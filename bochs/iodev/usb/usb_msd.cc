@@ -267,6 +267,7 @@ usb_msd_device_c::usb_msd_device_c(usbdev_type type, const char *filename)
     }
     s.journal[0] = 0;
     s.size = 0;
+    s.statusbar_id = bx_gui->register_statusitem("USB-HD", 1);
   } else if (d.type == USB_DEV_TYPE_CDROM) {
     strcpy(d.devname, "BOCHS USB CDROM");
     s.fname = filename;
@@ -293,6 +294,7 @@ usb_msd_device_c::usb_msd_device_c(usbdev_type type, const char *filename)
       bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
       usb->add(s.config);
     }
+    s.statusbar_id = bx_gui->register_statusitem("USB-CD", 1);
   }
 
   put("usb_msd", "USBMSD");
@@ -300,6 +302,7 @@ usb_msd_device_c::usb_msd_device_c(usbdev_type type, const char *filename)
 
 usb_msd_device_c::~usb_msd_device_c(void)
 {
+  bx_gui->unregister_statusitem(s.statusbar_id);
   if (s.scsi_dev != NULL)
     delete s.scsi_dev;
   if (s.hdimage != NULL) {
@@ -634,8 +637,10 @@ int usb_msd_device_c::handle_data(USBPacket *p)
           s.scsi_dev->scsi_send_command(s.tag, cbw.cmd, cbw.lun);
           if (s.residue == 0) {
             if (s.mode == USB_MSDM_DATAIN) {
+              bx_gui->statusbar_setitem(s.statusbar_id, 1);
               s.scsi_dev->scsi_read_data(s.tag);
             } else if (s.mode == USB_MSDM_DATAOUT) {
+              bx_gui->statusbar_setitem(s.statusbar_id, 1, 1);
               s.scsi_dev->scsi_write_data(s.tag);
             }
           }
@@ -768,8 +773,10 @@ void usb_msd_device_c::copy_data()
   s.data_len -= len;
   if (s.scsi_len == 0) {
     if (s.mode == USB_MSDM_DATAIN) {
+      bx_gui->statusbar_setitem(s.statusbar_id, 1);
       s.scsi_dev->scsi_read_data(s.tag);
     } else if (s.mode == USB_MSDM_DATAOUT) {
+      bx_gui->statusbar_setitem(s.statusbar_id, 1, 1);
       s.scsi_dev->scsi_write_data(s.tag);
     }
   }

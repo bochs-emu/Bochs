@@ -818,6 +818,7 @@ void bx_gui_c::unregister_statusitem(int id)
 {
   if (id < (int)statusitem_count) {
     strcpy(statusitem[id].text, "      ");
+    statusitem[id].active = 1;
     statusbar_setitem(id, 0, 0);
     if (id == (int)(statusitem_count - 1)) {
       statusitem_count--;

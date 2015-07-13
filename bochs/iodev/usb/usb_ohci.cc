@@ -1369,13 +1369,22 @@ void bx_usb_ohci_c::runtime_config(void)
 {
   int i;
   char pname[6];
+  usbdev_type type = USB_DEV_TYPE_NONE;
 
   for (i = 0; i < BX_N_USB_OHCI_PORTS; i++) {
     // device change support
     if ((BX_OHCI_THIS hub.device_change & (1 << i)) != 0) {
-      BX_INFO(("USB port #%d: device connect", i+1));
-      sprintf(pname, "port%d", i + 1);
-      init_device(i, (bx_list_c*)SIM->get_param(pname, SIM->get_param(BXPN_USB_OHCI)));
+      if (!BX_OHCI_THIS hub.usb_port[i].HcRhPortStatus.ccs) {
+        BX_INFO(("USB port #%d: device connect", i+1));
+        sprintf(pname, "port%d", i + 1);
+        init_device(i, (bx_list_c*)SIM->get_param(pname, SIM->get_param(BXPN_USB_OHCI)));
+      } else {
+        BX_INFO(("USB port #%d: device disconnect", i+1));
+        if (BX_OHCI_THIS hub.usb_port[i].device != NULL) {
+          type = BX_OHCI_THIS hub.usb_port[i].device->get_type();
+        }
+        usb_set_connect_status(i, type, 0);
+      }
       BX_OHCI_THIS hub.device_change &= ~(1 << i);
     }
     // forward to connected device
@@ -1514,7 +1523,6 @@ void bx_usb_ohci_c::usb_set_connect_status(Bit8u port, int type, bx_bool connect
 const char *bx_usb_ohci_c::usb_param_handler(bx_param_string_c *param, int set,
                                            const char *oldval, const char *val, int maxlen)
 {
-  usbdev_type type = USB_DEV_TYPE_NONE;
   int portnum;
 
   if (set) {
@@ -1522,11 +1530,7 @@ const char *bx_usb_ohci_c::usb_param_handler(bx_param_string_c *param, int set,
     bx_bool empty = ((strlen(val) == 0) || (!strcmp(val, "none")));
     if ((portnum >= 0) && (portnum < BX_N_USB_OHCI_PORTS)) {
       if (empty && BX_OHCI_THIS hub.usb_port[portnum].HcRhPortStatus.ccs) {
-        BX_INFO(("USB port #%d: device disconnect", portnum+1));
-        if (BX_OHCI_THIS hub.usb_port[portnum].device != NULL) {
-          type = BX_OHCI_THIS hub.usb_port[portnum].device->get_type();
-        }
-        usb_set_connect_status(portnum, type, 0);
+        BX_OHCI_THIS hub.device_change |= (1 << portnum);
       } else if (!empty && !BX_OHCI_THIS hub.usb_port[portnum].HcRhPortStatus.ccs) {
         BX_OHCI_THIS hub.device_change |= (1 << portnum);
       }
