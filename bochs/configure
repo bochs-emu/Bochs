@@ -23408,7 +23408,7 @@ if test "$use_usb" = 1; then
     as_fn_error $? "USB requires PCI support" "$LINENO" 5
   fi
   USBCORE_OBJ="usb_common.o"
-  USBDEV_OBJS="usb_hid.o usb_hub.o usb_msd.o usb_printer.o"
+  USBDEV_OBJS="usb_hid.o usb_hub.o usb_msd.o usb_printer.o usb_cbi.o"
   SCSI_OBJS="scsi_device.o"
   if test "$bx_plugins" = 0; then
     USB_LIB_VAR='iodev/usb/libusb.a'

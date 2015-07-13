@@ -136,7 +136,8 @@ enum usbdev_type {
   USB_DEV_TYPE_DISK,
   USB_DEV_TYPE_CDROM,
   USB_DEV_TYPE_HUB,
-  USB_DEV_TYPE_PRINTER
+  USB_DEV_TYPE_PRINTER,
+  USB_DEV_TYPE_FLOPPY
 };
 
 class bx_usb_devctl_c : public bx_usb_devctl_stub_c {

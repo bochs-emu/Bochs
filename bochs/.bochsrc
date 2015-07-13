@@ -1057,8 +1057,8 @@ speaker: enabled=1, mode=sound
 # USB_UHCI:
 # This option controls the presence of the USB root hub which is a part
 # of the i440FX PCI chipset. With the portX parameter you can connect devices
-# to the hub (currently supported: 'mouse', 'tablet', 'keypad', 'disk', 'cdrom'
-# 'hub' and 'printer').
+# to the hub (currently supported: 'mouse', 'tablet', 'keypad', 'disk', 'cdrom',
+# 'floppy', 'hub' and 'printer').
 #
 # If you connect the mouse or tablet to one of the ports, Bochs forwards the
 # mouse movement data to the USB device instead of the selected mouse type.
@@ -1073,6 +1073,10 @@ speaker: enabled=1, mode=sound
 # an ISO image or raw device name also separated with a colon. An option to
 # insert/eject media is available in the runtime configuration.
 #
+# To emulate a USB floppy you can use the 'floppy' device with the path to the
+# image separated with a colon. To use the VVFAT image mode similar to the
+# legacy floppy the syntax 'floppy:vvfat:directory' must be used (see below).
+#
 # The device name 'hub' connects an external hub with max. 8 ports (default: 4)
 # to the root hub. To specify the number of ports you have to add the value
 # separated with a colon. Connecting devices to the external hub ports is only
@@ -1086,11 +1090,16 @@ speaker: enabled=1, mode=sound
 # The optionsX parameter can be used to assign specific options to the device
 # connected to the corresponding USB port. Currently this feature is used to
 # set the speed reported by device ('low', 'full', 'high' or 'super'). The
-# availabe speed choices depend on both HC and device. For the USB 'disk' device
-# the optionsX parameter can be used to specify an alternative redolog file
-# (journal) of some image modes. For 'vvfat' mode USB disks the optionsX
-# parameter can be used to specify the disk size (range 128M ... 128G). If the
-# size is not specified, it defaults to 504M.
+# availabe speed choices depend on both HC and device.
+# For the USB 'disk' device the optionsX parameter can be used to specify an
+# alternative redolog file (journal) of some image modes. For 'vvfat' mode USB
+# disks the optionsX parameter can be used to specify the disk size (range
+# 128M ... 128G). If the size is not specified, it defaults to 504M.
+# For the USB 'floppy' device the optionsX parameter can be used to specify an
+# alternative device ID to be reported. Currently only the model "teac" is
+# supported (can fix hw detection in some guest OS). The USB floppy also
+# accepts the parameter "write_protected" with valid values 0 and 1 to select
+# the access mode (default is 0).
 #=======================================================================
 #usb_uhci: enabled=1
 #usb_uhci: enabled=1, port1=mouse, port2=disk:usbstick.img
@@ -1098,6 +1107,7 @@ speaker: enabled=1, mode=sound
 #usb_uhci: enabled=1, port2=disk:undoable:usbdisk.img, options2=journal:redo.log
 #usb_uhci: enabled=1, port2=disk:vvfat:vvfat, options2=speed:full
 #usb_uhci: enabled=1, port1=printer:printdata.bin, port2=cdrom:image.iso
+#usb_uhci: enabled=1, port2=floppy:vvfat:diskette, options2="model:teac"
 
 #=======================================================================
 # USB_OHCI:

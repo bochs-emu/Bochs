@@ -5,8 +5,8 @@
 // Generic USB emulation code
 //
 // Copyright (c) 2005       Fabrice Bellard
-// Copyright (C) 2009       Benjamin D Lunt (fys at frontiernet net)
-//               2009-2014  The Bochs Project
+// Copyright (C) 2009-2015  Benjamin D Lunt (fys at fysnet net)
+//               2009-2015  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -40,6 +40,7 @@
 #include "usb_hid.h"
 #include "usb_hub.h"
 #include "usb_msd.h"
+#include "usb_cbi.h"
 #include "usb_printer.h"
 
 #define LOG_THIS
@@ -128,6 +129,14 @@ int bx_usb_devctl_c::init_device(bx_list_c *portconf, logfunctions *hub, void **
       hub->panic("USB device 'printer' needs a filename separated with a colon");
       return type;
     }
+  } else if (!strncmp(devname, "floppy", 6)) {
+    if ((dnlen > 7) && (devname[6] == ':')) {
+      type = USB_DEV_TYPE_FLOPPY;
+      *device = new usb_cbi_device_c(type, devname+7);
+    } else {
+      hub->panic("USB device 'floppy' needs a filename separated with a colon");
+      return type;
+    }
   } else {
     hub->panic("unknown USB device: %s", devname);
     return type;
@@ -178,6 +187,7 @@ void bx_usb_devctl_c::parse_port_options(usb_device_c *device, bx_list_c *portco
     }
     delete [] options;
   }
+
   for (i = 0; i < (unsigned)optc; i++) {
     if (!strncmp(opts[i], "speed:", 6)) {
       if (!strcmp(opts[i]+6, "low")) {
