@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2014  The Bochs Project
+//  Copyright (C) 2002-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -791,16 +791,39 @@ void bx_gui_c::beep_off()
 
 int bx_gui_c::register_statusitem(const char *text, bx_bool auto_off)
 {
-  if (statusitem_count < BX_MAX_STATUSITEMS) {
-    strncpy(statusitem[statusitem_count].text, text, 8);
-    statusitem[statusitem_count].text[7] = 0;
-    statusitem[statusitem_count].auto_off = auto_off;
-    statusitem[statusitem_count].counter = 0;
-    statusitem[statusitem_count].active = 0;
-    statusitem[statusitem_count].mode = 0;
-    return statusitem_count++;
-  } else {
-   return -1;
+  unsigned id = statusitem_count;
+
+  for (unsigned i = 0; i < statusitem_count; i++) {
+    if (!statusitem[i].in_use) {
+      id = i;
+      break;
+    }
+  }
+  if (id == statusitem_count) {
+    if (++statusitem_count > BX_MAX_STATUSITEMS) {
+      return -1;
+    }
+  }
+  statusitem[id].in_use = 1;
+  strncpy(statusitem[id].text, text, 8);
+  statusitem[id].text[7] = 0;
+  statusitem[id].auto_off = auto_off;
+  statusitem[id].counter = 0;
+  statusitem[id].active = 0;
+  statusitem[id].mode = 0;
+  return id;
+}
+
+void bx_gui_c::unregister_statusitem(int id)
+{
+  if (id < (int)statusitem_count) {
+    strcpy(statusitem[id].text, "      ");
+    statusbar_setitem(id, 0, 0);
+    if (id == (int)(statusitem_count - 1)) {
+      statusitem_count--;
+    } else {
+      statusitem[id].in_use = 0;
+    }
   }
 }
 

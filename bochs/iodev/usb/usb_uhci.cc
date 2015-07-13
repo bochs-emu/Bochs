@@ -180,9 +180,6 @@ void bx_usb_uhci_c::init(void)
 
   BX_UHCI_THIS pci_base_address[4] = 0x0;
 
-  //FIXME: for now, we want a status bar // hub zero, port zero
-  BX_UHCI_THIS hub.statusbar_id = bx_gui->register_statusitem("UHCI", 1);
-
   bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
   bx_list_c *uhci_rt = new bx_list_c(usb_rt, "uhci", "UHCI Runtime Options");
   uhci_rt->set_options(uhci_rt->SHOW_PARENT);
@@ -916,14 +913,6 @@ bx_bool bx_usb_uhci_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *t
 
   maxlen++;
   maxlen &= 0x7FF;
-
-  /* set status bar conditions for device */
-  if ((maxlen > 0) && (BX_UHCI_THIS hub.statusbar_id >= 0)) {
-    if (pid == USB_TOKEN_IN)
-      bx_gui->statusbar_setitem(BX_UHCI_THIS hub.statusbar_id, 1);     // read
-    else
-      bx_gui->statusbar_setitem(BX_UHCI_THIS hub.statusbar_id, 1, 1);  // write
-  }
 
   BX_UHCI_THIS usb_packet.pid = pid;
   BX_UHCI_THIS usb_packet.devaddr = addr;

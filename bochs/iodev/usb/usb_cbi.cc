@@ -309,6 +309,7 @@ usb_cbi_device_c::usb_cbi_device_c(usbdev_type type, const char *filename)
 
 usb_cbi_device_c::~usb_cbi_device_c(void)
 {
+  bx_gui->unregister_statusitem(s.statusbar_id);
   if (s.dev_buffer != NULL)
     delete [] s.dev_buffer;
   if (s.hdimage != NULL) {
@@ -352,7 +353,7 @@ bx_bool usb_cbi_device_c::init()
   d.connected = 1;
   s.dev_buffer = new Bit8u[CBI_MAX_TRANSFER * 512];
 
-  s.statusbar_id = bx_gui->register_statusitem("Floppy", 1);
+  s.statusbar_id = bx_gui->register_statusitem("USB-FD", 1);
   s.did_inquiry_fail = 0;
   s.fail_count = 0;
 

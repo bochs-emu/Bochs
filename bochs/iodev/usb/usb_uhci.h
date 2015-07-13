@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009       Benjamin D Lunt (fys at frontiernet net)
-//                2009-2012  The Bochs Project
+//                2009-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -158,7 +158,6 @@ typedef struct {
 
   Bit8u devfunc;
 
-  int statusbar_id; // ID of the status LEDs
   Bit8u device_change;
 } bx_usb_uhci_t;
 

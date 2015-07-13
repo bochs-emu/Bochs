@@ -192,9 +192,6 @@ void bx_usb_ohci_c::init(void)
   BX_OHCI_THIS hub.use_bulk_head = 0;
   BX_OHCI_THIS hub.sof_time = 0;
 
-  //FIXME: for now, we want a status bar // hub zero, port zero
-  BX_OHCI_THIS hub.statusbar_id = bx_gui->register_statusitem("OHCI", 1);
-
   bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
   bx_list_c *ohci_rt = new bx_list_c(usb_rt, "ohci", "OHCI Runtime Options");
   ohci_rt->set_options(ohci_rt->SHOW_PARENT);
@@ -1242,14 +1239,6 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
     (pid == USB_TOKEN_IN)? "IN" : (pid == USB_TOKEN_OUT) ? "OUT" : (pid == USB_TOKEN_SETUP) ? "SETUP" : "UNKNOWN", 
     ED_GET_FA(ed), ED_GET_EN(ed), len, ED_GET_MPS(ed), TD_GET_CBP(td), TD_GET_BE(td)));
   BX_DEBUG(("    td->t = %i  ed->c = %i  td->di = %i  td->r = %i", TD_GET_T(td), ED_GET_C(ed), TD_GET_DI(td), TD_GET_R(td)));
-
-  /* set status bar conditions for device */
-  if ((len > 0) && (BX_OHCI_THIS hub.statusbar_id >= 0)) {
-    if (pid == USB_TOKEN_IN)
-      bx_gui->statusbar_setitem(BX_OHCI_THIS hub.statusbar_id, 1);     // read
-    else
-      bx_gui->statusbar_setitem(BX_OHCI_THIS hub.statusbar_id, 1, 1);  // write
-  }
 
   switch (pid) {
     case USB_TOKEN_SETUP:

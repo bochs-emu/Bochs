@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2014  The Bochs Project
+//  Copyright (C) 2002-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -151,6 +151,7 @@ public:
   void update_drive_status_buttons(void);
   static void     mouse_enabled_changed(bx_bool val);
   int register_statusitem(const char *text, bx_bool auto_off=0);
+  void unregister_statusitem(int id);
   void statusbar_setitem(int element, bx_bool active, bx_bool w=0);
   static void init_signal_handlers();
   static void toggle_mouse_enable(void);
@@ -207,6 +208,7 @@ protected:
   unsigned statusitem_count;
   int led_timer_index;
   struct {
+    bx_bool in_use;
     char text[8];
     bx_bool active;
     bx_bool mode; // read/write

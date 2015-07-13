@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010-2014  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2011-2014  The Bochs Project
+//                2011-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -277,9 +277,6 @@ void bx_usb_xhci_c::init(void)
   BX_XHCI_THIS pci_conf[0x3d] = BX_PCI_INTD;
 
   BX_XHCI_THIS pci_base_address[0] = 0x0;
-
-  //FIXME: for now, we want a status bar // hub zero, port zero
-  BX_XHCI_THIS hub.statusbar_id = bx_gui->register_statusitem("xHCI", 1);
 
   bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
   bx_list_c *xhci_rt = new bx_list_c(usb_rt, "xhci", "xHCI Runtime Options");
@@ -2002,14 +1999,6 @@ void bx_usb_xhci_c::process_transfer_ring(const int slot, const int ep)
 
       // is there a transfer to be done?
       if (is_transfer_trb) {
-        // set status bar conditions for device
-        if ((transfer_length > 0) && (BX_XHCI_THIS hub.statusbar_id >= 0)) {
-          if (cur_direction == USB_TOKEN_IN)
-            bx_gui->statusbar_setitem(BX_XHCI_THIS hub.statusbar_id, 1);     // read
-          else
-            bx_gui->statusbar_setitem(BX_XHCI_THIS hub.statusbar_id, 1, 1);  // write
-        }
-
         comp_code = TRB_SUCCESS;  // assume good trans event
         packet.pid = cur_direction;
         packet.devaddr = BX_XHCI_THIS hub.slots[slot].slot_context.device_address;
