@@ -32,11 +32,11 @@ enum {
   BX_SEG_REG_SS = 2,
   BX_SEG_REG_DS = 3,
   BX_SEG_REG_FS = 4,
-  BX_SEG_REG_GS = 5
+  BX_SEG_REG_GS = 5,
+  // NULL now has to fit in 3 bits.
+  BX_SEG_REG_NULL = 7
 };
 
-// NULL now has to fit in 3 bits.
-#define BX_SEG_REG_NULL  7
 #define BX_NULL_SEG_REG(seg) ((seg) == BX_SEG_REG_NULL)
 
 enum {
@@ -173,7 +173,6 @@ enum {
 // access to 64 bit MSR registers
 #define MSR_FSBASE  (BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.base)
 #define MSR_GSBASE  (BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.base)
-#define MSR_KERNELGSBASE   (BX_CPU_THIS_PTR msr.kernelgsbase)
 
 #else // simplify merge between 32-bit and 64-bit mode
 
@@ -543,9 +542,15 @@ extern const char* cpu_mode_string(unsigned cpu_mode);
 #define IsCanonical(offset) ((Bit64u)((((Bit64s)(offset)) >> (BX_LIN_ADDRESS_WIDTH-1)) + 1) < 2)
 #endif
 
-#define IsValidPhyAddr(addr) (((addr) & BX_PHY_ADDRESS_RESERVED_BITS) == 0)
+BX_CPP_INLINE bx_bool IsValidPhyAddr(bx_phy_address addr)
+{
+  return ((addr & BX_PHY_ADDRESS_RESERVED_BITS) == 0);
+}
 
-#define IsValidPageAlignedPhyAddr(addr) (((addr) & (BX_PHY_ADDRESS_RESERVED_BITS | 0xfff)) == 0)
+BX_CPP_INLINE bx_bool IsValidPageAlignedPhyAddr(bx_phy_address addr)
+{
+  return ((addr & (BX_PHY_ADDRESS_RESERVED_BITS | 0xfff)) == 0);
+}
 
 const Bit32u CACHE_LINE_SIZE = 64;
 
@@ -784,8 +789,6 @@ typedef struct
 #if BX_SUPPORT_APIC
   bx_phy_address apicbase;
 #endif
-
-#define MSR_STAR   (BX_CPU_THIS_PTR msr.star)
 
   // SYSCALL/SYSRET instruction msr's
   Bit64u star;

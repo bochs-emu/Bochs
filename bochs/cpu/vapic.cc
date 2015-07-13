@@ -33,7 +33,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::is_virtual_apic_page(bx_phy_address pad
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES))
-      if (PPFOf(paddr) == PPFOf(vm->apic_access_page)) return BX_TRUE;
+      if (PPFOf(paddr) == vm->apic_access_page) return BX_TRUE;
   }
 
   return BX_FALSE;

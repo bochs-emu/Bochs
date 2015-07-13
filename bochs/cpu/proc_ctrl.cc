@@ -1085,7 +1085,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
     }
 
     // set up CS segment, flat, 64-bit DPL=0
-    parse_selector((MSR_STAR >> 32) & BX_SELECTOR_RPL_MASK,
+    parse_selector((BX_CPU_THIS_PTR msr.star >> 32) & BX_SELECTOR_RPL_MASK,
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
 
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid   = SegValidCache | SegAccessROK | SegAccessWOK | SegAccessROK4G | SegAccessWOK4G;
@@ -1107,7 +1107,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
 #endif
 
     // set up SS segment, flat, 64-bit DPL=0
-    parse_selector(((MSR_STAR >> 32) + 8) & BX_SELECTOR_RPL_MASK,
+    parse_selector(((BX_CPU_THIS_PTR msr.star >> 32) + 8) & BX_SELECTOR_RPL_MASK,
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
 
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid   = SegValidCache | SegAccessROK | SegAccessWOK | SegAccessROK4G | SegAccessWOK4G;
@@ -1131,10 +1131,10 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
     // legacy mode
 
     ECX = EIP;
-    temp_RIP = MSR_STAR & 0xFFFFFFFF;
+    temp_RIP = (Bit32u)(BX_CPU_THIS_PTR msr.star);
 
     // set up CS segment, flat, 32-bit DPL=0
-    parse_selector((MSR_STAR >> 32) & BX_SELECTOR_RPL_MASK,
+    parse_selector((BX_CPU_THIS_PTR msr.star >> 32) & BX_SELECTOR_RPL_MASK,
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
 
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid   = SegValidCache | SegAccessROK | SegAccessWOK | SegAccessROK4G | SegAccessWOK4G;
@@ -1158,7 +1158,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
 #endif
 
     // set up SS segment, flat, 32-bit DPL=0
-    parse_selector(((MSR_STAR >> 32) + 8) & BX_SELECTOR_RPL_MASK,
+    parse_selector(((BX_CPU_THIS_PTR msr.star >> 32) + 8) & BX_SELECTOR_RPL_MASK,
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
 
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid   = SegValidCache | SegAccessROK | SegAccessWOK | SegAccessROK4G | SegAccessWOK4G;
@@ -1219,7 +1219,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
       }
 
       // Return to 64-bit mode, set up CS segment, flat, 64-bit DPL=3
-      parse_selector((((MSR_STAR >> 48) + 16) & BX_SELECTOR_RPL_MASK) | 3,
+      parse_selector((((BX_CPU_THIS_PTR msr.star >> 48) + 16) & BX_SELECTOR_RPL_MASK) | 3,
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
 
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid   = SegValidCache | SegAccessROK | SegAccessWOK | SegAccessROK4G | SegAccessWOK4G;
@@ -1238,7 +1238,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
     }
     else {
       // Return to 32-bit compatibility mode, set up CS segment, flat, 32-bit DPL=3
-      parse_selector((MSR_STAR >> 48) | 3,
+      parse_selector((BX_CPU_THIS_PTR msr.star >> 48) | 3,
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
 
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid   = SegValidCache | SegAccessROK | SegAccessWOK | SegAccessROK4G | SegAccessWOK4G;
@@ -1261,7 +1261,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
     handleAlignmentCheck(/* CPL change */);
 
     // SS base, limit, attributes unchanged
-    parse_selector((Bit16u)(((MSR_STAR >> 48) + 8) | 3),
+    parse_selector((Bit16u)(((BX_CPU_THIS_PTR msr.star >> 48) + 8) | 3),
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
 
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid   = SegValidCache | SegAccessROK | SegAccessWOK | SegAccessROK4G | SegAccessWOK4G;
@@ -1276,7 +1276,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
 #endif
   {
     // Return to 32-bit legacy mode, set up CS segment, flat, 32-bit DPL=3
-    parse_selector((MSR_STAR >> 48) | 3,
+    parse_selector((BX_CPU_THIS_PTR msr.star >> 48) | 3,
                      &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
 
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid   = SegValidCache | SegAccessROK | SegAccessWOK | SegAccessROK4G | SegAccessWOK4G;
@@ -1298,7 +1298,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
     handleAlignmentCheck(/* CPL change */);
 
     // SS base, limit, attributes unchanged
-    parse_selector((Bit16u)(((MSR_STAR >> 48) + 8) | 3),
+    parse_selector((Bit16u)(((BX_CPU_THIS_PTR msr.star >> 48) + 8) | 3),
                      &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
 
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid   = SegValidCache | SegAccessROK | SegAccessWOK | SegAccessROK4G | SegAccessWOK4G;
@@ -1331,8 +1331,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SWAPGS(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
 
   Bit64u temp_GS_base = MSR_GSBASE;
-  MSR_GSBASE = MSR_KERNELGSBASE;
-  MSR_KERNELGSBASE = temp_GS_base;
+  MSR_GSBASE = BX_CPU_THIS_PTR msr.kernelgsbase;
+  BX_CPU_THIS_PTR msr.kernelgsbase = temp_GS_base;
 
   BX_NEXT_INSTR(i);
 }

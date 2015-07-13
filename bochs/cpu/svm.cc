@@ -1062,8 +1062,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLOAD(bxInstruction_c *i)
   BX_CPU_THIS_PTR tr = guest_tr;
   BX_CPU_THIS_PTR ldtr = guest_ldtr;
 
-  MSR_KERNELGSBASE = CanonicalizeAddress(vmcb_read64(SVM_GUEST_KERNEL_GSBASE_MSR));
-  MSR_STAR = vmcb_read64(SVM_GUEST_STAR_MSR);
+  BX_CPU_THIS_PTR msr.kernelgsbase = CanonicalizeAddress(vmcb_read64(SVM_GUEST_KERNEL_GSBASE_MSR));
+  BX_CPU_THIS_PTR msr.star = vmcb_read64(SVM_GUEST_STAR_MSR);
   BX_CPU_THIS_PTR msr.lstar = CanonicalizeAddress(vmcb_read64(SVM_GUEST_LSTAR_MSR));
   BX_CPU_THIS_PTR msr.cstar = CanonicalizeAddress(vmcb_read64(SVM_GUEST_CSTAR_MSR));
   BX_CPU_THIS_PTR msr.fmask = vmcb_read64(SVM_GUEST_FMASK_MSR);
@@ -1106,8 +1106,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMSAVE(bxInstruction_c *i)
   svm_segment_write(&BX_CPU_THIS_PTR tr, SVM_GUEST_TR_SELECTOR);
   svm_segment_write(&BX_CPU_THIS_PTR ldtr, SVM_GUEST_LDTR_SELECTOR);
 
-  vmcb_write64(SVM_GUEST_KERNEL_GSBASE_MSR, MSR_KERNELGSBASE);
-  vmcb_write64(SVM_GUEST_STAR_MSR, MSR_STAR);
+  vmcb_write64(SVM_GUEST_KERNEL_GSBASE_MSR, BX_CPU_THIS_PTR msr.kernelgsbase);
+  vmcb_write64(SVM_GUEST_STAR_MSR, BX_CPU_THIS_PTR msr.star);
   vmcb_write64(SVM_GUEST_LSTAR_MSR, BX_CPU_THIS_PTR msr.lstar);
   vmcb_write64(SVM_GUEST_CSTAR_MSR, BX_CPU_THIS_PTR msr.cstar);
   vmcb_write64(SVM_GUEST_FMASK_MSR, BX_CPU_THIS_PTR msr.fmask);
