@@ -145,26 +145,25 @@ public:
   virtual void   init() {
     STUBFUNC(HD, init);
   }
-  virtual void   reset(unsigned type) {
+  virtual void reset(unsigned type) {
     STUBFUNC(HD, reset);
   }
-  virtual Bit32u   get_first_cd_handle(void) {
-    STUBFUNC(HD, get_first_cd_handle); return 0;
+  virtual Bit32u get_first_cd_handle(void) {
+    return BX_MAX_ATA_CHANNEL*2;
   }
   virtual unsigned get_cd_media_status(Bit32u handle) {
-    STUBFUNC(HD, get_cd_media_status); return 0;
+    return 0;
   }
   virtual unsigned set_cd_media_status(Bit32u handle, unsigned status) {
     STUBFUNC(HD, set_cd_media_status); return 0;
   }
   virtual Bit32u virt_read_handler(Bit32u address, unsigned io_len)
   {
-    STUBFUNC(HD, virt_read_handler); return 0;
+    return 0;
   }
-  virtual void   virt_write_handler(Bit32u address,
+  virtual void virt_write_handler(Bit32u address,
       Bit32u value, unsigned io_len)
   {
-    STUBFUNC(HD, virt_write_handler);
   }
   virtual bx_bool bmdma_read_sector(Bit8u channel, Bit8u *buffer, Bit32u *sector_size) {
     STUBFUNC(HD, bmdma_read_sector); return 0;
