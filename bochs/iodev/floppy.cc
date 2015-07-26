@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2014  The Bochs Project
+//  Copyright (C) 2002-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -244,13 +244,39 @@ void bx_floppy_ctrl_c::init(void)
     }
   }
 
-  /* CMOS Floppy Type and Equipment Byte register */
-  DEV_cmos_set_reg(0x10, cmos_value);
-  if (BX_FD_THIS s.num_supported_floppies > 0) {
-    DEV_cmos_set_reg(0x14, (DEV_cmos_get_reg(0x14) & 0x3e) |
-                          ((BX_FD_THIS s.num_supported_floppies-1) << 6) | 1);
-  } else {
-    DEV_cmos_set_reg(0x14, (DEV_cmos_get_reg(0x14) & 0x3e));
+  // generate CMOS values for floppy and boot sequence if not using a CMOS image
+  if (!SIM->get_param_bool(BXPN_CMOSIMAGE_ENABLED)->get()) {
+    /* CMOS Floppy Type and Equipment Byte register */
+    DEV_cmos_set_reg(0x10, cmos_value);
+    if (BX_FD_THIS s.num_supported_floppies > 0) {
+      DEV_cmos_set_reg(0x14, (DEV_cmos_get_reg(0x14) & 0x3e) |
+                             ((BX_FD_THIS s.num_supported_floppies-1) << 6) | 1);
+    } else {
+      DEV_cmos_set_reg(0x14, (DEV_cmos_get_reg(0x14) & 0x3e));
+    }
+
+    // Set the "non-extended" boot device (first floppy or first hard disk).
+    if (SIM->get_param_enum(BXPN_BOOTDRIVE1)->get() != BX_BOOT_FLOPPYA) {
+      // system boot sequence C:, A:
+      DEV_cmos_set_reg(0x2d, DEV_cmos_get_reg(0x2d) & 0xdf);
+    } else { // 'a'
+      // system boot sequence A:, C:
+      DEV_cmos_set_reg(0x2d, DEV_cmos_get_reg(0x2d) | 0x20);
+    }
+
+    // Set the "extended" boot sequence, bytes 0x38 and 0x3D (needed for cdrom booting)
+    BX_INFO(("Using boot sequence %s, %s, %s",
+             SIM->get_param_enum(BXPN_BOOTDRIVE1)->get_selected(),
+             SIM->get_param_enum(BXPN_BOOTDRIVE2)->get_selected(),
+             SIM->get_param_enum(BXPN_BOOTDRIVE3)->get_selected()));
+    DEV_cmos_set_reg(0x3d, SIM->get_param_enum(BXPN_BOOTDRIVE1)->get() |
+                           (SIM->get_param_enum(BXPN_BOOTDRIVE2)->get() << 4));
+
+    // Set the signature check flag in cmos, inverted for compatibility
+    DEV_cmos_set_reg(0x38, SIM->get_param_bool(BXPN_FLOPPYSIGCHECK)->get() |
+                           (SIM->get_param_enum(BXPN_BOOTDRIVE3)->get() << 4));
+    BX_INFO(("Floppy boot signature check is %sabled",
+             SIM->get_param_bool(BXPN_FLOPPYSIGCHECK)->get() ? "dis" : "en"));
   }
 
   if (BX_FD_THIS s.floppy_timer_index == BX_NULL_TIMER_HANDLE) {
