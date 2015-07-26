@@ -914,7 +914,13 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun)
       r->buf_len = 16;
       break;
     case 0x2f:
-      BX_INFO(("Verify"));
+      BX_DEBUG(("Verify (sector " FMT_LL "d, count %d)", lba, len));
+      if (lba > max_lba)
+        goto illegal_lba;
+      if (buf[1] & 2) {
+        BX_ERROR(("Verify with ByteChk not implemented yet"));
+        goto fail;
+      }
       break;
     case 0x23: {
       // USBMASS-UFI10.pdf  rev 1.0  Section 4.10
