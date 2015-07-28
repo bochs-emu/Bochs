@@ -303,6 +303,7 @@ usb_cbi_device_c::usb_cbi_device_c(usbdev_type type, const char *filename)
   }
 
   s.dev_buffer = NULL;
+  s.statusbar_id = -1;
 
   put("usb_cbi", "USBCBI");
 }
@@ -381,6 +382,12 @@ const char* usb_cbi_device_c::get_info()
 
 void usb_cbi_device_c::register_state_specific(bx_list_c *parent)
 {
+  bx_list_c *list = new bx_list_c(parent, "s", "UFI/CBI Floppy Disk State");
+  new bx_shadow_num_c(list, "usb_len", &s.usb_len);
+  new bx_shadow_num_c(list, "data_len", &s.data_len);
+  new bx_shadow_num_c(list, "cur_command", &s.cur_command);
+  new bx_shadow_num_c(list, "fail_count", &s.fail_count);
+  new bx_shadow_bool_c(list, "did_inquiry_fail", &s.did_inquiry_fail);
   // TODO
 }
 

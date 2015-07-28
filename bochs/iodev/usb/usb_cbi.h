@@ -72,13 +72,10 @@ private:
     Bit32u usb_len;
     Bit8u *usb_buf;
     Bit32u data_len;
-    Bit32u tag;
     Bit8u image_mode;
     device_image_t *hdimage;
     USBPacket *packet;
-    bx_list_c *sr_list;
     const char *fname;
-    bx_list_c *config;
     char info_txt[BX_PATHNAME_LEN];
     Bit8u cur_command;
     int fail_count;
@@ -87,7 +84,6 @@ private:
     bx_bool model;  // 0 = bochs, 1 = teac
     int statusbar_id;
   } s;
-
 };
 
 #endif
