@@ -175,6 +175,7 @@ public:
   int get_speed() {return d.speed;}
   void set_speed(int speed) {d.speed = speed;}
   Bit8u get_address() {return d.addr;}
+  void set_debug_mode();
 
   void usb_send_msg(int msg);
 

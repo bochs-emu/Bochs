@@ -177,11 +177,11 @@ static const Bit8u bx_cbi_dev_frmt_capacity[] = {
   0x00, 0x00, 0x00,    // reserved
   32,                  // remaining list in bytes
   // current: 1.44meg
-    0x00, 0x00, 0x0B, 0x40,  // lba's 
+    0x00, 0x00, 0x0B, 0x3f,  // lba's 
     0x02,                    // descriptor code
     0x00, 0x02, 0x00,        // 512-byte sectors
   // allowed #1: 1.44meg
-    0x00, 0x00, 0x0B, 0x40,  // lba's 
+    0x00, 0x00, 0x0B, 0x3f,  // lba's 
     0x00,                    // descriptor code
     0x00, 0x02, 0x00,        // 512-byte sectors
   // allowed #2: 1.25meg
@@ -195,7 +195,7 @@ static const Bit8u bx_cbi_dev_frmt_capacity[] = {
 };
 
 static const Bit8u bx_cbi_dev_capacity[] = {
-  0x00, 0x00, 0x0B, 0x40,  // lba's 
+  0x00, 0x00, 0x0B, 0x3f,  // lba's
   0x00, 0x00, 0x02, 0x00   // 512-byte sectors
 };
 
@@ -337,12 +337,6 @@ bx_bool usb_cbi_device_c::set_option(const char *option)
 
 bx_bool usb_cbi_device_c::init()
 {
-  /*  If you wish to set DEBUG=report in the code, instead of
-   *  in the configuration, simply uncomment this line.  I use
-   *  it when I am working on this emulation.
-   */
-  //LOG_THIS setonoff(LOGLEV_DEBUG, ACT_REPORT);
-
   if (d.type == USB_DEV_TYPE_FLOPPY) {
     s.hdimage = DEV_hdimage_init_image(s.image_mode, 1474560, "");
     if ((s.hdimage->open(s.fname)) < 0) {

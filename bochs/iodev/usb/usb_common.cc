@@ -206,6 +206,8 @@ void bx_usb_devctl_c::parse_port_options(usb_device_c *device, bx_list_c *portco
       } else {
         BX_ERROR(("unsupported USB device speed: '%s'", opts[i]+6));
       }
+    } else if (!strcmp(opts[i], "debug")) {
+      device->set_debug_mode();
     } else if (!device->set_option(opts[i])) {
       BX_ERROR(("unknown USB device option: '%s'", opts[i]));
     }
@@ -430,6 +432,12 @@ void usb_device_c::usb_send_msg(int msg)
   memset(&p, 0, sizeof(p));
   p.pid = msg;
   handle_packet(&p);
+}
+
+// Turn on BX_DEBUG messages at connection time
+void usb_device_c::set_debug_mode()
+{
+  setonoff(LOGLEV_DEBUG, ACT_REPORT);
 }
 
 #endif // BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB
