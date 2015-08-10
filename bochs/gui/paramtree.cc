@@ -232,8 +232,7 @@ void bx_param_num_c::set(Bit64s newval)
 {
   if (handler) {
     // the handler can override the new value and/or perform some side effect
-    val.number = newval;
-    (*handler)(this, 1, newval);
+    val.number = (*handler)(this, 1, newval);
   } else {
     // just set the value.  This code does not check max/min.
     val.number = newval;
@@ -790,16 +789,19 @@ void bx_param_string_c::set(const char *buf)
 
   if (options & RAW_BYTES) {
     memcpy(oldval, val, maxsize);
-    memcpy(val, buf, maxsize);
   } else {
     strncpy(oldval, val, maxsize);
     oldval[maxsize - 1] = 0;
-    strncpy(val, buf, maxsize);
-    val[maxsize - 1] = 0;
   }
   if (handler) {
     // the handler can return a different char* to be copied into the value
     buf = (*handler)(this, 1, oldval, buf, -1);
+  }
+  if (options & RAW_BYTES) {
+    memcpy(val, buf, maxsize);
+  } else {
+    strncpy(val, buf, maxsize);
+    val[maxsize - 1] = 0;
   }
   delete [] oldval;
   if (dependent_list != NULL) update_dependents();

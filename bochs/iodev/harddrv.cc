@@ -3543,7 +3543,13 @@ Bit64s bx_hard_drive_c::cdrom_status_handler(bx_param_c *param, int set, Bit64s 
     int handle = get_device_handle_from_param(param);
     if (handle >= 0) {
       if (!strcmp(param->get_name(), "status")) {
-        BX_HD_THIS channels[handle/2].drives[handle%2].status_changed = 1;
+        bx_bool locked = BX_HD_THIS channels[handle/2].drives[handle%2].cdrom.locked;
+        if ((val == 1) || !locked) {
+          BX_HD_THIS channels[handle/2].drives[handle%2].status_changed = 1;
+        } else if (locked) {
+          BX_ERROR(("cdrom tray locked: eject failed"));
+          return BX_INSERTED;
+        }
       }
     } else {
       BX_PANIC(("cdrom_status_handler called with unexpected parameter '%s'", param->get_name()));
@@ -3562,7 +3568,12 @@ const char *bx_hard_drive_c::cdrom_path_handler(bx_param_string_c *param, int se
     int handle = get_device_handle_from_param(param);
     if (handle >= 0) {
       if (!strcmp(param->get_name(), "path")) {
-        BX_HD_THIS channels[handle/2].drives[handle%2].status_changed = 1;
+        if (!BX_HD_THIS channels[handle/2].drives[handle%2].cdrom.locked) {
+          BX_HD_THIS channels[handle/2].drives[handle%2].status_changed = 1;
+        } else {
+          val = oldval;
+          BX_ERROR(("cdrom tray locked: path change failed"));
+        }
       }
     } else {
       BX_PANIC(("cdrom_path_handler called with unexpected parameter '%s'", param->get_name()));
