@@ -45,8 +45,8 @@
 
 #define LOG_THIS
 
-// we bark if guest tries to transfer more than CBI_MAX_TRANSFER sectors at a time.
-#define CBI_MAX_TRANSFER   128
+// maximum size of the read buffer in sectors
+#define CBI_MAX_SECTORS   16
 
 // Set this to zero if you only support CB interface.  Set to 1 if you support CBI.
 #define USB_CBI_USE_INTERRUPT  1
@@ -346,7 +346,7 @@ bx_bool usb_cbi_device_c::init()
     sprintf(s.info_txt, "USB CBI: path='%s', mode='%s'", s.fname, hdimage_mode_names[s.image_mode]);
   }
   d.connected = 1;
-  s.dev_buffer = new Bit8u[CBI_MAX_TRANSFER * 512];
+  s.dev_buffer = new Bit8u[CBI_MAX_SECTORS * 512];
 
   s.statusbar_id = bx_gui->register_statusitem("USB-FD", 1);
   s.did_inquiry_fail = 0;
@@ -379,6 +379,7 @@ void usb_cbi_device_c::register_state_specific(bx_list_c *parent)
   bx_list_c *list = new bx_list_c(parent, "s", "UFI/CBI Floppy Disk State");
   new bx_shadow_num_c(list, "usb_len", &s.usb_len);
   new bx_shadow_num_c(list, "data_len", &s.data_len);
+  new bx_shadow_num_c(list, "sector_count", &s.sector_count);
   new bx_shadow_num_c(list, "cur_command", &s.cur_command);
   new bx_shadow_num_c(list, "fail_count", &s.fail_count);
   new bx_shadow_bool_c(list, "did_inquiry_fail", &s.did_inquiry_fail);
@@ -567,6 +568,7 @@ bx_bool usb_cbi_device_c::handle_command(Bit8u *command)
 
   s.cur_command = command[0];
   s.usb_buf = s.dev_buffer;
+  s.sector_count = 0;
 
   // most commands that use the LBA field, use the same place for this field
   lba = ((command[2] << 24) |
@@ -637,13 +639,16 @@ bx_bool usb_cbi_device_c::handle_command(Bit8u *command)
                (command[9] <<  0));
     case UFI_READ_10:
       BX_DEBUG(("UFI_READ%i COMMAND (lba = %i, count = %i)", (s.cur_command == UFI_READ_12) ? 12 : 10, lba, count));
-      if (count > CBI_MAX_TRANSFER)
-        BX_PANIC(("Guest requested more than %i sectors at a time.  Increase CBI_MAX_TRANSFER to %i", CBI_MAX_TRANSFER, count));
+      if (count > CBI_MAX_SECTORS) {
+        s.sector_count = count - CBI_MAX_SECTORS;
+        count = CBI_MAX_SECTORS;
+      }
       if (s.hdimage->lseek(lba * 512, SEEK_SET) < 0) {
         BX_ERROR(("could not lseek() floppy drive image file"));
         s.usb_len = 0;
-      } else
+      } else {
         s.usb_len = (unsigned) s.hdimage->read((bx_ptr_t) s.usb_buf, count * 512);
+      }
       s.data_len = s.usb_len;
       break;
 
@@ -654,8 +659,6 @@ bx_bool usb_cbi_device_c::handle_command(Bit8u *command)
                (command[9] <<  0));
     case UFI_WRITE_10:
       BX_DEBUG(("UFI_WRITE%i COMMAND (lba = %i, count = %i)", (s.cur_command == UFI_WRITE_12) ? 12 : 10, lba, count));
-      if (count > CBI_MAX_TRANSFER)
-        BX_PANIC(("Guest requested more than %i sectors at a time.  Increase CBI_MAX_TRANSFER to %i", CBI_MAX_TRANSFER, count));
       if (s.hdimage->lseek(lba * 512, SEEK_SET) < 0)
         BX_ERROR(("could not lseek() floppy drive image file"));
       s.usb_len = (count * 512);
@@ -763,6 +766,7 @@ int usb_cbi_device_c::handle_data(USBPacket *p)
   Bit8u devep = p->devep;
   Bit8u *data = p->data;
   int len = p->len;
+  Bit32u count;
 
   switch (p->pid) {
     case USB_TOKEN_OUT:
@@ -815,6 +819,18 @@ int usb_cbi_device_c::handle_data(USBPacket *p)
             s.usb_buf += len;
             s.data_len -= len;
             ret = len;
+            if ((s.data_len == 0) && (s.sector_count > 0)) {
+              count = s.sector_count;
+              if (count > CBI_MAX_SECTORS) {
+                s.sector_count = count - CBI_MAX_SECTORS;
+                count = CBI_MAX_SECTORS;
+              } else {
+                s.sector_count = 0;
+              }
+              s.usb_buf = s.dev_buffer;
+              s.usb_len = (unsigned) s.hdimage->read((bx_ptr_t) s.usb_buf, count * 512);
+              s.data_len = s.usb_len;
+            }
 
             if (ret > 0) usb_dump_packet(data, ret);
             break;

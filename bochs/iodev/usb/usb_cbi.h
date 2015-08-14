@@ -72,6 +72,7 @@ private:
     Bit32u usb_len;
     Bit8u *usb_buf;
     Bit32u data_len;
+    Bit32u sector_count;
     Bit8u image_mode;
     device_image_t *hdimage;
     USBPacket *packet;
