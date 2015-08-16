@@ -283,6 +283,7 @@ usb_cbi_device_c::usb_cbi_device_c(const char *filename)
 
   d.type = USB_DEV_TYPE_FLOPPY;
   d.maxspeed = USB_SPEED_FULL;
+  d.speed = d.maxspeed;
   memset((void*)&s, 0, sizeof(s));
   strcpy(d.devname, "BOCHS USB CBI FLOPPY");
   strcpy(tmpfname, filename);

@@ -252,6 +252,7 @@ usb_msd_device_c::usb_msd_device_c(usbdev_type type, const char *filename)
 
   d.type = type;
   d.maxspeed = USB_SPEED_SUPER;
+  d.speed = USB_SPEED_FULL;
   memset((void*)&s, 0, sizeof(s));
   if (d.type == USB_DEV_TYPE_DISK) {
     strcpy(d.devname, "BOCHS USB HARDDRIVE");
