@@ -130,9 +130,13 @@ int bx_usb_devctl_c::init_device(bx_list_c *portconf, logfunctions *hub, void **
       return type;
     }
   } else if (!strncmp(devname, "floppy", 6)) {
-    if ((dnlen > 7) && (devname[6] == ':')) {
+    if ((dnlen == 6) || (devname[6] == ':')) {
       type = USB_DEV_TYPE_FLOPPY;
-      *device = new usb_cbi_device_c(type, devname+7);
+      if (dnlen > 7) {
+        *device = new usb_cbi_device_c(devname+7);
+      } else {
+        *device = new usb_cbi_device_c(devname+dnlen);
+      }
     } else {
       hub->panic("USB device 'floppy' needs a filename separated with a colon");
       return type;

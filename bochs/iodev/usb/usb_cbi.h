@@ -49,7 +49,7 @@ class device_image_t;
 
 class usb_cbi_device_c : public usb_device_c {
 public:
-  usb_cbi_device_c(usbdev_type type, const char *filename);
+  usb_cbi_device_c(const char *filename);
   virtual ~usb_cbi_device_c(void);
 
   virtual bx_bool init();

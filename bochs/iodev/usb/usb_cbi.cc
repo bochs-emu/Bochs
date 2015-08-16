@@ -276,29 +276,27 @@ static Bit8u bx_cbi_dev_mode_sense_cur[] = {
   0x00, 0x00, 0x00  // reserved
 };
 
-usb_cbi_device_c::usb_cbi_device_c(usbdev_type type, const char *filename)
+usb_cbi_device_c::usb_cbi_device_c(const char *filename)
 {
   char tmpfname[BX_PATHNAME_LEN];
   char *ptr1, *ptr2;
 
-  d.type = type;
+  d.type = USB_DEV_TYPE_FLOPPY;
   d.maxspeed = USB_SPEED_FULL;
   memset((void*)&s, 0, sizeof(s));
-  if (d.type == USB_DEV_TYPE_FLOPPY) {
-    strcpy(d.devname, "BOCHS USB CBI FLOPPY");
-    strcpy(tmpfname, filename);
-    ptr1 = strtok(tmpfname, ":");
-    ptr2 = strtok(NULL, ":");
-    if ((ptr2 == NULL) || (strlen(ptr1) < 2)) {
-      s.image_mode = BX_HDIMAGE_MODE_FLAT;
-      s.fname = filename;
-    } else {
-      s.image_mode = SIM->hdimage_get_mode(ptr1);
-      s.fname = filename+strlen(ptr1)+1;
-      if ((s.image_mode != BX_HDIMAGE_MODE_FLAT) &&
-          (s.image_mode != BX_HDIMAGE_MODE_VVFAT)) {
-        BX_PANIC(("USB floppy only supports image modes 'flat' and 'vvfat'"));
-      }
+  strcpy(d.devname, "BOCHS USB CBI FLOPPY");
+  strcpy(tmpfname, filename);
+  ptr1 = strtok(tmpfname, ":");
+  ptr2 = strtok(NULL, ":");
+  if ((ptr2 == NULL) || (strlen(ptr1) < 2)) {
+    s.image_mode = BX_HDIMAGE_MODE_FLAT;
+    s.fname = filename;
+  } else {
+    s.image_mode = SIM->hdimage_get_mode(ptr1);
+    s.fname = filename+strlen(ptr1)+1;
+    if ((s.image_mode != BX_HDIMAGE_MODE_FLAT) &&
+        (s.image_mode != BX_HDIMAGE_MODE_VVFAT)) {
+      BX_PANIC(("USB floppy only supports image modes 'flat' and 'vvfat'"));
     }
   }
 
@@ -337,14 +335,17 @@ bx_bool usb_cbi_device_c::set_option(const char *option)
 
 bx_bool usb_cbi_device_c::init()
 {
-  if (d.type == USB_DEV_TYPE_FLOPPY) {
+  if ((strlen(s.fname) > 0) && (strcmp(s.fname, "none"))) {
     s.hdimage = DEV_hdimage_init_image(s.image_mode, 1474560, "");
     if ((s.hdimage->open(s.fname)) < 0) {
       BX_PANIC(("could not open floppy drive image file '%s'", s.fname));
       return 0;
     }
-    sprintf(s.info_txt, "USB CBI: path='%s', mode='%s'", s.fname, hdimage_mode_names[s.image_mode]);
+  } else {
+    BX_ERROR(("USB floppy without media not supported yet"));
+    return 0;
   }
+  sprintf(s.info_txt, "USB CBI: path='%s', mode='%s'", s.fname, hdimage_mode_names[s.image_mode]);
   d.connected = 1;
   s.dev_buffer = new Bit8u[CBI_MAX_SECTORS * 512];
 
@@ -661,8 +662,8 @@ bx_bool usb_cbi_device_c::handle_command(Bit8u *command)
       BX_DEBUG(("UFI_WRITE%i COMMAND (lba = %i, count = %i)", (s.cur_command == UFI_WRITE_12) ? 12 : 10, lba, count));
       if (s.hdimage->lseek(lba * 512, SEEK_SET) < 0)
         BX_ERROR(("could not lseek() floppy drive image file"));
-      s.usb_len = (count * 512);
-      s.data_len = s.usb_len;
+      s.data_len = (count * 512);
+      s.usb_len = 0;
       break;
 
     case UFI_READ_CAPACITY:
@@ -784,12 +785,15 @@ int usb_cbi_device_c::handle_data(USBPacket *p)
           bx_gui->statusbar_setitem(s.statusbar_id, 1, 1);     // write
           if (len > (int) s.data_len)
             goto fail;
-          if (len > 0)
-            // This will write so many bytes to the "disk".
-            //  I don't know if the actual hardware waits for a 512 byte block
-            //  before it writes it...
-            s.hdimage->write((bx_ptr_t) data, len);
-          s.data_len -= len;
+          if (len > 0) {
+            memcpy(s.usb_buf+s.usb_len, data, len);
+            s.usb_len += len;
+            s.data_len -= len;
+          }
+          if ((s.data_len == 0) || (s.usb_len >= 512)) {
+            s.hdimage->write((bx_ptr_t) s.usb_buf, 512);
+            s.usb_len = 0;
+          }
           ret = len;
 
           if (ret > 0) usb_dump_packet(data, ret);
