@@ -129,8 +129,10 @@ BX_THREAD_FUNC(conversion_thread, indata)
     BX_UNLOCK(conversion_mutex);
     if (curbuffer != NULL) {
       waveout->convert_pcm_data();
+      BX_MSLEEP(5);
+    } else {
+      BX_MSLEEP(20);
     }
-    BX_MSLEEP(25);
   }
   conversion_control = -1;
   BX_THREAD_EXIT;
