@@ -522,10 +522,22 @@ void setup_mtrr(void)
     wrmsr_smp(MSR_MTRRfix4K_E8000, 0);
     wrmsr_smp(MSR_MTRRfix4K_F0000, 0);
     wrmsr_smp(MSR_MTRRfix4K_F8000, 0);
+
+    int phys_bits = 32;
+    uint32_t eax, ebx, ecx, edx;
+    cpuid(0x80000000u, eax, ebx, ecx, edx);
+    if (eax >= 0x80000008) {
+      /* Get physical bits from leaf 0x80000008 (if available) */
+      cpuid(0x80000008u, eax, ebx, ecx, edx);
+      phys_bits = eax & 0xff;
+    }
+    uint64_t phys_mask = ((1ull << phys_bits) - 1);
+
     /* Mark 3-4GB as UC, anything not specified defaults to WB */
     wrmsr_smp(MTRRphysBase_MSR(0), 0xc0000000 | MTRR_MEMTYPE_UC);
     /* Make sure no reserved bit set to '1 in MTRRphysMask_MSR */
-    wrmsr_smp(MTRRphysMask_MSR(0), (uint32_t)(~(0x40000000 - 1)) | 0x800);
+    wrmsr_smp(MTRRphysMask_MSR(0), (~(0x40000000 - 1) & phys_mask) | 0x800);
+
     wrmsr_smp(MSR_MTRRdefType, 0xc00 | MTRR_MEMTYPE_WB);
 }
 
