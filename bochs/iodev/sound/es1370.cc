@@ -221,6 +221,7 @@ bx_es1370_c::bx_es1370_c()
   midiout[1] = NULL;
   wavemode = 0;
   midimode = 0;
+  s.rt_conf_id = -1;
 }
 
 bx_es1370_c::~bx_es1370_c()
@@ -228,6 +229,7 @@ bx_es1370_c::~bx_es1370_c()
   closemidioutput();
   closewaveoutput();
 
+  SIM->unregister_runtime_config_handler(s.rt_conf_id);
   SIM->get_bochs_root()->remove("es1370");
   bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_MISC);
   misc_rt->remove("es1370");
@@ -326,7 +328,7 @@ void bx_es1370_c::init(void)
   SIM->get_param_num("midimode", base)->set_handler(es1370_param_handler);
   SIM->get_param_string("midifile", base)->set_handler(es1370_param_string_handler);
   // register handler for correct es1370 parameter handling after runtime config
-  SIM->register_runtime_config_handler(this, runtime_config_handler);
+  BX_ES1370_THIS s.rt_conf_id = SIM->register_runtime_config_handler(this, runtime_config_handler);
   BX_ES1370_THIS wave_changed = 0;
   BX_ES1370_THIS midi_changed = 0;
 

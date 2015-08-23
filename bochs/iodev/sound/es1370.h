@@ -77,6 +77,7 @@ typedef struct {
   Bit8u midicmd_index;
   Bit8u midi_buffer[256];
 
+  int rt_conf_id;
   Bit8u devfunc;
 } bx_es1370_t;
 

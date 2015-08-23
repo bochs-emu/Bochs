@@ -237,6 +237,7 @@ typedef struct {
   Bit64u   sof_time;
 
   Bit8u device_change;
+  int rt_conf_id;
 } bx_usb_ohci_t;
 
 

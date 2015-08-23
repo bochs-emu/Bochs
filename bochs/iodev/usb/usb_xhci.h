@@ -526,6 +526,7 @@ typedef struct {
   Bit8u devfunc;
 
   Bit8u device_change;
+  int rt_conf_id;
 } bx_usb_xhci_t;
 
 // Version 3.0.23.0 of the Renesas uPD720202 driver, even though the card is

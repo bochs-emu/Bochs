@@ -46,7 +46,10 @@ bx_list_c *root_param = NULL;
 // bx_keyboard.s.internal_buffer[4] (or whatever) directly. -Bryce
 //
 
+static int rt_conf_id = 0;
+
 typedef struct _rt_conf_entry_t {
+  int id;
   void *device;
   rt_conf_handler_t handler;
   struct _rt_conf_entry_t *next;
@@ -164,7 +167,8 @@ public:
     void *userdata);
   virtual int configuration_interface(const char* name, ci_command_t command);
   virtual int begin_simulation(int argc, char *argv[]);
-  virtual bx_bool register_runtime_config_handler(void *dev, rt_conf_handler_t handler);
+  virtual int register_runtime_config_handler(void *dev, rt_conf_handler_t handler);
+  virtual void unregister_runtime_config_handler(int id);
   virtual void update_runtime_options();
   virtual void set_sim_thread_func(is_sim_thread_func_t func) {}
   virtual bx_bool is_sim_thread();
@@ -875,16 +879,17 @@ int bx_real_sim_c::begin_simulation(int argc, char *argv[])
   return bx_begin_simulation(argc, argv);
 }
 
-bx_bool bx_real_sim_c::register_runtime_config_handler(void *dev, rt_conf_handler_t handler)
+int bx_real_sim_c::register_runtime_config_handler(void *dev, rt_conf_handler_t handler)
 {
   rt_conf_entry_t *rt_conf_entry;
 
   rt_conf_entry = (rt_conf_entry_t *)malloc(sizeof(rt_conf_entry_t));
   if (rt_conf_entry == NULL) {
     BX_PANIC(("can't allocate rt_conf_entry_t"));
-    return 0;
+    return -1;
   }
 
+  rt_conf_entry->id = rt_conf_id;;
   rt_conf_entry->device = dev;
   rt_conf_entry->handler = handler;
   rt_conf_entry->next = NULL;
@@ -899,7 +904,27 @@ bx_bool bx_real_sim_c::register_runtime_config_handler(void *dev, rt_conf_handle
     }
     temp->next = rt_conf_entry;
   }
-  return 1;
+  return rt_conf_id++;
+}
+
+void bx_real_sim_c::unregister_runtime_config_handler(int id)
+{
+  rt_conf_entry_t *prev = NULL, *next = rt_conf_entries;
+
+  while (next != NULL) {
+    if (next->id == id) {
+      if (prev != NULL) {
+        prev->next = next->next;
+      } else {
+        rt_conf_entries = next->next;
+      }
+      free(next);
+      break;
+    } else {
+      prev = next;
+      next = next->next;
+    }
+  }
 }
 
 void bx_real_sim_c::update_runtime_options()

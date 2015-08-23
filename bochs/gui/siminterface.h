@@ -765,7 +765,8 @@ public:
     void *userdata) {}
   virtual int configuration_interface(const char* name, ci_command_t command) {return -1; }
   virtual int begin_simulation(int argc, char *argv[]) {return -1;}
-  virtual bx_bool register_runtime_config_handler(void *dev, rt_conf_handler_t handler) {return 0;}
+  virtual int register_runtime_config_handler(void *dev, rt_conf_handler_t handler) {return 0;}
+  virtual void unregister_runtime_config_handler(int id) {}
   virtual void update_runtime_options() {}
   typedef bx_bool (*is_sim_thread_func_t)();
   is_sim_thread_func_t is_sim_thread_func;

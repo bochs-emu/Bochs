@@ -132,8 +132,10 @@ bx_hard_drive_c::bx_hard_drive_c()
       channels[channel].drives[device].hdimage =  NULL;
       channels[channel].drives[device].cdrom.cd =  NULL;
       channels[channel].drives[device].seek_timer_index = BX_NULL_TIMER_HANDLE;
+      channels[channel].drives[device].statusbar_id = -1;
     }
   }
+  rt_conf_id = -1;
 }
 
 bx_hard_drive_c::~bx_hard_drive_c()
@@ -141,6 +143,7 @@ bx_hard_drive_c::~bx_hard_drive_c()
   char  ata_name[20];
   bx_list_c *base;
 
+  SIM->unregister_runtime_config_handler(rt_conf_id);
   for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     for (Bit8u device=0; device<2; device ++) {
       if (channels[channel].drives[device].hdimage != NULL) {
@@ -271,7 +274,6 @@ void bx_hard_drive_c::init(void)
 
       // If not present
       BX_HD_THIS channels[channel].drives[device].device_type  = IDE_NONE;
-      BX_HD_THIS channels[channel].drives[device].statusbar_id = -1;
       BX_HD_THIS channels[channel].drives[device].identify_set = 0;
       if (SIM->get_param_enum("type", base)->get() == BX_ATA_DEVICE_NONE) continue;
 
@@ -542,7 +544,7 @@ void bx_hard_drive_c::init(void)
   BX_HD_THIS pci_enabled = SIM->get_param_bool(BXPN_PCI_ENABLED)->get();
 
   // register handler for correct cdrom parameter handling after runtime config
-  SIM->register_runtime_config_handler(BX_HD_THIS_PTR, runtime_config_handler);
+  BX_HD_THIS rt_conf_id = SIM->register_runtime_config_handler(BX_HD_THIS_PTR, runtime_config_handler);
 }
 
 void bx_hard_drive_c::reset(unsigned type)

@@ -212,6 +212,7 @@ bx_usb_xhci_c::bx_usb_xhci_c()
   put("usb_xhci", "XHCI");
   memset((void*)&hub, 0, sizeof(bx_usb_xhci_t));
   device_buffer = NULL;
+  hub.rt_conf_id = -1;
   //hub.frame_timer_index = BX_NULL_TIMER_HANDLE;
 }
 
@@ -219,6 +220,7 @@ bx_usb_xhci_c::~bx_usb_xhci_c()
 {
   char pname[16];
 
+  SIM->unregister_runtime_config_handler(hub.rt_conf_id);
   if (BX_XHCI_THIS device_buffer != NULL)
     delete [] BX_XHCI_THIS device_buffer;
 
@@ -293,7 +295,7 @@ void bx_usb_xhci_c::init(void)
   }
 
   // register handler for correct device connect handling after runtime config
-  SIM->register_runtime_config_handler(BX_XHCI_THIS_PTR, runtime_config_handler);
+  BX_XHCI_THIS hub.rt_conf_id = SIM->register_runtime_config_handler(BX_XHCI_THIS_PTR, runtime_config_handler);
   BX_XHCI_THIS hub.device_change = 0;
 
   for (i=0; i<USB_XHCI_PORTS; i++)

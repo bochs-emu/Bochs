@@ -219,10 +219,13 @@ bx_sb16_c::bx_sb16_c(void)
   midimode = 0;
   loglevel = 0;
   logfile = NULL;
+  rt_conf_id = -1;
 }
 
 bx_sb16_c::~bx_sb16_c(void)
 {
+  SIM->unregister_runtime_config_handler(rt_conf_id);
+
   closemidioutput();
 
   if (BX_SB16_WAVEOUT1 != NULL) {
@@ -433,7 +436,7 @@ void bx_sb16_c::init(void)
   SIM->get_param_num("loglevel", base)->set_handler(sb16_param_handler);
   SIM->get_param_string("log", base)->set_handler(sb16_param_string_handler);
   // register handler for correct sb16 parameter handling after runtime config
-  SIM->register_runtime_config_handler(this, runtime_config_handler);
+  BX_SB16_THIS rt_conf_id = SIM->register_runtime_config_handler(this, runtime_config_handler);
   BX_SB16_THIS midi_changed = 0;
   BX_SB16_THIS wave_changed = 0;
 }

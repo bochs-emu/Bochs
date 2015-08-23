@@ -126,12 +126,16 @@ bx_floppy_ctrl_c::bx_floppy_ctrl_c()
   put("FLOPPY");
   memset(&s, 0, sizeof(s));
   s.floppy_timer_index = BX_NULL_TIMER_HANDLE;
+  s.statusbar_id[0] = -1;
+  s.statusbar_id[1] = -1;
+  s.rt_conf_id = -1;
 }
 
 bx_floppy_ctrl_c::~bx_floppy_ctrl_c()
 {
   char pname[10];
 
+  SIM->unregister_runtime_config_handler(s.rt_conf_id);
   for (int i = 0; i < 2; i++) {
     close_media(&BX_FD_THIS s.media[i]);
     sprintf(pname, "floppy.%d", i);
@@ -302,7 +306,7 @@ void bx_floppy_ctrl_c::init(void)
     SIM->get_param_enum("status", floppy)->set_runtime_param(1);
   }
   // register handler for correct floppy parameter handling after runtime config
-  SIM->register_runtime_config_handler(this, runtime_config_handler);
+  BX_FD_THIS s.rt_conf_id = SIM->register_runtime_config_handler(this, runtime_config_handler);
 #if BX_DEBUGGER
   // register device for the 'info device' command (calls debug_dump())
   bx_dbg_register_debug_info("floppy", this);

@@ -159,6 +159,7 @@ private:
   int currentdma8;
   int currentdma16;
   int fmopl_callback_id;
+  int rt_conf_id;
   Bit16u fm_volume;
 
   // the MPU 401 relevant variables

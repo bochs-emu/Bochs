@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2012  The Bochs Project
+//  Copyright (C) 2002-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -127,6 +127,7 @@ private:
     Bit8u    perp_mode; // perpendicular mode
 
     int      statusbar_id[2]; // IDs of the status LEDs
+    int      rt_conf_id;      // ID of the runtime config handler
   } s;  // state information
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);

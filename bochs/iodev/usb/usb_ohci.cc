@@ -134,12 +134,14 @@ bx_usb_ohci_c::bx_usb_ohci_c()
   memset((void*)&hub, 0, sizeof(bx_usb_ohci_t));
   device_buffer = NULL;
   hub.frame_timer_index = BX_NULL_TIMER_HANDLE;
+  hub.rt_conf_id = -1;
 }
 
 bx_usb_ohci_c::~bx_usb_ohci_c()
 {
   char pname[16];
 
+  SIM->unregister_runtime_config_handler(hub.rt_conf_id);
   if (BX_OHCI_THIS device_buffer != NULL)
     delete [] BX_OHCI_THIS device_buffer;
 
@@ -207,7 +209,7 @@ void bx_usb_ohci_c::init(void)
   }
 
   // register handler for correct device connect handling after runtime config
-  SIM->register_runtime_config_handler(BX_OHCI_THIS_PTR, runtime_config_handler);
+  BX_OHCI_THIS hub.rt_conf_id = SIM->register_runtime_config_handler(BX_OHCI_THIS_PTR, runtime_config_handler);
   BX_OHCI_THIS hub.device_change = 0;
 
   BX_INFO(("USB OHCI initialized"));
