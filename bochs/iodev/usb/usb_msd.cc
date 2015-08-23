@@ -281,7 +281,7 @@ usb_msd_device_c::usb_msd_device_c(usbdev_type type, const char *filename)
     s.config->set_device_param(this);
     path = new bx_param_string_c(s.config, "path", "Path", "", "", BX_PATHNAME_LEN);
     path->set(s.fname);
-    path->set_handler(cd_param_string_handler);
+    path->set_handler(cdrom_path_handler);
     status = new bx_param_enum_c(s.config,
       "status",
       "Status",
@@ -289,13 +289,14 @@ usb_msd_device_c::usb_msd_device_c(usbdev_type type, const char *filename)
       media_status_names,
       BX_INSERTED,
       BX_EJECTED);
-    status->set_handler(cd_param_handler);
+    status->set_handler(cdrom_status_handler);
     status->set_ask_format("Is the device inserted or ejected? [%s] ");
     if (SIM->is_wx_selected()) {
       bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
       usb->add(s.config);
     }
     s.statusbar_id = bx_gui->register_statusitem("USB-CD", 1);
+    s.rt_conf_id = SIM->register_runtime_config_handler(this, runtime_config_handler);
   }
 
   put("usb_msd", "USBMSD");
@@ -311,6 +312,7 @@ usb_msd_device_c::~usb_msd_device_c(void)
     delete s.hdimage;
   } else if (s.cdrom != NULL) {
     delete s.cdrom;
+    SIM->unregister_runtime_config_handler(s.rt_conf_id);
     if (SIM->is_wx_selected()) {
       bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
       usb->remove(s.config->get_name());
@@ -638,11 +640,13 @@ int usb_msd_device_c::handle_data(USBPacket *p)
           s.scsi_dev->scsi_send_command(s.tag, cbw.cmd, cbw.lun);
           if (s.residue == 0) {
             if (s.mode == USB_MSDM_DATAIN) {
-              bx_gui->statusbar_setitem(s.statusbar_id, 1);
-              s.scsi_dev->scsi_read_data(s.tag);
+              if (s.scsi_dev->scsi_read_data(s.tag)) {
+                bx_gui->statusbar_setitem(s.statusbar_id, 1);
+              }
             } else if (s.mode == USB_MSDM_DATAOUT) {
-              bx_gui->statusbar_setitem(s.statusbar_id, 1, 1);
-              s.scsi_dev->scsi_write_data(s.tag);
+              if (s.scsi_dev->scsi_write_data(s.tag)) {
+                bx_gui->statusbar_setitem(s.statusbar_id, 1, 1);
+              }
             }
           }
           ret = len;
@@ -774,11 +778,13 @@ void usb_msd_device_c::copy_data()
   s.data_len -= len;
   if (s.scsi_len == 0) {
     if (s.mode == USB_MSDM_DATAIN) {
-      bx_gui->statusbar_setitem(s.statusbar_id, 1);
-      s.scsi_dev->scsi_read_data(s.tag);
+      if (s.scsi_dev->scsi_read_data(s.tag)) {
+        bx_gui->statusbar_setitem(s.statusbar_id, 1);
+      }
     } else if (s.mode == USB_MSDM_DATAOUT) {
-      bx_gui->statusbar_setitem(s.statusbar_id, 1, 1);
-      s.scsi_dev->scsi_write_data(s.tag);
+      if (s.scsi_dev->scsi_write_data(s.tag)) {
+        bx_gui->statusbar_setitem(s.statusbar_id, 1, 1);
+      }
     }
   }
 }
@@ -871,49 +877,71 @@ bx_bool usb_msd_device_c::get_inserted()
   return s.scsi_dev->get_inserted();
 }
 
+bx_bool usb_msd_device_c::get_locked()
+{
+  return s.scsi_dev->get_locked();
+}
+
+void usb_msd_device_c::runtime_config_handler(void *this_ptr)
+{
+  usb_msd_device_c *class_ptr = (usb_msd_device_c *) this_ptr;
+  class_ptr->runtime_config();
+}
+
+void usb_msd_device_c::runtime_config(void)
+{
+  if (s.status_changed) {
+    set_inserted(0);
+    if (SIM->get_param_enum("status", s.config)->get() == BX_INSERTED) {
+      set_inserted(1);
+    }
+    s.status_changed = 0;
+  }
+}
+
 #undef LOG_THIS
 #define LOG_THIS cdrom->
 
 // USB hub runtime parameter handlers
-const char *usb_msd_device_c::cd_param_string_handler(bx_param_string_c *param, int set,
+const char *usb_msd_device_c::cdrom_path_handler(bx_param_string_c *param, int set,
                                                       const char *oldval, const char *val, int maxlen)
 {
   usb_msd_device_c *cdrom;
 
   if (set) {
+    if (strlen(val) < 1) {
+      val = "none";
+    }
     cdrom = (usb_msd_device_c*) param->get_parent()->get_device_param();
     if (cdrom != NULL) {
-      bx_bool empty = ((strlen(val) == 0) || (!strcmp(val, "none")));
-      if (!empty) {
-        if (cdrom->get_inserted()) {
-          BX_ERROR(("direct path change not supported (setting to 'none')"));
-          param->set("none");
-        }
+      if (!cdrom->get_locked()) {
+        cdrom->s.status_changed = 1;
       } else {
-        SIM->get_param_enum("status", param->get_parent())->set(BX_EJECTED);
+        val = oldval;
+        BX_ERROR(("cdrom tray locked: path change failed"));
       }
     } else {
-      BX_PANIC(("cd_param_string_handler: cdrom not found"));
+      BX_PANIC(("cdrom_path_handler: cdrom not found"));
     }
   }
   return val;
 }
 
-Bit64s usb_msd_device_c::cd_param_handler(bx_param_c *param, int set, Bit64s val)
+Bit64s usb_msd_device_c::cdrom_status_handler(bx_param_c *param, int set, Bit64s val)
 {
   usb_msd_device_c *cdrom;
-  const char *path;
 
   if (set) {
     cdrom = (usb_msd_device_c*) param->get_parent()->get_device_param();
     if (cdrom != NULL) {
-      path = SIM->get_param_string("path", param->get_parent())->getptr();
-      val &= ((strlen(path) > 0) && (strcmp(path, "none")));
-      if (val != cdrom->get_inserted()) {
-        cdrom->set_inserted(val == BX_INSERTED);
+      if ((val == 1) || !cdrom->get_locked()) {
+        cdrom->s.status_changed = 1;
+      } else if (cdrom->get_locked()) {
+        BX_ERROR(("cdrom tray locked: eject failed"));
+        return BX_INSERTED;
       }
     } else {
-      BX_PANIC(("cd_param_string_handler: cdrom not found"));
+      BX_PANIC(("cdrom_status_handler: cdrom not found"));
     }
   }
   return val;

@@ -6,7 +6,7 @@
 //
 //  Copyright (c) 2006 CodeSourcery.
 //  Written by Paul Brook
-//  Copyright (C) 2009-2014  The Bochs Project
+//  Copyright (C) 2009-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -46,6 +46,7 @@ public:
   virtual void cancel_packet(USBPacket *p);
   bx_bool set_inserted(bx_bool value);
   bx_bool get_inserted();
+  bx_bool get_locked();
 
 protected:
   void copy_data();
@@ -76,11 +77,16 @@ private:
     char journal[BX_PATHNAME_LEN]; // undoable / volatile disk only
     int size; // VVFAT disk only
     int statusbar_id;
+    int rt_conf_id;
+    bx_bool status_changed;
   } s;
 
-  static const char *cd_param_string_handler(bx_param_string_c *param, int set,
+  static void runtime_config_handler(void *);
+  void runtime_config(void);
+
+  static const char *cdrom_path_handler(bx_param_string_c *param, int set,
                                              const char *oldval, const char *val, int maxlen);
-  static Bit64s cd_param_handler(bx_param_c *param, int set, Bit64s val);
+  static Bit64s cdrom_status_handler(bx_param_c *param, int set, Bit64s val);
 };
 
 #endif

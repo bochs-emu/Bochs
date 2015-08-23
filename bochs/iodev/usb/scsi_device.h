@@ -9,7 +9,7 @@
 //
 //  Written by Paul Brook
 //
-//  Copyright (C) 2007-2014  The Bochs Project
+//  Copyright (C) 2007-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -78,13 +78,14 @@ public:
   void scsi_command_complete(SCSIRequest *r, int status, int sense);
   void scsi_cancel_io(Bit32u tag);
   void scsi_read_complete(void *req, int ret);
-  void scsi_read_data(Bit32u tag);
+  bx_bool scsi_read_data(Bit32u tag);
   void scsi_write_complete(void *req, int ret);
-  int scsi_write_data(Bit32u tag);
+  bx_bool scsi_write_data(Bit32u tag);
   Bit8u* scsi_get_buf(Bit32u tag);
   const char *get_serial_number() {return drive_serial_str;}
   void set_inserted(bx_bool value);
   bx_bool get_inserted() {return inserted;}
+  bx_bool get_locked() {return locked;}
   static void seek_timer_handler(void *);
   void seek_timer(void);
   bx_bool save_requests(const char *path);

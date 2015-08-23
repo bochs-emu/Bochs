@@ -9,7 +9,7 @@
 //
 //  Written by Paul Brook
 //
-//  Copyright (C) 2007-2014  The Bochs Project
+//  Copyright (C) 2007-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -380,7 +380,7 @@ void scsi_device_t::scsi_read_complete(void *req, int ret)
   completion(dev, SCSI_REASON_DATA, r->tag, r->buf_len);
 }
 
-void scsi_device_t::scsi_read_data(Bit32u tag)
+bx_bool scsi_device_t::scsi_read_data(Bit32u tag)
 {
   Bit32u i, n;
   int ret = 0;
@@ -388,18 +388,18 @@ void scsi_device_t::scsi_read_data(Bit32u tag)
   SCSIRequest *r = scsi_find_request(tag);
   if (!r) {
     BX_ERROR(("bad read tag 0x%x", tag));
-    return;
+    return 0;
   }
   if (r->sector_count == (Bit32u)-1) {
     BX_DEBUG(("read buf_len=%d", r->buf_len));
     r->sector_count = 0;
     completion(dev, SCSI_REASON_DATA, r->tag, r->buf_len);
-    return;
+    return 0;
   }
   BX_DEBUG(("read sector_count=%d", r->sector_count));
   if (r->sector_count == 0) {
     scsi_command_complete(r, STATUS_GOOD, SENSE_NO_SENSE);
-    return;
+    return 0;
   }
 
   n = r->sector_count;
@@ -432,6 +432,7 @@ void scsi_device_t::scsi_read_data(Bit32u tag)
   }
   r->sector += n;
   r->sector_count -= n;
+  return 1;
 }
 
 void scsi_device_t::scsi_write_complete(void *req, int ret)
@@ -458,7 +459,7 @@ void scsi_device_t::scsi_write_complete(void *req, int ret)
   }
 }
 
-int scsi_device_t::scsi_write_data(Bit32u tag)
+bx_bool scsi_device_t::scsi_write_data(Bit32u tag)
 {
   SCSIRequest *r;
   Bit32u n;
@@ -468,7 +469,7 @@ int scsi_device_t::scsi_write_data(Bit32u tag)
   r = scsi_find_request(tag);
   if (!r) {
     BX_ERROR(("bad write tag 0x%x", tag));
-    return 1;
+    return 0;
   }
   if (type == SCSIDEV_TYPE_DISK) {
     n = r->buf_len / 512;
@@ -484,17 +485,20 @@ int scsi_device_t::scsi_write_data(Bit32u tag)
       if (ret < r->buf_len) {
         BX_ERROR(("could not write() hard drive image file"));
         scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_HARDWARE_ERROR);
+        return 0;
       } else {
         scsi_write_complete((void*)r, 0);
       }
     } else {
       scsi_write_complete(r, 0);
+      return 0;
     }
   } else {
     BX_ERROR(("CD-ROM: write not supported"));
     scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_HARDWARE_ERROR);
+    return 0;
   }
-  return 0;
+  return 1;
 }
 
 Bit8u* scsi_device_t::scsi_get_buf(Bit32u tag)
@@ -844,6 +848,8 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun)
     case 0x28:
     case 0x88:
       BX_DEBUG(("Read (sector " FMT_LL "d, count %d)", lba, len));
+      if (!inserted)
+        goto notready;
       if (lba > max_lba)
         goto illegal_lba;
       r->sector = lba;

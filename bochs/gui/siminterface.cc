@@ -909,20 +909,20 @@ int bx_real_sim_c::register_runtime_config_handler(void *dev, rt_conf_handler_t 
 
 void bx_real_sim_c::unregister_runtime_config_handler(int id)
 {
-  rt_conf_entry_t *prev = NULL, *next = rt_conf_entries;
+  rt_conf_entry_t *prev = NULL, *curr = rt_conf_entries;
 
-  while (next != NULL) {
-    if (next->id == id) {
+  while (curr != NULL) {
+    if (curr->id == id) {
       if (prev != NULL) {
-        prev->next = next->next;
+        prev->next = curr->next;
       } else {
-        rt_conf_entries = next->next;
+        rt_conf_entries = curr->next;
       }
-      free(next);
+      free(curr);
       break;
     } else {
-      prev = next;
-      next = next->next;
+      prev = curr;
+      curr = curr->next;
     }
   }
 }
