@@ -81,6 +81,7 @@ private:
     Bit8u cur_command;
     int fail_count;
     bx_bool did_inquiry_fail;
+    bx_bool inserted; // 0 = media not present
     bx_bool wp;     // 0 = not write_protected, 1 = write_protected
     bx_bool model;  // 0 = bochs, 1 = teac
     int statusbar_id;
