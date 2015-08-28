@@ -166,6 +166,8 @@ static const Bit8u bx_hub_hub_descriptor[] =
 static int hub_count = 0;
 
 
+void usb_hub_restore_handler(void *dev, bx_list_c *conf);
+
 usb_hub_device_c::usb_hub_device_c(Bit8u ports)
 {
   int i;
@@ -229,12 +231,17 @@ void usb_hub_device_c::register_state_specific(bx_list_c *parent)
 {
   Bit8u i;
   char portnum[6];
-  bx_list_c *port;
+  bx_list_c *port, *pconf, *config;
 
   hub.state = new bx_list_c(parent, "hub", "USB HUB Device State");
   for (i=0; i<hub.n_ports; i++) {
     sprintf(portnum, "port%d", i+1);
     port = new bx_list_c(hub.state, portnum);
+    pconf = (bx_list_c*)hub.config->get_by_name(portnum);
+    config = new bx_list_c(port, portnum);
+    config->add(pconf->get_by_name("device"));
+    config->add(pconf->get_by_name("options"));
+    config->set_restore_handler(this, usb_hub_restore_handler);
     new bx_shadow_num_c(port, "PortStatus", &hub.usb_port[i].PortStatus, BASE_HEX);
     new bx_shadow_num_c(port, "PortChange", &hub.usb_port[i].PortChange, BASE_HEX);
     // empty list for USB device state
@@ -683,6 +690,23 @@ const char *usb_hub_device_c::hub_param_handler(bx_param_string_c *param, int se
     }
   }
   return val;
+}
+
+#undef LOG_THIS
+#define LOG_THIS
+
+void usb_hub_restore_handler(void *dev, bx_list_c *conf)
+{
+  ((usb_hub_device_c*)dev)->restore_handler(conf);
+}
+
+void usb_hub_device_c::restore_handler(bx_list_c *conf)
+{
+  int i;
+  const char *pname = conf->get_name();
+
+  i = atoi(&pname[4]) - 1;
+  init_device(i, (bx_list_c*)SIM->get_param(pname, hub.config));
 }
 
 #endif // BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB

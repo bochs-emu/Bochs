@@ -44,6 +44,7 @@ public:
   virtual void register_state_specific(bx_list_c *parent);
   virtual void after_restore_state();
   virtual void runtime_config();
+  void restore_handler(bx_list_c *conf);
 
 private:
   struct {

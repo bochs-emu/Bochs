@@ -1236,14 +1236,16 @@ bx_bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path,
         while (ptr) {
           if (i == 0) {
             if (!strcmp(ptr, "}")) {
+              base->restore();
               base = (bx_list_c*)base->get_parent();
               break;
             } else {
               param = get_param(ptr, base);
+              strncpy(pname, ptr, 80);
             }
           } else if (i == 2) {
             if (param == NULL) {
-              BX_PANIC(("cannot find param!"));
+              BX_PANIC(("cannot find param '%s'!", pname));
             }
             else {
               if (param->get_type() != BXT_LIST) {

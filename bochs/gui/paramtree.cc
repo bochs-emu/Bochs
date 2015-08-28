@@ -940,6 +940,7 @@ bx_list_c::bx_list_c(bx_param_c *parent, const char *name)
     this->parent = (bx_list_c *)parent;
     this->parent->add(this);
   }
+  this->restore_handler = NULL;
   init("");
 }
 
@@ -955,6 +956,7 @@ bx_list_c::bx_list_c(bx_param_c *parent, const char *name, const char *title)
     this->parent = (bx_list_c *)parent;
     this->parent->add(this);
   }
+  this->restore_handler = NULL;
   init(title);
 }
 
@@ -972,6 +974,7 @@ bx_list_c::bx_list_c(bx_param_c *parent, const char *name, const char *title, bx
     this->parent = (bx_list_c *)parent;
     this->parent->add(this);
   }
+  this->restore_handler = NULL;
   init(title);
 }
 
@@ -1136,4 +1139,16 @@ void bx_list_c::set_runtime_param(int val)
       item->param->set_runtime_param(1);
     }
   }
+}
+
+void bx_list_c::set_restore_handler(void *devptr, list_restore_handler restore)
+{
+  sr_devptr = devptr;
+  restore_handler = restore;
+}
+
+void bx_list_c::restore()
+{
+  if (restore_handler)
+    (*restore_handler)(sr_devptr, this);
 }

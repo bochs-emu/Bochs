@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1391,12 +1391,7 @@ void bx_init_hardware()
   SIM->opt_plugin_ctrl("*", 0);
   bx_pc_system.register_state();
   DEV_register_state();
-  if (SIM->get_param_bool(BXPN_RESTORE_FLAG)->get()) {
-    if (!SIM->restore_logopts()) {
-      BX_PANIC(("cannot restore log options"));
-      SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(0);
-    }
-  } else {
+  if (!SIM->get_param_bool(BXPN_RESTORE_FLAG)->get()) {
     bx_set_log_actions_by_device(1);
   }
 
@@ -1405,6 +1400,10 @@ void bx_init_hardware()
 
   if (SIM->get_param_bool(BXPN_RESTORE_FLAG)->get()) {
     if (SIM->restore_hardware()) {
+      if (!SIM->restore_logopts()) {
+        BX_PANIC(("cannot restore log options"));
+        SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(0);
+      }
       bx_sr_after_restore_state();
     } else {
       BX_PANIC(("cannot restore hardware state"));

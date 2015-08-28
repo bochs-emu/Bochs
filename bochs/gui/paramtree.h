@@ -446,6 +446,8 @@ typedef struct _bx_listitem_t {
   struct _bx_listitem_t *next;
 } bx_listitem_t;
 
+typedef void (*list_restore_handler)(void *devptr, class bx_list_c *);
+
 class BOCHSAPI bx_list_c : public bx_param_c {
 protected:
   // chained list of bx_listitem_t
@@ -458,6 +460,9 @@ protected:
   // title of the menu or series
   char *title;
   void init(const char *list_title);
+  // save / restore support
+  void *sr_devptr;
+  list_restore_handler restore_handler;
 public:
   enum {
     // When a bx_list_c is displayed as a menu, SHOW_PARENT controls whether or
@@ -505,6 +510,8 @@ public:
   virtual void clear();
   virtual void remove(const char *name);
   virtual void set_runtime_param(int val);
+  void set_restore_handler(void *devptr, list_restore_handler restore);
+  void restore();
 #if BX_USE_TEXTCONFIG
   virtual void text_print(FILE *);
   virtual int text_ask(FILE *fpin, FILE *fpout);
