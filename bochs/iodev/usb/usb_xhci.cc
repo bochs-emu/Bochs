@@ -936,11 +936,11 @@ void bx_usb_xhci_c::remove_device(Bit8u port)
   char pname[BX_PATHNAME_LEN];
 
   if (BX_XHCI_THIS hub.usb_port[port].device != NULL) {
-    delete BX_XHCI_THIS hub.usb_port[port].device;
-    BX_XHCI_THIS hub.usb_port[port].device = NULL;
     sprintf(pname, "usb_xhci.hub.port%d.device", port+1);
     bx_list_c *devlist = (bx_list_c*)SIM->get_param(pname, SIM->get_bochs_root());
     if (devlist) devlist->clear();
+    delete BX_XHCI_THIS hub.usb_port[port].device;
+    BX_XHCI_THIS hub.usb_port[port].device = NULL;
   }
 }
 

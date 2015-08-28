@@ -5,7 +5,7 @@
 // USB hub emulation support (ported from QEMU)
 //
 // Copyright (C) 2005       Fabrice Bellard
-// Copyright (C) 2009-2014  The Bochs Project
+// Copyright (C) 2009-2015  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -591,11 +591,11 @@ void usb_hub_device_c::remove_device(Bit8u port)
   char pname[BX_PATHNAME_LEN];
 
   if (hub.usb_port[port].device != NULL) {
-    delete hub.usb_port[port].device;
-    hub.usb_port[port].device = NULL;
     sprintf(pname, "port%d.device", port+1);
     bx_list_c *devlist = (bx_list_c*)SIM->get_param(pname, hub.state);
     devlist->clear();
+    delete hub.usb_port[port].device;
+    hub.usb_port[port].device = NULL;
   }
 }
 
