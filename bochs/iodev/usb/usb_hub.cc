@@ -692,9 +692,6 @@ const char *usb_hub_device_c::hub_param_handler(bx_param_string_c *param, int se
   return val;
 }
 
-#undef LOG_THIS
-#define LOG_THIS
-
 void usb_hub_restore_handler(void *dev, bx_list_c *conf)
 {
   ((usb_hub_device_c*)dev)->restore_handler(conf);

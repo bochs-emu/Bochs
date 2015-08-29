@@ -1271,20 +1271,23 @@ bx_bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path,
                   ((bx_param_enum_c*)param)->set_by_name(ptr);
                   break;
                 case BXT_PARAM_STRING:
-                  if (((bx_param_string_c*)param)->get_options() & bx_param_string_c::RAW_BYTES) {
-                    p = 0;
-                    for (j = 0; j < ((bx_param_string_c*)param)->get_maxsize(); j++) {
-                      if (ptr[p] == ((bx_param_string_c*)param)->get_separator()) {
-                        p++;
+                  {
+                    bx_param_string_c *sparam = (bx_param_string_c*)param;
+                    if (sparam->get_options() & bx_param_string_c::RAW_BYTES) {
+                      p = 0;
+                      for (j = 0; j < sparam->get_maxsize(); j++) {
+                        if (ptr[p] == sparam->get_separator()) {
+                          p++;
+                        }
+                        if (sscanf(ptr+p, "%02x", &n) == 1) {
+                          buf[j] = n;
+                          p += 2;
+                        }
                       }
-                      if (sscanf(ptr+p, "%02x", &n) == 1) {
-                        buf[j] = n;
-                        p += 2;
-                      }
+                      if (!sparam->equals(buf)) sparam->set(buf);
+                    } else {
+                      if (!sparam->equals(ptr)) sparam->set(ptr);
                     }
-                    ((bx_param_string_c*)param)->set(buf);
-                  } else {
-                    ((bx_param_string_c*)param)->set(ptr);
                   }
                   break;
                 case BXT_PARAM_DATA:

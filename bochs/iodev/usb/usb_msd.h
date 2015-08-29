@@ -38,6 +38,8 @@ public:
   virtual bx_bool init();
   virtual bx_bool set_option(const char *option);
   virtual const char* get_info();
+  virtual void runtime_config(void);
+  void restore_handler(bx_list_c *conf);
 
   virtual void handle_reset();
   virtual int handle_control(int request, int value, int index, int length, Bit8u *data);
@@ -77,12 +79,8 @@ private:
     char journal[BX_PATHNAME_LEN]; // undoable / volatile disk only
     int size; // VVFAT disk only
     int statusbar_id;
-    int rt_conf_id;
     bx_bool status_changed;
   } s;
-
-  static void runtime_config_handler(void *);
-  void runtime_config(void);
 
   static const char *cdrom_path_handler(bx_param_string_c *param, int set,
                                              const char *oldval, const char *val, int maxlen);

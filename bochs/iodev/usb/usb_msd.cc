@@ -239,6 +239,8 @@ static const Bit8u bx_msd_bos_descriptor3[] = {
   0x20, 0x00  /* u16  bss_wU2DevExitLat; */
 };
 
+void usb_msd_restore_handler(void *dev, bx_list_c *conf);
+
 static int usb_cdrom_count = 0;
 
 usb_msd_device_c::usb_msd_device_c(usbdev_type type, const char *filename)
@@ -296,7 +298,6 @@ usb_msd_device_c::usb_msd_device_c(usbdev_type type, const char *filename)
       usb->add(s.config);
     }
     s.statusbar_id = bx_gui->register_statusitem("USB-CD", 1);
-    s.rt_conf_id = SIM->register_runtime_config_handler(this, runtime_config_handler);
   }
 
   put("usb_msd", "USBMSD");
@@ -312,7 +313,6 @@ usb_msd_device_c::~usb_msd_device_c(void)
     delete s.hdimage;
   } else if (s.cdrom != NULL) {
     delete s.cdrom;
-    SIM->unregister_runtime_config_handler(s.rt_conf_id);
     if (SIM->is_wx_selected()) {
       bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
       usb->remove(s.config->get_name());
@@ -396,7 +396,12 @@ const char* usb_msd_device_c::get_info()
 void usb_msd_device_c::register_state_specific(bx_list_c *parent)
 {
   s.sr_list = new bx_list_c(parent, "s", "USB MSD Device State");
-  if ((d.type == USB_DEV_TYPE_DISK) && (s.hdimage != NULL)) {
+  if (d.type == USB_DEV_TYPE_CDROM) {
+    bx_list_c *rt_config = new bx_list_c(s.sr_list, "rt_config");
+    rt_config->add(s.config->get_by_name("path"));
+    rt_config->add(s.config->get_by_name("status"));
+    rt_config->set_restore_handler(this, usb_msd_restore_handler);
+  } else if ((d.type == USB_DEV_TYPE_DISK) && (s.hdimage != NULL)) {
     s.hdimage->register_state(s.sr_list);
   }
   new bx_shadow_num_c(s.sr_list, "mode", &s.mode);
@@ -882,20 +887,16 @@ bx_bool usb_msd_device_c::get_locked()
   return s.scsi_dev->get_locked();
 }
 
-void usb_msd_device_c::runtime_config_handler(void *this_ptr)
-{
-  usb_msd_device_c *class_ptr = (usb_msd_device_c *) this_ptr;
-  class_ptr->runtime_config();
-}
-
 void usb_msd_device_c::runtime_config(void)
 {
-  if (s.status_changed) {
-    set_inserted(0);
-    if (SIM->get_param_enum("status", s.config)->get() == BX_INSERTED) {
-      set_inserted(1);
+  if (d.type == USB_DEV_TYPE_CDROM) {
+    if (s.status_changed) {
+      set_inserted(0);
+      if (SIM->get_param_enum("status", s.config)->get() == BX_INSERTED) {
+        set_inserted(1);
+      }
+      s.status_changed = 0;
     }
-    s.status_changed = 0;
   }
 }
 
@@ -945,6 +946,16 @@ Bit64s usb_msd_device_c::cdrom_status_handler(bx_param_c *param, int set, Bit64s
     }
   }
   return val;
+}
+
+void usb_msd_restore_handler(void *dev, bx_list_c *conf)
+{
+  ((usb_msd_device_c*)dev)->restore_handler(conf);
+}
+
+void usb_msd_device_c::restore_handler(bx_list_c *conf)
+{
+  runtime_config();
 }
 
 #endif // BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB
