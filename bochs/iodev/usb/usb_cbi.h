@@ -55,6 +55,8 @@ public:
   virtual bx_bool init();
   virtual bx_bool set_option(const char *option);
   virtual const char* get_info();
+  virtual void runtime_config(void);
+  void restore_handler(bx_list_c *conf);
 
   virtual void handle_reset();
   virtual int handle_control(int request, int value, int index, int length, Bit8u *data);
@@ -77,6 +79,7 @@ private:
     device_image_t *hdimage;
     USBPacket *packet;
     const char *fname;
+    bx_list_c *config;
     char info_txt[BX_PATHNAME_LEN];
     Bit8u cur_command;
     int fail_count;
@@ -85,7 +88,12 @@ private:
     bx_bool wp;     // 0 = not write_protected, 1 = write_protected
     bx_bool model;  // 0 = bochs, 1 = teac
     int statusbar_id;
+    bx_bool status_changed;
   } s;
+
+  static const char *floppy_path_handler(bx_param_string_c *param, int set,
+                                         const char *oldval, const char *val, int maxlen);
+  static Bit64s floppy_param_handler(bx_param_c *param, int set, Bit64s val);
 };
 
 #endif

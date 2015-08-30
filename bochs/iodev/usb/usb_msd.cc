@@ -385,6 +385,7 @@ bx_bool usb_msd_device_c::init()
   s.scsi_dev->register_state(s.sr_list, "scsidev");
   s.mode = USB_MSDM_CBW;
   d.connected = 1;
+  s.status_changed = 0;
   return 1;
 }
 
@@ -903,9 +904,9 @@ void usb_msd_device_c::runtime_config(void)
 #undef LOG_THIS
 #define LOG_THIS cdrom->
 
-// USB hub runtime parameter handlers
+// USB cdrom runtime parameter handlers
 const char *usb_msd_device_c::cdrom_path_handler(bx_param_string_c *param, int set,
-                                                      const char *oldval, const char *val, int maxlen)
+                                                 const char *oldval, const char *val, int maxlen)
 {
   usb_msd_device_c *cdrom;
 

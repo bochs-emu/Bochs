@@ -276,10 +276,19 @@ static Bit8u bx_cbi_dev_mode_sense_cur[] = {
   0x00, 0x00, 0x00  // reserved
 };
 
+void usb_cbi_restore_handler(void *dev, bx_list_c *conf);
+
+static int usb_floppy_count = 0;
+
 usb_cbi_device_c::usb_cbi_device_c(const char *filename)
 {
+  char pname[10];
+  char label[32];
   char tmpfname[BX_PATHNAME_LEN];
   char *ptr1, *ptr2;
+  bx_param_string_c *path;
+  bx_param_bool_c *readonly;
+  bx_param_enum_c *status;
 
   d.type = USB_DEV_TYPE_FLOPPY;
   d.maxspeed = USB_SPEED_FULL;
@@ -301,9 +310,38 @@ usb_cbi_device_c::usb_cbi_device_c(const char *filename)
       BX_PANIC(("USB floppy only supports image modes 'flat' and 'vvfat'"));
     }
   }
-
   s.dev_buffer = NULL;
-  s.statusbar_id = -1;
+  s.statusbar_id = bx_gui->register_statusitem("USB-FD", 1);
+// config options
+  bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
+  sprintf(pname, "floppy%d", ++usb_floppy_count);
+  sprintf(label, "USB floppy #%d Configuration", usb_floppy_count);
+  s.config = new bx_list_c(usb_rt, pname, label);
+  s.config->set_options(bx_list_c::SERIES_ASK | bx_list_c::USE_BOX_TITLE);
+  s.config->set_device_param(this);
+  path = new bx_param_string_c(s.config, "path", "Path", "", "", BX_PATHNAME_LEN);
+  path->set(s.fname);
+  path->set_handler(floppy_path_handler);
+  readonly = new bx_param_bool_c(s.config,
+    "readonly",
+    "Write Protection",
+    "Floppy media write protection",
+    0);
+  readonly->set_handler(floppy_param_handler);
+  readonly->set_ask_format("Is media write protected? [%s] ");
+  status = new bx_param_enum_c(s.config,
+    "status",
+    "Status",
+    "Floppy media status (inserted / ejected)",
+    media_status_names,
+    BX_INSERTED,
+    BX_EJECTED);
+  status->set_handler(floppy_param_handler);
+  status->set_ask_format("Is the device inserted or ejected? [%s] ");
+  if (SIM->is_wx_selected()) {
+    bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
+    usb->add(s.config);
+  }
 
   put("usb_cbi", "USBCBI");
 }
@@ -317,12 +355,19 @@ usb_cbi_device_c::~usb_cbi_device_c(void)
     if (s.inserted) s.hdimage->close();
     delete s.hdimage;
   }
+  if (SIM->is_wx_selected()) {
+    bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
+    usb->remove(s.config->get_name());
+  }
+  bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
+  usb_rt->remove(s.config->get_name());
 }
 
 bx_bool usb_cbi_device_c::set_option(const char *option)
 {
   if (!strncmp(option, "write_protected:", 16)) {
     s.wp = atol(&option[16]);
+    SIM->get_param_bool("readonly", s.config)->set(s.wp);
     return 1;
   } else if (!strncmp(option, "model:", 6)) {
     if (!strcmp(option+6, "teac")) {
@@ -343,6 +388,7 @@ bx_bool usb_cbi_device_c::init()
       BX_ERROR(("could not open floppy image file '%s'", s.fname));
     } else {
       s.inserted = 1;
+      SIM->get_param_enum("status", s.config)->set(BX_INSERTED);
     }
   }
   if (s.inserted) {
@@ -353,9 +399,9 @@ bx_bool usb_cbi_device_c::init()
   d.connected = 1;
   s.dev_buffer = new Bit8u[CBI_MAX_SECTORS * 512];
 
-  s.statusbar_id = bx_gui->register_statusitem("USB-FD", 1);
   s.did_inquiry_fail = 0;
   s.fail_count = 0;
+  s.status_changed = 0;
 
   return 1;
 }
@@ -382,6 +428,11 @@ const char* usb_cbi_device_c::get_info()
 void usb_cbi_device_c::register_state_specific(bx_list_c *parent)
 {
   bx_list_c *list = new bx_list_c(parent, "s", "UFI/CBI Floppy Disk State");
+  bx_list_c *rt_config = new bx_list_c(list, "rt_config");
+  rt_config->add(s.config->get_by_name("path"));
+  rt_config->add(s.config->get_by_name("readonly"));
+  rt_config->add(s.config->get_by_name("status"));
+  rt_config->set_restore_handler(this, usb_cbi_restore_handler);
   new bx_shadow_num_c(list, "usb_len", &s.usb_len);
   new bx_shadow_num_c(list, "data_len", &s.data_len);
   new bx_shadow_num_c(list, "sector_count", &s.sector_count);
@@ -902,6 +953,62 @@ fail:
 void usb_cbi_device_c::cancel_packet(USBPacket *p)
 {
   s.packet = NULL;
+}
+
+void usb_cbi_device_c::runtime_config(void)
+{
+  if (s.status_changed) {
+    // TODO
+    s.status_changed = 0;
+  }
+}
+
+#undef LOG_THIS
+#define LOG_THIS floppy->
+
+// USB floppy runtime parameter handlers
+const char *usb_cbi_device_c::floppy_path_handler(bx_param_string_c *param, int set,
+                                                  const char *oldval, const char *val, int maxlen)
+{
+  usb_cbi_device_c *floppy;
+
+  if (set) {
+    if (strlen(val) < 1) {
+      val = "none";
+    }
+    floppy = (usb_cbi_device_c*) param->get_parent()->get_device_param();
+    if (floppy != NULL) {
+      floppy->s.status_changed = 1;
+    } else {
+      BX_PANIC(("floppy_path_handler: floppy not found"));
+    }
+  }
+  return val;
+}
+
+Bit64s usb_cbi_device_c::floppy_param_handler(bx_param_c *param, int set, Bit64s val)
+{
+  usb_cbi_device_c *floppy;
+
+  if (set) {
+    floppy = (usb_cbi_device_c*) param->get_parent()->get_device_param();
+    if (floppy != NULL) {
+      floppy->s.status_changed = 1;
+    } else {
+      BX_PANIC(("floppy_status_handler: floppy not found"));
+    }
+  }
+  return val;
+}
+
+void usb_cbi_restore_handler(void *dev, bx_list_c *conf)
+{
+  ((usb_cbi_device_c*)dev)->restore_handler(conf);
+}
+
+void usb_cbi_device_c::restore_handler(bx_list_c *conf)
+{
+  runtime_config();
 }
 
 #endif // BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB
