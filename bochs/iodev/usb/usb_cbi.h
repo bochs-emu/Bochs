@@ -64,10 +64,6 @@ public:
   virtual void register_state_specific(bx_list_c *parent);
   virtual void cancel_packet(USBPacket *p);
 
-protected:
-  void send_status();
-  bx_bool handle_command(Bit8u *command);
-
 private:
   struct {
     Bit8u *dev_buffer;
@@ -83,6 +79,8 @@ private:
     char info_txt[BX_PATHNAME_LEN];
     Bit8u cur_command;
     int fail_count;
+    int sense;
+    int asc;
     bx_bool did_inquiry_fail;
     bx_bool inserted; // 0 = media not present
     bx_bool wp;     // 0 = not write_protected, 1 = write_protected
@@ -90,6 +88,9 @@ private:
     int statusbar_id;
     bx_bool status_changed;
   } s;
+
+  bx_bool handle_command(Bit8u *command);
+  bx_bool set_inserted(bx_bool value);
 
   static const char *floppy_path_handler(bx_param_string_c *param, int set,
                                          const char *oldval, const char *val, int maxlen);

@@ -349,12 +349,9 @@ usb_cbi_device_c::usb_cbi_device_c(const char *filename)
 usb_cbi_device_c::~usb_cbi_device_c(void)
 {
   bx_gui->unregister_statusitem(s.statusbar_id);
+  set_inserted(0);
   if (s.dev_buffer != NULL)
     delete [] s.dev_buffer;
-  if (s.hdimage != NULL) {
-    if (s.inserted) s.hdimage->close();
-    delete s.hdimage;
-  }
   if (SIM->is_wx_selected()) {
     bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
     usb->remove(s.config->get_name());
@@ -382,16 +379,7 @@ bx_bool usb_cbi_device_c::set_option(const char *option)
 
 bx_bool usb_cbi_device_c::init()
 {
-  if ((strlen(s.fname) > 0) && (strcmp(s.fname, "none"))) {
-    s.hdimage = DEV_hdimage_init_image(s.image_mode, 1474560, "");
-    if ((s.hdimage->open(s.fname)) < 0) {
-      BX_ERROR(("could not open floppy image file '%s'", s.fname));
-    } else {
-      s.inserted = 1;
-      SIM->get_param_enum("status", s.config)->set(BX_INSERTED);
-    }
-  }
-  if (s.inserted) {
+  if (set_inserted(1)) {
     sprintf(s.info_txt, "USB CBI: path='%s', mode='%s'", s.fname, hdimage_mode_names[s.image_mode]);
   } else {
     sprintf(s.info_txt, "USB CBI: media not present");
@@ -439,6 +427,8 @@ void usb_cbi_device_c::register_state_specific(bx_list_c *parent)
   new bx_shadow_num_c(list, "cur_command", &s.cur_command);
   new bx_shadow_num_c(list, "fail_count", &s.fail_count);
   new bx_shadow_bool_c(list, "did_inquiry_fail", &s.did_inquiry_fail);
+  new bx_shadow_num_c(list, "sense", &s.sense);
+  new bx_shadow_num_c(list, "asc", &s.asc);
   // TODO
 }
 
@@ -651,6 +641,11 @@ bx_bool usb_cbi_device_c::handle_command(Bit8u *command)
     return 0;
   }
 
+  if (s.cur_command != UFI_REQUEST_SENSE) {
+    s.sense = 0;
+    s.asc = 0;
+  }
+
   switch (s.cur_command) {
     case UFI_INQUIRY:
       BX_DEBUG(("UFI INQUIRY COMMAND"));
@@ -681,12 +676,10 @@ bx_bool usb_cbi_device_c::handle_command(Bit8u *command)
 
     case UFI_REQUEST_SENSE:
       BX_DEBUG(("UFI_REQUEST_SENSE COMMAND"));
-      if (s.inserted) {
-        bx_cbi_dev_req_sense[2] = 0x00;
-        bx_cbi_dev_req_sense[12] = 0x00;
-      } else {
-        bx_cbi_dev_req_sense[2] = 0x02;
-        bx_cbi_dev_req_sense[12] = 0x3a;
+      bx_cbi_dev_req_sense[2] = s.sense;
+      bx_cbi_dev_req_sense[12] = s.asc;
+      if (s.sense == 6) {
+        s.sense = 0;
       }
       memcpy(s.usb_buf, bx_cbi_dev_req_sense, sizeof(bx_cbi_dev_req_sense));
       s.usb_len = sizeof(bx_cbi_dev_req_sense);
@@ -703,6 +696,8 @@ bx_bool usb_cbi_device_c::handle_command(Bit8u *command)
     case UFI_READ_10:
       BX_DEBUG(("UFI_READ%i COMMAND (lba = %i, count = %i)", (s.cur_command == UFI_READ_12) ? 12 : 10, lba, count));
       if (!s.inserted) {
+        s.sense = 2;
+        s.asc = 0x3a;
         break;
       }
       if (count > CBI_MAX_SECTORS) {
@@ -727,6 +722,8 @@ bx_bool usb_cbi_device_c::handle_command(Bit8u *command)
     case UFI_WRITE_10:
       BX_DEBUG(("UFI_WRITE%i COMMAND (lba = %i, count = %i)", (s.cur_command == UFI_WRITE_12) ? 12 : 10, lba, count));
       if (!s.inserted) {
+        s.sense = 2;
+        s.asc = 0x3a;
         break;
       }
       if (s.hdimage->lseek(lba * 512, SEEK_SET) < 0)
@@ -738,6 +735,8 @@ bx_bool usb_cbi_device_c::handle_command(Bit8u *command)
     case UFI_READ_CAPACITY:
       BX_DEBUG(("UFI_READ_CAPACITY COMMAND"));
       if (!s.inserted) {
+        s.sense = 2;
+        s.asc = 0x3a;
         break;
       }
       memcpy(s.usb_buf, bx_cbi_dev_capacity, sizeof(bx_cbi_dev_capacity));
@@ -750,6 +749,8 @@ bx_bool usb_cbi_device_c::handle_command(Bit8u *command)
       //  the interrupt in part of the CBI
       BX_DEBUG(("UFI_TEST_UNIT_READY COMMAND"));
       if (!s.inserted) {
+        s.sense = 2;
+        s.asc = 0x3a;
         break;
       }
       s.usb_len = 0;
@@ -932,6 +933,7 @@ int usb_cbi_device_c::handle_data(USBPacket *p)
         // We currently do not support error reporting.
         // We currently assume all transfers are successful
         memset(data, 0, 2);
+        data[0] = s.asc;
         ret = 2;
 #endif
       } else
@@ -955,10 +957,44 @@ void usb_cbi_device_c::cancel_packet(USBPacket *p)
   s.packet = NULL;
 }
 
+bx_bool usb_cbi_device_c::set_inserted(bx_bool value)
+{
+  const char *path;
+
+  s.inserted = value;
+  if (value) {
+    path = SIM->get_param_string("path", s.config)->getptr();
+    if ((strlen(path) > 0) && (strcmp(path, "none"))) {
+      s.hdimage = DEV_hdimage_init_image(s.image_mode, 1474560, "");
+      if ((s.hdimage->open(path)) < 0) {
+        BX_ERROR(("could not open floppy image file '%s'", path));
+        set_inserted(0);
+        SIM->get_param_enum("status", s.config)->set(BX_EJECTED);
+      } else {
+        s.sense = 6;
+        s.asc = 0x28;
+      }
+    } else {
+      set_inserted(0);
+      SIM->get_param_enum("status", s.config)->set(BX_EJECTED);
+    }
+  } else {
+    if (s.hdimage != NULL) {
+      s.hdimage->close();
+      delete s.hdimage;
+      s.hdimage = NULL;
+    }
+  }
+  return s.inserted;
+}
+
 void usb_cbi_device_c::runtime_config(void)
 {
   if (s.status_changed) {
-    // TODO
+    set_inserted(0);
+    if (SIM->get_param_enum("status", s.config)->get() == BX_INSERTED) {
+      set_inserted(1);
+    }
     s.status_changed = 0;
   }
 }
