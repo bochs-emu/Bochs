@@ -323,11 +323,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
     if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
       return_ESP = ESP;
     else
-      return_ESP =  SP;
+      return_ESP = SP;
 
     // save return CS:eIP to be pushed on new stack
     return_CS = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
-    if (cs_descriptor.u.segment.d_b)
+    if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b)
       return_EIP = EIP;
     else
       return_EIP = IP;
