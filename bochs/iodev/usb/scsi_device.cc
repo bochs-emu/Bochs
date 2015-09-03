@@ -1000,6 +1000,12 @@ void scsi_device_t::seek_timer_handler(void *this_ptr)
   class_ptr->seek_timer();
 }
 
+// Turn on BX_DEBUG messages at connection time
+void scsi_device_t::set_debug_mode()
+{
+  setonoff(LOGLEV_DEBUG, ACT_REPORT);
+}
+
 void scsi_device_t::seek_timer()
 {
   // TODO

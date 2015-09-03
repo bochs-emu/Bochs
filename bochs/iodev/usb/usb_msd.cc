@@ -383,6 +383,9 @@ bx_bool usb_msd_device_c::init()
     }
   }
   s.scsi_dev->register_state(s.sr_list, "scsidev");
+  if (getonoff(LOGLEV_DEBUG) == ACT_REPORT) {
+    s.scsi_dev->set_debug_mode();
+  }
   s.mode = USB_MSDM_CBW;
   d.connected = 1;
   s.status_changed = 0;
@@ -867,9 +870,16 @@ bx_bool usb_msd_device_c::set_inserted(bx_bool value)
 
   if (value) {
     path = SIM->get_param_string("path", s.config)->getptr();
-    if (!s.cdrom->insert_cdrom(path)) {
+    if ((strlen(path) > 0) && (strcmp(path, "none"))) {
+      if (!s.cdrom->insert_cdrom(path)) {
+        value = 0;
+      }
+    } else {
+      value = 0;
+    }
+    if (!value) {
       SIM->get_param_enum("status", s.config)->set(BX_EJECTED);
-      return 0;
+      s.status_changed = 0;
     }
   } else {
     s.cdrom->eject_cdrom();

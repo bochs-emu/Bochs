@@ -90,6 +90,7 @@ public:
   void seek_timer(void);
   bx_bool save_requests(const char *path);
   void restore_requests(const char *path);
+  void set_debug_mode();
 
 protected:
   SCSIRequest* scsi_new_request(Bit32u tag);
