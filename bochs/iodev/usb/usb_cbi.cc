@@ -173,19 +173,19 @@ static const Bit8u bx_cbi_dev_inquiry_bochs[] = {
   0x30, 0x30, 0x31, 0x30                           /* revision level      */
 };
 
-static const Bit8u bx_cbi_dev_frmt_capacity[] = {
+static Bit8u bx_cbi_dev_frmt_capacity[] = {
   0x00, 0x00, 0x00,    // reserved
   32,                  // remaining list in bytes
   // current: 1.44meg
-    0x00, 0x00, 0x0B, 0x3f,  // lba's 
+    0x00, 0x00, 0x0B, 0x40,  // lba's
     0x02,                    // descriptor code
     0x00, 0x02, 0x00,        // 512-byte sectors
   // allowed #1: 1.44meg
-    0x00, 0x00, 0x0B, 0x3f,  // lba's 
+    0x00, 0x00, 0x0B, 0x40,  // lba's
     0x00,                    // descriptor code
     0x00, 0x02, 0x00,        // 512-byte sectors
   // allowed #2: 1.25meg
-    0x00, 0x00, 0x04, 0xD0,  // lba's 
+    0x00, 0x00, 0x04, 0xD0,  // lba's
     0x02,                    // descriptor code
     0x00, 0x04, 0x00,        // 1024-byte sectors
   // allowed #3: 1.28meg
@@ -245,8 +245,8 @@ static Bit8u bx_cbi_dev_mode_sense_cur[] = {
   0x05,  // page code 5
   0x1E,  // 30 more bytes
   0x03, 0xE8,  // transfer rate (0x03E8 = 1000d = 1,000 Kbits per second)
-  0x02,        // head count
-  0x12,        // spt
+  0x02,        // head count (2)
+  0x12,        // spt (18)
   0x02, 0x00,  // bytes per sector (512)
   0x00, 0x50,  // cylinder count (80)
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // reserved
@@ -667,8 +667,17 @@ bx_bool usb_cbi_device_c::handle_command(Bit8u *command)
 
     case UFI_READ_FORMAT_CAPACITIES:
       BX_DEBUG(("UFI_READ_FORMAT_CAPACITIES COMMAND"));
-      memcpy(s.usb_buf, bx_cbi_dev_frmt_capacity, sizeof(bx_cbi_dev_frmt_capacity));
-      s.usb_len = sizeof(bx_cbi_dev_frmt_capacity);
+      if (s.inserted) {
+        bx_cbi_dev_frmt_capacity[3] = 32;
+        bx_cbi_dev_frmt_capacity[8] = 0x02;
+        memcpy(s.usb_buf, bx_cbi_dev_frmt_capacity, sizeof(bx_cbi_dev_frmt_capacity));
+        s.usb_len = sizeof(bx_cbi_dev_frmt_capacity);
+      } else {
+        bx_cbi_dev_frmt_capacity[3] = 8;
+        bx_cbi_dev_frmt_capacity[8] = 0x03;
+        memcpy(s.usb_buf, bx_cbi_dev_frmt_capacity, 12);
+        s.usb_len = 12;
+      }
       s.data_len = (unsigned) ((command[7] << 8) | command[8]);
       if (s.data_len > s.usb_len)
         s.data_len = s.usb_len;
