@@ -2053,8 +2053,11 @@ void bx_usb_xhci_c::process_transfer_ring(const int slot, const int ep)
             }
             break;
         }
+        if (ret == USB_RET_ASYNC) {
+          BX_ERROR(("Async packet handling not implemented yet"));
+        }
 
-        // 4.10.1 paragraph 4 
+        // 4.10.1 paragraph 4
         // 4.10.1.1
         if (ioc) {
           if ((comp_code == TRB_SUCCESS) && spd_occurred && TRB_SPD(trb.command)) {

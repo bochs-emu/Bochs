@@ -1275,6 +1275,9 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
       return 1;
   }
 
+  if (ret == USB_RET_ASYNC) {
+    BX_ERROR(("Async packet handling not implemented yet"));
+  }
   // print the buffer used, to the log file
   if (ret > 0) {
     BX_DEBUG(("buffer dump (%i bytes)", ret));

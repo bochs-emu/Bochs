@@ -950,6 +950,9 @@ bx_bool bx_usb_uhci_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *t
       update_irq();
       return 0;
   }
+  if (ret == USB_RET_ASYNC) {
+    BX_ERROR(("Async packet handling not implemented yet"));
+  }
   if (ret >= 0) {
     BX_UHCI_THIS set_status(td, 0, 0, 0, 0, 0, 0, len-1);
   } else {
