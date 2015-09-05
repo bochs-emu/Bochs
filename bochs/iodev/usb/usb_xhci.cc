@@ -212,7 +212,7 @@ bx_usb_xhci_c::bx_usb_xhci_c()
   put("usb_xhci", "XHCI");
   memset((void*)&hub, 0, sizeof(bx_usb_xhci_t));
   device_buffer = NULL;
-  hub.rt_conf_id = -1;
+  rt_conf_id = -1;
   //hub.frame_timer_index = BX_NULL_TIMER_HANDLE;
 }
 
@@ -220,7 +220,7 @@ bx_usb_xhci_c::~bx_usb_xhci_c()
 {
   char pname[16];
 
-  SIM->unregister_runtime_config_handler(hub.rt_conf_id);
+  SIM->unregister_runtime_config_handler(rt_conf_id);
   if (BX_XHCI_THIS device_buffer != NULL)
     delete [] BX_XHCI_THIS device_buffer;
 
@@ -267,8 +267,8 @@ void bx_usb_xhci_c::init(void)
   //  BX_XHCI_THIS hub.frame_timer_index =
   //                   bx_pc_system.register_timer(this, usb_frame_handler, 1024, 1, 1, "xhci.frame_timer");
 
-  BX_XHCI_THIS hub.devfunc = 0x00;
-  DEV_register_pci_handlers(this, &BX_XHCI_THIS hub.devfunc, BX_PLUGIN_USB_XHCI,
+  BX_XHCI_THIS devfunc = 0x00;
+  DEV_register_pci_handlers(this, &BX_XHCI_THIS devfunc, BX_PLUGIN_USB_XHCI,
                             "Experimental USB xHCI");
 
   // initialize readonly registers
@@ -295,8 +295,8 @@ void bx_usb_xhci_c::init(void)
   }
 
   // register handler for correct device connect handling after runtime config
-  BX_XHCI_THIS hub.rt_conf_id = SIM->register_runtime_config_handler(BX_XHCI_THIS_PTR, runtime_config_handler);
-  BX_XHCI_THIS hub.device_change = 0;
+  BX_XHCI_THIS rt_conf_id = SIM->register_runtime_config_handler(BX_XHCI_THIS_PTR, runtime_config_handler);
+  BX_XHCI_THIS device_change = 0;
 
   for (i=0; i<USB_XHCI_PORTS; i++)
     BX_XHCI_THIS hub.usb_port[i].is_usb3 = (port_speed_allowed[i] == USB3);
@@ -953,7 +953,7 @@ void bx_usb_xhci_c::update_irq(unsigned interrupter)
     level = 1;
     BX_DEBUG(("Interrupt Fired."));
   }
-  DEV_pci_set_irq(BX_XHCI_THIS hub.devfunc, BX_XHCI_THIS pci_conf[0x3d], level);
+  DEV_pci_set_irq(BX_XHCI_THIS devfunc, BX_XHCI_THIS pci_conf[0x3d], level);
 }
 
 bx_bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *data, void *param)
@@ -1435,7 +1435,7 @@ bx_bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *da
         BX_XHCI_THIS hub.op_regs.HcStatus.hse     = (value & (1 <<  2)) ? 0 : BX_XHCI_THIS hub.op_regs.HcStatus.hse;
         //FIXME: should this line go where system software clears the IP bit, or here when it clears the status:eint bit?
         if (value & (1 << 3))  // acknowledging the interrupt
-          DEV_pci_set_irq(BX_XHCI_THIS hub.devfunc, BX_XHCI_THIS pci_conf[0x3d], 0);
+          DEV_pci_set_irq(BX_XHCI_THIS devfunc, BX_XHCI_THIS pci_conf[0x3d], 0);
         break;
 
       case 0x08: // Page Size
@@ -1845,7 +1845,7 @@ void bx_usb_xhci_c::process_transfer_ring(const int slot, const int ep)
   Bit64u address = 0, org_addr;
   int int_target/*, td_size*/;
   Bit32u transfer_length;
-  int ret, len;
+  int ret = 0, len;
   int port_num = BX_XHCI_THIS hub.slots[slot].slot_context.rh_port_num;
   USBPacket packet;
   Bit8u cur_direction = (ep & 1) ? USB_TOKEN_IN : USB_TOKEN_OUT; // for NORMAL without SETUP
@@ -2865,7 +2865,7 @@ void bx_usb_xhci_c::runtime_config(void)
 
   for (i = 0; i < BX_N_USB_XHCI_PORTS; i++) {
     // device change support
-    if ((BX_XHCI_THIS hub.device_change & (1 << i)) != 0) {
+    if ((BX_XHCI_THIS device_change & (1 << i)) != 0) {
       if (!BX_XHCI_THIS hub.usb_port[i].portsc.ccs) {
         BX_INFO(("USB port #%d: device connect", i+1));
         sprintf(pname, "port%d", i + 1);
@@ -2877,7 +2877,7 @@ void bx_usb_xhci_c::runtime_config(void)
         }
         usb_set_connect_status(i, type, 0);
       }
-      BX_XHCI_THIS hub.device_change &= ~(1 << i);
+      BX_XHCI_THIS device_change &= ~(1 << i);
     }
     // forward to connected device
     if (BX_XHCI_THIS hub.usb_port[i].device != NULL) {
@@ -3046,9 +3046,9 @@ const char *bx_usb_xhci_c::usb_param_handler(bx_param_string_c *param, int set,
     bx_bool empty = ((strlen(val) == 0) || (!strcmp(val, "none")));
     if ((portnum >= 0) && (portnum < USB_XHCI_PORTS)) {
       if (empty && BX_XHCI_THIS hub.usb_port[portnum].portsc.ccs) {
-        BX_XHCI_THIS hub.device_change |= (1 << portnum);
+        BX_XHCI_THIS device_change |= (1 << portnum);
       } else if (!empty && !BX_XHCI_THIS hub.usb_port[portnum].portsc.ccs) {
-        BX_XHCI_THIS hub.device_change |= (1 << portnum);
+        BX_XHCI_THIS device_change |= (1 << portnum);
       }
     } else {
       BX_PANIC(("usb_param_handler called with unexpected parameter '%s'", param->get_name()));
