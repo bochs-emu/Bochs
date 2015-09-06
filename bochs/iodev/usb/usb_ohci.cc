@@ -1187,8 +1187,7 @@ void bx_usb_ohci_c::process_ed(struct OHCI_ED *ed, const Bit32u ed_address)
 bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
 {
   unsigned pid = 0, len = 0, len1, len2;
-  int ilen, r, ret = 0;
-  char buf_str[1025], temp_str[17];
+  int ilen, ret = 0;
 
   // The td->cc field should be 111x if it hasn't been processed yet.
   if (TD_GET_CC(td) < NotAccessed) {
@@ -1277,20 +1276,6 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
 
   if (ret == USB_RET_ASYNC) {
     BX_ERROR(("Async packet handling not implemented yet"));
-  }
-  // print the buffer used, to the log file
-  if (ret > 0) {
-    BX_DEBUG(("buffer dump (%i bytes)", ret));
-    buf_str[0] = 0;
-    for (r=0; r<ret; r++) {
-      sprintf(temp_str, "%02X ", device_buffer[r]);
-      strcat(buf_str, temp_str);
-      if ((r % 16) == 15) {
-        BX_DEBUG(("%s", buf_str));
-        buf_str[0] = 0;
-      }
-    }
-    if (strlen(buf_str) > 0) BX_DEBUG(("%s", buf_str));
   }
 
   if ((ret == (int)len) || ((pid == USB_TOKEN_IN) && (ret >= 0) &&

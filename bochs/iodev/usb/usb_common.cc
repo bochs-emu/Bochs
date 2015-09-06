@@ -232,20 +232,21 @@ void bx_usb_devctl_c::usb_send_msg(void *dev, int msg)
 // Dumps the contents of a buffer to the log file
 void usb_device_c::usb_dump_packet(Bit8u *data, unsigned size)
 {
-  char the_packet[256], str[16];
-  strcpy(the_packet, "Packet contents (in hex):");
-  unsigned offset = 0;
-  for (unsigned p=0; p<size; p++) {
-    if (!(p & 0x0F)) {
-      BX_DEBUG(("%s", the_packet));
-      sprintf(the_packet, "  0x%04X ", offset);
-      offset += 16;
+  char buf_str[1025], temp_str[17];
+
+  if (getonoff(LOGLEV_DEBUG) == ACT_REPORT) {
+    BX_DEBUG(("packet hexdump (%i bytes)", size));
+    buf_str[0] = 0;
+    for (unsigned i = 0; i < size; i++) {
+      sprintf(temp_str, "%02X ", data[i]);
+      strcat(buf_str, temp_str);
+      if ((i % 16) == 15) {
+        BX_DEBUG(("%s", buf_str));
+        buf_str[0] = 0;
+      }
     }
-    sprintf(str, " %02X", data[p]);
-    strcat(the_packet, str);
+    if (strlen(buf_str) > 0) BX_DEBUG(("%s", buf_str));
   }
-  if (strlen(the_packet))
-    BX_DEBUG(("%s", the_packet));
 }
 
 int usb_device_c::set_usb_string(Bit8u *buf, const char *str)
