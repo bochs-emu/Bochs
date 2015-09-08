@@ -712,7 +712,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
 #if BX_SUPPORT_MONITOR_MWAIT
   // CPL is always 0 in real mode
   if (/* !real_mode() && */ CPL != 0) {
-    BX_DEBUG(("MWAIT instruction not recognized when CPL != 0"));
+    BX_DEBUG(("MONITOR: instruction not recognized when CPL != 0"));
     exception(BX_UD_EXCEPTION, 0);
   }
 
@@ -787,7 +787,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
 #if BX_SUPPORT_MONITOR_MWAIT
   // CPL is always 0 in real mode
   if (/* !real_mode() && */ CPL != 0) {
-    BX_DEBUG(("%s: instruction not recognized when CPL != 0", i->getIaOpcodeNameShort()));
+    BX_DEBUG(("MWAIT: instruction not recognized when CPL != 0"));
     exception(BX_UD_EXCEPTION, 0);
   }
 
