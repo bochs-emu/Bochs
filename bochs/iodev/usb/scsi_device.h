@@ -61,6 +61,8 @@ typedef struct SCSIRequest {
   int buf_len;
   Bit8u *dma_buf;
   Bit32u status;
+  bx_bool async_supported;
+  bx_bool seek_active;
   struct SCSIRequest *next;
 } SCSIRequest;
 
@@ -74,7 +76,7 @@ public:
   virtual ~scsi_device_t(void);
 
   void register_state(bx_list_c *parent, const char *name);
-  Bit32s scsi_send_command(Bit32u tag, Bit8u *buf, int lun);
+  Bit32s scsi_send_command(Bit32u tag, Bit8u *buf, int lun, bx_bool async);
   void scsi_command_complete(SCSIRequest *r, int status, int sense);
   void scsi_cancel_io(Bit32u tag);
   void scsi_read_complete(void *req, int ret);
@@ -87,7 +89,6 @@ public:
   bx_bool get_inserted() {return inserted;}
   bx_bool get_locked() {return locked;}
   static void seek_timer_handler(void *);
-  void seek_timer(void);
   bx_bool save_requests(const char *path);
   void restore_requests(const char *path);
   void set_debug_mode();
@@ -98,12 +99,16 @@ protected:
   SCSIRequest *scsi_find_request(Bit32u tag);
 
 private:
+  void start_seek(SCSIRequest *r);
+  void seek_timer(void);
+
   enum scsidev_type type;
   device_image_t *hdimage;
   cdrom_base_c *cdrom;
   SCSIRequest *requests;
   int cluster_size;
   Bit64u max_lba;
+  Bit64u curr_lba;
   int sense;
   int tcq;
   scsi_completionfn completion;

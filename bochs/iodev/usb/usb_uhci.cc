@@ -921,6 +921,8 @@ bx_bool bx_usb_uhci_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *t
   BX_UHCI_THIS usb_packet.devep = endpt;
   BX_UHCI_THIS usb_packet.data = device_buffer;
   BX_UHCI_THIS usb_packet.len = maxlen;
+  BX_UHCI_THIS usb_packet.complete_cb = NULL;
+  BX_UHCI_THIS usb_packet.complete_dev = this;
   switch (pid) {
     case USB_TOKEN_OUT:
     case USB_TOKEN_SETUP:

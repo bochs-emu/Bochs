@@ -235,6 +235,8 @@ typedef struct {
   bx_bool  use_control_head;
   bx_bool  use_bulk_head;
   Bit64u   sof_time;
+  Bit32u   async_td;
+  bx_bool  async_complete;
 
   Bit8u device_change;
   int rt_conf_id;
@@ -252,6 +254,8 @@ public:
   virtual void after_restore_state(void);
   virtual Bit32u  pci_read_handler(Bit8u address, unsigned io_len);
   virtual void    pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
+
+  void async_complete_packet(USBPacket *packet);
 
   static const char *usb_param_handler(bx_param_string_c *param, int set,
                                        const char *oldval, const char *val, int maxlen);
@@ -278,6 +282,7 @@ private:
 
   static Bit32u get_frame_remaining(void);
 
+  void process_lists();
   void process_ed(struct OHCI_ED *, const Bit32u);
   bx_bool process_td(struct OHCI_TD *, struct OHCI_ED *);
 

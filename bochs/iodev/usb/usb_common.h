@@ -117,6 +117,10 @@
 // USB 3.0
 #define USB_DT_BIN_DEV_OBJ_STORE        0x0F
 
+typedef struct USBPacket USBPacket;
+
+typedef void USBCallback(USBPacket *packet, void *dev);
+
 class usb_device_c;
 
 struct USBPacket {
@@ -125,6 +129,8 @@ struct USBPacket {
   Bit8u devep;
   Bit8u *data;
   int len;
+  USBCallback *complete_cb;
+  void *complete_dev;
   usb_device_c *dev;
 };
 
@@ -211,6 +217,11 @@ static BX_CPP_INLINE void usb_defer_packet(USBPacket *p, usb_device_c *dev)
 static BX_CPP_INLINE void usb_cancel_packet(USBPacket *p)
 {
   p->dev->cancel_packet(p);
+}
+
+static BX_CPP_INLINE void usb_packet_complete(USBPacket *p)
+{
+    p->complete_cb(p, p->complete_dev);
 }
 
 #endif

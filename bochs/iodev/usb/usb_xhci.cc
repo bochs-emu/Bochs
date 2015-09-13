@@ -2007,6 +2007,8 @@ void bx_usb_xhci_c::process_transfer_ring(const int slot, const int ep)
         packet.devep = (ep >> 1);
         packet.data = BX_XHCI_THIS device_buffer;
         packet.len = transfer_length;
+        packet.complete_cb = NULL;
+        packet.complete_dev = BX_XHCI_THIS_PTR;
         switch (cur_direction) {
           case USB_TOKEN_OUT:
           case USB_TOKEN_SETUP:
@@ -2818,6 +2820,8 @@ int bx_usb_xhci_c::send_set_address(const int addr, const int port_num)
   packet.devaddr = 0;  // default address
   packet.len = 8;
   packet.data = setup_address;
+  packet.complete_cb = NULL;
+  packet.complete_dev = BX_XHCI_THIS_PTR;
   ret = BX_XHCI_THIS broadcast_packet(&packet, port_num);
   if (ret == 0) {
     packet.pid = USB_TOKEN_IN;

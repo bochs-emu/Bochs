@@ -174,7 +174,7 @@ void bx_usb_ohci_c::init(void)
     return;
   }
 
-  BX_OHCI_THIS device_buffer = new Bit8u[65536];
+  BX_OHCI_THIS device_buffer = new Bit8u[8192];
 
   // Call our frame timer routine every 1mS (1,000uS)
   // Continuous and active
@@ -371,6 +371,11 @@ void bx_usb_ohci_c::reset_hc()
       usb_set_connect_status(i, BX_OHCI_THIS hub.usb_port[i].device->get_type(), 1);
     }
   }
+
+  if (BX_OHCI_THIS hub.async_td) {
+    usb_cancel_packet(&BX_OHCI_THIS usb_packet);
+    BX_OHCI_THIS hub.async_td = 0;
+  }
 }
 
 void bx_usb_ohci_c::reset_port(int p)
@@ -471,6 +476,8 @@ void bx_usb_ohci_c::register_state(void)
   new bx_shadow_bool_c(hub, "use_control_head", &BX_OHCI_THIS hub.use_control_head);
   new bx_shadow_bool_c(hub, "use_bulk_head", &BX_OHCI_THIS hub.use_bulk_head);
   new bx_shadow_num_c(hub, "sof_time", &BX_OHCI_THIS hub.sof_time);
+  new bx_shadow_num_c(hub, "async_td", &BX_OHCI_THIS hub.async_td);
+  new bx_shadow_bool_c(hub, "async_complete", &BX_OHCI_THIS hub.async_complete);
   register_pci_state(hub);
 }
 
@@ -1078,55 +1085,8 @@ void bx_usb_ohci_c::usb_frame_timer(void)
     if ((BX_OHCI_THIS hub.ohci_done_count != 7) && (BX_OHCI_THIS hub.ohci_done_count > 0))
       BX_OHCI_THIS hub.ohci_done_count--;
 
-    // TODO:  Rather than just comparing .fr to <8000 here, and <4000 below, see the highlighted
-    //   statement on page 45.
+    BX_OHCI_THIS process_lists();
 
-    // if the control list is enabled *and* the control list filled bit is set, do a control list ED
-    if (BX_OHCI_THIS hub.op_regs.HcControl.cle) {
-      if (BX_OHCI_THIS hub.use_control_head) {
-        BX_OHCI_THIS hub.op_regs.HcControlCurrentED = 0;
-        BX_OHCI_THIS hub.use_control_head = 0;
-      }
-      if (!BX_OHCI_THIS hub.op_regs.HcControlCurrentED && BX_OHCI_THIS hub.op_regs.HcCommandStatus.clf) {
-        BX_OHCI_THIS hub.op_regs.HcControlCurrentED = BX_OHCI_THIS hub.op_regs.HcControlHeadED;
-        BX_OHCI_THIS hub.op_regs.HcCommandStatus.clf = 0;
-      }
-      while (BX_OHCI_THIS hub.op_regs.HcControlCurrentED) {
-        DEV_MEM_READ_PHYSICAL(BX_OHCI_THIS hub.op_regs.HcControlCurrentED,      4, (Bit8u*) &cur_ed.dword0);
-        DEV_MEM_READ_PHYSICAL(BX_OHCI_THIS hub.op_regs.HcControlCurrentED +  4, 4, (Bit8u*) &cur_ed.dword1);
-        DEV_MEM_READ_PHYSICAL(BX_OHCI_THIS hub.op_regs.HcControlCurrentED +  8, 4, (Bit8u*) &cur_ed.dword2);
-        DEV_MEM_READ_PHYSICAL(BX_OHCI_THIS hub.op_regs.HcControlCurrentED + 12, 4, (Bit8u*) &cur_ed.dword3);
-        process_ed(&cur_ed, BX_OHCI_THIS hub.op_regs.HcControlCurrentED);
-        BX_OHCI_THIS hub.op_regs.HcControlCurrentED = ED_GET_NEXTED(&cur_ed);
-        if (get_frame_remaining() < 8000)
-          goto do_bulk_eds;
-      }
-    }
-
-do_bulk_eds:
-    // if the bulk list is enabled *and* the bulk list filled bit is set, do a bulk list ED
-    if (BX_OHCI_THIS hub.op_regs.HcControl.ble) {
-      if (BX_OHCI_THIS hub.use_bulk_head) {
-        BX_OHCI_THIS hub.op_regs.HcBulkCurrentED = 0;
-        BX_OHCI_THIS hub.use_bulk_head = 0;
-      }
-      if (!BX_OHCI_THIS hub.op_regs.HcBulkCurrentED && BX_OHCI_THIS hub.op_regs.HcCommandStatus.blf) {
-        BX_OHCI_THIS hub.op_regs.HcBulkCurrentED = BX_OHCI_THIS hub.op_regs.HcBulkHeadED;
-        BX_OHCI_THIS hub.op_regs.HcCommandStatus.blf = 0;
-      }
-      while (BX_OHCI_THIS hub.op_regs.HcBulkCurrentED) {
-        DEV_MEM_READ_PHYSICAL(BX_OHCI_THIS hub.op_regs.HcBulkCurrentED,      4, (Bit8u*) &cur_ed.dword0);
-        DEV_MEM_READ_PHYSICAL(BX_OHCI_THIS hub.op_regs.HcBulkCurrentED +  4, 4, (Bit8u*) &cur_ed.dword1);
-        DEV_MEM_READ_PHYSICAL(BX_OHCI_THIS hub.op_regs.HcBulkCurrentED +  8, 4, (Bit8u*) &cur_ed.dword2);
-        DEV_MEM_READ_PHYSICAL(BX_OHCI_THIS hub.op_regs.HcBulkCurrentED + 12, 4, (Bit8u*) &cur_ed.dword3);
-        process_ed(&cur_ed, BX_OHCI_THIS hub.op_regs.HcBulkCurrentED);
-        BX_OHCI_THIS hub.op_regs.HcBulkCurrentED = ED_GET_NEXTED(&cur_ed);
-        if (get_frame_remaining() < 4000)
-          goto do_iso_eds;
-      }
-    }
-
-do_iso_eds:
     // do the ED's in the interrupt table
     if (BX_OHCI_THIS hub.op_regs.HcControl.ple) {
       address = BX_OHCI_THIS hub.op_regs.HcHCCA + ((BX_OHCI_THIS hub.op_regs.HcFmNumber & 0x1F) * 4);
@@ -1142,6 +1102,58 @@ do_iso_eds:
     }
 
   }  // end run schedule
+}
+
+void bx_usb_ohci_c::process_lists(void)
+{
+  struct OHCI_ED cur_ed;
+
+  // TODO:  Rather than just comparing .fr to <8000 here, and <4000 below, see the highlighted
+  //   statement on page 45.
+
+  // if the control list is enabled *and* the control list filled bit is set, do a control list ED
+  if (BX_OHCI_THIS hub.op_regs.HcControl.cle) {
+    if (BX_OHCI_THIS hub.use_control_head) {
+      BX_OHCI_THIS hub.op_regs.HcControlCurrentED = 0;
+      BX_OHCI_THIS hub.use_control_head = 0;
+    }
+    if (!BX_OHCI_THIS hub.op_regs.HcControlCurrentED && BX_OHCI_THIS hub.op_regs.HcCommandStatus.clf) {
+      BX_OHCI_THIS hub.op_regs.HcControlCurrentED = BX_OHCI_THIS hub.op_regs.HcControlHeadED;
+      BX_OHCI_THIS hub.op_regs.HcCommandStatus.clf = 0;
+    }
+    while (BX_OHCI_THIS hub.op_regs.HcControlCurrentED) {
+      DEV_MEM_READ_PHYSICAL(BX_OHCI_THIS hub.op_regs.HcControlCurrentED,      4, (Bit8u*) &cur_ed.dword0);
+      DEV_MEM_READ_PHYSICAL(BX_OHCI_THIS hub.op_regs.HcControlCurrentED +  4, 4, (Bit8u*) &cur_ed.dword1);
+      DEV_MEM_READ_PHYSICAL(BX_OHCI_THIS hub.op_regs.HcControlCurrentED +  8, 4, (Bit8u*) &cur_ed.dword2);
+      DEV_MEM_READ_PHYSICAL(BX_OHCI_THIS hub.op_regs.HcControlCurrentED + 12, 4, (Bit8u*) &cur_ed.dword3);
+      process_ed(&cur_ed, BX_OHCI_THIS hub.op_regs.HcControlCurrentED);
+      BX_OHCI_THIS hub.op_regs.HcControlCurrentED = ED_GET_NEXTED(&cur_ed);
+      if (get_frame_remaining() < 8000)
+        break;
+    }
+  }
+
+  // if the bulk list is enabled *and* the bulk list filled bit is set, do a bulk list ED
+  if (BX_OHCI_THIS hub.op_regs.HcControl.ble) {
+    if (BX_OHCI_THIS hub.use_bulk_head) {
+      BX_OHCI_THIS hub.op_regs.HcBulkCurrentED = 0;
+      BX_OHCI_THIS hub.use_bulk_head = 0;
+    }
+    if (!BX_OHCI_THIS hub.op_regs.HcBulkCurrentED && BX_OHCI_THIS hub.op_regs.HcCommandStatus.blf) {
+      BX_OHCI_THIS hub.op_regs.HcBulkCurrentED = BX_OHCI_THIS hub.op_regs.HcBulkHeadED;
+      BX_OHCI_THIS hub.op_regs.HcCommandStatus.blf = 0;
+    }
+    while (BX_OHCI_THIS hub.op_regs.HcBulkCurrentED) {
+      DEV_MEM_READ_PHYSICAL(BX_OHCI_THIS hub.op_regs.HcBulkCurrentED,      4, (Bit8u*) &cur_ed.dword0);
+      DEV_MEM_READ_PHYSICAL(BX_OHCI_THIS hub.op_regs.HcBulkCurrentED +  4, 4, (Bit8u*) &cur_ed.dword1);
+      DEV_MEM_READ_PHYSICAL(BX_OHCI_THIS hub.op_regs.HcBulkCurrentED +  8, 4, (Bit8u*) &cur_ed.dword2);
+      DEV_MEM_READ_PHYSICAL(BX_OHCI_THIS hub.op_regs.HcBulkCurrentED + 12, 4, (Bit8u*) &cur_ed.dword3);
+      process_ed(&cur_ed, BX_OHCI_THIS hub.op_regs.HcBulkCurrentED);
+      BX_OHCI_THIS hub.op_regs.HcBulkCurrentED = ED_GET_NEXTED(&cur_ed);
+      if (get_frame_remaining() < 4000)
+        break;
+    }
+  }
 }
 
 void bx_usb_ohci_c::process_ed(struct OHCI_ED *ed, const Bit32u ed_address)
@@ -1184,10 +1196,35 @@ void bx_usb_ohci_c::process_ed(struct OHCI_ED *ed, const Bit32u ed_address)
   }
 }
 
+void ohci_async_complete_packet(USBPacket *packet, void *dev)
+{
+  ((bx_usb_ohci_c*)dev)->async_complete_packet(packet);
+}
+
+void bx_usb_ohci_c::async_complete_packet(USBPacket *packet)
+{
+  BX_INFO(("Experimental async packet completion"));
+  BX_OHCI_THIS hub.async_complete = 1;
+  // These hacks are currently required for async completion
+  BX_OHCI_THIS hub.use_control_head = 1;
+  BX_OHCI_THIS hub.use_bulk_head = 1;
+  BX_OHCI_THIS hub.op_regs.HcCommandStatus.blf = 1;
+  BX_OHCI_THIS hub.op_regs.HcCommandStatus.clf = 1;
+  BX_OHCI_THIS process_lists();
+}
+
 bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
 {
   unsigned pid = 0, len = 0, len1, len2;
   int ilen, ret = 0;
+  Bit32u addr;
+  bx_bool completion;
+
+  addr = ED_GET_HEADP(ed);
+  completion = (addr == BX_OHCI_THIS hub.async_td);
+  if (completion && !BX_OHCI_THIS hub.async_complete) {
+    return 0;
+  }
 
   // The td->cc field should be 111x if it hasn't been processed yet.
   if (TD_GET_CC(td) < NotAccessed) {
@@ -1222,62 +1259,75 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
   } else
     len = 0;
 
-  BX_OHCI_THIS usb_packet.pid = pid;
-  BX_OHCI_THIS usb_packet.devaddr = ED_GET_FA(ed);
-  BX_OHCI_THIS usb_packet.devep = ED_GET_EN(ed);
-  BX_OHCI_THIS usb_packet.data = BX_OHCI_THIS device_buffer;
-  switch (pid) {
-    case USB_TOKEN_SETUP:
-    case USB_TOKEN_OUT:
-      BX_OHCI_THIS usb_packet.len = (len <= ED_GET_MPS(ed)) ? len : ED_GET_MPS(ed);
-      break;
-    case USB_TOKEN_IN:
-      BX_OHCI_THIS usb_packet.len = len;
-      break;
+  if (completion) {
+    ret = BX_OHCI_THIS usb_packet.len;
+    BX_OHCI_THIS hub.async_td = 0;
+    BX_OHCI_THIS hub.async_complete = 0;
+  } else {
+    if (BX_OHCI_THIS hub.async_td) {
+      BX_ERROR(("too many pending packets"));
+      return 0;
+    }
+    BX_OHCI_THIS usb_packet.pid = pid;
+    BX_OHCI_THIS usb_packet.devaddr = ED_GET_FA(ed);
+    BX_OHCI_THIS usb_packet.devep = ED_GET_EN(ed);
+    BX_OHCI_THIS usb_packet.data = BX_OHCI_THIS device_buffer;
+    BX_OHCI_THIS usb_packet.complete_cb = ohci_async_complete_packet;
+    BX_OHCI_THIS usb_packet.complete_dev = this;
+    switch (pid) {
+      case USB_TOKEN_SETUP:
+      case USB_TOKEN_OUT:
+        BX_OHCI_THIS usb_packet.len = (len <= ED_GET_MPS(ed)) ? len : ED_GET_MPS(ed);
+        break;
+      case USB_TOKEN_IN:
+        BX_OHCI_THIS usb_packet.len = len;
+        break;
+    }
+
+    BX_DEBUG(("    pid = %s  addr = %i   endpnt = %i    len = %i  mps = %i (td->cbp = 0x%08X, td->be = 0x%08X)", 
+      (pid == USB_TOKEN_IN)? "IN" : (pid == USB_TOKEN_OUT) ? "OUT" : (pid == USB_TOKEN_SETUP) ? "SETUP" : "UNKNOWN", 
+      ED_GET_FA(ed), ED_GET_EN(ed), len, ED_GET_MPS(ed), TD_GET_CBP(td), TD_GET_BE(td)));
+    BX_DEBUG(("    td->t = %i  ed->c = %i  td->di = %i  td->r = %i", TD_GET_T(td), ED_GET_C(ed), TD_GET_DI(td), TD_GET_R(td)));
+
+    switch (pid) {
+      case USB_TOKEN_SETUP:
+        if (len > 0)
+          DEV_MEM_READ_PHYSICAL_DMA(TD_GET_CBP(td), len, device_buffer);
+        // TODO: This is a hack.  dev->handle_packet() should return the amount of bytes
+        //  it received, not the amount it anticipates on receiving/sending in the next packet.
+        if ((ret = BX_OHCI_THIS broadcast_packet(&BX_OHCI_THIS usb_packet)) >= 0)
+          ret = 8;
+        break;
+      case USB_TOKEN_OUT:
+        if (len > 0)
+          DEV_MEM_READ_PHYSICAL_DMA(TD_GET_CBP(td), len, device_buffer);
+        ret = BX_OHCI_THIS broadcast_packet(&BX_OHCI_THIS usb_packet);
+        break;
+      case USB_TOKEN_IN:
+        ret = BX_OHCI_THIS broadcast_packet(&BX_OHCI_THIS usb_packet);
+        break;
+      default:
+        TD_SET_CC(td, UnexpectedPID);
+        TD_SET_EC(td, 3);
+        return 1;
+    }
+
+    if (ret == USB_RET_ASYNC) {
+      BX_OHCI_THIS hub.async_td = addr;
+      BX_INFO(("Experimental async packet handling"));
+      return 0;
+    }
   }
-
-  BX_DEBUG(("    pid = %s  addr = %i   endpnt = %i    len = %i  mps = %i (td->cbp = 0x%08X, td->be = 0x%08X)", 
-    (pid == USB_TOKEN_IN)? "IN" : (pid == USB_TOKEN_OUT) ? "OUT" : (pid == USB_TOKEN_SETUP) ? "SETUP" : "UNKNOWN", 
-    ED_GET_FA(ed), ED_GET_EN(ed), len, ED_GET_MPS(ed), TD_GET_CBP(td), TD_GET_BE(td)));
-  BX_DEBUG(("    td->t = %i  ed->c = %i  td->di = %i  td->r = %i", TD_GET_T(td), ED_GET_C(ed), TD_GET_DI(td), TD_GET_R(td)));
-
-  switch (pid) {
-    case USB_TOKEN_SETUP:
-      if (len > 0)
-        DEV_MEM_READ_PHYSICAL_DMA(TD_GET_CBP(td), len, device_buffer);
-      // TODO: This is a hack.  dev->handle_packet() should return the amount of bytes
-      //  it received, not the amount it anticipates on receiving/sending in the next packet.
-      if ((ret = BX_OHCI_THIS broadcast_packet(&BX_OHCI_THIS usb_packet)) >= 0)
-        ret = 8;
-      break;
-    case USB_TOKEN_OUT:
-      if (len > 0)
-        DEV_MEM_READ_PHYSICAL_DMA(TD_GET_CBP(td), len, device_buffer);
-      ret = BX_OHCI_THIS broadcast_packet(&BX_OHCI_THIS usb_packet);
-      break;
-    case USB_TOKEN_IN:
-      ret = BX_OHCI_THIS broadcast_packet(&BX_OHCI_THIS usb_packet);
-      if (ret > 0) {
-        if (((TD_GET_CBP(td) & 0xfff) + ret) > 0x1000) {
-          len1 = 0x1000 - (TD_GET_CBP(td) & 0xfff);
-          len2 = ret - len1;
-          DEV_MEM_WRITE_PHYSICAL_DMA(TD_GET_CBP(td), len1, device_buffer);
-          DEV_MEM_WRITE_PHYSICAL_DMA((TD_GET_BE(td) & ~0xfff), len2, device_buffer+len1);
-        } else {
-          DEV_MEM_WRITE_PHYSICAL_DMA(TD_GET_CBP(td), ret, device_buffer);
-        }
-      }
-      break;
-    default:
-      TD_SET_CC(td, UnexpectedPID);
-      TD_SET_EC(td, 3);
-      return 1;
+  if ((ret > 0) && (pid == USB_TOKEN_IN)) {
+    if (((TD_GET_CBP(td) & 0xfff) + ret) > 0x1000) {
+      len1 = 0x1000 - (TD_GET_CBP(td) & 0xfff);
+      len2 = ret - len1;
+      DEV_MEM_WRITE_PHYSICAL_DMA(TD_GET_CBP(td), len1, device_buffer);
+      DEV_MEM_WRITE_PHYSICAL_DMA((TD_GET_BE(td) & ~0xfff), len2, device_buffer+len1);
+    } else {
+      DEV_MEM_WRITE_PHYSICAL_DMA(TD_GET_CBP(td), ret, device_buffer);
+    }
   }
-
-  if (ret == USB_RET_ASYNC) {
-    BX_ERROR(("Async packet handling not implemented yet"));
-  }
-
   if ((ret == (int)len) || ((pid == USB_TOKEN_IN) && (ret >= 0) &&
       TD_GET_R(td)) || ((pid == USB_TOKEN_OUT) && (ret >= 0) &&
       (ret <= (int) ED_GET_MPS(ed)))) {
@@ -1315,9 +1365,6 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
           TD_SET_CC(td, Stall);
           break;
         case USB_RET_BABBLE:  // (-4)
-          TD_SET_CC(td, BufferOverrun);
-          break;
-        case USB_RET_ASYNC:  // (-5)
           TD_SET_CC(td, BufferOverrun);
           break;
         default:

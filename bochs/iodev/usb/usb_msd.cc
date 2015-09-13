@@ -615,6 +615,7 @@ int usb_msd_device_c::handle_data(USBPacket *p)
   Bit8u devep = p->devep;
   Bit8u *data = p->data;
   int len = p->len;
+  bx_bool async = (p->complete_cb != NULL);
 
   switch (p->pid) {
     case USB_TOKEN_OUT:
@@ -646,7 +647,7 @@ int usb_msd_device_c::handle_data(USBPacket *p)
           BX_DEBUG(("command tag 0x%X flags %08X len %d data %d",
                    s.tag, cbw.flags, cbw.cmd_len, s.data_len));
           s.residue = 0;
-          s.scsi_dev->scsi_send_command(s.tag, cbw.cmd, cbw.lun);
+          s.scsi_dev->scsi_send_command(s.tag, cbw.cmd, cbw.lun, async);
           if (s.residue == 0) {
             if (s.mode == USB_MSDM_DATAIN) {
               if (s.scsi_dev->scsi_read_data(s.tag)) {
@@ -841,6 +842,7 @@ void usb_msd_device_c::command_complete(int reason, Bit32u tag, Bit32u arg)
           s.mode = USB_MSDM_CSW;
       }
       s.packet = NULL;
+      usb_packet_complete(p);
     } else if (s.data_len == 0) {
       s.mode = USB_MSDM_CSW;
     }
@@ -853,6 +855,7 @@ void usb_msd_device_c::command_complete(int reason, Bit32u tag, Bit32u arg)
     if (s.usb_len == 0) {
       BX_INFO(("packet complete %p", p));
       s.packet = NULL;
+      usb_packet_complete(p);
     }
   }
 }
