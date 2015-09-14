@@ -592,7 +592,7 @@ void bx_dbg_interrupt(unsigned cpu, Bit8u vector, Bit16u error_code)
 
 void bx_dbg_halt(unsigned cpu)
 {
-  if (BX_CPU(dbg_cpu)->trace)
+  if (BX_CPU(cpu)->trace)
   {
     dbg_printf("CPU %d: HALTED\n", cpu);
   }
