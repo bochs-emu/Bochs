@@ -393,9 +393,6 @@ void scsi_device_t::scsi_read_complete(void *req, int ret)
 
 bx_bool scsi_device_t::scsi_read_data(Bit32u tag)
 {
-  Bit32u i, n;
-  int ret = 0;
-
   SCSIRequest *r = scsi_find_request(tag);
   if (!r) {
     BX_ERROR(("bad read tag 0x%x", tag));
@@ -412,42 +409,11 @@ bx_bool scsi_device_t::scsi_read_data(Bit32u tag)
     scsi_command_complete(r, STATUS_GOOD, SENSE_NO_SENSE);
     return 0;
   }
-
-  n = r->sector_count;
-  if (n > (Bit32u)(SCSI_DMA_BUF_SIZE / (512 * cluster_size)))
-    n = SCSI_DMA_BUF_SIZE / (512 * cluster_size);
-  r->buf_len = n * 512 * cluster_size;
-  if (type == SCSIDEV_TYPE_CDROM) {
-    if (r->async_supported) {
-      if (!r->seek_active) start_seek(r);
-      return 1;
-    } else {
-      i = 0;
-      do {
-        ret = (int)cdrom->read_block(r->dma_buf + (i * 2048), (Bit32u)(r->sector + i), 2048);
-      } while ((++i < n) && (ret == 1));
-      if (ret == 0) {
-        scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_MEDIUM_ERROR);
-      } else {
-        scsi_read_complete((void*)r, 0);
-      }
-    }
+  if ((r->async_supported) && (!r->seek_active)) {
+    start_seek(r);
   } else {
-    ret = (int)hdimage->lseek(r->sector * 512, SEEK_SET);
-    if (ret < 0) {
-      BX_ERROR(("could not lseek() hard drive image file"));
-      scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_HARDWARE_ERROR);
-    }
-    ret = (int)hdimage->read((bx_ptr_t)r->dma_buf, r->buf_len);
-    if (ret < r->buf_len) {
-      BX_ERROR(("could not read() hard drive image file"));
-      scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_HARDWARE_ERROR);
-    } else {
-      scsi_read_complete((void*)r, 0);
-    }
+    seek_complete(r);
   }
-  r->sector += n;
-  r->sector_count -= n;
   return 1;
 }
 
@@ -1041,13 +1007,21 @@ void scsi_device_t::seek_timer_handler(void *this_ptr)
 
 void scsi_device_t::seek_timer()
 {
-  Bit32u i, n, tag = bx_pc_system.triggeredTimerParam();
+  Bit32u tag = bx_pc_system.triggeredTimerParam();
   SCSIRequest *r = scsi_find_request(tag);
+
+  seek_complete(r);
+}
+
+void scsi_device_t::seek_complete(SCSIRequest *r)
+{
+  Bit32u i, n;
   int ret = 0;
 
   n = r->sector_count;
   if (n > (Bit32u)(SCSI_DMA_BUF_SIZE / (512 * cluster_size)))
     n = SCSI_DMA_BUF_SIZE / (512 * cluster_size);
+  r->buf_len = n * 512 * cluster_size;
   if (type == SCSIDEV_TYPE_CDROM) {
     i = 0;
     curr_lba = r->sector;
@@ -1057,13 +1031,26 @@ void scsi_device_t::seek_timer()
     } while ((++i < n) && (ret == 1));
     if (ret == 0) {
       scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_MEDIUM_ERROR);
-    } else {
-      scsi_read_complete((void*)r, 0);
+      return;
     }
-    r->sector += n;
-    r->sector_count -= n;
-    r->seek_active = 0;
+  } else {
+    ret = (int)hdimage->lseek(r->sector * 512, SEEK_SET);
+    if (ret < 0) {
+      BX_ERROR(("could not lseek() hard drive image file"));
+      scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_HARDWARE_ERROR);
+      return;
+    }
+    ret = (int)hdimage->read((bx_ptr_t)r->dma_buf, r->buf_len);
+    if (ret < r->buf_len) {
+      BX_ERROR(("could not read() hard drive image file"));
+      scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_HARDWARE_ERROR);
+      return;
+    }
   }
+  r->sector += n;
+  r->sector_count -= n;
+  r->seek_active = 0;
+  scsi_read_complete((void*)r, 0);
 }
 
 // Turn on BX_DEBUG messages at connection time

@@ -679,7 +679,7 @@ int usb_msd_device_c::handle_data(USBPacket *p)
             s.usb_len = 0;
           }
           if (s.usb_len) {
-            BX_INFO(("deferring packet %p", p));
+            BX_DEBUG(("deferring packet %p", p));
             usb_defer_packet(p, this);
             s.packet = p;
             ret = USB_RET_ASYNC;
@@ -851,11 +851,16 @@ void usb_msd_device_c::command_complete(int reason, Bit32u tag, Bit32u arg)
   s.scsi_len = arg;
   s.scsi_buf = s.scsi_dev->scsi_get_buf(tag);
   if (p) {
+    if (s.scsi_len > 0) {
+      usb_dump_packet(s.scsi_buf, s.scsi_len);
+    }
     copy_data();
     if (s.usb_len == 0) {
-      BX_INFO(("packet complete %p", p));
-      s.packet = NULL;
-      usb_packet_complete(p);
+      BX_DEBUG(("packet complete %p", p));
+      if (s.packet != NULL) {
+        s.packet = NULL;
+        usb_packet_complete(p);
+      }
     }
   }
 }

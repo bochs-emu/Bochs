@@ -101,6 +101,7 @@ protected:
 private:
   void start_seek(SCSIRequest *r);
   void seek_timer(void);
+  void seek_complete(SCSIRequest *r);
 
   enum scsidev_type type;
   device_image_t *hdimage;
