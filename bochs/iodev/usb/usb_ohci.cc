@@ -1539,6 +1539,7 @@ void bx_usb_ohci_c::usb_set_connect_status(Bit8u port, int type, bx_bool connect
             BX_ERROR(("port #%d: connect failed", port+1));
           } else {
             BX_INFO(("port #%d: connect: %s", port+1, device->get_info()));
+            device->set_async_mode(1);
           }
         }
       } else { // not connected

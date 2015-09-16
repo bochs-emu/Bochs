@@ -181,6 +181,7 @@ public:
   int get_speed() {return d.speed;}
   void set_speed(int speed) {d.speed = speed;}
   Bit8u get_address() {return d.addr;}
+  void set_async_mode(bx_bool async) {d.async_mode = async;}
   void set_debug_mode();
 
   void usb_send_msg(int msg);
@@ -203,6 +204,7 @@ protected:
     int setup_len;
     int setup_index;
     bx_bool stall;
+    bx_bool async_mode;
   } d;
 
   void usb_dump_packet(Bit8u *data, unsigned size);

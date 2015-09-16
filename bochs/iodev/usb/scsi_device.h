@@ -61,8 +61,9 @@ typedef struct SCSIRequest {
   int buf_len;
   Bit8u *dma_buf;
   Bit32u status;
-  bx_bool async_supported;
-  bx_bool seek_active;
+  bx_bool write_cmd;
+  bx_bool async_mode;
+  bx_bool seek_pending;
   struct SCSIRequest *next;
 } SCSIRequest;
 
