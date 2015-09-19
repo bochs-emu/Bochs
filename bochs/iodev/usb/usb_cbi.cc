@@ -46,7 +46,7 @@
 #define LOG_THIS
 
 // maximum size of the read buffer in sectors
-#define CBI_MAX_SECTORS   16
+#define CBI_MAX_SECTORS   18
 
 // Set this to zero if you only support CB interface.  Set to 1 if you support CBI.
 #define USB_CBI_USE_INTERRUPT  1
@@ -423,6 +423,7 @@ void usb_cbi_device_c::register_state_specific(bx_list_c *parent)
   rt_config->set_restore_handler(this, usb_cbi_restore_handler);
   new bx_shadow_num_c(list, "usb_len", &s.usb_len);
   new bx_shadow_num_c(list, "data_len", &s.data_len);
+  new bx_shadow_num_c(list, "sector", &s.sector);
   new bx_shadow_num_c(list, "sector_count", &s.sector_count);
   new bx_shadow_num_c(list, "cur_command", &s.cur_command);
   new bx_shadow_num_c(list, "fail_count", &s.fail_count);
@@ -703,24 +704,21 @@ bx_bool usb_cbi_device_c::handle_command(Bit8u *command)
                (command[8] <<  8) |
                (command[9] <<  0));
     case UFI_READ_10:
-      BX_DEBUG(("UFI_READ%i COMMAND (lba = %i, count = %i)", (s.cur_command == UFI_READ_12) ? 12 : 10, lba, count));
+      BX_DEBUG(("UFI_READ_%i COMMAND (lba = %i, count = %i)", (s.cur_command == UFI_READ_12) ? 12 : 10, lba, count));
       if (!s.inserted) {
         s.sense = 2;
         s.asc = 0x3a;
         break;
       }
-      if (count > CBI_MAX_SECTORS) {
-        s.sector_count = count - CBI_MAX_SECTORS;
-        count = CBI_MAX_SECTORS;
-      }
-      if (s.hdimage->lseek(lba * 512, SEEK_SET) < 0) {
+      s.sector = lba;
+      s.sector_count = count;
+      s.data_len = (count * 512);
+      s.usb_len = 0;
+      bx_gui->statusbar_setitem(s.statusbar_id, 1); // read
+      if (s.hdimage->lseek(s.sector * 512, SEEK_SET) < 0) {
         BX_ERROR(("could not lseek() floppy drive image file"));
-        s.usb_len = 0;
-      } else {
-        s.usb_len = (unsigned) s.hdimage->read((bx_ptr_t) s.usb_buf, count * 512);
-        bx_gui->statusbar_setitem(s.statusbar_id, 1);     // read
+        ret = 0;
       }
-      s.data_len = s.usb_len;
       break;
 
     case UFI_WRITE_12:
@@ -729,7 +727,7 @@ bx_bool usb_cbi_device_c::handle_command(Bit8u *command)
                (command[8] <<  8) |
                (command[9] <<  0));
     case UFI_WRITE_10:
-      BX_DEBUG(("UFI_WRITE%i COMMAND (lba = %i, count = %i)", (s.cur_command == UFI_WRITE_12) ? 12 : 10, lba, count));
+      BX_DEBUG(("UFI_WRITE_%i COMMAND (lba = %i, count = %i)", (s.cur_command == UFI_WRITE_12) ? 12 : 10, lba, count));
       if (!s.inserted) {
         s.sense = 2;
         s.asc = 0x3a;
@@ -830,8 +828,18 @@ bx_bool usb_cbi_device_c::handle_command(Bit8u *command)
       // However, we'll allow the command to return valid return.
       break;
 
-    case UFI_REZERO:
     case UFI_FORMAT_UNIT:
+      BX_DEBUG(("UFI_FORMAT_UNIT COMMAND (track = %i)", command[2]));
+      if (!s.inserted) {
+        s.sense = 2;
+        s.asc = 0x3a;
+        break;
+      }
+      s.sector = command[2] * 36;
+      s.data_len = (unsigned) ((command[7] << 8) | command[8]);
+      break;
+
+    case UFI_REZERO:
     case UFI_SEND_DIAGNOSTIC:
     case UFI_SEEK_10:
     case UFI_WRITE_VERIFY:
@@ -850,9 +858,9 @@ int usb_cbi_device_c::handle_data(USBPacket *p)
 {
   int ret = 0;
   Bit8u devep = p->devep;
-  Bit8u *data = p->data;
-  int len = p->len;
-  Bit32u count;
+  Bit8u *data = p->data, *tmpbuf;
+  int len = p->len, len1, len2;
+  Bit32u count, max_sectors, offset;
 
   switch (p->pid) {
     case USB_TOKEN_OUT:
@@ -877,11 +885,40 @@ int usb_cbi_device_c::handle_data(USBPacket *p)
           if ((s.data_len == 0) || (s.usb_len >= 512)) {
             s.hdimage->write((bx_ptr_t) s.usb_buf, 512);
             s.usb_len = 0;
-            bx_gui->statusbar_setitem(s.statusbar_id, 1, 1);     // write
+            bx_gui->statusbar_setitem(s.statusbar_id, 1, 1); // write
           }
           ret = len;
 
           if (ret > 0) usb_dump_packet(data, ret);
+          break;
+
+        case UFI_FORMAT_UNIT:
+          if (s.wp)
+            goto fail;
+
+          if (len > (int) s.data_len)
+            goto fail;
+          BX_DEBUG(("FORMAT UNIT: single track = %i, side = %i", (data[1] >> 4) & 1, data[1] & 1));
+          bx_gui->statusbar_setitem(s.statusbar_id, 1, 1); // write
+          if ((data[1] >> 4) & 1) {
+            offset = s.sector * 512;
+            if (data[1] & 1) {
+              offset += (18 * 512);
+            }
+            if (s.hdimage->lseek(offset, SEEK_SET) < 0) {
+              BX_ERROR(("could not lseek() floppy drive image file"));
+              break;
+            }
+            memset(s.dev_buffer, 0xff, 18 * 512);
+            if (s.hdimage->write((bx_ptr_t) s.dev_buffer, 18 * 512) < 0) {
+              BX_ERROR(("write error"));
+              break;
+            }
+          } else {
+            BX_ERROR(("FORMAT UNIT with no SINGLE TRACK bit set not yet supported"));
+          }
+          usb_dump_packet(data, len);
+          ret = len;
           break;
 
         default:
@@ -896,6 +933,65 @@ int usb_cbi_device_c::handle_data(USBPacket *p)
         switch (s.cur_command) {
           case UFI_READ_10:
           case UFI_READ_12:
+            if (len > (int) s.data_len)
+              len = s.data_len;
+            tmpbuf = data;
+            len1 = len;
+            while (len1 > 0) {
+              if (s.usb_len > 0) {
+                len2 = (len1 > (int)s.usb_len) ? s.usb_len : len1;
+                memcpy(tmpbuf, s.dev_buffer, len2);
+                tmpbuf += len2;
+                len1 -= len2;
+                s.data_len -= len2;
+                s.usb_len -= len2;
+                if (s.usb_len > 0) {
+                  memcpy(s.dev_buffer, s.dev_buffer+len2, s.usb_len);
+                } else {
+                  s.usb_buf = s.dev_buffer;
+                }
+                if (len1 == 0) break;
+              }
+              if ((int)s.usb_len < len1) {
+                count = s.sector_count;
+                max_sectors = CBI_MAX_SECTORS - (s.usb_len + 511) / 512;
+                if (count > max_sectors) {
+                  count = max_sectors;
+                }
+                s.sector_count -= count;
+                ret = s.hdimage->read((bx_ptr_t) s.usb_buf, count * 512);
+                if (ret > 0) {
+                  s.usb_len += ret;
+                  s.usb_buf += ret;
+                } else {
+                  BX_ERROR(("read error"));
+                  ret = 0;
+                  break;
+                }
+              }
+              if (len1 <= (int)s.usb_len) {
+                memcpy(tmpbuf, s.dev_buffer, len1);
+                s.data_len -= len1;
+                if (s.data_len > 0) {
+                  if ((int)s.usb_len > len1) {
+                    s.usb_len -= len1;
+                    memmove(s.dev_buffer, s.dev_buffer+len1, s.usb_len);
+                    s.usb_buf -= len1;
+                  } else {
+                    s.usb_len = 0;
+                    s.usb_buf = s.dev_buffer;
+                  }
+                }
+                len1 = 0;
+              }
+            }
+            if (s.data_len > 0) {
+              bx_gui->statusbar_setitem(s.statusbar_id, 1); // read
+            }
+            ret = len;
+            usb_dump_packet(data, ret);
+            break;
+
           case UFI_READ_CAPACITY:
           case UFI_MODE_SENSE:
           case UFI_READ_FORMAT_CAPACITIES:
@@ -907,21 +1003,7 @@ int usb_cbi_device_c::handle_data(USBPacket *p)
             s.usb_buf += len;
             s.data_len -= len;
             ret = len;
-            if ((s.data_len == 0) && (s.sector_count > 0)) {
-              count = s.sector_count;
-              if (count > CBI_MAX_SECTORS) {
-                s.sector_count = count - CBI_MAX_SECTORS;
-                count = CBI_MAX_SECTORS;
-              } else {
-                s.sector_count = 0;
-              }
-              s.usb_buf = s.dev_buffer;
-              s.usb_len = (unsigned) s.hdimage->read((bx_ptr_t) s.usb_buf, count * 512);
-              s.data_len = s.usb_len;
-              bx_gui->statusbar_setitem(s.statusbar_id, 1);     // read
-            }
-
-            if (ret > 0) usb_dump_packet(data, ret);
+            usb_dump_packet(data, ret);
             break;
 
           case UFI_START_STOP_UNIT:
