@@ -64,6 +64,8 @@ public:
   virtual void register_state_specific(bx_list_c *parent);
   virtual void cancel_packet(USBPacket *p);
 
+  static void floppy_timer_handler(void *);
+
 private:
   struct {
     Bit8u *dev_buffer;
@@ -88,9 +90,13 @@ private:
     bx_bool model;  // 0 = bochs, 1 = teac
     int statusbar_id;
     bx_bool status_changed;
+    int floppy_timer_index;
   } s;
 
   bx_bool handle_command(Bit8u *command);
+  void start_timer(void);
+  void floppy_read_sector(void);
+  void copy_data(USBPacket *p);
   bx_bool set_inserted(bx_bool value);
 
   static const char *floppy_path_handler(bx_param_string_c *param, int set,
