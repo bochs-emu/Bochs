@@ -143,6 +143,116 @@ void bx_cpuid_t::get_std_cpuid_extended_topology_leaf(Bit32u subfunction, cpuid_
 
 #endif
 
+#if BX_CPU_LEVEL >= 6
+void bx_cpuid_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
+{
+  leaf->eax = 0;
+  leaf->ebx = 0;
+  leaf->ecx = 0;
+  leaf->edx = 0;
+
+  if (is_cpu_extension_supported(BX_ISA_XSAVE))
+  {
+    switch(subfunction) {
+    case 0:
+      // EAX - valid bits of XCR0 (lower part)
+      // EBX - Maximum size (in bytes) required by enabled features
+      // ECX - Maximum size (in bytes) required by CPU supported features
+      // EDX - valid bits of XCR0 (upper part)
+      leaf->eax = cpu->xcr0_suppmask;
+
+      leaf->ebx = 512+64;
+#if BX_SUPPORT_AVX
+      if (cpu->xcr0.get_YMM())
+        leaf->ebx = XSAVE_YMM_STATE_OFFSET + XSAVE_YMM_STATE_LEN;
+#endif
+#if BX_SUPPORT_EVEX
+      if (cpu->xcr0.get_OPMASK())
+        leaf->ebx = XSAVE_OPMASK_STATE_OFFSET + XSAVE_OPMASK_STATE_LEN;
+      if (cpu->xcr0.get_ZMM_HI256())
+        leaf->ebx = XSAVE_ZMM_HI256_STATE_OFFSET + XSAVE_ZMM_HI256_STATE_LEN;
+      if (cpu->xcr0.get_HI_ZMM())
+        leaf->ebx = XSAVE_HI_ZMM_STATE_OFFSET + XSAVE_HI_ZMM_STATE_LEN;
+#endif
+
+      leaf->ecx = 512+64;
+#if BX_SUPPORT_AVX
+      if (cpu->xcr0_suppmask & BX_XCR0_YMM_MASK)
+        leaf->ecx = XSAVE_YMM_STATE_OFFSET + XSAVE_YMM_STATE_LEN;
+#endif
+#if BX_SUPPORT_EVEX
+      if (cpu->xcr0_suppmask & BX_XCR0_OPMASK_MASK)
+        leaf->ecx = XSAVE_OPMASK_STATE_OFFSET + XSAVE_OPMASK_STATE_LEN;
+      if (cpu->xcr0_suppmask & BX_XCR0_ZMM_HI256_MASK)
+        leaf->ecx = XSAVE_ZMM_HI256_STATE_OFFSET + XSAVE_ZMM_HI256_STATE_LEN;
+      if (cpu->xcr0_suppmask & BX_XCR0_HI_ZMM_MASK)
+        leaf->ecx = XSAVE_HI_ZMM_STATE_OFFSET + XSAVE_HI_ZMM_STATE_LEN;
+#endif
+
+      leaf->edx = 0;
+      break;
+
+    case 1:
+      // EAX[0] - support for the XSAVEOPT instruction
+      // EAX[1] - support for compaction extensions to the XSAVE feature set
+      // EAX[2] - support for execution of XGETBV with ECX = 1
+      // EAX[3] - support for XSAVES, XRSTORS, and the IA32_XSS MSR (not implemented yet)
+      leaf->eax = 0;
+      if (is_cpu_extension_supported(BX_ISA_XSAVEOPT))
+        leaf->eax |= 0x1;
+      if (is_cpu_extension_supported(BX_ISA_XSAVEC))
+        leaf->eax |= (1<<1) | (1<<2);
+      leaf->ebx = 0;
+      leaf->ecx = 0;
+      leaf->edx = 0;
+      break;
+
+#if BX_SUPPORT_AVX
+    case 2: // YMM leaf
+      if (cpu->xcr0_suppmask & BX_XCR0_YMM_MASK) {
+        leaf->eax = XSAVE_YMM_STATE_LEN;
+        leaf->ebx = XSAVE_YMM_STATE_OFFSET;
+        leaf->ecx = 0;
+        leaf->edx = 0;
+      }
+      break;
+#endif
+
+    case 3: // MPX leafs (BNDREGS, BNDCFG)
+    case 4:
+      break;
+
+#if BX_SUPPORT_EVEX
+    case 5: // OPMASK leaf
+      if (cpu->xcr0_suppmask & BX_XCR0_OPMASK_MASK) {
+        leaf->eax = XSAVE_OPMASK_STATE_LEN;
+        leaf->ebx = XSAVE_OPMASK_STATE_OFFSET;
+        leaf->ecx = 0;
+        leaf->edx = 0;
+      }
+      break;
+    case 6: // ZMM Hi256 leaf
+      if (cpu->xcr0_suppmask & BX_XCR0_ZMM_HI256_MASK) {
+        leaf->eax = XSAVE_ZMM_HI256_STATE_LEN;
+        leaf->ebx = XSAVE_ZMM_HI256_STATE_OFFSET;
+        leaf->ecx = 0;
+        leaf->edx = 0;
+      }
+      break;
+    case 7: // HI_ZMM leaf
+      if (cpu->xcr0_suppmask & BX_XCR0_HI_ZMM_MASK) {
+        leaf->eax = XSAVE_HI_ZMM_STATE_LEN;
+        leaf->ebx = XSAVE_HI_ZMM_STATE_OFFSET;
+        leaf->ecx = 0;
+        leaf->edx = 0;
+      }
+      break;
+#endif
+    }
+  }
+}
+#endif
+
 void bx_cpuid_t::get_leaf_0(unsigned max_leaf, const char *vendor_string, cpuid_function_t *leaf) const
 {
   // EAX: highest function understood by CPUID

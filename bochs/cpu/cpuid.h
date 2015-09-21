@@ -194,6 +194,10 @@ protected:
   void get_std_cpuid_extended_topology_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
 #endif
 
+#if BX_CPU_LEVEL >= 6
+  void get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
+#endif
+
   BX_CPP_INLINE void get_reserved_leaf(cpuid_function_t *leaf) const
   {
     leaf->eax = 0;

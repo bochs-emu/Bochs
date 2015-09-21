@@ -72,7 +72,7 @@ memory.o: memory.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debu
  ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../gui/gui.h \
  ../instrument/stubs/instrument.h ../cpu/cpu.h ../cpu/cpuid.h \
  ../cpu/crregs.h ../cpu/descriptor.h ../cpu/instr.h ../cpu/ia_opcodes.h \
- ../cpu/lazy_flags.h ../cpu/icache.h ../cpu/apic.h ../cpu/i387.h \
+ ../cpu/lazy_flags.h ../cpu/icache.h ../cpu/tlb.h ../cpu/apic.h ../cpu/i387.h \
  ../cpu/fpu/softfloat.h ../cpu/fpu/tag_w.h ../cpu/fpu/status_w.h \
  ../cpu/fpu/control_w.h ../cpu/xmm.h ../cpu/vmx.h ../iodev/iodev.h \
  ../plugin.h ../extplugin.h ../param_names.h
@@ -81,7 +81,7 @@ misc_mem.o: misc_mem.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
  ../gui/gui.h ../instrument/stubs/instrument.h ../param_names.h \
  ../cpu/cpu.h ../cpu/cpuid.h ../cpu/crregs.h ../cpu/descriptor.h \
- ../cpu/instr.h ../cpu/ia_opcodes.h ../cpu/lazy_flags.h ../cpu/icache.h \
+ ../cpu/instr.h ../cpu/ia_opcodes.h ../cpu/lazy_flags.h ../cpu/icache.h ../cpu/tlb.h \
  ../cpu/apic.h ../cpu/i387.h ../cpu/fpu/softfloat.h ../cpu/fpu/tag_w.h \
  ../cpu/fpu/status_w.h ../cpu/fpu/control_w.h ../cpu/xmm.h ../cpu/vmx.h \
  ../iodev/iodev.h ../plugin.h ../extplugin.h

@@ -538,56 +538,7 @@ void corei7_sandy_bridge_2600k_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) c
 
 // leaf 0x0000000C reserved //
 
-// leaf 0x0000000D //
-void corei7_sandy_bridge_2600k_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
-{
-  switch(subfunction) {
-  case 0:
-    // EAX - valid bits of XCR0 (lower part)
-    // EBX - Maximum size (in bytes) required by enabled features
-    // ECX - Maximum size (in bytes) required by CPU supported features
-    // EDX - valid bits of XCR0 (upper part)
-    leaf->eax = cpu->xcr0_suppmask;
-
-    leaf->ebx = 512+64;
-#if BX_SUPPORT_AVX
-    if (cpu->xcr0.get_YMM())
-      leaf->ebx = XSAVE_YMM_STATE_OFFSET + XSAVE_YMM_STATE_LEN;
-#endif
-
-    leaf->ecx = 512+64;
-#if BX_SUPPORT_AVX
-    leaf->ecx = XSAVE_YMM_STATE_OFFSET + XSAVE_YMM_STATE_LEN;
-#endif
-
-    leaf->edx = 0;
-    return;
-
-  case 1:
-    leaf->eax = 1; /* XSAVEOPT supported */
-    leaf->ebx = 0;
-    leaf->ecx = 0;
-    leaf->edx = 0;
-    return;
-
-#if BX_SUPPORT_AVX
-  case 2: // YMM leaf
-    leaf->eax = XSAVE_YMM_STATE_LEN;
-    leaf->ebx = XSAVE_YMM_STATE_OFFSET;
-    leaf->ecx = 0;
-    leaf->edx = 0;
-    return;
-#endif
-
-  default:
-    break;
-  }
-
-  leaf->eax = 0; // reserved
-  leaf->ebx = 0; // reserved
-  leaf->ecx = 0; // reserved
-  leaf->edx = 0; // reserved
-}
+// leaf 0x0000000D - XSAVE //
 
 // leaf 0x80000000 //
 void corei7_sandy_bridge_2600k_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const

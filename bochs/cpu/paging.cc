@@ -225,12 +225,6 @@
 // - Processor running at CPL=0,1,2 maps to U/S=0
 //   Processor running at CPL=3     maps to U/S=1
 
-#if BX_SUPPORT_X86_64
-  #define BX_INVALID_TLB_ENTRY BX_CONST64(0xffffffffffffffff)
-#else
-  #define BX_INVALID_TLB_ENTRY 0xffffffff
-#endif
-
 // bit [11] of the TLB lpf used for TLB_NoHostPtr valid indication
 #define TLB_LPFOf(laddr) AlignedAccessLPFOf(laddr, 0x7ff)
 
@@ -352,9 +346,8 @@ void BX_CPU_C::TLB_flush(void)
 
   invalidate_stack_cache();
 
-  for (unsigned n=0; n<BX_TLB_SIZE; n++) {
-    BX_CPU_THIS_PTR TLB.entry[n].lpf = BX_INVALID_TLB_ENTRY;
-    BX_CPU_THIS_PTR TLB.entry[n].accessBits = 0;
+  for (unsigned n=0; n < BX_TLB_SIZE; n++) {
+    BX_CPU_THIS_PTR TLB.entry[n].invalidate();
   }
 
 #if BX_CPU_LEVEL >= 5
@@ -383,8 +376,7 @@ void BX_CPU_C::TLB_flushNonGlobal(void)
   for (unsigned n=0; n<BX_TLB_SIZE; n++) {
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[n];
     if (!(tlbEntry->accessBits & TLB_GlobalPage)) {
-      tlbEntry->lpf = BX_INVALID_TLB_ENTRY;
-      tlbEntry->accessBits = 0;
+      tlbEntry->invalidate();
     }
     else {
       lpf_mask |= tlbEntry->lpf_mask;
@@ -421,8 +413,7 @@ void BX_CPU_C::TLB_invlpg(bx_address laddr)
       bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[n];
       bx_address entry_lpf_mask = tlbEntry->lpf_mask;
       if ((laddr & ~entry_lpf_mask) == (tlbEntry->lpf & ~entry_lpf_mask)) {
-        tlbEntry->lpf = BX_INVALID_TLB_ENTRY;
-        tlbEntry->accessBits = 0;
+        tlbEntry->invalidate();
       }
       else {
         lpf_mask |= entry_lpf_mask;
@@ -435,12 +426,10 @@ void BX_CPU_C::TLB_invlpg(bx_address laddr)
   else
 #endif
   {
-    unsigned TLB_index = BX_TLB_INDEX_OF(laddr, 0);
+    bx_TLB_entry *tlbEntry = BX_TLB_ENTRY_OF(laddr);
     bx_address lpf = LPFOf(laddr);
-    bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[TLB_index];
     if (TLB_LPFOf(tlbEntry->lpf) == lpf) {
-      tlbEntry->lpf = BX_INVALID_TLB_ENTRY;
-      tlbEntry->accessBits = 0;
+      tlbEntry->invalidate();
     }
   }
 
@@ -1958,19 +1947,6 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx
   }
   else {
     bx_phy_address pt_address = BX_CPU_THIS_PTR cr3 & BX_CR3_PAGING_MASK;
-
-    // see if page is in the TLB first
-    if (! verbose) {
-      bx_address lpf = LPFOf(laddr);
-      unsigned TLB_index = BX_TLB_INDEX_OF(lpf, 0);
-      bx_TLB_entry *tlbEntry  = &BX_CPU_THIS_PTR TLB.entry[TLB_index];
-
-      if (TLB_LPFOf(tlbEntry->lpf) == lpf) {
-        paddress = tlbEntry->ppf | PAGE_OFFSET(laddr);
-        *phy = paddress;
-        return 1;
-      }
-    }
 
 #if BX_CPU_LEVEL >= 6
     if (BX_CPU_THIS_PTR cr4.get_PAE()) {

@@ -29,9 +29,8 @@
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_linear_byte(unsigned s, bx_address laddr, Bit8u data)
 {
-  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
   bx_address lpf = LPFOf(laddr);
-  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+  bx_TLB_entry *tlbEntry = BX_TLB_ENTRY_OF(laddr);
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us write access
     // from this CPL.
@@ -169,9 +168,8 @@ BX_CPU_C::write_linear_xmmword(unsigned s, bx_address laddr, const BxPackedXmmRe
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_linear_xmmword_aligned(unsigned s, bx_address laddr, const BxPackedXmmRegister *data)
 {
-  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
   bx_address lpf = AlignedAccessLPFOf(laddr, 15);
-  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+  bx_TLB_entry *tlbEntry = BX_TLB_ENTRY_OF(laddr);
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us write access
     // from this CPL.
@@ -228,9 +226,8 @@ BX_CPU_C::write_linear_ymmword(unsigned s, bx_address laddr, const BxPackedYmmRe
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_linear_ymmword_aligned(unsigned s, bx_address laddr, const BxPackedYmmRegister *data)
 {
-  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
   bx_address lpf = AlignedAccessLPFOf(laddr, 31);
-  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+  bx_TLB_entry *tlbEntry = BX_TLB_ENTRY_OF(laddr);
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us write access
     // from this CPL.
@@ -289,9 +286,8 @@ BX_CPU_C::write_linear_zmmword(unsigned s, bx_address laddr, const BxPackedZmmRe
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_linear_zmmword_aligned(unsigned s, bx_address laddr, const BxPackedZmmRegister *data)
 {
-  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
   bx_address lpf = AlignedAccessLPFOf(laddr, 63);
-  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+  bx_TLB_entry *tlbEntry = BX_TLB_ENTRY_OF(laddr);
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us write access
     // from this CPL.
@@ -326,9 +322,8 @@ BX_CPU_C::read_linear_byte(unsigned s, bx_address laddr)
 {
   Bit8u data;
 
-  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
   bx_address lpf = LPFOf(laddr);
-  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+  bx_TLB_entry *tlbEntry = BX_TLB_ENTRY_OF(laddr);
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us read access
     // from this CPL.
@@ -470,9 +465,8 @@ BX_CPU_C::read_linear_xmmword(unsigned s, bx_address laddr, BxPackedXmmRegister 
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::read_linear_xmmword_aligned(unsigned s, bx_address laddr, BxPackedXmmRegister *data)
 {
-  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
   bx_address lpf = AlignedAccessLPFOf(laddr, 15);
-  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+  bx_TLB_entry *tlbEntry = BX_TLB_ENTRY_OF(laddr);
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us read access
     // from this CPL.
@@ -525,9 +519,8 @@ BX_CPU_C::read_linear_ymmword(unsigned s, bx_address laddr, BxPackedYmmRegister 
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::read_linear_ymmword_aligned(unsigned s, bx_address laddr, BxPackedYmmRegister *data)
 {
-  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
   bx_address lpf = AlignedAccessLPFOf(laddr, 31);
-  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+  bx_TLB_entry *tlbEntry = BX_TLB_ENTRY_OF(laddr);
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us read access
     // from this CPL.
@@ -582,9 +575,8 @@ BX_CPU_C::read_linear_zmmword(unsigned s, bx_address laddr, BxPackedZmmRegister 
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::read_linear_zmmword_aligned(unsigned s, bx_address laddr, BxPackedZmmRegister *data)
 {
-  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
   bx_address lpf = AlignedAccessLPFOf(laddr, 63);
-  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+  bx_TLB_entry *tlbEntry = BX_TLB_ENTRY_OF(laddr);
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us read access
     // from this CPL.
@@ -621,9 +613,8 @@ BX_CPU_C::read_linear_zmmword_aligned(unsigned s, bx_address laddr, BxPackedZmmR
 BX_CPU_C::read_RMW_linear_byte(unsigned s, bx_address laddr)
 {
   Bit8u data;
-  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
   bx_address lpf = LPFOf(laddr);
-  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+  bx_TLB_entry *tlbEntry = BX_TLB_ENTRY_OF(laddr);
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us write access
     // from this CPL.
@@ -922,9 +913,8 @@ BX_CPU_C::write_RMW_linear_qword(Bit64u val64)
 
 void BX_CPU_C::read_RMW_linear_dqword_aligned_64(unsigned s, bx_address laddr, Bit64u *hi, Bit64u *lo)
 {
-  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
   bx_address lpf = AlignedAccessLPFOf(laddr, 15);
-  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+  bx_TLB_entry *tlbEntry = BX_TLB_ENTRY_OF(laddr);
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us write access
     // from this CPL.

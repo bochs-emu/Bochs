@@ -51,7 +51,6 @@ private:
   void get_std_cpuid_leaf_5(cpuid_function_t *leaf) const;
 #endif
   void get_std_cpuid_leaf_6(cpuid_function_t *leaf) const;
-  void get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
 
   void get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const;
   void get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const;

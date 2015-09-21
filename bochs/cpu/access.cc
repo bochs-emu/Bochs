@@ -296,9 +296,8 @@ BX_CPU_C::system_read_byte(bx_address laddr)
 {
   Bit8u data;
 
-  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
   bx_address lpf = LPFOf(laddr);
-  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+  bx_TLB_entry *tlbEntry = BX_TLB_ENTRY_OF(laddr);
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us read access
     // from this CPL.
@@ -402,9 +401,8 @@ BX_CPU_C::system_read_qword(bx_address laddr)
   void BX_CPP_AttrRegparmN(2)
 BX_CPU_C::system_write_byte(bx_address laddr, Bit8u data)
 {
-  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
   Bit32u lpf = LPFOf(laddr);
-  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+  bx_TLB_entry *tlbEntry = BX_TLB_ENTRY_OF(laddr);
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us write access
     // from this CPL.
@@ -477,9 +475,8 @@ BX_CPU_C::system_write_dword(bx_address laddr, Bit32u data)
   Bit8u* BX_CPP_AttrRegparmN(2)
 BX_CPU_C::v2h_read_byte(bx_address laddr, bx_bool user)
 {
-  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
   bx_address lpf = LPFOf(laddr);
-  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+  bx_TLB_entry *tlbEntry = BX_TLB_ENTRY_OF(laddr);
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us read access
     // from this CPL.
@@ -497,9 +494,8 @@ BX_CPU_C::v2h_read_byte(bx_address laddr, bx_bool user)
   Bit8u* BX_CPP_AttrRegparmN(2)
 BX_CPU_C::v2h_write_byte(bx_address laddr, bx_bool user)
 {
-  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
   bx_address lpf = LPFOf(laddr);
-  bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
+  bx_TLB_entry *tlbEntry = BX_TLB_ENTRY_OF(laddr);
   if (tlbEntry->lpf == lpf)
   {
     // See if the TLB entry privilege level allows us write access
