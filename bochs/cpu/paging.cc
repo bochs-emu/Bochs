@@ -426,7 +426,7 @@ void BX_CPU_C::TLB_invlpg(bx_address laddr)
   else
 #endif
   {
-    bx_TLB_entry *tlbEntry = BX_TLB_ENTRY_OF(laddr);
+    bx_TLB_entry *tlbEntry = BX_TLB_ENTRY_OF(laddr, 0);
     bx_address lpf = LPFOf(laddr);
     if (TLB_LPFOf(tlbEntry->lpf) == lpf) {
       tlbEntry->invalidate();
@@ -2056,7 +2056,7 @@ int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_
 {
   Bit32u pageOffset = PAGE_OFFSET(laddr);
 
-  bx_TLB_entry *tlbEntry = BX_TLB_ENTRY_OF(laddr);
+  bx_TLB_entry *tlbEntry = BX_TLB_ENTRY_OF(laddr, 0);
 
 #if BX_SUPPORT_X86_64
   if (! IsCanonical(laddr)) {
@@ -2108,7 +2108,7 @@ int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_
     }
 #endif
 
-    bx_TLB_entry *tlbEntry2 = BX_TLB_ENTRY_OF(laddr2);
+    bx_TLB_entry *tlbEntry2 = BX_TLB_ENTRY_OF(laddr2, 0);
 
     BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, (curr_pl == 3), BX_WRITE);
     BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(tlbEntry2, laddr2, (curr_pl == 3), BX_WRITE);
@@ -2174,7 +2174,7 @@ int BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_p
   }
 #endif
 
-  bx_TLB_entry *tlbEntry = BX_TLB_ENTRY_OF(laddr);
+  bx_TLB_entry *tlbEntry = BX_TLB_ENTRY_OF(laddr, 0);
 
   /* check for reference across multiple pages */
   if ((pageOffset + len) <= 4096) {
@@ -2207,7 +2207,7 @@ int BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_p
     }
 #endif
 
-    bx_TLB_entry *tlbEntry2 = BX_TLB_ENTRY_OF(laddr2);
+    bx_TLB_entry *tlbEntry2 = BX_TLB_ENTRY_OF(laddr2, 0);
 
     BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, (curr_pl == 3), xlate_rw);
     BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(tlbEntry2, laddr2, (curr_pl == 3), xlate_rw);

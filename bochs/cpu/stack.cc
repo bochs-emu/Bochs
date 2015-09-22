@@ -108,7 +108,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::stackPrefetch(bx_address offset, unsigned 
   }
 
   Bit64u lpf = LPFOf(laddr);
-  bx_TLB_entry *tlbEntry = BX_TLB_ENTRY_OF(laddr);
+  bx_TLB_entry *tlbEntry = BX_TLB_ENTRY_OF(laddr, 0);
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us write access from this CPL
     // Assuming that we always can read if write access is OK

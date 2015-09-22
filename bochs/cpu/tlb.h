@@ -93,6 +93,6 @@ BX_CPP_INLINE bx_address AlignedAccessLPFOf(bx_address laddr, unsigned alignment
   return laddr & (LPF_MASK | alignment_mask);
 }
 
-#define BX_TLB_ENTRY_OF(lpf) (&BX_CPU_THIS_PTR TLB.entry[BX_TLB_INDEX_OF((lpf), 0)])
+#define BX_TLB_ENTRY_OF(lpf, len) (&BX_CPU_THIS_PTR TLB.entry[BX_TLB_INDEX_OF((lpf), (len))])
 
 #endif
