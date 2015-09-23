@@ -2056,6 +2056,8 @@ int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_
 {
   Bit32u pageOffset = PAGE_OFFSET(laddr);
 
+  bx_bool user = (curr_pl == 3);
+
   bx_TLB_entry *tlbEntry = BX_TLB_ENTRY_OF(laddr, 0);
 
 #if BX_SUPPORT_X86_64
@@ -2066,7 +2068,7 @@ int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_
 #endif
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  if (BX_CPU_THIS_PTR alignment_check() && (curr_pl == 3)) {
+  if (BX_CPU_THIS_PTR alignment_check() && user) {
     if (pageOffset & ac_mask) {
       BX_ERROR(("access_write_linear(): #AC misaligned access"));
       exception(BX_AC_EXCEPTION, 0);
@@ -2077,7 +2079,7 @@ int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_
   /* check for reference across multiple pages */
   if ((pageOffset + len) <= 4096) {
     // Access within single page.
-    BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, (curr_pl==3), BX_WRITE);
+    BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, user, BX_WRITE);
     BX_CPU_THIS_PTR address_xlation.pages     = 1;
 #if BX_SUPPORT_MEMTYPE
     BX_CPU_THIS_PTR address_xlation.memtype1  = tlbEntry->get_memtype();
@@ -2110,8 +2112,8 @@ int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_
 
     bx_TLB_entry *tlbEntry2 = BX_TLB_ENTRY_OF(laddr2, 0);
 
-    BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, (curr_pl == 3), BX_WRITE);
-    BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(tlbEntry2, laddr2, (curr_pl == 3), BX_WRITE);
+    BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, user, BX_WRITE);
+    BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(tlbEntry2, laddr2, user, BX_WRITE);
 #if BX_SUPPORT_MEMTYPE
     BX_CPU_THIS_PTR address_xlation.memtype1 = tlbEntry->get_memtype();
     BX_CPU_THIS_PTR address_xlation.memtype2 = tlbEntry2->get_memtype();
@@ -2158,6 +2160,8 @@ int BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_p
 
   Bit32u pageOffset = PAGE_OFFSET(laddr);
 
+  bx_bool user = (curr_pl == 3);
+
 #if BX_SUPPORT_X86_64
   if (! IsCanonical(laddr)) {
     BX_ERROR(("access_read_linear(): canonical failure"));
@@ -2166,7 +2170,7 @@ int BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_p
 #endif
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  if (BX_CPU_THIS_PTR alignment_check() && (curr_pl == 3)) {
+  if (BX_CPU_THIS_PTR alignment_check() && user) {
     if (pageOffset & ac_mask) {
       BX_ERROR(("access_read_linear(): #AC misaligned access"));
       exception(BX_AC_EXCEPTION, 0);
@@ -2179,7 +2183,7 @@ int BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_p
   /* check for reference across multiple pages */
   if ((pageOffset + len) <= 4096) {
     // Access within single page.
-    BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, (curr_pl == 3), xlate_rw);
+    BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, user, xlate_rw);
     BX_CPU_THIS_PTR address_xlation.pages     = 1;
 #if BX_SUPPORT_MEMTYPE
     BX_CPU_THIS_PTR address_xlation.memtype1  = tlbEntry->get_memtype();
@@ -2209,8 +2213,8 @@ int BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_p
 
     bx_TLB_entry *tlbEntry2 = BX_TLB_ENTRY_OF(laddr2, 0);
 
-    BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, (curr_pl == 3), xlate_rw);
-    BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(tlbEntry2, laddr2, (curr_pl == 3), xlate_rw);
+    BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, user, xlate_rw);
+    BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(tlbEntry2, laddr2, user, xlate_rw);
 #if BX_SUPPORT_MEMTYPE
     BX_CPU_THIS_PTR address_xlation.memtype1 = tlbEntry->get_memtype();
     BX_CPU_THIS_PTR address_xlation.memtype2 = tlbEntry2->get_memtype();
