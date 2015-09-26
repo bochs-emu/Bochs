@@ -721,14 +721,14 @@ bx_bool usb_cbi_device_c::handle_command(Bit8u *command)
       s.sector_count = count;
       s.data_len = (count * 512);
       s.usb_len = 0;
+      if (s.hdimage->lseek(s.sector * 512, SEEK_SET) < 0) {
+        BX_ERROR(("could not lseek() floppy drive image file"));
+        ret = 0;
+      }
       if (d.async_mode) {
-        start_timer();
+        start_timer(0);
       } else {
         bx_gui->statusbar_setitem(s.statusbar_id, 1); // read
-        if (s.hdimage->lseek(s.sector * 512, SEEK_SET) < 0) {
-          BX_ERROR(("could not lseek() floppy drive image file"));
-          ret = 0;
-        }
       }
       break;
 
@@ -744,10 +744,10 @@ bx_bool usb_cbi_device_c::handle_command(Bit8u *command)
         s.asc = 0x3a;
         break;
       }
+      s.sector = lba;
       s.data_len = (count * 512);
       s.usb_len = 0;
-      bx_gui->statusbar_setitem(s.statusbar_id, 1, 1); // write
-      if (s.hdimage->lseek(lba * 512, SEEK_SET) < 0) {
+      if (s.hdimage->lseek(s.sector * 512, SEEK_SET) < 0) {
         BX_ERROR(("could not lseek() floppy drive image file"));
         ret = 0;
       }
@@ -896,20 +896,24 @@ int usb_cbi_device_c::handle_data(USBPacket *p)
             s.usb_len += len;
             s.data_len -= len;
           }
+          ret = len;
           if ((s.data_len == 0) || (s.usb_len >= 512)) {
-            if (s.hdimage->write((bx_ptr_t) s.usb_buf, 512) < 0) {
-              BX_ERROR(("write error"));
-              ret = 0;
-              break;
+            if (d.async_mode) {
+              start_timer(1);
+              BX_DEBUG(("deferring packet %p", p));
+              usb_defer_packet(p, this);
+              s.packet = p;
+              ret = USB_RET_ASYNC;
             } else {
-              s.usb_len = 0;
-            }
-            if (s.data_len > 0) {
-              bx_gui->statusbar_setitem(s.statusbar_id, 1, 1); // write
+              if (!floppy_write_sector()) {
+                ret = 0;
+                break;
+              } else {
+                bx_gui->statusbar_setitem(s.statusbar_id, 1, 1); // write
+              }
             }
           }
-          usb_dump_packet(data, len);
-          ret = len;
+          if (ret > 0) usb_dump_packet(data, len);
           break;
 
         case UFI_FORMAT_UNIT:
@@ -957,7 +961,7 @@ int usb_cbi_device_c::handle_data(USBPacket *p)
               len = s.data_len;
             if (d.async_mode) {
               if (len > (int) s.usb_len) {
-                BX_INFO(("deferring packet %p", p));
+                BX_DEBUG(("deferring packet %p", p));
                 usb_defer_packet(p, this);
                 s.packet = p;
                 ret = USB_RET_ASYNC;
@@ -1061,16 +1065,41 @@ fail:
   return ret;
 }
 
-void usb_cbi_device_c::start_timer()
+void usb_cbi_device_c::start_timer(bx_bool write)
 {
-  bx_gui->statusbar_setitem(s.statusbar_id, 1); // read
+  bx_gui->statusbar_setitem(s.statusbar_id, 1, write);
   bx_pc_system.activate_timer(s.floppy_timer_index, CBI_SECTOR_TIME, 0);
 }
 
 void usb_cbi_device_c::floppy_timer_handler(void *this_ptr)
 {
   usb_cbi_device_c *class_ptr = (usb_cbi_device_c *) this_ptr;
-  class_ptr->floppy_read_sector();
+  class_ptr->floppy_timer();
+}
+
+void usb_cbi_device_c::floppy_timer()
+{
+  USBPacket *p = s.packet;
+
+  switch (s.cur_command) {
+    case UFI_READ_10:
+    case UFI_READ_12:
+      floppy_read_sector();
+      break;
+    case UFI_WRITE_10:
+    case UFI_WRITE_12:
+      if (!floppy_write_sector()) {
+        p->len = 0;
+      }
+      if (s.packet != NULL) {
+        usb_dump_packet(p->data, p->len);
+        s.packet = NULL;
+        usb_packet_complete(p);
+      }
+      break;
+    default:
+      BX_ERROR(("floppy_timer(): unsupported command"));
+  }
 }
 
 void usb_cbi_device_c::floppy_read_sector()
@@ -1079,28 +1108,23 @@ void usb_cbi_device_c::floppy_read_sector()
   USBPacket *p = s.packet;
 
   BX_DEBUG(("floppy_read_sector(): sector = %i", s.sector));
-  if (s.hdimage->lseek(s.sector * 512, SEEK_SET) < 0) {
-    BX_ERROR(("could not lseek() floppy drive image file"));
-    s.usb_len = 0;
-  } else {
-    if (((CBI_MAX_SECTORS * 512) - s.usb_len) >= 512) {
-      ret = s.hdimage->read((bx_ptr_t) s.usb_buf, 512);
-      if (ret > 0) {
-        s.usb_len += ret;
-        s.usb_buf += ret;
-      } else {
-        BX_ERROR(("read error"));
-        s.usb_len = 0;
-      }
+  if (((CBI_MAX_SECTORS * 512) - s.usb_len) >= 512) {
+    ret = s.hdimage->read((bx_ptr_t) s.usb_buf, 512);
+    if (ret > 0) {
+      s.usb_len += ret;
+      s.usb_buf += ret;
     } else {
-      BX_ERROR(("buffer overflow"));
+      BX_ERROR(("read error"));
       s.usb_len = 0;
     }
+  } else {
+    BX_ERROR(("buffer overflow"));
+    s.usb_len = 0;
   }
   if (s.usb_len > 0) {
     s.sector++;
     if (--s.sector_count > 0) {
-      start_timer();
+      start_timer(0);
     }
     if (s.packet != NULL) {
       if (p->len <= (int)s.usb_len) {
@@ -1110,6 +1134,24 @@ void usb_cbi_device_c::floppy_read_sector()
         usb_packet_complete(p);
       }
     }
+  }
+}
+
+bx_bool usb_cbi_device_c::floppy_write_sector()
+{
+  BX_DEBUG(("floppy_write_sector(): sector = %i", s.sector));
+  if (s.hdimage->write((bx_ptr_t) s.usb_buf, 512) < 0) {
+    BX_ERROR(("write error"));
+    return 0;
+  } else {
+    s.sector++;
+    if (s.usb_len > 512) {
+      s.usb_len -= 512;
+      memmove(s.usb_buf, s.usb_buf+512, s.usb_len);
+    } else {
+      s.usb_len = 0;
+    }
+    return 1;
   }
 }
 

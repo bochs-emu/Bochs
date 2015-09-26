@@ -94,8 +94,10 @@ private:
   } s;
 
   bx_bool handle_command(Bit8u *command);
-  void start_timer(void);
+  void start_timer(bx_bool write);
+  void floppy_timer(void);
   void floppy_read_sector(void);
+  bx_bool floppy_write_sector(void);
   void copy_data(USBPacket *p);
   bx_bool set_inserted(bx_bool value);
 
