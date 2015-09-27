@@ -281,6 +281,12 @@ static Bit8u bx_cbi_dev_mode_sense_cur[] = {
 
 void usb_cbi_restore_handler(void *dev, bx_list_c *conf);
 
+const char *fdimage_mode_names[] = {
+  "flat",
+  "vvfat",
+  NULL
+};
+
 static int usb_floppy_count = 0;
 
 usb_cbi_device_c::usb_cbi_device_c(const char *filename)
@@ -291,7 +297,7 @@ usb_cbi_device_c::usb_cbi_device_c(const char *filename)
   char *ptr1, *ptr2;
   bx_param_string_c *path;
   bx_param_bool_c *readonly;
-  bx_param_enum_c *status;
+  bx_param_enum_c *status, *mode;
 
   d.type = USB_DEV_TYPE_FLOPPY;
   d.maxspeed = USB_SPEED_FULL;
@@ -313,7 +319,7 @@ usb_cbi_device_c::usb_cbi_device_c(const char *filename)
       BX_PANIC(("USB floppy only supports image modes 'flat' and 'vvfat'"));
     }
   }
-  s.dev_buffer = NULL;
+  s.dev_buffer = new Bit8u[CBI_MAX_SECTORS * 512];
   s.statusbar_id = bx_gui->register_statusitem("USB-FD", 1);
   s.floppy_timer_index =
     DEV_register_timer(this, floppy_timer_handler, CBI_SECTOR_TIME, 0, 0, "USB FD timer");
@@ -327,6 +333,16 @@ usb_cbi_device_c::usb_cbi_device_c(const char *filename)
   path = new bx_param_string_c(s.config, "path", "Path", "", "", BX_PATHNAME_LEN);
   path->set(s.fname);
   path->set_handler(floppy_path_handler);
+  mode = new bx_param_enum_c(s.config,
+    "mode",
+    "Image mode",
+    "Mode of the floppy image",
+    fdimage_mode_names, 0, 0);
+  if (s.image_mode == BX_HDIMAGE_MODE_VVFAT) {
+    mode->set(1);
+  }
+  mode->set_handler(floppy_param_handler);
+  mode->set_ask_format("Enter mode of floppy image, (flat or vvfat): [%s] ");
   readonly = new bx_param_bool_c(s.config,
     "readonly",
     "Write Protection",
@@ -391,7 +407,6 @@ bx_bool usb_cbi_device_c::init()
     sprintf(s.info_txt, "USB CBI: media not present");
   }
   d.connected = 1;
-  s.dev_buffer = new Bit8u[CBI_MAX_SECTORS * 512];
 
   s.did_inquiry_fail = 0;
   s.fail_count = 0;
@@ -437,6 +452,7 @@ void usb_cbi_device_c::register_state_specific(bx_list_c *parent)
   BXRS_DEC_PARAM_FIELD(list, fail_count, s.fail_count);
   BXRS_PARAM_BOOL(list, did_inquiry_fail, s.did_inquiry_fail);
   BXRS_PARAM_SPECIAL32(list, usb_buf, param_save_handler, param_restore_handler);
+  new bx_shadow_data_c(list, "dev_buffer", s.dev_buffer, CBI_MAX_SECTORS * 512);
   // TODO: async usb packet
 }
 
@@ -1194,15 +1210,17 @@ void usb_cbi_device_c::cancel_packet(USBPacket *p)
 
 bx_bool usb_cbi_device_c::set_inserted(bx_bool value)
 {
-  const char *path;
+  Bit8u mode;
 
   s.inserted = value;
   if (value) {
-    path = SIM->get_param_string("path", s.config)->getptr();
-    if ((strlen(path) > 0) && (strcmp(path, "none"))) {
+    s.fname = SIM->get_param_string("path", s.config)->getptr();
+    if ((strlen(s.fname) > 0) && (strcmp(s.fname, "none"))) {
+      mode = SIM->get_param_enum("mode", s.config)->get();
+      s.image_mode = (mode == 1) ? BX_HDIMAGE_MODE_VVFAT : BX_HDIMAGE_MODE_FLAT;
       s.hdimage = DEV_hdimage_init_image(s.image_mode, 1474560, "");
-      if ((s.hdimage->open(path)) < 0) {
-        BX_ERROR(("could not open floppy image file '%s'", path));
+      if ((s.hdimage->open(s.fname)) < 0) {
+        BX_ERROR(("could not open floppy image file '%s'", s.fname));
         set_inserted(0);
         SIM->get_param_enum("status", s.config)->set(BX_EJECTED);
       } else {
