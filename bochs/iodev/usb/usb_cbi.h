@@ -68,29 +68,33 @@ public:
 
 private:
   struct {
+    // members set in constructor / init
     Bit8u *dev_buffer;
-    Bit32u usb_len;
-    Bit8u *usb_buf;
-    Bit32u data_len;
-    Bit32u sector;
-    Bit32u sector_count;
     Bit8u image_mode;
     device_image_t *hdimage;
-    USBPacket *packet;
     const char *fname;
     bx_list_c *config;
     char info_txt[BX_PATHNAME_LEN];
-    Bit8u cur_command;
-    int fail_count;
-    int sense;
-    int asc;
-    bx_bool did_inquiry_fail;
-    bx_bool inserted; // 0 = media not present
-    bx_bool wp;     // 0 = not write_protected, 1 = write_protected
     bx_bool model;  // 0 = bochs, 1 = teac
     int statusbar_id;
-    bx_bool status_changed;
     int floppy_timer_index;
+    // members handled by runtime config
+    bx_bool inserted; // 0 = media not present
+    bx_bool wp;     // 0 = not write_protected, 1 = write_protected
+    bx_bool status_changed;
+    // members handled by save/restore
+    Bit32u usb_len;
+    Bit32u data_len;
+    Bit32u sector;
+    Bit32u sector_count;
+    Bit8u cur_command;
+    int sense;
+    int asc;
+    int fail_count;
+    bx_bool did_inquiry_fail;
+    Bit8u *usb_buf;
+    // members not handled by save/restore
+    USBPacket *packet;
   } s;
 
   bx_bool handle_command(Bit8u *command);
@@ -104,6 +108,9 @@ private:
   static const char *floppy_path_handler(bx_param_string_c *param, int set,
                                          const char *oldval, const char *val, int maxlen);
   static Bit64s floppy_param_handler(bx_param_c *param, int set, Bit64s val);
+
+  static Bit64s param_save_handler(void *devptr, bx_param_c *param);
+  static void param_restore_handler(void *devptr, bx_param_c *param, Bit64s val);
 };
 
 #endif

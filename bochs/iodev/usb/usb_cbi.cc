@@ -370,8 +370,7 @@ usb_cbi_device_c::~usb_cbi_device_c(void)
 bx_bool usb_cbi_device_c::set_option(const char *option)
 {
   if (!strncmp(option, "write_protected:", 16)) {
-    s.wp = atol(&option[16]);
-    SIM->get_param_bool("readonly", s.config)->set(s.wp);
+    SIM->get_param_bool("readonly", s.config)->set(atol(&option[16]));
     return 1;
   } else if (!strncmp(option, "model:", 6)) {
     if (!strcmp(option+6, "teac")) {
@@ -428,16 +427,17 @@ void usb_cbi_device_c::register_state_specific(bx_list_c *parent)
   rt_config->add(s.config->get_by_name("readonly"));
   rt_config->add(s.config->get_by_name("status"));
   rt_config->set_restore_handler(this, usb_cbi_restore_handler);
-  new bx_shadow_num_c(list, "usb_len", &s.usb_len);
-  new bx_shadow_num_c(list, "data_len", &s.data_len);
-  new bx_shadow_num_c(list, "sector", &s.sector);
-  new bx_shadow_num_c(list, "sector_count", &s.sector_count);
-  new bx_shadow_num_c(list, "cur_command", &s.cur_command);
-  new bx_shadow_num_c(list, "fail_count", &s.fail_count);
-  new bx_shadow_bool_c(list, "did_inquiry_fail", &s.did_inquiry_fail);
-  new bx_shadow_num_c(list, "sense", &s.sense);
-  new bx_shadow_num_c(list, "asc", &s.asc);
-  // TODO
+  BXRS_DEC_PARAM_FIELD(list, usb_len, s.usb_len);
+  BXRS_DEC_PARAM_FIELD(list, data_len, s.data_len);
+  BXRS_DEC_PARAM_FIELD(list, sector, s.sector);
+  BXRS_DEC_PARAM_FIELD(list, sector_count, s.sector_count);
+  BXRS_DEC_PARAM_FIELD(list, cur_command, s.cur_command);
+  BXRS_DEC_PARAM_FIELD(list, sense, s.sense);
+  BXRS_DEC_PARAM_FIELD(list, asc, s.asc);
+  BXRS_DEC_PARAM_FIELD(list, fail_count, s.fail_count);
+  BXRS_PARAM_BOOL(list, did_inquiry_fail, s.did_inquiry_fail);
+  BXRS_PARAM_SPECIAL32(list, usb_buf, param_save_handler, param_restore_handler);
+  // TODO: async usb packet
 }
 
 void usb_cbi_device_c::handle_reset()
@@ -769,19 +769,24 @@ bx_bool usb_cbi_device_c::handle_command(Bit8u *command)
       // This is a zero data command. It simply sets the status bytes for
       //  the interrupt in part of the CBI
       BX_DEBUG(("UFI_TEST_UNIT_READY COMMAND"));
+      s.usb_len = 0;
+      s.data_len = 0;
       if (!s.inserted) {
         s.sense = 2;
         s.asc = 0x3a;
         break;
       }
-      s.usb_len = 0;
-      s.data_len = 0;
       break;
 
     case UFI_PREVENT_ALLOW_REMOVAL:
       BX_DEBUG(("UFI_PREVENT_ALLOW_REMOVAL COMMAND (prevent = %i)", (command[4] & 1) > 0));
       s.usb_len = 0;
       s.data_len = 0;
+      if (command[4] & 1) {
+        s.sense = 5;
+        s.asc = 0x24;
+        break;
+      }
       break;
 
     case UFI_MODE_SENSE:
@@ -837,9 +842,17 @@ bx_bool usb_cbi_device_c::handle_command(Bit8u *command)
       break;
 
     case UFI_START_STOP_UNIT:
+      BX_DEBUG(("UFI_START_STOP_UNIT COMMAND (start = %i)", command[4] & 1));
       // The UFI specs say that access to the media is allowed
       //  even if the start/stop command is used to stop the device.
       // However, we'll allow the command to return valid return.
+      s.usb_len = 0;
+      s.data_len = 0;
+      if ((command[4] & 2) != 0) {
+        s.sense = 5;
+        s.asc = 0x24;
+        break;
+      }
       break;
 
     case UFI_FORMAT_UNIT:
@@ -1193,6 +1206,7 @@ bx_bool usb_cbi_device_c::set_inserted(bx_bool value)
         set_inserted(0);
         SIM->get_param_enum("status", s.config)->set(BX_EJECTED);
       } else {
+        s.wp = SIM->get_param_bool("readonly", s.config)->get();
         s.sense = 6;
         s.asc = 0x28;
       }
@@ -1257,6 +1271,32 @@ Bit64s usb_cbi_device_c::floppy_param_handler(bx_param_c *param, int set, Bit64s
     }
   }
   return val;
+}
+
+Bit64s usb_cbi_device_c::param_save_handler(void *devptr, bx_param_c *param)
+{
+  Bit64s val = 0;
+  usb_cbi_device_c *floppy = (usb_cbi_device_c*) devptr;
+
+  if (!strcmp(param->get_name(), "usb_buf")) {
+    if (floppy->s.usb_buf != NULL) {
+      val = (Bit32u)(floppy->s.usb_buf - floppy->s.dev_buffer);
+    } else {
+      val = 0;
+    }
+  } else {
+    val = 0;
+  }
+  return val;
+}
+
+void usb_cbi_device_c::param_restore_handler(void *devptr, bx_param_c *param, Bit64s val)
+{
+  usb_cbi_device_c *floppy = (usb_cbi_device_c*) devptr;
+
+  if (!strcmp(param->get_name(), "usb_buf")) {
+    floppy->s.usb_buf = floppy->s.dev_buffer + val;
+  }
 }
 
 void usb_cbi_restore_handler(void *dev, bx_list_c *conf)
