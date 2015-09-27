@@ -43,7 +43,14 @@ case "$target" in
   *-pc-windows* | *-pc-winnt*)
     DEFAULT_GUI=win32 # default to win32 gui
     NO_LT=1           # do not use libtool at all
-    MSVC_TARGET=1
+    case "$target" in
+      x86_64*)
+        MSVC_TARGET=64
+        ;;
+      *)
+        MSVC_TARGET=32
+        ;;
+    esac
     ;;
   *-cygwin* | *-mingw32*)
     NO_LT=1   # do not use libtool at all
@@ -138,13 +145,15 @@ AC_CHECK_SIZEOF(unsigned short)
 AC_CHECK_SIZEOF(unsigned int)
 AC_CHECK_SIZEOF(unsigned long)
 AC_CHECK_SIZEOF(unsigned long long)
-AC_CHECK_SIZEOF(int *)
+if test "$MSVC_TARGET" = 0; then
+  AC_CHECK_SIZEOF(int *)
+fi
 AC_CHECK_FUNCS(getenv, AC_DEFINE(BX_HAVE_GETENV))
 AC_CHECK_FUNCS(setenv, AC_DEFINE(BX_HAVE_SETENV))
 AC_CHECK_FUNCS(snprintf, AC_DEFINE(BX_HAVE_SNPRINTF))
 AC_CHECK_FUNCS(vsnprintf, AC_DEFINE(BX_HAVE_VSNPRINTF))
 
-if test "$MSVC_TARGET" != 1; then
+if test "$MSVC_TARGET" = 0; then
   AC_CHECK_FUNCS(select, AC_DEFINE(BX_HAVE_SELECT))
   AC_CHECK_TYPE(socklen_t, AC_DEFINE(BX_HAVE_SOCKLEN_T), , [#include <sys/types.h>
   #include <sys/socket.h>])
@@ -201,6 +210,11 @@ else
   AC_DEFINE(BX_HAVE_FSEEKO64, 0)
   AC_DEFINE(BX_HAVE_SSIZE_T, 0)
   AC_DEFINE(BX_HAVE_SETENV, 0)
+  if test "$MSVC_TARGET" = 64; then
+    AC_DEFINE(SIZEOF_INT_P, 8)
+  else
+    AC_DEFINE(SIZEOF_INT_P, 4)
+  fi
 fi
 AC_CHECK_FUNCS(sleep, AC_DEFINE(BX_HAVE_SLEEP))
 AC_CHECK_FUNCS(nanosleep, AC_DEFINE(BX_HAVE_NANOSLEEP))
@@ -794,7 +808,7 @@ AC_ARG_ENABLE(debugger,
     AC_PATH_PROG(FLEX, flex, not_found)
     AC_PATH_PROG(YACC, yacc, not_found)
     AC_MSG_CHECKING(whether to generate parser / lexer files)
-    if test "$FLEX" = not_found -o "$YACC" = not_found -o "$MSVC_TARGET" = 1; then
+    if test "$FLEX" = not_found -o "$YACC" = not_found -o "$MSVC_TARGET" != 0; then
       NO_FLEX_YACC='#'
       AC_MSG_RESULT(no)
     else
@@ -1647,7 +1661,7 @@ if test "$networking" = yes; then
     ethernet_modules="$ethernet_modules slirp"
     AC_DEFINE(BX_NETMOD_SLIRP, 1)
   fi
-  if test "$MSVC_TARGET" != 1; then
+  if test "$MSVC_TARGET" = 0; then
     AC_CHECK_HEADER(net/bpf.h, [
         NETLOW_OBJS="$NETLOW_OBJS eth_fbsd.o"
         ethernet_modules="$ethernet_modules fbsd"
