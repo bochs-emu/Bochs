@@ -35,7 +35,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
 
   /* new cs selector must not be null, else #GP(0) */
   if ((cs_raw & 0xfffc) == 0) {
-    BX_ERROR(("call_protected: CS selector null"));
+    BX_DEBUG(("call_protected: CS selector null"));
     exception(BX_GP_EXCEPTION, 0);
   }
 
