@@ -447,10 +447,12 @@ void usb_cbi_device_c::register_state_specific(bx_list_c *parent)
   BXRS_DEC_PARAM_FIELD(list, sector, s.sector);
   BXRS_DEC_PARAM_FIELD(list, sector_count, s.sector_count);
   BXRS_DEC_PARAM_FIELD(list, cur_command, s.cur_command);
+  BXRS_DEC_PARAM_FIELD(list, cur_track, s.cur_track);
   BXRS_DEC_PARAM_FIELD(list, sense, s.sense);
   BXRS_DEC_PARAM_FIELD(list, asc, s.asc);
   BXRS_DEC_PARAM_FIELD(list, fail_count, s.fail_count);
   BXRS_PARAM_BOOL(list, did_inquiry_fail, s.did_inquiry_fail);
+  BXRS_PARAM_BOOL(list, seek_pending, s.seek_pending);
   BXRS_PARAM_SPECIAL32(list, usb_buf, param_save_handler, param_restore_handler);
   new bx_shadow_data_c(list, "dev_buffer", s.dev_buffer, CBI_MAX_SECTORS * 512);
   // TODO: async usb packet
@@ -638,7 +640,8 @@ bx_bool usb_cbi_device_c::handle_command(Bit8u *command)
 
   s.cur_command = command[0];
   s.usb_buf = s.dev_buffer;
-  s.sector_count = 0;
+  s.usb_len = 0;
+  s.data_len = 0;
 
   // most commands that use the LBA field, use the same place for this field
   lba = ((command[2] << 24) |
@@ -742,6 +745,7 @@ bx_bool usb_cbi_device_c::handle_command(Bit8u *command)
         ret = 0;
       }
       if (d.async_mode) {
+        s.seek_pending = 1;
         start_timer(0);
       } else {
         bx_gui->statusbar_setitem(s.statusbar_id, 1); // read
@@ -767,6 +771,9 @@ bx_bool usb_cbi_device_c::handle_command(Bit8u *command)
         BX_ERROR(("could not lseek() floppy drive image file"));
         ret = 0;
       }
+      if (d.async_mode) {
+        s.seek_pending = 1;
+      }
       break;
 
     case UFI_READ_CAPACITY:
@@ -785,8 +792,6 @@ bx_bool usb_cbi_device_c::handle_command(Bit8u *command)
       // This is a zero data command. It simply sets the status bytes for
       //  the interrupt in part of the CBI
       BX_DEBUG(("UFI_TEST_UNIT_READY COMMAND"));
-      s.usb_len = 0;
-      s.data_len = 0;
       if (!s.inserted) {
         s.sense = 2;
         s.asc = 0x3a;
@@ -796,8 +801,6 @@ bx_bool usb_cbi_device_c::handle_command(Bit8u *command)
 
     case UFI_PREVENT_ALLOW_REMOVAL:
       BX_DEBUG(("UFI_PREVENT_ALLOW_REMOVAL COMMAND (prevent = %i)", (command[4] & 1) > 0));
-      s.usb_len = 0;
-      s.data_len = 0;
       if (command[4] & 1) {
         s.sense = 5;
         s.asc = 0x24;
@@ -844,8 +847,6 @@ bx_bool usb_cbi_device_c::handle_command(Bit8u *command)
         case 1:  // changable values
         case 2:  // default values
         case 3:  // saved values
-          s.usb_len = 0;
-          s.data_len = 0;
           ret = 0;
           break;
       }
@@ -862,8 +863,6 @@ bx_bool usb_cbi_device_c::handle_command(Bit8u *command)
       // The UFI specs say that access to the media is allowed
       //  even if the start/stop command is used to stop the device.
       // However, we'll allow the command to return valid return.
-      s.usb_len = 0;
-      s.data_len = 0;
       if ((command[4] & 2) != 0) {
         s.sense = 5;
         s.asc = 0x24;
@@ -880,6 +879,9 @@ bx_bool usb_cbi_device_c::handle_command(Bit8u *command)
       }
       s.sector = command[2] * 36;
       s.data_len = (unsigned) ((command[7] << 8) | command[8]);
+      if (d.async_mode) {
+        s.seek_pending = 1;
+      }
       break;
 
     case UFI_REZERO:
@@ -903,7 +905,7 @@ int usb_cbi_device_c::handle_data(USBPacket *p)
   Bit8u devep = p->devep;
   Bit8u *data = p->data, *tmpbuf;
   int len = p->len, len1;
-  Bit32u count, max_sectors, offset;
+  Bit32u count, max_sectors;
 
   switch (p->pid) {
     case USB_TOKEN_OUT:
@@ -934,7 +936,7 @@ int usb_cbi_device_c::handle_data(USBPacket *p)
               s.packet = p;
               ret = USB_RET_ASYNC;
             } else {
-              if (!floppy_write_sector()) {
+              if (floppy_write_sector() < 0) {
                 ret = 0;
                 break;
               } else {
@@ -952,26 +954,33 @@ int usb_cbi_device_c::handle_data(USBPacket *p)
           if (len > (int) s.data_len)
             goto fail;
           BX_DEBUG(("FORMAT UNIT: single track = %i, side = %i", (data[1] >> 4) & 1, data[1] & 1));
-          bx_gui->statusbar_setitem(s.statusbar_id, 1, 1); // write
           if ((data[1] >> 4) & 1) {
-            offset = s.sector * 512;
             if (data[1] & 1) {
-              offset += (18 * 512);
+              s.sector += 18;
             }
-            if (s.hdimage->lseek(offset, SEEK_SET) < 0) {
+            if (s.hdimage->lseek(s.sector * 512, SEEK_SET) < 0) {
               BX_ERROR(("could not lseek() floppy drive image file"));
               break;
             }
-            memset(s.dev_buffer, 0xff, 18 * 512);
-            if (s.hdimage->write((bx_ptr_t) s.dev_buffer, 18 * 512) < 0) {
-              BX_ERROR(("write error"));
-              break;
+            if (d.async_mode) {
+              start_timer(2);
+              BX_DEBUG(("deferring packet %p", p));
+              usb_defer_packet(p, this);
+               s.packet = p;
+              ret = USB_RET_ASYNC;
+            } else {
+              bx_gui->statusbar_setitem(s.statusbar_id, 1, 1); // write
+              memset(s.dev_buffer, 0xff, 18 * 512);
+              if (s.hdimage->write((bx_ptr_t) s.dev_buffer, 18 * 512) < 0) {
+                BX_ERROR(("write error"));
+                break;
+              }
+              ret = len;
             }
           } else {
             BX_ERROR(("FORMAT UNIT with no SINGLE TRACK bit set not yet supported"));
           }
-          usb_dump_packet(data, len);
-          ret = len;
+          if (ret > 0) usb_dump_packet(data, len);
           break;
 
         default:
@@ -1094,10 +1103,25 @@ fail:
   return ret;
 }
 
-void usb_cbi_device_c::start_timer(bx_bool write)
+void usb_cbi_device_c::start_timer(Bit8u mode)
 {
-  bx_gui->statusbar_setitem(s.statusbar_id, 1, write);
-  bx_pc_system.activate_timer(s.floppy_timer_index, CBI_SECTOR_TIME, 0);
+  Bit32u delay = CBI_SECTOR_TIME;
+  Bit8u new_track, steps;
+
+  if (mode == 2) {
+    delay *= 18;
+  }
+  bx_gui->statusbar_setitem(s.statusbar_id, 1, (mode > 0));
+  if (s.seek_pending) {
+    new_track = (s.sector / 36);
+    steps = abs(new_track - s.cur_track);
+    if (steps == 0) steps = 1;
+    // FIXME: this is okay for selected data rate 1000 kbps
+    delay += (steps * 4000);
+    s.cur_track = new_track;
+    s.seek_pending = 0;
+  }
+  bx_pc_system.activate_timer(s.floppy_timer_index, delay, 0);
 }
 
 void usb_cbi_device_c::floppy_timer_handler(void *this_ptr)
@@ -1109,29 +1133,40 @@ void usb_cbi_device_c::floppy_timer_handler(void *this_ptr)
 void usb_cbi_device_c::floppy_timer()
 {
   USBPacket *p = s.packet;
+  int ret = 1;
 
   switch (s.cur_command) {
     case UFI_READ_10:
     case UFI_READ_12:
-      floppy_read_sector();
+      ret = floppy_read_sector();
       break;
     case UFI_WRITE_10:
     case UFI_WRITE_12:
-      if (!floppy_write_sector()) {
-        p->len = 0;
-      }
-      if (s.packet != NULL) {
-        usb_dump_packet(p->data, p->len);
-        s.packet = NULL;
-        usb_packet_complete(p);
+      ret = floppy_write_sector();
+      break;
+    case UFI_FORMAT_UNIT:
+      memset(s.dev_buffer, 0xff, 18 * 512);
+      if (s.hdimage->write((bx_ptr_t) s.dev_buffer, 18 * 512) < 0) {
+        BX_ERROR(("write error"));
+        ret = -1;
       }
       break;
     default:
       BX_ERROR(("floppy_timer(): unsupported command"));
+      ret = -1;
+  }
+  if (ret < 0) {
+    p->len = 0;
+  }
+  // ret: 0 = not complete / 1 = complete / -1 = error
+  if ((s.packet != NULL) && (ret != 0)) {
+    usb_dump_packet(p->data, p->len);
+    s.packet = NULL;
+    usb_packet_complete(p);
   }
 }
 
-void usb_cbi_device_c::floppy_read_sector()
+int usb_cbi_device_c::floppy_read_sector()
 {
   ssize_t ret;
   USBPacket *p = s.packet;
@@ -1152,28 +1187,32 @@ void usb_cbi_device_c::floppy_read_sector()
   }
   if (s.usb_len > 0) {
     s.sector++;
+    s.cur_track = (s.sector / 36);
     if (--s.sector_count > 0) {
       start_timer(0);
     }
     if (s.packet != NULL) {
       if (p->len <= (int)s.usb_len) {
         copy_data(p);
-        usb_dump_packet(p->data, p->len);
-        s.packet = NULL;
-        usb_packet_complete(p);
+      } else {
+        return 0;
       }
     }
+    return 1;
+  } else {
+    return -1;
   }
 }
 
-bx_bool usb_cbi_device_c::floppy_write_sector()
+int usb_cbi_device_c::floppy_write_sector()
 {
   BX_DEBUG(("floppy_write_sector(): sector = %i", s.sector));
   if (s.hdimage->write((bx_ptr_t) s.usb_buf, 512) < 0) {
     BX_ERROR(("write error"));
-    return 0;
+    return -1;
   } else {
     s.sector++;
+    s.cur_track = (s.sector / 36);
     if (s.usb_len > 512) {
       s.usb_len -= 512;
       memmove(s.usb_buf, s.usb_buf+512, s.usb_len);
