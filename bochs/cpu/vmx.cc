@@ -1695,7 +1695,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   }
 
   guest.activity_state = VMread32(VMCS_32BIT_GUEST_ACTIVITY_STATE);
-  if (guest.activity_state >= BX_VMX_LAST_ACTIVITY_STATE) {
+  if (guest.activity_state > BX_VMX_LAST_ACTIVITY_STATE) {
     BX_ERROR(("VMENTER FAIL: VMCS guest activity state %d", guest.activity_state));
     return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
   }
