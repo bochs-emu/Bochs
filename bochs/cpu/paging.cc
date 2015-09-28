@@ -1130,10 +1130,13 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
   bx_phy_address paddress, ppf, poffset = PAGE_OFFSET(laddr);
   unsigned isWrite = rw & 1; // write or r-m-w
   unsigned isExecute = (rw == BX_EXECUTE);
+  bx_address lpf = LPFOf(laddr);
 
   INC_TLB_STAT(tlbLookups);
-
-  bx_address lpf = LPFOf(laddr);
+  if (isExecute)
+    INC_TLB_STAT(tlbExecuteLookups);
+  if (isWrite)
+    INC_TLB_STAT(tlbWriteLookups);
 
   // already looked up TLB for code access
   if (! isExecute && TLB_LPFOf(tlbEntry->lpf) == lpf)
@@ -1150,6 +1153,10 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
   }
 
   INC_TLB_STAT(tlbMisses);
+  if (isExecute)
+    INC_TLB_STAT(tlbExecuteMisses);
+  if (isWrite)
+    INC_TLB_STAT(tlbWriteMisses);
 
   Bit32u lpf_mask = 0xfff; // 4K pages
   Bit32u combined_access = 0x06;

@@ -152,7 +152,11 @@ void BX_CPU_C::init_statistics(void)
 
 #if InstrumentTLB
   new bx_shadow_num_c(cpu, "tlbLookups", &stats->tlbLookups);
+  new bx_shadow_num_c(cpu, "tlbExecuteLookups", &stats->tlbExecuteLookups);
+  new bx_shadow_num_c(cpu, "tlbWriteLookups", &stats->tlbWriteLookups);
   new bx_shadow_num_c(cpu, "tlbMisses", &stats->tlbMisses);
+  new bx_shadow_num_c(cpu, "tlbExecuteMisses", &stats->tlbExecuteMisses);
+  new bx_shadow_num_c(cpu, "tlbWriteMisses", &stats->tlbWriteMisses);
 #endif
 
 #if InstrumentTLBFlush
