@@ -760,7 +760,7 @@ bx_bool BX_CPU_C::resume_from_system_management_mode(BX_SMM_State *smm_state)
     Bit16u ar_data = smm_state->segreg[segreg].selector_ar >> 16;
     if (set_segment_ar_data(&BX_CPU_THIS_PTR sregs[segreg],
           (ar_data >> 8) & 1,
-          smm_state->segreg[segreg].selector_ar & 0xf0ff,
+          smm_state->segreg[segreg].selector_ar & 0xffff,
           smm_state->segreg[segreg].base,
           smm_state->segreg[segreg].limit, ar_data))
     {
@@ -774,7 +774,7 @@ bx_bool BX_CPU_C::resume_from_system_management_mode(BX_SMM_State *smm_state)
   Bit16u ar_data = smm_state->ldtr.selector_ar >> 16;
   if (set_segment_ar_data(&BX_CPU_THIS_PTR ldtr,
           (ar_data >> 8) & 1,
-          smm_state->ldtr.selector_ar & 0xf0ff,
+          smm_state->ldtr.selector_ar & 0xffff,
           smm_state->ldtr.base,
           smm_state->ldtr.limit, ar_data))
   {
@@ -787,7 +787,7 @@ bx_bool BX_CPU_C::resume_from_system_management_mode(BX_SMM_State *smm_state)
   ar_data = smm_state->tr.selector_ar >> 16;
   if (set_segment_ar_data(&BX_CPU_THIS_PTR tr,
           (ar_data >> 8) & 1,
-          smm_state->tr.selector_ar & 0xf0ff,
+          smm_state->tr.selector_ar & 0xffff,
           smm_state->tr.base,
           smm_state->tr.limit, ar_data))
   {
