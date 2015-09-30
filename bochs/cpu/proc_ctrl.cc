@@ -587,6 +587,12 @@ Bit64u BX_CPU_C::get_TSC(void)
 {
   Bit64u tsc = bx_pc_system.time_ticks() - BX_CPU_THIS_PTR tsc_last_reset;
 #if BX_SUPPORT_VMX || BX_SUPPORT_SVM
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    if (VMEXIT(VMX_VM_EXEC_CTRL2_TSC_OFFSET) && SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_TSC_SCALING))
+      tsc = (tsc * BX_CPU_THIS_PTR vmcs.tsc_multiplier) >> 48;
+  }
+#endif
   tsc += BX_CPU_THIS_PTR tsc_offset;
 #endif
   return tsc;

@@ -240,6 +240,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_VMX_VMCS_SHADOWING        (1 << 20)              /* VMCS Shadowing */
 #define BX_VMX_EPT_EXCEPTION         (1 << 21)              /* EPT Violation (#VE) exception */
 #define BX_VMX_PML                   (1 << 22)              /* Page Modification Logging - not implemented yet */
+#define BX_VMX_TSC_SCALING           (1 << 23)              /* TSC Scaling */
 
 // CPUID defines - STD features CPUID[0x00000001].EDX
 // ----------------------------

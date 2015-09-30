@@ -387,6 +387,10 @@ bx_bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
       return BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT);
 #endif
 
+    case VMCS_64BIT_CONTROL_TSC_MULTIPLIER:
+    case VMCS_64BIT_CONTROL_TSC_MULTIPLIER_HI:
+      return BX_SUPPORT_VMX_EXTENSION(BX_VMX_TSC_SCALING);
+
 #if BX_SUPPORT_VMX >= 2
     /* VMCS 64-bit host state fields */
     /* binary 0010_11xx_xxxx_xxx0 */
@@ -589,6 +593,7 @@ void BX_CPU_C::init_vmx_capabilities(void)
   //   [19] Reserved (must be '0)
   //   [20] XSAVES Exiting (require XSAVES instruction support - not implemented)
   //   [21] PCOMMIT Exiting (require PCOMMIT instruction support - not implemented)
+  //   [25] Enable TSC Scaling
 
   cap->vmx_vmexec_ctrl2_supported_bits = 0;
 
@@ -642,6 +647,9 @@ void BX_CPU_C::init_vmx_capabilities(void)
     cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_EPT_VIOLATION_EXCEPTION;
   }
 #endif
+  if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_TSC_SCALING)) {
+    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_TSC_SCALING;
+  }
 
   // enable secondary vm exec controls if needed
   if (cap->vmx_vmexec_ctrl2_supported_bits != 0)

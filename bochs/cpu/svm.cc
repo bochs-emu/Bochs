@@ -223,6 +223,7 @@ void BX_CPU_C::SvmEnterSaveHostState(SVM_HOST_STATE *host)
 void BX_CPU_C::SvmExitLoadHostState(SVM_HOST_STATE *host)
 {
   BX_CPU_THIS_PTR tsc_offset = 0;
+  BX_CPU_THIS_PTR tsc_multiplier = 1;
 
   for (unsigned n=0;n < 4; n++) {
     BX_CPU_THIS_PTR sregs[n] = host->sregs[n];

@@ -263,6 +263,8 @@ enum VMFunctions {
 #define VMCS_64BIT_CONTROL_VE_EXCEPTION_INFO_ADDR_HI       0x0000202B
 #define VMCS_64BIT_CONTROL_XSS_EXITING_BITMAP              0x0000202C /* XSAVES */
 #define VMCS_64BIT_CONTROL_XSS_EXITING_BITMAP_HI           0x0000202D
+#define VMCS_64BIT_CONTROL_TSC_MULTIPLIER                  0x00002032 /* TSC Scaling */
+#define VMCS_64BIT_CONTROL_TSC_MULTIPLIER_HI               0x00002033
 
 /* VMCS 64-bit read only data fields */
 /* binary 0010_01xx_xxxx_xxx0 */
@@ -419,7 +421,7 @@ enum VMFunctions {
 #define VMCS_HOST_RSP                                      0x00006C14
 #define VMCS_HOST_RIP                                      0x00006C16
 
-#define VMX_HIGHEST_VMCS_ENCODING   (0x30)
+#define VMX_HIGHEST_VMCS_ENCODING   (0x34)
 
 // ===============================
 //  VMCS fields encoding/decoding
@@ -680,6 +682,7 @@ typedef struct bx_VMCS
 #define VMX_VM_EXEC_CTRL3_SUPPRESS_GUEST_VMX_TRACE  (1 << 19) /* Processor Trace */
 #define VMX_VM_EXEC_CTRL3_XSAVES_XRSTORS            (1 << 20) /* XSAVES */
 #define VMX_VM_EXEC_CTRL3_PCOMMIT_EXITING           (1 << 21) /* PCOMMIT */
+#define VMX_VM_EXEC_CTRL3_TSC_SCALING               (1 << 25) /* TSC Scaling */
 
 #define VMX_VM_EXEC_CTRL3_SUPPORTED_BITS \
     (BX_CPU_THIS_PTR vmx_cap.vmx_vmexec_ctrl2_supported_bits)
@@ -688,11 +691,12 @@ typedef struct bx_VMCS
 
    Bit64u vmcs_linkptr;
 
+   Bit64u tsc_multiplier;
+
    Bit32u vm_exceptions_bitmap;
    Bit32u vm_pf_mask;
    Bit32u vm_pf_match;
    Bit64u io_bitmap_addr[2];
-   Bit64u tsc_offset;
    bx_phy_address msr_bitmap_addr;
 
    bx_address vm_cr0_mask;

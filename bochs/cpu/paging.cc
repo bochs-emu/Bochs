@@ -324,8 +324,8 @@ static const Bit8u priv_check[BX_PRIV_CHECK_SIZE] =
 //       result when the direct access is not allowed.
 //
 
-#define TLB_NoHostPtr   (0x800) /* set this bit when direct access is NOT allowed */
-#define TLB_GlobalPage  (0x80000000)
+#define TLB_NoHostPtr     (0x800) /* set this bit when direct access is NOT allowed */
+#define TLB_GlobalPage    (0x80000000)
 
 #define TLB_SysReadOK     (0x01)
 #define TLB_UserReadOK    (0x02)

@@ -750,6 +750,14 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
 
 #endif // BX_SUPPORT_X86_64
 
+  if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_TSC_SCALING) {
+     if ((vm->tsc_multiplier = VMread64(VMCS_64BIT_CONTROL_TSC_MULTIPLIER)) == 0) {
+       BX_ERROR(("VMFAIL: VMCS EXEC CTRL: TSC multiplier should be non zero"));
+       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+     }
+  }
+
+
   //
   // Load VM-exit control fields to VMCS Cache
   //
@@ -3681,6 +3689,7 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vmexec_ctrls2, BX_CPU_THIS_PTR vmcs.vmexec_ctrls2);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vmexec_ctrls3, BX_CPU_THIS_PTR vmcs.vmexec_ctrls3);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vm_exceptions_bitmap, BX_CPU_THIS_PTR vmcs.vm_exceptions_bitmap);
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, tsc_multiplier, BX_CPU_THIS_PTR vmcs.tsc_multiplier);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vm_pf_mask, BX_CPU_THIS_PTR vmcs.vm_pf_mask);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vm_pf_match, BX_CPU_THIS_PTR vmcs.vm_pf_match);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, io_bitmap_addr1, BX_CPU_THIS_PTR vmcs.io_bitmap_addr[0]);
