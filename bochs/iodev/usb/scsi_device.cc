@@ -95,6 +95,7 @@ scsi_device_t::scsi_device_t(device_image_t *_hdimage, int _tcq,
   sprintf(drive_serial_str, "%d", serial_number++);
   seek_timer_index =
     DEV_register_timer(this, seek_timer_handler, 1000, 0, 0, "USB HD seek");
+  statusbar_id = bx_gui->register_statusitem("USB-HD", 1);
 
   put("SCSIHD");
 }
@@ -118,6 +119,7 @@ scsi_device_t::scsi_device_t(cdrom_base_c *_cdrom, int _tcq,
   sprintf(drive_serial_str, "%d", serial_number++);
   seek_timer_index =
     DEV_register_timer(this, seek_timer_handler, 1000, 0, 0, "USB CD seek");
+  statusbar_id = bx_gui->register_statusitem("USB-CD", 1);
 
   put("SCSICD");
 }
@@ -145,6 +147,7 @@ scsi_device_t::~scsi_device_t(void)
     }
     free_requests = NULL;
   }
+  bx_gui->unregister_statusitem(statusbar_id);
   bx_pc_system.deactivate_timer(seek_timer_index);
   bx_pc_system.unregisterTimer(seek_timer_index);
 }
@@ -337,7 +340,7 @@ void scsi_device_t::restore_requests(const char *path)
                 } else if (!strcmp(pname, "async_mode")) {
                   r->async_mode = (bx_bool)value;
                 } else if (!strcmp(pname, "seek_pending")) {
-                  r->seek_pending = (bx_bool)value;
+                  r->seek_pending = (Bit8u)value;
                 } else {
                   BX_ERROR(("restore_requests(): data format error"));
                   rrq_error = 1;
@@ -396,30 +399,29 @@ void scsi_device_t::scsi_read_complete(void *req, int ret)
   completion(dev, SCSI_REASON_DATA, r->tag, r->buf_len);
 }
 
-bx_bool scsi_device_t::scsi_read_data(Bit32u tag)
+void scsi_device_t::scsi_read_data(Bit32u tag)
 {
   SCSIRequest *r = scsi_find_request(tag);
   if (!r) {
     BX_ERROR(("bad read tag 0x%x", tag));
-    return 0;
+    return;
   }
   if (r->sector_count == (Bit32u)-1) {
     BX_DEBUG(("read buf_len=%d", r->buf_len));
     r->sector_count = 0;
     completion(dev, SCSI_REASON_DATA, r->tag, r->buf_len);
-    return 0;
+    return;
   }
   BX_DEBUG(("read sector_count=%d", r->sector_count));
   if (r->sector_count == 0) {
     scsi_command_complete(r, STATUS_GOOD, SENSE_NO_SENSE);
-    return 0;
+    return;
   }
-  if ((r->async_mode) && (!r->seek_pending)) {
+  if ((r->async_mode) && (r->seek_pending == 2)) {
     start_seek(r);
-  } else {
+  } else if (!r->seek_pending) {
     seek_complete(r);
   }
-  return 1;
 }
 
 void scsi_device_t::scsi_write_complete(void *req, int ret)
@@ -446,7 +448,7 @@ void scsi_device_t::scsi_write_complete(void *req, int ret)
   }
 }
 
-bx_bool scsi_device_t::scsi_write_data(Bit32u tag)
+void scsi_device_t::scsi_write_data(Bit32u tag)
 {
   SCSIRequest *r;
   Bit32u n;
@@ -456,11 +458,12 @@ bx_bool scsi_device_t::scsi_write_data(Bit32u tag)
   r = scsi_find_request(tag);
   if (!r) {
     BX_ERROR(("bad write tag 0x%x", tag));
-    return 0;
+    return;
   }
   if (type == SCSIDEV_TYPE_DISK) {
     n = r->buf_len / 512;
     if (n) {
+      bx_gui->statusbar_setitem(statusbar_id, 1, 1);
       ret = (int)hdimage->lseek(r->sector * 512, SEEK_SET);
       if (ret < 0) {
         BX_ERROR(("could not lseek() hard drive image file"));
@@ -472,20 +475,16 @@ bx_bool scsi_device_t::scsi_write_data(Bit32u tag)
       if (ret < r->buf_len) {
         BX_ERROR(("could not write() hard drive image file"));
         scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_HARDWARE_ERROR);
-        return 0;
       } else {
         scsi_write_complete((void*)r, 0);
       }
     } else {
       scsi_write_complete(r, 0);
-      return 0;
     }
   } else {
     BX_ERROR(("CD-ROM: write not supported"));
     scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_HARDWARE_ERROR);
-    return 0;
   }
-  return 1;
 }
 
 Bit8u* scsi_device_t::scsi_get_buf(Bit32u tag)
@@ -839,6 +838,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun, bx_bool
         goto illegal_lba;
       r->sector = lba;
       r->sector_count = len;
+      r->seek_pending = 2;
       r->async_mode = async;
       break;
     case 0x0a:
@@ -989,14 +989,14 @@ void scsi_device_t::start_seek(SCSIRequest *r)
 
   max_pos = max_lba;
   prev_pos = curr_lba;
-  new_pos = r->sector + r->sector_count;
+  new_pos = r->sector;
   if (type == SCSIDEV_TYPE_CDROM) {
     fSeekBase = 80000.0;
   } else {
     fSeekBase = 5000.0;
   }
   fSeekTime = fSeekBase * (double)abs((int)(new_pos - prev_pos + 1)) / (max_pos + 1);
-  seek_time = (fSeekTime > 10.0) ? (Bit32u)fSeekTime : 10;
+  seek_time = 4000 + (Bit32u)fSeekTime;
   bx_pc_system.activate_timer(seek_timer_index, seek_time, 0);
   bx_pc_system.setTimerParam(seek_timer_index, r->tag);
   r->seek_pending = 1;
@@ -1022,6 +1022,7 @@ void scsi_device_t::seek_complete(SCSIRequest *r)
   int ret = 0;
 
   if (!r->write_cmd) {
+    bx_gui->statusbar_setitem(statusbar_id, 1);
     n = r->sector_count;
     if (n > (Bit32u)(SCSI_DMA_BUF_SIZE / (512 * cluster_size)))
       n = SCSI_DMA_BUF_SIZE / (512 * cluster_size);

@@ -78,7 +78,6 @@ private:
     char info_txt[BX_PATHNAME_LEN];
     char journal[BX_PATHNAME_LEN]; // undoable / volatile disk only
     int size; // VVFAT disk only
-    int statusbar_id;
     bx_bool status_changed;
   } s;
 

@@ -63,7 +63,7 @@ typedef struct SCSIRequest {
   Bit32u status;
   bx_bool write_cmd;
   bx_bool async_mode;
-  bx_bool seek_pending;
+  Bit8u seek_pending;
   struct SCSIRequest *next;
 } SCSIRequest;
 
@@ -81,9 +81,9 @@ public:
   void scsi_command_complete(SCSIRequest *r, int status, int sense);
   void scsi_cancel_io(Bit32u tag);
   void scsi_read_complete(void *req, int ret);
-  bx_bool scsi_read_data(Bit32u tag);
+  void scsi_read_data(Bit32u tag);
   void scsi_write_complete(void *req, int ret);
-  bx_bool scsi_write_data(Bit32u tag);
+  void scsi_write_data(Bit32u tag);
   Bit8u* scsi_get_buf(Bit32u tag);
   const char *get_serial_number() {return drive_serial_str;}
   void set_inserted(bx_bool value);
@@ -119,6 +119,7 @@ private:
   bx_bool inserted;
   char drive_serial_str[21];
   int seek_timer_index;
+  int statusbar_id;
 };
 
 #endif
