@@ -58,27 +58,31 @@ protected:
 
 private:
   struct {
-    Bit8u mode;
-    Bit32u scsi_len;
-    Bit8u *scsi_buf;
-    Bit32u usb_len;
-    Bit8u *usb_buf;
-    Bit32u data_len;
-    Bit32u residue;
-    Bit32u tag;
-    int result;
+    // members set in constructor / init
     Bit8u image_mode;
     device_image_t *hdimage;
     cdrom_base_c *cdrom;
     scsi_device_t *scsi_dev;
-    USBPacket *packet;
     bx_list_c *sr_list;
     const char *fname;
     bx_list_c *config;
     char info_txt[BX_PATHNAME_LEN];
     char journal[BX_PATHNAME_LEN]; // undoable / volatile disk only
     int size; // VVFAT disk only
+    // members handled by runtime config
     bx_bool status_changed;
+    // members handled by save/restore
+    Bit8u mode;
+    Bit32u scsi_len;
+    Bit32u usb_len;
+    Bit32u data_len;
+    Bit32u residue;
+    Bit32u tag;
+    int result;
+    // members not handled by save/restore
+    Bit8u *scsi_buf;
+    Bit8u *usb_buf;
+    USBPacket *packet;
   } s;
 
   static const char *cdrom_path_handler(bx_param_string_c *param, int set,

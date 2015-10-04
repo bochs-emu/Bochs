@@ -104,22 +104,25 @@ private:
   void seek_timer(void);
   void seek_complete(SCSIRequest *r);
 
+  // members set in constructor
   enum scsidev_type type;
   device_image_t *hdimage;
   cdrom_base_c *cdrom;
-  SCSIRequest *requests;
   int cluster_size;
-  Bit64u max_lba;
-  Bit64u curr_lba;
-  int sense;
   int tcq;
   scsi_completionfn completion;
   void *dev;
-  bx_bool locked;
-  bx_bool inserted;
   char drive_serial_str[21];
   int seek_timer_index;
   int statusbar_id;
+  // members set in constructor / runtime config
+  Bit64u max_lba;
+  bx_bool inserted;
+  // members handled by save/restore
+  Bit64u curr_lba;
+  int sense;
+  bx_bool locked;
+  SCSIRequest *requests;
 };
 
 #endif

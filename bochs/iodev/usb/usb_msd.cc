@@ -405,13 +405,13 @@ void usb_msd_device_c::register_state_specific(bx_list_c *parent)
   } else if ((d.type == USB_DEV_TYPE_DISK) && (s.hdimage != NULL)) {
     s.hdimage->register_state(s.sr_list);
   }
-  new bx_shadow_num_c(s.sr_list, "mode", &s.mode);
-  new bx_shadow_num_c(s.sr_list, "scsi_len", &s.scsi_len);
-  new bx_shadow_num_c(s.sr_list, "usb_len", &s.usb_len);
-  new bx_shadow_num_c(s.sr_list, "data_len", &s.data_len);
-  new bx_shadow_num_c(s.sr_list, "residue", &s.residue);
-  new bx_shadow_num_c(s.sr_list, "tag", &s.tag);
-  new bx_shadow_num_c(s.sr_list, "result", &s.result);
+  BXRS_DEC_PARAM_FIELD(s.sr_list, mode, s.mode);
+  BXRS_DEC_PARAM_FIELD(s.sr_list, scsi_len, s.scsi_len);
+  BXRS_DEC_PARAM_FIELD(s.sr_list, usb_len, s.usb_len);
+  BXRS_DEC_PARAM_FIELD(s.sr_list, data_len, s.data_len);
+  BXRS_DEC_PARAM_FIELD(s.sr_list, residue, s.residue);
+  BXRS_DEC_PARAM_FIELD(s.sr_list, tag, s.tag);
+  BXRS_DEC_PARAM_FIELD(s.sr_list, result, s.result);
 }
 
 void usb_msd_device_c::handle_reset()
