@@ -865,19 +865,37 @@ int bx_param_string_c::sprint(char *buf, int len, bx_bool dquotes)
 bx_shadow_data_c::bx_shadow_data_c(bx_param_c *parent,
     const char *name,
     Bit8u *ptr_to_data,
-    Bit32u data_size)
+    Bit32u data_size,
+    bx_bool text_fmt)
   : bx_param_c(SIM->gen_param_id(), name, "")
 {
   set_type(BXT_PARAM_DATA);
   this->data_ptr = ptr_to_data;
   this->data_size = data_size;
+  this->text_fmt = text_fmt;
   if (parent) {
     BX_ASSERT(parent->get_type() == BXT_LIST);
     this->parent = (bx_list_c *)parent;
     this->parent->add(this);
   }
 }
-  
+
+Bit8u bx_shadow_data_c::get(Bit32u index)
+{
+  if (index < data_size) {
+    return data_ptr[index];
+  } else {
+    return 0;
+  }
+}
+
+void bx_shadow_data_c::set(Bit32u index, Bit8u value)
+{
+  if (index < data_size) {
+    data_ptr[index] = value;
+  }
+}
+
 bx_shadow_filedata_c::bx_shadow_filedata_c(bx_param_c *parent,
     const char *name, FILE **scratch_file_ptr_ptr)
   : bx_param_c(SIM->gen_param_id(), name, "")

@@ -371,11 +371,7 @@ void bx_floppy_ctrl_c::register_state(void)
 
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "floppy", "Floppy State");
   new bx_shadow_num_c(list, "data_rate", &BX_FD_THIS s.data_rate);
-  bx_list_c *command = new bx_list_c(list, "command");
-  for (i=0; i<10; i++) {
-    sprintf(name, "%u", i);
-    new bx_shadow_num_c(command, name, &BX_FD_THIS s.command[i], BASE_HEX);
-  }
+  new bx_shadow_data_c(list, "command", BX_FD_THIS s.command, 10, 1);
   new bx_shadow_num_c(list, "command_index", &BX_FD_THIS s.command_index);
   new bx_shadow_num_c(list, "command_size", &BX_FD_THIS s.command_size);
   new bx_shadow_bool_c(list, "command_complete", &BX_FD_THIS s.command_complete);
@@ -385,11 +381,7 @@ void bx_floppy_ctrl_c::register_state(void)
   new bx_shadow_num_c(list, "reset_sensei", &BX_FD_THIS s.reset_sensei);
   new bx_shadow_num_c(list, "format_count", &BX_FD_THIS s.format_count);
   new bx_shadow_num_c(list, "format_fillbyte", &BX_FD_THIS s.format_fillbyte, BASE_HEX);
-  bx_list_c *result = new bx_list_c(list, "result");
-  for (i=0; i<10; i++) {
-    sprintf(name, "%u", i);
-    new bx_shadow_num_c(result, name, &BX_FD_THIS s.result[i], BASE_HEX);
-  }
+  new bx_shadow_data_c(list, "result", BX_FD_THIS s.result, 10, 1);
   new bx_shadow_num_c(list, "result_index", &BX_FD_THIS s.result_index);
   new bx_shadow_num_c(list, "result_size", &BX_FD_THIS s.result_size);
   new bx_shadow_num_c(list, "DOR", &BX_FD_THIS s.DOR, BASE_HEX);

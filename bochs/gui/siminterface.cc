@@ -1202,11 +1202,21 @@ bx_bool bx_real_sim_c::restore_logopts()
   return 1;
 }
 
+static int bx_restore_getline(FILE *fp, char *line, int maxlen)
+{
+  char *ret = fgets(line, maxlen - 1, fp);
+  line[maxlen - 1] = '\0';
+  int len = strlen(line);
+  if ((len > 0) && (line[len - 1] < ' '))
+    line[len - 1] = '\0';
+  return (ret != NULL) ? len : 0;
+}
+
 bx_bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path, const char *restore_name)
 {
   char devstate[BX_PATHNAME_LEN], devdata[BX_PATHNAME_LEN];
   char line[512], buf[512], pname[80];
-  char *ret, *ptr;
+  char *ptr;
   int i, j, p;
   unsigned n;
   double fvalue;
@@ -1225,13 +1235,9 @@ bx_bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path,
   fp = fopen(devstate, "r");
   if (fp != NULL) {
     do {
-      ret = fgets(line, sizeof(line)-1, fp);
-      line[sizeof(line) - 1] = '\0';
-      int len = strlen(line);
-      if ((len>0) && (line[len-1] < ' '))
-        line[len-1] = '\0';
+      int len = bx_restore_getline(fp, line, BX_PATHNAME_LEN);
       i = 0;
-      if ((ret != NULL) && strlen(line)) {
+      if (len > 0) {
         ptr = strtok(line, " ");
         while (ptr) {
           if (i == 0) {
@@ -1291,11 +1297,33 @@ bx_bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path,
                   }
                   break;
                 case BXT_PARAM_DATA:
-                  sprintf(devdata, "%s/%s", sr_path, ptr);
-                  fp2 = fopen(devdata, "rb");
-                  if (fp2 != NULL) {
-                    fread(((bx_shadow_data_c*)param)->getptr(), 1, ((bx_shadow_data_c*)param)->get_size(), fp2);
-                    fclose(fp2);
+                  {
+                    bx_shadow_data_c *dparam = (bx_shadow_data_c*)param;
+                    if (!dparam->get_format()) {
+                      sprintf(devdata, "%s/%s", sr_path, ptr);
+                      fp2 = fopen(devdata, "rb");
+                      if (fp2 != NULL) {
+                        fread(dparam->getptr(), 1, dparam->get_size(), fp2);
+                        fclose(fp2);
+                      }
+                    } else if (!strcmp(ptr, "{")) {
+                      i = 0;
+                      do {
+                        bx_restore_getline(fp, buf, BX_PATHNAME_LEN);
+                        ptr = strtok(buf, " ");
+                        while (ptr) {
+                          if (!strcmp(ptr, "}")) {
+                            i = 0;
+                            break;
+                          } else {
+                            if (sscanf(ptr, "0x%02x", &n) == 1) {
+                              dparam->set(i++, (Bit8u)n);
+                            }
+                          }
+                          ptr = strtok(NULL, " ");
+                        }
+                      } while (i > 0);
+                    }
                   }
                   break;
                 case BXT_PARAM_FILEDATA:
@@ -1353,7 +1381,7 @@ bx_bool bx_real_sim_c::restore_hardware()
 
 bx_bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_path, int level)
 {
-  int i;
+  int i, j;
   Bit64s value;
   double fvalue;
   char pname[BX_PATHNAME_LEN], tmpstr[BX_PATHNAME_LEN];
@@ -1406,19 +1434,43 @@ bx_bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_
       fprintf(fp, "%s\n", tmpstr);
       break;
     case BXT_PARAM_DATA:
-      node->get_param_path(pname, BX_PATHNAME_LEN);
-      if (!strncmp(pname, "bochs.", 6)) {
-        strcpy(pname, pname+6);
-      }
-      fprintf(fp, "%s\n", pname);
-      if (sr_path)
-        sprintf(tmpstr, "%s/%s", sr_path, pname);
-      else
-        strcpy(tmpstr, pname);
-      fp2 = fopen(tmpstr, "wb");
-      if (fp2 != NULL) {
-        fwrite(((bx_shadow_data_c*)node)->getptr(), 1, ((bx_shadow_data_c*)node)->get_size(), fp2);
-        fclose(fp2);
+      {
+        bx_shadow_data_c *dparam = (bx_shadow_data_c*)node;
+        if (!dparam->get_format()) {
+          node->get_param_path(pname, BX_PATHNAME_LEN);
+          if (!strncmp(pname, "bochs.", 6)) {
+            strcpy(pname, pname+6);
+          }
+          fprintf(fp, "%s\n", pname);
+          if (sr_path)
+            sprintf(tmpstr, "%s/%s", sr_path, pname);
+          else
+            strcpy(tmpstr, pname);
+          fp2 = fopen(tmpstr, "wb");
+          if (fp2 != NULL) {
+            fwrite(dparam->getptr(), 1, dparam->get_size(), fp2);
+            fclose(fp2);
+          }
+        } else {
+          fprintf(fp, "{\n");
+          for (i=0; i < (int)dparam->get_size(); i++) {
+            if ((i % 16) == 0) {
+              for (j=0; j<(level+1); j++)
+                fprintf(fp, "  ");
+            } else {
+              fprintf(fp, ", ");
+            }
+            fprintf(fp, "0x%02x", dparam->get(i));
+            if (i == (int)(dparam->get_size() - 1)) {
+              fprintf(fp, "\n");
+            } else if ((i % 16) == 15) {
+              fprintf(fp, ",\n");
+            }
+          }
+          for (i=0; i<level; i++)
+            fprintf(fp, "  ");
+          fprintf(fp, "}\n");
+        }
       }
       break;
     case BXT_PARAM_FILEDATA:

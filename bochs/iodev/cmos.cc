@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2014  The Bochs Project
+//  Copyright (C) 2002-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -318,12 +318,7 @@ void bx_cmos_c::register_state(void)
 {
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "cmos", "CMOS State");
   BXRS_HEX_PARAM_FIELD(list, mem_address, BX_CMOS_THIS s.cmos_mem_address);
-  bx_list_c *ram = new bx_list_c(list, "ram");
-  for (unsigned i=0; i<128; i++) {
-    char name[6];
-    sprintf(name, "0x%02x", i);
-    new bx_shadow_num_c(ram, name, &BX_CMOS_THIS s.reg[i], BASE_HEX);
-  }
+  new bx_shadow_data_c(list, "ram", BX_CMOS_THIS s.reg, 128, 1);
 }
 
 void bx_cmos_c::after_restore_state(void)

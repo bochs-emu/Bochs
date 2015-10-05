@@ -413,13 +413,17 @@ public:
 class BOCHSAPI bx_shadow_data_c : public bx_param_c {
   Bit32u data_size;
   Bit8u *data_ptr;
+  bx_bool text_fmt;
 public:
   bx_shadow_data_c(bx_param_c *parent,
       const char *name,
       Bit8u *ptr_to_data,
-      Bit32u data_size);
+      Bit32u data_size, bx_bool text_fmt=0);
   Bit8u *getptr() {return data_ptr;}
   Bit32u get_size() const {return data_size;}
+  bx_bool get_format() const {return text_fmt;}
+  Bit8u get(Bit32u index);
+  void set(Bit32u index, Bit8u value);
 };
 
 typedef void (*filedata_save_handler)(void *devptr, FILE *save_fp);

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2006-2014  Volker Ruppert
+//  Copyright (C) 2006-2015  Volker Ruppert
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -206,12 +206,7 @@ void bx_acpi_ctrl_c::register_state(void)
   BXRS_HEX_PARAM_FIELD(smbus, data0, BX_ACPI_THIS s.smbus.data0);
   BXRS_HEX_PARAM_FIELD(smbus, data1, BX_ACPI_THIS s.smbus.data1);
   BXRS_HEX_PARAM_FIELD(smbus, index, BX_ACPI_THIS s.smbus.index);
-  bx_list_c *data = new bx_list_c(smbus, "data", "ACPI SMBus data");
-  for (unsigned i = 0; i < 32; i++) {
-    char name[6];
-    sprintf(name, "0x%02x", i);
-    new bx_shadow_num_c(data, name, &BX_ACPI_THIS s.smbus.data[i], BASE_HEX);
-  }
+  new bx_shadow_data_c(smbus, "data", BX_ACPI_THIS s.smbus.data, 32, 1);
   register_pci_state(list);
 }
 

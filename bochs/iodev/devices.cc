@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2014  The Bochs Project
+//  Copyright (C) 2002-2015  The Bochs Project
 //
 //  I/O port handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -1154,13 +1154,7 @@ void bx_pci_device_stub_c::init_pci_conf(Bit16u vid, Bit16u did, Bit8u rev, Bit3
 
 void bx_pci_device_stub_c::register_pci_state(bx_list_c *list)
 {
-  char name[6];
-
-  bx_list_c *pci = new bx_list_c(list, "pci_conf");
-  for (unsigned i=0; i<256; i++) {
-    sprintf(name, "0x%02x", i);
-    new bx_shadow_num_c(pci, name, &pci_conf[i], BASE_HEX);
-  }
+  new bx_shadow_data_c(list, "pci_conf", pci_conf, 256, 1);
 }
 
 void bx_pci_device_stub_c::load_pci_rom(const char *path)
