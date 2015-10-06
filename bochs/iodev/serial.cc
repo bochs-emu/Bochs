@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -577,7 +577,7 @@ bx_serial_c::init(void)
 
 void bx_serial_c::register_state(void)
 {
-  unsigned i, j;
+  unsigned i;
   char name[6];
   bx_list_c *port;
 
@@ -645,16 +645,8 @@ void bx_serial_c::register_state(void)
     new bx_shadow_bool_c(mstatus, "dcd", &BX_SER_THIS s[i].modem_status.dcd);
     new bx_shadow_num_c(port, "scratch", &BX_SER_THIS s[i].scratch, BASE_HEX);
     new bx_shadow_num_c(port, "tsrbuffer", &BX_SER_THIS s[i].tsrbuffer, BASE_HEX);
-    bx_list_c *rxfifo = new bx_list_c(port, "rx_fifo");
-    for (j=0; j<16; j++) {
-      sprintf(name, "0x%02x", j);
-      new bx_shadow_num_c(rxfifo, name, &BX_SER_THIS s[i].rx_fifo[j], BASE_HEX);
-    }
-    bx_list_c *txfifo = new bx_list_c(port, "tx_fifo");
-    for (j=0; j<16; j++) {
-      sprintf(name, "0x%02x", j);
-      new bx_shadow_num_c(txfifo, name, &BX_SER_THIS s[i].tx_fifo[j], BASE_HEX);
-    }
+    new bx_shadow_data_c(port, "rx_fifo", BX_SER_THIS s[i].rx_fifo, 16, 1);
+    new bx_shadow_data_c(port, "tx_fifo", BX_SER_THIS s[i].tx_fifo, 16, 1);
     new bx_shadow_num_c(port, "divisor_lsb", &BX_SER_THIS s[i].divisor_lsb, BASE_HEX);
     new bx_shadow_num_c(port, "divisor_msb", &BX_SER_THIS s[i].divisor_msb, BASE_HEX);
   }
@@ -666,11 +658,8 @@ void bx_serial_c::register_state(void)
   new bx_shadow_bool_c(list, "mouse_update", &BX_SER_THIS mouse_update);
   bx_list_c *mousebuf = new bx_list_c(list, "mouse_internal_buffer");
   new bx_shadow_num_c(mousebuf, "num_elements", &BX_SER_THIS mouse_internal_buffer.num_elements);
-  bx_list_c *buffer = new bx_list_c(mousebuf, "buffer");
-  for (i=0; i<BX_MOUSE_BUFF_SIZE; i++) {
-    sprintf(name, "0x%02x", i);
-    new bx_shadow_num_c(buffer, name, &BX_SER_THIS mouse_internal_buffer.buffer[i], BASE_HEX);
-  }
+  new bx_shadow_data_c(mousebuf, "buffer", BX_SER_THIS mouse_internal_buffer.buffer,
+                       BX_MOUSE_BUFF_SIZE, 1);
   new bx_shadow_num_c(mousebuf, "head", &BX_SER_THIS mouse_internal_buffer.head);
 }
 

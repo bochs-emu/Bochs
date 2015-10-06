@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -278,10 +278,6 @@ void bx_vgacore_c::init_systemtimer(bx_timer_handler_t f_timer, param_event_hand
 
 void bx_vgacore_c::register_state(bx_list_c *parent)
 {
-  unsigned i;
-  char name[6];
-  bx_list_c *reg;
-
   bx_list_c *list = new bx_list_c(parent, "vgacore", "VGA Core State");
   bx_list_c *misc = new bx_list_c(list, "misc_output");
   new bx_shadow_bool_c(misc, "color_emulation", &BX_VGA_THIS s.misc_output.color_emulation);
@@ -292,21 +288,13 @@ void bx_vgacore_c::register_state(bx_list_c *parent)
   new bx_shadow_bool_c(misc, "vert_sync_pol", &BX_VGA_THIS s.misc_output.vert_sync_pol);
   bx_list_c *crtc = new bx_list_c(list, "CRTC");
   new bx_shadow_num_c(crtc, "address", &BX_VGA_THIS s.CRTC.address, BASE_HEX);
-  reg = new bx_list_c(crtc, "reg");
-  for (i=0; i<=0x18; i++) {
-    sprintf(name, "0x%02x", i);
-    new bx_shadow_num_c(reg, name, &BX_VGA_THIS s.CRTC.reg[i], BASE_HEX);
-  }
+  new bx_shadow_data_c(crtc, "reg", BX_VGA_THIS s.CRTC.reg, 25, 1);
   new bx_shadow_bool_c(crtc, "write_protect", &BX_VGA_THIS s.CRTC.write_protect);
   bx_list_c *actl = new bx_list_c(list, "attribute_ctrl");
   new bx_shadow_bool_c(actl, "flip_flop", &BX_VGA_THIS s.attribute_ctrl.flip_flop);
   new bx_shadow_num_c(actl, "address", &BX_VGA_THIS s.attribute_ctrl.address, BASE_HEX);
   new bx_shadow_bool_c(actl, "video_enabled", &BX_VGA_THIS s.attribute_ctrl.video_enabled);
-  reg = new bx_list_c(actl, "palette_reg");
-  for (i=0; i<16; i++) {
-    sprintf(name, "0x%02x", i);
-    new bx_shadow_num_c(reg, name, &BX_VGA_THIS s.attribute_ctrl.palette_reg[i], BASE_HEX);
-  }
+  new bx_shadow_data_c(actl, "palette_reg", BX_VGA_THIS s.attribute_ctrl.palette_reg, 16, 1);
   new bx_shadow_num_c(actl, "overscan_color", &BX_VGA_THIS s.attribute_ctrl.overscan_color, BASE_HEX);
   new bx_shadow_num_c(actl, "color_plane_enable", &BX_VGA_THIS s.attribute_ctrl.color_plane_enable, BASE_HEX);
   new bx_shadow_num_c(actl, "horiz_pel_panning", &BX_VGA_THIS s.attribute_ctrl.horiz_pel_panning, BASE_HEX);

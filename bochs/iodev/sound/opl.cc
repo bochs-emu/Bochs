@@ -1525,16 +1525,8 @@ void adlib_register_state(bx_list_c *parent)
   bx_list_c *adlib = new bx_list_c(parent, "adlib");
   new bx_shadow_num_c(adlib, "opl_index", &opl_index, BASE_HEX);
 #if defined(OPLTYPE_IS_OPL3)
-  bx_list_c *regs = new bx_list_c(adlib, "regs");
-  for (i = 0; i < 512; i++) {
-    sprintf(numstr, "0x%03x", i);
-    new bx_shadow_num_c(regs, numstr, &adlibreg[i], BASE_HEX);
-  }
-  bx_list_c *wavesel = new bx_list_c(adlib, "wave_sel");
-  for (i = 0; i < 44; i++) {
-    sprintf(numstr, "%d", i);
-    new bx_shadow_num_c(wavesel, numstr, &wave_sel[i]);
-  }
+  new bx_shadow_data_c(adlib, "regs", adlibreg, 512);
+  new bx_shadow_data_c(adlib, "wave_sel", wave_sel, 44, 1);
 #endif
   new bx_shadow_num_c(adlib, "vibtab_pos", &vibtab_pos);
   new bx_shadow_num_c(adlib, "tremtab_pos", &tremtab_pos);

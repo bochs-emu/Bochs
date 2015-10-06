@@ -563,16 +563,8 @@ void bx_e1000_c::register_state(void)
   BXRS_DEC_PARAM_FIELD(list, rxbuf_min_shift, BX_E1000_THIS s.rxbuf_min_shift);
   BXRS_PARAM_BOOL(list, check_rxov, BX_E1000_THIS s.check_rxov);
   bx_list_c *tx = new bx_list_c(list, "tx", "");
-  bx_list_c *header = new bx_list_c(tx, "header", "");
-  for (i = 0; i < 256; i++) {
-    sprintf(pname, "0x%02x", i);
-    new bx_shadow_num_c(header, pname, &BX_E1000_THIS s.tx.header[i], BASE_HEX);
-  }
-  bx_list_c *vlh = new bx_list_c(tx, "vlan_header", "");
-  for (i = 0; i < 4; i++) {
-    sprintf(pname, "0x%02x", i);
-    new bx_shadow_num_c(vlh, pname, &BX_E1000_THIS s.tx.vlan_header[i], BASE_HEX);
-  }
+  new bx_shadow_data_c(tx, "header", BX_E1000_THIS s.tx.header, 256, 1);
+  new bx_shadow_data_c(tx, "vlan_header", BX_E1000_THIS s.tx.vlan_header, 4, 1);
   new bx_shadow_data_c(list, "tx_vlan_data", BX_E1000_THIS s.tx.vlan, 0x10004);
   BXRS_DEC_PARAM_FIELD(tx, size, BX_E1000_THIS s.tx.size);
   BXRS_DEC_PARAM_FIELD(tx, sum_needed, BX_E1000_THIS s.tx.sum_needed);

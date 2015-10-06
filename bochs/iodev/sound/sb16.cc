@@ -493,11 +493,7 @@ void bx_sb16_c::register_state(void)
   new bx_shadow_num_c(dma, "volume", &DSP.dma.param.volume);
   new bx_shadow_num_c(list, "fm_volume", &fm_volume);
   new bx_shadow_data_c(list, "chunk", DSP.dma.chunk, BX_SOUNDLOW_WAVEPACKETSIZE);
-  bx_list_c *csp = new bx_list_c(list, "csp_reg");
-  for (i=0; i<256; i++) {
-    sprintf(name, "0x%02x", i);
-    new bx_shadow_num_c(csp, name, &BX_SB16_THIS csp_reg[i], BASE_HEX);
-  }
+  new bx_shadow_data_c(list, "csp_reg", BX_SB16_THIS csp_reg, 256, 1);
   bx_list_c *opl = new bx_list_c(list, "opl");
   new bx_shadow_num_c(opl, "timer_running", &OPL.timer_running);
   for (i=0; i<2; i++) {
@@ -512,11 +508,7 @@ void bx_sb16_c::register_state(void)
     new bx_shadow_num_c(chip, "tflag", &OPL.tflag[i]);
   }
   new bx_shadow_num_c(list, "mixer_regindex", &MIXER.regindex, BASE_HEX);
-  bx_list_c *mixer = new bx_list_c(list, "mixer_reg");
-  for (i=0; i<BX_SB16_MIX_REG; i++) {
-    sprintf(name, "0x%02x", i);
-    new bx_shadow_num_c(mixer, name, &MIXER.reg[i], BASE_HEX);
-  }
+  new bx_shadow_data_c(list, "mixer_reg", MIXER.reg, BX_SB16_MIX_REG, 1);
   bx_list_c *emul = new bx_list_c(list, "emul");
   new bx_shadow_num_c(emul, "remaps", &EMUL.remaps);
   bx_list_c *remap = new bx_list_c(emul, "remaplist");

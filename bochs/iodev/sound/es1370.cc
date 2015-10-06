@@ -399,11 +399,8 @@ void bx_es1370_c::register_state(void)
   BXRS_HEX_PARAM_FIELD(list, status, BX_ES1370_THIS s.status);
   BXRS_HEX_PARAM_FIELD(list, mempage, BX_ES1370_THIS s.mempage);
   BXRS_HEX_PARAM_FIELD(list, codec_index, BX_ES1370_THIS s.codec_index);
-  bx_list_c *codec_regs = new bx_list_c(list, "codec_regs", "");
-  for (i = 0; i < BX_ES1370_CODEC_REGS; i++) {
-    sprintf(pname, "0x%02x", i);
-    new bx_shadow_num_c(codec_regs, pname, &BX_ES1370_THIS s.codec_reg[i], BASE_HEX);
-  }
+  new bx_shadow_data_c(list, "codec_regs", BX_ES1370_THIS s.codec_reg,
+                       BX_ES1370_CODEC_REGS, 1);
   BXRS_HEX_PARAM_FIELD(list, sctl, BX_ES1370_THIS s.sctl);
   BXRS_HEX_PARAM_FIELD(list, legacy1B, BX_ES1370_THIS s.legacy1B);
   BXRS_HEX_PARAM_FIELD(list, wave_vol, BX_ES1370_THIS s.wave_vol);

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -347,9 +347,6 @@ void bx_ne2k_c::reset(unsigned type)
 
 void bx_ne2k_c::register_state(void)
 {
-  unsigned i;
-  char name[6];
-
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "ne2k", "NE2000 State");
   bx_list_c *CR = new bx_list_c(list, "CR");
   new bx_shadow_bool_c(CR, "stop", &BX_NE2K_THIS s.CR.stop);
@@ -424,17 +421,9 @@ void bx_ne2k_c::register_state(void)
   new bx_shadow_num_c(list, "tallycnt_0", &BX_NE2K_THIS s.tallycnt_0, BASE_HEX);
   new bx_shadow_num_c(list, "tallycnt_1", &BX_NE2K_THIS s.tallycnt_1, BASE_HEX);
   new bx_shadow_num_c(list, "tallycnt_2", &BX_NE2K_THIS s.tallycnt_2, BASE_HEX);
-  bx_list_c *paddr = new bx_list_c(list, "physaddr");
-  for (i=0; i<6; i++) {
-    sprintf(name, "0x%02x", i);
-    new bx_shadow_num_c(paddr, name, &BX_NE2K_THIS s.physaddr[i], BASE_HEX);
-  }
+  new bx_shadow_data_c(list, "physaddr", BX_NE2K_THIS s.physaddr, 6, 1);
   new bx_shadow_num_c(list, "curr_page", &BX_NE2K_THIS s.curr_page, BASE_HEX);
-  bx_list_c *mchash = new bx_list_c(list, "mchash");
-  for (i=0; i<8; i++) {
-    sprintf(name, "0x%02x", i);
-    new bx_shadow_num_c(mchash, name, &BX_NE2K_THIS s.mchash[i], BASE_HEX);
-  }
+  new bx_shadow_data_c(list, "mchash", BX_NE2K_THIS s.mchash, 8, 1);
   new bx_shadow_num_c(list, "rempkt_ptr", &BX_NE2K_THIS s.rempkt_ptr, BASE_HEX);
   new bx_shadow_num_c(list, "localpkt_ptr", &BX_NE2K_THIS s.localpkt_ptr, BASE_HEX);
   new bx_shadow_num_c(list, "address_cnt", &BX_NE2K_THIS s.address_cnt, BASE_HEX);

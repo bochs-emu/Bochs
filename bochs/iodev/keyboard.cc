@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2014  The Bochs Project
+//  Copyright (C) 2002-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -226,10 +226,6 @@ void bx_keyb_c::reset(unsigned type)
 
 void bx_keyb_c::register_state(void)
 {
-  int i;
-  char name[4];
-  bx_list_c *buffer;
-
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "keyboard", "Keyboard State");
   bx_list_c *ctrl = new bx_list_c(list, "controller");
   BXRS_PARAM_BOOL(ctrl, tim, BX_KEY_THIS s.kbd_controller.tim);
@@ -270,11 +266,8 @@ void bx_keyb_c::register_state(void)
   BXRS_PARAM_BOOL(mouse, im_mode, BX_KEY_THIS s.mouse.im_mode);
   bx_list_c *kbdbuf = new bx_list_c(list, "kbd_internal_buffer");
   BXRS_DEC_PARAM_FIELD(kbdbuf, num_elements, BX_KEY_THIS s.kbd_internal_buffer.num_elements);
-  buffer = new bx_list_c(kbdbuf, "buffer");
-  for (i=0; i<BX_KBD_ELEMENTS; i++) {
-    sprintf(name, "%d", i);
-    new bx_shadow_num_c(buffer, name, &BX_KEY_THIS s.kbd_internal_buffer.buffer[i], BASE_HEX);
-  }
+  new bx_shadow_data_c(kbdbuf, "buffer", BX_KEY_THIS s.kbd_internal_buffer.buffer,
+                       BX_KBD_ELEMENTS, 1);
   BXRS_DEC_PARAM_FIELD(kbdbuf, head, BX_KEY_THIS s.kbd_internal_buffer.head);
   BXRS_PARAM_BOOL(kbdbuf, expecting_typematic, BX_KEY_THIS s.kbd_internal_buffer.expecting_typematic);
   BXRS_PARAM_BOOL(kbdbuf, expecting_led_write, BX_KEY_THIS s.kbd_internal_buffer.expecting_led_write);
@@ -284,17 +277,11 @@ void bx_keyb_c::register_state(void)
   BXRS_PARAM_BOOL(kbdbuf, scanning_enabled, BX_KEY_THIS s.kbd_internal_buffer.scanning_enabled);
   bx_list_c *mousebuf = new bx_list_c(list, "mouse_internal_buffer");
   BXRS_DEC_PARAM_FIELD(mousebuf, num_elements, BX_KEY_THIS s.mouse_internal_buffer.num_elements);
-  buffer = new bx_list_c(mousebuf, "buffer");
-  for (i=0; i<BX_MOUSE_BUFF_SIZE; i++) {
-    sprintf(name, "%d", i);
-    new bx_shadow_num_c(buffer, name, &BX_KEY_THIS s.mouse_internal_buffer.buffer[i], BASE_HEX);
-  }
+  new bx_shadow_data_c(mousebuf, "buffer", BX_KEY_THIS s.mouse_internal_buffer.buffer,
+                       BX_MOUSE_BUFF_SIZE, 1);
   BXRS_DEC_PARAM_FIELD(mousebuf, head, BX_KEY_THIS s.mouse_internal_buffer.head);
-  buffer = new bx_list_c(list, "controller_Q");
-  for (i=0; i<BX_KBD_CONTROLLER_QSIZE; i++) {
-    sprintf(name, "%d", i);
-    new bx_shadow_num_c(buffer, name, &BX_KEY_THIS s.controller_Q[i], BASE_HEX);
-  }
+  new bx_shadow_data_c(list, "controller_Q", BX_KEY_THIS s.controller_Q,
+                       BX_KBD_CONTROLLER_QSIZE, 1);
   BXRS_DEC_PARAM_FIELD(list, controller_Qsize, BX_KEY_THIS s.controller_Qsize);
   BXRS_DEC_PARAM_FIELD(list, controller_Qsource, BX_KEY_THIS s.controller_Qsource);
 }
