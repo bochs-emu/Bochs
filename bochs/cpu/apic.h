@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2002-2012 Zwane Mwaikambo, Stanislav Shwartsman
+//  Copyright (c) 2002-2015 Zwane Mwaikambo, Stanislav Shwartsman
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -32,10 +32,12 @@
 #define BX_NUM_LOCAL_APICS  BX_SMP_PROCESSORS
 #define BX_LAPIC_MAX_INTS   256
 
-#define BX_APIC_GLOBALLY_DISABLED 0
-#define BX_APIC_STATE_INVALID     1
-#define BX_APIC_XAPIC_MODE        2
-#define BX_APIC_X2APIC_MODE       3
+enum {
+  BX_APIC_GLOBALLY_DISABLED = 0,
+  BX_APIC_STATE_INVALID     = 1,
+  BX_APIC_XAPIC_MODE        = 2,
+  BX_APIC_X2APIC_MODE       = 3
+};
 
 #define BX_XAPIC_EXT_SUPPORT_IER  (1 << 0)
 #define BX_XAPIC_EXT_SUPPORT_SEOI (1 << 1)

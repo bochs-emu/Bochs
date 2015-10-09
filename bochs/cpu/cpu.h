@@ -539,7 +539,10 @@ enum BxCpuMode {
 extern const char* cpu_mode_string(unsigned cpu_mode);
 
 #if BX_SUPPORT_X86_64
-#define IsCanonical(offset) ((Bit64u)((((Bit64s)(offset)) >> (BX_LIN_ADDRESS_WIDTH-1)) + 1) < 2)
+BX_CPP_INLINE bx_bool IsCanonical(bx_address offset)
+{
+  return ((Bit64u)((((Bit64s)(offset)) >> (BX_LIN_ADDRESS_WIDTH-1)) + 1) < 2);
+}
 #endif
 
 BX_CPP_INLINE bx_bool IsValidPhyAddr(bx_phy_address addr)
@@ -746,11 +749,11 @@ BOCHSAPI extern BX_CPU_C   bx_cpu;
 
 #define IMPLEMENT_EFLAG_ACCESSOR_IOPL(bitnum)                   \
   BX_CPP_INLINE void BX_CPU_C::set_IOPL(Bit32u val) {           \
-    BX_CPU_THIS_PTR eflags &= ~(3<<12);                         \
-    BX_CPU_THIS_PTR eflags |= ((3&val) << 12);                  \
+    BX_CPU_THIS_PTR eflags &= ~(3<<bitnum);                     \
+    BX_CPU_THIS_PTR eflags |= ((3&val) << bitnum);              \
   }                                                             \
   BX_CPP_INLINE Bit32u BX_CPU_C::get_IOPL() {                   \
-    return 3 & (BX_CPU_THIS_PTR eflags >> 12);                  \
+    return 3 & (BX_CPU_THIS_PTR eflags >> bitnum);              \
   }
 
 const Bit32u EFlagsCFMask   = (1 <<  0);
@@ -5314,12 +5317,14 @@ BX_CPP_INLINE Bit32u BX_CPP_AttrRegparmN(1) BX_CPU_C::BxResolve32(bxInstruction_
 // bit 5 - EVEX_OK
 //
 
-#define BX_FETCH_MODE_IS32_MASK (1 << 0)
-#define BX_FETCH_MODE_IS64_MASK (1 << 1)
-#define BX_FETCH_MODE_SSE_OK    (1 << 2)
-#define BX_FETCH_MODE_AVX_OK    (1 << 3)
-#define BX_FETCH_MODE_OPMASK_OK (1 << 4)
-#define BX_FETCH_MODE_EVEX_OK   (1 << 5)
+enum {
+  BX_FETCH_MODE_IS32_MASK = (1 << 0),
+  BX_FETCH_MODE_IS64_MASK = (1 << 1),
+  BX_FETCH_MODE_SSE_OK    = (1 << 2),
+  BX_FETCH_MODE_AVX_OK    = (1 << 3),
+  BX_FETCH_MODE_OPMASK_OK = (1 << 4),
+  BX_FETCH_MODE_EVEX_OK   = (1 << 5)
+};
 
 //
 // updateFetchModeMask - has to be called everytime 

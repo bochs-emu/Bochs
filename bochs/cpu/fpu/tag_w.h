@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2003-2009 Stanislav Shwartsman
+//   Copyright (c) 2003-2015 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -25,9 +25,11 @@
 #define _TAG_W_H
 
 /* Tag Word */
-#define FPU_Tag_Valid   0x00
-#define FPU_Tag_Zero    0x01
-#define FPU_Tag_Special 0x02
-#define FPU_Tag_Empty   0x03
+enum {
+  FPU_Tag_Valid   = 0x00,
+  FPU_Tag_Zero    = 0x01,
+  FPU_Tag_Special = 0x02,
+  FPU_Tag_Empty   = 0x03
+};
 
 #endif
