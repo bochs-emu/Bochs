@@ -1756,6 +1756,14 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
         return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
       }
     }
+    if (guest.activity_state == BX_ACTIVITY_STATE_WAIT_FOR_SIPI) {
+      BX_ERROR(("VMENTER FAIL: No guest interruptions are allowed when entering Wait-For-Sipi state"));
+      return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+    }
+    if (guest.activity_state == BX_ACTIVITY_STATE_SHUTDOWN && event_type != BX_NMI) {
+      BX_ERROR(("VMENTER FAIL: No NMI guest interruption is allowed when entering Shotdown state"));
+      return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+    }
   }
 
   if (vmentry_ctrls & VMX_VMENTRY_CTRL1_SMM_ENTER) {

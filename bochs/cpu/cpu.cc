@@ -233,11 +233,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::linkTrace(bxInstruction_c *i)
 
   bxInstruction_c *next = i->getNextTrace(BX_CPU_THIS_PTR iCache.traceLinkTimeStamp);
   if (next) {
-//  bx_address eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
-//  if (eipBiased >= BX_CPU_THIS_PTR eipPageWindowSize) {
-//    prefetch();
-//  }
-
     BX_EXECUTE_INSTRUCTION(next);
     return;
   }
