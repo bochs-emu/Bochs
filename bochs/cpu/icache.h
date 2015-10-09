@@ -197,6 +197,16 @@ public:
 
     return e;
   }
+
+  BX_CPP_INLINE bx_bool breakLinks()
+  {
+    // break all links bewteen traces
+    if (++traceLinkTimeStamp == 0xffffffff) {
+      flushICacheEntries();
+      return BX_TRUE;
+    }
+    return BX_FALSE;
+  }
 };
 
 BX_CPP_INLINE void bxICache_c::flushICacheEntries(void)
@@ -223,10 +233,7 @@ BX_CPP_INLINE void bxICache_c::handleSMC(bx_phy_address pAddr, Bit32u mask)
   Bit32u pAddrIndex = bxPageWriteStampTable::hash(pAddr);
 
   // break all links bewteen traces
-  if (++traceLinkTimeStamp == 0xffffffff) {
-    flushICacheEntries();
-    return;
-  }
+  if (breakLinks()) return;
 
   // Need to invalidate all traces in the trace cache that might include an
   // instruction that was modified.  But this is not enough, it is possible

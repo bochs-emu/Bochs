@@ -359,6 +359,9 @@ void BX_CPU_C::TLB_flush(void)
   // and cause subsequent MWAIT instruction to wait forever
   BX_CPU_THIS_PTR monitor.reset_monitor();
 #endif
+
+  // break all links bewteen traces
+  BX_CPU_THIS_PTR iCache.breakLinks();
 }
 
 #if BX_CPU_LEVEL >= 6
@@ -391,6 +394,9 @@ void BX_CPU_C::TLB_flushNonGlobal(void)
   // and cause subsequent MWAIT instruction to wait forever
   BX_CPU_THIS_PTR monitor.reset_monitor();
 #endif
+
+  // break all links bewteen traces
+  BX_CPU_THIS_PTR iCache.breakLinks();
 }
 #endif
 
@@ -438,6 +444,9 @@ void BX_CPU_C::TLB_invlpg(bx_address laddr)
   // page and cause subsequent MWAIT instruction to wait forever
   BX_CPU_THIS_PTR monitor.reset_monitor();
 #endif
+
+  // break all links bewteen traces
+  BX_CPU_THIS_PTR iCache.breakLinks();
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPG(bxInstruction_c* i)
