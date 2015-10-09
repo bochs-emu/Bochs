@@ -4437,7 +4437,8 @@ public: // for now...
   BX_SMF unsigned   dbg_query_pending(void);
 #endif
 #if BX_DEBUGGER || BX_GDBSTUB
-  BX_SMF bx_bool  dbg_instruction_epilog(void);
+  BX_SMF void     dbg_instruction_epilog(void);
+  BX_SMF bx_bool  dbg_break_control(void);
 #endif
 #if BX_DEBUGGER || BX_DISASM || BX_INSTRUMENTATION || BX_GDBSTUB
   BX_SMF bx_bool  dbg_xlate_linear2phy(bx_address linear, bx_phy_address *phy, bx_bool verbose = 0);

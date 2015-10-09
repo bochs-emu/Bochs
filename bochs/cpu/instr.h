@@ -28,6 +28,22 @@ class bxInstruction_c;
 
 typedef void BX_INSF_TYPE;
 
+#if BX_DEBUGGER
+  #define BX_DEBUG_DISASM_CURRENT_INSTRUCTION(i) \
+    if (i->ilen()) { \
+      BX_SYNC_TIME_IF_SINGLE_PROCESSOR(0); \
+      if (BX_CPU_THIS_PTR trace) debug_disasm_instruction(BX_CPU_THIS_PTR prev_rip); \
+    }
+#else
+  #define BX_DEBUG_DISASM_CURRENT_INSTRUCTION(i)
+#endif
+
+#if BX_DEBUGGER || BX_GDBSTUB
+  #define BX_DEBUG_INSTR_EPILOG() dbg_instruction_epilog()
+#else
+  #define BX_DEBUG_INSTR_EPILOG()
+#endif
+
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
 
 #define BX_SYNC_TIME_IF_SINGLE_PROCESSOR(allowed_delta) {                     \
@@ -43,11 +59,13 @@ typedef void BX_INSF_TYPE;
 #define BX_COMMIT_INSTRUCTION(i) {                     \
   BX_CPU_THIS_PTR prev_rip = RIP; /* commit new RIP */ \
   BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, (i));            \
+  BX_DEBUG_INSTR_EPILOG();                             \
   BX_CPU_THIS_PTR icount++;                            \
 }
 
 #define BX_EXECUTE_INSTRUCTION(i) {                    \
   BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, (i));           \
+  BX_DEBUG_DISASM_CURRENT_INSTRUCTION(i);              \
   RIP += (i)->ilen();                                  \
   return BX_CPU_CALL_METHOD(i->execute1, (i));         \
 }

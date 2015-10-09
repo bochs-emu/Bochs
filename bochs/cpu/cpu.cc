@@ -39,7 +39,7 @@ void BX_CPU_C::cpu_loop(void)
     BX_CPU_THIS_PTR icount++;
     BX_SYNC_TIME_IF_SINGLE_PROCESSOR(0);
 #if BX_DEBUGGER || BX_GDBSTUB
-    if (dbg_instruction_epilog()) return;
+    if (dbg_break_control()) return;
 #endif
 #if BX_GDBSTUB
     if (bx_dbg.gdbstub_enabled) return;
@@ -78,6 +78,7 @@ void BX_CPU_C::cpu_loop(void)
     for(;;) {
       // want to allow changing of the instruction inside instrumentation callback
       BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
+      BX_DEBUG_DISASM_CURRENT_INSTRUCTION(i);
       RIP += i->ilen();
       // when handlers chaining is enabled this single call will execute entire trace
       BX_CPU_CALL_METHOD(i->execute1, (i)); // might iterate repeat instruction
@@ -94,26 +95,16 @@ void BX_CPU_C::cpu_loop(void)
 
     for(;;) {
 
-#if BX_DEBUGGER
-      if (BX_CPU_THIS_PTR trace)
-        debug_disasm_instruction(BX_CPU_THIS_PTR prev_rip);
-#endif
-
       // want to allow changing of the instruction inside instrumentation callback
       BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
+      BX_DEBUG_DISASM_CURRENT_INSTRUCTION(i);
       RIP += i->ilen();
       BX_CPU_CALL_METHOD(i->execute1, (i)); // might iterate repeat instruction
       BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
       BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
+      BX_DEBUG_INSTR_EPILOG();
       BX_CPU_THIS_PTR icount++;
-
       BX_SYNC_TIME_IF_SINGLE_PROCESSOR(0);
-
-      // note instructions generating exceptions never reach this point
-#if BX_DEBUGGER || BX_GDBSTUB
-      if (dbg_instruction_epilog()) return;
-#endif
-
       if (BX_CPU_THIS_PTR async_event) break;
 
       if (++i == last) {
@@ -631,7 +622,15 @@ void BX_CPU_C::prefetch(void)
 }
 
 #if BX_DEBUGGER || BX_GDBSTUB
-bx_bool BX_CPU_C::dbg_instruction_epilog(void)
+void BX_CPU_C::dbg_instruction_epilog(void)
+{
+  if (dbg_break_control()) {
+    bx_debug_break();
+    longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
+  }
+}
+
+bx_bool BX_CPU_C::dbg_break_control(void)
 {
 #if BX_DEBUGGER
   bx_address debug_eip = RIP;
@@ -641,6 +640,11 @@ bx_bool BX_CPU_C::dbg_instruction_epilog(void)
   BX_CPU_THIS_PTR guard_found.eip = debug_eip;
   BX_CPU_THIS_PTR guard_found.laddr = get_laddr(BX_SEG_REG_CS, debug_eip);
   BX_CPU_THIS_PTR guard_found.code_32_64 = BX_CPU_THIS_PTR fetchModeMask;
+
+  // convenient point to see if user requested debug break or typed Ctrl-C
+  if (bx_guard.interrupt_requested) {
+    return(1);
+  }
 
   //
   // Take care of break point conditions generated during instruction execution
@@ -675,14 +679,9 @@ bx_bool BX_CPU_C::dbg_instruction_epilog(void)
 
   // see if debugger requesting icount guard 
   if (bx_guard.guard_for & BX_DBG_GUARD_ICOUNT) {
-    if (get_icount() >= BX_CPU_THIS_PTR guard_found.icount_max) {
+    if (get_icount()+1 >= BX_CPU_THIS_PTR guard_found.icount_max) {
       return(1);
     }
-  }
-
-  // convenient point to see if user requested debug break or typed Ctrl-C
-  if (bx_guard.interrupt_requested) {
-    return(1);
   }
 
   // support for 'show' command in debugger
