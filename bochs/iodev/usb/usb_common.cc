@@ -418,9 +418,9 @@ int usb_device_c::handle_packet(USBPacket *p)
 void usb_device_c::register_state(bx_list_c *parent)
 {
   bx_list_c *list = new bx_list_c(parent, "d", "Common USB Device State");
-  new bx_shadow_num_c(list, "addr", &d.addr);
-  new bx_shadow_num_c(list, "state", &d.state);
-  new bx_shadow_num_c(list, "remote_wakeup", &d.remote_wakeup);
+  BXRS_DEC_PARAM_FIELD(list, addr, d.addr);
+  BXRS_DEC_PARAM_FIELD(list, state, d.state);
+  BXRS_DEC_PARAM_FIELD(list, remote_wakeup, d.remote_wakeup);
   register_state_specific(parent);
 }
 

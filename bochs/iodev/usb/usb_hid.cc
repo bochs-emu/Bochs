@@ -445,15 +445,17 @@ usb_hid_device_c::~usb_hid_device_c(void)
 void usb_hid_device_c::register_state_specific(bx_list_c *parent)
 {
   bx_list_c *list = new bx_list_c(parent, "s", "USB HID Device State");
-  new bx_shadow_num_c(list, "mouse_delayed_dx", &s.mouse_delayed_dx);
-  new bx_shadow_num_c(list, "mouse_delayed_dy", &s.mouse_delayed_dy);
-  new bx_shadow_num_c(list, "mouse_delayed_dz", &s.mouse_delayed_dz);
-  new bx_shadow_num_c(list, "mouse_x", &s.mouse_x);
-  new bx_shadow_num_c(list, "mouse_y", &s.mouse_y);
-  new bx_shadow_num_c(list, "mouse_z", &s.mouse_z);
-  new bx_shadow_num_c(list, "b_state", &s.b_state, BASE_HEX);
-  new bx_shadow_data_c(list, "saved_key", s.saved_key, 8, 1);
-  new bx_shadow_data_c(list, "key_pad_packet", s.key_pad_packet, 8, 1);
+  BXRS_DEC_PARAM_FIELD(list, mouse_delayed_dx, s.mouse_delayed_dx);
+  BXRS_DEC_PARAM_FIELD(list, mouse_delayed_dy, s.mouse_delayed_dy);
+  BXRS_DEC_PARAM_FIELD(list, mouse_delayed_dz, s.mouse_delayed_dz);
+  BXRS_DEC_PARAM_FIELD(list, mouse_x, s.mouse_x);
+  BXRS_DEC_PARAM_FIELD(list, mouse_y, s.mouse_y);
+  BXRS_DEC_PARAM_FIELD(list, mouse_z, s.mouse_z);
+  BXRS_HEX_PARAM_FIELD(list, b_state, s.b_state);
+  if (d.type == USB_DEV_TYPE_KEYPAD) {
+    new bx_shadow_data_c(list, "saved_key", s.saved_key, 8, 1);
+    new bx_shadow_data_c(list, "key_pad_packet", s.key_pad_packet, 8, 1);
+  }
 }
 
 void usb_hid_device_c::handle_reset()

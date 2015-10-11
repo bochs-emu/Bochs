@@ -242,8 +242,8 @@ void usb_hub_device_c::register_state_specific(bx_list_c *parent)
     config->add(pconf->get_by_name("device"));
     config->add(pconf->get_by_name("options"));
     config->set_restore_handler(this, usb_hub_restore_handler);
-    new bx_shadow_num_c(port, "PortStatus", &hub.usb_port[i].PortStatus, BASE_HEX);
-    new bx_shadow_num_c(port, "PortChange", &hub.usb_port[i].PortChange, BASE_HEX);
+    BXRS_HEX_PARAM_FIELD(port, PortStatus, hub.usb_port[i].PortStatus);
+    BXRS_HEX_PARAM_FIELD(port, PortChange, hub.usb_port[i].PortChange);
     // empty list for USB device state
     new bx_list_c(port, "device");
   }

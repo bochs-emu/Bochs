@@ -285,50 +285,50 @@ void bx_usb_uhci_c::register_state(void)
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "usb_uhci", "USB UHCI State");
   hub = new bx_list_c(list, "hub");
   usb_cmd = new bx_list_c(hub, "usb_command");
-  new bx_shadow_bool_c(usb_cmd, "max_packet_size", &BX_UHCI_THIS hub.usb_command.max_packet_size);
-  new bx_shadow_bool_c(usb_cmd, "configured", &BX_UHCI_THIS hub.usb_command.configured);
-  new bx_shadow_bool_c(usb_cmd, "debug", &BX_UHCI_THIS hub.usb_command.debug);
-  new bx_shadow_bool_c(usb_cmd, "resume", &BX_UHCI_THIS hub.usb_command.resume);
-  new bx_shadow_bool_c(usb_cmd, "suspend", &BX_UHCI_THIS hub.usb_command.suspend);
-  new bx_shadow_bool_c(usb_cmd, "reset", &BX_UHCI_THIS hub.usb_command.reset);
-  new bx_shadow_bool_c(usb_cmd, "host_reset", &BX_UHCI_THIS hub.usb_command.host_reset);
-  new bx_shadow_bool_c(usb_cmd, "schedule", &BX_UHCI_THIS hub.usb_command.schedule);
+  BXRS_PARAM_BOOL(usb_cmd, max_packet_size, BX_UHCI_THIS hub.usb_command.max_packet_size);
+  BXRS_PARAM_BOOL(usb_cmd, configured, BX_UHCI_THIS hub.usb_command.configured);
+  BXRS_PARAM_BOOL(usb_cmd, debug, BX_UHCI_THIS hub.usb_command.debug);
+  BXRS_PARAM_BOOL(usb_cmd, resume, BX_UHCI_THIS hub.usb_command.resume);
+  BXRS_PARAM_BOOL(usb_cmd, suspend, BX_UHCI_THIS hub.usb_command.suspend);
+  BXRS_PARAM_BOOL(usb_cmd, reset, BX_UHCI_THIS hub.usb_command.reset);
+  BXRS_PARAM_BOOL(usb_cmd, host_reset, BX_UHCI_THIS hub.usb_command.host_reset);
+  BXRS_PARAM_BOOL(usb_cmd, schedule, BX_UHCI_THIS hub.usb_command.schedule);
   usb_st = new bx_list_c(hub, "usb_status");
-  new bx_shadow_bool_c(usb_st, "host_halted", &BX_UHCI_THIS hub.usb_status.host_halted);
-  new bx_shadow_bool_c(usb_st, "host_error", &BX_UHCI_THIS hub.usb_status.host_error);
-  new bx_shadow_bool_c(usb_st, "pci_error", &BX_UHCI_THIS hub.usb_status.pci_error);
-  new bx_shadow_bool_c(usb_st, "resume", &BX_UHCI_THIS hub.usb_status.resume);
-  new bx_shadow_bool_c(usb_st, "error_interrupt", &BX_UHCI_THIS hub.usb_status.error_interrupt);
-  new bx_shadow_bool_c(usb_st, "interrupt", &BX_UHCI_THIS hub.usb_status.interrupt);
-  new bx_shadow_num_c(usb_st, "status2", &BX_UHCI_THIS hub.usb_status.status2, BASE_HEX);
+  BXRS_PARAM_BOOL(usb_st, host_halted, BX_UHCI_THIS hub.usb_status.host_halted);
+  BXRS_PARAM_BOOL(usb_st, host_error, BX_UHCI_THIS hub.usb_status.host_error);
+  BXRS_PARAM_BOOL(usb_st, pci_error, BX_UHCI_THIS hub.usb_status.pci_error);
+  BXRS_PARAM_BOOL(usb_st, resume, BX_UHCI_THIS hub.usb_status.resume);
+  BXRS_PARAM_BOOL(usb_st, error_interrupt, BX_UHCI_THIS hub.usb_status.error_interrupt);
+  BXRS_PARAM_BOOL(usb_st, interrupt, BX_UHCI_THIS hub.usb_status.interrupt);
+  BXRS_HEX_PARAM_FIELD(usb_st, status2, BX_UHCI_THIS hub.usb_status.status2);
   usb_en = new bx_list_c(hub, "usb_enable");
-  new bx_shadow_bool_c(usb_en, "short_packet", &BX_UHCI_THIS hub.usb_enable.short_packet);
-  new bx_shadow_bool_c(usb_en, "on_complete", &BX_UHCI_THIS hub.usb_enable.on_complete);
-  new bx_shadow_bool_c(usb_en, "resume", &BX_UHCI_THIS hub.usb_enable.resume);
-  new bx_shadow_bool_c(usb_en, "timeout_crc", &BX_UHCI_THIS hub.usb_enable.timeout_crc);
-  new bx_shadow_num_c(hub, "frame_num", &BX_UHCI_THIS hub.usb_frame_num.frame_num, BASE_HEX);
-  new bx_shadow_num_c(hub, "frame_base", &BX_UHCI_THIS hub.usb_frame_base.frame_base, BASE_HEX);
-  new bx_shadow_num_c(hub, "sof_timing", &BX_UHCI_THIS hub.usb_sof.sof_timing, BASE_HEX);
+  BXRS_PARAM_BOOL(usb_en, short_packet, BX_UHCI_THIS hub.usb_enable.short_packet);
+  BXRS_PARAM_BOOL(usb_en, on_complete, BX_UHCI_THIS hub.usb_enable.on_complete);
+  BXRS_PARAM_BOOL(usb_en, resume, BX_UHCI_THIS hub.usb_enable.resume);
+  BXRS_PARAM_BOOL(usb_en, timeout_crc, BX_UHCI_THIS hub.usb_enable.timeout_crc);
+  BXRS_HEX_PARAM_FIELD(hub, frame_num, BX_UHCI_THIS hub.usb_frame_num.frame_num);
+  BXRS_HEX_PARAM_FIELD(hub, frame_base, BX_UHCI_THIS hub.usb_frame_base.frame_base);
+  BXRS_HEX_PARAM_FIELD(hub, sof_timing, BX_UHCI_THIS hub.usb_sof.sof_timing);
   for (j=0; j<BX_N_USB_UHCI_PORTS; j++) {
     sprintf(portnum, "port%d", j+1);
     port = new bx_list_c(hub, portnum);
-    new bx_shadow_bool_c(port, "suspend", &BX_UHCI_THIS hub.usb_port[j].suspend);
-    new bx_shadow_bool_c(port, "reset", &BX_UHCI_THIS hub.usb_port[j].reset);
-    new bx_shadow_bool_c(port, "low_speed", &BX_UHCI_THIS hub.usb_port[j].low_speed);
-    new bx_shadow_bool_c(port, "resume", &BX_UHCI_THIS hub.usb_port[j].resume);
-    new bx_shadow_bool_c(port, "line_dminus", &BX_UHCI_THIS hub.usb_port[j].line_dminus);
-    new bx_shadow_bool_c(port, "line_dplus", &BX_UHCI_THIS hub.usb_port[j].line_dplus);
-    new bx_shadow_bool_c(port, "able_changed", &BX_UHCI_THIS hub.usb_port[j].able_changed);
-    new bx_shadow_bool_c(port, "enabled", &BX_UHCI_THIS hub.usb_port[j].enabled);
-    new bx_shadow_bool_c(port, "connect_changed", &BX_UHCI_THIS hub.usb_port[j].connect_changed);
-    new bx_shadow_bool_c(port, "status", &BX_UHCI_THIS hub.usb_port[j].status);
+    BXRS_PARAM_BOOL(port, suspend, BX_UHCI_THIS hub.usb_port[j].suspend);
+    BXRS_PARAM_BOOL(port, reset, BX_UHCI_THIS hub.usb_port[j].reset);
+    BXRS_PARAM_BOOL(port, low_speed, BX_UHCI_THIS hub.usb_port[j].low_speed);
+    BXRS_PARAM_BOOL(port, resume, BX_UHCI_THIS hub.usb_port[j].resume);
+    BXRS_PARAM_BOOL(port, line_dminus, BX_UHCI_THIS hub.usb_port[j].line_dminus);
+    BXRS_PARAM_BOOL(port, line_dplus, BX_UHCI_THIS hub.usb_port[j].line_dplus);
+    BXRS_PARAM_BOOL(port, able_changed, BX_UHCI_THIS hub.usb_port[j].able_changed);
+    BXRS_PARAM_BOOL(port, enabled, BX_UHCI_THIS hub.usb_port[j].enabled);
+    BXRS_PARAM_BOOL(port, connect_changed, BX_UHCI_THIS hub.usb_port[j].connect_changed);
+    BXRS_PARAM_BOOL(port, status, BX_UHCI_THIS hub.usb_port[j].status);
     // empty list for USB device state
     new bx_list_c(port, "device");
   }
   register_pci_state(hub);
 
-  new bx_shadow_bool_c(list, "busy", &BX_UHCI_THIS busy);
-  new bx_shadow_num_c(list, "global_reset", &BX_UHCI_THIS global_reset);
+  BXRS_PARAM_BOOL(list, busy, BX_UHCI_THIS busy);
+  BXRS_DEC_PARAM_FIELD(list, global_reset, BX_UHCI_THIS global_reset);
 }
 
 void bx_usb_uhci_c::after_restore_state(void)
