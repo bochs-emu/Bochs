@@ -574,9 +574,6 @@ void bx_usb_xhci_c::reset_hc()
     }
   }
 
-  for (i=0; i<USB_XHCI_PORTS; i++)
-    BX_XHCI_THIS hub.usb_port[i].is_usb3 = (port_speed_allowed[i] == USB3);
-
   // Extended Caps
   for (i=0; i<EXT_CAPS_SIZE; i++)
     BX_XHCI_THIS hub.extended_caps[i] = ext_caps[i];
@@ -758,9 +755,10 @@ bx_bool bx_usb_xhci_c::restore_hc_state(void)
 
 void bx_usb_xhci_c::register_state(void)
 {
-  unsigned i;
+  unsigned i, j;
   char tmpname[16];
   bx_list_c *hub, *port, *reg, *reg_grp, *reg_grp1;
+  bx_list_c *list1, *list2, *item, *entries, *entry;
 
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "usb_xhci", "USB xHCI State");
   hub = new bx_list_c(list, "hub");
@@ -832,29 +830,9 @@ void bx_usb_xhci_c::register_state(void)
   BXRS_HEX_PARAM_FIELD(reg_grp, HcConfig_cie, BX_XHCI_THIS hub.op_regs.HcConfig.cie);
 #endif
 
-  reg_grp = new bx_list_c(hub, "runtime_regs");
-  BXRS_HEX_PARAM_FIELD(reg_grp, mfindex, BX_XHCI_THIS hub.runtime_regs.mfindex.index);
-  for (i = 0; i < INTERRUPTERS; i++) {
-    sprintf(tmpname, "interrupter%d", i+1);
-    reg_grp1 = new bx_list_c(reg_grp, tmpname);
-    reg = new bx_list_c(reg_grp1, "iman");
-    BXRS_PARAM_BOOL(reg, ie, BX_XHCI_THIS hub.runtime_regs.interrupter[i].iman.ie);
-    BXRS_PARAM_BOOL(reg, ip, BX_XHCI_THIS hub.runtime_regs.interrupter[i].iman.ip);
-    reg = new bx_list_c(reg_grp1, "imod");
-    BXRS_HEX_PARAM_FIELD(reg, imodc, BX_XHCI_THIS hub.runtime_regs.interrupter[i].imod.imodc);
-    BXRS_HEX_PARAM_FIELD(reg, imodi, BX_XHCI_THIS hub.runtime_regs.interrupter[i].imod.imodi);
-    BXRS_HEX_PARAM_FIELD(reg_grp1, erstabsize, BX_XHCI_THIS hub.runtime_regs.interrupter[i].erstsz.erstabsize);
-    BXRS_HEX_PARAM_FIELD(reg_grp1, erstabadd, BX_XHCI_THIS hub.runtime_regs.interrupter[i].erstba.erstabadd);
-    reg = new bx_list_c(reg_grp1, "erdp");
-    BXRS_HEX_PARAM_FIELD(reg, eventadd, BX_XHCI_THIS hub.runtime_regs.interrupter[i].erdp.eventadd);
-    BXRS_PARAM_BOOL(reg, ehb, BX_XHCI_THIS hub.runtime_regs.interrupter[i].erdp.ehb);
-    BXRS_HEX_PARAM_FIELD(reg, desi, BX_XHCI_THIS hub.runtime_regs.interrupter[i].erdp.desi);
-  }
-
   for (i = 0; i < USB_XHCI_PORTS; i++) {
     sprintf(tmpname, "port%d", i+1);
     port = new bx_list_c(hub, tmpname);
-    BXRS_PARAM_BOOL(port, is_usb3, BX_XHCI_THIS hub.usb_port[i].is_usb3);
     BXRS_PARAM_BOOL(port, has_been_reset, BX_XHCI_THIS hub.usb_port[i].has_been_reset);
     reg = new bx_list_c(port, "portsc");
     BXRS_PARAM_BOOL(reg, wpr, BX_XHCI_THIS hub.usb_port[i].portsc.wpr);
@@ -880,10 +858,21 @@ void bx_usb_xhci_c::register_state(void)
     BXRS_PARAM_BOOL(reg, ped, BX_XHCI_THIS hub.usb_port[i].portsc.ped);
     BXRS_PARAM_BOOL(reg, ccs, BX_XHCI_THIS hub.usb_port[i].portsc.ccs);
 
-    // TODO: handle USB2/USB3 cases
     reg = new bx_list_c(port, "portpmsc");
+    if (BX_XHCI_THIS hub.usb_port[i].is_usb3) {
+      BXRS_PARAM_BOOL(reg, fla, BX_XHCI_THIS hub.usb_port[i].usb3.portpmsc.fla);
+      BXRS_HEX_PARAM_FIELD(reg, u2timeout, BX_XHCI_THIS hub.usb_port[i].usb3.portpmsc.u2timeout);
+      BXRS_HEX_PARAM_FIELD(reg, u1timeout, BX_XHCI_THIS hub.usb_port[i].usb3.portpmsc.u1timeout);
+      BXRS_HEX_PARAM_FIELD(port, portli_lec, BX_XHCI_THIS hub.usb_port[i].usb3.portli.lec);
+    } else {
+      BXRS_HEX_PARAM_FIELD(reg, tmode, BX_XHCI_THIS hub.usb_port[i].usb2.portpmsc.tmode);
+      BXRS_PARAM_BOOL(reg, hle, BX_XHCI_THIS hub.usb_port[i].usb2.portpmsc.hle);
+      BXRS_HEX_PARAM_FIELD(reg, l1dslot, BX_XHCI_THIS hub.usb_port[i].usb2.portpmsc.l1dslot);
+      BXRS_HEX_PARAM_FIELD(reg, hird, BX_XHCI_THIS hub.usb_port[i].usb2.portpmsc.hird);
+      BXRS_PARAM_BOOL(reg, rwe, BX_XHCI_THIS hub.usb_port[i].usb2.portpmsc.rwe);
+      BXRS_HEX_PARAM_FIELD(reg, l1s, BX_XHCI_THIS hub.usb_port[i].usb2.portpmsc.l1s);
+    }
 
-    BXRS_HEX_PARAM_FIELD(port, portli_lec, BX_XHCI_THIS hub.usb_port[i].usb3.portli.lec);
     reg = new bx_list_c(port, "porthlpmc");
     BXRS_HEX_PARAM_FIELD(reg, hirdm, BX_XHCI_THIS hub.usb_port[i].porthlpmc.hirdm);
     BXRS_HEX_PARAM_FIELD(reg, l1timeout, BX_XHCI_THIS hub.usb_port[i].porthlpmc.l1timeout);
@@ -891,6 +880,95 @@ void bx_usb_xhci_c::register_state(void)
     // empty list for USB device state
     new bx_list_c(port, "device");
   }
+
+  new bx_shadow_data_c(hub, "extended_caps", BX_XHCI_THIS hub.extended_caps, EXT_CAPS_SIZE, 1);
+
+  reg_grp = new bx_list_c(hub, "runtime_regs");
+  BXRS_HEX_PARAM_FIELD(reg_grp, mfindex, BX_XHCI_THIS hub.runtime_regs.mfindex.index);
+  for (i = 0; i < INTERRUPTERS; i++) {
+    sprintf(tmpname, "interrupter%d", i+1);
+    reg_grp1 = new bx_list_c(reg_grp, tmpname);
+    reg = new bx_list_c(reg_grp1, "iman");
+    BXRS_PARAM_BOOL(reg, ie, BX_XHCI_THIS hub.runtime_regs.interrupter[i].iman.ie);
+    BXRS_PARAM_BOOL(reg, ip, BX_XHCI_THIS hub.runtime_regs.interrupter[i].iman.ip);
+    reg = new bx_list_c(reg_grp1, "imod");
+    BXRS_HEX_PARAM_FIELD(reg, imodc, BX_XHCI_THIS hub.runtime_regs.interrupter[i].imod.imodc);
+    BXRS_HEX_PARAM_FIELD(reg, imodi, BX_XHCI_THIS hub.runtime_regs.interrupter[i].imod.imodi);
+    BXRS_HEX_PARAM_FIELD(reg_grp1, erstabsize, BX_XHCI_THIS hub.runtime_regs.interrupter[i].erstsz.erstabsize);
+    BXRS_HEX_PARAM_FIELD(reg_grp1, erstabadd, BX_XHCI_THIS hub.runtime_regs.interrupter[i].erstba.erstabadd);
+    reg = new bx_list_c(reg_grp1, "erdp");
+    BXRS_HEX_PARAM_FIELD(reg, eventadd, BX_XHCI_THIS hub.runtime_regs.interrupter[i].erdp.eventadd);
+    BXRS_PARAM_BOOL(reg, ehb, BX_XHCI_THIS hub.runtime_regs.interrupter[i].erdp.ehb);
+    BXRS_HEX_PARAM_FIELD(reg, desi, BX_XHCI_THIS hub.runtime_regs.interrupter[i].erdp.desi);
+  }
+
+  list1 = new bx_list_c(hub, "slots");
+  for (i = 1; i < MAX_SLOTS; i++) {
+    sprintf(tmpname, "slot%d", i);
+    item = new bx_list_c(list1, tmpname);
+    BXRS_PARAM_BOOL(item, enabled, BX_XHCI_THIS hub.slots[i].enabled);
+    BXRS_PARAM_BOOL(item, sent_address, BX_XHCI_THIS hub.slots[i].sent_address);
+    list2 = new bx_list_c(item, "slot_context");
+    BXRS_DEC_PARAM_FIELD(list2, entries, BX_XHCI_THIS hub.slots[i].slot_context.entries);
+    BXRS_PARAM_BOOL(list2, hub, BX_XHCI_THIS hub.slots[i].slot_context.hub);
+    BXRS_PARAM_BOOL(list2, mtt, BX_XHCI_THIS hub.slots[i].slot_context.mtt);
+    BXRS_DEC_PARAM_FIELD(list2, speed, BX_XHCI_THIS hub.slots[i].slot_context.speed);
+    BXRS_DEC_PARAM_FIELD(list2, route_string, BX_XHCI_THIS hub.slots[i].slot_context.route_string);
+    BXRS_DEC_PARAM_FIELD(list2, num_ports, BX_XHCI_THIS hub.slots[i].slot_context.num_ports);
+    BXRS_DEC_PARAM_FIELD(list2, rh_port_num, BX_XHCI_THIS hub.slots[i].slot_context.rh_port_num);
+    BXRS_DEC_PARAM_FIELD(list2, max_exit_latency, BX_XHCI_THIS hub.slots[i].slot_context.max_exit_latency);
+    BXRS_DEC_PARAM_FIELD(list2, int_target, BX_XHCI_THIS hub.slots[i].slot_context.int_target);
+    BXRS_DEC_PARAM_FIELD(list2, ttt, BX_XHCI_THIS hub.slots[i].slot_context.ttt);
+    BXRS_DEC_PARAM_FIELD(list2, tt_port_num, BX_XHCI_THIS hub.slots[i].slot_context.tt_port_num);
+    BXRS_DEC_PARAM_FIELD(list2, tt_hub_slot_id, BX_XHCI_THIS hub.slots[i].slot_context.tt_hub_slot_id);
+    BXRS_DEC_PARAM_FIELD(list2, slot_state, BX_XHCI_THIS hub.slots[i].slot_context.slot_state);
+    BXRS_DEC_PARAM_FIELD(list2, device_address, BX_XHCI_THIS hub.slots[i].slot_context.device_address);
+    entries = new bx_list_c(item, "ep_context");
+    for (j = 0; j < 32; j++) {
+      sprintf(tmpname, "%d", j);
+      entry = new bx_list_c(entries, tmpname);
+      list2 = new bx_list_c(entry, "ep_context");
+      BXRS_DEC_PARAM_FIELD(list2, interval, BX_XHCI_THIS hub.slots[i].ep_context[j].ep_context.interval);
+      BXRS_PARAM_BOOL(list2, lsa, BX_XHCI_THIS hub.slots[i].ep_context[j].ep_context.lsa);
+      BXRS_DEC_PARAM_FIELD(list2, max_pstreams, BX_XHCI_THIS hub.slots[i].ep_context[j].ep_context.max_pstreams);
+      BXRS_DEC_PARAM_FIELD(list2, mult, BX_XHCI_THIS hub.slots[i].ep_context[j].ep_context.mult);
+      BXRS_DEC_PARAM_FIELD(list2, ep_state, BX_XHCI_THIS hub.slots[i].ep_context[j].ep_context.ep_state);
+      BXRS_DEC_PARAM_FIELD(list2, max_packet_size, BX_XHCI_THIS hub.slots[i].ep_context[j].ep_context.max_packet_size);
+      BXRS_DEC_PARAM_FIELD(list2, max_burst_size, BX_XHCI_THIS hub.slots[i].ep_context[j].ep_context.max_burst_size);
+      BXRS_PARAM_BOOL(list2, hid, BX_XHCI_THIS hub.slots[i].ep_context[j].ep_context.hid);
+      BXRS_DEC_PARAM_FIELD(list2, ep_type, BX_XHCI_THIS hub.slots[i].ep_context[j].ep_context.ep_type);
+      BXRS_DEC_PARAM_FIELD(list2, cerr, BX_XHCI_THIS hub.slots[i].ep_context[j].ep_context.cerr);
+      BXRS_HEX_PARAM_FIELD(list2, tr_dequeue_pointer, BX_XHCI_THIS hub.slots[i].ep_context[j].ep_context.tr_dequeue_pointer);
+      BXRS_PARAM_BOOL(list2, dcs, BX_XHCI_THIS hub.slots[i].ep_context[j].ep_context.dcs);
+      BXRS_DEC_PARAM_FIELD(list2, max_esit_payload, BX_XHCI_THIS hub.slots[i].ep_context[j].ep_context.max_esit_payload);
+      BXRS_DEC_PARAM_FIELD(list2, average_trb_len, BX_XHCI_THIS hub.slots[i].ep_context[j].ep_context.average_trb_len);
+      BXRS_HEX_PARAM_FIELD(entry, edtla, BX_XHCI_THIS hub.slots[i].ep_context[j].edtla);
+      BXRS_HEX_PARAM_FIELD(entry, enqueue_pointer, BX_XHCI_THIS hub.slots[i].ep_context[j].enqueue_pointer);
+      BXRS_PARAM_BOOL(entry, rcs, BX_XHCI_THIS hub.slots[i].ep_context[j].rcs);
+    }
+  }
+
+  list1 = new bx_list_c(hub, "ring_members");
+  list2 = new bx_list_c(list1, "command_ring");
+  BXRS_HEX_PARAM_FIELD(list2, dq_pointer, BX_XHCI_THIS hub.ring_members.command_ring.dq_pointer);
+  BXRS_PARAM_BOOL(list2, rcs, BX_XHCI_THIS hub.ring_members.command_ring.rcs);
+  list2 = new bx_list_c(list1, "event_rings");
+  for (i = 0; i < INTERRUPTERS; i++) {
+    sprintf(tmpname, "ring%d", i);
+    item = new bx_list_c(list2, tmpname);
+    BXRS_PARAM_BOOL(item, rcs, BX_XHCI_THIS hub.ring_members.event_rings[i].rcs);
+    BXRS_HEX_PARAM_FIELD(item, trb_count, BX_XHCI_THIS hub.ring_members.event_rings[i].trb_count);
+    BXRS_HEX_PARAM_FIELD(item, count, BX_XHCI_THIS hub.ring_members.event_rings[i].count);
+    BXRS_HEX_PARAM_FIELD(item, cur_trb, BX_XHCI_THIS hub.ring_members.event_rings[i].cur_trb);
+    entries = new bx_list_c(item, "entries");
+    for (j = 0; j < (1<<MAX_SEG_TBL_SZ_EXP); j++) {
+      sprintf(tmpname, "entry%d", j);
+      entry = new bx_list_c(entries, tmpname);
+      BXRS_HEX_PARAM_FIELD(entry, addr, BX_XHCI_THIS hub.ring_members.event_rings[i].entrys[j].addr);
+      BXRS_HEX_PARAM_FIELD(entry, size, BX_XHCI_THIS hub.ring_members.event_rings[i].entrys[j].size);
+    }
+  }
+
   register_pci_state(hub);
 }
 
