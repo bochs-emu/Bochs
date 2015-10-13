@@ -445,40 +445,23 @@ void scsi_device_t::scsi_write_complete(void *req, int ret)
     }
     r->buf_len = len;
     BX_DEBUG(("write complete tag=0x%x more=%d", r->tag, len));
+    curr_lba = r->sector;
     completion(dev, SCSI_REASON_DATA, r->tag, len);
   }
 }
 
 void scsi_device_t::scsi_write_data(Bit32u tag)
 {
-  SCSIRequest *r;
-  Bit32u n;
-  int ret;
+  SCSIRequest *r = scsi_find_request(tag);
 
   BX_DEBUG(("write data tag=0x%x", tag));
-  r = scsi_find_request(tag);
   if (!r) {
     BX_ERROR(("bad write tag 0x%x", tag));
     return;
   }
   if (type == SCSIDEV_TYPE_DISK) {
-    n = r->buf_len / 512;
-    if (n) {
-      bx_gui->statusbar_setitem(statusbar_id, 1, 1);
-      ret = (int)hdimage->lseek(r->sector * 512, SEEK_SET);
-      if (ret < 0) {
-        BX_ERROR(("could not lseek() hard drive image file"));
-        scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_HARDWARE_ERROR);
-      }
-      ret = (int)hdimage->write((bx_ptr_t)r->dma_buf, r->buf_len);
-      r->sector += n;
-      r->sector_count -= n;
-      if (ret < r->buf_len) {
-        BX_ERROR(("could not write() hard drive image file"));
-        scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_HARDWARE_ERROR);
-      } else {
-        scsi_write_complete((void*)r, 0);
-      }
+    if ((r->buf_len / 512) > 0) {
+      seek_complete(r);
     } else {
       scsi_write_complete(r, 0);
     }
@@ -1022,6 +1005,7 @@ void scsi_device_t::seek_complete(SCSIRequest *r)
   Bit32u i, n;
   int ret = 0;
 
+  r->seek_pending = 0;
   if (!r->write_cmd) {
     bx_gui->statusbar_setitem(statusbar_id, 1);
     n = r->sector_count;
@@ -1044,8 +1028,11 @@ void scsi_device_t::seek_complete(SCSIRequest *r)
         scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_HARDWARE_ERROR);
         return;
       }
-      ret = (int)hdimage->read((bx_ptr_t)r->dma_buf, r->buf_len);
-      if (ret < r->buf_len) {
+      i = 0;
+      do {
+        ret = (int)hdimage->read((bx_ptr_t)(r->dma_buf + (i * 512)), 512);
+      } while ((++i < n) && (ret == 512));
+      if (ret != 512) {
         BX_ERROR(("could not read() hard drive image file"));
         scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_HARDWARE_ERROR);
         return;
@@ -1053,10 +1040,29 @@ void scsi_device_t::seek_complete(SCSIRequest *r)
     }
     r->sector += n;
     r->sector_count -= n;
-    r->seek_pending = 0;
     scsi_read_complete((void*)r, 0);
   } else {
-    // TODO
+    bx_gui->statusbar_setitem(statusbar_id, 1, 1);
+    n = r->buf_len / 512;
+    if (n) {
+      ret = (int)hdimage->lseek(r->sector * 512, SEEK_SET);
+      if (ret < 0) {
+        BX_ERROR(("could not lseek() hard drive image file"));
+        scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_HARDWARE_ERROR);
+      }
+      i = 0;
+      do {
+        ret = (int)hdimage->write((bx_ptr_t)(r->dma_buf + (i * 512)), 512);
+      } while ((++i < n) && (ret == 512));
+      if (ret != 512) {
+        BX_ERROR(("could not write() hard drive image file"));
+        scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_HARDWARE_ERROR);
+        return;
+      }
+      r->sector += n;
+      r->sector_count -= n;
+      scsi_write_complete((void*)r, 0);
+    }
   }
 }
 
