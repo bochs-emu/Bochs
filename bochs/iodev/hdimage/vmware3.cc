@@ -356,23 +356,23 @@ off_t vmware3_image_t::perform_seek()
 
 ssize_t vmware3_image_t::read(void * buf, size_t count)
 {
-    ssize_t total = 0;
-    while(count > 0)
-    {
-        off_t offset = perform_seek();
-        if(offset == INVALID_OFFSET)
-        {
-            BX_DEBUG(("vmware3 COW read failed on %u bytes", (unsigned)count));
-            return -1;
-        }
-        unsigned bytes_remaining = (unsigned)(tlb_size - offset);
-        unsigned amount = (bytes_remaining > count) ? count : bytes_remaining;
-        memcpy(buf, current->tlb + offset, amount);
-        requested_offset += amount;
-        total += amount;
-        count -= amount;
+  char *cbuf = (char*)buf;
+  ssize_t total = 0;
+  while (count > 0) {
+    off_t offset = perform_seek();
+    if (offset == INVALID_OFFSET) {
+      BX_DEBUG(("vmware3 COW read failed on %u bytes", (unsigned)count));
+      return -1;
     }
-    return total;
+    unsigned bytes_remaining = (unsigned)(tlb_size - offset);
+    unsigned amount = (bytes_remaining > count) ? count : bytes_remaining;
+    memcpy(cbuf, current->tlb + offset, amount);
+    requested_offset += amount;
+    total += amount;
+    cbuf += amount;
+    count -= amount;
+  }
+  return total;
 }
 
 /* This could be done much better, I'm sure. In fact, the whole header doesn't
@@ -452,35 +452,32 @@ bool vmware3_image_t::sync()
 
 ssize_t vmware3_image_t::write(const void * buf, size_t count)
 {
-    ssize_t total = 0;
-    while(count > 0)
-    {
-        off_t offset = perform_seek();
-        if(offset == INVALID_OFFSET)
-            return -1;
-        unsigned bytes_remaining = (unsigned)(tlb_size - offset);
-        unsigned amount = 0;
-        current->synced = false;
-        if(bytes_remaining > count)
-        {
-            memcpy(current->tlb + offset, buf, count);
-            amount = count;
-        }
-        else
-        {
-            memcpy(current->tlb + offset, buf, bytes_remaining);
-            if(!sync())
-            {
-                BX_DEBUG(("failed to sync when writing %u bytes", (unsigned)count));
-                return -1;
-            }
-            amount = bytes_remaining;
-        }
-        requested_offset += amount;
-        total += amount;
-        count -= amount;
+  char *cbuf = (char*)buf;
+  ssize_t total = 0;
+  while (count > 0) {
+    off_t offset = perform_seek();
+    if(offset == INVALID_OFFSET)
+      return -1;
+    unsigned bytes_remaining = (unsigned)(tlb_size - offset);
+    unsigned amount = 0;
+    current->synced = false;
+    if (bytes_remaining > count) {
+      memcpy(current->tlb + offset, cbuf, count);
+      amount = count;
+    } else {
+      memcpy(current->tlb + offset, cbuf, bytes_remaining);
+      if (!sync()) {
+        BX_DEBUG(("failed to sync when writing %u bytes", (unsigned)count));
+        return -1;
+      }
+      amount = bytes_remaining;
     }
-    return total;
+    requested_offset += amount;
+    total += amount;
+    cbuf += amount;
+    count -= amount;
+  }
+  return total;
 }
 
 Bit64s vmware3_image_t::lseek(Bit64s offset, int whence)

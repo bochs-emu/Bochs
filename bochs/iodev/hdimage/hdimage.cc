@@ -1967,13 +1967,15 @@ Bit64s growing_image_t::lseek(Bit64s offset, int whence)
 
 ssize_t growing_image_t::read(void* buf, size_t count)
 {
+  char *cbuf = (char*)buf;
   size_t n = 0;
   ssize_t ret = 0;
 
   memset(buf, 0, count);
   while (n < count) {
-    ret = redolog->read((char*) buf, 512);
+    ret = redolog->read(cbuf, 512);
     if (ret < 0) break;
+    cbuf += 512;
     n += 512;
   }
   return (ret < 0) ? ret : count;
@@ -1981,12 +1983,14 @@ ssize_t growing_image_t::read(void* buf, size_t count)
 
 ssize_t growing_image_t::write(const void* buf, size_t count)
 {
+  char *cbuf = (char*)buf;
   size_t n = 0;
   ssize_t ret = 0;
 
   while (n < count) {
-    ret = redolog->write((char*) buf, 512);
+    ret = redolog->write(cbuf, 512);
     if (ret < 0) break;
+    cbuf += 512;
     n += 512;
   }
   return (ret < 0) ? ret : count;
@@ -2142,14 +2146,16 @@ Bit64s undoable_image_t::lseek(Bit64s offset, int whence)
 
 ssize_t undoable_image_t::read(void* buf, size_t count)
 {
+  char *cbuf = (char*)buf;
   size_t n = 0;
   ssize_t ret = 0;
 
   while (n < count) {
-    if ((size_t)redolog->read((char*) buf, 512) != 512) {
-      ret = ro_disk->read((char*) buf, 512);
+    if ((size_t)redolog->read(cbuf, 512) != 512) {
+      ret = ro_disk->read(cbuf, 512);
       if (ret < 0) break;
     }
+    cbuf += 512;
     n += 512;
   }
   return (ret < 0) ? ret : count;
@@ -2157,12 +2163,14 @@ ssize_t undoable_image_t::read(void* buf, size_t count)
 
 ssize_t undoable_image_t::write(const void* buf, size_t count)
 {
+  char *cbuf = (char*)buf;
   size_t n = 0;
   ssize_t ret = 0;
 
   while (n < count) {
-    ret = redolog->write((char*) buf, 512);
+    ret = redolog->write(cbuf, 512);
     if (ret < 0) break;
+    cbuf += 512;
     n += 512;
   }
   return (ret < 0) ? ret : count;
@@ -2301,14 +2309,16 @@ Bit64s volatile_image_t::lseek(Bit64s offset, int whence)
 
 ssize_t volatile_image_t::read(void* buf, size_t count)
 {
+  char *cbuf = (char*)buf;
   size_t n = 0;
   ssize_t ret = 0;
 
   while (n < count) {
-    if ((size_t)redolog->read((char*) buf, 512) != 512) {
-      ret = ro_disk->read((char*) buf, 512);
+    if ((size_t)redolog->read(cbuf, 512) != 512) {
+      ret = ro_disk->read(cbuf, 512);
       if (ret < 0) break;
     }
+    cbuf += 512;
     n += 512;
   }
   return (ret < 0) ? ret : count;
@@ -2316,12 +2326,14 @@ ssize_t volatile_image_t::read(void* buf, size_t count)
 
 ssize_t volatile_image_t::write(const void* buf, size_t count)
 {
+  char *cbuf = (char*)buf;
   size_t n = 0;
   ssize_t ret = 0;
 
   while (n < count) {
-    ret = redolog->write((char*) buf, 512);
+    ret = redolog->write(cbuf, 512);
     if (ret < 0) break;
+    cbuf += 512;
     n += 512;
   }
   return (ret < 0) ? ret : count;

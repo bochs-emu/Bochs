@@ -191,6 +191,7 @@ Bit64s vbox_image_t::lseek(Bit64s offset, int whence)
 
 ssize_t vbox_image_t::read(void *buf, size_t count)
 {
+  char *cbuf = (char*)buf;
   ssize_t total = 0;
   while (count > 0) {
     off_t readable = perform_seek();
@@ -201,10 +202,11 @@ ssize_t vbox_image_t::read(void *buf, size_t count)
 
     off_t copysize = ((off_t)count > readable) ? readable : count;
     off_t offset = current_offset & (header.block_size - 1);
-    memcpy(buf, block_data + (size_t) offset, (size_t) copysize);
+    memcpy(cbuf, block_data + (size_t) offset, (size_t) copysize);
 
     current_offset += copysize;
     total += (long) copysize;
+    cbuf += copysize;
     count -= (size_t) copysize;
   }
 
@@ -213,6 +215,7 @@ ssize_t vbox_image_t::read(void *buf, size_t count)
 
 ssize_t vbox_image_t::write(const void *buf, size_t count)
 {
+  char *cbuf = (char*)buf;
   ssize_t total = 0;
   while (count > 0) {
     off_t writable = perform_seek();
@@ -223,10 +226,11 @@ ssize_t vbox_image_t::write(const void *buf, size_t count)
 
     off_t writesize = ((off_t)count > writable) ? writable : count;
     off_t offset = current_offset & (header.block_size - 1);
-    memcpy(block_data + offset, buf, (size_t) writesize);
+    memcpy(block_data + offset, cbuf, (size_t) writesize);
 
     current_offset += writesize;
     total += (long) writesize;
+    cbuf += writesize;
     count -= (size_t) writesize;
     is_dirty = 1;
   }
