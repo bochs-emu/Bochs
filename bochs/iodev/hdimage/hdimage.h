@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2005-2014  The Bochs Project
+//  Copyright (C) 2005-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -285,8 +285,8 @@ class concat_image_t : public device_image_t
   private:
 #define BX_CONCAT_MAX_IMAGES 8
       int fd_table[BX_CONCAT_MAX_IMAGES];
-      Bit64s start_offset_table[BX_CONCAT_MAX_IMAGES];
-      Bit64s length_table[BX_CONCAT_MAX_IMAGES];
+      Bit64u start_offset_table[BX_CONCAT_MAX_IMAGES];
+      Bit64u length_table[BX_CONCAT_MAX_IMAGES];
       void increment_string(char *str);
       int maxfd;  // number of entries in tables that are valid
 
@@ -299,9 +299,9 @@ class concat_image_t : public device_image_t
       // the following variables tell which partial image file to use for
       // the next read and write.
       int index;  // index into table
-      int fd;     // fd to use for reads and writes
-      Bit64s thismin, thismax; // byte offset boundary of this image
-      Bit64s total_offset;     // current byte offset
+      int curr_fd;     // fd to use for reads and writes
+      Bit64u curr_min, curr_max; // byte offset boundary of this image
+      Bit64u total_offset;     // current byte offset
       const char *pathname0;
 };
 

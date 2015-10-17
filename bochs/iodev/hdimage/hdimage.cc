@@ -557,7 +557,7 @@ char increment_string(char *str, int diff)
 
 concat_image_t::concat_image_t()
 {
-  fd = -1;
+  curr_fd = -1;
 }
 
 void concat_image_t::increment_string(char *str)
@@ -573,11 +573,7 @@ int concat_image_t::open(const char* _pathname0, int flags)
   BX_DEBUG(("concat_image_t::open"));
   Bit64s start_offset = 0;
   for (int i=0; i<BX_CONCAT_MAX_IMAGES; i++) {
-    fd_table[i] = ::open(pathname, O_RDWR
-#ifdef O_BINARY
-                  | O_BINARY
-#endif
-                  );
+    fd_table[i] = hdimage_open_file(pathname, flags, &length_table[i], NULL);
     if (fd_table[i] < 0) {
       // open failed.
       // if no FD was opened successfully, return -1 (fail).
@@ -587,33 +583,18 @@ int concat_image_t::open(const char* _pathname0, int flags)
       maxfd = i;
       break;
     }
-    BX_DEBUG(("concat_image: open image %s, fd[%d] = %d", pathname, i, fd_table[i]));
-    /* look at size of image file to calculate disk geometry */
-    struct stat stat_buf;
-    int ret = fstat(fd_table[i], &stat_buf);
-    if (ret) {
-      BX_PANIC(("fstat() returns error!"));
-    }
-#ifdef S_ISBLK
-    if (S_ISBLK(stat_buf.st_mode)) {
-      BX_PANIC(("block devices should REALLY NOT be used as concat images"));
-    }
-#endif
-    if ((stat_buf.st_size % 512) != 0) {
-      BX_PANIC(("size of disk image must be multiple of 512 bytes"));
-    }
-    length_table[i] = stat_buf.st_size;
+    BX_INFO(("concat_image: open image #%d: '%s', (" FMT_LL "u bytes)", i, pathname, length_table[i]));
     start_offset_table[i] = start_offset;
-    start_offset += stat_buf.st_size;
+    start_offset += length_table[i];
     increment_string(pathname);
   }
   free(pathname);
   // start up with first image selected
+  total_offset = 0;
   index = 0;
-  fd = fd_table[0];
-  thismin = 0;
-  thismax = length_table[0]-1;
-  seek_was_last_op = 0;
+  curr_fd = fd_table[0];
+  curr_min = 0;
+  curr_max = length_table[0]-1;
   hd_size = start_offset;
   BX_INFO(("hd_size: " FMT_LL "u", hd_size));
   return 0; // success.
@@ -634,28 +615,40 @@ Bit64s concat_image_t::lseek(Bit64s offset, int whence)
   if ((offset % 512) != 0)
     BX_PANIC(("lseek HD with offset not multiple of 512"));
   BX_DEBUG(("concat_image_t.lseek(%d)", whence));
-  total_offset = offset;
+  switch (whence) {
+    case SEEK_SET:
+      total_offset = offset;
+      break;
+    case SEEK_CUR:
+      total_offset += offset;
+      break;
+    case SEEK_END:
+      total_offset = hd_size - offset;
+      break;
+    default:
+      return -1;
+  }
   // is this offset in this disk image?
-  if (offset < thismin) {
+  if (offset < (Bit64s)curr_min) {
     // no, look at previous images
     for (int i=index-1; i>=0; i--) {
-      if (offset >= start_offset_table[i]) {
+      if (offset >= (Bit64s)start_offset_table[i]) {
         index = i;
-        fd = fd_table[i];
-        thismin = start_offset_table[i];
-        thismax = thismin + length_table[i] - 1;
+        curr_fd = fd_table[i];
+        curr_min = start_offset_table[i];
+        curr_max = curr_min + length_table[i] - 1;
         BX_DEBUG(("concat_image_t.lseek to earlier image, index=%d", index));
         break;
       }
     }
-  } else if (offset > thismax) {
+  } else if (offset > (Bit64s)curr_max) {
     // no, look at later images
     for (int i=index+1; i<maxfd; i++) {
-      if (offset < start_offset_table[i] + length_table[i]) {
+      if (offset < (Bit64s)(start_offset_table[i] + length_table[i])) {
         index = i;
-        fd = fd_table[i];
-        thismin = start_offset_table[i];
-        thismax = thismin + length_table[i] - 1;
+        curr_fd = fd_table[i];
+        curr_min = start_offset_table[i];
+        curr_max = curr_min + length_table[i] - 1;
         BX_DEBUG(("concat_image_t.lseek to earlier image, index=%d", index));
         break;
       }
@@ -663,68 +656,64 @@ Bit64s concat_image_t::lseek(Bit64s offset, int whence)
   }
   // now offset should be within the current image.
   offset -= start_offset_table[index];
-  if (offset < 0 || offset >= length_table[index]) {
+  if ((offset < 0) || (offset >= (Bit64s)length_table[index])) {
     BX_PANIC(("concat_image_t.lseek to byte %ld failed", (long)offset));
     return -1;
   }
-
-  seek_was_last_op = 1;
-  return (Bit64s)::lseek(fd, (off_t)offset, whence);
+  return (Bit64s)::lseek(curr_fd, (off_t)offset, SEEK_SET);
 }
 
 ssize_t concat_image_t::read(void* buf, size_t count)
 {
-  size_t count1;
+  size_t readmax, count1 = count;
   ssize_t ret = -1;
   char *buf1 = (char*)buf;
 
   BX_DEBUG(("concat_image_t.read %ld bytes", (long)count));
-  // notice if anyone does sequential read or write without seek in between.
-  // This can be supported pretty easily, but needs additional checks for
-  // end of a partial image.
-  if (!seek_was_last_op)
-    BX_PANIC(("no seek before read"));
-  if ((Bit64s)(total_offset + count - 1) <= thismax) {
-    return ::read(fd, buf1, count);
-  } else {
-    count1 = (size_t)(thismax - total_offset + 1);
-    ret = ::read(fd, buf1, count1);
-    if (ret >= 0) {
-      buf1 += count1;
-      ret = lseek(thismax + 1, SEEK_SET);
+  do {
+    readmax = (size_t)(curr_max - total_offset + 1);
+    if (count1 > readmax) {
+      ret = ::read(curr_fd, buf1, readmax);
       if (ret >= 0) {
-        ret = ::read(fd, buf1, count - count1);
+        buf1 += readmax;
+        count1 -= readmax;
+        ret = lseek(curr_max + 1, SEEK_SET);
       }
+    } else {
+      ret = ::read(curr_fd, buf1, count1);
+      if (ret >= 0) {
+        ret = lseek(count1, SEEK_CUR);
+      }
+      break;
     }
-  }
+  } while (ret > 0);
   return (ret < 0) ? ret : count;
 }
 
 ssize_t concat_image_t::write(const void* buf, size_t count)
 {
-  size_t count1;
+  size_t writemax, count1 = count;
   ssize_t ret = -1;
   char *buf1 = (char*)buf;
 
   BX_DEBUG(("concat_image_t.write %ld bytes", (long)count));
-  // notice if anyone does sequential read or write without seek in between.
-  // This can be supported pretty easily, but needs additional checks for
-  // end of a partial image.
-  if (!seek_was_last_op)
-    BX_PANIC(("no seek before write"));
-  if ((Bit64s)(total_offset + count - 1) <= thismax) {
-    return ::write(fd, buf1, count);
-  } else {
-    count1 = (size_t)(thismax - total_offset + 1);
-    ret = ::write(fd, buf1, count1);
-    if (ret >= 0) {
-      buf1 += count1;
-      ret = lseek(thismax + 1, SEEK_SET);
+  do {
+    writemax = (size_t)(curr_max - total_offset + 1);
+    if (count1 > writemax) {
+      ret = ::write(curr_fd, buf1, writemax);
       if (ret >= 0) {
-        ret = ::write(fd, buf1, count - count1);
+        buf1 += writemax;
+        count1 -= writemax;
+        ret = lseek(curr_max + 1, SEEK_SET);
       }
+    } else {
+      ret = ::write(curr_fd, buf1, count1);
+      if (ret >= 0) {
+        ret = lseek(count1, SEEK_CUR);
+      }
+      break;
     }
-  }
+  } while (ret > 0);
   return (ret < 0) ? ret : count;
 }
 
