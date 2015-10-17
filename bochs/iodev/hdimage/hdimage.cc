@@ -629,10 +629,10 @@ Bit64s concat_image_t::lseek(Bit64s offset, int whence)
       return -1;
   }
   // is this offset in this disk image?
-  if (offset < (Bit64s)curr_min) {
+  if (total_offset < curr_min) {
     // no, look at previous images
     for (int i=index-1; i>=0; i--) {
-      if (offset >= (Bit64s)start_offset_table[i]) {
+      if (total_offset >= start_offset_table[i]) {
         index = i;
         curr_fd = fd_table[i];
         curr_min = start_offset_table[i];
@@ -641,10 +641,10 @@ Bit64s concat_image_t::lseek(Bit64s offset, int whence)
         break;
       }
     }
-  } else if (offset > (Bit64s)curr_max) {
+  } else if (total_offset > curr_max) {
     // no, look at later images
     for (int i=index+1; i<maxfd; i++) {
-      if (offset < (Bit64s)(start_offset_table[i] + length_table[i])) {
+      if (total_offset < (start_offset_table[i] + length_table[i])) {
         index = i;
         curr_fd = fd_table[i];
         curr_min = start_offset_table[i];
@@ -655,7 +655,7 @@ Bit64s concat_image_t::lseek(Bit64s offset, int whence)
     }
   }
   // now offset should be within the current image.
-  offset -= start_offset_table[index];
+  offset = total_offset - start_offset_table[index];
   if ((offset < 0) || (offset >= (Bit64s)length_table[index])) {
     BX_PANIC(("concat_image_t.lseek to byte %ld failed", (long)offset));
     return -1;
