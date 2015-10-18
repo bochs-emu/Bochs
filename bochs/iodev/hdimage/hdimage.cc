@@ -144,7 +144,7 @@ device_image_t* bx_hdimage_ctl_c::init_image(Bit8u image_mode, Bit64u disk_size,
       break;
 
     default:
-      BX_PANIC(("unsupported HD mode : '%s'", hdimage_mode_names[image_mode]));
+      BX_PANIC(("Disk image mode '%s' not available", hdimage_mode_names[image_mode]));
       break;
   }
   return hdimage;
@@ -764,21 +764,6 @@ sparse_image_t::sparse_image_t()
   parent_image = NULL;
 }
 
-/*
-void showpagetable(Bit32u * pagetable, size_t numpages)
-{
- printf("Non null pages: ");
- for (int i = 0; i < numpages; i++)
- {
-   if (pagetable[i] != 0xffffffff)
-   {
-     printf("%d ", i);
-   }
- }
- printf("\n");
-}
-*/
-
 int sparse_image_t::read_header()
 {
   BX_ASSERT(sizeof(header) == SPARSE_HEADER_SIZE);
@@ -884,8 +869,6 @@ int sparse_image_t::open(const char* pathname0, int flags)
 
   lseek(0, SEEK_SET);
 
-  //showpagetable(pagetable, header.numpages);
-
   char * parentpathname = strdup(pathname);
   char lastchar = ::increment_string(parentpathname, -1);
 
@@ -946,8 +929,6 @@ void sparse_image_t::close()
 
 Bit64s sparse_image_t::lseek(Bit64s offset, int whence)
 {
-  //showpagetable(pagetable, header.numpages);
-
   if ((offset % 512) != 0)
     BX_PANIC(("lseek HD with offset not multiple of 512"));
   if (whence != SEEK_SET)
@@ -960,8 +941,6 @@ Bit64s sparse_image_t::lseek(Bit64s offset, int whence)
     BX_PANIC(("sparse_image_t.lseek to byte %ld failed", (long)offset));
     return -1;
   }
-
-  //printf("Seeking to position %ld\n", (long) offset);
 
   set_virtual_page((Bit32u)(offset >> pagesize_shift));
   position_page_offset = (Bit32u)(offset & pagesize_mask);
@@ -1015,7 +994,6 @@ ssize_t sparse_image_t::read_page_fragment(Bit32u read_virtual_page, Bit32u read
         panic(strerror(errno));
     }
 
-    //printf("Reading %s at position %ld size %d\n", pathname, (long) physical_offset, (long) read_size);
     ssize_t readret = ::read(fd, buf, read_size);
 
     if (readret == -1)
@@ -1036,7 +1014,6 @@ ssize_t sparse_image_t::read_page_fragment(Bit32u read_virtual_page, Bit32u read
 
 ssize_t sparse_image_t::read(void* buf, size_t count)
 {
-  //showpagetable(pagetable, header.numpages);
   ssize_t total_read = 0;
 
   BX_DEBUG(("sparse_image_t.read %ld bytes", (long)count));
@@ -1088,8 +1065,6 @@ void sparse_image_t::panic(const char * message)
 
 ssize_t sparse_image_t::write(const void* buf, size_t count)
 {
-  //showpagetable(pagetable, header.numpages);
-
   ssize_t total_written = 0;
 
   Bit32u update_pagetable_start = position_virtual_page;
@@ -1189,7 +1164,6 @@ ssize_t sparse_image_t::write(const void* buf, size_t count)
         panic(strerror(errno));
     }
 
-    //printf("Writing at position %ld size %d\n", (long) physical_offset, can_write);
     ssize_t writeret = ::write(fd, buf, can_write);
 
     if (writeret == -1)
@@ -1247,7 +1221,6 @@ ssize_t sparse_image_t::write(const void* buf, size_t count)
       // underlying_current_filepos update deferred
       if (ret == -1) panic(strerror(errno));
 
-      //printf("Writing header at position %ld size %ld\n", (long) pagetable_write_from, (long) write_bytecount);
       ret = ::write(fd, &pagetable[update_pagetable_start], write_bytecount);
       if (ret == -1) panic(strerror(errno));
       if ((size_t)ret != write_bytecount) panic("could not write entire updated block header");
