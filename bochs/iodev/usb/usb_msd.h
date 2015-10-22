@@ -52,7 +52,7 @@ public:
 
 protected:
   void copy_data();
-  void send_status();
+  void send_status(USBPacket *p);
   static void usb_msd_command_complete(void *this_ptr, int reason, Bit32u tag, Bit32u arg);
   void command_complete(int reason, Bit32u tag, Bit32u arg);
 

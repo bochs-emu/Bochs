@@ -461,7 +461,11 @@ void scsi_device_t::scsi_write_data(Bit32u tag)
   }
   if (type == SCSIDEV_TYPE_DISK) {
     if ((r->buf_len / 512) > 0) {
-      seek_complete(r);
+      if ((r->async_mode) && (r->seek_pending == 2)) {
+        start_seek(r);
+      } else if (!r->seek_pending) {
+        seek_complete(r);
+      }
     } else {
       scsi_write_complete(r, 0);
     }
@@ -834,6 +838,8 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun, bx_bool
       r->sector = lba;
       r->sector_count = len;
       r->write_cmd = 1;
+      r->seek_pending = 2;
+      r->async_mode = async;
       break;
     case 0x35:
       BX_DEBUG(("Syncronise cache (sector " FMT_LL "d, count %d)", lba, len));

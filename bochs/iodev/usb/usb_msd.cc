@@ -692,13 +692,6 @@ int usb_msd_device_c::handle_data(USBPacket *p)
 
       switch (s.mode) {
         case USB_MSDM_DATAOUT:
-          if ((s.data_len > 0) && (len == 13)) {
-            s.usb_len = len;
-            s.usb_buf = data;
-            send_status();
-            ret = 13;
-            break;
-          }
           if (s.data_len != 0 || len < 13)
             goto fail;
           usb_defer_packet(p, this);
@@ -712,9 +705,7 @@ int usb_msd_device_c::handle_data(USBPacket *p)
           if (len < 13)
             return ret;
 
-          s.usb_len = len;
-          s.usb_buf = data;
-          send_status();
+          send_status(p);
           s.mode = USB_MSDM_CBW;
           ret = 13;
           break;
@@ -787,15 +778,15 @@ void usb_msd_device_c::copy_data()
   }
 }
 
-void usb_msd_device_c::send_status()
+void usb_msd_device_c::send_status(USBPacket *p)
 {
   struct usb_msd_csw csw;
 
   csw.sig = htod32(0x53425355);
   csw.tag = htod32(s.tag);
-  csw.residue = s.residue;
+  csw.residue = htod32(s.residue);
   csw.status = s.result;
-  memcpy(s.usb_buf, &csw, 13);
+  memcpy(p->data, &csw, BX_MIN(p->len, 13));
 }
 
 void usb_msd_device_c::usb_msd_command_complete(void *this_ptr, int reason, Bit32u tag, Bit32u arg)
@@ -816,8 +807,12 @@ void usb_msd_device_c::command_complete(int reason, Bit32u tag, Bit32u arg)
     s.residue = s.data_len;
     s.result = arg != 0;
     if (s.packet) {
-      if (s.data_len == 0 && s.mode == USB_MSDM_DATAOUT) {
-        send_status();
+      if ((s.data_len == 0) && (s.mode == USB_MSDM_DATAOUT)) {
+        send_status(p);
+        s.mode = USB_MSDM_CBW;
+        usb_dump_packet(p->data, p->len);
+      } else if (s.mode == USB_MSDM_CSW) {
+        send_status(p);
         s.mode = USB_MSDM_CBW;
       } else {
         if (s.data_len) {
