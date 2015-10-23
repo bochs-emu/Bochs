@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2014  The Bochs Project
+//  Copyright (C) 2014-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -119,7 +119,7 @@ bitmaps *sdl_bitmaps[MAX_SDL_BITMAPS];
 int n_sdl_bitmaps = 0;
 int statusbar_height = 18;
 static unsigned statusitem_pos[12] = {
-  0, 170, 210, 250, 290, 330, 370, 410, 450, 490, 530, 570
+  0, 170, 220, 270, 320, 370, 420, 470, 520, 570, 620, 670
 };
 static bx_bool statusitem_active[12];
 #if BX_SHOW_IPS
@@ -185,8 +185,8 @@ static void sdl_set_status_text(int element, const char *text, bx_bool active, b
     } while(--colsleft);
     buf = buf_row + disp;
   } while(--rowsleft);
-  if ((element > 0) && (strlen(text) > 4)) {
-    textlen = 4;
+  if ((element > 0) && (strlen(text) > 6)) {
+    textlen = 6;
   } else {
     textlen = strlen(text);
   }
