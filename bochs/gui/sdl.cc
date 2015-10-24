@@ -613,7 +613,7 @@ void bx_sdl_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   Bit16u font_row, mask;
   Bit8u cfstart, cfwidth, cfheight, split_fontrows, split_textrow;
   bx_bool cursor_visible, gfxcharw9, invert, forceUpdate, split_screen;
-  bx_bool blink_mode, blink_state;
+  bx_bool blink_mode, blink_state, dwidth;
   Uint32 text_palette[16];
 
   forceUpdate = 0;
@@ -623,6 +623,7 @@ void bx_sdl_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     if (tm_info->blink_flags & BX_TEXT_BLINK_TOGGLE)
       forceUpdate = 1;
   }
+  dwidth = (fontwidth > 9);
   if (charmap_updated) {
     forceUpdate = 1;
     charmap_updated = 0;
@@ -755,7 +756,7 @@ void bx_sdl_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
             else
               *buf = fgcolor;
             buf++;
-            font_row <<= 1;
+            if (!dwidth || (fontpixels & 1)) font_row <<= 1;
           } while (--fontpixels);
           buf -= cfwidth;
           buf += disp;

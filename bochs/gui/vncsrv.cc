@@ -938,9 +938,10 @@ void DrawBitmap(int x, int y, int width, int height, char *bmap,
 void DrawChar(int x, int y, int width, int height, int fonty, char *bmap,
         rfbPixel fgcolor, rfbPixel bgcolor, bx_bool gfxchar)
 {
-  static rfbPixel newBits[9 * 32];
+  static rfbPixel newBits[18 * 32];
   unsigned char mask;
   int bytes = width * height;
+  bx_bool dwidth = (width > 9);
 
   for (int i = 0; i < bytes; i += width) {
     mask = 0x80;
@@ -954,7 +955,7 @@ void DrawChar(int x, int y, int width, int height, int fonty, char *bmap,
           newBits[i + j] = bgcolor;
         }
       }
-      mask >>= 1;
+      if (!dwidth || (j & 1)) mask >>= 1;
     }
     fonty++;
   }

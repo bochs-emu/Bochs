@@ -1276,6 +1276,7 @@ void DrawChar(int x, int y, int width, int height, int fonty, char *bmap,
   static unsigned char newBits[9 * 32];
   unsigned char mask;
   int bytes = width * height;
+  bx_bool dwidth = (width > 9);
   for (int i = 0; i < bytes; i+=width) {
     mask = 0x80;
     for (int j = 0; j < width; j++) {
@@ -1288,7 +1289,7 @@ void DrawChar(int x, int y, int width, int height, int fonty, char *bmap,
           newBits[i + j] = bgcolor;
         }
       }
-      mask >>= 1;
+      if (!dwidth || (j & 1)) mask >>= 1;
     }
     fonty++;
   }

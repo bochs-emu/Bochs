@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2012  The Bochs Project
+//  Copyright (C) 2001-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -226,7 +226,8 @@ protected:
     Bit16u last_xres;
     Bit16u last_yres;
     Bit8u last_bpp;
-    Bit8u last_msl;
+    Bit8u last_fw;
+    Bit8u last_fh;
     // maximum resolution and number of tiles
     Bit16u max_xres;
     Bit16u max_yres;

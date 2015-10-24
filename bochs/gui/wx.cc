@@ -1261,9 +1261,10 @@ static void UpdateScreen(unsigned char *newBits, int x, int y, int width, int he
 
 static void DrawBochsBitmap(int x, int y, int width, int height, char *bmap, char fgcolor, char bgcolor, int fontx, int fonty, bx_bool gfxchar)
 {
-  static unsigned char newBits[9 * 32];
+  static unsigned char newBits[18 * 32];
   unsigned char mask;
   int bytes = width * height;
+  bx_bool dwidth = (width > 9);
 
   if (y > wxScreenY) return;
 
@@ -1279,7 +1280,7 @@ static void DrawBochsBitmap(int x, int y, int width, int height, char *bmap, cha
           newBits[i + j] = bgcolor;
         }
       }
-      mask >>= 1;
+      if (!dwidth || (j & 1)) mask >>= 1;
     }
     fonty++;
   }

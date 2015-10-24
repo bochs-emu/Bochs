@@ -1259,14 +1259,14 @@ void bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                       bx_vga_tminfo_t *tm_info)
 {
   Bit8u *old_line, *new_line, *text_base;
-  Bit8u cChar;
-  unsigned int curs, hchars, i, j, offset, rows, x, y, xc, yc, yc2, cs_y;
+  Bit8u cChar, fbits, fmask, frow;
+  unsigned int curs, hchars, i, j, k, offset, rows, x, y, xc, yc, yc2, cs_y;
   unsigned new_foreground, new_background;
   Bit8u cfwidth, cfheight, cfheight2, font_col, font_row, font_row2;
   Bit8u split_textrow, split_fontrows;
   bx_bool forceUpdate = 0, split_screen;
   bx_bool blink_state, blink_mode;
-  unsigned char cell[64];
+  unsigned char cell[96];
   unsigned long text_palette[16];
 
   blink_mode = (tm_info->blink_flags & BX_TEXT_BLINK_MODE) > 0;
@@ -1276,32 +1276,56 @@ void bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
       forceUpdate = 1;
   }
   if (charmap_updated) {
-    BX_INFO(("charmap update. Font Height is %d",font_height));
+    BX_INFO(("charmap update. Font is %d x %d", font_width, font_height));
     for (unsigned c = 0; c<256; c++) {
       if (char_changed[c]) {
         XFreePixmap(bx_x_display, vgafont[c]);
         bx_bool gfxchar = tm_info->line_graphics && ((c & 0xE0) == 0xC0);
+        bx_bool dwidth = font_width > 9;
+        i = 0;
         j = 0;
         memset(cell, 0, sizeof(cell));
-        for(i=0; i<font_height*2; i+=2) {
-          cell[i] |= ((vga_charmap[(c<<5)+j] & 0x01)<<7);
-          cell[i] |= ((vga_charmap[(c<<5)+j] & 0x02)<<5);
-          cell[i] |= ((vga_charmap[(c<<5)+j] & 0x04)<<3);
-          cell[i] |= ((vga_charmap[(c<<5)+j] & 0x08)<<1);
-          cell[i] |= ((vga_charmap[(c<<5)+j] & 0x10)>>1);
-          cell[i] |= ((vga_charmap[(c<<5)+j] & 0x20)>>3);
-          cell[i] |= ((vga_charmap[(c<<5)+j] & 0x40)>>5);
-          cell[i] |= ((vga_charmap[(c<<5)+j] & 0x80)>>7);
-          if (gfxchar) {
-            cell[i+1] = (vga_charmap[(c<<5)+j] & 0x01);
-          }
-          j++;
+        if (dwidth) {
+          do {
+            frow = vga_charmap[(c<<5)+j];
+            fmask = 0x80;
+            fbits = 0x03;
+            for (k=0; k<8; k++) {
+              if (frow & fmask) cell[i] |= fbits;
+              fmask >>= 1;
+              fbits <<= 2;
+              if (k == 3) {
+                i++;
+                fbits = 0x03;
+              }
+            }
+            if (gfxchar) {
+              if (frow & 0x01) cell[i+1] = 0x03;
+            }
+            i += 2;
+          } while (++j < font_height);
+          vgafont[c] = XCreateBitmapFromData(bx_x_display, win,
+                         (const char*)cell, 18, font_height);
+        } else {
+          do {
+            frow = vga_charmap[(c<<5)+j];
+            fmask = 0x80;
+            fbits = 0x01;
+            for (k=0; k<8; k++) {
+              if (frow & fmask) cell[i] |= fbits;
+              fmask >>= 1;
+              fbits <<= 1;
+            }
+            if (gfxchar) {
+              if (frow & 0x01) cell[i+1] = 0x01;
+            }
+            i += 2;
+          } while (++j < font_height);
+          vgafont[c] = XCreateBitmapFromData(bx_x_display, win,
+                         (const char*)cell, 9, font_height);
         }
-
-        vgafont[c]=XCreateBitmapFromData(bx_x_display, win,
-                        (const char*)cell, 9, font_height);
-            if(vgafont[c] == None)
-              BX_PANIC(("Can't create vga font [%d]", c));
+        if(vgafont[c] == None)
+          BX_PANIC(("Can't create vga font [%d]", c));
         char_changed[c] = 0;
       }
     }
@@ -1718,7 +1742,11 @@ void bx_x_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsi
   guest_yres = y;
   if (guest_textmode) {
     font_height = fheight;
-    font_width = fwidth;
+    if (fwidth != font_width) {
+      font_width = fwidth;
+      charmap_updated = 1;
+      for (int i = 0; i < 256; i++) char_changed[i] = 1;
+    }
     text_cols = x / font_width;
     text_rows = y / font_height;
   }

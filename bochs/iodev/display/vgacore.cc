@@ -359,7 +359,8 @@ void bx_vgacore_c::register_state(bx_list_c *parent)
   new bx_shadow_num_c(list, "last_xres", &BX_VGA_THIS s.last_xres);
   new bx_shadow_num_c(list, "last_yres", &BX_VGA_THIS s.last_yres);
   new bx_shadow_num_c(list, "last_bpp", &BX_VGA_THIS s.last_bpp);
-  new bx_shadow_num_c(list, "last_msl", &BX_VGA_THIS s.last_msl);
+  new bx_shadow_num_c(list, "last_fw", &BX_VGA_THIS s.last_fw);
+  new bx_shadow_num_c(list, "last_fh", &BX_VGA_THIS s.last_fh);
   new bx_shadow_num_c(list, "vga_override", &BX_VGA_THIS s.vga_override);
   new bx_shadow_data_c(list, "memory", BX_VGA_THIS s.memory, BX_VGA_THIS s.memsize);
 }
@@ -1304,8 +1305,8 @@ void bx_vgacore_c::set_override(bx_bool enabled, void *dev)
     bx_virt_timer.deactivate_timer(BX_VGA_THIS timer_id);
   } else {
     bx_virt_timer.activate_timer(BX_VGA_THIS timer_id, BX_VGA_THIS update_interval, 1);
-    bx_gui->dimension_update(BX_VGA_THIS s.last_xres, BX_VGA_THIS s.last_yres, 8,
-                             BX_VGA_THIS s.last_msl+1, BX_VGA_THIS s.last_bpp);
+    bx_gui->dimension_update(BX_VGA_THIS s.last_xres, BX_VGA_THIS s.last_yres,
+                             BX_VGA_THIS s.last_fw, BX_VGA_THIS s.last_fh, BX_VGA_THIS s.last_bpp);
     BX_VGA_THIS redraw_area(0, 0, BX_VGA_THIS s.last_xres, BX_VGA_THIS s.last_yres);
   }
 }
@@ -1705,15 +1706,18 @@ void bx_vgacore_c::update(void)
       return;
     }
     cWidth = ((BX_VGA_THIS s.sequencer.reg1 & 0x01) == 1) ? 8 : 9;
+    if (BX_VGA_THIS s.x_dotclockdiv2) cWidth <<= 1;
     iWidth = cWidth * cols;
     iHeight = VDE+1;
-    if ((iWidth != BX_VGA_THIS s.last_xres) || (iHeight != BX_VGA_THIS s.last_yres) || (MSL != BX_VGA_THIS s.last_msl) ||
+    if ((iWidth != BX_VGA_THIS s.last_xres) || (iHeight != BX_VGA_THIS s.last_yres) ||
+        (cWidth != BX_VGA_THIS s.last_fw) ||((MSL+1) != BX_VGA_THIS s.last_fh) ||
         (BX_VGA_THIS s.last_bpp > 8))
     {
       bx_gui->dimension_update(iWidth, iHeight, MSL+1, cWidth);
       BX_VGA_THIS s.last_xres = iWidth;
       BX_VGA_THIS s.last_yres = iHeight;
-      BX_VGA_THIS s.last_msl = MSL;
+      BX_VGA_THIS s.last_fw = cWidth;
+      BX_VGA_THIS s.last_fh = MSL+1;
       BX_VGA_THIS s.last_bpp = 8;
     }
     if (skip_update()) return;
