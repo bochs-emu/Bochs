@@ -238,17 +238,17 @@ SectionEnd
 
 Function .onInstSuccess
   MessageBox MB_YESNO|MB_ICONQUESTION \
-             "Would you like to see a list of changes?" \
+             "Would you like to see a list of changes?" /SD IDNO \
              IDNO NoChanges
   ExecWait 'notepad.exe $INSTDIR\CHANGES.TXT'
   NoChanges:
   MessageBox MB_YESNO|MB_ICONQUESTION \
-             "Setup has completed. Show README now?" \
+             "Setup has completed. Show README now?" /SD IDNO \
              IDNO NoReadme
   ExecWait 'notepad.exe $INSTDIR\README.txt'
 
   NoReadme:
-  MessageBox MB_OK "Thank you for installing Bochs, think inside the bochs."
+  MessageBox MB_OK "Thank you for installing Bochs, think inside the bochs." /SD IDOK
 FunctionEnd
 
 ;--------------------------------
