@@ -1920,6 +1920,7 @@ void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, 
 {
   guest_textmode = (fheight > 0);
   if (guest_textmode && (fwidth > 9)) {
+    // use existing stretching feature for text mode CO40
     x >>= 1;
     fwidth >>= 1;
   }

@@ -1273,7 +1273,7 @@ void DrawBitmap(int x, int y, int width, int height, char *bmap,
 void DrawChar(int x, int y, int width, int height, int fonty, char *bmap,
         char fgcolor, char bgcolor, bx_bool gfxchar)
 {
-  static unsigned char newBits[9 * 32];
+  static unsigned char newBits[18 * 32];
   unsigned char mask;
   int bytes = width * height;
   bx_bool dwidth = (width > 9);
