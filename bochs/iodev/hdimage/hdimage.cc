@@ -223,7 +223,7 @@ int hdimage_open_file(const char *pathname, int flags, Bit64u *fsize, FILETIME *
       return -1;
     }
 #ifdef linux
-    if (stat_buf.st_rdev) { // Is this a special device file (e.g. /dev/sde) ?
+    if (S_ISBLK(stat_buf.st_mode)) { // Is this a special device file (e.g. /dev/sde) ?
       ioctl(fd, BLKGETSIZE64, fsize); // yes it's!
     }
     else
@@ -584,6 +584,19 @@ int concat_image_t::open(const char* _pathname0, int flags)
       break;
     }
     BX_INFO(("concat_image: open image #%d: '%s', (" FMT_LL "u bytes)", i, pathname, length_table[i]));
+    struct stat stat_buf;
+    int ret = fstat(fd_table[i], &stat_buf);
+    if (ret) {
+      BX_PANIC(("fstat() returns error!"));
+    }
+#ifdef S_ISBLK
+    if (S_ISBLK(stat_buf.st_mode)) {
+      BX_PANIC(("block devices should REALLY NOT be used as concat images"));
+    }
+#endif
+    if ((stat_buf.st_size % 512) != 0) {
+      BX_PANIC(("size of disk image must be multiple of 512 bytes"));
+    }
     start_offset_table[i] = start_offset;
     start_offset += length_table[i];
     increment_string(pathname);

@@ -387,7 +387,7 @@ Bit32u cdrom_misc_c::capacity()
   if (fstat(fd, &stat_buf)) {
     BX_PANIC(("fstat() returns error!"));
   }
-  if (stat_buf.st_rdev) { // Is this a special device file (e.g. /dev/sr0) ?
+  if (S_ISBLK(stat_buf.st_mode)) { // Is this a special device file (e.g. /dev/sr0) ?
     ioctl(fd, BLKGETSIZE64, &fsize);
   } else {
     fsize = (Bit64u)stat_buf.st_size;
