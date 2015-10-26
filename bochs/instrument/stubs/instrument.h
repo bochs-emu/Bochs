@@ -119,10 +119,10 @@ void bx_instr_vmexit(unsigned cpu, Bit32u reason, Bit64u qualification);
 #define BX_INSTR_REPEAT_ITERATION(cpu_id, i)  bx_instr_repeat_iteration(cpu_id, i)
 
 /* linear memory access */
-#define BX_INSTR_LIN_ACCESS(cpu_id, lin, phy, len, rw)  bx_instr_lin_access(cpu_id, lin, phy, len, memtype, rw)
+#define BX_INSTR_LIN_ACCESS(cpu_id, lin, phy, len, memtype, rw)  bx_instr_lin_access(cpu_id, lin, phy, len, memtype, rw)
 
 /* physical memory access */
-#define BX_INSTR_PHY_ACCESS(cpu_id, phy, len, rw)  bx_instr_phy_access(cpu_id, phy, len, memtype, rw)
+#define BX_INSTR_PHY_ACCESS(cpu_id, phy, len, memtype, rw)  bx_instr_phy_access(cpu_id, phy, len, memtype, rw)
 
 /* feedback from device units */
 #define BX_INSTR_INP(addr, len)               bx_instr_inp(addr, len)
