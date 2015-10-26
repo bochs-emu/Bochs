@@ -1203,7 +1203,7 @@ void ohci_async_complete_packet(USBPacket *packet, void *dev)
 
 void bx_usb_ohci_c::async_complete_packet(USBPacket *packet)
 {
-  BX_INFO(("Experimental async packet completion"));
+  BX_DEBUG(("Async packet completion"));
   BX_OHCI_THIS hub.async_complete = 1;
   // These hacks are currently required for async completion
   BX_OHCI_THIS hub.use_control_head = 1;
@@ -1314,7 +1314,7 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
 
     if (ret == USB_RET_ASYNC) {
       BX_OHCI_THIS hub.async_td = addr;
-      BX_INFO(("Experimental async packet handling"));
+      BX_DEBUG(("Async packet deferred"));
       return 0;
     }
   }

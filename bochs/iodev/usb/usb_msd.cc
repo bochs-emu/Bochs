@@ -694,6 +694,7 @@ int usb_msd_device_c::handle_data(USBPacket *p)
         case USB_MSDM_DATAOUT:
           if (s.data_len != 0 || len < 13)
             goto fail;
+          BX_DEBUG(("deferring packet %p", p));
           usb_defer_packet(p, this);
           s.packet = p;
           ret = USB_RET_ASYNC;
@@ -727,7 +728,7 @@ int usb_msd_device_c::handle_data(USBPacket *p)
             s.usb_len = 0;
           }
           if (s.usb_len) {
-            BX_INFO(("deferring packet %p", p));
+            BX_DEBUG(("deferring packet %p", p));
             usb_defer_packet(p, this);
             s.packet = p;
             ret = USB_RET_ASYNC;
