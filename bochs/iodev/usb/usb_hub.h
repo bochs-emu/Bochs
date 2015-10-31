@@ -30,7 +30,7 @@
 #define BX_IODEV_USB_HUB_H
 
 
-// max. number of ports defined in bochs.h
+#define USB_HUB_PORTS 8
 
 class usb_hub_device_c : public usb_device_c {
 public:
@@ -58,7 +58,7 @@ private:
 
       Bit16u PortStatus;
       Bit16u PortChange;
-    } usb_port[BX_N_USB_HUB_PORTS];
+    } usb_port[USB_HUB_PORTS];
     Bit16u device_change;
   } hub;
 

@@ -147,13 +147,7 @@
 //  ie.: Each physical port (socket) has two defined port register sets.  One for USB3, one for USB2
 // Only one port type may be used at a time.  Port0 or Port1, not both.  If Port0 is used, then
 //  Port1 must be vacant.
-#ifndef BX_N_USB_XHCI_PORTS
-  #error "BX_N_USB_XHCI_PORTS was not defined in bochs.h"
-#else
-  #if (BX_N_USB_XHCI_PORTS < USB_XHCI_PORTS)
-    #error "BX_N_USB_XHCI_PORTS is less than USB_XHCI_PORTS."
-  #endif
-#endif
+#define BX_N_USB_XHCI_PORTS 4
 
 // xHCI speed values
 #define SPEED_FULL   1

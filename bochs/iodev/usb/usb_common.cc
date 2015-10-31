@@ -113,7 +113,7 @@ int bx_usb_devctl_c::init_device(bx_list_c *portconf, logfunctions *hub, void **
     if (dnlen > 3) {
       if (devname[3] == ':') {
         ports = atoi(&devname[4]);
-        if ((ports < 2) || (ports > BX_N_USB_HUB_PORTS)) {
+        if ((ports < 2) || (ports > USB_HUB_PORTS)) {
           hub->panic("USB device 'hub': invalid number of ports");
         }
       } else {
