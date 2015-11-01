@@ -277,9 +277,30 @@ void bx_usb_xhci_c::init(void)
   // revision number (0x03 = uPD720201, 0x02 = uPD720202)
   init_pci_conf(0x1912, 0x0015, 0x02, 0x0c0330, 0x00);
   BX_XHCI_THIS pci_conf[0x3d] = BX_PCI_INTD;
-
   BX_XHCI_THIS pci_base_address[0] = 0x0;
 
+  // initialize capability registers
+  BX_XHCI_THIS hub.cap_regs.HcCapLength  = (VERSION_MAJOR << 24) | (VERSION_MINOR << 16) | OPS_REGS_OFFSET;
+  BX_XHCI_THIS hub.cap_regs.HcSParams1   = (USB_XHCI_PORTS << 24) | (INTERRUPTERS << 8) | MAX_SLOTS;
+  BX_XHCI_THIS hub.cap_regs.HcSParams2   = 
+    // MAX_SCRATCH_PADS 4:0 in bits 31:27 (v1.00) and bits 9:5 in bits 21:25 (v1.01+)
+    ((MAX_SCRATCH_PADS >> 5) << 21) | ((MAX_SCRATCH_PADS & 0x1F) << 27) |
+    ((SCATCH_PAD_RESTORE == 1) << 26) | (MAX_SEG_TBL_SZ_EXP << 4) | ISO_SECH_THRESHOLD;
+  BX_XHCI_THIS hub.cap_regs.HcSParams3   = (U2_DEVICE_EXIT_LAT << 16) | U1_DEVICE_EXIT_LAT;
+  BX_XHCI_THIS hub.cap_regs.HcCParams1   = 
+    ((EXT_CAPS_OFFSET >> 2) << 16) | (MAX_PSA_SIZE << 12) | (SEC_DOMAIN_BAND << 9) | (PARSE_ALL_EVENT << 8) | 
+    (LIGHT_HC_RESET << 5) | 
+    (PORT_INDICATORS << 4) | (PORT_POWER_CTRL << 3) | ((CONTEXT_SIZE >> 6) << 2) | 
+    (BW_NEGOTIATION << 1) | ADDR_CAP_64;
+  BX_XHCI_THIS hub.cap_regs.DBOFF        = DOORBELL_OFFSET;  // at offset DOORBELL_OFFSET from base
+  BX_XHCI_THIS hub.cap_regs.RTSOFF       = RUNTIME_OFFSET;   // at offset RUNTIME_OFFSET from base
+#if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
+  BX_XHCI_THIS hub.cap_regs.HcCParams2   = 
+    (CONFIG_INFO_CAP << 5) | (LARGE_ESIT_PAYLOAD_CAP << 4) | (COMPLNC_TRANS_CAP << 3) |
+    (FORCE_SAVE_CONTEXT_CAP << 2) | (CONFIG_EP_CMND_CAP << 1) | U3_ENTRY_CAP;
+#endif
+
+  // initialize runtime configuration
   bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
   bx_list_c *xhci_rt = new bx_list_c(usb_rt, "xhci", "xHCI Runtime Options");
   xhci_rt->set_options(xhci_rt->SHOW_PARENT | xhci_rt->USE_BOX_TITLE);
@@ -452,44 +473,6 @@ void bx_usb_xhci_c::reset_hc()
 {
   int i;
   char pname[6];
-
-  // Capability registers
-  BX_XHCI_THIS hub.cap_regs.HcCapLength  = (VERSION_MAJOR << 24) | (VERSION_MINOR << 16) | OPS_REGS_OFFSET;
-  BX_XHCI_THIS hub.cap_regs.HcSParams1   = (USB_XHCI_PORTS << 24) | (INTERRUPTERS << 8) | MAX_SLOTS;
-  BX_XHCI_THIS hub.cap_regs.HcSParams2   = 
-    // MAX_SCRATCH_PADS 4:0 in bits 31:27 (v1.00) and bits 9:5 in bits 21:25 (v1.01+)
-    ((MAX_SCRATCH_PADS >> 5) << 21) | ((MAX_SCRATCH_PADS & 0x1F) << 27) |
-    ((SCATCH_PAD_RESTORE == 1) << 26) | (MAX_SEG_TBL_SZ_EXP << 4) | ISO_SECH_THRESHOLD;
-  BX_XHCI_THIS hub.cap_regs.HcSParams3   = (U2_DEVICE_EXIT_LAT << 16) | U1_DEVICE_EXIT_LAT;
-  BX_XHCI_THIS hub.cap_regs.HcCParams1   = 
-    ((EXT_CAPS_OFFSET >> 2) << 16) | (MAX_PSA_SIZE << 12) | (SEC_DOMAIN_BAND << 9) | (PARSE_ALL_EVENT << 8) | 
-    (LIGHT_HC_RESET << 5) | 
-    (PORT_INDICATORS << 4) | (PORT_POWER_CTRL << 3) | ((CONTEXT_SIZE >> 6) << 2) | 
-    (BW_NEGOTIATION << 1) | ADDR_CAP_64;
-  BX_XHCI_THIS hub.cap_regs.DBOFF        = DOORBELL_OFFSET;  // at offset DOORBELL_OFFSET from base
-  BX_XHCI_THIS hub.cap_regs.RTSOFF       = RUNTIME_OFFSET;   // at offset RUNTIME_OFFSET from base
-#if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
-  BX_XHCI_THIS hub.cap_regs.HcCParams2   = 
-    (CONFIG_INFO_CAP << 5) | (LARGE_ESIT_PAYLOAD_CAP << 4) | (COMPLNC_TRANS_CAP << 3) |
-    (FORCE_SAVE_CONTEXT_CAP << 2) | (CONFIG_EP_CMND_CAP << 1) | U3_ENTRY_CAP;
-#endif
-
-  BX_DEBUG((" CAPLENGTH: 0x%02X", BX_XHCI_THIS hub.cap_regs.HcCapLength & 0xFF));
-  BX_DEBUG(("HC VERSION: %X.%02X", ((BX_XHCI_THIS hub.cap_regs.HcCapLength & 0xFF000000) >> 24), 
-    ((BX_XHCI_THIS hub.cap_regs.HcCapLength & 0x00FF0000) >> 16)));
-  BX_DEBUG(("HCSPARAMS1: 0x%08X", BX_XHCI_THIS hub.cap_regs.HcSParams1));
-  BX_DEBUG(("HCSPARAMS2: 0x%08X", BX_XHCI_THIS hub.cap_regs.HcSParams2));
-  BX_DEBUG(("HCSPARAMS3: 0x%08X", BX_XHCI_THIS hub.cap_regs.HcSParams3));
-#if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
-  BX_DEBUG(("HCCPARAMS1: 0x%08X", BX_XHCI_THIS hub.cap_regs.HcCParams1));
-#else
-  BX_DEBUG(("HCCPARAMS: 0x%08X", BX_XHCI_THIS hub.cap_regs.HcCParams1));
-#endif
-  BX_DEBUG(("     DBOFF: 0x%08X", BX_XHCI_THIS hub.cap_regs.DBOFF));
-  BX_DEBUG(("    RTSOFF: 0x%08X", BX_XHCI_THIS hub.cap_regs.RTSOFF));
-#if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
-  BX_DEBUG(("HCCPARAMS2: 0x%08X", BX_XHCI_THIS hub.cap_regs.HcCParams2));
-#endif
 
   // Command
   BX_XHCI_THIS hub.op_regs.HcCommand.RsvdP1 = 0;
@@ -762,18 +745,6 @@ void bx_usb_xhci_c::register_state(void)
 
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "usb_xhci", "USB xHCI State");
   hub = new bx_list_c(list, "hub");
-  reg_grp = new bx_list_c(hub, "cap_regs");
-  BXRS_HEX_PARAM_FIELD(reg_grp, HcCapLength, BX_XHCI_THIS hub.cap_regs.HcCapLength);
-  BXRS_HEX_PARAM_FIELD(reg_grp, HcSParams1, BX_XHCI_THIS hub.cap_regs.HcSParams1);
-  BXRS_HEX_PARAM_FIELD(reg_grp, HcSParams2, BX_XHCI_THIS hub.cap_regs.HcSParams2);
-  BXRS_HEX_PARAM_FIELD(reg_grp, HcSParams3, BX_XHCI_THIS hub.cap_regs.HcSParams3);
-  BXRS_HEX_PARAM_FIELD(reg_grp, HcCParams1, BX_XHCI_THIS hub.cap_regs.HcCParams1);
-  BXRS_HEX_PARAM_FIELD(reg_grp, DBOFF, BX_XHCI_THIS hub.cap_regs.DBOFF);
-  BXRS_HEX_PARAM_FIELD(reg_grp, RTSOFF, BX_XHCI_THIS hub.cap_regs.RTSOFF);
-#if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
-  BXRS_HEX_PARAM_FIELD(reg_grp, HcCParams2, BX_XHCI_THIS hub.cap_regs.HcCParams2);
-#endif
-
   reg_grp = new bx_list_c(hub, "op_regs");
   reg = new bx_list_c(reg_grp, "HcCommand");
 #if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
