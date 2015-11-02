@@ -932,7 +932,7 @@ static void pci_bios_init_device(PCIDevice *d)
         /* default memory mappings */
         for(i = 0; i < PCI_NUM_REGIONS; i++) {
             int ofs;
-            uint32_t val, size ;
+            uint32_t val, size, align;
 
             if (i == PCI_ROM_SLOT) {
                 ofs = PCI_ROM_ADDRESS;
@@ -944,16 +944,23 @@ static void pci_bios_init_device(PCIDevice *d)
             val = pci_config_readl(d, ofs);
             if (val != 0) {
                 size = (~(val & ~0xf)) + 1;
-                if (val & PCI_ADDRESS_SPACE_IO)
+                if (val & PCI_ADDRESS_SPACE_IO) {
                     paddr = &pci_bios_io_addr;
-                else
+                    align = 0x10;
+                } else {
                     paddr = &pci_bios_mem_addr;
+                    align = 0x10000;
+                }
                 *paddr = (*paddr + size - 1) & ~(size - 1);
                 pci_set_io_region_addr(d, i, *paddr);
                 if ((i == PCI_ROM_SLOT) && (class == PCI_CLASS_DISPLAY_VGA)) {
                     pci_bios_init_pcirom(d, *paddr);
                 }
-                *paddr += size;
+                if (size < align) {
+                    *paddr += align;
+                } else {
+                    *paddr += size;
+                }
             }
         }
         break;
