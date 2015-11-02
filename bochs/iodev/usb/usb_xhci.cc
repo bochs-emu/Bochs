@@ -2548,7 +2548,7 @@ void bx_usb_xhci_c::process_command_ring(void)
             comp_code = TRB_ERROR;
             BX_ERROR(("Get Secondary Port Bandwidth not implemented yet."));
 #else
-        write_event_TRB(0, org_addr, TRB_SET_COMP_CODE(TRB_ERROR), TRB_SET_TYPE(COMMAND_COMPLETION), 1);
+            write_event_TRB(0, org_addr, TRB_SET_COMP_CODE(TRB_ERROR), TRB_SET_TYPE(COMMAND_COMPLETION), 1);
 #endif
           }
 
@@ -2556,6 +2556,26 @@ void bx_usb_xhci_c::process_command_ring(void)
           BX_INFO(("0x" FORMATADDRESS ": Command Ring: GetPortBandwidth TRB (speed = %i) (hub_id = %i) (returning %i)", 
             (bx_phy_address) org_addr, band_speed, hub_id, comp_code));
         }
+        break;
+
+      case RESET_DEVICE:
+        slot = TRB_GET_SLOT(trb.command);  // slots are 1 based
+        if ((BX_XHCI_THIS hub.slots[slot].slot_context.slot_state == SLOT_STATE_ADRESSED) ||
+            (BX_XHCI_THIS hub.slots[slot].slot_context.slot_state == SLOT_STATE_CONFIGURED)) {
+          BX_XHCI_THIS hub.slots[slot].slot_context.slot_state = SLOT_STATE_DEFAULT;
+          BX_XHCI_THIS hub.slots[slot].slot_context.device_address = 0;
+          update_slot_context(slot);
+          for (i=2; i<32; i++) {
+            BX_XHCI_THIS hub.slots[slot].ep_context[i].ep_context.ep_state = EP_STATE_DISABLED;
+            update_ep_context(slot, i);
+          }
+          comp_code = TRB_SUCCESS;
+        } else {
+          comp_code = TRB_ERROR;
+        }
+        write_event_TRB(0, org_addr, TRB_SET_COMP_CODE(comp_code), TRB_SET_TYPE(COMMAND_COMPLETION), 1);
+        BX_INFO(("0x" FORMATADDRESS ": Command Ring: Found Reset Device TRB (slot = %i) (returning %i)", 
+          (bx_phy_address) org_addr, slot, comp_code));
         break;
 
       // unknown TRB type

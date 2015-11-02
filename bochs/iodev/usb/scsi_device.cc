@@ -826,7 +826,9 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun, bx_bool
         goto illegal_lba;
       r->sector = lba;
       r->sector_count = len;
-      r->seek_pending = 2;
+      if (async) {
+        r->seek_pending = 2;
+      }
       r->async_mode = async;
       break;
     case 0x0a:
@@ -838,7 +840,9 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun, bx_bool
       r->sector = lba;
       r->sector_count = len;
       r->write_cmd = 1;
-      r->seek_pending = 2;
+      if (async) {
+        r->seek_pending = 2;
+      }
       r->async_mode = async;
       break;
     case 0x35:
