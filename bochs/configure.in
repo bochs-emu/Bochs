@@ -1493,6 +1493,7 @@ AC_ARG_ENABLE(pcidev,
 
 use_usb=0
 USBHC_OBJS=''
+UHCICORE_OBJ=''
 USBHC_DLL_TARGETS=''
 AC_MSG_CHECKING(for USB UHCI support)
 AC_ARG_ENABLE(usb,
@@ -1501,6 +1502,7 @@ AC_ARG_ENABLE(usb,
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_USB_UHCI, 1)
     USBHC_OBJS="usb_uhci.o"
+    UHCICORE_OBJ="uhci_core.o"
     USBHC_DLL_TARGETS="bx_usb_uhci.dll"
     use_usb=1
    else
@@ -1564,6 +1566,7 @@ if test "$use_usb" = 1; then
   fi
 fi
 AC_SUBST(USBHC_OBJS)
+AC_SUBST(UHCICORE_OBJ)
 AC_SUBST(USBCORE_OBJ)
 AC_SUBST(USBDEV_OBJS)
 AC_SUBST(SCSI_OBJS)
