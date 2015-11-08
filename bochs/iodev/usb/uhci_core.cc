@@ -54,6 +54,8 @@
 
 #define LOG_THIS
 
+//#define UHCI_FULL_DEBUG
+
 const Bit8u uhci_iomask[32] = {2, 1, 2, 1, 2, 1, 2, 0, 4, 0, 0, 0, 1, 0, 0, 0,
                               3, 1, 3, 1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
@@ -92,6 +94,10 @@ void bx_uhci_core_c::init_uhci(Bit8u devfunc, Bit16u devid, Bit8u headt, Bit8u i
   init_pci_conf(0x8086, devid, 0x01, 0x0c0300, headt);
   pci_conf[0x3d] = intp;
   pci_base_address[4] = 0x0;
+
+  for (int i=0; i<USB_UHCI_PORTS; i++) {
+    hub.usb_port[i].device = NULL;
+  }
 }
 
 void bx_uhci_core_c::reset_uhci(unsigned type)
@@ -159,7 +165,7 @@ void bx_uhci_core_c::reset_uhci(unsigned type)
     hub.usb_port[j].able_changed = 0;
     hub.usb_port[j].status = 0;
     if (hub.usb_port[j].device != NULL) {
-      usb_set_connect_status(j, hub.usb_port[j].device->get_type(), 1);
+      set_connect_status(j, hub.usb_port[j].device->get_type(), 1);
     }
   }
 }
@@ -380,7 +386,7 @@ void bx_uhci_core_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
       // HCRESET
       if (hub.usb_command.host_reset) {
-        reset(0);
+        reset_uhci(0);
         for (unsigned i=0; i<USB_UHCI_PORTS; i++) {
           if (hub.usb_port[i].status) {
             if (hub.usb_port[i].device != NULL) {
@@ -406,7 +412,7 @@ void bx_uhci_core_c::write(Bit32u address, Bit32u value, unsigned io_len)
         if (global_reset) {
           global_reset = 0;
           unsigned int running = hub.usb_command.schedule;
-          reset(0);
+          reset_uhci(0);
           hub.usb_status.host_halted = (running) ? 1 : 0;
         }
       }
@@ -532,7 +538,7 @@ void bx_uhci_core_c::write(Bit32u address, Bit32u value, unsigned io_len)
             if (hub.usb_port[port].device != NULL) {
               hub.usb_port[port].low_speed =
                 (hub.usb_port[port].device->get_speed() == USB_SPEED_LOW);
-              usb_set_connect_status(port, hub.usb_port[port].device->get_type(), 1);
+              set_connect_status(port, hub.usb_port[port].device->get_type(), 1);
               DEV_usb_send_msg(hub.usb_port[port].device, USB_MSG_RESET);
             }
           }
@@ -626,9 +632,11 @@ void bx_uhci_core_c::uhci_timer(void)
           stack[stk].d = HC_VERT;
           stack[stk].q = (item & 0x0002) ? 1 : 0;
           stack[stk].t = (item & 0x0001) ? 1 : 0;
+#if UHCI_FULL_DEBUG
           BX_DEBUG(("Queue %3i: 0x%08X %i %i  0x%08X %i %i", queue_num,
             stack[stk-1].next, stack[stk-1].q, stack[stk-1].t,
             stack[stk].next, stack[stk].q, stack[stk].t));
+#endif
           queue_num++;
         } else {  // else is a TD
           address = stack[stk].next;
@@ -925,7 +933,7 @@ const char *usb_speed[4] = {
   "super"
 };
 
-void bx_uhci_core_c::usb_set_connect_status(Bit8u port, int type, bx_bool connected)
+void bx_uhci_core_c::set_connect_status(Bit8u port, int type, bx_bool connected)
 {
   usb_device_c *device = hub.usb_port[port].device;
   if (device != NULL) {
@@ -969,7 +977,7 @@ void bx_uhci_core_c::usb_set_connect_status(Bit8u port, int type, bx_bool connec
 
         if (!device->get_connected()) {
           if (!device->init()) {
-            usb_set_connect_status(port, type, 0);
+            set_connect_status(port, type, 0);
             BX_ERROR(("port #%d: connect failed", port+1));
           } else {
             BX_INFO(("port #%d: connect: %s", port+1, device->get_info()));
@@ -987,6 +995,18 @@ void bx_uhci_core_c::usb_set_connect_status(Bit8u port, int type, bx_bool connec
         hub.usb_port[port].line_dplus = 0;
       }
     }
+  }
+}
+
+void bx_uhci_core_c::set_port_device(int port, usb_device_c *dev)
+{
+  usb_device_c *olddev = hub.usb_port[port].device;
+  if ((dev != NULL) && (olddev == NULL)) {
+    hub.usb_port[port].device = dev;
+    set_connect_status(port, dev->get_type(), 1);
+  } else if ((dev == NULL) && (olddev != NULL)) {
+    set_connect_status(port, olddev->get_type(), 0);
+    hub.usb_port[port].device = dev;
   }
 }
 

@@ -178,6 +178,7 @@ public:
   virtual void reset_uhci(unsigned);
   virtual void register_state(bx_list_c *parent);
   virtual void after_restore_state(void);
+  virtual void set_port_device(int port, usb_device_c *dev);
   virtual Bit32u  pci_read_handler(Bit8u address, unsigned io_len);
   virtual void    pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 
@@ -192,7 +193,7 @@ protected:
   void update_irq(void);
 
   int  broadcast_packet(USBPacket *p);
-  void usb_set_connect_status(Bit8u port, int type, bx_bool connected);
+  void set_connect_status(Bit8u port, int type, bx_bool connected);
 
   static void uhci_timer_handler(void *);
   void uhci_timer(void);

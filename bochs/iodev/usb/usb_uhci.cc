@@ -161,7 +161,6 @@ void bx_usb_uhci_c::init(void)
     uhci_rt->add(port);
     device = (bx_param_string_c*)port->get_by_name("device");
     device->set_handler(usb_param_handler);
-    BX_UHCI_THIS hub.usb_port[i].device = NULL;
   }
 
   // register handler for correct device connect handling after runtime config
@@ -213,7 +212,7 @@ void bx_usb_uhci_c::init_device(Bit8u port, bx_list_c *portconf)
   bx_list_c *sr_list = (bx_list_c*)SIM->get_param(pname, SIM->get_bochs_root());
   type = DEV_usb_init_device(portconf, BX_UHCI_THIS_PTR, &BX_UHCI_THIS hub.usb_port[port].device, sr_list);
   if (BX_UHCI_THIS hub.usb_port[port].device != NULL) {
-    usb_set_connect_status(port, type, 1);
+    set_connect_status(port, type, 1);
   }
 }
 
@@ -254,7 +253,7 @@ void bx_usb_uhci_c::runtime_config(void)
         if (BX_UHCI_THIS hub.usb_port[i].device != NULL) {
           type = BX_UHCI_THIS hub.usb_port[i].device->get_type();
         }
-        usb_set_connect_status(i, type, 0);
+        set_connect_status(i, type, 0);
         remove_device(i);
       }
       BX_UHCI_THIS device_change &= ~(1 << i);
