@@ -187,9 +187,10 @@ void bx_devices_c::init(BX_MEM_C *newmem)
       }
       SIM->get_param_bool(BXPN_UHCI_ENABLED)->set(1);
     }
+    // USB core loaded before parsing bochsrc - unload if not used.
     usb_enabled = is_usb_enabled();
-    if (usb_enabled)
-      PLUG_load_plugin(usb_common, PLUGTYPE_CORE);
+    if (!usb_enabled)
+      PLUG_unload_plugin(usb_common);
 #endif
     if (chipset == BX_PCI_CHIPSET_I440FX) {
       PLUG_load_plugin(acpi, PLUGTYPE_STANDARD);
