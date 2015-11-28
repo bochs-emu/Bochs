@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2014  The Bochs Project
+//  Copyright (C) 2002-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -68,7 +68,7 @@ bx_piix3_c::~bx_piix3_c()
 
 void bx_piix3_c::init(void)
 {
-  unsigned i;
+  unsigned i, j;
   // called once when bochs initializes
 
   Bit8u devfunc = BX_PCI_DEVICE(1,0);
@@ -90,8 +90,11 @@ void bx_piix3_c::init(void)
 
   for (i=0; i<16; i++)
     BX_P2I_THIS s.irq_registry[i] = 0x0;
-  for (i=0; i<16; i++)
-    BX_P2I_THIS s.irq_level[i] = 0x0;
+  for (i=0; i<4; i++) {
+    for (j=0; j<16; j++) {
+      BX_P2I_THIS s.irq_level[i][j] = 0x0;
+    }
+  }
   // initialize readonly registers
   if (BX_P2I_THIS s.chipset == BX_PCI_CHIPSET_I440FX) {
     init_pci_conf(0x8086, 0x7000, 0x00, 0x060100, 0x80);
@@ -153,7 +156,7 @@ void bx_piix3_c::reset(unsigned type)
 
 void bx_piix3_c::register_state(void)
 {
-  unsigned i;
+  unsigned i, j;
   char name[6];
 
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "pci2isa", "PCI-to-ISA Bridge State");
@@ -172,9 +175,11 @@ void bx_piix3_c::register_state(void)
     new bx_shadow_num_c(irqr, name, &BX_P2I_THIS s.irq_registry[i]);
   }
   bx_list_c *irql = new bx_list_c(list, "irq_level");
-  for (i=0; i<16; i++) {
-    sprintf(name, "%u", i);
-    new bx_shadow_num_c(irql, name, &BX_P2I_THIS s.irq_level[i]);
+  for (i=0; i<4; i++) {
+    for (j=0; j<16; j++) {
+      sprintf(name, "%u_%u", i, j);
+      new bx_shadow_num_c(irql, name, &BX_P2I_THIS s.irq_level[i][j]);
+    }
   }
 }
 
@@ -226,14 +231,16 @@ void bx_piix3_c::pci_set_irq(Bit8u devfunc, unsigned line, bx_bool level)
   Bit8u irq = BX_P2I_THIS pci_conf[0x60 + pirq];
   if ((irq < 16) && (((1 << irq) & 0xdef8) > 0)) {
     if (level == 1) {
-      if (!BX_P2I_THIS s.irq_level[irq]) {
+      if (!BX_P2I_THIS s.irq_level[0][irq] && !BX_P2I_THIS s.irq_level[1][irq] &&
+          !BX_P2I_THIS s.irq_level[2][irq] && !BX_P2I_THIS s.irq_level[3][irq]) {
         DEV_pic_raise_irq(irq);
         BX_DEBUG(("PIRQ%c -> IRQ %d = 1", pirq+65, irq));
       }
-      BX_P2I_THIS s.irq_level[irq] |= (1 << (devfunc >> 3));
+      BX_P2I_THIS s.irq_level[pirq][irq] |= (1 << (devfunc >> 3));
     } else {
-      BX_P2I_THIS s.irq_level[irq] &= ~(1 << (devfunc >> 3));
-      if (!BX_P2I_THIS s.irq_level[irq]) {
+      BX_P2I_THIS s.irq_level[pirq][irq] &= ~(1 << (devfunc >> 3));
+      if (!BX_P2I_THIS s.irq_level[0][irq] && !BX_P2I_THIS s.irq_level[1][irq] &&
+          !BX_P2I_THIS s.irq_level[2][irq] && !BX_P2I_THIS s.irq_level[3][irq]) {
         DEV_pic_lower_irq(irq);
         BX_DEBUG(("PIRQ%c -> IRQ %d = 0", pirq+65, irq));
       }
@@ -444,7 +451,7 @@ void bx_piix3_c::debug_dump(int argc, char **argv)
       dbg_printf("PIRQ%c# = 0x%02x", i + 65, BX_P2I_THIS pci_conf[0x60 + i]);
       Bit8u irq = BX_P2I_THIS pci_conf[0x60 + i];
       if (irq < 16) {
-        dbg_printf(" (level=%d)\n", BX_P2I_THIS s.irq_level[irq] > 0);
+        dbg_printf(" (level=%d)\n", BX_P2I_THIS s.irq_level[i][irq] > 0);
       } else {
         dbg_printf("\n");
       }

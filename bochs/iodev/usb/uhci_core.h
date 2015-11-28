@@ -149,7 +149,6 @@ typedef struct {
   } usb_port[USB_UHCI_PORTS];
 
   Bit8u devfunc;
-  bx_bool irq_level;
 } bx_uhci_core_t;
 
 #pragma pack (push, 1)

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2012  The Bochs Project
+//  Copyright (C) 2002-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -55,7 +55,7 @@ private:
     Bit8u apmc;
     Bit8u apms;
     Bit8u irq_registry[16];
-    Bit32u irq_level[16];
+    Bit32u irq_level[4][16];
     Bit8u pci_reset;
   } s;
 

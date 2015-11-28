@@ -129,7 +129,6 @@ void bx_uhci_core_c::reset_uhci(unsigned type)
   // reset locals
   busy = 0;
   global_reset = 0;
-  hub.irq_level = 0;
 
   // Put the USB registers into their RESET state
   hub.usb_command.max_packet_size = 0;
@@ -222,7 +221,6 @@ void bx_uhci_core_c::register_state(bx_list_c *parent)
   }
   register_pci_state(hub1);
 
-  BXRS_PARAM_BOOL(hub1, irq_level, hub.irq_level);
   BXRS_PARAM_BOOL(list, busy, busy);
   BXRS_DEC_PARAM_FIELD(list, global_reset, global_reset);
 }
@@ -257,10 +255,7 @@ void bx_uhci_core_c::update_irq()
   } else {
     level = 0;
   }
-  if (level != hub.irq_level) {
-    DEV_pci_set_irq(hub.devfunc, pci_conf[0x3d], level);
-    hub.irq_level = level;
-  }
+  DEV_pci_set_irq(hub.devfunc, pci_conf[0x3d], level);
 }
 
 // static IO port read callback handler
