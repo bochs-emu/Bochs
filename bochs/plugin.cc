@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2013  The Bochs Project
+//  Copyright (C) 2002-2015  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -879,11 +879,14 @@ static builtin_plugin_t builtin_opt_plugins[] = {
 #if BX_SUPPORT_SB16
   BUILTIN_PLUGIN_ENTRY(sb16),
 #endif
+#if BX_SUPPORT_USB_UHCI
+  BUILTIN_PLUGIN_ENTRY(usb_uhci),
+#endif
 #if BX_SUPPORT_USB_OHCI
   BUILTIN_PLUGIN_ENTRY(usb_ohci),
 #endif
-#if BX_SUPPORT_USB_UHCI
-  BUILTIN_PLUGIN_ENTRY(usb_uhci),
+#if BX_SUPPORT_USB_EHCI
+  BUILTIN_PLUGIN_ENTRY(usb_ehci),
 #endif
 #if BX_SUPPORT_USB_XHCI
   BUILTIN_PLUGIN_ENTRY(usb_xhci),

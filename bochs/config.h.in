@@ -195,6 +195,7 @@
 #define BX_USE_PCIDEV_SMF   1  // PCI-DEV
 #define BX_USE_USB_UHCI_SMF 1  // USB UHCI hub
 #define BX_USE_USB_OHCI_SMF 1  // USB OHCI hub
+#define BX_USE_USB_EHCI_SMF 1  // USB EHCI hub
 #define BX_USE_USB_XHCI_SMF 1  // USB xHCI hub
 #define BX_USE_PCIPNIC_SMF  1  // PCI pseudo NIC
 #define BX_USE_E1000_SMF    1  // Intel(R) Gigabit Ethernet
@@ -215,8 +216,8 @@
    || !BX_USE_PAR_SMF || !BX_USE_PIC_SMF || !BX_USE_PIT_SMF \
    || !BX_USE_SER_SMF || !BX_USE_UM_SMF || !BX_USE_VGA_SMF \
    || !BX_USE_SB16_SMF || !BX_USE_ES1370_SMF || !BX_USE_DEV_SMF \
-   || !BX_USE_PCI_SMF || !BX_USE_P2I_SMF \
-   || !BX_USE_USB_UHCI_SMF || !BX_USE_USB_OHCI_SMF || !BX_USE_USB_XHCI_SMF \
+   || !BX_USE_PCI_SMF || !BX_USE_P2I_SMF || !BX_USE_USB_UHCI_SMF \
+   || !BX_USE_USB_OHCI_SMF || !BX_USE_USB_EHCI_SMF || !BX_USE_USB_XHCI_SMF \
    || !BX_USE_PCIPNIC_SMF || !BX_USE_PIDE_SMF || !BX_USE_ACPI_SMF \
    || !BX_USE_NE2K_SMF || !BX_USE_EFI_SMF || !BX_USE_GAMEPORT_SMF \
    || !BX_USE_E1000_SMF || !BX_USE_PCIDEV_SMF || !BX_USE_CIRRUS_SMF)
@@ -820,11 +821,17 @@ typedef
 // USB host controllers
 #define BX_SUPPORT_USB_UHCI 0
 #define BX_SUPPORT_USB_OHCI 0
+#define BX_SUPPORT_USB_EHCI 0
 #define BX_SUPPORT_USB_XHCI 0
-#define BX_SUPPORT_PCIUSB (BX_SUPPORT_USB_UHCI || BX_SUPPORT_USB_OHCI || BX_SUPPORT_USB_XHCI)
+#define BX_SUPPORT_PCIUSB \
+  (BX_SUPPORT_USB_UHCI || BX_SUPPORT_USB_OHCI || BX_SUPPORT_USB_EHCI || BX_SUPPORT_USB_XHCI)
 
 #if (BX_SUPPORT_PCIUSB && !BX_SUPPORT_PCI)
   #error To enable USB, you must also enable PCI
+#endif
+
+#if (BX_SUPPORT_USB_EHCI && !BX_SUPPORT_USB_UHCI)
+  #error To enable EHCI, you must also enable UHCI
 #endif
 
 // MS bus mouse support

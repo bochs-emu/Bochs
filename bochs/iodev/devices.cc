@@ -1044,6 +1044,7 @@ bx_bool bx_devices_c::is_usb_enabled(void)
 {
   if (PLUG_device_present("usb_ohci") ||
       PLUG_device_present("usb_uhci") ||
+      PLUG_device_present("usb_ehci") ||
       PLUG_device_present("usb_xhci")) {
     return 1;
   }

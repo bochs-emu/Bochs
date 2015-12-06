@@ -661,6 +661,9 @@ int bx_init_main(int argc, char *argv[])
 #if BX_SUPPORT_USB_UHCI
           fprintf(stderr, "usb_uhci\n");
 #endif
+#if BX_SUPPORT_USB_EHCI
+          fprintf(stderr, "usb_ehci\n");
+#endif
 #if BX_SUPPORT_USB_XHCI
           fprintf(stderr, "usb_xhci\n");
 #endif
