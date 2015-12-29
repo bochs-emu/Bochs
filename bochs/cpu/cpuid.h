@@ -112,6 +112,7 @@ enum {
   BX_ISA_SMEP,                    /* SMEP support */
   BX_ISA_TSC_DEADLINE,            /* TSC-Deadline */
   BX_ISA_FCS_FDS_DEPRECATION,     /* FCS/FDS Deprecation */
+  BX_ISA_FDP_DEPRECATION,         /* FDP Deprecation - FDP update on unmasked x87 exception only */
   BX_ISA_EXTENSION_LAST
 };                            
 
@@ -422,7 +423,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT3_BMI1                   (1 <<  3)
 #define BX_CPUID_EXT3_HLE                    (1 <<  4)
 #define BX_CPUID_EXT3_AVX2                   (1 <<  5)
-#define BX_CPUID_EXT3_RESERVED6              (1 <<  6)
+#define BX_CPUID_EXT3_FDP_DEPRECATION        (1 <<  6)
 #define BX_CPUID_EXT3_SMEP                   (1 <<  7)
 #define BX_CPUID_EXT3_BMI2                   (1 <<  8)
 #define BX_CPUID_EXT3_ENCHANCED_REP_STRINGS  (1 <<  9)
