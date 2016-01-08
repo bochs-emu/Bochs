@@ -15,6 +15,8 @@
 #include <assert.h>
 #include <stddef.h>
 
+#include "qemu-queue.h"
+
 #if defined(_MSC_VER)
 #include <io.h>
 typedef Bit8s  int8_t;
@@ -43,55 +45,6 @@ typedef Bit64s ssize_t;
 #ifndef MIN
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #endif
-
-/*
- * Tail queue definitions.
- */
-#define _QTAILQ_HEAD(name, type, qual)                                   \
-struct name {                                                           \
-        qual type *tqh_first;           /* first element */             \
-        qual type *qual *tqh_last;      /* addr of last next element */ \
-}
-#define QTAILQ_HEAD(name, type)  _QTAILQ_HEAD(name, struct type,)
-
-#define QTAILQ_HEAD_INITIALIZER(head)                                    \
-        { NULL, &(head).tqh_first }
-
-#define _QTAILQ_ENTRY(type, qual)                                        \
-struct {                                                                \
-        qual type *tqe_next;            /* next element */              \
-        qual type *qual *tqe_prev;      /* address of previous next element */\
-}
-#define QTAILQ_ENTRY(type)       _QTAILQ_ENTRY(struct type,)
-
-/*
- * Tail queue functions.
- */
-#define QTAILQ_INSERT_TAIL(head, elm, field) do {                        \
-        (elm)->field.tqe_next = NULL;                                   \
-        (elm)->field.tqe_prev = (head)->tqh_last;                       \
-        *(head)->tqh_last = (elm);                                      \
-        (head)->tqh_last = &(elm)->field.tqe_next;                      \
-} while (/*CONSTCOND*/0)
-
-#define QTAILQ_REMOVE(head, elm, field) do {                             \
-        if (((elm)->field.tqe_next) != NULL)                            \
-                (elm)->field.tqe_next->field.tqe_prev =                 \
-                    (elm)->field.tqe_prev;                              \
-        else                                                            \
-                (head)->tqh_last = (elm)->field.tqe_prev;               \
-        *(elm)->field.tqe_prev = (elm)->field.tqe_next;                 \
-} while (/*CONSTCOND*/0)
-
-#define QTAILQ_FOREACH(var, head, field)                                 \
-        for ((var) = ((head)->tqh_first);                               \
-                (var);                                                  \
-                (var) = ((var)->field.tqe_next))
-
-/*
- * Tail queue access methods.
- */
-#define QTAILQ_EMPTY(head)               ((head)->tqh_first == NULL)
 
 /* Workaround for older versions of MinGW. */
 #ifndef ECONNREFUSED
