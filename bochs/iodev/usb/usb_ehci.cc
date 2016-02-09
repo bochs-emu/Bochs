@@ -45,6 +45,7 @@
 #include "pci.h"
 #include "usb_common.h"
 #include "uhci_core.h"
+#include "qemu-queue.h"
 #include "usb_ehci.h"
 
 #define LOG_THIS theUSB_EHCI->
@@ -66,6 +67,41 @@ bx_usb_ehci_c* theUSB_EHCI = NULL;
 
 #define FRAME_TIMER_FREQ 1000
 #define FRAME_TIMER_USEC (1000000 / FRAME_TIMER_FREQ)
+
+#define MAX_QH           100      // Max allowable queue heads in a chain
+#define MIN_FR_PER_TICK  3        // Min frames to process when catching up
+
+/*  Internal periodic / asynchronous schedule state machine states
+ */
+typedef enum {
+    EST_INACTIVE = 1000,
+    EST_ACTIVE,
+    EST_EXECUTING,
+    EST_SLEEPING,
+    /*  The following states are internal to the state machine function
+    */
+    EST_WAITLISTHEAD,
+    EST_FETCHENTRY,
+    EST_FETCHQH,
+    EST_FETCHITD,
+    EST_FETCHSITD,
+    EST_ADVANCEQUEUE,
+    EST_FETCHQTD,
+    EST_EXECUTE,
+    EST_WRITEBACK,
+    EST_HORIZONTALQH
+} EHCI_STATES;
+
+/* macros for accessing fields within next link pointer entry */
+#define NLPTR_GET(x)             ((x) & 0xffffffe0)
+#define NLPTR_TYPE_GET(x)        (((x) >> 1) & 3)
+#define NLPTR_TBIT(x)            ((x) & 1)  // 1=invalid, 0=valid
+
+/* link pointer types */
+#define NLPTR_TYPE_ITD           0     // isoc xfer descriptor
+#define NLPTR_TYPE_QH            1     // queue head
+#define NLPTR_TYPE_STITD         2     // split xaction, isoc xfer descriptor
+#define NLPTR_TYPE_FSTN          3     // frame span traversal node
 
 // builtin configuration handling functions
 
@@ -233,6 +269,7 @@ void bx_usb_ehci_c::init(void)
   // register handler for correct device connect handling after runtime config
   BX_EHCI_THIS rt_conf_id = SIM->register_runtime_config_handler(BX_EHCI_THIS_PTR, runtime_config_handler);
   BX_EHCI_THIS device_change = 0;
+  BX_EHCI_THIS maxframes = 128;
 
   BX_INFO(("USB EHCI initialized"));
 }
@@ -315,7 +352,10 @@ void bx_usb_ehci_c::register_state(void)
   hub = new bx_list_c(list, "hub");
   BXRS_DEC_PARAM_FIELD(hub, usbsts_pending, BX_EHCI_THIS hub.usbsts_pending);
   BXRS_DEC_PARAM_FIELD(hub, usbsts_frindex, BX_EHCI_THIS hub.usbsts_frindex);
+  BXRS_DEC_PARAM_FIELD(hub, pstate, BX_EHCI_THIS hub.pstate);
+  BXRS_DEC_PARAM_FIELD(hub, astate, BX_EHCI_THIS hub.astate);
   BXRS_DEC_PARAM_FIELD(hub, last_run_usec, BX_EHCI_THIS hub.last_run_usec);
+  BXRS_DEC_PARAM_FIELD(hub, async_stepdown, BX_EHCI_THIS hub.async_stepdown);
   op_regs = new bx_list_c(hub, "op_regs");
   reg = new bx_list_c(op_regs, "UsbCmd");
   BXRS_HEX_PARAM_FIELD(reg, itc, BX_EHCI_THIS hub.op_regs.UsbCmd.itc);
@@ -422,6 +462,8 @@ void bx_usb_ehci_c::reset_hc()
 
   BX_EHCI_THIS hub.usbsts_pending = 0;
   BX_EHCI_THIS hub.usbsts_frindex = 0;
+  BX_EHCI_THIS hub.astate = EST_INACTIVE;
+  BX_EHCI_THIS hub.pstate = EST_INACTIVE;
   BX_EHCI_THIS update_irq();
 }
 
@@ -584,18 +626,6 @@ void bx_usb_ehci_c::change_port_owner(int port)
   }
 }
 
-int bx_usb_ehci_c::broadcast_packet(USBPacket *p, const int port)
-{
-  int ret = USB_RET_NODEV;
-
-  if ((BX_EHCI_THIS hub.usb_port[port].device != NULL) &&
-      !BX_EHCI_THIS hub.usb_port[port].portsc.po &&
-      !BX_EHCI_THIS hub.usb_port[port].portsc.sus) {
-    ret = BX_EHCI_THIS hub.usb_port[port].device->handle_packet(p);
-  }
-  return ret;
-}
-
 bx_bool bx_usb_ehci_c::read_handler(bx_phy_address addr, unsigned len, void *data, void *param)
 {
   Bit32u val = 0, val_hi = 0;
@@ -731,12 +761,13 @@ bx_bool bx_usb_ehci_c::write_handler(bx_phy_address addr, unsigned len, void *da
         BX_EHCI_THIS hub.op_regs.UsbCmd.itc   = (value >> 16) & 0x7f;
         BX_EHCI_THIS hub.op_regs.UsbCmd.iaad  = (value >> 6) & 1;
         BX_EHCI_THIS hub.op_regs.UsbCmd.ase   = (value >> 5) & 1;
+        BX_EHCI_THIS hub.op_regs.UsbCmd.pse   = (value >> 4) & 1;
         BX_EHCI_THIS hub.op_regs.UsbCmd.hcreset = (value >> 1) & 1;
         BX_EHCI_THIS hub.op_regs.UsbCmd.rs    = (value & 1);
-        if (!BX_EHCI_THIS hub.op_regs.UsbCmd.pse) {
-          BX_EHCI_THIS hub.last_run_usec = bx_pc_system.time_usec();
+        if (BX_EHCI_THIS hub.op_regs.UsbCmd.iaad) {
+          BX_EHCI_THIS hub.async_stepdown = 0;
+          // TODO
         }
-        BX_EHCI_THIS hub.op_regs.UsbCmd.pse   = (value >> 4) & 1;
         if (BX_EHCI_THIS hub.op_regs.UsbCmd.hcreset) {
           BX_EHCI_THIS reset_hc();
           BX_EHCI_THIS hub.op_regs.UsbCmd.hcreset = 0;
@@ -862,6 +893,490 @@ void bx_usb_ehci_c::commit_irq(void)
   BX_EHCI_THIS update_irq();
 }
 
+void bx_usb_ehci_c::update_halt(void)
+{
+  if (BX_EHCI_THIS hub.op_regs.UsbCmd.rs) {
+    BX_EHCI_THIS hub.op_regs.UsbSts.hchalted = 0;
+  } else {
+    if (BX_EHCI_THIS hub.astate == EST_INACTIVE && BX_EHCI_THIS hub.pstate == EST_INACTIVE) {
+      BX_EHCI_THIS hub.op_regs.UsbSts.hchalted = 1;
+    }
+  }
+}
+
+void bx_usb_ehci_c::set_state(int async, int state)
+{
+  if (async) {
+    BX_EHCI_THIS hub.astate = state;
+    if (BX_EHCI_THIS hub.astate == EST_INACTIVE) {
+      BX_EHCI_THIS hub.op_regs.UsbSts.ass = 0;
+      BX_EHCI_THIS update_halt();
+    } else {
+      BX_EHCI_THIS hub.op_regs.UsbSts.ass = 1;
+    }
+  } else {
+    BX_EHCI_THIS hub.pstate = state;
+    if (BX_EHCI_THIS hub.pstate == EST_INACTIVE) {
+      BX_EHCI_THIS hub.op_regs.UsbSts.pss = 0;
+      BX_EHCI_THIS update_halt();
+    } else {
+      BX_EHCI_THIS hub.op_regs.UsbSts.pss = 1;
+    }
+  }
+}
+
+int bx_usb_ehci_c::get_state(int async)
+{
+  return async ? BX_EHCI_THIS hub.astate : BX_EHCI_THIS hub.pstate;
+}
+
+void bx_usb_ehci_c::set_fetch_addr(int async, Bit32u addr)
+{
+  if (async) {
+    BX_EHCI_THIS hub.a_fetch_addr = addr;
+  } else {
+    BX_EHCI_THIS hub.p_fetch_addr = addr;
+  }
+}
+
+int bx_usb_ehci_c::get_fetch_addr(int async)
+{
+  // TODO
+  return 0;
+}
+
+EHCIPacket *bx_usb_ehci_c::alloc_packet(EHCIQueue *q)
+{
+  // TODO
+  return NULL;
+}
+
+void bx_usb_ehci_c::free_packet(EHCIPacket *p)
+{
+  // TODO
+}
+
+EHCIQueue *bx_usb_ehci_c::alloc_queue(Bit32u addr, int async)
+{
+  // TODO
+  return NULL;
+}
+
+int bx_usb_ehci_c::cancel_queue(EHCIQueue *q)
+{
+  EHCIPacket *p;
+  int packets = 0;
+
+  p = QTAILQ_FIRST(&q->packets);
+  if (p == NULL) {
+    return 0;
+  }
+
+  do {
+    free_packet(p);
+    packets++;
+  } while ((p = QTAILQ_FIRST(&q->packets)) != NULL);
+  return packets;
+}
+
+int bx_usb_ehci_c::reset_queue(EHCIQueue *q)
+{
+  // TODO
+  return 0;
+}
+
+void bx_usb_ehci_c::free_queue(EHCIQueue *q, const char *warn)
+{
+  EHCIQueueHead *head = q->async ? &q->ehci->aqueues : &q->ehci->pqueues;
+  int cancelled;
+
+  cancelled = BX_EHCI_THIS cancel_queue(q);
+  if (warn && cancelled > 0) {
+//    ehci_trace_guest_bug(q->ehci, warn);
+  }
+  QTAILQ_REMOVE(head, q, next);
+  free(q);
+}
+
+EHCIQueue *bx_usb_ehci_c::find_queue_by_qh(Bit32u addr, int async)
+{
+  // TODO
+  return NULL;
+}
+
+void bx_usb_ehci_c::queues_rip_unused(int async)
+{
+  EHCIQueueHead *head = async ? &BX_EHCI_THIS hub.aqueues : &BX_EHCI_THIS hub.pqueues;
+  const char *warn = async ? "guest unlinked busy QH" : NULL;
+  Bit64u maxage = FRAME_TIMER_USEC * BX_EHCI_THIS maxframes * 4;
+  EHCIQueue *q, *tmp;
+
+  QTAILQ_FOREACH_SAFE(q, head, next, tmp) {
+    if (q->seen) {
+      q->seen = 0;
+      q->ts = BX_EHCI_THIS hub.last_run_usec;
+      continue;
+    }
+    if (BX_EHCI_THIS hub.last_run_usec < q->ts + maxage) {
+      continue;
+    }
+    BX_EHCI_THIS free_queue(q, warn);
+  }
+}
+
+void bx_usb_ehci_c::queues_rip_unseen(int async)
+{
+  // TODO
+}
+
+void bx_usb_ehci_c::queues_rip_device(usb_device_c *dev, int async)
+{
+  // TODO
+}
+
+void bx_usb_ehci_c::queues_rip_all(int async)
+{
+  // TODO
+}
+
+usb_device_c *bx_usb_ehci_c::find_device(Bit8u addr)
+{
+  // TODO
+  return NULL;
+}
+
+void bx_usb_ehci_c::flush_qh(EHCIQueue *q)
+{
+  // TODO
+}
+
+int bx_usb_ehci_c::qh_do_overlay(EHCIQueue *q)
+{
+  // TODO
+  return 0;
+}
+
+int bx_usb_ehci_c::init_transfer(EHCIPacket *p)
+{
+  // TODO
+  return 0;
+}
+
+void bx_usb_ehci_c::finish_transfer(EHCIQueue *q, int status)
+{
+  // TODO
+}
+
+void bx_usb_ehci_c::async_complete_packet(USBPacket *packet)
+{
+  // TODO
+}
+
+void bx_usb_ehci_c::execute_complete(EHCIQueue *q)
+{
+  // TODO
+}
+
+int bx_usb_ehci_c::execute(EHCIPacket *p, const char *action)
+{
+  // TODO
+  return 0;
+}
+
+int bx_usb_ehci_c::process_itd(EHCIitd *itd, Bit32u addr)
+{
+  // TODO
+  return 0;
+}
+
+int bx_usb_ehci_c::state_waitlisthead(int async)
+{
+  EHCIqh qh;
+  int i = 0;
+  int again = 0;
+  Bit32u entry = BX_EHCI_THIS hub.op_regs.AsyncListAddr;
+
+  /* set reclamation flag at start event (4.8.6) */
+  if (async) {
+    BX_EHCI_THIS hub.op_regs.UsbSts.recl = 1;
+  }
+
+  BX_EHCI_THIS queues_rip_unused(async);
+
+  /*  Find the head of the list (4.9.1.1) */
+  for (i = 0; i < MAX_QH; i++) {
+    // TODO
+//    get_dwords(NLPTR_GET(entry), (Bit32u *) &qh,
+//               sizeof(EHCIqh) >> 2);
+
+    if (qh.epchar & QH_EPCHAR_H) {
+      if (async) {
+        entry |= (NLPTR_TYPE_QH << 1);
+      }
+
+      BX_EHCI_THIS set_fetch_addr(async, entry);
+      BX_EHCI_THIS set_state(async, EST_FETCHENTRY);
+      again = 1;
+      goto out;
+    }
+
+    entry = qh.next;
+    if (entry == BX_EHCI_THIS hub.op_regs.AsyncListAddr) {
+      break;
+    }
+  }
+
+  /* no head found for list. */
+
+  BX_EHCI_THIS set_state(async, EST_ACTIVE);
+
+out:
+  return again;
+}
+
+int bx_usb_ehci_c::state_fetchentry(int async)
+{
+  // TODO
+  return 0;
+}
+
+EHCIQueue *bx_usb_ehci_c::state_fetchqh(int async)
+{
+  // TODO
+  return NULL;
+}
+
+int bx_usb_ehci_c::state_fetchitd(int async)
+{
+  // TODO
+  return 0;
+}
+
+int bx_usb_ehci_c::state_fetchsitd(int async)
+{
+  // TODO
+  return 0;
+}
+
+int bx_usb_ehci_c::state_advqueue(EHCIQueue *q)
+{
+  // TODO
+  return 0;
+}
+
+int bx_usb_ehci_c::state_fetchqtd(EHCIQueue *q)
+{
+  // TODO
+  return 0;
+}
+
+int bx_usb_ehci_c::state_horizqh(EHCIQueue *q)
+{
+  // TODO
+  return 0;
+}
+
+int bx_usb_ehci_c::fill_queue(EHCIPacket *p)
+{
+  // TODO
+  return 0;
+}
+
+int bx_usb_ehci_c::state_execute(EHCIQueue *q)
+{
+  // TODO
+  return 0;
+}
+
+int bx_usb_ehci_c::state_executing(EHCIQueue *q)
+{
+  // TODO
+  return 0;
+}
+
+int bx_usb_ehci_c::state_writeback(EHCIQueue *q)
+{
+  // TODO
+  return 0;
+}
+
+void bx_usb_ehci_c::advance_state(int async)
+{
+  EHCIQueue *q = NULL;
+  int again;
+
+  do {
+    switch (BX_EHCI_THIS get_state(async)) {
+      case EST_WAITLISTHEAD:
+        again = BX_EHCI_THIS state_waitlisthead(async);
+        break;
+
+      case EST_FETCHENTRY:
+        again = BX_EHCI_THIS state_fetchentry(async);
+        break;
+
+      case EST_FETCHQH:
+        q = BX_EHCI_THIS state_fetchqh(async);
+        if (q != NULL) {
+          assert(q->async == async);
+          again = 1;
+        } else {
+          again = 0;
+        }
+        break;
+
+      case EST_FETCHITD:
+        again = BX_EHCI_THIS state_fetchitd(async);
+        break;
+
+      case EST_FETCHSITD:
+        again = BX_EHCI_THIS state_fetchsitd(async);
+        break;
+
+      case EST_ADVANCEQUEUE:
+        again = BX_EHCI_THIS state_advqueue(q);
+        break;
+
+      case EST_FETCHQTD:
+        again = BX_EHCI_THIS state_fetchqtd(q);
+        break;
+
+      case EST_HORIZONTALQH:
+        again = BX_EHCI_THIS state_horizqh(q);
+        break;
+
+      case EST_EXECUTE:
+        again = BX_EHCI_THIS state_execute(q);
+        if (async) {
+          BX_EHCI_THIS hub.async_stepdown = 0;
+        }
+        break;
+
+      case EST_EXECUTING:
+        assert(q != NULL);
+        if (async) {
+          BX_EHCI_THIS hub.async_stepdown = 0;
+        }
+        again = BX_EHCI_THIS state_executing(q);
+        break;
+
+      case EST_WRITEBACK:
+        assert(q != NULL);
+        again = BX_EHCI_THIS state_writeback(q);
+        break;
+
+      default:
+        BX_ERROR(("Bad state!"));
+        again = -1;
+        break;
+    }
+
+    if (again < 0) {
+        BX_ERROR(("processing error - resetting ehci HC"));
+        BX_EHCI_THIS reset_hc();
+        again = 0;
+    }
+  } while (again);
+}
+
+void bx_usb_ehci_c::advance_async_state(void)
+{
+  const int async = 1;
+
+  switch (BX_EHCI_THIS get_state(async)) {
+    case EST_INACTIVE:
+      if (!BX_EHCI_THIS hub.op_regs.UsbCmd.ase) {
+        break;
+      }
+      BX_EHCI_THIS set_state(async, EST_ACTIVE);
+    // No break, fall through to ACTIVE
+
+    case EST_ACTIVE:
+      if (!BX_EHCI_THIS hub.op_regs.UsbCmd.ase) {
+        BX_EHCI_THIS queues_rip_all(async);
+        BX_EHCI_THIS set_state(async, EST_INACTIVE);
+        break;
+      }
+
+      /* make sure guest has acknowledged the doorbell interrupt */
+      /* TO-DO: is this really needed? */
+      if (BX_EHCI_THIS hub.op_regs.UsbSts.inti & USBSTS_IAA) {
+        BX_DEBUG(("IAA status bit still set."));
+        break;
+      }
+
+      /* check that address register has been set */
+      if (BX_EHCI_THIS hub.op_regs.AsyncListAddr == 0) {
+        break;
+      }
+
+      BX_EHCI_THIS set_state(async, EST_WAITLISTHEAD);
+      BX_EHCI_THIS advance_state(async);
+
+      /* If the doorbell is set, the guest wants to make a change to the
+       * schedule. The host controller needs to release cached data.
+       * (section 4.8.2)
+       */
+      if (BX_EHCI_THIS hub.op_regs.UsbCmd.iaad) {
+        /* Remove all unseen qhs from the async qhs queue */
+        BX_EHCI_THIS queues_rip_unseen(async);
+        BX_EHCI_THIS hub.op_regs.UsbCmd.iaad = 0;
+        BX_EHCI_THIS raise_irq(USBSTS_IAA);
+      }
+      break;
+
+    default:
+      /* this should only be due to a developer mistake */
+      BX_PANIC(("Bad asynchronous state %d. Resetting to active", BX_EHCI_THIS hub.astate));
+  }
+}
+
+void bx_usb_ehci_c::advance_periodic_state(void)
+{
+  Bit32u entry;
+  Bit32u list;
+  const int async = 0;
+
+    // 4.6
+
+  switch (BX_EHCI_THIS get_state(async)) {
+    case EST_INACTIVE:
+      if (!(BX_EHCI_THIS hub.op_regs.FrIndex & 7) && BX_EHCI_THIS hub.op_regs.UsbCmd.pse) {
+        BX_EHCI_THIS set_state(async, EST_ACTIVE);
+        // No break, fall through to ACTIVE
+      } else
+        break;
+
+    case EST_ACTIVE:
+      if (!(BX_EHCI_THIS hub.op_regs.FrIndex & 7) && !BX_EHCI_THIS hub.op_regs.UsbCmd.pse) {
+        BX_EHCI_THIS queues_rip_all(async);
+        BX_EHCI_THIS set_state(async, EST_INACTIVE);
+        break;
+      }
+
+      list = BX_EHCI_THIS hub.op_regs.PeriodicListBase & 0xfffff000;
+      /* check that register has been set */
+      if (list == 0) {
+        break;
+      }
+      list |= ((BX_EHCI_THIS hub.op_regs.FrIndex & 0x1ff8) >> 1);
+
+      DEV_MEM_READ_PHYSICAL(list, 4, (Bit8u*)&entry);
+
+      BX_DEBUG(("PERIODIC state adv fr=%d.  [%08X] -> %08X",
+                BX_EHCI_THIS hub.op_regs.FrIndex / 8, list, entry));
+      BX_EHCI_THIS set_fetch_addr(async, entry);
+      BX_EHCI_THIS set_state(async, EST_FETCHENTRY);
+      BX_EHCI_THIS advance_state(async);
+      BX_EHCI_THIS queues_rip_unused(async);
+      break;
+
+    default:
+      /* this should only be due to a developer mistake */
+      BX_PANIC(("Bad periodic state %d. Resetting to active", BX_EHCI_THIS hub.pstate));
+  }
+}
+
 void bx_usb_ehci_c::update_frindex(int frames)
 {
   int i;
@@ -889,6 +1404,11 @@ void bx_usb_ehci_c::update_frindex(int frames)
   }
 }
 
+void bx_usb_ehci_c::async_bh(void)
+{
+  // TODO
+}
+
 void bx_usb_ehci_c::ehci_frame_handler(void *this_ptr)
 {
   bx_usb_ehci_c *class_ptr = (bx_usb_ehci_c *) this_ptr;
@@ -900,15 +1420,51 @@ void bx_usb_ehci_c::ehci_frame_timer(void)
 {
   Bit64u t_now;
   Bit64u usec_elapsed;
-  int frames;
+  int frames, skipped_frames;
+  int i;
 
   t_now = bx_pc_system.time_usec();
   usec_elapsed = t_now - BX_EHCI_THIS hub.last_run_usec;
   frames = usec_elapsed / FRAME_TIMER_USEC;
 
-  BX_EHCI_THIS update_frindex(frames);
-  BX_EHCI_THIS hub.last_run_usec += frames;
-  // TODO
+  if (BX_EHCI_THIS hub.op_regs.UsbCmd.rs || (BX_EHCI_THIS hub.pstate != EST_INACTIVE)) {
+    BX_EHCI_THIS hub.async_stepdown = 0;
+
+    if (frames > (int)BX_EHCI_THIS maxframes) {
+      skipped_frames = frames - BX_EHCI_THIS maxframes;
+      BX_EHCI_THIS update_frindex(skipped_frames);
+      BX_EHCI_THIS hub.last_run_usec += FRAME_TIMER_USEC * skipped_frames;
+      frames -= skipped_frames;
+      BX_DEBUG(("WARNING - EHCI skipped %d frames", skipped_frames));
+    }
+
+    for (i = 0; i < frames; i++) {
+      if (i >= MIN_FR_PER_TICK) {
+        BX_EHCI_THIS commit_irq();
+        if ((BX_EHCI_THIS hub.op_regs.UsbSts.inti & BX_EHCI_THIS hub.op_regs.UsbIntr) > 0){
+          break;
+        }
+      }
+      BX_EHCI_THIS update_frindex(1);
+      BX_EHCI_THIS advance_periodic_state();
+      BX_EHCI_THIS hub.last_run_usec += FRAME_TIMER_USEC;
+    }
+  } else {
+    if (BX_EHCI_THIS hub.async_stepdown < BX_EHCI_THIS maxframes / 2) {
+      BX_EHCI_THIS hub.async_stepdown++;
+    }
+    BX_EHCI_THIS update_frindex(frames);
+    BX_EHCI_THIS hub.last_run_usec += FRAME_TIMER_USEC * frames;
+  }
+
+  if (BX_EHCI_THIS hub.op_regs.UsbCmd.rs || (BX_EHCI_THIS hub.astate != EST_INACTIVE)) {
+    BX_EHCI_THIS advance_async_state();
+  }
+
+  BX_EHCI_THIS commit_irq();
+  if (BX_EHCI_THIS hub.usbsts_pending) {
+    BX_EHCI_THIS hub.async_stepdown = 0;
+  }
 }
 
 void bx_usb_ehci_c::runtime_config_handler(void *this_ptr)
