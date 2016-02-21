@@ -950,7 +950,6 @@ void BX_CPU_C::reset(unsigned source)
   // Reset XMM state - unchanged on #INIT
   if (source == BX_RESET_HARDWARE) {
     for(n=0; n<BX_XMM_REGISTERS; n++) {
-printf("%d\n", n);
       BX_CLEAR_AVX_REG(n);
     }
 
