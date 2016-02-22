@@ -207,7 +207,7 @@ bxICacheEntry_c* BX_CPU_C::getICacheEntry(void)
     // iCache miss. No validated instruction with matching fetch parameters
     // is in the iCache.
     INC_ICACHE_STAT(iCacheMisses);
-    entry = serveICacheMiss(entry, (Bit32u) eipBiased, pAddr);
+    entry = serveICacheMiss((Bit32u) eipBiased, pAddr);
   }
 
   return entry;
