@@ -174,6 +174,10 @@ void bx_cpuid_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *
       if (cpu->xcr0.get_HI_ZMM())
         leaf->ebx = XSAVE_HI_ZMM_STATE_OFFSET + XSAVE_HI_ZMM_STATE_LEN;
 #endif
+#if BX_SUPPORT_PKEYS
+      if (cpu->xcr0.get_PKRU())
+        leaf->ebx = XSAVE_PKRU_STATE_OFFSET + XSAVE_PKRU_STATE_LEN;
+#endif
 
       leaf->ecx = 512+64;
 #if BX_SUPPORT_AVX
@@ -188,7 +192,10 @@ void bx_cpuid_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *
       if (cpu->xcr0_suppmask & BX_XCR0_HI_ZMM_MASK)
         leaf->ecx = XSAVE_HI_ZMM_STATE_OFFSET + XSAVE_HI_ZMM_STATE_LEN;
 #endif
-
+#if BX_SUPPORT_PKEYS
+      if (cpu->xcr0_suppmask & BX_XCR0_PKRU_MASK)
+        leaf->ecx = XSAVE_PKRU_STATE_OFFSET + XSAVE_PKRU_STATE_LEN;
+#endif
       leaf->edx = 0;
       break;
 
@@ -243,6 +250,20 @@ void bx_cpuid_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *
       if (cpu->xcr0_suppmask & BX_XCR0_HI_ZMM_MASK) {
         leaf->eax = XSAVE_HI_ZMM_STATE_LEN;
         leaf->ebx = XSAVE_HI_ZMM_STATE_OFFSET;
+        leaf->ecx = 0;
+        leaf->edx = 0;
+      }
+      break;
+#endif
+
+    case 8: // Processor trace leaf
+      break;
+
+#if BX_SUPPPORT_PKEYS
+    case 9: // Ptotection keys
+      if (cpu->xcr0_suppmask & BX_XCR0_PKRU_MASK) {
+        leaf->eax = XSAVE_PKRU_STATE_LEN;
+        leaf->ebx = XSAVE_PKRU_STATE_OFFSET;
         leaf->ecx = 0;
         leaf->edx = 0;
       }

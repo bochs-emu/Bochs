@@ -403,7 +403,7 @@ BX_CPU_C::system_write_byte(bx_address laddr, Bit8u data)
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us write access
     // from this CPL.
-    if (tlbEntry->accessBits & 0x04) {
+    if (isWriteOK(tlbEntry, 0)) {
       bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
       Bit32u pageOffset = PAGE_OFFSET(laddr);
       bx_phy_address pAddr = tlbEntry->ppf | pageOffset;
@@ -427,7 +427,7 @@ BX_CPU_C::system_write_word(bx_address laddr, Bit16u data)
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us write access
     // from this CPL.
-    if (tlbEntry->accessBits & 0x04) {
+    if (isWriteOK(tlbEntry, 0)) {
       bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
       Bit32u pageOffset = PAGE_OFFSET(laddr);
       bx_phy_address pAddr = tlbEntry->ppf | pageOffset;
@@ -451,7 +451,7 @@ BX_CPU_C::system_write_dword(bx_address laddr, Bit32u data)
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us write access
     // from this CPL.
-    if (tlbEntry->accessBits & 0x04) {
+    if (isWriteOK(tlbEntry, 0)) {
       bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
       Bit32u pageOffset = PAGE_OFFSET(laddr);
       bx_phy_address pAddr = tlbEntry->ppf | pageOffset;
@@ -475,7 +475,7 @@ BX_CPU_C::v2h_read_byte(bx_address laddr, bx_bool user)
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us read access
     // from this CPL.
-    if (tlbEntry->accessBits & (0x01 << user)) {
+    if (isReadOK(tlbEntry, user)) {
       bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
       Bit32u pageOffset = PAGE_OFFSET(laddr);
       Bit8u *hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
@@ -495,7 +495,7 @@ BX_CPU_C::v2h_write_byte(bx_address laddr, bx_bool user)
   {
     // See if the TLB entry privilege level allows us write access
     // from this CPL.
-    if (tlbEntry->accessBits & (0x04 << user)) {
+    if (isWriteOK(tlbEntry, user)) {
       bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
       Bit32u pageOffset = PAGE_OFFSET(laddr);
       Bit8u *hostAddr = (Bit8u*) (hostPageAddr | pageOffset);

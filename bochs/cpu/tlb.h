@@ -44,11 +44,65 @@ typedef bx_ptr_equiv_t bx_hostpageaddr_t;
   #define BX_INVALID_TLB_ENTRY 0xffffffff
 #endif
 
+// accessBits
+#define TLB_SysReadOK     (0x01)
+#define TLB_UserReadOK    (0x02)
+#define TLB_SysWriteOK    (0x04)
+#define TLB_UserWriteOK   (0x08)
+#define TLB_SysExecuteOK  (0x10)
+#define TLB_UserExecuteOK (0x20)
+
+#if BX_SUPPORT_PKEYS
+
+// check if page from a TLB entry can be written
+#define isWriteOK(tlbEntry, user) \
+  (tlbEntry->accessBits & (0x04 << (user)) & BX_CPU_THIS_PTR wr_pkey[tlbEntry->pkey])
+
+// check if page from a TLB entry can be read
+#define isReadOK(tlbEntry, user) \
+  (tlbEntry->accessBits & (0x01 << (user)) & BX_CPU_THIS_PTR rd_pkey[tlbEntry->pkey])
+
+#else // protection keys are not enabled
+
+// check if page from a TLB entry can be written
+#define isWriteOK(tlbEntry, user) \
+  (tlbEntry->accessBits & (0x04 << (user)))
+
+// check if page from a TLB entry can be read
+#define isReadOK(tlbEntry, user) \
+  (tlbEntry->accessBits & (0x01 << (user)))
+
+#endif
+
+enum {
+  BX_MEMTYPE_UC = 0,
+  BX_MEMTYPE_WC = 1,
+  BX_MEMTYPE_RESERVED2 = 2,
+  BX_MEMTYPE_RESERVED3 = 3,
+  BX_MEMTYPE_WT = 4,
+  BX_MEMTYPE_WP = 5,
+  BX_MEMTYPE_WB = 6,
+  BX_MEMTYPE_UC_WEAK = 7, // PAT only
+  BX_MEMTYPE_INVALID = 8
+};
+
+typedef unsigned BxMemtype;
+
+// avoid wasting cycles to determine memory type if not required
+#if BX_SUPPORT_MEMTYPE
+  #define MEMTYPE(memtype) (memtype)
+#else
+  #define MEMTYPE(memtype) (BX_MEMTYPE_UC)
+#endif
+
 typedef struct {
   bx_address lpf;       // linear page frame
   bx_phy_address ppf;   // physical page frame
   bx_hostpageaddr_t hostPageAddr;
   Bit32u accessBits;
+#if BX_SUPPORT_X86_64
+  Bit32u pkey;
+#endif
   Bit32u lpf_mask;      // linear address mask of the page size
 
 #if BX_SUPPORT_MEMTYPE
@@ -60,14 +114,7 @@ typedef struct {
     accessBits = 0;
   }
 
-  BX_CPP_INLINE Bit32u get_memtype() const
-  {
-#if BX_SUPPORT_MEMTYPE
-    return memtype;
-#else
-    return BX_MEMTYPE_UC;
-#endif
-  }
+  BX_CPP_INLINE Bit32u get_memtype() const { return MEMTYPE(memtype); }
 
 } bx_TLB_entry;
 
@@ -83,7 +130,10 @@ typedef struct {
   #define PPF_MASK (0xfffff000)
 #endif
 
-#define PAGE_OFFSET(laddr) ((Bit32u)(laddr) & 0xfff)
+BX_CPP_INLINE Bit32u PAGE_OFFSET(bx_address laddr)
+{
+  return (Bit32u)(laddr) & 0xfff;
+}
 
 BX_CPP_INLINE bx_address LPFOf(bx_address laddr) { return laddr & LPF_MASK; }
 BX_CPP_INLINE bx_address PPFOf(bx_phy_address paddr) { return paddr & PPF_MASK; }

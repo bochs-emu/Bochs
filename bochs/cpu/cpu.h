@@ -215,12 +215,6 @@ enum {
   BX_CPU_THIS_PTR gen_reg[index].word.rx = val; \
 }
 
-/*
-#define BX_WRITE_32BIT_REG(index, val) {\
-  BX_CPU_THIS_PTR gen_reg[index].dword.erx = val; \
-}
-*/
-
 #if BX_SUPPORT_X86_64
 
 #define BX_WRITE_8BIT_REGx(index, extended, val) {\
@@ -468,27 +462,6 @@ const unsigned BX_NUM_VARIABLE_RANGE_MTRRS = 8;
 #define BX_MSR_TSC_DEADLINE        0x6E0
 
 #define BX_MSR_MAX_INDEX          0x1000
-
-enum {
-  BX_MEMTYPE_UC = 0,
-  BX_MEMTYPE_WC = 1,
-  BX_MEMTYPE_RESERVED2 = 2,
-  BX_MEMTYPE_RESERVED3 = 3,
-  BX_MEMTYPE_WT = 4,
-  BX_MEMTYPE_WP = 5,
-  BX_MEMTYPE_WB = 6,
-  BX_MEMTYPE_UC_WEAK = 7, // PAT only
-  BX_MEMTYPE_INVALID = 8
-};
-
-typedef unsigned BxMemtype;
-
-// avoid wasting cycles to determine memory type if not required
-#if BX_SUPPORT_MEMTYPE
-  #define MEMTYPE(memtype) (memtype)
-#else
-  #define MEMTYPE(memtype) (BX_MEMTYPE_UC)
-#endif
 
 #if BX_SUPPORT_VMX
   #define BX_MSR_VMX_BASIC                0x480
@@ -1086,6 +1059,26 @@ public: // for now...
 #if BX_CPU_LEVEL >= 6
   xcr0_t xcr0;
   Bit32u xcr0_suppmask;
+#endif
+
+#if BX_SUPPORT_PKEYS
+  // protection keys
+  Bit32u pkru;
+
+  // unpacked protection keys to be tested together with accessBits from TLB
+  // the unpacked key is stored in the accessBits format:
+  //     bit 5: Execute from User   privilege is OK
+  //     bit 4: Execute from System privilege is OK
+  //     bit 3: Write   from User   privilege is OK
+  //     bit 2: Write   from System privilege is OK
+  //     bit 1: Read    from User   privilege is OK
+  //     bit 0: Read    from System privilege is OK
+  // But only bits 1 and 3 are relevant, all others should be set to '1
+  // When protection key prevents all accesses to the page both bits 1 and 3 are cleared
+  // When protection key prevents writes to the page bit 1 will be set and 3 cleared
+  // When no protection keys are enabled all bits should be set for all keys
+  Bit32u rd_pkey[16];
+  Bit32u wr_pkey[16];
 #endif
 
 #if BX_SUPPORT_FPU
@@ -4400,6 +4393,11 @@ public: // for now...
   BX_SMF BX_INSF_TYPE MONITOR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE MWAIT(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
+#if BX_SUPPORT_PKEYS
+  BX_SMF BX_INSF_TYPE RDPKRU(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE WRPKRU(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#endif
+
   BX_SMF BX_INSF_TYPE UndefinedOpcode(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE BxError(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
@@ -4714,7 +4712,7 @@ public: // for now...
   BX_SMF void update_access_dirty_PAE(bx_phy_address *entry_addr, Bit64u *entry, BxMemtype *entry_memtype, unsigned max_level, unsigned leaf, unsigned write);
 #endif
 #if BX_SUPPORT_X86_64
-  BX_SMF bx_phy_address translate_linear_long_mode(bx_address laddr, Bit32u &lpf_mask, unsigned user, unsigned rw);
+  BX_SMF bx_phy_address translate_linear_long_mode(bx_address laddr, Bit32u &lpf_mask, Bit32u &pkey, unsigned user, unsigned rw);
 #endif
 #if BX_SUPPORT_VMX >= 2
   BX_SMF bx_phy_address translate_guest_physical(bx_phy_address guest_paddr, bx_address guest_laddr, bx_bool guest_laddr_valid, bx_bool is_page_walk, unsigned rw);
@@ -5026,6 +5024,11 @@ public: // for now...
   BX_SMF void   set_TSC(Bit64u tsc);
 #endif
 
+#if BX_SUPPORT_PKEYS
+  BX_SMF void set_PKRU(Bit32u pkru);
+  BX_SMF void disable_PKRU();
+#endif
+
 #if BX_SUPPORT_FPU
   BX_SMF void print_state_FPU(void);
   BX_SMF void prepareFPU(bxInstruction_c *i, bx_bool = 1);
@@ -5067,6 +5070,9 @@ public: // for now...
   BX_SMF bx_bool xsave_hi_zmm_state_xinuse(void);
 #endif
 #endif
+#if BX_SUPPORT_PKEYS
+  BX_SMF bx_bool xsave_pkru_state_xinuse(void);
+#endif
 
   BX_SMF Bit32u get_xinuse_vector(Bit32u requested_feature_bitmap);
 
@@ -5080,6 +5086,9 @@ public: // for now...
   BX_SMF void xsave_hi_zmm_state(bxInstruction_c *i, bx_address offset);
 #endif
 #endif
+#if BX_SUPPORT_PKEYS
+  BX_SMF void xsave_pkru_state(bxInstruction_c *i, bx_address offset);
+#endif
 
   BX_SMF void xrstor_x87_state(bxInstruction_c *i, bx_address offset);
   BX_SMF void xrstor_sse_state(bxInstruction_c *i, bx_address offset);
@@ -5091,6 +5100,9 @@ public: // for now...
   BX_SMF void xrstor_hi_zmm_state(bxInstruction_c *i, bx_address offset);
 #endif
 #endif
+#if BX_SUPPORT_PKEYS
+  BX_SMF void xrstor_pkru_state(bxInstruction_c *i, bx_address offset);
+#endif
 
   BX_SMF void xrstor_init_x87_state(void);
   BX_SMF void xrstor_init_sse_state(void);
@@ -5101,6 +5113,9 @@ public: // for now...
   BX_SMF void xrstor_init_zmm_hi256_state(void);
   BX_SMF void xrstor_init_hi_zmm_state(void);
 #endif
+#endif
+#if BX_SUPPORT_PKEYS
+  BX_SMF void xrstor_init_pkru_state(void);
 #endif
 #endif
 

@@ -247,6 +247,26 @@
 //    |  |  +--+------> u/s,r/w combined of page dir & table (cached)
 //    |  +------------> u/s of current access
 //    +---------------> Current CR0.WP value
+//
+//                                                                  CR0.WP = 0     CR0.WP = 1
+//    -----------------------------------------------------------------------------------------
+//       0  0  0  0 | sys read from supervisor page             | Allowed       | Allowed
+//       0  0  0  1 | sys write to read only supervisor page    | Allowed       | Not Allowed
+//       0  0  1  0 | sys read from supervisor page             | Allowed       | Allowed
+//       0  0  1  1 | sys write to supervisor page              | Allowed       | Allowed
+//       0  1  0  0 | sys read from read only user page         | Allowed       | Allowed
+//       0  1  0  1 | sys write to read only user page          | Allowed       | Not Allowed
+//       0  1  1  0 | sys read from user page                   | Allowed       | Allowed
+//       0  1  1  1 | sys write to user page                    | Allowed       | Allowed
+//       1  0  0  0 | user read from read only supervisor page  | Not Allowed   | Not Allowed
+//       1  0  0  1 | user write to read only supervisor page   | Not Allowed   | Not Allowed
+//       1  0  1  0 | user read from supervisor page            | Not Allowed   | Not Allowed
+//       1  0  1  1 | user write to supervisor page             | Not Allowed   | Not Allowed
+//       1  1  0  0 | user read from read only user page        | Allowed       | Allowed
+//       1  1  0  1 | user write to read only user page         | Not Allowed   | Not Allowed
+//       1  1  1  0 | user read from user page                  | Allowed       | Allowed
+//       1  1  1  1 | user write to user page                   | Allowed       | Allowed
+//
 
 /* 0xff0bbb0b */
 static const Bit8u priv_check[BX_PRIV_CHECK_SIZE] =
@@ -326,13 +346,6 @@ static const Bit8u priv_check[BX_PRIV_CHECK_SIZE] =
 
 #define TLB_NoHostPtr     (0x800) /* set this bit when direct access is NOT allowed */
 #define TLB_GlobalPage    (0x80000000)
-
-#define TLB_SysReadOK     (0x01)
-#define TLB_UserReadOK    (0x02)
-#define TLB_SysWriteOK    (0x04)
-#define TLB_UserWriteOK   (0x08)
-#define TLB_SysExecuteOK  (0x10)
-#define TLB_UserExecuteOK (0x20)
 
 #include "cpustats.h"
 
@@ -489,6 +502,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPG(bxInstruction_c* i)
 #define ERROR_PROTECTION        0x01
 #define ERROR_RESERVED          0x08
 #define ERROR_CODE_ACCESS       0x10
+#define ERROR_PKEY              0x20
 
 void BX_CPU_C::page_fault(unsigned fault, bx_address laddr, unsigned user, unsigned rw)
 {
@@ -663,7 +677,7 @@ BX_CPP_INLINE Bit32u calculate_pat(Bit32u entry, Bit32u lpf_mask)
 #if BX_SUPPORT_X86_64
 
 // Translate a linear address to a physical address in long mode
-bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lpf_mask, unsigned user, unsigned rw)
+bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lpf_mask, Bit32u &pkey, unsigned user, unsigned rw)
 {
   bx_phy_address ppf = BX_CPU_THIS_PTR cr3 & BX_CR3_PAGING_MASK;
 
@@ -737,6 +751,24 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
   unsigned priv_index = (BX_CPU_THIS_PTR cr0.get_WP() << 4) | // bit 4
                         (user<<3) |                           // bit 3
                         (combined_access | isWrite);          // bit 2,1,0
+
+#if BX_SUPPORT_PKEYS
+  if (BX_CPU_THIS_PTR cr4.get_PKE()) {
+    pkey = (entry[leaf] >> 59) & 0xf;
+
+    if (rw != BX_EXECUTE) {
+      // check of accessDisable bit set
+      if (BX_CPU_THIS_PTR pkru & (1<<(pkey*2)))
+        page_fault(ERROR_PROTECTION | ERROR_PKEY, laddr, user, rw);
+
+      // check of writeDisable bit set
+      if (BX_CPU_THIS_PTR pkru & (1<<(pkey*2+1))) {
+        if (isWrite && (user || BX_CPU_THIS_PTR cr0.get_WP()))
+          page_fault(ERROR_PROTECTION | ERROR_PKEY, laddr, user, rw);
+      }
+    }
+  }
+#endif
 
   if (!priv_check[priv_index] || nx_fault)
     page_fault(ERROR_PROTECTION, laddr, user, rw);
@@ -1152,8 +1184,19 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
   {
     paddress = tlbEntry->ppf | poffset;
 
+#if BX_SUPPORT_PKEYS
+    if (isWrite) {
+      if (tlbEntry->accessBits & (1 << (0x2 | user)) & BX_CPU_THIS_PTR wr_pkey[tlbEntry->pkey])
+        return paddress;
+    }
+    else {
+      if (tlbEntry->accessBits & (1 << user) & BX_CPU_THIS_PTR rd_pkey[tlbEntry->pkey])
+        return paddress;
+    }
+#else
     if (tlbEntry->accessBits & (1 << (/*(isExecute<<2) |*/ (isWrite<<1) | user)))
       return paddress;
+#endif
 
     // The current access does not have permission according to the info
     // in our TLB cache entry.  Re-walk the page tables, in case there is
@@ -1169,6 +1212,9 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
 
   Bit32u lpf_mask = 0xfff; // 4K pages
   Bit32u combined_access = 0x06;
+#if BX_SUPPORT_X86_64
+  Bit32u pkey = 0;
+#endif
 
   if(BX_CPU_THIS_PTR cr0.get_PG())
   {
@@ -1177,7 +1223,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
 #if BX_CPU_LEVEL >= 6
 #if BX_SUPPORT_X86_64
     if (long_mode())
-      paddress = translate_linear_long_mode(laddr, lpf_mask, user, rw);
+      paddress = translate_linear_long_mode(laddr, lpf_mask, pkey, user, rw);
     else
 #endif
       if (BX_CPU_THIS_PTR cr4.get_PAE())
@@ -1224,6 +1270,9 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
   // direct memory access is NOT allowed by default
   tlbEntry->lpf = lpf | TLB_NoHostPtr;
   tlbEntry->lpf_mask = lpf_mask;
+#if BX_SUPPORT_PKEYS
+  tlbEntry->pkey = pkey;
+#endif
   tlbEntry->ppf = ppf;
   tlbEntry->accessBits = 0;
 

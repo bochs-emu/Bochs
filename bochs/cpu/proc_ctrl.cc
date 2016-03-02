@@ -1435,4 +1435,62 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::WRGSBASE_Eq(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-#endif
+#endif // BX_SUPPORT_X86_64
+
+#if BX_SUPPORT_PKEYS
+
+void BX_CPU_C::set_PKRU(Bit32u pkru)
+{
+  BX_CPU_THIS_PTR pkru = RAX;
+
+  for (unsigned i=0; i<16; i++) {
+    BX_CPU_THIS_PTR rd_pkey[i] = BX_CPU_THIS_PTR wr_pkey[i] =
+      TLB_SysReadOK | TLB_UserReadOK | TLB_SysWriteOK | TLB_UserWriteOK;
+
+    // accessDisable bit set
+    if (pkru & (1<<(i*2))) {
+      BX_CPU_THIS_PTR rd_pkey[i] &= ~(TLB_UserReadOK | TLB_UserWriteOK);
+      BX_CPU_THIS_PTR wr_pkey[i] &= ~(TLB_UserReadOK | TLB_UserWriteOK);
+    }
+    
+    // writeDisable bit set
+    if (pkru & (1<<(i*2+1))) {
+      BX_CPU_THIS_PTR wr_pkey[i] &= ~(TLB_UserWriteOK);
+      if (BX_CPU_THIS_PTR cr0.get_WP())
+        BX_CPU_THIS_PTR wr_pkey[i] &= ~(TLB_SysWriteOK);
+    }
+  }
+}
+
+void BX_CPU_C::disable_PKRU()
+{
+  for (unsigned i=0; i<16; i++) {
+    BX_CPU_THIS_PTR rd_pkey[i] = BX_CPU_THIS_PTR wr_pkey[i] =
+      TLB_SysReadOK | TLB_UserReadOK | TLB_SysWriteOK | TLB_UserWriteOK;
+  }
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPKRU(bxInstruction_c *i)
+{
+  if (! BX_CPU_THIS_PTR cr4.get_PKE())
+    exception(BX_UD_EXCEPTION, 0);
+
+  if (ECX != 0)
+    exception(BX_GP_EXCEPTION, 0);
+
+  RAX = BX_CPU_THIS_PTR pkru;
+  RDX = 0;
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::WRPKRU(bxInstruction_c *i)
+{
+  if (! BX_CPU_THIS_PTR cr4.get_PKE())
+    exception(BX_UD_EXCEPTION, 0);
+
+  if ((ECX|EDX) != 0)
+    exception(BX_GP_EXCEPTION, 0);
+
+  BX_CPU_THIS_PTR set_PKRU(EAX);
+}
+
+#endif // BX_SUPPORT_PKEYS

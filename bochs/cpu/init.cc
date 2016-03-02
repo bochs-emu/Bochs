@@ -266,6 +266,10 @@ void BX_CPU_C::register_state(void)
 #endif
 #endif
 
+#if BX_SUPPORT_PKEYS
+  BXRS_HEX_PARAM_FIELD(cpu, pkru, pkru);
+#endif
+
   for(n=0; n<6; n++) {
     bx_segment_reg_t *segment = &BX_CPU_THIS_PTR sregs[n];
     bx_list_c *sreg = new bx_list_c(cpu, strseg(segment));
@@ -595,6 +599,13 @@ void BX_CPU_C::after_restore_state(void)
   set_VMCSPTR(BX_CPU_THIS_PTR vmcsptr);
 #endif
 
+#if BX_SUPPORT_PKEYS
+  if (long_mode() && BX_CPU_THIS_PTR cr4.get_PKE())
+    set_PKRU(BX_CPU_THIS_PTR pkru);
+  else
+    disable_PKRU();
+#endif
+
   assert_checks();
   debug(RIP);
 }
@@ -812,6 +823,10 @@ void BX_CPU_C::reset(unsigned source)
     BX_CPU_THIS_PTR xcr0_suppmask |= BX_XCR0_OPMASK_MASK | BX_XCR0_ZMM_HI256_MASK | BX_XCR0_HI_ZMM_MASK;
 #endif
 #endif // BX_SUPPORT_AVX
+#if BX_SUPPORT_PKEYS
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PKU))
+    BX_CPU_THIS_PTR xcr0_suppmask |= BX_XCR0_PKRU_MASK;
+#endif
 #endif // BX_CPU_LEVEL >= 6
 
 /* initialise MSR registers to defaults */
@@ -862,6 +877,10 @@ void BX_CPU_C::reset(unsigned source)
     BX_CPU_THIS_PTR set_TSC(0); // do not change TSC on INIT
   }
 #endif // BX_CPU_LEVEL >= 5
+
+#if BX_SUPPORT_PKEYS
+  BX_CPU_THIS_PTR set_PKRU(0);
+#endif
 
 #if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR msr.sysenter_cs_msr  = 0;

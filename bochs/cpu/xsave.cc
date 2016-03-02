@@ -146,6 +146,19 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
   }
 #endif
 
+#if BX_SUPPORT_PKEYS
+  if ((requested_feature_bitmap & BX_XCR0_PKRU_MASK) != 0)
+  {
+    if (! xsaveopt || (xinuse & BX_XCR0_PKRU_MASK) != 0)
+      xsave_pkru_state(i, eaddr+XSAVE_PKRU_STATE_OFFSET);
+
+    if (xinuse & BX_XCR0_PKRU_MASK)
+      xstate_bv |=  BX_XCR0_PKRU_MASK;
+    else
+      xstate_bv &= ~BX_XCR0_PKRU_MASK;
+  }
+#endif
+
   // always update header to 'dirty' state
   write_virtual_qword(i->seg(), (eaddr + 512) & asize_mask, xstate_bv);
 #endif
@@ -240,6 +253,16 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
       xsave_hi_zmm_state(i, eaddr+offset);
 
     offset += XSAVE_HI_ZMM_STATE_LEN;
+  }
+#endif
+
+#if BX_SUPPORT_PKEYS
+  if ((requested_feature_bitmap & BX_XCR0_PKRU_MASK) != 0)
+  {
+    if (xinuse & BX_XCR0_PKRU_MASK)
+      xsave_pkru_state(i, eaddr+offset);
+
+    offset += XSAVE_PKRU_STATE_LEN;
   }
 #endif
 
@@ -412,6 +435,19 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
       offset += XSAVE_HI_ZMM_STATE_LEN;
     }
 #endif
+
+#if BX_SUPPORT_PKEYS
+    /////////////////////////////////////////////////////////////////////////////
+    if ((requested_feature_bitmap & BX_XCR0_PKRU_MASK) != 0)
+    {
+      if (xstate_bv & BX_XCR0_PKRU_MASK)
+        xrstor_pkru_state(i, eaddr+offset);
+      else
+        xrstor_init_pkru_state();
+
+      offset += XSAVE_PKRU_STATE_LEN;
+    }
+#endif
   }
   else {
 #if BX_SUPPORT_AVX
@@ -453,6 +489,18 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
         xrstor_init_hi_zmm_state();
     }
 #endif
+
+#if BX_SUPPORT_PKEYS
+    /////////////////////////////////////////////////////////////////////////////
+    if ((requested_feature_bitmap & BX_XCR0_PKRU_MASK) != 0)
+    {
+      if (xstate_bv & BX_XCR0_PKRU_MASK)
+        xrstor_pkru_state(i, eaddr+XSAVE_PKRU_STATE_OFFSET);
+      else
+        xrstor_init_pkru_state();
+    }
+#endif
+
   }
 #endif // BX_CPU_LEVEL >= 6
 
@@ -870,6 +918,31 @@ bx_bool BX_CPU_C::xsave_hi_zmm_state_xinuse(void)
 
 #endif // BX_SUPPORT_AVX
 
+#if BX_SUPPORT_PKEYS
+// PKRU state management //
+
+void BX_CPU_C::xsave_pkru_state(bxInstruction_c *i, bx_address offset)
+{
+  write_virtual_qword(i->seg(), offset, (Bit64u) BX_CPU_THIS_PTR pkru);
+}
+
+void BX_CPU_C::xrstor_pkru_state(bxInstruction_c *i, bx_address offset)
+{
+  Bit32u pkru = read_virtual_dword(i->seg(), offset);
+  set_PKRU(pkru);
+}
+
+void BX_CPU_C::xrstor_init_pkru_state(void)
+{
+  set_PKRU(0);
+}
+
+bx_bool BX_CPU_C::xsave_pkru_state_xinuse(void)
+{
+  return (BX_CPU_THIS_PTR pkru != 0);
+}
+#endif
+
 Bit32u BX_CPU_C::get_xinuse_vector(Bit32u requested_feature_bitmap)
 {
   Bit32u xinuse = 0;
@@ -901,6 +974,13 @@ Bit32u BX_CPU_C::get_xinuse_vector(Bit32u requested_feature_bitmap)
       xinuse |= BX_XCR0_HI_ZMM_MASK;
   }
 #endif
+#endif
+
+#if BX_SUPPORT_PKEYS
+  if (requested_feature_bitmap & BX_XCR0_PKRU_MASK) {
+    if (xsave_pkru_state_xinuse()) 
+      xinuse |= BX_XCR0_PKRU_MASK;
+  }
 #endif
 
   return xinuse;

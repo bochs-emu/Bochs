@@ -238,12 +238,14 @@ struct bx_efer_t {
 #define XSAVE_OPMASK_STATE_LEN         (64)
 #define XSAVE_ZMM_HI256_STATE_LEN     (512)
 #define XSAVE_HI_ZMM_STATE_LEN       (1024)
+#define XSAVE_PKRU_STATE_LEN           (64)
 
 #define XSAVE_SSE_STATE_OFFSET        (160)
 #define XSAVE_YMM_STATE_OFFSET        (576)
 #define XSAVE_OPMASK_STATE_OFFSET    (1088)
 #define XSAVE_ZMM_HI256_STATE_OFFSET (1152)
 #define XSAVE_HI_ZMM_STATE_OFFSET    (1664)
+#define XSAVE_PKRU_STATE_OFFSET      (2688)
 
 struct xcr0_t {
   Bit32u  val32; // 32bit value of register

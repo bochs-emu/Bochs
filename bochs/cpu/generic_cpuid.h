@@ -89,6 +89,7 @@ private:
   Bit32u get_std2_cpuid_features(void) const;
   Bit32u get_ext2_cpuid_features(void) const;
   Bit32u get_ext3_cpuid_features(void) const;
+  Bit32u get_ext4_cpuid_features(void) const;
   Bit32u get_extended_cpuid_features(void) const;
 #endif
 

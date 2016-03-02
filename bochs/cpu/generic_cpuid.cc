@@ -304,7 +304,7 @@ void bx_generic_cpuid_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function
 {
   leaf->eax = 0; /* report max sub-leaf that supported in leaf 7 */
   leaf->ebx = get_ext3_cpuid_features();
-  leaf->ecx = 0;
+  leaf->ecx = get_ext4_cpuid_features();
   leaf->edx = 0;
 }
 
@@ -1404,6 +1404,28 @@ Bit32u bx_generic_cpuid_t::get_ext3_cpuid_features(void) const
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SHA))
     features |= BX_CPUID_EXT3_SHA;
+
+  return features;
+}
+
+Bit32u bx_generic_cpuid_t::get_ext4_cpuid_features(void) const
+{
+  Bit32u features = 0;
+
+  //   [0:0]    PREFETCHWT1 instruction support
+  //   [1:1]    AVX512 VBMI instructions support
+  //   [2:2]    reserved
+  //   [3:3]    PKU: Protection keys for user-mode pages.
+  //   [4:4]    OSPKE: OS has set CR4.PKE to enable protection keys
+  //  [31:5]    reserved
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX512_VBMI))
+    features |= BX_CPUID_EXT4_AVX512VBMI;
+
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PKU)) {
+    features |= BX_CPUID_EXT4_PKU;
+    if (cpu->cr4.get_PKE())
+      features |= BX_CPUID_EXT4_OSPKE;
+  }
 
   return features;
 }
