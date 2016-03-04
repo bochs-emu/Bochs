@@ -1112,8 +1112,12 @@ bx_bool BX_CPU_C::SetCR0(bxInstruction_c *i, bx_address val)
   // Modification of PG,PE flushes TLB cache according to docs.
   // Additionally, the TLB strategy is based on the current value of
   // WP, so if that changes we must also flush the TLB.
-  if ((oldCR0 & 0x80010001) != (val_32 & 0x80010001))
+  if ((oldCR0 & 0x80010001) != (val_32 & 0x80010001)) {
     TLB_flush(); // Flush Global entries also
+#if BX_SUPPORT_PKEYS
+    set_PKRU(BX_CPU_THIS_PTR pkru); // recalculate protection keys due to CR0.WP change
+#endif
+  }
 
   return 1;
 }
