@@ -1211,6 +1211,9 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
 
   if (is_cpu_extension_supported(BX_ISA_SMAP))
     allowMask |= BX_CR4_SMAP_MASK;
+
+  if (is_cpu_extension_supported(BX_ISA_PKU))
+    allowMask |= BX_CR4_PKE_MASK;
 #endif
 
   return allowMask;
