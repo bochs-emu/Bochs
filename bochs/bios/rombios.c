@@ -971,26 +971,26 @@ static char bios_cvs_version_string[] = "$Revision$ $Date$";
 #  define BX_DEBUG_INT74(a...)
 #endif
 
-#define SET_AL(val8) AX = ((AX & 0xff00) | (val8))
-#define SET_BL(val8) BX = ((BX & 0xff00) | (val8))
-#define SET_CL(val8) CX = ((CX & 0xff00) | (val8))
-#define SET_DL(val8) DX = ((DX & 0xff00) | (val8))
-#define SET_AH(val8) AX = ((AX & 0x00ff) | ((val8) << 8))
-#define SET_BH(val8) BX = ((BX & 0x00ff) | ((val8) << 8))
-#define SET_CH(val8) CX = ((CX & 0x00ff) | ((val8) << 8))
-#define SET_DH(val8) DX = ((DX & 0x00ff) | ((val8) << 8))
+#define SET_AL(val8) *((Bit8u *)&AX) = (val8)
+#define SET_BL(val8) *((Bit8u *)&BX) = (val8)
+#define SET_CL(val8) *((Bit8u *)&CX) = (val8)
+#define SET_DL(val8) *((Bit8u *)&DX) = (val8)
+#define SET_AH(val8) *(((Bit8u *)&AX)+1) = (val8)
+#define SET_BH(val8) *(((Bit8u *)&BX)+1) = (val8)
+#define SET_CH(val8) *(((Bit8u *)&CX)+1) = (val8)
+#define SET_DH(val8) *(((Bit8u *)&DX)+1) = (val8)
 
 #define GET_AL() ( AX & 0x00ff )
 #define GET_BL() ( BX & 0x00ff )
 #define GET_CL() ( CX & 0x00ff )
 #define GET_DL() ( DX & 0x00ff )
-#define GET_AH() ( AX >> 8 )
-#define GET_BH() ( BX >> 8 )
-#define GET_CH() ( CX >> 8 )
-#define GET_DH() ( DX >> 8 )
+#define GET_AH() *(((Bit8u *)&AX)+1)
+#define GET_BH() *(((Bit8u *)&BX)+1)
+#define GET_CH() *(((Bit8u *)&CX)+1)
+#define GET_DH() *(((Bit8u *)&DX)+1)
 
 #define GET_ELDL() ( ELDX & 0x00ff )
-#define GET_ELDH() ( ELDX >> 8 )
+#define GET_ELDH() *(((Bit8u *)&ELDX)+1)
 
 #define SET_CF()     FLAGS |= 0x0001
 #define CLEAR_CF()   FLAGS &= 0xfffe
