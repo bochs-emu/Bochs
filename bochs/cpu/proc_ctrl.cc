@@ -324,6 +324,14 @@ void BX_CPU_C::handleCpuModeChange(void)
     // switching between compatibility and long64 mode also affect SS.BASE
     // which is always zero in long64 mode
     invalidate_stack_cache();
+
+    // re-initialize protection keys if entered long mode and CR4.PKE=1
+#if BX_SUPPORT_PKEYS
+    if (BX_CPU_THIS_PTR cr4.get_PKE())
+      set_PKRU(BX_CPU_THIS_PTR pkru);
+    else
+      disable_PKRU();
+#endif
   }
   else
 #endif

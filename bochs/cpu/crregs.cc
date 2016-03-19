@@ -1312,6 +1312,14 @@ bx_bool BX_CPU_C::SetCR4(bxInstruction_c *i, bx_address val)
 #endif
 #endif
 
+  // re-calculate protection keys if CR4.PKE was set
+#if BX_SUPPORT_PKEYS
+  if (long_mode() && BX_CPU_THIS_PTR cr4.get_PKE())
+    set_PKRU(BX_CPU_THIS_PTR pkru);
+  else
+    disable_PKRU();
+#endif
+
   return 1;
 }
 #endif // BX_CPU_LEVEL >= 5
