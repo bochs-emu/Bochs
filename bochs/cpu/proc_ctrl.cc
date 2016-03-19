@@ -324,14 +324,6 @@ void BX_CPU_C::handleCpuModeChange(void)
     // switching between compatibility and long64 mode also affect SS.BASE
     // which is always zero in long64 mode
     invalidate_stack_cache();
-
-    // re-initialize protection keys if entered long mode and CR4.PKE=1
-#if BX_SUPPORT_PKEYS
-    if (BX_CPU_THIS_PTR cr4.get_PKE())
-      set_PKRU(BX_CPU_THIS_PTR pkru);
-    else
-      disable_PKRU();
-#endif
   }
   else
 #endif
@@ -362,6 +354,11 @@ void BX_CPU_C::handleCpuModeChange(void)
 #if BX_SUPPORT_AVX
   handleAvxModeChange(); /* protected mode reloaded */
 #endif
+#endif
+
+  // re-initialize protection keys
+#if BX_SUPPORT_PKEYS
+  set_PKRU(BX_CPU_THIS_PTR pkru);
 #endif
 
   if (mode != BX_CPU_THIS_PTR cpu_mode) {
@@ -1455,26 +1452,20 @@ void BX_CPU_C::set_PKRU(Bit32u pkru)
     BX_CPU_THIS_PTR rd_pkey[i] = BX_CPU_THIS_PTR wr_pkey[i] =
       TLB_SysReadOK | TLB_UserReadOK | TLB_SysWriteOK | TLB_UserWriteOK;
 
-    // accessDisable bit set
-    if (pkru & (1<<(i*2))) {
-      BX_CPU_THIS_PTR rd_pkey[i] &= ~(TLB_UserReadOK | TLB_UserWriteOK);
-      BX_CPU_THIS_PTR wr_pkey[i] &= ~(TLB_UserReadOK | TLB_UserWriteOK);
-    }
+    if (long_mode() && BX_CPU_THIS_PTR cr4.get_PKE()) {
+      // accessDisable bit set
+      if (pkru & (1<<(i*2))) {
+        BX_CPU_THIS_PTR rd_pkey[i] &= ~(TLB_UserReadOK | TLB_UserWriteOK);
+        BX_CPU_THIS_PTR wr_pkey[i] &= ~(TLB_UserReadOK | TLB_UserWriteOK);
+      }
     
-    // writeDisable bit set
-    if (pkru & (1<<(i*2+1))) {
-      BX_CPU_THIS_PTR wr_pkey[i] &= ~(TLB_UserWriteOK);
-      if (BX_CPU_THIS_PTR cr0.get_WP())
-        BX_CPU_THIS_PTR wr_pkey[i] &= ~(TLB_SysWriteOK);
+      // writeDisable bit set
+      if (pkru & (1<<(i*2+1))) {
+        BX_CPU_THIS_PTR wr_pkey[i] &= ~(TLB_UserWriteOK);
+        if (BX_CPU_THIS_PTR cr0.get_WP())
+          BX_CPU_THIS_PTR wr_pkey[i] &= ~(TLB_SysWriteOK);
+      }
     }
-  }
-}
-
-void BX_CPU_C::disable_PKRU()
-{
-  for (unsigned i=0; i<16; i++) {
-    BX_CPU_THIS_PTR rd_pkey[i] = BX_CPU_THIS_PTR wr_pkey[i] =
-      TLB_SysReadOK | TLB_UserReadOK | TLB_SysWriteOK | TLB_UserWriteOK;
   }
 }
 

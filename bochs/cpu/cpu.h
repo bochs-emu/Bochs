@@ -5026,7 +5026,6 @@ public: // for now...
 
 #if BX_SUPPORT_PKEYS
   BX_SMF void set_PKRU(Bit32u pkru);
-  BX_SMF void disable_PKRU();
 #endif
 
 #if BX_SUPPORT_FPU

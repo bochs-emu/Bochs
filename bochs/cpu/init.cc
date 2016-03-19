@@ -600,10 +600,7 @@ void BX_CPU_C::after_restore_state(void)
 #endif
 
 #if BX_SUPPORT_PKEYS
-  if (long_mode() && BX_CPU_THIS_PTR cr4.get_PKE())
-    set_PKRU(BX_CPU_THIS_PTR pkru);
-  else
-    disable_PKRU();
+  set_PKRU(BX_CPU_THIS_PTR pkru);
 #endif
 
   assert_checks();
