@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2015  The Bochs Project
+//  Copyright (C) 2002-2016  The Bochs Project
 //
 //  I/O port handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -220,7 +220,8 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 #endif
   PLUG_load_plugin(keyboard, PLUGTYPE_STANDARD);
 #if BX_SUPPORT_BUSMOUSE
-  if (mouse_type == BX_MOUSE_TYPE_BUS) {
+  if ((mouse_type == BX_MOUSE_TYPE_INPORT) ||
+      (mouse_type == BX_MOUSE_TYPE_BUS)) {
     PLUG_load_plugin(busmouse, PLUGTYPE_OPTIONAL);
   }
 #endif

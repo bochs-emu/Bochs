@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2015  The Bochs Project
+//  Copyright (C) 2002-2016  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1031,6 +1031,7 @@ void bx_init_options()
     "ps2",
     "imps2",
 #if BX_SUPPORT_BUSMOUSE
+    "inport",
     "bus",
 #endif
     "serial",

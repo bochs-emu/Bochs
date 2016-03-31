@@ -1785,7 +1785,7 @@ Optional Features:
   --enable-es1370         enable ES1370 soundcard support (no)
   --enable-gameport       enable standard PC gameport support (yes, if
                           soundcard present)
-  --enable-busmouse       enable Busmouse support (InPort)
+  --enable-busmouse       enable Busmouse support (InPort & Standard)
   --enable-docbook        build the Docbook documentation (yes, if docbook
                           present)
   --enable-xpm            enable the check for XPM support (yes)

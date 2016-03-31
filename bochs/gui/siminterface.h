@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2015  The Bochs Project
+//  Copyright (C) 2001-2016  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -482,6 +482,7 @@ enum {
   BX_MOUSE_TYPE_PS2,
   BX_MOUSE_TYPE_IMPS2,
 #if BX_SUPPORT_BUSMOUSE
+  BX_MOUSE_TYPE_INPORT,
   BX_MOUSE_TYPE_BUS,
 #endif
   BX_MOUSE_TYPE_SERIAL,

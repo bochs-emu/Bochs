@@ -2084,7 +2084,7 @@ BUSM_OBJS=''
 bx_busmouse=0
 AC_MSG_CHECKING(for Busmouse support)
 AC_ARG_ENABLE(busmouse,
-  AS_HELP_STRING([--enable-busmouse], [enable Busmouse support (InPort)]),
+  AS_HELP_STRING([--enable-busmouse], [enable Busmouse support (InPort & Standard)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_BUSMOUSE, 1)
