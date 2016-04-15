@@ -122,6 +122,8 @@ enum {
   IA_FCS_FDS_DEPRECATION,     /* FCS/FDS Deprecation */
   IA_FDP_DEPRECATION,         /* FDP Deprecation */
   IA_PKU,                     /* User-Mode Protection Keys */
+  IA_UMIP,                    /* User-Mode Instruction Prevention */
+  IA_RDPID,                   /* RDPID support */
   IA_EXTENSION_LAST
 };                            
 

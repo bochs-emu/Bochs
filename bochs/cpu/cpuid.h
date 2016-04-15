@@ -114,6 +114,8 @@ enum {
   BX_ISA_FCS_FDS_DEPRECATION,     /* FCS/FDS Deprecation */
   BX_ISA_FDP_DEPRECATION,         /* FDP Deprecation - FDP update on unmasked x87 exception only */
   BX_ISA_PKU,                     /* User-Mode Protection Keys */
+  BX_ISA_UMIP,                    /* User-Mode Instructions Prevention */
+  BX_ISA_RDPID,                   /* RDPID Support */
   BX_ISA_EXTENSION_LAST
 };                            
 
@@ -387,7 +389,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 
 //   [0:0]    FS/GS BASE access instructions
 //   [1:1]    Support for IA32_TSC_ADJUST MSR
-//   [2:2]    reserved
+//   [2:2]    SGX: Intel Software Guard Extensions
 //   [3:3]    BMI1: Advanced Bit Manipulation Extensions
 //   [4:4]    HLE: Hardware Lock Elision
 //   [5:5]    AVX2
@@ -420,7 +422,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 
 #define BX_CPUID_EXT3_FSGSBASE               (1 <<  0)
 #define BX_CPUID_EXT3_TSC_ADJUST             (1 <<  1)
-#define BX_CPUID_EXT3_RESERVED2              (1 <<  2)
+#define BX_CPUID_EXT3_SGX                    (1 <<  2)
 #define BX_CPUID_EXT3_BMI1                   (1 <<  3)
 #define BX_CPUID_EXT3_HLE                    (1 <<  4)
 #define BX_CPUID_EXT3_AVX2                   (1 <<  5)
@@ -456,16 +458,31 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 
 //   [0:0]    PREFETCHWT1 instruction support
 //   [1:1]    AVX512 VBMI instructions support
-//   [2:2]    reserved
+//   [2:2]    UMIP: Supports user-mode instruction prevention
 //   [3:3]    PKU: Protection keys for user-mode pages.
 //   [4:4]    OSPKE: OS has set CR4.PKE to enable protection keys
-//  [31:5]    reserved
+//  [21:5]    reserved
+// [22:22]    RDPID: Read Processor ID support
+// [29:23]    reserved
+// [30:30]    SGX_LC: SGX Launch Configuration
+// [31:31]    reserved
 
 #define BX_CPUID_EXT4_PREFETCHWT1            (1 <<  0)
 #define BX_CPUID_EXT4_AVX512VBMI             (1 <<  1)
-#define BX_CPUID_EXT4_RESERVED2              (1 <<  2)
+#define BX_CPUID_EXT4_UMIP                   (1 <<  2)
 #define BX_CPUID_EXT4_PKU                    (1 <<  3)
 #define BX_CPUID_EXT4_OSPKE                  (1 <<  4)
+// ...
+#define BX_CPUID_EXT4_RDPID                  (1 << 22)
+#define BX_CPUID_EXT4_RESERVED23             (1 << 23)
+#define BX_CPUID_EXT4_RESERVED24             (1 << 24)
+#define BX_CPUID_EXT4_RESERVED25             (1 << 25)
+#define BX_CPUID_EXT4_RESERVED26             (1 << 26)
+#define BX_CPUID_EXT4_RESERVED27             (1 << 27)
+#define BX_CPUID_EXT4_RESERVED28             (1 << 28)
+#define BX_CPUID_EXT4_RESERVED29             (1 << 29)
+#define BX_CPUID_EXT4_SGX_LAUNCH_CONFIG      (1 << 30)
+#define BX_CPUID_EXT4_RESERVED31             (1 << 31)
 
 // CPUID defines - STD2 features CPUID[0x80000001].EDX
 // -----------------------------

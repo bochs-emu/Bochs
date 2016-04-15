@@ -1024,7 +1024,7 @@ void bx_dbg_info_control_regs_command(void)
   dbg_printf("    PWT=page-level write-through=%d\n", (cr3>>3) & 1);
 #if BX_CPU_LEVEL >= 5
   Bit32u cr4 = SIM->get_param_num("CR4", dbg_cpu_list)->get();
-  dbg_printf("CR4=0x%08x: %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n", cr4,
+  dbg_printf("CR4=0x%08x: %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n", cr4,
     (cr4 & (1<<22)) ? "PKE" : "pke",
     (cr4 & (1<<21)) ? "SMAP" : "smap",
     (cr4 & (1<<20)) ? "SMEP" : "smep",
@@ -1034,6 +1034,7 @@ void bx_dbg_info_control_regs_command(void)
     (cr4 & (1<<14)) ? "SMX" : "smx",
     (cr4 & (1<<13)) ? "VMX" : "vmx",
     (cr4 & (1<<10)) ? "OSXMMEXCPT" : "osxmmexcpt",
+    (cr4 & (1<<11)) ? "UMIP" : "umip",
     (cr4 & (1<<9))  ? "OSFXSR" : "osfxsr",
     (cr4 & (1<<8))  ? "PCE" : "pce",
     (cr4 & (1<<7))  ? "PGE" : "pge",

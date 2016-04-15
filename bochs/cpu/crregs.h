@@ -99,6 +99,7 @@ struct bx_cr0_t {
 #define BX_CR4_PCE_MASK        (1 << 8)
 #define BX_CR4_OSFXSR_MASK     (1 << 9)
 #define BX_CR4_OSXMMEXCPT_MASK (1 << 10)
+#define BX_CR4_UMIP_MASK       (1 << 11)
 #define BX_CR4_VMXE_MASK       (1 << 13)
 #define BX_CR4_SMXE_MASK       (1 << 14)
 #define BX_CR4_FSGSBASE_MASK   (1 << 16)
@@ -122,6 +123,7 @@ struct bx_cr4_t {
   IMPLEMENT_CRREG_ACCESSORS(PCE, 8);
   IMPLEMENT_CRREG_ACCESSORS(OSFXSR, 9);
   IMPLEMENT_CRREG_ACCESSORS(OSXMMEXCPT, 10);
+  IMPLEMENT_CRREG_ACCESSORS(UMIP, 11);
 #if BX_SUPPORT_VMX
   IMPLEMENT_CRREG_ACCESSORS(VMXE, 13);
 #endif

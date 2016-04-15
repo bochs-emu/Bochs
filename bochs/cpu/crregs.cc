@@ -899,6 +899,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SMSW_EwR(bxInstruction_c *i)
 {
+  if (CPL!=0 && BX_CPU_THIS_PTR cr4.get_UMIP()) {
+    BX_ERROR(("SMSW: CPL != 0 causes #GP when CR4.UMIP set"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
   Bit32u msw = (Bit32u) read_CR0();  // handle CR0 shadow in VMX
 
   if (i->os32L()) {
@@ -913,6 +918,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SMSW_EwR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SMSW_EwM(bxInstruction_c *i)
 {
+  if (CPL!=0 && BX_CPU_THIS_PTR cr4.get_UMIP()) {
+    BX_ERROR(("SMSW: CPL != 0 causes #GP when CR4.UMIP set"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
   Bit16u msw = read_CR0() & 0xffff;   // handle CR0 shadow in VMX
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   write_virtual_word(i->seg(), eaddr, msw);
@@ -1129,6 +1139,7 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
 
   // CR4 bits definitions:
   //   [31-22] Reserved, Must be Zero
+  //   [22]    PKE: Protection Keys Enable R/W
   //   [21]    SMAP: Supervisor Mode Access Prevention R/W
   //   [20]    SMEP: Supervisor Mode Execution Protection R/W
   //   [19]    Reserved, Must be Zero
@@ -1138,7 +1149,8 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
   //   [15]    Reserved, Must be Zero
   //   [14]    SMXE: SMX Extensions R/W
   //   [13]    VMXE: VMX Extensions R/W
-  //   [12-11] Reserved, Must be Zero
+  //   [12] Reserved, Must be Zero
+  //   [11]    UMIP: User Mode Instruction Prevention R/W
   //   [10]    OSXMMEXCPT: Operating System Unmasked Exception Support R/W
   //   [9]     OSFXSR: Operating System FXSAVE/FXRSTOR Support R/W
   //   [8]     PCE: Performance-Monitoring Counter Enable R/W
@@ -1214,6 +1226,9 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
 
   if (is_cpu_extension_supported(BX_ISA_PKU))
     allowMask |= BX_CR4_PKE_MASK;
+
+  if (is_cpu_extension_supported(BX_ISA_UMIP))
+    allowMask |= BX_CR4_UMIP_MASK;
 #endif
 
   return allowMask;

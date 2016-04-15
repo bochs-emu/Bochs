@@ -102,7 +102,7 @@ static const char *VMX_vmexit_reason_name[] =
   /* 57 */  "RDRAND",
   /* 58 */  "INVPCID",
   /* 59 */  "VMFUNC",
-  /* 60 */  "Reserved60",
+  /* 60 */  "ENCLS",
   /* 61 */  "RDSEED",
   /* 62 */  "PML Log Full",
   /* 63 */  "XSAVES",

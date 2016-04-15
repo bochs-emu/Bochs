@@ -130,7 +130,7 @@ enum VMX_vmexit_reason {
    VMX_VMEXIT_RDRAND = 57,
    VMX_VMEXIT_INVPCID = 58,
    VMX_VMEXIT_VMFUNC = 59,
-   VMX_VMEXIT_RESERVED60 = 60,
+   VMX_VMEXIT_ENCLS = 60,
    VMX_VMEXIT_RDSEED = 61,
    VMX_VMEXIT_PML_LOGFULL = 62,
    VMX_VMEXIT_XSAVES = 63,
@@ -263,6 +263,8 @@ enum VMFunctions {
 #define VMCS_64BIT_CONTROL_VE_EXCEPTION_INFO_ADDR_HI       0x0000202B
 #define VMCS_64BIT_CONTROL_XSS_EXITING_BITMAP              0x0000202C /* XSAVES */
 #define VMCS_64BIT_CONTROL_XSS_EXITING_BITMAP_HI           0x0000202D
+#define VMCS_64BIT_CONTROL_ENCLS_EXITING_BITMAP            0x0000202E /* ENCLS/SGX */
+#define VMCS_64BIT_CONTROL_ENCLS_EXITING_BITMAP_HI         0x0000202F
 #define VMCS_64BIT_CONTROL_TSC_MULTIPLIER                  0x00002032 /* TSC Scaling */
 #define VMCS_64BIT_CONTROL_TSC_MULTIPLIER_HI               0x00002033
 
@@ -291,6 +293,8 @@ enum VMFunctions {
 #define VMCS_64BIT_GUEST_IA32_PDPTE2_HI                    0x0000280F
 #define VMCS_64BIT_GUEST_IA32_PDPTE3                       0x00002810
 #define VMCS_64BIT_GUEST_IA32_PDPTE3_HI                    0x00002811
+#define VMCS_64BIT_GUEST_IA32_BNDCFGS                      0x00002812 /* MPX */
+#define VMCS_64BIT_GUEST_IA32_BNDCFGS_HI                   0x00002813
 
 /* VMCS 64-bit host state fields */
 /* binary 0010_11xx_xxxx_xxx0 */
@@ -676,6 +680,7 @@ typedef struct bx_VMCS
 #define VMX_VM_EXEC_CTRL3_INVPCID                   (1 << 12)
 #define VMX_VM_EXEC_CTRL3_VMFUNC_ENABLE             (1 << 13) /* VM Functions */
 #define VMX_VM_EXEC_CTRL3_VMCS_SHADOWING            (1 << 14) /* VMCS Shadowing */
+#define VMX_VM_EXEC_CTRL3_SGX_ENCLS_VMEXIT          (1 << 15) /* ENCLS/SGX */
 #define VMX_VM_EXEC_CTRL3_RDSEED_VMEXIT             (1 << 16)
 #define VMX_VM_EXEC_CTRL3_PML_ENABLE                (1 << 17) /* Page Modification Logging */
 #define VMX_VM_EXEC_CTRL3_EPT_VIOLATION_EXCEPTION   (1 << 18) /* #VE Exception */
@@ -757,6 +762,7 @@ typedef struct bx_VMCS
 #define VMX_VMEXIT_CTRL1_STORE_EFER_MSR             (1 << 20) /* EFER */
 #define VMX_VMEXIT_CTRL1_LOAD_EFER_MSR              (1 << 21) /* EFER */
 #define VMX_VMEXIT_CTRL1_STORE_VMX_PREEMPTION_TIMER (1 << 22) /* VMX preemption timer */
+#define VMX_VMEXIT_CTRL1_CLEAR_BNDCFGS              (1 << 23) /* MPX */
 #define VMX_VMEXIT_CTRL1_SUPPRESS_VMX_PACKETS       (1 << 24) /* Processor Trace */
 
 #define VMX_VMEXIT_CTRL1_SUPPORTED_BITS \
@@ -780,6 +786,7 @@ typedef struct bx_VMCS
 #define VMX_VMENTRY_CTRL1_LOAD_PERF_GLOBAL_CTRL_MSR         (1 << 13) /* Perf Global Ctrl */
 #define VMX_VMENTRY_CTRL1_LOAD_PAT_MSR                      (1 << 14) /* PAT */
 #define VMX_VMENTRY_CTRL1_LOAD_EFER_MSR                     (1 << 15) /* EFER */
+#define VMX_VMENTRY_CTRL1_LOAD_BNDCFGS                      (1 << 16) /* MPX */
 #define VMX_VMENTRY_CTRL1_SUPPRESS_VMX_PACKETS              (1 << 17) /* Processor Trace */
 
 #define VMX_VMENTRY_CTRL1_SUPPORTED_BITS \

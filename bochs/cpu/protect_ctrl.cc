@@ -286,6 +286,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SLDT_Ew(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
   }
 
+  if (CPL!=0 && BX_CPU_THIS_PTR cr4.get_UMIP()) {
+    BX_ERROR(("SLDT: CPL != 0 causes #GP when CR4.UMIP set"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest)
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_DESCRIPTOR_TABLE_VMEXIT))
@@ -321,6 +326,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::STR_Ew(bxInstruction_c *i)
   if (! protected_mode()) {
     BX_ERROR(("STR: not recognized in real or virtual-8086 mode"));
     exception(BX_UD_EXCEPTION, 0);
+  }
+
+  if (CPL!=0 && BX_CPU_THIS_PTR cr4.get_UMIP()) {
+    BX_ERROR(("STR: CPL != 0 causes #GP when CR4.UMIP set"));
+    exception(BX_GP_EXCEPTION, 0);
   }
 
 #if BX_SUPPORT_VMX >= 2
@@ -746,6 +756,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SGDT_Ms(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
+  if (CPL!=0 && BX_CPU_THIS_PTR cr4.get_UMIP()) {
+    BX_ERROR(("SGDT: CPL != 0 causes #GP when CR4.UMIP set"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest)
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_DESCRIPTOR_TABLE_VMEXIT))
@@ -771,6 +786,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SGDT_Ms(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SIDT_Ms(bxInstruction_c *i)
 {
+  if (CPL!=0 && BX_CPU_THIS_PTR cr4.get_UMIP()) {
+    BX_ERROR(("SIDT: CPL != 0 causes #GP when CR4.UMIP set"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
 #if BX_SUPPORT_VMX >= 2
@@ -870,6 +890,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::LIDT_Ms(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SGDT64_Ms(bxInstruction_c *i)
 {
+  if (CPL!=0 && BX_CPU_THIS_PTR cr4.get_UMIP()) {
+    BX_ERROR(("SGDT: CPL != 0 causes #GP when CR4.UMIP set"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
 
 #if BX_SUPPORT_VMX >= 2
@@ -897,6 +922,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SGDT64_Ms(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SIDT64_Ms(bxInstruction_c *i)
 {
+  if (CPL!=0 && BX_CPU_THIS_PTR cr4.get_UMIP()) {
+    BX_ERROR(("SIDT: CPL != 0 causes #GP when CR4.UMIP set"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64);
 
 #if BX_SUPPORT_VMX >= 2

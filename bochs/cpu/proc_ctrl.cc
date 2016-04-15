@@ -652,7 +652,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSCP(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
 
 #if BX_SUPPORT_VMX
-  // RDTSCP will always #UD in legacy VMX mode
+  // RDPID will always #UD in legacy VMX mode
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_RDTSCP)) {
        BX_ERROR(("%s in VMX guest: not allowed to use instruction !", i->getIaOpcodeNameShort()));
@@ -686,6 +686,26 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSCP(bxInstruction_c *i)
   RDX = GET32H(ticks);
   RCX = BX_CPU_THIS_PTR msr.tsc_aux;
 
+#endif
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPID_Ed(bxInstruction_c *i)
+{
+#if BX_SUPPORT_X86_64
+
+#if BX_SUPPORT_VMX
+  // RDTSCP will always #UD in legacy VMX mode
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_RDTSCP)) {
+       BX_ERROR(("%s in VMX guest: not allowed to use instruction !", i->getIaOpcodeNameShort()));
+       exception(BX_UD_EXCEPTION, 0);
+    }
+  }
+#endif
+
+  BX_WRITE_32BIT_REGZ(i->dst(), BX_CPU_THIS_PTR msr.tsc_aux);
 #endif
 
   BX_NEXT_INSTR(i);
@@ -1479,6 +1499,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPKRU(bxInstruction_c *i)
 
   RAX = BX_CPU_THIS_PTR pkru;
   RDX = 0;
+
+  BX_NEXT_INSTR(i);
 }
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::WRPKRU(bxInstruction_c *i)
@@ -1490,6 +1512,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::WRPKRU(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
 
   BX_CPU_THIS_PTR set_PKRU(EAX);
+
+  BX_NEXT_TRACE(i);
 }
 
 #endif // BX_SUPPORT_PKEYS
