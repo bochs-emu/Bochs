@@ -873,11 +873,13 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_RDPID[3] = {
   /* F2 */ { 0, BX_IA_ERROR }
 };
 
+#if BX_SUPPORT_X86_64
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_RDPID64[3] = {
   /* 66 */ { 0, BX_IA_ERROR },
   /* F3 */ { 0, BX_IA_RDPID_Eq },
   /* F2 */ { 0, BX_IA_ERROR }
 };
+#endif
 
 static const BxOpcodeInfo_t BxOpcodeInfoG9w[8*2] = {
   /* /r form */
