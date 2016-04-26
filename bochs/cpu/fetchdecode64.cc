@@ -133,6 +133,8 @@ static unsigned sreg_mod1or2_base32[16] = {
 // table of all Bochs opcodes
 extern struct bxIAOpcodeTable BxOpcodesTable[];
 
+extern Bit16u WalkOpcodeTables(const BxOpcodeInfo_t *OpcodeInfoPtr, Bit16u &attr, Bit32u fetchModeMask, unsigned modrm, unsigned sse_prefix, unsigned osize, unsigned vex_vl, bx_bool vex_w);
+
 // 512 entries for 16bit operand size
 // 512 entries for 32bit operand size
 // 512 entries for 64bit operand size
@@ -2125,7 +2127,7 @@ modrm_done:
     }
 #endif
 
-    ia_opcode = WalkOpcodeTables(OpcodeInfoPtr, attr, b2, sse_prefix, offset >> 9, i->getVL(), vex_w);
+    ia_opcode = WalkOpcodeTables(OpcodeInfoPtr, attr, fetchModeMask, b2, sse_prefix, offset >> 9, i->getVL(), vex_w);
   }
   else {
     // Opcode does not require a MODRM byte.
