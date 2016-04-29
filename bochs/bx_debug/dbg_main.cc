@@ -2932,7 +2932,7 @@ void bx_dbg_restore_command(const char *param_name, const char *restore_path)
 
 void bx_dbg_disassemble_current(const char *format)
 {
-  Bit64u addr = bx_dbg_get_laddr(bx_dbg_get_selector_value(BX_DBG_SREG_CS), 
+  Bit64u addr = bx_dbg_get_laddr(bx_dbg_get_selector_value(BX_SEG_REG_CS), 
      BX_CPU(dbg_cpu)->get_instruction_pointer());
   bx_dbg_disassemble_command(format, addr, addr);
 }

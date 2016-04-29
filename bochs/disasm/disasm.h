@@ -26,6 +26,8 @@
 
 #include "config.h"
 
+#include "cpu/decoder.h"
+
 #define BX_DECODE_MODRM(modrm_byte, mod, opcode, rm) { \
   mod    = (modrm_byte >> 6) & 0x03; \
   opcode = (modrm_byte >> 3) & 0x07; \
@@ -37,119 +39,6 @@
   index = (sib_byte >> 3) & 0x07;  \
   base  =  sib_byte & 0x07;        \
 }
-
-/* Instruction set attributes (duplicated in cpu.h) */
-enum {
-  IA_386 = 0,                 /* 386 or earlier instruction */
-  IA_X87,                     /* FPU (X87) instruction */
-  IA_486,                     /* 486 new instruction */
-  IA_PENTIUM,                 /* Pentium new instruction */
-  IA_P6,                      /* P6 new instruction */
-  IA_MMX,                     /* MMX instruction */
-  IA_3DNOW,                   /* 3DNow! instruction (AMD) */
-  IA_DEBUG_EXTENSIONS,        /* Debug Extensions support */
-  IA_VME,                     /* VME support */
-  IA_PSE,                     /* PSE support */
-  IA_PAE,                     /* PAE support */
-  IA_PGE,                     /* Global Pages support */
-  IA_PSE36,                   /* PSE-36 support */
-  IA_MTRR,                    /* MTRR support */
-  IA_PAT,                     /* PAT support */
-  IA_SYSCALL_SYSRET_LEGACY,   /* SYSCALL/SYSRET in legacy mode (AMD) */
-  IA_SYSENTER_SYSEXIT,        /* SYSENTER/SYSEXIT instruction */
-  IA_CLFLUSH,                 /* CLFLUSH instruction */
-  IA_CLFLUSHOPT,              /* CLFLUSHOPT instruction */
-  IA_CLWB,                    /* CLWB instruction */
-  IA_SSE,                     /* SSE  instruction */
-  IA_SSE2,                    /* SSE2 instruction */
-  IA_SSE3,                    /* SSE3 instruction */
-  IA_SSSE3,                   /* SSSE3 instruction */
-  IA_SSE4_1,                  /* SSE4_1 instruction */
-  IA_SSE4_2,                  /* SSE4_2 instruction */
-  IA_POPCNT,                  /* POPCNT instruction */
-  IA_MONITOR_MWAIT,           /* MONITOR/MWAIT instruction */
-  IA_VMX,                     /* VMX instruction */
-  IA_SMX,                     /* SMX instruction */
-  IA_LONG_MODE,               /* Long Mode (x86-64) support */
-  IA_LM_LAHF_SAHF,            /* Long Mode LAHF/SAHF instruction */
-  IA_NX,                      /* No-Execute support */
-  IA_1G_PAGES,                /* 1Gb pages support */
-  IA_CMPXCHG16B,              /* CMPXCHG16B instruction */
-  IA_RDTSCP,                  /* RDTSCP instruction */
-  IA_FFXSR,                   /* EFER.FFXSR support */
-  IA_XSAVE,                   /* XSAVE/XRSTOR extensions instruction */
-  IA_XSAVEOPT,                /* XSAVEOPT instruction */
-  IA_XSAVEC,                  /* XSAVEC instruction */
-  IA_XSAVES,                  /* XSAVES instruction */
-  IA_AES_PCLMULQDQ,           /* AES+PCLMULQDQ instruction */
-  IA_MOVBE,                   /* MOVBE instruction */
-  IA_FSGSBASE,                /* FS/GS BASE access instruction */
-  IA_INVPCID,                 /* INVPCID instruction */
-  IA_AVX,                     /* AVX instruction */
-  IA_AVX2,                    /* AVX2 instruction */
-  IA_AVX_F16C,                /* AVX F16 convert instruction */
-  IA_AVX_FMA,                 /* AVX FMA instruction */
-  IA_ALT_MOV_CR8,             /* LOCK CR0 access CR8 (AMD) */
-  IA_SSE4A,                   /* SSE4A instruction (AMD) */
-  IA_MISALIGNED_SSE,          /* Misaligned SSE (AMD) */
-  IA_LZCNT,                   /* LZCNT instruction */
-  IA_BMI1,                    /* BMI1 instruction */
-  IA_BMI2,                    /* BMI2 instruction */
-  IA_FMA4,                    /* FMA4 instruction (AMD) */
-  IA_XOP,                     /* XOP instruction (AMD) */
-  IA_TBM,                     /* TBM instruction (AMD) */
-  IA_SVM,                     /* SVM instruction (AMD) */
-  IA_RDRAND,                  /* RDRAND instruction */
-  IA_ADX,                     /* ADCX/ADOX instruction */
-  IA_SMAP,                    /* SMAP support */
-  IA_RDSEED,                  /* RDSEED instruction */
-  IA_SHA,                     /* SHA instruction */
-  IA_AVX512,                  /* AVX-512 instruction */
-  IA_AVX512_CD,               /* AVX-512 Conflict Detection instruction */
-  IA_AVX512_PF,               /* AVX-512 Sparse Prefetch instruction */
-  IA_AVX512_ER,               /* AVX-512 Exponential/Reciprocal instruction */
-  IA_AVX512_DQ,               /* AVX-512DQ instruction */
-  IA_AVX512_BW,               /* AVX-512 Byte/Word instruction */
-  IA_AVX512_VL,               /* AVX-512 Vector Length extensions */
-  IA_AVX512_VBMI,             /* AVX-512 Vector Bit Manipulation Instructions */
-  IA_AVX512_IFMA52,           /* AVX-512 IFMA52 Instructions */
-  IA_XAPIC,                   /* XAPIC support */
-  IA_X2APIC,                  /* X2APIC support */
-  IA_XAPIC_EXT,               /* XAPIC Extensions support */
-  IA_PCID,                    /* PCID pages support */
-  IA_SMEP,                    /* SMEP support */
-  IA_TSC_DEADLINE,            /* TSC-Deadline */
-  IA_FCS_FDS_DEPRECATION,     /* FCS/FDS Deprecation */
-  IA_FDP_DEPRECATION,         /* FDP Deprecation */
-  IA_PKU,                     /* User-Mode Protection Keys */
-  IA_UMIP,                    /* User-Mode Instruction Prevention */
-  IA_RDPID,                   /* RDPID support */
-  IA_EXTENSION_LAST
-};                            
-
-/* general purpose bit register */
-enum {
-	rAX_REG,
-	rCX_REG,
-	rDX_REG,
-	rBX_REG,
-	rSP_REG,
-	rBP_REG,
-	rSI_REG,
-	rDI_REG
-};
-
-/* segment register */
-enum {
-	ES_REG,
-	CS_REG,
-	SS_REG,
-	DS_REG,
-	FS_REG,
-	GS_REG,
-        INVALID_SEG1,
-        INVALID_SEG2
-};
 
 class disassembler;
 struct x86_insn;

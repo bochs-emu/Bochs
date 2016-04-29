@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2010-2015 Stanislav Shwartsman
+//   Copyright (c) 2010-2016 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -30,100 +30,6 @@ struct cpuid_function_t {
   Bit32u ecx;
   Bit32u edx;
 };
-
-enum {
-  BX_ISA_386 = 0,                 /* 386 or earlier instruction */
-  BX_ISA_X87,                     /* FPU (X87) instruction */
-  BX_ISA_486,                     /* 486 new instruction */
-  BX_ISA_PENTIUM,                 /* Pentium new instruction */
-  BX_ISA_P6,                      /* P6 new instruction */
-  BX_ISA_MMX,                     /* MMX instruction */
-  BX_ISA_3DNOW,                   /* 3DNow! instruction (AMD) */
-  BX_ISA_DEBUG_EXTENSIONS,        /* Debug Extensions support */
-  BX_ISA_VME,                     /* VME support */
-  BX_ISA_PSE,                     /* PSE support */
-  BX_ISA_PAE,                     /* PAE support */
-  BX_ISA_PGE,                     /* Global Pages support */
-  BX_ISA_PSE36,                   /* PSE-36 support */
-  BX_ISA_MTRR,                    /* MTRR support */
-  BX_ISA_PAT,                     /* PAT support */
-  BX_ISA_SYSCALL_SYSRET_LEGACY,   /* SYSCALL/SYSRET in legacy mode (AMD) */
-  BX_ISA_SYSENTER_SYSEXIT,        /* SYSENTER/SYSEXIT instruction */
-  BX_ISA_CLFLUSH,                 /* CLFLUSH instruction */
-  BX_ISA_CLFLUSHOPT,              /* CLFLUSHOPT instruction */
-  BX_ISA_CLWB,                    /* CLWB instruction */
-  BX_ISA_SSE,                     /* SSE  instruction */
-  BX_ISA_SSE2,                    /* SSE2 instruction */
-  BX_ISA_SSE3,                    /* SSE3 instruction */
-  BX_ISA_SSSE3,                   /* SSSE3 instruction */
-  BX_ISA_SSE4_1,                  /* SSE4_1 instruction */
-  BX_ISA_SSE4_2,                  /* SSE4_2 instruction */
-  BX_ISA_POPCNT,                  /* POPCNT instruction */
-  BX_ISA_MONITOR_MWAIT,           /* MONITOR/MWAIT instruction */
-  BX_ISA_VMX,                     /* VMX instruction */
-  BX_ISA_SMX,                     /* SMX instruction */
-  BX_ISA_LONG_MODE,               /* Long Mode (x86-64) support */
-  BX_ISA_LM_LAHF_SAHF,            /* Long Mode LAHF/SAHF instruction */
-  BX_ISA_NX,                      /* No-Execute support */
-  BX_ISA_1G_PAGES,                /* 1Gb pages support */
-  BX_ISA_CMPXCHG16B,              /* CMPXCHG16B instruction */
-  BX_ISA_RDTSCP,                  /* RDTSCP instruction */
-  BX_ISA_FFXSR,                   /* EFER.FFXSR support */
-  BX_ISA_XSAVE,                   /* XSAVE/XRSTOR extensions instruction */
-  BX_ISA_XSAVEOPT,                /* XSAVEOPT instruction */
-  BX_ISA_XSAVEC,                  /* XSAVEC instruction */
-  BX_ISA_XSAVES,                  /* XSAVES instruction */
-  BX_ISA_AES_PCLMULQDQ,           /* AES+PCLMULQDQ instruction */
-  BX_ISA_MOVBE,                   /* MOVBE instruction */
-  BX_ISA_FSGSBASE,                /* FS/GS BASE access instruction */
-  BX_ISA_INVPCID,                 /* INVPCID instruction */
-  BX_ISA_AVX,                     /* AVX instruction */
-  BX_ISA_AVX2,                    /* AVX2 instruction */
-  BX_ISA_AVX_F16C,                /* AVX F16 convert instruction */
-  BX_ISA_AVX_FMA,                 /* AVX FMA instruction */
-  BX_ISA_ALT_MOV_CR8,             /* LOCK CR0 access CR8 (AMD) */
-  BX_ISA_SSE4A,                   /* SSE4A instruction (AMD) */
-  BX_ISA_MISALIGNED_SSE,          /* Misaligned SSE (AMD) */
-  BX_ISA_LZCNT,                   /* LZCNT instruction */
-  BX_ISA_BMI1,                    /* BMI1 instruction */
-  BX_ISA_BMI2,                    /* BMI2 instruction */
-  BX_ISA_FMA4,                    /* FMA4 instruction (AMD) */
-  BX_ISA_XOP,                     /* XOP instruction (AMD) */
-  BX_ISA_TBM,                     /* TBM instruction (AMD) */
-  BX_ISA_SVM,                     /* SVM instruction (AMD) */
-  BX_ISA_RDRAND,                  /* RDRAND instruction */
-  BX_ISA_ADX,                     /* ADCX/ADOX instruction */
-  BX_ISA_SMAP,                    /* SMAP support */
-  BX_ISA_RDSEED,                  /* RDSEED instruction */
-  BX_ISA_SHA,                     /* SHA instruction */
-  BX_ISA_AVX512,                  /* AVX-512 instruction */
-  BX_ISA_AVX512_CD,               /* AVX-512 Conflict Detection instruction */
-  BX_ISA_AVX512_PF,               /* AVX-512 Sparse Prefetch instruction */
-  BX_ISA_AVX512_ER,               /* AVX-512 Exponential/Reciprocal instruction */
-  BX_ISA_AVX512_DQ,               /* AVX-512DQ instruction */
-  BX_ISA_AVX512_BW,               /* AVX-512 Byte/Word instruction */
-  BX_ISA_AVX512_VL,               /* AVX-512 Vector Length extensions */
-  BX_ISA_AVX512_VBMI,             /* AVX-512 Vector Bit Manipulation Instructions */
-  BX_ISA_AVX512_IFMA52,           /* AVX-512 IFMA52 Instructions */
-  BX_ISA_XAPIC,                   /* XAPIC support */
-  BX_ISA_X2APIC,                  /* X2APIC support */
-  BX_ISA_XAPIC_EXT,               /* XAPIC Extensions support */
-  BX_ISA_PCID,                    /* PCID pages support */
-  BX_ISA_SMEP,                    /* SMEP support */
-  BX_ISA_TSC_DEADLINE,            /* TSC-Deadline */
-  BX_ISA_FCS_FDS_DEPRECATION,     /* FCS/FDS Deprecation */
-  BX_ISA_FDP_DEPRECATION,         /* FDP Deprecation - FDP update on unmasked x87 exception only */
-  BX_ISA_PKU,                     /* User-Mode Protection Keys */
-  BX_ISA_UMIP,                    /* User-Mode Instructions Prevention */
-  BX_ISA_RDPID,                   /* RDPID Support */
-  BX_ISA_EXTENSION_LAST
-};                            
-
-#define BX_ISA_EXTENSIONS_ARRAY_SIZE (4)
-
-#if (BX_ISA_EXTENSION_LAST) >= (BX_ISA_EXTENSIONS_ARRAY_SIZE*4)
-  #error "ISA extensions array limit exceeded!"
-#endif
 
 class VMCS_Mapping;
 

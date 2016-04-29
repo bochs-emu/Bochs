@@ -149,83 +149,83 @@ print-string    { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PRINT_STRING); }
 page            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PAGE); }
 device          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DEVICE); }
 all             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ALL); }
-al              { bxlval.uval = BX_DBG_REG8L_AL; return(BX_TOKEN_8BL_REG);}
-bl              { bxlval.uval = BX_DBG_REG8L_BL; return(BX_TOKEN_8BL_REG);}
-cl              { bxlval.uval = BX_DBG_REG8L_CL; return(BX_TOKEN_8BL_REG);}
-dl              { bxlval.uval = BX_DBG_REG8L_DL; return(BX_TOKEN_8BL_REG);}
-sil             { LONG_MODE_8BL_REG(BX_DBG_REG8L_SIL); }
-dil             { LONG_MODE_8BL_REG(BX_DBG_REG8L_DIL); }
-spl             { LONG_MODE_8BL_REG(BX_DBG_REG8L_SPL); }
-bpl             { LONG_MODE_8BL_REG(BX_DBG_REG8L_BPL); }
-r8b             { LONG_MODE_8BL_REG(BX_DBG_REG8L_R8);  }
-r9b             { LONG_MODE_8BL_REG(BX_DBG_REG8L_R9);  }
-r10b            { LONG_MODE_8BL_REG(BX_DBG_REG8L_R10); }
-r11b            { LONG_MODE_8BL_REG(BX_DBG_REG8L_R11); }
-r12b            { LONG_MODE_8BL_REG(BX_DBG_REG8L_R12); }
-r13b            { LONG_MODE_8BL_REG(BX_DBG_REG8L_R13); }
-r14b            { LONG_MODE_8BL_REG(BX_DBG_REG8L_R14); }
-r15b            { LONG_MODE_8BL_REG(BX_DBG_REG8L_R15); }
-ah              { bxlval.uval = BX_DBG_REG8H_AH; return(BX_TOKEN_8BH_REG);}
-bh              { bxlval.uval = BX_DBG_REG8H_BH; return(BX_TOKEN_8BH_REG);}
-ch              { bxlval.uval = BX_DBG_REG8H_CH; return(BX_TOKEN_8BH_REG);}
-dh              { bxlval.uval = BX_DBG_REG8H_DH; return(BX_TOKEN_8BH_REG);}
-ax              { bxlval.uval = BX_DBG_REG16_AX; return(BX_TOKEN_16B_REG);}
-bx              { bxlval.uval = BX_DBG_REG16_BX; return(BX_TOKEN_16B_REG);}
-cx              { bxlval.uval = BX_DBG_REG16_CX; return(BX_TOKEN_16B_REG);}
-dx              { bxlval.uval = BX_DBG_REG16_DX; return(BX_TOKEN_16B_REG);}
-si              { bxlval.uval = BX_DBG_REG16_SI; return(BX_TOKEN_16B_REG);}
-di              { bxlval.uval = BX_DBG_REG16_DI; return(BX_TOKEN_16B_REG);}
-bp              { bxlval.uval = BX_DBG_REG16_BP; return(BX_TOKEN_16B_REG);}
-sp              { bxlval.uval = BX_DBG_REG16_SP; return(BX_TOKEN_16B_REG);}
-r8w             { LONG_MODE_16B_REG(BX_DBG_REG16_R8);  }
-r9w             { LONG_MODE_16B_REG(BX_DBG_REG16_R9);  }
-r10w            { LONG_MODE_16B_REG(BX_DBG_REG16_R10); }
-r11w            { LONG_MODE_16B_REG(BX_DBG_REG16_R11); }
-r12w            { LONG_MODE_16B_REG(BX_DBG_REG16_R12); }
-r13w            { LONG_MODE_16B_REG(BX_DBG_REG16_R13); }
-r14w            { LONG_MODE_16B_REG(BX_DBG_REG16_R14); }
-r15w            { LONG_MODE_16B_REG(BX_DBG_REG16_R15); }
-eax             { bxlval.uval = BX_DBG_REG32_EAX; return(BX_TOKEN_32B_REG);}
-ebx             { bxlval.uval = BX_DBG_REG32_EBX; return(BX_TOKEN_32B_REG);}
-ecx             { bxlval.uval = BX_DBG_REG32_ECX; return(BX_TOKEN_32B_REG);}
-edx             { bxlval.uval = BX_DBG_REG32_EDX; return(BX_TOKEN_32B_REG);}
-esi             { bxlval.uval = BX_DBG_REG32_ESI; return(BX_TOKEN_32B_REG);}
-edi             { bxlval.uval = BX_DBG_REG32_EDI; return(BX_TOKEN_32B_REG);}
-ebp             { bxlval.uval = BX_DBG_REG32_EBP; return(BX_TOKEN_32B_REG);}
-esp             { bxlval.uval = BX_DBG_REG32_ESP; return(BX_TOKEN_32B_REG);}
-r8d             { LONG_MODE_32B_REG(BX_DBG_REG32_R8);  }
-r9d             { LONG_MODE_32B_REG(BX_DBG_REG32_R9);  }
-r10d            { LONG_MODE_32B_REG(BX_DBG_REG32_R10); }
-r11d            { LONG_MODE_32B_REG(BX_DBG_REG32_R11); }
-r12d            { LONG_MODE_32B_REG(BX_DBG_REG32_R12); }
-r13d            { LONG_MODE_32B_REG(BX_DBG_REG32_R13); }
-r14d            { LONG_MODE_32B_REG(BX_DBG_REG32_R14); }
-r15d            { LONG_MODE_32B_REG(BX_DBG_REG32_R15); }
-rax             { LONG_MODE_64B_REG(BX_DBG_REG64_RAX); }
-rbx             { LONG_MODE_64B_REG(BX_DBG_REG64_RBX); }
-rcx             { LONG_MODE_64B_REG(BX_DBG_REG64_RCX); }
-rdx             { LONG_MODE_64B_REG(BX_DBG_REG64_RDX); }
-rsi             { LONG_MODE_64B_REG(BX_DBG_REG64_RSI); }
-rdi             { LONG_MODE_64B_REG(BX_DBG_REG64_RDI); }
-rsp             { LONG_MODE_64B_REG(BX_DBG_REG64_RSP); }
-rbp             { LONG_MODE_64B_REG(BX_DBG_REG64_RBP); }
-r8              { LONG_MODE_64B_REG(BX_DBG_REG64_R8);  }
-r9              { LONG_MODE_64B_REG(BX_DBG_REG64_R9);  }
-r10             { LONG_MODE_64B_REG(BX_DBG_REG64_R10); }
-r11             { LONG_MODE_64B_REG(BX_DBG_REG64_R11); }
-r12             { LONG_MODE_64B_REG(BX_DBG_REG64_R12); }
-r13             { LONG_MODE_64B_REG(BX_DBG_REG64_R13); }
-r14             { LONG_MODE_64B_REG(BX_DBG_REG64_R14); }
-r15             { LONG_MODE_64B_REG(BX_DBG_REG64_R15); }
+al              { bxlval.uval = BX_8BIT_REG_AL; return(BX_TOKEN_8BL_REG);}
+bl              { bxlval.uval = BX_8BIT_REG_BL; return(BX_TOKEN_8BL_REG);}
+cl              { bxlval.uval = BX_8BIT_REG_CL; return(BX_TOKEN_8BL_REG);}
+dl              { bxlval.uval = BX_8BIT_REG_DL; return(BX_TOKEN_8BL_REG);}
+sil             { LONG_MODE_8BL_REG(BX_8BIT_REG_SIL); }
+dil             { LONG_MODE_8BL_REG(BX_8BIT_REG_DIL); }
+spl             { LONG_MODE_8BL_REG(BX_8BIT_REG_SPL); }
+bpl             { LONG_MODE_8BL_REG(BX_8BIT_REG_BPL); }
+r8b             { LONG_MODE_8BL_REG(BX_8BIT_REG_R8);  }
+r9b             { LONG_MODE_8BL_REG(BX_8BIT_REG_R9);  }
+r10b            { LONG_MODE_8BL_REG(BX_8BIT_REG_R10); }
+r11b            { LONG_MODE_8BL_REG(BX_8BIT_REG_R11); }
+r12b            { LONG_MODE_8BL_REG(BX_8BIT_REG_R12); }
+r13b            { LONG_MODE_8BL_REG(BX_8BIT_REG_R13); }
+r14b            { LONG_MODE_8BL_REG(BX_8BIT_REG_R14); }
+r15b            { LONG_MODE_8BL_REG(BX_8BIT_REG_R15); }
+ah              { bxlval.uval = BX_8BIT_REG_AH; return(BX_TOKEN_8BH_REG);}
+bh              { bxlval.uval = BX_8BIT_REG_BH; return(BX_TOKEN_8BH_REG);}
+ch              { bxlval.uval = BX_8BIT_REG_CH; return(BX_TOKEN_8BH_REG);}
+dh              { bxlval.uval = BX_8BIT_REG_DH; return(BX_TOKEN_8BH_REG);}
+ax              { bxlval.uval = BX_16BIT_REG_AX; return(BX_TOKEN_16B_REG);}
+bx              { bxlval.uval = BX_16BIT_REG_BX; return(BX_TOKEN_16B_REG);}
+cx              { bxlval.uval = BX_16BIT_REG_CX; return(BX_TOKEN_16B_REG);}
+dx              { bxlval.uval = BX_16BIT_REG_DX; return(BX_TOKEN_16B_REG);}
+si              { bxlval.uval = BX_16BIT_REG_SI; return(BX_TOKEN_16B_REG);}
+di              { bxlval.uval = BX_16BIT_REG_DI; return(BX_TOKEN_16B_REG);}
+bp              { bxlval.uval = BX_16BIT_REG_BP; return(BX_TOKEN_16B_REG);}
+sp              { bxlval.uval = BX_16BIT_REG_SP; return(BX_TOKEN_16B_REG);}
+r8w             { LONG_MODE_16B_REG(BX_16BIT_REG_R8);  }
+r9w             { LONG_MODE_16B_REG(BX_16BIT_REG_R9);  }
+r10w            { LONG_MODE_16B_REG(BX_16BIT_REG_R10); }
+r11w            { LONG_MODE_16B_REG(BX_16BIT_REG_R11); }
+r12w            { LONG_MODE_16B_REG(BX_16BIT_REG_R12); }
+r13w            { LONG_MODE_16B_REG(BX_16BIT_REG_R13); }
+r14w            { LONG_MODE_16B_REG(BX_16BIT_REG_R14); }
+r15w            { LONG_MODE_16B_REG(BX_16BIT_REG_R15); }
+eax             { bxlval.uval = BX_32BIT_REG_EAX; return(BX_TOKEN_32B_REG);}
+ebx             { bxlval.uval = BX_32BIT_REG_EBX; return(BX_TOKEN_32B_REG);}
+ecx             { bxlval.uval = BX_32BIT_REG_ECX; return(BX_TOKEN_32B_REG);}
+edx             { bxlval.uval = BX_32BIT_REG_EDX; return(BX_TOKEN_32B_REG);}
+esi             { bxlval.uval = BX_32BIT_REG_ESI; return(BX_TOKEN_32B_REG);}
+edi             { bxlval.uval = BX_32BIT_REG_EDI; return(BX_TOKEN_32B_REG);}
+ebp             { bxlval.uval = BX_32BIT_REG_EBP; return(BX_TOKEN_32B_REG);}
+esp             { bxlval.uval = BX_32BIT_REG_ESP; return(BX_TOKEN_32B_REG);}
+r8d             { LONG_MODE_32B_REG(BX_32BIT_REG_R8);  }
+r9d             { LONG_MODE_32B_REG(BX_32BIT_REG_R9);  }
+r10d            { LONG_MODE_32B_REG(BX_32BIT_REG_R10); }
+r11d            { LONG_MODE_32B_REG(BX_32BIT_REG_R11); }
+r12d            { LONG_MODE_32B_REG(BX_32BIT_REG_R12); }
+r13d            { LONG_MODE_32B_REG(BX_32BIT_REG_R13); }
+r14d            { LONG_MODE_32B_REG(BX_32BIT_REG_R14); }
+r15d            { LONG_MODE_32B_REG(BX_32BIT_REG_R15); }
+rax             { LONG_MODE_64B_REG(BX_64BIT_REG_RAX); }
+rbx             { LONG_MODE_64B_REG(BX_64BIT_REG_RBX); }
+rcx             { LONG_MODE_64B_REG(BX_64BIT_REG_RCX); }
+rdx             { LONG_MODE_64B_REG(BX_64BIT_REG_RDX); }
+rsi             { LONG_MODE_64B_REG(BX_64BIT_REG_RSI); }
+rdi             { LONG_MODE_64B_REG(BX_64BIT_REG_RDI); }
+rsp             { LONG_MODE_64B_REG(BX_64BIT_REG_RSP); }
+rbp             { LONG_MODE_64B_REG(BX_64BIT_REG_RBP); }
+r8              { LONG_MODE_64B_REG(BX_64BIT_REG_R8);  }
+r9              { LONG_MODE_64B_REG(BX_64BIT_REG_R9);  }
+r10             { LONG_MODE_64B_REG(BX_64BIT_REG_R10); }
+r11             { LONG_MODE_64B_REG(BX_64BIT_REG_R11); }
+r12             { LONG_MODE_64B_REG(BX_64BIT_REG_R12); }
+r13             { LONG_MODE_64B_REG(BX_64BIT_REG_R13); }
+r14             { LONG_MODE_64B_REG(BX_64BIT_REG_R14); }
+r15             { LONG_MODE_64B_REG(BX_64BIT_REG_R15); }
 ip              { return(BX_TOKEN_REG_IP); }
 eip             { return(BX_TOKEN_REG_EIP);}
 rip             { return(BX_TOKEN_REG_RIP);}
-cs              { bxlval.uval = BX_DBG_SREG_CS; return(BX_TOKEN_CS); }
-es              { bxlval.uval = BX_DBG_SREG_ES; return(BX_TOKEN_ES); }
-ss              { bxlval.uval = BX_DBG_SREG_SS; return(BX_TOKEN_SS); }
-ds              { bxlval.uval = BX_DBG_SREG_DS; return(BX_TOKEN_DS); }
-fs              { bxlval.uval = BX_DBG_SREG_FS; return(BX_TOKEN_FS); }
-gs              { bxlval.uval = BX_DBG_SREG_GS; return(BX_TOKEN_GS); }
+cs              { bxlval.uval = BX_SEG_REG_CS; return(BX_TOKEN_CS); }
+es              { bxlval.uval = BX_SEG_REG_ES; return(BX_TOKEN_ES); }
+ss              { bxlval.uval = BX_SEG_REG_SS; return(BX_TOKEN_SS); }
+ds              { bxlval.uval = BX_SEG_REG_DS; return(BX_TOKEN_DS); }
+fs              { bxlval.uval = BX_SEG_REG_FS; return(BX_TOKEN_FS); }
+gs              { bxlval.uval = BX_SEG_REG_GS; return(BX_TOKEN_GS); }
 k[0-7]          { EVEX_OPMASK_REG(bxtext[1] - '0'); }
 flags|eflags    { bxlval.uval = 0; return (BX_TOKEN_FLAGS); }
 xml             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_XML); }

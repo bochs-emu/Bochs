@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2015  The Bochs Project
+//  Copyright (C) 2001-2016  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -40,149 +40,7 @@ extern Bit32u dbg_cpu;
 
 void dbg_printf (const char *fmt, ...);
 
-typedef enum {
-  BX_DBG_SREG_ES,
-  BX_DBG_SREG_CS,
-  BX_DBG_SREG_SS,
-  BX_DBG_SREG_DS,
-  BX_DBG_SREG_FS,
-  BX_DBG_SREG_GS
-} SRegs;
-
-#if BX_SUPPORT_X86_64
-# define BX_DBG_GEN_REGISTERS 16
-#else
-# define BX_DBG_GEN_REGISTERS 8
-#endif
-
-typedef enum {
-  BX_DBG_REG8H_AH,
-  BX_DBG_REG8H_CH,
-  BX_DBG_REG8H_DH,
-  BX_DBG_REG8H_BH,
-} Regs8H;
-
-#if BX_SUPPORT_X86_64
-
-typedef enum {
-  BX_DBG_REG8L_AL,
-  BX_DBG_REG8L_CL,
-  BX_DBG_REG8L_DL,
-  BX_DBG_REG8L_BL,
-  BX_DBG_REG8L_SPL,
-  BX_DBG_REG8L_BPL,
-  BX_DBG_REG8L_SIL,
-  BX_DBG_REG8L_DIL,
-  BX_DBG_REG8L_R8,
-  BX_DBG_REG8L_R9,
-  BX_DBG_REG8L_R10,
-  BX_DBG_REG8L_R11,
-  BX_DBG_REG8L_R12,
-  BX_DBG_REG8L_R13,
-  BX_DBG_REG8L_R14,
-  BX_DBG_REG8L_R15
-} Regs8L;
-
-typedef enum {
-  BX_DBG_REG16_AX,
-  BX_DBG_REG16_CX,
-  BX_DBG_REG16_DX,
-  BX_DBG_REG16_BX,
-  BX_DBG_REG16_SP,
-  BX_DBG_REG16_BP,
-  BX_DBG_REG16_SI,
-  BX_DBG_REG16_DI,
-  BX_DBG_REG16_R8,
-  BX_DBG_REG16_R9,
-  BX_DBG_REG16_R10,
-  BX_DBG_REG16_R11,
-  BX_DBG_REG16_R12,
-  BX_DBG_REG16_R13,
-  BX_DBG_REG16_R14,
-  BX_DBG_REG16_R15
-} Regs16;
-
-typedef enum {
-  BX_DBG_REG32_EAX,
-  BX_DBG_REG32_ECX,
-  BX_DBG_REG32_EDX,
-  BX_DBG_REG32_EBX,
-  BX_DBG_REG32_ESP,
-  BX_DBG_REG32_EBP,
-  BX_DBG_REG32_ESI,
-  BX_DBG_REG32_EDI,
-  BX_DBG_REG32_R8,
-  BX_DBG_REG32_R9,
-  BX_DBG_REG32_R10,
-  BX_DBG_REG32_R11,
-  BX_DBG_REG32_R12,
-  BX_DBG_REG32_R13,
-  BX_DBG_REG32_R14,
-  BX_DBG_REG32_R15
-} Regs32;
-
-typedef enum {
-  BX_DBG_REG64_RAX,
-  BX_DBG_REG64_RCX,
-  BX_DBG_REG64_RDX,
-  BX_DBG_REG64_RBX,
-  BX_DBG_REG64_RSP,
-  BX_DBG_REG64_RBP,
-  BX_DBG_REG64_RSI,
-  BX_DBG_REG64_RDI,
-  BX_DBG_REG64_R8,
-  BX_DBG_REG64_R9,
-  BX_DBG_REG64_R10,
-  BX_DBG_REG64_R11,
-  BX_DBG_REG64_R12,
-  BX_DBG_REG64_R13,
-  BX_DBG_REG64_R14,
-  BX_DBG_REG64_R15
-} Regs64;
-
-#else
-
-typedef enum {
-  BX_DBG_REG8L_AL,
-  BX_DBG_REG8L_CL,
-  BX_DBG_REG8L_DL,
-  BX_DBG_REG8L_BL
-} Regs8L;
-
-typedef enum {
-  BX_DBG_REG16_AX,
-  BX_DBG_REG16_CX,
-  BX_DBG_REG16_DX,
-  BX_DBG_REG16_BX,
-  BX_DBG_REG16_SP,
-  BX_DBG_REG16_BP,
-  BX_DBG_REG16_SI,
-  BX_DBG_REG16_DI
-} Regs16;
-
-typedef enum {
-  BX_DBG_REG32_EAX,
-  BX_DBG_REG32_ECX,
-  BX_DBG_REG32_EDX,
-  BX_DBG_REG32_EBX,
-  BX_DBG_REG32_ESP,
-  BX_DBG_REG32_EBP,
-  BX_DBG_REG32_ESI,
-  BX_DBG_REG32_EDI
-} Regs32;
-
-#endif
-
-typedef enum {
-  BX_DBG_REG_MASK_K0,
-  BX_DBG_REG_MASK_K1,
-  BX_DBG_REG_MASK_K2,
-  BX_DBG_REG_MASK_K3,
-  BX_DBG_REG_MASK_K4,
-  BX_DBG_REG_MASK_K5,
-  BX_DBG_REG_MASK_K6,
-  BX_DBG_REG_MASK_K7
-} OpmaskRegs;
+#include "cpu/decoder.h"
 
 typedef enum
 {

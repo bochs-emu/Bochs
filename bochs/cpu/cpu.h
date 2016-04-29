@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2015  The Bochs Project
+//  Copyright (C) 2001-2016  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -20,79 +20,11 @@
 /////////////////////////////////////////////////////////////////////////
 
 #ifndef BX_CPU_H
-#  define BX_CPU_H 1
+#define BX_CPU_H
 
 #include <setjmp.h>
 
-// <TAG-DEFINES-DECODE-START>
-// segment register encoding
-enum {
-  BX_SEG_REG_ES = 0,
-  BX_SEG_REG_CS = 1,
-  BX_SEG_REG_SS = 2,
-  BX_SEG_REG_DS = 3,
-  BX_SEG_REG_FS = 4,
-  BX_SEG_REG_GS = 5,
-  // NULL now has to fit in 3 bits.
-  BX_SEG_REG_NULL = 7
-};
-
-#define BX_NULL_SEG_REG(seg) ((seg) == BX_SEG_REG_NULL)
-
-enum {
-  BX_16BIT_REG_AX,
-  BX_16BIT_REG_CX,
-  BX_16BIT_REG_DX,
-  BX_16BIT_REG_BX,
-  BX_16BIT_REG_SP,
-  BX_16BIT_REG_BP,
-  BX_16BIT_REG_SI,
-  BX_16BIT_REG_DI
-};
-
-enum {
-  BX_32BIT_REG_EAX,
-  BX_32BIT_REG_ECX,
-  BX_32BIT_REG_EDX,
-  BX_32BIT_REG_EBX,
-  BX_32BIT_REG_ESP,
-  BX_32BIT_REG_EBP,
-  BX_32BIT_REG_ESI,
-  BX_32BIT_REG_EDI
-};
-
-enum {
-  BX_64BIT_REG_RAX,
-  BX_64BIT_REG_RCX,
-  BX_64BIT_REG_RDX,
-  BX_64BIT_REG_RBX,
-  BX_64BIT_REG_RSP,
-  BX_64BIT_REG_RBP,
-  BX_64BIT_REG_RSI,
-  BX_64BIT_REG_RDI,
-  BX_64BIT_REG_R8,
-  BX_64BIT_REG_R9,
-  BX_64BIT_REG_R10,
-  BX_64BIT_REG_R11,
-  BX_64BIT_REG_R12,
-  BX_64BIT_REG_R13,
-  BX_64BIT_REG_R14,
-  BX_64BIT_REG_R15
-};
-
-#if BX_SUPPORT_X86_64
-# define BX_GENERAL_REGISTERS 16
-#else
-# define BX_GENERAL_REGISTERS 8
-#endif
-
-#define BX_16BIT_REG_IP  (BX_GENERAL_REGISTERS)
-#define BX_32BIT_REG_EIP (BX_GENERAL_REGISTERS)
-#define BX_64BIT_REG_RIP (BX_GENERAL_REGISTERS)
-
-#define BX_TMP_REGISTER  (BX_GENERAL_REGISTERS+1)
-#define BX_NIL_REGISTER  (BX_GENERAL_REGISTERS+2)
-// <TAG-DEFINES-DECODE-END>
+#include "decoder.h"
 
 #if defined(NEED_CPU_REG_SHORTCUTS)
 

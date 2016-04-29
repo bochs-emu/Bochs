@@ -189,7 +189,7 @@ void disassembler::resolve32_mod0(const x86_insn *insn, unsigned datasize)
   if (insn->is_seg_override())
     seg = segment_name[insn->seg_override];
   else
-    seg = segment_name[DS_REG];
+    seg = segment_name[BX_SEG_REG_DS];
 
   if (insn->is_64) {
     if (intel_mode) eip_regname = "eip";
@@ -273,7 +273,7 @@ void disassembler::resolve64_mod0(const x86_insn *insn, unsigned datasize)
   if (insn->is_seg_override())
     seg = segment_name[insn->seg_override];
   else
-    seg = segment_name[DS_REG];
+    seg = segment_name[BX_SEG_REG_DS];
 
   if (intel_mode) rip_regname = "rip";
   else rip_regname = "%rip";
