@@ -20,7 +20,7 @@ void bx_dbg_info_linux_command(void)
 {
   BX_INFO (("Info linux"));
   bx_dbg_sreg_t cs;
-  BX_CPU(dbg_cpu)->dbg_get_sreg(&cs, BX_DBG_SREG_CS);
+  BX_CPU(dbg_cpu)->dbg_get_sreg(&cs, BX_SEG_REG_CS);
   int cpu_mode = BX_CPU(dbg_cpu)->get_cpu_mode();
 
   int mode;
