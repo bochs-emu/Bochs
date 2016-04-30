@@ -135,6 +135,10 @@ extern struct bxIAOpcodeTable BxOpcodesTable[];
 
 extern Bit16u WalkOpcodeTables(const BxOpcodeInfo_t *OpcodeInfoPtr, Bit16u &attr, Bit32u fetchModeMask, unsigned modrm, unsigned sse_prefix, unsigned osize, unsigned vex_vl, bx_bool vex_w);
 
+#if BX_SUPPORT_EVEX
+extern unsigned evex_displ8_compression(bxInstruction_c *i, unsigned ia_opcode, unsigned type, unsigned vex_w);
+#endif
+
 // 512 entries for 16bit operand size
 // 512 entries for 32bit operand size
 // 512 entries for 64bit operand size

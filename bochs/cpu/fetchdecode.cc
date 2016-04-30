@@ -172,6 +172,10 @@ bxIAOpcodeTable BxOpcodesTable[] = {
 
 extern Bit16u WalkOpcodeTables(const BxOpcodeInfo_t *OpcodeInfoPtr, Bit16u &attr, Bit32u fetchModeMask, unsigned modrm, unsigned sse_prefix, unsigned osize, unsigned vex_vl, bx_bool vex_w);
 
+#if BX_SUPPORT_EVEX
+extern unsigned evex_displ8_compression(bxInstruction_c *i, unsigned ia_opcode, unsigned type, unsigned vex_w);
+#endif
+
 /* ************************** */
 /* 512 entries for 16bit mode */
 /* 512 entries for 32bit mode */
@@ -2041,7 +2045,7 @@ decode_done:
 }
 
 #if BX_SUPPORT_EVEX
-unsigned BX_CPU_C::evex_displ8_compression(bxInstruction_c *i, unsigned ia_opcode, unsigned type, unsigned vex_w)
+unsigned evex_displ8_compression(bxInstruction_c *i, unsigned ia_opcode, unsigned type, unsigned vex_w)
 {
   if (ia_opcode == BX_IA_V512_VMOVDDUP_VpdWpd && i->getVL() == BX_VL128)
     return 8;
