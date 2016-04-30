@@ -333,9 +333,9 @@ public:
   virtual ~bx_param_enum_c();
   const char *get_choice(int n) { return choices[n]; }
   const char *get_selected() { return choices[val.number - min]; }
-  int find_by_name(const char *string);
+  int find_by_name(const char *s);
   virtual void set(Bit64s val);
-  bx_bool set_by_name(const char *string);
+  bx_bool set_by_name(const char *s);
   void set_dependent_list(bx_list_c *l, bx_bool enable_all);
   void set_dependent_bitmap(Bit64s value, Bit64u bitmap);
   Bit64u get_dependent_bitmap(Bit64s value);

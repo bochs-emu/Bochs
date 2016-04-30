@@ -597,19 +597,19 @@ void bx_param_enum_c::set(Bit64s val)
   update_dependents();
 }
 
-int bx_param_enum_c::find_by_name(const char *string)
+int bx_param_enum_c::find_by_name(const char *s)
 {
   const char **p;
   for (p=&choices[0]; *p; p++) {
-    if (!strcmp(string, *p))
+    if (!strcmp(s, *p))
       return p-choices;
   }
   return -1;
 }
 
-bx_bool bx_param_enum_c::set_by_name(const char *string)
+bx_bool bx_param_enum_c::set_by_name(const char *s)
 {
-  int n = find_by_name(string);
+  int n = find_by_name(s);
   if (n<0) return 0;
   set(n + min);
   return 1;
