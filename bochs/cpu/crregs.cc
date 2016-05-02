@@ -920,10 +920,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SMSW_EwR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SMSW_EwM(bxInstruction_c *i)
 {
+#if BX_CPU_LEVEL >= 5
   if (CPL!=0 && BX_CPU_THIS_PTR cr4.get_UMIP()) {
     BX_ERROR(("SMSW: CPL != 0 causes #GP when CR4.UMIP set"));
     exception(BX_GP_EXCEPTION, 0);
   }
+#endif
 
   Bit16u msw = read_CR0() & 0xffff;   // handle CR0 shadow in VMX
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
