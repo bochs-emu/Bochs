@@ -1744,6 +1744,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 
   if (VMENTRY_INJECTING_EVENT(vm->vmentry_interr_info)) {
     unsigned event_type = (vm->vmentry_interr_info >> 8) & 7;
+    unsigned vector = vm->vmentry_interr_info & 0xff;
     if (event_type == BX_EXTERNAL_INTERRUPT) {
       if ((guest.interruptibility_state & 0x3) != 0 || (guest.rflags & EFlagsIFMask) == 0) {
         BX_ERROR(("VMENTER FAIL: VMCS guest interrupts blocked when injecting external interrupt"));
@@ -1760,8 +1761,8 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
       BX_ERROR(("VMENTER FAIL: No guest interruptions are allowed when entering Wait-For-Sipi state"));
       return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
     }
-    if (guest.activity_state == BX_ACTIVITY_STATE_SHUTDOWN && event_type != BX_NMI) {
-      BX_ERROR(("VMENTER FAIL: Only NMI guest interruption is allowed when entering shutdown state"));
+    if (guest.activity_state == BX_ACTIVITY_STATE_SHUTDOWN && event_type != BX_NMI && vector != BX_MC_EXCEPTION) {
+      BX_ERROR(("VMENTER FAIL: Only NMI or #MC guest interruption is allowed when entering shutdown state"));
       return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
     }
   }
