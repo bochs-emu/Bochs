@@ -279,6 +279,29 @@ void bx_param_num_c::set_enabled(int en)
   update_dependents();
 }
 
+int bx_param_num_c::parse_param(const char *value)
+{
+  if (value != NULL) {
+    if ((value[0] == '0') && (value[1] == 'x')) {
+      set(strtoul(value, NULL, 16));
+    } else {
+      if (value[strlen(value)-1] == 'K') {
+        set(1000 * strtoul(value, NULL, 10));
+      }
+      else if (value[strlen(value)-1] == 'M') {
+        set(1000000 * strtoul(value, NULL, 10));
+      }
+      else {
+        set(strtoul(value, NULL, 10));
+      }
+    }
+
+    return 1;
+  }
+
+  return 0;
+}
+
 // Signed 64 bit
 bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
     const char *name,
@@ -516,6 +539,20 @@ bx_param_bool_c::bx_param_bool_c(bx_param_c *parent,
   set_type(BXT_PARAM_BOOL);
 }
 
+int bx_param_bool_c::parse_param(const char *value)
+{
+  if (value != NULL) {
+    if (!strcmp(value, "0") || !stricmp(value, "false")) {
+      set(0); return 1;
+    } 
+    if (!strcmp(value, "1") || !stricmp(value, "true")) {
+      set(1); return 1;
+    }
+  }
+
+  return 0;
+}
+
 bx_shadow_bool_c::bx_shadow_bool_c(bx_param_c *parent,
       const char *name,
       const char *label,
@@ -668,6 +705,15 @@ void bx_param_enum_c::set_enabled(int en)
   }
   bx_param_c::set_enabled(en);
   update_dependents();
+}
+
+int bx_param_enum_c::parse_param(const char *value)
+{
+  if (value != NULL) {
+    return set_by_name(value);
+  }
+
+  return 0;
 }
 
 bx_param_string_c::bx_param_string_c(bx_param_c *parent,
@@ -831,6 +877,17 @@ bx_bool bx_param_string_c::isempty()
   } else {
     return ((strlen(val) == 0) || !strcmp(val, "none"));
   }
+}
+
+int bx_param_string_c::parse_param(const char *value)
+{
+  if (value != NULL) {
+    set(value);
+  } else {
+    set("");
+  }
+
+  return 1;
 }
 
 int bx_param_string_c::sprint(char *buf, int len, bx_bool dquotes)

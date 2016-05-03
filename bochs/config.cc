@@ -2173,52 +2173,16 @@ int bx_parse_param_from_list(const char *context, const char *input, bx_list_c *
       free(propval);
       return 0;
     }
-    switch (param->get_type()) {
-      case BXT_PARAM_NUM:
-        if (value != NULL) {
-          if ((value[0] == '0') && (value[1] == 'x')) {
-            ((bx_param_num_c*)param)->set(strtoul(value, NULL, 16));
-          } else {
-            if (value[strlen(value)-1] == 'K') {
-              ((bx_param_num_c*)param)->set(1000 * strtoul(value, NULL, 10));
-            }
-            else if (value[strlen(value)-1] == 'M') {
-              ((bx_param_num_c*)param)->set(1000000 * strtoul(value, NULL, 10));
-            }
-            else {
-              ((bx_param_num_c*)param)->set(strtoul(value, NULL, 10));
-            }
-          }
-        }
-        break;
-      case BXT_PARAM_BOOL:
-        if (value != NULL) {
-          if (!strcmp(value, "0") || !strcmp(value, "1")) {
-            ((bx_param_bool_c*)param)->set(atol(value));
-          } else {
-            PARSE_WARN(("%s: wrong value for parameter '%s'", context, property));
-            ret = -1;
-          }
-        }
-        break;
-      case BXT_PARAM_ENUM:
-        if (value != NULL) {
-          if (!((bx_param_enum_c*)param)->set_by_name(value)) {
-            PARSE_WARN(("%s: invalid choice '%s' parameter '%s'", context, value, property));
-            ret = -1;
-          }
-        }
-        break;
-      case BXT_PARAM_STRING:
-        if (value != NULL) {
-          ((bx_param_string_c*)param)->set(value);
-        } else {
-          ((bx_param_string_c*)param)->set("");
-        }
-        break;
-      default:
-        PARSE_WARN(("%s: parameter '%s': unknown type", context, property));
+    int res = param->parse_param(value);
+    if (res != -1) {
+      if (res == 0) {
+        PARSE_WARN(("%s: wrong value for parameter '%s'", context, property));
         ret = -1;
+      }
+    }
+    else {
+      PARSE_WARN(("%s: parameter '%s': unknown type", context, property));
+      ret = -1;
     }
   } else {
     PARSE_WARN(("%s: unknown parameter '%s'", context, property));

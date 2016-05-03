@@ -117,41 +117,61 @@ public:
     // indirectly from one or more other options (e.g. cpu count)
     CI_ONLY = (1<<31)
   } bx_param_opt_bits;
+
   bx_param_c(Bit32u id, const char *name, const char *description);
   bx_param_c(Bit32u id, const char *name, const char *label, const char *description);
   virtual ~bx_param_c();
+
+  virtual void reset() {}
+
+  const char *get_name() const { return name; }
   bx_param_c *get_parent() { return (bx_param_c *) parent; }
+
   int get_param_path(char *path_out, int maxlen);
+
   void set_format(const char *format) {text_format = format;}
   const char *get_format() const {return text_format;}
+
   void set_long_format(const char *format) {long_text_format = format;}
   const char *get_long_format() const {return long_text_format;}
+
   void set_ask_format(const char *format);
   const char *get_ask_format() const {return ask_format;}
+
   void set_label(const char *text);
-  void set_description(const char *text);
   const char *get_label() const {return label;}
+
+  void set_description(const char *text);
+  const char *get_description() const { return description; }
+
   virtual void set_runtime_param(int val) { runtime_param = val; }
   int get_runtime_param() { return runtime_param; }
+
   void set_group(const char *group);
   const char *get_group() const {return group_name;}
-  const char *get_name() const { return name; }
-  const char *get_description() const { return description; }
+
   int get_enabled() const { return enabled; }
   virtual void set_enabled(int enabled) { this->enabled = enabled; }
-  virtual void reset() {}
+
   int getint() const {return -1;}
+
   static const char* set_default_format(const char *f);
   static const char *get_default_format() { return default_text_format; }
+
   bx_list_c *get_dependent_list() { return dependent_list; }
+
   void set_options(Bit32u options) { this->options = options; }
   Bit32u get_options() const { return options; }
+
   void set_device_param(void *dev) { device = dev; }
   void *get_device_param() { return device; }
+
 #if BX_USE_TEXTCONFIG
   virtual void text_print(FILE *fp) {}
-  virtual int text_ask(FILE *fpin, FILE *fpout) {return -1;}
+  virtual int text_ask(FILE *fpin, FILE *fpout) { return -1; }
 #endif
+
+  virtual int parse_param(const char *value) { return -1; }
 };
 
 typedef Bit64s (*param_event_handler)(class bx_param_c *, int set, Bit64s val);
@@ -213,6 +233,7 @@ public:
   virtual void text_print(FILE *fp);
   virtual int text_ask(FILE *fpin, FILE *fpout);
 #endif
+  virtual int parse_param(const char *value);
 };
 
 // a bx_shadow_num_c is like a bx_param_num_c except that it doesn't
@@ -296,6 +317,7 @@ public:
   virtual void text_print(FILE *fp);
   virtual int text_ask(FILE *fpin, FILE *fpout);
 #endif
+  virtual int parse_param(const char *value);
 };
 
 // a bx_shadow_bool_c is a shadow param based on bx_param_bool_c.
@@ -344,6 +366,7 @@ public:
   virtual void text_print(FILE *fp);
   virtual int text_ask(FILE *fpin, FILE *fpout);
 #endif
+  virtual int parse_param(const char *value);
 };
 
 typedef const char* (*param_string_event_handler)(class bx_param_string_c *,
@@ -392,6 +415,7 @@ public:
   virtual void text_print(FILE *fp);
   virtual int text_ask(FILE *fpin, FILE *fpout);
 #endif
+  virtual int parse_param(const char *value);
 };
 
 // Declare a filename class.  It is identical to a string, except that
