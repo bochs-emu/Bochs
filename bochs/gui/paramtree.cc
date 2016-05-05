@@ -1206,11 +1206,9 @@ void bx_list_c::remove(const char *name)
 
 void bx_list_c::set_runtime_param(int val)
 {
-  bx_listitem_t *item;
-
   runtime_param = val;
   if (runtime_param) {
-    for (item = list; item; item = item->next) {
+    for (bx_listitem_t * item = list; item; item = item->next) {
       item->param->set_runtime_param(1);
     }
   }

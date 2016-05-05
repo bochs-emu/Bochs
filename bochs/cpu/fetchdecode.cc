@@ -2178,7 +2178,8 @@ Bit16u WalkOpcodeTables(const BxOpcodeInfo_t *OpcodeInfoPtr, Bit16u &attr, Bit32
           OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[(modrm & 0x3f) + 8]);
         break;
       default:
-        BX_PANIC(("fetchdecode64: Unknown opcode group %d", group));
+//      BX_PANIC(("fetchdecode64: Unknown opcode group %d", group));
+        return BX_IA_ERROR;
     }
 
     /* get additional attributes from group table */
