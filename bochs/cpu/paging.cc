@@ -391,11 +391,13 @@ void BX_CPU_C::TLB_flushNonGlobal(void)
 
   for (unsigned n=0; n<BX_TLB_SIZE; n++) {
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[n];
-    if (!(tlbEntry->accessBits & TLB_GlobalPage)) {
-      tlbEntry->invalidate();
-    }
-    else {
-      lpf_mask |= tlbEntry->lpf_mask;
+    if (tlbEntry->valid()) {
+      if (!(tlbEntry->accessBits & TLB_GlobalPage)) {
+        tlbEntry->invalidate();
+      }
+      else {
+        lpf_mask |= tlbEntry->lpf_mask;
+      }
     }
   }
 
@@ -430,12 +432,14 @@ void BX_CPU_C::TLB_invlpg(bx_address laddr)
     // make sure INVLPG handles correctly large pages
     for (unsigned n=0; n<BX_TLB_SIZE; n++) {
       bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[n];
-      bx_address entry_lpf_mask = tlbEntry->lpf_mask;
-      if ((laddr & ~entry_lpf_mask) == (tlbEntry->lpf & ~entry_lpf_mask)) {
-        tlbEntry->invalidate();
-      }
-      else {
-        lpf_mask |= entry_lpf_mask;
+      if (tlbEntry->valid()) {
+        bx_address entry_lpf_mask = tlbEntry->lpf_mask;
+        if ((laddr & ~entry_lpf_mask) == (tlbEntry->lpf & ~entry_lpf_mask)) {
+          tlbEntry->invalidate();
+        }
+        else {
+          lpf_mask |= entry_lpf_mask;
+        }
       }
     }
 
@@ -2376,9 +2380,12 @@ bx_hostpageaddr_t BX_CPU_C::getHostMemAddr(bx_phy_address paddr, unsigned rw)
 bx_bool BX_CPU_C::check_addr_in_tlb_buffers(const Bit8u *addr, const Bit8u *end)
 {
   for (unsigned tlb_entry_num=0; tlb_entry_num < BX_TLB_SIZE; tlb_entry_num++) {
-    if (((BX_CPU_THIS_PTR TLB.entry[tlb_entry_num].hostPageAddr)>=(const bx_hostpageaddr_t)addr) &&
-        ((BX_CPU_THIS_PTR TLB.entry[tlb_entry_num].hostPageAddr)<(const bx_hostpageaddr_t)end))
-      return true;
+    bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlb_entry_num];
+    if (tlbEntry->valid()) {
+      if (((tlbEntry->hostPageAddr) >= (const bx_hostpageaddr_t)addr) &&
+          ((tlbEntry->hostPageAddr)  < (const bx_hostpageaddr_t)end))
+        return true;
+    }
   }
   return false;
 }

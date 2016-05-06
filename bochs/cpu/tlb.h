@@ -109,6 +109,8 @@ typedef struct {
   Bit32u memtype;      // keep it Bit32u for alignment
 #endif
 
+  BX_CPP_INLINE bx_bool valid() const { return lpf != BX_INVALID_TLB_ENTRY; }
+
   BX_CPP_INLINE void invalidate() {
     lpf = BX_INVALID_TLB_ENTRY;
     accessBits = 0;
