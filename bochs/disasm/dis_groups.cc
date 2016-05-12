@@ -29,6 +29,13 @@
 #endif
 */
 
+#if BX_SUPPORT_X86_64 == 0
+#define BX_64BIT_REG_RAX BX_32BIT_REG_EAX
+#define BX_64BIT_REG_RCX BX_32BIT_REG_ECX
+#define BX_64BIT_REG_RSI BX_32BIT_REG_ESI
+#define BX_64BIT_REG_RDI BX_32BIT_REG_EDI
+#endif
+
 void disassembler::Apw(const x86_insn *insn)
 {
   Bit16u imm16 = fetch_word();
