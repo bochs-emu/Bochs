@@ -27,7 +27,7 @@
 #define FLEX_SCANNER
 #define YY_FLEX_MAJOR_VERSION 2
 #define YY_FLEX_MINOR_VERSION 5
-#define YY_FLEX_SUBMINOR_VERSION 39
+#define YY_FLEX_SUBMINOR_VERSION 37
 #if YY_FLEX_SUBMINOR_VERSION > 0
 #define FLEX_BETA
 #endif
@@ -186,7 +186,6 @@ extern FILE *bxin, *bxout;
 #define EOB_ACT_LAST_MATCH 2
 
     #define YY_LESS_LINENO(n)
-    #define YY_LINENO_REWIND_TO(ptr)
     
 /* Return all but the first "n" matched characters back to the input stream. */
 #define yyless(n) \
@@ -804,7 +803,7 @@ static unsigned lex_input_size = 0;
 
 
 
-#line 808 "<stdout>"
+#line 807 "<stdout>"
 
 #define INITIAL 0
 #define EXAMINE 1
@@ -988,6 +987,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
+#line 59 "lexer.l"
+
+#line 993 "<stdout>"
+
 	if ( !(yy_init) )
 		{
 		(yy_init) = 1;
@@ -1014,11 +1017,6 @@ YY_DECL
 		bx_load_buffer_state( );
 		}
 
-	{
-#line 59 "lexer.l"
-
-#line 1021 "<stdout>"
-
 	while ( 1 )		/* loops until end-of-file is reached */
 		{
 		yy_cp = (yy_c_buf_p);
@@ -1035,7 +1033,7 @@ YY_DECL
 yy_match:
 		do
 			{
-			register YY_CHAR yy_c = yy_ec[YY_SC_TO_UI(*yy_cp)] ;
+			register YY_CHAR yy_c = yy_ec[YY_SC_TO_UI(*yy_cp)];
 			if ( yy_accept[yy_current_state] )
 				{
 				(yy_last_accepting_state) = yy_current_state;
@@ -1489,342 +1487,342 @@ YY_RULE_SETUP
 case 93:
 YY_RULE_SETUP
 #line 152 "lexer.l"
-{ bxlval.uval = BX_DBG_REG8L_AL; return(BX_TOKEN_8BL_REG);}
+{ bxlval.uval = BX_8BIT_REG_AL; return(BX_TOKEN_8BL_REG);}
 	YY_BREAK
 case 94:
 YY_RULE_SETUP
 #line 153 "lexer.l"
-{ bxlval.uval = BX_DBG_REG8L_BL; return(BX_TOKEN_8BL_REG);}
+{ bxlval.uval = BX_8BIT_REG_BL; return(BX_TOKEN_8BL_REG);}
 	YY_BREAK
 case 95:
 YY_RULE_SETUP
 #line 154 "lexer.l"
-{ bxlval.uval = BX_DBG_REG8L_CL; return(BX_TOKEN_8BL_REG);}
+{ bxlval.uval = BX_8BIT_REG_CL; return(BX_TOKEN_8BL_REG);}
 	YY_BREAK
 case 96:
 YY_RULE_SETUP
 #line 155 "lexer.l"
-{ bxlval.uval = BX_DBG_REG8L_DL; return(BX_TOKEN_8BL_REG);}
+{ bxlval.uval = BX_8BIT_REG_DL; return(BX_TOKEN_8BL_REG);}
 	YY_BREAK
 case 97:
 YY_RULE_SETUP
 #line 156 "lexer.l"
-{ LONG_MODE_8BL_REG(BX_DBG_REG8L_SIL); }
+{ LONG_MODE_8BL_REG(BX_8BIT_REG_SIL); }
 	YY_BREAK
 case 98:
 YY_RULE_SETUP
 #line 157 "lexer.l"
-{ LONG_MODE_8BL_REG(BX_DBG_REG8L_DIL); }
+{ LONG_MODE_8BL_REG(BX_8BIT_REG_DIL); }
 	YY_BREAK
 case 99:
 YY_RULE_SETUP
 #line 158 "lexer.l"
-{ LONG_MODE_8BL_REG(BX_DBG_REG8L_SPL); }
+{ LONG_MODE_8BL_REG(BX_8BIT_REG_SPL); }
 	YY_BREAK
 case 100:
 YY_RULE_SETUP
 #line 159 "lexer.l"
-{ LONG_MODE_8BL_REG(BX_DBG_REG8L_BPL); }
+{ LONG_MODE_8BL_REG(BX_8BIT_REG_BPL); }
 	YY_BREAK
 case 101:
 YY_RULE_SETUP
 #line 160 "lexer.l"
-{ LONG_MODE_8BL_REG(BX_DBG_REG8L_R8);  }
+{ LONG_MODE_8BL_REG(BX_8BIT_REG_R8);  }
 	YY_BREAK
 case 102:
 YY_RULE_SETUP
 #line 161 "lexer.l"
-{ LONG_MODE_8BL_REG(BX_DBG_REG8L_R9);  }
+{ LONG_MODE_8BL_REG(BX_8BIT_REG_R9);  }
 	YY_BREAK
 case 103:
 YY_RULE_SETUP
 #line 162 "lexer.l"
-{ LONG_MODE_8BL_REG(BX_DBG_REG8L_R10); }
+{ LONG_MODE_8BL_REG(BX_8BIT_REG_R10); }
 	YY_BREAK
 case 104:
 YY_RULE_SETUP
 #line 163 "lexer.l"
-{ LONG_MODE_8BL_REG(BX_DBG_REG8L_R11); }
+{ LONG_MODE_8BL_REG(BX_8BIT_REG_R11); }
 	YY_BREAK
 case 105:
 YY_RULE_SETUP
 #line 164 "lexer.l"
-{ LONG_MODE_8BL_REG(BX_DBG_REG8L_R12); }
+{ LONG_MODE_8BL_REG(BX_8BIT_REG_R12); }
 	YY_BREAK
 case 106:
 YY_RULE_SETUP
 #line 165 "lexer.l"
-{ LONG_MODE_8BL_REG(BX_DBG_REG8L_R13); }
+{ LONG_MODE_8BL_REG(BX_8BIT_REG_R13); }
 	YY_BREAK
 case 107:
 YY_RULE_SETUP
 #line 166 "lexer.l"
-{ LONG_MODE_8BL_REG(BX_DBG_REG8L_R14); }
+{ LONG_MODE_8BL_REG(BX_8BIT_REG_R14); }
 	YY_BREAK
 case 108:
 YY_RULE_SETUP
 #line 167 "lexer.l"
-{ LONG_MODE_8BL_REG(BX_DBG_REG8L_R15); }
+{ LONG_MODE_8BL_REG(BX_8BIT_REG_R15); }
 	YY_BREAK
 case 109:
 YY_RULE_SETUP
 #line 168 "lexer.l"
-{ bxlval.uval = BX_DBG_REG8H_AH; return(BX_TOKEN_8BH_REG);}
+{ bxlval.uval = BX_8BIT_REG_AH; return(BX_TOKEN_8BH_REG);}
 	YY_BREAK
 case 110:
 YY_RULE_SETUP
 #line 169 "lexer.l"
-{ bxlval.uval = BX_DBG_REG8H_BH; return(BX_TOKEN_8BH_REG);}
+{ bxlval.uval = BX_8BIT_REG_BH; return(BX_TOKEN_8BH_REG);}
 	YY_BREAK
 case 111:
 YY_RULE_SETUP
 #line 170 "lexer.l"
-{ bxlval.uval = BX_DBG_REG8H_CH; return(BX_TOKEN_8BH_REG);}
+{ bxlval.uval = BX_8BIT_REG_CH; return(BX_TOKEN_8BH_REG);}
 	YY_BREAK
 case 112:
 YY_RULE_SETUP
 #line 171 "lexer.l"
-{ bxlval.uval = BX_DBG_REG8H_DH; return(BX_TOKEN_8BH_REG);}
+{ bxlval.uval = BX_8BIT_REG_DH; return(BX_TOKEN_8BH_REG);}
 	YY_BREAK
 case 113:
 YY_RULE_SETUP
 #line 172 "lexer.l"
-{ bxlval.uval = BX_DBG_REG16_AX; return(BX_TOKEN_16B_REG);}
+{ bxlval.uval = BX_16BIT_REG_AX; return(BX_TOKEN_16B_REG);}
 	YY_BREAK
 case 114:
 YY_RULE_SETUP
 #line 173 "lexer.l"
-{ bxlval.uval = BX_DBG_REG16_BX; return(BX_TOKEN_16B_REG);}
+{ bxlval.uval = BX_16BIT_REG_BX; return(BX_TOKEN_16B_REG);}
 	YY_BREAK
 case 115:
 YY_RULE_SETUP
 #line 174 "lexer.l"
-{ bxlval.uval = BX_DBG_REG16_CX; return(BX_TOKEN_16B_REG);}
+{ bxlval.uval = BX_16BIT_REG_CX; return(BX_TOKEN_16B_REG);}
 	YY_BREAK
 case 116:
 YY_RULE_SETUP
 #line 175 "lexer.l"
-{ bxlval.uval = BX_DBG_REG16_DX; return(BX_TOKEN_16B_REG);}
+{ bxlval.uval = BX_16BIT_REG_DX; return(BX_TOKEN_16B_REG);}
 	YY_BREAK
 case 117:
 YY_RULE_SETUP
 #line 176 "lexer.l"
-{ bxlval.uval = BX_DBG_REG16_SI; return(BX_TOKEN_16B_REG);}
+{ bxlval.uval = BX_16BIT_REG_SI; return(BX_TOKEN_16B_REG);}
 	YY_BREAK
 case 118:
 YY_RULE_SETUP
 #line 177 "lexer.l"
-{ bxlval.uval = BX_DBG_REG16_DI; return(BX_TOKEN_16B_REG);}
+{ bxlval.uval = BX_16BIT_REG_DI; return(BX_TOKEN_16B_REG);}
 	YY_BREAK
 case 119:
 YY_RULE_SETUP
 #line 178 "lexer.l"
-{ bxlval.uval = BX_DBG_REG16_BP; return(BX_TOKEN_16B_REG);}
+{ bxlval.uval = BX_16BIT_REG_BP; return(BX_TOKEN_16B_REG);}
 	YY_BREAK
 case 120:
 YY_RULE_SETUP
 #line 179 "lexer.l"
-{ bxlval.uval = BX_DBG_REG16_SP; return(BX_TOKEN_16B_REG);}
+{ bxlval.uval = BX_16BIT_REG_SP; return(BX_TOKEN_16B_REG);}
 	YY_BREAK
 case 121:
 YY_RULE_SETUP
 #line 180 "lexer.l"
-{ LONG_MODE_16B_REG(BX_DBG_REG16_R8);  }
+{ LONG_MODE_16B_REG(BX_16BIT_REG_R8);  }
 	YY_BREAK
 case 122:
 YY_RULE_SETUP
 #line 181 "lexer.l"
-{ LONG_MODE_16B_REG(BX_DBG_REG16_R9);  }
+{ LONG_MODE_16B_REG(BX_16BIT_REG_R9);  }
 	YY_BREAK
 case 123:
 YY_RULE_SETUP
 #line 182 "lexer.l"
-{ LONG_MODE_16B_REG(BX_DBG_REG16_R10); }
+{ LONG_MODE_16B_REG(BX_16BIT_REG_R10); }
 	YY_BREAK
 case 124:
 YY_RULE_SETUP
 #line 183 "lexer.l"
-{ LONG_MODE_16B_REG(BX_DBG_REG16_R11); }
+{ LONG_MODE_16B_REG(BX_16BIT_REG_R11); }
 	YY_BREAK
 case 125:
 YY_RULE_SETUP
 #line 184 "lexer.l"
-{ LONG_MODE_16B_REG(BX_DBG_REG16_R12); }
+{ LONG_MODE_16B_REG(BX_16BIT_REG_R12); }
 	YY_BREAK
 case 126:
 YY_RULE_SETUP
 #line 185 "lexer.l"
-{ LONG_MODE_16B_REG(BX_DBG_REG16_R13); }
+{ LONG_MODE_16B_REG(BX_16BIT_REG_R13); }
 	YY_BREAK
 case 127:
 YY_RULE_SETUP
 #line 186 "lexer.l"
-{ LONG_MODE_16B_REG(BX_DBG_REG16_R14); }
+{ LONG_MODE_16B_REG(BX_16BIT_REG_R14); }
 	YY_BREAK
 case 128:
 YY_RULE_SETUP
 #line 187 "lexer.l"
-{ LONG_MODE_16B_REG(BX_DBG_REG16_R15); }
+{ LONG_MODE_16B_REG(BX_16BIT_REG_R15); }
 	YY_BREAK
 case 129:
 YY_RULE_SETUP
 #line 188 "lexer.l"
-{ bxlval.uval = BX_DBG_REG32_EAX; return(BX_TOKEN_32B_REG);}
+{ bxlval.uval = BX_32BIT_REG_EAX; return(BX_TOKEN_32B_REG);}
 	YY_BREAK
 case 130:
 YY_RULE_SETUP
 #line 189 "lexer.l"
-{ bxlval.uval = BX_DBG_REG32_EBX; return(BX_TOKEN_32B_REG);}
+{ bxlval.uval = BX_32BIT_REG_EBX; return(BX_TOKEN_32B_REG);}
 	YY_BREAK
 case 131:
 YY_RULE_SETUP
 #line 190 "lexer.l"
-{ bxlval.uval = BX_DBG_REG32_ECX; return(BX_TOKEN_32B_REG);}
+{ bxlval.uval = BX_32BIT_REG_ECX; return(BX_TOKEN_32B_REG);}
 	YY_BREAK
 case 132:
 YY_RULE_SETUP
 #line 191 "lexer.l"
-{ bxlval.uval = BX_DBG_REG32_EDX; return(BX_TOKEN_32B_REG);}
+{ bxlval.uval = BX_32BIT_REG_EDX; return(BX_TOKEN_32B_REG);}
 	YY_BREAK
 case 133:
 YY_RULE_SETUP
 #line 192 "lexer.l"
-{ bxlval.uval = BX_DBG_REG32_ESI; return(BX_TOKEN_32B_REG);}
+{ bxlval.uval = BX_32BIT_REG_ESI; return(BX_TOKEN_32B_REG);}
 	YY_BREAK
 case 134:
 YY_RULE_SETUP
 #line 193 "lexer.l"
-{ bxlval.uval = BX_DBG_REG32_EDI; return(BX_TOKEN_32B_REG);}
+{ bxlval.uval = BX_32BIT_REG_EDI; return(BX_TOKEN_32B_REG);}
 	YY_BREAK
 case 135:
 YY_RULE_SETUP
 #line 194 "lexer.l"
-{ bxlval.uval = BX_DBG_REG32_EBP; return(BX_TOKEN_32B_REG);}
+{ bxlval.uval = BX_32BIT_REG_EBP; return(BX_TOKEN_32B_REG);}
 	YY_BREAK
 case 136:
 YY_RULE_SETUP
 #line 195 "lexer.l"
-{ bxlval.uval = BX_DBG_REG32_ESP; return(BX_TOKEN_32B_REG);}
+{ bxlval.uval = BX_32BIT_REG_ESP; return(BX_TOKEN_32B_REG);}
 	YY_BREAK
 case 137:
 YY_RULE_SETUP
 #line 196 "lexer.l"
-{ LONG_MODE_32B_REG(BX_DBG_REG32_R8);  }
+{ LONG_MODE_32B_REG(BX_32BIT_REG_R8);  }
 	YY_BREAK
 case 138:
 YY_RULE_SETUP
 #line 197 "lexer.l"
-{ LONG_MODE_32B_REG(BX_DBG_REG32_R9);  }
+{ LONG_MODE_32B_REG(BX_32BIT_REG_R9);  }
 	YY_BREAK
 case 139:
 YY_RULE_SETUP
 #line 198 "lexer.l"
-{ LONG_MODE_32B_REG(BX_DBG_REG32_R10); }
+{ LONG_MODE_32B_REG(BX_32BIT_REG_R10); }
 	YY_BREAK
 case 140:
 YY_RULE_SETUP
 #line 199 "lexer.l"
-{ LONG_MODE_32B_REG(BX_DBG_REG32_R11); }
+{ LONG_MODE_32B_REG(BX_32BIT_REG_R11); }
 	YY_BREAK
 case 141:
 YY_RULE_SETUP
 #line 200 "lexer.l"
-{ LONG_MODE_32B_REG(BX_DBG_REG32_R12); }
+{ LONG_MODE_32B_REG(BX_32BIT_REG_R12); }
 	YY_BREAK
 case 142:
 YY_RULE_SETUP
 #line 201 "lexer.l"
-{ LONG_MODE_32B_REG(BX_DBG_REG32_R13); }
+{ LONG_MODE_32B_REG(BX_32BIT_REG_R13); }
 	YY_BREAK
 case 143:
 YY_RULE_SETUP
 #line 202 "lexer.l"
-{ LONG_MODE_32B_REG(BX_DBG_REG32_R14); }
+{ LONG_MODE_32B_REG(BX_32BIT_REG_R14); }
 	YY_BREAK
 case 144:
 YY_RULE_SETUP
 #line 203 "lexer.l"
-{ LONG_MODE_32B_REG(BX_DBG_REG32_R15); }
+{ LONG_MODE_32B_REG(BX_32BIT_REG_R15); }
 	YY_BREAK
 case 145:
 YY_RULE_SETUP
 #line 204 "lexer.l"
-{ LONG_MODE_64B_REG(BX_DBG_REG64_RAX); }
+{ LONG_MODE_64B_REG(BX_64BIT_REG_RAX); }
 	YY_BREAK
 case 146:
 YY_RULE_SETUP
 #line 205 "lexer.l"
-{ LONG_MODE_64B_REG(BX_DBG_REG64_RBX); }
+{ LONG_MODE_64B_REG(BX_64BIT_REG_RBX); }
 	YY_BREAK
 case 147:
 YY_RULE_SETUP
 #line 206 "lexer.l"
-{ LONG_MODE_64B_REG(BX_DBG_REG64_RCX); }
+{ LONG_MODE_64B_REG(BX_64BIT_REG_RCX); }
 	YY_BREAK
 case 148:
 YY_RULE_SETUP
 #line 207 "lexer.l"
-{ LONG_MODE_64B_REG(BX_DBG_REG64_RDX); }
+{ LONG_MODE_64B_REG(BX_64BIT_REG_RDX); }
 	YY_BREAK
 case 149:
 YY_RULE_SETUP
 #line 208 "lexer.l"
-{ LONG_MODE_64B_REG(BX_DBG_REG64_RSI); }
+{ LONG_MODE_64B_REG(BX_64BIT_REG_RSI); }
 	YY_BREAK
 case 150:
 YY_RULE_SETUP
 #line 209 "lexer.l"
-{ LONG_MODE_64B_REG(BX_DBG_REG64_RDI); }
+{ LONG_MODE_64B_REG(BX_64BIT_REG_RDI); }
 	YY_BREAK
 case 151:
 YY_RULE_SETUP
 #line 210 "lexer.l"
-{ LONG_MODE_64B_REG(BX_DBG_REG64_RSP); }
+{ LONG_MODE_64B_REG(BX_64BIT_REG_RSP); }
 	YY_BREAK
 case 152:
 YY_RULE_SETUP
 #line 211 "lexer.l"
-{ LONG_MODE_64B_REG(BX_DBG_REG64_RBP); }
+{ LONG_MODE_64B_REG(BX_64BIT_REG_RBP); }
 	YY_BREAK
 case 153:
 YY_RULE_SETUP
 #line 212 "lexer.l"
-{ LONG_MODE_64B_REG(BX_DBG_REG64_R8);  }
+{ LONG_MODE_64B_REG(BX_64BIT_REG_R8);  }
 	YY_BREAK
 case 154:
 YY_RULE_SETUP
 #line 213 "lexer.l"
-{ LONG_MODE_64B_REG(BX_DBG_REG64_R9);  }
+{ LONG_MODE_64B_REG(BX_64BIT_REG_R9);  }
 	YY_BREAK
 case 155:
 YY_RULE_SETUP
 #line 214 "lexer.l"
-{ LONG_MODE_64B_REG(BX_DBG_REG64_R10); }
+{ LONG_MODE_64B_REG(BX_64BIT_REG_R10); }
 	YY_BREAK
 case 156:
 YY_RULE_SETUP
 #line 215 "lexer.l"
-{ LONG_MODE_64B_REG(BX_DBG_REG64_R11); }
+{ LONG_MODE_64B_REG(BX_64BIT_REG_R11); }
 	YY_BREAK
 case 157:
 YY_RULE_SETUP
 #line 216 "lexer.l"
-{ LONG_MODE_64B_REG(BX_DBG_REG64_R12); }
+{ LONG_MODE_64B_REG(BX_64BIT_REG_R12); }
 	YY_BREAK
 case 158:
 YY_RULE_SETUP
 #line 217 "lexer.l"
-{ LONG_MODE_64B_REG(BX_DBG_REG64_R13); }
+{ LONG_MODE_64B_REG(BX_64BIT_REG_R13); }
 	YY_BREAK
 case 159:
 YY_RULE_SETUP
 #line 218 "lexer.l"
-{ LONG_MODE_64B_REG(BX_DBG_REG64_R14); }
+{ LONG_MODE_64B_REG(BX_64BIT_REG_R14); }
 	YY_BREAK
 case 160:
 YY_RULE_SETUP
 #line 219 "lexer.l"
-{ LONG_MODE_64B_REG(BX_DBG_REG64_R15); }
+{ LONG_MODE_64B_REG(BX_64BIT_REG_R15); }
 	YY_BREAK
 case 161:
 YY_RULE_SETUP
@@ -1844,32 +1842,32 @@ YY_RULE_SETUP
 case 164:
 YY_RULE_SETUP
 #line 223 "lexer.l"
-{ bxlval.uval = BX_DBG_SREG_CS; return(BX_TOKEN_CS); }
+{ bxlval.uval = BX_SEG_REG_CS; return(BX_TOKEN_CS); }
 	YY_BREAK
 case 165:
 YY_RULE_SETUP
 #line 224 "lexer.l"
-{ bxlval.uval = BX_DBG_SREG_ES; return(BX_TOKEN_ES); }
+{ bxlval.uval = BX_SEG_REG_ES; return(BX_TOKEN_ES); }
 	YY_BREAK
 case 166:
 YY_RULE_SETUP
 #line 225 "lexer.l"
-{ bxlval.uval = BX_DBG_SREG_SS; return(BX_TOKEN_SS); }
+{ bxlval.uval = BX_SEG_REG_SS; return(BX_TOKEN_SS); }
 	YY_BREAK
 case 167:
 YY_RULE_SETUP
 #line 226 "lexer.l"
-{ bxlval.uval = BX_DBG_SREG_DS; return(BX_TOKEN_DS); }
+{ bxlval.uval = BX_SEG_REG_DS; return(BX_TOKEN_DS); }
 	YY_BREAK
 case 168:
 YY_RULE_SETUP
 #line 227 "lexer.l"
-{ bxlval.uval = BX_DBG_SREG_FS; return(BX_TOKEN_FS); }
+{ bxlval.uval = BX_SEG_REG_FS; return(BX_TOKEN_FS); }
 	YY_BREAK
 case 169:
 YY_RULE_SETUP
 #line 228 "lexer.l"
-{ bxlval.uval = BX_DBG_SREG_GS; return(BX_TOKEN_GS); }
+{ bxlval.uval = BX_SEG_REG_GS; return(BX_TOKEN_GS); }
 	YY_BREAK
 case 170:
 YY_RULE_SETUP
@@ -2041,7 +2039,7 @@ YY_RULE_SETUP
 #line 263 "lexer.l"
 ECHO;
 	YY_BREAK
-#line 2045 "<stdout>"
+#line 2043 "<stdout>"
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(EXAMINE):
 case YY_STATE_EOF(DISASM):
@@ -2174,7 +2172,6 @@ case YY_STATE_EOF(DISASM):
 			"fatal flex scanner internal error--no action found" );
 	} /* end of action switch */
 		} /* end of scanning one token */
-	} /* end of user's declarations */
 } /* end of bxlex */
 
 /* yy_get_next_buffer - try to read in a new buffer
@@ -2808,7 +2805,7 @@ YY_BUFFER_STATE bx_scan_bytes  (yyconst char * yybytes, yy_size_t  _yybytes_len 
 	YY_BUFFER_STATE b;
 	char *buf;
 	yy_size_t n;
-	yy_size_t i;
+	int i;
     
 	/* Get memory for full buffer, including space for trailing EOB's. */
 	n = _yybytes_len + 2;
