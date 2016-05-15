@@ -173,7 +173,7 @@ public:
 BOCHSAPI extern BX_MEM_C bx_mem;
 
 // must be power of two
-#define BX_MEM_BLOCK_LEN (1024*1024) /* 1M blocks */
+#define BX_MEM_BLOCK_LEN (128*1024) /* 128K blocks */
 
 /*
 BX_CPP_INLINE Bit8u* BX_MEM_C::get_vector(bx_phy_address addr)
