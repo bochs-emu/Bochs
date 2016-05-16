@@ -52,6 +52,8 @@
 
 bx_usb_ehci_c* theUSB_EHCI = NULL;
 
+#define USB_RET_PROCERR   (-99)
+
 #define IO_SPACE_SIZE   256
 
 #define OPS_REGS_OFFSET 0x20
@@ -102,6 +104,17 @@ typedef enum {
 #define NLPTR_TYPE_QH            1     // queue head
 #define NLPTR_TYPE_STITD         2     // split xaction, isoc xfer descriptor
 #define NLPTR_TYPE_FSTN          3     // frame span traversal node
+
+/* nifty macros from Arnon's EHCI version  */
+#define get_field(data, field) \
+    (((data) & field##_MASK) >> field##_SH)
+
+#define set_field(data, newval, field) do { \
+    Bit32u val = *data; \
+    val &= ~ field##_MASK; \
+    val |= ((newval) << field##_SH) & field##_MASK; \
+    *data = val; \
+    } while(0)
 
 // builtin configuration handling functions
 
@@ -941,25 +954,56 @@ void bx_usb_ehci_c::set_fetch_addr(int async, Bit32u addr)
 
 int bx_usb_ehci_c::get_fetch_addr(int async)
 {
-  // TODO
-  return 0;
+  return async ? BX_EHCI_THIS hub.a_fetch_addr : BX_EHCI_THIS hub.p_fetch_addr;
 }
 
 EHCIPacket *bx_usb_ehci_c::alloc_packet(EHCIQueue *q)
 {
-  // TODO
-  return NULL;
+  EHCIPacket *p = new EHCIPacket;
+  p->queue = q;
+  // TODO: usb_packet_init(&p->packet);
+  QTAILQ_INSERT_TAIL(&q->packets, p, next);
+  return p;
 }
 
 void bx_usb_ehci_c::free_packet(EHCIPacket *p)
 {
-  // TODO
+  if (p->async == EHCI_ASYNC_FINISHED) {
+    int state = BX_EHCI_THIS get_state(p->queue->async);
+    /* This is a normal, but rare condition (cancel racing completion) */
+    BX_ERROR(("EHCI: Warning packet completed but not processed"));
+    BX_EHCI_THIS state_executing(p->queue);
+    BX_EHCI_THIS state_writeback(p->queue);
+    BX_EHCI_THIS set_state(p->queue->async, state);
+    /* state_writeback recurses into us with async == EHCI_ASYNC_NONE!! */
+    return;
+  }
+  if (p->async == EHCI_ASYNC_INITIALIZED) {
+    // TODO: usb_packet_unmap(&p->packet, &p->sgl);
+    // TODO: qemu_sglist_destroy(&p->sgl);
+  }
+  if (p->async == EHCI_ASYNC_INFLIGHT) {
+    usb_cancel_packet(&p->packet);
+    // TODO: usb_packet_unmap(&p->packet, &p->sgl);
+    // TODO: qemu_sglist_destroy(&p->sgl);
+  }
+  QTAILQ_REMOVE(&p->queue->packets, p, next);
+  // TODO: usb_packet_cleanup(&p->packet);
+  delete p;
 }
 
 EHCIQueue *bx_usb_ehci_c::alloc_queue(Bit32u addr, int async)
 {
-  // TODO
-  return NULL;
+  EHCIQueueHead *head = async ? &BX_EHCI_THIS hub.aqueues : &BX_EHCI_THIS hub.pqueues;
+  EHCIQueue *q;
+
+  q = new EHCIQueue;
+  q->ehci = &BX_EHCI_THIS hub;
+  q->qhaddr = addr;
+  q->async = async;
+  QTAILQ_INIT(&q->packets);
+  QTAILQ_INSERT_HEAD(head, q, next);
+  return q;
 }
 
 int bx_usb_ehci_c::cancel_queue(EHCIQueue *q)
@@ -981,8 +1025,10 @@ int bx_usb_ehci_c::cancel_queue(EHCIQueue *q)
 
 int bx_usb_ehci_c::reset_queue(EHCIQueue *q)
 {
-  // TODO
-  return 0;
+  int packets = BX_EHCI_THIS cancel_queue(q);
+  q->dev = NULL;
+  q->qtdaddr = 0;
+  return packets;
 }
 
 void bx_usb_ehci_c::free_queue(EHCIQueue *q, const char *warn)
@@ -1000,7 +1046,14 @@ void bx_usb_ehci_c::free_queue(EHCIQueue *q, const char *warn)
 
 EHCIQueue *bx_usb_ehci_c::find_queue_by_qh(Bit32u addr, int async)
 {
-  // TODO
+  EHCIQueueHead *head = async ? &BX_EHCI_THIS hub.aqueues : &BX_EHCI_THIS hub.pqueues;
+  EHCIQueue *q;
+
+  QTAILQ_FOREACH(q, head, next) {
+    if (addr == q->qhaddr) {
+      return q;
+    }
+  }
   return NULL;
 }
 
@@ -1026,45 +1079,160 @@ void bx_usb_ehci_c::queues_rip_unused(int async)
 
 void bx_usb_ehci_c::queues_rip_unseen(int async)
 {
-  // TODO
+  EHCIQueueHead *head = async ? &BX_EHCI_THIS hub.aqueues : &BX_EHCI_THIS hub.pqueues;
+  EHCIQueue *q, *tmp;
+
+  QTAILQ_FOREACH_SAFE(q, head, next, tmp) {
+    if (!q->seen) {
+      BX_EHCI_THIS free_queue(q, NULL);
+    }
+  }
 }
 
 void bx_usb_ehci_c::queues_rip_device(usb_device_c *dev, int async)
 {
-  // TODO
+  EHCIQueueHead *head = async ? &BX_EHCI_THIS hub.aqueues : &BX_EHCI_THIS hub.pqueues;
+  EHCIQueue *q, *tmp;
+
+  QTAILQ_FOREACH_SAFE(q, head, next, tmp) {
+    if (q->dev != dev) {
+      continue;
+    }
+    BX_EHCI_THIS free_queue(q, NULL);
+  }
 }
 
 void bx_usb_ehci_c::queues_rip_all(int async)
 {
-  // TODO
+  EHCIQueueHead *head = async ? &BX_EHCI_THIS hub.aqueues : &BX_EHCI_THIS hub.pqueues;
+  const char *warn = async ? "guest stopped busy async schedule" : NULL;
+  EHCIQueue *q, *tmp;
+
+  QTAILQ_FOREACH_SAFE(q, head, next, tmp) {
+    BX_EHCI_THIS free_queue(q, warn);
+  }
 }
 
 usb_device_c *bx_usb_ehci_c::find_device(Bit8u addr)
 {
-  // TODO
+  usb_device_c *dev = NULL;
+
+  for (int i = 0; i < USB_EHCI_PORTS; i++) {
+    if (!BX_EHCI_THIS hub.usb_port[i].portsc.ped) {
+      BX_DEBUG(("Port %d not enabled", i));
+      continue;
+    }
+    // TODO: dev = usb_find_device(i, addr);
+    if (dev != NULL) {
+      return dev;
+    }
+  }
   return NULL;
 }
 
 void bx_usb_ehci_c::flush_qh(EHCIQueue *q)
 {
-  // TODO
+    Bit32u *qh = (Bit32u *) &q->qh;
+    Bit32u dwords = sizeof(EHCIqh) >> 2;
+    Bit32u addr = NLPTR_GET(q->qhaddr);
+
+    // TODO: put_dwords(q->ehci, addr + 3 * sizeof(uint32_t), qh + 3, dwords - 3);
 }
 
 int bx_usb_ehci_c::qh_do_overlay(EHCIQueue *q)
 {
-  // TODO
+  EHCIPacket *p = QTAILQ_FIRST(&q->packets);
+  int i;
+  int dtoggle;
+  int ping;
+  int eps;
+  int reload;
+
+  assert(p != NULL);
+  assert(p->qtdaddr == q->qtdaddr);
+
+  dtoggle = q->qh.token & QTD_TOKEN_DTOGGLE;
+  ping    = q->qh.token & QTD_TOKEN_PING;
+
+  q->qh.current_qtd = p->qtdaddr;
+  q->qh.next_qtd    = p->qtd.next;
+  q->qh.altnext_qtd = p->qtd.altnext;
+  q->qh.token       = p->qtd.token;
+
+
+  eps = get_field(q->qh.epchar, QH_EPCHAR_EPS);
+  if (eps == EHCI_QH_EPS_HIGH) {
+    q->qh.token &= ~QTD_TOKEN_PING;
+    q->qh.token |= ping;
+  }
+
+  reload = get_field(q->qh.epchar, QH_EPCHAR_RL);
+  set_field(&q->qh.altnext_qtd, reload, QH_ALTNEXT_NAKCNT);
+
+  for (i = 0; i < 5; i++) {
+    q->qh.bufptr[i] = p->qtd.bufptr[i];
+  }
+
+  if (!(q->qh.epchar & QH_EPCHAR_DTC)) {
+    q->qh.token &= ~QTD_TOKEN_DTOGGLE;
+    q->qh.token |= dtoggle;
+  }
+
+  q->qh.bufptr[1] &= ~BUFPTR_CPROGMASK_MASK;
+  q->qh.bufptr[2] &= ~BUFPTR_FRAMETAG_MASK;
+
+  BX_EHCI_THIS flush_qh(q);
+
   return 0;
 }
 
 int bx_usb_ehci_c::init_transfer(EHCIPacket *p)
 {
-  // TODO
+  Bit32u cpage, offset, bytes, plen;
+  Bit64u page;
+
+  cpage  = get_field(p->qtd.token, QTD_TOKEN_CPAGE);
+  bytes  = get_field(p->qtd.token, QTD_TOKEN_TBYTES);
+  offset = p->qtd.bufptr[0] & ~QTD_BUFPTR_MASK;
+  // TODO: pci_dma_sglist_init(&p->sgl, &p->queue->ehci->dev, 5);
+
+  while (bytes > 0) {
+    if (cpage > 4) {
+      BX_ERROR(("cpage out of range (%d)", cpage));
+      return USB_RET_PROCERR;
+    }
+
+    page  = p->qtd.bufptr[cpage] & QTD_BUFPTR_MASK;
+    page += offset;
+    plen  = bytes;
+    if (plen > 4096 - offset) {
+      plen = 4096 - offset;
+      offset = 0;
+      cpage++;
+    }
+
+    // TODO: qemu_sglist_add(&p->sgl, page, plen);
+    bytes -= plen;
+  }
   return 0;
 }
 
 void bx_usb_ehci_c::finish_transfer(EHCIQueue *q, int status)
 {
-  // TODO
+  Bit32u cpage, offset;
+
+  if (status > 0) {
+    cpage  = get_field(q->qh.token, QTD_TOKEN_CPAGE);
+    offset = q->qh.bufptr[0] & ~QTD_BUFPTR_MASK;
+
+    offset += status;
+    cpage  += offset >> QTD_BUFPTR_SH;
+    offset &= ~QTD_BUFPTR_MASK;
+
+    set_field(&q->qh.token, cpage, QTD_TOKEN_CPAGE);
+    q->qh.bufptr[0] &= QTD_BUFPTR_MASK;
+    q->qh.bufptr[0] |= offset;
+  }
 }
 
 void bx_usb_ehci_c::async_complete_packet(USBPacket *packet)
