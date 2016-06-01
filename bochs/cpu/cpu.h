@@ -4751,6 +4751,10 @@ public: // for now...
   BX_SMF bx_bool relocate_apic(Bit64u val_64);
 #endif
 
+  BX_SMF void load_segw(bxInstruction_c *i, unsigned seg) BX_CPP_AttrRegparmN(2);
+  BX_SMF void load_segd(bxInstruction_c *i, unsigned seg) BX_CPP_AttrRegparmN(2);
+  BX_SMF void load_segq(bxInstruction_c *i, unsigned seg) BX_CPP_AttrRegparmN(2);
+
   BX_SMF void jmp_far16(bxInstruction_c *i, Bit16u cs_raw, Bit16u disp16);
   BX_SMF void jmp_far32(bxInstruction_c *i, Bit16u cs_raw, Bit32u disp32);
   BX_SMF void call_far16(bxInstruction_c *i, Bit16u cs_raw, Bit16u disp16);
