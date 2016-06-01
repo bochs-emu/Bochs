@@ -608,7 +608,7 @@ void bx_hard_drive_c::register_state(void)
         new bx_shadow_num_c(drive, "current_command", &BX_CONTROLLER(i, j).current_command, BASE_HEX);
         new bx_shadow_num_c(drive, "multiple_sectors", &BX_CONTROLLER(i, j).multiple_sectors, BASE_HEX);
         new bx_shadow_bool_c(drive, "lba_mode", &BX_CONTROLLER(i, j).lba_mode);
-        new bx_shadow_num_c(drive, "packet_dma", &BX_CONTROLLER(i, j).packet_dma, BASE_HEX);
+        new bx_shadow_bool_c(drive, "packet_dma", &BX_CONTROLLER(i, j).packet_dma);
         new bx_shadow_bool_c(drive, "control_reset", &BX_CONTROLLER(i, j).control.reset);
         new bx_shadow_bool_c(drive, "control_disable_irq", &BX_CONTROLLER(i, j).control.disable_irq);
         new bx_shadow_num_c(drive, "reset_in_progress", &BX_CONTROLLER(i, j).reset_in_progress, BASE_HEX);

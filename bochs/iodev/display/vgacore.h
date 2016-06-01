@@ -168,7 +168,7 @@ protected:
       Bit8u   raster_op;
       Bit8u   read_map_select;
       Bit8u   write_mode;
-      bx_bool read_mode;
+      Bit32u  read_mode;
       bx_bool odd_even;
       bx_bool chain_odd_even;
       Bit8u   shift_reg;

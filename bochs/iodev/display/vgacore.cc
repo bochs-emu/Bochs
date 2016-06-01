@@ -361,7 +361,7 @@ void bx_vgacore_c::register_state(bx_list_c *parent)
   new bx_shadow_num_c(list, "last_bpp", &BX_VGA_THIS s.last_bpp);
   new bx_shadow_num_c(list, "last_fw", &BX_VGA_THIS s.last_fw);
   new bx_shadow_num_c(list, "last_fh", &BX_VGA_THIS s.last_fh);
-  new bx_shadow_num_c(list, "vga_override", &BX_VGA_THIS s.vga_override);
+  new bx_shadow_bool_c(list, "vga_override", &BX_VGA_THIS s.vga_override);
   new bx_shadow_data_c(list, "memory", BX_VGA_THIS s.memory, BX_VGA_THIS s.memsize);
 }
 
@@ -1807,7 +1807,6 @@ Bit8u bx_vgacore_c::mem_read(bx_phy_address addr)
       BX_VGA_THIS s.graphics_ctrl.latch[2] = plane2[offset];
       BX_VGA_THIS s.graphics_ctrl.latch[3] = plane3[offset];
       return(BX_VGA_THIS s.graphics_ctrl.latch[BX_VGA_THIS s.graphics_ctrl.read_map_select]);
-      break;
 
     case 1: /* read mode 1 */
       {
@@ -1835,7 +1834,6 @@ Bit8u bx_vgacore_c::mem_read(bx_phy_address addr)
 
       return retval;
       }
-      break;
     default:
       return 0;
   }
@@ -2357,8 +2355,7 @@ void bx_vgacore_c::debug_dump(void)
 }
 #endif
 
-void bx_vgacore_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
-                      unsigned height)
+void bx_vgacore_c::redraw_area(unsigned x0, unsigned y0, unsigned width, unsigned height)
 {
   unsigned xti, yti, xt0, xt1, yt0, yt1, xmax, ymax;
 
