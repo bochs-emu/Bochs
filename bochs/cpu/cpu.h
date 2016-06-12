@@ -24,7 +24,14 @@
 
 #include <setjmp.h>
 
-#include "decoder.h"
+#include "decoder/decoder.h"
+
+#define BX_16BIT_REG_IP  (BX_GENERAL_REGISTERS)
+#define BX_32BIT_REG_EIP (BX_GENERAL_REGISTERS)
+#define BX_64BIT_REG_RIP (BX_GENERAL_REGISTERS)
+
+#define BX_TMP_REGISTER  (BX_GENERAL_REGISTERS+1)
+#define BX_NIL_REGISTER  (BX_GENERAL_REGISTERS+2)
 
 #if defined(NEED_CPU_REG_SHORTCUTS)
 
@@ -217,7 +224,7 @@
 // <TAG-INSTRUMENTATION_COMMON-BEGIN>
 
 // possible types passed to BX_INSTR_TLB_CNTRL()
-enum {
+enum BX_Instr_TLBControl {
   BX_INSTR_MOV_CR0 = 10,
   BX_INSTR_MOV_CR3 = 11,
   BX_INSTR_MOV_CR4 = 12,
@@ -230,13 +237,13 @@ enum {
 };
 
 // possible types passed to BX_INSTR_CACHE_CNTRL()
-enum {
+enum BX_Instr_CacheControl {
   BX_INSTR_INVD = 10,
   BX_INSTR_WBINVD = 11
 };
 
 // possible types passed to BX_INSTR_FAR_BRANCH() and BX_INSTR_UCNEAR_BRANCH()
-enum {
+enum BX_Instr_Branch {
   BX_INSTR_IS_JMP = 10,
   BX_INSTR_IS_JMP_INDIRECT = 11,
   BX_INSTR_IS_CALL = 12,
@@ -251,7 +258,7 @@ enum {
 };
 
 // possible types passed to BX_INSTR_PREFETCH_HINT()
-enum {
+enum BX_Instr_PrefetchHINT {
   BX_INSTR_PREFETCH_NTA = 0,
   BX_INSTR_PREFETCH_T0  = 1,
   BX_INSTR_PREFETCH_T1  = 2,
@@ -293,7 +300,7 @@ struct BxExceptionInfo {
   bx_bool push_error;
 };
 
-enum {
+enum BX_Exception {
   BX_DE_EXCEPTION =  0, // Divide Error (fault)
   BX_DB_EXCEPTION =  1, // Debug (fault/trap)
   BX_BP_EXCEPTION =  3, // Breakpoint (trap)
@@ -464,6 +471,19 @@ const Bit32u CACHE_LINE_SIZE = 64;
 
 class BX_CPU_C;
 class BX_MEM_C;
+class bxInstruction_c;
+
+typedef void BX_INSF_TYPE;
+
+// <TAG-TYPE-EXECUTEPTR-START>
+#if BX_USE_CPU_SMF
+typedef BX_INSF_TYPE (BX_CPP_AttrRegparmN(1) *BxExecutePtr_tR)(bxInstruction_c *);
+typedef void (BX_CPP_AttrRegparmN(1) *BxRepIterationPtr_tR)(bxInstruction_c *);
+#else
+typedef BX_INSF_TYPE (BX_CPU_C::*BxExecutePtr_tR)(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+typedef void (BX_CPU_C::*BxRepIterationPtr_tR)(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#endif
+// <TAG-TYPE-EXECUTEPTR-END>
 
 #if BX_USE_CPU_SMF == 0
 // normal member functions.  This can ONLY be used within BX_CPU_C classes.
@@ -736,7 +756,7 @@ typedef struct
 
 #include "crregs.h"
 #include "descriptor.h"
-#include "instr.h"
+#include "decoder/instr.h"
 #include "lazy_flags.h"
 #include "tlb.h"
 #include "icache.h"
@@ -4394,12 +4414,7 @@ public: // for now...
   BX_SMF bx_bool handleWaitForEvent(void);
   BX_SMF void InterruptAcknowledge(void);
 
-  BX_SMF int fetchDecode32(const Bit8u *fetchPtr, Bit32u fetchModeMask, bxInstruction_c *i, unsigned remainingInPage) BX_CPP_AttrRegparmN(3);
-#if BX_SUPPORT_X86_64
-  BX_SMF int fetchDecode64(const Bit8u *fetchPtr, Bit32u fetchModeMask, bxInstruction_c *i, unsigned remainingInPage) BX_CPP_AttrRegparmN(3);
-#endif
   BX_SMF void boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bxInstruction_c *);
-  BX_SMF char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr, bxInstruction_c *i, bx_address cs_base = 0, bx_address rip = 0);
 
   BX_SMF bxICacheEntry_c *serveICacheMiss(Bit32u eipBiased, bx_phy_address pAddr);
   BX_SMF bxICacheEntry_c* getICacheEntry(void);
@@ -5665,6 +5680,65 @@ enum {
   BX_INVPCID_ALL_CONTEXT_INVALIDATION,
   BX_INVPCID_ALL_CONTEXT_NON_GLOBAL_INVALIDATION
 };
+#endif
+
+class bxInstruction_c;
+
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+
+#define BX_SYNC_TIME_IF_SINGLE_PROCESSOR(allowed_delta) {                     \
+  if (BX_SMP_PROCESSORS == 1) {                                               \
+    Bit32u delta = (Bit32u)(BX_CPU_THIS_PTR icount - BX_CPU_THIS_PTR icount_last_sync); \
+    if (delta >= allowed_delta) {                                             \
+      BX_CPU_THIS_PTR sync_icount();                                          \
+      BX_TICKN(delta);                                                        \
+    }                                                                         \
+  }                                                                           \
+}
+
+#define BX_COMMIT_INSTRUCTION(i) {                     \
+  BX_CPU_THIS_PTR prev_rip = RIP; /* commit new RIP */ \
+  BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, (i));            \
+  BX_CPU_THIS_PTR icount++;                            \
+}
+
+#define BX_EXECUTE_INSTRUCTION(i) {                    \
+  BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, (i));           \
+  RIP += (i)->ilen();                                  \
+  return BX_CPU_CALL_METHOD(i->execute1, (i));         \
+}
+
+#define BX_NEXT_TRACE(i) {                             \
+  BX_COMMIT_INSTRUCTION(i);                            \
+  return;                                              \
+}
+
+#if BX_ENABLE_TRACE_LINKING == 0
+#define linkTrace(i)
+#endif
+
+#define BX_LINK_TRACE(i) {                             \
+  BX_COMMIT_INSTRUCTION(i);                            \
+  linkTrace(i);                                        \
+  return;                                              \
+}
+
+#define BX_NEXT_INSTR(i) {                             \
+  BX_COMMIT_INSTRUCTION(i);                            \
+  if (BX_CPU_THIS_PTR async_event) return;             \
+  ++i;                                                 \
+  BX_EXECUTE_INSTRUCTION(i);                           \
+}
+
+#else // BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+
+#define BX_NEXT_TRACE(i) { return; }
+#define BX_NEXT_INSTR(i) { return; }
+#define BX_LINK_TRACE(i) { return; }
+
+#define BX_SYNC_TIME_IF_SINGLE_PROCESSOR(allowed_delta) \
+  if (BX_SMP_PROCESSORS == 1) BX_TICK1()
+
 #endif
 
 #endif  // #ifndef BX_CPU_H

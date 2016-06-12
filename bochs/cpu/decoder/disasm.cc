@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2013-2014 Stanislav Shwartsman
+//   Copyright (c) 2013-2016 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -21,12 +21,15 @@
 //
 /////////////////////////////////////////////////////////////////////////
 
-#define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
-#include "cpu.h"
-#define LOG_THIS BX_CPU_THIS_PTR
+#include "../cpu.h"
 
 #include "fetchdecode.h"
+
+extern int fetchDecode32(const Bit8u *fetchPtr, Bit32u fetchModeMask, bx_bool handle_lock_cr0, bxInstruction_c *i, unsigned remainingInPage);
+#if BX_SUPPORT_X86_64
+extern int fetchDecode64(const Bit8u *fetchPtr, Bit32u fetchModeMask, bx_bool handle_lock_cr0, bxInstruction_c *i, unsigned remainingInPage);
+#endif
 
 // table of all Bochs opcodes
 extern struct bxIAOpcodeTable BxOpcodesTable[];
@@ -440,7 +443,7 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
   return disbufptr;
 }
 
-char* BX_CPU_C::disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr, bxInstruction_c *i, bx_address cs_base, bx_address rip)
+char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr, bxInstruction_c *i, bx_address cs_base, bx_address rip)
 {
   Bit32u fetchModeMask = BX_FETCH_MODE_SSE_OK |
                          BX_FETCH_MODE_AVX_OK |
@@ -454,10 +457,10 @@ char* BX_CPU_C::disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbuf
 
 #if BX_SUPPORT_X86_64
   if (is_64)
-    ret = fetchDecode64(opcode, fetchModeMask, i, 16);
+    ret = fetchDecode64(opcode, fetchModeMask, BX_CPU(0)->is_cpu_extension_supported(BX_ISA_ALT_MOV_CR8), i, 16);
   else
 #endif
-    ret = fetchDecode32(opcode, fetchModeMask, i, 16);
+    ret = fetchDecode32(opcode, fetchModeMask, BX_CPU(0)->is_cpu_extension_supported(BX_ISA_ALT_MOV_CR8), i, 16);
 
   if (ret < 0)
     sprintf(disbufptr, "decode failed");

@@ -31,6 +31,11 @@
 
 bxPageWriteStampTable pageWriteStampTable;
 
+extern int fetchDecode32(const Bit8u *fetchPtr, Bit32u fetchModeMask, bx_bool handle_lock_cr0, bxInstruction_c *i, unsigned remainingInPage);
+#if BX_SUPPORT_X86_64
+extern int fetchDecode64(const Bit8u *fetchPtr, Bit32u fetchModeMask, bx_bool handle_lock_cr0, bxInstruction_c *i, unsigned remainingInPage);
+#endif
+
 void flushICaches(void)
 {
   for (unsigned i=0; i<BX_SMP_PROCESSORS; i++) {
@@ -103,10 +108,10 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(Bit32u eipBiased, bx_phy_address pAdd
   {
 #if BX_SUPPORT_X86_64
     if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
-      ret = fetchDecode64(fetchPtr, BX_CPU_THIS_PTR fetchModeMask, i, remainingInPage);
+      ret = fetchDecode64(fetchPtr, BX_CPU_THIS_PTR fetchModeMask, BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_ALT_MOV_CR8), i, remainingInPage);
     else
 #endif
-      ret = fetchDecode32(fetchPtr, BX_CPU_THIS_PTR fetchModeMask, i, remainingInPage);
+      ret = fetchDecode32(fetchPtr, BX_CPU_THIS_PTR fetchModeMask, BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_ALT_MOV_CR8), i, remainingInPage);
 
     if (ret < 0) {
       // Fetching instruction on segment/page boundary
@@ -255,10 +260,10 @@ void BX_CPU_C::boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bx
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
-    ret = fetchDecode64(fetchBuffer, BX_CPU_THIS_PTR fetchModeMask, i, remainingInPage+fetchBufferLimit);
+    ret = fetchDecode64(fetchBuffer, BX_CPU_THIS_PTR fetchModeMask, BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_ALT_MOV_CR8), i, remainingInPage+fetchBufferLimit);
   else
 #endif
-    ret = fetchDecode32(fetchBuffer, BX_CPU_THIS_PTR fetchModeMask, i, remainingInPage+fetchBufferLimit);
+    ret = fetchDecode32(fetchBuffer, BX_CPU_THIS_PTR fetchModeMask, BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_ALT_MOV_CR8), i, remainingInPage+fetchBufferLimit);
 
   if (ret < 0) {
     BX_INFO(("boundaryFetch #GP(0): failed to complete instruction decoding"));

@@ -26,7 +26,7 @@
 
 #include "config.h"
 
-#include "cpu/decoder.h"
+#include "cpu/decoder/decoder.h"
 
 #define BX_DECODE_MODRM(modrm_byte, mod, opcode, rm) { \
   mod    = (modrm_byte >> 6) & 0x03; \

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2012 Stanislav Shwartsman
+//   Copyright (c) 2016 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -23,77 +23,6 @@
 
 #ifndef BX_INSTR_H
 #define BX_INSTR_H
-
-class bxInstruction_c;
-
-typedef void BX_INSF_TYPE;
-
-#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
-
-#define BX_SYNC_TIME_IF_SINGLE_PROCESSOR(allowed_delta) {                     \
-  if (BX_SMP_PROCESSORS == 1) {                                               \
-    Bit32u delta = (Bit32u)(BX_CPU_THIS_PTR icount - BX_CPU_THIS_PTR icount_last_sync); \
-    if (delta >= allowed_delta) {                                             \
-      BX_CPU_THIS_PTR sync_icount();                                          \
-      BX_TICKN(delta);                                                        \
-    }                                                                         \
-  }                                                                           \
-}
-
-#define BX_COMMIT_INSTRUCTION(i) {                     \
-  BX_CPU_THIS_PTR prev_rip = RIP; /* commit new RIP */ \
-  BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, (i));            \
-  BX_CPU_THIS_PTR icount++;                            \
-}
-
-#define BX_EXECUTE_INSTRUCTION(i) {                    \
-  BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, (i));           \
-  RIP += (i)->ilen();                                  \
-  return BX_CPU_CALL_METHOD(i->execute1, (i));         \
-}
-
-#define BX_NEXT_TRACE(i) {                             \
-  BX_COMMIT_INSTRUCTION(i);                            \
-  return;                                              \
-}
-
-#if BX_ENABLE_TRACE_LINKING == 0
-#define linkTrace(i)
-#endif
-
-#define BX_LINK_TRACE(i) {                             \
-  BX_COMMIT_INSTRUCTION(i);                            \
-  linkTrace(i);                                        \
-  return;                                              \
-}
-
-#define BX_NEXT_INSTR(i) {                             \
-  BX_COMMIT_INSTRUCTION(i);                            \
-  if (BX_CPU_THIS_PTR async_event) return;             \
-  ++i;                                                 \
-  BX_EXECUTE_INSTRUCTION(i);                           \
-}
-
-#else // BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
-
-#define BX_NEXT_TRACE(i) { return; }
-#define BX_NEXT_INSTR(i) { return; }
-#define BX_LINK_TRACE(i) { return; }
-
-#define BX_SYNC_TIME_IF_SINGLE_PROCESSOR(allowed_delta) \
-  if (BX_SMP_PROCESSORS == 1) BX_TICK1()
-
-#endif
-
-// <TAG-TYPE-EXECUTEPTR-START>
-#if BX_USE_CPU_SMF
-typedef BX_INSF_TYPE (BX_CPP_AttrRegparmN(1) *BxExecutePtr_tR)(bxInstruction_c *);
-typedef void (BX_CPP_AttrRegparmN(1) *BxRepIterationPtr_tR)(bxInstruction_c *);
-#else
-typedef BX_INSF_TYPE (BX_CPU_C::*BxExecutePtr_tR)(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-typedef void (BX_CPU_C::*BxRepIterationPtr_tR)(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-#endif
-// <TAG-TYPE-EXECUTEPTR-END>
 
 extern bx_address bx_asize_mask[];
 

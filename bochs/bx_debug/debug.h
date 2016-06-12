@@ -40,7 +40,7 @@ extern Bit32u dbg_cpu;
 
 void dbg_printf (const char *fmt, ...);
 
-#include "cpu/decoder.h"
+#include "cpu/decoder/decoder.h"
 
 typedef enum
 {

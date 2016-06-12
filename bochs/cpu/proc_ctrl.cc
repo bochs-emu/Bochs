@@ -26,6 +26,29 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BxError(bxInstruction_c *i)
+{
+  unsigned ia_opcode = i->getIaOpcode();
+ 
+  if (ia_opcode == BX_IA_ERROR) {
+    BX_DEBUG(("BxError: Encountered an unknown instruction (signalling #UD)"));
+
+#if BX_DISASM && BX_DEBUGGER == 0 // with debugger it easy to see the #UD
+    if (LOG_THIS getonoff(LOGLEV_DEBUG))
+      debug_disasm_instruction(BX_CPU_THIS_PTR prev_rip);
+#endif
+  }
+  else {
+    BX_DEBUG(("%s: instruction not supported - signalling #UD", get_bx_opcode_name(ia_opcode)));
+    for (unsigned n=0; n<BX_ISA_EXTENSIONS_ARRAY_SIZE; n++)
+      BX_DEBUG(("ia_extensions_bitmask[%d]: %08x", n, BX_CPU_THIS_PTR ia_extensions_bitmask[n]));
+  }
+
+  exception(BX_UD_EXCEPTION, 0);
+
+  BX_NEXT_TRACE(i); // keep compiler happy
+}
+
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::UndefinedOpcode(bxInstruction_c *i)
 {
   BX_DEBUG(("UndefinedOpcode: generate #UD exception"));

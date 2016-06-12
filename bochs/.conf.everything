@@ -40,6 +40,5 @@
   --enable-busmouse \
   --enable-iodebug \
   --enable-large-ramfile \
-  --enable-gdb-stub \
   --enable-show-ips \
   --with-all-libs
