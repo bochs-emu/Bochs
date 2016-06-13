@@ -44,7 +44,7 @@ OBJS = \
 	cpu.o \
 	event.o \
 	icache.o \
-	decoder\fetchdecode.o \
+	decoder/fetchdecode.o \
 	access.o \
 	access2.o \
 	shift16.o \
@@ -116,14 +116,14 @@ OBJS = \
 	string.o \
 	paging.o \
 	rdrand.o \
-	decoder\disasm.o
+	decoder/disasm.o
 	
 # Objects which are only used for x86-64 code
 OBJS64 = \
 	arith64.o \
 	ctrl_xfer64.o \
 	data_xfer64.o \
-	decoder\fetchdecode64.o \
+	decoder/fetchdecode64.o \
 	logical64.o \
 	mult64.o \
 	shift64.o \
