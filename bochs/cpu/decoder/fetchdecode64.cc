@@ -1690,6 +1690,92 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F FF /q */ { 0, BX_IA_ERROR }
 };
 
+const Bit8u *decodeModrm64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned mod, unsigned nnn, unsigned rm, unsigned rex_r, unsigned rex_x, unsigned rex_b)
+{
+  unsigned seg = BX_SEG_REG_DS;
+
+  i->setSibBase(rm & 0xf); // initialize with rm to use BxResolve64Base
+  i->setSibIndex(4);
+  // initialize displ32 with zero to include cases with no diplacement
+  i->modRMForm.displ32u = 0;
+
+  // note that mod==11b handled outside
+
+  if ((rm & 0x7) != 4) { // no s-i-b byte
+    if (mod == 0x00) { // mod == 00b
+      if ((rm & 0x7) == 5) {
+        i->setSibBase(BX_64BIT_REG_RIP);
+        goto get_32bit_displ;
+      }
+      // mod==00b, rm!=4, rm!=5
+      goto modrm_done;
+    }
+    // (mod == 0x40), mod==01b or (mod == 0x80), mod==10b
+    seg = sreg_mod1or2_base32[rm & 0xf];
+  }
+  else { // mod!=11b, rm==4, s-i-b byte follows
+    unsigned sib, base, index, scale;
+    if (remain != 0) {
+      sib = *iptr++;
+      remain--;
+    }
+    else {
+      return NULL;
+    }
+    base  = (sib & 0x7) | rex_b; sib >>= 3;
+    index = (sib & 0x7) | rex_x; sib >>= 3;
+    scale =  sib;
+    i->setSibScale(scale);
+    i->setSibBase(base & 0xf);
+    // this part is a little tricky - assign index value always,
+    // it will be really used if the instruction is Gather. Others
+    // assume that resolve function will do the right thing.
+    i->setSibIndex(index & 0xf);
+    if (mod == 0x00) { // mod==00b, rm==4
+      seg = sreg_mod0_base32[base & 0xf];
+      if ((base & 0x7) == 5) {
+        i->setSibBase(BX_NIL_REGISTER);
+        goto get_32bit_displ;
+      }
+      // mod==00b, rm==4, base!=5
+      goto modrm_done;
+    }
+    // (mod == 0x40), mod==01b or (mod == 0x80), mod==10b
+    seg = sreg_mod1or2_base32[base & 0xf];
+  }
+
+  // (mod == 0x40), mod==01b
+  if (mod == 0x40) {
+    if (remain != 0) {
+      // 8 sign extended to 32
+      i->modRMForm.displ32u = (Bit8s) *iptr++;
+      remain--;
+    }
+    else {
+      return NULL;
+    }
+  }
+  else {
+
+get_32bit_displ:
+
+    // (mod == 0x80), mod==10b
+    if (remain > 3) {
+      i->modRMForm.displ32u = FetchDWORD(iptr);
+      iptr += 4;
+      remain -= 4;
+    }
+    else {
+      return NULL;
+    }
+  }
+
+modrm_done:
+
+  i->setSeg(seg);
+  return iptr;  
+}
+
 int fetchDecode64(const Bit8u *iptr, Bit32u fetchModeMask, bx_bool handle_lock_cr0, bxInstruction_c *i, unsigned remainingInPage)
 {
   if (remainingInPage > 15) remainingInPage = 15;
@@ -2041,90 +2127,18 @@ fetch_b1:
 
     if (mod == 0xc0) { // mod == 11b
       i->assertModC0();
-      goto modrm_done;
-    }
-
-    mod_mem = 1;
-    i->setSibBase(rm & 0xf); // initialize with rm to use BxResolve64Base
-    i->setSibIndex(4);
-    // initialize displ32 with zero to include cases with no diplacement
-    i->modRMForm.displ32u = 0;
-
-    // note that mod==11b handled above
-
-    if ((rm & 0x7) != 4) { // no s-i-b byte
-      if (mod == 0x00) { // mod == 00b
-        if ((rm & 0x7) == 5) {
-          i->setSibBase(BX_64BIT_REG_RIP);
-          goto get_32bit_displ;
-        }
-        // mod==00b, rm!=4, rm!=5
-        goto modrm_done;
-      }
-      // (mod == 0x40), mod==01b or (mod == 0x80), mod==10b
-      seg = sreg_mod1or2_base32[rm & 0xf];
-    }
-    else { // mod!=11b, rm==4, s-i-b byte follows
-      unsigned sib, base, index, scale;
-      if (remain != 0) {
-        sib = *iptr++;
-        remain--;
-      }
-      else {
-        return(-1);
-      }
-      base  = (sib & 0x7) | rex_b; sib >>= 3;
-      index = (sib & 0x7) | rex_x; sib >>= 3;
-      scale =  sib;
-      i->setSibScale(scale);
-      i->setSibBase(base & 0xf);
-      // this part is a little tricky - assign index value always,
-      // it will be really used if the instruction is Gather. Others
-      // assume that resolve function will do the right thing.
-      i->setSibIndex(index & 0xf);
-      if (mod == 0x00) { // mod==00b, rm==4
-        seg = sreg_mod0_base32[base & 0xf];
-        if ((base & 0x7) == 5) {
-          i->setSibBase(BX_NIL_REGISTER);
-          goto get_32bit_displ;
-        }
-        // mod==00b, rm==4, base!=5
-        goto modrm_done;
-      }
-      // (mod == 0x40), mod==01b or (mod == 0x80), mod==10b
-      seg = sreg_mod1or2_base32[base & 0xf];
-    }
-
-    // (mod == 0x40), mod==01b
-    if (mod == 0x40) {
-      if (remain != 0) {
-        // 8 sign extended to 32
-        i->modRMForm.displ32u = (Bit8s) *iptr++;
-#if BX_SUPPORT_EVEX
-        displ8 = 1;
-#endif
-        remain--;
-      }
-      else {
-        return(-1);
-      }
     }
     else {
-
-get_32bit_displ:
-
-      // (mod == 0x80), mod==10b
-      if (remain > 3) {
-        i->modRMForm.displ32u = FetchDWORD(iptr);
-        iptr += 4;
-        remain -= 4;
-      }
-      else {
+      mod_mem = 1;
+      iptr = decodeModrm64(iptr, remain, i, mod, nnn, rm, rex_r, rex_x, rex_b);
+      if (! iptr) 
         return(-1);
+#if BX_SUPPORT_EVEX
+      if (mod == 0x40) { // mod==01b
+        displ8 = 1;
       }
+#endif
     }
-
-modrm_done:
 
 #if BX_SUPPORT_EVEX
     // EVEX.b in reg form implies 512-bit vector length
