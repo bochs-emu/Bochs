@@ -2163,6 +2163,7 @@ fetch_b1:
     rm = (b1 & 7) | rex_b;
     nnn = (b1 >> 3) & 7;
     i->assertModC0();
+    i->setSeg(seg);
 
     if (b1 == 0x90) {
       if (sse_prefix == SSE_PREFIX_F3)
@@ -2392,8 +2393,7 @@ fetch_b1:
 
   // assign memory segment override
   if (! BX_NULL_SEG_REG(seg_override))
-     seg = seg_override;
-  i->setSeg(seg);
+     i->setSeg(seg_override);
 
 #if BX_SUPPORT_AVX
   if (had_vex_xop) {
