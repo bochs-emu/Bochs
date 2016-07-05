@@ -266,6 +266,10 @@ public:
     metaInfo.metaInfo1 = (metaInfo.metaInfo1 & 0x3f) | (value << 6);
   }
 
+  BX_CPP_INLINE void setLock(void) {
+    setLockRepUsed(1);
+  }
+
   BX_CPP_INLINE unsigned getVL(void) const {
 #if BX_SUPPORT_AVX
     return modRMForm.Ib[1];

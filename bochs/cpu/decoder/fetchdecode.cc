@@ -172,10 +172,6 @@ bxIAOpcodeTable BxOpcodesTable[] = {
 
 extern Bit16u WalkOpcodeTables(const BxOpcodeInfo_t *OpcodeInfoPtr, Bit16u &attr, Bit32u fetchModeMask, unsigned modrm, unsigned sse_prefix, unsigned osize, unsigned vex_vl, bx_bool vex_w);
 
-#if BX_SUPPORT_EVEX
-extern unsigned evex_displ8_compression(bxInstruction_c *i, unsigned ia_opcode, unsigned type, unsigned vex_w);
-#endif
-
 /* ************************** */
 /* 512 entries for 16bit mode */
 /* 512 entries for 32bit mode */
@@ -1418,6 +1414,216 @@ modrm_done:
   return iptr;
 }
 
+#if BX_SUPPORT_EVEX
+unsigned evex_displ8_compression(bxInstruction_c *i, unsigned ia_opcode, unsigned src, unsigned type, unsigned vex_w)
+{
+  if (src == BX_SRC_RM) {
+    switch (type) {
+    case BX_GPR64:
+      return 8;
+    case BX_GPR32:
+      return 4;
+    case BX_GPR16:
+      return 2;
+    }
+
+    return 1;
+  }
+
+  if (ia_opcode == BX_IA_V512_VMOVDDUP_VpdWpd && i->getVL() == BX_VL128)
+    return 8;
+
+  unsigned len = i->getVL();
+
+  switch (type) {
+  case BX_VMM_FULL_VECTOR:
+    if (i->getEvexb()) { // broadcast
+       return (4 << vex_w);
+    }
+    else {
+       return (16 * len);
+    }
+
+  case BX_VMM_SCALAR_BYTE:
+    return 1;
+
+  case BX_VMM_SCALAR_WORD:
+    return 2;
+
+  case BX_VMM_SCALAR:
+    return (4 << vex_w);
+
+  case BX_VMM_HALF_VECTOR:
+    if (i->getEvexb()) { // broadcast
+       return (4 << vex_w);
+    }
+    else {
+       return (8 * len);
+    }
+
+  case BX_VMM_QUARTER_VECTOR:
+    BX_ASSERT(! i->getEvexb());
+    return (4 * len);
+
+  case BX_VMM_OCT_VECTOR:
+    BX_ASSERT(! i->getEvexb());
+    return (2 * len);
+
+  case BX_VMM_VEC128:
+    return 16;
+
+  case BX_VMM_VEC256:
+    return 32;
+  }
+
+  return 1;
+}
+#endif
+
+bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, unsigned nnn, unsigned rm)
+{
+  for (unsigned n = 0; n <= 3; n++) {
+    unsigned src = (unsigned) BxOpcodesTable[ia_opcode].src[n];
+    unsigned type = src >> 3;
+    switch(src & 0x7) {
+    case BX_SRC_NONE:
+      break;
+    case BX_SRC_EAX:
+      i->setSrcReg(n, 0);
+      break;
+    case BX_SRC_NNN:
+      i->setSrcReg(n, nnn);
+      break;
+    case BX_SRC_RM:
+      if (i->modC0()) {
+        i->setSrcReg(n, rm);
+      }
+      else {
+        unsigned tmpreg = BX_TMP_REGISTER;
+#if BX_SUPPORT_FPU
+        if (type == BX_VMM_REG) tmpreg = BX_VECTOR_TMP_REGISTER;
+#endif
+        i->setSrcReg(n, tmpreg);
+      }
+      break;
+    default:
+      BX_PANIC(("assign_srcs: unknown definition %d for src %d", src, n));
+      break;
+    }
+  }
+
+  return BX_TRUE;
+}
+
+#if BX_SUPPORT_AVX
+bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, unsigned nnn, unsigned rm, unsigned vvv, unsigned vex_w, bx_bool had_evex = BX_FALSE, bx_bool displ8 = BX_FALSE)
+{
+  bx_bool use_vvv = BX_FALSE;
+  unsigned displ8_scale = 1;
+
+  // assign sources
+  for (unsigned n = 0; n <= 3; n++) {
+    unsigned src = (unsigned) BxOpcodesTable[ia_opcode].src[n];
+    unsigned type = src >> 3;
+    src &= 0x7;
+#if BX_SUPPORT_EVEX
+    bx_bool mem_src = BX_FALSE;
+#endif
+
+    switch(src) {
+    case BX_SRC_NONE:
+      break;
+    case BX_SRC_EAX:
+      i->setSrcReg(n, 0);
+      break;
+    case BX_SRC_NNN:
+      i->setSrcReg(n, nnn);
+      if (type == BX_KMASK_REG) {
+        if (nnn >= 8) return BX_FALSE;
+      }
+      break;
+    case BX_SRC_RM:
+      if (i->modC0()) {
+        i->setSrcReg(n, rm);
+      }
+      else {
+#if BX_SUPPORT_EVEX
+        mem_src = BX_TRUE;
+#endif
+        i->setSrcReg(n, (type == BX_VMM_REG) ? BX_VECTOR_TMP_REGISTER : BX_TMP_REGISTER);
+      }
+      break;
+#if BX_SUPPORT_EVEX
+    case BX_SRC_EVEX_RM:
+      if (i->modC0()) {
+        if (type == BX_KMASK_REG)
+          rm &= 0x7;
+
+        i->setSrcReg(n, rm);
+      }
+      else {
+        mem_src = BX_TRUE;
+        i->setSrcReg(n, BX_VECTOR_TMP_REGISTER);
+        if (n == 0) // zero masking is not allowed for memory destination
+          if (i->isZeroMasking()) return BX_FALSE;
+      }
+      break;
+#endif
+    case BX_SRC_VVV:
+      i->setSrcReg(n, vvv);
+      use_vvv = BX_TRUE;
+      if (type == BX_KMASK_REG) {
+        if (vvv >= 8) return BX_FALSE;
+      }
+      break;
+    case BX_SRC_VIB:
+#if BX_SUPPORT_EVEX
+      if (had_evex)
+        i->setSrcReg(n, ((i->Ib() << 1) & 0x10) | (i->Ib() >> 4));
+      else
+#endif
+        i->setSrcReg(n, (i->Ib() >> 4) & 7);
+      break;
+    case BX_SRC_VSIB:
+      if (! i->as32L() || i->sibIndex() == BX_NIL_REGISTER) {
+        return BX_FALSE;
+      }
+#if BX_SUPPORT_EVEX
+      i->setSibIndex(i->sibIndex() | (vvv & 0x10));
+      // zero masking is not allowed for gather/scatter
+      if (i->isZeroMasking()) return BX_FALSE;
+      mem_src = BX_TRUE;
+#endif
+      break;
+    default:
+      BX_PANIC(("assign_srcs: unknown definition %d for src %d", src, n));
+      break;
+    }
+
+#if BX_SUPPORT_EVEX
+    if (had_evex && displ8 && mem_src) {
+      displ8_scale = evex_displ8_compression(i, ia_opcode, src, type, vex_w);
+    }
+#endif
+  }
+
+#if BX_SUPPORT_EVEX
+  if (displ8_scale > 1) {
+    if (i->as32L())
+      i->modRMForm.displ32u *= displ8_scale;
+    else
+      i->modRMForm.displ16u *= displ8_scale;
+  }
+#endif
+
+  if (! use_vvv && vvv != 0) {
+    return BX_FALSE;
+  }
+
+  return BX_TRUE;
+}
+#endif
+
 int fetchDecode32(const Bit8u *iptr, Bit32u fetchModeMask, bx_bool handle_lock_cr0, bxInstruction_c *i, unsigned remainingInPage)
 {
   if (remainingInPage > 15) remainingInPage = 15;
@@ -1437,10 +1643,9 @@ int fetchDecode32(const Bit8u *iptr, Bit32u fetchModeMask, bx_bool handle_lock_c
   bx_bool vex_w = 0;
 #if BX_SUPPORT_AVX
   int had_vex_xop = 0, vvv = -1;
-  bx_bool use_vvv = 0;
 #endif
 #if BX_SUPPORT_EVEX
-  bx_bool displ8 = 0;
+  bx_bool displ8 = BX_FALSE;
 #endif
 
   os_32 = is_32 = fetchModeMask & BX_FETCH_MODE_IS32_MASK;
@@ -1705,7 +1910,7 @@ fetch_b1:
         return(-1);
 #if BX_SUPPORT_EVEX
       if (mod == 0x40) { // mod==01b
-        displ8 = 1;
+        displ8 = BX_TRUE;
       }
 #endif
     }
@@ -1868,103 +2073,34 @@ fetch_b1:
     ia_opcode = Bx3DNowOpcode[i->modRMForm.Ib[0]];
 #endif
 
-  // assign sources
-  for (unsigned n = 0; n <= 3; n++) {
-    unsigned src = (unsigned) BxOpcodesTable[ia_opcode].src[n];
-    unsigned type = src >> 3;
-    switch(src & 0x7) {
-    case BX_SRC_NONE:
-      break;
-    case BX_SRC_EAX:
-      i->setSrcReg(n, 0);
-      break;
-    case BX_SRC_NNN:
-      i->setSrcReg(n, nnn);
-      break;
-    case BX_SRC_RM:
-      if (! mod_mem) {
-        i->setSrcReg(n, rm);
-      }
-      else {
-        unsigned tmpreg = BX_TMP_REGISTER;
-#if BX_SUPPORT_FPU
-        if (type == BX_VMM_REG) tmpreg = BX_VECTOR_TMP_REGISTER;
-#endif
-        i->setSrcReg(n, tmpreg);
-#if BX_SUPPORT_EVEX
-        if (b1 == 0x62 && displ8) {
-          int displ_mult = 1;
-          if (type == BX_GPR16) displ_mult = 2;
-          else if (type == BX_GPR32) displ_mult = 4;
-
-          if (i->as32L())
-            i->modRMForm.displ32u *= displ_mult;
-          else
-            i->modRMForm.displ16u *= displ_mult;
-        }
-#endif
-      }
-      break;
-#if BX_SUPPORT_EVEX
-    case BX_SRC_EVEX_RM:
-      if (! mod_mem) {
-        i->setSrcReg(n, rm);
-      }
-      else {
-        i->setSrcReg(n, BX_VECTOR_TMP_REGISTER);
-        if (displ8) {
-          if (i->as32L())
-            i->modRMForm.displ32u *= evex_displ8_compression(i, ia_opcode, type, vex_w);
-          else
-            i->modRMForm.displ16u *= evex_displ8_compression(i, ia_opcode, type, vex_w);
-        }
-        if (n == 0 && i->isZeroMasking()) // zero masking is not allowed for memory destination
-          ia_opcode = BX_IA_ERROR;
-      }
-      break;
-#endif
-#if BX_SUPPORT_AVX
-    case BX_SRC_VVV:
-      i->setSrcReg(n, vvv);
-      use_vvv = 1;
-      break;
-    case BX_SRC_VIB:
-      i->setSrcReg(n, (i->Ib() >> 4) & 7);
-      break;
-    case BX_SRC_VSIB:
-      if (! i->as32L() || i->sibIndex() == BX_NIL_REGISTER) {
-        ia_opcode = BX_IA_ERROR;
-      }
-#if BX_SUPPORT_EVEX
-      if (displ8) {
-        if (i->as32L())
-          i->modRMForm.displ32u *= 4 << vex_w;
-        else
-          i->modRMForm.displ16u *= 4 << vex_w;
-      }
-      // zero masking is not allowed for gather/scatter
-      if (i->isZeroMasking()) {
-        ia_opcode = BX_IA_ERROR;
-      }
-      break;
-#endif
-#endif
-    default:
-      BX_PANIC(("fetchdecode32: unknown definition %d for src %d", src, n));
-      break;
-    }
-  }
-
   // assign memory segment override
   if (! BX_NULL_SEG_REG(seg_override))
     i->setSeg(seg_override);
 
+#if BX_SUPPORT_EVEX
+  if (had_vex_xop == 0x62) {
+    if (! assign_srcs(i, ia_opcode, nnn, rm, vvv, vex_w, BX_TRUE, displ8))
+      ia_opcode = BX_IA_ERROR;
+  }
+  else
+#endif
+  {
+#if BX_SUPPORT_AVX
+    if (had_vex_xop) {
+      if (! assign_srcs(i, ia_opcode, nnn, rm, vvv, vex_w))
+        ia_opcode = BX_IA_ERROR;
+    }
+    else
+#endif
+    {
+      if (! assign_srcs(i, ia_opcode, nnn, rm))
+        ia_opcode = BX_IA_ERROR;
+    }
+  }
+
 #if BX_SUPPORT_AVX
   if (had_vex_xop) {
-    if (! use_vvv && vvv != 0) {
-      ia_opcode = BX_IA_ERROR;
-    }
-    else if ((attr & BxVexW0) != 0 && vex_w) {
+    if ((attr & BxVexW0) != 0 && vex_w) {
       ia_opcode = BX_IA_ERROR;
     }
     else if ((attr & BxVexW1) != 0 && !vex_w) {
@@ -1983,16 +2119,14 @@ fetch_b1:
       ia_opcode = BX_IA_ERROR;
     }
   }
-  else {
-    BX_ASSERT(! use_vvv);
-  }
 #endif
 
 decode_done:
 
   i->setILen(remainingInPage - remain);
   i->setIaOpcode(ia_opcode);
-  if (lock) i->setLockRepUsed(1);
+  if (lock)
+    i->setLock();
 
   if (mod_mem) {
     i->execute1 = BxOpcodesTable[ia_opcode].execute1;
@@ -2067,59 +2201,6 @@ decode_done:
 
   return(0);
 }
-
-#if BX_SUPPORT_EVEX
-unsigned evex_displ8_compression(bxInstruction_c *i, unsigned ia_opcode, unsigned type, unsigned vex_w)
-{
-  if (ia_opcode == BX_IA_V512_VMOVDDUP_VpdWpd && i->getVL() == BX_VL128)
-    return 8;
-
-  unsigned len = i->getVL();
-
-  switch (type) {
-  case BX_VMM_FULL_VECTOR:
-    if (i->getEvexb()) { // broadcast
-       return (4 << vex_w);
-    }
-    else {
-       return (16 * len);
-    }
-
-  case BX_VMM_SCALAR_BYTE:
-    return 1;
-
-  case BX_VMM_SCALAR_WORD:
-    return 2;
-
-  case BX_VMM_SCALAR:
-    return (4 << vex_w);
-
-  case BX_VMM_HALF_VECTOR:
-    if (i->getEvexb()) { // broadcast
-       return (4 << vex_w);
-    }
-    else {
-       return (8 * len);
-    }
-
-  case BX_VMM_QUARTER_VECTOR:
-    BX_ASSERT(! i->getEvexb());
-    return (4 * len);
-
-  case BX_VMM_OCT_VECTOR:
-    BX_ASSERT(! i->getEvexb());
-    return (2 * len);
-
-  case BX_VMM_VEC128:
-    return 16;
-
-  case BX_VMM_VEC256:
-    return 32;
-  }
-
-  return 1;
-}
-#endif
 
 Bit16u WalkOpcodeTables(const BxOpcodeInfo_t *OpcodeInfoPtr, Bit16u &attr, Bit32u fetchModeMask, unsigned modrm, unsigned sse_prefix, unsigned osize, unsigned vex_vl, bx_bool vex_w)
 {

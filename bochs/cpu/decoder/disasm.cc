@@ -249,13 +249,13 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
       disbufptr = resolve_memref(disbufptr, i, src_index);
 #if BX_SUPPORT_EVEX
       // EVEX.z is ignored for memory destination forms
-      if (n == 0 && (src_index == BX_SRC_EVEX_RM || src_type == BX_VMM_REG) && i->opmask()) {
+      if (n == 0 && (src_index == BX_SRC_EVEX_RM || src_index == BX_SRC_VSIB || src_type == BX_VMM_REG) && i->opmask()) {
         disbufptr = dis_sprintf(disbufptr, "{k%d}", i->opmask());
       }
 #endif
     }
     else {
-      if (src_index == BX_SRC_EVEX_RM) src_type = BX_VMM_REG; 
+      if (src_index == BX_SRC_EVEX_RM) src_type = BX_VMM_REG;
       unsigned srcreg = i->getSrcReg(n);
       if (src_type < 0x10) {
         switch(src_type) {

@@ -135,8 +135,9 @@ extern struct bxIAOpcodeTable BxOpcodesTable[];
 
 extern Bit16u WalkOpcodeTables(const BxOpcodeInfo_t *OpcodeInfoPtr, Bit16u &attr, Bit32u fetchModeMask, unsigned modrm, unsigned sse_prefix, unsigned osize, unsigned vex_vl, bx_bool vex_w);
 
-#if BX_SUPPORT_EVEX
-extern unsigned evex_displ8_compression(bxInstruction_c *i, unsigned ia_opcode, unsigned type, unsigned vex_w);
+extern bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, unsigned nnn, unsigned rm);
+#if BX_SUPPORT_AVX
+extern bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, unsigned nnn, unsigned rm, unsigned vvv, unsigned vex_w, bx_bool had_evex = BX_FALSE, bx_bool displ8 = BX_FALSE);
 #endif
 
 // 512 entries for 16bit operand size
@@ -1797,11 +1798,10 @@ int fetchDecode64(const Bit8u *iptr, Bit32u fetchModeMask, bx_bool handle_lock_c
   bx_bool vex_w = 0;
 #if BX_SUPPORT_AVX
   int had_vex_xop = 0, vvv = -1;
-  bx_bool use_vvv = 0;
 #endif
 
 #if BX_SUPPORT_EVEX
-  unsigned evex_v = 0, displ8 = 0;
+  bx_bool displ8 = BX_FALSE;
 #endif
 
   i->init(/*os32*/ 1,  // operand size 32 override defaults to 1
@@ -2011,7 +2011,7 @@ fetch_b1:
 
     sse_prefix = (evex >> 8) & 0x3;
     vvv = 15 - ((evex >> 11) & 0xf);
-    evex_v = ((evex >> 15) & 0x10) ^ 0x10;
+    unsigned evex_v = ((evex >> 15) & 0x10) ^ 0x10;
     vvv |= evex_v;
     vex_w = (evex >> 15) & 0x1;
     if (vex_w) {
@@ -2137,7 +2137,7 @@ fetch_b1:
         return(-1);
 #if BX_SUPPORT_EVEX
       if (mod == 0x40) { // mod==01b
-        displ8 = 1;
+        displ8 = BX_TRUE;
       }
 #endif
     }
@@ -2309,99 +2309,34 @@ fetch_b1:
     ia_opcode = Bx3DNowOpcode[i->modRMForm.Ib[0]];
 #endif
 
-  // assign sources
-  for (unsigned n = 0; n <= 3; n++) {
-    unsigned src = (unsigned) BxOpcodesTable[ia_opcode].src[n];
-    unsigned type = src >> 3;
-    switch(src & 0x7) {
-    case BX_SRC_NONE:
-      break;
-    case BX_SRC_EAX:
-      i->setSrcReg(n, 0);
-      break;
-    case BX_SRC_NNN:
-      i->setSrcReg(n, nnn);
-#if BX_SUPPORT_AVX
-      if (type == BX_KMASK_REG) {
-        if (nnn >= 8) ia_opcode = BX_IA_ERROR;
-      }
-#endif
-      break;
-    case BX_SRC_RM:
-      if (! mod_mem) {
-#if BX_SUPPORT_AVX
-        if (type == BX_KMASK_REG) rm &= 0x7;
-#endif
-        i->setSrcReg(n, rm);
-      }
-      else {
-        i->setSrcReg(n, (type == BX_VMM_REG) ? BX_VECTOR_TMP_REGISTER : BX_TMP_REGISTER);
-#if BX_SUPPORT_EVEX
-        if (b1 == 0x62 && displ8) {
-          if (type == BX_GPR16) i->modRMForm.displ32u *= 2;
-          else if (type == BX_GPR32) i->modRMForm.displ32u *= 4;
-          else if (type == BX_GPR64) i->modRMForm.displ32u *= 8;
-        }
-#endif
-      }
-      break;
-#if BX_SUPPORT_EVEX
-    case BX_SRC_EVEX_RM:
-      if (! mod_mem) {
-        i->setSrcReg(n, rm);
-      }
-      else {
-        i->setSrcReg(n, BX_VECTOR_TMP_REGISTER);
-        if (displ8) i->modRMForm.displ32u *= evex_displ8_compression(i, ia_opcode, type, vex_w);
-        if (n == 0 && i->isZeroMasking()) // zero masking is not allowed for memory destination
-          ia_opcode = BX_IA_ERROR;
-      }
-      break;
-#endif
-#if BX_SUPPORT_AVX
-    case BX_SRC_VVV:
-      i->setSrcReg(n, vvv);
-      use_vvv = 1;
-      if (type == BX_KMASK_REG) {
-        if (vvv >= 8) ia_opcode = BX_IA_ERROR;
-      }
-      break;
-    case BX_SRC_VIB:
-#if BX_SUPPORT_EVEX
-      if (b1 == 0x62)
-        i->setSrcReg(n, ((i->Ib() << 1) & 0x10) | (i->Ib() >> 4));
-      else
-#endif
-        i->setSrcReg(n, (i->Ib() >> 4));
-      break;
-    case BX_SRC_VSIB:
-      if (i->sibIndex() == BX_NIL_REGISTER) {
-        ia_opcode = BX_IA_ERROR;
-      }
-#if BX_SUPPORT_EVEX
-      i->setSibIndex(i->sibIndex() | evex_v);
-      if (displ8) i->modRMForm.displ32u *= 4 << vex_w;
-      // zero masking is not allowed for gather/scatter
-      if (i->isZeroMasking()) ia_opcode = BX_IA_ERROR;
-#endif
-      break;
-#endif
-    default:
-      BX_PANIC(("fetchdecode64: unknown definition %d for src %d", src, n));
-      break;
-    }
-  }
-
   // assign memory segment override
   if (! BX_NULL_SEG_REG(seg_override))
      i->setSeg(seg_override);
 
+#if BX_SUPPORT_EVEX
+  if (had_vex_xop == 0x62) {
+    if (! assign_srcs(i, ia_opcode, nnn, rm, vvv, vex_w, BX_TRUE, displ8))
+      ia_opcode = BX_IA_ERROR;
+  }
+  else
+#endif
+  {
+#if BX_SUPPORT_AVX
+    if (had_vex_xop) {
+      if (! assign_srcs(i, ia_opcode, nnn, rm, vvv, vex_w))
+        ia_opcode = BX_IA_ERROR;
+    }
+    else
+#endif
+    {
+      if (! assign_srcs(i, ia_opcode, nnn, rm))
+        ia_opcode = BX_IA_ERROR;
+    }
+  }
+
 #if BX_SUPPORT_AVX
   if (had_vex_xop) {
-    if (! use_vvv && vvv != 0) {
-      ia_opcode = BX_IA_ERROR;
-    }
-    else if ((attr & BxVexW0) != 0 && vex_w) {
+    if ((attr & BxVexW0) != 0 && vex_w) {
       ia_opcode = BX_IA_ERROR;
     }
     else if ((attr & BxVexW1) != 0 && !vex_w) {
@@ -2420,16 +2355,14 @@ fetch_b1:
       ia_opcode = BX_IA_ERROR;
     }
   }
-  else {
-    BX_ASSERT(! use_vvv);
-  }
 #endif
 
 decode_done:
 
   i->setILen(remainingInPage - remain);
   i->setIaOpcode(ia_opcode);
-  if (lock) i->setLockRepUsed(1);
+  if (lock)
+    i->setLock();
 
   if (mod_mem) {
     i->execute1 = BxOpcodesTable[ia_opcode].execute1;
