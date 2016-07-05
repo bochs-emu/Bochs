@@ -1784,7 +1784,7 @@ int fetchDecode64(const Bit8u *iptr, Bit32u fetchModeMask, bx_bool handle_lock_c
   unsigned b1, b2 = 0, ia_opcode = BX_IA_ERROR, imm_mode = 0;
   unsigned offset = 512, rex_r = 0, rex_x = 0, rex_b = 0;
   unsigned rm = 0, mod = 0, nnn = 0, mod_mem = 0;
-  unsigned seg = BX_SEG_REG_DS, seg_override = BX_SEG_REG_NULL;
+  unsigned seg_override = BX_SEG_REG_NULL;
   bx_bool lock = 0;
 
 #define SSE_PREFIX_NONE 0
@@ -2092,6 +2092,8 @@ fetch_b1:
     has_modrm = BxOpcodeHasModrm64[b1];
   }
 
+  i->setSeg(BX_SEG_REG_DS); // default segment is DS:
+
   if (has_modrm) {
 
     // handle 3-byte escape
@@ -2163,7 +2165,6 @@ fetch_b1:
     rm = (b1 & 7) | rex_b;
     nnn = (b1 >> 3) & 7;
     i->assertModC0();
-    i->setSeg(seg);
 
     if (b1 == 0x90) {
       if (sse_prefix == SSE_PREFIX_F3)
@@ -2435,11 +2436,11 @@ decode_done:
     i->handlers.execute2 = BxOpcodesTable[ia_opcode].execute2;
 
     if (ia_opcode == BX_IA_MOV_GqEq) {
-      if (seg == BX_SEG_REG_SS)
+      if (i->seg() == BX_SEG_REG_SS)
         i->execute1 = &BX_CPU_C::MOV64S_GqEqM;
     }
     if (ia_opcode == BX_IA_MOV_EqGq) {
-      if (seg == BX_SEG_REG_SS)
+      if (i->seg() == BX_SEG_REG_SS)
         i->execute1 = &BX_CPU_C::MOV64S_EqGqM;
     }
   }
