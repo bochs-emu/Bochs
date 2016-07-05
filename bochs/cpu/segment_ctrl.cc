@@ -27,10 +27,10 @@
 
 void BX_CPP_AttrRegparmN(2) BX_CPU_C::load_segw(bxInstruction_c *i, unsigned seg)
 {
-  Bit32u eaddr = (Bit32u) BX_CPU_RESOLVE_ADDR_32(i);
+  Bit32u eaddr = (Bit32u) BX_CPU_RESOLVE_ADDR(i);
 
-  Bit16u segsel = read_virtual_word_32(i->seg(), (eaddr + 2) & i->asize_mask());
-  Bit16u reg_16 = read_virtual_word_32(i->seg(),  eaddr);
+  Bit16u segsel = read_virtual_word(i->seg(), (eaddr + 2) & i->asize_mask());
+  Bit16u reg_16 = read_virtual_word(i->seg(),  eaddr);
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[seg], segsel);
 
@@ -39,10 +39,10 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::load_segw(bxInstruction_c *i, unsigned seg
 
 void BX_CPP_AttrRegparmN(2) BX_CPU_C::load_segd(bxInstruction_c *i, unsigned seg)
 {
-  Bit32u eaddr = (Bit32u) BX_CPU_RESOLVE_ADDR_32(i);
+  Bit32u eaddr = (Bit32u) BX_CPU_RESOLVE_ADDR(i);
 
-  Bit16u segsel = read_virtual_word_32(i->seg(), (eaddr + 4) & i->asize_mask());
-  Bit32u reg_32 = read_virtual_dword_32(i->seg(), eaddr);
+  Bit16u segsel = read_virtual_word(i->seg(), (eaddr + 4) & i->asize_mask());
+  Bit32u reg_32 = read_virtual_dword(i->seg(), eaddr);
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[seg], segsel);
 
