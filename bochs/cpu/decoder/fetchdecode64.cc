@@ -1975,6 +1975,7 @@ fetch_b1:
     has_modrm = (opcode_byte != 0x177); // if not VZEROUPPER/VZEROALL opcode
 
     OpcodeInfoPtr = &BxOpcodeTableAVX[(opcode_byte-256)*2 + vex_l];
+    attr = OpcodeInfoPtr->Attr;
   }
 #if BX_SUPPORT_EVEX
   else if (b1 == 0x62) {
@@ -2039,6 +2040,7 @@ fetch_b1:
     has_modrm = 1;
 
     OpcodeInfoPtr = &BxOpcodeTableEVEX[opcode_byte*2 + (opmask != 0)];
+    attr = OpcodeInfoPtr->Attr;
   }
 #endif
   else if (b1 == 0x8f && (*iptr & 0x08) == 0x08) {
@@ -2085,6 +2087,7 @@ fetch_b1:
     opcode_byte += 256 * xop_opcext;
 
     OpcodeInfoPtr = &BxOpcodeTableXOP[opcode_byte];
+    attr = OpcodeInfoPtr->Attr;
   }
   else
 #endif
