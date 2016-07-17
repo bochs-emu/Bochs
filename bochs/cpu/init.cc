@@ -810,7 +810,9 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR xcr0.set32(0x1);
+  if (source == BX_RESET_HARDWARE) {
+    BX_CPU_THIS_PTR xcr0.set32(0x3);
+  }
   BX_CPU_THIS_PTR xcr0_suppmask = 0x3;
 #if BX_SUPPORT_AVX
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX))
@@ -859,11 +861,15 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR msr.star = 0;
 #if BX_SUPPORT_X86_64
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_LONG_MODE)) {
-    BX_CPU_THIS_PTR msr.lstar = 0;
-    BX_CPU_THIS_PTR msr.cstar = 0;
+    if (source == BX_RESET_HARDWARE) {
+      BX_CPU_THIS_PTR msr.lstar = 0;
+      BX_CPU_THIS_PTR msr.cstar = 0;
+    }
     BX_CPU_THIS_PTR msr.fmask = 0x00020200;
     BX_CPU_THIS_PTR msr.kernelgsbase = 0;
-    BX_CPU_THIS_PTR msr.tsc_aux = 0;
+    if (source == BX_RESET_HARDWARE) {
+      BX_CPU_THIS_PTR msr.tsc_aux = 0;
+    }
   }
 #endif
 
@@ -875,19 +881,20 @@ void BX_CPU_C::reset(unsigned source)
   }
 #endif // BX_CPU_LEVEL >= 5
 
+  if (source == BX_RESET_HARDWARE) {
+
 #if BX_SUPPORT_PKEYS
-  BX_CPU_THIS_PTR set_PKRU(0);
+    BX_CPU_THIS_PTR set_PKRU(0);
 #endif
 
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR msr.sysenter_cs_msr  = 0;
-  BX_CPU_THIS_PTR msr.sysenter_esp_msr = 0;
-  BX_CPU_THIS_PTR msr.sysenter_eip_msr = 0;
+    BX_CPU_THIS_PTR msr.sysenter_cs_msr  = 0;
+    BX_CPU_THIS_PTR msr.sysenter_esp_msr = 0;
+    BX_CPU_THIS_PTR msr.sysenter_eip_msr = 0;
 #endif
 
   // Do not change MTRR on INIT
 #if BX_CPU_LEVEL >= 6
-  if (source == BX_RESET_HARDWARE) {
     for (n=0; n<16; n++)
       BX_CPU_THIS_PTR msr.mtrrphys[n] = 0;
 
@@ -899,18 +906,17 @@ void BX_CPU_C::reset(unsigned source)
 
     BX_CPU_THIS_PTR msr.pat = (Bit64u) BX_CONST64(0x0007040600070406);
     BX_CPU_THIS_PTR msr.mtrr_deftype = 0;
-  }
 #endif
 
-  // All configurable MSRs do not change on INIT
+    // All configurable MSRs do not change on INIT
 #if BX_CONFIGURE_MSRS
-  if (source == BX_RESET_HARDWARE) {
     for (n=0; n < BX_MSR_MAX_INDEX; n++) {
       if (BX_CPU_THIS_PTR msrs[n])
         BX_CPU_THIS_PTR msrs[n]->reset();
     }
-  }
 #endif
+
+  }
 
   BX_CPU_THIS_PTR EXT = 0;
   BX_CPU_THIS_PTR last_exception_type = 0;
@@ -959,8 +965,9 @@ void BX_CPU_C::reset(unsigned source)
 #if BX_SUPPORT_EVEX
   BX_CPU_THIS_PTR opmask_ok = BX_CPU_THIS_PTR evex_ok = 0;
 
-  for (n=0; n<8; n++)
-    BX_WRITE_OPMASK(n, 0);
+  if (source == BX_RESET_HARDWARE) {
+    for (n=0; n<8; n++) BX_WRITE_OPMASK(n, 0);
+  }
 #endif
 
   // Reset XMM state - unchanged on #INIT
