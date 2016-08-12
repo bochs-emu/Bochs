@@ -32,7 +32,9 @@
 
 #ifdef __linux__
 
+#ifndef ANDROID
 #include <linux/joystick.h>
+#endif
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -133,6 +135,7 @@ void bx_gameport_c::register_state(void)
 
 void bx_gameport_c::poll_joydev(void)
 {
+#ifndef ANDROID
 #ifdef __linux__
   struct js_event e;
   fd_set joyfds;
@@ -177,6 +180,7 @@ void bx_gameport_c::poll_joydev(void)
     BX_GAMEPORT_THIS delay_y = 25 + (joypos.wYpos / 60);
   }
 #endif
+#endif //ANDROID
 }
 
 // static IO port read callback handler

@@ -453,7 +453,7 @@ BOCHSAPI extern Bit32u apic_id_mask;
 #define BX_RESET_SOFTWARE 10
 #define BX_RESET_HARDWARE 11
 
-#include "memory/memory.h"
+#include "memory/memory-bochs.h"
 #include "pc_system.h"
 #include "gui/gui.h"
 
@@ -521,21 +521,48 @@ BX_CPP_INLINE Bit64u bx_bswap64(Bit64u val64)
 
 #ifdef BX_LITTLE_ENDIAN
 
-#define WriteHostWordToLittleEndian(hostPtr,  nativeVar16) \
+#define WriteHostWordToLittleEndian(hostPtr, nativeVar16) \
     *((Bit16u*)(hostPtr)) = (nativeVar16)
 #define WriteHostDWordToLittleEndian(hostPtr, nativeVar32) \
     *((Bit32u*)(hostPtr)) = (nativeVar32)
+#ifdef ANDROID
+// Resolve problems with unaligned access
+#define WriteHostQWordToLittleEndian(hostPtr, nativeVar64) { \
+    ((Bit8u *)(hostPtr))[0] = (Bit8u) (nativeVar64); \
+    ((Bit8u *)(hostPtr))[1] = (Bit8u) ((nativeVar64)>>8); \
+    ((Bit8u *)(hostPtr))[2] = (Bit8u) ((nativeVar64)>>16); \
+    ((Bit8u *)(hostPtr))[3] = (Bit8u) ((nativeVar64)>>24); \
+    ((Bit8u *)(hostPtr))[4] = (Bit8u) ((nativeVar64)>>32); \
+    ((Bit8u *)(hostPtr))[5] = (Bit8u) ((nativeVar64)>>40); \
+    ((Bit8u *)(hostPtr))[6] = (Bit8u) ((nativeVar64)>>48); \
+    ((Bit8u *)(hostPtr))[7] = (Bit8u) ((nativeVar64)>>56); \
+}
+#else
 #define WriteHostQWordToLittleEndian(hostPtr, nativeVar64) \
     *((Bit64u*)(hostPtr)) = (nativeVar64)
-
-#define ReadHostWordFromLittleEndian(hostPtr,  nativeVar16) \
+#endif
+#define ReadHostWordFromLittleEndian(hostPtr, nativeVar16) \
     (nativeVar16) = *((Bit16u*)(hostPtr))
 #define ReadHostDWordFromLittleEndian(hostPtr, nativeVar32) \
     (nativeVar32) = *((Bit32u*)(hostPtr))
+#ifdef ANDROID
+// Resolve problems with unaligned access
+#define ReadHostQWordFromLittleEndian(hostPtr, nativeVar64) { \
+    (nativeVar64) = ((Bit64u) ((Bit8u *)(hostPtr))[0]) | \
+    (((Bit64u) ((Bit8u *)(hostPtr))[1])<<8) | \
+    (((Bit64u) ((Bit8u *)(hostPtr))[2])<<16) | \
+    (((Bit64u) ((Bit8u *)(hostPtr))[3])<<24) | \
+    (((Bit64u) ((Bit8u *)(hostPtr))[4])<<32) | \
+    (((Bit64u) ((Bit8u *)(hostPtr))[5])<<40) | \
+    (((Bit64u) ((Bit8u *)(hostPtr))[6])<<48) | \
+    (((Bit64u) ((Bit8u *)(hostPtr))[7])<<56); \
+}
+#else
 #define ReadHostQWordFromLittleEndian(hostPtr, nativeVar64) \
     (nativeVar64) = *((Bit64u*)(hostPtr))
+#endif
 
-#else
+#else 
 
 #ifdef __MORPHOS__
 

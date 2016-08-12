@@ -3269,11 +3269,14 @@ bx_bool bx_hard_drive_c::set_cd_media_status(Bit32u handle, bx_bool status)
 
 bx_bool bx_hard_drive_c::bmdma_present(void)
 {
-#if BX_SUPPORT_PCI
-  if (BX_HD_THIS pci_enabled) {
-    return DEV_ide_bmdma_present();
+  #if BX_SUPPORT_PCI
+    if (BX_HD_THIS pci_enabled) {
+      #ifndef ANDROID
+      // DMA emulation works very bad under Android
+      return DEV_ide_bmdma_present();
+      #endif
   }
-#endif
+  #endif
   return 0;
 }
 

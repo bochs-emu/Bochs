@@ -75,7 +75,9 @@ Bit32u pcm_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len);
 extern int conversion_control;
 extern int mixer_control;
 extern BX_MUTEX(conversion_mutex);
+#ifndef ANDROID
 extern BX_MUTEX(mixer_mutex);
+#endif
 
 // the waveout class
 

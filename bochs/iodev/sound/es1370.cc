@@ -374,7 +374,10 @@ void bx_es1370_c::reset(unsigned type)
     BX_ES1370_THIS s.chan[i].leftover = 0;
   }
 
+  #ifndef ANDROID
+  // Gameport is unsupported on Android
   DEV_gameport_set_enabled(0);
+  #endif
 
   // Deassert IRQ
   set_irq_level(0);
@@ -615,7 +618,10 @@ void bx_es1370_c::write(Bit32u address, Bit32u value, unsigned io_len)
       mask = (0xffffffff >> ((4 - io_len) << 3)) << shift;
       value = (BX_ES1370_THIS s.ctl & ~mask) | ((value << shift) & mask);
       if ((value ^ BX_ES1370_THIS s.ctl) & 0x04) {
+        #ifndef ANDROID
+        // Gameport is unsupported on Android
         DEV_gameport_set_enabled((value & 0x04) != 0);
+        #endif
       }
       BX_ES1370_THIS update_voices(value, BX_ES1370_THIS s.sctl, 0);
       break;

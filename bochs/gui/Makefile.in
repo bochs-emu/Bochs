@@ -207,19 +207,19 @@ dist-clean: clean
 ###########################################
 amigaos.o: amigaos.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
- ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h \
  ../gui/gui.h ../instrument/stubs/instrument.h ../bxversion.h \
  ../param_names.h ../iodev/iodev.h ../plugin.h ../extplugin.h
 carbon.o: carbon.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../gui/siminterface.h ../cpudb.h \
- ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../gui/gui.h \
+ ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h ../gui/gui.h \
  ../instrument/stubs/instrument.h keymap.h ../iodev/iodev.h ../plugin.h \
  ../extplugin.h ../param_names.h
 enh_dbg.o: enh_dbg.@CPP_SUFFIX@ ../config.h
 gtk_enh_dbg_osdep.o: gtk_enh_dbg_osdep.@CPP_SUFFIX@ ../config.h
 gui.o: gui.@CPP_SUFFIX@ ../iodev/iodev.h ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
- ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h \
  ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
  ../param_names.h ../iodev/virt_timer.h keymap.h ../gui/bitmaps/floppya.h \
  ../gui/bitmaps/floppyb.h ../gui/bitmaps/mouse.h ../gui/bitmaps/reset.h \
@@ -229,66 +229,66 @@ gui.o: gui.@CPP_SUFFIX@ ../iodev/iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/bitmaps/saverestore.h
 keymap.o: keymap.@CPP_SUFFIX@ ../param_names.h ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
- ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h \
  ../gui/gui.h ../instrument/stubs/instrument.h keymap.h
 macintosh.o: macintosh.@CPP_SUFFIX@ ../param_names.h ../bochs.h ../config.h \
  ../osdep.h ../bx_debug/debug.h ../config.h ../osdep.h \
- ../gui/siminterface.h ../cpudb.h ../gui/paramtree.h ../memory/memory.h \
+ ../gui/siminterface.h ../cpudb.h ../gui/paramtree.h ../memory/memory-bochs.h \
  ../pc_system.h ../gui/gui.h ../instrument/stubs/instrument.h \
  ../iodev/iodev.h ../plugin.h ../extplugin.h
 nogui.o: nogui.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../gui/siminterface.h ../cpudb.h \
- ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../gui/gui.h \
+ ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h ../gui/gui.h \
  ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
  ../param_names.h icon_bochs.h
 paramtree.o: paramtree.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
- ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h \
  ../gui/gui.h ../instrument/stubs/instrument.h paramtree.h
 rfb.o: rfb.@CPP_SUFFIX@ ../param_names.h ../iodev/iodev.h ../bochs.h ../config.h \
  ../osdep.h ../bx_debug/debug.h ../config.h ../osdep.h \
- ../gui/siminterface.h ../cpudb.h ../gui/paramtree.h ../memory/memory.h \
+ ../gui/siminterface.h ../cpudb.h ../gui/paramtree.h ../memory/memory-bochs.h \
  ../pc_system.h ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h \
  ../extplugin.h keymap.h icon_bochs.h font/vga.bitmap.h sdl.h rfb.h \
  rfbkeys.h
 scrollwin.o: scrollwin.@CPP_SUFFIX@ ../config.h
 sdl2.o: sdl2.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../gui/siminterface.h ../cpudb.h \
- ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../gui/gui.h \
+ ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h ../gui/gui.h \
  ../instrument/stubs/instrument.h ../param_names.h keymap.h \
  ../iodev/iodev.h ../plugin.h ../extplugin.h
 sdl.o: sdl.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../gui/siminterface.h ../cpudb.h \
- ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../gui/gui.h \
+ ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h ../gui/gui.h \
  ../instrument/stubs/instrument.h ../param_names.h keymap.h \
  ../iodev/iodev.h ../plugin.h ../extplugin.h icon_bochs.h sdl.h sdlkeys.h
 siminterface.o: siminterface.@CPP_SUFFIX@ ../param_names.h ../iodev/iodev.h \
  ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h ../config.h \
  ../osdep.h ../gui/siminterface.h ../cpudb.h ../gui/paramtree.h \
- ../memory/memory.h ../pc_system.h ../gui/gui.h \
+ ../memory/memory-bochs.h ../pc_system.h ../gui/gui.h \
  ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
  ../iodev/virt_timer.h
 svga.o: svga.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../gui/siminterface.h ../cpudb.h \
- ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../gui/gui.h \
+ ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h ../gui/gui.h \
  ../instrument/stubs/instrument.h ../param_names.h ../iodev/iodev.h \
  ../plugin.h ../extplugin.h
 term.o: term.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../gui/siminterface.h ../cpudb.h \
- ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../gui/gui.h \
+ ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h ../gui/gui.h \
  ../instrument/stubs/instrument.h ../param_names.h ../iodev/iodev.h \
  ../plugin.h ../extplugin.h
 textconfig.o: textconfig.@CPP_SUFFIX@ ../config.h ../osdep.h ../param_names.h \
  textconfig.h siminterface.h ../cpudb.h paramtree.h ../extplugin.h
 vncsrv.o: vncsrv.@CPP_SUFFIX@ ../param_names.h ../iodev/iodev.h ../bochs.h \
  ../config.h ../osdep.h ../bx_debug/debug.h ../config.h ../osdep.h \
- ../gui/siminterface.h ../cpudb.h ../gui/paramtree.h ../memory/memory.h \
+ ../gui/siminterface.h ../cpudb.h ../gui/paramtree.h ../memory/memory-bochs.h \
  ../pc_system.h ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h \
  ../extplugin.h keymap.h icon_bochs.h font/vga.bitmap.h sdl.h rfb.h \
  rfbkeys.h
 win32.o: win32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../gui/siminterface.h ../cpudb.h \
- ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../gui/gui.h \
+ ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h ../gui/gui.h \
  ../instrument/stubs/instrument.h ../param_names.h keymap.h \
  ../iodev/iodev.h ../plugin.h ../extplugin.h
 win32dialog.o: win32dialog.@CPP_SUFFIX@ win32dialog.h ../config.h
@@ -296,7 +296,7 @@ win32_enh_dbg_osdep.o: win32_enh_dbg_osdep.@CPP_SUFFIX@ ../config.h
 win32paramdlg.o: win32paramdlg.@CPP_SUFFIX@ win32dialog.h ../config.h
 wx.o: wx.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../gui/siminterface.h ../cpudb.h \
- ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../gui/gui.h \
+ ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h ../gui/gui.h \
  ../instrument/stubs/instrument.h ../param_names.h keymap.h \
  ../iodev/iodev.h ../plugin.h ../extplugin.h font/vga.bitmap.h wxmain.h
 wxdialog.o: wxdialog.@CPP_SUFFIX@ ../config.h ../param_names.h ../osdep.h \
@@ -310,25 +310,25 @@ wxmain.o: wxmain.@CPP_SUFFIX@ ../config.h ../param_names.h ../osdep.h \
  bitmaps/mouse.xpm bitmaps/userbutton.xpm bitmaps/saverestore.xpm
 x.o: x.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../gui/siminterface.h ../cpudb.h \
- ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../gui/gui.h \
+ ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h ../gui/gui.h \
  ../instrument/stubs/instrument.h ../param_names.h keymap.h \
  ../iodev/iodev.h ../plugin.h ../extplugin.h enh_dbg.h icon_bochs.xpm \
  font/vga.bitmap.h
 amigaos.lo: amigaos.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
- ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h \
  ../gui/gui.h ../instrument/stubs/instrument.h ../bxversion.h \
  ../param_names.h ../iodev/iodev.h ../plugin.h ../extplugin.h
 carbon.lo: carbon.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../gui/siminterface.h ../cpudb.h \
- ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../gui/gui.h \
+ ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h ../gui/gui.h \
  ../instrument/stubs/instrument.h keymap.h ../iodev/iodev.h ../plugin.h \
  ../extplugin.h ../param_names.h
 enh_dbg.lo: enh_dbg.@CPP_SUFFIX@ ../config.h
 gtk_enh_dbg_osdep.lo: gtk_enh_dbg_osdep.@CPP_SUFFIX@ ../config.h
 gui.lo: gui.@CPP_SUFFIX@ ../iodev/iodev.h ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
- ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h \
  ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
  ../param_names.h ../iodev/virt_timer.h keymap.h ../gui/bitmaps/floppya.h \
  ../gui/bitmaps/floppyb.h ../gui/bitmaps/mouse.h ../gui/bitmaps/reset.h \
@@ -338,66 +338,66 @@ gui.lo: gui.@CPP_SUFFIX@ ../iodev/iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/bitmaps/saverestore.h
 keymap.lo: keymap.@CPP_SUFFIX@ ../param_names.h ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
- ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h \
  ../gui/gui.h ../instrument/stubs/instrument.h keymap.h
 macintosh.lo: macintosh.@CPP_SUFFIX@ ../param_names.h ../bochs.h ../config.h \
  ../osdep.h ../bx_debug/debug.h ../config.h ../osdep.h \
- ../gui/siminterface.h ../cpudb.h ../gui/paramtree.h ../memory/memory.h \
+ ../gui/siminterface.h ../cpudb.h ../gui/paramtree.h ../memory/memory-bochs.h \
  ../pc_system.h ../gui/gui.h ../instrument/stubs/instrument.h \
  ../iodev/iodev.h ../plugin.h ../extplugin.h
 nogui.lo: nogui.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../gui/siminterface.h ../cpudb.h \
- ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../gui/gui.h \
+ ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h ../gui/gui.h \
  ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
  ../param_names.h icon_bochs.h
 paramtree.lo: paramtree.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
- ../cpudb.h ../gui/paramtree.h ../memory/memory.h ../pc_system.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h \
  ../gui/gui.h ../instrument/stubs/instrument.h paramtree.h
 rfb.lo: rfb.@CPP_SUFFIX@ ../param_names.h ../iodev/iodev.h ../bochs.h ../config.h \
  ../osdep.h ../bx_debug/debug.h ../config.h ../osdep.h \
- ../gui/siminterface.h ../cpudb.h ../gui/paramtree.h ../memory/memory.h \
+ ../gui/siminterface.h ../cpudb.h ../gui/paramtree.h ../memory/memory-bochs.h \
  ../pc_system.h ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h \
  ../extplugin.h keymap.h icon_bochs.h font/vga.bitmap.h sdl.h rfb.h \
  rfbkeys.h
 scrollwin.lo: scrollwin.@CPP_SUFFIX@ ../config.h
 sdl2.lo: sdl2.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../gui/siminterface.h ../cpudb.h \
- ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../gui/gui.h \
+ ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h ../gui/gui.h \
  ../instrument/stubs/instrument.h ../param_names.h keymap.h \
  ../iodev/iodev.h ../plugin.h ../extplugin.h
 sdl.lo: sdl.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../gui/siminterface.h ../cpudb.h \
- ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../gui/gui.h \
+ ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h ../gui/gui.h \
  ../instrument/stubs/instrument.h ../param_names.h keymap.h \
  ../iodev/iodev.h ../plugin.h ../extplugin.h icon_bochs.h sdl.h sdlkeys.h
 siminterface.lo: siminterface.@CPP_SUFFIX@ ../param_names.h ../iodev/iodev.h \
  ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h ../config.h \
  ../osdep.h ../gui/siminterface.h ../cpudb.h ../gui/paramtree.h \
- ../memory/memory.h ../pc_system.h ../gui/gui.h \
+ ../memory/memory-bochs.h ../pc_system.h ../gui/gui.h \
  ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
  ../iodev/virt_timer.h
 svga.lo: svga.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../gui/siminterface.h ../cpudb.h \
- ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../gui/gui.h \
+ ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h ../gui/gui.h \
  ../instrument/stubs/instrument.h ../param_names.h ../iodev/iodev.h \
  ../plugin.h ../extplugin.h
 term.lo: term.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../gui/siminterface.h ../cpudb.h \
- ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../gui/gui.h \
+ ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h ../gui/gui.h \
  ../instrument/stubs/instrument.h ../param_names.h ../iodev/iodev.h \
  ../plugin.h ../extplugin.h
 textconfig.lo: textconfig.@CPP_SUFFIX@ ../config.h ../osdep.h ../param_names.h \
  textconfig.h siminterface.h ../cpudb.h paramtree.h ../extplugin.h
 vncsrv.lo: vncsrv.@CPP_SUFFIX@ ../param_names.h ../iodev/iodev.h ../bochs.h \
  ../config.h ../osdep.h ../bx_debug/debug.h ../config.h ../osdep.h \
- ../gui/siminterface.h ../cpudb.h ../gui/paramtree.h ../memory/memory.h \
+ ../gui/siminterface.h ../cpudb.h ../gui/paramtree.h ../memory/memory-bochs.h \
  ../pc_system.h ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h \
  ../extplugin.h keymap.h icon_bochs.h font/vga.bitmap.h sdl.h rfb.h \
  rfbkeys.h
 win32.lo: win32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../gui/siminterface.h ../cpudb.h \
- ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../gui/gui.h \
+ ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h ../gui/gui.h \
  ../instrument/stubs/instrument.h ../param_names.h keymap.h \
  ../iodev/iodev.h ../plugin.h ../extplugin.h
 win32dialog.lo: win32dialog.@CPP_SUFFIX@ win32dialog.h ../config.h
@@ -405,7 +405,7 @@ win32_enh_dbg_osdep.lo: win32_enh_dbg_osdep.@CPP_SUFFIX@ ../config.h
 win32paramdlg.lo: win32paramdlg.@CPP_SUFFIX@ win32dialog.h ../config.h
 wx.lo: wx.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../gui/siminterface.h ../cpudb.h \
- ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../gui/gui.h \
+ ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h ../gui/gui.h \
  ../instrument/stubs/instrument.h ../param_names.h keymap.h \
  ../iodev/iodev.h ../plugin.h ../extplugin.h font/vga.bitmap.h wxmain.h
 wxdialog.lo: wxdialog.@CPP_SUFFIX@ ../config.h ../param_names.h ../osdep.h \
@@ -419,7 +419,7 @@ wxmain.lo: wxmain.@CPP_SUFFIX@ ../config.h ../param_names.h ../osdep.h \
  bitmaps/mouse.xpm bitmaps/userbutton.xpm bitmaps/saverestore.xpm
 x.lo: x.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../gui/siminterface.h ../cpudb.h \
- ../gui/paramtree.h ../memory/memory.h ../pc_system.h ../gui/gui.h \
+ ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h ../gui/gui.h \
  ../instrument/stubs/instrument.h ../param_names.h keymap.h \
  ../iodev/iodev.h ../plugin.h ../extplugin.h enh_dbg.h icon_bochs.xpm \
  font/vga.bitmap.h

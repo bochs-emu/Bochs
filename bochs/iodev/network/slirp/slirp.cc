@@ -928,7 +928,7 @@ void slirp_socket_recv(Slirp *slirp, struct in_addr guest_addr, int guest_port,
 
 void slirp_warning(Slirp *slirp, const char *msg)
 {
-    BX_ERROR((msg));
+    BX_ERROR(("%s",msg));
 }
 
 #endif

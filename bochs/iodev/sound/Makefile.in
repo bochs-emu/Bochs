@@ -134,134 +134,134 @@ dist-clean: clean
 es1370.o: es1370.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h ../pci.h es1370.h soundlow.h
 opl.o: opl.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h opl.h
 sb16.o: sb16.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h soundlow.h sb16.h opl.h
 soundalsa.o: soundalsa.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h soundlow.h soundalsa.h
 soundfile.o: soundfile.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h soundlow.h soundfile.h
 soundlnx.o: soundlnx.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h soundlow.h soundlnx.h
 soundlow.o: soundlow.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h soundlow.h
 soundmod.o: soundmod.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h soundmod.h soundlow.h soundlnx.h soundosx.h \
  soundwin.h soundsdl.h soundalsa.h soundfile.h
 soundosx.o: soundosx.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h soundlow.h soundosx.h
 soundsdl.o: soundsdl.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h soundlow.h soundsdl.h
 soundwin.o: soundwin.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h soundlow.h soundwin.h
 es1370.lo: es1370.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h ../pci.h es1370.h soundlow.h
 opl.lo: opl.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h opl.h
 sb16.lo: sb16.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h soundlow.h sb16.h opl.h
 soundalsa.lo: soundalsa.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h soundlow.h soundalsa.h
 soundfile.lo: soundfile.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h soundlow.h soundfile.h
 soundlnx.lo: soundlnx.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h soundlow.h soundlnx.h
 soundlow.lo: soundlow.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h soundlow.h
 soundmod.lo: soundmod.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h soundmod.h soundlow.h soundlnx.h soundosx.h \
  soundwin.h soundsdl.h soundalsa.h soundfile.h
 soundosx.lo: soundosx.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h soundlow.h soundosx.h
 soundsdl.lo: soundsdl.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h soundlow.h soundsdl.h
 soundwin.lo: soundwin.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h soundlow.h soundwin.h

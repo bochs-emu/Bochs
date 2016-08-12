@@ -157,31 +157,31 @@ dist-clean: clean
 e1000.o: e1000.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h ../pci.h netmod.h e1000.h
 eth_fbsd.o: eth_fbsd.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h netmod.h
 eth_linux.o: eth_linux.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h netmod.h
 eth_null.o: eth_null.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h netmod.h
 eth_slirp.o: eth_slirp.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h netmod.h slirp/slirp.h slirp/slirp_config.h \
  slirp/debug.h slirp/libslirp.h slirp/compat.h slirp/ip.h slirp/tcp.h \
@@ -191,49 +191,49 @@ eth_slirp.o: eth_slirp.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
 eth_tap.o: eth_tap.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h netmod.h
 eth_tuntap.o: eth_tuntap.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h netmod.h
 eth_vde.o: eth_vde.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h netmod.h
 eth_vnet.o: eth_vnet.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h netmod.h
 eth_win32.o: eth_win32.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h netmod.h
 ne2k.o: ne2k.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h ../pci.h ne2k.h netmod.h
 netmod.o: netmod.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h netmod.h
 pcipnic.o: pcipnic.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h
 slirp/arp_table.o: slirp/arp_table.@CPP_SUFFIX@ slirp/slirp.h ../../config.h \
@@ -264,7 +264,7 @@ slirp/dnssearch.o: slirp/dnssearch.@CPP_SUFFIX@ slirp/slirp.h ../../config.h \
 slirp/if.o: slirp/if.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h slirp/slirp.h slirp/slirp_config.h slirp/debug.h \
  slirp/libslirp.h slirp/compat.h slirp/ip.h slirp/tcp.h slirp/tcp_var.h \
@@ -304,7 +304,7 @@ slirp/sbuf.o: slirp/sbuf.@CPP_SUFFIX@ slirp/slirp.h ../../config.h slirp/slirp_c
 slirp/slirp.o: slirp/slirp.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h slirp/slirp.h slirp/slirp_config.h slirp/debug.h \
  slirp/libslirp.h slirp/compat.h slirp/ip.h slirp/tcp.h slirp/tcp_var.h \
@@ -349,31 +349,31 @@ slirp/udp.o: slirp/udp.@CPP_SUFFIX@ slirp/slirp.h ../../config.h slirp/slirp_con
 e1000.lo: e1000.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h ../pci.h netmod.h e1000.h
 eth_fbsd.lo: eth_fbsd.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h netmod.h
 eth_linux.lo: eth_linux.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h netmod.h
 eth_null.lo: eth_null.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h netmod.h
 eth_slirp.lo: eth_slirp.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h netmod.h slirp/slirp.h slirp/slirp_config.h \
  slirp/debug.h slirp/libslirp.h slirp/compat.h slirp/ip.h slirp/tcp.h \
@@ -383,49 +383,49 @@ eth_slirp.lo: eth_slirp.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
 eth_tap.lo: eth_tap.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h netmod.h
 eth_tuntap.lo: eth_tuntap.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h netmod.h
 eth_vde.lo: eth_vde.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h netmod.h
 eth_vnet.lo: eth_vnet.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h netmod.h
 eth_win32.lo: eth_win32.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h netmod.h
 ne2k.lo: ne2k.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h ../pci.h ne2k.h netmod.h
 netmod.lo: netmod.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h netmod.h
 pcipnic.lo: pcipnic.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h
 slirp/arp_table.lo: slirp/arp_table.@CPP_SUFFIX@ slirp/slirp.h ../../config.h \
@@ -456,7 +456,7 @@ slirp/dnssearch.lo: slirp/dnssearch.@CPP_SUFFIX@ slirp/slirp.h ../../config.h \
 slirp/if.lo: slirp/if.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h slirp/slirp.h slirp/slirp_config.h slirp/debug.h \
  slirp/libslirp.h slirp/compat.h slirp/ip.h slirp/tcp.h slirp/tcp_var.h \
@@ -496,7 +496,7 @@ slirp/sbuf.lo: slirp/sbuf.@CPP_SUFFIX@ slirp/slirp.h ../../config.h slirp/slirp_
 slirp/slirp.lo: slirp/slirp.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h slirp/slirp.h slirp/slirp_config.h slirp/debug.h \
  slirp/libslirp.h slirp/compat.h slirp/ip.h slirp/tcp.h slirp/tcp_var.h \

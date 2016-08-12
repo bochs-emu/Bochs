@@ -1965,6 +1965,13 @@ AC_ARG_ENABLE(es1370,
 if test "$soundcard_present" = 1; then
   AC_DEFINE(BX_SUPPORT_SOUNDLOW, 1)
   case "$target" in
+    *-linux-android*)
+      SOUNDLOW_OBJS='soundsdl.o'
+      soundlow_drivers="sdl"
+      soundlow_default="sdl"
+      AC_DEFINE(BX_HAVE_SOUND_SDL, 1)
+      bx_have_alsa=0
+      ;;
     *-linux* | *-freebsd*)
       SOUNDLOW_OBJS='soundlnx.o'
       soundlow_drivers="oss"

@@ -28,6 +28,13 @@
 
 #include "slirp.h"
 
+#ifndef WEXITSTATUS
+# define WEXITSTATUS(stat_val) ((unsigned int) (stat_val) >> 8)
+#endif
+#ifndef WIFEXITED
+# define WIFEXITED(stat_val) (((stat_val) & 255) == 0)
+#endif
+
 #if BX_NETWORKING && BX_NETMOD_SLIRP
 
 void pstrcpy(char *buf, int buf_size, const char *str)

@@ -1,0 +1,35 @@
+1) At first for building we need (64bit) linux
+
+2) Install Android sdk&ndk (i unpacked it into ~/android directory)
+http://developer.android.com/ndk/downloads/index.html
+https://developer.android.com/sdk/index.html
+
+for run android environment i create and use simple script setenv-android.sh
+
+#!/bin/sh
+
+export PATH=~/android/android-ndk-r12b:$PATH
+export PATH=~/android/android-sdk-linux/tools:$PATH
+export PATH=~/android/android-sdk-linux/build-tools/24.0.0:$PATH
+
+now we can run android build environment via console
+. setenv-android.sh
+
+Now via Android SDK Manager (for call sdk manager via console type android). We need download latest version:
+Android SDK Tools
+Android SDK Platform-tools
+Android SDL Build tools
+Android 6.0 (API 23)
++SDK Platform (API 23)
+
+3) Install pelya's libSDL-environment
+cd ~
+git clone git://github.com/pelya/commandergenius androidsdl
+
+4) download bochs sources
+git clone git://github.com/lubomyr/bochs
+Copy folder ~/bochs/build/android/bochs into ~/androidsdl/project/jni/application
+
+// Now we can build project (apk)
+cd ~/androidsdl
+./build.sh bochs

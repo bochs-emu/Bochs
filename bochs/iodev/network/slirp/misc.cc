@@ -8,6 +8,8 @@
  * terms and conditions of the copyright.
  */
 
+#include <dirent.h>
+
 #include "slirp.h"
 #include "libslirp.h"
 
@@ -173,8 +175,24 @@ fork_exec(struct socket *so, const char *ex, int do_pty)
 		dup2(s, 0);
 		dup2(s, 1);
 		dup2(s, 2);
+#ifdef ANDROID
+		{
+			/* No getdtablesize() on Android, we will use /proc/XXX/fd/ Linux virtual FS instead */
+			char proc_fd_path[256];
+			sprintf(proc_fd_path, "/proc/%u/fd", (unsigned)getpid());
+			DIR *proc_dir = opendir(proc_fd_path);
+			if (proc_dir) {
+				for (struct dirent *fd = readdir(proc_dir); fd != NULL; fd = readdir(proc_dir)) {
+					if (atoi(fd->d_name) >= 3 && fd->d_name[0] != '.') /* ".." and "." will return 0 anyway */
+						close(atoi(fd->d_name));
+				}
+				closedir(proc_dir);
+			}
+		}
+#else
 		for (s = getdtablesize() - 1; s >= 3; s--)
 		   close(s);
+#endif
 
 		i = 0;
 		bptr = strdup(ex); /* No need to free() this */
