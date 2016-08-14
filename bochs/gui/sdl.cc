@@ -422,7 +422,11 @@ void switch_to_fullscreen(void)
   SDL_FreeSurface(sdl_screen);
   sdl_screen = NULL;
 
+#ifdef ANDROID
+  sdl_fullscreen = SDL_SetVideoMode(res_x,res_y,32, SDL_SWSURFACE|SDL_FULLSCREEN);
+#else
   sdl_fullscreen = SDL_SetVideoMode(res_x,res_y,32, SDL_HWSURFACE|SDL_FULLSCREEN);
+#endif
   src.y = 0;
   SDL_BlitSurface(tmp,&src,sdl_fullscreen,&dst);
   SDL_FreeSurface(tmp);
@@ -505,7 +509,11 @@ bx_sdl_gui_c::bx_sdl_gui_c()
   atexit(SDL_Quit);
 #endif
 
+#ifdef ANDROID
+  modes = SDL_ListModes(NULL, SDL_FULLSCREEN|SDL_SWSURFACE);
+#else
   modes = SDL_ListModes(NULL, SDL_FULLSCREEN|SDL_HWSURFACE);
+#endif
   if (modes == NULL) {
     panic("No video modes available");
     return;
@@ -1168,7 +1176,11 @@ void bx_sdl_gui_c::dimension_update(unsigned x, unsigned y,
         BX_HEADERBAR_BG_GREEN,
         BX_HEADERBAR_BG_BLUE);
   } else {
+#ifdef ANDROID
+    sdl_fullscreen = SDL_SetVideoMode(x, y, 32, SDL_SWSURFACE|SDL_FULLSCREEN);
+#else
     sdl_fullscreen = SDL_SetVideoMode(x, y, 32, SDL_HWSURFACE|SDL_FULLSCREEN);
+#endif
     if(!sdl_fullscreen) {
       LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
       BX_PANIC(("Unable to set requested videomode: %ix%i: %s",x,y,SDL_GetError()));
