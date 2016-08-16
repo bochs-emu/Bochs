@@ -19,7 +19,7 @@ if [ \! -f bin-$1/Makefile ] ; then
 		--with-sdl \
 		--enable-cpu-level=6 --enable-smp --enable-x86-64 --enable-avx \
 		--enable-sb16 --enable-es1370 \
-		--enable-ne2000 --enable-ne1000 \
+		--enable-ne2000 --enable-e1000 \
 		--enable-clgd54xx --enable-voodoo \
 		--enable-all-optimizations \
 		--enable-usb --enable-usb-ohci \
@@ -29,6 +29,7 @@ fi
 
 # Fix a compilation error
 mkdir -p bin-$1/iodev/network/slirp
+mkdir -p bin-$1/cpu/decoder
 
 
 make -j4 -C bin-$1 && mv -f bin-$1/bochs libapplication-$1.so
