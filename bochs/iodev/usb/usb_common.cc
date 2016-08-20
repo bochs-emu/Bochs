@@ -6,7 +6,7 @@
 //
 // Copyright (c) 2005       Fabrice Bellard
 // Copyright (C) 2009-2015  Benjamin D Lunt (fys at fysnet net)
-//               2009-2015  The Bochs Project
+//               2009-2016  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -443,6 +443,15 @@ void usb_device_c::usb_send_msg(int msg)
 void usb_device_c::set_debug_mode()
 {
   setonoff(LOGLEV_DEBUG, ACT_REPORT);
+}
+
+usb_device_c* usb_device_c::find_device(Bit8u addr)
+{
+  if (addr == d.addr) {
+    return this;
+  } else {
+    return NULL;
+  }
 }
 
 #endif // BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB

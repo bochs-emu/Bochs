@@ -5,7 +5,7 @@
 // USB hub emulation support (ported from QEMU)
 //
 // Copyright (C) 2005       Fabrice Bellard
-// Copyright (C) 2009-2015  The Bochs Project
+// Copyright (C) 2009-2016  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -704,6 +704,27 @@ void usb_hub_device_c::restore_handler(bx_list_c *conf)
 
   i = atoi(&pname[4]) - 1;
   init_device(i, (bx_list_c*)SIM->get_param(pname, hub.config));
+}
+
+usb_device_c* usb_hub_device_c::find_device(Bit8u addr)
+{
+  int i;
+  usb_device_c *dev, *dev2;
+
+  if (addr == d.addr) {
+    return this;
+  } else {
+    for (i = 0; i < hub.n_ports; i++) {
+      dev = hub.usb_port[i].device;
+      if ((dev != NULL) && (hub.usb_port[i].PortStatus & PORT_STAT_ENABLE)) {
+        dev2 = dev->find_device(addr);
+        if (dev2 != NULL) {
+          return dev2;
+        }
+      }
+    }
+    return NULL;
+  }
 }
 
 #endif // BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB

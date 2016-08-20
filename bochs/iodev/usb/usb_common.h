@@ -6,7 +6,7 @@
 //
 // Copyright (c) 2005       Fabrice Bellard
 // Copyright (C) 2009       Benjamin D Lunt (fys at frontiernet net)
-//               2009-2014  The Bochs Project
+//               2009-2016  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -163,6 +163,7 @@ public:
 
   virtual bx_bool init() {return 1;}
   virtual const char* get_info() {return NULL;}
+  virtual usb_device_c* find_device(Bit8u addr);
 
   virtual int handle_packet(USBPacket *p);
   virtual void handle_reset() {}

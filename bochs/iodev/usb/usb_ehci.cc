@@ -1122,7 +1122,9 @@ usb_device_c *bx_usb_ehci_c::find_device(Bit8u addr)
       BX_DEBUG(("Port %d not enabled", i));
       continue;
     }
-    // TODO: dev = usb_find_device(i, addr);
+    if (BX_EHCI_THIS hub.usb_port[i].device != NULL) {
+      dev = BX_EHCI_THIS hub.usb_port[i].device->find_device(addr);
+    }
     if (dev != NULL) {
       return dev;
     }

@@ -5,7 +5,7 @@
 // USB hub emulation support (ported from QEMU)
 //
 // Copyright (C) 2005       Fabrice Bellard
-// Copyright (C) 2009-2015  The Bochs Project
+// Copyright (C) 2009-2016  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -37,6 +37,7 @@ public:
   usb_hub_device_c(Bit8u ports);
   virtual ~usb_hub_device_c(void);
 
+  virtual usb_device_c* find_device(Bit8u addr);
   virtual int handle_packet(USBPacket *p);
   virtual void handle_reset();
   virtual int handle_control(int request, int value, int index, int length, Bit8u *data);
