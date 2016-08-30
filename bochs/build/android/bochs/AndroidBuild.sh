@@ -19,7 +19,7 @@ if [ \! -f bin-$1/Makefile ] ; then
 	env LIBS="-lgnustl_static" \
 		../setEnvironment-$1.sh sh -c "cd bin-$1 && ../bochs/configure \
 		--build=x86_64-unknown-linux-gnu --host=$2 --with-sdl \
-		--enable-cpu-level=6 --enable-smp --enable-x86-64 --enable-avx \
+		--enable-cpu-level=6 --enable-x86-64 \
 		--enable-sb16 --enable-es1370 \
 		--enable-ne2000 --enable-e1000 \
 		--enable-clgd54xx --enable-voodoo \
@@ -31,7 +31,7 @@ if [ \! -f bin-$1/Makefile ] ; then
 	env LIBS="-lgnustl_static" \
 		../setEnvironment-$1.sh sh -c "cd bin-$1 && ../bochs/configure \
 		--build=x86_64-unknown-linux-gnu --host=$2 --with-sdl \
-		--enable-cpu-level=6 --enable-smp --enable-x86-64 --enable-avx \
+		--enable-cpu-level=6 --enable-x86-64 \
 		--enable-sb16 --enable-es1370 \
 		--enable-ne2000 --enable-e1000 \
 		--enable-clgd54xx --enable-voodoo \
