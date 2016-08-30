@@ -12,11 +12,13 @@ fi
 mkdir -p bin-$1
 
 if [ \! -f bin-$1/Makefile ] ; then
-	env CFLAGS="-Ofast -ffast-math" \
+#        env CLANG=1
+
+  if [ "$1" = arm64-v8a ]; then
+	env CFLAGS="-O2 -ffast-math" \
 	env LIBS="-lgnustl_static" \
 		../setEnvironment-$1.sh sh -c "cd bin-$1 && ../bochs/configure \
-		--build=x86_64-unknown-linux-gnu --host=$2 \
-		--with-sdl \
+		--build=x86_64-unknown-linux-gnu --host=$2 --with-sdl \
 		--enable-cpu-level=6 --enable-smp --enable-x86-64 --enable-avx \
 		--enable-sb16 --enable-es1370 \
 		--enable-ne2000 --enable-e1000 \
@@ -24,6 +26,19 @@ if [ \! -f bin-$1/Makefile ] ; then
 		--enable-all-optimizations \
 		--enable-usb --enable-usb-ohci \
 		--disable-gameport --disable-disasm --disable-docbook" || exit 1
+  else
+	env CFLAGS="-Ofast" \
+	env LIBS="-lgnustl_static" \
+		../setEnvironment-$1.sh sh -c "cd bin-$1 && ../bochs/configure \
+		--build=x86_64-unknown-linux-gnu --host=$2 --with-sdl \
+		--enable-cpu-level=6 --enable-smp --enable-x86-64 --enable-avx \
+		--enable-sb16 --enable-es1370 \
+		--enable-ne2000 --enable-e1000 \
+		--enable-clgd54xx --enable-voodoo \
+		--enable-all-optimizations \
+		--enable-usb --enable-usb-ohci \
+		--disable-gameport --disable-disasm --disable-docbook" || exit 1
+  fi
 fi
 
 
