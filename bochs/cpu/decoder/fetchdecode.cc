@@ -1480,11 +1480,6 @@ unsigned evex_displ8_compression(bxInstruction_c *i, unsigned ia_opcode, unsigne
 }
 #endif
 
-const Bit8u *decodeVEX(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned sse_prefix, unsigned rex_prefix, bx_bool lock)
-{
-  
-}
-
 bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, unsigned nnn, unsigned rm)
 {
   for (unsigned n = 0; n <= 3; n++) {
