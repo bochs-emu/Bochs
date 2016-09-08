@@ -170,7 +170,7 @@ bxIAOpcodeTable BxOpcodesTable[] = {
 };
 #undef  bx_define_opcode
 
-extern Bit16u WalkOpcodeTables(const BxOpcodeInfo_t *OpcodeInfoPtr, Bit16u &attr, Bit32u fetchModeMask, unsigned modrm, unsigned sse_prefix, unsigned osize, unsigned vex_vl, bx_bool vex_w);
+extern Bit16u WalkOpcodeTables(const BxOpcodeInfo_t *OpcodeInfoPtr, Bit16u &attr, bx_bool is_64, unsigned modrm, unsigned sse_prefix, unsigned osize, unsigned vex_vl, bx_bool vex_w);
 
 /* ************************** */
 /* 512 entries for 16bit mode */
@@ -1925,7 +1925,7 @@ fetch_b1:
     }
 #endif
 
-    ia_opcode = WalkOpcodeTables(OpcodeInfoPtr, attr, fetchModeMask, b2, sse_prefix, os_32, i->getVL(), vex_w);
+    ia_opcode = WalkOpcodeTables(OpcodeInfoPtr, attr, BX_FALSE, b2, sse_prefix, os_32, i->getVL(), vex_w);
   }
   else {
     // Opcode does not require a MODRM byte.
@@ -2205,7 +2205,7 @@ decode_done:
   return(0);
 }
 
-Bit16u WalkOpcodeTables(const BxOpcodeInfo_t *OpcodeInfoPtr, Bit16u &attr, Bit32u fetchModeMask, unsigned modrm, unsigned sse_prefix, unsigned osize, unsigned vex_vl, bx_bool vex_w)
+Bit16u WalkOpcodeTables(const BxOpcodeInfo_t *OpcodeInfoPtr, Bit16u &attr, bx_bool is_64, unsigned modrm, unsigned sse_prefix, unsigned osize, unsigned vex_vl, bx_bool vex_w)
 {
   // Parse mod-nnn-rm and related bytes
   unsigned mod_mem = (modrm & 0xc0) != 0xc0;
@@ -2306,7 +2306,7 @@ Bit16u WalkOpcodeTables(const BxOpcodeInfo_t *OpcodeInfoPtr, Bit16u &attr, Bit32
 #if BX_SUPPORT_AVX
       else {
         // VexW64 is ignored in 32-bit mode
-        if (has_alias == BxAliasVexW || (fetchModeMask & BX_FETCH_MODE_IS64_MASK) != 0) {
+        if (has_alias == BxAliasVexW || is_64) {
           alias = vex_w;
         }
       }

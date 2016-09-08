@@ -133,7 +133,7 @@ static unsigned sreg_mod1or2_base32[16] = {
 // table of all Bochs opcodes
 extern struct bxIAOpcodeTable BxOpcodesTable[];
 
-extern Bit16u WalkOpcodeTables(const BxOpcodeInfo_t *OpcodeInfoPtr, Bit16u &attr, Bit32u fetchModeMask, unsigned modrm, unsigned sse_prefix, unsigned osize, unsigned vex_vl, bx_bool vex_w);
+extern Bit16u WalkOpcodeTables(const BxOpcodeInfo_t *OpcodeInfoPtr, Bit16u &attr, bx_bool is_64, unsigned modrm, unsigned sse_prefix, unsigned osize, unsigned vex_vl, bx_bool vex_w);
 
 extern bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, unsigned nnn, unsigned rm);
 #if BX_SUPPORT_AVX
@@ -2152,7 +2152,7 @@ fetch_b1:
     }
 #endif
 
-    ia_opcode = WalkOpcodeTables(OpcodeInfoPtr, attr, fetchModeMask, b2, sse_prefix, offset >> 9, i->getVL(), vex_w);
+    ia_opcode = WalkOpcodeTables(OpcodeInfoPtr, attr, BX_TRUE, b2, sse_prefix, offset >> 9, i->getVL(), vex_w);
   }
   else {
     // Opcode does not require a MODRM byte.
