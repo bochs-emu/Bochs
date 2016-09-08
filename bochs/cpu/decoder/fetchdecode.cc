@@ -1730,23 +1730,18 @@ fetch_b1:
       goto decode_done;
 
     unsigned vex, vex_opcext = 1;
-    if (remain != 0) {
-      remain--;
-      vex = *iptr++;
-    }
-    else
+    if (remain == 0)
       return(-1);
+    remain--;
+    vex = *iptr++;
 
     if (b1 == 0xc4) {
       // decode 3-byte VEX prefix
       vex_opcext = vex & 0x1f;
-      if (remain != 0) {
-        remain--;
-        vex = *iptr++;  // fetch VEX3
-      }
-      else
+      if (remain == 0)
         return(-1);
-
+      remain--;
+      vex = *iptr++;  // fetch VEX3
       vex_w = (vex >> 7) & 0x1;
     }
 
@@ -1755,13 +1750,10 @@ fetch_b1:
     i->setVL(BX_VL128 + vex_l);
     sse_prefix = vex & 0x3;
 
-    unsigned opcode_byte = 0;
-    if (remain != 0) {
-      remain--;
-      opcode_byte = *iptr++;
-    }
-    else
+    if (remain == 0)
       return(-1);
+    remain--;
+    unsigned opcode_byte = *iptr++;
 
     opcode_byte += 256 * vex_opcext;
     if (opcode_byte < 256 || opcode_byte >= 1024) goto decode_done;
@@ -1884,12 +1876,10 @@ fetch_b1:
 #endif
 
     // opcode requires modrm byte
-    if (remain != 0) {
-      remain--;
-      b2 = *iptr++;
-    }
-    else
+    if (remain == 0)
       return(-1);
+    remain--;
+    b2 = *iptr++;
 
     // Parse mod-nnn-rm and related bytes
     mod = b2 & 0xc0; // leave unshifted
