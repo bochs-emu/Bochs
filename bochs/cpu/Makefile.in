@@ -44,7 +44,7 @@ OBJS = \
 	cpu.o \
 	event.o \
 	icache.o \
-	decoder/fetchdecode.o \
+	decoder/fetchdecode32.o \
 	access.o \
 	access2.o \
 	shift16.o \
