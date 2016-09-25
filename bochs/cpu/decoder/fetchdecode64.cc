@@ -35,6 +35,7 @@
 // immediate constant
 ///////////////////////////
 
+
 // The table for 64-bit is slightly different from the
 // table for 32-bit due to undefined opcodes, which
 // were valid in 32-bit mode
@@ -140,62 +141,64 @@ extern bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, unsigned nnn,
 extern bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, unsigned nnn, unsigned rm, unsigned vvv, unsigned vex_w, bx_bool had_evex = BX_FALSE, bx_bool displ8 = BX_FALSE);
 #endif
 
+extern const Bit8u *decodeModrm64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned mod, unsigned nnn, unsigned rm, unsigned rex_r, unsigned rex_x, unsigned rex_b);
+
 // 512 entries for 16bit operand size
 // 512 entries for 32bit operand size
 // 512 entries for 64bit operand size
 
 static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   // 512 entries for 16bit mode
-  /* 00 /w */ { BxLockable, BX_IA_ADD_EbGb },
-  /* 01 /w */ { BxLockable, BX_IA_ADD_EwGw },
+  /* 00 /w */ { 0, BX_IA_ADD_EbGb },
+  /* 01 /w */ { 0, BX_IA_ADD_EwGw },
   /* 02 /w */ { 0, BX_IA_ADD_GbEb },
   /* 03 /w */ { 0, BX_IA_ADD_GwEw },
   /* 04 /w */ { BxImmediate_Ib, BX_IA_ADD_ALIb },
   /* 05 /w */ { BxImmediate_Iw, BX_IA_ADD_AXIw },
   /* 06 /w */ { 0, BX_IA_ERROR },
   /* 07 /w */ { 0, BX_IA_ERROR },
-  /* 08 /w */ { BxLockable, BX_IA_OR_EbGb },
-  /* 09 /w */ { BxLockable, BX_IA_OR_EwGw },
+  /* 08 /w */ { 0, BX_IA_OR_EbGb },
+  /* 09 /w */ { 0, BX_IA_OR_EwGw },
   /* 0A /w */ { 0, BX_IA_OR_GbEb },
   /* 0B /w */ { 0, BX_IA_OR_GwEw },
   /* 0C /w */ { BxImmediate_Ib, BX_IA_OR_ALIb },
   /* 0D /w */ { BxImmediate_Iw, BX_IA_OR_AXIw },
   /* 0E /w */ { 0, BX_IA_ERROR },
   /* 0F /w */ { 0, BX_IA_ERROR }, // 2-byte escape
-  /* 10 /w */ { BxLockable, BX_IA_ADC_EbGb },
-  /* 11 /w */ { BxLockable, BX_IA_ADC_EwGw },
+  /* 10 /w */ { 0, BX_IA_ADC_EbGb },
+  /* 11 /w */ { 0, BX_IA_ADC_EwGw },
   /* 12 /w */ { 0, BX_IA_ADC_GbEb },
   /* 13 /w */ { 0, BX_IA_ADC_GwEw },
   /* 14 /w */ { BxImmediate_Ib, BX_IA_ADC_ALIb },
   /* 15 /w */ { BxImmediate_Iw, BX_IA_ADC_AXIw },
   /* 16 /w */ { 0, BX_IA_ERROR },
   /* 17 /w */ { 0, BX_IA_ERROR },
-  /* 18 /w */ { BxLockable, BX_IA_SBB_EbGb },
-  /* 19 /w */ { BxLockable, BX_IA_SBB_EwGw },
+  /* 18 /w */ { 0, BX_IA_SBB_EbGb },
+  /* 19 /w */ { 0, BX_IA_SBB_EwGw },
   /* 1A /w */ { 0, BX_IA_SBB_GbEb },
   /* 1B /w */ { 0, BX_IA_SBB_GwEw },
   /* 1C /w */ { BxImmediate_Ib, BX_IA_SBB_ALIb },
   /* 1D /w */ { BxImmediate_Iw, BX_IA_SBB_AXIw },
   /* 1E /w */ { 0, BX_IA_ERROR },
   /* 1F /w */ { 0, BX_IA_ERROR },
-  /* 20 /w */ { BxLockable, BX_IA_AND_EbGb },
-  /* 21 /w */ { BxLockable, BX_IA_AND_EwGw },
+  /* 20 /w */ { 0, BX_IA_AND_EbGb },
+  /* 21 /w */ { 0, BX_IA_AND_EwGw },
   /* 22 /w */ { 0, BX_IA_AND_GbEb },
   /* 23 /w */ { 0, BX_IA_AND_GwEw },
   /* 24 /w */ { BxImmediate_Ib, BX_IA_AND_ALIb },
   /* 25 /w */ { BxImmediate_Iw, BX_IA_AND_AXIw },
   /* 26 /w */ { 0, BX_IA_ERROR }, // ES:
   /* 27 /w */ { 0, BX_IA_ERROR },
-  /* 28 /w */ { BxLockable, BX_IA_SUB_EbGb },
-  /* 29 /w */ { BxLockable, BX_IA_SUB_EwGw },
+  /* 28 /w */ { 0, BX_IA_SUB_EbGb },
+  /* 29 /w */ { 0, BX_IA_SUB_EwGw },
   /* 2A /w */ { 0, BX_IA_SUB_GbEb },
   /* 2B /w */ { 0, BX_IA_SUB_GwEw },
   /* 2C /w */ { BxImmediate_Ib, BX_IA_SUB_ALIb },
   /* 2D /w */ { BxImmediate_Iw, BX_IA_SUB_AXIw },
   /* 2E /w */ { 0, BX_IA_ERROR }, // CS:
   /* 2F /w */ { 0, BX_IA_ERROR },
-  /* 30 /w */ { BxLockable, BX_IA_XOR_EbGb },
-  /* 31 /w */ { BxLockable, BX_IA_XOR_EwGw },
+  /* 30 /w */ { 0, BX_IA_XOR_EbGb },
+  /* 31 /w */ { 0, BX_IA_XOR_EwGw },
   /* 32 /w */ { 0, BX_IA_XOR_GbEb },
   /* 33 /w */ { 0, BX_IA_XOR_GwEw },
   /* 34 /w */ { BxImmediate_Ib, BX_IA_XOR_ALIb },
@@ -280,8 +283,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 83 /w */ { BxGroup1 | BxImmediate_Ib_SE, BX_IA_ERROR, BxOpcodeInfoG1Ew },
   /* 84 /w */ { 0, BX_IA_TEST_EbGb },
   /* 85 /w */ { 0, BX_IA_TEST_EwGw },
-  /* 86 /w */ { BxLockable, BX_IA_XCHG_EbGb },
-  /* 87 /w */ { BxLockable, BX_IA_XCHG_EwGw },
+  /* 86 /w */ { 0, BX_IA_XCHG_EbGb },
+  /* 87 /w */ { 0, BX_IA_XCHG_EwGw },
   /* 88 /w */ { 0, BX_IA_MOV_EbGb },
   /* 89 /w */ { 0, BX_IA_MOV_EwGw },
   /* 8A /w */ { 0, BX_IA_MOV_GbEb },
@@ -386,7 +389,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* ED /w */ { 0, BX_IA_IN_AXDX },
   /* EE /w */ { 0, BX_IA_OUT_DXAL },
   /* EF /w */ { 0, BX_IA_OUT_DXAX },
-  /* F0 /w */ { 0, BX_IA_ERROR }, // LOCK
+  /* F0 /w */ { 0, BX_IA_ERROR }, // LOCK:
   /* F1 /w */ { 0, BX_IA_INT1 },
   /* F2 /w */ { 0, BX_IA_ERROR }, // REPNE/REPNZ
   /* F3 /w */ { 0, BX_IA_ERROR }, // REP, REPE/REPZ
@@ -574,15 +577,15 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F A8 /w */ { 0, BX_IA_PUSH_Op16_Sw },
   /* 0F A9 /w */ { 0, BX_IA_POP_Op16_Sw },
   /* 0F AA /w */ { 0, BX_IA_RSM },
-  /* 0F AB /w */ { BxLockable, BX_IA_BTS_EwGw },
+  /* 0F AB /w */ { 0, BX_IA_BTS_EwGw },
   /* 0F AC /w */ { BxImmediate_Ib, BX_IA_SHRD_EwGwIb },
   /* 0F AD /w */ { 0,              BX_IA_SHRD_EwGw   },
   /* 0F AE /w */ { BxGroup15, BX_IA_ERROR, BxOpcodeInfo64G15d },
   /* 0F AF /w */ { 0, BX_IA_IMUL_GwEw },
-  /* 0F B0 /w */ { BxLockable, BX_IA_CMPXCHG_EbGb },
-  /* 0F B1 /w */ { BxLockable, BX_IA_CMPXCHG_EwGw },
+  /* 0F B0 /w */ { 0, BX_IA_CMPXCHG_EbGb },
+  /* 0F B1 /w */ { 0, BX_IA_CMPXCHG_EwGw },
   /* 0F B2 /w */ { 0, BX_IA_LSS_GwMp },
-  /* 0F B3 /w */ { BxLockable, BX_IA_BTR_EwGw },
+  /* 0F B3 /w */ { 0, BX_IA_BTR_EwGw },
   /* 0F B4 /w */ { 0, BX_IA_LFS_GwMp },
   /* 0F B5 /w */ { 0, BX_IA_LGS_GwMp },
   /* 0F B6 /w */ { 0, BX_IA_MOVZX_GwEb },
@@ -590,13 +593,13 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F B8 /w */ { BxPrefixSSEF3, BX_IA_POPCNT_GwEw },
   /* 0F B9 /w */ { 0, BX_IA_UD2B },
   /* 0F BA /w */ { BxGroup8, BX_IA_ERROR, BxOpcodeInfoG8EwIb },
-  /* 0F BB /w */ { BxLockable, BX_IA_BTC_EwGw },
+  /* 0F BB /w */ { 0, BX_IA_BTC_EwGw },
   /* 0F BC /w */ { BxPrefixSSE, BX_IA_BSF_GwEw, BxOpcodeGroupSSE_TZCNT16 },
   /* 0F BD /w */ { BxPrefixSSE, BX_IA_BSR_GwEw, BxOpcodeGroupSSE_LZCNT16 },
   /* 0F BE /w */ { 0, BX_IA_MOVSX_GwEb },
   /* 0F BF /w */ { 0, BX_IA_MOV_GwEw }, // MOVSX_GwEw
-  /* 0F C0 /w */ { BxLockable, BX_IA_XADD_EbGb },
-  /* 0F C1 /w */ { BxLockable, BX_IA_XADD_EwGw },
+  /* 0F C0 /w */ { 0, BX_IA_XADD_EbGb },
+  /* 0F C1 /w */ { 0, BX_IA_XADD_EwGw },
   /* 0F C2 /w */ { BxAliasSSE | BxImmediate_Ib, BX_IA_CMPPS_VpsWpsIb },
   /* 0F C3 /w */ { BxPrefixSSE, BX_IA_MOVNTI_Op64_MdGd, BxOpcodeGroupSSE_ERR },
   /* 0F C4 /w */ { BxPrefixSSE2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeGroupSSE_0fc4 },
@@ -661,56 +664,56 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F FF /w */ { 0, BX_IA_ERROR },
 
   // 512 entries for 32bit mode
-  /* 00 /d */ { BxLockable, BX_IA_ADD_EbGb },
-  /* 01 /d */ { BxLockable, BX_IA_ADD_EdGd },
+  /* 00 /d */ { 0, BX_IA_ADD_EbGb },
+  /* 01 /d */ { 0, BX_IA_ADD_EdGd },
   /* 02 /d */ { 0, BX_IA_ADD_GbEb },
   /* 03 /d */ { 0, BX_IA_ADD_GdEd },
   /* 04 /d */ { BxImmediate_Ib, BX_IA_ADD_ALIb },
   /* 05 /d */ { BxImmediate_Id, BX_IA_ADD_EAXId },
   /* 06 /d */ { 0, BX_IA_ERROR },
   /* 07 /d */ { 0, BX_IA_ERROR },
-  /* 08 /d */ { BxLockable, BX_IA_OR_EbGb },
-  /* 09 /d */ { BxLockable, BX_IA_OR_EdGd },
+  /* 08 /d */ { 0, BX_IA_OR_EbGb },
+  /* 09 /d */ { 0, BX_IA_OR_EdGd },
   /* 0A /d */ { 0, BX_IA_OR_GbEb },
   /* 0B /d */ { 0, BX_IA_OR_GdEd },
   /* 0C /d */ { BxImmediate_Ib, BX_IA_OR_ALIb },
   /* 0D /d */ { BxImmediate_Id, BX_IA_OR_EAXId },
   /* 0E /d */ { 0, BX_IA_ERROR },
   /* 0F /d */ { 0, BX_IA_ERROR }, // 2-byte escape
-  /* 10 /d */ { BxLockable, BX_IA_ADC_EbGb },
-  /* 11 /d */ { BxLockable, BX_IA_ADC_EdGd },
+  /* 10 /d */ { 0, BX_IA_ADC_EbGb },
+  /* 11 /d */ { 0, BX_IA_ADC_EdGd },
   /* 12 /d */ { 0, BX_IA_ADC_GbEb },
   /* 13 /d */ { 0, BX_IA_ADC_GdEd },
   /* 14 /d */ { BxImmediate_Ib, BX_IA_ADC_ALIb },
   /* 15 /d */ { BxImmediate_Id, BX_IA_ADC_EAXId },
   /* 16 /d */ { 0, BX_IA_ERROR },
   /* 17 /d */ { 0, BX_IA_ERROR },
-  /* 18 /d */ { BxLockable, BX_IA_SBB_EbGb },
-  /* 19 /d */ { BxLockable, BX_IA_SBB_EdGd },
+  /* 18 /d */ { 0, BX_IA_SBB_EbGb },
+  /* 19 /d */ { 0, BX_IA_SBB_EdGd },
   /* 1A /d */ { 0, BX_IA_SBB_GbEb },
   /* 1B /d */ { 0, BX_IA_SBB_GdEd },
   /* 1C /d */ { BxImmediate_Ib, BX_IA_SBB_ALIb },
   /* 1D /d */ { BxImmediate_Id, BX_IA_SBB_EAXId },
   /* 1E /d */ { 0, BX_IA_ERROR },
   /* 1F /d */ { 0, BX_IA_ERROR },
-  /* 20 /d */ { BxLockable, BX_IA_AND_EbGb },
-  /* 21 /d */ { BxLockable, BX_IA_AND_EdGd },
+  /* 20 /d */ { 0, BX_IA_AND_EbGb },
+  /* 21 /d */ { 0, BX_IA_AND_EdGd },
   /* 22 /d */ { 0, BX_IA_AND_GbEb },
   /* 23 /d */ { 0, BX_IA_AND_GdEd },
   /* 24 /d */ { BxImmediate_Ib, BX_IA_AND_ALIb },
   /* 25 /d */ { BxImmediate_Id, BX_IA_AND_EAXId },
   /* 26 /d */ { 0, BX_IA_ERROR }, // ES:
   /* 27 /d */ { 0, BX_IA_ERROR },
-  /* 28 /d */ { BxLockable, BX_IA_SUB_EbGb },
-  /* 29 /d */ { BxLockable, BX_IA_SUB_EdGd },
+  /* 28 /d */ { 0, BX_IA_SUB_EbGb },
+  /* 29 /d */ { 0, BX_IA_SUB_EdGd },
   /* 2A /d */ { 0, BX_IA_SUB_GbEb },
   /* 2B /d */ { 0, BX_IA_SUB_GdEd },
   /* 2C /d */ { BxImmediate_Ib, BX_IA_SUB_ALIb },
   /* 2D /d */ { BxImmediate_Id, BX_IA_SUB_EAXId },
   /* 2E /d */ { 0, BX_IA_ERROR }, // CS:
   /* 2F /d */ { 0, BX_IA_ERROR },
-  /* 30 /d */ { BxLockable, BX_IA_XOR_EbGb },
-  /* 31 /d */ { BxLockable, BX_IA_XOR_EdGd },
+  /* 30 /d */ { 0, BX_IA_XOR_EbGb },
+  /* 31 /d */ { 0, BX_IA_XOR_EdGd },
   /* 32 /d */ { 0, BX_IA_XOR_GbEb },
   /* 33 /d */ { 0, BX_IA_XOR_GdEd },
   /* 34 /d */ { BxImmediate_Ib, BX_IA_XOR_ALIb },
@@ -795,8 +798,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 83 /d */ { BxGroup1 | BxImmediate_Ib_SE, BX_IA_ERROR, BxOpcodeInfoG1Ed },
   /* 84 /d */ { 0, BX_IA_TEST_EbGb },
   /* 85 /d */ { 0, BX_IA_TEST_EdGd },
-  /* 86 /d */ { BxLockable, BX_IA_XCHG_EbGb },
-  /* 87 /d */ { BxLockable, BX_IA_XCHG_EdGd },
+  /* 86 /d */ { 0, BX_IA_XCHG_EbGb },
+  /* 87 /d */ { 0, BX_IA_XCHG_EdGd },
   /* 88 /d */ { 0, BX_IA_MOV_EbGb },
   /* 89 /d */ { 0, BX_IA_MOV_Op64_EdGd },
   /* 8A /d */ { 0, BX_IA_MOV_GbEb },
@@ -1089,15 +1092,15 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F A8 /d */ { 0, BX_IA_PUSH_Op64_Sw },
   /* 0F A9 /d */ { 0, BX_IA_POP_Op64_Sw },
   /* 0F AA /d */ { 0, BX_IA_RSM },
-  /* 0F AB /d */ { BxLockable, BX_IA_BTS_EdGd },
+  /* 0F AB /d */ { 0, BX_IA_BTS_EdGd },
   /* 0F AC /d */ { BxImmediate_Ib, BX_IA_SHRD_EdGdIb },
   /* 0F AD /d */ { 0,              BX_IA_SHRD_EdGd   },
   /* 0F AE /d */ { BxGroup15, BX_IA_ERROR, BxOpcodeInfo64G15d },
   /* 0F AF /d */ { 0, BX_IA_IMUL_GdEd },
-  /* 0F B0 /d */ { BxLockable, BX_IA_CMPXCHG_EbGb },
-  /* 0F B1 /d */ { BxLockable, BX_IA_CMPXCHG_EdGd },
+  /* 0F B0 /d */ { 0, BX_IA_CMPXCHG_EbGb },
+  /* 0F B1 /d */ { 0, BX_IA_CMPXCHG_EdGd },
   /* 0F B2 /d */ { 0, BX_IA_LSS_GdMp },
-  /* 0F B3 /d */ { BxLockable, BX_IA_BTR_EdGd },
+  /* 0F B3 /d */ { 0, BX_IA_BTR_EdGd },
   /* 0F B4 /d */ { 0, BX_IA_LFS_GdMp },
   /* 0F B5 /d */ { 0, BX_IA_LGS_GdMp },
   /* 0F B6 /d */ { 0, BX_IA_MOVZX_GdEb },
@@ -1105,13 +1108,13 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F B8 /d */ { BxPrefixSSEF3, BX_IA_POPCNT_GdEd },
   /* 0F B9 /d */ { 0, BX_IA_UD2B },
   /* 0F BA /d */ { BxGroup8, BX_IA_ERROR, BxOpcodeInfoG8EdIb },
-  /* 0F BB /d */ { BxLockable, BX_IA_BTC_EdGd },
+  /* 0F BB /d */ { 0, BX_IA_BTC_EdGd },
   /* 0F BC /d */ { BxPrefixSSE, BX_IA_BSF_GdEd, BxOpcodeGroupSSE_TZCNT32 },
   /* 0F BD /d */ { BxPrefixSSE, BX_IA_BSR_GdEd, BxOpcodeGroupSSE_LZCNT32 },
   /* 0F BE /d */ { 0, BX_IA_MOVSX_GdEb },
   /* 0F BF /d */ { 0, BX_IA_MOVSX_GdEw },
-  /* 0F C0 /d */ { BxLockable, BX_IA_XADD_EbGb },
-  /* 0F C1 /d */ { BxLockable, BX_IA_XADD_EdGd },
+  /* 0F C0 /d */ { 0, BX_IA_XADD_EbGb },
+  /* 0F C1 /d */ { 0, BX_IA_XADD_EdGd },
   /* 0F C2 /d */ { BxAliasSSE | BxImmediate_Ib, BX_IA_CMPPS_VpsWpsIb },
   /* 0F C3 /d */ { BxPrefixSSE, BX_IA_MOVNTI_Op64_MdGd, BxOpcodeGroupSSE_ERR },
   /* 0F C4 /d */ { BxPrefixSSE2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeGroupSSE_0fc4 },
@@ -1176,56 +1179,56 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F FF /d */ { 0, BX_IA_ERROR },
 
   // 512 entries for 64bit mode
-  /* 00 /q */ { BxLockable, BX_IA_ADD_EbGb },
-  /* 01 /q */ { BxLockable, BX_IA_ADD_EqGq },
+  /* 00 /q */ { 0, BX_IA_ADD_EbGb },
+  /* 01 /q */ { 0, BX_IA_ADD_EqGq },
   /* 02 /q */ { 0, BX_IA_ADD_GbEb },
   /* 03 /q */ { 0, BX_IA_ADD_GqEq },
   /* 04 /q */ { BxImmediate_Ib, BX_IA_ADD_ALIb },
   /* 05 /q */ { BxImmediate_Id, BX_IA_ADD_RAXId },
   /* 06 /q */ { 0, BX_IA_ERROR },
   /* 07 /q */ { 0, BX_IA_ERROR },
-  /* 08 /q */ { BxLockable, BX_IA_OR_EbGb },
-  /* 09 /q */ { BxLockable, BX_IA_OR_EqGq },
+  /* 08 /q */ { 0, BX_IA_OR_EbGb },
+  /* 09 /q */ { 0, BX_IA_OR_EqGq },
   /* 0A /q */ { 0, BX_IA_OR_GbEb },
   /* 0B /q */ { 0, BX_IA_OR_GqEq },
   /* 0C /q */ { BxImmediate_Ib, BX_IA_OR_ALIb },
   /* 0D /q */ { BxImmediate_Id, BX_IA_OR_RAXId },
   /* 0E /q */ { 0, BX_IA_ERROR },
   /* 0F /q */ { 0, BX_IA_ERROR }, // 2-byte escape
-  /* 10 /q */ { BxLockable, BX_IA_ADC_EbGb },
-  /* 11 /q */ { BxLockable, BX_IA_ADC_EqGq },
+  /* 10 /q */ { 0, BX_IA_ADC_EbGb },
+  /* 11 /q */ { 0, BX_IA_ADC_EqGq },
   /* 12 /q */ { 0, BX_IA_ADC_GbEb },
   /* 13 /q */ { 0, BX_IA_ADC_GqEq },
   /* 14 /q */ { BxImmediate_Ib, BX_IA_ADC_ALIb },
   /* 15 /q */ { BxImmediate_Id, BX_IA_ADC_RAXId },
   /* 16 /q */ { 0, BX_IA_ERROR },
   /* 17 /q */ { 0, BX_IA_ERROR },
-  /* 18 /q */ { BxLockable, BX_IA_SBB_EbGb },
-  /* 19 /q */ { BxLockable, BX_IA_SBB_EqGq },
+  /* 18 /q */ { 0, BX_IA_SBB_EbGb },
+  /* 19 /q */ { 0, BX_IA_SBB_EqGq },
   /* 1A /q */ { 0, BX_IA_SBB_GbEb },
   /* 1B /q */ { 0, BX_IA_SBB_GqEq },
   /* 1C /q */ { BxImmediate_Ib, BX_IA_SBB_ALIb },
   /* 1D /q */ { BxImmediate_Id, BX_IA_SBB_RAXId },
   /* 1E /q */ { 0, BX_IA_ERROR },
   /* 1F /q */ { 0, BX_IA_ERROR },
-  /* 20 /q */ { BxLockable, BX_IA_AND_EbGb },
-  /* 21 /q */ { BxLockable, BX_IA_AND_EqGq },
+  /* 20 /q */ { 0, BX_IA_AND_EbGb },
+  /* 21 /q */ { 0, BX_IA_AND_EqGq },
   /* 22 /q */ { 0, BX_IA_AND_GbEb },
   /* 23 /q */ { 0, BX_IA_AND_GqEq },
   /* 24 /q */ { BxImmediate_Ib, BX_IA_AND_ALIb },
   /* 25 /q */ { BxImmediate_Id, BX_IA_AND_RAXId },
   /* 26 /q */ { 0, BX_IA_ERROR }, // ES:
   /* 27 /q */ { 0, BX_IA_ERROR },
-  /* 28 /q */ { BxLockable, BX_IA_SUB_EbGb },
-  /* 29 /q */ { BxLockable, BX_IA_SUB_EqGq },
+  /* 28 /q */ { 0, BX_IA_SUB_EbGb },
+  /* 29 /q */ { 0, BX_IA_SUB_EqGq },
   /* 2A /q */ { 0, BX_IA_SUB_GbEb },
   /* 2B /q */ { 0, BX_IA_SUB_GqEq },
   /* 2C /q */ { BxImmediate_Ib, BX_IA_SUB_ALIb },
   /* 2D /q */ { BxImmediate_Id, BX_IA_SUB_RAXId },
   /* 2E /q */ { 0, BX_IA_ERROR }, // CS:
   /* 2F /q */ { 0, BX_IA_ERROR },
-  /* 30 /q */ { BxLockable, BX_IA_XOR_EbGb },
-  /* 31 /q */ { BxLockable, BX_IA_XOR_EqGq },
+  /* 30 /q */ { 0, BX_IA_XOR_EbGb },
+  /* 31 /q */ { 0, BX_IA_XOR_EqGq },
   /* 32 /q */ { 0, BX_IA_XOR_GbEb },
   /* 33 /q */ { 0, BX_IA_XOR_GqEq },
   /* 34 /q */ { BxImmediate_Ib, BX_IA_XOR_ALIb },
@@ -1310,8 +1313,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 83 /q */ { BxGroup1 | BxImmediate_Ib_SE, BX_IA_ERROR, BxOpcodeInfo64G1Eq },
   /* 84 /q */ { 0, BX_IA_TEST_EbGb },
   /* 85 /q */ { 0, BX_IA_TEST_EqGq },
-  /* 86 /q */ { BxLockable, BX_IA_XCHG_EbGb },
-  /* 87 /q */ { BxLockable, BX_IA_XCHG_EqGq },
+  /* 86 /q */ { 0, BX_IA_XCHG_EbGb },
+  /* 87 /q */ { 0, BX_IA_XCHG_EqGq },
   /* 88 /q */ { 0, BX_IA_MOV_EbGb },
   /* 89 /q */ { 0, BX_IA_MOV_EqGq },
   /* 8A /q */ { 0, BX_IA_MOV_GbEb },
@@ -1604,15 +1607,15 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F A8 /q */ { 0, BX_IA_PUSH_Op64_Sw },
   /* 0F A9 /q */ { 0, BX_IA_POP_Op64_Sw },
   /* 0F AA /q */ { 0, BX_IA_RSM },
-  /* 0F AB /q */ { BxLockable, BX_IA_BTS_EqGq },
+  /* 0F AB /q */ { 0, BX_IA_BTS_EqGq },
   /* 0F AC /q */ { BxImmediate_Ib, BX_IA_SHRD_EqGqIb },
   /* 0F AD /q */ { 0,              BX_IA_SHRD_EqGq   },
   /* 0F AE /q */ { BxGroup15, BX_IA_ERROR, BxOpcodeInfo64G15q },
   /* 0F AF /q */ { 0, BX_IA_IMUL_GqEq },
-  /* 0F B0 /q */ { BxLockable, BX_IA_CMPXCHG_EbGb },
-  /* 0F B1 /q */ { BxLockable, BX_IA_CMPXCHG_EqGq },
+  /* 0F B0 /q */ { 0, BX_IA_CMPXCHG_EbGb },
+  /* 0F B1 /q */ { 0, BX_IA_CMPXCHG_EqGq },
   /* 0F B2 /q */ { 0, BX_IA_LSS_GqMp }, // TODO: LSS_GdMp for AMD CPU
-  /* 0F B3 /q */ { BxLockable, BX_IA_BTR_EqGq },
+  /* 0F B3 /q */ { 0, BX_IA_BTR_EqGq },
   /* 0F B4 /q */ { 0, BX_IA_LFS_GqMp }, // TODO: LFS_GdMp for AMD CPU
   /* 0F B5 /q */ { 0, BX_IA_LGS_GqMp }, // TODO: LGS_GdMp for AMD CPU
   /* 0F B6 /q */ { 0, BX_IA_MOVZX_GqEb },
@@ -1620,13 +1623,13 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F B8 /q */ { BxPrefixSSEF3, BX_IA_POPCNT_GqEq },
   /* 0F B9 /q */ { 0, BX_IA_UD2B },
   /* 0F BA /q */ { BxGroup8, BX_IA_ERROR, BxOpcodeInfo64G8EqIb },
-  /* 0F BB /q */ { BxLockable, BX_IA_BTC_EqGq },
+  /* 0F BB /q */ { 0, BX_IA_BTC_EqGq },
   /* 0F BC /q */ { BxPrefixSSE, BX_IA_BSF_GqEq, BxOpcodeGroupSSE_TZCNT64 },
   /* 0F BD /q */ { BxPrefixSSE, BX_IA_BSR_GqEq, BxOpcodeGroupSSE_LZCNT64 },
   /* 0F BE /q */ { 0, BX_IA_MOVSX_GqEb },
   /* 0F BF /q */ { 0, BX_IA_MOVSX_GqEw },
-  /* 0F C0 /q */ { BxLockable, BX_IA_XADD_EbGb },
-  /* 0F C1 /q */ { BxLockable, BX_IA_XADD_EqGq },
+  /* 0F C0 /q */ { 0, BX_IA_XADD_EbGb },
+  /* 0F C1 /q */ { 0, BX_IA_XADD_EqGq },
   /* 0F C2 /q */ { BxAliasSSE | BxImmediate_Ib, BX_IA_CMPPS_VpsWpsIb },
   /* 0F C3 /q */ { BxPrefixSSE, BX_IA_MOVNTI_MqGq, BxOpcodeGroupSSE_ERR },
   /* 0F C4 /q */ { BxPrefixSSE2 | BxImmediate_Ib, BX_IA_ERROR, BxOpcodeGroupSSE_0fc4 },
@@ -1691,216 +1694,430 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F FF /q */ { 0, BX_IA_ERROR }
 };
 
-const Bit8u *decodeModrm64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned mod, unsigned nnn, unsigned rm, unsigned rex_r, unsigned rex_x, unsigned rex_b)
+#if BX_SUPPORT_AVX
+int decoder_vex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix)
 {
-  unsigned seg = BX_SEG_REG_DS;
+  unsigned rex_r = 0, rex_x = 0, rex_b = 0;
+  unsigned rm = 0, mod = 0, nnn = 0;
+  unsigned b2 = 0;
+  int ia_opcode = BX_IA_ERROR;
 
-  i->setSibBase(rm & 0xf); // initialize with rm to use BxResolve64Base
-  i->setSibIndex(4);
-  // initialize displ32 with zero to include cases with no diplacement
-  i->modRMForm.displ32u = 0;
+  unsigned offset = 512; 
+  if (! i->os32L())
+    offset = 0;
 
-  // note that mod==11b handled outside
+  // VEX
+  assert((b1 & ~0x1) == 0xc4);
 
-  if ((rm & 0x7) != 4) { // no s-i-b byte
-    if (mod == 0x00) { // mod == 00b
-      if ((rm & 0x7) == 5) {
-        i->setSibBase(BX_64BIT_REG_RIP);
-        goto get_32bit_displ;
-      }
-      // mod==00b, rm!=4, rm!=5
-      goto modrm_done;
-    }
-    // (mod == 0x40), mod==01b or (mod == 0x80), mod==10b
-    seg = sreg_mod1or2_base32[rm & 0xf];
-  }
-  else { // mod!=11b, rm==4, s-i-b byte follows
-    unsigned sib, base, index, scale;
-    if (remain != 0) {
-      sib = *iptr++;
-      remain--;
-    }
-    else {
-      return NULL;
-    }
-    base  = (sib & 0x7) | rex_b; sib >>= 3;
-    index = (sib & 0x7) | rex_x; sib >>= 3;
-    scale =  sib;
-    i->setSibScale(scale);
-    i->setSibBase(base & 0xf);
-    // this part is a little tricky - assign index value always,
-    // it will be really used if the instruction is Gather. Others
-    // assume that resolve function will do the right thing.
-    i->setSibIndex(index & 0xf);
-    if (mod == 0x00) { // mod==00b, rm==4
-      seg = sreg_mod0_base32[base & 0xf];
-      if ((base & 0x7) == 5) {
-        i->setSibBase(BX_NIL_REGISTER);
-        goto get_32bit_displ;
-      }
-      // mod==00b, rm==4, base!=5
-      goto modrm_done;
-    }
-    // (mod == 0x40), mod==01b or (mod == 0x80), mod==10b
-    seg = sreg_mod1or2_base32[base & 0xf];
-  }
-
-  // (mod == 0x40), mod==01b
-  if (mod == 0x40) {
-    if (remain != 0) {
-      // 8 sign extended to 32
-      i->modRMForm.displ32u = (Bit8s) *iptr++;
-      remain--;
-    }
-    else {
-      return NULL;
-    }
-  }
-  else {
-
-get_32bit_displ:
-
-    // (mod == 0x80), mod==10b
-    if (remain > 3) {
-      i->modRMForm.displ32u = FetchDWORD(iptr);
-      iptr += 4;
-      remain -= 4;
-    }
-    else {
-      return NULL;
-    }
-  }
-
-modrm_done:
-
-  i->setSeg(seg);
-  return iptr;  
-}
-
-int fetchDecode64(const Bit8u *iptr, Bit32u fetchModeMask, bx_bool handle_lock_cr0, bxInstruction_c *i, unsigned remainingInPage)
-{
-  if (remainingInPage > 15) remainingInPage = 15;
-
-  unsigned remain = remainingInPage; // remain must be at least 1
-  unsigned b1, b2 = 0, ia_opcode = BX_IA_ERROR, imm_mode = 0;
-  unsigned offset = 512, rex_r = 0, rex_x = 0, rex_b = 0;
-  unsigned rm = 0, mod = 0, nnn = 0, mod_mem = 0;
-  unsigned seg_override = BX_SEG_REG_NULL;
-  bx_bool lock = 0;
-
-#define SSE_PREFIX_NONE 0
-#define SSE_PREFIX_66   1
-#define SSE_PREFIX_F3   2
-#define SSE_PREFIX_F2   3
-  unsigned sse_prefix = SSE_PREFIX_NONE;
-  unsigned rex_prefix = 0;
+  if (sse_prefix | rex_prefix)
+    return(ia_opcode);
 
   bx_bool vex_w = 0;
-#if BX_SUPPORT_AVX
-  int had_vex_xop = 0, vvv = -1;
-#endif
-
-#if BX_SUPPORT_EVEX
-  bx_bool displ8 = BX_FALSE;
-#endif
-
-  i->init(/*os32*/ 1,  // operand size 32 override defaults to 1
-          /*as32*/ 1,  // address size 32 override defaults to 1
-          /*os64*/ 0,  // operand size 64 override defaults to 0
-          /*as64*/ 1); // address size 64 override defaults to 1
-
-fetch_b1:
-  b1 = *iptr++;
+  unsigned vex_opcext = 1;
+  if (remain == 0)
+    return(-1);
   remain--;
+  unsigned vex = *iptr++;
 
-  switch (b1) {
-    case 0x40:
-    case 0x41:
-    case 0x42:
-    case 0x43:
-    case 0x44:
-    case 0x45:
-    case 0x46:
-    case 0x47:
-    case 0x48:
-    case 0x49:
-    case 0x4A:
-    case 0x4B:
-    case 0x4C:
-    case 0x4D:
-    case 0x4E:
-    case 0x4F:
-      rex_prefix = b1;
-      if (remain != 0) {
-        goto fetch_b1;
-      }
-      return(-1);
-    case 0x0f: // 2 byte escape
-      if (remain != 0) {
-        remain--;
-        b1 = 0x100 | *iptr++;
-        break;
-      }
-      return(-1);
-    case 0xf2: // REPNE/REPNZ
-    case 0xf3: // REP/REPE/REPZ
-      rex_prefix = 0;
-      sse_prefix = (b1 & 3) ^ 1;
-      i->setLockRepUsed(b1 & 3);
-      if (remain != 0) {
-        goto fetch_b1;
-      }
-      return(-1);
-    case 0x2e: // CS:
-    case 0x26: // ES:
-    case 0x36: // SS:
-    case 0x3e: // DS:
-      /* ignore segment override prefix */
-      rex_prefix = 0;
-      if (remain != 0) {
-        goto fetch_b1;
-      }
-      return(-1);
-    case 0x64: // FS:
-    case 0x65: // GS:
-      rex_prefix = 0;
-      seg_override = b1 & 0xf;
-      if (remain != 0) {
-        goto fetch_b1;
-      }
-      return(-1);
-    case 0x66: // OpSize
-      rex_prefix = 0;
-      if(!sse_prefix) sse_prefix = SSE_PREFIX_66;
-      i->setOs32B(0);
-      offset = 0;
-      if (remain != 0) {
-        goto fetch_b1;
-      }
-      return(-1);
-    case 0x67: // AddrSize
-      rex_prefix = 0;
-      i->clearAs64();
-      if (remain != 0) {
-        goto fetch_b1;
-      }
-      return(-1);
-    case 0xf0: // LOCK:
-      rex_prefix = 0;
-      lock = 1;
-      if (remain != 0) {
-        goto fetch_b1;
-      }
-      return(-1);
-    default:
-      break;
-  }
+  rex_r = ((vex >> 4) & 0x8) ^ 0x8;
+  if (b1 == 0xc4) {
+    rex_x = ((vex >> 3) & 0x8) ^ 0x8;
+    rex_b = ((vex >> 2) & 0x8) ^ 0x8;
 
-  if (rex_prefix) {
-    i->assertExtend8bit();
-    if (rex_prefix & 0x8) {
+    // decode 3-byte VEX prefix
+    vex_opcext = vex & 0x1f;
+    if (remain == 0)
+      return(-1);
+    remain--;
+    vex = *iptr++;  // fetch VEX3
+
+    if (vex & 0x80) {
+      vex_w = 1;
       i->assertOs64();
       i->assertOs32();
+      offset = 512*2;
+    }
+  }
+
+  int vvv = 15 - ((vex >> 3) & 0xf);
+  unsigned vex_l = (vex >> 2) & 0x1;
+  i->setVL(BX_VL128 + vex_l);
+  sse_prefix = vex & 0x3;
+
+  if (remain == 0)
+    return(-1);
+  remain--;
+  unsigned opcode_byte = *iptr++; // fetch new b1
+  opcode_byte += 256 * vex_opcext;
+  if (opcode_byte < 256 || opcode_byte >= 1024)
+    return(ia_opcode);
+  bx_bool has_modrm = (opcode_byte != 0x177); // if not VZEROUPPER/VZEROALL opcode
+
+  const BxOpcodeInfo_t *OpcodeInfoPtr = &BxOpcodeTableAVX[(opcode_byte-256)*2 + vex_l];
+  Bit16u attr = OpcodeInfoPtr->Attr;
+
+  if (has_modrm) {
+    // opcode requires modrm byte
+    if (remain == 0)
+      return(-1);
+    remain--;
+    b2 = *iptr++;
+
+    // Parse mod-nnn-rm and related bytes
+    mod = b2 & 0xc0;
+    nnn = ((b2 >> 3) & 0x7) | rex_r;
+    rm  = (b2 & 0x7) | rex_b;
+
+    if (mod == 0xc0) { // mod == 11b
+      i->assertModC0();
+    }
+    else {
+      iptr = decodeModrm64(iptr, remain, i, mod, nnn, rm, rex_r, rex_x, rex_b);
+      if (! iptr) 
+        return(-1);
+    }
+
+    ia_opcode = WalkOpcodeTables(OpcodeInfoPtr, attr, BX_TRUE, b2, sse_prefix, offset >> 9, i->getVL(), vex_w);
+  }
+  else {
+    // Opcode does not require a MODRM byte.
+    // Note that a 2-byte opcode (0F XX) will jump to before
+    // the if() above after fetching the 2nd byte, so this path is
+    // taken in all cases if a modrm byte is NOT required.
+
+    unsigned group = attr & BxGroupX;
+    if (group == BxPrefixSSE && sse_prefix)
+      OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix-1]);
+
+    ia_opcode = OpcodeInfoPtr->IA;
+    rm = (b1 & 7) | rex_b;
+    nnn = (b1 >> 3) & 7;
+    i->assertModC0();
+  }
+
+  unsigned imm_mode = attr & BxImmediate;
+  if (imm_mode) {
+    if (BxImmediate_Ib == imm_mode) {
+      if (remain != 0) {
+        i->modRMForm.Ib[0] = *iptr;
+        remain--;
+      }
+      else {
+        return(-1);
+      }
+    }
+    else {
+      BX_PANIC(("fetchdecode: EVEX with imm_mode = %u", imm_mode));
+    }
+  }
+
+  if (! assign_srcs(i, ia_opcode, nnn, rm, vvv, vex_w))
+    ia_opcode = BX_IA_ERROR;
+
+  // invalid opcode sanity checks
+  if ((attr & BxVexW0) != 0 && vex_w) {
+    ia_opcode = BX_IA_ERROR;
+  }
+  else if ((attr & BxVexW1) != 0 && !vex_w) {
+    ia_opcode = BX_IA_ERROR;
+  }
+  else if ((attr & BxVexL0) != 0 && i->getVL() != BX_VL128) {
+    ia_opcode = BX_IA_ERROR;
+  }
+  else if ((attr & BxVexL1) != 0 && i->getVL() == BX_VL128) {
+    ia_opcode = BX_IA_ERROR;
+  }
+
+  return ia_opcode;
+}
+
+#if BX_SUPPORT_EVEX
+int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix)
+{
+  unsigned rex_r = 0, rex_x = 0, rex_b = 0;
+  unsigned rm = 0, mod = 0, nnn = 0;
+  unsigned b2 = 0;
+  int ia_opcode = BX_IA_ERROR;
+
+  bx_bool displ8 = BX_FALSE;
+
+  unsigned offset = 512; 
+  if (! i->os32L())
+    offset = 0;
+
+  // EVEX prefix 0x62
+  assert(b1 == 0x62);
+  if (sse_prefix | rex_prefix)
+    return(ia_opcode);
+
+  Bit32u evex;
+  if (remain > 3) {
+    evex = FetchDWORD(iptr);
+    iptr += 4;
+    remain -= 4;
+  }
+  else {
+    return(-1);
+  }
+
+  // check for reserved EVEX bits
+  if ((evex & 0x0c) != 0 || (evex & 0x400) == 0)
+    return(ia_opcode);
+
+  unsigned evex_opcext = evex & 0x3;
+  if (evex_opcext == 0)
+    return(ia_opcode);
+
+  rex_r = ((evex >> 4) & 0x8) ^ 0x8;
+  rex_r |= (evex & 0x10) ^ 0x10;
+  rex_x = ((evex >> 3) & 0x8) ^ 0x8;
+  rex_b = ((evex >> 2) & 0x8) ^ 0x8;
+  rex_b |= (rex_x << 1);
+
+  sse_prefix = (evex >> 8) & 0x3;
+  int vvv = 15 - ((evex >> 11) & 0xf);
+  unsigned evex_v = ((evex >> 15) & 0x10) ^ 0x10;
+  vvv |= evex_v;
+  unsigned vex_w = (evex >> 15) & 0x1;
+  if (vex_w) {
+    i->assertOs64();
+    i->assertOs32();
+    offset = 512*2;
+  }
+
+  unsigned opmask = (evex >> 16) & 0x7;
+  i->setOpmask(opmask);
+  unsigned evex_b = (evex >> 20) & 0x1;
+  i->setEvexb(evex_b);
+
+  unsigned evex_vl_rc = (evex >> 21) & 0x3;
+  i->setRC(evex_vl_rc);
+  i->setVL(1 << evex_vl_rc);
+
+  unsigned evex_z = (evex >> 23) & 0x1;
+  i->setZeroMasking(evex_z);
+
+  if (evex_z && ! opmask)
+    return(ia_opcode);
+   
+  unsigned opcode_byte = (evex >> 24);
+  opcode_byte += 256 * (evex_opcext-1);
+
+  const BxOpcodeInfo_t *OpcodeInfoPtr = &BxOpcodeTableEVEX[opcode_byte*2 + (opmask != 0)];
+  Bit16u attr = OpcodeInfoPtr->Attr;
+
+  // opcode requires modrm byte
+  if (remain == 0)
+    return(-1);
+  remain--;
+  b2 = *iptr++;
+
+  // Parse mod-nnn-rm and related bytes
+  mod = b2 & 0xc0;
+  nnn = ((b2 >> 3) & 0x7) | rex_r;
+  rm  = (b2 & 0x7) | rex_b;
+
+  if (mod == 0xc0) { // mod == 11b
+    i->assertModC0();
+  }
+  else {
+    iptr = decodeModrm64(iptr, remain, i, mod, nnn, rm, rex_r, rex_x, rex_b);
+    if (! iptr) 
+      return(-1);
+    if (mod == 0x40) { // mod==01b
+      displ8 = BX_TRUE;
+    }
+  }
+
+  // EVEX.b in reg form implies 512-bit vector length
+  if (i->modC0() && i->getEvexb()) {
+    i->setVL(BX_VL512);
+  }
+
+  ia_opcode = WalkOpcodeTables(OpcodeInfoPtr, attr, BX_TRUE, b2, sse_prefix, offset >> 9, i->getVL(), vex_w);
+
+  unsigned imm_mode = attr & BxImmediate;
+  if (imm_mode) {
+    if (BxImmediate_Ib == imm_mode) {
+      if (remain != 0) {
+        i->modRMForm.Ib[0] = *iptr;
+        remain--;
+      }
+      else {
+        return(-1);
+      }
+    }
+    else {
+      BX_PANIC(("fetchdecode: EVEX with imm_mode = %u", imm_mode));
+    }
+  }
+
+  if (! assign_srcs(i, ia_opcode, nnn, rm, vvv, vex_w, BX_TRUE, displ8))
+    ia_opcode = BX_IA_ERROR;
+
+  // invalid opcode sanity checks
+  if ((attr & BxVexW0) != 0 && vex_w) {
+    ia_opcode = BX_IA_ERROR;
+  }
+  else if ((attr & BxVexW1) != 0 && !vex_w) {
+    ia_opcode = BX_IA_ERROR;
+  }
+  // EVEX specific #UD conditions
+  else if (i->getVL() > BX_VL512) {
+    ia_opcode = BX_IA_ERROR;
+  }
+  else if ((attr & BxVexL0) != 0 && i->getVL() != BX_VL128) {
+    ia_opcode = BX_IA_ERROR;
+  }
+  else if ((attr & BxVexL1) != 0 && i->getVL() == BX_VL128) {
+    ia_opcode = BX_IA_ERROR;
+  }
+
+  return ia_opcode;
+}
+#endif
+
+int decoder_xop64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix)
+{
+  unsigned rex_r = 0, rex_x = 0, rex_b = 0;
+  unsigned rm = 0, mod = 0, nnn = 0;
+  unsigned b2 = 0;
+  int ia_opcode = BX_IA_ERROR;
+  bx_bool vex_w = 0;
+
+  unsigned offset = 512; 
+  if (! i->os32L())
+    offset = 0;
+
+  // 3 byte XOP prefix
+  assert(b1 == 0x8f && (*iptr & 0x08) == 0x08);
+
+  if (sse_prefix | rex_prefix)
+    return(ia_opcode);
+
+  unsigned vex;
+  if (remain > 2) {
+    remain -= 3;
+    vex = *iptr++; // fetch XOP2
+  }
+  else
+    return(-1);
+
+  rex_r = ((vex >> 4) & 0x8) ^ 0x8;
+  rex_x = ((vex >> 3) & 0x8) ^ 0x8;
+  rex_b = ((vex >> 2) & 0x8) ^ 0x8;
+
+  unsigned xop_opcext = (vex & 0x1f) - 8;
+  if (xop_opcext >= 3)
+    return(ia_opcode);
+
+  vex = *iptr++; // fetch XOP3
+
+  if (vex & 0x80) {
+    vex_w = 1;
+    i->assertOs64();
+    i->assertOs32();
+    offset = 512*2;
+  }
+
+  int vvv = 15 - ((vex >> 3) & 0xf);
+  unsigned vex_l = (vex >> 2) & 0x1;
+  i->setVL(BX_VL128 + vex_l);
+  sse_prefix = vex & 0x3;
+  if (sse_prefix)
+    return(ia_opcode);
+
+  unsigned opcode_byte = *iptr++;
+  opcode_byte += 256 * xop_opcext;
+
+  const BxOpcodeInfo_t *OpcodeInfoPtr = &BxOpcodeTableXOP[opcode_byte];
+  Bit16u attr = OpcodeInfoPtr->Attr;
+
+  // opcode requires modrm byte
+  if (remain == 0)
+    return(-1);
+  remain--;
+  b2 = *iptr++;
+
+  // Parse mod-nnn-rm and related bytes
+  mod = b2 & 0xc0;
+  nnn = ((b2 >> 3) & 0x7) | rex_r;
+  rm  = (b2 & 0x7) | rex_b;
+
+  if (mod == 0xc0) { // mod == 11b
+    i->assertModC0();
+  }
+  else {
+    iptr = decodeModrm64(iptr, remain, i, mod, nnn, rm, rex_r, rex_x, rex_b);
+    if (! iptr) 
+      return(-1);
+  }
+
+  ia_opcode = WalkOpcodeTables(OpcodeInfoPtr, attr, BX_TRUE, b2, sse_prefix, offset >> 9, i->getVL(), vex_w);
+
+  unsigned imm_mode = attr & BxImmediate;
+  if (imm_mode) {
+    // make sure iptr was advanced after Ib(), Iw() and Id()
+    switch (imm_mode) {
+      case BxImmediate_Ib:
+        if (remain != 0) {
+          i->modRMForm.Ib[0] = *iptr++;
+          remain--;
+        }
+        else {
+          return(-1);
+        }
+        break;
+      case BxImmediate_Id:
+        if (remain > 3) {
+          i->modRMForm.Id = FetchDWORD(iptr);
+          iptr += 4;
+          remain -= 4;
+        }
+        else {
+          return(-1);
+        }
+        break;
+      default:
+        BX_PANIC(("fetchdecode: XOP with imm_mode = %u", imm_mode));
+        break;
+    }
+  }
+
+  if (! assign_srcs(i, ia_opcode, nnn, rm, vvv, vex_w))
+    ia_opcode = BX_IA_ERROR;
+
+  // invalid opcode sanity checks
+  if ((attr & BxVexW0) != 0 && vex_w) {
+    ia_opcode = BX_IA_ERROR;
+  }
+  else if ((attr & BxVexW1) != 0 && !vex_w) {
+    ia_opcode = BX_IA_ERROR;
+  }
+  else if ((attr & BxVexL0) != 0 && i->getVL() != BX_VL128) {
+    ia_opcode = BX_IA_ERROR;
+  }
+  else if ((attr & BxVexL1) != 0 && i->getVL() == BX_VL128) {
+    ia_opcode = BX_IA_ERROR;
+  }
+
+  return ia_opcode;
+}
+
+#endif
+
+int decoder64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix)
+{
+  unsigned offset = 512, rex_r = 0, rex_x = 0, rex_b = 0;
+  unsigned rm = 0, mod = 0, nnn = 0;
+  unsigned b2 = 0;
+  int ia_opcode = BX_IA_ERROR;
+
+  if (! i->os32L())
+    offset = 0;
+
+  if (rex_prefix) {
+    if (rex_prefix & 0x8) {
       offset = 512*2;
     }
     rex_r = ((rex_prefix & 0x4) << 1);
@@ -1908,10 +2125,7 @@ fetch_b1:
     rex_b = ((rex_prefix & 0x1) << 3);
   }
 
-  i->modRMForm.Id = 0;
-
   unsigned index = b1+offset;
-
   const BxOpcodeInfo_t *OpcodeInfoPtr = &(BxOpcodeInfo64[index]);
   Bit16u attr = OpcodeInfoPtr->Attr;
 
@@ -1920,175 +2134,23 @@ fetch_b1:
 #if BX_SUPPORT_AVX
   if ((b1 & ~0x1) == 0xc4) {
     // VEX
-    had_vex_xop = b1;
-    if (sse_prefix | rex_prefix)
-      goto decode_done;
-/*
-    if (! protected_mode())
-      goto decode_done;
-*/
-    unsigned vex, vex_opcext = 1;
-    if (remain == 0)
-      return(-1);
-    remain--;
-    vex = *iptr++;
-
-    rex_r = ((vex >> 4) & 0x8) ^ 0x8;
-    if (b1 == 0xc4) {
-      rex_x = ((vex >> 3) & 0x8) ^ 0x8;
-      rex_b = ((vex >> 2) & 0x8) ^ 0x8;
-
-      // decode 3-byte VEX prefix
-      vex_opcext = vex & 0x1f;
-      if (remain == 0)
-        return(-1);
-      remain--;
-      vex = *iptr++;  // fetch VEX3
-
-      if (vex & 0x80) {
-        vex_w = 1;
-        i->assertOs64();
-        i->assertOs32();
-      }
-    }
-
-    vvv = 15 - ((vex >> 3) & 0xf);
-    unsigned vex_l = (vex >> 2) & 0x1;
-    i->setVL(BX_VL128 + vex_l);
-    sse_prefix = vex & 0x3;
-
-    if (remain == 0)
-      return(-1);
-    remain--;
-    unsigned opcode_byte = *iptr++; // fetch new b1
-
-    opcode_byte += 256 * vex_opcext;
-    if (opcode_byte < 256 || opcode_byte >= 1024)
-      goto decode_done;
-    has_modrm = (opcode_byte != 0x177); // if not VZEROUPPER/VZEROALL opcode
-
-    OpcodeInfoPtr = &BxOpcodeTableAVX[(opcode_byte-256)*2 + vex_l];
-    attr = OpcodeInfoPtr->Attr;
+    return decoder_vex64(iptr, remain, i, b1, sse_prefix, rex_prefix);
   }
 #if BX_SUPPORT_EVEX
   else if (b1 == 0x62) {
-    had_vex_xop = b1;
-    if (sse_prefix | rex_prefix)
-      goto decode_done;
-/*
-    if (! protected_mode())
-      goto decode_done;
-*/
-    Bit32u evex;
-    if (remain > 3) {
-      evex = FetchDWORD(iptr);
-      iptr += 4;
-      remain -= 4;
-    }
-    else {
-      return(-1);
-    }
-
-    // check for reserved EVEX bits
-    if ((evex & 0x0c) != 0 || (evex & 0x400) == 0)
-      goto decode_done;
-
-    unsigned evex_opcext = evex & 0x3;
-    if (evex_opcext == 0)
-      goto decode_done;
-
-    rex_r = ((evex >> 4) & 0x8) ^ 0x8;
-    rex_r |= (evex & 0x10) ^ 0x10;
-    rex_x = ((evex >> 3) & 0x8) ^ 0x8;
-    rex_b = ((evex >> 2) & 0x8) ^ 0x8;
-    rex_b |= (rex_x << 1);
-
-    sse_prefix = (evex >> 8) & 0x3;
-    vvv = 15 - ((evex >> 11) & 0xf);
-    unsigned evex_v = ((evex >> 15) & 0x10) ^ 0x10;
-    vvv |= evex_v;
-    vex_w = (evex >> 15) & 0x1;
-    if (vex_w) {
-      i->assertOs64();
-      i->assertOs32();
-    }
-
-    unsigned opmask = (evex >> 16) & 0x7;
-    i->setOpmask(opmask);
-    unsigned evex_b = (evex >> 20) & 0x1;
-    i->setEvexb(evex_b);
-
-    unsigned evex_vl_rc = (evex >> 21) & 0x3;
-    i->setRC(evex_vl_rc);
-    i->setVL(1 << evex_vl_rc);
-
-    unsigned evex_z = (evex >> 23) & 0x1;
-    i->setZeroMasking(evex_z);
-
-    if (evex_z && ! opmask)
-      goto decode_done;
-    
-    unsigned opcode_byte = (evex >> 24);
-    opcode_byte += 256 * (evex_opcext-1);
-    has_modrm = 1;
-
-    OpcodeInfoPtr = &BxOpcodeTableEVEX[opcode_byte*2 + (opmask != 0)];
-    attr = OpcodeInfoPtr->Attr;
+    // EVEX
+    return decoder_evex64(iptr, remain, i, b1, sse_prefix, rex_prefix);
   }
 #endif
   else if (b1 == 0x8f && (*iptr & 0x08) == 0x08) {
     // 3 byte XOP prefix
-    had_vex_xop = b1;
-    if (sse_prefix | rex_prefix)
-      goto decode_done;
-/*
-    if (! protected_mode())
-      goto decode_done;
-*/
-    unsigned vex;
-    if (remain > 2) {
-      remain -= 3;
-      vex = *iptr++; // fetch XOP2
-    }
-    else
-      return(-1);
-
-    rex_r = ((vex >> 4) & 0x8) ^ 0x8;
-    rex_x = ((vex >> 3) & 0x8) ^ 0x8;
-    rex_b = ((vex >> 2) & 0x8) ^ 0x8;
-
-    unsigned xop_opcext = (vex & 0x1f) - 8;
-    if (xop_opcext >= 3)
-      goto decode_done;
-
-    vex = *iptr++; // fetch XOP3
-
-    if (vex & 0x80) {
-      vex_w = 1;
-      i->assertOs64();
-      i->assertOs32();
-    }
-
-    vvv = 15 - ((vex >> 3) & 0xf);
-    unsigned vex_l = (vex >> 2) & 0x1;
-    i->setVL(BX_VL128 + vex_l);
-    sse_prefix = vex & 0x3;
-    if (sse_prefix) goto decode_done;
-
-    unsigned opcode_byte = *iptr++;
-    has_modrm = 1;
-    opcode_byte += 256 * xop_opcext;
-
-    OpcodeInfoPtr = &BxOpcodeTableXOP[opcode_byte];
-    attr = OpcodeInfoPtr->Attr;
+    return decoder_xop64(iptr, remain, i, b1, sse_prefix, rex_prefix);
   }
   else
 #endif
   {
     has_modrm = BxOpcodeHasModrm64[b1];
   }
-
-  i->setSeg(BX_SEG_REG_DS); // default segment is DS:
 
   if (has_modrm) {
 
@@ -2125,25 +2187,12 @@ fetch_b1:
       i->assertModC0();
     }
     else {
-      mod_mem = 1;
       iptr = decodeModrm64(iptr, remain, i, mod, nnn, rm, rex_r, rex_x, rex_b);
       if (! iptr) 
         return(-1);
-#if BX_SUPPORT_EVEX
-      if (mod == 0x40) { // mod==01b
-        displ8 = BX_TRUE;
-      }
-#endif
     }
 
-#if BX_SUPPORT_EVEX
-    // EVEX.b in reg form implies 512-bit vector length
-    if (i->modC0() && i->getEvexb()) {
-      i->setVL(BX_VL512);
-    }
-#endif
-
-    ia_opcode = WalkOpcodeTables(OpcodeInfoPtr, attr, BX_TRUE, b2, sse_prefix, offset >> 9, i->getVL(), vex_w);
+    ia_opcode = WalkOpcodeTables(OpcodeInfoPtr, attr, BX_TRUE, b2, sse_prefix, offset >> 9, i->getVL(), 0);
   }
   else {
     // Opcode does not require a MODRM byte.
@@ -2168,21 +2217,7 @@ fetch_b1:
     }
   }
 
-  if (lock) { // lock prefix invalid opcode
-    // lock prefix not allowed or destination operand is not memory
-    if (!mod_mem || !(attr & BxLockable)) {
-      if (handle_lock_cr0 && (ia_opcode == BX_IA_MOV_CR0Rq || ia_opcode == BX_IA_MOV_RqCR0)) {
-        nnn = 8; // extend CR0 -> CR8
-      }
-      else {
-        BX_INFO(("LOCK prefix unallowed (op1=0x%x, modrm=0x%02x)", b1, b2));
-        // replace execution function with undefined-opcode
-        ia_opcode = BX_IA_ERROR;
-      }
-    }
-  }
-
-  imm_mode = attr & BxImmediate;
+  unsigned imm_mode = attr & BxImmediate;
   if (imm_mode) {
     // make sure iptr was advanced after Ib(), Iw() and Id()
     switch (imm_mode) {
@@ -2275,25 +2310,20 @@ fetch_b1:
         break;
     }
 
-#if BX_SUPPORT_AVX
-    if (! had_vex_xop)
-#endif
-    {
-      unsigned imm_mode2 = attr & BxImmediate2;
-      if (imm_mode2) {
-        if (imm_mode2 == BxImmediate_Ib2) {
-          if (remain != 0) {
-            i->modRMForm.Ib2[0] = *iptr;
-            remain--;
-          }
-          else {
-            return(-1);
-          }
+    unsigned imm_mode2 = attr & BxImmediate2;
+    if (imm_mode2) {
+      if (imm_mode2 == BxImmediate_Ib2) {
+        if (remain != 0) {
+          i->modRMForm.Ib2[0] = *iptr;
+          remain--;
         }
         else {
-          BX_INFO(("b1 was %x", b1));
-          BX_PANIC(("fetchdecode64: imm_mode2 = %u", imm_mode2));
+          return(-1);
         }
+      }
+      else {
+        BX_INFO(("b1 was %x", b1));
+        BX_PANIC(("fetchdecode64: imm_mode2 = %u", imm_mode2));
       }
     }
   }
@@ -2303,62 +2333,225 @@ fetch_b1:
     ia_opcode = Bx3DNowOpcode[i->modRMForm.Ib[0]];
 #endif
 
+  if (! assign_srcs(i, ia_opcode, nnn, rm))
+    ia_opcode = BX_IA_ERROR;
+
+  return ia_opcode;
+}
+
+const Bit8u *decodeModrm64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned mod, unsigned nnn, unsigned rm, unsigned rex_r, unsigned rex_x, unsigned rex_b)
+{
+  unsigned seg = BX_SEG_REG_DS;
+
+  i->setSibBase(rm & 0xf); // initialize with rm to use BxResolve64Base
+  i->setSibIndex(4);
+  // initialize displ32 with zero to include cases with no diplacement
+  i->modRMForm.displ32u = 0;
+
+  // note that mod==11b handled outside
+
+  if ((rm & 0x7) != 4) { // no s-i-b byte
+    if (mod == 0x00) { // mod == 00b
+      if ((rm & 0x7) == 5) {
+        i->setSibBase(BX_64BIT_REG_RIP);
+        goto get_32bit_displ;
+      }
+      // mod==00b, rm!=4, rm!=5
+      goto modrm_done;
+    }
+    // (mod == 0x40), mod==01b or (mod == 0x80), mod==10b
+    seg = sreg_mod1or2_base32[rm & 0xf];
+  }
+  else { // mod!=11b, rm==4, s-i-b byte follows
+    unsigned sib, base, index, scale;
+    if (remain != 0) {
+      sib = *iptr++;
+      remain--;
+    }
+    else {
+      return NULL;
+    }
+    base  = (sib & 0x7) | rex_b; sib >>= 3;
+    index = (sib & 0x7) | rex_x; sib >>= 3;
+    scale =  sib;
+    i->setSibScale(scale);
+    i->setSibBase(base & 0xf);
+    // this part is a little tricky - assign index value always,
+    // it will be really used if the instruction is Gather. Others
+    // assume that resolve function will do the right thing.
+    i->setSibIndex(index & 0xf);
+    if (mod == 0x00) { // mod==00b, rm==4
+      seg = sreg_mod0_base32[base & 0xf];
+      if ((base & 0x7) == 5) {
+        i->setSibBase(BX_NIL_REGISTER);
+        goto get_32bit_displ;
+      }
+      // mod==00b, rm==4, base!=5
+      goto modrm_done;
+    }
+    // (mod == 0x40), mod==01b or (mod == 0x80), mod==10b
+    seg = sreg_mod1or2_base32[base & 0xf];
+  }
+
+  // (mod == 0x40), mod==01b
+  if (mod == 0x40) {
+    if (remain != 0) {
+      // 8 sign extended to 32
+      i->modRMForm.displ32u = (Bit8s) *iptr++;
+      remain--;
+    }
+    else {
+      return NULL;
+    }
+  }
+  else {
+
+get_32bit_displ:
+
+    // (mod == 0x80), mod==10b
+    if (remain > 3) {
+      i->modRMForm.displ32u = FetchDWORD(iptr);
+      iptr += 4;
+      remain -= 4;
+    }
+    else {
+      return NULL;
+    }
+  }
+
+modrm_done:
+
+  i->setSeg(seg);
+  return iptr;  
+}
+
+int fetchDecode64(const Bit8u *iptr, Bit32u fetchModeMask, bx_bool handle_lock_cr0, bxInstruction_c *i, unsigned remainingInPage)
+{
+  if (remainingInPage > 15) remainingInPage = 15;
+
+  unsigned remain = remainingInPage; // remain must be at least 1
+  unsigned b1;
+  int ia_opcode = BX_IA_ERROR;
+  unsigned seg_override = BX_SEG_REG_NULL;
+  bx_bool lock = 0;
+  unsigned sse_prefix = SSE_PREFIX_NONE;
+  unsigned rex_prefix = 0;
+
+  i->init(/*os32*/ 1,  // operand size 32 override defaults to 1
+          /*as32*/ 1,  // address size 32 override defaults to 1
+          /*os64*/ 0,  // operand size 64 override defaults to 0
+          /*as64*/ 1); // address size 64 override defaults to 1
+
+fetch_b1:
+  b1 = *iptr++;
+  remain--;
+
+  switch (b1) {
+    case 0x40:
+    case 0x41:
+    case 0x42:
+    case 0x43:
+    case 0x44:
+    case 0x45:
+    case 0x46:
+    case 0x47:
+    case 0x48:
+    case 0x49:
+    case 0x4A:
+    case 0x4B:
+    case 0x4C:
+    case 0x4D:
+    case 0x4E:
+    case 0x4F:
+      rex_prefix = b1;
+      if (remain != 0) {
+        goto fetch_b1;
+      }
+      return(-1);
+    case 0x0f: // 2 byte escape
+      if (remain != 0) {
+        remain--;
+        b1 = 0x100 | *iptr++;
+        break;
+      }
+      return(-1);
+    case 0xf2: // REPNE/REPNZ
+    case 0xf3: // REP/REPE/REPZ
+      rex_prefix = 0;
+      sse_prefix = (b1 & 3) ^ 1;
+      i->setLockRepUsed(b1 & 3);
+      if (remain != 0) {
+        goto fetch_b1;
+      }
+      return(-1);
+    case 0x2e: // CS:
+    case 0x26: // ES:
+    case 0x36: // SS:
+    case 0x3e: // DS:
+      /* ignore segment override prefix */
+      rex_prefix = 0;
+      if (remain != 0) {
+        goto fetch_b1;
+      }
+      return(-1);
+    case 0x64: // FS:
+    case 0x65: // GS:
+      rex_prefix = 0;
+      seg_override = b1 & 0xf;
+      if (remain != 0) {
+        goto fetch_b1;
+      }
+      return(-1);
+    case 0x66: // OpSize
+      rex_prefix = 0;
+      if(!sse_prefix) sse_prefix = SSE_PREFIX_66;
+      i->setOs32B(0);
+      if (remain != 0) {
+        goto fetch_b1;
+      }
+      return(-1);
+    case 0x67: // AddrSize
+      rex_prefix = 0;
+      i->clearAs64();
+      if (remain != 0) {
+        goto fetch_b1;
+      }
+      return(-1);
+    case 0xf0: // LOCK:
+      rex_prefix = 0;
+      lock = 1;
+      if (remain != 0) {
+        goto fetch_b1;
+      }
+      return(-1);
+    default:
+      break;
+  }
+
+  if (rex_prefix) {
+    i->assertExtend8bit();
+    if (rex_prefix & 0x8) {
+      i->assertOs64();
+      i->assertOs32();
+    }
+  }
+
+  i->setSeg(BX_SEG_REG_DS); // default segment is DS:
+
+  i->modRMForm.Id = 0;
+
+  ia_opcode = decoder64(iptr, remain, i, b1, sse_prefix, rex_prefix);
+  if (ia_opcode < 0)
+    return(-1);
+
+  i->setILen(remainingInPage - remain);
+  i->setIaOpcode(ia_opcode);
+
   // assign memory segment override
   if (! BX_NULL_SEG_REG(seg_override))
      i->setSeg(seg_override);
 
-#if BX_SUPPORT_EVEX
-  if (had_vex_xop == 0x62) {
-    if (! assign_srcs(i, ia_opcode, nnn, rm, vvv, vex_w, BX_TRUE, displ8))
-      ia_opcode = BX_IA_ERROR;
-  }
-  else
-#endif
-  {
-#if BX_SUPPORT_AVX
-    if (had_vex_xop) {
-      if (! assign_srcs(i, ia_opcode, nnn, rm, vvv, vex_w))
-        ia_opcode = BX_IA_ERROR;
-    }
-    else
-#endif
-    {
-      if (! assign_srcs(i, ia_opcode, nnn, rm))
-        ia_opcode = BX_IA_ERROR;
-    }
-  }
-
-#if BX_SUPPORT_AVX
-  if (had_vex_xop) {
-    if ((attr & BxVexW0) != 0 && vex_w) {
-      ia_opcode = BX_IA_ERROR;
-    }
-    else if ((attr & BxVexW1) != 0 && !vex_w) {
-      ia_opcode = BX_IA_ERROR;
-    }
-#if BX_SUPPORT_EVEX
-    // EVEX specific #UD conditions
-    else if (i->getVL() > BX_VL512) {
-      ia_opcode = BX_IA_ERROR;
-    }
-#endif
-    else if ((attr & BxVexL0) != 0 && i->getVL() != BX_VL128) {
-      ia_opcode = BX_IA_ERROR;
-    }
-    else if ((attr & BxVexL1) != 0 && i->getVL() == BX_VL128) {
-      ia_opcode = BX_IA_ERROR;
-    }
-  }
-#endif
-
-decode_done:
-
-  i->setILen(remainingInPage - remain);
-  i->setIaOpcode(ia_opcode);
-  if (lock)
-    i->setLock();
-
-  if (mod_mem) {
+  if (! i->modC0()) {
     i->execute1 = BxOpcodesTable[ia_opcode].execute1;
     i->handlers.execute2 = BxOpcodesTable[ia_opcode].execute2;
 
@@ -2379,9 +2572,27 @@ decode_done:
   BX_ASSERT(i->execute1);
 
   Bit32u op_flags = BxOpcodesTable[ia_opcode].opflags;
+
+  if (lock) {
+    i->setLock();
+    // lock prefix not allowed or destination operand is not memory
+    if (i->modC0() || !(op_flags & BX_LOCKABLE)) {
+      if (handle_lock_cr0 && (ia_opcode == BX_IA_MOV_CR0Rq || ia_opcode == BX_IA_MOV_RqCR0)) {
+        if (ia_opcode == BX_IA_MOV_CR0Rq)
+          i->setSrcReg(0, 8); // extend CR0 -> CR8
+        if (ia_opcode == BX_IA_MOV_RqCR0)
+          i->setSrcReg(1, 8); // extend CR0 -> CR8
+      }
+      else {
+        // replace execution function with undefined-opcode
+        i->execute1 = &BX_CPU_C::BxError;
+      }
+    }
+  }
+
 #if BX_SUPPORT_EVEX
   if ((op_flags & BX_PREPARE_EVEX) != 0 && i->getEvexb()) {
-    if (mod_mem) {
+    if (! i->modC0()) {
       if ((op_flags & BX_PREPARE_EVEX_NO_BROADCAST) == BX_PREPARE_EVEX_NO_BROADCAST) {
         BX_DEBUG(("%s: broadcast is not supported for this instruction", i->getIaOpcodeNameShort()));
         i->execute1 = &BX_CPU_C::BxError;
