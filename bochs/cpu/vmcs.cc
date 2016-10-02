@@ -592,7 +592,10 @@ void BX_CPU_C::init_vmx_capabilities(void)
   //   [18] Support for EPT Violation (#VE) exception
   //   [19] Reserved (must be '0)
   //   [20] XSAVES Exiting (require XSAVES instruction support - not implemented)
-  //   [21] PCOMMIT Exiting (require PCOMMIT instruction support - not implemented)
+  //   [21] Reserved (must be '0)
+  //   [22] Reserved (must be '0)
+  //   [23] Reserved (must be '0)
+  //   [24] Reserved (must be '0)
   //   [25] Enable TSC Scaling
 
   cap->vmx_vmexec_ctrl2_supported_bits = 0;
