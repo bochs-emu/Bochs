@@ -811,7 +811,7 @@ void BX_CPU_C::reset(unsigned source)
 
 #if BX_CPU_LEVEL >= 6
   if (source == BX_RESET_HARDWARE) {
-    BX_CPU_THIS_PTR xcr0.set32(0x3);
+    BX_CPU_THIS_PTR xcr0.set32(0x1);
   }
   BX_CPU_THIS_PTR xcr0_suppmask = 0x3;
 #if BX_SUPPORT_AVX
