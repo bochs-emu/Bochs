@@ -70,6 +70,7 @@ bx_usb_ehci_c* theUSB_EHCI = NULL;
 #define FRAME_TIMER_FREQ 1000
 #define FRAME_TIMER_USEC (1000000 / FRAME_TIMER_FREQ)
 
+#define BUFF_SIZE        5*4096   // Max bytes to transfer per transaction
 #define MAX_QH           100      // Max allowable queue heads in a chain
 #define MIN_FR_PER_TICK  3        // Min frames to process when catching up
 
@@ -115,6 +116,12 @@ typedef enum {
     val |= ((newval) << field##_SH) & field##_MASK; \
     *data = val; \
     } while(0)
+
+static inline struct EHCIPacket *container_of_usb_packet(void *ptr)
+{
+  return reinterpret_cast<struct EHCIPacket*>(static_cast<char*>(ptr) -
+    reinterpret_cast<size_t>(&(static_cast<struct EHCIPacket*>(0)->packet)));
+}
 
 // builtin configuration handling functions
 
@@ -226,7 +233,7 @@ void bx_usb_ehci_c::init(void)
     return;
   }
 
-  BX_EHCI_THIS device_buffer = new Bit8u[65536];
+  BX_EHCI_THIS device_buffer = new Bit8u[BUFF_SIZE];
 
   // Call our frame timer routine every 1mS (1,024uS)
   // Continuous and active
@@ -553,10 +560,12 @@ void bx_usb_ehci_c::set_connect_status(Bit8u port, int type, bx_bool connected)
         }
         if (device->get_speed() == USB_SPEED_SUPER) {
           BX_PANIC(("Super-speed device not supported on USB2 port."));
+          set_connect_status(port, type, 0);
           return;
         }
         if (device->get_speed() == USB_SPEED_HIGH) {
           BX_PANIC(("High-speed device not yet supported by EHCI emulation"));
+          set_connect_status(port, type, 0);
           return;
         }
         switch (device->get_speed()) {
@@ -585,6 +594,7 @@ void bx_usb_ehci_c::set_connect_status(Bit8u port, int type, bx_bool connected)
             BX_ERROR(("port #%d: connect failed", port+1));
           } else {
             BX_INFO(("port #%d: connect: %s", port+1, device->get_info()));
+//            device->set_async_mode(1);
           }
         }
       } else { // not connected
@@ -598,6 +608,7 @@ void bx_usb_ehci_c::set_connect_status(Bit8u port, int type, bx_bool connected)
         } else {
           BX_EHCI_THIS hub.usb_port[port].portsc.ccs = 0;
           BX_EHCI_THIS hub.usb_port[port].portsc.ped = 0;
+          device->set_async_mode(0);
         }
         if (!BX_EHCI_THIS hub.usb_port[port].owner_change) {
           remove_device(port);
@@ -952,7 +963,7 @@ void bx_usb_ehci_c::set_fetch_addr(int async, Bit32u addr)
   }
 }
 
-int bx_usb_ehci_c::get_fetch_addr(int async)
+Bit32u bx_usb_ehci_c::get_fetch_addr(int async)
 {
   return async ? BX_EHCI_THIS hub.a_fetch_addr : BX_EHCI_THIS hub.p_fetch_addr;
 }
@@ -961,7 +972,7 @@ EHCIPacket *bx_usb_ehci_c::alloc_packet(EHCIQueue *q)
 {
   EHCIPacket *p = new EHCIPacket;
   p->queue = q;
-  // TODO: usb_packet_init(&p->packet);
+  // TODO: usb_packet_init(&p->packet); ???
   QTAILQ_INSERT_TAIL(&q->packets, p, next);
   return p;
 }
@@ -978,17 +989,11 @@ void bx_usb_ehci_c::free_packet(EHCIPacket *p)
     /* state_writeback recurses into us with async == EHCI_ASYNC_NONE!! */
     return;
   }
-  if (p->async == EHCI_ASYNC_INITIALIZED) {
-    // TODO: usb_packet_unmap(&p->packet, &p->sgl);
-    // TODO: qemu_sglist_destroy(&p->sgl);
-  }
   if (p->async == EHCI_ASYNC_INFLIGHT) {
     usb_cancel_packet(&p->packet);
-    // TODO: usb_packet_unmap(&p->packet, &p->sgl);
-    // TODO: qemu_sglist_destroy(&p->sgl);
   }
   QTAILQ_REMOVE(&p->queue->packets, p, next);
-  // TODO: usb_packet_cleanup(&p->packet);
+  // TODO: usb_packet_cleanup(&p->packet); ???
   delete p;
 }
 
@@ -1038,7 +1043,7 @@ void bx_usb_ehci_c::free_queue(EHCIQueue *q, const char *warn)
 
   cancelled = BX_EHCI_THIS cancel_queue(q);
   if (warn && cancelled > 0) {
-//    ehci_trace_guest_bug(q->ehci, warn);
+    BX_ERROR((warn));
   }
   QTAILQ_REMOVE(head, q, next);
   free(q);
@@ -1132,13 +1137,35 @@ usb_device_c *bx_usb_ehci_c::find_device(Bit8u addr)
   return NULL;
 }
 
+int bx_usb_ehci_c::get_dwords(Bit32u addr, Bit32u *buf, int num)
+{
+  int i;
+
+  for (i = 0; i < num; i++, buf++, addr += sizeof(*buf)) {
+    DEV_MEM_READ_PHYSICAL(addr, 4, (Bit8u*)buf);
+  }
+
+  return 1;
+}
+
+int bx_usb_ehci_c::put_dwords(Bit32u addr, Bit32u *buf, int num)
+{
+  int i;
+
+  for (i = 0; i < num; i++, buf++, addr += sizeof(*buf)) {
+    DEV_MEM_WRITE_PHYSICAL(addr, 4, (Bit8u*)buf);
+  }
+
+  return 1;
+}
+
 void bx_usb_ehci_c::flush_qh(EHCIQueue *q)
 {
-    Bit32u *qh = (Bit32u *) &q->qh;
-    Bit32u dwords = sizeof(EHCIqh) >> 2;
-    Bit32u addr = NLPTR_GET(q->qhaddr);
+  Bit32u *qh = (Bit32u *) &q->qh;
+  Bit32u dwords = sizeof(EHCIqh) >> 2;
+  Bit32u addr = NLPTR_GET(q->qhaddr);
 
-    // TODO: put_dwords(q->ehci, addr + 3 * sizeof(uint32_t), qh + 3, dwords - 3);
+  put_dwords(addr + 3 * sizeof(Bit32u), qh + 3, dwords - 3);
 }
 
 int bx_usb_ehci_c::qh_do_overlay(EHCIQueue *q)
@@ -1190,13 +1217,12 @@ int bx_usb_ehci_c::qh_do_overlay(EHCIQueue *q)
 
 int bx_usb_ehci_c::init_transfer(EHCIPacket *p)
 {
-  Bit32u cpage, offset, bytes, plen;
+  Bit32u cpage, offset, bytes, plen, blen = 0;
   Bit64u page;
 
   cpage  = get_field(p->qtd.token, QTD_TOKEN_CPAGE);
   bytes  = get_field(p->qtd.token, QTD_TOKEN_TBYTES);
   offset = p->qtd.bufptr[0] & ~QTD_BUFPTR_MASK;
-  // TODO: pci_dma_sglist_init(&p->sgl, &p->queue->ehci->dev, 5);
 
   while (bytes > 0) {
     if (cpage > 4) {
@@ -1213,7 +1239,12 @@ int bx_usb_ehci_c::init_transfer(EHCIPacket *p)
       cpage++;
     }
 
-    // TODO: qemu_sglist_add(&p->sgl, page, plen);
+    if (p->pid == USB_TOKEN_IN) {
+      DEV_MEM_WRITE_PHYSICAL_DMA(page, plen, device_buffer+blen);
+    } else {
+      DEV_MEM_READ_PHYSICAL_DMA(page, plen, device_buffer+blen);
+    }
+    blen += plen;
     bytes -= plen;
   }
   return 0;
@@ -1237,25 +1268,166 @@ void bx_usb_ehci_c::finish_transfer(EHCIQueue *q, int status)
   }
 }
 
+void ehci_async_complete_packet(USBPacket *packet, void *dev)
+{
+  ((bx_usb_ehci_c*)dev)->async_complete_packet(packet);
+}
+
 void bx_usb_ehci_c::async_complete_packet(USBPacket *packet)
 {
-  // TODO
+  EHCIPacket *p;
+
+  BX_INFO(("Experimental async packet completion"));
+  p = container_of_usb_packet(packet);
+  if (p->pid == USB_TOKEN_IN) {
+    BX_EHCI_THIS init_transfer(p);
+  }
+  BX_ASSERT(p->async == EHCI_ASYNC_INFLIGHT);
+  p->async = EHCI_ASYNC_FINISHED;
+  p->usb_status = packet->len;
+
+  if (p->queue->async) {
+    BX_EHCI_THIS advance_async_state();
+  }
 }
 
 void bx_usb_ehci_c::execute_complete(EHCIQueue *q)
 {
-  // TODO
+  EHCIPacket *p = QTAILQ_FIRST(&q->packets);
+
+  BX_ASSERT(p != NULL);
+  BX_ASSERT(p->qtdaddr == q->qtdaddr);
+  BX_ASSERT(p->async == EHCI_ASYNC_INITIALIZED ||
+            p->async == EHCI_ASYNC_FINISHED);
+
+  BX_DEBUG(("execute_complete: qhaddr 0x%x, next %x, qtdaddr 0x%x, status %d",
+            q->qhaddr, q->qh.next, q->qtdaddr, p->usb_status));
+
+  if (p->usb_status < 0) {
+    switch (p->usb_status) {
+      case USB_RET_IOERROR:
+      case USB_RET_NODEV:
+        q->qh.token |= (QTD_TOKEN_HALT | QTD_TOKEN_XACTERR);
+        set_field(&q->qh.token, 0, QTD_TOKEN_CERR);
+        BX_EHCI_THIS raise_irq(USBSTS_ERRINT);
+        break;
+      case USB_RET_STALL:
+        q->qh.token |= QTD_TOKEN_HALT;
+        BX_EHCI_THIS raise_irq(USBSTS_ERRINT);
+        break;
+      case USB_RET_NAK:
+        set_field(&q->qh.altnext_qtd, 0, QH_ALTNEXT_NAKCNT);
+        return;
+      case USB_RET_BABBLE:
+        q->qh.token |= (QTD_TOKEN_HALT | QTD_TOKEN_BABBLE);
+        BX_EHCI_THIS raise_irq(USBSTS_ERRINT);
+        break;
+      default:
+        BX_PANIC(("USB invalid response %d", p->usb_status));
+        break;
+    }
+  } else {
+    if (p->tbytes && p->pid == USB_TOKEN_IN) {
+      p->tbytes -= p->usb_status;
+    } else {
+      p->tbytes = 0;
+    }
+
+    BX_DEBUG(("updating tbytes to %d", p->tbytes));
+    set_field(&q->qh.token, p->tbytes, QTD_TOKEN_TBYTES);
+  }
+  BX_EHCI_THIS finish_transfer(q, p->usb_status);
+  p->async = EHCI_ASYNC_NONE;
+
+  q->qh.token ^= QTD_TOKEN_DTOGGLE;
+  q->qh.token &= ~QTD_TOKEN_ACTIVE;
+
+  if (q->qh.token & QTD_TOKEN_IOC) {
+    BX_EHCI_THIS raise_irq(USBSTS_INT);
+  }
 }
 
-int bx_usb_ehci_c::execute(EHCIPacket *p, const char *action)
+int bx_usb_ehci_c::execute(EHCIPacket *p)
 {
-  // TODO
-  return 0;
+  int ret;
+  int endp;
+
+  BX_ASSERT(p->async == EHCI_ASYNC_NONE ||
+           p->async == EHCI_ASYNC_INITIALIZED);
+
+  if (!(p->qtd.token & QTD_TOKEN_ACTIVE)) {
+    BX_ERROR(("Attempting to execute inactive qtd"));
+    return USB_RET_PROCERR;
+  }
+
+  p->tbytes = (p->qtd.token & QTD_TOKEN_TBYTES_MASK) >> QTD_TOKEN_TBYTES_SH;
+  if (p->tbytes > BUFF_SIZE) {
+    BX_ERROR(("guest requested more bytes than allowed"));
+    return USB_RET_PROCERR;
+  }
+
+  p->pid = (p->qtd.token & QTD_TOKEN_PID_MASK) >> QTD_TOKEN_PID_SH;
+  switch (p->pid) {
+    case 0:
+        p->pid = USB_TOKEN_OUT;
+        break;
+    case 1:
+        p->pid = USB_TOKEN_IN;
+        break;
+    case 2:
+        p->pid = USB_TOKEN_SETUP;
+        break;
+    default:
+        BX_ERROR(("bad token"));
+        break;
+  }
+
+  endp = get_field(p->queue->qh.epchar, QH_EPCHAR_EP);
+
+  if (p->async == EHCI_ASYNC_NONE) {
+    if (p->pid != USB_TOKEN_IN) {
+      if (BX_EHCI_THIS init_transfer(p) != 0) {
+        return USB_RET_PROCERR;
+      }
+    }
+
+    p->packet.pid = p->pid;
+    p->packet.devaddr = p->queue->dev->get_address();
+    p->packet.devep = endp;
+    p->packet.data = BX_EHCI_THIS device_buffer;
+    p->packet.len = p->tbytes;
+    p->packet.complete_cb = ehci_async_complete_packet;
+    p->packet.complete_dev = BX_EHCI_THIS_PTR;
+
+    p->async = EHCI_ASYNC_INITIALIZED;
+  }
+
+  ret = p->queue->dev->handle_packet(&p->packet);
+
+  if (ret > BUFF_SIZE) {
+    BX_ERROR(("ret from usb_handle_packet > BUFF_SIZE"));
+    return USB_RET_PROCERR;
+  }
+
+  if (ret > 0) {
+    if (p->pid == USB_TOKEN_SETUP) {
+      // TODO: This is a hack.  dev->handle_packet() should return the amount of bytes
+      //  it received, not the amount it anticipates on receiving/sending in the next packet.
+      ret = 8;
+    } else if (p->pid == USB_TOKEN_IN) {
+      if (BX_EHCI_THIS init_transfer(p) != 0) {
+        return USB_RET_PROCERR;
+      }
+    }
+  }
+
+  return ret;
 }
 
 int bx_usb_ehci_c::process_itd(EHCIitd *itd, Bit32u addr)
 {
   // TODO
+  BX_PANIC(("process_itd() not implemented yet"));
   return 0;
 }
 
@@ -1275,9 +1447,7 @@ int bx_usb_ehci_c::state_waitlisthead(int async)
 
   /*  Find the head of the list (4.9.1.1) */
   for (i = 0; i < MAX_QH; i++) {
-    // TODO
-//    get_dwords(NLPTR_GET(entry), (Bit32u *) &qh,
-//               sizeof(EHCIqh) >> 2);
+    get_dwords(NLPTR_GET(entry), (Bit32u *) &qh, sizeof(EHCIqh) >> 2);
 
     if (qh.epchar & QH_EPCHAR_H) {
       if (async) {
@@ -1306,68 +1476,377 @@ out:
 
 int bx_usb_ehci_c::state_fetchentry(int async)
 {
-  // TODO
-  return 0;
+  int again = 0;
+  Bit32u entry = BX_EHCI_THIS get_fetch_addr(async);
+
+  if (NLPTR_TBIT(entry)) {
+    BX_EHCI_THIS set_state(async, EST_ACTIVE);
+    goto out;
+  }
+
+  if (async && (NLPTR_TYPE_GET(entry) != NLPTR_TYPE_QH)) {
+    BX_ERROR(("non queue head request in async schedule"));
+    return -1;
+  }
+
+  switch (NLPTR_TYPE_GET(entry)) {
+    case NLPTR_TYPE_QH:
+      BX_EHCI_THIS set_state(async, EST_FETCHQH);
+      again = 1;
+      break;
+
+    case NLPTR_TYPE_ITD:
+      BX_EHCI_THIS set_state(async, EST_FETCHITD);
+      again = 1;
+      break;
+
+    case NLPTR_TYPE_STITD:
+      BX_EHCI_THIS set_state(async, EST_FETCHSITD);
+      again = 1;
+      break;
+
+    default:
+      /* TODO: handle FSTN type */
+      BX_ERROR(("FETCHENTRY: entry at %X is of type %d which is not supported yet",
+                entry, NLPTR_TYPE_GET(entry)));
+      return -1;
+  }
+
+out:
+  return again;
 }
 
 EHCIQueue *bx_usb_ehci_c::state_fetchqh(int async)
 {
-  // TODO
-  return NULL;
+  EHCIPacket *p;
+  Bit32u entry, devaddr, endp;
+  EHCIQueue *q;
+  EHCIqh qh;
+
+  entry = BX_EHCI_THIS get_fetch_addr(async);
+  q = BX_EHCI_THIS find_queue_by_qh(entry, async);
+  if (NULL == q) {
+    q = BX_EHCI_THIS alloc_queue(entry, async);
+  }
+  p = QTAILQ_FIRST(&q->packets);
+
+  q->seen++;
+  if (q->seen > 1) {
+    BX_EHCI_THIS set_state(async, EST_ACTIVE);
+    q = NULL;
+    goto out;
+  }
+
+  get_dwords(NLPTR_GET(q->qhaddr), (Bit32u*) &qh, sizeof(EHCIqh) >> 2);
+
+  devaddr = get_field(qh.epchar, QH_EPCHAR_DEVADDR);
+  endp    = get_field(qh.epchar, QH_EPCHAR_EP);
+  if ((devaddr != get_field(q->qh.epchar, QH_EPCHAR_DEVADDR)) ||
+    (endp    != get_field(q->qh.epchar, QH_EPCHAR_EP)) ||
+    (memcmp(&qh.current_qtd, &q->qh.current_qtd,
+                                 9 * sizeof(Bit32u)) != 0) ||
+        (q->dev != NULL && q->dev->get_address() != devaddr)) {
+    if (BX_EHCI_THIS reset_queue(q) > 0) {
+      BX_ERROR(("guest updated active QH"));
+    }
+    p = NULL;
+  }
+  q->qh = qh;
+
+  if (q->dev == NULL) {
+    q->dev = BX_EHCI_THIS find_device(devaddr);
+  }
+
+  if (p && p->async == EHCI_ASYNC_FINISHED) {
+    BX_EHCI_THIS set_state(async, EST_EXECUTING);
+    goto out;
+  }
+
+  if (async && (q->qh.epchar & QH_EPCHAR_H)) {
+    if (BX_EHCI_THIS hub.op_regs.UsbSts.recl) {
+      BX_EHCI_THIS hub.op_regs.UsbSts.recl = 0;
+    } else {
+      BX_DEBUG(("FETCHQH:  QH 0x%08x. H-bit set, reclamation status reset - done processing",
+                q->qhaddr));
+      BX_EHCI_THIS set_state(async, EST_ACTIVE);
+      q = NULL;
+      goto out;
+    }
+  }
+
+  if (q->qh.token & QTD_TOKEN_HALT) {
+    BX_EHCI_THIS set_state(async, EST_HORIZONTALQH);
+  } else if ((q->qh.token & QTD_TOKEN_ACTIVE) &&
+             (NLPTR_TBIT(q->qh.current_qtd) == 0)) {
+    q->qtdaddr = q->qh.current_qtd;
+    BX_EHCI_THIS set_state(async, EST_FETCHQTD);
+  } else {
+    BX_EHCI_THIS set_state(async, EST_ADVANCEQUEUE);
+  }
+
+out:
+  return q;
 }
 
 int bx_usb_ehci_c::state_fetchitd(int async)
 {
-  // TODO
-  return 0;
+  Bit32u entry;
+  EHCIitd itd;
+
+  BX_ASSERT(!async);
+  entry = BX_EHCI_THIS get_fetch_addr(async);
+
+  get_dwords(NLPTR_GET(entry), (Bit32u*) &itd, sizeof(EHCIitd) >> 2);
+
+  if (BX_EHCI_THIS process_itd(&itd, entry) != 0) {
+    return -1;
+  }
+
+  put_dwords(NLPTR_GET(entry), (Bit32u*) &itd, sizeof(EHCIitd) >> 2);
+  BX_EHCI_THIS set_fetch_addr(async, itd.next);
+  BX_EHCI_THIS set_state(async, EST_FETCHENTRY);
+
+  return 1;
 }
 
 int bx_usb_ehci_c::state_fetchsitd(int async)
 {
-  // TODO
-  return 0;
+  Bit32u entry;
+  EHCIsitd sitd;
+
+  BX_ASSERT(!async);
+  entry = BX_EHCI_THIS get_fetch_addr(async);
+
+  get_dwords(NLPTR_GET(entry), (Bit32u*)&sitd, sizeof(EHCIsitd) >> 2);
+
+  if (!(sitd.results & SITD_RESULTS_ACTIVE)) {
+    /* siTD is not active, nothing to do */;
+  } else {
+      /* TODO: split transfers are not implemented */
+    BX_ERROR(("WARNING: Skipping active siTD"));
+  }
+
+  BX_EHCI_THIS set_fetch_addr(async, sitd.next);
+  BX_EHCI_THIS set_state(async, EST_FETCHENTRY);
+  return 1;
 }
 
 int bx_usb_ehci_c::state_advqueue(EHCIQueue *q)
 {
-  // TODO
-  return 0;
+  if (((q->qh.token & QTD_TOKEN_TBYTES_MASK) != 0) &&
+      (NLPTR_TBIT(q->qh.altnext_qtd) == 0)) {
+    q->qtdaddr = q->qh.altnext_qtd;
+    BX_EHCI_THIS set_state(q->async, EST_FETCHQTD);
+
+  } else if (NLPTR_TBIT(q->qh.next_qtd) == 0) {
+    q->qtdaddr = q->qh.next_qtd;
+    BX_EHCI_THIS set_state(q->async, EST_FETCHQTD);
+
+  } else {
+    BX_EHCI_THIS set_state(q->async, EST_HORIZONTALQH);
+  }
+
+  return 1;
 }
 
 int bx_usb_ehci_c::state_fetchqtd(EHCIQueue *q)
 {
-  // TODO
-  return 0;
+  EHCIqtd qtd;
+  EHCIPacket *p;
+  int again = 0;
+
+  get_dwords(NLPTR_GET(q->qtdaddr), (Bit32u*) &qtd, sizeof(EHCIqtd) >> 2);
+
+  p = QTAILQ_FIRST(&q->packets);
+  if (p != NULL) {
+    if (p->qtdaddr != q->qtdaddr ||
+        (!NLPTR_TBIT(p->qtd.next) && (p->qtd.next != qtd.next)) ||
+        (!NLPTR_TBIT(p->qtd.altnext) && (p->qtd.altnext != qtd.altnext)) ||
+        p->qtd.bufptr[0] != qtd.bufptr[0]) {
+      BX_EHCI_THIS cancel_queue(q);
+      BX_ERROR(("guest updated active QH or qTD"));
+      p = NULL;
+    } else {
+      p->qtd = qtd;
+      BX_EHCI_THIS qh_do_overlay(q);
+    }
+  }
+
+  if (!(qtd.token & QTD_TOKEN_ACTIVE)) {
+    if (p != NULL) {
+      BX_EHCI_THIS cancel_queue(q);
+      p = NULL;
+    }
+    BX_EHCI_THIS set_state(q->async, EST_HORIZONTALQH);
+    again = 1;
+  } else if (p != NULL) {
+    switch (p->async) {
+      case EHCI_ASYNC_NONE:
+        BX_PANIC(("Should never happen"));
+        break;
+      case EHCI_ASYNC_INITIALIZED:
+        BX_EHCI_THIS set_state(q->async, EST_EXECUTE);
+        break;
+      case EHCI_ASYNC_INFLIGHT:
+        BX_EHCI_THIS set_state(q->async, EST_HORIZONTALQH);
+        break;
+      case EHCI_ASYNC_FINISHED:
+        BX_EHCI_THIS set_state(q->async, EST_EXECUTING);
+        break;
+    }
+    again = 1;
+  } else {
+    p = BX_EHCI_THIS alloc_packet(q);
+    p->qtdaddr = q->qtdaddr;
+    p->qtd = qtd;
+    BX_EHCI_THIS set_state(q->async, EST_EXECUTE);
+    again = 1;
+  }
+
+  return again;
 }
 
 int bx_usb_ehci_c::state_horizqh(EHCIQueue *q)
 {
-  // TODO
-  return 0;
+  int again = 0;
+
+  if (BX_EHCI_THIS get_fetch_addr(q->async) != q->qh.next) {
+    BX_EHCI_THIS set_fetch_addr(q->async, q->qh.next);
+    BX_EHCI_THIS set_state(q->async, EST_FETCHENTRY);
+    again = 1;
+  } else {
+    BX_EHCI_THIS set_state(q->async, EST_ACTIVE);
+  }
+
+  return again;
 }
 
 int bx_usb_ehci_c::fill_queue(EHCIPacket *p)
 {
-  // TODO
-  return 0;
+  EHCIQueue *q = p->queue;
+  EHCIqtd qtd = p->qtd;
+  Bit32u qtdaddr;
+
+  for (;;) {
+    if (NLPTR_TBIT(qtd.altnext) == 0) {
+      break;
+    }
+    if (NLPTR_TBIT(qtd.next) != 0) {
+      break;
+    }
+    qtdaddr = qtd.next;
+    get_dwords(NLPTR_GET(qtdaddr), (Bit32u*) &qtd, sizeof(EHCIqtd) >> 2);
+    if (!(qtd.token & QTD_TOKEN_ACTIVE)) {
+      break;
+    }
+    p = BX_EHCI_THIS alloc_packet(q);
+    p->qtdaddr = qtdaddr;
+    p->qtd = qtd;
+    p->usb_status = BX_EHCI_THIS execute(p);
+    if (p->usb_status == USB_RET_PROCERR) {
+      break;
+    }
+    BX_ASSERT(p->usb_status == USB_RET_ASYNC);
+    p->async = EHCI_ASYNC_INFLIGHT;
+  }
+  return p->usb_status;
 }
 
 int bx_usb_ehci_c::state_execute(EHCIQueue *q)
 {
-  // TODO
-  return 0;
+  EHCIPacket *p = QTAILQ_FIRST(&q->packets);
+  int again = 0;
+
+  BX_ASSERT(p != NULL);
+  BX_ASSERT(p->qtdaddr == q->qtdaddr);
+
+  if (BX_EHCI_THIS qh_do_overlay(q) != 0) {
+    return -1;
+  }
+
+  if (!q->async) {
+        int transactCtr = get_field(q->qh.epcap, QH_EPCAP_MULT);
+        if (!transactCtr) {
+            BX_EHCI_THIS set_state(q->async, EST_HORIZONTALQH);
+            again = 1;
+            goto out;
+        }
+  }
+
+  if (q->async) {
+    BX_EHCI_THIS hub.op_regs.UsbSts.recl = 1;
+  }
+
+  p->usb_status = BX_EHCI_THIS execute(p);
+  if (p->usb_status == USB_RET_PROCERR) {
+    again = -1;
+    goto out;
+  }
+  if (p->usb_status == USB_RET_ASYNC) {
+    BX_EHCI_THIS flush_qh(q);
+    p->async = EHCI_ASYNC_INFLIGHT;
+    BX_EHCI_THIS set_state(q->async, EST_HORIZONTALQH);
+    again = (BX_EHCI_THIS fill_queue(p) == USB_RET_PROCERR) ? -1 : 1;
+    goto out;
+  }
+
+  BX_EHCI_THIS set_state(q->async, EST_EXECUTING);
+  again = 1;
+
+out:
+  return again;
 }
 
 int bx_usb_ehci_c::state_executing(EHCIQueue *q)
 {
-  // TODO
-  return 0;
+  EHCIPacket *p = QTAILQ_FIRST(&q->packets);
+
+  BX_ASSERT(p != NULL);
+  BX_ASSERT(p->qtdaddr == q->qtdaddr);
+
+  BX_EHCI_THIS execute_complete(q);
+
+  if (!q->async) {
+    int transactCtr = get_field(q->qh.epcap, QH_EPCAP_MULT);
+    transactCtr--;
+    set_field(&q->qh.epcap, transactCtr, QH_EPCAP_MULT);
+  }
+
+  if (p->usb_status == USB_RET_NAK) {
+    BX_EHCI_THIS set_state(q->async, EST_HORIZONTALQH);
+  } else {
+    BX_EHCI_THIS set_state(q->async, EST_WRITEBACK);
+  }
+
+  BX_EHCI_THIS flush_qh(q);
+  return 1;
 }
 
 int bx_usb_ehci_c::state_writeback(EHCIQueue *q)
 {
-  // TODO
-  return 0;
+  EHCIPacket *p = QTAILQ_FIRST(&q->packets);
+  Bit32u *qtd, addr;
+  int again = 0;
+
+  BX_ASSERT(p != NULL);
+  BX_ASSERT(p->qtdaddr == q->qtdaddr);
+
+  qtd = (Bit32u*) &q->qh.next_qtd;
+  addr = NLPTR_GET(p->qtdaddr);
+  put_dwords(addr + 2 * sizeof(Bit32u), qtd + 2, 2);
+  BX_EHCI_THIS free_packet(p);
+
+  if (q->qh.token & QTD_TOKEN_HALT) {
+    while ((p = QTAILQ_FIRST(&q->packets)) != NULL) {
+      BX_EHCI_THIS free_packet(p);
+    }
+    BX_EHCI_THIS set_state(q->async, EST_HORIZONTALQH);
+    again = 1;
+  } else {
+    BX_EHCI_THIS set_state(q->async, EST_ADVANCEQUEUE);
+    again = 1;
+  }
+  return again;
 }
 
 void bx_usb_ehci_c::advance_state(int async)
@@ -1498,6 +1977,7 @@ void bx_usb_ehci_c::advance_async_state(void)
     default:
       /* this should only be due to a developer mistake */
       BX_PANIC(("Bad asynchronous state %d. Resetting to active", BX_EHCI_THIS hub.astate));
+      BX_EHCI_THIS set_state(async, EST_ACTIVE);
   }
 }
 
@@ -1572,11 +2052,6 @@ void bx_usb_ehci_c::update_frindex(int frames)
       }
     }
   }
-}
-
-void bx_usb_ehci_c::async_bh(void)
-{
-  // TODO
 }
 
 void bx_usb_ehci_c::ehci_frame_handler(void *this_ptr)

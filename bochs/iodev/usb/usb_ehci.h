@@ -299,7 +299,6 @@ struct EHCIPacket {
     Bit32u qtdaddr;      /* address QTD read from                 */
 
     USBPacket packet;
-//    QEMUSGList sgl;
     int pid;
     Bit32u tbytes;
     enum async_state async;
@@ -334,6 +333,8 @@ public:
   virtual Bit32u  pci_read_handler(Bit8u address, unsigned io_len);
   virtual void    pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 
+  void async_complete_packet(USBPacket *packet);
+
   static const char *usb_param_handler(bx_param_string_c *param, int set,
                                        const char *oldval, const char *val, int maxlen);
 
@@ -363,7 +364,7 @@ private:
   void set_state(int async, int state);
   int get_state(int async);
   void set_fetch_addr(int async, Bit32u addr);
-  int get_fetch_addr(int async);
+  Bit32u get_fetch_addr(int async);
 
   EHCIPacket *alloc_packet(EHCIQueue *q);
   void free_packet(EHCIPacket *p);
@@ -378,13 +379,14 @@ private:
   void queues_rip_all(int async);
 
   usb_device_c *find_device(Bit8u addr);
+  int get_dwords(Bit32u addr, Bit32u *buf, int num);
+  int put_dwords(Bit32u addr, Bit32u *buf, int num);
   void flush_qh(EHCIQueue *q);
   int qh_do_overlay(EHCIQueue *q);
   int init_transfer(EHCIPacket *p);
   void finish_transfer(EHCIQueue *q, int status);
-  void async_complete_packet(USBPacket *packet);
   void execute_complete(EHCIQueue *q);
-  int execute(EHCIPacket *p, const char *action);
+  int execute(EHCIPacket *p);
   int process_itd(EHCIitd *itd, Bit32u addr);
 
   int state_waitlisthead(int async);
@@ -404,7 +406,6 @@ private:
   void advance_async_state(void);
   void advance_periodic_state(void);
   void update_frindex(int frames);
-  void async_bh(void);
 
   // EHCI frame timer
   static void ehci_frame_handler(void *);
