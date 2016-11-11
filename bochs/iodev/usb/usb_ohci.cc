@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009       Benjamin D Lunt (fys at frontiernet net)
-//                2009-2015  The Bochs Project
+//                2009-2016  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1527,10 +1527,12 @@ void bx_usb_ohci_c::usb_set_connect_status(Bit8u port, int type, bx_bool connect
           case USB_SPEED_HIGH:
           case USB_SPEED_SUPER:
             BX_PANIC(("HC supports 'low' or 'full' speed devices only."));
-            device->set_speed(USB_SPEED_FULL);
-            break;
+            usb_set_connect_status(port, type, 0);
+            return;
           default:
-            BX_ERROR(("device->get_speed() returned invalid speed value"));
+            BX_PANIC(("USB device returned invalid speed value"));
+            usb_set_connect_status(port, type, 0);
+            return;
         }
         BX_OHCI_THIS hub.usb_port[port].HcRhPortStatus.ccs = 1;
         if (!device->get_connected()) {

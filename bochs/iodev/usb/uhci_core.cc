@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009-2015  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2009-2015  The Bochs Project
+//                2009-2016  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -949,11 +949,12 @@ void bx_uhci_core_c::set_connect_status(Bit8u port, int type, bx_bool connected)
             break;
           case USB_SPEED_HIGH:
           case USB_SPEED_SUPER:
-            BX_PANIC(("HC supports 'low' or 'full' speed devices only."));
-            device->set_speed(USB_SPEED_FULL);
-            break;
+            BX_ERROR(("HC ignores device with unsupported speed"));
+            return;
           default:
-            BX_ERROR(("device->get_speed() returned invalid speed value"));
+            BX_PANIC(("USB device returned invalid speed value"));
+            set_connect_status(port, type, 0);
+            return;
         }
         if (hub.usb_port[port].low_speed) {
           hub.usb_port[port].line_dminus = 1;  //  dminus=1 & dplus=0 = low speed  (at idle time)

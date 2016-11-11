@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010-2014  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2011-2015  The Bochs Project
+//                2011-2016  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -3060,10 +3060,14 @@ void bx_usb_xhci_c::usb_set_connect_status(Bit8u port, int type, bx_bool connect
         if ((device->get_speed() == USB_SPEED_SUPER) &&
             !BX_XHCI_THIS hub.usb_port[port].is_usb3) {
           BX_PANIC(("Super-speed device not supported on USB2 port."));
+          usb_set_connect_status(port, type, 0);
+          return;
         }
         if ((device->get_speed() != USB_SPEED_SUPER) &&
             BX_XHCI_THIS hub.usb_port[port].is_usb3) {
           BX_PANIC(("Only super-speed devices supported on USB3 port."));
+          usb_set_connect_status(port, type, 0);
+          return;
         }
         switch (device->get_speed()) {
           case USB_SPEED_LOW:
@@ -3079,7 +3083,9 @@ void bx_usb_xhci_c::usb_set_connect_status(Bit8u port, int type, bx_bool connect
             BX_XHCI_THIS hub.usb_port[port].portsc.speed = 4;
             break;
           default:
-            BX_ERROR(("device->get_speed() returned invalid speed value"));
+            BX_PANIC(("USB device returned invalid speed value"));
+            usb_set_connect_status(port, type, 0);
+            return;
         }
         BX_XHCI_THIS hub.usb_port[port].portsc.ccs = 1;
         if (!device->get_connected()) {
