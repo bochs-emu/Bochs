@@ -207,6 +207,7 @@ protected:
     int setup_index;
     bx_bool stall;
     bx_bool async_mode;
+    bx_list_c *sr;
   } d;
 
   void usb_dump_packet(Bit8u *data, unsigned size);

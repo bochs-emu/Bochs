@@ -7,7 +7,7 @@
 //
 // Copyright (c) 2005       Fabrice Bellard
 // Copyright (c) 2007       OpenMoko, Inc.  (andrew@openedhand.com)
-// Copyright (C) 2009-2015  The Bochs Project
+// Copyright (C) 2009-2016  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -433,6 +433,7 @@ usb_hid_device_c::usb_hid_device_c(usbdev_type type)
 
 usb_hid_device_c::~usb_hid_device_c(void)
 {
+  d.sr->clear();
   if ((d.type == USB_DEV_TYPE_MOUSE) ||
       (d.type == USB_DEV_TYPE_TABLET)) {
     bx_gui->set_mouse_mode_absxy(0);

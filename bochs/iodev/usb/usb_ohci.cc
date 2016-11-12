@@ -520,12 +520,7 @@ void bx_usb_ohci_c::init_device(Bit8u port, bx_list_c *portconf)
 
 void bx_usb_ohci_c::remove_device(Bit8u port)
 {
-  char pname[BX_PATHNAME_LEN];
-
   if (BX_OHCI_THIS hub.usb_port[port].device != NULL) {
-    sprintf(pname, "usb_ohci.hub.port%d.device", port+1);
-    bx_list_c *devlist = (bx_list_c*)SIM->get_param(pname, SIM->get_bochs_root());
-    devlist->clear();
     delete BX_OHCI_THIS hub.usb_port[port].device;
     BX_OHCI_THIS hub.usb_port[port].device = NULL;
   }

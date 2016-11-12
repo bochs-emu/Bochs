@@ -417,6 +417,7 @@ int usb_device_c::handle_packet(USBPacket *p)
 
 void usb_device_c::register_state(bx_list_c *parent)
 {
+  d.sr = parent;
   bx_list_c *list = new bx_list_c(parent, "d", "Common USB Device State");
   BXRS_DEC_PARAM_FIELD(list, addr, d.addr);
   BXRS_DEC_PARAM_FIELD(list, state, d.state);

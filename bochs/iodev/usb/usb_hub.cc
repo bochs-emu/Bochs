@@ -219,6 +219,7 @@ usb_hub_device_c::~usb_hub_device_c(void)
   for (int i=0; i<hub.n_ports; i++) {
     remove_device(i);
   }
+  d.sr->clear();
   if (SIM->is_wx_selected()) {
     bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
     usb->remove(hub.config->get_name());
@@ -588,12 +589,7 @@ void usb_hub_device_c::init_device(Bit8u port, bx_list_c *portconf)
 
 void usb_hub_device_c::remove_device(Bit8u port)
 {
-  char pname[BX_PATHNAME_LEN];
-
   if (hub.usb_port[port].device != NULL) {
-    sprintf(pname, "port%d.device", port+1);
-    bx_list_c *devlist = (bx_list_c*)SIM->get_param(pname, hub.state);
-    devlist->clear();
     delete hub.usb_port[port].device;
     hub.usb_port[port].device = NULL;
   }

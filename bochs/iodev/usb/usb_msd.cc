@@ -6,7 +6,7 @@
 //
 //  Copyright (c) 2006 CodeSourcery.
 //  Written by Paul Brook
-//  Copyright (C) 2009-2015  The Bochs Project
+//  Copyright (C) 2009-2016  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -303,6 +303,7 @@ usb_msd_device_c::usb_msd_device_c(usbdev_type type, const char *filename)
 
 usb_msd_device_c::~usb_msd_device_c(void)
 {
+  d.sr->clear();
   if (s.scsi_dev != NULL)
     delete s.scsi_dev;
   if (s.hdimage != NULL) {

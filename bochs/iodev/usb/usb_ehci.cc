@@ -4,7 +4,7 @@
 //
 //  Experimental USB EHCI adapter (partly ported from Qemu)
 //
-//  Copyright (C) 2015  The Bochs Project
+//  Copyright (C) 2015-2016  The Bochs Project
 //
 //  Copyright(c) 2008  Emutex Ltd. (address@hidden)
 //  Copyright(c) 2011-2012 Red Hat, Inc.
@@ -534,12 +534,7 @@ void bx_usb_ehci_c::init_device(Bit8u port, bx_list_c *portconf)
 
 void bx_usb_ehci_c::remove_device(Bit8u port)
 {
-  char pname[BX_PATHNAME_LEN];
-
   if (BX_EHCI_THIS hub.usb_port[port].device != NULL) {
-    sprintf(pname, "usb_ehci.hub.port%d.device", port+1);
-    bx_list_c *devlist = (bx_list_c*)SIM->get_param(pname, SIM->get_bochs_root());
-    if (devlist) devlist->clear();
     delete BX_EHCI_THIS hub.usb_port[port].device;
     BX_EHCI_THIS hub.usb_port[port].device = NULL;
   }

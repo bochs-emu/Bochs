@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009       Benjamin D Lunt (fys at frontiernet net)
-//                2009-2015  The Bochs Project
+//                2009-2016  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -125,6 +125,7 @@ usb_printer_device_c::usb_printer_device_c(usbdev_type type, const char *filenam
 
 usb_printer_device_c::~usb_printer_device_c(void)
 {
+  d.sr->clear();
   if (s.fp != NULL) {
     fclose(s.fp);
   }
