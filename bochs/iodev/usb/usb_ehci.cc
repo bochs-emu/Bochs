@@ -416,6 +416,8 @@ void bx_usb_ehci_c::register_state(void)
     BXRS_PARAM_BOOL(reg, ped, BX_EHCI_THIS hub.usb_port[i].portsc.ped);
     BXRS_PARAM_BOOL(reg, csc, BX_EHCI_THIS hub.usb_port[i].portsc.csc);
     BXRS_PARAM_BOOL(reg, ccs, BX_EHCI_THIS hub.usb_port[i].portsc.ccs);
+    // empty list for USB device state
+    new bx_list_c(port, "device");
   }
   for (i = 0; i < 3; i++) {
     sprintf(tmpname, "uhci%d", i);
@@ -555,11 +557,6 @@ void bx_usb_ehci_c::set_connect_status(Bit8u port, int type, bx_bool connected)
         }
         if (device->get_speed() == USB_SPEED_SUPER) {
           BX_PANIC(("Super-speed device not supported on USB2 port."));
-          set_connect_status(port, type, 0);
-          return;
-        }
-        if (device->get_speed() == USB_SPEED_HIGH) {
-          BX_PANIC(("High-speed device not yet supported by EHCI emulation"));
           set_connect_status(port, type, 0);
           return;
         }
@@ -1234,6 +1231,7 @@ int bx_usb_ehci_c::init_transfer(EHCIPacket *p)
       cpage++;
     }
 
+    // Bochs specific code (no async and scatter/gather support yet)
     if (p->pid == USB_TOKEN_IN) {
       DEV_MEM_WRITE_PHYSICAL_DMA(page, plen, device_buffer+blen);
     } else {
@@ -1379,13 +1377,15 @@ int bx_usb_ehci_c::execute(EHCIPacket *p)
 
   endp = get_field(p->queue->qh.epchar, QH_EPCHAR_EP);
 
-  if (p->async == EHCI_ASYNC_NONE) {
+// FIXME: This check makes transfer fail with current Bochs code
+//  if (p->async == EHCI_ASYNC_NONE) {
     if (p->pid != USB_TOKEN_IN) {
       if (BX_EHCI_THIS init_transfer(p) != 0) {
         return USB_RET_PROCERR;
       }
     }
 
+    // Packet setup (could be moved separate function)
     p->packet.pid = p->pid;
     p->packet.devaddr = p->queue->dev->get_address();
     p->packet.devep = endp;
@@ -1395,9 +1395,12 @@ int bx_usb_ehci_c::execute(EHCIPacket *p)
     p->packet.complete_dev = BX_EHCI_THIS_PTR;
 
     p->async = EHCI_ASYNC_INITIALIZED;
-  }
+//  }
 
   ret = p->queue->dev->handle_packet(&p->packet);
+  BX_DEBUG(("submit: qh %x next %x qtd %x pid %x len %d (total %d) endp %x ret %d\n",
+            p->queue->qhaddr, p->queue->qh.next, p->queue->qtdaddr, p->pid,
+            p->packet.len, p->tbytes, endp, ret));
 
   if (ret > BUFF_SIZE) {
     BX_ERROR(("ret from usb_handle_packet > BUFF_SIZE"));
