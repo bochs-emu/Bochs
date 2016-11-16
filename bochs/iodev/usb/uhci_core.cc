@@ -168,6 +168,10 @@ void bx_uhci_core_c::reset_uhci(unsigned type)
       set_connect_status(j, hub.usb_port[j].device->get_type(), 1);
     }
   }
+  if (hub.async_td) {
+    usb_cancel_packet(&usb_packet);
+    hub.async_td = 0;
+  }
 }
 
 void bx_uhci_core_c::register_state(bx_list_c *parent)
@@ -219,6 +223,8 @@ void bx_uhci_core_c::register_state(bx_list_c *parent)
     // empty list for USB device state
     new bx_list_c(port, "device");
   }
+  BXRS_DEC_PARAM_FIELD(hub1, async_td, hub.async_td);
+  BXRS_PARAM_BOOL(hub1, async_complete, hub.async_complete);
   register_pci_state(hub1);
 
   BXRS_PARAM_BOOL(list, busy, busy);
@@ -739,9 +745,21 @@ void bx_uhci_core_c::uhci_timer(void)
   //    However, since we don't do anything, let's not.
 }
 
+void uhci_async_complete_packet(USBPacket *packet, void *dev)
+{
+  ((bx_uhci_core_c*)dev)->async_complete_packet(packet);
+}
+
+void bx_uhci_core_c::async_complete_packet(USBPacket *packet)
+{
+  BX_DEBUG(("Experimental async packet completion"));
+  hub.async_complete = 1;
+}
+
 bx_bool bx_uhci_core_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td) {
 
   int len = 0, ret = 0;
+  bx_bool completion;
 
   Bit16u maxlen = (td->dword2 >> 21);
   Bit8u  addr   = (td->dword2 >> 8) & 0x7F;
@@ -750,6 +768,11 @@ bx_bool bx_uhci_core_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *
 
   BX_DEBUG(("QH%03i:TD found at address: 0x%08X", queue_num, address));
   BX_DEBUG(("  %08X   %08X   %08X   %08X", td->dword0, td->dword1, td->dword2, td->dword3));
+
+  completion = (address == hub.async_td);
+  if (completion && !hub.async_complete) {
+    return 0;
+  }
 
   // check TD to make sure it is valid
   // A max length 0x500 to 0x77E is illegal
@@ -769,44 +792,58 @@ bx_bool bx_uhci_core_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *
   maxlen++;
   maxlen &= 0x7FF;
 
-  usb_packet.pid = pid;
-  usb_packet.devaddr = addr;
-  usb_packet.devep = endpt;
-  usb_packet.data = device_buffer;
-  usb_packet.len = maxlen;
-  usb_packet.complete_cb = NULL;
-  usb_packet.complete_dev = this;
-  switch (pid) {
-    case USB_TOKEN_OUT:
-    case USB_TOKEN_SETUP:
-      if (maxlen > 0) {
-        DEV_MEM_READ_PHYSICAL_DMA(td->dword3, maxlen, device_buffer);
-      }
-      ret = broadcast_packet(&usb_packet);
-      len = maxlen;
-      break;
-    case USB_TOKEN_IN:
-      ret = broadcast_packet(&usb_packet);
-      if (ret >= 0) {
-        len = ret;
-        if (len > maxlen) {
-          len = maxlen;
-          ret = USB_RET_BABBLE;
-        }
-        if (len > 0) {
-          DEV_MEM_WRITE_PHYSICAL_DMA(td->dword3, len, device_buffer);
-        }
-      } else {
-        len = 0;
-      }
-      break;
-    default:
-      hub.usb_status.host_error = 1;
-      update_irq();
+  if (completion) {
+    ret = usb_packet.len;
+    hub.async_td = 0;
+    hub.async_complete = 0;
+  } else {
+    if (hub.async_td) {
+      BX_ERROR(("too many pending packets"));
       return 0;
+    }
+    usb_packet.pid = pid;
+    usb_packet.devaddr = addr;
+    usb_packet.devep = endpt;
+    usb_packet.data = device_buffer;
+    usb_packet.len = maxlen;
+    usb_packet.complete_cb = uhci_async_complete_packet;
+    usb_packet.complete_dev = this;
+    switch (pid) {
+      case USB_TOKEN_OUT:
+      case USB_TOKEN_SETUP:
+        if (maxlen > 0) {
+          DEV_MEM_READ_PHYSICAL_DMA(td->dword3, maxlen, device_buffer);
+        }
+        ret = broadcast_packet(&usb_packet);
+        len = maxlen;
+        break;
+      case USB_TOKEN_IN:
+        ret = broadcast_packet(&usb_packet);
+        break;
+      default:
+        hub.usb_status.host_error = 1;
+        update_irq();
+        return 0;
+    }
+    if (ret == USB_RET_ASYNC) {
+      hub.async_td = address;
+      BX_DEBUG(("Async packet deferred"));
+      return 0;
+    }
   }
-  if (ret == USB_RET_ASYNC) {
-    BX_ERROR(("Async packet handling not implemented yet"));
+  if (pid == USB_TOKEN_IN) {
+    if (ret >= 0) {
+      len = ret;
+      if (len > maxlen) {
+        len = maxlen;
+        ret = USB_RET_BABBLE;
+      }
+      if (len > 0) {
+        DEV_MEM_WRITE_PHYSICAL_DMA(td->dword3, len, device_buffer);
+      }
+    } else {
+      len = 0;
+    }
   }
   if (ret >= 0) {
     set_status(td, 0, 0, 0, 0, 0, 0, len-1);
@@ -982,6 +1019,7 @@ void bx_uhci_core_c::set_connect_status(Bit8u port, int type, bx_bool connected)
             BX_ERROR(("port #%d: connect failed", port+1));
           } else {
             BX_INFO(("port #%d: connect: %s", port+1, device->get_info()));
+            device->set_async_mode(1);
           }
         }
       } else {
