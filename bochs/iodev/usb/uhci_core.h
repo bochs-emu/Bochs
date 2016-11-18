@@ -190,7 +190,6 @@ protected:
   bx_uhci_core_t hub;
   Bit8u          global_reset;
   bx_bool        busy;
-  Bit8u          *device_buffer;
 
   USBPacket usb_packet;
 

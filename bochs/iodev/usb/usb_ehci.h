@@ -4,7 +4,7 @@
 //
 //  Experimental USB EHCI adapter (partly ported from Qemu)
 //
-//  Copyright (C) 2015  The Bochs Project
+//  Copyright (C) 2015-2016  The Bochs Project
 //
 //  Copyright(c) 2008  Emutex Ltd. (address@hidden)
 //  Copyright(c) 2011-2012 Red Hat, Inc.
@@ -344,7 +344,6 @@ private:
   Bit8u         devfunc;
   Bit8u         device_change;
   int           rt_conf_id;
-  Bit8u         *device_buffer;
   Bit32u        maxframes;
 
   void reset_hc(void);
@@ -383,7 +382,7 @@ private:
   int put_dwords(Bit32u addr, Bit32u *buf, int num);
   void flush_qh(EHCIQueue *q);
   int qh_do_overlay(EHCIQueue *q);
-  int init_transfer(EHCIPacket *p);
+  int transfer(EHCIPacket *p);
   void finish_transfer(EHCIQueue *q, int status);
   void execute_complete(EHCIQueue *q);
   int execute(EHCIPacket *p);

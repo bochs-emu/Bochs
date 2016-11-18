@@ -263,7 +263,6 @@ public:
 private:
 
   bx_usb_ohci_t hub;
-  Bit8u         *device_buffer;
 
   USBPacket usb_packet;
 

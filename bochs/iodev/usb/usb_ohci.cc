@@ -132,7 +132,6 @@ bx_usb_ohci_c::bx_usb_ohci_c()
 {
   put("usb_ohci", "OHCI");
   memset((void*)&hub, 0, sizeof(bx_usb_ohci_t));
-  device_buffer = NULL;
   hub.frame_timer_index = BX_NULL_TIMER_HANDLE;
   hub.rt_conf_id = -1;
 }
@@ -142,8 +141,6 @@ bx_usb_ohci_c::~bx_usb_ohci_c()
   char pname[16];
 
   SIM->unregister_runtime_config_handler(hub.rt_conf_id);
-  if (BX_OHCI_THIS device_buffer != NULL)
-    delete [] BX_OHCI_THIS device_buffer;
 
   for (int i=0; i<USB_OHCI_PORTS; i++) {
     sprintf(pname, "port%d.device", i+1);
@@ -173,8 +170,6 @@ void bx_usb_ohci_c::init(void)
     ((bx_param_bool_c*)((bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL))->get_by_name("usb_ohci"))->set(0);
     return;
   }
-
-  BX_OHCI_THIS device_buffer = new Bit8u[8192];
 
   // Call our frame timer routine every 1mS (1,000uS)
   // Continuous and active
@@ -1213,6 +1208,7 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
   unsigned pid = 0, len = 0, len1, len2;
   int ilen, ret = 0;
   Bit32u addr;
+  Bit16u maxlen = 0;
   bx_bool completion;
 
   addr = ED_GET_HEADP(ed);
@@ -1263,21 +1259,21 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
       BX_ERROR(("too many pending packets"));
       return 0;
     }
-    BX_OHCI_THIS usb_packet.pid = pid;
-    BX_OHCI_THIS usb_packet.devaddr = ED_GET_FA(ed);
-    BX_OHCI_THIS usb_packet.devep = ED_GET_EN(ed);
-    BX_OHCI_THIS usb_packet.data = BX_OHCI_THIS device_buffer;
-    BX_OHCI_THIS usb_packet.complete_cb = ohci_async_complete_packet;
-    BX_OHCI_THIS usb_packet.complete_dev = this;
     switch (pid) {
       case USB_TOKEN_SETUP:
       case USB_TOKEN_OUT:
-        BX_OHCI_THIS usb_packet.len = (len <= ED_GET_MPS(ed)) ? len : ED_GET_MPS(ed);
+        maxlen = (len <= ED_GET_MPS(ed)) ? len : ED_GET_MPS(ed);
         break;
       case USB_TOKEN_IN:
-        BX_OHCI_THIS usb_packet.len = len;
+        maxlen = len;
         break;
     }
+    usb_packet_init(&BX_OHCI_THIS usb_packet, maxlen);
+    BX_OHCI_THIS usb_packet.pid = pid;
+    BX_OHCI_THIS usb_packet.devaddr = ED_GET_FA(ed);
+    BX_OHCI_THIS usb_packet.devep = ED_GET_EN(ed);
+    BX_OHCI_THIS usb_packet.complete_cb = ohci_async_complete_packet;
+    BX_OHCI_THIS usb_packet.complete_dev = this;
 
     BX_DEBUG(("    pid = %s  addr = %i   endpnt = %i    len = %i  mps = %i (td->cbp = 0x%08X, td->be = 0x%08X)", 
       (pid == USB_TOKEN_IN)? "IN" : (pid == USB_TOKEN_OUT) ? "OUT" : (pid == USB_TOKEN_SETUP) ? "SETUP" : "UNKNOWN", 
@@ -1287,7 +1283,7 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
     switch (pid) {
       case USB_TOKEN_SETUP:
         if (len > 0)
-          DEV_MEM_READ_PHYSICAL_DMA(TD_GET_CBP(td), len, device_buffer);
+          DEV_MEM_READ_PHYSICAL_DMA(TD_GET_CBP(td), len, BX_OHCI_THIS usb_packet.data);
         // TODO: This is a hack.  dev->handle_packet() should return the amount of bytes
         //  it received, not the amount it anticipates on receiving/sending in the next packet.
         if ((ret = BX_OHCI_THIS broadcast_packet(&BX_OHCI_THIS usb_packet)) >= 0)
@@ -1295,7 +1291,7 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
         break;
       case USB_TOKEN_OUT:
         if (len > 0)
-          DEV_MEM_READ_PHYSICAL_DMA(TD_GET_CBP(td), len, device_buffer);
+          DEV_MEM_READ_PHYSICAL_DMA(TD_GET_CBP(td), maxlen, BX_OHCI_THIS usb_packet.data);
         ret = BX_OHCI_THIS broadcast_packet(&BX_OHCI_THIS usb_packet);
         break;
       case USB_TOKEN_IN:
@@ -1317,10 +1313,10 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
     if (((TD_GET_CBP(td) & 0xfff) + ret) > 0x1000) {
       len1 = 0x1000 - (TD_GET_CBP(td) & 0xfff);
       len2 = ret - len1;
-      DEV_MEM_WRITE_PHYSICAL_DMA(TD_GET_CBP(td), len1, device_buffer);
-      DEV_MEM_WRITE_PHYSICAL_DMA((TD_GET_BE(td) & ~0xfff), len2, device_buffer+len1);
+      DEV_MEM_WRITE_PHYSICAL_DMA(TD_GET_CBP(td), len1, BX_OHCI_THIS usb_packet.data);
+      DEV_MEM_WRITE_PHYSICAL_DMA((TD_GET_BE(td) & ~0xfff), len2, BX_OHCI_THIS usb_packet.data+len1);
     } else {
-      DEV_MEM_WRITE_PHYSICAL_DMA(TD_GET_CBP(td), ret, device_buffer);
+      DEV_MEM_WRITE_PHYSICAL_DMA(TD_GET_CBP(td), ret, BX_OHCI_THIS usb_packet.data);
     }
   }
   if ((ret == (int)len) || ((pid == USB_TOKEN_IN) && (ret >= 0) &&
@@ -1373,6 +1369,7 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
 
   BX_DEBUG((" td->cbp = 0x%08X   ret = %i  len = %i  td->cc = %i   td->ec = %i  ed->h = %i", TD_GET_CBP(td), ret, len, TD_GET_CC(td), TD_GET_EC(td), ED_GET_H(ed)));
   BX_DEBUG(("    td->t = %i  ed->c = %i", TD_GET_T(td), ED_GET_C(ed)));
+  usb_packet_cleanup(&BX_OHCI_THIS usb_packet);
 
   return 1;
 }

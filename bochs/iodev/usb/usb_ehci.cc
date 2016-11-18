@@ -184,7 +184,6 @@ bx_usb_ehci_c::bx_usb_ehci_c()
 {
   put("usb_ehci", "EHCI");
   memset((void*)&hub, 0, sizeof(bx_usb_ehci_t));
-  device_buffer = NULL;
   rt_conf_id = -1;
   hub.frame_timer_index = BX_NULL_TIMER_HANDLE;
 }
@@ -195,8 +194,6 @@ bx_usb_ehci_c::~bx_usb_ehci_c()
   int i;
 
   SIM->unregister_runtime_config_handler(rt_conf_id);
-  if (BX_EHCI_THIS device_buffer != NULL)
-    delete [] BX_EHCI_THIS device_buffer;
 
   for (i = 0; i < 3; i++) {
     if (BX_EHCI_THIS uhci[i] != NULL)
@@ -232,8 +229,6 @@ void bx_usb_ehci_c::init(void)
     ((bx_param_bool_c*)((bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL))->get_by_name("usb_ehci"))->set(0);
     return;
   }
-
-  BX_EHCI_THIS device_buffer = new Bit8u[BUFF_SIZE];
 
   // Call our frame timer routine every 1mS (1,024uS)
   // Continuous and active
@@ -1207,7 +1202,7 @@ int bx_usb_ehci_c::qh_do_overlay(EHCIQueue *q)
   return 0;
 }
 
-int bx_usb_ehci_c::init_transfer(EHCIPacket *p)
+int bx_usb_ehci_c::transfer(EHCIPacket *p)
 {
   Bit32u cpage, offset, bytes, plen, blen = 0;
   Bit64u page;
@@ -1233,9 +1228,9 @@ int bx_usb_ehci_c::init_transfer(EHCIPacket *p)
 
     // Bochs specific code (no async and scatter/gather support yet)
     if (p->pid == USB_TOKEN_IN) {
-      DEV_MEM_WRITE_PHYSICAL_DMA(page, plen, device_buffer+blen);
+      DEV_MEM_WRITE_PHYSICAL_DMA(page, plen, p->packet.data+blen);
     } else {
-      DEV_MEM_READ_PHYSICAL_DMA(page, plen, device_buffer+blen);
+      DEV_MEM_READ_PHYSICAL_DMA(page, plen, p->packet.data+blen);
     }
     blen += plen;
     bytes -= plen;
@@ -1273,7 +1268,7 @@ void bx_usb_ehci_c::async_complete_packet(USBPacket *packet)
   BX_INFO(("Experimental async packet completion"));
   p = container_of_usb_packet(packet);
   if (p->pid == USB_TOKEN_IN) {
-    BX_EHCI_THIS init_transfer(p);
+    BX_EHCI_THIS transfer(p);
   }
   BX_ASSERT(p->async == EHCI_ASYNC_INFLIGHT);
   p->async = EHCI_ASYNC_FINISHED;
@@ -1379,18 +1374,17 @@ int bx_usb_ehci_c::execute(EHCIPacket *p)
 
 // FIXME: This check makes transfer fail with current Bochs code
 //  if (p->async == EHCI_ASYNC_NONE) {
+    usb_packet_init(&p->packet, p->tbytes);
     if (p->pid != USB_TOKEN_IN) {
-      if (BX_EHCI_THIS init_transfer(p) != 0) {
+      if (BX_EHCI_THIS transfer(p) != 0) {
         return USB_RET_PROCERR;
       }
     }
 
-    // Packet setup (could be moved separate function)
+    // Packet setup
     p->packet.pid = p->pid;
     p->packet.devaddr = p->queue->dev->get_address();
     p->packet.devep = endp;
-    p->packet.data = BX_EHCI_THIS device_buffer;
-    p->packet.len = p->tbytes;
     p->packet.complete_cb = ehci_async_complete_packet;
     p->packet.complete_dev = BX_EHCI_THIS_PTR;
 
@@ -1413,11 +1407,12 @@ int bx_usb_ehci_c::execute(EHCIPacket *p)
       //  it received, not the amount it anticipates on receiving/sending in the next packet.
       ret = 8;
     } else if (p->pid == USB_TOKEN_IN) {
-      if (BX_EHCI_THIS init_transfer(p) != 0) {
+      if (BX_EHCI_THIS transfer(p) != 0) {
         return USB_RET_PROCERR;
       }
     }
   }
+  usb_packet_cleanup(&p->packet);
 
   return ret;
 }

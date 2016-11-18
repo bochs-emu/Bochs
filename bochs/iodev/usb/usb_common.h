@@ -214,6 +214,26 @@ protected:
   int set_usb_string(Bit8u *buf, const char *str);
 };
 
+static BX_CPP_INLINE void usb_packet_init(USBPacket *p, int size)
+{
+  memset(p, 0, sizeof(USBPacket));
+  if (size > 0) {
+    p->data = new Bit8u[size];
+    if (!p->data) {
+      return;
+    }
+  }
+  p->len = size;
+}
+
+static BX_CPP_INLINE void usb_packet_cleanup(USBPacket *p)
+{
+  if (p->data) {
+    delete [] p->data;
+    p->data = NULL;
+  }
+}
+
 static BX_CPP_INLINE void usb_defer_packet(USBPacket *p, usb_device_c *dev)
 {
   p->dev = dev;

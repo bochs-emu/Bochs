@@ -65,22 +65,16 @@ bx_uhci_core_c::bx_uhci_core_c()
 {
   put("uhci_core", "UHCIC");
   memset((void*)&hub, 0, sizeof(bx_uhci_core_t));
-  device_buffer = NULL;
   hub.timer_index = BX_NULL_TIMER_HANDLE;
 }
 
 bx_uhci_core_c::~bx_uhci_core_c()
 {
-  if (device_buffer != NULL)
-    delete [] device_buffer;
-
   BX_DEBUG(("Exit"));
 }
 
 void bx_uhci_core_c::init_uhci(Bit8u devfunc, Bit16u devid, Bit8u headt, Bit8u intp)
 {
-  device_buffer = new Bit8u[65536];
-
   // Call our timer routine every 1mS (1,000uS)
   // Continuous and active
   hub.timer_index =
@@ -801,18 +795,17 @@ bx_bool bx_uhci_core_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *
       BX_ERROR(("too many pending packets"));
       return 0;
     }
+    usb_packet_init(&usb_packet, maxlen);
     usb_packet.pid = pid;
     usb_packet.devaddr = addr;
     usb_packet.devep = endpt;
-    usb_packet.data = device_buffer;
-    usb_packet.len = maxlen;
     usb_packet.complete_cb = uhci_async_complete_packet;
     usb_packet.complete_dev = this;
     switch (pid) {
       case USB_TOKEN_OUT:
       case USB_TOKEN_SETUP:
         if (maxlen > 0) {
-          DEV_MEM_READ_PHYSICAL_DMA(td->dword3, maxlen, device_buffer);
+          DEV_MEM_READ_PHYSICAL_DMA(td->dword3, maxlen, usb_packet.data);
         }
         ret = broadcast_packet(&usb_packet);
         len = maxlen;
@@ -839,7 +832,7 @@ bx_bool bx_uhci_core_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *
         ret = USB_RET_BABBLE;
       }
       if (len > 0) {
-        DEV_MEM_WRITE_PHYSICAL_DMA(td->dword3, len, device_buffer);
+        DEV_MEM_WRITE_PHYSICAL_DMA(td->dword3, len, usb_packet.data);
       }
     } else {
       len = 0;
@@ -850,6 +843,7 @@ bx_bool bx_uhci_core_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *
   } else {
     set_status(td, 1, 0, 0, 0, 0, 0, 0x007); // stalled
   }
+  usb_packet_cleanup(&usb_packet);
   return 1;
 }
 
