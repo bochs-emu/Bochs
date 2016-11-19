@@ -1206,7 +1206,7 @@ void bx_usb_ohci_c::async_complete_packet(USBPacket *packet)
 bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
 {
   unsigned pid = 0, len = 0, len1, len2;
-  int ilen, ret = 0;
+  int ilen, ret = 0, ret2 = 1;
   Bit32u addr;
   Bit16u maxlen = 0;
   bx_bool completion;
@@ -1350,7 +1350,7 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
           TD_SET_CC(td, DeviceNotResponding);
           break;
         case USB_RET_NAK:    // (-2)
-          TD_SET_CC(td, Stall);
+          ret2 = 0;
           break;
         case USB_RET_STALL:  // (-3)
           TD_SET_CC(td, Stall);
@@ -1363,15 +1363,17 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
           break;
       }
     }
-    TD_SET_EC(td, 3);
-    ED_SET_H(ed, 1);
+    if (ret != USB_RET_NAK) {
+      TD_SET_EC(td, 3);
+      ED_SET_H(ed, 1);
+    }
   }
 
   BX_DEBUG((" td->cbp = 0x%08X   ret = %i  len = %i  td->cc = %i   td->ec = %i  ed->h = %i", TD_GET_CBP(td), ret, len, TD_GET_CC(td), TD_GET_EC(td), ED_GET_H(ed)));
   BX_DEBUG(("    td->t = %i  ed->c = %i", TD_GET_T(td), ED_GET_C(ed)));
   usb_packet_cleanup(&BX_OHCI_THIS usb_packet);
 
-  return 1;
+  return ret2;
 }
 
 int bx_usb_ohci_c::broadcast_packet(USBPacket *p)

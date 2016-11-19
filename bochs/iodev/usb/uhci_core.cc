@@ -840,6 +840,8 @@ bx_bool bx_uhci_core_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *
   }
   if (ret >= 0) {
     set_status(td, 0, 0, 0, 0, 0, 0, len-1);
+  } else if (ret == USB_RET_NAK) {
+    set_status(td, 0, 0, 0, 1, 0, 0, 0); // NAK
   } else {
     set_status(td, 1, 0, 0, 0, 0, 0, 0x007); // stalled
   }

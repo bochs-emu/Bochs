@@ -453,6 +453,8 @@ void usb_hid_device_c::register_state_specific(bx_list_c *parent)
   BXRS_DEC_PARAM_FIELD(list, mouse_y, s.mouse_y);
   BXRS_DEC_PARAM_FIELD(list, mouse_z, s.mouse_z);
   BXRS_HEX_PARAM_FIELD(list, b_state, s.b_state);
+  BXRS_HEX_PARAM_FIELD(list, idle, s.idle);
+  BXRS_PARAM_BOOL(list, has_events, s.has_events);
   if (d.type == USB_DEV_TYPE_KEYPAD) {
     new bx_shadow_data_c(list, "saved_key", s.saved_key, 8, 1);
     new bx_shadow_data_c(list, "key_pad_packet", s.key_pad_packet, 8, 1);
@@ -645,9 +647,9 @@ int usb_hid_device_c::handle_control(int request, int value, int index, int leng
     case GET_REPORT:
       if ((d.type == USB_DEV_TYPE_MOUSE) ||
           (d.type == USB_DEV_TYPE_TABLET)) {
-        ret = mouse_poll(data, length);
+        ret = mouse_poll(data, length, 1);
       } else if (d.type == USB_DEV_TYPE_KEYPAD) {
-        ret = keypad_poll(data, length);
+        ret = keypad_poll(data, length, 1);
       } else {
         goto fail;
       }
@@ -660,7 +662,14 @@ int usb_hid_device_c::handle_control(int request, int value, int index, int leng
         goto fail;
       }
       break;
+    case GET_IDLE:
+      data[0] = s.idle;
+      ret = 1;
+      break;
     case SET_IDLE:
+      s.idle = (value >> 8);
+      ret = 0;
+      break;
     case SET_PROTOCOL:
       ret = 0;
       break;
@@ -683,15 +692,15 @@ int usb_hid_device_c::handle_data(USBPacket *p)
       if (p->devep == 1) {
         if ((d.type == USB_DEV_TYPE_MOUSE) ||
             (d.type == USB_DEV_TYPE_TABLET)) {
-          ret = mouse_poll(p->data, p->len);
+          ret = mouse_poll(p->data, p->len, 0);
         } else if (d.type == USB_DEV_TYPE_KEYPAD) {
-          ret = keypad_poll(p->data, p->len);
+          ret = keypad_poll(p->data, p->len, 0);
         } else {
           goto fail;
         }
       } else if (p->devep == 2) {
         if (d.type == USB_DEV_TYPE_KEYPAD) {
-          ret = mouse_poll(p->data, p->len);
+          ret = mouse_poll(p->data, p->len, 0);
         } else {
           goto fail;
         }
@@ -710,36 +719,42 @@ int usb_hid_device_c::handle_data(USBPacket *p)
   return ret;
 }
 
-int usb_hid_device_c::mouse_poll(Bit8u *buf, int len)
+int usb_hid_device_c::mouse_poll(Bit8u *buf, int len, bx_bool force)
 {
-  int l = 0;
+  int l = USB_RET_NAK;
 
   if ((d.type == USB_DEV_TYPE_MOUSE) ||
       (d.type == USB_DEV_TYPE_KEYPAD)) {
-    if (!s.mouse_x && !s.mouse_y) {
+    if (!s.has_events) {
       // if there's no new movement, handle delayed one
       mouse_enq(0, 0, s.mouse_z, s.b_state, 0);
     }
-    buf[0] = (Bit8u) s.b_state;
-    buf[1] = (Bit8s) s.mouse_x;
-    buf[2] = (Bit8s) s.mouse_y;
-    s.mouse_x = 0;
-    s.mouse_y = 0;
-    l = 3;
-    if (len >= 4) {
-      buf[3] = (Bit8s) s.mouse_z; // if wheel mouse
-      s.mouse_z = 0;
-      l = 4;
+    if (s.has_events || (s.idle != 0) || force) {
+      buf[0] = (Bit8u) s.b_state;
+      buf[1] = (Bit8s) s.mouse_x;
+      buf[2] = (Bit8s) s.mouse_y;
+      s.mouse_x = 0;
+      s.mouse_y = 0;
+      l = 3;
+      if (len >= 4) {
+        buf[3] = (Bit8s) s.mouse_z; // if wheel mouse
+        s.mouse_z = 0;
+        l = 4;
+      }
+      s.has_events = 0;
     }
   } else if (d.type == USB_DEV_TYPE_TABLET) {
-    buf[0] = (Bit8u) s.b_state;
-    buf[1] = (Bit8u)(s.mouse_x & 0xff);
-    buf[2] = (Bit8u)(s.mouse_x >> 8);
-    buf[3] = (Bit8u)(s.mouse_y & 0xff);
-    buf[4] = (Bit8u)(s.mouse_y >> 8);
-    buf[5] = (Bit8s) s.mouse_z;
-    s.mouse_z = 0;
-    l = 6;
+    if (s.has_events || (s.idle != 0) || force) {
+      buf[0] = (Bit8u) s.b_state;
+      buf[1] = (Bit8u)(s.mouse_x & 0xff);
+      buf[2] = (Bit8u)(s.mouse_x >> 8);
+      buf[3] = (Bit8u)(s.mouse_y & 0xff);
+      buf[4] = (Bit8u)(s.mouse_y >> 8);
+      buf[5] = (Bit8s) s.mouse_z;
+      s.mouse_z = 0;
+      l = 6;
+      s.has_events = 0;
+    }
   }
   return l;
 }
@@ -794,6 +809,9 @@ void usb_hid_device_c::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned
 
     s.mouse_x = (Bit8s) delta_x;
     s.mouse_y = (Bit8s) delta_y;
+    if ((s.mouse_x != 0) || (s.mouse_y != 0) || (button_state != s.b_state)) {
+      s.has_events = 1;
+    }
   } else if (d.type == USB_DEV_TYPE_TABLET) {
     if (absxy) {
       s.mouse_x = delta_x;
@@ -806,18 +824,22 @@ void usb_hid_device_c::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned
       s.mouse_x = 0;
     if (s.mouse_y < 0)
       s.mouse_y = 0;
+    s.has_events = 1;
   }
   s.mouse_z = (Bit8s) delta_z;
   s.b_state = (Bit8u) button_state;
 }
 
-int usb_hid_device_c::keypad_poll(Bit8u *buf, int len)
+int usb_hid_device_c::keypad_poll(Bit8u *buf, int len, bx_bool force)
 {
-  int l = 0;
+  int l = USB_RET_NAK;
 
   if (d.type == USB_DEV_TYPE_KEYPAD) {
-    memcpy(buf, s.key_pad_packet, len);
-    l = 8;
+    if (s.has_events || (s.idle != 0) || force) {
+      memcpy(buf, s.key_pad_packet, len);
+      l = 8;
+      s.has_events = 0;
+    }
   }
   return l;
 }
@@ -863,6 +885,7 @@ bx_bool usb_hid_device_c::key_enq(Bit8u *scan_code)
     memset(s.saved_key, 0, 8);
   } else {
     memcpy(s.saved_key, our_scan_code, 8);
+    s.has_events = 1;
     // print a debug line to the log file
     char bx_debug_code[128] = "";
     char value[8];
