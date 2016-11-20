@@ -85,7 +85,7 @@ static Bit32u serial_number = 1234;
 static const Bit8u bx_hub_dev_descriptor[] = {
   0x12,       /*  u8 bLength; */
   0x01,       /*  u8 bDescriptorType; Device */
-  0x00, 0x02, /*  u16 bcdUSB; v2.0 */
+  0x10, 0x01, /*  u16 bcdUSB; v1.1 */
 
   0x09,       /*  u8  bDeviceClass; HUB_CLASSCODE */
   0x00,       /*  u8  bDeviceSubClass; */
@@ -155,10 +155,10 @@ static const Bit8u bx_hub_hub_descriptor[] =
   0x00,       /*  u8  bLength; patched in later */
   0x29,       /*  u8  bDescriptorType; Hub-descriptor */
   0x00,       /*  u8  bNbrPorts; (patched later) */
-  0xa9,       /* u16  wHubCharacteristics; */
+  0x0a,       /* u16  wHubCharacteristics; */
   0x00,       /*   (per-port OC, no power switching) */
-  0x32,       /*  u8  bPwrOn2pwrGood; 2ms */
-  0x64        /*  u8  bHubContrCurrent; 0 mA */
+  0x01,       /*  u8  bPwrOn2pwrGood; 2ms */
+  0x00        /*  u8  bHubContrCurrent; 0 mA */
 
   /* DeviceRemovable and PortPwrCtrlMask patched in later */
 };
@@ -261,8 +261,20 @@ void usb_hub_device_c::after_restore_state()
 
 void usb_hub_device_c::handle_reset()
 {
-  // TODO
+  int i;
+
   BX_DEBUG(("Reset"));
+  for (i = 0; i < hub.n_ports; i++) {
+    hub.usb_port[i].PortStatus = PORT_STAT_POWER;
+    hub.usb_port[i].PortChange = 0;
+    if (hub.usb_port[i].device != NULL) {
+      hub.usb_port[i].PortStatus |= PORT_STAT_CONNECTION;
+      hub.usb_port[i].PortChange |= PORT_STAT_C_CONNECTION;
+      if (hub.usb_port[i].device->get_speed() == USB_SPEED_LOW) {
+        hub.usb_port[i].PortStatus |= PORT_STAT_LOW_SPEED;
+      }
+    }
+  }
 }
 
 int usb_hub_device_c::handle_control(int request, int value, int index, int length, Bit8u *data)
@@ -601,12 +613,29 @@ void usb_hub_device_c::usb_set_connect_status(Bit8u port, int type, bx_bool conn
   if (device != NULL) {
     if (device->get_type() == type) {
       if (connected) {
+        switch (device->get_speed()) {
+          case USB_SPEED_LOW:
+            hub.usb_port[port].PortStatus |= PORT_STAT_LOW_SPEED;
+            break;
+          case USB_SPEED_FULL:
+            hub.usb_port[port].PortStatus &= ~PORT_STAT_LOW_SPEED;
+            break;
+          case USB_SPEED_HIGH:
+          case USB_SPEED_SUPER:
+            BX_PANIC(("Hub supports 'low' or 'full' speed devices only."));
+            usb_set_connect_status(port, type, 0);
+            return;
+          default:
+            BX_PANIC(("USB device returned invalid speed value"));
+            usb_set_connect_status(port, type, 0);
+            return;
+        }
         hub.usb_port[port].PortStatus |= PORT_STAT_CONNECTION;
         hub.usb_port[port].PortChange |= PORT_STAT_C_CONNECTION;
-        if (device->get_speed() == USB_SPEED_LOW)
-          hub.usb_port[port].PortStatus |= PORT_STAT_LOW_SPEED;
-        else
-          hub.usb_port[port].PortStatus &= ~PORT_STAT_LOW_SPEED;
+        if (hub.usb_port[port].PortStatus & PORT_STAT_SUSPEND) {
+          hub.usb_port[port].PortChange |= PORT_STAT_C_SUSPEND;
+          // TODO: signal resume to upstream port
+        }
         if (!device->get_connected()) {
           if (!device->init()) {
             usb_set_connect_status(port, type, 0);
