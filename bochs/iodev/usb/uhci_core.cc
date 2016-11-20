@@ -841,7 +841,7 @@ bx_bool bx_uhci_core_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *
   if (ret >= 0) {
     set_status(td, 0, 0, 0, 0, 0, 0, len-1);
   } else if (ret == USB_RET_NAK) {
-    set_status(td, 0, 0, 0, 1, 0, 0, 0); // NAK
+    set_status(td, 0, 0, 0, 1, 0, 0, len-1); // NAK
   } else {
     set_status(td, 1, 0, 0, 0, 0, 0, 0x007); // stalled
   }
@@ -878,7 +878,7 @@ void bx_uhci_core_c::set_status(struct TD *td, bx_bool stalled, bx_bool data_buf
   td->dword1 |= crc_time_out      ? (1<<18) : 0; // crc/timeout
   td->dword1 |= bitstuff_error    ? (1<<17) : 0; // bitstuff error
   td->dword1 |= (act_len & 0x7FF);               // actual length
-  if (stalled || data_buffer_error || babble || nak || crc_time_out || bitstuff_error)
+  if (stalled || data_buffer_error || babble || crc_time_out || bitstuff_error)
     td->dword1 &= ~((1<<28) | (1<<27));  // clear the c_err field in there was an error
 }
 

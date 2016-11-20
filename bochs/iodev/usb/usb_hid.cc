@@ -771,6 +771,8 @@ void usb_hid_device_c::mouse_enq_static(void *dev, int delta_x, int delta_y, int
 
 void usb_hid_device_c::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy)
 {
+  Bit16s prev_x, prev_y;
+
   if (d.type == USB_DEV_TYPE_MOUSE) {
     // scale down the motion
     if ((delta_x < -1) || (delta_x > 1))
@@ -813,6 +815,8 @@ void usb_hid_device_c::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned
       s.has_events = 1;
     }
   } else if (d.type == USB_DEV_TYPE_TABLET) {
+    prev_x = s.mouse_x;
+    prev_y = s.mouse_y;
     if (absxy) {
       s.mouse_x = delta_x;
       s.mouse_y = delta_y;
@@ -824,7 +828,9 @@ void usb_hid_device_c::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned
       s.mouse_x = 0;
     if (s.mouse_y < 0)
       s.mouse_y = 0;
-    s.has_events = 1;
+    if ((s.mouse_x != prev_x) || (s.mouse_y != prev_y) || (button_state != s.b_state)) {
+      s.has_events = 1;
+    }
   }
   s.mouse_z = (Bit8s) delta_z;
   s.b_state = (Bit8u) button_state;
