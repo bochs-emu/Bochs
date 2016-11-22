@@ -149,8 +149,6 @@ typedef struct {
   } usb_port[USB_UHCI_PORTS];
 
   Bit8u   devfunc;
-  Bit32u  async_td;
-  bx_bool async_complete;
 } bx_uhci_core_t;
 
 #pragma pack (push, 1)
@@ -172,6 +170,13 @@ struct HCSTACK {
   bx_bool t;
 };
 
+typedef struct UHCIAsync {
+  USBPacket packet;
+  Bit32u    td_addr;
+  bx_bool   done;
+  struct UHCIAsync *next;
+} UHCIAsync;
+
 class bx_uhci_core_c : public bx_devmodel_c, public bx_pci_device_stub_c {
 public:
   bx_uhci_core_c();
@@ -191,12 +196,16 @@ protected:
   Bit8u          global_reset;
   bx_bool        busy;
 
-  USBPacket usb_packet;
+  UHCIAsync *packets;
 
   void update_irq(void);
 
   int  broadcast_packet(USBPacket *p);
   void set_connect_status(Bit8u port, int type, bx_bool connected);
+
+  UHCIAsync* create_async_packet(Bit32u addr, int maxlen);
+  void       remove_async_packet(UHCIAsync *packet);
+  UHCIAsync* find_async_packet(Bit32u addr);
 
   static void uhci_timer_handler(void *);
   void uhci_timer(void);
