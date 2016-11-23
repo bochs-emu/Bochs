@@ -984,14 +984,16 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
         Bit8u bitmask = 0xff >> (3 - BX_SER_THIS s[port].line_cntl.wordlen_sel);
         value &= bitmask;
         if (BX_SER_THIS s[port].line_status.thr_empty) {
-          if (BX_SER_THIS s[port].fifo_cntl.enable) {
+          if (BX_SER_THIS s[port].fifo_cntl.enable &&
+              !BX_SER_THIS s[port].modem_cntl.local_loopback) {
             BX_SER_THIS s[port].tx_fifo[BX_SER_THIS s[port].tx_fifo_end++] = value;
           } else {
             BX_SER_THIS s[port].thrbuffer = value;
           }
           BX_SER_THIS s[port].line_status.thr_empty = 0;
           if (BX_SER_THIS s[port].line_status.tsr_empty) {
-            if (BX_SER_THIS s[port].fifo_cntl.enable) {
+            if (BX_SER_THIS s[port].fifo_cntl.enable &&
+                !BX_SER_THIS s[port].modem_cntl.local_loopback) {
               BX_SER_THIS s[port].tsrbuffer = BX_SER_THIS s[port].tx_fifo[0];
               memmove(&BX_SER_THIS s[port].tx_fifo[0], &BX_SER_THIS s[port].tx_fifo[1], 15);
               BX_SER_THIS s[port].line_status.thr_empty = (--BX_SER_THIS s[port].tx_fifo_end == 0);
@@ -999,11 +1001,18 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
               BX_SER_THIS s[port].tsrbuffer = BX_SER_THIS s[port].thrbuffer;
               BX_SER_THIS s[port].line_status.thr_empty = 1;
             }
+            if (BX_SER_THIS s[port].line_status.thr_empty) {
+              raise_interrupt(port, BX_SER_INT_TXHOLD);
+            }
             BX_SER_THIS s[port].line_status.tsr_empty = 0;
-            raise_interrupt(port, BX_SER_INT_TXHOLD);
-            bx_pc_system.activate_timer(BX_SER_THIS s[port].tx_timer_index,
-                                        BX_SER_THIS s[port].databyte_usec,
-                                        0); /* not continuous */
+            if (BX_SER_THIS s[port].modem_cntl.local_loopback) {
+              rx_fifo_enq(port, BX_SER_THIS s[port].tsrbuffer);
+              BX_SER_THIS s[port].line_status.tsr_empty = 1;
+            } else {
+              bx_pc_system.activate_timer(BX_SER_THIS s[port].tx_timer_index,
+                                          BX_SER_THIS s[port].databyte_usec,
+                                          0); /* not continuous */
+            }
           } else {
             BX_SER_THIS s[port].tx_interrupt = 0;
             lower_interrupt(port);
@@ -1337,7 +1346,9 @@ void bx_serial_c::rx_fifo_enq(Bit8u port, Bit8u data)
 
   if (BX_SER_THIS s[port].fifo_cntl.enable) {
     if (BX_SER_THIS s[port].rx_fifo_end == 16) {
-      BX_ERROR(("com%d: receive FIFO overflow", port+1));
+      if (!BX_SER_THIS s[port].modem_cntl.local_loopback) {
+        BX_ERROR(("com%d: receive FIFO overflow", port+1));
+      }
       BX_SER_THIS s[port].line_status.overrun_error = 1;
       raise_interrupt(port, BX_SER_INT_RXLSTAT);
     } else {
@@ -1390,68 +1401,64 @@ void bx_serial_c::tx_timer(void)
   Bit8u port = (Bit8u)bx_pc_system.triggeredTimerParam();
   char pname[20];
 
-  if (BX_SER_THIS s[port].modem_cntl.local_loopback) {
-    rx_fifo_enq(port, BX_SER_THIS s[port].tsrbuffer);
-  } else {
-    switch (BX_SER_THIS s[port].io_mode) {
-      case BX_SER_MODE_FILE:
+  switch (BX_SER_THIS s[port].io_mode) {
+    case BX_SER_MODE_FILE:
+      if (BX_SER_THIS s[port].output == NULL) {
+        sprintf(pname, "ports.serial.%d", port+1);
+        bx_list_c *base = (bx_list_c*) SIM->get_param(pname);
+        bx_param_string_c *devparam = SIM->get_param_string("dev", base);
+        if (!devparam->isempty()) {
+          BX_SER_THIS s[port].output = fopen(devparam->getptr(), "wb");
+        }
         if (BX_SER_THIS s[port].output == NULL) {
-          sprintf(pname, "ports.serial.%d", port+1);
-          bx_list_c *base = (bx_list_c*) SIM->get_param(pname);
-          bx_param_string_c *devparam = SIM->get_param_string("dev", base);
-          if (!devparam->isempty()) {
-            BX_SER_THIS s[port].output = fopen(devparam->getptr(), "wb");
-          }
-          if (BX_SER_THIS s[port].output == NULL) {
-            BX_ERROR(("Could not open '%s' to write com%d output",
-                      devparam->getptr(), port+1));
-            BX_SER_THIS s[port].io_mode = BX_SER_MODE_NULL;
-          }
+          BX_ERROR(("Could not open '%s' to write com%d output",
+                    devparam->getptr(), port+1));
+          BX_SER_THIS s[port].io_mode = BX_SER_MODE_NULL;
         }
-        fputc(BX_SER_THIS s[port].tsrbuffer, BX_SER_THIS s[port].output);
-        fflush(BX_SER_THIS s[port].output);
-        break;
-      case BX_SER_MODE_TERM:
+      }
+      fputc(BX_SER_THIS s[port].tsrbuffer, BX_SER_THIS s[port].output);
+      fflush(BX_SER_THIS s[port].output);
+      break;
+    case BX_SER_MODE_TERM:
 #if defined(SERIAL_ENABLE)
-        BX_DEBUG(("com%d: write: '%c'", port+1, BX_SER_THIS s[port].tsrbuffer));
-        if (BX_SER_THIS s[port].tty_id >= 0) {
-          write(BX_SER_THIS s[port].tty_id, (bx_ptr_t) & BX_SER_THIS s[port].tsrbuffer, 1);
-        }
+      BX_DEBUG(("com%d: write: '%c'", port+1, BX_SER_THIS s[port].tsrbuffer));
+      if (BX_SER_THIS s[port].tty_id >= 0) {
+        write(BX_SER_THIS s[port].tty_id, (bx_ptr_t) & BX_SER_THIS s[port].tsrbuffer, 1);
+      }
 #endif
-        break;
-      case BX_SER_MODE_RAW:
+      break;
+    case BX_SER_MODE_RAW:
 #if USE_RAW_SERIAL
-        if (!BX_SER_THIS s[port].raw->ready_transmit())
-          BX_PANIC(("com%d: not ready to transmit", port+1));
-        BX_SER_THIS s[port].raw->transmit(BX_SER_THIS s[port].tsrbuffer);
+      if (!BX_SER_THIS s[port].raw->ready_transmit())
+        BX_PANIC(("com%d: not ready to transmit", port+1));
+      BX_SER_THIS s[port].raw->transmit(BX_SER_THIS s[port].tsrbuffer);
 #endif
-        break;
-      case BX_SER_MODE_MOUSE:
-        BX_INFO(("com%d: write to mouse ignored: 0x%02x", port+1, BX_SER_THIS s[port].tsrbuffer));
-        break;
-      case BX_SER_MODE_SOCKET_CLIENT:
-      case BX_SER_MODE_SOCKET_SERVER:
-        if (BX_SER_THIS s[port].socket_id >= 0) {
+      break;
+    case BX_SER_MODE_MOUSE:
+      BX_INFO(("com%d: write to mouse ignored: 0x%02x", port+1, BX_SER_THIS s[port].tsrbuffer));
+      break;
+    case BX_SER_MODE_SOCKET_CLIENT:
+    case BX_SER_MODE_SOCKET_SERVER:
+      if (BX_SER_THIS s[port].socket_id >= 0) {
 #ifdef BX_SER_WIN32
-          BX_INFO(("attempting to write win32 : %c", BX_SER_THIS s[port].tsrbuffer));
-          ::send(BX_SER_THIS s[port].socket_id,
-                 (const char*) & BX_SER_THIS s[port].tsrbuffer, 1, 0);
+        BX_INFO(("attempting to write win32 : %c", BX_SER_THIS s[port].tsrbuffer));
+        ::send(BX_SER_THIS s[port].socket_id,
+               (const char*) & BX_SER_THIS s[port].tsrbuffer, 1, 0);
 #else
-          ::write(BX_SER_THIS s[port].socket_id,
-                  (bx_ptr_t) & BX_SER_THIS s[port].tsrbuffer, 1);
+        ::write(BX_SER_THIS s[port].socket_id,
+                (bx_ptr_t) & BX_SER_THIS s[port].tsrbuffer, 1);
 #endif
-        }
-        break;
-      case BX_SER_MODE_PIPE_CLIENT:
-      case BX_SER_MODE_PIPE_SERVER:
+      }
+      break;
+    case BX_SER_MODE_PIPE_CLIENT:
+    case BX_SER_MODE_PIPE_SERVER:
 #ifdef BX_SER_WIN32
-        if (BX_SER_THIS s[port].pipe) {
-          DWORD written;
-          WriteFile(BX_SER_THIS s[port].pipe, (bx_ptr_t)& BX_SER_THIS s[port].tsrbuffer, 1, &written, NULL);
-        }
+      if (BX_SER_THIS s[port].pipe) {
+        DWORD written;
+        WriteFile(BX_SER_THIS s[port].pipe, (bx_ptr_t)& BX_SER_THIS s[port].tsrbuffer, 1, &written, NULL);
+      }
 #endif
-        break;
-    }
+      break;
   }
 
   BX_SER_THIS s[port].line_status.tsr_empty = 1;
