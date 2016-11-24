@@ -430,7 +430,7 @@ int usb_msd_device_c::handle_control(int request, int value, int index, int leng
     case EndpointRequest | USB_REQ_GET_STATUS:
       BX_DEBUG(("USB_REQ_GET_STATUS:"));
       data[0] = (1 << USB_DEVICE_SELF_POWERED) |
-        (d.remote_wakeup << USB_DEVICE_REMOTE_WAKEUP);
+                (0 << USB_DEVICE_REMOTE_WAKEUP);
       data[1] = 0x00;
       ret = 2;
       break;
@@ -448,8 +448,6 @@ int usb_msd_device_c::handle_control(int request, int value, int index, int leng
       BX_DEBUG(("USB_REQ_SET_FEATURE:"));
       switch (value) {
         case USB_DEVICE_REMOTE_WAKEUP:
-          d.remote_wakeup = 1;
-          break;
         case USB_DEVICE_U1_ENABLE:
         case USB_DEVICE_U2_ENABLE:
           break;

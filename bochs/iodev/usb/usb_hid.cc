@@ -476,8 +476,8 @@ int usb_hid_device_c::handle_control(int request, int value, int index, int leng
       if (d.state == USB_STATE_DEFAULT)
         goto fail;
       else {
-        data[0] = (1 << USB_DEVICE_SELF_POWERED) |
-          (d.remote_wakeup << USB_DEVICE_REMOTE_WAKEUP);
+        data[0] = (0 << USB_DEVICE_SELF_POWERED) |
+                  (d.remote_wakeup << USB_DEVICE_REMOTE_WAKEUP);
         data[1] = 0x00;
         ret = 2;
       }

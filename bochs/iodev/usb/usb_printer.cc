@@ -172,7 +172,7 @@ int usb_printer_device_c::handle_control(int request, int value, int index, int 
         goto fail;
       else {
         data[0] = (1 << USB_DEVICE_SELF_POWERED) |
-          (d.remote_wakeup << USB_DEVICE_REMOTE_WAKEUP);
+                  (0 << USB_DEVICE_REMOTE_WAKEUP);
         data[1] = 0x00;
         ret = 2;
       }
@@ -186,9 +186,7 @@ int usb_printer_device_c::handle_control(int request, int value, int index, int 
       ret = 0;
       break;
     case DeviceOutRequest | USB_REQ_SET_FEATURE:
-      if (value == USB_DEVICE_REMOTE_WAKEUP) {
-        d.remote_wakeup = 1;
-      } else {
+      if (value != USB_DEVICE_REMOTE_WAKEUP) {
         goto fail;
       }
       ret = 0;
