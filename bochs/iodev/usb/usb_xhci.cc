@@ -2556,6 +2556,7 @@ void bx_usb_xhci_c::process_command_ring(void)
         if ((BX_XHCI_THIS hub.slots[slot].slot_context.slot_state == SLOT_STATE_ADRESSED) ||
             (BX_XHCI_THIS hub.slots[slot].slot_context.slot_state == SLOT_STATE_CONFIGURED)) {
           BX_XHCI_THIS hub.slots[slot].slot_context.slot_state = SLOT_STATE_DEFAULT;
+          BX_XHCI_THIS hub.slots[slot].slot_context.entries = 1;
           BX_XHCI_THIS hub.slots[slot].slot_context.device_address = 0;
           update_slot_context(slot);
           for (i=2; i<32; i++) {
@@ -2564,7 +2565,7 @@ void bx_usb_xhci_c::process_command_ring(void)
           }
           comp_code = TRB_SUCCESS;
         } else {
-          comp_code = TRB_ERROR;
+          comp_code = CONTEXT_STATE_ERROR;
         }
         write_event_TRB(0, org_addr, TRB_SET_COMP_CODE(comp_code), TRB_SET_TYPE(COMMAND_COMPLETION), 1);
         BX_DEBUG(("0x" FORMATADDRESS ": Command Ring: Found Reset Device TRB (slot = %i) (returning %i)", 
