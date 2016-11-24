@@ -434,10 +434,8 @@ void bx_usb_ohci_c::register_state(void)
   BXRS_HEX_PARAM_FIELD(reg, potpgt, BX_OHCI_THIS hub.op_regs.HcRhDescriptorA.potpgt);
   BXRS_PARAM_BOOL(reg, nocp, BX_OHCI_THIS hub.op_regs.HcRhDescriptorA.nocp);
   BXRS_PARAM_BOOL(reg, ocpm, BX_OHCI_THIS hub.op_regs.HcRhDescriptorA.ocpm);
-  BXRS_PARAM_BOOL(reg, dt, BX_OHCI_THIS hub.op_regs.HcRhDescriptorA.dt);
   BXRS_PARAM_BOOL(reg, nps, BX_OHCI_THIS hub.op_regs.HcRhDescriptorA.nps);
   BXRS_PARAM_BOOL(reg, psm, BX_OHCI_THIS hub.op_regs.HcRhDescriptorA.psm);
-  BXRS_HEX_PARAM_FIELD(reg, ndp, BX_OHCI_THIS hub.op_regs.HcRhDescriptorA.ndp);
   reg = new bx_list_c(hub, "HcRhDescriptorB");
   BXRS_HEX_PARAM_FIELD(reg, ppcm, BX_OHCI_THIS hub.op_regs.HcRhDescriptorB.ppcm);
   BXRS_HEX_PARAM_FIELD(reg, dr, BX_OHCI_THIS hub.op_regs.HcRhDescriptorB.dr);
@@ -867,13 +865,13 @@ bx_bool bx_usb_ohci_c::write_handler(bx_phy_address addr, unsigned len, void *da
       break;
 
     case 0x44: // HcLSThreshold
-      BX_ERROR(("Write to HcLSThreshold not allowed."));
+      BX_OHCI_THIS hub.op_regs.HcLSThreshold = (value & 0x00000FFF);
       break;
 
     case 0x48: // HcRhDescriptorA
       if (value & 0x00FFE000)
         BX_ERROR(("Write to a reserved field in HcRhDescriptorA."));
-      if (value & 0x000000FF)
+      if ((value & 0x000000FF) != BX_OHCI_THIS hub.op_regs.HcRhDescriptorA.ndp)
         BX_ERROR(("Write to HcRhDescriptorA.ndp not allowed."));
       if (value & (1<<10))
         BX_ERROR(("Write to HcRhDescriptorA.dt not allowed."));
