@@ -266,7 +266,7 @@ enum { PLS_U0 = 0, PLS_U1, PLS_U2, PLS_U3_SUSPENDED, PLS_DISABLED, PLS_RXDETECT,
 // Slot State
 #define SLOT_STATE_DISABLED_ENABLED  0
 #define SLOT_STATE_DEFAULT           1
-#define SLOT_STATE_ADRESSED          2
+#define SLOT_STATE_ADDRESSED         2
 #define SLOT_STATE_CONFIGURED        3
 
 // EP State

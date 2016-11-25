@@ -2255,7 +2255,7 @@ void bx_usb_xhci_c::process_command_ring(void)
                   int port_num = ((tmpval1 & (0xFF<<16)) >> 16) - 1;  // slot:port_num is 1 based
                   new_addr = create_unique_address(slot);
                   if (send_set_address(new_addr, port_num) == 0) {
-                    slot_context.slot_state = SLOT_STATE_ADRESSED;
+                    slot_context.slot_state = SLOT_STATE_ADDRESSED;
                     slot_context.device_address = new_addr;
                     ep_context.ep_state = EP_STATE_RUNNING;
                     comp_code = TRB_SUCCESS;
@@ -2410,7 +2410,7 @@ void bx_usb_xhci_c::process_command_ring(void)
             }
           }
 
-          if (!dc && (BX_XHCI_THIS hub.slots[slot].slot_context.slot_state >= SLOT_STATE_ADRESSED)) {
+          if (!dc && (BX_XHCI_THIS hub.slots[slot].slot_context.slot_state >= SLOT_STATE_ADDRESSED)) {
             comp_code = TRB_SUCCESS;  // assume good completion
             // Check all the input context entries with an a_flag == 1
             for (i=2; i<32; i++) {
@@ -2446,7 +2446,7 @@ void bx_usb_xhci_c::process_command_ring(void)
               }
 
               // if all EP's are in the disabled state, then set to slot_state = ADDRESSED, else slot_state = CONFIGURED
-              BX_XHCI_THIS hub.slots[slot].slot_context.slot_state = SLOT_STATE_ADRESSED; // assume all disabled
+              BX_XHCI_THIS hub.slots[slot].slot_context.slot_state = SLOT_STATE_ADDRESSED; // assume all disabled
               for (i=2; i<32; i++) {
                 if (BX_XHCI_THIS hub.slots[slot].ep_context[i].ep_context.ep_state > EP_STATE_DISABLED) {
                   BX_XHCI_THIS hub.slots[slot].slot_context.slot_state = SLOT_STATE_CONFIGURED;
@@ -2553,7 +2553,7 @@ void bx_usb_xhci_c::process_command_ring(void)
 
       case RESET_DEVICE:
         slot = TRB_GET_SLOT(trb.command);  // slots are 1 based
-        if ((BX_XHCI_THIS hub.slots[slot].slot_context.slot_state == SLOT_STATE_ADRESSED) ||
+        if ((BX_XHCI_THIS hub.slots[slot].slot_context.slot_state == SLOT_STATE_ADDRESSED) ||
             (BX_XHCI_THIS hub.slots[slot].slot_context.slot_state == SLOT_STATE_CONFIGURED)) {
           BX_XHCI_THIS hub.slots[slot].slot_context.slot_state = SLOT_STATE_DEFAULT;
           BX_XHCI_THIS hub.slots[slot].slot_context.entries = 1;
@@ -2720,7 +2720,7 @@ void bx_usb_xhci_c::dump_ep_context(const Bit32u *context, const int slot, const
 {
   BX_INFO((" -=-=-=-=-=-=-=-=- EP Context -=-=-=-=-=-=-=-"));
   BX_INFO(("       ReservedZ: %02x",    (context[0] & (0xFF<<24)) >> 24));
-  BX_INFO(("        Interval: %i (%i)", (context[0] & (0x0F<<20)) >> 20, BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.interval));
+  BX_INFO(("        Interval: %i (%i)", (context[0] & (0x0F<<16)) >> 16, BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.interval));
   BX_INFO(("             LSA: %i (%i)", (context[0] & (1   <<15)) >> 15, BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.lsa));
   BX_INFO(("     MaxPStreams: %i (%i)", (context[0] & (0x1F<<10)) >> 10, BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.max_pstreams));
   BX_INFO(("            Mult: %i (%i)", (context[0] & (0x03<< 8)) >>  8, BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.mult));
@@ -2759,7 +2759,7 @@ void bx_usb_xhci_c::copy_slot_from_buffer(struct SLOT_CONTEXT *slot_context, con
   slot_context->hub =             ((*(Bit32u *) &buffer[0]) & (1<<26)) ? 1 : 0;
   slot_context->mtt =             ((*(Bit32u *) &buffer[0]) & (1<<25)) ? 1 : 0;
   slot_context->speed =           ((*(Bit32u *) &buffer[0]) & (0x0F<<20)) >> 20;
-  slot_context->route_string =    ((*(Bit32u *) &buffer[0]) & 0x0007FFFF);
+  slot_context->route_string =    ((*(Bit32u *) &buffer[0]) & 0x000FFFFF);
   slot_context->num_ports =        (*(Bit32u *) &buffer[4]) >> 24;
   slot_context->rh_port_num =     ((*(Bit32u *) &buffer[4]) & (0xFF<<16)) >> 16;
   slot_context->max_exit_latency = (*(Bit32u *) &buffer[4]) & 0xFFFF;
