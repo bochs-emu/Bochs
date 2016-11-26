@@ -581,7 +581,7 @@ void bx_usb_ehci_c::set_connect_status(Bit8u port, int type, bx_bool connected)
             BX_ERROR(("port #%d: connect failed", port+1));
           } else {
             BX_INFO(("port #%d: connect: %s", port+1, device->get_info()));
-//            device->set_async_mode(1);
+            device->set_async_mode(1);
           }
         }
       } else { // not connected
@@ -958,8 +958,9 @@ Bit32u bx_usb_ehci_c::get_fetch_addr(int async)
 EHCIPacket *bx_usb_ehci_c::alloc_packet(EHCIQueue *q)
 {
   EHCIPacket *p = new EHCIPacket;
+  memset(p, 0, sizeof(EHCIPacket));
   p->queue = q;
-  // TODO: usb_packet_init(&p->packet); ???
+  usb_packet_init(&p->packet, BUFF_SIZE);
   QTAILQ_INSERT_TAIL(&q->packets, p, next);
   return p;
 }
@@ -980,7 +981,7 @@ void bx_usb_ehci_c::free_packet(EHCIPacket *p)
     usb_cancel_packet(&p->packet);
   }
   QTAILQ_REMOVE(&p->queue->packets, p, next);
-  // TODO: usb_packet_cleanup(&p->packet); ???
+  usb_packet_cleanup(&p->packet);
   delete p;
 }
 
@@ -990,6 +991,7 @@ EHCIQueue *bx_usb_ehci_c::alloc_queue(Bit32u addr, int async)
   EHCIQueue *q;
 
   q = new EHCIQueue;
+  memset(q, 0, sizeof(EHCIQueue));
   q->ehci = &BX_EHCI_THIS hub;
   q->qhaddr = addr;
   q->async = async;
@@ -1265,7 +1267,7 @@ void bx_usb_ehci_c::async_complete_packet(USBPacket *packet)
 {
   EHCIPacket *p;
 
-  BX_INFO(("Experimental async packet completion"));
+  BX_DEBUG(("Experimental async packet completion"));
   p = container_of_usb_packet(packet);
   if (p->pid == USB_TOKEN_IN) {
     BX_EHCI_THIS transfer(p);
@@ -1372,9 +1374,8 @@ int bx_usb_ehci_c::execute(EHCIPacket *p)
 
   endp = get_field(p->queue->qh.epchar, QH_EPCHAR_EP);
 
-// FIXME: This check makes transfer fail with current Bochs code
-//  if (p->async == EHCI_ASYNC_NONE) {
-    usb_packet_init(&p->packet, p->tbytes);
+  if (p->async == EHCI_ASYNC_NONE) {
+    p->packet.len = p->tbytes;
     if (p->pid != USB_TOKEN_IN) {
       if (BX_EHCI_THIS transfer(p) != 0) {
         return USB_RET_PROCERR;
@@ -1389,7 +1390,7 @@ int bx_usb_ehci_c::execute(EHCIPacket *p)
     p->packet.complete_dev = BX_EHCI_THIS_PTR;
 
     p->async = EHCI_ASYNC_INITIALIZED;
-//  }
+  }
 
   ret = p->queue->dev->handle_packet(&p->packet);
   BX_DEBUG(("submit: qh %x next %x qtd %x pid %x len %d (total %d) endp %x ret %d\n",
@@ -1412,7 +1413,6 @@ int bx_usb_ehci_c::execute(EHCIPacket *p)
       }
     }
   }
-  usb_packet_cleanup(&p->packet);
 
   return ret;
 }
