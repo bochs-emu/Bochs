@@ -235,8 +235,6 @@ typedef struct {
   bx_bool  use_control_head;
   bx_bool  use_bulk_head;
   Bit64u   sof_time;
-  Bit32u   async_td;
-  bx_bool  async_complete;
 
   Bit8u device_change;
   int rt_conf_id;
@@ -264,7 +262,7 @@ private:
 
   bx_usb_ohci_t hub;
 
-  USBPacket usb_packet;
+  USBAsync *packets;
 
   static void reset_hc();
   static void reset_port(int);

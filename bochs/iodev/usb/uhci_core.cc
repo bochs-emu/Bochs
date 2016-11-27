@@ -59,12 +59,6 @@
 const Bit8u uhci_iomask[32] = {2, 1, 2, 1, 2, 1, 2, 0, 4, 0, 0, 0, 1, 0, 0, 0,
                               3, 1, 3, 1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-static inline struct UHCIAsync *container_of_usb_packet(void *ptr)
-{
-  return reinterpret_cast<struct UHCIAsync*>(static_cast<char*>(ptr) -
-    reinterpret_cast<size_t>(&(static_cast<struct UHCIAsync*>(0)->packet)));
-}
-
 // the device object
 
 bx_uhci_core_c::bx_uhci_core_c()
@@ -170,7 +164,7 @@ void bx_uhci_core_c::reset_uhci(unsigned type)
   }
   while (packets != NULL) {
     usb_cancel_packet(&packets->packet);
-    remove_async_packet(packets);
+    remove_async_packet(&packets, packets);
   }
 }
 
@@ -752,14 +746,14 @@ void uhci_async_complete_packet(USBPacket *packet, void *dev)
 void bx_uhci_core_c::async_complete_packet(USBPacket *packet)
 {
   BX_DEBUG(("Experimental async packet completion"));
-  UHCIAsync *p = container_of_usb_packet(packet);
+  USBAsync *p = container_of_usb_packet(packet);
   p->done = 1;
 }
 
 bx_bool bx_uhci_core_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td) {
 
   int len = 0, ret = 0;
-  UHCIAsync *p;
+  USBAsync *p;
   bx_bool completion;
 
   Bit16u maxlen = (td->dword2 >> 21);
@@ -770,7 +764,7 @@ bx_bool bx_uhci_core_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *
   BX_DEBUG(("QH%03i:TD found at address: 0x%08X", queue_num, address));
   BX_DEBUG(("  %08X   %08X   %08X   %08X", td->dword0, td->dword1, td->dword2, td->dword3));
 
-  p = find_async_packet(address);
+  p = find_async_packet(&packets, address);
   completion = (p != NULL);
   if (completion && !p->done) {
     return 0;
@@ -797,7 +791,7 @@ bx_bool bx_uhci_core_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *
   if (completion) {
     ret = p->packet.len;
   } else {
-    p = create_async_packet(address, maxlen);
+    p = create_async_packet(&packets, address, maxlen);
     p->packet.pid = pid;
     p->packet.devaddr = addr;
     p->packet.devep = endpt;
@@ -846,7 +840,7 @@ bx_bool bx_uhci_core_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *
   } else {
     set_status(td, 1, 0, 0, 0, 0, 0, 0x007); // stalled
   }
-  remove_async_packet(p);
+  remove_async_packet(&packets, p);
   return 1;
 }
 
@@ -1044,58 +1038,6 @@ void bx_uhci_core_c::set_port_device(int port, usb_device_c *dev)
     set_connect_status(port, olddev->get_type(), 0);
     hub.usb_port[port].device = dev;
   }
-}
-
-// Async packet support
-
-UHCIAsync* bx_uhci_core_c::create_async_packet(Bit32u addr, int maxlen)
-{
-  UHCIAsync *p;
-
-  p = new UHCIAsync;
-  usb_packet_init(&p->packet, maxlen);
-  p->td_addr = addr;
-  p->done = 0;
-  p->next = packets;
-  packets = p;
-  return p;
-}
-
-void bx_uhci_core_c::remove_async_packet(UHCIAsync *p)
-{
-  UHCIAsync *last;
-
-  if (packets == p) {
-    packets = p->next;
-  } else {
-    last = packets;
-    while (last != NULL) {
-      if (last->next != p)
-        last = last->next;
-      else
-        break;
-    }
-    if (last) {
-      last->next = p->next;
-    } else {
-      return;
-    }
-  }
-  usb_packet_cleanup(&p->packet);
-  delete p;
-}
-
-UHCIAsync* bx_uhci_core_c::find_async_packet(Bit32u addr)
-{
-  UHCIAsync *p = packets;
-
-  while (p != NULL) {
-    if (p->td_addr != addr)
-      p = p->next;
-    else
-      break;
-  }
-  return p;
 }
 
 #endif // BX_SUPPORT_PCI && BX_SUPPORT_USB_UHCI

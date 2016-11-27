@@ -367,9 +367,9 @@ void bx_usb_ohci_c::reset_hc()
     }
   }
 
-  if (BX_OHCI_THIS hub.async_td) {
-    usb_cancel_packet(&BX_OHCI_THIS usb_packet);
-    BX_OHCI_THIS hub.async_td = 0;
+  while (BX_OHCI_THIS packets != NULL) {
+    usb_cancel_packet(&BX_OHCI_THIS packets->packet);
+    remove_async_packet(&BX_OHCI_THIS packets, BX_OHCI_THIS packets);
   }
 }
 
@@ -469,8 +469,7 @@ void bx_usb_ohci_c::register_state(void)
   BXRS_PARAM_BOOL(hub, use_control_head, BX_OHCI_THIS hub.use_control_head);
   BXRS_PARAM_BOOL(hub, use_bulk_head, BX_OHCI_THIS hub.use_bulk_head);
   BXRS_DEC_PARAM_FIELD(hub, sof_time, BX_OHCI_THIS hub.sof_time);
-  BXRS_DEC_PARAM_FIELD(hub, async_td, BX_OHCI_THIS hub.async_td);
-  BXRS_PARAM_BOOL(hub, async_complete, BX_OHCI_THIS hub.async_complete);
+  // TODO: handle async packets
   register_pci_state(hub);
 }
 
@@ -1192,7 +1191,8 @@ void ohci_async_complete_packet(USBPacket *packet, void *dev)
 void bx_usb_ohci_c::async_complete_packet(USBPacket *packet)
 {
   BX_DEBUG(("Async packet completion"));
-  BX_OHCI_THIS hub.async_complete = 1;
+  USBAsync *p = container_of_usb_packet(packet);
+  p->done = 1;
   // These hacks are currently required for async completion
   BX_OHCI_THIS hub.use_control_head = 1;
   BX_OHCI_THIS hub.use_bulk_head = 1;
@@ -1207,11 +1207,13 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
   int ilen, ret = 0, ret2 = 1;
   Bit32u addr;
   Bit16u maxlen = 0;
+  USBAsync *p;
   bx_bool completion;
 
   addr = ED_GET_HEADP(ed);
-  completion = (addr == BX_OHCI_THIS hub.async_td);
-  if (completion && !BX_OHCI_THIS hub.async_complete) {
+  p = find_async_packet(&packets, addr);
+  completion = (p != NULL);
+  if (completion && !p->done) {
     return 0;
   }
 
@@ -1249,14 +1251,8 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
     len = 0;
 
   if (completion) {
-    ret = BX_OHCI_THIS usb_packet.len;
-    BX_OHCI_THIS hub.async_td = 0;
-    BX_OHCI_THIS hub.async_complete = 0;
+    ret = p->packet.len;
   } else {
-    if (BX_OHCI_THIS hub.async_td) {
-      BX_ERROR(("too many pending packets"));
-      return 0;
-    }
     switch (pid) {
       case USB_TOKEN_SETUP:
       case USB_TOKEN_OUT:
@@ -1266,12 +1262,12 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
         maxlen = len;
         break;
     }
-    usb_packet_init(&BX_OHCI_THIS usb_packet, maxlen);
-    BX_OHCI_THIS usb_packet.pid = pid;
-    BX_OHCI_THIS usb_packet.devaddr = ED_GET_FA(ed);
-    BX_OHCI_THIS usb_packet.devep = ED_GET_EN(ed);
-    BX_OHCI_THIS usb_packet.complete_cb = ohci_async_complete_packet;
-    BX_OHCI_THIS usb_packet.complete_dev = this;
+    p = create_async_packet(&packets, addr, maxlen);
+    p->packet.pid = pid;
+    p->packet.devaddr = ED_GET_FA(ed);
+    p->packet.devep = ED_GET_EN(ed);
+    p->packet.complete_cb = ohci_async_complete_packet;
+    p->packet.complete_dev = this;
 
     BX_DEBUG(("    pid = %s  addr = %i   endpnt = %i    len = %i  mps = %i (td->cbp = 0x%08X, td->be = 0x%08X)", 
       (pid == USB_TOKEN_IN)? "IN" : (pid == USB_TOKEN_OUT) ? "OUT" : (pid == USB_TOKEN_SETUP) ? "SETUP" : "UNKNOWN", 
@@ -1281,19 +1277,19 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
     switch (pid) {
       case USB_TOKEN_SETUP:
         if (len > 0)
-          DEV_MEM_READ_PHYSICAL_DMA(TD_GET_CBP(td), len, BX_OHCI_THIS usb_packet.data);
+          DEV_MEM_READ_PHYSICAL_DMA(TD_GET_CBP(td), len, p->packet.data);
         // TODO: This is a hack.  dev->handle_packet() should return the amount of bytes
         //  it received, not the amount it anticipates on receiving/sending in the next packet.
-        if ((ret = BX_OHCI_THIS broadcast_packet(&BX_OHCI_THIS usb_packet)) >= 0)
+        if ((ret = BX_OHCI_THIS broadcast_packet(&p->packet)) >= 0)
           ret = 8;
         break;
       case USB_TOKEN_OUT:
         if (len > 0)
-          DEV_MEM_READ_PHYSICAL_DMA(TD_GET_CBP(td), maxlen, BX_OHCI_THIS usb_packet.data);
-        ret = BX_OHCI_THIS broadcast_packet(&BX_OHCI_THIS usb_packet);
+          DEV_MEM_READ_PHYSICAL_DMA(TD_GET_CBP(td), maxlen, p->packet.data);
+        ret = BX_OHCI_THIS broadcast_packet(&p->packet);
         break;
       case USB_TOKEN_IN:
-        ret = BX_OHCI_THIS broadcast_packet(&BX_OHCI_THIS usb_packet);
+        ret = BX_OHCI_THIS broadcast_packet(&p->packet);
         break;
       default:
         TD_SET_CC(td, UnexpectedPID);
@@ -1302,7 +1298,6 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
     }
 
     if (ret == USB_RET_ASYNC) {
-      BX_OHCI_THIS hub.async_td = addr;
       BX_DEBUG(("Async packet deferred"));
       return 0;
     }
@@ -1311,10 +1306,10 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
     if (((TD_GET_CBP(td) & 0xfff) + ret) > 0x1000) {
       len1 = 0x1000 - (TD_GET_CBP(td) & 0xfff);
       len2 = ret - len1;
-      DEV_MEM_WRITE_PHYSICAL_DMA(TD_GET_CBP(td), len1, BX_OHCI_THIS usb_packet.data);
-      DEV_MEM_WRITE_PHYSICAL_DMA((TD_GET_BE(td) & ~0xfff), len2, BX_OHCI_THIS usb_packet.data+len1);
+      DEV_MEM_WRITE_PHYSICAL_DMA(TD_GET_CBP(td), len1, p->packet.data);
+      DEV_MEM_WRITE_PHYSICAL_DMA((TD_GET_BE(td) & ~0xfff), len2, p->packet.data+len1);
     } else {
-      DEV_MEM_WRITE_PHYSICAL_DMA(TD_GET_CBP(td), ret, BX_OHCI_THIS usb_packet.data);
+      DEV_MEM_WRITE_PHYSICAL_DMA(TD_GET_CBP(td), ret, p->packet.data);
     }
   }
   if ((ret == (int)len) || ((pid == USB_TOKEN_IN) && (ret >= 0) &&
@@ -1369,7 +1364,7 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
 
   BX_DEBUG((" td->cbp = 0x%08X   ret = %i  len = %i  td->cc = %i   td->ec = %i  ed->h = %i", TD_GET_CBP(td), ret, len, TD_GET_CC(td), TD_GET_EC(td), ED_GET_H(ed)));
   BX_DEBUG(("    td->t = %i  ed->c = %i", TD_GET_T(td), ED_GET_C(ed)));
-  usb_packet_cleanup(&BX_OHCI_THIS usb_packet);
+  remove_async_packet(&packets, p);
 
   return ret2;
 }

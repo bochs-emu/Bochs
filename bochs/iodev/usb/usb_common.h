@@ -135,6 +135,13 @@ struct USBPacket {
   usb_device_c *dev;
 };
 
+typedef struct USBAsync {
+  USBPacket packet;
+  Bit32u    td_addr;
+  bx_bool   done;
+  struct USBAsync *next;
+} USBAsync;
+
 enum usbdev_type {
   USB_DEV_TYPE_NONE=0,
   USB_DEV_TYPE_MOUSE,
@@ -247,6 +254,64 @@ static BX_CPP_INLINE void usb_cancel_packet(USBPacket *p)
 static BX_CPP_INLINE void usb_packet_complete(USBPacket *p)
 {
     p->complete_cb(p, p->complete_dev);
+}
+
+// Async packet support
+
+static BX_CPP_INLINE USBAsync* create_async_packet(USBAsync **base, Bit32u addr, int maxlen)
+{
+  USBAsync *p;
+
+  p = new USBAsync;
+  usb_packet_init(&p->packet, maxlen);
+  p->td_addr = addr;
+  p->done = 0;
+  p->next = *base;
+  *base = p;
+  return p;
+}
+
+static BX_CPP_INLINE void remove_async_packet(USBAsync **base, USBAsync *p)
+{
+  USBAsync *last;
+
+  if (*base == p) {
+    *base = p->next;
+  } else {
+    last = *base;
+    while (last != NULL) {
+      if (last->next != p)
+        last = last->next;
+      else
+        break;
+    }
+    if (last) {
+      last->next = p->next;
+    } else {
+      return;
+    }
+  }
+  usb_packet_cleanup(&p->packet);
+  delete p;
+}
+
+static BX_CPP_INLINE USBAsync* find_async_packet(USBAsync **base, Bit32u addr)
+{
+  USBAsync *p = *base;
+
+  while (p != NULL) {
+    if (p->td_addr != addr)
+      p = p->next;
+    else
+      break;
+  }
+  return p;
+}
+
+static BX_CPP_INLINE struct USBAsync *container_of_usb_packet(void *ptr)
+{
+  return reinterpret_cast<struct USBAsync*>(static_cast<char*>(ptr) -
+    reinterpret_cast<size_t>(&(static_cast<struct USBAsync*>(0)->packet)));
 }
 
 #endif

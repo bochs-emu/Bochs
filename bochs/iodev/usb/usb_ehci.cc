@@ -117,7 +117,7 @@ typedef enum {
     *data = val; \
     } while(0)
 
-static inline struct EHCIPacket *container_of_usb_packet(void *ptr)
+static inline struct EHCIPacket *ehci_container_of_usb_packet(void *ptr)
 {
   return reinterpret_cast<struct EHCIPacket*>(static_cast<char*>(ptr) -
     reinterpret_cast<size_t>(&(static_cast<struct EHCIPacket*>(0)->packet)));
@@ -1290,7 +1290,7 @@ void bx_usb_ehci_c::async_complete_packet(USBPacket *packet)
   EHCIPacket *p;
 
   BX_DEBUG(("Experimental async packet completion"));
-  p = container_of_usb_packet(packet);
+  p = ehci_container_of_usb_packet(packet);
   if (p->pid == USB_TOKEN_IN) {
     BX_EHCI_THIS transfer(p);
   }
