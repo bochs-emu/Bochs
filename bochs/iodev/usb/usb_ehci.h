@@ -354,7 +354,7 @@ private:
   static void set_connect_status(Bit8u port, int type, bx_bool connected);
   static void change_port_owner(int port);
 
-  // methods ported from QEMU EHCI
+  // EHCI core methods ported from QEMU 1.2.2
   void update_irq(void);
   void raise_irq(Bit8u intr);
   void commit_irq(void);
@@ -364,6 +364,9 @@ private:
   int get_state(int async);
   void set_fetch_addr(int async, Bit32u addr);
   Bit32u get_fetch_addr(int async);
+
+  bx_bool async_enabled(void);
+  bx_bool periodic_enabled(void);
 
   EHCIPacket *alloc_packet(EHCIQueue *q);
   void free_packet(EHCIPacket *p);
