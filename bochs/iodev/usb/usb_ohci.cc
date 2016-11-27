@@ -1135,7 +1135,9 @@ void bx_usb_ohci_c::process_lists(void)
       DEV_MEM_READ_PHYSICAL(BX_OHCI_THIS hub.op_regs.HcBulkCurrentED +  4, 4, (Bit8u*) &cur_ed.dword1);
       DEV_MEM_READ_PHYSICAL(BX_OHCI_THIS hub.op_regs.HcBulkCurrentED +  8, 4, (Bit8u*) &cur_ed.dword2);
       DEV_MEM_READ_PHYSICAL(BX_OHCI_THIS hub.op_regs.HcBulkCurrentED + 12, 4, (Bit8u*) &cur_ed.dword3);
-      process_ed(&cur_ed, BX_OHCI_THIS hub.op_regs.HcBulkCurrentED);
+      if (process_ed(&cur_ed, BX_OHCI_THIS hub.op_regs.HcBulkCurrentED)) {
+        BX_OHCI_THIS hub.op_regs.HcCommandStatus.blf = 1;
+      }
       BX_OHCI_THIS hub.op_regs.HcBulkCurrentED = ED_GET_NEXTED(&cur_ed);
       if (get_frame_remaining() < 4000)
         break;
@@ -1143,9 +1145,10 @@ void bx_usb_ohci_c::process_lists(void)
   }
 }
 
-void bx_usb_ohci_c::process_ed(struct OHCI_ED *ed, const Bit32u ed_address)
+bx_bool bx_usb_ohci_c::process_ed(struct OHCI_ED *ed, const Bit32u ed_address)
 {
   struct OHCI_TD cur_td;
+  bx_bool ret = 0;
 
   if (!ED_GET_H(ed) && !ED_GET_K(ed) && (ED_GET_HEADP(ed) != ED_GET_TAILP(ed))) {
     // if the isochronous is enabled and ed is a isochronous, do TD
@@ -1157,6 +1160,7 @@ void bx_usb_ohci_c::process_ed(struct OHCI_ED *ed, const Bit32u ed_address)
       }
     } else {
       BX_DEBUG(("Found a valid ED that points to an control/bulk/int TD"));
+      ret = 1;
       while (ED_GET_HEADP(ed) != ED_GET_TAILP(ed)) {
         DEV_MEM_READ_PHYSICAL(ED_GET_HEADP(ed),      4, (Bit8u*) &cur_td.dword0);
         DEV_MEM_READ_PHYSICAL(ED_GET_HEADP(ed) +  4, 4, (Bit8u*) &cur_td.dword1);
@@ -1181,6 +1185,7 @@ void bx_usb_ohci_c::process_ed(struct OHCI_ED *ed, const Bit32u ed_address)
     }
     DEV_MEM_WRITE_PHYSICAL(ed_address +  8, 4, (Bit8u*) &ed->dword2);
   }
+  return ret;
 }
 
 void ohci_async_complete_packet(USBPacket *packet, void *dev)
@@ -1193,11 +1198,6 @@ void bx_usb_ohci_c::async_complete_packet(USBPacket *packet)
   BX_DEBUG(("Async packet completion"));
   USBAsync *p = container_of_usb_packet(packet);
   p->done = 1;
-  // These hacks are currently required for async completion
-  BX_OHCI_THIS hub.use_control_head = 1;
-  BX_OHCI_THIS hub.use_bulk_head = 1;
-  BX_OHCI_THIS hub.op_regs.HcCommandStatus.blf = 1;
-  BX_OHCI_THIS hub.op_regs.HcCommandStatus.clf = 1;
   BX_OHCI_THIS process_lists();
 }
 

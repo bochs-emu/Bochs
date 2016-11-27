@@ -280,7 +280,7 @@ private:
   static Bit32u get_frame_remaining(void);
 
   void process_lists();
-  void process_ed(struct OHCI_ED *, const Bit32u);
+  bx_bool process_ed(struct OHCI_ED *, const Bit32u);
   bx_bool process_td(struct OHCI_TD *, struct OHCI_ED *);
 
 #if BX_USE_USB_OHCI_SMF
