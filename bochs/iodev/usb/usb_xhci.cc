@@ -211,7 +211,6 @@ bx_usb_xhci_c::bx_usb_xhci_c()
 {
   put("usb_xhci", "XHCI");
   memset((void*)&hub, 0, sizeof(bx_usb_xhci_t));
-  device_buffer = NULL;
   rt_conf_id = -1;
   //hub.frame_timer_index = BX_NULL_TIMER_HANDLE;
 }
@@ -221,8 +220,6 @@ bx_usb_xhci_c::~bx_usb_xhci_c()
   char pname[16];
 
   SIM->unregister_runtime_config_handler(rt_conf_id);
-  if (BX_XHCI_THIS device_buffer != NULL)
-    delete [] BX_XHCI_THIS device_buffer;
 
   for (int i=0; i<USB_XHCI_PORTS; i++) {
     sprintf(pname, "port%d.device", i+1);
@@ -258,8 +255,6 @@ void bx_usb_xhci_c::init(void)
     ((bx_param_bool_c*)((bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL))->get_by_name("usb_xhci"))->set(0);
     return;
   }
-
-  BX_XHCI_THIS device_buffer = new Bit8u[65536];
 
   // TODO: Use this to decrement the Interrupter:count down value
   // Call our frame timer routine every 1mS (1,024uS)
@@ -1895,6 +1890,7 @@ void bx_usb_xhci_c::process_transfer_ring(const int slot, const int ep)
   bx_bool first_event_trb_encountered = 0;
   Bit32u bytes_not_transferred = 0;
   int comp_code = 0;
+  Bit8u immed_data[8];
 
   // this assumes that we are starting at the first of the TD when this function is called.
   // this is usually the case, and rarely isn't.
@@ -1956,7 +1952,7 @@ void bx_usb_xhci_c::process_transfer_ring(const int slot, const int ep)
       // is the data in trb.parameter? (Immediate data?)
       is_immed_data = TRB_IS_IMMED_DATA(trb.command);
       if (is_immed_data)
-        memcpy(BX_XHCI_THIS device_buffer, &trb.parameter, 8);
+        DEV_MEM_READ_PHYSICAL_DMA((bx_phy_address) org_addr, 8, immed_data); // No byte-swapping here
       else
         address = trb.parameter;
 
@@ -2044,22 +2040,23 @@ void bx_usb_xhci_c::process_transfer_ring(const int slot, const int ep)
       // is there a transfer to be done?
       if (is_transfer_trb) {
         comp_code = TRB_SUCCESS;  // assume good trans event
+        usb_packet_init(&packet, transfer_length);
         packet.pid = cur_direction;
         packet.devaddr = BX_XHCI_THIS hub.slots[slot].slot_context.device_address;
         packet.devep = (ep >> 1);
-        packet.data = BX_XHCI_THIS device_buffer;
-        packet.len = transfer_length;
         packet.complete_cb = NULL;
         packet.complete_dev = BX_XHCI_THIS_PTR;
         switch (cur_direction) {
           case USB_TOKEN_OUT:
           case USB_TOKEN_SETUP:
-            if ((is_immed_data == 0) && (transfer_length > 0))
-              DEV_MEM_READ_PHYSICAL_DMA((bx_phy_address) address, transfer_length, BX_XHCI_THIS device_buffer);
+            if (is_immed_data)
+              memcpy(packet.data, immed_data, transfer_length);
+            else if (transfer_length > 0)
+              DEV_MEM_READ_PHYSICAL_DMA((bx_phy_address) address, transfer_length, packet.data);
             // The XHCI should block all SET_ADDRESS SETUP TOKEN's
             if ((cur_direction == USB_TOKEN_SETUP)   &&
-                (BX_XHCI_THIS device_buffer[0] == 0) &&  // Request type
-                (BX_XHCI_THIS device_buffer[1] == 5)) {  // SET_ADDRESS
+                (packet.data[0] == 0) &&  // Request type
+                (packet.data[1] == 5)) {  // SET_ADDRESS
               len = 0;
               comp_code = TRB_ERROR;
               BX_ERROR(("SETUP_TOKEN: System Software should not send SET_ADDRESS command on the xHCI."));
@@ -2075,7 +2072,7 @@ void bx_usb_xhci_c::process_transfer_ring(const int slot, const int ep)
               len = ret;
               BX_XHCI_THIS hub.slots[slot].ep_context[ep].edtla += len;
               if (len > 0)
-                DEV_MEM_WRITE_PHYSICAL_DMA((bx_phy_address) address, len, BX_XHCI_THIS device_buffer);
+                DEV_MEM_WRITE_PHYSICAL_DMA((bx_phy_address) address, len, packet.data);
               BX_DEBUG(("IN: Transferred %i bytes, requested %i bytes", len, transfer_length));
               if (len < (int) transfer_length) {
                 bytes_not_transferred = transfer_length - len;
@@ -2112,6 +2109,7 @@ void bx_usb_xhci_c::process_transfer_ring(const int slot, const int ep)
           write_event_TRB(int_target, org_addr, TRB_SET_COMP_CODE(comp_code) | bytes_not_transferred, 
             TRB_SET_SLOT(slot) | TRB_SET_EP(ep) | TRB_SET_TYPE(TRANS_EVENT), 1);
         }
+        usb_packet_cleanup(&packet);
       }
     }
 

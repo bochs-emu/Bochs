@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010-2014  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2011-2015  The Bochs Project
+//                2011-2016  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -549,7 +549,6 @@ private:
   Bit8u         devfunc;
   Bit8u         device_change;
   int           rt_conf_id;
-  Bit8u         *device_buffer;
 
   static void reset_hc();
   static void reset_port(int);
