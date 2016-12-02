@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2010-2014  Benjamin D Lunt (fys [at] fysnet [dot] net)
+//  Copyright (C) 2010-2016  Benjamin D Lunt (fys [at] fysnet [dot] net)
 //                2011-2016  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or

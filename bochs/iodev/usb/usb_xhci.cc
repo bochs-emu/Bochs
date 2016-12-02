@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2010-2014  Benjamin D Lunt (fys [at] fysnet [dot] net)
+//  Copyright (C) 2010-2016  Benjamin D Lunt (fys [at] fysnet [dot] net)
 //                2011-2016  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
@@ -2097,6 +2097,11 @@ void bx_usb_xhci_c::process_transfer_ring(const int slot, const int ep)
         if (ret == USB_RET_ASYNC) {
           BX_ERROR(("Async packet handling not implemented yet"));
         }
+        usb_packet_cleanup(&packet);
+
+        // if the device NAK'ed, we retire the TD and halt the ep
+        if (ret == USB_RET_NAK)
+          break;
 
         // 4.10.1 paragraph 4
         // 4.10.1.1
@@ -2109,7 +2114,6 @@ void bx_usb_xhci_c::process_transfer_ring(const int slot, const int ep)
           write_event_TRB(int_target, org_addr, TRB_SET_COMP_CODE(comp_code) | bytes_not_transferred, 
             TRB_SET_SLOT(slot) | TRB_SET_EP(ep) | TRB_SET_TYPE(TRANS_EVENT), 1);
         }
-        usb_packet_cleanup(&packet);
       }
     }
 

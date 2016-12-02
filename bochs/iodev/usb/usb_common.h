@@ -5,7 +5,7 @@
 // Generic USB emulation code
 //
 // Copyright (c) 2005       Fabrice Bellard
-// Copyright (C) 2009       Benjamin D Lunt (fys at frontiernet net)
+// Copyright (C) 2009-2016  Benjamin D Lunt (fys [at] fysnet [dot] net)
 //               2009-2016  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy

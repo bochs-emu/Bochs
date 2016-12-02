@@ -3,11 +3,11 @@
 /////////////////////////////////////////////////////////////////////////
 //
 // USB HID emulation support (mouse and tablet) ported from QEMU
-// USB keypad emulation based on code by Benjamin D Lunt (fys at frontiernet net)
+// USB keypad emulation based on code by Benjamin D Lunt (fys [at] fysnet [dot] net)
 //
 // Copyright (c) 2005       Fabrice Bellard
 // Copyright (c) 2007       OpenMoko, Inc.  (andrew@openedhand.com)
-// Copyright (C) 2009-2012  The Bochs Project
+// Copyright (C) 2009-2016  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
