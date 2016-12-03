@@ -2029,6 +2029,15 @@ void bx_usb_xhci_c::process_transfer_ring(const int slot, const int ep)
             (bx_phy_address) org_addr, slot, ep, BX_XHCI_THIS hub.slots[slot].ep_context[ep].edtla, comp_code));
           break;
 
+        // No Op (transfer ring) TRB (Sect: 6.4.1.4)
+        case NO_OP:
+          BX_DEBUG(("0x" FORMATADDRESS ": Transfer Ring (slot = %i) (ep = %i): Found No Op TRB", 
+            (bx_phy_address) org_addr, slot, ep));
+          cur_direction = 0;
+          is_transfer_trb = 1;
+          transfer_length = 0;
+          break;
+
         // unknown TRB type
         default:
           BX_ERROR(("0x" FORMATADDRESS ": Transfer Ring (slot = %i) (ep = %i): Unknown TRB found.", 
@@ -2099,9 +2108,16 @@ void bx_usb_xhci_c::process_transfer_ring(const int slot, const int ep)
         }
         usb_packet_cleanup(&packet);
 
-        // if the device NAK'ed, we retire the TD and halt the ep
-        if (ret == USB_RET_NAK)
-          break;
+        if (ret == USB_RET_NAK) {
+          // If we are a high-speed device, and a SETUP packet, we need to 
+          // return a comp_code of TRANSACTION_ERROR instead of breaking out.
+          if ((cur_direction == USB_TOKEN_SETUP) && 
+              (BX_XHCI_THIS hub.slots[slot].slot_context.speed == SPEED_HI))
+            comp_code = TRANSACTION_ERROR;
+          else
+            // if the device NAK'ed, we retire the TD and halt the ep
+            break;
+        }
 
         // 4.10.1 paragraph 4
         // 4.10.1.1
@@ -2163,7 +2179,7 @@ void bx_usb_xhci_c::process_command_ring(void)
         // Chain bit and Interrupter Target fields are ignored in Command Rings (Page 370)
         BX_XHCI_THIS hub.ring_members.command_ring.dq_pointer = trb.parameter & (Bit64u) ~0xF;
         if (TRB_IOC(trb.command))
-          write_event_TRB(0, org_addr, TRB_SET_COMP_CODE(TRB_SUCCESS), TRB_SET_TYPE(LINK), 1);
+          write_event_TRB(0, org_addr, TRB_SET_COMP_CODE(TRB_SUCCESS), TRB_SET_SLOT(0) | TRB_SET_TYPE(LINK), 1);
         if (TRB_TOGGLE(trb.command))
           BX_XHCI_THIS hub.ring_members.command_ring.rcs ^= 1;
         BX_DEBUG(("0x" FORMATADDRESS ": Command Ring: Found LINK TRB:  New dq_pointer = 0x" FORMATADDRESS " (%i)", 
@@ -2174,7 +2190,7 @@ void bx_usb_xhci_c::process_command_ring(void)
 
       // NEC: Get Firmware version
       case NEC_TRB_TYPE_GET_FW:
-        write_event_TRB(0, org_addr, TRB_SET_COMP_CODE(1) | 0x3021, TRB_SET_TYPE(NEC_TRB_TYPE_CMD_COMP), 1);
+        write_event_TRB(0, org_addr, TRB_SET_COMP_CODE(1) | 0x3021, TRB_SET_SLOT(0) | TRB_SET_TYPE(NEC_TRB_TYPE_CMD_COMP), 1);
         BX_INFO(("NEC GET Firmware Version TRB found.  Returning 0x3021"));
         break;
 
@@ -2543,11 +2559,11 @@ void bx_usb_xhci_c::process_command_ring(void)
             comp_code = TRB_ERROR;
             BX_ERROR(("Get Secondary Port Bandwidth not implemented yet."));
 #else
-            write_event_TRB(0, org_addr, TRB_SET_COMP_CODE(TRB_ERROR), TRB_SET_TYPE(COMMAND_COMPLETION), 1);
+            write_event_TRB(0, org_addr, TRB_SET_COMP_CODE(TRB_ERROR), TRB_SET_SLOT(0) | TRB_SET_TYPE(COMMAND_COMPLETION), 1);
 #endif
           }
 
-          write_event_TRB(0, org_addr, TRB_SET_COMP_CODE(comp_code), TRB_SET_TYPE(COMMAND_COMPLETION), 1);
+          write_event_TRB(0, org_addr, TRB_SET_COMP_CODE(comp_code), TRB_SET_SLOT(0) | TRB_SET_TYPE(COMMAND_COMPLETION), 1);
           BX_DEBUG(("0x" FORMATADDRESS ": Command Ring: GetPortBandwidth TRB (speed = %i) (hub_id = %i) (returning %i)", 
             (bx_phy_address) org_addr, band_speed, hub_id, comp_code));
         }
@@ -2569,9 +2585,18 @@ void bx_usb_xhci_c::process_command_ring(void)
         } else {
           comp_code = CONTEXT_STATE_ERROR;
         }
-        write_event_TRB(0, org_addr, TRB_SET_COMP_CODE(comp_code), TRB_SET_TYPE(COMMAND_COMPLETION), 1);
+        write_event_TRB(0, org_addr, TRB_SET_COMP_CODE(comp_code), TRB_SET_SLOT(slot) | TRB_SET_TYPE(COMMAND_COMPLETION), 1);
         BX_DEBUG(("0x" FORMATADDRESS ": Command Ring: Found Reset Device TRB (slot = %i) (returning %i)", 
           (bx_phy_address) org_addr, slot, comp_code));
+        break;
+
+      // No Op (command ring) TRB (Sect: 6.4.3.1)
+      case NO_OP_CMD:
+        slot = TRB_GET_SLOT(trb.command);  // slots are 1 based
+        ep = TRB_GET_EP(trb.command);
+        BX_DEBUG(("0x" FORMATADDRESS ": Command Ring (slot = %i) (ep = %i): Found No Op TRB", 
+          (bx_phy_address) org_addr, slot, ep));
+        write_event_TRB(0, org_addr, TRB_SET_COMP_CODE(TRB_SUCCESS), TRB_SET_SLOT(0) | TRB_SET_TYPE(COMMAND_COMPLETION), 1);
         break;
 
       // unknown TRB type
@@ -2579,7 +2604,8 @@ void bx_usb_xhci_c::process_command_ring(void)
         BX_ERROR(("0x" FORMATADDRESS ": Command Ring: Unknown TRB found.", (bx_phy_address) org_addr));
         BX_ERROR(("Unknown trb type found: %i(dec)  (0x" FMT_ADDRX64 " 0x%08X 0x%08X)", TRB_GET_TYPE(trb.command), 
           trb.parameter, trb.status, trb.command));
-        write_event_TRB(0, 0x0, TRB_SET_COMP_CODE(TRB_ERROR), TRB_SET_TYPE(COMMAND_COMPLETION), 1);
+        slot = TRB_GET_SLOT(trb.command);  // slots are 1 based
+        write_event_TRB(0, 0x0, TRB_SET_COMP_CODE(TRB_ERROR), TRB_SET_SLOT(slot) | TRB_SET_TYPE(COMMAND_COMPLETION), 1);
     }
 
     // advance the Dequeue pointer and continue;
