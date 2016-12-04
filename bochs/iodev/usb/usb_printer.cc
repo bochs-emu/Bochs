@@ -117,6 +117,13 @@ usb_printer_device_c::usb_printer_device_c(usbdev_type type, const char *filenam
   d.speed = d.maxspeed;
   memset((void*)&s, 0, sizeof(s));
   strcpy(d.devname, "USB Printer");
+  d.dev_descriptor = bx_printer_dev_descriptor;
+  d.config_descriptor = bx_printer_config_descriptor;
+  d.device_desc_size = sizeof(bx_printer_dev_descriptor);
+  d.config_desc_size = sizeof(bx_printer_config_descriptor);
+  d.vendor_desc = "Hewlett-Packard";
+  d.product_desc = "Deskjet 920C";
+  d.serial_num = "HU18L6P2DNBI";
   s.fname = filename;
   s.fp = NULL;
 
@@ -157,7 +164,6 @@ void usb_printer_device_c::register_state_specific(bx_list_c *parent)
 
 void usb_printer_device_c::handle_reset()
 {
-  BX_INFO(("Opened %s for USB HP Deskjet 920C printer emulation.", s.fname));
   BX_DEBUG(("Reset"));
 }
 
@@ -166,92 +172,30 @@ int usb_printer_device_c::handle_control(int request, int value, int index, int 
   int ret = 0;
 
   BX_DEBUG(("Printer: request: 0x%04X  value: 0x%04X  index: 0x%04X  len: %i", request, value, index, length));
+
+  ret = handle_control_common(request, value, index, length, data);
+  if (ret >= 0) {
+    return ret;
+  }
+
+  ret = 0;
   switch(request) {
-    case DeviceRequest | USB_REQ_GET_STATUS:
-      if (d.state == USB_STATE_DEFAULT)
-        goto fail;
-      else {
-        data[0] = (1 << USB_DEVICE_SELF_POWERED) |
-                  (0 << USB_DEVICE_REMOTE_WAKEUP);
-        data[1] = 0x00;
-        ret = 2;
-      }
-      break;
     case DeviceOutRequest | USB_REQ_CLEAR_FEATURE:
-      if (value == USB_DEVICE_REMOTE_WAKEUP) {
-        d.remote_wakeup = 0;
-      } else {
-        goto fail;
-      }
-      ret = 0;
+      goto fail;
       break;
     case DeviceOutRequest | USB_REQ_SET_FEATURE:
-      if (value != USB_DEVICE_REMOTE_WAKEUP) {
-        goto fail;
-      }
-      ret = 0;
-      break;
-    case DeviceOutRequest | USB_REQ_SET_ADDRESS:
-      d.state = USB_STATE_ADDRESS;
-      d.addr = value;
-      ret = 0;
+      goto fail;
       break;
     case DeviceRequest | USB_REQ_GET_DESCRIPTOR:
       switch(value >> 8) {
-        case USB_DT_DEVICE:
-          memcpy(data, bx_printer_dev_descriptor, sizeof(bx_printer_dev_descriptor));
-          ret = sizeof(bx_printer_dev_descriptor);
-          break;
-        case USB_DT_CONFIG:
-          memcpy(data, bx_printer_config_descriptor, sizeof(bx_printer_config_descriptor));
-          ret = sizeof(bx_printer_config_descriptor);
-          break;
         case USB_DT_STRING:
-          switch(value & 0xff) {
-            case 0:
-              /* language ids */
-              data[0] = 4;
-              data[1] = 3;
-              data[2] = 0x09;
-              data[3] = 0x04;
-              ret = 4;
-              break;
-            case 1:
-              /* vendor description */
-              ret = set_usb_string(data, "Hewlett-Packard");
-              break;
-            case 2:
-              /* product description */
-              ret = set_usb_string(data, "Deskjet 920C");
-              break;
-            case 3:
-              /* serial number */
-              ret = set_usb_string(data, "HU18L6P2DNBI");
-              break;
-            default:
-              BX_ERROR(("USB Printer handle_control: unknown string descriptor 0x%02x", value & 0xff));
-              goto fail;
-          }
+          BX_ERROR(("USB Printer handle_control: unknown string descriptor 0x%02x", value & 0xff));
+          goto fail;
           break;
         default:
           BX_ERROR(("USB Printer handle_control: unknown descriptor type 0x%02x", value >> 8));
           goto fail;
       }
-      break;
-    case DeviceRequest | USB_REQ_GET_CONFIGURATION:
-      data[0] = 1;
-      ret = 1;
-      break;
-    case DeviceOutRequest | USB_REQ_SET_CONFIGURATION:
-      d.state = USB_STATE_CONFIGURED;
-      ret = 0;
-      break;
-    case DeviceRequest | USB_REQ_GET_INTERFACE:
-      data[0] = 0;
-      ret = 1;
-      break;
-    case EndpointOutRequest | USB_REQ_SET_INTERFACE:
-      ret = 0;
       break;
 
     /* printer specific requests */

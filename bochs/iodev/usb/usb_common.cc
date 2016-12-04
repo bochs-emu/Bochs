@@ -229,47 +229,23 @@ void bx_usb_devctl_c::usb_send_msg(void *dev, int msg)
   ((usb_device_c*)dev)->usb_send_msg(msg);
 }
 
-// Dumps the contents of a buffer to the log file
-void usb_device_c::usb_dump_packet(Bit8u *data, unsigned size)
+// Base class for USB devices
+usb_device_c::usb_device_c(void)
 {
-  char buf_str[1025], temp_str[17];
+  memset((void*)&d, 0, sizeof(d));
+}
 
-  if (getonoff(LOGLEV_DEBUG) == ACT_REPORT) {
-    BX_DEBUG(("packet hexdump (%i bytes)", size));
-    buf_str[0] = 0;
-    for (unsigned i = 0; i < size; i++) {
-      sprintf(temp_str, "%02X ", data[i]);
-      strcat(buf_str, temp_str);
-      if ((i % 16) == 15) {
-        BX_DEBUG(("%s", buf_str));
-        buf_str[0] = 0;
-      }
-    }
-    if (strlen(buf_str) > 0) BX_DEBUG(("%s", buf_str));
+// Find device with given address
+usb_device_c* usb_device_c::find_device(Bit8u addr)
+{
+  if (addr == d.addr) {
+    return this;
+  } else {
+    return NULL;
   }
 }
 
-int usb_device_c::set_usb_string(Bit8u *buf, const char *str)
-{
-  size_t len, i;
-  Bit8u *q;
-
-  q = buf;
-  len = strlen(str);
-  if (len > 32) {
-    *q = 0;
-    return 0;
-  }
-  *q++ = 2 * len + 2;
-  *q++ = 3;
-  for(i = 0; i < len; i++) {
-    *q++ = str[i];
-    *q++ = 0;
-  }
-  return q - buf;
-}
-
-// generic USB packet handler
+// Generic USB packet handler
 
 #define SETUP_STATE_IDLE 0
 #define SETUP_STATE_DATA 1
@@ -415,6 +391,103 @@ int usb_device_c::handle_packet(USBPacket *p)
   return ret;
 }
 
+int usb_device_c::handle_control_common(int request, int value, int index, int length, Bit8u *data)
+{
+  int ret = -1;
+
+  switch (request) {
+    case DeviceOutRequest | USB_REQ_SET_ADDRESS:
+      BX_DEBUG(("USB_REQ_SET_ADDRESS:"));
+      d.state = USB_STATE_ADDRESS;
+      d.addr = value;
+      ret = 0;
+      break;
+    case DeviceRequest | USB_REQ_GET_DESCRIPTOR:
+      switch (value >> 8) {
+        case USB_DT_DEVICE:
+          BX_DEBUG(("USB_REQ_GET_DESCRIPTOR: Device"));
+          memcpy(data, d.dev_descriptor, d.device_desc_size);
+          ret = d.device_desc_size;
+          break;
+        case USB_DT_CONFIG:
+          BX_DEBUG(("USB_REQ_GET_DESCRIPTOR: Config"));
+          memcpy(data, d.config_descriptor, d.config_desc_size);
+          ret = d.config_desc_size;
+          break;
+        case USB_DT_STRING:
+          BX_DEBUG(("USB_REQ_GET_DESCRIPTOR: String"));
+          switch(value & 0xff) {
+            case 0:
+              // language IDs
+              data[0] = 4;
+              data[1] = 3;
+              data[2] = 0x09;
+              data[3] = 0x04;
+              ret = 4;
+              break;
+            case 1:
+              // vendor description
+              ret = set_usb_string(data, d.vendor_desc);
+              break;
+            case 2:
+              // product description
+              ret = set_usb_string(data, d.product_desc);
+              break;
+            case 3:
+              // serial number
+              ret = set_usb_string(data, d.serial_num);
+              break;
+          }
+          break;
+      }
+      break;
+    case DeviceRequest | USB_REQ_GET_STATUS:
+      BX_DEBUG(("USB_REQ_GET_STATUS:"));
+      data[0] = 0x00;
+      if (d.config_descriptor[7] & 0x40) {
+        data[0] |= (1 << USB_DEVICE_SELF_POWERED);
+      }
+      if (d.remote_wakeup) {
+        data[0] |= (1 << USB_DEVICE_REMOTE_WAKEUP);
+      }
+      data[1] = 0x00;
+      ret = 2;
+      break;
+    case DeviceRequest | USB_REQ_GET_CONFIGURATION:
+      BX_DEBUG(("USB_REQ_GET_CONFIGURATION:"));
+      data[0] = 1;
+      ret = 1;
+      break;
+    case DeviceOutRequest | USB_REQ_SET_CONFIGURATION:
+      BX_DEBUG(("USB_REQ_SET_CONFIGURATION:"));
+      d.state = USB_STATE_CONFIGURED;
+      ret = 0;
+      break;
+    case DeviceOutRequest | USB_REQ_CLEAR_FEATURE:
+      if (value == USB_DEVICE_REMOTE_WAKEUP) {
+        d.remote_wakeup = 0;
+        ret = 0;
+      }
+      break;
+    case DeviceOutRequest | USB_REQ_SET_FEATURE:
+      if (value == USB_DEVICE_REMOTE_WAKEUP) {
+        d.remote_wakeup = 1;
+        ret = 0;
+      }
+      break;
+    case InterfaceRequest | USB_REQ_GET_INTERFACE:
+      BX_DEBUG(("USB_REQ_GET_INFTERFACE:"));
+      data[0] = 0;
+      ret = 1;
+      break;
+    case InterfaceOutRequest | USB_REQ_SET_INTERFACE:
+      BX_DEBUG(("USB_REQ_SET_INFTERFACE:"));
+      ret = 0;
+      break;
+  }
+  return ret;
+}
+
 void usb_device_c::register_state(bx_list_c *parent)
 {
   d.sr = parent;
@@ -425,10 +498,10 @@ void usb_device_c::register_state(bx_list_c *parent)
   register_state_specific(parent);
 }
 
-// base class for USB devices
-usb_device_c::usb_device_c(void)
+// Turn on BX_DEBUG messages at connection time
+void usb_device_c::set_debug_mode()
 {
-  memset((void*)&d, 0, sizeof(d));
+  setonoff(LOGLEV_DEBUG, ACT_REPORT);
 }
 
 // Send an internal message to a USB device
@@ -440,19 +513,44 @@ void usb_device_c::usb_send_msg(int msg)
   handle_packet(&p);
 }
 
-// Turn on BX_DEBUG messages at connection time
-void usb_device_c::set_debug_mode()
+// Dumps the contents of a buffer to the log file
+void usb_device_c::usb_dump_packet(Bit8u *data, unsigned size)
 {
-  setonoff(LOGLEV_DEBUG, ACT_REPORT);
+  char buf_str[1025], temp_str[17];
+
+  if (getonoff(LOGLEV_DEBUG) == ACT_REPORT) {
+    BX_DEBUG(("packet hexdump (%i bytes)", size));
+    buf_str[0] = 0;
+    for (unsigned i = 0; i < size; i++) {
+      sprintf(temp_str, "%02X ", data[i]);
+      strcat(buf_str, temp_str);
+      if ((i % 16) == 15) {
+        BX_DEBUG(("%s", buf_str));
+        buf_str[0] = 0;
+      }
+    }
+    if (strlen(buf_str) > 0) BX_DEBUG(("%s", buf_str));
+  }
 }
 
-usb_device_c* usb_device_c::find_device(Bit8u addr)
+int usb_device_c::set_usb_string(Bit8u *buf, const char *str)
 {
-  if (addr == d.addr) {
-    return this;
-  } else {
-    return NULL;
+  size_t len, i;
+  Bit8u *q;
+
+  q = buf;
+  len = strlen(str);
+  if (len > 32) {
+    *q = 0;
+    return 0;
   }
+  *q++ = 2 * len + 2;
+  *q++ = 3;
+  for(i = 0; i < len; i++) {
+    *q++ = str[i];
+    *q++ = 0;
+  }
+  return q - buf;
 }
 
 #endif // BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB

@@ -96,14 +96,14 @@ static const Bit8u bx_hub_dev_descriptor[] = {
   0x5A, 0x00, /*  u16 idProduct; */
   0x00, 0x01, /*  u16 bcdDevice */
 
-  0x00,       /*  u8  iManufacturer; */
-  0x00,       /*  u8  iProduct; */
-  0x00,       /*  u8  iSerialNumber; */
+  0x01,       /*  u8  iManufacturer; */
+  0x02,       /*  u8  iProduct; */
+  0x03,       /*  u8  iSerialNumber; */
   0x01        /*  u8  bNumConfigurations; */
 };
 
 /* XXX: patch interrupt size */
-static const Bit8u bx_hub_config_descriptor[] = {
+static Bit8u bx_hub_config_descriptor[] = {
 
   /* one configuration */
   0x09,       /*  u8  bLength; */
@@ -180,10 +180,18 @@ usb_hub_device_c::usb_hub_device_c(Bit8u ports)
   d.maxspeed = USB_SPEED_FULL;
   d.speed = d.maxspeed;
   strcpy(d.devname, "Bochs USB HUB");
+  d.dev_descriptor = bx_hub_dev_descriptor;
+  d.config_descriptor = bx_hub_config_descriptor;
+  d.device_desc_size = sizeof(bx_hub_dev_descriptor);
+  d.config_desc_size = sizeof(bx_hub_config_descriptor);
+  d.vendor_desc = "BOCHS";
+  d.product_desc = "BOCHS USB HUB";
   d.connected = 1;
   memset((void*)&hub, 0, sizeof(hub));
   hub.n_ports = ports;
+  bx_hub_config_descriptor[22] = (hub.n_ports + 1 + 7) / 8;
   sprintf(hub.serial_number, "%d", serial_number++);
+  d.serial_num = hub.serial_number;
   for(i = 0; i < hub.n_ports; i++) {
     hub.usb_port[i].PortStatus = PORT_STAT_POWER;
     hub.usb_port[i].PortChange = 0;
@@ -282,24 +290,15 @@ int usb_hub_device_c::handle_control(int request, int value, int index, int leng
   int ret = 0;
   unsigned int n;
 
+  ret = handle_control_common(request, value, index, length, data);
+  if (ret >= 0) {
+    return ret;
+  }
+
+  ret = 0;
   switch(request) {
-    case DeviceRequest | USB_REQ_GET_STATUS:
-      if (d.state == USB_STATE_DEFAULT)
-        goto fail;
-      else {
-        data[0] = (1 << USB_DEVICE_SELF_POWERED) |
-                  (d.remote_wakeup << USB_DEVICE_REMOTE_WAKEUP);
-        data[1] = 0x00;
-        ret = 2;
-      }
-      break;
     case DeviceOutRequest | USB_REQ_CLEAR_FEATURE:
-      if (value == USB_DEVICE_REMOTE_WAKEUP) {
-        d.remote_wakeup = 0;
-      } else {
-        goto fail;
-      }
-      ret = 0;
+      goto fail;
       break;
     case EndpointOutRequest | USB_REQ_CLEAR_FEATURE:
       if (value == 0 && index != 0x81) { /* clear ep halt */
@@ -308,83 +307,20 @@ int usb_hub_device_c::handle_control(int request, int value, int index, int leng
       ret = 0;
       break;
     case DeviceOutRequest | USB_REQ_SET_FEATURE:
-      if (value == USB_DEVICE_REMOTE_WAKEUP) {
-        d.remote_wakeup = 1;
-      } else {
-        goto fail;
-      }
-      ret = 0;
-      break;
-    case DeviceOutRequest | USB_REQ_SET_ADDRESS:
-      d.state = USB_STATE_ADDRESS;
-      d.addr = value;
-      ret = 0;
+      goto fail;
       break;
     case DeviceRequest | USB_REQ_GET_DESCRIPTOR:
       switch(value >> 8) {
-        case USB_DT_DEVICE:
-          memcpy(data, bx_hub_dev_descriptor,
-                 sizeof(bx_hub_dev_descriptor));
-          ret = sizeof(bx_hub_dev_descriptor);
-          break;
-        case USB_DT_CONFIG:
-          memcpy(data, bx_hub_config_descriptor,
-                 sizeof(bx_hub_config_descriptor));
-
-          /* status change endpoint size based on number
-           * of ports */
-          data[22] = (hub.n_ports + 1 + 7) / 8;
-
-          ret = sizeof(bx_hub_config_descriptor);
-          break;
         case USB_DT_STRING:
-          switch(value & 0xff) {
-            case 0:
-              /* language ids */
-              data[0] = 4;
-              data[1] = 3;
-              data[2] = 0x09;
-              data[3] = 0x04;
-              ret = 4;
-              break;
-            case 1:
-              /* serial number */
-              ret = set_usb_string(data, hub.serial_number);
-              break;
-            case 2:
-              /* product description */
-              ret = set_usb_string(data, "Bochs USB HUB");
-              break;
-            case 3:
-              /* vendor description */
-              ret = set_usb_string(data, "Bochs");
-              break;
-            default:
-              BX_ERROR(("unknown string descriptor type %i", value & 0xff));
-              goto fail;
-          }
+          BX_ERROR(("unknown string descriptor type %i", value & 0xff));
+          goto fail;
           break;
         default:
           BX_ERROR(("unknown descriptor type: 0x%02x", (value >> 8)));
           goto fail;
       }
       break;
-    case DeviceRequest | USB_REQ_GET_CONFIGURATION:
-      data[0] = 1;
-      ret = 1;
-      break;
-    case DeviceOutRequest | USB_REQ_SET_CONFIGURATION:
-      d.state = USB_STATE_CONFIGURED;
-      ret = 0;
-      break;
-    case DeviceRequest | USB_REQ_GET_INTERFACE:
-      data[0] = 0;
-      ret = 1;
-      break;
-    case DeviceOutRequest | USB_REQ_SET_INTERFACE:
-      ret = 0;
-      break;
-      /* usb specific requests */
+      /* hub specific requests */
     case GetHubStatus:
       if (d.state == USB_STATE_CONFIGURED) {
         data[0] = 0;

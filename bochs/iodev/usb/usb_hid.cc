@@ -87,9 +87,9 @@ static const Bit8u bx_mouse_dev_descriptor[] = {
   0x01, 0x00, /*  u16 idProduct; */
   0x00, 0x00, /*  u16 bcdDevice */
 
-  0x03,       /*  u8  iManufacturer; */
+  0x01,       /*  u8  iManufacturer; */
   0x02,       /*  u8  iProduct; */
-  0x01,       /*  u8  iSerialNumber; */
+  0x03,       /*  u8  iSerialNumber; */
   0x01        /*  u8  bNumConfigurations; */
 };
 
@@ -278,9 +278,9 @@ static const Bit8u bx_keypad_dev_descriptor[] = {
   0x01, 0x01, /*  u16 idProduct; */
   0x01, 0x00, /*  u16 bcdDevice */
 
-  0x03,       /*  u8  iManufacturer; */
+  0x01,       /*  u8  iManufacturer; */
   0x02,       /*  u8  iProduct; */
-  0x01,       /*  u8  iSerialNumber; */
+  0x03,       /*  u8  iSerialNumber; */
   0x01        /*  u8  bNumConfigurations; */
 };
 
@@ -416,15 +416,30 @@ usb_hid_device_c::usb_hid_device_c(usbdev_type type)
   d.speed = d.maxspeed;
   if (d.type == USB_DEV_TYPE_MOUSE) {
     strcpy(d.devname, "USB Mouse");
+    d.dev_descriptor = bx_mouse_dev_descriptor;
+    d.config_descriptor = bx_mouse_config_descriptor;
+    d.device_desc_size = sizeof(bx_mouse_dev_descriptor);
+    d.config_desc_size = sizeof(bx_mouse_config_descriptor);
     DEV_register_removable_mouse((void*)this, mouse_enq_static, mouse_enabled_changed);
   } else if (d.type == USB_DEV_TYPE_TABLET) {
     strcpy(d.devname, "USB Tablet");
+    d.dev_descriptor = bx_mouse_dev_descriptor;
+    d.config_descriptor = bx_tablet_config_descriptor;
+    d.device_desc_size = sizeof(bx_mouse_dev_descriptor);
+    d.config_desc_size = sizeof(bx_tablet_config_descriptor);
     DEV_register_removable_mouse((void*)this, mouse_enq_static, mouse_enabled_changed);
     bx_gui->set_mouse_mode_absxy(1);
   } else if (d.type == USB_DEV_TYPE_KEYPAD) {
     strcpy(d.devname, "USB/PS2 Keypad");
+    d.dev_descriptor = bx_keypad_dev_descriptor;
+    d.config_descriptor = bx_keypad_config_descriptor;
+    d.device_desc_size = sizeof(bx_keypad_dev_descriptor);
+    d.config_desc_size = sizeof(bx_keypad_config_descriptor);
     DEV_register_removable_keyboard((void*)this, key_enq_static);
   }
+  d.vendor_desc = "BOCHS";
+  d.product_desc = d.devname;
+  d.serial_num = "1";
   d.connected = 1;
   memset((void*)&s, 0, sizeof(s));
 
@@ -469,99 +484,25 @@ void usb_hid_device_c::handle_reset()
 
 int usb_hid_device_c::handle_control(int request, int value, int index, int length, Bit8u *data)
 {
-  int ret = 0;
+  int ret;
 
+  ret = handle_control_common(request, value, index, length, data);
+  if (ret >= 0) {
+    return ret;
+  }
+
+  ret = 0;
   switch(request) {
-    case DeviceRequest | USB_REQ_GET_STATUS:
-      if (d.state == USB_STATE_DEFAULT)
-        goto fail;
-      else {
-        data[0] = (0 << USB_DEVICE_SELF_POWERED) |
-                  (d.remote_wakeup << USB_DEVICE_REMOTE_WAKEUP);
-        data[1] = 0x00;
-        ret = 2;
-      }
-      break;
     case DeviceOutRequest | USB_REQ_CLEAR_FEATURE:
-      if (value == USB_DEVICE_REMOTE_WAKEUP) {
-        d.remote_wakeup = 0;
-      } else {
-        goto fail;
-      }
-      ret = 0;
+      goto fail;
       break;
     case DeviceOutRequest | USB_REQ_SET_FEATURE:
-      if (value == USB_DEVICE_REMOTE_WAKEUP) {
-        d.remote_wakeup = 1;
-      } else {
-        goto fail;
-      }
-      ret = 0;
-      break;
-    case DeviceOutRequest | USB_REQ_SET_ADDRESS:
-      d.state = USB_STATE_ADDRESS;
-      d.addr = value;
-      ret = 0;
+      goto fail;
       break;
     case DeviceRequest | USB_REQ_GET_DESCRIPTOR:
       switch(value >> 8) {
-        case USB_DT_DEVICE:
-          if ((d.type == USB_DEV_TYPE_MOUSE) ||
-              (d.type == USB_DEV_TYPE_TABLET)) {
-            memcpy(data, bx_mouse_dev_descriptor,
-                   sizeof(bx_mouse_dev_descriptor));
-            ret = sizeof(bx_mouse_dev_descriptor);
-          } else if (d.type == USB_DEV_TYPE_KEYPAD) {
-            memcpy(data, bx_keypad_dev_descriptor,
-                   sizeof(bx_keypad_dev_descriptor));
-            ret = sizeof(bx_keypad_dev_descriptor);
-          } else {
-            goto fail;
-          }
-          break;
-        case USB_DT_CONFIG:
-          if (d.type == USB_DEV_TYPE_MOUSE) {
-            memcpy(data, bx_mouse_config_descriptor,
-                   sizeof(bx_mouse_config_descriptor));
-            ret = sizeof(bx_mouse_config_descriptor);
-          } else if (d.type == USB_DEV_TYPE_TABLET) {
-            memcpy(data, bx_tablet_config_descriptor,
-                   sizeof(bx_tablet_config_descriptor));
-            ret = sizeof(bx_tablet_config_descriptor);
-          } else if (d.type == USB_DEV_TYPE_KEYPAD) {
-            memcpy(data, bx_keypad_config_descriptor,
-                   sizeof(bx_keypad_config_descriptor));
-            ret = sizeof(bx_keypad_config_descriptor);
-          } else {
-            goto fail;
-          }
-          break;
         case USB_DT_STRING:
           switch(value & 0xff) {
-            case 0:
-              /* language ids */
-              data[0] = 4;
-              data[1] = 3;
-              data[2] = 0x09;
-              data[3] = 0x04;
-              ret = 4;
-              break;
-            case 1:
-              /* serial number */
-              ret = set_usb_string(data, "1");
-              break;
-            case 2:
-              /* product description */
-              if (strlen(d.devname) > 0) {
-                ret = set_usb_string(data, d.devname);
-              } else {
-                goto fail;
-              }
-              break;
-            case 3:
-              /* vendor description */
-              ret = set_usb_string(data, "BOCHS");
-              break;
             case 4:
               ret = set_usb_string(data, "HID Mouse");
               break;
@@ -577,21 +518,6 @@ int usb_hid_device_c::handle_control(int request, int value, int index, int leng
           BX_ERROR(("USB HID handle_control: unknown descriptor type 0x%02x", value >> 8));
           goto fail;
       }
-      break;
-    case DeviceRequest | USB_REQ_GET_CONFIGURATION:
-      data[0] = 1;
-      ret = 1;
-      break;
-    case DeviceOutRequest | USB_REQ_SET_CONFIGURATION:
-      d.state = USB_STATE_CONFIGURED;
-      ret = 0;
-      break;
-    case DeviceRequest | USB_REQ_GET_INTERFACE:
-      data[0] = 0;
-      ret = 1;
-      break;
-    case DeviceOutRequest | USB_REQ_SET_INTERFACE:
-      ret = 0;
       break;
       /* hid specific requests */
     case InterfaceRequest | USB_REQ_GET_DESCRIPTOR:

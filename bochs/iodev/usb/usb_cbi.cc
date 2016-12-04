@@ -83,7 +83,7 @@ static Bit8u bx_cbi_dev_descriptor[] = {
 
   0x01,       /*  u8  iManufacturer; */
   0x02,       /*  u8  iProduct; */
-  0x00,       /*  u8  iSerialNumber; */
+  0x03,       /*  u8  iSerialNumber; */
   0x01        /*  u8  bNumConfigurations; */
 };
 
@@ -304,6 +304,25 @@ usb_cbi_device_c::usb_cbi_device_c(const char *filename)
   d.speed = d.maxspeed;
   memset((void*)&s, 0, sizeof(s));
   strcpy(d.devname, "BOCHS USB CBI FLOPPY");
+  d.dev_descriptor = bx_cbi_dev_descriptor;
+  d.config_descriptor = bx_cbi_config_descriptor;
+  d.device_desc_size = sizeof(bx_cbi_dev_descriptor);
+  d.config_desc_size = sizeof(bx_cbi_config_descriptor);
+  // set the model information
+  //  s.model == 1 if use teac model, else use bochs model
+  if (s.model) {
+    bx_cbi_dev_descriptor[8] = 0x44;
+    bx_cbi_dev_descriptor[9] = 0x06;
+    d.vendor_desc = "TEAC    ";
+    d.product_desc = "TEAC FD-05PUW   ";
+    d.serial_num = "3000";
+  } else {
+    bx_cbi_dev_descriptor[8] = 0x00;
+    bx_cbi_dev_descriptor[9] = 0x00;
+    d.vendor_desc = "BOCHS   ";
+    d.product_desc = d.devname;
+    d.serial_num = "00.10";
+  }
   s.inserted = 0;
   strcpy(tmpfname, filename);
   ptr1 = strtok(tmpfname, ":");
@@ -422,16 +441,6 @@ const char* usb_cbi_device_c::get_info()
   bx_cbi_dev_mode_sense_cur[3] &= ~0x80;
   bx_cbi_dev_mode_sense_cur[3] |= ((s.wp > 0) << 7);
 
-  // set the model information
-  //  s.model == 1 if use teac model, else use bochs model
-  if (s.model) {
-    bx_cbi_dev_descriptor[8] = 0x44;
-    bx_cbi_dev_descriptor[9] = 0x06;
-  } else {
-    bx_cbi_dev_descriptor[8] = 0x00;
-    bx_cbi_dev_descriptor[9] = 0x00;
-  }
-
   return s.info_txt;
 }
 
@@ -466,28 +475,20 @@ void usb_cbi_device_c::handle_reset()
 
 int usb_cbi_device_c::handle_control(int request, int value, int index, int length, Bit8u *data)
 {
-  int ret = 0;
+  int ret;
 
+  ret = handle_control_common(request, value, index, length, data);
+  if (ret >= 0) {
+    return ret;
+  }
+
+  ret = 0;
   switch (request) {
-    case DeviceRequest | USB_REQ_GET_STATUS:
-    case EndpointRequest | USB_REQ_GET_STATUS:
-      BX_DEBUG(("USB_REQ_GET_STATUS:"));
-      data[0] = (0 << USB_DEVICE_SELF_POWERED) |
-                (0 << USB_DEVICE_REMOTE_WAKEUP);
-      data[1] = 0x00;
-      ret = 2;
-      break;
     case DeviceOutRequest | USB_REQ_CLEAR_FEATURE:
-      BX_DEBUG(("USB_REQ_CLEAR_FEATURE:"));
-      if (value == USB_DEVICE_REMOTE_WAKEUP) {
-        d.remote_wakeup = 0;
-      } else {
-        BX_INFO(("USB_REQ_CLEAR_FEATURE: Not handled: %i %i %i %i", request, value, index, length ));
-        // It's okay that we don't handle this.  Most likely the guest is just
-        //  clearing the toggle bit.  Since we don't worry about the toggle bit (yet?),
-        //  we can just ignore and continue.
-        //goto fail;
-      }
+      BX_INFO(("USB_REQ_CLEAR_FEATURE: Not handled: %i %i %i %i", request, value, index, length ));
+      // It's okay that we don't handle this.  Most likely the guest is just
+      //  clearing the toggle bit.  Since we don't worry about the toggle bit (yet?),
+      //  we can just ignore and continue.
       ret = 0;
       break;
     case DeviceOutRequest | USB_REQ_SET_FEATURE:
@@ -503,55 +504,11 @@ int usb_cbi_device_c::handle_control(int request, int value, int index, int leng
       }
       ret = 0;
       break;
-    case DeviceOutRequest | USB_REQ_SET_ADDRESS:
-      BX_DEBUG(("USB_REQ_SET_ADDRESS:"));
-      d.addr = value;
-      ret = 0;
-      break;
     case DeviceRequest | USB_REQ_GET_DESCRIPTOR:
       switch (value >> 8) {
-        case USB_DT_DEVICE:
-          BX_DEBUG(("USB_REQ_GET_DESCRIPTOR: Device"));
-          memcpy(data, bx_cbi_dev_descriptor, sizeof(bx_cbi_dev_descriptor));
-          ret = sizeof(bx_cbi_dev_descriptor);
-          break;
-        case USB_DT_CONFIG:
-          BX_DEBUG(("USB_REQ_GET_DESCRIPTOR: Config"));
-          memcpy(data, bx_cbi_config_descriptor, sizeof(bx_cbi_config_descriptor));
-          ret = sizeof(bx_cbi_config_descriptor);
-          break;
         case USB_DT_STRING:
           BX_DEBUG(("USB_REQ_GET_DESCRIPTOR: String"));
           switch(value & 0xff) {
-            case 0:
-              // language IDs
-              data[0] = 4;
-              data[1] = 3;
-              data[2] = 0x09;
-              data[3] = 0x04;
-              ret = 4;
-              break;
-            case 1:
-              // vendor description
-              if (s.model)
-                ret = set_usb_string(data, "TEAC    ");
-              else
-                ret = set_usb_string(data, "BOCHS   ");
-              break;
-            case 2:
-              // product description
-              if (s.model)
-                ret = set_usb_string(data, "TEAC FD-05PUW   ");
-              else
-                ret = set_usb_string(data, d.devname);
-              break;
-            case 3:
-              // serial number
-              if (s.model)
-                ret = set_usb_string(data, "3000");
-              else
-                ret = set_usb_string(data, "00.10");
-              break;
             case 0xEE:
               // Microsoft OS Descriptor check
               // We don't support this check, so fail
@@ -572,25 +529,6 @@ int usb_cbi_device_c::handle_control(int request, int value, int index, int leng
           BX_ERROR(("USB CBI handle_control: unknown descriptor type 0x%02x", value >> 8));
           goto fail;
       }
-      break;
-    case DeviceRequest | USB_REQ_GET_CONFIGURATION:
-      BX_DEBUG(("USB_REQ_GET_CONFIGURATION:"));
-      data[0] = 1;
-      ret = 1;
-      break;
-    case DeviceOutRequest | USB_REQ_SET_CONFIGURATION:
-      BX_DEBUG(("USB_REQ_SET_CONFIGURATION:"));
-      ret = 0;
-      break;
-    case DeviceRequest | USB_REQ_GET_INTERFACE:
-      BX_DEBUG(("USB_REQ_GET_INFTERFACE:"));
-      data[0] = 0;
-      ret = 1;
-      break;
-    case DeviceOutRequest | USB_REQ_SET_INTERFACE:
-    case InterfaceOutRequest | USB_REQ_SET_INTERFACE:
-      BX_DEBUG(("USB_REQ_SET_INFTERFACE:"));
-      ret = 0;
       break;
     case EndpointOutRequest | USB_REQ_CLEAR_FEATURE:
       BX_DEBUG(("USB_REQ_CLEAR_FEATURE:"));

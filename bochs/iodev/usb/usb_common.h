@@ -175,7 +175,7 @@ public:
 
   virtual int handle_packet(USBPacket *p);
   virtual void handle_reset() {}
-  virtual int handle_control(int request, int value, int index, int length, Bit8u *data) {return 0;}
+  virtual int handle_control(int request, int value, int index, int length, Bit8u *data) {return -1;}
   virtual int handle_data(USBPacket *p) {return 0;}
   void register_state(bx_list_c *parent);
   virtual void register_state_specific(bx_list_c *parent) {}
@@ -205,6 +205,14 @@ protected:
     Bit8u config;
     char devname[32];
 
+    const Bit8u *dev_descriptor;
+    const Bit8u *config_descriptor;
+    int device_desc_size;
+    int config_desc_size;
+    const char *vendor_desc;
+    const char *product_desc;
+    const char *serial_num;
+
     int state;
     Bit8u setup_buf[8];
     Bit8u data_buf[1024];
@@ -217,6 +225,7 @@ protected:
     bx_list_c *sr;
   } d;
 
+  int handle_control_common(int request, int value, int index, int length, Bit8u *data);
   void usb_dump_packet(Bit8u *data, unsigned size);
   int set_usb_string(Bit8u *buf, const char *str);
 };
