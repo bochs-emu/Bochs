@@ -381,8 +381,6 @@ private:
   void queues_rip_all(int async);
 
   usb_device_c *find_device(Bit8u addr);
-  int get_dwords(Bit32u addr, Bit32u *buf, int num);
-  int put_dwords(Bit32u addr, Bit32u *buf, int num);
   void flush_qh(EHCIQueue *q);
   int qh_do_overlay(EHCIQueue *q);
   int transfer(EHCIPacket *p);

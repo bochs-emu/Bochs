@@ -1144,28 +1144,6 @@ usb_device_c *bx_usb_ehci_c::find_device(Bit8u addr)
   return NULL;
 }
 
-int bx_usb_ehci_c::get_dwords(Bit32u addr, Bit32u *buf, int num)
-{
-  int i;
-
-  for (i = 0; i < num; i++, buf++, addr += sizeof(*buf)) {
-    DEV_MEM_READ_PHYSICAL(addr, 4, (Bit8u*)buf);
-  }
-
-  return 1;
-}
-
-int bx_usb_ehci_c::put_dwords(Bit32u addr, Bit32u *buf, int num)
-{
-  int i;
-
-  for (i = 0; i < num; i++, buf++, addr += sizeof(*buf)) {
-    DEV_MEM_WRITE_PHYSICAL(addr, 4, (Bit8u*)buf);
-  }
-
-  return 1;
-}
-
 void bx_usb_ehci_c::flush_qh(EHCIQueue *q)
 {
   Bit32u *qh = (Bit32u *) &q->qh;

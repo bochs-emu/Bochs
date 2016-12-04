@@ -579,8 +579,8 @@ private:
   static void dump_ep_context(const Bit32u *context, const int slot, const int ep);
   static void copy_slot_from_buffer(struct SLOT_CONTEXT *slot_context, const Bit8u *buffer);
   static void copy_ep_from_buffer(struct EP_CONTEXT *ep_context, const Bit8u *buffer);
-  static void copy_slot_to_buffer(const Bit8u *buffer, const int slot);
-  static void copy_ep_to_buffer(const Bit8u *buffer, const int slot, const int ep);
+  static void copy_slot_to_buffer(Bit32u *buffer, const int slot);
+  static void copy_ep_to_buffer(Bit32u *buffer, const int slot, const int ep);
   static bx_bool validate_slot_context(const struct SLOT_CONTEXT *slot_context);
   static bx_bool validate_ep_context(const struct EP_CONTEXT *ep_context, int speed, int ep_num);
   static int  create_unique_address(const int slot);

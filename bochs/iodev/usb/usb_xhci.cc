@@ -657,8 +657,8 @@ bx_bool bx_usb_xhci_c::save_hc_state(void)
 {
   int i, j;
   Bit64u addr;
-  Bit8u *ptr = (Bit8u *) &BX_XHCI_THIS hub;
-  Bit8u temp[16 | (8 * MAX_SCRATCH_PADS)];  // at least the larger of 16 or (8 * MAX_SCRATCH_PADS)
+  Bit32u *ptr = (Bit32u *) &BX_XHCI_THIS hub;
+  Bit64u temp[2 | MAX_SCRATCH_PADS];  // at least the larger of 2 or MAX_SCRATCH_PADS
   Bit32u crc;
 
   // do we use the scratch pad buffers to save the controller state?
@@ -667,16 +667,18 @@ bx_bool bx_usb_xhci_c::save_hc_state(void)
   DEV_MEM_READ_PHYSICAL((bx_phy_address) BX_XHCI_THIS hub.op_regs.HcDCBAAP.dcbaap, 8, (Bit8u*)&addr);
 
   // get MAX_SCRATCH_PADS worth of pointers
-  DEV_MEM_READ_PHYSICAL_DMA((bx_phy_address) addr, MAX_SCRATCH_PADS * 8, temp);
+  for (i=0; i<MAX_SCRATCH_PADS; i++) {
+    DEV_MEM_READ_PHYSICAL((bx_phy_address) (addr + i * 8), 8, (Bit8u*)temp[i]);
+  }
 
   for (i=0; i<MAX_SCRATCH_PADS; i++) {
     crc = 0;
     for (j=0; j<((XHCI_PAGE_SIZE << 12) >> 2) - 1; j++)
-      crc += * (Bit32u *) ptr[j * 4];
-    ReadHostQWordFromLittleEndian(&temp[i * 8], addr);
-    DEV_MEM_WRITE_PHYSICAL_DMA((bx_phy_address)  addr, (XHCI_PAGE_SIZE << 12) - sizeof(Bit32u), ptr);
+      crc += ptr[j];
+    addr = temp[i];
+    DEV_MEM_WRITE_PHYSICAL_DMA((bx_phy_address)  addr, (XHCI_PAGE_SIZE << 12) - sizeof(Bit32u), (Bit8u*)ptr);
     DEV_MEM_WRITE_PHYSICAL((bx_phy_address) (addr + ((XHCI_PAGE_SIZE << 12) - sizeof(Bit32u))), sizeof(Bit32u), (Bit8u *) &crc);
-    ptr += ((XHCI_PAGE_SIZE << 12) - sizeof(Bit32u));
+    ptr += (((XHCI_PAGE_SIZE << 12) >> 2) - 1);
   }
 #else
   // Use controller's internal memory to save the state
@@ -696,8 +698,8 @@ bx_bool bx_usb_xhci_c::restore_hc_state(void)
 {
   int i, j;
   Bit64u addr;
-  Bit8u temp[16 | (8 * MAX_SCRATCH_PADS)];  // at least the larger of 16 or (8 * MAX_SCRATCH_PADS)
-  Bit8u temp_buffer[(XHCI_PAGE_SIZE << 12)];
+  Bit64u temp[2 | MAX_SCRATCH_PADS];  // at least the larger of 2 or MAX_SCRATCH_PADS
+  Bit32u temp_buffer[(XHCI_PAGE_SIZE << 12) >> 2];
   Bit32u crc;
 
   // if we are to use the scratch pad buffers to restore the controller state
@@ -706,16 +708,18 @@ bx_bool bx_usb_xhci_c::restore_hc_state(void)
   DEV_MEM_READ_PHYSICAL((bx_phy_address) BX_XHCI_THIS hub.op_regs.HcDCBAAP.dcbaap, 8, (Bit8u*)&addr);
 
   // get MAX_SCRATCH_PADS worth of pointers
-  DEV_MEM_READ_PHYSICAL_DMA((bx_phy_address) addr, MAX_SCRATCH_PADS * 8, temp);
+  for (i=0; i<MAX_SCRATCH_PADS; i++) {
+    DEV_MEM_READ_PHYSICAL_DMA((bx_phy_address) (addr + i * 8), 8, (Bit8u*)temp[i]);
+  }
 
   // we read it in to a temp buffer just to check the crc.
   for (i=0; i<MAX_SCRATCH_PADS; i++) {
-    ReadHostQWordFromLittleEndian(&temp[i * 8], addr);
-    DEV_MEM_READ_PHYSICAL_DMA((bx_phy_address) addr, (XHCI_PAGE_SIZE << 12), temp_buffer);
+    addr = temp[i];
+    DEV_MEM_READ_PHYSICAL_DMA((bx_phy_address) addr, (XHCI_PAGE_SIZE << 12), (Bit8u*)temp_buffer);
     crc = 0;
     for (j=0; j<((XHCI_PAGE_SIZE << 12) >> 2) - 1; j++)
-      crc += * (Bit32u *) temp_buffer[j * 4];
-    if (crc != * (Bit32u *) temp_buffer[(XHCI_PAGE_SIZE << 12) - sizeof(Bit32u)])
+      crc += temp_buffer[j];
+    if (crc != temp_buffer[((XHCI_PAGE_SIZE << 12) >> 2) - 1])
       return 1;  // error
   }
 #else
@@ -996,7 +1000,6 @@ void bx_usb_xhci_c::update_irq(unsigned interrupter)
 bx_bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *data, void *param)
 {
   Bit32u val = 0, val_hi = 0;
-  Bit64u val64;
   int i, speed = 0;
 
   const Bit32u offset = (Bit32u) (addr - BX_XHCI_THIS pci_base_address[0]);
@@ -1227,15 +1230,19 @@ bx_bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *dat
         val = BX_XHCI_THIS hub.extended_caps[caps_offset];
         break;
       case 2:
-        ReadHostWordFromLittleEndian(&BX_XHCI_THIS hub.extended_caps[caps_offset], val);
-        break;
-      case 4:
-        ReadHostDWordFromLittleEndian(&BX_XHCI_THIS hub.extended_caps[caps_offset], val);
+        val = BX_XHCI_THIS hub.extended_caps[caps_offset] |
+              (BX_XHCI_THIS hub.extended_caps[caps_offset + 1] << 8);
         break;
       case 8:
-        ReadHostQWordFromLittleEndian(&BX_XHCI_THIS hub.extended_caps[caps_offset], val64);
-        val = (Bit32u) val64;
-        val_hi = (Bit32u) (val64 >> 32);
+        val_hi = (BX_XHCI_THIS hub.extended_caps[caps_offset + 4] |
+                  (BX_XHCI_THIS hub.extended_caps[caps_offset + 5] << 8) |
+                  (BX_XHCI_THIS hub.extended_caps[caps_offset + 6] << 16) |
+                  (BX_XHCI_THIS hub.extended_caps[caps_offset + 7] << 24));
+      case 4:
+        val = (BX_XHCI_THIS hub.extended_caps[caps_offset] |
+               (BX_XHCI_THIS hub.extended_caps[caps_offset + 1] << 8) |
+               (BX_XHCI_THIS hub.extended_caps[caps_offset + 2] << 16) |
+               (BX_XHCI_THIS hub.extended_caps[caps_offset + 3] << 24));
         break;
     }
   } else
@@ -2248,7 +2255,7 @@ void bx_usb_xhci_c::process_command_ring(void)
       case ADDRESS_DEVICE:
         slot = TRB_GET_SLOT(trb.command);  // slots are 1 based
         if (BX_XHCI_THIS hub.slots[slot].enabled == 1) {
-          DEV_MEM_READ_PHYSICAL_DMA((bx_phy_address) trb.parameter, (CONTEXT_SIZE + (CONTEXT_SIZE * 2)), buffer);
+          get_dwords((bx_phy_address) trb.parameter, (Bit32u*)buffer, (CONTEXT_SIZE + (CONTEXT_SIZE * 2)) >> 2);
           bsr = ((trb.command & (1<<9)) == (1<<9));
           DEV_MEM_READ_PHYSICAL((bx_phy_address) trb.parameter,     4, (Bit8u*)&tmpval1);
           DEV_MEM_READ_PHYSICAL((bx_phy_address) trb.parameter + 4, 4, (Bit8u*)&tmpval2);
@@ -2269,8 +2276,7 @@ void bx_usb_xhci_c::process_command_ring(void)
                   comp_code = CONTEXT_STATE_ERROR;
               } else { // BSR flag is clear
                 if (BX_XHCI_THIS hub.slots[slot].slot_context.slot_state <= SLOT_STATE_DEFAULT) {
-                  ReadHostDWordFromLittleEndian(&buffer[CONTEXT_SIZE + 4], tmpval1);
-                  int port_num = ((tmpval1 & (0xFF<<16)) >> 16) - 1;  // slot:port_num is 1 based
+                  int port_num = slot_context.rh_port_num - 1;  // slot:port_num is 1 based
                   new_addr = create_unique_address(slot);
                   if (send_set_address(new_addr, port_num) == 0) {
                     slot_context.slot_state = SLOT_STATE_ADDRESSED;
@@ -2311,7 +2317,7 @@ void bx_usb_xhci_c::process_command_ring(void)
       case EVALUATE_CONTEXT: {
           slot = TRB_GET_SLOT(trb.command);  // slots are 1 based
           if (BX_XHCI_THIS hub.slots[slot].enabled == 1) {
-            DEV_MEM_READ_PHYSICAL_DMA((bx_phy_address) trb.parameter, (CONTEXT_SIZE + (CONTEXT_SIZE * 32)), buffer);
+            get_dwords((bx_phy_address) trb.parameter, (Bit32u*)buffer, (CONTEXT_SIZE + (CONTEXT_SIZE * 32)) >> 2);
             DEV_MEM_READ_PHYSICAL((bx_phy_address) trb.parameter + 4, 4, (Bit8u*)&a_flags);
             // only the Slot context and EP1 (control EP) contexts are evaluated. Section 6.2.3.3
             // If the slot is not addresses or configured, then return error
@@ -2409,9 +2415,9 @@ void bx_usb_xhci_c::process_command_ring(void)
         slot = TRB_GET_SLOT(trb.command);  // slots are 1 based
         bx_bool dc = TRB_DC(trb.command);
         if (BX_XHCI_THIS hub.slots[slot].enabled) {
-          DEV_MEM_READ_PHYSICAL_DMA((bx_phy_address) trb.parameter, (CONTEXT_SIZE + (CONTEXT_SIZE * 32)), buffer);
-          DEV_MEM_READ_PHYSICAL_DMA((bx_phy_address) trb.parameter,     4, (Bit8u*)&d_flags);
-          DEV_MEM_READ_PHYSICAL_DMA((bx_phy_address) trb.parameter + 4, 4, (Bit8u*)&a_flags);
+          get_dwords((bx_phy_address) trb.parameter, (Bit32u*)buffer, (CONTEXT_SIZE + (CONTEXT_SIZE * 32)) >> 2);
+          DEV_MEM_READ_PHYSICAL((bx_phy_address) trb.parameter,     4, (Bit8u*)&d_flags);
+          DEV_MEM_READ_PHYSICAL((bx_phy_address) trb.parameter + 4, 4, (Bit8u*)&a_flags);
           copy_slot_from_buffer(&slot_context, &buffer[CONTEXT_SIZE]);  // so we get entry_count
 
           if (BX_XHCI_THIS hub.slots[slot].slot_context.slot_state == SLOT_STATE_CONFIGURED) {
@@ -2688,24 +2694,24 @@ void bx_usb_xhci_c::write_TRB(bx_phy_address addr, const Bit64u parameter, const
 
 void bx_usb_xhci_c::update_slot_context(const int slot)
 {
-  Bit8u buffer[64];
+  Bit32u buffer[16];
 
   memset(buffer, 0, 64);
   copy_slot_to_buffer(buffer, slot);
   Bit64u slot_addr = (BX_XHCI_THIS hub.op_regs.HcDCBAAP.dcbaap + (slot * sizeof(Bit64u)));
   DEV_MEM_READ_PHYSICAL((bx_phy_address) slot_addr, sizeof(Bit64u), (Bit8u *) &slot_addr);
-  DEV_MEM_WRITE_PHYSICAL_DMA((bx_phy_address) slot_addr, CONTEXT_SIZE, buffer);
+  put_dwords((bx_phy_address) slot_addr, buffer, CONTEXT_SIZE >> 2);
 }
 
 void bx_usb_xhci_c::update_ep_context(const int slot, const int ep)
 {
-  Bit8u buffer[64];
+  Bit32u buffer[16];
 
   memset(buffer, 0, 64);
   copy_ep_to_buffer(buffer, slot, ep);
   Bit64u slot_addr = (BX_XHCI_THIS hub.op_regs.HcDCBAAP.dcbaap + (slot * sizeof(Bit64u)));
   DEV_MEM_READ_PHYSICAL((bx_phy_address) slot_addr, sizeof(Bit64u), (Bit8u *) &slot_addr);
-  DEV_MEM_WRITE_PHYSICAL_DMA((bx_phy_address) (slot_addr + (ep * CONTEXT_SIZE)), CONTEXT_SIZE, buffer);
+  put_dwords((bx_phy_address) (slot_addr + (ep * CONTEXT_SIZE)), buffer, CONTEXT_SIZE >> 2);
 }
 
 void bx_usb_xhci_c::dump_slot_context(const Bit32u *context, const int slot)
@@ -2783,74 +2789,79 @@ void bx_usb_xhci_c::dump_ep_context(const Bit32u *context, const int slot, const
 
 void bx_usb_xhci_c::copy_slot_from_buffer(struct SLOT_CONTEXT *slot_context, const Bit8u *buffer)
 {
-  slot_context->entries =          (*(Bit32u *) &buffer[0]) >> 27;
-  slot_context->hub =             ((*(Bit32u *) &buffer[0]) & (1<<26)) ? 1 : 0;
-  slot_context->mtt =             ((*(Bit32u *) &buffer[0]) & (1<<25)) ? 1 : 0;
-  slot_context->speed =           ((*(Bit32u *) &buffer[0]) & (0x0F<<20)) >> 20;
-  slot_context->route_string =    ((*(Bit32u *) &buffer[0]) & 0x000FFFFF);
-  slot_context->num_ports =        (*(Bit32u *) &buffer[4]) >> 24;
-  slot_context->rh_port_num =     ((*(Bit32u *) &buffer[4]) & (0xFF<<16)) >> 16;
-  slot_context->max_exit_latency = (*(Bit32u *) &buffer[4]) & 0xFFFF;
-  slot_context->int_target =       (*(Bit32u *) &buffer[8]) >> 22;
-  slot_context->ttt =             ((*(Bit32u *) &buffer[8]) & (0x3<<16)) >> 16;
-  slot_context->tt_port_num =     ((*(Bit32u *) &buffer[8]) & (0xFF<<8)) >> 8;
-  slot_context->tt_hub_slot_id =   (*(Bit32u *) &buffer[8]) & 0xFF;
-  slot_context->slot_state =       (*(Bit32u *) &buffer[12]) >> 27;
-  slot_context->device_address =   (*(Bit32u *) &buffer[12]) & 0xFF;
+  Bit32u *buffer32 = (Bit32u*)buffer;
+
+  slot_context->entries =          (buffer32[0] >> 27);
+  slot_context->hub =              (buffer32[0] & (1<<26)) ? 1 : 0;
+  slot_context->mtt =              (buffer32[0] & (1<<25)) ? 1 : 0;
+  slot_context->speed =            (buffer32[0] & (0x0F<<20)) >> 20;
+  slot_context->route_string =     (buffer32[0] & 0x000FFFFF);
+  slot_context->num_ports =        (buffer32[1] >> 24);
+  slot_context->rh_port_num =      (buffer32[1] & (0xFF<<16)) >> 16;
+  slot_context->max_exit_latency = (buffer32[1] & 0xFFFF);
+  slot_context->int_target =       (buffer32[2] >> 22);
+  slot_context->ttt =              (buffer32[2] & (0x3<<16)) >> 16;
+  slot_context->tt_port_num =      (buffer32[2] & (0xFF<<8)) >> 8;
+  slot_context->tt_hub_slot_id =   (buffer32[2] & 0xFF);
+  slot_context->slot_state =       (buffer32[3] >> 27);
+  slot_context->device_address =   (buffer32[3] & 0xFF);
 }
 
 void bx_usb_xhci_c::copy_ep_from_buffer(struct EP_CONTEXT *ep_context, const Bit8u *buffer)
 {
-  ep_context->interval =           ((*(Bit32u *) &buffer[0]) & (0xFF<<16)) >> 16;
-  ep_context->lsa =                ((*(Bit32u *) &buffer[0]) & (1<<15)) ? 1 : 0;
-  ep_context->max_pstreams =       ((*(Bit32u *) &buffer[0]) & (0x1F<<10)) >> 10;
-  ep_context->mult =               ((*(Bit32u *) &buffer[0]) & (0x03<<8)) >> 8;
-  ep_context->ep_state =            (*(Bit32u *) &buffer[0]) & 0x07;
-  ep_context->max_packet_size =     (*(Bit32u *) &buffer[4]) >> 16;
-  ep_context->max_burst_size =     ((*(Bit32u *) &buffer[4]) & (0xFF<<8)) >> 8;
-  ep_context->hid =                ((*(Bit32u *) &buffer[4]) & (1<<7)) ? 1 : 0;
-  ep_context->ep_type =            ((*(Bit32u *) &buffer[4]) & (0x07<<3)) >> 3;
-  ep_context->cerr =               ((*(Bit32u *) &buffer[4]) & (0x03<<1)) >> 1;
-  ep_context->tr_dequeue_pointer =  (*(Bit64u *) &buffer[8]) & (Bit64u) ~0xF;
-  ep_context->dcs =                 (*(Bit64u *) &buffer[8]) & (1<<0);
-  ep_context->max_esit_payload =    (*(Bit32u *) &buffer[16]) >> 16;
-  ep_context->average_trb_len =     (*(Bit32u *) &buffer[16]) & 0xFFFF;
+  Bit32u *buffer32 = (Bit32u*)buffer;
+
+  ep_context->interval =           (buffer32[0] & (0xFF<<16)) >> 16;
+  ep_context->lsa =                (buffer32[0] & (1<<15)) ? 1 : 0;
+  ep_context->max_pstreams =       (buffer32[0] & (0x1F<<10)) >> 10;
+  ep_context->mult =               (buffer32[0] & (0x03<<8)) >> 8;
+  ep_context->ep_state =           (buffer32[0] & 0x07);
+  ep_context->max_packet_size =    (buffer32[1] >> 16);
+  ep_context->max_burst_size =     (buffer32[1] & (0xFF<<8)) >> 8;
+  ep_context->hid =                (buffer32[1] & (1<<7)) ? 1 : 0;
+  ep_context->ep_type =            (buffer32[1] & (0x07<<3)) >> 3;
+  ep_context->cerr =               (buffer32[1] & (0x03<<1)) >> 1;
+  ep_context->tr_dequeue_pointer = (buffer32[2] & (Bit64u) ~0xF) | ((Bit64u)buffer32[3] << 32);
+  ep_context->dcs =                (buffer32[2] & (1<<0));
+  ep_context->max_esit_payload =   (buffer32[4] >> 16);
+  ep_context->average_trb_len =    (buffer32[4] & 0xFFFF);
 }
 
-void bx_usb_xhci_c::copy_slot_to_buffer(const Bit8u *buffer, const int slot)
+void bx_usb_xhci_c::copy_slot_to_buffer(Bit32u *buffer32, const int slot)
 {
-  (*(Bit32u *) &buffer[0]) =  (BX_XHCI_THIS hub.slots[slot].slot_context.entries << 27) |
-                              (BX_XHCI_THIS hub.slots[slot].slot_context.hub << 26) |
-                              (BX_XHCI_THIS hub.slots[slot].slot_context.mtt << 25) |
-                              (BX_XHCI_THIS hub.slots[slot].slot_context.speed << 20) |
-                               BX_XHCI_THIS hub.slots[slot].slot_context.route_string;
-  (*(Bit32u *) &buffer[4]) =  (BX_XHCI_THIS hub.slots[slot].slot_context.num_ports << 24) |
-                              (BX_XHCI_THIS hub.slots[slot].slot_context.rh_port_num << 16) |
-                               BX_XHCI_THIS hub.slots[slot].slot_context.max_exit_latency;
-  (*(Bit32u *) &buffer[8]) =  (BX_XHCI_THIS hub.slots[slot].slot_context.int_target << 22) |
-                              (BX_XHCI_THIS hub.slots[slot].slot_context.ttt << 16) |
-                              (BX_XHCI_THIS hub.slots[slot].slot_context.tt_port_num << 8) |
-                               BX_XHCI_THIS hub.slots[slot].slot_context.tt_hub_slot_id;
-  (*(Bit32u *) &buffer[12]) = (BX_XHCI_THIS hub.slots[slot].slot_context.slot_state << 27) |
-                               BX_XHCI_THIS hub.slots[slot].slot_context.device_address;
+  buffer32[0] = (BX_XHCI_THIS hub.slots[slot].slot_context.entries << 27) |
+                (BX_XHCI_THIS hub.slots[slot].slot_context.hub << 26) |
+                (BX_XHCI_THIS hub.slots[slot].slot_context.mtt << 25) |
+                (BX_XHCI_THIS hub.slots[slot].slot_context.speed << 20) |
+                 BX_XHCI_THIS hub.slots[slot].slot_context.route_string;
+  buffer32[1] = (BX_XHCI_THIS hub.slots[slot].slot_context.num_ports << 24) |
+                (BX_XHCI_THIS hub.slots[slot].slot_context.rh_port_num << 16) |
+                 BX_XHCI_THIS hub.slots[slot].slot_context.max_exit_latency;
+  buffer32[2] = (BX_XHCI_THIS hub.slots[slot].slot_context.int_target << 22) |
+                (BX_XHCI_THIS hub.slots[slot].slot_context.ttt << 16) |
+                (BX_XHCI_THIS hub.slots[slot].slot_context.tt_port_num << 8) |
+                 BX_XHCI_THIS hub.slots[slot].slot_context.tt_hub_slot_id;
+  buffer32[3] = (BX_XHCI_THIS hub.slots[slot].slot_context.slot_state << 27) |
+                 BX_XHCI_THIS hub.slots[slot].slot_context.device_address;
 }
 
-void bx_usb_xhci_c::copy_ep_to_buffer(const Bit8u *buffer, const int slot, const int ep)
+void bx_usb_xhci_c::copy_ep_to_buffer(Bit32u *buffer32, const int slot, const int ep)
 {
-  (*(Bit32u *) &buffer[0]) =  (BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.interval << 16) |
-                              (BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.lsa << 15) |
-                              (BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.max_pstreams << 10) |
-                              (BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.mult << 8) |
-                               BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.ep_state;
-  (*(Bit32u *) &buffer[4]) =  (BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.max_packet_size << 16) |
-                              (BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.max_burst_size << 8) |
-                              (BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.hid << 7) |
-                              (BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.ep_type << 3) |
-                              (BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.cerr << 1);
-  (*(Bit64u *) &buffer[8]) =   BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.tr_dequeue_pointer |
-                               BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.dcs;
-  (*(Bit32u *) &buffer[16]) = (BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.max_esit_payload << 16) |
-                               BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.average_trb_len;
+  buffer32[0] = (BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.interval << 16) |
+                (BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.lsa << 15) |
+                (BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.max_pstreams << 10) |
+                (BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.mult << 8) |
+                 BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.ep_state;
+  buffer32[1] = (BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.max_packet_size << 16) |
+                (BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.max_burst_size << 8) |
+                (BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.hid << 7) |
+                (BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.ep_type << 3) |
+                (BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.cerr << 1);
+  buffer32[2] = ((Bit32u)BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.tr_dequeue_pointer) |
+                 BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.dcs;
+  buffer32[3] =  (Bit32u)(BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.tr_dequeue_pointer >> 32);
+  buffer32[4] = (BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.max_esit_payload << 16) |
+                 BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.average_trb_len;
 }
 
 bx_bool bx_usb_xhci_c::validate_slot_context(const struct SLOT_CONTEXT *slot_context)

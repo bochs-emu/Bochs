@@ -323,4 +323,24 @@ static BX_CPP_INLINE struct USBAsync *container_of_usb_packet(void *ptr)
     reinterpret_cast<size_t>(&(static_cast<struct USBAsync*>(0)->packet)));
 }
 
+// dword read / write helper functions
+
+static BX_CPP_INLINE void get_dwords(Bit32u addr, Bit32u *buf, int num)
+{
+  int i;
+
+  for (i = 0; i < num; i++, buf++, addr += sizeof(*buf)) {
+    DEV_MEM_READ_PHYSICAL(addr, 4, (Bit8u*)buf);
+  }
+}
+
+static BX_CPP_INLINE void put_dwords(Bit32u addr, Bit32u *buf, int num)
+{
+  int i;
+
+  for (i = 0; i < num; i++, buf++, addr += sizeof(*buf)) {
+    DEV_MEM_WRITE_PHYSICAL(addr, 4, (Bit8u*)buf);
+  }
+}
+
 #endif
