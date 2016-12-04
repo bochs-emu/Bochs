@@ -60,14 +60,14 @@ A.sidebar:hover {color: blue; text-decoration: underline}
 
 <br><br><center><b>Support</b></center>
 
-<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=New+Bochs+Documentation&url=http://sourceforge.net/apps/mediawiki/bochs/index.phpqmrktitleeqMain_Page" class="sidebar">Bochs Wiki</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="https://sourceforge.net/p/bochs/wiki/Home" class="sidebar">Bochs Wiki</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Bochs+FAQ&url=http://bochs.sourceforge.net/doc/docbook/user/faq.html" class="sidebar">Bochs FAQ</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=New+Bochs+Documentation&url=http://bochs.sourceforge.net/doc/docbook" class="sidebar">Documentation</a>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=New+Bochs+Documentation&url=http://bochs.sourceforge.net/doc/docbook/user/index.html" class="sidebar">User Guide</a>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=New+Bochs+Documentation&url=http://bochs.sourceforge.net/doc/docbook/development/index.html" class="sidebar">Devel. Guide</a>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=New+Bochs+Documentation&url=http://bochs.sourceforge.net/doc/docbook/documentation/index.html" class="sidebar">Doc. Guide</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/mailinglists.html" class="sidebar">Mailing Lists</a>
-<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Bochs+Discussion+Boards&url=http://sourceforge.net/projects/bochs/forums" class="sidebar">Discussion Boards</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://sourceforge.net/p/bochs/discussion/?source=navbar" class="sidebar">Discussion Boards</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=SourceForge+Site+Docs&url=http://sourceforge.net/apps/trac/sourceforge/wiki/WikiStart" class="sidebar">SF Site Docs</a>
 
 <br><br><center><b>Feedback</b></center>
