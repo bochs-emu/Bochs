@@ -206,14 +206,12 @@ int main (int argc, char **argv)
 
 #if !BX_HAVE_STRDUP
 /* XXX use real strdup */
-char *bx_strdup(const char *str)
+char *bx_strdup(const char *s)
 {
-  char *temp = (char*)malloc(strlen(str)+1);
-  sprintf(temp, "%s", str);
-  return temp;
-
-  // Well, I'm sure this isn't how strdup is REALLY implemented,
-  // but it works...
+  char *p = malloc (strlen (s) + 1);   // allocate memory
+  if (p != NULL)
+      strcpy (p,s);                    // copy string
+  return p;                            // return the memory
 }
 #endif  /* !BX_HAVE_STRDUP */
 

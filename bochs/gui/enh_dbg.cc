@@ -3443,11 +3443,11 @@ BxEvent *enh_dbg_notify_callback(void *unused, BxEvent *event)
 static size_t strip_whitespace(char *s)
 {
   size_t ptr = 0;
-  char *tmp = (char*)malloc(strlen(s)+1);
+  char *tmp = new [strlen(s)+1];
   strcpy(tmp, s);
   while (s[ptr] == ' ') ptr++;
   if (ptr > 0) strcpy(s, tmp+ptr);
-  free(tmp);
+  delete [] tmp;
   ptr = strlen(s);
   while ((ptr > 0) && (s[ptr-1] == ' ')) {
     s[--ptr] = 0;
