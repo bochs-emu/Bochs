@@ -881,15 +881,8 @@ int bx_real_sim_c::begin_simulation(int argc, char *argv[])
 
 int bx_real_sim_c::register_runtime_config_handler(void *dev, rt_conf_handler_t handler)
 {
-  rt_conf_entry_t *rt_conf_entry;
-
-  rt_conf_entry = (rt_conf_entry_t *)malloc(sizeof(rt_conf_entry_t));
-  if (rt_conf_entry == NULL) {
-    BX_PANIC(("can't allocate rt_conf_entry_t"));
-    return -1;
-  }
-
-  rt_conf_entry->id = rt_conf_id;;
+  rt_conf_entry_t *rt_conf_entry = new rt_conf_entry_t;
+  rt_conf_entry->id = rt_conf_id;
   rt_conf_entry->device = dev;
   rt_conf_entry->handler = handler;
   rt_conf_entry->next = NULL;
@@ -918,7 +911,7 @@ void bx_real_sim_c::unregister_runtime_config_handler(int id)
       } else {
         rt_conf_entries = curr->next;
       }
-      free(curr);
+      delete curr;
       break;
     } else {
       prev = curr;
@@ -973,14 +966,7 @@ bx_bool bx_real_sim_c::is_addon_option(const char *keyword)
 bx_bool bx_real_sim_c::register_addon_option(const char *keyword, addon_option_parser_t parser,
                                              addon_option_save_t save_func)
 {
-  addon_option_t *addon_option;
-
-  addon_option = (addon_option_t *)malloc(sizeof(addon_option_t));
-  if (addon_option == NULL) {
-    BX_PANIC(("can't allocate addon_option_t"));
-    return 0;
-  }
-
+  addon_option_t *addon_option = new addon_option_t;
   addon_option->name = keyword;
   addon_option->parser = parser;
   addon_option->savefn = save_func;
@@ -993,7 +979,7 @@ bx_bool bx_real_sim_c::register_addon_option(const char *keyword, addon_option_p
 
     while (temp->next) {
       if (!strcmp(temp->name, keyword)) {
-        free(addon_option);
+        delete addon_option;
         return 0;
       }
       temp = temp->next;
@@ -1014,7 +1000,7 @@ bx_bool bx_real_sim_c::unregister_addon_option(const char *keyword)
       } else {
         prev->next = addon_option->next;
       }
-      free(addon_option);
+      delete addon_option;
       return 1;
     } else {
       prev = addon_option;
@@ -1025,9 +1011,7 @@ bx_bool bx_real_sim_c::unregister_addon_option(const char *keyword)
 
 Bit32s bx_real_sim_c::parse_addon_option(const char *context, int num_params, char *params [])
 {
-  addon_option_t *addon_option;
-
-  for (addon_option = addon_options; addon_option; addon_option = addon_option->next) {
+  for (addon_option_t *addon_option = addon_options; addon_option; addon_option = addon_option->next) {
     if ((!strcmp(addon_option->name, params[0])) &&
         (addon_option->parser != NULL)) {
       return (*addon_option->parser)(context, num_params, params);
@@ -1039,9 +1023,7 @@ Bit32s bx_real_sim_c::parse_addon_option(const char *context, int num_params, ch
 
 Bit32s bx_real_sim_c::save_addon_options(FILE *fp)
 {
-  addon_option_t *addon_option;
-
-  for (addon_option = addon_options; addon_option; addon_option = addon_option->next) {
+  for (addon_option_t *addon_option = addon_options; addon_option; addon_option = addon_option->next) {
     if (addon_option->savefn != NULL) {
       (*addon_option->savefn)(fp);
     }
@@ -1074,9 +1056,9 @@ void bx_real_sim_c::init_save_restore()
 
 void bx_real_sim_c::cleanup_save_restore()
 {
-  bx_list_c *list;
+  bx_list_c *list = get_bochs_root();
 
-  if ((list = get_bochs_root()) != NULL) {
+  if (list != NULL) {
     list->clear();
   }
 }

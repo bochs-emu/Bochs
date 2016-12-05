@@ -540,7 +540,7 @@ void terminateEmul(int reason)
   if (MemoryDC) DeleteDC (MemoryDC);
   if (MemoryBitmap) DeleteObject (MemoryBitmap);
 
-  if (bitmap_info) delete[] (char*)bitmap_info;
+  delete[] (char*)bitmap_info;
 
   for (unsigned b=0; b<bx_bitmap_entries; b++)
     if (bx_bitmaps[b].bmap) DeleteObject(bx_bitmaps[b].bmap);
@@ -677,8 +677,7 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   for(unsigned c=0; c<256; c++) vgafont[c] = NULL;
   create_vga_font();
 
-  bitmap_info=(BITMAPINFO*)new char[sizeof(BITMAPINFOHEADER)+
-    259*sizeof(RGBQUAD)]; // 256 + 3 entries for 16 bpp mode
+  bitmap_info=(BITMAPINFO*)new char[sizeof(BITMAPINFOHEADER)+259*sizeof(RGBQUAD)]; // 256 + 3 entries for 16 bpp mode
   bitmap_info->bmiHeader.biSize=sizeof(BITMAPINFOHEADER);
   bitmap_info->bmiHeader.biWidth=x_tilesize;
   // Height is negative for top-down bitmap
@@ -2000,8 +1999,7 @@ void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, 
 // xdim: x dimension of bitmap
 // ydim: y dimension of bitmap
 
-unsigned bx_win32_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim,
-				 unsigned ydim)
+unsigned bx_win32_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
 {
   unsigned char *data;
   TBADDBITMAP tbab;
@@ -2046,8 +2044,7 @@ unsigned bx_win32_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim,
 // f: a 'C' function pointer to callback when the mouse is clicked in
 //     the boundaries of this bitmap.
 
-unsigned bx_win32_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment,
-				    void (*f)(void))
+unsigned bx_win32_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void))
 {
   unsigned hb_index;
   TBBUTTON tbb[1];
