@@ -354,7 +354,7 @@ plugin_t *plugin_unload(plugin_t *plugin)
 
   dead_plug = plugin;
   plugin = plugin->next;
-  free(dead_plug);
+  delete dead_plug;
 
   return plugin;
 }
@@ -385,10 +385,7 @@ void plugin_load(char *name, char *args, plugintype_t type)
     }
   }
 
-  plugin = (plugin_t *)malloc(sizeof(plugin_t));
-  if (!plugin) {
-    BX_PANIC(("malloc plugin_t failed"));
-  }
+  plugin = new plugin_t;
 
   plugin->type = type;
   plugin->name = name;
@@ -421,7 +418,7 @@ void plugin_load(char *name, char *args, plugintype_t type)
   if (!plugin->handle) {
     current_plugin_context = NULL;
     BX_PANIC(("LoadLibrary failed for module '%s': error=%d", name, GetLastError()));
-    free(plugin);
+    delete plugin;
     return;
   }
 #else
@@ -430,7 +427,7 @@ void plugin_load(char *name, char *args, plugintype_t type)
   if (!plugin->handle) {
     current_plugin_context = NULL;
     BX_PANIC(("dlopen failed for module '%s': %s", name, lt_dlerror()));
-    free(plugin);
+    delete plugin;
     return;
   }
 #endif
@@ -554,13 +551,9 @@ plugin_startup(void)
 
 void pluginRegisterDeviceDevmodel(plugin_t *plugin, plugintype_t type, bx_devmodel_c *devmodel, const char *name)
 {
-  device_t *device, **devlist;
+  device_t **devlist;
 
-  device = (device_t *)malloc(sizeof(device_t));
-  if (!device)
-  {
-    pluginlog->panic("can't allocate device_t");
-  }
+  device_t *device = new device_t;
 
   device->name = name;
   BX_ASSERT(devmodel != NULL);
@@ -610,7 +603,7 @@ void pluginUnregisterDeviceDevmodel(const char *name)
       } else {
         prev->next = device->next;
       }
-      free(device);
+      delete device;
       break;
     } else {
       prev = device;
@@ -761,7 +754,7 @@ void bx_unload_plugins()
 #endif
     }
     next = device->next;
-    free(device);
+    delete device;
     device = next;
   }
   devices = NULL;
@@ -781,7 +774,7 @@ void bx_unload_core_plugins()
       delete device->devmodel;
     }
     next = device->next;
-    free(device);
+    delete device;
     device = next;
   }
   core_devices = NULL;
