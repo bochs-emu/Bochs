@@ -86,7 +86,7 @@ bx_param_c::~bx_param_c()
   delete [] description;
   delete [] ask_format;
   delete [] group_name;
-  if (dependent_list) delete dependent_list;
+  delete dependent_list;
 }
 
 void bx_param_c::set_description(const char *text)
@@ -622,9 +622,7 @@ bx_param_enum_c::bx_param_enum_c(bx_param_c *parent,
 
 bx_param_enum_c::~bx_param_enum_c()
 {
-  if (deps_bitmap != NULL) {
-    free(deps_bitmap);
-  }
+  delete [] deps_bitmap;
 }
 
 
@@ -655,7 +653,7 @@ bx_bool bx_param_enum_c::set_by_name(const char *s)
 void bx_param_enum_c::set_dependent_list(bx_list_c *l, bx_bool enable_all)
 {
   dependent_list = l;
-  deps_bitmap = (Bit64u*)malloc((size_t)(sizeof(Bit64u) * (max - min + 1)));
+  deps_bitmap = new Bit64u[max - min + 1];
   for (int i=0; i<(max-min+1); i++) {
     if (enable_all) {
       deps_bitmap[i] = (1 << (l->get_size())) - 1;
@@ -768,8 +766,8 @@ bx_param_filename_c::bx_param_filename_c(bx_param_c *parent,
 
 bx_param_string_c::~bx_param_string_c()
 {
-  if (val != NULL) delete [] val;
-  if (initial_val != NULL) delete [] initial_val;
+  delete [] val;
+  delete [] initial_val;
 }
 
 void bx_param_string_c::reset()
@@ -1058,7 +1056,7 @@ bx_list_c::~bx_list_c()
   if (list != NULL) {
     clear();
   }
-  if (title != NULL) delete [] title;
+  delete [] title;
 }
 
 void bx_list_c::init(const char *list_title)
@@ -1101,17 +1099,11 @@ bx_list_c* bx_list_c::clone()
 
 void bx_list_c::add(bx_param_c *param)
 {
-  bx_listitem_t *item;
-
   if ((get_by_name(param->get_name()) != NULL) && (param->get_parent() == this)) {
     BX_PANIC(("parameter '%s' already exists in list '%s'", param->get_name(), this->get_name()));
     return;
   }
-  item = (bx_listitem_t*) malloc(sizeof(bx_listitem_t));
-  if (item == NULL) {
-    BX_PANIC(("bx_list_c::add(): malloc() failed"));
-    return;
-  }
+  bx_listitem_t *item = new bx_listitem_t;
   item->param = param;
   item->next = NULL;
   if (list == NULL) {
@@ -1173,7 +1165,7 @@ void bx_list_c::clear()
       delete temp->param;
     }
     next = temp->next;
-    free(temp);
+    delete temp;
     temp = next;
   }
   list = NULL;
@@ -1195,7 +1187,7 @@ void bx_list_c::remove(const char *name)
       } else {
         prev->next = item->next;
       }
-      free(item);
+      delete item;
       size--;
       break;
     } else {
