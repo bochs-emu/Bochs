@@ -52,7 +52,6 @@ extern "C" {
 #include "param_names.h"
 #include "textconfig.h"
 #include "siminterface.h"
-#include "extplugin.h"
 
 #define CI_PATH_LENGTH 512
 
