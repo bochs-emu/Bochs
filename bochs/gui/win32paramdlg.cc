@@ -61,18 +61,11 @@ dlg_list_t *dlg_lists = NULL;
 
 bx_bool registerDlgList(UINT lid, bx_list_c *list)
 {
-  dlg_list_t *dlg_list;
-  int items;
-
-  dlg_list = (dlg_list_t *)malloc(sizeof(dlg_list_t));
-  if (dlg_list == NULL) {
-    return 0;
-  }
-
+  dlg_list_t *dlg_list = new dlg_list_t;
   dlg_list->list = list;
   dlg_list->dlg_list_id = lid;
   dlg_list->dlg_base_id = nextDlgID;
-  items = list->get_size();
+  int items = list->get_size();
   nextDlgID += items;
   dlg_list->next = NULL;
 
@@ -83,7 +76,7 @@ bx_bool registerDlgList(UINT lid, bx_list_c *list)
 
     while (temp->next) {
       if (temp->list == dlg_list->list) {
-        free(dlg_list);
+        delete dlg_list;
         return 0;
       }
       temp = temp->next;
@@ -161,7 +154,7 @@ void cleanupDlgLists()
     d = dlg_lists;
     while (d != NULL) {
       next = d->next;
-      free(d);
+      delete d;
       d = next;
     }
     dlg_lists = NULL;
