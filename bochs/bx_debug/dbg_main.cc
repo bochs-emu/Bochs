@@ -167,12 +167,7 @@ bx_bool bx_dbg_register_debug_info(const char *devname, void *dev)
 {
   debug_info_t *debug_info;
 
-  debug_info = (debug_info_t *)malloc(sizeof(debug_info_t));
-  if (debug_info == NULL) {
-    BX_PANIC(("can't allocate debug_info_t"));
-    return 0;
-  }
-
+  debug_info_t *debug_info = new debug_info_t;
   debug_info->name = devname;
   debug_info->device = (bx_devmodel_c*)dev;
   debug_info->next = NULL;
@@ -184,7 +179,7 @@ bx_bool bx_dbg_register_debug_info(const char *devname, void *dev)
 
     while (temp->next) {
       if (!strcmp(temp->name, devname)) {
-        free(debug_info);
+        delete debug_info;
         return 0;
       }
       temp = temp->next;
@@ -199,7 +194,7 @@ void bx_dbg_info_cleanup(void)
   debug_info_t *temp = bx_debug_info_list, *next;
   while (temp != NULL) {
     next = temp->next;
-    free(temp);
+    delete temp;
     temp = next;
   }
   bx_debug_info_list = NULL;
