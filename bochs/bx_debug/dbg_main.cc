@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2015  The Bochs Project
+//  Copyright (C) 2001-2016  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -165,8 +165,6 @@ int bx_dbg_set_rcfile(const char *rcfile)
 
 bx_bool bx_dbg_register_debug_info(const char *devname, void *dev)
 {
-  debug_info_t *debug_info;
-
   debug_info_t *debug_info = new debug_info_t;
   debug_info->name = devname;
   debug_info->device = (bx_devmodel_c*)dev;

@@ -8,7 +8,7 @@
 //
 //  Modified by Bruce Ewing
 //
-//  Copyright (C) 2008-2014  The Bochs Project
+//  Copyright (C) 2008-2016  The Bochs Project
 
 #include "config.h"
 
@@ -3443,7 +3443,7 @@ BxEvent *enh_dbg_notify_callback(void *unused, BxEvent *event)
 static size_t strip_whitespace(char *s)
 {
   size_t ptr = 0;
-  char *tmp = new [strlen(s)+1];
+  char *tmp = new char[strlen(s)+1];
   strcpy(tmp, s);
   while (s[ptr] == ' ') ptr++;
   if (ptr > 0) strcpy(s, tmp+ptr);
