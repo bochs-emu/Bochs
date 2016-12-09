@@ -33,50 +33,540 @@
 // immediate constant
 ///////////////////////////
 
-#define X 0 /* undefined opcode */
+// common fetchdecode32/64 opcode tables
+#include "fetchdecode.h"
 
-static const Bit8u BxOpcodeHasModrm32[512] = {
-  /*       0 1 2 3 4 5 6 7 8 9 a b c d e f          */
-  /*       -------------------------------          */
-  /* 00 */ 1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,X,
-  /* 10 */ 1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,
-  /* 20 */ 1,1,1,1,0,0,X,0,1,1,1,1,0,0,X,0,
-  /* 30 */ 1,1,1,1,0,0,X,0,1,1,1,1,0,0,X,0,
-  /* 40 */ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  /* 50 */ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  /* 60 */ 0,0,1,1,X,X,X,X,0,1,0,1,0,0,0,0,
-  /* 70 */ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  /* 80 */ 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-  /* 90 */ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  /* A0 */ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  /* B0 */ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  /* C0 */ 1,1,0,0,1,1,1,1,0,0,0,0,0,0,0,0,
-  /* D0 */ 1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1,
-  /* E0 */ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  /* F0 */ X,0,X,X,0,0,1,1,0,0,0,0,0,0,1,1,
-  /*       0 1 2 3 4 5 6 7 8 9 a b c d e f           */
-  /*       -------------------------------           */
-           1,1,1,1,X,0,0,0,0,0,X,0,X,1,0,1, /* 0F 00 */
-           1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, /* 0F 10 */
-           1,1,1,1,1,X,1,X,1,1,1,1,1,1,1,1, /* 0F 20 */
-           0,0,0,0,0,0,X,X,1,X,1,X,X,X,X,X, /* 0F 30 */
-           1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, /* 0F 40 */
-           1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, /* 0F 50 */
-           1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, /* 0F 60 */
-           1,1,1,1,1,1,1,0,1,1,X,X,1,1,1,1, /* 0F 70 */
-           0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 0F 80 */
-           1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, /* 0F 90 */
-           0,0,0,1,1,1,0,0,0,0,0,1,1,1,1,1, /* 0F A0 */
-           1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, /* 0F B0 */
-           1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0, /* 0F C0 */
-           1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, /* 0F D0 */
-           1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, /* 0F E0 */
-           1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,X  /* 0F F0 */
-  /*       -------------------------------           */
-  /*       0 1 2 3 4 5 6 7 8 9 a b c d e f           */
+extern int decoder32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, const void *opcode_table);
+extern int decoder_modrm32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, const void *opcode_table);
+extern int decoder32_fp_escape(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, const void *opcode_table);
+extern int decoder_vex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, const void *opcode_table);
+extern int decoder_evex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, const void *opcode_table);
+extern int decoder_xop32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, const void *opcode_table);
+extern int decoder_ud32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, const void *opcode_table);
+extern int decoder32_nop(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, const void *opcode_table);
+
+typedef int (*BxFetchDecode32Ptr)(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, const void *opcode_table);
+
+struct BxOpcodeDecodeDescriptor32 {
+  BxFetchDecode32Ptr decode_method;
+  const void *opcode_table;
 };
 
-#undef X
+static BxOpcodeDecodeDescriptor32 decode32_descriptor[512] =
+{
+   /*    00 */ { &decoder_modrm32, NULL },
+   /*    01 */ { &decoder_modrm32, NULL },
+   /*    02 */ { &decoder_modrm32, NULL },
+   /*    03 */ { &decoder_modrm32, NULL },
+   /*    04 */ { &decoder32, NULL },
+   /*    05 */ { &decoder32, NULL },
+   /*    06 */ { &decoder32, NULL },
+   /*    07 */ { &decoder32, NULL },
+   /*    08 */ { &decoder_modrm32, NULL },
+   /*    09 */ { &decoder_modrm32, NULL },
+   /*    0A */ { &decoder_modrm32, NULL },
+   /*    0B */ { &decoder_modrm32, NULL },
+   /*    0C */ { &decoder32, NULL },
+   /*    0D */ { &decoder32, NULL },
+   /*    0E */ { &decoder32, NULL },
+   /*    0F */ { &decoder_ud32, NULL },           // 2-byte escape
+   /*    10 */ { &decoder_modrm32, NULL },
+   /*    11 */ { &decoder_modrm32, NULL },
+   /*    12 */ { &decoder_modrm32, NULL },
+   /*    13 */ { &decoder_modrm32, NULL },
+   /*    14 */ { &decoder32, NULL },
+   /*    15 */ { &decoder32, NULL },
+   /*    16 */ { &decoder32, NULL },
+   /*    17 */ { &decoder32, NULL },
+   /*    18 */ { &decoder_modrm32, NULL },
+   /*    19 */ { &decoder_modrm32, NULL },
+   /*    1A */ { &decoder_modrm32, NULL },
+   /*    1B */ { &decoder_modrm32, NULL },
+   /*    1C */ { &decoder32, NULL },
+   /*    1D */ { &decoder32, NULL },
+   /*    1E */ { &decoder32, NULL },
+   /*    1F */ { &decoder32, NULL },
+   /*    20 */ { &decoder_modrm32, NULL },
+   /*    21 */ { &decoder_modrm32, NULL },
+   /*    22 */ { &decoder_modrm32, NULL },
+   /*    23 */ { &decoder_modrm32, NULL },
+   /*    24 */ { &decoder32, NULL },
+   /*    25 */ { &decoder32, NULL },
+   /*    26 */ { &decoder_ud32, NULL },           // ES:
+   /*    27 */ { &decoder32, NULL },
+   /*    28 */ { &decoder_modrm32, NULL },
+   /*    29 */ { &decoder_modrm32, NULL },
+   /*    2A */ { &decoder_modrm32, NULL },
+   /*    2B */ { &decoder_modrm32, NULL },
+   /*    2C */ { &decoder32, NULL },
+   /*    2D */ { &decoder32, NULL },
+   /*    2E */ { &decoder_ud32, NULL },           // CS:
+   /*    2F */ { &decoder32, NULL },
+   /*    30 */ { &decoder_modrm32, NULL },
+   /*    31 */ { &decoder_modrm32, NULL },
+   /*    32 */ { &decoder_modrm32, NULL },
+   /*    33 */ { &decoder_modrm32, NULL },
+   /*    34 */ { &decoder32, NULL },
+   /*    35 */ { &decoder32, NULL },
+   /*    36 */ { &decoder_ud32, NULL },           // SS:
+   /*    37 */ { &decoder32, NULL },
+   /*    38 */ { &decoder_modrm32, NULL },
+   /*    39 */ { &decoder_modrm32, NULL },
+   /*    3A */ { &decoder_modrm32, NULL },
+   /*    3B */ { &decoder_modrm32, NULL },
+   /*    3C */ { &decoder32, NULL },
+   /*    3D */ { &decoder32, NULL },
+   /*    3E */ { &decoder_ud32, NULL },           // DS:
+   /*    3F */ { &decoder32, NULL },
+   /*    40 */ { &decoder32, NULL },
+   /*    41 */ { &decoder32, NULL },
+   /*    42 */ { &decoder32, NULL },
+   /*    43 */ { &decoder32, NULL },
+   /*    44 */ { &decoder32, NULL },
+   /*    45 */ { &decoder32, NULL },
+   /*    46 */ { &decoder32, NULL },
+   /*    47 */ { &decoder32, NULL },
+   /*    48 */ { &decoder32, NULL },
+   /*    49 */ { &decoder32, NULL },
+   /*    4A */ { &decoder32, NULL },
+   /*    4B */ { &decoder32, NULL },
+   /*    4C */ { &decoder32, NULL },
+   /*    4D */ { &decoder32, NULL },
+   /*    4E */ { &decoder32, NULL },
+   /*    4F */ { &decoder32, NULL },
+   /*    50 */ { &decoder32, NULL },
+   /*    51 */ { &decoder32, NULL },
+   /*    52 */ { &decoder32, NULL },
+   /*    53 */ { &decoder32, NULL },
+   /*    54 */ { &decoder32, NULL },
+   /*    55 */ { &decoder32, NULL },
+   /*    56 */ { &decoder32, NULL },
+   /*    57 */ { &decoder32, NULL },
+   /*    58 */ { &decoder32, NULL },
+   /*    59 */ { &decoder32, NULL },
+   /*    5A */ { &decoder32, NULL },
+   /*    5B */ { &decoder32, NULL },
+   /*    5C */ { &decoder32, NULL },
+   /*    5D */ { &decoder32, NULL },
+   /*    5E */ { &decoder32, NULL },
+   /*    5F */ { &decoder32, NULL },
+   /*    60 */ { &decoder32, NULL },
+   /*    61 */ { &decoder32, NULL },
+   /*    62 */ { &decoder_evex32, NULL },       // EVEX prefix
+   /*    63 */ { &decoder_modrm32, NULL },
+   /*    64 */ { &decoder_ud32, NULL },           // FS:
+   /*    65 */ { &decoder_ud32, NULL },           // GS:
+   /*    66 */ { &decoder_ud32, NULL },           // OSIZE:
+   /*    67 */ { &decoder_ud32, NULL },           // ASIZE:
+   /*    68 */ { &decoder32, NULL },
+   /*    69 */ { &decoder_modrm32, NULL },
+   /*    6A */ { &decoder32, NULL },
+   /*    6B */ { &decoder_modrm32, NULL },
+   /*    6C */ { &decoder32, NULL },
+   /*    6D */ { &decoder32, NULL },
+   /*    6E */ { &decoder32, NULL },
+   /*    6F */ { &decoder32, NULL },
+   /*    70 */ { &decoder32, NULL },
+   /*    71 */ { &decoder32, NULL },
+   /*    72 */ { &decoder32, NULL },
+   /*    73 */ { &decoder32, NULL },
+   /*    74 */ { &decoder32, NULL },
+   /*    75 */ { &decoder32, NULL },
+   /*    76 */ { &decoder32, NULL },
+   /*    77 */ { &decoder32, NULL },
+   /*    78 */ { &decoder32, NULL },
+   /*    79 */ { &decoder32, NULL },
+   /*    7A */ { &decoder32, NULL },
+   /*    7B */ { &decoder32, NULL },
+   /*    7C */ { &decoder32, NULL },
+   /*    7D */ { &decoder32, NULL },
+   /*    7E */ { &decoder32, NULL },
+   /*    7F */ { &decoder32, NULL },
+   /*    80 */ { &decoder_modrm32, NULL },
+   /*    81 */ { &decoder_modrm32, NULL },
+   /*    82 */ { &decoder_modrm32, NULL },
+   /*    83 */ { &decoder_modrm32, NULL },
+   /*    84 */ { &decoder_modrm32, NULL },
+   /*    85 */ { &decoder_modrm32, NULL },
+   /*    86 */ { &decoder_modrm32, NULL },
+   /*    87 */ { &decoder_modrm32, NULL },
+   /*    88 */ { &decoder_modrm32, NULL },
+   /*    89 */ { &decoder_modrm32, NULL },
+   /*    8A */ { &decoder_modrm32, NULL },
+   /*    8B */ { &decoder_modrm32, NULL },
+   /*    8C */ { &decoder_modrm32, NULL },
+   /*    8D */ { &decoder_modrm32, NULL },
+   /*    8E */ { &decoder_modrm32, NULL },
+   /*    8F */ { &decoder_xop32, NULL },        // XOP prefix
+   /*    90 */ { &decoder32_nop, NULL },
+   /*    91 */ { &decoder32, NULL },
+   /*    92 */ { &decoder32, NULL },
+   /*    93 */ { &decoder32, NULL },
+   /*    94 */ { &decoder32, NULL },
+   /*    95 */ { &decoder32, NULL },
+   /*    96 */ { &decoder32, NULL },
+   /*    97 */ { &decoder32, NULL },
+   /*    98 */ { &decoder32, NULL },
+   /*    99 */ { &decoder32, NULL },
+   /*    9A */ { &decoder32, NULL },
+   /*    9B */ { &decoder32, NULL },
+   /*    9C */ { &decoder32, NULL },
+   /*    9D */ { &decoder32, NULL },
+   /*    9E */ { &decoder32, NULL },
+   /*    9F */ { &decoder32, NULL },
+   /*    A0 */ { &decoder32, NULL },
+   /*    A1 */ { &decoder32, NULL },
+   /*    A2 */ { &decoder32, NULL },
+   /*    A3 */ { &decoder32, NULL },
+   /*    A4 */ { &decoder32, NULL },
+   /*    A5 */ { &decoder32, NULL },
+   /*    A6 */ { &decoder32, NULL },
+   /*    A7 */ { &decoder32, NULL },
+   /*    A8 */ { &decoder32, NULL },
+   /*    A9 */ { &decoder32, NULL },
+   /*    AA */ { &decoder32, NULL },
+   /*    AB */ { &decoder32, NULL },
+   /*    AC */ { &decoder32, NULL },
+   /*    AD */ { &decoder32, NULL },
+   /*    AE */ { &decoder32, NULL },
+   /*    AF */ { &decoder32, NULL },
+   /*    B0 */ { &decoder32, NULL },
+   /*    B1 */ { &decoder32, NULL },
+   /*    B2 */ { &decoder32, NULL },
+   /*    B3 */ { &decoder32, NULL },
+   /*    B4 */ { &decoder32, NULL },
+   /*    B5 */ { &decoder32, NULL },
+   /*    B6 */ { &decoder32, NULL },
+   /*    B7 */ { &decoder32, NULL },
+   /*    B8 */ { &decoder32, NULL },
+   /*    B9 */ { &decoder32, NULL },
+   /*    BA */ { &decoder32, NULL },
+   /*    BB */ { &decoder32, NULL },
+   /*    BC */ { &decoder32, NULL },
+   /*    BD */ { &decoder32, NULL },
+   /*    BE */ { &decoder32, NULL },
+   /*    BF */ { &decoder32, NULL },
+   /*    C0 */ { &decoder_modrm32, NULL },
+   /*    C1 */ { &decoder_modrm32, NULL },
+   /*    C2 */ { &decoder32, NULL },
+   /*    C3 */ { &decoder32, NULL },
+   /*    C4 */ { &decoder_vex32, NULL },        // VEX prefix
+   /*    C5 */ { &decoder_vex32, NULL },        // VEX prefix
+   /*    C6 */ { &decoder_modrm32, NULL },
+   /*    C7 */ { &decoder_modrm32, NULL },
+   /*    C8 */ { &decoder32, NULL },
+   /*    C9 */ { &decoder32, NULL },
+   /*    CA */ { &decoder32, NULL },
+   /*    CB */ { &decoder32, NULL },
+   /*    CC */ { &decoder32, NULL },
+   /*    CD */ { &decoder32, NULL },
+   /*    CE */ { &decoder32, NULL },
+   /*    CF */ { &decoder32, NULL },
+   /*    D0 */ { &decoder_modrm32, NULL },
+   /*    D1 */ { &decoder_modrm32, NULL },
+   /*    D2 */ { &decoder_modrm32, NULL },
+   /*    D3 */ { &decoder_modrm32, NULL },
+   /*    D4 */ { &decoder32, NULL },
+   /*    D5 */ { &decoder32, NULL },
+   /*    D6 */ { &decoder32, NULL },
+   /*    D7 */ { &decoder32, NULL },
+   /*    D8 */ { &decoder32_fp_escape, BxOpcodeInfo_FloatingPointD8 },
+   /*    D9 */ { &decoder32_fp_escape, BxOpcodeInfo_FloatingPointD9 },
+   /*    DA */ { &decoder32_fp_escape, BxOpcodeInfo_FloatingPointDA },
+   /*    DB */ { &decoder32_fp_escape, BxOpcodeInfo_FloatingPointDB },
+   /*    DC */ { &decoder32_fp_escape, BxOpcodeInfo_FloatingPointDC },
+   /*    DD */ { &decoder32_fp_escape, BxOpcodeInfo_FloatingPointDD },
+   /*    DE */ { &decoder32_fp_escape, BxOpcodeInfo_FloatingPointDE },
+   /*    DF */ { &decoder32_fp_escape, BxOpcodeInfo_FloatingPointDF },
+   /*    E0 */ { &decoder32, NULL },
+   /*    E1 */ { &decoder32, NULL },
+   /*    E2 */ { &decoder32, NULL },
+   /*    E3 */ { &decoder32, NULL },
+   /*    E4 */ { &decoder32, NULL },
+   /*    E5 */ { &decoder32, NULL },
+   /*    E6 */ { &decoder32, NULL },
+   /*    E7 */ { &decoder32, NULL },
+   /*    E8 */ { &decoder32, NULL },
+   /*    E9 */ { &decoder32, NULL },
+   /*    EA */ { &decoder32, NULL },
+   /*    EB */ { &decoder32, NULL },
+   /*    EC */ { &decoder32, NULL },
+   /*    ED */ { &decoder32, NULL },
+   /*    EE */ { &decoder32, NULL },
+   /*    EF */ { &decoder32, NULL },
+   /*    F0 */ { &decoder_ud32, NULL },           // LOCK:
+   /*    F1 */ { &decoder32, NULL },
+   /*    F2 */ { &decoder_ud32, NULL },           // REPNE/REPNZ
+   /*    F3 */ { &decoder_ud32, NULL },           // REP, REPE/REPZ
+   /*    F4 */ { &decoder32, NULL },
+   /*    F5 */ { &decoder32, NULL },
+   /*    F6 */ { &decoder_modrm32, NULL },
+   /*    F7 */ { &decoder_modrm32, NULL },
+   /*    F8 */ { &decoder32, NULL },
+   /*    F9 */ { &decoder32, NULL },
+   /*    FA */ { &decoder32, NULL },
+   /*    FB */ { &decoder32, NULL },
+   /*    FC */ { &decoder32, NULL },
+   /*    FD */ { &decoder32, NULL },
+   /*    FE */ { &decoder_modrm32, NULL },
+   /*    FF */ { &decoder_modrm32, NULL },
+   /*    00 */ { &decoder_modrm32, NULL },
+   /* 0F 01 */ { &decoder_modrm32, NULL },
+   /* 0F 02 */ { &decoder_modrm32, NULL },
+   /* 0F 03 */ { &decoder_modrm32, NULL },
+   /* 0F 04 */ { &decoder_ud32, NULL },
+   /* 0F 05 */ { &decoder32, NULL },
+   /* 0F 06 */ { &decoder32, NULL },
+   /* 0F 07 */ { &decoder32, NULL },
+   /* 0F 08 */ { &decoder32, NULL },
+   /* 0F 09 */ { &decoder32, NULL },
+   /* 0F 0A */ { &decoder_ud32, NULL },
+   /* 0F 0B */ { &decoder32, NULL },
+   /* 0F 0C */ { &decoder_ud32, NULL },
+   /* 0F 0D */ { &decoder_modrm32, NULL },
+   /* 0F 0E */ { &decoder32, NULL },
+   /* 0F 0F */ { &decoder_modrm32, NULL },          // 3dnow! escape
+   /* 0F 10 */ { &decoder_modrm32, NULL },
+   /* 0F 11 */ { &decoder_modrm32, NULL },
+   /* 0F 12 */ { &decoder_modrm32, NULL },
+   /* 0F 13 */ { &decoder_modrm32, NULL },
+   /* 0F 14 */ { &decoder_modrm32, NULL },
+   /* 0F 15 */ { &decoder_modrm32, NULL },
+   /* 0F 16 */ { &decoder_modrm32, NULL },
+   /* 0F 17 */ { &decoder_modrm32, NULL },
+   /* 0F 18 */ { &decoder_modrm32, NULL },
+   /* 0F 19 */ { &decoder_modrm32, NULL },
+   /* 0F 1A */ { &decoder_modrm32, NULL },
+   /* 0F 1B */ { &decoder_modrm32, NULL },
+   /* 0F 1C */ { &decoder_modrm32, NULL },
+   /* 0F 1D */ { &decoder_modrm32, NULL },
+   /* 0F 1E */ { &decoder_modrm32, NULL },
+   /* 0F 1F */ { &decoder_modrm32, NULL },
+   /* 0F 20 */ { &decoder_modrm32, NULL },
+   /* 0F 21 */ { &decoder_modrm32, NULL },
+   /* 0F 22 */ { &decoder_modrm32, NULL },
+   /* 0F 23 */ { &decoder_modrm32, NULL },
+   /* 0F 24 */ { &decoder_modrm32, NULL },
+   /* 0F 25 */ { &decoder_ud32, NULL },
+   /* 0F 26 */ { &decoder_modrm32, NULL },
+   /* 0F 27 */ { &decoder_ud32, NULL },
+   /* 0F 28 */ { &decoder_modrm32, NULL },
+   /* 0F 29 */ { &decoder_modrm32, NULL },
+   /* 0F 2A */ { &decoder_modrm32, NULL },
+   /* 0F 2B */ { &decoder_modrm32, NULL },
+   /* 0F 2C */ { &decoder_modrm32, NULL },
+   /* 0F 2D */ { &decoder_modrm32, NULL },
+   /* 0F 2E */ { &decoder_modrm32, NULL },
+   /* 0F 2F */ { &decoder_modrm32, NULL },
+   /* 0F 30 */ { &decoder32, NULL },
+   /* 0F 31 */ { &decoder32, NULL },
+   /* 0F 32 */ { &decoder32, NULL },
+   /* 0F 33 */ { &decoder32, NULL },
+   /* 0F 34 */ { &decoder32, NULL },
+   /* 0F 35 */ { &decoder32, NULL },
+   /* 0F 36 */ { &decoder_ud32, NULL },
+   /* 0F 37 */ { &decoder32, NULL },
+   /* 0F 38 */ { &decoder_modrm32, NULL },          // 3-byte escape
+   /* 0F 39 */ { &decoder_ud32, NULL },
+   /* 0F 3A */ { &decoder_modrm32, NULL },          // 3-byte escape
+   /* 0F 3B */ { &decoder_ud32, NULL },
+   /* 0F 3C */ { &decoder_ud32, NULL },
+   /* 0F 3D */ { &decoder_ud32, NULL },
+   /* 0F 3E */ { &decoder_ud32, NULL },
+   /* 0F 3F */ { &decoder_ud32, NULL },
+   /* 0F 40 */ { &decoder_modrm32, NULL },
+   /* 0F 41 */ { &decoder_modrm32, NULL },
+   /* 0F 42 */ { &decoder_modrm32, NULL },
+   /* 0F 43 */ { &decoder_modrm32, NULL },
+   /* 0F 44 */ { &decoder_modrm32, NULL },
+   /* 0F 45 */ { &decoder_modrm32, NULL },
+   /* 0F 46 */ { &decoder_modrm32, NULL },
+   /* 0F 47 */ { &decoder_modrm32, NULL },
+   /* 0F 48 */ { &decoder_modrm32, NULL },
+   /* 0F 49 */ { &decoder_modrm32, NULL },
+   /* 0F 4A */ { &decoder_modrm32, NULL },
+   /* 0F 4B */ { &decoder_modrm32, NULL },
+   /* 0F 4C */ { &decoder_modrm32, NULL },
+   /* 0F 4D */ { &decoder_modrm32, NULL },
+   /* 0F 4E */ { &decoder_modrm32, NULL },
+   /* 0F 4F */ { &decoder_modrm32, NULL },
+   /* 0F 50 */ { &decoder_modrm32, NULL },
+   /* 0F 51 */ { &decoder_modrm32, NULL },
+   /* 0F 52 */ { &decoder_modrm32, NULL },
+   /* 0F 53 */ { &decoder_modrm32, NULL },
+   /* 0F 54 */ { &decoder_modrm32, NULL },
+   /* 0F 55 */ { &decoder_modrm32, NULL },
+   /* 0F 56 */ { &decoder_modrm32, NULL },
+   /* 0F 57 */ { &decoder_modrm32, NULL },
+   /* 0F 58 */ { &decoder_modrm32, NULL },
+   /* 0F 59 */ { &decoder_modrm32, NULL },
+   /* 0F 5A */ { &decoder_modrm32, NULL },
+   /* 0F 5B */ { &decoder_modrm32, NULL },
+   /* 0F 5C */ { &decoder_modrm32, NULL },
+   /* 0F 5D */ { &decoder_modrm32, NULL },
+   /* 0F 5E */ { &decoder_modrm32, NULL },
+   /* 0F 5F */ { &decoder_modrm32, NULL },
+   /* 0F 60 */ { &decoder_modrm32, NULL },
+   /* 0F 61 */ { &decoder_modrm32, NULL },
+   /* 0F 62 */ { &decoder_modrm32, NULL },
+   /* 0F 63 */ { &decoder_modrm32, NULL },
+   /* 0F 64 */ { &decoder_modrm32, NULL },
+   /* 0F 65 */ { &decoder_modrm32, NULL },
+   /* 0F 66 */ { &decoder_modrm32, NULL },
+   /* 0F 67 */ { &decoder_modrm32, NULL },
+   /* 0F 68 */ { &decoder_modrm32, NULL },
+   /* 0F 69 */ { &decoder_modrm32, NULL },
+   /* 0F 6A */ { &decoder_modrm32, NULL },
+   /* 0F 6B */ { &decoder_modrm32, NULL },
+   /* 0F 6C */ { &decoder_modrm32, NULL },
+   /* 0F 6D */ { &decoder_modrm32, NULL },
+   /* 0F 6E */ { &decoder_modrm32, NULL },
+   /* 0F 6F */ { &decoder_modrm32, NULL },
+   /* 0F 70 */ { &decoder_modrm32, NULL },
+   /* 0F 71 */ { &decoder_modrm32, NULL },
+   /* 0F 72 */ { &decoder_modrm32, NULL },
+   /* 0F 73 */ { &decoder_modrm32, NULL },
+   /* 0F 74 */ { &decoder_modrm32, NULL },
+   /* 0F 75 */ { &decoder_modrm32, NULL },
+   /* 0F 76 */ { &decoder_modrm32, NULL },
+   /* 0F 77 */ { &decoder32, NULL },
+   /* 0F 78 */ { &decoder_modrm32, NULL },
+   /* 0F 79 */ { &decoder_modrm32, NULL },
+   /* 0F 7A */ { &decoder_ud32, NULL },
+   /* 0F 7B */ { &decoder_ud32, NULL },
+   /* 0F 7C */ { &decoder_modrm32, NULL },
+   /* 0F 7D */ { &decoder_modrm32, NULL },
+   /* 0F 7E */ { &decoder_modrm32, NULL },
+   /* 0F 7F */ { &decoder_modrm32, NULL },
+   /* 0F 80 */ { &decoder32, NULL },
+   /* 0F 81 */ { &decoder32, NULL },
+   /* 0F 82 */ { &decoder32, NULL },
+   /* 0F 83 */ { &decoder32, NULL },
+   /* 0F 84 */ { &decoder32, NULL },
+   /* 0F 85 */ { &decoder32, NULL },
+   /* 0F 86 */ { &decoder32, NULL },
+   /* 0F 87 */ { &decoder32, NULL },
+   /* 0F 88 */ { &decoder32, NULL },
+   /* 0F 89 */ { &decoder32, NULL },
+   /* 0F 8A */ { &decoder32, NULL },
+   /* 0F 8B */ { &decoder32, NULL },
+   /* 0F 8C */ { &decoder32, NULL },
+   /* 0F 8D */ { &decoder32, NULL },
+   /* 0F 8E */ { &decoder32, NULL },
+   /* 0F 8F */ { &decoder32, NULL },
+   /* 0F 90 */ { &decoder_modrm32, NULL },
+   /* 0F 91 */ { &decoder_modrm32, NULL },
+   /* 0F 92 */ { &decoder_modrm32, NULL },
+   /* 0F 93 */ { &decoder_modrm32, NULL },
+   /* 0F 94 */ { &decoder_modrm32, NULL },
+   /* 0F 95 */ { &decoder_modrm32, NULL },
+   /* 0F 96 */ { &decoder_modrm32, NULL },
+   /* 0F 97 */ { &decoder_modrm32, NULL },
+   /* 0F 98 */ { &decoder_modrm32, NULL },
+   /* 0F 99 */ { &decoder_modrm32, NULL },
+   /* 0F 9A */ { &decoder_modrm32, NULL },
+   /* 0F 9B */ { &decoder_modrm32, NULL },
+   /* 0F 9C */ { &decoder_modrm32, NULL },
+   /* 0F 9D */ { &decoder_modrm32, NULL },
+   /* 0F 9E */ { &decoder_modrm32, NULL },
+   /* 0F 9F */ { &decoder_modrm32, NULL },
+   /* 0F A0 */ { &decoder32, NULL },
+   /* 0F A1 */ { &decoder32, NULL },
+   /* 0F A2 */ { &decoder32, NULL },
+   /* 0F A3 */ { &decoder_modrm32, NULL },
+   /* 0F A4 */ { &decoder_modrm32, NULL },
+   /* 0F A5 */ { &decoder_modrm32, NULL },
+   /* 0F A6 */ { &decoder32, NULL },
+   /* 0F A7 */ { &decoder32, NULL },
+   /* 0F A8 */ { &decoder32, NULL },
+   /* 0F A9 */ { &decoder32, NULL },
+   /* 0F AA */ { &decoder32, NULL },
+   /* 0F AB */ { &decoder_modrm32, NULL },
+   /* 0F AC */ { &decoder_modrm32, NULL },
+   /* 0F AD */ { &decoder_modrm32, NULL },
+   /* 0F AE */ { &decoder_modrm32, NULL },
+   /* 0F AF */ { &decoder_modrm32, NULL },
+   /* 0F B0 */ { &decoder_modrm32, NULL },
+   /* 0F B1 */ { &decoder_modrm32, NULL },
+   /* 0F B2 */ { &decoder_modrm32, NULL },
+   /* 0F B3 */ { &decoder_modrm32, NULL },
+   /* 0F B4 */ { &decoder_modrm32, NULL },
+   /* 0F B5 */ { &decoder_modrm32, NULL },
+   /* 0F B6 */ { &decoder_modrm32, NULL },
+   /* 0F B7 */ { &decoder_modrm32, NULL },
+   /* 0F B8 */ { &decoder_modrm32, NULL },
+   /* 0F B9 */ { &decoder_modrm32, NULL },
+   /* 0F BA */ { &decoder_modrm32, NULL },
+   /* 0F BB */ { &decoder_modrm32, NULL },
+   /* 0F BC */ { &decoder_modrm32, NULL },
+   /* 0F BD */ { &decoder_modrm32, NULL },
+   /* 0F BE */ { &decoder_modrm32, NULL },
+   /* 0F BF */ { &decoder_modrm32, NULL },
+   /* 0F C0 */ { &decoder_modrm32, NULL },
+   /* 0F C1 */ { &decoder_modrm32, NULL },
+   /* 0F C2 */ { &decoder_modrm32, NULL },
+   /* 0F C3 */ { &decoder_modrm32, NULL },
+   /* 0F C4 */ { &decoder_modrm32, NULL },
+   /* 0F C5 */ { &decoder_modrm32, NULL },
+   /* 0F C6 */ { &decoder_modrm32, NULL },
+   /* 0F C7 */ { &decoder_modrm32, NULL },
+   /* 0F C8 */ { &decoder32, NULL },
+   /* 0F C9 */ { &decoder32, NULL },
+   /* 0F CA */ { &decoder32, NULL },
+   /* 0F CB */ { &decoder32, NULL },
+   /* 0F CC */ { &decoder32, NULL },
+   /* 0F CD */ { &decoder32, NULL },
+   /* 0F CE */ { &decoder32, NULL },
+   /* 0F CF */ { &decoder32, NULL },
+   /* 0F D0 */ { &decoder_modrm32, NULL },
+   /* 0F D1 */ { &decoder_modrm32, NULL },
+   /* 0F D2 */ { &decoder_modrm32, NULL },
+   /* 0F D3 */ { &decoder_modrm32, NULL },
+   /* 0F D4 */ { &decoder_modrm32, NULL },
+   /* 0F D5 */ { &decoder_modrm32, NULL },
+   /* 0F D6 */ { &decoder_modrm32, NULL },
+   /* 0F D7 */ { &decoder_modrm32, NULL },
+   /* 0F D8 */ { &decoder_modrm32, NULL },
+   /* 0F D9 */ { &decoder_modrm32, NULL },
+   /* 0F DA */ { &decoder_modrm32, NULL },
+   /* 0F DB */ { &decoder_modrm32, NULL },
+   /* 0F DC */ { &decoder_modrm32, NULL },
+   /* 0F DD */ { &decoder_modrm32, NULL },
+   /* 0F DE */ { &decoder_modrm32, NULL },
+   /* 0F DF */ { &decoder_modrm32, NULL },
+   /* 0F E0 */ { &decoder_modrm32, NULL },
+   /* 0F E1 */ { &decoder_modrm32, NULL },
+   /* 0F E2 */ { &decoder_modrm32, NULL },
+   /* 0F E3 */ { &decoder_modrm32, NULL },
+   /* 0F E4 */ { &decoder_modrm32, NULL },
+   /* 0F E5 */ { &decoder_modrm32, NULL },
+   /* 0F E6 */ { &decoder_modrm32, NULL },
+   /* 0F E7 */ { &decoder_modrm32, NULL },
+   /* 0F E8 */ { &decoder_modrm32, NULL },
+   /* 0F E9 */ { &decoder_modrm32, NULL },
+   /* 0F EA */ { &decoder_modrm32, NULL },
+   /* 0F EB */ { &decoder_modrm32, NULL },
+   /* 0F EC */ { &decoder_modrm32, NULL },
+   /* 0F ED */ { &decoder_modrm32, NULL },
+   /* 0F EE */ { &decoder_modrm32, NULL },
+   /* 0F EF */ { &decoder_modrm32, NULL },
+   /* 0F F0 */ { &decoder_modrm32, NULL },
+   /* 0F F1 */ { &decoder_modrm32, NULL },
+   /* 0F F2 */ { &decoder_modrm32, NULL },
+   /* 0F F3 */ { &decoder_modrm32, NULL },
+   /* 0F F4 */ { &decoder_modrm32, NULL },
+   /* 0F F5 */ { &decoder_modrm32, NULL },
+   /* 0F F6 */ { &decoder_modrm32, NULL },
+   /* 0F F7 */ { &decoder_modrm32, NULL },
+   /* 0F F8 */ { &decoder_modrm32, NULL },
+   /* 0F F9 */ { &decoder_modrm32, NULL },
+   /* 0F FA */ { &decoder_modrm32, NULL },
+   /* 0F FB */ { &decoder_modrm32, NULL },
+   /* 0F FC */ { &decoder_modrm32, NULL },
+   /* 0F FD */ { &decoder_modrm32, NULL },
+   /* 0F FE */ { &decoder_modrm32, NULL },
+   /* 0F FF */ { &decoder_ud32, NULL }
+};
 
 // Some info on the opcodes at {0F A6} and {0F A7}
 //
@@ -159,9 +649,6 @@ static unsigned sreg_mod1or2_base32[8] = {
   BX_SEG_REG_DS,
   BX_SEG_REG_DS
 };
-
-// common fetchdecode32/64 opcode tables
-#include "fetchdecode.h"
 
 // table of all Bochs opcodes
 bxIAOpcodeTable BxOpcodesTable[] = {
@@ -323,7 +810,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* 8D /w */ { 0, BX_IA_LEA_GwM },
   /* 8E /w */ { 0, BX_IA_MOV_SwEw },
   /* 8F /w */ { BxGroup1A, BX_IA_ERROR, BxOpcodeInfoG1AEw },
-  /* 90 /w */ { BxPrefixSSE, BX_IA_NOP, BxOpcodeGroupSSE_PAUSE },
+  /* 90 /w */ { 0, BX_IA_NOP },
   /* 91 /w */ { 0, BX_IA_XCHG_RXAX },
   /* 92 /w */ { 0, BX_IA_XCHG_RXAX },
   /* 93 /w */ { 0, BX_IA_XCHG_RXAX },
@@ -395,25 +882,14 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* D5 /w */ { BxImmediate_Ib, BX_IA_AAD },
   /* D6 /w */ { 0, BX_IA_SALC },
   /* D7 /w */ { 0, BX_IA_XLAT },
-#if BX_SUPPORT_FPU
-  /* D8 /w */ { BxGroupFP, BX_IA_ERROR, BxOpcodeInfo_FPGroupD8 },
-  /* D9 /w */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointD9 },
-  /* DA /w */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDA },
-  /* DB /w */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDB },
-  /* DC /w */ { BxGroupFP, BX_IA_ERROR, BxOpcodeInfo_FPGroupDC },
-  /* DD /w */ { BxGroupFP, BX_IA_ERROR, BxOpcodeInfo_FPGroupDD },
-  /* DE /w */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDE },
-  /* DF /w */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDF },
-#else
-  /* D8 /w */ { 0, BX_IA_FPUESC },
-  /* D9 /w */ { 0, BX_IA_FPUESC },
-  /* DA /w */ { 0, BX_IA_FPUESC },
-  /* DB /w */ { 0, BX_IA_FPUESC },
-  /* DC /w */ { 0, BX_IA_FPUESC },
-  /* DD /w */ { 0, BX_IA_FPUESC },
-  /* DE /w */ { 0, BX_IA_FPUESC },
-  /* DF /w */ { 0, BX_IA_FPUESC },
-#endif
+  /* D8 /d */ { 0, BX_IA_ERROR },       // FPU ESCAPE
+  /* D9 /d */ { 0, BX_IA_ERROR },       // FPU ESCAPE
+  /* DA /d */ { 0, BX_IA_ERROR },       // FPU ESCAPE
+  /* DB /d */ { 0, BX_IA_ERROR },       // FPU ESCAPE
+  /* DC /d */ { 0, BX_IA_ERROR },       // FPU ESCAPE
+  /* DD /d */ { 0, BX_IA_ERROR },       // FPU ESCAPE
+  /* DE /d */ { 0, BX_IA_ERROR },       // FPU ESCAPE
+  /* DF /d */ { 0, BX_IA_ERROR },       // FPU ESCAPE
   /* E0 /w */ { BxImmediate_BrOff8, BX_IA_LOOPNE_Op16_Jb },
   /* E1 /w */ { BxImmediate_BrOff8, BX_IA_LOOPE_Op16_Jb },
   /* E2 /w */ { BxImmediate_BrOff8, BX_IA_LOOP_Op16_Jb },
@@ -868,7 +1344,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* 8D /d */ { 0, BX_IA_LEA_GdM },
   /* 8E /d */ { 0, BX_IA_MOV_SwEw },
   /* 8F /d */ { BxGroup1A, BX_IA_ERROR, BxOpcodeInfoG1AEd },
-  /* 90 /d */ { BxPrefixSSE, BX_IA_NOP, BxOpcodeGroupSSE_PAUSE },
+  /* 90 /d */ { 0, BX_IA_NOP },
   /* 91 /d */ { 0, BX_IA_XCHG_ERXEAX },
   /* 92 /d */ { 0, BX_IA_XCHG_ERXEAX },
   /* 93 /d */ { 0, BX_IA_XCHG_ERXEAX },
@@ -940,25 +1416,14 @@ static const BxOpcodeInfo_t BxOpcodeInfo32[512*2] = {
   /* D5 /d */ { BxImmediate_Ib, BX_IA_AAD },
   /* D6 /d */ { 0, BX_IA_SALC },
   /* D7 /d */ { 0, BX_IA_XLAT },
-#if BX_SUPPORT_FPU
-  /* D8 /d */ { BxGroupFP, BX_IA_ERROR, BxOpcodeInfo_FPGroupD8 },
-  /* D9 /d */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointD9 },
-  /* DA /d */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDA },
-  /* DB /d */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDB },
-  /* DC /d */ { BxGroupFP, BX_IA_ERROR, BxOpcodeInfo_FPGroupDC },
-  /* DD /d */ { BxGroupFP, BX_IA_ERROR, BxOpcodeInfo_FPGroupDD },
-  /* DE /d */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDE },
-  /* DF /d */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDF },
-#else
-  /* D8 /d */ { 0, BX_IA_FPUESC },
-  /* D9 /d */ { 0, BX_IA_FPUESC },
-  /* DA /d */ { 0, BX_IA_FPUESC },
-  /* DB /d */ { 0, BX_IA_FPUESC },
-  /* DC /d */ { 0, BX_IA_FPUESC },
-  /* DD /d */ { 0, BX_IA_FPUESC },
-  /* DE /d */ { 0, BX_IA_FPUESC },
-  /* DF /d */ { 0, BX_IA_FPUESC },
-#endif
+  /* D8 /d */ { 0, BX_IA_ERROR },       // FPU ESCAPE
+  /* D9 /d */ { 0, BX_IA_ERROR },       // FPU ESCAPE
+  /* DA /d */ { 0, BX_IA_ERROR },       // FPU ESCAPE
+  /* DB /d */ { 0, BX_IA_ERROR },       // FPU ESCAPE
+  /* DC /d */ { 0, BX_IA_ERROR },       // FPU ESCAPE
+  /* DD /d */ { 0, BX_IA_ERROR },       // FPU ESCAPE
+  /* DE /d */ { 0, BX_IA_ERROR },       // FPU ESCAPE
+  /* DF /d */ { 0, BX_IA_ERROR },       // FPU ESCAPE
   /* E0 /d */ { BxImmediate_BrOff8, BX_IA_LOOPNE_Op32_Jb },
   /* E1 /d */ { BxImmediate_BrOff8, BX_IA_LOOPE_Op32_Jb },
   /* E2 /d */ { BxImmediate_BrOff8, BX_IA_LOOP_Op32_Jb },
@@ -1414,6 +1879,114 @@ modrm_done:
   return iptr;
 }
 
+int decodeImmediate32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned imm_mode, unsigned imm_mode2)
+{
+  if (imm_mode) {
+    // make sure iptr was advanced after Ib(), Iw() and Id()
+    switch (imm_mode) {
+      case BxImmediate_I1:
+        i->modRMForm.Ib[0] = 1;
+        break;
+      case BxImmediate_Ib:
+        if (remain != 0) {
+          i->modRMForm.Ib[0] = *iptr++;
+          remain--;
+        }
+        else {
+          return(-1);
+        }
+        break;
+      case BxImmediate_BrOff8:
+      case BxImmediate_Ib_SE: // Sign extend to OS size
+        if (remain != 0) {
+          Bit8s temp8s = *iptr++;
+          // this code works correctly both for LE and BE hosts
+          if (i->os32L())
+            i->modRMForm.Id    = (Bit32s) temp8s;
+          else
+            i->modRMForm.Iw[0] = (Bit16s) temp8s;
+          remain--;
+        }
+        else {
+          return(-1);
+        }
+        break;
+      case BxImmediate_Iw:
+        if (remain > 1) {
+          i->modRMForm.Iw[0] = FetchWORD(iptr);
+          iptr += 2;
+          remain -= 2;
+        }
+        else {
+          return(-1);
+        }
+        break;
+      case BxImmediate_Id:
+        if (remain > 3) {
+          i->modRMForm.Id = FetchDWORD(iptr);
+          iptr += 4;
+          remain -= 4;
+        }
+        else {
+          return(-1);
+        }
+        break;
+      case BxImmediate_O:
+        // For instructions which embed the address in the opcode.
+        if (i->as32L()) {
+          // fetch 32bit address into Id
+          if (remain > 3) {
+            i->modRMForm.Id = FetchDWORD(iptr);
+            iptr += 4;
+            remain -= 4;
+          }
+          else return(-1);
+        }
+        else {
+          // fetch 16bit address into Id
+          if (remain > 1) {
+            i->modRMForm.Id = (Bit32u) FetchWORD(iptr);
+            iptr += 2;
+            remain -= 2;
+          }
+          else return(-1);
+        }
+        break;
+      default:
+        BX_PANIC(("decoder32: imm_mode = %u", imm_mode));
+        break;
+    }
+
+    if (imm_mode2) {
+      switch (imm_mode2) {
+        case BxImmediate_Ib2:
+          if (remain != 0) {
+            i->modRMForm.Ib2[0] = *iptr;
+            remain--;
+          }
+          else {
+            return(-1);
+          }
+          break;
+        case BxImmediate_Iw2:
+          if (remain > 1) {
+            i->modRMForm.Iw2[0] = FetchWORD(iptr);
+            remain -= 2;
+          }
+          else {
+            return(-1);
+          }
+          break;
+        default:
+          BX_PANIC(("decoder32: imm_mode2 = %u", imm_mode2));
+          break;
+      }
+    }
+  }
+
+  return 0;
+}
+
 #if BX_SUPPORT_EVEX
 unsigned evex_displ8_compression(bxInstruction_c *i, unsigned ia_opcode, unsigned src, unsigned type, unsigned vex_w)
 {
@@ -1624,18 +2197,23 @@ bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, unsigned nnn, unsign
 }
 #endif
 
-#if BX_SUPPORT_AVX
-int decoder_vex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix)
+int decoder_vex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, const void *opcode_table)
 {
-  unsigned rm = 0, mod = 0, nnn = 0;
   int ia_opcode = BX_IA_ERROR;
+
+  // make sure VEX 0xC4 or VEX 0xC5
+  assert((b1 & ~0x1) == 0xc4);
+
+  if ((*iptr & 0xc0) != 0xc0) {
+    return decoder_modrm32(iptr, remain, i, b1, sse_prefix, opcode_table);
+  }
+
+#if BX_SUPPORT_AVX
+  unsigned rm = 0, mod = 0, nnn = 0;
 
   unsigned offset = 512;
   if (! i->os32L())
     offset = 0;
-
-  // make sure VEX 0xC4 or VEX 0xC5
-  assert((b1 & ~0x1) == 0xc4 && (*iptr & 0xc0) == 0xc0);
 
   if (sse_prefix)
     return(ia_opcode);
@@ -1747,24 +2325,30 @@ int decoder_vex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
   else if ((attr & BxVexL1) != 0 && i->getVL() == BX_VL128) {
     ia_opcode = BX_IA_ERROR;
   }
+#endif
 
   return ia_opcode;
 }
 
-#if BX_SUPPORT_EVEX
-int decoder_evex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix)
+int decoder_evex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, const void *opcode_table)
 {
-  unsigned rm = 0, mod = 0, nnn = 0;
   int ia_opcode = BX_IA_ERROR;
+
+  // make sure EVEX 0x62 prefix
+  assert(b1 == 0x62);
+
+  if ((*iptr & 0xc0) != 0xc0) {
+    return decoder_modrm32(iptr, remain, i, b1, sse_prefix, opcode_table);
+  }
+
+#if BX_SUPPORT_EVEX
+  unsigned rm = 0, mod = 0, nnn = 0;
 
   unsigned offset = 512;
   if (! i->os32L())
     offset = 0;
 
   bx_bool displ8 = BX_FALSE;
-
-  // make sure EVEX 0x62 prefix
-  assert(b1 == 0x62 && (*iptr & 0xc0) == 0xc0);
 
   if (sse_prefix)
     return(ia_opcode);
@@ -1883,22 +2467,28 @@ int decoder_evex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
   else if ((attr & BxVexL1) != 0 && i->getVL() == BX_VL128) {
     ia_opcode = BX_IA_ERROR;
   }
+#endif
 
   return ia_opcode;
 }
-#endif
 
-int decoder_xop32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix)
+int decoder_xop32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, const void *opcode_table)
 {
-  unsigned rm = 0, mod = 0, nnn = 0;
   int ia_opcode = BX_IA_ERROR;
+
+  // make sure XOP 0x8f prefix
+  assert(b1 == 0x8f);
+
+  if ((*iptr & 0xc8) != 0xc8) {
+    return decoder_modrm32(iptr, remain, i, b1, sse_prefix, opcode_table);
+  }
+
+#if BX_SUPPORT_AVX
+  unsigned rm = 0, mod = 0, nnn = 0;
 
   unsigned offset = 512;
   if (! i->os32L())
     offset = 0;
-
-  // make sure XOP 0x8f prefix
-  assert(b1 == 0x8f && (*iptr & 0xc8) == 0xc8);
 
   // 3 byte XOP prefix
   if (sse_prefix)
@@ -1956,11 +2546,10 @@ int decoder_xop32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
 
   unsigned imm_mode = attr & BxImmediate;
   if (imm_mode) {
-    // make sure iptr was advanced after Ib(), Iw() and Id()
     switch (imm_mode) {
       case BxImmediate_Ib:
         if (remain != 0) {
-          i->modRMForm.Ib[0] = *iptr++;
+          i->modRMForm.Ib[0] = *iptr;
           remain--;
         }
         else {
@@ -1970,7 +2559,6 @@ int decoder_xop32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
       case BxImmediate_Id:
         if (remain > 3) {
           i->modRMForm.Id = FetchDWORD(iptr);
-          iptr += 4;
           remain -= 4;
         }
         else {
@@ -1999,13 +2587,58 @@ int decoder_xop32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
   else if ((attr & BxVexL1) != 0 && i->getVL() == BX_VL128) {
     ia_opcode = BX_IA_ERROR;
   }
+#endif
 
   return ia_opcode;
 }
 
-#endif
+int decoder32_fp_escape(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, const void *opcode_table)
+{
+#if BX_SUPPORT_FPU == 0
+  return FPU_ESC;
+#else
+  unsigned rm = 0, mod = 0, nnn = 0;
+  unsigned b2 = 0;
+  int ia_opcode = BX_IA_ERROR;
 
-int decoder32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix)
+  assert(b1 >= 0xd8 && b1 <= 0xdf);
+
+  // opcode requires modrm byte
+  if (remain == 0)
+    return(-1);
+  remain--;
+  b2 = *iptr++;
+
+  // Parse mod-nnn-rm and related bytes
+  mod = b2 & 0xc0; // leave unshifted
+  nnn = (b2 >> 3) & 0x7;
+  rm  = b2 & 0x7;
+
+  i->setFoo((b2 | (b1 << 8)) & 0x7ff); /* for x87 */
+
+  if (mod == 0xc0) { // mod == 11b
+    i->assertModC0();
+  }
+  else {
+    iptr = decodeModrm32(iptr, remain, i, mod, nnn, rm);
+    if (! iptr) 
+      return(-1);
+  }
+
+  Bit16u *opcodes = (Bit16u *) opcode_table;
+  if (mod != 0xc0)
+    ia_opcode = opcodes[nnn];
+  else
+    ia_opcode = opcodes[(b2 & 0x3f) + 8];
+
+  if (! assign_srcs(i, ia_opcode, nnn, rm))
+    ia_opcode = BX_IA_ERROR;
+
+  return ia_opcode;
+#endif
+}
+
+int decoder_modrm32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, const void *opcode_table)
 {
   unsigned rm = 0, mod = 0, nnn = 0;
   unsigned b2 = 0;
@@ -2020,192 +2653,48 @@ int decoder32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned 
   const BxOpcodeInfo_t *OpcodeInfoPtr = &(BxOpcodeInfo32[index]);
   Bit16u attr = OpcodeInfoPtr->Attr;
 
-  bx_bool has_modrm = 0;
-#if BX_SUPPORT_AVX
-  if ((b1 & ~0x1) == 0xc4 && (*iptr & 0xc0) == 0xc0) {
-    // VEX 0xC4 and VEX 0xC5
-    return decoder_vex32(iptr, remain, i, b1, sse_prefix);
-  }
-#if BX_SUPPORT_EVEX
-  else if (b1 == 0x62 && (*iptr & 0xc0) == 0xc0) {
-    return decoder_evex32(iptr, remain, i, b1, sse_prefix);
-  }
-#endif
-  else if (b1 == 0x8f && (*iptr & 0xc8) == 0xc8) {
-    // 3 byte XOP prefix
-    return decoder_xop32(iptr, remain, i, b1, sse_prefix);
-  }
-  else
-#endif
-  {
-    has_modrm = BxOpcodeHasModrm32[b1];
-  }
-
-  if (has_modrm) {
-
 #if BX_CPU_LEVEL >= 6
-    // handle 3-byte escape
-    if (b1 == 0x138 || b1 == 0x13a) {
-      if (remain != 0) {
-        remain--;
-        unsigned b3 = *iptr++;
-        OpcodeInfoPtr = &OpcodeInfoPtr->AnotherArray[b3];
-      }
-      else
-        return(-1);
+  // handle 3-byte escape
+  if (b1 == 0x138 || b1 == 0x13a) {
+    if (remain != 0) {
+      remain--;
+      unsigned b3 = *iptr++;
+      OpcodeInfoPtr = &OpcodeInfoPtr->AnotherArray[b3];
     }
+    else
+      return(-1);
+  }
 #endif
 
-    // opcode requires modrm byte
-    if (remain == 0)
-      return(-1);
-    remain--;
-    b2 = *iptr++;
+  // opcode requires modrm byte
+  if (remain == 0)
+    return(-1);
+  remain--;
+  b2 = *iptr++;
 
-    // Parse mod-nnn-rm and related bytes
-    mod = b2 & 0xc0; // leave unshifted
-    nnn = (b2 >> 3) & 0x7;
-    rm  = b2 & 0x7;
+  // Parse mod-nnn-rm and related bytes
+  mod = b2 & 0xc0; // leave unshifted
+  nnn = (b2 >> 3) & 0x7;
+  rm  = b2 & 0x7;
 
-    if (b1 >= 0xd8 && b1 <= 0xdf)
-      i->setFoo((b2 | (b1 << 8)) & 0x7ff); /* for x87 */
+  // MOVs with CRx and DRx always use register ops and ignore the mod field.
+  if ((b1 & ~3) == 0x120)
+    mod = 0xc0;
 
-    // MOVs with CRx and DRx always use register ops and ignore the mod field.
-    if ((b1 & ~3) == 0x120)
-      mod = 0xc0;
-
-    if (mod == 0xc0) { // mod == 11b
-      i->assertModC0();
-    }
-    else {
-      iptr = decodeModrm32(iptr, remain, i, mod, nnn, rm);
-      if (! iptr) 
-        return(-1);
-    }
-
-    ia_opcode = WalkOpcodeTables(OpcodeInfoPtr, attr, BX_FALSE, b2, sse_prefix, offset >> 9, i->getVL(), 0 /* vex_w */);
-  }
-  else {
-    // Opcode does not require a MODRM byte.
-    // Note that a 2-byte opcode (0F XX) will jump to before
-    // the if() above after fetching the 2nd byte, so this path is
-    // taken in all cases if a modrm byte is NOT required.
-
-    unsigned group = attr & BxGroupX;
-    if (group == BxPrefixSSE && sse_prefix) {
-      OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix-1]);
-    }
-
-    ia_opcode = OpcodeInfoPtr->IA;
-    rm = b1 & 0x7;
-    nnn = (b1 >> 3) & 0x7;
+  if (mod == 0xc0) { // mod == 11b
     i->assertModC0();
   }
+  else {
+    iptr = decodeModrm32(iptr, remain, i, mod, nnn, rm);
+    if (! iptr) 
+      return(-1);
+  }
+
+  ia_opcode = WalkOpcodeTables(OpcodeInfoPtr, attr, BX_FALSE, b2, sse_prefix, offset >> 9, i->getVL(), 0 /* vex_w */);
 
   unsigned imm_mode = attr & BxImmediate;
-  if (imm_mode) {
-    // make sure iptr was advanced after Ib(), Iw() and Id()
-    switch (imm_mode) {
-      case BxImmediate_I1:
-        i->modRMForm.Ib[0] = 1;
-        break;
-      case BxImmediate_Ib:
-        if (remain != 0) {
-          i->modRMForm.Ib[0] = *iptr++;
-          remain--;
-        }
-        else {
-          return(-1);
-        }
-        break;
-      case BxImmediate_BrOff8:
-      case BxImmediate_Ib_SE: // Sign extend to OS size
-        if (remain != 0) {
-          Bit8s temp8s = *iptr;
-          // this code works correctly both for LE and BE hosts
-          if (i->os32L())
-            i->modRMForm.Id    = (Bit32s) temp8s;
-          else
-            i->modRMForm.Iw[0] = (Bit16s) temp8s;
-          remain--;
-        }
-        else {
-          return(-1);
-        }
-        break;
-      case BxImmediate_Iw:
-        if (remain > 1) {
-          i->modRMForm.Iw[0] = FetchWORD(iptr);
-          iptr += 2;
-          remain -= 2;
-        }
-        else {
-          return(-1);
-        }
-        break;
-      case BxImmediate_Id:
-        if (remain > 3) {
-          i->modRMForm.Id = FetchDWORD(iptr);
-          iptr += 4;
-          remain -= 4;
-        }
-        else {
-          return(-1);
-        }
-        break;
-      case BxImmediate_O:
-        // For instructions which embed the address in the opcode.
-        if (i->as32L()) {
-          // fetch 32bit address into Id
-          if (remain > 3) {
-            i->modRMForm.Id = FetchDWORD(iptr);
-            remain -= 4;
-          }
-          else return(-1);
-        }
-        else {
-          // fetch 16bit address into Id
-          if (remain > 1) {
-            i->modRMForm.Id = (Bit32u) FetchWORD(iptr);
-            remain -= 2;
-          }
-          else return(-1);
-        }
-        break;
-      default:
-        BX_INFO(("b1 was %x", b1));
-        BX_PANIC(("fetchdecode32: imm_mode = %u", imm_mode));
-        break;
-    }
-
-    unsigned imm_mode2 = attr & BxImmediate2;
-    if (imm_mode2) {
-      switch (imm_mode2) {
-        case BxImmediate_Ib2:
-          if (remain != 0) {
-            i->modRMForm.Ib2[0] = *iptr;
-            remain--;
-          }
-          else {
-            return(-1);
-          }
-          break;
-        case BxImmediate_Iw2:
-          if (remain > 1) {
-            i->modRMForm.Iw2[0] = FetchWORD(iptr);
-            remain -= 2;
-          }
-          else {
-            return(-1);
-          }
-          break;
-        default:
-          BX_INFO(("b1 was %x", b1));
-          BX_PANIC(("fetchdecode: imm_mode2 = %u", imm_mode2));
-          break;
-      }
-    }
-  }
+  if (decodeImmediate32(iptr, remain, i, imm_mode, 0 /* imm_mode2 only when there is no modrm */) < 0)
+    return (-1);
 
 #if BX_SUPPORT_3DNOW
   if(b1 == 0x10f)
@@ -2216,6 +2705,63 @@ int decoder32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned 
     ia_opcode = BX_IA_ERROR;
 
   return ia_opcode;
+}
+
+int decoder32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, const void *opcode_table)
+{
+  int ia_opcode = BX_IA_ERROR;
+
+  unsigned offset = 512;
+  if (! i->os32L())
+    offset = 0;
+
+  unsigned index = b1 + offset;
+
+  const BxOpcodeInfo_t *OpcodeInfoPtr = &(BxOpcodeInfo32[index]);
+  Bit16u attr = OpcodeInfoPtr->Attr;
+
+  // Opcode does not require a MODRM byte.
+  // Note that a 2-byte opcode (0F XX) will jump to before
+  // the if() above after fetching the 2nd byte, so this path is
+  // taken in all cases if a modrm byte is NOT required.
+
+  unsigned group = attr & BxGroupX;
+  if (group == BxPrefixSSE && sse_prefix) {
+    OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix-1]);
+  }
+  ia_opcode = OpcodeInfoPtr->IA;
+
+  unsigned rm = b1 & 0x7;
+  unsigned nnn = (b1 >> 3) & 0x7;
+  i->assertModC0();
+
+  unsigned imm_mode  = attr & BxImmediate,
+           imm_mode2 = attr & BxImmediate2;
+
+  if (decodeImmediate32(iptr, remain, i, imm_mode, imm_mode2) < 0)
+    return (-1);
+
+  if (! assign_srcs(i, ia_opcode, nnn, rm))
+    ia_opcode = BX_IA_ERROR;
+
+  return ia_opcode;
+}
+
+int decoder32_nop(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, const void *opcode_table)
+{
+  assert(b1 == 0x90);
+
+  i->assertModC0();
+
+  if (sse_prefix == SSE_PREFIX_F3)
+    return BX_IA_PAUSE;
+  else
+    return BX_IA_NOP;
+}
+
+int decoder_ud32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, const void *opcode_table)
+{
+  return BX_IA_ERROR;
 }
 
 int fetchDecode32(const Bit8u *iptr, Bit32u fetchModeMask, bx_bool handle_lock_cr0, bxInstruction_c *i, unsigned remainingInPage)
@@ -2298,7 +2844,8 @@ fetch_b1:
 
   i->modRMForm.Id = 0;
  
-  ia_opcode = decoder32(iptr, remain, i, b1, sse_prefix);
+  BxOpcodeDecodeDescriptor32 *decode_descriptor = &decode32_descriptor[b1];
+  ia_opcode = decode_descriptor->decode_method(iptr, remain, i, b1, sse_prefix, decode_descriptor->opcode_table);
   if (ia_opcode < 0)
     return(-1);
 

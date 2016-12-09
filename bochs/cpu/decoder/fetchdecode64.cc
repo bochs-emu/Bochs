@@ -35,56 +35,6 @@
 // immediate constant
 ///////////////////////////
 
-
-// The table for 64-bit is slightly different from the
-// table for 32-bit due to undefined opcodes, which
-// were valid in 32-bit mode
-
-#define X 0 /* undefined opcode */
-
-static const Bit8u BxOpcodeHasModrm64[512] = {
-  /*       0 1 2 3 4 5 6 7 8 9 a b c d e f          */
-  /*       -------------------------------          */
-  /* 00 */ 1,1,1,1,0,0,X,X,1,1,1,1,0,0,X,X,
-  /* 10 */ 1,1,1,1,0,0,X,X,1,1,1,1,0,0,X,X,
-  /* 20 */ 1,1,1,1,0,0,X,X,1,1,1,1,0,0,X,X,
-  /* 30 */ 1,1,1,1,0,0,X,X,1,1,1,1,0,0,X,X,
-  /* 40 */ X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,
-  /* 50 */ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  /* 60 */ X,X,X,1,X,X,X,X,0,1,0,1,0,0,0,0,
-  /* 70 */ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  /* 80 */ 1,1,X,1,1,1,1,1,1,1,1,1,1,1,1,1,
-  /* 90 */ 0,0,0,0,0,0,0,0,0,0,X,0,0,0,0,0,
-  /* A0 */ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  /* B0 */ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-  /* C0 */ 1,1,0,0,X,X,1,1,0,0,0,0,0,0,X,0,
-  /* D0 */ 1,1,1,1,X,X,X,0,1,1,1,1,1,1,1,1,
-  /* E0 */ 0,0,0,0,0,0,0,0,0,0,X,0,0,0,0,0,
-  /* F0 */ X,0,X,X,0,0,1,1,0,0,0,0,0,0,1,1,
-  /*       0 1 2 3 4 5 6 7 8 9 a b c d e f           */
-  /*       -------------------------------           */
-           1,1,1,1,X,0,0,0,0,0,X,0,X,1,0,1, /* 0F 00 */
-           1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, /* 0F 10 */
-           1,1,1,1,X,X,X,X,1,1,1,1,1,1,1,1, /* 0F 20 */
-           0,0,0,0,X,X,X,X,1,X,1,X,X,X,X,X, /* 0F 30 */
-           1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, /* 0F 40 */
-           1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, /* 0F 50 */
-           1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, /* 0F 60 */
-           1,1,1,1,1,1,1,0,1,1,X,X,1,1,1,1, /* 0F 70 */
-           0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 0F 80 */
-           1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, /* 0F 90 */
-           0,0,0,1,1,1,X,X,0,0,0,1,1,1,1,1, /* 0F A0 */
-           1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, /* 0F B0 */
-           1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0, /* 0F C0 */
-           1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, /* 0F D0 */
-           1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, /* 0F E0 */
-           1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,X  /* 0F F0 */
-  /*       -------------------------------           */
-  /*       0 1 2 3 4 5 6 7 8 9 a b c d e f           */
-};
-
-#undef X
-
 // Segment override prefixes
 // -------------------------
 // In 64-bit mode the CS, DS, ES, and SS segment overrides are ignored.
@@ -142,6 +92,539 @@ extern bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, unsigned nnn,
 #endif
 
 extern const Bit8u *decodeModrm64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned mod, unsigned nnn, unsigned rm, unsigned rex_r, unsigned rex_x, unsigned rex_b);
+extern int decodeImmediate64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned imm_mode, unsigned imm_mode2);
+
+extern int decoder64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, const void *opcode_table);
+extern int decoder_modrm64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, const void *opcode_table);
+extern int decoder64_fp_escape(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, const void *opcode_table);
+extern int decoder_vex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, const void *opcode_table);
+extern int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, const void *opcode_table);
+extern int decoder_xop64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, const void *opcode_table);
+extern int decoder_ud64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, const void *opcode_table);
+extern int decoder64_nop(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, const void *opcode_table);
+
+typedef int (*BxFetchDecode64Ptr)(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, const void *opcode_table);
+
+struct BxOpcodeDecodeDescriptor64 {
+  BxFetchDecode64Ptr decode_method;
+  const void *opcode_table;
+};
+
+static BxOpcodeDecodeDescriptor64 decode64_descriptor[512] =
+{
+   /*    00 */ { &decoder_modrm64, NULL },
+   /*    01 */ { &decoder_modrm64, NULL },
+   /*    02 */ { &decoder_modrm64, NULL },
+   /*    03 */ { &decoder_modrm64, NULL },
+   /*    04 */ { &decoder64, NULL },
+   /*    05 */ { &decoder64, NULL },
+   /*    06 */ { &decoder_ud64, NULL },
+   /*    07 */ { &decoder_ud64, NULL },
+   /*    08 */ { &decoder_modrm64, NULL },
+   /*    09 */ { &decoder_modrm64, NULL },
+   /*    0A */ { &decoder_modrm64, NULL },
+   /*    0B */ { &decoder_modrm64, NULL },
+   /*    0C */ { &decoder64, NULL },
+   /*    0D */ { &decoder64, NULL },
+   /*    0E */ { &decoder_ud64, NULL },
+   /*    0F */ { &decoder_ud64, NULL },             // 2-byte escape
+   /*    10 */ { &decoder_modrm64, NULL },
+   /*    11 */ { &decoder_modrm64, NULL },
+   /*    12 */ { &decoder_modrm64, NULL },
+   /*    13 */ { &decoder_modrm64, NULL },
+   /*    14 */ { &decoder64, NULL },
+   /*    15 */ { &decoder64, NULL },
+   /*    16 */ { &decoder_ud64, NULL },
+   /*    17 */ { &decoder_ud64, NULL },
+   /*    18 */ { &decoder_modrm64, NULL },
+   /*    19 */ { &decoder_modrm64, NULL },
+   /*    1A */ { &decoder_modrm64, NULL },
+   /*    1B */ { &decoder_modrm64, NULL },
+   /*    1C */ { &decoder64, NULL },
+   /*    1D */ { &decoder64, NULL },
+   /*    1E */ { &decoder_ud64, NULL },
+   /*    1F */ { &decoder_ud64, NULL },
+   /*    20 */ { &decoder_modrm64, NULL },
+   /*    21 */ { &decoder_modrm64, NULL },
+   /*    22 */ { &decoder_modrm64, NULL },
+   /*    23 */ { &decoder_modrm64, NULL },
+   /*    24 */ { &decoder64, NULL },
+   /*    25 */ { &decoder64, NULL },
+   /*    26 */ { &decoder_ud64, NULL },
+   /*    27 */ { &decoder_ud64, NULL },
+   /*    28 */ { &decoder_modrm64, NULL },
+   /*    29 */ { &decoder_modrm64, NULL },
+   /*    2A */ { &decoder_modrm64, NULL },
+   /*    2B */ { &decoder_modrm64, NULL },
+   /*    2C */ { &decoder64, NULL },
+   /*    2D */ { &decoder64, NULL },
+   /*    2E */ { &decoder_ud64, NULL },
+   /*    2F */ { &decoder_ud64, NULL },
+   /*    30 */ { &decoder_modrm64, NULL },
+   /*    31 */ { &decoder_modrm64, NULL },
+   /*    32 */ { &decoder_modrm64, NULL },
+   /*    33 */ { &decoder_modrm64, NULL },
+   /*    34 */ { &decoder64, NULL },
+   /*    35 */ { &decoder64, NULL },
+   /*    36 */ { &decoder_ud64, NULL },
+   /*    37 */ { &decoder_ud64, NULL },
+   /*    38 */ { &decoder_modrm64, NULL },
+   /*    39 */ { &decoder_modrm64, NULL },
+   /*    3A */ { &decoder_modrm64, NULL },
+   /*    3B */ { &decoder_modrm64, NULL },
+   /*    3C */ { &decoder64, NULL },
+   /*    3D */ { &decoder64, NULL },
+   /*    3E */ { &decoder_ud64, NULL },
+   /*    3F */ { &decoder_ud64, NULL },
+   /*    40 */ { &decoder_ud64, NULL },             // REX prefix
+   /*    41 */ { &decoder_ud64, NULL },             // REX prefix
+   /*    42 */ { &decoder_ud64, NULL },             // REX prefix
+   /*    43 */ { &decoder_ud64, NULL },             // REX prefix
+   /*    44 */ { &decoder_ud64, NULL },             // REX prefix
+   /*    45 */ { &decoder_ud64, NULL },             // REX prefix
+   /*    46 */ { &decoder_ud64, NULL },             // REX prefix
+   /*    47 */ { &decoder_ud64, NULL },             // REX prefix
+   /*    48 */ { &decoder_ud64, NULL },             // REX prefix
+   /*    49 */ { &decoder_ud64, NULL },             // REX prefix
+   /*    4A */ { &decoder_ud64, NULL },             // REX prefix
+   /*    4B */ { &decoder_ud64, NULL },             // REX prefix
+   /*    4C */ { &decoder_ud64, NULL },             // REX prefix
+   /*    4D */ { &decoder_ud64, NULL },             // REX prefix
+   /*    4E */ { &decoder_ud64, NULL },             // REX prefix
+   /*    4F */ { &decoder_ud64, NULL },             // REX prefix
+   /*    50 */ { &decoder64, NULL },
+   /*    51 */ { &decoder64, NULL },
+   /*    52 */ { &decoder64, NULL },
+   /*    53 */ { &decoder64, NULL },
+   /*    54 */ { &decoder64, NULL },
+   /*    55 */ { &decoder64, NULL },
+   /*    56 */ { &decoder64, NULL },
+   /*    57 */ { &decoder64, NULL },
+   /*    58 */ { &decoder64, NULL },
+   /*    59 */ { &decoder64, NULL },
+   /*    5A */ { &decoder64, NULL },
+   /*    5B */ { &decoder64, NULL },
+   /*    5C */ { &decoder64, NULL },
+   /*    5D */ { &decoder64, NULL },
+   /*    5E */ { &decoder64, NULL },
+   /*    5F */ { &decoder64, NULL },
+   /*    60 */ { &decoder_ud64, NULL },
+   /*    61 */ { &decoder_ud64, NULL },
+   /*    62 */ { &decoder_evex64, NULL },           // EVEX prefix
+   /*    63 */ { &decoder_modrm64, NULL },
+   /*    64 */ { &decoder_ud64, NULL },
+   /*    65 */ { &decoder_ud64, NULL },
+   /*    66 */ { &decoder_ud64, NULL },
+   /*    67 */ { &decoder_ud64, NULL },
+   /*    68 */ { &decoder64, NULL },
+   /*    69 */ { &decoder_modrm64, NULL },
+   /*    6A */ { &decoder64, NULL },
+   /*    6B */ { &decoder_modrm64, NULL },
+   /*    6C */ { &decoder64, NULL },
+   /*    6D */ { &decoder64, NULL },
+   /*    6E */ { &decoder64, NULL },
+   /*    6F */ { &decoder64, NULL },
+   /*    70 */ { &decoder64, NULL },
+   /*    71 */ { &decoder64, NULL },
+   /*    72 */ { &decoder64, NULL },
+   /*    73 */ { &decoder64, NULL },
+   /*    74 */ { &decoder64, NULL },
+   /*    75 */ { &decoder64, NULL },
+   /*    76 */ { &decoder64, NULL },
+   /*    77 */ { &decoder64, NULL },
+   /*    78 */ { &decoder64, NULL },
+   /*    79 */ { &decoder64, NULL },
+   /*    7A */ { &decoder64, NULL },
+   /*    7B */ { &decoder64, NULL },
+   /*    7C */ { &decoder64, NULL },
+   /*    7D */ { &decoder64, NULL },
+   /*    7E */ { &decoder64, NULL },
+   /*    7F */ { &decoder64, NULL },
+   /*    80 */ { &decoder_modrm64, NULL },
+   /*    81 */ { &decoder_modrm64, NULL },
+   /*    82 */ { &decoder_ud64, NULL },
+   /*    83 */ { &decoder_modrm64, NULL },
+   /*    84 */ { &decoder_modrm64, NULL },
+   /*    85 */ { &decoder_modrm64, NULL },
+   /*    86 */ { &decoder_modrm64, NULL },
+   /*    87 */ { &decoder_modrm64, NULL },
+   /*    88 */ { &decoder_modrm64, NULL },
+   /*    89 */ { &decoder_modrm64, NULL },
+   /*    8A */ { &decoder_modrm64, NULL },
+   /*    8B */ { &decoder_modrm64, NULL },
+   /*    8C */ { &decoder_modrm64, NULL },
+   /*    8D */ { &decoder_modrm64, NULL },
+   /*    8E */ { &decoder_modrm64, NULL },
+   /*    8F */ { &decoder_xop64, NULL },          // XOP prefix
+   /*    90 */ { &decoder64_nop, NULL },
+   /*    91 */ { &decoder64, NULL },
+   /*    92 */ { &decoder64, NULL },
+   /*    93 */ { &decoder64, NULL },
+   /*    94 */ { &decoder64, NULL },
+   /*    95 */ { &decoder64, NULL },
+   /*    96 */ { &decoder64, NULL },
+   /*    97 */ { &decoder64, NULL },
+   /*    98 */ { &decoder64, NULL },
+   /*    99 */ { &decoder64, NULL },
+   /*    9A */ { &decoder_ud64, NULL },
+   /*    9B */ { &decoder64, NULL },
+   /*    9C */ { &decoder64, NULL },
+   /*    9D */ { &decoder64, NULL },
+   /*    9E */ { &decoder64, NULL },
+   /*    9F */ { &decoder64, NULL },
+   /*    A0 */ { &decoder64, NULL },
+   /*    A1 */ { &decoder64, NULL },
+   /*    A2 */ { &decoder64, NULL },
+   /*    A3 */ { &decoder64, NULL },
+   /*    A4 */ { &decoder64, NULL },
+   /*    A5 */ { &decoder64, NULL },
+   /*    A6 */ { &decoder64, NULL },
+   /*    A7 */ { &decoder64, NULL },
+   /*    A8 */ { &decoder64, NULL },
+   /*    A9 */ { &decoder64, NULL },
+   /*    AA */ { &decoder64, NULL },
+   /*    AB */ { &decoder64, NULL },
+   /*    AC */ { &decoder64, NULL },
+   /*    AD */ { &decoder64, NULL },
+   /*    AE */ { &decoder64, NULL },
+   /*    AF */ { &decoder64, NULL },
+   /*    B0 */ { &decoder64, NULL },
+   /*    B1 */ { &decoder64, NULL },
+   /*    B2 */ { &decoder64, NULL },
+   /*    B3 */ { &decoder64, NULL },
+   /*    B4 */ { &decoder64, NULL },
+   /*    B5 */ { &decoder64, NULL },
+   /*    B6 */ { &decoder64, NULL },
+   /*    B7 */ { &decoder64, NULL },
+   /*    B8 */ { &decoder64, NULL },
+   /*    B9 */ { &decoder64, NULL },
+   /*    BA */ { &decoder64, NULL },
+   /*    BB */ { &decoder64, NULL },
+   /*    BC */ { &decoder64, NULL },
+   /*    BD */ { &decoder64, NULL },
+   /*    BE */ { &decoder64, NULL },
+   /*    BF */ { &decoder64, NULL },
+   /*    C0 */ { &decoder_modrm64, NULL },
+   /*    C1 */ { &decoder_modrm64, NULL },
+   /*    C2 */ { &decoder64, NULL },
+   /*    C3 */ { &decoder64, NULL },
+   /*    C4 */ { &decoder_vex64, NULL },            // VEX prefix
+   /*    C5 */ { &decoder_vex64, NULL },            // VEX prefix
+   /*    C6 */ { &decoder_modrm64, NULL },
+   /*    C7 */ { &decoder_modrm64, NULL },
+   /*    C8 */ { &decoder64, NULL },
+   /*    C9 */ { &decoder64, NULL },
+   /*    CA */ { &decoder64, NULL },
+   /*    CB */ { &decoder64, NULL },
+   /*    CC */ { &decoder64, NULL },
+   /*    CD */ { &decoder64, NULL },
+   /*    CE */ { &decoder_ud64, NULL },
+   /*    CF */ { &decoder64, NULL },
+   /*    D0 */ { &decoder_modrm64, NULL },
+   /*    D1 */ { &decoder_modrm64, NULL },
+   /*    D2 */ { &decoder_modrm64, NULL },
+   /*    D3 */ { &decoder_modrm64, NULL },
+   /*    D4 */ { &decoder_ud64, NULL },
+   /*    D5 */ { &decoder_ud64, NULL },
+   /*    D6 */ { &decoder_ud64, NULL },
+   /*    D7 */ { &decoder64, NULL },
+   /*    D8 */ { &decoder64_fp_escape, BxOpcodeInfo_FloatingPointD8 },
+   /*    D9 */ { &decoder64_fp_escape, BxOpcodeInfo_FloatingPointD9 },
+   /*    DA */ { &decoder64_fp_escape, BxOpcodeInfo_FloatingPointDA },
+   /*    DB */ { &decoder64_fp_escape, BxOpcodeInfo_FloatingPointDB },
+   /*    DC */ { &decoder64_fp_escape, BxOpcodeInfo_FloatingPointDC },
+   /*    DD */ { &decoder64_fp_escape, BxOpcodeInfo_FloatingPointDD },
+   /*    DE */ { &decoder64_fp_escape, BxOpcodeInfo_FloatingPointDE },
+   /*    DF */ { &decoder64_fp_escape, BxOpcodeInfo_FloatingPointDF },
+   /*    E0 */ { &decoder64, NULL },
+   /*    E1 */ { &decoder64, NULL },
+   /*    E2 */ { &decoder64, NULL },
+   /*    E3 */ { &decoder64, NULL },
+   /*    E4 */ { &decoder64, NULL },
+   /*    E5 */ { &decoder64, NULL },
+   /*    E6 */ { &decoder64, NULL },
+   /*    E7 */ { &decoder64, NULL },
+   /*    E8 */ { &decoder64, NULL },
+   /*    E9 */ { &decoder64, NULL },
+   /*    EA */ { &decoder_ud64, NULL },
+   /*    EB */ { &decoder64, NULL },
+   /*    EC */ { &decoder64, NULL },
+   /*    ED */ { &decoder64, NULL },
+   /*    EE */ { &decoder64, NULL },
+   /*    EF */ { &decoder64, NULL },
+   /*    F0 */ { &decoder_ud64, NULL },
+   /*    F1 */ { &decoder64, NULL },
+   /*    F2 */ { &decoder_ud64, NULL },
+   /*    F3 */ { &decoder_ud64, NULL },
+   /*    F4 */ { &decoder64, NULL },
+   /*    F5 */ { &decoder64, NULL },
+   /*    F6 */ { &decoder_modrm64, NULL },
+   /*    F7 */ { &decoder_modrm64, NULL },
+   /*    F8 */ { &decoder64, NULL },
+   /*    F9 */ { &decoder64, NULL },
+   /*    FA */ { &decoder64, NULL },
+   /*    FB */ { &decoder64, NULL },
+   /*    FC */ { &decoder64, NULL },
+   /*    FD */ { &decoder64, NULL },
+   /*    FE */ { &decoder_modrm64, NULL },
+   /*    FF */ { &decoder_modrm64, NULL },
+   /*    00 */ { &decoder_modrm64, NULL },
+   /* 0F 01 */ { &decoder_modrm64, NULL },
+   /* 0F 02 */ { &decoder_modrm64, NULL },
+   /* 0F 03 */ { &decoder_modrm64, NULL },
+   /* 0F 04 */ { &decoder_ud64, NULL },
+   /* 0F 05 */ { &decoder64, NULL },
+   /* 0F 06 */ { &decoder64, NULL },
+   /* 0F 07 */ { &decoder64, NULL },
+   /* 0F 08 */ { &decoder64, NULL },
+   /* 0F 09 */ { &decoder64, NULL },
+   /* 0F 0A */ { &decoder_ud64, NULL },
+   /* 0F 0B */ { &decoder64, NULL },
+   /* 0F 0C */ { &decoder_ud64, NULL },
+   /* 0F 0D */ { &decoder_modrm64, NULL },
+   /* 0F 0E */ { &decoder64, NULL },
+   /* 0F 0F */ { &decoder_modrm64, NULL },
+   /* 0F 10 */ { &decoder_modrm64, NULL },
+   /* 0F 11 */ { &decoder_modrm64, NULL },
+   /* 0F 12 */ { &decoder_modrm64, NULL },
+   /* 0F 13 */ { &decoder_modrm64, NULL },
+   /* 0F 14 */ { &decoder_modrm64, NULL },
+   /* 0F 15 */ { &decoder_modrm64, NULL },
+   /* 0F 16 */ { &decoder_modrm64, NULL },
+   /* 0F 17 */ { &decoder_modrm64, NULL },
+   /* 0F 18 */ { &decoder_modrm64, NULL },
+   /* 0F 19 */ { &decoder_modrm64, NULL },
+   /* 0F 1A */ { &decoder_modrm64, NULL },
+   /* 0F 1B */ { &decoder_modrm64, NULL },
+   /* 0F 1C */ { &decoder_modrm64, NULL },
+   /* 0F 1D */ { &decoder_modrm64, NULL },
+   /* 0F 1E */ { &decoder_modrm64, NULL },
+   /* 0F 1F */ { &decoder_modrm64, NULL },
+   /* 0F 20 */ { &decoder_modrm64, NULL },
+   /* 0F 21 */ { &decoder_modrm64, NULL },
+   /* 0F 22 */ { &decoder_modrm64, NULL },
+   /* 0F 23 */ { &decoder_modrm64, NULL },
+   /* 0F 24 */ { &decoder_ud64, NULL },
+   /* 0F 25 */ { &decoder_ud64, NULL },
+   /* 0F 26 */ { &decoder_ud64, NULL },
+   /* 0F 27 */ { &decoder_ud64, NULL },
+   /* 0F 28 */ { &decoder_modrm64, NULL },
+   /* 0F 29 */ { &decoder_modrm64, NULL },
+   /* 0F 2A */ { &decoder_modrm64, NULL },
+   /* 0F 2B */ { &decoder_modrm64, NULL },
+   /* 0F 2C */ { &decoder_modrm64, NULL },
+   /* 0F 2D */ { &decoder_modrm64, NULL },
+   /* 0F 2E */ { &decoder_modrm64, NULL },
+   /* 0F 2F */ { &decoder_modrm64, NULL },
+   /* 0F 30 */ { &decoder64, NULL },
+   /* 0F 31 */ { &decoder64, NULL },
+   /* 0F 32 */ { &decoder64, NULL },
+   /* 0F 33 */ { &decoder64, NULL },
+   /* 0F 34 */ { &decoder64, NULL },
+   /* 0F 35 */ { &decoder64, NULL },
+   /* 0F 36 */ { &decoder_ud64, NULL },
+   /* 0F 37 */ { &decoder64, NULL },
+   /* 0F 38 */ { &decoder_modrm64, NULL },
+   /* 0F 39 */ { &decoder_ud64, NULL },
+   /* 0F 3A */ { &decoder_modrm64, NULL },
+   /* 0F 3B */ { &decoder_ud64, NULL },
+   /* 0F 3C */ { &decoder_ud64, NULL },
+   /* 0F 3D */ { &decoder_ud64, NULL },
+   /* 0F 3E */ { &decoder_ud64, NULL },
+   /* 0F 3F */ { &decoder_ud64, NULL },
+   /* 0F 40 */ { &decoder_modrm64, NULL },
+   /* 0F 41 */ { &decoder_modrm64, NULL },
+   /* 0F 42 */ { &decoder_modrm64, NULL },
+   /* 0F 43 */ { &decoder_modrm64, NULL },
+   /* 0F 44 */ { &decoder_modrm64, NULL },
+   /* 0F 45 */ { &decoder_modrm64, NULL },
+   /* 0F 46 */ { &decoder_modrm64, NULL },
+   /* 0F 47 */ { &decoder_modrm64, NULL },
+   /* 0F 48 */ { &decoder_modrm64, NULL },
+   /* 0F 49 */ { &decoder_modrm64, NULL },
+   /* 0F 4A */ { &decoder_modrm64, NULL },
+   /* 0F 4B */ { &decoder_modrm64, NULL },
+   /* 0F 4C */ { &decoder_modrm64, NULL },
+   /* 0F 4D */ { &decoder_modrm64, NULL },
+   /* 0F 4E */ { &decoder_modrm64, NULL },
+   /* 0F 4F */ { &decoder_modrm64, NULL },
+   /* 0F 50 */ { &decoder_modrm64, NULL },
+   /* 0F 51 */ { &decoder_modrm64, NULL },
+   /* 0F 52 */ { &decoder_modrm64, NULL },
+   /* 0F 53 */ { &decoder_modrm64, NULL },
+   /* 0F 54 */ { &decoder_modrm64, NULL },
+   /* 0F 55 */ { &decoder_modrm64, NULL },
+   /* 0F 56 */ { &decoder_modrm64, NULL },
+   /* 0F 57 */ { &decoder_modrm64, NULL },
+   /* 0F 58 */ { &decoder_modrm64, NULL },
+   /* 0F 59 */ { &decoder_modrm64, NULL },
+   /* 0F 5A */ { &decoder_modrm64, NULL },
+   /* 0F 5B */ { &decoder_modrm64, NULL },
+   /* 0F 5C */ { &decoder_modrm64, NULL },
+   /* 0F 5D */ { &decoder_modrm64, NULL },
+   /* 0F 5E */ { &decoder_modrm64, NULL },
+   /* 0F 5F */ { &decoder_modrm64, NULL },
+   /* 0F 60 */ { &decoder_modrm64, NULL },
+   /* 0F 61 */ { &decoder_modrm64, NULL },
+   /* 0F 62 */ { &decoder_modrm64, NULL },
+   /* 0F 63 */ { &decoder_modrm64, NULL },
+   /* 0F 64 */ { &decoder_modrm64, NULL },
+   /* 0F 65 */ { &decoder_modrm64, NULL },
+   /* 0F 66 */ { &decoder_modrm64, NULL },
+   /* 0F 67 */ { &decoder_modrm64, NULL },
+   /* 0F 68 */ { &decoder_modrm64, NULL },
+   /* 0F 69 */ { &decoder_modrm64, NULL },
+   /* 0F 6A */ { &decoder_modrm64, NULL },
+   /* 0F 6B */ { &decoder_modrm64, NULL },
+   /* 0F 6C */ { &decoder_modrm64, NULL },
+   /* 0F 6D */ { &decoder_modrm64, NULL },
+   /* 0F 6E */ { &decoder_modrm64, NULL },
+   /* 0F 6F */ { &decoder_modrm64, NULL },
+   /* 0F 70 */ { &decoder_modrm64, NULL },
+   /* 0F 71 */ { &decoder_modrm64, NULL },
+   /* 0F 72 */ { &decoder_modrm64, NULL },
+   /* 0F 73 */ { &decoder_modrm64, NULL },
+   /* 0F 74 */ { &decoder_modrm64, NULL },
+   /* 0F 75 */ { &decoder_modrm64, NULL },
+   /* 0F 76 */ { &decoder_modrm64, NULL },
+   /* 0F 77 */ { &decoder64, NULL },
+   /* 0F 78 */ { &decoder_modrm64, NULL },
+   /* 0F 79 */ { &decoder_modrm64, NULL },
+   /* 0F 7A */ { &decoder_ud64, NULL },
+   /* 0F 7B */ { &decoder_ud64, NULL },
+   /* 0F 7C */ { &decoder_modrm64, NULL },
+   /* 0F 7D */ { &decoder_modrm64, NULL },
+   /* 0F 7E */ { &decoder_modrm64, NULL },
+   /* 0F 7F */ { &decoder_modrm64, NULL },
+   /* 0F 80 */ { &decoder64, NULL },
+   /* 0F 81 */ { &decoder64, NULL },
+   /* 0F 82 */ { &decoder64, NULL },
+   /* 0F 83 */ { &decoder64, NULL },
+   /* 0F 84 */ { &decoder64, NULL },
+   /* 0F 85 */ { &decoder64, NULL },
+   /* 0F 86 */ { &decoder64, NULL },
+   /* 0F 87 */ { &decoder64, NULL },
+   /* 0F 88 */ { &decoder64, NULL },
+   /* 0F 89 */ { &decoder64, NULL },
+   /* 0F 8A */ { &decoder64, NULL },
+   /* 0F 8B */ { &decoder64, NULL },
+   /* 0F 8C */ { &decoder64, NULL },
+   /* 0F 8D */ { &decoder64, NULL },
+   /* 0F 8E */ { &decoder64, NULL },
+   /* 0F 8F */ { &decoder64, NULL },
+   /* 0F 90 */ { &decoder_modrm64, NULL },
+   /* 0F 91 */ { &decoder_modrm64, NULL },
+   /* 0F 92 */ { &decoder_modrm64, NULL },
+   /* 0F 93 */ { &decoder_modrm64, NULL },
+   /* 0F 94 */ { &decoder_modrm64, NULL },
+   /* 0F 95 */ { &decoder_modrm64, NULL },
+   /* 0F 96 */ { &decoder_modrm64, NULL },
+   /* 0F 97 */ { &decoder_modrm64, NULL },
+   /* 0F 98 */ { &decoder_modrm64, NULL },
+   /* 0F 99 */ { &decoder_modrm64, NULL },
+   /* 0F 9A */ { &decoder_modrm64, NULL },
+   /* 0F 9B */ { &decoder_modrm64, NULL },
+   /* 0F 9C */ { &decoder_modrm64, NULL },
+   /* 0F 9D */ { &decoder_modrm64, NULL },
+   /* 0F 9E */ { &decoder_modrm64, NULL },
+   /* 0F 9F */ { &decoder_modrm64, NULL },
+   /* 0F A0 */ { &decoder64, NULL },
+   /* 0F A1 */ { &decoder64, NULL },
+   /* 0F A2 */ { &decoder64, NULL },
+   /* 0F A3 */ { &decoder_modrm64, NULL },
+   /* 0F A4 */ { &decoder_modrm64, NULL },
+   /* 0F A5 */ { &decoder_modrm64, NULL },
+   /* 0F A6 */ { &decoder_ud64, NULL },
+   /* 0F A7 */ { &decoder_ud64, NULL },
+   /* 0F A8 */ { &decoder64, NULL },
+   /* 0F A9 */ { &decoder64, NULL },
+   /* 0F AA */ { &decoder64, NULL },
+   /* 0F AB */ { &decoder_modrm64, NULL },
+   /* 0F AC */ { &decoder_modrm64, NULL },
+   /* 0F AD */ { &decoder_modrm64, NULL },
+   /* 0F AE */ { &decoder_modrm64, NULL },
+   /* 0F AF */ { &decoder_modrm64, NULL },
+   /* 0F B0 */ { &decoder_modrm64, NULL },
+   /* 0F B1 */ { &decoder_modrm64, NULL },
+   /* 0F B2 */ { &decoder_modrm64, NULL },
+   /* 0F B3 */ { &decoder_modrm64, NULL },
+   /* 0F B4 */ { &decoder_modrm64, NULL },
+   /* 0F B5 */ { &decoder_modrm64, NULL },
+   /* 0F B6 */ { &decoder_modrm64, NULL },
+   /* 0F B7 */ { &decoder_modrm64, NULL },
+   /* 0F B8 */ { &decoder_modrm64, NULL },
+   /* 0F B9 */ { &decoder_modrm64, NULL },
+   /* 0F BA */ { &decoder_modrm64, NULL },
+   /* 0F BB */ { &decoder_modrm64, NULL },
+   /* 0F BC */ { &decoder_modrm64, NULL },
+   /* 0F BD */ { &decoder_modrm64, NULL },
+   /* 0F BE */ { &decoder_modrm64, NULL },
+   /* 0F BF */ { &decoder_modrm64, NULL },
+   /* 0F C0 */ { &decoder_modrm64, NULL },
+   /* 0F C1 */ { &decoder_modrm64, NULL },
+   /* 0F C2 */ { &decoder_modrm64, NULL },
+   /* 0F C3 */ { &decoder_modrm64, NULL },
+   /* 0F C4 */ { &decoder_modrm64, NULL },
+   /* 0F C5 */ { &decoder_modrm64, NULL },
+   /* 0F C6 */ { &decoder_modrm64, NULL },
+   /* 0F C7 */ { &decoder_modrm64, NULL },
+   /* 0F C8 */ { &decoder64, NULL },
+   /* 0F C9 */ { &decoder64, NULL },
+   /* 0F CA */ { &decoder64, NULL },
+   /* 0F CB */ { &decoder64, NULL },
+   /* 0F CC */ { &decoder64, NULL },
+   /* 0F CD */ { &decoder64, NULL },
+   /* 0F CE */ { &decoder64, NULL },
+   /* 0F CF */ { &decoder64, NULL },
+   /* 0F D0 */ { &decoder_modrm64, NULL },
+   /* 0F D1 */ { &decoder_modrm64, NULL },
+   /* 0F D2 */ { &decoder_modrm64, NULL },
+   /* 0F D3 */ { &decoder_modrm64, NULL },
+   /* 0F D4 */ { &decoder_modrm64, NULL },
+   /* 0F D5 */ { &decoder_modrm64, NULL },
+   /* 0F D6 */ { &decoder_modrm64, NULL },
+   /* 0F D7 */ { &decoder_modrm64, NULL },
+   /* 0F D8 */ { &decoder_modrm64, NULL },
+   /* 0F D9 */ { &decoder_modrm64, NULL },
+   /* 0F DA */ { &decoder_modrm64, NULL },
+   /* 0F DB */ { &decoder_modrm64, NULL },
+   /* 0F DC */ { &decoder_modrm64, NULL },
+   /* 0F DD */ { &decoder_modrm64, NULL },
+   /* 0F DE */ { &decoder_modrm64, NULL },
+   /* 0F DF */ { &decoder_modrm64, NULL },
+   /* 0F E0 */ { &decoder_modrm64, NULL },
+   /* 0F E1 */ { &decoder_modrm64, NULL },
+   /* 0F E2 */ { &decoder_modrm64, NULL },
+   /* 0F E3 */ { &decoder_modrm64, NULL },
+   /* 0F E4 */ { &decoder_modrm64, NULL },
+   /* 0F E5 */ { &decoder_modrm64, NULL },
+   /* 0F E6 */ { &decoder_modrm64, NULL },
+   /* 0F E7 */ { &decoder_modrm64, NULL },
+   /* 0F E8 */ { &decoder_modrm64, NULL },
+   /* 0F E9 */ { &decoder_modrm64, NULL },
+   /* 0F EA */ { &decoder_modrm64, NULL },
+   /* 0F EB */ { &decoder_modrm64, NULL },
+   /* 0F EC */ { &decoder_modrm64, NULL },
+   /* 0F ED */ { &decoder_modrm64, NULL },
+   /* 0F EE */ { &decoder_modrm64, NULL },
+   /* 0F EF */ { &decoder_modrm64, NULL },
+   /* 0F F0 */ { &decoder_modrm64, NULL },
+   /* 0F F1 */ { &decoder_modrm64, NULL },
+   /* 0F F2 */ { &decoder_modrm64, NULL },
+   /* 0F F3 */ { &decoder_modrm64, NULL },
+   /* 0F F4 */ { &decoder_modrm64, NULL },
+   /* 0F F5 */ { &decoder_modrm64, NULL },
+   /* 0F F6 */ { &decoder_modrm64, NULL },
+   /* 0F F7 */ { &decoder_modrm64, NULL },
+   /* 0F F8 */ { &decoder_modrm64, NULL },
+   /* 0F F9 */ { &decoder_modrm64, NULL },
+   /* 0F FA */ { &decoder_modrm64, NULL },
+   /* 0F FB */ { &decoder_modrm64, NULL },
+   /* 0F FC */ { &decoder_modrm64, NULL },
+   /* 0F FD */ { &decoder_modrm64, NULL },
+   /* 0F FE */ { &decoder_modrm64, NULL },
+   /* 0F FF */ { &decoder_ud64, NULL }
+};
 
 // 512 entries for 16bit operand size
 // 512 entries for 32bit operand size
@@ -365,14 +848,14 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* D5 /w */ { 0, BX_IA_ERROR },
   /* D6 /w */ { 0, BX_IA_ERROR },
   /* D7 /w */ { 0, BX_IA_XLAT },
-  /* D8 /w */ { BxGroupFP, BX_IA_ERROR, BxOpcodeInfo_FPGroupD8 },
-  /* D9 /w */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointD9 },
-  /* DA /w */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDA },
-  /* DB /w */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDB },
-  /* DC /w */ { BxGroupFP, BX_IA_ERROR, BxOpcodeInfo_FPGroupDC },
-  /* DD /w */ { BxGroupFP, BX_IA_ERROR, BxOpcodeInfo_FPGroupDD },
-  /* DE /w */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDE },
-  /* DF /w */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDF },
+  /* D8 /w */ { 0, BX_IA_ERROR },   // FPESCAPE
+  /* D9 /w */ { 0, BX_IA_ERROR },   // FPESCAPE
+  /* DA /w */ { 0, BX_IA_ERROR },   // FPESCAPE
+  /* DB /w */ { 0, BX_IA_ERROR },   // FPESCAPE
+  /* DC /w */ { 0, BX_IA_ERROR },   // FPESCAPE
+  /* DD /w */ { 0, BX_IA_ERROR },   // FPESCAPE
+  /* DE /w */ { 0, BX_IA_ERROR },   // FPESCAPE
+  /* DF /w */ { 0, BX_IA_ERROR },   // FPESCAPE
   /* E0 /w */ { BxImmediate_BrOff8, BX_IA_LOOPNE_Op64_Jb },
   /* E1 /w */ { BxImmediate_BrOff8, BX_IA_LOOPE_Op64_Jb },
   /* E2 /w */ { BxImmediate_BrOff8, BX_IA_LOOP_Op64_Jb },
@@ -880,14 +1363,14 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* D5 /d */ { 0, BX_IA_ERROR },
   /* D6 /d */ { 0, BX_IA_ERROR },
   /* D7 /d */ { 0, BX_IA_XLAT },
-  /* D8 /d */ { BxGroupFP, BX_IA_ERROR, BxOpcodeInfo_FPGroupD8 },
-  /* D9 /d */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointD9 },
-  /* DA /d */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDA },
-  /* DB /d */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDB },
-  /* DC /d */ { BxGroupFP, BX_IA_ERROR, BxOpcodeInfo_FPGroupDC },
-  /* DD /d */ { BxGroupFP, BX_IA_ERROR, BxOpcodeInfo_FPGroupDD },
-  /* DE /d */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDE },
-  /* DF /d */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDF },
+  /* D8 /d */ { 0, BX_IA_ERROR },   // FPESCAPE
+  /* D9 /d */ { 0, BX_IA_ERROR },   // FPESCAPE
+  /* DA /d */ { 0, BX_IA_ERROR },   // FPESCAPE
+  /* DB /d */ { 0, BX_IA_ERROR },   // FPESCAPE
+  /* DC /d */ { 0, BX_IA_ERROR },   // FPESCAPE
+  /* DD /d */ { 0, BX_IA_ERROR },   // FPESCAPE
+  /* DE /d */ { 0, BX_IA_ERROR },   // FPESCAPE
+  /* DF /d */ { 0, BX_IA_ERROR },   // FPESCAPE
   /* E0 /d */ { BxImmediate_BrOff8, BX_IA_LOOPNE_Op64_Jb },
   /* E1 /d */ { BxImmediate_BrOff8, BX_IA_LOOPE_Op64_Jb },
   /* E2 /d */ { BxImmediate_BrOff8, BX_IA_LOOP_Op64_Jb },
@@ -1395,14 +1878,14 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* D5 /q */ { 0, BX_IA_ERROR },
   /* D6 /q */ { 0, BX_IA_ERROR },
   /* D7 /q */ { 0, BX_IA_XLAT },
-  /* D8 /q */ { BxGroupFP, BX_IA_ERROR, BxOpcodeInfo_FPGroupD8 },
-  /* D9 /q */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointD9 },
-  /* DA /q */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDA },
-  /* DB /q */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDB },
-  /* DC /q */ { BxGroupFP, BX_IA_ERROR, BxOpcodeInfo_FPGroupDC },
-  /* DD /q */ { BxGroupFP, BX_IA_ERROR, BxOpcodeInfo_FPGroupDD },
-  /* DE /q */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDE },
-  /* DF /q */ { BxFPEscape, BX_IA_ERROR, BxOpcodeInfo_FloatingPointDF },
+  /* D8 /q */ { 0, BX_IA_ERROR },   // FPESCAPE
+  /* D9 /q */ { 0, BX_IA_ERROR },   // FPESCAPE
+  /* DA /q */ { 0, BX_IA_ERROR },   // FPESCAPE
+  /* DB /q */ { 0, BX_IA_ERROR },   // FPESCAPE
+  /* DC /q */ { 0, BX_IA_ERROR },   // FPESCAPE
+  /* DD /q */ { 0, BX_IA_ERROR },   // FPESCAPE
+  /* DE /q */ { 0, BX_IA_ERROR },   // FPESCAPE
+  /* DF /q */ { 0, BX_IA_ERROR },   // FPESCAPE
   /* E0 /q */ { BxImmediate_BrOff8, BX_IA_LOOPNE_Op64_Jb },
   /* E1 /q */ { BxImmediate_BrOff8, BX_IA_LOOPE_Op64_Jb },
   /* E2 /q */ { BxImmediate_BrOff8, BX_IA_LOOP_Op64_Jb },
@@ -1695,7 +2178,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
 };
 
 #if BX_SUPPORT_AVX
-int decoder_vex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix)
+int decoder_vex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, const void *opcode_table)
 {
   unsigned rex_r = 0, rex_x = 0, rex_b = 0;
   unsigned rm = 0, mod = 0, nnn = 0;
@@ -1807,7 +2290,7 @@ int decoder_vex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
       }
     }
     else {
-      BX_PANIC(("fetchdecode: EVEX with imm_mode = %u", imm_mode));
+      BX_PANIC(("decoder_vex64: VEX with imm_mode = %u", imm_mode));
     }
   }
 
@@ -1832,7 +2315,7 @@ int decoder_vex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
 }
 
 #if BX_SUPPORT_EVEX
-int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix)
+int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, const void *opcode_table)
 {
   unsigned rex_r = 0, rex_x = 0, rex_b = 0;
   unsigned rm = 0, mod = 0, nnn = 0;
@@ -1847,6 +2330,7 @@ int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
 
   // EVEX prefix 0x62
   assert(b1 == 0x62);
+
   if (sse_prefix | rex_prefix)
     return(ia_opcode);
 
@@ -1948,7 +2432,7 @@ int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
       }
     }
     else {
-      BX_PANIC(("fetchdecode: EVEX with imm_mode = %u", imm_mode));
+      BX_PANIC(("decoder_evex64: EVEX with imm_mode = %u", imm_mode));
     }
   }
 
@@ -1977,7 +2461,7 @@ int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
 }
 #endif
 
-int decoder_xop64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix)
+int decoder_xop64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, const void *opcode_table)
 {
   unsigned rex_r = 0, rex_x = 0, rex_b = 0;
   unsigned rm = 0, mod = 0, nnn = 0;
@@ -1990,7 +2474,10 @@ int decoder_xop64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
     offset = 0;
 
   // 3 byte XOP prefix
-  assert(b1 == 0x8f && (*iptr & 0x08) == 0x08);
+  assert(b1 == 0x8f);
+
+  if ((*iptr & 0x08) != 0x08)
+    return decoder_modrm64(iptr, remain, i, b1, sse_prefix, rex_prefix, opcode_table);
 
   if (sse_prefix | rex_prefix)
     return(ia_opcode);
@@ -2079,7 +2566,7 @@ int decoder_xop64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
         }
         break;
       default:
-        BX_PANIC(("fetchdecode: XOP with imm_mode = %u", imm_mode));
+        BX_PANIC(("decoder_xop64: XOP with imm_mode = %u", imm_mode));
         break;
     }
   }
@@ -2106,7 +2593,61 @@ int decoder_xop64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
 
 #endif
 
-int decoder64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix)
+int decoder_ud64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, const void *opcode_table)
+{
+  return BX_IA_ERROR;
+}
+
+int decoder64_fp_escape(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, const void *opcode_table)
+{
+  unsigned rex_r = 0, rex_x = 0, rex_b = 0;
+  unsigned rm = 0, mod = 0, nnn = 0;
+  unsigned b2 = 0;
+  int ia_opcode = BX_IA_ERROR;
+
+  assert(b1 >= 0xd8 && b1 <= 0xdf);
+
+  if (rex_prefix) {
+    rex_r = ((rex_prefix & 0x4) << 1);
+    rex_x = ((rex_prefix & 0x2) << 2);
+    rex_b = ((rex_prefix & 0x1) << 3);
+  }
+
+  // opcode requires modrm byte
+  if (remain == 0)
+    return(-1);
+  remain--;
+  b2 = *iptr++;
+
+  // Parse mod-nnn-rm and related bytes
+  mod = b2 & 0xc0; // leave unshifted
+  nnn = ((b2 >> 3) & 0x7) | rex_r;
+  rm  = (b2 & 0x7) | rex_b;
+
+  i->setFoo((b2 | (b1 << 8)) & 0x7ff); /* for x87 */
+
+  if (mod == 0xc0) { // mod == 11b
+    i->assertModC0();
+  }
+  else {
+    iptr = decodeModrm64(iptr, remain, i, mod, nnn, rm, rex_r, rex_x, rex_b);
+    if (! iptr) 
+      return(-1);
+  }
+
+  Bit16u *opcodes = (Bit16u *) opcode_table;
+  if (mod != 0xc0)
+    ia_opcode = opcodes[nnn];
+  else
+    ia_opcode = opcodes[(b2 & 0x3f) + 8];
+
+  if (! assign_srcs(i, ia_opcode, nnn, rm))
+    ia_opcode = BX_IA_ERROR;
+
+  return ia_opcode;
+}
+
+int decoder_modrm64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, const void *opcode_table)
 {
   unsigned offset = 512, rex_r = 0, rex_x = 0, rex_b = 0;
   unsigned rm = 0, mod = 0, nnn = 0;
@@ -2129,209 +2670,115 @@ int decoder64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned 
   const BxOpcodeInfo_t *OpcodeInfoPtr = &(BxOpcodeInfo64[index]);
   Bit16u attr = OpcodeInfoPtr->Attr;
 
-  bx_bool has_modrm = 0;
-
-#if BX_SUPPORT_AVX
-  if ((b1 & ~0x1) == 0xc4) {
-    // VEX
-    return decoder_vex64(iptr, remain, i, b1, sse_prefix, rex_prefix);
-  }
-#if BX_SUPPORT_EVEX
-  else if (b1 == 0x62) {
-    // EVEX
-    return decoder_evex64(iptr, remain, i, b1, sse_prefix, rex_prefix);
-  }
-#endif
-  else if (b1 == 0x8f && (*iptr & 0x08) == 0x08) {
-    // 3 byte XOP prefix
-    return decoder_xop64(iptr, remain, i, b1, sse_prefix, rex_prefix);
-  }
-  else
-#endif
-  {
-    has_modrm = BxOpcodeHasModrm64[b1];
-  }
-
-  if (has_modrm) {
-
-    // handle 3-byte escape
-    if (b1 == 0x138 || b1 == 0x13a) {
-      if (remain != 0) {
-        remain--;
-        unsigned b3 = *iptr++;
-        OpcodeInfoPtr = &OpcodeInfoPtr->AnotherArray[b3];
-      }
-      else
-        return(-1);
+  // handle 3-byte escape
+  if (b1 == 0x138 || b1 == 0x13a) {
+    if (remain != 0) {
+      remain--;
+      unsigned b3 = *iptr++;
+      OpcodeInfoPtr = &OpcodeInfoPtr->AnotherArray[b3];
     }
-
-    // opcode requires modrm byte
-    if (remain == 0)
+    else
       return(-1);
-    remain--;
-    b2 = *iptr++;
+  }
 
-    // Parse mod-nnn-rm and related bytes
-    mod = b2 & 0xc0;
-    nnn = ((b2 >> 3) & 0x7) | rex_r;
-    rm  = (b2 & 0x7) | rex_b;
+  // opcode requires modrm byte
+  if (remain == 0)
+    return(-1);
+  remain--;
+  b2 = *iptr++;
 
-    if (b1 >= 0xd8 && b1 <= 0xdf)
-      i->setFoo((b2 | (b1 << 8)) & 0x7ff); /* for x87 */
+  // Parse mod-nnn-rm and related bytes
+  mod = b2 & 0xc0;
+  nnn = ((b2 >> 3) & 0x7) | rex_r;
+  rm  = (b2 & 0x7) | rex_b;
 
-    // MOVs with CRx and DRx always use register ops and ignore the mod field.
-    if ((b1 & ~3) == 0x120)
-      mod = 0xc0;
+  // MOVs with CRx and DRx always use register ops and ignore the mod field.
+  if ((b1 & ~3) == 0x120)
+    mod = 0xc0;
 
-    if (mod == 0xc0) { // mod == 11b
-      i->assertModC0();
-    }
-    else {
-      iptr = decodeModrm64(iptr, remain, i, mod, nnn, rm, rex_r, rex_x, rex_b);
-      if (! iptr) 
-        return(-1);
-    }
-
-    ia_opcode = WalkOpcodeTables(OpcodeInfoPtr, attr, BX_TRUE, b2, sse_prefix, offset >> 9, i->getVL(), 0);
+  if (mod == 0xc0) { // mod == 11b
+    i->assertModC0();
   }
   else {
-    // Opcode does not require a MODRM byte.
-    // Note that a 2-byte opcode (0F XX) will jump to before
-    // the if() above after fetching the 2nd byte, so this path is
-    // taken in all cases if a modrm byte is NOT required.
-
-    unsigned group = attr & BxGroupX;
-    if (group == BxPrefixSSE && sse_prefix)
-      OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix-1]);
-
-    ia_opcode = OpcodeInfoPtr->IA;
-    rm = (b1 & 7) | rex_b;
-    nnn = (b1 >> 3) & 7;
-    i->assertModC0();
-
-    if (b1 == 0x90) {
-      if (sse_prefix == SSE_PREFIX_F3)
-        ia_opcode = BX_IA_PAUSE;
-      else if (! rex_b)
-        ia_opcode = BX_IA_NOP;
-    }
+    iptr = decodeModrm64(iptr, remain, i, mod, nnn, rm, rex_r, rex_x, rex_b);
+    if (! iptr) 
+      return(-1);
   }
+
+  ia_opcode = WalkOpcodeTables(OpcodeInfoPtr, attr, BX_TRUE, b2, sse_prefix, offset >> 9, i->getVL(), 0);
 
   unsigned imm_mode = attr & BxImmediate;
-  if (imm_mode) {
-    // make sure iptr was advanced after Ib(), Iw() and Id()
-    switch (imm_mode) {
-      case BxImmediate_I1:
-        i->modRMForm.Ib[0] = 1;
-        break;
-      case BxImmediate_Ib:
-        if (remain != 0) {
-          i->modRMForm.Ib[0] = *iptr++;
-          remain--;
-        }
-        else {
-          return(-1);
-        }
-        break;
-      case BxImmediate_Ib_SE: // Sign extend to OS size
-        if (remain != 0) {
-          Bit8s temp8s = *iptr;
-          // this code works correctly both for LE and BE hosts
-          if (i->os32L())
-            i->modRMForm.Id    = (Bit32s) temp8s;
-          else
-            i->modRMForm.Iw[0] = (Bit16s) temp8s;
-          remain--;
-        }
-        else {
-          return(-1);
-        }
-        break;
-      case BxImmediate_BrOff8:
-        if (remain != 0) {
-          Bit8s temp8s = *iptr;
-          i->modRMForm.Id = (Bit32s) temp8s;
-          remain--;
-        }
-        else {
-          return(-1);
-        }
-        break;
-      case BxImmediate_Iw:
-        if (remain > 1) {
-          i->modRMForm.Iw[0] = FetchWORD(iptr);
-          iptr += 2;
-          remain -= 2;
-        }
-        else {
-          return(-1);
-        }
-        break;
-      case BxImmediate_Id:
-        if (remain > 3) {
-          i->modRMForm.Id = FetchDWORD(iptr);
-          iptr += 4;
-          remain -= 4;
-        }
-        else {
-          return(-1);
-        }
-        break;
-      case BxImmediate_Iq: // MOV Rx,imm64
-        if (remain > 7) {
-          i->IqForm.Iq = FetchQWORD(iptr);
-          remain -= 8;
-        }
-        else {
-          return(-1);
-        }
-        break;
-      case BxImmediate_O:
-        // For instructions which embed the address in the opcode.
-        // There is only 64/32-bit addressing available in long64 mode.
-        if (i->as64L()) {
-          if (remain > 7) {
-            i->IqForm.Iq = FetchQWORD(iptr);
-            remain -= 8;
-          }
-          else return(-1);
-        }
-        else { // as32
-          if (remain > 3) {
-            i->IqForm.Iq = (Bit64u) FetchDWORD(iptr);
-            remain -= 4;
-          }
-          else return(-1);
-        }
-        break;
-      default:
-        BX_INFO(("b1 was %x", b1));
-        BX_PANIC(("fetchdecode64: imm_mode = %u", imm_mode));
-        break;
-    }
-
-    unsigned imm_mode2 = attr & BxImmediate2;
-    if (imm_mode2) {
-      if (imm_mode2 == BxImmediate_Ib2) {
-        if (remain != 0) {
-          i->modRMForm.Ib2[0] = *iptr;
-          remain--;
-        }
-        else {
-          return(-1);
-        }
-      }
-      else {
-        BX_INFO(("b1 was %x", b1));
-        BX_PANIC(("fetchdecode64: imm_mode2 = %u", imm_mode2));
-      }
-    }
-  }
+  if (decodeImmediate64(iptr, remain, i, imm_mode, 0 /* imm_mode2 only when there is no modrm */) < 0)
+    return (-1);
 
 #if BX_SUPPORT_3DNOW
   if(b1 == 0x10f)
     ia_opcode = Bx3DNowOpcode[i->modRMForm.Ib[0]];
 #endif
+
+  if (! assign_srcs(i, ia_opcode, nnn, rm))
+    ia_opcode = BX_IA_ERROR;
+
+  return ia_opcode;
+}
+
+int decoder64_nop(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, const void *opcode_table)
+{
+  assert(b1 == 0x90);
+
+  unsigned rex_b = ((rex_prefix & 0x1) << 3);
+  if (rex_b) {
+    return decoder64(iptr, remain, i, b1, sse_prefix, rex_prefix, opcode_table);
+  }
+  else {
+    i->assertModC0();
+
+    if (sse_prefix == SSE_PREFIX_F3)
+      return BX_IA_PAUSE;
+    else
+      return BX_IA_NOP;
+  }
+}
+
+int decoder64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, const void *opcode_table)
+{
+  unsigned offset = 512, rex_b = 0;
+  unsigned rm = 0, nnn = 0;
+  int ia_opcode = BX_IA_ERROR;
+
+  if (! i->os32L())
+    offset = 0;
+
+  if (rex_prefix) {
+    if (rex_prefix & 0x8) {
+      offset = 512*2;
+    }
+    rex_b = ((rex_prefix & 0x1) << 3);
+  }
+
+  unsigned index = b1+offset;
+  const BxOpcodeInfo_t *OpcodeInfoPtr = &(BxOpcodeInfo64[index]);
+  Bit16u attr = OpcodeInfoPtr->Attr;
+
+  // Opcode does not require a MODRM byte.
+  // Note that a 2-byte opcode (0F XX) will jump to before
+  // the if() above after fetching the 2nd byte, so this path is
+  // taken in all cases if a modrm byte is NOT required.
+
+  unsigned group = attr & BxGroupX;
+  if (group == BxPrefixSSE && sse_prefix)
+    OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix-1]);
+
+  ia_opcode = OpcodeInfoPtr->IA;
+  rm = (b1 & 7) | rex_b;
+  nnn = (b1 >> 3) & 7;
+  i->assertModC0();
+
+  unsigned imm_mode  = attr & BxImmediate,
+           imm_mode2 = attr & BxImmediate2;
+
+  if (decodeImmediate64(iptr, remain, i, imm_mode, imm_mode2) < 0)
+    return (-1);
 
   if (! assign_srcs(i, ia_opcode, nnn, rm))
     ia_opcode = BX_IA_ERROR;
@@ -2423,6 +2870,121 @@ modrm_done:
 
   i->setSeg(seg);
   return iptr;  
+}
+
+int decodeImmediate64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned imm_mode, unsigned imm_mode2)
+{
+  if (imm_mode) {
+    // make sure iptr was advanced after Ib(), Iw() and Id()
+    switch (imm_mode) {
+      case BxImmediate_I1:
+        i->modRMForm.Ib[0] = 1;
+        break;
+      case BxImmediate_Ib:
+        if (remain != 0) {
+          i->modRMForm.Ib[0] = *iptr++;
+          remain--;
+        }
+        else {
+          return(-1);
+        }
+        break;
+      case BxImmediate_Ib_SE: // Sign extend to OS size
+        if (remain != 0) {
+          Bit8s temp8s = *iptr++;
+          // this code works correctly both for LE and BE hosts
+          if (i->os32L())
+            i->modRMForm.Id    = (Bit32s) temp8s;
+          else
+            i->modRMForm.Iw[0] = (Bit16s) temp8s;
+          remain--;
+        }
+        else {
+          return(-1);
+        }
+        break;
+      case BxImmediate_BrOff8:
+        if (remain != 0) {
+          Bit8s temp8s = *iptr++;
+          i->modRMForm.Id = (Bit32s) temp8s;
+          remain--;
+        }
+        else {
+          return(-1);
+        }
+        break;
+      case BxImmediate_Iw:
+        if (remain > 1) {
+          i->modRMForm.Iw[0] = FetchWORD(iptr);
+          iptr += 2;
+          remain -= 2;
+        }
+        else {
+          return(-1);
+        }
+        break;
+      case BxImmediate_Id:
+        if (remain > 3) {
+          i->modRMForm.Id = FetchDWORD(iptr);
+          iptr += 4;
+          remain -= 4;
+        }
+        else {
+          return(-1);
+        }
+        break;
+      case BxImmediate_Iq: // MOV Rx,imm64
+        if (remain > 7) {
+          i->IqForm.Iq = FetchQWORD(iptr);
+          iptr += 8;
+          remain -= 8;
+        }
+        else {
+          return(-1);
+        }
+        break;
+      case BxImmediate_O:
+        // For instructions which embed the address in the opcode.
+        // There is only 64/32-bit addressing available in long64 mode.
+        if (i->as64L()) {
+          if (remain > 7) {
+            i->IqForm.Iq = FetchQWORD(iptr);
+            iptr += 8;
+            remain -= 8;
+          }
+          else return(-1);
+        }
+        else { // as32
+          if (remain > 3) {
+            i->IqForm.Iq = (Bit64u) FetchDWORD(iptr);
+            iptr += 4;
+            remain -= 4;
+          }
+          else return(-1);
+        }
+        break;
+      default:
+        BX_PANIC(("decoder64: imm_mode = %u", imm_mode));
+        break;
+    }
+
+    if (imm_mode2) {
+      if (imm_mode2 == BxImmediate_Ib2) {
+        if (remain != 0) {
+          i->modRMForm.Ib2[0] = *iptr;
+          remain--;
+        }
+        else {
+          return(-1);
+        }
+      }
+      else {
+        BX_PANIC(("decoder64: imm_mode2 = %u", imm_mode2));
+      }
+    }
+  }
+
+  return 0;
 }
 
 int fetchDecode64(const Bit8u *iptr, Bit32u fetchModeMask, bx_bool handle_lock_cr0, bxInstruction_c *i, unsigned remainingInPage)
@@ -2540,7 +3102,8 @@ fetch_b1:
 
   i->modRMForm.Id = 0;
 
-  ia_opcode = decoder64(iptr, remain, i, b1, sse_prefix, rex_prefix);
+  BxOpcodeDecodeDescriptor64 *decode_descriptor = &decode64_descriptor[b1];
+  ia_opcode = decode_descriptor->decode_method(iptr, remain, i, b1, sse_prefix, rex_prefix, decode_descriptor->opcode_table);
   if (ia_opcode < 0)
     return(-1);
 

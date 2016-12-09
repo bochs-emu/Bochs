@@ -34,12 +34,6 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_ERR[3] = {
   /* F2 */ { 0, BX_IA_ERROR }
 };
 
-static const BxOpcodeInfo_t BxOpcodeGroupSSE_PAUSE[3] = {
-  /* 66 */ { 0, BX_IA_NOP },
-  /* F3 */ { 0, BX_IA_PAUSE },
-  /* F2 */ { 0, BX_IA_NOP }
-};
-
 static const BxOpcodeInfo_t BxOpcodeInfoG17A[8] = {
   /* 0 */ { BxImmediate_Ib | BxImmediate_Ib2, BX_IA_EXTRQ_UdqIbIb },
   /* 1 */ { 0, BX_IA_ERROR },
