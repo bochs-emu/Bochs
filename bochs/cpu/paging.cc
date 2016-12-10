@@ -1823,6 +1823,13 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
       ppf += (bx_phy_address)(guest_paddr & offset_mask);
       break;
     }
+
+    // EPT non leaf entry, check for reserved bits
+    if ((curr_entry >> 3) & 0xf) {
+      BX_DEBUG(("EPT %s: EPT misconfiguration, reserved bits set for non-leaf entry", bx_paging_level[leaf]));
+      vmexit_reason = VMX_VMEXIT_EPT_MISCONFIGURATION;
+      break;
+    }
   }
 
   if (!vmexit_reason && (access_mask & combined_access) != access_mask) {
