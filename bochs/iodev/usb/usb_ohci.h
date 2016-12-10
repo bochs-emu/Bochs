@@ -33,6 +33,12 @@
 
 #define USB_OHCI_PORTS 2
 
+// HCFS values
+#define  OHCI_USB_RESET       0x00
+#define  OHCI_USB_RESUME      0x01
+#define  OHCI_USB_OPERATIONAL 0x02
+#define  OHCI_USB_SUSPEND     0x03
+
 #define OHCI_INTR_SO          (1<<0) // Scheduling overrun
 #define OHCI_INTR_WD          (1<<1) // HcDoneHead writeback
 #define OHCI_INTR_SF          (1<<2) // Start of frame
@@ -253,7 +259,7 @@ public:
   virtual Bit32u  pci_read_handler(Bit8u address, unsigned io_len);
   virtual void    pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 
-  void async_complete_packet(USBPacket *packet);
+  void event_handler(int event, USBPacket *packet, int port);
 
   static const char *usb_param_handler(bx_param_string_c *param, int set,
                                        const char *oldval, const char *val, int maxlen);

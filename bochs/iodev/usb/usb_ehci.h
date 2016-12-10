@@ -333,7 +333,7 @@ public:
   virtual Bit32u  pci_read_handler(Bit8u address, unsigned io_len);
   virtual void    pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 
-  void async_complete_packet(USBPacket *packet);
+  void event_handler(int event, USBPacket *packet, int port);
 
   static const char *usb_param_handler(bx_param_string_c *param, int set,
                                        const char *oldval, const char *val, int maxlen);

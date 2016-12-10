@@ -120,7 +120,10 @@
 
 typedef struct USBPacket USBPacket;
 
-typedef void USBCallback(USBPacket *packet, void *dev);
+#define USB_EVENT_WAKEUP 0
+#define USB_EVENT_ASYNC  1
+
+typedef void USBCallback(int event, USBPacket *packet, void *dev, int port);
 
 class usb_device_c;
 
@@ -191,6 +194,12 @@ public:
   void set_speed(int speed) {d.speed = speed;}
   Bit8u get_address() {return d.addr;}
   void set_async_mode(bx_bool async) {d.async_mode = async;}
+  void set_event_handler(void *dev, USBCallback *cb, int port)
+  {
+    d.event.dev = dev;
+    d.event.cb = cb;
+    d.event.port = port;
+  }
   void set_debug_mode();
 
   void usb_send_msg(int msg);
@@ -222,6 +231,11 @@ protected:
     int setup_index;
     bx_bool stall;
     bx_bool async_mode;
+    struct {
+      USBCallback *cb;
+      void *dev;
+      int port;
+    } event;
     bx_list_c *sr;
   } d;
 
@@ -262,7 +276,7 @@ static BX_CPP_INLINE void usb_cancel_packet(USBPacket *p)
 
 static BX_CPP_INLINE void usb_packet_complete(USBPacket *p)
 {
-    p->complete_cb(p, p->complete_dev);
+    p->complete_cb(USB_EVENT_ASYNC, p, p->complete_dev, 0);
 }
 
 // Async packet support

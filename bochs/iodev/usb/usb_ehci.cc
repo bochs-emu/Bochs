@@ -123,6 +123,8 @@ static inline struct EHCIPacket *ehci_container_of_usb_packet(void *ptr)
     reinterpret_cast<size_t>(&(static_cast<struct EHCIPacket*>(0)->packet)));
 }
 
+void ehci_event_handler(int event, USBPacket *packet, void *dev, int port);
+
 // builtin configuration handling functions
 
 Bit32s usb_ehci_options_parser(const char *context, int num_params, char *params[])
@@ -583,11 +585,13 @@ void bx_usb_ehci_c::set_connect_status(Bit8u port, int type, bx_bool connected)
           if (!device->init()) {
             set_connect_status(port, type, 0);
             BX_ERROR(("port #%d: connect failed", port+1));
+            return;
           } else {
             BX_INFO(("port #%d: connect: %s", port+1, device->get_info()));
             device->set_async_mode(1);
           }
         }
+        device->set_event_handler(BX_EHCI_THIS_PTR, ehci_event_handler, port);
       } else { // not connected
         if (BX_EHCI_THIS hub.usb_port[port].portsc.po) {
           BX_EHCI_THIS uhci[port >> 1]->set_port_device(port & 1, NULL);
@@ -1258,26 +1262,35 @@ void bx_usb_ehci_c::finish_transfer(EHCIQueue *q, int status)
   }
 }
 
-void ehci_async_complete_packet(USBPacket *packet, void *dev)
+void ehci_event_handler(int event, USBPacket *packet, void *dev, int port)
 {
-  ((bx_usb_ehci_c*)dev)->async_complete_packet(packet);
+  ((bx_usb_ehci_c*)dev)->event_handler(event, packet, port);
 }
 
-void bx_usb_ehci_c::async_complete_packet(USBPacket *packet)
+void bx_usb_ehci_c::event_handler(int event, USBPacket *packet, int port)
 {
   EHCIPacket *p;
 
-  BX_DEBUG(("Experimental async packet completion"));
-  p = ehci_container_of_usb_packet(packet);
-  if (p->pid == USB_TOKEN_IN) {
-    BX_EHCI_THIS transfer(p);
-  }
-  BX_ASSERT(p->async == EHCI_ASYNC_INFLIGHT);
-  p->async = EHCI_ASYNC_FINISHED;
-  p->usb_status = packet->len;
+  if (event == USB_EVENT_ASYNC) {
+    BX_DEBUG(("Experimental async packet completion"));
+    p = ehci_container_of_usb_packet(packet);
+    if (p->pid == USB_TOKEN_IN) {
+      BX_EHCI_THIS transfer(p);
+    }
+    BX_ASSERT(p->async == EHCI_ASYNC_INFLIGHT);
+    p->async = EHCI_ASYNC_FINISHED;
+    p->usb_status = packet->len;
 
-  if (p->queue->async) {
-    BX_EHCI_THIS advance_async_state();
+    if (p->queue->async) {
+      BX_EHCI_THIS advance_async_state();
+    }
+  } else if (event == USB_EVENT_WAKEUP) {
+    if (BX_EHCI_THIS hub.usb_port[port].portsc.sus) {
+      BX_EHCI_THIS hub.usb_port[port].portsc.fpr = 1;
+      raise_irq(USBSTS_PCD);
+    }
+  } else {
+    BX_ERROR(("unknown/unsupported event (id=%d) on port #%d", event, port+1));
   }
 }
 
@@ -1388,7 +1401,7 @@ int bx_usb_ehci_c::execute(EHCIPacket *p)
     p->packet.pid = p->pid;
     p->packet.devaddr = p->queue->dev->get_address();
     p->packet.devep = endp;
-    p->packet.complete_cb = ehci_async_complete_packet;
+    p->packet.complete_cb = ehci_event_handler;
     p->packet.complete_dev = BX_EHCI_THIS_PTR;
 
     p->async = EHCI_ASYNC_INITIALIZED;

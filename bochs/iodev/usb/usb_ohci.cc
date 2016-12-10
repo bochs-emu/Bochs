@@ -271,7 +271,7 @@ void bx_usb_ohci_c::reset_hc()
   BX_OHCI_THIS hub.op_regs.HcControl.rwe       =          0;
   BX_OHCI_THIS hub.op_regs.HcControl.rwc       =          0;
   BX_OHCI_THIS hub.op_regs.HcControl.ir        =          0;
-  BX_OHCI_THIS hub.op_regs.HcControl.hcfs      =          0;
+  BX_OHCI_THIS hub.op_regs.HcControl.hcfs      =          OHCI_USB_RESET;
   BX_OHCI_THIS hub.op_regs.HcControl.ble       =          0;
   BX_OHCI_THIS hub.op_regs.HcControl.cle       =          0;
   BX_OHCI_THIS hub.op_regs.HcControl.ie        =          0;
@@ -755,9 +755,9 @@ bx_bool bx_usb_ohci_c::write_handler(bx_phy_address addr, unsigned len, void *da
       BX_OHCI_THIS hub.op_regs.HcControl.ie       = (value & (1<< 3)) ? 1 : 0;
       BX_OHCI_THIS hub.op_regs.HcControl.ple      = (value & (1<< 2)) ? 1 : 0;
       BX_OHCI_THIS hub.op_regs.HcControl.cbsr     = (value & (3<< 0)) >>  0;
-      if (BX_OHCI_THIS hub.op_regs.HcControl.hcfs == 0x02) {
+      if (BX_OHCI_THIS hub.op_regs.HcControl.hcfs == OHCI_USB_OPERATIONAL) {
         BX_OHCI_THIS hub.op_regs.HcFmRemainingToggle = 0;
-        if (org_state != 2)
+        if (org_state != OHCI_USB_OPERATIONAL)
           BX_OHCI_THIS hub.use_control_head = BX_OHCI_THIS hub.use_bulk_head = 1;
       }
       break;
@@ -773,7 +773,7 @@ bx_bool bx_usb_ohci_c::write_handler(bx_phy_address addr, unsigned len, void *da
       if (value & (1<< 0)) {
         BX_OHCI_THIS hub.op_regs.HcCommandStatus.hcr = 1;
         BX_OHCI_THIS reset_hc();
-        BX_OHCI_THIS hub.op_regs.HcControl.hcfs = 3;      // suspend state
+        BX_OHCI_THIS hub.op_regs.HcControl.hcfs = OHCI_USB_SUSPEND;
         for (unsigned i=0; i<USB_OHCI_PORTS; i++)
           if (BX_OHCI_THIS hub.usb_port[i].HcRhPortStatus.ccs && (BX_OHCI_THIS hub.usb_port[i].device != NULL))
             DEV_usb_send_msg(BX_OHCI_THIS hub.usb_port[i].device, USB_MSG_RESET);
@@ -1014,7 +1014,7 @@ Bit32u bx_usb_ohci_c::get_frame_remaining(void)
   Bit16u bit_time, fr;
 
   bit_time = (Bit16u)((bx_pc_system.time_usec() - BX_OHCI_THIS hub.sof_time) * 12);
-  if ((BX_OHCI_THIS hub.op_regs.HcControl.hcfs != 2) ||
+  if ((BX_OHCI_THIS hub.op_regs.HcControl.hcfs != OHCI_USB_OPERATIONAL) ||
       (bit_time > BX_OHCI_THIS hub.op_regs.HcFmInterval.fi)) {
     fr = 0;
   } else {
@@ -1036,7 +1036,7 @@ void bx_usb_ohci_c::usb_frame_timer(void)
   Bit32u address, ed_address;
   Bit16u zero = 0;
 
-  if (BX_OHCI_THIS hub.op_regs.HcControl.hcfs == 2) {
+  if (BX_OHCI_THIS hub.op_regs.HcControl.hcfs == OHCI_USB_OPERATIONAL) {
     // set remaining to the interval amount.
     BX_OHCI_THIS hub.op_regs.HcFmRemainingToggle = BX_OHCI_THIS hub.op_regs.HcFmInterval.fit;
     BX_OHCI_THIS hub.sof_time = bx_pc_system.time_usec();
@@ -1188,17 +1188,34 @@ bx_bool bx_usb_ohci_c::process_ed(struct OHCI_ED *ed, const Bit32u ed_address)
   return ret;
 }
 
-void ohci_async_complete_packet(USBPacket *packet, void *dev)
+void ohci_event_handler(int event, USBPacket *packet, void *dev, int port)
 {
-  ((bx_usb_ohci_c*)dev)->async_complete_packet(packet);
+  ((bx_usb_ohci_c*)dev)->event_handler(event, packet, port);
 }
 
-void bx_usb_ohci_c::async_complete_packet(USBPacket *packet)
+void bx_usb_ohci_c::event_handler(int event, USBPacket *packet, int port)
 {
-  BX_DEBUG(("Async packet completion"));
-  USBAsync *p = container_of_usb_packet(packet);
-  p->done = 1;
-  BX_OHCI_THIS process_lists();
+  Bit32u intr = 0;
+
+  if (event == USB_EVENT_ASYNC) {
+    BX_DEBUG(("Async packet completion"));
+    USBAsync *p = container_of_usb_packet(packet);
+    p->done = 1;
+    BX_OHCI_THIS process_lists();
+  } else if (event == USB_EVENT_WAKEUP) {
+    if (BX_OHCI_THIS hub.usb_port[port].HcRhPortStatus.pss) {
+      BX_OHCI_THIS hub.usb_port[port].HcRhPortStatus.pss = 0;
+      BX_OHCI_THIS hub.usb_port[port].HcRhPortStatus.pssc = 1;
+      intr = OHCI_INTR_RHSC;
+    }
+    if (BX_OHCI_THIS hub.op_regs.HcControl.hcfs == OHCI_USB_SUSPEND) {
+      BX_OHCI_THIS hub.op_regs.HcControl.hcfs = OHCI_USB_RESUME;
+      intr = OHCI_INTR_RD;
+    }
+    set_interrupt(intr);
+  } else {
+    BX_ERROR(("unknown/unsupported event (id=%d) on port #%d", event, port+1));
+  }
 }
 
 bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
@@ -1266,7 +1283,7 @@ bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
     p->packet.pid = pid;
     p->packet.devaddr = ED_GET_FA(ed);
     p->packet.devep = ED_GET_EN(ed);
-    p->packet.complete_cb = ohci_async_complete_packet;
+    p->packet.complete_cb = ohci_event_handler;
     p->packet.complete_dev = this;
 
     BX_DEBUG(("    pid = %s  addr = %i   endpnt = %i    len = %i  mps = %i (td->cbp = 0x%08X, td->be = 0x%08X)", 
@@ -1526,11 +1543,13 @@ void bx_usb_ohci_c::usb_set_connect_status(Bit8u port, int type, bx_bool connect
           if (!device->init()) {
             usb_set_connect_status(port, type, 0);
             BX_ERROR(("port #%d: connect failed", port+1));
+            return;
           } else {
             BX_INFO(("port #%d: connect: %s", port+1, device->get_info()));
             device->set_async_mode(1);
           }
         }
+        device->set_event_handler(BX_OHCI_THIS_PTR, ohci_event_handler, port);
       } else { // not connected
         BX_OHCI_THIS hub.usb_port[port].HcRhPortStatus.ccs = 0;
         BX_OHCI_THIS hub.usb_port[port].HcRhPortStatus.pes = 0;

@@ -738,16 +738,33 @@ void bx_uhci_core_c::uhci_timer(void)
   //    However, since we don't do anything, let's not.
 }
 
-void uhci_async_complete_packet(USBPacket *packet, void *dev)
+void uhci_event_handler(int event, USBPacket *packet, void *dev, int port)
 {
-  ((bx_uhci_core_c*)dev)->async_complete_packet(packet);
+  ((bx_uhci_core_c*)dev)->event_handler(event, packet, port);
 }
 
-void bx_uhci_core_c::async_complete_packet(USBPacket *packet)
+void bx_uhci_core_c::event_handler(int event, USBPacket *packet, int port)
 {
-  BX_DEBUG(("Experimental async packet completion"));
-  USBAsync *p = container_of_usb_packet(packet);
-  p->done = 1;
+  if (event == USB_EVENT_ASYNC) {
+    BX_DEBUG(("Experimental async packet completion"));
+    USBAsync *p = container_of_usb_packet(packet);
+    p->done = 1;
+  } else if (event == USB_EVENT_WAKEUP) {
+    if (hub.usb_port[port].suspend && !hub.usb_port[port].resume) {
+      hub.usb_port[port].resume = 1;
+    }
+    // if in suspend state, signal resume
+    if (hub.usb_command.suspend) {
+      hub.usb_command.resume = 1;
+      hub.usb_status.resume = 1;
+      if (hub.usb_enable.resume) {
+        hub.usb_status.interrupt = 1;
+      }
+      update_irq();
+    }
+  } else {
+    BX_ERROR(("unknown/unsupported event (id=%d) on port #%d", event, port+1));
+  }
 }
 
 bx_bool bx_uhci_core_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td) {
@@ -795,7 +812,7 @@ bx_bool bx_uhci_core_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *
     p->packet.pid = pid;
     p->packet.devaddr = addr;
     p->packet.devep = endpt;
-    p->packet.complete_cb = uhci_async_complete_packet;
+    p->packet.complete_cb = uhci_event_handler;
     p->packet.complete_dev = this;
     switch (pid) {
       case USB_TOKEN_OUT:
@@ -1008,11 +1025,13 @@ void bx_uhci_core_c::set_connect_status(Bit8u port, int type, bx_bool connected)
           if (!device->init()) {
             set_connect_status(port, type, 0);
             BX_ERROR(("port #%d: connect failed", port+1));
+            return;
           } else {
             BX_INFO(("port #%d: connect: %s", port+1, device->get_info()));
             device->set_async_mode(1);
           }
         }
+        device->set_event_handler(this, uhci_event_handler, port);
       } else {
         hub.usb_port[port].status = 0;
         hub.usb_port[port].connect_changed = 1;

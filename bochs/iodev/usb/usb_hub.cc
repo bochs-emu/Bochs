@@ -570,7 +570,9 @@ void usb_hub_device_c::usb_set_connect_status(Bit8u port, int type, bx_bool conn
         hub.usb_port[port].PortChange |= PORT_STAT_C_CONNECTION;
         if (hub.usb_port[port].PortStatus & PORT_STAT_SUSPEND) {
           hub.usb_port[port].PortChange |= PORT_STAT_C_SUSPEND;
-          // TODO: signal resume to upstream port
+        }
+        if (d.event.dev != NULL) {
+          d.event.cb(USB_EVENT_WAKEUP, NULL, d.event.dev, d.event.port);
         }
         if (!device->get_connected()) {
           if (!device->init()) {
@@ -581,6 +583,9 @@ void usb_hub_device_c::usb_set_connect_status(Bit8u port, int type, bx_bool conn
           }
         }
       } else {
+        if (d.event.dev != NULL) {
+          d.event.cb(USB_EVENT_WAKEUP, NULL, d.event.dev, d.event.port);
+        }
         hub.usb_port[port].PortStatus &= ~PORT_STAT_CONNECTION;
         hub.usb_port[port].PortChange |= PORT_STAT_C_CONNECTION;
         if (hub.usb_port[port].PortStatus & PORT_STAT_ENABLE) {
