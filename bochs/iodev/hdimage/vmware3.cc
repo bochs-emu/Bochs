@@ -567,9 +567,10 @@ void vmware3_image_t::restore_state(const char *backup_fname)
     sprintf(tempfn, "%s%d", backup_fname, i);
     char *filename = generate_cow_name(pathname, i);
     ret &= hdimage_copy_file(tempfn, filename);
+    strcpy(tempfn, filename);
     delete [] filename;
     if (ret == 0) {
-      BX_PANIC(("Failed to restore vmware3 image '%s'", filename));
+      BX_PANIC(("Failed to restore vmware3 image '%s'", tempfn));
       break;
     }
   }
