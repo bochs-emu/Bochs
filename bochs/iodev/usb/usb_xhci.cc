@@ -1606,7 +1606,7 @@ bx_bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *da
       case 0x00:
         if (value & (1<<9)) {  // port power
           if (value & ((1<<30) | (1<<24) | (1<<3) | (1<<0)))
-            BX_ERROR(("Write to one or more Read-only bits in PORTSC[%i] Register (0x%08X)", port, value));
+            BX_DEBUG(("Write to one or more Read-only bits in PORTSC[%i] Register (0x%08X)", port, value));
           if (value & ((3<<28) | (1<<2)))
             BX_ERROR(("Write non-zero to a RsvdZ member of PORTSC[%i] Register", port));
           if (BX_XHCI_THIS hub.usb_port[port].is_usb3) {
@@ -1880,6 +1880,30 @@ bx_bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *da
     BX_ERROR(("register write to unknown offset 0x%08X:  0x%08X%08X (len=%i)", offset, (Bit32u) value_hi, (Bit32u) value, len));
 
   return 1;
+}
+
+void xhci_event_handler(int event, USBPacket *packet, void *dev, int port)
+{
+  ((bx_usb_xhci_c*)dev)->event_handler(event, packet, port);
+}
+
+void bx_usb_xhci_c::event_handler(int event, USBPacket *packet, int port)
+{
+  if (event == USB_EVENT_WAKEUP) {
+    if (BX_XHCI_THIS hub.usb_port[port].portsc.pls != PLS_U3_SUSPENDED) {
+      return;
+    }
+    BX_XHCI_THIS hub.usb_port[port].portsc.pls = PLS_RESUME;
+    if (!BX_XHCI_THIS hub.usb_port[port].portsc.plc) {
+      BX_XHCI_THIS hub.usb_port[port].portsc.plc = 1;
+      if (BX_XHCI_THIS hub.op_regs.HcStatus.hch) {
+        return;
+      }
+      write_event_TRB(0, ((port + 1) << 24), TRB_SET_COMP_CODE(1), TRB_SET_TYPE(PORT_STATUS_CHANGE), 1);
+    }
+  } else {
+    BX_ERROR(("unknown/unsupported event (id=%d) on port #%d", event, port+1));
+  }
 }
 
 // This function checks and processes all enqueued TRB's in the EP's transfer ring
@@ -3118,10 +3142,12 @@ void bx_usb_xhci_c::usb_set_connect_status(Bit8u port, int type, bx_bool connect
           if (!device->init()) {
             usb_set_connect_status(port, type, 0);
             BX_ERROR(("port #%d: connect failed", port+1));
+            return;
           } else {
             BX_INFO(("port #%d: connect: %s", port+1, device->get_info()));
           }
         }
+        device->set_event_handler(BX_XHCI_THIS_PTR, xhci_event_handler, port);
       } else { // not connected
         BX_XHCI_THIS hub.usb_port[port].portsc.ccs = 0;
         BX_XHCI_THIS hub.usb_port[port].portsc.ped = 0;
