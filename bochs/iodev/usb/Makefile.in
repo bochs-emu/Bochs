@@ -172,7 +172,8 @@ usb_ehci.o: usb_ehci.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
  ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
- ../../param_names.h
+ ../../param_names.h ../pci.h usb_common.h uhci_core.h ../../qemu-queue.h \
+ usb_ehci.h
 usb_hid.o: usb_hid.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
@@ -247,7 +248,8 @@ usb_ehci.lo: usb_ehci.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
  ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
- ../../param_names.h
+ ../../param_names.h ../pci.h usb_common.h uhci_core.h ../../qemu-queue.h \
+ usb_ehci.h
 usb_hid.lo: usb_hid.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
