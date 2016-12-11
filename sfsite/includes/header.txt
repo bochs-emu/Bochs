@@ -67,20 +67,20 @@ A.sidebar:hover {color: blue; text-decoration: underline}
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=New+Bochs+Documentation&url=http://bochs.sourceforge.net/doc/docbook/development/index.html" class="sidebar">Devel. Guide</a>
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=New+Bochs+Documentation&url=http://bochs.sourceforge.net/doc/docbook/documentation/index.html" class="sidebar">Doc. Guide</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/mailinglists.html" class="sidebar">Mailing Lists</a>
-<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://sourceforge.net/p/bochs/discussion/?source=navbar" class="sidebar">Discussion Boards</a>
-<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=SourceForge+Site+Docs&url=http://sourceforge.net/apps/trac/sourceforge/wiki/WikiStart" class="sidebar">SF Site Docs</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://sourceforge.net/p/bochs/discussion/" class="sidebar">Discussion Boards</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="https://sourceforge.net/p/forge/documentation/Docs Home" class="sidebar">SF Site Docs</a>
 
 <br><br><center><b>Feedback</b></center>
 
-<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Report+a+Bug&url=http://sourceforge.net/tracker/qmrkgroup_ideq12580ampatideq112580" class="sidebar">Bug Reports</a>
-<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Request+a+Feature&url=http://sourceforge.net/tracker/qmrkatideq362580ampgroup_ideq12580ampfunceqbrowse" class="sidebar">Feature Requests</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="https://sourceforge.net/p/bochs/bugs/" class="sidebar">Bug Reports</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="https://sourceforge.net/p/bochs/feature-requests/" class="sidebar">Feature Requests</a>
 
 
 <br><br><center><b>Development</b></center>
 
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/getinvolved.html" class="sidebar">Get Involved</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="https://sourceforge.net/p/bochs/code/HEAD/tree/" class="sidebar">View the Source</a>
-<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Patches&url=http://sourceforge.net/tracker/qmrkatideq312580ampgroup_ideq12580ampfunceqbrowse" class="sidebar">Patches</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="https://sourceforge.net/p/bochs/patches/" class="sidebar">Patches</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/techdata.html" class="sidebar">Tech Specs Pages</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=SVN+Access+Information&url=http://sourceforge.net/apps/trac/sourceforge/wiki/Subversion" class="sidebar">Subversion Access</a>
 
