@@ -3161,8 +3161,10 @@ void bx_usb_xhci_c::usb_set_connect_status(Bit8u port, int type, bx_bool connect
       BX_XHCI_THIS hub.usb_port[port].portsc.pec = 1;
 
     // we changed the value of the port, so show it
-    BX_INFO(("Port #%d Status Change Event.", port + 1));
-    write_event_TRB(0, ((port + 1) << 24), TRB_SET_COMP_CODE(1), TRB_SET_TYPE(PORT_STATUS_CHANGE), 1);
+    if (!BX_XHCI_THIS hub.op_regs.HcStatus.hch) {
+      BX_INFO(("Port #%d Status Change Event.", port + 1));
+      write_event_TRB(0, ((port + 1) << 24), TRB_SET_COMP_CODE(1), TRB_SET_TYPE(PORT_STATUS_CHANGE), 1);
+    }
   }
 }
 
