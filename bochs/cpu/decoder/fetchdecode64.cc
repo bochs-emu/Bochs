@@ -2177,13 +2177,14 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F FF /q */ { 0, BX_IA_ERROR }
 };
 
-#if BX_SUPPORT_AVX
 int decoder_vex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, const void *opcode_table)
 {
+  int ia_opcode = BX_IA_ERROR;
+
+#if BX_SUPPORT_AVX
   unsigned rex_r = 0, rex_x = 0, rex_b = 0;
   unsigned rm = 0, mod = 0, nnn = 0;
   unsigned b2 = 0;
-  int ia_opcode = BX_IA_ERROR;
 
   unsigned offset = 512; 
   if (! i->os32L())
@@ -2310,17 +2311,19 @@ int decoder_vex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
   else if ((attr & BxVexL1) != 0 && i->getVL() == BX_VL128) {
     ia_opcode = BX_IA_ERROR;
   }
+#endif
 
   return ia_opcode;
 }
 
-#if BX_SUPPORT_EVEX
 int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, const void *opcode_table)
 {
+  int ia_opcode = BX_IA_ERROR;
+
+#if BX_SUPPORT_EVEX
   unsigned rex_r = 0, rex_x = 0, rex_b = 0;
   unsigned rm = 0, mod = 0, nnn = 0;
   unsigned b2 = 0;
-  int ia_opcode = BX_IA_ERROR;
 
   bx_bool displ8 = BX_FALSE;
 
@@ -2456,28 +2459,30 @@ int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
   else if ((attr & BxVexL1) != 0 && i->getVL() == BX_VL128) {
     ia_opcode = BX_IA_ERROR;
   }
+#endif
 
   return ia_opcode;
 }
-#endif
 
 int decoder_xop64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, const void *opcode_table)
 {
-  unsigned rex_r = 0, rex_x = 0, rex_b = 0;
-  unsigned rm = 0, mod = 0, nnn = 0;
-  unsigned b2 = 0;
   int ia_opcode = BX_IA_ERROR;
-  bx_bool vex_w = 0;
-
-  unsigned offset = 512; 
-  if (! i->os32L())
-    offset = 0;
 
   // 3 byte XOP prefix
   assert(b1 == 0x8f);
 
   if ((*iptr & 0x08) != 0x08)
     return decoder_modrm64(iptr, remain, i, b1, sse_prefix, rex_prefix, opcode_table);
+
+#if BX_SUPPORT_AVX
+  unsigned rex_r = 0, rex_x = 0, rex_b = 0;
+  unsigned rm = 0, mod = 0, nnn = 0;
+  unsigned b2 = 0;
+  bx_bool vex_w = 0;
+
+  unsigned offset = 512; 
+  if (! i->os32L())
+    offset = 0;
 
   if (sse_prefix | rex_prefix)
     return(ia_opcode);
@@ -2587,11 +2592,10 @@ int decoder_xop64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
   else if ((attr & BxVexL1) != 0 && i->getVL() == BX_VL128) {
     ia_opcode = BX_IA_ERROR;
   }
+#endif
 
   return ia_opcode;
 }
-
-#endif
 
 int decoder_ud64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, const void *opcode_table)
 {
