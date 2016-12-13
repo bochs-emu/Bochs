@@ -8,7 +8,9 @@
  * terms and conditions of the copyright.
  */
 
+#ifndef _WIN32
 #include <dirent.h>
+#endif
 
 #include "slirp.h"
 #include "libslirp.h"
