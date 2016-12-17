@@ -92,6 +92,7 @@ void bx_uhci_core_c::init_uhci(Bit8u devfunc, Bit16u devid, Bit8u headt, Bit8u i
   for (int i=0; i<USB_UHCI_PORTS; i++) {
     hub.usb_port[i].device = NULL;
   }
+  packets = NULL;
 }
 
 void bx_uhci_core_c::reset_uhci(unsigned type)

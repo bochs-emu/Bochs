@@ -206,6 +206,7 @@ void bx_usb_ohci_c::init(void)
   // register handler for correct device connect handling after runtime config
   BX_OHCI_THIS hub.rt_conf_id = SIM->register_runtime_config_handler(BX_OHCI_THIS_PTR, runtime_config_handler);
   BX_OHCI_THIS hub.device_change = 0;
+  BX_OHCI_THIS packets = NULL;
 
   BX_INFO(("USB OHCI initialized"));
 }

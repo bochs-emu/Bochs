@@ -140,8 +140,11 @@ struct USBPacket {
 
 typedef struct USBAsync {
   USBPacket packet;
-  Bit32u    td_addr;
-  bx_bool   done;
+  Bit64u    td_addr;
+  union {
+    bx_bool done;
+    Bit16u  slot_ep;
+  };
   struct USBAsync *next;
 } USBAsync;
 
@@ -281,7 +284,7 @@ static BX_CPP_INLINE void usb_packet_complete(USBPacket *p)
 
 // Async packet support
 
-static BX_CPP_INLINE USBAsync* create_async_packet(USBAsync **base, Bit32u addr, int maxlen)
+static BX_CPP_INLINE USBAsync* create_async_packet(USBAsync **base, Bit64u addr, int maxlen)
 {
   USBAsync *p;
 
@@ -318,7 +321,7 @@ static BX_CPP_INLINE void remove_async_packet(USBAsync **base, USBAsync *p)
   delete p;
 }
 
-static BX_CPP_INLINE USBAsync* find_async_packet(USBAsync **base, Bit32u addr)
+static BX_CPP_INLINE USBAsync* find_async_packet(USBAsync **base, Bit64u addr)
 {
   USBAsync *p = *base;
 
