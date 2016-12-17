@@ -367,7 +367,11 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [2:2]    UMIP: Supports user-mode instruction prevention
 //   [3:3]    PKU: Protection keys for user-mode pages.
 //   [4:4]    OSPKE: OS has set CR4.PKE to enable protection keys
-//  [21:5]    reserved
+//  [13:5]    reserved
+// [14:14]    AVX512 VPOPCNTDQ: AVX512 VPOPCNTD/VPOPCNTQ instructions
+// [15:15]    reserved
+// [16:16]    LA57: LA57 and 5-level paging
+// [21:15]    reserved
 // [22:22]    RDPID: Read Processor ID support
 // [29:23]    reserved
 // [30:30]    SGX_LC: SGX Launch Configuration
@@ -378,6 +382,10 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT4_UMIP                   (1 <<  2)
 #define BX_CPUID_EXT4_PKU                    (1 <<  3)
 #define BX_CPUID_EXT4_OSPKE                  (1 <<  4)
+// ...
+#define BX_CPUID_EXT4_AVX512_VPOPCNTDQ       (1 << 14)
+#define BX_CPUID_EXT4_RESERVED15             (1 << 15)
+#define BX_CPUID_EXT4_LA57                   (1 << 16)
 // ...
 #define BX_CPUID_EXT4_RDPID                  (1 << 22)
 #define BX_CPUID_EXT4_RESERVED23             (1 << 23)
