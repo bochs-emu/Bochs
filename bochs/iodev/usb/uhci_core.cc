@@ -747,7 +747,7 @@ void uhci_event_handler(int event, USBPacket *packet, void *dev, int port)
 void bx_uhci_core_c::event_handler(int event, USBPacket *packet, int port)
 {
   if (event == USB_EVENT_ASYNC) {
-    BX_DEBUG(("Experimental async packet completion"));
+    BX_DEBUG(("Async packet completion"));
     USBAsync *p = container_of_usb_packet(packet);
     p->done = 1;
   } else if (event == USB_EVENT_WAKEUP) {

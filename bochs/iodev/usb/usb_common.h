@@ -141,10 +141,8 @@ struct USBPacket {
 typedef struct USBAsync {
   USBPacket packet;
   Bit64u    td_addr;
-  union {
-    bx_bool done;
-    Bit16u  slot_ep;
-  };
+  bx_bool done;
+  Bit16u  slot_ep;
   struct USBAsync *next;
 } USBAsync;
 

@@ -313,6 +313,7 @@ void bx_usb_xhci_c::init(void)
   // register handler for correct device connect handling after runtime config
   BX_XHCI_THIS rt_conf_id = SIM->register_runtime_config_handler(BX_XHCI_THIS_PTR, runtime_config_handler);
   BX_XHCI_THIS device_change = 0;
+  BX_XHCI_THIS packets = NULL;
 
   for (i=0; i<USB_XHCI_PORTS; i++)
     BX_XHCI_THIS hub.usb_port[i].is_usb3 = (port_speed_allowed[i] == USB3);
@@ -578,6 +579,11 @@ void bx_usb_xhci_c::reset_hc()
   // reset our slot contexts
   for (i=0; i<MAX_SLOTS; i++)
     BX_XHCI_THIS hub.slots[i].enabled = 0;
+
+  while (BX_XHCI_THIS packets != NULL) {
+    usb_cancel_packet(&BX_XHCI_THIS packets->packet);
+    remove_async_packet(&BX_XHCI_THIS packets, BX_XHCI_THIS packets);
+  }
 }
 
 void bx_usb_xhci_c::reset_port(int p)
@@ -1889,7 +1895,16 @@ void xhci_event_handler(int event, USBPacket *packet, void *dev, int port)
 
 void bx_usb_xhci_c::event_handler(int event, USBPacket *packet, int port)
 {
-  if (event == USB_EVENT_WAKEUP) {
+  int slot, ep;
+
+  if (event == USB_EVENT_ASYNC) {
+    BX_DEBUG(("Experimental async packet completion"));
+    USBAsync *p = container_of_usb_packet(packet);
+    p->done = 1;
+    slot = (p->slot_ep >> 8);
+    ep = (p->slot_ep & 0xff);
+    BX_XHCI_THIS process_transfer_ring(slot, ep);
+  } else if (event == USB_EVENT_WAKEUP) {
     if (BX_XHCI_THIS hub.usb_port[port].portsc.pls != PLS_U3_SUSPENDED) {
       return;
     }
@@ -1915,7 +1930,7 @@ void bx_usb_xhci_c::process_transfer_ring(const int slot, const int ep)
   Bit32u transfer_length;
   int ret = 0, len;
   int port_num = BX_XHCI_THIS hub.slots[slot].slot_context.rh_port_num;
-  USBPacket packet;
+  USBAsync *p;
   Bit8u cur_direction = (ep & 1) ? USB_TOKEN_IN : USB_TOKEN_OUT; // for NORMAL without SETUP
   bx_bool is_transfer_trb, is_immed_data, ioc, spd_occurred = 0;
   bx_bool first_event_trb_encountered = 0;
@@ -2079,65 +2094,79 @@ void bx_usb_xhci_c::process_transfer_ring(const int slot, const int ep)
 
       // is there a transfer to be done?
       if (is_transfer_trb) {
+        p = find_async_packet(&BX_XHCI_THIS packets, org_addr);
+        bx_bool completion = (p != NULL);
+        if (completion && !p->done) {
+          return;
+        }
         comp_code = TRB_SUCCESS;  // assume good trans event
-        usb_packet_init(&packet, transfer_length);
-        packet.pid = cur_direction;
-        packet.devaddr = BX_XHCI_THIS hub.slots[slot].slot_context.device_address;
-        packet.devep = (ep >> 1);
-        packet.complete_cb = NULL;
-        packet.complete_dev = BX_XHCI_THIS_PTR;
-        switch (cur_direction) {
-          case USB_TOKEN_OUT:
-          case USB_TOKEN_SETUP:
-            if (is_immed_data)
-              memcpy(packet.data, immed_data, transfer_length);
-            else if (transfer_length > 0)
-              DEV_MEM_READ_PHYSICAL_DMA((bx_phy_address) address, transfer_length, packet.data);
-            // The XHCI should block all SET_ADDRESS SETUP TOKEN's
-            if ((cur_direction == USB_TOKEN_SETUP)   &&
-                (packet.data[0] == 0) &&  // Request type
-                (packet.data[1] == 5)) {  // SET_ADDRESS
-              len = 0;
-              comp_code = TRB_ERROR;
-              BX_ERROR(("SETUP_TOKEN: System Software should not send SET_ADDRESS command on the xHCI."));
-            } else {
-              ret = BX_XHCI_THIS broadcast_packet(&packet, port_num - 1);
-              len = transfer_length;
-              BX_DEBUG(("OUT: Transferred %i bytes (ret = %i)", len, ret));
-            }
-            break;
-          case USB_TOKEN_IN:
-            ret = BX_XHCI_THIS broadcast_packet(&packet, port_num - 1);
-            if (ret >= 0) {
-              len = ret;
-              BX_XHCI_THIS hub.slots[slot].ep_context[ep].edtla += len;
-              if (len > 0)
-                DEV_MEM_WRITE_PHYSICAL_DMA((bx_phy_address) address, len, packet.data);
-              BX_DEBUG(("IN: Transferred %i bytes, requested %i bytes", len, transfer_length));
-              if (len < (int) transfer_length) {
-                bytes_not_transferred = transfer_length - len;
-                spd_occurred = 1;
-              } else
-                bytes_not_transferred = 0;
-            } else {
-              switch (ret) {
-                case USB_RET_STALL:
-                  comp_code = STALL_ERROR;
-                  break;
-                case USB_RET_BABBLE:
-                  comp_code = BABBLE_DETECTION;
-                  break;
-                default:
-                  comp_code = TRANSACTION_ERROR;
+        if (completion) {
+          ret = p->packet.len;
+          len = ret;
+        } else {
+          p = create_async_packet(&BX_XHCI_THIS packets, org_addr, transfer_length);
+          p->packet.pid = cur_direction;
+          p->packet.devaddr = BX_XHCI_THIS hub.slots[slot].slot_context.device_address;
+          p->packet.devep = (ep >> 1);
+          p->packet.complete_cb = xhci_event_handler;
+          p->packet.complete_dev = BX_XHCI_THIS_PTR;
+          p->slot_ep = (slot << 8) | ep;
+          switch (cur_direction) {
+            case USB_TOKEN_OUT:
+            case USB_TOKEN_SETUP:
+              if (is_immed_data)
+                memcpy(p->packet.data, immed_data, transfer_length);
+              else if (transfer_length > 0)
+                DEV_MEM_READ_PHYSICAL_DMA((bx_phy_address) address, transfer_length, p->packet.data);
+              // The XHCI should block all SET_ADDRESS SETUP TOKEN's
+              if ((cur_direction == USB_TOKEN_SETUP)   &&
+                  (p->packet.data[0] == 0) &&  // Request type
+                  (p->packet.data[1] == 5)) {  // SET_ADDRESS
+                len = 0;
+                comp_code = TRB_ERROR;
+                BX_ERROR(("SETUP_TOKEN: System Software should not send SET_ADDRESS command on the xHCI."));
+              } else {
+                ret = BX_XHCI_THIS broadcast_packet(&p->packet, port_num - 1);
+                len = transfer_length;
+                BX_DEBUG(("OUT: Transferred %i bytes (ret = %i)", len, ret));
               }
-              len = 0;
-            }
+              break;
+            case USB_TOKEN_IN:
+              ret = BX_XHCI_THIS broadcast_packet(&p->packet, port_num - 1);
+              break;
+          }
+          if (ret == USB_RET_ASYNC) {
+            BX_DEBUG(("Async packet deferred"));
             break;
+          }
         }
-        if (ret == USB_RET_ASYNC) {
-          BX_ERROR(("Async packet handling not implemented yet"));
+        if (cur_direction == USB_TOKEN_IN) {
+          if (ret >= 0) {
+            len = ret;
+            BX_XHCI_THIS hub.slots[slot].ep_context[ep].edtla += len;
+            if (len > 0)
+              DEV_MEM_WRITE_PHYSICAL_DMA((bx_phy_address) address, len, p->packet.data);
+            BX_DEBUG(("IN: Transferred %i bytes, requested %i bytes", len, transfer_length));
+            if (len < (int) transfer_length) {
+              bytes_not_transferred = transfer_length - len;
+              spd_occurred = 1;
+            } else
+              bytes_not_transferred = 0;
+          } else {
+            switch (ret) {
+              case USB_RET_STALL:
+                comp_code = STALL_ERROR;
+                break;
+              case USB_RET_BABBLE:
+                comp_code = BABBLE_DETECTION;
+                break;
+              default:
+                comp_code = TRANSACTION_ERROR;
+            }
+            len = 0;
+          }
         }
-        usb_packet_cleanup(&packet);
+        remove_async_packet(&BX_XHCI_THIS packets, p);
 
         if (ret == USB_RET_NAK) {
           // If we are a high-speed device, and a SETUP packet, we need to 
@@ -3145,6 +3174,7 @@ void bx_usb_xhci_c::usb_set_connect_status(Bit8u port, int type, bx_bool connect
             return;
           } else {
             BX_INFO(("port #%d: connect: %s", port+1, device->get_info()));
+            device->set_async_mode(1);
           }
         }
         device->set_event_handler(BX_XHCI_THIS_PTR, xhci_event_handler, port);

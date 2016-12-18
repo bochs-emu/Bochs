@@ -551,6 +551,7 @@ private:
   Bit8u         devfunc;
   Bit8u         device_change;
   int           rt_conf_id;
+  USBAsync      *packets;
 
   static void reset_hc();
   static void reset_port(int);
