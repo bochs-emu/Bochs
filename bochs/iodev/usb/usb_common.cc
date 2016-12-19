@@ -233,6 +233,7 @@ void bx_usb_devctl_c::usb_send_msg(void *dev, int msg)
 usb_device_c::usb_device_c(void)
 {
   memset((void*)&d, 0, sizeof(d));
+  d.async_mode = 1;
 }
 
 // Find device with given address

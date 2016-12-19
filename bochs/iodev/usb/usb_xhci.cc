@@ -3174,7 +3174,6 @@ void bx_usb_xhci_c::usb_set_connect_status(Bit8u port, int type, bx_bool connect
             return;
           } else {
             BX_INFO(("port #%d: connect: %s", port+1, device->get_info()));
-            device->set_async_mode(1);
           }
         }
         device->set_event_handler(BX_XHCI_THIS_PTR, xhci_event_handler, port);
