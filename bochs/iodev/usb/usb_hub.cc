@@ -177,8 +177,7 @@ usb_hub_device_c::usb_hub_device_c(Bit8u ports)
   bx_param_string_c *device;
 
   d.type = USB_DEV_TYPE_HUB;
-  d.maxspeed = USB_SPEED_FULL;
-  d.speed = d.maxspeed;
+  d.speed = d.minspeed = d.maxspeed = USB_SPEED_FULL;
   strcpy(d.devname, "Bochs USB HUB");
   d.dev_descriptor = bx_hub_dev_descriptor;
   d.config_descriptor = bx_hub_config_descriptor;

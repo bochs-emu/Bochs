@@ -300,8 +300,7 @@ usb_cbi_device_c::usb_cbi_device_c(const char *filename)
   bx_param_enum_c *status, *mode;
 
   d.type = USB_DEV_TYPE_FLOPPY;
-  d.maxspeed = USB_SPEED_FULL;
-  d.speed = d.maxspeed;
+  d.speed = d.minspeed = d.maxspeed = USB_SPEED_FULL;
   memset((void*)&s, 0, sizeof(s));
   strcpy(d.devname, "BOCHS USB CBI FLOPPY");
   d.dev_descriptor = bx_cbi_dev_descriptor;

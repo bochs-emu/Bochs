@@ -253,8 +253,9 @@ usb_msd_device_c::usb_msd_device_c(usbdev_type type, const char *filename)
   bx_param_enum_c *status;
 
   d.type = type;
+  d.minspeed = USB_SPEED_FULL;
   d.maxspeed = USB_SPEED_SUPER;
-  d.speed = USB_SPEED_FULL;
+  d.speed = d.minspeed;
   memset((void*)&s, 0, sizeof(s));
   if (d.type == USB_DEV_TYPE_DISK) {
     strcpy(d.devname, "BOCHS USB HARDDRIVE");

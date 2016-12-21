@@ -190,9 +190,8 @@ public:
 
   bx_bool get_connected() {return d.connected;}
   usbdev_type get_type() {return d.type;}
-  int get_maxspeed() {return d.maxspeed;}
   int get_speed() {return d.speed;}
-  void set_speed(int speed) {d.speed = speed;}
+  bx_bool set_speed(int speed);
   Bit8u get_address() {return d.addr;}
   void set_async_mode(bx_bool async) {d.async_mode = async;}
   void set_event_handler(void *dev, USBCallback *cb, int port)
@@ -209,6 +208,7 @@ protected:
   struct {
     enum usbdev_type type;
     bx_bool connected;
+    int minspeed;
     int maxspeed;
     int speed;
     Bit8u addr;

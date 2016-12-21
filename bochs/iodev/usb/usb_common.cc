@@ -152,6 +152,19 @@ int bx_usb_devctl_c::init_device(bx_list_c *portconf, logfunctions *hub, void **
   return type;
 }
 
+const char *usbdev_names[] =
+{
+  "none",
+  "mouse",
+  "tablet",
+  "keypad",
+  "disk",
+  "cdrom",
+  "hub",
+  "printer",
+  "floppy"
+};
+
 void bx_usb_devctl_c::parse_port_options(usb_device_c *device, bx_list_c *portconf)
 {
   const char *raw_options;
@@ -203,17 +216,16 @@ void bx_usb_devctl_c::parse_port_options(usb_device_c *device, bx_list_c *portco
       } else if (!strcmp(opts[i]+6, "super")) {
         speed = USB_SPEED_SUPER;
       } else {
-        BX_ERROR(("unknown USB device speed: '%s'", opts[i]+6));
+        BX_ERROR(("ignoring unknown USB device speed: '%s'", opts[i]+6));
       }
-      if (speed <= device->get_maxspeed()) {
-        device->set_speed(speed);
-      } else {
-        BX_ERROR(("unsupported USB device speed: '%s'", opts[i]+6));
+      if (!device->set_speed(speed)) {
+        BX_PANIC(("USB device '%s' doesn't support '%s' speed",
+                  usbdev_names[device->get_type()], opts[i]+6));
       }
     } else if (!strcmp(opts[i], "debug")) {
       device->set_debug_mode();
     } else if (!device->set_option(opts[i])) {
-      BX_ERROR(("unknown USB device option: '%s'", opts[i]));
+      BX_ERROR(("ignoring unknown USB device option: '%s'", opts[i]));
     }
   }
   for (i = 1; i < (unsigned)optc; i++) {
@@ -243,6 +255,16 @@ usb_device_c* usb_device_c::find_device(Bit8u addr)
     return this;
   } else {
     return NULL;
+  }
+}
+
+bx_bool usb_device_c::set_speed(int speed)
+{
+  if ((speed >= d.minspeed) && (speed <= d.maxspeed)) {
+    d.speed = speed;
+    return 1;
+  } else {
+    return 0;
   }
 }
 

@@ -412,8 +412,9 @@ struct KEYPAD keypad_lookup[KEYPAD_LEN] = {
 usb_hid_device_c::usb_hid_device_c(usbdev_type type)
 {
   d.type = type;
-  d.maxspeed = USB_SPEED_LOW;
-  d.speed = d.maxspeed;
+  d.minspeed = USB_SPEED_LOW;
+  d.maxspeed = USB_SPEED_FULL;
+  d.speed = d.minspeed;
   if (d.type == USB_DEV_TYPE_MOUSE) {
     strcpy(d.devname, "USB Mouse");
     d.dev_descriptor = bx_mouse_dev_descriptor;
