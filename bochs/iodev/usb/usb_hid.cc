@@ -93,6 +93,26 @@ static const Bit8u bx_mouse_dev_descriptor[] = {
   0x01        /*  u8  bNumConfigurations; */
 };
 
+static const Bit8u bx_mouse_dev_descriptor2[] = {
+  0x12,       /*  u8 bLength; */
+  0x01,       /*  u8 bDescriptorType; Device */
+  0x00, 0x02, /*  u16 bcdUSB; v2.0 */
+
+  0x00,       /*  u8  bDeviceClass; */
+  0x00,       /*  u8  bDeviceSubClass; */
+  0x00,       /*  u8  bDeviceProtocol; [ low/full speeds only ] */
+  0x40,       /*  u8  bMaxPacketSize0; 64 Bytes */
+
+  0x27, 0x06, /*  u16 idVendor; */
+  0x01, 0x00, /*  u16 idProduct; */
+  0x00, 0x00, /*  u16 bcdDevice */
+
+  0x01,       /*  u8  iManufacturer; */
+  0x02,       /*  u8  iProduct; */
+  0x03,       /*  u8  iSerialNumber; */
+  0x01        /*  u8  bNumConfigurations; */
+};
+
 static const Bit8u bx_mouse_config_descriptor[] = {
   /* one configuration */
   0x09,       /*  u8  bLength; */
@@ -146,6 +166,61 @@ static const Bit8u bx_mouse_config_descriptor[] = {
   0x03,       /*  u8  ep_bmAttributes; Interrupt */
   0x03, 0x00, /*  u16 ep_wMaxPacketSize; */
   0x0a,       /*  u8  ep_bInterval; (0 - 255ms -- usb 2.0 spec) */
+};
+
+static const Bit8u bx_mouse_config_descriptor2[] = {
+  /* one configuration */
+  0x09,       /*  u8  bLength; */
+  0x02,       /*  u8  bDescriptorType; Configuration */
+  0x22, 0x00, /*  u16 wTotalLength; */
+  0x01,       /*  u8  bNumInterfaces; (1) */
+  0x01,       /*  u8  bConfigurationValue; */
+  0x04,       /*  u8  iConfiguration; */
+  0xa0,       /*  u8  bmAttributes;
+			 Bit 7: must be set,
+			     6: Self-powered,
+			     5: Remote wakeup,
+			     4..0: resvd */
+  50,         /*  u8  MaxPower; */
+
+  /* USB 1.1:
+   * USB 2.0, single TT organization (mandatory):
+   *	one interface, protocol 0
+   *
+   * USB 2.0, multiple TT organization (optional):
+   *	two interfaces, protocols 1 (like single TT)
+   *	and 2 (multiple TT mode) ... config is
+   *	sometimes settable
+   *	NOT IMPLEMENTED
+   */
+
+  /* one interface */
+  0x09,       /*  u8  if_bLength; */
+  0x04,       /*  u8  if_bDescriptorType; Interface */
+  0x00,       /*  u8  if_bInterfaceNumber; */
+  0x00,       /*  u8  if_bAlternateSetting; */
+  0x01,       /*  u8  if_bNumEndpoints; */
+  0x03,       /*  u8  if_bInterfaceClass; */
+  0x01,       /*  u8  if_bInterfaceSubClass; */
+  0x02,       /*  u8  if_bInterfaceProtocol; [usb1.1 or single tt] */
+  0x05,       /*  u8  if_iInterface; */
+
+  /* HID descriptor */
+  0x09,        /*  u8  bLength; */
+  0x21,        /*  u8 bDescriptorType; */
+  0x00, 0x01,  /*  u16 HID_class */
+  0x00,        /*  u8 country_code */
+  0x01,        /*  u8 num_descriptors */
+  0x22,        /*  u8 type; Report */
+  50, 0,       /*  u16 len */
+
+  /* one endpoint */
+  0x07,       /*  u8  ep_bLength; */
+  0x05,       /*  u8  ep_bDescriptorType; Endpoint */
+  0x81,       /*  u8  ep_bEndpointAddress; IN Endpoint 1 */
+  0x03,       /*  u8  ep_bmAttributes; Interrupt */
+  0x03, 0x00, /*  u16 ep_wMaxPacketSize; */
+  0x07,       /*  u8  ep_bInterval; (2 ^ (8-1) * 125 usecs = 8 ms) */
 };
 
 static const Bit8u bx_mouse_hid_descriptor[] = {
@@ -213,6 +288,50 @@ static const Bit8u bx_tablet_config_descriptor[] = {
   0x0a,       /*  u8  ep_bInterval; (0 - 255ms -- usb 2.0 spec) */
 };
 
+static const Bit8u bx_tablet_config_descriptor2[] = {
+  /* one configuration */
+  0x09,       /*  u8  bLength; */
+  0x02,       /*  u8  bDescriptorType; Configuration */
+  0x22, 0x00, /*  u16 wTotalLength; */
+  0x01,       /*  u8  bNumInterfaces; (1) */
+  0x01,       /*  u8  bConfigurationValue; */
+  0x04,       /*  u8  iConfiguration; */
+  0xa0,       /*  u8  bmAttributes;
+			 Bit 7: must be set,
+			     6: Self-powered,
+			     5: Remote wakeup,
+			     4..0: resvd */
+  50,         /*  u8  MaxPower; */
+
+  /* one interface */
+  0x09,       /*  u8  if_bLength; */
+  0x04,       /*  u8  if_bDescriptorType; Interface */
+  0x00,       /*  u8  if_bInterfaceNumber; */
+  0x00,       /*  u8  if_bAlternateSetting; */
+  0x01,       /*  u8  if_bNumEndpoints; */
+  0x03,       /*  u8  if_bInterfaceClass; */
+  0x01,       /*  u8  if_bInterfaceSubClass; */
+  0x02,       /*  u8  if_bInterfaceProtocol; [usb1.1 or single tt] */
+  0x05,       /*  u8  if_iInterface; */
+
+  /* HID descriptor */
+  0x09,        /*  u8  bLength; */
+  0x21,        /*  u8 bDescriptorType; */
+  0x00, 0x01,  /*  u16 HID_class */
+  0x00,        /*  u8 country_code */
+  0x01,        /*  u8 num_descriptors */
+  0x22,        /*  u8 type; Report */
+  74, 0,       /*  u16 len */
+
+  /* one endpoint */
+  0x07,       /*  u8  ep_bLength; */
+  0x05,       /*  u8  ep_bDescriptorType; Endpoint */
+  0x81,       /*  u8  ep_bEndpointAddress; IN Endpoint 1 */
+  0x03,       /*  u8  ep_bmAttributes; Interrupt */
+  0x08, 0x00, /*  u16 ep_wMaxPacketSize; */
+  0x04,       /*  u8  ep_bInterval; (2 ^ (4-1) * 125 usecs = 1 ms) */
+};
+
 static const Bit8u bx_tablet_hid_descriptor[] = {
   /* HID descriptor */
   0x09,        /*  u8  bLength; */
@@ -273,6 +392,26 @@ static const Bit8u bx_keypad_dev_descriptor[] = {
   0x00,       /*  u8  bDeviceSubClass; */
   0x00,       /*  u8  bDeviceProtocol; [ low/full speeds only ] */
   0x08,       /*  u8  bMaxPacketSize0; 8 Bytes */
+
+  0xB4, 0x04, /*  u16 idVendor; */
+  0x01, 0x01, /*  u16 idProduct; */
+  0x01, 0x00, /*  u16 bcdDevice */
+
+  0x01,       /*  u8  iManufacturer; */
+  0x02,       /*  u8  iProduct; */
+  0x03,       /*  u8  iSerialNumber; */
+  0x01        /*  u8  bNumConfigurations; */
+};
+
+static const Bit8u bx_keypad_dev_descriptor2[] = {
+  0x12,       /*  u8 bLength; */
+  0x01,       /*  u8 bDescriptorType; Device */
+  0x00, 0x02, /*  u16 bcdUSB; v2.0 */
+
+  0x00,       /*  u8  bDeviceClass; */
+  0x00,       /*  u8  bDeviceSubClass; */
+  0x00,       /*  u8  bDeviceProtocol; [ low/full speeds only ] */
+  0x40,       /*  u8  bMaxPacketSize0; 64 Bytes */
 
   0xB4, 0x04, /*  u16 idVendor; */
   0x01, 0x01, /*  u16 idProduct; */
@@ -356,6 +495,78 @@ static const Bit8u bx_keypad_config_descriptor[] = {
   0x0a,       /*  u8  ep_bInterval; (0 - 255ms -- usb 2.0 spec) */
 };
 
+static const Bit8u bx_keypad_config_descriptor2[] = {
+  /* one configuration */
+  0x09,       /*  u8  bLength; */
+  0x02,       /*  u8  bDescriptorType; Configuration */
+  0x3B, 0x00, /*  u16 wTotalLength; */
+  0x02,       /*  u8  bNumInterfaces; (2) */
+  0x01,       /*  u8  bConfigurationValue; */
+  0x04,       /*  u8  iConfiguration; */
+  0xa0,       /*  u8  bmAttributes;
+			 Bit 7: must be set,
+			     6: Self-powered,
+			     5: Remote wakeup,
+			     4..0: resvd */
+  50,         /*  u8  MaxPower; */
+
+  /* interface #1 of 2 */
+  0x09,       /*  u8  if_bLength; */
+  0x04,       /*  u8  if_bDescriptorType; Interface */
+  0x00,       /*  u8  if_bInterfaceNumber; */
+  0x00,       /*  u8  if_bAlternateSetting; */
+  0x01,       /*  u8  if_bNumEndpoints; */
+  0x03,       /*  u8  if_bInterfaceClass; */
+  0x01,       /*  u8  if_bInterfaceSubClass; */
+  0x01,       /*  u8  if_bInterfaceProtocol; [usb1.1 or single tt] */
+  0x05,       /*  u8  if_iInterface; */
+
+  /* HID descriptor */
+  0x09,        /*  u8  bLength; */
+  0x21,        /*  u8 bDescriptorType; */
+  0x00, 0x01,  /*  u16 HID_class */
+  0x00,        /*  u8 country_code */
+  0x01,        /*  u8 num_descriptors */
+  0x22,        /*  u8 type; Report */
+  65, 0,       /*  u16 len */
+
+  /* one endpoint (status change endpoint) */
+  0x07,       /*  u8  ep_bLength; */
+  0x05,       /*  u8  ep_bDescriptorType; Endpoint */
+  0x81,       /*  u8  ep_bEndpointAddress; IN Endpoint 1 */
+  0x03,       /*  u8  ep_bmAttributes; Interrupt */
+  0x08, 0x00, /*  u16 ep_wMaxPacketSize; */
+  0x07,       /*  u8  ep_bInterval; (2 ^ (8-1) * 125 usecs = 8 ms) */
+
+  /* interface #2 of 2 */
+  0x09,       /*  u8  if_bLength; */
+  0x04,       /*  u8  if_bDescriptorType; Interface */
+  0x01,       /*  u8  if_bInterfaceNumber; */
+  0x00,       /*  u8  if_bAlternateSetting; */
+  0x01,       /*  u8  if_bNumEndpoints; */
+  0x03,       /*  u8  if_bInterfaceClass; */
+  0x01,       /*  u8  if_bInterfaceSubClass; */
+  0x02,       /*  u8  if_bInterfaceProtocol; [usb1.1 or single tt] */
+  0x06,       /*  u8  if_iInterface; */
+
+  /* HID descriptor */
+  0x09,        /*  u8  bLength; */
+  0x21,        /*  u8 bDescriptorType; */
+  0x00, 0x01,  /*  u16 HID_class */
+  0x00,        /*  u8 country_code */
+  0x01,        /*  u8 num_descriptors */
+  0x22,        /*  u8 type; Report */
+  50, 0,       /*  u16 len */
+
+  /* one endpoint */
+  0x07,       /*  u8  ep_bLength; */
+  0x05,       /*  u8  ep_bDescriptorType; Endpoint */
+  0x82,       /*  u8  ep_bEndpointAddress; IN Endpoint 2 */
+  0x03,       /*  u8  ep_bmAttributes; Interrupt */
+  0x08, 0x00, /*  u16 ep_wMaxPacketSize; */
+  0x07,       /*  u8  ep_bInterval; (2 ^ (8-1) * 125 usecs = 8 ms) */
+};
+
 static const Bit8u bx_keypad_hid_descriptor[] = {
   /* HID descriptor */
   0x09,        /*  u8  bLength; */
@@ -413,29 +624,50 @@ usb_hid_device_c::usb_hid_device_c(usbdev_type type)
 {
   d.type = type;
   d.minspeed = USB_SPEED_LOW;
-  d.maxspeed = USB_SPEED_FULL;
+  d.maxspeed = USB_SPEED_HIGH;
   d.speed = d.minspeed;
   if (d.type == USB_DEV_TYPE_MOUSE) {
     strcpy(d.devname, "USB Mouse");
-    d.dev_descriptor = bx_mouse_dev_descriptor;
-    d.config_descriptor = bx_mouse_config_descriptor;
-    d.device_desc_size = sizeof(bx_mouse_dev_descriptor);
-    d.config_desc_size = sizeof(bx_mouse_config_descriptor);
+    if (d.speed == USB_SPEED_HIGH) {
+      d.dev_descriptor = bx_mouse_dev_descriptor2;
+      d.config_descriptor = bx_mouse_config_descriptor2;
+      d.device_desc_size = sizeof(bx_mouse_dev_descriptor2);
+      d.config_desc_size = sizeof(bx_mouse_config_descriptor2);
+    } else {
+      d.dev_descriptor = bx_mouse_dev_descriptor;
+      d.config_descriptor = bx_mouse_config_descriptor;
+      d.device_desc_size = sizeof(bx_mouse_dev_descriptor);
+      d.config_desc_size = sizeof(bx_mouse_config_descriptor);
+    }
     DEV_register_removable_mouse((void*)this, mouse_enq_static, mouse_enabled_changed);
   } else if (d.type == USB_DEV_TYPE_TABLET) {
     strcpy(d.devname, "USB Tablet");
-    d.dev_descriptor = bx_mouse_dev_descriptor;
-    d.config_descriptor = bx_tablet_config_descriptor;
-    d.device_desc_size = sizeof(bx_mouse_dev_descriptor);
-    d.config_desc_size = sizeof(bx_tablet_config_descriptor);
+    if (d.speed == USB_SPEED_HIGH) {
+      d.dev_descriptor = bx_mouse_dev_descriptor2;
+      d.config_descriptor = bx_tablet_config_descriptor2;
+      d.device_desc_size = sizeof(bx_mouse_dev_descriptor2);
+      d.config_desc_size = sizeof(bx_tablet_config_descriptor2);
+    } else {
+      d.dev_descriptor = bx_mouse_dev_descriptor;
+      d.config_descriptor = bx_tablet_config_descriptor;
+      d.device_desc_size = sizeof(bx_mouse_dev_descriptor);
+      d.config_desc_size = sizeof(bx_tablet_config_descriptor);
+    }
     DEV_register_removable_mouse((void*)this, mouse_enq_static, mouse_enabled_changed);
     bx_gui->set_mouse_mode_absxy(1);
   } else if (d.type == USB_DEV_TYPE_KEYPAD) {
     strcpy(d.devname, "USB/PS2 Keypad");
-    d.dev_descriptor = bx_keypad_dev_descriptor;
-    d.config_descriptor = bx_keypad_config_descriptor;
-    d.device_desc_size = sizeof(bx_keypad_dev_descriptor);
-    d.config_desc_size = sizeof(bx_keypad_config_descriptor);
+    if (d.speed == USB_SPEED_HIGH) {
+      d.dev_descriptor = bx_keypad_dev_descriptor2;
+      d.config_descriptor = bx_keypad_config_descriptor2;
+      d.device_desc_size = sizeof(bx_keypad_dev_descriptor2);
+      d.config_desc_size = sizeof(bx_keypad_config_descriptor2);
+    } else {
+      d.dev_descriptor = bx_keypad_dev_descriptor;
+      d.config_descriptor = bx_keypad_config_descriptor;
+      d.device_desc_size = sizeof(bx_keypad_dev_descriptor);
+      d.config_desc_size = sizeof(bx_keypad_config_descriptor);
+    }
     DEV_register_removable_keyboard((void*)this, key_enq_static);
   }
   d.vendor_desc = "BOCHS";
