@@ -82,7 +82,6 @@ A.sidebar:hover {color: blue; text-decoration: underline}
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="https://sourceforge.net/p/bochs/code/HEAD/tree/" class="sidebar">View the Source</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="https://sourceforge.net/p/bochs/patches/" class="sidebar">Patches</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/techdata.html" class="sidebar">Tech Specs Pages</a>
-<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=SVN+Access+Information&url=http://sourceforge.net/apps/trac/sourceforge/wiki/Subversion" class="sidebar">Subversion Access</a>
 
 <br><br><center><b>Resources</b></center>
 
