@@ -9,5 +9,5 @@
 </A>
 </center>
 </td>
-<td colspan="2"><font size="2" face="arial, helvetica">Please send comments and questions concerning the site to <a href="http://sourceforge.net/sendmessage.php?touser=376477">Volker Ruppert</a>.<BR>
-Web site feature requests and bug reports should be added to the <a href="https://sourceforge.net/p/bochs/feature-requests/">Web site tracker</a>.<BR>
+<td colspan="2"><font size="2" face="arial, helvetica">Please send comments and questions concerning the site to <a href="mailto:vruppert@users.sourceforge.net">Volker Ruppert</a>.<BR>
+Web site feature requests and bug reports should be added to the <a href="https://sourceforge.net/p/bochs/web-site-requests/">Web site tracker</a>.<BR>
