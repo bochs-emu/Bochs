@@ -212,7 +212,7 @@ bx_usb_xhci_c::bx_usb_xhci_c()
   put("usb_xhci", "XHCI");
   memset((void*)&hub, 0, sizeof(bx_usb_xhci_t));
   rt_conf_id = -1;
-  //hub.frame_timer_index = BX_NULL_TIMER_HANDLE;
+  xhci_timer_index = BX_NULL_TIMER_HANDLE;
 }
 
 bx_usb_xhci_c::~bx_usb_xhci_c()
@@ -256,11 +256,8 @@ void bx_usb_xhci_c::init(void)
     return;
   }
 
-  // TODO: Use this to decrement the Interrupter:count down value
-  // Call our frame timer routine every 1mS (1,024uS)
-  // Continuous and active
-  //  BX_XHCI_THIS hub.frame_timer_index =
-  //                   bx_pc_system.register_timer(this, usb_frame_handler, 1024, 1, 1, "xhci.frame_timer");
+  BX_XHCI_THIS xhci_timer_index =
+      bx_pc_system.register_timer(this, xhci_timer_handler, 1024, 1, 1, "xhci_timer");
 
   BX_XHCI_THIS devfunc = 0x00;
   DEV_register_pci_handlers(this, &BX_XHCI_THIS devfunc, BX_PLUGIN_USB_XHCI,
@@ -919,6 +916,8 @@ void bx_usb_xhci_c::register_state(void)
       BXRS_HEX_PARAM_FIELD(entry, edtla, BX_XHCI_THIS hub.slots[i].ep_context[j].edtla);
       BXRS_HEX_PARAM_FIELD(entry, enqueue_pointer, BX_XHCI_THIS hub.slots[i].ep_context[j].enqueue_pointer);
       BXRS_PARAM_BOOL(entry, rcs, BX_XHCI_THIS hub.slots[i].ep_context[j].rcs);
+      BXRS_PARAM_BOOL(entry, retry, BX_XHCI_THIS hub.slots[i].ep_context[j].retry);
+      BXRS_DEC_PARAM_FIELD(entry, retry_counter, BX_XHCI_THIS hub.slots[i].ep_context[j].retry_counter);
     }
   }
 
@@ -1942,6 +1941,7 @@ void bx_usb_xhci_c::process_transfer_ring(const int slot, const int ep)
   // this is usually the case, and rarely isn't.
   int trb_count = 0;
   BX_XHCI_THIS hub.slots[slot].ep_context[ep].edtla = 0;
+  BX_XHCI_THIS hub.slots[slot].ep_context[ep].retry = 0;
 
   // if the ep is disabled, return an error event trb.
   if ((BX_XHCI_THIS hub.slots[slot].slot_context.slot_state == SLOT_STATE_DISABLED_ENABLED)
@@ -2174,9 +2174,17 @@ void bx_usb_xhci_c::process_transfer_ring(const int slot, const int ep)
           if ((cur_direction == USB_TOKEN_SETUP) && 
               (BX_XHCI_THIS hub.slots[slot].slot_context.speed == SPEED_HI))
             comp_code = TRANSACTION_ERROR;
-          else
-            // if the device NAK'ed, we retire the TD and halt the ep
+          else {
+            // if the device NAK'ed, we retry with given interval
+            BX_XHCI_THIS hub.slots[slot].ep_context[ep].retry = 1;
+            int interval = 125 * (1 << BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.interval);
+            if (interval < 1000) {
+              BX_XHCI_THIS hub.slots[slot].ep_context[ep].retry_counter = 1;
+            } else {
+              BX_XHCI_THIS hub.slots[slot].ep_context[ep].retry_counter = interval / 1000;
+            }
             break;
+          }
         }
 
         // 4.10.1 paragraph 4
@@ -2989,19 +2997,29 @@ int bx_usb_xhci_c::broadcast_packet(USBPacket *p, const int port)
   return ret;
 }
 
-/*
-void bx_usb_xhci_c::usb_frame_handler(void *this_ptr)
+void bx_usb_xhci_c::xhci_timer_handler(void *this_ptr)
 {
   bx_usb_xhci_c *class_ptr = (bx_usb_xhci_c *) this_ptr;
-  class_ptr->usb_frame_timer();
+  class_ptr->xhci_timer();
 }
 
-// Called once every ????
-void bx_usb_xhci_c::usb_frame_timer(void)
+void bx_usb_xhci_c::xhci_timer(void)
 {
-  // Nothing for now
+  int slot, ep;
+
+  if (BX_XHCI_THIS hub.op_regs.HcStatus.hch)
+    return;
+
+  for (slot=1; slot<MAX_SLOTS; slot++) {
+    for (ep=1; ep<32; ep++) {
+      if (BX_XHCI_THIS hub.slots[slot].ep_context[ep].retry) {
+        if (--BX_XHCI_THIS hub.slots[slot].ep_context[ep].retry_counter <= 0) {
+          BX_XHCI_THIS process_transfer_ring(slot, ep);
+        }
+      }
+    }
+  }
 }
-*/
 
 void bx_usb_xhci_c::runtime_config_handler(void *this_ptr)
 {

@@ -218,9 +218,11 @@ struct HC_SLOT_CONTEXT {
   struct {
     struct EP_CONTEXT   ep_context;
     // our internal registers follow
-    Bit32u edtla;
-    Bit64u enqueue_pointer;
-    bx_bool  rcs;
+    Bit32u  edtla;
+    Bit64u  enqueue_pointer;
+    bx_bool rcs;
+    bx_bool retry;
+    int     retry_counter;
   } ep_context[32];  // first one is ignored by controller.
 };
 
@@ -551,6 +553,7 @@ private:
   Bit8u         devfunc;
   Bit8u         device_change;
   int           rt_conf_id;
+  int           xhci_timer_index;
   USBAsync      *packets;
 
   static void reset_hc();
@@ -565,8 +568,8 @@ private:
   static void usb_set_connect_status(Bit8u port, int type, bx_bool connected);
 
   static int  broadcast_packet(USBPacket *p, const int port);
-  //static void usb_frame_handler(void *);
-  //void usb_frame_timer(void);
+  static void xhci_timer_handler(void *);
+  void xhci_timer(void);
 
   static void process_transfer_ring(const int slot, const int ep);
   static void process_command_ring(void);
