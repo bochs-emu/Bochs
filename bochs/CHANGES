@@ -1,3 +1,26 @@
+Changes after 2.6.8 release:
+
+- Configure and compile
+  - Added Android host platform support.
+
+- I/O Devices
+  - Busmouse
+    - Added standard bus mouse support in addition to the existing InPort
+      emulation code. (patch by Ben Lunt).
+  - Hard drive
+    - Several fixes in some disk image modes.
+  - Sound
+    - Added separate thread for the PCM data conversion.
+  - USB
+    - Added USB EHCI device emulation support (EHCI core ported from Qemu).
+    - Added USB floppy (UFI/CBI) support (patch by Ben Lunt).
+    - Added asynchronus USB packet completion support (needed by disk/cdrom
+      seek and read/write latency emulation).
+    - Implemented USB remote wakeup mechanism.
+    - Fixed NAK response handling in all USB HCs.
+    - Added common USB device option "debug" to turn on BX_DEBUG reporting at
+      connection time.
+
 Changes in 2.6.8 (May 3, 2015):
 
 - CPU / CPUDB
