@@ -258,16 +258,6 @@ usb_device_c* usb_device_c::find_device(Bit8u addr)
   }
 }
 
-bx_bool usb_device_c::set_speed(int speed)
-{
-  if ((speed >= d.minspeed) && (speed <= d.maxspeed)) {
-    d.speed = speed;
-    return 1;
-  } else {
-    return 0;
-  }
-}
-
 // Generic USB packet handler
 
 #define SETUP_STATE_IDLE 0

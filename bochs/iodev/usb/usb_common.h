@@ -191,7 +191,16 @@ public:
   bx_bool get_connected() {return d.connected;}
   usbdev_type get_type() {return d.type;}
   int get_speed() {return d.speed;}
-  bx_bool set_speed(int speed);
+  bx_bool set_speed(int speed)
+  {
+    if ((speed >= d.minspeed) && (speed <= d.maxspeed)) {
+      d.speed = speed;
+      return 1;
+    } else {
+      return 0;
+    }
+  }
+
   Bit8u get_address() {return d.addr;}
   void set_async_mode(bx_bool async) {d.async_mode = async;}
   void set_event_handler(void *dev, USBCallback *cb, int port)

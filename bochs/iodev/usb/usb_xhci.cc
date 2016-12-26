@@ -3011,10 +3011,12 @@ void bx_usb_xhci_c::xhci_timer(void)
     return;
 
   for (slot=1; slot<MAX_SLOTS; slot++) {
-    for (ep=1; ep<32; ep++) {
-      if (BX_XHCI_THIS hub.slots[slot].ep_context[ep].retry) {
-        if (--BX_XHCI_THIS hub.slots[slot].ep_context[ep].retry_counter <= 0) {
-          BX_XHCI_THIS process_transfer_ring(slot, ep);
+    if (BX_XHCI_THIS hub.slots[slot].enabled) {
+      for (ep=1; ep<32; ep++) {
+        if (BX_XHCI_THIS hub.slots[slot].ep_context[ep].retry) {
+          if (--BX_XHCI_THIS hub.slots[slot].ep_context[ep].retry_counter <= 0) {
+            BX_XHCI_THIS process_transfer_ring(slot, ep);
+          }
         }
       }
     }
@@ -3160,11 +3162,12 @@ void bx_usb_xhci_c::usb_set_connect_status(Bit8u port, int type, bx_bool connect
           usb_set_connect_status(port, type, 0);
           return;
         }
-        if ((device->get_speed() != USB_SPEED_SUPER) &&
-            BX_XHCI_THIS hub.usb_port[port].is_usb3) {
-          BX_PANIC(("Only super-speed devices supported on USB3 port."));
-          usb_set_connect_status(port, type, 0);
-          return;
+        if (BX_XHCI_THIS hub.usb_port[port].is_usb3) {
+          if (!device->set_speed(USB_SPEED_SUPER)) {
+            BX_PANIC(("Only super-speed devices supported on USB3 port."));
+            usb_set_connect_status(port, type, 0);
+            return;
+          }
         }
         switch (device->get_speed()) {
           case USB_SPEED_LOW:
