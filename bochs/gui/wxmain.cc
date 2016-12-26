@@ -281,19 +281,17 @@ BxEvent *MyApp::DefaultCallback(void *thisptr, BxEvent *event)
     case BX_ASYNC_EVT_LOG_MSG:
     case BX_SYNC_EVT_LOG_ASK: {
       wxLogDebug(wxT("DefaultCallback: log ask event"));
-      wxString text;
-      text.Printf(wxT("Error: %s"), event->u.logmsg.msg);
       if (wxBochsClosing) {
         // gui closing down, do something simple and nongraphical.
+        wxString text;
+        text.Printf(wxT("Error: %s"), event->u.logmsg.msg);
         fprintf(stderr, "%s\n", (const char *)text.mb_str(wxConvUTF8));
+        event->retcode = BX_LOG_ASK_CHOICE_DIE;
       } else {
-        wxMessageBox(text, wxT("Error"), wxOK | wxICON_ERROR);
-        // maybe I can make OnLogAsk display something that looks appropriate.
-        // theFrame->OnLogAsk(event);
+        wxString levelName(SIM->get_log_level_name(event->u.logmsg.level), wxConvUTF8);
+        wxMessageBox(wxString(event->u.logmsg.msg, wxConvUTF8), levelName, wxOK | wxICON_ERROR);
+        event->retcode = BX_LOG_ASK_CHOICE_CONTINUE;
       }
-      event->retcode = BX_LOG_ASK_CHOICE_DIE;
-      // There is only one thread at this point.  if I choose DIE here, it will
-      // call fatal() and kill the whole app.
       break;
     }
     case BX_SYNC_EVT_TICK:
