@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2015  The Bochs Project
+//  Copyright (C) 2001-2016  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -2133,15 +2133,18 @@ enum {
 
 class x11_control_c {
 public:
-  x11_control_c(int type, int x, int y, unsigned int w,
-                unsigned int h, const char *text);
+  x11_control_c(int type, int x, int y, unsigned int w, unsigned int h,
+                const char *text);
   virtual ~x11_control_c();
 
   void draw(Display *display, Window win, GC gc);
   void draw_rect(Display *display, Window win, GC gc);
   void draw_text(Display *display, Window win, GC gc, const char *text);
+  void set_pos(int x, int y);
   int  test(XButtonEvent *bev);
   int  get_type() {return type;}
+  void set_param(int value) {param = value;}
+  int  get_param() {return param;}
   const char* get_text() {return text;}
   // checkbox
   int  get_status() {return status;}
@@ -2152,7 +2155,7 @@ public:
   const char* get_value() {return value;}
 private:
   unsigned int width, height;
-  int type, xmin, xmax, ymin, ymax;
+  int type, param, xmin, xmax, ymin, ymax;
   const char *text;
   // checkbox
   bx_bool status;
@@ -2162,20 +2165,18 @@ private:
   unsigned int len, pos, max;
 };
 
-x11_control_c::x11_control_c(int _type, int x, int y, unsigned int w,
-                             unsigned int h, const char *_text)
+x11_control_c::x11_control_c(int _type, int x, int y, unsigned int w, unsigned int h,
+                             const char *_text)
 {
   type = _type;
-  xmin = x;
-  ymin = y;
   width = w;
   height = h;
-  xmax = x + width;
-  ymax = y + height;
+  set_pos(x, y);
+  param = 0;
   if (type == XDC_EDIT) {
     len = strlen(_text);
     max = len;
-    value = (char*)malloc(max+1);
+    value = new char[max+1];
     strcpy(value, _text);
     pos = (len < 25) ? 0 : (len - 24);
     strncpy(editstr, value+pos, 24);
@@ -2193,6 +2194,14 @@ x11_control_c::x11_control_c(int _type, int x, int y, unsigned int w,
 x11_control_c::~x11_control_c()
 {
   if (value != NULL) free(value);
+}
+
+void x11_control_c::set_pos(int x, int y)
+{
+  xmin = x;
+  ymin = y;
+  xmax = x + width;
+  ymax = y + height;
 }
 
 void x11_control_c::draw(Display *display, Window win, GC gc)
@@ -2230,7 +2239,10 @@ int x11_control_c::test(XButtonEvent *bev)
 void x11_control_c::set_maxlen(unsigned int _max)
 {
   max = _max;
-  value = (char*)realloc(value, max+1);
+  char *newval = new char[max+1];
+  strcpy(newval, value);
+  delete [] value;
+  value = newval;
 }
 
 int x11_control_c::process_input(KeySym key, const char *str)
@@ -2266,28 +2278,33 @@ typedef struct _x11_static_t {
 
 class x11_dialog_c {
 public:
-  x11_dialog_c(char *name, int width, int height, int num_ctrls);
+  x11_dialog_c(const char *name, int width, int _height, int num_ctrls);
   virtual ~x11_dialog_c();
 
-  x11_control_c* add_control(int type, int x, int y, unsigned int width,
-                             unsigned int height, const char *text);
+  int add_control(int type, int x, int y, unsigned int width, unsigned int height,
+                  const char *text);
+  int add_button(const char *text);
   void add_static_text(int x, int y, const char *text, int length);
   void draw_text(Display *display, int x, int y, const char *text, int length);
+  void set_control_param(int id, int value);
   int run(int start_ctrl, int ok, int cancel);
+  x11_control_c* get_control(int id);
 private:
   Window dlgwin;
   GC gc, gc_inv;
-  int ctrl_cnt, cur_ctrl, old_ctrl;
+  int btn_base, ctrl_cnt, cur_ctrl, old_ctrl, height, width;
   x11_control_c **controls;
   x11_static_t *static_items;
 };
 
-x11_dialog_c::x11_dialog_c(char *name, int width, int height, int num_ctrls)
+x11_dialog_c::x11_dialog_c(const char *name, int _width, int _height, int num_ctrls)
 {
   Window dialogw;
   XSizeHints hint;
   unsigned long black_pixel, white_pixel;
 
+  width = _width;
+  height = _height;
   hint.flags = PPosition | PSize | PMinSize | PMaxSize;
   hint.x = 100;
   hint.y = 100;
@@ -2318,6 +2335,7 @@ x11_dialog_c::x11_dialog_c(char *name, int width, int height, int num_ctrls)
   XMapWindow(bx_x_display, dialogw);
   XFlush(bx_x_display);
   dlgwin = dialogw;
+  btn_base = 0;
   ctrl_cnt = num_ctrls;
   controls = new x11_control_c* [num_ctrls];
   static_items = NULL;
@@ -2344,21 +2362,36 @@ x11_dialog_c::~x11_dialog_c()
   XDestroyWindow(bx_x_display, dlgwin);
 }
 
-x11_control_c* x11_dialog_c::add_control(int type, int x, int y, unsigned int width,
-                                         unsigned int height, const char *text)
+int x11_dialog_c::add_control(int type, int x, int y, unsigned int w,
+                              unsigned int h, const char *text)
 {
-  x11_control_c *xctrl = new x11_control_c(type, x, y, width, height, text);
+  x11_control_c *xctrl = new x11_control_c(type, x, y, w, h, text);
   if (cur_ctrl < ctrl_cnt) {
-    controls[cur_ctrl++] = xctrl;
+    controls[cur_ctrl] = xctrl;
   }
-  return xctrl;
+  if (type != XDC_BUTTON) {
+    btn_base = cur_ctrl + 1;
+  }
+  return cur_ctrl++;
+}
+
+int x11_dialog_c::add_button(const char *text)
+{
+  int btn_id = add_control(XDC_BUTTON, 0, height - 30, 65, 20, text);
+  int n = cur_ctrl - btn_base;
+  int x0 = (width - ((n * 65) + ((n - 1) * 20))) / 2;
+  for (int i = btn_base; i < cur_ctrl; i++) {
+    controls[i]->set_pos(x0, height - 30);
+    x0 += 85;
+  }
+  return btn_id;
 }
 
 void x11_dialog_c::add_static_text(int x, int y, const char *text, int length)
 {
   x11_static_t *static_item, *temp;
 
-  static_item = (x11_static_t*)malloc(sizeof(x11_static_t));
+  static_item = new x11_static_t;
   static_item->x = x;
   static_item->y = y;
   static_item->text = new char[length+1];
@@ -2381,12 +2414,19 @@ void x11_dialog_c::draw_text(Display *display, int x, int y, const char *text, i
   XDrawImageString(display, dlgwin, gc, x, y, text, length);
 }
 
+void x11_dialog_c::set_control_param(int id, int value)
+{
+  if (id < ctrl_cnt) {
+    controls[id]->set_param(value);
+  }
+}
+
 int x11_dialog_c::run(int start_ctrl, int ok, int cancel)
 {
   XEvent xevent;
   KeySym key;
-  bx_bool init = 0, done = 0, valid = 0, status;
-  int i;
+  bx_bool done = 0, valid = 0, status;
+  int i, init = 0;
   char text[10], editstr[27];
   x11_static_t *temp;
 
@@ -2409,7 +2449,7 @@ int x11_dialog_c::run(int start_ctrl, int ok, int cancel)
             controls[i]->draw(xevent.xexpose.display, dlgwin, gc);
           }
           old_ctrl = cur_ctrl - 1;
-          if (old_ctrl < 0) old_ctrl = 1;
+          if (old_ctrl < 0) old_ctrl = ctrl_cnt - 1;
           init = 1;
         }
         break;
@@ -2479,23 +2519,35 @@ int x11_dialog_c::run(int start_ctrl, int ok, int cancel)
         valid = 0;
         break;
     }
-    if (init && (cur_ctrl != old_ctrl)) {
-      if (controls[old_ctrl]->get_type() == XDC_EDIT) {
-        sprintf(editstr, "%s ", controls[old_ctrl]->get_text());
-        controls[old_ctrl]->draw_text(bx_x_display, dlgwin, gc, editstr);
-      } else {
-        controls[old_ctrl]->draw_rect(bx_x_display, dlgwin, gc_inv);
+    if (init > 0) {
+      if ((init == 1) || (cur_ctrl != old_ctrl)) {
+        if (controls[old_ctrl]->get_type() == XDC_EDIT) {
+          sprintf(editstr, "%s ", controls[old_ctrl]->get_text());
+          controls[old_ctrl]->draw_text(bx_x_display, dlgwin, gc, editstr);
+        } else {
+          controls[old_ctrl]->draw_rect(bx_x_display, dlgwin, gc_inv);
+        }
+        if (controls[cur_ctrl]->get_type() == XDC_EDIT) {
+          sprintf(editstr, "%s_ ", controls[cur_ctrl]->get_text());
+          controls[cur_ctrl]->draw_text(bx_x_display, dlgwin, gc, editstr);
+        } else {
+          controls[cur_ctrl]->draw_rect(bx_x_display, dlgwin, gc);
+        }
+        old_ctrl = cur_ctrl;
+        init = 2;
       }
-      if (controls[cur_ctrl]->get_type() == XDC_EDIT) {
-        sprintf(editstr, "%s_ ", controls[cur_ctrl]->get_text());
-        controls[cur_ctrl]->draw_text(bx_x_display, dlgwin, gc, editstr);
-      } else {
-        controls[cur_ctrl]->draw_rect(bx_x_display, dlgwin, gc);
-      }
-      old_ctrl = cur_ctrl;
     }
   }
   return cur_ctrl;
+}
+
+x11_control_c* x11_dialog_c::get_control(int id)
+{
+  if (id < ctrl_cnt) {
+    return controls[id];
+  } else {
+    return NULL;
+  }
 }
 
 // X11 dialog box functions
@@ -2503,29 +2555,20 @@ int x11_dialog_c::run(int start_ctrl, int ok, int cancel)
 int x11_ask_dialog(BxEvent *event)
 {
 #if BX_DEBUGGER || BX_GDBSTUB
-  const int button_x[4] = { 36, 121, 206, 291 };
-  const int ask_code[4] = { BX_LOG_ASK_CHOICE_CONTINUE,
-                            BX_LOG_ASK_CHOICE_CONTINUE_ALWAYS,
-                            BX_LOG_ASK_CHOICE_ENTER_DEBUG,
-                            BX_LOG_ASK_CHOICE_DIE };
   const int num_ctrls = 4;
+  int debug_id;
 #else
-  const int button_x[3] = { 81, 166, 251 };
-  const int ask_code[3] = { BX_LOG_ASK_CHOICE_CONTINUE,
-                            BX_LOG_ASK_CHOICE_CONTINUE_ALWAYS,
-                            BX_LOG_ASK_CHOICE_DIE };
   const int num_ctrls = 3;
 #endif
-  int level, cpos;
-  int retcode = -1;
-  int control = num_ctrls - 1;
-  char name[16], device[18], message[512];
+  int level, cpos, retcode, cont_id, cont2_id, quit_id, ctrl_id;
+  const char *name;
+  char device[18], message[512];
 
   level = event->u.logmsg.level;
-  strcpy(name, SIM->get_log_level_name(level));
+  name = SIM->get_log_level_name(level);
   sprintf(device, "Device: %s", event->u.logmsg.prefix);
   sprintf(message, "Message: %s", event->u.logmsg.msg);
-  x11_dialog_c *xdlg = new x11_dialog_c(name, 400, 115, num_ctrls);
+  x11_dialog_c *xdlg = new x11_dialog_c(name, 400, 110, num_ctrls);
   xdlg->add_static_text(20, 25, device, strlen(device));
   if (strlen(message) > 62) {
     cpos = 62;
@@ -2535,14 +2578,18 @@ int x11_ask_dialog(BxEvent *event)
   } else {
     xdlg->add_static_text(20, 45, message, strlen(message));
   }
-  xdlg->add_control(XDC_BUTTON, button_x[0] + 2, 80, 65, 20, "Continue");
-  xdlg->add_control(XDC_BUTTON, button_x[1] + 2, 80, 65, 20, "Alwayscont");
+  cont_id = xdlg->add_button("Continue");
+  xdlg->set_control_param(cont_id, BX_LOG_ASK_CHOICE_CONTINUE);
+  cont2_id = xdlg->add_button("Alwayscont");
+  xdlg->set_control_param(cont2_id, BX_LOG_ASK_CHOICE_CONTINUE_ALWAYS);
 #if BX_DEBUGGER || BX_GDBSTUB
-  xdlg->add_control(XDC_BUTTON, button_x[2] + 2, 80, 65, 20, "Debugger");
+  debug_id = xdlg->add_button("Debugger");
+  xdlg->set_control_param(debug_id, BX_LOG_ASK_CHOICE_ENTER_DEBUG);
 #endif
-  xdlg->add_control(XDC_BUTTON, button_x[num_ctrls-1] + 2, 80, 65, 20, "Quit");
-  control = xdlg->run(num_ctrls-1, 0, num_ctrls-1);
-  retcode = ask_code[control];
+  quit_id = xdlg->add_button("Quit");
+  xdlg->set_control_param(quit_id, BX_LOG_ASK_CHOICE_DIE);
+  ctrl_id = xdlg->run(quit_id, cont_id, quit_id);
+  retcode = xdlg->get_control(ctrl_id)->get_param();
   delete xdlg;
   return retcode;
 }
@@ -2550,7 +2597,7 @@ int x11_ask_dialog(BxEvent *event)
 int x11_string_dialog(bx_param_string_c *param, bx_param_enum_c *param2)
 {
   x11_control_c *xctl_edit, *xbtn_status = NULL;
-  int control = 0, h, num_ctrls, ok_button;
+  int h, num_ctrls, ctrl_id, edit_id, status_id, ok_id, cancel_id, retcode = -1;
   bx_bool status = 0;
   char name[80], text[10];
   const char *value;
@@ -2559,7 +2606,6 @@ int x11_string_dialog(bx_param_string_c *param, bx_param_enum_c *param2)
     strcpy(name, "First CD-ROM image/device");
     status = (param2->get() == BX_INSERTED);
     h = 110;
-    ok_button = 2;
     num_ctrls = 4;
   } else {
     if (param->get_label() != NULL) {
@@ -2568,21 +2614,22 @@ int x11_string_dialog(bx_param_string_c *param, bx_param_enum_c *param2)
       strcpy(name, param->get_name());
     }
     h = 90;
-    ok_button = 1;
     num_ctrls = 3;
   }
   x11_dialog_c *xdlg = new x11_dialog_c(name, 250, h, num_ctrls);
-  xctl_edit = xdlg->add_control(XDC_EDIT, 45, 20, 160, 20, param->getptr());
+  edit_id = xdlg->add_control(XDC_EDIT, 45, 20, 160, 20, param->getptr());
+  xctl_edit = xdlg->get_control(edit_id);
   xctl_edit->set_maxlen(param->get_maxsize());
   if (param2 != NULL) {
     strcpy(text, status ? "X":" ");
-    xbtn_status = xdlg->add_control(XDC_CHECKBOX, 45, 50, 15, 16, text);
+    status_id = xdlg->add_control(XDC_CHECKBOX, 45, 50, 15, 16, text);
+    xbtn_status = xdlg->get_control(status_id);
     xdlg->add_static_text(70, 62, "Inserted", 8);
   }
-  xdlg->add_control(XDC_BUTTON, 55, h - 30, 65, 20, "OK");
-  xdlg->add_control(XDC_BUTTON, 130, h - 30, 65, 20, "Cancel");
-  control = xdlg->run(0, ok_button, num_ctrls-1);
-  if (control == ok_button) {
+  ok_id = xdlg->add_button("OK");
+  cancel_id = xdlg->add_button("Cancel");
+  ctrl_id = xdlg->run(edit_id, ok_id, cancel_id);
+  if (ctrl_id == ok_id) {
     value = xctl_edit->get_value();
     if (param2 != NULL) {
       status = xbtn_status->get_status();
@@ -2599,76 +2646,83 @@ int x11_string_dialog(bx_param_string_c *param, bx_param_enum_c *param2)
     } else {
       param->set(value);
     }
+    retcode = 1;
   }
   delete xdlg;
-  if (control == ok_button) {
-    return 1;
-  } else {
-    return -1;
-  }
+  return retcode;
 }
 
-int x11_yesno_dialog(bx_param_bool_c *param)
+#define XDLG_SIMPLE    0
+#define XDLG_OK_CANCEL 1
+#define XDLG_YES_NO    2
+
+int x11_message_box(bx_param_bool_c *param, int mode)
 {
-  int button_x[2], size_x, size_y;
-  int control, ypos;
-  unsigned int cpos1, cpos2, len, maxlen, lines;
-  char name[80], message[512];
+  int size_x, size_y;
+  int ctrl_id, yes_id, no_id, ypos;
+  unsigned int loffs[10], llen[10];
+  unsigned int i, cpos, len, maxlen, lines;
+  const char *name, *message;
 
   if (param->get_label() != NULL) {
-    strcpy(name, param->get_label());
+    name = param->get_label();
   } else {
-    strcpy(name, param->get_name());
+    name = param->get_name();
   }
-  strcpy(message, param->get_description());
-  cpos1 = 0;
-  cpos2 = 0;
+  message = param->get_description();
+  cpos = 0;
   lines = 0;
   maxlen = 0;
-  while (cpos2 < strlen(message)) {
-    lines++;
-    while ((cpos2 < strlen(message)) && (message[cpos2] != 0x0a)) cpos2++;
-    len = cpos2 - cpos1;
+  while (cpos < strlen(message) && (lines < 10)) {
+    loffs[lines] = cpos;
+    while ((cpos < strlen(message)) && (message[cpos] != 0x0a)) cpos++;
+    len = cpos - loffs[lines];
+    llen[lines] = len;
     if (len > maxlen) maxlen = len;
-    cpos2++;
-    cpos1 = cpos2;
+    lines++;
+    cpos++;
   }
   if (maxlen < 36) {
     size_x = 250;
-    button_x[0] = 55;
-    button_x[1] = 130;
   } else {
-    size_x = 10 + maxlen * 7;
-    button_x[0] = (size_x / 2) - 70;
-    button_x[1] = (size_x / 2) + 5;
+    size_x = 30 + maxlen * 6;
   }
   if (lines < 3) {
     size_y = 90;
   } else {
     size_y = 60 + lines * 15;
   }
-  control = 1 - param->get();
-  x11_dialog_c *xdlg = new x11_dialog_c(name, size_x, size_y, 2);
-  cpos1 = 0;
-  cpos2 = 0;
+  x11_dialog_c *xdlg = new x11_dialog_c(name, size_x, size_y,
+                                        (mode == XDLG_SIMPLE) ? 1 : 2);
   ypos = 34;
-  while (cpos2 < strlen(message)) {
-    while ((cpos2 < strlen(message)) && (message[cpos2] != 0x0a)) cpos2++;
-    len = cpos2 - cpos1;
-    xdlg->add_static_text(20, ypos, message+cpos1, len);
-    cpos2++;
-    cpos1 = cpos2;
+  for (i = 0; i < lines; i++) {
+    xdlg->add_static_text(20, ypos, message+loffs[i], llen[i]);
     ypos += 15;
   }
-  xdlg->add_control(XDC_BUTTON, button_x[0], size_y - 30, 65, 20, "Yes");
-  xdlg->add_control(XDC_BUTTON, button_x[1], size_y - 30, 65, 20, "No");
-  control = xdlg->run(control, 0, 1);
-  param->set(1 - control);
+  if ((mode == XDLG_OK_CANCEL) || (mode == XDLG_YES_NO)) {
+    if (mode == XDLG_YES_NO) {
+      yes_id = xdlg->add_button("Yes");
+      no_id = xdlg->add_button("No");
+    } else {
+      yes_id = xdlg->add_button("OK");
+      no_id = xdlg->add_button("Cancel");
+    }
+    ctrl_id = param->get() ? yes_id : no_id;
+    ctrl_id = xdlg->run(ctrl_id, yes_id, no_id);
+    param->set(ctrl_id == yes_id);
+  } else {
+    if (param->get()) {
+      ctrl_id = xdlg->add_button("OK");
+    } else {
+      ctrl_id = xdlg->add_button("Cancel");
+    }
+    xdlg->run(ctrl_id, ctrl_id, ctrl_id);
+  }
   delete xdlg;
-  return control;
+  return 1;
 }
 
-BxEvent *x11_notify_callback (void *unused, BxEvent *event)
+BxEvent *x11_notify_callback(void *unused, BxEvent *event)
 {
   int opts;
   bx_param_c *param;
@@ -2701,7 +2755,7 @@ BxEvent *x11_notify_callback (void *unused, BxEvent *event)
         event->retcode = x11_string_dialog(sparam, eparam);
         return event;
       } else if (param->get_type() == BXT_PARAM_BOOL) {
-        event->retcode = x11_yesno_dialog((bx_param_bool_c *)param);
+        event->retcode = x11_message_box((bx_param_bool_c*)param, XDLG_YES_NO);
         return event;
       }
     case BX_SYNC_EVT_TICK: // called periodically by siminterface.
