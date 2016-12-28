@@ -786,9 +786,9 @@ log: bochsout.txt
 #   debug: messages useful only when debugging the code.  This may
 #          spit out thousands per second.
 #
-# For events of each level, you can choose to exit Bochs ('fatal'), 'report'
-# or 'ignore'. On some guis you have the additional choice 'ask'. A gui dialog
-# appears asks how to proceed.
+# For events of each level, you can choose to exit Bochs ('fatal'), 'warn',
+# 'report' or 'ignore'. On some guis you have the additional choice 'ask'.
+# A gui dialog appears asks how to proceed.
 #
 # It is also possible to specify the 'action' to do for each Bochs facility
 # separately (e.g. crash on panics from everything except the cdrom, and only
