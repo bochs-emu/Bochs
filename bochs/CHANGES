@@ -6,6 +6,16 @@ Changes after 2.6.8 release:
 - Configure and compile
   - Added Android host platform support.
 
+- CPU / CPUDB
+  - Bugfixes for CPU emulation correctness (critical bugfix for x86-64 and AVX opcodes emulation,
+    fixed assertion failures in proc_ctrl.cc)
+  ! VMX: Implemented Page Modification Logging (PML)
+  ! VMX: Implemented TSC Scaling Extension
+  ! Paging: Implemented Protection Keys
+  ! Implemented UMIP: User Mode Instruction Prevention (don't allow execution of SLDT/SIDT/SGDT/STR/SMSW with CPL>0)
+  ! Implemented RDPID instruction
+  ! Implemented VPOPCNTD/VPOPCNTQ AVX512 instructions
+
 - I/O Devices
   - Busmouse
     - Added standard bus mouse support in addition to the existing InPort
@@ -24,6 +34,7 @@ Changes after 2.6.8 release:
     - Added common USB device option "debug" to turn on BX_DEBUG reporting at
       connection time.
 
+-------------------------------------------------------------------------
 Changes in 2.6.8 (May 3, 2015):
 
 - CPU / CPUDB
