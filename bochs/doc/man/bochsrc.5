@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "31 Mar 2016" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "28 Dec 2016" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -53,7 +53,7 @@ These plugins will be loaded by default (if present): 'biosdev', 'extfpuirq',
 
 These plugins are also supported, but they are usually loaded directly with
 their bochsrc option: 'e1000', 'es1370', 'ne2k', 'pcidev', 'pcipnic', 'sb16',
-\&'usb_ohci', 'usb_uhci', 'usb_xhci' and 'voodoo'.
+\&'usb_ehci', 'usb_ohci', 'usb_uhci', 'usb_xhci' and 'voodoo'.
 
 Example:
   plugin_ctrl: unmapped=0, e1000=1 # unload 'unmapped' and load 'e1000'
@@ -548,8 +548,8 @@ With the mouse type option you can select the type of mouse to emulate.
 The default value is 'ps2'. The other choices are 'imps2' (wheel mouse
 on PS/2), 'serial', 'serial_wheel', 'serial_msys' (one com port requires
 setting 'mode=mouse') 'inport' and 'bus' (if present). To connect a mouse
-to a USB port, see the 'usb_uhci', 'usb_ohci' or 'usb_xhci' option
-(requires PCI and USB support).
+to a USB port, see the 'usb_uhci', 'usb_ohci', 'usb_ehci' or 'usb_xhci'
+option (requires PCI and USB support).
 
 enabled
 
@@ -580,7 +580,7 @@ connected to PCI slots. Up to 5 slots are available. For these combined PCI/ISA
 devices assigning to slot is mandatory if you want to emulate the PCI model:
 cirrus, ne2k and pcivga. These PCI-only devices are also supported, but they are
 auto-assigned if you don't use the slot configuration: e1000, es1370, pcidev,
-pcipnic, usb_ohci and usb_xhci.
+pcipnic, usb_ohci, usb_ehci and usb_xhci.
 
 Example:
   pci: enabled=1, chipset=i440fx, slot1=pcivga, slot2=ne2k
@@ -817,54 +817,52 @@ Examples:
 
 .TP
 .I "panic:"
-If Bochs reaches  a condition  where it cannot
-emulate correctly, it does a panic.  This  can
-be a configuration problem  (like a misspelled
-bochsrc line) or an emulation problem (like an
-unsupported video mode). The  "panic"  setting
-in  bochsrc  tells  Bochs  how to respond to a
-panic.  You  can  set this to fatal (terminate
-the session),  report   (print information  to
-the console), or ignore (do nothing).
+If Bochs  reaches  a condition  where  it cannot emulate
+correctly, it does a panic. This  can be a configuration
+problem (like a misspelled bochsrc line) or an emulation
+problem  (like an  unsupported video mode). The  "panic"
+setting  in  bochsrc  tells  Bochs  how  to respond to a
+panic.   You  can  set  this  to  fatal  (terminate  the
+session), ask (ask user how to proceed) or report (print
+information to the log file).
 
-The safest setting is action=fatal. If you are
-getting  panics,  you  can  try  action=report
-instead.  If you allow Bochs to continue after
-a panic, don't be surprised if you get strange
-behavior or crashes if a panic occurs.  Please
-report  panic  messages  unless  it is just  a
-configuration  problem  like  "could  not find
-hard drive image."
+The safest setting is action=fatal or action=ask. If you
+are  getting  panics, you can try action=report instead.
+If you allow Bochs to continue after a panic,  don't  be
+surprised  if  you  get strange behavior or crashes if a
+panic occurs.  Please report panic messages unless it is
+just a configuration  problem like "could  not find hard
+drive image."
 
-Example:
+Examples:
   panic: action=fatal
+  panic: action=ask
 
 
 .TP
 .I "error:"
-Bochs produces an error message when it  finds
-a condition that really shouldn't happen,  but
-doesn't endanger the simulation. An example of
-an error  might be  if the  emulated  software
-produces an illegal disk command.
+Bochs  produces  an  error   message  when  it  finds  a
+condition  that  really  shouldn't  happen,  but doesn't
+endanger the  simulation.  An example of an error  might
+be  if the  emulated  software  produces an illegal disk
+command.
 
-The "error" setting tells Bochs how to respond
-to an error condition.   You can set  this  to
-fatal  (terminate the session),  report (print
-information to the  console),  or  ignore  (do
-nothing).
+The "error"  setting  tells  Bochs  how to respond to an
+error condition. You can set  this  to fatal  (terminate
+the  session), ask (ask user how to proceed), warn (show
+dialog   with  message   and  continue),  report  (print
+information  to the log file),  or ignore  (do nothing).
 
 Example:
   error: action=report
+  error: action=warn
 
 .TP
 .I "info:"
-This setting tells Bochs what to  do  when  an
-event  occurs   that  generates  informational
-messages.  You can  set this  to  fatal  (that
-would not be very smart though), report (print
-information to the  console),  or  ignore  (do
-nothing).   For  general  usage,  the "report"
+This  setting  tells Bochs  what  to  do  when  an event
+occurs   that generates  informational messages. You can
+set this  to report (print information to the log file),
+or  ignore (do nothing). For general usage, the "report"
 option is probably a good choice.
 
 Example:
@@ -872,13 +870,11 @@ Example:
 
 .TP
 .I "debug:"
-This  setting  tells  Bochs what  to  do  with
-messages intended to assist in debugging.  You
-can set  this  to  fatal  (but you shouldn't),
-report (print information to the  console), or
-ignore (do nothing). You should generally  set
-this  to  ignore,  unless  you are  trying  to
-diagnose a particular problem.
+This  setting  tells  Bochs  what  to  do  with messages
+intended to assist in  debugging.  You can set  this  to
+report (print  information to  the log file),  or ignore
+(do nothing). You should generally set this  to  ignore,
+unless  you are trying to diagnose a particular problem.
 
 .B NOTE:
 When  action=report,   Bochs   may  spit  out
@@ -1234,12 +1230,22 @@ Example:
   usb_ohci: enabled=1
 
 .TP
+.I "usb_ehci:"
+This option controls the presence of the USB EHCI host controller with a
+6-port hub. The portX parameter accepts the same device types with the same
+syntax as the UHCI controller (see above). The optionsX parameter is also
+available on EHCI.
+
+Example:
+  usb_ehci: enabled=1, port1=tablet, options1="speed:high"
+
+.TP
 .I "usb_xhci:"
-This option controls the presence of the experimental USB xHCI host controller
-with a 4-port hub. The portX parameter accepts the same device types with the
-same syntax as the UHCI controller (see above). The optionsX parameter is also
-available on xHCI. NOTE: port 1 and 2 are USB3 and only support super-speed
-devices, but port 3 and 4 are USB2 and support speed settings low, full and high.
+This option controls the presence of the USB xHCI host controller with a 4-port
+hub. The portX parameter accepts the same device types with the same syntax as
+the UHCI controller (see above). The optionsX parameter is also available on
+xHCI. NOTE: port 1 and 2 are USB3 and only support super-speed devices, but
+port 3 and 4 are USB2 and support speed settings low, full and high.
 
 Example:
   usb_xhci: enabled=1

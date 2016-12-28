@@ -526,11 +526,11 @@ currently work with.
   </row>
   <row>
     <entry>USB</entry>
-    <entry>incomplete</entry>
-    <entry>Three types of host controllers (UHCI, OHCI and xHCI) and the devices
-    'mouse', 'tablet', 'keypad', 'disk', 'cdrom', 'floppy, ''hub' and 'printer' are
-    available. Plugging in and removing devices at runtime is possible. Access to
-    real hardware is not implemented yet.
+    <entry>Yes</entry>
+    <entry>Four types of host controllers (UHCI, OHCI, EHCI and xHCI) and the
+    devices 'mouse', 'tablet', 'keypad', 'disk', 'cdrom', 'floppy, ''hub' and
+    'printer' are available. Plugging in and removing devices at runtime is
+    possible. Access to real hardware is not implemented yet.
     </entry>
   </row>
   <row>
@@ -2389,10 +2389,18 @@ to explicitly turn it off.
       </entry>
     </row>
     <row>
+      <entry>--enable-usb-ehci</entry>
+      <entry>no</entry>
+      <entry>
+        Enable USB EHCI support. The host controller with 6-port
+        root hub is available (USB device types: same as UHCI).
+      </entry>
+    </row>
+    <row>
       <entry>--enable-usb-xhci</entry>
       <entry>no</entry>
       <entry>
-        Enable experimental USB xHCI support. The host controller with 4-port
+        Enable USB xHCI support. The host controller with 4-port
         root hub is available (USB device types: same as UHCI).
       </entry>
     </row>
@@ -3200,7 +3208,7 @@ These plugins will be loaded by default (if present): 'biosdev', 'extfpuirq',
 <para>
 These plugins are also supported, but they are usually loaded directly with
 their bochsrc option: 'e1000', 'es1370', 'ne2k', 'pcidev', 'pcipnic', 'sb16',
-'usb_ohci', 'usb_uhci', 'usb_xhci' and 'voodoo'.
+'usb_ehci', 'usb_ohci', 'usb_uhci', 'usb_xhci' and 'voodoo'.
 </para>
 </section>
 
@@ -3849,8 +3857,8 @@ The default value is 'ps2'. The other choices are 'imps2' (wheel mouse
 on PS/2), 'serial', 'serial_wheel', 'serial_msys' (one com port requires
 setting 'mode=mouse', see <link linkend="bochsopt-com">com option</link>)
 'inport' and 'bus' (if present). To connect a mouse to a USB port, see the
-<link linkend="bochsopt-usb-uhci">usb_uhci</link>, 'usb_ohci 'or
-'usb_xhci' option (requires PCI and USB support).
+<link linkend="bochsopt-usb-uhci">usb_uhci</link>, 'usb_ohci', 'usb_ehci'
+or 'usb_xhci' options (requires PCI and USB support).
 </para>
 <para><command>enabled</command></para>
 <para>
@@ -3883,7 +3891,7 @@ connected to PCI slots. Up to 5 slots are available. For these combined PCI/ISA
 devices assigning to slot is mandatory if you want to emulate the PCI model:
 cirrus, ne2k and pcivga. These PCI-only devices are also supported, but they are
 auto-assigned if you don't use the slot configuration: e1000, es1370, pcidev,
-pcipnic, usb_ohci and usb_xhci.
+pcipnic, usb_ohci, usb_ehci and usb_xhci.
 </para>
 </section>
 
@@ -4278,9 +4286,9 @@ emulation problem (like an unsupported video mode).
 <para>
 The debug, info, error, and panic lines in the bochsrc control what Bochs will
 do when it encounters each type of event.  The allowed actions are: fatal
-(terminate bochs), ask (ask the user what to do), report (print information to
-the console or log file), or ignore (do nothing).  The recommended settings are
-listed in the sample above.
+(terminate bochs), ask (ask the user what to do), warn (show dialog with message
+and continue), report (print information to the console or log file), or ignore
+(do nothing). The recommended settings are listed in the sample above.
 </para>
 
 <para>
@@ -4828,15 +4836,27 @@ syntax as the UHCI controller (see the <link linkend="bochsopt-usb-uhci">usb_uhc
 The optionsX parameter is also available on OHCI.</para>
 </section>
 
+<section id="bochsopt-usb-ehci"><title>usb_ehci</title>
+<para>
+Example:
+<screen>
+  usb_ehci: enabled=1, port1=tablet, options1="speed:high"
+</screen>
+This option controls the presence of the USB EHCI host controller with a
+6-port hub. The portX parameter accepts the same device types with the same
+syntax as the UHCI controller (see the <link linkend="bochsopt-usb-uhci">usb_uhci option</link>).
+The optionsX parameter is also available on EHCI.</para>
+</section>
+
 <section id="bochsopt-usb-xhci"><title>usb_xhci</title>
 <para>
 Example:
 <screen>
-  usb_xhci: enabled=1
+  usb_xhci: enabled=1, port1="disk:usbdisk.img"
 </screen>
-This option controls the presence of the experimental USB xHCI host controller
-with a 4-port hub. The portX parameter accepts the same device types with the same
-syntax as the UHCI controller (see the <link linkend="bochsopt-usb-uhci">usb_uhci option</link>).
+This option controls the presence of the USB xHCI host controller with a 4-port
+hub. The portX parameter accepts the same device types with the same syntax as
+the UHCI controller (see the <link linkend="bochsopt-usb-uhci">usb_uhci option</link>).
 The optionsX parameter is also available on xHCI. NOTE: port 1 and 2 are USB3 and
 only support super-speed devices, but port 3 and 4 are USB2 and support speed
 settings low, full and high.</para>
@@ -6462,6 +6482,11 @@ simulation is starting.
       <entry>usb_cbi</entry>
       <entry>USBCBI</entry>
       <entry>USB (UFI/CBI) floppy emulation</entry>
+    </row>
+    <row>
+      <entry>usb_ehci</entry>
+      <entry>EHCI</entry>
+      <entry>USB EHCI controller</entry>
     </row>
     <row>
       <entry>usb_hid</entry>
