@@ -3128,6 +3128,8 @@ if test ! -d build; then mkdir build; fi
 if test ! -d build/linux; then mkdir build/linux; fi
 if test ! -d build/win32; then mkdir build/win32; fi
 if test ! -d build/win32/nsis; then mkdir build/win32/nsis; fi
+if test ! -d cpu/decoder; then mkdir cpu/decoder; fi
+if test ! -d iodev/network/slirp; then mkdir iodev/network/slirp; fi
 
 AC_SUBST(INSTALL_TARGET)
 AC_SUBST(INSTALL_LIST_FOR_PLATFORM)
