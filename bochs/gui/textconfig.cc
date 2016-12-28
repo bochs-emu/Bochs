@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2013  The Bochs Project
+//  Copyright (C) 2002-2016  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -552,8 +552,8 @@ static void bx_print_log_action_table()
 }
 
 static const char *log_options_prompt1 = "Enter the ID of the device to edit, or -1 to return: [-1] ";
-static const char *log_level_choices[] = { "ignore", "report", "ask", "fatal", "no change" };
-static int log_level_n_choices_normal = 4;
+static const char *log_level_choices[N_ACT+1] = { "ignore", "report", "warn", "ask", "fatal", "no change" };
+static int log_level_n_choices_normal = N_ACT;
 
 void bx_log_options(int individual)
 {
@@ -589,7 +589,7 @@ void bx_log_options(int individual)
     bx_print_log_action_table();
     for (int level=0; level<SIM->get_max_log_level(); level++) {
       char prompt[1024];
-      int action, default_action = 4;  // default to no change
+      int action, default_action = N_ACT;  // default to no change
       sprintf(prompt, "Enter action for %s event on all devices: [no change] ", SIM->get_log_level_name(level));
       // do show the no change choice (choices=4)
       if (ask_menu(prompt, "", log_level_n_choices_normal+1, log_level_choices, default_action, &action)<0)
@@ -718,47 +718,50 @@ config_interface_notify_callback(void *unused, BxEvent *event)
       event->retcode = event->u.param.param->text_ask(stdin, stderr);
       return event;
     case BX_SYNC_EVT_LOG_ASK:
-    {
-      int level = event->u.logmsg.level;
-      fprintf(stderr, "========================================================================\n");
-      fprintf(stderr, "Event type: %s\n", SIM->get_log_level_name (level));
-      fprintf(stderr, "Device: %s\n", event->u.logmsg.prefix);
-      fprintf(stderr, "Message: %s\n\n", event->u.logmsg.msg);
-      fprintf(stderr, "A %s has occurred.  Do you want to:\n", SIM->get_log_level_name (level));
-      fprintf(stderr, "  cont       - continue execution\n");
-      fprintf(stderr, "  alwayscont - continue execution, and don't ask again.\n");
-      fprintf(stderr, "               This affects only %s events from device %s\n", SIM->get_log_level_name (level), event->u.logmsg.prefix);
-      fprintf(stderr, "  die        - stop execution now\n");
-      fprintf(stderr, "  abort      - dump core %s\n",
-              BX_HAVE_ABORT ? "" : "(Disabled)");
+      if (event->u.logmsg.flag == BX_LOG_ASK_ASKDLG) {
+        int level = event->u.logmsg.level;
+        fprintf(stderr, "========================================================================\n");
+        fprintf(stderr, "Event type: %s\n", SIM->get_log_level_name (level));
+        fprintf(stderr, "Device: %s\n", event->u.logmsg.prefix);
+        fprintf(stderr, "Message: %s\n\n", event->u.logmsg.msg);
+        fprintf(stderr, "A %s has occurred.  Do you want to:\n", SIM->get_log_level_name (level));
+        fprintf(stderr, "  cont       - continue execution\n");
+        fprintf(stderr, "  alwayscont - continue execution, and don't ask again.\n");
+        fprintf(stderr, "               This affects only %s events from device %s\n", SIM->get_log_level_name (level), event->u.logmsg.prefix);
+        fprintf(stderr, "  die        - stop execution now\n");
+        fprintf(stderr, "  abort      - dump core %s\n",
+                BX_HAVE_ABORT ? "" : "(Disabled)");
 #if BX_DEBUGGER
-      fprintf(stderr, "  debug      - continue and return to bochs debugger\n");
+        fprintf(stderr, "  debug      - continue and return to bochs debugger\n");
 #endif
 #if BX_GDBSTUB
-      fprintf(stderr, "  debug      - hand control to gdb\n");
+        fprintf(stderr, "  debug      - hand control to gdb\n");
 #endif
 
-      int choice;
+        int choice;
 ask:
-      if (ask_menu("Choose one of the actions above: [%s] ", "",
-                   log_action_n_choices, log_action_ask_choices, 2, &choice) < 0)
-	event->retcode = -1;
-      // return 0 for continue, 1 for alwayscontinue, 2 for die, 3 for debug.
-      if (!BX_HAVE_ABORT && choice==BX_LOG_ASK_CHOICE_DUMP_CORE) goto ask;
-      fflush(stdout);
-      fflush(stderr);
-      event->retcode = choice;
-    }
-    return event;
-  case BX_ASYNC_EVT_REFRESH:
-  case BX_ASYNC_EVT_DBG_MSG:
-  case BX_ASYNC_EVT_LOG_MSG:
-    // The text mode interface does not use these events, so just ignore
-    // them.
-    return event;
-  default:
-    fprintf(stderr, "textconfig: notify callback called with event type %04x\n", event->type);
-    return event;
+        if (ask_menu("Choose one of the actions above: [%s] ", "",
+                     log_action_n_choices, log_action_ask_choices, 2, &choice) < 0)
+        event->retcode = -1;
+        // return 0 for continue, 1 for alwayscontinue, 2 for die, 3 for debug.
+        if (!BX_HAVE_ABORT && choice==BX_LOG_ASK_CHOICE_DUMP_CORE) goto ask;
+        fflush(stdout);
+        fflush(stderr);
+        event->retcode = choice;
+      } else {
+        // warning prompt not implemented
+        event->retcode = 0;
+      }
+      return event;
+    case BX_ASYNC_EVT_REFRESH:
+    case BX_ASYNC_EVT_DBG_MSG:
+    case BX_ASYNC_EVT_LOG_MSG:
+      // The text mode interface does not use these events, so just ignore
+      // them.
+      return event;
+    default:
+      fprintf(stderr, "textconfig: notify callback called with event type %04x\n", event->type);
+      return event;
   }
   assert(0); // switch statement should return
 }

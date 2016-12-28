@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2003-2014  The Bochs Project
+//  Copyright (C) 2003-2016  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -27,7 +27,7 @@
 #include "win32res.h"
 #include "win32paramdlg.h"
 
-const char log_choices[5][16] = {"ignore", "log", "ask user", "end simulation", "no change"};
+const char log_choices[N_ACT+1][16] = {"ignore", "log", "warn user", "ask user", "end simulation", "no change"};
 
 HWND GetBochsWindow()
 {
@@ -97,12 +97,16 @@ static BOOL CALLBACK LogAskProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPara
       SetWindowText(GetDlgItem(hDlg, IDASKMSG), event->u.logmsg.msg);
       SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_ADDSTRING, 0, (LPARAM)"Continue");
       SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_ADDSTRING, 0, (LPARAM)"Continue and don't ask again");
-      SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_ADDSTRING, 0, (LPARAM)"Kill simulation");
-      SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_ADDSTRING, 0, (LPARAM)"Abort (dump core)");
+      if (event->u.logmsg.flag == BX_LOG_ASK_ASKDLG) {
+        SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_ADDSTRING, 0, (LPARAM)"Kill simulation");
+        SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_ADDSTRING, 0, (LPARAM)"Abort (dump core)");
 #if BX_DEBUGGER
-      SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_ADDSTRING, 0, (LPARAM)"Continue and return to debugger");
+        SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_ADDSTRING, 0, (LPARAM)"Continue and return to debugger");
 #endif
-      SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_SETCURSEL, 2, 0);
+        SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_SETCURSEL, 2, 0);
+      } else {
+        SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_SETCURSEL, 0, 0);
+      }
       SetFocus(GetDlgItem(hDlg, IDASKLIST));
       return FALSE;
     case WM_CLOSE:

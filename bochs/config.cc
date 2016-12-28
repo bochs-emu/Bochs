@@ -2062,15 +2062,8 @@ static Bit32s parse_log_options(const char *context, int num_params, char *param
     actstr = strtok(NULL, "");
     if (actstr != NULL) {
       def_action = !strcmp(module, "action");
-      if (!strcmp(actstr, "fatal"))
-        action = ACT_FATAL;
-      else if (!strcmp (actstr, "report"))
-        action = ACT_REPORT;
-      else if (!strcmp (actstr, "ignore"))
-        action = ACT_IGNORE;
-      else if (!strcmp (actstr, "ask"))
-        action = ACT_ASK;
-      else {
+      action = SIM->is_action_name(actstr);
+      if (action < ACT_IGNORE) {
         PARSE_ERR(("%s: %s directive malformed.", context, params[0]));
         free(param);
         return -1;

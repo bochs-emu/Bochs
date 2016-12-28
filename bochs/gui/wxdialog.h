@@ -2,7 +2,7 @@
 // $Id$
 ////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2014  The Bochs Project
+//  Copyright (C) 2002-2016  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -354,10 +354,10 @@ private:
 #define LOG_OPTS_PROMPT wxT("How should Bochs respond to each type of event?")
 #define LOG_OPTS_TYPE_NAMES { wxT("Debug events"), wxT("Info events"), wxT("Error events"), wxT("Panic events") }
 #define LOG_OPTS_N_TYPES 4
-#define LOG_OPTS_CHOICES { wxT("ignore"), wxT("log"), wxT("ask user"), wxT("end simulation"), wxT("no change") }
-#define LOG_OPTS_N_CHOICES_NORMAL 4
-#define LOG_OPTS_N_CHOICES 5   // number of choices, including "no change"
-#define LOG_OPTS_NO_CHANGE 4   // index of "no change"
+#define LOG_OPTS_CHOICES { wxT("ignore"), wxT("log"), wxT("warn user"), wxT("ask user"), wxT("end simulation"), wxT("no change") }
+#define LOG_OPTS_N_CHOICES_NORMAL 5
+#define LOG_OPTS_N_CHOICES 6   // number of choices, including "no change"
+#define LOG_OPTS_NO_CHANGE 5   // index of "no change"
 #define LOG_OPTS_ADV wxT("For additional control over how each device responds to events, use the menu option \"Log ... By Device\".")
   wxFlexGridSizer *gridSizer;
   wxChoice *action[LOG_OPTS_N_TYPES];

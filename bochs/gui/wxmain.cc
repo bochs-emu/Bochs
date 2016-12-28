@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2014  The Bochs Project
+//  Copyright (C) 2002-2016  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1158,6 +1158,10 @@ void MyFrame::OnLogAsk(BxEvent *be)
 #if !BX_DEBUGGER && !BX_GDBSTUB
   dlg.EnableButton(dlg.DEBUG, FALSE);
 #endif
+  if (be->u.logmsg.flag != BX_LOG_ASK_ASKDLG) {
+    dlg.EnableButton(dlg.DIE, FALSE);
+    dlg.EnableButton(dlg.DUMP, FALSE);
+  }
   dlg.SetContext(wxString(be->u.logmsg.prefix, wxConvUTF8));
   dlg.SetMessage(wxString(be->u.logmsg.msg, wxConvUTF8));
   int n = dlg.ShowModal();

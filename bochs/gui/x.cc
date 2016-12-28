@@ -2687,11 +2687,7 @@ int x11_message_box(bx_param_bool_c *param, int mode)
   } else {
     size_x = 30 + maxlen * 6;
   }
-  if (lines < 3) {
-    size_y = 90;
-  } else {
-    size_y = 60 + lines * 15;
-  }
+  size_y = 70 + lines * 15;
   x11_dialog_c *xdlg = new x11_dialog_c(name, size_x, size_y,
                                         (mode == XDLG_SIMPLE) ? 1 : 2);
   ypos = 34;
@@ -2729,11 +2725,21 @@ BxEvent *x11_notify_callback(void *unused, BxEvent *event)
   bx_param_string_c *sparam;
   bx_param_enum_c *eparam;
   bx_list_c *list;
+  char message[256];
 
   switch (event->type)
   {
     case BX_SYNC_EVT_LOG_ASK:
-      event->retcode = x11_ask_dialog(event);
+      if (event->u.logmsg.flag == BX_LOG_ASK_ASKDLG) {
+        event->retcode = x11_ask_dialog(event);
+      } else if (event->u.logmsg.flag == BX_LOG_ASK_MSGBOX_WARN) {
+        const char *title = SIM->get_log_level_name(event->u.logmsg.level);
+        sprintf(message, "Device: %s\n\nMessage: %s", event->u.logmsg.prefix,
+                event->u.logmsg.msg);
+        bx_param_bool_c bparam(NULL, "warn", title, message, 1);
+        x11_message_box(&bparam, XDLG_SIMPLE);
+        event->retcode = 0;
+      }
       return event;
     case BX_SYNC_EVT_ASK_PARAM:
       param = event->u.param.param;

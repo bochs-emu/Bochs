@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2015  The Bochs Project
+//  Copyright (C) 2002-2016  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -100,6 +100,7 @@ public:
   virtual int get_log_action(int mod, int level);
   virtual void set_log_action(int mod, int level, int action);
   virtual const char *get_action_name(int action);
+  virtual int is_action_name(const char *val);
   virtual int get_default_log_action(int level) {
     return logfunctions::get_default_action(level);
   }
@@ -123,6 +124,7 @@ public:
   virtual void set_notify_callback(bxevent_handler func, void *arg);
   virtual void get_notify_callback(bxevent_handler *func, void **arg);
   virtual BxEvent* sim_to_ci_event(BxEvent *event);
+  virtual int log_warn(const char *prefix, int level, const char *msg);
   virtual int log_ask(const char *prefix, int level, const char *msg);
   virtual void log_msg(const char *prefix, int level, const char *msg);
   virtual void set_log_viewer(bx_bool val) { bx_log_viewer = val; }
@@ -420,6 +422,11 @@ const char *bx_real_sim_c::get_action_name(int action)
   return io->getaction(action);
 }
 
+int bx_real_sim_c::is_action_name(const char *val)
+{
+  return io->isaction(val);
+}
+
 const char *bx_real_sim_c::get_log_level_name(int level)
 {
   return io->getlevel(level);
@@ -575,6 +582,21 @@ BxEvent *bx_real_sim_c::sim_to_ci_event(BxEvent *event)
   }
 }
 
+int bx_real_sim_c::log_warn(const char *prefix, int level, const char *msg)
+{
+  BxEvent be;
+  be.type = BX_SYNC_EVT_LOG_ASK;
+  be.u.logmsg.prefix = prefix;
+  be.u.logmsg.level = level;
+  be.u.logmsg.msg = msg;
+  be.u.logmsg.flag = BX_LOG_ASK_MSGBOX_WARN;
+  // default return value in case something goes wrong.
+  be.retcode = BX_LOG_NOTIFY_FAILED;
+  // calling notify
+  sim_to_ci_event(&be);
+  return be.retcode;
+}
+
 // returns 0 for continue, 1 for alwayscontinue, 2 for die.
 int bx_real_sim_c::log_ask(const char *prefix, int level, const char *msg)
 {
@@ -583,6 +605,7 @@ int bx_real_sim_c::log_ask(const char *prefix, int level, const char *msg)
   be.u.logmsg.prefix = prefix;
   be.u.logmsg.level = level;
   be.u.logmsg.msg = msg;
+  be.u.logmsg.flag = BX_LOG_ASK_ASKDLG;
   // default return value in case something goes wrong.
   be.retcode = BX_LOG_NOTIFY_FAILED;
   // calling notify
@@ -1157,16 +1180,10 @@ bx_bool bx_real_sim_c::restore_logopts()
             } else if (!strncmp(string, "PANIC=", 6)) {
               type = LOGLEV_PANIC;
             }
-            if (!strcmp(string+j, "ignore")) {
-              action = ACT_IGNORE;
-            } else if (!strcmp(string+j, "report")) {
-              action = ACT_REPORT;
-            } else if (!strcmp(string+j, "ask")) {
-              action = ACT_ASK;
-            } else if (!strcmp(string+j, "fatal")) {
-              action = ACT_FATAL;
+            action = is_action_name(string+j);
+            if (action >= ACT_IGNORE) {
+              set_log_action(dev, type, action);
             }
-            set_log_action(dev, type, action);
           } else {
             if (i == 1) {
               BX_ERROR(("restore_logopts(): log module '%s' not found", devname));

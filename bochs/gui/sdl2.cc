@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2014-2015  The Bochs Project
+//  Copyright (C) 2014-2016  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1478,20 +1478,16 @@ int sdl2_ask_dialog(BxEvent *event)
   SDL_MessageBoxData msgboxdata;
   SDL_MessageBoxButtonData buttondata[4];
   int level, retcode;
-#if BX_DEBUGGER || BX_GDBSTUB
-  int defbtn = 3;
-#else
-  int defbtn = 2;
-#endif
   char message[512];
 
   level = event->u.logmsg.level;
-  sprintf(message, "%s %s", event->u.logmsg.prefix, event->u.logmsg.msg);
+  sprintf(message, "Device: %s\nMessage: %s", event->u.logmsg.prefix,
+          event->u.logmsg.msg);
   msgboxdata.flags = SDL_MESSAGEBOX_ERROR;
   msgboxdata.window = window;
   msgboxdata.title = SIM->get_log_level_name(level);
   msgboxdata.message = message;
-  msgboxdata.numbuttons = defbtn + 1;
+  msgboxdata.numbuttons = 2;
   msgboxdata.buttons = buttondata;
   msgboxdata.colorScheme = NULL;
   buttondata[0].flags = 0;
@@ -1500,14 +1496,18 @@ int sdl2_ask_dialog(BxEvent *event)
   buttondata[1].flags = 0;
   buttondata[1].buttonid = BX_LOG_ASK_CHOICE_CONTINUE_ALWAYS;
   buttondata[1].text = "Alwayscont";
+  if (event->u.logmsg.flag == BX_LOG_ASK_ASKDLG) {
+    msgboxdata.numbuttons = 3;
+    buttondata[2].flags = SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT;
+    buttondata[2].buttonid = BX_LOG_ASK_CHOICE_DIE;
+    buttondata[2].text = "Quit";
 #if BX_DEBUGGER || BX_GDBSTUB
-  buttondata[2].flags = 0;
-  buttondata[2].buttonid = BX_LOG_ASK_CHOICE_ENTER_DEBUG;
-  buttondata[2].text = "Debugger";
+    msgboxdata.numbuttons = 4;
+    buttondata[3].flags = 0;
+    buttondata[3].buttonid = BX_LOG_ASK_CHOICE_ENTER_DEBUG;
+    buttondata[3].text = "Debugger";
 #endif
-  buttondata[defbtn].flags = SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT;
-  buttondata[defbtn].buttonid = BX_LOG_ASK_CHOICE_DIE;
-  buttondata[defbtn].text = "Quit";
+  }
   if (SDL_ShowMessageBox(&msgboxdata, &retcode) < 0) {
     return -1;
   } else {

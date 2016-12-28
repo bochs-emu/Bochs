@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2016  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -50,11 +50,25 @@ const char* iofunctions::getlevel(int i) const
   else return "?";
 }
 
+static const char *act_name[N_ACT] = { "ignore", "report", "warn", "ask", "fatal" };
+
 const char* iofunctions::getaction(int i) const
 {
-  static const char *name[] = { "ignore", "report", "ask", "fatal" };
   assert (i>=ACT_IGNORE && i<N_ACT);
-  return name[i];
+  return act_name[i];
+}
+
+int iofunctions::isaction(const char *val) const
+{
+  int action = -1;
+
+  for (int i = 0; i < N_ACT; i++) {
+    if (!strcmp(val, act_name[i])) {
+      action = ACT_IGNORE + i;
+      break;
+    }
+  }
+  return action;
 }
 
 void iofunctions::flush(void)
@@ -414,6 +428,11 @@ void logfunctions::error(const char *fmt, ...)
   logio->out(LOGLEV_ERROR, prefix, fmt, ap);
   va_end(ap);
 
+  if (onoff[LOGLEV_ERROR] == ACT_WARN) {
+    va_start(ap, fmt);
+    warn(LOGLEV_ERROR, prefix, fmt, ap);
+    va_end(ap);
+  }
   if (onoff[LOGLEV_ERROR] == ACT_ASK) {
     va_start(ap, fmt);
     ask(LOGLEV_ERROR, prefix, fmt, ap);
@@ -438,6 +457,11 @@ void logfunctions::panic(const char *fmt, ...)
   logio->out(LOGLEV_PANIC, prefix, fmt, ap);
   va_end(ap);
 
+  if (onoff[LOGLEV_PANIC] == ACT_WARN) {
+    va_start(ap, fmt);
+    warn(LOGLEV_PANIC, prefix, fmt, ap);
+    va_end(ap);
+  }
   if (onoff[LOGLEV_PANIC] == ACT_ASK) {
     va_start(ap, fmt);
     ask(LOGLEV_PANIC, prefix, fmt, ap);
@@ -463,6 +487,36 @@ void logfunctions::ldebug(const char *fmt, ...)
   va_end(ap);
 
   // the actions ask() and fatal() are not supported here
+}
+
+void logfunctions::warn(int level, const char *prefix, const char *fmt, va_list ap)
+{
+  // Guard against reentry on warn() function.  The danger is that some
+  // function that's called within warn() could trigger another
+  // BX_ERROR that could call warn() again, leading to infinite
+  // recursion and infinite asks.
+  static char in_warn_already = 0;
+  char buf1[1024];
+  if (in_warn_already) {
+    fprintf(stderr, "logfunctions::warn() should not reenter!!\n");
+    return;
+  }
+  in_warn_already = 1;
+  vsnprintf(buf1, sizeof(buf1), fmt, ap);
+  // FIXME: facility set to 0 because it's unknown.
+
+  // update vga screen.  This is useful because sometimes useful messages
+  // are printed on the screen just before a panic.  It's also potentially
+  // dangerous if this function calls ask again...  That's why I added
+  // the reentry check above.
+  SIM->refresh_vga();
+
+  // ensure the text screen is showing
+  SIM->set_display_mode(DISP_MODE_CONFIG);
+  SIM->log_warn(prefix, level, buf1);
+  // return to simulation mode
+  SIM->set_display_mode(DISP_MODE_SIM);
+  in_warn_already = 0;
 }
 
 void logfunctions::ask(int level, const char *prefix, const char *fmt, va_list ap)

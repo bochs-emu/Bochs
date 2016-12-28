@@ -168,6 +168,7 @@ typedef enum {
 typedef enum {
   ACT_IGNORE = 0,
   ACT_REPORT,
+  ACT_WARN,
   ACT_ASK,
   ACT_FATAL,
   N_ACT
@@ -178,11 +179,11 @@ typedef enum {
 // normally all action choices are available for all event types. The exclude
 // expression allows some choices to be eliminated if they don't make any
 // sense.  For example, it would be stupid to ignore a panic.
-#define BX_LOG_OPTS_EXCLUDE(type, choice)  (                           \
-   /* can't die or ask, on debug or info events */                     \
-   (type <= LOGLEV_INFO && (choice == ACT_ASK || choice == ACT_FATAL)) \
-   /* can't ignore panics */                                           \
-   || (type == LOGLEV_PANIC && choice == ACT_IGNORE)                   \
+#define BX_LOG_OPTS_EXCLUDE(type, choice)  (             \
+   /* can't die, ask or warn, on debug or info events */ \
+   (type <= LOGLEV_INFO && (choice >= ACT_WARN))         \
+   /* can't ignore panics */                             \
+   || (type == LOGLEV_PANIC && choice == ACT_IGNORE)     \
    )
 
 // floppy / cdrom media status
@@ -392,6 +393,7 @@ typedef struct {
 // synchronizing threads, etc. for each.
 typedef struct {
   Bit8u level;
+  Bit8u flag;
   const char *prefix;
   const char *msg;
 } BxLogMsgEvent;
@@ -417,6 +419,12 @@ enum {
   BX_LOG_ASK_CHOICE_ENTER_DEBUG,
   BX_LOG_ASK_N_CHOICES,
   BX_LOG_NOTIFY_FAILED
+};
+
+enum {
+  BX_LOG_ASK_ASKDLG,
+  BX_LOG_ASK_MSGBOX_WARN,
+  BX_LOG_ASK_MSGBOX_QUIT
 };
 
 // Event type: BX_SYNC_EVT_GET_DBG_COMMAND
@@ -675,6 +683,7 @@ public:
   virtual int get_default_log_action(int level) {return -1;}
   virtual void set_default_log_action(int level, int action) {}
   virtual const char *get_action_name(int action) {return NULL;}
+  virtual int is_action_name(const char *val) {return -1;}
   virtual const char *get_log_level_name(int level) {return NULL;}
   virtual int get_max_log_level() {return -1;}
 
@@ -715,6 +724,9 @@ public:
   // send an event from the simulator to the CI.
   virtual BxEvent* sim_to_ci_event(BxEvent *event) {return NULL;}
 
+  // called from simulator when it hits errors, to warn the user
+  // before continuing simulation
+  virtual int log_warn(const char *prefix, int level, const char *msg) {return -1;}
   // called from simulator when it hits serious errors, to ask if the user
   // wants to continue or not
   virtual int log_ask(const char *prefix, int level, const char *msg) {return -1;}
