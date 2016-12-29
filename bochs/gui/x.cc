@@ -2543,55 +2543,112 @@ int x11_dialog_c::run(int start_ctrl, int ok, int cancel)
 
 x11_control_c* x11_dialog_c::get_control(int id)
 {
-  if (id < ctrl_cnt) {
+  if ((id >= 0) && (id < ctrl_cnt)) {
     return controls[id];
   } else {
     return NULL;
   }
 }
 
+// generic X11 message box
+
+#define MAX_BUTTONS 5
+
+typedef struct {
+  unsigned int count;
+  int def_id;
+  int ok_id;
+  int cancel_id;
+  struct {
+    const char *label;
+    int code;
+  } btn[MAX_BUTTONS];
+} x11_button_t;
+
+int x11_message_box(const char *title, const char *message, x11_button_t *buttons)
+{
+  unsigned int size_x, size_y;
+  unsigned int loffs[10], llen[10];
+  unsigned int i, cpos, ctrl_id, len, lines, maxlen, retcode, ypos;
+
+  cpos = 0;
+  lines = 0;
+  maxlen = 0;
+  while (cpos < strlen(message) && (lines < 10)) {
+    loffs[lines] = cpos;
+    while ((cpos < strlen(message)) && (message[cpos] != 0x0a)) cpos++;
+    len = cpos - loffs[lines];
+    llen[lines] = len;
+    if (len > maxlen) maxlen = len;
+    lines++;
+    cpos++;
+  }
+  size_x = buttons->count * 85 + 20;
+  if (maxlen > ((size_x - 30) / 6)) {
+    size_x = 30 + maxlen * 6;
+  }
+  size_y = 75 + lines * 15;
+  x11_dialog_c *xdlg = new x11_dialog_c(title, size_x, size_y, buttons->count);
+  ypos = 34;
+  for (i = 0; i < lines; i++) {
+    xdlg->add_static_text(20, ypos, message+loffs[i], llen[i]);
+    ypos += 15;
+  }
+  for (i = 0; i < buttons->count; i++) {
+    ctrl_id = xdlg->add_button(buttons->btn[i].label);
+    xdlg->set_control_param(ctrl_id, buttons->btn[i].code);
+  }
+  ctrl_id = xdlg->run(buttons->def_id, buttons->ok_id, buttons->cancel_id);
+  retcode = xdlg->get_control(ctrl_id)->get_param();
+  delete xdlg;
+  return retcode;
+}
+
 // X11 dialog box functions
 
 int x11_ask_dialog(BxEvent *event)
 {
-#if BX_DEBUGGER || BX_GDBSTUB
-  const int num_ctrls = 4;
-  int debug_id;
-#else
-  const int num_ctrls = 3;
-#endif
-  int level, cpos, retcode, cont_id, cont2_id, quit_id, ctrl_id;
-  const char *name;
-  char device[18], message[512];
+  const char *title = SIM->get_log_level_name(event->u.logmsg.level);
+  char message[256];
+  x11_button_t buttons;
+  int i = 0, mode;
 
-  level = event->u.logmsg.level;
-  name = SIM->get_log_level_name(level);
-  sprintf(device, "Device: %s", event->u.logmsg.prefix);
-  sprintf(message, "Message: %s", event->u.logmsg.msg);
-  x11_dialog_c *xdlg = new x11_dialog_c(name, 400, 110, num_ctrls);
-  xdlg->add_static_text(20, 25, device, strlen(device));
-  if (strlen(message) > 62) {
-    cpos = 62;
-    while ((cpos > 0) && (!isspace(message[cpos]))) cpos--;
-    xdlg->add_static_text(20, 45, message, cpos);
-    xdlg->add_static_text(74, 63, message+cpos+1, strlen(message)-cpos-1);
-  } else {
-    xdlg->add_static_text(20, 45, message, strlen(message));
+  sprintf(message, "Device: %s\n\nMessage: %s", event->u.logmsg.prefix,
+          event->u.logmsg.msg);
+  mode = event->u.logmsg.mode;
+  buttons.def_id = 0;
+  buttons.ok_id = 0;
+  buttons.cancel_id = 0;
+  if ((mode == BX_LOG_DLG_ASK) || (mode == BX_LOG_DLG_WARN)) {
+    buttons.btn[0].label = "Continue";
+    buttons.btn[0].code = BX_LOG_ASK_CHOICE_CONTINUE;
+    buttons.btn[1].label = "Alwayscont";
+    buttons.btn[1].code = BX_LOG_ASK_CHOICE_CONTINUE_ALWAYS;
+    i = 2;
   }
-  cont_id = xdlg->add_button("Continue");
-  xdlg->set_control_param(cont_id, BX_LOG_ASK_CHOICE_CONTINUE);
-  cont2_id = xdlg->add_button("Alwayscont");
-  xdlg->set_control_param(cont2_id, BX_LOG_ASK_CHOICE_CONTINUE_ALWAYS);
+  if (mode == BX_LOG_DLG_ASK) {
 #if BX_DEBUGGER || BX_GDBSTUB
-  debug_id = xdlg->add_button("Debugger");
-  xdlg->set_control_param(debug_id, BX_LOG_ASK_CHOICE_ENTER_DEBUG);
+    buttons.btn[i].label = "Debugger";
+    buttons.btn[i].code = BX_LOG_ASK_CHOICE_ENTER_DEBUG;
+    i++;
 #endif
-  quit_id = xdlg->add_button("Quit");
-  xdlg->set_control_param(quit_id, BX_LOG_ASK_CHOICE_DIE);
-  ctrl_id = xdlg->run(quit_id, cont_id, quit_id);
-  retcode = xdlg->get_control(ctrl_id)->get_param();
-  delete xdlg;
-  return retcode;
+#if BX_HAVE_ABORT
+    buttons.btn[i].label = "Dump Core";
+    buttons.btn[i].code = BX_LOG_ASK_CHOICE_DUMP_CORE;
+    i++;
+#endif
+  }
+  if ((mode == BX_LOG_DLG_ASK) || (mode == BX_LOG_DLG_QUIT)) {
+    buttons.btn[i].label = "Quit";
+    buttons.btn[i].code = BX_LOG_ASK_CHOICE_DIE;
+    i++;
+  }
+  buttons.count = i;
+  if (mode == BX_LOG_DLG_ASK) {
+    buttons.def_id = i - 1;
+    buttons.cancel_id = i - 1;
+  }
+  return x11_message_box(title, message, &buttons);
 }
 
 int x11_string_dialog(bx_param_string_c *param, bx_param_enum_c *param2)
@@ -2652,70 +2709,29 @@ int x11_string_dialog(bx_param_string_c *param, bx_param_enum_c *param2)
   return retcode;
 }
 
-#define XDLG_SIMPLE    0
-#define XDLG_OK_CANCEL 1
-#define XDLG_YES_NO    2
-
-int x11_message_box(bx_param_bool_c *param, int mode)
+int x11_yesno_dialog(bx_param_bool_c *param)
 {
-  int size_x, size_y;
-  int ctrl_id, yes_id, no_id, ypos;
-  unsigned int loffs[10], llen[10];
-  unsigned int i, cpos, len, maxlen, lines;
-  const char *name, *message;
+  const char *title, *message;
+  x11_button_t buttons;
+  int retcode;
 
   if (param->get_label() != NULL) {
-    name = param->get_label();
+    title = param->get_label();
   } else {
-    name = param->get_name();
+    title = param->get_name();
   }
   message = param->get_description();
-  cpos = 0;
-  lines = 0;
-  maxlen = 0;
-  while (cpos < strlen(message) && (lines < 10)) {
-    loffs[lines] = cpos;
-    while ((cpos < strlen(message)) && (message[cpos] != 0x0a)) cpos++;
-    len = cpos - loffs[lines];
-    llen[lines] = len;
-    if (len > maxlen) maxlen = len;
-    lines++;
-    cpos++;
-  }
-  if (maxlen < 36) {
-    size_x = 250;
-  } else {
-    size_x = 30 + maxlen * 6;
-  }
-  size_y = 70 + lines * 15;
-  x11_dialog_c *xdlg = new x11_dialog_c(name, size_x, size_y,
-                                        (mode == XDLG_SIMPLE) ? 1 : 2);
-  ypos = 34;
-  for (i = 0; i < lines; i++) {
-    xdlg->add_static_text(20, ypos, message+loffs[i], llen[i]);
-    ypos += 15;
-  }
-  if ((mode == XDLG_OK_CANCEL) || (mode == XDLG_YES_NO)) {
-    if (mode == XDLG_YES_NO) {
-      yes_id = xdlg->add_button("Yes");
-      no_id = xdlg->add_button("No");
-    } else {
-      yes_id = xdlg->add_button("OK");
-      no_id = xdlg->add_button("Cancel");
-    }
-    ctrl_id = param->get() ? yes_id : no_id;
-    ctrl_id = xdlg->run(ctrl_id, yes_id, no_id);
-    param->set(ctrl_id == yes_id);
-  } else {
-    if (param->get()) {
-      ctrl_id = xdlg->add_button("OK");
-    } else {
-      ctrl_id = xdlg->add_button("Cancel");
-    }
-    xdlg->run(ctrl_id, ctrl_id, ctrl_id);
-  }
-  delete xdlg;
-  return 1;
+  buttons.btn[0].label = "Yes";
+  buttons.btn[0].code = 1;
+  buttons.btn[1].label = "No";
+  buttons.btn[1].code = 0;
+  buttons.count = 2;
+  buttons.def_id = 1 - param->get();
+  buttons.ok_id = 0;
+  buttons.cancel_id = 1;
+  retcode = x11_message_box(title, message, &buttons);
+  param->set(retcode);
+  return retcode;
 }
 
 BxEvent *x11_notify_callback(void *unused, BxEvent *event)
@@ -2725,22 +2741,11 @@ BxEvent *x11_notify_callback(void *unused, BxEvent *event)
   bx_param_string_c *sparam;
   bx_param_enum_c *eparam;
   bx_list_c *list;
-  char message[256];
 
   switch (event->type)
   {
     case BX_SYNC_EVT_LOG_DLG:
-      if (event->u.logmsg.mode == BX_LOG_DLG_ASK) {
-        event->retcode = x11_ask_dialog(event);
-      } else {
-        int warn = (event->u.logmsg.mode == BX_LOG_DLG_WARN);
-        const char *title = SIM->get_log_level_name(event->u.logmsg.level);
-        sprintf(message, "Device: %s\n\nMessage: %s", event->u.logmsg.prefix,
-                event->u.logmsg.msg);
-        bx_param_bool_c bparam(NULL, "warn_quit", title, message, warn);
-        x11_message_box(&bparam, XDLG_SIMPLE);
-        event->retcode = warn ? BX_LOG_ASK_CHOICE_CONTINUE : BX_LOG_ASK_CHOICE_DIE;
-      }
+      event->retcode = x11_ask_dialog(event);
       return event;
     case BX_SYNC_EVT_ASK_PARAM:
       param = event->u.param.param;
@@ -2762,7 +2767,7 @@ BxEvent *x11_notify_callback(void *unused, BxEvent *event)
         event->retcode = x11_string_dialog(sparam, eparam);
         return event;
       } else if (param->get_type() == BXT_PARAM_BOOL) {
-        event->retcode = x11_message_box((bx_param_bool_c*)param, XDLG_YES_NO);
+        event->retcode = x11_yesno_dialog((bx_param_bool_c*)param);
         return event;
       }
     case BX_SYNC_EVT_TICK: // called periodically by siminterface.
