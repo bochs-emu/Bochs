@@ -513,7 +513,11 @@ void logfunctions::warn(int level, const char *prefix, const char *fmt, va_list 
 
   // ensure the text screen is showing
   SIM->set_display_mode(DISP_MODE_CONFIG);
-  SIM->log_warn(prefix, level, buf1);
+  int val = SIM->log_dlg(prefix, level, buf1, BX_LOG_DLG_WARN);
+  if (val == BX_LOG_ASK_CHOICE_CONTINUE_ALWAYS) {
+    // user said continue, and don't "ask" for this facility again.
+    setonoff(level, ACT_REPORT);
+  }
   // return to simulation mode
   SIM->set_display_mode(DISP_MODE_SIM);
   in_warn_already = 0;
@@ -543,7 +547,7 @@ void logfunctions::ask(int level, const char *prefix, const char *fmt, va_list a
 
   // ensure the text screen is showing
   SIM->set_display_mode(DISP_MODE_CONFIG);
-  int val = SIM->log_ask(prefix, level, buf1);
+  int val = SIM->log_dlg(prefix, level, buf1, BX_LOG_DLG_ASK);
   switch(val)
   {
     case BX_LOG_ASK_CHOICE_CONTINUE:

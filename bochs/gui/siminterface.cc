@@ -124,8 +124,7 @@ public:
   virtual void set_notify_callback(bxevent_handler func, void *arg);
   virtual void get_notify_callback(bxevent_handler *func, void **arg);
   virtual BxEvent* sim_to_ci_event(BxEvent *event);
-  virtual int log_warn(const char *prefix, int level, const char *msg);
-  virtual int log_ask(const char *prefix, int level, const char *msg);
+  virtual int log_dlg(const char *prefix, int level, const char *msg, int mode);
   virtual void log_msg(const char *prefix, int level, const char *msg);
   virtual void set_log_viewer(bx_bool val) { bx_log_viewer = val; }
   virtual bx_bool has_log_viewer() const { return bx_log_viewer; }
@@ -582,30 +581,14 @@ BxEvent *bx_real_sim_c::sim_to_ci_event(BxEvent *event)
   }
 }
 
-int bx_real_sim_c::log_warn(const char *prefix, int level, const char *msg)
+int bx_real_sim_c::log_dlg(const char *prefix, int level, const char *msg, int mode)
 {
   BxEvent be;
-  be.type = BX_SYNC_EVT_LOG_ASK;
+  be.type = BX_SYNC_EVT_LOG_DLG;
   be.u.logmsg.prefix = prefix;
   be.u.logmsg.level = level;
   be.u.logmsg.msg = msg;
-  be.u.logmsg.flag = BX_LOG_ASK_MSGBOX_WARN;
-  // default return value in case something goes wrong.
-  be.retcode = BX_LOG_NOTIFY_FAILED;
-  // calling notify
-  sim_to_ci_event(&be);
-  return be.retcode;
-}
-
-// returns 0 for continue, 1 for alwayscontinue, 2 for die.
-int bx_real_sim_c::log_ask(const char *prefix, int level, const char *msg)
-{
-  BxEvent be;
-  be.type = BX_SYNC_EVT_LOG_ASK;
-  be.u.logmsg.prefix = prefix;
-  be.u.logmsg.level = level;
-  be.u.logmsg.msg = msg;
-  be.u.logmsg.flag = BX_LOG_ASK_ASKDLG;
+  be.u.logmsg.mode = mode;
   // default return value in case something goes wrong.
   be.retcode = BX_LOG_NOTIFY_FAILED;
   // calling notify

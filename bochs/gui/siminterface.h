@@ -273,7 +273,7 @@ typedef enum {
   BX_SYNC_EVT_GET_PARAM,          // CI -> simulator -> CI
   BX_SYNC_EVT_ASK_PARAM,          // simulator -> CI -> simulator
   BX_SYNC_EVT_TICK,               // simulator -> CI, wait for response.
-  BX_SYNC_EVT_LOG_ASK,            // simulator -> CI, wait for response.
+  BX_SYNC_EVT_LOG_DLG,            // simulator -> CI, wait for response.
   BX_SYNC_EVT_GET_DBG_COMMAND,    // simulator -> CI, wait for response.
   __ALL_EVENTS_BELOW_ARE_ASYNC__,
   BX_ASYNC_EVT_KEY,               // vga window -> simulator
@@ -393,7 +393,7 @@ typedef struct {
 // synchronizing threads, etc. for each.
 typedef struct {
   Bit8u level;
-  Bit8u flag;
+  Bit8u mode;
   const char *prefix;
   const char *msg;
 } BxLogMsgEvent;
@@ -403,11 +403,11 @@ typedef struct {
 // Also uses BxLogMsgEvent, but this is a message to be displayed in
 // the debugger history window.
 
-// Event type: BX_SYNC_EVT_LOG_ASK
+// Event type: BX_SYNC_EVT_LOG_DLG
 //
 // This is a synchronous version of BX_ASYNC_EVT_LOG_MSG, which is used
 // when the "action=ask" setting is used.  If the simulator runs into a
-// panic, it sends a synchronous BX_SYNC_EVT_LOG_ASK to the CI to be
+// panic, it sends a synchronous BX_SYNC_EVT_LOG_DLG to the CI to be
 // displayed.  The CI shows a dialog that asks if the user wants to
 // continue, quit, etc. and sends the answer back to the simulator.
 // This event also uses BxLogMsgEvent.
@@ -422,9 +422,9 @@ enum {
 };
 
 enum {
-  BX_LOG_ASK_ASKDLG,
-  BX_LOG_ASK_MSGBOX_WARN,
-  BX_LOG_ASK_MSGBOX_QUIT
+  BX_LOG_DLG_ASK,
+  BX_LOG_DLG_WARN,
+  BX_LOG_DLG_QUIT
 };
 
 // Event type: BX_SYNC_EVT_GET_DBG_COMMAND
@@ -724,12 +724,11 @@ public:
   // send an event from the simulator to the CI.
   virtual BxEvent* sim_to_ci_event(BxEvent *event) {return NULL;}
 
-  // called from simulator when it hits errors, to warn the user
-  // before continuing simulation
-  virtual int log_warn(const char *prefix, int level, const char *msg) {return -1;}
-  // called from simulator when it hits serious errors, to ask if the user
-  // wants to continue or not
-  virtual int log_ask(const char *prefix, int level, const char *msg) {return -1;}
+  // called from simulator to display a gui dialog in particular situations.
+  // 1. When it hits serious errors, to ask if the user wants to continue or not.
+  // 2. When it hits errors, to warn the user before continuing simulation
+  // 3. When it hits critical errors, inform the user before terminating simulation.
+  virtual int log_dlg(const char *prefix, int level, const char *msg, int mode) {return -1;}
   // called from simulator when writing a message to log file
   virtual void log_msg(const char *prefix, int level, const char *msg) {}
   // set this to 1 if the gui has a log viewer

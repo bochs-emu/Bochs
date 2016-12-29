@@ -97,7 +97,7 @@ static BOOL CALLBACK LogAskProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPara
       SetWindowText(GetDlgItem(hDlg, IDASKMSG), event->u.logmsg.msg);
       SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_ADDSTRING, 0, (LPARAM)"Continue");
       SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_ADDSTRING, 0, (LPARAM)"Continue and don't ask again");
-      if (event->u.logmsg.flag == BX_LOG_ASK_ASKDLG) {
+      if (event->u.logmsg.mode == BX_LOG_DLG_ASK) {
         SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_ADDSTRING, 0, (LPARAM)"Kill simulation");
         SendMessage(GetDlgItem(hDlg, IDASKLIST), LB_ADDSTRING, 0, (LPARAM)"Abort (dump core)");
 #if BX_DEBUGGER
@@ -617,7 +617,7 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
   event->retcode = -1;
   switch (event->type)
   {
-    case BX_SYNC_EVT_LOG_ASK:
+    case BX_SYNC_EVT_LOG_DLG:
       LogAskDialog(event);
       return event;
     case BX_SYNC_EVT_ASK_PARAM:

@@ -1477,7 +1477,7 @@ int sdl2_ask_dialog(BxEvent *event)
 {
   SDL_MessageBoxData msgboxdata;
   SDL_MessageBoxButtonData buttondata[4];
-  int level, retcode;
+  int i = 0, level, mode, retcode;
   char message[512];
 
   level = event->u.logmsg.level;
@@ -1487,27 +1487,33 @@ int sdl2_ask_dialog(BxEvent *event)
   msgboxdata.window = window;
   msgboxdata.title = SIM->get_log_level_name(level);
   msgboxdata.message = message;
-  msgboxdata.numbuttons = 2;
   msgboxdata.buttons = buttondata;
   msgboxdata.colorScheme = NULL;
-  buttondata[0].flags = 0;
-  buttondata[0].buttonid = BX_LOG_ASK_CHOICE_CONTINUE;
-  buttondata[0].text = "Continue";
-  buttondata[1].flags = 0;
-  buttondata[1].buttonid = BX_LOG_ASK_CHOICE_CONTINUE_ALWAYS;
-  buttondata[1].text = "Alwayscont";
-  if (event->u.logmsg.flag == BX_LOG_ASK_ASKDLG) {
-    msgboxdata.numbuttons = 3;
-    buttondata[2].flags = SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT;
-    buttondata[2].buttonid = BX_LOG_ASK_CHOICE_DIE;
-    buttondata[2].text = "Quit";
-#if BX_DEBUGGER || BX_GDBSTUB
-    msgboxdata.numbuttons = 4;
-    buttondata[3].flags = 0;
-    buttondata[3].buttonid = BX_LOG_ASK_CHOICE_ENTER_DEBUG;
-    buttondata[3].text = "Debugger";
-#endif
+  mode = event->u.logmsg.mode;
+  if ((mode == BX_LOG_DLG_ASK) || (mode == BX_LOG_DLG_WARN)) {
+    buttondata[0].flags = 0;
+    buttondata[0].buttonid = BX_LOG_ASK_CHOICE_CONTINUE;
+    buttondata[0].text = "Continue";
+    buttondata[1].flags = 0;
+    buttondata[1].buttonid = BX_LOG_ASK_CHOICE_CONTINUE_ALWAYS;
+    buttondata[1].text = "Alwayscont";
+    i = 2;
   }
+#if BX_DEBUGGER || BX_GDBSTUB
+  if (mode == BX_LOG_DLG_ASK) {
+    buttondata[i].flags = 0;
+    buttondata[i].buttonid = BX_LOG_ASK_CHOICE_ENTER_DEBUG;
+    buttondata[i].text = "Debugger";
+    i++;
+  }
+#endif
+  if ((mode == BX_LOG_DLG_ASK) || (mode == BX_LOG_DLG_QUIT)) {
+    buttondata[i].flags = SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT;
+    buttondata[i].buttonid = BX_LOG_ASK_CHOICE_DIE;
+    buttondata[i].text = "Quit";
+    i++;
+  }
+  msgboxdata.numbuttons = i;
   if (SDL_ShowMessageBox(&msgboxdata, &retcode) < 0) {
     return -1;
   } else {
@@ -1547,7 +1553,7 @@ BxEvent *sdl2_notify_callback(void *unused, BxEvent *event)
   bx_param_c *param;
 
   switch (event->type) {
-    case BX_SYNC_EVT_LOG_ASK:
+    case BX_SYNC_EVT_LOG_DLG:
       event->retcode = sdl2_ask_dialog(event);
       return event;
     case BX_SYNC_EVT_ASK_PARAM:

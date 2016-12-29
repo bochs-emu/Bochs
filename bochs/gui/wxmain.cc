@@ -141,7 +141,7 @@ virtual int OnExit();
   public:
   // This default callback is installed when the simthread is NOT running,
   // so that events coming from the simulator code can be handled.
-  // The primary culprit is panics which cause an BX_SYNC_EVT_LOG_ASK.
+  // The primary culprit is panics which cause an BX_SYNC_EVT_LOG_DLG.
   static BxEvent *DefaultCallback(void *thisptr, BxEvent *event);
 };
 
@@ -279,7 +279,7 @@ BxEvent *MyApp::DefaultCallback(void *thisptr, BxEvent *event)
   switch (event->type)
   {
     case BX_ASYNC_EVT_LOG_MSG:
-    case BX_SYNC_EVT_LOG_ASK: {
+    case BX_SYNC_EVT_LOG_DLG: {
       wxLogDebug(wxT("DefaultCallback: log ask event"));
       if (wxBochsClosing) {
         // gui closing down, do something simple and nongraphical.
@@ -1126,8 +1126,8 @@ void MyFrame::OnSim2CIEvent(wxCommandEvent& event)
     showLogView->AppendText(be->u.logmsg.level, wxString(be->u.logmsg.msg, wxConvUTF8));
     free((void*)be->u.logmsg.msg);
     break;
-  case BX_SYNC_EVT_LOG_ASK:
-    OnLogAsk(be);
+  case BX_SYNC_EVT_LOG_DLG:
+    OnLogDlg(be);
     break;
   case BX_ASYNC_EVT_QUIT_SIM:
     wxMessageBox(wxT("Bochs simulation has stopped."), wxT("Bochs Stopped"),
@@ -1146,22 +1146,24 @@ void MyFrame::OnSim2CIEvent(wxCommandEvent& event)
     delete be;
 }
 
-void MyFrame::OnLogAsk(BxEvent *be)
+void MyFrame::OnLogDlg(BxEvent *be)
 {
   wxLogDebug(wxT("log msg: level=%d, prefix='%s', msg='%s'"),
       be->u.logmsg.level,
       be->u.logmsg.prefix,
       be->u.logmsg.msg);
-  wxASSERT(be->type == BX_SYNC_EVT_LOG_ASK);
+  wxASSERT(be->type == BX_SYNC_EVT_LOG_DLG);
   wxString levelName(SIM->get_log_level_name(be->u.logmsg.level), wxConvUTF8);
   LogMsgAskDialog dlg(this, -1, levelName);  // panic, error, etc.
+  int mode = be->u.logmsg.mode;
+  dlg.EnableButton(dlg.CONT, mode != BX_LOG_DLG_QUIT);
+  dlg.EnableButton(dlg.DUMP, mode == BX_LOG_DLG_ASK);
+  dlg.EnableButton(dlg.DIE, mode != BX_LOG_DLG_WARN);
 #if !BX_DEBUGGER && !BX_GDBSTUB
   dlg.EnableButton(dlg.DEBUG, FALSE);
+#else
+  dlg.EnableButton(dlg.DEBUG, mode == BX_LOG_DLG_ASK);
 #endif
-  if (be->u.logmsg.flag != BX_LOG_ASK_ASKDLG) {
-    dlg.EnableButton(dlg.DIE, FALSE);
-    dlg.EnableButton(dlg.DUMP, FALSE);
-  }
   dlg.SetContext(wxString(be->u.logmsg.prefix, wxConvUTF8));
   dlg.SetMessage(wxString(be->u.logmsg.msg, wxConvUTF8));
   int n = dlg.ShowModal();

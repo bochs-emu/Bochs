@@ -717,8 +717,8 @@ config_interface_notify_callback(void *unused, BxEvent *event)
     case BX_SYNC_EVT_ASK_PARAM:
       event->retcode = event->u.param.param->text_ask(stdin, stderr);
       return event;
-    case BX_SYNC_EVT_LOG_ASK:
-      if (event->u.logmsg.flag == BX_LOG_ASK_ASKDLG) {
+    case BX_SYNC_EVT_LOG_DLG:
+      if (event->u.logmsg.mode == BX_LOG_DLG_ASK) {
         int level = event->u.logmsg.level;
         fprintf(stderr, "========================================================================\n");
         fprintf(stderr, "Event type: %s\n", SIM->get_log_level_name (level));

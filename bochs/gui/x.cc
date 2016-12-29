@@ -2729,16 +2729,17 @@ BxEvent *x11_notify_callback(void *unused, BxEvent *event)
 
   switch (event->type)
   {
-    case BX_SYNC_EVT_LOG_ASK:
-      if (event->u.logmsg.flag == BX_LOG_ASK_ASKDLG) {
+    case BX_SYNC_EVT_LOG_DLG:
+      if (event->u.logmsg.mode == BX_LOG_DLG_ASK) {
         event->retcode = x11_ask_dialog(event);
-      } else if (event->u.logmsg.flag == BX_LOG_ASK_MSGBOX_WARN) {
+      } else {
+        int warn = (event->u.logmsg.mode == BX_LOG_DLG_WARN);
         const char *title = SIM->get_log_level_name(event->u.logmsg.level);
         sprintf(message, "Device: %s\n\nMessage: %s", event->u.logmsg.prefix,
                 event->u.logmsg.msg);
-        bx_param_bool_c bparam(NULL, "warn", title, message, 1);
+        bx_param_bool_c bparam(NULL, "warn_quit", title, message, warn);
         x11_message_box(&bparam, XDLG_SIMPLE);
-        event->retcode = 0;
+        event->retcode = warn ? BX_LOG_ASK_CHOICE_CONTINUE : BX_LOG_ASK_CHOICE_DIE;
       }
       return event;
     case BX_SYNC_EVT_ASK_PARAM:
