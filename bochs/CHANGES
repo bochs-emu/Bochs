@@ -2,6 +2,7 @@ Changes after 2.6.8 release:
 
 - General
   - Added new log action "warn", designed to show a message box on error events.
+  - Show message box before exit if log action is set to "fatal".
 
 - Configure and compile
   - Added Android host platform support.

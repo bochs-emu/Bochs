@@ -276,7 +276,7 @@ public:
   void error(const char *fmt, ...)  BX_CPP_AttrPrintf(2, 3);
   void panic(const char *fmt, ...)  BX_CPP_AttrPrintf(2, 3);
   void ldebug(const char *fmt, ...) BX_CPP_AttrPrintf(2, 3);
-  void fatal(const char *prefix, const char *fmt, va_list ap, int exit_status);
+  void fatal(int level, const char *prefix, const char *fmt, va_list ap, int exit_status);
   void warn(int level, const char *prefix, const char *fmt, va_list ap);
   void ask(int level, const char *prefix, const char *fmt, va_list ap);
   void put(const char *p);

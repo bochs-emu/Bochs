@@ -399,21 +399,13 @@ void logfunctions::info(const char *fmt, ...)
 
   assert(logio != NULL);
 
-  if (!onoff[LOGLEV_INFO]) return;
+  if (onoff[LOGLEV_INFO] == ACT_IGNORE) return;
 
   va_start(ap, fmt);
   logio->out(LOGLEV_INFO, prefix, fmt, ap);
   va_end(ap);
 
-  if (onoff[LOGLEV_INFO] == ACT_ASK) {
-    va_start(ap, fmt);
-    ask(LOGLEV_INFO, prefix, fmt, ap);
-    va_end(ap);
-  }
-  if (onoff[LOGLEV_INFO] == ACT_FATAL) {
-    va_start(ap, fmt);
-    fatal(prefix, fmt, ap, 1);
-  }
+  // the actions warn(), ask() and fatal() are not supported here
 }
 
 void logfunctions::error(const char *fmt, ...)
@@ -422,7 +414,7 @@ void logfunctions::error(const char *fmt, ...)
 
   assert(logio != NULL);
 
-  if(!onoff[LOGLEV_ERROR]) return;
+  if (onoff[LOGLEV_ERROR] == ACT_IGNORE) return;
 
   va_start(ap, fmt);
   logio->out(LOGLEV_ERROR, prefix, fmt, ap);
@@ -432,15 +424,14 @@ void logfunctions::error(const char *fmt, ...)
     va_start(ap, fmt);
     warn(LOGLEV_ERROR, prefix, fmt, ap);
     va_end(ap);
-  }
-  if (onoff[LOGLEV_ERROR] == ACT_ASK) {
+  } else if (onoff[LOGLEV_ERROR] == ACT_ASK) {
     va_start(ap, fmt);
     ask(LOGLEV_ERROR, prefix, fmt, ap);
     va_end(ap);
   }
   if (onoff[LOGLEV_ERROR] == ACT_FATAL) {
     va_start(ap, fmt);
-    fatal(prefix, fmt, ap, 1);
+    fatal(LOGLEV_ERROR, prefix, fmt, ap, 1);
   }
 }
 
@@ -461,16 +452,14 @@ void logfunctions::panic(const char *fmt, ...)
     va_start(ap, fmt);
     warn(LOGLEV_PANIC, prefix, fmt, ap);
     va_end(ap);
-  }
-  if (onoff[LOGLEV_PANIC] == ACT_ASK) {
+  } else if (onoff[LOGLEV_PANIC] == ACT_ASK) {
     va_start(ap, fmt);
     ask(LOGLEV_PANIC, prefix, fmt, ap);
     va_end(ap);
   }
   if (onoff[LOGLEV_PANIC] == ACT_FATAL) {
     va_start(ap, fmt);
-    fatal(prefix, fmt, ap, 1);
-    va_end(ap);
+    fatal(LOGLEV_PANIC, prefix, fmt, ap, 1);
   }
 }
 
@@ -480,13 +469,13 @@ void logfunctions::ldebug(const char *fmt, ...)
 
   assert(logio != NULL);
 
-  if(!onoff[LOGLEV_DEBUG]) return;
+  if (onoff[LOGLEV_DEBUG] == ACT_IGNORE) return;
 
   va_start(ap, fmt);
   logio->out(LOGLEV_DEBUG, prefix, fmt, ap);
   va_end(ap);
 
-  // the actions ask() and fatal() are not supported here
+  // the actions warn(), ask() and fatal() are not supported here
 }
 
 void logfunctions::warn(int level, const char *prefix, const char *fmt, va_list ap)
@@ -639,28 +628,27 @@ static void carbonFatalDialog(const char *error, const char *exposition)
 }
 #endif
 
-void logfunctions::fatal(const char *prefix, const char *fmt, va_list ap, int exit_status)
+void logfunctions::fatal(int level, const char *prefix, const char *fmt, va_list ap, int exit_status)
 {
   char tmpbuf[1024];
   char exit_msg[1024];
 
+  vsnprintf(tmpbuf, sizeof(tmpbuf), fmt, ap);
+  va_end(ap);
+  if (!bx_user_quit) {
+    SIM->log_dlg(prefix, level, tmpbuf, BX_LOG_DLG_QUIT);
+  }
   if (!SIM->is_wx_selected()) {
     // store prefix and message in 'exit_msg' before unloading device plugins
-    vsnprintf(tmpbuf, sizeof(tmpbuf), fmt, ap);
-    va_end(ap);
     sprintf(exit_msg, "%s %s", prefix, tmpbuf);
   }
 #if !BX_DEBUGGER
   bx_atexit();
 #endif
 #if BX_WITH_CARBON
-  if(!isatty(STDIN_FILENO) && !SIM->get_init_done())
-  {
-    char buf1[1024];
-    char buf2[1024];
-    vsnprintf(buf1, sizeof(buf1), fmt, ap);
-    snprintf(buf2, sizeof(buf2), "Bochs startup error\n%s", buf1);
-    carbonFatalDialog(buf2,
+  if (!isatty(STDIN_FILENO) && !SIM->get_init_done()) {
+    snprintf(exit_msg, sizeof(exit_msg), "Bochs startup error\n%s", tmpbuf);
+    carbonFatalDialog(exit_msg,
       "For more information, try running Bochs within Terminal by clicking on \"bochs.scpt\".");
   }
 #endif
