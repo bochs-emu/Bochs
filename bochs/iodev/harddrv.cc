@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2015  The Bochs Project
+//  Copyright (C) 2001-2016  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -376,22 +376,22 @@ void bx_hard_drive_c::init(void)
         BX_CONTROLLER(channel,device).sector_count = 0;
         BX_CONTROLLER(channel,device).interrupt_reason.c_d = 1;
         if (BX_CONTROLLER(channel,device).sector_count != 0x01)
-          BX_PANIC(("interrupt reason bit field error"));
+          BX_FATAL(("interrupt reason bit field error"));
 
         BX_CONTROLLER(channel,device).sector_count = 0;
         BX_CONTROLLER(channel,device).interrupt_reason.i_o = 1;
         if (BX_CONTROLLER(channel,device).sector_count != 0x02)
-          BX_PANIC(("interrupt reason bit field error"));
+          BX_FATAL(("interrupt reason bit field error"));
 
         BX_CONTROLLER(channel,device).sector_count = 0;
         BX_CONTROLLER(channel,device).interrupt_reason.rel = 1;
         if (BX_CONTROLLER(channel,device).sector_count != 0x04)
-          BX_PANIC(("interrupt reason bit field error"));
+          BX_FATAL(("interrupt reason bit field error"));
 
         BX_CONTROLLER(channel,device).sector_count = 0;
         BX_CONTROLLER(channel,device).interrupt_reason.tag = 3;
         if (BX_CONTROLLER(channel,device).sector_count != 0x18)
-          BX_PANIC(("interrupt reason bit field error"));
+          BX_FATAL(("interrupt reason bit field error"));
         BX_CONTROLLER(channel,device).sector_count = 0;
 
         // allocate low level driver

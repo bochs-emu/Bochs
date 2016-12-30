@@ -9,8 +9,8 @@
  * Author: Benjamin D Lunt
  * Contact: fys [at] fysnet [dot] net
  *
- * Copyright (C) 2015 Benjamin D Lunt.
- * Copyright (C) 2006-2015  The Bochs Project
+ * Copyright (C) 2015       Benjamin D Lunt.
+ * Copyright (C) 2006-2016  The Bochs Project
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -66,7 +66,7 @@ vbox_image_t::vbox_image_t()
   header_dirty(0)
 {
   if (sizeof(_VBOX_VDI_Header) != 512) {
-    BX_PANIC(("system error: invalid header structure size"));
+    BX_FATAL(("system error: invalid header structure size"));
   }
 }
 

@@ -6,7 +6,7 @@
 // ported from QEMU block driver with some additions (see below)
 //
 // Copyright (c) 2004,2005  Johannes E. Schindelin
-// Copyright (C) 2010-2015  The Bochs Project
+// Copyright (C) 2010-2016  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -342,7 +342,7 @@ infosector_t;
 vvfat_image_t::vvfat_image_t(Bit64u size, const char* _redolog_name)
 {
   if (sizeof(bootsector_t) != 512) {
-    BX_PANIC(("system error: invalid bootsector structure size"));
+    BX_FATAL(("system error: invalid bootsector structure size"));
   }
 
   first_sectors = new Bit8u[0xc000];

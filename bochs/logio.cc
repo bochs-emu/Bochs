@@ -628,6 +628,20 @@ static void carbonFatalDialog(const char *error, const char *exposition)
 }
 #endif
 
+void logfunctions::fatal1(const char *fmt, ...)
+{
+  va_list ap;
+
+  assert(logio != NULL);
+
+  va_start(ap, fmt);
+  logio->out(LOGLEV_PANIC, prefix, fmt, ap);
+  va_end(ap);
+
+  va_start(ap, fmt);
+  fatal(LOGLEV_PANIC, prefix, fmt, ap, 1);
+}
+
 void logfunctions::fatal(int level, const char *prefix, const char *fmt, va_list ap, int exit_status)
 {
   char tmpbuf[1024];

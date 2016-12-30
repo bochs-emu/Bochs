@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2013       Volker Ruppert
-//  Copyright (C) 2001-2013  The Bochs Project
+//  Copyright (C) 2001-2016  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -71,6 +71,7 @@ extern const char *hdimage_mode_names[];
 #define BX_INFO(x)  { if (bx_interactive) { (printf) x ; printf("\n"); } }
 #define BX_ERROR(x) { (printf) x ; printf("\n"); }
 #define BX_PANIC(x) { (printf) x ; printf("\n"); myexit(1); }
+#define BX_FATAL(x) { (printf) x ; printf("\n"); myexit(1); }
 #define BX_ASSERT(x)
 
 extern int bx_interactive;

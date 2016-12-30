@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2014  The Bochs Project
+//  Copyright (C) 2014-2016  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -296,7 +296,7 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
 
   this->netdev = dev;
   if (sizeof(struct arphdr) != 28) {
-    BX_PANIC(("system error: invalid ARP header structure size"));
+    BX_FATAL(("system error: invalid ARP header structure size"));
   }
   BX_INFO(("slirp network driver"));
 
