@@ -31,6 +31,7 @@ export LDFLAGS
             --enable-voodoo \
             --enable-usb \
             --enable-usb-ohci \
+            --enable-usb-ehci \
             --enable-usb-xhci \
             --enable-es1370 \
             --enable-e1000 \

@@ -32,6 +32,7 @@
   --enable-voodoo \
   --enable-usb \
   --enable-usb-ohci \
+  --enable-usb-ehci \
   --enable-usb-xhci \
   --enable-cdrom \
   --enable-sb16 \

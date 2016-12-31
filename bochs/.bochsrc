@@ -13,7 +13,7 @@
 #
 # These plugins are also supported, but they are usually loaded directly with
 # their bochsrc option: 'e1000', 'es1370', 'ne2k', 'pcidev', 'pcipnic', 'sb16',
-# 'usb_ohci', 'usb_uhci', 'usb_xhci' and 'voodoo'.
+# 'usb_ehci', 'usb_ohci', 'usb_uhci', 'usb_xhci' and 'voodoo'.
 #=======================================================================
 #plugin_ctrl: unmapped=0, e1000=1 # unload 'unmapped' and load 'e1000'
 
@@ -489,8 +489,8 @@ vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
 #  The default value is 'ps2'. The other choices are 'imps2' (wheel mouse
 #  on PS/2), 'serial', 'serial_wheel', 'serial_msys' (one com port requires
 #  setting 'mode=mouse') 'inport' and 'bus' (if present). To connect a mouse
-#  to a USB port, see the 'usb_uhci', 'usb_ohci' or 'usb_xhci' options
-#  (requires PCI and USB support).
+#  to a USB port, see the 'usb_uhci', 'usb_ohci', 'usb_ehci' or 'usb_xhci'
+#  options (requires PCI and USB support).
 #
 #  ENABLED:
 #  The Bochs gui creates mouse "events" unless the 'enabled' option is
@@ -521,7 +521,7 @@ mouse: enabled=0
 # devices assigning to slot is mandatory if you want to emulate the PCI model:
 # cirrus, ne2k and pcivga. These PCI-only devices are also supported, but they
 # are auto-assigned if you don't use the slot configuration: e1000, es1370,
-# pcidev, pcipnic, usb_ohci, usb_xhci and voodoo.
+# pcidev, pcipnic, usb_ehci, usb_ohci, usb_xhci and voodoo.
 #
 # Example:
 #   pci: enabled=1, chipset=i440fx, slot1=pcivga, slot2=ne2k
@@ -1124,9 +1124,18 @@ speaker: enabled=1, mode=sound
 #usb_ohci: enabled=1, port1=printer:usbprinter.bin
 
 #=======================================================================
+# USB_EHCI:
+# This option controls the presence of the USB EHCI host controller with a
+# 6-port hub. The portX parameter accepts the same device types with the
+# same syntax as the UHCI controller (see above). The optionsX parameter is
+# also available on EHCI.
+#=======================================================================
+#usb_ehci: enabled=1
+
+#=======================================================================
 # USB_XHCI:
-# This option controls the presence of the experimental USB xHCI host controller
-# with a 4-port hub. The portX parameter accepts the same device types with the
+# This option controls the presence of the USB xHCI host controller with a
+# 4-port hub. The portX parameter accepts the same device types with the
 # same syntax as the UHCI controller (see above). The optionsX parameter is
 # also available on xHCI. NOTE: port 1 and 2 are USB3 and only support
 # super-speed devices, but port 3 and 4 are USB2 and support speed settings

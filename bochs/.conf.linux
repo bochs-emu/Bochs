@@ -37,6 +37,8 @@ case $which_config in
                 --enable-voodoo \
                 --enable-usb \
                 --enable-usb-ohci \
+                --enable-usb-ehci \
+                --enable-usb-xhci \
                 --enable-es1370 \
                 --enable-e1000 \
                 --enable-show-ips \
@@ -59,6 +61,7 @@ case $which_config in
                 --enable-voodoo \
                 --enable-usb \
                 --enable-usb-ohci \
+                --enable-usb-ehci \
                 --enable-usb-xhci \
                 --enable-es1370 \
                 --enable-e1000 \
