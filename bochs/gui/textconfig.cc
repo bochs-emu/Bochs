@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2016  The Bochs Project
+//  Copyright (C) 2002-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -55,6 +55,9 @@ extern "C" {
 
 #define CI_PATH_LENGTH 512
 
+#define bx_printf SIM->bx_printf
+#define bx_fgets  SIM->bx_gets
+
 /* functions for changing particular options */
 void bx_config_interface_init();
 int bx_read_rc(char *rc);
@@ -94,9 +97,9 @@ int ask_uint(const char *prompt, const char *help, Bit32u min, Bit32u max, Bit32
   int illegal;
   assert(base==10 || base==16);
   while (1) {
-    printf(prompt, the_default);
+    bx_printf(prompt, the_default);
     fflush(stdout);
-    if (!fgets(buffer, sizeof(buffer), stdin))
+    if (!bx_fgets(buffer, sizeof(buffer), stdin))
       return -1;
     clean = clean_string(buffer);
     if (strlen(clean) < 1) {
@@ -105,11 +108,11 @@ int ask_uint(const char *prompt, const char *help, Bit32u min, Bit32u max, Bit32
       return 0;
     }
     if ((clean[0] == '?') && (strlen(help) > 0)) {
-      printf("\n%s\n", help);
+      bx_printf("\n%s\n", help);
       if (base == 10) {
-        printf("Your choice must be an integer between %u and %u.\n\n", min, max);
+        bx_printf("Your choice must be an integer between %u and %u.\n\n", min, max);
       } else {
-        printf("Your choice must be an integer between 0x%x and 0x%x.\n\n", min, max);
+        bx_printf("Your choice must be an integer between 0x%x and 0x%x.\n\n", min, max);
       }
       continue;
     }
@@ -117,10 +120,10 @@ int ask_uint(const char *prompt, const char *help, Bit32u min, Bit32u max, Bit32
     illegal = (1 != sscanf(buffer, format, &n));
     if (illegal || n<min || n>max) {
       if (base == 10) {
-        printf("Your choice (%s) was not an integer between %u and %u.\n\n",
+        bx_printf("Your choice (%s) was not an integer between %u and %u.\n\n",
                clean, min, max);
       } else {
-        printf("Your choice (%s) was not an integer between 0x%x and 0x%x.\n\n",
+        bx_printf("Your choice (%s) was not an integer between 0x%x and 0x%x.\n\n",
                clean, min, max);
       }
     } else {
@@ -139,9 +142,9 @@ int ask_int(const char *prompt, const char *help, Bit32s min, Bit32s max, Bit32s
   char *clean;
   int illegal;
   while (1) {
-    printf(prompt, the_default);
+    bx_printf(prompt, the_default);
     fflush(stdout);
-    if (!fgets(buffer, sizeof(buffer), stdin))
+    if (!bx_fgets(buffer, sizeof(buffer), stdin))
       return -1;
     clean = clean_string(buffer);
     if (strlen(clean) < 1) {
@@ -150,13 +153,13 @@ int ask_int(const char *prompt, const char *help, Bit32s min, Bit32s max, Bit32s
       return 0;
     }
     if ((clean[0] == '?') && (strlen(help) > 0)) {
-      printf("\n%s\n", help);
-      printf("Your choice must be an integer between %u and %u.\n\n", min, max);
+      bx_printf("\n%s\n", help);
+      bx_printf("Your choice must be an integer between %u and %u.\n\n", min, max);
       continue;
     }
     illegal = (1 != sscanf(buffer, "%d", &n));
     if (illegal || n<min || n>max) {
-      printf("Your choice (%s) was not an integer between %d and %d.\n\n",
+      bx_printf("Your choice (%s) was not an integer between %d and %d.\n\n",
              clean, min, max);
     } else {
       // choice is okay
@@ -173,9 +176,9 @@ int ask_menu(const char *prompt, const char *help, int n_choices, const char *ch
   int i;
   *out = -1;
   while (1) {
-    printf(prompt, choice[the_default]);
+    bx_printf(prompt, choice[the_default]);
     fflush(stdout);
-    if (!fgets(buffer, sizeof(buffer), stdin))
+    if (!bx_fgets(buffer, sizeof(buffer), stdin))
       return -1;
     clean = clean_string(buffer);
     if (strlen(clean) < 1) {
@@ -191,15 +194,15 @@ int ask_menu(const char *prompt, const char *help, int n_choices, const char *ch
       }
     }
     if (clean[0] != '?') {
-      printf("Your choice (%s) did not match any of the choices:\n", clean);
+      bx_printf("Your choice (%s) did not match any of the choices:\n", clean);
     } else if (strlen(help) > 0) {
-      printf("\n%s\nValid values are: ", help);
+      bx_printf("\n%s\nValid values are: ", help);
     }
     for (i=0; i<n_choices; i++) {
-      if (i>0) printf(", ");
-      printf("%s", choice[i]);
+      if (i>0) bx_printf(", ");
+      bx_printf("%s", choice[i]);
     }
-    printf("\n");
+    bx_printf("\n");
   }
 }
 
@@ -210,9 +213,9 @@ int ask_yn(const char *prompt, const char *help, Bit32u the_default, Bit32u *out
   *out = 1<<31;
   while (1) {
     // if there's a %s field, substitute in the default yes/no.
-    printf(prompt, the_default ? "yes" : "no");
+    bx_printf(prompt, the_default ? "yes" : "no");
     fflush(stdout);
-    if (!fgets(buffer, sizeof(buffer), stdin))
+    if (!bx_fgets(buffer, sizeof(buffer), stdin))
       return -1;
     clean = clean_string(buffer);
     if (strlen(clean) < 1) {
@@ -225,11 +228,11 @@ int ask_yn(const char *prompt, const char *help, Bit32u the_default, Bit32u *out
       case 'n': *out=0; return 0;
       case '?':
         if (strlen(help) > 0) {
-          printf("\n%s\n", help);
+          bx_printf("\n%s\n", help);
         }
         break;
     }
-    printf("Please type either yes or no.\n");
+    bx_printf("Please type either yes or no.\n");
   }
 }
 
@@ -243,9 +246,9 @@ int ask_string(const char *prompt, const char *the_default, char *out)
   char *clean;
   assert(the_default != out);
   out[0] = 0;
-  printf(prompt, the_default);
+  bx_printf(prompt, the_default);
   fflush(stdout);
-  if (fgets(buffer, sizeof(buffer), stdin) == NULL)
+  if (bx_fgets(buffer, sizeof(buffer), stdin) == NULL)
     return -1;
   clean = clean_string(buffer);
   if (clean[0] == '?')
@@ -339,10 +342,10 @@ static const char *plugin_ctrl_prompt =
 "Please choose one:  [0] ";
 
 #define NOT_IMPLEMENTED(choice) \
-  fprintf(stderr, "ERROR: choice %d not implemented\n", choice);
+  bx_printf("ERROR: choice %d not implemented\n", choice);
 
 #define BAD_OPTION(menu,choice) \
-  do {fprintf(stderr, "ERROR: menu %d has no choice %d\n", menu, choice); \
+  do {bx_printf("ERROR: menu %d has no choice %d\n", menu, choice); \
       assert(0); } while (0)
 
 void build_runtime_options_prompt(const char *format, char *buf, int size)
@@ -372,7 +375,7 @@ int do_menu(const char *pname)
   bx_list_c *menu = (bx_list_c *)SIM->get_param(pname, NULL);
   while (1) {
     menu->set_choice(0);
-    int status = menu->text_ask(stdin, stderr);
+    int status = menu->text_ask();
     if (status < 0) return status;
     if (menu->get_choice() < 1)
       return menu->get_choice();
@@ -382,23 +385,17 @@ int do_menu(const char *pname)
       assert(chosen != NULL);
       if (chosen->get_enabled()) {
         if (SIM->get_init_done() && !chosen->get_runtime_param()) {
-          fprintf(stderr, "\nWARNING: parameter not available at runtime!\n");
+          bx_printf("\nWARNING: parameter not available at runtime!\n");
         } else if (chosen->get_type() == BXT_LIST) {
           char chosen_pname[80];
           chosen->get_param_path(chosen_pname, 80);
           do_menu(chosen_pname);
         } else {
-          chosen->text_ask(stdin, stderr);
+          chosen->text_ask();
         }
       }
     }
   }
-}
-
-void askparam(char *pname)
-{
-  bx_param_c *param = SIM->get_param(pname);
-  param->text_ask(stdin, stderr);
 }
 
 int bx_config_interface(int menu)
@@ -430,7 +427,7 @@ int bx_config_interface(int menu)
           if (ask_uint(startup_menu_prompt, "", 1, n_choices, default_choice, &choice, 10) < 0) return -1;
           switch (choice) {
             case 1:
-              fprintf(stderr, "I reset all options back to their factory defaults.\n\n");
+              bx_printf("I reset all options back to their factory defaults.\n\n");
               SIM->reset_all_param();
               SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_EDIT_START);
               break;
@@ -509,10 +506,10 @@ int bx_config_interface(int menu)
               break;
             case BX_CI_RT_CONT:
               SIM->update_runtime_options();
-              fprintf(stderr, "Continuing simulation\n");
+              bx_printf("Continuing simulation\n");
               return 0;
             case BX_CI_RT_QUIT:
-              fprintf(stderr, "You chose quit on the configuration interface.\n");
+              bx_printf("You chose quit on the configuration interface.\n");
               bx_user_quit = 1;
 #if !BX_DEBUGGER
               bx_atexit();
@@ -521,12 +518,12 @@ int bx_config_interface(int menu)
               bx_dbg_exit(1);
 #endif
               return -1;
-            default: fprintf(stderr, "Menu choice %d not implemented.\n", choice);
+            default: bx_printf("Menu choice %d not implemented.\n", choice);
           }
         }
         break;
       default:
-        fprintf(stderr, "Unknown config interface menu type.\n");
+        bx_printf("Unknown config interface menu type.\n");
         assert(menu >=0 && menu < BX_CI_N_MENUS);
     }
   }
@@ -535,18 +532,18 @@ int bx_config_interface(int menu)
 static void bx_print_log_action_table()
 {
   // just try to print all the prefixes first.
-  fprintf(stderr, "Current log settings:\n");
-  fprintf(stderr, "                 Debug      Info       Error       Panic\n");
-  fprintf(stderr, "ID    Device     Action     Action     Action      Action\n");
-  fprintf(stderr, "----  ---------  ---------  ---------  ----------  ----------\n");
+  bx_printf("Current log settings:\n");
+  bx_printf("                 Debug      Info       Error       Panic\n");
+  bx_printf("ID    Device     Action     Action     Action      Action\n");
+  bx_printf("----  ---------  ---------  ---------  ----------  ----------\n");
   int i, j, imax=SIM->get_n_log_modules();
   for (i=0; i<imax; i++) {
     if (strcmp(SIM->get_prefix(i), BX_NULL_PREFIX)) {
-      fprintf(stderr, "%3d.  %s ", i, SIM->get_prefix(i));
+      bx_printf("%3d.  %s ", i, SIM->get_prefix(i));
       for (j=0; j<SIM->get_max_log_level(); j++) {
-        fprintf(stderr, "%10s ", SIM->get_action_name(SIM->get_log_action(i, j)));
+        bx_printf("%10s ", SIM->get_action_name(SIM->get_log_action(i, j)));
       }
-      fprintf(stderr, "\n");
+      bx_printf("\n");
     }
   }
 }
@@ -566,7 +563,7 @@ void bx_log_options(int individual)
       if (ask_int(log_options_prompt1, "", -1, maxid-1, -1, &id) < 0)
         return;
       if (id < 0) return;
-      fprintf(stderr, "Editing log options for the device %s\n", SIM->get_prefix(id));
+      bx_printf("Editing log options for the device %s\n", SIM->get_prefix(id));
       for (level=0; level<SIM->get_max_log_level(); level++) {
         char prompt[1024];
         int default_action = SIM->get_log_action(id, level);
@@ -579,7 +576,7 @@ void bx_log_options(int individual)
         if (!BX_LOG_OPTS_EXCLUDE(level, action)) {
           SIM->set_log_action(id, level, action);
         } else {
-          fprintf(stderr, "Event type '%s' does not support log action '%s'.\n",
+          bx_printf("Event type '%s' does not support log action '%s'.\n",
                   SIM->get_log_level_name(level), log_level_choices[action]);
         }
       }
@@ -599,7 +596,7 @@ void bx_log_options(int individual)
           SIM->set_default_log_action(level, action);
           SIM->set_log_action(-1, level, action);
         } else {
-          fprintf(stderr, "Event type '%s' does not support log action '%s'.\n",
+          bx_printf("Event type '%s' does not support log action '%s'.\n",
                   SIM->get_log_level_name(level), log_level_choices[action]);
         }
       }
@@ -618,7 +615,7 @@ int bx_read_rc(char *rc)
     if (ask_string("\nWhat is the configuration file name?\nTo cancel, type 'none'. [%s] ", oldrc, newrc) < 0) return -1;
     if (!strcmp(newrc, "none")) return -1;
     if (SIM->read_rc(newrc) >= 0) return 0;
-    fprintf(stderr, "The file '%s' could not be found.\n", newrc);
+    bx_printf("The file '%s' could not be found.\n", newrc);
   }
 }
 
@@ -638,7 +635,7 @@ int bx_write_rc(char *rc)
     // try with overwrite off first
     int status = SIM->write_rc(newrc, 0);
     if (status >= 0) {
-      fprintf(stderr, "Wrote configuration to '%s'.\n", newrc);
+      bx_printf("Wrote configuration to '%s'.\n", newrc);
       return 0;
     } else if (status == -2) {
       // return code -2 indicates the file already exists, and overwrite
@@ -650,10 +647,10 @@ int bx_write_rc(char *rc)
       if (!overwrite) continue;  // if "no", start loop over, asking for a different file
       // they confirmed, so try again with overwrite bit set
       if (SIM->write_rc(newrc, 1) >= 0) {
-        fprintf(stderr, "Overwriting existing configuration '%s'.\n", newrc);
+        bx_printf("Overwriting existing configuration '%s'.\n", newrc);
         return 0;
       } else {
-        fprintf(stderr, "Write failed to '%s'.\n", newrc);
+        bx_printf("Write failed to '%s'.\n", newrc);
       }
     }
   }
@@ -674,27 +671,27 @@ void bx_plugin_ctrl()
       plugin_ctrl = (bx_list_c*) SIM->get_param(BXPN_PLUGIN_CTRL);
       count = plugin_ctrl->get_size();
       if (count == 0) {
-        fprintf(stderr, "\nNo optional plugins loaded\n");
+        bx_printf("\nNo optional plugins loaded\n");
       } else {
-        fprintf(stderr, "\nCurrently loaded plugins:");
+        bx_printf("\nCurrently loaded plugins:");
         for (int i = 0; i < count; i++) {
-          if (i > 0) fprintf(stderr, ",");
-          fprintf(stderr, " %s", plugin_ctrl->get(i)->get_name());
+          if (i > 0) bx_printf(",");
+          bx_printf(" %s", plugin_ctrl->get(i)->get_name());
         }
-        fprintf(stderr, "\n");
+        bx_printf("\n");
       }
       if (choice == 1) {
         ask_string("\nEnter the name of the plugin to load.\nTo cancel, type 'none'. [%s] ", "none", plugname);
         if (strcmp(plugname, "none")) {
           if (!SIM->opt_plugin_ctrl(plugname, 1)) {
-            fprintf(stderr, "\nPlugin already loaded.\n");
+            bx_printf("\nPlugin already loaded.\n");
           }
         }
       } else {
         ask_string("\nEnter the name of the plugin to unload.\nTo cancel, type 'none'. [%s] ", "none", plugname);
         if (strcmp(plugname, "none")) {
           if (!SIM->opt_plugin_ctrl(plugname, 0)) {
-            fprintf(stderr, "\nNo plugin unloaded.\n");
+            bx_printf("\nNo plugin unloaded.\n");
           }
         }
       }
@@ -715,7 +712,7 @@ config_interface_notify_callback(void *unused, BxEvent *event)
       event->retcode = 0;
       return event;
     case BX_SYNC_EVT_ASK_PARAM:
-      event->retcode = event->u.param.param->text_ask(stdin, stderr);
+      event->retcode = event->u.param.param->text_ask();
       return event;
     case BX_SYNC_EVT_LOG_DLG:
       if (event->u.logmsg.mode == BX_LOG_DLG_ASK) {
@@ -774,97 +771,97 @@ void bx_config_interface_init()
 /////////////////////////////////////////////////////////////////////
 // implement the text_* methods for bx_param types.
 
-void bx_param_num_c::text_print(FILE *fp)
+void bx_param_num_c::text_print()
 {
   if (get_long_format()) {
-    fprintf(fp, get_long_format(), get());
+    bx_printf(get_long_format(), get());
   } else {
     const char *format = "%s: %d";
     assert(base==10 || base==16);
     if (base==16) format = "%s: 0x%x";
     if (get_label()) {
-      fprintf(fp, format, get_label(), get());
+      bx_printf(format, get_label(), get());
     } else {
-      fprintf(fp, format, get_name(), get());
+      bx_printf(format, get_name(), get());
     }
   }
 }
 
-void bx_param_bool_c::text_print(FILE *fp)
+void bx_param_bool_c::text_print()
 {
   if (get_format()) {
-    fprintf(fp, get_format(), get() ? "yes" : "no");
+    bx_printf(get_format(), get() ? "yes" : "no");
   } else {
     const char *format = "%s: %s";
     if (get_label()) {
-      fprintf(fp, format, get_label(), get() ? "yes" : "no");
+      bx_printf(format, get_label(), get() ? "yes" : "no");
     } else {
-      fprintf(fp, format, get_name(), get() ? "yes" : "no");
+      bx_printf(format, get_name(), get() ? "yes" : "no");
     }
   }
 }
 
-void bx_param_enum_c::text_print(FILE *fp)
+void bx_param_enum_c::text_print()
 {
   int n = get();
   assert(n >= min && n <= max);
   const char *choice = choices[n - min];
   if (get_format()) {
-    fprintf(fp, get_format(), choice);
+    bx_printf(get_format(), choice);
   } else {
     const char *format = "%s: %s";
     if (get_label()) {
-      fprintf(fp, format, get_label(), choice);
+      bx_printf(format, get_label(), choice);
     } else {
-      fprintf(fp, format, get_name(), choice);
+      bx_printf(format, get_name(), choice);
     }
   }
 }
 
-void bx_param_string_c::text_print(FILE *fp)
+void bx_param_string_c::text_print()
 {
   char value[1024];
 
   this->sprint(value, 1024, 0);
   if (get_format()) {
-    fprintf(fp, get_format(), value);
+    bx_printf(get_format(), value);
   } else {
     if (get_label()) {
-      fprintf(fp, "%s: %s", get_label(), value);
+      bx_printf("%s: %s", get_label(), value);
     } else {
-      fprintf(fp, "%s: %s", get_name(), value);
+      bx_printf("%s: %s", get_name(), value);
     }
   }
 }
 
-void bx_list_c::text_print(FILE *fp)
+void bx_list_c::text_print()
 {
   bx_listitem_t *item;
   int i = 0;
 
-  fprintf(fp, "%s: ", get_name());
+  bx_printf("%s: ", get_name());
   for (item = list; item; item = item->next) {
     if (item->param->get_enabled()) {
       if ((i > 0) && (options & SERIES_ASK))
-        fprintf(fp, ", ");
-      item->param->text_print(fp);
+        bx_printf(", ");
+      item->param->text_print();
       if (!(options & SERIES_ASK))
-        fprintf(fp, "\n");
+        bx_printf("\n");
     }
     i++;
   }
 }
 
-int bx_param_num_c::text_ask(FILE *fpin, FILE *fpout)
+int bx_param_num_c::text_ask()
 {
-  fprintf(fpout, "\n");
+  bx_printf("\n");
   int status;
   const char *prompt = get_ask_format();
   const char *help = get_description();
   if (prompt == NULL) {
     // default prompt, if they didn't set an ask format string
-    text_print(fpout);
-    fprintf(fpout, "\n");
+    text_print();
+    bx_printf("\n");
     prompt = "Enter new value or '?' for help: [%d] ";
     if (base==16)
       prompt = "Enter new value in hex or '?' for help: [%x] ";
@@ -876,9 +873,9 @@ int bx_param_num_c::text_ask(FILE *fpin, FILE *fpout)
   return 0;
 }
 
-int bx_param_bool_c::text_ask(FILE *fpin, FILE *fpout)
+int bx_param_bool_c::text_ask()
 {
-  fprintf(fpout, "\n");
+  bx_printf("\n");
   int status;
   const char *prompt = get_ask_format();
   const char *help = get_description();
@@ -900,16 +897,16 @@ int bx_param_bool_c::text_ask(FILE *fpin, FILE *fpout)
   return 0;
 }
 
-int bx_param_enum_c::text_ask(FILE *fpin, FILE *fpout)
+int bx_param_enum_c::text_ask()
 {
-  fprintf(fpout, "\n");
+  bx_printf("\n");
   const char *prompt = get_ask_format();
   const char *help = get_description();
   if (prompt == NULL) {
     // default prompt, if they didn't set an ask format string
-    fprintf(fpout, "%s = ", get_name());
-    text_print(fpout);
-    fprintf(fpout, "\n");
+    bx_printf("%s = ", get_name());
+    text_print();
+    bx_printf("\n");
     prompt = "Enter new value or '?' for help: [%s] ";
   }
   Bit32s n = (Bit32s)(get() - min);
@@ -941,19 +938,19 @@ int parse_raw_bytes(char *dest, char *src, int destsize, char separator)
   return 0;
 }
 
-int bx_param_string_c::text_ask(FILE *fpin, FILE *fpout)
+int bx_param_string_c::text_ask()
 {
-  fprintf(fpout, "\n");
+  bx_printf("\n");
   int status;
   const char *prompt = get_ask_format();
   if (prompt == NULL) {
     if (options & SELECT_FOLDER_DLG) {
-      fprintf(fpout, "%s\n\n", get_label());
+      bx_printf("%s\n\n", get_label());
       prompt = "Enter a path to an existing folder or press enter to cancel\n";
     } else {
       // default prompt, if they didn't set an ask format string
-      text_print(fpout);
-      fprintf(fpout, "\n");
+      text_print();
+      bx_printf("\n");
       prompt = "Enter a new value, '?' for help, or press return for no change.\n";
     }
   }
@@ -961,7 +958,7 @@ int bx_param_string_c::text_ask(FILE *fpin, FILE *fpout)
     char buffer[1024];
     status = ask_string(prompt, getptr(), buffer);
     if (status == -2) {
-      fprintf(fpout, "\n%s\n", get_description());
+      bx_printf("\n%s\n", get_description());
       continue;
     }
     if (status < 0) return status;
@@ -973,7 +970,7 @@ int bx_param_string_c::text_ask(FILE *fpin, FILE *fpout)
       // copy raw hex into buffer
       status = parse_raw_bytes(buffer, buffer2, maxsize, separator);
       if (status < 0) {
-        fprintf(fpout, "Illegal raw byte format.  I expected something like 3A%c03%c12%c...\n", separator, separator, separator);
+        bx_printf("Illegal raw byte format.  I expected something like 3A%c03%c12%c...\n", separator, separator, separator);
         continue;
       }
     }
@@ -983,54 +980,54 @@ int bx_param_string_c::text_ask(FILE *fpin, FILE *fpout)
   }
 }
 
-int bx_list_c::text_ask(FILE *fpin, FILE *fpout)
+int bx_list_c::text_ask()
 {
   bx_listitem_t *item;
   bx_list_c *child;
 
   const char *my_title = title;
-  fprintf(fpout, "\n");
+  bx_printf("\n");
   int i, imax = strlen(my_title);
-  for (i=0; i<imax; i++) fprintf(fpout, "-");
-  fprintf(fpout, "\n%s\n", my_title);
-  for (i=0; i<imax; i++) fprintf(fpout, "-");
-  fprintf(fpout, "\n");
+  for (i=0; i<imax; i++) bx_printf("-");
+  bx_printf("\n%s\n", my_title);
+  for (i=0; i<imax; i++) bx_printf("-");
+  bx_printf("\n");
   if (options & SERIES_ASK) {
     for (item = list; item; item = item->next) {
       if (item->param->get_enabled()) {
         if (!SIM->get_init_done() || item->param->get_runtime_param()) {
-          item->param->text_ask(fpin, fpout);
+          item->param->text_ask();
         }
       }
     }
   } else {
     if (options & SHOW_PARENT)
-      fprintf(fpout, "0. Return to previous menu\n");
+      bx_printf("0. Return to previous menu\n");
     int i = 0;
     for (item = list; item; item = item->next) {
-      fprintf(fpout, "%d. ", i+1);
+      bx_printf("%d. ", i+1);
       if ((item->param->get_enabled()) &&
           (!SIM->get_init_done() || item->param->get_runtime_param())) {
         if (item->param->get_type() == BXT_LIST) {
           child = (bx_list_c*)item->param;
-          fprintf(fpout, "%s\n", child->get_title());
+          bx_printf("%s\n", child->get_title());
         } else {
           if ((options & SHOW_GROUP_NAME) && (item->param->get_group() != NULL))
-            fprintf(fpout, "%s ", item->param->get_group());
-          item->param->text_print(fpout);
-          fprintf(fpout, "\n");
+            bx_printf("%s ", item->param->get_group());
+          item->param->text_print();
+          bx_printf("\n");
         }
       } else {
         if (item->param->get_type() == BXT_LIST) {
           child = (bx_list_c*)item->param;
-          fprintf(fpout, "%s (disabled)\n", child->get_title());
+          bx_printf("%s (disabled)\n", child->get_title());
         } else {
-          fprintf(fpout, "(disabled)\n");
+          bx_printf("(disabled)\n");
         }
       }
       i++;
     }
-    fprintf(fpout, "\n");
+    bx_printf("\n");
     int min = (options & SHOW_PARENT) ? 0 : 1;
     int max = size;
     int status = ask_uint("Please choose one: [%d] ", "", min, max, choice, &choice, 10);
@@ -1046,10 +1043,10 @@ static int ci_callback(void *userdata, ci_command_t command)
     case CI_START:
       bx_config_interface_init();
       if (SIM->get_param_enum(BXPN_BOCHS_START)->get() == BX_QUICK_START)
-	bx_config_interface(BX_CI_START_SIMULATION);
+        bx_config_interface(BX_CI_START_SIMULATION);
       else {
         if (!SIM->test_for_text_console())
-	  return CI_ERR_NO_TEXT_CONSOLE;
+          return CI_ERR_NO_TEXT_CONSOLE;
         bx_config_interface(BX_CI_START_MENU);
       }
       break;

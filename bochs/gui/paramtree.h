@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2010-2015  The Bochs Project
+//  Copyright (C) 2010-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -167,8 +167,8 @@ public:
   void *get_device_param() { return device; }
 
 #if BX_USE_TEXTCONFIG
-  virtual void text_print(FILE *fp) {}
-  virtual int text_ask(FILE *fpin, FILE *fpout) { return -1; }
+  virtual void text_print() {}
+  virtual int text_ask() { return -1; }
 #endif
 
   virtual int parse_param(const char *value) { return -1; }
@@ -230,8 +230,8 @@ public:
   static Bit32u set_default_base(Bit32u val);
   static Bit32u get_default_base() { return default_base; }
 #if BX_USE_TEXTCONFIG
-  virtual void text_print(FILE *fp);
-  virtual int text_ask(FILE *fpin, FILE *fpout);
+  virtual void text_print();
+  virtual int text_ask();
 #endif
   virtual int parse_param(const char *value);
 };
@@ -314,8 +314,8 @@ public:
       Bit64s initial_val,
       bx_bool is_shadow = 0);
 #if BX_USE_TEXTCONFIG
-  virtual void text_print(FILE *fp);
-  virtual int text_ask(FILE *fpin, FILE *fpout);
+  virtual void text_print();
+  virtual int text_ask();
 #endif
   virtual int parse_param(const char *value);
 };
@@ -363,8 +363,8 @@ public:
   Bit64u get_dependent_bitmap(Bit64s value);
   virtual void set_enabled(int enabled);
 #if BX_USE_TEXTCONFIG
-  virtual void text_print(FILE *fp);
-  virtual int text_ask(FILE *fpin, FILE *fpout);
+  virtual void text_print();
+  virtual int text_ask();
 #endif
   virtual int parse_param(const char *value);
 };
@@ -412,8 +412,8 @@ public:
   bx_bool isempty();
   int sprint(char *buf, int buflen, bx_bool dquotes);
 #if BX_USE_TEXTCONFIG
-  virtual void text_print(FILE *fp);
-  virtual int text_ask(FILE *fpin, FILE *fpout);
+  virtual void text_print();
+  virtual int text_ask();
 #endif
   virtual int parse_param(const char *value);
 };
@@ -541,8 +541,8 @@ public:
   void set_restore_handler(void *devptr, list_restore_handler restore);
   void restore();
 #if BX_USE_TEXTCONFIG
-  virtual void text_print(FILE *);
-  virtual int text_ask(FILE *fpin, FILE *fpout);
+  virtual void text_print();
+  virtual int text_ask();
 #endif
 };
 

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2015  The Bochs Project
+//  Copyright (C) 2002-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -162,6 +162,14 @@ public:
   void init_debug_dialog(void);
   void close_debug_dialog(void);
 #endif
+#if BX_USE_TEXTCONFIG
+  // gui console support
+  bx_bool has_gui_console(void) {return console.present;}
+  void console_refresh(bx_bool force);
+  void console_key_enq(Bit8u key);
+  int bx_printf(const char *s);
+  char* bx_gets(char *s, int size);
+#endif
 
 protected:
   // And these are defined and used privately in gui.cc
@@ -183,6 +191,11 @@ protected:
   // status bar LED timer
   static void led_timer_handler(void *);
   void led_timer(void);
+#if BX_USE_TEXTCONFIG
+  // gui console support
+  void console_init(void);
+  void console_cleanup(void);
+#endif
 
   // header bar buttons
   bx_bool floppyA_status;
@@ -231,6 +244,7 @@ protected:
   unsigned y_tilesize;
   // current guest display settings
   bx_bool guest_textmode;
+  unsigned guest_fsize;
   unsigned guest_xres;
   unsigned guest_yres;
   unsigned guest_bpp;
@@ -252,6 +266,24 @@ protected:
   int user_shortcut_len;
   // gui dialog capabilities
   Bit32u dialog_caps;
+#if BX_USE_TEXTCONFIG
+  // gui console support
+  struct {
+    bx_bool present;
+    bx_bool running;
+    Bit8u *screen;
+    Bit8u *oldscreen;
+    unsigned saved_fsize;
+    unsigned saved_xres;
+    unsigned saved_yres;
+    unsigned saved_bpp;
+    unsigned cursor_x;
+    unsigned cursor_y;
+    bx_vga_tminfo_t tminfo;
+    Bit8u keys[16];
+    Bit8u n_keys;
+  } console;
+#endif
 };
 
 

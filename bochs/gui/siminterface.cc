@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2016  The Bochs Project
+//  Copyright (C) 2002-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -218,6 +218,11 @@ public:
                                      const char *param, int maxports, bx_list_c *base);
   virtual int  write_param_list(FILE *fp, bx_list_c *base, const char *optname, bx_bool multiline);
   virtual int  write_usb_options(FILE *fp, int maxports, bx_list_c *base);
+#if BX_USE_TEXTCONFIG
+  // gui console support
+  virtual int  bx_printf(const char *fmt, ...);
+  virtual char* bx_gets(char *s, int size, FILE *stream);
+#endif
 
 private:
   bx_bool save_sr_param(FILE *fp, bx_param_c *node, const char *sr_path, int level);
@@ -1571,3 +1576,31 @@ int bx_real_sim_c::write_usb_options(FILE *fp, int maxports, bx_list_c *base)
 {
   return bx_write_usb_options(fp, maxports, base);
 }
+
+#if BX_USE_TEXTCONFIG
+int bx_real_sim_c::bx_printf(const char *fmt, ...)
+{
+  va_list ap;
+  char buf[1025];
+
+  va_start(ap, fmt);
+  vsnprintf(buf, 1024, fmt, ap);
+  va_end(ap);
+  if (get_init_done()) {
+    if (bx_gui->has_gui_console()) {
+      return bx_gui->bx_printf(buf);
+    }
+  }
+  return printf(buf);
+}
+
+char* bx_real_sim_c::bx_gets(char *s, int size, FILE *stream)
+{
+  if (get_init_done()) {
+    if (bx_gui->has_gui_console()) {
+      return bx_gui->bx_gets(s, size);
+    }
+  }
+  return fgets(s, size, stream);
+}
+#endif

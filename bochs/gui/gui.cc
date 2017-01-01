@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2015  The Bochs Project
+//  Copyright (C) 2002-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -35,6 +35,8 @@
 #include "gui/bitmaps/cdromd.h"
 #include "gui/bitmaps/userbutton.h"
 #include "gui/bitmaps/saverestore.h"
+
+#include "sdl.h"
 
 #if BX_WITH_MACOS
 #  include <Disks.h>
@@ -102,6 +104,7 @@ bx_gui_c::bx_gui_c(void): disp_mode(DISP_MODE_SIM)
   led_timer_index = BX_NULL_TIMER_HANDLE;
   framebuffer = NULL;
   guest_textmode = 1;
+  guest_fsize = (16 << 4) | 8;
   guest_xres = 640;
   guest_yres = 480;
   guest_bpp = 8;
@@ -115,6 +118,11 @@ bx_gui_c::~bx_gui_c()
   if (framebuffer != NULL) {
     delete [] framebuffer;
   }
+#if BX_USE_TEXTCONFIG
+  if (console.running) {
+    console_cleanup();
+  }
+#endif
 }
 
 void bx_gui_c::init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
@@ -129,7 +137,10 @@ void bx_gui_c::init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
   BX_GUI_THIS x_tilesize = tilewidth;
   BX_GUI_THIS y_tilesize = tileheight;
   BX_GUI_THIS dialog_caps = BX_GUI_DLG_RUNTIME | BX_GUI_DLG_SAVE_RESTORE;
-
+#if BX_USE_TEXTCONFIG
+  BX_GUI_THIS console.present = 0;
+  BX_GUI_THIS console.running = 0;
+#endif
   BX_GUI_THIS toggle_method = SIM->get_param_enum(BXPN_MOUSE_TOGGLE)->get();
   BX_GUI_THIS toggle_keystate = 0;
   switch (toggle_method) {
@@ -1051,5 +1062,149 @@ void bx_gui_c::close_debug_dialog()
 {
   extern void CloseDebugDialog();
   CloseDebugDialog();
+}
+#endif
+
+#if BX_USE_TEXTCONFIG
+
+#define BX_CONSOLE_BUFSIZE 4000
+
+void bx_gui_c::console_init(void)
+{
+  int i;
+
+  console.screen = new Bit8u[BX_CONSOLE_BUFSIZE];
+  console.oldscreen = new Bit8u[BX_CONSOLE_BUFSIZE];
+  for (i = 0; i < BX_CONSOLE_BUFSIZE; i+=2) {
+    console.screen[i] = 0x20;
+    console.screen[i+1] = 0x07;
+  }
+  memset(console.oldscreen, 0xff, BX_CONSOLE_BUFSIZE);
+  console.saved_xres = guest_xres;
+  console.saved_yres = guest_yres;
+  console.saved_bpp = guest_bpp;
+  console.saved_fsize = guest_fsize;
+  for (i = 0; i < 256; i++) {
+    memcpy(&BX_GUI_THIS vga_charmap[0]+i*32, &sdl_font8x16[i], 16);
+    BX_GUI_THIS char_changed[i] = 1;
+  }
+  BX_GUI_THIS charmap_updated = 1;
+  console.cursor_x = 0;
+  console.cursor_y = 0;
+  memset(&console.tminfo, 0, sizeof(bx_vga_tminfo_t));
+  console.tminfo.line_offset = 160;
+  console.tminfo.line_compare = 1023;
+  console.tminfo.cs_start = 14;
+  console.tminfo.cs_end = 15;
+  console.tminfo.blink_flags = BX_TEXT_BLINK_MODE | BX_TEXT_BLINK_STATE;
+  console.tminfo.actl_palette[7] = 0x07;
+  dimension_update(720, 400, 16, 9, 8);
+  console.n_keys = 0;
+  console.running = 1;
+}
+
+void bx_gui_c::console_cleanup(void)
+{
+  delete [] console.screen;
+  delete [] console.oldscreen;
+  unsigned fheight = (console.saved_fsize >> 4);
+  unsigned fwidth = (console.saved_fsize & 0x0f);
+  dimension_update(console.saved_xres, console.saved_yres, fheight, fwidth,
+                   console.saved_bpp);
+  console.running = 0;
+}
+
+void bx_gui_c::console_refresh(bx_bool force)
+{
+  if (force) memset(console.oldscreen, 0xff, BX_CONSOLE_BUFSIZE);
+  text_update(console.oldscreen, console.screen, console.cursor_x,
+              console.cursor_y, &console.tminfo);
+  memcpy(console.oldscreen, console.screen, BX_CONSOLE_BUFSIZE);
+}
+
+void bx_gui_c::console_key_enq(Bit8u key)
+{
+  if (console.n_keys < 16) {
+    console.keys[console.n_keys++] = key;
+  }
+}
+
+int bx_gui_c::bx_printf(const char *s)
+{
+  unsigned offset;
+
+  if (!console.running) {
+    console_init();
+  }
+  for (unsigned i = 0; i < strlen(s); i++) {
+    offset = console.cursor_y * 160 + console.cursor_x * 2;
+    if ((s[i] != 0x08) && (s[i] != 0x0a)) {
+      console.screen[offset] = s[i];
+      console.screen[offset+1] = 0x07;
+      console.cursor_x++;
+    }
+    if ((s[i] == 0x0a) || (console.cursor_x == 80)) {
+      console.cursor_x = 0;
+      console.cursor_y++;
+    }
+    if (s[i] == 0x08) {
+      if (offset > 0) {
+        console.screen[offset-2] = 0x20;
+        console.screen[offset-1] = 0x07;
+        if (console.cursor_x > 0) {
+          console.cursor_x--;
+        } else {
+          console.cursor_x = 79;
+          console.cursor_y--;
+        }
+      }
+    }
+    if (console.cursor_y == 25) {
+      memcpy(console.screen, console.screen+160, BX_CONSOLE_BUFSIZE-160);
+      console.cursor_y--;
+      offset = console.cursor_y * 160 + console.cursor_x * 2;
+      for (int j = 0; j < 160; j+=2) {
+        console.screen[offset+j] = 0x20;
+        console.screen[offset+j+1] = 0x07;
+      }
+    }
+  }
+  console_refresh(0);
+  return strlen(s);
+}
+
+char* bx_gui_c::bx_gets(char *s, int size)
+{
+  char keystr[2];
+  int pos = 0, done = 0;
+
+  keystr[1] = 0;
+  do {
+    handle_events();
+    while ((console.n_keys > 0) && !done) {
+      if ((console.keys[0] >= 0x20) && (pos < (size-1))) {
+        s[pos++] = console.keys[0];
+        keystr[0] = console.keys[0];
+        bx_printf(keystr);
+      } else if (console.keys[0] == 0x0d) {
+        s[pos] = 0x00;
+        keystr[0] = 0x0a;
+        bx_printf(keystr);
+        done = 1;
+      } else if ((console.keys[0] == 0x08) && (pos > 0)) {
+        pos--;
+        keystr[0] = 0x08;
+        bx_printf(keystr);
+      }
+      memcpy(&console.keys[0], &console.keys[1], 15);
+      console.n_keys--;
+    }
+#if BX_HAVE_USLEEP
+    usleep(25000);
+#else
+    msleep(25);
+#endif
+  } while (!done);
+  return s;
 }
 #endif

@@ -9,6 +9,10 @@ Changes after 2.6.8 release:
 - Configure and compile
   - Added Android host platform support.
 
+- GUI and display libraries
+  - X11: Show the runtime configuration in the Bochs VGA window instead of
+         console / xterm.
+
 - CPU / CPUDB
   - Bugfixes for CPU emulation correctness (critical bugfix for x86-64 and AVX opcodes emulation,
     fixed assertion failures in proc_ctrl.cc)

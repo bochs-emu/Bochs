@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2016  The Bochs Project
+//  Copyright (C) 2001-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -63,12 +63,17 @@ public:
 #endif
   virtual void beep_on(float frequency);
   virtual void beep_off();
+  virtual void set_display_mode(disp_mode_t newmode);
   virtual void statusbar_setitem_specific(int element, bx_bool active, bx_bool w);
   virtual void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
   virtual void set_mouse_mode_absxy(bx_bool mode);
 #if BX_SHOW_IPS
   virtual void show_ips(Bit32u ips_count);
 #endif
+private:
+  void headerbar_click(int x);
+  void send_mouse_status(void);
+  void xkeypress(KeySym keysym, int press_release);
 };
 
 // declare one instance of the gui object and call macro to insert the
@@ -170,8 +175,6 @@ static char x11_ips_text[20];
 static Bit8u x11_mouse_msg_counter = 0;
 #endif
 
-static void headerbar_click(int x, int y);
-static void send_keyboard_mouse_status(void);
 static void set_status_text(int element, const char *text, bx_bool active, bx_bool w=0);
 
 
@@ -301,7 +304,6 @@ Bit32u ascii_to_key_event[0x5f] = {
 extern Bit8u graphics_snapshot[32 * 1024];
 
 static void create_internal_vga_font(void);
-static void xkeypress(KeySym keysym, int press_release);
 // extern "C" void select_visual(void);
 
 #define ROUNDUP(nbytes, pad) ((((nbytes) + ((pad)-1)) / (pad)) * ((pad)>>3))
@@ -693,6 +695,9 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
   new_gfx_api = 1;
   dialog_caps |= (BX_GUI_DLG_USER | BX_GUI_DLG_SNAPSHOT | BX_GUI_DLG_CDROM);
+#if BX_USE_TEXTCONFIG
+  console.present = 1;
+#endif
 }
 
 void set_status_text(int element, const char *text, bx_bool active, bx_bool w)
@@ -836,17 +841,20 @@ void bx_x_gui_c::handle_events(void)
         y = 0;
       }
 
-      DEV_vga_redraw_area(
-        (unsigned) expose_event->x,
-        y,
-        (unsigned) expose_event->width,
-        height);
-
+#if BX_USE_TEXTCONFIG
+      if (console.running) {
+        console_refresh(1);
+      } else
+#endif
+      {
+        DEV_vga_redraw_area((unsigned) expose_event->x, y,
+                            (unsigned) expose_event->width, height);
+      }
       /* Always draw headerbar, even if not touched by expose event.
        * As a small optimization, only do it on last contigous expose.
        */
       if (expose_event->count == 0) {
-      show_headerbar();
+        show_headerbar();
       }
       break;
 
@@ -865,12 +873,12 @@ void bx_x_gui_c::handle_events(void)
                 BX_DEBUG(("xxx:   in headerbar"));
         if (mouse_update) {
                   BX_DEBUG(("xxx:   mouse_update=1"));
-          send_keyboard_mouse_status();
+          send_mouse_status();
           mouse_update = 0;
         }
         prev_x = current_x = -1;
         prev_y = current_y = -1;
-        headerbar_click(button_event->x, button_event->y);
+        headerbar_click(button_event->x);
         break;
       }
       current_x = button_event->x;
@@ -880,7 +888,7 @@ void bx_x_gui_c::handle_events(void)
       switch (button_event->button) {
         case Button1:
           mouse_button_state |= 0x01;
-          send_keyboard_mouse_status();
+          send_mouse_status();
           mouse_update = 0;
           break;
         case Button2:
@@ -888,13 +896,13 @@ void bx_x_gui_c::handle_events(void)
             toggle_mouse_enable();
           } else {
             mouse_button_state |= 0x04;
-            send_keyboard_mouse_status();
+            send_mouse_status();
             mouse_update = 0;
           }
           break;
         case Button3:
           mouse_button_state |= 0x02;
-          send_keyboard_mouse_status();
+          send_mouse_status();
           mouse_update = 0;
           break;
       }
@@ -904,7 +912,7 @@ void bx_x_gui_c::handle_events(void)
       button_event = (XButtonEvent *) &report;
       if (button_event->y < BX_HEADER_BAR_Y) {
         if (mouse_update) {
-          send_keyboard_mouse_status();
+          send_mouse_status();
           mouse_update = 0;
         }
         prev_x = current_x = -1;
@@ -918,28 +926,28 @@ void bx_x_gui_c::handle_events(void)
       switch (button_event->button) {
         case Button1:
           mouse_button_state &= ~0x01;
-          send_keyboard_mouse_status();
+          send_mouse_status();
           mouse_update = 0;
           break;
         case Button2:
           mouse_toggle_check(BX_MT_MBUTTON, 0);
           mouse_button_state &= ~0x04;
-          send_keyboard_mouse_status();
+          send_mouse_status();
           mouse_update = 0;
           break;
         case Button3:
           mouse_button_state &= ~0x02;
-          send_keyboard_mouse_status();
+          send_mouse_status();
           mouse_update = 0;
           break;
         case Button4:
           current_z = 1;
-          send_keyboard_mouse_status();
+          send_mouse_status();
           mouse_update = 0;
           break;
         case Button5:
           current_z = -1;
-          send_keyboard_mouse_status();
+          send_mouse_status();
           mouse_update = 0;
           break;
       }
@@ -1004,7 +1012,7 @@ void bx_x_gui_c::handle_events(void)
 
   if (mouse_update) {
     BX_DEBUG(("handle_events(): send mouse status"));
-    send_keyboard_mouse_status();
+    send_mouse_status();
   }
 #if BX_SHOW_IPS
   if (x11_ips_update) {
@@ -1014,12 +1022,15 @@ void bx_x_gui_c::handle_events(void)
 #endif
 }
 
-void send_keyboard_mouse_status(void)
+void bx_x_gui_c::send_mouse_status(void)
 {
   int dx, dy, dz;
   BX_DEBUG(("XXX: prev=(%d,%d) curr=(%d,%d)",
             prev_x, prev_y, current_x, current_y));
 
+#if BX_USE_TEXTCONFIG
+  if (console.running) return;
+#endif
   if (x11_mouse_mode_absxy) {
     if ((current_y >= (int)bx_headerbar_y) && (current_y < (int)(dimension_y + bx_headerbar_y))) {
       dx = current_x * 0x7fff / dimension_x;
@@ -1059,22 +1070,31 @@ void bx_x_gui_c::flush(void)
     XFlush(bx_x_display);
 }
 
-void xkeypress(KeySym keysym, int press_release)
+void bx_x_gui_c::xkeypress(KeySym keysym, int press_release)
 {
   Bit32u key_event;
   bx_bool mouse_toggle = 0;
 
+#if BX_USE_TEXTCONFIG
+  if (console.running && !press_release) {
+    if (((keysym >= XK_space) && (keysym <= XK_asciitilde)) ||
+        (keysym == XK_Return) || (keysym == XK_BackSpace)) {
+      console_key_enq((Bit8u)(keysym & 0xff));
+    }
+    return;
+  }
+#endif
   if ((keysym == XK_Control_L) || (keysym == XK_Control_R)) {
-     mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_CTRL, !press_release);
+     mouse_toggle = mouse_toggle_check(BX_MT_KEY_CTRL, !press_release);
   } else if (keysym == XK_Alt_L) {
-     mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_ALT, !press_release);
+     mouse_toggle = mouse_toggle_check(BX_MT_KEY_ALT, !press_release);
   } else if (keysym == XK_F10) {
-     mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_F10, !press_release);
+     mouse_toggle = mouse_toggle_check(BX_MT_KEY_F10, !press_release);
   } else if (keysym == XK_F12) {
      mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_F12, !press_release);
   }
   if (mouse_toggle) {
-    bx_gui->toggle_mouse_enable();
+    toggle_mouse_enable();
     return;
   }
 
@@ -1738,6 +1758,7 @@ void bx_x_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsi
     BX_PANIC(("%d bpp graphics mode not supported", bpp));
   }
   guest_textmode = (fheight > 0);
+  guest_fsize = (fheight << 4) | fwidth;
   guest_xres = x;
   guest_yres = y;
   if (guest_textmode) {
@@ -1868,18 +1889,20 @@ void bx_x_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
             xorigin, 0, 1);
 }
 
-void headerbar_click(int x, int y)
+void bx_x_gui_c::headerbar_click(int x)
 {
   int xorigin;
 
-  // assuming y is in bounds
-  UNUSED(y);
   for (unsigned i=0; i<bx_headerbar_entries; i++) {
     if (bx_headerbar_entry[i].alignment == BX_GRAVITY_LEFT)
       xorigin = bx_headerbar_entry[i].xorigin;
     else
       xorigin = dimension_x - bx_headerbar_entry[i].xorigin;
     if ((x>=xorigin) && (x<(xorigin+int(bx_headerbar_entry[i].xdim)))) {
+#if BX_USE_TEXTCONFIG
+      if (console.running && (i != power_hbar_id))
+        return;
+#endif
       bx_headerbar_entry[i].f();
       return;
     }
@@ -2122,6 +2145,19 @@ void bx_x_gui_c::show_ips(Bit32u ips_count)
   }
 }
 #endif
+
+void bx_x_gui_c::set_display_mode(disp_mode_t newmode)
+{
+  // if no mode change, do nothing.
+  if (disp_mode == newmode) return;
+  // remember the display mode for next time
+  disp_mode = newmode;
+#if BX_USE_TEXTCONFIG
+  if ((newmode == DISP_MODE_SIM) && console.running) {
+    console_cleanup();
+  }
+#endif
+}
 
 // X11 control class
 
