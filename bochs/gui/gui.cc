@@ -36,7 +36,9 @@
 #include "gui/bitmaps/userbutton.h"
 #include "gui/bitmaps/saverestore.h"
 
+#if BX_USE_TEXTCONFIG
 #include "sdl.h"
+#endif
 
 #if BX_WITH_MACOS
 #  include <Disks.h>
