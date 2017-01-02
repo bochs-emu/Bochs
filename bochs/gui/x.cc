@@ -841,12 +841,9 @@ void bx_x_gui_c::handle_events(void)
         y = 0;
       }
 
-#if BX_USE_TEXTCONFIG
-      if (console.running) {
+      if (console_running()) {
         console_refresh(1);
-      } else
-#endif
-      {
+      } else {
         DEV_vga_redraw_area((unsigned) expose_event->x, y,
                             (unsigned) expose_event->width, height);
       }
@@ -1028,9 +1025,8 @@ void bx_x_gui_c::send_mouse_status(void)
   BX_DEBUG(("XXX: prev=(%d,%d) curr=(%d,%d)",
             prev_x, prev_y, current_x, current_y));
 
-#if BX_USE_TEXTCONFIG
-  if (console.running) return;
-#endif
+  if (console_running()) return;
+
   if (x11_mouse_mode_absxy) {
     if ((current_y >= (int)bx_headerbar_y) && (current_y < (int)(dimension_y + bx_headerbar_y))) {
       dx = current_x * 0x7fff / dimension_x;
@@ -1075,15 +1071,13 @@ void bx_x_gui_c::xkeypress(KeySym keysym, int press_release)
   Bit32u key_event;
   bx_bool mouse_toggle = 0;
 
-#if BX_USE_TEXTCONFIG
-  if (console.running && !press_release) {
+  if (console_running() && !press_release) {
     if (((keysym >= XK_space) && (keysym <= XK_asciitilde)) ||
         (keysym == XK_Return) || (keysym == XK_BackSpace)) {
       console_key_enq((Bit8u)(keysym & 0xff));
     }
     return;
   }
-#endif
   if ((keysym == XK_Control_L) || (keysym == XK_Control_R)) {
      mouse_toggle = mouse_toggle_check(BX_MT_KEY_CTRL, !press_release);
   } else if (keysym == XK_Alt_L) {
@@ -1899,10 +1893,8 @@ void bx_x_gui_c::headerbar_click(int x)
     else
       xorigin = dimension_x - bx_headerbar_entry[i].xorigin;
     if ((x>=xorigin) && (x<(xorigin+int(bx_headerbar_entry[i].xdim)))) {
-#if BX_USE_TEXTCONFIG
-      if (console.running && (i != power_hbar_id))
+      if (console_running() && (i != power_hbar_id))
         return;
-#endif
       bx_headerbar_entry[i].f();
       return;
     }
@@ -2152,11 +2144,9 @@ void bx_x_gui_c::set_display_mode(disp_mode_t newmode)
   if (disp_mode == newmode) return;
   // remember the display mode for next time
   disp_mode = newmode;
-#if BX_USE_TEXTCONFIG
-  if ((newmode == DISP_MODE_SIM) && console.running) {
+  if ((newmode == DISP_MODE_SIM) && console_running()) {
     console_cleanup();
   }
-#endif
 }
 
 // X11 control class

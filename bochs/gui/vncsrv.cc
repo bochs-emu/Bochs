@@ -7,7 +7,7 @@
 //    Donald Becker
 //    http://www.psyon.org
 //
-//  Copyright (C) 2001-2015  The Bochs Project
+//  Copyright (C) 2001-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -52,11 +52,7 @@
 
 #include "icon_bochs.h"
 #include "font/vga.bitmap.h"
-#if (BX_WITH_SDL || BX_WITH_SDL2 || BX_WITH_RFB) && !BX_PLUGINS
-extern unsigned char sdl_font8x8[256][8];
-#else
 #include "sdl.h" // 8x8 font for status text
-#endif
 
 #define HAVE_LIBVNCSERVER
 

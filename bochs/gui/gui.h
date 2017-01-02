@@ -165,10 +165,15 @@ public:
 #if BX_USE_TEXTCONFIG
   // gui console support
   bx_bool has_gui_console(void) {return console.present;}
+  bx_bool console_running(void) {return console.running;}
   void console_refresh(bx_bool force);
   void console_key_enq(Bit8u key);
   int bx_printf(const char *s);
   char* bx_gets(char *s, int size);
+#else
+  bx_bool console_running(void) {return 0;}
+  void console_refresh(bx_bool force) {}
+  void console_key_enq(Bit8u key) {}
 #endif
 
 protected:
@@ -195,6 +200,8 @@ protected:
   // gui console support
   void console_init(void);
   void console_cleanup(void);
+#else
+  void console_cleanup(void) {}
 #endif
 
   // header bar buttons

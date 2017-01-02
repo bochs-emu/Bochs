@@ -632,6 +632,8 @@ bx_bool bx_gui_c::mouse_toggle_check(Bit32u key, bx_bool pressed)
   Bit32u newstate;
   bx_bool toggle = 0;
 
+  if (console_running())
+    return 0;
   newstate = toggle_keystate;
   if (pressed) {
     newstate |= key;
@@ -1096,9 +1098,8 @@ void bx_gui_c::console_init(void)
   memset(&console.tminfo, 0, sizeof(bx_vga_tminfo_t));
   console.tminfo.line_offset = 160;
   console.tminfo.line_compare = 1023;
-  console.tminfo.cs_start = 14;
-  console.tminfo.cs_end = 15;
-  console.tminfo.blink_flags = BX_TEXT_BLINK_MODE | BX_TEXT_BLINK_STATE;
+  console.tminfo.cs_start = 0x2e;
+  console.tminfo.cs_end = 0x0f;
   console.tminfo.actl_palette[7] = 0x07;
   dimension_update(720, 400, 16, 9, 8);
   console.n_keys = 0;
@@ -1179,11 +1180,12 @@ char* bx_gui_c::bx_gets(char *s, int size)
 {
   char keystr[2];
   int pos = 0, done = 0;
+  int cs_counter = 1, cs_visible = 0;
 
   keystr[1] = 0;
   do {
     handle_events();
-    while ((console.n_keys > 0) && !done) {
+    while (console.n_keys > 0) {
       if ((console.keys[0] >= 0x20) && (pos < (size-1))) {
         s[pos++] = console.keys[0];
         keystr[0] = console.keys[0];
@@ -1206,7 +1208,18 @@ char* bx_gui_c::bx_gets(char *s, int size)
 #else
     msleep(25);
 #endif
+    if (--cs_counter == 0) {
+      cs_counter = 10;
+      cs_visible ^= 1;
+      if (cs_visible) {
+        console.tminfo.cs_start &= ~0x20;
+      } else {
+        console.tminfo.cs_start |= 0x20;
+      }
+      console_refresh(0);
+    }
   } while (!done);
+  console.tminfo.cs_start |= 0x20;
   return s;
 }
 #endif
