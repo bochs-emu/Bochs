@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009-2013  The Bochs Project
+//  Copyright (C) 2009-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -72,24 +72,13 @@ void keyboard_handler(int scancode, int press);
 void mouse_handler(int button, int dx, int dy, int dz,
 		    int drx, int dry, int drz);
 
-unsigned char reverse_byteorder(unsigned char b)
-{
-    unsigned char ret = 0;
-
-    for (unsigned i=0;i<8;i++){
-	ret |= (b & 0x01) << (7 - i);
-	b >>= 1;
-    }
-    return ret;
-}
-
 void create_vga_font()
 {
-    memcpy(vgafont, bx_vgafont, sizeof(bx_vgafont));
+  memcpy(vgafont, bx_vgafont, sizeof(bx_vgafont));
 
-    for (unsigned i=0;i< sizeof(bx_vgafont);i++) {
-	vgafont[i] = reverse_byteorder(vgafont[i]);
-    }
+  for (unsigned i=0;i< sizeof(bx_vgafont);i++) {
+    vgafont[i] = reverse_bitorder(vgafont[i]);
+  }
 }
 
 bx_svga_gui_c::bx_svga_gui_c()

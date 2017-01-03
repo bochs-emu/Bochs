@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2013  The Bochs Project
+//  Copyright (C) 2001-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -183,7 +183,6 @@ void CreateVGAFont(void);
 BitMap *CreateBitMap(unsigned width,  unsigned height);
 PixMapHandle CreatePixMap(unsigned left, unsigned top, unsigned width,
         unsigned height, unsigned depth, CTabHandle clut);
-unsigned char reverse_bitorder(unsigned char);
 
 //this routine moves the initial window position so that it is entirely onscreen
 //it is needed for os 8.x with appearance managaer
@@ -1670,19 +1669,6 @@ PixMapHandle CreatePixMap(unsigned left, unsigned top, unsigned width,
   // use one we created earlier.
 
   return pm;
-}
-
-unsigned char reverse_bitorder(unsigned char b)
-{
-  unsigned char ret=0;
-
-  for (unsigned i=0; i<8; i++)
-  {
-    ret |= (b & 0x01) << (7-i);
-    b >>= 1;
-  }
-
-  return(ret);
 }
 
 void bx_macintosh_gui_c::mouse_enabled_changed_specific (bx_bool val)

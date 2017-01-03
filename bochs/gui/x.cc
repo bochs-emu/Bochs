@@ -695,9 +695,7 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
   new_gfx_api = 1;
   dialog_caps |= (BX_GUI_DLG_USER | BX_GUI_DLG_SNAPSHOT | BX_GUI_DLG_CDROM);
-#if BX_USE_TEXTCONFIG
   console.present = 1;
-#endif
 }
 
 void set_status_text(int element, const char *text, bx_bool active, bx_bool w)
@@ -1511,8 +1509,6 @@ void bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   h_panning = tm_info->h_panning;
   prev_cursor_x = cursor_x;
   prev_cursor_y = cursor_y;
-
-  XFlush(bx_x_display);
 }
 
 int bx_x_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)

@@ -231,7 +231,6 @@ static const rfbPixelFormat BGR233Format = {
 
 void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 {
-  unsigned char fc, vc;
   int i, timeout = 30;
 
   put("RFB");
@@ -247,13 +246,7 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
   for (i = 0; i < 256; i++) {
     for (int j = 0; j < 16; j++) {
-      vc = bx_vgafont[i].data[j];
-      fc = 0;
-      for (int b = 0; b < 8; b++) {
-        fc |= (vc & 0x01) << (7 - b);
-        vc >>= 1;
-      }
-      vga_charmap[i * 32 + j] = fc;
+      vga_charmap[i * 32 + j] = reverse_bitorder(bx_vgafont[i].data[j]);
     }
   }
 
@@ -337,6 +330,7 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
   new_gfx_api = 1;
   dialog_caps = 0;
+//  console.present = 1;
 }
 
 // ::HANDLE_EVENTS()
@@ -586,6 +580,7 @@ void bx_rfb_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, un
     BX_PANIC(("%d bpp graphics mode not supported yet", bpp));
   }
   guest_textmode = (fheight > 0);
+  guest_fsize = (fheight << 4) | fwidth;
   guest_xres = x;
   guest_yres = y;
   if (guest_textmode) {
@@ -1833,6 +1828,8 @@ void rfbMouseMove(int x, int y, int z, int bmask)
           xorigin = rfbWindowX - rfbHeaderbarBitmaps[i].xorigin;
         if ((x >= xorigin) &&
             (x < (xorigin + int(rfbBitmaps[rfbHeaderbarBitmaps[i].index].xdim)))) {
+          rfbKeyboardEvents = 0;
+          bKeyboardInUse = 0;
           rfbHeaderbarBitmaps[i].f();
           return;
         }

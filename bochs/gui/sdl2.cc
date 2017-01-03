@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2014-2016  The Bochs Project
+//  Copyright (C) 2014-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -430,9 +430,9 @@ void bx_sdl2_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 {
   int i, j;
   unsigned icon_id;
-#ifdef WIN32
-  bx_bool gui_ci;
+  bx_bool gui_ci = 0;
 
+#ifdef WIN32
   gui_ci = !strcmp(SIM->get_param_enum(BXPN_SEL_CONFIG_INTERFACE)->get_selected(), "win32config");
 #endif
   put("SDL2");
@@ -503,7 +503,7 @@ void bx_sdl2_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
         }
 #else
         init_debug_dialog();
-#endif 
+#endif
 #endif
 #if BX_SHOW_IPS
       } else if (!strcmp(argv[i], "hideIPS")) {
@@ -517,14 +517,14 @@ void bx_sdl2_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   }
 
   new_gfx_api = 1;
-#ifdef WIN32
-  if (gui_ci) {
-    dialog_caps = BX_GUI_DLG_ALL;
-  }
-#if BX_SHOW_IPS
+#if defined(WIN32) && BX_SHOW_IPS
   timer_id = SDL_AddTimer(1000, sdlTimer, NULL);
 #endif
-#endif
+  if (gui_ci) {
+    dialog_caps = BX_GUI_DLG_ALL;
+  } else {
+//    console.present = 1;
+  }
 }
 
 
@@ -1038,6 +1038,7 @@ void bx_sdl2_gui_c::dimension_update(unsigned x, unsigned y,
     BX_PANIC(("%d bpp graphics mode not supported", bpp));
   }
   guest_textmode = (fheight > 0);
+  guest_fsize = (fheight << 4) | fwidth;
   guest_xres = x;
   guest_yres = y;
   if (guest_textmode) {

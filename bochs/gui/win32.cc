@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2015  The Bochs Project
+//  Copyright (C) 2002-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -203,7 +203,6 @@ DWORD WINAPI UIThread(PVOID);
 void SetStatusText(unsigned Num, const char *Text, bx_bool active, bx_bool w=0);
 void terminateEmul(int);
 void create_vga_font(void);
-static unsigned char reverse_bitorder(unsigned char);
 void DrawBitmap(HDC, HBITMAP, int, int, int, int, int, int, DWORD, unsigned char);
 void updateUpdated(int,int,int,int);
 static void headerbar_click(int x);
@@ -2164,19 +2163,6 @@ void create_vga_font(void)
       data[i*2] = reverse_bitorder(bx_vgafont[c].data[i]);
     SetBitmapBits(vgafont[c], 64, data);
   }
-}
-
-
-unsigned char reverse_bitorder(unsigned char b)
-{
-  unsigned char ret=0;
-
-  for (unsigned i=0; i<8; i++) {
-    ret |= (b & 0x01) << (7-i);
-    b >>= 1;
-  }
-
-  return(ret);
 }
 
 

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2015  The Bochs Project
+//  Copyright (C) 2002-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -961,8 +961,7 @@ DWORD WINAPI DebugGuiThread(LPVOID)
 
 void bx_wx_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 {
-  int b,i,j;
-  unsigned char fc, vc;
+  int i, j;
   wxDisplay display;
 
   put("WX");
@@ -980,13 +979,7 @@ void bx_wx_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
   for(i = 0; i < 256; i++) {
     for(j = 0; j < 16; j++) {
-      vc = bx_vgafont[i].data[j];
-      fc = 0;
-      for (b = 0; b < 8; b++) {
-        fc |= (vc & 0x01) << (7 - b);
-        vc >>= 1;
-      }
-      vga_charmap[i*32+j] = fc;
+      vga_charmap[i * 32 + j] = reverse_bitorder(bx_vgafont[i].data[j]);
     }
   }
 

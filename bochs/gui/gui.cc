@@ -99,6 +99,17 @@ static user_key_t user_keys[N_USER_KEYS] =
   { "scrlck", BX_KEY_SCRL_LOCK }
 };
 
+Bit8u reverse_bitorder(Bit8u b)
+{
+  Bit8u ret = 0;
+
+  for (unsigned i = 0; i < 8; i++) {
+    ret |= (b & 0x01) << (7 - i);
+    b >>= 1;
+  }
+  return ret;
+}
+
 bx_gui_c::bx_gui_c(void): disp_mode(DISP_MODE_SIM)
 {
   put("GUI"); // Init in specific_init
@@ -1122,6 +1133,7 @@ void bx_gui_c::console_refresh(bx_bool force)
   if (force) memset(console.oldscreen, 0xff, BX_CONSOLE_BUFSIZE);
   text_update(console.oldscreen, console.screen, console.cursor_x,
               console.cursor_y, &console.tminfo);
+  flush();
   memcpy(console.oldscreen, console.screen, BX_CONSOLE_BUFSIZE);
 }
 
