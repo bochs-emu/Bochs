@@ -51,12 +51,17 @@ public:
   bx_rfb_gui_c (void) {}
   DECLARE_GUI_VIRTUAL_METHODS()
   DECLARE_GUI_NEW_VIRTUAL_METHODS()
+  virtual void set_display_mode(disp_mode_t newmode);
   void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
   void statusbar_setitem_specific(int element, bx_bool active, bx_bool w);
   virtual void set_mouse_mode_absxy(bx_bool mode);
 #if BX_SHOW_IPS
   void show_ips(Bit32u ips_count);
 #endif
+private:
+  void headerbar_click(int x);
+  void rfbMouseMove(int x, int y, int z, int bmask);
+  void rfbKeyPressed(Bit32u key, int press_release);
 };
 
 // declare one instance of the gui object and call macro to insert the
@@ -200,8 +205,6 @@ void SendUpdate(int x, int y, int width, int height, Bit32u encoding);
 void rfbAddUpdateRegion(unsigned x0, unsigned y0, unsigned w, unsigned h);
 void rfbSetStatusText(int element, const char *text, bx_bool active, bx_bool w = 0);
 static Bit32u convertStringToRfbKey(const char *string);
-void rfbKeyPressed(Bit32u key, int press_release);
-void rfbMouseMove(int x, int y, int z, int bmask);
 #if BX_SHOW_IPS && defined(WIN32)
 DWORD WINAPI rfbShowIPSthread(LPVOID);
 #endif
@@ -329,8 +332,8 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 #endif
 
   new_gfx_api = 1;
-  dialog_caps = 0;
-//  console.present = 1;
+  dialog_caps = BX_GUI_DLG_RUNTIME;
+  console.present = 1;
 }
 
 // ::HANDLE_EVENTS()
@@ -857,6 +860,468 @@ void bx_rfb_gui_c::show_ips(Bit32u ips_count)
   }
 }
 #endif
+
+void bx_rfb_gui_c::set_display_mode(disp_mode_t newmode)
+{
+  // if no mode change, do nothing.
+  if (disp_mode == newmode) return;
+  // remember the display mode for next time
+  disp_mode = newmode;
+  if ((newmode == DISP_MODE_SIM) && console_running()) {
+    console_cleanup();
+  }
+}
+
+void bx_rfb_gui_c::headerbar_click(int x)
+{
+  int xorigin;
+
+  for (unsigned i = 0; i < rfbHeaderbarBitmapCount; i++) {
+    if (rfbHeaderbarBitmaps[i].alignment == BX_GRAVITY_LEFT)
+      xorigin = rfbHeaderbarBitmaps[i].xorigin;
+    else
+      xorigin = rfbWindowX - rfbHeaderbarBitmaps[i].xorigin;
+    if ((x >= xorigin) &&
+        (x < (xorigin + int(rfbBitmaps[rfbHeaderbarBitmaps[i].index].xdim)))) {
+      if (console_running() && (i != power_hbar_id))
+        return;
+      rfbKeyboardEvents = 0;
+      bKeyboardInUse = 0;
+      rfbHeaderbarBitmaps[i].f();
+      return;
+    }
+  }
+}
+
+void bx_rfb_gui_c::rfbMouseMove(int x, int y, int z, int bmask)
+{
+  static int oldx = -1;
+  static int oldy = -1;
+  int dx, dy;
+
+  if ((oldx == 1) && (oldy == -1)) {
+    oldx = x;
+    oldy = y;
+    return;
+  }
+  if (y > rfbHeaderbarY) {
+    if (console_running())
+      return;
+    if (rfbMouseModeAbsXY) {
+      if ((y >= rfbHeaderbarY) && (y < (int)(rfbDimensionY + rfbHeaderbarY))) {
+        dx = x * 0x7fff / rfbDimensionX;
+        dy = (y - rfbHeaderbarY) * 0x7fff / rfbDimensionY;
+        DEV_mouse_motion(dx, dy, z, bmask, 1);
+      }
+    } else {
+      DEV_mouse_motion(x - oldx, oldy - y, z, bmask, 0);
+    }
+    oldx = x;
+    oldy = y;
+  } else {
+    if (bmask == 1) {
+      headerbar_click(x);
+    }
+  }
+}
+
+// function to convert key names into rfb key values.
+// This first try will be horribly inefficient, but it only has
+// to be done while loading a keymap.  Once the simulation starts,
+// this function won't be called.
+static Bit32u convertStringToRfbKey(const char *string)
+{
+  rfbKeyTabEntry *ptr;
+  for (ptr = &rfb_keytable[0]; ptr->name != NULL; ptr++) {
+    if (!strcmp(string, ptr->name))
+      return ptr->value;
+  }
+  return BX_KEYMAP_UNKNOWN;
+}
+
+static Bit32u rfb_ascii_to_key_event[0x5f] = {
+  //  !"#$%&'
+  BX_KEY_SPACE,
+  BX_KEY_1,
+  BX_KEY_SINGLE_QUOTE,
+  BX_KEY_3,
+  BX_KEY_4,
+  BX_KEY_5,
+  BX_KEY_7,
+  BX_KEY_SINGLE_QUOTE,
+
+  // ()*+,-./
+  BX_KEY_9,
+  BX_KEY_0,
+  BX_KEY_8,
+  BX_KEY_EQUALS,
+  BX_KEY_COMMA,
+  BX_KEY_MINUS,
+  BX_KEY_PERIOD,
+  BX_KEY_SLASH,
+
+  // 01234567
+  BX_KEY_0,
+  BX_KEY_1,
+  BX_KEY_2,
+  BX_KEY_3,
+  BX_KEY_4,
+  BX_KEY_5,
+  BX_KEY_6,
+  BX_KEY_7,
+
+  // 89:;<=>?
+  BX_KEY_8,
+  BX_KEY_9,
+  BX_KEY_SEMICOLON,
+  BX_KEY_SEMICOLON,
+  BX_KEY_COMMA,
+  BX_KEY_EQUALS,
+  BX_KEY_PERIOD,
+  BX_KEY_SLASH,
+
+  // @ABCDEFG
+  BX_KEY_2,
+  BX_KEY_A,
+  BX_KEY_B,
+  BX_KEY_C,
+  BX_KEY_D,
+  BX_KEY_E,
+  BX_KEY_F,
+  BX_KEY_G,
+
+
+  // HIJKLMNO
+  BX_KEY_H,
+  BX_KEY_I,
+  BX_KEY_J,
+  BX_KEY_K,
+  BX_KEY_L,
+  BX_KEY_M,
+  BX_KEY_N,
+  BX_KEY_O,
+
+
+  // PQRSTUVW
+  BX_KEY_P,
+  BX_KEY_Q,
+  BX_KEY_R,
+  BX_KEY_S,
+  BX_KEY_T,
+  BX_KEY_U,
+  BX_KEY_V,
+  BX_KEY_W,
+
+  // XYZ[\]^_
+  BX_KEY_X,
+  BX_KEY_Y,
+  BX_KEY_Z,
+  BX_KEY_LEFT_BRACKET,
+  BX_KEY_BACKSLASH,
+  BX_KEY_RIGHT_BRACKET,
+  BX_KEY_6,
+  BX_KEY_MINUS,
+
+  // `abcdefg
+  BX_KEY_GRAVE,
+  BX_KEY_A,
+  BX_KEY_B,
+  BX_KEY_C,
+  BX_KEY_D,
+  BX_KEY_E,
+  BX_KEY_F,
+  BX_KEY_G,
+
+  // hijklmno
+  BX_KEY_H,
+  BX_KEY_I,
+  BX_KEY_J,
+  BX_KEY_K,
+  BX_KEY_L,
+  BX_KEY_M,
+  BX_KEY_N,
+  BX_KEY_O,
+
+  // pqrstuvw
+  BX_KEY_P,
+  BX_KEY_Q,
+  BX_KEY_R,
+  BX_KEY_S,
+  BX_KEY_T,
+  BX_KEY_U,
+  BX_KEY_V,
+  BX_KEY_W,
+
+  // xyz{|}~
+  BX_KEY_X,
+  BX_KEY_Y,
+  BX_KEY_Z,
+  BX_KEY_LEFT_BRACKET,
+  BX_KEY_BACKSLASH,
+  BX_KEY_RIGHT_BRACKET,
+  BX_KEY_GRAVE
+};
+
+void bx_rfb_gui_c::rfbKeyPressed(Bit32u key, int press_release)
+{
+  Bit32u key_event;
+
+  if (console_running() && press_release) {
+    if (((key >= XK_space) && (key <= XK_asciitilde)) ||
+        (key == XK_Return) || (key == XK_BackSpace)) {
+      console_key_enq((Bit8u)(key & 0xff));
+    }
+    return;
+  }
+  if (!SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
+    if ((key >= XK_space) && (key <= XK_asciitilde)) {
+      key_event = rfb_ascii_to_key_event[key - XK_space];
+    } else {
+      switch (key) {
+        case XK_KP_1:
+#ifdef XK_KP_End
+        case XK_KP_End:
+#endif
+          key_event = BX_KEY_KP_END;
+          break;
+
+        case XK_KP_2:
+#ifdef XK_KP_Down
+        case XK_KP_Down:
+#endif
+          key_event = BX_KEY_KP_DOWN;
+          break;
+
+        case XK_KP_3:
+#ifdef XK_KP_Page_Down
+        case XK_KP_Page_Down:
+#endif
+          key_event = BX_KEY_KP_PAGE_DOWN;
+          break;
+
+        case XK_KP_4:
+#ifdef XK_KP_Left
+        case XK_KP_Left:
+#endif
+          key_event = BX_KEY_KP_LEFT;
+          break;
+
+        case XK_KP_5:
+#ifdef XK_KP_Begin
+        case XK_KP_Begin:
+#endif
+          key_event = BX_KEY_KP_5;
+          break;
+
+        case XK_KP_6:
+#ifdef XK_KP_Right
+        case XK_KP_Right:
+#endif
+          key_event = BX_KEY_KP_RIGHT;
+          break;
+
+        case XK_KP_7:
+#ifdef XK_KP_Home
+        case XK_KP_Home:
+#endif
+          key_event = BX_KEY_KP_HOME;
+          break;
+
+        case XK_KP_8:
+#ifdef XK_KP_Up
+        case XK_KP_Up:
+#endif
+          key_event = BX_KEY_KP_UP;
+          break;
+
+        case XK_KP_9:
+#ifdef XK_KP_Page_Up
+        case XK_KP_Page_Up:
+#endif
+          key_event = BX_KEY_KP_PAGE_UP;
+          break;
+
+        case XK_KP_0:
+#ifdef XK_KP_Insert
+        case XK_KP_Insert:
+#endif
+          key_event = BX_KEY_KP_INSERT;
+          break;
+
+        case XK_KP_Decimal:
+#ifdef XK_KP_Delete
+        case XK_KP_Delete:
+#endif
+          key_event = BX_KEY_KP_DELETE;
+          break;
+
+#ifdef XK_KP_Enter
+        case XK_KP_Enter:
+          key_event = BX_KEY_KP_ENTER;
+          break;
+#endif
+
+        case XK_KP_Subtract:
+          key_event = BX_KEY_KP_SUBTRACT;
+          break;
+        case XK_KP_Add:
+          key_event = BX_KEY_KP_ADD;
+          break;
+
+        case XK_KP_Multiply:
+          key_event = BX_KEY_KP_MULTIPLY;
+          break;
+        case XK_KP_Divide:
+          key_event = BX_KEY_KP_DIVIDE;
+          break;
+
+        case XK_Up:
+          key_event = BX_KEY_UP;
+          break;
+        case XK_Down:
+          key_event = BX_KEY_DOWN;
+          break;
+        case XK_Left:
+          key_event = BX_KEY_LEFT;
+          break;
+        case XK_Right:
+          key_event = BX_KEY_RIGHT;
+          break;
+
+        case XK_Delete:
+          key_event = BX_KEY_DELETE;
+          break;
+        case XK_BackSpace:
+          key_event = BX_KEY_BACKSPACE;
+          break;
+        case XK_Tab:
+          key_event = BX_KEY_TAB;
+          break;
+#ifdef XK_ISO_Left_Tab
+        case XK_ISO_Left_Tab:
+          key_event = BX_KEY_TAB;
+          break;
+#endif
+        case XK_Return:
+          key_event = BX_KEY_ENTER;
+          break;
+        case XK_Escape:
+          key_event = BX_KEY_ESC;
+          break;
+        case XK_F1:
+          key_event = BX_KEY_F1;
+          break;
+        case XK_F2:
+          key_event = BX_KEY_F2;
+          break;
+        case XK_F3:
+          key_event = BX_KEY_F3;
+          break;
+        case XK_F4:
+          key_event = BX_KEY_F4;
+          break;
+        case XK_F5:
+          key_event = BX_KEY_F5;
+          break;
+        case XK_F6:
+          key_event = BX_KEY_F6;
+          break;
+        case XK_F7:
+          key_event = BX_KEY_F7;
+          break;
+        case XK_F8:
+          key_event = BX_KEY_F8;
+          break;
+        case XK_F9:
+          key_event = BX_KEY_F9;
+          break;
+        case XK_F10:
+          key_event = BX_KEY_F10;
+          break;
+        case XK_F11:
+          key_event = BX_KEY_F11;
+          break;
+        case XK_F12:
+          key_event = BX_KEY_F12;
+          break;
+        case XK_Control_L:
+          key_event = BX_KEY_CTRL_L;
+          break;
+#ifdef XK_Control_R
+        case XK_Control_R:
+          key_event = BX_KEY_CTRL_R;
+          break;
+#endif
+        case XK_Shift_L:
+          key_event = BX_KEY_SHIFT_L;
+          break;
+        case XK_Shift_R:
+          key_event = BX_KEY_SHIFT_R;
+          break;
+        case XK_Alt_L:
+          key_event = BX_KEY_ALT_L;
+          break;
+#ifdef XK_Alt_R
+        case XK_Alt_R:
+          key_event = BX_KEY_ALT_R;
+          break;
+#endif
+        case XK_Caps_Lock:
+          key_event = BX_KEY_CAPS_LOCK;
+          break;
+        case XK_Num_Lock:
+          key_event = BX_KEY_NUM_LOCK;
+          break;
+#ifdef XK_Scroll_Lock
+        case XK_Scroll_Lock:
+          key_event = BX_KEY_SCRL_LOCK;
+          break;
+#endif
+#ifdef XK_Print
+        case XK_Print:
+          key_event = BX_KEY_PRINT;
+          break;
+#endif
+#ifdef XK_Pause
+        case XK_Pause:
+          key_event = BX_KEY_PAUSE;
+          break;
+#endif
+
+        case XK_Insert:
+          key_event = BX_KEY_INSERT;
+          break;
+        case XK_Home:
+          key_event = BX_KEY_HOME;
+          break;
+        case XK_End:
+          key_event = BX_KEY_END;
+          break;
+        case XK_Page_Up:
+          key_event = BX_KEY_PAGE_UP;
+          break;
+        case XK_Page_Down:
+          key_event = BX_KEY_PAGE_DOWN;
+          break;
+
+        default:
+          BX_ERROR(("rfbKeyPress(): key %04x unhandled!", key));
+          return;
+      }
+    }
+  } else {
+    BXKeyEntry *entry = bx_keymap.findHostKey(key);
+    if (!entry) {
+      BX_ERROR(("rfbKeyPressed(): key %x unhandled!", (unsigned) key));
+      return;
+    }
+    key_event = entry->baseKey;
+  }
+
+  if (!press_release)
+    key_event |= BX_KEY_RELEASED;
+  DEV_kbd_gen_scancode(key_event);
+}
 
 // RFB specific functions
 
@@ -1403,439 +1868,6 @@ void rfbSetStatusText(int element, const char *text, bx_bool active, bx_bool w)
   }
 
   rfbAddUpdateRegion(xleft, rfbWindowY - rfbStatusbarY + 1, xsize, rfbStatusbarY - 2);
-}
-
-// function to convert key names into rfb key values.
-// This first try will be horribly inefficient, but it only has
-// to be done while loading a keymap.  Once the simulation starts,
-// this function won't be called.
-static Bit32u convertStringToRfbKey(const char *string)
-{
-  rfbKeyTabEntry *ptr;
-  for (ptr = &rfb_keytable[0]; ptr->name != NULL; ptr++) {
-    if (!strcmp(string, ptr->name))
-      return ptr->value;
-  }
-  return BX_KEYMAP_UNKNOWN;
-}
-
-static Bit32u rfb_ascii_to_key_event[0x5f] = {
-  //  !"#$%&'
-  BX_KEY_SPACE,
-  BX_KEY_1,
-  BX_KEY_SINGLE_QUOTE,
-  BX_KEY_3,
-  BX_KEY_4,
-  BX_KEY_5,
-  BX_KEY_7,
-  BX_KEY_SINGLE_QUOTE,
-
-  // ()*+,-./
-  BX_KEY_9,
-  BX_KEY_0,
-  BX_KEY_8,
-  BX_KEY_EQUALS,
-  BX_KEY_COMMA,
-  BX_KEY_MINUS,
-  BX_KEY_PERIOD,
-  BX_KEY_SLASH,
-
-  // 01234567
-  BX_KEY_0,
-  BX_KEY_1,
-  BX_KEY_2,
-  BX_KEY_3,
-  BX_KEY_4,
-  BX_KEY_5,
-  BX_KEY_6,
-  BX_KEY_7,
-
-  // 89:;<=>?
-  BX_KEY_8,
-  BX_KEY_9,
-  BX_KEY_SEMICOLON,
-  BX_KEY_SEMICOLON,
-  BX_KEY_COMMA,
-  BX_KEY_EQUALS,
-  BX_KEY_PERIOD,
-  BX_KEY_SLASH,
-
-  // @ABCDEFG
-  BX_KEY_2,
-  BX_KEY_A,
-  BX_KEY_B,
-  BX_KEY_C,
-  BX_KEY_D,
-  BX_KEY_E,
-  BX_KEY_F,
-  BX_KEY_G,
-
-
-  // HIJKLMNO
-  BX_KEY_H,
-  BX_KEY_I,
-  BX_KEY_J,
-  BX_KEY_K,
-  BX_KEY_L,
-  BX_KEY_M,
-  BX_KEY_N,
-  BX_KEY_O,
-
-
-  // PQRSTUVW
-  BX_KEY_P,
-  BX_KEY_Q,
-  BX_KEY_R,
-  BX_KEY_S,
-  BX_KEY_T,
-  BX_KEY_U,
-  BX_KEY_V,
-  BX_KEY_W,
-
-  // XYZ[\]^_
-  BX_KEY_X,
-  BX_KEY_Y,
-  BX_KEY_Z,
-  BX_KEY_LEFT_BRACKET,
-  BX_KEY_BACKSLASH,
-  BX_KEY_RIGHT_BRACKET,
-  BX_KEY_6,
-  BX_KEY_MINUS,
-
-  // `abcdefg
-  BX_KEY_GRAVE,
-  BX_KEY_A,
-  BX_KEY_B,
-  BX_KEY_C,
-  BX_KEY_D,
-  BX_KEY_E,
-  BX_KEY_F,
-  BX_KEY_G,
-
-  // hijklmno
-  BX_KEY_H,
-  BX_KEY_I,
-  BX_KEY_J,
-  BX_KEY_K,
-  BX_KEY_L,
-  BX_KEY_M,
-  BX_KEY_N,
-  BX_KEY_O,
-
-  // pqrstuvw
-  BX_KEY_P,
-  BX_KEY_Q,
-  BX_KEY_R,
-  BX_KEY_S,
-  BX_KEY_T,
-  BX_KEY_U,
-  BX_KEY_V,
-  BX_KEY_W,
-
-  // xyz{|}~
-  BX_KEY_X,
-  BX_KEY_Y,
-  BX_KEY_Z,
-  BX_KEY_LEFT_BRACKET,
-  BX_KEY_BACKSLASH,
-  BX_KEY_RIGHT_BRACKET,
-  BX_KEY_GRAVE
-};
-
-void rfbKeyPressed(Bit32u key, int press_release)
-{
-  Bit32u key_event;
-
-  if (!SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
-    if ((key >= XK_space) && (key <= XK_asciitilde)) {
-      key_event = rfb_ascii_to_key_event[key - XK_space];
-    } else {
-      switch (key) {
-        case XK_KP_1:
-#ifdef XK_KP_End
-        case XK_KP_End:
-#endif
-          key_event = BX_KEY_KP_END;
-          break;
-
-        case XK_KP_2:
-#ifdef XK_KP_Down
-        case XK_KP_Down:
-#endif
-          key_event = BX_KEY_KP_DOWN;
-          break;
-
-        case XK_KP_3:
-#ifdef XK_KP_Page_Down
-        case XK_KP_Page_Down:
-#endif
-          key_event = BX_KEY_KP_PAGE_DOWN;
-          break;
-
-        case XK_KP_4:
-#ifdef XK_KP_Left
-        case XK_KP_Left:
-#endif
-          key_event = BX_KEY_KP_LEFT;
-          break;
-
-        case XK_KP_5:
-#ifdef XK_KP_Begin
-        case XK_KP_Begin:
-#endif
-          key_event = BX_KEY_KP_5;
-          break;
-
-        case XK_KP_6:
-#ifdef XK_KP_Right
-        case XK_KP_Right:
-#endif
-          key_event = BX_KEY_KP_RIGHT;
-          break;
-
-        case XK_KP_7:
-#ifdef XK_KP_Home
-        case XK_KP_Home:
-#endif
-          key_event = BX_KEY_KP_HOME;
-          break;
-
-        case XK_KP_8:
-#ifdef XK_KP_Up
-        case XK_KP_Up:
-#endif
-          key_event = BX_KEY_KP_UP;
-          break;
-
-        case XK_KP_9:
-#ifdef XK_KP_Page_Up
-        case XK_KP_Page_Up:
-#endif
-          key_event = BX_KEY_KP_PAGE_UP;
-          break;
-
-        case XK_KP_0:
-#ifdef XK_KP_Insert
-        case XK_KP_Insert:
-#endif
-          key_event = BX_KEY_KP_INSERT;
-          break;
-
-        case XK_KP_Decimal:
-#ifdef XK_KP_Delete
-        case XK_KP_Delete:
-#endif
-          key_event = BX_KEY_KP_DELETE;
-          break;
-
-#ifdef XK_KP_Enter
-        case XK_KP_Enter:
-          key_event = BX_KEY_KP_ENTER;
-          break;
-#endif
-
-        case XK_KP_Subtract:
-          key_event = BX_KEY_KP_SUBTRACT;
-          break;
-        case XK_KP_Add:
-          key_event = BX_KEY_KP_ADD;
-          break;
-
-        case XK_KP_Multiply:
-          key_event = BX_KEY_KP_MULTIPLY;
-          break;
-        case XK_KP_Divide:
-          key_event = BX_KEY_KP_DIVIDE;
-          break;
-
-        case XK_Up:
-          key_event = BX_KEY_UP;
-          break;
-        case XK_Down:
-          key_event = BX_KEY_DOWN;
-          break;
-        case XK_Left:
-          key_event = BX_KEY_LEFT;
-          break;
-        case XK_Right:
-          key_event = BX_KEY_RIGHT;
-          break;
-
-        case XK_Delete:
-          key_event = BX_KEY_DELETE;
-          break;
-        case XK_BackSpace:
-          key_event = BX_KEY_BACKSPACE;
-          break;
-        case XK_Tab:
-          key_event = BX_KEY_TAB;
-          break;
-#ifdef XK_ISO_Left_Tab
-        case XK_ISO_Left_Tab:
-          key_event = BX_KEY_TAB;
-          break;
-#endif
-        case XK_Return:
-          key_event = BX_KEY_ENTER;
-          break;
-        case XK_Escape:
-          key_event = BX_KEY_ESC;
-          break;
-        case XK_F1:
-          key_event = BX_KEY_F1;
-          break;
-        case XK_F2:
-          key_event = BX_KEY_F2;
-          break;
-        case XK_F3:
-          key_event = BX_KEY_F3;
-          break;
-        case XK_F4:
-          key_event = BX_KEY_F4;
-          break;
-        case XK_F5:
-          key_event = BX_KEY_F5;
-          break;
-        case XK_F6:
-          key_event = BX_KEY_F6;
-          break;
-        case XK_F7:
-          key_event = BX_KEY_F7;
-          break;
-        case XK_F8:
-          key_event = BX_KEY_F8;
-          break;
-        case XK_F9:
-          key_event = BX_KEY_F9;
-          break;
-        case XK_F10:
-          key_event = BX_KEY_F10;
-          break;
-        case XK_F11:
-          key_event = BX_KEY_F11;
-          break;
-        case XK_F12:
-          key_event = BX_KEY_F12;
-          break;
-        case XK_Control_L:
-          key_event = BX_KEY_CTRL_L;
-          break;
-#ifdef XK_Control_R
-        case XK_Control_R:
-          key_event = BX_KEY_CTRL_R;
-          break;
-#endif
-        case XK_Shift_L:
-          key_event = BX_KEY_SHIFT_L;
-          break;
-        case XK_Shift_R:
-          key_event = BX_KEY_SHIFT_R;
-          break;
-        case XK_Alt_L:
-          key_event = BX_KEY_ALT_L;
-          break;
-#ifdef XK_Alt_R
-        case XK_Alt_R:
-          key_event = BX_KEY_ALT_R;
-          break;
-#endif
-        case XK_Caps_Lock:
-          key_event = BX_KEY_CAPS_LOCK;
-          break;
-        case XK_Num_Lock:
-          key_event = BX_KEY_NUM_LOCK;
-          break;
-#ifdef XK_Scroll_Lock
-        case XK_Scroll_Lock:
-          key_event = BX_KEY_SCRL_LOCK;
-          break;
-#endif
-#ifdef XK_Print
-        case XK_Print:
-          key_event = BX_KEY_PRINT;
-          break;
-#endif
-#ifdef XK_Pause
-        case XK_Pause:
-          key_event = BX_KEY_PAUSE;
-          break;
-#endif
-
-        case XK_Insert:
-          key_event = BX_KEY_INSERT;
-          break;
-        case XK_Home:
-          key_event = BX_KEY_HOME;
-          break;
-        case XK_End:
-          key_event = BX_KEY_END;
-          break;
-        case XK_Page_Up:
-          key_event = BX_KEY_PAGE_UP;
-          break;
-        case XK_Page_Down:
-          key_event = BX_KEY_PAGE_DOWN;
-          break;
-
-        default:
-          BX_ERROR(("rfbKeyPress(): key %04x unhandled!", key));
-          return;
-      }
-    }
-  } else {
-    BXKeyEntry *entry = bx_keymap.findHostKey(key);
-    if (!entry) {
-      BX_ERROR(("rfbKeyPressed(): key %x unhandled!", (unsigned) key));
-      return;
-    }
-    key_event = entry->baseKey;
-  }
-
-  if (!press_release)
-    key_event |= BX_KEY_RELEASED;
-  DEV_kbd_gen_scancode(key_event);
-}
-
-void rfbMouseMove(int x, int y, int z, int bmask)
-{
-  static int oldx = -1;
-  static int oldy = -1;
-  int dx, dy, xorigin;
-
-  if ((oldx == 1) && (oldy == -1)) {
-    oldx = x;
-    oldy = y;
-    return;
-  }
-  if (y > rfbHeaderbarY) {
-    if (rfbMouseModeAbsXY) {
-      if ((y >= rfbHeaderbarY) && (y < (int)(rfbDimensionY + rfbHeaderbarY))) {
-        dx = x * 0x7fff / rfbDimensionX;
-        dy = (y - rfbHeaderbarY) * 0x7fff / rfbDimensionY;
-        DEV_mouse_motion(dx, dy, z, bmask, 1);
-      }
-    } else {
-      DEV_mouse_motion(x - oldx, oldy - y, z, bmask, 0);
-    }
-    oldx = x;
-    oldy = y;
-  } else {
-    if (bmask == 1) {
-      for (unsigned i = 0; i < rfbHeaderbarBitmapCount; i++) {
-        if (rfbHeaderbarBitmaps[i].alignment == BX_GRAVITY_LEFT)
-          xorigin = rfbHeaderbarBitmaps[i].xorigin;
-        else
-          xorigin = rfbWindowX - rfbHeaderbarBitmaps[i].xorigin;
-        if ((x >= xorigin) &&
-            (x < (xorigin + int(rfbBitmaps[rfbHeaderbarBitmaps[i].index].xdim)))) {
-          rfbKeyboardEvents = 0;
-          bKeyboardInUse = 0;
-          rfbHeaderbarBitmaps[i].f();
-          return;
-        }
-      }
-    }
-  }
 }
 
 #if BX_SHOW_IPS && defined(WIN32)

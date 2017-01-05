@@ -54,6 +54,8 @@ public:
 #if BX_SHOW_IPS
   virtual void show_ips(Bit32u ips_count);
 #endif
+private:
+  void headerbar_click(int x);
 };
 
 // declare one instance of the gui object and call macro to insert the
@@ -125,24 +127,6 @@ static bx_bool sdl_hide_ips = 0;
 static bx_bool sdl_ips_update = 0;
 static char sdl_ips_text[20];
 #endif
-
-
-static void headerbar_click(int x)
-{
-  int xdim,xorigin;
-
-  for (unsigned i=0; i<bx_headerbar_entries; i++) {
-    xdim = sdl_bitmaps[hb_entry[i].bmp_id]->src.w;
-    if (hb_entry[i].alignment == BX_GRAVITY_LEFT)
-      xorigin = sdl_bitmaps[hb_entry[i].bmp_id]->dst.x;
-    else
-      xorigin = res_x - sdl_bitmaps[hb_entry[i].bmp_id]->dst.x;
-    if ((x>=xorigin) && (x<(xorigin+xdim))) {
-      hb_entry[i].f();
-      return;
-    }
-  }
-}
 
 
 static void sdl_set_status_text(int element, const char *text, bx_bool active, bx_bool w = 0)
@@ -866,7 +850,7 @@ void bx_sdl_gui_c::handle_events(void)
         break;
 
       case SDL_MOUSEMOTION:
-        if (!sdl_grab) {
+        if (!sdl_grab || console_running()) {
           break;
         }
         if (just_warped
@@ -935,6 +919,9 @@ void bx_sdl_gui_c::handle_events(void)
             && (sdl_fullscreen_toggle == 0)) {
           mouse_toggle_check(BX_MT_MBUTTON, 0);
         }
+        if (console_running()) {
+          break;
+        }
         // figure out mouse state
         new_mousex = (int)(sdl_event.button.x);
         new_mousey = (int)(sdl_event.button.y);
@@ -965,6 +952,14 @@ void bx_sdl_gui_c::handle_events(void)
         break;
 
       case SDL_KEYDOWN:
+        if (console_running()) {
+          SDLKey keysym = sdl_event.key.keysym.sym;
+          if (((keysym >= SDLK_SPACE) && (keysym < SDLK_DELETE)) ||
+              (keysym == SDLK_RETURN) || (keysym == SDLK_BACKSPACE)) {
+            // TODO
+          }
+          break;
+        }
         // mouse capture toggle-check
         if (sdl_fullscreen_toggle == 0) {
           if ((sdl_event.key.keysym.sym == SDLK_LCTRL) ||
@@ -1428,6 +1423,26 @@ void bx_sdl_gui_c::mouse_enabled_changed_specific (bx_bool val)
 }
 
 
+void bx_sdl_gui_c::headerbar_click(int x)
+{
+  int xdim,xorigin;
+
+  for (unsigned i=0; i<bx_headerbar_entries; i++) {
+    xdim = sdl_bitmaps[hb_entry[i].bmp_id]->src.w;
+    if (hb_entry[i].alignment == BX_GRAVITY_LEFT)
+      xorigin = sdl_bitmaps[hb_entry[i].bmp_id]->dst.x;
+    else
+      xorigin = res_x - sdl_bitmaps[hb_entry[i].bmp_id]->dst.x;
+    if ((x>=xorigin) && (x<(xorigin+xdim))) {
+      if (console_running() && (i != power_hbar_id))
+        return;
+      hb_entry[i].f();
+      return;
+    }
+  }
+}
+
+
 void bx_sdl_gui_c::exit(void)
 {
   if (sdl_screen)
@@ -1520,6 +1535,10 @@ void bx_sdl_gui_c::set_display_mode(disp_mode_t newmode)
   if (disp_mode == newmode) return;
   // remember the display mode for next time
   disp_mode = newmode;
+  if ((newmode == DISP_MODE_SIM) && console_running()) {
+    console_cleanup();
+    return;
+  }
   // If fullscreen mode is on, we must switch back to windowed mode if
   // the user needs to see the text console.
   if (sdl_fullscreen_toggle) {
