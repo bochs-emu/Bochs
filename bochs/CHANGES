@@ -10,8 +10,8 @@ Changes after 2.6.8 release:
   - Added Android host platform support.
 
 - GUI and display libraries
-  - Show the runtime configuration in the Bochs VGA window instead of
-    console / xterm (rfb, vncsrv and X11 guis).
+  - Show the runtime configuration in the Bochs VGA window (gui console) instead
+    of console / xterm (rfb, sdl, vncsrv and X11 guis).
   - SDL2: Added get/set clipboard text support.
 
 - CPU / CPUDB

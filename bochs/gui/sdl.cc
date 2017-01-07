@@ -535,6 +535,7 @@ void bx_sdl_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   dimension_update(640, 480);
 
   SDL_EnableKeyRepeat(250, 50);
+  SDL_EnableUNICODE(SDL_TRUE);
   SDL_WM_SetCaption(BOCHS_WINDOW_NAME, "Bochs");
   SDL_WarpMouse(half_res_x, half_res_y);
 
@@ -585,7 +586,7 @@ void bx_sdl_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   if (gui_ci) {
     dialog_caps = BX_GUI_DLG_ALL;
   } else {
-//    console.present = 1;
+    console.present = 1;
   }
 }
 
@@ -954,9 +955,12 @@ void bx_sdl_gui_c::handle_events(void)
       case SDL_KEYDOWN:
         if (console_running()) {
           SDLKey keysym = sdl_event.key.keysym.sym;
+          Bit8u ascii = (Bit8u)sdl_event.key.keysym.unicode;
           if (((keysym >= SDLK_SPACE) && (keysym < SDLK_DELETE)) ||
               (keysym == SDLK_RETURN) || (keysym == SDLK_BACKSPACE)) {
-            // TODO
+            if (ascii < 0x80) {
+              console_key_enq(ascii);
+            }
           }
           break;
         }
