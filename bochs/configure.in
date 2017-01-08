@@ -452,6 +452,7 @@ AC_ARG_ENABLE(plugins,
     ]
   )
 
+USER_PLUGINS_MAKEFILE=''
 if test "$bx_plugins" = 1; then
   AC_MSG_RESULT(yes)
   AC_DEFINE(BX_PLUGINS, 1)
@@ -476,6 +477,9 @@ if test "$bx_plugins" = 1; then
   PLUGIN_TARGET_2=plugins_gcc
   INSTALL_PLUGINS_VAR=install_libtool_plugins
   NONPLUGIN_GUI_LINK_OPTS=''
+  if test -d user_plugins; then
+    USER_PLUGINS_MAKEFILE='user_plugins/Makefile'
+  fi
 else
   AC_MSG_RESULT(no)
   bx_plugins=0
@@ -3190,7 +3194,7 @@ AC_OUTPUT(Makefile iodev/Makefile iodev/display/Makefile iodev/hdimage/Makefile 
 	 disasm/Makefile ${INSTRUMENT_DIR}/Makefile misc/Makefile \
 	 doc/docbook/Makefile build/linux/bochs-dlx bxversion.h bxversion.rc \
 	 build/macosx/Info.plist build/win32/nsis/Makefile \
-	 build/win32/nsis/bochs.nsi host/linux/pcidev/Makefile)
+	 build/win32/nsis/bochs.nsi host/linux/pcidev/Makefile ${USER_PLUGINS_MAKEFILE})
 
 # Create some subdirectories for when you run configure from some other
 # directory (part #2).
