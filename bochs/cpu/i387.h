@@ -258,10 +258,10 @@ typedef BxPackedRegister BxPackedMmxRegister;
 #define BX_READ_MMX_REG(index) 						\
     (*((const BxPackedMmxRegister*)(&(BX_MMX_REG(index)))))
 
-#define BX_WRITE_MMX_REG(index, value)            			\
+#define BX_WRITE_MMX_REG(index, value)              \
 {                                 					\
-   (BX_FPU_REG(index)).fraction = MMXUQ(value);				\
-   (BX_FPU_REG(index)).exp = 0xffff;       				\
+   (BX_FPU_REG(index)).fraction = MMXUQ(value);		\
+   (BX_FPU_REG(index)).exp = 0xffff;       			\
 }
 
 #endif		/* BX_SUPPORT_FPU */

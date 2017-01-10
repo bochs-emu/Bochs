@@ -28,7 +28,7 @@
 
 /* ************************************************************************ */
 
-static const BxOpcodeInfo_t BxOpcodeInfoXOP_G1[8] = {
+static const BxExtOpcodeInfo_t BxOpcodeInfoXOP_G1[8] = {
   /* 0 */ { 0, BX_IA_ERROR },
   /* 1 */ { BxAliasVexW64, BX_IA_BLCFILL_BdEd },
   /* 2 */ { BxAliasVexW64, BX_IA_BLSFILL_BdEd },
@@ -39,7 +39,7 @@ static const BxOpcodeInfo_t BxOpcodeInfoXOP_G1[8] = {
   /* 7 */ { BxAliasVexW64, BX_IA_T1MSKC_BdEd }
 };
 
-static const BxOpcodeInfo_t BxOpcodeInfoXOP_G2[8] = {
+static const BxExtOpcodeInfo_t BxOpcodeInfoXOP_G2[8] = {
   /* 0 */ { 0, BX_IA_ERROR },
   /* 1 */ { BxAliasVexW64, BX_IA_BLCMSK_BdEd },
   /* 2 */ { 0, BX_IA_ERROR },
@@ -52,7 +52,7 @@ static const BxOpcodeInfo_t BxOpcodeInfoXOP_G2[8] = {
 
 /* ************************************************************************ */
 
-static const BxOpcodeInfo_t BxOpcodeTableXOP[256*3] = {
+static const BxExtOpcodeInfo_t BxOpcodeTableXOP[256*3] = {
   // 256 entries for XOP-encoded map 0x8 opcodes
   /* 00 /0 */ { 0, BX_IA_ERROR },
   /* 01 /0 */ { BxGroupN | BxVexL0, BX_IA_ERROR, BxOpcodeInfoXOP_G1 },
