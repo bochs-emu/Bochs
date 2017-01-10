@@ -59,7 +59,7 @@ extern "C" {
 #define bx_fgets  SIM->bx_gets
 
 /* functions for changing particular options */
-void bx_config_interface_init();
+void bx_text_config_interface_init();
 int bx_read_rc(char *rc);
 int bx_write_rc(char *rc);
 void bx_plugin_ctrl();
@@ -398,14 +398,14 @@ int do_menu(const char *pname)
   }
 }
 
-int bx_config_interface(int menu)
+int bx_text_config_interface(int menu)
 {
   Bit32u choice;
   char sr_path[CI_PATH_LENGTH];
   while (1) {
     switch (menu) {
       case BX_CI_INIT:
-        bx_config_interface_init();
+        bx_text_config_interface_init();
         return 0;
       case BX_CI_START_SIMULATION:
         SIM->begin_simulation(bx_startup_flags.argc, bx_startup_flags.argv);
@@ -439,7 +439,7 @@ int bx_config_interface(int menu)
                 SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_RUN_START);
               break;
             case 3:
-              bx_config_interface(BX_CI_START_OPTS);
+              bx_text_config_interface(BX_CI_START_OPTS);
               SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_RUN_START);
               break;
             case 4: bx_write_rc(NULL); break;
@@ -448,11 +448,11 @@ int bx_config_interface(int menu)
                 if (strcmp(sr_path, "none")) {
                   SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(1);
                   SIM->get_param_string(BXPN_RESTORE_PATH)->set(sr_path);
-                  bx_config_interface(BX_CI_START_SIMULATION);
+                  bx_text_config_interface(BX_CI_START_SIMULATION);
                 }
               }
               break;
-            case 6: bx_config_interface(BX_CI_START_SIMULATION); break;
+            case 6: bx_text_config_interface(BX_CI_START_SIMULATION); break;
             case 7: SIM->quit_sim(1); return -1;
             default: BAD_OPTION(menu, choice);
           }
@@ -763,7 +763,7 @@ ask:
   assert(0); // switch statement should return
 }
 
-void bx_config_interface_init()
+void bx_text_config_interface_init()
 {
   SIM->set_notify_callback(config_interface_notify_callback, NULL);
 }
@@ -1041,17 +1041,17 @@ static int ci_callback(void *userdata, ci_command_t command)
   switch (command)
   {
     case CI_START:
-      bx_config_interface_init();
+      bx_text_config_interface_init();
       if (SIM->get_param_enum(BXPN_BOCHS_START)->get() == BX_QUICK_START)
-        bx_config_interface(BX_CI_START_SIMULATION);
+        bx_text_config_interface(BX_CI_START_SIMULATION);
       else {
         if (!SIM->test_for_text_console())
           return CI_ERR_NO_TEXT_CONSOLE;
-        bx_config_interface(BX_CI_START_MENU);
+        bx_text_config_interface(BX_CI_START_MENU);
       }
       break;
     case CI_RUNTIME_CONFIG:
-      bx_config_interface(BX_CI_RUNTIME);
+      bx_text_config_interface(BX_CI_RUNTIME);
       break;
     case CI_SHUTDOWN:
       break;

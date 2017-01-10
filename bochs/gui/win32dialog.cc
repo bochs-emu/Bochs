@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2003-2016  The Bochs Project
+//  Copyright (C) 2003-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -26,6 +26,7 @@
 #include "param_names.h"
 #include "win32res.h"
 #include "win32paramdlg.h"
+#include "textconfig.h"
 
 const char log_choices[N_ACT+1][16] = {"ignore", "log", "warn user", "ask user", "end simulation", "no change"};
 
@@ -679,15 +680,19 @@ static int win32_ci_callback(void *userdata, ci_command_t command)
       }
       break;
     case CI_RUNTIME_CONFIG:
-      if (MainMenuDialog(GetBochsWindow(), 1) < 0) {
-        bx_user_quit = 1;
+      if (!bx_gui->has_gui_console()) {
+        if (MainMenuDialog(GetBochsWindow(), 1) < 0) {
+          bx_user_quit = 1;
 #if !BX_DEBUGGER
-        bx_atexit();
-        SIM->quit_sim(1);
+          bx_atexit();
+          SIM->quit_sim(1);
 #else
-        bx_dbg_exit(1);
+          bx_dbg_exit(1);
 #endif
-        return -1;
+          return -1;
+        }
+      } else {
+        bx_text_config_interface(BX_CI_RUNTIME);
       }
       break;
     case CI_SHUTDOWN:
