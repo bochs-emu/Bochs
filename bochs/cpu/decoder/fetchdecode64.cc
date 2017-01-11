@@ -91,7 +91,7 @@ extern Bit16u WalkOpcodeTables(const BxExtOpcodeInfo_t *OpcodeInfoPtr, Bit16u &a
 
 extern bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, unsigned nnn, unsigned rm);
 #if BX_SUPPORT_AVX
-extern bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, unsigned nnn, unsigned rm, unsigned vvv, unsigned vex_w, bx_bool had_evex = BX_FALSE, bx_bool displ8 = BX_FALSE);
+extern bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bx_bool is_64, unsigned nnn, unsigned rm, unsigned vvv, unsigned vex_w, bx_bool had_evex = BX_FALSE, bx_bool displ8 = BX_FALSE);
 #endif
 
 extern const Bit8u *decodeModrm64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned mod, unsigned nnn, unsigned rm, unsigned rex_r, unsigned rex_x, unsigned rex_b);
@@ -1277,7 +1277,7 @@ int decoder_vex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
     }
   }
 
-  if (! assign_srcs(i, ia_opcode, nnn, rm, vvv, vex_w))
+  if (! assign_srcs(i, ia_opcode, BX_TRUE, nnn, rm, vvv, vex_w))
     ia_opcode = BX_IA_ERROR;
 
   // invalid opcode sanity checks
@@ -1421,7 +1421,7 @@ int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
     }
   }
 
-  if (! assign_srcs(i, ia_opcode, nnn, rm, vvv, vex_w, BX_TRUE, displ8))
+  if (! assign_srcs(i, ia_opcode, BX_TRUE, nnn, rm, vvv, vex_w, BX_TRUE, displ8))
     ia_opcode = BX_IA_ERROR;
 
   // invalid opcode sanity checks
@@ -1575,7 +1575,7 @@ int decoder_xop64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
     }
   }
 
-  if (! assign_srcs(i, ia_opcode, nnn, rm, vvv, vex_w))
+  if (! assign_srcs(i, ia_opcode, BX_TRUE, nnn, rm, vvv, vex_w))
     ia_opcode = BX_IA_ERROR;
 
   // invalid opcode sanity checks

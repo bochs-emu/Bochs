@@ -1586,7 +1586,7 @@ bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, unsigned nnn, unsign
 }
 
 #if BX_SUPPORT_AVX
-bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, unsigned nnn, unsigned rm, unsigned vvv, unsigned vex_w, bx_bool had_evex = BX_FALSE, bx_bool displ8 = BX_FALSE)
+bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bx_bool is_64, unsigned nnn, unsigned rm, unsigned vvv, unsigned vex_w, bx_bool had_evex = BX_FALSE, bx_bool displ8 = BX_FALSE)
 {
   bx_bool use_vvv = BX_FALSE;
 #if BX_SUPPORT_EVEX
@@ -1649,12 +1649,17 @@ bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, unsigned nnn, unsign
       }
       break;
     case BX_SRC_VIB:
+      if (is_64) {
 #if BX_SUPPORT_EVEX
-      if (had_evex)
-        i->setSrcReg(n, ((i->Ib() << 1) & 0x10) | (i->Ib() >> 4));
-      else
+        if (had_evex)
+          i->setSrcReg(n, ((i->Ib() << 1) & 0x10) | (i->Ib() >> 4));
+        else
 #endif
+          i->setSrcReg(n, (i->Ib() >> 4));
+      }
+      else {
         i->setSrcReg(n, (i->Ib() >> 4) & 7);
+      }
       break;
     case BX_SRC_VSIB:
       if (! i->as32L() || i->sibIndex() == BX_NIL_REGISTER) {
@@ -1804,7 +1809,7 @@ int decoder_vex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
     }
   }
 
-  if (! assign_srcs(i, ia_opcode, nnn, rm, vvv, vex_w))
+  if (! assign_srcs(i, ia_opcode, BX_FALSE, nnn, rm, vvv, vex_w))
     ia_opcode = BX_IA_ERROR;
 
   // invalid opcode sanity checks
@@ -1922,7 +1927,7 @@ int decoder_evex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
     }
   }
 
-  if (! assign_srcs(i, ia_opcode, modrm.nnn, modrm.rm, vvv, vex_w, BX_TRUE, displ8))
+  if (! assign_srcs(i, ia_opcode, BX_FALSE, modrm.nnn, modrm.rm, vvv, vex_w, BX_TRUE, displ8))
     ia_opcode = BX_IA_ERROR;
 
   // invalid opcode sanity checks
@@ -2039,7 +2044,7 @@ int decoder_xop32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
     }
   }
 
-  if (! assign_srcs(i, ia_opcode, modrm.nnn, modrm.rm, vvv, vex_w))
+  if (! assign_srcs(i, ia_opcode, BX_FALSE, modrm.nnn, modrm.rm, vvv, vex_w))
     ia_opcode = BX_IA_ERROR;
 
   // invalid opcode sanity checks
