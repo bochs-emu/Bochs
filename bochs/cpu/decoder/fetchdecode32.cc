@@ -2226,9 +2226,11 @@ int decoder32_group7(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, un
 
   if (attr == BxNoPrefixSSE && sse_prefix)
     ia_opcode = BX_IA_ERROR;
+#if BX_SUPPORT_X86_64
   // SWAPGS is valid only in 64-bit mode
   if (ia_opcode == BX_IA_SWAPGS)
     ia_opcode = BX_IA_ERROR;
+#endif
 
   assign_srcs(i, ia_opcode, modrm.nnn, modrm.rm);
 
@@ -2398,21 +2400,17 @@ int decoder_modrm32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, uns
 
   // check forbidden SSE prefixes
   unsigned group = attr & BxGroupX;
-  if (group & BxPrefixSSE66) {
-    if (sse_prefix != SSE_PREFIX_66)
-      return BX_IA_ERROR;
-  }
-  if (group & BxPrefixSSEF2) {
-    if (sse_prefix != SSE_PREFIX_F2)
-      return BX_IA_ERROR;
-  }
-  if (group & BxPrefixSSEF3) {
-    if (sse_prefix != SSE_PREFIX_F3)
-      return BX_IA_ERROR;
-  }
-  if (group & BxNoPrefixSSE) {
-    if (sse_prefix)
-      return BX_IA_ERROR;
+  if (group) {
+    if (group < BxPrefixSSE) {
+      /* For opcodes with only one allowed SSE prefix */
+      if (sse_prefix != (group >> 4)) {
+        return BX_IA_ERROR;
+      }
+    }
+    if (group & BxNoPrefixSSE) {
+      if (sse_prefix)
+        return BX_IA_ERROR;
+    }
   }
 
 #if BX_SUPPORT_3DNOW
