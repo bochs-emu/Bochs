@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2015  The Bochs Project
+//  Copyright (C) 2002-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -848,6 +848,45 @@ static builtin_plugin_t builtin_opt_plugins[] = {
   BUILTIN_PLUGIN_ENTRY(extfpuirq),
   BUILTIN_PLUGIN_ENTRY(parallel),
   BUILTIN_PLUGIN_ENTRY(serial),
+#if BX_WITH_AMIGAOS
+  BUILTIN_PLUGIN_ENTRY(amigaos),
+#endif
+#if BX_WITH_CARBON
+  BUILTIN_PLUGIN_ENTRY(carbon),
+#endif
+#if BX_WITH_MACOS
+  BUILTIN_PLUGIN_ENTRY(macos),
+#endif
+#if BX_WITH_NOGUI
+  BUILTIN_PLUGIN_ENTRY(nogui),
+#endif
+#if BX_WITH_RFB
+  BUILTIN_PLUGIN_ENTRY(rfb),
+#endif
+#if BX_WITH_SDL
+  BUILTIN_PLUGIN_ENTRY(sdl),
+#endif
+#if BX_WITH_SDL2
+  BUILTIN_PLUGIN_ENTRY(sdl2),
+#endif
+#if BX_WITH_SVGA
+  BUILTIN_PLUGIN_ENTRY(svga),
+#endif
+#if BX_WITH_TERM
+  BUILTIN_PLUGIN_ENTRY(term),
+#endif
+#if BX_WITH_VNCSRV
+  BUILTIN_PLUGIN_ENTRY(vncsrv),
+#endif
+#if BX_WITH_WIN32
+  BUILTIN_PLUGIN_ENTRY(win32),
+#endif
+#if BX_WITH_X11
+  BUILTIN_PLUGIN_ENTRY(x),
+#endif
+#if BX_SUPPORT_BUSMOUSE
+  BUILTIN_PLUGIN_ENTRY(busmouse),
+#endif
 #if BX_SUPPORT_E1000
   BUILTIN_PLUGIN_ENTRY(e1000),
 #endif

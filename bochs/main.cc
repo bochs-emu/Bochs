@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2015  The Bochs Project
+//  Copyright (C) 2001-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -937,7 +937,7 @@ bx_bool load_and_init_display_lib(void)
     // the simulation for the second time.
     // Also, if you load wxWidgets as the configuration interface.  Its
     // plugin_init will install wxWidgets as the bx_gui.
-    return true;
+    return 1;
   }
   BX_ASSERT(bx_gui == NULL);
   bx_param_enum_c *ci_param = SIM->get_param_enum(BXPN_SEL_CONFIG_INTERFACE);
@@ -952,62 +952,15 @@ bx_bool load_and_init_display_lib(void)
     // would already be initialized.  Sorry, it doesn't work that way.
     BX_ERROR(("wxWidgets was not used as the configuration interface, so it cannot be used as the display library"));
     // choose another, hopefully different!
-    gui_param->set (0);
+    gui_param->set(0);
     gui_name = gui_param->get_selected();
     if (!strcmp (gui_name, "wx")) {
       BX_PANIC(("no alternative display libraries are available"));
-      return false;
+      return 0;
     }
     BX_ERROR(("changing display library to '%s' instead", gui_name));
   }
-#if BX_WITH_AMIGAOS
-  if (!strcmp(gui_name, "amigaos"))
-    PLUG_load_plugin (amigaos, PLUGTYPE_OPTIONAL);
-#endif
-#if BX_WITH_CARBON
-  if (!strcmp(gui_name, "carbon"))
-    PLUG_load_plugin (carbon, PLUGTYPE_OPTIONAL);
-#endif
-#if BX_WITH_MACOS
-  if (!strcmp(gui_name, "macos"))
-    PLUG_load_plugin (macintosh, PLUGTYPE_OPTIONAL);
-#endif
-#if BX_WITH_NOGUI
-  if (!strcmp(gui_name, "nogui"))
-    PLUG_load_plugin (nogui, PLUGTYPE_OPTIONAL);
-#endif
-#if BX_WITH_RFB
-  if (!strcmp(gui_name, "rfb"))
-    PLUG_load_plugin (rfb, PLUGTYPE_OPTIONAL);
-#endif
-#if BX_WITH_SDL
-  if (!strcmp(gui_name, "sdl"))
-    PLUG_load_plugin (sdl, PLUGTYPE_OPTIONAL);
-#endif
-#if BX_WITH_SDL2
-  if (!strcmp(gui_name, "sdl2"))
-    PLUG_load_plugin (sdl2, PLUGTYPE_OPTIONAL);
-#endif
-#if BX_WITH_SVGA
-  if (!strcmp(gui_name, "svga"))
-    PLUG_load_plugin (svga, PLUGTYPE_OPTIONAL);
-#endif
-#if BX_WITH_TERM
-  if (!strcmp(gui_name, "term"))
-    PLUG_load_plugin (term, PLUGTYPE_OPTIONAL);
-#endif
-#if BX_WITH_VNCSRV
-  if (!strcmp(gui_name, "vncsrv"))
-    PLUG_load_plugin (vncsrv, PLUGTYPE_OPTIONAL);
-#endif
-#if BX_WITH_WIN32
-  if (!strcmp(gui_name, "win32"))
-    PLUG_load_plugin (win32, PLUGTYPE_OPTIONAL);
-#endif
-#if BX_WITH_X11
-  if (!strcmp(gui_name, "x"))
-    PLUG_load_plugin (x, PLUGTYPE_OPTIONAL);
-#endif
+  PLUG_load_opt_plugin(gui_name);
 
 #if BX_GUI_SIGHANDLER
   // set the flag for guis requiring a GUI sighandler.
@@ -1019,10 +972,10 @@ bx_bool load_and_init_display_lib(void)
 #endif
 
   BX_ASSERT(bx_gui != NULL);
-  return true;
+  return 1;
 }
 
-int bx_begin_simulation (int argc, char *argv[])
+int bx_begin_simulation(int argc, char *argv[])
 {
   bx_user_quit = 0;
   if (SIM->get_param_bool(BXPN_RESTORE_FLAG)->get()) {
