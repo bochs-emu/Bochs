@@ -346,7 +346,6 @@ void bx_vncsrv_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 #endif
 
   new_gfx_api = 1;
-  dialog_caps = BX_GUI_DLG_RUNTIME;
   console.present = 1;
 }
 

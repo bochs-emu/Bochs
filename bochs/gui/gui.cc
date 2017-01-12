@@ -744,6 +744,7 @@ void bx_gui_c::save_restore_handler(void)
   char sr_path[BX_PATHNAME_LEN];
 
   if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_SAVE_RESTORE) {
+    BX_GUI_THIS set_display_mode(DISP_MODE_CONFIG);
     sr_path[0] = 0;
     ret = SIM->ask_filename(sr_path, sizeof(sr_path),
                             "Save Bochs state to folder...", "none",
@@ -759,6 +760,7 @@ void bx_gui_c::save_restore_handler(void)
         }
       }
     }
+    BX_GUI_THIS set_display_mode(DISP_MODE_SIM);
   }
 }
 
