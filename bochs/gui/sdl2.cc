@@ -53,6 +53,7 @@ public:
 #if BX_SHOW_IPS
   virtual void show_ips(Bit32u ips_count);
 #endif
+  virtual void set_console_edit_mode(bx_bool mode);
 private:
   void headerbar_click(int x);
 };
@@ -507,7 +508,7 @@ void bx_sdl2_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   if (gui_ci) {
     dialog_caps = BX_GUI_DLG_ALL;
   } else {
-//    console.present = 1;
+    console.present = 1;
   }
 }
 
@@ -879,7 +880,10 @@ void bx_sdl2_gui_c::handle_events(void)
       case SDL_KEYDOWN:
         if (console_running()) {
           if ((sdl_event.key.keysym.sym & (1 << 30)) == 0) {
-            // TODO
+            Bit8u ascii = (Bit8u)sdl_event.key.keysym.sym;
+            if ((ascii == SDLK_RETURN) || (ascii == SDLK_BACKSPACE)) {
+              console_key_enq(ascii);
+            }
           }
           break;
         }
@@ -964,6 +968,12 @@ void bx_sdl2_gui_c::handle_events(void)
           }
           if (key_event == BX_KEY_UNHANDLED) break;
           DEV_kbd_gen_scancode(key_event | BX_KEY_RELEASED);
+        }
+        break;
+
+      case SDL_TEXTINPUT:
+        if (console_running()) {
+          console_key_enq(sdl_event.text.text[0]);
         }
         break;
 
@@ -1462,6 +1472,15 @@ void bx_sdl2_gui_c::show_ips(Bit32u ips_count)
   }
 }
 #endif
+
+void bx_sdl2_gui_c::set_console_edit_mode(bx_bool mode)
+{
+  if (mode) {
+    SDL_StartTextInput();
+  } else {
+    SDL_StopTextInput();
+  }
+}
 
 /// key mapping code for SDL2
 

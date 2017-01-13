@@ -11,7 +11,7 @@ Changes after 2.6.8 release:
 
 - GUI and display libraries
   - Show the runtime configuration in the Bochs VGA window (gui console) instead
-    of console / xterm (rfb, sdl, vncsrv and X11 guis).
+    of console / xterm (rfb, sdl, sdl2, vncsrv and X11 guis).
   - SDL2: Added get/set clipboard text support.
 
 - CPU / CPUDB

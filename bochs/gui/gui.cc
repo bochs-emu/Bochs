@@ -1196,6 +1196,7 @@ char* bx_gui_c::bx_gets(char *s, int size)
   int pos = 0, done = 0;
   int cs_counter = 1, cs_visible = 0;
 
+  set_console_edit_mode(1);
   keystr[1] = 0;
   do {
     handle_events();
@@ -1234,6 +1235,7 @@ char* bx_gui_c::bx_gets(char *s, int size)
     }
   } while (!done);
   console.tminfo.cs_start |= 0x20;
+  set_console_edit_mode(0);
   return s;
 }
 #endif

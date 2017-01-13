@@ -135,6 +135,9 @@ public:
   virtual void beep_off();
   virtual void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
   virtual void set_mouse_mode_absxy(bx_bool mode) {}
+#if BX_USE_GUI_CONSOLE
+  virtual void set_console_edit_mode(bx_bool mode) {}
+#endif
 
   // The following function(s) are defined already, and your
   // GUI code calls them
