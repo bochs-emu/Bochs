@@ -268,67 +268,10 @@ builtinActivateTimer(unsigned id, Bit32u usec, bx_bool continuous)
 /* Plugin initialization / deinitialization                             */
 /************************************************************************/
 
-void plugin_init_all (void)
-{
-  plugin_t *plugin;
-
-  pluginlog->info("Initializing plugins");
-
-  for (plugin = plugins; plugin; plugin = plugin->next)
-  {
-    char *arg_ptr = plugin->args;
-
-    /* process the command line */
-    plugin->argc = 0;
-    while (plugin->argc < MAX_ARGC)
-    {
-      while (*arg_ptr && isspace (*arg_ptr))
-        arg_ptr++;
-
-      if (!*arg_ptr) break;
-      plugin->argv[plugin->argc++] = arg_ptr;
-
-      while (*arg_ptr && !isspace (*arg_ptr))
-        arg_ptr++;
-
-      if (!*arg_ptr) break;
-      *arg_ptr++ = '\0';
-    }
-
-    /* initialize the plugin */
-    if (plugin->plugin_init (plugin, plugin->type, plugin->argc, plugin->argv))
-    {
-      pluginlog->panic("Plugin initialization failed for %s", plugin->name);
-      plugin_abort();
-    }
-
-    plugin->initialized = 1;
-  }
-}
-
 void plugin_init_one(plugin_t *plugin)
 {
-  char *arg_ptr = plugin->args;
-
-  /* process the command line */
-  plugin->argc = 0;
-  while (plugin->argc < MAX_ARGC)
-  {
-    while (*arg_ptr && isspace (*arg_ptr))
-      arg_ptr++;
-
-    if (!*arg_ptr) break;
-    plugin->argv[plugin->argc++] = arg_ptr;
-
-    while (*arg_ptr && !isspace (*arg_ptr))
-      arg_ptr++;
-
-    if (!*arg_ptr) break;
-    *arg_ptr++ = '\0';
-  }
-
   /* initialize the plugin */
-  if (plugin->plugin_init (plugin, plugin->type, plugin->argc, plugin->argv))
+  if (plugin->plugin_init (plugin, plugin->type, 0, NULL))
   {
     pluginlog->info("Plugin initialization failed for %s", plugin->name);
     plugin_abort();
@@ -359,14 +302,7 @@ plugin_t *plugin_unload(plugin_t *plugin)
   return plugin;
 }
 
-void plugin_fini_all (void)
-{
-  plugin_t *plugin;
-
-  for (plugin = plugins; plugin; plugin = plugin_unload(plugin));
-}
-
-void plugin_load(char *name, char *args, plugintype_t type)
+void plugin_load(char *name, plugintype_t type)
 {
   plugin_t *plugin, *temp;
 #if defined(WIN32)
@@ -389,7 +325,6 @@ void plugin_load(char *name, char *args, plugintype_t type)
 
   plugin->type = type;
   plugin->name = name;
-  plugin->args = args;
   plugin->initialized = 0;
 
   char plugin_filename[BX_PATHNAME_LEN], tmpname[BX_PATHNAME_LEN];
@@ -636,7 +571,7 @@ int bx_load_plugin(const char *name, plugintype_t type)
 {
   char *namecopy = new char[1+strlen(name)];
   strcpy(namecopy, name);
-  plugin_load(namecopy, (char*)"", type);
+  plugin_load(namecopy, type);
   return 1;
 }
 

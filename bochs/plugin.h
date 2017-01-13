@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2015  The Bochs Project
+//  Copyright (C) 2002-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -292,10 +292,6 @@ typedef struct _device_t
 extern device_t *devices;
 
 void plugin_startup(void);
-void plugin_load(char *name, char *args, plugintype_t);
-plugin_t *plugin_unload(plugin_t *plugin);
-void plugin_init_all(void);
-void plugin_fini_all(void);
 
 /* === Device Stuff === */
 typedef void (*deviceInitMem_t)(BX_MEM_C *);
