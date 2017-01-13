@@ -827,8 +827,7 @@ public:
   virtual int  write_param_list(FILE *fp, bx_list_c *base, const char *optname, bx_bool multiline) {return 0;}
   virtual int  write_usb_options(FILE *fp, int maxports, bx_list_c *base) {return 0;}
 
-#if BX_USE_TEXTCONFIG
-  // gui console support
+#if BX_USE_GUI_CONSOLE
   virtual int  bx_printf(const char *fmt, ...) {return 0;}
   virtual char* bx_gets(char *s, int size, FILE *stream) {return NULL;}
 #endif

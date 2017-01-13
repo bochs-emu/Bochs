@@ -55,8 +55,13 @@ extern "C" {
 
 #define CI_PATH_LENGTH 512
 
+#if BX_USE_GUI_CONSOLE
 #define bx_printf SIM->bx_printf
 #define bx_fgets  SIM->bx_gets
+#else
+#define bx_printf printf
+#define bx_fgets  fgets
+#endif
 
 /* functions for changing particular options */
 void bx_text_config_interface_init();

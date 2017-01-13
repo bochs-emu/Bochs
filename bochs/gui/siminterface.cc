@@ -218,8 +218,7 @@ public:
                                      const char *param, int maxports, bx_list_c *base);
   virtual int  write_param_list(FILE *fp, bx_list_c *base, const char *optname, bx_bool multiline);
   virtual int  write_usb_options(FILE *fp, int maxports, bx_list_c *base);
-#if BX_USE_TEXTCONFIG
-  // gui console support
+#if BX_USE_GUI_CONSOLE
   virtual int  bx_printf(const char *fmt, ...);
   virtual char* bx_gets(char *s, int size, FILE *stream);
 #endif
@@ -1577,7 +1576,7 @@ int bx_real_sim_c::write_usb_options(FILE *fp, int maxports, bx_list_c *base)
   return bx_write_usb_options(fp, maxports, base);
 }
 
-#if BX_USE_TEXTCONFIG
+#if BX_USE_GUI_CONSOLE
 int bx_real_sim_c::bx_printf(const char *fmt, ...)
 {
   va_list ap;

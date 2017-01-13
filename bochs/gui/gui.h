@@ -164,8 +164,7 @@ public:
   void init_debug_dialog(void);
   void close_debug_dialog(void);
 #endif
-#if BX_USE_TEXTCONFIG
-  // gui console support
+#if BX_USE_GUI_CONSOLE
   bx_bool has_gui_console(void) {return console.present;}
   bx_bool console_running(void) {return console.running;}
   void console_refresh(bx_bool force);
@@ -198,8 +197,7 @@ protected:
   // status bar LED timer
   static void led_timer_handler(void *);
   void led_timer(void);
-#if BX_USE_TEXTCONFIG
-  // gui console support
+#if BX_USE_GUI_CONSOLE
   void console_init(void);
   void console_cleanup(void);
 #else
@@ -275,8 +273,7 @@ protected:
   int user_shortcut_len;
   // gui dialog capabilities
   Bit32u dialog_caps;
-#if BX_USE_TEXTCONFIG
-  // gui console support
+#if BX_USE_GUI_CONSOLE
   struct {
     bx_bool present;
     bx_bool running;

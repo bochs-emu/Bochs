@@ -36,7 +36,7 @@
 #include "gui/bitmaps/userbutton.h"
 #include "gui/bitmaps/saverestore.h"
 
-#if BX_USE_TEXTCONFIG
+#if BX_USE_GUI_CONSOLE
 #include "sdl.h"
 #endif
 
@@ -131,7 +131,7 @@ bx_gui_c::~bx_gui_c()
   if (framebuffer != NULL) {
     delete [] framebuffer;
   }
-#if BX_USE_TEXTCONFIG
+#if BX_USE_GUI_CONSOLE
   if (console.running) {
     console_cleanup();
   }
@@ -150,7 +150,7 @@ void bx_gui_c::init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
   BX_GUI_THIS x_tilesize = tilewidth;
   BX_GUI_THIS y_tilesize = tileheight;
   BX_GUI_THIS dialog_caps = BX_GUI_DLG_RUNTIME | BX_GUI_DLG_SAVE_RESTORE;
-#if BX_USE_TEXTCONFIG
+#if BX_USE_GUI_CONSOLE
   BX_GUI_THIS console.present = 0;
   BX_GUI_THIS console.running = 0;
 #endif
@@ -1082,7 +1082,7 @@ void bx_gui_c::close_debug_dialog()
 }
 #endif
 
-#if BX_USE_TEXTCONFIG
+#if BX_USE_GUI_CONSOLE
 
 #define BX_CONSOLE_BUFSIZE 4000
 

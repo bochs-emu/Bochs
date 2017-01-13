@@ -2307,6 +2307,7 @@ AC_MSG_RESULT($DEFAULT_GUI)
 
 display_libs=""
 GUI_DLL_TARGETS=""
+use_gui_console=0
 
 # the $with_* variable tells the gui library to use, but does NOT necessarily
 # indicate the platform.  Settings that depend on the platform should be
@@ -2360,6 +2361,7 @@ if test "$with_x11" = yes; then
   if test "$gui_debugger" = 1; then
     needs_gtk2=1
   fi
+  use_gui_console=1
 fi
 AC_SUBST(X_CFLAGS)
 AC_SUBST(X_LIBS)
@@ -2392,6 +2394,7 @@ if test "$with_sdl" = yes; then
          ;;
     esac
   fi
+  use_gui_console=1
 fi
 
 if test "$with_sdl2" = yes; then
@@ -2422,6 +2425,7 @@ if test "$with_sdl2" = yes; then
          ;;
     esac
   fi
+  use_gui_console=1
 fi
 
 if test "$with_svga" = yes; then
@@ -2441,6 +2445,7 @@ if test "$with_rfb" = yes; then
   AC_DEFINE(BX_WITH_RFB, 1)
   SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_RFB)"
   GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_RFB)"
+  use_gui_console=1
 fi
 
 if test "$with_vncsrv" = yes; then
@@ -2459,6 +2464,7 @@ if test "$with_vncsrv" = yes; then
     AC_MSG_WARN([Bochs for LibVNCServer cannot be compiled here, disabling it])
     with_vncsrv=no
   fi
+  use_gui_console=1
 fi
 
 if test "$with_amigaos" = yes; then
@@ -2625,6 +2631,12 @@ if test "$display_libs" = " wxWidgets"; then
   AC_DEFINE(BX_USE_TEXTCONFIG, 0)
 else
   AC_DEFINE(BX_USE_TEXTCONFIG, 1)
+fi
+
+if test "$use_gui_console" = 1; then
+  AC_DEFINE(BX_USE_GUI_CONSOLE, 1)
+else
+  AC_DEFINE(BX_USE_GUI_CONSOLE, 0)
 fi
 
 if test "$bx_plugins" = 1; then
