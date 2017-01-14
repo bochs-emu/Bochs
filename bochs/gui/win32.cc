@@ -75,7 +75,7 @@ IMPLEMENT_GUI_PLUGIN_CODE(win32)
 // Keyboard/mouse stuff
 #define SCANCODE_BUFSIZE    20
 #define MOUSE_PRESSED       0x20000000
-#define HEADERBAR_CLICKED   0x08000000
+#define TOOLBAR_CLICKED     0x08000000
 #define MOUSE_MOTION        0x22000000
 #define FOCUS_CHANGED       0x44000000
 #define BX_SYSKEY           (KF_UP|KF_REPEAT|KF_ALTDOWN)
@@ -143,9 +143,9 @@ static struct {
   unsigned bmap_id;
   void (*f)(void);
   const char *tooltip;
-} bx_headerbar_entry[BX_MAX_HEADERBAR_ENTRIES];
+} win32_toolbar_entry[BX_MAX_HEADERBAR_ENTRIES];
 
-static int bx_headerbar_entries;
+static int win32_toolbar_entries;
 static unsigned bx_hb_separator;
 
 // Status Bar stuff
@@ -205,7 +205,7 @@ void terminateEmul(int);
 void create_vga_font(void);
 void DrawBitmap(HDC, HBITMAP, int, int, int, int, int, int, DWORD, unsigned char);
 void updateUpdated(int,int,int,int);
-static void headerbar_click(int x);
+static void win32_toolbar_click(int x);
 
 
 Bit32u win32_to_bx_key[2][0x100] =
@@ -614,7 +614,7 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   win32_max_yres = this->max_yres;
 
   bx_bitmap_entries = 0;
-  bx_headerbar_entries = 0;
+  win32_toolbar_entries = 0;
   bx_hb_separator = 0;
   mouseCaptureMode = FALSE;
   mouseCaptureNew = FALSE;
@@ -1019,7 +1019,7 @@ LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
   case WM_COMMAND:
     if (LOWORD(wParam) >= 101) {
       EnterCriticalSection(&stInfo.keyCS);
-      enq_key_event(LOWORD(wParam)-101, HEADERBAR_CLICKED);
+      enq_key_event(LOWORD(wParam)-101, TOOLBAR_CLICKED);
       LeaveCriticalSection(&stInfo.keyCS);
     }
     break;
@@ -1088,8 +1088,8 @@ LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
       lpttt = (LPTOOLTIPTEXT)lParam;
       idTT = (int)wParam;
       hbar_id = idTT - 101;
-      if (SendMessage(hwndTB, TB_GETSTATE, idTT, 0) && bx_headerbar_entry[hbar_id].tooltip != NULL) {
-        lstrcpy(lpttt->szText, bx_headerbar_entry[hbar_id].tooltip);
+      if (SendMessage(hwndTB, TB_GETSTATE, idTT, 0) && win32_toolbar_entry[hbar_id].tooltip != NULL) {
+        lstrcpy(lpttt->szText, win32_toolbar_entry[hbar_id].tooltip);
       }
     }
     return FALSE;
@@ -1517,8 +1517,8 @@ void bx_win32_gui_c::handle_events(void)
     else if (key & MOUSE_PRESSED) {
       DEV_mouse_motion(0, 0, 0, LOWORD(key), 0);
     }
-    else if (key & HEADERBAR_CLICKED) {
-      headerbar_click(LOWORD(key));
+    else if (key & TOOLBAR_CLICKED) {
+      win32_toolbar_click(LOWORD(key));
     }
     else {
       key_event = win32_to_bx_key[(key & 0x100) ? 1 : 0][key & 0xff];
@@ -2048,11 +2048,10 @@ unsigned bx_win32_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, 
   unsigned hb_index;
   TBBUTTON tbb[1];
 
-  if ((bx_headerbar_entries+1) > BX_MAX_HEADERBAR_ENTRIES)
+  if ((win32_toolbar_entries+1) > BX_MAX_HEADERBAR_ENTRIES)
     terminateEmul(EXIT_HEADER_BITMAP_ERROR);
 
-  bx_headerbar_entries++;
-  hb_index = bx_headerbar_entries - 1;
+  hb_index = win32_toolbar_entries++;
 
   memset(tbb,0,sizeof(tbb));
   if (bx_hb_separator==0) {
@@ -2073,9 +2072,9 @@ unsigned bx_win32_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, 
     SendMessage(hwndTB, TB_INSERTBUTTON, bx_hb_separator+1, (LPARAM)(LPTBBUTTON)&tbb);
   }
 
-  bx_headerbar_entry[hb_index].bmap_id = bmap_id;
-  bx_headerbar_entry[hb_index].f = f;
-  bx_headerbar_entry[hb_index].tooltip = NULL;
+  win32_toolbar_entry[hb_index].bmap_id = bmap_id;
+  win32_toolbar_entry[hb_index].f = f;
+  win32_toolbar_entry[hb_index].tooltip = NULL;
 
   return(hb_index);
 }
@@ -2112,8 +2111,8 @@ void bx_win32_gui_c::show_headerbar(void)
 
 void bx_win32_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 {
-  if (bmap_id != bx_headerbar_entry[hbar_id].bmap_id) {
-    bx_headerbar_entry[hbar_id].bmap_id = bmap_id;
+  if (bmap_id != win32_toolbar_entry[hbar_id].bmap_id) {
+    win32_toolbar_entry[hbar_id].bmap_id = bmap_id;
     bx_bool is_visible = IsWindowVisible(hwndTB);
     if (is_visible) {
       ShowWindow(hwndTB, SW_HIDE);
@@ -2236,10 +2235,10 @@ void updateUpdated(int x1, int y1, int x2, int y2)
 }
 
 
-void headerbar_click(int x)
+void win32_toolbar_click(int x)
 {
-  if (x < bx_headerbar_entries) {
-    bx_headerbar_entry[x].f();
+  if (x < win32_toolbar_entries) {
+    win32_toolbar_entry[x].f();
   }
 }
 
@@ -2266,7 +2265,7 @@ void bx_win32_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
 
 void bx_win32_gui_c::set_tooltip(unsigned hbar_id, const char *tip)
 {
-  bx_headerbar_entry[hbar_id].tooltip = tip;
+  win32_toolbar_entry[hbar_id].tooltip = tip;
 }
 
 void bx_win32_gui_c::set_mouse_mode_absxy(bx_bool mode)
