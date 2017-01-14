@@ -113,6 +113,7 @@ Bit8u reverse_bitorder(Bit8u b)
 bx_gui_c::bx_gui_c(void): disp_mode(DISP_MODE_SIM)
 {
   put("GUI"); // Init in specific_init
+  bx_headerbar_entries = 0;
   statusitem_count = 0;
   led_timer_index = BX_NULL_TIMER_HANDLE;
   framebuffer = NULL;
@@ -761,6 +762,24 @@ void bx_gui_c::save_restore_handler(void)
       }
     }
     BX_GUI_THIS set_display_mode(DISP_MODE_SIM);
+  }
+}
+
+void bx_gui_c::headerbar_click(int x)
+{
+  int xorigin;
+
+  for (unsigned i=0; i<bx_headerbar_entries; i++) {
+    if (bx_headerbar_entry[i].alignment == BX_GRAVITY_LEFT)
+      xorigin = bx_headerbar_entry[i].xorigin;
+    else
+      xorigin = guest_xres - bx_headerbar_entry[i].xorigin;
+    if ((x>=xorigin) && (x<(xorigin+int(bx_headerbar_entry[i].xdim)))) {
+      if (console_running() && (i != power_hbar_id))
+        return;
+      bx_headerbar_entry[i].f();
+      return;
+    }
   }
 }
 

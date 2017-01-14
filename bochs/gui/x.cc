@@ -71,7 +71,6 @@ public:
   virtual void show_ips(Bit32u ips_count);
 #endif
 private:
-  void headerbar_click(int x);
   void send_mouse_status(void);
   void xkeypress(KeySym keysym, int press_release);
 };
@@ -147,18 +146,7 @@ static struct {
   unsigned ydim;
 } bx_bitmaps[BX_MAX_PIXMAPS];
 
-static struct {
-  Pixmap   bitmap;
-  unsigned xdim;
-  unsigned ydim;
-  unsigned xorigin;
-  unsigned yorigin;
-  unsigned alignment;
-  void (*f)(void);
-} bx_headerbar_entry[BX_MAX_HEADERBAR_ENTRIES];
-
 static unsigned bx_headerbar_y = 0;
-static unsigned bx_headerbar_entries = 0;
 static unsigned bx_bitmap_left_xorigin = 0;  // pixels from left
 static unsigned bx_bitmap_right_xorigin = 0; // pixels from right
 
@@ -1801,9 +1789,10 @@ void bx_x_gui_c::show_headerbar(void)
       xright = xorigin;
     }
     if (xright < xleft) break;
-    XCopyPlane(bx_x_display, bx_headerbar_entry[i].bitmap, win, gc_headerbar,
-      0,0, bx_headerbar_entry[i].xdim, bx_headerbar_entry[i].ydim,
-              xorigin, 0, 1);
+    Pixmap bitmap = bx_bitmaps[bx_headerbar_entry[i].bmap_id].bmap;
+    XCopyPlane(bx_x_display, bitmap, win, gc_headerbar, 0, 0,
+               bx_headerbar_entry[i].xdim, bx_headerbar_entry[i].ydim,
+               xorigin, 0, 1);
   }
   for (unsigned i=0; i<12; i++) {
     xleft = bx_statusitem_pos[i];
@@ -1833,7 +1822,7 @@ unsigned bx_x_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, uns
     BX_PANIC(("x: could not create bitmap"));
   }
   bx_bitmap_entries++;
-  return(bx_bitmap_entries-1); // return index as handle
+  return (bx_bitmap_entries-1); // return index as handle
 }
 
 unsigned bx_x_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void))
@@ -1841,60 +1830,38 @@ unsigned bx_x_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void
   unsigned hb_index;
 
   if ((bx_headerbar_entries+1) > BX_MAX_HEADERBAR_ENTRIES)
-    BX_PANIC(("x: too many headerbar entries, increase BX_MAX_HEADERBAR_ENTRIES"));
+    BX_PANIC(("too many headerbar entries, increase BX_MAX_HEADERBAR_ENTRIES"));
 
-  bx_headerbar_entries++;
-  hb_index = bx_headerbar_entries - 1;
+  hb_index = bx_headerbar_entries++;
 
-  bx_headerbar_entry[hb_index].bitmap = bx_bitmaps[bmap_id].bmap;
-  bx_headerbar_entry[hb_index].xdim   = bx_bitmaps[bmap_id].xdim;
-  bx_headerbar_entry[hb_index].ydim   = bx_bitmaps[bmap_id].ydim;
+  bx_headerbar_entry[hb_index].bmap_id = bmap_id;
+  bx_headerbar_entry[hb_index].xdim    = bx_bitmaps[bmap_id].xdim;
+  bx_headerbar_entry[hb_index].ydim    = bx_bitmaps[bmap_id].ydim;
   bx_headerbar_entry[hb_index].alignment = alignment;
   bx_headerbar_entry[hb_index].f = f;
   if (alignment == BX_GRAVITY_LEFT) {
     bx_headerbar_entry[hb_index].xorigin = bx_bitmap_left_xorigin;
-    bx_headerbar_entry[hb_index].yorigin = 0;
     bx_bitmap_left_xorigin += bx_bitmaps[bmap_id].xdim;
-  }
-  else { // BX_GRAVITY_RIGHT
+  } else { // BX_GRAVITY_RIGHT
     bx_bitmap_right_xorigin += bx_bitmaps[bmap_id].xdim;
     bx_headerbar_entry[hb_index].xorigin = bx_bitmap_right_xorigin;
-    bx_headerbar_entry[hb_index].yorigin = 0;
   }
-  return(hb_index);
+  return hb_index;
 }
 
 void bx_x_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 {
   unsigned xorigin;
 
-  bx_headerbar_entry[hbar_id].bitmap = bx_bitmaps[bmap_id].bmap;
+  bx_headerbar_entry[hbar_id].bmap_id = bmap_id;
 
   if (bx_headerbar_entry[hbar_id].alignment == BX_GRAVITY_LEFT)
     xorigin = bx_headerbar_entry[hbar_id].xorigin;
   else
     xorigin = dimension_x - bx_headerbar_entry[hbar_id].xorigin;
-  XCopyPlane(bx_x_display, bx_headerbar_entry[hbar_id].bitmap, win, gc_headerbar,
-    0,0, bx_headerbar_entry[hbar_id].xdim, bx_headerbar_entry[hbar_id].ydim,
-            xorigin, 0, 1);
-}
-
-void bx_x_gui_c::headerbar_click(int x)
-{
-  int xorigin;
-
-  for (unsigned i=0; i<bx_headerbar_entries; i++) {
-    if (bx_headerbar_entry[i].alignment == BX_GRAVITY_LEFT)
-      xorigin = bx_headerbar_entry[i].xorigin;
-    else
-      xorigin = dimension_x - bx_headerbar_entry[i].xorigin;
-    if ((x>=xorigin) && (x<(xorigin+int(bx_headerbar_entry[i].xdim)))) {
-      if (console_running() && (i != power_hbar_id))
-        return;
-      bx_headerbar_entry[i].f();
-      return;
-    }
-  }
+  XCopyPlane(bx_x_display, bx_bitmaps[bmap_id].bmap, win, gc_headerbar, 0, 0,
+             bx_headerbar_entry[hbar_id].xdim, bx_headerbar_entry[hbar_id].ydim,
+             xorigin, 0, 1);
 }
 
 void bx_x_gui_c::exit(void)

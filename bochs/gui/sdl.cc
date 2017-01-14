@@ -54,8 +54,6 @@ public:
 #if BX_SHOW_IPS
   virtual void show_ips(Bit32u ips_count);
 #endif
-private:
-  void headerbar_click(int x);
 };
 
 // declare one instance of the gui object and call macro to insert the
@@ -84,14 +82,6 @@ struct bitmaps {
   SDL_Surface *surface;
   SDL_Rect src, dst;
 };
-
-static struct {
-  unsigned bmp_id;
-  unsigned alignment;
-  void (*f)(void);
-} hb_entry[BX_MAX_HEADERBAR_ENTRIES];
-
-unsigned bx_headerbar_entries = 0;
 
 SDL_Surface *sdl_screen, *sdl_fullscreen;
 SDL_Rect sdl_maxres;
@@ -1283,9 +1273,11 @@ unsigned bx_sdl_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment,
   bx_headerbar_entries++;
   hb_index = bx_headerbar_entries - 1;
 
-  hb_entry[hb_index].bmp_id = bmap_id;
-  hb_entry[hb_index].alignment = alignment;
-  hb_entry[hb_index].f = f;
+  bx_headerbar_entry[hb_index].bmap_id = bmap_id;
+  bx_headerbar_entry[hb_index].xdim = sdl_bitmaps[bmap_id]->src.w;
+  bx_headerbar_entry[hb_index].ydim = sdl_bitmaps[bmap_id]->src.h;
+  bx_headerbar_entry[hb_index].alignment = alignment;
+  bx_headerbar_entry[hb_index].f = f;
 
   if (alignment == BX_GRAVITY_LEFT) {
     sdl_bitmaps[bmap_id]->dst.x = bx_bitmap_left_xorigin;
@@ -1294,6 +1286,7 @@ unsigned bx_sdl_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment,
     bx_bitmap_right_xorigin += sdl_bitmaps[bmap_id]->src.w;
     sdl_bitmaps[bmap_id]->dst.x = bx_bitmap_right_xorigin;
   }
+  bx_headerbar_entry[hb_index].xorigin = sdl_bitmaps[bmap_id]->dst.x;
 
   return hb_index;
 }
@@ -1305,13 +1298,13 @@ void bx_sdl_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
   unsigned old_id;
 
   if (!sdl_screen) return;
-  old_id = hb_entry[hbar_id].bmp_id;
+  old_id = bx_headerbar_entry[hbar_id].bmap_id;
   hb_dst = sdl_bitmaps[old_id]->dst;
   sdl_bitmaps[old_id]->dst.x = -1;
-  hb_entry[hbar_id].bmp_id = bmap_id;
+  bx_headerbar_entry[hbar_id].bmap_id = bmap_id;
   sdl_bitmaps[bmap_id]->dst.x = hb_dst.x;
   if (sdl_bitmaps[bmap_id]->dst.x != -1) {
-    if (hb_entry[hbar_id].alignment == BX_GRAVITY_RIGHT) {
+    if (bx_headerbar_entry[hbar_id].alignment == BX_GRAVITY_RIGHT) {
       hb_dst.x = res_x - hb_dst.x;
     }
     SDL_BlitSurface(
@@ -1357,10 +1350,10 @@ void bx_sdl_gui_c::show_headerbar(void)
 
   // go thru the bitmaps and display the active ones
   while (bitmapscount--) {
-    current_bmp = hb_entry[bitmapscount].bmp_id;
+    current_bmp = bx_headerbar_entry[bitmapscount].bmap_id;
     if(sdl_bitmaps[current_bmp]->dst.x != -1) {
       hb_dst = sdl_bitmaps[current_bmp]->dst;
-      if (hb_entry[bitmapscount].alignment == BX_GRAVITY_RIGHT) {
+      if (bx_headerbar_entry[bitmapscount].alignment == BX_GRAVITY_RIGHT) {
         hb_dst.x = res_x - hb_dst.x;
       }
       SDL_BlitSurface(
@@ -1424,26 +1417,6 @@ void bx_sdl_gui_c::mouse_enabled_changed_specific (bx_bool val)
     SDL_WM_GrabInput(SDL_GRAB_OFF);
   }
   sdl_grab = val;
-}
-
-
-void bx_sdl_gui_c::headerbar_click(int x)
-{
-  int xdim,xorigin;
-
-  for (unsigned i=0; i<bx_headerbar_entries; i++) {
-    xdim = sdl_bitmaps[hb_entry[i].bmp_id]->src.w;
-    if (hb_entry[i].alignment == BX_GRAVITY_LEFT)
-      xorigin = sdl_bitmaps[hb_entry[i].bmp_id]->dst.x;
-    else
-      xorigin = res_x - sdl_bitmaps[hb_entry[i].bmp_id]->dst.x;
-    if ((x>=xorigin) && (x<(xorigin+xdim))) {
-      if (console_running() && (i != power_hbar_id))
-        return;
-      hb_entry[i].f();
-      return;
-    }
-  }
 }
 
 

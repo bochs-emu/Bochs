@@ -18,8 +18,19 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
+// header bar and status bar stuff
+#define BX_HEADER_BAR_Y 32
+
+#define BX_MAX_PIXMAPS 17
+#define BX_MAX_HEADERBAR_ENTRIES 12
+
+// align pixmaps towards left or right side of header bar
+#define BX_GRAVITY_LEFT 10
+#define BX_GRAVITY_RIGHT 11
+
 #define BX_MAX_STATUSITEMS 10
 
+// gui dialog capabilities
 #define BX_GUI_DLG_FLOPPY       0x01
 #define BX_GUI_DLG_CDROM        0x02
 #define BX_GUI_DLG_SNAPSHOT     0x04
@@ -182,7 +193,7 @@ public:
 
 protected:
   // And these are defined and used privately in gui.cc
-  // header bar button handers
+  // header bar button handlers
   static void floppyA_handler(void);
   static void floppyB_handler(void);
   static void cdrom1_handler(void);
@@ -194,6 +205,8 @@ protected:
   static void config_handler(void);
   static void userbutton_handler(void);
   static void save_restore_handler(void);
+  // process clicks on the "classic" Bochs headerbar
+  void headerbar_click(int x);
   // snapshot helper functions
   static void make_text_snapshot(char **snapshot, Bit32u *length);
   static Bit32u set_snapshot_mode(bx_bool mode);
@@ -223,6 +236,16 @@ protected:
   unsigned mouse_bmap_id, nomouse_bmap_id, mouse_hbar_id;
   unsigned user_bmap_id, user_hbar_id;
   unsigned save_restore_bmap_id, save_restore_hbar_id;
+  // the "classic" Bochs headerbar
+  unsigned bx_headerbar_entries;
+  struct {
+    unsigned bmap_id;
+    unsigned xdim;
+    unsigned ydim;
+    unsigned xorigin;
+    unsigned alignment;
+    void (*f)(void);
+  } bx_headerbar_entry[BX_MAX_HEADERBAR_ENTRIES];
   // text charmap
   unsigned char vga_charmap[0x2000];
   bx_bool charmap_updated;
@@ -338,15 +361,6 @@ virtual Bit8u *graphics_tile_get(unsigned x, unsigned y,                    \
 virtual void graphics_tile_update_in_place(unsigned x, unsigned y,          \
                                        unsigned w, unsigned h);
 /* end of DECLARE_GUI_NEW_VIRTUAL_METHODS */
-
-#define BX_HEADER_BAR_Y 32
-
-#define BX_MAX_PIXMAPS 17
-#define BX_MAX_HEADERBAR_ENTRIES 12
-
-// align pixmaps towards left or right side of header bar
-#define BX_GRAVITY_LEFT 10
-#define BX_GRAVITY_RIGHT 11
 
 #define BX_KEY_PRESSED  0x00000000
 #define BX_KEY_RELEASED 0x80000000

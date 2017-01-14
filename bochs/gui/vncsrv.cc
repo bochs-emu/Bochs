@@ -73,7 +73,6 @@ public:
 #endif
   rfbScreenInfoPtr screen;
 private:
-  void headerbar_click(int x);
   void vncMouseMove(int x, int y, int z, int bmask);
   void vncKeyPressed(Bit32u key, int press_release);
 };
@@ -121,16 +120,7 @@ static struct _rfbBitmaps {
     unsigned ydim;
 } rfbBitmaps[BX_MAX_PIXMAPS];
 
-static unsigned rfbHeaderbarBitmapCount = 0;
-static struct _rfbHeaderbarBitmaps {
-    unsigned int index;
-    unsigned int xorigin;
-    unsigned int yorigin;
-    unsigned int alignment;
-    void (*f)(void);
-} rfbHeaderbarBitmaps[BX_MAX_HEADERBAR_ENTRIES];
-
-//Keyboard stuff
+// Keyboard/Mouse stuff
 #define KEYBOARD 1
 #define MOUSE    0
 #define MAX_KEY_EVENTS 512
@@ -684,23 +674,22 @@ unsigned bx_vncsrv_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment,
 {
   int hb_index;
 
-  if ((rfbHeaderbarBitmapCount + 1) > BX_MAX_HEADERBAR_ENTRIES) {
+  if ((bx_headerbar_entries + 1) > BX_MAX_HEADERBAR_ENTRIES) {
     return 0;
   }
 
-  rfbHeaderbarBitmapCount++;
-  hb_index = rfbHeaderbarBitmapCount - 1;
-  rfbHeaderbarBitmaps[hb_index].index = bmap_id;
-  rfbHeaderbarBitmaps[hb_index].alignment = alignment;
-  rfbHeaderbarBitmaps[hb_index].f = f;
+  hb_index = bx_headerbar_entries++;
+  bx_headerbar_entry[hb_index].bmap_id = bmap_id;
+  bx_headerbar_entry[hb_index].xdim = rfbBitmaps[bmap_id].xdim;
+  bx_headerbar_entry[hb_index].ydim = rfbBitmaps[bmap_id].ydim;
+  bx_headerbar_entry[hb_index].alignment = alignment;
+  bx_headerbar_entry[hb_index].f = f;
   if (alignment == BX_GRAVITY_LEFT) {
-    rfbHeaderbarBitmaps[hb_index].xorigin = rfbOriginLeft;
-    rfbHeaderbarBitmaps[hb_index].yorigin = 0;
+    bx_headerbar_entry[hb_index].xorigin = rfbOriginLeft;
     rfbOriginLeft += rfbBitmaps[bmap_id].xdim;
   } else { // BX_GRAVITY_RIGHT
     rfbOriginRight += rfbBitmaps[bmap_id].xdim;
-    rfbHeaderbarBitmaps[hb_index].xorigin = rfbOriginRight;
-    rfbHeaderbarBitmaps[hb_index].yorigin = 0;
+    bx_headerbar_entry[hb_index].xorigin = rfbOriginRight;
   }
   return hb_index;
 }
@@ -713,22 +702,21 @@ unsigned bx_vncsrv_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment,
 void bx_vncsrv_gui_c::show_headerbar(void)
 {
   char *newBits, value;
-  unsigned int i, xorigin, addr;
+  unsigned int i, xorigin, addr, bmap_id;
 
   newBits = (char *) malloc(rfbWindowX * rfbHeaderbarY);
   memset(newBits, 0, (rfbWindowX * rfbHeaderbarY));
   DrawBitmap(0, 0, rfbWindowX, rfbHeaderbarY, newBits, headerbar_fg,
              headerbar_bg);
-  for (i = 0; i < rfbHeaderbarBitmapCount; i++) {
-    if (rfbHeaderbarBitmaps[i].alignment == BX_GRAVITY_LEFT) {
-      xorigin = rfbHeaderbarBitmaps[i].xorigin;
+  for (i = 0; i < bx_headerbar_entries; i++) {
+    if (bx_headerbar_entry[i].alignment == BX_GRAVITY_LEFT) {
+      xorigin = bx_headerbar_entry[i].xorigin;
     } else {
-      xorigin = rfbWindowX - rfbHeaderbarBitmaps[i].xorigin;
+      xorigin = rfbWindowX - bx_headerbar_entry[i].xorigin;
     }
-    DrawBitmap(xorigin, 0, rfbBitmaps[rfbHeaderbarBitmaps[i].index].xdim,
-               rfbBitmaps[rfbHeaderbarBitmaps[i].index].ydim,
-               rfbBitmaps[rfbHeaderbarBitmaps[i].index].bmap, headerbar_fg,
-               headerbar_bg);
+    bmap_id = bx_headerbar_entry[i].bmap_id;
+    DrawBitmap(xorigin, 0, rfbBitmaps[bmap_id].xdim, rfbBitmaps[bmap_id].ydim,
+               rfbBitmaps[bmap_id].bmap, headerbar_fg, headerbar_bg);
   }
   free(newBits);
   newBits = (char *) malloc(rfbWindowX * rfbStatusbarY / 8);
@@ -765,18 +753,16 @@ void bx_vncsrv_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 {
   unsigned int xorigin;
 
-  if (bmap_id == rfbHeaderbarBitmaps[hbar_id].index)
+  if (bmap_id == bx_headerbar_entry[hbar_id].bmap_id)
     return;
-  rfbHeaderbarBitmaps[hbar_id].index = bmap_id;
-  if (rfbHeaderbarBitmaps[hbar_id].alignment == BX_GRAVITY_LEFT) {
-    xorigin = rfbHeaderbarBitmaps[hbar_id].xorigin;
+  bx_headerbar_entry[hbar_id].bmap_id = bmap_id;
+  if (bx_headerbar_entry[hbar_id].alignment == BX_GRAVITY_LEFT) {
+    xorigin = bx_headerbar_entry[hbar_id].xorigin;
   } else {
-    xorigin = rfbWindowX - rfbHeaderbarBitmaps[hbar_id].xorigin;
+    xorigin = rfbWindowX - bx_headerbar_entry[hbar_id].xorigin;
   }
-  DrawBitmap(xorigin, 0, rfbBitmaps[rfbHeaderbarBitmaps[hbar_id].index].xdim,
-             rfbBitmaps[rfbHeaderbarBitmaps[hbar_id].index].ydim,
-             rfbBitmaps[rfbHeaderbarBitmaps[hbar_id].index].bmap, headerbar_fg,
-             headerbar_bg);
+  DrawBitmap(xorigin, 0, rfbBitmaps[bmap_id].xdim, rfbBitmaps[bmap_id].ydim,
+             rfbBitmaps[bmap_id].bmap, headerbar_fg, headerbar_bg);
 }
 
 // ::EXIT()
@@ -895,27 +881,6 @@ void bx_vncsrv_gui_c::set_display_mode(disp_mode_t newmode)
   }
 }
 
-void bx_vncsrv_gui_c::headerbar_click(int x)
-{
-  int xorigin;
-
-  for (unsigned i = 0; i < rfbHeaderbarBitmapCount; i++) {
-    if (rfbHeaderbarBitmaps[i].alignment == BX_GRAVITY_LEFT)
-      xorigin = rfbHeaderbarBitmaps[i].xorigin;
-    else
-      xorigin = rfbWindowX - rfbHeaderbarBitmaps[i].xorigin;
-    if ((x >= xorigin) &&
-        (x < (xorigin + int(rfbBitmaps[rfbHeaderbarBitmaps[i].index].xdim)))) {
-      if (console_running() && (i != power_hbar_id))
-        return;
-      rfbKeyboardEvents = 0;
-      BX_UNLOCK(bKeyboardInUse);
-      rfbHeaderbarBitmaps[i].f();
-      return;
-    }
-  }
-}
-
 void bx_vncsrv_gui_c::vncMouseMove(int x, int y, int z, int bmask)
 {
   static int oldx = -1;
@@ -943,6 +908,8 @@ void bx_vncsrv_gui_c::vncMouseMove(int x, int y, int z, int bmask)
     oldy = y;
   } else {
     if (bmask == 1) {
+      rfbKeyboardEvents = 0;
+      BX_UNLOCK(bKeyboardInUse);
       headerbar_click(x);
     }
   }
