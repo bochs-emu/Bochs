@@ -400,6 +400,8 @@ bx_sdl2_gui_c::bx_sdl2_gui_c()
   info("maximum host resolution: x=%d y=%d", sdl_maxres.w, sdl_maxres.h);
 }
 
+// SDL2 implementation of the bx_gui_c methods (see nogui.cc for details)
+
 void bx_sdl2_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 {
   int i, j;

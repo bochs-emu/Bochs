@@ -499,6 +499,8 @@ bx_sdl_gui_c::bx_sdl_gui_c()
 }
 
 
+// SDL implementation of the bx_gui_c methods (see nogui.cc for details)
+
 void bx_sdl_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 {
   int i, j;

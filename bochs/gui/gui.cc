@@ -49,6 +49,8 @@ bx_gui_c *bx_gui = NULL;
 #define BX_GUI_THIS bx_gui->
 #define LOG_THIS BX_GUI_THIS
 
+// user button shortcut stuff
+
 #define BX_KEY_UNKNOWN 0x7fffffff
 #define N_USER_KEYS 38
 
@@ -99,6 +101,20 @@ static user_key_t user_keys[N_USER_KEYS] =
   { "scrlck", BX_KEY_SCRL_LOCK }
 };
 
+Bit32u get_user_key(char *key)
+{
+  int i = 0;
+
+  while (i < N_USER_KEYS) {
+    if (!strcmp(key, user_keys[i].key))
+      return user_keys[i].symbol;
+    i++;
+  }
+  return BX_KEY_UNKNOWN;
+}
+
+// font bitmap helper function
+
 Bit8u reverse_bitorder(Bit8u b)
 {
   Bit8u ret = 0;
@@ -109,6 +125,8 @@ Bit8u reverse_bitorder(Bit8u b)
   }
   return ret;
 }
+
+// common gui implementation
 
 bx_gui_c::bx_gui_c(void): disp_mode(DISP_MODE_SIM)
 {
@@ -679,18 +697,6 @@ const char* bx_gui_c::get_toggle_info(void)
   return mouse_toggle_text;
 }
 
-Bit32u get_user_key(char *key)
-{
-  int i = 0;
-
-  while (i < N_USER_KEYS) {
-    if (!strcmp(key, user_keys[i].key))
-      return user_keys[i].symbol;
-    i++;
-  }
-  return BX_KEY_UNKNOWN;
-}
-
 bx_bool bx_gui_c::parse_user_shortcut(const char *val)
 {
   char *ptr, shortcut_tmp[512];
@@ -922,6 +928,42 @@ void bx_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
   *bpp = 32;
 }
 
+bx_bool bx_gui_c::palette_change_common(Bit8u index, Bit8u red, Bit8u green, Bit8u blue)
+{
+  BX_GUI_THIS palette[index].red = red;
+  BX_GUI_THIS palette[index].green = green;
+  BX_GUI_THIS palette[index].blue = blue;
+  return palette_change(index, red, green, blue);
+}
+
+void bx_gui_c::show_ips(Bit32u ips_count)
+{
+#if BX_SHOW_IPS
+  BX_INFO(("ips = %3.3fM", ips_count / 1000000.0));
+#endif
+}
+
+Bit8u bx_gui_c::get_mouse_headerbar_id()
+{
+  return BX_GUI_THIS mouse_hbar_id;
+}
+
+#if BX_DEBUGGER && BX_DEBUGGER_GUI
+void bx_gui_c::init_debug_dialog()
+{
+  extern void InitDebugDialog();
+  InitDebugDialog();
+}
+
+void bx_gui_c::close_debug_dialog()
+{
+  extern void CloseDebugDialog();
+  CloseDebugDialog();
+}
+#endif
+
+// new graphics API (compatibility code)
+
 bx_svga_tileinfo_t *bx_gui_c::graphics_tile_info(bx_svga_tileinfo_t *info)
 {
   BX_GUI_THIS host_pitch = BX_GUI_THIS host_xres * ((BX_GUI_THIS host_bpp + 1) >> 3);
@@ -1066,40 +1108,6 @@ bx_svga_tileinfo_t * bx_gui_c::graphics_tile_info_common(bx_svga_tileinfo_t *inf
 
   return info;
 }
-
-bx_bool bx_gui_c::palette_change_common(Bit8u index, Bit8u red, Bit8u green, Bit8u blue)
-{
-  BX_GUI_THIS palette[index].red = red;
-  BX_GUI_THIS palette[index].green = green;
-  BX_GUI_THIS palette[index].blue = blue;
-  return palette_change(index, red, green, blue);
-}
-
-void bx_gui_c::show_ips(Bit32u ips_count)
-{
-#if BX_SHOW_IPS
-  BX_INFO(("ips = %3.3fM", ips_count / 1000000.0));
-#endif
-}
-
-Bit8u bx_gui_c::get_mouse_headerbar_id()
-{
-  return BX_GUI_THIS mouse_hbar_id;
-}
-
-#if BX_DEBUGGER && BX_DEBUGGER_GUI
-void bx_gui_c::init_debug_dialog()
-{
-  extern void InitDebugDialog();
-  InitDebugDialog();
-}
-
-void bx_gui_c::close_debug_dialog()
-{
-  extern void CloseDebugDialog();
-  CloseDebugDialog();
-}
-#endif
 
 #if BX_USE_GUI_CONSOLE
 

@@ -274,7 +274,7 @@ pascal OSStatus CEvtHandleWindowBackdropUpdate (EventHandlerCallRef nextHandler,
 }
 
 // Translate MouseDowns in a handled window into Bochs events
-// Main ::HANDLE_EVENTS will feed all mouse updates to Bochs
+// Main ::handle_events() will feed all mouse updates to Bochs
 pascal OSStatus CEvtHandleWindowEmulatorClick (EventHandlerCallRef nextHandler,
   EventRef theEvent,
   void* userData)
@@ -784,18 +784,7 @@ void CreateWindows(void)
   SetPortWindowPort(win);
 }
 
-// ::SPECIFIC_INIT()
-//
-// Called from gui.cc, once upon program startup, to allow for the
-// specific GUI code (X11, Win32, ...) to be initialized.
-//
-// argc, argv: not used right now, but the intention is to pass native GUI
-//     specific options from the command line.  (X11 options, Win32 options,...)
-//
-// headerbar_y:  A headerbar (toolbar) is display on the top of the
-//     VGA window, showing floppy status, and other information.  It
-//     always assumes the width of the current VGA mode width, but
-//     it's height is defined by this parameter.
+// CARBON implementation of the bx_gui_c methods (see nogui.cc for details)
 
 void bx_carbon_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 {
@@ -931,12 +920,6 @@ BX_CPP_INLINE void ResetPointer(void)
   }
 }
 
-// ::HANDLE_EVENTS()
-//
-// Called periodically (vga_update_interval in .bochsrc) so the
-// the gui code can poll for keyboard, mouse, and other
-// relevant events.
-
 void bx_carbon_gui_c::handle_events(void)
 {
   EventRecord event;
@@ -1069,11 +1052,6 @@ void bx_carbon_gui_c::handle_events(void)
 }
 
 
-// ::FLUSH()
-//
-// Called periodically, requesting that the gui code flush all pending
-// screen update requests.
-
 void bx_carbon_gui_c::flush(void)
 {
   // an opportunity to make the Window Manager happy.
@@ -1100,11 +1078,6 @@ void bx_carbon_gui_c::flush(void)
 }
 
 
-// ::CLEAR_SCREEN()
-//
-// Called to request that the VGA region is cleared.  Don't
-// clear the area that defines the headerbar.
-
 void bx_carbon_gui_c::clear_screen(void)
 {
   Rect r;
@@ -1120,25 +1093,6 @@ void bx_carbon_gui_c::clear_screen(void)
 }
 
 
-
-// ::TEXT_UPDATE()
-//
-// Called in a VGA text mode, to update the screen with
-// new content.
-//
-// old_text: array of character/attributes making up the contents
-//           of the screen from the last call.  See below
-// new_text: array of character/attributes making up the current
-//           contents, which should now be displayed.  See below
-//
-// format of old_text & new_text: each is tm_info->line_offset*text_rows
-//     bytes long. Each character consists of 2 bytes.  The first by is
-//     the character value, the second is the attribute byte.
-//
-// cursor_x: new x location of cursor
-// cursor_y: new y location of cursor
-// tm_info:  this structure contains information for additional
-//           features in text mode (cursor shape, line offset,...)
 
 void bx_carbon_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   unsigned long cursor_x, unsigned long cursor_y,
@@ -1305,13 +1259,6 @@ int bx_carbon_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
   return 1;
 }
 
-// ::PALETTE_CHANGE()
-//
-// Allocate a color in the native GUI, for this color, and put
-// it in the colormap location 'index'.
-// returns: 0=no screen update needed (color map change has direct effect)
-//          1=screen updated needed (redraw using current colormap)
-
 bx_bool bx_carbon_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green, Bit8u blue)
 {
   PaletteHandle thePal, oldpal;
@@ -1358,21 +1305,6 @@ bx_bool bx_carbon_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green, Bit
   return((**gTile).pixelType != RGBDirect);
 }
 
-
-// ::GRAPHICS_TILE_UPDATE()
-//
-// Called to request that a tile of graphics be drawn to the
-// screen, since info in this region has changed.
-//
-// tile: array of 8bit values representing a block of pixels with
-//       dimension equal to the 'x_tilesize' & 'y_tilesize' members.
-//       Each value specifies an index into the
-//       array of colors you allocated for ::palette_change()
-// x0: x origin of tile
-// y0: y origin of tile
-//
-// note: origin of tile and of window based on (0,0) being in the upper
-//       left of the window.
 
 void bx_carbon_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 {
@@ -1430,19 +1362,6 @@ void bx_carbon_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0
     SetGWorld(savePort, saveDevice);*/
 }
 
-
-
-// ::DIMENSION_UPDATE()
-//
-// Called when the VGA mode changes it's X,Y dimensions.
-// Resize the window to this size, but you need to add on
-// the height of the headerbar to the Y value.
-//
-// x: new VGA x size
-// y: new VGA y size (add headerbar_y parameter from ::specific_init().
-// fheight: new VGA character height in text mode
-// fwidth : new VGA character width in text mode
-// bpp : bits per pixel in graphics mode
 
 void bx_carbon_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth, unsigned bpp)
 {
@@ -1504,15 +1423,6 @@ void bx_carbon_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight,
 
 // ::CREATE_BITMAP()
 //
-// Create a monochrome bitmap of size 'xdim' by 'ydim', which will
-// be drawn in the headerbar.  Return an integer ID to the bitmap,
-// with which the bitmap can be referenced later.
-//
-// bmap: packed 8 pixels-per-byte bitmap.  The pixel order is:
-//       bit0 is the left most pixel, bit7 is the right most pixel.
-// xdim: x dimension of bitmap
-// ydim: y dimension of bitmap
-
 // rewritten by tim senecal to use the cicn (color icon) resources instead
 
 // We need to have a cicn resource for each and every call to create_bitmap
@@ -1533,17 +1443,6 @@ unsigned bx_carbon_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim
   return(numPixMaps-1);
 }
 
-
-// ::HEADERBAR_BITMAP()
-//
-// Called to install a bitmap in the bochs headerbar (toolbar).
-//
-// bmap_id: will correspond to an ID returned from
-//     ::create_bitmap().  'alignment' is either BX_GRAVITY_LEFT
-//     or BX_GRAVITY_RIGHT, meaning install the bitmap in the next
-//     available leftmost or rightmost space.
-// f: a 'C' function pointer to callback when the mouse is clicked in
-//     the boundaries of this bitmap.
 
 unsigned bx_carbon_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void))
 {
@@ -1588,30 +1487,12 @@ unsigned bx_carbon_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment,
   return(hb_index);
 }
 
-// ::SHOW_HEADERBAR()
-//
-// Show (redraw) the current headerbar, which is composed of
-// currently installed bitmaps.
-
 void bx_carbon_gui_c::show_headerbar(void)
 {
   UpdateTools();
   DrawControls(toolwin);
 }
 
-
-// ::REPLACE_BITMAP()
-//
-// Replace the bitmap installed in the headerbar ID slot 'hbar_id',
-// with the one specified by 'bmap_id'.  'bmap_id' will have
-// been generated by ::create_bitmap().  The old and new bitmap
-// must be of the same size.  This allows the bitmap the user
-// sees to change, when some action occurs.  For example when
-// the user presses on the floppy icon, it then displays
-// the ejected status.
-//
-// hbar_id: headerbar slot ID
-// bmap_id: bitmap ID
 
 void bx_carbon_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 {
@@ -1627,11 +1508,6 @@ void bx_carbon_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
   show_headerbar();
 }
 
-
-// ::EXIT()
-//
-// Called before bochs terminates, to allow for a graceful
-// exit from the native GUI mechanism.
 
 void bx_carbon_gui_c::exit(void)
 {

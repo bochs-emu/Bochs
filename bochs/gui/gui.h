@@ -105,9 +105,6 @@ public:
                           unsigned long cursor_x, unsigned long cursor_y,
                           bx_vga_tminfo_t *tm_info) = 0;
   virtual void graphics_tile_update(Bit8u *tile, unsigned x, unsigned y) = 0;
-  virtual bx_svga_tileinfo_t *graphics_tile_info(bx_svga_tileinfo_t *info);
-  virtual Bit8u *graphics_tile_get(unsigned x, unsigned y, unsigned *w, unsigned *h);
-  virtual void graphics_tile_update_in_place(unsigned x, unsigned y, unsigned w, unsigned h);
   virtual void handle_events(void) = 0;
   virtual void flush(void) = 0;
   virtual void clear_screen(void) = 0;
@@ -120,9 +117,14 @@ public:
   virtual int get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)  = 0;
   virtual int set_clipboard_text(char *snapshot, Bit32u len) = 0;
   virtual void mouse_enabled_changed_specific (bx_bool val) = 0;
+  virtual void exit(void) = 0;
+  // new graphics API methods (compatibility mode in gui.cc)
+  virtual bx_svga_tileinfo_t *graphics_tile_info(bx_svga_tileinfo_t *info);
+  virtual Bit8u *graphics_tile_get(unsigned x, unsigned y, unsigned *w, unsigned *h);
+  virtual void graphics_tile_update_in_place(unsigned x, unsigned y, unsigned w, unsigned h);
+  // optional gui methods (stubs or default code in gui.cc)
   virtual void statusbar_setitem_specific(int element, bx_bool active, bx_bool w) {}
   virtual void set_tooltip(unsigned hbar_id, const char *tip) {}
-  virtual void exit(void) = 0;
   // set_display_mode() changes the mode between the configuration interface
   // and the simulation.  This is primarily intended for display libraries
   // which have a full-screen mode such as SDL, term, and svgalib.  The display

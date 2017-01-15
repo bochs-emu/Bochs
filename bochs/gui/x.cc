@@ -55,7 +55,7 @@ extern "C" {
 
 class bx_x_gui_c : public bx_gui_c {
 public:
-  bx_x_gui_c (void);
+  bx_x_gui_c(void);
   DECLARE_GUI_VIRTUAL_METHODS()
   DECLARE_GUI_NEW_VIRTUAL_METHODS()
 #if BX_USE_IDLE_HACK
@@ -133,7 +133,7 @@ static void enable_cursor();
 // keyboard
 static bx_bool x11_nokeyrepeat = 0;
 static bx_bool x11_use_kbd_mapping = 0;
-static Bit32u convertStringToXKeysym (const char *string);
+static Bit32u convertStringToXKeysym(const char *string);
 
 static bx_bool x_init_done = 0;
 
@@ -302,7 +302,7 @@ static void create_internal_vga_font(void);
 unsigned long col_vals[MAX_VGA_COLORS]; // 256 VGA colors
 unsigned curr_foreground, curr_background;
 
-BxEvent *x11_notify_callback (void *unused, BxEvent *event);
+BxEvent *x11_notify_callback(void *unused, BxEvent *event);
 static bxevent_handler old_callback = NULL;
 static void *old_callback_arg = NULL;
 
@@ -312,8 +312,8 @@ static void *old_callback_arg = NULL;
 // up the color cells so that we don't add to the problem!)  This is used
 // to determine whether Bochs should use a private colormap even when the
 // user did not specify it.
-static bx_bool
-test_alloc_colors (Colormap cmap, Bit32u n_tries) {
+static bx_bool test_alloc_colors(Colormap cmap, Bit32u n_tries)
+{
   XColor color;
   unsigned long pixel[MAX_VGA_COLORS];
   bx_bool pixel_valid[MAX_VGA_COLORS];
@@ -333,15 +333,17 @@ test_alloc_colors (Colormap cmap, Bit32u n_tries) {
       n_allocated++;
     }
   }
-  BX_INFO (("test_alloc_colors: %d colors available out of %d colors tried", n_allocated, n_tries));
+  BX_INFO(("test_alloc_colors: %d colors available out of %d colors tried", n_allocated, n_tries));
   // now free them all
   for (i=0; i<n_tries; i++) {
-    if (pixel_valid[i]) XFreeColors (bx_x_display, cmap, &pixel[i], 1, 0);
+    if (pixel_valid[i]) XFreeColors(bx_x_display, cmap, &pixel[i], 1, 0);
   }
   return (n_allocated == n_tries);
 }
 
-bx_x_gui_c::bx_x_gui_c () {}
+bx_x_gui_c::bx_x_gui_c() {}
+
+// X11 implementation of the bx_gui_c methods (see nogui.cc for details)
 
 void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 {
@@ -453,8 +455,8 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
     // then switch to private colormap despite the user setting.  There
     // are too many cases when no colors are available and Bochs simply
     // draws everything in black on black.
-    if (!test_alloc_colors (default_cmap, 16)) {
-      BX_ERROR (("I can't even allocate 16 colors!  Switching to a private colormap"));
+    if (!test_alloc_colors(default_cmap, 16)) {
+      BX_ERROR(("I can't even allocate 16 colors!  Switching to a private colormap"));
       x11_private_colormap = 1;
     }
     col_vals[0]  = BlackPixel(bx_x_display, bx_x_screen_num);
@@ -499,7 +501,7 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   white_pixel = col_vals[15];
 
   BX_INFO(("font %u wide x %u high, display depth = %d",
-                (unsigned) font_width, (unsigned) font_height, default_depth));
+           (unsigned) font_width, (unsigned) font_height, default_depth));
 
   //select_visual();
 
@@ -663,9 +665,9 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   XFlush(bx_x_display);
 
   // redirect notify callback to X11 specific code
-  SIM->get_notify_callback (&old_callback, &old_callback_arg);
-  assert (old_callback != NULL);
-  SIM->set_notify_callback (x11_notify_callback, NULL);
+  SIM->get_notify_callback(&old_callback, &old_callback_arg);
+  assert(old_callback != NULL);
+  SIM->set_notify_callback(x11_notify_callback, NULL);
 
   // loads keymap for x11
   x11_use_kbd_mapping = SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get();
@@ -815,7 +817,7 @@ void bx_x_gui_c::handle_events(void)
       return;
     }
 
-    switch  (report.type) {
+    switch (report.type) {
 
     case Expose:
       expose_event = &report.xexpose;
@@ -1235,7 +1237,7 @@ void bx_x_gui_c::xkeypress(KeySym keysym, int press_release)
   }
   else {
     /* use mapping */
-    BXKeyEntry *entry = bx_keymap.findHostKey (keysym);
+    BXKeyEntry *entry = bx_keymap.findHostKey(keysym);
     if (!entry) {
       BX_ERROR(("xkeypress(): keysym %x unhandled!", (unsigned) keysym));
       return;
@@ -1502,24 +1504,24 @@ void bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 int bx_x_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 {
   int len;
-  Bit8u *tmp = (Bit8u *)XFetchBytes (bx_x_display, &len);
+  Bit8u *tmp = (Bit8u *)XFetchBytes(bx_x_display, &len);
   // according to man XFetchBytes, tmp must be freed by XFree().  So allocate
   // a new buffer with "new".  The keyboard code will free it with delete []
   // when the paste is done.
   Bit8u *buf = new Bit8u[len];
-  memcpy (buf, tmp, len);
+  memcpy(buf, tmp, len);
   *bytes = buf;
   *nbytes = len;
-  XFree (tmp);
+  XFree(tmp);
   return 1;
 }
 
 int bx_x_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 {
   // this writes data to the clipboard.
-  BX_INFO (("storing %d bytes to X windows clipboard", len));
+  BX_INFO(("storing %d bytes to X windows clipboard", len));
   XSetSelectionOwner(bx_x_display, XA_PRIMARY, None, CurrentTime);
-  XStoreBytes (bx_x_display, (char *)text_snapshot, len);
+  XStoreBytes(bx_x_display, (char *)text_snapshot, len);
   return 1;
 }
 
@@ -1889,7 +1891,7 @@ void bx_x_gui_c::exit(void)
   BX_INFO(("Exit"));
 }
 
-static void warp_cursor (int dx, int dy)
+static void warp_cursor(int dx, int dy)
 {
   if (mouse_captured && (warp_dx || warp_dy || dx || dy)) {
      warp_dx = dx;
@@ -1953,7 +1955,7 @@ static void enable_cursor()
  *
  * It returns a Bit32u constant or BX_KEYMAP_UNKNOWN if it fails
  */
-static Bit32u convertStringToXKeysym (const char *string)
+static Bit32u convertStringToXKeysym(const char *string)
 {
   if (strncmp ("XK_", string, 3) != 0)
     return BX_KEYMAP_UNKNOWN;
@@ -2063,7 +2065,7 @@ void bx_x_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
   }
   Window root = RootWindow(dpy, 0);
 
-  if (XRRQueryExtension (dpy, &event_base, &error_base)) {
+  if (XRRQueryExtension(dpy, &event_base, &error_base)) {
     XRRScreenSize *xrrs = XRRSizes(dpy, 0, &num_sizes);
     XRRScreenConfiguration *conf = XRRGetScreenInfo(dpy, root);
     SizeID original_size_id = XRRConfigCurrentConfiguration(conf, &original_rotation);

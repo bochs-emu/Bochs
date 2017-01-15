@@ -955,9 +955,7 @@ DWORD WINAPI DebugGuiThread(LPVOID)
 }
 #endif
 
-//////////////////////////////////////////////////////////////
-// fill in methods of bx_gui
-//////////////////////////////////////////////////////////////
+// wxWidgets implementation of the bx_gui_c methods (see nogui.cc for details)
 
 void bx_wx_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 {
@@ -1044,12 +1042,6 @@ void bx_wx_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   new_gfx_api = 1;
   dialog_caps = BX_GUI_DLG_USER | BX_GUI_DLG_SNAPSHOT | BX_GUI_DLG_SAVE_RESTORE;
 }
-
-// ::HANDLE_EVENTS()
-//
-// Called periodically (vga_update_interval in .bochsrc) so the
-// the gui code can poll for keyboard, mouse, and other
-// relevant events.
 
 void bx_wx_gui_c::handle_events(void)
 {
@@ -1199,19 +1191,9 @@ void bx_wx_gui_c::statusbar_setitem_specific(int element, bx_bool active, bx_boo
   wxMutexGuiLeave();
 }
 
-// ::FLUSH()
-//
-// Called periodically, requesting that the gui code flush all pending
-// screen update requests.
-
 void bx_wx_gui_c::flush(void)
 {
 }
-
-// ::CLEAR_SCREEN()
-//
-// Called to request that the VGA region is cleared.  Don't
-// clear the area that defines the headerbar.
 
 void bx_wx_gui_c::clear_screen(void)
 {
@@ -1280,25 +1262,6 @@ static void DrawBochsBitmap(int x, int y, int width, int height, char *bmap, cha
   UpdateScreen(newBits, x, y, width, height);
 }
 
-
-// ::TEXT_UPDATE()
-//
-// Called in a VGA text mode, to update the screen with
-// new content.
-//
-// old_text: array of character/attributes making up the contents
-//           of the screen from the last call.  See below
-// new_text: array of character/attributes making up the current
-//           contents, which should now be displayed.  See below
-//
-// format of old_text & new_text: each is tm_info->line_offset*text_rows
-//     bytes long. Each character consists of 2 bytes.  The first by is
-//     the character value, the second is the attribute byte.
-//
-// cursor_x: new x location of cursor
-// cursor_y: new y location of cursor
-// tm_info:  this structure contains information for additional
-//           features in text mode (cursor shape, line offset,...)
 
 void bx_wx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                               unsigned long cursor_x, unsigned long cursor_y,
@@ -1485,13 +1448,6 @@ void bx_wx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   thePanel->MyRefresh();
 }
 
-// ::PALETTE_CHANGE()
-//
-// Allocate a color in the native GUI, for this color, and put
-// it in the colormap location 'index'.
-// returns: 0=no screen update needed (color map change has direct effect)
-//          1=screen update needed (redraw using current colormap)
-
 bx_bool bx_wx_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green, Bit8u blue)
 {
   IFDBG_VGA(wxLogDebug (wxT ("palette_change")));
@@ -1501,21 +1457,6 @@ bx_bool bx_wx_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green, Bit8u b
   return(1);  // screen update needed
 }
 
-
-// ::GRAPHICS_TILE_UPDATE()
-//
-// Called to request that a tile of graphics be drawn to the
-// screen, since info in this region has changed.
-//
-// tile: array of 8bit values representing a block of pixels with
-//       dimension equal to the 'x_tilesize' & 'y_tilesize' members.
-//       Each value specifies an index into the
-//       array of colors you allocated for ::palette_change()
-// x0: x origin of tile
-// y0: y origin of tile
-//
-// note: origin of tile and of window based on (0,0) being in the upper
-//       left of the window.
 
 void bx_wx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 {
@@ -1570,18 +1511,6 @@ void bx_wx_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
   thePanel->MyRefresh();
 }
 
-// ::DIMENSION_UPDATE()
-//
-// Called from the simulator when the VGA mode changes it's X,Y dimensions.
-// Resize the window to this size, but you need to add on
-// the height of the headerbar to the Y value.
-//
-// x:       new VGA x size
-// y:       new VGA y size
-// fheight: new VGA character height in text mode
-// fwidth : new VGA character width in text mode
-// bpp : bits per pixel in graphics mode
-
 void bx_wx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth, unsigned bpp)
 {
   IFDBG_VGA(wxLogDebug (wxT ("MyPanel::dimension_update trying to get lock. wxScreen=%p", wxScreen)));
@@ -1632,17 +1561,6 @@ void bx_wx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, uns
 }
 
 
-// ::CREATE_BITMAP()
-//
-// Create a monochrome bitmap of size 'xdim' by 'ydim', which will
-// be drawn in the headerbar.  Return an integer ID to the bitmap,
-// with which the bitmap can be referenced later.
-//
-// bmap: packed 8 pixels-per-byte bitmap.  The pixel order is:
-//       bit0 is the left most pixel, bit7 is the right most pixel.
-// xdim: x dimension of bitmap
-// ydim: y dimension of bitmap
-
 unsigned bx_wx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsigned ydim)
 {
   UNUSED(bmap);
@@ -1652,20 +1570,6 @@ unsigned bx_wx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, un
 }
 
 
-// ::HEADERBAR_BITMAP()
-//
-// Called to install a bitmap in the bochs headerbar (toolbar).
-//
-// bmap_id: will correspond to an ID returned from
-//     ::create_bitmap().  'alignment' is either BX_GRAVITY_LEFT
-//     or BX_GRAVITY_RIGHT, meaning install the bitmap in the next
-//     available leftmost or rightmost space.
-// alignment: is either BX_GRAVITY_LEFT or BX_GRAVITY_RIGHT,
-//     meaning install the bitmap in the next
-//     available leftmost or rightmost space.
-// f: a 'C' function pointer to callback when the mouse is clicked in
-//     the boundaries of this bitmap.
-
 unsigned bx_wx_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void))
 {
   UNUSED(bmap_id);
@@ -1674,40 +1578,16 @@ unsigned bx_wx_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, voi
   return(0);
 }
 
-// ::SHOW_HEADERBAR()
-//
-// Show (redraw) the current headerbar, which is composed of
-// currently installed bitmaps.
-
 void bx_wx_gui_c::show_headerbar(void)
 {
 }
 
-// ::REPLACE_BITMAP()
-//
-// Replace the bitmap installed in the headerbar ID slot 'hbar_id',
-// with the one specified by 'bmap_id'.  'bmap_id' will have
-// been generated by ::create_bitmap().  The old and new bitmap
-// must be of the same size.  This allows the bitmap the user
-// sees to change, when some action occurs.  For example when
-// the user presses on the floppy icon, it then displays
-// the ejected status.
-//
-// hbar_id: headerbar slot ID
-// bmap_id: bitmap ID
-
-  void
-bx_wx_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
+void bx_wx_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 {
   UNUSED(hbar_id);
   UNUSED(bmap_id);
 }
 
-
-// ::EXIT()
-//
-// Called before bochs terminates, to allow for a graceful
-// exit from the native GUI mechanism.
 
 void bx_wx_gui_c::exit(void)
 {

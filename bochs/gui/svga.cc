@@ -86,6 +86,8 @@ bx_svga_gui_c::bx_svga_gui_c()
   put("SVGA");
 }
 
+// SVGA implementation of the bx_gui_c methods (see nogui.cc for details)
+
 void bx_svga_gui_c::specific_init(int argc, char **argv, unsigned header_bar_y)
 {
   put("VGAGUI");
@@ -530,10 +532,6 @@ void bx_svga_gui_c::mouse_enabled_changed_specific (bx_bool val)
 {
 }
 
-
-void headerbar_click(int x)
-{
-}
 
 void bx_svga_gui_c::exit(void)
 {

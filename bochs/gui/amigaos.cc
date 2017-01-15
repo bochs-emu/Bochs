@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2000-2013  The Bochs Project
+//  Copyright (C) 2000-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -202,7 +202,7 @@ bx_bool open_screen(void)
     h = GetCyberIDAttr(CYBRIDATTR_HEIGHT, id);
     w = GetCyberIDAttr(CYBRIDATTR_WIDTH, id);
     d = GetCyberIDAttr(CYBRIDATTR_DEPTH, id);
-    
+
     //sprintf(scrmode, "%d", id);
     //setenv("env:bochs/screenmode", scrmode, 1);
 
@@ -301,6 +301,8 @@ bx_bool open_screen(void)
   white = ObtainBestPen(window->WScreen->ViewPort.ColorMap, 0xffffffff, 0xffffffff, 0xffffffff, NULL);
   black = ObtainBestPen(window->WScreen->ViewPort.ColorMap, 0x00000000, 0x00000000, 0x00000000, NULL);
 }
+
+// AmigaOS implementation of the bx_gui_c methods (see nogui.cc for details)
 
 void bx_amigaos_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 {
