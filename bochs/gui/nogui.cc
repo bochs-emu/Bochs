@@ -318,7 +318,10 @@ void bx_nogui_gui_c::exit(void)
 
 // ::MOUSE_ENABLED_CHANGED_SPECIFIC()
 //
-// Called whenever the mouse capture mode should be changed.
+// Called whenever the mouse capture mode should be changed. It can change
+// because of a gui event such as clicking on the mouse bitmap / button of
+// the header / tool bar, toggle the mouse capture using the configured
+// method with keyboard or mouse, or from the configuration interface.
 
 void bx_nogui_gui_c::mouse_enabled_changed_specific(bx_bool val)
 {
