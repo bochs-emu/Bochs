@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2015  The Bochs Project
+//  Copyright (C) 2002-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -302,11 +302,11 @@ void bx_piix3_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
   switch (address) {
     case 0x00b2:
-#if BX_SUPPORT_PCI
-      DEV_acpi_generate_smi((Bit8u)value);
-#else
-      BX_ERROR(("write %08x: APM command register not supported without ACPI", value));
-#endif
+      if (PLUG_device_present(BX_PLUGIN_ACPI)) {
+        DEV_acpi_generate_smi((Bit8u)value);
+      } else {
+        BX_ERROR(("write 0x%02x: APM command register not supported without ACPI", value));
+      }
       BX_P2I_THIS s.apmc = value & 0xff;
       break;
     case 0x00b3:
