@@ -183,19 +183,23 @@ struct bxIAOpcodeTable {
   Bit8u opflags;
 };
 
+// where the source should be taken from
 enum {
-  BX_SRC_NONE = 0,
-  BX_SRC_EAX = 1,
-  BX_SRC_NNN = 2,
-  BX_SRC_RM = 3,
-  BX_SRC_EVEX_RM = 4,
-  BX_SRC_VVV = 5,
-  BX_SRC_VIB = 6,
-  BX_SRC_VSIB = 7    // gather/scatter vector index
+  BX_SRC_NONE = 0,          // no source, implicit source or immediate
+  BX_SRC_EAX = 1,           // the src is AL/AX/EAX/RAX or ST(0) for x87
+  BX_SRC_NNN = 2,           // the src should be taken from modrm.nnn
+  BX_SRC_RM = 3,            // the src is register or memory reference, register should be taken from modrm.rm
+  BX_SRC_EVEX_RM = 4,       // the src is register or EVEX memory reference, register should be taken from modrm.rm
+  BX_SRC_VVV = 5,           // the src should be taken from (e)vex.vvv
+  BX_SRC_VIB = 6,           // the src should be taken from immediate byte
+  BX_SRC_VSIB = 7           // the src is gather/scatter vector index
 };
 
+// for diassembly:
+// when the source is register, indicates the register type and size
+// when the source is memory reference, give hint about the memory access size
 enum {
-  BX_NO_REG = 0,
+  BX_NO_REGISTER = 0,
   BX_GPR8 = 0x1,
   BX_GPR8_32 = 0x2,  // 8-bit memory reference but 32-bit GPR
   BX_GPR16 = 0x3,
@@ -224,6 +228,7 @@ enum {
   BX_VMM_VEC256 = 8
 };
 
+// immediate forms
 enum {
   BX_IMMB = 0x10,
   BX_IMMW = 0x11,
@@ -234,13 +239,18 @@ enum {
   BX_IMM_BrOff16 = 0x16,
   BX_IMM_BrOff32 = 0x17,
   BX_IMM_BrOff64 = 0x18,
-  BX_RSIREF = 0x19,
-  BX_RDIREF = 0x1A,
-  BX_USECL = 0x1B,
-  BX_USEDX = 0x1C,
-  BX_DIRECT_PTR = 0x1D,
-  BX_DIRECT_MEMREF32 = 0x1E,
-  BX_DIRECT_MEMREF64 = 0x1F
+  BX_DIRECT_PTR = 0x19,
+  BX_DIRECT_MEMREF32 = 0x1A,
+  BX_DIRECT_MEMREF64 = 0x1B,
+};
+#define BX_IMM_LAST 0x1B
+
+// implicit sources
+enum {
+  BX_RSIREF = 0x1C,
+  BX_RDIREF = 0x1D,
+  BX_USECL = 0x1E,
+  BX_USEDX = 0x1F,
 };
 
 #define BX_FORM_SRC(type, src) (((type) << 3) | (src))

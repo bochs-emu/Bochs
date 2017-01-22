@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2013-2016 Stanislav Shwartsman
+//   Copyright (c) 2013-2017 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -167,6 +167,7 @@ char *resolve_memref(char *disbufptr, const bxInstruction_c *i, const char *regn
   return disbufptr;
 }
 
+// disasembly of memory reference
 char *resolve_memref(char *disbufptr, const bxInstruction_c *i, unsigned src_index)
 {
   // seg:[base + index*scale + disp]
@@ -180,6 +181,228 @@ char *resolve_memref(char *disbufptr, const bxInstruction_c *i, unsigned src_ind
   else {
     disbufptr = resolve_memref(disbufptr, i, intel_general_16bit_regname, src_index);
   }
+  return disbufptr;
+}
+
+// disasembly of register reference
+char *disasm_regref(char *disbufptr, const bxInstruction_c *i, unsigned src_num, unsigned src_type)
+{
+  unsigned srcreg = i->getSrcReg(src_num);
+
+  switch(src_type) {
+  case BX_GPR8:
+#if BX_SUPPORT_X86_64
+    if (i->extend8bitL())
+      disbufptr = dis_sprintf(disbufptr, "%s", intel_general_8bit_regname_rex[srcreg]);
+    else
+#endif
+      disbufptr = dis_sprintf(disbufptr, "%s", intel_general_8bit_regname[srcreg]);
+    break;
+
+  case BX_GPR16:
+    disbufptr = dis_sprintf(disbufptr, "%s", intel_general_16bit_regname[srcreg]);
+    break;
+
+  case BX_GPR32:
+  case BX_GPR8_32:      // 8-bit  memory ref but 32-bit GPR
+  case BX_GPR16_32:     // 16-bit memory ref but 32-bit GPR
+    disbufptr = dis_sprintf(disbufptr, "%s", intel_general_32bit_regname[srcreg]);
+    break;
+
+#if BX_SUPPORT_X86_64
+  case BX_GPR64:
+    disbufptr = dis_sprintf(disbufptr, "%s", intel_general_64bit_regname[srcreg]);
+    break;
+#endif
+
+  case BX_FPU_REG:
+    disbufptr = dis_sprintf(disbufptr, "st(%d)", srcreg & 0x7);
+    break;
+
+  case BX_MMX_REG:
+    disbufptr = dis_sprintf(disbufptr, "mm%d", srcreg & 0x7);
+    break;
+
+  case BX_VMM_REG:
+#if BX_SUPPORT_AVX
+    if (i->getVL() > BX_NO_VL) {
+      disbufptr = dis_sprintf(disbufptr, "%s%d", intel_vector_reg_name[i->getVL() - 1], srcreg);
+#if BX_SUPPORT_EVEX
+      if (src_num == 0 && i->opmask()) {
+        disbufptr = dis_sprintf(disbufptr, "{k%d}%s", i->opmask(),
+          i->isZeroMasking() ? "{z}" : "");
+      }
+#endif
+    }
+    else
+#endif
+    {
+      disbufptr = dis_sprintf(disbufptr, "xmm%d", srcreg);
+    }
+    break;
+
+#if BX_SUPPORT_EVEX
+  case BX_KMASK_REG:
+    disbufptr = dis_sprintf(disbufptr, "k%d", srcreg);
+    assert(srcreg < 8);
+    if (src_num == 0 && i->opmask()) {
+      disbufptr = dis_sprintf(disbufptr, "{k%d}%s", i->opmask(),
+        i->isZeroMasking() ? "{z}" : "");
+    }
+    break;
+#endif
+
+  case BX_SEGREG:
+    disbufptr = dis_sprintf(disbufptr, "%s", intel_segment_name[srcreg]);
+    break;
+
+  case BX_CREG:
+    disbufptr = dis_sprintf(disbufptr, "cr%d", srcreg);
+    break;
+
+  case BX_DREG:
+    disbufptr = dis_sprintf(disbufptr, "dr%d", srcreg);
+    break;
+
+  default:
+    if (src_type != BX_NO_REGISTER)
+      disbufptr = dis_sprintf(disbufptr, "(unknown source type %d)", src_type);
+    break;
+  }
+
+  return disbufptr;
+}
+
+char *disasm_immediate(char *disbufptr, const bxInstruction_c *i, unsigned src_type, bx_address cs_base, bx_address rip)
+{
+  switch(src_type) {
+  case BX_IMMB:
+    disbufptr = dis_sprintf(disbufptr, "0x%02x", i->Ib());
+    break;
+
+  case BX_IMMW:
+    disbufptr = dis_sprintf(disbufptr, "0x%04x", i->Iw());
+    break;
+
+  case BX_IMMD:
+    disbufptr = dis_sprintf(disbufptr, "0x%08x", i->Id());
+    break;
+
+#if BX_SUPPORT_X86_64
+  case BX_IMMD_SE:
+    disbufptr = dis_sprintf(disbufptr, "0x" FMT_ADDRX64, (Bit64u) (Bit32s) i->Id());
+    break;
+
+  case BX_IMMQ:
+    disbufptr = dis_sprintf(disbufptr, "0x" FMT_ADDRX64, i->Iq());
+    break;
+#endif
+
+  case BX_IMMB2:
+    disbufptr = dis_sprintf(disbufptr, "0x%02x", i->Ib2());
+    break;
+
+  case BX_IMM_BrOff16:
+    disbufptr = dis_sprintf(disbufptr, ".%+d", (Bit32s) (Bit16s) i->Iw());
+    if (cs_base != BX_JUMP_TARGET_NOT_REQ) {
+      Bit16u target = (rip + i->ilen() + (Bit16s) i->Iw()) & 0xffff;
+      disbufptr = dis_sprintf(disbufptr, " (0x%08x)", (Bit32u)(cs_base + target));
+    }
+    break;
+
+  case BX_IMM_BrOff32:
+    disbufptr = dis_sprintf(disbufptr, ".%+d", (Bit32s) i->Id());
+    if (cs_base != BX_JUMP_TARGET_NOT_REQ) {
+      Bit32u target = (Bit32u)(rip + i->ilen() + (Bit32s) i->Id());
+      disbufptr = dis_sprintf(disbufptr, " (0x%08x)", (Bit32u) (cs_base + target));
+    }
+    break;
+
+#if BX_SUPPORT_X86_64
+  case BX_IMM_BrOff64:
+    disbufptr = dis_sprintf(disbufptr, ".%+d", (Bit32s) i->Id());
+    if (cs_base != BX_JUMP_TARGET_NOT_REQ) {
+      Bit64u target = rip + i->ilen() + (Bit32s) i->Id();
+      disbufptr = dis_sprintf(disbufptr, " (0x" FMT_ADDRX ")", (Bit64u) (cs_base + target));
+    }
+    break;
+#endif
+
+  case BX_DIRECT_PTR:
+    if (i->os32L())
+      disbufptr = dis_sprintf(disbufptr, "0x%04x:%08x", i->Iw2(), i->Id());
+    else
+      disbufptr = dis_sprintf(disbufptr, "0x%04x:%04x", i->Iw2(), i->Iw());
+    break;
+
+  case BX_DIRECT_MEMREF32:
+    disbufptr = dis_sprintf(disbufptr, "%s:", intel_segment_name[i->seg()]);
+    if (! i->as32L())
+      disbufptr = dis_sprintf(disbufptr, "0x%04x", i->Id());
+    else
+      disbufptr = dis_sprintf(disbufptr, "0x%08x", i->Id());
+    break;
+
+#if BX_SUPPORT_X86_64
+  case BX_DIRECT_MEMREF64:
+    disbufptr = dis_sprintf(disbufptr, "%s:0x" FMT_ADDRX, intel_segment_name[i->seg()], i->Iq());
+    break;
+#endif
+
+  default:
+    disbufptr = dis_sprintf(disbufptr, "(unknown immediate form for disasm %d)", src_type);
+  }
+
+  return disbufptr;
+}
+
+char *disasm_implicit_src(char *disbufptr, const bxInstruction_c *i, unsigned src_type)
+{
+  switch(src_type) {
+  case BX_RSIREF:
+    disbufptr = dis_sprintf(disbufptr, "%s:", intel_segment_name[i->seg()]);
+#if BX_SUPPORT_X86_64
+    if (i->as64L()) {
+      disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_64bit_regname[BX_64BIT_REG_RSI]);
+    }
+    else
+#endif
+    {
+      if (i->as32L())
+        disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_32bit_regname[BX_32BIT_REG_ESI]);
+      else
+        disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_16bit_regname[BX_16BIT_REG_SI]);
+    }
+    break;
+
+  case BX_RDIREF:
+    disbufptr = dis_sprintf(disbufptr, "%s:", intel_segment_name[BX_SEG_REG_ES]);
+#if BX_SUPPORT_X86_64
+    if (i->as64L()) {
+      disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_64bit_regname[BX_64BIT_REG_RDI]);
+    }
+    else
+#endif
+    {
+      if (i->as32L())
+        disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_32bit_regname[BX_32BIT_REG_EDI]);
+      else
+        disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_16bit_regname[BX_16BIT_REG_DI]);
+    }
+    break;
+
+  case BX_USECL:
+    disbufptr = dis_sprintf(disbufptr, "cl");
+    break;
+
+  case BX_USEDX:
+    disbufptr = dis_sprintf(disbufptr, "dx");
+    break;
+
+  default:
+    disbufptr = dis_sprintf(disbufptr, "(unknown implicit source for disasm %d)", src_type);
+  }
+ 
   return disbufptr;
 }
 
@@ -256,176 +479,18 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
     }
     else {
       if (src_index == BX_SRC_EVEX_RM) src_type = BX_VMM_REG;
-      unsigned srcreg = i->getSrcReg(n);
+
       if (src_type < 0x10) {
-        switch(src_type) {
-        case BX_GPR8:
-#if BX_SUPPORT_X86_64
-          if (i->extend8bitL())
-            disbufptr = dis_sprintf(disbufptr, "%s", intel_general_8bit_regname_rex[srcreg]);
-          else
-#endif
-            disbufptr = dis_sprintf(disbufptr, "%s", intel_general_8bit_regname[srcreg]);
-          break;
-        case BX_GPR16:
-          disbufptr = dis_sprintf(disbufptr, "%s", intel_general_16bit_regname[srcreg]);
-          break;
-        case BX_GPR32:
-          disbufptr = dis_sprintf(disbufptr, "%s", intel_general_32bit_regname[srcreg]);
-          break;
-#if BX_SUPPORT_X86_64
-        case BX_GPR64:
-          disbufptr = dis_sprintf(disbufptr, "%s", intel_general_64bit_regname[srcreg]);
-          break;
-#endif
-        case BX_FPU_REG:
-          disbufptr = dis_sprintf(disbufptr, "st(%d)", srcreg & 0x7);
-          break;
-        case BX_MMX_REG:
-          disbufptr = dis_sprintf(disbufptr, "mm%d", srcreg & 0x7);
-          break;
-        case BX_VMM_REG:
-#if BX_SUPPORT_AVX
-          if (i->getVL() > BX_NO_VL) {
-            disbufptr = dis_sprintf(disbufptr, "%s%d", intel_vector_reg_name[i->getVL() - 1], srcreg);
-#if BX_SUPPORT_EVEX
-            if (n == 0 && i->opmask()) {
-              disbufptr = dis_sprintf(disbufptr, "{k%d}%s", i->opmask(),
-                  i->isZeroMasking() ? "{z}" : "");
-            }
-#endif
-          }
-          else
-#endif
-            disbufptr = dis_sprintf(disbufptr, "xmm%d", srcreg);
-          break;
-#if BX_SUPPORT_EVEX
-        case BX_KMASK_REG:
-          disbufptr = dis_sprintf(disbufptr, "k%d", srcreg);
-          assert(srcreg < 8);
-          if (n == 0 && i->opmask()) {
-            disbufptr = dis_sprintf(disbufptr, "{k%d}%s", i->opmask(),
-                  i->isZeroMasking() ? "{z}" : "");
-          }
-          break;
-#endif
-        case BX_SEGREG:
-          disbufptr = dis_sprintf(disbufptr, "%s", intel_segment_name[srcreg]);
-          break;
-        case BX_CREG:
-          disbufptr = dis_sprintf(disbufptr, "cr%d", srcreg);
-          break;
-        case BX_DREG:
-          disbufptr = dis_sprintf(disbufptr, "dr%d", srcreg);
-          break;
-        default:
-          if (src_type != BX_NO_REG)
-            disbufptr = dis_sprintf(disbufptr, "(unknown source type %d)", src_type);
-          break;
-        }
+        // this is register reference
+        disbufptr = disasm_regref(disbufptr, i, n, src_type);
       }
       else {
-        switch(src_type) {
-        case BX_IMMB:
-          disbufptr = dis_sprintf(disbufptr, "0x%02x", i->Ib());
-          break;
-        case BX_IMMW:
-          disbufptr = dis_sprintf(disbufptr, "0x%04x", i->Iw());
-          break;
-        case BX_IMMD:
-          disbufptr = dis_sprintf(disbufptr, "0x%08x", i->Id());
-          break;
-#if BX_SUPPORT_X86_64
-        case BX_IMMD_SE:
-          disbufptr = dis_sprintf(disbufptr, "0x" FMT_ADDRX64, (Bit64u) (Bit32s) i->Id());
-          break;
-        case BX_IMMQ:
-          disbufptr = dis_sprintf(disbufptr, "0x" FMT_ADDRX64, i->Iq());
-          break;
-#endif
-        case BX_IMMB2:
-          disbufptr = dis_sprintf(disbufptr, "0x%02x", i->Ib2());
-          break;
-        case BX_IMM_BrOff16:
-          disbufptr = dis_sprintf(disbufptr, ".%+d", (Bit32s) (Bit16s) i->Iw());
-          if (cs_base != BX_JUMP_TARGET_NOT_REQ) {
-            Bit16u target = (rip + i->ilen() + (Bit16s) i->Iw()) & 0xffff;
-            disbufptr = dis_sprintf(disbufptr, " (0x%08x)", (Bit32u)(cs_base + target));
-          }
-          break;
-        case BX_IMM_BrOff32:
-          disbufptr = dis_sprintf(disbufptr, ".%+d", (Bit32s) i->Id());
-          if (cs_base != BX_JUMP_TARGET_NOT_REQ) {
-            Bit32u target = (Bit32u)(rip + i->ilen() + (Bit32s) i->Id());
-            disbufptr = dis_sprintf(disbufptr, " (0x%08x)", (Bit32u) (cs_base + target));
-          }
-          break;
-#if BX_SUPPORT_X86_64
-        case BX_IMM_BrOff64:
-          disbufptr = dis_sprintf(disbufptr, ".%+d", (Bit32s) i->Id());
-          if (cs_base != BX_JUMP_TARGET_NOT_REQ) {
-            Bit64u target = rip + i->ilen() + (Bit32s) i->Id();
-            disbufptr = dis_sprintf(disbufptr, " (0x" FMT_ADDRX ")", (Bit64u) (cs_base + target));
-          }
-          break;
-#endif
-        case BX_RSIREF:
-          disbufptr = dis_sprintf(disbufptr, "%s:", intel_segment_name[i->seg()]);
-#if BX_SUPPORT_X86_64
-          if (i->as64L()) {
-            disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_64bit_regname[BX_64BIT_REG_RSI]);
-          }
-          else
-#endif
-          {
-            if (i->as32L())
-              disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_32bit_regname[BX_32BIT_REG_ESI]);
-            else
-              disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_16bit_regname[BX_16BIT_REG_SI]);
-          }
-          break;
-        case BX_RDIREF:
-          disbufptr = dis_sprintf(disbufptr, "%s:", intel_segment_name[BX_SEG_REG_ES]);
-#if BX_SUPPORT_X86_64
-          if (i->as64L()) {
-            disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_64bit_regname[BX_64BIT_REG_RDI]);
-          }
-          else
-#endif
-          {
-            if (i->as32L())
-              disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_32bit_regname[BX_32BIT_REG_EDI]);
-            else
-              disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_16bit_regname[BX_16BIT_REG_DI]);
-          }
-          break;
-        case BX_USECL:
-          disbufptr = dis_sprintf(disbufptr, "cl");
-          break;
-        case BX_USEDX:
-          disbufptr = dis_sprintf(disbufptr, "dx");
-          break;
-        case BX_DIRECT_PTR:
-          if (i->os32L())
-            disbufptr = dis_sprintf(disbufptr, "0x%04x:%08x", i->Iw2(), i->Id());
-          else
-            disbufptr = dis_sprintf(disbufptr, "0x%04x:%04x", i->Iw2(), i->Iw());
-          break;
-        case BX_DIRECT_MEMREF32:
-          disbufptr = dis_sprintf(disbufptr, "%s:", intel_segment_name[i->seg()]);
-          if (! i->as32L())
-            disbufptr = dis_sprintf(disbufptr, "0x%04x", i->Id());
-          else
-            disbufptr = dis_sprintf(disbufptr, "0x%08x", i->Id());
-          break;
-#if BX_SUPPORT_X86_64
-        case BX_DIRECT_MEMREF64:
-          disbufptr = dis_sprintf(disbufptr, "%s:0x" FMT_ADDRX, intel_segment_name[i->seg()], i->Iq());
-          break;
-#endif
-        default:
-          disbufptr = dis_sprintf(disbufptr, "(unknown source type %d)", src_type);
-          break;
+        if (src_type <= BX_IMM_LAST) {
+          // this is immediate value (including branch targets)
+          disbufptr = disasm_immediate(disbufptr, i, src_type, cs_base, rip);
+        }
+        else {
+          disbufptr = disasm_implicit_src(disbufptr, i, src_type);
         }
       }
     }
