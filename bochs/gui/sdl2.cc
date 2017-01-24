@@ -391,8 +391,7 @@ bx_sdl2_gui_c::bx_sdl2_gui_c()
 #endif
 #endif
   if (SDL_Init(flags) < 0) {
-    setonoff(LOGLEV_PANIC, ACT_FATAL);
-    panic("Unable to initialize SDL2 libraries");
+    BX_FATAL(("Unable to initialize SDL2 libraries"));
     return;
   }
   atexit(SDL_Quit);
@@ -432,8 +431,7 @@ void bx_sdl2_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
     SDL_WINDOW_SHOWN
     );
   if (window == NULL) {
-    LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
-    BX_PANIC(("Unable to create SDL2 window"));
+    BX_FATAL(("Unable to create SDL2 window"));
     return;
   }
 
@@ -969,8 +967,7 @@ void bx_sdl2_gui_c::handle_events(void)
         break;
 
       case SDL_QUIT:
-        LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
-        BX_PANIC(("User requested shutdown."));
+        BX_FATAL(("User requested shutdown."));
         break;
     }
   }
@@ -1115,8 +1112,7 @@ unsigned bx_sdl2_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, 
   if (!tmp->surface) {
     delete tmp;
     bx_gui->exit();
-    LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
-    BX_PANIC(("Unable to create requested bitmap"));
+    BX_FATAL(("Unable to create requested bitmap"));
   }
 
   tmp->src.w = xdim;

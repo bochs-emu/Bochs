@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2006-2015  Volker Ruppert
+//  Copyright (C) 2006-2017  Volker Ruppert
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -404,8 +404,7 @@ void bx_acpi_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
             switch (sus_typ) {
               case 0: // soft power off
                 bx_user_quit = 1;
-                LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
-                BX_PANIC(("ACPI control: soft power off"));
+                BX_FATAL(("ACPI control: soft power off"));
                 break;
               case 1:
                 BX_INFO(("ACPI control: suspend to ram"));

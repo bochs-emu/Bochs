@@ -461,8 +461,7 @@ bx_sdl_gui_c::bx_sdl_gui_c()
 #ifdef __MORPHOS__
   if (!(PowerSDLBase=OpenLibrary("powersdl.library",0)))
   {
-    setonoff(LOGLEVEL_PANIC, ACT_FATAL);
-    panic("Unable to open SDL libraries");
+    BX_FATAL(("Unable to open SDL libraries"));
     return;
   }
 #endif
@@ -474,8 +473,7 @@ bx_sdl_gui_c::bx_sdl_gui_c()
 #endif
 #endif
   if (SDL_Init(flags) < 0) {
-    setonoff(LOGLEV_PANIC, ACT_FATAL);
-    panic("Unable to initialize SDL libraries");
+    BX_FATAL(("Unable to initialize SDL libraries"));
     return;
   }
 #ifdef __MORPHOS__
@@ -1049,8 +1047,7 @@ void bx_sdl_gui_c::handle_events(void)
         break;
 
       case SDL_QUIT:
-        LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
-        BX_PANIC(("User requested shutdown."));
+        BX_FATAL(("User requested shutdown."));
     }
   }
 #if BX_SHOW_IPS
@@ -1155,8 +1152,7 @@ void bx_sdl_gui_c::dimension_update(unsigned x, unsigned y,
     sdl_screen = SDL_SetVideoMode(x, y+headerbar_height+statusbar_height, 32, SDL_SWSURFACE);
     if(!sdl_screen)
     {
-      LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
-      BX_PANIC(("Unable to set requested videomode: %ix%i: %s",x,y,SDL_GetError()));
+      BX_FATAL(("Unable to set requested videomode: %ix%i: %s",x,y,SDL_GetError()));
     }
     headerbar_fg = SDL_MapRGB(
         sdl_screen->format,
@@ -1175,8 +1171,7 @@ void bx_sdl_gui_c::dimension_update(unsigned x, unsigned y,
     sdl_fullscreen = SDL_SetVideoMode(x, y, 32, SDL_HWSURFACE|SDL_FULLSCREEN);
 #endif
     if(!sdl_fullscreen) {
-      LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
-      BX_PANIC(("Unable to set requested videomode: %ix%i: %s",x,y,SDL_GetError()));
+      BX_FATAL(("Unable to set requested videomode: %ix%i: %s",x,y,SDL_GetError()));
     }
   }
   res_x = x;
@@ -1224,8 +1219,7 @@ unsigned bx_sdl_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, u
   if (!tmp->surface) {
     delete tmp;
     bx_gui->exit();
-    LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
-    BX_PANIC(("Unable to create requested bitmap"));
+    BX_FATAL(("Unable to create requested bitmap"));
   }
 
   tmp->src.w = xdim;

@@ -92,8 +92,7 @@ void bx_svga_gui_c::specific_init(int argc, char **argv, unsigned header_bar_y)
 {
   put("VGAGUI");
   if (vga_init() != 0) {
-    LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
-    BX_PANIC(("Unable to initialize SVGAlib"));
+    BX_FATAL(("Unable to initialize SVGAlib"));
     return;
   }
 
@@ -487,8 +486,7 @@ void bx_svga_gui_c::dimension_update(
   vga_getpalvec(0, 256, save_vga_pal);
   if (vga_setmode(newmode) != 0)
   {
-      LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
-      BX_PANIC (("Unable to set requested videomode: %ix%i", x, y));
+      BX_FATAL(("Unable to set requested videomode: %ix%i", x, y));
   }
 
   gl_setcontextvga(newmode);

@@ -546,20 +546,18 @@ void terminateEmul(int reason)
   for (unsigned c=0; c<256; c++)
     if (vgafont[c]) DeleteObject(vgafont[c]);
 
-  LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
-
   switch (reason) {
   case EXIT_GUI_SHUTDOWN:
-    BX_PANIC(("Window closed, exiting!"));
+    BX_FATAL(("Window closed, exiting!"));
     break;
   case EXIT_GMH_FAILURE:
-    BX_PANIC(("GetModuleHandle failure!"));
+    BX_FATAL(("GetModuleHandle failure!"));
     break;
   case EXIT_FONT_BITMAP_ERROR:
-    BX_PANIC(("Font bitmap creation failure!"));
+    BX_FATAL(("Font bitmap creation failure!"));
     break;
   case EXIT_HEADER_BITMAP_ERROR:
-    BX_PANIC(("Header bitmap creation failure!"));
+    BX_FATAL(("Header bitmap creation failure!"));
     break;
   case EXIT_NORMAL:
     break;
