@@ -189,15 +189,16 @@ void bx_parallel_c::init(void)
 
       BX_PAR_THIS s[i].initmode = 0;
       // virtual_printer() opens output file on demand
-      BX_PAR_THIS s[i].outfparam = SIM->get_param_string("file", base);
-      BX_PAR_THIS s[i].outfparam->set_handler(parport_outfparam_handler);
+      BX_PAR_THIS s[i].file = SIM->get_param_string("file", base);
+      BX_PAR_THIS s[i].file->set_handler(parport_file_param_handler);
       // init runtime parameters
       if (misc_rt == NULL) {
         misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_MISC);
         menu = new bx_list_c(misc_rt, "parport", "Parallel Port Runtime Options");
         menu->set_options(menu->SHOW_PARENT | menu->USE_BOX_TITLE);
       }
-      menu->add(BX_PAR_THIS s[i].outfparam);
+      menu->add(BX_PAR_THIS s[i].file);
+      BX_PAR_THIS s[i].file_changed = 1;
       count++;
     }
   }
@@ -245,13 +246,14 @@ void bx_parallel_c::register_state(void)
 void bx_parallel_c::virtual_printer(Bit8u port)
 {
   if (BX_PAR_THIS s[port].STATUS.slct) {
-    if (BX_PAR_THIS s[port].output == NULL) {
-      if (!BX_PAR_THIS s[port].outfparam->isempty()) {
-        BX_PAR_THIS s[port].output = fopen(BX_PAR_THIS s[port].outfparam->getptr(), "wb");
+    if (BX_PAR_THIS s[port].file_changed) {
+      if (!BX_PAR_THIS s[port].file->isempty() && (BX_PAR_THIS s[port].output == NULL)) {
+        BX_PAR_THIS s[port].output = fopen(BX_PAR_THIS s[port].file->getptr(), "wb");
         if (!BX_PAR_THIS s[port].output)
           BX_ERROR(("Could not open '%s' to write parport%d output",
-                    BX_PAR_THIS s[port].outfparam->getptr(), port+1));
+                    BX_PAR_THIS s[port].file->getptr(), port+1));
       }
+      BX_PAR_THIS s[port].file_changed = 0;
     }
     if (BX_PAR_THIS s[port].output != NULL) {
       fputc(BX_PAR_THIS s[port].data, BX_PAR_THIS s[port].output);
@@ -446,9 +448,9 @@ void bx_parallel_c::write(Bit32u address, Bit32u value, unsigned io_len)
   }
 }
 
-const char* bx_parallel_c::parport_outfparam_handler(bx_param_string_c *param, int set,
-                                                     const char *oldval, const char *val,
-                                                     int maxlen)
+const char* bx_parallel_c::parport_file_param_handler(bx_param_string_c *param, int set,
+                                                      const char *oldval, const char *val,
+                                                      int maxlen)
 {
   if ((set) && (strcmp(val, oldval))) {
     int port = atoi((param->get_parent())->get_name()) - 1;
@@ -456,6 +458,7 @@ const char* bx_parallel_c::parport_outfparam_handler(bx_param_string_c *param, i
       fclose(BX_PAR_THIS s[port].output);
       BX_PAR_THIS s[port].output = NULL;
     }
+    BX_PAR_THIS s[port].file_changed = 1;
     // virtual_printer() re-opens the output file on demand
   }
   return val;

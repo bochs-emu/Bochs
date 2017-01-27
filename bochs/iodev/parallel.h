@@ -53,8 +53,9 @@ typedef struct {
     bx_bool input;
   } CONTROL;
   Bit8u IRQ;
-  bx_param_string_c *outfparam;
+  bx_param_string_c *file;
   FILE *output;
+  bx_bool file_changed;
   bx_bool initmode;
 } bx_par_t;
 
@@ -77,9 +78,9 @@ private:
   Bit32u read(Bit32u address, unsigned io_len);
   void   write(Bit32u address, Bit32u value, unsigned io_len);
 #endif
-  static const char* parport_outfparam_handler(bx_param_string_c *param, int set,
-                                               const char *oldval, const char *val,
-                                               int maxlen);
+  static const char* parport_file_param_handler(bx_param_string_c *param, int set,
+                                                const char *oldval, const char *val,
+                                                int maxlen);
 };
 
 #endif
