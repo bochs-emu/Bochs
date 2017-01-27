@@ -30,7 +30,7 @@ Changes after 2.6.8 release:
       emulation code. (patch by Ben Lunt).
   - Hard drive
     - Several fixes in some disk image modes.
-  - Parallel port
+  - Serial / Parallel ports
     - Added support for changing output file at runtime.
   - Sound
     - Added separate thread for the PCM data conversion.

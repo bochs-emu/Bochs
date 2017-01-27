@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -116,6 +116,7 @@ typedef struct {
   int tty_id;
   SOCKET socket_id;
   FILE *output;
+  bx_param_string_c *file;
 #ifdef BX_SER_WIN32
   HANDLE pipe;
 #endif
@@ -249,6 +250,9 @@ private:
   Bit32u read(Bit32u address, unsigned io_len);
   void   write(Bit32u address, Bit32u value, unsigned io_len);
 #endif
+  static const char* serial_file_param_handler(bx_param_string_c *param, int set,
+                                               const char *oldval, const char *val,
+                                               int maxlen);
 };
 
 #endif

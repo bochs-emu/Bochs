@@ -4362,10 +4362,10 @@ Examples:
 </para>
 <para>
   Other serial modes are 'null' (no input/output), 'file' (output to a file
-  specified as the 'dev' parameter), 'raw' (use the real serial port - under
-  construction for win32), 'mouse' (standard serial mouse - requires
-  <link linkend="bochsopt-mouse">mouse option</link> setting 'type=serial'
-  or 'type=serial_wheel').
+  specified as the 'dev' parameter and changeable at runtime), 'raw' (use the
+  real serial port - partly implemented on win32), 'mouse' (standard serial
+  mouse - requires <link linkend="bochsopt-mouse">mouse option</link> setting
+  'type=serial', 'type=serial_wheel' or 'type=serial_msys').
 </para>
 </section>
 
@@ -4382,7 +4382,7 @@ This defines a parallel (printer) port. When turned on and an output file is
 defined, the emulated printer port sends characters printed by the guest OS
 into the output file. On some platforms, a device filename can be used to
 send the data to the real parallel port (e.g. "/dev/lp0" on Linux, "lpt1" on
-win32 platforms).
+win32 platforms). The output file can be changed at runtime.
 </para>
 </section>
 

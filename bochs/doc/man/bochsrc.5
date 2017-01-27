@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "28 Dec 2016" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "27 Jan 2017" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -905,10 +905,20 @@ using the `tty' command, and use that as the `dev' parameter.  Then do
 and run bochs in the other window.  Serial I/O to com1 (port 0x3f8) will all
 go to the other window.
 
+In socket* and pipe* (win32 only) modes Bochs becomes either socket/named pipe
+client or server. In client mode it connects to an already running server (if
+connection fails Bochs treats com port as not connected). In server mode it
+opens socket/named pipe and waits until a client application connects to it
+before starting simulation. This mode is useful for remote debugging (e.g.
+with gdb's "target remote host:port" command or windbg's command line option
+-k com:pipe,port=\\.\pipe\pipename). Socket modes use simple TCP communication,
+pipe modes use duplex byte mode pipes.
+
 Other serial modes are 'null' (no input/output), 'file' (output to a file
-specified as the 'dev' parameter), 'raw' (use the real serial port - under
-construction for win32) and 'mouse' (standard serial mouse - requires
-mouse option setting 'type=serial' or 'type=serial_wheel')
+specified as the 'dev' parameter and changeable at runtime), 'raw' (use the
+real serial port - partly implemented on win32) and 'mouse' (standard serial
+mouse - requires mouse option setting 'type=serial', 'type=serial_wheel'
+or 'type=serial_msys')
 
 Examples:
   com1: enabled=1, mode=term, dev=/dev/ttyp7
@@ -920,7 +930,8 @@ Examples:
 This defines a parallel (printer) port. When turned on and an output file is
 defined the emulated printer port sends characters printed by the guest
 OS into the output file. On some platforms a device filename can be used to
-send the data to the real parallel port (e.g. "/dev/lp0" on Linux).
+send the data to the real parallel port (e.g. "/dev/lp0" on Linux). The
+output file can be changed at runtime.
 
 Examples:
   parport1: enabled=1, file=parport.out

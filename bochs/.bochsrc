@@ -838,9 +838,10 @@ debugger_log: -
 # -k com:pipe,port=\\.\pipe\pipename). Socket modes use simple TCP communication,
 #  pipe modes use duplex byte mode pipes.
 # Other serial modes are 'null' (no input/output), 'file' (output to a file
-# specified as the 'dev' parameter), 'raw' (use the real serial port - under
-# construction for win32), 'mouse' (standard serial mouse - requires
-# mouse option setting 'type=serial', 'type=serial_wheel' or 'type=serial_msys').
+# specified as the 'dev' parameter and changeable at runtime), 'raw' (use the
+# real serial port - partly implemented on win32), 'mouse' (standard serial
+# mouse - requires mouse option setting 'type=serial', 'type=serial_wheel' or
+# 'type=serial_msys').
 #
 # Examples:
 #   com1: enabled=1, mode=null
@@ -861,7 +862,7 @@ debugger_log: -
 # defined the emulated printer port sends characters printed by the guest OS
 # into the output file. On some platforms a device filename can be used to
 # send the data to the real parallel port (e.g. "/dev/lp0" on Linux, "lpt1" on
-# win32 platforms).
+# win32 platforms). The output file can be changed at runtime.
 #
 # Examples:
 #   parport1: enabled=1, file="parport.out"

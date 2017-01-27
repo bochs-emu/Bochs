@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2015  The Bochs Project
+//  Copyright (C) 2001-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -230,6 +230,8 @@ bx_serial_c::~bx_serial_c(void)
       }
     }
   }
+  bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_MISC);
+  misc_rt->remove("serial");
   SIM->get_bochs_root()->remove("serial");
   BX_DEBUG(("Exit"));
 }
@@ -240,7 +242,7 @@ bx_serial_c::init(void)
 {
   Bit16u ports[BX_SERIAL_MAXDEV] = {0x03f8, 0x02f8, 0x03e8, 0x02e8};
   char name[16], pname[20];
-  bx_list_c *base;
+  bx_list_c *base, *misc_rt = NULL, *menu = NULL;
   unsigned i, count = 0;
 
   BX_SER_THIS detect_mouse = 0;
@@ -371,16 +373,24 @@ bx_serial_c::init(void)
 
       BX_SER_THIS s[i].io_mode = BX_SER_MODE_NULL;
       Bit8u mode = SIM->get_param_enum("mode", base)->get();
-      bx_param_string_c *devparam = SIM->get_param_string("dev", base);
-      const char *dev = devparam->getptr();
+      BX_SER_THIS s[i].file = SIM->get_param_string("dev", base);
+      const char *dev = BX_SER_THIS s[i].file->getptr();
       if (mode == BX_SER_MODE_FILE) {
-        if (!devparam->isempty()) {
+        if (!BX_SER_THIS s[i].file->isempty()) {
           // tx_timer() opens the output file on demand
           BX_SER_THIS s[i].io_mode = BX_SER_MODE_FILE;
+          BX_SER_THIS s[i].file->set_handler(serial_file_param_handler);
+          // init runtime parameters
+          if (misc_rt == NULL) {
+            misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_MISC);
+            menu = new bx_list_c(misc_rt, "serial", "Serial Port Runtime Options");
+            menu->set_options(menu->SHOW_PARENT | menu->USE_BOX_TITLE);
+          }
+          menu->add(BX_SER_THIS s[i].file);
         }
       } else if (mode == BX_SER_MODE_TERM) {
 #if defined(SERIAL_ENABLE) && !defined(BX_SER_WIN32)
-        if (!devparam->isempty()) {
+        if (!BX_SER_THIS s[i].file->isempty()) {
           BX_SER_THIS s[i].tty_id = open(dev, O_RDWR|O_NONBLOCK,600);
           if (BX_SER_THIS s[i].tty_id < 0) {
             BX_PANIC(("open of com%d (%s) failed", i+1, dev));
@@ -1399,20 +1409,16 @@ void bx_serial_c::tx_timer(void)
 {
   bx_bool gen_int = 0;
   Bit8u port = (Bit8u)bx_pc_system.triggeredTimerParam();
-  char pname[20];
 
   switch (BX_SER_THIS s[port].io_mode) {
     case BX_SER_MODE_FILE:
       if (BX_SER_THIS s[port].output == NULL) {
-        sprintf(pname, "ports.serial.%d", port+1);
-        bx_list_c *base = (bx_list_c*) SIM->get_param(pname);
-        bx_param_string_c *devparam = SIM->get_param_string("dev", base);
-        if (!devparam->isempty()) {
-          BX_SER_THIS s[port].output = fopen(devparam->getptr(), "wb");
+        if (!BX_SER_THIS s[port].file->isempty()) {
+          BX_SER_THIS s[port].output = fopen(BX_SER_THIS s[port].file->getptr(), "wb");
         }
         if (BX_SER_THIS s[port].output == NULL) {
           BX_ERROR(("Could not open '%s' to write com%d output",
-                    devparam->getptr(), port+1));
+                    BX_SER_THIS s[port].file->getptr(), port+1));
           BX_SER_THIS s[port].io_mode = BX_SER_MODE_NULL;
         }
       }
@@ -1747,4 +1753,19 @@ void bx_serial_c::update_mouse_data()
     BX_SER_THIS mouse_internal_buffer.num_elements++;
   }
   BX_SER_THIS mouse_update = 0;
+}
+
+const char* bx_serial_c::serial_file_param_handler(bx_param_string_c *param, int set,
+                                                   const char *oldval, const char *val,
+                                                   int maxlen)
+{
+  if ((set) && (strcmp(val, oldval))) {
+    int port = atoi((param->get_parent())->get_name()) - 1;
+    if (BX_SER_THIS s[port].output != NULL) {
+      fclose(BX_SER_THIS s[port].output);
+      BX_SER_THIS s[port].output = NULL;
+    }
+    // tx_timer() re-opens the output file on demand
+  }
+  return val;
 }
