@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------
 Patch name: patch.example-user-plugin
 Author:     Volker Ruppert
-Updated:    8 Jan 2017
+Updated:    28 Jan 2017
 Status:     Demo
 
 Detailed description:
@@ -21,7 +21,7 @@ Detailed description:
 Patch was created with:
   diff -u
 Apply patch to what version:
-  svn revision 13026 (Jan 8, 2017)
+  svn revision 13051 (Jan 28, 2017)
 Instructions:
   To patch, go to main bochs directory.
   Type "patch -p0 < THIS_PATCH_FILE".
@@ -30,9 +30,9 @@ Instructions:
   make
   make install
 ----------------------------------------------------------------------
-diff ../bochs/user_plugins/Makefile.in ./user_plugins/Makefile.in
+diff -urN ../bochs/user_plugins/Makefile.in ./user_plugins/Makefile.in
 --- ../bochs/user_plugins/Makefile.in	1970-01-01 01:00:00.000000000 +0100
-+++ ./user_plugins/Makefile.in	2017-01-08 10:13:31.383971780 +0100
++++ ./user_plugins/Makefile.in	2017-01-28 21:20:39.386980650 +0100
 @@ -0,0 +1,112 @@
 +# Copyright (C) 2009-2017  Volker Ruppert
 +#
@@ -137,18 +137,18 @@ diff ../bochs/user_plugins/Makefile.in ./user_plugins/Makefile.in
 +# building plugins.
 +###########################################
 +testdev.o: testdev.@CPP_SUFFIX@ ../iodev/iodev.h ../bochs.h ../config.h ../osdep.h \
-+  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
-+  ../gui/siminterface.h ../memory/memory-bochs.h ../pc_system.h ../plugin.h \
-+  ../extplugin.h ../ltdl-bochs.h ../gui/gui.h ../gui/textconfig.h \
-+  ../gui/keymap.h ../instrument/stubs/instrument.h testdev.h
++ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
++ ../cpudb.h ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h \
++ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
++ ../param_names.h testdev.h
 +testdev.lo: testdev.@CPP_SUFFIX@ ../iodev/iodev.h ../bochs.h ../config.h ../osdep.h \
-+  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
-+  ../gui/siminterface.h ../memory/memory-bochs.h ../pc_system.h ../plugin.h \
-+  ../extplugin.h ../ltdl-bochs.h ../gui/gui.h ../gui/textconfig.h \
-+  ../gui/keymap.h ../instrument/stubs/instrument.h testdev.h
-diff ../bochs/user_plugins/testdev.cc ./user_plugins/testdev.cc
++ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
++ ../cpudb.h ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h \
++ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
++ ../param_names.h testdev.h
+diff -urN ../bochs/user_plugins/testdev.cc ./user_plugins/testdev.cc
 --- ../bochs/user_plugins/testdev.cc	1970-01-01 01:00:00.000000000 +0100
-+++ ./user_plugins/testdev.cc	2017-01-08 10:11:24.939116573 +0100
++++ ./user_plugins/testdev.cc	2017-01-28 21:15:30.176913002 +0100
 @@ -0,0 +1,123 @@
 +// Copyright (C) 2009-2017  Volker Ruppert
 +//
@@ -273,9 +273,9 @@ diff ../bochs/user_plugins/testdev.cc ./user_plugins/testdev.cc
 +
 +  BX_USER_THIS s.reg0 = value;
 +}
-diff ../bochs/user_plugins/testdev.h ./user_plugins/testdev.h
+diff -urN ../bochs/user_plugins/testdev.h ./user_plugins/testdev.h
 --- ../bochs/user_plugins/testdev.h	1970-01-01 01:00:00.000000000 +0100
-+++ ./user_plugins/testdev.h	2017-01-08 10:11:24.939116573 +0100
++++ ./user_plugins/testdev.h	2017-01-28 21:15:30.176913002 +0100
 @@ -0,0 +1,40 @@
 +// Copyright (C) 2009-2017  Volker Ruppert
 +//
