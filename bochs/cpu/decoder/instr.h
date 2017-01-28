@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2016 Stanislav Shwartsman
+//   Copyright (c) 2016-2017 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -80,7 +80,8 @@ public:
         Bit16u Iw[2];
         // use Ib[3] as AVX mask register
         // use Ib[2] as AVX attributes
-        //     7..4 (unused)
+        //     7..5 (unused)
+        //     4..4 VEX.W
         //     3..3 Broadcast/RC/SAE control (EVEX.b)
         //     2..2 Zeroing/Merging mask (EVEX.z)
         //     1..0 Round control
@@ -280,6 +281,15 @@ public:
   BX_CPP_INLINE void setVL(unsigned value) {
     modRMForm.Ib[1] = value;
   }
+
+#if BX_SUPPORT_AVX
+  BX_CPP_INLINE void setVexW(unsigned bit) {
+    modRMForm.Ib[2] = (modRMForm.Ib[2] & ~(1<<4)) | (bit<<4);
+  } 
+  BX_CPP_INLINE unsigned getVexW(void) const {
+    return modRMForm.Ib[2] & (1 << 4);
+  }
+#endif
 
 #if BX_SUPPORT_EVEX
   BX_CPP_INLINE void setOpmask(unsigned reg) {
