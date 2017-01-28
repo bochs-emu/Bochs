@@ -271,7 +271,7 @@ builtinActivateTimer(unsigned id, Bit32u usec, bx_bool continuous)
 void plugin_init_one(plugin_t *plugin)
 {
   /* initialize the plugin */
-  if (plugin->plugin_init (plugin, plugin->type, 0, NULL))
+  if (plugin->plugin_init(plugin, plugin->type))
   {
     pluginlog->info("Plugin initialization failed for %s", plugin->name);
     plugin_abort();
@@ -870,7 +870,7 @@ int bx_load_opt_plugin(const char *name)
   while (strcmp(builtin_opt_plugins[i].name, "NULL")) {
     if (!strcmp(name, builtin_opt_plugins[i].name)) {
       if (builtin_opt_plugins[i].status == 0) {
-        builtin_opt_plugins[i].plugin_init(NULL, PLUGTYPE_OPTIONAL, 0, NULL);
+        builtin_opt_plugins[i].plugin_init(NULL, PLUGTYPE_OPTIONAL);
         builtin_opt_plugins[i].status = 1;
       }
       return 1;

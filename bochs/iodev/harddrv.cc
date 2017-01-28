@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2016  The Bochs Project
+//  Copyright (C) 2001-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -109,7 +109,7 @@ BX_CPP_INLINE Bit32u read_32bit(const Bit8u* buf)
 bx_hard_drive_c *theHardDrive = NULL;
 logfunctions *atapilog = NULL;
 
-int CDECL libharddrv_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libharddrv_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
 {
   theHardDrive = new bx_hard_drive_c();
   bx_devices.pluginHardDrive = theHardDrive;

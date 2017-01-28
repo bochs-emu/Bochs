@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010-2016  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2011-2016  The Bochs Project
+//                2011-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -186,7 +186,7 @@ Bit32s usb_xhci_options_save(FILE *fp)
 
 // device plugin entry points
 
-int CDECL libusb_xhci_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libusb_xhci_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
 {
   theUSB_XHCI = new bx_usb_xhci_c();
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theUSB_XHCI, BX_PLUGIN_USB_XHCI);

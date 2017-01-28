@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2014  The Bochs Project
+//  Copyright (C) 2002-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -34,7 +34,7 @@
 
 bx_ioapic_c *theIOAPIC = NULL;
 
-int CDECL libioapic_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libioapic_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
 {
   theIOAPIC = new bx_ioapic_c();
   bx_devices.pluginIOAPIC = theIOAPIC;

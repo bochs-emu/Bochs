@@ -102,7 +102,7 @@ Bit32s parport_options_save(FILE *fp)
 
 // device plugin entry points
 
-int CDECL libparallel_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libparallel_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
 {
   theParallelDevice = new bx_parallel_c();
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theParallelDevice, BX_PLUGIN_PARALLEL);

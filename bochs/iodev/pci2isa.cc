@@ -38,7 +38,7 @@
 
 bx_piix3_c *thePci2IsaBridge = NULL;
 
-int CDECL libpci2isa_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libpci2isa_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
 {
   if (type == PLUGTYPE_CORE) {
     thePci2IsaBridge = new bx_piix3_c();

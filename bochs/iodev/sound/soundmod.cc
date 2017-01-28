@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2011-2015  The Bochs Project
+//  Copyright (C) 2011-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -46,7 +46,7 @@
 
 bx_soundmod_ctl_c* theSoundModCtl = NULL;
 
-int CDECL libsoundmod_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libsoundmod_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
 {
   if (type == PLUGTYPE_CORE) {
     theSoundModCtl = new bx_soundmod_ctl_c;

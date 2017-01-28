@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2003-2014  The Bochs Project
+//  Copyright (C) 2003-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -57,7 +57,7 @@ UINT STDCALL joyGetPos(UINT, LPJOYINFO);
 
 bx_gameport_c *theGameport = NULL;
 
-int CDECL libgameport_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libgameport_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
 {
   theGameport = new bx_gameport_c();
   bx_devices.pluginGameport = theGameport;

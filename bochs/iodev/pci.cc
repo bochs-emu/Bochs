@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2014  The Bochs Project
+//  Copyright (C) 2002-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -39,7 +39,7 @@ const char csname[2][20] = {"i430FX TSC", "i440FX PMC"};
 
 bx_pci_bridge_c *thePciBridge = NULL;
 
-int CDECL libpci_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libpci_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
 {
   if (type == PLUGTYPE_CORE) {
     thePciBridge = new bx_pci_bridge_c();

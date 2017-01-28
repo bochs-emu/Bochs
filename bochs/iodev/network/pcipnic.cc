@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Fen Systems Ltd. (http://www.fensystems.co.uk/)
-//  Copyright (C) 2003-2014  The Bochs Project
+//  Copyright (C) 2003-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -97,7 +97,7 @@ Bit32s pnic_options_save(FILE *fp)
 
 // device plugin entry points
 
-int CDECL libpcipnic_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libpcipnic_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
 {
   thePNICDevice = new bx_pcipnic_c();
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, thePNICDevice, BX_PLUGIN_PCIPNIC);

@@ -5,7 +5,7 @@
 // ES1370 soundcard support (ported from QEMU)
 //
 // Copyright (c) 2005  Vassili Karpov (malc)
-// Copyright (C) 2011-2015  The Bochs Project
+// Copyright (C) 2011-2017  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -186,7 +186,7 @@ Bit32s es1370_options_save(FILE *fp)
 
 // device plugin entry points
 
-int CDECL libes1370_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libes1370_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
 {
   theES1370Device = new bx_es1370_c();
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theES1370Device, BX_PLUGIN_ES1370);

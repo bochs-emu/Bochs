@@ -212,7 +212,7 @@ diff ../bochs/user_plugins/testdev.cc ./user_plugins/testdev.cc
 +
 +// device plugin entry points
 +
-+int libuser_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
++int libuser_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
 +{
 +  theTestDevice = new bx_testdev_c();
 +  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theTestDevice, "testdev");

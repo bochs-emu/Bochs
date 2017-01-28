@@ -66,7 +66,7 @@ const Bit8u acpi_sm_iomask[16] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 0, 2, 0, 0, 0
 
 extern void apic_bus_deliver_smi(void);
 
-int CDECL libacpi_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libacpi_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
 {
   theACPIController = new bx_acpi_ctrl_c();
   bx_devices.pluginACPIController = theACPIController;

@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003       David N. Welton <davidw@dedasys.com>.
-//  Copyright (C) 2003-2015  The Bochs Project
+//  Copyright (C) 2003-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -120,7 +120,7 @@ Bit32s speaker_options_save(FILE *fp)
 
 // device plugin entry points
 
-int CDECL libspeaker_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libspeaker_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
 {
   theSpeaker = new bx_speaker_c();
   bx_devices.pluginSpeaker = theSpeaker;

@@ -4,7 +4,7 @@
 //
 //  Experimental USB EHCI adapter (partly ported from Qemu)
 //
-//  Copyright (C) 2015-2016  The Bochs Project
+//  Copyright (C) 2015-2017  The Bochs Project
 //
 //  Copyright(c) 2008  Emutex Ltd. (address@hidden)
 //  Copyright(c) 2011-2012 Red Hat, Inc.
@@ -161,7 +161,7 @@ Bit32s usb_ehci_options_save(FILE *fp)
 
 // device plugin entry points
 
-int CDECL libusb_ehci_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libusb_ehci_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
 {
   theUSB_EHCI = new bx_usb_ehci_c();
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theUSB_EHCI, BX_PLUGIN_USB_EHCI);

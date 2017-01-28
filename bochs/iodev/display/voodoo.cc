@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2012-2014  The Bochs Project
+//  Copyright (C) 2012-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -130,7 +130,7 @@ Bit32s voodoo_options_save(FILE *fp)
 
 // device plugin entry points
 
-int CDECL libvoodoo_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libvoodoo_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
 {
   theVoodooDevice = new bx_voodoo_c();
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theVoodooDevice, BX_PLUGIN_VOODOO);

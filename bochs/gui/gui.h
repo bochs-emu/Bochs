@@ -528,7 +528,7 @@ virtual void graphics_tile_update_in_place(unsigned x, unsigned y,          \
 
 #define IMPLEMENT_GUI_PLUGIN_CODE(gui_name)                           \
   int CDECL lib##gui_name##_LTX_plugin_init(plugin_t *plugin,         \
-          plugintype_t type, int argc, char *argv[]) {                \
+          plugintype_t type) {                                        \
     genlog->info("installing %s module as the Bochs GUI", #gui_name); \
     theGui = new bx_##gui_name##_gui_c ();                            \
     bx_gui = theGui;                                                  \

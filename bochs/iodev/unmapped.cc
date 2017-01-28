@@ -31,7 +31,7 @@
 
 bx_unmapped_c *theUnmappedDevice = NULL;
 
-int CDECL libunmapped_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libunmapped_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
 {
   theUnmappedDevice = new bx_unmapped_c();
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theUnmappedDevice, BX_PLUGIN_UNMAPPED);

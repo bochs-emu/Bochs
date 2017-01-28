@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2015  The Bochs Project
+//  Copyright (C) 2002-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -100,7 +100,7 @@ Bit8u bin_to_bcd(Bit8u value, bx_bool is_binary)
     return ((value  / 10) << 4) | (value % 10);
 }
 
-int CDECL libcmos_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libcmos_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
 {
   if (type == PLUGTYPE_CORE) {
     theCmosDevice = new bx_cmos_c();

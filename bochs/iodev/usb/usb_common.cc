@@ -6,7 +6,7 @@
 //
 // Copyright (c) 2005       Fabrice Bellard
 // Copyright (C) 2009-2015  Benjamin D Lunt (fys at fysnet net)
-//               2009-2016  The Bochs Project
+//               2009-2017  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -47,7 +47,7 @@
 
 bx_usb_devctl_c* theUsbDevCtl = NULL;
 
-int CDECL libusb_common_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libusb_common_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
 {
   if (type == PLUGTYPE_CORE) {
     theUsbDevCtl = new bx_usb_devctl_c;

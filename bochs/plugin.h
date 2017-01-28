@@ -110,7 +110,7 @@ extern "C" {
 
 // When plugins are off, PLUG_load_plugin will call the plugin_init function
 // directly.
-#define PLUG_load_plugin(name,type) {lib##name##_LTX_plugin_init(NULL,type,0,NULL);}
+#define PLUG_load_plugin(name,type) {lib##name##_LTX_plugin_init(NULL,type);}
 #define PLUG_load_opt_plugin(name) bx_load_opt_plugin(name)
 #define PLUG_unload_plugin(name) {lib##name##_LTX_plugin_fini();}
 #define PLUG_unload_opt_plugin(name) bx_unload_opt_plugin(name,1);
@@ -358,16 +358,16 @@ int bx_unload_opt_plugin(const char *name, bx_bool devflag);
 // every plugin must define these, within the extern"C" block, so that
 // a non-mangled function symbol is available in the shared library.
 void plugin_fini(void);
-int plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[]);
+int plugin_init(plugin_t *plugin, plugintype_t type);
 
 // still in extern "C"
 #if BX_PLUGINS && defined(_MSC_VER)
 #define DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(mod) \
-  extern "C" __declspec(dllexport) int __cdecl lib##mod##_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[]); \
+  extern "C" __declspec(dllexport) int __cdecl lib##mod##_LTX_plugin_init(plugin_t *plugin, plugintype_t type); \
   extern "C" __declspec(dllexport) void __cdecl lib##mod##_LTX_plugin_fini(void);
 #else
 #define DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(mod) \
-  int CDECL lib##mod##_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[]); \
+  int CDECL lib##mod##_LTX_plugin_init(plugin_t *plugin, plugintype_t type); \
   void CDECL lib##mod##_LTX_plugin_fini(void);
 #endif
 

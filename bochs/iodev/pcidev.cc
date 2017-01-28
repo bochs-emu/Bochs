@@ -4,7 +4,8 @@
 
 /*
  *  PCIDEV: PCI host device mapping
- *  Copyright (C) 2003 - Frank Cornelis
+ *  Copyright (C) 2003       Frank Cornelis
+ *  Copyright (C) 2003-2017  The Bochs Project
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -114,7 +115,7 @@ Bit32s pcidev_options_save(FILE *fp)
 
 // device plugin entry points
 
-int CDECL libpcidev_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libpcidev_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
 {
   thePciDevAdapter = new bx_pcidev_c();
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, thePciDevAdapter, BX_PLUGIN_PCIDEV);

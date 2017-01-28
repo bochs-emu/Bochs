@@ -12,7 +12,7 @@
 //  Copyright (c) 2007 Dan Aloni
 //  Copyright (c) 2004 Antony T Curtis
 //
-//  Copyright (C) 2011-2015  The Bochs Project
+//  Copyright (C) 2011-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -343,7 +343,7 @@ Bit32s e1000_options_save(FILE *fp)
 
 // device plugin entry points
 
-int CDECL libe1000_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libe1000_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
 {
   theE1000Device = new bx_e1000_c();
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theE1000Device, BX_PLUGIN_E1000);

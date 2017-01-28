@@ -147,7 +147,7 @@ Bit32s serial_options_save(FILE *fp)
 
 // device plugin entry points
 
-int CDECL libserial_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libserial_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
 {
   theSerialDevice = new bx_serial_c();
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theSerialDevice, BX_PLUGIN_SERIAL);

@@ -5,7 +5,7 @@
 //  Copyright (c) 2004 Makoto Suzuki (suzu)
 //                     Volker Ruppert (vruppert)
 //                     Robin Kay (komadori)
-//  Copyright (C) 2004-2015  The Bochs Project
+//  Copyright (C) 2004-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -224,7 +224,7 @@
 
 static bx_svga_cirrus_c *theSvga = NULL;
 
-int CDECL libsvga_cirrus_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int CDECL libsvga_cirrus_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
 {
   if (type == PLUGTYPE_CORE) {
     theSvga = new bx_svga_cirrus_c();
