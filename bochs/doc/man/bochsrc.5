@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "27 Jan 2017" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "29 Jan 2017" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -1204,8 +1204,8 @@ available in the runtime configuration.
 
 The device 'printer' emulates the HP Deskjet 920C printer. The PCL data is
 sent to a file specified in bochsrc.txt. The current code appends the PCL
-code to the file if the file already existed. It would probably be nice to
-overwrite the file instead, asking user first.
+code to the file if the file already existed. The output file can be
+changed at runtime.
 
 The optionsX parameter can be used to assign specific options to the device
 connected to the corresponding USB port. Currently this feature is used to

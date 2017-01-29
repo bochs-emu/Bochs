@@ -4800,8 +4800,8 @@ available in the runtime configuration.
 <para>
 The device 'printer' emulates the HP Deskjet 920C printer. The PCL data is
 sent to a file specified in bochsrc.txt. The current code appends the PCL
-code to the file if the file already existed. It would probably be nice to
-overwrite the file instead, asking user first.
+code to the file if the file already existed. The output file can be changed
+at runtime.
 </para>
 <para>
 The options<replaceable>X</replaceable> parameter can be used to assign specific

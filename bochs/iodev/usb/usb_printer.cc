@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009-2016  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2009-2016  The Bochs Project
+//                2009-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -110,8 +110,14 @@ static const Bit8u bx_device_id_string[] =
   "VP:0800,FL,B0;"
   "VJ: ;";
 
+static int usb_printer_count = 0;
+
 usb_printer_device_c::usb_printer_device_c(usbdev_type type, const char *filename)
 {
+  char pname[10];
+  char label[32];
+  bx_param_string_c *fname;
+
   d.type = type;
   d.speed = d.minspeed = d.maxspeed = USB_SPEED_FULL;
   memset((void*)&s, 0, sizeof(s));
@@ -125,7 +131,20 @@ usb_printer_device_c::usb_printer_device_c(usbdev_type type, const char *filenam
   d.serial_num = "HU18L6P2DNBI";
   s.fname = filename;
   s.fp = NULL;
-
+  // config options
+  bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
+  sprintf(pname, "printer%d", ++usb_printer_count);
+  sprintf(label, "USB Printer #%d Configuration", usb_printer_count);
+  s.config = new bx_list_c(usb_rt, pname, label);
+  s.config->set_options(bx_list_c::SHOW_PARENT | bx_list_c::USE_BOX_TITLE);
+  s.config->set_device_param(this);
+  fname = new bx_param_filename_c(s.config, "file", "File", "", "", BX_PATHNAME_LEN);
+  fname->set(s.fname);
+  fname->set_handler(printfile_handler);
+  if (SIM->is_wx_selected()) {
+    bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
+    usb->add(s.config);
+  }
   put("usb_printer", "USBPRN");
 }
 
@@ -135,6 +154,12 @@ usb_printer_device_c::~usb_printer_device_c(void)
   if (s.fp != NULL) {
     fclose(s.fp);
   }
+  if (SIM->is_wx_selected()) {
+    bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
+    usb->remove(s.config->get_name());
+  }
+  bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
+  usb_rt->remove(s.config->get_name());
 }
 
 bx_bool usb_printer_device_c::init()
@@ -241,7 +266,9 @@ int usb_printer_device_c::handle_data(USBPacket *p)
       if (p->devep == 2) {
         BX_DEBUG(("Sent %i bytes to the 'usb printer': %s", p->len, s.fname));
         usb_dump_packet(p->data, p->len);
-        fwrite(p->data, 1, p->len, s.fp);
+        if (s.fp != NULL) {
+          fwrite(p->data, 1, p->len, s.fp);
+        }
         ret = p->len;
       } else {
         goto fail;
@@ -256,4 +283,33 @@ fail:
   return ret;
 }
 
+#undef LOG_THIS
+#define LOG_THIS printer->
+
+// USB printer runtime parameter handlers
+const char *usb_printer_device_c::printfile_handler(bx_param_string_c *param, int set,
+                                                    const char *oldval, const char *val,
+                                                    int maxlen)
+{
+  usb_printer_device_c *printer;
+
+  if (set) {
+    if (strlen(val) < 1) {
+      val = "none";
+    }
+    printer = (usb_printer_device_c*) param->get_parent()->get_device_param();
+    if (printer != NULL) {
+      if (printer->s.fp != NULL) {
+        fclose(printer->s.fp);
+      }
+      printer->s.fp = fopen(val, "w+b");
+      if (printer->s.fp == NULL) {
+        BX_ERROR(("Could not create/open %s", val));
+      }
+    } else {
+      BX_PANIC(("printfile_handler: printer not found"));
+    }
+  }
+  return val;
+}
 #endif // BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB

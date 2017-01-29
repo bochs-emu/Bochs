@@ -41,6 +41,7 @@ Changes after 2.6.8 release:
       seek and read/write latency emulation).
     - Implemented USB remote wakeup mechanism.
     - Fixed NAK response handling in all USB HCs.
+    - USB printer: added support for changing output file at runtime.
     - Added common USB device option "debug" to turn on BX_DEBUG reporting at
       connection time.
 
