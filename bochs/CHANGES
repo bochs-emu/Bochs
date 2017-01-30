@@ -29,6 +29,8 @@ Changes after 2.6.8 release:
     - Added standard bus mouse support in addition to the existing InPort
       emulation code. (patch by Ben Lunt).
   - Hard drive
+    - Implemented lock mechanism for hard disk images. An image that is opened
+      in r/w mode cannot be used multiple times (e.g. by another Bochs session).
     - Several fixes in some disk image modes.
   - Serial / Parallel ports
     - Added support for changing output file at runtime.

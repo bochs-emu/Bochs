@@ -1445,6 +1445,7 @@ ssize_t dll_image_t::write(const void* buf, size_t count)
 redolog_t::redolog_t()
 {
   fd = -1;
+  pathname = NULL;
   catalog = NULL;
   bitmap = NULL;
   extent_index = (Bit32u)0;
