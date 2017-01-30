@@ -6,7 +6,7 @@
 //
 // Copyright (c) 2005  Alex Beregszaszi
 // Copyright (c) 2009  Kevin Wolf <kwolf@suse.de>
-// Copyright (C) 2012-2013  The Bochs Project
+// Copyright (C) 2012-2017  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -138,20 +138,20 @@ int vpc_image_t::open(const char* _pathname, int flags)
   hd_size = sector_count * 512;
 
   if (sector_count >= 65535 * 16 * 255) {
-    ::close(fd);
+    bx_close_image(fd, pathname);
     return -EFBIG;
   }
 
   if (disk_type == VHD_DYNAMIC) {
     if (bx_read_image(fd, be64_to_cpu(footer->data_offset), buf, HEADER_SIZE) != HEADER_SIZE) {
-      ::close(fd);
+      bx_close_image(fd, pathname);
       return -1;
     }
 
     dyndisk_header = (vhd_dyndisk_header_t*)buf;
 
     if (strncmp((char*)dyndisk_header->magic, "cxsparse", 8)) {
-      ::close(fd);
+      bx_close_image(fd, pathname);
       return -1;
     }
 
@@ -163,7 +163,7 @@ int vpc_image_t::open(const char* _pathname, int flags)
 
     bat_offset = be64_to_cpu(dyndisk_header->table_offset);
     if (bx_read_image(fd, bat_offset, (void*)pagetable, max_table_entries * 4) != (max_table_entries * 4)) {
-      ::close(fd);
+      bx_close_image(fd, pathname);
       return -1;
     }
 
@@ -193,7 +193,7 @@ void vpc_image_t::close(void)
 {
   if (fd > -1) {
     delete [] pagetable;
-    ::close(fd);
+    bx_close_image(fd, pathname);
   }
 }
 

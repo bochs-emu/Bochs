@@ -178,12 +178,30 @@ int bx_write_image(int fd, Bit64s offset, void *buf, int count)
   return write(fd, buf, count);
 }
 
+int bx_close_image(int fd, const char *pathname)
+{
+#ifndef BXIMAGE
+  char lockfn[BX_PATHNAME_LEN];
+
+  sprintf(lockfn, "%s.lock", pathname);
+  if (access(lockfn, F_OK) == 0) {
+    unlink(lockfn);
+  }
+#endif
+  return ::close(fd);
+}
+
 #ifndef WIN32
 int hdimage_open_file(const char *pathname, int flags, Bit64u *fsize, time_t *mtime)
 #else
 int hdimage_open_file(const char *pathname, int flags, Bit64u *fsize, FILETIME *mtime)
 #endif
 {
+#ifndef BXIMAGE
+  char lockfn[BX_PATHNAME_LEN];
+  int lockfd;
+#endif
+
 #ifdef WIN32
   if (fsize != NULL) {
     HANDLE hFile = CreateFile(pathname, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, NULL);
@@ -202,6 +220,17 @@ int hdimage_open_file(const char *pathname, int flags, Bit64u *fsize, FILETIME *
     } else {
       return -1;
     }
+  }
+#endif
+
+#ifndef BXIMAGE
+  sprintf(lockfn, "%s.lock", pathname);
+  lockfd = ::open(lockfn, O_RDONLY);
+  if (lockfd >= 0) {
+    // Opening image must fail if lock file exists.
+    ::close(lockfd);
+    BX_ERROR(("image locked: '%s'", pathname));
+    return -1;
   }
 #endif
 
@@ -233,6 +262,19 @@ int hdimage_open_file(const char *pathname, int flags, Bit64u *fsize, FILETIME *
     }
     if (mtime != NULL) {
       *mtime = stat_buf.st_mtime;
+    }
+  }
+#endif
+#ifndef BXIMAGE
+  if ((flags & O_ACCMODE) != O_RDONLY) {
+    lockfd = ::open(lockfn, O_CREAT | O_RDWR
+#ifdef O_BINARY
+                | O_BINARY
+#endif
+                , S_IWUSR | S_IRUSR | S_IRGRP | S_IWGRP);
+    if (lockfd >= 0) {
+      // lock this image
+      ::close(lockfd);
     }
   }
 #endif
@@ -488,7 +530,7 @@ int flat_image_t::open(const char* _pathname, int flags)
 void flat_image_t::close()
 {
   if (fd > -1) {
-    ::close(fd);
+    bx_close_image(fd, pathname);
   }
 }
 
@@ -569,11 +611,11 @@ int concat_image_t::open(const char* _pathname0, int flags)
 {
   UNUSED(flags);
   pathname0 = _pathname0;
-  char *pathname = strdup(pathname0);
+  char *pathname1 = strdup(pathname0);
   BX_DEBUG(("concat_image_t::open"));
   Bit64s start_offset = 0;
   for (int i=0; i<BX_CONCAT_MAX_IMAGES; i++) {
-    fd_table[i] = hdimage_open_file(pathname, flags, &length_table[i], NULL);
+    fd_table[i] = hdimage_open_file(pathname1, flags, &length_table[i], NULL);
     if (fd_table[i] < 0) {
       // open failed.
       // if no FD was opened successfully, return -1 (fail).
@@ -583,7 +625,7 @@ int concat_image_t::open(const char* _pathname0, int flags)
       maxfd = i;
       break;
     }
-    BX_INFO(("concat_image: open image #%d: '%s', (" FMT_LL "u bytes)", i, pathname, length_table[i]));
+    BX_INFO(("concat_image: open image #%d: '%s', (" FMT_LL "u bytes)", i, pathname1, length_table[i]));
     struct stat stat_buf;
     int ret = fstat(fd_table[i], &stat_buf);
     if (ret) {
@@ -599,9 +641,9 @@ int concat_image_t::open(const char* _pathname0, int flags)
     }
     start_offset_table[i] = start_offset;
     start_offset += length_table[i];
-    increment_string(pathname);
+    increment_string(pathname1);
   }
-  free(pathname);
+  free(pathname1);
   // start up with first image selected
   total_offset = 0;
   index = 0;
@@ -616,11 +658,14 @@ int concat_image_t::open(const char* _pathname0, int flags)
 void concat_image_t::close()
 {
   BX_DEBUG(("concat_image_t.close"));
+  char *pathname1 = strdup(pathname0);
   for (int index = 0; index < maxfd; index++) {
     if (fd_table[index] > -1) {
-      ::close(fd_table[index]);
+      bx_close_image(fd_table[index], pathname1);
     }
+    increment_string(pathname1);
   }
+  free(pathname1);
 }
 
 Bit64s concat_image_t::lseek(Bit64s offset, int whence)
@@ -914,13 +959,8 @@ int sparse_image_t::open(const char* pathname0, int flags)
 void sparse_image_t::close()
 {
   BX_DEBUG(("concat_image_t.close"));
-  if (pathname != NULL)
-  {
-    free(pathname);
-  }
 #ifdef _POSIX_MAPPED_FILES
-  if (mmap_header != NULL)
-  {
+  if (mmap_header != NULL) {
     int ret = munmap(mmap_header, mmap_length);
     if (ret != 0)
       BX_INFO(("failed to un-memory map sparse disk file"));
@@ -928,14 +968,15 @@ void sparse_image_t::close()
   pagetable = NULL; // We didn't malloc it
 #endif
   if (fd > -1) {
-    ::close(fd);
+    bx_close_image(fd, pathname);
   }
-  if (pagetable != NULL)
-  {
+  if (pathname != NULL) {
+    free(pathname);
+  }
+  if (pagetable != NULL) {
     delete [] pagetable;
   }
-  if (parent_image != NULL)
-  {
+  if (parent_image != NULL) {
     delete parent_image;
   }
 }
@@ -1492,6 +1533,15 @@ int redolog_t::make_header(const char* type, Bit64u size)
 
 int redolog_t::create(const char* filename, const char* type, Bit64u size)
 {
+#ifndef BXIMAGE
+  char lockfn[BX_PATHNAME_LEN];
+
+  sprintf(lockfn, "%s.lock", filename);
+  if (access(lockfn, F_OK) == 0) {
+    return -1;
+  }
+#endif
+
   BX_INFO(("redolog : creating redolog %s", filename));
 
   int filedes = ::open(filename, O_RDWR | O_CREAT | O_TRUNC
@@ -1541,6 +1591,7 @@ int redolog_t::open(const char* filename, const char *type, int flags)
   FILETIME mtime;
 #endif
 
+  pathname = strdup(filename);
   fd = hdimage_open_file(filename, flags, &imgsize, &mtime);
   if (fd < 0) {
     BX_INFO(("redolog : could not open image %s", filename));
@@ -1624,7 +1675,10 @@ int redolog_t::open(const char* filename, const char *type, int flags)
 void redolog_t::close()
 {
   if (fd >= 0)
-    ::close(fd);
+    bx_close_image(fd, pathname);
+
+  if (pathname != NULL)
+    free(pathname);
 
   if (catalog != NULL)
     free(catalog);

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2005-2015  The Bochs Project
+//  Copyright (C) 2005-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -143,6 +143,7 @@ class redolog_t;
 
 int bx_read_image(int fd, Bit64s offset, void *buf, int count);
 int bx_write_image(int fd, Bit64s offset, void *buf, int count);
+int bx_close_image(int fd, const char *pathname);
 #ifndef WIN32
 int hdimage_open_file(const char *pathname, int flags, Bit64u *fsize, time_t *mtime);
 #else
@@ -452,6 +453,7 @@ class redolog_t
 
   private:
       void             print_header();
+      char            *pathname;
       int              fd;
       redolog_header_t header;     // Header is kept in x86 (little) endianness
       Bit32u          *catalog;

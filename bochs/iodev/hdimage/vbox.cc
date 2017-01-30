@@ -10,7 +10,7 @@
  * Contact: fys [at] fysnet [dot] net
  *
  * Copyright (C) 2015       Benjamin D Lunt.
- * Copyright (C) 2006-2016  The Bochs Project
+ * Copyright (C) 2006-2017  The Bochs Project
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -167,7 +167,7 @@ void vbox_image_t::close()
   delete [] mtlb; mtlb = 0;
   delete [] block_data; block_data = 0;
 
-  ::close(file_descriptor);
+  bx_close_image(file_descriptor, pathname);
   file_descriptor = -1;
 }
 
