@@ -40,7 +40,7 @@ Attached devices
   |
   +---- PS/2 Keyboard and Mouse                                 keyboard.cc, scancodes.cc
   |
-  +---- Bus Mouse (MS InPort)                                   busmouse.cc
+  +---- Bus Mouse (Standard / MS InPort)                        busmouse.cc
   |
   +---- Hard Drive + ATA controller                             harddrv.cc
   |        |
@@ -49,11 +49,12 @@ Attached devices
   |        |             +---- Core and basic modules           hdimage.cc
   |        |             |
   |        |             +---- Additional modules
-  |        |                          |
-  |        |                          +---- VMware version 3    vmware3.cc
-  |        |                          +---- VMware 4 (VMDK)     vmware4.cc
-  |        |                          +---- VirtualPC           vpc-img.cc
-  |        |                          +---- Virtual VFAT        vvfat.cc
+  |        |                         |
+  |        |                         +---- VirtualBox (VDI 1.1) vbox.cc
+  |        |                         +---- VMware version 3     vmware3.cc
+  |        |                         +---- VMware 4 (VMDK)      vmware4.cc
+  |        |                         +---- VirtualPC            vpc-img.cc
+  |        |                         +---- Virtual VFAT         vvfat.cc
   |        |
   |        +---- CD/DVD-ROM image / device access (*)           hdimage/cdrom.cc
   |                      |
@@ -115,6 +116,7 @@ Attached devices
            |
            +---- Host Controllers
            |             |
+           |             +---- USB EHCI adapter                 usb_ehci.cc
            |             +---- USB OHCI adapter                 usb_ohci.cc
            |             +---- USB UHCI adapter (PIIX3)         usb_uhci.cc
            |             +---- USB xHCI adapter                 usb_xhci.cc
@@ -123,6 +125,7 @@ Attached devices
                          | |
                          | +-- Control Module                   usb_common.cc
                          |
+                         +---- USB floppy emulation (*)         usb_cbi.cc
                          +---- USB HID emulation                usb_hid.cc
                          +---- USB external HUB                 usb_hub.cc
                          +---- USB mass storage device (*)      usb_msd.cc, scsi_device.cc
