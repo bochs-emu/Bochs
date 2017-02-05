@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2011-2015  The Bochs Project
+//  Copyright (C) 2011-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -24,6 +24,12 @@
 #include <pthread.h>
 #endif
 
+#if BX_HAVE_LIBSAMPLERATE
+#include <samplerate.h>
+#elif BX_HAVE_SOXR_LSR
+#include <soxr-lsr.h>
+#endif
+
 // This is the maximum size of a wave data packet.
 // It should be large enough for 0.1 seconds of playback or recording.
 #define BX_SOUNDLOW_WAVEPACKETSIZE  19200
@@ -42,39 +48,47 @@ typedef struct {
   Bit16u volume;
 } bx_pcm_param_t;
 
-const bx_pcm_param_t default_pcm_param = {44100, 16, 2, 1};
+const bx_pcm_param_t default_pcm_param = { 44100, 16, 2, 1, 0xffff };
 
 typedef Bit32u (*sound_record_handler_t)(void *arg, Bit32u len);
 typedef Bit32u (*get_wave_cb_t)(void *arg, Bit16u rate, Bit8u *buffer, Bit32u len);
 
 // audio buffer support
 
+#define BUFTYPE_FLOAT 0
+#define BUFTYPE_UCHAR 1
+
 typedef struct _audio_buffer_t
 {
   Bit32u size, pos;
-  Bit8u *data;
+  union {
+    Bit8u *data;
+    float *fdata;
+  };
   bx_pcm_param_t param;
   struct _audio_buffer_t *next;
 } audio_buffer_t;
 
 class bx_audio_buffer_c {
 public:
-  bx_audio_buffer_c(void);
+  bx_audio_buffer_c(Bit8u format);
   ~bx_audio_buffer_c();
 
   audio_buffer_t *new_buffer(Bit32u size);
   audio_buffer_t *get_buffer();
   void delete_buffer();
 private:
+  Bit8u format;
   audio_buffer_t *root;
 };
 
 extern bx_audio_buffer_c *audio_buffers[2];
+void convert_float_to_s16le(float *src, unsigned srcsize, Bit8u *dst);
 Bit32u pcm_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len);
 
-extern int conversion_control;
+extern int resampler_control;
 extern int mixer_control;
-extern BX_MUTEX(conversion_mutex);
+extern BX_MUTEX(resampler_mutex);
 #ifndef ANDROID
 extern BX_MUTEX(mixer_mutex);
 #endif
@@ -89,7 +103,6 @@ public:
   virtual int openwaveoutput(const char *wavedev);
   virtual int set_pcm_params(bx_pcm_param_t *param);
   virtual int sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param);
-  virtual int convert_pcm_data(void);
   virtual int get_packetsize();
   virtual int output(int length, Bit8u data[]);
   virtual int closewaveoutput();
@@ -97,14 +110,19 @@ public:
   virtual int register_wave_callback(void *, get_wave_cb_t wd_cb);
   virtual void unregister_wave_callback(int callback_id);
 
-  virtual bx_bool mixer_common(Bit8u *buffer, int len);
-protected:
-  void start_conversion_thread(void);
-  void start_mixer_thread(void);
-  void convert_common(Bit8u *src, int srcsize, Bit8u *dst, int dstsize, bx_pcm_param_t *param);
+  virtual void resampler(audio_buffer_t *inbuffer, audio_buffer_t *outbuffer);
 
-  bx_pcm_param_t emu_pcm_param, real_pcm_param;
-  int cvt_mult;
+  virtual bx_bool mixer_common(Bit8u *buffer, int len);
+
+protected:
+  void start_resampler_thread(void);
+  void start_mixer_thread(void);
+  Bit32u resampler_common(audio_buffer_t *inbuffer, float **fbuffer);
+
+  bx_pcm_param_t real_pcm_param;
+#if BX_HAVE_LIBSAMPLERATE || BX_HAVE_SOXR_LSR
+  SRC_STATE *src_state;
+#endif
 
   int cb_count;
   struct {

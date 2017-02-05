@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2012-2015  The Bochs Project
+//  Copyright (C) 2012-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -66,7 +66,7 @@ bx_soundlow_waveout_sdl_c::~bx_soundlow_waveout_sdl_c()
 int bx_soundlow_waveout_sdl_c::openwaveoutput(const char *wavedev)
 {
   set_pcm_params(&real_pcm_param);
-  start_conversion_thread();
+  start_resampler_thread();
   return BX_SOUNDLOW_OK;
 }
 
@@ -105,6 +105,10 @@ int bx_soundlow_waveout_sdl_c::set_pcm_params(bx_pcm_param_t *param)
     WaveOpen = 0;
     return BX_SOUNDLOW_ERR;
   } else {
+    if (fmt.freq != param->samplerate) {
+      param->samplerate = fmt.freq;
+      BX_INFO(("changed sample rate to %d", fmt.freq));
+    }
     WaveOpen = 1;
     mixer_control = 1;
   }
@@ -112,33 +116,22 @@ int bx_soundlow_waveout_sdl_c::set_pcm_params(bx_pcm_param_t *param)
   return BX_SOUNDLOW_OK;
 }
 
-int bx_soundlow_waveout_sdl_c::convert_pcm_data()
+void bx_soundlow_waveout_sdl_c::resampler(audio_buffer_t *inbuffer, audio_buffer_t *outbuffer)
 {
-  int len2;
+  Bit32u fcount;
+  float *fbuffer = NULL;
 
-  BX_LOCK(conversion_mutex);
-  audio_buffer_t *curbuffer = audio_buffers[0]->get_buffer();
-  if (memcmp(&curbuffer->param, &emu_pcm_param, sizeof(bx_pcm_param_t)) != 0) {
-    emu_pcm_param = curbuffer->param;
-    cvt_mult = (emu_pcm_param.bits == 8) ? 2 : 1;
-    if (emu_pcm_param.channels == 1) cvt_mult <<= 1;
-    if (emu_pcm_param.samplerate != real_pcm_param.samplerate) {
-      real_pcm_param.samplerate = emu_pcm_param.samplerate;
-      set_pcm_params(&real_pcm_param);
-    }
-  }
-  BX_UNLOCK(conversion_mutex);
-  len2 = curbuffer->size * cvt_mult;
+  UNUSED(outbuffer);
+  fcount = resampler_common(inbuffer, &fbuffer);
   SDL_LockAudio();
   if (WaveOpen) {
-    audio_buffer_t *newbuffer = audio_buffers[1]->new_buffer(len2);
-    convert_common(curbuffer->data, curbuffer->size, newbuffer->data, len2, &curbuffer->param);
+    audio_buffer_t *newbuffer = audio_buffers[1]->new_buffer(fcount << 1);
+    convert_float_to_s16le(fbuffer, fcount, newbuffer->data);
   }
   SDL_UnlockAudio();
-  BX_LOCK(conversion_mutex);
-  audio_buffers[0]->delete_buffer();
-  BX_UNLOCK(conversion_mutex);
-  return BX_SOUNDLOW_OK;
+  if (fbuffer != NULL) {
+    delete [] fbuffer;
+  }
 }
 
 bx_bool bx_soundlow_waveout_sdl_c::mixer_common(Bit8u *buffer, int len)

@@ -1974,7 +1974,6 @@ if test "$soundcard_present" = 1; then
       soundlow_drivers="sdl"
       soundlow_default="sdl"
       AC_DEFINE(BX_HAVE_SOUND_SDL, 1)
-      bx_have_alsa=0
       ;;
     *-linux* | *-freebsd*)
       SOUNDLOW_OBJS='soundlnx.o'
@@ -2041,6 +2040,25 @@ if test "$soundcard_present" = 1; then
       soundlow_default="sdl"
     fi
     AC_DEFINE(BX_HAVE_SOUND_SDL, 1)
+  fi
+  AC_CHECK_HEADER([samplerate.h], [bx_have_libsamplerate=1])
+  if test "$bx_have_libsamplerate" = 1; then
+    if test "$bx_plugins" = 1; then
+      SOUND_LINK_OPTS="$SOUND_LINK_OPTS -lsamplerate"
+    else
+      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lsamplerate"
+    fi
+    AC_DEFINE(BX_HAVE_LIBSAMPLERATE, 1)
+  else
+    AC_CHECK_HEADER([soxr-lsr.h], [bx_have_soxr_lsr=1])
+    if test "$bx_have_soxr_lsr" = 1; then
+      if test "$bx_plugins" = 1; then
+        SOUND_LINK_OPTS="$SOUND_LINK_OPTS -lsoxr-lsr"
+      else
+        DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lsoxr-lsr"
+      fi
+      AC_DEFINE(BX_HAVE_SOXR_LSR, 1)
+    fi
   fi
   if test "$bx_plugins" = 0; then
     SOUND_LIB_VAR='iodev/sound/libsound.a'

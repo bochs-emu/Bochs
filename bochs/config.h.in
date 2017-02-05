@@ -904,6 +904,9 @@ typedef
 //    file   Wave and midi output to file
 //    dummy  Dummy functions, no output
 #define BX_SOUND_LOWLEVEL_NAME "dummy"
+// resampling support
+#define BX_HAVE_LIBSAMPLERATE  0
+#define BX_HAVE_SOXR_LSR       0
 #endif
 
 #if (BX_SUPPORT_ES1370 && !BX_SUPPORT_PCI)

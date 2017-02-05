@@ -35,7 +35,8 @@ Changes after 2.6.8 release:
   - Serial / Parallel ports
     - Added support for changing output file at runtime.
   - Sound
-    - Added separate thread for the PCM data conversion.
+    - Added PCM output data resampling in a separate thread. The resampler
+      requires either libsamplerate or the SoX resampler library installed.
   - USB
     - Added USB EHCI device emulation support (EHCI core ported from Qemu).
     - Added USB floppy (UFI/CBI) support (patch by Ben Lunt).

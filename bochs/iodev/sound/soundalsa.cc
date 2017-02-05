@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2013-2015  The Bochs Project
+//  Copyright (C) 2013-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -33,11 +33,10 @@
 
 int alsa_pcm_open(bx_bool mode, alsa_pcm_t *alsa_pcm, bx_pcm_param_t *param, logfunctions *log)
 {
-  int ret;
   snd_pcm_format_t fmt;
   snd_pcm_hw_params_t *hwparams;
   unsigned int size, freq;
-  int dir, signeddata = param->format & 1;
+  int dir, ret, signeddata = param->format & 1;
 
   alsa_pcm->audio_bufsize = 0;
 
@@ -71,9 +70,22 @@ int alsa_pcm_open(bx_bool mode, alsa_pcm_t *alsa_pcm, bx_pcm_param_t *param, log
 
   if (param->channels == 2) size *= 2;
 
-  snd_pcm_hw_params_set_format(alsa_pcm->handle, hwparams, fmt);
-  snd_pcm_hw_params_set_channels(alsa_pcm->handle, hwparams, param->channels);
-  snd_pcm_hw_params_set_rate_near(alsa_pcm->handle, hwparams, &freq, &dir);
+  ret = snd_pcm_hw_params_set_format(alsa_pcm->handle, hwparams, fmt);
+  if (ret < 0)
+    return BX_SOUNDLOW_ERR;
+  ret = snd_pcm_hw_params_set_channels(alsa_pcm->handle, hwparams, param->channels);
+  if (ret < 0)
+    return BX_SOUNDLOW_ERR;
+#if BX_HAVE_LIBSAMPLERATE || BX_HAVE_SOXR_LSR
+  snd_pcm_hw_params_set_rate_resample(alsa_pcm->handle, hwparams, 0);
+#endif
+  ret =snd_pcm_hw_params_set_rate_near(alsa_pcm->handle, hwparams, &freq, &dir);
+  if (ret < 0)
+    return BX_SOUNDLOW_ERR;
+  if (freq != param->samplerate) {
+    param->samplerate = freq;
+    BX_INFO(("changed sample rate to %d", freq));
+  }
 
   alsa_pcm->frames = 32;
   snd_pcm_hw_params_set_period_size_near(alsa_pcm->handle, hwparams, &alsa_pcm->frames, &dir);
@@ -117,7 +129,7 @@ int bx_soundlow_waveout_alsa_c::openwaveoutput(const char *wavedev)
 {
   set_pcm_params(&real_pcm_param);
   pcm_callback_id = register_wave_callback(this, pcm_callback);
-  start_conversion_thread();
+  start_resampler_thread();
   start_mixer_thread();
   return BX_SOUNDLOW_OK;
 }

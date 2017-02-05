@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2015  The Bochs Project
+//  Copyright (C) 2001-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -97,8 +97,8 @@ int bx_soundlow_waveout_file_c::openwaveoutput(const char *wavedev)
       initwavfile();
     }
     set_pcm_params(&real_pcm_param);
-    if (conversion_control != 1) {
-      start_conversion_thread();
+    if (resampler_control != 1) {
+      start_resampler_thread();
     }
     if (mixer_control != 1) {
       pcm_callback_id = register_wave_callback(this, pcm_callback);

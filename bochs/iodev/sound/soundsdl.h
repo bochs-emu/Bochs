@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2012-2015  The Bochs Project
+//  Copyright (C) 2012-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -35,10 +35,13 @@ public:
 
   virtual int openwaveoutput(const char *wavedev);
   virtual int set_pcm_params(bx_pcm_param_t *param);
-  virtual int convert_pcm_data(void);
 
   virtual void unregister_wave_callback(int callback_id);
+
+  virtual void resampler(audio_buffer_t *inbuffer, audio_buffer_t *outbuffer);
+
   virtual bx_bool mixer_common(Bit8u *buffer, int len);
+
 private:
   bx_bool WaveOpen;
   SDL_AudioSpec fmt;

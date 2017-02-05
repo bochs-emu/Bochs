@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2015  The Bochs Project
+//  Copyright (C) 2001-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -62,7 +62,7 @@ int bx_soundlow_waveout_oss_c::openwaveoutput(const char *wavedev)
   }
   set_pcm_params(&real_pcm_param);
   pcm_callback_id = register_wave_callback(this, pcm_callback);
-  start_conversion_thread();
+  start_resampler_thread();
   start_mixer_thread();
   return BX_SOUNDLOW_OK;
 }

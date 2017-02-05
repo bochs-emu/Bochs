@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2011-2015  The Bochs Project
+//  Copyright (C) 2011-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -31,12 +31,15 @@
 
 #include "soundlow.h"
 
+#define LOG_THIS
+
 // audio buffer support
 
 bx_audio_buffer_c *audio_buffers[2];
 
-bx_audio_buffer_c::bx_audio_buffer_c()
+bx_audio_buffer_c::bx_audio_buffer_c(Bit8u _format)
 {
+  format = _format;
   root = NULL;
 }
 
@@ -50,7 +53,11 @@ bx_audio_buffer_c::~bx_audio_buffer_c()
 audio_buffer_t* bx_audio_buffer_c::new_buffer(Bit32u size)
 {
   audio_buffer_t *newbuffer = new audio_buffer_t;
-  newbuffer->data = new Bit8u[size];
+  if (format == BUFTYPE_FLOAT) {
+    newbuffer->fdata = new float[size];
+  } else {
+    newbuffer->data = new Bit8u[size];
+  }
   newbuffer->size = size;
   newbuffer->pos = 0;
   newbuffer->next = NULL;
@@ -78,9 +85,84 @@ void bx_audio_buffer_c::delete_buffer()
   audio_buffer_t *tmpbuffer = root;
   root = tmpbuffer->next;
   if (tmpbuffer->size > 0) {
-    delete [] tmpbuffer->data;
+    if (format == BUFTYPE_FLOAT) {
+      delete [] tmpbuffer->fdata;
+    } else {
+      delete [] tmpbuffer->data;
+    }
   }
   delete tmpbuffer;
+}
+
+// convert to float format for resampler
+
+static void convert_to_float(Bit8u *src, unsigned srcsize, audio_buffer_t *audiobuf)
+{
+  unsigned i, j;
+  bx_pcm_param_t *param = &audiobuf->param;
+  bx_bool issigned = (param->format & 1);
+  bx_bool setvol = (param->volume != BX_MAX_BIT16U);
+  Bit16s val16s;
+  Bit16u val16u;
+  float volume[2];
+
+  float *dst = audiobuf->fdata;
+  if (setvol) {
+    volume[0] = ((float)(param->volume & 0xff)) / 255.0F;
+    volume[1] = ((float)(param->volume >> 8)) / 255.0F;
+  }
+  if (param->bits == 8) {
+    if (issigned) {
+      for (i = 0; i < srcsize; i++) {
+        dst[i] = ((float)src[i]) / 128.0F;
+        if (setvol) {
+          dst[i] *= volume[i & 1];
+        }
+      }
+    } else {
+      for (i = 0; i < srcsize; i++) {
+        dst[i] = (((float)src[i]) - 128.0F) / 128.0F;
+        if (setvol) {
+          dst[i] *= volume[i & 1];
+        }
+      }
+    }
+  } else {
+    j = 0;
+    if (issigned) {
+      for (i = 0; i < srcsize; i += 2) {
+        val16s = (Bit16s)(src[i] | (src[i+1] << 8));
+        dst[j] = ((float)val16s) / 32768.0F;
+        if (setvol) {
+          dst[j] *= volume[i & 1];
+        }
+        j++;
+      }
+    } else {
+      for (i = 0; i < srcsize; i += 2) {
+        val16u = (Bit16u)(src[i] | (src[i+1] << 8));
+        dst[j] = (((float)val16u) - 32768.0F) / 32768.0F;
+        if (setvol) {
+          dst[j] *= volume[i & 1];
+        }
+        j++;
+      }
+    }
+  }
+}
+
+// convert from float format for output
+
+void convert_float_to_s16le(float *src, unsigned srcsize, Bit8u *dst)
+{
+  Bit16s val16s;
+  unsigned i, j = 0;
+
+  for (i = 0; i < srcsize; i++) {
+    val16s = (Bit16s)(src[i] * 32768.0F);
+    dst[j++] =(Bit8u)(val16s & 0xff);
+    dst[j++] = (Bit8u)(val16s >> 8);
+  }
 }
 
 // audio buffer callback function
@@ -112,29 +194,31 @@ Bit32u pcm_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len)
   return copied;
 }
 
-// mixer thread support
+// resampler & mixer thread support
 
-int conversion_control = 0;
+int resampler_control = 0;
 int mixer_control = 0;
-BX_MUTEX(conversion_mutex);
+BX_MUTEX(resampler_mutex);
 BX_MUTEX(mixer_mutex);
 
-BX_THREAD_FUNC(conversion_thread, indata)
+BX_THREAD_FUNC(resampler_thread, indata)
 {
   bx_soundlow_waveout_c *waveout = (bx_soundlow_waveout_c*)indata;
-  conversion_control = 1;
-  while (conversion_control > 0) {
-    BX_LOCK(conversion_mutex);
+  resampler_control = 1;
+  while (resampler_control > 0) {
+    BX_LOCK(resampler_mutex);
     audio_buffer_t *curbuffer = audio_buffers[0]->get_buffer();
-    BX_UNLOCK(conversion_mutex);
+    BX_UNLOCK(resampler_mutex);
     if (curbuffer != NULL) {
-      waveout->convert_pcm_data();
-      BX_MSLEEP(5);
+      waveout->resampler(curbuffer, NULL);
+      BX_LOCK(resampler_mutex);
+      audio_buffers[0]->delete_buffer();
+      BX_UNLOCK(resampler_mutex);
     } else {
       BX_MSLEEP(20);
     }
   }
-  conversion_control = -1;
+  resampler_control = -1;
   BX_THREAD_EXIT;
 }
 
@@ -164,28 +248,35 @@ BX_THREAD_FUNC(mixer_thread, indata)
 
 bx_soundlow_waveout_c::bx_soundlow_waveout_c()
 {
+  int ret = 0;
+
   put("waveout", "WAVOUT");
   if (audio_buffers[0] == NULL) {
-    audio_buffers[0] = new bx_audio_buffer_c();
-    audio_buffers[1] = new bx_audio_buffer_c();
+    audio_buffers[0] = new bx_audio_buffer_c(BUFTYPE_FLOAT);
+    audio_buffers[1] = new bx_audio_buffer_c(BUFTYPE_UCHAR);
   }
   real_pcm_param = default_pcm_param;
-  emu_pcm_param = default_pcm_param;
   cb_count = 0;
   pcm_callback_id = -1;
+#if BX_HAVE_LIBSAMPLERATE || BX_HAVE_SOXR_LSR
+  src_state = src_new(SRC_SINC_MEDIUM_QUALITY, 2, &ret);
+#endif
 }
 
 bx_soundlow_waveout_c::~bx_soundlow_waveout_c()
 {
+#if BX_HAVE_LIBSAMPLERATE || BX_HAVE_SOXR_LSR
+  src_delete(src_state);
+#endif
   if (pcm_callback_id >= 0) {
     unregister_wave_callback(pcm_callback_id);
   }
-  if (conversion_control > 0) {
-    conversion_control = 0;
-    while (conversion_control >= 0) {
+  if (resampler_control > 0) {
+    resampler_control = 0;
+    while (resampler_control >= 0) {
       BX_MSLEEP(1);
     }
-    BX_FINI_MUTEX(conversion_mutex);
+    BX_FINI_MUTEX(resampler_mutex);
   }
   if (mixer_control > 0) {
     mixer_control = 0;
@@ -215,59 +306,29 @@ int bx_soundlow_waveout_c::set_pcm_params(bx_pcm_param_t *param)
 
 int bx_soundlow_waveout_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param)
 {
-  int len2;
+  unsigned len1 = length;
+  audio_buffer_t *inbuffer, *outbuffer;
 
+  if (src_param->bits == 16) len1 >>= 1;
   if (pcm_callback_id >= 0) {
-    BX_LOCK(conversion_mutex);
-    audio_buffer_t *newbuffer = audio_buffers[0]->new_buffer(length);
-    memcpy(newbuffer->data, data, length);
-    newbuffer->param = *src_param;
-    BX_UNLOCK(conversion_mutex);
+    BX_LOCK(resampler_mutex);
+    inbuffer = audio_buffers[0]->new_buffer(len1);
+    memcpy(&inbuffer->param, src_param, sizeof(bx_pcm_param_t));
+    convert_to_float(data, length, inbuffer);
+    BX_UNLOCK(resampler_mutex);
   } else {
-    if (memcmp(src_param, &emu_pcm_param, sizeof(bx_pcm_param_t)) != 0) {
-      emu_pcm_param = *src_param;
-      cvt_mult = (src_param->bits == 8) ? 2 : 1;
-      if (src_param->channels == 1) cvt_mult <<= 1;
-      if (src_param->samplerate != real_pcm_param.samplerate) {
-        real_pcm_param.samplerate = src_param->samplerate;
-        set_pcm_params(&real_pcm_param);
-      }
-    }
-    len2 = length * cvt_mult;
-    Bit8u *tmpbuffer = new Bit8u[len2];
-    convert_common(data, length, tmpbuffer, len2, src_param);
-    output(len2, tmpbuffer);
-    delete [] tmpbuffer;
+    inbuffer = new audio_buffer_t;
+    inbuffer->fdata = new float[len1];
+    inbuffer->size = len1;
+    memcpy(&inbuffer->param, src_param, sizeof(bx_pcm_param_t));
+    outbuffer = new audio_buffer_t;
+    memset(outbuffer, 0, sizeof(audio_buffer_t));
+    convert_to_float(data, length, inbuffer);
+    resampler(inbuffer, outbuffer);
+    output(outbuffer->size, outbuffer->data);
+    delete [] outbuffer;
+    delete [] inbuffer;
   }
-  return BX_SOUNDLOW_OK;
-}
-
-int bx_soundlow_waveout_c::convert_pcm_data()
-{
-  int len2;
-
-  BX_LOCK(conversion_mutex);
-  audio_buffer_t *curbuffer = audio_buffers[0]->get_buffer();
-  if (memcmp(&curbuffer->param, &emu_pcm_param, sizeof(bx_pcm_param_t)) != 0) {
-    emu_pcm_param = curbuffer->param;
-    cvt_mult = (emu_pcm_param.bits == 8) ? 2 : 1;
-    if (emu_pcm_param.channels == 1) cvt_mult <<= 1;
-    if (emu_pcm_param.samplerate != real_pcm_param.samplerate) {
-      real_pcm_param.samplerate = emu_pcm_param.samplerate;
-      set_pcm_params(&real_pcm_param);
-    }
-  }
-  BX_UNLOCK(conversion_mutex);
-  len2 = curbuffer->size * cvt_mult;
-  if (pcm_callback_id >= 0) {
-    BX_LOCK(mixer_mutex);
-    audio_buffer_t *newbuffer = audio_buffers[1]->new_buffer(len2);
-    convert_common(curbuffer->data, curbuffer->size, newbuffer->data, len2, &curbuffer->param);
-    BX_UNLOCK(mixer_mutex);
-  }
-  BX_LOCK(conversion_mutex);
-  audio_buffers[0]->delete_buffer();
-  BX_UNLOCK(conversion_mutex);
   return BX_SOUNDLOW_OK;
 }
 
@@ -349,68 +410,91 @@ bx_bool bx_soundlow_waveout_c::mixer_common(Bit8u *buffer, int len)
   return (len3 > 0);
 }
 
-void bx_soundlow_waveout_c::convert_common(Bit8u *src, int srcsize, Bit8u *dst, int dstsize, bx_pcm_param_t *param)
+void bx_soundlow_waveout_c::resampler(audio_buffer_t *inbuffer, audio_buffer_t *outbuffer)
 {
-  int i, j;
-  Bit8u xor_val;
-  Bit16s value16s;
-  Bit8u volumes[2], channel = 0;
+  Bit32u fcount;
+  float *fbuffer = NULL;
 
-  xor_val = (param->format & 1) ? 0x00 : 0x80;
-  if (param->bits == 16) {
-    if ((param->format & 1) && (param->channels == 2)) {
-      memcpy(dst, src, dstsize);
-    } else if (param->channels == 2) {
-      j = 0;
-      for (i = 0; i < srcsize; i+=2) {
-        dst[j++] = src[i];
-        dst[j++] = src[i+1] ^ xor_val;
-      }
-    } else {
-      j = 0;
-      for (i = 0; i < srcsize; i+=2) {
-        dst[j++] = src[i];
-        dst[j++] = src[i+1] ^ xor_val;
-        dst[j++] = src[i];
-        dst[j++] = src[i+1] ^ xor_val;
-      }
-    }
+  fcount = resampler_common(inbuffer, &fbuffer);
+  if (outbuffer == NULL) {
+    BX_LOCK(mixer_mutex);
+    audio_buffer_t *newbuffer = audio_buffers[1]->new_buffer(fcount << 1);
+    convert_float_to_s16le(fbuffer, fcount, newbuffer->data);
+    BX_UNLOCK(mixer_mutex);
   } else {
-    if (param->channels == 2) {
-      j = 0;
-      for (i = 0; i < srcsize; i++) {
-        dst[j++] = 0;
-        dst[j++] = src[i] ^ xor_val;
-      }
-    } else {
-      j = 0;
-      for (i = 0; i < srcsize; i++) {
-        dst[j++] = 0;
-        dst[j++] = src[i] ^ xor_val;
-        dst[j++] = 0;
-        dst[j++] = src[i] ^ xor_val;
-      }
-    }
+    outbuffer->data = new Bit8u[fcount << 1];
+    outbuffer->size = (fcount << 1);
+    convert_float_to_s16le(fbuffer, fcount, outbuffer->data);
   }
-  if (param->volume != 0xffff) {
-    volumes[0] = (Bit8u)(param->volume & 0xff);
-    volumes[1] = (Bit8u)(param->volume >> 8);
-    for (i = 0; i < dstsize; i+=2) {
-      value16s = (Bit16s)(dst[i] | (dst[i+1] << 8));
-      value16s = (Bit16s)((Bit32s)value16s * volumes[channel] / 255);
-      dst[i] = (Bit8u)(value16s & 0xff);
-      dst[i+1] = (Bit8u)(value16s >> 8);
-      channel ^= 1;
-    }
+  if (fbuffer != NULL) {
+    delete [] fbuffer;
   }
 }
 
-void bx_soundlow_waveout_c::start_conversion_thread()
+Bit32u bx_soundlow_waveout_c::resampler_common(audio_buffer_t *inbuffer, float **fbuffer)
+{
+  unsigned i, j, fcount = 0;
+  bx_pcm_param_t param = inbuffer->param;
+
+  if (param.channels != real_pcm_param.channels) {
+    if (param.channels == 1) {
+      float *temp = new float[inbuffer->size * 2];
+      j = 0;
+      for (i = 0; i < inbuffer->size; i++) {
+        temp[j++] = inbuffer->fdata[i];
+        temp[j++] = inbuffer->fdata[i];
+      }
+      delete [] inbuffer->fdata;
+      inbuffer->fdata = temp;
+      inbuffer->size <<= 1;
+    } else {
+      BX_ERROR(("conversion from stereo to mono not implemented"));
+    }
+  }
+#if BX_HAVE_LIBSAMPLERATE || BX_HAVE_SOXR_LSR
+  if (param.samplerate != real_pcm_param.samplerate) {
+    SRC_DATA data;
+    double irate = (double)param.samplerate;
+    double orate = (double)real_pcm_param.samplerate;
+    size_t ilen = inbuffer->size / 2;
+    size_t olen = (size_t)(ilen * orate / irate + 0.5);
+    *fbuffer  = new float[olen * 2];
+    fcount = olen * 2;
+    int ret = 0;
+
+    data.data_in = inbuffer->fdata;
+    data.data_out = *fbuffer;
+    data.input_frames = (int)ilen;
+    data.output_frames = (int)olen;
+    data.src_ratio = orate / irate;
+    data.end_of_input = 0;
+    ret = src_process(src_state, &data);
+    if (ret != 0) {
+      BX_ERROR(("resampling error: %s", src_strerror(ret)));
+    }
+  } else {
+    *fbuffer = new float[inbuffer->size];
+    fcount = inbuffer->size;
+    memcpy(*fbuffer, inbuffer->data, sizeof(float) * fcount);
+  }
+#else
+  if (param.samplerate != real_pcm_param.samplerate) {
+    real_pcm_param.samplerate = param.samplerate;
+    set_pcm_params(&real_pcm_param);
+  }
+  *fbuffer = new float[inbuffer->size];
+  fcount = inbuffer->size;
+  memcpy(*fbuffer, inbuffer->data, sizeof(float) * fcount);
+#endif
+  return fcount;
+}
+
+void bx_soundlow_waveout_c::start_resampler_thread()
 {
   BX_THREAD_ID(threadID);
 
-  BX_INIT_MUTEX(conversion_mutex);
-  BX_THREAD_CREATE(conversion_thread, this, threadID);
+  BX_INIT_MUTEX(resampler_mutex);
+  BX_THREAD_CREATE(resampler_thread, this, threadID);
 }
 
 void bx_soundlow_waveout_c::start_mixer_thread()
