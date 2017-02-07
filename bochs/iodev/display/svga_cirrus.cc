@@ -1345,7 +1345,11 @@ void bx_svga_cirrus_c::svga_update(void)
           for (yc=0, yti = 0; yc<height; yc+=Y_TILESIZE, yti++) {
             for (xc=0, xti = 0; xc<width; xc+=X_TILESIZE, xti++) {
               if (GET_TILE_UPDATED (xti, yti)) {
-                vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * pitch + xc);
+                if (!BX_CIRRUS_THIS s.y_doublescan) {
+                  vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * pitch + xc);
+                } else {
+                  vid_ptr = BX_CIRRUS_THIS disp_ptr + ((yc >> 1) * pitch + xc);
+                }
                 tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
                 for (r=0; r<h; r++) {
                   vid_ptr2  = vid_ptr;
@@ -1367,7 +1371,9 @@ void bx_svga_cirrus_c::svga_update(void)
                       }
                     }
                   }
-                  vid_ptr  += pitch;
+                  if (!BX_CIRRUS_THIS s.y_doublescan || (r & 1)) {
+                    vid_ptr += pitch;
+                  }
                   tile_ptr += info.pitch;
                 }
                 draw_hardware_cursor(xc, yc, &info);
