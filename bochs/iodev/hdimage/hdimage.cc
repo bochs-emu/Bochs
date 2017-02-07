@@ -53,6 +53,10 @@
 #include <sys/wait.h>
 #endif
 
+#ifndef O_ACCMODE
+#define O_ACCMODE (O_WRONLY | O_RDWR)
+#endif
+
 #define LOG_THIS theHDImageCtl->
 
 #ifndef BXIMAGE
