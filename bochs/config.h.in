@@ -907,6 +907,8 @@ typedef
 // resampling support
 #define BX_HAVE_LIBSAMPLERATE  0
 #define BX_HAVE_SOXR_LSR       0
+// SDL2 audio capture support (version >= 2.0.5)
+#define BX_HAVE_SDL2_AUDIO_CAPTURE 0
 #endif
 
 #if (BX_SUPPORT_ES1370 && !BX_SUPPORT_PCI)

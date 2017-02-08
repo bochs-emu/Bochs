@@ -24086,6 +24086,20 @@ fi
     fi
     $as_echo "#define BX_HAVE_SOUND_SDL 1" >>confdefs.h
 
+    SDL2_VERSION=`sdl2-config --version`
+    # SDL version >= 2.0.5 supports audio capture
+    sdl2_audio_capture=0
+
+    case x$SDL2_VERSION in
+      x2.0.[0-4]) ;;
+      x2.0.[5-9]) sdl2_audio_capture=1 ;;
+      *) ;;
+    esac
+
+    if test "$sdl2_audio_capture" = 1; then
+      $as_echo "#define BX_HAVE_SDL2_AUDIO_CAPTURE 1" >>confdefs.h
+
+    fi
   fi
   ac_fn_c_check_header_mongrel "$LINENO" "samplerate.h" "ac_cv_header_samplerate_h" "$ac_includes_default"
 if test "x$ac_cv_header_samplerate_h" = xyes; then :
