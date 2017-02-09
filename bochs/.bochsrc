@@ -889,9 +889,9 @@ parport1: enabled=1, file="parport.out"
 # waveindrv:
 #      This defines the driver to be used for the wavein feature.
 #      Possible values are 'dummy' (recording silence) and platform-dependent
-#      drivers 'alsa', 'oss' and 'win'.
+#      drivers 'alsa', 'oss', 'sdl' and 'win'.
 # wavein:
-#      This defines the device to be used for wave output (if necessary).
+#      This defines the device to be used for wave input (if necessary).
 # midioutdrv:
 #      This defines the driver to be used for the MIDI output feature.
 #      Possible values are 'file' (all MIDI data sent to file), 'dummy' (no

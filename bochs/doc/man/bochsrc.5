@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "29 Jan 2017" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "9 Feb 2017" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -958,10 +958,10 @@ waveout:
 waveindrv:
   This defines the driver to be used for the wavein feature.
   Possible values are 'dummy' (recording silence) and platform-dependent
-  drivers 'alsa', 'oss' and 'win'.
+  drivers 'alsa', 'oss', 'sdl' and 'win'.
 
 wavein:
-  This defines the device to be used for wave output (if necessary).
+  This defines the device to be used for wave input (if necessary).
 
 midioutdrv:
   This defines the driver to be used for the MIDI output feature.
