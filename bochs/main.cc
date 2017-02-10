@@ -1261,13 +1261,28 @@ void bx_init_hardware()
   BX_INFO(("  Fast function calls: %s", BX_FAST_FUNC_CALL?"yes":"no"));
   BX_INFO(("  Handlers Chaining speedups: %s", BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS?"yes":"no"));
   BX_INFO(("Devices configuration"));
-  BX_INFO(("  NE2000 support: %s", BX_SUPPORT_NE2K?"yes":"no"));
-  BX_INFO(("  PCI support: %s, enabled=%s", BX_SUPPORT_PCI?"yes":"no",
-    SIM->get_param_bool(BXPN_PCI_ENABLED)->get() ? "yes" : "no"));
-  BX_INFO(("  SB16 support: %s", BX_SUPPORT_SB16?"yes":"no"));
-  BX_INFO(("  USB support: %s", BX_SUPPORT_PCIUSB?"yes":"no"));
-  BX_INFO(("  VGA extension support: vbe%s%s", BX_SUPPORT_CLGD54XX?" cirrus":"",
-    BX_SUPPORT_VOODOO?" voodoo":""));
+  BX_INFO(("  PCI support: %s", BX_SUPPORT_PCI?"i440FX i430FX":"no"));
+#if BX_SUPPORT_NE2K || BX_SUPPORT_E1000
+  BX_INFO(("  Networking support:%s%s",
+           BX_SUPPORT_NE2K?" NE2000":"", BX_SUPPORT_E1000?" E1000":""));
+#else
+  BX_INFO(("  Networking: no"));
+#endif
+#if BX_SUPPORT_SB16 || BX_SUPPORT_ES1370
+  BX_INFO(("  Sound support:%s%s",
+           BX_SUPPORT_SB16?" SB16":"", BX_SUPPORT_ES1370?" ES1370":""));
+#else
+  BX_INFO(("  Sound support: no"));
+#endif
+#if BX_SUPPORT_PCIUSB
+  BX_INFO(("  USB support:%s%s%s%s",
+           BX_SUPPORT_USB_UHCI?" UHCI":"", BX_SUPPORT_USB_OHCI?" OHCI":"",
+           BX_SUPPORT_USB_EHCI?" EHCI":"", BX_SUPPORT_USB_XHCI?" xHCI":""));
+#else
+  BX_INFO(("  USB support: no"));
+#endif
+  BX_INFO(("  VGA extension support: vbe%s%s",
+           BX_SUPPORT_CLGD54XX?" cirrus":"", BX_SUPPORT_VOODOO?" voodoo":""));
 
   // Check if there is a romimage
   if (SIM->get_param_string(BXPN_ROM_PATH)->isempty()) {
