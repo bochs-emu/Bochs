@@ -1403,6 +1403,11 @@ Bit16u bx_floppy_ctrl_c::dma_read(Bit8u *buffer, Bit16u maxlen)
         BX_FD_THIS s.status_reg1 = 0x27; // 0010 0111
         // ST2: CRCE=1, SERR=1, BCYL=1, NDAM=1.
         BX_FD_THIS s.status_reg2 = 0x31; // 0011 0001
+        if (!(BX_FD_THIS s.main_status_reg & FD_MS_NDMA)) {
+          DEV_dma_set_drq(FLOPPY_DMA_CHAN, 0);
+        } else {
+          BX_FD_THIS s.main_status_reg &= ~FD_MS_NDMA;
+        }
         enter_result_phase();
         return 1;
       }
