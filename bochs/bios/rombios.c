@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -160,6 +160,12 @@
 #define write_byte_DS(offset,data) *((Bit8u *)(offset)) = (data)
 #define write_word_DS(offset,data) *((Bit16u *)(offset)) = (data)
 #define write_dword_DS(offset,data) *((Bit32u *)(offset)) = (data)
+
+// Added this to refer byte, word
+#define LOBYTE(val) *((Bit8u *)&val)
+#define HIBYTE(val) *(((Bit8u *)&val)+1)
+#define LOWORD(val) *((Bit16u *)&val)
+#define HIWORD(val) *(((Bit16u *)&val)+1)
 
 ASM_START
 .rom
@@ -923,7 +929,7 @@ Bit16u cdrom_boot();
 
 static char bios_cvs_version_string[] = "$Revision$ $Date$";
 
-#define BIOS_COPYRIGHT_STRING "(c) 2001-2014  The Bochs Project"
+#define BIOS_COPYRIGHT_STRING "(c) 2001-2017  The Bochs Project"
 
 #if DEBUG_ATA
 #  define BX_DEBUG_ATA(a...) BX_DEBUG(a)
@@ -1686,8 +1692,9 @@ bios_printf(action, s)
   bx_bool  in_format;
   short i;
   Bit16u  *arg_ptr;
-  Bit16u  arg, nibble, hibyte, shift_count, format_width;
+  Bit16u  arg, nibble, shift_count, format_width;
   Bit16u  old_ds = set_DS(get_CS());
+  Bit32u  lval;
 
   arg_ptr = &s;
 
@@ -1728,22 +1735,23 @@ bios_printf(action, s)
           s++;
           c = read_byte_DS(s); /* is it ld,lx,lu? */
           arg_ptr++; /* increment to next arg */
-          hibyte = read_word_SS(arg_ptr);
+          HIWORD(lval) = read_word_SS(arg_ptr);
+          LOWORD(lval) = arg;
           if (c == 'd') {
-            if (hibyte & 0x8000)
-              put_luint(action, 0L-(((Bit32u) hibyte << 16) | arg), format_width-1, 1);
+            if (HIWORD(lval) & 0x8000)
+              put_luint(action, 0L-lval, format_width-1, 1);
             else
-              put_luint(action, ((Bit32u) hibyte << 16) | arg, format_width, 0);
+              put_luint(action, lval, format_width, 0);
           }
           else if (c == 'u') {
-            put_luint(action, ((Bit32u) hibyte << 16) | arg, format_width, 0);
+            put_luint(action, lval, format_width, 0);
           }
           else if ((c & 0xdf) == 'X')
           {
             if (format_width == 0)
               format_width = 8;
             for (i=format_width-1; i>=0; i--) {
-              nibble = ((((Bit32u) hibyte <<16) | arg) >> (4 * i)) & 0x000f;
+              nibble = ((Bit16u)(lval >> (4 * i))) & 0x000f;
               send (action, (nibble<=9)? (nibble+'0') : (nibble+c-33));
             }
           }
@@ -1758,10 +1766,8 @@ bios_printf(action, s)
           put_str(action, get_CS(), arg);
         }
         else if (c == 'S') {
-          hibyte = arg;
           arg_ptr++;
-          arg = read_word_SS(arg_ptr);
-          put_str(action, hibyte, arg);
+          put_str(action, arg, read_word_SS(arg_ptr));
         }
         else if (c == 'c') {
           send(action, arg);
@@ -2119,7 +2125,7 @@ interactive_bootkey()
             printf("%s", drivetypes[4]);
             if (e.description != 0)
             {
-              memcpyb(ss, &description, (Bit16u)(e.description >> 16), (Bit16u)(e.description & 0xffff), 32);
+              memcpyb(ss, &description, HIWORD(e.description), LOWORD(e.description), 32);
               description[32] = 0;
               printf(" [%S]", ss, description);
            }
@@ -2170,7 +2176,7 @@ print_boot_device(e)
   /* print product string if BEV */
   if (type == 4 && e->description != 0) {
     /* first 32 bytes are significant */
-    memcpyb(ss, &description, (Bit16u)(e->description >> 16), (Bit16u)(e->description & 0xffff), 32);
+    memcpyb(ss, &description, HIWORD(e->description), LOWORD(e->description), 32);
     /* terminate string */
     description[32] = 0;
     printf(" [%S]", ss, description);
@@ -2503,8 +2509,8 @@ static int await_ide(when_done,base,timeout)
   Bit16u base;
   Bit16u timeout;
 {
-  Bit32u time=0,last=0;
-  Bit16u status;
+  Bit32u time=0;
+  Bit16u status,last=0;
   Bit8u result;
   status = inb(base + ATA_CB_STAT); // for the times you're supposed to throw one away
   for(;;) {
@@ -2524,9 +2530,9 @@ static int await_ide(when_done,base,timeout)
       result = 0;
 
     if (result) return 0;
-    if (time>>16 != last) // mod 2048 each 16 ms
+    if (HIWORD(time) != last) // mod 2048 each 16 ms
     {
-      last = time >>16;
+      last = HIWORD(time);
       BX_DEBUG_ATA("await_ide: (TIMEOUT,BSY,!BSY,!BSY_DRQ,!BSY_!DRQ,!BSY_RDY) %d time= %ld timeout= %d\n",when_done,time>>11, timeout);
     }
     if (status & ATA_CB_STAT_ERR)
@@ -2963,26 +2969,27 @@ Bit32u lba_low, lba_high;
 
   // sector will be 0 only on lba access. Convert to lba-chs
   if (sector == 0) {
-    if ((count >= 1 << 8) || lba_high || (lba_low >= ((1UL << 28) - count))) {
+    if (HIBYTE(count) >= 1 || lba_high || (lba_low >= ((1UL << 28) - count))) {
       outb(iobase1 + ATA_CB_FR, 0x00);
-      outb(iobase1 + ATA_CB_SC, (count >> 8) & 0xff);
-      outb(iobase1 + ATA_CB_SN, lba_low >> 24);
-      outb(iobase1 + ATA_CB_CL, lba_high & 0xff);
-      outb(iobase1 + ATA_CB_CH, lba_high >> 8);
+      outb(iobase1 + ATA_CB_SC, HIBYTE(count));
+      outb(iobase1 + ATA_CB_SN, HIBYTE(HIWORD(lba_low)));
+      outb(iobase1 + ATA_CB_CL, LOBYTE(lba_high));
+      outb(iobase1 + ATA_CB_CH, HIBYTE(LOWORD(lba_high)));
       command |= 0x04;
-      count &= (1UL << 8) - 1;
+      count &= (1 << 8) - 1;
       lba_low &= (1UL << 24) - 1;
     }
-    sector = (Bit16u) (lba_low & 0x000000ffL);
-    cylinder = (Bit16u) ((lba_low>>8) & 0x0000ffffL);
-    head = ((Bit16u) ((lba_low>>24) & 0x0000000fL)) | ATA_CB_DH_LBA;
+    sector = (Bit16u) LOBYTE(lba_low);
+    lba_low >>= 8;
+    cylinder = LOWORD(lba_low);
+    head = (HIWORD(lba_low) & 0x000f) | ATA_CB_DH_LBA;
   }
 
   outb(iobase1 + ATA_CB_FR, 0x00);
   outb(iobase1 + ATA_CB_SC, count);
   outb(iobase1 + ATA_CB_SN, sector);
-  outb(iobase1 + ATA_CB_CL, cylinder & 0x00ff);
-  outb(iobase1 + ATA_CB_CH, cylinder >> 8);
+  outb(iobase1 + ATA_CB_CL, LOBYTE(cylinder));
+  outb(iobase1 + ATA_CB_CH, HIBYTE(cylinder));
   outb(iobase1 + ATA_CB_DH, (slave ? ATA_CB_DH_DEV1 : ATA_CB_DH_DEV0) | (Bit8u) head );
   outb(iobase1 + ATA_CB_CMD, command);
 
@@ -3278,7 +3285,8 @@ ASM_END
       bufoff %= 16;
 
       // Get the byte count
-      lcount =  ((Bit16u)(inb(iobase1 + ATA_CB_CH))<<8)+inb(iobase1 + ATA_CB_CL);
+      LOBYTE(lcount) = inb(iobase1 + ATA_CB_CL);
+      HIBYTE(lcount) = inb(iobase1 + ATA_CB_CH);
 
       // adjust to read what we want
       if(header>lcount) {
@@ -3504,10 +3512,10 @@ atapi_is_ready(device)
   return -1;
 ok:
 
-  block_len = (Bit32u) buf[4] << 24
-    | (Bit32u) buf[5] << 16
-    | (Bit32u) buf[6] << 8
-    | (Bit32u) buf[7] << 0;
+  HIBYTE(HIWORD(block_len)) = buf[4];
+  LOBYTE(HIWORD(block_len)) = buf[5];
+  HIBYTE(LOWORD(block_len)) = buf[6];
+  LOBYTE(block_len) = buf[7];
   BX_DEBUG_ATA("block_len=%u\n", block_len);
 
   if (block_len!= 2048 && block_len!= 512)
@@ -3517,10 +3525,10 @@ ok:
   }
   write_dword(ebda_seg,&EbdaData->ata.devices[device].blksize, block_len);
 
-  sectors = (Bit32u) buf[0] << 24
-    | (Bit32u) buf[1] << 16
-    | (Bit32u) buf[2] << 8
-    | (Bit32u) buf[3] << 0;
+  HIBYTE(HIWORD(sectors)) = buf[0];
+  LOBYTE(HIWORD(sectors)) = buf[1];
+  HIBYTE(LOWORD(sectors)) = buf[2];
+  LOBYTE(sectors) = buf[3];
 
   BX_DEBUG_ATA("sectors=%u\n", sectors);
   if (block_len == 2048)
@@ -3639,10 +3647,10 @@ cdrom_boot()
   atacmd[0]=0x28;                      // READ command
   atacmd[7]=(0x01 & 0xff00) >> 8;      // Sectors
   atacmd[8]=(0x01 & 0x00ff);           // Sectors
-  atacmd[2]=(lba & 0xff000000) >> 24;  // LBA
-  atacmd[3]=(lba & 0x00ff0000) >> 16;
-  atacmd[4]=(lba & 0x0000ff00) >> 8;
-  atacmd[5]=(lba & 0x000000ff);
+  atacmd[2]=HIBYTE(HIWORD(lba));  // LBA
+  atacmd[3]=LOBYTE(HIWORD(lba));
+  atacmd[4]=HIBYTE(LOWORD(lba));
+  atacmd[5]=LOBYTE(lba);
   if((error = ata_cmd_packet(device, 12, get_SS(), atacmd, 0, 2048L, ATA_DATA_IN, get_SS(), buffer)) != 0)
     return 7;
 
@@ -3686,12 +3694,13 @@ cdrom_boot()
   // And we read the image in memory
   memsetb(get_SS(),atacmd,0,12);
   atacmd[0]=0x28;                      // READ command
-  atacmd[7]=((1+(nbsectors-1)/4) & 0xff00) >> 8;      // Sectors
-  atacmd[8]=((1+(nbsectors-1)/4) & 0x00ff);           // Sectors
-  atacmd[2]=(lba & 0xff000000) >> 24;  // LBA
-  atacmd[3]=(lba & 0x00ff0000) >> 16;
-  atacmd[4]=(lba & 0x0000ff00) >> 8;
-  atacmd[5]=(lba & 0x000000ff);
+  i = 1+(nbsectors-1)/4;
+  atacmd[7]=HIBYTE(i);      // Sectors
+  atacmd[8]=LOBYTE(i);      // Sectors
+  atacmd[2]=HIBYTE(HIWORD(lba));  // LBA
+  atacmd[3]=LOBYTE(HIWORD(lba));
+  atacmd[4]=HIBYTE(LOWORD(lba));
+  atacmd[5]=LOBYTE(lba);
   if((error = ata_cmd_packet(device, 12, get_SS(), atacmd, 0, nbsectors*512L, ATA_DATA_IN, boot_segment,0)) != 0)
   {
     // Restore old DS value before return.
@@ -3773,7 +3782,7 @@ void int14_function(regs, ds, iret_addr)
         } else {
           val16 = 0x600 >> ((regs.u.r8.al & 0xE0) >> 5);
           outb(addr, val16 & 0xFF);
-          outb(addr+1, val16 >> 8);
+          outb(addr+1, HIBYTE(val16));
         }
         outb(addr+3, regs.u.r8.al & 0x1F);
         regs.u.r8.ah = inb(addr+5);
@@ -4632,9 +4641,8 @@ ASM_END
          case 0x20: // coded by osmaker aka K.J.
             if(regs.u.r32.edx == 0x534D4150)
             {
-                extended_memory_size = inb_cmos(0x35);
-                extended_memory_size <<= 8;
-                extended_memory_size |= inb_cmos(0x34);
+                LOBYTE(extended_memory_size) = inb_cmos(0x35);
+                HIBYTE(LOWORD(extended_memory_size)) = inb_cmos(0x34);
                 extended_memory_size *= 64;
                 if(extended_memory_size > 0x2fc000) {
                     extended_memory_size = 0x2fc000; // everything after this is reserved memory until we get to 0x100000000
@@ -4643,18 +4651,15 @@ ASM_END
                 extended_memory_size += (16L * 1024 * 1024);
 
                 if(extended_memory_size <= (16L * 1024 * 1024)) {
-                    extended_memory_size = inb_cmos(0x31);
-                    extended_memory_size <<= 8;
-                    extended_memory_size |= inb_cmos(0x30);
+                    LOBYTE(extended_memory_size) = inb_cmos(0x31);
+                    HIBYTE(LOWORD(extended_memory_size)) = inb_cmos(0x30);
                     extended_memory_size *= 1024;
                     extended_memory_size += (1L * 1024 * 1024);
                 }
 
-                extra_lowbits_memory_size = inb_cmos(0x5c);
-                extra_lowbits_memory_size <<= 8;
-                extra_lowbits_memory_size |= inb_cmos(0x5b);
-                extra_lowbits_memory_size *= 64;
-                extra_lowbits_memory_size *= 1024;
+                LOBYTE(HIWORD(extra_lowbits_memory_size)) = inb_cmos(0x5c);
+                HIBYTE(HIWORD(extra_lowbits_memory_size)) = inb_cmos(0x5b);
+                LOWORD(extra_lowbits_memory_size) = 0;
                 extra_highbits_memory_size = inb_cmos(0x5d);
 
                 switch(regs.u.r16.bx)
@@ -5347,7 +5352,7 @@ BX_DEBUG_INT74("int74: read byte %02x\n", in_byte);
 BX_DEBUG_INT74("int74_function: make_farcall=1\n");
     if (package_count == 3) {
       status = read_byte_DS(&EbdaData->mouse_data[0]);
-      status |= ((Bit16u)read_byte_DS(&EbdaData->mouse_data[1])) << 8;
+      HIBYTE(status) = read_byte_DS(&EbdaData->mouse_data[1]);
       X      = read_byte_DS(&EbdaData->mouse_data[2]);
       Y      = read_byte_DS(&EbdaData->mouse_data[3]);
     } else {
@@ -5729,8 +5734,8 @@ int13_harddisk(EHAX, DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
 
       // Compute sector count seen by int13
       lba_low = (Bit32u)(nlc - 1) * (Bit32u)nlh * (Bit32u)nlspt;
-      CX = lba_low >> 16;
-      DX = lba_low & 0xffff;
+      CX = HIWORD(lba_low);
+      DX = LOWORD(lba_low);
 
       SET_AH(3);  // hard disk accessible
       goto int13_success_noah;
@@ -5958,12 +5963,12 @@ int13_cdrom(EHBX, DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
 
       memsetb(get_SS(),atacmd,0,12);
       atacmd[0]=0x28;                      // READ command
-      atacmd[7]=(count & 0xff00) >> 8;     // Sectors
-      atacmd[8]=(count & 0x00ff);          // Sectors
-      atacmd[2]=(lba & 0xff000000) >> 24;  // LBA
-      atacmd[3]=(lba & 0x00ff0000) >> 16;
-      atacmd[4]=(lba & 0x0000ff00) >> 8;
-      atacmd[5]=(lba & 0x000000ff);
+      atacmd[7]=HIBYTE(count);        // Sectors
+      atacmd[8]=LOBYTE(count);        // Sectors
+      atacmd[2]=HIBYTE(HIWORD(lba));  // LBA
+      atacmd[3]=LOBYTE(HIWORD(lba));
+      atacmd[4]=HIBYTE(LOWORD(lba));
+      atacmd[5]=LOBYTE(lba);
       status = ata_cmd_packet(device, 12, get_SS(), atacmd, 0, count*2048L, ATA_DATA_IN, segment,offset);
 
       count = (Bit16u)(read_dword_DS(&EbdaData->ata.trsfbytes) >> 11);
@@ -6182,8 +6187,8 @@ int13_cdemu(DS, ES, DI, SI, BP, SP, BX, DX, CX, AX, IP, CS, FLAGS)
 {
   Bit8u  device, status;
   Bit16u vheads, vspt, vcylinders;
-  Bit16u head, sector, cylinder, nbsectors;
-  Bit32u vlba, ilba, slba, elba;
+  Bit16u head, sector, cylinder, nbsectors, count;
+  Bit32u vlba, ilba, slba, elba, lba;
   Bit16u before, segment, offset;
   Bit8u  atacmd[12];
 
@@ -6285,12 +6290,14 @@ int13_cdemu(DS, ES, DI, SI, BP, SP, BX, DX, CX, AX, IP, CS, FLAGS)
 
       memsetb(get_SS(),atacmd,0,12);
       atacmd[0]=0x28;                      // READ command
-      atacmd[7]=((Bit16u)(elba-slba+1) & 0xff00) >> 8; // Sectors
-      atacmd[8]=((Bit16u)(elba-slba+1) & 0x00ff);      // Sectors
-      atacmd[2]=(ilba+slba & 0xff000000) >> 24;  // LBA
-      atacmd[3]=(ilba+slba & 0x00ff0000) >> 16;
-      atacmd[4]=(ilba+slba & 0x0000ff00) >> 8;
-      atacmd[5]=(ilba+slba & 0x000000ff);
+      count = (Bit16u)(elba-slba)+1;
+      atacmd[7]=HIBYTE(count); // Sectors
+      atacmd[8]=LOBYTE(count); // Sectors
+      lba = ilba+slba;
+      atacmd[2]=HIBYTE(HIWORD(lba));  // LBA
+      atacmd[3]=LOBYTE(HIWORD(lba));
+      atacmd[4]=HIBYTE(LOWORD(lba));
+      atacmd[5]=LOBYTE(lba);
       if((status = ata_cmd_packet(device, 12, get_SS(), atacmd, before*512, nbsectors*512L, ATA_DATA_IN, segment,offset)) != 0) {
         BX_INFO("int13_cdemu: function %02x, error %02x !\n",GET_AH(),status);
         SET_AH(0x02);
@@ -6527,8 +6534,8 @@ BX_DEBUG_INT13_HD("int13_f01\n");
         }
 
         ax = head / hd_heads;
-        cyl_mod = ax & 0xff;
-        head    = ax >> 8;
+        cyl_mod = LOBYTE(ax);
+        head    = HIBYTE(ax);
         cylinder |= cyl_mod;
       }
 
@@ -6566,8 +6573,8 @@ BX_DEBUG_INT13_HD("CHS: %x %x %x\n", cylinder, head, sector);
       }
       else {
         outb(PORT_ATA1_CMD_BASE + 3, sector);
-        outb(PORT_ATA1_CMD_BASE + 4, cylinder & 0x00ff);
-        outb(PORT_ATA1_CMD_BASE + 5, cylinder >> 8);
+        outb(PORT_ATA1_CMD_BASE + 4, LOBYTE(cylinder));
+        outb(PORT_ATA1_CMD_BASE + 5, HIBYTE(cylinder));
         outb(PORT_ATA1_CMD_BASE + 6, 0xa0 | ((drive & 0x01)<<4) | (head & 0x0f));
       }
       outb(PORT_ATA1_CMD_BASE + 7, 0x20);
@@ -6706,8 +6713,8 @@ BX_DEBUG_INT13_HD("CHS (write): %x %x %x\n", cylinder, head, sector);
       }
       else {
         outb(PORT_ATA1_CMD_BASE + 3, sector);
-        outb(PORT_ATA1_CMD_BASE + 4, cylinder & 0x00ff);
-        outb(PORT_ATA1_CMD_BASE + 5, cylinder >> 8);
+        outb(PORT_ATA1_CMD_BASE + 4, LOBYTE(cylinder));
+        outb(PORT_ATA1_CMD_BASE + 5, HIBYTE(cylinder));
         outb(PORT_ATA1_CMD_BASE + 6, 0xa0 | ((GET_ELDL() & 0x01)<<4) | (head & 0x0f));
       }
       outb(PORT_ATA1_CMD_BASE + 7, 0x30);
@@ -6989,7 +6996,8 @@ get_hd_geometry(drive, hd_cylinders, hd_heads, hd_sectors)
   }
 
   // cylinders
-  cylinders = inb_cmos(iobase) | (inb_cmos(iobase+1) << 8);
+  LOBYTE(cylinders) = inb_cmos(iobase);
+  HIBYTE(cylinders) = inb_cmos(iobase+1);
   write_word_SS(hd_cylinders, cylinders);
 
   // heads
@@ -7403,11 +7411,11 @@ BX_DEBUG_INT13_FL("floppy f00\n");
   BX_DEBUG_INT13_FL("clear flip-flop\n");
       outb(PORT_DMA1_CLEAR_FF_REG, 0x00); // clear flip-flop
       outb(PORT_DMA_ADDR_2, base_address);
-      outb(PORT_DMA_ADDR_2, base_address>>8);
+      outb(PORT_DMA_ADDR_2, HIBYTE(base_address));
   BX_DEBUG_INT13_FL("clear flip-flop\n");
       outb(PORT_DMA1_CLEAR_FF_REG, 0x00); // clear flip-flop
       outb(PORT_DMA_CNT_2, base_count);
-      outb(PORT_DMA_CNT_2, base_count>>8);
+      outb(PORT_DMA_CNT_2, HIBYTE(base_count));
 
       if (ah == 0x02) {
         // Read Diskette Sectors
@@ -7600,10 +7608,10 @@ BX_DEBUG_INT13_FL("floppy f05\n");
       outb(PORT_DMA1_MASK_REG, 0x06);
       outb(PORT_DMA1_CLEAR_FF_REG, 0x00); // clear flip-flop
       outb(PORT_DMA_ADDR_2, base_address);
-      outb(PORT_DMA_ADDR_2, base_address>>8);
+      outb(PORT_DMA_ADDR_2, HIBYTE(base_address));
       outb(PORT_DMA1_CLEAR_FF_REG, 0x00); // clear flip-flop
       outb(PORT_DMA_CNT_2, base_count);
-      outb(PORT_DMA_CNT_2, base_count>>8);
+      outb(PORT_DMA_CNT_2, HIBYTE(base_count));
       mode_register = 0x4a; // single mode, increment, autoinit disable,
                             // transfer type=read, channel 2
       outb(PORT_DMA1_MODE_REG, mode_register);
@@ -8199,7 +8207,8 @@ int17_function(regs, ds, iret_addr)
 
   addr = read_word_DS(0x0400 + (regs.u.r16.dx << 1) + 8);
   if ((regs.u.r8.ah < 3) && (regs.u.r16.dx < 3) && (addr > 0)) {
-    timeout = read_byte_DS(0x0478 + regs.u.r16.dx) << 8;
+    HIBYTE(timeout) = read_byte_DS(0x0478 + regs.u.r16.dx);
+    LOBYTE(timeout) = 0;
     if (regs.u.r8.ah == 0) {
       outb(addr, regs.u.r8.al);
       val8 = inb(addr+2);
@@ -8373,15 +8382,15 @@ ASM_END
       return;
     }
 
-    bootdrv = (Bit8u)(status>>8);
+    bootdrv = HIBYTE(status);
     bootseg = read_word(ebda_seg,&EbdaData->cdemu.load_segment);
     bootip = 0;
     break;
 #endif
 
   case IPL_TYPE_BEV: /* Expansion ROM with a Bootstrap Entry Vector (a far pointer) */
-    bootseg = e.vector >> 16;
-    bootip = e.vector & 0xffff;
+    bootseg = HIWORD(e.vector);
+    bootip = LOWORD(e.vector);
     break;
 
   default: return;
