@@ -4639,26 +4639,25 @@ ASM_END
     case 0xe8:
         switch(regs.u.r8.al) {
          case 0x20: // coded by osmaker aka K.J.
-            if(regs.u.r32.edx == 0x534D4150)
-            {
-                LOBYTE(extended_memory_size) = inb_cmos(0x35);
-                HIBYTE(LOWORD(extended_memory_size)) = inb_cmos(0x34);
+            if (regs.u.r32.edx == 0x534D4150) {
+                LOBYTE(extended_memory_size) = inb_cmos(0x34);
+                HIBYTE(LOWORD(extended_memory_size)) = inb_cmos(0x35);
                 extended_memory_size *= 64;
-                if(extended_memory_size > 0x2fc000) {
+                if (extended_memory_size > 0x2fc000) {
                     extended_memory_size = 0x2fc000; // everything after this is reserved memory until we get to 0x100000000
                 }
                 extended_memory_size *= 1024;
                 extended_memory_size += (16L * 1024 * 1024);
 
-                if(extended_memory_size <= (16L * 1024 * 1024)) {
-                    LOBYTE(extended_memory_size) = inb_cmos(0x31);
-                    HIBYTE(LOWORD(extended_memory_size)) = inb_cmos(0x30);
+                if (extended_memory_size <= (16L * 1024 * 1024)) {
+                    LOBYTE(extended_memory_size) = inb_cmos(0x30);
+                    HIBYTE(LOWORD(extended_memory_size)) = inb_cmos(0x31);
                     extended_memory_size *= 1024;
                     extended_memory_size += (1L * 1024 * 1024);
                 }
 
-                LOBYTE(HIWORD(extra_lowbits_memory_size)) = inb_cmos(0x5c);
-                HIBYTE(HIWORD(extra_lowbits_memory_size)) = inb_cmos(0x5b);
+                LOBYTE(HIWORD(extra_lowbits_memory_size)) = inb_cmos(0x5b);
+                HIBYTE(HIWORD(extra_lowbits_memory_size)) = inb_cmos(0x5c);
                 LOWORD(extra_lowbits_memory_size) = 0;
                 extra_highbits_memory_size = inb_cmos(0x5d);
 
