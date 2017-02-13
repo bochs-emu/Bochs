@@ -698,7 +698,7 @@ void bx_init_options()
   ram->set_options(ram->SERIES_ASK);
 
   path = new bx_param_filename_c(rom,
-      "path",
+      "file",
       "ROM BIOS image",
       "Pathname of ROM image to load",
       "", BX_PATHNAME_LEN);
@@ -706,18 +706,18 @@ void bx_init_options()
   sprintf(name, "%s/BIOS-bochs-latest", (char *)get_builtin_variable("BXSHARE"));
   path->set_initial_val(name);
   bx_param_num_c *romaddr = new bx_param_num_c(rom,
-      "addr",
+      "address",
       "ROM BIOS address",
       "The address at which the ROM image should be loaded",
       0, BX_MAX_BIT32U,
       0);
   romaddr->set_base(16);
-  romaddr->set_format("0x%05x");
-  romaddr->set_long_format("ROM BIOS address: 0x%05x");
+  romaddr->set_format("0x%08x");
+  romaddr->set_long_format("ROM BIOS address: 0x%08x");
   rom->set_options(rom->SERIES_ASK);
 
   path = new bx_param_filename_c(vgarom,
-      "path",
+      "file",
       "VGA BIOS image",
       "Pathname of VGA ROM image to load",
       "", BX_PATHNAME_LEN);
@@ -772,7 +772,7 @@ void bx_init_options()
     path->set_format(strdup(label));
     sprintf(descr, "The address at which the optional RAM image #%d should be loaded", i+1);
     optaddr = new bx_param_num_c(optnum2,
-      "addr",
+      "address",
       "Address",
       descr,
       0, BX_MAX_BIT32U,
@@ -3318,21 +3318,9 @@ int bx_write_configuration(const char *rc, int overwrite)
     fprintf(fp, "\n");
   fprintf(fp, "memory: host=%d, guest=%d\n", SIM->get_param_num(BXPN_HOST_MEM_SIZE)->get(),
     SIM->get_param_num(BXPN_MEM_SIZE)->get());
-  sparam = SIM->get_param_string(BXPN_ROM_PATH);
-  if (!sparam->isempty()) {
-    fprintf(fp, "romimage: file=\"%s\"", sparam->getptr());
-    if (SIM->get_param_num(BXPN_ROM_ADDRESS)->get() != 0)
-      fprintf(fp, ", address=0x%08x\n", (unsigned int) SIM->get_param_num(BXPN_ROM_ADDRESS)->get());
-    else
-      fprintf(fp, "\n");
-  } else {
-    fprintf(fp, "# no romimage\n");
-  }
-  sparam = SIM->get_param_string(BXPN_VGA_ROM_PATH);
-  if (!sparam->isempty())
-    fprintf(fp, "vgaromimage: file=\"%s\"\n", sparam->getptr());
-  else
-    fprintf(fp, "# no vgaromimage\n");
+
+  bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_ROMIMAGE), "romimage", 0);
+  bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_VGA_ROMIMAGE), "vgaromimage", 0);
   fprintf(fp, "boot: %s", SIM->get_param_enum(BXPN_BOOTDRIVE1)->get_selected());
   for (i=1; i<3; i++) {
     sprintf(tmppath, "boot_params.boot_drive%d", i+1);
