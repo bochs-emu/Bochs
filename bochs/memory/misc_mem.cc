@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2017  The Bochs Project
 //
 //  I/O memory handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -502,7 +502,7 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
                          path));
 }
 
-void BX_MEM_C::load_RAM(const char *path, bx_phy_address ramaddress, Bit8u type)
+void BX_MEM_C::load_RAM(const char *path, bx_phy_address ramaddress)
 {
   struct stat stat_buf;
   int fd, ret;

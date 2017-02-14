@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2017  The Bochs Project
 //
 //  I/O memory handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -133,7 +133,7 @@ public:
   BX_MEM_SMF void    dmaWritePhysicalPage(bx_phy_address addr, unsigned len, Bit8u *data);
 
   BX_MEM_SMF void    load_ROM(const char *path, bx_phy_address romaddress, Bit8u type);
-  BX_MEM_SMF void    load_RAM(const char *path, bx_phy_address romaddress, Bit8u type);
+  BX_MEM_SMF void    load_RAM(const char *path, bx_phy_address romaddress);
 
 #if (BX_DEBUGGER || BX_DISASM || BX_GDBSTUB)
   BX_MEM_SMF bx_bool dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit8u *buf);

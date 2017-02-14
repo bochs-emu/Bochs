@@ -1153,6 +1153,10 @@ void bx_set_log_actions_by_device(bx_bool panic_flag)
 
 void bx_init_hardware()
 {
+  int i;
+  char pname[16];
+  bx_list_c *base;
+
   // all configuration has been read, now initialize everything.
 
   bx_pc_system.initialize(SIM->get_param_num(BXPN_IPS)->get());
@@ -1326,24 +1330,22 @@ void bx_init_hardware()
                       SIM->get_param_num(BXPN_ROM_ADDRESS)->get(), 0);
 
   // Then load the optional ROM images
-  if (!SIM->get_param_string(BXPN_OPTROM1_PATH)->isempty())
-    BX_MEM(0)->load_ROM(SIM->get_param_string(BXPN_OPTROM1_PATH)->getptr(), SIM->get_param_num(BXPN_OPTROM1_ADDRESS)->get(), 2);
-  if (!SIM->get_param_string(BXPN_OPTROM2_PATH)->isempty())
-    BX_MEM(0)->load_ROM(SIM->get_param_string(BXPN_OPTROM2_PATH)->getptr(), SIM->get_param_num(BXPN_OPTROM2_ADDRESS)->get(), 2);
-  if (!SIM->get_param_string(BXPN_OPTROM3_PATH)->isempty())
-    BX_MEM(0)->load_ROM(SIM->get_param_string(BXPN_OPTROM3_PATH)->getptr(), SIM->get_param_num(BXPN_OPTROM3_ADDRESS)->get(), 2);
-  if (!SIM->get_param_string(BXPN_OPTROM4_PATH)->isempty())
-    BX_MEM(0)->load_ROM(SIM->get_param_string(BXPN_OPTROM4_PATH)->getptr(), SIM->get_param_num(BXPN_OPTROM4_ADDRESS)->get(), 2);
+  for (i=0; i<BX_N_OPTROM_IMAGES; i++) {
+    sprintf(pname, "%s.%d", BXPN_OPTROM_BASE, i+1);
+    base = (bx_list_c*) SIM->get_param(pname);
+    if (!SIM->get_param_string("file", base)->isempty())
+      BX_MEM(0)->load_ROM(SIM->get_param_string("file", base)->getptr(),
+                          SIM->get_param_num("address", base)->get(), 2);
+  }
 
   // Then load the optional RAM images
-  if (!SIM->get_param_string(BXPN_OPTRAM1_PATH)->isempty())
-    BX_MEM(0)->load_RAM(SIM->get_param_string(BXPN_OPTRAM1_PATH)->getptr(), SIM->get_param_num(BXPN_OPTRAM1_ADDRESS)->get(), 2);
-  if (!SIM->get_param_string(BXPN_OPTRAM2_PATH)->isempty())
-    BX_MEM(0)->load_RAM(SIM->get_param_string(BXPN_OPTRAM2_PATH)->getptr(), SIM->get_param_num(BXPN_OPTRAM2_ADDRESS)->get(), 2);
-  if (!SIM->get_param_string(BXPN_OPTRAM3_PATH)->isempty())
-    BX_MEM(0)->load_RAM(SIM->get_param_string(BXPN_OPTRAM3_PATH)->getptr(), SIM->get_param_num(BXPN_OPTRAM3_ADDRESS)->get(), 2);
-  if (!SIM->get_param_string(BXPN_OPTRAM4_PATH)->isempty())
-    BX_MEM(0)->load_RAM(SIM->get_param_string(BXPN_OPTRAM4_PATH)->getptr(), SIM->get_param_num(BXPN_OPTRAM4_ADDRESS)->get(), 2);
+  for (i=0; i<BX_N_OPTRAM_IMAGES; i++) {
+    sprintf(pname, "%s.%d", BXPN_OPTRAM_BASE, i+1);
+    base = (bx_list_c*) SIM->get_param(pname);
+    if (!SIM->get_param_string("file", base)->isempty())
+      BX_MEM(0)->load_RAM(SIM->get_param_string("file", base)->getptr(),
+                          SIM->get_param_num("address", base)->get());
+  }
 
 #if BX_SUPPORT_SMP == 0
   BX_CPU(0)->initialize();
