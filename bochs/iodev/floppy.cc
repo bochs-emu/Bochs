@@ -1351,7 +1351,19 @@ Bit16u bx_floppy_ctrl_c::dma_read(Bit8u *buffer, Bit16u maxlen)
     BX_FD_THIS s.format_count--;
     switch (3 - (BX_FD_THIS s.format_count & 0x03)) {
       case 0:
-        BX_FD_THIS s.cylinder[drive] = *buffer;
+        if (*buffer < BX_FD_THIS s.media[drive].tracks) {
+          BX_FD_THIS s.cylinder[drive] = *buffer;
+        } else {
+          BX_ERROR(("format track: cylinder out of range"));
+          if (!(BX_FD_THIS s.main_status_reg & FD_MS_NDMA)) {
+            DEV_dma_set_drq(FLOPPY_DMA_CHAN, 0);
+          }
+          BX_FD_THIS s.status_reg0 = 0x40 | (BX_FD_THIS s.head[drive]<<2) | drive;
+          BX_FD_THIS s.status_reg1 = 0x04;
+          BX_FD_THIS s.status_reg2 = 0x00;
+          enter_result_phase();
+          return 1;
+        }
         break;
       case 1:
         if (*buffer != BX_FD_THIS s.head[drive])
