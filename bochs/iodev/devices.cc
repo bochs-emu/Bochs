@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2016  The Bochs Project
+//  Copyright (C) 2002-2017  The Bochs Project
 //
 //  I/O port handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -292,6 +292,11 @@ void bx_devices_c::init(BX_MEM_C *newmem)
     DEV_cmos_set_reg(0x5b, (Bit8u)(memory_above_4gb >> 16));
     DEV_cmos_set_reg(0x5c, (Bit8u)(memory_above_4gb >> 24));
     DEV_cmos_set_reg(0x5d, memory_above_4gb >> 32);
+  }
+
+  // TODO: add support for a comma-separated list of BIOS options
+  if (!strcmp(SIM->get_param_string(BXPN_ROM_OPTIONS)->getptr(), "fastboot")) {
+    DEV_cmos_set_reg(0x3f, 0x01);
   }
 
   if (timer_handle != BX_NULL_TIMER_HANDLE) {

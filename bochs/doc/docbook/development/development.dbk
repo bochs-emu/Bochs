@@ -993,10 +993,25 @@ LOC	NOTES	MEANING
 
 0x3a	S	ata translation policy - ata2 + ata3 (see above)
 
+0x3b	S	ata biosdetect flags - ata0 + ata1 (unimplemented)
+	bits
+	1-0	ata0-master (0: auto, 1: cmos, 2: none)
+	3-2	ata0-slave
+	5-4	ata1-master
+	7-6	ata1-slave
+
+0x3c	S	ata biosdetect flags - ata2 + ata3 (unimplemented)
+
 0x3d	S	eltorito boot sequence (see above)
 	bits
 	3-0	boot drive #1
 	7-4	boot drive #2
+
+0x3f	S	BIOS options
+	bits
+	0	fastboot (skip boot menu delay)
+	7-1	reserved
+
 0x5b	S 	extra memory above 4GB
 0x5c	S 	extra memory above 4GB
 0x5d	S 	extra memory above 4GB

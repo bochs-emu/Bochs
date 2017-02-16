@@ -493,8 +493,10 @@ void bx_hard_drive_c::init(void)
             Bit16u heads = BX_DRIVE(channel,device).hdimage->heads;
             Bit16u spt = BX_DRIVE(channel,device).hdimage->spt;
             Bit8u  translation = SIM->get_param_enum("translation", base)->get();
+            Bit8u  bd = (SIM->get_param_enum("biosdetect", base)->get() & 0x03);
 
-            Bit8u reg = 0x39 + channel/2;
+            Bit8u treg = 0x39 + channel/2;
+            Bit8u breg = 0x3b + channel/2;
             Bit8u bitshift = 2 * (device+(2 * (channel%2)));
 
             // Find the right translation if autodetect
@@ -523,18 +525,20 @@ void bx_hard_drive_c::init(void)
 
             switch(translation) {
               case BX_ATA_TRANSLATION_NONE:
-                DEV_cmos_set_reg(reg, DEV_cmos_get_reg(reg) | (0 << bitshift));
+                DEV_cmos_set_reg(treg, DEV_cmos_get_reg(treg) | (0 << bitshift));
                 break;
               case BX_ATA_TRANSLATION_LBA:
-                DEV_cmos_set_reg(reg, DEV_cmos_get_reg(reg) | (1 << bitshift));
+                DEV_cmos_set_reg(treg, DEV_cmos_get_reg(treg) | (1 << bitshift));
                 break;
               case BX_ATA_TRANSLATION_LARGE:
-                DEV_cmos_set_reg(reg, DEV_cmos_get_reg(reg) | (2 << bitshift));
+                DEV_cmos_set_reg(treg, DEV_cmos_get_reg(treg) | (2 << bitshift));
                 break;
               case BX_ATA_TRANSLATION_RECHS:
-                DEV_cmos_set_reg(reg, DEV_cmos_get_reg(reg) | (3 << bitshift));
+                DEV_cmos_set_reg(treg, DEV_cmos_get_reg(treg) | (3 << bitshift));
                 break;
             }
+            // TODO: biosdetect flag not yet handled by Bochs BIOS
+            DEV_cmos_set_reg(breg, DEV_cmos_get_reg(breg) | (bd << bitshift));
           }
         }
       }

@@ -363,8 +363,10 @@ memory: guest=512, host=256
 # The usage of external large BIOS images (up to 512k) at memory top is
 # now supported, but we still recommend to use the BIOS distributed with Bochs.
 # The start address is optional, since it can be calculated from image size.
+# The Bochs BIOS currently supports only the option "fastboot" to skip the
+# boot menu delay.
 #=======================================================================
-romimage: file=$BXSHARE/BIOS-bochs-latest 
+romimage: file=$BXSHARE/BIOS-bochs-latest, options=fastboot
 #romimage: file=$BXSHARE/bios.bin-1.7.5 # http://www.seabios.org/SeaBIOS
 #romimage: file=mybios.bin, address=0xfff80000 # 512k at memory top
 
@@ -673,7 +675,7 @@ ata3: enabled=0, ioaddr1=0x168, ioaddr2=0x360, irq=9
 #   heads=      only valid for disks
 #   spt=        only valid for disks
 #   status=     only valid for cdroms [inserted|ejected]
-#   biosdetect= type of biosdetection [none|auto], only for disks on ata0 [cmos]
+#   biosdetect= type of biosdetection [auto|cmos|none]
 #   translation=type of translation of the bios, only for disks [none|lba|large|rechs|auto]
 #   model=      string returned by identify device command
 #   journal=    optional filename of the redolog for undoable, volatile and vvfat disks

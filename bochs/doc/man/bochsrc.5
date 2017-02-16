@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "9 Feb 2017" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "16 Feb 2017" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -419,12 +419,13 @@ You can use the environment variable $BXSHARE to specify the location of the BIO
 The usage of external large BIOS images (up to 512k) at memory top is
 now supported, but we still recommend to use the BIOS distributed with Bochs.
 The start address is optional, since it can be calculated from image size.
+The Bochs BIOS currently supports only the option "fastboot" to skip the
+boot menu delay.
 
 Examples:
-  romimage: file=bios/BIOS-bochs-latest
+  romimage: file=bios/BIOS-bochs-latest, options=fastboot
   romimage: file=$BXSHARE/BIOS-bochs-legacy
   romimage: file=mybios.bin, address=0xfff80000
-  romimage: file=mybios.bin
 
 .TP
 .I "vgaromimage:"
@@ -714,7 +715,7 @@ This defines the type and characteristics of all attached ata devices:
    heads=      only valid for disks
    spt=        only valid for disks
    status=     only valid for cdroms [inserted|ejected]
-   biosdetect= type of biosdetection [none|auto], only for disks on ata0 [cmos]
+   biosdetect= type of biosdetection [auto|cmos|none]
    translation=type of translation of the bios, only for disks [none|lba|large|rechs|auto]
    model=      string returned by identify device command
    journal=    optional filename of the redolog for undoable, volatile and vvfat disks

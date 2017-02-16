@@ -2096,6 +2096,9 @@ interactive_bootkey()
   while (check_for_keystroke())
     get_keystroke();
 
+  if ((inb_cmos(0x3f) & 0x01) == 0x01) /* check for 'fastboot' option */
+    return;
+
   printf("Press F12 for boot menu.\n\n");
 
   delay_ticks_and_check_for_keystroke(11, 5); /* ~3 seconds */
@@ -7536,7 +7539,7 @@ BX_DEBUG_INT13_FL("floppy f00\n");
             SET_CF();
             return;
           } else {
-            BX_PANIC("int13_diskette_function: read error\n");
+            BX_PANIC("int13_diskette_function: write error\n");
           }
         }
       }

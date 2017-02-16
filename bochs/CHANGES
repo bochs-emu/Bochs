@@ -48,6 +48,8 @@ Changes after 2.6.8 release:
     - USB printer: added support for changing output file at runtime.
     - Added common USB device option "debug" to turn on BX_DEBUG reporting at
       connection time.
+- ROM BIOS
+  - Implemented Bochs BIOS option "fastboot" for skipping the boot menu delay.
 
 -------------------------------------------------------------------------
 Changes in 2.6.8 (May 3, 2015):

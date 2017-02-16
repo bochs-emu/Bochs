@@ -1395,7 +1395,7 @@ void bx_init_options()
         "Generic 1234", 41);
       model->set_ask_format("Enter new model name: [%s]");
 
-      static const char *atadevice_biosdetect_names[] = { "none", "auto", "cmos", NULL };
+      static const char *atadevice_biosdetect_names[] = { "auto", "cmos", "none", NULL };
 
       bx_param_enum_c *biosdetect = new bx_param_enum_c(menu,
         "biosdetect",
@@ -1403,7 +1403,7 @@ void bx_init_options()
         "Type of bios detection",
         atadevice_biosdetect_names,
         BX_ATA_BIOSDETECT_AUTO,
-        BX_ATA_BIOSDETECT_NONE);
+        BX_ATA_BIOSDETECT_AUTO);
       biosdetect->set_ask_format("Enter bios detection type: [%s]");
 
       static const char *atadevice_translation_names[] = { "none", "lba", "large", "rechs", "auto", NULL };

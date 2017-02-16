@@ -3671,7 +3671,6 @@ Examples:
   romimage: file=bios/BIOS-bochs-latest, address=0xfffe0000
   romimage: file=$BXSHARE/BIOS-bochs-legacy, address=0xffff0000
   romimage: file=mybios.bin, address=0xfff80000
-  romimage: file=mybios.bin
 </screen>
 The ROM BIOS controls what the PC does when it first powers on.  Normally, you
 can use a precompiled BIOS in the source or binary distribution called
@@ -3683,6 +3682,8 @@ You can use the environment variable $BXSHARE to specify the location of the BIO
 The usage of external large BIOS images (up to 512k) at memory top is
 now supported, but we still recommend to use the BIOS distributed with Bochs.
 The start address is optional, since it can be calculated from image size.
+The Bochs BIOS currently supports only the option "fastboot" to skip the
+boot menu delay.
 </para>
 </section>
 
@@ -4071,7 +4072,7 @@ This defines the type and characteristics of all attached ata devices:
 <row> <entry> heads </entry> <entry> only valid for disks </entry> </row>
 <row> <entry> spt </entry> <entry> only valid for disks </entry> </row>
 <row> <entry> status </entry> <entry> only valid for cdroms </entry> <entry> [inserted | ejected] </entry> </row>
-<row> <entry> biosdetect </entry> <entry> type of biosdetection </entry> <entry> [none | auto], only for disks on ata0 [cmos] </entry> </row>
+<row> <entry> biosdetect </entry> <entry> type of biosdetection </entry> <entry> [auto | cmos | none] </entry> </row>
 <row> <entry> translation </entry> <entry> type of translation done by the BIOS (legacy int13), only for disks </entry> <entry> [none | lba | large | rechs | auto] </entry> </row>
 <row> <entry> model </entry> <entry> string returned by identify device ATA command </entry> </row>
 <row> <entry> journal </entry> <entry> optional filename of the redolog for undoable, volatile and vvfat disks </entry> </row>
