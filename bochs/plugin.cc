@@ -816,6 +816,9 @@ static builtin_plugin_t builtin_gui_plugins[] = {
 #if BX_WITH_WIN32
   BUILTIN_GUI_PLUGIN_ENTRY(win32),
 #endif
+#if BX_WITH_WX
+  BUILTIN_GUI_PLUGIN_ENTRY(wx),
+#endif
 #if BX_WITH_X11
   BUILTIN_GUI_PLUGIN_ENTRY(x),
 #endif
