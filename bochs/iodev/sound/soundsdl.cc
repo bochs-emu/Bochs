@@ -138,7 +138,7 @@ bx_bool bx_soundlow_waveout_sdl_c::mixer_common(Bit8u *buffer, int len)
 {
   Bit32u len2 = 0;
 
-  Bit8u *tmpbuffer = (Bit8u*)malloc(len);
+  Bit8u *tmpbuffer = new Bit8u[len];
   for (int i = 0; i < cb_count; i++) {
     if (get_wave[i].cb != NULL) {
       memset(tmpbuffer, 0, len);
@@ -148,7 +148,7 @@ bx_bool bx_soundlow_waveout_sdl_c::mixer_common(Bit8u *buffer, int len)
       }
     }
   }
-  free(tmpbuffer);
+  delete [] tmpbuffer;
   return 1;
 }
 

@@ -220,7 +220,7 @@ int bx_soundlow_wavein_alsa_c::getwavepacket(int length, Bit8u data[])
   int ret;
 
   if (alsa_wavein.buffer == NULL) {
-    alsa_wavein.buffer = (char *)malloc(alsa_wavein.alsa_bufsize);
+    alsa_wavein.buffer = new char[alsa_wavein.alsa_bufsize];
   }
   while (alsa_wavein.audio_bufsize < length) {
     ret = snd_pcm_readi(alsa_wavein.handle, alsa_wavein.buffer, alsa_wavein.frames);
@@ -241,7 +241,7 @@ int bx_soundlow_wavein_alsa_c::getwavepacket(int length, Bit8u data[])
   memcpy(data, audio_buffer, length);
   alsa_wavein.audio_bufsize -= length;
   if ((alsa_wavein.audio_bufsize <= 0) && (alsa_wavein.buffer != NULL)) {
-    free(alsa_wavein.buffer);
+    delete [] alsa_wavein.buffer;
     alsa_wavein.buffer = NULL;
   }
   return BX_SOUNDLOW_OK;

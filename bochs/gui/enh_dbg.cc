@@ -8,7 +8,7 @@
 //
 //  Modified by Bruce Ewing
 //
-//  Copyright (C) 2008-2016  The Bochs Project
+//  Copyright (C) 2008-2017  The Bochs Project
 
 #include "config.h"
 
@@ -3432,7 +3432,7 @@ BxEvent *enh_dbg_notify_callback(void *unused, BxEvent *event)
     case BX_ASYNC_EVT_LOG_MSG:
       if (LogView) {
         ParseIDText(event->u.logmsg.msg);
-        free((void*)event->u.logmsg.msg);
+        delete [] event->u.logmsg.msg;
         return event;
       }
     default:

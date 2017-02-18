@@ -391,7 +391,7 @@ bx_bool hdimage_backup_file(int fd, const char *backup_fname)
   if (backup_fd >= 0) {
     offset = 0;
     size = 0x20000;
-    buf = (char*)malloc(size);
+    buf = new char[size];
     if (buf == NULL) {
       ::close(backup_fd);
       return 0;
@@ -409,7 +409,7 @@ bx_bool hdimage_backup_file(int fd, const char *backup_fname)
     if (nread < 0) {
       ret = 0;
     }
-    free(buf);
+    delete [] buf;
     ::close(backup_fd);
     return ret;
   }
@@ -461,7 +461,7 @@ bx_bool hdimage_copy_file(const char *src, const char *dst)
   }
   offset = 0;
   size = 0x20000;
-  buf = (char*)malloc(size);
+  buf = new char[size];
   if (buf == NULL) {
     ::close(fd1);
     ::close(fd2);
@@ -480,7 +480,7 @@ bx_bool hdimage_copy_file(const char *src, const char *dst)
   if (nread < 0) {
     ret = 0;
   }
-  free(buf);
+  delete [] buf;
   ::close(fd1);
   ::close(fd2);
   return ret;
@@ -615,7 +615,8 @@ int concat_image_t::open(const char* _pathname0, int flags)
 {
   UNUSED(flags);
   pathname0 = _pathname0;
-  char *pathname1 = strdup(pathname0);
+  char *pathname1 = new char[strlen(pathname0) + 1];
+  strcpy(pathname1, pathname0);
   BX_DEBUG(("concat_image_t::open"));
   Bit64s start_offset = 0;
   for (int i=0; i<BX_CONCAT_MAX_IMAGES; i++) {
@@ -647,7 +648,7 @@ int concat_image_t::open(const char* _pathname0, int flags)
     start_offset += length_table[i];
     increment_string(pathname1);
   }
-  free(pathname1);
+  delete [] pathname1;
   // start up with first image selected
   total_offset = 0;
   index = 0;
@@ -662,14 +663,15 @@ int concat_image_t::open(const char* _pathname0, int flags)
 void concat_image_t::close()
 {
   BX_DEBUG(("concat_image_t.close"));
-  char *pathname1 = strdup(pathname0);
+  char *pathname1 = new char[strlen(pathname0) + 1];
+  strcpy(pathname1, pathname0);
   for (int index = 0; index < maxfd; index++) {
     if (fd_table[index] > -1) {
       bx_close_image(fd_table[index], pathname1);
     }
     increment_string(pathname1);
   }
-  free(pathname1);
+  delete [] pathname1;
 }
 
 Bit64s concat_image_t::lseek(Bit64s offset, int whence)
@@ -798,17 +800,18 @@ void concat_image_t::restore_state(const char *backup_fname)
   char tempfn[BX_PATHNAME_LEN];
 
   close();
-  char *image_name = strdup(pathname0);
+  char *image_name = new char[strlen(pathname0) + 1];
+  strcpy(image_name, pathname0);
   for (int index = 0; index < maxfd; index++) {
     sprintf(tempfn, "%s%d", backup_fname, index);
     if (!hdimage_copy_file(tempfn, image_name)) {
       BX_PANIC(("Failed to restore concat image '%s'", image_name));
-      free(image_name);
+      delete [] image_name;
       return;
     }
     increment_string(image_name);
   }
-  free(image_name);
+  delete [] image_name;
   device_image_t::open(pathname0);
 }
 #endif
@@ -1518,8 +1521,8 @@ int redolog_t::make_header(const char* type, Bit64u size)
 
   print_header();
 
-  catalog = (Bit32u*)malloc(dtoh32(header.specific.catalog) * sizeof(Bit32u));
-  bitmap = (Bit8u*)malloc(dtoh32(header.specific.bitmap));
+  catalog = new Bit32u[dtoh32(header.specific.catalog)];
+  bitmap =  new Bit8u[dtoh32(header.specific.bitmap)];
 
   if ((catalog == NULL) || (bitmap==NULL))
     BX_PANIC(("redolog : could not malloc catalog or bitmap"));
@@ -1596,7 +1599,8 @@ int redolog_t::open(const char* filename, const char *type, int flags)
   FILETIME mtime;
 #endif
 
-  pathname = strdup(filename);
+  pathname = new char[strlen(filename) + 1];
+  strcpy(pathname, filename);
   fd = hdimage_open_file(filename, flags, &imgsize, &mtime);
   if (fd < 0) {
     BX_INFO(("redolog : could not open image %s", filename));
@@ -1639,7 +1643,7 @@ int redolog_t::open(const char* filename, const char *type, int flags)
     set_timestamp(fat_datetime(mtime, 1) | (fat_datetime(mtime, 0) << 16));
   }
 
-  catalog = (Bit32u*)malloc(dtoh32(header.specific.catalog) * sizeof(Bit32u));
+  catalog = new Bit32u[dtoh32(header.specific.catalog)];
 
   // FIXME could mmap
   res = bx_read_image(fd, dtoh32(header.standard.header), catalog, dtoh32(header.specific.catalog) * sizeof(Bit32u));
@@ -1663,7 +1667,7 @@ int redolog_t::open(const char* filename, const char *type, int flags)
   BX_INFO(("redolog : next extent will be at index %d",extent_next));
 
   // memory used for storing bitmaps
-  bitmap = (Bit8u *)malloc(dtoh32(header.specific.bitmap));
+  bitmap = new Bit8u[dtoh32(header.specific.bitmap)];
 
   bitmap_blocks = 1 + (dtoh32(header.specific.bitmap) - 1) / 512;
   extent_blocks = 1 + (dtoh32(header.specific.extent) - 1) / 512;
@@ -1683,13 +1687,13 @@ void redolog_t::close()
     bx_close_image(fd, pathname);
 
   if (pathname != NULL)
-    free(pathname);
+    delete [] pathname;
 
   if (catalog != NULL)
-    free(catalog);
+    delete [] catalog;
 
   if (bitmap != NULL)
-    free(bitmap);
+    delete [] bitmap;
 }
 
 Bit64u redolog_t::get_size()
@@ -1813,7 +1817,7 @@ ssize_t redolog_t::write(const void* buf, size_t count)
 
     extent_next += 1;
 
-    char *zerobuffer = (char*)malloc(512);
+    char *zerobuffer = new char[512];
     memset(zerobuffer, 0, 512);
 
     // Write bitmap
@@ -1828,7 +1832,7 @@ ssize_t redolog_t::write(const void* buf, size_t count)
       ::write(fd, zerobuffer, 512);
     }
 
-    free(zerobuffer);
+    delete [] zerobuffer;
 
     update_catalog = 1;
   }
@@ -2109,7 +2113,8 @@ undoable_image_t::undoable_image_t(const char* _redolog_name)
   redolog_name = NULL;
   if (_redolog_name != NULL) {
     if ((strlen(_redolog_name) > 0) && (strcmp(_redolog_name,"none") != 0)) {
-      redolog_name = strdup(_redolog_name);
+      redolog_name = new char[strlen(_redolog_name) + 1];
+      strcpy(redolog_name, _redolog_name);
     }
   }
 }
@@ -2144,7 +2149,7 @@ int undoable_image_t::open(const char* pathname, int flags)
 
   // If not set, we make up the redolog filename from the pathname
   if (redolog_name == NULL) {
-    redolog_name = (char*)malloc(strlen(pathname) + UNDOABLE_REDOLOG_EXTENSION_LENGTH + 1);
+    redolog_name = new char[strlen(pathname) + UNDOABLE_REDOLOG_EXTENSION_LENGTH + 1];
     sprintf(redolog_name, "%s%s", pathname, UNDOABLE_REDOLOG_EXTENSION);
   }
 
@@ -2155,6 +2160,7 @@ int undoable_image_t::open(const char* pathname, int flags)
     }
   }
   if (!coherency_check(ro_disk, redolog)) {
+    close();
     return -1;
   }
 
@@ -2169,7 +2175,7 @@ void undoable_image_t::close()
   ro_disk->close();
 
   if (redolog_name != NULL)
-    free(redolog_name);
+    delete [] redolog_name;
 }
 
 Bit64s undoable_image_t::lseek(Bit64s offset, int whence)
@@ -2250,7 +2256,8 @@ volatile_image_t::volatile_image_t(const char* _redolog_name)
   redolog_name = NULL;
   if (_redolog_name != NULL) {
     if ((strlen(_redolog_name) > 0) && (strcmp(_redolog_name,"none") != 0)) {
-      redolog_name = strdup(_redolog_name);
+      redolog_name = new char[strlen(_redolog_name) + 1];
+      strcpy(redolog_name, _redolog_name);
     }
   }
 }
@@ -2288,10 +2295,11 @@ int volatile_image_t::open(const char* pathname, int flags)
 
   // If not set, use pathname as template
   if (redolog_name == NULL) {
-    redolog_name = strdup(pathname);
+    redolog_name = new char[strlen(pathname) + 1];
+    strcpy(redolog_name, pathname);
   }
 
-  redolog_temp = (char*)malloc(strlen(redolog_name) + VOLATILE_REDOLOG_EXTENSION_LENGTH + 1);
+  redolog_temp = new char[strlen(redolog_name) + VOLATILE_REDOLOG_EXTENSION_LENGTH + 1];
   sprintf(redolog_temp, "%s%s", redolog_name, VOLATILE_REDOLOG_EXTENSION);
 
   filedes = mkstemp(redolog_temp);
@@ -2329,10 +2337,10 @@ void volatile_image_t::close()
   unlink(redolog_temp);
 #endif
   if (redolog_temp!=NULL)
-    free(redolog_temp);
+    delete [] redolog_temp;
 
   if (redolog_name!=NULL)
-    free(redolog_name);
+    delete [] redolog_name;
 }
 
 Bit64s volatile_image_t::lseek(Bit64s offset, int whence)

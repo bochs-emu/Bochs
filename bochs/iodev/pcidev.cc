@@ -437,7 +437,7 @@ void bx_pcidev_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len
       /*
        * Remap our I/O port handlers here.
        */
-      iomask = (Bit8u*)malloc(BX_PCIDEV_THIS regions[io_reg_idx].size);
+      iomask = new Bit8u[BX_PCIDEV_THIS regions[io_reg_idx].size];
       memset(iomask, 7, BX_PCIDEV_THIS regions[io_reg_idx].size);
       if (DEV_pci_set_base_io(&(BX_PCIDEV_THIS regions[io_reg_idx]),
             read_handler, write_handler,
@@ -447,7 +447,7 @@ void bx_pcidev_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len
         BX_INFO(("new base #%d i/o address: 0x%04x", io_reg_idx,
                  (Bit16u)BX_PCIDEV_THIS regions[io_reg_idx].start));
       }
-      free(iomask);
+      delete [] iomask;
     }
     return;
   }

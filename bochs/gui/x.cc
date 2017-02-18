@@ -835,7 +835,7 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   imWide  = ximage->bytes_per_line;
   imBPP   = ximage->bits_per_pixel;
 
-  imagedata = (char *) malloc((size_t) (ximage->bytes_per_line * y_tilesize));
+  imagedata = new char[ximage->bytes_per_line * y_tilesize];
   if (!imagedata) BX_PANIC(("imagedata: malloc returned error"));
 
   ximage->data = imagedata;

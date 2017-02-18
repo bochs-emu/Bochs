@@ -269,7 +269,7 @@ void bx_vncsrv_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
     BX_PANIC(("Create VNC screen failed!"));
 
   screen->desktopName = "Bochs VNC Screen";
-  screen->frameBuffer = (char *) malloc(rfbWindowX * rfbWindowY * sizeof(rfbPixel));
+  screen->frameBuffer = new char[rfbWindowX * rfbWindowY * sizeof(rfbPixel)];
   screen->alwaysShared = TRUE;
   screen->ptrAddEvent = doptr;
   screen->kbdAddEvent = dokey;
@@ -555,7 +555,7 @@ unsigned bx_vncsrv_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim
     BX_ERROR(("too many pixmaps."));
     return 0;
   }
-  rfbBitmaps[rfbBitmapCount].bmap = (char *) malloc((xdim * ydim) / 8);
+  rfbBitmaps[rfbBitmapCount].bmap = new char[(xdim * ydim) / 8];
   rfbBitmaps[rfbBitmapCount].xdim = xdim;
   rfbBitmaps[rfbBitmapCount].ydim = ydim;
   memcpy(rfbBitmaps[rfbBitmapCount].bmap, bmap, (xdim * ydim) / 8);
@@ -594,7 +594,7 @@ void bx_vncsrv_gui_c::show_headerbar(void)
   char *newBits, value;
   unsigned int i, xorigin, addr, bmap_id;
 
-  newBits = (char *) malloc(rfbWindowX * rfbHeaderbarY);
+  newBits = new char[rfbWindowX * rfbHeaderbarY];
   memset(newBits, 0, (rfbWindowX * rfbHeaderbarY));
   DrawBitmap(0, 0, rfbWindowX, rfbHeaderbarY, newBits, headerbar_fg,
              headerbar_bg);
@@ -608,8 +608,8 @@ void bx_vncsrv_gui_c::show_headerbar(void)
     DrawBitmap(xorigin, 0, rfbBitmaps[bmap_id].xdim, rfbBitmaps[bmap_id].ydim,
                rfbBitmaps[bmap_id].bmap, headerbar_fg, headerbar_bg);
   }
-  free(newBits);
-  newBits = (char *) malloc(rfbWindowX * rfbStatusbarY / 8);
+  delete [] newBits;
+  newBits = new char[rfbWindowX * rfbStatusbarY / 8];
   memset(newBits, 0, (rfbWindowX * rfbStatusbarY / 8));
   for (i = 1; i < 12; i++) {
     addr = rfbStatusitemPos[i] / 8;
@@ -620,7 +620,7 @@ void bx_vncsrv_gui_c::show_headerbar(void)
   }
   DrawBitmap(0, rfbWindowY - rfbStatusbarY, rfbWindowX, rfbStatusbarY,
              newBits, headerbar_fg, headerbar_bg);
-  free(newBits);
+  delete [] newBits;
   for (i = 1; i <= statusitem_count; i++) {
     vncSetStatusText(i, statusitem[i - 1].text, rfbStatusitemActive[i]);
   }
@@ -654,7 +654,7 @@ void bx_vncsrv_gui_c::exit(void)
   BX_FINI_MUTEX(bKeyboardInUse);
 
   for (i = 0; i < rfbBitmapCount; i++) {
-    free(rfbBitmaps[i].bmap);
+    delete [] rfbBitmaps[i].bmap;
   }
 
   BX_DEBUG(("bx_vncsrv_gui_c::exit()"));
@@ -1121,7 +1121,7 @@ BX_THREAD_FUNC(vncServerThreadInit, indata)
   /* 40000 are the microseconds to wait on select(), i.e. 0.04 seconds*/
   rfbRunEventLoop(theGui->screen, 40000, FALSE);
 
-  free(theGui->screen->frameBuffer);
+  delete [] theGui->screen->frameBuffer;
   rfbScreenCleanup(theGui->screen);
 
   rfbServerDown = true;
@@ -1141,7 +1141,7 @@ void DrawBitmap(int x, int y, int width, int height, char *bmap,
 {
   rfbPixel *newBits;
 
-  newBits = (rfbPixel *) malloc(width * height * sizeof(rfbPixel));
+  newBits = new rfbPixel[width * height];
   memset(newBits, 0, (width * height * sizeof(rfbPixel)));
   for (int i = 0; i < (width * height) / 8; i++) {
     newBits[i * 8 + 0] = (bmap[i] & 0x01) ? fgcolor : bgcolor;
@@ -1154,7 +1154,7 @@ void DrawBitmap(int x, int y, int width, int height, char *bmap,
     newBits[i * 8 + 7] = (bmap[i] & 0x80) ? fgcolor : bgcolor;
   }
   UpdateScreen(newBits, x, y, width, height);
-  free(newBits);
+  delete [] newBits;
 }
 
 void DrawChar(int x, int y, int width, int height, int fonty, char *bmap,
@@ -1217,7 +1217,7 @@ void vncSetStatusText(int element, const char *text, bx_bool active, bx_bool w)
   rfbStatusitemActive[element] = active;
   xleft = rfbStatusitemPos[element] + 2;
   xsize = rfbStatusitemPos[element + 1] - xleft - 1;
-  newBits = (char *) malloc(((xsize / 8) + 1) * (rfbStatusbarY - 2));
+  newBits = new char[((xsize / 8) + 1) * (rfbStatusbarY - 2)];
   memset(newBits, 0, ((xsize / 8) + 1) * (rfbStatusbarY - 2));
   for (i = 0; i < (rfbStatusbarY - 2); i++) {
     newBits[((xsize / 8) + 1) * i] = 0;
@@ -1233,7 +1233,7 @@ void vncSetStatusText(int element, const char *text, bx_bool active, bx_bool w)
   DrawBitmap(xleft, rfbWindowY - rfbStatusbarY + 1, xsize, rfbStatusbarY - 2,
              newBits, fgcolor, bgcolor);
 
-  free(newBits);
+  delete [] newBits;
   len = ((element > 0) && (strlen(text) > 4)) ? 4 : strlen(text);
   for (i = 0; i < len; i++) {
     DrawChar(xleft + i * 8 + 2, rfbWindowY - rfbStatusbarY + 5, 8, 8, 0,
@@ -1249,10 +1249,10 @@ void newframebuffer(rfbScreenInfoPtr screen, int width, int height)
     unsigned char *oldfb, *newfb;
 
     oldfb = (unsigned char*) screen->frameBuffer;
-    newfb = (unsigned char*) malloc(width * height * sizeof(rfbPixel));
+    newfb = new unsigned char[width * height * sizeof(rfbPixel)];
     rfbNewFramebuffer(screen, (char*) newfb, width, height, 8, 3,
             sizeof(rfbPixel));
-    free(oldfb);
+    delete [] oldfb;
 
     /*** FIXME: Re-install cursor. ***/
 }

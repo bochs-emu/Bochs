@@ -986,11 +986,10 @@ void bx_wx_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   IFDBG_VGA(wxLogDebug (wxT ("MyPanel::specific_init trying to get lock. wxScreen=%p", wxScreen)));
   wxCriticalSectionLocker lock(wxScreen_lock);
   IFDBG_VGA(wxLogDebug (wxT ("MyPanel::specific_init got lock. wxScreen=%p", wxScreen)));
-  if (wxScreen == NULL) {
-    wxScreen = (char *)malloc(wxScreenX * wxScreenY * 3);
-  } else {
-    wxScreen = (char *)realloc(wxScreen, wxScreenX * wxScreenY * 3);
+  if (wxScreen != NULL) {
+    delete [] wxScreen;
   }
+  wxScreen = new char[wxScreenX * wxScreenY * 3];
   memset(wxScreen, 0, wxScreenX * wxScreenY * 3);
 
   wxTileX = x_tilesize;
@@ -1538,7 +1537,8 @@ void bx_wx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, uns
   }
   wxScreenX = x;
   wxScreenY = y;
-  wxScreen = (char *)realloc(wxScreen, wxScreenX * wxScreenY * 3);
+  delete [] wxScreen;
+  wxScreen = new char[wxScreenX * wxScreenY * 3];
   wxASSERT (wxScreen != NULL);
   wxScreen_lock.Leave ();
   IFDBG_VGA(wxLogDebug (wxT ("MyPanel::dimension_update gave up lock. wxScreen=%p", wxScreen)));

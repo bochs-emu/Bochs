@@ -2927,7 +2927,7 @@ bx_bool bx_sb16_buffer::puts(const char *data, ...)
   char *string;
   int index = 0;
 
-  string = (char *) malloc(length);
+  string = new char[length];
 
   va_list ap;
   va_start(ap, data);
@@ -2941,12 +2941,12 @@ bx_bool bx_sb16_buffer::puts(const char *data, ...)
   {
     if (put((Bit8u) string[index]) == 0)
     {
-      free(string);
+      delete [] string;
       return 0;  // buffer full
     }
     index++;
   }
-  free(string);
+  delete [] string;
   return 1;
 }
 

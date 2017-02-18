@@ -255,7 +255,7 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
     BX_ERROR(("private_colormap option ignored."));
   }
 
-  rfbScreen = (char *)malloc(rfbWindowX * rfbWindowY);
+  rfbScreen = new char[rfbWindowX * rfbWindowY];
   memset(&rfbPalette, 0, sizeof(rfbPalette));
 
   rfbUpdateRegion.x = rfbWindowX;
@@ -510,7 +510,8 @@ void bx_rfb_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, un
       rfbDimensionY = y;
       rfbWindowX = rfbDimensionX;
       rfbWindowY = rfbDimensionY + rfbHeaderbarY + rfbStatusbarY;
-      rfbScreen = (char *)realloc(rfbScreen, rfbWindowX * rfbWindowY);
+      delete [] rfbScreen;
+      rfbScreen = new char[rfbWindowX * rfbWindowY];
       SendUpdate(0, 0, rfbWindowX, rfbWindowY, rfbEncodingDesktopSize);
       bx_gui->show_headerbar();
     } else {
@@ -531,7 +532,7 @@ unsigned bx_rfb_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, u
     BX_ERROR(("too many pixmaps."));
     return 0;
   }
-  rfbBitmaps[rfbBitmapCount].bmap = (char *) malloc((xdim * ydim) / 8);
+  rfbBitmaps[rfbBitmapCount].bmap = new char[(xdim * ydim) / 8];
   rfbBitmaps[rfbBitmapCount].xdim = xdim;
   rfbBitmaps[rfbBitmapCount].ydim = ydim;
   memcpy(rfbBitmaps[rfbBitmapCount].bmap, bmap, (xdim * ydim) / 8);
@@ -569,7 +570,7 @@ void bx_rfb_gui_c::show_headerbar(void)
   char *newBits, value;
   unsigned int i, xorigin, addr, bmap_id;
 
-  newBits = (char *) malloc(rfbWindowX * rfbHeaderbarY);
+  newBits = new char[rfbWindowX * rfbHeaderbarY];
   memset(newBits, 0, (rfbWindowX * rfbHeaderbarY));
   DrawBitmap(0, 0, rfbWindowX, rfbHeaderbarY, newBits, headerbar_fg, headerbar_bg, 0);
   for (i = 0; i < bx_headerbar_entries; i++) {
@@ -582,8 +583,8 @@ void bx_rfb_gui_c::show_headerbar(void)
     DrawBitmap(xorigin, 0, rfbBitmaps[bmap_id].xdim, rfbBitmaps[bmap_id].ydim,
                rfbBitmaps[bmap_id].bmap, headerbar_fg, headerbar_bg, 0);
   }
-  free(newBits);
-  newBits = (char *) malloc(rfbWindowX * rfbStatusbarY / 8);
+  delete [] newBits;
+  newBits = new char[rfbWindowX * rfbStatusbarY / 8];
   memset(newBits, 0, (rfbWindowX * rfbStatusbarY / 8));
   for (i = 1; i < 12; i++) {
     addr = rfbStatusitemPos[i] / 8;
@@ -594,7 +595,7 @@ void bx_rfb_gui_c::show_headerbar(void)
   }
   DrawBitmap(0, rfbWindowY - rfbStatusbarY, rfbWindowX, rfbStatusbarY, newBits,
              headerbar_fg, headerbar_bg, 0);
-  free(newBits);
+  delete [] newBits;
   for (i = 1; i <= statusitem_count; i++) {
     rfbSetStatusText(i, statusitem[i - 1].text, rfbStatusitemActive[i]);
   }
@@ -623,7 +624,7 @@ void bx_rfb_gui_c::exit(void)
 #ifdef BX_RFB_WIN32
   StopWinsock();
 #endif
-  free(rfbScreen);
+  delete [] rfbScreen;
   for(i = 0; i < rfbBitmapCount; i++) {
     free(rfbBitmaps[i].bmap);
   }
@@ -1549,7 +1550,7 @@ void DrawBitmap(int x, int y, int width, int height, char *bmap,
         char fgcolor, char bgcolor, bx_bool update_client)
 {
   unsigned char *newBits;
-  newBits = (unsigned char *)malloc(width * height);
+  newBits = new unsigned char[width * height];
   memset(newBits, 0, (width * height));
   for (int i = 0; i < (width * height) / 8; i++) {
     newBits[i * 8 + 0] = (bmap[i] & 0x01) ? fgcolor : bgcolor;
@@ -1562,7 +1563,7 @@ void DrawBitmap(int x, int y, int width, int height, char *bmap,
     newBits[i * 8 + 7] = (bmap[i] & 0x80) ? fgcolor : bgcolor;
   }
   UpdateScreen(newBits, x, y, width, height, update_client);
-  free(newBits);
+  delete [] newBits;
 }
 
 void DrawChar(int x, int y, int width, int height, int fonty, char *bmap,
@@ -1648,13 +1649,13 @@ void SendUpdate(int x, int y, int width, int height, Bit32u encoding)
         WriteExact(sGlobal, (char *)&furh, rfbFramebufferUpdateRectHeaderSize);
 
         if (encoding == rfbEncodingRaw) {
-          newBits = (char *)malloc(width * height);
+          newBits = new char[width * height];
           for(int i = 0; i < height; i++) {
             memcpy(&newBits[i * width], &rfbScreen[y * rfbWindowX + x], width);
             y++;
           }
           WriteExact(sGlobal, (char *)newBits, width * height);
-          free(newBits);
+          delete [] newBits;
         }
     }
 }
@@ -1683,7 +1684,7 @@ void rfbSetStatusText(int element, const char *text, bx_bool active, bx_bool w)
   rfbStatusitemActive[element] = active;
   xleft = rfbStatusitemPos[element] + 2;
   xsize = rfbStatusitemPos[element + 1] - xleft - 1;
-  newBits = (char *) malloc(((xsize / 8) + 1) * (rfbStatusbarY - 2));
+  newBits = new char[((xsize / 8) + 1) * (rfbStatusbarY - 2)];
   memset(newBits, 0, ((xsize / 8) + 1) * (rfbStatusbarY - 2));
   for (i = 0; i < (rfbStatusbarY - 2); i++) {
     newBits[((xsize / 8) + 1) * i] = 0;
@@ -1699,7 +1700,7 @@ void rfbSetStatusText(int element, const char *text, bx_bool active, bx_bool w)
   DrawBitmap(xleft, rfbWindowY - rfbStatusbarY + 1, xsize, rfbStatusbarY - 2,
              newBits, fgcolor, bgcolor, 0);
 
-  free(newBits);
+  delete [] newBits;
   len = ((element > 0) && (strlen(text) > 4)) ? 4 : strlen(text);
   for (i = 0; i < len; i++) {
     DrawChar(xleft + i * 8 + 2, rfbWindowY - rfbStatusbarY + 5, 8, 8, 0,
