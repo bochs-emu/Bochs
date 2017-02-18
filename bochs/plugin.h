@@ -86,6 +86,7 @@ extern "C" {
 #if BX_PLUGINS
 
 #define PLUG_load_plugin(name,type) {bx_load_plugin(#name,type);}
+#define PLUG_load_gui_plugin(name) bx_load_plugin(name,PLUGTYPE_GUI)
 #define PLUG_load_opt_plugin(name) bx_load_plugin(name,PLUGTYPE_OPTIONAL)
 #define PLUG_load_user_plugin(name) {bx_load_plugin(name,PLUGTYPE_USER);}
 #define PLUG_unload_plugin(name) {bx_unload_plugin(#name,1);}
@@ -111,6 +112,7 @@ extern "C" {
 // When plugins are off, PLUG_load_plugin will call the plugin_init function
 // directly.
 #define PLUG_load_plugin(name,type) {lib##name##_LTX_plugin_init(NULL,type);}
+#define PLUG_load_gui_plugin(name) bx_load_gui_plugin(name)
 #define PLUG_load_opt_plugin(name) bx_load_opt_plugin(name)
 #define PLUG_unload_plugin(name) {lib##name##_LTX_plugin_fini();}
 #define PLUG_unload_opt_plugin(name) bx_unload_opt_plugin(name,1);
@@ -351,6 +353,7 @@ extern void bx_plugins_register_state(void);
 extern void bx_plugins_after_restore_state(void);
 
 #if !BX_PLUGINS
+int bx_load_gui_plugin(const char *name);
 int bx_load_opt_plugin(const char *name);
 int bx_unload_opt_plugin(const char *name, bx_bool devflag);
 #endif
@@ -365,12 +368,19 @@ int plugin_init(plugin_t *plugin, plugintype_t type);
 #define DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(mod) \
   extern "C" __declspec(dllexport) int __cdecl lib##mod##_LTX_plugin_init(plugin_t *plugin, plugintype_t type); \
   extern "C" __declspec(dllexport) void __cdecl lib##mod##_LTX_plugin_fini(void);
+#define DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(mod) \
+  extern "C" __declspec(dllexport) int __cdecl lib##mod##_gui_plugin_init(plugin_t *plugin, plugintype_t type); \
+  extern "C" __declspec(dllexport) void __cdecl lib##mod##_gui_plugin_fini(void);
 #else
 #define DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(mod) \
   int CDECL lib##mod##_LTX_plugin_init(plugin_t *plugin, plugintype_t type); \
   void CDECL lib##mod##_LTX_plugin_fini(void);
+#define DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(mod) \
+  int CDECL lib##mod##_gui_plugin_init(plugin_t *plugin, plugintype_t type); \
+  void CDECL lib##mod##_gui_plugin_fini(void);
 #endif
 
+// device plugins
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(harddrv)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(hdimage)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(keyboard)
@@ -409,20 +419,21 @@ DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(acpi)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(iodebug)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(ioapic)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(voodoo)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(amigaos)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(carbon)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(macintosh)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(nogui)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(rfb)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(sdl)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(sdl2)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(svga)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(term)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(vncsrv)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(win32)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(wx)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(x)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(user)
+// gui plugins
+DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(amigaos)
+DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(carbon)
+DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(macintosh)
+DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(nogui)
+DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(rfb)
+DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(sdl)
+DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(sdl2)
+DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(svga)
+DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(term)
+DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(vncsrv)
+DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(win32)
+DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(wx)
+DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(x)
 
 
 #ifdef __cplusplus

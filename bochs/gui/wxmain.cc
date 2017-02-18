@@ -209,8 +209,7 @@ static int ci_callback(void *userdata, ci_command_t command)
   return 0;
 }
 
-extern "C" int libwx_LTX_plugin_init(plugin_t *plugin, plugintype_t type,
-  int argc, char *argv[])
+extern "C" int libwx_gui_plugin_init(plugin_t *plugin, plugintype_t type)
 {
   wxLogDebug(wxT("plugin_init for wxmain.cc"));
   wxLogDebug(wxT("installing wxWidgets as the configuration interface"));
@@ -221,7 +220,7 @@ extern "C" int libwx_LTX_plugin_init(plugin_t *plugin, plugintype_t type,
   return 0; // success
 }
 
-extern "C" void libwx_LTX_plugin_fini()
+extern "C" void libwx_gui_plugin_fini()
 {
   // Nothing here yet
 }

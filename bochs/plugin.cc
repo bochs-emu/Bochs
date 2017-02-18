@@ -36,8 +36,10 @@
 
 #define LOG_THIS genlog->
 
-#define PLUGIN_INIT_FMT_STRING  "lib%s_LTX_plugin_init"
-#define PLUGIN_FINI_FMT_STRING  "lib%s_LTX_plugin_fini"
+#define PLUGIN_INIT_FMT_STRING     "lib%s_LTX_plugin_init"
+#define PLUGIN_FINI_FMT_STRING     "lib%s_LTX_plugin_fini"
+#define GUI_PLUGIN_INIT_FMT_STRING "lib%s_gui_plugin_init"
+#define GUI_PLUGIN_FINI_FMT_STRING "lib%s_gui_plugin_fini"
 #define PLUGIN_PATH ""
 
 #ifndef WIN32
@@ -367,7 +369,9 @@ void plugin_load(char *name, plugintype_t type)
   }
 #endif
 
-  if (type != PLUGTYPE_USER) {
+  if (type == PLUGTYPE_GUI) {
+    sprintf(tmpname, GUI_PLUGIN_INIT_FMT_STRING, name);
+  } else if (type != PLUGTYPE_USER) {
     sprintf(tmpname, PLUGIN_INIT_FMT_STRING, name);
   } else {
     sprintf(tmpname, PLUGIN_INIT_FMT_STRING, "user");
@@ -386,7 +390,9 @@ void plugin_load(char *name, plugintype_t type)
   }
 #endif
 
-  if (type != PLUGTYPE_USER) {
+  if (type == PLUGTYPE_GUI) {
+    sprintf(tmpname, GUI_PLUGIN_FINI_FMT_STRING, name);
+  } else if (type != PLUGTYPE_USER) {
     sprintf(tmpname, PLUGIN_FINI_FMT_STRING, name);
   } else {
     sprintf(tmpname, PLUGIN_FINI_FMT_STRING, "user");
@@ -765,7 +771,7 @@ void bx_plugins_after_restore_state()
 
 #if !BX_PLUGINS
 
-// special code for loading optional plugins when plugins are turned off
+// special code for loading gui & optional plugins when plugins are turned off
 
 typedef struct {
   const char *name;
@@ -773,6 +779,64 @@ typedef struct {
   plugin_fini_t plugin_fini;
   bx_bool       status;
 } builtin_plugin_t;
+
+#define BUILTIN_GUI_PLUGIN_ENTRY(mod) {#mod, lib##mod##_gui_plugin_init, lib##mod##_gui_plugin_fini, 0}
+
+static builtin_plugin_t builtin_gui_plugins[] = {
+#if BX_WITH_AMIGAOS
+  BUILTIN_GUI_PLUGIN_ENTRY(amigaos),
+#endif
+#if BX_WITH_CARBON
+  BUILTIN_GUI_PLUGIN_ENTRY(carbon),
+#endif
+#if BX_WITH_MACOS
+  BUILTIN_GUI_PLUGIN_ENTRY(macos),
+#endif
+#if BX_WITH_NOGUI
+  BUILTIN_GUI_PLUGIN_ENTRY(nogui),
+#endif
+#if BX_WITH_RFB
+  BUILTIN_GUI_PLUGIN_ENTRY(rfb),
+#endif
+#if BX_WITH_SDL
+  BUILTIN_GUI_PLUGIN_ENTRY(sdl),
+#endif
+#if BX_WITH_SDL2
+  BUILTIN_GUI_PLUGIN_ENTRY(sdl2),
+#endif
+#if BX_WITH_SVGA
+  BUILTIN_GUI_PLUGIN_ENTRY(svga),
+#endif
+#if BX_WITH_TERM
+  BUILTIN_GUI_PLUGIN_ENTRY(term),
+#endif
+#if BX_WITH_VNCSRV
+  BUILTIN_GUI_PLUGIN_ENTRY(vncsrv),
+#endif
+#if BX_WITH_WIN32
+  BUILTIN_GUI_PLUGIN_ENTRY(win32),
+#endif
+#if BX_WITH_X11
+  BUILTIN_GUI_PLUGIN_ENTRY(x),
+#endif
+  {"NULL", NULL, NULL, 0}
+};
+
+int bx_load_gui_plugin(const char *name)
+{
+  int i = 0;
+  while (strcmp(builtin_gui_plugins[i].name, "NULL")) {
+    if (!strcmp(name, builtin_gui_plugins[i].name)) {
+      if (builtin_gui_plugins[i].status == 0) {
+        builtin_gui_plugins[i].plugin_init(NULL, PLUGTYPE_GUI);
+        builtin_gui_plugins[i].status = 1;
+      }
+      return 1;
+    }
+    i++;
+  };
+  return 0;
+}
 
 #define BUILTIN_PLUGIN_ENTRY(mod) {#mod, lib##mod##_LTX_plugin_init, lib##mod##_LTX_plugin_fini, 0}
 
@@ -783,42 +847,6 @@ static builtin_plugin_t builtin_opt_plugins[] = {
   BUILTIN_PLUGIN_ENTRY(extfpuirq),
   BUILTIN_PLUGIN_ENTRY(parallel),
   BUILTIN_PLUGIN_ENTRY(serial),
-#if BX_WITH_AMIGAOS
-  BUILTIN_PLUGIN_ENTRY(amigaos),
-#endif
-#if BX_WITH_CARBON
-  BUILTIN_PLUGIN_ENTRY(carbon),
-#endif
-#if BX_WITH_MACOS
-  BUILTIN_PLUGIN_ENTRY(macos),
-#endif
-#if BX_WITH_NOGUI
-  BUILTIN_PLUGIN_ENTRY(nogui),
-#endif
-#if BX_WITH_RFB
-  BUILTIN_PLUGIN_ENTRY(rfb),
-#endif
-#if BX_WITH_SDL
-  BUILTIN_PLUGIN_ENTRY(sdl),
-#endif
-#if BX_WITH_SDL2
-  BUILTIN_PLUGIN_ENTRY(sdl2),
-#endif
-#if BX_WITH_SVGA
-  BUILTIN_PLUGIN_ENTRY(svga),
-#endif
-#if BX_WITH_TERM
-  BUILTIN_PLUGIN_ENTRY(term),
-#endif
-#if BX_WITH_VNCSRV
-  BUILTIN_PLUGIN_ENTRY(vncsrv),
-#endif
-#if BX_WITH_WIN32
-  BUILTIN_PLUGIN_ENTRY(win32),
-#endif
-#if BX_WITH_X11
-  BUILTIN_PLUGIN_ENTRY(x),
-#endif
 #if BX_SUPPORT_BUSMOUSE
   BUILTIN_PLUGIN_ENTRY(busmouse),
 #endif

@@ -138,10 +138,10 @@ static void setupWorkingDirectory(char *path)
   /* chdir to the binary app's parent */
   int n;
   n = chdir (parentdir);
-  if (n) BX_PANIC (("failed to change dir to parent"));
+  if (n) BX_PANIC(("failed to change dir to parent"));
   /* chdir to the .app's parent */
   n = chdir ("../../../");
-  if (n) BX_PANIC (("failed to change to ../../.."));
+  if (n) BX_PANIC(("failed to change to ../../.."));
 }
 
 /* Panic button to display fatal errors.
@@ -335,7 +335,7 @@ int bxmain(void)
     }
 #if BX_WITH_WX
     else if (!strcmp(ci_name, "wx")) {
-      PLUG_load_plugin(wx, PLUGTYPE_CORE);
+      PLUG_load_gui_plugin("wx");
     }
 #endif
     else {
@@ -744,17 +744,17 @@ int bx_init_main(int argc, char *argv[])
       // ugly hack.  I don't know how to open a window to print messages in,
       // so put them in /tmp/early-bochs-out.txt.  Sorry. -bbd
       io->init_log("/tmp/early-bochs-out.txt");
-      BX_INFO (("I was launched by double clicking.  Fixing home directory."));
+      BX_INFO(("I was launched by double clicking.  Fixing home directory."));
       arg = argc; // ignore all other args.
       setupWorkingDirectory (argv[0]);
       // there is no stdin/stdout so disable the text-based config interface.
       SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_QUICK_START);
       char cwd[MAXPATHLEN];
       getwd (cwd);
-      BX_INFO (("Now my working directory is %s", cwd));
+      BX_INFO(("Now my working directory is %s", cwd));
       // if it was started from command line, there could be some args still.
       for (int a=0; a<argc; a++) {
-        BX_INFO (("argument %d is %s", a, argv[a]));
+        BX_INFO(("argument %d is %s", a, argv[a]));
       }
     }
 #endif
@@ -767,7 +767,7 @@ int bx_init_main(int argc, char *argv[])
 #endif
     else if (argv[arg][0] == '-') {
       print_usage();
-      BX_PANIC (("command line arg '%s' was not understood", argv[arg]));
+      BX_PANIC(("command line arg '%s' was not understood", argv[arg]));
     }
     else {
       // the arg did not start with -, so stop interpreting flags
@@ -781,7 +781,7 @@ int bx_init_main(int argc, char *argv[])
     CFBundleRef mainBundle;
     CFURLRef bxshareDir;
     char bxshareDirPath[MAXPATHLEN];
-    BX_INFO (("fixing default bxshare location ..."));
+    BX_INFO(("fixing default bxshare location ..."));
     // set bxshare to the directory that contains our application
     mainBundle = CFBundleGetMainBundle();
     BX_ASSERT(mainBundle != NULL);
@@ -801,7 +801,7 @@ int bx_init_main(int argc, char *argv[])
       c--;
     *c = '\0';          /* cut off last part (binary name) */
     setenv("BXSHARE", bxshareDirPath, 1);
-    BX_INFO (("now my BXSHARE is %s", getenv("BXSHARE")));
+    BX_INFO(("now my BXSHARE is %s", getenv("BXSHARE")));
     CFRelease(bxshareDir);
   }
 #endif
@@ -822,7 +822,7 @@ int bx_init_main(int argc, char *argv[])
       // there is no stdin/stdout so disable the text-based config interface.
       SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_QUICK_START);
     }
-    BX_INFO (("fixing default lib location ..."));
+    BX_INFO(("fixing default lib location ..."));
     // locate the lib directory within the application bundle.
     // our libs have been placed in bochs.app/Contents/(current platform aka MacOS)/lib
     // This isn't quite right, but they are platform specific and we haven't put
@@ -838,14 +838,14 @@ int bx_init_main(int argc, char *argv[])
       return -1;
     }
     setenv("LTDL_LIBRARY_PATH", libDirPath, 1);
-    BX_INFO (("now my LTDL_LIBRARY_PATH is %s", getenv("LTDL_LIBRARY_PATH")));
+    BX_INFO(("now my LTDL_LIBRARY_PATH is %s", getenv("LTDL_LIBRARY_PATH")));
     CFRelease(libDir);
   }
 #elif BX_HAVE_GETENV && BX_HAVE_SETENV
   if (getenv("LTDL_LIBRARY_PATH") != NULL) {
-    BX_INFO (("LTDL_LIBRARY_PATH is set to '%s'", getenv("LTDL_LIBRARY_PATH")));
+    BX_INFO(("LTDL_LIBRARY_PATH is set to '%s'", getenv("LTDL_LIBRARY_PATH")));
   } else {
-    BX_INFO (("LTDL_LIBRARY_PATH not set. using compile time default '%s'",
+    BX_INFO(("LTDL_LIBRARY_PATH not set. using compile time default '%s'",
         BX_PLUGIN_PATH));
     setenv("LTDL_LIBRARY_PATH", BX_PLUGIN_PATH, 1);
   }
@@ -853,9 +853,9 @@ int bx_init_main(int argc, char *argv[])
 #endif  /* if BX_PLUGINS */
 #if BX_HAVE_GETENV && BX_HAVE_SETENV
   if (getenv("BXSHARE") != NULL) {
-    BX_INFO (("BXSHARE is set to '%s'", getenv("BXSHARE")));
+    BX_INFO(("BXSHARE is set to '%s'", getenv("BXSHARE")));
   } else {
-    BX_INFO (("BXSHARE not set. using compile time default '%s'",
+    BX_INFO(("BXSHARE not set. using compile time default '%s'",
         BX_SHARE_PATH));
     setenv("BXSHARE", BX_SHARE_PATH, 1);
   }
@@ -960,7 +960,7 @@ bx_bool load_and_init_display_lib(void)
     }
     BX_ERROR(("changing display library to '%s' instead", gui_name));
   }
-  PLUG_load_opt_plugin(gui_name);
+  PLUG_load_gui_plugin(gui_name);
 
 #if BX_GUI_SIGHANDLER
   // set the flag for guis requiring a GUI sighandler.
@@ -971,8 +971,7 @@ bx_bool load_and_init_display_lib(void)
   }
 #endif
 
-  BX_ASSERT(bx_gui != NULL);
-  return 1;
+  return (bx_gui != NULL);
 }
 
 int bx_begin_simulation(int argc, char *argv[])
@@ -989,8 +988,8 @@ int bx_begin_simulation(int argc, char *argv[])
   }
 
   // deal with gui selection
-  if (!load_and_init_display_lib ()) {
-    BX_PANIC (("no gui module was loaded"));
+  if (!load_and_init_display_lib()) {
+    BX_PANIC(("no gui module was loaded"));
     return 0;
   }
 
@@ -1162,7 +1161,7 @@ void bx_init_hardware()
   bx_pc_system.initialize(SIM->get_param_num(BXPN_IPS)->get());
 
   if (SIM->get_param_string(BXPN_LOG_FILENAME)->getptr()[0]!='-') {
-    BX_INFO (("using log file %s", SIM->get_param_string(BXPN_LOG_FILENAME)->getptr()));
+    BX_INFO(("using log file %s", SIM->get_param_string(BXPN_LOG_FILENAME)->getptr()));
     io->init_log(SIM->get_param_string(BXPN_LOG_FILENAME)->getptr());
   }
 
@@ -1491,7 +1490,7 @@ void CDECL bx_signal_handler(int signum)
   // once, leading to multiple threads trying to display a dialog box,
   // leading to GUI deadlock.
   if (!SIM->is_sim_thread()) {
-    BX_INFO (("bx_signal_handler: ignored sig %d because it wasn't called from the simulator thread", signum));
+    BX_INFO(("bx_signal_handler: ignored sig %d because it wasn't called from the simulator thread", signum));
     return;
   }
 #if BX_GUI_SIGHANDLER
@@ -1519,7 +1518,7 @@ void CDECL bx_signal_handler(int signum)
 
 #if BX_GUI_SIGHANDLER
   if (bx_gui_sighandler) {
-    if ((1<<signum) & bx_gui->get_sighandler_mask ()) {
+    if ((1<<signum) & bx_gui->get_sighandler_mask()) {
       bx_gui->sighandler(signum);
       return;
     }
