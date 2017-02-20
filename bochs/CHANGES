@@ -38,6 +38,7 @@ Changes after 2.6.8 release:
     - Added PCM output data resampling in a separate thread. The resampler
       requires either libsamplerate or the SoX resampler library installed.
     - SDL: Added audio capture support (requires library version >= 2.0.5).
+    - Now creating separate plugins for each sound driver (alsa, win, etc.).
   - USB
     - Added USB EHCI device emulation support (EHCI core ported from Qemu).
     - Added USB floppy (UFI/CBI) support (patch by Ben Lunt).

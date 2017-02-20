@@ -84,7 +84,7 @@ private:
 
 extern bx_audio_buffer_c *audio_buffers[2];
 void convert_float_to_s16le(float *src, unsigned srcsize, Bit8u *dst);
-Bit32u pcm_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len);
+BOCHSAPI_MSVCONLY Bit32u pcm_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len);
 
 extern int resampler_control;
 extern int mixer_control;
@@ -95,7 +95,7 @@ extern BX_MUTEX(mixer_mutex);
 
 // the waveout class
 
-class bx_soundlow_waveout_c : public logfunctions {
+class BOCHSAPI_MSVCONLY bx_soundlow_waveout_c : public logfunctions {
 public:
   bx_soundlow_waveout_c();
   virtual ~bx_soundlow_waveout_c();
@@ -134,7 +134,7 @@ protected:
 
 // the wavein class
 
-class bx_soundlow_wavein_c : public logfunctions {
+class BOCHSAPI_MSVCONLY bx_soundlow_wavein_c : public logfunctions {
 public:
   bx_soundlow_wavein_c();
   virtual ~bx_soundlow_wavein_c();
@@ -154,7 +154,7 @@ protected:
 
 // the midiout class
 
-class bx_soundlow_midiout_c : public logfunctions {
+class BOCHSAPI_MSVCONLY bx_soundlow_midiout_c : public logfunctions {
 public:
   bx_soundlow_midiout_c();
   virtual ~bx_soundlow_midiout_c();
@@ -168,7 +168,7 @@ public:
 // This is the base class of the sound lowlevel support.
 // the lowlevel sound driver class returns pointers to the child objects
 
-class bx_sound_lowlevel_c : public logfunctions {
+class BOCHSAPI_MSVCONLY bx_sound_lowlevel_c : public logfunctions {
 public:
   bx_sound_lowlevel_c();
   virtual ~bx_sound_lowlevel_c();
