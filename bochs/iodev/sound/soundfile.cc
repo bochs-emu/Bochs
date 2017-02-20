@@ -28,6 +28,7 @@
 
 #include "iodev.h"
 #include "soundlow.h"
+#include "soundmod.h"
 #include "soundfile.h"
 
 #if BX_SUPPORT_SOUNDLOW
@@ -38,6 +39,22 @@
 #define BX_SOUNDFILE_MID 3
 
 #define LOG_THIS
+
+bx_sound_file_c* fileSoundDriver = NULL;
+
+// sound driver plugin entry points
+
+int CDECL libfile_sound_plugin_init(plugin_t *plugin, plugintype_t type)
+{
+  fileSoundDriver = new bx_sound_file_c();
+  DEV_sound_register_driver(fileSoundDriver, BX_SOUNDDRV_FILE);
+  return 0; // Success
+}
+
+void CDECL libfile_sound_plugin_fini(void)
+{
+  delete fileSoundDriver;
+}
 
 // bx_soundlow_waveout_file_c class implemenzation
 

@@ -20,8 +20,14 @@
 
 // Lowlevel sound output support for SDL written by Volker Ruppert
 
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
+
 #include "iodev.h"
 #include "soundlow.h"
+#include "soundmod.h"
 #include "soundsdl.h"
 
 #if BX_HAVE_SOUND_SDL && BX_SUPPORT_SOUNDLOW
@@ -29,6 +35,22 @@
 #define LOG_THIS
 
 #include <SDL.h>
+
+bx_sound_sdl_c* sdlSoundDriver = NULL;
+
+// sound driver plugin entry points
+
+int CDECL libsdl_sound_plugin_init(plugin_t *plugin, plugintype_t type)
+{
+  sdlSoundDriver = new bx_sound_sdl_c();
+  DEV_sound_register_driver(sdlSoundDriver, BX_SOUNDDRV_SDL);
+  return 0; // Success
+}
+
+void CDECL libsdl_sound_plugin_fini(void)
+{
+  delete sdlSoundDriver;
+}
 
 // SDL audio callback
 

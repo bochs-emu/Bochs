@@ -36,16 +36,20 @@
 
 #define LOG_THIS genlog->
 
-#define PLUGIN_INIT_FMT_STRING     "lib%s_LTX_plugin_init"
-#define PLUGIN_FINI_FMT_STRING     "lib%s_LTX_plugin_fini"
-#define GUI_PLUGIN_INIT_FMT_STRING "lib%s_gui_plugin_init"
-#define GUI_PLUGIN_FINI_FMT_STRING "lib%s_gui_plugin_fini"
-#define PLUGIN_PATH ""
+#define PLUGIN_INIT_FMT_STRING       "lib%s_LTX_plugin_init"
+#define PLUGIN_FINI_FMT_STRING       "lib%s_LTX_plugin_fini"
+#define GUI_PLUGIN_INIT_FMT_STRING   "lib%s_gui_plugin_init"
+#define GUI_PLUGIN_FINI_FMT_STRING   "lib%s_gui_plugin_fini"
+#define SOUND_PLUGIN_INIT_FMT_STRING "lib%s_sound_plugin_init"
+#define SOUND_PLUGIN_FINI_FMT_STRING "lib%s_sound_plugin_fini"
+#define PLUGIN_PATH                  ""
 
 #ifndef WIN32
-#define PLUGIN_FILENAME_FORMAT "libbx_%s.so"
+#define PLUGIN_FILENAME_FORMAT       "libbx_%s.so"
+#define SOUND_PLUGIN_FILENAME_FORMAT "libbx_sound%s.so"
 #else
-#define PLUGIN_FILENAME_FORMAT "bx_%s.dll"
+#define PLUGIN_FILENAME_FORMAT       "bx_%s.dll"
+#define SOUND_PLUGIN_FILENAME_FORMAT "bx_sound%s.dll"
 #endif
 
 logfunctions *pluginlog;
@@ -330,7 +334,11 @@ void plugin_load(char *name, plugintype_t type)
   plugin->initialized = 0;
 
   char plugin_filename[BX_PATHNAME_LEN], tmpname[BX_PATHNAME_LEN];
-  sprintf(tmpname, PLUGIN_FILENAME_FORMAT, name);
+  if (type != PLUGTYPE_SOUND) {
+    sprintf(tmpname, PLUGIN_FILENAME_FORMAT, name);
+  } else {
+    sprintf(tmpname, SOUND_PLUGIN_FILENAME_FORMAT, name);
+  }
   sprintf(plugin_filename, "%s%s", PLUGIN_PATH, tmpname);
 
   // Set context so that any devices that the plugin registers will
@@ -354,7 +362,8 @@ void plugin_load(char *name, plugintype_t type)
   BX_INFO(("DLL handle is %p", plugin->handle));
   if (!plugin->handle) {
     current_plugin_context = NULL;
-    BX_PANIC(("LoadLibrary failed for module '%s': error=%d", name, GetLastError()));
+    BX_PANIC(("LoadLibrary failed for module '%s' (%s): error=%d", name,
+              plugin_filename, GetLastError()));
     delete plugin;
     return;
   }
@@ -363,7 +372,8 @@ void plugin_load(char *name, plugintype_t type)
   BX_INFO(("lt_dlhandle is %p", plugin->handle));
   if (!plugin->handle) {
     current_plugin_context = NULL;
-    BX_PANIC(("dlopen failed for module '%s': %s", name, lt_dlerror()));
+    BX_PANIC(("dlopen failed for module '%s' (%s): %s", name, plugin_filename,
+              lt_dlerror()));
     delete plugin;
     return;
   }
@@ -371,6 +381,8 @@ void plugin_load(char *name, plugintype_t type)
 
   if (type == PLUGTYPE_GUI) {
     sprintf(tmpname, GUI_PLUGIN_INIT_FMT_STRING, name);
+  } else if (type == PLUGTYPE_SOUND) {
+    sprintf(tmpname, SOUND_PLUGIN_INIT_FMT_STRING, name);
   } else if (type != PLUGTYPE_USER) {
     sprintf(tmpname, PLUGIN_INIT_FMT_STRING, name);
   } else {
@@ -392,6 +404,8 @@ void plugin_load(char *name, plugintype_t type)
 
   if (type == PLUGTYPE_GUI) {
     sprintf(tmpname, GUI_PLUGIN_FINI_FMT_STRING, name);
+  } else if (type == PLUGTYPE_SOUND) {
+    sprintf(tmpname, SOUND_PLUGIN_FINI_FMT_STRING, name);
   } else if (type != PLUGTYPE_USER) {
     sprintf(tmpname, PLUGIN_FINI_FMT_STRING, name);
   } else {
@@ -922,6 +936,60 @@ int bx_unload_opt_plugin(const char *name, bx_bool devflag)
         }
         builtin_opt_plugins[i].plugin_fini();
         builtin_opt_plugins[i].status = 0;
+      }
+      return 1;
+    }
+    i++;
+  };
+  return 0;
+}
+
+#define BUILTIN_SOUND_PLUGIN_ENTRY(mod) {#mod, lib##mod##_sound_plugin_init, lib##mod##_sound_plugin_fini, 0}
+
+static builtin_plugin_t builtin_sound_plugins[] = {
+#if BX_HAVE_SOUND_ALSA
+  BUILTIN_SOUND_PLUGIN_ENTRY(alsa),
+#endif
+#if BX_HAVE_SOUND_OSS
+  BUILTIN_SOUND_PLUGIN_ENTRY(oss),
+#endif
+#if BX_HAVE_SOUND_OSX
+  BUILTIN_SOUND_PLUGIN_ENTRY(osx),
+#endif
+#if BX_HAVE_SOUND_SDL
+  BUILTIN_SOUND_PLUGIN_ENTRY(sdl),
+#endif
+#if BX_HAVE_SOUND_WIN
+  BUILTIN_SOUND_PLUGIN_ENTRY(win),
+#endif
+  BUILTIN_SOUND_PLUGIN_ENTRY(file),
+  {"NULL", NULL, NULL, 0}
+};
+
+int bx_load_sound_plugin(const char *name)
+{
+  int i = 0;
+  while (strcmp(builtin_sound_plugins[i].name, "NULL")) {
+    if (!strcmp(name, builtin_sound_plugins[i].name)) {
+      if (builtin_sound_plugins[i].status == 0) {
+        builtin_sound_plugins[i].plugin_init(NULL, PLUGTYPE_SOUND);
+        builtin_sound_plugins[i].status = 1;
+      }
+      return 1;
+    }
+    i++;
+  };
+  return 0;
+}
+
+int bx_unload_sound_plugin(const char *name)
+{
+  int i = 0;
+  while (strcmp(builtin_sound_plugins[i].name, "NULL")) {
+    if (!strcmp(name, builtin_sound_plugins[i].name)) {
+      if (builtin_sound_plugins[i].status == 1) {
+        builtin_sound_plugins[i].plugin_fini();
+        builtin_sound_plugins[i].status = 0;
       }
       return 1;
     }

@@ -18,12 +18,7 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
-// Common sound module code and dummy sound lowlevel functions
-
-// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE
-// is used to know when we are exporting symbols and when we are importing.
-#define BX_PLUGGABLE
+// Sound driver loader code
 
 #include "iodev.h"
 
@@ -31,36 +26,15 @@
 
 #include "soundmod.h"
 #include "soundlow.h"
-#include "soundlnx.h"
-#include "soundosx.h"
-#include "soundwin.h"
-#include "soundsdl.h"
-#include "soundalsa.h"
-#include "soundfile.h"
 
 #if BX_WITH_SDL || BX_WITH_SDL2
 #include <SDL.h>
 #endif
 
-#define LOG_THIS theSoundModCtl->
+#define LOG_THIS bx_soundmod_ctl.
 
-bx_soundmod_ctl_c* theSoundModCtl = NULL;
+bx_soundmod_ctl_c bx_soundmod_ctl;
 
-int CDECL libsoundmod_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
-{
-  if (type == PLUGTYPE_CORE) {
-    theSoundModCtl = new bx_soundmod_ctl_c;
-    bx_devices.pluginSoundModCtl = theSoundModCtl;
-    return 0; // Success
-  } else {
-    return -1;
-  }
-}
-
-void CDECL libsoundmod_LTX_plugin_fini(void)
-{
-  delete theSoundModCtl;
-}
 
 bx_soundmod_ctl_c::bx_soundmod_ctl_c()
 {
@@ -68,13 +42,6 @@ bx_soundmod_ctl_c::bx_soundmod_ctl_c()
   n_sound_drivers = 0;
   soundmod[0].module = NULL;
   waveout = NULL;
-}
-
-bx_soundmod_ctl_c::~bx_soundmod_ctl_c()
-{
-  for (unsigned i = 0; i < n_sound_drivers; i++) {
-    delete soundmod[i].module;
-  }
 }
 
 void bx_soundmod_ctl_c::init()
@@ -97,55 +64,64 @@ void bx_soundmod_ctl_c::init()
   }
 }
 
-bx_sound_lowlevel_c* bx_soundmod_ctl_c::get_driver(int driver_id)
+void bx_soundmod_ctl_c::exit()
 {
-  bx_sound_lowlevel_c *driver = NULL;
-  unsigned i;
+  unsigned i, driver_id;
 
-  for (i = 0; i < n_sound_drivers; i++) {
-    if (driver_id == soundmod[i].drv_id) {
-      return soundmod[i].module;
+  while (n_sound_drivers > 0) {
+    i = --n_sound_drivers;
+    driver_id = soundmod[i].drv_id;
+    if (driver_id == BX_SOUNDDRV_DUMMY) {
+      delete soundmod[i].module;
+    } else {
+      PLUG_unload_sound_plugin(sound_driver_names[driver_id]);
     }
   }
+}
+
+bx_bool bx_soundmod_ctl_c::register_driver(bx_sound_lowlevel_c *module, int driver_id)
+{
+  unsigned i = n_sound_drivers;
+
   if (i == BX_MAX_SOUND_DRIVERS) {
     BX_PANIC(("Too many sound drivers!"));
-    return NULL;
+    return 0;
   }
-  if (driver_id == BX_SOUNDDRV_DUMMY) {
-    driver = new bx_sound_dummy_c();
-  } else if (driver_id == BX_SOUNDDRV_FILE) {
-    driver = new bx_sound_file_c();
-#if BX_HAVE_SOUND_ALSA
-  } else if (driver_id == BX_SOUNDDRV_ALSA) {
-    driver = new bx_sound_alsa_c();
-#endif
-#if BX_HAVE_SOUND_SDL
-  } else if (driver_id == BX_SOUNDDRV_SDL) {
-    driver = new bx_sound_sdl_c();
-#endif
-#if BX_HAVE_SOUND_OSS
-  } else if (driver_id == BX_SOUNDDRV_OSS) {
-    driver = new bx_sound_oss_c();
-#endif
-#if BX_HAVE_SOUND_OSX
-  } else if (driver_id == BX_SOUNDDRV_OSX) {
-    driver = new bx_sound_osx_c();
-#endif
-#if BX_HAVE_SOUND_WIN
-  } else if (driver_id == BX_SOUNDDRV_WIN) {
-    driver = new bx_sound_windows_c();
-#endif
-  } else {
-    BX_PANIC(("unknown lowlevel sound driver id %d", driver_id));
-  }
-  if (driver != NULL) {
+  if (module != NULL) {
     BX_INFO(("Installed sound driver '%s' at index #%d",
              sound_driver_names[driver_id], i));
     soundmod[i].drv_id = driver_id;
-    soundmod[i].module = driver;
+    soundmod[i].module = module;
     n_sound_drivers++;
+    return 1;
   }
-  return driver;
+  return 0;
+}
+
+bx_sound_lowlevel_c* bx_soundmod_ctl_c::get_driver(int driver_id)
+{
+  unsigned i, loaded = 0;
+
+  do {
+    for (i = 0; i < n_sound_drivers; i++) {
+      if (driver_id == soundmod[i].drv_id) {
+        return soundmod[i].module;
+      }
+    }
+    if (loaded) return NULL;
+    if (i == BX_MAX_SOUND_DRIVERS) {
+      BX_PANIC(("Too many sound drivers!"));
+      return NULL;
+    }
+    if (driver_id == BX_SOUNDDRV_DUMMY) {
+      bx_sound_lowlevel_c *driver = new bx_sound_dummy_c();
+      register_driver(driver, driver_id);
+    } else {
+      PLUG_load_sound_plugin(sound_driver_names[driver_id]);
+    }
+    loaded = 1;
+  } while (1);
+  return NULL;
 }
 
 bx_soundlow_waveout_c* bx_soundmod_ctl_c::get_waveout(bx_bool using_file)

@@ -35,6 +35,7 @@
 #if BX_SUPPORT_PCI && BX_SUPPORT_ES1370
 
 #include "soundlow.h"
+#include "soundmod.h"
 #include "pci.h"
 #include "es1370.h"
 

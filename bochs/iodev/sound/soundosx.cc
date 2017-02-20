@@ -20,12 +20,18 @@
 
 // This file (SOUNDOSX.CC) written and donated by Brian Huffman
 
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
+
 #ifdef PARANOID
 #include <MacTypes.h>
 #endif
 
 #include "iodev.h"
 #include "soundlow.h"
+#include "soundmod.h"
 #include "soundosx.h"
 
 #if BX_HAVE_SOUND_OSX && BX_SUPPORT_SOUNDLOW
@@ -75,6 +81,22 @@ ExtSoundHeader WaveHeader[BX_SOUND_OSX_NBUF];
 AudioUnit WaveOutputUnit = NULL;
 AudioConverterRef WaveConverter = NULL;
 #endif
+
+bx_sound_osx_c* osxSoundDriver = NULL;
+
+// sound driver plugin entry points
+
+int CDECL libosx_sound_plugin_init(plugin_t *plugin, plugintype_t type)
+{
+  osxSoundDriver = new bx_sound_osx_c();
+  DEV_sound_register_driver(osxSoundDriver, BX_SOUNDDRV_OSX);
+  return 0; // Success
+}
+
+void CDECL libosx_sound_plugin_fini(void)
+{
+  delete osxSoundDriver;
+}
 
 // bx_soundlow_waveout_osx_c class implemenzation
 

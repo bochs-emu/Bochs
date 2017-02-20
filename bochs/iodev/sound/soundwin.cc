@@ -28,6 +28,7 @@
 
 #include "iodev.h"
 #include "soundlow.h"
+#include "soundmod.h"
 #include "soundwin.h"
 
 #if BX_HAVE_SOUND_WIN && BX_SUPPORT_SOUNDLOW
@@ -49,6 +50,22 @@
 // some data for the wave buffers
 HANDLE DataHandle;     // returned by GlobalAlloc()
 Bit8u *DataPointer;    // returned by GlobalLock()
+
+bx_sound_windows_c* winSoundDriver = NULL;
+
+// sound driver plugin entry points
+
+int CDECL libwin_sound_plugin_init(plugin_t *plugin, plugintype_t type)
+{
+  winSoundDriver = new bx_sound_windows_c();
+  DEV_sound_register_driver(winSoundDriver, BX_SOUNDDRV_WIN);
+  return 0; // Success
+}
+
+void CDECL libwin_sound_plugin_fini(void)
+{
+  delete winSoundDriver;
+}
 
 // helper function
 Bit8u* newbuffer(unsigned blksize)

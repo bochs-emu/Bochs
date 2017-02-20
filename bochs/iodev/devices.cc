@@ -27,6 +27,7 @@
 
 #include "iodev/virt_timer.h"
 #include "iodev/slowdown_timer.h"
+#include "iodev/sound/soundmod.h"
 
 #define LOG_THIS bx_devices.
 
@@ -90,9 +91,6 @@ void bx_devices_c::init_stubs()
 #endif
 #if BX_SUPPORT_PCIUSB
   pluginUsbDevCtl = &stubUsbDevCtl;
-#endif
-#if BX_SUPPORT_SOUNDLOW
-  pluginSoundModCtl = &stubSoundModCtl;
 #endif
 #if BX_NETWORKING
   pluginNetModCtl = &stubNetModCtl;
@@ -168,8 +166,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 #if BX_SUPPORT_SOUNDLOW
   sound_enabled = is_sound_enabled();
   if (sound_enabled) {
-    PLUG_load_plugin(soundmod, PLUGTYPE_CORE);
-    pluginSoundModCtl->init();
+    bx_soundmod_ctl.init();
   }
 #endif
   // PCI logic (i440FX)
@@ -397,7 +394,7 @@ void bx_devices_c::exit()
 #endif
 #if BX_SUPPORT_SOUNDLOW
   if (sound_enabled)
-    PLUG_unload_plugin(soundmod);
+    bx_soundmod_ctl.exit();
 #endif
 #if BX_SUPPORT_PCIUSB
   if (usb_enabled)

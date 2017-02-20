@@ -32,6 +32,7 @@
 #if BX_SUPPORT_SB16
 
 #include "soundlow.h"
+#include "soundmod.h"
 #include "sb16.h"
 #include "opl.h"
 

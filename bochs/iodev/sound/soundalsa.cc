@@ -21,13 +21,35 @@
 
 // ALSA PCM input/output and MIDI output support written by Volker Ruppert
 
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
+
 #include "iodev.h"
 #include "soundlow.h"
+#include "soundmod.h"
 #include "soundalsa.h"
 
 #if BX_HAVE_SOUND_ALSA && BX_SUPPORT_SOUNDLOW
 
 #define LOG_THIS log->
+
+bx_sound_alsa_c* alsaSoundDriver = NULL;
+
+// sound driver plugin entry points
+
+int CDECL libalsa_sound_plugin_init(plugin_t *plugin, plugintype_t type)
+{
+  alsaSoundDriver = new bx_sound_alsa_c();
+  DEV_sound_register_driver(alsaSoundDriver, BX_SOUNDDRV_ALSA);
+  return 0; // Success
+}
+
+void CDECL libalsa_sound_plugin_fini(void)
+{
+  delete alsaSoundDriver;
+}
 
 // helper function for wavein / waveout
 

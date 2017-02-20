@@ -183,7 +183,7 @@ protected:
   bx_soundlow_midiout_c *midiout;
 };
 
-// the dummy sound driver contains stubs for all features
+// The dummy sound driver contains stubs for all features
 
 class bx_sound_dummy_c : public bx_sound_lowlevel_c {
 public:

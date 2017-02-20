@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2015  The Bochs Project
+//  Copyright (C) 2001-2017  The Bochs Project
 //
 //  I/O port handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -81,9 +81,6 @@ class BOCHSAPI bx_devmodel_c : public logfunctions {
 class bx_list_c;
 class device_image_t;
 class cdrom_base_c;
-class bx_soundlow_waveout_c;
-class bx_soundlow_wavein_c;
-class bx_soundlow_midiout_c;
 
 //////////////////////////////////////////////////////////////////////
 // declare stubs for PCI devices
@@ -346,21 +343,6 @@ public:
   }
 };
 
-#if BX_SUPPORT_SOUNDLOW
-class BOCHSAPI bx_soundmod_ctl_stub_c : public bx_devmodel_c {
-public:
-  virtual bx_soundlow_waveout_c* get_waveout(bx_bool using_file) {
-    STUBFUNC(soundmod_ctl, get_waveout); return NULL;
-  }
-  virtual bx_soundlow_wavein_c* get_wavein() {
-    STUBFUNC(soundmod_ctl, get_wavein); return NULL;
-  }
-  virtual bx_soundlow_midiout_c* get_midiout(bx_bool using_file) {
-    STUBFUNC(soundmod_ctl, get_midiout); return NULL;
-  }
-};
-#endif
-
 #if BX_NETWORKING
 class BOCHSAPI bx_netmod_ctl_stub_c : public bx_devmodel_c {
 public:
@@ -465,9 +447,6 @@ public:
 #if BX_SUPPORT_PCIUSB
   bx_usb_devctl_stub_c  *pluginUsbDevCtl;
 #endif
-#if BX_SUPPORT_SOUNDLOW
-  bx_soundmod_ctl_stub_c  *pluginSoundModCtl;
-#endif
 #if BX_NETWORKING
   bx_netmod_ctl_stub_c  *pluginNetModCtl;
 #endif
@@ -499,9 +478,6 @@ public:
 #endif
 #if BX_SUPPORT_PCIUSB
   bx_usb_devctl_stub_c stubUsbDevCtl;
-#endif
-#if BX_SUPPORT_SOUNDLOW
-  bx_soundmod_ctl_stub_c  stubSoundModCtl;
 #endif
 #if BX_NETWORKING
   bx_netmod_ctl_stub_c  stubNetModCtl;

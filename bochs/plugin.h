@@ -57,7 +57,6 @@ extern "C" {
 #define BX_PLUGIN_PCI       "pci"
 #define BX_PLUGIN_PCI2ISA   "pci2isa"
 #define BX_PLUGIN_PCI_IDE   "pci_ide"
-#define BX_PLUGIN_SOUNDMOD  "soundmod"
 #define BX_PLUGIN_SB16      "sb16"
 #define BX_PLUGIN_ES1370    "es1370"
 #define BX_PLUGIN_NETMOD    "netmod"
@@ -88,9 +87,11 @@ extern "C" {
 #define PLUG_load_plugin(name,type) {bx_load_plugin(#name,type);}
 #define PLUG_load_gui_plugin(name) bx_load_plugin(name,PLUGTYPE_GUI)
 #define PLUG_load_opt_plugin(name) bx_load_plugin(name,PLUGTYPE_OPTIONAL)
+#define PLUG_load_sound_plugin(name) bx_load_plugin(name,PLUGTYPE_SOUND)
 #define PLUG_load_user_plugin(name) {bx_load_plugin(name,PLUGTYPE_USER);}
 #define PLUG_unload_plugin(name) {bx_unload_plugin(#name,1);}
 #define PLUG_unload_opt_plugin(name) bx_unload_plugin(name,1)
+#define PLUG_unload_sound_plugin(name) bx_unload_plugin(name,1)
 #define PLUG_unload_user_plugin(name) {bx_unload_plugin(name,1);}
 
 #define DEV_register_ioread_handler(b,c,d,e,f)  pluginRegisterIOReadHandler(b,c,d,e,f)
@@ -114,8 +115,10 @@ extern "C" {
 #define PLUG_load_plugin(name,type) {lib##name##_LTX_plugin_init(NULL,type);}
 #define PLUG_load_gui_plugin(name) bx_load_gui_plugin(name)
 #define PLUG_load_opt_plugin(name) bx_load_opt_plugin(name)
+#define PLUG_load_sound_plugin(name) bx_load_sound_plugin(name)
 #define PLUG_unload_plugin(name) {lib##name##_LTX_plugin_fini();}
 #define PLUG_unload_opt_plugin(name) bx_unload_opt_plugin(name,1);
+#define PLUG_unload_sound_plugin(name) bx_unload_sound_plugin(name);
 #define DEV_register_ioread_handler(b,c,d,e,f) bx_devices.register_io_read_handler(b,c,d,e,f)
 #define DEV_register_iowrite_handler(b,c,d,e,f) bx_devices.register_io_write_handler(b,c,d,e,f)
 #define DEV_unregister_ioread_handler(b,c,d,e)  bx_devices.unregister_io_read_handler(b,c,d,e)
@@ -258,9 +261,10 @@ extern "C" {
 #define DEV_usb_send_msg(a,b) bx_devices.pluginUsbDevCtl->usb_send_msg((void*)a,b)
 
 ///////// Sound module macros
-#define DEV_sound_get_waveout(a) (bx_devices.pluginSoundModCtl->get_waveout(a))
-#define DEV_sound_get_wavein() (bx_devices.pluginSoundModCtl->get_wavein())
-#define DEV_sound_get_midiout(a) (bx_devices.pluginSoundModCtl->get_midiout(a))
+#define DEV_sound_register_driver(a,b) (bx_soundmod_ctl.register_driver(a,b))
+#define DEV_sound_get_waveout(a) (bx_soundmod_ctl.get_waveout(a))
+#define DEV_sound_get_wavein() (bx_soundmod_ctl.get_wavein())
+#define DEV_sound_get_midiout(a) (bx_soundmod_ctl.get_midiout(a))
 
 ///////// Networking module macro
 #define DEV_net_init_module(a,b,c,d) \
@@ -355,7 +359,9 @@ extern void bx_plugins_after_restore_state(void);
 #if !BX_PLUGINS
 int bx_load_gui_plugin(const char *name);
 int bx_load_opt_plugin(const char *name);
+int bx_load_sound_plugin(const char *name);
 int bx_unload_opt_plugin(const char *name, bx_bool devflag);
+int bx_unload_sound_plugin(const char *name);
 #endif
 
 // every plugin must define these, within the extern"C" block, so that
@@ -371,6 +377,9 @@ int plugin_init(plugin_t *plugin, plugintype_t type);
 #define DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(mod) \
   extern "C" __declspec(dllexport) int __cdecl lib##mod##_gui_plugin_init(plugin_t *plugin, plugintype_t type); \
   extern "C" __declspec(dllexport) void __cdecl lib##mod##_gui_plugin_fini(void);
+#define DECLARE_PLUGIN_INIT_FINI_FOR_SOUND_MODULE(mod) \
+  extern "C" __declspec(dllexport) int __cdecl lib##mod##_sound_plugin_init(plugin_t *plugin, plugintype_t type); \
+  extern "C" __declspec(dllexport) void __cdecl lib##mod##_sound_plugin_fini(void);
 #else
 #define DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(mod) \
   int CDECL lib##mod##_LTX_plugin_init(plugin_t *plugin, plugintype_t type); \
@@ -378,6 +387,9 @@ int plugin_init(plugin_t *plugin, plugintype_t type);
 #define DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(mod) \
   int CDECL lib##mod##_gui_plugin_init(plugin_t *plugin, plugintype_t type); \
   void CDECL lib##mod##_gui_plugin_fini(void);
+#define DECLARE_PLUGIN_INIT_FINI_FOR_SOUND_MODULE(mod) \
+  int CDECL lib##mod##_sound_plugin_init(plugin_t *plugin, plugintype_t type); \
+  void CDECL lib##mod##_sound_plugin_fini(void);
 #endif
 
 // device plugins
@@ -434,6 +446,13 @@ DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(vncsrv)
 DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(win32)
 DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(wx)
 DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(x)
+// sound driver plugins
+DECLARE_PLUGIN_INIT_FINI_FOR_SOUND_MODULE(alsa)
+DECLARE_PLUGIN_INIT_FINI_FOR_SOUND_MODULE(file)
+DECLARE_PLUGIN_INIT_FINI_FOR_SOUND_MODULE(oss)
+DECLARE_PLUGIN_INIT_FINI_FOR_SOUND_MODULE(osx)
+DECLARE_PLUGIN_INIT_FINI_FOR_SOUND_MODULE(sdl)
+DECLARE_PLUGIN_INIT_FINI_FOR_SOUND_MODULE(win)
 
 
 #ifdef __cplusplus
