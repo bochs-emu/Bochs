@@ -188,6 +188,7 @@ public:
   int bx_printf(const char *s);
   char* bx_gets(char *s, int size);
 #else
+  bx_bool has_gui_console(void) {return 0;}
   bx_bool console_running(void) {return 0;}
   void console_refresh(bx_bool force) {}
   void console_key_enq(Bit8u key) {}
