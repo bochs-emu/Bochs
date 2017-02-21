@@ -944,6 +944,8 @@ int bx_unload_opt_plugin(const char *name, bx_bool devflag)
   return 0;
 }
 
+#if BX_SUPPORT_SOUNDLOW
+
 #define BUILTIN_SOUND_PLUGIN_ENTRY(mod) {#mod, lib##mod##_sound_plugin_init, lib##mod##_sound_plugin_fini, 0}
 
 static builtin_plugin_t builtin_sound_plugins[] = {
@@ -997,6 +999,7 @@ int bx_unload_sound_plugin(const char *name)
   };
   return 0;
 }
+#endif
 
 #endif
 

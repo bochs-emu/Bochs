@@ -86,8 +86,8 @@ extern bx_audio_buffer_c *audio_buffers[2];
 void convert_float_to_s16le(float *src, unsigned srcsize, Bit8u *dst);
 BOCHSAPI_MSVCONLY Bit32u pcm_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len);
 
-extern int resampler_control;
-extern int mixer_control;
+BOCHSAPI_MSVCONLY extern int resampler_control;
+BOCHSAPI_MSVCONLY extern int mixer_control;
 extern BX_MUTEX(resampler_mutex);
 #ifndef ANDROID
 extern BX_MUTEX(mixer_mutex);

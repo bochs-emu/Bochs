@@ -260,30 +260,30 @@ bx_soundlow_waveout_c::bx_soundlow_waveout_c()
 
 bx_soundlow_waveout_c::~bx_soundlow_waveout_c()
 {
-#if BX_HAVE_LIBSAMPLERATE || BX_HAVE_SOXR_LSR
-  src_delete(src_state);
-#endif
   if (pcm_callback_id >= 0) {
+#if BX_HAVE_LIBSAMPLERATE || BX_HAVE_SOXR_LSR
+    src_delete(src_state);
+#endif
     unregister_wave_callback(pcm_callback_id);
-  }
-  if (resampler_control > 0) {
-    resampler_control = 0;
-    while (resampler_control >= 0) {
-      BX_MSLEEP(1);
+    if (resampler_control > 0) {
+      resampler_control = 0;
+      while (resampler_control >= 0) {
+        BX_MSLEEP(1);
+      }
+      BX_FINI_MUTEX(resampler_mutex);
     }
-    BX_FINI_MUTEX(resampler_mutex);
-  }
-  if (mixer_control > 0) {
-    mixer_control = 0;
-    while (mixer_control >= 0) {
-      BX_MSLEEP(1);
+    if (mixer_control > 0) {
+      mixer_control = 0;
+      while (mixer_control >= 0) {
+        BX_MSLEEP(1);
+      }
+      BX_FINI_MUTEX(mixer_mutex);
     }
-    BX_FINI_MUTEX(mixer_mutex);
-  }
-  if (audio_buffers[0] != NULL) {
-    delete audio_buffers[0];
-    delete audio_buffers[1];
-    audio_buffers[0] = NULL;
+    if (audio_buffers[0] != NULL) {
+      delete audio_buffers[0];
+      delete audio_buffers[1];
+      audio_buffers[0] = NULL;
+    }
   }
 }
 
