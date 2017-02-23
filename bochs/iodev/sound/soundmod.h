@@ -47,8 +47,6 @@ private:
     bx_sound_lowlevel_c *module;
   } soundmod[BX_MAX_SOUND_DRIVERS];
   unsigned n_sound_drivers;
-
-  bx_soundlow_waveout_c *waveout;
 };
 
 BOCHSAPI extern bx_soundmod_ctl_c bx_soundmod_ctl;

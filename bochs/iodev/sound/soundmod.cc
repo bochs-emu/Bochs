@@ -41,7 +41,6 @@ bx_soundmod_ctl_c::bx_soundmod_ctl_c()
   put("soundctl", "SNDCTL");
   n_sound_drivers = 0;
   soundmod[0].module = NULL;
-  waveout = NULL;
 }
 
 void bx_soundmod_ctl_c::init()
@@ -50,7 +49,7 @@ void bx_soundmod_ctl_c::init()
   const char *pwavein = SIM->get_param_string(BXPN_SOUND_WAVEIN)->getptr();
   int ret;
 
-  waveout = get_waveout(0);
+  bx_soundlow_waveout_c *waveout = get_waveout(0);
   if (waveout != NULL) {
     if (!strlen(pwavein)) {
       SIM->get_param_string(BXPN_SOUND_WAVEIN)->set(pwaveout);
@@ -109,10 +108,6 @@ bx_sound_lowlevel_c* bx_soundmod_ctl_c::get_driver(int driver_id)
       }
     }
     if (loaded) return NULL;
-    if (i == BX_MAX_SOUND_DRIVERS) {
-      BX_PANIC(("Too many sound drivers!"));
-      return NULL;
-    }
     if (driver_id == BX_SOUNDDRV_DUMMY) {
       bx_sound_lowlevel_c *driver = new bx_sound_dummy_c();
       register_driver(driver, driver_id);
