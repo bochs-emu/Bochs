@@ -87,11 +87,11 @@ extern "C" {
 #define PLUG_load_plugin(name,type) {bx_load_plugin(#name,type);}
 #define PLUG_load_gui_plugin(name) bx_load_plugin(name,PLUGTYPE_GUI)
 #define PLUG_load_opt_plugin(name) bx_load_plugin(name,PLUGTYPE_OPTIONAL)
-#define PLUG_load_sound_plugin(name) bx_load_plugin(name,PLUGTYPE_SOUND)
+#define PLUG_load_snd_plugin(name) bx_load_plugin(name,PLUGTYPE_SOUND)
 #define PLUG_load_user_plugin(name) {bx_load_plugin(name,PLUGTYPE_USER);}
 #define PLUG_unload_plugin(name) {bx_unload_plugin(#name,1);}
 #define PLUG_unload_opt_plugin(name) bx_unload_plugin(name,1)
-#define PLUG_unload_sound_plugin(name) bx_unload_plugin(name,1)
+#define PLUG_unload_snd_plugin(name) bx_unload_plugin(name,1)
 #define PLUG_unload_user_plugin(name) {bx_unload_plugin(name,1);}
 
 #define DEV_register_ioread_handler(b,c,d,e,f)  pluginRegisterIOReadHandler(b,c,d,e,f)
@@ -416,7 +416,6 @@ DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(usb_uhci)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(usb_ohci)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(usb_ehci)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(usb_xhci)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(soundmod)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(sb16)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(es1370)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(netmod)
