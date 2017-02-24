@@ -73,7 +73,7 @@ void bx_soundmod_ctl_c::exit()
     if (driver_id == BX_SOUNDDRV_DUMMY) {
       delete soundmod[i].module;
     } else {
-      PLUG_unload_sound_plugin(sound_driver_names[driver_id]);
+      PLUG_unload_snd_plugin(sound_driver_names[driver_id]);
     }
   }
 }
@@ -112,7 +112,7 @@ bx_sound_lowlevel_c* bx_soundmod_ctl_c::get_driver(int driver_id)
       bx_sound_lowlevel_c *driver = new bx_sound_dummy_c();
       register_driver(driver, driver_id);
     } else {
-      PLUG_load_sound_plugin(sound_driver_names[driver_id]);
+      PLUG_load_snd_plugin(sound_driver_names[driver_id]);
     }
     loaded = 1;
   } while (1);

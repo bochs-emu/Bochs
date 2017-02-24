@@ -113,12 +113,13 @@ extern "C" {
 // When plugins are off, PLUG_load_plugin will call the plugin_init function
 // directly.
 #define PLUG_load_plugin(name,type) {lib##name##_LTX_plugin_init(NULL,type);}
-#define PLUG_load_gui_plugin(name) bx_load_gui_plugin(name)
-#define PLUG_load_opt_plugin(name) bx_load_opt_plugin(name)
-#define PLUG_load_sound_plugin(name) bx_load_sound_plugin(name)
+#define PLUG_load_gui_plugin(name) bx_load_plugin2(name,PLUGTYPE_GUI)
+#define PLUG_load_opt_plugin(name) bx_load_plugin2(name,PLUGTYPE_OPTIONAL)
+#define PLUG_load_snd_plugin(name) bx_load_plugin2(name,PLUGTYPE_SOUND)
 #define PLUG_unload_plugin(name) {lib##name##_LTX_plugin_fini();}
 #define PLUG_unload_opt_plugin(name) bx_unload_opt_plugin(name,1);
-#define PLUG_unload_sound_plugin(name) bx_unload_sound_plugin(name);
+#define PLUG_unload_snd_plugin(name) bx_unload_snd_plugin(name);
+
 #define DEV_register_ioread_handler(b,c,d,e,f) bx_devices.register_io_read_handler(b,c,d,e,f)
 #define DEV_register_iowrite_handler(b,c,d,e,f) bx_devices.register_io_write_handler(b,c,d,e,f)
 #define DEV_unregister_ioread_handler(b,c,d,e)  bx_devices.unregister_io_read_handler(b,c,d,e)
@@ -357,11 +358,9 @@ extern void bx_plugins_register_state(void);
 extern void bx_plugins_after_restore_state(void);
 
 #if !BX_PLUGINS
-int bx_load_gui_plugin(const char *name);
-int bx_load_opt_plugin(const char *name);
-int bx_load_sound_plugin(const char *name);
+int bx_load_plugin2(const char *name, plugintype_t type);
 int bx_unload_opt_plugin(const char *name, bx_bool devflag);
-int bx_unload_sound_plugin(const char *name);
+int bx_unload_snd_plugin(const char *name);
 #endif
 
 // every plugin must define these, within the extern"C" block, so that

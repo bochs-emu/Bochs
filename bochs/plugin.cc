@@ -785,18 +785,22 @@ void bx_plugins_after_restore_state()
 
 #if !BX_PLUGINS
 
-// special code for loading gui & optional plugins when plugins are turned off
+// Special code for loading gui, optional and sound plugins when plugin support
+// is turned off.
 
 typedef struct {
-  const char *name;
+  const char*   name;
+  plugintype_t  type;
   plugin_init_t plugin_init;
   plugin_fini_t plugin_fini;
   bx_bool       status;
 } builtin_plugin_t;
 
-#define BUILTIN_GUI_PLUGIN_ENTRY(mod) {#mod, lib##mod##_gui_plugin_init, lib##mod##_gui_plugin_fini, 0}
+#define BUILTIN_GUI_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_GUI, lib##mod##_gui_plugin_init, lib##mod##_gui_plugin_fini, 0}
+#define BUILTIN_OPT_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_OPTIONAL, lib##mod##_LTX_plugin_init, lib##mod##_LTX_plugin_fini, 0}
+#define BUILTIN_SND_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_SOUND, lib##mod##_sound_plugin_init, lib##mod##_sound_plugin_fini, 0}
 
-static builtin_plugin_t builtin_gui_plugins[] = {
+static builtin_plugin_t builtin_plugins[] = {
 #if BX_WITH_AMIGAOS
   BUILTIN_GUI_PLUGIN_ENTRY(amigaos),
 #endif
@@ -836,87 +840,84 @@ static builtin_plugin_t builtin_gui_plugins[] = {
 #if BX_WITH_X11
   BUILTIN_GUI_PLUGIN_ENTRY(x),
 #endif
-  {"NULL", NULL, NULL, 0}
-};
-
-int bx_load_gui_plugin(const char *name)
-{
-  int i = 0;
-  while (strcmp(builtin_gui_plugins[i].name, "NULL")) {
-    if (!strcmp(name, builtin_gui_plugins[i].name)) {
-      if (builtin_gui_plugins[i].status == 0) {
-        builtin_gui_plugins[i].plugin_init(NULL, PLUGTYPE_GUI);
-        builtin_gui_plugins[i].status = 1;
-      }
-      return 1;
-    }
-    i++;
-  };
-  return 0;
-}
-
-#define BUILTIN_PLUGIN_ENTRY(mod) {#mod, lib##mod##_LTX_plugin_init, lib##mod##_LTX_plugin_fini, 0}
-
-static builtin_plugin_t builtin_opt_plugins[] = {
-  BUILTIN_PLUGIN_ENTRY(unmapped),
-  BUILTIN_PLUGIN_ENTRY(biosdev),
-  BUILTIN_PLUGIN_ENTRY(speaker),
-  BUILTIN_PLUGIN_ENTRY(extfpuirq),
-  BUILTIN_PLUGIN_ENTRY(parallel),
-  BUILTIN_PLUGIN_ENTRY(serial),
+  BUILTIN_OPT_PLUGIN_ENTRY(unmapped),
+  BUILTIN_OPT_PLUGIN_ENTRY(biosdev),
+  BUILTIN_OPT_PLUGIN_ENTRY(speaker),
+  BUILTIN_OPT_PLUGIN_ENTRY(extfpuirq),
+  BUILTIN_OPT_PLUGIN_ENTRY(parallel),
+  BUILTIN_OPT_PLUGIN_ENTRY(serial),
 #if BX_SUPPORT_BUSMOUSE
-  BUILTIN_PLUGIN_ENTRY(busmouse),
+  BUILTIN_OPT_PLUGIN_ENTRY(busmouse),
 #endif
 #if BX_SUPPORT_E1000
-  BUILTIN_PLUGIN_ENTRY(e1000),
+  BUILTIN_OPT_PLUGIN_ENTRY(e1000),
 #endif
 #if BX_SUPPORT_ES1370
-  BUILTIN_PLUGIN_ENTRY(es1370),
+  BUILTIN_OPT_PLUGIN_ENTRY(es1370),
 #endif
 #if BX_SUPPORT_GAMEPORT
-  BUILTIN_PLUGIN_ENTRY(gameport),
+  BUILTIN_OPT_PLUGIN_ENTRY(gameport),
 #endif
 #if BX_SUPPORT_IODEBUG
-  BUILTIN_PLUGIN_ENTRY(iodebug),
+  BUILTIN_OPT_PLUGIN_ENTRY(iodebug),
 #endif
 #if BX_SUPPORT_NE2K
-  BUILTIN_PLUGIN_ENTRY(ne2k),
+  BUILTIN_OPT_PLUGIN_ENTRY(ne2k),
 #endif
 #if BX_SUPPORT_PCIDEV
-  BUILTIN_PLUGIN_ENTRY(pcidev),
+  BUILTIN_OPT_PLUGIN_ENTRY(pcidev),
 #endif
 #if BX_SUPPORT_PCIPNIC
-  BUILTIN_PLUGIN_ENTRY(pcipnic),
+  BUILTIN_OPT_PLUGIN_ENTRY(pcipnic),
 #endif
 #if BX_SUPPORT_SB16
-  BUILTIN_PLUGIN_ENTRY(sb16),
+  BUILTIN_OPT_PLUGIN_ENTRY(sb16),
 #endif
 #if BX_SUPPORT_USB_UHCI
-  BUILTIN_PLUGIN_ENTRY(usb_uhci),
+  BUILTIN_OPT_PLUGIN_ENTRY(usb_uhci),
 #endif
 #if BX_SUPPORT_USB_OHCI
-  BUILTIN_PLUGIN_ENTRY(usb_ohci),
+  BUILTIN_OPT_PLUGIN_ENTRY(usb_ohci),
 #endif
 #if BX_SUPPORT_USB_EHCI
-  BUILTIN_PLUGIN_ENTRY(usb_ehci),
+  BUILTIN_OPT_PLUGIN_ENTRY(usb_ehci),
 #endif
 #if BX_SUPPORT_USB_XHCI
-  BUILTIN_PLUGIN_ENTRY(usb_xhci),
+  BUILTIN_OPT_PLUGIN_ENTRY(usb_xhci),
 #endif
 #if BX_SUPPORT_VOODOO
-  BUILTIN_PLUGIN_ENTRY(voodoo),
+  BUILTIN_OPT_PLUGIN_ENTRY(voodoo),
 #endif
-  {"NULL", NULL, NULL, 0}
+#if BX_SUPPORT_SOUNDLOW
+#if BX_HAVE_SOUND_ALSA
+  BUILTIN_SND_PLUGIN_ENTRY(alsa),
+#endif
+#if BX_HAVE_SOUND_OSS
+  BUILTIN_SND_PLUGIN_ENTRY(oss),
+#endif
+#if BX_HAVE_SOUND_OSX
+  BUILTIN_SND_PLUGIN_ENTRY(osx),
+#endif
+#if BX_HAVE_SOUND_SDL
+  BUILTIN_SND_PLUGIN_ENTRY(sdl),
+#endif
+#if BX_HAVE_SOUND_WIN
+  BUILTIN_SND_PLUGIN_ENTRY(win),
+#endif
+  BUILTIN_SND_PLUGIN_ENTRY(file),
+#endif
+  {"NULL", PLUGTYPE_GUI, NULL, NULL, 0}
 };
 
-int bx_load_opt_plugin(const char *name)
+int bx_load_plugin2(const char *name, plugintype_t type)
 {
   int i = 0;
-  while (strcmp(builtin_opt_plugins[i].name, "NULL")) {
-    if (!strcmp(name, builtin_opt_plugins[i].name)) {
-      if (builtin_opt_plugins[i].status == 0) {
-        builtin_opt_plugins[i].plugin_init(NULL, PLUGTYPE_OPTIONAL);
-        builtin_opt_plugins[i].status = 1;
+  while (strcmp(builtin_plugins[i].name, "NULL")) {
+    if ((!strcmp(name, builtin_plugins[i].name)) &&
+        (type == builtin_plugins[i].type)) {
+      if (builtin_plugins[i].status == 0) {
+        builtin_plugins[i].plugin_init(NULL, type);
+        builtin_plugins[i].status = 1;
       }
       return 1;
     }
@@ -928,14 +929,15 @@ int bx_load_opt_plugin(const char *name)
 int bx_unload_opt_plugin(const char *name, bx_bool devflag)
 {
   int i = 0;
-  while (strcmp(builtin_opt_plugins[i].name, "NULL")) {
-    if (!strcmp(name, builtin_opt_plugins[i].name)) {
-      if (builtin_opt_plugins[i].status == 1) {
+  while (strcmp(builtin_plugins[i].name, "NULL")) {
+    if ((!strcmp(name, builtin_plugins[i].name)) &&
+        (builtin_plugins[i].type == PLUGTYPE_OPTIONAL)) {
+      if (builtin_plugins[i].status == 1) {
         if (devflag) {
-          pluginUnregisterDeviceDevmodel(builtin_opt_plugins[i].name);
+          pluginUnregisterDeviceDevmodel(builtin_plugins[i].name);
         }
-        builtin_opt_plugins[i].plugin_fini();
-        builtin_opt_plugins[i].status = 0;
+        builtin_plugins[i].plugin_fini();
+        builtin_plugins[i].status = 0;
       }
       return 1;
     }
@@ -945,53 +947,15 @@ int bx_unload_opt_plugin(const char *name, bx_bool devflag)
 }
 
 #if BX_SUPPORT_SOUNDLOW
-
-#define BUILTIN_SOUND_PLUGIN_ENTRY(mod) {#mod, lib##mod##_sound_plugin_init, lib##mod##_sound_plugin_fini, 0}
-
-static builtin_plugin_t builtin_sound_plugins[] = {
-#if BX_HAVE_SOUND_ALSA
-  BUILTIN_SOUND_PLUGIN_ENTRY(alsa),
-#endif
-#if BX_HAVE_SOUND_OSS
-  BUILTIN_SOUND_PLUGIN_ENTRY(oss),
-#endif
-#if BX_HAVE_SOUND_OSX
-  BUILTIN_SOUND_PLUGIN_ENTRY(osx),
-#endif
-#if BX_HAVE_SOUND_SDL
-  BUILTIN_SOUND_PLUGIN_ENTRY(sdl),
-#endif
-#if BX_HAVE_SOUND_WIN
-  BUILTIN_SOUND_PLUGIN_ENTRY(win),
-#endif
-  BUILTIN_SOUND_PLUGIN_ENTRY(file),
-  {"NULL", NULL, NULL, 0}
-};
-
-int bx_load_sound_plugin(const char *name)
+int bx_unload_snd_plugin(const char *name)
 {
   int i = 0;
-  while (strcmp(builtin_sound_plugins[i].name, "NULL")) {
-    if (!strcmp(name, builtin_sound_plugins[i].name)) {
-      if (builtin_sound_plugins[i].status == 0) {
-        builtin_sound_plugins[i].plugin_init(NULL, PLUGTYPE_SOUND);
-        builtin_sound_plugins[i].status = 1;
-      }
-      return 1;
-    }
-    i++;
-  };
-  return 0;
-}
-
-int bx_unload_sound_plugin(const char *name)
-{
-  int i = 0;
-  while (strcmp(builtin_sound_plugins[i].name, "NULL")) {
-    if (!strcmp(name, builtin_sound_plugins[i].name)) {
-      if (builtin_sound_plugins[i].status == 1) {
-        builtin_sound_plugins[i].plugin_fini();
-        builtin_sound_plugins[i].status = 0;
+  while (strcmp(builtin_plugins[i].name, "NULL")) {
+    if ((!strcmp(name, builtin_plugins[i].name)) &&
+        (builtin_plugins[i].type == PLUGTYPE_SOUND)) {
+      if (builtin_plugins[i].status == 1) {
+        builtin_plugins[i].plugin_fini();
+        builtin_plugins[i].status = 0;
       }
       return 1;
     }
