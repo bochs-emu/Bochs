@@ -29,7 +29,11 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
+#ifdef BXHUB
+#include "config.h"
+#else
 #include "iodev.h"
+#endif
 
 #if BX_NETWORKING
 
@@ -40,6 +44,10 @@
 #else
 #include <winsock2.h>
 #endif
+
+#ifdef BXHUB
+#include "misc/bxcompat.h"
+#else
 
 #define LOG_THIS theNetModCtl->
 
@@ -127,6 +135,9 @@ extern class bx_vde_locator_c bx_vde_match;
 #if BX_NETMOD_SLIRP
 extern class bx_slirp_locator_c bx_slirp_match;
 #endif
+#if BX_NETMOD_SOCKET
+extern class bx_socket_locator_c bx_socket_match;
+#endif
 extern class bx_vnet_locator_c bx_vnet_match;
 
 //
@@ -190,6 +201,11 @@ eth_locator_c::create(const char *type, const char *netif,
   {
     if(!strcmp(type, "win32"))
       ptr = (eth_locator_c *) &bx_win32_match;
+  }
+#endif
+#if BX_NETMOD_SOCKET
+  if (!strcmp(type, "socket")) {
+    ptr = (eth_locator_c *) &bx_socket_match;
   }
 #endif
   if (!strcmp(type, "vnet")) {
@@ -275,6 +291,7 @@ void write_pktlog_txt(FILE *pktlog_txt, const Bit8u *buf, unsigned len, bx_bool 
   fprintf(pktlog_txt, "--\n");
   fflush(pktlog_txt);
 }
+#endif
 
 Bit16u ip_checksum(const Bit8u *buf, unsigned buf_len)
 {
@@ -359,7 +376,11 @@ Bit16u ip_checksum(const Bit8u *buf, unsigned buf_len)
 static const Bit8u subnetmask_ipv4addr[4] = {0xff,0xff,0xff,0x00};
 static const Bit8u broadcast_ipv4addr1[4] = {0xff,0xff,0xff,0xff};
 
+#ifndef BXHUB
 int process_dhcp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len, Bit8u *reply, dhcp_cfg_t *dhcp)
+#else
+int process_dhcp(const Bit8u *data, unsigned data_len, Bit8u *reply, dhcp_cfg_t *dhcp)
+#endif
 {
   const Bit8u *opts;
   unsigned opts_len;
@@ -756,12 +777,20 @@ void tftp_remove_session(tftp_session_t *s)
 
 void tftp_update_timestamp(tftp_session_t *s)
 {
+#ifndef BXHUB
   s->timestamp = (unsigned)(bx_pc_system.time_usec() / 1000000);
+#else
+  s->timestamp = (unsigned)time(NULL);
+#endif
 }
 
 void tftp_timeout_check()
 {
+#ifndef BXHUB
   unsigned curtime = (unsigned)(bx_pc_system.time_usec() / 1000000);
+#else
+  unsigned curtime = (unsigned)time(NULL);
+#endif
   tftp_session_t *next, *s = tftp_sessions;
 
   while (s != NULL) {
@@ -850,8 +879,13 @@ int tftp_send_optack(Bit8u *buffer, tftp_session_t *s)
   return (p - buffer);
 }
 
+#ifndef BXHUB
 void tftp_parse_options(bx_devmodel_c *netdev, const char *mode, const Bit8u *data,
                         unsigned data_len, tftp_session_t *s)
+#else
+void tftp_parse_options(const char *mode, const Bit8u *data, unsigned data_len,
+                        tftp_session_t *s)
+#endif
 {
   while (mode < (const char*)data + data_len) {
     if (memcmp(mode, "octet\0", 6) == 0) {
@@ -891,7 +925,11 @@ void tftp_parse_options(bx_devmodel_c *netdev, const char *mode, const Bit8u *da
   }
 }
 
+#ifndef BXHUB
 int process_tftp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len, Bit16u req_tid, Bit8u *reply, const char *tftp_rootdir)
+#else
+int process_tftp(const Bit8u *data, unsigned data_len, Bit16u req_tid, Bit8u *reply, const char *tftp_rootdir)
+#endif
 {
   FILE *fp;
   unsigned block_nr;
@@ -916,7 +954,11 @@ int process_tftp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len, Bi
         // options
         if (strlen((char*)reply) < data_len - 2) {
           const char *mode = (const char*)data + 2 + strlen((char*)reply) + 1;
+#ifndef BXHUB
           tftp_parse_options(netdev, mode, data, data_len, s);
+#else
+          tftp_parse_options(mode, data, data_len, s);
+#endif
         }
         if (!(s->options & TFTP_OPTION_OCTET)) {
           return tftp_send_error(reply, 4, "Unsupported transfer mode", NULL);
@@ -953,7 +995,11 @@ int process_tftp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len, Bi
         // options
         if (strlen((char*)reply) < data_len - 2) {
           const char *mode = (const char*)data + 2 + strlen((char*)reply) + 1;
+#ifndef BXHUB
           tftp_parse_options(netdev, mode, data, data_len, s);
+#else
+          tftp_parse_options(mode, data, data_len, s);
+#endif
         }
         if (!(s->options & TFTP_OPTION_OCTET)) {
           return tftp_send_error(reply, 4, "Unsupported transfer mode", NULL);

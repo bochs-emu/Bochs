@@ -1021,6 +1021,9 @@ speaker: enabled=1, mode=sound
 #         DHCP assigns 192.168.10.2 to the guest.
 #         TFTP uses the 'ethdev' value for the root directory and doesn't
 #         overwrite files.
+# socket: Connect two Bochs instances with external program 'bxhub' (simulating
+#         a two port ethernet hub). It provides the same services as the 'vnet'
+#         module and assigns IP addresses like 'slirp' (10.0.2.x).
 #
 #=======================================================================
 # ne2k: ioaddr=0x300, irq=9, mac=fe:fd:00:00:00:01, ethmod=fbsd, ethdev=en0 #macosx
@@ -1032,6 +1035,7 @@ speaker: enabled=1, mode=sound
 # ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:01, ethmod=null, ethdev=eth0
 # ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:01, ethmod=vde, ethdev="/tmp/vde.ctl"
 # ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:01, ethmod=vnet, ethdev="c:/temp"
+# ne2k: mac=b0:c4:20:00:00:01, ethmod=socket, ethdev=40000 # base port #1
 # ne2k: mac=b0:c4:20:00:00:01, ethmod=slirp, script=slirp.conf, bootrom=ne2k_pci.rom
 
 #=======================================================================

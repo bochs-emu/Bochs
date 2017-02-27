@@ -1705,6 +1705,9 @@ if test "$networking" = yes; then
     NETLOW_OBJS="$NETLOW_OBJS eth_slirp.o \$(SLIRP_OBJS)"
     ethernet_modules="$ethernet_modules slirp"
     AC_DEFINE(BX_NETMOD_SLIRP, 1)
+    NETLOW_OBJS="$NETLOW_OBJS eth_socket.o"
+    ethernet_modules="$ethernet_modules socket"
+    AC_DEFINE(BX_NETMOD_SOCKET, 1)
   fi
   if test "$MSVC_TARGET" = 0; then
     AC_CHECK_HEADER(net/bpf.h, [
@@ -2735,9 +2738,11 @@ case "$target" in
     EXE=".exe"
     PRIMARY_TARGET="bochs.exe"
     BXIMAGE_LINK_OPTS="user32.lib"
-    # also compile niclist if networking is on
+    # also compile bxhub and niclist if networking is on
     if test "$networking" = yes; then
-      OPTIONAL_TARGET="$OPTIONAL_TARGET niclist.exe"
+      OPTIONAL_TARGET="$OPTIONAL_TARGET bxhub.exe niclist.exe"
+      BXHUB_FLAG="/DBXHUB"
+      BXHUB_LINK_OPTS="ws2_32.lib"
     fi
     COMMAND_SEPARATOR=""
     CD_UP_ONE="cd .."
@@ -2758,16 +2763,26 @@ case "$target" in
     PRIMARY_TARGET="bochs.exe"
     BXIMAGE_LINK_OPTS="-luser32"
     if test "$networking" = yes; then
-      OPTIONAL_TARGET="$OPTIONAL_TARGET niclist.exe"
+      OPTIONAL_TARGET="$OPTIONAL_TARGET bxhub.exe niclist.exe"
+      BXHUB_FLAG="-DBXHUB"
+      BXHUB_LINK_OPTS="-lws2_32"
     fi
     AC_DEFINE(BX_HAVE_SELECT, 1)
     ;;
   *-pc-mingw*)
     BXIMAGE_LINK_OPTS="-luser32"
     if test "$networking" = yes; then
-      OPTIONAL_TARGET="$OPTIONAL_TARGET niclist"
+      OPTIONAL_TARGET="$OPTIONAL_TARGET bxhub niclist"
+      BXHUB_FLAG="-DBXHUB"
+      BXHUB_LINK_OPTS="-lws2_32"
     fi
     AC_DEFINE(BX_HAVE_SELECT, 1)
+    ;;
+  *)
+    if test "$networking" = yes; then
+      OPTIONAL_TARGET="$OPTIONAL_TARGET bxhub"
+      BXHUB_FLAG="-DBXHUB"
+    fi
     ;;
 esac
 
@@ -2784,6 +2799,8 @@ case "$target" in
 esac
 AC_SUBST(BXIMAGE_FLAG)
 AC_SUBST(BXIMAGE_LINK_OPTS)
+AC_SUBST(BXHUB_FLAG)
+AC_SUBST(BXHUB_LINK_OPTS)
 AC_SUBST(CXXFLAGS_CONSOLE)
 
 ENH_DBG_OBJS=""

@@ -27,6 +27,7 @@
 #ifndef BX_NETMOD_H
 #define BX_NETMOD_H
 
+#ifndef BXHUB
 // Pseudo device that loads the lowlevel networking module
 class bx_netmod_ctl_c : public bx_netmod_ctl_stub_c {
 public:
@@ -34,6 +35,7 @@ public:
   virtual ~bx_netmod_ctl_c() {}
   virtual void* init_module(bx_list_c *base, void* rxh, void* rxstat, bx_devmodel_c *dev);
 };
+#endif
 
 #define BX_PACKET_BUFSIZE 2048 // Enough for an ether frame
 
@@ -132,8 +134,10 @@ typedef struct {
 
 static const Bit8u broadcast_macaddr[6] = {0xff,0xff,0xff,0xff,0xff,0xff};
 
+#ifndef BXHUB
 int execute_script(bx_devmodel_c *netdev, const char *name, char* arg1);
 void write_pktlog_txt(FILE *pktlog_txt, const Bit8u *buf, unsigned len, bx_bool host_to_guest);
+#endif
 
 BX_CPP_INLINE Bit16u get_net2(const Bit8u *buf)
 {
@@ -164,6 +168,10 @@ BX_CPP_INLINE void put_net4(Bit8u *buf,Bit32u data)
 }
 
 Bit16u ip_checksum(const Bit8u *buf, unsigned buf_len);
+#ifdef BXHUB
+int process_dhcp(const Bit8u *data, unsigned data_len, Bit8u *reply, dhcp_cfg_t *dhcp);
+int process_tftp(const Bit8u *data, unsigned data_len, Bit16u req_tid, Bit8u *reply, const char *tftp_rootdir);
+#else
 int process_dhcp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len, Bit8u *reply, dhcp_cfg_t *dhcp);
 int process_tftp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len, Bit16u req_tid, Bit8u *reply, const char *tftp_rootdir);
 
@@ -213,5 +221,7 @@ private:
   eth_locator_c *next;
   const char *type;
 };
+
+#endif
 
 #endif

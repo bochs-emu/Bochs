@@ -167,6 +167,9 @@ void bx_init_std_nic_options(const char *name, bx_list_c *menu)
 #if BX_NETMOD_SLIRP
     "slirp",
 #endif
+#if BX_NETMOD_SOCKET
+    "socket",
+#endif
     "vnet",
     NULL
   };

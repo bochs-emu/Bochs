@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2013       Volker Ruppert
-//  Copyright (C) 2001-2016  The Bochs Project
+//  Copyright (C) 2001-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -41,6 +41,7 @@
 #include <fcntl.h>
 #include <string.h>
 
+#ifdef BXIMAGE
 // copied from siminterface.h
 enum {
   BX_HDIMAGE_MODE_FLAT,
@@ -61,6 +62,7 @@ enum {
 #define BX_HDIMAGE_MODE_UNKNOWN  -1
 
 extern const char *hdimage_mode_names[];
+#endif
 
 // definitions for compatibility with Bochs
 #ifndef UNUSED
@@ -68,12 +70,18 @@ extern const char *hdimage_mode_names[];
 #endif
 
 #define BX_DEBUG(x)
+#ifdef BXIMAGE
 #define BX_INFO(x)  { if (bx_interactive) { (printf) x ; printf("\n"); } }
 #define BX_ERROR(x) { (printf) x ; printf("\n"); }
 #define BX_PANIC(x) { (printf) x ; printf("\n"); myexit(1); }
 #define BX_FATAL(x) { (printf) x ; printf("\n"); myexit(1); }
+#else
+#define BX_INFO(x)
+#define BX_ERROR(x)  { (printf) x ; printf("\n"); }
+#endif
 #define BX_ASSERT(x)
 
+#ifdef BXIMAGE
 extern int bx_interactive;
 
 class device_image_t;
@@ -82,5 +90,11 @@ void myexit(int code);
 device_image_t* init_image(Bit8u image_mode);
 
 #define DEV_hdimage_init_image(a,b,c) init_image(a)
+
+#else
+
+#define BX_PATHNAME_LEN 512
+
+#endif
 
 #endif

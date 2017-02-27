@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2014  The Bochs Project
+# Copyright (C) 2001-2017  The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -253,6 +253,9 @@ bximage@EXE@: misc/bximage.o misc/hdimage.o misc/vmware3.o misc/vmware4.o misc/v
 niclist@EXE@: misc/niclist.o
 	@LINK_CONSOLE@ misc/niclist.o
 
+bxhub@EXE@: misc/bxhub.o misc/netmod.o
+	@LINK_CONSOLE@ misc/bxhub.o misc/netmod.o @BXHUB_LINK_OPTS@
+
 # compile with console CXXFLAGS, not gui CXXFLAGS
 misc/bximage.o: $(srcdir)/misc/bximage.cc $(srcdir)/misc/bswap.h \
   $(srcdir)/misc/bxcompat.h $(srcdir)/iodev/hdimage/hdimage.h
@@ -277,6 +280,14 @@ misc/vpc-img.o: $(srcdir)/iodev/hdimage/vpc-img.cc $(srcdir)/iodev/hdimage/vpc-i
 misc/vbox.o: $(srcdir)/iodev/hdimage/vbox.cc $(srcdir)/iodev/hdimage/vbox.h \
   $(srcdir)/iodev/hdimage/hdimage.h $(srcdir)/misc/bxcompat.h
 	$(CXX) @DASH@c $(BX_INCDIRS) @BXIMAGE_FLAG@ $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/vbox.cc @OFP@$@
+
+misc/bxhub.o: $(srcdir)/misc/bxhub.cc $(srcdir)/iodev/network/netmod.h \
+  $(srcdir)/misc/bxcompat.h
+	$(CC) @DASH@c $(BX_INCDIRS) $(CXXFLAGS_CONSOLE) $(srcdir)/misc/bxhub.cc @OFP@$@
+
+misc/netmod.o: $(srcdir)/iodev/network/netmod.cc $(srcdir)/iodev/network/netmod.h \
+  $(srcdir)/misc/bxcompat.h
+	$(CXX) @DASH@c $(BX_INCDIRS) @BXHUB_FLAG@ $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/network/netmod.cc @OFP@$@
 
 # compile with console CFLAGS, not gui CXXFLAGS
 misc/niclist.o: $(srcdir)/misc/niclist.c

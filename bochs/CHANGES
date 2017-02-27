@@ -34,6 +34,9 @@ Changes after 2.6.8 release:
     - Several fixes in some disk image modes.
   - Serial / Parallel ports
     - Added support for changing output file at runtime.
+  - Networking
+    - Added ethernet module 'socket'. designed to connect two Bochs instances
+      with external program 'bxhub' (simulating a two port ethernet hub).
   - Sound
     - Added PCM output data resampling in a separate thread. The resampler
       requires either libsamplerate or the SoX resampler library installed.
