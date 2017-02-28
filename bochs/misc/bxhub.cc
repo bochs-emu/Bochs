@@ -39,6 +39,8 @@ extern "C" {
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#define closesocket(s)    close(s)
+typedef int SOCKET;
 #endif
 #include <signal.h>
 };
@@ -83,7 +85,7 @@ typedef struct arp_header {
 arp_header_t;
 
 typedef struct {
-  int so;
+  SOCKET so;
   struct sockaddr_in sin, sout;
   bx_bool init;
   dhcp_cfg_t dhcp;
@@ -416,13 +418,13 @@ void send_packet(hub_client_t *client, Bit8u *buf, unsigned len)
 
 static hub_client_t hclient[2];
 
-void intHandler(int sig)
+void CDECL intHandler(int sig)
 {
   if (sig == SIGINT) {
     for (int i = 0; i < 2; i++) {
       if (hclient[i].init)
         delete [] hclient[i].reply_buffer;
-      close(hclient[i].so);
+      closesocket(hclient[i].so);
     }
   }
   exit(0);

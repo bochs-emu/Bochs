@@ -70,6 +70,11 @@ extern "C" {
 #include <net/ethernet.h>
 #include <net/if.h>
 #include <linux/types.h>
+#define closesocket(s) close(s)
+typedef int SOCKET;
+#ifndef INVALID_SOCKET
+#define INVALID_SOCKET -1
+#endif
 #endif
 };
 
@@ -94,7 +99,7 @@ public:
 
 private:
   unsigned char *socket_macaddr[6];
-  int fd;                                  // socket we listen on
+  SOCKET fd;                               // socket we listen on
   int ifindex;                             // socket number (will TX to ifindex+1)
   struct sockaddr_in sout;                 // target address for TX
   static void rx_timer_handler(void *);
@@ -141,14 +146,30 @@ bx_socket_pktmover_c::bx_socket_pktmover_c(const char *netif,
   BX_INFO(("socket network driver"));
   memcpy(socket_macaddr, macaddr, 6);
 
+#ifdef WIN32
+  WORD wVersionRequested;
+  WSADATA wsaData;
+  int err;
+  wVersionRequested = MAKEWORD(2, 0);
+  err = WSAStartup(wVersionRequested, &wsaData);
+  if (err != 0) {
+    BX_PANIC(("WSAStartup failed"));
+    return;
+  }
+#endif
+
   // Open RX socket
   //
-  if ((this->fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
-    this->fd = -1;
+  if ((this->fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == INVALID_SOCKET) {
+#ifndef WIN32
+    this->fd = INVALID_SOCKET;
     if (errno == EACCES)
       BX_PANIC(("eth_socket: insufficient priviledges to open socket"));
     else
       BX_PANIC(("eth_socket: could not open socket: %s", strerror(errno)));
+#else
+    BX_PANIC(("eth_socket: could not open socket: error=%d", WSAGetLastError()));
+#endif
     return;
   }
 
@@ -158,8 +179,8 @@ bx_socket_pktmover_c::bx_socket_pktmover_c(const char *netif,
 
   if (this->ifindex == 0) {
     BX_PANIC(("eth_socket: could not translate socket number '%s'\n", netif));
-    close(this->fd);
-    this->fd = -1;
+    closesocket(this->fd);
+    this->fd = INVALID_SOCKET;
     this->ifindex = -1;
     return;
   }
@@ -173,10 +194,9 @@ bx_socket_pktmover_c::bx_socket_pktmover_c(const char *netif,
 
 
   if (bind(fd, (struct sockaddr *) &sin, sizeof(sin)) < 0) {
-    perror ("bxhub - cannot bind socket");
     BX_PANIC(("eth_socket: could not bind to socket '%d' (%s)\n", ifindex, strerror(errno)));
-    close(fd);
-    this->fd = -1;
+    closesocket(fd);
+    this->fd = INVALID_SOCKET;
     return;
   }
 
@@ -189,8 +209,8 @@ bx_socket_pktmover_c::bx_socket_pktmover_c(const char *netif,
   if (fcntl(this->fd, F_SETFL, O_NONBLOCK) == -1) {
 #endif
     BX_PANIC(("eth_socket: could not set non-blocking i/o on socket"));
-    close(this->fd);
-    this->fd = -1;
+    closesocket(this->fd);
+    this->fd = INVALID_SOCKET;
     return;
   }
 
@@ -218,8 +238,8 @@ void bx_socket_pktmover_c::sendpkt(void *buf, unsigned io_len)
 {
   int status;
 
-  if (this->fd != -1) {
-    status = sendto(this->fd, (char*)buf, io_len, 
+  if (this->fd != INVALID_SOCKET) {
+    status = sendto(this->fd, (char*)buf, io_len,
                     (MSG_DONTROUTE | MSG_NOSIGNAL | MSG_DONTWAIT),
                     (struct sockaddr*) &sout, sizeof(sout));
     if (status == -1) {
@@ -241,10 +261,10 @@ void bx_socket_pktmover_c::rx_timer_handler(void *this_ptr)
 void bx_socket_pktmover_c::rx_timer(void)
 {
   int nbytes = 0;
-  Bit8u rxbuf[BX_PACKET_BUFSIZE]; 
+  Bit8u rxbuf[BX_PACKET_BUFSIZE];
 
   // is socket open and bound?
-  if (this->fd == -1)
+  if (this->fd == INVALID_SOCKET)
     return;
 
   // receive packet
