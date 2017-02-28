@@ -506,7 +506,7 @@ int process_dhcp(const Bit8u *data, unsigned data_len, Bit8u *reply, dhcp_cfg_t 
   opts_len = sizeof(replybuf)/sizeof(replybuf[0])-240;
   switch (dhcpmsgtype) {
   case DHCPDISCOVER:
-    BX_INFO(("dhcp server: DHCPDISCOVER"));
+    BX_DEBUG(("dhcp server: DHCPDISCOVER"));
     // reset guest address; answer must be broadcasted to unconfigured IP
     memcpy(dhcp->guest_ipv4addr, broadcast_ipv4addr1, 4);
     *replyopts ++ = BOOTPOPT_DHCP_MESSAGETYPE;
@@ -521,7 +521,7 @@ int process_dhcp(const Bit8u *data, unsigned data_len, Bit8u *reply, dhcp_cfg_t 
     dhcpreqparam_default_validflag = true;
     break;
   case DHCPREQUEST:
-    BX_INFO(("dhcp server: DHCPREQUEST"));
+    BX_DEBUG(("dhcp server: DHCPREQUEST"));
     // check ciaddr.
     if (found_serverid || found_guest_ipaddr || (!memcmp(&data[12], dhcp->default_guest_ipv4addr, 4))) {
       *replyopts ++ = BOOTPOPT_DHCP_MESSAGETYPE;
@@ -557,7 +557,7 @@ int process_dhcp(const Bit8u *data, unsigned data_len, Bit8u *reply, dhcp_cfg_t 
     while (dhcpreqparams_len-- > 0) {
       switch (*dhcpreqparams++) {
       case BOOTPOPT_SUBNETMASK:
-        BX_INFO(("provide BOOTPOPT_SUBNETMASK"));
+        BX_DEBUG(("provide BOOTPOPT_SUBNETMASK"));
         if (opts_len < 6) {
           BX_ERROR(("option buffer is insufficient"));
           return 0;
@@ -569,7 +569,7 @@ int process_dhcp(const Bit8u *data, unsigned data_len, Bit8u *reply, dhcp_cfg_t 
         replyopts += 4;
         break;
       case BOOTPOPT_ROUTER_OPTION:
-        BX_INFO(("provide BOOTPOPT_ROUTER_OPTION"));
+        BX_DEBUG(("provide BOOTPOPT_ROUTER_OPTION"));
         if (opts_len < 6) {
           BX_ERROR(("option buffer is insufficient"));
           return 0;
@@ -582,7 +582,7 @@ int process_dhcp(const Bit8u *data, unsigned data_len, Bit8u *reply, dhcp_cfg_t 
         break;
       case BOOTPOPT_DOMAIN_NAMESERVER:
         if (dhcp->dns_ipv4addr[0] != 0) {
-          BX_INFO(("provide BOOTPOPT_DOMAIN_NAMESERVER"));
+          BX_DEBUG(("provide BOOTPOPT_DOMAIN_NAMESERVER"));
           if (opts_len < 6) {
             BX_ERROR(("option buffer is insufficient"));
             return 0;
@@ -595,7 +595,7 @@ int process_dhcp(const Bit8u *data, unsigned data_len, Bit8u *reply, dhcp_cfg_t 
         }
         break;
       case BOOTPOPT_BROADCAST_ADDRESS:
-        BX_INFO(("provide BOOTPOPT_BROADCAST_ADDRESS"));
+        BX_DEBUG(("provide BOOTPOPT_BROADCAST_ADDRESS"));
         if (opts_len < 6) {
           BX_ERROR(("option buffer is insufficient"));
           return 0;
@@ -608,7 +608,7 @@ int process_dhcp(const Bit8u *data, unsigned data_len, Bit8u *reply, dhcp_cfg_t 
         *replyopts ++ = 0xff;
         break;
       case BOOTPOPT_IP_ADDRESS_LEASE_TIME:
-        BX_INFO(("provide BOOTPOPT_IP_ADDRESS_LEASE_TIME"));
+        BX_DEBUG(("provide BOOTPOPT_IP_ADDRESS_LEASE_TIME"));
         if (opts_len < 6) {
           BX_ERROR(("option buffer is insufficient"));
           return 0;
@@ -624,7 +624,7 @@ int process_dhcp(const Bit8u *data, unsigned data_len, Bit8u *reply, dhcp_cfg_t 
         replyopts += 4;
         break;
       case BOOTPOPT_SERVER_IDENTIFIER:
-        BX_INFO(("provide BOOTPOPT_SERVER_IDENTIFIER"));
+        BX_DEBUG(("provide BOOTPOPT_SERVER_IDENTIFIER"));
         if (opts_len < 6) {
           BX_ERROR(("option buffer is insufficient"));
           return 0;
@@ -636,7 +636,7 @@ int process_dhcp(const Bit8u *data, unsigned data_len, Bit8u *reply, dhcp_cfg_t 
         replyopts += 4;
         break;
       case BOOTPOPT_RENEWAL_TIME:
-        BX_INFO(("provide BOOTPOPT_RENEWAL_TIME"));
+        BX_DEBUG(("provide BOOTPOPT_RENEWAL_TIME"));
         if (opts_len < 6) {
           BX_ERROR(("option buffer is insufficient"));
           return 0;
@@ -648,7 +648,7 @@ int process_dhcp(const Bit8u *data, unsigned data_len, Bit8u *reply, dhcp_cfg_t 
         replyopts += 4;
         break;
       case BOOTPOPT_REBINDING_TIME:
-        BX_INFO(("provide BOOTPOPT_REBINDING_TIME"));
+        BX_DEBUG(("provide BOOTPOPT_REBINDING_TIME"));
         if (opts_len < 6) {
           BX_ERROR(("option buffer is insufficient"));
           return 0;
@@ -661,7 +661,7 @@ int process_dhcp(const Bit8u *data, unsigned data_len, Bit8u *reply, dhcp_cfg_t 
         break;
       case BOOTPOPT_HOST_NAME:
         if (hostname != NULL) {
-          BX_INFO(("provide BOOTPOPT_HOST_NAME"));
+          BX_DEBUG(("provide BOOTPOPT_HOST_NAME"));
           if (opts_len < (hostname_len + 2)) {
             free(hostname);
             BX_ERROR(("option buffer is insufficient"));
@@ -919,7 +919,7 @@ void tftp_parse_options(const char *mode, const Bit8u *data, unsigned data_len,
       }
       mode += strlen(mode)+1;
     } else {
-      BX_INFO(("tftp req: unknown option %s", mode));
+      BX_ERROR(("tftp req: unknown option %s", mode));
       break;
     }
   }
@@ -969,7 +969,7 @@ int process_tftp(const Bit8u *data, unsigned data_len, Bit16u req_tid, Bit8u *re
             s->options &= ~TFTP_OPTION_TSIZE;
           } else {
             s->tsize_val = (size_t)stbuf.st_size;
-            BX_INFO(("tftp filesize: %lu", (unsigned long)s->tsize_val));
+            BX_DEBUG(("tftp filesize: %lu", (unsigned long)s->tsize_val));
           }
         }
         if ((s->options & ~TFTP_OPTION_OCTET) > 0) {

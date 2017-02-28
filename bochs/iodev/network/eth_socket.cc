@@ -28,8 +28,8 @@
 //   - author definitely doesn't know C++ and generally doesn't know what
 //     he is doing :)
 //
-// the idea is to provide a software multiport 'ethernet hub' and allow 
-// communication between multiple bochs instances on the same machine 
+// the idea is to provide a software multiport 'ethernet hub' and allow
+// communication between multiple bochs instances on the same machine
 // entirely in userspace and without need for root priviledges.
 //
 // The config line in .bochsrc should look like:
@@ -40,12 +40,12 @@
 //
 // ne2k: ioaddr=0x280, irq=10, mac=00:a:b:c:1:2, ethmod=socket, ethdev=40000
 //
-// this module will bind to 127.0.0.1:<socknum> for RX packets 
+// this module will bind to 127.0.0.1:<socknum> for RX packets
 // TX packets will be sent to 127.0.0.1:<socknum + 1>
 
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
@@ -79,8 +79,6 @@ extern "C" {
 #endif
 
 #define BX_PACKET_POLL  1000    // Poll for a frame every 1000 usecs
-
-#define BX_PACKET_BUFSIZ 2048   // Enough for an ether frame
 
 //
 //  Define the class. This is private to this module
@@ -171,7 +169,7 @@ bx_socket_pktmover_c::bx_socket_pktmover_c(const char *netif,
   //
   sin.sin_family = AF_INET;
   sin.sin_port = htons(this->ifindex);
-  sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK); // localhost 
+  sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK); // localhost
 
 
   if (bind(fd, (struct sockaddr *) &sin, sizeof(sin)) < 0) {
@@ -205,7 +203,7 @@ bx_socket_pktmover_c::bx_socket_pktmover_c(const char *netif,
 
   // Start the rx poll
   //
-  this->rx_timer_index = 
+  this->rx_timer_index =
     bx_pc_system.register_timer(this, this->rx_timer_handler, BX_PACKET_POLL,
                                 1, 1, "eth_socket"); // continuous, active
 
@@ -213,7 +211,6 @@ bx_socket_pktmover_c::bx_socket_pktmover_c(const char *netif,
   this->rxstat = rxstat;
   BX_INFO(("socket network driver initialized: using socket %d", this->ifindex));
 }
-
 
 
 // the output routine - called with pre-formatted ethernet frame.
@@ -244,7 +241,7 @@ void bx_socket_pktmover_c::rx_timer_handler(void *this_ptr)
 void bx_socket_pktmover_c::rx_timer(void)
 {
   int nbytes = 0;
-  Bit8u rxbuf[BX_PACKET_BUFSIZ]; 
+  Bit8u rxbuf[BX_PACKET_BUFSIZE]; 
 
   // is socket open and bound?
   if (this->fd == -1)

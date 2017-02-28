@@ -1,3 +1,6 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id$
+/////////////////////////////////////////////////////////////////////////
 /*
  * bxhub.c: a simple, two-port software 'ethernet hub' for use with
  * eth_socket Bochs ethernet pktmover.
@@ -78,9 +81,19 @@ typedef struct arp_header {
 #endif
 arp_header_t;
 
+typedef struct {
+  int so;
+  struct sockaddr_in sin, sout;
+  bx_bool init;
+  dhcp_cfg_t dhcp;
+  Bit8u *reply_buffer;
+  int pending_reply_size;
+} hub_client_t;
+
 const Bit8u default_host_macaddr[6] = {0xb0, 0xc4, 0x20, 0x00, 0x00, 0x03};
 const Bit8u default_host_ipv4addr[4] = {10, 0, 2, 2};
 const Bit8u default_dns_ipv4addr[4] = {10, 0, 2, 3};
+
 const Bit8u default_guest_ipv4addr[2][4] =
 {
   {10, 0, 2, 15},
@@ -97,24 +110,20 @@ const Bit8u broadcast_ipv4addr[3][4] =
 static Bit16u port_base = 40000;
 static char tftp_root[BX_PATHNAME_LEN];
 static Bit8u host_macaddr[6];
-int client_count;
-int dhcp_init[2];
-dhcp_cfg_t dhcp[2];
-Bit8u reply_buffer[2][1024];
-int pending_reply_size[2];
+static int client_count;
 
 
-void prepare_builtin_reply(int client, unsigned type)
+void prepare_builtin_reply(hub_client_t *client, unsigned type)
 {
-  ethernet_header_t *ethhdr;
+  dhcp_cfg_t *dhcpc = &client->dhcp;
+  ethernet_header_t *ethhdr = (ethernet_header_t *)client->reply_buffer;
 
-  ethhdr = (ethernet_header_t *)reply_buffer[client];
-  memcpy(ethhdr->dst_mac_addr, dhcp[client].guest_macaddr, ETHERNET_MAC_ADDR_LEN);
-  memcpy(ethhdr->src_mac_addr, dhcp[client].host_macaddr, ETHERNET_MAC_ADDR_LEN);
+  memcpy(ethhdr->dst_mac_addr, dhcpc->guest_macaddr, ETHERNET_MAC_ADDR_LEN);
+  memcpy(ethhdr->src_mac_addr, dhcpc->host_macaddr, ETHERNET_MAC_ADDR_LEN);
   ethhdr->type = htons(type);
 }
 
-bx_bool handle_ipv4(int client, Bit8u *buf, unsigned len)
+bx_bool handle_ipv4(hub_client_t *client, Bit8u *buf, unsigned len)
 {
   unsigned total_len;
   unsigned fragment_flags;
@@ -128,8 +137,8 @@ bx_bool handle_ipv4(int client, Bit8u *buf, unsigned len)
   unsigned udp_reply_size = 0;
   unsigned icmptype;
   unsigned icmpcode;
-  Bit8u *replybuf = reply_buffer[client];
-  dhcp_cfg_t *dhcpc = &dhcp[client];
+  Bit8u *replybuf = client->reply_buffer;
+  dhcp_cfg_t *dhcpc = &client->dhcp;
 
   // guest-to-host IPv4
   if (len < (14U+20U)) {
@@ -210,7 +219,7 @@ bx_bool handle_ipv4(int client, Bit8u *buf, unsigned len)
         memcpy(&replybuf[30], dhcpc->guest_ipv4addr, 4);
         put_net2(&replybuf[24], 0);
         put_net2(&replybuf[24], ip_checksum(&replybuf[14], l3header_len) ^ (Bit16u)0xffff);
-        pending_reply_size[client] = udp_reply_size + 42;
+        client->pending_reply_size = udp_reply_size + 42;
         prepare_builtin_reply(client, ETHERNET_TYPE_IPV4);
       }
       // don't forward DHCP / TFTP requests to other client
@@ -246,7 +255,7 @@ bx_bool handle_ipv4(int client, Bit8u *buf, unsigned len)
           memcpy(&replybuf[30], dhcpc->guest_ipv4addr, 4);
           put_net2(&replybuf[24], 0);
           put_net2(&replybuf[24], ip_checksum(&replybuf[14], l3header_len) ^ (Bit16u)0xffff);
-          pending_reply_size[client] = 14U+l3header_len+l4pkt_len;
+          client->pending_reply_size = 14U+l3header_len+l4pkt_len;
           prepare_builtin_reply(client, ETHERNET_TYPE_IPV4);
           return 1;
         }
@@ -260,13 +269,13 @@ bx_bool handle_ipv4(int client, Bit8u *buf, unsigned len)
   return 0;
 }
 
-bx_bool handle_arp(int client, Bit8u *buf, unsigned len)
+bx_bool handle_arp(hub_client_t *client, Bit8u *buf, unsigned len)
 {
+  dhcp_cfg_t *dhcpc = &client->dhcp;
   arp_header_t *arphdr = (arp_header_t *)((Bit8u *)buf +
                                           sizeof(ethernet_header_t));
-
-  if (pending_reply_size[client] > 0)
-    return 0;
+  arp_header_t *arprhdr = (arp_header_t *)((Bit8u *)client->reply_buffer +
+                                          sizeof(ethernet_header_t));
 
   if ((ntohs(arphdr->hw_addr_space) != 0x0001) ||
       (ntohs(arphdr->proto_addr_space) != 0x0800) ||
@@ -278,23 +287,21 @@ bx_bool handle_arp(int client, Bit8u *buf, unsigned len)
     return 0;
   }
 
-  arp_header_t *arprhdr = (arp_header_t *)((Bit8u *)reply_buffer[client] +
-                                                    sizeof(ethernet_header_t));
   switch(ntohs(arphdr->opcode)) {
     case ARP_OPCODE_REQUEST:
       if (((Bit8u *)arphdr)[27] > 3)
         break;
-      memset(reply_buffer[client], 0, MIN_RX_PACKET_LEN);
+      memset(client->reply_buffer, 0, MIN_RX_PACKET_LEN);
       arprhdr->hw_addr_space = htons(0x0001);
       arprhdr->proto_addr_space = htons(0x0800);
       arprhdr->hw_addr_len = ETHERNET_MAC_ADDR_LEN;
       arprhdr->proto_addr_len = 4;
       arprhdr->opcode = htons(ARP_OPCODE_REPLY);
-      memcpy((Bit8u *)arprhdr+8, dhcp[client].host_macaddr, ETHERNET_MAC_ADDR_LEN);
+      memcpy((Bit8u *)arprhdr+8, dhcpc->host_macaddr, ETHERNET_MAC_ADDR_LEN);
       memcpy((Bit8u *)arprhdr+14, (Bit8u *)arphdr+24, 4);
-      memcpy((Bit8u *)arprhdr+18, dhcp[client].guest_macaddr, ETHERNET_MAC_ADDR_LEN);
+      memcpy((Bit8u *)arprhdr+18, dhcpc->guest_macaddr, ETHERNET_MAC_ADDR_LEN);
       memcpy((Bit8u *)arprhdr+24, (Bit8u *)arphdr+14, 4);
-      pending_reply_size[client] = MIN_RX_PACKET_LEN;
+      client->pending_reply_size = MIN_RX_PACKET_LEN;
       prepare_builtin_reply(client, ETHERNET_TYPE_ARP);
       return 1;
     case ARP_OPCODE_REPLY:
@@ -305,30 +312,33 @@ bx_bool handle_arp(int client, Bit8u *buf, unsigned len)
   return 0;
 }
 
-int handle_packet(int client, Bit8u *buf, unsigned len)
+int handle_packet(hub_client_t *client, Bit8u *buf, unsigned len)
 {
   ethernet_header_t *ethhdr = (ethernet_header_t *)buf;
-  dhcp_cfg_t *dhcpc = &dhcp[client];
+  dhcp_cfg_t *dhcpc = &client->dhcp;
   int ret = 1;
 
-  if (!dhcp_init[client]) {
+  if (!client->init) {
     if (memcmp(ethhdr->src_mac_addr, host_macaddr, 6) == 0) {
-      dhcp_init[client] = -1;
+      client->init = -1;
     } else {
       memcpy(dhcpc->host_macaddr, host_macaddr, ETHERNET_MAC_ADDR_LEN);
       memcpy(dhcpc->guest_macaddr, ethhdr->src_mac_addr, ETHERNET_MAC_ADDR_LEN);
       memcpy(dhcpc->host_ipv4addr, &default_host_ipv4addr[0], 4);
       memcpy(dhcpc->guest_ipv4addr, &broadcast_ipv4addr[1][0], 4);
-      dhcpc->default_guest_ipv4addr = default_guest_ipv4addr[client];
+      dhcpc->default_guest_ipv4addr = default_guest_ipv4addr[client_count++];
       memcpy(dhcpc->dns_ipv4addr, &default_dns_ipv4addr[0], 4);
-      dhcp_init[client] = 1;
-      client_count++;
+      client->reply_buffer = new Bit8u[BUFSIZE];
+      client->init = 1;
     }
   }
   if ((memcmp(ethhdr->dst_mac_addr, host_macaddr, ETHERNET_MAC_ADDR_LEN) != 0) &&
       (memcmp(ethhdr->dst_mac_addr, broadcast_macaddr, ETHERNET_MAC_ADDR_LEN) != 0)) {
     return 0;
   }
+
+  if (client->pending_reply_size > 0)
+    return 0;
 
   switch (ntohs(ethhdr->type)) {
     case ETHERNET_TYPE_IPV4: 
@@ -397,18 +407,20 @@ int parse_cmdline(int argc, char *argv[])
   return ret;
 }
 
+void send_packet(hub_client_t *client, Bit8u *buf, unsigned len)
+{
+  sendto(client->so, (char*)buf, len, (MSG_DONTROUTE|MSG_NOSIGNAL|MSG_DONTWAIT),
+         (struct sockaddr*) &client->sout, sizeof(client->sout));
+}
+
 int CDECL main(int argc, char **argv)
 {
-  int s1, s2, n;
-  struct sockaddr_in s1in, s1out, s2in, s2out;
+  hub_client_t hclient[2];
+  int i, n;
   fd_set rfds;
   Bit8u buf[BUFSIZE];
 
   client_count = 0;
-  dhcp_init[0] = 0;
-  dhcp_init[1] = 0;
-  pending_reply_size[0] = 0;
-  pending_reply_size[1] = 0;
 
   if (!parse_cmdline(argc, argv))
     exit(0);
@@ -425,52 +437,32 @@ int CDECL main(int argc, char **argv)
   }
 #endif
 
-  /* create sockets */
+  for (i = 0; i < 2; i++) {
+    memset(&hclient[i], 0, sizeof(hub_client_t));
 
-  if ((s1 = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
-    perror("bxhub - cannot create socket");
-    exit(1);
+    /* create sockets */
+    if ((hclient[i].so = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
+      perror("bxhub - cannot create socket");
+      exit(1);
+    }
+
+    /* fill addres structures */
+    hclient[i].sin.sin_family = AF_INET;
+    hclient[i].sin.sin_port = htons(port_base + (i * 2) + 1); 
+    hclient[i].sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK); 
+
+    hclient[i].sout.sin_family = AF_INET;
+    hclient[i].sout.sin_port = htons(port_base + (i * 2));
+    hclient[i].sout.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+
+    /* configure (bind) sockets */
+    if (bind(hclient[i].so, (struct sockaddr *) &hclient[i].sin, sizeof(hclient[i].sin)) < 0) {
+      perror("bxhub - cannot bind socket");
+      exit(2);
+    }
+
+    printf("RX port #%d in use: %d\n", i + 1, ntohs(hclient[i].sin.sin_port));
   }
-
-  if ((s2 = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
-    perror("bxhub - cannot create socket");
-    exit(1);
-  }
-
-  /* fill addres structures */
-
-  s1in.sin_family = AF_INET;
-  s1in.sin_port = htons(port_base + 1); 
-  s1in.sin_addr.s_addr = htonl(INADDR_LOOPBACK); 
-
-  s1out.sin_family = AF_INET;
-  s1out.sin_port = htons(port_base);
-  s1out.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-
-  s2in.sin_family = AF_INET;
-  s2in.sin_port = htons(port_base + 3); 
-  s2in.sin_addr.s_addr = htonl(INADDR_LOOPBACK); 
-
-  s2out.sin_family = AF_INET;
-  s2out.sin_port = htons(port_base + 2);
-  s2out.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-
-
-  /* configure (bind) sockets */
-
-  if (bind(s1, (struct sockaddr *) &s1in, sizeof(s1in)) < 0) {
-    perror("bxhub - cannot bind socket");
-    exit(2);
-  }
-
-  printf("1st RX port in use: %d\n", ntohs(s1in.sin_port));
-
-  if (bind(s2, (struct sockaddr *) &s2in, sizeof(s2in)) < 0) {
-    perror("bxhub - cannot bind socket");
-    exit(2);
-  }
-
-  printf("2nd RX port in use: %d\n", ntohs(s2in.sin_port));
 
   printf("Host MAC address: %02x:%02x:%02x:%02x:%02x:%02x\n",
          host_macaddr[0], host_macaddr[1], host_macaddr[2],
@@ -487,55 +479,52 @@ int CDECL main(int argc, char **argv)
     /* wait for input */
 
     FD_ZERO(&rfds);
-    FD_SET(s1, &rfds);
-    FD_SET(s2, &rfds);
+    FD_SET(hclient[0].so, &rfds);
+    FD_SET(hclient[1].so, &rfds);
 
-    n = select(s2+1, &rfds, NULL, NULL, NULL);
+    n = select(hclient[1].so+1, &rfds, NULL, NULL, NULL);
 
     /* data is available somewhere */
 
-    if (FD_ISSET(s1, &rfds)) { // check input 1
-      n = recv(s1, (char*)buf, sizeof(buf), 0);
+    if (FD_ISSET(hclient[0].so, &rfds)) { // check input 1
+      n = recv(hclient[0].so, (char*)buf, sizeof(buf), 0);
       if (n > 0) {
-        if (!handle_packet(0, buf, n)) {
-          sendto(s2, (char*)buf, n, (MSG_DONTROUTE|MSG_NOSIGNAL|MSG_DONTWAIT),
-                 (struct sockaddr*) &s2out, sizeof(s2out));
+        if (!handle_packet(&hclient[0], buf, n)) {
+          send_packet(&hclient[1], buf, n);
         }
       }
     }
 
-    if (FD_ISSET(s2, &rfds)) { // check input 2
-      n = recv(s2, (char*)buf, sizeof(buf), 0);
+    if (FD_ISSET(hclient[1].so, &rfds)) { // check input 2
+      n = recv(hclient[1].so, (char*)buf, sizeof(buf), 0);
       if (n > 0) {
-        if (!handle_packet(1, buf, n)) {
-          sendto(s1, (char*)buf, n, (MSG_DONTROUTE|MSG_NOSIGNAL|MSG_DONTWAIT),
-                 (struct sockaddr*) &s1out, sizeof(s1out));
+        if (!handle_packet(&hclient[1], buf, n)) {
+          send_packet(&hclient[0], buf, n);
         }
       }
     }
 
-    if ((dhcp_init[0] < 0) || (dhcp_init[1] < 0)) {
-      perror("bxhub - wrong MAC address configuration");
+    if ((hclient[0].init < 0) || (hclient[1].init < 0)) {
+      fprintf(stderr, "bxhub - wrong MAC address configuration\n");
       break;
     }
 
-    if (pending_reply_size[0] > 0) {
-      n = pending_reply_size[0];
-      sendto(s1, (char*)reply_buffer[0], n, (MSG_DONTROUTE|MSG_NOSIGNAL|MSG_DONTWAIT),
-                 (struct sockaddr*) &s1out, sizeof(s1out));
-      pending_reply_size[0] = 0;
+    if (hclient[0].pending_reply_size > 0) {
+      send_packet(&hclient[0], hclient[0].reply_buffer, hclient[0].pending_reply_size);
+      hclient[0].pending_reply_size = 0;
     }
 
-    if (pending_reply_size[1] > 0) {
-      n = pending_reply_size[1];
-      sendto(s2, (char*)reply_buffer[1], n, (MSG_DONTROUTE|MSG_NOSIGNAL|MSG_DONTWAIT),
-                 (struct sockaddr*) &s2out, sizeof(s2out));
-      pending_reply_size[1] = 0;
+    if (hclient[1].pending_reply_size > 0) {
+      send_packet(&hclient[1], hclient[1].reply_buffer, hclient[1].pending_reply_size);
+      hclient[1].pending_reply_size = 0;
     }
   }
 
-  close(s2);
-  close(s1);
+  if (hclient[0].init) delete [] hclient[0].reply_buffer;
+  if (hclient[1].init) delete [] hclient[1].reply_buffer;
+
+  close(hclient[0].so);
+  close(hclient[1].so);
 
   exit(0);
 }
