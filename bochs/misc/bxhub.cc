@@ -40,6 +40,7 @@ extern "C" {
 #include <sys/socket.h>
 #include <netinet/in.h>
 #endif
+#include <signal.h>
 };
 
 #ifndef BXHUB
@@ -413,14 +414,25 @@ void send_packet(hub_client_t *client, Bit8u *buf, unsigned len)
          (struct sockaddr*) &client->sout, sizeof(client->sout));
 }
 
+static hub_client_t hclient[2];
+
+void intHandler(int sig)
+{
+  if (sig == SIGINT) {
+    for (int i = 0; i < 2; i++) {
+      if (hclient[i].init)
+        delete [] hclient[i].reply_buffer;
+      close(hclient[i].so);
+    }
+  }
+  exit(0);
+}
+
 int CDECL main(int argc, char **argv)
 {
-  hub_client_t hclient[2];
   int i, n;
   fd_set rfds;
   Bit8u buf[BUFSIZE];
-
-  client_count = 0;
 
   if (!parse_cmdline(argc, argv))
     exit(0);
@@ -436,6 +448,9 @@ int CDECL main(int argc, char **argv)
     return 0;
   }
 #endif
+
+  signal(SIGINT, intHandler);
+  client_count = 0;
 
   for (i = 0; i < 2; i++) {
     memset(&hclient[i], 0, sizeof(hub_client_t));
@@ -473,6 +488,7 @@ int CDECL main(int argc, char **argv)
   } else {
     printf("TFTP support disabled\n");
   }
+  printf("Press CTRL+C to quit bxhub\n");
 
   while (1) {
 
@@ -519,12 +535,5 @@ int CDECL main(int argc, char **argv)
       hclient[1].pending_reply_size = 0;
     }
   }
-
-  if (hclient[0].init) delete [] hclient[0].reply_buffer;
-  if (hclient[1].init) delete [] hclient[1].reply_buffer;
-
-  close(hclient[0].so);
-  close(hclient[1].so);
-
-  exit(0);
+  return 0;
 }
