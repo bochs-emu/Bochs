@@ -376,10 +376,55 @@ Bit16u ip_checksum(const Bit8u *buf, unsigned buf_len)
 static const Bit8u subnetmask_ipv4addr[4] = {0xff,0xff,0xff,0x00};
 static const Bit8u broadcast_ipv4addr1[4] = {0xff,0xff,0xff,0xff};
 
+void vnet_prepare_reply(Bit8u *replybuf, unsigned l3type, dhcp_cfg_t *dhcpc)
+{
+  ethernet_header_t *ethhdr = (ethernet_header_t *)replybuf;
+
+  memcpy(ethhdr->dst_mac_addr, dhcpc->guest_macaddr, ETHERNET_MAC_ADDR_LEN);
+  memcpy(ethhdr->src_mac_addr, dhcpc->host_macaddr, ETHERNET_MAC_ADDR_LEN);
+  ethhdr->type = htons(l3type);
+}
+
+bx_bool vnet_process_arp_request(const Bit8u *buf, Bit8u *reply, dhcp_cfg_t *dhcp)
+{
+  arp_header_t *arprhdr = (arp_header_t *)(reply + sizeof(ethernet_header_t));
+
+  if (!memcmp(&buf[22], dhcp->guest_macaddr, 6)) {
+    memcpy(dhcp->guest_ipv4addr, &buf[28], 4);
+    if (!memcmp(&buf[38], dhcp->host_ipv4addr, 4)) {
+      memset(reply, 0, MIN_RX_PACKET_LEN);
+      memcpy(arprhdr, &buf[14], 6);
+      arprhdr->opcode = htons(ARP_OPCODE_REPLY);
+      memcpy((Bit8u *)arprhdr+8, dhcp->host_macaddr, ETHERNET_MAC_ADDR_LEN);
+      memcpy((Bit8u *)arprhdr+14, dhcp->host_ipv4addr, 4);
+      memcpy((Bit8u *)arprhdr+18, dhcp->guest_macaddr, ETHERNET_MAC_ADDR_LEN);
+      memcpy((Bit8u *)arprhdr+24, dhcp->guest_ipv4addr, 4);
+      return 1;
+    }
+  }
+  return 0;
+}
+
+bx_bool vnet_process_icmp_echo(const Bit8u *l3pkt, unsigned l3header_len,
+                               const Bit8u *l4pkt, unsigned l4pkt_len,
+                               Bit8u *reply)
+{
+  if ((14U+l3header_len+l4pkt_len) > ICMP_ECHO_PACKET_MAX) {
+    return 0;
+  }
+  memcpy(&reply[14], l3pkt, l3header_len);
+  memcpy(&reply[14+l3header_len], l4pkt, l4pkt_len);
+  reply[14+l3header_len+0] = 0x00; // echo reply
+  put_net2(&reply[14+l3header_len+2],0);
+  put_net2(&reply[14+l3header_len+2],
+           ip_checksum(&reply[14+l3header_len],l4pkt_len) ^ (Bit16u)0xffff);
+  return 1;
+}
+
 #ifndef BXHUB
-int process_dhcp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len, Bit8u *reply, dhcp_cfg_t *dhcp)
+int vnet_process_dhcp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len, Bit8u *reply, dhcp_cfg_t *dhcp)
 #else
-int process_dhcp(const Bit8u *data, unsigned data_len, Bit8u *reply, dhcp_cfg_t *dhcp)
+int vnet_process_dhcp(const Bit8u *data, unsigned data_len, Bit8u *reply, dhcp_cfg_t *dhcp)
 #endif
 {
   const Bit8u *opts;
@@ -926,9 +971,9 @@ void tftp_parse_options(const char *mode, const Bit8u *data, unsigned data_len,
 }
 
 #ifndef BXHUB
-int process_tftp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len, Bit16u req_tid, Bit8u *reply, const char *tftp_rootdir)
+int vnet_process_tftp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len, Bit16u req_tid, Bit8u *reply, const char *tftp_rootdir)
 #else
-int process_tftp(const Bit8u *data, unsigned data_len, Bit16u req_tid, Bit8u *reply, const char *tftp_rootdir)
+int vnet_process_tftp(const Bit8u *data, unsigned data_len, Bit16u req_tid, Bit8u *reply, const char *tftp_rootdir)
 #endif
 {
   FILE *fp;

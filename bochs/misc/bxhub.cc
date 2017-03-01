@@ -60,30 +60,6 @@ typedef int SOCKET;
 
 #define BUFSIZE 4096
 
-#define ICMP_ECHO_PACKET_MAX  128
-
-#define ARP_OPCODE_REQUEST 1
-#define ARP_OPCODE_REPLY   2
-
-typedef struct arp_header {
-#if defined(_MSC_VER) && (_MSC_VER>=1300)
-  __declspec(align(1))
-#endif
-  Bit16u  hw_addr_space;
-  Bit16u  proto_addr_space;
-  Bit8u   hw_addr_len;
-  Bit8u   proto_addr_len;
-  Bit16u  opcode;
-  /* HW address of sender */
-  /* Protocol address of sender */
-  /* HW address of target*/
-  /* Protocol address of target */
-}
-#if !defined(_MSC_VER)
-  GCC_ATTRIBUTE((packed))
-#endif
-arp_header_t;
-
 typedef struct {
   SOCKET so;
   struct sockaddr_in sin, sout;
@@ -95,7 +71,6 @@ typedef struct {
 
 const Bit8u default_host_macaddr[6] = {0xb0, 0xc4, 0x20, 0x00, 0x00, 0x03};
 const Bit8u default_host_ipv4addr[4] = {10, 0, 2, 2};
-const Bit8u default_dns_ipv4addr[4] = {10, 0, 2, 3};
 
 const Bit8u default_guest_ipv4addr[2][4] =
 {
@@ -116,22 +91,11 @@ static Bit8u host_macaddr[6];
 static int client_count;
 
 
-void prepare_builtin_reply(hub_client_t *client, unsigned type)
-{
-  dhcp_cfg_t *dhcpc = &client->dhcp;
-  ethernet_header_t *ethhdr = (ethernet_header_t *)client->reply_buffer;
-
-  memcpy(ethhdr->dst_mac_addr, dhcpc->guest_macaddr, ETHERNET_MAC_ADDR_LEN);
-  memcpy(ethhdr->src_mac_addr, dhcpc->host_macaddr, ETHERNET_MAC_ADDR_LEN);
-  ethhdr->type = htons(type);
-}
-
 bx_bool handle_ipv4(hub_client_t *client, Bit8u *buf, unsigned len)
 {
   unsigned total_len;
   unsigned fragment_flags;
   unsigned fragment_offset;
-  unsigned ipproto;
   unsigned l3header_len;
   const Bit8u *l4pkt;
   unsigned l4pkt_len;
@@ -147,49 +111,50 @@ bx_bool handle_ipv4(hub_client_t *client, Bit8u *buf, unsigned len)
   if (len < (14U+20U)) {
     return 0;
   }
-  if ((buf[14+0] & 0xf0) != 0x40) {
+
+  ip_header_t *iphdr = (ip_header_t *)((Bit8u *)buf +
+                                       sizeof(ethernet_header_t));
+  if (iphdr->version != 4) {
     return 0;
   }
-  l3header_len = ((unsigned)(buf[14+0] & 0x0f) << 2);
+  l3header_len = (iphdr->header_len << 2);
   if (l3header_len != 20) {
     return 0;
   }
-  if (len < (14U+l3header_len)) return 0;
-  if (ip_checksum(&buf[14],l3header_len) != (Bit16u)0xffff) {
+  if (ip_checksum((Bit8u*)iphdr, l3header_len) != (Bit16u)0xffff) {
     return 0;
   }
 
-  total_len = get_net2(&buf[14+2]);
+  total_len = ntohs(iphdr->total_len);
 
-  if (memcmp(&buf[14+16],dhcpc->host_ipv4addr, 4) &&
-      memcmp(&buf[14+16],broadcast_ipv4addr[0],4) &&
-      memcmp(&buf[14+16],broadcast_ipv4addr[1],4) &&
-      memcmp(&buf[14+16],broadcast_ipv4addr[2],4))
+  if (memcmp(&iphdr->dst_addr, dhcpc->host_ipv4addr, 4) &&
+      memcmp(&iphdr->dst_addr, broadcast_ipv4addr[0],4) &&
+      memcmp(&iphdr->dst_addr, broadcast_ipv4addr[1],4) &&
+      memcmp(&iphdr->dst_addr, broadcast_ipv4addr[2],4))
   {
     return 0;
   }
 
-  fragment_flags = (unsigned)buf[14+6] >> 5;
-  fragment_offset = ((unsigned)get_net2(&buf[14+6]) & 0x1fff) << 3;
-  ipproto = buf[14+9];
+  fragment_flags = ntohs(iphdr->frag_offs) >> 13;
+  fragment_offset = (ntohs(iphdr->frag_offs) & 0x1fff) << 3;
 
   if ((fragment_flags & 0x1) || (fragment_offset != 0)) {
     return 0;
-  } else {
-    l4pkt = &buf[14 + l3header_len];
-    l4pkt_len = total_len - l3header_len;
   }
 
-  if (ipproto == 0x11) {
+  l4pkt = &buf[14 + l3header_len];
+  l4pkt_len = total_len - l3header_len;
+
+  if (iphdr->protocol == 0x11) {
     // guest-to-host UDP IPv4
     if (l4pkt_len < 8) return 0;
     udp_sourceport = get_net2(&l4pkt[0]);
     udp_targetport = get_net2(&l4pkt[2]);
     if ((udp_targetport == 67) || (udp_targetport == 69)) { // BOOTP & TFTP
       if (udp_targetport == 67) { // BOOTP
-        udp_reply_size = process_dhcp(&l4pkt[8], l4pkt_len-8, &replybuf[42], dhcpc);
+        udp_reply_size = vnet_process_dhcp(&l4pkt[8], l4pkt_len-8, &replybuf[42], dhcpc);
       } else if (strlen(tftp_root) > 0) {
-        udp_reply_size = process_tftp(&l4pkt[8], l4pkt_len-8, udp_sourceport, &replybuf[42], tftp_root);
+        udp_reply_size = vnet_process_tftp(&l4pkt[8], l4pkt_len-8, udp_sourceport, &replybuf[42], tftp_root);
       }
       if (udp_reply_size > 0) {
         // host-to-guest UDP IPv4: pseudo-header
@@ -215,61 +180,45 @@ bx_bool handle_ipv4(hub_client_t *client, Bit8u *buf, unsigned len)
         replybuf[21] = 0x00;
         replybuf[22] = 0x07; // TTL
         replybuf[23] = 0x11; // UDP
-        // host-to-guest IPv4
-        replybuf[14] = (replybuf[14] & 0x0f) | 0x40;
-        l3header_len = ((unsigned)(replybuf[14] & 0x0f) << 2);
-        memcpy(&replybuf[26], dhcpc->host_ipv4addr, 4);
-        memcpy(&replybuf[30], dhcpc->guest_ipv4addr, 4);
-        put_net2(&replybuf[24], 0);
-        put_net2(&replybuf[24], ip_checksum(&replybuf[14], l3header_len) ^ (Bit16u)0xffff);
         client->pending_reply_size = udp_reply_size + 42;
-        prepare_builtin_reply(client, ETHERNET_TYPE_IPV4);
       }
-      // don't forward DHCP / TFTP requests to other client
-      return 1;
     }
-  } else if (ipproto == 0x01) {
+  } else if (iphdr->protocol == 0x01) {
     // guest-to-host ICMP
     if (l4pkt_len < 8) return 0;
     icmptype = l4pkt[0];
     icmpcode = l4pkt[1];
-    if (ip_checksum(l4pkt,l4pkt_len) != (Bit16u)0xffff) {
-      BX_ERROR(("icmp: invalid checksum"));
+    if (ip_checksum(l4pkt, l4pkt_len) != (Bit16u)0xffff) {
       return 0;
     }
 
     switch (icmptype) {
       case 0x08: // ECHO
         if (icmpcode == 0) {
-          if ((14U+l3header_len+l4pkt_len) > ICMP_ECHO_PACKET_MAX) {
-            BX_ERROR(("icmp echo: size of an echo packet is too long"));
-            return 0;
+          if (vnet_process_icmp_echo(&buf[14], l3header_len, l4pkt, l4pkt_len,
+                                     replybuf)) {
+            client->pending_reply_size = 14U+l3header_len+l4pkt_len;
           }
-          memcpy(&replybuf[14], &buf[14], l3header_len);
-          memcpy(&replybuf[14+l3header_len], l4pkt, l4pkt_len);
-          replybuf[14+l3header_len+0] = 0x00; // echo reply
-          put_net2(&replybuf[14+l3header_len+2],0);
-          put_net2(&replybuf[14+l3header_len+2],
-                   ip_checksum(&replybuf[14+l3header_len],l4pkt_len) ^ (Bit16u)0xffff);
-          // host-to-guest IPv4
-          replybuf[14] = (replybuf[14] & 0x0f) | 0x40;
-          l3header_len = ((unsigned)(replybuf[14] & 0x0f) << 2);
-          memcpy(&replybuf[26], dhcpc->host_ipv4addr, 4);
-          memcpy(&replybuf[30], dhcpc->guest_ipv4addr, 4);
-          put_net2(&replybuf[24], 0);
-          put_net2(&replybuf[24], ip_checksum(&replybuf[14], l3header_len) ^ (Bit16u)0xffff);
-          client->pending_reply_size = 14U+l3header_len+l4pkt_len;
-          prepare_builtin_reply(client, ETHERNET_TYPE_IPV4);
-          return 1;
         }
         break;
       default:
-        BX_INFO(("unhandled icmp packet: type=%u code=%u",
-                 icmptype, icmpcode));
         break;
     }
   }
-  return 0;
+  if (client->pending_reply_size > 0) {
+    // host-to-guest IPv4
+    replybuf[14] = (replybuf[14] & 0x0f) | 0x40;
+    l3header_len = ((unsigned)(replybuf[14] & 0x0f) << 2);
+    memcpy(&replybuf[26], dhcpc->host_ipv4addr, 4);
+    memcpy(&replybuf[30], dhcpc->guest_ipv4addr, 4);
+    put_net2(&replybuf[24], 0);
+    put_net2(&replybuf[24], ip_checksum(&replybuf[14], l3header_len) ^ (Bit16u)0xffff);
+    vnet_prepare_reply(replybuf, ETHERNET_TYPE_IPV4, dhcpc);
+    // don't forward to other client
+    return 1;
+  } else {
+    return 0;
+  }
 }
 
 bx_bool handle_arp(hub_client_t *client, Bit8u *buf, unsigned len)
@@ -277,38 +226,25 @@ bx_bool handle_arp(hub_client_t *client, Bit8u *buf, unsigned len)
   dhcp_cfg_t *dhcpc = &client->dhcp;
   arp_header_t *arphdr = (arp_header_t *)((Bit8u *)buf +
                                           sizeof(ethernet_header_t));
-  arp_header_t *arprhdr = (arp_header_t *)((Bit8u *)client->reply_buffer +
-                                          sizeof(ethernet_header_t));
 
   if ((ntohs(arphdr->hw_addr_space) != 0x0001) ||
       (ntohs(arphdr->proto_addr_space) != 0x0800) ||
       (arphdr->hw_addr_len != ETHERNET_MAC_ADDR_LEN) ||
       (arphdr->proto_addr_len != 4)) {
-    fprintf(stderr, "Unhandled ARP message hw: %04x (%d) proto: %04x (%d)\n",
-              ntohs(arphdr->hw_addr_space), arphdr->hw_addr_len,
-              ntohs(arphdr->proto_addr_space), arphdr->proto_addr_len);
     return 0;
   }
 
   switch(ntohs(arphdr->opcode)) {
     case ARP_OPCODE_REQUEST:
-      if (((Bit8u *)arphdr)[27] > 3)
-        break;
-      memset(client->reply_buffer, 0, MIN_RX_PACKET_LEN);
-      arprhdr->hw_addr_space = htons(0x0001);
-      arprhdr->proto_addr_space = htons(0x0800);
-      arprhdr->hw_addr_len = ETHERNET_MAC_ADDR_LEN;
-      arprhdr->proto_addr_len = 4;
-      arprhdr->opcode = htons(ARP_OPCODE_REPLY);
-      memcpy((Bit8u *)arprhdr+8, dhcpc->host_macaddr, ETHERNET_MAC_ADDR_LEN);
-      memcpy((Bit8u *)arprhdr+14, (Bit8u *)arphdr+24, 4);
-      memcpy((Bit8u *)arprhdr+18, dhcpc->guest_macaddr, ETHERNET_MAC_ADDR_LEN);
-      memcpy((Bit8u *)arprhdr+24, (Bit8u *)arphdr+14, 4);
-      client->pending_reply_size = MIN_RX_PACKET_LEN;
-      prepare_builtin_reply(client, ETHERNET_TYPE_ARP);
-      return 1;
-    case ARP_OPCODE_REPLY:
+      if (vnet_process_arp_request(buf, client->reply_buffer, dhcpc)) {
+        client->pending_reply_size = MIN_RX_PACKET_LEN;
+        vnet_prepare_reply(client->reply_buffer, ETHERNET_TYPE_ARP, dhcpc);
+        return 1;
+      }
       break;
+    case ARP_OPCODE_REPLY:
+    case ARP_OPCODE_REV_REQUEST:
+    case ARP_OPCODE_REV_REPLY:
     default:
       break;
   }
@@ -330,7 +266,6 @@ int handle_packet(hub_client_t *client, Bit8u *buf, unsigned len)
       memcpy(dhcpc->host_ipv4addr, &default_host_ipv4addr[0], 4);
       memcpy(dhcpc->guest_ipv4addr, &broadcast_ipv4addr[1][0], 4);
       dhcpc->default_guest_ipv4addr = default_guest_ipv4addr[client_count++];
-      memcpy(dhcpc->dns_ipv4addr, &default_dns_ipv4addr[0], 4);
       client->reply_buffer = new Bit8u[BUFSIZE];
       client->init = 1;
     }

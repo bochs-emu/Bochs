@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2013  The Bochs Project
+//  Copyright (C) 2001-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -53,6 +53,13 @@ public:
 #define ETHERNET_TYPE_IPV4 0x0800
 #define ETHERNET_TYPE_ARP  0x0806
 
+#define ARP_OPCODE_REQUEST     1
+#define ARP_OPCODE_REPLY       2
+#define ARP_OPCODE_REV_REQUEST 3
+#define ARP_OPCODE_REV_REPLY   4
+
+#define ICMP_ECHO_PACKET_MAX  128
+
 #define TFTP_BUFFER_SIZE 1024
 
 #if defined(_MSC_VER)
@@ -73,6 +80,25 @@ typedef struct ethernet_header {
   GCC_ATTRIBUTE((packed))
 #endif
 ethernet_header_t;
+
+typedef struct arp_header {
+#if defined(_MSC_VER) && (_MSC_VER>=1300)
+  __declspec(align(1))
+#endif
+  Bit16u  hw_addr_space;
+  Bit16u  proto_addr_space;
+  Bit8u   hw_addr_len;
+  Bit8u   proto_addr_len;
+  Bit16u  opcode;
+  /* HW address of sender */
+  /* Protocol address of sender */
+  /* HW address of target*/
+  /* Protocol address of target */
+}
+#if !defined(_MSC_VER)
+  GCC_ATTRIBUTE((packed))
+#endif
+arp_header_t;
 
 typedef struct ip_header {
 #if defined(_MSC_VER) && (_MSC_VER>=1300)
@@ -167,13 +193,23 @@ BX_CPP_INLINE void put_net4(Bit8u *buf,Bit32u data)
   *(buf+3) = (Bit8u)(data & 0xff);
 }
 
+// vnet code shared with bxhub
 Bit16u ip_checksum(const Bit8u *buf, unsigned buf_len);
+void vnet_prepare_reply(Bit8u *replybuf, unsigned l3type, dhcp_cfg_t *dhcpc);
+bx_bool vnet_process_arp_request(const Bit8u *buf, Bit8u *reply, dhcp_cfg_t *dhcp);
+bx_bool vnet_process_icmp_echo(const Bit8u *l3pkt, unsigned l3header_len,
+                               const Bit8u *l4pkt, unsigned l4pkt_len,
+                               Bit8u *reply);
 #ifdef BXHUB
-int process_dhcp(const Bit8u *data, unsigned data_len, Bit8u *reply, dhcp_cfg_t *dhcp);
-int process_tftp(const Bit8u *data, unsigned data_len, Bit16u req_tid, Bit8u *reply, const char *tftp_rootdir);
+int vnet_process_dhcp(const Bit8u *data, unsigned data_len, Bit8u *reply,
+                      dhcp_cfg_t *dhcp);
+int vnet_process_tftp(const Bit8u *data, unsigned data_len, Bit16u req_tid,
+                      Bit8u *reply, const char *tftp_rootdir);
 #else
-int process_dhcp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len, Bit8u *reply, dhcp_cfg_t *dhcp);
-int process_tftp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len, Bit16u req_tid, Bit8u *reply, const char *tftp_rootdir);
+int vnet_process_dhcp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len,
+                      Bit8u *reply, dhcp_cfg_t *dhcp);
+int vnet_process_tftp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len,
+                      Bit16u req_tid, Bit8u *reply, const char *tftp_rootdir);
 
 //
 //  The eth_pktmover class is used by ethernet chip emulations
