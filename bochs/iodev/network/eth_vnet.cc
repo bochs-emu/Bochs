@@ -69,7 +69,6 @@ static const Bit8u broadcast_ipv4addr[3][4] =
   {192,168, 10,255},
 };
 
-#define ICMP_ECHO_PACKET_MAX  128
 #define LAYER4_LISTEN_MAX  128
 
 static Bit8u    packet_buffer[BX_PACKET_BUFSIZE];
