@@ -1140,6 +1140,9 @@ void bx_gui_c::console_init(void)
   console.tminfo.cs_start = 0x2e;
   console.tminfo.cs_end = 0x0f;
   console.tminfo.actl_palette[7] = 0x07;
+  memcpy(console.saved_palette, palette, 32);
+  palette_change_common(0x00, 0x00, 0x00, 0x00);
+  palette_change_common(0x07, 0xa8, 0xa8, 0xa8);
   dimension_update(720, 400, 16, 9, 8);
   console.n_keys = 0;
   console.running = 1;
@@ -1149,6 +1152,10 @@ void bx_gui_c::console_cleanup(void)
 {
   delete [] console.screen;
   delete [] console.oldscreen;
+  palette_change_common(0x00, console.saved_palette[2], console.saved_palette[1],
+                        console.saved_palette[0]);
+  palette_change_common(0x07, console.saved_palette[30], console.saved_palette[29],
+                        console.saved_palette[28]);
   unsigned fheight = (console.saved_fsize >> 4);
   unsigned fwidth = (console.saved_fsize & 0x0f);
   dimension_update(console.saved_xres, console.saved_yres, fheight, fwidth,

@@ -312,6 +312,7 @@ protected:
     unsigned saved_xres;
     unsigned saved_yres;
     unsigned saved_bpp;
+    Bit8u saved_palette[32];
     unsigned cursor_x;
     unsigned cursor_y;
     bx_vga_tminfo_t tminfo;
