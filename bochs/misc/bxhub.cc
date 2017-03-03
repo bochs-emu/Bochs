@@ -58,7 +58,7 @@ typedef int SOCKET;
 #include "osdep.h"
 #include "iodev/network/netmod.h"
 
-#define BXHUB_MAX_CLIENTS 4
+#define BXHUB_MAX_CLIENTS 6
 
 typedef struct {
   SOCKET so;
@@ -69,7 +69,7 @@ typedef struct {
   int pending_reply_size;
 } hub_client_t;
 
-const Bit8u default_host_macaddr[6] = {0xb0, 0xc4, 0x20, 0x00, 0x00, 0x03};
+const Bit8u default_host_macaddr[6] = {0xb0, 0xc4, 0x20, 0x00, 0x00, 0x0f};
 const Bit8u default_host_ipv4addr[4] = {10, 0, 2, 2};
 
 const Bit8u default_guest_ipv4addr[BXHUB_MAX_CLIENTS][4] =
@@ -103,8 +103,8 @@ bx_bool handle_ipv4(hub_client_t *client, Bit8u *buf, unsigned len)
   unsigned l3header_len;
   const Bit8u *l4pkt;
   unsigned l4pkt_len;
-  unsigned udp_sourceport;
-  unsigned udp_targetport;
+  unsigned udp_src_port;
+  unsigned udp_dst_port;
   unsigned udp_reply_size = 0;
   unsigned icmptype;
   unsigned icmpcode;
@@ -152,40 +152,48 @@ bx_bool handle_ipv4(hub_client_t *client, Bit8u *buf, unsigned len)
   if (iphdr->protocol == 0x11) {
     // guest-to-host UDP IPv4
     if (l4pkt_len < 8) return 0;
-    udp_sourceport = get_net2(&l4pkt[0]);
-    udp_targetport = get_net2(&l4pkt[2]);
-    if ((udp_targetport == 67) || (udp_targetport == 69)) { // BOOTP & TFTP
-      if (udp_targetport == 67) { // BOOTP
-        udp_reply_size = vnet_process_dhcp(&l4pkt[8], l4pkt_len-8, &replybuf[42], dhcpc);
-      } else if (strlen(tftp_root) > 0) {
-        udp_reply_size = vnet_process_tftp(&l4pkt[8], l4pkt_len-8, udp_sourceport, &replybuf[42], tftp_root);
-      }
-      if (udp_reply_size > 0) {
-        // host-to-guest UDP IPv4: pseudo-header
-        replybuf[22] = 0;
-        replybuf[23] = 0x11; // UDP
-        put_net2(&replybuf[24], 8U+udp_reply_size);
-        memcpy(&replybuf[26], dhcpc->host_ipv4addr, 4);
-        memcpy(&replybuf[30], dhcpc->guest_ipv4addr, 4);
-        // udp header
-        put_net2(&replybuf[34], udp_targetport);
-        put_net2(&replybuf[36], udp_sourceport);
-        put_net2(&replybuf[38], 8U+udp_reply_size);
-        put_net2(&replybuf[40], 0);
-        put_net2(&replybuf[40],
-                 ip_checksum(&replybuf[22], 12U+8U+udp_reply_size) ^ (Bit16u)0xffff);
-        // ip header
-        memset(&replybuf[14], 0, 20);
-        replybuf[14] = 0x45;
-        replybuf[15] = 0x00;
-        put_net2(&replybuf[16], 20U+8U+udp_reply_size);
-        put_net2(&replybuf[18], 1);
-        replybuf[20] = 0x00;
-        replybuf[21] = 0x00;
-        replybuf[22] = 0x07; // TTL
-        replybuf[23] = 0x11; // UDP
-        client->pending_reply_size = udp_reply_size + 42;
-      }
+    udp_header_t *udphdr = (udp_header_t *)l4pkt;
+    udp_src_port = ntohs(udphdr->src_port);
+    udp_dst_port = ntohs(udphdr->dst_port);
+    switch (udp_dst_port) {
+      case 67: // BOOTP
+        udp_reply_size = vnet_process_dhcp(NULL, &l4pkt[8], l4pkt_len-8,
+                                           &replybuf[42], dhcpc);
+        break;
+      case 69: // TFTP
+        if (strlen(tftp_root) > 0) {
+          udp_reply_size = vnet_process_tftp(NULL, &l4pkt[8], l4pkt_len-8,
+                                             udp_src_port, &replybuf[42], tftp_root);
+        }
+        break;
+      default:
+        break;
+    }
+    if (udp_reply_size > 0) {
+      // host-to-guest UDP IPv4: pseudo-header
+      replybuf[22] = 0;
+      replybuf[23] = 0x11; // UDP
+      put_net2(&replybuf[24], 8U+udp_reply_size);
+      memcpy(&replybuf[26], dhcpc->host_ipv4addr, 4);
+      memcpy(&replybuf[30], dhcpc->guest_ipv4addr, 4);
+      // udp header
+      put_net2(&replybuf[34], udp_dst_port);
+      put_net2(&replybuf[36], udp_src_port);
+      put_net2(&replybuf[38], 8U+udp_reply_size);
+      put_net2(&replybuf[40], 0);
+      put_net2(&replybuf[40],
+               ip_checksum(&replybuf[22], 12U+8U+udp_reply_size) ^ (Bit16u)0xffff);
+      // ip header
+      memset(&replybuf[14], 0, 20);
+      replybuf[14] = 0x45;
+      replybuf[15] = 0x00;
+      put_net2(&replybuf[16], 20U+8U+udp_reply_size);
+      put_net2(&replybuf[18], 1);
+      replybuf[20] = 0x00;
+      replybuf[21] = 0x00;
+      replybuf[22] = 0x07; // TTL
+      replybuf[23] = 0x11; // UDP
+      client->pending_reply_size = udp_reply_size + 42;
     }
   } else if (iphdr->protocol == 0x01) {
     // guest-to-host ICMP
@@ -195,7 +203,6 @@ bx_bool handle_ipv4(hub_client_t *client, Bit8u *buf, unsigned len)
     if (ip_checksum(l4pkt, l4pkt_len) != (Bit16u)0xffff) {
       return 0;
     }
-
     switch (icmptype) {
       case 0x08: // ECHO
         if (icmpcode == 0) {

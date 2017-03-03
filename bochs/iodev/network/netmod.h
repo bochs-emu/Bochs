@@ -194,23 +194,21 @@ BX_CPP_INLINE void put_net4(Bit8u *buf,Bit32u data)
 }
 
 // vnet code shared with bxhub
+#ifdef BXHUB
+#define bx_devmodel_c void
+#endif
 Bit16u ip_checksum(const Bit8u *buf, unsigned buf_len);
 void vnet_prepare_reply(Bit8u *replybuf, unsigned l3type, dhcp_cfg_t *dhcpc);
 bx_bool vnet_process_arp_request(const Bit8u *buf, Bit8u *reply, dhcp_cfg_t *dhcp);
 bx_bool vnet_process_icmp_echo(const Bit8u *l3pkt, unsigned l3header_len,
                                const Bit8u *l4pkt, unsigned l4pkt_len,
                                Bit8u *reply);
-#ifdef BXHUB
-int vnet_process_dhcp(const Bit8u *data, unsigned data_len, Bit8u *reply,
-                      dhcp_cfg_t *dhcp);
-int vnet_process_tftp(const Bit8u *data, unsigned data_len, Bit16u req_tid,
-                      Bit8u *reply, const char *tftp_rootdir);
-#else
 int vnet_process_dhcp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len,
                       Bit8u *reply, dhcp_cfg_t *dhcp);
 int vnet_process_tftp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len,
                       Bit16u req_tid, Bit8u *reply, const char *tftp_rootdir);
 
+#ifndef BXHUB
 //
 //  The eth_pktmover class is used by ethernet chip emulations
 // to interface to the outside world. An instance of this

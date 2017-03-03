@@ -605,23 +605,23 @@ void bx_vnet_pktmover_c::process_udpipv4(
   const Bit8u *ipheader, unsigned ipheader_len,
   const Bit8u *l4pkt, unsigned l4pkt_len)
 {
-  unsigned udp_targetport;
-  unsigned udp_sourceport;
+  unsigned udp_dst_port;
+  unsigned udp_src_port;
 //  unsigned udp_len;
   layer4_handler_t func;
 
   if (l4pkt_len < 8) return;
   udp_header_t *udphdr = (udp_header_t *)l4pkt;
-  udp_sourceport = ntohs(udphdr->src_port);
-  udp_targetport = ntohs(udphdr->dst_port);
+  udp_src_port = ntohs(udphdr->src_port);
+  udp_dst_port = ntohs(udphdr->dst_port);
 //  udp_len = ntohs(udphdr->length);
 
-  func = get_layer4_handler(0x11, udp_targetport);
+  func = get_layer4_handler(0x11, udp_dst_port);
   if (func != (layer4_handler_t)NULL) {
     (*func)((void *)this,ipheader, ipheader_len,
-      udp_sourceport, udp_targetport, &l4pkt[8], l4pkt_len-8);
+      udp_src_port, udp_dst_port, &l4pkt[8], l4pkt_len-8);
   } else {
-    BX_ERROR(("udp - unhandled port %u", udp_targetport));
+    BX_ERROR(("udp - unhandled port %u", udp_dst_port));
   }
 }
 

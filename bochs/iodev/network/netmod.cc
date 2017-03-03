@@ -421,11 +421,7 @@ bx_bool vnet_process_icmp_echo(const Bit8u *l3pkt, unsigned l3header_len,
   return 1;
 }
 
-#ifndef BXHUB
 int vnet_process_dhcp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len, Bit8u *reply, dhcp_cfg_t *dhcp)
-#else
-int vnet_process_dhcp(const Bit8u *data, unsigned data_len, Bit8u *reply, dhcp_cfg_t *dhcp)
-#endif
 {
   const Bit8u *opts;
   unsigned opts_len;
@@ -924,13 +920,8 @@ int tftp_send_optack(Bit8u *buffer, tftp_session_t *s)
   return (p - buffer);
 }
 
-#ifndef BXHUB
 void tftp_parse_options(bx_devmodel_c *netdev, const char *mode, const Bit8u *data,
                         unsigned data_len, tftp_session_t *s)
-#else
-void tftp_parse_options(const char *mode, const Bit8u *data, unsigned data_len,
-                        tftp_session_t *s)
-#endif
 {
   while (mode < (const char*)data + data_len) {
     if (memcmp(mode, "octet\0", 6) == 0) {
@@ -970,11 +961,7 @@ void tftp_parse_options(const char *mode, const Bit8u *data, unsigned data_len,
   }
 }
 
-#ifndef BXHUB
 int vnet_process_tftp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len, Bit16u req_tid, Bit8u *reply, const char *tftp_rootdir)
-#else
-int vnet_process_tftp(const Bit8u *data, unsigned data_len, Bit16u req_tid, Bit8u *reply, const char *tftp_rootdir)
-#endif
 {
   FILE *fp;
   unsigned block_nr;
@@ -999,11 +986,7 @@ int vnet_process_tftp(const Bit8u *data, unsigned data_len, Bit16u req_tid, Bit8
         // options
         if (strlen((char*)reply) < data_len - 2) {
           const char *mode = (const char*)data + 2 + strlen((char*)reply) + 1;
-#ifndef BXHUB
           tftp_parse_options(netdev, mode, data, data_len, s);
-#else
-          tftp_parse_options(mode, data, data_len, s);
-#endif
         }
         if (!(s->options & TFTP_OPTION_OCTET)) {
           return tftp_send_error(reply, 4, "Unsupported transfer mode", NULL);
@@ -1040,11 +1023,7 @@ int vnet_process_tftp(const Bit8u *data, unsigned data_len, Bit16u req_tid, Bit8
         // options
         if (strlen((char*)reply) < data_len - 2) {
           const char *mode = (const char*)data + 2 + strlen((char*)reply) + 1;
-#ifndef BXHUB
           tftp_parse_options(netdev, mode, data, data_len, s);
-#else
-          tftp_parse_options(mode, data, data_len, s);
-#endif
         }
         if (!(s->options & TFTP_OPTION_OCTET)) {
           return tftp_send_error(reply, 4, "Unsupported transfer mode", NULL);
