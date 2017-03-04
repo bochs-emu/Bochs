@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2011  The Bochs Project
+//  Copyright (C) 2001-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -96,10 +96,10 @@ bx_null_pktmover_c::bx_null_pktmover_c(const char *netif,
   this->rxstat = rxstat;
   // eventually Bryce wants txlog to dump in pcap format so that
   // tcpdump -r FILE can read it and interpret packets.
-  txlog = fopen("ne2k-tx.log", "wb");
-  if (!txlog) BX_PANIC(("open ne2k-tx.log failed"));
-  txlog_txt = fopen("ne2k-txdump.txt", "wb");
-  if (!txlog_txt) BX_PANIC(("open ne2k-txdump.txt failed"));
+  txlog = fopen("eth_null-tx.log", "wb");
+  if (!txlog) BX_PANIC(("open eth_null-tx.log failed"));
+  txlog_txt = fopen("eth_null-txdump.txt", "wb");
+  if (!txlog_txt) BX_PANIC(("open eth_null-txdump.txt failed"));
   fprintf(txlog_txt, "null packetmover readable log file\n");
   fprintf(txlog_txt, "net IF = %s\n", netif);
   fprintf(txlog_txt, "MAC address = ");

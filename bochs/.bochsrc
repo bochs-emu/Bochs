@@ -574,10 +574,11 @@ pci: enabled=1, chipset=i440fx
 
 #=======================================================================
 # CMOSIMAGE:
-# This defines image file that can be loaded into the CMOS RAM at startup.
-# The rtc_init parameter controls whether initialize the RTC with values stored
-# in the image. By default the time0 argument given to the clock option is used.
-# With 'rtc_init=image' the image is the source for the initial time.
+# This defines a binary image file with size 128 bytes that can be loaded into
+# the CMOS RAM at startup. The rtc_init parameter controls whether initialize
+# the RTC with values stored in the image. By default the time0 argument given
+# to the clock option is used. With 'rtc_init=image' the image is the source
+# for the initial time.
 #
 # Example:
 #   cmosimage: file=cmos.img, rtc_init=image
@@ -998,15 +999,19 @@ speaker: enabled=1, mode=sound
 # Windows machines, you must run niclist to get the name of the ethdev.
 # Niclist source code is in misc/niclist.c and it is included in Windows 
 # binary releases.
+# # The 'socket' module uses this parameter to specify the UDP port for
+# receiving packets.
 #
 # SCRIPT: The script value is optional, and is the name of a script that 
 # is executed after bochs initialize the network interface. You can use 
 # this script to configure this network interface, or enable masquerading.
 # This is mainly useful for the tun/tap devices that only exist during
 # Bochs execution. The network interface name is supplied to the script
-# as first parameter. The 'slirp' module uses this parameter to specify
-# a config file for setting up an alternative IP configuration or additional
-# features.
+# as first parameter.
+# The 'slirp' module uses this parameter to specify a config file for
+# setting up an alternative IP configuration or additional features.
+# The 'vnet' module uses this parameter to specify an alternative
+# log file name.
 #
 # BOOTROM: The bootrom value is optional, and is the name of the ROM image
 # to load. Note that this feature is only implemented for the PCI version of
@@ -1021,9 +1026,9 @@ speaker: enabled=1, mode=sound
 #         DHCP assigns 192.168.10.2 to the guest.
 #         TFTP uses the 'ethdev' value for the root directory and doesn't
 #         overwrite files.
-# socket: Connect two Bochs instances with external program 'bxhub' (simulating
-#         a two port ethernet hub). It provides the same services as the 'vnet'
-#         module and assigns IP addresses like 'slirp' (10.0.2.x).
+# socket: Connect up to 6 Bochs instances with external program 'bxhub'
+#         (simulating an ethernet hub). It provides the same services as the
+#         'vnet' module and assigns IP addresses like 'slirp' (10.0.2.x).
 #
 #=======================================================================
 # ne2k: ioaddr=0x300, irq=9, mac=fe:fd:00:00:00:01, ethmod=fbsd, ethdev=en0 #macosx

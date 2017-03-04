@@ -238,14 +238,18 @@ void bx_vnet_pktmover_c::pktmover_init(
                        (status == BX_NETDEV_100MBIT) ? 100 : 10;
   this->rx_timer_index =
     bx_pc_system.register_timer(this, this->rx_timer_handler, 1000,
-                              	 0, 0, "eth_vnet");
+                                0, 0, "eth_vnet");
 
   BX_INFO(("'vnet' network driver initialized"));
   bx_vnet_instances++;
 
 #if BX_ETH_VNET_LOGGING
-  pktlog_txt = fopen("ne2k-pktlog.txt", "wb");
-  if (!pktlog_txt) BX_PANIC(("ne2k-pktlog.txt failed"));
+  if ((strlen(script) > 0) && (strcmp(script, "none"))) {
+    pktlog_txt = fopen(script, "wb");
+  } else {
+    pktlog_txt = fopen("vnet-pktlog.txt", "wb");
+  }
+  if (!pktlog_txt) BX_PANIC(("vnet-pktlog.txt failed"));
   fprintf(pktlog_txt, "vnet packetmover readable log file\n");
   fprintf(pktlog_txt, "TFTP root = %s\n", netif);
   fprintf(pktlog_txt, "host MAC address = ");
@@ -260,8 +264,8 @@ void bx_vnet_pktmover_c::pktmover_init(
 #endif
 #if BX_ETH_VNET_PCAP_LOGGING
   pcapp = pcap_open_dead(DLT_EN10MB, BX_PACKET_BUFSIZE);
-  pktlog_pcap = pcap_dump_open(pcapp, "ne2k-pktlog.pcap");
-  if (pktlog_pcap == NULL) BX_PANIC(("ne2k-pktlog.pcap failed"));
+  pktlog_pcap = pcap_dump_open(pcapp, "vnet-pktlog.pcap");
+  if (pktlog_pcap == NULL) BX_PANIC(("vnet-pktlog.pcap failed"));
 #endif
 }
 

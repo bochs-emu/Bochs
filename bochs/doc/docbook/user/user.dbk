@@ -3951,11 +3951,11 @@ Example:
 <screen>
   cmosimage: file=cmos.img, rtc_init=time0
 </screen>
-This defines image file that can be loaded into the CMOS RAM at startup.
-The rtc_init parameter controls whether initialize the RTC with values stored
-in the image. By default the time0 argument given to the
-<link linkend="bochsopt-clock">clock option</link> is used. With 'rtc_init=image'
-the image is the source for the initial time.
+This defines a binary image file with size 128 bytes that can be loaded into
+the CMOS RAM at startup. The rtc_init parameter controls whether initialize
+the RTC with values stored in the image. By default the time0 argument given
+to the <link linkend="bochsopt-clock">clock option</link> is used. With
+'rtc_init=image' the image is the source for the initial time.
 </para>
 </section>
 
@@ -4697,7 +4697,7 @@ version where this module was added.
     uses the 'ethdev' value for the root directory and doesn't overwrite files.
     </entry>
     <entry>Yes, for TFTP</entry>
-    <entry>No</entry>
+    <entry>Yes, for log file name</entry>
     <entry>2.2</entry>
   </row>
   <row>
@@ -4711,6 +4711,16 @@ version where this module was added.
     <entry>Yes, for TFTP</entry>
     <entry>Yes, for Slirp config</entry>
     <entry>2.6.5</entry>
+  </row>
+  <row>
+    <entry>socket</entry>
+    <entry>Connect up to 6 Bochs instances with external program 'bxhub'
+    (simulating an ethernet hub). It provides the same services as the
+    'vnet' module and assigns IP addresses like 'slirp' (10.0.2.x).
+    </entry>
+    <entry>Yes, for base UDP port</entry>
+    <entry>No</entry>
+    <entry>2.6.8 SVN</entry>
   </row>
   <row>
     <entry>win32</entry>

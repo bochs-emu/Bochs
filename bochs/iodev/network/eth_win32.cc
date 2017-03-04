@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -334,8 +334,8 @@ bx_win32_pktmover_c::bx_win32_pktmover_c(
     bx_pc_system.register_timer(this, this->rx_timer_handler, 10000, 1, 1, "eth_win32");
 
 #if BX_ETH_WIN32_LOGGING
-  pktlog_txt = fopen("ne2k-pktlog.txt", "wb");
-  if (!pktlog_txt) BX_PANIC(("ne2k-pktlog.txt failed"));
+  pktlog_txt = fopen("eth_win32-pktlog.txt", "wb");
+  if (!pktlog_txt) BX_PANIC(("eth_win32-pktlog.txt failed"));
   fprintf(pktlog_txt, "win32 packetmover readable log file\n");
   fprintf(pktlog_txt, "host adapter = %s\n", netif);
   fprintf(pktlog_txt, "guest MAC address = ");

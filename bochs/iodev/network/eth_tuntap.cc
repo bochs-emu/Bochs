@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2011  The Bochs Project
+//  Copyright (C) 2001-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -196,10 +196,10 @@ bx_tuntap_pktmover_c::bx_tuntap_pktmover_c(const char *netif,
 #if BX_ETH_TUNTAP_LOGGING
   // eventually Bryce wants txlog to dump in pcap format so that
   // tcpdump -r FILE can read it and interpret packets.
-  txlog = fopen("ne2k-tx.log", "wb");
-  if (!txlog) BX_PANIC(("open ne2k-tx.log failed"));
-  txlog_txt = fopen("ne2k-txdump.txt", "wb");
-  if (!txlog_txt) BX_PANIC(("open ne2k-txdump.txt failed"));
+  txlog = fopen("tuntap-tx.log", "wb");
+  if (!txlog) BX_PANIC(("open tuntap-tx.log failed"));
+  txlog_txt = fopen("tuntap-txdump.txt", "wb");
+  if (!txlog_txt) BX_PANIC(("open tuntap-txdump.txt failed"));
   fprintf(txlog_txt, "tuntap packetmover readable log file\n");
   fprintf(txlog_txt, "net IF = %s\n", netif);
   fprintf(txlog_txt, "MAC address = ");
@@ -208,10 +208,10 @@ bx_tuntap_pktmover_c::bx_tuntap_pktmover_c(const char *netif,
   fprintf(txlog_txt, "\n--\n");
   fflush(txlog_txt);
 
-  rxlog = fopen("ne2k-rx.log", "wb");
-  if (!rxlog) BX_PANIC(("open ne2k-rx.log failed"));
-  rxlog_txt = fopen("ne2k-rxdump.txt", "wb");
-  if (!rxlog_txt) BX_PANIC(("open ne2k-rxdump.txt failed"));
+  rxlog = fopen("tuntap-rx.log", "wb");
+  if (!rxlog) BX_PANIC(("open tuntap-rx.log failed"));
+  rxlog_txt = fopen("tuntap-rxdump.txt", "wb");
+  if (!rxlog_txt) BX_PANIC(("open tuntap-rxdump.txt failed"));
   fprintf(rxlog_txt, "tuntap packetmover readable log file\n");
   fprintf(rxlog_txt, "net IF = %s\n", netif);
   fprintf(rxlog_txt, "MAC address = ");

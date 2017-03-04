@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "16 Feb 2017" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "4 Mar 2017" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -626,10 +626,11 @@ Example:
 
 .TP
 .I "cmosimage:"
-This defines image file that can be loaded into the CMOS RAM at startup.
-The rtc_init parameter controls whether initialize the RTC with values stored
-in the image. By default the time0 argument given to the clock option is used.
-With 'rtc_init=image' the image is the source for the initial time.
+This defines a binary image file with size 128 bytes that can be loaded into
+the CMOS RAM at startup. The rtc_init parameter controls whether initialize
+the RTC with values stored in the image. By default the time0 argument given
+to the clock option is used. With 'rtc_init=image' the image is the source
+for the initial time.
 
 Example:
   cmosimage: file=cmos.img, rtc_init=time0
@@ -1120,6 +1121,9 @@ you can use the following 'ethmod's to simulate a virtual network.
             DHCP assigns 192.168.10.2 to the guest
             The TFTP server use 'ethdev' for the root directory and doesn't
             overwrite files
+ - socket : Connect up to 6 Bochs instances with external program 'bxhub'
+            (simulating an ethernet hub). It provides the same services as the
+            'vnet' module and assigns IP addresses like 'slirp' (10.0.2.x).
 
 ETHDEV:
 The ethdev value is the name of the network interface on your host
@@ -1127,6 +1131,8 @@ platform.  On UNIX machines, you can get the name by running ifconfig. On
 Windows machines, you must run niclist to get the name of the ethdev.
 Niclist source code is in misc/niclist.c and it is included in Windows
 binary releases.
+The 'socket' module uses this parameter to specify the UDP port for
+receiving packets.
 
 SCRIPT:
 The script value is optional, and is the name of a script that
@@ -1136,7 +1142,8 @@ This is mainly useful for the tun/tap devices that only exist during
 Bochs execution. The network interface name is supplied to the script
 as first parameter. The 'slirp' module uses this parameter to specify
 a config file for setting up an alternative IP configuration or additional
-features.
+features. The 'vnet' module uses this parameter to specify an alternative
+log file name.
 
 BOOTROM:
 The bootrom value is optional, and is the name of the ROM image
