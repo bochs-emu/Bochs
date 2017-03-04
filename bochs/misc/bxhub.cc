@@ -72,14 +72,6 @@ typedef struct {
 const Bit8u default_host_macaddr[6] = {0xb0, 0xc4, 0x20, 0x00, 0x00, 0x0f};
 const Bit8u default_host_ipv4addr[4] = {10, 0, 2, 2};
 
-const Bit8u default_guest_ipv4addr[BXHUB_MAX_CLIENTS][4] =
-{
-  {10, 0, 2, 15},
-  {10, 0, 2, 16},
-  {10, 0, 2, 17},
-  {10, 0, 2, 18},
-};
-
 const Bit8u broadcast_ipv4addr[3][4] =
 {
   {  0,  0,  0,  0},
@@ -87,11 +79,11 @@ const Bit8u broadcast_ipv4addr[3][4] =
   { 10,  0,  2,255},
 };
 
+static Bit8u default_guest_ipv4addr[4] = {10, 0, 2, 15};
 static Bit16u port_base = 40000;
 static char tftp_root[BX_PATHNAME_LEN];
 static Bit8u host_macaddr[6];
 static int client_max;
-static int client_count;
 static hub_client_t hclient[BXHUB_MAX_CLIENTS];
 
 
@@ -276,7 +268,8 @@ int handle_packet(hub_client_t *client, Bit8u *buf, unsigned len)
       memcpy(dhcpc->guest_macaddr, ethhdr->src_mac_addr, ETHERNET_MAC_ADDR_LEN);
       memcpy(dhcpc->host_ipv4addr, &default_host_ipv4addr[0], 4);
       memcpy(dhcpc->guest_ipv4addr, &broadcast_ipv4addr[1][0], 4);
-      dhcpc->default_guest_ipv4addr = default_guest_ipv4addr[client_count++];
+      memcpy(dhcpc->default_guest_ipv4addr, default_guest_ipv4addr, 4);
+      default_guest_ipv4addr[3]++;
       client->reply_buffer = new Bit8u[BX_PACKET_BUFSIZE];
       client->init = 1;
     }
@@ -431,7 +424,6 @@ int CDECL main(int argc, char **argv)
 #endif
 
   signal(SIGINT, intHandler);
-  client_count = 0;
 
   for (i = 0; i < client_max; i++) {
     memset(&hclient[i], 0, sizeof(hub_client_t));

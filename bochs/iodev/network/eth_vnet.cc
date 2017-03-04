@@ -223,10 +223,10 @@ void bx_vnet_pktmover_c::pktmover_init(
   memcpy(&dhcp.guest_macaddr[0], macaddr, 6);
   dhcp.host_macaddr[5] ^= 0x03;
 
-  memcpy(&dhcp.host_ipv4addr[0], &default_host_ipv4addr[0], 4);
-  memcpy(&dhcp.guest_ipv4addr[0], &broadcast_ipv4addr[1][0], 4);
-  dhcp.default_guest_ipv4addr = default_guest_ipv4addr;
-  memcpy(&dhcp.dns_ipv4addr[0], &broadcast_ipv4addr[0][0], 4);
+  memcpy(dhcp.host_ipv4addr, default_host_ipv4addr, 4);
+  memcpy(dhcp.guest_ipv4addr, &broadcast_ipv4addr[1][0], 4);
+  memcpy(dhcp.default_guest_ipv4addr, default_guest_ipv4addr, 4);
+  memcpy(&dhcp.dns_ipv4addr, &broadcast_ipv4addr[0][0], 4);
 
   l4data_used = 0;
 

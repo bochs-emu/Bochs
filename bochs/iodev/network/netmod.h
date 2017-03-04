@@ -153,7 +153,7 @@ typedef struct {
   Bit8u host_macaddr[6];
   Bit8u guest_macaddr[6];
   Bit8u host_ipv4addr[4];
-  const Bit8u *default_guest_ipv4addr;
+  Bit8u default_guest_ipv4addr[4];
   Bit8u guest_ipv4addr[4];
   Bit8u dns_ipv4addr[4];
 } dhcp_cfg_t;
