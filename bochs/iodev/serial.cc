@@ -60,21 +60,21 @@ bx_serial_c *theSerialDevice = NULL;
 
 // builtin configuration handling functions
 
+static const char *serial_mode_list[] = {
+  "null",
+  "file",
+  "term",
+  "raw",
+  "mouse",
+  "socket-client",
+  "socket-server",
+  "pipe-client",
+  "pipe-server",
+  NULL
+};
+
 void serial_init_options(void)
 {
-  static const char *serial_mode_list[] = {
-    "null",
-    "file",
-    "term",
-    "raw",
-    "mouse",
-    "socket-client",
-    "socket-server",
-    "pipe-client",
-    "pipe-server",
-    NULL
-  };
-
   char name[4], label[80], descr[120];
 
   bx_list_c *serial = (bx_list_c*)SIM->get_param("ports.serial");
@@ -440,7 +440,6 @@ bx_serial_c::init(void)
         BX_SER_THIS mouse_type = SIM->get_param_enum(BXPN_MOUSE_TYPE)->get();
       } else if ((mode == BX_SER_MODE_SOCKET_CLIENT) ||
                  (mode == BX_SER_MODE_SOCKET_SERVER)) {
-        BX_SER_THIS s[i].io_mode = mode;
         struct sockaddr_in  sin;
         struct hostent      *hp;
         char                host[BX_PATHNAME_LEN];
@@ -456,8 +455,10 @@ bx_serial_c::init(void)
           int err;
           wVersionRequested = MAKEWORD(2, 0);
           err = WSAStartup(wVersionRequested, &wsaData);
-          if (err != 0)
+          if (err != 0) {
             BX_PANIC(("WSAStartup failed"));
+            continue;
+          }
           winsock_init = true;
         }
 #endif
@@ -467,12 +468,14 @@ bx_serial_c::init(void)
         substr = strtok(NULL, ":");
         if (!substr) {
           BX_PANIC(("com%d: inet address is wrong (%s)", i+1, dev));
+          continue;
         }
         port = atoi(substr);
 
         hp = gethostbyname(host);
         if (!hp) {
           BX_PANIC(("com%d: gethostbyname failed (%s)", i+1, host));
+          continue;
         }
 
         memset ((char*) &sin, 0, sizeof (sin));
@@ -484,37 +487,44 @@ bx_serial_c::init(void)
         sin.sin_port = htons (port);
 
         socket = ::socket (AF_INET, SOCK_STREAM, 0);
-        if (socket < 0)
+        if (socket < 0) {
           BX_PANIC(("com%d: socket() failed",i+1));
+          continue;
+        }
 
-        // server mode
         if (server) {
-          if (::bind (socket, (sockaddr *) &sin, sizeof (sin)) < 0 ||
-              ::listen (socket, SOMAXCONN) < 0) {
+          // server mode
+          if (::bind(socket, (sockaddr *) &sin, sizeof (sin)) < 0 ||
+              ::listen(socket, SOMAXCONN) < 0) {
             closesocket(socket);
             socket = (SOCKET) -1;
             BX_PANIC(("com%d: bind() or listen() failed (host:%s, port:%d)",i+1, host, port));
-          }
-          else {
-            BX_INFO(("com%d: waiting for client to connect (host:%s, port:%d)",i+1, host, port));
+            continue;
+          } else {
+            fprintf(stderr,"com%d: waiting for client to connect (host:%s, port:%d)\n",i+1, host, port);
             SOCKET client;
-            if ((client = ::accept (socket, NULL, 0)) < 0)
+            if ((client = ::accept(socket, NULL, 0)) < 0) {
               BX_PANIC(("com%d: accept() failed (host:%s, port:%d)",i+1, host, port));
-            closesocket(socket);
-            socket = client;
+              continue;
+            } else {
+              fprintf(stderr,"client connected\n");
+              closesocket(socket);
+              socket = client;
+            }
           }
-        }
-        // client mode
-        else if (::connect (socket, (sockaddr *) &sin, sizeof (sin)) < 0) {
+        } else if (::connect(socket, (sockaddr *) &sin, sizeof (sin)) < 0) {
+          // client mode
           closesocket(socket);
           socket = (SOCKET) -1;
-          BX_INFO(("com%d: connect() failed (host:%s, port:%d)",i+1, host, port));
+          BX_ERROR(("com%d: connect() failed (host:%s, port:%d)",i+1, host, port));
         }
 
         BX_SER_THIS s[i].socket_id = socket;
-        if (socket > 0)
+        if (socket > 0) {
           BX_INFO(("com%d - inet %s - socket_id: %d, ip:%s, port:%d",
-            i+1, server ? "server" : "client", socket, host, port));
+                   i+1, server ? "server" : "client", socket, host, port));
+          BX_SER_THIS s[i].io_mode = mode;
+        }
       } else if ((mode == BX_SER_MODE_PIPE_CLIENT) ||
                  (mode == BX_SER_MODE_PIPE_SERVER)) {
         if (strlen(dev) > 0) {
@@ -522,38 +532,40 @@ bx_serial_c::init(void)
 #ifdef BX_SER_WIN32
           HANDLE pipe;
 
-          BX_SER_THIS s[i].io_mode = mode;
-
-          // server mode
           if (server) {
+            // server mode
             pipe = CreateNamedPipe( dev,
                 PIPE_ACCESS_DUPLEX | FILE_FLAG_FIRST_PIPE_INSTANCE,
                 PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
                 1, 4096, 4096, 0, NULL);
 
-            if (pipe == INVALID_HANDLE_VALUE)
+            if (pipe == INVALID_HANDLE_VALUE) {
               BX_PANIC(("com%d: CreateNamedPipe(%s) failed", i+1, dev));
-
+              continue;
+            }
             BX_INFO(("com%d: waiting for client to connect to %s", i+1, dev));
             if (!ConnectNamedPipe(pipe, NULL) && GetLastError() != ERROR_PIPE_CONNECTED)
             {
               CloseHandle(pipe);
               pipe = INVALID_HANDLE_VALUE;
               BX_PANIC(("com%d: ConnectNamedPipe(%s) failed", i+1, dev));
+              continue;
             }
-          }
-          // client mode
-          else {
+          } else {
+            // client mode
             pipe = CreateFile( dev,
                GENERIC_READ | GENERIC_WRITE, 
                0, NULL, OPEN_EXISTING, 0, NULL);
 
-            if (pipe == INVALID_HANDLE_VALUE)
-              BX_INFO(("com%d: failed to open pipe %s", i+1, dev));
+            if (pipe == INVALID_HANDLE_VALUE) {
+              BX_ERROR(("com%d: failed to open pipe %s", i+1, dev));
+            }
           }
 
-          if (pipe != INVALID_HANDLE_VALUE)
+          if (pipe != INVALID_HANDLE_VALUE) {
             BX_SER_THIS s[i].pipe = pipe;
+            BX_SER_THIS s[i].io_mode = mode;
+          }
 #else
           BX_PANIC(("support for serial mode 'pipe-%s' not available", server?"server":"client"));
 #endif
@@ -568,7 +580,7 @@ bx_serial_c::init(void)
       }
       count++;
       BX_INFO(("com%d at 0x%04x irq %d (mode: %s)", i+1, ports[i], BX_SER_THIS s[i].IRQ,
-               SIM->get_param_enum("mode", base)->get_selected()));
+               serial_mode_list[BX_SER_THIS s[i].io_mode]));
     }
   }
   // Check if the device is disabled or not configured
@@ -1420,6 +1432,7 @@ void bx_serial_c::tx_timer(void)
           BX_ERROR(("Could not open '%s' to write com%d output",
                     BX_SER_THIS s[port].file->getptr(), port+1));
           BX_SER_THIS s[port].io_mode = BX_SER_MODE_NULL;
+          return;
         }
       }
       fputc(BX_SER_THIS s[port].tsrbuffer, BX_SER_THIS s[port].output);
@@ -1446,14 +1459,9 @@ void bx_serial_c::tx_timer(void)
     case BX_SER_MODE_SOCKET_CLIENT:
     case BX_SER_MODE_SOCKET_SERVER:
       if (BX_SER_THIS s[port].socket_id >= 0) {
-#ifdef BX_SER_WIN32
-        BX_INFO(("attempting to write win32 : %c", BX_SER_THIS s[port].tsrbuffer));
+        BX_DEBUG(("com%d: write byte [0x%02x]", port+1, BX_SER_THIS s[port].tsrbuffer));
         ::send(BX_SER_THIS s[port].socket_id,
-               (const char*) & BX_SER_THIS s[port].tsrbuffer, 1, 0);
-#else
-        ::write(BX_SER_THIS s[port].socket_id,
-                (bx_ptr_t) & BX_SER_THIS s[port].tsrbuffer, 1);
-#endif
+               (const char*) &BX_SER_THIS s[port].tsrbuffer, 1, 0);
       }
       break;
     case BX_SER_MODE_PIPE_CLIENT:
@@ -1532,17 +1540,15 @@ void bx_serial_c::rx_timer(void)
           tval.tv_usec = 0;
           FD_ZERO(&fds);
           SOCKET socketid = BX_SER_THIS s[port].socket_id;
-          if (socketid >= 0) FD_SET(socketid, &fds);
-          if ((socketid >= 0) && (select(socketid+1, &fds, NULL, NULL, &tval) == 1)) {
-            ssize_t bytes = (ssize_t)
-#ifdef BX_SER_WIN32
+          if (socketid >= 0) {
+            FD_SET(socketid, &fds);
+            if (select(socketid+1, &fds, NULL, NULL, &tval) == 1) {
+              ssize_t bytes = (ssize_t)
               ::recv(socketid, (char*) &chbuf, 1, 0);
-#else
-                read(socketid, &chbuf, 1);
-#endif
-            if (bytes > 0) {
-              BX_INFO((" -- COM %d : read byte [%d]", port+1, chbuf));
-              data_ready = 1;
+              if (bytes > 0) {
+                BX_DEBUG(("com%d: read byte [0x%02x]", port+1, chbuf));
+                data_ready = 1;
+              }
             }
           }
         }
