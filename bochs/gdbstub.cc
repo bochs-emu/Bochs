@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2015  The Bochs Project Team
+//  Copyright (C) 2002-2017  The Bochs Project Team
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -919,4 +919,8 @@ void bx_gdbstub_init(void)
 
   /* CPU loop */
   bx_cpu.cpu_loop();
+
+#ifdef WIN32
+  WSACleanup();
+#endif
 }

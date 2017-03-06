@@ -58,6 +58,10 @@ typedef int SOCKET;
 
 bx_serial_c *theSerialDevice = NULL;
 
+#ifdef BX_SER_WIN32
+static bx_bool winsock_init = false;
+#endif
+
 // builtin configuration handling functions
 
 static const char *serial_mode_list[] = {
@@ -219,6 +223,12 @@ bx_serial_c::~bx_serial_c(void)
         case BX_SER_MODE_SOCKET_CLIENT:
         case BX_SER_MODE_SOCKET_SERVER:
           if (BX_SER_THIS s[i].socket_id >= 0) closesocket(BX_SER_THIS s[i].socket_id);
+#ifdef WIN32
+          if (winsock_init) {
+            WSACleanup();
+            winsock_init = false;
+          }
+#endif
           break;
         case BX_SER_MODE_PIPE_CLIENT:
         case BX_SER_MODE_PIPE_SERVER:
@@ -448,7 +458,6 @@ bx_serial_c::init(void)
         bx_bool             server = (mode == BX_SER_MODE_SOCKET_SERVER);
 
 #ifdef BX_SER_WIN32
-        static bx_bool winsock_init = false;
         if (!winsock_init) {
           WORD wVersionRequested;
           WSADATA wsaData;

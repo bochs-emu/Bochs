@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2017  The Bochs Project
+//  Copyright (C) 2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -70,6 +70,7 @@ extern "C" {
 #include <net/ethernet.h>
 #include <net/if.h>
 #include <linux/types.h>
+#include <netdb.h>
 #define closesocket(s) close(s)
 typedef int SOCKET;
 #ifndef INVALID_SOCKET
@@ -94,6 +95,7 @@ public:
                        eth_rx_handler_t rxh,
                        eth_rx_status_t rxstat,
                        bx_devmodel_c *dev, const char *script);
+  virtual ~bx_socket_pktmover_c();
 
   void sendpkt(void *buf, unsigned io_len);
 
@@ -101,7 +103,7 @@ private:
   unsigned char *socket_macaddr[6];
   SOCKET fd;                               // socket we listen on
   int ifindex;                             // socket number (will TX to ifindex+1)
-  struct sockaddr_in sout;                 // target address for TX
+  struct sockaddr_in sin, sout;            // target address for RX / TX
   static void rx_timer_handler(void *);
   void rx_timer(void);
   int rx_timer_index;
@@ -137,7 +139,6 @@ bx_socket_pktmover_c::bx_socket_pktmover_c(const char *netif,
                                            bx_devmodel_c *dev,
                                            const char *script)
 {
-  struct sockaddr_in sin;
 #ifdef WIN32
   unsigned long nbl = 1;
 #endif
@@ -185,13 +186,11 @@ bx_socket_pktmover_c::bx_socket_pktmover_c(const char *netif,
     return;
   }
 
-
   // Bind to given interface
   //
   sin.sin_family = AF_INET;
   sin.sin_port = htons(this->ifindex);
-  sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK); // localhost
-
+  sin.sin_addr.s_addr = htonl(INADDR_ANY);
 
   if (bind(fd, (struct sockaddr *) &sin, sizeof(sin)) < 0) {
     BX_PANIC(("eth_socket: could not bind to socket '%d' (%s)\n", ifindex, strerror(errno)));
@@ -199,7 +198,6 @@ bx_socket_pktmover_c::bx_socket_pktmover_c(const char *netif,
     this->fd = INVALID_SOCKET;
     return;
   }
-
 
   // Set up non-blocking i/o
   //
@@ -220,7 +218,6 @@ bx_socket_pktmover_c::bx_socket_pktmover_c(const char *netif,
   sout.sin_port = htons(this->ifindex + 1); // will TX to RX + 1
   sout.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 
-
   // Start the rx poll
   //
   this->rx_timer_index =
@@ -233,6 +230,16 @@ bx_socket_pktmover_c::bx_socket_pktmover_c(const char *netif,
 }
 
 
+// the destructor
+//
+bx_socket_pktmover_c::~bx_socket_pktmover_c()
+{
+#ifdef WIN32
+  WSACleanup();
+#endif
+}
+
+
 // the output routine - called with pre-formatted ethernet frame.
 void bx_socket_pktmover_c::sendpkt(void *buf, unsigned io_len)
 {
@@ -240,7 +247,7 @@ void bx_socket_pktmover_c::sendpkt(void *buf, unsigned io_len)
 
   if (this->fd != INVALID_SOCKET) {
     status = sendto(this->fd, (char*)buf, io_len,
-                    (MSG_DONTROUTE | MSG_NOSIGNAL | MSG_DONTWAIT),
+                    (MSG_NOSIGNAL | MSG_DONTWAIT),
                     (struct sockaddr*) &sout, sizeof(sout));
     if (status == -1) {
       BX_INFO(("eth_socket: write failed: %s", strerror(errno)));
@@ -261,6 +268,7 @@ void bx_socket_pktmover_c::rx_timer_handler(void *this_ptr)
 void bx_socket_pktmover_c::rx_timer(void)
 {
   int nbytes = 0;
+  unsigned int slen = sizeof(sin);
   Bit8u rxbuf[BX_PACKET_BUFSIZE];
 
   // is socket open and bound?
@@ -268,7 +276,8 @@ void bx_socket_pktmover_c::rx_timer(void)
     return;
 
   // receive packet
-  nbytes = recv(this->fd, (char*)rxbuf, sizeof(rxbuf), MSG_NOSIGNAL);
+  nbytes = recvfrom(this->fd, (char*)rxbuf, sizeof(rxbuf), MSG_NOSIGNAL,
+                    (struct sockaddr*) &sin, &slen);
 
   if (nbytes == -1) {
     if (errno != EAGAIN)
