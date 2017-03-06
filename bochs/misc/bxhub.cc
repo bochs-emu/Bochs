@@ -264,6 +264,7 @@ int handle_packet(hub_client_t *client, Bit8u *buf, unsigned len)
     if (memcmp(ethhdr->src_mac_addr, host_macaddr, 6) == 0) {
       client->init = -1;
     } else {
+      client->sout.sin_addr.s_addr = client->sin.sin_addr.s_addr;
       memcpy(dhcpc->host_macaddr, host_macaddr, ETHERNET_MAC_ADDR_LEN);
       memcpy(dhcpc->guest_macaddr, ethhdr->src_mac_addr, ETHERNET_MAC_ADDR_LEN);
       memcpy(dhcpc->host_ipv4addr, &default_host_ipv4addr[0], 4);
@@ -293,7 +294,7 @@ int handle_packet(hub_client_t *client, Bit8u *buf, unsigned len)
 
 void send_packet(hub_client_t *client, Bit8u *buf, unsigned len)
 {
-  sendto(client->so, (char*)buf, len, (MSG_DONTROUTE|MSG_NOSIGNAL|MSG_DONTWAIT),
+  sendto(client->so, (char*)buf, len, (MSG_NOSIGNAL|MSG_DONTWAIT),
          (struct sockaddr*) &client->sout, sizeof(client->sout));
 }
 
@@ -397,6 +398,9 @@ void CDECL intHandler(int sig)
         delete [] hclient[i].reply_buffer;
       closesocket(hclient[i].so);
     }
+#ifdef WIN32
+    WSACleanup();
+#endif
   }
   exit(0);
 }
@@ -404,6 +408,7 @@ void CDECL intHandler(int sig)
 int CDECL main(int argc, char **argv)
 {
   int c, i, n;
+  unsigned int slen;
   fd_set rfds;
   Bit8u buf[BX_PACKET_BUFSIZE];
   ethernet_header_t *ethhdr = (ethernet_header_t *)buf;
@@ -436,12 +441,12 @@ int CDECL main(int argc, char **argv)
 
     /* fill addres structures */
     hclient[i].sin.sin_family = AF_INET;
-    hclient[i].sin.sin_port = htons(port_base + (i * 2) + 1); 
-    hclient[i].sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK); 
+    hclient[i].sin.sin_port = htons(port_base + (i * 2) + 1);
+    hclient[i].sin.sin_addr.s_addr = htonl(INADDR_ANY);
 
     hclient[i].sout.sin_family = AF_INET;
     hclient[i].sout.sin_port = htons(port_base + (i * 2));
-    hclient[i].sout.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    hclient[i].sout.sin_addr.s_addr = htonl(INADDR_ANY);
 
     /* configure (bind) sockets */
     if (bind(hclient[i].so, (struct sockaddr *) &hclient[i].sin, sizeof(hclient[i].sin)) < 0) {
@@ -479,7 +484,9 @@ int CDECL main(int argc, char **argv)
     for (i = 0; i < client_max; i++) {
       // check input
       if (FD_ISSET(hclient[i].so, &rfds)) {
-        n = recv(hclient[i].so, (char*)buf, sizeof(buf), 0);
+        slen = sizeof(hclient[i].sin);
+        n = recvfrom(hclient[i].so, (char*)buf, sizeof(buf), 0,
+                     (struct sockaddr*) &hclient[i].sin, &slen);
         if (n > 0) {
           if (memcmp(ethhdr->dst_mac_addr, broadcast_macaddr, ETHERNET_MAC_ADDR_LEN) == 0) {
             broadcast_packet(i, buf, n);
