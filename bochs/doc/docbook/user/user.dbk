@@ -4586,6 +4586,8 @@ ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:01, ethmod=vde, ethdev="/tmp/vde.c
 ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:01, ethmod=vnet, ethdev="c:/temp"
 ne2k: ioaddr=0x300, irq=9, mac=fe:fd:00:00:00:01, ethmod=tap, ethdev=tap0
 ne2k: ioaddr=0x300, irq=9, mac=fe:fd:00:00:00:01, ethmod=tuntap, ethdev=/dev/net/tun0, script=./tunconfig
+ne2k: mac=b0:c4:20:00:00:01, ethmod=socket, ethdev=40000 # use localhost
+ne2k: mac=b0:c4:20:00:00:01, ethmod=socket, ethdev=mymachine:40000
 ne2k: mac=b0:c4:20:00:00:01, ethmod=slirp, script=slirp.conf, bootrom=ne2k_pci.rom
 
 IOADDR, IRQ: You probably won't need to change ioaddr and irq, unless there
@@ -4714,11 +4716,12 @@ version where this module was added.
   </row>
   <row>
     <entry>socket</entry>
-    <entry>Connect up to 6 Bochs instances with external program 'bxhub'
-    (simulating an ethernet hub). It provides the same services as the
-    'vnet' module and assigns IP addresses like 'slirp' (10.0.2.x).
+    <entry>Connect up to 6 Bochs instances on the same or other machine
+    with external program 'bxhub' (simulating an ethernet hub). It provides
+    the same services as the 'vnet' module and assigns IP addresses like
+    'slirp' (10.0.2.x).
     </entry>
-    <entry>Yes, for base UDP port</entry>
+    <entry>Yes, for base UDP port and (optional) the host to connect</entry>
     <entry>No</entry>
     <entry>2.6.8 SVN</entry>
   </row>

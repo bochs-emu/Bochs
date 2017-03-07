@@ -2,9 +2,6 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 /*
- * bxhub.c: a simple, two-port software 'ethernet hub' for use with
- * eth_socket Bochs ethernet pktmover.
- *
  * Copyright (C) 2003  by Mariusz Matuszek [NOmrmmSPAM @ users.sourceforge.net]
  * Copyright (C) 2017  The Bochs Project
  *
@@ -21,14 +18,17 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
- *
- *
- * Problems:
- * - only two 'interfaces' (easily extendable),
- * - in general - this is a quick hack :-)
- *
- * compile as you like, but 'gcc bxhub.c -o bxhub' will be enough.
  */
+
+// bxhub.c: a simple, two-port software 'ethernet hub' for use with
+// eth_socket Bochs ethernet pktmover.
+
+// Extensions by Volker Ruppert (2017):
+// - Windows support added.
+// - Integrated 'vnet' server features (ARP, ICMP-echo, DHCP and TFTP).
+// - Command line options added for base UDP port and 'vnet' server features.
+// - Support for connects from up to 6 Bochs sessions.
+// - Support for connecting from other machines.
 
 #include "config.h"
 

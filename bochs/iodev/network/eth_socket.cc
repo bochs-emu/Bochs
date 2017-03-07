@@ -2,6 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
+//  Copyright (C) 2003  by Mariusz Matuszek [NOmrmmSPAM @ users.sourceforge.net]
 //  Copyright (C) 2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
@@ -17,10 +18,9 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
-//  Copyright (C) 2001  MandrakeSoft S.A.
 
-// Mariusz Matuszek (NOmrmmSPAM (at) users.sourceforge.net) wrote this code
-// based on eth_linux.cc
+// Mariusz Matuszek wrote the original version of eth_socket.cc based on
+// eth_linux.cc.
 //
 // problems and limitations:
 //   - external program 'bxhub' is required
@@ -43,6 +43,9 @@
 // this module will bind to 127.0.0.1:<socknum> for RX packets
 // TX packets will be sent to 127.0.0.1:<socknum + 1>
 
+// Extensions by Volker Ruppert (2017):
+// - Windows support
+// - Support for connecting other machine using format 'host:port'.
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE
@@ -102,7 +105,6 @@ public:
 private:
   unsigned char *socket_macaddr[6];
   SOCKET fd;                               // socket we listen on
-  int ifindex;                             // socket number (will TX to ifindex+1)
   struct sockaddr_in sin, sout;            // target address for RX / TX
   static void rx_timer_handler(void *);
   void rx_timer(void);
@@ -139,6 +141,8 @@ bx_socket_pktmover_c::bx_socket_pktmover_c(const char *netif,
                                            bx_devmodel_c *dev,
                                            const char *script)
 {
+  struct hostent *hp;
+  int port;
 #ifdef WIN32
   unsigned long nbl = 1;
 #endif
@@ -146,6 +150,7 @@ bx_socket_pktmover_c::bx_socket_pktmover_c(const char *netif,
   this->netdev = dev;
   BX_INFO(("socket network driver"));
   memcpy(socket_macaddr, macaddr, 6);
+  this->fd = INVALID_SOCKET;
 
 #ifdef WIN32
   WORD wVersionRequested;
@@ -158,6 +163,38 @@ bx_socket_pktmover_c::bx_socket_pktmover_c(const char *netif,
     return;
   }
 #endif
+
+  if (isalpha(netif[0])) {
+    // Expecting format 'host:port', so split up 'netif' string.
+    char *host = strdup(netif);
+    char *substr = strtok(host, ":");
+    substr = strtok(NULL, ":");
+    if (!substr) {
+      BX_PANIC(("eth_socket: inet address is wrong (%s)", netif));
+      free(host);
+      return;
+    }
+    hp = gethostbyname(host);
+    if (!hp) {
+      BX_PANIC(("eth_socket: gethostbyname failed (%s)", host));
+      free(host);
+      return;
+    }
+    free(host);
+    port = atoi(substr);
+    if (port == 0) {
+      BX_PANIC(("eth_socket: could not translate socket number '%s'", substr));
+      return;
+    }
+  } else {
+    // Use localhost and translate 'netif' to port number.
+    hp = gethostbyname("localhost");
+    port = atoi(netif);
+    if (port == 0) {
+      BX_PANIC(("eth_socket: could not translate socket number '%s'", netif));
+      return;
+    }
+  }
 
   // Open RX socket
   //
@@ -174,26 +211,14 @@ bx_socket_pktmover_c::bx_socket_pktmover_c(const char *netif,
     return;
   }
 
-  // Translate interface name (string) to index (RX port number)
-  //
-  this->ifindex = atoi(netif);
-
-  if (this->ifindex == 0) {
-    BX_PANIC(("eth_socket: could not translate socket number '%s'\n", netif));
-    closesocket(this->fd);
-    this->fd = INVALID_SOCKET;
-    this->ifindex = -1;
-    return;
-  }
-
   // Bind to given interface
   //
   sin.sin_family = AF_INET;
-  sin.sin_port = htons(this->ifindex);
+  sin.sin_port = htons(port);
   sin.sin_addr.s_addr = htonl(INADDR_ANY);
 
   if (bind(fd, (struct sockaddr *) &sin, sizeof(sin)) < 0) {
-    BX_PANIC(("eth_socket: could not bind to socket '%d' (%s)\n", ifindex, strerror(errno)));
+    BX_PANIC(("eth_socket: could not bind to socket '%s' (%s)", netif, strerror(errno)));
     closesocket(fd);
     this->fd = INVALID_SOCKET;
     return;
@@ -215,8 +240,8 @@ bx_socket_pktmover_c::bx_socket_pktmover_c(const char *netif,
   // Set up destination address for TX ( sendto() )
   //
   sout.sin_family = AF_INET;
-  sout.sin_port = htons(this->ifindex + 1); // will TX to RX + 1
-  sout.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+  sout.sin_port = htons(port+1); // set TX to RX + 1
+  memcpy((char*) &(sout.sin_addr), hp->h_addr, hp->h_length);
 
   // Start the rx poll
   //
@@ -226,7 +251,7 @@ bx_socket_pktmover_c::bx_socket_pktmover_c(const char *netif,
 
   this->rxh    = rxh;
   this->rxstat = rxstat;
-  BX_INFO(("socket network driver initialized: using socket %d", this->ifindex));
+  BX_INFO(("socket network driver initialized: using socket '%s'", netif));
 }
 
 

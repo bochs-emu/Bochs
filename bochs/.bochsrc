@@ -999,8 +999,8 @@ speaker: enabled=1, mode=sound
 # Windows machines, you must run niclist to get the name of the ethdev.
 # Niclist source code is in misc/niclist.c and it is included in Windows 
 # binary releases.
-# # The 'socket' module uses this parameter to specify the UDP port for
-# receiving packets.
+# The 'socket' module uses this parameter to specify the UDP port for
+# receiving packets and (optional) the host to connect.
 #
 # SCRIPT: The script value is optional, and is the name of a script that 
 # is executed after bochs initialize the network interface. You can use 
@@ -1040,7 +1040,8 @@ speaker: enabled=1, mode=sound
 # ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:01, ethmod=null, ethdev=eth0
 # ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:01, ethmod=vde, ethdev="/tmp/vde.ctl"
 # ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:01, ethmod=vnet, ethdev="c:/temp"
-# ne2k: mac=b0:c4:20:00:00:01, ethmod=socket, ethdev=40000 # base port #1
+# ne2k: mac=b0:c4:20:00:00:01, ethmod=socket, ethdev=40000 # use localhost
+# ne2k: mac=b0:c4:20:00:00:01, ethmod=socket, ethdev=mymachine:40000
 # ne2k: mac=b0:c4:20:00:00:01, ethmod=slirp, script=slirp.conf, bootrom=ne2k_pci.rom
 
 #=======================================================================
