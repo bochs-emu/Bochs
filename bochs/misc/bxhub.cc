@@ -408,7 +408,7 @@ void CDECL intHandler(int sig)
 int CDECL main(int argc, char **argv)
 {
   int c, i, n;
-  unsigned int slen;
+  socklen_t slen;
   fd_set rfds;
   Bit8u buf[BX_PACKET_BUFSIZE];
   ethernet_header_t *ethhdr = (ethernet_header_t *)buf;

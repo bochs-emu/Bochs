@@ -293,7 +293,7 @@ void bx_socket_pktmover_c::rx_timer_handler(void *this_ptr)
 void bx_socket_pktmover_c::rx_timer(void)
 {
   int nbytes = 0;
-  unsigned int slen = sizeof(sin);
+  socklen_t slen = sizeof(sin);
   Bit8u rxbuf[BX_PACKET_BUFSIZE];
 
   // is socket open and bound?
