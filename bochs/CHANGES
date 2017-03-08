@@ -1,5 +1,14 @@
 Changes after 2.6.8 release:
 
+Brief summary :
+  - Added Android host platform support.
+  - Added USB EHCI device emulation support.
+  - Added USB floppy (UFI/CBI) support.
+  - Added ethernet module 'socket', designed to interconnect Bochs instances.
+  - Show textconfig at runtime in the Bochs VGA window (gui console).
+
+Detailed change log :
+
 - General
   - Added new log action "warn", designed to show a message box on error events.
   - Show message box before exit if log action is set to "fatal".
@@ -35,8 +44,8 @@ Changes after 2.6.8 release:
   - Serial / Parallel ports
     - Added support for changing output file at runtime.
   - Networking
-    - Added ethernet module 'socket'. designed to connect two Bochs instances
-      with external program 'bxhub' (simulating a two port ethernet hub).
+    - Added ethernet module 'socket', designed to interconnect Bochs instances
+      with external program 'bxhub' (simulating a multi-port ethernet hub).
   - Sound
     - Added PCM output data resampling in a separate thread. The resampler
       requires either libsamplerate or the SoX resampler library installed.
