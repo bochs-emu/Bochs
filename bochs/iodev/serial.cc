@@ -223,7 +223,7 @@ bx_serial_c::~bx_serial_c(void)
         case BX_SER_MODE_SOCKET_CLIENT:
         case BX_SER_MODE_SOCKET_SERVER:
           if (BX_SER_THIS s[i].socket_id >= 0) closesocket(BX_SER_THIS s[i].socket_id);
-#ifdef WIN32
+#ifdef BX_SER_WIN32
           if (winsock_init) {
             WSACleanup();
             winsock_init = false;
