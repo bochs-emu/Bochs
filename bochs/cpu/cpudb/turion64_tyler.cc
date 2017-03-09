@@ -405,11 +405,14 @@ void turion64_tyler_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
 // leaf 0x80000008 //
 void turion64_tyler_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
 {
-  // virtual & phys address size in low 2 bytes.
-  leaf->eax = BX_PHY_ADDRESS_WIDTH | (BX_LIN_ADDRESS_WIDTH << 8);
-  leaf->ebx = 0;
+  bx_cpuid_t::get_ext_cpuid_leaf_8(leaf);
+
+  // [17..16] Performance time-stamp counter size.
+  // [15..12] APIC ID size, Zero value indicates that legacy methods must be
+  //          used to derive the maximum number of cores.
+  //  [11..8] (reserved)
+  //   [7..0] Number of physical cores - 1.
   leaf->ecx = ncores - 1;
-  leaf->edx = 0;
 }
 
 // leaf 0x80000009 : Reserved //

@@ -682,14 +682,6 @@ void corei7_ivy_bridge_3770k_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) con
 }
 
 // leaf 0x80000008 //
-void corei7_ivy_bridge_3770k_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
-{
-  // virtual & phys address size in low 2 bytes.
-  leaf->eax = BX_PHY_ADDRESS_WIDTH | (BX_LIN_ADDRESS_WIDTH << 8);
-  leaf->ebx = 0;
-  leaf->ecx = 0; // Reserved, undefined
-  leaf->edx = 0;
-}
 
 void corei7_ivy_bridge_3770k_t::dump_cpuid(void) const
 {

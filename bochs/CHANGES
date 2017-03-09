@@ -61,6 +61,7 @@ Detailed change log :
     - USB printer: added support for changing output file at runtime.
     - Added common USB device option "debug" to turn on BX_DEBUG reporting at
       connection time.
+
 - ROM BIOS
   - Implemented Bochs BIOS option "fastboot" for skipping the boot menu delay.
 

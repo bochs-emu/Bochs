@@ -333,6 +333,20 @@ void bx_cpuid_t::get_ext_cpuid_brand_string_leaf(const char *brand_string, Bit32
 #endif
 }
 
+// leaf 0x80000008 - return Intel defaults //
+void bx_cpuid_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
+{
+  // virtual & phys address size in low 2 bytes of EAX.
+  // TODO: physical address width should be 32-bit when no PSE-36 is supported
+  Bit32u phy_addr_width = BX_PHY_ADDRESS_WIDTH;
+  Bit32u lin_addr_width = is_cpu_extension_supported(BX_ISA_LONG_MODE) ? BX_LIN_ADDRESS_WIDTH : 32;
+
+  leaf->eax = phy_addr_width | (lin_addr_width << 8);
+  leaf->ebx = 0;
+  leaf->ecx = 0; // Reserved, undefined for Intel
+  leaf->edx = 0;
+}
+
 void bx_cpuid_t::get_cpuid_hidden_level(cpuid_function_t *leaf, const char *magic_string) const
 {
   memcpy(&(leaf->eax), magic_string     , 4);

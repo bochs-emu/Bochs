@@ -743,16 +743,6 @@ void broadwell_ult_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
   leaf->edx = 0x00000100; // bit 8 - invariant TSC
 }
 
-// leaf 0x80000008 //
-void broadwell_ult_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
-{
-  // virtual & phys address size in low 2 bytes.
-  leaf->eax = BX_PHY_ADDRESS_WIDTH | (BX_LIN_ADDRESS_WIDTH << 8);
-  leaf->ebx = 0;
-  leaf->ecx = 0; // Reserved, undefined
-  leaf->edx = 0;
-}
-
 void broadwell_ult_t::dump_cpuid(void) const
 {
   bx_cpuid_t::dump_cpuid(0x14, 0x8);

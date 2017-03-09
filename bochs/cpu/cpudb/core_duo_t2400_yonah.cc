@@ -515,14 +515,6 @@ void core_duo_t2400_yonah_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
 }
 
 // leaf 0x80000008 //
-void core_duo_t2400_yonah_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
-{
-  // virtual & phys address size in low 2 bytes.
-  leaf->eax = BX_PHY_ADDRESS_WIDTH | (32 << 8);
-  leaf->ebx = 0;
-  leaf->ecx = 0; // Reserved, undefined
-  leaf->edx = 0;
-}
 
 void core_duo_t2400_yonah_t::dump_cpuid(void) const
 {
