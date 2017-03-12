@@ -28,6 +28,7 @@
 #include "iodev/virt_timer.h"
 #include "iodev/slowdown_timer.h"
 #include "iodev/sound/soundmod.h"
+#include "iodev/network/netmod.h"
 
 #define LOG_THIS bx_devices.
 
@@ -91,9 +92,6 @@ void bx_devices_c::init_stubs()
 #endif
 #if BX_SUPPORT_PCIUSB
   pluginUsbDevCtl = &stubUsbDevCtl;
-#endif
-#if BX_NETWORKING
-  pluginNetModCtl = &stubNetModCtl;
 #endif
 }
 
@@ -161,7 +159,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 #if BX_NETWORKING
   network_enabled = is_network_enabled();
   if (network_enabled)
-    PLUG_load_plugin(netmod, PLUGTYPE_CORE);
+    bx_netmod_ctl.init();
 #endif
 #if BX_SUPPORT_SOUNDLOW
   sound_enabled = is_sound_enabled();
@@ -390,7 +388,7 @@ void bx_devices_c::exit()
   PLUG_unload_plugin(hdimage);
 #if BX_NETWORKING
   if (network_enabled)
-    PLUG_unload_plugin(netmod);
+    bx_netmod_ctl.exit();
 #endif
 #if BX_SUPPORT_SOUNDLOW
   if (sound_enabled)

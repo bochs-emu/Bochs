@@ -57,6 +57,21 @@
 
 #if BX_NETWORKING && BX_NETMOD_SOCKET
 
+// network driver plugin entry points
+
+int CDECL libsocket_net_plugin_init(plugin_t *plugin, plugintype_t type)
+{
+  // Nothing here yet
+  return 0; // Success
+}
+
+void CDECL libsocket_net_plugin_fini(void)
+{
+  // Nothing here yet
+}
+
+// network driver implementation
+
 #define LOG_THIS netdev->
 
 extern "C" {

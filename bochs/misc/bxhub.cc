@@ -57,6 +57,7 @@ typedef int SOCKET;
 #include "misc/bxcompat.h"
 #include "osdep.h"
 #include "iodev/network/netmod.h"
+#include "iodev/network/netutil.h"
 
 #define BXHUB_MAX_CLIENTS 6
 

@@ -79,12 +79,15 @@ SLIRP_OBJS = \
 BX_INCDIRS = -I.. -I../.. -I$(srcdir)/.. -I$(srcdir)/../.. -I../../@INSTRUMENT_DIR@ -I$(srcdir)/../../@INSTRUMENT_DIR@
 LOCAL_CXXFLAGS = $(MCH_CFLAGS)
 
+OBJS_THAT_CANNOT_BE_PLUGINS = netmod.o
+
 OBJS_THAT_CAN_BE_PLUGINS = \
   @NETDEV_OBJS@ \
-  netmod.o
+  $(NETLOW_OBJS)
 
 OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
-  $(NETLOW_OBJS)
+  netutil.o \
+  $(SLIRP_OBJS)
 
 NONPLUGIN_OBJS = @IODEV_EXT_NON_PLUGIN_OBJS@
 PLUGIN_OBJS = @IODEV_EXT_PLUGIN_OBJS@
@@ -96,7 +99,8 @@ plugins: @PLUGIN_TARGET_2@
 
 plugins_gcc: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 
-plugins_msvc: bx_netmod.dll $(NETDEV_DLL_TARGETS)
+plugins_msvc: $(NETDEV_DLL_TARGETS) bx_eth_null.dll bx_eth_slirp.dll \
+	bx_eth_socket.dll bx_eth_vnet.dll bx_eth_win32.dll
 
 libnetwork.a: $(NONPLUGIN_OBJS)
 	@RMCOMMAND@ libnetwork.a
@@ -115,16 +119,31 @@ libbx_%.la: %.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH)
 
 # special link rules for plugins that require more than one object file
-libbx_netmod.la: netmod.lo $(NETLOW_OBJS:.o=.lo)
-	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module netmod.lo $(NETLOW_OBJS:.o=.lo) -o libbx_netmod.la -rpath $(PLUGIN_PATH)
+libbx_eth_slirp.la: eth_slirp.lo $(SLIRP_OBJS:.o=.lo)
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module eth_slirp.lo $(SLIRP_OBJS:.o=.lo) -o libbx_eth_slirp.la -rpath $(PLUGIN_PATH)
+
+libbx_eth_vnet.la: eth_vnet.lo netutil.lo
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module eth_vnet.lo netutil.lo -o libbx_eth_vnet.la -rpath $(PLUGIN_PATH)
 
 #### building DLLs for win32 (Cygwin and MinGW/MSYS)
 bx_%.dll: %.o
 	$(CXX) $(CXXFLAGS) -shared -o $@ $< $(WIN32_DLL_IMPORT_LIBRARY)
 
 # special link rules for plugins with Cygwin, MinGW/MSYS and MSVC nmake
-bx_netmod.dll: netmod.o $(NETLOW_OBJS)
-	@LINK_DLL@ netmod.o $(NETLOW_OBJS) $(WIN32_DLL_IMPORT_LIBRARY) $(NETMOD_LINK_OPTS@LINK_VAR@)
+bx_eth_null.dll: eth_null.o
+	@LINK_DLL@ eth_null.o $(WIN32_DLL_IMPORT_LIBRARY)
+
+bx_eth_slirp.dll: eth_slirp.o $(SLIRP_OBJS)
+	@LINK_DLL@ eth_slirp.o $(SLIRP_OBJS) $(WIN32_DLL_IMPORT_LIBRARY) $(NETMOD_LINK_OPTS@LINK_VAR@)
+
+bx_eth_socket.dll: eth_socket.o
+	@LINK_DLL@ eth_socket.o $(WIN32_DLL_IMPORT_LIBRARY) $(NETMOD_LINK_OPTS@LINK_VAR@)
+
+bx_eth_vnet.dll: eth_vnet.o netutil.o
+	@LINK_DLL@ eth_vnet.o netutil.o $(WIN32_DLL_IMPORT_LIBRARY) $(NETMOD_LINK_OPTS@LINK_VAR@)
+
+bx_eth_win32.dll: eth_win32.o
+	@LINK_DLL@ eth_win32.o $(WIN32_DLL_IMPORT_LIBRARY) $(NETMOD_LINK_OPTS@LINK_VAR@)
 
 bx_e1000.dll: e1000.o
 	@LINK_DLL@ e1000.o $(WIN32_DLL_IMPORT_LIBRARY)
@@ -218,7 +237,7 @@ eth_vnet.o: eth_vnet.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
  ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
- ../../param_names.h netmod.h
+ ../../param_names.h netmod.h netutil.h
 eth_win32.o: eth_win32.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
@@ -237,6 +256,12 @@ netmod.o: netmod.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osde
  ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h netmod.h
+netutil.o: netutil.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
+ ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
+ ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
+ ../../param_names.h netmod.h netutil.h
 pcipnic.o: pcipnic.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
@@ -428,7 +453,7 @@ eth_vnet.lo: eth_vnet.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
  ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
- ../../param_names.h netmod.h
+ ../../param_names.h netmod.h netutil.h
 eth_win32.lo: eth_win32.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
@@ -447,6 +472,12 @@ netmod.lo: netmod.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osd
  ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h netmod.h
+netutil.lo: netutil.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
+ ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
+ ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
+ ../../param_names.h netmod.h netutil.h
 pcipnic.lo: pcipnic.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \

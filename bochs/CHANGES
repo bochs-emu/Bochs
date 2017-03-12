@@ -46,6 +46,8 @@ Detailed change log :
   - Networking
     - Added ethernet module 'socket', designed to interconnect Bochs instances
       with external program 'bxhub' (simulating a multi-port ethernet hub).
+    - Now creating separate plugins for each network driver implementation
+      (slirp, win32, etc.).
   - Sound
     - Added PCM output data resampling in a separate thread. The resampler
       requires either libsamplerate or the SoX resampler library installed.

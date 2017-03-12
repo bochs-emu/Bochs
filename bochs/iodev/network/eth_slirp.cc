@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2014-2016  The Bochs Project
+//  Copyright (C) 2014-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -31,12 +31,28 @@
 #include "slirp/slirp.h"
 #include "slirp/libslirp.h"
 
+static unsigned int bx_slirp_instances;
+
+// network driver plugin entry points
+
+int CDECL libslirp_net_plugin_init(plugin_t *plugin, plugintype_t type)
+{
+  bx_slirp_instances = 0;
+  return 0; // Success
+}
+
+void CDECL libslirp_net_plugin_fini(void)
+{
+  // Nothing here yet
+}
+
+// network driver implementation
+
 #define LOG_THIS netdev->
 
 #define MAX_HOSTFWD 5
 
 static int rx_timer_index = BX_NULL_TIMER_HANDLE;
-static unsigned int bx_slirp_instances = 0;
 fd_set rfds, wfds, xfds;
 int nfds;
 
@@ -382,7 +398,7 @@ void slirp_output(void *this_ptr, const Bit8u *pkt, int pkt_len)
 void bx_slirp_pktmover_c::receive(void *pkt, unsigned pkt_len)
 {
   if (this->rxstat(this->netdev) & BX_NETDEV_RXREADY) {
-    if (pkt_len < 60) pkt_len = 60;
+    if (pkt_len < MIN_RX_PACKET_LEN) pkt_len = MIN_RX_PACKET_LEN;
     this->rxh(this->netdev, pkt, pkt_len);
   } else {
     BX_ERROR(("device not ready to receive data"));

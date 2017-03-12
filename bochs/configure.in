@@ -1702,7 +1702,7 @@ if test "$networking" = yes; then
       ;;
   esac
   if test $can_compile_slirp = 1; then
-    NETLOW_OBJS="$NETLOW_OBJS eth_slirp.o \$(SLIRP_OBJS)"
+    NETLOW_OBJS="$NETLOW_OBJS eth_slirp.o"
     ethernet_modules="$ethernet_modules slirp"
     AC_DEFINE(BX_NETMOD_SLIRP, 1)
     NETLOW_OBJS="$NETLOW_OBJS eth_socket.o"
@@ -1779,10 +1779,8 @@ if test "$networking" = yes; then
 
     ;;
   esac
-  if test "$bx_plugins" = 0; then
-    NETWORK_LIB_VAR='iodev/network/libnetwork.a'
-    AC_SUBST(NETWORK_LIB_VAR)
-  fi
+  NETWORK_LIB_VAR='iodev/network/libnetwork.a'
+  AC_SUBST(NETWORK_LIB_VAR)
   AC_DEFINE(BX_NETWORKING, 1)
   AC_MSG_CHECKING(for ethernet modules)
   AC_MSG_RESULT($ethernet_modules)

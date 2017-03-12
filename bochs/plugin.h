@@ -59,7 +59,6 @@ extern "C" {
 #define BX_PLUGIN_PCI_IDE   "pci_ide"
 #define BX_PLUGIN_SB16      "sb16"
 #define BX_PLUGIN_ES1370    "es1370"
-#define BX_PLUGIN_NETMOD    "netmod"
 #define BX_PLUGIN_NE2K      "ne2k"
 #define BX_PLUGIN_EXTFPUIRQ "extfpuirq"
 #define BX_PLUGIN_PCIDEV    "pcidev"
@@ -88,10 +87,12 @@ extern "C" {
 #define PLUG_load_gui_plugin(name) bx_load_plugin(name,PLUGTYPE_GUI)
 #define PLUG_load_opt_plugin(name) bx_load_plugin(name,PLUGTYPE_OPTIONAL)
 #define PLUG_load_snd_plugin(name) bx_load_plugin(name,PLUGTYPE_SOUND)
+#define PLUG_load_net_plugin(name) bx_load_plugin(name,PLUGTYPE_NETWORK)
 #define PLUG_load_user_plugin(name) {bx_load_plugin(name,PLUGTYPE_USER);}
 #define PLUG_unload_plugin(name) {bx_unload_plugin(#name,1);}
 #define PLUG_unload_opt_plugin(name) bx_unload_plugin(name,1)
 #define PLUG_unload_snd_plugin(name) bx_unload_plugin(name,1)
+#define PLUG_unload_net_plugin(name) bx_unload_plugin(name,1)
 #define PLUG_unload_user_plugin(name) {bx_unload_plugin(name,1);}
 
 #define DEV_register_ioread_handler(b,c,d,e,f)  pluginRegisterIOReadHandler(b,c,d,e,f)
@@ -116,9 +117,11 @@ extern "C" {
 #define PLUG_load_gui_plugin(name) bx_load_plugin2(name,PLUGTYPE_GUI)
 #define PLUG_load_opt_plugin(name) bx_load_plugin2(name,PLUGTYPE_OPTIONAL)
 #define PLUG_load_snd_plugin(name) bx_load_plugin2(name,PLUGTYPE_SOUND)
+#define PLUG_load_net_plugin(name) bx_load_plugin2(name,PLUGTYPE_NETWORK)
 #define PLUG_unload_plugin(name) {lib##name##_LTX_plugin_fini();}
 #define PLUG_unload_opt_plugin(name) bx_unload_opt_plugin(name,1);
 #define PLUG_unload_snd_plugin(name) bx_unload_snd_plugin(name);
+#define PLUG_unload_net_plugin(name) bx_unload_net_plugin(name);
 
 #define DEV_register_ioread_handler(b,c,d,e,f) bx_devices.register_io_read_handler(b,c,d,e,f)
 #define DEV_register_iowrite_handler(b,c,d,e,f) bx_devices.register_io_write_handler(b,c,d,e,f)
@@ -269,7 +272,7 @@ extern "C" {
 
 ///////// Networking module macro
 #define DEV_net_init_module(a,b,c,d) \
-  ((eth_pktmover_c*)bx_devices.pluginNetModCtl->init_module(a,(void*)b,(void*)c,d))
+  ((eth_pktmover_c*)bx_netmod_ctl.init_module(a,(void*)b,(void*)c,d))
 
 ///////// Gameport macro
 #define DEV_gameport_set_enabled(a) bx_devices.pluginGameport->set_enabled(a)
@@ -379,6 +382,9 @@ int plugin_init(plugin_t *plugin, plugintype_t type);
 #define DECLARE_PLUGIN_INIT_FINI_FOR_SOUND_MODULE(mod) \
   extern "C" __declspec(dllexport) int __cdecl lib##mod##_sound_plugin_init(plugin_t *plugin, plugintype_t type); \
   extern "C" __declspec(dllexport) void __cdecl lib##mod##_sound_plugin_fini(void);
+#define DECLARE_PLUGIN_INIT_FINI_FOR_NET_MODULE(mod) \
+  extern "C" __declspec(dllexport) int __cdecl lib##mod##_net_plugin_init(plugin_t *plugin, plugintype_t type); \
+  extern "C" __declspec(dllexport) void __cdecl lib##mod##_net_plugin_fini(void);
 #else
 #define DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(mod) \
   int CDECL lib##mod##_LTX_plugin_init(plugin_t *plugin, plugintype_t type); \
@@ -389,6 +395,9 @@ int plugin_init(plugin_t *plugin, plugintype_t type);
 #define DECLARE_PLUGIN_INIT_FINI_FOR_SOUND_MODULE(mod) \
   int CDECL lib##mod##_sound_plugin_init(plugin_t *plugin, plugintype_t type); \
   void CDECL lib##mod##_sound_plugin_fini(void);
+#define DECLARE_PLUGIN_INIT_FINI_FOR_NET_MODULE(mod) \
+  int CDECL lib##mod##_net_plugin_init(plugin_t *plugin, plugintype_t type); \
+  void CDECL lib##mod##_net_plugin_fini(void);
 #endif
 
 // device plugins
@@ -451,6 +460,17 @@ DECLARE_PLUGIN_INIT_FINI_FOR_SOUND_MODULE(oss)
 DECLARE_PLUGIN_INIT_FINI_FOR_SOUND_MODULE(osx)
 DECLARE_PLUGIN_INIT_FINI_FOR_SOUND_MODULE(sdl)
 DECLARE_PLUGIN_INIT_FINI_FOR_SOUND_MODULE(win)
+// network driver plugins
+DECLARE_PLUGIN_INIT_FINI_FOR_NET_MODULE(fbsd)
+DECLARE_PLUGIN_INIT_FINI_FOR_NET_MODULE(linux)
+DECLARE_PLUGIN_INIT_FINI_FOR_NET_MODULE(null)
+DECLARE_PLUGIN_INIT_FINI_FOR_NET_MODULE(slirp)
+DECLARE_PLUGIN_INIT_FINI_FOR_NET_MODULE(socket)
+DECLARE_PLUGIN_INIT_FINI_FOR_NET_MODULE(tap)
+DECLARE_PLUGIN_INIT_FINI_FOR_NET_MODULE(tuntap)
+DECLARE_PLUGIN_INIT_FINI_FOR_NET_MODULE(vde)
+DECLARE_PLUGIN_INIT_FINI_FOR_NET_MODULE(vnet)
+DECLARE_PLUGIN_INIT_FINI_FOR_NET_MODULE(win32)
 
 
 #ifdef __cplusplus

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2011  The Bochs Project
+//  Copyright (C) 2001-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -44,6 +44,21 @@
 #include "netmod.h"
 
 #if BX_NETWORKING && BX_NETMOD_LINUX
+
+// network driver plugin entry points
+
+int CDECL liblinux_net_plugin_init(plugin_t *plugin, plugintype_t type)
+{
+  // Nothing here yet
+  return 0; // Success
+}
+
+void CDECL liblinux_net_plugin_fini(void)
+{
+  // Nothing here yet
+}
+
+// network driver implementation
 
 #define LOG_THIS netdev->
 

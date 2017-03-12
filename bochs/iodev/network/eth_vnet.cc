@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2005-2017  The Bochs Project
+//  Copyright (C) 2004-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -35,8 +35,26 @@
 
 #include "iodev.h"
 #include "netmod.h"
+#include "netutil.h"
 
 #if BX_NETWORKING
+
+static unsigned int bx_vnet_instances;
+
+// network driver plugin entry points
+
+int CDECL libvnet_net_plugin_init(plugin_t *plugin, plugintype_t type)
+{
+  bx_vnet_instances = 0;
+  return 0; // Success
+}
+
+void CDECL libvnet_net_plugin_fini(void)
+{
+  // Nothing here yet
+}
+
+// network driver implementation
 
 #define LOG_THIS netdev->
 
@@ -52,8 +70,6 @@
 #if BX_ETH_VNET_PCAP_LOGGING
 #include <pcap.h>
 #endif
-
-static unsigned int bx_vnet_instances = 0;
 
 /////////////////////////////////////////////////////////////////////////
 // handler to send/receive packets
@@ -347,7 +363,7 @@ void bx_vnet_pktmover_c::rx_timer(void)
 
 void bx_vnet_pktmover_c::host_to_guest(Bit8u *buf, unsigned io_len, unsigned l3type)
 {
-  Bit8u localbuf[60];
+  Bit8u localbuf[MIN_RX_PACKET_LEN];
 
   if (io_len < 14) {
     BX_PANIC(("host_to_guest: io_len < 14!"));

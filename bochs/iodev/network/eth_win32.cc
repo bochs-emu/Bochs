@@ -42,6 +42,21 @@
 
 #if BX_NETWORKING && BX_NETMOD_WIN32
 
+// network driver plugin entry points
+
+int CDECL libwin32_net_plugin_init(plugin_t *plugin, plugintype_t type)
+{
+  // Nothing here yet
+  return 0; // Success
+}
+
+void CDECL libwin32_net_plugin_fini(void)
+{
+  // Nothing here yet
+}
+
+// network driver implementation
+
 #ifndef __CYGWIN__
 #include <winsock2.h>
 #endif
@@ -391,7 +406,7 @@ void bx_win32_pktmover_c::rx_timer(void)
         if(memcmp(pPacket, cMacAddr, 6) == 0 || memcmp(pPacket, broadcast_macaddr, 6) == 0)
         {
           pktlen = hdr->bh_caplen;
-          if (pktlen < 60) pktlen = 60;
+          if (pktlen < MIN_RX_PACKET_LEN) pktlen = MIN_RX_PACKET_LEN;
 #if BX_ETH_WIN32_LOGGING
           write_pktlog_txt(pktlog_txt, pPacket, pktlen, 1);
 #endif

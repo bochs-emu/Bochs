@@ -253,8 +253,8 @@ bximage@EXE@: misc/bximage.o misc/hdimage.o misc/vmware3.o misc/vmware4.o misc/v
 niclist@EXE@: misc/niclist.o
 	@LINK_CONSOLE@ misc/niclist.o
 
-bxhub@EXE@: misc/bxhub.o misc/netmod.o
-	@LINK_CONSOLE@ misc/bxhub.o misc/netmod.o @BXHUB_LINK_OPTS@
+bxhub@EXE@: misc/bxhub.o misc/netutil.o
+	@LINK_CONSOLE@ misc/bxhub.o misc/netutil.o @BXHUB_LINK_OPTS@
 
 # compile with console CXXFLAGS, not gui CXXFLAGS
 misc/bximage.o: $(srcdir)/misc/bximage.cc $(srcdir)/misc/bswap.h \
@@ -285,9 +285,9 @@ misc/bxhub.o: $(srcdir)/misc/bxhub.cc $(srcdir)/iodev/network/netmod.h \
   $(srcdir)/misc/bxcompat.h
 	$(CC) @DASH@c $(BX_INCDIRS) $(CXXFLAGS_CONSOLE) $(srcdir)/misc/bxhub.cc @OFP@$@
 
-misc/netmod.o: $(srcdir)/iodev/network/netmod.cc $(srcdir)/iodev/network/netmod.h \
-  $(srcdir)/misc/bxcompat.h
-	$(CXX) @DASH@c $(BX_INCDIRS) @BXHUB_FLAG@ $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/network/netmod.cc @OFP@$@
+misc/netutil.o: $(srcdir)/iodev/network/netmod.cc $(srcdir)/iodev/network/netutil.h \
+  $(srcdir)/iodev/network/netmod.h $(srcdir)/misc/bxcompat.h
+	$(CXX) @DASH@c $(BX_INCDIRS) @BXHUB_FLAG@ $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/network/netutil.cc @OFP@$@
 
 # compile with console CFLAGS, not gui CXXFLAGS
 misc/niclist.o: $(srcdir)/misc/niclist.c

@@ -53,6 +53,21 @@
 
 #if BX_NETWORKING && BX_NETMOD_FBSD
 
+// network driver plugin entry points
+
+int CDECL libfbsd_net_plugin_init(plugin_t *plugin, plugintype_t type)
+{
+  // Nothing here yet
+  return 0; // Success
+}
+
+void CDECL libfbsd_net_plugin_fini(void)
+{
+  // Nothing here yet
+}
+
+// network driver implementation
+
 #define LOG_THIS netdev->
 
 #define BX_ETH_FBSD_LOGGING 0

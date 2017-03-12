@@ -42,14 +42,18 @@
 #define GUI_PLUGIN_FINI_FMT_STRING   "lib%s_gui_plugin_fini"
 #define SOUND_PLUGIN_INIT_FMT_STRING "lib%s_sound_plugin_init"
 #define SOUND_PLUGIN_FINI_FMT_STRING "lib%s_sound_plugin_fini"
+#define NET_PLUGIN_INIT_FMT_STRING   "lib%s_net_plugin_init"
+#define NET_PLUGIN_FINI_FMT_STRING   "lib%s_net_plugin_fini"
 #define PLUGIN_PATH                  ""
 
 #ifndef WIN32
 #define PLUGIN_FILENAME_FORMAT       "libbx_%s.so"
 #define SOUND_PLUGIN_FILENAME_FORMAT "libbx_sound%s.so"
+#define NET_PLUGIN_FILENAME_FORMAT   "libbx_eth_%s.so"
 #else
 #define PLUGIN_FILENAME_FORMAT       "bx_%s.dll"
 #define SOUND_PLUGIN_FILENAME_FORMAT "bx_sound%s.dll"
+#define NET_PLUGIN_FILENAME_FORMAT   "bx_eth_%s.dll"
 #endif
 
 logfunctions *pluginlog;
@@ -334,10 +338,12 @@ void plugin_load(char *name, plugintype_t type)
   plugin->initialized = 0;
 
   char plugin_filename[BX_PATHNAME_LEN], tmpname[BX_PATHNAME_LEN];
-  if (type != PLUGTYPE_SOUND) {
-    sprintf(tmpname, PLUGIN_FILENAME_FORMAT, name);
-  } else {
+  if (type == PLUGTYPE_SOUND) {
     sprintf(tmpname, SOUND_PLUGIN_FILENAME_FORMAT, name);
+  } else if (type == PLUGTYPE_NETWORK) {
+    sprintf(tmpname, NET_PLUGIN_FILENAME_FORMAT, name);
+  } else {
+    sprintf(tmpname, PLUGIN_FILENAME_FORMAT, name);
   }
   sprintf(plugin_filename, "%s%s", PLUGIN_PATH, tmpname);
 
@@ -383,6 +389,8 @@ void plugin_load(char *name, plugintype_t type)
     sprintf(tmpname, GUI_PLUGIN_INIT_FMT_STRING, name);
   } else if (type == PLUGTYPE_SOUND) {
     sprintf(tmpname, SOUND_PLUGIN_INIT_FMT_STRING, name);
+  } else if (type == PLUGTYPE_NETWORK) {
+    sprintf(tmpname, NET_PLUGIN_INIT_FMT_STRING, name);
   } else if (type != PLUGTYPE_USER) {
     sprintf(tmpname, PLUGIN_INIT_FMT_STRING, name);
   } else {
@@ -406,6 +414,8 @@ void plugin_load(char *name, plugintype_t type)
     sprintf(tmpname, GUI_PLUGIN_FINI_FMT_STRING, name);
   } else if (type == PLUGTYPE_SOUND) {
     sprintf(tmpname, SOUND_PLUGIN_FINI_FMT_STRING, name);
+  } else if (type == PLUGTYPE_NETWORK) {
+    sprintf(tmpname, NET_PLUGIN_FINI_FMT_STRING, name);
   } else if (type != PLUGTYPE_USER) {
     sprintf(tmpname, PLUGIN_FINI_FMT_STRING, name);
   } else {
@@ -799,6 +809,7 @@ typedef struct {
 #define BUILTIN_GUI_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_GUI, lib##mod##_gui_plugin_init, lib##mod##_gui_plugin_fini, 0}
 #define BUILTIN_OPT_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_OPTIONAL, lib##mod##_LTX_plugin_init, lib##mod##_LTX_plugin_fini, 0}
 #define BUILTIN_SND_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_SOUND, lib##mod##_sound_plugin_init, lib##mod##_sound_plugin_fini, 0}
+#define BUILTIN_NET_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_NETWORK, lib##mod##_net_plugin_init, lib##mod##_net_plugin_fini, 0}
 
 static builtin_plugin_t builtin_plugins[] = {
 #if BX_WITH_AMIGAOS
@@ -906,6 +917,34 @@ static builtin_plugin_t builtin_plugins[] = {
 #endif
   BUILTIN_SND_PLUGIN_ENTRY(file),
 #endif
+#if BX_NETWORKING
+#if BX_NETMOD_FBSD
+  BUILTIN_NET_PLUGIN_ENTRY(fbsd),
+#endif
+#if BX_NETMOD_LINUX
+  BUILTIN_NET_PLUGIN_ENTRY(linux),
+#endif
+  BUILTIN_NET_PLUGIN_ENTRY(null),
+#if BX_NETMOD_SLIRP
+  BUILTIN_NET_PLUGIN_ENTRY(slirp),
+#endif
+#if BX_NETMOD_SOCKET
+  BUILTIN_NET_PLUGIN_ENTRY(socket),
+#endif
+#if BX_NETMOD_TAP
+  BUILTIN_NET_PLUGIN_ENTRY(tap),
+#endif
+#if BX_NETMOD_TUNTAP
+  BUILTIN_NET_PLUGIN_ENTRY(tuntap),
+#endif
+#if BX_NETMOD_VDE
+  BUILTIN_NET_PLUGIN_ENTRY(vde),
+#endif
+  BUILTIN_NET_PLUGIN_ENTRY(vnet),
+#if BX_NETMOD_WIN32
+  BUILTIN_NET_PLUGIN_ENTRY(win32),
+#endif
+#endif
   {"NULL", PLUGTYPE_GUI, NULL, NULL, 0}
 };
 
@@ -953,6 +992,25 @@ int bx_unload_snd_plugin(const char *name)
   while (strcmp(builtin_plugins[i].name, "NULL")) {
     if ((!strcmp(name, builtin_plugins[i].name)) &&
         (builtin_plugins[i].type == PLUGTYPE_SOUND)) {
+      if (builtin_plugins[i].status == 1) {
+        builtin_plugins[i].plugin_fini();
+        builtin_plugins[i].status = 0;
+      }
+      return 1;
+    }
+    i++;
+  };
+  return 0;
+}
+#endif
+
+#if BX_NETWORKING
+int bx_unload_net_plugin(const char *name)
+{
+  int i = 0;
+  while (strcmp(builtin_plugins[i].name, "NULL")) {
+    if ((!strcmp(name, builtin_plugins[i].name)) &&
+        (builtin_plugins[i].type == PLUGTYPE_NETWORK)) {
       if (builtin_plugins[i].status == 1) {
         builtin_plugins[i].plugin_fini();
         builtin_plugins[i].status = 0;

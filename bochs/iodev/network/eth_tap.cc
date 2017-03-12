@@ -88,6 +88,21 @@
 
 #if BX_NETWORKING && BX_NETMOD_TAP
 
+// network driver plugin entry points
+
+int CDECL libtap_net_plugin_init(plugin_t *plugin, plugintype_t type)
+{
+  // Nothing here yet
+  return 0; // Success
+}
+
+void CDECL libtap_net_plugin_fini(void)
+{
+  // Nothing here yet
+}
+
+// network driver implementation
+
 #define LOG_THIS netdev->
 
 #include <signal.h>
@@ -406,9 +421,9 @@ void bx_tap_pktmover_c::rx_timer()
   }
 #endif
   BX_DEBUG(("eth_tap: got packet: %d bytes, dst=%x:%x:%x:%x:%x:%x, src=%x:%x:%x:%x:%x:%x\n", nbytes, rxbuf[0], rxbuf[1], rxbuf[2], rxbuf[3], rxbuf[4], rxbuf[5], rxbuf[6], rxbuf[7], rxbuf[8], rxbuf[9], rxbuf[10], rxbuf[11]));
-  if (nbytes < 60) {
-    BX_INFO(("packet too short (%d), padding to 60", nbytes));
-    nbytes = 60;
+  if (nbytes < MIN_RX_PACKET_LEN) {
+    BX_INFO(("packet too short (%d), padding to %d", nbytes, MIN_RX_PACKET_LEN));
+    nbytes = MIN_RX_PACKET_LEN;
   }
   if (this->rxstat(this->netdev) & BX_NETDEV_RXREADY) {
     this->rxh(this->netdev, rxbuf, nbytes);

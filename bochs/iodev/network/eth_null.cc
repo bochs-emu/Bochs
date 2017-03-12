@@ -36,6 +36,21 @@
 
 #if BX_NETWORKING
 
+// network driver plugin entry points
+
+int CDECL libnull_net_plugin_init(plugin_t *plugin, plugintype_t type)
+{
+  // Nothing here yet
+  return 0; // Success
+}
+
+void CDECL libnull_net_plugin_fini(void)
+{
+  // Nothing here yet
+}
+
+// network driver implementation
+
 #define LOG_THIS netdev->
 
 #define BX_ETH_NULL_LOGGING 1

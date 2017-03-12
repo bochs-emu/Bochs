@@ -343,15 +343,6 @@ public:
   }
 };
 
-#if BX_NETWORKING
-class BOCHSAPI bx_netmod_ctl_stub_c : public bx_devmodel_c {
-public:
-  virtual void* init_module(bx_list_c *base, void* rxh, void* rxstat, bx_devmodel_c *dev) {
-    STUBFUNC(netmod_ctl, init_module); return NULL;
-  }
-};
-#endif
-
 class BOCHSAPI bx_devices_c : public logfunctions {
 public:
   bx_devices_c();
@@ -447,9 +438,6 @@ public:
 #if BX_SUPPORT_PCIUSB
   bx_usb_devctl_stub_c  *pluginUsbDevCtl;
 #endif
-#if BX_NETWORKING
-  bx_netmod_ctl_stub_c  *pluginNetModCtl;
-#endif
 
   // stub classes that the pointers (above) can point to until a plugin is
   // loaded
@@ -478,9 +466,6 @@ public:
 #endif
 #if BX_SUPPORT_PCIUSB
   bx_usb_devctl_stub_c stubUsbDevCtl;
-#endif
-#if BX_NETWORKING
-  bx_netmod_ctl_stub_c  stubNetModCtl;
 #endif
 
   // Some info to pass to devices which can handled bulk IO.  This allows
