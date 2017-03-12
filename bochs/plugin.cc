@@ -1004,25 +1004,6 @@ int bx_unload_snd_plugin(const char *name)
 }
 #endif
 
-#if BX_NETWORKING
-int bx_unload_net_plugin(const char *name)
-{
-  int i = 0;
-  while (strcmp(builtin_plugins[i].name, "NULL")) {
-    if ((!strcmp(name, builtin_plugins[i].name)) &&
-        (builtin_plugins[i].type == PLUGTYPE_NETWORK)) {
-      if (builtin_plugins[i].status == 1) {
-        builtin_plugins[i].plugin_fini();
-        builtin_plugins[i].status = 0;
-      }
-      return 1;
-    }
-    i++;
-  };
-  return 0;
-}
-#endif
-
 #endif
 
 }

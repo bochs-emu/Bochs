@@ -121,7 +121,6 @@ extern "C" {
 #define PLUG_unload_plugin(name) {lib##name##_LTX_plugin_fini();}
 #define PLUG_unload_opt_plugin(name) bx_unload_opt_plugin(name,1);
 #define PLUG_unload_snd_plugin(name) bx_unload_snd_plugin(name);
-#define PLUG_unload_net_plugin(name) bx_unload_net_plugin(name);
 
 #define DEV_register_ioread_handler(b,c,d,e,f) bx_devices.register_io_read_handler(b,c,d,e,f)
 #define DEV_register_iowrite_handler(b,c,d,e,f) bx_devices.register_io_write_handler(b,c,d,e,f)

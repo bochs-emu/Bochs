@@ -39,13 +39,12 @@
 
 #if BX_NETWORKING
 
-static unsigned int bx_vnet_instances;
+static unsigned int bx_vnet_instances = 0;
 
 // network driver plugin entry points
 
 int CDECL libvnet_net_plugin_init(plugin_t *plugin, plugintype_t type)
 {
-  bx_vnet_instances = 0;
   return 0; // Success
 }
 

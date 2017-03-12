@@ -56,7 +56,11 @@ void* bx_netmod_ctl_c::init_module(bx_list_c *base, void *rxh, void *rxstat, bx_
   // Attach to the selected ethernet module
   const char *modname = SIM->get_param_enum("ethmod", base)->get_selected();
   if (!eth_locator_c::module_present(modname)) {
+#if BX_PLUGINS
     PLUG_load_net_plugin(modname);
+#else
+    BX_PANIC(("could not find networking module '%s'", modname));
+#endif
   }
   ethmod = eth_locator_c::create(modname,
                                  SIM->get_param_string("ethdev", base)->getptr(),
@@ -65,15 +69,15 @@ void* bx_netmod_ctl_c::init_module(bx_list_c *base, void *rxh, void *rxstat, bx_
                                  SIM->get_param_string("script", base)->getptr());
 
   if (ethmod == NULL) {
-    BX_PANIC(("could not find eth module %s", modname));
+    BX_PANIC(("could not find networking module '%s'", modname));
     // if they continue, use null.
-    BX_INFO(("could not find eth module %s - using null instead", modname));
+    BX_INFO(("could not find networking module '%s' - using 'null' instead", modname));
 
     ethmod = eth_locator_c::create("null", NULL,
                                    (const char *) SIM->get_param_string("mac", base)->getptr(),
                                    (eth_rx_handler_t)rxh, (eth_rx_status_t)rxstat, netdev, "");
     if (ethmod == NULL)
-      BX_PANIC(("could not locate null module"));
+      BX_PANIC(("could not locate 'null' module"));
   }
   return ethmod;
 }

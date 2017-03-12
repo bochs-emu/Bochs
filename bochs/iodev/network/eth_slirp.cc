@@ -31,13 +31,12 @@
 #include "slirp/slirp.h"
 #include "slirp/libslirp.h"
 
-static unsigned int bx_slirp_instances;
+static unsigned int bx_slirp_instances = 0;
 
 // network driver plugin entry points
 
 int CDECL libslirp_net_plugin_init(plugin_t *plugin, plugintype_t type)
 {
-  bx_slirp_instances = 0;
   return 0; // Success
 }
 
