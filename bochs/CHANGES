@@ -1,6 +1,7 @@
 Changes after 2.6.8 release:
 
 Brief summary :
+  - Bugfixes for CPU emulation correctness.
   - Added Android host platform support.
   - Added USB EHCI device emulation support.
   - Added USB floppy (UFI/CBI) support.
