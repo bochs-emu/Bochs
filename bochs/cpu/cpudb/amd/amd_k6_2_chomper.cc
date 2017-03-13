@@ -31,8 +31,6 @@
 
 amd_k6_2_chomper_t::amd_k6_2_chomper_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
-  BX_INFO(("WARNING: 3DNow! is not implemented yet !"));
-
   enable_cpu_extension(BX_ISA_X87);
   enable_cpu_extension(BX_ISA_486);
   enable_cpu_extension(BX_ISA_PENTIUM);
@@ -45,6 +43,8 @@ amd_k6_2_chomper_t::amd_k6_2_chomper_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 #if BX_PHY_ADDRESS_LONG
   enable_cpu_extension(BX_ISA_PSE36);
 #endif
+
+  warning_messages();
 }
 
 void amd_k6_2_chomper_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const

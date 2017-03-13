@@ -84,6 +84,8 @@ corei7_sandy_bridge_2600k_t::corei7_sandy_bridge_2600k_t(BX_CPU_C *cpu): bx_cpui
 #if BX_SUPPORT_AVX
   enable_cpu_extension(BX_ISA_AVX);
 #endif
+
+  warning_messages();
 }
 
 void corei7_sandy_bridge_2600k_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const

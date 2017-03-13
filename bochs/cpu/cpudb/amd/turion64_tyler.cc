@@ -31,8 +31,6 @@
 
 turion64_tyler_t::turion64_tyler_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
-  BX_INFO(("WARNING: 3DNow! is not implemented yet !"));
-
   if (! BX_SUPPORT_SVM)
     BX_INFO(("WARNING: SVM Support is not compiled in !"));
 
@@ -70,6 +68,8 @@ turion64_tyler_t::turion64_tyler_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 #endif
   enable_cpu_extension(BX_ISA_ALT_MOV_CR8);
   enable_cpu_extension(BX_ISA_XAPIC_EXT);
+
+  warning_messages();
 }
 
 void turion64_tyler_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const

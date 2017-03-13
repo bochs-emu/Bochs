@@ -38,9 +38,6 @@ broadwell_ult_t::broadwell_ult_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   if (! BX_SUPPORT_MONITOR_MWAIT)
     BX_INFO(("WARNING: MONITOR/MWAIT support is not compiled in !"));
 
-  BX_INFO(("WARNING: RDRAND would not produce true random numbers !"));
-  BX_INFO(("WARNING: RDSEED would not produce true random numbers !"));
-
   enable_cpu_extension(BX_ISA_X87);
   enable_cpu_extension(BX_ISA_486);
   enable_cpu_extension(BX_ISA_PENTIUM);
@@ -101,6 +98,8 @@ broadwell_ult_t::broadwell_ult_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_RDSEED);
   enable_cpu_extension(BX_ISA_ADX);
   enable_cpu_extension(BX_ISA_SMAP);
+
+  warning_messages();
 }
 
 void broadwell_ult_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const

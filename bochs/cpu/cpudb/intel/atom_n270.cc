@@ -61,6 +61,8 @@ atom_n270_t::atom_n270_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_PAT);
   enable_cpu_extension(BX_ISA_XAPIC);
   enable_cpu_extension(BX_ISA_MOVBE);
+
+  warning_messages();
 }
 
 void atom_n270_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const

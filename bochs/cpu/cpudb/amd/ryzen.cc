@@ -38,9 +38,6 @@ ryzen_t::ryzen_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   if (! BX_SUPPORT_MONITOR_MWAIT)
     BX_INFO(("WARNING: MONITOR/MWAIT support is not compiled in !"));
 
-  BX_INFO(("WARNING: RDRAND would not produce true random numbers !"));
-  BX_INFO(("WARNING: RDSEED would not produce true random numbers !"));
-
   enable_cpu_extension(BX_ISA_X87);
   enable_cpu_extension(BX_ISA_486);
   enable_cpu_extension(BX_ISA_PENTIUM);
@@ -101,6 +98,8 @@ ryzen_t::ryzen_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_MISALIGNED_SSE);
   enable_cpu_extension(BX_ISA_ALT_MOV_CR8);
   enable_cpu_extension(BX_ISA_XAPIC_EXT);
+
+  warning_messages();
 }
 
 void ryzen_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const

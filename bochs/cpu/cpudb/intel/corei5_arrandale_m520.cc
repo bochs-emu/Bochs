@@ -76,6 +76,8 @@ corei5_arrandale_m520_t::corei5_arrandale_m520_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_CMPXCHG16B);
   enable_cpu_extension(BX_ISA_RDTSCP);
   enable_cpu_extension(BX_ISA_AES_PCLMULQDQ);
+
+  warning_messages();
 }
 
 void corei5_arrandale_m520_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const

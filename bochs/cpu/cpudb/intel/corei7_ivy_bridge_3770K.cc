@@ -38,8 +38,6 @@ corei7_ivy_bridge_3770k_t::corei7_ivy_bridge_3770k_t(BX_CPU_C *cpu): bx_cpuid_t(
   if (! BX_SUPPORT_MONITOR_MWAIT)
     BX_INFO(("WARNING: MONITOR/MWAIT support is not compiled in !"));
 
-  BX_INFO(("WARNING: RDRAND would not produce true random numbers !"));
-
   enable_cpu_extension(BX_ISA_X87);
   enable_cpu_extension(BX_ISA_486);
   enable_cpu_extension(BX_ISA_PENTIUM);
@@ -88,6 +86,8 @@ corei7_ivy_bridge_3770k_t::corei7_ivy_bridge_3770k_t(BX_CPU_C *cpu): bx_cpuid_t(
   enable_cpu_extension(BX_ISA_FSGSBASE);
   enable_cpu_extension(BX_ISA_SMEP);
   enable_cpu_extension(BX_ISA_RDRAND);
+
+  warning_messages();
 }
 
 void corei7_ivy_bridge_3770k_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const

@@ -48,6 +48,8 @@ p3_katmai_t::p3_katmai_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 #endif
   enable_cpu_extension(BX_ISA_MTRR);
   enable_cpu_extension(BX_ISA_PAT);
+
+  warning_messages();
 }
 
 void p3_katmai_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
