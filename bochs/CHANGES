@@ -32,6 +32,7 @@ Detailed change log :
   ! Implemented UMIP: User Mode Instruction Prevention (don't allow execution of SLDT/SIDT/SGDT/STR/SMSW with CPL>0)
   ! Implemented RDPID instruction
   ! Implemented VPOPCNTD/VPOPCNTQ AVX512 instructions
+  ! CPUDB: Added AMD Ryzen configuration to CPUDB
 
 - I/O Devices
   - Busmouse
