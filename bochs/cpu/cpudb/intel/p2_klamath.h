@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2015 Stanislav Shwartsman
+//   Copyright (c) 2011-2017 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -21,35 +21,33 @@
 //
 /////////////////////////////////////////////////////////////////////////
 
-bx_define_cpudb(bx_generic)
-#if BX_CPU_LEVEL >= 5
-bx_define_cpudb(pentium)
-bx_define_cpudb(pentium_mmx)
-bx_define_cpudb(amd_k6_2_chomper)
+#ifndef BX_P2_KLAMATH_CPUID_DEFINITIONS_H
+#define BX_P2_KLAMATH_CPUID_DEFINITIONS_H
+
 #if BX_CPU_LEVEL >= 6
-bx_define_cpudb(p2_klamath)
-bx_define_cpudb(p3_katmai)
-bx_define_cpudb(p4_willamette)
-bx_define_cpudb(core_duo_t2400_yonah)
-bx_define_cpudb(atom_n270)
-#if BX_SUPPORT_X86_64
-bx_define_cpudb(p4_prescott_celeron_336)
-bx_define_cpudb(athlon64_clawhammer)
-bx_define_cpudb(athlon64_venice)
-bx_define_cpudb(turion64_tyler)
-bx_define_cpudb(phenom_8650_toliman)
-bx_define_cpudb(core2_penryn_t9600)
-bx_define_cpudb(corei5_lynnfield_750)
-bx_define_cpudb(corei5_arrandale_m520)
-bx_define_cpudb(corei7_sandy_bridge_2600k)
-#if BX_SUPPORT_AVX
-bx_define_cpudb(zambezi)
-bx_define_cpudb(trinity_apu)
-bx_define_cpudb(ryzen)
-bx_define_cpudb(corei7_ivy_bridge_3770k)
-bx_define_cpudb(corei7_haswell_4770)
-bx_define_cpudb(broadwell_ult)
-#endif
-#endif
-#endif
+
+#include "cpu/cpuid.h"
+
+class p2_klamath_t : public bx_cpuid_t {
+public:
+  p2_klamath_t(BX_CPU_C *cpu);
+  virtual ~p2_klamath_t() {}
+
+  // return CPU name
+  virtual const char *get_name(void) const { return "p2_klamath"; }
+
+  virtual void get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
+
+  virtual void dump_cpuid(void) const;
+
+private:
+  void get_std_cpuid_leaf_0(cpuid_function_t *leaf) const;
+  void get_std_cpuid_leaf_1(cpuid_function_t *leaf) const;
+  void get_std_cpuid_leaf_2(cpuid_function_t *leaf) const;
+};
+
+extern bx_cpuid_t *create_p2_klamath_cpuid(BX_CPU_C *cpu);
+
+#endif // BX_CPU_LEVEL >= 6
+
 #endif
