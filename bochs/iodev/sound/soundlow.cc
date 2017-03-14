@@ -238,7 +238,7 @@ BX_THREAD_FUNC(mixer_thread, indata)
   BX_THREAD_EXIT;
 }
 
-// bx_soundlow_waveout_c class implemenzation
+// bx_soundlow_waveout_c class implementation
 // The dummy output methods don't do anything.
 
 bx_soundlow_waveout_c::bx_soundlow_waveout_c()
@@ -499,7 +499,7 @@ void bx_soundlow_waveout_c::start_mixer_thread()
   BX_THREAD_CREATE(mixer_thread, this, threadID);
 }
 
-// bx_soundlow_wavein_c class implemenzation
+// bx_soundlow_wavein_c class implementation
 // The dummy input method returns silence.
 
 bx_soundlow_wavein_c::bx_soundlow_wavein_c()
@@ -568,7 +568,7 @@ void bx_soundlow_wavein_c::record_timer(void)
   record_handler(this, record_packet_size);
 }
 
-// bx_soundlow_midiout_c class implemenzation
+// bx_soundlow_midiout_c class implementation
 // The dummy output methods don't do anything.
 
 bx_soundlow_midiout_c::bx_soundlow_midiout_c()
@@ -605,18 +605,26 @@ int bx_soundlow_midiout_c::closemidioutput()
   return BX_SOUNDLOW_OK;
 }
 
-// bx_sound_lowlevel_c class implemenzation
+bx_sound_lowlevel_c *bx_sound_lowlevel_c::all;
 
-bx_sound_lowlevel_c::bx_sound_lowlevel_c()
+// bx_sound_lowlevel_c class implementation
+
+bx_sound_lowlevel_c::bx_sound_lowlevel_c(const char *type)
 {
   put("soundlow", "SNDLOW");
   waveout = NULL;
   wavein = NULL;
   midiout = NULL;
+  // self-registering static objects ported from the network code
+  next = all;
+  all  = this;
+  this->type = type;
 }
 
 bx_sound_lowlevel_c::~bx_sound_lowlevel_c()
 {
+  bx_sound_lowlevel_c *ptr = 0;
+
   if (waveout != NULL) {
     delete waveout;
   }
@@ -626,32 +634,53 @@ bx_sound_lowlevel_c::~bx_sound_lowlevel_c()
   if (midiout != NULL) {
     delete midiout;
   }
+  // unregister sound driver
+  if (this == all) {
+    all = all->next;
+  } else {
+    ptr = all;
+    while (ptr != NULL) {
+      if (ptr->next != this) {
+        ptr = ptr->next;
+      } else {
+        break;
+      }
+    }
+  }
+  if (ptr) {
+    ptr->next = this->next;
+  }
 }
 
-// bx_sound_dummy_c class implemenzation
-
-bx_soundlow_waveout_c* bx_sound_dummy_c::get_waveout()
+bx_bool bx_sound_lowlevel_c::module_present(const char *type)
 {
-  if (waveout == NULL) {
-    waveout = new bx_soundlow_waveout_c();
+  bx_sound_lowlevel_c *ptr = 0;
+
+  for (ptr = all; ptr != NULL; ptr = ptr->next) {
+    if (strcmp(type, ptr->type) == 0)
+      return 1;
   }
-  return waveout;
+  return 0;
 }
 
-bx_soundlow_wavein_c* bx_sound_dummy_c::get_wavein()
+bx_sound_lowlevel_c* bx_sound_lowlevel_c::get_module(const char *type)
 {
-  if (wavein == NULL) {
-    wavein = new bx_soundlow_wavein_c();
+  bx_sound_lowlevel_c *ptr = 0;
+
+  for (ptr = all; ptr != NULL; ptr = ptr->next) {
+    if (strcmp(type, ptr->type) == 0)
+      return ptr;
   }
-  return wavein;
+  return NULL;
 }
 
-bx_soundlow_midiout_c* bx_sound_dummy_c::get_midiout()
+void bx_sound_lowlevel_c::cleanup()
 {
-  if (midiout == NULL) {
-    midiout = new bx_soundlow_midiout_c();
+#if BX_PLUGINS
+  while (all != NULL) {
+    PLUG_unload_snd_plugin(all->type);
   }
-  return midiout;
+#endif
 }
 
 #endif

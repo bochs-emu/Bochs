@@ -82,23 +82,20 @@ AudioUnit WaveOutputUnit = NULL;
 AudioConverterRef WaveConverter = NULL;
 #endif
 
-bx_sound_osx_c* osxSoundDriver = NULL;
-
 // sound driver plugin entry points
 
 int CDECL libosx_sound_plugin_init(plugin_t *plugin, plugintype_t type)
 {
-  osxSoundDriver = new bx_sound_osx_c();
-  DEV_sound_register_driver(osxSoundDriver, BX_SOUNDDRV_OSX);
+  // Nothing here yet
   return 0; // Success
 }
 
 void CDECL libosx_sound_plugin_fini(void)
 {
-  delete osxSoundDriver;
+  // Nothing here yet
 }
 
-// bx_soundlow_waveout_osx_c class implemenzation
+// bx_soundlow_waveout_osx_c class implementation
 
 bx_soundlow_waveout_osx_c::bx_soundlow_waveout_osx_c()
     :bx_soundlow_waveout_c()
@@ -473,7 +470,7 @@ void bx_soundlow_waveout_osx_c::nextbuffer (int *outDataSize, void **outData)
 }
 #endif
 
-// bx_soundlow_midiout_osx_c class implemenzation
+// bx_soundlow_midiout_osx_c class implementation
 
 bx_soundlow_midiout_osx_c::bx_soundlow_midiout_osx_c()
     :bx_soundlow_midiout_c()
@@ -561,13 +558,7 @@ int bx_soundlow_midiout_osx_c::closemidioutput()
   return BX_SOUNDLOW_OK;
 }
 
-// bx_sound_osx_c class implemenzation
-
-bx_sound_osx_c::bx_sound_osx_c()
-    :bx_sound_lowlevel_c()
-{
-  BX_INFO(("Sound lowlevel module 'osx' initialized"));
-}
+// bx_sound_osx_c class implementation
 
 bx_soundlow_waveout_c* bx_sound_osx_c::get_waveout()
 {

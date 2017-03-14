@@ -68,13 +68,13 @@ private:
 
 class bx_sound_sdl_c : public bx_sound_lowlevel_c {
 public:
-  bx_sound_sdl_c();
+  bx_sound_sdl_c() : bx_sound_lowlevel_c("sdl") {}
   virtual ~bx_sound_sdl_c() {}
 
   virtual bx_soundlow_waveout_c* get_waveout();
 #if BX_HAVE_SDL2_AUDIO_CAPTURE
   virtual bx_soundlow_wavein_c* get_wavein();
 #endif
-};
+} bx_sound_sdl;
 
 #endif  // BX_HAVE_SOUND_SDL

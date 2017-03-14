@@ -87,12 +87,12 @@ private:
 
 class bx_sound_alsa_c : public bx_sound_lowlevel_c {
 public:
-  bx_sound_alsa_c();
+  bx_sound_alsa_c() : bx_sound_lowlevel_c("alsa") {}
   virtual ~bx_sound_alsa_c() {}
 
   virtual bx_soundlow_waveout_c* get_waveout();
   virtual bx_soundlow_wavein_c* get_wavein();
   virtual bx_soundlow_midiout_c* get_midiout();
-};
+} bx_sound_alsa;
 
 #endif

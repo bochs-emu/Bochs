@@ -230,6 +230,6 @@ public:
   virtual bx_soundlow_waveout_c* get_waveout();
   virtual bx_soundlow_wavein_c* get_wavein();
   virtual bx_soundlow_midiout_c* get_midiout();
-};
+} bx_sound_windows;
 
 #endif  // BX_HAVE_SOUND_WIN

@@ -39,8 +39,6 @@ bx_soundmod_ctl_c bx_soundmod_ctl;
 bx_soundmod_ctl_c::bx_soundmod_ctl_c()
 {
   put("soundctl", "SNDCTL");
-  n_sound_drivers = 0;
-  soundmod[0].module = NULL;
 }
 
 void bx_soundmod_ctl_c::init()
@@ -65,58 +63,20 @@ void bx_soundmod_ctl_c::init()
 
 void bx_soundmod_ctl_c::exit()
 {
-  unsigned i, driver_id;
-
-  while (n_sound_drivers > 0) {
-    i = --n_sound_drivers;
-    driver_id = soundmod[i].drv_id;
-    if (driver_id == BX_SOUNDDRV_DUMMY) {
-      delete soundmod[i].module;
-    } else {
-      PLUG_unload_snd_plugin(sound_driver_names[driver_id]);
-    }
-  }
-}
-
-bx_bool bx_soundmod_ctl_c::register_driver(bx_sound_lowlevel_c *module, int driver_id)
-{
-  unsigned i = n_sound_drivers;
-
-  if (i == BX_MAX_SOUND_DRIVERS) {
-    BX_PANIC(("Too many sound drivers!"));
-    return 0;
-  }
-  if (module != NULL) {
-    BX_INFO(("Installed sound driver '%s' at index #%d",
-             sound_driver_names[driver_id], i));
-    soundmod[i].drv_id = driver_id;
-    soundmod[i].module = module;
-    n_sound_drivers++;
-    return 1;
-  }
-  return 0;
+  bx_sound_lowlevel_c::cleanup();
 }
 
 bx_sound_lowlevel_c* bx_soundmod_ctl_c::get_driver(int driver_id)
 {
-  unsigned i, loaded = 0;
-
-  do {
-    for (i = 0; i < n_sound_drivers; i++) {
-      if (driver_id == soundmod[i].drv_id) {
-        return soundmod[i].module;
-      }
-    }
-    if (loaded) return NULL;
-    if (driver_id == BX_SOUNDDRV_DUMMY) {
-      bx_sound_lowlevel_c *driver = new bx_sound_dummy_c();
-      register_driver(driver, driver_id);
-    } else {
-      PLUG_load_snd_plugin(sound_driver_names[driver_id]);
-    }
-    loaded = 1;
-  } while (1);
-  return NULL;
+  const char *modname = sound_driver_names[driver_id];
+  if (!bx_sound_lowlevel_c::module_present(modname)) {
+#if BX_PLUGINS
+    PLUG_load_snd_plugin(modname);
+#else
+    BX_PANIC(("could not find sound driver '%s'", modname));
+#endif
+  }
+  return bx_sound_lowlevel_c::get_module(modname);
 }
 
 bx_soundlow_waveout_c* bx_soundmod_ctl_c::get_waveout(bx_bool using_file)

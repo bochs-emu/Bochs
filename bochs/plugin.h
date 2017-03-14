@@ -120,7 +120,6 @@ extern "C" {
 #define PLUG_load_net_plugin(name) bx_load_plugin2(name,PLUGTYPE_NETWORK)
 #define PLUG_unload_plugin(name) {lib##name##_LTX_plugin_fini();}
 #define PLUG_unload_opt_plugin(name) bx_unload_opt_plugin(name,1);
-#define PLUG_unload_snd_plugin(name) bx_unload_snd_plugin(name);
 
 #define DEV_register_ioread_handler(b,c,d,e,f) bx_devices.register_io_read_handler(b,c,d,e,f)
 #define DEV_register_iowrite_handler(b,c,d,e,f) bx_devices.register_io_write_handler(b,c,d,e,f)
@@ -264,7 +263,6 @@ extern "C" {
 #define DEV_usb_send_msg(a,b) bx_devices.pluginUsbDevCtl->usb_send_msg((void*)a,b)
 
 ///////// Sound module macros
-#define DEV_sound_register_driver(a,b) (bx_soundmod_ctl.register_driver(a,b))
 #define DEV_sound_get_waveout(a) (bx_soundmod_ctl.get_waveout(a))
 #define DEV_sound_get_wavein() (bx_soundmod_ctl.get_wavein())
 #define DEV_sound_get_midiout(a) (bx_soundmod_ctl.get_midiout(a))
@@ -362,7 +360,6 @@ extern void bx_plugins_after_restore_state(void);
 #if !BX_PLUGINS
 int bx_load_plugin2(const char *name, plugintype_t type);
 int bx_unload_opt_plugin(const char *name, bx_bool devflag);
-int bx_unload_snd_plugin(const char *name);
 #endif
 
 // every plugin must define these, within the extern"C" block, so that
@@ -454,6 +451,7 @@ DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(wx)
 DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(x)
 // sound driver plugins
 DECLARE_PLUGIN_INIT_FINI_FOR_SOUND_MODULE(alsa)
+DECLARE_PLUGIN_INIT_FINI_FOR_SOUND_MODULE(dummy)
 DECLARE_PLUGIN_INIT_FINI_FOR_SOUND_MODULE(file)
 DECLARE_PLUGIN_INIT_FINI_FOR_SOUND_MODULE(oss)
 DECLARE_PLUGIN_INIT_FINI_FOR_SOUND_MODULE(osx)

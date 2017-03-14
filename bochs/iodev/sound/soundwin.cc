@@ -51,20 +51,17 @@
 HANDLE DataHandle;     // returned by GlobalAlloc()
 Bit8u *DataPointer;    // returned by GlobalLock()
 
-bx_sound_windows_c* winSoundDriver = NULL;
-
 // sound driver plugin entry points
 
 int CDECL libwin_sound_plugin_init(plugin_t *plugin, plugintype_t type)
 {
-  winSoundDriver = new bx_sound_windows_c();
-  DEV_sound_register_driver(winSoundDriver, BX_SOUNDDRV_WIN);
+  // Nothing here yet
   return 0; // Success
 }
 
 void CDECL libwin_sound_plugin_fini(void)
 {
-  delete winSoundDriver;
+  // Nothing here yet
 }
 
 // helper function
@@ -82,7 +79,7 @@ Bit8u* newbuffer(unsigned blksize)
   }
 }
 
-// bx_soundlow_waveout_win_c class implemenzation
+// bx_soundlow_waveout_win_c class implementation
 
 bx_soundlow_waveout_win_c::bx_soundlow_waveout_win_c()
     :bx_soundlow_waveout_c()
@@ -223,7 +220,7 @@ int bx_soundlow_waveout_win_c::output(int length, Bit8u data[])
   return BX_SOUNDLOW_OK;
 }
 
-// bx_soundlow_wavein_win_c class implemenzation
+// bx_soundlow_wavein_win_c class implementation
 
 bx_soundlow_wavein_win_c::bx_soundlow_wavein_win_c()
     :bx_soundlow_wavein_c()
@@ -362,7 +359,7 @@ void bx_soundlow_wavein_win_c::record_timer(void)
   record_handler(this, record_packet_size);
 }
 
-// bx_soundlow_midiout_win_c class implemenzation
+// bx_soundlow_midiout_win_c class implementation
 
 bx_soundlow_midiout_win_c::bx_soundlow_midiout_win_c()
     :bx_soundlow_midiout_c()
@@ -477,10 +474,10 @@ void bx_soundlow_midiout_win_c::checkmidiready()
   }
 }
 
-// bx_sound_windows_c class implemenzation
+// bx_sound_windows_c class implementation
 
 bx_sound_windows_c::bx_sound_windows_c()
-  :bx_sound_lowlevel_c()
+  :bx_sound_lowlevel_c("win")
 {
   DataHandle = GlobalAlloc(GMEM_MOVEABLE | GMEM_SHARE, size);
   DataPointer = (Bit8u*) GlobalLock(DataHandle);
@@ -490,8 +487,6 @@ bx_sound_windows_c::bx_sound_windows_c()
 
 #undef size
 #undef ALIGN
-
-  BX_INFO(("Sound lowlevel module 'win' initialized"));
 }
 
 bx_sound_windows_c::~bx_sound_windows_c()

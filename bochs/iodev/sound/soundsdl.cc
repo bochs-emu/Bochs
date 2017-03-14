@@ -36,20 +36,17 @@
 
 #include <SDL.h>
 
-bx_sound_sdl_c* sdlSoundDriver = NULL;
-
 // sound driver plugin entry points
 
 int CDECL libsdl_sound_plugin_init(plugin_t *plugin, plugintype_t type)
 {
-  sdlSoundDriver = new bx_sound_sdl_c();
-  DEV_sound_register_driver(sdlSoundDriver, BX_SOUNDDRV_SDL);
+  // Nothing here yet
   return 0; // Success
 }
 
 void CDECL libsdl_sound_plugin_fini(void)
 {
-  delete sdlSoundDriver;
+  // Nothing here yet
 }
 
 // SDL audio callback
@@ -60,7 +57,7 @@ void sdl_callback(void *thisptr, Bit8u *stream, int len)
   ((bx_soundlow_waveout_sdl_c*)thisptr)->mixer_common(stream, len);
 }
 
-// bx_soundlow_waveout_sdl_c class implemenzation
+// bx_soundlow_waveout_sdl_c class implementation
 
 bx_soundlow_waveout_sdl_c::bx_soundlow_waveout_sdl_c()
     :bx_soundlow_waveout_c()
@@ -184,7 +181,7 @@ void bx_soundlow_waveout_sdl_c::unregister_wave_callback(int callback_id)
   SDL_UnlockAudio();
 }
 
-// bx_soundlow_wavein_sdl2_c class implemenzation
+// bx_soundlow_wavein_sdl2_c class implementation
 
 #if BX_HAVE_SDL2_AUDIO_CAPTURE
 bx_soundlow_wavein_sdl2_c::bx_soundlow_wavein_sdl2_c()
@@ -294,13 +291,7 @@ void bx_soundlow_wavein_sdl2_c::record_timer(void)
 }
 #endif
 
-// bx_sound_sdl_c class implemenzation
-
-bx_sound_sdl_c::bx_sound_sdl_c()
-    :bx_sound_lowlevel_c()
-{
-  // nothing here yet
-}
+// bx_sound_sdl_c class implementation
 
 bx_soundlow_waveout_c* bx_sound_sdl_c::get_waveout()
 {

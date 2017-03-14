@@ -40,23 +40,20 @@
 #include <sys/ioctl.h>
 #include <sys/soundcard.h>
 
-bx_sound_oss_c* ossSoundDriver = NULL;
-
 // sound driver plugin entry points
 
 int CDECL liboss_sound_plugin_init(plugin_t *plugin, plugintype_t type)
 {
-  ossSoundDriver = new bx_sound_oss_c();
-  DEV_sound_register_driver(ossSoundDriver, BX_SOUNDDRV_OSS);
+  // Nothing here yet
   return 0; // Success
 }
 
 void CDECL liboss_sound_plugin_fini(void)
 {
-  delete ossSoundDriver;
+  // Nothing here yet
 }
 
-// bx_soundlow_waveout_oss_c class implemenzation
+// bx_soundlow_waveout_oss_c class implementation
 
 bx_soundlow_waveout_oss_c::bx_soundlow_waveout_oss_c()
     :bx_soundlow_waveout_c()
@@ -169,7 +166,7 @@ int bx_soundlow_waveout_oss_c::output(int length, Bit8u data[])
   }
 }
 
-// bx_soundlow_wavein_oss_c class implemenzation
+// bx_soundlow_wavein_oss_c class implementation
 
 bx_soundlow_wavein_oss_c::bx_soundlow_wavein_oss_c()
     :bx_soundlow_wavein_c()
@@ -311,7 +308,7 @@ void bx_soundlow_wavein_oss_c::record_timer(void)
   record_handler(this, record_packet_size);
 }
 
-// bx_soundlow_midiout_oss_c class implemenzation
+// bx_soundlow_midiout_oss_c class implementation
 
 bx_soundlow_midiout_oss_c::bx_soundlow_midiout_oss_c()
     :bx_soundlow_midiout_c()
@@ -361,13 +358,7 @@ int bx_soundlow_midiout_oss_c::closemidioutput()
   return BX_SOUNDLOW_OK;
 }
 
-// bx_sound_oss_c class implemenzation
-
-bx_sound_oss_c::bx_sound_oss_c()
-    :bx_sound_lowlevel_c()
-{
-  BX_INFO(("Sound lowlevel module 'oss' initialized"));
-}
+// bx_sound_oss_c class implementation
 
 bx_soundlow_waveout_c* bx_sound_oss_c::get_waveout()
 {

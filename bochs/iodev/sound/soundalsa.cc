@@ -35,20 +35,17 @@
 
 #define LOG_THIS log->
 
-bx_sound_alsa_c* alsaSoundDriver = NULL;
-
 // sound driver plugin entry points
 
 int CDECL libalsa_sound_plugin_init(plugin_t *plugin, plugintype_t type)
 {
-  alsaSoundDriver = new bx_sound_alsa_c();
-  DEV_sound_register_driver(alsaSoundDriver, BX_SOUNDDRV_ALSA);
+  // Nothing here yet
   return 0; // Success
 }
 
 void CDECL libalsa_sound_plugin_fini(void)
 {
-  delete alsaSoundDriver;
+  // Nothing here yet
 }
 
 // helper function for wavein / waveout
@@ -129,7 +126,7 @@ int alsa_pcm_open(bx_bool mode, alsa_pcm_t *alsa_pcm, bx_pcm_param_t *param, log
 #undef LOG_THIS
 #define LOG_THIS
 
-// bx_soundlow_waveout_alsa_c class implemenzation
+// bx_soundlow_waveout_alsa_c class implementation
 
 bx_soundlow_waveout_alsa_c::bx_soundlow_waveout_alsa_c()
     :bx_soundlow_waveout_c()
@@ -184,7 +181,7 @@ int bx_soundlow_waveout_alsa_c::output(int length, Bit8u data[])
   return BX_SOUNDLOW_OK;
 }
 
-// bx_soundlow_wavein_alsa_c class implemenzation
+// bx_soundlow_wavein_alsa_c class implementation
 
 bx_soundlow_wavein_alsa_c::bx_soundlow_wavein_alsa_c()
     :bx_soundlow_wavein_c()
@@ -293,7 +290,7 @@ void bx_soundlow_wavein_alsa_c::record_timer(void)
   record_handler(this, record_packet_size);
 }
 
-// bx_soundlow_midiout_alsa_c class implemenzation
+// bx_soundlow_midiout_alsa_c class implementation
 
 bx_soundlow_midiout_alsa_c::bx_soundlow_midiout_alsa_c()
     :bx_soundlow_midiout_c()
@@ -452,13 +449,7 @@ int bx_soundlow_midiout_alsa_c::closemidioutput()
   return BX_SOUNDLOW_OK;
 }
 
-// bx_sound_alsa_c class implemenzation
-
-bx_sound_alsa_c::bx_sound_alsa_c()
-    :bx_sound_lowlevel_c()
-{
-  BX_INFO(("Sound lowlevel module 'alsa' initialized"));
-}
+// bx_sound_alsa_c class implementation
 
 bx_soundlow_waveout_c* bx_sound_alsa_c::get_waveout()
 {

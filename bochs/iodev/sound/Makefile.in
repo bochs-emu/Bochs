@@ -49,7 +49,7 @@ top_builddir    = ../..
 LIBTOOL=@LIBTOOL@
 WIN32_DLL_IMPORT_LIBRARY=../../@WIN32_DLL_IMPORT_LIB@
 
-SOUNDLOW_OBJS = soundfile.o @SOUNDLOW_OBJS@
+SOUNDLOW_OBJS = sounddummy.o soundfile.o @SOUNDLOW_OBJS@
 
 SOUNDMOD_LINK_OPTS = -lwinmm
 SOUNDMOD_LINK_OPTS_VCPP = winmm.lib
@@ -78,7 +78,7 @@ plugins: @PLUGIN_TARGET_2@
 
 plugins_gcc: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 
-plugins_msvc: bx_soundfile.dll bx_soundwin.dll $(SOUNDHW_DLL_TARGETS)
+plugins_msvc: bx_sounddummy.dll bx_soundfile.dll bx_soundwin.dll $(SOUNDHW_DLL_TARGETS)
 
 libsound.a: $(NONPLUGIN_OBJS)
 	@RMCOMMAND@ libsound.a
@@ -116,6 +116,9 @@ bx_sb16.dll: sb16.o opl.o
 
 bx_es1370.dll: es1370.o
 	@LINK_DLL@ es1370.o $(WIN32_DLL_IMPORT_LIBRARY)
+
+bx_sounddummy.dll: sounddummy.o
+	@LINK_DLL@ sounddummy.o $(WIN32_DLL_IMPORT_LIBRARY)
 
 bx_soundfile.dll: soundfile.o
 	@LINK_DLL@ soundfile.o $(WIN32_DLL_IMPORT_LIBRARY)
@@ -165,6 +168,12 @@ soundalsa.o: soundalsa.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h soundlow.h soundmod.h soundalsa.h
+sounddummy.o: sounddummy.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
+ ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
+ ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
+ ../../param_names.h soundlow.h
 soundfile.o: soundfile.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
@@ -231,6 +240,12 @@ soundalsa.lo: soundalsa.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h soundlow.h soundmod.h soundalsa.h
+sounddummy.lo: sounddummy.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
+ ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
+ ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
+ ../../param_names.h soundlow.h
 soundfile.lo: soundfile.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \

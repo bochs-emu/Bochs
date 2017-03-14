@@ -900,6 +900,8 @@ static builtin_plugin_t builtin_plugins[] = {
   BUILTIN_OPT_PLUGIN_ENTRY(voodoo),
 #endif
 #if BX_SUPPORT_SOUNDLOW
+  BUILTIN_SND_PLUGIN_ENTRY(dummy),
+  BUILTIN_SND_PLUGIN_ENTRY(file),
 #if BX_HAVE_SOUND_ALSA
   BUILTIN_SND_PLUGIN_ENTRY(alsa),
 #endif
@@ -915,7 +917,6 @@ static builtin_plugin_t builtin_plugins[] = {
 #if BX_HAVE_SOUND_WIN
   BUILTIN_SND_PLUGIN_ENTRY(win),
 #endif
-  BUILTIN_SND_PLUGIN_ENTRY(file),
 #endif
 #if BX_NETWORKING
 #if BX_NETMOD_FBSD
@@ -984,25 +985,6 @@ int bx_unload_opt_plugin(const char *name, bx_bool devflag)
   };
   return 0;
 }
-
-#if BX_SUPPORT_SOUNDLOW
-int bx_unload_snd_plugin(const char *name)
-{
-  int i = 0;
-  while (strcmp(builtin_plugins[i].name, "NULL")) {
-    if ((!strcmp(name, builtin_plugins[i].name)) &&
-        (builtin_plugins[i].type == PLUGTYPE_SOUND)) {
-      if (builtin_plugins[i].status == 1) {
-        builtin_plugins[i].plugin_fini();
-        builtin_plugins[i].status = 0;
-      }
-      return 1;
-    }
-    i++;
-  };
-  return 0;
-}
-#endif
 
 #endif
 

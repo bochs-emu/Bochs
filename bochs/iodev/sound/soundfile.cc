@@ -40,23 +40,20 @@
 
 #define LOG_THIS
 
-bx_sound_file_c* fileSoundDriver = NULL;
-
 // sound driver plugin entry points
 
 int CDECL libfile_sound_plugin_init(plugin_t *plugin, plugintype_t type)
 {
-  fileSoundDriver = new bx_sound_file_c();
-  DEV_sound_register_driver(fileSoundDriver, BX_SOUNDDRV_FILE);
+  // Nothing here yet
   return 0; // Success
 }
 
 void CDECL libfile_sound_plugin_fini(void)
 {
-  delete fileSoundDriver;
+  // Nothing here yet
 }
 
-// bx_soundlow_waveout_file_c class implemenzation
+// bx_soundlow_waveout_file_c class implementation
 
 bx_soundlow_waveout_file_c::bx_soundlow_waveout_file_c()
     :bx_soundlow_waveout_c()
@@ -238,7 +235,7 @@ void bx_soundlow_waveout_file_c::VOC_write_block(int block, Bit32u headerlen,
     fwrite(data, 1, datalen, wavefile);
 }
 
-// bx_soundlow_midiout_file_c class implemenzation
+// bx_soundlow_midiout_file_c class implementation
 
 bx_soundlow_midiout_file_c::bx_soundlow_midiout_file_c()
     :bx_soundlow_midiout_c()
@@ -376,13 +373,7 @@ void bx_soundlow_midiout_file_c::writedeltatime(Bit32u deltatime)
     fputc(value[i], midifile);
 }
 
-// bx_sound_oss_c class implemenzation
-
-bx_sound_file_c::bx_sound_file_c()
-    :bx_sound_lowlevel_c()
-{
-  BX_INFO(("Sound lowlevel module 'file' initialized"));
-}
+// bx_sound_oss_c class implementation
 
 bx_soundlow_waveout_c* bx_sound_file_c::get_waveout()
 {

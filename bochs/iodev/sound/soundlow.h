@@ -170,27 +170,23 @@ public:
 
 class BOCHSAPI_MSVCONLY bx_sound_lowlevel_c : public logfunctions {
 public:
-  bx_sound_lowlevel_c();
-  virtual ~bx_sound_lowlevel_c();
+  static bx_bool module_present(const char *type);
+  static bx_sound_lowlevel_c* get_module(const char *type);
+  static void cleanup();
 
   virtual bx_soundlow_waveout_c* get_waveout() {return NULL;}
   virtual bx_soundlow_wavein_c* get_wavein() {return NULL;}
   virtual bx_soundlow_midiout_c* get_midiout() {return NULL;}
 
 protected:
+  bx_sound_lowlevel_c(const char *type);
+  virtual ~bx_sound_lowlevel_c();
+
   bx_soundlow_waveout_c *waveout;
   bx_soundlow_wavein_c *wavein;
   bx_soundlow_midiout_c *midiout;
-};
-
-// The dummy sound driver contains stubs for all features
-
-class bx_sound_dummy_c : public bx_sound_lowlevel_c {
-public:
-  bx_sound_dummy_c() {}
-  virtual ~bx_sound_dummy_c() {}
-
-  virtual bx_soundlow_waveout_c* get_waveout();
-  virtual bx_soundlow_wavein_c* get_wavein();
-  virtual bx_soundlow_midiout_c* get_midiout();
+private:
+  static bx_sound_lowlevel_c *all;
+  bx_sound_lowlevel_c *next;
+  const char *type;
 };
