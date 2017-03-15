@@ -109,6 +109,7 @@ enum {
   BX_ISA_PKU,                     /* User-Mode Protection Keys */
   BX_ISA_UMIP,                    /* User-Mode Instructions Prevention */
   BX_ISA_RDPID,                   /* RDPID Support */
+  BX_ISA_TCE,                     /* Translation Cache Extensions (TCE) support (AMD) */
   BX_ISA_EXTENSION_LAST
 };                            
 

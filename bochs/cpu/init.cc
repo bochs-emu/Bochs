@@ -860,6 +860,8 @@ void BX_CPU_C::reset(unsigned source)
       BX_CPU_THIS_PTR efer_suppmask |= BX_EFER_FFXSR_MASK;
     if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SVM))
       BX_CPU_THIS_PTR efer_suppmask |= BX_EFER_SVME_MASK;
+    if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_TCE))
+      BX_CPU_THIS_PTR efer_suppmask |= BX_EFER_TCE_MASK;
   }
 #endif
 
