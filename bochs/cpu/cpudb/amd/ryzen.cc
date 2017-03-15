@@ -500,7 +500,7 @@ void ryzen_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [14:14] Reserved
   //   [15:15] LWP: Light weight profiling
   //   [16:16] FMA4: Four-operand FMA instructions support
-  // * [17:17] Reserved
+  // * [17:17] Translation Cache Extensions
   //   [18:18] Reserved
   //   [19:19] NodeId: Indicates support for NodeId MSR (0xc001100c)
   //   [20:20] Reserved
@@ -527,7 +527,9 @@ void ryzen_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
               BX_CPUID_EXT2_MISALIGNED_SSE |
               BX_CPUID_EXT2_PREFETCHW |
               BX_CPUID_EXT2_OSVW |
+           /* BX_CPUID_EXT2_SKINIT | */ // not implemented
               BX_CPUID_EXT2_WDT |
+              BX_CPUID_EXT2_TCE |
               BX_CPUID_EXT2_TOPOLOGY_EXTENSIONS |
               BX_CPUID_EXT2_PERFCTR_EXT_CORE |
               BX_CPUID_EXT2_PERFCTR_EXT_NB |

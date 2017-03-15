@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2007-2015 Stanislav Shwartsman
+//   Copyright (c) 2007-2017 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -211,6 +211,7 @@ struct bx_dr7_t {
 #define BX_EFER_SVME_MASK      (1 << 12)
 #define BX_EFER_LMSLE_MASK     (1 << 13)
 #define BX_EFER_FFXSR_MASK     (1 << 14)
+#define BX_EFER_TCE_MASK       (1 << 15)
 
 struct bx_efer_t {
   Bit32u val32; // 32bit value of register
@@ -225,6 +226,7 @@ struct bx_efer_t {
   IMPLEMENT_CRREG_ACCESSORS(SVME,  12); /* AMD Secure Virtual Machine */
   IMPLEMENT_CRREG_ACCESSORS(LMSLE, 13); /* AMD Long Mode Segment Limit */
   IMPLEMENT_CRREG_ACCESSORS(FFXSR, 14);
+  IMPLEMENT_CRREG_ACCESSORS(TCE,   15); /* AMD Translation Cache Extensions */
 #endif
 
   BX_CPP_INLINE Bit32u get32() const { return val32; }

@@ -449,7 +449,8 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 // [14:14] reserved
 // [15:15] LWP: Light weight profiling
 // [16:16] FMA4: Four-operand FMA instructions support
-// [18:17] reserved
+// [17:17] Translation Cache Extensions (reserved?)
+// [18:18] reserved
 // [19:19] NodeId: Indicates support for NodeId MSR (0xc001100c)
 // [20:20] reserved
 // [21:21] TBM: trailing bit manipulation instruction support
@@ -480,7 +481,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT2_RESERVED14             (1 << 14)
 #define BX_CPUID_EXT2_LWP                    (1 << 15)
 #define BX_CPUID_EXT2_FMA4                   (1 << 16)
-#define BX_CPUID_EXT2_RESERVED17             (1 << 17)
+#define BX_CPUID_EXT2_TCE                    (1 << 17)
 #define BX_CPUID_EXT2_RESERVED18             (1 << 18)
 #define BX_CPUID_EXT2_NODEID                 (1 << 19)
 #define BX_CPUID_EXT2_RESERVED20             (1 << 20)
