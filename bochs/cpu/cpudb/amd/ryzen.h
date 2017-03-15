@@ -68,6 +68,7 @@ private:
   void get_ext_cpuid_leaf_1C(cpuid_function_t *leaf) const;
   void get_ext_cpuid_leaf_1D(Bit32u subfunction, cpuid_function_t *leaf) const;
   void get_ext_cpuid_leaf_1E(cpuid_function_t *leaf) const;
+  void get_ext_cpuid_leaf_1F(cpuid_function_t *leaf) const;
 };
 
 extern bx_cpuid_t *create_ryzen_cpuid(BX_CPU_C *cpu);

@@ -161,6 +161,9 @@ void ryzen_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function
   case 0x8000001E:
     get_ext_cpuid_leaf_1E(leaf);
     return;
+  case 0x8000001F:
+    get_ext_cpuid_leaf_1F(leaf);
+    return;
   case 0x00000000:
     get_std_cpuid_leaf_0(leaf);
     return;
@@ -509,7 +512,7 @@ void ryzen_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   // * [26:26] Data breakpoint extension. Indicates support for MSR 0xC0011027 and MSRs 0xC001101[B:9]
   //   [27:27] Performance time-stamp counter. Indicates support for MSR 0xC0010280
   // * [28:28] PerfCtrExtL2I: L2I performance counter extensions support
-  // * [29:29] Reserved
+  // * [29:29] MONITORX/MWAITX instructions support
   //   [30:30] Reserved
   //   [31:31] Reserved
   leaf->ecx = BX_CPUID_EXT2_LAHF_SAHF |
@@ -524,13 +527,13 @@ void ryzen_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
               BX_CPUID_EXT2_MISALIGNED_SSE |
               BX_CPUID_EXT2_PREFETCHW |
               BX_CPUID_EXT2_OSVW |
-              BX_CPUID_EXT2_IBS |
-              BX_CPUID_EXT2_XOP |
               BX_CPUID_EXT2_WDT |
-              BX_CPUID_EXT2_NODEID |
               BX_CPUID_EXT2_TOPOLOGY_EXTENSIONS |
               BX_CPUID_EXT2_PERFCTR_EXT_CORE |
-              BX_CPUID_EXT2_PERFCTR_EXT_NB;
+              BX_CPUID_EXT2_PERFCTR_EXT_NB |
+              BX_CPUID_EXT2_DATA_BREAKPOINT_EXT |
+              BX_CPUID_EXT2_PERFCTR_EXT_L2I;
+           /* BX_CPUID_EXT2_MONITORX_MWAITX - not implemented yet */
 
   // EDX:
   // Many of the bits in EDX are the same as FN 0x00000001 for AMD
@@ -761,7 +764,13 @@ void ryzen_t::get_ext_cpuid_leaf_1E(cpuid_function_t *leaf) const
   leaf->edx = 0;
 }
 
-// leaf 0x8000001F - Reserved //
+void ryzen_t::get_ext_cpuid_leaf_1F(cpuid_function_t *leaf) const
+{
+  leaf->eax = 0x00000007;
+  leaf->ebx = 0x0000016f;
+  leaf->ecx = 0x0000000f;
+  leaf->edx = 0;
+}
 
 void ryzen_t::dump_cpuid(void) const
 {
