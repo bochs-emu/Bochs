@@ -75,6 +75,9 @@ ryzen_t::ryzen_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 #endif
   enable_cpu_extension(BX_ISA_RDTSCP);
   enable_cpu_extension(BX_ISA_XSAVE);
+  enable_cpu_extension(BX_ISA_XSAVEOPT);
+  enable_cpu_extension(BX_ISA_XSAVEC);
+  enable_cpu_extension(BX_ISA_XSAVES);
   enable_cpu_extension(BX_ISA_AES_PCLMULQDQ);
   enable_cpu_extension(BX_ISA_AVX);
   enable_cpu_extension(BX_ISA_AVX_F16C);

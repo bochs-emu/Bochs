@@ -30,6 +30,7 @@ Detailed change log :
   ! VMX: Implemented Page Modification Logging (PML)
   ! VMX: Implemented TSC Scaling Extension
   ! Paging: Implemented Protection Keys
+  ! Implemented XSAVES/XRSTORS extensions
   ! Implemented UMIP: User Mode Instruction Prevention (don't allow execution of SLDT/SIDT/SGDT/STR/SMSW with CPL>0)
   ! Implemented RDPID instruction
   ! Implemented VPOPCNTD/VPOPCNTQ AVX512 instructions

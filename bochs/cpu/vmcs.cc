@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2009-2014 Stanislav Shwartsman
+//   Copyright (c) 2009-2017 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -591,7 +591,7 @@ void BX_CPU_C::init_vmx_capabilities(void)
   //   [17] Page Modification Logging Enable
   //   [18] Support for EPT Violation (#VE) exception
   //   [19] Reserved (must be '0)
-  //   [20] XSAVES Exiting (require XSAVES instruction support - not implemented)
+  //   [20] XSAVES Exiting
   //   [21] Reserved (must be '0)
   //   [22] Reserved (must be '0)
   //   [23] Reserved (must be '0)
@@ -648,6 +648,11 @@ void BX_CPU_C::init_vmx_capabilities(void)
     if (! BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPTP_SWITCHING))
       BX_PANIC(("#VE exception feature requires EPTP switching support !"));
     cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_EPT_VIOLATION_EXCEPTION;
+  }
+#endif
+#if BX_SUPPORT_VMX >= 2
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_XSAVES)) {
+    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_XSAVES_XRSTORS;
   }
 #endif
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_TSC_SCALING)) {

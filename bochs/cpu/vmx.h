@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2009-2015 Stanislav Shwartsman
+//   Copyright (c) 2009-2017 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -745,6 +745,10 @@ typedef struct bx_VMCS
 #if BX_SUPPORT_VMX >= 2
    bx_phy_address ve_info_addr;
    Bit16u eptp_index;
+#endif
+
+#if BX_SUPPORT_VMX >= 2
+   Bit64u xss_exiting_bitmap;
 #endif
 
    //

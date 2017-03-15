@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2015 Stanislav Shwartsman
+//   Copyright (c) 2008-2017 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -158,6 +158,12 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
     case BX_MSR_APICBASE:
       val64 = BX_CPU_THIS_PTR msr.apicbase;
       BX_INFO(("RDMSR: Read %08x:%08x from MSR_APICBASE", GET32H(val64), GET32L(val64)));
+      break;
+#endif
+
+#if BX_CPU_LEVEL >= 6
+    case BX_MSR_XSS:
+      val64 = BX_CPU_THIS_PTR msr.msr_xss;
       break;
 #endif
 
@@ -675,6 +681,16 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 #if BX_SUPPORT_APIC
     case BX_MSR_APICBASE:
       return relocate_apic(val_64);
+#endif
+
+#if BX_CPU_LEVEL >= 6
+    case BX_MSR_XSS:
+      if (! is_cpu_extension_supported(BX_ISA_XSAVES)) {
+        BX_ERROR(("WRMSR BX_MSR_XSS: XSAVES not enabled in the cpu model"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
+      BX_ERROR(("WRMSR: attempt to set reserved bit in BX_MSR_XSS"));
+      return 0;
 #endif
 
 #if BX_CPU_LEVEL >= 6

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2016  The Bochs Project
+//  Copyright (C) 2001-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -440,6 +440,8 @@ const unsigned BX_NUM_VARIABLE_RANGE_MTRRS = 8;
 #define BX_SVM_SMM_CTL_MSR      0xc0010116
 #define BX_SVM_HSAVE_PA_MSR     0xc0010117
 
+#define BX_MSR_XSS              0xda0
+
 enum BxCpuMode {
   BX_MODE_IA32_REAL = 0,        // CR0.PE=0                |
   BX_MODE_IA32_V8086 = 1,       // CR0.PE=1, EFLAGS.VM=1   | EFER.LMA=0
@@ -748,6 +750,10 @@ typedef struct
 
 #if BX_SUPPORT_SVM
   Bit64u svm_hsave_pa;
+#endif
+
+#if BX_CPU_LEVEL >= 6
+  Bit64u msr_xss;
 #endif
 
   /* TODO finish of the others */

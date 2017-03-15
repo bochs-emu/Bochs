@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2015  The Bochs Project
+//  Copyright (C) 2001-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -387,6 +387,10 @@ void BX_CPU_C::register_state(void)
 
   BXRS_HEX_PARAM_FIELD(MSR, pat, msr.pat.u64);
   BXRS_HEX_PARAM_FIELD(MSR, mtrr_deftype, msr.mtrr_deftype);
+
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_XSAVES)) {
+    BXRS_HEX_PARAM_FIELD(MSR, msr_xss, msr.msr_xss);
+  }
 #endif
 #if BX_CONFIGURE_MSRS
   bx_list_c *MSRS = new bx_list_c(cpu, "USER_MSR");
@@ -826,6 +830,7 @@ void BX_CPU_C::reset(unsigned source)
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PKU))
     BX_CPU_THIS_PTR xcr0_suppmask |= BX_XCR0_PKRU_MASK;
 #endif
+  BX_CPU_THIS_PTR msr.msr_xss = 0;
 #endif // BX_CPU_LEVEL >= 6
 
 /* initialise MSR registers to defaults */

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2016 Stanislav Shwartsman
+//   Copyright (c) 2008-2017 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -1294,6 +1294,8 @@ bx_define_opcode(BX_IA_XSAVEC, &BX_CPU_C::XSAVEC, &BX_CPU_C::BxError, BX_ISA_XSA
 bx_define_opcode(BX_IA_XSETBV, &BX_CPU_C::BxError, &BX_CPU_C::XSETBV, BX_ISA_XSAVE, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
 bx_define_opcode(BX_IA_XGETBV, &BX_CPU_C::BxError, &BX_CPU_C::XGETBV, BX_ISA_XSAVE, OP_NONE, OP_NONE, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_XSAVEOPT, &BX_CPU_C::XSAVE, &BX_CPU_C::BxError, BX_ISA_XSAVEOPT, OP_M, OP_NONE, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_XSAVES, &BX_CPU_C::XSAVEC, &BX_CPU_C::BxError, BX_ISA_XSAVES, OP_M, OP_NONE, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_XRSTORS, &BX_CPU_C::XRSTOR, &BX_CPU_C::BxError, BX_ISA_XSAVES, OP_M, OP_NONE, OP_NONE, OP_NONE, 0)
 
 #if BX_CPU_LEVEL >= 6
 

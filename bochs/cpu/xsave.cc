@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2015 Stanislav Shwartsman
+//   Copyright (c) 2008-2017 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -34,6 +34,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR prepareXSAVE();
 
+  bx_bool xsaveopt = (i->getIaOpcode() == BX_IA_XSAVEOPT);
+
   BX_DEBUG(("%s: save processor state XCR0=0x%08x", i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR xcr0.get32()));
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
@@ -63,8 +65,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
 
   Bit32u requested_feature_bitmap = BX_CPU_THIS_PTR xcr0.get32() & EAX;
   Bit32u xinuse = get_xinuse_vector(requested_feature_bitmap);
-
-  bx_bool xsaveopt = (i->getIaOpcode() == BX_IA_XSAVEOPT);
 
   /////////////////////////////////////////////////////////////////////////////
   if ((requested_feature_bitmap & BX_XCR0_FPU_MASK) != 0)
@@ -172,6 +172,28 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR prepareXSAVE();
 
+  bx_bool xsaves = (i->getIaOpcode() == BX_IA_XSAVES);
+  if (xsaves) {
+    if (CPL != 0) {
+      BX_ERROR(("%s: with CPL != 0", i->getIaOpcodeNameShort()));
+      exception(BX_GP_EXCEPTION, 0);
+    }
+
+#if BX_SUPPORT_VMX
+    if (BX_CPU_THIS_PTR in_vmx_guest) {
+      if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_XSAVES_XRSTORS)) {
+        BX_ERROR(("%s in VMX guest: not allowed to use instruction !", i->getIaOpcodeNameShort()));
+        exception(BX_UD_EXCEPTION, 0);
+      }
+
+      VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+      Bit64u requested_features = (((Bit64u) EDX) << 32) | EAX;
+      if (requested_features & BX_CPU_THIS_PTR msr.msr_xss & vm->xss_exiting_bitmap)
+        VMexit(VMX_VMEXIT_XSAVES, 0);
+    }
+#endif
+  }
+
   BX_DEBUG(("%s: save processor state XCR0=0x%08x", i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR xcr0.get32()));
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
@@ -195,7 +217,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
   // We will go feature-by-feature and not run over all XCR0 bits
   //
 
-  Bit32u requested_feature_bitmap = BX_CPU_THIS_PTR xcr0.get32() & EAX;
+  Bit32u xcr0 = BX_CPU_THIS_PTR xcr0.get32();
+  if (xsaves)
+    xcr0 |= BX_CPU_THIS_PTR msr.msr_xss;
+
+  Bit32u requested_feature_bitmap = xcr0 & EAX;
   Bit32u xinuse = get_xinuse_vector(requested_feature_bitmap);
   Bit64u xstate_bv = requested_feature_bitmap & xinuse;
   Bit64u xcomp_bv = requested_feature_bitmap | XSAVEC_COMPACTION_ENABLED;
@@ -282,7 +308,29 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR prepareXSAVE();
 
-  BX_DEBUG(("XRSTOR: restore processor state XCR0=0x%08x", BX_CPU_THIS_PTR xcr0.get32()));
+  bx_bool xrstors = (i->getIaOpcode() == BX_IA_XRSTORS);
+  if (xrstors) {
+    if (CPL != 0) {
+      BX_ERROR(("%s: with CPL != 0", i->getIaOpcodeNameShort()));
+      exception(BX_GP_EXCEPTION, 0);
+    }
+
+#if BX_SUPPORT_VMX
+    if (BX_CPU_THIS_PTR in_vmx_guest) {
+      if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_XSAVES_XRSTORS)) {
+        BX_ERROR(("%s in VMX guest: not allowed to use instruction !", i->getIaOpcodeNameShort()));
+        exception(BX_UD_EXCEPTION, 0);
+      }
+
+      VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+      Bit64u requested_features = (((Bit64u) EDX) << 32) | EAX;
+      if (requested_features & BX_CPU_THIS_PTR msr.msr_xss & vm->xss_exiting_bitmap)
+        VMexit(VMX_VMEXIT_XRSTORS, 0);
+    }
+#endif
+  }
+
+  BX_DEBUG(("%s: restore processor state XCR0=0x%08x", i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR xcr0.get32()));
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   bx_address laddr = get_laddr(i->seg(), eaddr);
@@ -290,14 +338,14 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
   if (BX_CPU_THIS_PTR alignment_check()) {
     if (laddr & 0x3) {
-      BX_ERROR(("XRSTOR: access not aligned to 4-byte cause model specific #AC(0)"));
+      BX_ERROR(("%s: access not aligned to 4-byte cause model specific #AC(0)", i->getIaOpcodeNameShort()));
       exception(BX_AC_EXCEPTION, 0);
     }
   }
 #endif
 
   if (laddr & 0x3f) {
-    BX_ERROR(("XRSTOR: access not aligned to 64-byte"));
+    BX_ERROR(("%s: access not aligned to 64-byte", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -308,7 +356,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   Bit64u header3 = read_virtual_qword(i->seg(), (eaddr + 528) & asize_mask);
 
   if (header3 != 0) {
-    BX_ERROR(("XRSTOR: Reserved header state is not '0"));
+    BX_ERROR(("%s: Reserved header state is not '0", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -316,25 +364,29 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
 
   if (! BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_XSAVEC) || ! compaction) {
     if (xcomp_bv != 0) {
-      BX_ERROR(("XRSTOR: Reserved header state is not '0"));
+      BX_ERROR(("%s: Reserved header state is not '0", i->getIaOpcodeNameShort()));
       exception(BX_GP_EXCEPTION, 0);
     }
   }
 
+  Bit32u xcr0 = BX_CPU_THIS_PTR xcr0.get32();
+  if (xrstors)
+    xcr0 |= BX_CPU_THIS_PTR msr.msr_xss;
+
   if (! compaction) {
-    if ((~BX_CPU_THIS_PTR xcr0.get32() & xstate_bv) != 0 || (GET32H(xstate_bv) << 1) != 0) {
-      BX_ERROR(("XRSTOR: Invalid xsave_bv state"));
+    if ((~xcr0 & xstate_bv) != 0 || (GET32H(xstate_bv) << 1) != 0) {
+      BX_ERROR(("%s: Invalid xsave_bv state", i->getIaOpcodeNameShort()));
       exception(BX_GP_EXCEPTION, 0);
     }
   }
   else {
-    if ((~BX_CPU_THIS_PTR xcr0.get32() & xcomp_bv) != 0 || (GET32H(xcomp_bv) << 1) != 0) {
-      BX_ERROR(("XRSTOR: Invalid xcomp_bv state"));
+    if ((~xcr0 & xcomp_bv) != 0 || (GET32H(xcomp_bv) << 1) != 0) {
+      BX_ERROR(("%s: Invalid xcomp_bv state", i->getIaOpcodeNameShort()));
       exception(BX_GP_EXCEPTION, 0);
     }
     
     if (xstate_bv & ~xcomp_bv) {
-      BX_ERROR(("XRSTOR: Invalid xcomp_bv state"));
+      BX_ERROR(("%s: Invalid xcomp_bv state", i->getIaOpcodeNameShort()));
       exception(BX_GP_EXCEPTION, 0);
     }
 
@@ -345,7 +397,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
     Bit64u header8 = read_virtual_qword(i->seg(), (eaddr + 568) & asize_mask);
 
     if (header4 | header5 | header6 | header7 | header8) {
-      BX_ERROR(("XRSTOR: Reserved header state is not '0"));
+      BX_ERROR(("%s: Reserved header state is not '0", i->getIaOpcodeNameShort()));
       exception(BX_GP_EXCEPTION, 0);
     }
   }
@@ -354,7 +406,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   // We will go feature-by-feature and not run over all XCR0 bits
   //
 
-  Bit32u requested_feature_bitmap = BX_CPU_THIS_PTR xcr0.get32() & EAX;
+  Bit32u requested_feature_bitmap = xcr0 & EAX;
 
   /////////////////////////////////////////////////////////////////////////////
   if ((requested_feature_bitmap & BX_XCR0_FPU_MASK) != 0)
