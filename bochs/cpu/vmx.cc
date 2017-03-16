@@ -3755,6 +3755,7 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
 #if BX_SUPPORT_VMX >= 2
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, ve_info_addr, BX_CPU_THIS_PTR vmcs.ve_info_addr);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, eptp_index, BX_CPU_THIS_PTR vmcs.eptp_index);
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, xss_exiting_bitmap, BX_CPU_THIS_PTR vmcs.xss_exiting_bitmap);
 #endif
 
   //
