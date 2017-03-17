@@ -52,12 +52,25 @@ public:
   virtual bx_soundlow_midiout_c* get_midiout();
 } bx_sound_dummy;
 
+// the dummy waveout class
+
+class bx_soundlow_waveout_dummy_c : public bx_soundlow_waveout_c {
+public:
+  bx_soundlow_waveout_dummy_c() : bx_soundlow_waveout_c() {}
+  virtual ~bx_soundlow_waveout_dummy_c() {}
+
+  virtual int sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param);
+
+  virtual int register_wave_callback(void *, get_wave_cb_t wd_cb);
+  virtual void unregister_wave_callback(int callback_id);
+};
+
 // bx_sound_dummy_c class implementation
 
 bx_soundlow_waveout_c* bx_sound_dummy_c::get_waveout()
 {
   if (waveout == NULL) {
-    waveout = new bx_soundlow_waveout_c();
+    waveout = new bx_soundlow_waveout_dummy_c();
   }
   return waveout;
 }
@@ -76,6 +89,28 @@ bx_soundlow_midiout_c* bx_sound_dummy_c::get_midiout()
     midiout = new bx_soundlow_midiout_c();
   }
   return midiout;
+}
+
+// bx_sound_waveout_dummy_c class implementation
+
+int bx_soundlow_waveout_dummy_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param)
+{
+  UNUSED(length);
+  UNUSED(data);
+  UNUSED(src_param);
+  return BX_SOUNDLOW_OK;
+}
+
+int bx_soundlow_waveout_dummy_c::register_wave_callback(void *arg, get_wave_cb_t wd_cb)
+{
+  UNUSED(arg);
+  UNUSED(wd_cb);
+  return -1;
+}
+
+void bx_soundlow_waveout_dummy_c::unregister_wave_callback(int callback_id)
+{
+  UNUSED(callback_id);
 }
 
 #endif
