@@ -5453,7 +5453,7 @@ BX_CPP_INLINE bx_address BX_CPU_C::agen_read(unsigned s, bx_address offset, unsi
     return get_laddr64(s, offset);
   }
 #endif
-  return agen_read32(s, offset, len);
+  return agen_read32(s, (Bit32u)offset, len);
 }
 
 BX_CPP_INLINE bx_address BX_CPU_C::agen_read_aligned(unsigned s, bx_address offset, unsigned len)
@@ -5463,7 +5463,7 @@ BX_CPP_INLINE bx_address BX_CPU_C::agen_read_aligned(unsigned s, bx_address offs
     return get_laddr64(s, offset);
   }
 #endif
-  return agen_read_aligned32(s, offset, len);
+  return agen_read_aligned32(s, (Bit32u)offset, len);
 }
 
 BX_CPP_INLINE bx_address BX_CPU_C::agen_write(unsigned s, bx_address offset, unsigned len)
@@ -5473,7 +5473,7 @@ BX_CPP_INLINE bx_address BX_CPU_C::agen_write(unsigned s, bx_address offset, uns
     return get_laddr64(s, offset);
   }
 #endif
-  return agen_write32(s, offset, len);
+  return agen_write32(s, (Bit32u)offset, len);
 }
 
 BX_CPP_INLINE bx_address BX_CPU_C::agen_write_aligned(unsigned s, bx_address offset, unsigned len)
@@ -5483,7 +5483,7 @@ BX_CPP_INLINE bx_address BX_CPU_C::agen_write_aligned(unsigned s, bx_address off
     return get_laddr64(s, offset);
   }
 #endif
-  return agen_write_aligned32(s, offset, len);
+  return agen_write_aligned32(s, (Bit32u)offset, len);
 }
 
 #include "access.h"

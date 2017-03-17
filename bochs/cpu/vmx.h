@@ -463,7 +463,7 @@ enum VMFunctions {
 
 #define BX_VMX_VMCS_REVISION_ID 0x2B /* better to be unique bochs VMCS revision id */
 
-struct VMCS_Mapping {
+class VMCS_Mapping {
 private:
    Bit32u revision_id;
 
