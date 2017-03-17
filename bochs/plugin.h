@@ -91,8 +91,8 @@ extern "C" {
 #define PLUG_load_user_plugin(name) {bx_load_plugin(name,PLUGTYPE_USER);}
 #define PLUG_unload_plugin(name) {bx_unload_plugin(#name,1);}
 #define PLUG_unload_opt_plugin(name) bx_unload_plugin(name,1)
-#define PLUG_unload_snd_plugin(name) bx_unload_plugin(name,1)
-#define PLUG_unload_net_plugin(name) bx_unload_plugin(name,1)
+#define PLUG_unload_snd_plugin(name) bx_unload_plugin(name,0)
+#define PLUG_unload_net_plugin(name) bx_unload_plugin(name,0)
 #define PLUG_unload_user_plugin(name) {bx_unload_plugin(name,1);}
 
 #define DEV_register_ioread_handler(b,c,d,e,f)  pluginRegisterIOReadHandler(b,c,d,e,f)
