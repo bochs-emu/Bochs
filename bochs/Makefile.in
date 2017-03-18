@@ -530,7 +530,14 @@ zip:
 clean:
 	@RMCOMMAND@ *.o
 	@RMCOMMAND@ *.a
-	@RMCOMMAND@ bochs@EXE@ bximage@EXE@ @OPTIONAL_TARGET@
+	@RMCOMMAND@ bochs
+	@RMCOMMAND@ bochs.exe
+	@RMCOMMAND@ bximage
+	@RMCOMMAND@ bximage.exe
+	@RMCOMMAND@ bxhub
+	@RMCOMMAND@ bxhub.exe
+	@RMCOMMAND@ niclist
+	@RMCOMMAND@ niclist.exe
 	@RMCOMMAND@ bochs.out
 	@RMCOMMAND@ bochsout.txt
 	@RMCOMMAND@ *.exp *.lib
