@@ -37,17 +37,18 @@ typedef struct {
 // These are the lazy flags bits in oszapc.auxbits which hold lazy state
 // of zero flag, adjust flag, carry flag, and overflow flag.
 
-#define LF_BIT_SD      (0)          /* lazy Sign Flag Delta            */
-#define LF_BIT_AF      (3)          /* lazy Adjust flag                */
-#define LF_BIT_PDB     (8)          /* lazy Parity Delta Byte (8 bits) */
-#define LF_BIT_CF      (31)         /* lazy Carry Flag                 */
-#define LF_BIT_PO      (30)         /* lazy Partial Overflow = CF ^ OF */
+enum {
+  LF_BIT_SD  = 0,         /* lazy Sign Flag Delta            */
+  LF_BIT_AF  = 3,         /* lazy Adjust flag                */
+  LF_BIT_PDB = 8,         /* lazy Parity Delta Byte (8 bits) */
+  LF_BIT_CF  = 31,        /* lazy Carry Flag                 */
+  LF_BIT_PO  = 30         /* lazy Partial Overflow = CF ^ OF */
 
-#define LF_MASK_SD     (0x01 << LF_BIT_SD)
-#define LF_MASK_AF     (0x01 << LF_BIT_AF)
-#define LF_MASK_PDB    (0xFF << LF_BIT_PDB)
-#define LF_MASK_CF     (0x01 << LF_BIT_CF)
-#define LF_MASK_PO     (0x01 << LF_BIT_PO)
+const Bit32u LF_MASK_SD  = (0x01 << LF_BIT_SD);
+const Bit32u LF_MASK_AF  = (0x01 << LF_BIT_AF);
+const Bit32u LF_MASK_PDB = (0xFF << LF_BIT_PDB);
+const Bit32u LF_MASK_CF  = (0x01 << LF_BIT_CF);
+const Bit32u LF_MASK_PO  = (0x01 << LF_BIT_PO);
 
 #define ADD_COUT_VEC(op1, op2, result) \
   (((op1) & (op2)) | (((op1) | (op2)) & (~(result))))

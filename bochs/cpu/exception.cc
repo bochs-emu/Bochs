@@ -769,11 +769,12 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bx_bool push_error, Bit16u
 /* Exception classes.  These are used as indexes into the 'is_exception_OK'
  * array below, and are stored in the 'exception' array also
  */
-#define BX_ET_BENIGN       0
-#define BX_ET_CONTRIBUTORY 1
-#define BX_ET_PAGE_FAULT   2
-
-#define BX_ET_DOUBLE_FAULT 10
+enum {
+  BX_ET_BENIGN = 0,
+  BX_ET_CONTRIBUTORY = 1,
+  BX_ET_PAGE_FAULT = 2,
+  BX_ET_DOUBLE_FAULT = 10
+};
 
 static const bx_bool is_exception_OK[3][3] = {
     { 1, 1, 1 }, /* 1st exception is BENIGN */
@@ -781,9 +782,11 @@ static const bx_bool is_exception_OK[3][3] = {
     { 1, 0, 0 }  /* 1st exception is PAGE_FAULT */
 };
 
-#define BX_EXCEPTION_CLASS_TRAP  0
-#define BX_EXCEPTION_CLASS_FAULT 1
-#define BX_EXCEPTION_CLASS_ABORT 2
+enum {
+  BX_EXCEPTION_CLASS_TRAP = 0,
+  BX_EXCEPTION_CLASS_FAULT = 1,
+  BX_EXCEPTION_CLASS_ABORT = 2
+};
 
 struct BxExceptionInfo exceptions_info[BX_CPU_HANDLED_EXCEPTIONS] = {
   /* DE */ { BX_ET_CONTRIBUTORY, BX_EXCEPTION_CLASS_FAULT, 0 },
