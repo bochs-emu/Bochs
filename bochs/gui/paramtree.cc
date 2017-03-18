@@ -589,7 +589,7 @@ Bit64s bx_shadow_bool_c::get64()
 void bx_shadow_bool_c::set(Bit64s newval)
 {
   // only change the bitnum bit
-  Bit64s mask = 1 << bitnum;
+  Bit64s mask = BX_CONST64(1) << bitnum;
   *(val.pbool) &= ~mask;
   *(val.pbool) |= ((newval & 1) << bitnum);
   if (handler) {
