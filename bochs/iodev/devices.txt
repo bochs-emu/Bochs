@@ -90,7 +90,8 @@ Attached devices
   |                      +---- TAP Interface                    eth_tap.cc
   |                      +---- TUN/TAP Interface                eth_tuntap.cc
   |                      +---- VDE Interface                    eth_vde.cc
-  |                      +---- virtual Ethernet locator         eth_vnet.cc
+  |                      +---- Virtual network module           eth_vnet.cc
+  |                      +---- Socket network module            eth_socket.cc
   |                      +---- builtin Slirp support            eth_slirp.cc, slirp/*
   |
   +---- Sound support                                           sound/
@@ -103,11 +104,12 @@ Attached devices
   |        +---- Sound modules                                  soundlow.cc
   |                      |
   |                      +---- Control Module                   soundmod.cc
+  |                      +---- Dummy Module                     sounddummy.cc
   |                      +---- File Output Module               soundfile.cc
   |                      +---- Library specific Module          soundsdl.cc
   |                      +---- Host specific Modules
   |                                   |
-  |                                   +---- FreeBSD / Linux     soundlnx.cc
+  |                                   +---- FreeBSD / Linux     soundoss.cc
   |                                   +---- Linux               soundalsa.cc
   |                                   +---- Mac OSX             soundosx.cc
   |                                   +---- Windows             soundwin.cc
