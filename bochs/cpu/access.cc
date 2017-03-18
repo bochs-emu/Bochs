@@ -52,7 +52,7 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned le
   length--;
 
   if (align) {
-    Bit32u laddr = seg->cache.u.segment.base + offset;
+    Bit32u laddr = (Bit32u)(seg->cache.u.segment.base + offset);
     if (laddr & length) {
       BX_DEBUG(("write_virtual_checks(): #GP misaligned access"));
       exception(BX_GP_EXCEPTION, 0);
@@ -131,7 +131,7 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len
   length--;
 
   if (align) {
-    Bit32u laddr = seg->cache.u.segment.base + offset;
+    Bit32u laddr = (Bit32u)(seg->cache.u.segment.base + offset);
     if (laddr & length) {
       BX_DEBUG(("read_virtual_checks(): #GP misaligned access"));
       exception(BX_GP_EXCEPTION, 0);
@@ -398,7 +398,7 @@ BX_CPU_C::system_read_qword(bx_address laddr)
   void BX_CPP_AttrRegparmN(2)
 BX_CPU_C::system_write_byte(bx_address laddr, Bit8u data)
 {
-  Bit32u lpf = LPFOf(laddr);
+  bx_address lpf = LPFOf(laddr);
   bx_TLB_entry *tlbEntry = BX_TLB_ENTRY_OF(laddr, 0);
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us write access
@@ -422,7 +422,7 @@ BX_CPU_C::system_write_byte(bx_address laddr, Bit8u data)
   void BX_CPP_AttrRegparmN(2)
 BX_CPU_C::system_write_word(bx_address laddr, Bit16u data)
 {
-  Bit32u lpf = LPFOf(laddr);
+  bx_address lpf = LPFOf(laddr);
   bx_TLB_entry *tlbEntry = BX_TLB_ENTRY_OF(laddr, 1);
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us write access
@@ -446,7 +446,7 @@ BX_CPU_C::system_write_word(bx_address laddr, Bit16u data)
   void BX_CPP_AttrRegparmN(2)
 BX_CPU_C::system_write_dword(bx_address laddr, Bit32u data)
 {
-  Bit32u lpf = LPFOf(laddr);
+  bx_address lpf = LPFOf(laddr);
   bx_TLB_entry *tlbEntry = BX_TLB_ENTRY_OF(laddr, 3);
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us write access
