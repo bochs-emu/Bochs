@@ -2071,7 +2071,7 @@ int decoder_xop32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
 int decoder32_fp_escape(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, const BxOpcodeInfo_t *opcode_table)
 {
 #if BX_SUPPORT_FPU == 0
-  return FPU_ESC;
+  return BX_IA_FPUESC;
 #else
   int ia_opcode = BX_IA_ERROR;
 

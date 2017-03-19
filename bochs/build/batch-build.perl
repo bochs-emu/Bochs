@@ -41,7 +41,7 @@ $TEST_SMP = 1;
 $TEST_IODEV = 1;
 $TEST_PCI = 1;
 $TEST_X86_64 = 1;
-$TEST_SSE = 1;
+$TEST_AVX = 1;
 $TEST_PLUGINS = 1;
 $TEST_DEVICES = 1;
 
@@ -78,20 +78,14 @@ add_configuration ('plug-wx',
 }
 
 if ($TEST_DEVICES) {
-add_configuration ('alldev',
-  '--enable-ne2000 --enable-pci --enable-port-e9-hack --enable-cdrom --enable-iodebug');
-add_configuration ('ne2000',
-  '--enable-ne2000');
+add_configuration ('isa',
+  '--disable-pci --enable-ne2000 --enable-sb16 --enable-clgd54xx --enable-busmouse --enable-port-e9-hack');
 add_configuration ('pci',
-  '--enable-pci');
-add_configuration ('port-e9-hack',
-  '--enable-port-e9-hack');
-add_configuration ('cdrom',
-  '--enable-cdrom');
-add_configuration ('gdbstub',
-  '--enable-gdbstub');
-add_configuration ('iodebug',
-  '--enable-iodebug');
+  '--enable-pci --enable-ne2000 --enable-es1370 --enable-clgd54xx --enable-usb');
+add_configuration ('usb',
+  '--enable-pci --enable-ne2000 --enable-clgd54xx --enable-usb --enable-usb-ohci --enable-usb-ehci --enable-usb-xhci');
+add_configuration ('net',
+  '--enable-pci --enable-ne2000 --enable-e1000 --enable-pnic --enable-usb');
 }
 
 if ($TEST_GUIS) {
@@ -100,10 +94,10 @@ if ($TEST_GUIS) {
     '--with-wx');
   add_configuration ('wx-d',
     '--with-wx --enable-debugger');
-  add_configuration ('sdl',
-    '--with-sdl');
-  add_configuration ('sdl-d',
-    '--with-sdl --enable-debugger');
+  add_configuration ('sdl2',
+    '--with-sdl2');
+  add_configuration ('sdl2-d',
+    '--with-sdl2 --enable-debugger');
   add_configuration ('term',
     '--with-term');
   add_configuration ('term-d',
@@ -121,25 +115,19 @@ if ($TEST_GUIS) {
 if ($TEST_CPU) {
 # test with various cpu options
 add_configuration ('i386',
-  '--enable-cpu-level=3 --disable-mmx');
+  '--enable-cpu-level=3 --disable-fpu');
+add_configuration ('i386-fpu',
+  '--enable-cpu-level=3');
 add_configuration ('i486',
-  '--enable-cpu-level=4 --disable-mmx');
+  '--enable-cpu-level=4');
 add_configuration ('i586',
   '--enable-cpu-level=5');
 add_configuration ('i686',
   '--enable-cpu-level=6');
-add_configuration ('large-pages',
-  '--enable-large-pages');
-add_configuration ('pae',
-  '--enable-pae');
 add_configuration ('repeat',
   '--enable-repeat-speedups');
-add_configuration ('globalpg',
-  '--enable-global-pages');
-add_configuration ('icache',
-  '--enable-icache');
 add_configuration ('cpuall',
-  '--enable-large-pages --enable-pae --enable-global-pages --enable-all-optimizations');
+  '--enable-all-optimizations --enable-vmx=1');
 }
 
 if ($TEST_SMP) {
@@ -166,20 +154,12 @@ add_configuration ('64bit-wx-d',
   '--enable-x86-64 --with-wx --enable-debugger');
 }
 
-if ($TEST_SSE) {
-# test SSE configurations
-add_configuration ('sse1',
-  '--enable-sse=1');
-add_configuration ('sse2',
-  '--enable-sse=2');
-add_configuration ('sse3',
-  '--enable-sse=3');
-add_configuration ('sse4',
-  '--enable-sse=4');
-add_configuration ('sse2-dbg',
-  '--enable-sse=2 --enable-debugger');
-add_configuration ('sse2-x86-64-wx-d',
-  '--enable-sse=2 --enable-x86-64 --with-wx --enable-debugger');
+if ($TEST_AVX) {
+# test AVX configurations
+add_configuration ('avx',
+  '--enable-x86-64 --enable-avx');
+add_configuration ('evex',
+  '--enable-x86-64 --enable-avx --enable-evex');
 }
 
 my $nohup = 0;
