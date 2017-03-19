@@ -325,9 +325,9 @@ void print_usage()
   fprintf(stderr,
     "Usage: bxhub [options]\n\n"
     "Supported options:\n"
-    "  -ports=...    number of virtual ethernet ports (2 - 4)\n"
+    "  -ports=...    number of virtual ethernet ports (2 - 6)\n"
     "  -base=...     base UDP port (bxhub uses 2 ports per Bochs session)\n"
-    "  -mac=...      host MAC address (default is b0:c4:20:00:00:03)\n"
+    "  -mac=...      host MAC address (default is b0:c4:20:00:00:0f)\n"
     "  -tftp=...     enable TFTP support using specified directory\n"
     "  --help        display this help and exit\n\n");
 }

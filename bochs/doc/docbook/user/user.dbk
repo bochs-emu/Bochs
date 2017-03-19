@@ -1379,24 +1379,30 @@ DLX Linux screenshot.
 </thead>
 <tbody>
 
+<row><entry>bios.bin-1.7.5 </entry> <entry> SeaBIOS ROM image </entry> </row>
 <row><entry>BIOS-bochs-latest </entry> <entry> default ROM BIOS image for Bochs </entry> </row>
 <row><entry>BIOS-bochs-legacy </entry> <entry> ROM BIOS image without 32-bit init code </entry> </row>
-<row><entry>bios.bin-1.7.5 </entry> <entry> SeaBIOS ROM image </entry> </row>
+<row><entry>bochsdbg.exe </entry> <entry> the main Bochs executable with debugger enabled </entry> </row>
 <row><entry>bochs.exe </entry> <entry> the main Bochs executable </entry> </row>
 <row><entry>bochs.ico </entry> <entry> the Bochs icon (used for links in start menu and on the desktop) </entry> </row>
-<row><entry>bochsdbg.exe </entry> <entry> the main Bochs executable with debugger enabled </entry> </row>
 <row><entry>bochsrc-sample.txt </entry> <entry> sample Bochs configuration file </entry> </row>
+<row><entry>bxhub.exe </entry> <entry> utility required for the 'socket' networking module </entry> </row>
 <row><entry>bximage.exe </entry> <entry> tool for manipulating disk images </entry> </row>
 <row><entry>CHANGES.txt </entry> <entry> what has changed between versions </entry> </row>
 <row><entry>COPYING.txt </entry> <entry> copy of the LGPL license </entry> </row>
+<row><entry>lgban.ico </entry> <entry> a set of Bochs icons in different sizes </entry> </row>
 <row><entry>LICENSE.txt </entry> <entry> Bochs license information </entry> </row>
-<row><entry>README.txt </entry> <entry> the read-me file from the source distribution. </entry> </row>
-<row><entry>TODO.txt </entry> <entry> the TODO file from the source distribution. </entry> </row>
+<row><entry>logo.ico </entry> <entry> another set of Bochs icons </entry> </row>
 <row><entry>niclist.exe </entry> <entry> tool to find out the network interface name </entry> </row>
-<row><entry>penguin.ico </entry> <entry> the Linux logo (used for the DLX link in start menu) </entry> </row>
+<row><entry>penguin.ico </entry> <entry> icons for the DLX Linux link </entry> </row>
+<row><entry>README.txt </entry> <entry> the read-me file from the source distribution. </entry> </row>
 <row><entry>sb16ctrl.exe </entry> <entry> tool to control sb16 in Bochs </entry> </row>
 <row><entry>sb16ctrl.txt </entry> <entry> examples of sb16ctrl commands </entry> </row>
 <row><entry>SeaBIOS-README.txt </entry> <entry> README for SeaBIOS ROM image </entry> </row>
+<row><entry>slirp.conf </entry> <entry> sample config file for the advanced 'slirp' network configuration </entry> </row>
+<row><entry>TODO.txt </entry> <entry> the TODO file from the source distribution. </entry> </row>
+<row><entry>unbochs.ico </entry> <entry> icon for the uninstaller link </entry> </row>
+<row><entry>uninstall.exe </entry> <entry> uninstall program for Bochs (created by the installation wizard) </entry> </row>
 <row><entry>VGABIOS-elpin-2.40 </entry> <entry> VGA BIOS image for Bochs </entry> </row>
 <row><entry>VGABIOS-elpin-LICENSE.txt </entry> <entry> license for VGA BIOS </entry> </row>
 <row><entry>VGABIOS-lgpl-latest </entry> <entry> LGPL'd VGA BIOS image for Bochs </entry> </row>
@@ -1404,12 +1410,11 @@ DLX Linux screenshot.
 <row><entry>VGABIOS-lgpl-latest-cirrus </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Cirrus extension enabled </entry> </row>
 <row><entry>VGABIOS-lgpl-latest-cirrus-debug </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Cirrus extension enabled and debug output to the logfile </entry> </row>
 <row><entry>VGABIOS-lgpl-README.txt </entry> <entry> readme for the LGPL'd VGA BIOS </entry> </row>
-<row><entry>uninstall.exe </entry> <entry> uninstall program for Bochs (created by the installation wizard) </entry> </row>
 <row><entry>dlxlinux\ </entry> <entry> directory containing DLX linux sample disk image and configuration files</entry> </row>
-<row><entry>dlxlinux\readme.txt </entry> <entry> description of DLX linux</entry> </row>
-<row><entry>dlxlinux\bochsrc.txt </entry> <entry> Bochs configuration file for DLX</entry> </row>
+<row><entry>dlxlinux\bochsrc.bxrc </entry> <entry> Bochs configuration file for DLX</entry> </row>
 <row><entry>dlxlinux/hd10meg.img </entry> <entry> disk image file (10 meg) </entry> </row>
-<row><entry>dlxlinux\start.bat </entry> <entry> Run this BAT file to try out DLX Linux inside Bochs! </entry> </row>
+<row><entry>dlxlinux\readme.txt </entry> <entry> description of DLX linux</entry> </row>
+<row><entry>dlxlinux\run.bat </entry> <entry> Run this BAT file to try out DLX Linux inside Bochs! </entry> </row>
 <row><entry>dlxlinux\testform.txt </entry> <entry> Form for reporting success or failure </entry> </row>
 <row>
   <entry>doc\index.html</entry>
@@ -1563,21 +1568,24 @@ description of each one.
 </thead>
 <tbody>
 
-<row><entry>/usr/share/doc/bochs/CHANGES</entry> <entry> what has changed between versions </entry> </row>
-<row><entry>/usr/share/doc/bochs/COPYING</entry> <entry> copy of the LGPL license </entry> </row>
-<row><entry>/usr/share/doc/bochs/LICENSE</entry> <entry> Bochs license information </entry> </row>
-<row><entry>/usr/share/doc/bochs/README</entry> <entry> the read-me file from the source distribution. </entry> </row>
-<row><entry>/usr/share/doc/bochs/TODO</entry> <entry> the TODO file from the source distribution. </entry> </row>
 <row><entry>/usr/bin/bochs </entry> <entry> the main Bochs executable </entry> </row>
+<row><entry>/usr/bin/bochs-dlx </entry> <entry> run this script to try out DLX Linux inside Bochs!</entry> </row>
+<row><entry>/usr/bin/bxhub </entry> <entry> utility required for the 'socket' networking module </entry> </row>
 <row><entry>/usr/bin/bximage </entry> <entry> tool for manipulating disk images </entry> </row>
 <row><entry>/usr/lib/bochs/plugins/* </entry> <entry> device and gui plugins for Bochs (plugin version only) </entry> </row>
 <row><entry>/usr/share/doc/bochs/bochsrc-sample.txt</entry> <entry> sample Bochs configuration file </entry> </row>
 <row><entry>/usr/share/man/man1/* </entry> <entry> man pages for bochs, bochs-dlx and bximage</entry> </row>
 <row><entry>/usr/share/man/man5/* </entry> <entry> man page for bochsrc </entry> </row>
+<row><entry>/usr/share/doc/bochs/CHANGES</entry> <entry> what has changed between versions </entry> </row>
+<row><entry>/usr/share/doc/bochs/COPYING</entry> <entry> copy of the LGPL license </entry> </row>
+<row><entry>/usr/share/doc/bochs/LICENSE</entry> <entry> Bochs license information </entry> </row>
+<row><entry>/usr/share/doc/bochs/README</entry> <entry> the read-me file from the source distribution. </entry> </row>
+<row><entry>/usr/share/doc/bochs/TODO</entry> <entry> the TODO file from the source distribution. </entry> </row>
 <row><entry>/usr/share/doc/bochs/index.html</entry> <entry> a local copy of all Bochs documentation ( <ulink url="http://bochs.sourceforge.net/doc/docbook/index.html">Online copy</ulink> )</entry> </row>
+<row><entry>/usr/share/doc/bochs/slirp.conf </entry> <entry> sample config file for the advanced 'slirp' network configuration </entry> </row>
+<row><entry>/usr/share/bochs/bios.bin-1.7.5 </entry> <entry> SeaBIOS ROM image </entry> </row>
 <row><entry>/usr/share/bochs/BIOS-bochs-latest </entry> <entry> default ROM BIOS image for Bochs </entry> </row>
 <row><entry>/usr/share/bochs/BIOS-bochs-legacy </entry> <entry> ROM BIOS image without 32-bit init code </entry> </row>
-<row><entry>/usr/share/bochs/bios.bin-1.7.5 </entry> <entry> SeaBIOS ROM image </entry> </row>
 <row><entry>/usr/share/bochs/SeaBIOS-README </entry> <entry> README for SeaBIOS ROM image </entry> </row>
 <row><entry>/usr/share/bochs/VGABIOS-elpin-2.40 </entry> <entry> VGA BIOS image for Bochs </entry> </row>
 <row><entry>/usr/share/bochs/VGABIOS-elpin-LICENSE </entry> <entry> license for VGA BIOS </entry> </row>
@@ -1586,7 +1594,6 @@ description of each one.
 <row><entry>/usr/share/bochs/VGABIOS-lgpl-latest-cirrus </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Cirrus extension enabled </entry> </row>
 <row><entry>/usr/share/bochs/VGABIOS-lgpl-latest-cirrus-debug </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Cirrus extension enabled and debug output to the logfile </entry> </row>
 <row><entry>/usr/share/bochs/VGABIOS-lgpl-README </entry> <entry> readme for the LGPL'd VGA BIOS </entry> </row>
-<row><entry>/usr/bin/bochs-dlx </entry> <entry> run this script to try out DLX Linux inside Bochs!</entry> </row>
 <row><entry>/usr/share/bochs/dlxlinux/ </entry> <entry> directory containing DLX linux sample disk image and configuration files</entry> </row>
 <row><entry>/usr/share/bochs/dlxlinux/readme.txt</entry> <entry> description of DLX linux</entry> </row>
 <row><entry>/usr/share/bochs/keymaps/*.map </entry> <entry>keymap tables for X11, SDL and SDL2 </entry> </row>
@@ -4719,11 +4726,12 @@ version where this module was added.
     <entry>Connect up to 6 Bochs instances on the same or other machine
     with external program 'bxhub' (simulating an ethernet hub). It provides
     the same services as the 'vnet' module and assigns IP addresses like
-    'slirp' (10.0.2.x).
+    'slirp' (10.0.2.x) (see <link linkend="using-socket">Using the 'socket'
+    networking module</link>).
     </entry>
     <entry>Yes, for base UDP port and (optional) the host to connect</entry>
     <entry>No</entry>
-    <entry>2.6.8 SVN</entry>
+    <entry>2.6.9</entry>
   </row>
   <row>
     <entry>win32</entry>
@@ -7572,6 +7580,66 @@ Up to 5 port redirection rules are supported per slirp instance.</para>
 </section>
 </section>
 
+<section id="using-socket"><title>Using the 'socket' networking module</title>
+<para>
+The original patch for the 'socket' networking module has been written by
+Mariusz Matuszek in 2003. It supported interconnecting two Bochs sessions
+running on the same machine via UDP using an external program called 'bxhub'.
+</para>
+<para>
+The 'socket' networking module is now integrated in the Bochs code with these
+extensions:
+<itemizedlist>
+<listitem><para>Integrated 'vnet' server features (ARP, ICMP-echo, DHCP and TFTP)</para></listitem>
+<listitem><para>Command line options for 'bxhub' added for base UDP port and 'vnet' server features</para></listitem>
+<listitem><para>Support for connects from up to 6 Bochs sessions</para></listitem>
+<listitem><para>Support for connecting 'bxhub' on other machine</para></listitem>
+</itemizedlist>
+</para>
+<para>
+The 'socket' networking module uses two UDP ports per Bochs session. By default
+the first session receives packets from port 40000 and sends packets to port
+40001. The second session uses then the ports 40002 and 40003. For further
+sessions the port numbers are incremented accordingly. The port number for
+receiving packets is specified with the 'ethdev' parameter of the bochsrc
+line for the network adapter. The format is <emphasis>host:port</emphasis>
+for connecting the 'bxhub' utility. If it runs on the same machine
+('localhost') the host name can be omitted.
+</para>
+<para>
+These examples show how to use the 'socket' module with the NE2000 adapter. The line
+is very similar for the E1000 or PCI Pseudo NIC.
+<screen>
+ne2k: mac=52:54:00:12:34:56, ethmod=socket, ethdev=mymachine:40000, script=""
+ne2k: mac=52:54:00:12:34:56, ethmod=socket, ethdev=40000, script=""
+</screen>
+</para>
+<section><title>Using the 'bxhub' utility</title>
+<para>
+If <command>bxhub</command> is started without command line options, these
+default values are used:
+<itemizedlist>
+<listitem><para>UDP base port 40000</para></listitem>
+<listitem><para>2 client connections</para></listitem>
+<listitem><para>Server MAC address b0:c4:20:00:00:0f</para></listitem>
+<listitem><para>TFTP support disabled</para></listitem>
+</itemizedlist>
+</para>
+<para>
+To change the default settings, these parameters are supported:
+<screen>
+Usage: bxhub [options]
+
+Supported options:
+  -ports=...    number of virtual ethernet ports (2 - 6)
+  -base=...     base UDP port (bxhub uses 2 ports per Bochs session)
+  -mac=...      host MAC address (default is b0:c4:20:00:00:0f)
+  -tftp=...     enable TFTP support using specified directory
+  --help        display this help and exit
+</screen>
+</para>
+</section>
+</section>
 <section id="internal-debugger">
 <title>Using Bochs internal debugger</title>
 
