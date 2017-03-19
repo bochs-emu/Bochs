@@ -954,7 +954,7 @@ int usb_cbi_device_c::handle_data(USBPacket *p)
                     count = max_sectors;
                   }
                   s.sector_count -= count;
-                  ret = s.hdimage->read((bx_ptr_t) s.usb_buf, count * 512);
+                  ret = (int)s.hdimage->read((bx_ptr_t) s.usb_buf, count * 512);
                   if (ret > 0) {
                     s.usb_len += ret;
                     s.usb_buf += ret;
@@ -1111,7 +1111,7 @@ int usb_cbi_device_c::floppy_read_sector()
   if (((CBI_MAX_SECTORS * 512) - s.usb_len) >= 512) {
     ret = s.hdimage->read((bx_ptr_t) s.usb_buf, 512);
     if (ret > 0) {
-      s.usb_len += ret;
+      s.usb_len += (Bit32u)ret;
       s.usb_buf += ret;
     } else {
       BX_ERROR(("read error"));

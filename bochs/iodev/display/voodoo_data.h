@@ -1945,7 +1945,7 @@ BX_CPP_INLINE Bit32s fast_reciplog(Bit64s value, Bit32s *log2)
     recip <<= exp;
 
   /* on the way out, apply the original sign to the reciprocal */
-  return neg ? -recip : recip;
+  return neg ? -((Bit32s)recip) : recip;
 }
 
 

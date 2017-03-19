@@ -6,7 +6,9 @@ ICON_BOCHS ICON build/win32/nsis/bochs.ico
 ICON_BOCHS2 ICON build/win32/nsis/logo.ico
 
 // Manifest for both 32-bit and 64-bit Windows
+#ifndef VSIDE
 1 24 build/win32/bochs.manifest
+#endif
 
 ASK_DLG DIALOG 30, 30, 200, 100
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU

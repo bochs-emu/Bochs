@@ -2144,7 +2144,7 @@ void bx_usb_ehci_c::ehci_frame_timer(void)
 
   t_now = bx_pc_system.time_usec();
   usec_elapsed = t_now - BX_EHCI_THIS hub.last_run_usec;
-  frames = usec_elapsed / FRAME_TIMER_USEC;
+  frames = (int)(usec_elapsed / FRAME_TIMER_USEC);
 
   if (BX_EHCI_THIS periodic_enabled() || (BX_EHCI_THIS hub.pstate != EST_INACTIVE)) {
     need_timer++;

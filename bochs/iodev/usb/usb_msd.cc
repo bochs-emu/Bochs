@@ -430,7 +430,7 @@ bx_bool usb_msd_device_c::init()
     s.hdimage = DEV_hdimage_init_image(s.image_mode, 0, s.journal);
     if (s.image_mode == BX_HDIMAGE_MODE_VVFAT) {
       Bit64u hdsize = ((Bit64u)s.size) << 20;
-      s.hdimage->cylinders = (Bit64u)(hdsize/16.0/63.0/512.0);
+      s.hdimage->cylinders = (unsigned)(hdsize/16.0/63.0/512.0);
       s.hdimage->heads = 16;
       s.hdimage->spt = 63;
     }
