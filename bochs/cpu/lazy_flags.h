@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2011  The Bochs Project
+//  Copyright (C) 2001-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -43,6 +43,7 @@ enum {
   LF_BIT_PDB = 8,         /* lazy Parity Delta Byte (8 bits) */
   LF_BIT_CF  = 31,        /* lazy Carry Flag                 */
   LF_BIT_PO  = 30         /* lazy Partial Overflow = CF ^ OF */
+};
 
 const Bit32u LF_MASK_SD  = (0x01 << LF_BIT_SD);
 const Bit32u LF_MASK_AF  = (0x01 << LF_BIT_AF);
