@@ -1159,6 +1159,7 @@ speaker: enabled=1, mode=sound
 #=======================================================================
 # PCIDEV:
 # PCI host device mapping
+# WARNING: This Bochs feature is not maintained yet and may fail.
 #=======================================================================
 #pcidev: vendor=0x1234, device=0x5678
 
@@ -1166,6 +1167,7 @@ speaker: enabled=1, mode=sound
 # GDBSTUB:
 # Enable GDB stub. See user documentation for details.
 # Default value is enabled=0.
+# WARNING: This Bochs feature is not maintained yet and may fail.
 #=======================================================================
 #gdbstub: enabled=0, port=1234, text_base=0, data_base=0, bss_base=0
 

@@ -69,7 +69,8 @@ Some of the basic work is done now: The config parameter handling has
 been rewritten to a parameter tree and user-defined bochsrc options are now
 supported. For most of the optional plugins the config parameter creation and
 bochsrc parsing has been moved to the plugin code. Unknown bochsrc options are
-now treated as plugin names and Bochs tries to load them.
+now treated as plugin names and Bochs tries to load them. The network and
+sound modules are now separate plugins.
 
 4. PCI host<->guest proxy
 Being able to use a real pci device from inside Bochs would be a
@@ -108,7 +109,9 @@ instructions on getting this working.
 Status:
 The pnic device is present in SVN, but the status is unknown. PCI boot ROM support
 has been added for Bochs 2.6. Built-in 'slirp' support for user mode networking
-has been added in Bochs 2.6.5.
+has been added in Bochs 2.6.5. The 'socket' networking module has been added
+in Bochs 2.6.9. It allows interconnecting Bochs instances with multi-port
+ethernet hub.
 
 8. Bios
 8.1 add "jump table placeholder" and log missing function calls in the bios.
@@ -140,8 +143,8 @@ Ben Lunt has been working on USB support. The USB mouse and keypad code
 is present in Bochs and almost stable. USB flash disk support has been
 started and the runtime device change support should be completed.
 Status:
-OHCI and UHCI host controller and 7 devices are known to work in Bochs.
-USB xHCI support is present, but needs more testing.
+OHCI and UHCI host controller and 8 devices are known to work in Bochs.
+USB EHCI and xHCI support is now also present.
 
 12. Config file
 Benjamen R. Meyer wrote :

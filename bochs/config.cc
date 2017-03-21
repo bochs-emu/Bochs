@@ -2259,20 +2259,16 @@ int bx_parse_nic_params(const char *context, const char *param, bx_list_c *base)
 
 bx_bool is_deprecated_option(const char *oldparam, const char **newparam)
 {
-  if (!strcmp(oldparam, "i440fxsupport")) {
-    // replaced v2.5 / removed v2.6.1
-    *newparam = "pci";
-    return 1;
-  } else if (!strcmp(oldparam, "vga_update_interval")) {
-    // replaced v2.5 / removed v2.6.1
-    *newparam = "vga";
-    return 1;
-  } else if ((!strcmp(oldparam, "keyboard_serial_delay")) ||
+  if ((!strcmp(oldparam, "keyboard_serial_delay")) ||
              (!strcmp(oldparam, "keyboard_paste_delay")) ||
              (!strcmp(oldparam, "keyboard_type")) ||
              (!strcmp(oldparam, "keyboard_mapping")) ||
              (!strcmp(oldparam, "keyboardmapping"))) {
-    // replaced v2.6 / removed v2.6.6 SVN
+    // replaced v2.6 / removed v2.6.7
+    *newparam = "keyboard";
+    return 1;
+  } else if (!strcmp(oldparam, "user_shortcut")) {
+    // replaced v2.6.1 / removed v2.6.9
     *newparam = "keyboard";
     return 1;
 #if BX_SUPPORT_PCIPNIC
@@ -3020,17 +3016,6 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       }
       SIM->get_param_string(BXPN_LOAD32BITOS_INITRD)->set(&params[4][7]);
     }
-  } else if (!strcmp(params[0], "user_shortcut")) {
-    // handled by 'keyboard' option since Bochs 2.6.1
-    if (num_params != 2) {
-      PARSE_ERR(("%s: user_shortcut directive: wrong # args.", context));
-    }
-    if(!strncmp(params[1], "keys=", 4)) {
-      SIM->get_param_string(BXPN_USER_SHORTCUT)->set(&params[1][5]);
-    } else {
-      PARSE_ERR(("%s: user_shortcut directive malformed.", context));
-    }
-    PARSE_WARN(("%s: 'user_shortcut' will be replaced by new 'keyboard' option.", context));
   } else if (!strcmp(params[0], "user_plugin")) {
 #if BX_PLUGINS
     char tmpname[80];

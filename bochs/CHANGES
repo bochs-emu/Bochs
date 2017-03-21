@@ -18,6 +18,7 @@ Detailed change log :
 
 - Configure and compile
   - Added Android host platform support.
+  - Configure script now prints warnings for features not maintained yet.
 
 - GUI and display libraries
   - Show the runtime configuration in the Bochs VGA window (gui console) instead
