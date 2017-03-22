@@ -417,34 +417,34 @@ void bx_svga_cirrus_c::register_state(void)
 
 void bx_svga_cirrus_c::after_restore_state(void)
 {
+#if BX_SUPPORT_PCI
+  if (BX_CIRRUS_THIS pci_enabled) {
+    if (DEV_pci_set_base_mem(BX_CIRRUS_THIS_PTR, cirrus_mem_read_handler,
+                             cirrus_mem_write_handler,
+                             &BX_CIRRUS_THIS pci_base_address[0],
+                             &BX_CIRRUS_THIS pci_conf[0x10],
+                             0x2000000)) {
+      BX_INFO(("new pci_memaddr: 0x%04x", BX_CIRRUS_THIS pci_base_address[0]));
+    }
+    if (DEV_pci_set_base_mem(BX_CIRRUS_THIS_PTR, cirrus_mem_read_handler,
+                             cirrus_mem_write_handler,
+                             &BX_CIRRUS_THIS pci_base_address[1],
+                             &BX_CIRRUS_THIS pci_conf[0x14],
+                             CIRRUS_PNPMMIO_SIZE)) {
+      BX_INFO(("new pci_mmioaddr = 0x%08x", BX_CIRRUS_THIS pci_base_address[1]));
+    }
+    if (DEV_pci_set_base_mem(BX_CIRRUS_THIS_PTR, cirrus_mem_read_handler,
+                             cirrus_mem_write_handler,
+                             &BX_CIRRUS_THIS pci_rom_address,
+                             &BX_CIRRUS_THIS pci_conf[0x30],
+                             BX_CIRRUS_THIS pci_rom_size)) {
+      BX_INFO(("new ROM address: 0x%08x", BX_CIRRUS_THIS pci_rom_address));
+    }
+  }
+#endif
   if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x01) == CIRRUS_SR7_BPP_VGA) {
     BX_CIRRUS_THIS bx_vgacore_c::after_restore_state();
   } else {
-#if BX_SUPPORT_PCI
-    if (BX_CIRRUS_THIS pci_enabled) {
-      if (DEV_pci_set_base_mem(BX_CIRRUS_THIS_PTR, cirrus_mem_read_handler,
-                               cirrus_mem_write_handler,
-                               &BX_CIRRUS_THIS pci_base_address[0],
-                               &BX_CIRRUS_THIS pci_conf[0x10],
-                               0x2000000)) {
-        BX_INFO(("new pci_memaddr: 0x%04x", BX_CIRRUS_THIS pci_base_address[0]));
-      }
-      if (DEV_pci_set_base_mem(BX_CIRRUS_THIS_PTR, cirrus_mem_read_handler,
-                               cirrus_mem_write_handler,
-                               &BX_CIRRUS_THIS pci_base_address[1],
-                               &BX_CIRRUS_THIS pci_conf[0x14],
-                               CIRRUS_PNPMMIO_SIZE)) {
-        BX_INFO(("new pci_mmioaddr = 0x%08x", BX_CIRRUS_THIS pci_base_address[1]));
-      }
-      if (DEV_pci_set_base_mem(BX_CIRRUS_THIS_PTR, cirrus_mem_read_handler,
-                               cirrus_mem_write_handler,
-                               &BX_CIRRUS_THIS pci_rom_address,
-                               &BX_CIRRUS_THIS pci_conf[0x30],
-                               BX_CIRRUS_THIS pci_rom_size)) {
-        BX_INFO(("new ROM address: 0x%08x", BX_CIRRUS_THIS pci_rom_address));
-      }
-    }
-#endif
     for (unsigned i=0; i<256; i++) {
       bx_gui->palette_change_common(i, BX_CIRRUS_THIS s.pel.data[i].red<<2,
                                     BX_CIRRUS_THIS s.pel.data[i].green<<2,
