@@ -570,9 +570,10 @@ currently work with.
   </row>
   <row>
     <entry>Take advantage of your SMP box</entry>
-    <entry>No</entry>
-    <entry>At present, Bochs does not use threads or parallel processing, so it
-    will not run any faster on multiprocessor hardware.
+    <entry>Minimal</entry>
+    <entry>At present, Bochs only uses threads in the lowlevel sound output
+    code. The simulation itself uses only one thread, so it will not run any
+    faster on multiprocessor hardware.
     </entry>
   </row>
   <row>
@@ -698,8 +699,8 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
        <para>
        Kevin Lawton is the primary author of Bochs. There have been bug fixes,
        enhancements, and code contributions from some few hundred people, so
-       it is not possible to list them all.  Recently, Kevin has been working
-       on a PC virtualization project called <ulink
+       it is not possible to list them all. Later, Kevin had been working on a
+       PC virtualization project called <ulink
        url="http://savannah.nongnu.org/projects/plex86">plex86</ulink>. In Fall 2002, he
        made contributed some major CPU speedups and helped with integration
        and debugging of the x86-64 emulation code.
@@ -786,9 +787,10 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
      Does Bochs support a CD-ROM?
      </para></question>
      <answer><para>
-     Yes, a CD-ROM is supported in Linux, Windows, and most BSDs. The
-     CD-ROM drivers for Bochs allow the guest operating system to access the
-     host operating system's CD-ROM data directly.
+     Yes, the CD-ROM emulation and accessing ISO files is always available.
+     Reading from host CD-ROM media is supported in Linux, Windows, and most
+     BSDs. The CD-ROM drivers for Bochs allow the guest operating system to
+     access the host operating system's CD-ROM data directly.
      </para></answer>
   </qandaentry>
 
@@ -809,8 +811,9 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
      </para></question>
      <answer><para>
      Yes.  Bochs emulates an NE2000 compatible network card (ISA / PCI) or an
-     Intel(R) 82540EM Gigabit Ethernet adapter (PCI). Networking is not supported
-     on all platforms. See <xref linkend="features"> for details.
+     Intel(R) 82540EM Gigabit Ethernet adapter (PCI). Using the host's network
+     capabilities is not supported on all platforms. See <xref linkend="features">
+     for details.
      </para></answer>
   </qandaentry>
 
@@ -820,14 +823,13 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
      </para></question>
      <answer><para>
      Well, lot's of different OS's run inside of Bochs, so
-   thousands.  I'm assuming you are asking about Windows programs.
-   To give you a few, the following ones from the Winstone'98 tests
-   worked: Access 97, CorelDRAW! 7, Excel 97, Lotus 1-2-3 97, Word 97,
-   PowerPoint 97, Quattro Pro 7, WordPerfect 7.
-</para>
-
-     <para>Also, I've compiled an entire OS kernel inside Bochs before.  Not
-to mention, running DOOM, though at then-pathetic speeds.
+     thousands.  I'm assuming you are asking about Windows programs.
+     To give you a few, the following ones from the Winstone'98 tests
+     worked: Access 97, CorelDRAW! 7, Excel 97, Lotus 1-2-3 97, Word 97,
+     PowerPoint 97, Quattro Pro 7, WordPerfect 7.
+     </para>
+     <para>Also, I've compiled an entire OS kernel inside Bochs before.
+     Not  to mention, running DOOM, though at then-pathetic speeds.
      </para></answer>
   </qandaentry>
 

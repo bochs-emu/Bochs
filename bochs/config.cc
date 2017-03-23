@@ -2658,7 +2658,6 @@ static int parse_line_formatted(const char *context, int num_params, char *param
           SIM->get_param_num(BXPN_ROM_ADDRESS)->set(strtoul(&params[i][8], NULL, 10));
       } else  if (!strncmp(params[i], "options=", 8)) {
         SIM->get_param_string(BXPN_ROM_OPTIONS)->set(&params[i][8]);
-        PARSE_WARN(("%s: romimage: BIOS options not handled yet.", context));
       } else {
         PARSE_ERR(("%s: romimage directive malformed.", context));
       }
@@ -2830,8 +2829,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       } else if (!strcmp(params[i], "rtc_init=image")) {
         SIM->get_param_bool(BXPN_CMOSIMAGE_RTC_INIT)->set(1);
       } else {
-        // for backward compatiblity
-        SIM->get_param_string(BXPN_CMOSIMAGE_PATH)->set(params[i]);
+        BX_ERROR(("%s: unknown parameter for cmosimage ignored.", context));
       }
     }
     if (strlen(SIM->get_param_string(BXPN_CMOSIMAGE_PATH)->getptr()) > 0) {

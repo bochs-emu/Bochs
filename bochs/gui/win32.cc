@@ -614,8 +614,6 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
       if (!strcmp(argv[i], "nokeyrepeat")) {
         BX_INFO(("disabled host keyboard repeat"));
         win32_nokeyrepeat = 1;
-      } else if (!strcmp(argv[i], "legacyF12")) {
-        BX_PANIC(("The option 'legacyF12' is now deprecated - use 'mouse: toggle=f12' instead"));
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
       } else if (!strcmp(argv[i], "gui_debug")) {
         if (gui_ci) {
