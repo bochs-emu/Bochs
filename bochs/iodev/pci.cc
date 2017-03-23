@@ -279,19 +279,19 @@ void bx_pci_bridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io
       case 0x5D:
       case 0x5E:
       case 0x5F:
-        if (value != oldval) {
+        if (value8 != oldval) {
           BX_PCI_THIS pci_conf[address+i] = value8;
           if ((address+i) == 0x59) {
             area = BX_MEM_AREA_F0000;
-            DEV_mem_set_memory_type(area, 0, (value >> 4) & 0x1);
-            DEV_mem_set_memory_type(area, 1, (value >> 5) & 0x1);
+            DEV_mem_set_memory_type(area, 0, (value8 >> 4) & 0x1);
+            DEV_mem_set_memory_type(area, 1, (value8 >> 5) & 0x1);
           } else {
             area = ((address+i) - 0x5a) << 1;
-            DEV_mem_set_memory_type(area, 0, (value >> 0) & 0x1);
-            DEV_mem_set_memory_type(area, 1, (value >> 1) & 0x1);
+            DEV_mem_set_memory_type(area, 0, (value8 >> 0) & 0x1);
+            DEV_mem_set_memory_type(area, 1, (value8 >> 1) & 0x1);
             area++;
-            DEV_mem_set_memory_type(area, 0, (value >> 4) & 0x1);
-            DEV_mem_set_memory_type(area, 1, (value >> 5) & 0x1);
+            DEV_mem_set_memory_type(area, 0, (value8 >> 4) & 0x1);
+            DEV_mem_set_memory_type(area, 1, (value8 >> 5) & 0x1);
           }
           BX_INFO(("%s write to PAM register %x (TLB Flush)", csname[BX_PCI_THIS chipset], address+i));
           bx_pc_system.MemoryMappingChanged();
