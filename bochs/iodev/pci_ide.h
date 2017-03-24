@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2004-2014  The Bochs Project
+//  Copyright (C) 2004-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -49,8 +49,7 @@ public:
   void param_restore(bx_param_c *param, Bit64s val);
 #endif
 
-  virtual Bit32u pci_read_handler(Bit8u address, unsigned io_len);
-  virtual void   pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
+  virtual void pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 
   static void timer_handler(void *);
   BX_PIDE_SMF void timer(void);

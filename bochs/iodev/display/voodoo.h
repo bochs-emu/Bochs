@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2012-2014  The Bochs Project
+//  Copyright (C) 2012-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -56,8 +56,7 @@ public:
   virtual void redraw_area(unsigned x0, unsigned y0,
                            unsigned width, unsigned height);
 
-  virtual Bit32u pci_read_handler(Bit8u address, unsigned io_len);
-  virtual void   pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
+  virtual void pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 
   static Bit16u get_retrace(void);
   static void output_enable(bx_bool enabled);

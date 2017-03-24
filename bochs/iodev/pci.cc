@@ -206,18 +206,6 @@ void bx_pci_bridge_c::after_restore_state(void)
   BX_PCI_THIS smram_control(BX_PCI_THIS pci_conf[0x72]);
 }
 
-// pci configuration space read callback handler
-Bit32u bx_pci_bridge_c::pci_read_handler(Bit8u address, unsigned io_len)
-{
-  Bit32u value = 0;
-
-  for (unsigned i=0; i<io_len; i++) {
-    value |= (BX_PCI_THIS pci_conf[address+i] << (i*8));
-  }
-  BX_DEBUG(("%s read  register 0x%02x value 0x%08x", csname[BX_PCI_THIS chipset], address, value));
-  return value;
-}
-
 // pci configuration space write callback handler
 void bx_pci_bridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {
@@ -318,7 +306,7 @@ void bx_pci_bridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io
         }
         break;
       case 0x72:
-        smram_control(value);  // SMRAM conrol register
+        smram_control(value8); // SMRAM control register
         break;
       default:
         BX_PCI_THIS pci_conf[address+i] = value8;

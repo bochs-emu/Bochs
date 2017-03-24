@@ -43,9 +43,6 @@
 
 bx_usb_uhci_c* theUSB_UHCI = NULL;
 
-const Bit8u uhci_iomask[32] = {2, 1, 2, 1, 2, 1, 2, 0, 4, 0, 0, 0, 1, 0, 0, 0,
-                              3, 1, 3, 1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-
 // builtin configuration handling functions
 
 Bit32s usb_uhci_options_parser(const char *context, int num_params, char *params[])

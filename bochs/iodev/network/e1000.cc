@@ -1477,26 +1477,6 @@ void bx_e1000_c::rx_frame(const void *buf, unsigned buf_size)
 }
 
 
-// pci configuration space read callback handler
-Bit32u bx_e1000_c::pci_read_handler(Bit8u address, unsigned io_len)
-{
-  Bit32u value = 0;
-
-  for (unsigned i=0; i<io_len; i++) {
-    value |= (BX_E1000_THIS pci_conf[address+i] << (i*8));
-  }
-
-  if (io_len == 1)
-    BX_DEBUG(("read  PCI register 0x%02x value 0x%02x", address, value));
-  else if (io_len == 2)
-    BX_DEBUG(("read  PCI register 0x%02x value 0x%04x", address, value));
-  else if (io_len == 4)
-    BX_DEBUG(("read  PCI register 0x%02x value 0x%08x", address, value));
-
-  return value;
-}
-
-
 // pci configuration space write callback handler
 void bx_e1000_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {

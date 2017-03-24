@@ -420,18 +420,6 @@ void bx_pci_ide_c::write(Bit32u address, Bit32u value, unsigned io_len)
 }
 
 
-// pci configuration space read callback handler
-Bit32u bx_pci_ide_c::pci_read_handler(Bit8u address, unsigned io_len)
-{
-  Bit32u value = 0;
-
-  for (unsigned i=0; i<io_len; i++) {
-    value |= (BX_PIDE_THIS pci_conf[address+i] << (i*8));
-  }
-  BX_DEBUG(("PIIX3 PCI IDE read  register 0x%02x value 0x%08x", address, value));
-  return value;
-}
-
 // pci configuration space write callback handler
 void bx_pci_ide_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {

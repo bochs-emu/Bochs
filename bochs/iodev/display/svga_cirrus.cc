@@ -2379,19 +2379,6 @@ void bx_svga_cirrus_c::svga_init_pcihandlers(void)
   BX_CIRRUS_THIS load_pci_rom(SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr());
 }
 
-Bit32u bx_svga_cirrus_c::pci_read_handler(Bit8u address, unsigned io_len)
-{
-  Bit32u ret = 0;
-  for (unsigned i = 0; i < io_len; i++) {
-    ret |= (Bit32u)(BX_CIRRUS_THIS pci_conf[address + i]) << (i*8);
-  }
-
-  BX_DEBUG(("pci_read:  address 0x%02x, io_len 0x%02x, value 0x%x",
-    (unsigned)address, (unsigned)io_len, (unsigned)ret));
-
-  return ret;
-}
-
 void bx_svga_cirrus_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {
   unsigned i;

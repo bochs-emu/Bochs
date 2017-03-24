@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010-2016  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2011-2016  The Bochs Project
+//                2011-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -540,8 +540,8 @@ public:
   virtual void reset(unsigned);
   virtual void register_state(void);
   virtual void after_restore_state(void);
-  virtual Bit32u  pci_read_handler(Bit8u address, unsigned io_len);
-  virtual void    pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
+
+  virtual void pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 
   void event_handler(int event, USBPacket *packet, int port);
 

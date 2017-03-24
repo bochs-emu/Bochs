@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009-2015  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2009-2016  The Bochs Project
+//                2009-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -893,25 +893,6 @@ void bx_uhci_core_c::set_status(struct TD *td, bx_bool stalled, bx_bool data_buf
   td->dword1 |= (act_len & 0x7FF);               // actual length
   if (stalled || data_buffer_error || babble || crc_time_out || bitstuff_error)
     td->dword1 &= ~((1<<28) | (1<<27));  // clear the c_err field in there was an error
-}
-
-// pci configuration space read callback handler
-Bit32u bx_uhci_core_c::pci_read_handler(Bit8u address, unsigned io_len)
-{
-  Bit32u value = 0;
-
-  for (unsigned i=0; i<io_len; i++) {
-    value |= (pci_conf[address+i] << (i*8));
-  }
-
-  if (io_len == 1)
-    BX_DEBUG(("read  PCI register 0x%02x value 0x%02x", address, value));
-  else if (io_len == 2)
-    BX_DEBUG(("read  PCI register 0x%02x value 0x%04x", address, value));
-  else if (io_len == 4)
-    BX_DEBUG(("read  PCI register 0x%02x value 0x%08x", address, value));
-
-  return value;
 }
 
 

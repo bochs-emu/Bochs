@@ -95,10 +95,7 @@ public:
     if (pci_rom != NULL) delete [] pci_rom;
   }
 
-  virtual Bit32u pci_read_handler(Bit8u address, unsigned io_len) {
-    return 0;
-  }
-
+  virtual Bit32u pci_read_handler(Bit8u address, unsigned io_len);
   virtual void pci_write_handler(Bit8u address, Bit32u value, unsigned io_len) {}
 
   void init_pci_conf(Bit16u vid, Bit16u did, Bit8u rev, Bit32u classc, Bit8u headt);

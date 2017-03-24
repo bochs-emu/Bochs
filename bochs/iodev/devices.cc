@@ -1217,6 +1217,24 @@ void bx_pci_device_stub_c::load_pci_rom(const char *path)
   BX_INFO(("loaded PCI ROM '%s' (size=%u / PCI=%uk)", path, (unsigned) stat_buf.st_size, pci_rom_size >> 10));
 }
 
+Bit32u bx_pci_device_stub_c::pci_read_handler(Bit8u address, unsigned io_len)
+{
+  Bit32u value = 0;
+
+  for (unsigned i=0; i<io_len; i++) {
+    value |= (pci_conf[address+i] << (i*8));
+  }
+
+  if (io_len == 1)
+    BX_DEBUG(("read  PCI register 0x%02X value 0x%02X (len=1)", address, value));
+  else if (io_len == 2)
+    BX_DEBUG(("read  PCI register 0x%02X value 0x%04X (len=2)", address, value));
+  else if (io_len == 4)
+    BX_DEBUG(("read  PCI register 0x%02X value 0x%08X (len=4)", address, value));
+
+  return value;
+}
+
 #if BX_SUPPORT_PCI
 bx_bool bx_devices_c::register_pci_handlers(bx_pci_device_stub_c *dev,
                                             Bit8u *devfunc, const char *name,

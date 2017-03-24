@@ -1695,19 +1695,6 @@ void bx_ne2k_c::set_irq_level(bx_bool level)
 }
 
 #if BX_SUPPORT_PCI
-
-// pci configuration space read callback handler
-Bit32u bx_ne2k_c::pci_read_handler(Bit8u address, unsigned io_len)
-{
-  Bit32u value = 0;
-
-  for (unsigned i=0; i<io_len; i++) {
-    value |= (BX_NE2K_THIS pci_conf[address+i] << (i*8));
-  }
-  BX_DEBUG(("NE2000 PCI NIC read  register 0x%02x value 0x%08x", address, value));
-  return value;
-}
-
 // pci configuration space write callback handler
 void bx_ne2k_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {
@@ -1780,7 +1767,6 @@ void bx_ne2k_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
   else if (io_len == 4)
     BX_DEBUG(("write PCI register 0x%02x value 0x%08x", address, value));
 }
-
 #endif /* BX_SUPPORT_PCI */
 
 #if BX_DEBUGGER

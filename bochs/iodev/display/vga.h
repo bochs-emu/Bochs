@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2012  The Bochs Project
+//  Copyright (C) 2002-2017  The Bochs Project
 //  PCI VGA dummy adapter Copyright (C) 2002,2003  Mike Nordell
 //
 //  This library is free software; you can redistribute it and/or
@@ -113,11 +113,10 @@ public:
 #endif
 
 #if BX_SUPPORT_PCI
-  virtual Bit32u pci_read_handler(Bit8u address, unsigned io_len);
-  virtual void   pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
+  virtual void pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 #endif
 #if BX_DEBUGGER
-  virtual void   debug_dump(int argc, char **argv);
+  virtual void debug_dump(int argc, char **argv);
 #endif
 
   static Bit64s   vga_param_handler(bx_param_c *param, int set, Bit64s val);
