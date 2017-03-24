@@ -3014,6 +3014,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       }
       SIM->get_param_string(BXPN_LOAD32BITOS_INITRD)->set(&params[4][7]);
     }
+    PARSE_WARN(("%s: WARNING: This Bochs feature is not maintained yet", context));
   } else if (!strcmp(params[0], "user_plugin")) {
 #if BX_PLUGINS
     char tmpname[80];

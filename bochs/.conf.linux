@@ -39,6 +39,7 @@ case $which_config in
                 --enable-usb-ohci \
                 --enable-usb-ehci \
                 --enable-usb-xhci \
+                --enable-busmouse \
                 --enable-es1370 \
                 --enable-e1000 \
                 --enable-show-ips \
@@ -63,6 +64,7 @@ case $which_config in
                 --enable-usb-ohci \
                 --enable-usb-ehci \
                 --enable-usb-xhci \
+                --enable-busmouse \
                 --enable-es1370 \
                 --enable-e1000 \
                 --enable-plugins \
