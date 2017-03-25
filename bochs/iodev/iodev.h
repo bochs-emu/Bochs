@@ -121,7 +121,6 @@ protected:
 
 class BOCHSAPI bx_keyb_stub_c : public bx_devmodel_c {
 public:
-  virtual ~bx_keyb_stub_c() {}
   // stubs for bx_keyb_c methods
   virtual void gen_scancode(Bit32u key) {
     STUBFUNC(keyboard, gen_scancode);
@@ -136,13 +135,6 @@ public:
 
 class BOCHSAPI bx_hard_drive_stub_c : public bx_devmodel_c {
 public:
-  virtual void   init() {
-    STUBFUNC(HD, init);
-  }
-  virtual void reset(unsigned type) {
-    STUBFUNC(HD, reset);
-  }
-
   virtual Bit32u get_first_cd_handle(void) {
     return BX_MAX_ATA_CHANNEL*2;
   }
@@ -180,9 +172,6 @@ public:
   }
   virtual void set_reg(unsigned reg, Bit32u val) {
     STUBFUNC(cmos, set_reg);
-  }
-  virtual time_t get_timeval() {
-    return 0;
   }
   virtual void checksum_cmos(void) {
     STUBFUNC(cmos, checksum);
