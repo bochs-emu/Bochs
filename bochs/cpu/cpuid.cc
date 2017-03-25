@@ -371,7 +371,12 @@ void bx_cpuid_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
   Bit32u lin_addr_width = is_cpu_extension_supported(BX_ISA_LONG_MODE) ? BX_LIN_ADDRESS_WIDTH : 32;
 
   leaf->eax = phy_addr_width | (lin_addr_width << 8);
+
+  // [0:0] CLZERO support
   leaf->ebx = 0;
+  if (is_cpu_extension_supported(BX_ISA_CLZERO))
+    leaf->ebx |= 0x1;
+
   leaf->ecx = 0; // Reserved, undefined for Intel
   leaf->edx = 0;
 }

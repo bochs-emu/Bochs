@@ -102,6 +102,7 @@ ryzen_t::ryzen_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_MISALIGNED_SSE);
   enable_cpu_extension(BX_ISA_ALT_MOV_CR8);
   enable_cpu_extension(BX_ISA_XAPIC_EXT);
+  enable_cpu_extension(BX_ISA_CLZERO);
 
   warning_messages();
 }

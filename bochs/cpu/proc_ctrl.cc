@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2015  The Bochs Project
+//  Copyright (C) 2001-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -323,6 +323,31 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CLFLUSH(bxInstruction_c *i)
 #endif
 
   BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CLZERO(bxInstruction_c *i)
+{
+  bx_address eaddr = RAX & ~BX_CONST64(CACHE_LINE_SIZE-1) & i->asize_mask();
+
+#if BX_SUPPORT_EVEX
+  BxPackedZmmRegister zmmzero;
+  zmmzero.clear();
+  for (unsigned n=0; n<CACHE_LINE_SIZE; n += 64) {
+    write_virtual_zmmword(i->seg(), eaddr+n, &zmmzero);
+  }
+#elif BX_SUPPORT_AVX
+  BxPackedYmmRegister ymmzero;
+  ymmzero.clear();
+  for (unsigned n=0; n<CACHE_LINE_SIZE; n += 32) {
+    write_virtual_ymmword(i->seg(), eaddr+n, &ymmzero);
+  }
+#else
+  BxPackedXmmRegister xmmzero;
+  xmmzero.clear();
+  for (unsigned n=0; n<CACHE_LINE_SIZE; n += 16) {
+    write_virtual_xmmword(i->seg(), eaddr+n, &xmmzero);
+  }
+#endif
 }
 
 void BX_CPU_C::handleCpuModeChange(void)
