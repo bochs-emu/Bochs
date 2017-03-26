@@ -76,8 +76,8 @@ libcpudb.a: $(CPUDB_OBJS)
 $(CPUDB_OBJS): $(BX_INCLUDES)
 
 clean:
-	@RMCOMMAND@ amd/*.o
-	@RMCOMMAND@ intel/*.o
+	@RMCOMMAND@ amd@SLASH@*.o
+	@RMCOMMAND@ intel@SLASH@*.o
 	@RMCOMMAND@ *.a
 
 dist-clean: clean
