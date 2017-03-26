@@ -98,8 +98,6 @@ broadwell_ult_t::broadwell_ult_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_RDSEED);
   enable_cpu_extension(BX_ISA_ADX);
   enable_cpu_extension(BX_ISA_SMAP);
-
-  warning_messages();
 }
 
 void broadwell_ult_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const

@@ -56,8 +56,6 @@ athlon64_clawhammer_t::athlon64_clawhammer_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_LONG_MODE);
   enable_cpu_extension(BX_ISA_LM_LAHF_SAHF);
   enable_cpu_extension(BX_ISA_NX);
-
-  warning_messages();
 }
 
 void athlon64_clawhammer_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const

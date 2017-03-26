@@ -96,8 +96,6 @@ corei7_haswell_4770_t::corei7_haswell_4770_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_RDRAND);
   enable_cpu_extension(BX_ISA_TSC_DEADLINE);
   enable_cpu_extension(BX_ISA_FCS_FDS_DEPRECATION);
-
-  warning_messages();
 }
 
 void corei7_haswell_4770_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const

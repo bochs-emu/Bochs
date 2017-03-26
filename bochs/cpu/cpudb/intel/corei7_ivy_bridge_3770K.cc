@@ -86,8 +86,6 @@ corei7_ivy_bridge_3770k_t::corei7_ivy_bridge_3770k_t(BX_CPU_C *cpu): bx_cpuid_t(
   enable_cpu_extension(BX_ISA_FSGSBASE);
   enable_cpu_extension(BX_ISA_SMEP);
   enable_cpu_extension(BX_ISA_RDRAND);
-
-  warning_messages();
 }
 
 void corei7_ivy_bridge_3770k_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const

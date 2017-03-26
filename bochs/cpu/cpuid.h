@@ -89,6 +89,7 @@ protected:
   BX_CPP_INLINE void enable_cpu_extension(unsigned extension) {
     assert(extension < BX_ISA_EXTENSION_LAST);
     ia_extensions_bitmask[extension / 32] |=  (1 << (extension % 32));
+    warning_messages(extension);
   }
 
   BX_CPP_INLINE void disable_cpu_extension(unsigned extension) {
@@ -129,7 +130,7 @@ protected:
   void dump_cpuid_leaf(unsigned function, unsigned subfunction = 0) const;
   void dump_cpuid(unsigned max_std_leaf, unsigned max_ext_leaf) const;
 
-  void warning_messages() const;
+  void warning_messages(unsigned extension) const;
 
 #if BX_SUPPORT_VMX
   VMCS_Mapping vmcs_map;

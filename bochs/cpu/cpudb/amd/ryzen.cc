@@ -106,8 +106,6 @@ ryzen_t::ryzen_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 #if BX_SUPPORT_MONITOR_MWAIT
   enable_cpu_extension(BX_ISA_MONITORX_MWAITX);
 #endif
-
-  warning_messages();
 }
 
 void ryzen_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const

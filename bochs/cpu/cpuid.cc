@@ -416,14 +416,19 @@ void bx_cpuid_t::dump_cpuid(unsigned max_std_leaf, unsigned max_ext_leaf) const
   }
 }
 
-void bx_cpuid_t::warning_messages() const
+void bx_cpuid_t::warning_messages(unsigned extension) const
 {
-  if (is_cpu_extension_supported(BX_ISA_3DNOW))
+  switch(extension) {
+  case BX_ISA_3DNOW:
     BX_INFO(("WARNING: 3DNow! is not implemented yet !"));
-
-  if (is_cpu_extension_supported(BX_ISA_RDRAND))
+    break;
+  case BX_ISA_RDRAND:
     BX_INFO(("WARNING: RDRAND would not produce true random numbers !"));
-
-  if (is_cpu_extension_supported(BX_ISA_RDSEED))
+    break;
+  case BX_ISA_RDSEED:
     BX_INFO(("WARNING: RDSEED would not produce true random numbers !"));
+    break;
+  default:
+    break;
+  }
 }
