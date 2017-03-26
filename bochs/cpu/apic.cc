@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2002-2014 Zwane Mwaikambo, Stanislav Shwartsman
+//  Copyright (c) 2002-2017 Zwane Mwaikambo, Stanislav Shwartsman
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -191,10 +191,17 @@ bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu, unsigned id)
 #if BX_SUPPORT_VMX >= 2
   // Register a non-active timer for VMX preemption timer.
   vmx_timer_handle = bx_pc_system.register_timer_ticks(this,
-            bx_local_apic_c::vmx_preemption_timer_expired, 0, 0, 0, "vmx_preemtion");
+            bx_local_apic_c::vmx_preemption_timer_expired, 0, 0, 0, "vmx_preemption");
   BX_DEBUG(("vmx_timer is = %d", vmx_timer_handle));
   vmx_preemption_timer_rate = VMX_MISC_PREEMPTION_TIMER_RATE;
   vmx_timer_active = 0;
+#endif
+
+#if BX_SUPPORT_MONITOR_MWAIT
+  mwaitx_timer_handle = bx_pc_system.register_timer_ticks(this,
+            bx_local_apic_c::mwaitx_timer_expired, 0, 0, 0, "mwaitx_timer");
+  BX_DEBUG(("mwaitx_timer is = %d", mwaitx_timer_handle));
+  mwaitx_timer_active = 0;
 #endif
 
   xapic = simulate_xapic; // xAPIC or legacy APIC
@@ -237,6 +244,13 @@ void bx_local_apic_c::reset(unsigned type)
   if(vmx_timer_active) {
     bx_pc_system.deactivate_timer(vmx_timer_handle);
     vmx_timer_active = 0;
+  }
+#endif
+
+#if BX_SUPPORT_MONITOR_MWAIT
+  if(mwaitx_timer_active) {
+    bx_pc_system.deactivate_timer(mwaitx_timer_handle);
+    mwaitx_timer_active = 0;
   }
 #endif
 
@@ -1154,7 +1168,7 @@ void bx_local_apic_c::set_vmx_preemption_timer(Bit32u value)
   vmx_preemption_timer_value = value;
   vmx_preemption_timer_initial = bx_pc_system.time_ticks();
   vmx_preemption_timer_fire = ((vmx_preemption_timer_initial >> vmx_preemption_timer_rate) + value) << vmx_preemption_timer_rate;
-  BX_DEBUG(("VMX Preemption timer. value = %u, rate = %u, init = %u, fire = %u", value, vmx_preemption_timer_rate, vmx_preemption_timer_initial, vmx_preemption_timer_fire));
+  BX_DEBUG(("VMX Preemption timer: value = %u, rate = %u, init = %u, fire = %u", value, vmx_preemption_timer_rate, vmx_preemption_timer_initial, vmx_preemption_timer_fire));
   bx_pc_system.activate_timer_ticks(vmx_timer_handle, vmx_preemption_timer_fire - vmx_preemption_timer_initial, 0);
   vmx_timer_active = 1;
 }
@@ -1173,6 +1187,32 @@ void bx_local_apic_c::vmx_preemption_timer_expired(void *this_ptr)
   class_ptr->cpu->signal_event(BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED);
   class_ptr->deactivate_vmx_preemption_timer();
 }
+#endif
+
+#if BX_SUPPORT_MONITOR_MWAIT
+
+void bx_local_apic_c::set_mwaitx_timer(Bit32u value)
+{
+  BX_DEBUG(("MWAITX timer: value = %u", value));
+  bx_pc_system.activate_timer_ticks(mwaitx_timer_active, value, 0);
+  mwaitx_timer_active = 1;
+}
+
+void bx_local_apic_c::deactivate_mwaitx_timer(void)
+{
+  if (! mwaitx_timer_active) return;
+  bx_pc_system.deactivate_timer(mwaitx_timer_handle);
+  mwaitx_timer_active = 0;
+}
+
+// Invoked when MWAITX timer expired
+void bx_local_apic_c::mwaitx_timer_expired(void *this_ptr)
+{
+  bx_local_apic_c *class_ptr = (bx_local_apic_c *) this_ptr;
+  class_ptr->cpu->wakeup_monitor();
+  class_ptr->deactivate_mwaitx_timer();
+}
+
 #endif
   
 #if BX_CPU_LEVEL >= 6
@@ -1401,6 +1441,11 @@ void bx_local_apic_c::register_state(bx_param_c *parent)
   BXRS_HEX_PARAM_SIMPLE(lapic, vmx_preemption_timer_value);
   BXRS_HEX_PARAM_SIMPLE(lapic, vmx_preemption_timer_rate);
   BXRS_PARAM_BOOL(lapic, vmx_timer_active, vmx_timer_active);
+#endif
+
+#if BX_SUPPORT_MONITOR_MWAIT
+  BXRS_DEC_PARAM_SIMPLE(lapic, mwaitx_timer_handle);
+  BXRS_PARAM_BOOL(lapic, mwaitx_timer_active, mwaitx_timer_active);
 #endif
 }
 

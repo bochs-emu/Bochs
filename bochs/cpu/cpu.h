@@ -5080,6 +5080,7 @@ public: // for now...
 #if BX_SUPPORT_MONITOR_MWAIT
   BX_SMF bx_bool    is_monitor(bx_phy_address addr, unsigned len);
   BX_SMF void    check_monitor(bx_phy_address addr, unsigned len);
+  BX_SMF void   wakeup_monitor(void);
 #endif
 
 #if BX_SUPPORT_VMX

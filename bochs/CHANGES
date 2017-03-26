@@ -1,6 +1,7 @@
 Changes in 2.6.9 (not yet released):
 
 Brief summary :
+  - CPU: implemented new instructions and x86 architecture extensions.
   - Bugfixes for CPU emulation correctness.
   - Added Android host platform support.
   - Added USB EHCI device emulation support.
@@ -31,10 +32,13 @@ Detailed change log :
   ! VMX: Implemented Page Modification Logging (PML)
   ! VMX: Implemented TSC Scaling Extension
   ! Paging: Implemented Protection Keys
-  ! Implemented XSAVES/XRSTORS extensions
   ! Implemented UMIP: User Mode Instruction Prevention (don't allow execution of SLDT/SIDT/SGDT/STR/SMSW with CPL>0)
   ! Implemented RDPID instruction
   ! Implemented VPOPCNTD/VPOPCNTQ AVX512 instructions
+  ! Implemented XSAVES/XRSTORS instructions and IA32_XSS MSR
+  ! Implemented Translation Cache Extensions (TCE) for AMD CPUID and EFER.TCE control
+  ! Implemented CLZERO instruction (AMD), enabled in Ryzen CPU model
+  ! Implemented MONITORX/MWAITX instructions (AMD), enabled in Ryzen CPU model
   ! CPUDB: Added AMD Ryzen configuration to CPUDB
 
 - I/O Devices

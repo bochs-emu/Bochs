@@ -2092,8 +2092,8 @@ static const BxOpcodeInfo_t BxOpcodeTable0F01[64] = {
   /* 0F 01 F8 */ { 0, BX_IA_ERROR },
 #endif
   /* 0F 01 F9 */ { 0, BX_IA_RDTSCP }, // end trace to avoid multiple TSC samples in one cycle
-  /* 0F 01 FA */ { 0, BX_IA_ERROR },
-  /* 0F 01 FB */ { 0, BX_IA_ERROR },
+  /* 0F 01 FA */ { 0, BX_IA_MONITORX },
+  /* 0F 01 FB */ { 0, BX_IA_MWAITX },
   /* 0F 01 FC */ { 0, BX_IA_CLZERO },
   /* 0F 01 FD */ { 0, BX_IA_ERROR },
   /* 0F 01 FE */ { 0, BX_IA_ERROR },

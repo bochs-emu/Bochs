@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2002-2015 Zwane Mwaikambo, Stanislav Shwartsman
+//  Copyright (c) 2002-2017 Zwane Mwaikambo, Stanislav Shwartsman
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -199,6 +199,11 @@ class BOCHSAPI bx_local_apic_c : public logfunctions
   bx_bool vmx_timer_active;
 #endif 
 
+#if BX_SUPPORT_MONITOR_MWAIT
+  int mwaitx_timer_handle;
+  bx_bool mwaitx_timer_active;
+#endif
+
   BX_CPU_C *cpu;
 
 public:
@@ -261,6 +266,12 @@ public:
   void deactivate_vmx_preemption_timer(void);
   static void vmx_preemption_timer_expired(void *);
 #endif  
+
+#if BX_SUPPORT_MONITOR_MWAIT
+  void set_mwaitx_timer(Bit32u value);
+  void deactivate_mwaitx_timer(void);
+  static void mwaitx_timer_expired(void *);
+#endif
 };
 
 int apic_bus_deliver_lowest_priority(Bit8u vector, apic_dest_t dest, bx_bool trig_mode, bx_bool broadcast);

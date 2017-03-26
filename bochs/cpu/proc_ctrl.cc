@@ -776,13 +776,16 @@ bx_bool BX_CPU_C::is_monitor(bx_phy_address begin_addr, unsigned len)
 
 void BX_CPU_C::check_monitor(bx_phy_address begin_addr, unsigned len)
 {
-  if (is_monitor(begin_addr, len)) {
-    // wakeup from MWAIT state
-    if(BX_CPU_THIS_PTR activity_state >= BX_ACTIVITY_STATE_MWAIT)
-       BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_ACTIVE;
-    // clear monitor
-    BX_CPU_THIS_PTR monitor.reset_monitor();
-  }
+  if (is_monitor(begin_addr, len)) wakeup_monitor();
+}
+
+void BX_CPU_C::wakeup_monitor(void)
+{
+  // wakeup from MWAIT state
+  if(BX_CPU_THIS_PTR activity_state >= BX_ACTIVITY_STATE_MWAIT)
+     BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_ACTIVE;
+  // clear monitor
+  BX_CPU_THIS_PTR monitor.reset_monitor();
 }
 #endif
 
@@ -790,12 +793,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MONITOR_MWAIT
   // CPL is always 0 in real mode
-  if (/* !real_mode() && */ CPL != 0) {
-    BX_DEBUG(("MONITOR: instruction not recognized when CPL != 0"));
+  if (CPL != 0 && i->getIaOpcode() != BX_IA_MONITORX) {
+    BX_DEBUG(("%s: instruction not recognized when CPL != 0", i->getIaOpcodeNameShort()));
     exception(BX_UD_EXCEPTION, 0);
   }
 
-  BX_DEBUG(("MONITOR instruction executed EAX = 0x%08x", EAX));
+  BX_DEBUG(("%s instruction executed EAX = 0x%08x", i->getIaOpcodeNameShort(), EAX));
 
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
@@ -806,7 +809,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
 #endif
 
   if (RCX != 0) {
-    BX_ERROR(("MONITOR: no optional extensions supported"));
+    BX_ERROR(("%s: no optional extensions supported", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -820,7 +823,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
     if (! IsCanonical(laddr)) {
-      BX_ERROR(("MONITOR: non-canonical access !"));
+      BX_ERROR(("%s: non-canonical access !", i->getIaOpcodeNameShort()));
       exception(int_number(i->seg()), 0);
     }
   }
@@ -865,12 +868,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MONITOR_MWAIT
   // CPL is always 0 in real mode
-  if (/* !real_mode() && */ CPL != 0) {
-    BX_DEBUG(("MWAIT: instruction not recognized when CPL != 0"));
+  if (CPL != 0 && i->getIaOpcode() != BX_IA_MWAITX) {
+    BX_DEBUG(("%s: instruction not recognized when CPL != 0", i->getIaOpcodeNameShort()));
     exception(BX_UD_EXCEPTION, 0);
   }
 
-  BX_DEBUG(("MWAIT instruction executed ECX = 0x%08x", ECX));
+  BX_DEBUG(("%s instruction executed ECX = 0x%08x", i->getIaOpcodeNameShort(), ECX));
 
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
@@ -880,11 +883,21 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
   }
 #endif
 
-  // only one extension is supported
+  // extension supported:
   //   ECX[0] - interrupt MWAIT even if EFLAGS.IF = 0
-  if (RCX & ~(BX_CONST64(1))) {
-    BX_ERROR(("MWAIT: incorrect optional extensions in RCX"));
-    exception(BX_GP_EXCEPTION, 0);
+  //   ECX[1] - timed MWAITX
+  // all other bits are reserved
+  if (i->getIaOpcode() == BX_IA_MWAITX) {
+    if (RCX & ~(BX_CONST64(3))) {
+      BX_ERROR(("%s: incorrect optional extensions in RCX", i->getIaOpcodeNameShort()));
+      exception(BX_GP_EXCEPTION, 0);
+    }
+  }
+  else {
+    if (RCX & ~(BX_CONST64(1))) {
+      BX_ERROR(("%s: incorrect optional extensions in RCX", i->getIaOpcodeNameShort()));
+      exception(BX_GP_EXCEPTION, 0);
+    }
   }
 
 #if BX_SUPPORT_SVM
@@ -898,7 +911,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
 
   // If monitor has already triggered, we just return.
   if (! BX_CPU_THIS_PTR monitor.armed) {
-    BX_DEBUG(("MWAIT: the MONITOR was not armed or already triggered"));
+    BX_DEBUG(("%s: the MONITOR was not armed or already triggered", i->getIaOpcodeNameShort()));
     BX_NEXT_TRACE(i);
   }
 
@@ -929,6 +942,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
   }
 
   BX_INSTR_MWAIT(BX_CPU_ID, BX_CPU_THIS_PTR monitor.monitor_addr, CACHE_LINE_SIZE, ECX);
+
+  if (ECX & 2) {
+    if (i->getIaOpcode() == BX_IA_MWAITX) {
+      BX_CPU_THIS_PTR lapic.set_mwaitx_timer(EBX);
+    }
+  }
 
   enter_sleep_state(new_state);
 #endif

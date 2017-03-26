@@ -52,6 +52,7 @@ enum {
   BX_ISA_SSE4_2,                  /* SSE4_2 instruction */
   BX_ISA_POPCNT,                  /* POPCNT instruction */
   BX_ISA_MONITOR_MWAIT,           /* MONITOR/MWAIT instruction */
+  BX_ISA_MONITORX_MWAITX,         /* MONITORX/MWAITX instruction (AMD) */
   BX_ISA_VMX,                     /* VMX instruction */
   BX_ISA_SMX,                     /* SMX instruction */
   BX_ISA_LONG_MODE,               /* Long Mode (x86-64) support */
