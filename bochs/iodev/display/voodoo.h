@@ -43,7 +43,7 @@ typedef struct {
 } bx_voodoo_t;
 
 
-class bx_voodoo_c : public bx_nonvga_device_c, bx_pci_device_stub_c {
+class bx_voodoo_c : public bx_nonvga_device_c {
 public:
   bx_voodoo_c();
   virtual ~bx_voodoo_c();

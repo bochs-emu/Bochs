@@ -4,7 +4,8 @@
 
 /*
  *  PCIDEV: PCI host device mapping
- *  Copyright (C) 2003 - Frank Cornelis
+ *  Copyright (C) 2003       Frank Cornelis
+ *  Copyright (C) 2003-2017  The Bochs Project
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -39,7 +40,7 @@ struct region_struct {
   class bx_pcidev_c *pcidev;
 };
 
-class bx_pcidev_c : public bx_devmodel_c, public bx_pci_device_stub_c {
+class bx_pcidev_c : public bx_pci_device_c {
 public:
   bx_pcidev_c();
   virtual ~bx_pcidev_c();

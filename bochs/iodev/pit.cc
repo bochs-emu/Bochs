@@ -37,7 +37,6 @@ int CDECL libpit_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
 {
   if (type == PLUGTYPE_CORE) {
     thePit = new bx_pit_c();
-    bx_devices.pluginPitDevice = thePit;
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, thePit, BX_PLUGIN_PIT);
     return 0; // Success
   } else {

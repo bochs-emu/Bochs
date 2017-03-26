@@ -36,7 +36,7 @@
 #define BX_PCI_INTC 3
 #define BX_PCI_INTD 4
 
-class bx_pci_bridge_c : public bx_devmodel_c, public bx_pci_device_stub_c {
+class bx_pci_bridge_c : public bx_pci_device_c {
 public:
   bx_pci_bridge_c();
   virtual ~bx_pci_bridge_c();

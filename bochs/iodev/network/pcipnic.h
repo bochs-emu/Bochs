@@ -60,7 +60,7 @@ typedef struct {
 } bx_pnic_t;
 
 
-class bx_pcipnic_c : public bx_devmodel_c, bx_pci_device_stub_c {
+class bx_pcipnic_c : public bx_pci_device_c {
 public:
   bx_pcipnic_c();
   virtual ~bx_pcipnic_c();

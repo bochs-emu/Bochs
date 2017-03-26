@@ -667,7 +667,9 @@ void bx_hard_drive_c::seek_timer()
         controller->status.seek_complete = 1;
         controller->status.drq   = 1;
         controller->status.corrected_data = 0;
+#if BX_SUPPORT_PCI
         DEV_ide_bmdma_start_transfer(channel);
+#endif
         break;
       case 0x70: // SEEK
         BX_SELECTED_DRIVE(channel).curr_lsector = BX_SELECTED_DRIVE(channel).next_lsector;
@@ -3165,7 +3167,9 @@ bx_hard_drive_c::ready_to_send_atapi(Bit8u channel)
   controller->status.err = 0;
 
   if (BX_SELECTED_CONTROLLER(channel).packet_dma) {
+#if BX_SUPPORT_PCI
     DEV_ide_bmdma_start_transfer(channel);
+#endif
   } else {
     raise_interrupt(channel);
   }

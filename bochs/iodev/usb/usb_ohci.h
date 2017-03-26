@@ -248,7 +248,7 @@ typedef struct {
 
 
 
-class bx_usb_ohci_c : public bx_devmodel_c, public bx_pci_device_stub_c {
+class bx_usb_ohci_c : public bx_pci_device_c {
 public:
   bx_usb_ohci_c();
   virtual ~bx_usb_ohci_c();

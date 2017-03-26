@@ -68,19 +68,14 @@ bx_devices_c::~bx_devices_c()
 
 void bx_devices_c::init_stubs()
 {
-  pluginPci2IsaBridge = &stubPci2Isa;
-  pluginPciIdeController = &stubPciIde;
-#if BX_SUPPORT_PCI
-  pluginACPIController = &stubACPIController;
-#endif
-  pluginKeyboard = &stubKeyboard;
+  pluginCmosDevice = &stubCmos;
   pluginDmaDevice = &stubDma;
   pluginFloppyDevice = &stubFloppy;
-  pluginCmosDevice = &stubCmos;
-  pluginVgaDevice = &stubVga;
-  pluginPicDevice = &stubPic;
   pluginHardDrive = &stubHardDrive;
+  pluginKeyboard = &stubKeyboard;
+  pluginPicDevice = &stubPic;
   pluginSpeaker = &stubSpeaker;
+  pluginVgaDevice = &stubVga;
 #if BX_SUPPORT_IODEBUG
   pluginIODebug = &stubIODebug;
 #endif
@@ -90,6 +85,11 @@ void bx_devices_c::init_stubs()
 #if BX_SUPPORT_GAMEPORT
   pluginGameport = &stubGameport;
 #endif
+#if BX_SUPPORT_PCI
+  pluginPci2IsaBridge = &stubPci2Isa;
+  pluginPciIdeController = &stubPciIde;
+  pluginACPIController = &stubACPIController;
+#endif
 #if BX_SUPPORT_PCIUSB
   pluginUsbDevCtl = &stubUsbDevCtl;
 #endif
@@ -97,7 +97,10 @@ void bx_devices_c::init_stubs()
 
 void bx_devices_c::init(BX_MEM_C *newmem)
 {
-  unsigned i, chipset;
+#if BX_SUPPORT_PCI
+  unsigned chipset;
+#endif
+  unsigned i;
   const char def_name[] = "Default";
   const char *vga_ext;
 
@@ -170,8 +173,8 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   // PCI logic (i440FX)
   pci.enabled = SIM->get_param_bool(BXPN_PCI_ENABLED)->get();
   if (pci.enabled) {
-    chipset = SIM->get_param_enum(BXPN_PCI_CHIPSET)->get();
 #if BX_SUPPORT_PCI
+    chipset = SIM->get_param_enum(BXPN_PCI_CHIPSET)->get();
     PLUG_load_plugin(pci, PLUGTYPE_CORE);
     PLUG_load_plugin(pci2isa, PLUGTYPE_CORE);
 #if BX_SUPPORT_PCIUSB
@@ -1140,8 +1143,9 @@ void bx_devices_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned 
   }
 }
 
+#if BX_SUPPORT_PCI
 // generic PCI support
-void bx_pci_device_stub_c::init_pci_conf(Bit16u vid, Bit16u did, Bit8u rev, Bit32u classc, Bit8u headt)
+void bx_pci_device_c::init_pci_conf(Bit16u vid, Bit16u did, Bit8u rev, Bit32u classc, Bit8u headt)
 {
   memset(pci_conf, 0, 256);
   pci_conf[0x00] = (Bit8u)(vid & 0xff);
@@ -1155,12 +1159,12 @@ void bx_pci_device_stub_c::init_pci_conf(Bit16u vid, Bit16u did, Bit8u rev, Bit3
   pci_conf[0x0e] = headt;
 }
 
-void bx_pci_device_stub_c::register_pci_state(bx_list_c *list)
+void bx_pci_device_c::register_pci_state(bx_list_c *list)
 {
   new bx_shadow_data_c(list, "pci_conf", pci_conf, 256, 1);
 }
 
-void bx_pci_device_stub_c::load_pci_rom(const char *path)
+void bx_pci_device_c::load_pci_rom(const char *path)
 {
   struct stat stat_buf;
   int fd, ret;
@@ -1217,7 +1221,7 @@ void bx_pci_device_stub_c::load_pci_rom(const char *path)
   BX_INFO(("loaded PCI ROM '%s' (size=%u / PCI=%uk)", path, (unsigned) stat_buf.st_size, pci_rom_size >> 10));
 }
 
-Bit32u bx_pci_device_stub_c::pci_read_handler(Bit8u address, unsigned io_len)
+Bit32u bx_pci_device_c::pci_read_handler(Bit8u address, unsigned io_len)
 {
   Bit32u value = 0;
 
@@ -1235,8 +1239,7 @@ Bit32u bx_pci_device_stub_c::pci_read_handler(Bit8u address, unsigned io_len)
   return value;
 }
 
-#if BX_SUPPORT_PCI
-bx_bool bx_devices_c::register_pci_handlers(bx_pci_device_stub_c *dev,
+bx_bool bx_devices_c::register_pci_handlers(bx_pci_device_c *dev,
                                             Bit8u *devfunc, const char *name,
                                             const char *descr)
 {

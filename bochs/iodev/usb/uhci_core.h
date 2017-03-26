@@ -170,7 +170,7 @@ struct HCSTACK {
   bx_bool t;
 };
 
-class bx_uhci_core_c : public bx_devmodel_c, public bx_pci_device_stub_c {
+class bx_uhci_core_c : public bx_pci_device_c {
 public:
   bx_uhci_core_c();
   virtual ~bx_uhci_core_c();

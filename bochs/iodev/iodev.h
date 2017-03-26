@@ -83,15 +83,14 @@ class device_image_t;
 class cdrom_base_c;
 
 //////////////////////////////////////////////////////////////////////
-// declare stubs for PCI devices
+// bx_pci_device_c declaration
 //////////////////////////////////////////////////////////////////////
 
-// the best should be deriving of bx_pci_device_stub_c from bx_devmodel_c
-// but it make serious problems for cirrus_svga device
-class BOCHSAPI bx_pci_device_stub_c {
+#if BX_SUPPORT_PCI
+class BOCHSAPI bx_pci_device_c : public bx_devmodel_c {
 public:
-  bx_pci_device_stub_c(): pci_rom(NULL), pci_rom_size(0) {}
-  virtual ~bx_pci_device_stub_c() {
+  bx_pci_device_c(): pci_rom(NULL), pci_rom_size(0) {}
+  virtual ~bx_pci_device_c() {
     if (pci_rom != NULL) delete [] pci_rom;
   }
 
@@ -109,6 +108,7 @@ protected:
   Bit32u pci_rom_address;
   Bit32u pci_rom_size;
 };
+#endif
 
 //////////////////////////////////////////////////////////////////////
 // declare stubs for devices
@@ -226,7 +226,13 @@ public:
   }
 };
 
-class BOCHSAPI bx_vga_stub_c : public bx_devmodel_c {
+class BOCHSAPI bx_vga_stub_c
+#if BX_SUPPORT_PCI
+: public bx_pci_device_c
+#else
+: public bx_devmodel_c
+#endif
+{
 public:
   virtual void redraw_area(unsigned x0, unsigned y0,
                            unsigned width, unsigned height) {
@@ -250,22 +256,6 @@ public:
   }
 };
 
-class BOCHSAPI bx_pci2isa_stub_c : public bx_devmodel_c, public bx_pci_device_stub_c {
-public:
-  virtual void pci_set_irq (Bit8u devfunc, unsigned line, bx_bool level) {
-    STUBFUNC(pci2isa, pci_set_irq);
-  }
-};
-
-class BOCHSAPI bx_pci_ide_stub_c : public bx_devmodel_c, public bx_pci_device_stub_c {
-public:
-  virtual bx_bool bmdma_present(void) {
-    return 0;
-  }
-  virtual void bmdma_start_transfer(Bit8u channel) {}
-  virtual void bmdma_set_irq(Bit8u channel) {}
-};
-
 class BOCHSAPI bx_speaker_stub_c : public bx_devmodel_c {
 public:
   virtual void beep_on(float frequency) {
@@ -277,7 +267,23 @@ public:
 };
 
 #if BX_SUPPORT_PCI
-class BOCHSAPI bx_acpi_ctrl_stub_c : public bx_devmodel_c, public bx_pci_device_stub_c {
+class BOCHSAPI bx_pci2isa_stub_c : public bx_pci_device_c {
+public:
+  virtual void pci_set_irq (Bit8u devfunc, unsigned line, bx_bool level) {
+    STUBFUNC(pci2isa, pci_set_irq);
+  }
+};
+
+class BOCHSAPI bx_pci_ide_stub_c : public bx_pci_device_c {
+public:
+  virtual bx_bool bmdma_present(void) {
+    return 0;
+  }
+  virtual void bmdma_start_transfer(Bit8u channel) {}
+  virtual void bmdma_set_irq(Bit8u channel) {}
+};
+
+class BOCHSAPI bx_acpi_ctrl_stub_c : public bx_pci_device_c {
 public:
   virtual void generate_smi(Bit8u value) {}
 };
@@ -385,7 +391,7 @@ public:
 
 #if BX_SUPPORT_PCI
   Bit32u pci_get_confAddr(void) {return pci.confAddr;}
-  bx_bool register_pci_handlers(bx_pci_device_stub_c *device, Bit8u *devfunc,
+  bx_bool register_pci_handlers(bx_pci_device_c *device, Bit8u *devfunc,
                                 const char *name, const char *descr);
   bx_bool pci_set_base_mem(void *this_ptr, memory_handler_t f1, memory_handler_t f2,
                            Bit32u *addr, Bit8u *pci_conf, unsigned size);
@@ -397,21 +403,15 @@ public:
   static void timer_handler(void *);
   void timer(void);
 
-  bx_pci2isa_stub_c *pluginPci2IsaBridge;
-  bx_pci_ide_stub_c *pluginPciIdeController;
-#if BX_SUPPORT_PCI
-  bx_acpi_ctrl_stub_c *pluginACPIController;
-#endif
-  bx_devmodel_c     *pluginPitDevice;
-  bx_keyb_stub_c    *pluginKeyboard;
+  bx_cmos_stub_c    *pluginCmosDevice;
   bx_dma_stub_c     *pluginDmaDevice;
   bx_floppy_stub_c  *pluginFloppyDevice;
-  bx_cmos_stub_c    *pluginCmosDevice;
-  bx_vga_stub_c     *pluginVgaDevice;
-  bx_pic_stub_c     *pluginPicDevice;
   bx_hard_drive_stub_c *pluginHardDrive;
   bx_hdimage_ctl_stub_c *pluginHDImageCtl;
+  bx_keyb_stub_c    *pluginKeyboard;
+  bx_pic_stub_c     *pluginPicDevice;
   bx_speaker_stub_c *pluginSpeaker;
+  bx_vga_stub_c     *pluginVgaDevice;
 #if BX_SUPPORT_IODEBUG
   bx_iodebug_stub_c *pluginIODebug;
 #endif
@@ -421,6 +421,11 @@ public:
 #if BX_SUPPORT_GAMEPORT
   bx_game_stub_c  *pluginGameport;
 #endif
+#if BX_SUPPORT_PCI
+  bx_pci2isa_stub_c *pluginPci2IsaBridge;
+  bx_pci_ide_stub_c *pluginPciIdeController;
+  bx_acpi_ctrl_stub_c *pluginACPIController;
+#endif
 #if BX_SUPPORT_PCIUSB
   bx_usb_devctl_stub_c  *pluginUsbDevCtl;
 #endif
@@ -428,19 +433,14 @@ public:
   // stub classes that the pointers (above) can point to until a plugin is
   // loaded
   bx_cmos_stub_c stubCmos;
-  bx_keyb_stub_c stubKeyboard;
+  bx_dma_stub_c  stubDma;
+  bx_floppy_stub_c  stubFloppy;
   bx_hard_drive_stub_c stubHardDrive;
   bx_hdimage_ctl_stub_c stubHDImage;
-  bx_dma_stub_c  stubDma;
+  bx_keyb_stub_c stubKeyboard;
   bx_pic_stub_c  stubPic;
-  bx_floppy_stub_c  stubFloppy;
-  bx_vga_stub_c  stubVga;
-  bx_pci2isa_stub_c stubPci2Isa;
-  bx_pci_ide_stub_c stubPciIde;
   bx_speaker_stub_c stubSpeaker;
-#if BX_SUPPORT_PCI
-  bx_acpi_ctrl_stub_c stubACPIController;
-#endif
+  bx_vga_stub_c  stubVga;
 #if BX_SUPPORT_IODEBUG
   bx_iodebug_stub_c stubIODebug;
 #endif
@@ -449,6 +449,11 @@ public:
 #endif
 #if BX_SUPPORT_GAMEPORT
   bx_game_stub_c stubGameport;
+#endif
+#if BX_SUPPORT_PCI
+  bx_pci2isa_stub_c stubPci2Isa;
+  bx_pci_ide_stub_c stubPciIde;
+  bx_acpi_ctrl_stub_c stubACPIController;
 #endif
 #if BX_SUPPORT_PCIUSB
   bx_usb_devctl_stub_c stubUsbDevCtl;
@@ -510,7 +515,7 @@ private:
 #if BX_SUPPORT_PCI
     Bit8u handler_id[0x100];  // 256 devices/functions
     struct {
-      bx_pci_device_stub_c *handler;
+      bx_pci_device_c *handler;
     } pci_handler[BX_MAX_PCI_DEVICES];
     unsigned num_pci_handlers;
 

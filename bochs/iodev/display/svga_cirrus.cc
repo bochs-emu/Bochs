@@ -463,11 +463,12 @@ void bx_svga_cirrus_c::redraw_area(unsigned x0, unsigned y0,
   if ((width == 0) || (height == 0)) {
     return;
   }
+#if BX_SUPPORT_PCI
   if (BX_CIRRUS_THIS s.vga_override && (BX_CIRRUS_THIS s.nvgadev != NULL)) {
     BX_CIRRUS_THIS s.nvgadev->redraw_area(x0, y0, width, height);
     return;
   }
-
+#endif
   if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x01) == CIRRUS_SR7_BPP_VGA) {
     BX_CIRRUS_THIS bx_vgacore_c::redraw_area(x0,y0,width,height);
     return;
@@ -1013,14 +1014,16 @@ void bx_svga_cirrus_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
 
 void bx_svga_cirrus_c::refresh_display(void *this_ptr, bx_bool redraw)
 {
+#if BX_SUPPORT_PCI
   if (BX_CIRRUS_THIS s.vga_override && (BX_CIRRUS_THIS s.nvgadev != NULL)) {
     BX_CIRRUS_THIS s.nvgadev->refresh_display(BX_CIRRUS_THIS s.nvgadev, redraw);
-  } else {
-    if (redraw) {
-      redraw_area(0, 0, BX_CIRRUS_THIS s.last_xres, BX_CIRRUS_THIS s.last_yres);
-    }
-    svga_timer_handler(this_ptr);
+    return;
   }
+#endif
+  if (redraw) {
+    redraw_area(0, 0, BX_CIRRUS_THIS s.last_xres, BX_CIRRUS_THIS s.last_yres);
+  }
+  svga_timer_handler(this_ptr);
 }
 
 void bx_svga_cirrus_c::svga_timer_handler(void *this_ptr)

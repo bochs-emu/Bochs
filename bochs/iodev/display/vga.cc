@@ -345,14 +345,16 @@ Bit64s bx_vga_c::vga_param_handler(bx_param_c *param, int set, Bit64s val)
 
 void bx_vga_c::refresh_display(void *this_ptr, bx_bool redraw)
 {
+#if BX_SUPPORT_PCI
   if (BX_VGA_THIS s.vga_override && (BX_VGA_THIS s.nvgadev != NULL)) {
     BX_VGA_THIS s.nvgadev->refresh_display(BX_VGA_THIS s.nvgadev, redraw);
-  } else {
-    if (redraw) {
-      redraw_area(0, 0, BX_VGA_THIS s.last_xres, BX_VGA_THIS s.last_yres);
-    }
-    timer_handler(this_ptr);
+    return;
   }
+#endif
+  if (redraw) {
+    redraw_area(0, 0, BX_VGA_THIS s.last_xres, BX_VGA_THIS s.last_yres);
+  }
+  timer_handler(this_ptr);
 }
 
 void bx_vga_c::timer_handler(void *this_ptr)
@@ -780,11 +782,12 @@ void bx_vga_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
   if (width == 0 || height == 0) {
     return;
   }
+#if BX_SUPPORT_PCI
   if (BX_VGA_THIS s.vga_override && (BX_VGA_THIS s.nvgadev != NULL)) {
     BX_VGA_THIS s.nvgadev->redraw_area(x0, y0, width, height);
     return;
   }
-
+#endif
   if (BX_VGA_THIS vbe.enabled) {
     BX_VGA_THIS s.vga_mem_updated = 1;
     xmax = BX_VGA_THIS vbe.xres;

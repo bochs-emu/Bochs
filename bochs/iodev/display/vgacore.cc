@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2015  The Bochs Project
+//  Copyright (C) 2001-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1300,7 +1300,9 @@ void bx_vgacore_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool 
 void bx_vgacore_c::set_override(bx_bool enabled, void *dev)
 {
   BX_VGA_THIS s.vga_override = enabled;
+#if BX_SUPPORT_PCI
   BX_VGA_THIS s.nvgadev = (bx_nonvga_device_c*)dev;
+#endif
   if (enabled) {
     bx_virt_timer.deactivate_timer(BX_VGA_THIS timer_id);
   } else {

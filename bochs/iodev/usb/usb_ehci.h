@@ -322,7 +322,7 @@ struct EHCIQueue {
     QTAILQ_HEAD(, EHCIPacket) packets;
 };
 
-class bx_usb_ehci_c : public bx_devmodel_c, public bx_pci_device_stub_c {
+class bx_usb_ehci_c : public bx_pci_device_c {
 public:
   bx_usb_ehci_c();
   virtual ~bx_usb_ehci_c();

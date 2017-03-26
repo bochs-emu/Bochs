@@ -113,7 +113,7 @@ typedef struct {
 } bx_e1000_t;
 
 
-class bx_e1000_c : public bx_devmodel_c, bx_pci_device_stub_c {
+class bx_e1000_c : public bx_pci_device_c {
 public:
   bx_e1000_c();
   virtual ~bx_e1000_c();

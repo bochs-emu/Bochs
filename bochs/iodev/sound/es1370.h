@@ -82,7 +82,7 @@ typedef struct {
 } bx_es1370_t;
 
 
-class bx_es1370_c : public bx_devmodel_c, bx_pci_device_stub_c {
+class bx_es1370_c : public bx_pci_device_c {
 public:
   bx_es1370_c();
   virtual ~bx_es1370_c();

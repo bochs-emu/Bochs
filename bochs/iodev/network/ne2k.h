@@ -197,9 +197,11 @@ typedef struct {
 #endif
 } bx_ne2k_t;
 
-class bx_ne2k_c : public bx_devmodel_c
+class bx_ne2k_c
 #if BX_SUPPORT_PCI
-  , public bx_pci_device_stub_c
+: public bx_pci_device_c
+#else
+: public bx_devmodel_c
 #endif
 {
 public:

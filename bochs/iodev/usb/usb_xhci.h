@@ -532,7 +532,7 @@ typedef struct {
   #error "ERSTABADD_MASK not defined"
 #endif
 
-class bx_usb_xhci_c : public bx_devmodel_c, public bx_pci_device_stub_c {
+class bx_usb_xhci_c : public bx_pci_device_c {
 public:
   bx_usb_xhci_c();
   virtual ~bx_usb_xhci_c();
