@@ -1221,6 +1221,7 @@ void bx_pci_device_c::load_pci_rom(const char *path)
   BX_INFO(("loaded PCI ROM '%s' (size=%u / PCI=%uk)", path, (unsigned) stat_buf.st_size, pci_rom_size >> 10));
 }
 
+// pci configuration space read callback handler
 Bit32u bx_pci_device_c::pci_read_handler(Bit8u address, unsigned io_len)
 {
   Bit32u value = 0;

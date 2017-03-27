@@ -360,7 +360,7 @@ Bit32u bx_pci_ide_c::read(Bit32u address, unsigned io_len)
       break;
     case 0x04:
       value = BX_PIDE_THIS s.bmdma[channel].dtpr;
-      BX_DEBUG(("BM-DMA read DTP register, channel %d, value = 0x%04x", channel, value));
+      BX_DEBUG(("BM-DMA read DTP register, channel %d, value = 0x%08x", channel, value));
       break;
   }
 
@@ -414,7 +414,7 @@ void bx_pci_ide_c::write(Bit32u address, Bit32u value, unsigned io_len)
       break;
     case 0x04:
       BX_PIDE_THIS s.bmdma[channel].dtpr = value & 0xfffffffc;
-      BX_DEBUG(("BM-DMA write DTP register, channel %d, value = 0x%04x", channel, value));
+      BX_DEBUG(("BM-DMA write DTP register, channel %d, value = 0x%08x", channel, value));
       break;
   }
 }
