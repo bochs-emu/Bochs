@@ -912,8 +912,9 @@ bx_define_opcode(BX_IA_CMOVS_GdEd, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::CMOVS_GdEdR, B
 bx_define_opcode(BX_IA_CMOVZ_GdEd, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::CMOVZ_GdEdR, BX_ISA_P6, OP_Gd, OP_Ed, OP_NONE, OP_NONE, 0)
 
 bx_define_opcode(BX_IA_RDPMC, NULL, &BX_CPU_C::RDPMC, BX_ISA_P6, OP_NONE, OP_NONE, OP_NONE, OP_NONE, 0)
-bx_define_opcode(BX_IA_UD2A, &BX_CPU_C::UndefinedOpcode, &BX_CPU_C::UndefinedOpcode, 0, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
-bx_define_opcode(BX_IA_UD2B, &BX_CPU_C::UndefinedOpcode, &BX_CPU_C::UndefinedOpcode, 0, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
+bx_define_opcode(BX_IA_UD0, &BX_CPU_C::UndefinedOpcode, &BX_CPU_C::UndefinedOpcode, 0, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
+bx_define_opcode(BX_IA_UD1, &BX_CPU_C::UndefinedOpcode, &BX_CPU_C::UndefinedOpcode, 0, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
+bx_define_opcode(BX_IA_UD2, &BX_CPU_C::UndefinedOpcode, &BX_CPU_C::UndefinedOpcode, 0, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
 // P6 new instructions
 
 // FXSAVE

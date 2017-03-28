@@ -2155,7 +2155,7 @@ static const BxOpcodeInfo_t BxOpcodeTable0F09[] = {
 
 // opcode 0F 0B
 static const BxOpcodeInfo_t BxOpcodeTable0F0B[] = {
-  /* 0F 0B */ { 0, BX_IA_UD2A },
+  /* 0F 0B */ { 0, BX_IA_UD2 },
 };
 
 // opcode 0F 0D - 3DNow! PREFETCHW on AMD, NOP on older Intel CPUs
@@ -3745,10 +3745,10 @@ static const BxOpcodeInfo_t BxOpcodeTable0FB8[] = {
 
 // opcode 0F B9
 static const BxOpcodeInfo_t BxOpcodeTable0FB9[] = {
-  /* 0F B9 /w */ { 0, BX_IA_UD2B },
-  /* 0F B9 /d */ { 0, BX_IA_UD2B },
+  /* 0F B9 /w */ { 0, BX_IA_UD1 },
+  /* 0F B9 /d */ { 0, BX_IA_UD1 },
 #if BX_SUPPORT_X86_64
-  /* 0F B9 /q */ { 0, BX_IA_UD2B },
+  /* 0F B9 /q */ { 0, BX_IA_UD1 },
 #endif
 };
 
@@ -4296,6 +4296,11 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0FFE[4] = {
   /* 66 */ { 0, BX_IA_PADDD_VdqWdq },
   /* F3 */ { 0, BX_IA_ERROR },
   /* F2 */ { 0, BX_IA_ERROR },
+};
+
+// opcode 0F FF
+static const BxOpcodeInfo_t BxOpcodeTable0F0F[] = {
+  /* 0F FF */ { 0, BX_IA_UD0 },
 };
 
 #endif // BX_FETCHDECODE_OPMAP_H
