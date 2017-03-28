@@ -2072,10 +2072,158 @@ In Bochs 1.3 and before, the X11 GUI was always the default.
 <para>
 The remaining options can generally be used with any GUI.  For each option
 such as <option>--enable-cdrom</option>, you can also write <option>--disable-cdrom</option>
-to explicitly turn it off.
+to explicitly turn it off. The following 3 tables show the general options
+(.e.g debugger and plugins support), the CPU-related stuff (e.g. cpu level,
+SMP, x86_64 support) and the devices options (e.g. PCI, USB, Cirrus graphics).
 </para>
 
-<table id="configure-options"><title>Configure Options</title>
+<table id="configure-options-1"><title>Configure Options (General)</title>
+<tgroup cols="3" align="left" colsep="1" rowsep="1">
+  <thead>
+    <row>
+      <entry>Option</entry>
+      <entry>Default</entry>
+      <entry>Comments</entry>
+   </row>
+  </thead>
+  <tbody>
+    <row>
+      <entry>--enable-plugins</entry>
+      <entry>no</entry>
+      <entry>
+      Plugins are shared libraries that can be loaded on demand.  Example: the
+      serial device is implemented as a plugin.  In Unix, the serial plugin is
+      called libbx_serial.so.  When Bochs reads its configuration file, if the
+      serial device is enabled it loads libbx_serial.so.  See the Features
+      section for supported platforms.
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-debugger</entry>
+      <entry>no</entry>
+      <entry>
+        Compile in support for Bochs internal command-line debugger.  This has
+        nothing to do with x86 hardware debug support.  It is a more powerful
+        and non-intrusive native debugger.  Enabling this will of course slow
+        down the emulation.  You only need this option if you know you need it.
+        After you have run <command>./configure</command>, you may want to edit
+        <filename>config.h</filename> to customize the debugger further;
+        see <xref linkend="internal-debugger"> for more information.
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-debugger-gui</entry>
+      <entry>yes if debugger is on</entry>
+      <entry>
+      Enable support for the gui frontend of the Bochs debugger. This feature
+      is supported on Windows hosts and on hosts with GTK2 installed.
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-readline</entry>
+      <entry>detected by configure</entry>
+      <entry>
+      Compile the debugger with the GNU readline library, which gives
+      command line editing and history.
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-gdb-stub</entry>
+      <entry>no</entry>
+      <entry>
+      Enable support for the remote GDB stub. See <link linkend="debugging-with-gdb">Using Bochs and the remote GDB stub</link>.
+      NOTE: This feature cannot be used if the Bochs debugger is also enabled.
+      WARNING: This Bochs feature is not maintained yet and may fail.
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-disasm</entry>
+      <entry>yes</entry>
+      <entry>Compile in support for built-in disassembler.  Bochs has
+          a built-in disassembler, which is useful if you either
+          run the built-in debugger (<option>--enable-debugger</option>), or want
+          disassembly of the current instruction when there is a
+          panic in bochs.</entry>
+    </row>
+    <row>
+      <entry>--enable-docbook</entry>
+      <entry>detected</entry>
+      <entry>
+      Build the docbook documentation in doc/docbook.  The configure
+      script will enable this option automatically if you have a program
+      called docbook2html installed.
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-instrumentation=<option>directory</option></entry>
+      <entry>no</entry>
+      <entry>
+      Compile in support for instrumentation.  This allows you to collect
+      instrumentation data from bochs as it executes code.  You have to create
+      your own instrumentation library and define the instrumentation macros
+      (hooks in bochs) to either call your library functions or not, depending
+      upon whether you want to collect each piece of data.
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-xpm</entry>
+      <entry>yes</entry>
+      <entry>
+      Enables the check for the XPM library. This option is only valid if the
+      x display library is enabled (<option>--with-x11</option>).
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-show-ips</entry>
+      <entry>yes</entry>
+      <entry>
+      Enables logging of measured IPS, see the <command>ips</command> parameter
+      of the <link linkend="bochsopt-cpu-ips">cpu option</link>.
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-logging</entry>
+      <entry>yes</entry>
+      <entry>
+      By default, Bochs generates logfile output that can be configured with
+      bochsrc options and at runtime. Use <option>--disable-logging</option>
+      to turn off this feature completely.
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-assert-checks</entry>
+      <entry>yes if debugger is on</entry>
+      <entry>
+      BX_ASSERT event causes a panic on assertion failure if enabled (logging
+      feature must be enabled, too).
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-cpp</entry>
+      <entry>no</entry>
+      <entry>
+      Use .cpp as C++ suffix. Renames all the .cc files to .cpp for use with
+      compilers which want that, like older MS C++ compilers. Don't use this
+      option unless you know you need it.
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-idle-hack</entry>
+      <entry>no</entry>
+      <entry>
+      Enables Roland Mainz's experimental idle code, which is intended to
+      keep Bochs from always using 100% of CPU time.  When Bochs is waiting
+      around for an interrupt, the idle code uses a select() loop and some
+      X11 tricks to wait until user input arrives.  This is designed to
+      keep Bochs responsive while still yielding to other processes when
+      Bochs is idle. It only works with X11 or term GUI.
+      </entry>
+    </row>
+  </tbody>
+</tgroup>
+</table>
+
+<table id="configure-options-2"><title>Configure Options (CPU &amp; Memory)</title>
 <tgroup cols="3" align="left" colsep="1" rowsep="1">
   <thead>
     <row>
@@ -2183,6 +2331,46 @@ to explicitly turn it off.
       <entry>support for guest memory larger than the host supports</entry>
     </row>
     <row>
+      <entry>--enable-repeat-speedups</entry>
+      <entry>no</entry>
+      <entry>enable support repeated I/O and memory copy speedups</entry>
+    </row>
+    <row>
+      <entry>--enable-fast-function-calls</entry>
+      <entry>no</entry>
+      <entry>enable support for fast function calls (gcc on x86 only)</entry>
+    </row>
+    <row>
+      <entry>--enable-handlers-chaining</entry>
+      <entry>no</entry>
+      <entry>enable support for handlers chaining optimization</entry>
+    </row>
+    <row>
+      <entry>--enable-all-optimizations</entry>
+      <entry>no</entry>
+      <entry>
+        Turn on the enables for all speed optimizations that the
+        developers believe are safe to use:
+         --enable-repeat-speedups,
+         --enable-fast-function-calls,
+         --enable-handlers-chaining.
+      </entry>
+    </row>
+  </tbody>
+</tgroup>
+</table>
+
+<table id="configure-options-3"><title>Configure Options (Devices)</title>
+<tgroup cols="3" align="left" colsep="1" rowsep="1">
+  <thead>
+    <row>
+      <entry>Option</entry>
+      <entry>Default</entry>
+      <entry>Comments</entry>
+   </row>
+  </thead>
+  <tbody>
+    <row>
       <entry>--enable-cdrom</entry>
       <entry>yes</entry>
       <entry>
@@ -2223,27 +2411,14 @@ to explicitly turn it off.
       </entry>
     </row>
     <row>
-      <entry>--enable-idle-hack</entry>
-      <entry>no</entry>
-      <entry>
-      Enables Roland Mainz's experimental idle code, which is intended to
-      keep Bochs from always using 100% of CPU time.  When Bochs is waiting
-      around for an interrupt, the idle code uses a select() loop and some
-      X11 tricks to wait until user input arrives.  This is designed to
-      keep Bochs responsive while still yielding to other processes when
-      Bochs is idle. It only works with X11 or term GUI.
-      </entry>
-    </row>
-    <row>
       <entry>--enable-ne2000</entry>
       <entry>no</entry>
       <entry>Enable NE2000 network card support.  This requires a
-      low-level component to be written for each OS.  The NE2000
-      option is only supported on FreeBSD, OpenBSD, Linux, and Windows
-      9x/NT/2K/XP.  When enabled and configured, the NE2000 device model can
-      talk to any computer on the network EXCEPT FOR the local host.
-      Exception: Under most circumstances, Bochs can talk to the local host
-      on Windows, and in the ethertap interface for Linux.
+      low-level component to be written for each OS (supported on FreeBSD,
+      OpenBSD, Linux, and Windows 9x/NT/2K/XP).  When enabled and configured,
+      the NE2000 device model can talk to any computer on the network
+      EXCEPT FOR the local host. Exception: Under most circumstances, Bochs can
+      talk to the local host on Windows, and in the ethertap interface for Linux.
       </entry>
     </row>
     <row>
@@ -2271,90 +2446,6 @@ to explicitly turn it off.
       </entry>
     </row>
     <row>
-      <entry>--enable-plugins</entry>
-      <entry>no</entry>
-      <entry>
-      Plugins are shared libraries that can be loaded on demand.  Example: the
-      serial device is implemented as a plugin.  In Unix, the serial plugin is
-      called libbx_serial.so.  When Bochs reads its configuration file, if the
-      serial device is enabled it loads libbx_serial.so.  See the Features
-      section for supported platforms.
-      </entry>
-    </row>
-    <row>
-      <entry>--enable-repeat-speedups</entry>
-      <entry>no</entry>
-      <entry>enable support repeated I/O and memory copy speedups</entry>
-    </row>
-    <row>
-      <entry>--enable-fast-function-calls</entry>
-      <entry>no</entry>
-      <entry>enable support for fast function calls (gcc on x86 only)</entry>
-    </row>
-    <row>
-      <entry>--enable-handlers-chaining</entry>
-      <entry>no</entry>
-      <entry>enable support for handlers chaining optimization</entry>
-    </row>
-    <row>
-      <entry>--enable-all-optimizations</entry>
-      <entry>no</entry>
-      <entry>
-        Turn on the enables for all speed optimizations that the
-        developers believe are safe to use:
-         --enable-repeat-speedups,
-         --enable-fast-function-calls,
-         --enable-handlers-chaining.
-      </entry>
-    </row>
-    <row>
-      <entry>--enable-debugger</entry>
-      <entry>no</entry>
-      <entry>
-        Compile in support for Bochs internal command-line debugger.  This has
-        nothing to do with x86 hardware debug support.  It is a more powerful
-        and non-intrusive native debugger.  Enabling this will of course slow
-        down the emulation.  You only need this option if you know you need it.
-        After you have run <command>./configure</command>, you may want to edit
-        <filename>config.h</filename> to customize the debugger further;
-        see <xref linkend="internal-debugger"> for more information.
-      </entry>
-    </row>
-    <row>
-      <entry>--enable-debugger-gui</entry>
-      <entry>yes if debugger is on</entry>
-      <entry>
-      Enable support for the gui frontend of the Bochs debugger. This feature
-      is supported on Windows hosts and on hosts with GTK2 installed.
-      </entry>
-    </row>
-    <row>
-      <entry>--enable-readline</entry>
-      <entry>detected by configure</entry>
-      <entry>
-      Compile the debugger with the GNU readline library, which gives
-      command line editing and history.
-      </entry>
-    </row>
-    <row>
-      <entry>--enable-gdb-stub</entry>
-      <entry>no</entry>
-      <entry>
-      Enable support for the remote GDB stub. See <link linkend="debugging-with-gdb">Using Bochs and the remote GDB stub</link>.
-      NOTE: This feature cannot be used if the Bochs debugger is also enabled.
-      WARNING: This Bochs feature is not maintained yet and may fail.
-      </entry>
-    </row>
-    <row>
-      <entry>--enable-disasm</entry>
-      <entry>yes</entry>
-      <entry>Compile in support for built-in disassembler.  Bochs has
-          a built-in disassembler, which is useful if you either
-          run the built-in debugger (<option>--enable-debugger</option>), or want
-          disassembly of the current instruction when there is a
-          panic in bochs.</entry>
-    </row>
-    <row>
       <entry>--enable-iodebug</entry>
       <entry>yes if debugger is on</entry>
       <entry>
@@ -2370,7 +2461,8 @@ to explicitly turn it off.
     <row>
       <entry>--enable-pci</entry>
       <entry>yes</entry>
-      <entry>Enable limited i440FX PCI support. This is still incomplete, but usable.
+      <entry>Enable limited i440FX / i430FX PCI support. This is still incomplete,
+      but usable.
       </entry>
     </row>
     <row>
@@ -2420,68 +2512,6 @@ to explicitly turn it off.
       <entry>
         Enable support for the serial port emulation to access to the host's
         serial port. This feature is partly implemented for Windows hosts only.
-      </entry>
-    </row>
-    <row>
-      <entry>--enable-docbook</entry>
-      <entry>detected</entry>
-      <entry>
-      Build the docbook documentation in doc/docbook.  The configure
-      script will enable this option automatically if you have a program
-      called docbook2html installed.
-      </entry>
-    </row>
-    <row>
-      <entry>--enable-instrumentation=<option>directory</option></entry>
-      <entry>no</entry>
-      <entry>
-      Compile in support for instrumentation.  This allows you to collect
-      instrumentation data from bochs as it executes code.  You have to create
-      your own instrumentation library and define the instrumentation macros
-      (hooks in bochs) to either call your library functions or not, depending
-      upon whether you want to collect each piece of data.
-      </entry>
-    </row>
-    <row>
-      <entry>--enable-xpm</entry>
-      <entry>yes</entry>
-      <entry>
-      Enables the check for the XPM library. This option is only valid if the
-      x display library is enabled (<option>--with-x11</option>).
-      </entry>
-    </row>
-    <row>
-      <entry>--enable-show-ips</entry>
-      <entry>yes</entry>
-      <entry>
-      Enables logging of measured IPS, see the <command>ips</command> parameter
-      of the <link linkend="bochsopt-cpu-ips">cpu option</link>.
-      </entry>
-    </row>
-    <row>
-      <entry>--enable-logging</entry>
-      <entry>yes</entry>
-      <entry>
-      By default, Bochs generates logfile output that can be configured with
-      bochsrc options and at runtime. Use <option>--disable-logging</option>
-      to turn off this feature completely.
-      </entry>
-    </row>
-    <row>
-      <entry>--enable-assert-checks</entry>
-      <entry>yes if debugger is on</entry>
-      <entry>
-      BX_ASSERT event causes a panic on assertion failure if enabled (logging
-      feature must be enabled, too).
-      </entry>
-    </row>
-    <row>
-      <entry>--enable-cpp</entry>
-      <entry>no</entry>
-      <entry>
-      Use .cpp as C++ suffix. Renames all the .cc files to .cpp for use with
-      compilers which want that, like older MS C++ compilers. Don't use this
-      option unless you know you need it.
       </entry>
     </row>
   </tbody>
@@ -2625,7 +2655,8 @@ find the workspace file called <filename>bochs.sln</filename> in the folder
 "vs2013" and load it in VC++. Choose <command>Project:Set Active Project</command>
 and be sure that "bochs" is selected. Then choose <command>Build:Build bochs.exe</command>.
 This will build all the required libraries (iodev, cpu, etc.) and the auxiliary
-programs <filename>bximage.exe</filename> and <filename>niclist.exe</filename>.
+programs <filename>bximage.exe</filename>, <filename>bxhub.exe</filename> and
+<filename>niclist.exe</filename>.
 </para>
 
 <para>
@@ -3678,8 +3709,8 @@ value. In all other cases the 'memory' option should be used instead.
 <para>
 Examples:
 <screen>
-  romimage: file=bios/BIOS-bochs-latest, address=0xfffe0000
-  romimage: file=$BXSHARE/BIOS-bochs-legacy, address=0xffff0000
+  romimage: file=bios/BIOS-bochs-latest, options=fastboot
+  romimage: file=$BXSHARE/BIOS-bochs-legacy
   romimage: file=mybios.bin, address=0xfff80000
 </screen>
 The ROM BIOS controls what the PC does when it first powers on.  Normally, you
@@ -3885,7 +3916,7 @@ and the 'toggle' option below).
 The default method to toggle the mouse capture at runtime is to press the
 CTRL key and the middle mouse button ('ctrl+mbutton'). This option allows
 to change the method to 'ctrl+f10' (like DOSBox) or 'ctrl+alt' (like QEMU)
-or 'f12' (replaces win32 'legacyF12' option).
+or 'f12'.
 </para>
 </section>
 

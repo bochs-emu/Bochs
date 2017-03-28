@@ -71,6 +71,7 @@ memory
     rom
       path
       address
+      options
     vgarom
       path
   optrom
@@ -109,7 +110,8 @@ clock_cmos
     rtc_init
 
 pci
-  i440fx_support
+  enabled
+  chipset
   slot
     1
     2
@@ -225,6 +227,8 @@ ports
         device
         options
     ohci
+      (same options as ports.usb.uhci)
+    ehci
       (same options as ports.usb.uhci)
     xhci
       (same options as ports.usb.uhci)
