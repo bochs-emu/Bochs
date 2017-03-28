@@ -4299,7 +4299,7 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0FFE[4] = {
 };
 
 // opcode 0F FF
-static const BxOpcodeInfo_t BxOpcodeTable0F0F[] = {
+static const BxOpcodeInfo_t BxOpcodeTable0FFF[] = {
   /* 0F FF */ { 0, BX_IA_UD0 },
 };
 

@@ -605,7 +605,7 @@ static BxOpcodeDecodeDescriptor32 decode32_descriptor[] =
    /*    0F FC */ { &decoder32_sse, BxOpcodeGroupSSE_0FFC },
    /*    0F FD */ { &decoder32_sse, BxOpcodeGroupSSE_0FFD },
    /*    0F FE */ { &decoder32_sse, BxOpcodeGroupSSE_0FFE },
-   /*    0F FF */ { &decoder_simple32, BxOpcodeTable0F0F },
+   /*    0F FF */ { &decoder_simple32, BxOpcodeTable0FFF },
 #if BX_CPU_LEVEL >= 6
    // 3-byte opcode 0x0F 0x38
    /* 0F 38 00 */ { &decoder32_sse, BxOpcodeGroupSSE_0F3800 },

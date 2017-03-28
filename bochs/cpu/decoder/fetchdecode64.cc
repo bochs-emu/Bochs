@@ -640,7 +640,7 @@ static BxOpcodeDecodeDescriptor64 decode64_descriptor[] =
    /*    0F FC */ { &decoder64_sse, BxOpcodeGroupSSE_0FFC },
    /*    0F FD */ { &decoder64_sse, BxOpcodeGroupSSE_0FFD },
    /*    0F FE */ { &decoder64_sse, BxOpcodeGroupSSE_0FFE },
-   /*    0F FF */ { &decoder_simple64, BxOpcodeTable0F0F },
+   /*    0F FF */ { &decoder_simple64, BxOpcodeTable0FFF },
 
    // 3-byte opcode 0x0F 0x38
    /* 0F 38 00 */ { &decoder64_sse, BxOpcodeGroupSSE_0F3800 },
