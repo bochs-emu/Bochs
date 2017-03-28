@@ -222,7 +222,7 @@ BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned 
     case 14: case 15: /* execute/read-only, conforming */
       if (seg->cache.u.segment.limit_scaled == 0xffffffff && seg->cache.u.segment.base == 0) {
         seg->cache.valid |= SegAccessROK | SegAccessROK4G;
-	break;
+    	break;
       }
 
       if (offset > (seg->cache.u.segment.limit_scaled - length)
@@ -255,7 +255,7 @@ BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned 
       else
         upper_limit = 0x0000ffff;
       if (offset <= seg->cache.u.segment.limit_scaled ||
-           offset > upper_limit || (upper_limit - offset) < length)
+          offset > upper_limit || (upper_limit - offset) < length)
       {
         BX_ERROR(("execute_virtual_checks(): read beyond limit expand down"));
         return 0;

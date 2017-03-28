@@ -283,44 +283,21 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::WBINVD(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CLFLUSH(bxInstruction_c *i)
 {
-  bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[i->seg()];
-
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-  bx_address laddr = get_laddr(i->seg(), eaddr);
+  bx_address laddr;
 
+  // CLFLUSH performs all the segmentation and paging checks that a 1-byte read would perform,
+  // except that it also allows references to execute-only segments.
 #if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-    if (! IsCanonical(laddr)) {
-      BX_ERROR(("%s: non-canonical access !", i->getIaOpcodeNameShort()));
-      exception(int_number(i->seg()), 0);
-    }
-  }
-  else
+  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
+    laddr = get_laddr64(i->seg(), eaddr);
+  else 
 #endif
-  {
-    // check if we could access the memory segment
-    if (!(seg->cache.valid & SegAccessROK)) {
-      if (! execute_virtual_checks(seg, (Bit32u) eaddr, 1))
-        exception(int_number(i->seg()), 0);
-    }
-    else {
-      if (eaddr > seg->cache.u.segment.limit_scaled) {
-        BX_ERROR(("%s: segment limit violation", i->getIaOpcodeNameShort()));
-        exception(int_number(i->seg()), 0);
-      }
-    }
-  }
+    laddr = agen_read_execute32(i->seg(), (Bit32u)eaddr, 1);
 
-#if BX_INSTRUMENTATION
-  bx_phy_address paddr =
-#endif
-    translate_linear(BX_TLB_ENTRY_OF(laddr, 0), laddr, USER_PL, BX_READ);
+  tickle_read_linear(i->seg(), laddr);
 
-  BX_INSTR_CLFLUSH(BX_CPU_ID, laddr, paddr);
-
-#if BX_X86_DEBUGGER
-  hwbreakpoint_match(laddr, 1, BX_READ);
-#endif
+  BX_INSTR_CLFLUSH(BX_CPU_ID, laddr, BX_CPU_THIS_PTR address_xlation.paddress1);
 
   BX_NEXT_INSTR(i);
 }
@@ -813,37 +790,15 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[i->seg()];
+  bx_address eaddr = RAX & i->asize_mask();
 
-  bx_address offset = RAX & i->asize_mask();
+  // MONITOR/MONITORX performs the same segmentation and paging checks as a 1-byte read
+  tickle_read_virtual(i->seg(), eaddr);
 
-  // set MONITOR
-  bx_address laddr = get_laddr(i->seg(), offset);
-
-#if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-    if (! IsCanonical(laddr)) {
-      BX_ERROR(("%s: non-canonical access !", i->getIaOpcodeNameShort()));
-      exception(int_number(i->seg()), 0);
-    }
-  }
-  else
+  bx_phy_address paddr = BX_CPU_THIS_PTR address_xlation.paddress1;
+#if BX_SUPPORT_MEMTYPE
+  if (BX_CPU_THIS_PTR address_xlation.memtype1 != BX_MEMTYPE_WB) return;
 #endif
-  {
-    // check if we could access the memory segment
-    if (!(seg->cache.valid & SegAccessROK)) {
-      if (! execute_virtual_checks(seg, (Bit32u) offset, 1))
-        exception(int_number(i->seg()), 0);
-    }
-    else {
-      if (offset > seg->cache.u.segment.limit_scaled) {
-        BX_ERROR(("%s: segment limit violation", i->getIaOpcodeNameShort()));
-        exception(int_number(i->seg()), 0);
-      }
-    }
-  }
-
-  bx_phy_address paddr = translate_linear(BX_TLB_ENTRY_OF(laddr, 0), laddr, USER_PL, BX_READ);
 
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {

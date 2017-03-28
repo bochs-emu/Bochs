@@ -4482,6 +4482,10 @@ public: // for now...
 #endif
 #endif
 
+  BX_SMF void tickle_read_linear(unsigned seg, bx_address offset) BX_CPP_AttrRegparmN(2);
+  BX_SMF void tickle_read_virtual_32(unsigned seg, Bit32u offset) BX_CPP_AttrRegparmN(2);
+  BX_SMF void tickle_read_virtual(unsigned seg, bx_address offset) BX_CPP_AttrRegparmN(2);
+
   BX_SMF Bit8u read_virtual_byte_32(unsigned seg, Bit32u offset) BX_CPP_AttrRegparmN(2);
   BX_SMF Bit16u read_virtual_word_32(unsigned seg, Bit32u offset) BX_CPP_AttrRegparmN(2);
   BX_SMF Bit32u read_virtual_dword_32(unsigned seg, Bit32u offset) BX_CPP_AttrRegparmN(2);
@@ -4946,6 +4950,7 @@ public: // for now...
 
   BX_SMF bx_address agen_read(unsigned seg, bx_address offset, unsigned len);
   BX_SMF Bit32u agen_read32(unsigned seg, Bit32u offset, unsigned len);
+  BX_SMF Bit32u agen_read_execute32(unsigned seg, Bit32u offset, unsigned len);
   BX_SMF bx_address agen_read_aligned(unsigned seg, bx_address offset, unsigned len);
   BX_SMF Bit32u agen_read_aligned32(unsigned seg, Bit32u offset, unsigned len);
 
@@ -5366,6 +5371,27 @@ BX_CPP_INLINE bx_address BX_CPU_C::get_laddr(unsigned seg, bx_address offset)
   }
 #endif
   return get_laddr32(seg, (Bit32u) offset);
+}
+
+// same as agen_read32 but also allow access to execute only segments
+BX_CPP_INLINE Bit32u BX_CPU_C::agen_read_execute32(unsigned s, Bit32u offset, unsigned len)
+{
+  bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
+
+  if (seg->cache.valid & SegAccessROK4G) {
+    return offset;
+  }
+
+  if (seg->cache.valid & SegAccessROK) {
+    if (offset <= (seg->cache.u.segment.limit_scaled-len+1)) {
+      return get_laddr32(s, offset);
+    }
+  }
+
+  if (!execute_virtual_checks(seg, offset, len))
+    exception(int_number(s), 0);
+
+  return get_laddr32(s, offset);
 }
 
 BX_CPP_INLINE Bit32u BX_CPU_C::agen_read32(unsigned s, Bit32u offset, unsigned len)

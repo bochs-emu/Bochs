@@ -311,6 +311,36 @@ BX_CPU_C::write_linear_zmmword_aligned(unsigned s, bx_address laddr, const BxPac
 
 #endif
 
+  void BX_CPP_AttrRegparmN(2)
+BX_CPU_C::tickle_read_linear(unsigned s, bx_address laddr)
+{
+  bx_address lpf = LPFOf(laddr);
+  bx_TLB_entry *tlbEntry = BX_TLB_ENTRY_OF(laddr, 0);
+  if (tlbEntry->lpf == lpf) {
+    // See if the TLB entry privilege level allows us read access
+    // from this CPL.
+    if (isReadOK(tlbEntry, USER_PL)) return;
+  }
+
+#if BX_SUPPORT_X86_64
+  if (! IsCanonical(laddr)) {
+    BX_ERROR(("tickle_read_linear(): canonical failure"));
+    exception(int_number(s), 0);
+  }
+#endif
+
+  // Access within single page
+  BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, USER_PL, BX_READ);
+  BX_CPU_THIS_PTR address_xlation.pages     = 1;
+#if BX_SUPPORT_MEMTYPE
+  BX_CPU_THIS_PTR address_xlation.memtype1  = tlbEntry->get_memtype();
+#endif
+
+#if BX_X86_DEBUGGER
+  hwbreakpoint_match(laddr, 1, BX_READ);
+#endif
+}
+
   Bit8u BX_CPP_AttrRegparmN(2)
 BX_CPU_C::read_linear_byte(unsigned s, bx_address laddr)
 {
