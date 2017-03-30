@@ -105,8 +105,8 @@ bx_null_pktmover_c::bx_null_pktmover_c(const char *netif,
 #if BX_ETH_NULL_LOGGING
   // Start the rx poll
   this->rx_timer_index =
-    bx_pc_system.register_timer(this, this->rx_timer_handler, 1000,
-                                1, 1, "eth_null"); // continuous, active
+    DEV_register_timer(this, this->rx_timer_handler, 1000, 1, 1,
+                       "eth_null"); // continuous, active
   this->rxh    = rxh;
   this->rxstat = rxstat;
   // eventually Bryce wants txlog to dump in pcap format so that

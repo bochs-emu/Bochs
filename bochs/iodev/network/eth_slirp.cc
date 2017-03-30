@@ -322,8 +322,8 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
                        (status == BX_NETDEV_100MBIT) ? 100 : 10;
   if (bx_slirp_instances == 0) {
     rx_timer_index =
-      bx_pc_system.register_timer(this, this->rx_timer_handler, 1000,
-                                1, 1, "eth_slirp");
+      DEV_register_timer(this, this->rx_timer_handler, 1000, 1, 1,
+                         "eth_slirp");
 #ifndef WIN32
     signal(SIGPIPE, SIG_IGN);
 #endif

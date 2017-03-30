@@ -285,7 +285,7 @@ void bx_floppy_ctrl_c::init(void)
 
   if (BX_FD_THIS s.floppy_timer_index == BX_NULL_TIMER_HANDLE) {
     BX_FD_THIS s.floppy_timer_index =
-      bx_pc_system.register_timer(this, timer_handler, 250, 0, 0, "floppy");
+      DEV_register_timer(this, timer_handler, 250, 0, 0, "floppy");
   }
   /* phase out s.non_dma in favor of using FD_MS_NDMA, more like hardware */
   BX_FD_THIS s.main_status_reg &= ~FD_MS_NDMA;  // enable DMA from start

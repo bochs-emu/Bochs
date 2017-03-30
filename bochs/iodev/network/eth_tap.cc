@@ -279,8 +279,8 @@ bx_tap_pktmover_c::bx_tap_pktmover_c(const char *netif,
 
   // Start the rx poll
   this->rx_timer_index =
-    bx_pc_system.register_timer(this, this->rx_timer_handler, 1000,
-                                1, 1, "eth_tap"); // continuous, active
+    DEV_register_timer(this, this->rx_timer_handler, 1000, 1, 1,
+                       "eth_tap"); // continuous, active
   this->rxh    = rxh;
   this->rxstat = rxstat;
   memcpy(&guest_macaddr[0], macaddr, 6);

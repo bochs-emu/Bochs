@@ -165,8 +165,8 @@ bx_vde_pktmover_c::bx_vde_pktmover_c(const char *netif,
 
   // Start the rx poll
   this->rx_timer_index =
-    bx_pc_system.register_timer(this, this->rx_timer_handler, 1000,
-                                1, 1, "eth_vde"); // continuous, active
+    DEV_register_timer(this, this->rx_timer_handler, 1000, 1, 1,
+                       "eth_vde"); // continuous, active
   this->rxh    = rxh;
   this->rxstat = rxstat;
 #if BX_ETH_VDE_LOGGING

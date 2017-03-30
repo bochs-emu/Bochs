@@ -257,7 +257,7 @@ void bx_usb_xhci_c::init(void)
   }
 
   BX_XHCI_THIS xhci_timer_index =
-      bx_pc_system.register_timer(this, xhci_timer_handler, 1024, 1, 1, "xhci_timer");
+      DEV_register_timer(this, xhci_timer_handler, 1024, 1, 1, "xhci_timer");
 
   BX_XHCI_THIS devfunc = 0x00;
   DEV_register_pci_handlers(this, &BX_XHCI_THIS devfunc, BX_PLUGIN_USB_XHCI,

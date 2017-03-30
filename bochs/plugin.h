@@ -141,10 +141,7 @@ extern "C" {
 #define DEV_reset_devices(type) {bx_devices.reset(type); }
 #define DEV_register_state() {bx_devices.register_state(); }
 #define DEV_after_restore_state() {bx_devices.after_restore_state(); }
-
 #define DEV_register_timer(a,b,c,d,e,f) bx_pc_system.register_timer(a,b,c,d,e,f)
-#define DEV_mouse_enabled_changed(en) (bx_devices.mouse_enabled_changed(en))
-#define DEV_mouse_motion(dx, dy, dz, bs, absxy) (bx_devices.mouse_motion(dx, dy, dz, bs, absxy))
 
 ///////// Removable devices macros
 #define DEV_optional_key_enq(a) (bx_devices.optional_key_enq(a))
@@ -171,6 +168,10 @@ extern "C" {
 #define DEV_kbd_paste_bytes(bytes, count) \
     (bx_devices.pluginKeyboard->paste_bytes(bytes,count))
 #define DEV_kbd_release_keys() (bx_devices.pluginKeyboard->release_keys())
+
+///////// mouse macros
+#define DEV_mouse_enabled_changed(en) (bx_devices.mouse_enabled_changed(en))
+#define DEV_mouse_motion(dx, dy, dz, bs, absxy) (bx_devices.mouse_motion(dx, dy, dz, bs, absxy))
 
 ///////// hard drive macros
 #define DEV_hd_read_handler(a, b, c) \
@@ -331,13 +332,6 @@ BOCHSAPI extern int (*pluginRegisterDefaultIOWriteHandler)(void *thisPtr, ioWrit
 /* === IRQ stuff === */
 BOCHSAPI extern void  (*pluginRegisterIRQ)(unsigned irq, const char *name);
 BOCHSAPI extern void  (*pluginUnregisterIRQ)(unsigned irq, const char *name);
-
-/* === Timer stuff === */
-BOCHSAPI extern int     (*pluginRegisterTimer)(void *this_ptr, void (*funct)(void *),
-                             Bit32u useconds, bx_bool continuous,
-                             bx_bool active, const char *name);
-
-BOCHSAPI extern void    (*pluginActivateTimer)(unsigned id, Bit32u usec, bx_bool continuous);
 
 /* === HRQ stuff === */
 BOCHSAPI extern void    (*pluginSetHRQ)(unsigned val);

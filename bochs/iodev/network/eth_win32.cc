@@ -346,7 +346,7 @@ bx_win32_pktmover_c::bx_win32_pktmover_c(
     BX_PANIC(("Could not allocate a recv packet"));
   }
   rx_timer_index =
-    bx_pc_system.register_timer(this, this->rx_timer_handler, 10000, 1, 1, "eth_win32");
+    DEV_register_timer(this, this->rx_timer_handler, 10000, 1, 1, "eth_win32");
 
 #if BX_ETH_WIN32_LOGGING
   pktlog_txt = fopen("eth_win32-pktlog.txt", "wb");

@@ -396,19 +396,19 @@ void bx_sb16_c::init(void)
 
   // initialize the timers
   if (MPU.timer_handle == BX_NULL_TIMER_HANDLE) {
-    MPU.timer_handle = bx_pc_system.register_timer
+    MPU.timer_handle = DEV_register_timer
       (BX_SB16_THISP, mpu_timer, 500000 / 384, 1, 1, "sb16.mpu");
     // midi timer: active, continuous, 500000 / 384 seconds (384 = delta time, 500000 = sec per beat at 120 bpm. Don't change this!)
   }
 
   if (DSP.timer_handle == BX_NULL_TIMER_HANDLE) {
-    DSP.timer_handle = bx_pc_system.register_timer
+    DSP.timer_handle = DEV_register_timer
       (BX_SB16_THISP, dsp_dmatimer, 1, 1, 0, "sb16.dsp");
     // dma timer: inactive, continuous, frequency variable
   }
 
   if (OPL.timer_handle == BX_NULL_TIMER_HANDLE) {
-    OPL.timer_handle = bx_pc_system.register_timer
+    OPL.timer_handle = DEV_register_timer
       (BX_SB16_THISP, opl_timer, 80, 1, 0, "sb16.opl");
     // opl timer: inactive, continuous, frequency 80us
   }

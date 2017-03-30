@@ -86,10 +86,6 @@ int (*pluginRegisterDefaultIOReadHandler)(void *thisPtr, ioReadHandler_t callbac
                             const char *name, Bit8u mask) = 0;
 int (*pluginRegisterDefaultIOWriteHandler)(void *thisPtr, ioWriteHandler_t callback,
                              const char *name, Bit8u mask) = 0;
-int (*pluginRegisterTimer)(void *this_ptr, void (*funct)(void *),
-                            Bit32u useconds, bx_bool continuous,
-bx_bool active, const char* name) = 0;
-                            void (*pluginActivateTimer)(unsigned id, Bit32u usec, bx_bool continuous) = 0;
 
 void (*pluginHRQHackCallback)(void);
 unsigned pluginHRQ = 0;
@@ -254,23 +250,6 @@ builtinRegisterDefaultIOWriteHandler(void *thisPtr, ioWriteHandler_t callback,
   bx_devices.register_default_io_write_handler (thisPtr, callback, name, mask);
   pluginlog->ldebug("plugin %s registered default I/O write ", name);
   return 0;
-}
-
-  static int
-builtinRegisterTimer(void *this_ptr, void (*funct)(void *),
-                        Bit32u useconds, bx_bool continuous,
-                        bx_bool active, const char* name)
-{
-  int id = bx_pc_system.register_timer (this_ptr, funct, useconds, continuous, active, name);
-  pluginlog->ldebug("plugin %s registered timer %d", name, id);
-  return id;
-}
-
-  static void
-builtinActivateTimer(unsigned id, Bit32u usec, bx_bool continuous)
-{
-  bx_pc_system.activate_timer (id, usec, continuous);
-  pluginlog->ldebug("plugin activated timer %d", id);
 }
 
 #if BX_PLUGINS
@@ -494,9 +473,6 @@ plugin_startup(void)
 
   pluginRegisterDefaultIOReadHandler = builtinRegisterDefaultIOReadHandler;
   pluginRegisterDefaultIOWriteHandler = builtinRegisterDefaultIOWriteHandler;
-
-  pluginRegisterTimer = builtinRegisterTimer;
-  pluginActivateTimer = builtinActivateTimer;
 
   pluginlog = new logfunctions();
   pluginlog->put("PLUGIN");

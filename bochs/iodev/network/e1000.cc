@@ -473,8 +473,7 @@ void bx_e1000_c::init(void)
 
   if (BX_E1000_THIS s.tx_timer_index == BX_NULL_TIMER_HANDLE) {
     BX_E1000_THIS s.tx_timer_index =
-      bx_pc_system.register_timer(this, tx_timer_handler, 0,
-                                  0, 0, "e1000"); // one-shot, inactive
+      DEV_register_timer(this, tx_timer_handler, 0, 0, 0, "e1000"); // one-shot, inactive
   }
   BX_E1000_THIS s.statusbar_id = bx_gui->register_statusitem("E1000", 1);
 

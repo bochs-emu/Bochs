@@ -130,7 +130,7 @@ void bx_acpi_ctrl_c::init(void)
 
   if (BX_ACPI_THIS s.timer_index == BX_NULL_TIMER_HANDLE) {
     BX_ACPI_THIS s.timer_index =
-      bx_pc_system.register_timer(this, timer_handler, 1000, 0, 0, "ACPI");
+      DEV_register_timer(this, timer_handler, 1000, 0, 0, "ACPI");
   }
   DEV_register_iowrite_handler(this, write_handler, ACPI_DBG_IO_ADDR, "ACPI", 4);
 

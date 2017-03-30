@@ -174,7 +174,7 @@ void bx_usb_ohci_c::init(void)
   // Call our frame timer routine every 1mS (1,000uS)
   // Continuous and active
   BX_OHCI_THIS hub.frame_timer_index =
-                   bx_pc_system.register_timer(this, usb_frame_handler, 1000, 1,1, "ohci.frame_timer");
+                   DEV_register_timer(this, usb_frame_handler, 1000, 1,1, "ohci.frame_timer");
 
   BX_OHCI_THIS hub.devfunc = 0x00;
   DEV_register_pci_handlers(this, &BX_OHCI_THIS hub.devfunc, BX_PLUGIN_USB_OHCI,

@@ -78,7 +78,7 @@ void bx_uhci_core_c::init_uhci(Bit8u devfunc, Bit16u devid, Bit8u headt, Bit8u i
   // Call our timer routine every 1mS (1,000uS)
   // Continuous and active
   hub.timer_index =
-    bx_pc_system.register_timer(this, uhci_timer_handler, 1000, 1,1, "usb.timer");
+    DEV_register_timer(this, uhci_timer_handler, 1000, 1,1, "usb.timer");
 
   hub.devfunc = devfunc;
   DEV_register_pci_handlers(this, &hub.devfunc, BX_PLUGIN_USB_UHCI,

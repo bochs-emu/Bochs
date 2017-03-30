@@ -252,8 +252,7 @@ void bx_vnet_pktmover_c::pktmover_init(
   this->netdev_speed = (status == BX_NETDEV_1GBIT) ? 1000 :
                        (status == BX_NETDEV_100MBIT) ? 100 : 10;
   this->rx_timer_index =
-    bx_pc_system.register_timer(this, this->rx_timer_handler, 1000,
-                                0, 0, "eth_vnet");
+    DEV_register_timer(this, this->rx_timer_handler, 1000, 0, 0, "eth_vnet");
 
   BX_INFO(("'vnet' network driver initialized"));
   bx_vnet_instances++;

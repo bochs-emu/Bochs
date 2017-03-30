@@ -293,21 +293,21 @@ bx_serial_c::init(void)
 
       if (BX_SER_THIS s[i].tx_timer_index == BX_NULL_TIMER_HANDLE) {
         BX_SER_THIS s[i].tx_timer_index =
-          bx_pc_system.register_timer(this, tx_timer_handler, 0,
-                                      0,0, "serial.tx"); // one-shot, inactive
+          DEV_register_timer(this, tx_timer_handler, 0, 0, 0,
+                             "serial.tx"); // one-shot, inactive
           bx_pc_system.setTimerParam(BX_SER_THIS s[i].tx_timer_index, i);
       }
 
       if (BX_SER_THIS s[i].rx_timer_index == BX_NULL_TIMER_HANDLE) {
         BX_SER_THIS s[i].rx_timer_index =
-          bx_pc_system.register_timer(this, rx_timer_handler, 0,
-                                      0,0, "serial.rx"); // one-shot, inactive
+          DEV_register_timer(this, rx_timer_handler, 0, 0, 0,
+                             "serial.rx"); // one-shot, inactive
           bx_pc_system.setTimerParam(BX_SER_THIS s[i].rx_timer_index, i);
       }
       if (BX_SER_THIS s[i].fifo_timer_index == BX_NULL_TIMER_HANDLE) {
         BX_SER_THIS s[i].fifo_timer_index =
-          bx_pc_system.register_timer(this, fifo_timer_handler, 0,
-                                      0,0, "serial.fifo"); // one-shot, inactive
+          DEV_register_timer(this, fifo_timer_handler, 0, 0, 0,
+                             "serial.fifo"); // one-shot, inactive
           bx_pc_system.setTimerParam(BX_SER_THIS s[i].fifo_timer_index, i);
       }
 

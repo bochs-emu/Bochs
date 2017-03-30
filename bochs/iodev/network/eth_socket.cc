@@ -261,8 +261,8 @@ bx_socket_pktmover_c::bx_socket_pktmover_c(const char *netif,
   // Start the rx poll
   //
   this->rx_timer_index =
-    bx_pc_system.register_timer(this, this->rx_timer_handler, BX_PACKET_POLL,
-                                1, 1, "eth_socket"); // continuous, active
+    DEV_register_timer(this, this->rx_timer_handler, BX_PACKET_POLL, 1, 1,
+                       "eth_socket"); // continuous, active
 
   this->rxh    = rxh;
   this->rxstat = rxstat;

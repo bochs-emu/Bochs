@@ -215,8 +215,8 @@ void bx_ne2k_c::init(void)
 
   if (BX_NE2K_THIS s.tx_timer_index == BX_NULL_TIMER_HANDLE) {
     BX_NE2K_THIS s.tx_timer_index =
-      bx_pc_system.register_timer(this, tx_timer_handler, 0,
-                                  0,0, "ne2k"); // one-shot, inactive
+      DEV_register_timer(this, tx_timer_handler, 0, 0, 0,
+                         "ne2k"); // one-shot, inactive
   }
   // Register the IRQ and i/o port addresses
   if (!BX_NE2K_THIS s.pci_enabled) {

@@ -114,7 +114,7 @@ void bx_busm_c::init(void)
 
   // Call our timer routine at 30hz
   BX_BUSM_THIS timer_index =
-    bx_pc_system.register_timer(this, timer_handler, 33334, 1, 1, "bus mouse timer");
+    DEV_register_timer(this, timer_handler, 33334, 1, 1, "bus mouse timer");
 
   for (int i=0x23C; i<=0x23F; i++) {
     DEV_register_ioread_handler(this, read_handler, i, "Bus Mouse", 1);

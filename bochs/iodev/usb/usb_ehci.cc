@@ -234,7 +234,7 @@ void bx_usb_ehci_c::init(void)
 
   // Call our frame timer routine every 1mS (1,024uS)
   // Continuous and active
-  BX_EHCI_THIS hub.frame_timer_index = bx_pc_system.register_timer(this, ehci_frame_handler,
+  BX_EHCI_THIS hub.frame_timer_index = DEV_register_timer(this, ehci_frame_handler,
                                                  FRAME_TIMER_USEC, 1, 1, "ehci.frame_timer");
 
   BX_EHCI_THIS devfunc = 0x07;

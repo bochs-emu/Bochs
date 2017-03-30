@@ -129,7 +129,7 @@ void bx_keyb_c::init(void)
                                       0x0060, "8042 Keyboard controller", 1);
   DEV_register_iowrite_handler(this, write_handler,
                                       0x0064, "8042 Keyboard controller", 1);
-  BX_KEY_THIS timer_handle = bx_pc_system.register_timer(this, timer_handler,
+  BX_KEY_THIS timer_handle = DEV_register_timer(this, timer_handler,
                                  SIM->get_param_num(BXPN_KBD_SERIAL_DELAY)->get(), 1, 1,
                                  "8042 Keyboard controller");
 

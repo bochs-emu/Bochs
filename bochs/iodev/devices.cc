@@ -298,7 +298,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   }
 
   if (timer_handle != BX_NULL_TIMER_HANDLE) {
-    timer_handle = bx_pc_system.register_timer(this, timer_handler,
+    timer_handle = DEV_register_timer(this, timer_handler,
       (unsigned) BX_IODEV_HANDLER_PERIOD, 1, 1, "devices.cc");
   }
 

@@ -293,19 +293,19 @@ void bx_es1370_c::init(void)
   BX_ES1370_THIS s.mpu_outputinit = (BX_ES1370_THIS midimode & 1);
 
   if (BX_ES1370_THIS s.dac1_timer_index == BX_NULL_TIMER_HANDLE) {
-    BX_ES1370_THIS s.dac1_timer_index = bx_pc_system.register_timer
+    BX_ES1370_THIS s.dac1_timer_index = DEV_register_timer
       (BX_ES1370_THIS_PTR, es1370_timer_handler, 1, 1, 0, "es1370.dac1");
     // DAC1 timer: inactive, continuous, frequency variable
     bx_pc_system.setTimerParam(BX_ES1370_THIS s.dac1_timer_index, 0);
   }
   if (BX_ES1370_THIS s.dac2_timer_index == BX_NULL_TIMER_HANDLE) {
-    BX_ES1370_THIS s.dac2_timer_index = bx_pc_system.register_timer
+    BX_ES1370_THIS s.dac2_timer_index = DEV_register_timer
       (BX_ES1370_THIS_PTR, es1370_timer_handler, 1, 1, 0, "es1370.dac2");
     // DAC2 timer: inactive, continuous, frequency variable
     bx_pc_system.setTimerParam(BX_ES1370_THIS s.dac2_timer_index, 1);
   }
   if (BX_ES1370_THIS s.mpu_timer_index == BX_NULL_TIMER_HANDLE) {
-    BX_ES1370_THIS s.mpu_timer_index = bx_pc_system.register_timer
+    BX_ES1370_THIS s.mpu_timer_index = DEV_register_timer
       (BX_ES1370_THIS_PTR, mpu_timer_handler, 500000 / 384, 1, 1, "es1370.mpu");
     // midi timer: active, continuous, 500000 / 384 seconds (384 = delta time, 500000 = sec per beat at 120 bpm. Don't change this!)
   }
