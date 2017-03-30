@@ -92,9 +92,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_GdEdM(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_EdGdM(bxInstruction_c *i)
 {
-  bx_bool temp_CF = getB_CF();
-
-  Bit32u op1_32, op2_32, sum_32;
+  Bit32u op1_32, op2_32, sum_32, temp_CF = getB_CF();
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
 
@@ -110,9 +108,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_EdGdM(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_GdEdR(bxInstruction_c *i)
 {
-  bx_bool temp_CF = getB_CF();
-
-  Bit32u op1_32, op2_32, sum_32;
+  Bit32u op1_32, op2_32, sum_32, temp_CF = getB_CF();
 
   op1_32 = BX_READ_32BIT_REG(i->dst());
   op2_32 = BX_READ_32BIT_REG(i->src());
@@ -126,9 +122,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_GdEdR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_GdEdM(bxInstruction_c *i)
 {
-  bx_bool temp_CF = getB_CF();
-
-  Bit32u op1_32, op2_32, sum_32;
+  Bit32u op1_32, op2_32, sum_32, temp_CF = getB_CF();
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
 
@@ -144,9 +138,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_GdEdM(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_EdGdM(bxInstruction_c *i)
 {
-  bx_bool temp_CF = getB_CF();
-
-  Bit32u op1_32, op2_32, diff_32;
+  Bit32u op1_32, op2_32, diff_32, temp_CF = getB_CF();
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
 
@@ -162,9 +154,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_EdGdM(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_GdEdR(bxInstruction_c *i)
 {
-  bx_bool temp_CF = getB_CF();
-
-  Bit32u op1_32, op2_32, diff_32;
+  Bit32u op1_32, op2_32, diff_32, temp_CF = getB_CF();
 
   op1_32 = BX_READ_32BIT_REG(i->dst());
   op2_32 = BX_READ_32BIT_REG(i->src());
@@ -178,9 +168,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_GdEdR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_GdEdM(bxInstruction_c *i)
 {
-  bx_bool temp_CF = getB_CF();
-
-  Bit32u op1_32, op2_32, diff_32;
+  Bit32u op1_32, op2_32, diff_32, temp_CF = getB_CF();
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
 
@@ -196,9 +184,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_GdEdM(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_EdIdM(bxInstruction_c *i)
 {
-  bx_bool temp_CF = getB_CF();
-
-  Bit32u op1_32, op2_32 = i->Id(), diff_32;
+  Bit32u op1_32, op2_32 = i->Id(), diff_32, temp_CF = getB_CF();
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
 
@@ -213,9 +199,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_EdIdM(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SBB_EdIdR(bxInstruction_c *i)
 {
-  bx_bool temp_CF = getB_CF();
-
-  Bit32u op1_32, op2_32 = i->Id(), diff_32;
+  Bit32u op1_32, op2_32 = i->Id(), diff_32, temp_CF = getB_CF();
 
   op1_32 = BX_READ_32BIT_REG(i->dst());
   diff_32 = op1_32 - (op2_32 + temp_CF);
@@ -421,9 +405,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_EdIdR(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_EdIdM(bxInstruction_c *i)
 {
-  bx_bool temp_CF = getB_CF();
-
-  Bit32u op1_32, op2_32 = i->Id(), sum_32;
+  Bit32u op1_32, op2_32 = i->Id(), sum_32, temp_CF = getB_CF();
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
 
@@ -438,9 +420,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_EdIdM(bxInstruction_c *i)
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ADC_EdIdR(bxInstruction_c *i)
 {
-  bx_bool temp_CF = getB_CF();
-
-  Bit32u op1_32, op2_32 = i->Id(), sum_32;
+  Bit32u op1_32, op2_32 = i->Id(), sum_32, temp_CF = getB_CF();
 
   op1_32 = BX_READ_32BIT_REG(i->dst());
   sum_32 = op1_32 + op2_32 + temp_CF;

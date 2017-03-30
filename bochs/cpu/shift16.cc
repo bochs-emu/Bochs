@@ -377,15 +377,17 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_EwM(bxInstruction_c *i)
   /* pointer, segment address pair */
   Bit16u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
 
+  unsigned temp_CF = getB_CF();
+
   if (count) {
     if (count==1) {
-      result_16 = (op1_16 << 1) | getB_CF();
+      result_16 = (op1_16 << 1) | temp_CF;
     }
     else if (count==16) {
-      result_16 = (getB_CF() << 15) | (op1_16 >> 1);
+      result_16 = (temp_CF << 15) | (op1_16 >> 1);
     }
     else { // 2..15
-      result_16 = (op1_16 << count) | (getB_CF() << (count - 1)) |
+      result_16 = (op1_16 << count) | (temp_CF << (count - 1)) |
                   (op1_16 >> (17 - count));
     }
 
@@ -412,17 +414,19 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_EwR(bxInstruction_c *i)
 
   count = (count & 0x1f) % 17;
 
+  unsigned temp_CF = getB_CF();
+
   if (count) {
     Bit16u op1_16 = BX_READ_16BIT_REG(i->dst());
 
     if (count==1) {
-      result_16 = (op1_16 << 1) | getB_CF();
+      result_16 = (op1_16 << 1) | temp_CF;
     }
     else if (count==16) {
-      result_16 = (getB_CF() << 15) | (op1_16 >> 1);
+      result_16 = (temp_CF << 15) | (op1_16 >> 1);
     }
     else { // 2..15
-      result_16 = (op1_16 << count) | (getB_CF() << (count - 1)) |
+      result_16 = (op1_16 << count) | (temp_CF << (count - 1)) |
                   (op1_16 >> (17 - count));
     }
 
@@ -453,7 +457,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_EwM(bxInstruction_c *i)
   Bit16u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
 
   if (count) {
-    Bit16u result_16 = (op1_16 >> count) | (getB_CF() << (16 - count)) |
+    unsigned temp_CF = getB_CF();
+
+    Bit16u result_16 = (op1_16 >> count) | (temp_CF << (16 - count)) |
                        (op1_16 << (17 - count));
 
     write_RMW_linear_word(result_16);
@@ -481,7 +487,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_EwR(bxInstruction_c *i)
   if (count) {
     Bit16u op1_16 = BX_READ_16BIT_REG(i->dst());
 
-    Bit16u result_16 = (op1_16 >> count) | (getB_CF() << (16 - count)) |
+    unsigned temp_CF = getB_CF();
+
+    Bit16u result_16 = (op1_16 >> count) | (temp_CF << (16 - count)) |
                        (op1_16 << (17 - count));
 
     BX_WRITE_16BIT_REG(i->dst(), result_16);

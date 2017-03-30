@@ -565,17 +565,17 @@ BOCHSAPI extern BX_CPU_C   bx_cpu;
 // The macro is used once for each flag bit
 // Do not use for arithmetic flags !
 #define DECLARE_EFLAG_ACCESSOR(name,bitnum)                     \
-  BX_SMF BX_CPP_INLINE Bit32u  get_##name ();                   \
-  BX_SMF BX_CPP_INLINE bx_bool getB_##name ();                  \
+  BX_SMF BX_CPP_INLINE unsigned  get_##name ();                 \
+  BX_SMF BX_CPP_INLINE unsigned getB_##name ();                 \
   BX_SMF BX_CPP_INLINE void assert_##name ();                   \
   BX_SMF BX_CPP_INLINE void clear_##name ();                    \
   BX_SMF BX_CPP_INLINE void set_##name (bx_bool val);
 
 #define IMPLEMENT_EFLAG_ACCESSOR(name,bitnum)                   \
-  BX_CPP_INLINE bx_bool BX_CPU_C::getB_##name () {              \
+  BX_CPP_INLINE unsigned BX_CPU_C::getB_##name () {             \
     return 1 & (BX_CPU_THIS_PTR eflags >> bitnum);              \
   }                                                             \
-  BX_CPP_INLINE Bit32u  BX_CPU_C::get_##name () {               \
+  BX_CPP_INLINE unsigned BX_CPU_C::get_##name () {              \
     return BX_CPU_THIS_PTR eflags & (1 << bitnum);              \
   }
 
@@ -1354,11 +1354,11 @@ public: // for now...
   }
  
   // ZF
-  BX_SMF BX_CPP_INLINE bx_bool getB_ZF(void) {
+  BX_SMF BX_CPP_INLINE unsigned getB_ZF(void) {
     return (0 == BX_CPU_THIS_PTR oszapc.result);
   }
 
-  BX_SMF BX_CPP_INLINE bx_bool get_ZF(void) { return getB_ZF(); }
+  BX_SMF BX_CPP_INLINE unsigned get_ZF(void) { return getB_ZF(); }
 
   BX_SMF BX_CPP_INLINE void set_ZF(bx_bool val) {
     if (val) assert_ZF();
@@ -1383,12 +1383,12 @@ public: // for now...
   }
 
   // SF
-  BX_SMF BX_CPP_INLINE bx_bool getB_SF(void) {
+  BX_SMF BX_CPP_INLINE unsigned getB_SF(void) {
     return ((BX_CPU_THIS_PTR oszapc.result >> BX_LF_SIGN_BIT) ^
             (BX_CPU_THIS_PTR oszapc.auxbits >> LF_BIT_SD)) & 1;
   }
 
-  BX_SMF BX_CPP_INLINE bx_bool get_SF(void) { return getB_SF(); }
+  BX_SMF BX_CPP_INLINE unsigned get_SF(void) { return getB_SF(); }
 
   BX_SMF BX_CPP_INLINE void set_SF(bx_bool val) {
     bx_bool temp_sf = getB_SF();
@@ -1405,14 +1405,14 @@ public: // for now...
   }
 
   // PF - bit 2 in EFLAGS, represented by lower 8 bits of oszapc.result
-  BX_SMF BX_CPP_INLINE bx_bool getB_PF(void) {
+  BX_SMF BX_CPP_INLINE unsigned getB_PF(void) {
     Bit32u temp = (255 & BX_CPU_THIS_PTR oszapc.result);
     temp = temp ^ (255 & (BX_CPU_THIS_PTR oszapc.auxbits >> LF_BIT_PDB));
     temp = (temp ^ (temp >> 4)) & 0x0F;
     return (0x9669U >> temp) & 1;
   }
 
-  BX_SMF BX_CPP_INLINE bx_bool get_PF(void) { return getB_PF(); }
+  BX_SMF BX_CPP_INLINE unsigned get_PF(void) { return getB_PF(); }
 
   BX_SMF BX_CPP_INLINE void set_PF(bx_bool val) {
     Bit32u temp_pdb = (255 & BX_CPU_THIS_PTR oszapc.result) ^ (!val);
@@ -1430,11 +1430,11 @@ public: // for now...
   }
 
   // AF - bit 4 in EFLAGS, represented by bit LF_BIT_AF of oszapc.auxbits
-  BX_SMF BX_CPP_INLINE bx_bool getB_AF(void) {
+  BX_SMF BX_CPP_INLINE unsigned getB_AF(void) {
     return ((BX_CPU_THIS_PTR oszapc.auxbits >> LF_BIT_AF) & 1);
   }
 
-  BX_SMF BX_CPP_INLINE bx_bool get_AF(void) {
+  BX_SMF BX_CPP_INLINE unsigned get_AF(void) {
     return (BX_CPU_THIS_PTR oszapc.auxbits & LF_MASK_AF);
   }
 
@@ -1452,11 +1452,11 @@ public: // for now...
   }
 
   // CF
-  BX_SMF BX_CPP_INLINE bx_bool getB_CF(void) {
+  BX_SMF BX_CPP_INLINE unsigned getB_CF(void) {
     return ((BX_CPU_THIS_PTR oszapc.auxbits >> LF_BIT_CF) & 1);
   }
 
-  BX_SMF BX_CPP_INLINE bx_bool get_CF(void) {
+  BX_SMF BX_CPP_INLINE unsigned get_CF(void) {
     return (BX_CPU_THIS_PTR oszapc.auxbits & LF_MASK_CF);
   }
 
@@ -1476,11 +1476,11 @@ public: // for now...
   }
 
   // OF
-  BX_SMF BX_CPP_INLINE bx_bool getB_OF(void) {
+  BX_SMF BX_CPP_INLINE unsigned getB_OF(void) {
     return ((BX_CPU_THIS_PTR oszapc.auxbits + (1U << LF_BIT_PO)) >> LF_BIT_CF) & 1;
   }
 
-  BX_SMF BX_CPP_INLINE bx_bool get_OF(void) {
+  BX_SMF BX_CPP_INLINE unsigned get_OF(void) {
     return (BX_CPU_THIS_PTR oszapc.auxbits + (1U << LF_BIT_PO)) & (1U << LF_BIT_CF);
   }
 
@@ -1495,7 +1495,7 @@ public: // for now...
   }
  
   BX_SMF BX_CPP_INLINE void assert_OF(void) {
-    bx_bool temp_cf = getB_CF();
+    unsigned temp_cf = getB_CF();
     SET_FLAGS_OxxxxC((1), temp_cf);
   }
 

@@ -287,11 +287,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_EqM(bxInstruction_c *i)
     BX_NEXT_INSTR(i);
   }
 
+  Bit64u temp_CF = getB_CF();
+
   if (count==1) {
-    result_64 = (op1_64 << 1) | getB_CF();
+    result_64 = (op1_64 << 1) | temp_CF;
   }
   else {
-    result_64 = (op1_64 << count) | (getB_CF() << (count - 1)) |
+    result_64 = (op1_64 << count) | (temp_CF << (count - 1)) |
                 (op1_64 >> (65 - count));
   }
 
@@ -323,11 +325,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_EqR(bxInstruction_c *i)
 
   Bit64u op1_64 = BX_READ_64BIT_REG(i->dst());
 
+  Bit64u temp_CF = getB_CF();
+
   if (count==1) {
-    result_64 = (op1_64 << 1) | getB_CF();
+    result_64 = (op1_64 << 1) | temp_CF;
   }
   else {
-    result_64 = (op1_64 << count) | (getB_CF() << (count - 1)) |
+    result_64 = (op1_64 << count) | (temp_CF << (count - 1)) |
                 (op1_64 >> (65 - count));
   }
 
@@ -361,11 +365,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_EqM(bxInstruction_c *i)
     BX_NEXT_INSTR(i);
   }
 
+  Bit64u temp_CF = getB_CF();
+
   if (count==1) {
-    result_64 = (op1_64 >> 1) | (((Bit64u) getB_CF()) << 63);
+    result_64 = (op1_64 >> 1) | (temp_CF << 63);
   }
   else {
-    result_64 = (op1_64 >> count) | (getB_CF() << (64 - count)) |
+    result_64 = (op1_64 >> count) | (temp_CF << (64 - count)) |
                 (op1_64 << (65 - count));
   }
 
@@ -397,11 +403,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_EqR(bxInstruction_c *i)
 
   Bit64u op1_64 = BX_READ_64BIT_REG(i->dst());
 
+  Bit64u temp_CF = getB_CF();
+
   if (count==1) {
-    result_64 = (op1_64 >> 1) | (((Bit64u) getB_CF()) << 63);
+    result_64 = (op1_64 >> 1) | (temp_CF << 63);
   }
   else {
-    result_64 = (op1_64 >> count) | (getB_CF() << (64 - count)) |
+    result_64 = (op1_64 >> count) | (temp_CF << (64 - count)) |
                 (op1_64 << (65 - count));
   }
 

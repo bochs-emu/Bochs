@@ -201,11 +201,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_EbR(bxInstruction_c *i)
 
   Bit8u op1_8 = BX_READ_8BIT_REGx(i->dst(), i->extend8bitL());
 
+  unsigned temp_CF = getB_CF();
+
   if (count==1) {
-    result_8 = (op1_8 << 1) | getB_CF();
+    result_8 = (op1_8 << 1) | temp_CF;
   }
   else {
-    result_8 = (op1_8 << count) | (getB_CF() << (count - 1)) |
+    result_8 = (op1_8 << count) | (temp_CF << (count - 1)) |
                (op1_8 >> (9 - count));
   }
 
@@ -239,11 +241,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_EbM(bxInstruction_c *i)
     BX_NEXT_INSTR(i);
   }
 
+  unsigned temp_CF = getB_CF();
+
   if (count==1) {
-    result_8 = (op1_8 << 1) | getB_CF();
+    result_8 = (op1_8 << 1) | temp_CF;
   }
   else {
-    result_8 = (op1_8 << count) | (getB_CF() << (count - 1)) |
+    result_8 = (op1_8 << count) | (temp_CF << (count - 1)) |
                (op1_8 >> (9 - count));
   }
 
@@ -271,7 +275,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_EbR(bxInstruction_c *i)
   if (count) {
     Bit8u op1_8 = BX_READ_8BIT_REGx(i->dst(), i->extend8bitL());
 
-    Bit8u result_8 = (op1_8 >> count) | (getB_CF() << (8 - count)) |
+    unsigned temp_CF = getB_CF();
+
+    Bit8u result_8 = (op1_8 >> count) | (temp_CF << (8 - count)) |
                      (op1_8 << (9 - count));
 
     BX_WRITE_8BIT_REGx(i->dst(), i->extend8bitL(), result_8);
@@ -301,7 +307,9 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_EbM(bxInstruction_c *i)
   count = (count & 0x1f) % 9;
 
   if (count) {
-    Bit8u result_8 = (op1_8 >> count) | (getB_CF() << (8 - count)) |
+    unsigned temp_CF = getB_CF();
+
+    Bit8u result_8 = (op1_8 >> count) | (temp_CF << (8 - count)) |
                      (op1_8 << (9 - count));
 
     write_RMW_linear_byte(result_8);

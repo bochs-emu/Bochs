@@ -297,11 +297,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_EdM(bxInstruction_c *i)
     BX_NEXT_INSTR(i);
   }
 
+  Bit32u temp_CF = getB_CF();
+
   if (count==1) {
-    result_32 = (op1_32 << 1) | getB_CF();
+    result_32 = (op1_32 << 1) | temp_CF;
   }
   else {
-    result_32 = (op1_32 << count) | (getB_CF() << (count - 1)) |
+    result_32 = (op1_32 << count) | (temp_CF << (count - 1)) |
                 (op1_32 >> (33 - count));
   }
 
@@ -333,11 +335,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_EdR(bxInstruction_c *i)
 
   Bit32u op1_32 = BX_READ_32BIT_REG(i->dst());
 
+  Bit32u temp_CF = getB_CF();
+
   if (count==1) {
-    result_32 = (op1_32 << 1) | getB_CF();
+    result_32 = (op1_32 << 1) | temp_CF;
   }
   else {
-    result_32 = (op1_32 << count) | (getB_CF() << (count - 1)) |
+    result_32 = (op1_32 << count) | (temp_CF << (count - 1)) |
                 (op1_32 >> (33 - count));
   }
 
@@ -371,11 +375,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_EdM(bxInstruction_c *i)
     BX_NEXT_INSTR(i);
   }
 
+  Bit32u temp_CF = getB_CF();
+
   if (count==1) {
-    result_32 = (op1_32 >> 1) | (getB_CF() << 31);
+    result_32 = (op1_32 >> 1) | (temp_CF << 31);
   }
   else {
-    result_32 = (op1_32 >> count) | (getB_CF() << (32 - count)) |
+    result_32 = (op1_32 >> count) | (temp_CF << (32 - count)) |
                 (op1_32 << (33 - count));
   }
 
@@ -408,11 +414,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_EdR(bxInstruction_c *i)
 
   Bit32u op1_32 = BX_READ_32BIT_REG(i->dst());
 
+  Bit32u temp_CF = getB_CF();
+
   if (count==1) {
-    result_32 = (op1_32 >> 1) | (getB_CF() << 31);
+    result_32 = (op1_32 >> 1) | (temp_CF << 31);
   }
   else {
-    result_32 = (op1_32 >> count) | (getB_CF() << (32 - count)) |
+    result_32 = (op1_32 >> count) | (temp_CF << (32 - count)) |
                 (op1_32 << (33 - count));
   }
 
