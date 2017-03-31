@@ -804,11 +804,6 @@ void bx_keyb_c::gen_scancode(Bit32u key)
   else
     scancode=(unsigned char *)scancodes[(key&0xFF)][BX_KEY_THIS s.kbd_controller.current_scancodes_set].make;
 
-  // if we have a removable keyboard installed, we need to call its handler first
-  if (DEV_optional_key_enq(scancode)) {
-    return;
-  }
-
   if (BX_KEY_THIS s.kbd_controller.scancodes_translate) {
     // Translate before send
     Bit8u escaped=0x00;

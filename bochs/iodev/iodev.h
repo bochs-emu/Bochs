@@ -45,7 +45,7 @@
 typedef Bit32u (*bx_read_handler_t)(void *, Bit32u, unsigned);
 typedef void   (*bx_write_handler_t)(void *, Bit32u, Bit32u, unsigned);
 
-typedef bx_bool (*bx_keyb_enq_t)(void *, Bit8u *);
+typedef bx_bool (*bx_kbd_gen_scancode_t)(void *, Bit32u);
 typedef void (*bx_mouse_enq_t)(void *, int, int, int, unsigned, bx_bool);
 typedef void (*bx_mouse_enabled_changed_t)(void *, bx_bool);
 
@@ -380,12 +380,12 @@ public:
   Bit32u inp(Bit16u addr, unsigned io_len) BX_CPP_AttrRegparmN(2);
   void   outp(Bit16u addr, Bit32u value, unsigned io_len) BX_CPP_AttrRegparmN(3);
 
-  void register_removable_keyboard(void *dev, bx_keyb_enq_t keyb_enq);
+  void register_removable_keyboard(void *dev, bx_kbd_gen_scancode_t kbd_gen_scancode);
   void unregister_removable_keyboard(void *dev);
   void register_default_mouse(void *dev, bx_mouse_enq_t mouse_enq, bx_mouse_enabled_changed_t mouse_enabled_changed);
   void register_removable_mouse(void *dev, bx_mouse_enq_t mouse_enq, bx_mouse_enabled_changed_t mouse_enabled_changed);
   void unregister_removable_mouse(void *dev);
-  bx_bool optional_key_enq(Bit8u *scan_code);
+  void gen_scancode(Bit32u key);
   void mouse_enabled_changed(bx_bool enabled);
   void mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy);
 
@@ -507,7 +507,7 @@ private:
   } bx_mouse[2];
   struct {
     void *dev;
-    bx_keyb_enq_t enq_event;
+    bx_kbd_gen_scancode_t gen_scancode;
   } bx_keyboard;
 
   struct {

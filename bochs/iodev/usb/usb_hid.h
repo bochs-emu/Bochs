@@ -7,7 +7,7 @@
 //
 // Copyright (c) 2005       Fabrice Bellard
 // Copyright (c) 2007       OpenMoko, Inc.  (andrew@openedhand.com)
-// Copyright (C) 2009-2016  The Bochs Project
+// Copyright (C) 2009-2017  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -51,14 +51,14 @@ private:
     Bit16s mouse_y;
     Bit8s mouse_z;
     Bit8u b_state;
-    Bit8u saved_key[8];
+    Bit32u saved_key;
     Bit8u key_pad_packet[8];
     Bit8u idle;
     bx_bool has_events;
   } s;
 
-  static bx_bool key_enq_static(void *dev, Bit8u *scan_code);
-  bx_bool key_enq(Bit8u *scan_code);
+  static bx_bool gen_scancode_static(void *dev, Bit32u key);
+  bx_bool gen_scancode(Bit32u key);
   static void mouse_enabled_changed(void *dev, bx_bool enabled);
   static void mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy);
   void mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy);

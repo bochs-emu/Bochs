@@ -67,9 +67,9 @@
 #define SET_IDLE     0x210a
 #define SET_PROTOCOL 0x210b
 
-#define KEYPAD_LEN   128
+#define KEYPAD_LEN   16
 struct KEYPAD {
-  Bit8u  scan_code[8];
+  Bit32u bxkey;
   Bit8u  keypad_packet[8];
 };
 
@@ -600,24 +600,24 @@ static const Bit8u bx_keypad_hid_report_descriptor2[] = {
   0x01, 0xC0
 };
 
-// this interface has a key conversion table of len = 18
+// this interface has a key conversion table of len = 16
 struct KEYPAD keypad_lookup[KEYPAD_LEN] = {
-  { { 0x6C,       }, { 0x00, 0x00, 0x5F, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 7
-  { { 0x6B,       }, { 0x00, 0x00, 0x5C, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 4
-  { { 0x69,       }, { 0x00, 0x00, 0x59, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 1
-  { { 0x70,       }, { 0x00, 0x00, 0x62, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 0
-  { { 0xE0, 0x4A, }, { 0x00, 0x00, 0x54, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // /
-  { { 0x75,       }, { 0x00, 0x00, 0x60, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 8
-  { { 0x73,       }, { 0x00, 0x00, 0x5D, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 5
-  { { 0x72,       }, { 0x00, 0x00, 0x5A, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 2
-  { { 0x7C,       }, { 0x00, 0x00, 0x55, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // *
-  { { 0x7D,       }, { 0x00, 0x00, 0x61, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 9
-  { { 0x74,       }, { 0x00, 0x00, 0x5E, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 6
-  { { 0x7A,       }, { 0x00, 0x00, 0x5B, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 3
-  { { 0x71,       }, { 0x00, 0x00, 0x63, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // -
-  { { 0x7B,       }, { 0x00, 0x00, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // +
-  { { 0x79,       }, { 0x00, 0x00, 0x57, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // .
-  { { 0xE0, 0x5A  }, { 0x00, 0x00, 0x58, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // Enter
+  { BX_KEY_KP_HOME,      { 0x00, 0x00, 0x5F, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 7
+  { BX_KEY_KP_LEFT,      { 0x00, 0x00, 0x5C, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 4
+  { BX_KEY_KP_END,       { 0x00, 0x00, 0x59, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 1
+  { BX_KEY_KP_INSERT,    { 0x00, 0x00, 0x62, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 0
+  { BX_KEY_KP_DIVIDE,    { 0x00, 0x00, 0x54, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // /
+  { BX_KEY_KP_UP,        { 0x00, 0x00, 0x60, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 8
+  { BX_KEY_KP_5,         { 0x00, 0x00, 0x5D, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 5
+  { BX_KEY_KP_DOWN,      { 0x00, 0x00, 0x5A, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 2
+  { BX_KEY_KP_MULTIPLY,  { 0x00, 0x00, 0x55, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // *
+  { BX_KEY_KP_PAGE_UP,   { 0x00, 0x00, 0x61, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 9
+  { BX_KEY_KP_RIGHT,     { 0x00, 0x00, 0x5E, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 6
+  { BX_KEY_KP_PAGE_DOWN, { 0x00, 0x00, 0x5B, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 3
+  { BX_KEY_KP_SUBTRACT,  { 0x00, 0x00, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // -
+  { BX_KEY_KP_ADD,       { 0x00, 0x00, 0x57, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // +
+  { BX_KEY_KP_DELETE,    { 0x00, 0x00, 0x63, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // .
+  { BX_KEY_KP_ENTER,     { 0x00, 0x00, 0x58, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // Enter
 };
 
 usb_hid_device_c::usb_hid_device_c(usbdev_type type)
@@ -668,13 +668,16 @@ usb_hid_device_c::usb_hid_device_c(usbdev_type type)
       d.device_desc_size = sizeof(bx_keypad_dev_descriptor);
       d.config_desc_size = sizeof(bx_keypad_config_descriptor);
     }
-    DEV_register_removable_keyboard((void*)this, key_enq_static);
+    DEV_register_removable_keyboard((void*)this, gen_scancode_static);
   }
   d.vendor_desc = "BOCHS";
   d.product_desc = d.devname;
   d.serial_num = "1";
   d.connected = 1;
   memset((void*)&s, 0, sizeof(s));
+  if (d.type == USB_DEV_TYPE_KEYPAD) {
+    s.saved_key = BX_KEY_UNHANDLED;
+  }
 
   put("usb_hid", "USBHID");
 }
@@ -704,7 +707,7 @@ void usb_hid_device_c::register_state_specific(bx_list_c *parent)
   BXRS_HEX_PARAM_FIELD(list, idle, s.idle);
   BXRS_PARAM_BOOL(list, has_events, s.has_events);
   if (d.type == USB_DEV_TYPE_KEYPAD) {
-    new bx_shadow_data_c(list, "saved_key", s.saved_key, 8, 1);
+    BXRS_DEC_PARAM_FIELD(list, saved_key, s.saved_key);
     new bx_shadow_data_c(list, "key_pad_packet", s.key_pad_packet, 8, 1);
   }
 }
@@ -1008,63 +1011,46 @@ int usb_hid_device_c::keypad_poll(Bit8u *buf, int len, bx_bool force)
     if (s.has_events || (s.idle != 0) || force) {
       memcpy(buf, s.key_pad_packet, len);
       l = 8;
-      s.has_events = 0;
+      if (s.saved_key == BX_KEY_UNHANDLED) {
+        s.has_events = 0;
+      }
     }
   }
   return l;
 }
 
-bx_bool usb_hid_device_c::key_enq_static(void *dev, Bit8u *scan_code)
+bx_bool usb_hid_device_c::gen_scancode_static(void *dev, Bit32u key)
 {
-  return ((usb_hid_device_c*)dev)->key_enq(scan_code);
+  return ((usb_hid_device_c*)dev)->gen_scancode(key);
 }
 
-bx_bool usb_hid_device_c::key_enq(Bit8u *scan_code)
+bx_bool usb_hid_device_c::gen_scancode(Bit32u key)
 {
-  bx_bool is_break_code = 0;
-  Bit8u our_scan_code[8];
-
-  memset(our_scan_code, 0, 8);
-  int os = 0;
-  for (int sc=0; sc<8; sc++) {
-    if ((scan_code[sc] == 0xF0) && ((sc == 0) || ((sc == 1) && (scan_code[0] == 0xE0)))) {
-      is_break_code = 1;
-    } else {
-      if (!(our_scan_code[os++] = scan_code[sc])) break;
-    }
-  }
-
   // if it is the break code of the saved key, then clear our packet key.
-  if (is_break_code && !memcmp(s.saved_key, our_scan_code, 8)) {
-    memset(s.saved_key, 0, 8);
-    memset(s.key_pad_packet, 0, 8);
-    return 1; // tell the keyboard handler that we used it, and to return with out processing key
+  if (key & BX_KEY_RELEASED) {
+    key &= ~BX_KEY_RELEASED;
+    if (key == s.saved_key) {
+      s.saved_key = BX_KEY_UNHANDLED;
+      memset(s.key_pad_packet, 0, 8);
+      BX_DEBUG(("Routing Bochs key release (%d) to USB keypad", key));
+      return 1; // tell the keyboard handler that we used it, and to return with out processing key
+    }
+    return 0;
   }
 
   bx_bool fnd = 0;
-  for (int m = 0; m < 18; m++) {
-    if (!memcmp(keypad_lookup[m].scan_code, our_scan_code, 8)) {
+  for (int m = 0; m < KEYPAD_LEN; m++) {
+    if (key == keypad_lookup[m].bxkey) {
       memcpy(s.key_pad_packet, keypad_lookup[m].keypad_packet, 8);
       fnd = 1;
       break;
     }
   }
 
-  if (!fnd) {
-    memset(s.key_pad_packet, 0, 8);
-    memset(s.saved_key, 0, 8);
-  } else {
-    memcpy(s.saved_key, our_scan_code, 8);
+  if (fnd) {
+    s.saved_key = key;
     s.has_events = 1;
-    // print a debug line to the log file
-    char bx_debug_code[128] = "";
-    char value[8];
-    for (unsigned i=0; i<strlen((char *) our_scan_code); i++) {
-      sprintf(value, "0x%02x", our_scan_code[i]);
-      if (i) strcat(bx_debug_code, "  ");
-      strcat(bx_debug_code, value);
-    }
-    BX_DEBUG(("Re-routing scan code (%s) to USB keypad", bx_debug_code));
+    BX_DEBUG(("Routing Bochs key press (%d) to USB keypad", key));
   }
 
   // tell the keyboard handler whether we used it or not.  (0 = no, 1 = yes and keyboard.cc ignores keystoke)

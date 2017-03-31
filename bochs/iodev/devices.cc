@@ -138,7 +138,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 
   // removable devices init
   bx_keyboard.dev = NULL;
-  bx_keyboard.enq_event = NULL;
+  bx_keyboard.gen_scancode = NULL;
   for (i=0; i < 2; i++) {
     bx_mouse[i].dev = NULL;
     bx_mouse[i].enq_event = NULL;
@@ -1056,11 +1056,11 @@ bx_bool bx_devices_c::is_usb_enabled(void)
 }
 
 // removable keyboard/mouse registration
-void bx_devices_c::register_removable_keyboard(void *dev, bx_keyb_enq_t keyb_enq)
+void bx_devices_c::register_removable_keyboard(void *dev, bx_kbd_gen_scancode_t kbd_gen_scancode)
 {
   if (bx_keyboard.dev == NULL) {
     bx_keyboard.dev = dev;
-    bx_keyboard.enq_event = keyb_enq;
+    bx_keyboard.gen_scancode = kbd_gen_scancode;
   }
 }
 
@@ -1068,7 +1068,7 @@ void bx_devices_c::unregister_removable_keyboard(void *dev)
 {
   if (dev == bx_keyboard.dev) {
     bx_keyboard.dev = NULL;
-    bx_keyboard.enq_event = NULL;
+    bx_keyboard.gen_scancode = NULL;
   }
 }
 
@@ -1101,12 +1101,17 @@ void bx_devices_c::unregister_removable_mouse(void *dev)
   }
 }
 
-bx_bool bx_devices_c::optional_key_enq(Bit8u *scan_code)
+// common keyboard device handler
+void bx_devices_c::gen_scancode(Bit32u key)
 {
+  bx_bool ret = 0;
+
   if (bx_keyboard.dev != NULL) {
-    return bx_keyboard.enq_event(bx_keyboard.dev, scan_code);
+    ret = bx_keyboard.gen_scancode(bx_keyboard.dev, key);
   }
-  return 0;
+  if (ret == 0) {
+    pluginKeyboard->gen_scancode(key);
+  }
 }
 
 // common mouse device handlers

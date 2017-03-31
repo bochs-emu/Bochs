@@ -163,8 +163,7 @@ extern "C" {
 #define DEV_cmos_checksum() (bx_devices.pluginCmosDevice->checksum_cmos())
 
 ///////// keyboard macros
-#define DEV_kbd_gen_scancode(key) \
-    (bx_devices.pluginKeyboard->gen_scancode(key))
+#define DEV_kbd_gen_scancode(key) (bx_devices.gen_scancode(key))
 #define DEV_kbd_paste_bytes(bytes, count) \
     (bx_devices.pluginKeyboard->paste_bytes(bytes,count))
 #define DEV_kbd_release_keys() (bx_devices.pluginKeyboard->release_keys())
