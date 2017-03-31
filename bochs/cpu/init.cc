@@ -489,6 +489,12 @@ void BX_CPU_C::register_state(void)
     BXRS_HEX_PARAM_FIELD(tlb_entry, lpf_mask, TLB.entry[n].lpf_mask);
     BXRS_HEX_PARAM_FIELD(tlb_entry, ppf, TLB.entry[n].ppf);
     BXRS_HEX_PARAM_FIELD(tlb_entry, accessBits, TLB.entry[n].accessBits);
+#if BX_SUPPORT_PKEYS
+    BXRS_HEX_PARAM_FIELD(tlb_entry, pkey, TLB.entry[n].pkey);
+#endif
+#if BX_SUPPORT_MEMTYPE
+    BXRS_HEX_PARAM_FIELD(tlb_entry, memtype, TLB.entry[n].memtype);
+#endif
   }
 #endif
 }

@@ -100,7 +100,7 @@ typedef struct {
   bx_phy_address ppf;   // physical page frame
   bx_hostpageaddr_t hostPageAddr;
   Bit32u accessBits;
-#if BX_SUPPORT_X86_64
+#if BX_SUPPORT_PKEYS
   Bit32u pkey;
 #endif
   Bit32u lpf_mask;      // linear address mask of the page size

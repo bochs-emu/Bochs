@@ -769,10 +769,8 @@ void BX_CPU_C::wakeup_monitor(void)
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MONITOR_MWAIT
-  unsigned monitorx = (i->getIaOpcode() == BX_IA_MONITORX);
-
   // CPL is always 0 in real mode
-  if (CPL != 0 && monitorx) {
+  if (CPL != 0 && i->getIaOpcode() != BX_IA_MONITORX) {
     BX_DEBUG(("%s: instruction not recognized when CPL != 0", i->getIaOpcodeNameShort()));
     exception(BX_UD_EXCEPTION, 0);
   }
@@ -799,7 +797,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
 
   bx_phy_address paddr = BX_CPU_THIS_PTR address_xlation.paddress1;
 #if BX_SUPPORT_MEMTYPE
-  if (monitorx && BX_CPU_THIS_PTR address_xlation.memtype1 != BX_MEMTYPE_WB) return;
+  if (BX_CPU_THIS_PTR address_xlation.memtype1 != BX_MEMTYPE_WB) return;
 #endif
 
 #if BX_SUPPORT_SVM
