@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2005-2012 Stanislav Shwartsman
+//   Copyright (c) 2005-2017 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -99,7 +99,6 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
   /* NT = 0: INTERRUPT RETURN ON STACK -or STACK_RETURN_TO_V86 */
   unsigned top_nbytes_same;
   Bit32u new_eip = 0, new_esp, temp_ESP, new_eflags = 0;
-  Bit16u new_ip = 0, new_flags = 0;
 
   /* 16bit opsize  |   32bit opsize
    * ==============================
@@ -138,9 +137,9 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     }
   }
   else {
-    new_flags       = stack_read_word(temp_ESP + 4);
+    new_eflags      = stack_read_word(temp_ESP + 4);
     raw_cs_selector = stack_read_word(temp_ESP + 2);
-    new_ip          = stack_read_word(temp_ESP + 0);
+    new_eip         = stack_read_word(temp_ESP + 0);
   }
 
   parse_selector(raw_cs_selector, &cs_selector);
@@ -166,12 +165,13 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
   check_cs(&cs_descriptor, raw_cs_selector, 0, cs_selector.rpl);
 
   if (cs_selector.rpl == CPL) { /* INTERRUPT RETURN TO SAME LEVEL */
+
+    /* load CS-cache with new code segment descriptor */
+    branch_far32(&cs_selector, &cs_descriptor, new_eip, cs_selector.rpl);
+
     /* top 6/12 bytes on stack must be within limits, else #SS(0) */
     /* satisfied above */
     if (i->os32L()) {
-      /* load CS-cache with new code segment descriptor */
-      branch_far32(&cs_selector, &cs_descriptor, new_eip, cs_selector.rpl);
-
       // ID,VIP,VIF,AC,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
       Bit32u changeMask = EFlagsOSZAPCMask | EFlagsTFMask |
                               EFlagsDFMask | EFlagsNTMask | EFlagsRFMask;
@@ -189,11 +189,8 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
       writeEFlags(new_eflags, changeMask);
     }
     else {
-      /* load CS-cache with new code segment descriptor */
-      branch_far32(&cs_selector, &cs_descriptor, (Bit32u) new_ip, cs_selector.rpl);
-
       /* load flags with third word on stack */
-      write_flags(new_flags, CPL==0, CPL<=BX_CPU_THIS_PTR get_IOPL());
+      write_flags((Bit16u) new_eflags, CPL==0, CPL<=BX_CPU_THIS_PTR get_IOPL());
     }
 
     /* increment stack by 6/12 */
@@ -267,14 +264,10 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     }
 
     if (i->os32L()) {
-      new_esp    = stack_read_dword(temp_ESP + 12);
-      new_eflags = stack_read_dword(temp_ESP +  8);
-      new_eip    = stack_read_dword(temp_ESP +  0);
+      new_esp = stack_read_dword(temp_ESP + 12);
     }
     else {
-      new_esp    = stack_read_word(temp_ESP + 6);
-      new_eflags = stack_read_word(temp_ESP + 4);
-      new_eip    = stack_read_word(temp_ESP + 0);
+      new_esp = stack_read_word(temp_ESP + 6);
     }
 
     // ID,VIP,VIF,AC,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
