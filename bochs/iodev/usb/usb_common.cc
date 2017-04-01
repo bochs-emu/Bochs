@@ -468,11 +468,12 @@ int usb_device_c::handle_control_common(int request, int value, int index, int l
       break;
     case DeviceRequest | USB_REQ_GET_CONFIGURATION:
       BX_DEBUG(("USB_REQ_GET_CONFIGURATION:"));
-      data[0] = 1;
+      data[0] = d.config;
       ret = 1;
       break;
     case DeviceOutRequest | USB_REQ_SET_CONFIGURATION:
-      BX_DEBUG(("USB_REQ_SET_CONFIGURATION:"));
+      BX_DEBUG(("USB_REQ_SET_CONFIGURATION: value=%d", value));
+      d.config = value;
       d.state = USB_STATE_CONFIGURED;
       ret = 0;
       break;
@@ -489,12 +490,13 @@ int usb_device_c::handle_control_common(int request, int value, int index, int l
       }
       break;
     case InterfaceRequest | USB_REQ_GET_INTERFACE:
-      BX_DEBUG(("USB_REQ_GET_INFTERFACE:"));
-      data[0] = 0;
+      BX_DEBUG(("USB_REQ_GET_INTERFACE:"));
+      data[0] = d.interface;
       ret = 1;
       break;
     case InterfaceOutRequest | USB_REQ_SET_INTERFACE:
-      BX_DEBUG(("USB_REQ_SET_INFTERFACE:"));
+      BX_DEBUG(("USB_REQ_SET_INTERFACE: value=%d", value));
+      d.interface = value;
       ret = 0;
       break;
   }
@@ -506,6 +508,8 @@ void usb_device_c::register_state(bx_list_c *parent)
   d.sr = parent;
   bx_list_c *list = new bx_list_c(parent, "d", "Common USB Device State");
   BXRS_DEC_PARAM_FIELD(list, addr, d.addr);
+  BXRS_DEC_PARAM_FIELD(list, config, d.config);
+  BXRS_DEC_PARAM_FIELD(list, interface, d.interface);
   BXRS_DEC_PARAM_FIELD(list, state, d.state);
   BXRS_DEC_PARAM_FIELD(list, remote_wakeup, d.remote_wakeup);
   register_state_specific(parent);

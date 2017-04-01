@@ -6,7 +6,7 @@
 //
 // Copyright (c) 2005       Fabrice Bellard
 // Copyright (C) 2009-2016  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//               2009-2016  The Bochs Project
+//               2009-2017  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -222,6 +222,7 @@ protected:
     int speed;
     Bit8u addr;
     Bit8u config;
+    Bit8u interface;
     char devname[32];
 
     const Bit8u *dev_descriptor;
