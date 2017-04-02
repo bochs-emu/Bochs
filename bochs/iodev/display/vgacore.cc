@@ -387,13 +387,12 @@ void bx_vgacore_c::after_restore_state(void)
 
 void bx_vgacore_c::determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth)
 {
-  int ai[0x20];
-  int i,h,v;
-  for (i = 0 ; i < 0x19 ; i++)
-   ai[i] = BX_VGA_THIS s.CRTC.reg[i];
+  int h, v;
+#define AI BX_VGA_THIS s.CRTC.reg
 
-  h = (ai[1] + 1) * 8;
-  v = (ai[18] | ((ai[7] & 0x02) << 7) | ((ai[7] & 0x40) << 3)) + 1;
+  h = (AI[1] + 1) * 8;
+  v = (AI[18] | ((AI[7] & 0x02) << 7) | ((AI[7] & 0x40) << 3)) + 1;
+#undef AI
 
   if (BX_VGA_THIS s.graphics_ctrl.shift_reg == 0) {
     *piWidth = 640;
