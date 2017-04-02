@@ -49,6 +49,9 @@ bx_gui_c *bx_gui = NULL;
 #define BX_GUI_THIS bx_gui->
 #define LOG_THIS BX_GUI_THIS
 
+// Enable this if you want confirm quit after pressing power button.
+//#define BX_GUI_CONFIRM_QUIT
+
 // user button shortcut stuff
 
 #define BX_KEY_UNKNOWN 0x7fffffff
@@ -409,9 +412,10 @@ void bx_gui_c::reset_handler(void)
 
 void bx_gui_c::power_handler(void)
 {
-  // test case for yes/no dialog: confirm power off
-  //if (!SIM->ask_yes_no("Quit Bochs", "Are you sure ?", 0))
-  //  return;
+#ifdef BX_GUI_CONFIRM_QUIT
+  if (!SIM->ask_yes_no("Quit Bochs", "Are you sure ?", 0))
+    return;
+#endif
   // the user pressed power button, so there's no doubt they want bochs
   // to quit.  Change panics to fatal for the GUI and then do a panic.
   bx_user_quit = 1;
