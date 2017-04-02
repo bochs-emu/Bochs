@@ -5591,6 +5591,11 @@ features enabled at compile time (3rd column).
     <entry>cpu level 5</entry>
   </row>
   <row>
+    <entry>pentium</entry>
+    <entry>Intel Pentium (P54C)</entry>
+    <entry>cpu level 5</entry>
+  </row>
+  <row>
     <entry>pentium_mmx</entry>
     <entry>Intel Pentium MMX</entry>
     <entry>cpu level 5</entry>
@@ -5666,6 +5671,11 @@ features enabled at compile time (3rd column).
     <entry>cpu level 6, x86-64</entry>
   </row>
   <row>
+    <entry>corei7_sandy_bridge_2600k</entry>
+    <entry>Intel(R) Core(TM) i7-2600K (Sandy Bridge)</entry>
+    <entry>cpu level 6, x86-64, avx</entry>
+  </row>
+  <row>
     <entry>zambezi</entry>
     <entry>AMD FX(tm)-4100 Quad-Core Processor (Zambezi)</entry>
     <entry>cpu level 6, x86-64, avx</entry>
@@ -5676,8 +5686,8 @@ features enabled at compile time (3rd column).
     <entry>cpu level 6, x86-64, avx</entry>
   </row>
   <row>
-    <entry>corei7_sandy_bridge_2600k</entry>
-    <entry>Intel(R) Core(TM) i7-2600K (Sandy Bridge)</entry>
+    <entry>ryzen</entry>
+    <entry>AMD Ryzen 7 1700</entry>
     <entry>cpu level 6, x86-64, avx</entry>
   </row>
   <row>
@@ -5688,6 +5698,11 @@ features enabled at compile time (3rd column).
   <row>
     <entry>corei7_haswell_4770</entry>
     <entry>Intel(R) Core(TM) i7-4770 CPU (Haswell)</entry>
+    <entry>cpu level 6, x86-64, avx</entry>
+  </row>
+  <row>
+    <entry>broadwell_ult</entry>
+    <entry>Intel(R) Processor 5Y70 CPU (Broadwell)</entry>
     <entry>cpu level 6, x86-64, avx</entry>
   </row>
 </tbody>

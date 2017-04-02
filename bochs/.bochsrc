@@ -120,9 +120,10 @@
 #  core2_penryn_t9600         Intel Mobile Core 2 Duo T9600 (Penryn)
 #  corei5_lynnfield_750       Intel(R) Core(TM) i5   750 (Lynnfield)
 #  corei5_arrandale_m520      Intel(R) Core(TM) i5 M 520 (Arrandale)
+#  corei7_sandy_bridge_2600k  Intel(R) Core(TM) i7-2600K (Sandy Bridge)
 #  zambezi                    AMD FX(tm)-4100 Quad-Core Processor (Zambezi)
 #  trinity_apu                AMD A8-5600K APU (Trinity)
-#  corei7_sandy_bridge_2600k  Intel(R) Core(TM) i7-2600K (Sandy Bridge)
+#  ryzen                      AMD Ryzen 7 1700
 #  corei7_ivy_bridge_3770k    Intel(R) Core(TM) i7-3770K CPU (Ivy Bridge)
 #  corei7_haswell_4770        Intel(R) Core(TM) i7-4770 CPU (Haswell)
 #  broadwell_ult              Intel(R) Processor 5Y70 CPU (Broadwell)
