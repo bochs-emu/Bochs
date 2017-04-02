@@ -669,6 +669,7 @@ usb_hid_device_c::usb_hid_device_c(usbdev_type type)
       d.config_desc_size = sizeof(bx_keypad_config_descriptor);
     }
     DEV_register_removable_keyboard((void*)this, gen_scancode_static);
+//    DEV_register_removable_mouse((void*)this, mouse_enq_static, mouse_enabled_changed);
   }
   d.vendor_desc = "BOCHS";
   d.product_desc = d.devname;
@@ -691,6 +692,7 @@ usb_hid_device_c::~usb_hid_device_c(void)
     DEV_unregister_removable_mouse((void*)this);
   } else if (d.type == USB_DEV_TYPE_KEYPAD) {
     DEV_unregister_removable_keyboard((void*)this);
+//    DEV_unregister_removable_mouse((void*)this);
   }
 }
 
@@ -816,7 +818,11 @@ int usb_hid_device_c::handle_control(int request, int value, int index, int leng
           (d.type == USB_DEV_TYPE_TABLET)) {
         ret = mouse_poll(data, length, 1);
       } else if (d.type == USB_DEV_TYPE_KEYPAD) {
-        ret = keypad_poll(data, length, 1);
+        if (index == 0) {
+          ret = keypad_poll(data, length, 1);
+        } else {
+          ret = mouse_poll(data, length, 1);
+        }
       } else {
         goto fail;
       }
@@ -1011,9 +1017,7 @@ int usb_hid_device_c::keypad_poll(Bit8u *buf, int len, bx_bool force)
     if (s.has_events || (s.idle != 0) || force) {
       memcpy(buf, s.key_pad_packet, len);
       l = 8;
-      if (s.saved_key == BX_KEY_UNHANDLED) {
-        s.has_events = 0;
-      }
+      s.has_events = 0;
     }
   }
   return l;
@@ -1032,6 +1036,7 @@ bx_bool usb_hid_device_c::gen_scancode(Bit32u key)
     if (key == s.saved_key) {
       s.saved_key = BX_KEY_UNHANDLED;
       memset(s.key_pad_packet, 0, 8);
+      s.has_events = 1;
       BX_DEBUG(("Routing Bochs key release (%d) to USB keypad", key));
       return 1; // tell the keyboard handler that we used it, and to return with out processing key
     }
