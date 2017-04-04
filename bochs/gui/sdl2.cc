@@ -1340,10 +1340,10 @@ bx_svga_tileinfo_t *bx_sdl2_gui_c::graphics_tile_info(bx_svga_tileinfo_t *info)
     info->blue_mask = sdl_fullscreen->format->Bmask;
     info->is_indexed = (sdl_fullscreen->format->palette != NULL);
   }
-#ifdef BX_LITTLE_ENDIAN
-  info->is_little_endian = 1;
-#else
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
   info->is_little_endian = 0;
+#else
+  info->is_little_endian = 1;
 #endif
   return info;
 }
