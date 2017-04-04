@@ -843,6 +843,19 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
     </para></answer>
   </qandaentry>
 
+  <qandaentry>
+     <question><para>
+     Does Bochs run on my mobile device?
+     </para></question>
+     <answer><para>
+       Bochs has now minimal support for the Android platform using a special
+       version of the SDL library. There are some external projects that use
+       the offical sources with some modifications. They also offer a gui
+       for easy Bochs configuration. Other mobile platforms are not officially
+       supported yet.
+     </para></answer>
+  </qandaentry>
+
 <!-- ......................................................
      A blank question to fill in copy and paste to create
      a new entry (8 lines to yank)
@@ -5841,16 +5854,22 @@ On Linux /dev/console is used for output and on Windows the Beep() function.</pa
 </section>
 <section><title>SB16 runtime configuration</title>
 <para>
-The SB16 configuration parameters <option>loglevel</option> and <option>dmatimer</option>
-are available in the runtime configuration menu or dialog. In addition to this,
-there is a small program called <command>SB16CTRL</command> to change emulation
-settings from inside the simulation.
+Most of the SB16 configuration parameters are available in the runtime
+configuration menu or dialog. In addition to this, there is a small program
+called <command>SB16CTRL</command> to change emulation settings from inside
+the simulation.
 </para>
-<section><title>Runtime options <option>loglevel</option> and <option>dmatimer</option></title>
+<section><title>Runtime options</title>
 <para>
 Unlike other devices, the SB16 emulation has it's own logfile and a loglevel parameter
-to control what should be printed there. See the <link linkend="bochsopt-sb16">sb16</link>
-bochsrc option for details.
+to control what should be printed there. Both the <option>log</option> file and
+<option>loglevel</option> parameters can be changed at runtime. See the
+<link linkend="bochsopt-sb16">sb16</link> bochsrc option for details.
+</para>
+<para>
+The output parameters <option>midimode</option>, <option>midifile</option>,
+<option>wavemode</option> and <option>wavefile</option> are also available at
+runtime.
 </para>
 <para>
 The <option>dmatimer</option> parameter controls the DMA timing for wave (PCM)
@@ -5872,7 +5891,7 @@ program that can be run from inside the emulation.
 It currently supports the following commands:
 </para>
 
-<table><title>Supported options for <command>sb16ctl</command></title>
+<table><title>Supported options for <command>sb16ctrl</command></title>
 <tgroup cols="2">
   <thead>
     <row>
