@@ -61,6 +61,7 @@ including Linux, DOS, Windows 9X/NT/2000/XP or Windows 7.
 %defattr(-, root, root)
 	/usr/bin/bochs
 	/usr/bin/bochs-dlx
+	/usr/bin/bxhub
 	/usr/bin/bximage
 	/usr/share/bochs/*
 	/usr/share/doc/*

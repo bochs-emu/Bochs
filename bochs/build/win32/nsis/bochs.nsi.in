@@ -164,6 +164,9 @@ Section "Add Bochs to the Start Menu and Desktop" SecIcons
   CreateShortCut "${PGDIR}\Disk Image Creation Tool.lnk" \
                  "$INSTDIR\bximage.exe"
 
+  CreateShortCut "${PGDIR}\Virtual Network Hub.lnk" \
+                 "$INSTDIR\bxhub.exe"
+
   CreateShortCut "${PGDIR}\NIC Lister.lnk" \
                  "$INSTDIR\niclist.exe"
 
