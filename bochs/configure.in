@@ -8,13 +8,13 @@ AC_CONFIG_HEADER(ltdlconf.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
 dnl // into all the right places.
-VERSION="2.6.8.svn"
-VER_STRING="2.6.8.svn"
+VERSION="2.6.9"
+VER_STRING="2.6.9"
 dnl // WIN_VER_STRING format is "a, b, c, d"
 dnl // c should be > 90 for pre-release of next version otherwise patch level
 dnl // d should be 0 for release and 1 for svn version
-WIN_VER_STRING="2, 6, 8, 1"
-REL_STRING="Built from SVN snapshot after release 2.6.8"
+WIN_VER_STRING="2, 6, 9, 0"
+REL_STRING="Built from SVN snapshot on April 9, 2017"
 
 changequote(<<, >>)
 changequote([, ])
