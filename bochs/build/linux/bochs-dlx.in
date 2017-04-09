@@ -1,0 +1,118 @@
+#!/bin/sh
+BOCHS=@prefix@/bin/bochs
+DLXINST=@prefix@/share/bochs/dlxlinux
+GZIP=@GZIP@
+if [ ! -z $1 ]; then
+  DLXPATH=$1
+else
+  DLXPATH=$HOME/.bochsdlx
+fi
+CONFFILE=$HOME/.bochsdlx/bochsconf
+
+makedlxdir() {
+  echo 
+  echo ---------------------------------------------------------------
+  echo To run the DLX Linux demo, I need to create a directory called 
+  echo $DLXPATH, and copy some configuration files 
+  echo and a 10 megabyte disk image into the directory.
+  echo ---------------------------------------------------------------
+  ok='unknown'
+  while test $ok = 'unknown'; do
+    echo Is that okay? [y/n]
+    read j
+    case $j in
+	    y*) ok=1 ;;
+	    n*) ok=0 ;;
+    esac
+  done
+  if test $ok != 1; then
+    echo Aborting
+    exit 1
+  fi
+  #echo DEBUG: Creating $HOME/.bochsdlx/bochsrc
+  echo DLXPATH=$DLXPATH > $CONFFILE
+  . $CONFFILE
+  for file in bochsrc.txt readme.txt testform.txt; do
+    if [ ! -f $DLXPATH/$file ]; then
+      echo Copying $DLXINST/$file '->' $DLXPATH/.
+      cp $DLXINST/$file $DLXPATH/.
+    else
+      echo "ERROR: $file already exists in $DLXPATH. Remove it to replace."
+    fi;
+  done
+  if [ ! -f $DLXPATH/hd10meg.img ]; then
+    echo Uncompressing $DLXINST/hd10meg.img.gz '->' $DLXPATH/hd10meg.img
+    $GZIP -dc $DLXINST/hd10meg.img.gz > $DLXPATH/hd10meg.img
+  else
+    echo "ERROR: hd10meg.img already exists in $DLXPATH. Remove it to replace."
+  fi
+}
+
+echo ---------------------------------------------------------------
+echo "            DLX Linux Demo, for Bochs x86 Emulator"
+echo ---------------------------------------------------------------
+
+echo -n "Checking for bochs binary..."
+if test ! -x $BOCHS; then
+  echo FAILED
+  echo ERROR: I could not find bochs in $BOCHS
+  exit 1
+fi
+echo ok
+echo -n "Checking for DLX linux directory..."
+if test ! -d $DLXINST; then
+  echo FAILED
+  echo ERROR: I could not find the DLX linux directory.
+  exit 1
+fi
+echo ok
+echo -n "Checking for $GZIP..."
+$GZIP < /dev/null > /dev/null 
+if test $? = 0; then
+  echo ok
+else
+  echo not found
+  echo ERROR: without $GZIP in your PATH, I cannot continue.
+  exit 1
+fi
+echo -n "Checking for $HOME/.bochsdlx directory..."
+if test -d "$HOME/.bochsdlx"; then
+  echo "ok"
+  if test -f "$CONFFILE"; then
+    . $CONFFILE
+  else
+    makedlxdir
+  fi
+else
+  #echo DEBUG: Creating $HOME/.bochsdlx
+  mkdir -p $HOME/.bochsdlx
+  mkdir -p $DLXPATH
+  makedlxdir
+fi
+echo Entering $DLXPATH
+cd $DLXPATH
+
+# Now that we're in the DLXPATH, make sure that bochsrc.txt & hd10meg.img exist
+if test ! -f bochsrc.txt; then
+  echo ERROR: bochsrc.txt not found
+  exit 1
+fi
+if test ! -f hd10meg.img; then
+  echo ERROR: hd10meg.img not found
+  exit 1
+fi
+
+echo Running bochs
+
+# ok now try it
+$BOCHS -q
+
+echo
+echo ---------------------------------------------------------------
+echo The DLX Linux demo is over.  If you want to free up the disk 
+echo space in your account, remove the .bochsdlx directory from
+echo your home directory.  Example:
+echo "   rm -rf ~/.bochsdlx"
+echo Please be careful with rm -rf because it can make a mess.
+echo ---------------------------------------------------------------
+exit 0
