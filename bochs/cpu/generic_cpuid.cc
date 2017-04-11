@@ -768,7 +768,8 @@ void bx_generic_cpuid_t::init_cpu_extensions_bitmask(void)
       enable_cpu_extension(BX_ISA_1G_PAGES);
   }
   else {
-    if (BX_SUPPORT_VMX >= 2) {
+    static unsigned vmx_enabled = SIM->get_param_num(BXPN_CPUID_VMX)->get();
+    if (vmx_enabled >= 2) {
       BX_PANIC(("PANIC: VMX=2 emulation requires x86-64 support !"));
       return;
     }
