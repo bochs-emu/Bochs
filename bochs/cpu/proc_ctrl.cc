@@ -318,11 +318,16 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CLZERO(bxInstruction_c *i)
   for (unsigned n=0; n<CACHE_LINE_SIZE; n += 32) {
     write_virtual_ymmword(i->seg(), eaddr+n, &ymmzero);
   }
-#else
+#elif NX_CPU_LEVEL >= 6
   BxPackedXmmRegister xmmzero;
   xmmzero.clear();
   for (unsigned n=0; n<CACHE_LINE_SIZE; n += 16) {
     write_virtual_xmmword(i->seg(), eaddr+n, &xmmzero);
+  }
+#else
+  Bit64u val_64 = 0;
+  for (unsigned n=0; n<CACHE_LINE_SIZE; n += 8) {
+    write_virtual_qword(i->seg(), eaddr+n, val_64);
   }
 #endif
 }
