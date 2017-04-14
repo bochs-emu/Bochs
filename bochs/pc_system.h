@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -124,6 +124,7 @@ public:
   void activate_timer_ticks(unsigned index, Bit64u instructions,
                             bx_bool continuous);
   Bit64u time_usec();
+  Bit64u time_nsec();
   Bit64u time_usec_sequential();
   static BX_CPP_INLINE Bit64u time_ticks() {
     return bx_pc_system.ticksTotal +

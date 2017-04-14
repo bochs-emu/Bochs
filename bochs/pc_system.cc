@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -461,6 +461,11 @@ Bit64u bx_pc_system_c::time_usec_sequential()
 Bit64u bx_pc_system_c::time_usec()
 {
   return (Bit64u) (((double)(Bit64s)time_ticks()) / m_ips);
+}
+
+Bit64u bx_pc_system_c::time_nsec()
+{
+  return (Bit64u) (((double)(Bit64s)time_ticks()) / m_ips * 1000.0);
 }
 
 void bx_pc_system_c::start_timers(void) { }

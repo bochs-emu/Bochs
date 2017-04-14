@@ -135,7 +135,6 @@ void bx_ioapic_c::init(void)
 {
   BX_INFO(("initializing I/O APIC"));
   set_enabled(1, 0x0000);
-  reset(BX_RESET_HARDWARE);
 #if BX_DEBUGGER
   // register device for the 'info device' command (calls debug_dump())
   bx_dbg_register_debug_info("ioapic", this);
