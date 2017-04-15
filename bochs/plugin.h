@@ -161,6 +161,10 @@ extern "C" {
 #define DEV_cmos_get_reg(a) (bx_devices.pluginCmosDevice->get_reg(a))
 #define DEV_cmos_set_reg(a,b) (bx_devices.pluginCmosDevice->set_reg(a,b))
 #define DEV_cmos_checksum() (bx_devices.pluginCmosDevice->checksum_cmos())
+#define DEV_cmos_enable_irq(a) (bx_devices.pluginCmosDevice->enable_irq(a))
+
+///////// PIT macro
+#define DEV_pit_enable_irq(a) (bx_devices.pluginPitDevice->enable_irq(a))
 
 ///////// keyboard macros
 #define DEV_kbd_gen_scancode(key) (bx_devices.gen_scancode(key))

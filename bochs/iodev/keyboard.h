@@ -227,7 +227,6 @@ private:
   void mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy);
 
   static void   timer_handler(void *);
-  void   timer(void);
   int    timer_handle;
   int    statusbar_id[3];
   bx_bool bxkey_state[BX_KEY_NBKEYS];

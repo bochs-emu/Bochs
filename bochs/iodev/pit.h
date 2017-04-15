@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -32,7 +32,7 @@
 #  define BX_PIT_THIS this->
 #endif
 
-class bx_pit_c : public bx_devmodel_c {
+class bx_pit_c : public bx_pit_stub_c {
 public:
   bx_pit_c();
   virtual ~bx_pit_c();
@@ -40,6 +40,9 @@ public:
   virtual void reset(unsigned type);
   virtual void register_state(void);
   virtual void after_restore_state(void);
+  virtual void enable_irq(bx_bool enabled) {
+    s.irq_enabled = enabled;
+  }
 #if BX_DEBUGGER
   virtual void debug_dump(int argc, char **argv);
 #endif
@@ -61,6 +64,7 @@ private:
     Bit64u  total_ticks;
     Bit64u  total_usec;
     int     timer_handle[3];
+    bx_bool irq_enabled;
   } s;
 
   bx_bool is_realtime;

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2012  The Bochs Project
+//  Copyright (C) 2002-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -55,6 +55,9 @@ public:
   virtual time_t get_timeval() {
     return s.timeval;
   }
+  virtual void enable_irq(bx_bool enabled) {
+    s.irq_enabled = enabled;
+  }
 
   struct {
     int     periodic_timer_index;
@@ -67,6 +70,7 @@ public:
     bx_bool rtc_mode_12hour;
     bx_bool rtc_mode_binary;
     bx_bool rtc_sync;
+    bx_bool irq_enabled;
 
     Bit8u   reg[128];
   } s;  // state information

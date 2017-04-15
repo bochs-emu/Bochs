@@ -176,6 +176,16 @@ public:
   virtual void checksum_cmos(void) {
     STUBFUNC(cmos, checksum);
   }
+  virtual void enable_irq(bx_bool enabled) {
+    STUBFUNC(cmos, enable_irq);
+  }
+};
+
+class BOCHSAPI bx_pit_stub_c : public bx_devmodel_c {
+public:
+  virtual void enable_irq(bx_bool enabled) {
+    STUBFUNC(pit, enable_irq);
+  }
 };
 
 class BOCHSAPI bx_dma_stub_c : public bx_devmodel_c {
@@ -410,6 +420,7 @@ public:
   bx_hdimage_ctl_stub_c *pluginHDImageCtl;
   bx_keyb_stub_c    *pluginKeyboard;
   bx_pic_stub_c     *pluginPicDevice;
+  bx_pit_stub_c     *pluginPitDevice;
   bx_speaker_stub_c *pluginSpeaker;
   bx_vga_stub_c     *pluginVgaDevice;
 #if BX_SUPPORT_IODEBUG
@@ -439,6 +450,7 @@ public:
   bx_hdimage_ctl_stub_c stubHDImage;
   bx_keyb_stub_c stubKeyboard;
   bx_pic_stub_c  stubPic;
+  bx_pit_stub_c  stubPit;
   bx_speaker_stub_c stubSpeaker;
   bx_vga_stub_c  stubVga;
 #if BX_SUPPORT_IODEBUG

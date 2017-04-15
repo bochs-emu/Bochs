@@ -37,6 +37,7 @@ int CDECL libpit_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
 {
   if (type == PLUGTYPE_CORE) {
     thePit = new bx_pit_c();
+    bx_devices.pluginPitDevice = thePit;
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, thePit, BX_PLUGIN_PIT);
     return 0; // Success
   } else {
@@ -101,6 +102,7 @@ void bx_pit_c::init(void)
       (clock_mode == BX_CLOCK_SYNC_BOTH);
 
   DEV_register_irq(0, "8254 PIT");
+  BX_PIT_THIS s.irq_enabled = 1;
   DEV_register_ioread_handler(this, read_handler, 0x0040, "8254 PIT", 1);
   DEV_register_ioread_handler(this, read_handler, 0x0041, "8254 PIT", 1);
   DEV_register_ioread_handler(this, read_handler, 0x0042, "8254 PIT", 1);
@@ -172,6 +174,7 @@ void bx_pit_c::register_state(void)
   new bx_shadow_num_c(list, "last_next_event_time", &BX_PIT_THIS s.last_next_event_time);
   new bx_shadow_num_c(list, "total_ticks", &BX_PIT_THIS s.total_ticks);
   new bx_shadow_num_c(list, "total_usec", &BX_PIT_THIS s.total_usec);
+  BXRS_PARAM_BOOL(list, irq_enabled, BX_PIT_THIS s.irq_enabled);
   bx_list_c *counter = new bx_list_c(list, "counter");
   BX_PIT_THIS s.timer.register_state(counter);
 }
@@ -392,10 +395,12 @@ bx_bool bx_pit_c::periodic(Bit32u usec_delta)
 
 void bx_pit_c::irq_handler(bx_bool value)
 {
-  if (value == 1) {
-    DEV_pic_raise_irq(0);
-  } else {
-    DEV_pic_lower_irq(0);
+  if (BX_PIT_THIS s.irq_enabled) {
+    if (value == 1) {
+      DEV_pic_raise_irq(0);
+    } else {
+      DEV_pic_lower_irq(0);
+    }
   }
 }
 

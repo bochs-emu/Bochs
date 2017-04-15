@@ -278,6 +278,7 @@ void bx_cmos_c::init(void)
 void bx_cmos_c::reset(unsigned type)
 {
   BX_CMOS_THIS s.cmos_mem_address = 0;
+  BX_CMOS_THIS s.irq_enabled = 1;
 
   // RESET affects the following registers:
   //  CRA: no effects
@@ -318,6 +319,7 @@ void bx_cmos_c::register_state(void)
 {
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "cmos", "CMOS State");
   BXRS_HEX_PARAM_FIELD(list, mem_address, BX_CMOS_THIS s.cmos_mem_address);
+  BXRS_PARAM_BOOL(list, irq_enabled, BX_CMOS_THIS s.irq_enabled);
   new bx_shadow_data_c(list, "ram", BX_CMOS_THIS s.reg, 128, 1);
 }
 
@@ -386,7 +388,9 @@ Bit32u bx_cmos_c::read(Bit32u address, unsigned io_len)
       // all bits of Register C are cleared after a read occurs.
       if (BX_CMOS_THIS s.cmos_mem_address == REG_STAT_C) {
         BX_CMOS_THIS s.reg[REG_STAT_C] = 0x00;
-        DEV_pic_lower_irq(8);
+        if (BX_CMOS_THIS s.irq_enabled) {
+          DEV_pic_lower_irq(8);
+        }
       }
       return(ret8);
 
@@ -659,7 +663,9 @@ void bx_cmos_c::periodic_timer()
   // update status register C
   if (BX_CMOS_THIS s.reg[REG_STAT_B] & 0x40) {
     BX_CMOS_THIS s.reg[REG_STAT_C] |= 0xc0; // Interrupt Request, Periodic Int
-    DEV_pic_raise_irq(8);
+    if (BX_CMOS_THIS s.irq_enabled) {
+      DEV_pic_raise_irq(8);
+    }
   }
 }
 
@@ -703,7 +709,9 @@ void bx_cmos_c::uip_timer()
   // update status register C
   if (BX_CMOS_THIS s.reg[REG_STAT_B] & 0x10) {
     BX_CMOS_THIS s.reg[REG_STAT_C] |= 0x90; // Interrupt Request, Update Ended
-    DEV_pic_raise_irq(8);
+    if (BX_CMOS_THIS s.irq_enabled) {
+      DEV_pic_raise_irq(8);
+    }
   }
 
   // compare CMOS user copy of time/date to alarm time/date here
@@ -727,7 +735,9 @@ void bx_cmos_c::uip_timer()
     }
     if (alarm_match) {
       BX_CMOS_THIS s.reg[REG_STAT_C] |= 0xa0; // Interrupt Request, Alarm Int
-      DEV_pic_raise_irq(8);
+      if (BX_CMOS_THIS s.irq_enabled) {
+        DEV_pic_raise_irq(8);
+      }
     }
   }
   BX_CMOS_THIS s.reg[REG_STAT_A] &= 0x7f; // clear UIP bit

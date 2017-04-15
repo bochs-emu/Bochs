@@ -95,6 +95,7 @@ public:
   void   setTimerParam(unsigned timerID, Bit32u param);
   void   start_timers(void);
   void   activate_timer(unsigned timer_index, Bit32u useconds, bx_bool continuous);
+  void   activate_timer_nsec(unsigned timer_index, Bit64u nseconds, bx_bool continuous);
   void   deactivate_timer(unsigned timer_index);
   unsigned triggeredTimerID(void) {
     return triggeredTimer;
