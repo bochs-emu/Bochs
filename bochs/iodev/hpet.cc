@@ -164,7 +164,7 @@ void bx_hpet_c::init(void)
 {
   BX_INFO(("initializing HPET"));
   s.num_timers = HPET_MIN_TIMERS;
-  s.capability = 0x8086a001ULL | ((s.num_timers - 1) << 8);
+  s.capability = BX_CONST64(0x8086a001) | ((s.num_timers - 1) << 8);
   s.capability |= ((Bit64u)(HPET_CLK_PERIOD * FS_PER_NS) << 32);
   s.isr = 0x00;
   DEV_register_memory_handlers(theHPET, hpet_read, hpet_write,
@@ -187,14 +187,14 @@ void bx_hpet_c::reset(unsigned type)
     HPETTimer *timer = &s.timer[i];
 
     hpet_del_timer(timer);
-    timer->cmp = ~0ULL;
+    timer->cmp = ~BX_CONST64(0);
     timer->config = HPET_TN_PERIODIC_CAP | HPET_TN_SIZE_CAP;
-    timer->period = 0ULL;
+    timer->period = BX_CONST64(0);
     timer->wrap_flag = 0;
   }
-  s.hpet_counter = 0ULL;
-  s.hpet_offset = 0ULL;
-  s.config = 0ULL;
+  s.hpet_counter = BX_CONST64(0);
+  s.hpet_offset = BX_CONST64(0);
+  s.config = BX_CONST64(0);
 }
 
 void bx_hpet_c::register_state(void)
@@ -433,12 +433,12 @@ void bx_hpet_c::write_aligned(bx_phy_address address, Bit32u value)
         return;
       case HPET_CFG:
         val = hpet_fixup_reg(new_val, old_val, HPET_CFG_WRITE_MASK);
-        s.config = (s.config & 0xffffffff00000000ULL) | val;
+        s.config = (s.config & BX_CONST64(0xffffffff00000000)) | val;
         if (activating_bit(old_val, new_val, HPET_CFG_ENABLE)) {
           /* Enable main counter and interrupt generation. */
           s.hpet_offset = ticks_to_ns(s.hpet_counter) - bx_pc_system.time_nsec();
           for (i = 0; i < s.num_timers; i++) {
-            if (s.timer[i].cmp != ~0ULL) {
+            if (s.timer[i].cmp != ~BX_CONST64(0U)) {
               hpet_set_timer(&s.timer[i]);
             }
           }
@@ -473,13 +473,13 @@ void bx_hpet_c::write_aligned(bx_phy_address address, Bit32u value)
         if (hpet_enabled()) {
           BX_DEBUG(("Writing counter while HPET enabled!"));
         }
-        s.hpet_counter = (s.hpet_counter & 0xffffffff00000000ULL) | value;
+        s.hpet_counter = (s.hpet_counter & BX_CONST64(0xffffffff00000000)) | value;
         break;
       case HPET_COUNTER + 4:
         if (hpet_enabled()) {
           BX_DEBUG(("Writing counter while HPET enabled!"));
         }
-        s.hpet_counter = (s.hpet_counter & 0xffffffffULL) | (((Bit64u)value) << 32);
+        s.hpet_counter = (s.hpet_counter & BX_CONST64(0xffffffff)) | (((Bit64u)value) << 32);
         break;
       default:
         BX_ERROR(("write to reserved offset 0x%04x", index));
@@ -497,7 +497,7 @@ void bx_hpet_c::write_aligned(bx_phy_address address, Bit32u value)
           update_irq(timer, 0);
         }
         val = hpet_fixup_reg(new_val, old_val, HPET_TN_CFG_WRITE_MASK);
-        timer->config = (timer->config & 0xffffffff00000000ULL) | val;
+        timer->config = (timer->config & BX_CONST64(0xffffffff00000000)) | val;
         if (new_val & HPET_TN_32BIT) {
           timer->cmp = (Bit32u)timer->cmp;
           timer->period = (Bit32u)timer->period;
@@ -513,15 +513,15 @@ void bx_hpet_c::write_aligned(bx_phy_address address, Bit32u value)
           new_val = (Bit32u)new_val;
         }
         if (!timer_is_periodic(timer) || (timer->config & HPET_TN_SETVAL)) {
-          timer->cmp = (timer->cmp & 0xffffffff00000000ULL) | new_val;
+          timer->cmp = (timer->cmp & BX_CONST64(0xffffffff00000000)) | new_val;
         }
         if (timer_is_periodic(timer)) {
           /*
            * FIXME: Clamp period to reasonable min value?
            * Clamp period to reasonable max value
            */
-          new_val &= (timer->config & HPET_TN_32BIT ? ~0u : ~0ull) >> 1;
-          timer->period = (timer->period & 0xffffffff00000000ULL) | new_val;
+          new_val &= (timer->config & HPET_TN_32BIT ? ~0u : ~BX_CONST64(0)) >> 1;
+          timer->period = (timer->period & BX_CONST64(0xffffffff00000000)) | new_val;
         }
         timer->config &= ~HPET_TN_SETVAL;
         if (hpet_enabled()) {
@@ -530,14 +530,14 @@ void bx_hpet_c::write_aligned(bx_phy_address address, Bit32u value)
         break;
       case HPET_TN_CMP + 4:
         if (!timer_is_periodic(timer) || (timer->config & HPET_TN_SETVAL)) {
-          timer->cmp = (timer->cmp & 0xffffffffULL) | (new_val << 32);
+          timer->cmp = (timer->cmp & BX_CONST64(0xffffffff)) | (new_val << 32);
         } else {
           /*
            * FIXME: Clamp period to reasonable min value?
            * Clamp period to reasonable max value
            */
-          new_val &= (timer->config & HPET_TN_32BIT ? ~0u : ~0ull) >> 1;
-          timer->period = (timer->period & 0xffffffffULL) | (new_val << 32);
+          new_val &= (timer->config & HPET_TN_32BIT ? ~0u : ~BX_CONST64(0)) >> 1;
+          timer->period = (timer->period & BX_CONST64(0xffffffff)) | (new_val << 32);
         }
         timer->config &= ~HPET_TN_SETVAL;
         if (hpet_enabled()) {
@@ -545,7 +545,7 @@ void bx_hpet_c::write_aligned(bx_phy_address address, Bit32u value)
         }
         break;
       case HPET_TN_ROUTE:
-        timer->fsb = (timer->fsb & 0xffffffff00000000ULL) | new_val;
+        timer->fsb = (timer->fsb & BX_CONST64(0xffffffff00000000)) | new_val;
         break;
       case HPET_TN_ROUTE + 4:
         timer->fsb = (new_val << 32) | (timer->fsb & 0xffffffff);
