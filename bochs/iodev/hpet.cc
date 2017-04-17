@@ -258,7 +258,7 @@ void bx_hpet_c::update_irq(HPETTimer *timer, bx_bool set)
   } else {
     route = timer_int_route(timer);
   }
-  mask = 1 << timer->tn;
+  mask = (Bit64u)(1 << timer->tn);
   if (!set || !timer_enabled(timer) || !hpet_enabled()) {
     s.isr &= ~mask;
     if (!timer_fsb_route(timer)) {
@@ -464,7 +464,7 @@ void bx_hpet_c::write_aligned(bx_phy_address address, Bit32u value)
       case HPET_STATUS:
         val = new_val & s.isr;
         for (i = 0; i < s.num_timers; i++) {
-          if (val & (1 << i)) {
+          if (val & (Bit64u)(1 << i)) {
             update_irq(&s.timer[i], 0);
           }
         }
