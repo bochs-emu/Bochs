@@ -21327,29 +21327,6 @@ fi
     fi
   fi
 
-  if test "$with_macos" != yes; then
-    can_compile_macos=1
-    ac_fn_c_check_header_mongrel "$LINENO" "Quickdraw.h" "ac_cv_header_Quickdraw_h" "$ac_includes_default"
-if test "x$ac_cv_header_Quickdraw_h" = xyes; then :
-
-else
-   can_compile_macos=0
-fi
-
-
-    ac_fn_c_check_header_mongrel "$LINENO" "Dialogs.h" "ac_cv_header_Dialogs_h" "$ac_includes_default"
-if test "x$ac_cv_header_Dialogs_h" = xyes; then :
-
-else
-   can_compile_macos=0
-fi
-
-
-    if test $can_compile_macos = 1; then
-      with_macos=yes
-    fi
-  fi
-
   if test "$with_carbon" != yes; then
     can_compile_carbon=1
     ac_fn_c_check_header_mongrel "$LINENO" "Carbon.h" "ac_cv_header_Carbon_h" "$ac_includes_default"
@@ -21437,29 +21414,6 @@ fi
       fi
     else
       with_sdl2=yes
-    fi
-  fi
-
-  if test "$with_svga" != yes; then
-    can_compile_svga=1
-    ac_fn_c_check_header_mongrel "$LINENO" "vga.h" "ac_cv_header_vga_h" "$ac_includes_default"
-if test "x$ac_cv_header_vga_h" = xyes; then :
-
-else
-   can_compile_svga=0
-fi
-
-
-    ac_fn_c_check_header_mongrel "$LINENO" "vgagl.h" "ac_cv_header_vgagl_h" "$ac_includes_default"
-if test "x$ac_cv_header_vgagl_h" = xyes; then :
-
-else
-   can_compile_svga=0
-fi
-
-
-    if test $can_compile_svga = 1; then
-      with_svga=yes
     fi
   fi
 

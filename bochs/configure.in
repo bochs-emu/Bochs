@@ -303,15 +303,6 @@ if test "$with_all_libs" = yes; then
     fi
   fi
 
-  if test "$with_macos" != yes; then
-    can_compile_macos=1
-    AC_CHECK_HEADER([Quickdraw.h], [], [ can_compile_macos=0 ])
-    AC_CHECK_HEADER([Dialogs.h], [], [ can_compile_macos=0 ])
-    if test $can_compile_macos = 1; then
-      with_macos=yes
-    fi
-  fi
-
   if test "$with_carbon" != yes; then
     can_compile_carbon=1
     AC_CHECK_HEADER([Carbon.h], [], [ can_compile_carbon=0 ])
@@ -343,15 +334,6 @@ if test "$with_all_libs" = yes; then
       fi
     else
       with_sdl2=yes
-    fi
-  fi
-
-  if test "$with_svga" != yes; then
-    can_compile_svga=1
-    AC_CHECK_HEADER([vga.h], [], [ can_compile_svga=0 ])
-    AC_CHECK_HEADER([vgagl.h], [], [ can_compile_svga=0 ])
-    if test $can_compile_svga = 1; then
-      with_svga=yes
     fi
   fi
 
