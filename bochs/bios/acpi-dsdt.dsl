@@ -136,7 +136,6 @@ DefinitionBlock (
                     ,, , AddressRangeMemory, TypeStatic)
             })
         }
-#ifdef BX_QEMU
         Device(HPET) {
             Name(_HID,  EISAID("PNP0103"))
             Name(_UID, 0)
@@ -155,7 +154,6 @@ DefinitionBlock (
                 )
             })
         }
-#endif
     }
 
     Scope(\_SB.PCI0) {

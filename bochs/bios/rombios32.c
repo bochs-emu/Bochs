@@ -1267,11 +1267,7 @@ struct rsdp_descriptor         /* Root System Descriptor Pointer */
 struct rsdt_descriptor_rev1
 {
 	ACPI_TABLE_HEADER_DEF                           /* ACPI common table header */
-#ifdef BX_QEMU
 	uint32_t                             table_offset_entry [4]; /* Array of pointers to other */
-#else
-	uint32_t                             table_offset_entry [3]; /* Array of pointers to other */
-#endif
 			 /* ACPI tables */
 } __attribute__((__packed__));
 
@@ -1411,7 +1407,6 @@ struct madt_processor_apic
 #endif
 } __attribute__((__packed__));
 
-#ifdef BX_QEMU
 /*
  *  * ACPI 2.0 Generic Address Space definition.
  *   */
@@ -1435,7 +1430,6 @@ struct acpi_20_hpet {
     uint8_t            page_protect;
 } __attribute__((__packed__));
 #define ACPI_HPET_ADDRESS 0xFED00000UL
-#endif
 
 struct madt_io_apic
 {
@@ -1563,10 +1557,8 @@ void acpi_bios_init(void)
     struct facs_descriptor_rev1 *facs;
     struct multiple_apic_table *madt;
     uint8_t *dsdt, *ssdt;
-#ifdef BX_QEMU
     struct acpi_20_hpet *hpet;
     uint32_t hpet_addr;
-#endif
     uint32_t base_addr, rsdt_addr, fadt_addr, addr, facs_addr, dsdt_addr, ssdt_addr;
     uint32_t acpi_tables_size, madt_addr, madt_size;
     int i;
@@ -1618,12 +1610,10 @@ void acpi_bios_init(void)
     madt = (void *)(addr);
     addr += madt_size;
 
-#ifdef BX_QEMU
     addr = (addr + 7) & ~7;
     hpet_addr = addr;
     hpet = (void *)(addr);
     addr += sizeof(*hpet);
-#endif
 
     acpi_tables_size = addr - base_addr;
 
@@ -1651,9 +1641,7 @@ void acpi_bios_init(void)
     rsdt->table_offset_entry[0] = cpu_to_le32(fadt_addr);
     rsdt->table_offset_entry[1] = cpu_to_le32(madt_addr);
     rsdt->table_offset_entry[2] = cpu_to_le32(ssdt_addr);
-#ifdef BX_QEMU
     rsdt->table_offset_entry[3] = cpu_to_le32(hpet_addr);
-#endif
     acpi_build_table_header((struct acpi_table_header *)rsdt,
                             "RSDT", sizeof(*rsdt), 1);
 
@@ -1727,7 +1715,6 @@ void acpi_bios_init(void)
                                 "APIC", madt_size, 1);
     }
 
-#ifdef BX_QEMU
     /* HPET */
     memset(hpet, 0, sizeof(*hpet));
     /* Note timer_block_id value must be kept in sync with value advertised by
@@ -1737,7 +1724,6 @@ void acpi_bios_init(void)
     hpet->addr.address = cpu_to_le32(ACPI_HPET_ADDRESS);
     acpi_build_table_header((struct  acpi_table_header *)hpet,
                              "HPET", sizeof(*hpet), 1);
-#endif
 
 }
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2015  The Bochs Project
+# Copyright (C) 2001-2017  The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -200,7 +200,8 @@ devices.o: devices.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h \
  ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
- ../param_names.h ../iodev/virt_timer.h ../iodev/slowdown_timer.h
+ ../param_names.h ../iodev/virt_timer.h ../iodev/slowdown_timer.h \
+ ../iodev/sound/soundmod.h ../iodev/network/netmod.h
 dma.o: dma.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h \
@@ -226,6 +227,11 @@ harddrv.o: harddrv.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h \
  ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
  ../param_names.h harddrv.h hdimage/hdimage.h hdimage/cdrom.h
+hpet.o: hpet.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h hpet.h
 ioapic.o: ioapic.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h \
@@ -339,7 +345,8 @@ devices.lo: devices.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h \
  ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
- ../param_names.h ../iodev/virt_timer.h ../iodev/slowdown_timer.h
+ ../param_names.h ../iodev/virt_timer.h ../iodev/slowdown_timer.h \
+ ../iodev/sound/soundmod.h ../iodev/network/netmod.h
 dma.lo: dma.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h \
@@ -365,6 +372,11 @@ harddrv.lo: harddrv.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h \
  ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
  ../param_names.h harddrv.h hdimage/hdimage.h hdimage/cdrom.h
+hpet.lo: hpet.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
+ ../cpudb.h ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h \
+ ../gui/gui.h ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
+ ../param_names.h hpet.h
 ioapic.lo: ioapic.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h \

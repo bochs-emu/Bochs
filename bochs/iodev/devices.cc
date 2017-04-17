@@ -193,6 +193,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 #endif
     if (chipset == BX_PCI_CHIPSET_I440FX) {
       PLUG_load_plugin(acpi, PLUGTYPE_STANDARD);
+      PLUG_load_plugin(hpet, PLUGTYPE_STANDARD);
     }
 #else
     BX_ERROR(("Bochs is not compiled with PCI support"));

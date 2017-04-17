@@ -1438,6 +1438,7 @@ AC_ARG_ENABLE(x86-debugger,
 
 dnl devices configuration section
 
+PCI_OBJS=''
 AC_MSG_CHECKING(for i440FX PCI support)
 AC_ARG_ENABLE(pci,
   AS_HELP_STRING([--enable-pci], [enable i440FX PCI support (yes)]),
@@ -1445,20 +1446,20 @@ AC_ARG_ENABLE(pci,
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_PCI, 1)
     pci=1
-    PCI_OBJS='pci.o pci2isa.o pci_ide.o acpi.o'
    else
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_SUPPORT_PCI, 0)
     pci=0
-    PCI_OBJS=''
    fi],
   [
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_PCI, 1)
     pci=1
-    PCI_OBJS='pci.o pci2isa.o pci_ide.o acpi.o'
     ]
   )
+if test "$pci" = "1"; then
+  PCI_OBJS='pci.o pci2isa.o pci_ide.o acpi.o hpet.o'
+fi
 AC_SUBST(PCI_OBJS)
 
 
@@ -2839,7 +2840,7 @@ case $target in
       IODEV_DLL_TARGETS=""
       IODEV_DLL_LIST="biosdev cmos dma extfpuirq harddrv ioapic parallel pic speaker unmapped"
       if test "$pci" = "1"; then
-        IODEV_DLL_LIST="$IODEV_DLL_LIST acpi pci pci2isa pci_ide"
+        IODEV_DLL_LIST="$IODEV_DLL_LIST acpi pci pci2isa pci_ide hpet"
       fi
       if test "$bx_debugger" = 1; then
         IODEV_DLL_LIST="$IODEV_DLL_LIST iodebug"
