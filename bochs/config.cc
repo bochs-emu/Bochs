@@ -1113,6 +1113,7 @@ void bx_init_options()
       "Skips check for the 0xaa55 signature on floppy boot device.",
       0);
 
+#if BX_LOAD32BITOSHACK
   // loader hack
   bx_list_c *load32bitos = new bx_list_c(boot_params, "load32bitos", "32-bit OS Loader Hack");
 
@@ -1148,6 +1149,7 @@ void bx_init_options()
   whichOS->set_dependent_list(load32bitos->clone(), 1);
   whichOS->set_dependent_bitmap(Load32bitOSNone, 0);
   whichOS->set(Load32bitOSNone);
+#endif
   boot_params->set_options(menu->SHOW_PARENT);
 
   // floppy subtree
@@ -2985,6 +2987,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       PARSE_ERR(("%s: port_e9_hack directive malformed.", context));
     }
   } else if (!strcmp(params[0], "load32bitOSImage")) {
+#if BX_LOAD32BITOSHACK
     if ((num_params!=4) && (num_params!=5)) {
       PARSE_ERR(("%s: load32bitOSImage directive: wrong # args.", context));
     }
@@ -3015,6 +3018,9 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       SIM->get_param_string(BXPN_LOAD32BITOS_INITRD)->set(&params[4][7]);
     }
     PARSE_WARN(("%s: WARNING: This Bochs feature is not maintained yet", context));
+#else
+    PARSE_ERR(("%s: load32bitOSImage: BX_LOAD32BITOSHACK must be set to 1.", context));
+#endif
   } else if (!strcmp(params[0], "user_plugin")) {
 #if BX_PLUGINS
     char tmpname[80];
@@ -3178,6 +3184,7 @@ int bx_write_usb_options(FILE *fp, int maxports, bx_list_c *base)
   return 0;
 }
 
+#if BX_LOAD32BITOSHACK
 int bx_write_loader_options(FILE *fp)
 {
   if (SIM->get_param_enum(BXPN_LOAD32BITOS_WHICH)->get() == Load32bitOSNone) {
@@ -3191,6 +3198,7 @@ int bx_write_loader_options(FILE *fp)
       SIM->get_param_string(BXPN_LOAD32BITOS_INITRD)->getptr());
   return 0;
 }
+#endif
 
 int bx_write_clock_cmos_options(FILE *fp)
 {
@@ -3412,7 +3420,9 @@ int bx_write_configuration(const char *rc, int overwrite)
   fprintf(fp, "screenmode: name=\"%s\"\n", SIM->get_param_string(BXPN_SCREENMODE)->getptr());
 #endif
   bx_write_clock_cmos_options(fp);
+#if BX_LOAD32BITOSHACK
   bx_write_loader_options(fp);
+#endif
   bx_write_log_options(fp, (bx_list_c*) SIM->get_param("log"));
   bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_KEYBOARD), NULL, 0);
   bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_MOUSE), NULL, 0);

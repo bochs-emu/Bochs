@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -23,6 +23,8 @@
 #include "cpu/cpu.h"
 #include "iodev/iodev.h"
 #define LOG_THIS genlog->
+
+#if BX_LOAD32BITOSHACK
 
 static void bx_load_linux_hack(void);
 static void bx_load_null_kernel_hack(void);
@@ -292,3 +294,4 @@ Bit32u bx_load_kernel_image(char *path, Bit32u paddr)
 
   return page_size;
 }
+#endif

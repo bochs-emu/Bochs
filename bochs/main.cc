@@ -1016,10 +1016,12 @@ int bx_begin_simulation(int argc, char *argv[])
 
   bx_init_hardware();
 
+#if BX_LOAD32BITOSHACK
   if (SIM->get_param_enum(BXPN_LOAD32BITOS_WHICH)->get()) {
     void bx_load32bitOSimagehack(void);
     bx_load32bitOSimagehack();
   }
+#endif
 
   SIM->set_init_done(1);
 

@@ -122,10 +122,12 @@
 #define BXPN_BOOTDRIVE2                  "boot_params.boot_drive2"
 #define BXPN_BOOTDRIVE3                  "boot_params.boot_drive3"
 #define BXPN_FLOPPYSIGCHECK              "boot_params.floppy_sig_check"
+#if BX_LOAD32BITOSHACK
 #define BXPN_LOAD32BITOS_WHICH           "boot_params.load32bitos.which"
 #define BXPN_LOAD32BITOS_PATH            "boot_params.load32bitos.path"
 #define BXPN_LOAD32BITOS_IOLOG           "boot_params.load32bitos.iolog"
 #define BXPN_LOAD32BITOS_INITRD          "boot_params.load32bitos.initrd"
+#endif
 #define BXPN_FLOPPYA                     "floppy.0"
 #define BXPN_FLOPPYA_DEVTYPE             "floppy.0.devtype"
 #define BXPN_FLOPPYA_PATH                "floppy.0.path"

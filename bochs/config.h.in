@@ -919,6 +919,9 @@ typedef
 // I/O Interface to debugger
 #define BX_SUPPORT_IODEBUG 0
 
+// Legacy feature disabled by default
+#define BX_LOAD32BITOSHACK 0
+
 #ifdef WIN32
 #define BX_FLOPPY0_NAME "Floppy Disk A:"
 #define BX_FLOPPY1_NAME "Floppy Disk B:"

@@ -1216,6 +1216,7 @@ speaker: enabled=1, mode=sound
 # other stuff
 #=======================================================================
 # WARNING: This Bochs feature is not maintained yet. Is it still used ?
+# To use it, set BX_LOAD32BITOSHACK in config.h to 1 and recompile Bochs.
 #load32bitOSImage: os=nullkernel, path=../kernel.img, iolog=../vga_io.log
 #load32bitOSImage: os=linux, path=../linux.img, iolog=../vga_io.log, initrd=../initrd.img
 
