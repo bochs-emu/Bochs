@@ -30,11 +30,16 @@
 // - Support for connects from up to 6 Bochs sessions.
 // - Support for connecting from other machines.
 
+#ifdef __CYGWIN__
+#define __USE_W32_SOCKETS
+#endif
+
 #include "config.h"
 
 extern "C" {
 #ifdef WIN32
 #include <winsock2.h>
+#include <ws2tcpip.h>
 #else
 #include <sys/types.h>
 #include <sys/socket.h>

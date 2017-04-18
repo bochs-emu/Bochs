@@ -52,6 +52,10 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
+#ifdef __CYGWIN__
+#define __USE_W32_SOCKETS
+#endif
+
 #include "iodev.h"
 #include "netmod.h"
 
@@ -77,6 +81,7 @@ void CDECL libsocket_net_plugin_fini(void)
 extern "C" {
 #ifdef WIN32
 #include <winsock2.h>
+#include <ws2tcpip.h>
 #else
 #include <errno.h>
 #include <fcntl.h>
@@ -159,7 +164,7 @@ bx_socket_pktmover_c::bx_socket_pktmover_c(const char *netif,
   struct hostent *hp;
   int port;
 #ifdef WIN32
-  unsigned long nbl = 1;
+  ULONG nbl = 1;
 #endif
 
   this->netdev = dev;
