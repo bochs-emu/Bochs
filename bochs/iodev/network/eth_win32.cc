@@ -141,7 +141,7 @@ struct bpf_insn {
 	u_short	code;
 	u_char 	jt;
 	u_char 	jf;
-	bpf_int32 k;
+	bpf_u_int32 k;
 };
 
 struct bpf_program {
