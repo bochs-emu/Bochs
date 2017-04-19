@@ -325,8 +325,13 @@ void bx_socket_pktmover_c::rx_timer(void)
                     (struct sockaddr*) &sin, &slen);
 
   if (nbytes == -1) {
+#ifdef WIN32
+    if (WSAGetLastError() != WSAEWOULDBLOCK)
+      BX_INFO(("eth_socket: error receiving packet: %d", WSAGetLastError()));
+#else
     if (errno != EAGAIN)
-      BX_INFO(("eth_socket: error receiving packet: %s\n", strerror(errno)));
+      BX_INFO(("eth_socket: error receiving packet: %s", strerror(errno)));
+#endif
     return;
   }
 
@@ -337,7 +342,7 @@ void bx_socket_pktmover_c::rx_timer(void)
   }
 
   if (this->rxstat(this->netdev) & BX_NETDEV_RXREADY) {
-    BX_DEBUG(("eth_socket: got packet: %d bytes, dst=%x:%x:%x:%x:%x:%x, src=%x:%x:%x:%x:%x:%x\n", nbytes, rxbuf[0], rxbuf[1], rxbuf[2], rxbuf[3], rxbuf[4], rxbuf[5], rxbuf[6], rxbuf[7], rxbuf[8], rxbuf[9], rxbuf[10], rxbuf[11]));
+    BX_DEBUG(("eth_socket: got packet: %d bytes, dst=%x:%x:%x:%x:%x:%x, src=%x:%x:%x:%x:%x:%x", nbytes, rxbuf[0], rxbuf[1], rxbuf[2], rxbuf[3], rxbuf[4], rxbuf[5], rxbuf[6], rxbuf[7], rxbuf[8], rxbuf[9], rxbuf[10], rxbuf[11]));
     this->rxh(this->netdev, rxbuf, nbytes);
   }
 }
