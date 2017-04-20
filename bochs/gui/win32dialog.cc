@@ -136,7 +136,7 @@ static BOOL CALLBACK StringParamProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
     case WM_INITDIALOG:
       param = (bx_param_string_c *)lParam;
       title = param->get_label();
-      if (title == NULL || strlen(title) == 0) {
+      if ((title == NULL) || (strlen(title) == 0)) {
         title = param->get_name();
       }
       SetWindowText(hDlg, title);
@@ -168,7 +168,7 @@ void SetStandardLogOptions(HWND hDlg)
 
   for (level=0; level<N_LOGLEV; level++) {
     int mod = 0;
-    int first = SIM->get_log_action(mod, level);
+    int first = SIM->get_log_action (mod, level);
     BOOL consensus = true;
     // now compare all others to first.  If all match, then use "first" as
     // the initial value.

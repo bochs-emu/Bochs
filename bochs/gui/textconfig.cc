@@ -990,7 +990,7 @@ int bx_list_c::text_ask()
   bx_listitem_t *item;
   bx_list_c *child;
 
-  const char *my_title = title.c_str();
+  const char *my_title = title;
   bx_printf("\n");
   int i, imax = strlen(my_title);
   for (i=0; i<imax; i++) bx_printf("-");
