@@ -74,7 +74,8 @@ ip_output(struct socket *so, struct mbuf *m0)
 	 */
 	ip->ip_v = IPVERSION;
 	ip->ip_off &= IP_DF;
-	ip->ip_id = htons(slirp->ip_id++);
+	slirp->ip_id++;
+	ip->ip_id = htons(slirp->ip_id);
 	ip->ip_hl = hlen >> 2;
 
 	/*

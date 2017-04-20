@@ -82,6 +82,10 @@ extern "C" {
 #ifdef WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#ifdef __CYGWIN__
+#undef FIONBIO
+#define FIONBIO 0x8004667e
+#endif
 #else
 #include <errno.h>
 #include <fcntl.h>
