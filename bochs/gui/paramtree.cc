@@ -37,15 +37,10 @@ const char* bx_param_c::default_text_format = NULL;
 bx_param_c::bx_param_c(Bit32u id, const char *param_name, const char *param_desc)
   : bx_object_c(id),
     parent(NULL),
-    description(NULL),
-    label(NULL),
-    ask_format(NULL),
-    group_name(NULL)
+    name(param_name),
+    description(param_desc)
 {
   set_type(BXT_PARAM);
-  this->name = new char[strlen(param_name)+1];
-  strcpy(this->name, param_name);
-  set_description(param_desc);
   this->text_format = default_text_format;
   this->long_text_format = default_text_format;
   this->runtime_param = 0;
@@ -59,16 +54,11 @@ bx_param_c::bx_param_c(Bit32u id, const char *param_name, const char *param_desc
 bx_param_c::bx_param_c(Bit32u id, const char *param_name, const char *param_label, const char *param_desc)
   : bx_object_c(id),
     parent(NULL),
-    description(NULL),
-    label(NULL),
-    ask_format(NULL),
-    group_name(NULL)
+    name(param_name),
+    description(param_desc),
+    label(param_label)
 {
   set_type(BXT_PARAM);
-  this->name = new char[strlen(param_name)+1];
-  strcpy(this->name, param_name);
-  set_description(param_desc);
-  set_label(param_label);
   this->text_format = default_text_format;
   this->long_text_format = default_text_format;
   this->runtime_param = 0;
@@ -81,61 +71,12 @@ bx_param_c::bx_param_c(Bit32u id, const char *param_name, const char *param_labe
 
 bx_param_c::~bx_param_c()
 {
-  delete [] name;
-  delete [] label;
-  delete [] description;
-  delete [] ask_format;
-  delete [] group_name;
   delete dependent_list;
-}
-
-void bx_param_c::set_description(const char *text)
-{
-  delete [] this->description;
-  if (text) {
-    this->description = new char[strlen(text)+1];
-    strcpy(this->description, text);
-  } else {
-    this->description = NULL;
-  }
-}
-
-void bx_param_c::set_label(const char *text)
-{
-  delete [] label;
-  if (text) {
-    label = new char[strlen(text)+1];
-    strcpy(label, text);
-  } else {
-    label = NULL;
-  }
-}
-
-void bx_param_c::set_ask_format(const char *format)
-{
-  delete [] ask_format;
-  if (format) {
-    ask_format = new char[strlen(format)+1];
-    strcpy(ask_format, format);
-  } else {
-    ask_format = NULL;
-  }
-}
-
-void bx_param_c::set_group(const char *group)
-{
-  delete [] group_name;
-  if (group) {
-    group_name = new char[strlen(group)+1];
-    strcpy(group_name, group);
-  } else {
-    group_name = NULL;
-  }
 }
 
 int bx_param_c::get_param_path(char *path_out, int maxlen)
 {
-  if ((get_parent() == NULL) || (get_parent() == root_param)) {
+  if (get_parent() == NULL || get_parent() == root_param) {
     // Start with an empty string.
     // Never print the name of the root param.
     path_out[0] = 0;
@@ -145,7 +86,7 @@ int bx_param_c::get_param_path(char *path_out, int maxlen)
       strncat(path_out, ".", maxlen);
     }
   }
-  strncat(path_out, name, maxlen);
+  strncat(path_out, name.c_str(), maxlen);
   return strlen(path_out);
 }
 
@@ -1056,18 +997,11 @@ bx_list_c::~bx_list_c()
   if (list != NULL) {
     clear();
   }
-  delete [] title;
 }
 
 void bx_list_c::init(const char *list_title)
 {
-  if (list_title) {
-    this->title = new char[strlen(list_title)+1];
-    strcpy(this->title, list_title);
-  } else {
-    this->title = new char[1];
-    this->title[0] = 0;
-  }
+  title = string(list_title);
   this->options = 0;
   this->choice = 1;
 }
@@ -1090,7 +1024,7 @@ void bx_list_c::set_parent(bx_param_c *newparent)
 
 bx_list_c* bx_list_c::clone()
 {
-  bx_list_c *newlist = new bx_list_c(NULL, name, title);
+  bx_list_c *newlist = new bx_list_c(NULL, name.c_str(), title.c_str());
   for (int i=0; i<get_size(); i++)
     newlist->add(get(i));
   newlist->set_options(options);

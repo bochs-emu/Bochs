@@ -23,6 +23,10 @@
 #ifndef BX_PARAM_TREE_H
 #define BX_PARAM_TREE_H
 
+using namespace std;
+
+#include <string>
+
 ////////////////////////////////////////////////////////////////////
 // parameter classes: bx_param_c and family
 ////////////////////////////////////////////////////////////////////
@@ -95,13 +99,13 @@ class BOCHSAPI bx_param_c : public bx_object_c {
   BOCHSAPI_CYGONLY static const char *default_text_format;
 protected:
   bx_list_c *parent;
-  char *name;
-  char *description;
-  char *label; // label string for text menus and gui dialogs
+  string name;
+  string description;
+  string label; // label string for text menus and gui dialogs
   const char *text_format;  // printf format string. %d for ints, %s for strings, etc.
   const char *long_text_format;  // printf format string. %d for ints, %s for strings, etc.
-  char *ask_format;  // format string for asking for a new value
-  char *group_name;  // name of the group the param belongs to
+  string ask_format;  // format string for asking for a new value
+  string group_name;  // name of the group the param belongs to
   int runtime_param;
   int enabled;
   Bit32u options;
@@ -124,7 +128,7 @@ public:
 
   virtual void reset() {}
 
-  const char *get_name() const { return name; }
+  const char *get_name() const { return name.c_str(); }
   bx_param_c *get_parent() { return (bx_param_c *) parent; }
 
   int get_param_path(char *path_out, int maxlen);
@@ -135,20 +139,20 @@ public:
   void set_long_format(const char *format) {long_text_format = format;}
   const char *get_long_format() const {return long_text_format;}
 
-  void set_ask_format(const char *format);
-  const char *get_ask_format() const {return ask_format;}
+  void set_ask_format(const char *txt) { ask_format = string(txt); }
+  const char *get_ask_format() const {return ask_format.c_str();}
 
-  void set_label(const char *text);
-  const char *get_label() const {return label;}
+  void set_label(const char *txt) { label = string(txt); }
+  const char *get_label() const {return label.c_str();}
 
-  void set_description(const char *text);
-  const char *get_description() const { return description; }
+  void set_description(const char *desc) { description = string(desc); }
+  const char *get_description() const { return description.c_str(); }
 
   virtual void set_runtime_param(int val) { runtime_param = val; }
-  int get_runtime_param() { return runtime_param; }
+  int get_runtime_param() const { return runtime_param; }
 
-  void set_group(const char *group);
-  const char *get_group() const {return group_name;}
+  void set_group(const char *group) { group_name = string(group); }
+  const char *get_group() const {return group_name.c_str();}
 
   int get_enabled() const { return enabled; }
   virtual void set_enabled(int enabled) { this->enabled = enabled; }
@@ -225,8 +229,8 @@ public:
   void set_initial_val(Bit64s initial_val);
   int get_base() const { return base; }
   void set_range(Bit64u min, Bit64u max);
-  Bit64s get_min() { return min; }
-  Bit64s get_max() { return max; }
+  Bit64s get_min() const { return min; }
+  Bit64s get_max() const { return max; }
   static Bit32u set_default_base(Bit32u val);
   static Bit32u get_default_base() { return default_base; }
 #if BX_USE_TEXTCONFIG
@@ -486,7 +490,7 @@ protected:
   // to 1 in the constructor.
   Bit32u choice; // type Bit32u is compatible with ask_uint
   // title of the menu or series
-  char *title;
+  string title;
   void init(const char *list_title);
   // save / restore support
   void *sr_devptr;
@@ -531,7 +535,7 @@ public:
   int get_size() const { return size; }
   int get_choice() const { return choice; }
   void set_choice(int new_choice) { choice = new_choice; }
-  char *get_title() { return title; }
+  const char *get_title() const { return title.c_str(); }
   void set_parent(bx_param_c *newparent);
   bx_param_c *get_parent() { return parent; }
   virtual void reset();
