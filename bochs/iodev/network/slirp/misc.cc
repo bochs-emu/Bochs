@@ -141,7 +141,7 @@ fork_exec(struct socket *so, const char *ex, int do_pty)
 		    bind(s, (struct sockaddr *)&addr, addrlen) < 0 ||
 		    listen(s, 1) < 0) {
 #ifdef DEBUG
-			lprint("Error: inet socket: %s\n", strerror(errno));
+			printf("Error: inet socket: %s\n", strerror(errno));
 #endif
 			closesocket(s);
 
@@ -153,7 +153,7 @@ fork_exec(struct socket *so, const char *ex, int do_pty)
 	switch(pid) {
 	 case -1:
 #ifdef DEBUG
-		lprint("Error: fork failed: %s\n", strerror(errno));
+		printf("Error: fork failed: %s\n", strerror(errno));
 #endif
 		close(s);
 		return 0;
