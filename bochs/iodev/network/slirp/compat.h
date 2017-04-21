@@ -6,7 +6,7 @@
  * Qemu compatibility defines
  *
  * Copyright (c) 2003-2008  Fabrice Bellard
- * Copyright (C) 2014-2015  The Bochs Project
+ * Copyright (C) 2014-2017  The Bochs Project
  */
 
 #ifndef SLIRP_COMPAT_H
@@ -72,7 +72,7 @@ typedef Bit64s ssize_t;
 # define EWOULDBLOCK  WSAEWOULDBLOCK
 #endif
 
-#if defined(WIN32) && !defined(__CYGWIN__)
+#ifdef _WIN32
 struct iovec {
     void *iov_base;
     size_t iov_len;
@@ -82,11 +82,13 @@ struct iovec {
 // missing functions
 void pstrcpy(char *buf, int buf_size, const char *str);
 int qemu_socket(int domain, int type, int protocol);
-#ifdef WIN32
+#ifndef HAVE_INET_ATON
+int inet_aton(const char *cp, struct in_addr *ia);
+#endif
+#ifdef _WIN32
 #define qemu_setsockopt(sockfd, level, optname, optval, optlen) \
     setsockopt(sockfd, level, optname, (const char *)optval, optlen)
 #define qemu_recv(a,b,c,d) recv(a,(char*)b,c,d)
-int inet_aton(const char *cp, struct in_addr *ia);
 #else
 #define qemu_setsockopt(sockfd, level, optname, optval, optlen) \
     setsockopt(sockfd, level, optname, (const void *)optval, optlen)

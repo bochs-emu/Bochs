@@ -473,7 +473,7 @@ sorecvfrom(struct socket *so)
 	} else {                            	/* A "normal" UDP packet */
 	  struct mbuf *m;
           int len;
-#ifdef WIN32
+#ifdef _WIN32
           unsigned long n;
 #else
           int n;

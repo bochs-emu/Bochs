@@ -61,7 +61,7 @@ static u_int dns_addr_time;
 /* for the aging of certain requests like DNS */
 #define TIMEOUT_DEFAULT 1000  /* milliseconds */
 
-#ifdef WIN32
+#if defined(_WIN32) || defined(__CYGWIN__)
 
 #include <iphlpapi.h>
 
@@ -108,13 +108,6 @@ int get_dns_addr(struct in_addr *pdns_addr)
         FixedInfo = NULL;
     }
     return 0;
-}
-
-static void CDECL winsock_cleanup(void)
-{
-#ifndef __CYGWIN__
-    WSACleanup();
-#endif
 }
 
 #else
@@ -186,6 +179,13 @@ int get_dns_addr(struct in_addr *pdns_addr)
     return 0;
 }
 
+#endif
+
+#ifdef _WIN32
+static void CDECL winsock_cleanup(void)
+{
+    WSACleanup();
+}
 #endif
 
 static void slirp_init_once(void)
