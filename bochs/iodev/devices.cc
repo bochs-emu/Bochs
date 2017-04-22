@@ -140,6 +140,9 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   // removable devices init
   bx_keyboard.dev = NULL;
   bx_keyboard.gen_scancode = NULL;
+  for (i = 0; i < BX_KEY_NBKEYS; i++) {
+    bx_keyboard.bxkey_state[i] = 0;
+  }
   for (i=0; i < 2; i++) {
     bx_mouse[i].dev = NULL;
     bx_mouse[i].enq_event = NULL;
@@ -340,6 +343,7 @@ void bx_devices_c::reset(unsigned type)
 #endif
   mem->disable_smram();
   bx_reset_plugins(type);
+  release_keys();
 }
 
 void bx_devices_c::register_state()
@@ -1103,16 +1107,27 @@ void bx_devices_c::unregister_removable_mouse(void *dev)
   }
 }
 
-// common keyboard device handler
+// common keyboard device handlers
 void bx_devices_c::gen_scancode(Bit32u key)
 {
   bx_bool ret = 0;
 
+  bx_keyboard.bxkey_state[key & 0xff] = ((key & BX_KEY_RELEASED) == 0);
   if (bx_keyboard.dev != NULL) {
     ret = bx_keyboard.gen_scancode(bx_keyboard.dev, key);
   }
   if (ret == 0) {
     pluginKeyboard->gen_scancode(key);
+  }
+}
+
+void bx_devices_c::release_keys()
+{
+  for (int i = 0; i < BX_KEY_NBKEYS; i++) {
+    if (bx_keyboard.bxkey_state[i]) {
+      gen_scancode(i | BX_KEY_RELEASED);
+      bx_keyboard.bxkey_state[i] = 0;
+    }
   }
 }
 

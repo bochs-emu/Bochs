@@ -171,7 +171,7 @@ extern "C" {
 #define DEV_kbd_gen_scancode(key) (bx_devices.gen_scancode(key))
 #define DEV_kbd_paste_bytes(bytes, count) \
     (bx_devices.pluginKeyboard->paste_bytes(bytes,count))
-#define DEV_kbd_release_keys() (bx_devices.pluginKeyboard->release_keys())
+#define DEV_kbd_release_keys() (bx_devices.release_keys())
 
 ///////// mouse macros
 #define DEV_mouse_enabled_changed(en) (bx_devices.mouse_enabled_changed(en))

@@ -128,9 +128,6 @@ public:
   virtual void paste_bytes(Bit8u *data, Bit32s length) {
     STUBFUNC(keyboard, paste_bytes);
   }
-  virtual void release_keys(void) {
-    STUBFUNC(keyboard, release_keys);
-  }
 };
 
 class BOCHSAPI bx_hard_drive_stub_c : public bx_devmodel_c {
@@ -396,6 +393,7 @@ public:
   void register_removable_mouse(void *dev, bx_mouse_enq_t mouse_enq, bx_mouse_enabled_changed_t mouse_enabled_changed);
   void unregister_removable_mouse(void *dev);
   void gen_scancode(Bit32u key);
+  void release_keys(void);
   void mouse_enabled_changed(bx_bool enabled);
   void mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy);
 
@@ -520,6 +518,7 @@ private:
   struct {
     void *dev;
     bx_kbd_gen_scancode_t gen_scancode;
+    bx_bool bxkey_state[BX_KEY_NBKEYS];
   } bx_keyboard;
 
   struct {
