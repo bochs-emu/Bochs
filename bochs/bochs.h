@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2016  The Bochs Project
+//  Copyright (C) 2001-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -115,6 +115,7 @@ extern "C" {
 int  bx_begin_simulation(int argc, char *argv[]);
 void bx_stop_simulation();
 char *bx_find_bochsrc(void);
+const char *get_builtin_variable(const char *varname);
 int  bx_parse_cmdline(int arg, int argc, char *argv[]);
 int  bx_read_configuration(const char *rcfile);
 int  bx_write_configuration(const char *rcfile, int overwrite);

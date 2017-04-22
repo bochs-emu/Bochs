@@ -855,9 +855,15 @@ int bx_init_main(int argc, char *argv[])
   if (getenv("BXSHARE") != NULL) {
     BX_INFO(("BXSHARE is set to '%s'", getenv("BXSHARE")));
   } else {
+#ifdef WIN32
+    BX_INFO(("BXSHARE not set. using system default '%s'",
+        get_builtin_variable("BXSHARE")));
+    setenv("BXSHARE", get_builtin_variable("BXSHARE"), 1);
+#else
     BX_INFO(("BXSHARE not set. using compile time default '%s'",
         BX_SHARE_PATH));
     setenv("BXSHARE", BX_SHARE_PATH, 1);
+#endif
   }
 #else
   // we don't have getenv or setenv.  Do nothing.

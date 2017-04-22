@@ -45,7 +45,6 @@ Bit8u bx_user_plugin_count = 0;
 
 extern bx_debug_t bx_dbg;
 
-static const char *get_builtin_variable(const char *varname);
 static int parse_line_unformatted(const char *context, char *line);
 static int parse_line_formatted(const char *context, int num_params, char *params[]);
 static int parse_bochsrc(const char *rcfile);
@@ -1849,7 +1848,7 @@ static int parse_bochsrc(const char *rcfile)
   return retval;
 }
 
-static const char *get_builtin_variable(const char *varname)
+const char *get_builtin_variable(const char *varname)
 {
 #ifdef WIN32
   int code;
