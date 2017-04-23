@@ -8,12 +8,12 @@
  * terms and conditions of the copyright.
  */
 
+#include "slirp.h"
+#include "libslirp.h"
+
 #ifndef _WIN32
 #include <dirent.h>
 #endif
-
-#include "slirp.h"
-#include "libslirp.h"
 
 #if BX_NETWORKING && BX_NETMOD_SLIRP
 

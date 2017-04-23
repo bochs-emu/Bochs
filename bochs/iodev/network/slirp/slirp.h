@@ -5,6 +5,11 @@
 #ifndef __COMMON_H__
 #define __COMMON_H__
 
+#ifdef __CYGWIN__
+#define __USE_W32_SOCKETS
+#define _WIN32
+#endif
+
 #include "config.h"
 #include "slirp_config.h"
 
@@ -23,6 +28,13 @@ typedef char *caddr_t;
 # include <ws2tcpip.h>
 # include <sys/timeb.h>
 # include <iphlpapi.h>
+
+#if defined(__CYGWIN__) && defined(_WIN64)
+#undef FIONBIO
+#define FIONBIO 0x8004667e
+#undef FIONREAD
+#define FIONREAD 0x4004667f
+#endif
 
 #else
 # define ioctlsocket ioctl

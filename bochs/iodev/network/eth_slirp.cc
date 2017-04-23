@@ -23,6 +23,11 @@
 
 #define BX_PLUGGABLE
 
+#ifdef __CYGWIN__
+#define __USE_W32_SOCKETS
+#define _WIN32
+#endif
+
 #include "iodev.h"
 #include "netmod.h"
 
@@ -364,7 +369,11 @@ void bx_slirp_pktmover_c::rx_timer_handler(void *this_ptr)
 {
   Bit32u timeout = 0;
   int ret;
+#ifdef WIN32
+  TIMEVAL tv;
+#else
   struct timeval tv;
+#endif
 
   nfds = -1;
   FD_ZERO(&rfds);

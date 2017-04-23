@@ -474,7 +474,7 @@ sorecvfrom(struct socket *so)
 	  struct mbuf *m;
           int len;
 #ifdef _WIN32
-          unsigned long n;
+          ULONG n;
 #else
           int n;
 #endif

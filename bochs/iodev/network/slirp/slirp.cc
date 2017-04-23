@@ -26,8 +26,8 @@
  */
 #define BX_PLUGGABLE
 
-#include "iodev.h"
 #include "slirp.h"
+#include "iodev.h"
 
 #if BX_NETWORKING && BX_NETMOD_SLIRP
 

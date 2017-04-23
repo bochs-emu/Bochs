@@ -61,7 +61,7 @@ void qemu_set_nonblock(int fd)
     f = fcntl(fd, F_GETFL);
     fcntl(fd, F_SETFL, f | O_NONBLOCK);
 #elif !defined(_MSC_VER)
-    unsigned long opt = 1;
+    ULONG opt = 1;
     ioctlsocket(fd, FIONBIO, &opt);
 #endif
 }

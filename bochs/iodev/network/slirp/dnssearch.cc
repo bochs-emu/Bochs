@@ -25,10 +25,10 @@
  * THE SOFTWARE.
  */
 
+#include "slirp.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include "slirp.h"
 
 #if BX_NETWORKING && BX_NETMOD_SLIRP
 

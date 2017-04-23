@@ -68,6 +68,10 @@ typedef Bit64s ssize_t;
 #ifndef ENOTCONN
 # define ENOTCONN     WSAENOTCONN
 #endif
+#if defined(__CYGWIN__) && defined(EWOULDBLOCK)
+# undef EWOULDBLOCK
+# define EWOULDBLOCK  WSAEWOULDBLOCK
+#endif
 #ifndef EWOULDBLOCK
 # define EWOULDBLOCK  WSAEWOULDBLOCK
 #endif
