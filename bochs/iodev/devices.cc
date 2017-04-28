@@ -1167,101 +1167,6 @@ void bx_devices_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned 
 
 #if BX_SUPPORT_PCI
 // generic PCI support
-void bx_pci_device_c::init_pci_conf(Bit16u vid, Bit16u did, Bit8u rev, Bit32u classc, Bit8u headt)
-{
-  memset(pci_conf, 0, 256);
-  pci_conf[0x00] = (Bit8u)(vid & 0xff);
-  pci_conf[0x01] = (Bit8u)(vid >> 8);
-  pci_conf[0x02] = (Bit8u)(did & 0xff);
-  pci_conf[0x03] = (Bit8u)(did >> 8);
-  pci_conf[0x08] = rev;
-  pci_conf[0x09] = (Bit8u)(classc & 0xff);
-  pci_conf[0x0a] = (Bit8u)((classc >> 8) & 0xff);
-  pci_conf[0x0b] = (Bit8u)((classc >> 16) & 0xff);
-  pci_conf[0x0e] = headt;
-}
-
-void bx_pci_device_c::register_pci_state(bx_list_c *list)
-{
-  new bx_shadow_data_c(list, "pci_conf", pci_conf, 256, 1);
-}
-
-void bx_pci_device_c::load_pci_rom(const char *path)
-{
-  struct stat stat_buf;
-  int fd, ret;
-  unsigned long size, max_size;
-
-  if (*path == '\0') {
-    BX_PANIC(("PCI ROM image undefined"));
-    return;
-  }
-  // read in PCI ROM image file
-  fd = open(path, O_RDONLY
-#ifdef O_BINARY
-            | O_BINARY
-#endif
-           );
-  if (fd < 0) {
-    BX_PANIC(("couldn't open PCI ROM image file '%s'.", path));
-    return;
-  }
-  ret = fstat(fd, &stat_buf);
-  if (ret) {
-    close(fd);
-    BX_PANIC(("couldn't stat PCI ROM image file '%s'.", path));
-    return;
-  }
-
-  max_size = 0x20000;
-  size = (unsigned long)stat_buf.st_size;
-  if (size > max_size) {
-    close(fd);
-    BX_PANIC(("PCI ROM image too large"));
-    return;
-  }
-  if ((size % 512) != 0) {
-    close(fd);
-    BX_PANIC(("PCI ROM image size must be multiple of 512 (size = %ld)", size));
-    return;
-  }
-  while ((size - 1) < max_size) {
-    max_size >>= 1;
-  }
-  pci_rom_size = (max_size << 1);
-  pci_rom = new Bit8u[pci_rom_size];
-
-  while (size > 0) {
-    ret = read(fd, (bx_ptr_t) pci_rom, size);
-    if (ret <= 0) {
-      BX_PANIC(("read failed on PCI ROM image: '%s'", path));
-    }
-    size -= ret;
-  }
-  close(fd);
-
-  BX_INFO(("loaded PCI ROM '%s' (size=%u / PCI=%uk)", path, (unsigned) stat_buf.st_size, pci_rom_size >> 10));
-}
-
-// pci configuration space read callback handler
-Bit32u bx_pci_device_c::pci_read_handler(Bit8u address, unsigned io_len)
-{
-  Bit32u value = 0;
-
-  for (unsigned i=0; i<io_len; i++) {
-    value |= (pci_conf[address+i] << (i*8));
-  }
-
-  if (io_len == 1)
-    BX_DEBUG(("read  PCI register 0x%02X value 0x%02X (len=1)", address, value));
-  else if (io_len == 2)
-    BX_DEBUG(("read  PCI register 0x%02X value 0x%04X (len=2)", address, value));
-  else if (io_len == 4)
-    BX_DEBUG(("read  PCI register 0x%02X value 0x%08X (len=4)", address, value));
-
-  return value;
-}
-
 bx_bool bx_devices_c::register_pci_handlers(bx_pci_device_c *dev,
                                             Bit8u *devfunc, const char *name,
                                             const char *descr)
@@ -1386,5 +1291,104 @@ bx_bool bx_devices_c::pci_set_base_io(void *this_ptr, bx_read_handler_t f1, bx_w
     return 1;
   }
   return 0;
+}
+
+// PCI device base class (common methods)
+#undef LOG_THIS
+#define LOG_THIS
+
+void bx_pci_device_c::init_pci_conf(Bit16u vid, Bit16u did, Bit8u rev, Bit32u classc, Bit8u headt)
+{
+  memset(pci_conf, 0, 256);
+  pci_conf[0x00] = (Bit8u)(vid & 0xff);
+  pci_conf[0x01] = (Bit8u)(vid >> 8);
+  pci_conf[0x02] = (Bit8u)(did & 0xff);
+  pci_conf[0x03] = (Bit8u)(did >> 8);
+  pci_conf[0x08] = rev;
+  pci_conf[0x09] = (Bit8u)(classc & 0xff);
+  pci_conf[0x0a] = (Bit8u)((classc >> 8) & 0xff);
+  pci_conf[0x0b] = (Bit8u)((classc >> 16) & 0xff);
+  pci_conf[0x0e] = headt;
+}
+
+void bx_pci_device_c::register_pci_state(bx_list_c *list)
+{
+  new bx_shadow_data_c(list, "pci_conf", pci_conf, 256, 1);
+}
+
+void bx_pci_device_c::load_pci_rom(const char *path)
+{
+  struct stat stat_buf;
+  int fd, ret;
+  unsigned long size, max_size;
+
+  if (*path == '\0') {
+    BX_PANIC(("PCI ROM image undefined"));
+    return;
+  }
+  // read in PCI ROM image file
+  fd = open(path, O_RDONLY
+#ifdef O_BINARY
+            | O_BINARY
+#endif
+           );
+  if (fd < 0) {
+    BX_PANIC(("couldn't open PCI ROM image file '%s'.", path));
+    return;
+  }
+  ret = fstat(fd, &stat_buf);
+  if (ret) {
+    close(fd);
+    BX_PANIC(("couldn't stat PCI ROM image file '%s'.", path));
+    return;
+  }
+
+  max_size = 0x20000;
+  size = (unsigned long)stat_buf.st_size;
+  if (size > max_size) {
+    close(fd);
+    BX_PANIC(("PCI ROM image too large"));
+    return;
+  }
+  if ((size % 512) != 0) {
+    close(fd);
+    BX_PANIC(("PCI ROM image size must be multiple of 512 (size = %ld)", size));
+    return;
+  }
+  while ((size - 1) < max_size) {
+    max_size >>= 1;
+  }
+  pci_rom_size = (max_size << 1);
+  pci_rom = new Bit8u[pci_rom_size];
+
+  while (size > 0) {
+    ret = read(fd, (bx_ptr_t) pci_rom, size);
+    if (ret <= 0) {
+      BX_PANIC(("read failed on PCI ROM image: '%s'", path));
+    }
+    size -= ret;
+  }
+  close(fd);
+
+  BX_INFO(("loaded PCI ROM '%s' (size=%u / PCI=%uk)", path, (unsigned) stat_buf.st_size, pci_rom_size >> 10));
+}
+
+// pci configuration space read callback handler
+Bit32u bx_pci_device_c::pci_read_handler(Bit8u address, unsigned io_len)
+{
+  Bit32u value = 0;
+
+  for (unsigned i=0; i<io_len; i++) {
+    value |= (pci_conf[address+i] << (i*8));
+  }
+
+  if (io_len == 1)
+    BX_DEBUG(("read  PCI register 0x%02X value 0x%02X (len=1)", address, value));
+  else if (io_len == 2)
+    BX_DEBUG(("read  PCI register 0x%02X value 0x%04X (len=2)", address, value));
+  else if (io_len == 4)
+    BX_DEBUG(("read  PCI register 0x%02X value 0x%08X (len=4)", address, value));
+
+  return value;
 }
 #endif

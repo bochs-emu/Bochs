@@ -25,6 +25,7 @@
 #define BX_VOODOO_THIS_PTR theVoodooDevice
 
 typedef struct {
+  Bit8u model;
   struct {
     Bit32u width;
     Bit32u height;
