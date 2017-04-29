@@ -477,9 +477,8 @@ Bit32u poly_render_triangle(void *dest, const rectangle *cliprect, poly_draw_sca
   Bit32s curscan, scaninc=1;
 
   Bit32s v1yclip, v3yclip;
-  Bit32s v1y, v3y /*, v1x */;
+  Bit32s v1y, v3y;
   Bit32s pixels = 0;
-//  Bit32u startunit;
 
   /* first sort by Y */
   if (v2->y < v1->y)
@@ -502,13 +501,12 @@ Bit32u poly_render_triangle(void *dest, const rectangle *cliprect, poly_draw_sca
   }
 
   /* compute some integral X/Y vertex values */
-//  v1x = round_coordinate(v1->x);
   v1y = round_coordinate(v1->y);
   v3y = round_coordinate(v3->y);
 
   /* clip coordinates */
   v1yclip = v1y;
-  v3yclip = v3y;// + ((poly->flags & POLYFLAG_INCLUDE_BOTTOM_EDGE) ? 1 : 0);
+  v3yclip = v3y;
   if (cliprect != NULL)
   {
     v1yclip = MAX(v1yclip, cliprect->min_y);
@@ -517,51 +515,16 @@ Bit32u poly_render_triangle(void *dest, const rectangle *cliprect, poly_draw_sca
   if (v3yclip - v1yclip <= 0)
     return 0;
 
-  /* allocate a new polygon */
-//  polygon = allocate_polygon(poly, v1yclip, v3yclip);
-
-  /* fill in the polygon information */
-  //polygon->poly = poly;
-  //polygon->dest = dest;
-  //polygon->callback = callback;
-  //polygon->extra = poly->extra[poly->extra_next - 1];
-  //polygon->numparams = paramcount;
-  //polygon->numverts = 3;
-
-  /* set the start X/Y coordinates */
-  //polygon->xorigin = v1x;
-  //polygon->yorigin = v1y;
-
   /* compute the slopes for each portion of the triangle */
   dxdy_v1v2 = (v2->y == v1->y) ? 0.0f : (v2->x - v1->x) / (v2->y - v1->y);
   dxdy_v1v3 = (v3->y == v1->y) ? 0.0f : (v3->x - v1->x) / (v3->y - v1->y);
   dxdy_v2v3 = (v3->y == v2->y) ? 0.0f : (v3->x - v2->x) / (v3->y - v2->y);
 
   /* compute the X extents for each scanline */
-//  startunit = poly->unit_next;
-
-//  tri_work_unit *unit = new tri_work_unit;
   poly_extent extent;
   int extnum=0;
   for (curscan = v1yclip; curscan < v3yclip; curscan += scaninc)
   {
-//    Bit32u bucketnum = ((Bit32u)curscan / SCANLINES_PER_BUCKET) % TOTAL_BUCKETS;
-//    Bit32u unit_index = poly->unit_next++;
-//    tri_work_unit *unit = &poly->unit[unit_index]->tri;
-
-
-    /* determine how much to advance to hit the next bucket */
-//    scaninc = SCANLINES_PER_BUCKET - (Bit32u)curscan % SCANLINES_PER_BUCKET;
-
-    /* fill in the work unit basics */
-//    unit->shared.polygon = polygon;
-//    unit->shared.count_next = MIN(v3yclip - curscan, scaninc);
-//    unit->shared.scanline = curscan;
-//    unit->shared.previtem = poly->unit_bucket[bucketnum];
-//    poly->unit_bucket[bucketnum] = unit_index;
-
-    /* iterate over extents */
-//    for (extnum = 0; extnum < unit->shared.count_next; extnum++)
     {
       float fully = (float)(curscan + extnum) + 0.5f;
       float startx = v1->x + (fully - v1->y) * dxdy_v1v3;
@@ -586,10 +549,6 @@ Bit32u poly_render_triangle(void *dest, const rectangle *cliprect, poly_draw_sca
         istopx = temp;
       }
 
-      /* include the right edge if requested */
-//      if (poly->flags & POLYFLAG_INCLUDE_RIGHT_EDGE)
-//        istopx++;
-
       /* apply left/right clipping */
       if (cliprect != NULL)
       {
@@ -602,8 +561,6 @@ Bit32u poly_render_triangle(void *dest, const rectangle *cliprect, poly_draw_sca
       /* set the extent and update the total pixel count */
       if (istartx >= istopx)
         istartx = istopx = 0;
-//      unit->extent[extnum].startx = istartx;
-//      unit->extent[extnum].stopx = istopx;
       extent.startx = istartx;
       extent.stopx = istopx;
       (callback)(dest,curscan,&extent,extra,0);
@@ -612,19 +569,12 @@ Bit32u poly_render_triangle(void *dest, const rectangle *cliprect, poly_draw_sca
     }
   }
 
-//  delete unit;
-
-  /* return the total number of pixels in the triangle */
-//  poly->triangles++;
-//  poly->pixels += pixels;
   return pixels;
 }
 
-Bit32s triangle_create_work_item(/*voodoo_state *v,*/ Bit16u *drawbuf, int texcount)
+Bit32s triangle_create_work_item(Bit16u *drawbuf, int texcount)
 {
-  poly_extra_data extra;// = (poly_extra_data *)poly_get_extra_data(v->poly);
-//  raster_info *info = new raster_info;
-//  info=find_rasterizer(v, info, texcount);
+  poly_extra_data extra;
   raster_info *info = find_rasterizer(v, texcount);
   poly_vertex vert[3];
   Bit32u retval;
@@ -699,13 +649,11 @@ Bit32s triangle_create_work_item(/*voodoo_state *v,*/ Bit16u *drawbuf, int texco
   info->polys++;
   retval = poly_render_triangle(drawbuf, NULL, info->callback, 0, &vert[0], &vert[1], &vert[2], &extra);
 
-//  delete info;
-
   return retval;
 }
 
 
-void draw_line (int x1, int y1, int x2, int y2, Bit16u *buf)
+void draw_line(int x1, int y1, int x2, int y2, Bit16u *buf)
 {
   int i, deltax, deltay, numpixels,
       d, dinc1, dinc2,
@@ -784,8 +732,6 @@ Bit32s triangle(voodoo_state *v)
   int destbuf;
   int pixels;
 
-//  profiler_mark_start(PROFILER_USER2);
-
   /* determine the number of TMUs involved */
   texcount = 0;
   if (!FBIINIT3_DISABLE_TMUS(v->reg[fbiInit3].u) && FBZCP_TEXTURE_ENABLE(v->reg[fbzColorPath].u))
@@ -826,9 +772,6 @@ Bit32s triangle(voodoo_state *v)
     }
   }
 
-  /* wait for any outstanding work to finish */
-//  poly_wait(v->poly, "triangle");
-
   /* determine the draw buffer */
   destbuf = (v->type >= VOODOO_BANSHEE) ? 1 : FBZMODE_DRAW_BUFFER(v->reg[fbzMode].u);
   switch (destbuf)
@@ -846,10 +789,6 @@ Bit32s triangle(voodoo_state *v)
       return TRIANGLE_SETUP_CLOCKS;
   }
 
-//  draw_line(v->fbi.ax/16,v->fbi.ay/16,v->fbi.bx/16,v->fbi.by/16,drawbuf);
-//  draw_line(v->fbi.ax/16,v->fbi.ay/16,v->fbi.cx/16,v->fbi.cy/16,drawbuf);
-//  draw_line(v->fbi.cx/16,v->fbi.cy/16,v->fbi.bx/16,v->fbi.by/16,drawbuf);
-
   /* find a rasterizer that matches our current state */
   pixels = triangle_create_work_item(/*v, */drawbuf, texcount);
 
@@ -858,8 +797,6 @@ Bit32s triangle(voodoo_state *v)
 
   /* update stats */
   v->stats.total_triangles++;
-
-//  profiler_mark_end();
 
   /* 1 pixel per clock, plus some setup time */
   if (LOG_REGISTERS) BX_DEBUG(("cycles = %d", TRIANGLE_SETUP_CLOCKS + pixels));
@@ -914,13 +851,11 @@ static void raster_fastfill(void *destbase, Bit32s y, const poly_extent *extent,
 }
 
 
-Bit32u poly_render_triangle_custom(/*poly_manager *poly, */void *dest, const rectangle *cliprect, poly_draw_scanline_func callback, int startscanline, int numscanlines, const poly_extent *extents, poly_extra_data *extra)
+Bit32u poly_render_triangle_custom(void *dest, const rectangle *cliprect, poly_draw_scanline_func callback, int startscanline, int numscanlines, const poly_extent *extents, poly_extra_data *extra)
 {
   Bit32s curscan, scaninc;
-//  polygon_info *polygon;
   Bit32s v1yclip, v3yclip;
   Bit32s pixels = 0;
-//  Bit32u startunit;
 
   /* clip coordinates */
   if (cliprect != NULL)
@@ -936,41 +871,15 @@ Bit32u poly_render_triangle_custom(/*poly_manager *poly, */void *dest, const rec
   if (v3yclip - v1yclip <= 0)
     return 0;
 
-  /* allocate a new polygon */
-//  polygon = allocate_polygon(poly, v1yclip, v3yclip);
-
-  /* fill in the polygon information */
-  //polygon->poly = poly;
-  //polygon->dest = dest;
-  //polygon->callback = callback;
-  //polygon->extra = poly->extra[poly->extra_next - 1];
-  //polygon->numparams = 0;
-  //polygon->numverts = 3;
-
   /* compute the X extents for each scanline */
-//  startunit = poly->unit_next;
   for (curscan = v1yclip; curscan < v3yclip; curscan += scaninc)
   {
-//    Bit32u bucketnum = ((Bit32u)curscan / SCANLINES_PER_BUCKET) % TOTAL_BUCKETS;
-//    Bit32u unit_index = poly->unit_next++;
-//    tri_work_unit *unit = &poly->unit[unit_index]->tri;
-//    tri_work_unit unit;
-
     int extnum=0;
 
     /* determine how much to advance to hit the next bucket */
-//    scaninc = SCANLINES_PER_BUCKET - (Bit32u)curscan % SCANLINES_PER_BUCKET;
     scaninc = 1;
 
-    /* fill in the work unit basics */
-    //unit->shared.polygon = polygon;
-    //unit->shared.count_next = MIN(v3yclip - curscan, scaninc);
-    //unit->shared.scanline = curscan;
-    //unit->shared.previtem = poly->unit_bucket[bucketnum];
-    //poly->unit_bucket[bucketnum] = unit_index;
-
     /* iterate over extents */
-//    for (extnum = 0; extnum < unit->shared.count_next; extnum++)
     {
       const poly_extent *extent = &extents[(curscan + extnum) - startscanline];
       Bit32s istartx = extent->startx, istopx = extent->stopx;
@@ -993,8 +902,6 @@ Bit32u poly_render_triangle_custom(/*poly_manager *poly, */void *dest, const rec
       }
 
       /* set the extent and update the total pixel count */
-//      unit.extent[extnum].startx = istartx;
-//      unit.extent[extnum].stopx = istopx;
       (callback)(dest,curscan,extent,extra,0);
       if (istartx < istopx)
         pixels += istopx - istartx;
@@ -1004,14 +911,6 @@ Bit32u poly_render_triangle_custom(/*poly_manager *poly, */void *dest, const rec
   poly->unit_max = MAX(poly->unit_max, poly->unit_next);
 #endif
 
-
-  /* enqueue the work items */
-//  if (poly->queue != NULL)
-//    osd_work_item_queue_multiple(poly->queue, poly_item_callback, poly->unit_next - startunit, poly->unit[startunit], poly->unit_size, WORK_ITEM_FLAG_AUTO_RELEASE);
-
-  /* return the total number of pixels in the object */
-//  poly->triangles++;
-//  poly->pixels += pixels;
   return pixels;
 }
 
@@ -1074,7 +973,7 @@ Bit32s fastfill(voodoo_state *v)
   for (extnum = 1; extnum < (int)ARRAY_LENGTH(extents); extnum++)
     extents[extnum] = extents[0];
 
-  poly_extra_data extra; //(poly_extra_data *)poly_get_extra_data(v->poly);
+  poly_extra_data extra;
   /* iterate over blocks of extents */
   for (y = sy; y < ey; y += ARRAY_LENGTH(extents))
   {
@@ -1093,10 +992,8 @@ Bit32s fastfill(voodoo_state *v)
 void swap_buffers(voodoo_state *v)
 {
   int count;
-//  if (LOG_VBLANK_SWAP) BX_DEBUG(("--- swap_buffers @ %d", video_screen_get_vpos(v->screen)));
 
   /* force a partial update */
-//  video_screen_update_partial(v->screen, video_screen_get_vpos(v->screen));
   v->fbi.video_changed = 1;
 
   /* keep a history of swap intervals */
@@ -1131,59 +1028,8 @@ void swap_buffers(voodoo_state *v)
   v->fbi.vblank_count = 0;
   v->fbi.vblank_swap_pending = 0;
 
-  /* reset the last_op_time to now and start processing the next command */
-  if (v->pci.op_pending)
-  {
-//    v->pci.op_end_time = timer_get_time(v->device->machine);
-//    flush_fifos(v, v->pci.op_end_time);
-  }
-
-  /* we may be able to unstall now */
-//  if (v->pci.stall_state != NOT_STALLED)
-//    check_stalled_cpu(v, timer_get_time(v->device->machine));
-
   /* periodically log rasterizer info */
   v->stats.swaps++;
-//  if (LOG_RASTERIZERS && v->stats.swaps % 100 == 0)
-//    dump_rasterizer_stats(v);
-
-  /* update the statistics (debug) */
-  if (v->stats.display)
-  {
-/*
-    const rectangle *visible_area = video_screen_get_visible_area(v->screen);
-    int screen_area = (visible_area->max_x - visible_area->min_x + 1) * (visible_area->max_y - visible_area->min_y + 1);
-    char *statsptr = v->stats.buffer;
-    int pixelcount;
-    int i;
-
-    update_statistics(v, TRUE);
-    pixelcount = v->stats.total_pixels_out;
-
-    statsptr += sprintf(statsptr, "Swap:%6d\n", v->stats.swaps);
-    statsptr += sprintf(statsptr, "Hist:%08X\n", v->reg[fbiSwapHistory].u);
-    statsptr += sprintf(statsptr, "Stal:%6d\n", v->stats.stalls);
-    statsptr += sprintf(statsptr, "Rend:%6d%%\n", pixelcount * 100 / screen_area);
-    statsptr += sprintf(statsptr, "Poly:%6d\n", v->stats.total_triangles);
-    statsptr += sprintf(statsptr, "PxIn:%6d\n", v->stats.total_pixels_in);
-    statsptr += sprintf(statsptr, "POut:%6d\n", v->stats.total_pixels_out);
-    statsptr += sprintf(statsptr, "Clip:%6d\n", v->stats.total_clipped);
-    statsptr += sprintf(statsptr, "Stip:%6d\n", v->stats.total_stippled);
-    statsptr += sprintf(statsptr, "Chro:%6d\n", v->stats.total_chroma_fail);
-    statsptr += sprintf(statsptr, "ZFun:%6d\n", v->stats.total_zfunc_fail);
-    statsptr += sprintf(statsptr, "AFun:%6d\n", v->stats.total_afunc_fail);
-    statsptr += sprintf(statsptr, "RegW:%6d\n", v->stats.reg_writes);
-    statsptr += sprintf(statsptr, "RegR:%6d\n", v->stats.reg_reads);
-    statsptr += sprintf(statsptr, "LFBW:%6d\n", v->stats.lfb_writes);
-    statsptr += sprintf(statsptr, "LFBR:%6d\n", v->stats.lfb_reads);
-    statsptr += sprintf(statsptr, "TexW:%6d\n", v->stats.tex_writes);
-    statsptr += sprintf(statsptr, "TexM:");
-    for (i = 0; i < 16; i++)
-      if (v->stats.texture_mode[i])
-        *statsptr++ = "0123456789ABCDEF"[i];
-    *statsptr = 0;
-*/
-  }
 
   /* update statistics */
   v->stats.stalls = 0;
@@ -1316,8 +1162,6 @@ void recompute_video_memory(voodoo_state *v)
   }
   v->fbi.rowpixels = v->fbi.tile_width * v->fbi.x_tiles;
 
-//  logerror("VOODOO.%d.VIDMEM: buffer_pages=%X  fifo=%X-%X  tiles=%X  rowpix=%d\n", v->index, buffer_pages, fifo_start_page, fifo_last_page, v->fbi.x_tiles, v->fbi.rowpixels);
-
   /* first RGB buffer always starts at 0 */
   v->fbi.rgboffs[0] = 0;
 
@@ -1338,7 +1182,6 @@ void recompute_video_memory(voodoo_state *v)
 
       case 1: /* 3 color buffers, 0 aux buffers */
         v->fbi.rgboffs[2] = 2 * buffer_pages * 0x1000;
-        //v->fbi.auxoffs = ~0;
         v->fbi.auxoffs = 3 * buffer_pages * 0x1000;
         break;
 
@@ -1357,9 +1200,6 @@ void recompute_video_memory(voodoo_state *v)
   /* clamp the aux buffer to video memory */
   if (v->fbi.auxoffs != (Bit32u)~0 && v->fbi.auxoffs > v->fbi.mask)
     v->fbi.auxoffs = v->fbi.mask;
-
-/*  mame_printf_debug("rgb[0] = %08X   rgb[1] = %08X   rgb[2] = %08X   aux = %08X\n",
-            v->fbi.rgboffs[0], v->fbi.rgboffs[1], v->fbi.rgboffs[2], v->fbi.auxoffs);*/
 
   /* compute the memory FIFO location and size */
   if (fifo_last_page > v->fbi.mask / 0x1000)
@@ -1471,8 +1311,6 @@ void register_w(Bit32u offset, Bit32u data)
   Bit32u chips   = (offset>>8) & 0xf;
   reg.u = data;
 
-//  Bit32u origdata = data;
-//  Bit32s cycles = 0;
   Bit64s data64;
 
   BX_DEBUG(("write chip 0x%x reg 0x%x value 0x%08x(%s)", chips, regnum<<2, data, voodoo_reg_name[regnum]));
@@ -1757,13 +1595,13 @@ void register_w(Bit32u offset, Bit32u data)
     case triangleCMD:
       v->fbi.cheating_allowed = (v->fbi.ax != 0 || v->fbi.ay != 0 || v->fbi.bx > 50 || v->fbi.by != 0 || v->fbi.cx != 0 || v->fbi.cy > 50);
       v->fbi.sign = data;
-/*      cycles = */ triangle(v);
+      triangle(v);
       break;
 
     case ftriangleCMD:
       v->fbi.cheating_allowed = 1;
       v->fbi.sign = data;
-/*      cycles = */ triangle(v);
+      triangle(v);
       break;
 
     /* other commands */
@@ -1776,12 +1614,12 @@ void register_w(Bit32u offset, Bit32u data)
       break;
 
     case fastfillCMD:
-/*      cycles = */ fastfill(v);
+      fastfill(v);
       break;
 
     case swapbufferCMD:
       poly_wait(v->poly, v->regnames[regnum]);
-/*      cycles = */ swapbuffer(v, data);
+      swapbuffer(v, data);
       break;
     /* gamma table access -- Voodoo/Voodoo2 only */
     case clutData:
@@ -1846,51 +1684,12 @@ void register_w(Bit32u offset, Bit32u data)
             v->reg[hSync].u, v->reg[vSync].u, v->reg[backPorch].u, v->reg[videoDimensions].u));
           BX_DEBUG(("Horiz: %d-%d (%d total)  Vert: %d-%d (%d total) -- ", visarea.min_x, visarea.max_x, htotal, visarea.min_y, visarea.max_y, vtotal));
 
-#if 0
-          /* compute the new period for standard res, medium res, and VGA res */
-//        attoseconds_t refresh = video_screen_get_frame_period(v->screen).attoseconds;
-          attoseconds_t stdperiod, medperiod, vgaperiod;
-          attoseconds_t stddiff, meddiff, vgadiff;
-
-//          stdperiod = HZ_TO_ATTOSECONDS(15750) * vtotal;
-//          medperiod = HZ_TO_ATTOSECONDS(25000) * vtotal;
-//          vgaperiod = HZ_TO_ATTOSECONDS(31500) * vtotal;
-
-          /* compute a diff against the current refresh period */
-          stddiff = stdperiod - refresh;
-          if (stddiff < 0) stddiff = -stddiff;
-          meddiff = medperiod - refresh;
-          if (meddiff < 0) meddiff = -meddiff;
-          vgadiff = vgaperiod - refresh;
-          if (vgadiff < 0) vgadiff = -vgadiff;
-
-          /* configure the screen based on which one matches the closest */
-          if (stddiff < meddiff && stddiff < vgadiff)
-          {
-//            video_screen_configure(v->screen, htotal, vtotal, &visarea, stdperiod);
-            BX_DEBUG(("Standard resolution, %f Hz", ATTOSECONDS_TO_HZ(stdperiod)));
-          }
-          else if (meddiff < vgadiff)
-          {
-//            video_screen_configure(v->screen, htotal, vtotal, &visarea, medperiod);
-            BX_DEBUG(("Medium resolution, %f Hz", ATTOSECONDS_TO_HZ(medperiod)));
-          }
-          else
-          {
-//            video_screen_configure(v->screen, htotal, vtotal, &visarea, vgaperiod);
-            BX_DEBUG(("VGA resolution, %f Hz", ATTOSECONDS_TO_HZ(vgaperiod)));
-          }
-#endif
-
           /* configure the new framebuffer info */
           v->fbi.width = hvis + 1;
           v->fbi.height = vvis;
           v->fbi.xoffs = hbp;
           v->fbi.yoffs = vbp;
           v->fbi.vsyncscan = (v->reg[vSync].u >> 16) & 0xfff;
-
-          /* recompute the time of VBLANK */
-//          adjust_vblank_timer(v);
 
           /* if changing dimensions, update video memory layout */
           if (regnum == videoDimensions)
@@ -2120,7 +1919,7 @@ Bit32s texture_w(Bit32u offset, Bit32u data)
       tt = (offset >> 7) & 0xff;
 
       /* old code has a bit about how this is broken in gauntleg unless we always look at TMU0 */
-      if (TEXMODE_SEQ_8_DOWNLD(v->tmu[0].reg/*t->reg*/[textureMode].u))
+      if (TEXMODE_SEQ_8_DOWNLD(v->tmu[0].reg[textureMode].u))
         ts = (offset << 2) & 0xfc;
       else
         ts = (offset << 1) & 0xfc;
@@ -2198,7 +1997,6 @@ Bit32u lfb_w(Bit32u offset, Bit32u data, Bit32u mem_mask)
 {
   Bit16u *dest, *depth;
   Bit32u destmax, depthmax;
-//  Bit32u mem_mask=0xffffffff;
   Bit32u forcefront=0;
 
   int sr[2], sg[2], sb[2], sa[2], sw[2];
@@ -2411,7 +2209,6 @@ Bit32u lfb_w(Bit32u offset, Bit32u data, Bit32u mem_mask)
 
   /* select the target buffer */
   destbuf = (v->type >= VOODOO_BANSHEE) ? (!forcefront) : LFBMODE_WRITE_BUFFER_SELECT(v->reg[lfbMode].u);
-//  BX_DEBUG(("destbuf %X lfbmode %X",destbuf, v->reg[lfbMode].u));
   switch (destbuf)
   {
     case 0:     /* front buffer */
@@ -2696,7 +2493,6 @@ Bit32u lfb_r(Bit32u offset)
 
   /* select the target buffer */
   destbuf = (v->type >= VOODOO_BANSHEE) ? (!forcefront) : LFBMODE_READ_BUFFER_SELECT(v->reg[lfbMode].u);
-//  BX_DEBUG(("destbuf %X lfbmode %X",destbuf, v->reg[lfbMode].u));
   switch (destbuf)
   {
     case 0:     /* front buffer */
@@ -2955,12 +2751,9 @@ void voodoo_init(Bit8u _type)
   soft_reset(v);
 }
 
-bx_bool voodoo_update(/*running_device *device, bitmap_t *bitmap, */const rectangle *cliprect)
+bx_bool voodoo_update(const rectangle *cliprect)
 {
-//  voodoo_state *v = get_safe_token(device);
   bx_bool changed = v->fbi.video_changed;
-//  int drawbuf = v->fbi.frontbuf;
-//  int statskey;
   int x, y;
 
   /* reset the video changed flag */
@@ -2968,7 +2761,6 @@ bx_bool voodoo_update(/*running_device *device, bitmap_t *bitmap, */const rectan
 
   /* if we are blank, just fill with black */
   if (v->type <= VOODOO_2 && FBIINIT1_SOFTWARE_BLANK(v->reg[fbiInit1].u)) {
-//    bitmap_fill(bitmap, cliprect, 0);
     return changed;
   }
 
@@ -3039,46 +2831,5 @@ bx_bool voodoo_update(/*running_device *device, bitmap_t *bitmap, */const rectan
     changed = 1;
   }
 
-  /* debugging! */
-//  if (input_code_pressed(device->machine, KEYCODE_L))
-//    drawbuf = v->fbi.backbuf;
-
-  /* copy from the current front buffer */
-/*
-  for (y = cliprect->min_y; y <= cliprect->max_y; y++)
-    if (y >= v->fbi.yoffs)
-    {
-      Bit16u *src = (Bit16u *)(v->fbi.ram + v->fbi.rgboffs[drawbuf]) + (y - v->fbi.yoffs) * v->fbi.rowpixels - v->fbi.xoffs;
-      Bit32u *dst = BITMAP_ADDR32(bitmap, y, 0);
-      for (x = cliprect->min_x; x <= cliprect->max_x; x++)
-        dst[x] = v->fbi.pen[src[x]];
-    }
-*/
-  /* update stats display */
-/*
-  statskey = (input_code_pressed(device->machine, KEYCODE_BACKSLASH) != 0);
-  if (statskey && statskey != v->stats.lastkey)
-    v->stats.display = !v->stats.display;
-  v->stats.lastkey = statskey;
-*/
-  /* display stats */
-/*
-  if (v->stats.display)
-    popmessage(v->stats.buffer, 0, 0);
-*/
-  /* update render override */
-/*
-  v->stats.render_override = input_code_pressed(device->machine, KEYCODE_ENTER);
-  if (DEBUG_DEPTH && v->stats.render_override)
-  {
-    for (y = cliprect->min_y; y <= cliprect->max_y; y++)
-    {
-      Bit16u *src = (Bit16u *)(v->fbi.ram + v->fbi.auxoffs) + (y - v->fbi.yoffs) * v->fbi.rowpixels - v->fbi.xoffs;
-      Bit32u *dst = BITMAP_ADDR32(bitmap, y, 0);
-      for (x = cliprect->min_x; x <= cliprect->max_x; x++)
-        dst[x] = ((src[x] << 8) & 0xff0000) | ((src[x] >> 0) & 0xff00) | ((src[x] >> 8) & 0xff);
-    }
-  }
-*/
   return changed;
 }

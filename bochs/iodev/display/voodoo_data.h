@@ -1473,10 +1473,7 @@ struct _pci_state
   fifo_state  fifo;           /* PCI FIFO */
   Bit32u      init_enable;    /* initEnable value */
   Bit8u       stall_state;    /* state of the system if we're stalled */
-//  voodoo_stall_func stall_callback; /* callback for stalling/unstalling */
   Bit8u       op_pending;     /* true if an operation is pending */
-//  attotime    op_end_time;  /* time when the pending operation ends */
-//  emu_timer*  continue_timer; /* timer to use to continue processing */
   Bit32u      fifo_mem[64*2]; /* memory backing the PCI FIFO */
 };
 
@@ -1588,13 +1585,11 @@ struct _fbi_state
   Bit32u        tile_height;    /* height of video tiles */
   Bit32u        x_tiles;        /* number of tiles in the X direction */
 
-//  emu_timer *     vblank_timer  /* VBLANK timer */
   Bit8u         vblank;         /* VBLANK state */
   Bit8u         vblank_count;   /* number of VBLANKs since last swap */
   bx_bool       vblank_swap_pending; /* a swap is pending, waiting for a vblank */
   Bit8u         vblank_swap;    /* swap when we hit this count */
   Bit8u         vblank_dont_swap; /* don't actually swap when we hit this point */
-//  voodoo_vblank_func  vblank_client; /* client callback */
 
   /* triangle setup info */
   bx_bool       cheating_allowed; /* allow cheating? */
@@ -1715,13 +1710,9 @@ struct _banshee_info
 struct _voodoo_state
 {
   Bit8u       index;         /* index of board */
-//  running_device *device;    /* pointer to our containing device */
-//  running_device *screen;    /* the screen we are acting on */
-//  running_device *cpu;       /* the CPU we interact with */
   Bit8u       type;         /* type of system */
   Bit8u       chipmask;     /* mask for which chips are available */
   Bit32u      freq;         /* operating frequency */
-//  attoseconds_t   attoseconds_per_cycle;  /* attoseconds per cycle */
   Bit32u      extra_cycles; /* extra cycles not yet accounted for */
   int         trigger;      /* trigger used for stalling */
 
@@ -1741,7 +1732,6 @@ struct _voodoo_state
   Bit32u      send_config;
   Bit32u      tmu_config;
 
-//  poly_manager*   poly;         /* polygon manager */
   stats_block *   thread_stats; /* per-thread statistics */
 
   voodoo_stats    stats;        /* internal statistics */
