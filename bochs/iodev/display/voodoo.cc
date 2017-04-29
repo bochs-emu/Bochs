@@ -464,13 +464,21 @@ void bx_voodoo_c::mode_change_timer_handler(void *this_ptr)
 
 bx_bool bx_voodoo_c::update_timing(void)
 {
+  int htotal, vtotal, vsync;
+
   if (!BX_VOODOO_THIS s.vdraw.clock_enabled || !BX_VOODOO_THIS s.vdraw.output_on)
     return 0;
   if ((v->reg[hSync].u == 0) || (v->reg[vSync].u == 0))
     return 0;
-  int htotal = ((v->reg[hSync].u >> 16) & 0x3ff) + 1 + (v->reg[hSync].u & 0xff) + 1;
-  int vtotal = ((v->reg[vSync].u >> 16) & 0xfff) + (v->reg[vSync].u & 0xfff);
-  int vsync = ((v->reg[vSync].u >> 16) & 0xfff);
+  if (BX_VOODOO_THIS s.model == VOODOO_2) {
+    htotal = ((v->reg[hSync].u >> 16) & 0x7ff) + 1 + (v->reg[hSync].u & 0x1ff) + 1;
+    vtotal = ((v->reg[vSync].u >> 16) & 0x1fff) + (v->reg[vSync].u & 0x1fff);
+    vsync = ((v->reg[vSync].u >> 16) & 0x1fff);
+  } else {
+    htotal = ((v->reg[hSync].u >> 16) & 0x3ff) + 1 + (v->reg[hSync].u & 0xff) + 1;
+    vtotal = ((v->reg[vSync].u >> 16) & 0xfff) + (v->reg[vSync].u & 0xfff);
+    vsync = ((v->reg[vSync].u >> 16) & 0xfff);
+  }
   double hfreq = (double)(v->dac.clk0_freq * 1000) / htotal;
   if (((v->reg[fbiInit1].u >> 20) & 3) == 1) { // VCLK div 2
     hfreq /= 2;
@@ -518,7 +526,7 @@ void bx_voodoo_c::update(void)
   Bit8u * tile_ptr, * tile_ptr2;
   bx_svga_tileinfo_t info;
 
-  BX_VOODOO_THIS s.vdraw.frame_start = bx_pc_system.time_usec();
+  BX_VOODOO_THIS s.vdraw.frame_start = bx_virt_timer.time_usec(1);
 
   if (v->fbi.vblank_swap_pending) {
     swap_buffers(v);
@@ -591,13 +599,13 @@ void bx_voodoo_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
   v->fbi.video_changed = 1;
 }
 
-Bit16u bx_voodoo_c::get_retrace(void)
+Bit32u bx_voodoo_c::get_retrace(void)
 {
-  Bit64u time_in_frame = bx_pc_system.time_usec()  - BX_VOODOO_THIS s.vdraw.frame_start;
-  if (time_in_frame > BX_VOODOO_THIS s.vdraw.vsync_usec) {
+  Bit64u time_in_frame = bx_virt_timer.time_usec(1)  - BX_VOODOO_THIS s.vdraw.frame_start;
+  if (time_in_frame >= BX_VOODOO_THIS s.vdraw.vsync_usec) {
     return 0;
   } else {
-    return (Bit16u)((BX_VOODOO_THIS s.vdraw.vsync_usec - time_in_frame) / BX_VOODOO_THIS s.vdraw.htotal_usec + 1);
+    return (Bit32u)(time_in_frame / BX_VOODOO_THIS s.vdraw.htotal_usec + 1);
   }
 }
 

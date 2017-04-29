@@ -59,7 +59,7 @@ public:
 
   virtual void pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 
-  static Bit16u get_retrace(void);
+  static Bit32u get_retrace(void);
   static void output_enable(bx_bool enabled);
   static void update_screen_start(void);
   static bx_bool update_timing(void);

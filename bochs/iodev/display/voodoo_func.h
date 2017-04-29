@@ -2664,8 +2664,11 @@ Bit32u register_r(Bit32u offset)
       break;
 
     case vRetrace:
-    case hvRetrace:
       result = Voodoo_get_retrace() & 0x1fff;
+      break;
+
+    case hvRetrace:
+      result = Voodoo_get_retrace(); // TODO: hRetrace
       break;
   }
 
