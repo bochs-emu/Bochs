@@ -133,6 +133,7 @@ display
   voodoo
     enabled
     model
+    realtime
 
 keyboard_mouse
   keyboard

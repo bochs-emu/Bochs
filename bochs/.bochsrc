@@ -411,15 +411,15 @@ vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
 #
 #   UPDATE_FREQ
 #     This parameter specifies the number of display updates per second.
-#     The VGA update timer now uses the realtime engine and the default
-#     value is 5. This parameter can be changed at runtime.
+#     The VGA update timer by default uses the realtime engine with a value
+#     of 5. This parameter can be changed at runtime.
 #
 #   REALTIME
-#     If set to 1, the VGA timer is based on realtime, otherwise it is based
-#     on the ips setting. If the host is slow (low ips, update_freq) and the
-#     guest uses HLT appropriately, setting this to 0 and "clock: sync=none"
-#     may improve the responsiveness of the guest GUI when the guest is
-#     otherwise idle. The default value is 1.
+#     If set to 1 (default), the VGA timer is based on realtime, otherwise it
+#     is driven by the cpu and depends on the ips setting. If the host is slow
+#     (low ips, update_freq) and the guest uses HLT appropriately, setting this
+#     to 0 and "clock: sync=none" may improve the responsiveness of the guest
+#     GUI when the guest is otherwise idle.
 #
 # Examples:
 #   vga: extension=cirrus, update_freq=10
@@ -429,11 +429,13 @@ vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
 #=======================================================================
 # VOODOO:
 # This defines the Voodoo Graphics emulation (experimental). Currently
-# supported models are 'voodoo1' and 'voodoo2'. The Voodoo2 support is
-# not yet complete.
+# supported models are 'voodoo1' and 'voodoo2'. The Voodoo2 support is not
+# yet complete. The 'realtime' option is very similar to the vga realtime
+# option. If set to 1 (default), the Voodoo timer is based on realtime,
+# otherwise it is driven by the cpu and depends on the ips setting.
 #
 # Examples:
-#   voodoo: enabled=1, model=voodoo1
+#   voodoo: enabled=1, model=voodoo1, realtime=1
 #=======================================================================
 #voodoo: enabled=1, model=voodoo1
 
