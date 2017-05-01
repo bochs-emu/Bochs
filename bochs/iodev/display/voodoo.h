@@ -39,10 +39,11 @@ typedef struct {
     bx_bool output_on;
     bx_bool override_on;
     bx_bool screen_update_pending;
+    bx_bool gui_update_pending;
     bx_bool realtime;
   } vdraw;
   int mode_change_timer_id;
-  int update_timer_id;
+  int vertical_timer_id;
   Bit8u devfunc;
 } bx_voodoo_t;
 
@@ -59,6 +60,7 @@ public:
   virtual void refresh_display(void *this_ptr, bx_bool redraw);
   virtual void redraw_area(unsigned x0, unsigned y0,
                            unsigned width, unsigned height);
+  virtual void update(void);
 
   virtual void pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 
@@ -76,8 +78,7 @@ private:
   static bx_bool mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
 
   static void mode_change_timer_handler(void *);
-  static void update_timer_handler(void *);
-  static void update(void);
+  static void vertical_timer_handler(void *);
 };
 
 #endif

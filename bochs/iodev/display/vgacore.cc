@@ -259,18 +259,18 @@ void bx_vgacore_c::init_iohandlers(bx_read_handler_t f_read, bx_write_handler_t 
 
 void bx_vgacore_c::init_systemtimer(bx_timer_handler_t f_timer, param_event_handler f_param)
 {
-  const bx_bool realtime = SIM->get_param_bool(BXPN_VGA_REALTIME)->get();
+  BX_VGA_THIS realtime = SIM->get_param_bool(BXPN_VGA_REALTIME)->get();
   bx_param_num_c *vga_update_freq = SIM->get_param_num(BXPN_VGA_UPDATE_FREQUENCY);
-  BX_VGA_THIS update_interval = (Bit32u)(1000000 / vga_update_freq->get());
-  BX_INFO(("interval=%u, mode=%s", BX_VGA_THIS update_interval, realtime ? "realtime":"standard"));
+  Bit32u update_interval = (Bit32u)(1000000 / vga_update_freq->get());
+  BX_INFO(("interval=%u, mode=%s", update_interval, BX_VGA_THIS realtime ? "realtime":"standard"));
   if (BX_VGA_THIS timer_id == BX_NULL_TIMER_HANDLE) {
     BX_VGA_THIS timer_id = bx_virt_timer.register_timer(this, f_timer,
-       BX_VGA_THIS update_interval, 1, 1, realtime, "vga");
+       update_interval, 1, 1, BX_VGA_THIS realtime, "vga");
     vga_update_freq->set_handler(f_param);
   }
   // VGA text mode cursor blink frequency 1.875 Hz
-  if (BX_VGA_THIS update_interval < 266666) {
-    BX_VGA_THIS s.blink_counter = 266666 / (unsigned)BX_VGA_THIS update_interval;
+  if (update_interval < 266666) {
+    BX_VGA_THIS s.blink_counter = 266666 / (unsigned)update_interval;
   } else {
     BX_VGA_THIS s.blink_counter = 1;
   }
@@ -378,11 +378,9 @@ void bx_vgacore_c::after_restore_state(void)
     BX_VGA_THIS s.last_xres = BX_VGA_THIS s.max_xres;
     BX_VGA_THIS s.last_yres = BX_VGA_THIS s.max_yres;
     BX_VGA_THIS redraw_area(0, 0, BX_VGA_THIS s.max_xres, BX_VGA_THIS s.max_yres);
-    BX_VGA_THIS update();
-    bx_gui->flush();
-  } else {
-    bx_virt_timer.deactivate_timer(BX_VGA_THIS timer_id);
   }
+  BX_VGA_THIS update();
+  bx_gui->flush();
 }
 
 void bx_vgacore_c::determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth)
@@ -507,7 +505,7 @@ Bit32u bx_vgacore_c::read(Bit32u address, unsigned io_len)
       //           horizontal or vertical retrace period is active
 
       retval = 0;
-      display_usec = bx_pc_system.time_usec() % BX_VGA_THIS s.vtotal_usec;
+      display_usec = bx_virt_timer.time_usec(BX_VGA_THIS realtime) % BX_VGA_THIS s.vtotal_usec;
       if ((display_usec >= BX_VGA_THIS s.vrstart_usec) &&
           (display_usec <= BX_VGA_THIS s.vrend_usec)) {
         retval |= 0x08;
@@ -1302,26 +1300,11 @@ void bx_vgacore_c::set_override(bx_bool enabled, void *dev)
 #if BX_SUPPORT_PCI
   BX_VGA_THIS s.nvgadev = (bx_nonvga_device_c*)dev;
 #endif
-  if (enabled) {
-    bx_virt_timer.deactivate_timer(BX_VGA_THIS timer_id);
-  } else {
-    bx_virt_timer.activate_timer(BX_VGA_THIS timer_id, BX_VGA_THIS update_interval, 1);
+  if (!enabled) {
     bx_gui->dimension_update(BX_VGA_THIS s.last_xres, BX_VGA_THIS s.last_yres,
                              BX_VGA_THIS s.last_fw, BX_VGA_THIS s.last_fh, BX_VGA_THIS s.last_bpp);
     BX_VGA_THIS redraw_area(0, 0, BX_VGA_THIS s.last_xres, BX_VGA_THIS s.last_yres);
   }
-}
-
-void bx_vgacore_c::timer_handler(void *this_ptr)
-{
-  bx_vgacore_c *class_ptr = (bx_vgacore_c *) this_ptr;
-  class_ptr->timer();
-}
-
-void bx_vgacore_c::timer(void)
-{
-  update();
-  bx_gui->flush();
 }
 
 Bit8u bx_vgacore_c::get_vga_pixel(Bit16u x, Bit16u y, Bit16u saddr, Bit16u lc, bx_bool bs, Bit8u **plane)
@@ -1388,7 +1371,7 @@ bx_bool bx_vgacore_c::skip_update(void)
     return 1;
 
   /* skip screen update if the vertical retrace is in progress */
-  display_usec = bx_pc_system.time_usec() % BX_VGA_THIS s.vtotal_usec;
+  display_usec = bx_virt_timer.time_usec(BX_VGA_THIS realtime) % BX_VGA_THIS s.vtotal_usec;
   if ((display_usec > BX_VGA_THIS s.vrstart_usec) &&
       (display_usec < BX_VGA_THIS s.vrend_usec)) {
     return 1;

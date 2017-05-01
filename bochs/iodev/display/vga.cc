@@ -330,12 +330,12 @@ Bit64s bx_vga_c::vga_param_handler(bx_param_c *param, int set, Bit64s val)
 {
   // handler for runtime parameter 'vga: update_freq'
   if (set) {
-    BX_VGA_THIS update_interval = (Bit32u)(1000000 / val);
-    BX_INFO(("Changing timer interval to %d", BX_VGA_THIS update_interval));
+    Bit32u update_interval = (Bit32u)(1000000 / val);
+    BX_INFO(("Changing timer interval to %d", update_interval));
     BX_VGA_THIS timer_handler(theVga);
-    bx_virt_timer.activate_timer(BX_VGA_THIS timer_id, BX_VGA_THIS update_interval, 1);
-    if (BX_VGA_THIS update_interval < 300000) {
-      BX_VGA_THIS s.blink_counter = 300000 / (unsigned)BX_VGA_THIS update_interval;
+    bx_virt_timer.activate_timer(BX_VGA_THIS timer_id, update_interval, 1);
+    if (update_interval < 300000) {
+      BX_VGA_THIS s.blink_counter = 300000 / (unsigned)update_interval;
     } else {
       BX_VGA_THIS s.blink_counter = 1;
     }
@@ -378,6 +378,12 @@ void bx_vga_c::update(void)
 {
   unsigned iHeight, iWidth;
 
+#if BX_SUPPORT_PCI
+  if (BX_VGA_THIS s.vga_override && (BX_VGA_THIS s.nvgadev != NULL)) {
+    BX_VGA_THIS s.nvgadev->update();
+    return;
+  }
+#endif
   if (BX_VGA_THIS vbe.enabled) {
     /* no screen update necessary */
     if ((BX_VGA_THIS s.vga_mem_updated==0) && BX_VGA_THIS s.graphics_ctrl.graphics_alpha)
@@ -391,7 +397,7 @@ void bx_vga_c::update(void)
 
     /* skip screen update if the vertical retrace is in progress
        (using 72 Hz vertical frequency) */
-    if ((bx_pc_system.time_usec() % 13888) < 70)
+    if ((bx_virt_timer.time_usec(BX_VGA_THIS realtime) % 13888) < 70)
       return;
 
     if (BX_VGA_THIS vbe.bpp != VBE_DISPI_BPP_4) {

@@ -51,6 +51,7 @@ public:
   virtual void redraw_area(unsigned x0, unsigned y0,
                            unsigned width, unsigned height) {}
   virtual void refresh_display(void *this_ptr, bx_bool redraw) {}
+  virtual void update(void) {}
 };
 #endif
 
@@ -78,9 +79,6 @@ public:
   virtual void   get_text_snapshot(Bit8u **text_snapshot, unsigned *txHeight,
                                    unsigned *txWidth);
   virtual void   init_vga_extension(void) {}
-
-  static void    timer_handler(void *);
-  void           timer(void);
 
 protected:
   void init_standard_vga(void);
@@ -239,7 +237,7 @@ protected:
   } s;  // state information
 
   int timer_id;
-  Bit32u update_interval;
+  bx_bool realtime;
   bx_bool extension_init;
   bx_bool pci_enabled;
 };

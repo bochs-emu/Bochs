@@ -160,7 +160,7 @@ bx_voodoo_c::bx_voodoo_c()
 {
   put("VOODOO");
   s.mode_change_timer_id = BX_NULL_TIMER_HANDLE;
-  s.update_timer_id = BX_NULL_TIMER_HANDLE;
+  s.vertical_timer_id = BX_NULL_TIMER_HANDLE;
   v = NULL;
 }
 
@@ -196,14 +196,15 @@ void bx_voodoo_c::init(void)
     BX_VOODOO_THIS s.mode_change_timer_id = bx_virt_timer.register_timer(this, mode_change_timer_handler,
        1000, 0, 0, 0, "voodoo_mode_change");
   }
-  if (BX_VOODOO_THIS s.update_timer_id == BX_NULL_TIMER_HANDLE) {
-    BX_VOODOO_THIS s.update_timer_id = bx_virt_timer.register_timer(this, update_timer_handler,
-       50000, 1, 0, BX_VOODOO_THIS s.vdraw.realtime, "voodoo_update");
+  if (BX_VOODOO_THIS s.vertical_timer_id == BX_NULL_TIMER_HANDLE) {
+    BX_VOODOO_THIS s.vertical_timer_id = bx_virt_timer.register_timer(this, vertical_timer_handler,
+       50000, 1, 0, BX_VOODOO_THIS s.vdraw.realtime, "vertical_timer");
   }
   BX_VOODOO_THIS s.vdraw.clock_enabled = 1;
   BX_VOODOO_THIS s.vdraw.output_on = 0;
   BX_VOODOO_THIS s.vdraw.override_on = 0;
   BX_VOODOO_THIS s.vdraw.screen_update_pending = 0;
+  BX_VOODOO_THIS s.vdraw.gui_update_pending = 0;
 
   v = new voodoo_state;
   BX_VOODOO_THIS s.model = (Bit8u)SIM->get_param_enum("model", base)->get();
@@ -452,7 +453,7 @@ void bx_voodoo_c::mode_change_timer_handler(void *this_ptr)
 
   if ((!BX_VOODOO_THIS s.vdraw.clock_enabled || !BX_VOODOO_THIS s.vdraw.output_on) && BX_VOODOO_THIS s.vdraw.override_on) {
     // switching off
-    bx_virt_timer.deactivate_timer(BX_VOODOO_THIS s.update_timer_id);
+    bx_virt_timer.deactivate_timer(BX_VOODOO_THIS s.vertical_timer_id);
     DEV_vga_set_override(0, NULL);
     BX_VOODOO_THIS s.vdraw.override_on = 0;
     BX_VOODOO_THIS s.vdraw.width = 0;
@@ -503,10 +504,10 @@ bx_bool bx_voodoo_c::update_timing(void)
     BX_VOODOO_THIS s.vdraw.width = v->fbi.width;
     BX_VOODOO_THIS s.vdraw.height = v->fbi.height;
     bx_gui->dimension_update(v->fbi.width, v->fbi.height, 0, 0, 16);
-    update_timer_handler(NULL);
+    vertical_timer_handler(NULL);
   }
   BX_INFO(("Voodoo output %dx%d@%uHz", v->fbi.width, v->fbi.height, (unsigned)vfreq));
-  bx_virt_timer.activate_timer(BX_VOODOO_THIS s.update_timer_id, (Bit32u)BX_VOODOO_THIS s.vdraw.vtotal_usec, 1);
+  bx_virt_timer.activate_timer(BX_VOODOO_THIS s.vertical_timer_id, (Bit32u)BX_VOODOO_THIS s.vdraw.vtotal_usec, 1);
   return 1;
 }
 
@@ -515,15 +516,26 @@ void bx_voodoo_c::refresh_display(void *this_ptr, bx_bool redraw)
   if (redraw) {
     redraw_area(0, 0, v->fbi.width, v->fbi.height);
   }
-  update_timer_handler(this_ptr);
+  vertical_timer_handler(this_ptr);
 }
 
-void bx_voodoo_c::update_timer_handler(void *this_ptr)
+void bx_voodoo_c::vertical_timer_handler(void *this_ptr)
 {
   UNUSED(this_ptr);
 
-  update();
-  bx_gui->flush();
+  BX_VOODOO_THIS s.vdraw.frame_start = bx_virt_timer.time_usec(BX_VOODOO_THIS s.vdraw.realtime);
+
+  if (v->fbi.vblank_swap_pending) {
+    swap_buffers(v);
+  }
+
+  rectangle re;
+  re.min_x = re.min_y = 0;
+  re.max_x = v->fbi.width;
+  re.max_y = v->fbi.height;
+  if (!voodoo_update(&re))
+    return;
+  BX_VOODOO_THIS s.vdraw.gui_update_pending = 1;
 }
 
 void bx_voodoo_c::update(void)
@@ -537,17 +549,7 @@ void bx_voodoo_c::update(void)
   Bit8u * tile_ptr, * tile_ptr2;
   bx_svga_tileinfo_t info;
 
-  BX_VOODOO_THIS s.vdraw.frame_start = bx_virt_timer.time_usec(BX_VOODOO_THIS s.vdraw.realtime);
-
-  if (v->fbi.vblank_swap_pending) {
-    swap_buffers(v);
-  }
-
-  rectangle re;
-  re.min_x = re.min_y = 0;
-  re.max_x = v->fbi.width;
-  re.max_y = v->fbi.height;
-  if (!voodoo_update(&re))
+  if (!BX_VOODOO_THIS s.vdraw.gui_update_pending)
     return;
 
   Bit8u *disp_ptr = (Bit8u*)(v->fbi.ram + v->fbi.rgboffs[v->fbi.frontbuf]);
@@ -601,6 +603,7 @@ void bx_voodoo_c::update(void)
   } else {
     BX_PANIC(("cannot get svga tile info"));
   }
+  BX_VOODOO_THIS s.vdraw.gui_update_pending = 0;
 }
 
 void bx_voodoo_c::redraw_area(unsigned x0, unsigned y0, unsigned width,

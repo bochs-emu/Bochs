@@ -821,12 +821,12 @@ void bx_svga_cirrus_c::get_text_snapshot(Bit8u **text_snapshot,
 Bit64s bx_svga_cirrus_c::svga_param_handler(bx_param_c *param, int set, Bit64s val)
 {
   if (set) {
-    BX_CIRRUS_THIS update_interval = (Bit32u)(1000000 / val);
-    BX_INFO(("Changing timer interval to %d", BX_CIRRUS_THIS update_interval));
+    Bit32u update_interval = (Bit32u)(1000000 / val);
+    BX_INFO(("Changing timer interval to %d", update_interval));
     BX_CIRRUS_THIS svga_timer_handler(theSvga);
-    bx_virt_timer.activate_timer(BX_CIRRUS_THIS timer_id, BX_CIRRUS_THIS update_interval, 1);
-    if (BX_CIRRUS_THIS update_interval < 300000) {
-      BX_CIRRUS_THIS s.blink_counter = 300000 / (unsigned)BX_CIRRUS_THIS update_interval;
+    bx_virt_timer.activate_timer(BX_CIRRUS_THIS timer_id, update_interval, 1);
+    if (update_interval < 300000) {
+      BX_CIRRUS_THIS s.blink_counter = 300000 / (unsigned)update_interval;
     } else {
       BX_CIRRUS_THIS s.blink_counter = 1;
     }
@@ -1228,6 +1228,12 @@ void bx_svga_cirrus_c::svga_update(void)
 {
   unsigned width, height, pitch;
 
+#if BX_SUPPORT_PCI
+  if (BX_CIRRUS_THIS s.vga_override && (BX_CIRRUS_THIS s.nvgadev != NULL)) {
+    BX_CIRRUS_THIS s.nvgadev->update();
+    return;
+  }
+#endif
   /* skip screen update when the sequencer is in reset mode or video is disabled */
   if (! BX_CIRRUS_THIS s.sequencer.reset1 ||
       ! BX_CIRRUS_THIS s.sequencer.reset2 ||
