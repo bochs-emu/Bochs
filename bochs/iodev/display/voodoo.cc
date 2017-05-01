@@ -457,6 +457,7 @@ void bx_voodoo_c::mode_change_timer_handler(void *this_ptr)
     BX_VOODOO_THIS s.vdraw.override_on = 0;
     BX_VOODOO_THIS s.vdraw.width = 0;
     BX_VOODOO_THIS s.vdraw.height = 0;
+    BX_INFO(("Voodoo output disabled"));
   }
 
   if ((BX_VOODOO_THIS s.vdraw.clock_enabled && BX_VOODOO_THIS s.vdraw.output_on) && !BX_VOODOO_THIS s.vdraw.override_on) {
@@ -470,7 +471,7 @@ void bx_voodoo_c::mode_change_timer_handler(void *this_ptr)
 
 bx_bool bx_voodoo_c::update_timing(void)
 {
-  int htotal, vtotal, vsync;
+  int htotal, vtotal, hsync, vsync;
 
   if (!BX_VOODOO_THIS s.vdraw.clock_enabled || !BX_VOODOO_THIS s.vdraw.output_on)
     return 0;
@@ -479,10 +480,12 @@ bx_bool bx_voodoo_c::update_timing(void)
   if (BX_VOODOO_THIS s.model == VOODOO_2) {
     htotal = ((v->reg[hSync].u >> 16) & 0x7ff) + 1 + (v->reg[hSync].u & 0x1ff) + 1;
     vtotal = ((v->reg[vSync].u >> 16) & 0x1fff) + (v->reg[vSync].u & 0x1fff);
+    hsync = ((v->reg[hSync].u >> 16) & 0x7ff);
     vsync = ((v->reg[vSync].u >> 16) & 0x1fff);
   } else {
     htotal = ((v->reg[hSync].u >> 16) & 0x3ff) + 1 + (v->reg[hSync].u & 0xff) + 1;
     vtotal = ((v->reg[vSync].u >> 16) & 0xfff) + (v->reg[vSync].u & 0xfff);
+    hsync = ((v->reg[hSync].u >> 16) & 0x3ff);
     vsync = ((v->reg[vSync].u >> 16) & 0xfff);
   }
   double hfreq = (double)(v->dac.clk0_freq * 1000) / htotal;
@@ -490,8 +493,10 @@ bx_bool bx_voodoo_c::update_timing(void)
     hfreq /= 2;
   }
   double vfreq = hfreq / (double)vtotal;
-  BX_VOODOO_THIS s.vdraw.vtotal_usec = (unsigned)(1000000.0 / vfreq);
   BX_VOODOO_THIS s.vdraw.htotal_usec = (unsigned)(1000000.0 / hfreq);
+  BX_VOODOO_THIS s.vdraw.vtotal_usec = (unsigned)(1000000.0 / vfreq);
+  BX_VOODOO_THIS s.vdraw.htime_to_pixel = (double)htotal / (1000000.0 / hfreq);
+  BX_VOODOO_THIS s.vdraw.hsync_usec = BX_VOODOO_THIS s.vdraw.htotal_usec * hsync / htotal;
   BX_VOODOO_THIS s.vdraw.vsync_usec = vsync * BX_VOODOO_THIS s.vdraw.htotal_usec;
   if ((BX_VOODOO_THIS s.vdraw.width != v->fbi.width) ||
       (BX_VOODOO_THIS s.vdraw.height != v->fbi.height)) {
@@ -605,13 +610,23 @@ void bx_voodoo_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
   v->fbi.video_changed = 1;
 }
 
-Bit32u bx_voodoo_c::get_retrace(void)
+Bit32u bx_voodoo_c::get_retrace(bx_bool hv)
 {
   Bit64u time_in_frame = bx_virt_timer.time_usec(BX_VOODOO_THIS s.vdraw.realtime) - BX_VOODOO_THIS s.vdraw.frame_start;
   if (time_in_frame >= BX_VOODOO_THIS s.vdraw.vsync_usec) {
     return 0;
   } else {
-    return (Bit32u)(time_in_frame / BX_VOODOO_THIS s.vdraw.htotal_usec + 1);
+    Bit32u value = (Bit32u)(time_in_frame / BX_VOODOO_THIS s.vdraw.htotal_usec + 1);
+    if (hv) {
+      Bit32u time_in_line = (Bit32u)(time_in_frame % BX_VOODOO_THIS s.vdraw.htotal_usec);
+      Bit32u hpixel = (Bit32u)(time_in_line * BX_VOODOO_THIS s.vdraw.htime_to_pixel);
+      if (time_in_line < BX_VOODOO_THIS s.vdraw.hsync_usec) {
+// This code seems to be okay, but Voodoo driver gets confused in next stage
+// and finally causes a segfault.
+//        value |= ((hpixel + 1) << 16);
+      }
+    }
+    return value;
   }
 }
 

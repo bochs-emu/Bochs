@@ -84,7 +84,7 @@ struct _voodoo_config
 
 #define Voodoo_UpdateScreenStart() theVoodooDevice->update_screen_start()
 #define Voodoo_Output_Enable(x)    theVoodooDevice->output_enable(x)
-#define Voodoo_get_retrace()       theVoodooDevice->get_retrace()
-#define Voodoo_update_timing()       theVoodooDevice->update_timing()
+#define Voodoo_get_retrace(a)      theVoodooDevice->get_retrace(a)
+#define Voodoo_update_timing()     theVoodooDevice->update_timing()
 
 #endif

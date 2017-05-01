@@ -1330,6 +1330,14 @@ void register_w(Bit32u offset, Bit32u data)
     BX_ERROR(("Invalid attempt to write %s", v->regnames[regnum]));
     return;
   }
+  if ((FBIINIT7_CMDFIFO_ENABLE(v->reg[fbiInit7].u)) &&
+      ((offset & 0x200000) > 0)) {
+    if (!(v->regaccess[regnum] & REGISTER_WRITETHRU)) {
+      BX_ERROR(("Invalid attempt to write %s", v->regnames[regnum]));
+      return;
+    }
+    BX_ERROR(("Writing to CMDFIFO not supported yet"));
+  }
 
   switch (regnum) {
     /* Vertex data is 12.4 formatted fixed point */
@@ -2373,6 +2381,10 @@ Bit32u register_r(Bit32u offset)
     BX_ERROR(("Invalid attempt to read %s", v->regnames[regnum]));
     return 0;
   }
+  if ((FBIINIT7_CMDFIFO_ENABLE(v->reg[fbiInit7].u)) &&
+      ((offset & 0x200000) > 0)) {
+    BX_ERROR(("Invalid attempt to read from CMDFIFO"));
+  }
 
   Bit32u result;
 
@@ -2398,7 +2410,7 @@ Bit32u register_r(Bit32u offset)
       }
 
       /* bit 6 is the vertical retrace */
-      result |= (Voodoo_get_retrace() > 0) << 6;
+      result |= (Voodoo_get_retrace(0) > 0) << 6;
 
       /* bit 7 is FBI graphics engine busy */
       if (v->pci.op_pending)
@@ -2461,11 +2473,11 @@ Bit32u register_r(Bit32u offset)
       break;
 
     case vRetrace:
-      result = Voodoo_get_retrace() & 0x1fff;
+      result = Voodoo_get_retrace(0) & 0x1fff;
       break;
 
     case hvRetrace:
-      result = Voodoo_get_retrace(); // TODO: hRetrace
+      result = Voodoo_get_retrace(1);
       break;
   }
 

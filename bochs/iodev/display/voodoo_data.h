@@ -642,7 +642,7 @@ static const Bit8u banshee_register_access[0x100] =
  *
  *************************************/
 
-static const char *const voodoo_reg_name[] =
+static const char *const voodoo_reg_name[0x100] =
 {
   /* 0x000 */
   "status",   "{intrCtrl}", "vertexAx",   "vertexAy",
