@@ -28,7 +28,7 @@ extern void handleSMC(bx_phy_address pAddr, Bit32u mask);
 
 class bxPageWriteStampTable
 {
-#define PHY_MEM_PAGES (1024*1024)
+  const Bit32u PHY_MEM_PAGES = 1024*1024;
   Bit32u *fineGranularityMapping;
 
 public:
@@ -104,8 +104,6 @@ extern bxPageWriteStampTable pageWriteStampTable;
 #define BxICacheEntries (64  * 1024)  // Must be a power of 2.
 #define BxICacheMemPool (576 * 1024)
 
-#define BX_MAX_TRACE_LENGTH 32
-
 struct bxICacheEntry_c
 {
   bx_phy_address pAddr; // Physical address of the instruction
@@ -115,7 +113,9 @@ struct bxICacheEntry_c
   bxInstruction_c *i;
 };
 
-#define BX_ICACHE_INVALID_PHY_ADDRESS (bx_phy_address(-1))
+#define BX_MAX_TRACE_LENGTH 32
+
+static const bx_phy_address BX_ICACHE_INVALID_PHY_ADDRESS = bx_phy_address(-1);
 
 BX_CPP_INLINE void flushSMC(bxICacheEntry_c *e)
 {
