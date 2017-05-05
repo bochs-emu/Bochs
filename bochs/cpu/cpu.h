@@ -4997,9 +4997,9 @@ public: // for now...
   BX_SMF void prepareFPU(bxInstruction_c *i, bx_bool = 1);
   BX_SMF void FPU_check_pending_exceptions(void);
   BX_SMF void FPU_update_last_instruction(bxInstruction_c *i);
-  BX_SMF void FPU_stack_underflow(int stnr, int pop_stack = 0);
-  BX_SMF void FPU_stack_overflow(void);
-  BX_SMF unsigned FPU_exception(unsigned exception, bx_bool = 0);
+  BX_SMF void FPU_stack_underflow(bxInstruction_c *i, int stnr, int pop_stack = 0);
+  BX_SMF void FPU_stack_overflow(bxInstruction_c *i);
+  BX_SMF unsigned FPU_exception(bxInstruction_c *i, unsigned exception, bx_bool = 0);
   BX_SMF bx_address fpu_save_environment(bxInstruction_c *i);
   BX_SMF bx_address fpu_load_environment(bxInstruction_c *i);
   BX_SMF Bit8u pack_FPU_TW(Bit16u tag_word);

@@ -30,7 +30,7 @@
 
 #include "softfloat-specialize.h"
 
-void BX_CPU_C::FPU_stack_overflow(void)
+void BX_CPU_C::FPU_stack_overflow(bxInstruction_c *i)
 {
   /* The masked response */
   if (BX_CPU_THIS_PTR the_i387.is_IA_masked())
@@ -38,10 +38,10 @@ void BX_CPU_C::FPU_stack_overflow(void)
     BX_CPU_THIS_PTR the_i387.FPU_push();
     BX_WRITE_FPU_REG(floatx80_default_nan, 0);
   }
-  FPU_exception(FPU_EX_Stack_Overflow);
+  FPU_exception(i, FPU_EX_Stack_Overflow);
 }
 
-void BX_CPU_C::FPU_stack_underflow(int stnr, int pop_stack)
+void BX_CPU_C::FPU_stack_underflow(bxInstruction_c *i, int stnr, int pop_stack)
 {
   /* The masked response */
   if (BX_CPU_THIS_PTR the_i387.is_IA_masked())
@@ -50,11 +50,11 @@ void BX_CPU_C::FPU_stack_underflow(int stnr, int pop_stack)
     if (pop_stack)
         BX_CPU_THIS_PTR the_i387.FPU_pop();
   }
-  FPU_exception(FPU_EX_Stack_Underflow);
+  FPU_exception(i, FPU_EX_Stack_Underflow);
 }
 
 /* Returns unmasked exceptions if occured */
-unsigned BX_CPU_C::FPU_exception(unsigned exception, bx_bool is_store)
+unsigned BX_CPU_C::FPU_exception(bxInstruction_c *i, unsigned exception, bx_bool is_store)
 {
   /* Extract only the bits which we use to set the status word */
   exception &= (FPU_SW_Exceptions_Mask);
@@ -67,8 +67,21 @@ unsigned BX_CPU_C::FPU_exception(unsigned exception, bx_bool is_store)
       unmasked &= (FPU_EX_Invalid | FPU_EX_Zero_Div);
 
   /* Set summary bits iff exception isn't masked */
-  if (unmasked)
+  if (unmasked) {
     FPU_PARTIAL_STATUS |= (FPU_SW_Summary | FPU_SW_Backward);
+
+    // when FOPCODE deprecation is set, FOPCODE is updated only when unmasked x87 exception occurs
+    if (is_cpu_extension_supported(BX_ISA_FOPCODE_DEPRECATION))
+      BX_CPU_THIS_PTR the_i387.foo = i->foo();
+
+    // when FOPCODE deprecation is set, FCS/FDP are updated only when unmasked x87 exception occurs
+    if (is_cpu_extension_supported(BX_ISA_FDP_DEPRECATION)) {
+      if (! i->modC0()) {
+        BX_CPU_THIS_PTR the_i387.fds = BX_CPU_THIS_PTR sregs[i->seg()].selector.value;
+        BX_CPU_THIS_PTR the_i387.fdp = RMAddr(i);
+      }
+    }
+  }
 
   if (exception & FPU_EX_Invalid) {
      // FPU_EX_Invalid cannot come with any other exception but x87 stack fault

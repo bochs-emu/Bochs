@@ -43,13 +43,19 @@ void BX_CPU_C::prepareFPU(bxInstruction_c *i, bx_bool check_pending_exceptions)
 
 void BX_CPU_C::FPU_update_last_instruction(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR the_i387.foo = i->foo();
+  // when FOPCODE deprecation is set, FOPCODE is updated only when unmasked x87 exception occurs
+  if (! is_cpu_extension_supported(BX_ISA_FOPCODE_DEPRECATION))
+    BX_CPU_THIS_PTR the_i387.foo = i->foo();
+
   BX_CPU_THIS_PTR the_i387.fcs = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
   BX_CPU_THIS_PTR the_i387.fip = BX_CPU_THIS_PTR prev_rip;
 
-  if (! i->modC0()) {
-     BX_CPU_THIS_PTR the_i387.fds = BX_CPU_THIS_PTR sregs[i->seg()].selector.value;
-     BX_CPU_THIS_PTR the_i387.fdp = RMAddr(i);
+  // when FOPCODE deprecation is set, FCS/FDP are updated only when unmasked x87 exception occurs
+  if (! is_cpu_extension_supported(BX_ISA_FDP_DEPRECATION)) {
+    if (! i->modC0()) {
+      BX_CPU_THIS_PTR the_i387.fds = BX_CPU_THIS_PTR sregs[i->seg()].selector.value;
+      BX_CPU_THIS_PTR the_i387.fdp = RMAddr(i);
+    }
   }
 }
 
