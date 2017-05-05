@@ -103,6 +103,8 @@ static HANDLE workerThread = 0;
 static DWORD workerThreadID = 0;
 static int mouse_buttons = 3;
 static bx_bool win32_nokeyrepeat = 0;
+static bx_bool win32_traphotkeys = 0;
+HHOOK hKeyboardHook;
 
 // Graphics screen stuff
 static unsigned x_tilesize = 0;
@@ -206,7 +208,6 @@ void create_vga_font(void);
 void DrawBitmap(HDC, HBITMAP, int, int, int, int, int, int, DWORD, unsigned char);
 void updateUpdated(int,int,int,int);
 static void win32_toolbar_click(int x);
-
 
 Bit32u win32_to_bx_key[2][0x100] =
 {
@@ -473,6 +474,47 @@ Bit32u win32_to_bx_key[2][0x100] =
 
 /* Macro to convert WM_ button state to BX button state */
 
+void gen_key_event(Bit32u key, Bit32u press_release)
+{
+  EnterCriticalSection(&stInfo.keyCS);
+  enq_key_event(key, press_release);
+  LeaveCriticalSection(&stInfo.keyCS);
+}
+
+LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam )
+{
+  if (nCode < 0 || nCode != HC_ACTION || (!mouseCaptureMode && !fullscreenMode))
+    return CallNextHookEx(hKeyboardHook, nCode, wParam, lParam); 
+
+  KBDLLHOOKSTRUCT* p = (KBDLLHOOKSTRUCT*)lParam;
+  Bit32u press_release = (p->flags & LLKHF_UP) ? BX_KEY_RELEASED : BX_KEY_PRESSED;
+  BOOL bAltKeyDown = (p->flags & LLKHF_ALTDOWN);
+  BOOL bControlKeyDown = GetAsyncKeyState(VK_CONTROL) >> ((sizeof(SHORT) * 8) - 1); //checks ctrl key pressed
+
+  if (p->vkCode == VK_TAB && bAltKeyDown) {
+    gen_key_event(p->scanCode, press_release);
+    return 1; //disable alt-tab
+  }
+  if (p->vkCode == VK_SPACE && bAltKeyDown) {
+    gen_key_event(p->scanCode, press_release);
+    return 1; //disable alt-space
+  }
+  if ((p->vkCode == VK_LWIN) || (p->vkCode == VK_RWIN)) {
+    gen_key_event(p->vkCode | 0x100, press_release);
+    return 1;//disable windows keys
+  }
+  if (p->vkCode == VK_ESCAPE && bAltKeyDown) {
+    gen_key_event(p->scanCode, press_release);
+    return 1;//disable alt-escape
+  }
+  if (p->vkCode == VK_ESCAPE && bControlKeyDown) {
+    gen_key_event(p->scanCode, press_release);
+    return 1; //disable ctrl-escape
+  }
+
+  return CallNextHookEx(hKeyboardHook, nCode, wParam, lParam);
+}
+
 #if BX_SHOW_IPS
 VOID CALLBACK MyTimer(HWND,UINT,UINT,DWORD);
 #endif
@@ -614,6 +656,9 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
       if (!strcmp(argv[i], "nokeyrepeat")) {
         BX_INFO(("disabled host keyboard repeat"));
         win32_nokeyrepeat = 1;
+      } else if (!strcmp(argv[i], "traphotkeys")) {
+        BX_INFO(("trap system hotkeys for Bochs window"));
+        win32_traphotkeys = 1;
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
       } else if (!strcmp(argv[i], "gui_debug")) {
         if (gui_ci) {
@@ -999,6 +1044,9 @@ LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
   switch (iMsg) {
   case WM_CREATE:
     SetStatusText(0, szMouseEnable, TRUE);
+    if (win32_traphotkeys) {
+      hKeyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, GetModuleHandle(NULL), 0);
+    }
     return 0;
 
   case WM_COMMAND:
