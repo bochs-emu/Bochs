@@ -88,7 +88,10 @@
 #display_library: sdl2, options="fullscreen" # startup in fullscreen mode
 #display_library: term
 #display_library: vncsrv
-#display_library: win32
+# "traphotkeys" - system hotkeys not handled by host OS, but sent to guest
+#                 (win32 in mouse capture and fullscreen mode: alt-tab, win,
+#                 alt-space, alt-esc, ctrl-esc)
+#display_library: win32, options="traphotkeys"
 #display_library: wx
 #display_library: x
 
