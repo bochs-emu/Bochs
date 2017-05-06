@@ -1331,12 +1331,13 @@ void register_w(Bit32u offset, Bit32u data)
     return;
   }
   if ((FBIINIT7_CMDFIFO_ENABLE(v->reg[fbiInit7].u)) &&
-      ((offset & 0x200000) > 0)) {
+      ((offset & 0x80000) > 0)) {
     if (!(v->regaccess[regnum] & REGISTER_WRITETHRU)) {
       BX_ERROR(("Invalid attempt to write %s", v->regnames[regnum]));
       return;
     }
     BX_ERROR(("Writing to CMDFIFO not supported yet"));
+    return;
   }
 
   switch (regnum) {
@@ -2382,7 +2383,7 @@ Bit32u register_r(Bit32u offset)
     return 0;
   }
   if ((FBIINIT7_CMDFIFO_ENABLE(v->reg[fbiInit7].u)) &&
-      ((offset & 0x200000) > 0)) {
+      ((offset & 0x80000) > 0)) {
     BX_ERROR(("Invalid attempt to read from CMDFIFO"));
   }
 

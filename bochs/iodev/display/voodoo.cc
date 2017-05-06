@@ -624,9 +624,7 @@ Bit32u bx_voodoo_c::get_retrace(bx_bool hv)
       Bit32u time_in_line = (Bit32u)(time_in_frame % BX_VOODOO_THIS s.vdraw.htotal_usec);
       Bit32u hpixel = (Bit32u)(time_in_line * BX_VOODOO_THIS s.vdraw.htime_to_pixel);
       if (time_in_line < BX_VOODOO_THIS s.vdraw.hsync_usec) {
-// This code seems to be okay, but Voodoo driver gets confused in next stage
-// and finally causes a segfault.
-//        value |= ((hpixel + 1) << 16);
+        value |= ((hpixel + 1) << 16);
       }
     }
     return value;
