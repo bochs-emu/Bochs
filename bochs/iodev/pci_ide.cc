@@ -275,8 +275,7 @@ void bx_pci_ide_c::timer()
       }
     };
     if (count > 0) {
-      BX_PIDE_THIS s.bmdma[channel].status &= ~0x01;
-      BX_PIDE_THIS s.bmdma[channel].status |= 0x06;
+      DEV_hd_bmdma_complete(channel);
       return;
     } else {
       DEV_MEM_WRITE_PHYSICAL_DMA(prd.addr, size, BX_PIDE_THIS s.bmdma[channel].buffer_idx);
@@ -295,9 +294,8 @@ void bx_pci_ide_c::timer()
         break;
       }
     };
-    if (count > 511) {
-      BX_PIDE_THIS s.bmdma[channel].status &= ~0x01;
-      BX_PIDE_THIS s.bmdma[channel].status |= 0x06;
+    if (count >= 512) {
+      DEV_hd_bmdma_complete(channel);
       return;
     }
   }

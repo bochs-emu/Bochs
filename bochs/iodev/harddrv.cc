@@ -3296,6 +3296,8 @@ bx_bool bx_hard_drive_c::bmdma_read_sector(Bit8u channel, Bit8u *buffer, Bit32u 
   if ((controller->current_command == 0xC8) ||
       (controller->current_command == 0x25)) {
     *sector_size = 512;
+    if (controller->num_sectors == 0)
+      return 0;
     if (!ide_read_sector(channel, buffer, 512)) {
       return 0;
     }
@@ -3354,9 +3356,11 @@ bx_bool bx_hard_drive_c::bmdma_write_sector(Bit8u channel, Bit8u *buffer)
   if ((controller->current_command != 0xCA) &&
       (controller->current_command != 0x35)) {
     BX_ERROR(("DMA write not active"));
-    command_aborted (channel, controller->current_command);
+    command_aborted(channel, controller->current_command);
     return 0;
   }
+  if (controller->num_sectors == 0)
+    return 0;
   if (!ide_write_sector(channel, buffer, 512)) {
     return 0;
   }
