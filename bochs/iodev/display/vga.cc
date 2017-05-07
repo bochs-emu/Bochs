@@ -1217,6 +1217,7 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
               }
               bx_gui->dimension_update(BX_VGA_THIS vbe.xres, BX_VGA_THIS vbe.yres, 0, 0, depth);
               BX_VGA_THIS s.last_bpp = depth;
+              BX_VGA_THIS s.last_fh = 0;
             } else {
               BX_VGA_THIS s.plane_shift = VBE_DISPI_4BPP_PLANE_SHIFT;
               BX_VGA_THIS s.plane_offset = (BX_VGA_THIS vbe.bank << 16);

@@ -1302,7 +1302,7 @@ void bx_vgacore_c::set_override(bx_bool enabled, void *dev)
 #endif
   if (!enabled) {
     bx_gui->dimension_update(BX_VGA_THIS s.last_xres, BX_VGA_THIS s.last_yres,
-                             BX_VGA_THIS s.last_fw, BX_VGA_THIS s.last_fh, BX_VGA_THIS s.last_bpp);
+                             BX_VGA_THIS s.last_fh, BX_VGA_THIS s.last_fw, BX_VGA_THIS s.last_bpp);
     BX_VGA_THIS redraw_area(0, 0, BX_VGA_THIS s.last_xres, BX_VGA_THIS s.last_yres);
   }
 }

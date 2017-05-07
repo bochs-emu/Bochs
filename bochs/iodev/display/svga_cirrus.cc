@@ -1101,6 +1101,7 @@ void bx_svga_cirrus_c::svga_modeupdate(void)
   BX_CIRRUS_THIS s.last_xres = iWidth;
   BX_CIRRUS_THIS s.last_yres = iHeight;
   BX_CIRRUS_THIS s.last_bpp = iDispBpp;
+  BX_CIRRUS_THIS s.last_fh = 0;
 }
 
 void bx_svga_cirrus_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *info)
