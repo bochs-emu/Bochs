@@ -464,7 +464,7 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
     unsigned src = (unsigned) BxOpcodesTable[ia_opcode].src[n];
     unsigned src_type = src >> 3;
     unsigned src_index = src & 0x7;
-    if (! src_type && src != BX_SRC_RM && src != BX_SRC_EVEX_RM) continue;
+    if (! src_type && src_index != BX_SRC_RM && src_index != BX_SRC_EVEX_RM) continue;
     if (srcs_used++ > 0)
       disbufptr = dis_sprintf(disbufptr, ", ");
 
