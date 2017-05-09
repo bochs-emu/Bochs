@@ -288,15 +288,14 @@ const Bit8u OP_Jw = BX_FORM_SRC(BX_IMM_BrOff16, BX_SRC_NONE);
 const Bit8u OP_Jd = BX_FORM_SRC(BX_IMM_BrOff32, BX_SRC_NONE);
 const Bit8u OP_Jq = BX_FORM_SRC(BX_IMM_BrOff64, BX_SRC_NONE);
 
-const Bit8u OP_M  = BX_SRC_RM;
-const Bit8u OP_Mb = BX_SRC_RM;
-const Bit8u OP_Mw = BX_SRC_RM;
-const Bit8u OP_Md = BX_SRC_RM;
-const Bit8u OP_Mq = BX_SRC_RM;
-const Bit8u OP_Mp = BX_SRC_RM;
+const Bit8u OP_M  = BX_FORM_SRC(BX_NO_REGISTER, BX_SRC_RM);
 const Bit8u OP_Mt = BX_FORM_SRC(BX_FPU_REG, BX_SRC_RM);
-
 const Bit8u OP_Mdq = BX_FORM_SRC(BX_VMM_REG, BX_SRC_RM);
+
+const Bit8u OP_Mb = OP_Eb;
+const Bit8u OP_Mw = OP_Ew;
+const Bit8u OP_Md = OP_Ed;
+const Bit8u OP_Mq = OP_Eq;
 
 const Bit8u OP_Pq = BX_FORM_SRC(BX_MMX_REG, BX_SRC_NNN);
 const Bit8u OP_Qq = BX_FORM_SRC(BX_MMX_REG, BX_SRC_RM);
