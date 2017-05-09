@@ -1327,17 +1327,26 @@ void register_w(Bit32u offset, Bit32u data)
 
   /* first make sure this register is writable */
   if (!(v->regaccess[regnum] & REGISTER_WRITE)) {
-    BX_ERROR(("Invalid attempt to write %s", v->regnames[regnum]));
+    BX_DEBUG(("Invalid attempt to write %s", v->regnames[regnum]));
     return;
   }
-  if ((FBIINIT7_CMDFIFO_ENABLE(v->reg[fbiInit7].u)) &&
-      ((offset & 0x80000) > 0)) {
-    if (!(v->regaccess[regnum] & REGISTER_WRITETHRU)) {
-      BX_ERROR(("Invalid attempt to write %s", v->regnames[regnum]));
+  if (FBIINIT7_CMDFIFO_ENABLE(v->reg[fbiInit7].u)) {
+    if (!FBIINIT7_CMDFIFO_MEMORY_STORE(v->reg[fbiInit7].u)) {
+      BX_ERROR(("CMDFIFO-to-FIFO mode not supported yet"));
+    } else if ((offset & 0x80000) > 0) {
+      Bit32u fbi_offset = (v->fbi.cmdfifo[0].base + ((offset & 0xffff) << 2)) & v->fbi.mask;
+      BX_ERROR(("Writing to CMDFIFO has no effect yet: FBI offset=0x%08x, data=0x%08x",
+                fbi_offset, data));
+      *(Bit32u*)&v->fbi.ram[fbi_offset] = data;
       return;
+    } else {
+      if (v->regaccess[regnum] & REGISTER_WRITETHRU) {
+        BX_DEBUG(("Writing to register %s in CMDFIFO mode", v->regnames[regnum]));
+      } else {
+        BX_DEBUG(("Invalid attempt to write %s in CMDFIFO mode", v->regnames[regnum]));
+        return;
+      }
     }
-    BX_ERROR(("Writing to CMDFIFO not supported yet"));
-    return;
   }
 
   switch (regnum) {
@@ -1856,6 +1865,16 @@ void register_w(Bit32u offset, Bit32u data)
       /* send tmu config data to the frame buffer */
       v->send_config = TREXINIT_SEND_TMU_CONFIG(data);
       goto default_case;
+      break;
+
+    case cmdFifoBaseAddr:
+      v->fbi.cmdfifo[0].base = (data & 0x3ff) << 12;
+      v->fbi.cmdfifo[0].end = ((data >> 16) & 0x3ff) << 12;
+      break;
+
+    case intrCtrl:
+    case userIntrCMD:
+      BX_ERROR(("Writing to register %s not supported yet", v->regnames[regnum]));
       break;
 
     /* these registers are referenced in the renderer; we must wait for pending work before changing */
@@ -2379,12 +2398,13 @@ Bit32u register_r(Bit32u offset)
 
   /* first make sure this register is readable */
   if (!(v->regaccess[regnum] & REGISTER_READ)) {
-    BX_ERROR(("Invalid attempt to read %s", v->regnames[regnum]));
+    BX_DEBUG(("Invalid attempt to read %s", v->regnames[regnum]));
     return 0;
   }
   if ((FBIINIT7_CMDFIFO_ENABLE(v->reg[fbiInit7].u)) &&
       ((offset & 0x80000) > 0)) {
-    BX_ERROR(("Invalid attempt to read from CMDFIFO"));
+    BX_DEBUG(("Invalid attempt to read from CMDFIFO"));
+    return 0;
   }
 
   Bit32u result;
@@ -2479,6 +2499,10 @@ Bit32u register_r(Bit32u offset)
 
     case hvRetrace:
       result = Voodoo_get_retrace(1);
+      break;
+
+    case cmdFifoBaseAddr:
+      result = (v->fbi.cmdfifo[0].base >> 12) | ((v->fbi.cmdfifo[0].end >> 12) << 16);
       break;
   }
 
