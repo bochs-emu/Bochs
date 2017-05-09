@@ -167,9 +167,61 @@ char *resolve_memref(char *disbufptr, const bxInstruction_c *i, const char *regn
   return disbufptr;
 }
 
-// disasembly of memory reference
-char *resolve_memref(char *disbufptr, const bxInstruction_c *i, unsigned src_index)
+char *resolve_memsize(char *disbufptr, const bxInstruction_c *i, unsigned src_index, unsigned src_type)
 {
+  if (src_index == BX_SRC_RM) {
+    switch(src_type) {
+    case BX_GPR8:
+    case BX_GPR8_32:      // 8-bit  memory ref but 32-bit GPR
+      disbufptr = dis_sprintf(disbufptr, "byte ptr ");
+      break;
+
+    case BX_GPR16:
+    case BX_GPR16_32:     // 16-bit memory ref but 32-bit GPR
+    case BX_SEGREG:
+      disbufptr = dis_sprintf(disbufptr, "word ptr ");
+      break;
+
+    case BX_GPR32:
+      disbufptr = dis_sprintf(disbufptr, "dword ptr ");
+      break;
+
+#if BX_SUPPORT_X86_64
+    case BX_GPR64:
+#endif
+    case BX_MMX_REG:
+#if BX_SUPPORT_EVEX
+    case BX_KMASK_REG:
+#endif
+      disbufptr = dis_sprintf(disbufptr, "qword ptr ");
+      break;
+
+    case BX_FPU_REG:
+      disbufptr = dis_sprintf(disbufptr, "tbyte ptr ");
+      break;
+
+    case BX_VMM_REG:
+#if BX_SUPPORT_AVX
+      if (i->getVL() > BX_NO_VL)
+        disbufptr = dis_sprintf(disbufptr, "%sword ptr ", intel_vector_reg_name[i->getVL() - 1]);
+      else
+#endif
+        disbufptr = dis_sprintf(disbufptr, "xmmword ptr ");
+      break;
+
+    default:
+      break;
+    }
+  }
+
+  return disbufptr;
+}
+
+// disasembly of memory reference
+char *resolve_memref(char *disbufptr, const bxInstruction_c *i, unsigned src_index, unsigned src_type)
+{
+  disbufptr = resolve_memsize(disbufptr, i, src_index, src_type);
+
   // seg:[base + index*scale + disp]
   disbufptr = dis_sprintf(disbufptr, "%s:", intel_segment_name[i->seg()]);
   if (i->as64L()) {
@@ -469,7 +521,7 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
       disbufptr = dis_sprintf(disbufptr, ", ");
 
     if (! i->modC0() && (src_index == BX_SRC_RM || src_index == BX_SRC_EVEX_RM || src_index == BX_SRC_VSIB)) {
-      disbufptr = resolve_memref(disbufptr, i, src_index);
+      disbufptr = resolve_memref(disbufptr, i, src_index, src_type);
 #if BX_SUPPORT_EVEX
       // EVEX.z is ignored for memory destination forms
       if (n == 0 && (src_index == BX_SRC_EVEX_RM || src_index == BX_SRC_VSIB || src_type == BX_VMM_REG) && i->opmask()) {
