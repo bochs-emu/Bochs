@@ -186,9 +186,7 @@ char *resolve_memsize(char *disbufptr, const bxInstruction_c *i, unsigned src_in
       disbufptr = dis_sprintf(disbufptr, "dword ptr ");
       break;
 
-#if BX_SUPPORT_X86_64
     case BX_GPR64:
-#endif
     case BX_MMX_REG:
 #if BX_SUPPORT_EVEX
     case BX_KMASK_REG:
@@ -209,7 +207,7 @@ char *resolve_memsize(char *disbufptr, const bxInstruction_c *i, unsigned src_in
         disbufptr = dis_sprintf(disbufptr, "xmmword ptr ");
       break;
 
-    default:
+    default: 
       break;
     }
   }
