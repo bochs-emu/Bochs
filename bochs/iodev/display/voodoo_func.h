@@ -1303,6 +1303,14 @@ void dacdata_r(dac_state *d, Bit8u regnum)
   d->read_result = result;
 }
 
+void cmdfifo_put(Bit32u fbi_offset, Bit32u data)
+{
+  BX_ERROR(("Writing to CMDFIFO has no effect yet: FBI offset=0x%08x, data=0x%08x",
+            fbi_offset, data));
+  *(Bit32u*)&v->fbi.ram[fbi_offset] = data;
+  v->fbi.cmdfifo[0].depth++;
+}
+
 voodoo_reg reg;
 
 void register_w(Bit32u offset, Bit32u data)
@@ -1335,9 +1343,7 @@ void register_w(Bit32u offset, Bit32u data)
       BX_ERROR(("CMDFIFO-to-FIFO mode not supported yet"));
     } else if ((offset & 0x80000) > 0) {
       Bit32u fbi_offset = (v->fbi.cmdfifo[0].base + ((offset & 0xffff) << 2)) & v->fbi.mask;
-      BX_ERROR(("Writing to CMDFIFO has no effect yet: FBI offset=0x%08x, data=0x%08x",
-                fbi_offset, data));
-      *(Bit32u*)&v->fbi.ram[fbi_offset] = data;
+      cmdfifo_put(fbi_offset, data);
       return;
     } else {
       if (v->regaccess[regnum] & REGISTER_WRITETHRU) {
@@ -1744,6 +1750,9 @@ void register_w(Bit32u offset, Bit32u data)
 
       if (v->type <= VOODOO_2 && (chips & 1) && INITEN_ENABLE_HW_INIT(v->pci.init_enable))
       {
+        if ((v->type == VOODOO_2) && (regnum == fbiInit7)) {
+          v->fbi.cmdfifo[0].enable = FBIINIT7_CMDFIFO_ENABLE(data);
+        }
         v->reg[regnum].u = data;
         recompute_video_memory(v);
         v->fbi.video_changed = 1;
@@ -1872,8 +1881,26 @@ void register_w(Bit32u offset, Bit32u data)
       v->fbi.cmdfifo[0].end = ((data >> 16) & 0x3ff) << 12;
       break;
 
+    case cmdFifoRdPtr:
+      v->fbi.cmdfifo[0].rdptr = data;
+      break;
+
+    case cmdFifoDepth:
+      v->fbi.cmdfifo[0].depth = data & 0xffff;
+      break;
+
+    case cmdFifoAMin:
+      v->fbi.cmdfifo[0].amin = data;
+      break;
+
+    case cmdFifoAMax:
+      v->fbi.cmdfifo[0].amax = data;
+      break;
+
     case intrCtrl:
     case userIntrCMD:
+    case bltSize:
+    case bltCommand:
       BX_ERROR(("Writing to register %s not supported yet", v->regnames[regnum]));
       break;
 
@@ -2503,6 +2530,22 @@ Bit32u register_r(Bit32u offset)
 
     case cmdFifoBaseAddr:
       result = (v->fbi.cmdfifo[0].base >> 12) | ((v->fbi.cmdfifo[0].end >> 12) << 16);
+      break;
+
+    case cmdFifoRdPtr:
+      result = v->fbi.cmdfifo[0].rdptr;
+      break;
+
+    case cmdFifoDepth:
+      result = v->fbi.cmdfifo[0].depth;
+      break;
+
+    case cmdFifoAMin:
+      result = v->fbi.cmdfifo[0].amin;
+      break;
+
+    case cmdFifoAMax:
+      result = v->fbi.cmdfifo[0].amax;
       break;
   }
 

@@ -1455,7 +1455,7 @@ struct _fifo_state
 typedef struct _cmdfifo_info cmdfifo_info;
 struct _cmdfifo_info
 {
-  Bit8u   enable;       /* enabled? */
+  bx_bool enable;       /* enabled? */
   Bit8u   count_holes;  /* count holes? */
   Bit32u  base;         /* base address in framebuffer RAM */
   Bit32u  end;          /* end address in framebuffer RAM */

@@ -207,6 +207,7 @@ void bx_voodoo_c::init(void)
   BX_VOODOO_THIS s.vdraw.gui_update_pending = 0;
 
   v = new voodoo_state;
+  memset(v, 0, sizeof(voodoo_state));
   BX_VOODOO_THIS s.model = (Bit8u)SIM->get_param_enum("model", base)->get();
   if (BX_VOODOO_THIS s.model == VOODOO_2) {
     init_pci_conf(0x121a, 0x0002, 0x02, 0x038000, 0x00);
@@ -326,6 +327,18 @@ void bx_voodoo_c::register_state(void)
   new bx_shadow_num_c(fbi, "dady", &v->fbi.dady);
   new bx_shadow_num_c(fbi, "dzdy", &v->fbi.dzdy);
   new bx_shadow_num_c(fbi, "dwdy", &v->fbi.dwdy);
+  bx_list_c *cmdfifo = new bx_list_c(fbi, "cmdfifo", "");
+  for (i = 0; i < 2; i++) {
+    sprintf(name, "%d", i);
+    bx_list_c *num = new bx_list_c(cmdfifo, name, "");
+    new bx_shadow_bool_c(num, "enable", &v->fbi.cmdfifo[i].enable, BASE_HEX);
+    new bx_shadow_num_c(num, "base", &v->fbi.cmdfifo[i].base, BASE_HEX);
+    new bx_shadow_num_c(num, "end", &v->fbi.cmdfifo[i].end, BASE_HEX);
+    new bx_shadow_num_c(num, "rdptr", &v->fbi.cmdfifo[i].rdptr, BASE_HEX);
+    new bx_shadow_num_c(num, "depth", &v->fbi.cmdfifo[i].depth);
+    new bx_shadow_num_c(num, "amin", &v->fbi.cmdfifo[i].amin, BASE_HEX);
+    new bx_shadow_num_c(num, "amax", &v->fbi.cmdfifo[i].amax, BASE_HEX);
+  }
   bx_list_c *fogblend = new bx_list_c(fbi, "fogblend", "");
   for (i = 0; i < 64; i++) {
     sprintf(name, "%d", i);
