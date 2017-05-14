@@ -60,6 +60,11 @@ Bit32u voodoo_last_msg = 255;
 
 #define MODIFY_PIXEL(VV)
 
+/* cmdfifo thread (Voodoo2) */
+BX_THREAD_ID(cmdfifo_threadID);
+int cmdfifo_control = 0;
+BX_MUTEX(cmdfifo_mutex);
+
 /* fast dither lookup */
 static Bit8u dither4_lookup[256*16*2];
 static Bit8u dither2_lookup[256*16*2];
@@ -1303,57 +1308,17 @@ void dacdata_r(dac_state *d, Bit8u regnum)
   d->read_result = result;
 }
 
-void cmdfifo_put(Bit32u fbi_offset, Bit32u data)
-{
-  BX_ERROR(("Writing to CMDFIFO has no effect yet: FBI offset=0x%08x, data=0x%08x",
-            fbi_offset, data));
-  *(Bit32u*)&v->fbi.ram[fbi_offset] = data;
-  v->fbi.cmdfifo[0].depth++;
-}
-
-voodoo_reg reg;
-
-void register_w(Bit32u offset, Bit32u data)
+void register_w(Bit32u offset, Bit32u data, bx_bool log)
 {
   Bit32u regnum  = (offset) & 0xff;
   Bit32u chips   = (offset>>8) & 0xf;
-  reg.u = data;
-
   Bit64s data64;
-
-  BX_DEBUG(("write chip 0x%x reg 0x%x value 0x%08x(%s)", chips, regnum<<2, data, voodoo_reg_name[regnum]));
-  voodoo_last_msg=regnum;
 
   if (chips == 0)
     chips = 0xf;
 
-  /* the first 64 registers can be aliased differently */
-  if ((offset & 0x800c0) == 0x80000 && v->alt_regmap)
-    regnum = register_alias_map[offset & 0x3f];
-  else
-    regnum = offset & 0xff;
-
-  /* first make sure this register is writable */
-  if (!(v->regaccess[regnum] & REGISTER_WRITE)) {
-    BX_DEBUG(("Invalid attempt to write %s", v->regnames[regnum]));
-    return;
-  }
-  if (FBIINIT7_CMDFIFO_ENABLE(v->reg[fbiInit7].u)) {
-    if (!FBIINIT7_CMDFIFO_MEMORY_STORE(v->reg[fbiInit7].u)) {
-      BX_ERROR(("CMDFIFO-to-FIFO mode not supported yet"));
-    } else if ((offset & 0x80000) > 0) {
-      Bit32u fbi_offset = (v->fbi.cmdfifo[0].base + ((offset & 0xffff) << 2)) & v->fbi.mask;
-      cmdfifo_put(fbi_offset, data);
-      return;
-    } else {
-      if (v->regaccess[regnum] & REGISTER_WRITETHRU) {
-        BX_DEBUG(("Writing to register %s in CMDFIFO mode", v->regnames[regnum]));
-      } else {
-        BX_DEBUG(("Invalid attempt to write %s in CMDFIFO mode", v->regnames[regnum]));
-        return;
-      }
-    }
-  }
+  if (log)
+    BX_DEBUG(("write chip 0x%x reg 0x%x value 0x%08x(%s)", chips, regnum<<2, data, voodoo_reg_name[regnum]));
 
   switch (regnum) {
     /* Vertex data is 12.4 formatted fixed point */
@@ -1663,113 +1628,6 @@ void register_w(Bit32u offset, Bit32u data)
           BX_DEBUG(("clutData ignored because video timing reset = 1"));
       }
       break;
-    /* external DAC access -- Voodoo/Voodoo2 only */
-    case dacData:
-      if (v->type <= VOODOO_2 /*&& (chips & 1)*/)
-      {
-        poly_wait(v->poly, v->regnames[regnum]);
-        if (!(data & 0x800))
-          dacdata_w(&v->dac, (data >> 8) & 7, data & 0xff);
-        else
-          dacdata_r(&v->dac, (data >> 8) & 7);
-      }
-      break;
-
-    /* vertical sync rate -- Voodoo/Voodoo2 only */
-    case hSync:
-    case vSync:
-    case backPorch:
-    case videoDimensions:
-      if (v->type <= VOODOO_2 && (chips & 1))
-      {
-        poly_wait(v->poly, v->regnames[regnum]);
-        v->reg[regnum].u = data;
-        if (v->reg[hSync].u != 0 && v->reg[vSync].u != 0 && v->reg[videoDimensions].u != 0)
-        {
-          int htotal = ((v->reg[hSync].u >> 16) & 0x3ff) + 1 + (v->reg[hSync].u & 0xff) + 1;
-          int vtotal = ((v->reg[vSync].u >> 16) & 0xfff) + (v->reg[vSync].u & 0xfff);
-          int hvis = v->reg[videoDimensions].u & 0x3ff;
-          int vvis = (v->reg[videoDimensions].u >> 16) & 0x3ff;
-          int hbp = (v->reg[backPorch].u & 0xff) + 2;
-          int vbp = (v->reg[backPorch].u >> 16) & 0xff;
-          rectangle visarea;
-
-          /* create a new visarea */
-          visarea.min_x = hbp;
-          visarea.max_x = hbp + hvis - 1;
-          visarea.min_y = vbp;
-          visarea.max_y = vbp + vvis - 1;
-
-          /* keep within bounds */
-          visarea.max_x = MIN(visarea.max_x, htotal - 1);
-          visarea.max_y = MIN(visarea.max_y, vtotal - 1);
-
-          BX_DEBUG(("hSync=%08X  vSync=%08X  backPorch=%08X  videoDimensions=%08X",
-            v->reg[hSync].u, v->reg[vSync].u, v->reg[backPorch].u, v->reg[videoDimensions].u));
-          BX_DEBUG(("Horiz: %d-%d (%d total)  Vert: %d-%d (%d total) -- ", visarea.min_x, visarea.max_x, htotal, visarea.min_y, visarea.max_y, vtotal));
-
-          /* configure the new framebuffer info */
-          v->fbi.width = hvis + 1;
-          v->fbi.height = vvis;
-          v->fbi.xoffs = hbp;
-          v->fbi.yoffs = vbp;
-          v->fbi.vsyncscan = (v->reg[vSync].u >> 16) & 0xfff;
-
-          /* if changing dimensions, update video memory layout */
-          if (regnum == videoDimensions)
-            recompute_video_memory(v);
-
-          Voodoo_UpdateScreenStart();
-        }
-      }
-      break;
-
-    /* fbiInit0 can only be written if initEnable says we can -- Voodoo/Voodoo2 only */
-    case fbiInit0:
-      poly_wait(v->poly, v->regnames[regnum]);
-      if (v->type <= VOODOO_2 && (chips & 1) && INITEN_ENABLE_HW_INIT(v->pci.init_enable)) {
-        Voodoo_Output_Enable(data & 1);
-        v->reg[fbiInit0].u = data;
-        if (FBIINIT0_GRAPHICS_RESET(data))
-          soft_reset(v);
-        if (FBIINIT0_FIFO_RESET(data))
-          fifo_reset(&v->pci.fifo);
-        recompute_video_memory(v);
-      }
-      break;
-
-    /* fbiInitX can only be written if initEnable says we can -- Voodoo/Voodoo2 only */
-    /* most of these affect memory layout, so always recompute that when done */
-    case fbiInit1:
-    case fbiInit2:
-    case fbiInit4:
-    case fbiInit5:
-    case fbiInit6:
-    case fbiInit7:
-      poly_wait(v->poly, v->regnames[regnum]);
-
-      if (v->type <= VOODOO_2 && (chips & 1) && INITEN_ENABLE_HW_INIT(v->pci.init_enable))
-      {
-        if ((v->type == VOODOO_2) && (regnum == fbiInit7)) {
-          v->fbi.cmdfifo[0].enable = FBIINIT7_CMDFIFO_ENABLE(data);
-        }
-        v->reg[regnum].u = data;
-        recompute_video_memory(v);
-        v->fbi.video_changed = 1;
-      }
-      break;
-
-    case fbiInit3:
-      poly_wait(v->poly, v->regnames[regnum]);
-      if (v->type <= VOODOO_2 && (chips & 1) && INITEN_ENABLE_HW_INIT(v->pci.init_enable))
-      {
-        v->reg[regnum].u = data;
-        v->alt_regmap = FBIINIT3_TRI_REGISTER_REMAP(data);
-        v->fbi.yorigin = FBIINIT3_YORIGIN_SUBTRACT(v->reg[fbiInit3].u);
-        recompute_video_memory(v);
-      }
-      break;
-
     /* nccTable entries are processed and expanded immediately */
     case nccTable+0:
     case nccTable+1:
@@ -1876,32 +1734,23 @@ void register_w(Bit32u offset, Bit32u data)
       goto default_case;
       break;
 
-    case cmdFifoBaseAddr:
-      v->fbi.cmdfifo[0].base = (data & 0x3ff) << 12;
-      v->fbi.cmdfifo[0].end = ((data >> 16) & 0x3ff) << 12;
-      break;
-
-    case cmdFifoRdPtr:
-      v->fbi.cmdfifo[0].rdptr = data;
-      break;
-
-    case cmdFifoDepth:
-      v->fbi.cmdfifo[0].depth = data & 0xffff;
-      break;
-
-    case cmdFifoAMin:
-      v->fbi.cmdfifo[0].amin = data;
-      break;
-
-    case cmdFifoAMax:
-      v->fbi.cmdfifo[0].amax = data;
-      break;
-
-    case intrCtrl:
     case userIntrCMD:
+    case bltSrcBaseAddr:
+    case bltDstBaseAddr:
+    case bltXYStrides:
+    case bltSrcChromaRange:
+    case bltDstChromaRange:
+    case bltClipX:
+    case bltClipY:
+    case bltSrcXY:
+    case bltDstXY:
     case bltSize:
+    case bltRop:
+    case bltColor:
     case bltCommand:
+    case bltData:
       BX_ERROR(("Writing to register %s not supported yet", v->regnames[regnum]));
+      v->reg[regnum].u = data;
       break;
 
     /* these registers are referenced in the renderer; we must wait for pending work before changing */
@@ -2414,6 +2263,373 @@ nextpixel:
   return 0;
 }
 
+void cmdfifo_put(Bit32u fbi_offset, Bit32u data)
+{
+  BX_LOCK(cmdfifo_mutex);
+  *(Bit32u*)(&v->fbi.ram[fbi_offset]) = data;
+  v->fbi.cmdfifo[0].depth++;
+  BX_UNLOCK(cmdfifo_mutex);
+}
+
+Bit32u cmdfifo_get(void)
+{
+  Bit32u data;
+
+  while ((cmdfifo_control > 0) && (v->fbi.cmdfifo[0].depth == 0)) {
+    BX_MSLEEP(1);
+  }
+  BX_LOCK(cmdfifo_mutex);
+  data = *(Bit32u*)(&v->fbi.ram[v->fbi.cmdfifo[0].rdptr & v->fbi.mask]);
+  v->fbi.cmdfifo[0].rdptr += 4;
+  v->fbi.cmdfifo[0].depth--;
+  BX_UNLOCK(cmdfifo_mutex);
+  return data;
+}
+
+void cmdfifo_process(void)
+{
+  Bit32u data, mask, nwords, regaddr;
+  Bit8u type, code, nvertex, smode;
+  bx_bool inc, pcolor;
+  voodoo_reg reg;
+
+  data = cmdfifo_get();
+  type = (Bit8u)(data & 0x07);
+  switch (type) {
+    case 0:
+      code = (Bit8u)((data >> 3) & 0x07);
+      switch (code) {
+        case 0: // NOP
+          break;
+        case 3: // JMP
+          v->fbi.cmdfifo[0].rdptr = (data >> 4) & 0xfffffc;
+          break;
+        default:
+          BX_ERROR(("CMDFIFO packet type 0: unsupported code %d", code));
+      }
+      break;
+    case 1:
+      nwords = (data >> 16);
+      regaddr = (data & 0x7ff8) >> 3;
+      inc = (data >> 15) & 1;
+      while (nwords--) {
+        data = cmdfifo_get();
+        register_w(regaddr, data, 1);
+        if (inc) regaddr++;
+      }
+      break;
+    case 2:
+      BX_INFO(("CMDFIFO packet type 2: not tested yet"));
+      mask = (data >> 3);
+      regaddr = bltSrcBaseAddr;
+      while (mask) {
+        if (mask & 1) {
+          data = cmdfifo_get();
+          register_w(regaddr, data, 1);
+        }
+        regaddr++;
+        mask >>= 1;
+      }
+      break;
+    case 3:
+      BX_ERROR(("CMDFIFO packet type 3: not implemented yet"));
+      nwords = (data >> 29);
+      pcolor = (data >> 28) & 1;
+      smode = (data >> 22) & 0x3f;
+      mask = (data >> 10) & 0xff;
+      nvertex = (data >> 6) & 0x0f;
+      code = (data >> 3) & 0x07;
+      register_w(sSetupMode, (smode << 16) | mask, 1);
+      // TODO
+      while (nvertex--) {
+        reg.u = cmdfifo_get();
+        v->fbi.svert[3].x = reg.f;
+        reg.u = cmdfifo_get();
+        v->fbi.svert[3].y = reg.f;
+        if (mask & 0x01) {
+          if (pcolor) {
+            data = cmdfifo_get();
+            v->fbi.svert[3].b = (float)(data & 0xff);
+            v->fbi.svert[3].g = (float)((data >> 8) & 0xff);
+            v->fbi.svert[3].r = (float)((data >> 16) & 0xff);
+            v->fbi.svert[3].a = (float)((data >> 24) & 0xff);
+          } else {
+            reg.u = cmdfifo_get();
+            v->fbi.svert[3].r = reg.f;
+            reg.u = cmdfifo_get();
+            v->fbi.svert[3].g = reg.f;
+            reg.u = cmdfifo_get();
+            v->fbi.svert[3].b = reg.f;
+          }
+        }
+        if ((mask & 0x02) && !pcolor) {
+          reg.u = cmdfifo_get();
+          v->fbi.svert[3].a = reg.f;
+        }
+        if (mask & 0x04) {
+          reg.u = cmdfifo_get();
+          v->fbi.svert[3].z = reg.f;
+        }
+        if (mask & 0x08) {
+          reg.u = cmdfifo_get();
+          v->fbi.svert[3].wb = reg.f;
+        }
+        if (mask & 0x10) {
+          reg.u = cmdfifo_get();
+          v->fbi.svert[3].w0 = reg.f;
+        }
+        if (mask & 0x20) {
+          reg.u = cmdfifo_get();
+          v->fbi.svert[3].s0 = reg.f;
+          reg.u = cmdfifo_get();
+          v->fbi.svert[3].t0 = reg.f;
+        }
+        if (mask & 0x40) {
+          reg.u = cmdfifo_get();
+          v->fbi.svert[3].w1 = reg.f;
+        }
+        if (mask & 0x80) {
+          reg.u = cmdfifo_get();
+          v->fbi.svert[3].s1 = reg.f;
+          reg.u = cmdfifo_get();
+          v->fbi.svert[3].t1 = reg.f;
+        }
+        // TODO
+      }
+      while (nwords--) cmdfifo_get();
+      break;
+    case 4:
+      nwords = (data >> 29);
+      mask = (data >> 15) & 0x3fff;
+      regaddr = (data & 0x7ff8) >> 3;
+      while (mask) {
+        if (mask & 1) {
+          data = cmdfifo_get();
+          register_w(regaddr, data, 1);
+        }
+        regaddr++;
+        mask >>= 1;
+      }
+      while (nwords--) cmdfifo_get();
+      break;
+    case 5:
+      if ((data & 0x3fc00000) > 0) {
+        BX_ERROR(("CMDFIFO packet type 5: byte disable not supported yet"));
+      }
+      nwords = (data >> 3) & 0x7ffff;
+      regaddr = (cmdfifo_get() & 0xffffff) >> 2;
+      code = (data >> 30);
+      switch (code) {
+        case 2:
+          while (nwords--) {
+            data = cmdfifo_get();
+            lfb_w(regaddr, data, 0xffffffff);
+            regaddr++;
+          }
+          break;
+        case 3:
+          while (nwords--) {
+            data = cmdfifo_get();
+            texture_w(regaddr, data);
+            regaddr++;
+          }
+          break;
+        default:
+          BX_ERROR(("CMDFIFO packet type 5: unsupported destination type %d", code));
+      }
+      break;
+    default:
+      BX_ERROR(("CMDFIFO: unsupported packet type %d", type));
+  }
+}
+
+voodoo_reg reg;
+
+void register_w_common(Bit32u offset, Bit32u data)
+{
+  Bit32u regnum  = (offset) & 0xff;
+  Bit32u chips   = (offset>>8) & 0xf;
+  reg.u = data;
+
+  /* Voodoo 2 CMDFIFO handling */
+  if (FBIINIT7_CMDFIFO_ENABLE(v->reg[fbiInit7].u)) {
+    if (!FBIINIT7_CMDFIFO_MEMORY_STORE(v->reg[fbiInit7].u)) {
+      BX_ERROR(("CMDFIFO-to-FIFO mode not supported yet"));
+    } else if ((offset & 0x80000) > 0) {
+      Bit32u fbi_offset = (v->fbi.cmdfifo[0].base + ((offset & 0xffff) << 2)) & v->fbi.mask;
+      BX_DEBUG(("CMDFIFO write: FBI offset=0x%08x, data=0x%08x", fbi_offset, data));
+      cmdfifo_put(fbi_offset, data);
+      return;
+    } else {
+      if (v->regaccess[regnum] & REGISTER_WRITETHRU) {
+        BX_DEBUG(("Writing to register %s in CMDFIFO mode", v->regnames[regnum]));
+      } else {
+        BX_DEBUG(("Invalid attempt to write %s in CMDFIFO mode", v->regnames[regnum]));
+        return;
+      }
+    }
+  }
+
+  if (chips == 0)
+    chips = 0xf;
+
+  /* first make sure this register is writable */
+  if (!(v->regaccess[regnum] & REGISTER_WRITE)) {
+    BX_DEBUG(("Invalid attempt to write %s", v->regnames[regnum]));
+    return;
+  }
+  /* the first 64 registers can be aliased differently */
+  if ((offset & 0x800c0) == 0x80000 && v->alt_regmap)
+    regnum = register_alias_map[offset & 0x3f];
+  else
+    regnum = offset & 0xff;
+
+  BX_DEBUG(("write chip 0x%x reg 0x%x value 0x%08x(%s)", chips, regnum<<2, data, voodoo_reg_name[regnum]));
+
+  switch (regnum) {
+    /* external DAC access -- Voodoo/Voodoo2 only */
+    case dacData:
+      if (v->type <= VOODOO_2 /*&& (chips & 1)*/)
+      {
+        poly_wait(v->poly, v->regnames[regnum]);
+        if (!(data & 0x800))
+          dacdata_w(&v->dac, (data >> 8) & 7, data & 0xff);
+        else
+          dacdata_r(&v->dac, (data >> 8) & 7);
+      }
+      break;
+
+    /* vertical sync rate -- Voodoo/Voodoo2 only */
+    case hSync:
+    case vSync:
+    case backPorch:
+    case videoDimensions:
+      if (v->type <= VOODOO_2 && (chips & 1))
+      {
+        poly_wait(v->poly, v->regnames[regnum]);
+        v->reg[regnum].u = data;
+        if (v->reg[hSync].u != 0 && v->reg[vSync].u != 0 && v->reg[videoDimensions].u != 0)
+        {
+          int htotal = ((v->reg[hSync].u >> 16) & 0x3ff) + 1 + (v->reg[hSync].u & 0xff) + 1;
+          int vtotal = ((v->reg[vSync].u >> 16) & 0xfff) + (v->reg[vSync].u & 0xfff);
+          int hvis = v->reg[videoDimensions].u & 0x3ff;
+          int vvis = (v->reg[videoDimensions].u >> 16) & 0x3ff;
+          int hbp = (v->reg[backPorch].u & 0xff) + 2;
+          int vbp = (v->reg[backPorch].u >> 16) & 0xff;
+          rectangle visarea;
+
+          /* create a new visarea */
+          visarea.min_x = hbp;
+          visarea.max_x = hbp + hvis - 1;
+          visarea.min_y = vbp;
+          visarea.max_y = vbp + vvis - 1;
+
+          /* keep within bounds */
+          visarea.max_x = MIN(visarea.max_x, htotal - 1);
+          visarea.max_y = MIN(visarea.max_y, vtotal - 1);
+
+          BX_DEBUG(("hSync=%08X  vSync=%08X  backPorch=%08X  videoDimensions=%08X",
+            v->reg[hSync].u, v->reg[vSync].u, v->reg[backPorch].u, v->reg[videoDimensions].u));
+          BX_DEBUG(("Horiz: %d-%d (%d total)  Vert: %d-%d (%d total) -- ", visarea.min_x, visarea.max_x, htotal, visarea.min_y, visarea.max_y, vtotal));
+
+          /* configure the new framebuffer info */
+          v->fbi.width = hvis + 1;
+          v->fbi.height = vvis;
+          v->fbi.xoffs = hbp;
+          v->fbi.yoffs = vbp;
+          v->fbi.vsyncscan = (v->reg[vSync].u >> 16) & 0xfff;
+
+          /* if changing dimensions, update video memory layout */
+          if (regnum == videoDimensions)
+            recompute_video_memory(v);
+
+          Voodoo_UpdateScreenStart();
+        }
+      }
+      break;
+
+    /* fbiInit0 can only be written if initEnable says we can -- Voodoo/Voodoo2 only */
+    case fbiInit0:
+      poly_wait(v->poly, v->regnames[regnum]);
+      if (v->type <= VOODOO_2 && (chips & 1) && INITEN_ENABLE_HW_INIT(v->pci.init_enable)) {
+        Voodoo_Output_Enable(data & 1);
+        v->reg[fbiInit0].u = data;
+        if (FBIINIT0_GRAPHICS_RESET(data))
+          soft_reset(v);
+        if (FBIINIT0_FIFO_RESET(data))
+          fifo_reset(&v->pci.fifo);
+        recompute_video_memory(v);
+      }
+      break;
+
+    /* fbiInitX can only be written if initEnable says we can -- Voodoo/Voodoo2 only */
+    /* most of these affect memory layout, so always recompute that when done */
+    case fbiInit1:
+    case fbiInit2:
+    case fbiInit4:
+    case fbiInit5:
+    case fbiInit6:
+    case fbiInit7:
+      poly_wait(v->poly, v->regnames[regnum]);
+
+      if (v->type <= VOODOO_2 && (chips & 1) && INITEN_ENABLE_HW_INIT(v->pci.init_enable))
+      {
+        if ((v->type == VOODOO_2) && (regnum == fbiInit7)) {
+          v->fbi.cmdfifo[0].enable = FBIINIT7_CMDFIFO_ENABLE(data);
+        }
+        v->reg[regnum].u = data;
+        recompute_video_memory(v);
+        v->fbi.video_changed = 1;
+      }
+      break;
+
+    case fbiInit3:
+      poly_wait(v->poly, v->regnames[regnum]);
+      if (v->type <= VOODOO_2 && (chips & 1) && INITEN_ENABLE_HW_INIT(v->pci.init_enable))
+      {
+        v->reg[regnum].u = data;
+        v->alt_regmap = FBIINIT3_TRI_REGISTER_REMAP(data);
+        v->fbi.yorigin = FBIINIT3_YORIGIN_SUBTRACT(v->reg[fbiInit3].u);
+        recompute_video_memory(v);
+      }
+      break;
+
+    case cmdFifoBaseAddr:
+      BX_LOCK(cmdfifo_mutex);
+      v->fbi.cmdfifo[0].base = (data & 0x3ff) << 12;
+      v->fbi.cmdfifo[0].end = ((data >> 16) & 0x3ff) << 12;
+      BX_UNLOCK(cmdfifo_mutex);
+      break;
+
+    case cmdFifoRdPtr:
+      BX_LOCK(cmdfifo_mutex);
+      v->fbi.cmdfifo[0].rdptr = data;
+      BX_UNLOCK(cmdfifo_mutex);
+      break;
+
+    case cmdFifoDepth:
+      BX_LOCK(cmdfifo_mutex);
+      v->fbi.cmdfifo[0].depth = data & 0xffff;
+      BX_UNLOCK(cmdfifo_mutex);
+      break;
+
+    case cmdFifoAMin:
+      v->fbi.cmdfifo[0].amin = data;
+      break;
+
+    case cmdFifoAMax:
+      v->fbi.cmdfifo[0].amax = data;
+      break;
+
+    case intrCtrl:
+      BX_ERROR(("Writing to register %s not supported yet", v->regnames[regnum]));
+      break;
+
+    default:
+      register_w(offset, data, 0);
+  }
+}
+
 Bit32u register_r(Bit32u offset)
 {
   Bit32u regnum  = (offset) & 0xff;
@@ -2472,6 +2688,10 @@ Bit32u register_r(Bit32u offset)
       if (v->pci.op_pending)
         result |= 1 << 9;
 
+      if (v->type == VOODOO_2) {
+        if (v->fbi.cmdfifo[0].enable && v->fbi.cmdfifo[0].depth > 0)
+          result |= 7 << 7;
+      }
       /* Banshee is different starting here */
       if (v->type < VOODOO_BANSHEE)
       {
@@ -2627,7 +2847,7 @@ Bit32u lfb_r(Bit32u offset)
 void voodoo_w(Bit32u offset, Bit32u data, Bit32u mask) {
 
   if ((offset & (0xc00000/4)) == 0)
-    register_w(offset, data);
+    register_w_common(offset, data);
   else if (offset & (0x800000/4))
     texture_w(offset, data);
   else

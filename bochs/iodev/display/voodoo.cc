@@ -75,6 +75,10 @@
 
 bx_voodoo_c* theVoodooDevice = NULL;
 
+#ifndef WIN32
+#include <pthread.h>
+#endif
+
 #include "voodoo_types.h"
 #include "voodoo_data.h"
 #include "voodoo_main.h"
@@ -154,6 +158,22 @@ void CDECL libvoodoo_LTX_plugin_fini(void)
   delete theVoodooDevice;
 }
 
+// cmdfifo thread (Voodoo2)
+
+BX_THREAD_FUNC(cmdfifo_thread, indata)
+{
+  UNUSED(indata);
+  cmdfifo_control = 1;
+  while (cmdfifo_control > 0) {
+    while ((cmdfifo_control > 0) && (v->fbi.cmdfifo[0].depth == 0)) {
+      BX_MSLEEP(1);
+    }
+    cmdfifo_process();
+  }
+  cmdfifo_control = -1;
+  BX_THREAD_EXIT;
+}
+
 // the device object
 
 bx_voodoo_c::bx_voodoo_c()
@@ -166,6 +186,13 @@ bx_voodoo_c::bx_voodoo_c()
 
 bx_voodoo_c::~bx_voodoo_c()
 {
+  if (cmdfifo_control > 0) {
+    cmdfifo_control = 0;
+    while (cmdfifo_control >= 0) {
+      BX_MSLEEP(1);
+    }
+    BX_FINI_MUTEX(cmdfifo_mutex);
+  }
   if (v != NULL) {
     free(v->fbi.ram);
     free(v->tmu[0].ram);
@@ -219,6 +246,11 @@ void bx_voodoo_c::init(void)
   BX_VOODOO_THIS pci_base_address[0] = 0;
 
   voodoo_init(BX_VOODOO_THIS s.model);
+
+  if (BX_VOODOO_THIS s.model == VOODOO_2) {
+    BX_INIT_MUTEX(cmdfifo_mutex);
+    BX_THREAD_CREATE(cmdfifo_thread, this, cmdfifo_threadID);
+  }
 
   BX_INFO(("3dfx Voodoo Graphics adapter (model=%s) initialized",
            SIM->get_param_enum("model", base)->get_selected()));

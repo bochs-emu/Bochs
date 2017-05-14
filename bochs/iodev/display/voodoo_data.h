@@ -1610,7 +1610,7 @@ struct _fbi_state
   stats_block   lfb_stats;      /* LFB-access statistics */
 
   Bit8u         sverts;         /* number of vertices ready */
-  setup_vertex  svert[3];       /* 3 setup vertices */
+  setup_vertex  svert[4];       /* 3 setup vertices + 1 for current data */
 
   fifo_state    fifo;           /* framebuffer memory fifo */
   cmdfifo_info  cmdfifo[2];     /* command FIFOs */
