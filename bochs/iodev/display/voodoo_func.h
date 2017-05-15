@@ -809,6 +809,190 @@ Bit32s triangle(voodoo_state *v)
 }
 
 
+static Bit32s setup_and_draw_triangle(voodoo_state *v)
+{
+  float dx1, dy1, dx2, dy2;
+  float divisor, tdiv;
+
+  /* grab the X/Ys at least */
+  v->fbi.ax = (Bit16s)(v->fbi.svert[0].x * 16.0);
+  v->fbi.ay = (Bit16s)(v->fbi.svert[0].y * 16.0);
+  v->fbi.bx = (Bit16s)(v->fbi.svert[1].x * 16.0);
+  v->fbi.by = (Bit16s)(v->fbi.svert[1].y * 16.0);
+  v->fbi.cx = (Bit16s)(v->fbi.svert[2].x * 16.0);
+  v->fbi.cy = (Bit16s)(v->fbi.svert[2].y * 16.0);
+
+  /* compute the divisor */
+  divisor = 1.0f / ((v->fbi.svert[0].x - v->fbi.svert[1].x) * (v->fbi.svert[0].y - v->fbi.svert[2].y) -
+            (v->fbi.svert[0].x - v->fbi.svert[2].x) * (v->fbi.svert[0].y - v->fbi.svert[1].y));
+
+  /* backface culling */
+  if (v->reg[sSetupMode].u & 0x20000)
+  {
+    int culling_sign = (v->reg[sSetupMode].u >> 18) & 1;
+    int divisor_sign = (divisor < 0);
+
+    /* if doing strips and ping pong is enabled, apply the ping pong */
+    if ((v->reg[sSetupMode].u & 0x90000) == 0x00000)
+      culling_sign ^= (v->fbi.sverts - 3) & 1;
+
+    /* if our sign matches the culling sign, we're done for */
+    if (divisor_sign == culling_sign)
+      return TRIANGLE_SETUP_CLOCKS;
+  }
+
+  /* compute the dx/dy values */
+  dx1 = v->fbi.svert[0].y - v->fbi.svert[2].y;
+  dx2 = v->fbi.svert[0].y - v->fbi.svert[1].y;
+  dy1 = v->fbi.svert[0].x - v->fbi.svert[1].x;
+  dy2 = v->fbi.svert[0].x - v->fbi.svert[2].x;
+
+  /* set up R,G,B */
+  tdiv = divisor * 4096.0f;
+  if (v->reg[sSetupMode].u & (1 << 0))
+  {
+    v->fbi.startr = (Bit32s)(v->fbi.svert[0].r * 4096.0f);
+    v->fbi.drdx = (Bit32s)(((v->fbi.svert[0].r - v->fbi.svert[1].r) * dx1 - (v->fbi.svert[0].r - v->fbi.svert[2].r) * dx2) * tdiv);
+    v->fbi.drdy = (Bit32s)(((v->fbi.svert[0].r - v->fbi.svert[2].r) * dy1 - (v->fbi.svert[0].r - v->fbi.svert[1].r) * dy2) * tdiv);
+    v->fbi.startg = (Bit32s)(v->fbi.svert[0].g * 4096.0f);
+    v->fbi.dgdx = (Bit32s)(((v->fbi.svert[0].g - v->fbi.svert[1].g) * dx1 - (v->fbi.svert[0].g - v->fbi.svert[2].g) * dx2) * tdiv);
+    v->fbi.dgdy = (Bit32s)(((v->fbi.svert[0].g - v->fbi.svert[2].g) * dy1 - (v->fbi.svert[0].g - v->fbi.svert[1].g) * dy2) * tdiv);
+    v->fbi.startb = (Bit32s)(v->fbi.svert[0].b * 4096.0f);
+    v->fbi.dbdx = (Bit32s)(((v->fbi.svert[0].b - v->fbi.svert[1].b) * dx1 - (v->fbi.svert[0].b - v->fbi.svert[2].b) * dx2) * tdiv);
+    v->fbi.dbdy = (Bit32s)(((v->fbi.svert[0].b - v->fbi.svert[2].b) * dy1 - (v->fbi.svert[0].b - v->fbi.svert[1].b) * dy2) * tdiv);
+  }
+
+  /* set up alpha */
+  if (v->reg[sSetupMode].u & (1 << 1))
+  {
+    v->fbi.starta = (Bit32s)(v->fbi.svert[0].a * 4096.0);
+    v->fbi.dadx = (Bit32s)(((v->fbi.svert[0].a - v->fbi.svert[1].a) * dx1 - (v->fbi.svert[0].a - v->fbi.svert[2].a) * dx2) * tdiv);
+    v->fbi.dady = (Bit32s)(((v->fbi.svert[0].a - v->fbi.svert[2].a) * dy1 - (v->fbi.svert[0].a - v->fbi.svert[1].a) * dy2) * tdiv);
+  }
+
+  /* set up Z */
+  if (v->reg[sSetupMode].u & (1 << 2))
+  {
+    v->fbi.startz = (Bit32s)(v->fbi.svert[0].z * 4096.0);
+    v->fbi.dzdx = (Bit32s)(((v->fbi.svert[0].z - v->fbi.svert[1].z) * dx1 - (v->fbi.svert[0].z - v->fbi.svert[2].z) * dx2) * tdiv);
+    v->fbi.dzdy = (Bit32s)(((v->fbi.svert[0].z - v->fbi.svert[2].z) * dy1 - (v->fbi.svert[0].z - v->fbi.svert[1].z) * dy2) * tdiv);
+  }
+
+  /* set up Wb */
+  tdiv = divisor * 65536.0f * 65536.0f;
+  if (v->reg[sSetupMode].u & (1 << 3))
+  {
+    v->fbi.startw = v->tmu[0].startw = v->tmu[1].startw = (Bit64s)(v->fbi.svert[0].wb * 65536.0f * 65536.0f);
+    v->fbi.dwdx = v->tmu[0].dwdx = v->tmu[1].dwdx = ((v->fbi.svert[0].wb - v->fbi.svert[1].wb) * dx1 - (v->fbi.svert[0].wb - v->fbi.svert[2].wb) * dx2) * tdiv;
+    v->fbi.dwdy = v->tmu[0].dwdy = v->tmu[1].dwdy = ((v->fbi.svert[0].wb - v->fbi.svert[2].wb) * dy1 - (v->fbi.svert[0].wb - v->fbi.svert[1].wb) * dy2) * tdiv;
+  }
+
+  /* set up W0 */
+  if (v->reg[sSetupMode].u & (1 << 4))
+  {
+    v->tmu[0].startw = v->tmu[1].startw = (Bit64s)(v->fbi.svert[0].w0 * 65536.0f * 65536.0f);
+    v->tmu[0].dwdx = v->tmu[1].dwdx = ((v->fbi.svert[0].w0 - v->fbi.svert[1].w0) * dx1 - (v->fbi.svert[0].w0 - v->fbi.svert[2].w0) * dx2) * tdiv;
+    v->tmu[0].dwdy = v->tmu[1].dwdy = ((v->fbi.svert[0].w0 - v->fbi.svert[2].w0) * dy1 - (v->fbi.svert[0].w0 - v->fbi.svert[1].w0) * dy2) * tdiv;
+  }
+
+  /* set up S0,T0 */
+  if (v->reg[sSetupMode].u & (1 << 5))
+  {
+    v->tmu[0].starts = v->tmu[1].starts = (Bit64s)(v->fbi.svert[0].s0 * 65536.0f * 65536.0f);
+    v->tmu[0].dsdx = v->tmu[1].dsdx = ((v->fbi.svert[0].s0 - v->fbi.svert[1].s0) * dx1 - (v->fbi.svert[0].s0 - v->fbi.svert[2].s0) * dx2) * tdiv;
+    v->tmu[0].dsdy = v->tmu[1].dsdy = ((v->fbi.svert[0].s0 - v->fbi.svert[2].s0) * dy1 - (v->fbi.svert[0].s0 - v->fbi.svert[1].s0) * dy2) * tdiv;
+    v->tmu[0].startt = v->tmu[1].startt = (Bit64s)(v->fbi.svert[0].t0 * 65536.0f * 65536.0f);
+    v->tmu[0].dtdx = v->tmu[1].dtdx = ((v->fbi.svert[0].t0 - v->fbi.svert[1].t0) * dx1 - (v->fbi.svert[0].t0 - v->fbi.svert[2].t0) * dx2) * tdiv;
+    v->tmu[0].dtdy = v->tmu[1].dtdy = ((v->fbi.svert[0].t0 - v->fbi.svert[2].t0) * dy1 - (v->fbi.svert[0].t0 - v->fbi.svert[1].t0) * dy2) * tdiv;
+  }
+
+  /* set up W1 */
+  if (v->reg[sSetupMode].u & (1 << 6))
+  {
+    v->tmu[1].startw = (Bit64s)(v->fbi.svert[0].w1 * 65536.0f * 65536.0f);
+    v->tmu[1].dwdx = ((v->fbi.svert[0].w1 - v->fbi.svert[1].w1) * dx1 - (v->fbi.svert[0].w1 - v->fbi.svert[2].w1) * dx2) * tdiv;
+    v->tmu[1].dwdy = ((v->fbi.svert[0].w1 - v->fbi.svert[2].w1) * dy1 - (v->fbi.svert[0].w1 - v->fbi.svert[1].w1) * dy2) * tdiv;
+  }
+
+  /* set up S1,T1 */
+  if (v->reg[sSetupMode].u & (1 << 7))
+  {
+    v->tmu[1].starts = (Bit64s)(v->fbi.svert[0].s1 * 65536.0f * 65536.0f);
+    v->tmu[1].dsdx = ((v->fbi.svert[0].s1 - v->fbi.svert[1].s1) * dx1 - (v->fbi.svert[0].s1 - v->fbi.svert[2].s1) * dx2) * tdiv;
+    v->tmu[1].dsdy = ((v->fbi.svert[0].s1 - v->fbi.svert[2].s1) * dy1 - (v->fbi.svert[0].s1 - v->fbi.svert[1].s1) * dy2) * tdiv;
+    v->tmu[1].startt = (Bit64s)(v->fbi.svert[0].t1 * 65536.0f * 65536.0f);
+    v->tmu[1].dtdx = ((v->fbi.svert[0].t1 - v->fbi.svert[1].t1) * dx1 - (v->fbi.svert[0].t1 - v->fbi.svert[2].t1) * dx2) * tdiv;
+    v->tmu[1].dtdy = ((v->fbi.svert[0].t1 - v->fbi.svert[2].t1) * dy1 - (v->fbi.svert[0].t1 - v->fbi.svert[1].t1) * dy2) * tdiv;
+  }
+
+  /* draw the triangle */
+  v->fbi.cheating_allowed = 1;
+  return triangle(v);
+}
+
+
+static Bit32s begin_triangle(voodoo_state *v)
+{
+  setup_vertex *sv = &v->fbi.svert[2];
+
+  /* extract all the data from registers */
+  sv->x = v->reg[sVx].f;
+  sv->y = v->reg[sVy].f;
+  sv->wb = v->reg[sWb].f;
+  sv->w0 = v->reg[sWtmu0].f;
+  sv->s0 = v->reg[sS_W0].f;
+  sv->t0 = v->reg[sT_W0].f;
+  sv->w1 = v->reg[sWtmu1].f;
+  sv->s1 = v->reg[sS_Wtmu1].f;
+  sv->t1 = v->reg[sT_Wtmu1].f;
+  sv->a = v->reg[sAlpha].f;
+  sv->r = v->reg[sRed].f;
+  sv->g = v->reg[sGreen].f;
+  sv->b = v->reg[sBlue].f;
+
+  /* spread it across all three verts and reset the count */
+  v->fbi.svert[0] = v->fbi.svert[1] = v->fbi.svert[2];
+  v->fbi.sverts = 1;
+
+  return 0;
+}
+
+
+static Bit32s draw_triangle(voodoo_state *v)
+{
+  setup_vertex *sv = &v->fbi.svert[2];
+  int cycles = 0;
+
+  /* for strip mode, shuffle vertex 1 down to 0 */
+  if (!(v->reg[sSetupMode].u & (1 << 16)))
+    v->fbi.svert[0] = v->fbi.svert[1];
+
+  /* copy 2 down to 1 regardless */
+  v->fbi.svert[1] = v->fbi.svert[2];
+
+  /* extract all the data from registers */
+  sv->x = v->reg[sVx].f;
+  sv->y = v->reg[sVy].f;
+  sv->wb = v->reg[sWb].f;
+  sv->w0 = v->reg[sWtmu0].f;
+  sv->s0 = v->reg[sS_W0].f;
+  sv->t0 = v->reg[sT_W0].f;
+  sv->w1 = v->reg[sWtmu1].f;
+  sv->s1 = v->reg[sS_Wtmu1].f;
+  sv->t1 = v->reg[sT_Wtmu1].f;
+  sv->a = v->reg[sAlpha].f;
+  sv->r = v->reg[sRed].f;
+  sv->g = v->reg[sGreen].f;
+  sv->b = v->reg[sBlue].f;
+
+  /* if we have enough verts, go ahead and draw */
+  if (++v->fbi.sverts >= 3)
+    cycles = setup_and_draw_triangle(v);
+
+  return cycles;
+}
+
+
 static void raster_fastfill(void *destbase, Bit32s y, const poly_extent *extent, const void *extradata, int threadid)
 {
   const poly_extra_data *extra = (const poly_extra_data *)extradata;
@@ -1317,6 +1501,12 @@ void register_w(Bit32u offset, Bit32u data, bx_bool log)
   if (chips == 0)
     chips = 0xf;
 
+  /* the first 64 registers can be aliased differently */
+  if ((offset & 0x800c0) == 0x80000 && v->alt_regmap)
+    regnum = register_alias_map[offset & 0x3f];
+  else
+    regnum = offset & 0xff;
+
   if (log)
     BX_DEBUG(("write chip 0x%x reg 0x%x value 0x%08x(%s)", chips, regnum<<2, data, voodoo_reg_name[regnum]));
 
@@ -1591,6 +1781,14 @@ void register_w(Bit32u offset, Bit32u data, bx_bool log)
       v->fbi.cheating_allowed = 1;
       v->fbi.sign = data;
       triangle(v);
+      break;
+
+    case sBeginTriCMD:
+      begin_triangle(v);
+      break;
+
+    case sDrawTriCMD:
+      draw_triangle(v);
       break;
 
     /* other commands */
@@ -2288,31 +2486,33 @@ Bit32u cmdfifo_get(void)
 
 void cmdfifo_process(void)
 {
-  Bit32u data, mask, nwords, regaddr;
+  Bit32u command, data, mask, nwords, regaddr;
   Bit8u type, code, nvertex, smode;
   bx_bool inc, pcolor;
   voodoo_reg reg;
+  int i;
+  setup_vertex svert = {0};
 
-  data = cmdfifo_get();
-  type = (Bit8u)(data & 0x07);
+  command = cmdfifo_get();
+  type = (Bit8u)(command & 0x07);
   switch (type) {
     case 0:
-      code = (Bit8u)((data >> 3) & 0x07);
+      code = (Bit8u)((command >> 3) & 0x07);
       switch (code) {
         case 0: // NOP
           break;
         case 3: // JMP
-          v->fbi.cmdfifo[0].rdptr = (data >> 4) & 0xfffffc;
+          v->fbi.cmdfifo[0].rdptr = (command >> 4) & 0xfffffc;
           break;
         default:
           BX_ERROR(("CMDFIFO packet type 0: unsupported code %d", code));
       }
       break;
     case 1:
-      nwords = (data >> 16);
-      regaddr = (data & 0x7ff8) >> 3;
-      inc = (data >> 15) & 1;
-      while (nwords--) {
+      nwords = (command >> 16);
+      regaddr = (command & 0x7ff8) >> 3;
+      inc = (command >> 15) & 1;
+      for (i = 0; i < (int)nwords; i++) {
         data = cmdfifo_get();
         register_w(regaddr, data, 1);
         if (inc) regaddr++;
@@ -2320,7 +2520,7 @@ void cmdfifo_process(void)
       break;
     case 2:
       BX_INFO(("CMDFIFO packet type 2: not tested yet"));
-      mask = (data >> 3);
+      mask = (command >> 3);
       regaddr = bltSrcBaseAddr;
       while (mask) {
         if (mask & 1) {
@@ -2332,76 +2532,99 @@ void cmdfifo_process(void)
       }
       break;
     case 3:
-      BX_ERROR(("CMDFIFO packet type 3: not implemented yet"));
-      nwords = (data >> 29);
-      pcolor = (data >> 28) & 1;
-      smode = (data >> 22) & 0x3f;
-      mask = (data >> 10) & 0xff;
-      nvertex = (data >> 6) & 0x0f;
-      code = (data >> 3) & 0x07;
-      register_w(sSetupMode, (smode << 16) | mask, 1);
-      // TODO
-      while (nvertex--) {
+      nwords = (command >> 29);
+      pcolor = (command >> 28) & 1;
+      smode = (command >> 22) & 0x3f;
+      mask = (command >> 10) & 0xff;
+      nvertex = (command >> 6) & 0x0f;
+      code = (command >> 3) & 0x07;
+      /* copy relevant bits into the setup mode register */
+      v->reg[sSetupMode].u = ((smode << 16) | mask);
+      /* loop over triangles */
+      for (i = 0; i < nvertex; i++) {
         reg.u = cmdfifo_get();
-        v->fbi.svert[3].x = reg.f;
+        svert.x = reg.f;
         reg.u = cmdfifo_get();
-        v->fbi.svert[3].y = reg.f;
-        if (mask & 0x01) {
-          if (pcolor) {
+        svert.y = reg.f;
+        if (pcolor) {
+          if (mask & 0x03) {
             data = cmdfifo_get();
-            v->fbi.svert[3].b = (float)(data & 0xff);
-            v->fbi.svert[3].g = (float)((data >> 8) & 0xff);
-            v->fbi.svert[3].r = (float)((data >> 16) & 0xff);
-            v->fbi.svert[3].a = (float)((data >> 24) & 0xff);
-          } else {
-            reg.u = cmdfifo_get();
-            v->fbi.svert[3].r = reg.f;
-            reg.u = cmdfifo_get();
-            v->fbi.svert[3].g = reg.f;
-            reg.u = cmdfifo_get();
-            v->fbi.svert[3].b = reg.f;
+            if (mask & 0x01) {
+              svert.r = (float)RGB_RED(data);
+              svert.g = (float)RGB_GREEN(data);
+              svert.b = (float)RGB_BLUE(data);
+            }
+            if (mask & 0x02) {
+              svert.a = (float)RGB_ALPHA(data);
+            }
           }
-        }
-        if ((mask & 0x02) && !pcolor) {
-          reg.u = cmdfifo_get();
-          v->fbi.svert[3].a = reg.f;
+        } else {
+          if (mask & 0x01) {
+            reg.u = cmdfifo_get();
+            svert.r = reg.f;
+            reg.u = cmdfifo_get();
+            svert.g = reg.f;
+            reg.u = cmdfifo_get();
+            svert.b = reg.f;
+          }
+          if (mask & 0x02) {
+            reg.u = cmdfifo_get();
+            svert.a = reg.f;
+          }
         }
         if (mask & 0x04) {
           reg.u = cmdfifo_get();
-          v->fbi.svert[3].z = reg.f;
+          svert.z = reg.f;
         }
         if (mask & 0x08) {
           reg.u = cmdfifo_get();
-          v->fbi.svert[3].wb = reg.f;
+          svert.wb = reg.f;
         }
         if (mask & 0x10) {
           reg.u = cmdfifo_get();
-          v->fbi.svert[3].w0 = reg.f;
+          svert.w0 = reg.f;
         }
         if (mask & 0x20) {
           reg.u = cmdfifo_get();
-          v->fbi.svert[3].s0 = reg.f;
+          svert.s0 = reg.f;
           reg.u = cmdfifo_get();
-          v->fbi.svert[3].t0 = reg.f;
+          svert.t0 = reg.f;
         }
         if (mask & 0x40) {
           reg.u = cmdfifo_get();
-          v->fbi.svert[3].w1 = reg.f;
+          svert.w1 = reg.f;
         }
         if (mask & 0x80) {
           reg.u = cmdfifo_get();
-          v->fbi.svert[3].s1 = reg.f;
+          svert.s1 = reg.f;
           reg.u = cmdfifo_get();
-          v->fbi.svert[3].t1 = reg.f;
+          svert.t1 = reg.f;
         }
-        // TODO
+        /* if we're starting a new strip, or if this is the first of a set of verts */
+        /* for a series of individual triangles, initialize all the verts */
+        if ((code == 1 && i == 0) || (code == 0 && i % 3 == 0)) {
+          v->fbi.sverts = 1;
+          v->fbi.svert[0] = v->fbi.svert[1] = v->fbi.svert[2] = svert;
+        } else { /* otherwise, add this to the list */
+          /* for strip mode, shuffle vertex 1 down to 0 */
+          if (!(smode & 1))
+            v->fbi.svert[0] = v->fbi.svert[1];
+
+          /* copy 2 down to 1 and add our new one regardless */
+          v->fbi.svert[1] = v->fbi.svert[2];
+          v->fbi.svert[2] = svert;
+
+          /* if we have enough, draw */
+          if (++v->fbi.sverts >= 3)
+            setup_and_draw_triangle(v);
+        }
       }
       while (nwords--) cmdfifo_get();
       break;
     case 4:
-      nwords = (data >> 29);
-      mask = (data >> 15) & 0x3fff;
-      regaddr = (data & 0x7ff8) >> 3;
+      nwords = (command >> 29);
+      mask = (command >> 15) & 0x3fff;
+      regaddr = (command & 0x7ff8) >> 3;
       while (mask) {
         if (mask & 1) {
           data = cmdfifo_get();
@@ -2413,22 +2636,22 @@ void cmdfifo_process(void)
       while (nwords--) cmdfifo_get();
       break;
     case 5:
-      if ((data & 0x3fc00000) > 0) {
+      if ((command & 0x3fc00000) > 0) {
         BX_ERROR(("CMDFIFO packet type 5: byte disable not supported yet"));
       }
-      nwords = (data >> 3) & 0x7ffff;
+      nwords = (command >> 3) & 0x7ffff;
       regaddr = (cmdfifo_get() & 0xffffff) >> 2;
-      code = (data >> 30);
+      code = (command >> 30);
       switch (code) {
         case 2:
-          while (nwords--) {
+          for (i = 0; i < (int)nwords; i++) {
             data = cmdfifo_get();
             lfb_w(regaddr, data, 0xffffffff);
             regaddr++;
           }
           break;
         case 3:
-          while (nwords--) {
+          for (i = 0; i < (int)nwords; i++) {
             data = cmdfifo_get();
             texture_w(regaddr, data);
             regaddr++;
@@ -2457,12 +2680,15 @@ void register_w_common(Bit32u offset, Bit32u data)
       BX_ERROR(("CMDFIFO-to-FIFO mode not supported yet"));
     } else if ((offset & 0x80000) > 0) {
       Bit32u fbi_offset = (v->fbi.cmdfifo[0].base + ((offset & 0xffff) << 2)) & v->fbi.mask;
-      BX_DEBUG(("CMDFIFO write: FBI offset=0x%08x, data=0x%08x", fbi_offset, data));
+      if (LOG_CMDFIFO) BX_DEBUG(("CMDFIFO write: FBI offset=0x%08x, data=0x%08x", fbi_offset, data));
       cmdfifo_put(fbi_offset, data);
       return;
     } else {
       if (v->regaccess[regnum] & REGISTER_WRITETHRU) {
         BX_DEBUG(("Writing to register %s in CMDFIFO mode", v->regnames[regnum]));
+      } else if (regnum == swapbufferCMD) {
+        v->fbi.swaps_pending++;
+        return;
       } else {
         BX_DEBUG(("Invalid attempt to write %s in CMDFIFO mode", v->regnames[regnum]));
         return;
@@ -2473,16 +2699,17 @@ void register_w_common(Bit32u offset, Bit32u data)
   if (chips == 0)
     chips = 0xf;
 
-  /* first make sure this register is writable */
-  if (!(v->regaccess[regnum] & REGISTER_WRITE)) {
-    BX_DEBUG(("Invalid attempt to write %s", v->regnames[regnum]));
-    return;
-  }
   /* the first 64 registers can be aliased differently */
   if ((offset & 0x800c0) == 0x80000 && v->alt_regmap)
     regnum = register_alias_map[offset & 0x3f];
   else
     regnum = offset & 0xff;
+
+  /* first make sure this register is writable */
+  if (!(v->regaccess[regnum] & REGISTER_WRITE)) {
+    BX_DEBUG(("Invalid attempt to write %s", v->regnames[regnum]));
+    return;
+  }
 
   BX_DEBUG(("write chip 0x%x reg 0x%x value 0x%08x(%s)", chips, regnum<<2, data, voodoo_reg_name[regnum]));
 
