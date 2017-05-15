@@ -2676,12 +2676,14 @@ void register_w_common(Bit32u offset, Bit32u data)
 
   /* Voodoo 2 CMDFIFO handling */
   if (FBIINIT7_CMDFIFO_ENABLE(v->reg[fbiInit7].u)) {
-    if (!FBIINIT7_CMDFIFO_MEMORY_STORE(v->reg[fbiInit7].u)) {
-      BX_ERROR(("CMDFIFO-to-FIFO mode not supported yet"));
-    } else if ((offset & 0x80000) > 0) {
-      Bit32u fbi_offset = (v->fbi.cmdfifo[0].base + ((offset & 0xffff) << 2)) & v->fbi.mask;
-      if (LOG_CMDFIFO) BX_DEBUG(("CMDFIFO write: FBI offset=0x%08x, data=0x%08x", fbi_offset, data));
-      cmdfifo_put(fbi_offset, data);
+    if ((offset & 0x80000) > 0) {
+      if (!FBIINIT7_CMDFIFO_MEMORY_STORE(v->reg[fbiInit7].u)) {
+        BX_ERROR(("CMDFIFO-to-FIFO mode not supported yet"));
+      } else {
+        Bit32u fbi_offset = (v->fbi.cmdfifo[0].base + ((offset & 0xffff) << 2)) & v->fbi.mask;
+        if (LOG_CMDFIFO) BX_DEBUG(("CMDFIFO write: FBI offset=0x%08x, data=0x%08x", fbi_offset, data));
+        cmdfifo_put(fbi_offset, data);
+      }
       return;
     } else {
       if (v->regaccess[regnum] & REGISTER_WRITETHRU) {
