@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2010-2015  The Bochs Project
+//  Copyright (C) 2010-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -453,6 +453,19 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
     this->base = base;
     this->text_format = "0x%02x";
   }
+}
+
+// Float (floating point)
+bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
+    const char *name,
+    float *ptr_to_real_val)
+: bx_param_num_c(parent, name, NULL, NULL, BX_MIN_BIT64U, BX_MAX_BIT64U, 0, 1)
+{
+  this->varsize = 32;
+  this->lowbit = 0;
+  this->mask = BX_MAX_BIT32U;
+  val.pfloat = ptr_to_real_val;
+  this->base = BASE_FLOAT;
 }
 
 // Double (floating point)

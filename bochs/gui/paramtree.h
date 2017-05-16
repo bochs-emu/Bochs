@@ -89,6 +89,7 @@ public:
 
 #define BASE_DEC 10
 #define BASE_HEX 16
+#define BASE_FLOAT 32
 #define BASE_DOUBLE 64
 
 class BOCHSAPI bx_param_c : public bx_object_c {
@@ -190,6 +191,7 @@ protected:
     Bit32s *p32bit;  // used by bx_shadow_num_c
     Bit16s *p16bit;  // used by bx_shadow_num_c
     Bit8s  *p8bit;   // used by bx_shadow_num_c
+    float  *pfloat;  // used by bx_shadow_num_c
     double *pdouble; // used by bx_shadow_num_c
     bx_bool *pbool;  // used by bx_shadow_bool_c
   } val;
@@ -297,6 +299,9 @@ public:
   bx_shadow_num_c(bx_param_c *parent,
       const char *name,
       double *ptr_to_real_val);
+  bx_shadow_num_c(bx_param_c *parent,
+      const char *name,
+      float *ptr_to_real_val);
   virtual Bit64s get64();
   virtual void set(Bit64s val);
   virtual void reset();

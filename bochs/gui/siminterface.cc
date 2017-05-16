@@ -1205,7 +1205,8 @@ bx_bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path,
   char *ptr;
   int i, j, p;
   unsigned n;
-  double fvalue;
+  float f1value;
+  double f2value;
   Bit64u value;
   bx_param_c *param = NULL;
   FILE *fp, *fp2;
@@ -1247,8 +1248,12 @@ bx_bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path,
               switch (param->get_type()) {
                 case BXT_PARAM_NUM:
                   if (((bx_param_num_c*)param)->get_base() == BASE_DOUBLE) {
-                    fvalue = strtod(ptr, NULL);
-                    memcpy(&value, &fvalue, sizeof(double));
+                    f2value = strtod(ptr, NULL);
+                    memcpy(&value, &f2value, sizeof(double));
+                    ((bx_param_num_c*)param)->set(value);
+                  } else if (((bx_param_num_c*)param)->get_base() == BASE_FLOAT) {
+                    f1value = (float)strtod(ptr, NULL);
+                    memcpy(&value, &f1value, sizeof(float));
                     ((bx_param_num_c*)param)->set(value);
                   } else if ((ptr[0] == '0') && (ptr[1] == 'x')) {
                     ((bx_param_num_c*)param)->set(strtoull(ptr, NULL, 16));
@@ -1369,7 +1374,8 @@ bx_bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_
 {
   int i, j;
   Bit64s value;
-  double fvalue;
+  float f1value;
+  double f2value;
   char pname[BX_PATHNAME_LEN], tmpstr[BX_PATHNAME_LEN];
   FILE *fp2;
 
@@ -1384,8 +1390,11 @@ bx_bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_
     case BXT_PARAM_NUM:
       value = ((bx_param_num_c*)node)->get64();
       if (((bx_param_num_c*)node)->get_base() == BASE_DOUBLE) {
-        memcpy(&fvalue, &value, sizeof(double));
-        fprintf(fp, "%f\n", fvalue);
+        memcpy(&f2value, &value, sizeof(double));
+        fprintf(fp, "%f\n", f2value);
+      } else if (((bx_param_num_c*)node)->get_base() == BASE_FLOAT) {
+        memcpy(&f1value, &value, sizeof(float));
+        fprintf(fp, "%f\n", f1value);
       } else if (((bx_param_num_c*)node)->get_base() == BASE_DEC) {
         if (((bx_param_num_c*)node)->get_min() >= BX_MIN_BIT64U) {
           if ((Bit64u)((bx_param_num_c*)node)->get_max() > BX_MAX_BIT32U) {

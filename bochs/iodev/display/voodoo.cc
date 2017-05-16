@@ -359,6 +359,26 @@ void bx_voodoo_c::register_state(void)
   new bx_shadow_num_c(fbi, "dady", &v->fbi.dady);
   new bx_shadow_num_c(fbi, "dzdy", &v->fbi.dzdy);
   new bx_shadow_num_c(fbi, "dwdy", &v->fbi.dwdy);
+  new bx_shadow_num_c(fbi, "sverts", &v->fbi.sverts);
+  bx_list_c *svert = new bx_list_c(fbi, "svert", "");
+  for (i = 0; i < 3; i++) {
+    sprintf(name, "%d", i);
+    bx_list_c *num = new bx_list_c(svert, name, "");
+    new bx_shadow_num_c(num, "x", &v->fbi.svert[i].x);
+    new bx_shadow_num_c(num, "y", &v->fbi.svert[i].y);
+    new bx_shadow_num_c(num, "a", &v->fbi.svert[i].a);
+    new bx_shadow_num_c(num, "r", &v->fbi.svert[i].r);
+    new bx_shadow_num_c(num, "g", &v->fbi.svert[i].g);
+    new bx_shadow_num_c(num, "b", &v->fbi.svert[i].b);
+    new bx_shadow_num_c(num, "z", &v->fbi.svert[i].z);
+    new bx_shadow_num_c(num, "wb", &v->fbi.svert[i].wb);
+    new bx_shadow_num_c(num, "w0", &v->fbi.svert[i].w0);
+    new bx_shadow_num_c(num, "s0", &v->fbi.svert[i].s0);
+    new bx_shadow_num_c(num, "t0", &v->fbi.svert[i].t0);
+    new bx_shadow_num_c(num, "w1", &v->fbi.svert[i].w1);
+    new bx_shadow_num_c(num, "s1", &v->fbi.svert[i].s1);
+    new bx_shadow_num_c(num, "t1", &v->fbi.svert[i].t1);
+  }
   bx_list_c *cmdfifo = new bx_list_c(fbi, "cmdfifo", "");
   for (i = 0; i < 2; i++) {
     sprintf(name, "%d", i);

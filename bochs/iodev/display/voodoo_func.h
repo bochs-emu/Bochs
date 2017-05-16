@@ -1423,6 +1423,53 @@ void recompute_video_memory(voodoo_state *v)
   }
 }
 
+
+void voodoo_bitblt(void)
+{
+  Bit8u command = (Bit8u)(v->reg[bltCommand].u & 0x07);
+  Bit16u c, cols, dst_x, dst_y, fgcolor, r, rows, size;
+  Bit32u offset, loffset;
+
+  switch (command) {
+    case 0:
+      BX_ERROR(("Screen-to-Screen bitBLT not implemented yet"));
+      break;
+    case 1:
+      BX_ERROR(("CPU-to-Screen bitBLT not implemented yet"));
+      break;
+    case 2:
+      BX_ERROR(("bitBLT Rectangle fill not implemented yet"));
+      break;
+    case 3:
+      dst_x = (Bit16u)(v->reg[bltDstXY].u & 0x7ff);
+      dst_y = (Bit16u)((v->reg[bltDstXY].u >> 16) & 0x7ff);
+      cols = (Bit16u)(v->reg[bltSize].u & 0x1ff);
+      rows = (Bit16u)((v->reg[bltSize].u >> 16) & 0x1ff);
+      fgcolor = (Bit16u)(v->reg[bltColor].u & 0xffff);
+      loffset = (4 << v->fbi.lfb_stride);
+      for (r = 0; r <= rows; r++) {
+        offset = dst_y * loffset;
+        if (r == 0) {
+          offset += dst_x * 2;
+          size = loffset / 2 - dst_x;
+        } else if (r == rows) {
+          size = cols;
+        } else {
+          size = loffset / 2;
+        }
+        for (c = 0; c < size; c++) {
+          v->fbi.ram[offset + c * 2] = (Bit8u)(fgcolor & 0xff);
+          v->fbi.ram[offset + c * 2 + 1] = (Bit8u)(fgcolor >> 8);
+        }
+        dst_y++;
+      }
+      break;
+    default:
+      BX_ERROR(("Voodoo bitBLT: unknown command %d)", command));
+  }
+}
+
+
 void dacdata_w(dac_state *d, Bit8u regnum, Bit8u data)
 {
   d->reg[regnum] = data;
@@ -1933,22 +1980,18 @@ void register_w(Bit32u offset, Bit32u data, bx_bool log)
       break;
 
     case userIntrCMD:
-    case bltSrcBaseAddr:
-    case bltDstBaseAddr:
-    case bltXYStrides:
-    case bltSrcChromaRange:
-    case bltDstChromaRange:
-    case bltClipX:
-    case bltClipY:
-    case bltSrcXY:
-    case bltDstXY:
-    case bltSize:
-    case bltRop:
-    case bltColor:
-    case bltCommand:
     case bltData:
       BX_ERROR(("Writing to register %s not supported yet", v->regnames[regnum]));
       v->reg[regnum].u = data;
+      break;
+
+    case bltDstXY:
+    case bltSize:
+    case bltCommand:
+      v->reg[regnum].u = data;
+      if ((data >> 31) & 1) {
+        voodoo_bitblt();
+      }
       break;
 
     /* these registers are referenced in the renderer; we must wait for pending work before changing */
@@ -2461,7 +2504,7 @@ nextpixel:
   return 0;
 }
 
-void cmdfifo_put(Bit32u fbi_offset, Bit32u data)
+void cmdfifo_w(Bit32u fbi_offset, Bit32u data)
 {
   BX_LOCK(cmdfifo_mutex);
   *(Bit32u*)(&v->fbi.ram[fbi_offset]) = data;
@@ -2469,7 +2512,7 @@ void cmdfifo_put(Bit32u fbi_offset, Bit32u data)
   BX_UNLOCK(cmdfifo_mutex);
 }
 
-Bit32u cmdfifo_get(void)
+Bit32u cmdfifo_r(void)
 {
   Bit32u data;
 
@@ -2493,7 +2536,7 @@ void cmdfifo_process(void)
   int i;
   setup_vertex svert = {0};
 
-  command = cmdfifo_get();
+  command = cmdfifo_r();
   type = (Bit8u)(command & 0x07);
   switch (type) {
     case 0:
@@ -2513,7 +2556,7 @@ void cmdfifo_process(void)
       regaddr = (command & 0x7ff8) >> 3;
       inc = (command >> 15) & 1;
       for (i = 0; i < (int)nwords; i++) {
-        data = cmdfifo_get();
+        data = cmdfifo_r();
         register_w(regaddr, data, 1);
         if (inc) regaddr++;
       }
@@ -2524,7 +2567,7 @@ void cmdfifo_process(void)
       regaddr = bltSrcBaseAddr;
       while (mask) {
         if (mask & 1) {
-          data = cmdfifo_get();
+          data = cmdfifo_r();
           register_w(regaddr, data, 1);
         }
         regaddr++;
@@ -2542,13 +2585,13 @@ void cmdfifo_process(void)
       v->reg[sSetupMode].u = ((smode << 16) | mask);
       /* loop over triangles */
       for (i = 0; i < nvertex; i++) {
-        reg.u = cmdfifo_get();
+        reg.u = cmdfifo_r();
         svert.x = reg.f;
-        reg.u = cmdfifo_get();
+        reg.u = cmdfifo_r();
         svert.y = reg.f;
         if (pcolor) {
           if (mask & 0x03) {
-            data = cmdfifo_get();
+            data = cmdfifo_r();
             if (mask & 0x01) {
               svert.r = (float)RGB_RED(data);
               svert.g = (float)RGB_GREEN(data);
@@ -2560,44 +2603,44 @@ void cmdfifo_process(void)
           }
         } else {
           if (mask & 0x01) {
-            reg.u = cmdfifo_get();
+            reg.u = cmdfifo_r();
             svert.r = reg.f;
-            reg.u = cmdfifo_get();
+            reg.u = cmdfifo_r();
             svert.g = reg.f;
-            reg.u = cmdfifo_get();
+            reg.u = cmdfifo_r();
             svert.b = reg.f;
           }
           if (mask & 0x02) {
-            reg.u = cmdfifo_get();
+            reg.u = cmdfifo_r();
             svert.a = reg.f;
           }
         }
         if (mask & 0x04) {
-          reg.u = cmdfifo_get();
+          reg.u = cmdfifo_r();
           svert.z = reg.f;
         }
         if (mask & 0x08) {
-          reg.u = cmdfifo_get();
+          reg.u = cmdfifo_r();
           svert.wb = reg.f;
         }
         if (mask & 0x10) {
-          reg.u = cmdfifo_get();
+          reg.u = cmdfifo_r();
           svert.w0 = reg.f;
         }
         if (mask & 0x20) {
-          reg.u = cmdfifo_get();
+          reg.u = cmdfifo_r();
           svert.s0 = reg.f;
-          reg.u = cmdfifo_get();
+          reg.u = cmdfifo_r();
           svert.t0 = reg.f;
         }
         if (mask & 0x40) {
-          reg.u = cmdfifo_get();
+          reg.u = cmdfifo_r();
           svert.w1 = reg.f;
         }
         if (mask & 0x80) {
-          reg.u = cmdfifo_get();
+          reg.u = cmdfifo_r();
           svert.s1 = reg.f;
-          reg.u = cmdfifo_get();
+          reg.u = cmdfifo_r();
           svert.t1 = reg.f;
         }
         /* if we're starting a new strip, or if this is the first of a set of verts */
@@ -2619,7 +2662,7 @@ void cmdfifo_process(void)
             setup_and_draw_triangle(v);
         }
       }
-      while (nwords--) cmdfifo_get();
+      while (nwords--) cmdfifo_r();
       break;
     case 4:
       nwords = (command >> 29);
@@ -2627,32 +2670,32 @@ void cmdfifo_process(void)
       regaddr = (command & 0x7ff8) >> 3;
       while (mask) {
         if (mask & 1) {
-          data = cmdfifo_get();
+          data = cmdfifo_r();
           register_w(regaddr, data, 1);
         }
         regaddr++;
         mask >>= 1;
       }
-      while (nwords--) cmdfifo_get();
+      while (nwords--) cmdfifo_r();
       break;
     case 5:
       if ((command & 0x3fc00000) > 0) {
         BX_ERROR(("CMDFIFO packet type 5: byte disable not supported yet"));
       }
       nwords = (command >> 3) & 0x7ffff;
-      regaddr = (cmdfifo_get() & 0xffffff) >> 2;
+      regaddr = (cmdfifo_r() & 0xffffff) >> 2;
       code = (command >> 30);
       switch (code) {
         case 2:
           for (i = 0; i < (int)nwords; i++) {
-            data = cmdfifo_get();
+            data = cmdfifo_r();
             lfb_w(regaddr, data, 0xffffffff);
             regaddr++;
           }
           break;
         case 3:
           for (i = 0; i < (int)nwords; i++) {
-            data = cmdfifo_get();
+            data = cmdfifo_r();
             texture_w(regaddr, data);
             regaddr++;
           }
@@ -2666,13 +2709,11 @@ void cmdfifo_process(void)
   }
 }
 
-voodoo_reg reg;
 
 void register_w_common(Bit32u offset, Bit32u data)
 {
   Bit32u regnum  = (offset) & 0xff;
   Bit32u chips   = (offset>>8) & 0xf;
-  reg.u = data;
 
   /* Voodoo 2 CMDFIFO handling */
   if (FBIINIT7_CMDFIFO_ENABLE(v->reg[fbiInit7].u)) {
@@ -2682,7 +2723,7 @@ void register_w_common(Bit32u offset, Bit32u data)
       } else {
         Bit32u fbi_offset = (v->fbi.cmdfifo[0].base + ((offset & 0xffff) << 2)) & v->fbi.mask;
         if (LOG_CMDFIFO) BX_DEBUG(("CMDFIFO write: FBI offset=0x%08x, data=0x%08x", fbi_offset, data));
-        cmdfifo_put(fbi_offset, data);
+        cmdfifo_w(fbi_offset, data);
       }
       return;
     } else {
@@ -2798,14 +2839,10 @@ void register_w_common(Bit32u offset, Bit32u data)
     case fbiInit4:
     case fbiInit5:
     case fbiInit6:
-    case fbiInit7:
       poly_wait(v->poly, v->regnames[regnum]);
 
       if (v->type <= VOODOO_2 && (chips & 1) && INITEN_ENABLE_HW_INIT(v->pci.init_enable))
       {
-        if ((v->type == VOODOO_2) && (regnum == fbiInit7)) {
-          v->fbi.cmdfifo[0].enable = FBIINIT7_CMDFIFO_ENABLE(data);
-        }
         v->reg[regnum].u = data;
         recompute_video_memory(v);
         v->fbi.video_changed = 1;
@@ -2820,6 +2857,19 @@ void register_w_common(Bit32u offset, Bit32u data)
         v->alt_regmap = FBIINIT3_TRI_REGISTER_REMAP(data);
         v->fbi.yorigin = FBIINIT3_YORIGIN_SUBTRACT(v->reg[fbiInit3].u);
         recompute_video_memory(v);
+      }
+      break;
+
+    case fbiInit7:
+      poly_wait(v->poly, v->regnames[regnum]);
+
+      if (v->type == VOODOO_2 && (chips & 1) && INITEN_ENABLE_HW_INIT(v->pci.init_enable))
+      {
+        if (v->fbi.cmdfifo[0].enable != FBIINIT7_CMDFIFO_ENABLE(data)) {
+          v->fbi.cmdfifo[0].enable = FBIINIT7_CMDFIFO_ENABLE(data);
+          BX_INFO(("CMDFIFO now %sabled", v->fbi.cmdfifo[0].enable ? "en" : "dis"));
+        }
+        v->reg[regnum].u = data;
       }
       break;
 
@@ -2858,6 +2908,7 @@ void register_w_common(Bit32u offset, Bit32u data)
       register_w(offset, data, 0);
   }
 }
+
 
 Bit32u register_r(Bit32u offset)
 {
