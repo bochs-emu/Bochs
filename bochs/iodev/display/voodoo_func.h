@@ -1427,8 +1427,9 @@ void recompute_video_memory(voodoo_state *v)
 void voodoo_bitblt(void)
 {
   Bit8u command = (Bit8u)(v->reg[bltCommand].u & 0x07);
+  Bit8u b1, b2;
   Bit16u c, cols, dst_x, dst_y, fgcolor, r, rows, size;
-  Bit32u offset, loffset;
+  Bit32u offset, loffset, stride;
 
   switch (command) {
     case 0:
@@ -1446,27 +1447,33 @@ void voodoo_bitblt(void)
       cols = (Bit16u)(v->reg[bltSize].u & 0x1ff);
       rows = (Bit16u)((v->reg[bltSize].u >> 16) & 0x1ff);
       fgcolor = (Bit16u)(v->reg[bltColor].u & 0xffff);
-      loffset = (4 << v->fbi.lfb_stride);
+      b1 = (Bit8u)(fgcolor & 0xff);
+      b2 = (Bit8u)(fgcolor >> 8);
+      stride = (4 << v->fbi.lfb_stride);
+      loffset = dst_y * stride;
       for (r = 0; r <= rows; r++) {
-        offset = dst_y * loffset;
         if (r == 0) {
-          offset += dst_x * 2;
-          size = loffset / 2 - dst_x;
-        } else if (r == rows) {
-          size = cols;
+          offset = (loffset + dst_x * 2) & v->fbi.mask;
+          size = stride / 2 - dst_x;
         } else {
-          size = loffset / 2;
+          offset = (loffset & v->fbi.mask);
+          if (r == rows) {
+            size = cols;
+          } else {
+            size = stride / 2;
+          }
         }
         for (c = 0; c < size; c++) {
-          v->fbi.ram[offset + c * 2] = (Bit8u)(fgcolor & 0xff);
-          v->fbi.ram[offset + c * 2 + 1] = (Bit8u)(fgcolor >> 8);
+          v->fbi.ram[offset++] = b1;
+          v->fbi.ram[offset++] = b2;
         }
-        dst_y++;
+        loffset += stride;
       }
       break;
     default:
       BX_ERROR(("Voodoo bitBLT: unknown command %d)", command));
   }
+  v->fbi.video_changed = 1;
 }
 
 
