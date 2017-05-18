@@ -1254,9 +1254,9 @@ end_of_thread:
 
 void rfbStartThread()
 {
-  BX_THREAD_ID(threadID);
+  BX_THREAD_VAR(thread_var);
 
-  BX_THREAD_CREATE(rfbServerThreadInit, NULL, threadID);
+  BX_THREAD_CREATE(rfbServerThreadInit, NULL, thread_var);
 }
 
 void HandleRfbClient(SOCKET sClient)

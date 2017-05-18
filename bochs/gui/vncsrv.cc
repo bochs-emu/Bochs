@@ -1131,9 +1131,9 @@ BX_THREAD_FUNC(vncServerThreadInit, indata)
 
 void vncStartThread()
 {
-  BX_THREAD_ID(threadID);
+  BX_THREAD_VAR(thread_var);
 
-  BX_THREAD_CREATE(vncServerThreadInit, NULL, threadID);
+  BX_THREAD_CREATE(vncServerThreadInit, NULL, thread_var);
 }
 
 void DrawBitmap(int x, int y, int width, int height, char *bmap,

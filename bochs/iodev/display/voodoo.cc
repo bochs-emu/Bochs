@@ -163,14 +163,12 @@ void CDECL libvoodoo_LTX_plugin_fini(void)
 BX_THREAD_FUNC(cmdfifo_thread, indata)
 {
   UNUSED(indata);
-  cmdfifo_control = 1;
-  while (cmdfifo_control > 0) {
-    while ((cmdfifo_control > 0) && (v->fbi.cmdfifo[0].depth == 0)) {
+  while (1) {
+    while (!v->fbi.cmdfifo[0].enable || (v->fbi.cmdfifo[0].depth == 0)) {
       BX_MSLEEP(1);
     }
     cmdfifo_process();
   }
-  cmdfifo_control = -1;
   BX_THREAD_EXIT;
 }
 
@@ -186,11 +184,8 @@ bx_voodoo_c::bx_voodoo_c()
 
 bx_voodoo_c::~bx_voodoo_c()
 {
-  if (cmdfifo_control > 0) {
-    cmdfifo_control = 0;
-    while (cmdfifo_control >= 0) {
-      BX_MSLEEP(1);
-    }
+  if (BX_VOODOO_THIS s.model == VOODOO_2) {
+    BX_THREAD_KILL(cmdfifo_thread_var);
     BX_FINI_MUTEX(cmdfifo_mutex);
   }
   if (v != NULL) {
@@ -249,7 +244,7 @@ void bx_voodoo_c::init(void)
 
   if (BX_VOODOO_THIS s.model == VOODOO_2) {
     BX_INIT_MUTEX(cmdfifo_mutex);
-    BX_THREAD_CREATE(cmdfifo_thread, this, cmdfifo_threadID);
+    BX_THREAD_CREATE(cmdfifo_thread, this, cmdfifo_thread_var);
   }
 
   BX_INFO(("3dfx Voodoo Graphics adapter (model=%s) initialized",

@@ -61,8 +61,7 @@ Bit32u voodoo_last_msg = 255;
 #define MODIFY_PIXEL(VV)
 
 /* cmdfifo thread (Voodoo2) */
-BX_THREAD_ID(cmdfifo_threadID);
-int cmdfifo_control = 0;
+BX_THREAD_VAR(cmdfifo_thread_var);
 BX_MUTEX(cmdfifo_mutex);
 
 /* fast dither lookup */
@@ -2523,7 +2522,7 @@ Bit32u cmdfifo_r(void)
 {
   Bit32u data;
 
-  while ((cmdfifo_control > 0) && (v->fbi.cmdfifo[0].depth == 0)) {
+  while (v->fbi.cmdfifo[0].depth == 0) {
     BX_MSLEEP(1);
   }
   BX_LOCK(cmdfifo_mutex);

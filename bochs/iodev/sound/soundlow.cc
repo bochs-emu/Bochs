@@ -485,18 +485,18 @@ Bit32u bx_soundlow_waveout_c::resampler_common(audio_buffer_t *inbuffer, float *
 
 void bx_soundlow_waveout_c::start_resampler_thread()
 {
-  BX_THREAD_ID(threadID);
+  BX_THREAD_VAR(thread_var);
 
   BX_INIT_MUTEX(resampler_mutex);
-  BX_THREAD_CREATE(resampler_thread, this, threadID);
+  BX_THREAD_CREATE(resampler_thread, this, thread_var);
 }
 
 void bx_soundlow_waveout_c::start_mixer_thread()
 {
-  BX_THREAD_ID(threadID);
+  BX_THREAD_VAR(thread_var);
 
   BX_INIT_MUTEX(mixer_mutex);
-  BX_THREAD_CREATE(mixer_thread, this, threadID);
+  BX_THREAD_CREATE(mixer_thread, this, thread_var);
 }
 
 // bx_soundlow_wavein_c class implementation
