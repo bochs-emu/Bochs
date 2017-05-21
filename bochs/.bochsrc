@@ -432,10 +432,10 @@ vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
 #=======================================================================
 # VOODOO:
 # This defines the Voodoo Graphics emulation (experimental). Currently
-# supported models are 'voodoo1' and 'voodoo2'. The Voodoo2 support is not
-# yet complete. The 'realtime' option controls the behaviour of the timer
-# used for the vertical retrace emulation. The gui screen update timing
-# is controlled by the related 'vga' options.
+# supported models are 'voodoo1' and 'voodoo2'. The Voodoo2 support is not yet
+# complete, but almost usable. The 'realtime' option controls the behaviour of
+# the timer used for the vertical retrace emulation. The gui screen update
+# timing is controlled by the related 'vga' options.
 #
 # Examples:
 #   voodoo: enabled=1, model=voodoo1, realtime=1
