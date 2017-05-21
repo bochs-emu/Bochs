@@ -149,7 +149,7 @@ static raster_info *add_rasterizer(voodoo_state *v, const raster_info *cinfo)
   int hash = compute_raster_hash(cinfo);
 
   if (v->next_rasterizer > MAX_RASTERIZERS)
-  BX_PANIC(("Out of space for new rasterizers!"));
+    BX_PANIC(("Out of space for new rasterizers!"));
 
   /* make a copy of the info */
   *info = *cinfo;
@@ -630,7 +630,6 @@ Bit32s triangle_create_work_item(Bit16u *drawbuf, int texcount)
     extra.dt0dy = v->tmu[0].dtdy;
     extra.dw0dy = v->tmu[0].dwdy;
     extra.lodbase0 = prepare_tmu(&v->tmu[0]);
-    v->stats.texture_mode[TEXMODE_FORMAT(v->tmu[0].reg[textureMode].u)]++;
 
     /* fill in texture 1 parameters */
     if (texcount > 1)
@@ -645,7 +644,6 @@ Bit32s triangle_create_work_item(Bit16u *drawbuf, int texcount)
       extra.dt1dy = v->tmu[1].dtdy;
       extra.dw1dy = v->tmu[1].dwdy;
       extra.lodbase1 = prepare_tmu(&v->tmu[1]);
-      v->stats.texture_mode[TEXMODE_FORMAT(v->tmu[1].reg[textureMode].u)]++;
     }
   }
 
@@ -656,78 +654,6 @@ Bit32s triangle_create_work_item(Bit16u *drawbuf, int texcount)
   return retval;
 }
 
-
-void draw_line(int x1, int y1, int x2, int y2, Bit16u *buf)
-{
-  int i, deltax, deltay, numpixels,
-      d, dinc1, dinc2,
-      x, xinc1, xinc2,
-      y, yinc1, yinc2;
-  Bit16u color = 0xffff;
-  int XRes = v->fbi.rowpixels;
-  int YRes = v->fbi.height;
-  Bit16u *dest;
-  dest = buf;
-
-  deltax = abs(x2 - x1);
-  deltay = abs(y2 - y1);
-
-  if (deltax >= deltay)
-  {
-      numpixels = deltax + 1;
-      d = (deltay<<1) - deltax;
-      dinc1 = deltay<<1;
-      dinc2 = (deltay - deltax) << 1;
-      xinc1 = 1;
-      xinc2 = 1;
-      yinc1 = 0;
-      yinc2 = 1;
-  }
-  else
-  {
-      numpixels = deltay + 1;
-      d = (deltax<<1) - deltay;
-      dinc1 = deltax << 1;
-      dinc2 = (deltax - deltay) << 1;
-      xinc1 = 0;
-      xinc2 = 1;
-      yinc1 = 1;
-      yinc2 = 1;
-  }
-
-  if (x1 > x2)
-  {
-      xinc1 = - xinc1;
-      xinc2 = - xinc2;
-  }
-  if (y1 > y2)
-  {
-      yinc1 = - yinc1;
-      yinc2 = - yinc2;
-  }
-
-  x = x1;
-  y = y1;
-
-  for (i=0; i < numpixels; i++)
-  {
-      if ((x>=0) && (x<XRes) && (y>=0) && (y<YRes))
-          dest [x + y*XRes] = color;
-
-      if (d < 0)
-      {
-          d = d + dinc1;
-          x = x + xinc1;
-          y = y + yinc1;
-      }
-      else
-      {
-          d = d + dinc2;
-          x = x + xinc2;
-          y = y + yinc2;
-      }
-  }
-}
 
 Bit32s triangle(voodoo_state *v)
 {
@@ -798,9 +724,6 @@ Bit32s triangle(voodoo_state *v)
 
   /* update stats */
   v->reg[fbiTrianglesOut].u++;
-
-  /* update stats */
-  v->stats.total_triangles++;
 
   /* 1 pixel per clock, plus some setup time */
   if (LOG_REGISTERS) BX_DEBUG(("cycles = %d", TRIANGLE_SETUP_CLOCKS + pixels));
@@ -1215,26 +1138,6 @@ void swap_buffers(voodoo_state *v)
     v->fbi.swaps_pending--;
   v->fbi.vblank_count = 0;
   v->fbi.vblank_swap_pending = 0;
-
-  /* periodically log rasterizer info */
-  v->stats.swaps++;
-
-  /* update statistics */
-  v->stats.stalls = 0;
-  v->stats.total_triangles = 0;
-  v->stats.total_pixels_in = 0;
-  v->stats.total_pixels_out = 0;
-  v->stats.total_chroma_fail = 0;
-  v->stats.total_zfunc_fail = 0;
-  v->stats.total_afunc_fail = 0;
-  v->stats.total_clipped = 0;
-  v->stats.total_stippled = 0;
-  v->stats.reg_writes = 0;
-  v->stats.reg_reads = 0;
-  v->stats.lfb_writes = 0;
-  v->stats.lfb_reads = 0;
-  v->stats.tex_writes = 0;
-  memset(v->stats.texture_mode, 0, sizeof(v->stats.texture_mode));
 }
 
 /*-------------------------------------------------
@@ -1275,15 +1178,6 @@ static void accumulate_statistics(voodoo_state *v, const stats_block *stats)
   v->reg[fbiChromaFail].u += stats->chroma_fail;
   v->reg[fbiZfuncFail].u += stats->zfunc_fail;
   v->reg[fbiAfuncFail].u += stats->afunc_fail;
-
-  /* apply emulation statistics */
-  v->stats.total_pixels_in += stats->pixels_in;
-  v->stats.total_pixels_out += stats->pixels_out;
-  v->stats.total_chroma_fail += stats->chroma_fail;
-  v->stats.total_zfunc_fail += stats->zfunc_fail;
-  v->stats.total_afunc_fail += stats->afunc_fail;
-  v->stats.total_clipped += stats->clip_fail;
-  v->stats.total_stippled += stats->stipple_count;
 }
 
 static void update_statistics(voodoo_state *v, int accumulate)
@@ -2032,9 +1926,6 @@ Bit32s texture_w(Bit32u offset, Bit32u data)
 
   tmu_state *t;
 
-  /* statistics */
-  v->stats.tex_writes++;
-
   /* point to the right TMU */
   if (!(v->chipmask & (2 << tmunum)) || (tmunum >= MAX_TMU))
     return 0;
@@ -2155,9 +2046,6 @@ Bit32u lfb_w(Bit32u offset, Bit32u data, Bit32u mem_mask)
   int pix, destbuf;
 
   BX_DEBUG(("write LFB offset 0x%x value 0x%08x", offset, data));
-
-  /* statistics */
-  v->stats.lfb_writes++;
 
   /* byte swizzling */
   if (LFBMODE_BYTE_SWIZZLE_WRITES(v->reg[lfbMode].u))
@@ -3069,9 +2957,6 @@ Bit32u lfb_r(Bit32u offset)
   Bit32u destbuf;
 
   BX_DEBUG(("read LFB offset 0x%x", offset));
-
-  /* statistics */
-  v->stats.lfb_reads++;
 
   /* compute X,Y */
   x = (offset << 1) & 0x3fe;

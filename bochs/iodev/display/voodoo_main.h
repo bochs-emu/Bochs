@@ -62,20 +62,6 @@ enum
     TYPE DEFINITIONS
 ***************************************************************************/
 
-typedef struct _voodoo_config voodoo_config;
-struct _voodoo_config
-{
-  int         type;
-  Bit8u       fbmem;
-  Bit8u       tmumem0;
-  Bit8u       tmumem1;
-  const char *    screen;
-  const char *    cputag;
-//  voodoo_vblank_func  vblank;
-//  voodoo_stall_func stall;
-};
-
-
 #define VOODOO_MEM 0x60000000
 #define VOODOO_REG_PAGES 1024
 #define VOODOO_LFB_PAGES 1024

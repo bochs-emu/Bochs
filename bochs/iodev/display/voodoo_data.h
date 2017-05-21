@@ -1401,32 +1401,6 @@ union _voodoo_reg
 typedef voodoo_reg rgb_union;
 
 
-typedef struct _voodoo_stats voodoo_stats;
-struct _voodoo_stats
-{
-  Bit8u   lastkey;            /* last key state */
-  Bit8u   display;            /* display stats? */
-  Bit32s  swaps;              /* total swaps */
-  Bit32s  stalls;             /* total stalls */
-  Bit32s  total_triangles;    /* total triangles */
-  Bit32s  total_pixels_in;    /* total pixels in */
-  Bit32s  total_pixels_out;   /* total pixels out */
-  Bit32s  total_chroma_fail;  /* total chroma fail */
-  Bit32s  total_zfunc_fail;   /* total z func fail */
-  Bit32s  total_afunc_fail;   /* total a func fail */
-  Bit32s  total_clipped;      /* total clipped */
-  Bit32s  total_stippled;     /* total stippled */
-  Bit32s  lfb_writes;         /* LFB writes */
-  Bit32s  lfb_reads;          /* LFB reads */
-  Bit32s  reg_writes;         /* register writes */
-  Bit32s  reg_reads;          /* register reads */
-  Bit32s  tex_writes;         /* texture writes */
-  Bit32s  texture_mode[16];   /* 16 different texture modes */
-  Bit8u   render_override;    /* render override */
-  char    buffer[1024];       /* string */
-};
-
-
 /* note that this structure is an even 64 bytes long */
 typedef struct _stats_block stats_block;
 struct _stats_block
@@ -1733,8 +1707,6 @@ struct _voodoo_state
   Bit32u      tmu_config;
 
   stats_block *   thread_stats; /* per-thread statistics */
-
-  voodoo_stats    stats;        /* internal statistics */
 
   Bit32u      last_status_pc;   /* PC of last status description (for logging) */
   Bit32u      last_status_value; /* value of last status read (for logging) */
@@ -3066,7 +3038,6 @@ do                                                                              
       (VV)->reg[stipple].u = ((VV)->reg[stipple].u << 1) | ((VV)->reg[stipple].u >> 31); \
       if (((VV)->reg[stipple].u & 0x80000000) == 0)                              \
       {                                                                          \
-        (VV)->stats.total_stippled++;                                            \
         goto skipdrawdepth;                                                      \
       }                                                                          \
     }                                                                            \
@@ -3077,7 +3048,6 @@ do                                                                              
       int stipple_index = (((YY) & 3) << 3) | (~(XX) & 7);                       \
       if ((((VV)->reg[stipple].u >> stipple_index) & 1) == 0)                    \
       {                                                                          \
-        (VV)->stats.total_stippled++;                                            \
         goto skipdrawdepth;                                                      \
       }                                                                          \
     }                                                                            \
@@ -3588,14 +3558,12 @@ void raster_##name(void *destbase, Bit32s y, const poly_extent *extent, const vo
     if (startx < tempclip)                                                       \
     {                                                                            \
       stats->pixels_in += tempclip - startx;                                     \
-      v->stats.total_clipped += tempclip - startx;                               \
       startx = tempclip;                                                         \
     }                                                                            \
     tempclip = v->reg[clipLeftRight].u & 0x3ff;                                  \
     if (stopx >= tempclip)                                                       \
     {                                                                            \
       stats->pixels_in += stopx - tempclip;                                      \
-      v->stats.total_clipped += stopx - tempclip;                                \
       stopx = tempclip - 1;                                                      \
     }                                                                            \
   }                                                                              \
