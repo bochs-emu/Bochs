@@ -77,7 +77,7 @@ bx_soundlow_waveout_sdl_c::~bx_soundlow_waveout_sdl_c()
     pcm_callback_id = -1;
   }
   WaveOutOpen = 0;
-  mixer_control = 0;
+  mix_thread_start = 0;
   SDL_CloseAudio();
   SDL_QuitSubSystem(SDL_INIT_AUDIO);
 }
@@ -129,7 +129,7 @@ int bx_soundlow_waveout_sdl_c::set_pcm_params(bx_pcm_param_t *param)
       BX_INFO(("changed sample rate to %d", fmt.freq));
     }
     WaveOutOpen = 1;
-    mixer_control = 1;
+    mix_thread_start = 1;
   }
   SDL_PauseAudio(0);
   return BX_SOUNDLOW_OK;
