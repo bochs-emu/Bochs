@@ -370,10 +370,10 @@ void disassembler::print_datasize(unsigned size)
       dis_sprintf("tbyte ptr ");
       break;
     case XMM_SIZE:
-      dis_sprintf("dqword ptr ");
+      dis_sprintf("xmmword ptr ");
       break;
     case YMM_SIZE:
-      dis_sprintf("qqword ptr ");
+      dis_sprintf("ymmword ptr ");
       break;
     case X_SIZE:
       break;
