@@ -1163,6 +1163,9 @@ int decoder_vex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
 {
   int ia_opcode = BX_IA_ERROR;
 
+  if (remain == 0)
+    return(-1);
+
 #if BX_SUPPORT_AVX
   unsigned rex_r = 0, rex_x = 0, rex_b = 0;
   unsigned rm = 0, mod = 0, nnn = 0;
@@ -1176,14 +1179,12 @@ int decoder_vex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
   assert((b1 & ~0x1) == 0xc4);
 
   if (sse_prefix | rex_prefix)
-    return(ia_opcode);
+    return(BX_IA_ERROR);
 
   bx_bool vex_w = 0;
   unsigned vex_opcext = 1;
-  if (remain == 0)
-    return(-1);
-  remain--;
   unsigned vex = *iptr++;
+  remain--;
 
   rex_r = ((vex >> 4) & 0x8) ^ 0x8;
   if (b1 == 0xc4) {
@@ -1302,6 +1303,9 @@ int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
 {
   int ia_opcode = BX_IA_ERROR;
 
+  if (remain == 0)
+    return(-1);
+
 #if BX_SUPPORT_EVEX
   unsigned rex_r = 0, rex_x = 0, rex_b = 0;
   unsigned rm = 0, mod = 0, nnn = 0;
@@ -1317,7 +1321,7 @@ int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
   assert(b1 == 0x62);
 
   if (sse_prefix | rex_prefix)
-    return(ia_opcode);
+    return(BX_IA_ERROR);
 
   Bit32u evex;
   if (remain > 3) {

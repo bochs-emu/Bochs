@@ -1708,6 +1708,9 @@ int decoder_vex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
   // make sure VEX 0xC4 or VEX 0xC5
   assert((b1 & ~0x1) == 0xc4);
 
+  if (remain == 0)
+    return(-1);
+
   if ((*iptr & 0xc0) != 0xc0) {
     return decoder_modrm32(iptr, remain, i, b1, sse_prefix, opcode_table);
   }
@@ -1716,14 +1719,12 @@ int decoder_vex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
   unsigned rm = 0, mod = 0, nnn = 0;
 
   if (sse_prefix)
-    return(ia_opcode);
+    return(BX_IA_ERROR);
 
   bx_bool vex_w = 0;
   unsigned vex_opcext = 1;
-  if (remain == 0)
-    return(-1);
-  remain--;
   unsigned vex = *iptr++;
+  remain--;
 
   if (b1 == 0xc4) {
     // decode 3-byte VEX prefix
@@ -1838,6 +1839,9 @@ int decoder_evex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
   // make sure EVEX 0x62 prefix
   assert(b1 == 0x62);
 
+  if (remain == 0)
+    return(-1);
+
   if ((*iptr & 0xc0) != 0xc0) {
     return decoder_modrm32(iptr, remain, i, b1, sse_prefix, opcode_table);
   }
@@ -1846,7 +1850,7 @@ int decoder_evex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
   bx_bool displ8 = BX_FALSE;
 
   if (sse_prefix)
-    return(ia_opcode);
+    return(BX_IA_ERROR);
 
   Bit32u evex;
   if (remain > 3) {
