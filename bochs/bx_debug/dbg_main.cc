@@ -2605,7 +2605,7 @@ void bx_dbg_examine_command(const char *command, const char *format, bx_bool for
       data_size = 1;
       per_line = 64;
     }
-    else
+    else {
       switch (unit_size) {
         case 'b': data_size = 1; per_line = 16; break;
         case 'h': data_size = 2; per_line = 8; break;
@@ -2615,6 +2615,7 @@ void bx_dbg_examine_command(const char *command, const char *format, bx_bool for
       // binary format is quite large
       if (display_format == 't')
         per_line /= 4;
+    }
   }
   else {
     switch (unit_size) {
