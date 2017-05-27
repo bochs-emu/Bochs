@@ -1965,6 +1965,9 @@ int decoder_xop32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
   // make sure XOP 0x8f prefix
   assert(b1 == 0x8f);
 
+  if (remain == 0)
+    return(-1);
+
   if ((*iptr & 0xc8) != 0xc8) {
     // not XOP prefix, decode regular opcode
     struct bx_modrm modrm;
