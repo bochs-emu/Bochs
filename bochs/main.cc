@@ -872,11 +872,6 @@ int bx_init_main(int argc, char *argv[])
   // initialize plugin system. This must happen before we attempt to
   // load any modules.
   plugin_startup();
-#if BX_SUPPORT_PCIUSB
-  // USB HC devices depend on USB core symbols, so we have to load it here.
-  // The devices init() unloads it if not used.
-  PLUG_load_plugin(usb_common, PLUGTYPE_CORE);
-#endif
 
   int norcfile = 1;
 

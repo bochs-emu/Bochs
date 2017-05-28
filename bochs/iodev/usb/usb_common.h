@@ -146,6 +146,15 @@ typedef struct USBAsync {
   struct USBAsync *next;
 } USBAsync;
 
+enum usbmod_type {
+  USB_MOD_TYPE_NONE=0,
+  USB_MOD_TYPE_CBI,
+  USB_MOD_TYPE_HID,
+  USB_MOD_TYPE_HUB,
+  USB_MOD_TYPE_MSD,
+  USB_MOD_TYPE_PRINTER
+};
+
 enum usbdev_type {
   USB_DEV_TYPE_NONE=0,
   USB_DEV_TYPE_MOUSE,
@@ -158,17 +167,20 @@ enum usbdev_type {
   USB_DEV_TYPE_FLOPPY
 };
 
-class bx_usb_devctl_c : public bx_usb_devctl_stub_c {
+class BOCHSAPI bx_usbdev_ctl_c : public logfunctions {
 public:
-  bx_usb_devctl_c();
-  virtual ~bx_usb_devctl_c() {}
+  bx_usbdev_ctl_c();
+  virtual ~bx_usbdev_ctl_c() {}
+  void init(void);
+  void exit(void);
   virtual int init_device(bx_list_c *portconf, logfunctions *hub, void **dev, bx_list_c *sr_list);
-  virtual void usb_send_msg(void *dev, int msg);
 private:
   void parse_port_options(usb_device_c *dev, bx_list_c *portconf);
 };
 
-class usb_device_c : public logfunctions {
+BOCHSAPI extern bx_usbdev_ctl_c bx_usbdev_ctl;
+
+class BOCHSAPI usb_device_c : public logfunctions {
 public:
   usb_device_c(void);
   virtual ~usb_device_c() {}
@@ -363,5 +375,25 @@ static BX_CPP_INLINE void put_dwords(bx_phy_address addr, Bit32u *buf, int num)
     DEV_MEM_WRITE_PHYSICAL(addr, 4, (Bit8u*)buf);
   }
 }
+
+//
+// The usbdev_locator class is used by usb_device_c classes to register
+// their name. USB HC emulations use the static 'create' method
+// to locate and instantiate a usb_device_c class.
+//
+class BOCHSAPI_MSVCONLY usbdev_locator_c {
+public:
+  static bx_bool module_present(const char *type);
+  static void cleanup();
+  static usb_device_c *create(const char *type, usbdev_type devtype, const char *args);
+protected:
+  usbdev_locator_c(const char *type);
+  virtual ~usbdev_locator_c();
+  virtual usb_device_c *allocate(usbdev_type devtype, const char *args) = 0;
+private:
+  static usbdev_locator_c *all;
+  usbdev_locator_c *next;
+  const char *type;
+};
 
 #endif

@@ -1589,19 +1589,10 @@ if test "$use_usb" = 1; then
   if test "$pci" != "1"; then
     AC_MSG_ERROR([USB requires PCI support])
   fi
-  USBCORE_OBJ="usb_common.o"
-  USBDEV_OBJS="usb_hid.o usb_hub.o usb_msd.o usb_printer.o usb_cbi.o"
-  SCSI_OBJS="scsi_device.o"
-  if test "$bx_plugins" = 0; then
-    USB_LIB_VAR='iodev/usb/libusb.a'
-    AC_SUBST(USB_LIB_VAR)
-  fi
+  USB_LIB_VAR='iodev/usb/libusb.a'
+  AC_SUBST(USB_LIB_VAR)
 fi
 AC_SUBST(USBHC_OBJS)
-AC_SUBST(UHCICORE_OBJ)
-AC_SUBST(USBCORE_OBJ)
-AC_SUBST(USBDEV_OBJS)
-AC_SUBST(SCSI_OBJS)
 AC_SUBST(USBHC_DLL_TARGETS)
 
 

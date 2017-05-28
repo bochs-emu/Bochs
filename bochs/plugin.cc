@@ -44,16 +44,20 @@
 #define SOUND_PLUGIN_FINI_FMT_STRING "lib%s_sound_plugin_fini"
 #define NET_PLUGIN_INIT_FMT_STRING   "lib%s_net_plugin_init"
 #define NET_PLUGIN_FINI_FMT_STRING   "lib%s_net_plugin_fini"
+#define USB_PLUGIN_INIT_FMT_STRING   "lib%s_dev_plugin_init"
+#define USB_PLUGIN_FINI_FMT_STRING   "lib%s_dev_plugin_fini"
 #define PLUGIN_PATH                  ""
 
 #ifndef WIN32
 #define PLUGIN_FILENAME_FORMAT       "libbx_%s.so"
 #define SOUND_PLUGIN_FILENAME_FORMAT "libbx_sound%s.so"
 #define NET_PLUGIN_FILENAME_FORMAT   "libbx_eth_%s.so"
+#define USB_PLUGIN_FILENAME_FORMAT   "libbx_%s.so"
 #else
 #define PLUGIN_FILENAME_FORMAT       "bx_%s.dll"
 #define SOUND_PLUGIN_FILENAME_FORMAT "bx_sound%s.dll"
 #define NET_PLUGIN_FILENAME_FORMAT   "bx_eth_%s.dll"
+#define USB_PLUGIN_FILENAME_FORMAT   "bx_%s.dll"
 #endif
 
 logfunctions *pluginlog;
@@ -321,6 +325,8 @@ void plugin_load(char *name, plugintype_t type)
     sprintf(tmpname, SOUND_PLUGIN_FILENAME_FORMAT, name);
   } else if (type == PLUGTYPE_NETWORK) {
     sprintf(tmpname, NET_PLUGIN_FILENAME_FORMAT, name);
+  } else if (type == PLUGTYPE_USBDEV) {
+    sprintf(tmpname, USB_PLUGIN_FILENAME_FORMAT, name);
   } else {
     sprintf(tmpname, PLUGIN_FILENAME_FORMAT, name);
   }
@@ -370,6 +376,8 @@ void plugin_load(char *name, plugintype_t type)
     sprintf(tmpname, SOUND_PLUGIN_INIT_FMT_STRING, name);
   } else if (type == PLUGTYPE_NETWORK) {
     sprintf(tmpname, NET_PLUGIN_INIT_FMT_STRING, name);
+  } else if (type == PLUGTYPE_USBDEV) {
+    sprintf(tmpname, USB_PLUGIN_INIT_FMT_STRING, name);
   } else if (type != PLUGTYPE_USER) {
     sprintf(tmpname, PLUGIN_INIT_FMT_STRING, name);
   } else {
@@ -395,6 +403,8 @@ void plugin_load(char *name, plugintype_t type)
     sprintf(tmpname, SOUND_PLUGIN_FINI_FMT_STRING, name);
   } else if (type == PLUGTYPE_NETWORK) {
     sprintf(tmpname, NET_PLUGIN_FINI_FMT_STRING, name);
+  } else if (type == PLUGTYPE_USBDEV) {
+    sprintf(tmpname, USB_PLUGIN_FINI_FMT_STRING, name);
   } else if (type != PLUGTYPE_USER) {
     sprintf(tmpname, PLUGIN_FINI_FMT_STRING, name);
   } else {
@@ -786,6 +796,7 @@ typedef struct {
 #define BUILTIN_OPT_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_OPTIONAL, lib##mod##_LTX_plugin_init, lib##mod##_LTX_plugin_fini, 0}
 #define BUILTIN_SND_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_SOUND, lib##mod##_sound_plugin_init, lib##mod##_sound_plugin_fini, 0}
 #define BUILTIN_NET_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_NETWORK, lib##mod##_net_plugin_init, lib##mod##_net_plugin_fini, 0}
+#define BUILTIN_USB_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_USBDEV, lib##mod##_dev_plugin_init, lib##mod##_dev_plugin_fini, 0}
 
 static builtin_plugin_t builtin_plugins[] = {
 #if BX_WITH_AMIGAOS
@@ -921,6 +932,13 @@ static builtin_plugin_t builtin_plugins[] = {
 #if BX_NETMOD_WIN32
   BUILTIN_NET_PLUGIN_ENTRY(win32),
 #endif
+#endif
+#if BX_SUPPORT_PCIUSB
+  BUILTIN_USB_PLUGIN_ENTRY(usb_cbi),
+  BUILTIN_USB_PLUGIN_ENTRY(usb_hid),
+  BUILTIN_USB_PLUGIN_ENTRY(usb_hub),
+  BUILTIN_USB_PLUGIN_ENTRY(usb_msd),
+  BUILTIN_USB_PLUGIN_ENTRY(usb_printer),
 #endif
   {"NULL", PLUGTYPE_GUI, NULL, NULL, 0}
 };

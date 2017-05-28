@@ -390,7 +390,7 @@ void bx_uhci_core_c::write(Bit32u address, Bit32u value, unsigned io_len)
         for (unsigned i=0; i<USB_UHCI_PORTS; i++) {
           if (hub.usb_port[i].status) {
             if (hub.usb_port[i].device != NULL) {
-              DEV_usb_send_msg(hub.usb_port[i].device, USB_MSG_RESET);
+              hub.usb_port[i].device->usb_send_msg(USB_MSG_RESET);
             }
             hub.usb_port[i].connect_changed = 1;
             if (hub.usb_port[i].enabled) {
@@ -539,7 +539,7 @@ void bx_uhci_core_c::write(Bit32u address, Bit32u value, unsigned io_len)
               hub.usb_port[port].low_speed =
                 (hub.usb_port[port].device->get_speed() == USB_SPEED_LOW);
               set_connect_status(port, hub.usb_port[port].device->get_type(), 1);
-              DEV_usb_send_msg(hub.usb_port[port].device, USB_MSG_RESET);
+              hub.usb_port[port].device->usb_send_msg(USB_MSG_RESET);
             }
           }
           BX_INFO(("Port%d: Reset", port+1));

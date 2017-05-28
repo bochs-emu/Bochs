@@ -29,6 +29,7 @@
 #include "iodev/slowdown_timer.h"
 #include "iodev/sound/soundmod.h"
 #include "iodev/network/netmod.h"
+#include "iodev/usb/usb_common.h"
 
 #define LOG_THIS bx_devices.
 
@@ -90,9 +91,6 @@ void bx_devices_c::init_stubs()
   pluginPci2IsaBridge = &stubPci2Isa;
   pluginPciIdeController = &stubPciIde;
   pluginACPIController = &stubACPIController;
-#endif
-#if BX_SUPPORT_PCIUSB
-  pluginUsbDevCtl = &stubUsbDevCtl;
 #endif
 }
 
@@ -182,6 +180,9 @@ void bx_devices_c::init(BX_MEM_C *newmem)
     PLUG_load_plugin(pci, PLUGTYPE_CORE);
     PLUG_load_plugin(pci2isa, PLUGTYPE_CORE);
 #if BX_SUPPORT_PCIUSB
+    usb_enabled = is_usb_enabled();
+    if (usb_enabled)
+      bx_usbdev_ctl.init();
     if (chipset == BX_PCI_CHIPSET_I440FX) {
       // UHCI is a part of the PIIX3, so load / enable it
       if (!PLUG_device_present("usb_uhci")) {
@@ -189,10 +190,6 @@ void bx_devices_c::init(BX_MEM_C *newmem)
       }
       SIM->get_param_bool(BXPN_UHCI_ENABLED)->set(1);
     }
-    // USB core loaded before parsing bochsrc - unload if not used.
-    usb_enabled = is_usb_enabled();
-    if (!usb_enabled)
-      PLUG_unload_plugin(usb_common);
 #endif
     if (chipset == BX_PCI_CHIPSET_I440FX) {
       PLUG_load_plugin(acpi, PLUGTYPE_STANDARD);
@@ -405,7 +402,7 @@ void bx_devices_c::exit()
 #endif
 #if BX_SUPPORT_PCIUSB
   if (usb_enabled)
-    PLUG_unload_plugin(usb_common);
+    bx_usbdev_ctl.exit();
 #endif
   init_stubs();
 }

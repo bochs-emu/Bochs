@@ -49,25 +49,28 @@ top_builddir    = ../..
 LIBTOOL=@LIBTOOL@
 WIN32_DLL_IMPORT_LIBRARY=../../@WIN32_DLL_IMPORT_LIB@
 
-USBDEV_OBJS = @USBDEV_OBJS@
-UHCICORE_OBJ = @UHCICORE_OBJ@
-SCSI_OBJS = @SCSI_OBJS@
+USBDEV_OBJS = usb_hid.o usb_hub.o usb_msd.o usb_printer.o usb_cbi.o
+UHCICORE_OBJ = uhci_core.o
+SCSI_OBJS = scsi_device.o
 
 BX_INCDIRS = -I.. -I../.. -I$(srcdir)/.. -I$(srcdir)/../.. -I../../@INSTRUMENT_DIR@ -I$(srcdir)/../../@INSTRUMENT_DIR@
 LOCAL_CXXFLAGS = $(MCH_CFLAGS)
 
+OBJS_THAT_CANNOT_BE_PLUGINS = \
+  usb_common.o
+
 OBJS_THAT_CAN_BE_PLUGINS = \
   @USBHC_OBJS@ \
-  @USBCORE_OBJ@
+  $(USBDEV_OBJS)
 
 OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
   $(UHCICORE_OBJ) \
-  $(USBDEV_OBJS) \
   $(SCSI_OBJS)
 
 NONPLUGIN_OBJS = @IODEV_EXT_NON_PLUGIN_OBJS@
 PLUGIN_OBJS = @IODEV_EXT_PLUGIN_OBJS@
 USBHC_DLL_TARGETS = @USBHC_DLL_TARGETS@
+USBDEV_DLL_TARGETS = bx_usb_hid.dll bx_usb_hub.dll bx_usb_msd.dll bx_usb_printer.dll bx_usb_cbi.dll
 
 all: libusb.a
 
@@ -75,7 +78,7 @@ plugins: @PLUGIN_TARGET_2@
 
 plugins_gcc: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 
-plugins_msvc: bx_usb_common.dll $(USBHC_DLL_TARGETS)
+plugins_msvc: $(USBHC_DLL_TARGETS) $(USBDEV_DLL_TARGETS)
 
 libusb.a: $(NONPLUGIN_OBJS)
 	@RMCOMMAND@ libusb.a
@@ -94,8 +97,8 @@ libbx_%.la: %.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH)
 
 # special link rules for plugins that require more than one object file
-libbx_usb_common.la: usb_common.lo $(USBDEV_OBJS:.o=.lo) scsi_device.lo
-	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module usb_common.lo $(USBDEV_OBJS:.o=.lo) scsi_device.lo -o libbx_usb_common.la -rpath $(PLUGIN_PATH)
+libbx_usb_msd.la: usb_msd.lo scsi_device.lo
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module usb_msd.lo scsi_device.lo -o libbx_usb_msd.la -rpath $(PLUGIN_PATH)
 
 libbx_usb_uhci.la: usb_uhci.lo uhci_core.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module usb_uhci.lo uhci_core.lo -o libbx_usb_uhci.la -rpath $(PLUGIN_PATH)
@@ -108,9 +111,6 @@ bx_%.dll: %.o
 	$(CXX) $(CXXFLAGS) -shared -o $@ $< $(WIN32_DLL_IMPORT_LIBRARY)
 
 # special link rules for plugins with Cygwin, MinGW/MSYS and MSVC nmake
-bx_usb_common.dll: usb_common.o $(USBDEV_OBJS) scsi_device.o
-	@LINK_DLL@ usb_common.o $(USBDEV_OBJS) scsi_device.o $(WIN32_DLL_IMPORT_LIBRARY)
-
 bx_usb_uhci.dll: usb_uhci.o uhci_core.o
 	@LINK_DLL@ usb_uhci.o uhci_core.o $(WIN32_DLL_IMPORT_LIBRARY)
 
@@ -122,6 +122,21 @@ bx_usb_ehci.dll: usb_ehci.o uhci_core.o
 
 bx_usb_xhci.dll: usb_xhci.o
 	@LINK_DLL@ usb_xhci.o $(WIN32_DLL_IMPORT_LIBRARY)
+
+bx_usb_cbi.dll: usb_cbi.o
+	@LINK_DLL@ usb_cbi.o $(WIN32_DLL_IMPORT_LIBRARY)
+
+bx_usb_hid.dll: usb_hid.o
+	@LINK_DLL@ usb_hid.o $(WIN32_DLL_IMPORT_LIBRARY)
+
+bx_usb_hub.dll: usb_hub.o
+	@LINK_DLL@ usb_hub.o $(WIN32_DLL_IMPORT_LIBRARY)
+
+bx_usb_msd.dll: usb_msd.o scsi_device.o
+	@LINK_DLL@ usb_msd.o scsi_device.o $(WIN32_DLL_IMPORT_LIBRARY)
+
+bx_usb_printer.dll: usb_printer.o
+	@LINK_DLL@ usb_printer.o $(WIN32_DLL_IMPORT_LIBRARY)
 
 ##### end DLL section
 

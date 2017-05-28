@@ -857,7 +857,7 @@ bx_bool bx_usb_ehci_c::write_handler(bx_phy_address addr, unsigned len, void *da
           }
           if (oldpr && !BX_EHCI_THIS hub.usb_port[port].portsc.pr) {
             if (BX_EHCI_THIS hub.usb_port[port].device != NULL) {
-              DEV_usb_send_msg(BX_EHCI_THIS hub.usb_port[port].device, USB_MSG_RESET);
+              BX_EHCI_THIS hub.usb_port[port].device->usb_send_msg(USB_MSG_RESET);
               BX_EHCI_THIS hub.usb_port[port].portsc.csc = 0;
               if (BX_EHCI_THIS hub.usb_port[port].device->get_speed() == USB_SPEED_HIGH) {
                 BX_EHCI_THIS hub.usb_port[port].portsc.ped = 1;

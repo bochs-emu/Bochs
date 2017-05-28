@@ -777,7 +777,7 @@ bx_bool bx_usb_ohci_c::write_handler(bx_phy_address addr, unsigned len, void *da
         BX_OHCI_THIS hub.op_regs.HcControl.hcfs = OHCI_USB_SUSPEND;
         for (unsigned i=0; i<USB_OHCI_PORTS; i++)
           if (BX_OHCI_THIS hub.usb_port[i].HcRhPortStatus.ccs && (BX_OHCI_THIS hub.usb_port[i].device != NULL))
-            DEV_usb_send_msg(BX_OHCI_THIS hub.usb_port[i].device, USB_MSG_RESET);
+            BX_OHCI_THIS hub.usb_port[i].device->usb_send_msg(USB_MSG_RESET);
       }
       break;
 
@@ -980,7 +980,7 @@ bx_bool bx_usb_ohci_c::write_handler(bx_phy_address addr, unsigned len, void *da
             BX_OHCI_THIS hub.usb_port[p].HcRhPortStatus.lsda =
               (BX_OHCI_THIS hub.usb_port[p].device->get_speed() == USB_SPEED_LOW);
             usb_set_connect_status(p, BX_OHCI_THIS hub.usb_port[p].device->get_type(), 1);
-            DEV_usb_send_msg(BX_OHCI_THIS hub.usb_port[p].device, USB_MSG_RESET);
+            BX_OHCI_THIS hub.usb_port[p].device->usb_send_msg(USB_MSG_RESET);
           }
           set_interrupt(OHCI_INTR_RHSC);
         }

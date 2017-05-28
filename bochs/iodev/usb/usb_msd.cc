@@ -39,6 +39,31 @@
 
 #define LOG_THIS
 
+// USB device plugin entry points
+
+int CDECL libusb_msd_dev_plugin_init(plugin_t *plugin, plugintype_t type)
+{
+  return 0; // Success
+}
+
+void CDECL libusb_msd_dev_plugin_fini(void)
+{
+  // Nothing here yet
+}
+
+//
+// Define the static class that registers the derived USB device class,
+// and allocates one on request.
+//
+class bx_usb_msd_locator_c : public usbdev_locator_c {
+public:
+  bx_usb_msd_locator_c(void) : usbdev_locator_c("usb_msd") {}
+protected:
+  usb_device_c *allocate(usbdev_type devtype, const char *args) {
+    return (new usb_msd_device_c(devtype, args));
+  }
+} bx_usb_msd_match;
+
 enum USBMSDMode {
   USB_MSDM_CBW,
   USB_MSDM_DATAOUT,

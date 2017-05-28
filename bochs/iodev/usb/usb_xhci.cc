@@ -1678,7 +1678,7 @@ bx_bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *da
               BX_XHCI_THIS hub.usb_port[port].portsc.pls = PLS_U0;
               BX_XHCI_THIS hub.usb_port[port].portsc.ped = 1;
               if (BX_XHCI_THIS hub.usb_port[port].device != NULL) {
-                DEV_usb_send_msg(BX_XHCI_THIS hub.usb_port[port].device, USB_MSG_RESET);
+                BX_XHCI_THIS hub.usb_port[port].device->usb_send_msg(USB_MSG_RESET);
                 if (BX_XHCI_THIS hub.usb_port[port].is_usb3 && (reset_type == WARM_RESET))
                   BX_XHCI_THIS hub.usb_port[port].portsc.wrc = 1;
                 BX_XHCI_THIS hub.usb_port[port].portsc.prc = 1;

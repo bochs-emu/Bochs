@@ -322,16 +322,6 @@ public:
 };
 #endif
 
-#if BX_SUPPORT_PCIUSB
-class BOCHSAPI bx_usb_devctl_stub_c : public bx_devmodel_c {
-public:
-  virtual int init_device(bx_list_c *portconf, logfunctions *hub, void **dev, bx_list_c *sr_list) {
-    STUBFUNC(usb_devctl, init_device); return 0;
-  }
-  virtual void usb_send_msg(void *dev, int msg) {}
-};
-#endif
-
 class BOCHSAPI bx_hdimage_ctl_stub_c : public bx_devmodel_c {
 public:
   virtual device_image_t* init_image(Bit8u image_mode, Bit64u disk_size, const char *journal) {
@@ -435,9 +425,6 @@ public:
   bx_pci_ide_stub_c *pluginPciIdeController;
   bx_acpi_ctrl_stub_c *pluginACPIController;
 #endif
-#if BX_SUPPORT_PCIUSB
-  bx_usb_devctl_stub_c  *pluginUsbDevCtl;
-#endif
 
   // stub classes that the pointers (above) can point to until a plugin is
   // loaded
@@ -464,9 +451,6 @@ public:
   bx_pci2isa_stub_c stubPci2Isa;
   bx_pci_ide_stub_c stubPciIde;
   bx_acpi_ctrl_stub_c stubACPIController;
-#endif
-#if BX_SUPPORT_PCIUSB
-  bx_usb_devctl_stub_c stubUsbDevCtl;
 #endif
 
   // Some info to pass to devices which can handled bulk IO.  This allows
