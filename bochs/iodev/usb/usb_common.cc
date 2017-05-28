@@ -295,7 +295,7 @@ void usbdev_locator_c::cleanup()
 {
 #if BX_PLUGINS
   while (all != NULL) {
-    PLUG_unload_usb_plugin(usbmod_names[all->type]);
+    PLUG_unload_usb_plugin(all->type);
   }
 #endif
 }
