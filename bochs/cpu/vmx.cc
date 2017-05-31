@@ -3114,7 +3114,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD_EdGd(bxInstruction_c *i)
 #if BX_SUPPORT_VMX >= 2
     if (Vmexit_Vmread(i))
 #endif
-        VMexit_Instruction(i, VMX_VMEXIT_VMREAD, BX_READ);
+      VMexit_Instruction(i, VMX_VMEXIT_VMREAD, BX_READ);
 
     vmcs_pointer = BX_CPU_THIS_PTR vmcs.vmcs_linkptr;
   }
@@ -3174,7 +3174,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMREAD_EqGq(bxInstruction_c *i)
 #if BX_SUPPORT_VMX >= 2
     if (Vmexit_Vmread(i))
 #endif
-        VMexit_Instruction(i, VMX_VMEXIT_VMREAD, BX_READ);
+      VMexit_Instruction(i, VMX_VMEXIT_VMREAD, BX_READ);
 
     vmcs_pointer = BX_CPU_THIS_PTR vmcs.vmcs_linkptr;
   }
@@ -3239,7 +3239,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE_GdEd(bxInstruction_c *i)
 #if BX_SUPPORT_VMX >= 2
     if (Vmexit_Vmwrite(i))
 #endif
-        VMexit_Instruction(i, VMX_VMEXIT_VMWRITE, BX_WRITE);
+      VMexit_Instruction(i, VMX_VMEXIT_VMWRITE, BX_WRITE);
 
     vmcs_pointer = BX_CPU_THIS_PTR vmcs.vmcs_linkptr;
   }
@@ -3309,7 +3309,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMWRITE_GqEq(bxInstruction_c *i)
 #if BX_SUPPORT_VMX >= 2
     if (Vmexit_Vmwrite(i))
 #endif
-        VMexit_Instruction(i, VMX_VMEXIT_VMWRITE, BX_WRITE);
+      VMexit_Instruction(i, VMX_VMEXIT_VMWRITE, BX_WRITE);
 
     vmcs_pointer = BX_CPU_THIS_PTR vmcs.vmcs_linkptr;
   }
@@ -3431,7 +3431,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVEPT(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    VMexit_Instruction(i, VMX_VMEXIT_INVEPT, BX_READ);
+    VMexit_Instruction(i, VMX_VMEXIT_INVEPT);
   }
 
   if (CPL != 0) {
@@ -3489,7 +3489,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVVPID(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    VMexit_Instruction(i, VMX_VMEXIT_INVVPID, BX_READ);
+    VMexit_Instruction(i, VMX_VMEXIT_INVVPID);
   }
 
   if (CPL != 0) {
@@ -3579,7 +3579,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVPCID(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX >= 2
     if (VMEXIT(VMX_VM_EXEC_CTRL2_INVLPG_VMEXIT)) {
-      VMexit_Instruction(i, VMX_VMEXIT_INVPCID, BX_READ);
+      VMexit_Instruction(i, VMX_VMEXIT_INVPCID);
     }
 #endif
 

@@ -34,7 +34,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDRAND_Ew(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_RDRAND_VMEXIT)) {
-      VMexit(VMX_VMEXIT_RDRAND, 0);
+      VMexit_Instruction(i, VMX_VMEXIT_RDRAND);
     }
   }
 #endif
@@ -61,7 +61,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDRAND_Ed(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_RDRAND_VMEXIT)) {
-      VMexit(VMX_VMEXIT_RDRAND, 0);
+      VMexit_Instruction(i, VMX_VMEXIT_RDRAND);
     }
   }
 #endif
@@ -93,7 +93,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDRAND_Eq(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_RDRAND_VMEXIT)) {
-      VMexit(VMX_VMEXIT_RDRAND, 0);
+      VMexit_Instruction(i, VMX_VMEXIT_RDRAND);
     }
   }
 #endif
@@ -133,7 +133,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDSEED_Ew(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_RDSEED_VMEXIT)) {
-      VMexit(VMX_VMEXIT_RDSEED, 0);
+      VMexit_Instruction(i, VMX_VMEXIT_RDSEED);
     }
   }
 #endif
@@ -160,7 +160,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDSEED_Ed(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_RDSEED_VMEXIT)) {
-      VMexit(VMX_VMEXIT_RDSEED, 0);
+      VMexit_Instruction(i, VMX_VMEXIT_RDSEED);
     }
   }
 #endif
@@ -192,7 +192,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RDSEED_Eq(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_RDSEED_VMEXIT)) {
-      VMexit(VMX_VMEXIT_RDSEED, 0);
+      VMexit_Instruction(i, VMX_VMEXIT_RDSEED);
     }
   }
 #endif

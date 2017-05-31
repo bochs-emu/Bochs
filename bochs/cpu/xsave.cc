@@ -189,7 +189,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
       VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
       Bit64u requested_features = (((Bit64u) EDX) << 32) | EAX;
       if (requested_features & BX_CPU_THIS_PTR msr.msr_xss & vm->xss_exiting_bitmap)
-        VMexit(VMX_VMEXIT_XSAVES, 0);
+        VMexit_Instruction(i, VMX_VMEXIT_XSAVES);
     }
 #endif
   }
@@ -325,7 +325,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
       VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
       Bit64u requested_features = (((Bit64u) EDX) << 32) | EAX;
       if (requested_features & BX_CPU_THIS_PTR msr.msr_xss & vm->xss_exiting_bitmap)
-        VMexit(VMX_VMEXIT_XRSTORS, 0);
+        VMexit_Instruction(i, VMX_VMEXIT_XRSTORS);
     }
 #endif
   }
