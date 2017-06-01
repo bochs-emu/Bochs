@@ -29,13 +29,13 @@
 
 #if BX_SUPPORT_VMX
 
-VMCS_Mapping::VMCS_Mapping(Bit32u revision): revision_id(revision)
+VMCS_Mapping::VMCS_Mapping(Bit32u revision, VMCS_Access_Rights_Format f): revision_id(revision), ar_format(f)
 {
   clear();
   init_generic_mapping();
 }
 
-VMCS_Mapping::VMCS_Mapping(Bit32u revision, const char *filename): revision_id(revision)
+VMCS_Mapping::VMCS_Mapping(Bit32u revision, const char *filename, VMCS_Access_Rights_Format f): revision_id(revision), ar_format(f)
 {
   clear();
 

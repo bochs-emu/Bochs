@@ -463,9 +463,16 @@ enum VMFunctions {
 
 #define BX_VMX_VMCS_REVISION_ID 0x2B /* better to be unique bochs VMCS revision id */
 
+enum VMCS_Access_Rights_Format {
+   VMCS_AR_ROTATE,
+   VMCS_AR_PACK		// Intel Skylake packs AR into 16 bit form
+};
+
 class VMCS_Mapping {
 private:
    Bit32u revision_id;
+
+   VMCS_Access_Rights_Format ar_format; // in which form segment selectors Access Rights are stored in the VMCS
 
    // assume 16 VMCS field types (encoded with 4 bits: 2 bits for VMCS_FIELD_TYPE and 2 bits for VMCS_FIELD_WIDTH)
    unsigned vmcs_map[16][VMX_HIGHEST_VMCS_ENCODING];
@@ -473,8 +480,8 @@ private:
    void init_generic_mapping();
 
 public:
-   VMCS_Mapping(Bit32u revision_id = BX_VMX_VMCS_REVISION_ID); // default VMCS mapping
-   VMCS_Mapping(Bit32u revision_id, const char *filename);
+   VMCS_Mapping(Bit32u revision_id = BX_VMX_VMCS_REVISION_ID, VMCS_Access_Rights_Format f = VMCS_AR_ROTATE); // default VMCS mapping
+   VMCS_Mapping(Bit32u revision_id, const char *filename, VMCS_Access_Rights_Format f = VMCS_AR_ROTATE);
 
    void clear();
 
@@ -483,6 +490,8 @@ public:
 
    void set_vmcs_revision_id(Bit32u revision) { revision_id = revision; }
    Bit32u get_vmcs_revision_id() const { return revision_id; }
+
+   VMCS_Access_Rights_Format get_access_rights_format() const { return ar_format; }
    
    unsigned vmcs_field_offset(Bit32u encoding) const;
 
