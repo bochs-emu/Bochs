@@ -318,7 +318,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CLZERO(bxInstruction_c *i)
   for (unsigned n=0; n<CACHE_LINE_SIZE; n += 32) {
     write_virtual_ymmword(i->seg(), eaddr+n, &ymmzero);
   }
-#elif NX_CPU_LEVEL >= 6
+#elif BX_CPU_LEVEL >= 6
   BxPackedXmmRegister xmmzero;
   xmmzero.clear();
   for (unsigned n=0; n<CACHE_LINE_SIZE; n += 16) {
