@@ -499,7 +499,7 @@ int bxwrap(void)
 char* bxtext;
 #endif
 
-void bxerror(char *s)
+void bxerror(const char *s)
 {
   dbg_printf("%s:%d: %s at '%s'\n", bx_infile_stack[bx_infile_stack_index].fname,
     bx_infile_stack[bx_infile_stack_index].lineno, s, bxtext);

@@ -66,7 +66,7 @@ void bx_add_lex_input(char *buf);
 
 // Yacc defs
 extern int bxparse(void);
-extern void bxerror(char *s);
+extern void bxerror(const char *s);
 
 // register function for 'info device' command
 bx_bool bx_dbg_register_debug_info(const char *devname, void *dev);
