@@ -185,7 +185,7 @@ public:
   usb_device_c(void);
   virtual ~usb_device_c() {}
 
-  virtual bx_bool init() {return 1;}
+  virtual bx_bool init() {return d.connected;}
   virtual const char* get_info() {return NULL;}
   virtual usb_device_c* find_device(Bit8u addr);
 

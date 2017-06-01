@@ -32,7 +32,6 @@
 #if BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB
 
 #include "usb_common.h"
-#include "usb_hub.h"
 
 #define LOG_THIS bx_usbdev_ctl.
 
@@ -80,14 +79,23 @@ int bx_usbdev_ctl_c::init_device(bx_list_c *portconf, logfunctions *hub, void **
 {
   usbmod_type modtype = USB_MOD_TYPE_NONE;
   usbdev_type devtype = USB_DEV_TYPE_NONE;
-  int ports;
   usb_device_c **device = (usb_device_c**)dev;
-  const char *devname = NULL;
-  const char *args = NULL;
-  size_t dnlen;
+  const char *raw_devname = NULL;
+  const char *args;
+  char *devname, *ptr;
+  size_t len;
 
-  devname = ((bx_param_string_c*)portconf->get_by_name("device"))->getptr();
-  dnlen = strlen(devname);
+  raw_devname = ((bx_param_string_c*)portconf->get_by_name("device"))->getptr();
+  len = strlen(raw_devname);
+  devname = new char[len + 1];
+  strcpy(devname, raw_devname);
+  ptr = strtok(devname, ":");
+  ptr = strtok(NULL, "\n");
+  if (ptr == NULL) {
+    args = raw_devname+strlen(devname);
+  } else {
+    args = raw_devname+(ptr-devname);
+  }
   if (!strcmp(devname, "mouse")) {
     modtype = USB_MOD_TYPE_HID;
     devtype = USB_DEV_TYPE_MOUSE;
@@ -97,67 +105,36 @@ int bx_usbdev_ctl_c::init_device(bx_list_c *portconf, logfunctions *hub, void **
   } else if (!strcmp(devname, "keypad")) {
     modtype = USB_MOD_TYPE_HID;
     devtype = USB_DEV_TYPE_KEYPAD;
-  } else if (!strncmp(devname, "disk", 4)) {
-    if ((dnlen > 5) && (devname[4] == ':')) {
+  } else if (!strcmp(devname, "disk")) {
+    if (ptr != NULL) {
       modtype = USB_MOD_TYPE_MSD;
       devtype = USB_DEV_TYPE_DISK;
-      args = devname+5;
     } else {
+      delete [] devname;
       hub->panic("USB device 'disk' needs a filename separated with a colon");
       return devtype;
     }
-  } else if (!strncmp(devname, "cdrom", 5)) {
-    if ((dnlen == 5) || (devname[5] == ':')) {
-      modtype = USB_MOD_TYPE_MSD;
-      devtype = USB_DEV_TYPE_CDROM;
-      if (dnlen > 6) {
-        args = devname+6;
-      } else {
-        args = devname+dnlen;
-      }
-    } else {
-      hub->panic("USB device 'cdrom' needs a filename separated with a colon");
-      return devtype;
-    }
-  } else if (!strncmp(devname, "hub", 3)) {
+  } else if (!strcmp(devname, "cdrom")) {
+    modtype = USB_MOD_TYPE_MSD;
+    devtype = USB_DEV_TYPE_CDROM;
+  } else if (!strcmp(devname, "hub")) {
     modtype = USB_MOD_TYPE_HUB;
     devtype = USB_DEV_TYPE_HUB;
-    ports = 4;
-    if (dnlen > 3) {
-      if (devname[3] == ':') {
-        ports = atoi(&devname[4]);
-        args = devname+4;
-        if ((ports < 2) || (ports > USB_HUB_PORTS)) {
-          hub->panic("USB device 'hub': invalid number of ports");
-        }
-      } else {
-        hub->panic("USB device 'hub' needs the port count separated with a colon");
-      }
-    }
-  } else if (!strncmp(devname, "printer", 7)) {
-    if ((dnlen > 8) && (devname[7] == ':')) {
+  } else if (!strcmp(devname, "printer")) {
+    if (ptr != NULL) {
       modtype = USB_MOD_TYPE_PRINTER;
       devtype = USB_DEV_TYPE_PRINTER;
-      args = devname+8;
     } else {
       hub->panic("USB device 'printer' needs a filename separated with a colon");
+      delete [] devname;
       return devtype;
     }
   } else if (!strncmp(devname, "floppy", 6)) {
-    if ((dnlen == 6) || (devname[6] == ':')) {
-      modtype = USB_MOD_TYPE_CBI;
-      devtype = USB_DEV_TYPE_FLOPPY;
-      if (dnlen > 7) {
-        args = devname+7;
-      } else {
-        args = devname+dnlen;
-      }
-    } else {
-      hub->panic("USB device 'floppy' needs a filename separated with a colon");
-      return devtype;
-    }
+    modtype = USB_MOD_TYPE_CBI;
+    devtype = USB_DEV_TYPE_FLOPPY;
   } else {
     hub->panic("unknown USB device: %s", devname);
+    delete [] devname;
     return devtype;
   }
   if (!usbdev_locator_c::module_present(usbmod_names[modtype])) {
@@ -172,6 +149,7 @@ int bx_usbdev_ctl_c::init_device(bx_list_c *portconf, logfunctions *hub, void **
     (*device)->register_state(sr_list);
     parse_port_options(*device, portconf);
   }
+  delete [] devname;
   return devtype;
 }
 

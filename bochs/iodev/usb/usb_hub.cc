@@ -60,7 +60,12 @@ public:
   bx_usb_hub_locator_c(void) : usbdev_locator_c("usb_hub") {}
 protected:
   usb_device_c *allocate(usbdev_type devtype, const char *args) {
-    int ports = atoi(args);
+    int ports;
+    if (args != NULL) {
+      ports = atoi(args);
+    } else {
+      ports = 4;
+    }
     return (new usb_hub_device_c(ports));
   }
 } bx_usb_hub_match;
@@ -211,6 +216,10 @@ usb_hub_device_c::usb_hub_device_c(Bit8u ports)
   d.config_desc_size = sizeof(bx_hub_config_descriptor);
   d.vendor_desc = "BOCHS";
   d.product_desc = "BOCHS USB HUB";
+  if ((ports < 2) || (ports > USB_HUB_PORTS)) {
+    BX_ERROR(("ignoring invalid number of ports (%d)", ports));
+    ports = 4;
+  }
   d.connected = 1;
   memset((void*)&hub, 0, sizeof(hub));
   hub.n_ports = ports;
