@@ -454,6 +454,7 @@ BX_CPP_INLINE static Bit32u rotate_l(Bit32u val_32)
   return (val_32 << 8) | (val_32 >> 24);
 }
 
+// AR.NULL is bit 16
 BX_CPP_INLINE static Bit32u vmx_pack_ar_field(Bit32u ar_field, VMCS_Access_Rights_Format access_rights_format)
 {
   switch (access_rights_format) {
@@ -475,6 +476,7 @@ BX_CPP_INLINE static Bit32u vmx_pack_ar_field(Bit32u ar_field, VMCS_Access_Right
   return ar_field;
 }
 
+// AR.NULL is bit 16
 BX_CPP_INLINE static Bit32u vmx_unpack_ar_field(Bit32u ar_field, VMCS_Access_Rights_Format access_rights_format)
 {
   switch (access_rights_format) {

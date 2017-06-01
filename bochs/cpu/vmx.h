@@ -480,8 +480,8 @@ private:
    void init_generic_mapping();
 
 public:
-   VMCS_Mapping(Bit32u revision_id = BX_VMX_VMCS_REVISION_ID, VMCS_Access_Rights_Format f = VMCS_AR_ROTATE); // default VMCS mapping
-   VMCS_Mapping(Bit32u revision_id, const char *filename, VMCS_Access_Rights_Format f = VMCS_AR_ROTATE);
+   VMCS_Mapping(Bit32u revision_id = BX_VMX_VMCS_REVISION_ID); // default VMCS mapping
+   VMCS_Mapping(Bit32u revision_id, const char *filename);
 
    void clear();
 
@@ -491,6 +491,7 @@ public:
    void set_vmcs_revision_id(Bit32u revision) { revision_id = revision; }
    Bit32u get_vmcs_revision_id() const { return revision_id; }
 
+   void set_access_rights_format(VMCS_Access_Rights_Format f) { ar_format = f; }
    VMCS_Access_Rights_Format get_access_rights_format() const { return ar_format; }
    
    unsigned vmcs_field_offset(Bit32u encoding) const;
