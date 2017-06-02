@@ -197,8 +197,7 @@ BX_MUTEX(mixer_mutex);
 BX_THREAD_FUNC(resampler_thread, indata)
 {
   bx_soundlow_waveout_c *waveout = (bx_soundlow_waveout_c*)indata;
-  waveout->resampler_running();
-  while (1) {
+  while (waveout->resampler_running()) {
     BX_LOCK(resampler_mutex);
     audio_buffer_t *curbuffer = audio_buffers[0]->get_buffer();
     BX_UNLOCK(resampler_mutex);
@@ -220,8 +219,7 @@ BX_THREAD_FUNC(mixer_thread, indata)
 
   bx_soundlow_waveout_c *waveout = (bx_soundlow_waveout_c*)indata;
   Bit8u *mixbuffer = new Bit8u[BX_SOUNDLOW_WAVEPACKETSIZE];
-  waveout->mixer_running();
-  while (1) {
+  while (waveout->mixer_running()) {
     len = waveout->get_packetsize();
     memset(mixbuffer, 0, len);
     if (waveout->mixer_common(mixbuffer, len)) {
@@ -231,6 +229,7 @@ BX_THREAD_FUNC(mixer_thread, indata)
     }
   }
   delete [] mixbuffer;
+  waveout->closewaveoutput();
   BX_THREAD_EXIT;
 }
 
@@ -263,11 +262,13 @@ bx_soundlow_waveout_c::~bx_soundlow_waveout_c()
 #endif
     unregister_wave_callback(pcm_callback_id);
     if (res_thread_start) {
-      BX_THREAD_KILL(res_thread_var);
+      res_thread_start = 0;
+      BX_MSLEEP(20);
       BX_FINI_MUTEX(resampler_mutex);
     }
     if (mix_thread_start) {
-      BX_THREAD_KILL(mix_thread_var);
+      mix_thread_start = 0;
+      BX_MSLEEP(25);
       BX_FINI_MUTEX(mixer_mutex);
     }
     if (audio_buffers[0] != NULL) {
@@ -478,12 +479,14 @@ Bit32u bx_soundlow_waveout_c::resampler_common(audio_buffer_t *inbuffer, float *
 void bx_soundlow_waveout_c::start_resampler_thread()
 {
   BX_INIT_MUTEX(resampler_mutex);
+  res_thread_start = 1;
   BX_THREAD_CREATE(resampler_thread, this, res_thread_var);
 }
 
 void bx_soundlow_waveout_c::start_mixer_thread()
 {
   BX_INIT_MUTEX(mixer_mutex);
+  mix_thread_start = 1;
   BX_THREAD_CREATE(mixer_thread, this, mix_thread_var);
 }
 

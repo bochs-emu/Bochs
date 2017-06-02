@@ -38,12 +38,13 @@ typedef struct {
 class bx_soundlow_waveout_alsa_c : public bx_soundlow_waveout_c {
 public:
   bx_soundlow_waveout_alsa_c();
-  virtual ~bx_soundlow_waveout_alsa_c();
+  virtual ~bx_soundlow_waveout_alsa_c() {}
 
   virtual int openwaveoutput(const char *wavedev);
   virtual int set_pcm_params(bx_pcm_param_t *param);
   virtual int get_packetsize();
   virtual int output(int length, Bit8u data[]);
+  virtual int closewaveoutput();
 private:
   alsa_pcm_t alsa_waveout;
 };

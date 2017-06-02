@@ -26,7 +26,7 @@
 class bx_soundlow_waveout_file_c : public bx_soundlow_waveout_c {
 public:
   bx_soundlow_waveout_file_c();
-  virtual ~bx_soundlow_waveout_file_c();
+  virtual ~bx_soundlow_waveout_file_c() {}
 
   virtual int openwaveoutput(const char *wavedev);
   virtual int set_pcm_params(bx_pcm_param_t *param);

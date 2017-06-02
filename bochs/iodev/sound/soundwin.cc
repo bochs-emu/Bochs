@@ -90,14 +90,6 @@ bx_soundlow_waveout_win_c::bx_soundlow_waveout_win_c()
     BX_PANIC(("Allocated memory was too small!"));
 }
 
-bx_soundlow_waveout_win_c::~bx_soundlow_waveout_win_c()
-{
-  if (WaveOutOpen == 1) {
-    waveOutReset(hWaveOut);
-    waveOutClose(hWaveOut);
-  }
-}
-
 int bx_soundlow_waveout_win_c::openwaveoutput(const char *wavedev)
 {
   // could make the output device selectable,
@@ -217,6 +209,16 @@ int bx_soundlow_waveout_win_c::output(int length, Bit8u data[])
   }
   Sleep(1000 / SOUNDWIN_PACKETS_PER_SEC);
 
+  return BX_SOUNDLOW_OK;
+}
+
+int bx_soundlow_waveout_win_c::closewaveoutput()
+{
+  if (WaveOutOpen == 1) {
+    waveOutReset(hWaveOut);
+    waveOutClose(hWaveOut);
+    WaveOutOpen = 1;
+  }
   return BX_SOUNDLOW_OK;
 }
 

@@ -62,11 +62,6 @@ bx_soundlow_waveout_file_c::bx_soundlow_waveout_file_c()
   type = BX_SOUNDFILE_RAW;
 }
 
-bx_soundlow_waveout_file_c::~bx_soundlow_waveout_file_c()
-{
-  closewaveoutput();
-}
-
 void bx_soundlow_waveout_file_c::initwavfile()
 {
   Bit8u waveheader[44] =

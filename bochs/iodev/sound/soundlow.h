@@ -112,8 +112,8 @@ public:
 
   virtual bx_bool mixer_common(Bit8u *buffer, int len);
 
-  void resampler_running() {res_thread_start = 1;}
-  void mixer_running() {mix_thread_start = 1;}
+  bx_bool resampler_running() {return res_thread_start;}
+  bx_bool mixer_running() {return mix_thread_start;}
 
 protected:
   void start_resampler_thread(void);
