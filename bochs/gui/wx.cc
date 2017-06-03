@@ -151,14 +151,11 @@ MyPanel::MyPanel(wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSi
   refreshTimer.SetOwner (this);
   refreshTimer.Start (100);
   needRefresh = true;
-  const char bits[1] = { 0 };
-  blankCursor = new wxCursor (bits, 1, 1, -1, -1, bits);
   thePanel = this;
 }
 
 MyPanel::~MyPanel()
 {
-  delete blankCursor;
   thePanel = NULL;
 }
 
@@ -234,7 +231,7 @@ void MyPanel::ToggleMouse(bool fromToolbar)
 #if defined(__WXMSW__)
     ShowCursor(0);
 #else
-    SetCursor(*blankCursor);
+    SetCursor(wxCURSOR_BLANK);
 #endif
   } else {
 #if defined(__WXMSW__)

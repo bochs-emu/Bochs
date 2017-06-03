@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2016  The Bochs Project
+//  Copyright (C) 2002-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -157,7 +157,6 @@ public:
   static void OnPluginInit();
   void ToggleMouse(bool fromToolbar);
 private:
-  wxCursor *blankCursor;
   bool needRefresh;
   wxTimer refreshTimer;
   Bit16s mouseSavedX, mouseSavedY;
