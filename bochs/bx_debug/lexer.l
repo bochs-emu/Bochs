@@ -65,6 +65,7 @@ crc             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CRC); }
 c               |
 cont            |
 continue        { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CONTINUE); }
+if              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_IF); }
 step            |
 s               { bxlval.sval = strdup(bxtext); return(BX_TOKEN_STEPN); }
 next            |
@@ -241,6 +242,12 @@ calc            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CALC); }
 "/"             { return ('/'); }
 ">>"            { return (BX_TOKEN_RSHIFT); }
 "<<"            { return (BX_TOKEN_LSHIFT); }
+"=="            { return (BX_TOKEN_EQ); }
+"!="            { return (BX_TOKEN_NE); }
+"<="            { return (BX_TOKEN_LE); }
+">="            { return (BX_TOKEN_GE); }
+">"             { return ('>'); }
+"<"             { return ('<'); }
 "&"             { return ('&'); }
 "|"             { return ('|'); }
 "^"             { return ('^'); }

@@ -115,7 +115,7 @@ void bx_dbg_watchpoint_continue(bx_bool watch_continue);
 void bx_dbg_watch(int type, bx_phy_address address, Bit32u len);
 void bx_dbg_unwatch_all(void);
 void bx_dbg_unwatch(bx_phy_address handle);
-void bx_dbg_continue_command(void);
+void bx_dbg_continue_command(bx_bool expression);
 void bx_dbg_stepN_command(int cpu, Bit32u count);
 void bx_dbg_set_auto_disassemble(bx_bool enable);
 void bx_dbg_disassemble_switch_mode(void);

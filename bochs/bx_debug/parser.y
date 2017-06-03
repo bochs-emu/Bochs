@@ -38,6 +38,7 @@
 %token <bval> BX_TOKEN_ON
 %token <bval> BX_TOKEN_OFF
 %token <sval> BX_TOKEN_CONTINUE
+%token <sval> BX_TOKEN_IF
 %token <sval> BX_TOKEN_STEPN
 %token <sval> BX_TOKEN_STEP_OVER
 %token <sval> BX_TOKEN_SET
@@ -122,6 +123,10 @@
 %token <sval> BX_TOKEN_GENERIC
 %token BX_TOKEN_RSHIFT
 %token BX_TOKEN_LSHIFT
+%token BX_TOKEN_EQ
+%token BX_TOKEN_NE
+%token BX_TOKEN_LE
+%token BX_TOKEN_GE
 %token BX_TOKEN_REG_IP
 %token BX_TOKEN_REG_EIP
 %token BX_TOKEN_REG_RIP
@@ -129,8 +134,9 @@
 %type <uval> vexpression
 %type <uval> expression
 
-%left '+' '-' '|' '^'
+%left '+' '-' '|' '^' '<' '>'
 %left '*' '/' '&' BX_TOKEN_LSHIFT BX_TOKEN_RSHIFT
+%left BX_TOKEN_EQ BX_TOKEN_NE BX_TOKEN_LE BX_TOKEN_GE
 %left NOT NEG INDIRECT
 
 %start commands
@@ -441,7 +447,12 @@ print_string_command:
 continue_command:
       BX_TOKEN_CONTINUE '\n'
       {
-        bx_dbg_continue_command();
+        bx_dbg_continue_command(1);
+        free($1);
+      }
+    | BX_TOKEN_CONTINUE BX_TOKEN_IF expression '\n'
+      {
+        bx_dbg_continue_command($3);
         free($1);
       }
     ;
@@ -940,6 +951,7 @@ help_command:
      | BX_TOKEN_HELP BX_TOKEN_CONTINUE '\n'
        {
          dbg_printf("c|cont|continue - continue executing\n");
+         dbg_printf("c|cont|continue if <expression> - continue executing only if expression is true\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_STEPN '\n'
@@ -1301,6 +1313,12 @@ expression:
    | expression '|' expression       { $$ = $1 | $3; }
    | expression '^' expression       { $$ = $1 ^ $3; }
    | expression '&' expression       { $$ = $1 & $3; }
+   | expression '>' expression       { $$ = $1 > $3; }
+   | expression '<' expression       { $$ = $1 < $3; }
+   | expression BX_TOKEN_EQ expression { $$ = $1 == $3; }
+   | expression BX_TOKEN_NE expression { $$ = $1 != $3; }
+   | expression BX_TOKEN_LE expression { $$ = $1 <= $3; }
+   | expression BX_TOKEN_GE expression { $$ = $1 >= $3; }
    | '!' expression %prec NOT        { $$ = !$2; }
    | '-' expression %prec NEG        { $$ = -$2; }
    | '*' expression %prec INDIRECT   { $$ = bx_dbg_lin_indirect($2); }
