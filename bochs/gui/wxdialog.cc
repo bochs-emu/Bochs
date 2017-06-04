@@ -684,8 +684,8 @@ ParamDialog::ParamDialog(
 ParamDialog::~ParamDialog()
 {
   paramHash->BeginFind();
-  wxNode *node;
-  while ((node = (wxNode*)paramHash->Next()) != NULL) {
+  wxHashTable::Node *node;
+  while ((node = paramHash->Next()) != NULL) {
     // assume that no ParamStruct appears in the hash table under multiple
     // keys.  If so, we will delete it twice and corrupt memory.
     ParamStruct *pstr = (ParamStruct*) node->GetData();
@@ -1021,8 +1021,8 @@ bool ParamDialog::CopyGuiToParam()
   }
   // loop through all the parameters
   idHash->BeginFind();
-  wxNode *node;
-  while ((node = (wxNode*)idHash->Next()) != NULL) {
+  wxHashTable::Node *node;
+  while ((node = idHash->Next()) != NULL) {
     ParamStruct *pstr = (ParamStruct*) node->GetData();
     wxLogDebug(wxT("commit changes for param %s"), pstr->param->get_name());
     CopyGuiToParam(pstr->param);
@@ -1123,8 +1123,8 @@ bool ParamDialog::CopyGuiToParam(bx_param_c *param)
 void ParamDialog::EnableChanged()
 {
   idHash->BeginFind();
-  wxNode *node;
-  while ((node = (wxNode*)idHash->Next()) != NULL) {
+  wxHashTable::Node *node;
+  while ((node = idHash->Next()) != NULL) {
     ParamStruct *pstr = (ParamStruct*) node->GetData();
     if (runtime) {
       if ((pstr->param->get_type() != BXT_LIST) && !pstr->param->get_runtime_param())
@@ -1218,8 +1218,8 @@ void ParamDialog::CopyParamToGui()
 {
   // loop through all the parameters
   idHash->BeginFind();
-  wxNode *node;
-  while ((node = (wxNode*)idHash->Next()) != NULL) {
+  wxHashTable::Node *node;
+  while ((node = idHash->Next()) != NULL) {
     ParamStruct *pstr = (ParamStruct*) node->GetData();
     IFDBG_DLG(wxLogDebug(wxT("refresh param %s"), pstr->param->get_name()));
     int type = pstr->param->get_type();

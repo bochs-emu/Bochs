@@ -2261,11 +2261,15 @@ ok_wx_version=0
 wx_multi_lib=0
 needs_gtk2=0
 wx_needs_gdk2=0
+wx_msw_unicode=0
 AC_MSG_CHECKING(for wxWidgets library version)
 if test x$WX_CONFIG != xnot_found; then
   WX_VERSION=`$WX_CONFIG --version`
   WX_BASENAME=`$WX_CONFIG --basename`
   [
+  if test "$WX_BASENAME" = wx_mswu; then
+    wx_msw_unicode=1
+  fi
   # test that version >= 2.3.2.  Anybody have a better way to do this? Yuck.
   case x$WX_VERSION in
     x2.[012]*) ;; # less than version 2.3.x
@@ -2280,12 +2284,22 @@ if test x$WX_CONFIG != xnot_found; then
         *) ;;
       esac
       ;;
-    x[3-9]*) ok_wx_version=1 ;;  # version 3 or greater
+    x3*)  # version 3
+      ok_wx_version=1
+      wx_multi_lib=1
+      case x$WX_BASENAME in
+        xwx_gtk2|xwx_gtk2u) wx_needs_gdk2=1 ;;
+        *) ;;
+      esac
+      ;;
     *) ;; # who knows?
   esac
   ]
 fi
 AC_MSG_RESULT($WX_VERSION)
+if test $wx_msw_unicode = 1; then
+  AC_DEFINE(WX_MSW_UNICODE, 1)
+fi
 if test "$cross_configure" = 0; then
   if test "$ok_wx_version" = 1; then
     # detected a usable version

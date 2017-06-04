@@ -496,7 +496,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   bxToolBar->SetToolBitmapSize(wxSize(32, 32));
 
 #define BX_ADD_TOOL(id, xpm_name, tooltip) do { \
-    bxToolBar->AddTool(id, wxBitmap(xpm_name), tooltip); \
+    bxToolBar->AddTool(id, wxT(""), wxBitmap(xpm_name), tooltip); \
   } while (0)
 
   BX_ADD_TOOL(ID_Edit_FD_0, floppya_xpm, wxT("Change Floppy A"));
