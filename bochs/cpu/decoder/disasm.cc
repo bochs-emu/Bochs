@@ -326,6 +326,22 @@ char *disasm_regref(char *disbufptr, const bxInstruction_c *i, unsigned src_num,
 char *disasm_immediate(char *disbufptr, const bxInstruction_c *i, unsigned src_type, bx_address cs_base, bx_address rip)
 {
   switch(src_type) {
+  case BX_DIRECT_MEMREF_B:
+    disbufptr = resolve_memsize(disbufptr, i, BX_SRC_RM, BX_GPR8);
+    break;
+  case BX_DIRECT_MEMREF_W:
+    disbufptr = resolve_memsize(disbufptr, i, BX_SRC_RM, BX_GPR16);
+    break;
+  case BX_DIRECT_MEMREF_D:
+    disbufptr = resolve_memsize(disbufptr, i, BX_SRC_RM, BX_GPR32);
+    break;
+  case BX_DIRECT_MEMREF_Q:
+    disbufptr = resolve_memsize(disbufptr, i, BX_SRC_RM, BX_GPR64);
+    break;
+  default: break;
+  };
+
+  switch(src_type) {
   case BX_IMMB:
     disbufptr = dis_sprintf(disbufptr, "0x%02x", i->Ib());
     break;
@@ -385,19 +401,21 @@ char *disasm_immediate(char *disbufptr, const bxInstruction_c *i, unsigned src_t
       disbufptr = dis_sprintf(disbufptr, "0x%04x:%04x", i->Iw2(), i->Iw());
     break;
 
-  case BX_DIRECT_MEMREF32:
+  case BX_DIRECT_MEMREF_B:
+  case BX_DIRECT_MEMREF_W:
+  case BX_DIRECT_MEMREF_D:
+  case BX_DIRECT_MEMREF_Q:
     disbufptr = dis_sprintf(disbufptr, "%s:", intel_segment_name[i->seg()]);
-    if (! i->as32L())
-      disbufptr = dis_sprintf(disbufptr, "0x%04x", i->Id());
-    else
-      disbufptr = dis_sprintf(disbufptr, "0x%08x", i->Id());
-    break;
-
 #if BX_SUPPORT_X86_64
-  case BX_DIRECT_MEMREF64:
-    disbufptr = dis_sprintf(disbufptr, "%s:0x" FMT_ADDRX, intel_segment_name[i->seg()], i->Iq());
-    break;
+    if (i->as64L())
+      disbufptr = dis_sprintf(disbufptr, "0x" FMT_ADDRX, i->Iq());
+    else
 #endif
+    if (i->as32L())
+      disbufptr = dis_sprintf(disbufptr, "0x%08x", i->Id());
+    else
+      disbufptr = dis_sprintf(disbufptr, "0x%04x", i->Id());
+    break;
 
   default:
     disbufptr = dis_sprintf(disbufptr, "(unknown immediate form for disasm %d)", src_type);

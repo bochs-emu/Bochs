@@ -244,9 +244,11 @@ enum {
   BX_IMM_BrOff32 = 0x8,
   BX_IMM_BrOff64 = 0x9,
   BX_DIRECT_PTR = 0xA,
-  BX_DIRECT_MEMREF32 = 0xB,
-  BX_DIRECT_MEMREF64 = 0xC,
-  // encodings 0xD to 0xF are still free
+  BX_DIRECT_MEMREF_B = 0xB,
+  BX_DIRECT_MEMREF_W = 0xC,
+  BX_DIRECT_MEMREF_D = 0xD,
+  BX_DIRECT_MEMREF_Q = 0xE,
+  // encoding 0xF still free
 };
 
 // implicit register or memory references
@@ -370,8 +372,10 @@ const Bit8u OP_Dq = BX_FORM_SRC(BX_DREG, BX_SRC_NNN);
 
 const Bit8u OP_Sw = BX_FORM_SRC(BX_SEGREG, BX_SRC_NNN);
 
-const Bit8u OP_Od = BX_FORM_SRC(BX_DIRECT_MEMREF32, BX_SRC_IMM);
-const Bit8u OP_Oq = BX_FORM_SRC(BX_DIRECT_MEMREF64, BX_SRC_IMM);
+const Bit8u OP_Ob = BX_FORM_SRC(BX_DIRECT_MEMREF_B, BX_SRC_IMM);
+const Bit8u OP_Ow = BX_FORM_SRC(BX_DIRECT_MEMREF_W, BX_SRC_IMM);
+const Bit8u OP_Od = BX_FORM_SRC(BX_DIRECT_MEMREF_D, BX_SRC_IMM);
+const Bit8u OP_Oq = BX_FORM_SRC(BX_DIRECT_MEMREF_Q, BX_SRC_IMM);
 
 const Bit8u OP_Ap = BX_FORM_SRC(BX_DIRECT_PTR, BX_SRC_IMM);
 
