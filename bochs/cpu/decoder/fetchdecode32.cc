@@ -1554,8 +1554,9 @@ bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, unsigned nnn, unsign
 {
   for (unsigned n = 0; n <= 3; n++) {
     unsigned src = (unsigned) BxOpcodesTable[ia_opcode].src[n];
-    unsigned type = src >> 3;
-    switch(src & 0x7) {
+    unsigned type = BX_DISASM_SRC_TYPE(src);
+    unsigned index = BX_DISASM_SRC_ORIGIN(src);
+    switch(index) {
     case BX_SRC_NONE:
       break;
     case BX_SRC_EAX:
@@ -1596,8 +1597,8 @@ bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bx_bool is_64, unsig
   // assign sources
   for (unsigned n = 0; n <= 3; n++) {
     unsigned src = (unsigned) BxOpcodesTable[ia_opcode].src[n];
-    unsigned type = src >> 3;
-    src &= 0x7;
+    unsigned type = BX_DISASM_SRC_TYPE(src);
+    src = BX_DISASM_SRC_ORIGIN(src);
 #if BX_SUPPORT_EVEX
     bx_bool mem_src = BX_FALSE;
 #endif

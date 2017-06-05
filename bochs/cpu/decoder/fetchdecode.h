@@ -255,6 +255,9 @@ enum {
 
 #define BX_FORM_SRC(type, src) (((type) << 3) | (src))
 
+#define BX_DISASM_SRC_ORIGIN(desc) (desc & 0x7)
+#define BX_DISASM_SRC_TYPE(desc) (desc >> 3)
+
 const Bit8u OP_NONE = BX_SRC_NONE;
 
 const Bit8u OP_Eb = BX_FORM_SRC(BX_GPR8, BX_SRC_RM);

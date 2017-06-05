@@ -512,8 +512,8 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
   unsigned srcs_used = 0;
   for (n = 0; n <= 3; n++) {
     unsigned src = (unsigned) BxOpcodesTable[ia_opcode].src[n];
-    unsigned src_type = src >> 3;
-    unsigned src_index = src & 0x7;
+    unsigned src_type = BX_DISASM_SRC_TYPE(src);
+    unsigned src_index = BX_DISASM_SRC_ORIGIN(src);
     if (! src_type && src_index != BX_SRC_RM && src_index != BX_SRC_EVEX_RM) continue;
     if (srcs_used++ > 0)
       disbufptr = dis_sprintf(disbufptr, ", ");
