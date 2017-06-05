@@ -1558,6 +1558,8 @@ bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, unsigned nnn, unsign
     unsigned index = BX_DISASM_SRC_ORIGIN(src);
     switch(index) {
     case BX_SRC_NONE:
+    case BX_SRC_IMM:
+    case BX_SRC_IMPLICIT:
       break;
     case BX_SRC_EAX:
       i->setSrcReg(n, 0);
@@ -1605,6 +1607,8 @@ bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bx_bool is_64, unsig
 
     switch(src) {
     case BX_SRC_NONE:
+    case BX_SRC_IMM:
+    case BX_SRC_IMPLICIT:
       break;
     case BX_SRC_EAX:
       i->setSrcReg(n, 0);

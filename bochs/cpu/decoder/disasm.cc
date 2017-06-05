@@ -409,7 +409,30 @@ char *disasm_immediate(char *disbufptr, const bxInstruction_c *i, unsigned src_t
 char *disasm_implicit_src(char *disbufptr, const bxInstruction_c *i, unsigned src_type)
 {
   switch(src_type) {
-  case BX_RSIREF:
+  case BX_RSIREF_B:
+  case BX_RDIREF_B:
+    disbufptr = resolve_memsize(disbufptr, i, BX_SRC_RM, BX_GPR8);
+    break;
+  case BX_RSIREF_W:
+  case BX_RDIREF_W:
+    disbufptr = resolve_memsize(disbufptr, i, BX_SRC_RM, BX_GPR16);
+    break;
+  case BX_RSIREF_D:
+  case BX_RDIREF_D:
+    disbufptr = resolve_memsize(disbufptr, i, BX_SRC_RM, BX_GPR32);
+    break;
+  case BX_RSIREF_Q:
+  case BX_RDIREF_Q:
+    disbufptr = resolve_memsize(disbufptr, i, BX_SRC_RM, BX_GPR64);
+    break;
+  default: break;
+  };
+
+  switch(src_type) {
+  case BX_RSIREF_B:
+  case BX_RSIREF_W:
+  case BX_RSIREF_D:
+  case BX_RSIREF_Q:
     disbufptr = dis_sprintf(disbufptr, "%s:", intel_segment_name[i->seg()]);
 #if BX_SUPPORT_X86_64
     if (i->as64L()) {
@@ -425,7 +448,10 @@ char *disasm_implicit_src(char *disbufptr, const bxInstruction_c *i, unsigned sr
     }
     break;
 
-  case BX_RDIREF:
+  case BX_RDIREF_B:
+  case BX_RDIREF_W:
+  case BX_RDIREF_D:
+  case BX_RDIREF_Q:
     disbufptr = dis_sprintf(disbufptr, "%s:", intel_segment_name[BX_SEG_REG_ES]);
 #if BX_SUPPORT_X86_64
     if (i->as64L()) {
@@ -530,18 +556,17 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
     else {
       if (src_index == BX_SRC_EVEX_RM) src_type = BX_VMM_REG;
 
-      if (src_type < 0x10) {
-        // this is register reference
-        disbufptr = disasm_regref(disbufptr, i, n, src_type);
+      if (src_index == BX_SRC_IMM) {
+        // this is immediate value (including branch targets)
+        disbufptr = disasm_immediate(disbufptr, i, src_type, cs_base, rip);
+      }
+      else if (src_index == BX_SRC_IMPLICIT) {
+        // this is implicit register or memory reference
+        disbufptr = disasm_implicit_src(disbufptr, i, src_type);
       }
       else {
-        if (src_type <= BX_IMM_LAST) {
-          // this is immediate value (including branch targets)
-          disbufptr = disasm_immediate(disbufptr, i, src_type, cs_base, rip);
-        }
-        else {
-          disbufptr = disasm_implicit_src(disbufptr, i, src_type);
-        }
+        // this is register reference
+        disbufptr = disasm_regref(disbufptr, i, n, src_type);
       }
     }
   }

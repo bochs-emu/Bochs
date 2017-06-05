@@ -192,7 +192,9 @@ enum {
   BX_SRC_EVEX_RM = 4,       // the src is register or EVEX memory reference, register should be taken from modrm.rm
   BX_SRC_VVV = 5,           // the src should be taken from (e)vex.vvv
   BX_SRC_VIB = 6,           // the src should be taken from immediate byte
-  BX_SRC_VSIB = 7           // the src is gather/scatter vector index
+  BX_SRC_VSIB = 7,          // the src is gather/scatter vector index
+  BX_SRC_IMM = 8,           // the src is immediate value
+  BX_SRC_IMPLICIT = 9,      // the src is implicit register or memory reference
 };
 
 // for diassembly:
@@ -213,6 +215,7 @@ enum {
   BX_SEGREG = 0xB,
   BX_CREG = 0xC,
   BX_DREG = 0xD,
+  // encodings 0xE to 0xF are still free
 };
 
 // to be used together with BX_SRC_EVEX_RM
@@ -226,37 +229,45 @@ enum {
   BX_VMM_OCT_VECTOR = 6,
   BX_VMM_VEC128 = 7,
   BX_VMM_VEC256 = 8
+  // encodings 0x9 to 0xF are still free
 };
 
 // immediate forms
 enum {
-  BX_IMMB = 0x10,
-  BX_IMMW = 0x11,
-  BX_IMMD = 0x12,
-  BX_IMMD_SE = 0x13,
-  BX_IMMQ = 0x14,
-  BX_IMMB2 = 0x15,
-  BX_IMM_BrOff16 = 0x16,
-  BX_IMM_BrOff32 = 0x17,
-  BX_IMM_BrOff64 = 0x18,
-  BX_DIRECT_PTR = 0x19,
-  BX_DIRECT_MEMREF32 = 0x1A,
-  BX_DIRECT_MEMREF64 = 0x1B,
+  BX_IMMB = 0x1,
+  BX_IMMW = 0x2,
+  BX_IMMD = 0x3,
+  BX_IMMD_SE = 0x4,
+  BX_IMMQ = 0x5,
+  BX_IMMB2 = 0x6,
+  BX_IMM_BrOff16 = 0x7,
+  BX_IMM_BrOff32 = 0x8,
+  BX_IMM_BrOff64 = 0x9,
+  BX_DIRECT_PTR = 0xA,
+  BX_DIRECT_MEMREF32 = 0xB,
+  BX_DIRECT_MEMREF64 = 0xC,
+  // encodings 0xD to 0xF are still free
 };
-#define BX_IMM_LAST 0x1B
 
-// implicit sources
+// implicit register or memory references
 enum {
-  BX_RSIREF = 0x1C,
-  BX_RDIREF = 0x1D,
-  BX_USECL = 0x1E,
-  BX_USEDX = 0x1F,
+  BX_RSIREF_B = 0x1,
+  BX_RSIREF_W = 0x2,
+  BX_RSIREF_D = 0x3,
+  BX_RSIREF_Q = 0x4,
+  BX_RDIREF_B = 0x5,
+  BX_RDIREF_W = 0x6,
+  BX_RDIREF_D = 0x7,
+  BX_RDIREF_Q = 0x8,
+  BX_USECL = 0x9,
+  BX_USEDX = 0xA,
+  // encodings 0xB to 0xF are still free
 };
 
-#define BX_FORM_SRC(type, src) (((type) << 3) | (src))
+#define BX_FORM_SRC(type, src) (((type) << 4) | (src))
 
-#define BX_DISASM_SRC_ORIGIN(desc) (desc & 0x7)
-#define BX_DISASM_SRC_TYPE(desc) (desc >> 3)
+#define BX_DISASM_SRC_ORIGIN(desc) (desc & 0xf)
+#define BX_DISASM_SRC_TYPE(desc) (desc >> 4)
 
 const Bit8u OP_NONE = BX_SRC_NONE;
 
@@ -277,19 +288,19 @@ const Bit8u OP_AXReg  = BX_FORM_SRC(BX_GPR16, BX_SRC_EAX);
 const Bit8u OP_EAXReg = BX_FORM_SRC(BX_GPR32, BX_SRC_EAX);
 const Bit8u OP_RAXReg = BX_FORM_SRC(BX_GPR64, BX_SRC_EAX);
 
-const Bit8u OP_CLReg  = BX_FORM_SRC(BX_USECL, BX_SRC_NONE);
-const Bit8u OP_DXReg  = BX_FORM_SRC(BX_USEDX, BX_SRC_NONE);
+const Bit8u OP_CLReg  = BX_FORM_SRC(BX_USECL, BX_SRC_IMPLICIT);
+const Bit8u OP_DXReg  = BX_FORM_SRC(BX_USEDX, BX_SRC_IMPLICIT);
 
-const Bit8u OP_Ib = BX_FORM_SRC(BX_IMMB, BX_SRC_NONE);
-const Bit8u OP_Iw = BX_FORM_SRC(BX_IMMW, BX_SRC_NONE);
-const Bit8u OP_Id = BX_FORM_SRC(BX_IMMD, BX_SRC_NONE);
-const Bit8u OP_sId = BX_FORM_SRC(BX_IMMD_SE, BX_SRC_NONE);
-const Bit8u OP_Iq = BX_FORM_SRC(BX_IMMQ, BX_SRC_NONE);
-const Bit8u OP_Ib2 = BX_FORM_SRC(BX_IMMB2, BX_SRC_NONE);
+const Bit8u OP_Ib = BX_FORM_SRC(BX_IMMB, BX_SRC_IMM);
+const Bit8u OP_Iw = BX_FORM_SRC(BX_IMMW, BX_SRC_IMM);
+const Bit8u OP_Id = BX_FORM_SRC(BX_IMMD, BX_SRC_IMM);
+const Bit8u OP_sId = BX_FORM_SRC(BX_IMMD_SE, BX_SRC_IMM);
+const Bit8u OP_Iq = BX_FORM_SRC(BX_IMMQ, BX_SRC_IMM);
+const Bit8u OP_Ib2 = BX_FORM_SRC(BX_IMMB2, BX_SRC_IMM);
 
-const Bit8u OP_Jw = BX_FORM_SRC(BX_IMM_BrOff16, BX_SRC_NONE);
-const Bit8u OP_Jd = BX_FORM_SRC(BX_IMM_BrOff32, BX_SRC_NONE);
-const Bit8u OP_Jq = BX_FORM_SRC(BX_IMM_BrOff64, BX_SRC_NONE);
+const Bit8u OP_Jw = BX_FORM_SRC(BX_IMM_BrOff16, BX_SRC_IMM);
+const Bit8u OP_Jd = BX_FORM_SRC(BX_IMM_BrOff32, BX_SRC_IMM);
+const Bit8u OP_Jq = BX_FORM_SRC(BX_IMM_BrOff64, BX_SRC_IMM);
 
 const Bit8u OP_M  = BX_FORM_SRC(BX_NO_REGISTER, BX_SRC_RM);
 const Bit8u OP_Mt = BX_FORM_SRC(BX_FPU_REG, BX_SRC_RM);
@@ -359,10 +370,10 @@ const Bit8u OP_Dq = BX_FORM_SRC(BX_DREG, BX_SRC_NNN);
 
 const Bit8u OP_Sw = BX_FORM_SRC(BX_SEGREG, BX_SRC_NNN);
 
-const Bit8u OP_Od = BX_FORM_SRC(BX_DIRECT_MEMREF32, BX_SRC_NONE);
-const Bit8u OP_Oq = BX_FORM_SRC(BX_DIRECT_MEMREF64, BX_SRC_NONE);
+const Bit8u OP_Od = BX_FORM_SRC(BX_DIRECT_MEMREF32, BX_SRC_IMM);
+const Bit8u OP_Oq = BX_FORM_SRC(BX_DIRECT_MEMREF64, BX_SRC_IMM);
 
-const Bit8u OP_Ap = BX_FORM_SRC(BX_DIRECT_PTR, BX_SRC_NONE);
+const Bit8u OP_Ap = BX_FORM_SRC(BX_DIRECT_PTR, BX_SRC_IMM);
 
 const Bit8u OP_KGb = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_NNN);
 const Bit8u OP_KEb = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_RM);
@@ -383,15 +394,15 @@ const Bit8u OP_KHq = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_VVV);
 const Bit8u OP_ST0 = BX_FORM_SRC(BX_FPU_REG, BX_SRC_EAX);
 const Bit8u OP_STi = BX_FORM_SRC(BX_FPU_REG, BX_SRC_RM);
 
-const Bit8u OP_Xb = BX_FORM_SRC(BX_RSIREF, BX_SRC_NONE);
-const Bit8u OP_Xw = BX_FORM_SRC(BX_RSIREF, BX_SRC_NONE);
-const Bit8u OP_Xd = BX_FORM_SRC(BX_RSIREF, BX_SRC_NONE);
-const Bit8u OP_Xq = BX_FORM_SRC(BX_RSIREF, BX_SRC_NONE);
+const Bit8u OP_Xb = BX_FORM_SRC(BX_RSIREF_B, BX_SRC_IMPLICIT);
+const Bit8u OP_Xw = BX_FORM_SRC(BX_RSIREF_W, BX_SRC_IMPLICIT);
+const Bit8u OP_Xd = BX_FORM_SRC(BX_RSIREF_D, BX_SRC_IMPLICIT);
+const Bit8u OP_Xq = BX_FORM_SRC(BX_RSIREF_Q, BX_SRC_IMPLICIT);
 
-const Bit8u OP_Yb = BX_FORM_SRC(BX_RDIREF, BX_SRC_NONE);
-const Bit8u OP_Yw = BX_FORM_SRC(BX_RDIREF, BX_SRC_NONE);
-const Bit8u OP_Yd = BX_FORM_SRC(BX_RDIREF, BX_SRC_NONE);
-const Bit8u OP_Yq = BX_FORM_SRC(BX_RDIREF, BX_SRC_NONE);
+const Bit8u OP_Yb = BX_FORM_SRC(BX_RDIREF_B, BX_SRC_IMPLICIT);
+const Bit8u OP_Yw = BX_FORM_SRC(BX_RDIREF_W, BX_SRC_IMPLICIT);
+const Bit8u OP_Yd = BX_FORM_SRC(BX_RDIREF_D, BX_SRC_IMPLICIT);
+const Bit8u OP_Yq = BX_FORM_SRC(BX_RDIREF_Q, BX_SRC_IMPLICIT);
 
 struct bx_modrm {
   unsigned modrm, mod, nnn, rm;
