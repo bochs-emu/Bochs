@@ -64,6 +64,7 @@ public:
                      eth_rx_handler_t rxh,
                      eth_rx_status_t rxstat,
                      bx_devmodel_c *dev, const char *script);
+  virtual ~bx_null_pktmover_c();
   void sendpkt(void *buf, unsigned io_len);
 private:
   int rx_timer_index;
@@ -122,6 +123,14 @@ bx_null_pktmover_c::bx_null_pktmover_c(const char *netif,
     fprintf(txlog_txt, "%02x%s", 0xff & macaddr[i], i<5?":" : "");
   fprintf(txlog_txt, "\n--\n");
   fflush(txlog_txt);
+#endif
+}
+
+bx_null_pktmover_c::~bx_null_pktmover_c()
+{
+#if BX_ETH_NULL_LOGGING
+  fclose(txlog);
+  fclose(txlog_txt);
 #endif
 }
 

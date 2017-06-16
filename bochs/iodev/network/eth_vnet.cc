@@ -285,6 +285,9 @@ void bx_vnet_pktmover_c::pktmover_init(
 
 bx_vnet_pktmover_c::~bx_vnet_pktmover_c()
 {
+#if BX_ETH_VNET_LOGGING
+  fclose(pktlog_txt);
+#endif
   bx_vnet_instances--;
 }
 

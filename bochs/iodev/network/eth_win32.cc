@@ -237,6 +237,7 @@ public:
                       eth_rx_handler_t rxh, eth_rx_status_t rxstat,
                       bx_devmodel_c *dev,
                       const char *script);
+  virtual ~bx_win32_pktmover_c();
   void sendpkt(void *buf, unsigned io_len);
 private:
   struct bpf_insn filter[8];
@@ -359,6 +360,13 @@ bx_win32_pktmover_c::bx_win32_pktmover_c(
     fprintf(pktlog_txt, "%02x%s", 0xff & macaddr[i], i<5?":" : "\n");
   fprintf(pktlog_txt, "--\n");
   fflush(pktlog_txt);
+#endif
+}
+
+bx_win32_pktmover_c::~bx_win32_pktmover_c()
+{
+#if BX_ETH_WIN32_LOGGING
+  fclose(pktlog_txt);
 #endif
 }
 
