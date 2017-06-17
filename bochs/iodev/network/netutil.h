@@ -129,6 +129,7 @@ typedef struct {
   Bit8u default_guest_ipv4addr[4];
   Bit8u guest_ipv4addr[4];
   Bit8u dns_ipv4addr[4];
+  char *hostname;
 } dhcp_cfg_t;
 
 // vnet functions shared with bxhub

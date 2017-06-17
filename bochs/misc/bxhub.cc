@@ -77,6 +77,7 @@ typedef struct {
 
 const Bit8u default_host_macaddr[6] = {0xb0, 0xc4, 0x20, 0x00, 0x00, 0x0f};
 const Bit8u default_host_ipv4addr[4] = {10, 0, 2, 2};
+const Bit8u default_dns_ipv4addr[4] = {10, 0, 2, 3};
 
 const Bit8u broadcast_ipv4addr[3][4] =
 {
@@ -91,7 +92,71 @@ static char tftp_root[BX_PATHNAME_LEN];
 static Bit8u host_macaddr[6];
 static int client_max;
 static hub_client_t hclient[BXHUB_MAX_CLIENTS];
+int bx_loglev;
 
+
+int process_dns(const Bit8u *data, unsigned len, Bit8u *reply, dhcp_cfg_t *dhcpc)
+{
+  char host[256];
+  Bit8u len1, p1, p2;
+  Bit8u ipaddr[4];
+  Bit16u val16[6];
+  bx_bool host_found = 0;
+  int i, rlen = 0;
+
+  for (i = 0; i < 6; i++) {
+    val16[i] = get_net2(&data[i * 2]);
+  }
+  if ((val16[1] != 0x0100) || (val16[2] != 0x0001))
+    return 0;
+  p1 = 12;
+  p2 = 0;
+  while (data[p1] != 0) {
+    len1 = data[p1];
+    if (p2 > 0) {
+      host[p2++] = '.';
+    }
+    memcpy(&host[p2], &data[p1 + 1], len1);
+    p2 += len1;
+    p1 += (len1 + 1);
+  };
+  host[p2] = 0;
+  if ((get_net2(&data[p1 + 1]) != 0x0001) || (get_net2(&data[p1 + 3]) != 0x0001))
+    return 0;
+  if (!strcasecmp(host, "vnet")) {
+    host_found = 1;
+    memcpy(&ipaddr, dhcpc->host_ipv4addr, 4);
+  } else {
+    for (i = 0; i < client_max; i++) {
+      if (hclient[i].init) {
+        if (!strcasecmp(host, hclient[i].dhcp.hostname)) {
+          host_found = 1;
+          memcpy(&ipaddr, &hclient[i].dhcp.guest_ipv4addr, 4);
+          break;
+        }
+      }
+    }
+  }
+  if (host_found) {
+    memcpy(reply, data, len);
+    put_net2(&reply[2], 0x8180);
+    put_net2(&reply[6], 0x0001);
+    reply[len] = 0xc0;
+    reply[len + 1] = 12;
+    put_net2(&reply[len + 2], 0x0001);
+    put_net2(&reply[len + 4], 0x0001);
+    put_net4(&reply[len + 6], 86400);
+    put_net2(&reply[len + 10], 4);
+    memcpy(&reply[len + 12], ipaddr, 4);
+    rlen = len + 16;
+  } else {
+    BX_ERROR(("DNS: unknown host '%s'", host));
+    memcpy(reply, data, len);
+    put_net2(&reply[2], 0x8183);
+    rlen = len;
+  }
+  return rlen;
+}
 
 bx_bool handle_ipv4(hub_client_t *client, Bit8u *buf, unsigned len)
 {
@@ -108,6 +173,8 @@ bx_bool handle_ipv4(hub_client_t *client, Bit8u *buf, unsigned len)
   unsigned icmpcode;
   Bit8u *replybuf = client->reply_buffer;
   dhcp_cfg_t *dhcpc = &client->dhcp;
+  Bit8u srv_ipv4addr[4];
+  bx_bool dns_service = 0;
 
   // guest-to-host IPv4
   if (len < (14U+20U)) {
@@ -129,7 +196,14 @@ bx_bool handle_ipv4(hub_client_t *client, Bit8u *buf, unsigned len)
 
   total_len = ntohs(iphdr->total_len);
 
-  if (memcmp(&iphdr->dst_addr, dhcpc->host_ipv4addr, 4) &&
+  if (!memcmp(&iphdr->dst_addr, dhcpc->dns_ipv4addr, 4)) {
+    memcpy(srv_ipv4addr, dhcpc->dns_ipv4addr, 4);
+    dns_service = 1;
+  } else {
+    memcpy(srv_ipv4addr, dhcpc->host_ipv4addr, 4);
+  }
+
+  if (memcmp(&iphdr->dst_addr, dhcpc->host_ipv4addr, 4) && !dns_service &&
       memcmp(&iphdr->dst_addr, broadcast_ipv4addr[0],4) &&
       memcmp(&iphdr->dst_addr, broadcast_ipv4addr[1],4) &&
       memcmp(&iphdr->dst_addr, broadcast_ipv4addr[2],4))
@@ -154,12 +228,19 @@ bx_bool handle_ipv4(hub_client_t *client, Bit8u *buf, unsigned len)
     udp_src_port = ntohs(udphdr->src_port);
     udp_dst_port = ntohs(udphdr->dst_port);
     switch (udp_dst_port) {
+      case 53: // DNS
+        if (dns_service) {
+          udp_reply_size = process_dns(&l4pkt[8], l4pkt_len-8, &replybuf[42], dhcpc);
+        }
+        break;
       case 67: // BOOTP
-        udp_reply_size = vnet_process_dhcp(NULL, &l4pkt[8], l4pkt_len-8,
-                                           &replybuf[42], dhcpc);
+        if (!dns_service) {
+          udp_reply_size = vnet_process_dhcp(NULL, &l4pkt[8], l4pkt_len-8,
+                                             &replybuf[42], dhcpc);
+        }
         break;
       case 69: // TFTP
-        if (strlen(tftp_root) > 0) {
+        if (!dns_service && (strlen(tftp_root) > 0)) {
           udp_reply_size = vnet_process_tftp(NULL, &l4pkt[8], l4pkt_len-8,
                                              udp_src_port, &replybuf[42], tftp_root);
         }
@@ -172,7 +253,7 @@ bx_bool handle_ipv4(hub_client_t *client, Bit8u *buf, unsigned len)
       replybuf[22] = 0;
       replybuf[23] = 0x11; // UDP
       put_net2(&replybuf[24], 8U+udp_reply_size);
-      memcpy(&replybuf[26], dhcpc->host_ipv4addr, 4);
+      memcpy(&replybuf[26], srv_ipv4addr, 4);
       memcpy(&replybuf[30], dhcpc->guest_ipv4addr, 4);
       // udp header
       put_net2(&replybuf[34], udp_dst_port);
@@ -213,12 +294,14 @@ bx_bool handle_ipv4(hub_client_t *client, Bit8u *buf, unsigned len)
       default:
         break;
     }
+  } else {
+    BX_DEBUG(("Unsupported IP protocol 0x%02x", iphdr->protocol));
   }
   if (client->pending_reply_size > 0) {
     // host-to-guest IPv4
     replybuf[14] = (replybuf[14] & 0x0f) | 0x40;
     l3header_len = ((unsigned)(replybuf[14] & 0x0f) << 2);
-    memcpy(&replybuf[26], dhcpc->host_ipv4addr, 4);
+    memcpy(&replybuf[26], srv_ipv4addr, 4);
     memcpy(&replybuf[30], dhcpc->guest_ipv4addr, 4);
     put_net2(&replybuf[24], 0);
     put_net2(&replybuf[24], ip_checksum(&replybuf[14], l3header_len) ^ (Bit16u)0xffff);
@@ -274,8 +357,11 @@ int handle_packet(hub_client_t *client, Bit8u *buf, unsigned len)
       memcpy(dhcpc->host_macaddr, host_macaddr, ETHERNET_MAC_ADDR_LEN);
       memcpy(dhcpc->guest_macaddr, ethhdr->src_mac_addr, ETHERNET_MAC_ADDR_LEN);
       memcpy(dhcpc->host_ipv4addr, &default_host_ipv4addr[0], 4);
+      memcpy(dhcpc->dns_ipv4addr, &default_dns_ipv4addr, 4);
       memcpy(dhcpc->guest_ipv4addr, &broadcast_ipv4addr[1][0], 4);
       memcpy(dhcpc->default_guest_ipv4addr, default_guest_ipv4addr, 4);
+      dhcpc->hostname = new char[256];
+      dhcpc->hostname[0] = 0;
       default_guest_ipv4addr[3]++;
       client->reply_buffer = new Bit8u[BX_PACKET_BUFSIZE];
       client->init = 1;
@@ -334,6 +420,7 @@ void print_usage()
     "  -base=...     base UDP port (bxhub uses 2 ports per Bochs session)\n"
     "  -mac=...      host MAC address (default is b0:c4:20:00:00:0f)\n"
     "  -tftp=...     enable TFTP support using specified directory\n"
+    "  -loglev=...   set log level (0 - 3, default 1)\n"
     "  --help        display this help and exit\n\n");
 }
 
@@ -345,6 +432,7 @@ int parse_cmdline(int argc, char *argv[])
   int tmp[6];
 
   client_max = 2;
+  bx_loglev = 1;
   port_base = 40000;
   tftp_root[0] = 0;
   memcpy(host_macaddr, default_host_macaddr, ETHERNET_MAC_ADDR_LEN);
@@ -385,6 +473,15 @@ int parse_cmdline(int argc, char *argv[])
         for (n=0; n<6; n++) host_macaddr[n] = (Bit8u)tmp[n];
       }
     }
+    else if (!strncmp("-loglev=", argv[arg], 8)) {
+      n = atoi(&argv[arg][8]);
+      if ((n >= 0) && (n <= 3)) {
+        bx_loglev = n;
+      } else {
+        printf("Unsupported log level %d (must be 0 - 3)\n\n", n);
+        ret = 0;
+      }
+    }
     else if (argv[arg][0] == '-') {
       printf("Unknown option: %s\n\n", argv[arg]);
       ret = 0;
@@ -400,8 +497,10 @@ void CDECL intHandler(int sig)
 {
   if (sig == SIGINT) {
     for (int i = 0; i < client_max; i++) {
-      if (hclient[i].init)
+      if (hclient[i].init) {
         delete [] hclient[i].reply_buffer;
+        delete [] hclient[i].dhcp.hostname;
+      }
       closesocket(hclient[i].so);
     }
 #ifdef WIN32

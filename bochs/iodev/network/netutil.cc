@@ -138,12 +138,14 @@ bx_bool vnet_process_arp_request(const Bit8u *buf, Bit8u *reply, dhcp_cfg_t *dhc
 
   if (!memcmp(&buf[22], dhcp->guest_macaddr, 6)) {
     memcpy(dhcp->guest_ipv4addr, &buf[28], 4);
-    if (!memcmp(&buf[38], dhcp->host_ipv4addr, 4)) {
+    if (!memcmp(&buf[38], dhcp->host_ipv4addr, 4) ||
+        ((dhcp->dns_ipv4addr[0] != 0) &&
+         !memcmp(&buf[38], dhcp->dns_ipv4addr, 4))) {
       memset(reply, 0, MIN_RX_PACKET_LEN);
       memcpy(arprhdr, &buf[14], 6);
       put_net2((Bit8u*)&arprhdr->opcode, ARP_OPCODE_REPLY);
       memcpy((Bit8u *)arprhdr+8, dhcp->host_macaddr, ETHERNET_MAC_ADDR_LEN);
-      memcpy((Bit8u *)arprhdr+14, dhcp->host_ipv4addr, 4);
+      memcpy((Bit8u *)arprhdr+14, &buf[38], 4);
       memcpy((Bit8u *)arprhdr+18, dhcp->guest_macaddr, ETHERNET_MAC_ADDR_LEN);
       memcpy((Bit8u *)arprhdr+24, dhcp->guest_ipv4addr, 4);
       return 1;
@@ -267,6 +269,10 @@ int vnet_process_dhcp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_le
       hostname = (char*)malloc(extlen);
       memcpy(hostname, extdata, extlen);
       hostname_len = extlen;
+      if ((dhcp->hostname != NULL) && (extlen < 256)) {
+        memcpy(dhcp->hostname, extdata, extlen);
+        dhcp->hostname[extlen] = 0;
+      }
       found_host_name = true;
       break;
     default:
