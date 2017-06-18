@@ -192,6 +192,7 @@ int vnet_process_dhcp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_le
   Bit8u replybuf[576];
   char *hostname = NULL;
   unsigned hostname_len = 0;
+  Bit16u maxsize = 0;
 
   if (data_len < (236U+4U)) return 0;
   if (data[0] != BOOTREQUEST) return 0;
@@ -274,6 +275,14 @@ int vnet_process_dhcp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_le
         dhcp->hostname[extlen] = 0;
       }
       found_host_name = true;
+      break;
+    case BOOTPOPT_MAX_DHCP_MESSAGE_SIZE:
+      if (extlen < 2)
+        break;
+      maxsize = get_net2(&extdata[0]);
+      if (maxsize < 548U) {
+        BX_ERROR(("invalid max. DHCP message size = %d", maxsize));
+      }
       break;
     default:
       BX_ERROR(("extcode %d not supported yet", extcode));
