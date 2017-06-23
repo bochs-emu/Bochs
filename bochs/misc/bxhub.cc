@@ -123,13 +123,13 @@ int process_dns(const Bit8u *data, unsigned len, Bit8u *reply, dhcp_cfg_t *dhcpc
   host[p2] = 0;
   if ((get_net2(&data[p1 + 1]) != 0x0001) || (get_net2(&data[p1 + 3]) != 0x0001))
     return 0;
-  if (!strcasecmp(host, "vnet")) {
+  if (!stricmp(host, "vnet")) {
     host_found = 1;
     memcpy(&ipaddr, dhcpc->host_ipv4addr, 4);
   } else {
     for (i = 0; i < client_max; i++) {
       if (hclient[i].init) {
-        if (!strcasecmp(host, hclient[i].dhcp.hostname)) {
+        if (!stricmp(host, hclient[i].dhcp.hostname)) {
           host_found = 1;
           memcpy(&ipaddr, &hclient[i].dhcp.guest_ipv4addr, 4);
           break;
