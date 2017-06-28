@@ -92,7 +92,6 @@ extern "C" {
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
-#include <netpacket/packet.h>
 #include <netinet/in.h>
 #include <net/ethernet.h>
 #include <net/if.h>
