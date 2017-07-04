@@ -29,6 +29,7 @@
 // - Command line options added for base UDP port and 'vnet' server features.
 // - Support for connects from up to 6 Bochs sessions.
 // - Support for connecting from other machines.
+// - Added DNS service support for the server 'vnet' and connected clients.
 
 #ifdef __CYGWIN__
 #define __USE_W32_SOCKETS
@@ -67,17 +68,18 @@ typedef int SOCKET;
 #define BXHUB_MAX_CLIENTS 6
 
 typedef struct {
-  SOCKET so;
-  struct sockaddr_in sin, sout;
-  bx_bool init;
+  SOCKET     so;
+  struct     sockaddr_in sin, sout;
+  bx_bool    init;
   dhcp_cfg_t dhcp;
-  Bit8u *reply_buffer;
-  int pending_reply_size;
+  Bit8u      *reply_buffer;
+  int        pending_reply_size;
 } hub_client_t;
 
 const Bit8u default_host_macaddr[6] = {0xb0, 0xc4, 0x20, 0x00, 0x00, 0x0f};
 const Bit8u default_host_ipv4addr[4] = {10, 0, 2, 2};
 const Bit8u default_dns_ipv4addr[4] = {10, 0, 2, 3};
+const Bit8u default_guest_ipv4addr[4] = {10, 0, 2, 15};
 
 const Bit8u broadcast_ipv4addr[3][4] =
 {
@@ -86,11 +88,11 @@ const Bit8u broadcast_ipv4addr[3][4] =
   { 10,  0,  2,255},
 };
 
-static Bit8u default_guest_ipv4addr[4] = {10, 0, 2, 15};
 static Bit16u port_base = 40000;
 static char tftp_root[BX_PATHNAME_LEN];
 static Bit8u host_macaddr[6];
 static int client_max;
+static Bit8u n_clients;
 static hub_client_t hclient[BXHUB_MAX_CLIENTS];
 int bx_loglev;
 
@@ -305,8 +307,7 @@ bx_bool handle_ipv4(hub_client_t *client, Bit8u *buf, unsigned len)
     memcpy(&replybuf[30], dhcpc->guest_ipv4addr, 4);
     put_net2(&replybuf[24], 0);
     put_net2(&replybuf[24], ip_checksum(&replybuf[14], l3header_len) ^ (Bit16u)0xffff);
-    vnet_prepare_reply(replybuf, ETHERNET_TYPE_IPV4, dhcpc);
-    // don't forward to other client
+    // set up reply packet
     return 1;
   } else {
     return 0;
@@ -330,7 +331,7 @@ bx_bool handle_arp(hub_client_t *client, Bit8u *buf, unsigned len)
     case ARP_OPCODE_REQUEST:
       if (vnet_process_arp_request(buf, client->reply_buffer, dhcpc)) {
         client->pending_reply_size = MIN_RX_PACKET_LEN;
-        vnet_prepare_reply(client->reply_buffer, ETHERNET_TYPE_ARP, dhcpc);
+        // set up reply packet
         return 1;
       }
       break;
@@ -343,26 +344,29 @@ bx_bool handle_arp(hub_client_t *client, Bit8u *buf, unsigned len)
   return 0;
 }
 
-int handle_packet(hub_client_t *client, Bit8u *buf, unsigned len)
+bx_bool handle_packet(hub_client_t *client, Bit8u *buf, unsigned len)
 {
   ethernet_header_t *ethhdr = (ethernet_header_t *)buf;
   dhcp_cfg_t *dhcpc = &client->dhcp;
-  int ret = 1;
+  bx_bool ret = 0;
+  Bit8u c;
 
   if (!client->init) {
     if (memcmp(ethhdr->src_mac_addr, host_macaddr, 6) == 0) {
       client->init = -1;
+      return 0;
     } else {
       client->sout.sin_addr.s_addr = client->sin.sin_addr.s_addr;
+      c = n_clients++;
       memcpy(dhcpc->host_macaddr, host_macaddr, ETHERNET_MAC_ADDR_LEN);
       memcpy(dhcpc->guest_macaddr, ethhdr->src_mac_addr, ETHERNET_MAC_ADDR_LEN);
       memcpy(dhcpc->host_ipv4addr, &default_host_ipv4addr[0], 4);
       memcpy(dhcpc->dns_ipv4addr, &default_dns_ipv4addr, 4);
       memcpy(dhcpc->guest_ipv4addr, &broadcast_ipv4addr[1][0], 4);
       memcpy(dhcpc->default_guest_ipv4addr, default_guest_ipv4addr, 4);
+      dhcpc->default_guest_ipv4addr[3] += c;
       dhcpc->hostname = new char[256];
       dhcpc->hostname[0] = 0;
-      default_guest_ipv4addr[3]++;
       client->reply_buffer = new Bit8u[BX_PACKET_BUFSIZE];
       client->init = 1;
     }
@@ -381,6 +385,12 @@ int handle_packet(hub_client_t *client, Bit8u *buf, unsigned len)
     default:
       break;
   }
+  if (ret) {
+    ethernet_header_t *ethrhdr = (ethernet_header_t *)client->reply_buffer;
+    memcpy(ethrhdr->dst_mac_addr, ethhdr->src_mac_addr, ETHERNET_MAC_ADDR_LEN);
+    memcpy(ethrhdr->src_mac_addr, dhcpc->host_macaddr, ETHERNET_MAC_ADDR_LEN);
+    ethrhdr->type = ethhdr->type;
+  }
   return ret;
 }
 
@@ -392,7 +402,8 @@ void send_packet(hub_client_t *client, Bit8u *buf, unsigned len)
 
 void broadcast_packet(int clientid, Bit8u *buf, unsigned len)
 {
-  handle_packet(&hclient[clientid], buf, len);
+  if (handle_packet(&hclient[clientid], buf, len))
+    return;
   for (int i = 0; i < client_max; i++) {
     if (i != clientid) {
       send_packet(&hclient[i], buf, len);
@@ -535,6 +546,7 @@ int CDECL main(int argc, char **argv)
 
   signal(SIGINT, intHandler);
 
+  n_clients = 0;
   for (i = 0; i < client_max; i++) {
     memset(&hclient[i], 0, sizeof(hub_client_t));
 
