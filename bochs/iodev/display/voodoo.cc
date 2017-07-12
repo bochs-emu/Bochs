@@ -310,6 +310,7 @@ void bx_voodoo_c::register_state(void)
     new bx_shadow_num_c(dac, name, &v->dac.reg[i], BASE_HEX);
   }
   new bx_shadow_num_c(dac, "read_result", &v->dac.read_result, BASE_HEX);
+  new bx_shadow_num_c(dac, "clk0_freq", &v->dac.clk0_freq, BASE_DEC);
   bx_list_c *fbi = new bx_list_c(vstate, "fbi", "framebuffer");
   new bx_shadow_data_c(fbi, "ram", v->fbi.ram, (4 << 20));
   new bx_shadow_num_c(fbi, "rgboffs0", &v->fbi.rgboffs[0], BASE_HEX);
@@ -473,11 +474,13 @@ void bx_voodoo_c::after_restore_state(void)
                            0x1000000)) {
     BX_INFO(("new mem base address: 0x%08x", BX_VOODOO_THIS pci_base_address[0]));
   }
-  // force update
-  v->fbi.video_changed = 1;
-  BX_VOODOO_THIS s.vdraw.override_on = !BX_VOODOO_THIS s.vdraw.override_on;
-  BX_VOODOO_THIS s.vdraw.frame_start = bx_virt_timer.time_usec(BX_VOODOO_THIS s.vdraw.realtime);
-  mode_change_timer_handler(NULL);
+  if (BX_VOODOO_THIS s.vdraw.override_on) {
+    // force update
+    v->fbi.video_changed = 1;
+    BX_VOODOO_THIS s.vdraw.frame_start = bx_virt_timer.time_usec(BX_VOODOO_THIS s.vdraw.realtime);
+    BX_VOODOO_THIS update_timing();
+    DEV_vga_set_override(1, BX_VOODOO_THIS_PTR);
+  }
 }
 
 bx_bool bx_voodoo_c::mem_read_handler(bx_phy_address addr, unsigned len,
