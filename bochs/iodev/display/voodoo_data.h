@@ -1437,6 +1437,7 @@ struct _cmdfifo_info
   Bit32u  amin;         /* minimum address */
   Bit32u  amax;         /* maximum address */
   Bit32u  depth;        /* current depth */
+  Bit32u  depth_needed; /* depth needed for command */
   Bit32u  holes;        /* number of holes */
 };
 

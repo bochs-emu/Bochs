@@ -164,7 +164,7 @@ BX_THREAD_FUNC(cmdfifo_thread, indata)
 {
   UNUSED(indata);
   while (1) {
-    while (!v->fbi.cmdfifo[0].enable || (v->fbi.cmdfifo[0].depth == 0)) {
+    while (!v->fbi.cmdfifo[0].enable || (v->fbi.cmdfifo[0].depth < v->fbi.cmdfifo[0].depth_needed)) {
       BX_MSLEEP(1);
     }
     cmdfifo_process();
@@ -243,6 +243,7 @@ void bx_voodoo_c::init(void)
   voodoo_init(BX_VOODOO_THIS s.model);
 
   if (BX_VOODOO_THIS s.model == VOODOO_2) {
+    v->fbi.cmdfifo[0].depth_needed = BX_MAX_BIT32U;
     BX_INIT_MUTEX(cmdfifo_mutex);
     BX_THREAD_CREATE(cmdfifo_thread, this, cmdfifo_thread_var);
   }
