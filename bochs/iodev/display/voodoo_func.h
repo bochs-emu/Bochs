@@ -2398,12 +2398,14 @@ nextpixel:
   return 0;
 }
 
-void cmdfifo_calc_depth_needed(void)
+Bit32u cmdfifo_calc_depth_needed(void)
 {
-  Bit32u command, needed = 1;
+  Bit32u command, needed = BX_MAX_BIT32U;
   Bit8u type;
   int i, count = 0;
 
+  if (v->fbi.cmdfifo[0].depth == 0)
+    return needed;
   BX_LOCK(cmdfifo_mutex);
   command = *(Bit32u*)(&v->fbi.ram[v->fbi.cmdfifo[0].rdptr & v->fbi.mask]);
   BX_UNLOCK(cmdfifo_mutex);
@@ -2452,7 +2454,7 @@ void cmdfifo_calc_depth_needed(void)
     default:
       BX_ERROR(("CMDFIFO: unsupported packet type %d", type));
   }
-  v->fbi.cmdfifo[0].depth_needed = needed;
+  return needed;
 }
 
 void cmdfifo_w(Bit32u fbi_offset, Bit32u data)
@@ -2462,7 +2464,7 @@ void cmdfifo_w(Bit32u fbi_offset, Bit32u data)
   v->fbi.cmdfifo[0].depth++;
   BX_UNLOCK(cmdfifo_mutex);
   if (v->fbi.cmdfifo[0].depth_needed == BX_MAX_BIT32U) {
-    cmdfifo_calc_depth_needed();
+    v->fbi.cmdfifo[0].depth_needed = cmdfifo_calc_depth_needed();
   }
 }
 
@@ -2658,11 +2660,7 @@ void cmdfifo_process(void)
     default:
       BX_ERROR(("CMDFIFO: unsupported packet type %d", type));
   }
-  if (v->fbi.cmdfifo[0].depth > 0) {
-    cmdfifo_calc_depth_needed();
-  } else {
-    v->fbi.cmdfifo[0].depth_needed = BX_MAX_BIT32U;
-  }
+  v->fbi.cmdfifo[0].depth_needed = cmdfifo_calc_depth_needed();
 }
 
 
