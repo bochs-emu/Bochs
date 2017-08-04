@@ -275,7 +275,11 @@ extern "C" {
   ((eth_pktmover_c*)bx_netmod_ctl.init_module(a,(void*)b,(void*)c,d))
 
 ///////// Gameport macro
+#if BX_SUPPORT_GAMEPORT
 #define DEV_gameport_set_enabled(a) bx_devices.pluginGameport->set_enabled(a)
+#else
+#define DEV_gameport_set_enabled(a) BX_ERROR(("gameport emulation not present"))
+#endif
 
 
 #if BX_HAVE_DLFCN_H
