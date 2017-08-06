@@ -805,46 +805,46 @@ static Bit32s setup_and_draw_triangle(voodoo_state *v)
   if (v->reg[sSetupMode].u & (1 << 3))
   {
     v->fbi.startw = v->tmu[0].startw = v->tmu[1].startw = (Bit64s)(v->fbi.svert[0].wb * 65536.0f * 65536.0f);
-    v->fbi.dwdx = v->tmu[0].dwdx = v->tmu[1].dwdx = ((v->fbi.svert[0].wb - v->fbi.svert[1].wb) * dx1 - (v->fbi.svert[0].wb - v->fbi.svert[2].wb) * dx2) * tdiv;
-    v->fbi.dwdy = v->tmu[0].dwdy = v->tmu[1].dwdy = ((v->fbi.svert[0].wb - v->fbi.svert[2].wb) * dy1 - (v->fbi.svert[0].wb - v->fbi.svert[1].wb) * dy2) * tdiv;
+    v->fbi.dwdx = v->tmu[0].dwdx = v->tmu[1].dwdx = (Bit64s)(((v->fbi.svert[0].wb - v->fbi.svert[1].wb) * dx1 - (v->fbi.svert[0].wb - v->fbi.svert[2].wb) * dx2) * tdiv);
+    v->fbi.dwdy = v->tmu[0].dwdy = v->tmu[1].dwdy = (Bit64s)(((v->fbi.svert[0].wb - v->fbi.svert[2].wb) * dy1 - (v->fbi.svert[0].wb - v->fbi.svert[1].wb) * dy2) * tdiv);
   }
 
   /* set up W0 */
   if (v->reg[sSetupMode].u & (1 << 4))
   {
     v->tmu[0].startw = v->tmu[1].startw = (Bit64s)(v->fbi.svert[0].w0 * 65536.0f * 65536.0f);
-    v->tmu[0].dwdx = v->tmu[1].dwdx = ((v->fbi.svert[0].w0 - v->fbi.svert[1].w0) * dx1 - (v->fbi.svert[0].w0 - v->fbi.svert[2].w0) * dx2) * tdiv;
-    v->tmu[0].dwdy = v->tmu[1].dwdy = ((v->fbi.svert[0].w0 - v->fbi.svert[2].w0) * dy1 - (v->fbi.svert[0].w0 - v->fbi.svert[1].w0) * dy2) * tdiv;
+    v->tmu[0].dwdx = v->tmu[1].dwdx = (Bit64s)(((v->fbi.svert[0].w0 - v->fbi.svert[1].w0) * dx1 - (v->fbi.svert[0].w0 - v->fbi.svert[2].w0) * dx2) * tdiv);
+    v->tmu[0].dwdy = v->tmu[1].dwdy = (Bit64s)(((v->fbi.svert[0].w0 - v->fbi.svert[2].w0) * dy1 - (v->fbi.svert[0].w0 - v->fbi.svert[1].w0) * dy2) * tdiv);
   }
 
   /* set up S0,T0 */
   if (v->reg[sSetupMode].u & (1 << 5))
   {
     v->tmu[0].starts = v->tmu[1].starts = (Bit64s)(v->fbi.svert[0].s0 * 65536.0f * 65536.0f);
-    v->tmu[0].dsdx = v->tmu[1].dsdx = ((v->fbi.svert[0].s0 - v->fbi.svert[1].s0) * dx1 - (v->fbi.svert[0].s0 - v->fbi.svert[2].s0) * dx2) * tdiv;
-    v->tmu[0].dsdy = v->tmu[1].dsdy = ((v->fbi.svert[0].s0 - v->fbi.svert[2].s0) * dy1 - (v->fbi.svert[0].s0 - v->fbi.svert[1].s0) * dy2) * tdiv;
+    v->tmu[0].dsdx = v->tmu[1].dsdx = (Bit64s)(((v->fbi.svert[0].s0 - v->fbi.svert[1].s0) * dx1 - (v->fbi.svert[0].s0 - v->fbi.svert[2].s0) * dx2) * tdiv);
+    v->tmu[0].dsdy = v->tmu[1].dsdy = (Bit64s)(((v->fbi.svert[0].s0 - v->fbi.svert[2].s0) * dy1 - (v->fbi.svert[0].s0 - v->fbi.svert[1].s0) * dy2) * tdiv);
     v->tmu[0].startt = v->tmu[1].startt = (Bit64s)(v->fbi.svert[0].t0 * 65536.0f * 65536.0f);
-    v->tmu[0].dtdx = v->tmu[1].dtdx = ((v->fbi.svert[0].t0 - v->fbi.svert[1].t0) * dx1 - (v->fbi.svert[0].t0 - v->fbi.svert[2].t0) * dx2) * tdiv;
-    v->tmu[0].dtdy = v->tmu[1].dtdy = ((v->fbi.svert[0].t0 - v->fbi.svert[2].t0) * dy1 - (v->fbi.svert[0].t0 - v->fbi.svert[1].t0) * dy2) * tdiv;
+    v->tmu[0].dtdx = v->tmu[1].dtdx = (Bit64s)(((v->fbi.svert[0].t0 - v->fbi.svert[1].t0) * dx1 - (v->fbi.svert[0].t0 - v->fbi.svert[2].t0) * dx2) * tdiv);
+    v->tmu[0].dtdy = v->tmu[1].dtdy = (Bit64s)(((v->fbi.svert[0].t0 - v->fbi.svert[2].t0) * dy1 - (v->fbi.svert[0].t0 - v->fbi.svert[1].t0) * dy2) * tdiv);
   }
 
   /* set up W1 */
   if (v->reg[sSetupMode].u & (1 << 6))
   {
     v->tmu[1].startw = (Bit64s)(v->fbi.svert[0].w1 * 65536.0f * 65536.0f);
-    v->tmu[1].dwdx = ((v->fbi.svert[0].w1 - v->fbi.svert[1].w1) * dx1 - (v->fbi.svert[0].w1 - v->fbi.svert[2].w1) * dx2) * tdiv;
-    v->tmu[1].dwdy = ((v->fbi.svert[0].w1 - v->fbi.svert[2].w1) * dy1 - (v->fbi.svert[0].w1 - v->fbi.svert[1].w1) * dy2) * tdiv;
+    v->tmu[1].dwdx = (Bit64s)(((v->fbi.svert[0].w1 - v->fbi.svert[1].w1) * dx1 - (v->fbi.svert[0].w1 - v->fbi.svert[2].w1) * dx2) * tdiv);
+    v->tmu[1].dwdy = (Bit64s)(((v->fbi.svert[0].w1 - v->fbi.svert[2].w1) * dy1 - (v->fbi.svert[0].w1 - v->fbi.svert[1].w1) * dy2) * tdiv);
   }
 
   /* set up S1,T1 */
   if (v->reg[sSetupMode].u & (1 << 7))
   {
     v->tmu[1].starts = (Bit64s)(v->fbi.svert[0].s1 * 65536.0f * 65536.0f);
-    v->tmu[1].dsdx = ((v->fbi.svert[0].s1 - v->fbi.svert[1].s1) * dx1 - (v->fbi.svert[0].s1 - v->fbi.svert[2].s1) * dx2) * tdiv;
-    v->tmu[1].dsdy = ((v->fbi.svert[0].s1 - v->fbi.svert[2].s1) * dy1 - (v->fbi.svert[0].s1 - v->fbi.svert[1].s1) * dy2) * tdiv;
+    v->tmu[1].dsdx = (Bit64s)(((v->fbi.svert[0].s1 - v->fbi.svert[1].s1) * dx1 - (v->fbi.svert[0].s1 - v->fbi.svert[2].s1) * dx2) * tdiv);
+    v->tmu[1].dsdy = (Bit64s)(((v->fbi.svert[0].s1 - v->fbi.svert[2].s1) * dy1 - (v->fbi.svert[0].s1 - v->fbi.svert[1].s1) * dy2) * tdiv);
     v->tmu[1].startt = (Bit64s)(v->fbi.svert[0].t1 * 65536.0f * 65536.0f);
-    v->tmu[1].dtdx = ((v->fbi.svert[0].t1 - v->fbi.svert[1].t1) * dx1 - (v->fbi.svert[0].t1 - v->fbi.svert[2].t1) * dx2) * tdiv;
-    v->tmu[1].dtdy = ((v->fbi.svert[0].t1 - v->fbi.svert[2].t1) * dy1 - (v->fbi.svert[0].t1 - v->fbi.svert[1].t1) * dy2) * tdiv;
+    v->tmu[1].dtdx = (Bit64s)(((v->fbi.svert[0].t1 - v->fbi.svert[1].t1) * dx1 - (v->fbi.svert[0].t1 - v->fbi.svert[2].t1) * dx2) * tdiv);
+    v->tmu[1].dtdy = (Bit64s)(((v->fbi.svert[0].t1 - v->fbi.svert[2].t1) * dy1 - (v->fbi.svert[0].t1 - v->fbi.svert[1].t1) * dy2) * tdiv);
   }
 
   /* draw the triangle */

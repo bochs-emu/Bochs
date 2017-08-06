@@ -31,7 +31,7 @@ typedef Bit64s ssize_t;
 #define strdup     _strdup
 #define open       _open
 #define close      _close
-#define lseek      _lseek
+#define lseek      _lseeki64
 #define read       _read
 #define write      _write
 #endif
