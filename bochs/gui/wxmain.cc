@@ -1029,7 +1029,7 @@ int MyFrame::HandleAskParamString(bx_param_string_c *param)
 
     if (ddialog->ShowModal() == wxID_OK)
       strncpy(newval, ddialog->GetPath().mb_str(wxConvUTF8), sizeof(newval));
-      newval[sizeof(newval) - 1] = '\0';
+    newval[sizeof(newval) - 1] = '\0';
     dialog = ddialog; // so I can delete it
   } else if (n_opt & param->IS_FILENAME) {
     // use file open dialog
@@ -1038,7 +1038,7 @@ int MyFrame::HandleAskParamString(bx_param_string_c *param)
     wxFileDialog *fdialog = new wxFileDialog(this, wxString(msg, wxConvUTF8), wxT(""), wxString(param->getptr(), wxConvUTF8), wxT("*.*"), style);
     if (fdialog->ShowModal() == wxID_OK)
       strncpy(newval, fdialog->GetPath().mb_str(wxConvUTF8), sizeof(newval));
-      newval[sizeof(newval) - 1] = '\0';
+    newval[sizeof(newval) - 1] = '\0';
     dialog = fdialog; // so I can delete it
   } else {
     // use simple string dialog
@@ -1046,7 +1046,7 @@ int MyFrame::HandleAskParamString(bx_param_string_c *param)
     wxTextEntryDialog *tdialog = new wxTextEntryDialog(this, wxString(msg, wxConvUTF8), wxT("Enter new value"), wxString(param->getptr(), wxConvUTF8), style);
     if (tdialog->ShowModal() == wxID_OK)
       strncpy(newval, tdialog->GetValue().mb_str(wxConvUTF8), sizeof(newval));
-      newval[sizeof(newval) - 1] = '\0';
+    newval[sizeof(newval) - 1] = '\0';
     dialog = tdialog; // so I can delete it
   }
   if (strlen(newval) > 0) {
