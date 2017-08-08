@@ -1439,6 +1439,9 @@ struct _cmdfifo_info
   Bit32u  depth;        /* current depth */
   Bit32u  depth_needed; /* depth needed for command */
   Bit32u  holes;        /* number of holes */
+#ifdef WIN32
+  HANDLE  event;
+#endif
 };
 
 

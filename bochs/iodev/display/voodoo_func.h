@@ -2466,6 +2466,11 @@ void cmdfifo_w(Bit32u fbi_offset, Bit32u data)
   if (v->fbi.cmdfifo[0].depth_needed == BX_MAX_BIT32U) {
     v->fbi.cmdfifo[0].depth_needed = cmdfifo_calc_depth_needed();
   }
+#ifdef WIN32
+  if (v->fbi.cmdfifo[0].depth >= v->fbi.cmdfifo[0].depth_needed) {
+    SetEvent(v->fbi.cmdfifo[0].event);
+  }
+#endif
 }
 
 Bit32u cmdfifo_r(void)

@@ -164,10 +164,18 @@ BX_THREAD_FUNC(cmdfifo_thread, indata)
 {
   UNUSED(indata);
   while (1) {
+#ifndef WIN32
     while (!v->fbi.cmdfifo[0].enable || (v->fbi.cmdfifo[0].depth < v->fbi.cmdfifo[0].depth_needed)) {
       BX_MSLEEP(1);
     }
     cmdfifo_process();
+#else
+    if (WaitForSingleObject(v->fbi.cmdfifo[0].event, 1) == WAIT_OBJECT_0) {
+      while (v->fbi.cmdfifo[0].enable && (v->fbi.cmdfifo[0].depth >= v->fbi.cmdfifo[0].depth_needed)) {
+        cmdfifo_process();
+      }
+    }
+#endif
   }
   BX_THREAD_EXIT;
 }
@@ -187,6 +195,9 @@ bx_voodoo_c::~bx_voodoo_c()
   if (BX_VOODOO_THIS s.model == VOODOO_2) {
     BX_THREAD_KILL(cmdfifo_thread_var);
     BX_FINI_MUTEX(cmdfifo_mutex);
+#ifdef WIN32
+    CloseHandle(v->fbi.cmdfifo[0].event);
+#endif
   }
   if (v != NULL) {
     free(v->fbi.ram);
@@ -245,6 +256,9 @@ void bx_voodoo_c::init(void)
   if (BX_VOODOO_THIS s.model == VOODOO_2) {
     v->fbi.cmdfifo[0].depth_needed = BX_MAX_BIT32U;
     BX_INIT_MUTEX(cmdfifo_mutex);
+#ifdef WIN32
+    v->fbi.cmdfifo[0].event = CreateEvent(NULL, FALSE, FALSE, "cmdfifo_event");
+#endif
     BX_THREAD_CREATE(cmdfifo_thread, this, cmdfifo_thread_var);
   }
 
