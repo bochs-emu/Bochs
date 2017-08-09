@@ -164,17 +164,17 @@ BX_THREAD_FUNC(cmdfifo_thread, indata)
 {
   UNUSED(indata);
   while (1) {
-#ifndef WIN32
-    while (!v->fbi.cmdfifo[0].enable || (v->fbi.cmdfifo[0].depth < v->fbi.cmdfifo[0].depth_needed)) {
-      BX_MSLEEP(1);
-    }
-    cmdfifo_process();
-#else
+#ifdef WIN32
     if (WaitForSingleObject(v->fbi.cmdfifo[0].event, 1) == WAIT_OBJECT_0) {
       while (v->fbi.cmdfifo[0].enable && (v->fbi.cmdfifo[0].depth >= v->fbi.cmdfifo[0].depth_needed)) {
         cmdfifo_process();
       }
     }
+#else
+    while (v->fbi.cmdfifo[0].enable && (v->fbi.cmdfifo[0].depth >= v->fbi.cmdfifo[0].depth_needed)) {
+      cmdfifo_process();
+    }
+    BX_MSLEEP(1);
 #endif
   }
   BX_THREAD_EXIT;
