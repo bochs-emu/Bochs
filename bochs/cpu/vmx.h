@@ -695,6 +695,7 @@ typedef struct bx_VMCS
 #define VMX_VM_EXEC_CTRL3_EPT_VIOLATION_EXCEPTION   (1 << 18) /* #VE Exception */
 #define VMX_VM_EXEC_CTRL3_SUPPRESS_GUEST_VMX_TRACE  (1 << 19) /* Processor Trace */
 #define VMX_VM_EXEC_CTRL3_XSAVES_XRSTORS            (1 << 20) /* XSAVES */
+#define VMX_VM_EXEC_CTRL3_MBE_CTRL                  (1 << 22) /* Mode Based Execution Control (not implemented yet) */
 #define VMX_VM_EXEC_CTRL3_TSC_SCALING               (1 << 25) /* TSC Scaling */
 
 #define VMX_VM_EXEC_CTRL3_SUPPORTED_BITS \
@@ -1017,33 +1018,38 @@ typedef struct bx_VMCS
 //     [6] - support VMENTER to HLT state
 //     [7] - support VMENTER to SHUTDOWN state
 //     [8] - support VMENTER to WAIT_FOR_SIPI state
+//    [14] - Intel Processor Trace (Intel PT) can be used in VMX operation
 //    [15] - RDMSR can be used in SMM to read the SMBASE MSR
 // [24:16] - number of CR3 target values supported
 // [27:25] - (N+1)*512 - recommended maximum MSRs in MSR store list
 //    [28] - MSR_IA32_SMM_MONITOR_CTL[2] enable
 //    [29] - Allow VMWRITE to R/O VMCS fields (to be used with VMCS Shadowing)
-// [31-30] - Reserved
+//    [30] - Allow injection of a software interrupt, software exception, or privileged
+//           software exception with an instruction length of 0
+//    [31] - Reserved
 // --------------------------------------------
 // [63:32] - MSEG revision ID used by processor
 
 #if BX_SUPPORT_VMX >= 2
-  #define VMX_MISC_STORE_LMA_TO_X86_64_GUEST_VMENTRY_CONTROL (1<<5)
+const Bit32u VMX_MISC_STORE_LMA_TO_X86_64_GUEST_VMENTRY_CONTROL = (1<<5);
 #else
-  #define VMX_MISC_STORE_LMA_TO_X86_64_GUEST_VMENTRY_CONTROL (0)
+const Bit32u VMX_MISC_STORE_LMA_TO_X86_64_GUEST_VMENTRY_CONTROL = 0;
 #endif
 
-#define VMX_SUPPORT_VMENTER_TO_NON_ACTIVE_STATE ((1<<6) | (1<<7) | (1<<8))
+const Bit32u VMX_SUPPORT_VMENTER_TO_NON_ACTIVE_STATE = (1<<6) | (1<<7) | (1<<8);
 
-#define VMX_MISC_SUPPORT_VMWRITE_READ_ONLY_FIELDS (1<<29)
+const Bit32u VMX_MISC_SUPPORT_VMWRITE_READ_ONLY_FIELDS            = (1<<29);
+const Bit32u VMX_MISC_ALLOW_INJECTION_OF_SW_INTERRUPT_WITH_ILEN_0 = (1<<30);
 
 //Rate to increase VMX preemtion timer
-#define VMX_MISC_PREEMPTION_TIMER_RATE (0)
+const Bit32u VMX_MISC_PREEMPTION_TIMER_RATE = 0;
 
 #define VMX_MSR_MISC (VMX_MISC_PREEMPTION_TIMER_RATE | \
                       VMX_MISC_STORE_LMA_TO_X86_64_GUEST_VMENTRY_CONTROL | \
                       VMX_SUPPORT_VMENTER_TO_NON_ACTIVE_STATE | \
                      (VMX_CR3_TARGET_MAX_CNT << 16) | \
-                     (BX_SUPPORT_VMX_EXTENSION(BX_VMX_VMCS_SHADOWING) ? VMX_MISC_SUPPORT_VMWRITE_READ_ONLY_FIELDS : 0))
+                     (BX_SUPPORT_VMX_EXTENSION(BX_VMX_VMCS_SHADOWING) ? VMX_MISC_SUPPORT_VMWRITE_READ_ONLY_FIELDS : 0) | \
+                     (BX_SUPPORT_VMX_EXTENSION(BX_VMX_SW_INTERRUPT_INJECTION_ILEN_0) ? VMX_MISC_ALLOW_INJECTION_OF_SW_INTERRUPT_WITH_ILEN_0 : 0))
 
 //
 // IA32_VMX_CR0_FIXED0 MSR (0x486)   IA32_VMX_CR0_FIXED1 MSR (0x487)

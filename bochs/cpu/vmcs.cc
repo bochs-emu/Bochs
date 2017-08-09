@@ -744,6 +744,7 @@ void BX_CPU_C::init_vmx_capabilities(void)
   // [17] - EPT 1G pages support
   // [20] - INVEPT instruction supported
   // [21] - EPT A/D bits supported
+  // [22] - advanced VM-exit information for EPT violations (not implemented yet)
   // [25] - INVEPT single-context invalidation supported
   // [26] - INVEPT all-context invalidation supported
   // [32] - INVVPID instruction supported

@@ -949,7 +949,9 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
        case BX_SOFTWARE_INTERRUPT:
        case BX_PRIVILEGED_SOFTWARE_INTERRUPT:
        case BX_SOFTWARE_EXCEPTION:
-         if (vm->vmentry_instr_length == 0 || vm->vmentry_instr_length > 15) {
+         if ((vm->vmentry_instr_length == 0 && !BX_SUPPORT_VMX_EXTENSION(BX_VMX_SW_INTERRUPT_INJECTION_ILEN_0)) || 
+              vm->vmentry_instr_length > 15)
+         {
            BX_ERROR(("VMFAIL: VMENTRY bad injected event instr length"));
            return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
          }

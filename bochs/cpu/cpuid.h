@@ -140,30 +140,31 @@ protected:
 typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 
 // cpuid VMX features
-#define BX_VMX_TPR_SHADOW            (1 <<  0)              /* TPR shadow */
-#define BX_VMX_VIRTUAL_NMI           (1 <<  1)              /* Virtual NMI */
-#define BX_VMX_APIC_VIRTUALIZATION   (1 <<  2)              /* APIC Access Virtualization */
-#define BX_VMX_WBINVD_VMEXIT         (1 <<  3)              /* WBINVD VMEXIT */
-#define BX_VMX_PERF_GLOBAL_CTRL      (1 <<  4)              /* Save/Restore MSR_PERF_GLOBAL_CTRL */
-#define BX_VMX_MONITOR_TRAP_FLAG     (1 <<  5)              /* Monitor trap Flag (MTF) */
-#define BX_VMX_X2APIC_VIRTUALIZATION (1 <<  6)              /* Virtualize X2APIC */
-#define BX_VMX_EPT                   (1 <<  7)              /* Extended Page Tables (EPT) */
-#define BX_VMX_VPID                  (1 <<  8)              /* VPID */
-#define BX_VMX_UNRESTRICTED_GUEST    (1 <<  9)              /* Unrestricted Guest */
-#define BX_VMX_PREEMPTION_TIMER      (1 << 10)              /* VMX preemption timer */
-#define BX_VMX_SAVE_DEBUGCTL_DISABLE (1 << 11)              /* Disable Save/Restore of MSR_DEBUGCTL */
-#define BX_VMX_PAT                   (1 << 12)              /* Save/Restore MSR_PAT */
-#define BX_VMX_EFER                  (1 << 13)              /* Save/Restore MSR_EFER */
-#define BX_VMX_DESCRIPTOR_TABLE_EXIT (1 << 14)              /* Descriptor Table VMEXIT */
-#define BX_VMX_PAUSE_LOOP_EXITING    (1 << 15)              /* Pause Loop Exiting */
-#define BX_VMX_EPTP_SWITCHING        (1 << 16)              /* EPTP switching (VM Function 0) */
-#define BX_VMX_EPT_ACCESS_DIRTY      (1 << 17)              /* Extended Page Tables (EPT) A/D Bits */
-#define BX_VMX_VINTR_DELIVERY        (1 << 18)              /* Virtual Interrupt Delivery */
-#define BX_VMX_POSTED_INSTERRUPTS    (1 << 19)              /* Posted Interrupts support - not implemented yet */
-#define BX_VMX_VMCS_SHADOWING        (1 << 20)              /* VMCS Shadowing */
-#define BX_VMX_EPT_EXCEPTION         (1 << 21)              /* EPT Violation (#VE) exception */
-#define BX_VMX_PML                   (1 << 22)              /* Page Modification Logging - not implemented yet */
-#define BX_VMX_TSC_SCALING           (1 << 23)              /* TSC Scaling */
+#define BX_VMX_TPR_SHADOW                       (1 <<  0)   /* TPR shadow */
+#define BX_VMX_VIRTUAL_NMI                      (1 <<  1)   /* Virtual NMI */
+#define BX_VMX_APIC_VIRTUALIZATION              (1 <<  2)   /* APIC Access Virtualization */
+#define BX_VMX_WBINVD_VMEXIT                    (1 <<  3)   /* WBINVD VMEXIT */
+#define BX_VMX_PERF_GLOBAL_CTRL                 (1 <<  4)   /* Save/Restore MSR_PERF_GLOBAL_CTRL */
+#define BX_VMX_MONITOR_TRAP_FLAG                (1 <<  5)   /* Monitor trap Flag (MTF) */
+#define BX_VMX_X2APIC_VIRTUALIZATION            (1 <<  6)   /* Virtualize X2APIC */
+#define BX_VMX_EPT                              (1 <<  7)   /* Extended Page Tables (EPT) */
+#define BX_VMX_VPID                             (1 <<  8)   /* VPID */
+#define BX_VMX_UNRESTRICTED_GUEST               (1 <<  9)   /* Unrestricted Guest */
+#define BX_VMX_PREEMPTION_TIMER                 (1 << 10)   /* VMX preemption timer */
+#define BX_VMX_SAVE_DEBUGCTL_DISABLE            (1 << 11)   /* Disable Save/Restore of MSR_DEBUGCTL */
+#define BX_VMX_PAT                              (1 << 12)   /* Save/Restore MSR_PAT */
+#define BX_VMX_EFER                             (1 << 13)   /* Save/Restore MSR_EFER */
+#define BX_VMX_DESCRIPTOR_TABLE_EXIT            (1 << 14)   /* Descriptor Table VMEXIT */
+#define BX_VMX_PAUSE_LOOP_EXITING               (1 << 15)   /* Pause Loop Exiting */
+#define BX_VMX_EPTP_SWITCHING                   (1 << 16)   /* EPTP switching (VM Function 0) */
+#define BX_VMX_EPT_ACCESS_DIRTY                 (1 << 17)   /* Extended Page Tables (EPT) A/D Bits */
+#define BX_VMX_VINTR_DELIVERY                   (1 << 18)   /* Virtual Interrupt Delivery */
+#define BX_VMX_POSTED_INSTERRUPTS               (1 << 19)   /* Posted Interrupts support - not implemented yet */
+#define BX_VMX_VMCS_SHADOWING                   (1 << 20)   /* VMCS Shadowing */
+#define BX_VMX_EPT_EXCEPTION                    (1 << 21)   /* EPT Violation (#VE) exception */
+#define BX_VMX_PML                              (1 << 22)   /* Page Modification Logging - not implemented yet */
+#define BX_VMX_TSC_SCALING                      (1 << 23)   /* TSC Scaling */
+#define BX_VMX_SW_INTERRUPT_INJECTION_ILEN_0  	(1 << 24)   /* Allow software interrupt injection with instruction length 0 */
 
 // CPUID defines - STD features CPUID[0x00000001].EDX
 // ----------------------------
@@ -312,7 +313,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [3:3]    BMI1: Advanced Bit Manipulation Extensions
 //   [4:4]    HLE: Hardware Lock Elision
 //   [5:5]    AVX2
-//   [6:6]    reserved
+//   [6:6]    FDP Deprecation
 //   [7:7]    SMEP: Supervisor Mode Execution Protection
 //   [8:8]    BMI2: Advanced Bit Manipulation Extensions
 //   [9:9]    Support for Enhanced REP MOVSB/STOSB
