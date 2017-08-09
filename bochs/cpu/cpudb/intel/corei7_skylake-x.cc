@@ -28,7 +28,7 @@
 
 #define LOG_THIS cpu->
 
-#if BX_SUPPORT_X86_64 && BX_SUPPORT_AVX && BX_SUPPORT_EVEX
+#if BX_SUPPORT_X86_64 && BX_SUPPORT_AVX
 
 corei7_skylake_x_t::corei7_skylake_x_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
@@ -99,11 +99,13 @@ corei7_skylake_x_t::corei7_skylake_x_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_ADX);
   enable_cpu_extension(BX_ISA_SMAP);
   enable_cpu_extension(BX_ISA_FDP_DEPRECATION);
+#if BX_SUPPORT_EVEX
   enable_cpu_extension(BX_ISA_AVX512);
   enable_cpu_extension(BX_ISA_AVX512_DQ);
   enable_cpu_extension(BX_ISA_AVX512_CD);
   enable_cpu_extension(BX_ISA_AVX512_BW);
   enable_cpu_extension(BX_ISA_AVX512_VL);
+#endif
   enable_cpu_extension(BX_ISA_CLFLUSHOPT);
   enable_cpu_extension(BX_ISA_CLWB);
 }
@@ -571,7 +573,7 @@ void corei7_skylake_x_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function
     //   [22:22] reserved
     // * [23:23] CLFLUSHOPT instruction
     // * [24:24] CLWB instruction
-    // * [25:25] Intel Processor Trace
+    // x [25:25] Intel Processor Trace
     //   [26:26] AVX512PF instructions support
     //   [27:27] AVX512ER instructions support
     // * [28:28] AVX512CD instructions support
@@ -587,18 +589,22 @@ void corei7_skylake_x_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function
                 BX_CPUID_EXT3_BMI2 | 
                 BX_CPUID_EXT3_ENCHANCED_REP_STRINGS |
                 BX_CPUID_EXT3_INVPCID |
+#if BX_SUPPORT_EVEX
                 BX_CPUID_EXT3_AVX512F |
                 BX_CPUID_EXT3_AVX512DQ |
+#endif
                 BX_CPUID_EXT3_DEPRECATE_FCS_FDS |
                 BX_CPUID_EXT3_RDSEED |
                 BX_CPUID_EXT3_ADX |
                 BX_CPUID_EXT3_SMAP |
                 BX_CPUID_EXT3_CLFLUSHOPT |
                 BX_CPUID_EXT3_CLWB |
-             /* BX_CPUID_EXT3_PROCESSOR_TRACE */ // Intel Processor Trace not implemented yet
+#if BX_SUPPORT_EVEX
                 BX_CPUID_EXT3_AVX512CD |
                 BX_CPUID_EXT3_AVX512BW |
-                BX_CPUID_EXT3_AVX512VL;
+                BX_CPUID_EXT3_AVX512VL |
+#endif
+                0;
 
     leaf->ecx = 0;
     leaf->edx = 0;
