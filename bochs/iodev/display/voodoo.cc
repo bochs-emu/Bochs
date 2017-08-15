@@ -166,15 +166,22 @@ BX_THREAD_FUNC(cmdfifo_thread, indata)
   while (1) {
 #ifdef WIN32
     if (WaitForSingleObject(v->fbi.cmdfifo[0].event, 1) == WAIT_OBJECT_0) {
+      BX_LOCK(cmdfifo_mutex);
       while (v->fbi.cmdfifo[0].enable && (v->fbi.cmdfifo[0].depth >= v->fbi.cmdfifo[0].depth_needed)) {
         cmdfifo_process();
       }
+      v->fbi.cmdfifo[0].cmd_ready = 0;
+      BX_UNLOCK(cmdfifo_mutex);
     }
 #else
+    while (!v->fbi.cmdfifo[0].event) BX_MSLEEP(1);
+    BX_LOCK(cmdfifo_mutex);
     while (v->fbi.cmdfifo[0].enable && (v->fbi.cmdfifo[0].depth >= v->fbi.cmdfifo[0].depth_needed)) {
       cmdfifo_process();
     }
-    BX_MSLEEP(1);
+    v->fbi.cmdfifo[0].cmd_ready = 0;
+    v->fbi.cmdfifo[0].event = 0;
+    BX_UNLOCK(cmdfifo_mutex);
 #endif
   }
   BX_THREAD_EXIT;
@@ -602,6 +609,14 @@ void bx_voodoo_c::vertical_timer_handler(void *this_ptr)
   UNUSED(this_ptr);
 
   BX_VOODOO_THIS s.vdraw.frame_start = bx_virt_timer.time_usec(BX_VOODOO_THIS s.vdraw.realtime);
+
+  if (v->fbi.cmdfifo[0].cmd_ready) {
+#ifdef WIN32
+    SetEvent(v->fbi.cmdfifo[0].event);
+#else
+    v->fbi.cmdfifo[0].event = 1;
+#endif
+  }
 
   if (v->fbi.vblank_swap_pending) {
     swap_buffers(v);
