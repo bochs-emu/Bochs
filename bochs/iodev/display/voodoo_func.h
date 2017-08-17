@@ -2406,7 +2406,9 @@ Bit32u cmdfifo_calc_depth_needed(void)
 
   if (v->fbi.cmdfifo[0].depth == 0)
     return needed;
+  BX_LOCK(cmdfifo_mutex);
   command = *(Bit32u*)(&v->fbi.ram[v->fbi.cmdfifo[0].rdptr & v->fbi.mask]);
+  BX_UNLOCK(cmdfifo_mutex);
   type = (Bit8u)(command & 0x07);
   switch (type) {
     case 0:
@@ -2461,7 +2463,9 @@ void cmdfifo_w(Bit32u fbi_offset, Bit32u data)
   *(Bit32u*)(&v->fbi.ram[fbi_offset]) = data;
   v->fbi.cmdfifo[0].depth++;
   if (v->fbi.cmdfifo[0].depth_needed == BX_MAX_BIT32U) {
+    BX_UNLOCK(cmdfifo_mutex);
     v->fbi.cmdfifo[0].depth_needed = cmdfifo_calc_depth_needed();
+    BX_LOCK(cmdfifo_mutex);
   }
   if (v->fbi.cmdfifo[0].depth >= v->fbi.cmdfifo[0].depth_needed) {
     v->fbi.cmdfifo[0].cmd_ready = 1;
@@ -2473,9 +2477,11 @@ Bit32u cmdfifo_r(void)
 {
   Bit32u data;
 
+  BX_LOCK(cmdfifo_mutex);
   data = *(Bit32u*)(&v->fbi.ram[v->fbi.cmdfifo[0].rdptr & v->fbi.mask]);
   v->fbi.cmdfifo[0].rdptr += 4;
   v->fbi.cmdfifo[0].depth--;
+  BX_UNLOCK(cmdfifo_mutex);
   return data;
 }
 

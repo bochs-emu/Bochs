@@ -166,19 +166,19 @@ BX_THREAD_FUNC(cmdfifo_thread, indata)
   while (1) {
 #ifdef WIN32
     if (WaitForSingleObject(v->fbi.cmdfifo[0].event, 1) == WAIT_OBJECT_0) {
-      BX_LOCK(cmdfifo_mutex);
       while (v->fbi.cmdfifo[0].enable && (v->fbi.cmdfifo[0].depth >= v->fbi.cmdfifo[0].depth_needed)) {
         cmdfifo_process();
       }
+      BX_LOCK(cmdfifo_mutex);
       v->fbi.cmdfifo[0].cmd_ready = 0;
       BX_UNLOCK(cmdfifo_mutex);
     }
 #else
     while (!v->fbi.cmdfifo[0].event) BX_MSLEEP(1);
-    BX_LOCK(cmdfifo_mutex);
     while (v->fbi.cmdfifo[0].enable && (v->fbi.cmdfifo[0].depth >= v->fbi.cmdfifo[0].depth_needed)) {
       cmdfifo_process();
     }
+    BX_LOCK(cmdfifo_mutex);
     v->fbi.cmdfifo[0].cmd_ready = 0;
     v->fbi.cmdfifo[0].event = 0;
     BX_UNLOCK(cmdfifo_mutex);
@@ -614,7 +614,9 @@ void bx_voodoo_c::vertical_timer_handler(void *this_ptr)
 #ifdef WIN32
     SetEvent(v->fbi.cmdfifo[0].event);
 #else
+    BX_LOCK(cmdfifo_mutex);
     v->fbi.cmdfifo[0].event = 1;
+    BX_UNLOCK(cmdfifo_mutex);
 #endif
   }
 
