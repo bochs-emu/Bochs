@@ -2669,6 +2669,35 @@ void cmdfifo_process(void)
 }
 
 
+void cmdfifo_set_event()
+{
+#ifdef WIN32
+  SetEvent(v->fbi.cmdfifo[0].event);
+#else
+  pthread_mutex_lock(&v->fbi.cmdfifo[0].mutex);
+  pthread_cond_signal(&v->fbi.cmdfifo[0].cond);
+  pthread_mutex_unlock(&v->fbi.cmdfifo[0].mutex);
+#endif
+}
+
+
+bx_bool cmdfifo_wait_for_event()
+{
+#ifdef WIN32
+  if (WaitForSingleObject(v->fbi.cmdfifo[0].event, 1) == WAIT_OBJECT_0) {
+    return 1;
+  } else {
+    return 0;
+  }
+#else
+  pthread_mutex_lock(&v->fbi.cmdfifo[0].mutex);
+  pthread_cond_wait(&v->fbi.cmdfifo[0].cond, &v->fbi.cmdfifo[0].mutex);
+  pthread_mutex_unlock(&v->fbi.cmdfifo[0].mutex);
+  return 1;
+#endif
+}
+
+
 void register_w_common(Bit32u offset, Bit32u data)
 {
   Bit32u regnum  = (offset) & 0xff;

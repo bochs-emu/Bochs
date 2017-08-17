@@ -164,8 +164,7 @@ BX_THREAD_FUNC(cmdfifo_thread, indata)
 {
   UNUSED(indata);
   while (1) {
-#ifdef WIN32
-    if (WaitForSingleObject(v->fbi.cmdfifo[0].event, 1) == WAIT_OBJECT_0) {
+    if (cmdfifo_wait_for_event()) {
       while (v->fbi.cmdfifo[0].enable && (v->fbi.cmdfifo[0].depth >= v->fbi.cmdfifo[0].depth_needed)) {
         cmdfifo_process();
       }
@@ -173,16 +172,6 @@ BX_THREAD_FUNC(cmdfifo_thread, indata)
       v->fbi.cmdfifo[0].cmd_ready = 0;
       BX_UNLOCK(cmdfifo_mutex);
     }
-#else
-    while (!v->fbi.cmdfifo[0].event) BX_MSLEEP(1);
-    while (v->fbi.cmdfifo[0].enable && (v->fbi.cmdfifo[0].depth >= v->fbi.cmdfifo[0].depth_needed)) {
-      cmdfifo_process();
-    }
-    BX_LOCK(cmdfifo_mutex);
-    v->fbi.cmdfifo[0].cmd_ready = 0;
-    v->fbi.cmdfifo[0].event = 0;
-    BX_UNLOCK(cmdfifo_mutex);
-#endif
   }
   BX_THREAD_EXIT;
 }
@@ -204,6 +193,9 @@ bx_voodoo_c::~bx_voodoo_c()
     BX_FINI_MUTEX(cmdfifo_mutex);
 #ifdef WIN32
     CloseHandle(v->fbi.cmdfifo[0].event);
+#else
+    pthread_cond_destroy(&v->fbi.cmdfifo[0].cond);
+    pthread_mutex_destroy(&v->fbi.cmdfifo[0].mutex);
 #endif
   }
   if (v != NULL) {
@@ -265,6 +257,9 @@ void bx_voodoo_c::init(void)
     BX_INIT_MUTEX(cmdfifo_mutex);
 #ifdef WIN32
     v->fbi.cmdfifo[0].event = CreateEvent(NULL, FALSE, FALSE, "cmdfifo_event");
+#else
+    pthread_cond_init(&v->fbi.cmdfifo[0].cond, NULL);
+    pthread_mutex_init(&v->fbi.cmdfifo[0].mutex, NULL);
 #endif
     BX_THREAD_CREATE(cmdfifo_thread, this, cmdfifo_thread_var);
   }
@@ -405,9 +400,11 @@ void bx_voodoo_c::register_state(void)
     new bx_shadow_num_c(num, "base", &v->fbi.cmdfifo[i].base, BASE_HEX);
     new bx_shadow_num_c(num, "end", &v->fbi.cmdfifo[i].end, BASE_HEX);
     new bx_shadow_num_c(num, "rdptr", &v->fbi.cmdfifo[i].rdptr, BASE_HEX);
-    new bx_shadow_num_c(num, "depth", &v->fbi.cmdfifo[i].depth);
     new bx_shadow_num_c(num, "amin", &v->fbi.cmdfifo[i].amin, BASE_HEX);
     new bx_shadow_num_c(num, "amax", &v->fbi.cmdfifo[i].amax, BASE_HEX);
+    new bx_shadow_num_c(num, "depth", &v->fbi.cmdfifo[i].depth);
+    new bx_shadow_num_c(num, "depth_needed", &v->fbi.cmdfifo[i].depth_needed);
+    new bx_shadow_bool_c(num, "cmd_ready", &v->fbi.cmdfifo[i].cmd_ready);
   }
   bx_list_c *fogblend = new bx_list_c(fbi, "fogblend", "");
   for (i = 0; i < 64; i++) {
@@ -611,13 +608,7 @@ void bx_voodoo_c::vertical_timer_handler(void *this_ptr)
   BX_VOODOO_THIS s.vdraw.frame_start = bx_virt_timer.time_usec(BX_VOODOO_THIS s.vdraw.realtime);
 
   if (v->fbi.cmdfifo[0].cmd_ready) {
-#ifdef WIN32
-    SetEvent(v->fbi.cmdfifo[0].event);
-#else
-    BX_LOCK(cmdfifo_mutex);
-    v->fbi.cmdfifo[0].event = 1;
-    BX_UNLOCK(cmdfifo_mutex);
-#endif
+    cmdfifo_set_event();
   }
 
   if (v->fbi.vblank_swap_pending) {

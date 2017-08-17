@@ -1443,7 +1443,8 @@ struct _cmdfifo_info
 #ifdef WIN32
   HANDLE  event;
 #else
-  bx_bool event;
+  pthread_cond_t cond;
+  pthread_mutex_t mutex;
 #endif
 };
 
