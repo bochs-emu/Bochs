@@ -40,7 +40,6 @@ typedef struct {
     bx_bool override_on;
     bx_bool screen_update_pending;
     bx_bool gui_update_pending;
-    bx_bool realtime;
   } vdraw;
   int mode_change_timer_id;
   int vertical_timer_id;

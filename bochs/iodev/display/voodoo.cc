@@ -109,11 +109,6 @@ void voodoo_init_options(void)
     "Selects the Voodoo model to emulate.",
     voodoo_model_list,
     VOODOO_1, VOODOO_1);
-  new bx_param_bool_c(menu,
-      "realtime",
-      "Voodoo timer realtime",
-      "If enabled, the Voodoo timer is based on realtime",
-      1);
   enabled->set_dependent_list(menu->clone());
 }
 
@@ -223,14 +218,13 @@ void bx_voodoo_c::init(void)
   DEV_register_pci_handlers(this, &BX_VOODOO_THIS s.devfunc, BX_PLUGIN_VOODOO,
                             "Experimental 3dfx Voodoo Graphics (SST-1/2)");
 
-  BX_VOODOO_THIS s.vdraw.realtime = SIM->get_param_bool("realtime", base)->get();
   if (BX_VOODOO_THIS s.mode_change_timer_id == BX_NULL_TIMER_HANDLE) {
     BX_VOODOO_THIS s.mode_change_timer_id = bx_virt_timer.register_timer(this, mode_change_timer_handler,
        1000, 0, 0, 0, "voodoo_mode_change");
   }
   if (BX_VOODOO_THIS s.vertical_timer_id == BX_NULL_TIMER_HANDLE) {
     BX_VOODOO_THIS s.vertical_timer_id = bx_virt_timer.register_timer(this, vertical_timer_handler,
-       50000, 1, 0, BX_VOODOO_THIS s.vdraw.realtime, "vertical_timer");
+       50000, 1, 0, 0, "vertical_timer");
   }
   BX_VOODOO_THIS s.vdraw.clock_enabled = 1;
   BX_VOODOO_THIS s.vdraw.output_on = 0;
@@ -496,7 +490,7 @@ void bx_voodoo_c::after_restore_state(void)
   if (BX_VOODOO_THIS s.vdraw.override_on) {
     // force update
     v->fbi.video_changed = 1;
-    BX_VOODOO_THIS s.vdraw.frame_start = bx_virt_timer.time_usec(BX_VOODOO_THIS s.vdraw.realtime);
+    BX_VOODOO_THIS s.vdraw.frame_start = bx_virt_timer.time_usec(0);
     BX_VOODOO_THIS update_timing();
     DEV_vga_set_override(1, BX_VOODOO_THIS_PTR);
   }
@@ -605,7 +599,7 @@ void bx_voodoo_c::vertical_timer_handler(void *this_ptr)
 {
   UNUSED(this_ptr);
 
-  BX_VOODOO_THIS s.vdraw.frame_start = bx_virt_timer.time_usec(BX_VOODOO_THIS s.vdraw.realtime);
+  BX_VOODOO_THIS s.vdraw.frame_start = bx_virt_timer.time_usec(0);
 
   if (v->fbi.cmdfifo[0].cmd_ready) {
     cmdfifo_set_event();
@@ -701,7 +695,7 @@ void bx_voodoo_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
 
 Bit32u bx_voodoo_c::get_retrace(bx_bool hv)
 {
-  Bit64u time_in_frame = bx_virt_timer.time_usec(BX_VOODOO_THIS s.vdraw.realtime) - BX_VOODOO_THIS s.vdraw.frame_start;
+  Bit64u time_in_frame = bx_virt_timer.time_usec(0) - BX_VOODOO_THIS s.vdraw.frame_start;
   if (time_in_frame >= BX_VOODOO_THIS s.vdraw.vsync_usec) {
     return 0;
   } else {

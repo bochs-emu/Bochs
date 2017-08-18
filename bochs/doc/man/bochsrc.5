@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "21 May 2017" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "18 Aug 2017" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -483,12 +483,11 @@ Examples:
 .I "voodoo:"
 This defines the Voodoo Graphics emulation (experimental). Currently
 supported models are 'voodoo1' and 'voodoo2'. The Voodoo2 support is not
-yet complete, but almost usable. The 'realtime' option controls the behaviour
-of the timer used for the vertical retrace emulation. The gui screen update
-timing is controlled by the related 'vga' options.
+yet complete, but almost usable. The gui screen update timing is controlled
+by the related 'vga' options.
 
 Example:
-  voodoo: enabled=1, model=voodoo1, realtime=1
+  voodoo: enabled=1, model=voodoo1
 
 .TP
 .I "keyboard:"
