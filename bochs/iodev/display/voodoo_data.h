@@ -1416,6 +1416,17 @@ struct _stats_block
 };
 
 
+typedef struct
+{
+#ifdef WIN32
+  HANDLE  event;
+#else
+  pthread_cond_t cond;
+  pthread_mutex_t mutex;
+#endif
+} fifo_event_t;
+
+
 typedef struct _fifo_state fifo_state;
 struct _fifo_state
 {
@@ -1440,12 +1451,6 @@ struct _cmdfifo_info
   Bit32u  depth_needed; /* depth needed for command */
   Bit32u  holes;        /* number of holes */
   bx_bool cmd_ready;
-#ifdef WIN32
-  HANDLE  event;
-#else
-  pthread_cond_t cond;
-  pthread_mutex_t mutex;
-#endif
 };
 
 
@@ -1724,6 +1729,39 @@ struct _voodoo_state
   raster_info *   raster_hash[RASTER_HASH_SIZE]; /* hash table of rasterizers */
 };
 
+
+// FIFO event handling
+
+fifo_event_t fifo_wakeup;
+
+
+void fifo_set_event(fifo_event_t *fifo_ev)
+{
+#ifdef WIN32
+  SetEvent(fifo_ev->event);
+#else
+  pthread_mutex_lock(&fifo_ev->mutex);
+  pthread_cond_signal(&fifo_ev->cond);
+  pthread_mutex_unlock(&fifo_ev->mutex);
+#endif
+}
+
+
+bx_bool fifo_wait_for_event(fifo_event_t *fifo_ev)
+{
+#ifdef WIN32
+  if (WaitForSingleObject(fifo_ev->event, 1) == WAIT_OBJECT_0) {
+    return 1;
+  } else {
+    return 0;
+  }
+#else
+  pthread_mutex_lock(&fifo_ev->mutex);
+  pthread_cond_wait(&fifo_ev->cond, &fifo_ev->mutex);
+  pthread_mutex_unlock(&fifo_ev->mutex);
+  return 1;
+#endif
+}
 
 
 /*************************************

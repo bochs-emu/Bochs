@@ -60,8 +60,9 @@ Bit32u voodoo_last_msg = 255;
 
 #define MODIFY_PIXEL(VV)
 
-/* cmdfifo thread (Voodoo2) */
-BX_THREAD_VAR(cmdfifo_thread_var);
+/* fifo thread variable */
+BX_THREAD_VAR(fifo_thread_var);
+/* CMDFIFO thread mutex (Voodoo2) */
 BX_MUTEX(cmdfifo_mutex);
 
 /* fast dither lookup */
@@ -2669,35 +2670,6 @@ void cmdfifo_process(void)
 }
 
 
-void cmdfifo_set_event()
-{
-#ifdef WIN32
-  SetEvent(v->fbi.cmdfifo[0].event);
-#else
-  pthread_mutex_lock(&v->fbi.cmdfifo[0].mutex);
-  pthread_cond_signal(&v->fbi.cmdfifo[0].cond);
-  pthread_mutex_unlock(&v->fbi.cmdfifo[0].mutex);
-#endif
-}
-
-
-bx_bool cmdfifo_wait_for_event()
-{
-#ifdef WIN32
-  if (WaitForSingleObject(v->fbi.cmdfifo[0].event, 1) == WAIT_OBJECT_0) {
-    return 1;
-  } else {
-    return 0;
-  }
-#else
-  pthread_mutex_lock(&v->fbi.cmdfifo[0].mutex);
-  pthread_cond_wait(&v->fbi.cmdfifo[0].cond, &v->fbi.cmdfifo[0].mutex);
-  pthread_mutex_unlock(&v->fbi.cmdfifo[0].mutex);
-  return 1;
-#endif
-}
-
-
 void register_w_common(Bit32u offset, Bit32u data)
 {
   Bit32u regnum  = (offset) & 0xff;
@@ -3110,8 +3082,8 @@ Bit32u lfb_r(Bit32u offset)
   return data;
 }
 
-void voodoo_w(Bit32u offset, Bit32u data, Bit32u mask) {
-
+void voodoo_w(Bit32u offset, Bit32u data, Bit32u mask)
+{
   if ((offset & (0xc00000/4)) == 0)
     register_w_common(offset, data);
   else if (offset & (0x800000/4))
@@ -3120,8 +3092,8 @@ void voodoo_w(Bit32u offset, Bit32u data, Bit32u mask) {
     lfb_w(offset, data, mask);
 }
 
-Bit32u voodoo_r(Bit32u offset) {
-
+Bit32u voodoo_r(Bit32u offset)
+{
   if (!(offset & (0xc00000/4)))
     return register_r(offset);
   else

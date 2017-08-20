@@ -153,19 +153,22 @@ void CDECL libvoodoo_LTX_plugin_fini(void)
   delete theVoodooDevice;
 }
 
-// cmdfifo thread (Voodoo2)
+// FIFO thread
 
-BX_THREAD_FUNC(cmdfifo_thread, indata)
+BX_THREAD_FUNC(fifo_thread, indata)
 {
   UNUSED(indata);
   while (1) {
-    if (cmdfifo_wait_for_event()) {
-      while (v->fbi.cmdfifo[0].enable && (v->fbi.cmdfifo[0].depth >= v->fbi.cmdfifo[0].depth_needed)) {
-        cmdfifo_process();
+    if (fifo_wait_for_event(&fifo_wakeup)) {
+      // TODO: process PCI FIFO / memory FIFO data here
+      if (v->fbi.cmdfifo[0].enable) {
+        while (v->fbi.cmdfifo[0].enable && (v->fbi.cmdfifo[0].depth >= v->fbi.cmdfifo[0].depth_needed)) {
+          cmdfifo_process();
+        }
+        BX_LOCK(cmdfifo_mutex);
+        v->fbi.cmdfifo[0].cmd_ready = 0;
+        BX_UNLOCK(cmdfifo_mutex);
       }
-      BX_LOCK(cmdfifo_mutex);
-      v->fbi.cmdfifo[0].cmd_ready = 0;
-      BX_UNLOCK(cmdfifo_mutex);
     }
   }
   BX_THREAD_EXIT;
@@ -183,16 +186,16 @@ bx_voodoo_c::bx_voodoo_c()
 
 bx_voodoo_c::~bx_voodoo_c()
 {
+  BX_THREAD_KILL(fifo_thread_var);
   if (BX_VOODOO_THIS s.model == VOODOO_2) {
-    BX_THREAD_KILL(cmdfifo_thread_var);
     BX_FINI_MUTEX(cmdfifo_mutex);
-#ifdef WIN32
-    CloseHandle(v->fbi.cmdfifo[0].event);
-#else
-    pthread_cond_destroy(&v->fbi.cmdfifo[0].cond);
-    pthread_mutex_destroy(&v->fbi.cmdfifo[0].mutex);
-#endif
   }
+#ifdef WIN32
+  CloseHandle(fifo_wakeup.event);
+#else
+  pthread_cond_destroy(&fifo_wakeup.cond);
+  pthread_mutex_destroy(&fifo_wakeup.mutex);
+#endif
   if (v != NULL) {
     free(v->fbi.ram);
     free(v->tmu[0].ram);
@@ -249,14 +252,14 @@ void bx_voodoo_c::init(void)
   if (BX_VOODOO_THIS s.model == VOODOO_2) {
     v->fbi.cmdfifo[0].depth_needed = BX_MAX_BIT32U;
     BX_INIT_MUTEX(cmdfifo_mutex);
-#ifdef WIN32
-    v->fbi.cmdfifo[0].event = CreateEvent(NULL, FALSE, FALSE, "cmdfifo_event");
-#else
-    pthread_cond_init(&v->fbi.cmdfifo[0].cond, NULL);
-    pthread_mutex_init(&v->fbi.cmdfifo[0].mutex, NULL);
-#endif
-    BX_THREAD_CREATE(cmdfifo_thread, this, cmdfifo_thread_var);
   }
+#ifdef WIN32
+  fifo_wakeup.event = CreateEvent(NULL, FALSE, FALSE, "fifo_wakeup");
+#else
+  pthread_cond_init(&fifo_wakeup.cond, NULL);
+  pthread_mutex_init(&fifo_wakeup.mutex, NULL);
+#endif
+  BX_THREAD_CREATE(fifo_thread, this, fifo_thread_var);
 
   BX_INFO(("3dfx Voodoo Graphics adapter (model=%s) initialized",
            SIM->get_param_enum("model", base)->get_selected()));
@@ -602,7 +605,7 @@ void bx_voodoo_c::vertical_timer_handler(void *this_ptr)
   BX_VOODOO_THIS s.vdraw.frame_start = bx_virt_timer.time_usec(0);
 
   if (v->fbi.cmdfifo[0].cmd_ready) {
-    cmdfifo_set_event();
+    fifo_set_event(&fifo_wakeup);
   }
 
   if (v->fbi.vblank_swap_pending) {
