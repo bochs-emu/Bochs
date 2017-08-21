@@ -324,7 +324,7 @@ void bx_voodoo_c::register_state(void)
     new bx_shadow_num_c(dac, name, &v->dac.reg[i], BASE_HEX);
   }
   new bx_shadow_num_c(dac, "read_result", &v->dac.read_result, BASE_HEX);
-  new bx_shadow_num_c(dac, "clk0_freq", &v->dac.clk0_freq, BASE_DEC);
+  new bx_shadow_num_c(dac, "clk0_freq", &v->dac.clk0_freq);
   bx_list_c *fbi = new bx_list_c(vstate, "fbi", "framebuffer");
   new bx_shadow_data_c(fbi, "ram", v->fbi.ram, (4 << 20));
   new bx_shadow_num_c(fbi, "rgboffs0", &v->fbi.rgboffs[0], BASE_HEX);
@@ -568,11 +568,11 @@ bx_bool bx_voodoo_c::update_timing(void)
     hsync = ((v->reg[hSync].u >> 16) & 0x3ff);
     vsync = ((v->reg[vSync].u >> 16) & 0xfff);
   }
-  double hfreq = (double)(v->dac.clk0_freq * 1000) / htotal;
+  float hfreq = v->dac.clk0_freq / (float)htotal;
   if (((v->reg[fbiInit1].u >> 20) & 3) == 1) { // VCLK div 2
     hfreq /= 2;
   }
-  double vfreq = hfreq / (double)vtotal;
+  float vfreq = hfreq / (float)vtotal;
   BX_VOODOO_THIS s.vdraw.htotal_usec = (unsigned)(1000000.0 / hfreq);
   BX_VOODOO_THIS s.vdraw.vtotal_usec = (unsigned)(1000000.0 / vfreq);
   BX_VOODOO_THIS s.vdraw.htime_to_pixel = (double)htotal / (1000000.0 / hfreq);

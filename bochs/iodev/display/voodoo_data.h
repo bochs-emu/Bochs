@@ -1621,7 +1621,7 @@ struct _dac_state
   Bit8u clk0_m;
   Bit8u clk0_n;
   Bit8u clk0_p;
-  Bit32u clk0_freq;
+  float clk0_freq;
 };
 
 
