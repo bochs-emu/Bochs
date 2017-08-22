@@ -77,7 +77,7 @@ bx_bool bx_dbg_read_linear(unsigned which_cpu, bx_address laddr, unsigned len, B
 Bit16u bx_dbg_get_selector_value(unsigned int seg_no);
 Bit16u bx_dbg_get_ip (void);
 Bit32u bx_dbg_get_eip(void);
-bx_address bx_dbg_get_instruction_pointer(void);
+bx_address bx_dbg_get_rip(void);
 Bit8u bx_dbg_get_reg8l_value(unsigned reg);
 Bit8u bx_dbg_get_reg8h_value(unsigned reg);
 Bit16u bx_dbg_get_reg16_value(unsigned reg);
@@ -110,6 +110,7 @@ void bx_dbg_xlate_address(bx_lin_address laddr);
 void bx_dbg_tlb_lookup(bx_lin_address laddr);
 void bx_dbg_show_command(const char*);
 void bx_dbg_print_stack_command(unsigned nwords);
+void bx_dbg_bt_command(unsigned dist);
 void bx_dbg_print_watchpoints(void);
 void bx_dbg_watchpoint_continue(bx_bool watch_continue);
 void bx_dbg_watch(int type, bx_phy_address address, Bit32u len);
@@ -189,12 +190,12 @@ void bx_dbg_show_param_command(const char *param, bx_bool xml);
 
 int bx_dbg_show_symbolic(void);
 void bx_dbg_set_symbol_command(const char *symbol, bx_address val);
-const char* bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base);
-int bx_dbg_symbol_command(const char* filename, bx_bool global, Bit32u offset);
+const char* bx_dbg_symbolic_address(bx_address context, bx_address eip, bx_address base);
+int bx_dbg_symbol_command(const char* filename, bx_bool global, bx_address offset);
 void bx_dbg_info_symbols_command(const char *Symbol);
 int bx_dbg_lbreakpoint_symbol_command(const char *Symbol, const char *condition);
-Bit32u bx_dbg_get_symbol_value(const char *Symbol);
-const char* bx_dbg_disasm_symbolic_address(Bit32u eip, Bit32u base);
+bx_address bx_dbg_get_symbol_value(const char *Symbol);
+const char* bx_dbg_disasm_symbolic_address(bx_address eip, bx_address base);
 
 #ifdef __cplusplus
 }

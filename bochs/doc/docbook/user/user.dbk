@@ -7797,13 +7797,24 @@ From here, you may use the following commands:
   vbreak seg:off              Set a virtual address instruction breakpoint
   vb     seg:off
 
+  vbreak seg:off if "expr"    Set a conditional virtual address instruction breakpoint
+  vb     seg:off if "expr"
+
   lbreak addr                 Set a linear address instruction breakpoint
   lb     addr
+
+  lbreak addr if "expr"       Set a conditional linear address instruction breakpoint
+  lb     addr if "expr"
 
   pbreak [*] addr             Set a physical address instruction breakpoint
   pb     [*] addr             (the '*' is optional for GDB compatibility)
   break  [*] addr
   b      [*] addr
+
+  pbreak [*] addr if "expr"   Set a conditional physical address instruction breakpoint
+  pb     [*] addr if "expr"   (the '*' is optional for GDB compatibility)
+  break  [*] addr if "expr"
+  b      [*] addr if "expr"
 
   info break                  Display state of all current breakpoints
   bpe    n                    Enable a breakpoint

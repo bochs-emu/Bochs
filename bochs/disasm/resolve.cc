@@ -266,6 +266,15 @@ void disassembler::resolve32_mod1or2_rm4(const x86_insn *insn, unsigned datasize
       general_32bit_regname[insn->base], index, insn->scale, insn->displacement.displ32);
 }
 
+#if BX_DEBUGGER
+#include "../bx_debug/debug.h"
+#define SYMBOLIC_ADDR(fmt)  fmt " (%s)"
+#define GET_SYMBOL(addr) bx_dbg_disasm_symbolic_address((addr), 0)
+#else
+#define SYMBOLIC_ADDR(fmt)  fmt "%s"
+#define GET_SYMBOL(addr) ""
+#endif
+
 void disassembler::resolve64_mod0(const x86_insn *insn, unsigned datasize)
 {
   const char *seg, *rip_regname;
@@ -282,6 +291,10 @@ void disassembler::resolve64_mod0(const x86_insn *insn, unsigned datasize)
     print_memory_access64(datasize, seg, rip_regname, NULL, 0, (Bit32s) insn->displacement.displ32);
   else
     print_memory_access64(datasize, seg, general_64bit_regname[insn->rm], NULL, 0, 0);
+
+  const char *sym = GET_SYMBOL(db_eip + insn->displacement.displ32);
+  if (sym)
+    dis_sprintf(SYMBOLIC_ADDR(""), sym);
 }
 
 void disassembler::resolve64_mod1or2(const x86_insn *insn, unsigned datasize)

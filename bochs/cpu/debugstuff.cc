@@ -125,30 +125,14 @@ void BX_CPU_C::debug(bx_address offset)
 #endif
 #if BX_SUPPORT_X86_64
   if (long_mode()) {
-    BX_INFO(("| RAX=%08x%08x  RBX=%08x%08x",
-          (unsigned) (RAX >> 32), (unsigned) EAX,
-          (unsigned) (RBX >> 32), (unsigned) EBX));
-    BX_INFO(("| RCX=%08x%08x  RDX=%08x%08x",
-          (unsigned) (RCX >> 32), (unsigned) ECX,
-          (unsigned) (RDX >> 32), (unsigned) EDX));
-    BX_INFO(("| RSP=%08x%08x  RBP=%08x%08x",
-          (unsigned) (RSP >> 32), (unsigned) ESP,
-          (unsigned) (RBP >> 32), (unsigned) EBP));
-    BX_INFO(("| RSI=%08x%08x  RDI=%08x%08x",
-          (unsigned) (RSI >> 32), (unsigned) ESI,
-          (unsigned) (RDI >> 32), (unsigned) EDI));
-    BX_INFO(("|  R8=%08x%08x   R9=%08x%08x",
-          (unsigned) (R8  >> 32), (unsigned) (R8  & 0xFFFFFFFF),
-          (unsigned) (R9  >> 32), (unsigned) (R9  & 0xFFFFFFFF)));
-    BX_INFO(("| R10=%08x%08x  R11=%08x%08x",
-          (unsigned) (R10 >> 32), (unsigned) (R10 & 0xFFFFFFFF),
-          (unsigned) (R11 >> 32), (unsigned) (R11 & 0xFFFFFFFF)));
-    BX_INFO(("| R12=%08x%08x  R13=%08x%08x",
-          (unsigned) (R12 >> 32), (unsigned) (R12 & 0xFFFFFFFF),
-          (unsigned) (R13 >> 32), (unsigned) (R13 & 0xFFFFFFFF)));
-    BX_INFO(("| R14=%08x%08x  R15=%08x%08x",
-          (unsigned) (R14 >> 32), (unsigned) (R14 & 0xFFFFFFFF),
-          (unsigned) (R15 >> 32), (unsigned) (R15 & 0xFFFFFFFF)));
+    BX_INFO(("| RAX=" FMT_ADDRX64 "  RBX=" FMT_ADDRX64 "", RAX, RBX));
+    BX_INFO(("| RCX=" FMT_ADDRX64 "  RDX=" FMT_ADDRX64 "", RCX, RDX));
+    BX_INFO(("| RSP=" FMT_ADDRX64 "  RBP=" FMT_ADDRX64 "", RSP, RBP));
+    BX_INFO(("| RSI=" FMT_ADDRX64 "  RDI=" FMT_ADDRX64 "", RSI, RDI));
+    BX_INFO(("|  R8=" FMT_ADDRX64 "   R9=" FMT_ADDRX64 "", R8,  R9));
+    BX_INFO(("| R10=" FMT_ADDRX64 "  R11=" FMT_ADDRX64 "", R10, R11));
+    BX_INFO(("| R12=" FMT_ADDRX64 "  R13=" FMT_ADDRX64 "", R12, R13));
+    BX_INFO(("| R14=" FMT_ADDRX64 "  R15=" FMT_ADDRX64 "", R14, R15));
   }
   else
 #endif
@@ -232,22 +216,19 @@ void BX_CPU_C::debug(bx_address offset)
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.d_b));
 #if BX_SUPPORT_X86_64
   if (long_mode()) {
-    BX_INFO(("|  MSR_FS_BASE:%08x%08x",
-      (unsigned) (MSR_FSBASE >> 32), (unsigned) (MSR_FSBASE & 0xFFFFFFFF)));
-    BX_INFO(("|  MSR_GS_BASE:%08x%08x",
-      (unsigned) (MSR_GSBASE >> 32), (unsigned) (MSR_GSBASE & 0xFFFFFFFF)));
+    BX_INFO(("|  MSR_FS_BASE:" FMT_ADDRX64,
+      MSR_FSBASE));
+    BX_INFO(("|  MSR_GS_BASE:" FMT_ADDRX64,
+      MSR_GSBASE));
 
-    BX_INFO(("| RIP=%08x%08x (%08x%08x)",
-      (unsigned) (BX_CPU_THIS_PTR gen_reg[BX_64BIT_REG_RIP].dword.hrx),
-      (unsigned)  EIP,
-      (unsigned) (BX_CPU_THIS_PTR prev_rip >> 32),
-      (unsigned) (BX_CPU_THIS_PTR prev_rip & 0xffffffff)));
-    BX_INFO(("| CR0=0x%08x CR2=0x%08x%08x",
-      (unsigned) (BX_CPU_THIS_PTR cr0.get32()),
-      (unsigned) (BX_CPU_THIS_PTR cr2 >> 32),
-      (unsigned) (BX_CPU_THIS_PTR cr2 & 0xffffffff)));
-    BX_INFO(("| CR3=0x%08x CR4=0x%08x",
-      (unsigned) BX_CPU_THIS_PTR cr3, (unsigned) BX_CPU_THIS_PTR cr4.get32()));
+    BX_INFO(("| RIP=" FMT_ADDRX64 " (" FMT_ADDRX64 ")",
+      BX_CPU_THIS_PTR gen_reg[BX_64BIT_REG_RIP].rrx,
+      BX_CPU_THIS_PTR prev_rip));
+    BX_INFO(("| CR0=0x%08x CR2=0x" FMT_ADDRX64,
+      (BX_CPU_THIS_PTR cr0.get32()),
+      (BX_CPU_THIS_PTR cr2)));
+    BX_INFO(("| CR3=0x" FMT_ADDRX64 " CR4=0x%08x",
+      BX_CPU_THIS_PTR cr3, BX_CPU_THIS_PTR cr4.get32()));
   }
   else
 #endif // BX_SUPPORT_X86_64
@@ -260,7 +241,7 @@ void BX_CPU_C::debug(bx_address offset)
       (unsigned) BX_CPU_THIS_PTR cr0.get32(),
       (unsigned) BX_CPU_THIS_PTR cr2, (unsigned) BX_CPU_THIS_PTR cr3));
 #else
-    BX_INFO(("| CR0=0x%08x CR2=0x%08x",
+    BX_INFO(("| CR0=0x%08x CR2=0x" FMT_ADDRX64,
       BX_CPU_THIS_PTR cr0.get32(), BX_CPU_THIS_PTR cr2));
     BX_INFO(("| CR3=0x%08x CR4=0x%08x",
       (unsigned) BX_CPU_THIS_PTR cr3, 

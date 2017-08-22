@@ -22,12 +22,16 @@
 #include <stdio.h>
 #include <assert.h>
 #include "disasm.h"
+#include "osdep.h"
 
-/*
 #if BX_DEBUGGER
 #include "../bx_debug/debug.h"
+#define SYMBOLIC_JUMP(fmt)  fmt " (%s)"
+#define GET_SYMBOL(addr) bx_dbg_disasm_symbolic_address((addr), 0)
+#else
+#define SYMBOLIC_JUMP(fmt)  fmt "%s"
+#define GET_SYMBOL(addr) ""
 #endif
-*/
 
 #if BX_SUPPORT_X86_64 == 0
 #define BX_64BIT_REG_RAX BX_32BIT_REG_EAX
@@ -654,21 +658,23 @@ void disassembler::sYdq(const x86_insn *insn) { OP_sY(insn, XMM_SIZE + insn->vex
 void disassembler::Jb(const x86_insn *insn)
 {
   Bit8s imm8 = (Bit8s) fetch_byte();
+  const char *sym;
 
   if (insn->is_64) {
     Bit64u imm64 = (Bit8s) imm8;
+    Bit64u target = db_eip + imm64;
+    sym = GET_SYMBOL(target);
+    sym = sym ? sym : "<unknown>";
 
     if (offset_mode_hex) {
-      dis_sprintf(".+0x%08x%08x", GET32H(imm64), GET32L(imm64));
+      dis_sprintf(SYMBOLIC_JUMP(".+0x" FMT_ADDRX64), imm64, sym);
     }
     else {
-      dis_sprintf(".%+d", (int) imm8);
+      dis_sprintf(SYMBOLIC_JUMP(".%+d"), (int) imm8, sym);
     }
 
     if (db_cs_base != BX_JUMP_TARGET_NOT_REQ) {
-      Bit64u target = db_eip + imm64;
-      target += db_cs_base;
-      dis_sprintf(" (0x%08x%08x)", GET32H(target), GET32L(target));
+      dis_sprintf(" (0x" FMT_ADDRX64 ")", target);
     }
 
     return;
@@ -676,31 +682,35 @@ void disassembler::Jb(const x86_insn *insn)
 
   if (insn->os_32) {
     Bit32u imm32 = (Bit8s) imm8;
+    Bit32u target = (Bit32u)(db_cs_base + db_eip + (Bit32s) imm32);
+    sym = GET_SYMBOL(target);
+    sym = sym ? sym : "<unknown>";
 
     if (offset_mode_hex) {
-      dis_sprintf(".+0x%08x", (unsigned) imm32);
+      dis_sprintf(SYMBOLIC_JUMP(".+0x%08x"), (unsigned) imm32, sym);
     }
     else {
-      dis_sprintf(".%+d", (int) imm8);
+      dis_sprintf(SYMBOLIC_JUMP(".%+d"), (int) imm8, sym);
     }
 
     if (db_cs_base != BX_JUMP_TARGET_NOT_REQ) {
-      Bit32u target = (Bit32u)(db_cs_base + db_eip + (Bit32s) imm32);
       dis_sprintf(" (0x%08x)", target);
     }
   }
   else {
     Bit16u imm16 = (Bit8s) imm8;
+    Bit16u target = (Bit16u)((db_eip + (Bit16s) imm16) & 0xffff);
+    sym = GET_SYMBOL(target);
+    sym = sym ? sym : "<unknown>";
 
     if (offset_mode_hex) {
-      dis_sprintf(".+0x%04x", (unsigned) imm16);
+      dis_sprintf(SYMBOLIC_JUMP(".+0x%04x"), (unsigned) imm16, sym);
     }
     else {
-      dis_sprintf(".%+d", (int) imm8);
+      dis_sprintf(SYMBOLIC_JUMP(".%+d"), (int) imm8, sym);
     }
 
     if (db_cs_base != BX_JUMP_TARGET_NOT_REQ) {
-      Bit16u target = (Bit16u)((db_eip + (Bit16s) imm16) & 0xffff);
       dis_sprintf(" (0x%08x)", target + db_cs_base);
     }
   }
@@ -712,16 +722,20 @@ void disassembler::Jw(const x86_insn *insn)
   assert(! insn->is_64);
 
   Bit16s imm16 = (Bit16s) fetch_word();
+  const char *sym;
 
+  Bit16u target = (db_eip + imm16) & 0xffff;
+  sym = GET_SYMBOL(target);
+  sym = sym ? sym : "<unknown>";
   if (offset_mode_hex) {
-    dis_sprintf(".+0x%04x", (unsigned) (Bit16u) imm16);
+    dis_sprintf(SYMBOLIC_JUMP(".+0x%04x"),
+        (unsigned) (Bit16u) imm16, sym);
   }
   else {
-    dis_sprintf(".%+d", (int) imm16);
+    dis_sprintf(SYMBOLIC_JUMP(".%+d"), (int) imm16, sym);
   }
 
   if (db_cs_base != BX_JUMP_TARGET_NOT_REQ) {
-    Bit16u target = (db_eip + imm16) & 0xffff;
     dis_sprintf(" (0x%08x)", target + db_cs_base);
   }
 }
@@ -729,34 +743,40 @@ void disassembler::Jw(const x86_insn *insn)
 void disassembler::Jd(const x86_insn *insn)
 {
   Bit32s imm32 = (Bit32s) fetch_dword();
+  const char *sym;
 
   if (insn->is_64) {
     Bit64u imm64 = (Bit32s) imm32;
+    Bit64u target = db_eip + (Bit64s) imm64;
+    sym = GET_SYMBOL(target);
+    sym = sym ? sym : "<unknown>";
 
     if (offset_mode_hex) {
-      dis_sprintf(".+0x%08x%08x", GET32H(imm64), GET32L(imm64));
+      dis_sprintf(SYMBOLIC_JUMP(".+0x" FMT_ADDRX64),
+          imm64, sym);
     }
     else {
-      dis_sprintf(".%+d", (int) imm32);
+      dis_sprintf(SYMBOLIC_JUMP(".%+d"), (int) imm32, sym);
     }
 
     if (db_cs_base != BX_JUMP_TARGET_NOT_REQ) {
-      Bit64u target = db_cs_base + db_eip + (Bit64s) imm64;
-      dis_sprintf(" (0x%08x%08x)", GET32H(target), GET32L(target));
+      dis_sprintf(" (0x" FMT_ADDRX64 ")", target);
     }
 
     return;
   }
 
+  Bit32u target = (Bit32u)(db_cs_base + db_eip + (Bit32s) imm32);
+  sym = GET_SYMBOL(target);
+  sym = sym ? sym : "<unknown>";
   if (offset_mode_hex) {
-    dis_sprintf(".+0x%08x", (unsigned) imm32);
+    dis_sprintf(SYMBOLIC_JUMP(".+0x%08x"), (unsigned) imm32, sym);
   }
   else {
-    dis_sprintf(".%+d", (int) imm32);
+    dis_sprintf(SYMBOLIC_JUMP(".%+d"), (int) imm32, sym);
   }
 
   if (db_cs_base != BX_JUMP_TARGET_NOT_REQ) {
-    Bit32u target = (Bit32u)(db_cs_base + db_eip + (Bit32s) imm32);
     dis_sprintf(" (0x%08x)", target);
   }
 }

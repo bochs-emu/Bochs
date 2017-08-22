@@ -284,8 +284,10 @@ int bx_dbg_main(void)
 
   bx_dbg_user_input_loop();
 
-  if(debugger_log != NULL)
+  if(debugger_log != NULL) {
     fclose(debugger_log);
+    debugger_log = NULL;
+  }
 
   bx_dbg_exit(0);
   return(0); // keep compiler happy
@@ -1160,7 +1162,7 @@ void bx_dbg_info_registers_command(int which_regs_mask)
     dbg_printf("r14: %08x_%08x\n", GET32H(reg), GET32L(reg));
     reg = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_R15);
     dbg_printf("r15: %08x_%08x\n", GET32H(reg), GET32L(reg));
-    reg = bx_dbg_get_instruction_pointer();
+    reg = bx_dbg_get_rip();
     dbg_printf("rip: %08x_%08x\n", GET32H(reg), GET32L(reg));
 #endif
     reg = BX_CPU(dbg_cpu)->read_eflags();
@@ -1288,6 +1290,15 @@ inserted:
   }
 
   dbg_printf("Time breakpoint inserted. Delta = " FMT_LL "u\n", diff);
+}
+
+Bit64u conv_8xBit8u_to_Bit64u(const Bit8u* buf)
+{
+  Bit64u ret = 0;
+  for (int i = 0; i < 8; i++) {
+    ret |= (buf[i] << (8 * i));
+  }
+  return ret;
 }
 
 Bit32u conv_4xBit8u_to_Bit32u(const Bit8u* buf)
@@ -1701,25 +1712,126 @@ void bx_dbg_print_stack_command(unsigned nwords)
     if (! bx_dbg_read_linear(dbg_cpu, linear_sp, len, buf)) break;
 #if BX_SUPPORT_X86_64
     if (len == 8) {
-      dbg_printf(" | STACK 0x%08x%08x [0x%08x:0x%08x]\n",
+      Bit64u addr_on_stack = conv_8xBit8u_to_Bit64u(buf);
+      const char *Sym=bx_dbg_disasm_symbolic_address(addr_on_stack, 0);
+      dbg_printf(" | STACK 0x%08x%08x [0x%08x:0x%08x] (%s)\n",
         GET32H(linear_sp), GET32L(linear_sp),
         (unsigned) conv_4xBit8u_to_Bit32u(buf+4),
-        (unsigned) conv_4xBit8u_to_Bit32u(buf));
+        (unsigned) conv_4xBit8u_to_Bit32u(buf),
+        Sym ? Sym : "<unknown>");
     }
     else
 #endif
     {
       if (len == 4) {
-        dbg_printf(" | STACK 0x%08x [0x%08x]\n",
-          (unsigned) linear_sp, (unsigned) conv_4xBit8u_to_Bit32u(buf));
+        Bit32u addr_on_stack = conv_4xBit8u_to_Bit32u(buf);
+        const char *Sym=bx_dbg_disasm_symbolic_address(addr_on_stack, 0);
+        dbg_printf(" | STACK 0x%08x [0x%08x] (%s)\n",
+          (unsigned) linear_sp, (unsigned) conv_4xBit8u_to_Bit32u(buf),
+          Sym ? Sym : "<unknown>");
       }
       else {
-        dbg_printf(" | STACK 0x%04x [0x%04x]\n",
-          (unsigned) linear_sp, (unsigned) conv_2xBit8u_to_Bit16u(buf));
+        Bit32u addr_on_stack = conv_2xBit8u_to_Bit16u(buf);
+        const char *Sym=bx_dbg_disasm_symbolic_address(addr_on_stack, 0);
+        dbg_printf(" | STACK 0x%04x [0x%04x] (%s)\n",
+          (unsigned) linear_sp, (unsigned) conv_2xBit8u_to_Bit16u(buf),
+          Sym ? Sym : "<unknown>");
       }
     }
 
     linear_sp += len;
+  }
+}
+
+void bx_dbg_bt_command(unsigned dist)
+{
+  bx_address linear_bp;
+  bx_address linear_sp;
+  unsigned len;
+
+#if BX_SUPPORT_X86_64
+  if (BX_CPU(dbg_cpu)->get_cpu_mode() == BX_MODE_LONG_64) {
+    linear_bp = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_RBP);
+    linear_sp = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_RSP);
+    bx_address rip = BX_CPU(dbg_cpu)->get_instruction_pointer();
+    const char *Sym=bx_dbg_disasm_symbolic_address(rip, 0);
+    dbg_printf("%012" FMT_64 "x -> %012" FMT_64 "x (%s)\n",
+      (Bit64u)linear_sp, (Bit64u)rip, Sym);
+    len = 8;
+  } else
+#endif
+  {
+    if (BX_CPU(dbg_cpu)->sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
+      linear_bp = BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_EBP);
+      linear_sp = BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_ESP);
+      bx_address eip = BX_CPU(dbg_cpu)->get_instruction_pointer();
+      const char *Sym=bx_dbg_disasm_symbolic_address(eip, 0);
+      dbg_printf("%08x -> %08x (%s)\n",
+        (Bit32u)linear_sp, (Bit32u)eip, Sym);
+      len = 4;
+    } else {
+      linear_bp = BX_CPU(dbg_cpu)->get_reg16(BX_16BIT_REG_BP);
+      linear_sp = BX_CPU(dbg_cpu)->get_reg16(BX_16BIT_REG_BP);
+      bx_address ip = BX_CPU(dbg_cpu)->get_instruction_pointer();
+      const char *Sym=bx_dbg_disasm_symbolic_address(ip, 0);
+      dbg_printf("%04x -> %04x (%s)\n",
+        (Bit16u)linear_sp, (Bit16u)ip, Sym);
+      len = 2;
+    }
+  }
+
+  Bit8u buf[8];
+  Bit64u addr_on_stack;
+  bx_address addr;
+
+  for (unsigned i = 0; i < dist; ++i) {
+    // Read return address right above frame pointer
+    addr = BX_CPU(dbg_cpu)->get_laddr(BX_SEG_REG_SS, linear_bp);
+    if (!bx_dbg_read_linear(dbg_cpu, addr + len, len, buf))
+      break;
+#if BX_SUPPORT_X86_64
+    if (len == 8) {
+      addr_on_stack = conv_8xBit8u_to_Bit64u(buf);
+      const char *Sym=bx_dbg_disasm_symbolic_address(addr_on_stack, 0);
+      dbg_printf("%012" FMT_64 "x -> %012" FMT_64 "x (%s)\n",
+                 (Bit64u)addr,
+                 (Bit64u)addr_on_stack,
+                 Sym ? Sym : "<unknown>");
+
+      // Get next frame pointer
+      if (!bx_dbg_read_linear(dbg_cpu, addr, len, buf))
+        break;
+      linear_bp = conv_8xBit8u_to_Bit64u(buf);
+    }
+    else
+#endif
+    {
+      if (len == 4) {
+        addr_on_stack = conv_4xBit8u_to_Bit32u(buf);
+        const char *Sym=bx_dbg_disasm_symbolic_address(addr_on_stack, 0);
+        dbg_printf(FMT_ADDRX32 " -> " FMT_ADDRX32 " (%s)\n",
+                   (Bit32u)addr,
+                   (Bit32u)addr_on_stack,
+                   Sym ? Sym : "<unknown>");
+
+        // Get next frame pointer
+        if (!bx_dbg_read_linear(dbg_cpu, addr, len, buf))
+          break;
+        linear_bp = conv_4xBit8u_to_Bit32u(buf);
+      } else {
+        addr_on_stack = conv_2xBit8u_to_Bit16u(buf);
+        const char *Sym=bx_dbg_disasm_symbolic_address(addr_on_stack, 0);
+        dbg_printf(FMT_ADDRX16 " -> " FMT_ADDRX16  " (%s)\n",
+                   (Bit16u)addr,
+                   (Bit16u)addr_on_stack,
+                   Sym ? Sym : "<unknown>");
+
+        // Get next frame pointer
+        if (!bx_dbg_read_linear(dbg_cpu, addr, len, buf))
+          break;
+        linear_bp = conv_2xBit8u_to_Bit16u(buf);
+      }
+    }
   }
 }
 
@@ -2188,6 +2300,7 @@ void bx_dbg_examine_command(const char *command, const char *format, bx_bool for
   Bit8u   data8;
   Bit16u  data16;
   Bit32u  data32;
+  Bit64u  data64;
   unsigned columns, per_line, offset;
   bx_bool is_linear;
   Bit8u databuf[8];
@@ -2290,11 +2403,6 @@ void bx_dbg_examine_command(const char *command, const char *format, bx_bool for
     return;
   }
 
-  if (unit_size == 'g') {
-    dbg_printf("error: dbg_examine: 'g' (8-byte) unit size not supported.\n");
-    return;
-  }
-
   if (format_passed) {
     // store current options as default
     bx_debugger.default_display_format = display_format;
@@ -2317,7 +2425,7 @@ void bx_dbg_examine_command(const char *command, const char *format, bx_bool for
         case 'b': data_size = 1; per_line = 16; break;
         case 'h': data_size = 2; per_line = 8; break;
         case 'w': data_size = 4; per_line = 4; break;
-        //case 'g': data_size = 8; per_line = 2; break;
+        case 'g': data_size = 8; per_line = 2; break;
       }
       // binary format is quite large
       if (display_format == 't')
@@ -2329,7 +2437,7 @@ void bx_dbg_examine_command(const char *command, const char *format, bx_bool for
       case 'b': data_size = 1; per_line = 8; break;
       case 'h': data_size = 2; per_line = 8; break;
       case 'w': data_size = 4; per_line = 4; break;
-    //case 'g': data_size = 8; per_line = 2; break;
+      case 'g': data_size = 8; per_line = 2; break;
     }
   }
 
@@ -2342,8 +2450,13 @@ void bx_dbg_examine_command(const char *command, const char *format, bx_bool for
         dbg_printf("\n");
       if (memory_dump)
         dbg_printf("0x" FMT_ADDRX ":", addr);
+      else {
+        const char *Sym=bx_dbg_disasm_symbolic_address(addr + offset, 0);
+        if (Sym)
+          dbg_printf("0x" FMT_ADDRX " <%s>:", addr, Sym);
       else
         dbg_printf("0x" FMT_ADDRX " <bogus+%8u>:", addr, offset);
+      }
       columns = 1;
     }
 
@@ -2425,10 +2538,10 @@ void bx_dbg_examine_command(const char *command, const char *format, bx_bool for
         }
 	else
         switch (display_format) {
-          case 'x': dbg_printf("\t0x%08x", (unsigned) data32); break;
-          case 'd': dbg_printf("\t%d", (int) (Bit32s) data32); break;
-          case 'u': dbg_printf("\t%u", (unsigned) data32); break;
-          case 'o': dbg_printf("\t%o", (unsigned) data32); break;
+          case 'x': dbg_printf("\t0x%08x", data32); break;
+          case 'd': dbg_printf("\t%d", (Bit32s) data32); break;
+          case 'u': dbg_printf("\t%u", data32); break;
+          case 'o': dbg_printf("\t%o", data32); break;
           case 't': dbg_printf_binary("\t%s", data32, 32); break;
           case 'c':
             bx_print_char(0xff & (data32>>24));
@@ -2437,6 +2550,37 @@ void bx_dbg_examine_command(const char *command, const char *format, bx_bool for
             bx_print_char(0xff & (data32>> 0));
             break;
         }
+        break;
+
+      case 8:
+        ReadHostQWordFromLittleEndian(databuf, data64);
+
+        if (memory_dump)
+          switch (display_format) {
+            case 'd': dbg_printf("%10" FMT_64 "d ", data64); break;
+            case 'u': dbg_printf("%10" FMT_64 "u ", data64); break;
+            case 'o': dbg_printf("%12" FMT_64 "o ", data64); break;
+            case 't': dbg_printf_binary("%s ", data64, 64); break;
+            default : dbg_printf("%08" FMT_64 "X ", data64); break;
+          }
+        else
+          switch (display_format) {
+            case 'x': dbg_printf("\t0x%08" FMT_64 "x", data64); break;
+            case 'd': dbg_printf("\t%" FMT_64 "d", (Bit64s) data64); break;
+            case 'u': dbg_printf("\t%" FMT_64 "u", data64); break;
+            case 'o': dbg_printf("\t%" FMT_64 "o", data64); break;
+            case 't': dbg_printf_binary("\t%s", data64, 64); break;
+            case 'c':
+              bx_print_char(0xff & (data64>>56));
+              bx_print_char(0xff & (data64>>48));
+              bx_print_char(0xff & (data64>>40));
+              bx_print_char(0xff & (data64>>32));
+              bx_print_char(0xff & (data64>>24));
+              bx_print_char(0xff & (data64>>16));
+              bx_print_char(0xff & (data64>> 8));
+              bx_print_char(0xff & (data64>> 0));
+              break;
+          }
         break;
     }
 
@@ -2561,7 +2705,7 @@ void bx_dbg_set_symbol_command(const char *symbol, bx_address val)
       return;
     }
     char cpu_param_name[10];
-    sprintf(cpu_param_name, "cpu%d", val);
+    sprintf(cpu_param_name, "cpu%d", (int)val);
     dbg_cpu_list = (bx_list_c*) SIM->get_param(cpu_param_name, SIM->get_bochs_root());
     dbg_cpu = val;
     return;
@@ -2671,11 +2815,11 @@ void bx_dbg_disassemble_command(const char *format, Bit64u from, Bit64u to)
     if (! bx_dbg_read_linear(dbg_cpu, from, 16, bx_disasm_ibuf)) break;
 
     unsigned ilen = bx_disassemble.disasm(dis_size==32, dis_size==64,
-       (bx_address)(-1), (bx_address)(-1), bx_disasm_ibuf, bx_disasm_tbuf);
+       0/*(bx_address)(-1)*/, from/*(bx_address)(-1)*/, bx_disasm_ibuf, bx_disasm_tbuf);
 
-    const char *Sym=bx_dbg_disasm_symbolic_address((Bit32u)from, 0);
+    const char *Sym=bx_dbg_disasm_symbolic_address(from, 0);
 
-    dbg_printf("%08x: ", (unsigned) from);
+    dbg_printf(FMT_ADDRX ": ", from);
     dbg_printf("(%20s): ", Sym?Sym:"");
     dbg_printf("%-25s ; ", bx_disasm_tbuf);
 
@@ -2870,6 +3014,11 @@ void bx_dbg_print_descriptor64(Bit32u lo1, Bit32u hi1, Bit32u lo2, Bit32u hi2)
       default:
         // task, int, trap, or call gate.
         dbg_printf("target=0x%04x:" FMT_ADDRX ", DPL=%d", segment, offset, dpl);
+
+        const char *Sym = bx_dbg_disasm_symbolic_address(offset, 0);
+        if (Sym)
+          dbg_printf(" (%s)", Sym);
+
         break;
       }
     }
@@ -2969,7 +3118,7 @@ void bx_dbg_info_gdt_command(unsigned from, unsigned to)
     Bit8u entry[8];
     if (8*n + 7 > gdtr.limit) break;
     if (bx_dbg_read_linear(dbg_cpu, gdtr.base + 8*n, 8, entry)) {
-      dbg_printf("GDT[0x%02x]=", n);
+      dbg_printf("GDT[0x%04x]=", n << 3);
 
       Bit32u lo = (entry[3]  << 24) | (entry[2]  << 16) | (entry[1]  << 8) | (entry[0]);
       Bit32u hi = (entry[7]  << 24) | (entry[6]  << 16) | (entry[5]  << 8) | (entry[4]);
@@ -3582,7 +3731,7 @@ Bit32u bx_dbg_get_eip(void)
   return BX_CPU(dbg_cpu)->get_eip();
 }
 
-bx_address bx_dbg_get_instruction_pointer(void)
+bx_address bx_dbg_get_rip(void)
 {
   return BX_CPU(dbg_cpu)->get_instruction_pointer();
 }
@@ -3712,7 +3861,8 @@ bx_address bx_dbg_get_laddr(Bit16u sel, bx_address ofs)
       highaddr = descriptor.u.segment.limit_scaled;
     }
 
-    if (ofs < lowaddr || ofs > highaddr) {
+    if ((ofs < lowaddr || ofs > highaddr) &&
+        BX_CPU(dbg_cpu)->get_cpu_mode() != BX_MODE_LONG_64) {
       dbg_printf("WARNING: Offset %08X is out of selector %04x limit (%08x...%08x)!\n",
         ofs, sel, lowaddr, highaddr);
     }

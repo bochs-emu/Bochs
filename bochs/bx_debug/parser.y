@@ -103,6 +103,7 @@ Bit64u eval_value;
 %token <sval> BX_TOKEN_MODEBP
 %token <sval> BX_TOKEN_VMEXITBP
 %token <sval> BX_TOKEN_PRINT_STACK
+%token <sval> BX_TOKEN_BT
 %token <sval> BX_TOKEN_WATCH
 %token <sval> BX_TOKEN_UNWATCH
 %token <sval> BX_TOKEN_READ
@@ -187,6 +188,7 @@ command:
     | modebp_command
     | vmexitbp_command
     | print_stack_command
+    | backtrace_command
     | watch_point_command
     | page_command
     | tlb_command
@@ -346,6 +348,19 @@ print_stack_command:
       {
           bx_dbg_print_stack_command($2);
           free($1);
+      }
+    ;
+
+backtrace_command:
+      BX_TOKEN_BT '\n'
+      {
+        bx_dbg_bt_command(16);
+        free($1);
+      }
+    | BX_TOKEN_BT BX_TOKEN_NUMERIC '\n'
+      {
+        bx_dbg_bt_command($2);
+        free($1);
       }
     ;
 
@@ -1303,7 +1318,7 @@ vexpression:
    | BX_TOKEN_SEGREG                 { $$ = bx_dbg_get_selector_value($1); }
    | BX_TOKEN_REG_IP                 { $$ = bx_dbg_get_ip (); }
    | BX_TOKEN_REG_EIP                { $$ = bx_dbg_get_eip(); }
-   | BX_TOKEN_REG_RIP                { $$ = bx_dbg_get_instruction_pointer(); }
+   | BX_TOKEN_REG_RIP                { $$ = bx_dbg_get_rip(); }
    | vexpression '+' vexpression     { $$ = $1 + $3; }
    | vexpression '-' vexpression     { $$ = $1 - $3; }
    | vexpression '*' vexpression     { $$ = $1 * $3; }
@@ -1332,7 +1347,7 @@ expression:
    | BX_TOKEN_SEGREG                 { $$ = bx_dbg_get_selector_value($1); }
    | BX_TOKEN_REG_IP                 { $$ = bx_dbg_get_ip (); }
    | BX_TOKEN_REG_EIP                { $$ = bx_dbg_get_eip(); }
-   | BX_TOKEN_REG_RIP                { $$ = bx_dbg_get_instruction_pointer(); }
+   | BX_TOKEN_REG_RIP                { $$ = bx_dbg_get_rip(); }
    | expression ':' expression       { $$ = bx_dbg_get_laddr ($1, $3); }
    | expression '+' expression       { $$ = $1 + $3; }
    | expression '-' expression       { $$ = $1 - $3; }
