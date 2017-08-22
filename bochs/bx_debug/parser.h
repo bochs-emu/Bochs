@@ -276,7 +276,7 @@ extern int bxdebug;
 
 union YYSTYPE
 {
-#line 13 "parser.y" /* yacc.c:1909  */
+#line 14 "parser.y" /* yacc.c:1909  */
 
   char    *sval;
   Bit64u   uval;

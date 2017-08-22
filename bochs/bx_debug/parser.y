@@ -8,6 +8,7 @@
 #include "debug.h"
 
 #if BX_DEBUGGER
+Bit64u eval_value;
 %}
 
 %union {
@@ -17,7 +18,6 @@
 }
 
 // Common registers
-%type <uval> BX_TOKEN_NONSEG_REG
 %type <uval> BX_TOKEN_SEGREG
 %type <bval> BX_TOKEN_TOGGLE_ON_OFF
 %type <sval> BX_TOKEN_REGISTERS
@@ -196,6 +196,8 @@ command:
     | print_string_command
     | help_command
     | calc_command
+    | if_command
+    | expression { eval_value = $1; }
     | 
     | '\n'
       {
@@ -453,7 +455,7 @@ continue_command:
     | BX_TOKEN_CONTINUE BX_TOKEN_IF expression '\n'
       {
         bx_dbg_continue_command($3);
-        free($1);
+        free($1); free($2);
       }
     ;
 
@@ -536,43 +538,68 @@ set_command:
 breakpoint_command:
       BX_TOKEN_VBREAKPOINT '\n'
       {
-        bx_dbg_vbreakpoint_command(bkAtIP, 0, 0);
+        bx_dbg_vbreakpoint_command(bkAtIP, 0, 0, NULL);
         free($1);
       }
     | BX_TOKEN_VBREAKPOINT vexpression ':' vexpression '\n'
       {
-        bx_dbg_vbreakpoint_command(bkRegular, $2, $4);
+        bx_dbg_vbreakpoint_command(bkRegular, $2, $4, NULL);
         free($1);
+      }
+    | BX_TOKEN_VBREAKPOINT vexpression ':' vexpression BX_TOKEN_IF BX_TOKEN_STRING '\n'
+      {
+        bx_dbg_vbreakpoint_command(bkRegular, $2, $4, $6);
+        free($1); free($5); free($6);
       }
     | BX_TOKEN_LBREAKPOINT '\n'
       {
-        bx_dbg_lbreakpoint_command(bkAtIP, 0);
+        bx_dbg_lbreakpoint_command(bkAtIP, 0, NULL);
         free($1);
       }
     | BX_TOKEN_LBREAKPOINT expression '\n'
       {
-        bx_dbg_lbreakpoint_command(bkRegular, $2);
+        bx_dbg_lbreakpoint_command(bkRegular, $2, NULL);
         free($1);
+      }
+    | BX_TOKEN_LBREAKPOINT expression BX_TOKEN_IF BX_TOKEN_STRING '\n'
+      {
+        bx_dbg_lbreakpoint_command(bkRegular, $2, $4);
+        free($1); free($3); free($4);
       }
     | BX_TOKEN_LBREAKPOINT BX_TOKEN_STRING '\n'
       {
-        bx_dbg_lbreakpoint_symbol_command($2);
-        free($1);free($2);
+        bx_dbg_lbreakpoint_symbol_command($2, NULL);
+        free($1); free($2);
+      }
+    | BX_TOKEN_LBREAKPOINT BX_TOKEN_STRING BX_TOKEN_IF BX_TOKEN_STRING '\n'
+      {
+        bx_dbg_lbreakpoint_symbol_command($2, $4);
+        free($1); free($2); free($3); free($4);
       }
     | BX_TOKEN_PBREAKPOINT '\n'
       {
-        bx_dbg_pbreakpoint_command(bkAtIP, 0);
+        bx_dbg_pbreakpoint_command(bkAtIP, 0, NULL);
         free($1);
       }
     | BX_TOKEN_PBREAKPOINT expression '\n'
       {
-        bx_dbg_pbreakpoint_command(bkRegular, $2);
+        bx_dbg_pbreakpoint_command(bkRegular, $2, NULL);
         free($1);
+      }
+    | BX_TOKEN_PBREAKPOINT expression BX_TOKEN_IF BX_TOKEN_STRING '\n'
+      {
+        bx_dbg_pbreakpoint_command(bkRegular, $2, $4);
+        free($1); free($3); free($4);
       }
     | BX_TOKEN_PBREAKPOINT '*' expression '\n'
       {
-        bx_dbg_pbreakpoint_command(bkRegular, $3);
+        bx_dbg_pbreakpoint_command(bkRegular, $3, NULL);
         free($1);
+      }
+    | BX_TOKEN_PBREAKPOINT '*' expression BX_TOKEN_IF BX_TOKEN_STRING '\n'
+      {
+        bx_dbg_pbreakpoint_command(bkRegular, $3, $5);
+        free($1); free($4); free($5);
       }
     ;
 
@@ -951,7 +978,7 @@ help_command:
      | BX_TOKEN_HELP BX_TOKEN_CONTINUE '\n'
        {
          dbg_printf("c|cont|continue - continue executing\n");
-         dbg_printf("c|cont|continue if <expression> - continue executing only if expression is true\n");
+         dbg_printf("c|cont|continue if \"expression\" - continue executing only if expression is true\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_STEPN '\n'
@@ -969,16 +996,19 @@ help_command:
      | BX_TOKEN_HELP BX_TOKEN_VBREAKPOINT '\n'
        {
          dbg_printf("vb|vbreak <seg:offset> - set a virtual address instruction breakpoint\n");
+         dbg_printf("vb|vbreak <seg:offset> if \"expression\" - set a conditional virtual address instruction breakpoint\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_LBREAKPOINT '\n'
        {
          dbg_printf("lb|lbreak <addr> - set a linear address instruction breakpoint\n");
+         dbg_printf("lb|lbreak <addr> if \"expression\" - set a conditional linear address instruction breakpoint\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_PBREAKPOINT '\n'
        {
          dbg_printf("p|pb|break|pbreak <addr> - set a physical address instruction breakpoint\n");
+         dbg_printf("p|pb|break|pbreak <addr> if \"expression\" - set a conditional physical address instruction breakpoint\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_DEL_BREAKPOINT '\n'
@@ -1245,19 +1275,19 @@ help_command:
 calc_command:
    BX_TOKEN_CALC expression '\n'
    {
+     eval_value = $2;
      bx_dbg_calc_command($2);
      free($1);
    }
 ;
 
-BX_TOKEN_NONSEG_REG:
-     BX_TOKEN_8BL_REG
-   | BX_TOKEN_8BH_REG
-   | BX_TOKEN_16B_REG
-   | BX_TOKEN_32B_REG
-   | BX_TOKEN_64B_REG
-   | BX_TOKEN_OPMASK_REG
-   { $$=$1; }
+if_command:
+   BX_TOKEN_IF expression '\n'
+   {
+     eval_value = $2 != 0;
+     bx_dbg_calc_command($2);
+     free($1);
+   }
 ;
 
 /* Arithmetic expression for vbreak command */

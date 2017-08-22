@@ -48,7 +48,7 @@ void bx_dbg_info_symbols_command(const char *symbol)
   dbg_printf(BX_HAVE_MAP_ERR);
 }
 
-int bx_dbg_lbreakpoint_symbol_command(const char *symbol)
+int bx_dbg_lbreakpoint_symbol_command(const char *symbol, const char *condition)
 {
   dbg_printf(BX_HAVE_MAP_ERR);
   return -1;
@@ -399,7 +399,7 @@ void bx_dbg_info_symbols_command(const char *symbol)
   }
 }
 
-int bx_dbg_lbreakpoint_symbol_command(const char *symbol)
+int bx_dbg_lbreakpoint_symbol_command(const char *symbol, const char *condition)
 {
   context_t* cntx = context_t::get_context(0);
   if(!cntx) {
@@ -412,7 +412,7 @@ int bx_dbg_lbreakpoint_symbol_command(const char *symbol)
 
   const symbol_entry_t* sym=cntx->get_symbol_entry(probe.name);
   if(sym)
-    return bx_dbg_lbreakpoint_command(bkRegular, sym->start);
+    return bx_dbg_lbreakpoint_command(bkRegular, sym->start, condition);
   dbg_printf ("symbol not found\n");
   return -1;
 }

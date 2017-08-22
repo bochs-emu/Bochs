@@ -49,6 +49,7 @@ YACC   = yacc
 
 BX_OBJS = \
   dbg_main.o \
+  dbg_breakpoints.o \
   symbols.o \
   linux.o \
 
@@ -111,6 +112,7 @@ dbg_main.o: debug.h
 ###########################################
 lexer.o: lexer.c debug.h ../config.h ../osdep.h
 parser.o: parser.c debug.h ../config.h ../osdep.h
+dbg_breakpoints.o: dbg_breakpoints.@CPP_SUFFIX@ debug.h ../config.h ../osdep.h
 dbg_main.o: dbg_main.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h \
