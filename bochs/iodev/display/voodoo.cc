@@ -161,8 +161,8 @@ BX_THREAD_FUNC(fifo_thread, indata)
   while (1) {
     if (fifo_wait_for_event(&fifo_wakeup)) {
       // TODO: process PCI FIFO / memory FIFO data here
-      if (v->fbi.cmdfifo[0].enable) {
-        while (v->fbi.cmdfifo[0].enable && (v->fbi.cmdfifo[0].depth >= v->fbi.cmdfifo[0].depth_needed)) {
+      if (v->fbi.cmdfifo[0].enabled) {
+        while (v->fbi.cmdfifo[0].enabled && (v->fbi.cmdfifo[0].depth >= v->fbi.cmdfifo[0].depth_needed)) {
           cmdfifo_process();
         }
         BX_LOCK(cmdfifo_mutex);
@@ -393,7 +393,7 @@ void bx_voodoo_c::register_state(void)
   for (i = 0; i < 2; i++) {
     sprintf(name, "%d", i);
     bx_list_c *num = new bx_list_c(cmdfifo, name, "");
-    new bx_shadow_bool_c(num, "enable", &v->fbi.cmdfifo[i].enable, BASE_HEX);
+    new bx_shadow_bool_c(num, "enabled", &v->fbi.cmdfifo[i].enabled, BASE_HEX);
     new bx_shadow_num_c(num, "base", &v->fbi.cmdfifo[i].base, BASE_HEX);
     new bx_shadow_num_c(num, "end", &v->fbi.cmdfifo[i].end, BASE_HEX);
     new bx_shadow_num_c(num, "rdptr", &v->fbi.cmdfifo[i].rdptr, BASE_HEX);
@@ -768,6 +768,11 @@ void bx_voodoo_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len
       case 0x41:
       case 0x42:
       case 0x43:
+        if (((address+i) == 0x40) && ((value8 ^ oldval) & 0x02)) {
+          v->pci.fifo.enabled = ((value8 & 0x02) > 0);
+          BX_INFO(("PCI FIFO now %sabled (not implemented yet)",
+                   v->pci.fifo.enabled ? "en":"dis"));
+        }
         if (((address+i) == 0x41) && (BX_VOODOO_THIS s.model == VOODOO_2)) {
           value8 &= 0x0f;
           value8 |= 0x50;

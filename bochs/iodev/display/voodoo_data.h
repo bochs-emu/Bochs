@@ -1430,6 +1430,7 @@ typedef struct
 typedef struct _fifo_state fifo_state;
 struct _fifo_state
 {
+  bx_bool enabled; /* enabled? */
   Bit32u* base; /* base of the FIFO */
   Bit32s  size; /* size of the FIFO */
   Bit32s  in;   /* input pointer */
@@ -1440,7 +1441,7 @@ struct _fifo_state
 typedef struct _cmdfifo_info cmdfifo_info;
 struct _cmdfifo_info
 {
-  bx_bool enable;       /* enabled? */
+  bx_bool enabled;      /* enabled? */
   Bit8u   count_holes;  /* count holes? */
   Bit32u  base;         /* base address in framebuffer RAM */
   Bit32u  end;          /* end address in framebuffer RAM */

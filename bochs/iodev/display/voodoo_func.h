@@ -1289,7 +1289,7 @@ void recompute_video_memory(voodoo_state *v)
     fifo_last_page = v->fbi.mask / 0x1000;
 
   /* is it valid and enabled? */
-  if (fifo_start_page <= fifo_last_page && FBIINIT0_ENABLE_MEMORY_FIFO(v->reg[fbiInit0].u))
+  if ((fifo_start_page <= fifo_last_page) && v->fbi.fifo.enabled)
   {
     v->fbi.fifo.base = (Bit32u *)(v->fbi.ram + fifo_start_page * 0x1000);
     v->fbi.fifo.size = (fifo_last_page + 1 - fifo_start_page) * 0x1000 / 4;
@@ -2787,6 +2787,11 @@ void register_w_common(Bit32u offset, Bit32u data)
       poly_wait(v->poly, v->regnames[regnum]);
       if (v->type <= VOODOO_2 && (chips & 1) && INITEN_ENABLE_HW_INIT(v->pci.init_enable)) {
         Voodoo_Output_Enable(data & 1);
+        if (v->fbi.fifo.enabled != FBIINIT0_ENABLE_MEMORY_FIFO(data)) {
+          v->fbi.fifo.enabled = FBIINIT0_ENABLE_MEMORY_FIFO(data);
+          BX_INFO(("memory FIFO now %sabled (not implemented yet)",
+                   v->fbi.fifo.enabled ? "en" : "dis"));
+        }
         v->reg[fbiInit0].u = data;
         if (FBIINIT0_GRAPHICS_RESET(data))
           soft_reset(v);
@@ -2829,9 +2834,9 @@ void register_w_common(Bit32u offset, Bit32u data)
 
       if (v->type == VOODOO_2 && (chips & 1) && INITEN_ENABLE_HW_INIT(v->pci.init_enable))
       {
-        if (v->fbi.cmdfifo[0].enable != FBIINIT7_CMDFIFO_ENABLE(data)) {
-          v->fbi.cmdfifo[0].enable = FBIINIT7_CMDFIFO_ENABLE(data);
-          BX_INFO(("CMDFIFO now %sabled", v->fbi.cmdfifo[0].enable ? "en" : "dis"));
+        if (v->fbi.cmdfifo[0].enabled != FBIINIT7_CMDFIFO_ENABLE(data)) {
+          v->fbi.cmdfifo[0].enabled = FBIINIT7_CMDFIFO_ENABLE(data);
+          BX_INFO(("CMDFIFO now %sabled", v->fbi.cmdfifo[0].enabled ? "en" : "dis"));
         }
         v->reg[regnum].u = data;
       }
@@ -2934,7 +2939,7 @@ Bit32u register_r(Bit32u offset)
         result |= 1 << 9;
 
       if (v->type == VOODOO_2) {
-        if (v->fbi.cmdfifo[0].enable && v->fbi.cmdfifo[0].depth > 0)
+        if (v->fbi.cmdfifo[0].enabled && v->fbi.cmdfifo[0].depth > 0)
           result |= 7 << 7;
       }
       /* Banshee is different starting here */
@@ -2944,7 +2949,7 @@ Bit32u register_r(Bit32u offset)
         result |= v->fbi.frontbuf << 10;
 
         /* bits 27:12 indicate memory FIFO freespace */
-        if (!FBIINIT0_ENABLE_MEMORY_FIFO(v->reg[fbiInit0].u) || fifo_empty(&v->fbi.fifo))
+        if (!v->fbi.fifo.enabled || fifo_empty(&v->fbi.fifo))
           result |= 0xffff << 12;
         else
         {
@@ -2959,11 +2964,11 @@ Bit32u register_r(Bit32u offset)
         /* bit 10 is 2D busy */
 
         /* bit 11 is cmd FIFO 0 busy */
-        if (v->fbi.cmdfifo[0].enable && v->fbi.cmdfifo[0].depth > 0)
+        if (v->fbi.cmdfifo[0].enabled && v->fbi.cmdfifo[0].depth > 0)
           result |= 1 << 11;
 
         /* bit 12 is cmd FIFO 1 busy */
-        if (v->fbi.cmdfifo[1].enable && v->fbi.cmdfifo[1].depth > 0)
+        if (v->fbi.cmdfifo[1].enabled && v->fbi.cmdfifo[1].depth > 0)
           result |= 1 << 12;
       }
 
