@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009-2015  Benjamin D Lunt (fys [at] fysnet [dot] net)
+//  Copyright (C) 2009-2017  Benjamin D Lunt (fys [at] fysnet [dot] net)
 //                2009-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
@@ -779,14 +779,14 @@ bx_bool bx_uhci_core_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *
   Bit8u  endpt  = (td->dword2 >> 15) & 0x0F;
   Bit8u  pid    =  td->dword2 & 0xFF;
 
-  BX_DEBUG(("QH%03i:TD found at address: 0x%08X", queue_num, address));
-  BX_DEBUG(("  %08X   %08X   %08X   %08X", td->dword0, td->dword1, td->dword2, td->dword3));
-
   p = find_async_packet(&packets, address);
   completion = (p != NULL);
   if (completion && !p->done) {
     return 0;
   }
+
+  BX_DEBUG(("QH%03i:TD found at address: 0x%08X", queue_num, address));
+  BX_DEBUG(("  %08X   %08X   %08X   %08X", td->dword0, td->dword1, td->dword2, td->dword3));
 
   // check TD to make sure it is valid
   // A max length 0x500 to 0x77E is illegal

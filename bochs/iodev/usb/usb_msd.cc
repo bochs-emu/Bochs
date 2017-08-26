@@ -6,7 +6,7 @@
 //
 //  Copyright (c) 2006 CodeSourcery.
 //  Written by Paul Brook
-//  Copyright (C) 2009-2016  The Bochs Project
+//  Copyright (C) 2009-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -578,7 +578,7 @@ int usb_msd_device_c::handle_control(int request, int value, int index, int leng
         case USB_DT_DEVICE_QUALIFIER:
           BX_DEBUG(("USB_REQ_GET_DESCRIPTOR: Device Qualifier"));
           // device qualifier
-          if (d.speed >= USB_SPEED_HIGH) {
+          if (d.speed == USB_SPEED_HIGH) {
             data[0] = 10;
             data[1] = USB_DT_DEVICE_QUALIFIER;
             memcpy(data+2, bx_msd_dev_descriptor+2, 6);
@@ -586,8 +586,8 @@ int usb_msd_device_c::handle_control(int request, int value, int index, int leng
             data[9] = 0;
             ret = 10;
           } else {
-            // a low- or full-speed only device (i.e.: a non high-speed device) must return
-            //  request error on this function
+            // a low-, full- or super-speed device (i.e.: a non high-speed device)
+            // must return request error on this function
             BX_ERROR(("USB MSD handle_control: full-speed only device returning stall on Device Qualifier."));
             goto fail;
           }
