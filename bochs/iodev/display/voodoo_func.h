@@ -2789,7 +2789,7 @@ void register_w_common(Bit32u offset, Bit32u data)
         Voodoo_Output_Enable(data & 1);
         if (v->fbi.fifo.enabled != FBIINIT0_ENABLE_MEMORY_FIFO(data)) {
           v->fbi.fifo.enabled = FBIINIT0_ENABLE_MEMORY_FIFO(data);
-          BX_INFO(("memory FIFO now %sabled (not implemented yet)",
+          BX_INFO(("memory FIFO now %sabled",
                    v->fbi.fifo.enabled ? "en" : "dis"));
         }
         v->reg[fbiInit0].u = data;
@@ -2875,7 +2875,21 @@ void register_w_common(Bit32u offset, Bit32u data)
       break;
 
     default:
-      register_w(offset, data, 0);
+      if (v->fbi.fifo.enabled) {
+        fifo_add(&v->fbi.fifo, FIFO_WR_REG | offset, data);
+        if ((regnum == triangleCMD) || (regnum == ftriangleCMD) || (regnum == nopCMD) ||
+            (regnum == fastfillCMD) || (regnum == swapbufferCMD)) {
+          BX_LOCK(fifo_mutex);
+          v->pci.op_pending++;
+          if (regnum == swapbufferCMD) {
+            v->fbi.swaps_pending++;
+          }
+          fifo_set_event(&fifo_wakeup);
+          BX_UNLOCK(fifo_mutex);
+        }
+      } else {
+        register_w(offset, data, 0);
+      }
   }
 }
 
@@ -2917,7 +2931,9 @@ Bit32u register_r(Bit32u offset)
         result |= 0x3f << 0;
       else
       {
+        BX_LOCK(fifo_mutex);
         int temp = fifo_space(&v->pci.fifo)/2;
+        BX_UNLOCK(fifo_mutex);
         if (temp > 0x3f)
           temp = 0x3f;
         result |= temp << 0;
@@ -2953,7 +2969,9 @@ Bit32u register_r(Bit32u offset)
           result |= 0xffff << 12;
         else
         {
+          BX_LOCK(fifo_mutex);
           int temp = fifo_space(&v->fbi.fifo)/2;
+          BX_UNLOCK(fifo_mutex);
           if (temp > 0xffff)
             temp = 0xffff;
           result |= temp << 12;
@@ -3095,10 +3113,19 @@ void voodoo_w(Bit32u offset, Bit32u data, Bit32u mask)
 {
   if ((offset & (0xc00000/4)) == 0)
     register_w_common(offset, data);
-  else if (offset & (0x800000/4))
-    texture_w(offset, data);
-  else
-    lfb_w(offset, data, mask);
+  else if (offset & (0x800000/4)) {
+    if (v->fbi.fifo.enabled) {
+      fifo_add(&v->fbi.fifo, FIFO_WR_TEX | offset, data);
+    } else {
+      texture_w(offset, data);
+    }
+  } else {
+    if (v->fbi.fifo.enabled) {
+      fifo_add(&v->fbi.fifo, FIFO_WR_FBI | offset, data);
+    } else {
+      lfb_w(offset, data, mask);
+    }
+  }
 }
 
 Bit32u voodoo_r(Bit32u offset)
@@ -3229,6 +3256,11 @@ void voodoo_init(Bit8u _type)
   v->dac.clk0_m = 0x37;
   v->dac.clk0_n = 0x02;
   v->dac.clk0_p = 0x03;
+
+  /* set up the PCI FIFO */
+  v->pci.fifo.base = v->pci.fifo_mem;
+  v->pci.fifo.size = 64*2;
+  v->pci.fifo.in = v->pci.fifo.out = 0;
 
   /* create a table of precomputed 1/n and log2(n) values */
   /* n ranges from 1.0000 to 2.0000 */

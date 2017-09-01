@@ -1733,7 +1733,9 @@ struct _voodoo_state
 
 // FIFO event handling
 
+BX_MUTEX(fifo_mutex);
 fifo_event_t fifo_wakeup;
+fifo_event_t fifo_not_full;
 
 
 void fifo_set_event(fifo_event_t *fifo_ev)
@@ -1771,67 +1773,25 @@ bx_bool fifo_wait_for_event(fifo_event_t *fifo_ev)
  *
  *************************************/
 
+/* fifo content defines */
+#define FIFO_TYPES  (7 << 29)
+#define FIFO_WR_REG (1 << 29)
+#define FIFO_WR_FBI (2 << 29)
+#define FIFO_WR_TEX (4 << 29)
+
 BX_CPP_INLINE void fifo_reset(fifo_state *f)
 {
+  BX_LOCK(fifo_mutex);
   f->in = f->out = 0;
+  fifo_set_event(&fifo_not_full);
+  BX_UNLOCK(fifo_mutex);
 }
 
 
-BX_CPP_INLINE void fifo_add(fifo_state *f, Bit32u data)
+BX_CPP_INLINE bx_bool fifo_full(fifo_state *f)
 {
-  Bit32s next_in;
-
-  /* compute the value of 'in' after we add this item */
-  next_in = f->in + 1;
-  if (next_in >= f->size)
-    next_in = 0;
-
-  /* as long as it's not equal to the output pointer, we can do it */
-  if (next_in != f->out)
-  {
-    f->base[f->in] = data;
-    f->in = next_in;
-  }
-}
-
-
-BX_CPP_INLINE Bit32u fifo_remove(fifo_state *f)
-{
-  Bit32u data = 0xffffffff;
-
-  /* as long as we have data, we can do it */
-  if (f->out != f->in)
-  {
-    Bit32s next_out;
-
-    /* fetch the data */
-    data = f->base[f->out];
-
-    /* advance the output pointer */
-    next_out = f->out + 1;
-    if (next_out >= f->size)
-      next_out = 0;
-    f->out = next_out;
-  }
-  return data;
-}
-
-
-BX_CPP_INLINE Bit32u fifo_peek(fifo_state *f)
-{
-  return f->base[f->out];
-}
-
-
-BX_CPP_INLINE int fifo_empty(fifo_state *f)
-{
-  return (f->in == f->out);
-}
-
-
-BX_CPP_INLINE int fifo_full(fifo_state *f)
-{
-  return (f->in + 1 == f->out || (f->in == f->size - 1 && f->out == 0));
+  bx_bool ret = (f->in + 2 == f->out || (f->in == f->size - 2 && f->out == 0));
+  return ret;
 }
 
 
@@ -1849,7 +1809,77 @@ BX_CPP_INLINE Bit32s fifo_space(fifo_state *f)
   Bit32s items = f->in - f->out;
   if (items < 0)
     items += f->size;
-  return f->size - 1 - items;
+  Bit32s fspace = f->size - 1 - items;
+  return fspace;
+}
+
+
+BX_CPP_INLINE void fifo_add(fifo_state *f, Bit32u offset, Bit32u data)
+{
+  Bit32s next_in;
+
+  BX_LOCK(fifo_mutex);
+  if (fifo_full(f)) {
+    fifo_set_event(&fifo_wakeup);
+    BX_UNLOCK(fifo_mutex);
+    fifo_wait_for_event(&fifo_not_full);
+    BX_LOCK(fifo_mutex);
+  }
+  /* compute the value of 'in' after we add this item */
+  next_in = f->in + 2;
+  if (next_in >= f->size)
+    next_in = 0;
+
+  /* as long as it's not equal to the output pointer, we can do it */
+  if (next_in != f->out)
+  {
+    f->base[f->in] = offset;
+    f->base[f->in + 1] = data;
+    f->in = next_in;
+  }
+  if (fifo_space(f) <= 16) {
+    fifo_set_event(&fifo_wakeup);
+  }
+  BX_UNLOCK(fifo_mutex);
+}
+
+
+BX_CPP_INLINE Bit32u fifo_remove(fifo_state *f, Bit32u *offset, Bit32u *data)
+{
+  Bit32u type = 0;
+
+  BX_LOCK(fifo_mutex);
+  /* as long as we have data, we can do it */
+  if (f->out != f->in)
+  {
+    Bit32s next_out;
+
+    /* fetch the data */
+    *offset = f->base[f->out];
+    type = *offset & FIFO_TYPES;
+    *offset &= 0xffffff;
+    *data = f->base[f->out + 1];
+
+    /* advance the output pointer */
+    next_out = f->out + 2;
+    if (next_out >= f->size)
+      next_out = 0;
+    f->out = next_out;
+  }
+  if (fifo_space(f) > 15) {
+    fifo_set_event(&fifo_not_full);
+  }
+  BX_UNLOCK(fifo_mutex);
+  return type;
+}
+
+
+BX_CPP_INLINE bx_bool fifo_empty(fifo_state *f)
+{
+  BX_LOCK(fifo_mutex);
+  bx_bool ret = (f->in == f->out);
+  BX_UNLOCK(fifo_mutex);
+  return ret;
 }
 
 

@@ -157,10 +157,36 @@ void CDECL libvoodoo_LTX_plugin_fini(void)
 
 BX_THREAD_FUNC(fifo_thread, indata)
 {
+  Bit32u type, offset = 0, data = 0, regnum;
+
   UNUSED(indata);
   while (1) {
     if (fifo_wait_for_event(&fifo_wakeup)) {
-      // TODO: process PCI FIFO / memory FIFO data here
+      // TODO: also process memory FIFO data here
+      while (!fifo_empty(&v->fbi.fifo)) {
+        type = fifo_remove(&v->fbi.fifo, &offset, &data);
+        switch (type) {
+          case FIFO_WR_REG:
+            if ((offset & 0x800c0) == 0x80000 && v->alt_regmap)
+              regnum = register_alias_map[offset & 0x3f];
+            else
+              regnum = offset & 0xff;
+            register_w(offset, data, 0);
+            if ((regnum == triangleCMD) || (regnum == ftriangleCMD) || (regnum == nopCMD) ||
+                (regnum == fastfillCMD) || (regnum == swapbufferCMD)) {
+              BX_LOCK(fifo_mutex);
+              v->pci.op_pending--;
+              BX_UNLOCK(fifo_mutex);
+            }
+            break;
+          case FIFO_WR_FBI:
+            lfb_w(offset, data, 0xffffffff);
+            break;
+          case FIFO_WR_TEX:
+            texture_w(offset, data);
+            break;
+        }
+      }
       if (v->fbi.cmdfifo[0].enabled) {
         while (v->fbi.cmdfifo[0].enabled && (v->fbi.cmdfifo[0].depth >= v->fbi.cmdfifo[0].depth_needed)) {
           cmdfifo_process();
@@ -187,14 +213,18 @@ bx_voodoo_c::bx_voodoo_c()
 bx_voodoo_c::~bx_voodoo_c()
 {
   BX_THREAD_KILL(fifo_thread_var);
+  BX_FINI_MUTEX(fifo_mutex);
   if (BX_VOODOO_THIS s.model == VOODOO_2) {
     BX_FINI_MUTEX(cmdfifo_mutex);
   }
 #ifdef WIN32
   CloseHandle(fifo_wakeup.event);
+  CloseHandle(fifo_not_full.event);
 #else
   pthread_cond_destroy(&fifo_wakeup.cond);
   pthread_mutex_destroy(&fifo_wakeup.mutex);
+  pthread_cond_destroy(&fifo_not_full.cond);
+  pthread_mutex_destroy(&fifo_not_full.mutex);
 #endif
   if (v != NULL) {
     free(v->fbi.ram);
@@ -249,16 +279,21 @@ void bx_voodoo_c::init(void)
 
   voodoo_init(BX_VOODOO_THIS s.model);
 
+  BX_INIT_MUTEX(fifo_mutex);
   if (BX_VOODOO_THIS s.model == VOODOO_2) {
     v->fbi.cmdfifo[0].depth_needed = BX_MAX_BIT32U;
     BX_INIT_MUTEX(cmdfifo_mutex);
   }
 #ifdef WIN32
   fifo_wakeup.event = CreateEvent(NULL, FALSE, FALSE, "fifo_wakeup");
+  fifo_not_full.event = CreateEvent(NULL, FALSE, FALSE, "fifo_not_full");
 #else
   pthread_cond_init(&fifo_wakeup.cond, NULL);
   pthread_mutex_init(&fifo_wakeup.mutex, NULL);
+  pthread_cond_init(&fifo_not_full.cond, NULL);
+  pthread_mutex_init(&fifo_not_full.mutex, NULL);
 #endif
+  fifo_set_event(&fifo_not_full);
   BX_THREAD_CREATE(fifo_thread, this, fifo_thread_var);
 
   BX_INFO(("3dfx Voodoo Graphics adapter (model=%s) initialized",
@@ -604,6 +639,9 @@ void bx_voodoo_c::vertical_timer_handler(void *this_ptr)
 
   BX_VOODOO_THIS s.vdraw.frame_start = bx_virt_timer.time_usec(0);
 
+  if (!fifo_empty(&v->fbi.fifo)) {
+    fifo_set_event(&fifo_wakeup);
+  }
   if (v->fbi.cmdfifo[0].cmd_ready) {
     fifo_set_event(&fifo_wakeup);
   }
@@ -770,8 +808,10 @@ void bx_voodoo_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len
       case 0x43:
         if (((address+i) == 0x40) && ((value8 ^ oldval) & 0x02)) {
           v->pci.fifo.enabled = ((value8 & 0x02) > 0);
-          BX_INFO(("PCI FIFO now %sabled (not implemented yet)",
-                   v->pci.fifo.enabled ? "en":"dis"));
+          if (!v->pci.fifo.enabled && !fifo_empty(&v->pci.fifo)) {
+            fifo_set_event(&fifo_wakeup);
+          }
+          BX_DEBUG(("PCI FIFO now %sabled (not implemented)", v->pci.fifo.enabled ? "en":"dis"));
         }
         if (((address+i) == 0x41) && (BX_VOODOO_THIS s.model == VOODOO_2)) {
           value8 &= 0x0f;
