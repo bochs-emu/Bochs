@@ -3126,7 +3126,13 @@ void voodoo_w(Bit32u offset, Bit32u data, Bit32u mask)
     }
   } else {
     if (v->fbi.fifo.enabled) {
-      fifo_add(&v->fbi.fifo, FIFO_WR_FBI | offset, data);
+      if (mask == 0xffffffff) {
+        fifo_add(&v->fbi.fifo, FIFO_WR_FBI_32 | offset, data);
+      } else if (mask & 1) {
+        fifo_add(&v->fbi.fifo, FIFO_WR_FBI_16L | offset, data);
+      } else {
+        fifo_add(&v->fbi.fifo, FIFO_WR_FBI_16H | offset, data);
+      }
     } else {
       lfb_w(offset, data, mask);
     }

@@ -178,11 +178,17 @@ BX_THREAD_FUNC(fifo_thread, indata)
               BX_UNLOCK(fifo_mutex);
             }
             break;
-          case FIFO_WR_FBI:
-            lfb_w(offset, data, 0xffffffff);
-            break;
           case FIFO_WR_TEX:
             texture_w(offset, data);
+            break;
+          case FIFO_WR_FBI_32:
+            lfb_w(offset, data, 0xffffffff);
+            break;
+          case FIFO_WR_FBI_16L:
+            lfb_w(offset, data, 0x0000ffff);
+            break;
+          case FIFO_WR_FBI_16H:
+            lfb_w(offset, data, 0xffff0000);
             break;
         }
       }
