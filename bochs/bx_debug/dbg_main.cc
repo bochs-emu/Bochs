@@ -3580,9 +3580,10 @@ void bx_dbg_print_help(void)
   dbg_printf("    show \"param\", restore\n");
 }
 
+extern "C" Bit64u eval_value;
+
 void bx_dbg_calc_command(Bit64u value)
 {
-  extern Bit64u eval_value;
   assert(value == eval_value);
   dbg_printf("0x" FMT_LL "x " FMT_LL "d\n", eval_value, eval_value);
 }
