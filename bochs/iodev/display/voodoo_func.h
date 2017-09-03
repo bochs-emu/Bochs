@@ -2475,7 +2475,11 @@ void cmdfifo_w(Bit32u fbi_offset, Bit32u data)
     BX_LOCK(cmdfifo_mutex);
   }
   if (v->fbi.cmdfifo[0].depth >= v->fbi.cmdfifo[0].depth_needed) {
-    v->fbi.cmdfifo[0].cmd_ready = 1;
+    if (FBIINIT0_VGA_PASSTHRU(v->reg[fbiInit0].u)) {
+      v->fbi.cmdfifo[0].cmd_ready = 1;
+    } else {
+      fifo_set_event(&fifo_wakeup);
+    }
   }
   BX_UNLOCK(cmdfifo_mutex);
 }
@@ -2682,7 +2686,7 @@ void register_w_common(Bit32u offset, Bit32u data)
   Bit32u chips   = (offset>>8) & 0xf;
 
   /* Voodoo 2 CMDFIFO handling */
-  if (FBIINIT7_CMDFIFO_ENABLE(v->reg[fbiInit7].u)) {
+  if (v->fbi.cmdfifo[0].enabled) {
     if ((offset & 0x80000) > 0) {
       if (!FBIINIT7_CMDFIFO_MEMORY_STORE(v->reg[fbiInit7].u)) {
         BX_ERROR(("CMDFIFO-to-FIFO mode not supported yet"));
@@ -2910,8 +2914,7 @@ Bit32u register_r(Bit32u offset)
     BX_DEBUG(("Invalid attempt to read %s", v->regnames[regnum]));
     return 0;
   }
-  if ((FBIINIT7_CMDFIFO_ENABLE(v->reg[fbiInit7].u)) &&
-      ((offset & 0x80000) > 0)) {
+  if (v->fbi.cmdfifo[0].enabled && ((offset & 0x80000) > 0)) {
     BX_DEBUG(("Invalid attempt to read from CMDFIFO"));
     return 0;
   }
