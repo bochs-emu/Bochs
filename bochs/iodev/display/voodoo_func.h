@@ -1216,6 +1216,7 @@ void soft_reset(voodoo_state *v)
   v->reg[fbiTrianglesOut].u = 0;
   fifo_reset(&v->fbi.fifo);
   fifo_reset(&v->pci.fifo);
+  v->pci.op_pending = 0;
 }
 
 
@@ -1306,6 +1307,7 @@ void recompute_video_memory(voodoo_state *v)
 
   /* reset the FIFO */
   fifo_reset(&v->fbi.fifo);
+  if (fifo_empty(&v->pci.fifo)) v->pci.op_pending = 0;
 
   /* reset our front/back buffers if they are out of range */
   if (v->fbi.rgboffs[2] == (Bit32u)~0)
@@ -1397,7 +1399,7 @@ void dacdata_w(dac_state *d, Bit8u regnum, Bit8u data)
           break;
         case 0x0e:
           if ((d->data_size == 1) && (data == 0xf8)) {
-            d->clk0_freq = 14318184.0 * ((float)(d->clk0_m + 2) / (float)(d->clk0_n + 2)) / (float)(1 << d->clk0_p);
+            d->clk0_freq = 14318184.0f * ((float)(d->clk0_m + 2) / (float)(d->clk0_n + 2)) / (float)(1 << d->clk0_p);
             Bit8u dacr6 = d->reg[6] & 0xf0;
             if ((dacr6 == 0x20) || (dacr6 == 0x60) || (dacr6 == 0x70)) {
               d->clk0_freq /= 2.0f;

@@ -162,7 +162,6 @@ BX_THREAD_FUNC(fifo_thread, indata)
   UNUSED(indata);
   while (1) {
     if (fifo_wait_for_event(&fifo_wakeup)) {
-      // TODO: also process memory FIFO data here
       while (!fifo_empty(&v->fbi.fifo)) {
         type = fifo_remove(&v->fbi.fifo, &offset, &data);
         switch (type) {
@@ -277,13 +276,14 @@ void bx_voodoo_c::init(void)
   BX_VOODOO_THIS pci_conf[0x3d] = BX_PCI_INTA;
   BX_VOODOO_THIS pci_base_address[0] = 0;
 
-  voodoo_init(BX_VOODOO_THIS s.model);
-
   BX_INIT_MUTEX(fifo_mutex);
   if (BX_VOODOO_THIS s.model == VOODOO_2) {
     v->fbi.cmdfifo[0].depth_needed = BX_MAX_BIT32U;
     BX_INIT_MUTEX(cmdfifo_mutex);
   }
+
+  voodoo_init(BX_VOODOO_THIS s.model);
+
 #ifdef WIN32
   fifo_wakeup.event = CreateEvent(NULL, FALSE, FALSE, "fifo_wakeup");
   fifo_not_full.event = CreateEvent(NULL, FALSE, FALSE, "fifo_not_full");
