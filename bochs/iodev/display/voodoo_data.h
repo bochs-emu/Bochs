@@ -1461,7 +1461,7 @@ struct _pci_state
   fifo_state  fifo;           /* PCI FIFO */
   Bit32u      init_enable;    /* initEnable value */
   Bit8u       stall_state;    /* state of the system if we're stalled */
-  Bit8u       op_pending;     /* true if an operation is pending */
+  Bit16u      op_pending;     /* number of operations pending */
   Bit32u      fifo_mem[64*2]; /* memory backing the PCI FIFO */
 };
 
@@ -1792,8 +1792,7 @@ BX_CPP_INLINE void fifo_reset(fifo_state *f)
 
 BX_CPP_INLINE bx_bool fifo_full(fifo_state *f)
 {
-  bx_bool ret = (f->in + 2 == f->out || (f->in == f->size - 2 && f->out == 0));
-  return ret;
+  return (f->in + 2 == f->out || (f->in == f->size - 2 && f->out == 0));
 }
 
 
@@ -1820,7 +1819,6 @@ BX_CPP_INLINE void fifo_add(fifo_state *f, Bit32u offset, Bit32u data)
 {
   Bit32s next_in;
 
-  BX_LOCK(fifo_mutex);
   if (fifo_full(f)) {
     fifo_set_event(&fifo_wakeup);
     BX_UNLOCK(fifo_mutex);
@@ -1839,10 +1837,6 @@ BX_CPP_INLINE void fifo_add(fifo_state *f, Bit32u offset, Bit32u data)
     f->base[f->in + 1] = data;
     f->in = next_in;
   }
-  if (fifo_space(f) <= 16) {
-    fifo_set_event(&fifo_wakeup);
-  }
-  BX_UNLOCK(fifo_mutex);
 }
 
 
@@ -1850,7 +1844,6 @@ BX_CPP_INLINE Bit32u fifo_remove(fifo_state *f, Bit32u *offset, Bit32u *data)
 {
   Bit32u type = 0;
 
-  BX_LOCK(fifo_mutex);
   /* as long as we have data, we can do it */
   if (f->out != f->in)
   {
@@ -1871,17 +1864,42 @@ BX_CPP_INLINE Bit32u fifo_remove(fifo_state *f, Bit32u *offset, Bit32u *data)
   if (fifo_space(f) > 15) {
     fifo_set_event(&fifo_not_full);
   }
-  BX_UNLOCK(fifo_mutex);
   return type;
 }
 
 
 BX_CPP_INLINE bx_bool fifo_empty(fifo_state *f)
 {
+  return (f->in == f->out);
+}
+
+
+BX_CPP_INLINE bx_bool fifo_empty_locked(fifo_state *f)
+{
   BX_LOCK(fifo_mutex);
   bx_bool ret = (f->in == f->out);
   BX_UNLOCK(fifo_mutex);
   return ret;
+}
+
+
+BX_CPP_INLINE void fifo_move(fifo_state *f1, fifo_state *f2)
+{
+  if (fifo_full(f2)) {
+    fifo_set_event(&fifo_wakeup);
+    BX_UNLOCK(fifo_mutex);
+    fifo_wait_for_event(&fifo_not_full);
+    BX_LOCK(fifo_mutex);
+  }
+  Bit32s items1 = fifo_items(f1);
+  Bit32s space2 = fifo_space(f2);
+  while ((items1 > 0) && (space2 > 0)) {
+    f2->base[f2->in++] = f1->base[f1->out++];
+    if (f2->in >= f2->size) f2->in = 0;
+    if (f1->out >= f1->size) f1->out = 0;
+    items1--;
+    space2--;
+  }
 }
 
 

@@ -158,12 +158,22 @@ void CDECL libvoodoo_LTX_plugin_fini(void)
 BX_THREAD_FUNC(fifo_thread, indata)
 {
   Bit32u type, offset = 0, data = 0, regnum;
+  fifo_state *fifo;
 
   UNUSED(indata);
   while (1) {
     if (fifo_wait_for_event(&fifo_wakeup)) {
-      while (!fifo_empty(&v->fbi.fifo)) {
-        type = fifo_remove(&v->fbi.fifo, &offset, &data);
+      BX_LOCK(fifo_mutex);
+      while (1) {
+        if (!fifo_empty(&v->fbi.fifo)) {
+          fifo = &v->fbi.fifo;
+        } else if (!fifo_empty(&v->pci.fifo)) {
+          fifo = &v->pci.fifo;
+        } else {
+          break;
+        }
+        type = fifo_remove(fifo, &offset, &data);
+        BX_UNLOCK(fifo_mutex);
         switch (type) {
           case FIFO_WR_REG:
             if ((offset & 0x800c0) == 0x80000 && v->alt_regmap)
@@ -191,7 +201,10 @@ BX_THREAD_FUNC(fifo_thread, indata)
             lfb_w(offset, data, 0xffff0000);
             break;
         }
+        BX_LOCK(fifo_mutex);
       }
+      v->pci.op_pending = 0;
+      BX_UNLOCK(fifo_mutex);
       if (v->fbi.cmdfifo[0].enabled) {
         while (v->fbi.cmdfifo[0].enabled && (v->fbi.cmdfifo[0].depth >= v->fbi.cmdfifo[0].depth_needed)) {
           cmdfifo_process();
@@ -645,9 +658,11 @@ void bx_voodoo_c::vertical_timer_handler(void *this_ptr)
 
   BX_VOODOO_THIS s.vdraw.frame_start = bx_virt_timer.time_usec(0);
 
-  if (!fifo_empty(&v->fbi.fifo)) {
+  BX_LOCK(fifo_mutex);
+  if (!fifo_empty(&v->pci.fifo) || !fifo_empty(&v->fbi.fifo)) {
     fifo_set_event(&fifo_wakeup);
   }
+  BX_UNLOCK(fifo_mutex);
   if (v->fbi.cmdfifo[0].cmd_ready) {
     fifo_set_event(&fifo_wakeup);
   }

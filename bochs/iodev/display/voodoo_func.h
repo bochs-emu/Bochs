@@ -1307,7 +1307,7 @@ void recompute_video_memory(voodoo_state *v)
 
   /* reset the FIFO */
   fifo_reset(&v->fbi.fifo);
-  if (fifo_empty(&v->pci.fifo)) v->pci.op_pending = 0;
+  if (fifo_empty_locked(&v->pci.fifo)) v->pci.op_pending = 0;
 
   /* reset our front/back buffers if they are out of range */
   if (v->fbi.rgboffs[2] == (Bit32u)~0)
@@ -2680,6 +2680,32 @@ void cmdfifo_process(void)
 }
 
 
+bx_bool fifo_add_common(Bit32u type_offset, Bit32u data)
+{
+  bx_bool ret = 0;
+
+  BX_LOCK(fifo_mutex);
+  if (v->pci.fifo.enabled) {
+    fifo_add(&v->pci.fifo, type_offset, data);
+    ret = 1;
+    if (v->fbi.fifo.enabled) {
+      if ((fifo_space(&v->pci.fifo)/2) <= 16) {
+        fifo_move(&v->pci.fifo, &v->fbi.fifo);
+      }
+      if ((fifo_space(&v->fbi.fifo)/2) <= 0xe000) {
+        fifo_set_event(&fifo_wakeup);
+      }
+    } else {
+      if ((fifo_space(&v->pci.fifo)/2) <= 16) {
+        fifo_set_event(&fifo_wakeup);
+      }
+    }
+  }
+  BX_UNLOCK(fifo_mutex);
+  return ret;
+}
+
+
 void register_w_common(Bit32u offset, Bit32u data)
 {
   Bit32u regnum  = (offset) & 0xff;
@@ -2881,18 +2907,17 @@ void register_w_common(Bit32u offset, Bit32u data)
       break;
 
     default:
-      if (v->fbi.fifo.enabled) {
-        fifo_add(&v->fbi.fifo, FIFO_WR_REG | offset, data);
+      if (fifo_add_common(FIFO_WR_REG | offset, data)) {
+        BX_LOCK(fifo_mutex);
         if ((regnum == triangleCMD) || (regnum == ftriangleCMD) || (regnum == nopCMD) ||
             (regnum == fastfillCMD) || (regnum == swapbufferCMD)) {
-          BX_LOCK(fifo_mutex);
           v->pci.op_pending++;
           if (regnum == swapbufferCMD) {
             v->fbi.swaps_pending++;
           }
           fifo_set_event(&fifo_wakeup);
-          BX_UNLOCK(fifo_mutex);
         }
+        BX_UNLOCK(fifo_mutex);
       } else {
         register_w(offset, data, 0);
       }
@@ -2932,7 +2957,7 @@ Bit32u register_r(Bit32u offset)
       result = 0;
 
       /* bits 5:0 are the PCI FIFO free space */
-      if (fifo_empty(&v->pci.fifo))
+      if (fifo_empty_locked(&v->pci.fifo))
         result |= 0x3f << 0;
       else
       {
@@ -2970,7 +2995,7 @@ Bit32u register_r(Bit32u offset)
         result |= v->fbi.frontbuf << 10;
 
         /* bits 27:12 indicate memory FIFO freespace */
-        if (!v->fbi.fifo.enabled || fifo_empty(&v->fbi.fifo))
+        if (!v->fbi.fifo.enabled || fifo_empty_locked(&v->fbi.fifo))
           result |= 0xffff << 12;
         else
         {
@@ -3116,24 +3141,23 @@ Bit32u lfb_r(Bit32u offset)
 
 void voodoo_w(Bit32u offset, Bit32u data, Bit32u mask)
 {
+  Bit32u type;
+
   if ((offset & (0xc00000/4)) == 0)
     register_w_common(offset, data);
   else if (offset & (0x800000/4)) {
-    if (v->fbi.fifo.enabled) {
-      fifo_add(&v->fbi.fifo, FIFO_WR_TEX | offset, data);
-    } else {
+    if (!fifo_add_common(FIFO_WR_TEX | offset, data)) {
       texture_w(offset, data);
     }
   } else {
-    if (v->fbi.fifo.enabled) {
-      if (mask == 0xffffffff) {
-        fifo_add(&v->fbi.fifo, FIFO_WR_FBI_32 | offset, data);
-      } else if (mask & 1) {
-        fifo_add(&v->fbi.fifo, FIFO_WR_FBI_16L | offset, data);
-      } else {
-        fifo_add(&v->fbi.fifo, FIFO_WR_FBI_16H | offset, data);
-      }
+    if (mask == 0xffffffff) {
+      type = FIFO_WR_FBI_32;
+    } else if (mask & 1) {
+      type = FIFO_WR_FBI_16L;
     } else {
+      type = FIFO_WR_FBI_16H;
+    }
+    if (!fifo_add_common(type | offset, data)) {
       lfb_w(offset, data, mask);
     }
   }
