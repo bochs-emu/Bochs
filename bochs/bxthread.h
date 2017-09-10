@@ -65,9 +65,9 @@ typedef struct
 #endif
 } bx_thread_event_t;
 
-void bx_create_event(bx_thread_event_t *thread_ev);
-void bx_destroy_event(bx_thread_event_t *thread_ev);
-void bx_set_event(bx_thread_event_t *thread_ev);
-bx_bool bx_wait_for_event(bx_thread_event_t *thread_ev);
+void BOCHSAPI_MSVCONLY bx_create_event(bx_thread_event_t *thread_ev);
+void BOCHSAPI_MSVCONLY bx_destroy_event(bx_thread_event_t *thread_ev);
+void BOCHSAPI_MSVCONLY bx_set_event(bx_thread_event_t *thread_ev);
+bx_bool BOCHSAPI_MSVCONLY bx_wait_for_event(bx_thread_event_t *thread_ev);
 
 #endif
