@@ -162,7 +162,7 @@ BX_THREAD_FUNC(fifo_thread, indata)
 
   UNUSED(indata);
   while (1) {
-    if (fifo_wait_for_event(&fifo_wakeup)) {
+    if (bx_wait_for_event(&fifo_wakeup)) {
       BX_LOCK(fifo_mutex);
       while (1) {
         if (!fifo_empty(&v->fbi.fifo)) {
@@ -235,15 +235,9 @@ bx_voodoo_c::~bx_voodoo_c()
   if (BX_VOODOO_THIS s.model == VOODOO_2) {
     BX_FINI_MUTEX(cmdfifo_mutex);
   }
-#ifdef WIN32
-  CloseHandle(fifo_wakeup.event);
-  CloseHandle(fifo_not_full.event);
-#else
-  pthread_cond_destroy(&fifo_wakeup.cond);
-  pthread_mutex_destroy(&fifo_wakeup.mutex);
-  pthread_cond_destroy(&fifo_not_full.cond);
-  pthread_mutex_destroy(&fifo_not_full.mutex);
-#endif
+  bx_destroy_event(&fifo_wakeup);
+  bx_destroy_event(&fifo_not_full);
+
   if (v != NULL) {
     free(v->fbi.ram);
     free(v->tmu[0].ram);
@@ -303,16 +297,9 @@ void bx_voodoo_c::init(void)
 
   voodoo_init(BX_VOODOO_THIS s.model);
 
-#ifdef WIN32
-  fifo_wakeup.event = CreateEvent(NULL, FALSE, FALSE, "fifo_wakeup");
-  fifo_not_full.event = CreateEvent(NULL, FALSE, FALSE, "fifo_not_full");
-#else
-  pthread_cond_init(&fifo_wakeup.cond, NULL);
-  pthread_mutex_init(&fifo_wakeup.mutex, NULL);
-  pthread_cond_init(&fifo_not_full.cond, NULL);
-  pthread_mutex_init(&fifo_not_full.mutex, NULL);
-#endif
-  fifo_set_event(&fifo_not_full);
+  bx_create_event(&fifo_wakeup);
+  bx_create_event(&fifo_not_full);
+  bx_set_event(&fifo_not_full);
   BX_THREAD_CREATE(fifo_thread, this, fifo_thread_var);
 
   BX_INFO(("3dfx Voodoo Graphics adapter (model=%s) initialized",
@@ -660,11 +647,11 @@ void bx_voodoo_c::vertical_timer_handler(void *this_ptr)
 
   BX_LOCK(fifo_mutex);
   if (!fifo_empty(&v->pci.fifo) || !fifo_empty(&v->fbi.fifo)) {
-    fifo_set_event(&fifo_wakeup);
+    bx_set_event(&fifo_wakeup);
   }
   BX_UNLOCK(fifo_mutex);
   if (v->fbi.cmdfifo[0].cmd_ready) {
-    fifo_set_event(&fifo_wakeup);
+    bx_set_event(&fifo_wakeup);
   }
 
   if (v->fbi.vblank_swap_pending) {
@@ -830,7 +817,7 @@ void bx_voodoo_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len
         if (((address+i) == 0x40) && ((value8 ^ oldval) & 0x02)) {
           v->pci.fifo.enabled = ((value8 & 0x02) > 0);
           if (!v->pci.fifo.enabled && !fifo_empty(&v->pci.fifo)) {
-            fifo_set_event(&fifo_wakeup);
+            bx_set_event(&fifo_wakeup);
           }
           BX_DEBUG(("PCI FIFO now %sabled (not implemented)", v->pci.fifo.enabled ? "en":"dis"));
         }

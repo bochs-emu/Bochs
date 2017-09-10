@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -378,5 +378,24 @@ extern Bit64u bx_get_realtime64_usec (void);
 #endif
 
 #endif // BX_LARGE_RAMFILE
+
+#ifndef WIN32
+#include <pthread.h>
+#endif
+
+typedef struct
+{
+#ifdef WIN32
+  HANDLE  event;
+#else
+  pthread_cond_t cond;
+  pthread_mutex_t mutex;
+#endif
+} bx_thread_event_t;
+
+void bx_create_event(bx_thread_event_t *thread_ev);
+void bx_destroy_event(bx_thread_event_t *thread_ev);
+void bx_set_event(bx_thread_event_t *thread_ev);
+bx_bool bx_wait_for_event(bx_thread_event_t *thread_ev);
 
 #endif /* ifdef BX_OSDEP_H */

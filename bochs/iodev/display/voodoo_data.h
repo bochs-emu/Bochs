@@ -1416,17 +1416,6 @@ struct _stats_block
 };
 
 
-typedef struct
-{
-#ifdef WIN32
-  HANDLE  event;
-#else
-  pthread_cond_t cond;
-  pthread_mutex_t mutex;
-#endif
-} fifo_event_t;
-
-
 typedef struct _fifo_state fifo_state;
 struct _fifo_state
 {
@@ -1734,37 +1723,8 @@ struct _voodoo_state
 // FIFO event handling
 
 BX_MUTEX(fifo_mutex);
-fifo_event_t fifo_wakeup;
-fifo_event_t fifo_not_full;
-
-
-void fifo_set_event(fifo_event_t *fifo_ev)
-{
-#ifdef WIN32
-  SetEvent(fifo_ev->event);
-#else
-  pthread_mutex_lock(&fifo_ev->mutex);
-  pthread_cond_signal(&fifo_ev->cond);
-  pthread_mutex_unlock(&fifo_ev->mutex);
-#endif
-}
-
-
-bx_bool fifo_wait_for_event(fifo_event_t *fifo_ev)
-{
-#ifdef WIN32
-  if (WaitForSingleObject(fifo_ev->event, 1) == WAIT_OBJECT_0) {
-    return 1;
-  } else {
-    return 0;
-  }
-#else
-  pthread_mutex_lock(&fifo_ev->mutex);
-  pthread_cond_wait(&fifo_ev->cond, &fifo_ev->mutex);
-  pthread_mutex_unlock(&fifo_ev->mutex);
-  return 1;
-#endif
-}
+bx_thread_event_t fifo_wakeup;
+bx_thread_event_t fifo_not_full;
 
 
 /*************************************
@@ -1785,7 +1745,7 @@ BX_CPP_INLINE void fifo_reset(fifo_state *f)
 {
   BX_LOCK(fifo_mutex);
   f->in = f->out = 0;
-  fifo_set_event(&fifo_not_full);
+  bx_set_event(&fifo_not_full);
   BX_UNLOCK(fifo_mutex);
 }
 
@@ -1820,9 +1780,9 @@ BX_CPP_INLINE void fifo_add(fifo_state *f, Bit32u offset, Bit32u data)
   Bit32s next_in;
 
   if (fifo_full(f)) {
-    fifo_set_event(&fifo_wakeup);
+    bx_set_event(&fifo_wakeup);
     BX_UNLOCK(fifo_mutex);
-    fifo_wait_for_event(&fifo_not_full);
+    bx_wait_for_event(&fifo_not_full);
     BX_LOCK(fifo_mutex);
   }
   /* compute the value of 'in' after we add this item */
@@ -1862,7 +1822,7 @@ BX_CPP_INLINE Bit32u fifo_remove(fifo_state *f, Bit32u *offset, Bit32u *data)
     f->out = next_out;
   }
   if (fifo_space(f) > 15) {
-    fifo_set_event(&fifo_not_full);
+    bx_set_event(&fifo_not_full);
   }
   return type;
 }
@@ -1886,9 +1846,9 @@ BX_CPP_INLINE bx_bool fifo_empty_locked(fifo_state *f)
 BX_CPP_INLINE void fifo_move(fifo_state *f1, fifo_state *f2)
 {
   if (fifo_full(f2)) {
-    fifo_set_event(&fifo_wakeup);
+    bx_set_event(&fifo_wakeup);
     BX_UNLOCK(fifo_mutex);
-    fifo_wait_for_event(&fifo_not_full);
+    bx_wait_for_event(&fifo_not_full);
     BX_LOCK(fifo_mutex);
   }
   Bit32s items1 = fifo_items(f1);

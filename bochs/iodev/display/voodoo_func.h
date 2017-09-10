@@ -2478,7 +2478,7 @@ void cmdfifo_w(Bit32u fbi_offset, Bit32u data)
     if (FBIINIT0_VGA_PASSTHRU(v->reg[fbiInit0].u)) {
       v->fbi.cmdfifo[0].cmd_ready = 1;
     } else {
-      fifo_set_event(&fifo_wakeup);
+      bx_set_event(&fifo_wakeup);
     }
   }
   BX_UNLOCK(cmdfifo_mutex);
@@ -2693,11 +2693,11 @@ bx_bool fifo_add_common(Bit32u type_offset, Bit32u data)
         fifo_move(&v->pci.fifo, &v->fbi.fifo);
       }
       if ((fifo_space(&v->fbi.fifo)/2) <= 0xe000) {
-        fifo_set_event(&fifo_wakeup);
+        bx_set_event(&fifo_wakeup);
       }
     } else {
       if ((fifo_space(&v->pci.fifo)/2) <= 16) {
-        fifo_set_event(&fifo_wakeup);
+        bx_set_event(&fifo_wakeup);
       }
     }
   }
@@ -2915,7 +2915,7 @@ void register_w_common(Bit32u offset, Bit32u data)
           if (regnum == swapbufferCMD) {
             v->fbi.swaps_pending++;
           }
-          fifo_set_event(&fifo_wakeup);
+          bx_set_event(&fifo_wakeup);
         }
         BX_UNLOCK(fifo_mutex);
       } else {

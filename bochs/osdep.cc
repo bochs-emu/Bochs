@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2013  The Bochs Project
+//  Copyright (C) 2001-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -369,3 +369,51 @@ Bit64u bx_get_realtime64_usec(void)
 }
 #endif
 #endif
+
+
+void bx_create_event(bx_thread_event_t *thread_ev)
+{
+#ifdef WIN32
+  thread_ev->event = CreateEvent(NULL, FALSE, FALSE, "event");
+#else
+  pthread_cond_init(&thread_ev->cond, NULL);
+  pthread_mutex_init(&thread_ev->mutex, NULL);
+#endif
+}
+
+void bx_destroy_event(bx_thread_event_t *thread_ev)
+{
+#ifdef WIN32
+  CloseHandle(thread_ev->event);
+#else
+  pthread_cond_destroy(&thread_ev->cond);
+  pthread_mutex_destroy(&thread_ev->mutex);
+#endif
+}
+
+void bx_set_event(bx_thread_event_t *thread_ev)
+{
+#ifdef WIN32
+  SetEvent(thread_ev->event);
+#else
+  pthread_mutex_lock(&thread_ev->mutex);
+  pthread_cond_signal(&thread_ev->cond);
+  pthread_mutex_unlock(&thread_ev->mutex);
+#endif
+}
+
+bx_bool bx_wait_for_event(bx_thread_event_t *thread_ev)
+{
+#ifdef WIN32
+  if (WaitForSingleObject(thread_ev->event, 1) == WAIT_OBJECT_0) {
+    return 1;
+  } else {
+    return 0;
+  }
+#else
+  pthread_mutex_lock(&thread_ev->mutex);
+  pthread_cond_wait(&thread_ev->cond, &thread_ev->mutex);
+  pthread_mutex_unlock(&thread_ev->mutex);
+  return 1;
+#endif
+}
