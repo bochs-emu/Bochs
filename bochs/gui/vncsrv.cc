@@ -59,6 +59,9 @@
 #include "rfb.h"
 #include "rfbkeys.h"
 
+#include "bxthread.h"
+
+
 class bx_vncsrv_gui_c: public bx_gui_c {
 public:
   bx_vncsrv_gui_c(void) : screen(NULL) {}
@@ -100,7 +103,6 @@ IMPLEMENT_GUI_PLUGIN_CODE(vncsrv)
 #else
 #include <errno.h>
 #endif
-#include <pthread.h>
 
 #endif
 

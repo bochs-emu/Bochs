@@ -70,14 +70,11 @@
 #include "vgacore.h"
 #include "voodoo.h"
 #include "virt_timer.h"
+#include "bxthread.h"
 
 #define LOG_THIS theVoodooDevice->
 
 bx_voodoo_c* theVoodooDevice = NULL;
-
-#ifndef WIN32
-#include <pthread.h>
-#endif
 
 #include "voodoo_types.h"
 #include "voodoo_data.h"

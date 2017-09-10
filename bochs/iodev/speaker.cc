@@ -25,9 +25,6 @@
 #include "speaker.h"
 
 #if BX_SUPPORT_SOUNDLOW
-#ifndef WIN32
-#include <pthread.h>
-#endif
 #include "sound/soundlow.h"
 #include "sound/soundmod.h"
 #endif

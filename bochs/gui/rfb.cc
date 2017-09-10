@@ -46,6 +46,9 @@
 #include "rfb.h"
 #include "rfbkeys.h"
 
+#include "bxthread.h"
+
+
 class bx_rfb_gui_c : public bx_gui_c {
 public:
   bx_rfb_gui_c (void) {}
@@ -86,9 +89,6 @@ IMPLEMENT_GUI_PLUGIN_CODE(rfb)
 #include <sys/errno.h>
 #else
 #include <errno.h>
-#endif
-#if !defined(__CYGWIN__)
-#include <pthread.h>
 #endif
 
 typedef int SOCKET;

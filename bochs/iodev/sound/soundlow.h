@@ -20,9 +20,7 @@
 
 // Common code for sound lowlevel modules
 
-#ifndef WIN32
-#include <pthread.h>
-#endif
+#include "bxthread.h"
 
 #if BX_HAVE_LIBSAMPLERATE
 #include <samplerate.h>

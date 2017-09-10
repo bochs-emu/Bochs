@@ -30,6 +30,7 @@
 //
 
 #include "bochs.h"
+#include "bxthread.h"
 
 //////////////////////////////////////////////////////////////////////
 // Missing library functions.  These should work on any platform
