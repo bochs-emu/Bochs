@@ -2413,9 +2413,7 @@ Bit32u cmdfifo_calc_depth_needed(void)
 
   if (v->fbi.cmdfifo[0].depth == 0)
     return needed;
-  BX_LOCK(cmdfifo_mutex);
   command = *(Bit32u*)(&v->fbi.ram[v->fbi.cmdfifo[0].rdptr & v->fbi.mask]);
-  BX_UNLOCK(cmdfifo_mutex);
   type = (Bit8u)(command & 0x07);
   switch (type) {
     case 0:
@@ -2470,14 +2468,11 @@ void cmdfifo_w(Bit32u fbi_offset, Bit32u data)
   *(Bit32u*)(&v->fbi.ram[fbi_offset]) = data;
   v->fbi.cmdfifo[0].depth++;
   if (v->fbi.cmdfifo[0].depth_needed == BX_MAX_BIT32U) {
-    BX_UNLOCK(cmdfifo_mutex);
     v->fbi.cmdfifo[0].depth_needed = cmdfifo_calc_depth_needed();
-    BX_LOCK(cmdfifo_mutex);
   }
   if (v->fbi.cmdfifo[0].depth >= v->fbi.cmdfifo[0].depth_needed) {
-    if (FBIINIT0_VGA_PASSTHRU(v->reg[fbiInit0].u)) {
-      v->fbi.cmdfifo[0].cmd_ready = 1;
-    } else {
+    v->fbi.cmdfifo[0].cmd_ready = 1;
+    if (!FBIINIT0_VGA_PASSTHRU(v->reg[fbiInit0].u)) {
       bx_set_event(&fifo_wakeup);
     }
   }
@@ -2488,11 +2483,9 @@ Bit32u cmdfifo_r(void)
 {
   Bit32u data;
 
-  BX_LOCK(cmdfifo_mutex);
   data = *(Bit32u*)(&v->fbi.ram[v->fbi.cmdfifo[0].rdptr & v->fbi.mask]);
   v->fbi.cmdfifo[0].rdptr += 4;
   v->fbi.cmdfifo[0].depth--;
-  BX_UNLOCK(cmdfifo_mutex);
   return data;
 }
 
@@ -2526,7 +2519,9 @@ void cmdfifo_process(void)
       inc = (command >> 15) & 1;
       for (i = 0; i < (int)nwords; i++) {
         data = cmdfifo_r();
+        BX_UNLOCK(cmdfifo_mutex);
         register_w(regaddr, data, 1);
+        BX_LOCK(cmdfifo_mutex);
         if (inc) regaddr++;
       }
       break;
@@ -2537,7 +2532,9 @@ void cmdfifo_process(void)
       while (mask) {
         if (mask & 1) {
           data = cmdfifo_r();
+          BX_UNLOCK(cmdfifo_mutex);
           register_w(regaddr, data, 1);
+          BX_LOCK(cmdfifo_mutex);
         }
         regaddr++;
         mask >>= 1;
@@ -2627,8 +2624,11 @@ void cmdfifo_process(void)
           v->fbi.svert[2] = svert;
 
           /* if we have enough, draw */
-          if (++v->fbi.sverts >= 3)
+          if (++v->fbi.sverts >= 3) {
+            BX_UNLOCK(cmdfifo_mutex);
             setup_and_draw_triangle(v);
+            BX_LOCK(cmdfifo_mutex);
+          }
         }
       }
       while (nwords--) cmdfifo_r();
@@ -2640,7 +2640,9 @@ void cmdfifo_process(void)
       while (mask) {
         if (mask & 1) {
           data = cmdfifo_r();
+          BX_UNLOCK(cmdfifo_mutex);
           register_w(regaddr, data, 1);
+          BX_LOCK(cmdfifo_mutex);
         }
         regaddr++;
         mask >>= 1;
@@ -2658,14 +2660,18 @@ void cmdfifo_process(void)
         case 2:
           for (i = 0; i < (int)nwords; i++) {
             data = cmdfifo_r();
+            BX_UNLOCK(cmdfifo_mutex);
             lfb_w(regaddr, data, 0xffffffff);
+            BX_LOCK(cmdfifo_mutex);
             regaddr++;
           }
           break;
         case 3:
           for (i = 0; i < (int)nwords; i++) {
             data = cmdfifo_r();
+            BX_UNLOCK(cmdfifo_mutex);
             texture_w(regaddr, data);
+            BX_LOCK(cmdfifo_mutex);
             regaddr++;
           }
           break;
@@ -2677,6 +2683,9 @@ void cmdfifo_process(void)
       BX_ERROR(("CMDFIFO: unsupported packet type %d", type));
   }
   v->fbi.cmdfifo[0].depth_needed = cmdfifo_calc_depth_needed();
+  if (v->fbi.cmdfifo[0].depth < v->fbi.cmdfifo[0].depth_needed) {
+    v->fbi.cmdfifo[0].cmd_ready = 0;
+  }
 }
 
 

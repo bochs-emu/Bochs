@@ -203,11 +203,10 @@ BX_THREAD_FUNC(fifo_thread, indata)
       v->pci.op_pending = 0;
       BX_UNLOCK(fifo_mutex);
       if (v->fbi.cmdfifo[0].enabled) {
-        while (v->fbi.cmdfifo[0].enabled && (v->fbi.cmdfifo[0].depth >= v->fbi.cmdfifo[0].depth_needed)) {
+        BX_LOCK(cmdfifo_mutex);
+        while (v->fbi.cmdfifo[0].cmd_ready) {
           cmdfifo_process();
         }
-        BX_LOCK(cmdfifo_mutex);
-        v->fbi.cmdfifo[0].cmd_ready = 0;
         BX_UNLOCK(cmdfifo_mutex);
       }
     }
