@@ -1,3 +1,29 @@
+Changes after 2.6.9 release:
+
+- General
+  - Disabled legacy "load32bitOShack" feature.
+
+- I/O Devices
+  - Timers
+    - Implemented HPET emulation (ported from Qemu).
+  - Voodoo
+    - Voodoo1 emulation speedup with combined PCI / memory FIFO implementation
+      and multi-threading support (separate FIFO thread).
+    - Voodoo2 model now working after some fixes and implementation of the
+      CMDFIFO (using FIFO thread) and one of the bitBLT functions.
+  - USB
+    - Now creating separate plugins for each USB device implementation.
+  - Networking
+    - bxhub: Added DNS service support for the server "vnet" and connected
+      clients.
+
+  - GUI and display libraries
+    - Added new win32 gui option "traphotkeys" for fullscreen mode.
+    - wx: Fixes and updates for wxWidgets 3.0 support.
+    - Removed legacy guis "macos" and "svga" from display library auto-
+      detection (still available using --with-XXX option).
+
+-------------------------------------------------------------------------
 Changes in 2.6.9 (April 9, 2017):
 
 Brief summary :
