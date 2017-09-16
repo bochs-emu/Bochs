@@ -26,47 +26,62 @@
 
 void bx_create_event(bx_thread_event_t *thread_ev)
 {
-#ifdef WIN32
+#if BX_WITH_SDL || BX_WITH_SDL2
+  thread_ev->cond = SDL_CreateCond();
+  thread_ev->lock = SDL_CreateMutex();
+#elif defined(WIN32)
   thread_ev->event = CreateEvent(NULL, FALSE, FALSE, "event");
 #else
   pthread_cond_init(&thread_ev->cond, NULL);
-  pthread_mutex_init(&thread_ev->mutex, NULL);
+  pthread_mutex_init(&thread_ev->lock, NULL);
 #endif
 }
 
 void bx_destroy_event(bx_thread_event_t *thread_ev)
 {
-#ifdef WIN32
+#if BX_WITH_SDL || BX_WITH_SDL2
+  SDL_DestroyCond(thread_ev->cond);
+  SDL_DestroyMutex(thread_ev->lock);
+#elif defined(WIN32)
   CloseHandle(thread_ev->event);
 #else
   pthread_cond_destroy(&thread_ev->cond);
-  pthread_mutex_destroy(&thread_ev->mutex);
+  pthread_mutex_destroy(&thread_ev->lock);
 #endif
 }
 
 void bx_set_event(bx_thread_event_t *thread_ev)
 {
-#ifdef WIN32
+#if BX_WITH_SDL || BX_WITH_SDL2
+  SDL_LockMutex(thread_ev->lock);
+  SDL_CondSignal(thread_ev->cond);
+  SDL_UnlockMutex(thread_ev->lock);
+#elif defined(WIN32)
   SetEvent(thread_ev->event);
 #else
-  pthread_mutex_lock(&thread_ev->mutex);
+  pthread_mutex_lock(&thread_ev->lock);
   pthread_cond_signal(&thread_ev->cond);
-  pthread_mutex_unlock(&thread_ev->mutex);
+  pthread_mutex_unlock(&thread_ev->lock);
 #endif
 }
 
 bx_bool bx_wait_for_event(bx_thread_event_t *thread_ev)
 {
-#ifdef WIN32
+#if BX_WITH_SDL || BX_WITH_SDL2
+  SDL_LockMutex(thread_ev->lock);
+  SDL_CondWait(thread_ev->cond, thread_ev->lock);
+  SDL_UnlockMutex(thread_ev->lock);
+  return 1;
+#elif defined(WIN32)
   if (WaitForSingleObject(thread_ev->event, 1) == WAIT_OBJECT_0) {
     return 1;
   } else {
     return 0;
   }
 #else
-  pthread_mutex_lock(&thread_ev->mutex);
-  pthread_cond_wait(&thread_ev->cond, &thread_ev->mutex);
-  pthread_mutex_unlock(&thread_ev->mutex);
+  pthread_mutex_lock(&thread_ev->lock);
+  pthread_cond_wait(&thread_ev->cond, &thread_ev->lock);
+  pthread_mutex_unlock(&thread_ev->lock);
   return 1;
 #endif
 }

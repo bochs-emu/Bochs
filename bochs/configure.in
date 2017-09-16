@@ -471,7 +471,6 @@ else
   NONPLUGIN_GUI_LINK_OPTS='$(GUI_LINK_OPTS)'
 fi
 AC_SUBST(DEFINE_PLUGIN_PATH)
-AC_SUBST(NONPLUGIN_GUI_LINK_OPTS)
 
 # copy gui variables into iodev variables.  Later, we will add to the gui
 # objs list, according to which display libraries are enabled.
@@ -2390,6 +2389,10 @@ if test "$with_sdl" = yes; then
   GUI_CXXFLAGS="$GUI_CXXFLAGS $SDL_CFLAGS"
   GUI_LINK_OPTS_SDL="`sdl-config --libs`"
   GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_SDL)"
+  # The plugin version uses multi-threading support in Bochs core
+  if test "$bx_plugins" = 1; then
+    NONPLUGIN_GUI_LINK_OPTS="`sdl-config --libs`"
+  fi
   # The enhanced X debugger depends on GTK2
   if test "$gui_debugger" = 1 -a "$DEFAULT_GUI" != win32; then
     needs_gtk2=1
@@ -2421,6 +2424,10 @@ if test "$with_sdl2" = yes; then
   GUI_CXXFLAGS="$GUI_CXXFLAGS $SDL2_CFLAGS"
   GUI_LINK_OPTS_SDL2="`sdl2-config --libs`"
   GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_SDL2)"
+  # The plugin version uses multi-threading support in Bochs core
+  if test "$bx_plugins" = 1; then
+    NONPLUGIN_GUI_LINK_OPTS="`sdl2-config --libs`"
+  fi
   # The enhanced X debugger depends on GTK2
   if test "$gui_debugger" = 1 -a "$DEFAULT_GUI" != win32; then
     needs_gtk2=1
@@ -3185,6 +3192,7 @@ AC_SUBST(DEVICE_LINK_OPTS)
 AC_SUBST(GUI_LINK_OPTS)
 AC_SUBST(GUI_LINK_OPTS_TERM)
 AC_SUBST(GUI_LINK_OPTS_WX)
+AC_SUBST(NONPLUGIN_GUI_LINK_OPTS)
 AC_SUBST(DASH)
 AC_SUBST(SLASH)
 AC_SUBST(CXXFP)
