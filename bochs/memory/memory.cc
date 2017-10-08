@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -71,11 +71,13 @@ void BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned le
 
   memory_handler = BX_MEM_THIS memory_handlers[a20addr >> 20];
   while (memory_handler) {
-    if (memory_handler->begin <= a20addr &&
+    if (memory_handler->write_handler != NULL) {
+      if (memory_handler->begin <= a20addr &&
           memory_handler->end >= a20addr &&
           memory_handler->write_handler(a20addr, len, data, memory_handler->param))
-    {
-      return;
+      {
+        return;
+      }
     }
     memory_handler = memory_handler->next;
   }

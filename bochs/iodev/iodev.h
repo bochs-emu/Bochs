@@ -99,6 +99,7 @@ public:
 
   void init_pci_conf(Bit16u vid, Bit16u did, Bit8u rev, Bit32u classc, Bit8u headt);
   void register_pci_state(bx_list_c *list);
+  void after_restore_pci_state(memory_handler_t mem_read_handler);
   void load_pci_rom(const char *path);
 
 protected:

@@ -440,20 +440,12 @@ void bx_ne2k_c::register_state(void)
 void bx_ne2k_c::after_restore_state(void)
 {
   if (BX_NE2K_THIS s.pci_enabled) {
+    bx_pci_device_c::after_restore_pci_state(mem_read_handler);
     if (DEV_pci_set_base_io(BX_NE2K_THIS_PTR, read_handler, write_handler,
                             &BX_NE2K_THIS s.base_address,
                             &BX_NE2K_THIS pci_conf[0x10],
                             32, &ne2k_iomask[0], "NE2000 PCI NIC")) {
       BX_INFO(("new base address: 0x%04x", BX_NE2K_THIS s.base_address));
-    }
-    if (BX_NE2K_THIS pci_rom_size > 0) {
-      if (DEV_pci_set_base_mem(BX_NE2K_THIS_PTR, mem_read_handler,
-                               mem_write_handler,
-                               &BX_NE2K_THIS pci_rom_address,
-                               &BX_NE2K_THIS pci_conf[0x30],
-                               BX_NE2K_THIS pci_rom_size)) {
-        BX_INFO(("new ROM address: 0x%08x", BX_NE2K_THIS pci_rom_address));
-      }
     }
   }
 }
@@ -1371,13 +1363,6 @@ bx_bool bx_ne2k_c::mem_read_handler(bx_phy_address addr, unsigned len,
   }
   return 1;
 }
-
-bx_bool bx_ne2k_c::mem_write_handler(bx_phy_address addr, unsigned len,
-                                     void *data, void *param)
-{
-  BX_INFO(("write to ROM ignored (addr=0x%08x len=%d)", (Bit32u)addr, len));
-  return 1;
-}
 #endif
 
 //
@@ -1751,8 +1736,7 @@ void bx_ne2k_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
     }
   }
   if (romaddr_change) {
-    if (DEV_pci_set_base_mem(BX_NE2K_THIS_PTR, mem_read_handler,
-                             mem_write_handler,
+    if (DEV_pci_set_base_mem(BX_NE2K_THIS_PTR, mem_read_handler, NULL,
                              &BX_NE2K_THIS pci_rom_address,
                              &BX_NE2K_THIS pci_conf[0x30],
                              BX_NE2K_THIS pci_rom_size)) {

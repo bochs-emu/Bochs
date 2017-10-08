@@ -824,7 +824,7 @@ BX_MEM_C::registerMemoryHandlers(void *param, memory_handler_t read_handler,
 {
   if (end_addr < begin_addr)
     return 0;
-  if (!read_handler || !write_handler) // allow NULL fetch handler
+  if (!read_handler) // allow NULL write and fetch handler
     return 0;
   BX_INFO(("Register memory access handlers: 0x" FMT_PHY_ADDRX " - 0x" FMT_PHY_ADDRX, begin_addr, end_addr));
   for (Bit32u page_idx = (Bit32u)(begin_addr >> 20); page_idx <= (Bit32u)(end_addr >> 20); page_idx++) {

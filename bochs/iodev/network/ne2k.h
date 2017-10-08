@@ -255,7 +255,6 @@ private:
 
 #if BX_SUPPORT_PCI
   BX_NE2K_SMF bx_bool mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
-  BX_NE2K_SMF bx_bool mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
 #endif
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);

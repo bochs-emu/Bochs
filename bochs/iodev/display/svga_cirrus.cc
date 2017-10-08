@@ -408,6 +408,7 @@ void bx_svga_cirrus_c::after_restore_state(void)
 {
 #if BX_SUPPORT_PCI
   if (BX_CIRRUS_THIS pci_enabled) {
+    bx_pci_device_c::after_restore_pci_state(cirrus_mem_read_handler);
     if (DEV_pci_set_base_mem(BX_CIRRUS_THIS_PTR, cirrus_mem_read_handler,
                              cirrus_mem_write_handler,
                              &BX_CIRRUS_THIS pci_base_address[0],
@@ -421,13 +422,6 @@ void bx_svga_cirrus_c::after_restore_state(void)
                              &BX_CIRRUS_THIS pci_conf[0x14],
                              CIRRUS_PNPMMIO_SIZE)) {
       BX_INFO(("new pci_mmioaddr = 0x%08x", BX_CIRRUS_THIS pci_base_address[1]));
-    }
-    if (DEV_pci_set_base_mem(BX_CIRRUS_THIS_PTR, cirrus_mem_read_handler,
-                             cirrus_mem_write_handler,
-                             &BX_CIRRUS_THIS pci_rom_address,
-                             &BX_CIRRUS_THIS pci_conf[0x30],
-                             BX_CIRRUS_THIS pci_rom_size)) {
-      BX_INFO(("new ROM address: 0x%08x", BX_CIRRUS_THIS pci_rom_address));
     }
   }
 #endif
@@ -2408,8 +2402,7 @@ void bx_svga_cirrus_c::pci_write_handler(Bit8u address, Bit32u value, unsigned i
     }
   }
   if (romaddr_change) {
-    if (DEV_pci_set_base_mem(BX_CIRRUS_THIS_PTR, cirrus_mem_read_handler,
-                             cirrus_mem_write_handler,
+    if (DEV_pci_set_base_mem(BX_CIRRUS_THIS_PTR, cirrus_mem_read_handler, NULL,
                              &BX_CIRRUS_THIS pci_rom_address,
                              &BX_CIRRUS_THIS pci_conf[0x30],
                              BX_CIRRUS_THIS pci_rom_size)) {

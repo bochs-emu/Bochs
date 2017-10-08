@@ -234,17 +234,12 @@ void bx_vga_c::after_restore_state(void)
   bx_vgacore_c::after_restore_state();
 #if BX_SUPPORT_PCI
   if (BX_VGA_THIS pci_enabled) {
+    bx_pci_device_c::after_restore_pci_state(mem_read_handler);
     if (BX_VGA_THIS vbe_present) {
       if (BX_VGA_THIS vbe_set_base_addr(&BX_VGA_THIS pci_base_address[0],
                                         &BX_VGA_THIS pci_conf[0x10])) {
         BX_INFO(("new base address: 0x%08x", BX_VGA_THIS pci_base_address[0]));
       }
-    }
-    if (DEV_pci_set_base_mem(this, mem_read_handler, mem_write_handler,
-                             &BX_VGA_THIS pci_rom_address,
-                             &BX_VGA_THIS pci_conf[0x30],
-                             BX_VGA_THIS pci_rom_size)) {
-      BX_INFO(("new ROM address: 0x%08x", BX_VGA_THIS pci_rom_address));
     }
   }
 #endif
@@ -1360,7 +1355,7 @@ void bx_vga_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
     }
   }
   if (romaddr_change) {
-    if (DEV_pci_set_base_mem(this, mem_read_handler, mem_write_handler,
+    if (DEV_pci_set_base_mem(this, mem_read_handler, NULL,
                              &BX_VGA_THIS pci_rom_address,
                              &BX_VGA_THIS pci_conf[0x30],
                              BX_VGA_THIS pci_rom_size)) {

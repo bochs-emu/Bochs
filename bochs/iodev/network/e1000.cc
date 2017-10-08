@@ -595,6 +595,7 @@ void bx_e1000_c::register_state(void)
 
 void bx_e1000_c::after_restore_state(void)
 {
+  bx_pci_device_c::after_restore_pci_state(mem_read_handler);
   if (DEV_pci_set_base_mem(BX_E1000_THIS_PTR, mem_read_handler, mem_write_handler,
                            &BX_E1000_THIS pci_base_address[0],
                            &BX_E1000_THIS pci_conf[0x10],
@@ -606,15 +607,6 @@ void bx_e1000_c::after_restore_state(void)
                           &BX_E1000_THIS pci_conf[0x14],
                           64, &e1000_iomask[0], "e1000")) {
     BX_INFO(("new i/o base address: 0x%04x", BX_E1000_THIS pci_base_address[1]));
-  }
-  if (BX_E1000_THIS pci_rom_size > 0) {
-    if (DEV_pci_set_base_mem(BX_E1000_THIS_PTR, mem_read_handler,
-                             mem_write_handler,
-                             &BX_E1000_THIS pci_rom_address,
-                             &BX_E1000_THIS pci_conf[0x30],
-                             BX_E1000_THIS pci_rom_size)) {
-      BX_INFO(("new ROM address: 0x%08x", BX_E1000_THIS pci_rom_address));
-    }
   }
 }
 
@@ -737,14 +729,6 @@ bx_bool bx_e1000_c::mem_write_handler(bx_phy_address addr, unsigned len,
   Bit32u value = *(Bit32u*) data;
   Bit32u offset;
   Bit16u index;
-
-  if (BX_E1000_THIS pci_rom_size > 0) {
-    Bit32u mask = (BX_E1000_THIS pci_rom_size - 1);
-    if ((addr & ~mask) == BX_E1000_THIS pci_rom_address) {
-      BX_INFO(("write to ROM ignored (addr=0x%08x len=%d)", (Bit32u)addr, len));
-      return 1;
-    }
-  }
 
   offset = addr & 0x1ffff;
   index = (offset >> 2);
@@ -1548,8 +1532,7 @@ void bx_e1000_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
     }
   }
   if (romaddr_change) {
-    if (DEV_pci_set_base_mem(BX_E1000_THIS_PTR, mem_read_handler,
-                             mem_write_handler,
+    if (DEV_pci_set_base_mem(BX_E1000_THIS_PTR, mem_read_handler, NULL,
                              &BX_E1000_THIS pci_rom_address,
                              &BX_E1000_THIS pci_conf[0x30],
                              BX_E1000_THIS pci_rom_size)) {

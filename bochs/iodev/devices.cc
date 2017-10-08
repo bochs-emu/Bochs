@@ -1313,6 +1313,16 @@ void bx_pci_device_c::register_pci_state(bx_list_c *list)
   new bx_shadow_data_c(list, "pci_conf", pci_conf, 256, 1);
 }
 
+void bx_pci_device_c::after_restore_pci_state(memory_handler_t mem_read_handler)
+{
+  if (pci_rom_size > 0) {
+    if (DEV_pci_set_base_mem(this, mem_read_handler, NULL, &pci_rom_address,
+                             &pci_conf[0x30], pci_rom_size)) {
+      BX_INFO(("new ROM address: 0x%08x", pci_rom_address));
+    }
+  }
+}
+
 void bx_pci_device_c::load_pci_rom(const char *path)
 {
   struct stat stat_buf;
