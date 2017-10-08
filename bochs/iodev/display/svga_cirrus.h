@@ -70,7 +70,6 @@ public:
 
   virtual void init_vga_extension(void);
   virtual void reset(unsigned type);
-  virtual void refresh_display(void *this_ptr, bx_bool redraw);
   virtual void redraw_area(unsigned x0, unsigned y0,
                            unsigned width, unsigned height);
   virtual Bit8u mem_read(bx_phy_address addr);
@@ -87,6 +86,9 @@ public:
   virtual void debug_dump(int argc, char **argv);
 #endif
 
+protected:
+  virtual void update(void);
+
 private:
   static Bit32u svga_read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   svga_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
@@ -97,11 +99,7 @@ private:
   BX_CIRRUS_SMF void mem_write_mode4and5_8bpp(Bit8u mode, Bit32u offset, Bit8u value);
   BX_CIRRUS_SMF void mem_write_mode4and5_16bpp(Bit8u mode, Bit32u offset, Bit8u value);
 
-  static void   svga_timer_handler(void *);
-  static Bit64s svga_param_handler(bx_param_c *param, int set, Bit64s val);
-  BX_CIRRUS_SMF void   svga_timer(void);
   BX_CIRRUS_SMF void   svga_modeupdate(void);
-  BX_CIRRUS_SMF void   svga_update(void);
 
   BX_CIRRUS_SMF void   svga_init_members();
 

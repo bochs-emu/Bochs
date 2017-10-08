@@ -100,6 +100,7 @@ void bx_vgacore_c::init(void)
 {
   unsigned x,y;
 
+  BX_VGA_THIS vgaext = SIM->get_param_string(BXPN_VGA_EXTENSION);
   BX_VGA_THIS extension_init = 0;
   BX_VGA_THIS pci_enabled = 0;
 
@@ -116,10 +117,8 @@ void bx_vgacore_c::init(void)
     for (x = 0; x < BX_VGA_THIS s.num_x_tiles; x++)
       SET_TILE_UPDATED(x, y, 0);
 
-  char *strptr = SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr();
-  if (!BX_VGA_THIS extension_init &&
-      (strlen(strptr) > 0) && strcmp(strptr, "none")) {
-    BX_PANIC(("unknown display extension: %s", strptr));
+  if (!BX_VGA_THIS extension_init && !BX_VGA_THIS vgaext->isempty()) {
+    BX_PANIC(("unknown display extension: %s", BX_VGA_THIS vgaext->getptr()));
   }
   if (!BX_VGA_THIS pci_enabled) {
     BX_MEM(0)->load_ROM(SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr(), 0xc0000, 1);
@@ -128,8 +127,6 @@ void bx_vgacore_c::init(void)
 
 void bx_vgacore_c::init_standard_vga(void)
 {
-  char *extname;
-
   // initialize VGA controllers and other internal stuff
   BX_VGA_THIS s.vga_enabled = 1;
   BX_VGA_THIS s.misc_output.color_emulation  = 1;
@@ -165,8 +162,7 @@ void bx_vgacore_c::init_standard_vga(void)
   BX_VGA_THIS s.vga_override = 0;
 
   // initialize memory, handlers and timer (depending on extension)
-  extname = SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr();
-  if ((strlen(extname) == 0) || (!strcmp(extname, "none"))) {
+  if (BX_VGA_THIS vgaext->isempty()) {
     BX_VGA_THIS s.memsize = 0x40000;
     if (BX_VGA_THIS s.memory == NULL)
       BX_VGA_THIS s.memory = new Bit8u[BX_VGA_THIS s.memsize];
@@ -257,16 +253,17 @@ void bx_vgacore_c::init_iohandlers(bx_read_handler_t f_read, bx_write_handler_t 
   }
 }
 
-void bx_vgacore_c::init_systemtimer(bx_timer_handler_t f_timer, param_event_handler f_param)
+void bx_vgacore_c::init_systemtimer(void)
 {
   BX_VGA_THIS realtime = SIM->get_param_bool(BXPN_VGA_REALTIME)->get();
   bx_param_num_c *vga_update_freq = SIM->get_param_num(BXPN_VGA_UPDATE_FREQUENCY);
   Bit32u update_interval = (Bit32u)(1000000 / vga_update_freq->get());
   BX_INFO(("interval=%u, mode=%s", update_interval, BX_VGA_THIS realtime ? "realtime":"standard"));
   if (BX_VGA_THIS timer_id == BX_NULL_TIMER_HANDLE) {
-    BX_VGA_THIS timer_id = bx_virt_timer.register_timer(this, f_timer,
+    BX_VGA_THIS timer_id = bx_virt_timer.register_timer(this, vga_timer_handler,
        update_interval, 1, 1, BX_VGA_THIS realtime, "vga");
-    vga_update_freq->set_handler(f_param);
+    vga_update_freq->set_handler(vga_param_handler);
+    vga_update_freq->set_device_param(this);
   }
   // VGA text mode cursor blink frequency 1.875 Hz
   if (update_interval < 266666) {
@@ -2376,4 +2373,53 @@ void bx_vgacore_c::redraw_area(unsigned x0, unsigned y0, unsigned width, unsigne
     memset(BX_VGA_THIS s.text_snapshot, 0,
            sizeof(BX_VGA_THIS s.text_snapshot));
   }
+}
+
+void bx_vgacore_c::refresh_display(void *this_ptr, bx_bool redraw)
+{
+  bx_vgacore_c *vgadev = (bx_vgacore_c *) this_ptr;
+#if BX_SUPPORT_PCI
+  if (vgadev->s.vga_override && (vgadev->s.nvgadev != NULL)) {
+    vgadev->s.nvgadev->refresh_display(vgadev->s.nvgadev, redraw);
+    return;
+  }
+#endif
+  if (redraw) {
+    redraw_area(0, 0, vgadev->s.last_xres, vgadev->s.last_yres);
+  }
+  vga_timer_handler(vgadev);
+}
+
+void bx_vgacore_c::vga_timer_handler(void *this_ptr)
+{
+  bx_vgacore_c *vgadev = (bx_vgacore_c *) this_ptr;
+#if BX_SUPPORT_PCI
+  if (vgadev->s.vga_override && (vgadev->s.nvgadev != NULL)) {
+    vgadev->s.nvgadev->update();
+    return;
+  }
+#endif
+  vgadev->update();
+  bx_gui->flush();
+}
+
+#undef LOG_THIS
+#define LOG_THIS vgadev->
+
+Bit64s bx_vgacore_c::vga_param_handler(bx_param_c *param, int set, Bit64s val)
+{
+  // handler for runtime parameter 'vga: update_freq'
+  if (set) {
+    Bit32u update_interval = (Bit32u)(1000000 / val);
+    bx_vgacore_c *vgadev = (bx_vgacore_c *)param->get_device_param();
+    BX_INFO(("Changing timer interval to %d", update_interval));
+    vga_timer_handler(vgadev);
+    bx_virt_timer.activate_timer(vgadev->timer_id, update_interval, 1);
+    if (update_interval < 266666) {
+      vgadev->s.blink_counter = 266666 / (unsigned)update_interval;
+    } else {
+      vgadev->s.blink_counter = 1;
+    }
+  }
+  return val;
 }

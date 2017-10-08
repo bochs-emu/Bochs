@@ -92,7 +92,7 @@ void bx_vga_c::init_vga_extension(void)
   Bit16u max_xres, max_yres, max_bpp;
 
   BX_VGA_THIS init_iohandlers(read_handler, write_handler);
-  BX_VGA_THIS init_systemtimer(timer_handler, vga_param_handler);
+  BX_VGA_THIS init_systemtimer();
   BX_VGA_THIS pci_enabled = SIM->is_pci_device("pcivga");
 
   // The following is for the VBE display extension
@@ -100,7 +100,7 @@ void bx_vga_c::init_vga_extension(void)
   BX_VGA_THIS vbe.enabled = 0;
   BX_VGA_THIS vbe.dac_8bit = 0;
   BX_VGA_THIS vbe.base_address = 0x0000;
-  if (!strcmp(SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr(), "vbe")) {
+  if (!strcmp(BX_VGA_THIS vgaext->getptr(), "vbe")) {
     BX_VGA_THIS put("BXVGA");
     for (addr=VBE_DISPI_IOPORT_INDEX; addr<=VBE_DISPI_IOPORT_DATA; addr++) {
       DEV_register_ioread_handler(this, vbe_read_handler, addr, "vga video", 7);
@@ -326,64 +326,10 @@ void bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_l
   }
 }
 
-Bit64s bx_vga_c::vga_param_handler(bx_param_c *param, int set, Bit64s val)
-{
-  // handler for runtime parameter 'vga: update_freq'
-  if (set) {
-    Bit32u update_interval = (Bit32u)(1000000 / val);
-    BX_INFO(("Changing timer interval to %d", update_interval));
-    BX_VGA_THIS timer_handler(theVga);
-    bx_virt_timer.activate_timer(BX_VGA_THIS timer_id, update_interval, 1);
-    if (update_interval < 300000) {
-      BX_VGA_THIS s.blink_counter = 300000 / (unsigned)update_interval;
-    } else {
-      BX_VGA_THIS s.blink_counter = 1;
-    }
-  }
-  return val;
-}
-
-void bx_vga_c::refresh_display(void *this_ptr, bx_bool redraw)
-{
-#if BX_SUPPORT_PCI
-  if (BX_VGA_THIS s.vga_override && (BX_VGA_THIS s.nvgadev != NULL)) {
-    BX_VGA_THIS s.nvgadev->refresh_display(BX_VGA_THIS s.nvgadev, redraw);
-    return;
-  }
-#endif
-  if (redraw) {
-    redraw_area(0, 0, BX_VGA_THIS s.last_xres, BX_VGA_THIS s.last_yres);
-  }
-  timer_handler(this_ptr);
-}
-
-void bx_vga_c::timer_handler(void *this_ptr)
-{
-#if BX_USE_VGA_SMF == 0
-  bx_vga_c *class_ptr = (bx_vga_c *) this_ptr;
-  class_ptr->timer();
-}
-
-void bx_vga_c::timer(void)
-{
-#else
-  UNUSED(this_ptr);
-#endif
-
-  update();
-  bx_gui->flush();
-}
-
 void bx_vga_c::update(void)
 {
   unsigned iHeight, iWidth;
 
-#if BX_SUPPORT_PCI
-  if (BX_VGA_THIS s.vga_override && (BX_VGA_THIS s.nvgadev != NULL)) {
-    BX_VGA_THIS s.nvgadev->update();
-    return;
-  }
-#endif
   if (BX_VGA_THIS vbe.enabled) {
     /* no screen update necessary */
     if ((BX_VGA_THIS s.vga_mem_updated==0) && BX_VGA_THIS s.graphics_ctrl.graphics_alpha)

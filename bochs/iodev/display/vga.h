@@ -105,12 +105,6 @@ public:
                              unsigned width, unsigned height);
 
   virtual void   init_vga_extension(void);
-  virtual void   refresh_display(void *this_ptr, bx_bool redraw);
-
-  static void     timer_handler(void *);
-#if BX_USE_VGA_SMF == 0
-  BX_VGA_SMF void timer(void);
-#endif
 
 #if BX_SUPPORT_PCI
   virtual void pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
@@ -119,8 +113,6 @@ public:
   virtual void debug_dump(int argc, char **argv);
 #endif
 
-  static Bit64s   vga_param_handler(bx_param_c *param, int set, Bit64s val);
-
 protected:
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
 #if BX_USE_VGA_SMF
@@ -128,7 +120,7 @@ protected:
 #endif
   void  write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log);
 
-  BX_VGA_SMF void update(void);
+  virtual void update(void);
 
   // Bochs VBE section
 #if BX_SUPPORT_PCI

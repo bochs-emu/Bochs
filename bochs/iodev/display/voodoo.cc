@@ -633,6 +633,7 @@ void bx_voodoo_c::refresh_display(void *this_ptr, bx_bool redraw)
     redraw_area(0, 0, v->fbi.width, v->fbi.height);
   }
   vertical_timer_handler(this_ptr);
+  update();
 }
 
 void bx_voodoo_c::vertical_timer_handler(void *this_ptr)
