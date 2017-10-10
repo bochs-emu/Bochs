@@ -257,7 +257,6 @@ void bx_svga_cirrus_c::init_vga_extension(void)
   BX_CIRRUS_THIS put("CIRRUS");
   // initialize SVGA stuffs.
   BX_CIRRUS_THIS bx_vgacore_c::init_iohandlers(svga_read_handler, svga_write_handler);
-  BX_CIRRUS_THIS bx_vgacore_c::init_systemtimer();
   BX_CIRRUS_THIS pci_enabled = SIM->is_pci_device("cirrus");
   BX_CIRRUS_THIS svga_init_members();
 #if BX_SUPPORT_PCI
@@ -438,20 +437,11 @@ void bx_svga_cirrus_c::after_restore_state(void)
   }
 }
 
-void bx_svga_cirrus_c::redraw_area(unsigned x0, unsigned y0,
-                              unsigned width, unsigned height)
+void bx_svga_cirrus_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
+                                   unsigned height)
 {
   unsigned xti, yti, xt0, xt1, yt0, yt1;
 
-  if ((width == 0) || (height == 0)) {
-    return;
-  }
-#if BX_SUPPORT_PCI
-  if (BX_CIRRUS_THIS s.vga_override && (BX_CIRRUS_THIS s.nvgadev != NULL)) {
-    BX_CIRRUS_THIS s.nvgadev->redraw_area(x0, y0, width, height);
-    return;
-  }
-#endif
   if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x01) == CIRRUS_SR7_BPP_VGA) {
     BX_CIRRUS_THIS bx_vgacore_c::redraw_area(x0,y0,width,height);
     return;
@@ -1802,8 +1792,8 @@ void bx_svga_cirrus_c::svga_write_sequencer(Bit32u address, unsigned index, Bit8
   }
 
   if (update_cursor) {
-    BX_CIRRUS_THIS redraw_area(x, y, size, size);
-    BX_CIRRUS_THIS redraw_area(BX_CIRRUS_THIS hw_cursor.x, BX_CIRRUS_THIS hw_cursor.y, BX_CIRRUS_THIS hw_cursor.size, BX_CIRRUS_THIS hw_cursor.size);
+    BX_CIRRUS_THIS vga_redraw_area(x, y, size, size);
+    BX_CIRRUS_THIS vga_redraw_area(BX_CIRRUS_THIS hw_cursor.x, BX_CIRRUS_THIS hw_cursor.y, BX_CIRRUS_THIS hw_cursor.size, BX_CIRRUS_THIS hw_cursor.size);
   }
 
   if (index <= CIRRUS_SEQENCER_MAX) {

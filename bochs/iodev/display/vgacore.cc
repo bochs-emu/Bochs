@@ -173,6 +173,8 @@ void bx_vgacore_c::init_standard_vga(void)
 
   // video card with BIOS ROM
   DEV_cmos_set_reg(0x14, (DEV_cmos_get_reg(0x14) & 0xcf) | 0x00);
+
+  BX_VGA_THIS init_systemtimer();
 }
 
 void bx_vgacore_c::init_gui(void)
@@ -374,7 +376,7 @@ void bx_vgacore_c::after_restore_state(void)
   if (!BX_VGA_THIS s.vga_override) {
     BX_VGA_THIS s.last_xres = BX_VGA_THIS s.max_xres;
     BX_VGA_THIS s.last_yres = BX_VGA_THIS s.max_yres;
-    BX_VGA_THIS redraw_area(0, 0, BX_VGA_THIS s.max_xres, BX_VGA_THIS s.max_yres);
+    BX_VGA_THIS vga_redraw_area(0, 0, BX_VGA_THIS s.max_xres, BX_VGA_THIS s.max_yres);
   }
   BX_VGA_THIS update();
   bx_gui->flush();
@@ -1287,7 +1289,7 @@ void bx_vgacore_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool 
   }
   if (needs_update) {
     // Mark all video as updated so the changes will go through
-    BX_VGA_THIS redraw_area(0, 0, BX_VGA_THIS s.last_xres, BX_VGA_THIS s.last_yres);
+    BX_VGA_THIS vga_redraw_area(0, 0, BX_VGA_THIS s.last_xres, BX_VGA_THIS s.last_yres);
   }
 }
 
@@ -1300,7 +1302,7 @@ void bx_vgacore_c::set_override(bx_bool enabled, void *dev)
   if (!enabled) {
     bx_gui->dimension_update(BX_VGA_THIS s.last_xres, BX_VGA_THIS s.last_yres,
                              BX_VGA_THIS s.last_fh, BX_VGA_THIS s.last_fw, BX_VGA_THIS s.last_bpp);
-    BX_VGA_THIS redraw_area(0, 0, BX_VGA_THIS s.last_xres, BX_VGA_THIS s.last_yres);
+    BX_VGA_THIS vga_redraw_area(0, 0, BX_VGA_THIS s.last_xres, BX_VGA_THIS s.last_yres);
   }
 }
 
@@ -2336,13 +2338,24 @@ void bx_vgacore_c::debug_dump(void)
 }
 #endif
 
-void bx_vgacore_c::redraw_area(unsigned x0, unsigned y0, unsigned width, unsigned height)
+void bx_vgacore_c::vga_redraw_area(unsigned x0, unsigned y0, unsigned width,
+                                   unsigned height)
 {
-  unsigned xti, yti, xt0, xt1, yt0, yt1, xmax, ymax;
-
   if (width == 0 || height == 0) {
     return;
   }
+#if BX_SUPPORT_PCI
+  if (BX_VGA_THIS s.vga_override && (BX_VGA_THIS s.nvgadev != NULL)) {
+    BX_VGA_THIS s.nvgadev->redraw_area(x0, y0, width, height);
+    return;
+  }
+#endif
+  redraw_area(x0, y0, width, height);
+}
+
+void bx_vgacore_c::redraw_area(unsigned x0, unsigned y0, unsigned width, unsigned height)
+{
+  unsigned xti, yti, xt0, xt1, yt0, yt1, xmax, ymax;
 
   BX_VGA_THIS s.vga_mem_updated = 1;
 
@@ -2385,7 +2398,7 @@ void bx_vgacore_c::refresh_display(void *this_ptr, bx_bool redraw)
   }
 #endif
   if (redraw) {
-    redraw_area(0, 0, vgadev->s.last_xres, vgadev->s.last_yres);
+    vga_redraw_area(0, 0, vgadev->s.last_xres, vgadev->s.last_yres);
   }
   vga_timer_handler(vgadev);
 }

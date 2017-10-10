@@ -2724,7 +2724,12 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     }
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "extension=", 10)) {
-        SIM->get_param_string(BXPN_VGA_EXTENSION)->set(&params[i][10]);
+        const char *vgaext = &params[i][10];
+        SIM->get_param_string(BXPN_VGA_EXTENSION)->set(vgaext);
+        if ((strlen(vgaext) > 0) &&
+            (strcmp(vgaext, "none") && strcmp(vgaext, "vbe") && strcmp(vgaext, "cirrus"))) {
+          PLUG_load_vga_plugin(vgaext);
+        }
       } else if (!strncmp(params[i], "update_freq=", 12)) {
         SIM->get_param_num(BXPN_VGA_UPDATE_FREQUENCY)->set(atol(&params[i][12]));
       } else if (!strncmp(params[i], "realtime=", 9)) {

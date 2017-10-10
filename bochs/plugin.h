@@ -89,6 +89,7 @@ extern "C" {
 #define PLUG_load_snd_plugin(name) bx_load_plugin(name,PLUGTYPE_SOUND)
 #define PLUG_load_net_plugin(name) bx_load_plugin(name,PLUGTYPE_NETWORK)
 #define PLUG_load_usb_plugin(name) bx_load_plugin(name,PLUGTYPE_USBDEV)
+#define PLUG_load_vga_plugin(name) bx_load_plugin(name,PLUGTYPE_VGA)
 #define PLUG_load_user_plugin(name) {bx_load_plugin(name,PLUGTYPE_USER);}
 #define PLUG_unload_plugin(name) {bx_unload_plugin(#name,1);}
 #define PLUG_unload_opt_plugin(name) bx_unload_plugin(name,1)
@@ -121,6 +122,7 @@ extern "C" {
 #define PLUG_load_snd_plugin(name) bx_load_plugin2(name,PLUGTYPE_SOUND)
 #define PLUG_load_net_plugin(name) bx_load_plugin2(name,PLUGTYPE_NETWORK)
 #define PLUG_load_usb_plugin(name) bx_load_plugin2(name,PLUGTYPE_USBDEV)
+#define PLUG_load_vga_plugin(name) bx_load_plugin2(name,PLUGTYPE_VGA)
 #define PLUG_unload_plugin(name) {lib##name##_LTX_plugin_fini();}
 #define PLUG_unload_opt_plugin(name) bx_unload_opt_plugin(name,1);
 
@@ -227,7 +229,7 @@ extern "C" {
 #define DEV_vga_mem_read(addr) (bx_devices.pluginVgaDevice->mem_read(addr))
 #define DEV_vga_mem_write(addr, val) (bx_devices.pluginVgaDevice->mem_write(addr, val))
 #define DEV_vga_redraw_area(left, top, right, bottom) \
-  (bx_devices.pluginVgaDevice->redraw_area(left, top, right, bottom))
+  (bx_devices.pluginVgaDevice->vga_redraw_area(left, top, right, bottom))
 #define DEV_vga_get_text_snapshot(rawsnap, height, width) \
   (bx_devices.pluginVgaDevice->get_text_snapshot(rawsnap, height, width))
 #define DEV_vga_refresh(a) \

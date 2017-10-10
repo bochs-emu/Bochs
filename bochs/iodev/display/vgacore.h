@@ -72,8 +72,10 @@ public:
   virtual void   debug_dump(void);
 #endif
 
-  virtual void   redraw_area(unsigned x0, unsigned y0,
-                             unsigned width, unsigned height);
+  virtual void   vga_redraw_area(unsigned x0, unsigned y0, unsigned width,
+                                 unsigned height);
+  virtual void   redraw_area(unsigned x0, unsigned y0, unsigned width,
+                             unsigned height);
   virtual void   refresh_display(void *this_ptr, bx_bool redraw);
   virtual void   get_text_snapshot(Bit8u **text_snapshot, unsigned *txHeight,
                                    unsigned *txWidth);

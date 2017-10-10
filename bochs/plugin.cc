@@ -515,6 +515,7 @@ void pluginRegisterDeviceDevmodel(plugin_t *plugin, plugintype_t type, bx_devmod
 
   switch (type) {
     case PLUGTYPE_CORE:
+    case PLUGTYPE_VGA:
       devlist = &core_devices;
       break;
     case PLUGTYPE_STANDARD:
@@ -797,6 +798,7 @@ typedef struct {
 #define BUILTIN_SND_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_SOUND, lib##mod##_sound_plugin_init, lib##mod##_sound_plugin_fini, 0}
 #define BUILTIN_NET_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_NETWORK, lib##mod##_net_plugin_init, lib##mod##_net_plugin_fini, 0}
 #define BUILTIN_USB_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_USBDEV, lib##mod##_dev_plugin_init, lib##mod##_dev_plugin_fini, 0}
+#define BUILTIN_VGA_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_VGA, lib##mod##_LTX_plugin_init, lib##mod##_LTX_plugin_fini, 0}
 
 static builtin_plugin_t builtin_plugins[] = {
 #if BX_WITH_AMIGAOS
@@ -884,6 +886,7 @@ static builtin_plugin_t builtin_plugins[] = {
   BUILTIN_OPT_PLUGIN_ENTRY(usb_xhci),
 #endif
 #if BX_SUPPORT_VOODOO
+  BUILTIN_VGA_PLUGIN_ENTRY(voodoo),
   BUILTIN_OPT_PLUGIN_ENTRY(voodoo),
 #endif
 #if BX_SUPPORT_SOUNDLOW

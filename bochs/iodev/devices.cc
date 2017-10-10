@@ -210,8 +210,10 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 #else
     BX_PANIC(("Bochs is not compiled with Cirrus support"));
 #endif
-  } else {
+  } else if (!strcmp(vga_ext, "vbe") || !strcmp(vga_ext, "none")) {
     PLUG_load_plugin(vga, PLUGTYPE_CORE);
+  } else if (pluginVgaDevice == &stubVga) {
+    BX_PANIC(("No VGA compatible display adapter present"));
   }
   PLUG_load_plugin(floppy, PLUGTYPE_CORE);
 

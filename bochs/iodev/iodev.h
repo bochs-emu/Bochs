@@ -242,9 +242,9 @@ class BOCHSAPI bx_vga_stub_c
 #endif
 {
 public:
-  virtual void redraw_area(unsigned x0, unsigned y0,
-                           unsigned width, unsigned height) {
-    STUBFUNC(vga, redraw_area);
+  virtual void vga_redraw_area(unsigned x0, unsigned y0, unsigned width,
+                               unsigned height) {
+    STUBFUNC(vga, vga_redraw_area);
   }
   virtual Bit8u mem_read(bx_phy_address addr) {
     STUBFUNC(vga, mem_read);  return 0;

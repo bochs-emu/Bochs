@@ -92,7 +92,6 @@ void bx_vga_c::init_vga_extension(void)
   Bit16u max_xres, max_yres, max_bpp;
 
   BX_VGA_THIS init_iohandlers(read_handler, write_handler);
-  BX_VGA_THIS init_systemtimer();
   BX_VGA_THIS pci_enabled = SIM->is_pci_device("pcivga");
 
   // The following is for the VBE display extension
@@ -722,19 +721,10 @@ void bx_vga_c::mem_write(bx_phy_address addr, Bit8u value)
 }
 
 void bx_vga_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
-                      unsigned height)
+                           unsigned height)
 {
   unsigned xti, yti, xt0, xt1, yt0, yt1, xmax, ymax;
 
-  if (width == 0 || height == 0) {
-    return;
-  }
-#if BX_SUPPORT_PCI
-  if (BX_VGA_THIS s.vga_override && (BX_VGA_THIS s.nvgadev != NULL)) {
-    BX_VGA_THIS s.nvgadev->redraw_area(x0, y0, width, height);
-    return;
-  }
-#endif
   if (BX_VGA_THIS vbe.enabled) {
     BX_VGA_THIS s.vga_mem_updated = 1;
     xmax = BX_VGA_THIS vbe.xres;
