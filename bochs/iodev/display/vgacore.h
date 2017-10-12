@@ -79,7 +79,7 @@ public:
   virtual void   refresh_display(void *this_ptr, bx_bool redraw);
   virtual void   get_text_snapshot(Bit8u **text_snapshot, unsigned *txHeight,
                                    unsigned *txWidth);
-  virtual void   init_vga_extension(void) {}
+  virtual bx_bool init_vga_extension(void) {return 0;}
 
   static void    vga_timer_handler(void *);
   static Bit64s  vga_param_handler(bx_param_c *param, int set, Bit64s val);
@@ -243,7 +243,6 @@ protected:
   int timer_id;
   bx_bool realtime;
   bx_param_string_c *vgaext;
-  bx_bool extension_init;
   bx_bool pci_enabled;
 };
 

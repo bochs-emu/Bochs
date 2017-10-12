@@ -68,7 +68,7 @@ public:
   bx_svga_cirrus_c();
   virtual ~bx_svga_cirrus_c();
 
-  virtual void init_vga_extension(void);
+  virtual bx_bool init_vga_extension(void);
   virtual void reset(unsigned type);
   virtual void redraw_area(unsigned x0, unsigned y0,
                            unsigned width, unsigned height);

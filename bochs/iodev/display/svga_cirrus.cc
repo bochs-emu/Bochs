@@ -252,7 +252,7 @@ bx_svga_cirrus_c::~bx_svga_cirrus_c()
   BX_DEBUG(("Exit"));
 }
 
-void bx_svga_cirrus_c::init_vga_extension(void)
+bx_bool bx_svga_cirrus_c::init_vga_extension(void)
 {
   BX_CIRRUS_THIS put("CIRRUS");
   // initialize SVGA stuffs.
@@ -272,11 +272,11 @@ void bx_svga_cirrus_c::init_vga_extension(void)
   }
   BX_CIRRUS_THIS s.max_xres = 1600;
   BX_CIRRUS_THIS s.max_yres = 1200;
-  BX_CIRRUS_THIS extension_init = 1;
 #if BX_DEBUGGER
   // register device for the 'info device' command (calls debug_dump())
   bx_dbg_register_debug_info("cirrus", this);
 #endif
+  return 1;
 }
 
 void bx_svga_cirrus_c::svga_init_members()

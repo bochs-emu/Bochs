@@ -86,10 +86,11 @@ bx_vga_c::~bx_vga_c()
   BX_DEBUG(("Exit"));
 }
 
-void bx_vga_c::init_vga_extension(void)
+bx_bool bx_vga_c::init_vga_extension(void)
 {
   unsigned addr;
   Bit16u max_xres, max_yres, max_bpp;
+  bx_bool ret = 0;
 
   BX_VGA_THIS init_iohandlers(read_handler, write_handler);
   BX_VGA_THIS pci_enabled = SIM->is_pci_device("pcivga");
@@ -148,7 +149,7 @@ void bx_vga_c::init_vga_extension(void)
     BX_VGA_THIS s.max_xres = BX_VGA_THIS vbe.max_xres;
     BX_VGA_THIS s.max_yres = BX_VGA_THIS vbe.max_yres;
     BX_VGA_THIS vbe_present = 1;
-    BX_VGA_THIS extension_init = 1;
+    ret = 1;
 
     BX_INFO(("VBE Bochs Display Extension Enabled"));
   }
@@ -176,6 +177,7 @@ void bx_vga_c::init_vga_extension(void)
   // register device for the 'info device' command (calls debug_dump())
   bx_dbg_register_debug_info("vga", this);
 #endif
+  return ret;
 }
 
 void bx_vga_c::reset(unsigned type)

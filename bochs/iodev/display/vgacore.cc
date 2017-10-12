@@ -101,11 +101,16 @@ void bx_vgacore_c::init(void)
   unsigned x,y;
 
   BX_VGA_THIS vgaext = SIM->get_param_string(BXPN_VGA_EXTENSION);
-  BX_VGA_THIS extension_init = 0;
   BX_VGA_THIS pci_enabled = 0;
 
   BX_VGA_THIS init_standard_vga();
-  BX_VGA_THIS init_vga_extension();
+  if (!BX_VGA_THIS init_vga_extension()) {
+    // VGA memory not yet initialized
+    BX_VGA_THIS s.memsize = 0x40000;
+    if (BX_VGA_THIS s.memory == NULL)
+      BX_VGA_THIS s.memory = new Bit8u[BX_VGA_THIS s.memsize];
+    memset(BX_VGA_THIS s.memory, 0, BX_VGA_THIS s.memsize);
+  }
   BX_VGA_THIS init_gui();
 
   BX_VGA_THIS s.num_x_tiles = BX_VGA_THIS s.max_xres / X_TILESIZE +
@@ -117,9 +122,6 @@ void bx_vgacore_c::init(void)
     for (x = 0; x < BX_VGA_THIS s.num_x_tiles; x++)
       SET_TILE_UPDATED(x, y, 0);
 
-  if (!BX_VGA_THIS extension_init && !BX_VGA_THIS vgaext->isempty()) {
-    BX_PANIC(("unknown display extension: %s", BX_VGA_THIS vgaext->getptr()));
-  }
   if (!BX_VGA_THIS pci_enabled) {
     BX_MEM(0)->load_ROM(SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr(), 0xc0000, 1);
   }
@@ -161,20 +163,14 @@ void bx_vgacore_c::init_standard_vga(void)
 
   BX_VGA_THIS s.vga_override = 0;
 
-  // initialize memory, handlers and timer (depending on extension)
-  if (BX_VGA_THIS vgaext->isempty()) {
-    BX_VGA_THIS s.memsize = 0x40000;
-    if (BX_VGA_THIS s.memory == NULL)
-      BX_VGA_THIS s.memory = new Bit8u[BX_VGA_THIS s.memsize];
-    memset(BX_VGA_THIS s.memory, 0, BX_VGA_THIS s.memsize);
-  }
+  // initialize memory handlers, timer and CMOS
   DEV_register_memory_handlers(BX_VGA_THIS_PTR, mem_read_handler, mem_write_handler,
                                0xa0000, 0xbffff);
 
+  BX_VGA_THIS init_systemtimer();
+
   // video card with BIOS ROM
   DEV_cmos_set_reg(0x14, (DEV_cmos_get_reg(0x14) & 0xcf) | 0x00);
-
-  BX_VGA_THIS init_systemtimer();
 }
 
 void bx_vgacore_c::init_gui(void)
