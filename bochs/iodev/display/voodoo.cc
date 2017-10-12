@@ -75,6 +75,7 @@
 #define LOG_THIS theVoodooDevice->
 
 bx_voodoo_c* theVoodooDevice = NULL;
+bx_voodoo_vga_c* theVoodooVga = NULL;
 
 #include "voodoo_types.h"
 #include "voodoo_data.h"
@@ -134,7 +135,13 @@ Bit32s voodoo_options_save(FILE *fp)
 int CDECL libvoodoo_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
 {
   theVoodooDevice = new bx_voodoo_c();
-  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theVoodooDevice, BX_PLUGIN_VOODOO);
+  if (type == PLUGTYPE_VGA) {
+    theVoodooVga = new bx_voodoo_vga_c();
+    bx_devices.pluginVgaDevice = theVoodooVga;
+    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theVoodooVga, BX_PLUGIN_VOODOO);
+  } else {
+    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theVoodooDevice, BX_PLUGIN_VOODOO);
+  }
   // add new configuration parameter for the config interface
   voodoo_init_options();
   // register add-on option for bochsrc and command line
@@ -147,6 +154,9 @@ void CDECL libvoodoo_LTX_plugin_fini(void)
   SIM->unregister_addon_option("voodoo");
   bx_list_c *menu = (bx_list_c*)SIM->get_param("display");
   menu->remove("voodoo");
+  if (theVoodooVga != NULL) {
+    delete theVoodooVga;
+  }
   delete theVoodooDevice;
 }
 
@@ -276,11 +286,14 @@ void bx_voodoo_c::init(void)
   v = new voodoo_state;
   memset(v, 0, sizeof(voodoo_state));
   BX_VOODOO_THIS s.model = (Bit8u)SIM->get_param_enum("model", base)->get();
-  if (BX_VOODOO_THIS s.model == VOODOO_2) {
+  if (BX_VOODOO_THIS s.model == VOODOO_1) {
+    init_pci_conf(0x121a, 0x0001, 0x02, 0x000000, 0x00);
+  } else if (BX_VOODOO_THIS s.model == VOODOO_2) {
     init_pci_conf(0x121a, 0x0002, 0x02, 0x038000, 0x00);
     BX_VOODOO_THIS pci_conf[0x10] = 0x08;
   } else {
-    init_pci_conf(0x121a, 0x0001, 0x02, 0x000000, 0x00);
+    BX_PANIC(("Voodoo model '%s' not supported yet",
+              SIM->get_param_enum("model", base)->get_selected()));
   }
   BX_VOODOO_THIS pci_conf[0x3d] = BX_PCI_INTA;
   BX_VOODOO_THIS pci_base_address[0] = 0;
@@ -853,6 +866,51 @@ void bx_voodoo_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len
     BX_DEBUG(("write PCI register 0x%02x value 0x%04x", address, value));
   else if (io_len == 4)
     BX_DEBUG(("write PCI register 0x%02x value 0x%08x", address, value));
+}
+
+bx_voodoo_vga_c::bx_voodoo_vga_c() : bx_vgacore_c()
+{
+  put("VVGA");
+}
+
+bx_voodoo_vga_c::~bx_voodoo_vga_c()
+{
+}
+
+bx_bool bx_voodoo_vga_c::init_vga_extension(void)
+{
+  init_iohandlers(read_handler, write_handler);
+  theVoodooDevice->init();
+  return 0;
+}
+
+void bx_voodoo_vga_c::reset(unsigned type)
+{
+  theVoodooDevice->reset(type);
+}
+
+void bx_voodoo_vga_c::register_state(void)
+{
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "voodoo_vga", "Voodoo VGA State");
+  bx_vgacore_c::register_state(list);
+  theVoodooDevice->register_state();
+}
+
+void bx_voodoo_vga_c::after_restore_state(void)
+{
+  bx_vgacore_c::after_restore_state();
+  theVoodooDevice->after_restore_state();
+}
+
+void bx_voodoo_vga_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
+                                  unsigned height)
+{
+  bx_vgacore_c::redraw_area(x0, y0, width, height);
+}
+
+void bx_voodoo_vga_c::update(void)
+{
+  BX_VVGA_THIS bx_vgacore_c::update();
 }
 
 #endif // BX_SUPPORT_PCI && BX_SUPPORT_VOODOO

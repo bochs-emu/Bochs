@@ -23,6 +23,7 @@
 
 #define BX_VOODOO_THIS theVoodooDevice->
 #define BX_VOODOO_THIS_PTR theVoodooDevice
+#define BX_VVGA_THIS theVoodooVga->
 
 typedef struct {
   Bit8u model;
@@ -80,4 +81,21 @@ private:
   static void vertical_timer_handler(void *);
 };
 
+class bx_voodoo_vga_c : public bx_vgacore_c {
+public:
+  bx_voodoo_vga_c();
+  virtual ~bx_voodoo_vga_c();
+
+  virtual void   reset(unsigned type);
+  virtual void   register_state(void);
+  virtual void   after_restore_state(void);
+
+  virtual void   redraw_area(unsigned x0, unsigned y0,
+                             unsigned width, unsigned height);
+
+  virtual bx_bool init_vga_extension(void);
+
+protected:
+  virtual void   update(void);
+};
 #endif
