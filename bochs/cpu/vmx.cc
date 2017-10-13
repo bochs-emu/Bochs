@@ -107,6 +107,8 @@ static const char *VMX_vmexit_reason_name[] =
   /* 62 */  "PML Log Full",
   /* 63 */  "XSAVES",
   /* 64 */  "XRSTORS",
+  /* 65 */  "Reserved65",
+  /* 66 */  "Sub-Page Protection",
 };
 
 ////////////////////////////////////////////////////////////

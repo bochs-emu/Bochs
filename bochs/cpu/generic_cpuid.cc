@@ -1420,7 +1420,7 @@ Bit32u bx_generic_cpuid_t::get_ext4_cpuid_features(void) const
   //   [4:4]    OSPKE: OS has set CR4.PKE to enable protection keys
   //  [31:5]    reserved
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX512_VBMI))
-    features |= BX_CPUID_EXT4_AVX512VBMI;
+    features |= BX_CPUID_EXT4_AVX512_VBMI;
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PKU)) {
     features |= BX_CPUID_EXT4_PKU;

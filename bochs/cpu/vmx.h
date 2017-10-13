@@ -135,6 +135,8 @@ enum VMX_vmexit_reason {
    VMX_VMEXIT_PML_LOGFULL = 62,
    VMX_VMEXIT_XSAVES = 63,
    VMX_VMEXIT_XRSTORS = 64,
+   VMX_VMEXIT_RESERVED65 = 65,
+   VMX_VMEXIT_SPP = 66,
    VMX_VMEXIT_LAST_REASON
 };
 
@@ -264,6 +266,8 @@ enum VMFunctions {
 #define VMCS_64BIT_CONTROL_XSS_EXITING_BITMAP_HI           0x0000202D
 #define VMCS_64BIT_CONTROL_ENCLS_EXITING_BITMAP            0x0000202E /* ENCLS/SGX */
 #define VMCS_64BIT_CONTROL_ENCLS_EXITING_BITMAP_HI         0x0000202F
+#define VMCS_64BIT_CONTROL_SPPTP                           0x00002030 /* Sup-Page Write Protection (not implemented yet) */
+#define VMCS_64BIT_CONTROL_SPPTP_HI                        0x00002031
 #define VMCS_64BIT_CONTROL_TSC_MULTIPLIER                  0x00002032 /* TSC Scaling */
 #define VMCS_64BIT_CONTROL_TSC_MULTIPLIER_HI               0x00002033
 
@@ -696,6 +700,7 @@ typedef struct bx_VMCS
 #define VMX_VM_EXEC_CTRL3_SUPPRESS_GUEST_VMX_TRACE  (1 << 19) /* Processor Trace */
 #define VMX_VM_EXEC_CTRL3_XSAVES_XRSTORS            (1 << 20) /* XSAVES */
 #define VMX_VM_EXEC_CTRL3_MBE_CTRL                  (1 << 22) /* Mode Based Execution Control (not implemented yet) */
+#define VMX_VM_EXEC_CTRL3_SUBPAGE_WR_PROTECT_CTRL   (1 << 23) /* Sub-Page Write Protection Control (not implemented yet) */
 #define VMX_VM_EXEC_CTRL3_TSC_SCALING               (1 << 25) /* TSC Scaling */
 
 #define VMX_VM_EXEC_CTRL3_SUPPORTED_BITS \
