@@ -829,7 +829,7 @@ void bx_voodoo_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len
           if (!v->pci.fifo.enabled && !fifo_empty(&v->pci.fifo)) {
             bx_set_event(&fifo_wakeup);
           }
-          BX_DEBUG(("PCI FIFO now %sabled (not implemented)", v->pci.fifo.enabled ? "en":"dis"));
+          BX_DEBUG(("PCI FIFO now %sabled", v->pci.fifo.enabled ? "en":"dis"));
         }
         if (((address+i) == 0x41) && (BX_VOODOO_THIS s.model == VOODOO_2)) {
           value8 &= 0x0f;
@@ -867,6 +867,9 @@ void bx_voodoo_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len
   else if (io_len == 4)
     BX_DEBUG(("write PCI register 0x%02x value 0x%08x", address, value));
 }
+
+#undef LOG_THIS
+#define LOG_THIS theVoodooVga->
 
 bx_voodoo_vga_c::bx_voodoo_vga_c() : bx_vgacore_c()
 {

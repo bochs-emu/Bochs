@@ -2405,10 +2405,12 @@ void bx_vgacore_c::vga_timer_handler(void *this_ptr)
 #if BX_SUPPORT_PCI
   if (vgadev->s.vga_override && (vgadev->s.nvgadev != NULL)) {
     vgadev->s.nvgadev->update();
-    return;
   }
+  else
 #endif
-  vgadev->update();
+  {
+    vgadev->update();
+  }
   bx_gui->flush();
 }
 
