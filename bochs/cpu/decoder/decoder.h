@@ -100,6 +100,7 @@ enum {
   BX_ISA_AVX512_IFMA52,           /* AVX-512 IFMA52 Instructions */
   BX_ISA_AVX512_VPOPCNTDQ,        /* AVX-512 VPOPCNTD/VPOPCNTQ Instructions */
   BX_ISA_AVX512_VNNI,             /* AVX-512 VNNI Instructions */
+  BX_ISA_AVX512_BITALG,           /* AVX-512 BITALG Instructions */
   BX_ISA_XAPIC,                   /* XAPIC support */
   BX_ISA_X2APIC,                  /* X2APIC support */
   BX_ISA_XAPIC_EXT,               /* XAPIC Extensions support */

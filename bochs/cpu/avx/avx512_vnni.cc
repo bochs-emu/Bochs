@@ -39,13 +39,17 @@
     for (unsigned n=0; n < len; n++)                                                                                         \
       (func) (&dst.vmm128(n), &op1.vmm128(n), &op2.vmm128(n));                                                               \
                                                                                                                              \
-    avx512_write_regd_masked(i, &dst, len, BX_READ_16BIT_OPMASK(i->opmask()));                                               \
+    if (i->opmask())                                                                                                         \
+      avx512_write_regd_masked(i, &dst, len, BX_READ_16BIT_OPMASK(i->opmask()));                                             \
+    else                                                                                                                     \
+      BX_WRITE_AVX_REGZ(i->dst(), dst, len);                                                                                  \
+                                                                                                                             \
     BX_NEXT_INSTR(i);                                                                                                        \
   }
 
-AVX512_3OP_DWORD_EL(VPDPBUSD_MASK_VdqWdqR, xmm_pdpbusd)
-AVX512_3OP_DWORD_EL(VPDPBUSDS_MASK_VdqWdqR, xmm_pdpbusds)
-AVX512_3OP_DWORD_EL(VPDPWSSD_MASK_VdqWdqR, xmm_pdpwssd)
-AVX512_3OP_DWORD_EL(VPDPWSSDS_MASK_VdqWdqR, xmm_pdpwssds)
+AVX512_3OP_DWORD_EL(VPDPBUSD_MASK_VdqHdqWdqR, xmm_pdpbusd)
+AVX512_3OP_DWORD_EL(VPDPBUSDS_MASK_VdqHdqWdqR, xmm_pdpbusds)
+AVX512_3OP_DWORD_EL(VPDPWSSD_MASK_VdqHdqWdqR, xmm_pdpwssd)
+AVX512_3OP_DWORD_EL(VPDPWSSDS_MASK_VdqHdqWdqR, xmm_pdpwssds)
 
 #endif

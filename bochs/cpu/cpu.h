@@ -3858,8 +3858,12 @@ public: // for now...
   BX_SMF BX_INSF_TYPE VPLZCNTD_MASK_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VPLZCNTQ_MASK_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
+  BX_SMF BX_INSF_TYPE VPOPCNTB_MASK_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VPOPCNTW_MASK_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VPOPCNTD_MASK_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VPOPCNTQ_MASK_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF BX_INSF_TYPE VPSHUFBITQMB_MASK_KGqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF BX_INSF_TYPE VPBROADCASTMB2Q_VdqKEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VPBROADCASTMW2D_VdqKEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3882,10 +3886,10 @@ public: // for now...
   BX_SMF BX_INSF_TYPE VPMULTISHIFTQB_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VPMULTISHIFTQB_MASK_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF BX_INSF_TYPE VPDPBUSD_MASK_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE VPDPBUSDS_MASK_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE VPDPWSSD_MASK_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE VPDPWSSDS_MASK_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VPDPBUSD_MASK_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VPDPBUSDS_MASK_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VPDPWSSD_MASK_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VPDPWSSDS_MASK_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 
   BX_SMF BX_INSF_TYPE LZCNT_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

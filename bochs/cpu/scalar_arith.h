@@ -108,6 +108,15 @@ BX_CPP_INLINE unsigned lzcntq(Bit64u val_64)
 
 // popcnt
 
+BX_CPP_INLINE unsigned popcntb(Bit8u val_8)
+{
+  val_8 = ((val_8>>1) & 0x55) + (val_8 & 0x55);
+  val_8 = ((val_8>>2) & 0x33) + (val_8 & 0x33);
+  val_8 = ((val_8>>4) & 0x0F) + (val_8 & 0x0F);
+
+  return val_8;
+}
+
 BX_CPP_INLINE unsigned popcntw(Bit16u val_16)
 {
   val_16 = ((val_16>>1) & 0x5555) + (val_16 & 0x5555);

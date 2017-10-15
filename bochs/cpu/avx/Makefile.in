@@ -58,7 +58,7 @@ AVX_OBJS = \
 	avx512_mask16.o \
 	avx512_mask32.o \
 	avx512_mask64.o \
-	avx512_conflict.o \
+	avx512_bitalg.o \
 	avx512_vnni.o \
 	gather.o \
 	tbm32.o \
@@ -108,7 +108,7 @@ avx512.o: avx512.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../fpu/control_w.h ../crregs.h ../descriptor.h ../decoder/instr.h \
  ../decoder/ia_opcodes.h ../lazy_flags.h ../tlb.h ../icache.h ../apic.h \
  ../xmm.h ../vmx.h ../cpuid.h ../stack.h ../access.h
-avx512_conflict.o: avx512_conflict.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
+avx512_bitalg.o: avx512_bitalg.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
  ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
