@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2015 Stanislav Shwartsman
+//   Copyright (c) 2011-2017 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -1413,14 +1413,42 @@ Bit32u bx_generic_cpuid_t::get_ext4_cpuid_features(void) const
 {
   Bit32u features = 0;
 
-  //   [0:0]    PREFETCHWT1 instruction support
-  //   [1:1]    AVX512 VBMI instructions support
-  //   [2:2]    reserved
-  //   [3:3]    PKU: Protection keys for user-mode pages.
-  //   [4:4]    OSPKE: OS has set CR4.PKE to enable protection keys
-  //  [31:5]    reserved
+  //   [0:0] PREFETCHWT1 instruction support
+  //   [1:1] AVX512 VBMI instructions support
+  //   [2:2] UMIP: Supports user-mode instruction prevention
+  //   [3:3] PKU: Protection keys for user-mode pages.
+  //   [4:4] OSPKE: OS has set CR4.PKE to enable protection keys
+  //   [5:5] reserved
+  //   [6:6] AVX512 VBMI2 instructions support
+  //   [7:7] reserved
+  //   [8:8] GFNI instructions support
+  //   [9:9] VAES instructions support
+  // [10:10] VPCLMULQDQ instruction support
+  // [11:11] AVX512 VNNI instructions support
+  // [12:12] AVX512 BITALG instructions support
+  // [13:13] reserved
+  // [14:14] AVX512 VPOPCNTDQ: AVX512 VPOPCNTD/VPOPCNTQ instructions
+  // [15:15] reserved
+  // [16:16] LA57: LA57 and 5-level paging
+  // [21:17] reserved
+  // [22:22] RDPID: Read Processor ID support
+  // [29:23] reserved
+  // [30:30] SGX_LC: SGX Launch Configuration
+  // [31:31] reserved
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX512_VBMI))
     features |= BX_CPUID_EXT4_AVX512_VBMI;
+
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_UMIP))
+    features |= BX_CPUID_EXT4_UMIP;
+
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX512_VNNI))
+    features |= BX_CPUID_EXT4_AVX512_VNNI;
+
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX512_VPOPCNTDQ))
+    features |= BX_CPUID_EXT4_AVX512_VPOPCNTDQ;
+
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_RDPID))
+    features |= BX_CPUID_EXT4_RDPID;
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PKU)) {
     features |= BX_CPUID_EXT4_PKU;

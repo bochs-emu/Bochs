@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2013-2016 Stanislav Shwartsman
+//   Copyright (c) 2013-2017 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -1506,14 +1506,14 @@ static const BxExtOpcodeInfo_t BxOpcodeTableEVEX[256*3*2] = {
   /* 4E    */ { BxAliasVexW | BxPrefixSSE66, BX_IA_V512_VRSQRT14PS_VpsWps_Kmask },
   /* 4F k0 */ { BxAliasVexW | BxPrefixSSE66, BX_IA_V512_VRSQRT14SS_VssHpsWss_Kmask },
   /* 4F    */ { BxAliasVexW | BxPrefixSSE66, BX_IA_V512_VRSQRT14SS_VssHpsWss_Kmask },
-  /* 50 k0 */ { 0, BX_IA_ERROR },
-  /* 50    */ { 0, BX_IA_ERROR },
-  /* 51 k0 */ { 0, BX_IA_ERROR },
-  /* 51    */ { 0, BX_IA_ERROR },
-  /* 52 k0 */ { 0, BX_IA_ERROR },
-  /* 52    */ { 0, BX_IA_ERROR },
-  /* 53 k0 */ { 0, BX_IA_ERROR },
-  /* 53    */ { 0, BX_IA_ERROR },
+  /* 50 k0 */ { BxVexW0 | BxPrefixSSE66, BX_IA_V512_VPDPBUSD_VdqWdq_Kmask },
+  /* 50    */ { BxVexW0 | BxPrefixSSE66, BX_IA_V512_VPDPBUSD_VdqWdq_Kmask },
+  /* 51 k0 */ { BxVexW0 | BxPrefixSSE66, BX_IA_V512_VPDPBUSDS_VdqWdq_Kmask },
+  /* 51    */ { BxVexW0 | BxPrefixSSE66, BX_IA_V512_VPDPBUSDS_VdqWdq_Kmask },
+  /* 52 k0 */ { BxVexW0 | BxPrefixSSE66, BX_IA_V512_VPDPWSSD_VdqWdq_Kmask },
+  /* 52    */ { BxVexW0 | BxPrefixSSE66, BX_IA_V512_VPDPWSSD_VdqWdq_Kmask },
+  /* 53 k0 */ { BxVexW0 | BxPrefixSSE66, BX_IA_V512_VPDPWSSDS_VdqWdq_Kmask },
+  /* 53    */ { BxVexW0 | BxPrefixSSE66, BX_IA_V512_VPDPWSSDS_VdqWdq_Kmask },
   /* 54 k0 */ { 0, BX_IA_ERROR },
   /* 54    */ { 0, BX_IA_ERROR },
   /* 55 k0 */ { BxAliasVexW | BxPrefixSSE66, BX_IA_V512_VPOPCNTD_VdqWdq_Kmask },

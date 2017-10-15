@@ -1746,4 +1746,56 @@ BX_CPP_INLINE void xmm_pshlq(BxPackedXmmRegister *op1, const BxPackedXmmRegister
   }
 }
 
+// VNNI
+
+BX_CPP_INLINE void xmm_pdpbusd(BxPackedXmmRegister *dst, BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+{
+  for(unsigned n=0; n<4; n++)
+  {
+    Bit32s p1word = (Bit32u) op1->xmmubyte(n*4)   * (Bit32s) op2->xmmsbyte(n*4);
+    Bit32s p2word = (Bit32u) op1->xmmubyte(n*4+1) * (Bit32s) op2->xmmsbyte(n*4+1);
+    Bit32s p3word = (Bit32u) op1->xmmubyte(n*4+2) * (Bit32s) op2->xmmsbyte(n*4+2);
+    Bit32s p4word = (Bit32u) op1->xmmubyte(n*4+3) * (Bit32s) op2->xmmsbyte(n*4+3);
+
+    dst->xmm32s(n) += (p1word + p2word + p3word + p4word);
+  }
+}
+
+BX_CPP_INLINE void xmm_pdpbusds(BxPackedXmmRegister *dst, BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+{
+  for(unsigned n=0; n<4; n++)
+  {
+    Bit32s p1word = (Bit32u) op1->xmmubyte(n*4)   * (Bit32s) op2->xmmsbyte(n*4);
+    Bit32s p2word = (Bit32u) op1->xmmubyte(n*4+1) * (Bit32s) op2->xmmsbyte(n*4+1);
+    Bit32s p3word = (Bit32u) op1->xmmubyte(n*4+2) * (Bit32s) op2->xmmsbyte(n*4+2);
+    Bit32s p4word = (Bit32u) op1->xmmubyte(n*4+3) * (Bit32s) op2->xmmsbyte(n*4+3);
+
+    Bit64s result = (Bit64s) dst->xmm32s(n) + (p1word + p2word + p3word + p4word);
+    dst->xmm32s(n) = SaturateQwordSToDwordS(result);
+  }
+}
+
+BX_CPP_INLINE void xmm_pdpwssd(BxPackedXmmRegister *dst, BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+{
+  for(unsigned n=0; n<4; n++)
+  {
+    Bit32s p1_dword = (Bit32s) op1->xmm16s(n*2)   * (Bit32s) op2->xmm16s(n*2);
+    Bit32s p2_dword = (Bit32s) op1->xmm16s(n*2+1) * (Bit32s) op2->xmm16s(n*2+1);
+
+    dst->xmm32s(n) += (p1_dword + p2_dword);
+  }
+}
+
+BX_CPP_INLINE void xmm_pdpwssds(BxPackedXmmRegister *dst, BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+{
+  for(unsigned n=0; n<4; n++)
+  {
+    Bit32s p1_dword = (Bit32s) op1->xmm16s(n*2)   * (Bit32s) op2->xmm16s(n*2);
+    Bit32s p2_dword = (Bit32s) op1->xmm16s(n*2+1) * (Bit32s) op2->xmm16s(n*2+1);
+
+    Bit64s result = (Bit64s) dst->xmm32s(n) + (p1_dword + p2_dword);
+    dst->xmm32s(n) = SaturateQwordSToDwordS(result);
+  }
+}
+
 #endif
