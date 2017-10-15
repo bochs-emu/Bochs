@@ -41,7 +41,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MUL_ALEbR(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_LOGIC_8(product_8l);
   if(product_8h != 0)
   {
-    ASSERT_FLAGS_OxxxxC();
+    BX_CPU_THIS_PTR oszapc.assert_flags_OxxxxC();
   }
 
   BX_NEXT_INSTR(i);
@@ -66,7 +66,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_ALEbR(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_LOGIC_8(product_8);
   if(product_16 != (Bit8s) product_16)
   {
-    ASSERT_FLAGS_OxxxxC();
+    BX_CPU_THIS_PTR oszapc.assert_flags_OxxxxC();
   }
 
   BX_NEXT_INSTR(i);

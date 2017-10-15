@@ -41,7 +41,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MUL_AXEwR(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_LOGIC_16(product_16l);
   if(product_16h != 0)
   {
-    ASSERT_FLAGS_OxxxxC();
+    BX_CPU_THIS_PTR oszapc.assert_flags_OxxxxC();
   }
 
   BX_NEXT_INSTR(i);
@@ -67,7 +67,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_AXEwR(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_LOGIC_16(product_16l);
   if(product_32 != (Bit16s)product_32)
   {
-    ASSERT_FLAGS_OxxxxC();
+    BX_CPU_THIS_PTR oszapc.assert_flags_OxxxxC();
   }
 
   BX_NEXT_INSTR(i);
@@ -140,7 +140,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GwEwIwR(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_LOGIC_16(product_16);
   if(product_32 != (Bit16s) product_32)
   {
-    ASSERT_FLAGS_OxxxxC();
+    BX_CPU_THIS_PTR oszapc.assert_flags_OxxxxC();
   }
 
   BX_NEXT_INSTR(i);
@@ -164,7 +164,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GwEwR(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_LOGIC_16(product_16);
   if(product_32 != (Bit16s) product_32)
   {
-    ASSERT_FLAGS_OxxxxC();
+    BX_CPU_THIS_PTR oszapc.assert_flags_OxxxxC();
   }
 
   BX_NEXT_INSTR(i);

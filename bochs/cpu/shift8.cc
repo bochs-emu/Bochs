@@ -40,7 +40,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EbR(bxInstruction_c *i)
     if (count & 0x18) {
       bit0 = (op1_8 &  1);
       bit7 = (op1_8 >> 7);
-      SET_FLAGS_OxxxxC(bit0 ^ bit7, bit0);
+      BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(bit0 ^ bit7, bit0);
     }
   }
   else {
@@ -56,7 +56,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EbR(bxInstruction_c *i)
     bit0 = (result_8 &  1);
     bit7 = (result_8 >> 7);
 
-    SET_FLAGS_OxxxxC(bit0 ^ bit7, bit0);
+    BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(bit0 ^ bit7, bit0);
   }
 
   BX_NEXT_INSTR(i);
@@ -80,7 +80,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EbM(bxInstruction_c *i)
     if (count & 0x18) {
       bit0 = (op1_8 &  1);
       bit7 = (op1_8 >> 7);
-      SET_FLAGS_OxxxxC(bit0 ^ bit7, bit0);
+      BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(bit0 ^ bit7, bit0);
     }
   }
   else {
@@ -96,7 +96,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EbM(bxInstruction_c *i)
     bit0 = (result_8 &  1);
     bit7 = (result_8 >> 7);
 
-    SET_FLAGS_OxxxxC(bit0 ^ bit7, bit0);
+    BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(bit0 ^ bit7, bit0);
   }
 
   BX_NEXT_INSTR(i);
@@ -119,7 +119,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_EbR(bxInstruction_c *i)
       bit6 = (op1_8 >> 6) & 1;
       bit7 = (op1_8 >> 7) & 1;
 
-      SET_FLAGS_OxxxxC(bit6 ^ bit7, bit7);
+      BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(bit6 ^ bit7, bit7);
     }
   }
   else {
@@ -135,7 +135,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_EbR(bxInstruction_c *i)
     bit6 = (result_8 >> 6) & 1;
     bit7 = (result_8 >> 7) & 1;
 
-    SET_FLAGS_OxxxxC(bit6 ^ bit7, bit7);
+    BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(bit6 ^ bit7, bit7);
   }
 
   BX_NEXT_INSTR(i);
@@ -160,7 +160,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_EbM(bxInstruction_c *i)
       bit6 = (op1_8 >> 6) & 1;
       bit7 = (op1_8 >> 7) & 1;
 
-      SET_FLAGS_OxxxxC(bit6 ^ bit7, bit7);
+      BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(bit6 ^ bit7, bit7);
     }
   }
   else {
@@ -176,7 +176,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_EbM(bxInstruction_c *i)
     bit6 = (result_8 >> 6) & 1;
     bit7 = (result_8 >> 7) & 1;
 
-    SET_FLAGS_OxxxxC(bit6 ^ bit7, bit7);
+    BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(bit6 ^ bit7, bit7);
   }
 
   BX_NEXT_INSTR(i);
@@ -215,7 +215,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_EbR(bxInstruction_c *i)
 
   cf = (op1_8 >> (8 - count)) & 0x01;
   of = cf ^ (result_8 >> 7);  // of = cf ^ result7
-  SET_FLAGS_OxxxxC(of, cf);
+  BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(of, cf);
 
   BX_NEXT_INSTR(i);
 }
@@ -255,7 +255,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCL_EbM(bxInstruction_c *i)
 
   cf = (op1_8 >> (8 - count)) & 0x01;
   of = cf ^ (result_8 >> 7);  // of = cf ^ result7
-  SET_FLAGS_OxxxxC(of, cf);
+  BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(of, cf);
 
   BX_NEXT_INSTR(i);
 }
@@ -284,7 +284,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_EbR(bxInstruction_c *i)
 
     cf = (op1_8 >> (count - 1)) & 0x1;
     of = (((result_8 << 1) ^ result_8) >> 7) & 0x1; // of = result6 ^ result7
-    SET_FLAGS_OxxxxC(of, cf);
+    BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(of, cf);
   }
 
   BX_NEXT_INSTR(i);
@@ -316,7 +316,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCR_EbM(bxInstruction_c *i)
 
     cf = (op1_8 >> (count - 1)) & 0x1;
     of = (((result_8 << 1) ^ result_8) >> 7) & 0x1; // of = result6 ^ result7
-    SET_FLAGS_OxxxxC(of, cf);
+    BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(of, cf);
   }
 
   BX_NEXT_INSTR(i);
@@ -353,7 +353,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_EbR(bxInstruction_c *i)
   BX_WRITE_8BIT_REGx(i->dst(), i->extend8bitL(), result_8);
 
   SET_FLAGS_OSZAPC_LOGIC_8(result_8);
-  SET_FLAGS_OxxxxC(of, cf);
+  BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(of, cf);
 
   BX_NEXT_INSTR(i);
 }
@@ -391,7 +391,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_EbM(bxInstruction_c *i)
   write_RMW_linear_byte(result_8);
 
   SET_FLAGS_OSZAPC_LOGIC_8(result_8);
-  SET_FLAGS_OxxxxC(of, cf);
+  BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(of, cf);
 
   BX_NEXT_INSTR(i);
 }
@@ -418,7 +418,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_EbR(bxInstruction_c *i)
     unsigned of = (((result_8 << 1) ^ result_8) >> 7) & 0x1;
 
     SET_FLAGS_OSZAPC_LOGIC_8(result_8);
-    SET_FLAGS_OxxxxC(of, cf);
+    BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(of, cf);
   }
 
   BX_NEXT_INSTR(i);
@@ -450,7 +450,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_EbM(bxInstruction_c *i)
     unsigned of = (((result_8 << 1) ^ result_8) >> 7) & 0x1;
 
     SET_FLAGS_OSZAPC_LOGIC_8(result_8);
-    SET_FLAGS_OxxxxC(of, cf);
+    BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(of, cf);
   }
 
   BX_NEXT_INSTR(i);
@@ -476,7 +476,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_EbR(bxInstruction_c *i)
 
     SET_FLAGS_OSZAPC_LOGIC_8(result_8);
     /* signed overflow cannot happen in SAR instruction */
-    SET_FLAGS_OxxxxC(0, cf);
+    BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(0, cf);
   }
 
   BX_NEXT_INSTR(i);
@@ -506,7 +506,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_EbM(bxInstruction_c *i)
 
     SET_FLAGS_OSZAPC_LOGIC_8(result_8);
     /* signed overflow cannot happen in SAR instruction */
-    SET_FLAGS_OxxxxC(0, cf);
+    BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(0, cf);
   }
 
   BX_NEXT_INSTR(i);

@@ -220,7 +220,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MUL_RAXEqR(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_LOGIC_64(product_128.lo);
   if(product_128.hi != 0)
   {
-    ASSERT_FLAGS_OxxxxC();
+    BX_CPU_THIS_PTR oszapc.assert_flags_OxxxxC();
   }
 
   BX_NEXT_INSTR(i);
@@ -252,7 +252,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_RAXEqR(bxInstruction_c *i)
 
   /* magic compare between RDX:RAX and sign extended RAX */
   if (((Bit64u)(product_128.hi) + (product_128.lo >> 63)) != 0) {
-    ASSERT_FLAGS_OxxxxC();
+    BX_CPU_THIS_PTR oszapc.assert_flags_OxxxxC();
   }
 
   BX_NEXT_INSTR(i);
@@ -349,7 +349,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GqEqIdR(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_LOGIC_64(product_128.lo);
 
   if (((Bit64u)(product_128.hi) + (product_128.lo >> 63)) != 0) {
-    ASSERT_FLAGS_OxxxxC();
+    BX_CPU_THIS_PTR oszapc.assert_flags_OxxxxC();
   }
 
   BX_NEXT_INSTR(i);
@@ -370,7 +370,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::IMUL_GqEqR(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_LOGIC_64(product_128.lo);
 
   if (((Bit64u)(product_128.hi) + (product_128.lo >> 63)) != 0) {
-    ASSERT_FLAGS_OxxxxC();
+    BX_CPU_THIS_PTR oszapc.assert_flags_OxxxxC();
   }
 
   BX_NEXT_INSTR(i);

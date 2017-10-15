@@ -951,7 +951,7 @@ public: // for now...
   Bit32u eflags; // Raw 32-bit value in x86 bit position.
 
   // lazy arithmetic flags state
-  bx_lf_flags_entry oszapc;
+  bx_lazyflags_entry oszapc;
 
   // so that we can back up when handling faults, exceptions, etc.
   // we need to store the value of the instruction pointer, before
@@ -1341,164 +1341,43 @@ public: // for now...
   BX_SMF BX_CPP_INLINE void clearEFlagsOSZAPC(void) {
     SET_FLAGS_OSZAPC_LOGIC_32(1);
   }
+
+  BX_SMF BX_CPP_INLINE unsigned getB_OF(void) { return BX_CPU_THIS_PTR oszapc.getB_OF(); }
+  BX_SMF BX_CPP_INLINE unsigned get_OF(void) { return BX_CPU_THIS_PTR oszapc.get_OF(); }
+  BX_SMF BX_CPP_INLINE void set_OF(bx_bool val) { BX_CPU_THIS_PTR oszapc.set_OF(val); }
+  BX_SMF BX_CPP_INLINE void clear_OF(void) { BX_CPU_THIS_PTR oszapc.clear_OF(); }
+  BX_SMF BX_CPP_INLINE void assert_OF(void) { BX_CPU_THIS_PTR oszapc.assert_OF(); }
+
+  BX_SMF BX_CPP_INLINE unsigned getB_SF(void) { return BX_CPU_THIS_PTR oszapc.getB_SF(); }
+  BX_SMF BX_CPP_INLINE unsigned get_SF(void) { return BX_CPU_THIS_PTR oszapc.get_SF(); }
+  BX_SMF BX_CPP_INLINE void set_SF(bx_bool val) { BX_CPU_THIS_PTR oszapc.set_SF(val); }
+  BX_SMF BX_CPP_INLINE void clear_SF(void) { BX_CPU_THIS_PTR oszapc.clear_SF(); }
+  BX_SMF BX_CPP_INLINE void assert_SF(void) { BX_CPU_THIS_PTR oszapc.assert_SF(); }
+
+  BX_SMF BX_CPP_INLINE unsigned getB_ZF(void) { return BX_CPU_THIS_PTR oszapc.getB_ZF(); }
+  BX_SMF BX_CPP_INLINE unsigned get_ZF(void) { return BX_CPU_THIS_PTR oszapc.get_ZF(); }
+  BX_SMF BX_CPP_INLINE void set_ZF(bx_bool val) { BX_CPU_THIS_PTR oszapc.set_ZF(val); }
+  BX_SMF BX_CPP_INLINE void clear_ZF(void) { BX_CPU_THIS_PTR oszapc.clear_ZF(); }
+  BX_SMF BX_CPP_INLINE void assert_ZF(void) { BX_CPU_THIS_PTR oszapc.assert_ZF(); }
+
+  BX_SMF BX_CPP_INLINE unsigned getB_AF(void) { return BX_CPU_THIS_PTR oszapc.getB_AF(); }
+  BX_SMF BX_CPP_INLINE unsigned get_AF(void) { return BX_CPU_THIS_PTR oszapc.get_AF(); }
+  BX_SMF BX_CPP_INLINE void set_AF(bx_bool val) { BX_CPU_THIS_PTR oszapc.set_AF(val); }
+  BX_SMF BX_CPP_INLINE void clear_AF(void) { BX_CPU_THIS_PTR oszapc.clear_AF(); }
+  BX_SMF BX_CPP_INLINE void assert_AF(void) { BX_CPU_THIS_PTR oszapc.assert_AF(); }
+
+  BX_SMF BX_CPP_INLINE unsigned getB_PF(void) { return BX_CPU_THIS_PTR oszapc.getB_PF(); }
+  BX_SMF BX_CPP_INLINE unsigned get_PF(void) { return BX_CPU_THIS_PTR oszapc.get_PF(); }
+  BX_SMF BX_CPP_INLINE void set_PF(bx_bool val) { BX_CPU_THIS_PTR oszapc.set_PF(val); }
+  BX_SMF BX_CPP_INLINE void clear_PF(void) { BX_CPU_THIS_PTR oszapc.clear_PF(); }
+  BX_SMF BX_CPP_INLINE void assert_PF(void) { BX_CPU_THIS_PTR oszapc.assert_PF(); }
+
+  BX_SMF BX_CPP_INLINE unsigned getB_CF(void) { return BX_CPU_THIS_PTR oszapc.getB_CF(); }
+  BX_SMF BX_CPP_INLINE unsigned get_CF(void) { return BX_CPU_THIS_PTR oszapc.get_CF(); }
+  BX_SMF BX_CPP_INLINE void set_CF(bx_bool val) { BX_CPU_THIS_PTR oszapc.set_CF(val); }
+  BX_SMF BX_CPP_INLINE void clear_CF(void) { BX_CPU_THIS_PTR oszapc.clear_CF(); }
+  BX_SMF BX_CPP_INLINE void assert_CF(void) { BX_CPU_THIS_PTR oszapc.assert_CF(); }
  
-  BX_SMF BX_CPP_INLINE void SET_FLAGS_OxxxxC(Bit32u new_of, Bit32u new_cf) {
-    Bit32u temp_po = new_of ^ new_cf;
-    BX_CPU_THIS_PTR oszapc.auxbits &= ~(LF_MASK_PO | LF_MASK_CF);
-    BX_CPU_THIS_PTR oszapc.auxbits |=
-                  (temp_po << LF_BIT_PO) | (new_cf << LF_BIT_CF);
-  }
- 
-  BX_SMF BX_CPP_INLINE void ASSERT_FLAGS_OxxxxC() {
-    SET_FLAGS_OxxxxC(1, 1);
-  }
- 
-  // ZF
-  BX_SMF BX_CPP_INLINE unsigned getB_ZF(void) {
-    return (0 == BX_CPU_THIS_PTR oszapc.result);
-  }
-
-  BX_SMF BX_CPP_INLINE unsigned get_ZF(void) { return getB_ZF(); }
-
-  BX_SMF BX_CPP_INLINE void set_ZF(bx_bool val) {
-    if (val) assert_ZF();
-    else clear_ZF();
-  }
-
-  BX_SMF BX_CPP_INLINE void clear_ZF(void) {
-    BX_CPU_THIS_PTR oszapc.result |= (1 << 8);
-  }
-
-  BX_SMF BX_CPP_INLINE void assert_ZF(void) {
-    // merge the sign bit into the Sign Delta
-    BX_CPU_THIS_PTR oszapc.auxbits ^=
-      (((BX_CPU_THIS_PTR oszapc.result >> BX_LF_SIGN_BIT) & 1) << LF_BIT_SD);
-
-    // merge the parity bits into the Parity Delta Byte
-    Bit32u temp_pdb = (255 & BX_CPU_THIS_PTR oszapc.result);
-    BX_CPU_THIS_PTR oszapc.auxbits ^= (temp_pdb << LF_BIT_PDB);
-
-    // now zero the .result value
-    BX_CPU_THIS_PTR oszapc.result = 0;
-  }
-
-  // SF
-  BX_SMF BX_CPP_INLINE unsigned getB_SF(void) {
-    return ((BX_CPU_THIS_PTR oszapc.result >> BX_LF_SIGN_BIT) ^
-            (BX_CPU_THIS_PTR oszapc.auxbits >> LF_BIT_SD)) & 1;
-  }
-
-  BX_SMF BX_CPP_INLINE unsigned get_SF(void) { return getB_SF(); }
-
-  BX_SMF BX_CPP_INLINE void set_SF(bx_bool val) {
-    bx_bool temp_sf = getB_SF();
-
-    BX_CPU_THIS_PTR oszapc.auxbits ^= (temp_sf ^ val) << LF_BIT_SD;
-  }
-
-  BX_SMF BX_CPP_INLINE void clear_SF(void) {
-    set_SF(0);
-  }
-
-  BX_SMF BX_CPP_INLINE void assert_SF(void) {
-    set_SF(1);
-  }
-
-  // PF - bit 2 in EFLAGS, represented by lower 8 bits of oszapc.result
-  BX_SMF BX_CPP_INLINE unsigned getB_PF(void) {
-    Bit32u temp = (255 & BX_CPU_THIS_PTR oszapc.result);
-    temp = temp ^ (255 & (BX_CPU_THIS_PTR oszapc.auxbits >> LF_BIT_PDB));
-    temp = (temp ^ (temp >> 4)) & 0x0F;
-    return (0x9669U >> temp) & 1;
-  }
-
-  BX_SMF BX_CPP_INLINE unsigned get_PF(void) { return getB_PF(); }
-
-  BX_SMF BX_CPP_INLINE void set_PF(bx_bool val) {
-    Bit32u temp_pdb = (255 & BX_CPU_THIS_PTR oszapc.result) ^ (!val);
-
-    BX_CPU_THIS_PTR oszapc.auxbits &= ~(LF_MASK_PDB);
-    BX_CPU_THIS_PTR oszapc.auxbits |= (temp_pdb << LF_BIT_PDB);
-  }
-
-  BX_SMF BX_CPP_INLINE void clear_PF(void) {
-    set_PF(0);
-  }
-
-  BX_SMF BX_CPP_INLINE void assert_PF(void) {
-    set_PF(1);
-  }
-
-  // AF - bit 4 in EFLAGS, represented by bit LF_BIT_AF of oszapc.auxbits
-  BX_SMF BX_CPP_INLINE unsigned getB_AF(void) {
-    return ((BX_CPU_THIS_PTR oszapc.auxbits >> LF_BIT_AF) & 1);
-  }
-
-  BX_SMF BX_CPP_INLINE unsigned get_AF(void) {
-    return (BX_CPU_THIS_PTR oszapc.auxbits & LF_MASK_AF);
-  }
-
-  BX_SMF BX_CPP_INLINE void set_AF(bx_bool val) {
-    BX_CPU_THIS_PTR oszapc.auxbits &= ~(LF_MASK_AF);
-    BX_CPU_THIS_PTR oszapc.auxbits |= (val) << LF_BIT_AF;
-  }
-  
-  BX_SMF BX_CPP_INLINE void clear_AF(void) {
-    BX_CPU_THIS_PTR oszapc.auxbits &= ~(LF_MASK_AF);
-  }
-
-  BX_SMF BX_CPP_INLINE void assert_AF(void) {
-    BX_CPU_THIS_PTR oszapc.auxbits |= (LF_MASK_AF);
-  }
-
-  // CF
-  BX_SMF BX_CPP_INLINE unsigned getB_CF(void) {
-    return ((BX_CPU_THIS_PTR oszapc.auxbits >> LF_BIT_CF) & 1);
-  }
-
-  BX_SMF BX_CPP_INLINE unsigned get_CF(void) {
-    return (BX_CPU_THIS_PTR oszapc.auxbits & LF_MASK_CF);
-  }
-
-  BX_SMF BX_CPP_INLINE void set_CF(bx_bool val) {
-    bx_bool temp_of = getB_OF();
-    SET_FLAGS_OxxxxC(temp_of, (val));
-  }
-
-  BX_SMF BX_CPP_INLINE void clear_CF(void) {
-    bx_bool temp_of = getB_OF();
-    SET_FLAGS_OxxxxC(temp_of, (0));
-  }
-
-  BX_SMF BX_CPP_INLINE void assert_CF(void) {
-    bx_bool temp_of = getB_OF();
-    SET_FLAGS_OxxxxC(temp_of, (1));
-  }
-
-  // OF
-  BX_SMF BX_CPP_INLINE unsigned getB_OF(void) {
-    return ((BX_CPU_THIS_PTR oszapc.auxbits + (1U << LF_BIT_PO)) >> LF_BIT_CF) & 1;
-  }
-
-  BX_SMF BX_CPP_INLINE unsigned get_OF(void) {
-    return (BX_CPU_THIS_PTR oszapc.auxbits + (1U << LF_BIT_PO)) & (1U << LF_BIT_CF);
-  }
-
-  BX_SMF BX_CPP_INLINE void set_OF(bx_bool val) {
-    bx_bool temp_cf = getB_CF();
-    SET_FLAGS_OxxxxC((val), temp_cf);
-  }
- 
-  BX_SMF BX_CPP_INLINE void clear_OF(void) {
-    bx_bool temp_cf = getB_CF();
-    SET_FLAGS_OxxxxC((0), temp_cf);
-  }
- 
-  BX_SMF BX_CPP_INLINE void assert_OF(void) {
-    unsigned temp_cf = getB_CF();
-    SET_FLAGS_OxxxxC((1), temp_cf);
-  }
-
   // constructors & destructors...
   BX_CPU_C(unsigned id = 0);
  ~BX_CPU_C();
