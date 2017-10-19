@@ -66,7 +66,8 @@ enum {
   BX_ISA_XSAVEOPT,                /* XSAVEOPT instruction */
   BX_ISA_XSAVEC,                  /* XSAVEC instruction */
   BX_ISA_XSAVES,                  /* XSAVES instruction */
-  BX_ISA_AES_PCLMULQDQ,           /* AES+PCLMULQDQ instruction */
+  BX_ISA_AES_PCLMULQDQ,           /* AES+PCLMULQDQ instructions */
+  BX_ISA_VAES_VPCLMULQDQ,         /* Wide vector versions of AES+PCLMULQDQ instructions */
   BX_ISA_MOVBE,                   /* MOVBE instruction */
   BX_ISA_FSGSBASE,                /* FS/GS BASE access instruction */
   BX_ISA_INVPCID,                 /* INVPCID instruction */

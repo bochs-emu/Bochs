@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2016 Stanislav Shwartsman
+//   Copyright (c) 2011-2017 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -1464,13 +1464,13 @@ static const BxExtOpcodeInfo_t BxOpcodeTableAVX[256*3*2] = {
   /* DB /0 */ { BxPrefixSSE66, BX_IA_V128_VAESIMC_VdqWdq },
   /* DB /1 */ { 0, BX_IA_ERROR },
   /* DC /0 */ { BxPrefixSSE66, BX_IA_V128_VAESENC_VdqHdqWdq },
-  /* DC /1 */ { 0, BX_IA_ERROR },
+  /* DC /1 */ { BxPrefixSSE66, BX_IA_V256_VAESENC_VdqHdqWdq },
   /* DD /0 */ { BxPrefixSSE66, BX_IA_V128_VAESENCLAST_VdqHdqWdq },
-  /* DD /1 */ { 0, BX_IA_ERROR },
+  /* DD /1 */ { BxPrefixSSE66, BX_IA_V256_VAESENCLAST_VdqHdqWdq },
   /* DE /0 */ { BxPrefixSSE66, BX_IA_V128_VAESDEC_VdqHdqWdq },
-  /* DE /1 */ { 0, BX_IA_ERROR },
+  /* DE /1 */ { BxPrefixSSE66, BX_IA_V256_VAESDEC_VdqHdqWdq },
   /* DF /0 */ { BxPrefixSSE66, BX_IA_V128_VAESDECLAST_VdqHdqWdq },
-  /* DF /1 */ { 0, BX_IA_ERROR },
+  /* DF /1 */ { BxPrefixSSE66, BX_IA_V256_VAESDECLAST_VdqHdqWdq },
   /* E0 /0 */ { 0, BX_IA_ERROR },
   /* E0 /1 */ { 0, BX_IA_ERROR },
   /* E1 /0 */ { 0, BX_IA_ERROR },
@@ -1674,7 +1674,7 @@ static const BxExtOpcodeInfo_t BxOpcodeTableAVX[256*3*2] = {
   /* 43 /0 */ { 0, BX_IA_ERROR },
   /* 43 /1 */ { 0, BX_IA_ERROR },
   /* 44 /0 */ { BxPrefixSSE66 | BxImmediate_Ib, BX_IA_V128_VPCLMULQDQ_VdqHdqWdqIb },
-  /* 44 /1 */ { 0, BX_IA_ERROR },
+  /* 44 /1 */ { BxPrefixSSE66 | BxImmediate_Ib, BX_IA_V256_VPCLMULQDQ_VdqHdqWdqIb },
   /* 45 /0 */ { 0, BX_IA_ERROR },
   /* 45 /1 */ { 0, BX_IA_ERROR },
   /* 46 /0 */ { 0, BX_IA_ERROR },
