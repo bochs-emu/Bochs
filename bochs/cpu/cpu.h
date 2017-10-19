@@ -2634,12 +2634,11 @@ public: // for now...
   /* AES instructions */
   BX_SMF BX_INSF_TYPE AESIMC_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE AESKEYGENASSIST_VdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  // extended to VEX/EVEX
-  BX_SMF BX_INSF_TYPE VAESENC_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE VAESENCLAST_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE VAESDEC_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE VAESDECLAST_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE VPCLMULQDQ_VdqHdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE AESENC_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE AESENCLAST_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE AESDEC_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE AESDECLAST_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE PCLMULQDQ_VdqHdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   /* AES instructions */
 
   /* SHA instructions */
@@ -3112,6 +3111,13 @@ public: // for now...
   BX_SMF BX_INSF_TYPE TZMSK_BqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   /* TBM (AMD) */
 #endif
+
+  // VAES: VEX extended AES instructions
+  BX_SMF BX_INSF_TYPE VAESENC_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VAESENCLAST_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VAESDEC_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VAESDECLAST_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VPCLMULQDQ_VdqHdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
 #if BX_SUPPORT_AVX
   // AVX512 OPMASK instructions (VEX encoded)

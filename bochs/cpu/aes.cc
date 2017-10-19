@@ -302,6 +302,21 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESIMC_VdqWdqR(bxInstruction_c *i)
 }
 
 /* 66 0F 38 DC */
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENC_VdqHdqWdqR(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
+
+  AES_ShiftRows(op1);
+  AES_SubstituteBytes(op1);
+  AES_MixColumns(op1);
+
+  xmm_xorps(&op1, &op2);
+
+  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
+
+  BX_NEXT_INSTR(i);
+}
+
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VAESENC_VdqHdqWdqR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
@@ -321,6 +336,20 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VAESENC_VdqHdqWdqR(bxInstruction_c
 }
 
 /* 66 0F 38 DD */
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENCLAST_VdqHdqWdqR(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
+
+  AES_ShiftRows(op1);
+  AES_SubstituteBytes(op1);
+
+  xmm_xorps(&op1, &op2);
+
+  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
+
+  BX_NEXT_INSTR(i);
+}
+
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VAESENCLAST_VdqHdqWdqR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
@@ -333,12 +362,27 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VAESENCLAST_VdqHdqWdqR(bxInstructi
     xmm_xorps(&op1.vmm128(n), &op2.vmm128(n));
   }
 
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
+  BX_WRITE_AVX_REGZ(i->dst(), op1, i->getVL());
 
   BX_NEXT_INSTR(i);
 }
 
 /* 66 0F 38 DE */
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDEC_VdqHdqWdqR(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
+
+  AES_InverseShiftRows(op1);
+  AES_InverseSubstituteBytes(op1);
+  AES_InverseMixColumns(op1);
+
+  xmm_xorps(&op1, &op2);
+
+  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
+
+  BX_NEXT_INSTR(i);
+}
+
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VAESDEC_VdqHdqWdqR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
@@ -352,12 +396,26 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VAESDEC_VdqHdqWdqR(bxInstruction_c
     xmm_xorps(&op1.vmm128(n), &op2.vmm128(n));
   }
 
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
+  BX_WRITE_AVX_REGZ(i->dst(), op1, i->getVL());
 
   BX_NEXT_INSTR(i);
 }
 
 /* 66 0F 38 DF */
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDECLAST_VdqHdqWdqR(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
+
+  AES_InverseShiftRows(op1);
+  AES_InverseSubstituteBytes(op1);
+
+  xmm_xorps(&op1, &op2);
+
+  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
+
+  BX_NEXT_INSTR(i);
+}
+
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VAESDECLAST_VdqHdqWdqR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
@@ -370,7 +428,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VAESDECLAST_VdqHdqWdqR(bxInstructi
     xmm_xorps(&op1.vmm128(n), &op2.vmm128(n));
   }
 
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
+  BX_WRITE_AVX_REGZ(i->dst(), op1, i->getVL());
 
   BX_NEXT_INSTR(i);
 }
@@ -412,6 +470,23 @@ BX_CPP_INLINE void xmm_pclmulqdq(BxPackedXmmRegister *r, Bit64u a, Bit64u b)
 }
 
 /* 66 0F 3A 44 */
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PCLMULQDQ_VdqHdqWdqIbR(bxInstruction_c *i)
+{
+  BxPackedXmmRegister r;
+  Bit8u imm8 = i->Ib();
+
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
+
+  // Perform Carry Less Multiplication [R = A CLMUL B]
+  // A determined by op1[imm8[0]]
+  // B determined by op2[imm8[4]]
+  xmm_pclmulqdq(&r, op1.xmm64u(imm8 & 1), op2.xmm64u((imm8 >> 4) & 1));
+
+  BX_WRITE_XMM_REGZ(i->dst(), r, i->getVL());
+
+  BX_NEXT_INSTR(i);
+}
+
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCLMULQDQ_VdqHdqWdqIbR(bxInstruction_c *i)
 {
   BxPackedAvxRegister r;
@@ -427,7 +502,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCLMULQDQ_VdqHdqWdqIbR(bxInstruct
     xmm_pclmulqdq(&r.vmm128(n), op1.xmm64u(imm8 & 1), op2.xmm64u((imm8 >> 4) & 1));
   }
 
-  BX_WRITE_AVX_REGZ(i->dst(), r, len);
+  BX_WRITE_AVX_REGZ(i->dst(), r, i->getVL());
 
   BX_NEXT_INSTR(i);
 }
