@@ -29,6 +29,8 @@
 #include "param_names.h"
 #include "cpustats.h"
 
+#include "decoder/ia_opcodes.h"
+
 bxPageWriteStampTable pageWriteStampTable;
 
 extern int fetchDecode32(const Bit8u *fetchPtr, Bit32u fetchModeMask, bx_bool handle_lock_cr0, bxInstruction_c *i, unsigned remainingInPage);

@@ -412,6 +412,8 @@ struct bx_modrm {
   unsigned modrm, mod, nnn, rm;
 };
 
+#include "ia_opcodes.h"
+
 //
 // Common FetchDecode Opcode Tables
 //

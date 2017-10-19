@@ -26,6 +26,8 @@
 
 #if BX_SUPPORT_X86_64
 
+#include "decoder/ia_opcodes.h"
+
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EqGqM(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64, result_64;

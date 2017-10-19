@@ -28,6 +28,8 @@
 
 #if BX_SUPPORT_FPU
 
+#include "cpu/decoder/ia_opcodes.h"
+
 extern float_status_t i387cw_to_softfloat_status_word(Bit16u control_word);
 
 #include "softfloatx80.h"

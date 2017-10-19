@@ -1196,7 +1196,7 @@ static unsigned sreg_mod1or2_base32[8] = {
 // table of all Bochs opcodes
 bxIAOpcodeTable BxOpcodesTable[] = {
 #define bx_define_opcode(a, b, c, d, s1, s2, s3, s4, e) { b, c, { s1, s2, s3, s4 }, e },
-#include "ia_opcodes.h"
+#include "ia_opcodes.def"
 };
 #undef  bx_define_opcode
 
@@ -2810,7 +2810,7 @@ const char *get_bx_opcode_name(Bit16u ia_opcode)
   static const char* BxOpcodeNamesTable[BX_IA_LAST] =
   {
 #define bx_define_opcode(a, b, c, d, s1, s2, s3, s4, e) #a,
-#include "ia_opcodes.h"
+#include "ia_opcodes.def"
   };
 #undef  bx_define_opcode
 
@@ -2822,7 +2822,7 @@ void BX_CPU_C::init_FetchDecodeTables(void)
   static Bit8u BxOpcodeFeatures[BX_IA_LAST] =
   {
 #define bx_define_opcode(a, b, c, d, s1, s2, s3, s4, e) d,
-#include "ia_opcodes.h"
+#include "ia_opcodes.def"
   };
 #undef  bx_define_opcode
 

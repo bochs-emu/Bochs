@@ -73,10 +73,10 @@ memory.o: memory.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debu
  ../instrument/stubs/instrument.h ../cpu/cpu.h ../cpu/decoder/decoder.h \
  ../cpu/i387.h ../cpu/fpu/softfloat.h ../cpu/fpu/tag_w.h \
  ../cpu/fpu/status_w.h ../cpu/fpu/control_w.h ../cpu/crregs.h \
- ../cpu/descriptor.h ../cpu/decoder/instr.h ../cpu/decoder/ia_opcodes.h \
- ../cpu/lazy_flags.h ../cpu/tlb.h ../cpu/icache.h ../cpu/apic.h \
- ../cpu/xmm.h ../cpu/vmx.h ../cpu/cpuid.h ../cpu/access.h \
- ../iodev/iodev.h ../plugin.h ../extplugin.h ../param_names.h
+ ../cpu/descriptor.h ../cpu/decoder/instr.h ../cpu/lazy_flags.h \
+ ../cpu/tlb.h ../cpu/icache.h ../cpu/apic.h ../cpu/xmm.h ../cpu/vmx.h \
+ ../cpu/svm.h ../cpu/cpuid.h ../cpu/access.h ../iodev/iodev.h ../plugin.h \
+ ../extplugin.h ../param_names.h
 misc_mem.o: misc_mem.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../gui/siminterface.h \
  ../cpudb.h ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h \
@@ -84,7 +84,6 @@ misc_mem.o: misc_mem.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../cpu/cpu.h ../cpu/decoder/decoder.h ../cpu/i387.h \
  ../cpu/fpu/softfloat.h ../cpu/fpu/tag_w.h ../cpu/fpu/status_w.h \
  ../cpu/fpu/control_w.h ../cpu/crregs.h ../cpu/descriptor.h \
- ../cpu/decoder/instr.h ../cpu/decoder/ia_opcodes.h ../cpu/lazy_flags.h \
- ../cpu/tlb.h ../cpu/icache.h ../cpu/apic.h ../cpu/xmm.h ../cpu/vmx.h \
- ../cpu/cpuid.h ../cpu/access.h ../iodev/iodev.h ../plugin.h \
- ../extplugin.h
+ ../cpu/decoder/instr.h ../cpu/lazy_flags.h ../cpu/tlb.h ../cpu/icache.h \
+ ../cpu/apic.h ../cpu/xmm.h ../cpu/vmx.h ../cpu/svm.h ../cpu/cpuid.h \
+ ../cpu/access.h ../iodev/iodev.h ../plugin.h ../extplugin.h

@@ -28,6 +28,8 @@
 
 #if BX_SUPPORT_VMX
 
+#include "decoder/ia_opcodes.h"
+
 // BX_READ(0) form means nnn(), rm(); BX_WRITE(1) form means rm(), nnn()
 Bit32u gen_instruction_info(bxInstruction_c *i, Bit32u reason, bx_bool rw_form)
 {

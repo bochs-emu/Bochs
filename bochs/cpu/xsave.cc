@@ -26,7 +26,9 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-#define XSAVEC_COMPACTION_ENABLED BX_CONST64(0x8000000000000000)
+#include "decoder/ia_opcodes.h"
+
+const Bit64u XSAVEC_COMPACTION_ENABLED = BX_CONST64(0x8000000000000000);
 
 /* 0F AE /4 */
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)

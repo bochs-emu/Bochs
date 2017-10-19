@@ -370,11 +370,4 @@ public:
 };
 // <TAG-CLASS-INSTRUCTION-END>
 
-enum {
-#define bx_define_opcode(a, b, c, d, s1, s2, s3, s4, e) a,
-#include "ia_opcodes.h"
-   BX_IA_LAST
-};
-#undef  bx_define_opcode
-
 #endif

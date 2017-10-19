@@ -28,6 +28,8 @@
 
 #if BX_SUPPORT_FPU
 
+#include "cpu/decoder/ia_opcodes.h"
+
 #define swap_values16u(a, b) { Bit16u tmp = a; a = b; b = tmp; }
 
 extern float_status_t i387cw_to_softfloat_status_word(Bit16u control_word);

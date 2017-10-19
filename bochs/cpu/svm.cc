@@ -28,6 +28,8 @@
 
 #if BX_SUPPORT_SVM
 
+#include "decoder/ia_opcodes.h"
+
 // for debugging and save/restore
 static const char *svm_segname[] = { "ES", "CS", "SS", "DS", "FS", "GS", "GDTR", "LDTR", "IDTR", "TR" };
 
