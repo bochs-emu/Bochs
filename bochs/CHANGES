@@ -3,6 +3,19 @@ Changes after 2.6.9 release:
 - General
   - Disabled legacy "load32bitOShack" feature.
 
+- CPU / CPUDB
+  - Bugfixes for CPU emulation correctness (critical bugfixes for VMX, AVX and AVX-512 emulation)
+  ! x87: implemented FOPCODE and FDP deprecation features
+  ! AVX-512: implemented AVX-512 VBMI2/VNNI/BITALG instructions
+  ! implemented VAES instructions / VPCLMULQDQ instruction
+  ! CPUID Added Skylake-X CPU definition with AVX-512 support
+
+- Bochs Debugger and Instrumentation
+  - Added support for conditional stepping/continue and conditional breakpoints in Bochs debugger
+  - Bochs debugger improvements patch by Doug Gale
+    - better handling of 64-bit addresses in the debugger, added support for 64 bit symbols,
+      added more symbol lookups.
+
 - I/O Devices
   - Timers
     - Implemented HPET emulation (ported from Qemu).
