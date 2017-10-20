@@ -97,7 +97,8 @@ enum {
   BX_ISA_AVX512_DQ,               /* AVX-512DQ instruction */
   BX_ISA_AVX512_BW,               /* AVX-512 Byte/Word instruction */
   BX_ISA_AVX512_VL,               /* AVX-512 Vector Length extensions */
-  BX_ISA_AVX512_VBMI,             /* AVX-512 Vector Bit Manipulation Instructions */
+  BX_ISA_AVX512_VBMI,             /* AVX-512 VBMI : Vector Bit Manipulation Instructions */
+  BX_ISA_AVX512_VBMI2,            /* AVX-512 VBMI2 : Vector Bit Manipulation Instructions */
   BX_ISA_AVX512_IFMA52,           /* AVX-512 IFMA52 Instructions */
   BX_ISA_AVX512_VPOPCNTDQ,        /* AVX-512 VPOPCNTD/VPOPCNTQ Instructions */
   BX_ISA_AVX512_VNNI,             /* AVX-512 VNNI Instructions */
