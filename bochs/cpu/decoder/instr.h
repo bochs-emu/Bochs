@@ -78,7 +78,7 @@ public:
       union {
         Bit32u Id;
         Bit16u Iw[2];
-        // use Ib[3] as AVX mask register
+        // use Ib[3] as EVEX mask register
         // use Ib[2] as AVX attributes
         //     7..5 (unused)
         //     4..4 VEX.W

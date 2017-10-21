@@ -302,7 +302,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESIMC_VdqWdqR(bxInstruction_c *i)
 }
 
 /* 66 0F 38 DC */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENC_VdqHdqWdqR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENC_VdqWdqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
 
@@ -312,7 +312,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENC_VdqHdqWdqR(bxInstruction_c 
 
   xmm_xorps(&op1, &op2);
 
-  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
+  BX_WRITE_XMM_REG(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
@@ -338,7 +338,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VAESENC_VdqHdqWdqR(bxInstruction_c
 #endif
 
 /* 66 0F 38 DD */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENCLAST_VdqHdqWdqR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENCLAST_VdqWdqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
 
@@ -347,7 +347,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESENCLAST_VdqHdqWdqR(bxInstructio
 
   xmm_xorps(&op1, &op2);
 
-  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
+  BX_WRITE_XMM_REG(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
@@ -372,7 +372,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VAESENCLAST_VdqHdqWdqR(bxInstructi
 #endif
 
 /* 66 0F 38 DE */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDEC_VdqHdqWdqR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDEC_VdqWdqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
 
@@ -382,7 +382,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDEC_VdqHdqWdqR(bxInstruction_c 
 
   xmm_xorps(&op1, &op2);
 
-  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
+  BX_WRITE_XMM_REG(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
@@ -408,7 +408,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VAESDEC_VdqHdqWdqR(bxInstruction_c
 #endif
 
 /* 66 0F 38 DF */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDECLAST_VdqHdqWdqR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDECLAST_VdqWdqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
 
@@ -417,7 +417,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AESDECLAST_VdqHdqWdqR(bxInstructio
 
   xmm_xorps(&op1, &op2);
 
-  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
+  BX_WRITE_XMM_REG(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
@@ -478,7 +478,7 @@ BX_CPP_INLINE void xmm_pclmulqdq(BxPackedXmmRegister *r, Bit64u a, Bit64u b)
 }
 
 /* 66 0F 3A 44 */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PCLMULQDQ_VdqHdqWdqIbR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PCLMULQDQ_VdqWdqIbR(bxInstruction_c *i)
 {
   BxPackedXmmRegister r;
   Bit8u imm8 = i->Ib();
@@ -490,7 +490,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PCLMULQDQ_VdqHdqWdqIbR(bxInstructi
   // B determined by op2[imm8[4]]
   xmm_pclmulqdq(&r, op1.xmm64u(imm8 & 1), op2.xmm64u((imm8 >> 4) & 1));
 
-  BX_WRITE_XMM_REGZ(i->dst(), r, i->getVL());
+  BX_WRITE_XMM_REG(i->dst(), r);
 
   BX_NEXT_INSTR(i);
 }

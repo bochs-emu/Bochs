@@ -7,7 +7,8 @@ Changes after 2.6.9 release:
   - Bugfixes for CPU emulation correctness (critical bugfixes for VMX, AVX and AVX-512 emulation)
   ! x87: implemented FOPCODE and FDP deprecation features
   ! AVX-512: implemented AVX-512 VBMI2/VNNI/BITALG instructions
-  ! implemented VAES instructions / VPCLMULQDQ instruction
+  ! Implemented VAES instructions / VPCLMULQDQ instruction
+  ! Implemented GFNI instructions
   ! CPUID Added Skylake-X CPU definition with AVX-512 support
 
 - Bochs Debugger and Instrumentation

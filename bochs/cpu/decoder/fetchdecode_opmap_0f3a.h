@@ -221,6 +221,22 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0F3ACC[4] = {
   /* F2 */ { 0, BX_IA_ERROR },
 };
 
+// opcode 0F 3A CE
+static const BxOpcodeInfo_t BxOpcodeGroupSSE_0F3ACE[4] = {
+  /* -- */ { 0, BX_IA_ERROR },
+  /* 66 */ { BxImmediate_Ib, BX_IA_GF2P8AFFINEQB_VdqWdqIb },
+  /* F3 */ { 0, BX_IA_ERROR },
+  /* F2 */ { 0, BX_IA_ERROR },
+};
+
+// opcode 0F 3A CF
+static const BxOpcodeInfo_t BxOpcodeGroupSSE_0F3ACF[4] = {
+  /* -- */ { 0, BX_IA_ERROR },
+  /* 66 */ { BxImmediate_Ib, BX_IA_GF2P8AFFINEINVQB_VdqWdqIb },
+  /* F3 */ { 0, BX_IA_ERROR },
+  /* F2 */ { 0, BX_IA_ERROR },
+};
+
 // opcode 0F 3A DF
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0F3ADF[4] = {
   /* -- */ { 0, BX_IA_ERROR },

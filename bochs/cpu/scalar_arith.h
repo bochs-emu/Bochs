@@ -24,6 +24,13 @@
 #ifndef BX_SCALAR_ARITH_FUNCTIONS_H
 #define BX_SCALAR_ARITH_FUNCTIONS_H
 
+// parity
+
+BX_CPP_INLINE unsigned parity_byte(Bit8u val_8)
+{
+  return (0x9669 >> ((val_8 ^ (val_8 >> 4)) & 0xF)) & 1;
+}
+
 // tzcnt
 
 BX_CPP_INLINE unsigned tzcntw(Bit16u val_16)

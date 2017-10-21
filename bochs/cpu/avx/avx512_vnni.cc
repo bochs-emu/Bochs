@@ -47,9 +47,9 @@
     BX_NEXT_INSTR(i);                                                                                                        \
   }
 
-AVX512_3OP_DWORD_EL(VPDPBUSD_MASK_VdqHdqWdqR, xmm_pdpbusd)
-AVX512_3OP_DWORD_EL(VPDPBUSDS_MASK_VdqHdqWdqR, xmm_pdpbusds)
-AVX512_3OP_DWORD_EL(VPDPWSSD_MASK_VdqHdqWdqR, xmm_pdpwssd)
-AVX512_3OP_DWORD_EL(VPDPWSSDS_MASK_VdqHdqWdqR, xmm_pdpwssds)
+AVX512_3OP_DWORD_EL(VPDPBUSD_VdqHdqWdqR, xmm_pdpbusd)
+AVX512_3OP_DWORD_EL(VPDPBUSDS_VdqHdqWdqR, xmm_pdpbusds)
+AVX512_3OP_DWORD_EL(VPDPWSSD_VdqHdqWdqR, xmm_pdpwssd)
+AVX512_3OP_DWORD_EL(VPDPWSSDS_VdqHdqWdqR, xmm_pdpwssds)
 
 #endif

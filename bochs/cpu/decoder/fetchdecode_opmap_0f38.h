@@ -469,6 +469,14 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0F38CD[4] = {
   /* F2 */ { 0, BX_IA_ERROR },
 };
 
+// opcode 0F 38 CF
+static const BxOpcodeInfo_t BxOpcodeGroupSSE_0F38CF[4] = {
+  /* -- */ { 0, BX_IA_ERROR },
+  /* 66 */ { 0, BX_IA_GF2P8MULB_VdqWdq },
+  /* F3 */ { 0, BX_IA_ERROR },
+  /* F2 */ { 0, BX_IA_ERROR },
+};
+
 // opcode 0F 38 DB
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0F38DB[4] = {
   /* -- */ { 0, BX_IA_ERROR },
