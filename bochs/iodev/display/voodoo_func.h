@@ -2871,6 +2871,7 @@ void register_w_common(Bit32u offset, Bit32u data)
       break;
 
     case fbiInit7:
+/*  case swapPending: -- Banshee */
       poly_wait(v->poly, v->regnames[regnum]);
 
       if (v->type == VOODOO_2 && (chips & 1) && INITEN_ENABLE_HW_INIT(v->pci.init_enable))
@@ -2880,6 +2881,8 @@ void register_w_common(Bit32u offset, Bit32u data)
           BX_INFO(("CMDFIFO now %sabled", v->fbi.cmdfifo[0].enabled ? "en" : "dis"));
         }
         v->reg[regnum].u = data;
+      } else if (v->type >= VOODOO_BANSHEE) {
+        v->fbi.swaps_pending++;
       }
       break;
 
@@ -2896,19 +2899,52 @@ void register_w_common(Bit32u offset, Bit32u data)
       BX_UNLOCK(cmdfifo_mutex);
       break;
 
-    case cmdFifoDepth:
-      BX_LOCK(cmdfifo_mutex);
-      v->fbi.cmdfifo[0].depth = data & 0xffff;
-      v->fbi.cmdfifo[0].depth_needed = BX_MAX_BIT32U;
-      BX_UNLOCK(cmdfifo_mutex);
-      break;
-
     case cmdFifoAMin:
-      v->fbi.cmdfifo[0].amin = data;
+/*  case colBufferAddr: -- Banshee */
+      if (v->type == VOODOO_2 && (chips & 1))
+        v->fbi.cmdfifo[0].amin = data;
+      else if (v->type >= VOODOO_BANSHEE && (chips & 1))
+        v->fbi.rgboffs[1] = data & v->fbi.mask & ~0x0f;
       break;
 
     case cmdFifoAMax:
-      v->fbi.cmdfifo[0].amax = data;
+/*  case colBufferStride: -- Banshee */
+      if (v->type == VOODOO_2 && (chips & 1)) {
+        v->fbi.cmdfifo[0].amax = data;
+      } else if (v->type >= VOODOO_BANSHEE && (chips & 1)) {
+        if (data & 0x8000)
+          v->fbi.rowpixels = (data & 0x7f) << 6;
+        else
+          v->fbi.rowpixels = (data & 0x3fff) >> 1;
+      }
+      break;
+
+    case cmdFifoDepth:
+/*  case auxBufferAddr: -- Banshee */
+      if (v->type == VOODOO_2 && (chips & 1)) {
+        BX_LOCK(cmdfifo_mutex);
+        v->fbi.cmdfifo[0].depth = data & 0xffff;
+        v->fbi.cmdfifo[0].depth_needed = BX_MAX_BIT32U;
+        BX_UNLOCK(cmdfifo_mutex);
+      } else if (v->type >= VOODOO_BANSHEE && (chips & 1)) {
+        v->fbi.auxoffs = data & v->fbi.mask & ~0x0f;
+      }
+      break;
+
+    case cmdFifoHoles:
+/*  case auxBufferStride: -- Banshee */
+      if (v->type == VOODOO_2 && (chips & 1)) {
+        v->fbi.cmdfifo[0].holes = data;
+      } else if (v->type >= VOODOO_BANSHEE && (chips & 1)) {
+        Bit32u rowpixels;
+
+        if (data & 0x8000)
+          rowpixels = (data & 0x7f) << 6;
+        else
+          rowpixels = (data & 0x3fff) >> 1;
+        if (v->fbi.rowpixels != rowpixels)
+          BX_PANIC(("aux buffer stride differs from color buffer stride"));
+      }
       break;
 
     case intrCtrl:
@@ -3285,21 +3321,47 @@ void voodoo_init(Bit8u _type)
   v->reg[fbiInit2].u = (1 << 6) | (0x100 << 23);
   v->reg[fbiInit3].u = (2 << 13) | (0xf << 17);
   v->reg[fbiInit4].u = (1 << 0);
-  v->alt_regmap = 0;
-  v->fbi.lfb_stride = 10;
   v->type = _type;
-  if (v->type == VOODOO_2) {
-    v->regaccess = voodoo2_register_access;
-  } else {
-    v->regaccess = voodoo_register_access;
+  switch (v->type) {
+    case VOODOO_1:
+      v->regaccess = voodoo_register_access;
+      v->regnames = voodoo_reg_name;
+      v->alt_regmap = 0;
+      v->fbi.lfb_stride = 10;
+      break;
+
+    case VOODOO_2:
+      v->regaccess = voodoo2_register_access;
+      v->regnames = voodoo_reg_name;
+      v->alt_regmap = 0;
+      v->fbi.lfb_stride = 10;
+      break;
+
+    case VOODOO_BANSHEE:
+      v->regaccess = banshee_register_access;
+      v->regnames = banshee_reg_name;
+      v->alt_regmap = 1;
+      v->fbi.lfb_stride = 11;
+      break;
   }
-  v->regnames = voodoo_reg_name;
   v->chipmask = 0x01 | 0x02 | 0x04 | 0x08;
   memset(v->dac.reg, 0, sizeof(v->dac.reg));
   v->dac.read_result = 0;
   v->dac.clk0_m = 0x37;
   v->dac.clk0_n = 0x02;
   v->dac.clk0_p = 0x03;
+
+  if (v->type == VOODOO_BANSHEE) {
+    /* initialize banshee registers */
+    memset(v->banshee.io, 0, sizeof(v->banshee.io));
+    v->banshee.io[io_pciInit0] = 0x01800040;
+    v->banshee.io[io_sipMonitor] = 0x40000000;
+    v->banshee.io[io_lfbMemoryConfig] = 0x000a2200;
+    v->banshee.io[io_dramInit0] = 0x0c579d29;
+    v->banshee.io[io_dramInit1] = 0x00f02200;
+    v->banshee.io[io_tmuGbeInit] = 0x00000bfb;
+    v->banshee.io[io_strapInfo] = 0x00000060;
+  }
 
   /* set up the PCI FIFO */
   v->pci.fifo.base = v->pci.fifo_mem;
@@ -3344,8 +3406,13 @@ void voodoo_init(Bit8u _type)
     for (pen = 0; pen < 512; pen++)
       v->fbi.clut[pen] = MAKE_RGB(pen,pen,pen);
   }
-  v->fbi.ram = (Bit8u*)malloc(4<<20); 
-  v->fbi.mask = (4<<20)-1;
+  if (v->type < VOODOO_BANSHEE) {
+    v->fbi.ram = (Bit8u*)malloc(4<<20); 
+    v->fbi.mask = (4<<20)-1;
+  } else {
+    v->fbi.ram = (Bit8u*)malloc(16<<20); 
+    v->fbi.mask = (16<<20)-1;
+  }
   v->fbi.frontbuf = 0;
   v->fbi.backbuf = 1;
   v->fbi.width = 640;

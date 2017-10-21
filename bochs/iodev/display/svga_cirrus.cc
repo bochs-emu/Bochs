@@ -909,7 +909,7 @@ void bx_svga_cirrus_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
   switch (address) {
     case 0x03b4: /* VGA: CRTC Index Register (monochrome emulation modes) */
     case 0x03d4: /* VGA: CRTC Index Register (color emulation modes) */
-      BX_CIRRUS_THIS crtc.index = value & 0x7f;
+      BX_CIRRUS_THIS crtc.index = value & 0x3f;
       break;
     case 0x03b5: /* VGA: CRTC Registers (monochrome emulation modes) */
     case 0x03d5: /* VGA: CRTC Registers (color emulation modes) */

@@ -816,8 +816,9 @@ static const char *const banshee_reg_name[] =
 #define io_tmuGbeInit         (0x024/4) /*  */
 #define io_vgaInit0           (0x028/4) /*  */
 #define io_vgaInit1           (0x02c/4) /*  */
-#define io_dramCommand          (0x030/4) /*  */
+#define io_dramCommand        (0x030/4) /*  */
 #define io_dramData           (0x034/4) /*  */
+#define io_strapInfo          (0x038/4) /*  */
 
 /* 0x040 */
 #define io_pllCtrl0           (0x040/4) /*  */
@@ -887,7 +888,7 @@ static const char *const banshee_io_reg_name[] =
   "status",   "pciInit0",   "sipMonitor", "lfbMemoryConfig",
   "miscInit0",  "miscInit1",  "dramInit0",  "dramInit1",
   "agpInit",    "tmuGbeInit", "vgaInit0",   "vgaInit1",
-  "dramCommand",  "dramData",   "reserved38", "reserved3c",
+  "dramCommand",  "dramData",   "strapInfo", "reserved3c",
 
   /* 0x040 */
   "pllCtrl0",   "pllCtrl1",   "pllCtrl2",   "dacMode",

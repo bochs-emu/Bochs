@@ -24,6 +24,7 @@
 #define BX_VOODOO_THIS theVoodooDevice->
 #define BX_VOODOO_THIS_PTR theVoodooDevice
 #define BX_VVGA_THIS theVoodooVga->
+#define BX_VVGA_THIS_PTR theVoodooVga
 
 typedef struct {
   Bit8u model;
@@ -68,6 +69,7 @@ public:
   static void output_enable(bx_bool enabled);
   static void update_screen_start(void);
   static bx_bool update_timing(void);
+  Bit8u get_model(void) {return s.model;}
 
 private:
   bx_voodoo_t s;
@@ -79,6 +81,14 @@ private:
 
   static void mode_change_timer_handler(void *);
   static void vertical_timer_handler(void *);
+
+  void banshee_pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
+
+  static Bit32u banshee_read_handler(void *this_ptr, Bit32u address, unsigned io_len);
+  static void   banshee_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
+
+  void banshee_mem_read(bx_phy_address addr, unsigned len, void *data);
+  void banshee_mem_write(bx_phy_address addr, unsigned len, void *data);
 };
 
 class bx_voodoo_vga_c : public bx_vgacore_c {
@@ -90,12 +100,27 @@ public:
   virtual void   register_state(void);
   virtual void   after_restore_state(void);
 
+  virtual Bit8u  mem_read(bx_phy_address addr);
+  virtual void   mem_write(bx_phy_address addr, Bit8u value);
+
   virtual void   redraw_area(unsigned x0, unsigned y0,
                              unsigned width, unsigned height);
 
   virtual bx_bool init_vga_extension(void);
 
+  void banshee_update_mode(void);
+  void banshee_set_dac_mode(bx_bool mode);
+
+  static Bit32u banshee_read_handler(void *this_ptr, Bit32u address, unsigned io_len);
+  static void   banshee_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
+
 protected:
   virtual void   update(void);
+
+private:
+  struct {
+    Bit8u bpp;
+    bx_bool dac_8bit;
+  } vbe;
 };
 #endif

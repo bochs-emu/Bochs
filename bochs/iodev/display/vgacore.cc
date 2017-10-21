@@ -1169,7 +1169,7 @@ void bx_vgacore_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool 
 
     case 0x03b4: /* CRTC Index Register (monochrome emulation modes) */
     case 0x03d4: /* CRTC Index Register (color emulation modes) */
-      BX_VGA_THIS s.CRTC.address = value & 0x7f;
+      BX_VGA_THIS s.CRTC.address = value & 0x3f;
       if (BX_VGA_THIS s.CRTC.address > 0x18)
         BX_DEBUG(("write: invalid CRTC register 0x%02x selected",
           (unsigned) BX_VGA_THIS s.CRTC.address));
