@@ -44,21 +44,6 @@
 
 #if BX_SUPPORT_CLGD54XX
 
-// Only reference the array if the tile numbers are within the bounds
-// of the array.  If out of bounds, do nothing.
-#define SET_TILE_UPDATED(xtile, ytile, value)                            \
-  do {                                                                   \
-    if (((xtile) < BX_CIRRUS_THIS s.num_x_tiles) && ((ytile) < BX_CIRRUS_THIS s.num_y_tiles)) \
-      BX_CIRRUS_THIS s.vga_tile_updated[(xtile)+(ytile)*BX_CIRRUS_THIS s.num_x_tiles] = value; \
-  } while (0)
-
-// Only reference the array if the tile numbers are within the bounds
-// of the array.  If out of bounds, return 0.
-#define GET_TILE_UPDATED(xtile,ytile)                                    \
-  ((((xtile) < BX_CIRRUS_THIS s.num_x_tiles) && ((ytile) < BX_CIRRUS_THIS s.num_y_tiles))? \
-     BX_CIRRUS_THIS s.vga_tile_updated[(xtile)+(ytile)*BX_CIRRUS_THIS s.num_x_tiles] \
-     : 0)
-
 #define LOG_THIS BX_CIRRUS_THIS
 
 #if BX_USE_CIRRUS_SMF
@@ -467,7 +452,7 @@ void bx_svga_cirrus_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
   }
   for (yti=yt0; yti<=yt1; yti++) {
     for (xti=xt0; xti<=xt1; xti++) {
-      SET_TILE_UPDATED (xti, yti, 1);
+      SET_TILE_UPDATED(BX_CIRRUS_THIS, xti, yti, 1);
     }
   }
 }
@@ -716,7 +701,7 @@ void bx_svga_cirrus_c::mem_write(bx_phy_address addr, Bit8u value)
         }
       }
       BX_CIRRUS_THIS svga_needs_update_tile = 1;
-      SET_TILE_UPDATED(((offset % BX_CIRRUS_THIS svga_pitch) / (BX_CIRRUS_THIS svga_bpp / 8)) / X_TILESIZE,
+      SET_TILE_UPDATED(BX_CIRRUS_THIS, ((offset % BX_CIRRUS_THIS svga_pitch) / (BX_CIRRUS_THIS svga_bpp / 8)) / X_TILESIZE,
                        (offset / BX_CIRRUS_THIS svga_pitch) / Y_TILESIZE, 1);
       return;
     } else if ((addr >= BX_CIRRUS_THIS pci_base_address[1]) &&
@@ -770,7 +755,7 @@ void bx_svga_cirrus_c::mem_write(bx_phy_address addr, Bit8u value)
         }
       }
       BX_CIRRUS_THIS svga_needs_update_tile = 1;
-      SET_TILE_UPDATED(((offset % BX_CIRRUS_THIS svga_pitch) / (BX_CIRRUS_THIS svga_bpp / 8)) / X_TILESIZE,
+      SET_TILE_UPDATED(BX_CIRRUS_THIS, ((offset % BX_CIRRUS_THIS svga_pitch) / (BX_CIRRUS_THIS svga_bpp / 8)) / X_TILESIZE,
                        (offset / BX_CIRRUS_THIS svga_pitch) / Y_TILESIZE, 1);
     }
   } else if (addr >= 0xB8000 && addr < 0xB8100) {
@@ -1259,7 +1244,7 @@ void bx_svga_cirrus_c::update(void)
                 }
                 draw_hardware_cursor(xc, yc, &info);
                 bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
-                SET_TILE_UPDATED (xti, yti, 0);
+                SET_TILE_UPDATED(BX_CIRRUS_THIS, xti, yti, 0);
               }
             }
           }
@@ -1308,7 +1293,7 @@ void bx_svga_cirrus_c::update(void)
                 }
                 draw_hardware_cursor(xc, yc, &info);
                 bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
-                SET_TILE_UPDATED (xti, yti, 0);
+                SET_TILE_UPDATED(BX_CIRRUS_THIS, xti, yti, 0);
               }
             }
           }
@@ -1345,7 +1330,7 @@ void bx_svga_cirrus_c::update(void)
                 }
                 draw_hardware_cursor(xc, yc, &info);
                 bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
-                SET_TILE_UPDATED (xti, yti, 0);
+                SET_TILE_UPDATED(BX_CIRRUS_THIS, xti, yti, 0);
               }
             }
           }
@@ -1382,7 +1367,7 @@ void bx_svga_cirrus_c::update(void)
                 }
                 draw_hardware_cursor(xc, yc, &info);
                 bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
-                SET_TILE_UPDATED (xti, yti, 0);
+                SET_TILE_UPDATED(BX_CIRRUS_THIS, xti, yti, 0);
               }
             }
           }
@@ -1420,7 +1405,7 @@ void bx_svga_cirrus_c::update(void)
                 }
                 draw_hardware_cursor(xc, yc, &info);
                 bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
-                SET_TILE_UPDATED (xti, yti, 0);
+                SET_TILE_UPDATED(BX_CIRRUS_THIS, xti, yti, 0);
               }
             }
           }
@@ -1459,7 +1444,7 @@ void bx_svga_cirrus_c::update(void)
                 }
                 draw_hardware_cursor(xc, yc, &info);
                 bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
-                SET_TILE_UPDATED (xti, yti, 0);
+                SET_TILE_UPDATED(BX_CIRRUS_THIS, xti, yti, 0);
               }
             }
           }

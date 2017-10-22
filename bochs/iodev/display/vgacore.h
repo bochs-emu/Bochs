@@ -45,6 +45,21 @@
 #define X_TILESIZE 16
 #define Y_TILESIZE 24
 
+// Only reference the array if the tile numbers are within the bounds
+// of the array.  If out of bounds, do nothing.
+#define SET_TILE_UPDATED(thisp, xtile, ytile, value)                          \
+  do {                                                                        \
+    if (((xtile) < thisp s.num_x_tiles) && ((ytile) < thisp s.num_y_tiles))   \
+      thisp s.vga_tile_updated[(xtile)+(ytile)* thisp s.num_x_tiles] = value; \
+  } while (0)
+
+// Only reference the array if the tile numbers are within the bounds
+// of the array.  If out of bounds, return 0.
+#define GET_TILE_UPDATED(xtile,ytile)                        \
+  ((((xtile) < s.num_x_tiles) && ((ytile) < s.num_y_tiles))? \
+     s.vga_tile_updated[(xtile)+(ytile)* s.num_x_tiles]      \
+     : 0)
+
 #if BX_SUPPORT_PCI
 class bx_nonvga_device_c : public bx_pci_device_c {
 public:

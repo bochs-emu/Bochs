@@ -37,21 +37,6 @@
 
 #define VGA_TRACE_FEATURE
 
-// Only reference the array if the tile numbers are within the bounds
-// of the array.  If out of bounds, do nothing.
-#define SET_TILE_UPDATED(xtile, ytile, value)                   \
-  do {                                                          \
-    if (((xtile) < s.num_x_tiles) && ((ytile) < s.num_y_tiles)) \
-      s.vga_tile_updated[(xtile)+(ytile)* s.num_x_tiles] = value; \
-  } while (0)
-
-// Only reference the array if the tile numbers are within the bounds
-// of the array.  If out of bounds, return 0.
-#define GET_TILE_UPDATED(xtile,ytile)                        \
-  ((((xtile) < s.num_x_tiles) && ((ytile) < s.num_y_tiles))? \
-     s.vga_tile_updated[(xtile)+(ytile)* s.num_x_tiles]      \
-     : 0)
-
 static const Bit16u charmap_offset[8] = {
   0x0000, 0x4000, 0x8000, 0xc000,
   0x2000, 0x6000, 0xa000, 0xe000
@@ -120,7 +105,7 @@ void bx_vgacore_c::init(void)
   BX_VGA_THIS s.vga_tile_updated = new bx_bool[BX_VGA_THIS s.num_x_tiles * BX_VGA_THIS s.num_y_tiles];
   for (y = 0; y < BX_VGA_THIS s.num_y_tiles; y++)
     for (x = 0; x < BX_VGA_THIS s.num_x_tiles; x++)
-      SET_TILE_UPDATED(x, y, 0);
+      SET_TILE_UPDATED(BX_VGA_THIS, x, y, 0);
 
   if (!BX_VGA_THIS pci_enabled) {
     BX_MEM(0)->load_ROM(SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr(), 0xc0000, 1);
@@ -1463,7 +1448,7 @@ void bx_vgacore_c::update(void)
                     BX_VGA_THIS s.tile[r*X_TILESIZE + c] = DAC_regno;
                   }
                 }
-                SET_TILE_UPDATED (xti, yti, 0);
+                SET_TILE_UPDATED(BX_VGA_THIS, xti, yti, 0);
                 bx_gui->graphics_tile_update_common(BX_VGA_THIS s.tile, xc, yc);
               }
             }
@@ -1490,7 +1475,7 @@ void bx_vgacore_c::update(void)
                       BX_VGA_THIS get_vga_pixel(x, y, start_addr, line_compare, cs_visible, plane);
                   }
                 }
-                SET_TILE_UPDATED (xti, yti, 0);
+                SET_TILE_UPDATED(BX_VGA_THIS, xti, yti, 0);
                 bx_gui->graphics_tile_update_common(BX_VGA_THIS s.tile, xc, yc);
               }
             }
@@ -1527,7 +1512,7 @@ void bx_vgacore_c::update(void)
                   BX_VGA_THIS s.tile[r*X_TILESIZE + c] = DAC_regno;
                 }
               }
-              SET_TILE_UPDATED (xti, yti, 0);
+              SET_TILE_UPDATED(BX_VGA_THIS, xti, yti, 0);
               bx_gui->graphics_tile_update_common(BX_VGA_THIS s.tile, xc, yc);
             }
           }
@@ -1561,7 +1546,7 @@ void bx_vgacore_c::update(void)
                     BX_VGA_THIS s.tile[r*X_TILESIZE + c] = color;
                   }
                 }
-                SET_TILE_UPDATED (xti, yti, 0);
+                SET_TILE_UPDATED(BX_VGA_THIS, xti, yti, 0);
                 bx_gui->graphics_tile_update_common(BX_VGA_THIS s.tile, xc, yc);
               }
             }
@@ -1585,7 +1570,7 @@ void bx_vgacore_c::update(void)
                     BX_VGA_THIS s.tile[r*X_TILESIZE + c] = color;
                   }
                 }
-                SET_TILE_UPDATED (xti, yti, 0);
+                SET_TILE_UPDATED(BX_VGA_THIS, xti, yti, 0);
                 bx_gui->graphics_tile_update_common(BX_VGA_THIS s.tile, xc, yc);
               }
             }
@@ -1609,7 +1594,7 @@ void bx_vgacore_c::update(void)
                     BX_VGA_THIS s.tile[r*X_TILESIZE + c] = color;
                   }
                 }
-                SET_TILE_UPDATED (xti, yti, 0);
+                SET_TILE_UPDATED(BX_VGA_THIS, xti, yti, 0);
                 bx_gui->graphics_tile_update_common(BX_VGA_THIS s.tile, xc, yc);
               }
             }
@@ -1906,9 +1891,9 @@ void bx_vgacore_c::mem_write(bx_phy_address addr, Bit8u value)
         y_tileno/=Y_TILESIZE;
       }
       BX_VGA_THIS s.vga_mem_updated = 1;
-      SET_TILE_UPDATED (x_tileno, y_tileno, 1);
+      SET_TILE_UPDATED(BX_VGA_THIS, x_tileno, y_tileno, 1);
       if (x_tileno2!=x_tileno) {
-        SET_TILE_UPDATED (x_tileno2, y_tileno, 1);
+        SET_TILE_UPDATED(BX_VGA_THIS, x_tileno2, y_tileno, 1);
       }
       return;
       /* CGA 320x200x4 / 640x200x2 end */
@@ -1934,7 +1919,7 @@ void bx_vgacore_c::mem_write(bx_phy_address addr, Bit8u value)
           y_tileno = (offset / BX_VGA_THIS s.line_offset) / Y_TILESIZE;
         }
         BX_VGA_THIS s.vga_mem_updated = 1;
-        SET_TILE_UPDATED (x_tileno, y_tileno, 1);
+        SET_TILE_UPDATED(BX_VGA_THIS, x_tileno, y_tileno, 1);
       }
       return;
     }
@@ -2215,7 +2200,7 @@ void bx_vgacore_c::mem_write(bx_phy_address addr, Bit8u value)
       } else {
         y_tileno = (offset / BX_VGA_THIS s.line_offset) / Y_TILESIZE;
       }
-      SET_TILE_UPDATED (x_tileno, y_tileno, 1);
+      SET_TILE_UPDATED(BX_VGA_THIS, x_tileno, y_tileno, 1);
     } else {
       if (BX_VGA_THIS s.line_compare < BX_VGA_THIS s.vertical_display_end) {
         if (BX_VGA_THIS s.line_offset > 0) {
@@ -2229,7 +2214,7 @@ void bx_vgacore_c::mem_write(bx_phy_address addr, Bit8u value)
           } else {
             y_tileno = ((offset / BX_VGA_THIS s.line_offset) + BX_VGA_THIS s.line_compare + 1) / Y_TILESIZE;
           }
-          SET_TILE_UPDATED (x_tileno, y_tileno, 1);
+          SET_TILE_UPDATED(BX_VGA_THIS, x_tileno, y_tileno, 1);
         }
       }
       if (offset >= start_addr) {
@@ -2245,7 +2230,7 @@ void bx_vgacore_c::mem_write(bx_phy_address addr, Bit8u value)
           } else {
             y_tileno = (offset / BX_VGA_THIS s.line_offset) / Y_TILESIZE;
           }
-          SET_TILE_UPDATED (x_tileno, y_tileno, 1);
+          SET_TILE_UPDATED(BX_VGA_THIS, x_tileno, y_tileno, 1);
         }
       }
     }
@@ -2373,7 +2358,7 @@ void bx_vgacore_c::redraw_area(unsigned x0, unsigned y0, unsigned width, unsigne
     }
     for (yti=yt0; yti<=yt1; yti++) {
       for (xti=xt0; xti<=xt1; xti++) {
-        SET_TILE_UPDATED(xti, yti, 1);
+        SET_TILE_UPDATED(BX_VGA_THIS, xti, yti, 1);
       }
     }
 

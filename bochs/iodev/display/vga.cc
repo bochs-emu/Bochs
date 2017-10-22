@@ -41,21 +41,6 @@
 
 #define LOG_THIS theVga->
 
-// Only reference the array if the tile numbers are within the bounds
-// of the array.  If out of bounds, do nothing.
-#define SET_TILE_UPDATED(xtile, ytile, value)                            \
-  do {                                                                   \
-    if (((xtile) < BX_VGA_THIS s.num_x_tiles) && ((ytile) < BX_VGA_THIS s.num_y_tiles)) \
-      BX_VGA_THIS s.vga_tile_updated[(xtile)+(ytile)*BX_VGA_THIS s.num_x_tiles] = value; \
-  } while (0)
-
-// Only reference the array if the tile numbers are within the bounds
-// of the array.  If out of bounds, return 0.
-#define GET_TILE_UPDATED(xtile,ytile)                                    \
-  ((((xtile) < BX_VGA_THIS s.num_x_tiles) && ((ytile) < BX_VGA_THIS s.num_y_tiles))? \
-     BX_VGA_THIS s.vga_tile_updated[(xtile)+(ytile)*BX_VGA_THIS s.num_x_tiles] \
-     : 0)
-
 bx_vga_c *theVga = NULL;
 
 int CDECL libvga_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
@@ -407,7 +392,7 @@ void bx_vga_c::update(void)
                       tile_ptr += info.pitch;
                     }
                     bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
-                    SET_TILE_UPDATED (xti, yti, 0);
+                    SET_TILE_UPDATED(BX_VGA_THIS, xti, yti, 0);
                   }
                 }
               }
@@ -447,7 +432,7 @@ void bx_vga_c::update(void)
                       tile_ptr += info.pitch;
                     }
                     bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
-                    SET_TILE_UPDATED (xti, yti, 0);
+                    SET_TILE_UPDATED(BX_VGA_THIS, xti, yti, 0);
                   }
                 }
               }
@@ -482,7 +467,7 @@ void bx_vga_c::update(void)
                       tile_ptr += info.pitch;
                     }
                     bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
-                    SET_TILE_UPDATED (xti, yti, 0);
+                    SET_TILE_UPDATED(BX_VGA_THIS, xti, yti, 0);
                   }
                 }
               }
@@ -517,7 +502,7 @@ void bx_vga_c::update(void)
                       tile_ptr += info.pitch;
                     }
                     bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
-                    SET_TILE_UPDATED (xti, yti, 0);
+                    SET_TILE_UPDATED(BX_VGA_THIS, xti, yti, 0);
                   }
                 }
               }
@@ -553,7 +538,7 @@ void bx_vga_c::update(void)
                       tile_ptr += info.pitch;
                     }
                     bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
-                    SET_TILE_UPDATED (xti, yti, 0);
+                    SET_TILE_UPDATED(BX_VGA_THIS, xti, yti, 0);
                   }
                 }
               }
@@ -590,7 +575,7 @@ void bx_vga_c::update(void)
                       tile_ptr += info.pitch;
                     }
                     bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
-                    SET_TILE_UPDATED (xti, yti, 0);
+                    SET_TILE_UPDATED(BX_VGA_THIS, xti, yti, 0);
                   }
                 }
               }
@@ -634,7 +619,7 @@ void bx_vga_c::update(void)
                   BX_VGA_THIS get_vga_pixel(x, y, BX_VGA_THIS vbe.virtual_start, 0xffff, 0, plane);
               }
             }
-            SET_TILE_UPDATED (xti, yti, 0);
+            SET_TILE_UPDATED(BX_VGA_THIS, xti, yti, 0);
             bx_gui->graphics_tile_update_common(BX_VGA_THIS s.tile, xc, yc);
           }
         }
@@ -745,7 +730,7 @@ void bx_vga_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
     }
     for (yti=yt0; yti<=yt1; yti++) {
       for (xti=xt0; xti<=xt1; xti++) {
-        SET_TILE_UPDATED(xti, yti, 1);
+        SET_TILE_UPDATED(BX_VGA_THIS, xti, yti, 1);
       }
     }
 
@@ -844,7 +829,7 @@ bx_vga_c::vbe_mem_write(bx_phy_address addr, Bit8u value)
     if ((y_tileno < BX_VGA_THIS s.num_y_tiles) && (x_tileno < BX_VGA_THIS s.num_x_tiles))
     {
       BX_VGA_THIS s.vga_mem_updated = 1;
-      SET_TILE_UPDATED (x_tileno, y_tileno, 1);
+      SET_TILE_UPDATED(BX_VGA_THIS, x_tileno, y_tileno, 1);
     }
   }
 }
@@ -1288,7 +1273,7 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
         BX_VGA_THIS s.vga_mem_updated = 1;
         for (unsigned xti = 0; xti < BX_VGA_THIS s.num_x_tiles; xti++) {
           for (unsigned yti = 0; yti < BX_VGA_THIS s.num_y_tiles; yti++) {
-            SET_TILE_UPDATED (xti, yti, 1);
+            SET_TILE_UPDATED(BX_VGA_THIS, xti, yti, 1);
           }
         }
       }
