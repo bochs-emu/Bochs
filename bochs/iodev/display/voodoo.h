@@ -121,6 +121,7 @@ private:
   struct {
     Bit8u bpp;
     bx_bool dac_8bit;
+    bx_bool half_mode;
   } vbe;
 };
 #endif
