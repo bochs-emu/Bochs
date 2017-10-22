@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2010-2016  Benjamin D Lunt (fys [at] fysnet [dot] net)
+//  Copyright (C) 2010-2017  Benjamin D Lunt (fys [at] fysnet [dot] net)
 //                2011-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
@@ -2381,9 +2381,14 @@ void bx_usb_xhci_c::process_command_ring(void)
             get_dwords((bx_phy_address) trb.parameter, (Bit32u*)buffer, (CONTEXT_SIZE + (CONTEXT_SIZE * 32)) >> 2);
             DEV_MEM_READ_PHYSICAL((bx_phy_address) trb.parameter + 4, 4, (Bit8u*)&a_flags);
             // only the Slot context and EP1 (control EP) contexts are evaluated. Section 6.2.3.3
-            // If the slot is not addresses or configured, then return error
-            // FIXME: XHCI specs 1.0, page 102 says DEFAULT or higher, while page 321 states higher than DEFAULT!!!
+            // If the slot is not addressed or configured, then return error
+            // XHCI specs 1.0, page 102 says DEFAULT or higher, while page 321 states higher than DEFAULT!!!
+            //  (specs 1.1 removed the DEFAULT word and require it to be greater than the DEFAULT state)
+#if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
+            if (BX_XHCI_THIS hub.slots[slot].slot_context.slot_state > SLOT_STATE_DEFAULT) {
+#else
             if (BX_XHCI_THIS hub.slots[slot].slot_context.slot_state >= SLOT_STATE_DEFAULT) {
+#endif
               comp_code = TRB_SUCCESS;  // assume good completion
               if (a_flags & (1<<0)) {
                 copy_slot_from_buffer(&slot_context, &buffer[CONTEXT_SIZE]);
@@ -2936,23 +2941,58 @@ bx_bool bx_usb_xhci_c::validate_slot_context(const struct SLOT_CONTEXT *slot_con
   return 1;
 }
 
+// xHCI, section 6.2.3.2
+// The controller can return a valid EP Context even though the MPS is less than
+//  the specified amount.  Win7 uses this to detect the actual EP0's max packet size...
+//  For example, the descriptor might return 64, but the device really only handles
+//   8-byte control transfers.
 bx_bool bx_usb_xhci_c::validate_ep_context(const struct EP_CONTEXT *ep_context, int speed, int ep_num)
 {
   // Only the Max_packet Size is evaluated (for an evaluate ep command) ???
-  // max_packet_size is assumed to be a multiple of 8  
 
   BX_DEBUG(("   ep_num = %i, speed = %i, ep_context->max_packet_size = %i", ep_num, speed, ep_context->max_packet_size));
 
+  // We need to make sure we don't exceed the value given in the
+  //  device descriptor mps field.
+
+  // TODO: get the mps from the device's descriptor.
+  //  for now, we just use the speed indicator passed to us...
+  unsigned int mps = 0;
+  switch (speed) {
+    case SPEED_LOW:
+      mps = 8;
+      break;
+    case SPEED_FULL:
+    case SPEED_HI:
+      mps = 64;
+      break;
+    case SPEED_SUPER:
+      mps = 512;
+  }
+
   // if speed == -1, don't check the speed
   if ((ep_num == 1) && (speed != -1)) {
-    return (
-      ((speed == SPEED_LOW) && (ep_context->max_packet_size == 8)) ||
-      ((speed == SPEED_FULL) && (ep_context->max_packet_size <= 64)) ||  // this may need to retrieve the mps from usb_common.c
-      ((speed == SPEED_HI) && (ep_context->max_packet_size == 64)) ||
-      ((speed == SPEED_SUPER) && (ep_context->max_packet_size == 512))
-      );
-  } else
-    return 1;
+    // if not a mutliple of 8, return invalid
+    if ((ep_context->max_packet_size & 7) > 0)
+      return 0;
+    // if not at least 8, return invalid
+    if (ep_context->max_packet_size < 8)
+      return 0;
+    switch (speed) {
+      case SPEED_LOW:
+        // low-speed EP0 can only be a size of 8 bytes
+        return (ep_context->max_packet_size == 8);
+      case SPEED_FULL:
+      case SPEED_HI:
+      case SPEED_SUPER:
+        // full- and high-speed EP0 can be 8, 16, 32, 40, 48, 56, or 64
+        // super-speed EP0 can be 8, 16, 32, 40, 48, 56, 64, ..., 512
+        return ((ep_context->max_packet_size >= 8) &&
+                (ep_context->max_packet_size <= mps));
+    }
+  }
+
+  return 1;
 }
 
 // The Specs say that the address is only unique to the RH Port Number
