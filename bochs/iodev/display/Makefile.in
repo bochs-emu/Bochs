@@ -156,7 +156,7 @@ voodoo.o: voodoo.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osde
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h ../pci.h vgacore.h voodoo.h ../virt_timer.h \
  ../../bxthread.h voodoo_types.h voodoo_data.h voodoo_main.h \
- voodoo_func.h voodoo_raster.h
+ voodoo_func.h
 svga_cirrus.lo: svga_cirrus.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
@@ -182,4 +182,4 @@ voodoo.lo: voodoo.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osd
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h ../pci.h vgacore.h voodoo.h ../virt_timer.h \
  ../../bxthread.h voodoo_types.h voodoo_data.h voodoo_main.h \
- voodoo_func.h voodoo_raster.h
+ voodoo_func.h

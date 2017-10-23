@@ -228,8 +228,6 @@ BX_CPP_INLINE Bit32s _mul_32x32_shift(Bit32s a, Bit32s b, Bit8s shift)
 }
 
 
-typedef void (*poly_draw_scanline_func)(void *dest, Bit32s scanline, const poly_extent *extent, const void *extradata, int threadid);
-
 BX_CPP_INLINE rgb_t rgba_bilinear_filter(rgb_t rgb00, rgb_t rgb01, rgb_t rgb10, rgb_t rgb11, Bit8u u, Bit8u v)
 {
   Bit32u ag0, ag1, rb0, rb1;

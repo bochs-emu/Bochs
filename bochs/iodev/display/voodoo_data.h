@@ -1616,28 +1616,9 @@ struct _dac_state
 };
 
 
-typedef struct _raster_info raster_info;
-struct _raster_info
-{
-  struct _raster_info *next;  /* pointer to next entry with the same hash */
-  poly_draw_scanline_func callback; /* callback pointer */
-  Bit8u   is_generic;     /* true if this is one of the generic rasterizers */
-  Bit8u   display;        /* display index */
-  Bit32u  hits;           /* how many hits (pixels) we've used this for */
-  Bit32u  polys;          /* how many polys we've used this for */
-  Bit32u  eff_color_path; /* effective fbzColorPath value */
-  Bit32u  eff_alpha_mode; /* effective alphaMode value */
-  Bit32u  eff_fog_mode;   /* effective fogMode value */
-  Bit32u  eff_fbz_mode;   /* effective fbzMode value */
-  Bit32u  eff_tex_mode_0; /* effective textureMode value for TMU #0 */
-  Bit32u  eff_tex_mode_1; /* effective textureMode value for TMU #1 */
-};
-
-
 struct _poly_extra_data
 {
   voodoo_state* state;        /* pointer back to the voodoo state */
-  raster_info*  info;         /* pointer to rasterizer information */
 
   Bit16s        ax, ay;       /* vertex A x,y (12.4) */
   Bit32s        startr, startg, startb, starta; /* starting R,G,B,A (12.12) */
@@ -1711,9 +1692,6 @@ struct _voodoo_state
   Bit32u      last_status_pc;   /* PC of last status description (for logging) */
   Bit32u      last_status_value; /* value of last status read (for logging) */
 
-  int         next_rasterizer;  /* next rasterizer index */
-  raster_info     rasterizer[MAX_RASTERIZERS]; /* array of rasterizers */
-  raster_info *   raster_hash[RASTER_HASH_SIZE]; /* hash table of rasterizers */
 };
 
 
@@ -2087,28 +2065,6 @@ BX_CPP_INLINE Bit32u normalize_tex_mode(Bit32u eff_tex_mode)
 
   return eff_tex_mode;
 }
-
-
-BX_CPP_INLINE Bit32u compute_raster_hash(const raster_info *info)
-{
-  Bit32u hash;
-
-  /* make a hash */
-  hash = info->eff_color_path;
-  hash = (hash << 1) | (hash >> 31);
-  hash ^= info->eff_fbz_mode;
-  hash = (hash << 1) | (hash >> 31);
-  hash ^= info->eff_alpha_mode;
-  hash = (hash << 1) | (hash >> 31);
-  hash ^= info->eff_fog_mode;
-  hash = (hash << 1) | (hash >> 31);
-  hash ^= info->eff_tex_mode_0;
-  hash = (hash << 1) | (hash >> 31);
-  hash ^= info->eff_tex_mode_1;
-
-  return hash % RASTER_HASH_SIZE;
-}
-
 
 
 /*************************************
@@ -3556,154 +3512,3 @@ do                                        \
 }                                                                                \
 while (0)
 
-
-
-/*************************************
- *
- *  Rasterizer generator macro
- *
- *************************************/
-
-#define RASTERIZER(name, TMUS, FBZCOLORPATH, FBZMODE, ALPHAMODE, FOGMODE, TEXMODE0, TEXMODE1) \
-                                        \
-void raster_##name(void *destbase, Bit32s y, const poly_extent *extent, const void *extradata, int threadid) \
-{                                                                                \
-  const poly_extra_data *extra = (const poly_extra_data *)extradata;             \
-  voodoo_state *v = extra->state;                                                \
-  stats_block *stats = &v->thread_stats[threadid];                               \
-  DECLARE_DITHER_POINTERS;                                                       \
-  Bit32s startx = extent->startx;                                                \
-  Bit32s stopx = extent->stopx;                                                  \
-  Bit32s iterr, iterg, iterb, itera;                                             \
-  Bit32s iterz;                                                                  \
-  Bit64s iterw, iterw0 = 0, iterw1 = 0;                                          \
-  Bit64s iters0 = 0, iters1 = 0;                                                 \
-  Bit64s itert0 = 0, itert1 = 0;                                                 \
-  Bit16u *depth;                                                                 \
-  Bit16u *dest;                                                                  \
-  Bit32s dx, dy;                                                                 \
-  Bit32s scry;                                                                   \
-  Bit32s x;                                                                      \
-                                                                                 \
-  /* determine the screen Y */                                                   \
-  scry = y;                                                                      \
-  if (FBZMODE_Y_ORIGIN(FBZMODE))                                                 \
-    scry = (v->fbi.yorigin - y) & 0x3ff;                                         \
-                                                                                 \
-  /* compute dithering */                                                        \
-  COMPUTE_DITHER_POINTERS(FBZMODE, y);                                           \
-                                                                                 \
-  /* apply clipping */                                                           \
-  if (FBZMODE_ENABLE_CLIPPING(FBZMODE))                                          \
-  {                                                                              \
-    Bit32s tempclip;                                                             \
-                                                                                 \
-    /* Y clipping buys us the whole scanline */                                  \
-    if (scry < (Bit32s)((v->reg[clipLowYHighY].u >> 16) & 0x3ff) ||              \
-      scry >= (Bit32s)(v->reg[clipLowYHighY].u & 0x3ff))                         \
-    {                                                                            \
-      stats->pixels_in += stopx - startx;                                        \
-      stats->clip_fail += stopx - startx;                                        \
-      return;                                                                    \
-    }                                                                            \
-                                                                                 \
-    /* X clipping */                                                             \
-    tempclip = (v->reg[clipLeftRight].u >> 16) & 0x3ff;                          \
-    if (startx < tempclip)                                                       \
-    {                                                                            \
-      stats->pixels_in += tempclip - startx;                                     \
-      startx = tempclip;                                                         \
-    }                                                                            \
-    tempclip = v->reg[clipLeftRight].u & 0x3ff;                                  \
-    if (stopx >= tempclip)                                                       \
-    {                                                                            \
-      stats->pixels_in += stopx - tempclip;                                      \
-      stopx = tempclip - 1;                                                      \
-    }                                                                            \
-  }                                                                              \
-                                                                                 \
-  /* get pointers to the target buffer and depth buffer */                       \
-  dest = (Bit16u *)destbase + scry * v->fbi.rowpixels;                           \
-  depth = (v->fbi.auxoffs != (Bit32u)~0) ? ((Bit16u *)(v->fbi.ram + v->fbi.auxoffs) + scry * v->fbi.rowpixels) : NULL; \
-                                                                                 \
-  /* compute the starting parameters */                                          \
-  dx = startx - (extra->ax >> 4);                                                \
-  dy = y - (extra->ay >> 4);                                                     \
-  iterr = extra->startr + dy * extra->drdy + dx * extra->drdx;                   \
-  iterg = extra->startg + dy * extra->dgdy + dx * extra->dgdx;                   \
-  iterb = extra->startb + dy * extra->dbdy + dx * extra->dbdx;                   \
-  itera = extra->starta + dy * extra->dady + dx * extra->dadx;                   \
-  iterz = extra->startz + dy * extra->dzdy + dx * extra->dzdx;                   \
-  iterw = extra->startw + dy * extra->dwdy + dx * extra->dwdx;                   \
-  if (TMUS >= 1)                                                                 \
-  {                                                                              \
-    iterw0 = extra->startw0 + dy * extra->dw0dy + dx * extra->dw0dx;             \
-    iters0 = extra->starts0 + dy * extra->ds0dy + dx * extra->ds0dx;             \
-    itert0 = extra->startt0 + dy * extra->dt0dy + dx * extra->dt0dx;             \
-  }                                                                              \
-  if (TMUS >= 2)                                                                 \
-  {                                                                              \
-    iterw1 = extra->startw1 + dy * extra->dw1dy + dx * extra->dw1dx;             \
-    iters1 = extra->starts1 + dy * extra->ds1dy + dx * extra->ds1dx;             \
-    itert1 = extra->startt1 + dy * extra->dt1dy + dx * extra->dt1dx;             \
-  }                                                                              \
-                                                                                 \
-  /* loop in X */                                                                \
-  for (x = startx; x < stopx; x++)                                               \
-  {                                                                              \
-    rgb_union iterargb = { 0 };                                                  \
-    rgb_union texel = { 0 };                                                     \
-                                                                                 \
-    /* pixel pipeline part 1 handles depth testing and stippling */              \
-    PIXEL_PIPELINE_BEGIN(v, stats, x, y, FBZCOLORPATH, FBZMODE,                  \
-                iterz, iterw);                                                   \
-                                                                                 \
-    /* run the texture pipeline on TMU1 to produce a value in texel */           \
-    /* note that they set LOD min to 8 to "disable" a TMU */                     \
-    if (TMUS >= 2 && v->tmu[1].lodmin < (8 << 8))                                \
-      TEXTURE_PIPELINE(&v->tmu[1], x, dither4, TEXMODE1, texel,                  \
-                v->tmu[1].lookup, extra->lodbase1,                               \
-                iters1, itert1, iterw1, texel);                                  \
-                                                                                 \
-    /* run the texture pipeline on TMU0 to produce a final */                    \
-    /* result in texel */                                                        \
-    /* note that they set LOD min to 8 to "disable" a TMU */                     \
-    if (TMUS >= 1 && v->tmu[0].lodmin < (8 << 8)) {                              \
-      if (v->send_config==0)                                                     \
-      TEXTURE_PIPELINE(&v->tmu[0], x, dither4, TEXMODE0, texel,                  \
-                v->tmu[0].lookup, extra->lodbase0,                               \
-                iters0, itert0, iterw0, texel);                                  \
-      /* send config data to the frame buffer */                                 \
-      else texel.u=v->tmu_config;                                                \
-    }                                                                            \
-    /* colorpath pipeline selects source colors and does blending */             \
-    CLAMPED_ARGB(iterr, iterg, iterb, itera, FBZCOLORPATH, iterargb);            \
-    COLORPATH_PIPELINE(v, stats, FBZCOLORPATH, FBZMODE, ALPHAMODE, texel,        \
-              iterz, iterw, iterargb);                                           \
-                                                                                 \
-    /* pixel pipeline part 2 handles fog, alpha, and final output */             \
-    PIXEL_PIPELINE_END(v, stats, dither, dither4, dither_lookup, x, dest, depth, \
-              FBZMODE, FBZCOLORPATH, ALPHAMODE, FOGMODE,                         \
-              iterz, iterw, iterargb);                                           \
-                                                                                 \
-    /* update the iterated parameters */                                         \
-    iterr += extra->drdx;                                                        \
-    iterg += extra->dgdx;                                                        \
-    iterb += extra->dbdx;                                                        \
-    itera += extra->dadx;                                                        \
-    iterz += extra->dzdx;                                                        \
-    iterw += extra->dwdx;                                                        \
-    if (TMUS >= 1)                                                               \
-    {                                                                            \
-      iterw0 += extra->dw0dx;                                                    \
-      iters0 += extra->ds0dx;                                                    \
-      itert0 += extra->dt0dx;                                                    \
-    }                                                                            \
-    if (TMUS >= 2)                                                               \
-    {                                                                            \
-      iterw1 += extra->dw1dx;                                                    \
-      iters1 += extra->ds1dx;                                                    \
-      itert1 += extra->dt1dx;                                                    \
-    }                                                                            \
-  }                                                                              \
-}

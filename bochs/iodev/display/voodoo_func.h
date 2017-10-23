@@ -73,170 +73,149 @@ static Bit8u dither2_lookup[256*16*2];
 Bit32u voodoo_reciplog[(2 << RECIPLOG_LOOKUP_BITS) + 2];
 
 
-/***************************************************************************
-    RASTERIZER MANAGEMENT
-***************************************************************************/
+void raster_function(int tmus, void *destbase, Bit32s y, const poly_extent *extent, const void *extradata, int threadid) {
+	const poly_extra_data *extra = (const poly_extra_data *) extradata;
+	voodoo_state *v = extra->state;
+	stats_block *stats = &v->thread_stats[threadid];
+	DECLARE_DITHER_POINTERS;
+	Bit32s startx = extent->startx;
+	Bit32s stopx = extent->stopx;
+	Bit32s iterr, iterg, iterb, itera;
+	Bit32s iterz;
+	Bit64s iterw, iterw0 = 0, iterw1 = 0;
+	Bit64s iters0 = 0, iters1 = 0;
+	Bit64s itert0 = 0, itert1 = 0;
+	Bit16u *depth;
+	Bit16u *dest;
+	Bit32s dx, dy;
+	Bit32s scry;
+	Bit32s x;
 
-/*-------------------------------------------------
-    generic_0tmu - generic rasterizer for 0 TMUs
--------------------------------------------------*/
+	Bit32u fbzcolorpath= v->reg[fbzColorPath].u;
+	Bit32u fbzmode= v->reg[fbzMode].u;
+	Bit32u alphamode= v->reg[alphaMode].u;
+	Bit32u fogmode= v->reg[fogMode].u;
+	Bit32u texmode0= (tmus==0? 0 : v->tmu[0].reg[textureMode].u);
+	Bit32u texmode1= (tmus<=1? 0 : v->tmu[1].reg[textureMode].u);
 
-RASTERIZER(generic_0tmu, 0, v->reg[fbzColorPath].u, v->reg[fbzMode].u, v->reg[alphaMode].u,
-      v->reg[fogMode].u, 0, 0)
+	/* determine the screen Y */
+	scry = y;
+	if (FBZMODE_Y_ORIGIN(fbzmode))
+		scry = (v->fbi.yorigin - y) & 0x3ff;
 
+	/* compute dithering */
+	COMPUTE_DITHER_POINTERS(fbzmode, y);
 
-/*-------------------------------------------------
-    generic_1tmu - generic rasterizer for 1 TMU
--------------------------------------------------*/
+	/* apply clipping */
+	if (FBZMODE_ENABLE_CLIPPING(fbzmode)) {
+		Bit32s tempclip;
 
-RASTERIZER(generic_1tmu, 1, v->reg[fbzColorPath].u, v->reg[fbzMode].u, v->reg[alphaMode].u,
-      v->reg[fogMode].u, v->tmu[0].reg[textureMode].u, 0)
+		/* Y clipping buys us the whole scanline */
+		if (scry < (Bit32s) ((v->reg[clipLowYHighY].u >> 16) & 0x3ff)
+				|| scry >= (Bit32s) (v->reg[clipLowYHighY].u & 0x3ff)) {
+			stats->pixels_in += stopx - startx;
+			stats->clip_fail += stopx - startx;
+			return;
+		}
 
+		/* X clipping */
+		tempclip = (v->reg[clipLeftRight].u >> 16) & 0x3ff;
+		if (startx < tempclip) {
+			stats->pixels_in += tempclip - startx;
+			startx = tempclip;
+		}
+		tempclip = v->reg[clipLeftRight].u & 0x3ff;
+		if (stopx >= tempclip) {
+			stats->pixels_in += stopx - tempclip;
+			stopx = tempclip - 1;
+		}
+	}
 
-/*-------------------------------------------------
-    generic_2tmu - generic rasterizer for 2 TMUs
--------------------------------------------------*/
+	/* get pointers to the target buffer and depth buffer */
+	dest = (Bit16u *) destbase + scry * v->fbi.rowpixels;
+	depth =
+			(v->fbi.auxoffs != (Bit32u) ~0) ?
+					((Bit16u *) (v->fbi.ram + v->fbi.auxoffs)
+							+ scry * v->fbi.rowpixels) :
+					NULL;
 
-RASTERIZER(generic_2tmu, 2, v->reg[fbzColorPath].u, v->reg[fbzMode].u, v->reg[alphaMode].u,
-      v->reg[fogMode].u, v->tmu[0].reg[textureMode].u, v->tmu[1].reg[textureMode].u)
+	/* compute the starting parameters */
+	dx = startx - (extra->ax >> 4);
+	dy = y - (extra->ay >> 4);
+	iterr = extra->startr + dy * extra->drdy + dx * extra->drdx;
+	iterg = extra->startg + dy * extra->dgdy + dx * extra->dgdx;
+	iterb = extra->startb + dy * extra->dbdy + dx * extra->dbdx;
+	itera = extra->starta + dy * extra->dady + dx * extra->dadx;
+	iterz = extra->startz + dy * extra->dzdy + dx * extra->dzdx;
+	iterw = extra->startw + dy * extra->dwdy + dx * extra->dwdx;
+	if (tmus >= 1) {
+		iterw0 = extra->startw0 + dy * extra->dw0dy + dx * extra->dw0dx;
+		iters0 = extra->starts0 + dy * extra->ds0dy + dx * extra->ds0dx;
+		itert0 = extra->startt0 + dy * extra->dt0dy + dx * extra->dt0dx;
+	}
+	if (tmus >= 2) {
+		iterw1 = extra->startw1 + dy * extra->dw1dy + dx * extra->dw1dx;
+		iters1 = extra->starts1 + dy * extra->ds1dy + dx * extra->ds1dx;
+		itert1 = extra->startt1 + dy * extra->dt1dy + dx * extra->dt1dx;
+	}
 
+	/* loop in X */
+	for (x = startx; x < stopx; x++) {
+		rgb_union iterargb = { 0 };
+		rgb_union texel = { 0 };
 
-/*************************************
- *
- *  Specific rasterizers
- *
- *************************************/
+		/* pixel pipeline part 1 handles depth testing and stippling */
+		PIXEL_PIPELINE_BEGIN(v, stats, x, y, fbzcolorpath, fbzmode,
+				iterz, iterw)
+			;
 
-#define RASTERIZER_ENTRY(fbzcp, alpha, fog, fbz, tex0, tex1) \
-  RASTERIZER(fbzcp##_##alpha##_##fog##_##fbz##_##tex0##_##tex1, (((tex0) == 0xffffffff) ? 0 : ((tex1) == 0xffffffff) ? 1 : 2), fbzcp, fbz, alpha, fog, tex0, tex1)
+			/* run the texture pipeline on TMU1 to produce a value in texel */
+			/* note that they set LOD min to 8 to "disable" a TMU */
+			if (tmus >= 2 && v->tmu[1].lodmin < (8 << 8))
+				TEXTURE_PIPELINE(&v->tmu[1], x, dither4, texmode1, texel,
+						v->tmu[1].lookup, extra->lodbase1, iters1, itert1,
+						iterw1, texel);
 
-#include "voodoo_raster.h"
+			/* run the texture pipeline on TMU0 to produce a final */
+			/* result in texel */
+			/* note that they set LOD min to 8 to "disable" a TMU */
+			if (tmus >= 1 && v->tmu[0].lodmin < (8 << 8)) {
+				if (v->send_config == 0)
+					TEXTURE_PIPELINE(&v->tmu[0], x, dither4, texmode0, texel,
+							v->tmu[0].lookup, extra->lodbase0, iters0, itert0,
+							iterw0, texel);
+				/* send config data to the frame buffer */
+				else
+					texel.u = v->tmu_config;
+			}
+			/* colorpath pipeline selects source colors and does blending */
+			CLAMPED_ARGB(iterr, iterg, iterb, itera, fbzcolorpath, iterargb);
+			COLORPATH_PIPELINE(v, stats, fbzcolorpath, fbzmode, alphamode,
+					texel, iterz, iterw, iterargb);
 
-#undef RASTERIZER_ENTRY
+			/* pixel pipeline part 2 handles fog, alpha, and final output */
+			PIXEL_PIPELINE_END(v, stats, dither, dither4, dither_lookup, x,
+					dest, depth, fbzmode, fbzcolorpath, alphamode, fogmode,
+					iterz, iterw, iterargb);
 
-
-
-/*************************************
- *
- *  Rasterizer table
- *
- *************************************/
-
-#define RASTERIZER_ENTRY(fbzcp, alpha, fog, fbz, tex0, tex1) \
-  { NULL, raster_##fbzcp##_##alpha##_##fog##_##fbz##_##tex0##_##tex1, FALSE, 0, 0, 0, fbzcp, alpha, fog, fbz, tex0, tex1 },
-
-static const raster_info predef_raster_table[] =
-{
-#include "voodoo_raster.h"
-  { 0 }
-};
-
-#undef RASTERIZER_ENTRY
-
-
-
-/***************************************************************************
-    RASTERIZER MANAGEMENT
-***************************************************************************/
-
-/*-------------------------------------------------
-    add_rasterizer - add a rasterizer to our
-    hash table
--------------------------------------------------*/
-
-static raster_info *add_rasterizer(voodoo_state *v, const raster_info *cinfo)
-{
-  raster_info *info = &v->rasterizer[v->next_rasterizer++];
-  int hash = compute_raster_hash(cinfo);
-
-  if (v->next_rasterizer > MAX_RASTERIZERS)
-    BX_PANIC(("Out of space for new rasterizers!"));
-
-  /* make a copy of the info */
-  *info = *cinfo;
-
-  /* fill in the data */
-  info->hits = 0;
-  info->polys = 0;
-
-  /* hook us into the hash table */
-  info->next = v->raster_hash[hash];
-  v->raster_hash[hash] = info;
-
-  if (LOG_RASTERIZERS) {
-    printf("Adding rasterizer @ %p : %08X %08X %08X %08X %08X %08X (hash=%d)\n",
-        info->callback,
-        info->eff_color_path, info->eff_alpha_mode, info->eff_fog_mode, info->eff_fbz_mode,
-        info->eff_tex_mode_0, info->eff_tex_mode_1, hash);
-
-    printf("RASTERIZER_ENTRY( 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X, 0x%08X)\n",
-      info->eff_color_path,
-      info->eff_alpha_mode,
-      info->eff_fog_mode,
-      info->eff_fbz_mode,
-      info->eff_tex_mode_0,
-      info->eff_tex_mode_1,
-      info->is_generic ? '*' : ' ',
-      info->polys,
-      info->hits);
-  }
-  return info;
-}
-
-
-/*-------------------------------------------------
-    find_rasterizer - find a rasterizer that
-    matches  our current parameters and return
-    it, creating a new one if necessary
--------------------------------------------------*/
-
-static raster_info *find_rasterizer(voodoo_state *v, int texcount)
-{
-  raster_info *info, *prev = NULL;
-  raster_info curinfo;
-  int hash;
-
-  /* build an info struct with all the parameters */
-  curinfo.eff_color_path = normalize_color_path(v->reg[fbzColorPath].u);
-  curinfo.eff_alpha_mode = normalize_alpha_mode(v->reg[alphaMode].u);
-  curinfo.eff_fog_mode = normalize_fog_mode(v->reg[fogMode].u);
-  curinfo.eff_fbz_mode = normalize_fbz_mode(v->reg[fbzMode].u);
-  curinfo.eff_tex_mode_0 = (texcount >= 1) ? normalize_tex_mode(v->tmu[0].reg[textureMode].u) : 0xffffffff;
-  curinfo.eff_tex_mode_1 = (texcount >= 2) ? normalize_tex_mode(v->tmu[1].reg[textureMode].u) : 0xffffffff;
-
-  /* compute the hash */
-  hash = compute_raster_hash(&curinfo);
-
-  /* find the appropriate hash entry */
-  for (info = v->raster_hash[hash]; info; prev = info, info = info->next)
-    if (info->eff_color_path == curinfo.eff_color_path &&
-      info->eff_alpha_mode == curinfo.eff_alpha_mode &&
-      info->eff_fog_mode == curinfo.eff_fog_mode &&
-      info->eff_fbz_mode == curinfo.eff_fbz_mode &&
-      info->eff_tex_mode_0 == curinfo.eff_tex_mode_0 &&
-      info->eff_tex_mode_1 == curinfo.eff_tex_mode_1)
-    {
-      /* got it, move us to the head of the list */
-      if (prev)
-      {
-        prev->next = info->next;
-        info->next = v->raster_hash[hash];
-        v->raster_hash[hash] = info;
-      }
-
-      /* return the result */
-      return info;
-    }
-
-  /* generate a new one using the generic entry */
-  curinfo.callback = (texcount == 0) ? raster_generic_0tmu : (texcount == 1) ? raster_generic_1tmu : raster_generic_2tmu;
-  curinfo.is_generic = TRUE;
-  curinfo.display = 0;
-  curinfo.polys = 0;
-  curinfo.hits = 0;
-  curinfo.next = 0;
-
-  return add_rasterizer(v, &curinfo);
+		/* update the iterated parameters */
+		iterr += extra->drdx;
+		iterg += extra->dgdx;
+		iterb += extra->dbdx;
+		itera += extra->dadx;
+		iterz += extra->dzdx;
+		iterw += extra->dwdx;
+		if (tmus >= 1) {
+			iterw0 += extra->dw0dx;
+			iters0 += extra->ds0dx;
+			itert0 += extra->dt0dx;
+		}
+		if (tmus >= 2) {
+			iterw1 += extra->dw1dx;
+			iters1 += extra->ds1dx;
+			itert1 += extra->dt1dx;
+		}
+	}
 }
 
 /*************************************
@@ -475,7 +454,7 @@ BX_CPP_INLINE Bit32s round_coordinate(float value)
   return result + (value - (float)result > 0.5f);
 }
 
-Bit32u poly_render_triangle(void *dest, const rectangle *cliprect, poly_draw_scanline_func callback, int paramcount, const poly_vertex *v1, const poly_vertex *v2, const poly_vertex *v3, poly_extra_data *extra)
+Bit32u poly_render_triangle(void *dest, const rectangle *cliprect, int texcount, int paramcount, const poly_vertex *v1, const poly_vertex *v2, const poly_vertex *v3, poly_extra_data *extra)
 {
   float dxdy_v1v2, dxdy_v1v3, dxdy_v2v3;
   const poly_vertex *tv;
@@ -568,7 +547,7 @@ Bit32u poly_render_triangle(void *dest, const rectangle *cliprect, poly_draw_sca
         istartx = istopx = 0;
       extent.startx = istartx;
       extent.stopx = istopx;
-      (callback)(dest,curscan,&extent,extra,0);
+      raster_function(texcount,dest,curscan,&extent,extra,0);
 
       pixels += istopx - istartx;
     }
@@ -580,7 +559,6 @@ Bit32u poly_render_triangle(void *dest, const rectangle *cliprect, poly_draw_sca
 Bit32s triangle_create_work_item(Bit16u *drawbuf, int texcount)
 {
   poly_extra_data extra;
-  raster_info *info = find_rasterizer(v, texcount);
   poly_vertex vert[3];
   Bit32u retval;
 
@@ -594,7 +572,6 @@ Bit32s triangle_create_work_item(Bit16u *drawbuf, int texcount)
 
   /* fill in the extra data */
   extra.state = v;
-  extra.info = info;
 
   /* fill in triangle parameters */
   extra.ax = v->fbi.ax;
@@ -649,14 +626,13 @@ Bit32s triangle_create_work_item(Bit16u *drawbuf, int texcount)
   }
 
   /* farm the rasterization out to other threads */
-  info->polys++;
-  retval = poly_render_triangle(drawbuf, NULL, info->callback, 0, &vert[0], &vert[1], &vert[2], &extra);
+  retval = poly_render_triangle(drawbuf, NULL, texcount, 0, &vert[0], &vert[1], &vert[2], &extra);
 
   return retval;
 }
 
 
-Bit32s triangle(voodoo_state *v)
+Bit32s triangle()
 {
   int texcount = 0;
   Bit16u *drawbuf;
@@ -732,7 +708,7 @@ Bit32s triangle(voodoo_state *v)
 }
 
 
-static Bit32s setup_and_draw_triangle(voodoo_state *v)
+static Bit32s setup_and_draw_triangle()
 {
   float dx1, dy1, dx2, dy2;
   float divisor, tdiv;
@@ -850,11 +826,11 @@ static Bit32s setup_and_draw_triangle(voodoo_state *v)
 
   /* draw the triangle */
   v->fbi.cheating_allowed = 1;
-  return triangle(v);
+  return triangle();
 }
 
 
-static Bit32s begin_triangle(voodoo_state *v)
+static Bit32s begin_triangle()
 {
   setup_vertex *sv = &v->fbi.svert[2];
 
@@ -881,7 +857,7 @@ static Bit32s begin_triangle(voodoo_state *v)
 }
 
 
-static Bit32s draw_triangle(voodoo_state *v)
+static Bit32s draw_triangle()
 {
   setup_vertex *sv = &v->fbi.svert[2];
   int cycles = 0;
@@ -910,7 +886,7 @@ static Bit32s draw_triangle(voodoo_state *v)
 
   /* if we have enough verts, go ahead and draw */
   if (++v->fbi.sverts >= 3)
-    cycles = setup_and_draw_triangle(v);
+    cycles = setup_and_draw_triangle();
 
   return cycles;
 }
@@ -963,7 +939,7 @@ static void raster_fastfill(void *destbase, Bit32s y, const poly_extent *extent,
 }
 
 
-Bit32u poly_render_triangle_custom(void *dest, const rectangle *cliprect, poly_draw_scanline_func callback, int startscanline, int numscanlines, const poly_extent *extents, poly_extra_data *extra)
+Bit32u poly_render_triangle_custom(void *dest, const rectangle *cliprect, int startscanline, int numscanlines, const poly_extent *extents, poly_extra_data *extra)
 {
   Bit32s curscan, scaninc;
   Bit32s v1yclip, v3yclip;
@@ -1014,7 +990,7 @@ Bit32u poly_render_triangle_custom(void *dest, const rectangle *cliprect, poly_d
       }
 
       /* set the extent and update the total pixel count */
-      (callback)(dest,curscan,extent,extra,0);
+      raster_fastfill(dest,curscan,extent,extra,0);
       if (istartx < istopx)
         pixels += istopx - istartx;
     }
@@ -1094,7 +1070,7 @@ Bit32s fastfill(voodoo_state *v)
     extra.state = v;
     memcpy(extra.dither, dithermatrix, sizeof(extra.dither));
 
-    pixels += poly_render_triangle_custom(drawbuf, NULL, raster_fastfill, y, count, extents, &extra);
+    pixels += poly_render_triangle_custom(drawbuf, NULL, y, count, extents, &extra);
   }
 
   /* 2 pixels per clock */
@@ -1728,21 +1704,21 @@ void register_w(Bit32u offset, Bit32u data, bx_bool log)
     case triangleCMD:
       v->fbi.cheating_allowed = (v->fbi.ax != 0 || v->fbi.ay != 0 || v->fbi.bx > 50 || v->fbi.by != 0 || v->fbi.cx != 0 || v->fbi.cy > 50);
       v->fbi.sign = data;
-      triangle(v);
+      triangle();
       break;
 
     case ftriangleCMD:
       v->fbi.cheating_allowed = 1;
       v->fbi.sign = data;
-      triangle(v);
+      triangle();
       break;
 
     case sBeginTriCMD:
-      begin_triangle(v);
+      begin_triangle();
       break;
 
     case sDrawTriCMD:
-      draw_triangle(v);
+      draw_triangle();
       break;
 
     /* other commands */
@@ -2626,7 +2602,7 @@ void cmdfifo_process(void)
           /* if we have enough, draw */
           if (++v->fbi.sverts >= 3) {
             BX_UNLOCK(cmdfifo_mutex);
-            setup_and_draw_triangle(v);
+            setup_and_draw_triangle();
             BX_LOCK(cmdfifo_mutex);
           }
         }
@@ -3313,7 +3289,6 @@ void voodoo_init(Bit8u _type)
 {
   int pen;
   int val;
-  const raster_info *info;
 
   v->reg[lfbMode].u = 0;
   v->reg[fbiInit0].u = (1 << 4) | (0x10 << 6);
@@ -3375,10 +3350,6 @@ void voodoo_init(Bit8u _type)
     voodoo_reciplog[val*2 + 0] = (1 << (RECIPLOG_LOOKUP_PREC + RECIPLOG_LOOKUP_BITS)) / value;
     voodoo_reciplog[val*2 + 1] = (Bit32u)(LOGB2((double)value / (double)(1 << RECIPLOG_LOOKUP_BITS)) * (double)(1 << RECIPLOG_LOOKUP_PREC));
   }
-
-  /* build the rasterizer table */
-  for (info = predef_raster_table; info->callback; info++)
-    add_rasterizer(v, info);
 
   /* create dithering tables */
   for (int val = 0; val < 256*16*2; val++) {
@@ -3449,7 +3420,9 @@ void voodoo_init(Bit8u _type)
 bx_bool voodoo_update(const rectangle *cliprect)
 {
   bx_bool changed = v->fbi.video_changed;
+#if 0
   int x, y;
+#endif
 
   /* reset the video changed flag */
   v->fbi.video_changed = 0;
@@ -3461,6 +3434,7 @@ bx_bool voodoo_update(const rectangle *cliprect)
 
   /* if the CLUT is dirty, recompute the pens array */
   if (v->fbi.clut_dirty) {
+#if 0
     Bit8u rtable[32], gtable[64], btable[32];
 
     /* Voodoo/Voodoo-2 have an internal 33-entry CLUT */
@@ -3520,7 +3494,7 @@ bx_bool voodoo_update(const rectangle *cliprect)
       int b = btable[x & 0x1f];
       v->fbi.pen[x] = MAKE_RGB(r, g, b);
     }
-
+#endif
     /* no longer dirty */
     v->fbi.clut_dirty = 0;
     changed = 1;
