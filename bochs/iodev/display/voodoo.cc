@@ -409,7 +409,9 @@ void bx_voodoo_c::register_state(void)
   new bx_shadow_num_c(dac, "read_result", &v->dac.read_result, BASE_HEX);
   new bx_shadow_num_c(dac, "clk0_freq", &v->dac.clk0_freq);
   bx_list_c *fbi = new bx_list_c(vstate, "fbi", "framebuffer");
-  new bx_shadow_data_c(fbi, "ram", v->fbi.ram, (4 << 20));
+  if ((BX_VOODOO_THIS s.model < VOODOO_BANSHEE) || (theVoodooVga == NULL)) {
+    new bx_shadow_data_c(fbi, "ram", v->fbi.ram, v->fbi.mask + 1);
+  }
   new bx_shadow_num_c(fbi, "rgboffs0", &v->fbi.rgboffs[0], BASE_HEX);
   new bx_shadow_num_c(fbi, "rgboffs1", &v->fbi.rgboffs[1], BASE_HEX);
   new bx_shadow_num_c(fbi, "rgboffs2", &v->fbi.rgboffs[2], BASE_HEX);
@@ -502,7 +504,9 @@ void bx_voodoo_c::register_state(void)
   for (i = 0; i < MAX_TMU; i++) {
     sprintf(name, "%d", i);
     bx_list_c *num = new bx_list_c(tmu, name, "");
-    new bx_shadow_data_c(num, "ram", v->tmu[i].ram, (4 << 20));
+    if (BX_VOODOO_THIS s.model < VOODOO_BANSHEE) {
+      new bx_shadow_data_c(num, "ram", v->tmu[i].ram, (4 << 20));
+    }
     new bx_shadow_bool_c(num, "regdirty", &v->tmu[i].regdirty);
     new bx_shadow_num_c(num, "starts", &v->tmu[i].starts);
     new bx_shadow_num_c(num, "startt", &v->tmu[i].startt);
@@ -557,6 +561,12 @@ void bx_voodoo_c::register_state(void)
     new bx_shadow_data_c(num, "palettea", (Bit8u*)v->tmu[i].palettea, 256 * sizeof(rgb_t));
   }
   new bx_shadow_num_c(vstate, "send_config", &v->send_config);
+  if (BX_VOODOO_THIS s.model == VOODOO_BANSHEE) {
+    bx_list_c *banshee = new bx_list_c(list, "banshee", "Voodoo Banshee State");
+    new bx_shadow_data_c(banshee, "io", (Bit8u*)v->banshee.io, 256, 1);
+    new bx_shadow_data_c(banshee, "crtc", (Bit8u*)v->banshee.crtc, 0x27, 1);
+    // TODO
+  }
   bx_list_c *vdraw = new bx_list_c(list, "vdraw", "Voodoo Draw State");
   new bx_shadow_bool_c(vdraw, "clock_enabled", &BX_VOODOO_THIS s.vdraw.clock_enabled);
   new bx_shadow_bool_c(vdraw, "output_on", &BX_VOODOO_THIS s.vdraw.output_on);
@@ -583,6 +593,27 @@ void bx_voodoo_c::after_restore_state(void)
     }
   } else {
     bx_pci_device_c::after_restore_pci_state(mem_read_handler);
+    if (DEV_pci_set_base_mem(BX_VOODOO_THIS_PTR, mem_read_handler, mem_write_handler,
+                             &BX_VOODOO_THIS pci_base_address[0],
+                             &BX_VOODOO_THIS pci_conf[0x10],
+                             0x2000000)) {
+      BX_INFO(("new mem base address: 0x%08x", BX_VOODOO_THIS pci_base_address[0]));
+    }
+    if (DEV_pci_set_base_mem(BX_VOODOO_THIS_PTR, mem_read_handler, mem_write_handler,
+                             &BX_VOODOO_THIS pci_base_address[1],
+                             &BX_VOODOO_THIS pci_conf[0x14],
+                             0x2000000)) {
+      BX_INFO(("new lfb base address: 0x%08x", BX_VOODOO_THIS pci_base_address[1]));
+    }
+    if (DEV_pci_set_base_io(BX_VOODOO_THIS_PTR, banshee_read_handler, banshee_write_handler,
+                            &BX_VOODOO_THIS pci_base_address[2],
+                            &BX_VOODOO_THIS pci_conf[0x18],
+                            256, &banshee_iomask[0], "banshee")) {
+      BX_INFO(("new i/o base address: 0x%04x", BX_VOODOO_THIS pci_base_address[2]));
+    }
+    if ((v->banshee.io[io_vidProcCfg] & 0x01) && (theVoodooVga != NULL)) {
+      theVoodooVga->banshee_update_mode();
+    }
     // TODO
   }
 }
@@ -1027,151 +1058,203 @@ Bit32u bx_voodoo_c::banshee_read_handler(void *this_ptr, Bit32u address, unsigne
 {
   UNUSED(this_ptr);
 
-  Bit32u result = 0xffffffff;
+  Bit32u result;
 
-  if ((address & ~0xff) == BX_VOODOO_THIS pci_base_address[2]) {
-    Bit8u offset = (Bit8u)(address & 0xff);
-    Bit8u reg = (offset>>2);
-    BX_DEBUG(("banshee read from offset 0x%02x (%s)", offset, banshee_io_reg_name[reg]));
-    switch (offset>>2) {
-      case io_status:
-        result = register_r(0);
-        break;
+  Bit8u offset = (Bit8u)(address & 0xff);
+  Bit8u reg = (offset>>2);
+  BX_DEBUG(("banshee read from offset 0x%02x (%s)", offset, banshee_io_reg_name[reg]));
+  switch (offset>>2) {
+    case io_status:
+      result = register_r(0);
+      break;
 
-      case io_dacData:
-        result = v->fbi.clut[v->banshee.io[io_dacAddr] & 0x1ff] = v->banshee.io[reg];
-        break;
+    case io_dacData:
+      result = v->fbi.clut[v->banshee.io[io_dacAddr] & 0x1ff] = v->banshee.io[reg];
+      break;
 
-      case io_vgab0:  case io_vgab4:  case io_vgab8:  case io_vgabc:
-      case io_vgac0:  case io_vgac4:  case io_vgac8:  case io_vgacc:
-      case io_vgad0:  case io_vgad4:  case io_vgad8:  case io_vgadc:
-        result = 0;
-        if (theVoodooVga != NULL) {
-          for (unsigned i=0; i<io_len; i++) {
-            result <<= 8;
-            result |= theVoodooVga->banshee_read_handler(theVoodooVga, 0x300+offset+i, 1);
-          }
+    case io_vgab0:  case io_vgab4:  case io_vgab8:  case io_vgabc:
+    case io_vgac0:  case io_vgac4:  case io_vgac8:  case io_vgacc:
+    case io_vgad0:  case io_vgad4:  case io_vgad8:  case io_vgadc:
+      result = 0;
+      if (theVoodooVga != NULL) {
+        for (unsigned i=0; i<io_len; i++) {
+          result <<= 8;
+          result |= theVoodooVga->banshee_vga_read_handler(theVoodooVga, 0x300+offset+i, 1);
         }
-        break;
+      }
+      break;
 
-      default:
-        result = v->banshee.io[reg];
-        break;
-    }
-    BX_DEBUG(("banshee read result = 0x%08x", result));
+    default:
+      result = v->banshee.io[reg];
+      break;
   }
+  BX_DEBUG(("banshee read result = 0x%08x", result));
   return result;
 }
 
 void bx_voodoo_c::banshee_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
 {
   UNUSED(this_ptr);
-  Bit16u width, height;
 
-  if ((address & ~0xff) == BX_VOODOO_THIS pci_base_address[2]) {
-    Bit8u offset = (Bit8u)(address & 0xff);
-    Bit8u reg = (offset>>2);
-    Bit32u old = v->banshee.io[reg];
-    BX_DEBUG(("banshee write to offset 0x%02x: value = 0x%08x len=%d (%s)", offset, value,
-              io_len, banshee_io_reg_name[reg]));
-    switch (reg) {
-      case io_vidProcCfg:
-        v->banshee.io[reg] = value;
-        if ((v->banshee.io[reg] ^ old) & 0x2800)
-          v->fbi.clut_dirty = 1;
-        if ((v->banshee.io[reg] & 0x01) && ((old & 0x01) == 0x00)) {
+  Bit8u offset = (Bit8u)(address & 0xff);
+  Bit8u reg = (offset>>2);
+  Bit32u old = v->banshee.io[reg];
+  BX_DEBUG(("banshee write to offset 0x%02x: value = 0x%08x len=%d (%s)", offset, value,
+            io_len, banshee_io_reg_name[reg]));
+  switch (reg) {
+    case io_vidProcCfg:
+      v->banshee.io[reg] = value;
+      if ((v->banshee.io[reg] ^ old) & 0x2800)
+        v->fbi.clut_dirty = 1;
+      if ((v->banshee.io[reg] & 0x01) && ((old & 0x01) == 0x00)) {
+        if (theVoodooVga != NULL) {
           theVoodooVga->banshee_update_mode();
         }
-        break;
+      }
+      break;
 
-      case io_dacData:
-        v->banshee.io[reg] = value;
-        if (v->banshee.io[reg] != v->fbi.clut[v->banshee.io[io_dacAddr] & 0x1ff]) {
-          v->fbi.clut[v->banshee.io[io_dacAddr] & 0x1ff] = v->banshee.io[reg];
-          v->fbi.clut_dirty = 1;
-        }
-        break;
+    case io_dacData:
+      v->banshee.io[reg] = value;
+      if (v->banshee.io[reg] != v->fbi.clut[v->banshee.io[io_dacAddr] & 0x1ff]) {
+        v->fbi.clut[v->banshee.io[io_dacAddr] & 0x1ff] = v->banshee.io[reg];
+        v->fbi.clut_dirty = 1;
+      }
+      break;
 
-      case io_miscInit0:
-        v->banshee.io[reg] = value;
-        v->fbi.yorigin = (value >> 18) & 0xfff;
-        break;
+    case io_miscInit0:
+      v->banshee.io[reg] = value;
+      v->fbi.yorigin = (value >> 18) & 0xfff;
+      break;
 
-      case io_vidScreenSize:
-        v->banshee.io[reg] = value;
-        width = (value & 0xfff);
-        height = (value >> 12) & 0xfff;
-        if ((width != v->fbi.width) || (height != v->fbi.height)) {
-          v->fbi.width = width;
-          v->fbi.height = height;
-        }
-        break;
+    case io_vidScreenSize:
+      v->banshee.io[reg] = value;
+      v->fbi.width = (value & 0xfff);
+      v->fbi.height = (value >> 12) & 0xfff;
+      break;
 
-      case io_vgaInit0:
-        v->banshee.io[reg] = value;
+    case io_vgaInit0:
+      v->banshee.io[reg] = value;
+      if (theVoodooVga != NULL) {
         theVoodooVga->banshee_set_dac_mode((v->banshee.io[reg] & 0x04) != 0);
-        break;
+      }
+      break;
 
-      case io_lfbMemoryConfig:
-        v->banshee.io[reg] = value;
-        v->fbi.lfb_base = (value & 0x1fff) << 10;
-        v->fbi.lfb_stride = ((value >> 13) & 7) + 10;
-        break;
+    case io_lfbMemoryConfig:
+      v->banshee.io[reg] = value;
+      v->fbi.lfb_base = (value & 0x1fff) << 13;
+      v->fbi.lfb_stride = ((value >> 13) & 7) + 10;
+      break;
 
-      case io_vgab0:  case io_vgab4:  case io_vgab8:  case io_vgabc:
-      case io_vgac0:  case io_vgac4:  case io_vgac8:  case io_vgacc:
-      case io_vgad0:  case io_vgad4:  case io_vgad8:  case io_vgadc:
-        if (theVoodooVga != NULL) {
-          for (unsigned i=0; i<io_len; i++) {
-            Bit8u value8 = (value >> (i*8)) & 0xff;
-            theVoodooVga->banshee_write_handler(theVoodooVga, 0x300+offset+i, value8, 1);
-          }
+    case io_vgab0:  case io_vgab4:  case io_vgab8:  case io_vgabc:
+    case io_vgac0:  case io_vgac4:  case io_vgac8:  case io_vgacc:
+    case io_vgad0:  case io_vgad4:  case io_vgad8:  case io_vgadc:
+      if (theVoodooVga != NULL) {
+        for (unsigned i=0; i<io_len; i++) {
+          Bit8u value8 = (value >> (i*8)) & 0xff;
+          theVoodooVga->banshee_vga_write_handler(theVoodooVga, 0x300+offset+i, value8, 1);
         }
-        break;
+      }
+      break;
 
-      default:
-        v->banshee.io[reg] = value;
-        break;
-    }
+    default:
+      v->banshee.io[reg] = value;
+      break;
   }
 }
 
 void bx_voodoo_c::banshee_mem_read(bx_phy_address addr, unsigned len, void *data)
 {
   Bit32u *data_ptr = (Bit32u*)data;
-  Bit32u value = 0;
+  Bit32u value = 0xffffffff;
+  Bit32u offset = (addr & 0x1ffffff);
 
   if (BX_VOODOO_THIS pci_rom_size > 0) {
     Bit32u mask = (BX_VOODOO_THIS pci_rom_size - 1);
     if ((addr & ~mask) == BX_VOODOO_THIS pci_rom_address) {
       if (BX_VOODOO_THIS pci_conf[0x30] & 0x01) {
+        value = 0;
         for (unsigned i = 0; i < len; i++) {
           value <<= 8;
           value |= BX_VOODOO_THIS pci_rom[(addr & mask) + i];
         }
-        *data_ptr = value;
-      } else {
-        *data_ptr = 0xffffffff;
       }
+      *data_ptr = value;
       return;
     }
   }
-  Bit32u offset = (addr & 0x1ffffff);
   if ((addr & ~0x1ffffff) == BX_VOODOO_THIS pci_base_address[0]) {
-    BX_INFO(("TODO: banshee mem read from offset 0x%08x", offset));
+    if (offset < 0x80000) {
+      value = BX_VOODOO_THIS banshee_read_handler(BX_VOODOO_THIS_PTR, offset, len);
+    } else if (offset < 0x100000) {
+      BX_INFO(("TODO: CMD/AGP/Misc register read from offset 0x%08x", offset));
+      value = v->banshee.agp[(offset >> 2) & 0x7f];
+    } else if (offset < 0x200000) {
+      BX_INFO(("TODO: 2D register read from offset 0x%08x", offset));
+      value = v->banshee.blt[(offset >> 2) & 0x7f];
+    } else if (offset < 0x600000) {
+      value = register_r((offset & 0x1fffff) >> 2);
+    } else if (offset < 0xc00000) {
+      BX_ERROR(("reserved read from offset 0x%08x", offset));
+    } else if (offset < 0x1000000) {
+      BX_INFO(("TODO: YUV planar space read from offset 0x%08x", offset));
+    } else {
+      Bit8u temp = v->fbi.lfb_stride;
+      v->fbi.lfb_stride = 11;
+      value = lfb_r((offset & 0xffffff) >> 2);
+      v->fbi.lfb_stride = temp;
+    }
   } else if ((addr & ~0x1ffffff) == BX_VOODOO_THIS pci_base_address[1]) {
-    BX_INFO(("TODO: banshee lfb read from offset 0x%08x", offset));
+    if (offset < v->fbi.lfb_base) {
+      if (offset <= v->fbi.mask) {
+        value = ((Bit32u *)v->fbi.ram)[offset >> 2];
+      }
+    } else {
+      value = lfb_r((offset - v->fbi.lfb_base) >> 2);
+    }
   }
+  *data_ptr = value;
 }
 
 void bx_voodoo_c::banshee_mem_write(bx_phy_address addr, unsigned len, void *data)
 {
   Bit32u offset = (addr & 0x1ffffff);
+  Bit32u value = *(Bit32u*)data;
 
   if ((addr & ~0x1ffffff) == BX_VOODOO_THIS pci_base_address[0]) {
-    BX_INFO(("TODO: banshee mem write to offset 0x%08x", offset));
+    if (offset < 0x80000) {
+      BX_VOODOO_THIS banshee_write_handler(BX_VOODOO_THIS_PTR, offset, value, len);
+    } else if (offset < 0x100000) {
+      BX_INFO(("TODO: CMD/AGP/Misc register write to offset 0x%08x", offset));
+      v->banshee.agp[(offset >> 2) & 0x7f] = value;
+    } else if (offset < 0x200000) {
+      BX_INFO(("TODO: 2D register write to offset 0x%08x", offset));
+      v->banshee.blt[(offset >> 2) & 0x7f] = value;
+    } else if (offset < 0x600000) {
+      register_w_common((offset & 0x1fffff) >> 2, value);
+    } else if (offset < 0x800000) {
+      texture_w((offset & 0x1fffff) >> 2, value);
+    } else if (offset < 0xc00000) {
+      BX_ERROR(("reserved write to offset 0x%08x", offset));
+    } else if (offset < 0x1000000) {
+      BX_INFO(("TODO: YUV planar space write to offset 0x%08x", offset));
+    } else {
+      Bit8u temp = v->fbi.lfb_stride;
+      v->fbi.lfb_stride = 11;
+      lfb_w((offset & 0xffffff) >> 2, value, 0xffffffff);
+      v->fbi.lfb_stride = temp;
+    }
   } else if ((addr & ~0x1ffffff) == BX_VOODOO_THIS pci_base_address[1]) {
-    BX_INFO(("TODO: banshee lfb write to offset 0x%08x", offset));
+    if (offset < v->fbi.lfb_base) {
+      if (v->fbi.cmdfifo[0].enabled || v->fbi.cmdfifo[1].enabled) {
+        BX_INFO(("TODO: CMDFIFO write"));
+      } else {
+        if (offset*4 <= v->fbi.mask) {
+          ((Bit32u *)v->fbi.ram)[offset >> 2] = value;
+        }
+      }
+    } else {
+      lfb_w((offset - v->fbi.lfb_base) >> 2, value, 0xffffffff);
+    }
   }
 }
 
@@ -1194,9 +1277,9 @@ bx_bool bx_voodoo_vga_c::init_vga_extension(void)
   if (theVoodooDevice->get_model() == VOODOO_BANSHEE) {
     BX_VVGA_THIS s.memory = v->fbi.ram;
     BX_VVGA_THIS s.memsize = v->fbi.mask + 1;
-    init_iohandlers(banshee_read_handler, banshee_write_handler);
-    DEV_register_iowrite_handler(this, banshee_write_handler, 0x0102, "banshee", 1);
-    DEV_register_iowrite_handler(this, banshee_write_handler, 0x46e8, "banshee", 1);
+    init_iohandlers(banshee_vga_read_handler, banshee_vga_write_handler);
+    DEV_register_iowrite_handler(this, banshee_vga_write_handler, 0x0102, "banshee", 1);
+    DEV_register_iowrite_handler(this, banshee_vga_write_handler, 0x46e8, "banshee", 1);
     BX_VVGA_THIS s.max_xres = 1280;
     BX_VVGA_THIS s.max_yres = 1024;
     BX_VVGA_THIS pci_enabled = 1;
@@ -1487,14 +1570,14 @@ void bx_voodoo_vga_c::update(void)
   }
 }
 
-Bit32u bx_voodoo_vga_c::banshee_read_handler(void *this_ptr, Bit32u address, unsigned io_len)
+Bit32u bx_voodoo_vga_c::banshee_vga_read_handler(void *this_ptr, Bit32u address, unsigned io_len)
 {
   UNUSED(this_ptr);
   Bit32u value;
 
   if ((io_len == 2) && ((address & 1) == 0)) {
-    value = banshee_read_handler(theVoodooVga,address,1);
-    value |= (banshee_read_handler(theVoodooVga,address+1,1) << 8);
+    value = banshee_vga_read_handler(theVoodooVga,address,1);
+    value |= (banshee_vga_read_handler(theVoodooVga,address+1,1) << 8);
     return value;
   }
 
@@ -1527,13 +1610,13 @@ Bit32u bx_voodoo_vga_c::banshee_read_handler(void *this_ptr, Bit32u address, uns
 
 }
 
-void bx_voodoo_vga_c::banshee_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
+void bx_voodoo_vga_c::banshee_vga_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
 {
   UNUSED(this_ptr);
 
   if ((io_len == 2) && ((address & 1) == 0)) {
-    banshee_write_handler(theVoodooVga,address,value & 0xff,1);
-    banshee_write_handler(theVoodooVga,address+1,value >> 8,1);
+    banshee_vga_write_handler(theVoodooVga,address,value & 0xff,1);
+    banshee_vga_write_handler(theVoodooVga,address+1,value >> 8,1);
     return;
   }
 

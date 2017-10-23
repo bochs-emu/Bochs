@@ -111,11 +111,11 @@ public:
   void banshee_update_mode(void);
   void banshee_set_dac_mode(bx_bool mode);
 
-  static Bit32u banshee_read_handler(void *this_ptr, Bit32u address, unsigned io_len);
-  static void   banshee_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
+  static Bit32u banshee_vga_read_handler(void *this_ptr, Bit32u address, unsigned io_len);
+  static void   banshee_vga_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
 
 protected:
-  virtual void   update(void);
+  virtual void  update(void);
 
 private:
   struct {

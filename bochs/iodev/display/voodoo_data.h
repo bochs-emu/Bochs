@@ -1675,12 +1675,8 @@ struct _banshee_info
 {
   Bit32u  io[0x40];   /* I/O registers */
   Bit32u  agp[0x80];  /* AGP registers */
-  Bit8u   vga[0x20];  /* VGA registers */
+  Bit32u  blt[0x80];  /* 2D registers */
   Bit8u   crtc[0x27]; /* VGA CRTC registers */
-  Bit8u   seq[0x05];  /* VGA sequencer registers */
-  Bit8u   gc[0x05];   /* VGA graphics controller registers */
-  Bit8u   att[0x15];  /* VGA attribute registers */
-  Bit8u   attff;      /* VGA attribute flip-flop */
 };
 
 

@@ -3429,10 +3429,15 @@ void voodoo_init(Bit8u _type)
   v->tmu[0].reg = &v->reg[0x100];
   v->tmu[1].reg = &v->reg[0x200];
 
-  v->tmu[0].ram = (Bit8u*)malloc(4<<20);
-  v->tmu[1].ram = (Bit8u*)malloc(4<<20);
-  v->tmu[0].mask = (4<<20)-1;
-  v->tmu[1].mask = (4<<20)-1;
+  if (v->type < VOODOO_BANSHEE) {
+    v->tmu[0].ram = (Bit8u*)malloc(4<<20);
+    v->tmu[1].ram = (Bit8u*)malloc(4<<20);
+    v->tmu[0].mask = (4<<20)-1;
+    v->tmu[1].mask = (4<<20)-1;
+  } else {
+    v->tmu[0].ram = v->fbi.ram;
+    v->tmu[0].mask = (16<<20)-1;
+  }
 
   v->tmu_config = 64;
 
