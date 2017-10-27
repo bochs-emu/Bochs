@@ -1097,8 +1097,10 @@ void bx_voodoo_c::banshee_write_handler(void *this_ptr, Bit32u address, Bit32u v
   UNUSED(this_ptr);
 
   Bit8u offset = (Bit8u)(address & 0xff);
-  Bit8u reg = (offset>>2);
+  Bit8u reg = (offset>>2), k, m, n;
   Bit32u old = v->banshee.io[reg];
+  double vfreq;
+
   BX_DEBUG(("banshee write to offset 0x%02x: value = 0x%08x len=%d (%s)", offset, value,
             io_len, banshee_io_reg_name[reg]));
   switch (reg) {
@@ -1109,6 +1111,20 @@ void bx_voodoo_c::banshee_write_handler(void *this_ptr, Bit32u address, Bit32u v
       if ((v->banshee.io[reg] & 0x01) && ((old & 0x01) == 0x00)) {
         if (theVoodooVga != NULL) {
           theVoodooVga->banshee_update_mode();
+        }
+      }
+      break;
+
+    case io_pllCtrl0:
+      if (value != v->banshee.io[reg]) {
+        v->banshee.io[reg] = value;
+        k = (Bit8u)(value & 0x03);
+        m = (Bit8u)((value >> 2) & 0x3f);
+        n = (Bit8u)((value >> 8) & 0xff);
+        vfreq = 14318180.0f * ((double)n + 2.0f) / ((double)m + 2.0f) / (double)(1 << k);
+        BX_INFO(("Setting VCLK #3 (pllCtrl0) = %.3f MHz", vfreq / 1000000.0f));
+        if (theVoodooVga != NULL) {
+          theVoodooVga->banshee_set_vclk3((Bit32u)vfreq);
         }
       }
       break;
@@ -1280,8 +1296,12 @@ bx_bool bx_voodoo_vga_c::init_vga_extension(void)
     init_iohandlers(banshee_vga_read_handler, banshee_vga_write_handler);
     DEV_register_iowrite_handler(this, banshee_vga_write_handler, 0x0102, "banshee", 1);
     DEV_register_iowrite_handler(this, banshee_vga_write_handler, 0x46e8, "banshee", 1);
-    BX_VVGA_THIS s.max_xres = 1280;
-    BX_VVGA_THIS s.max_yres = 1024;
+    BX_VVGA_THIS s.max_xres = 1600;
+    BX_VVGA_THIS s.max_yres = 1280;
+    BX_VVGA_THIS s.vclk[0] = 25175000;
+    BX_VVGA_THIS s.vclk[1] = 28322000;
+    BX_VVGA_THIS s.vclk[2] = 50000000;
+    BX_VVGA_THIS s.vclk[3] = 25175000;
     BX_VVGA_THIS pci_enabled = 1;
     return 1;
   } else {
@@ -1357,6 +1377,22 @@ void bx_voodoo_vga_c::banshee_set_dac_mode(bx_bool mode)
     vbe.dac_8bit = mode;
     s.dac_shift = mode ? 0 : 2;
   }
+}
+
+void bx_voodoo_vga_c::banshee_set_vclk3(Bit32u value)
+{
+  BX_VVGA_THIS s.vclk[3] = value;
+  if (BX_VVGA_THIS s.misc_output.clock_select == 3) {
+    calculate_retrace_timing();
+  }
+}
+
+void bx_voodoo_vga_c::get_crtc_params(Bit32u *htotal, Bit32u *vtotal)
+{
+  *htotal = BX_VVGA_THIS s.CRTC.reg[0] + ((v->banshee.crtc[0x1a] & 0x01) << 8) + 5;
+  *vtotal = BX_VVGA_THIS s.CRTC.reg[6] + ((BX_VVGA_THIS s.CRTC.reg[7] & 0x01) << 8) +
+            ((BX_VVGA_THIS s.CRTC.reg[7] & 0x20) << 4) +
+            ((v->banshee.crtc[0x1b] & 0x01) << 10) + 2;
 }
 
 void bx_voodoo_vga_c::update(void)

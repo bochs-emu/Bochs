@@ -107,9 +107,11 @@ public:
                              unsigned width, unsigned height);
 
   virtual bx_bool init_vga_extension(void);
+  virtual void   get_crtc_params(Bit32u *htotal, Bit32u *vtotal);
 
   void banshee_update_mode(void);
   void banshee_set_dac_mode(bx_bool mode);
+  void banshee_set_vclk3(Bit32u value);
 
   static Bit32u banshee_vga_read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   banshee_vga_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);

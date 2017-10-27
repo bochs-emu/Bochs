@@ -140,6 +140,8 @@ void bx_vgacore_c::init_standard_vga(void)
   BX_VGA_THIS s.plane_shift = 16;
   BX_VGA_THIS s.dac_shift = 2;
   BX_VGA_THIS s.last_bpp = 8;
+  BX_VGA_THIS s.vclk[0] = 25175000;
+  BX_VGA_THIS s.vclk[1] = 28322000;
   BX_VGA_THIS s.htotal_usec = 31;
   BX_VGA_THIS s.vtotal_usec = 14285;
 
@@ -258,6 +260,8 @@ void bx_vgacore_c::init_systemtimer(void)
 
 void bx_vgacore_c::register_state(bx_list_c *parent)
 {
+  char name[4];
+
   bx_list_c *list = new bx_list_c(parent, "vgacore", "VGA Core State");
   bx_list_c *misc = new bx_list_c(list, "misc_output");
   new bx_shadow_bool_c(misc, "color_emulation", &BX_VGA_THIS s.misc_output.color_emulation);
@@ -333,6 +337,11 @@ void bx_vgacore_c::register_state(bx_list_c *parent)
   new bx_shadow_num_c(list, "charmap_address", &BX_VGA_THIS s.charmap_address);
   new bx_shadow_bool_c(list, "x_dotclockdiv2", &BX_VGA_THIS s.x_dotclockdiv2);
   new bx_shadow_bool_c(list, "y_doublescan", &BX_VGA_THIS s.y_doublescan);
+  bx_list_c *vclk = new bx_list_c(list, "vclk");
+  for (int i = 0; i < 4; i++) {
+    sprintf(name, "%d", i);
+    new bx_shadow_num_c(vclk, name, &BX_VGA_THIS s.vclk[i]);
+  }
   new bx_shadow_num_c(list, "plane_shift", &BX_VGA_THIS s.plane_shift);
   new bx_shadow_num_c(list, "plane_offset", &BX_VGA_THIS s.plane_offset);
   new bx_shadow_num_c(list, "dac_shift", &BX_VGA_THIS s.dac_shift);
@@ -401,15 +410,27 @@ void bx_vgacore_c::determine_screen_dimensions(unsigned *piHeight, unsigned *piW
   }
 }
 
+void bx_vgacore_c::get_crtc_params(Bit32u *htotal, Bit32u *vtotal)
+{
+  *htotal = BX_VGA_THIS s.CRTC.reg[0] + 5;
+  *vtotal = BX_VGA_THIS s.CRTC.reg[6] + ((BX_VGA_THIS s.CRTC.reg[7] & 0x01) << 8) +
+            ((BX_VGA_THIS s.CRTC.reg[7] & 0x20) << 4) + 2;
+}
+
 void bx_vgacore_c::calculate_retrace_timing()
 {
-  Bit32u dot_clock[4] = {25175000, 28322000, 25175000, 25175000};
   Bit32u htotal, hbstart, hbend, clock, cwidth, vtotal, vrstart, vrend, hfreq, vfreq;
 
-  htotal = BX_VGA_THIS s.CRTC.reg[0] + 5;
-  htotal <<= BX_VGA_THIS s.x_dotclockdiv2;
+  BX_VGA_THIS get_crtc_params(&htotal, &vtotal);
   cwidth = ((BX_VGA_THIS s.sequencer.reg1 & 0x01) == 1) ? 8 : 9;
-  clock = dot_clock[BX_VGA_THIS s.misc_output.clock_select];
+  clock = BX_VGA_THIS s.vclk[BX_VGA_THIS s.misc_output.clock_select];
+  if (BX_VGA_THIS s.x_dotclockdiv2) clock >>= 1;
+  if (clock == 0) {
+    BX_ERROR(("Ignoring invalid video clock setting"));
+    return;
+  } else {
+    BX_DEBUG(("Using video clock %.3f MHz", (double)clock / 1000000.0f));
+  }
   hfreq = clock / (htotal * cwidth);
   BX_VGA_THIS s.htotal_usec = 1000000 / hfreq;
   hbstart = BX_VGA_THIS s.CRTC.reg[2];
@@ -417,8 +438,6 @@ void bx_vgacore_c::calculate_retrace_timing()
   hbend = (BX_VGA_THIS s.CRTC.reg[3] & 0x1f) + ((BX_VGA_THIS s.CRTC.reg[5] & 0x80) >> 2);
   hbend = hbstart + ((hbend - hbstart) & 0x3f);
   BX_VGA_THIS s.hbend_usec = (1000000 * hbend * cwidth) / clock;
-  vtotal = BX_VGA_THIS s.CRTC.reg[6] + ((BX_VGA_THIS s.CRTC.reg[7] & 0x01) << 8) +
-           ((BX_VGA_THIS s.CRTC.reg[7] & 0x20) << 4) + 2;
   vrstart = BX_VGA_THIS s.CRTC.reg[16] + ((BX_VGA_THIS s.CRTC.reg[7] & 0x04) << 6) +
             ((BX_VGA_THIS s.CRTC.reg[7] & 0x80) << 2);
   vrend = ((BX_VGA_THIS s.CRTC.reg[17] & 0x0f) - vrstart) & 0x0f;

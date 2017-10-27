@@ -338,6 +338,20 @@ void bx_svga_cirrus_c::svga_init_members()
   memset(BX_CIRRUS_THIS s.memory, 0xff, CIRRUS_VIDEO_MEMORY_BYTES);
   BX_CIRRUS_THIS disp_ptr = BX_CIRRUS_THIS s.memory;
   BX_CIRRUS_THIS memsize_mask = BX_CIRRUS_THIS s.memsize - 1;
+
+  // TODO: This should be done by the VGABIOS
+  BX_CIRRUS_THIS sequencer.reg[0x0b] = 0x4a;
+  BX_CIRRUS_THIS sequencer.reg[0x1b] = 0x2b;
+  BX_CIRRUS_THIS s.vclk[0] = 25227000;
+  BX_CIRRUS_THIS sequencer.reg[0x0c] = 0x5b;
+  BX_CIRRUS_THIS sequencer.reg[0x1c] = 0x2f;
+  BX_CIRRUS_THIS s.vclk[1] = 28325000;
+  BX_CIRRUS_THIS sequencer.reg[0x0d] = 0x42;
+  BX_CIRRUS_THIS sequencer.reg[0x1d] = 0x1f;
+  BX_CIRRUS_THIS s.vclk[2] = 31500000;
+  BX_CIRRUS_THIS sequencer.reg[0x0e] = 0x7e;
+  BX_CIRRUS_THIS sequencer.reg[0x1e] = 0x33;
+  BX_CIRRUS_THIS s.vclk[3] = 36082000;
 }
 
 void bx_svga_cirrus_c::reset(unsigned type)
@@ -1675,6 +1689,7 @@ void bx_svga_cirrus_c::svga_write_sequencer(Bit32u address, unsigned index, Bit8
 
   bx_bool update_cursor = 0;
   Bit16u x, y, size;
+  Bit8u i, n, d, p;
 
   x = BX_CIRRUS_THIS hw_cursor.x;
   y = BX_CIRRUS_THIS hw_cursor.y;
@@ -1712,8 +1727,9 @@ void bx_svga_cirrus_c::svga_write_sequencer(Bit32u address, unsigned index, Bit8
       break;
     case 0x08:
     case 0x09:
-    case 0x0a:  // cirrus scratch reg 1
-    case 0x0b:
+    case 0x0a: // cirrus scratch reg 1
+      break;
+    case 0x0b: // VCLK stuff
     case 0x0c:
     case 0x0d:
     case 0x0e:
@@ -1721,6 +1737,21 @@ void bx_svga_cirrus_c::svga_write_sequencer(Bit32u address, unsigned index, Bit8
     case 0x1c:
     case 0x1d:
     case 0x1e:
+      if (value != BX_CIRRUS_THIS sequencer.reg[index]) {
+        BX_CIRRUS_THIS sequencer.reg[index] = value;
+        i = (index & 0x0f) - 11;
+        n = BX_CIRRUS_THIS sequencer.reg[0x0b + i];
+        d = BX_CIRRUS_THIS sequencer.reg[0x1b + i] >> 1;
+        p = BX_CIRRUS_THIS sequencer.reg[0x1b + i] & 1;
+        if (d > 0) {
+          if (!p) {
+            BX_CIRRUS_THIS s.vclk[i] = (Bit32u)(14318180.0f * ((double)n / (double)d));
+          } else {
+            BX_CIRRUS_THIS s.vclk[i] = (Bit32u)(14318180.0f * ((double)n / (double)(d << 1)));
+          }
+          BX_DEBUG(("VCLK%d = %.3f MHz", i, (double)BX_CIRRUS_THIS s.vclk[i] / 1000000.0f));
+        }
+      }
       break;
     case 0x0f:
       return;
