@@ -71,6 +71,9 @@ public:
   static bx_bool update_timing(void);
   Bit8u get_model(void) {return s.model;}
 
+  Bit32u banshee_blt_reg_read(Bit8u reg);
+  void   banshee_blt_reg_write(Bit8u reg, Bit32u value);
+
 private:
   bx_voodoo_t s;
 
@@ -89,6 +92,9 @@ private:
 
   void banshee_mem_read(bx_phy_address addr, unsigned len, void *data);
   void banshee_mem_write(bx_phy_address addr, unsigned len, void *data);
+
+  Bit32u banshee_agp_reg_read(Bit8u reg);
+  void   banshee_agp_reg_write(Bit8u reg, Bit32u value);
 };
 
 class bx_voodoo_vga_c : public bx_vgacore_c {
@@ -121,7 +127,6 @@ protected:
 
 private:
   struct {
-    Bit8u bpp;
     bx_bool dac_8bit;
     bx_bool half_mode;
   } vbe;

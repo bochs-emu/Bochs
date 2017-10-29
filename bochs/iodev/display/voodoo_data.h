@@ -804,7 +804,7 @@ static const char *const banshee_reg_name[] =
  *************************************/
 
 /* 0x000 */
-#define io_status           (0x000/4) /*  */
+#define io_status             (0x000/4) /*  */
 #define io_pciInit0           (0x004/4) /*  */
 #define io_sipMonitor         (0x008/4) /*  */
 #define io_lfbMemoryConfig    (0x00c/4) /*  */
@@ -827,52 +827,52 @@ static const char *const banshee_reg_name[] =
 #define io_dacMode            (0x04c/4) /*  */
 #define io_dacAddr            (0x050/4) /*  */
 #define io_dacData            (0x054/4) /*  */
-#define io_rgbMaxDelta          (0x058/4) /*  */
+#define io_rgbMaxDelta        (0x058/4) /*  */
 #define io_vidProcCfg         (0x05c/4) /*  */
-#define io_hwCurPatAddr         (0x060/4) /*  */
+#define io_hwCurPatAddr       (0x060/4) /*  */
 #define io_hwCurLoc           (0x064/4) /*  */
 #define io_hwCurC0            (0x068/4) /*  */
 #define io_hwCurC1            (0x06c/4) /*  */
-#define io_vidInFormat          (0x070/4) /*  */
-#define io_vidInStatus          (0x074/4) /*  */
+#define io_vidInFormat        (0x070/4) /*  */
+#define io_vidInStatus        (0x074/4) /*  */
 #define io_vidSerialParallelPort    (0x078/4) /*  */
-#define io_vidInXDecimDeltas      (0x07c/4) /*  */
+#define io_vidInXDecimDeltas  (0x07c/4) /*  */
 
 /* 0x080 */
-#define io_vidInDecimInitErrs     (0x080/4) /*  */
-#define io_vidInYDecimDeltas      (0x084/4) /*  */
-#define io_vidPixelBufThold       (0x088/4) /*  */
-#define io_vidChromaMin         (0x08c/4) /*  */
-#define io_vidChromaMax         (0x090/4) /*  */
-#define io_vidCurrentLine       (0x094/4) /*  */
-#define io_vidScreenSize        (0x098/4) /*  */
-#define io_vidOverlayStartCoords    (0x09c/4) /*  */
-#define io_vidOverlayEndScreenCoord   (0x0a0/4) /*  */
-#define io_vidOverlayDudx       (0x0a4/4) /*  */
+#define io_vidInDecimInitErrs (0x080/4) /*  */
+#define io_vidInYDecimDeltas  (0x084/4) /*  */
+#define io_vidPixelBufThold   (0x088/4) /*  */
+#define io_vidChromaMin       (0x08c/4) /*  */
+#define io_vidChromaMax       (0x090/4) /*  */
+#define io_vidCurrentLine     (0x094/4) /*  */
+#define io_vidScreenSize      (0x098/4) /*  */
+#define io_vidOverlayStartCoords (0x09c/4) /*  */
+#define io_vidOverlayEndScreenCoord (0x0a0/4) /*  */
+#define io_vidOverlayDudx     (0x0a4/4) /*  */
 #define io_vidOverlayDudxOffsetSrcWidth (0x0a8/4) /*  */
-#define io_vidOverlayDvdy       (0x0ac/4) /*  */
-#define io_vgab0            (0x0b0/4) /*  */
-#define io_vgab4            (0x0b4/4) /*  */
-#define io_vgab8            (0x0b8/4) /*  */
-#define io_vgabc            (0x0bc/4) /*  */
+#define io_vidOverlayDvdy     (0x0ac/4) /*  */
+#define io_vgab0              (0x0b0/4) /*  */
+#define io_vgab4              (0x0b4/4) /*  */
+#define io_vgab8              (0x0b8/4) /*  */
+#define io_vgabc              (0x0bc/4) /*  */
 
 /* 0x0c0 */
-#define io_vgac0            (0x0c0/4) /*  */
-#define io_vgac4            (0x0c4/4) /*  */
-#define io_vgac8            (0x0c8/4) /*  */
-#define io_vgacc            (0x0cc/4) /*  */
-#define io_vgad0            (0x0d0/4) /*  */
-#define io_vgad4            (0x0d4/4) /*  */
-#define io_vgad8            (0x0d8/4) /*  */
-#define io_vgadc            (0x0dc/4) /*  */
-#define io_vidOverlayDvdyOffset     (0x0e0/4) /*  */
-#define io_vidDesktopStartAddr      (0x0e4/4) /*  */
-#define io_vidDesktopOverlayStride    (0x0e8/4) /*  */
+#define io_vgac0              (0x0c0/4) /*  */
+#define io_vgac4              (0x0c4/4) /*  */
+#define io_vgac8              (0x0c8/4) /*  */
+#define io_vgacc              (0x0cc/4) /*  */
+#define io_vgad0              (0x0d0/4) /*  */
+#define io_vgad4              (0x0d4/4) /*  */
+#define io_vgad8              (0x0d8/4) /*  */
+#define io_vgadc              (0x0dc/4) /*  */
+#define io_vidOverlayDvdyOffset (0x0e0/4) /*  */
+#define io_vidDesktopStartAddr (0x0e4/4) /*  */
+#define io_vidDesktopOverlayStride (0x0e8/4) /*  */
 #define io_vidInAddr0         (0x0ec/4) /*  */
 #define io_vidInAddr1         (0x0f0/4) /*  */
 #define io_vidInAddr2         (0x0f4/4) /*  */
-#define io_vidInStride          (0x0f8/4) /*  */
-#define io_vidCurrOverlayStartAddr    (0x0fc/4) /*  */
+#define io_vidInStride        (0x0f8/4) /*  */
+#define io_vidCurrOverlayStartAddr (0x0fc/4) /*  */
 
 
 
@@ -995,6 +995,47 @@ static const char *const banshee_agp_reg_name[] =
   "crc1",     "reserved124",  "reserved128",  "reserved12c",
   "crc2",     "reserved134",  "reserved138",  "reserved13c"
 };
+
+
+
+/*************************************
+ *
+ *  Voodoo Banshee 2D registers
+ *
+ *************************************/
+
+/* 0x000 */
+#define blt_status         (0x000/4) /*  */
+#define blt_intrCtrl       (0x004/4) /*  */
+#define blt_clip0Min       (0x008/4) /*  */
+#define blt_clip0Max       (0x00c/4) /*  */
+#define blt_dstBaseAddr    (0x010/4) /*  */
+#define blt_dstFormat      (0x014/4) /*  */
+#define blt_srcColorkeyMin (0x018/4) /*  */
+#define blt_srcColorkeyMax (0x01c/4) /*  */
+#define blt_dstColorkeyMin (0x020/4) /*  */
+#define blt_dstColorkeyMax (0x024/4) /*  */
+#define blt_bresError0     (0x028/4) /*  */
+#define blt_bresError1     (0x02c/4) /*  */
+#define blt_rop            (0x030/4) /*  */
+#define blt_srcBaseAddr    (0x034/4) /*  */
+#define blt_commandExtra   (0x038/4) /*  */
+#define blt_lineStipple    (0x03c/4) /*  */
+
+/* 0x040 */
+#define blt_lineStyle      (0x040/4) /*  */
+#define blt_pattern0Alias  (0x044/4) /*  */
+#define blt_pattern1Alias  (0x048/4) /*  */
+#define blt_clip1Min       (0x04c/4) /*  */
+#define blt_clip1Max       (0x050/4) /*  */
+#define blt_srcFormat      (0x054/4) /*  */
+#define blt_srcSize        (0x058/4) /*  */
+#define blt_srcXY          (0x05c/4) /*  */
+#define blt_colorBack      (0x060/4) /*  */
+#define blt_colorFore      (0x064/4) /*  */
+#define blt_dstSize        (0x068/4) /*  */
+#define blt_dstXY          (0x06c/4) /*  */
+#define blt_command        (0x070/4) /*  */
 
 
 
@@ -1654,10 +1695,11 @@ struct _poly_extra_data
 typedef struct _banshee_info banshee_info;
 struct _banshee_info
 {
-  Bit32u  io[0x40];   /* I/O registers */
-  Bit32u  agp[0x80];  /* AGP registers */
-  Bit32u  blt[0x80];  /* 2D registers */
-  Bit8u   crtc[0x27]; /* VGA CRTC registers */
+  Bit32u io[0x40];   /* I/O registers */
+  Bit32u agp[0x80];  /* AGP registers */
+  Bit32u blt[0x80];  /* 2D registers */
+  Bit8u  crtc[0x27]; /* VGA CRTC registers */
+  Bit8u  bpp;
 };
 
 

@@ -2502,15 +2502,22 @@ void cmdfifo_process(void)
       }
       break;
     case 2:
-      BX_INFO(("CMDFIFO packet type 2: not tested yet"));
       mask = (command >> 3);
-      regaddr = bltSrcBaseAddr;
+      if (v->type < VOODOO_BANSHEE) {
+        regaddr = bltSrcBaseAddr;
+      } else {
+        regaddr = blt_clip0Min;
+      }
       while (mask) {
         if (mask & 1) {
           data = cmdfifo_r();
-          BX_UNLOCK(cmdfifo_mutex);
-          register_w(regaddr, data, 1);
-          BX_LOCK(cmdfifo_mutex);
+          if (v->type < VOODOO_BANSHEE) {
+            BX_UNLOCK(cmdfifo_mutex);
+            register_w(regaddr, data, 1);
+            BX_LOCK(cmdfifo_mutex);
+          } else {
+            Voodoo_Banshee_2D_write(regaddr, data);
+          }
         }
         regaddr++;
         mask >>= 1;
