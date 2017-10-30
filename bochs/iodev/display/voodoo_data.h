@@ -1700,6 +1700,14 @@ struct _banshee_info
   Bit32u blt[0x80];  /* 2D registers */
   Bit8u  crtc[0x27]; /* VGA CRTC registers */
   Bit8u  bpp;
+  struct {
+    bx_bool enabled;
+    bx_bool mode;
+    Bit32u addr;
+    Bit16u x;
+    Bit16u y;
+    Bit32u color[2];
+  } hwcursor;
 };
 
 

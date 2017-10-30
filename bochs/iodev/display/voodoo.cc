@@ -1103,6 +1103,9 @@ void bx_voodoo_c::banshee_write_handler(void *this_ptr, Bit32u address, Bit32u v
   Bit8u reg = (offset>>2), k, m, n;
   Bit32u old = v->banshee.io[reg];
   double vfreq;
+  bx_bool prev_hwce = v->banshee.hwcursor.enabled;
+  Bit16u prev_hwcx = v->banshee.hwcursor.x;
+  Bit16u prev_hwcy = v->banshee.hwcursor.y;
 
   BX_DEBUG(("banshee write to offset 0x%02x: value = 0x%08x len=%d (%s)", offset, value,
             io_len, banshee_io_reg_name[reg]));
@@ -1167,6 +1170,42 @@ void bx_voodoo_c::banshee_write_handler(void *this_ptr, Bit32u address, Bit32u v
           theVoodooVga->banshee_update_mode();
         }
       }
+      v->banshee.hwcursor.enabled = ((v->banshee.io[reg] >> 27) & 1);
+      v->banshee.hwcursor.mode = ((v->banshee.io[reg] >> 1) & 1);
+      if (v->banshee.hwcursor.enabled != prev_hwce) {
+        theVoodooVga->redraw_area(v->banshee.hwcursor.x - 63, v->banshee.hwcursor.y - 63,
+                                  v->banshee.hwcursor.x, v->banshee.hwcursor.y);
+      }
+      break;
+
+    case io_hwCurPatAddr:
+      v->banshee.io[reg] = value;
+      v->banshee.hwcursor.addr = v->banshee.io[reg] & 0xffffff;
+      if (v->banshee.hwcursor.enabled && (value != old)) {
+        theVoodooVga->redraw_area(v->banshee.hwcursor.x - 63, v->banshee.hwcursor.y - 63,
+                                  v->banshee.hwcursor.x, v->banshee.hwcursor.y);
+      }
+      break;
+
+    case io_hwCurLoc:
+      v->banshee.io[reg] = value;
+      v->banshee.hwcursor.x = v->banshee.io[reg] & 0x7ff;
+      v->banshee.hwcursor.y = (v->banshee.io[reg] >> 16) & 0x7ff;
+      if (v->banshee.hwcursor.enabled && (value != old)) {
+        theVoodooVga->redraw_area(prev_hwcx - 63, prev_hwcy - 63, prev_hwcx, prev_hwcy);
+        theVoodooVga->redraw_area(v->banshee.hwcursor.x - 63, v->banshee.hwcursor.y - 63,
+                                  v->banshee.hwcursor.x, v->banshee.hwcursor.y);
+      }
+      break;
+
+    case io_hwCurC0:
+      v->banshee.io[reg] = value;
+      v->banshee.hwcursor.color[0] = v->banshee.io[reg] & 0xffffff;
+      break;
+
+    case io_hwCurC1:
+      v->banshee.io[reg] = value;
+      v->banshee.hwcursor.color[1] = v->banshee.io[reg] & 0xffffff;
       break;
 
     case io_vidScreenSize:
@@ -1634,6 +1673,112 @@ void bx_voodoo_vga_c::get_crtc_params(Bit32u *htotal, Bit32u *vtotal)
             ((v->banshee.crtc[0x1b] & 0x01) << 10) + 2;
 }
 
+void bx_voodoo_vga_c::banshee_draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *info)
+{
+  unsigned cx, cy, cw, ch, px, py, w, h, x, y;
+  Bit8u *cpat0, *cpat1, *tile_ptr, *tile_ptr2, *vid_ptr;
+  Bit8u ccode, pbits, pval0, pval1;
+  Bit32u colour = 0;
+  int i;
+
+  if ((xc <= v->banshee.hwcursor.x) &&
+      ((int)(xc + X_TILESIZE) > (v->banshee.hwcursor.x - 63)) &&
+      (yc <= v->banshee.hwcursor.y) &&
+      ((int)(yc + Y_TILESIZE) > (v->banshee.hwcursor.y - 63))) {
+
+    Bit32u start = v->banshee.io[io_vidDesktopStartAddr];
+    Bit8u *disp_ptr = &v->fbi.ram[start & v->fbi.mask];
+    Bit16u pitch = v->banshee.io[io_vidDesktopOverlayStride] & 0x7fff;
+    tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
+
+    if ((v->banshee.hwcursor.x - 63) < (int)xc) {
+      cx = xc;
+      if ((v->banshee.hwcursor.x - xc + 1) > w) {
+        cw = w;
+      } else {
+        cw = v->banshee.hwcursor.x - xc + 1;
+      }
+      px = 63 - (v->banshee.hwcursor.x - xc);
+    } else {
+      cx = v->banshee.hwcursor.x - 63;
+      cw = w - (v->banshee.hwcursor.x - 63 - xc);
+      px = 0;
+    }
+    if ((v->banshee.hwcursor.y - 63) < (int)yc) {
+      cy = yc;
+      if ((v->banshee.hwcursor.y - yc + 1) > h) {
+        ch = h;
+      } else {
+        ch = v->banshee.hwcursor.y - yc + 1;
+      }
+      py = 63 - (v->banshee.hwcursor.y - yc);
+    } else {
+      cy = v->banshee.hwcursor.y - 63;
+      ch = h - (v->banshee.hwcursor.y - 63 - yc);
+      py = 0;
+    }
+    tile_ptr += ((h - ch) * info->pitch);
+    tile_ptr += ((w - cw) * (info->bpp >> 3));
+    cpat0 = &v->fbi.ram[v->banshee.hwcursor.addr] + (py * 16);
+    for (y = cy; y < (cy + ch); y++) {
+      cpat1 = cpat0 + (px >> 3);
+      pbits = 8 - (px & 7);
+      tile_ptr2 = tile_ptr;
+      for (x = cx; x < (cx + cw); x++) {
+        pval0 = (*cpat1 >> (pbits - 1)) & 1;
+        pval1 = (*(cpat1 + 8) >> (pbits - 1)) & 1;
+        ccode = pval0 + (pval1 << 1) + (v->banshee.hwcursor.mode << 2);
+        if ((ccode == 0) || (ccode == 5)) {
+          colour = v->banshee.hwcursor.color[0];
+        } else if ((ccode == 2) || (ccode == 7)) {
+          colour = v->banshee.hwcursor.color[1];
+        } else {
+          vid_ptr = disp_ptr + y * pitch + x * (v->banshee.bpp >> 3);
+          switch (v->banshee.bpp) {
+            case 8:
+              colour = v->fbi.clut[*vid_ptr];
+              break;
+            case 16:
+              colour = *vid_ptr;
+              colour |= (*(vid_ptr + 1)) << 8;
+              colour = MAKE_COLOUR(
+                colour & 0x001f, 5, 8, 0x0000ff,
+                colour & 0x07e0, 11, 16, 0x00ff00,
+                colour & 0xf800, 16, 24, 0xff0000);
+              break;
+            case 24:
+            case 32:
+              colour = *vid_ptr;
+              colour |= (*(vid_ptr + 1)) << 8;
+              colour |= (*(vid_ptr + 2)) << 16;
+              break;
+          }
+          if (ccode == 3) colour ^= 0xffffff;
+        }
+        colour = MAKE_COLOUR(
+          colour, 24, info->red_shift, info->red_mask,
+          colour, 16, info->green_shift, info->green_mask,
+          colour, 8, info->blue_shift, info->blue_mask);
+        if (info->is_little_endian) {
+          for (i=0; i<info->bpp; i+=8) {
+            *(tile_ptr2++) = (Bit8u)(colour >> i);
+          }
+        } else {
+          for (i=info->bpp-8; i>-8; i-=8) {
+            *(tile_ptr2++) = (Bit8u)(colour >> i);
+          }
+        }
+        if (--pbits == 0) {
+          cpat1++;
+          pbits = 8;
+        }
+      }
+      cpat0 += 16;
+      tile_ptr += info->pitch;
+    }
+  }
+}
+
 void bx_voodoo_vga_c::update(void)
 {
   Bit32u start = v->banshee.io[io_vidDesktopStartAddr];
@@ -1705,6 +1850,9 @@ void bx_voodoo_vga_c::update(void)
                     }
                     tile_ptr += info.pitch;
                   }
+                  if (v->banshee.hwcursor.enabled) {
+                    banshee_draw_hwcursor(xc, yc, &info);
+                  }
                   SET_TILE_UPDATED(BX_VVGA_THIS, xti, yti, 0);
                   bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
                 }
@@ -1745,6 +1893,9 @@ void bx_voodoo_vga_c::update(void)
                       vid_ptr += pitch;
                     }
                     tile_ptr += info.pitch;
+                  }
+                  if (v->banshee.hwcursor.enabled) {
+                    banshee_draw_hwcursor(xc, yc, &info);
                   }
                   SET_TILE_UPDATED(BX_VVGA_THIS, xti, yti, 0);
                   bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
@@ -1788,6 +1939,9 @@ void bx_voodoo_vga_c::update(void)
                     }
                     tile_ptr += info.pitch;
                   }
+                  if (v->banshee.hwcursor.enabled) {
+                    banshee_draw_hwcursor(xc, yc, &info);
+                  }
                   SET_TILE_UPDATED(BX_VVGA_THIS, xti, yti, 0);
                   bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
                 }
@@ -1830,6 +1984,9 @@ void bx_voodoo_vga_c::update(void)
                       vid_ptr += pitch;
                     }
                     tile_ptr += info.pitch;
+                  }
+                  if (v->banshee.hwcursor.enabled) {
+                    banshee_draw_hwcursor(xc, yc, &info);
                   }
                   SET_TILE_UPDATED(BX_VVGA_THIS, xti, yti, 0);
                   bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
