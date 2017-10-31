@@ -2469,7 +2469,7 @@ void cmdfifo_process(void)
 {
   Bit32u command, data, mask, nwords, regaddr;
   Bit8u type, code, nvertex, smode;
-  bx_bool inc, pcolor;
+  bx_bool blt, inc, pcolor;
   voodoo_reg reg;
   int i;
   setup_vertex svert = {0};
@@ -2492,11 +2492,16 @@ void cmdfifo_process(void)
     case 1:
       nwords = (command >> 16);
       regaddr = (command & 0x7ff8) >> 3;
+      blt = (regaddr >> 11) & 1;
       inc = (command >> 15) & 1;
       for (i = 0; i < (int)nwords; i++) {
         data = cmdfifo_r();
         BX_UNLOCK(cmdfifo_mutex);
-        register_w(regaddr, data, 1);
+        if ((v->type < VOODOO_BANSHEE) || !blt) {
+          register_w(regaddr, data, 1);
+        } else {
+          Voodoo_Banshee_2D_write(regaddr & 0xff, data);
+        }
         BX_LOCK(cmdfifo_mutex);
         if (inc) regaddr++;
       }
@@ -2511,13 +2516,13 @@ void cmdfifo_process(void)
       while (mask) {
         if (mask & 1) {
           data = cmdfifo_r();
+          BX_UNLOCK(cmdfifo_mutex);
           if (v->type < VOODOO_BANSHEE) {
-            BX_UNLOCK(cmdfifo_mutex);
             register_w(regaddr, data, 1);
-            BX_LOCK(cmdfifo_mutex);
           } else {
             Voodoo_Banshee_2D_write(regaddr, data);
           }
+          BX_LOCK(cmdfifo_mutex);
         }
         regaddr++;
         mask >>= 1;
@@ -2620,11 +2625,16 @@ void cmdfifo_process(void)
       nwords = (command >> 29);
       mask = (command >> 15) & 0x3fff;
       regaddr = (command & 0x7ff8) >> 3;
+      blt = (regaddr >> 11) & 1;
       while (mask) {
         if (mask & 1) {
           data = cmdfifo_r();
           BX_UNLOCK(cmdfifo_mutex);
-          register_w(regaddr, data, 1);
+          if ((v->type < VOODOO_BANSHEE) || !blt) {
+            register_w(regaddr, data, 1);
+          } else {
+            Voodoo_Banshee_2D_write(regaddr & 0xff, data);
+          }
           BX_LOCK(cmdfifo_mutex);
         }
         regaddr++;

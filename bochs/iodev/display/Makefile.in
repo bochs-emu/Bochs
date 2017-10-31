@@ -111,7 +111,7 @@ bx_svga_cirrus.dll: svga_cirrus.o vgacore.o
 	@LINK_DLL@ svga_cirrus.o vgacore.o $(WIN32_DLL_IMPORT_LIBRARY)
 
 bx_voodoo.dll: voodoo.o vgacore.o
-	@LINK_DLL@ voodoo.o $(WIN32_DLL_IMPORT_LIBRARY)
+	@LINK_DLL@ voodoo.o vgacore.o $(WIN32_DLL_IMPORT_LIBRARY)
 
 ##### end DLL section
 

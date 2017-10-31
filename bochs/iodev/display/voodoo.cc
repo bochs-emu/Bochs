@@ -1321,7 +1321,8 @@ void bx_voodoo_c::banshee_mem_write(bx_phy_address addr, unsigned len, void *dat
       if (v->fbi.cmdfifo[0].enabled && (offset >= v->fbi.cmdfifo[0].base) &&
           (offset < v->fbi.cmdfifo[0].end)) {
         cmdfifo_w(offset, value);
-      } else if (v->fbi.cmdfifo[1].enabled) {
+      } else if (v->fbi.cmdfifo[1].enabled && (offset >= v->fbi.cmdfifo[1].base) &&
+          (offset < v->fbi.cmdfifo[1].end)) {
         BX_INFO(("TODO: CMDFIFO #1 write"));
       } else {
         for (unsigned i = 0; i < len; i++) {
@@ -1378,6 +1379,7 @@ void bx_voodoo_c::banshee_agp_reg_write(Bit8u reg, Bit32u value)
   switch (reg) {
     case cmdBaseAddr0:
     case cmdBaseAddr1:
+      BX_LOCK(cmdfifo_mutex);
       v->fbi.cmdfifo[fifo_idx].base = (value << 12);
       if (fifo_idx == 0) {
         v->fbi.cmdfifo[0].end = v->fbi.cmdfifo[0].base +
@@ -1386,15 +1388,18 @@ void bx_voodoo_c::banshee_agp_reg_write(Bit8u reg, Bit32u value)
         v->fbi.cmdfifo[1].end = v->fbi.cmdfifo[1].base +
           (((v->banshee.agp[cmdBaseSize1] & 0xff) + 1) << 12);
       }
+      BX_UNLOCK(cmdfifo_mutex);
       break;
     case cmdBaseSize0:
     case cmdBaseSize1:
+      BX_LOCK(cmdfifo_mutex);
       if (fifo_idx == 0) {
         v->fbi.cmdfifo[0].end = v->fbi.cmdfifo[0].base + (((value & 0xff) + 1) << 12);
       } else {
         v->fbi.cmdfifo[1].end = v->fbi.cmdfifo[1].base + (((value & 0xff) + 1) << 12);
       }
       v->fbi.cmdfifo[fifo_idx].enabled = ((value >> 8) & 1);
+      BX_UNLOCK(cmdfifo_mutex);
       break;
     case cmdBump0:
     case cmdBump1:
@@ -1404,7 +1409,9 @@ void bx_voodoo_c::banshee_agp_reg_write(Bit8u reg, Bit32u value)
       break;
     case cmdRdPtrL0:
     case cmdRdPtrL1:
+      BX_LOCK(cmdfifo_mutex);
       v->fbi.cmdfifo[fifo_idx].rdptr = value;
+      BX_UNLOCK(cmdfifo_mutex);
       break;
     case cmdRdPtrH0:
     case cmdRdPtrH1:
@@ -1422,7 +1429,9 @@ void bx_voodoo_c::banshee_agp_reg_write(Bit8u reg, Bit32u value)
       break;
     case cmdFifoDepth0:
     case cmdFifoDepth1:
+      BX_LOCK(cmdfifo_mutex);
       v->fbi.cmdfifo[fifo_idx].depth = value & 0xfffff;
+      BX_UNLOCK(cmdfifo_mutex);
       break;
     case cmdHoleCnt0:
     case cmdHoleCnt1:
@@ -1741,10 +1750,8 @@ void bx_voodoo_vga_c::banshee_draw_hwcursor(unsigned xc, unsigned yc, bx_svga_ti
             case 16:
               colour = *vid_ptr;
               colour |= (*(vid_ptr + 1)) << 8;
-              colour = MAKE_COLOUR(
-                colour & 0x001f, 5, 8, 0x0000ff,
-                colour & 0x07e0, 11, 16, 0x00ff00,
-                colour & 0xf800, 16, 24, 0xff0000);
+              colour = (((colour & 0xf800) << 8) | ((colour & 0x07e0) << 5) |
+                        ((colour & 0x001f) << 3));
               break;
             case 24:
             case 32:
