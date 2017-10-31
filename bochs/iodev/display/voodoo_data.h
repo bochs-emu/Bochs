@@ -1697,7 +1697,6 @@ struct _banshee_info
 {
   Bit32u io[0x40];   /* I/O registers */
   Bit32u agp[0x80];  /* AGP registers */
-  Bit32u blt[0x80];  /* 2D registers */
   Bit8u  crtc[0x27]; /* VGA CRTC registers */
   Bit8u  bpp;
   struct {
@@ -1708,6 +1707,21 @@ struct _banshee_info
     Bit16u y;
     Bit32u color[2];
   } hwcursor;
+  struct {
+    Bit32u reg[0x80];  /* 2D registers */
+    Bit8u cmd;
+    bx_bool immed;
+    bx_bool busy;
+    Bit16u src_x;
+    Bit16u src_y;
+    Bit16u dst_x;
+    Bit16u dst_y;
+    Bit16u dst_w;
+    Bit16u dst_h;
+    bx_bool x_dir;
+    bx_bool y_dir;
+    Bit8u rop0;
+  } blt;
 };
 
 

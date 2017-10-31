@@ -74,6 +74,12 @@ public:
   Bit32u banshee_blt_reg_read(Bit8u reg);
   void   banshee_blt_reg_write(Bit8u reg, Bit32u value);
 
+  void   banshee_blt_launch_area_write(Bit32u value);
+  void   banshee_blt_complete(void);
+  void   banshee_blt_rectangle_fill(void);
+  void   banshee_blt_screen_to_screen(void);
+  void   banshee_blt_host_to_screen(void);
+
 private:
   bx_voodoo_t s;
 

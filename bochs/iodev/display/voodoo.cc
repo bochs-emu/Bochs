@@ -564,7 +564,17 @@ void bx_voodoo_c::register_state(void)
   if (BX_VOODOO_THIS s.model == VOODOO_BANSHEE) {
     bx_list_c *banshee = new bx_list_c(list, "banshee", "Voodoo Banshee State");
     new bx_shadow_data_c(banshee, "io", (Bit8u*)v->banshee.io, 256, 1);
+    new bx_shadow_data_c(banshee, "agp", (Bit8u*)v->banshee.agp, 0x80, 1);
     new bx_shadow_data_c(banshee, "crtc", (Bit8u*)v->banshee.crtc, 0x27, 1);
+    new bx_shadow_data_c(banshee, "blt_reg", (Bit8u*)v->banshee.blt.reg, 0x80, 1);
+    new bx_shadow_num_c(banshee, "bpp", &v->banshee.bpp);
+    new bx_shadow_bool_c(banshee, "hwcursor_enabled", &v->banshee.hwcursor.enabled);
+    new bx_shadow_bool_c(banshee, "hwcursor_mode", &v->banshee.hwcursor.mode);
+    new bx_shadow_num_c(banshee, "hwcursor_addr", &v->banshee.hwcursor.addr, BASE_HEX);
+    new bx_shadow_num_c(banshee, "hwcursor_x", &v->banshee.hwcursor.x, BASE_HEX);
+    new bx_shadow_num_c(banshee, "hwcursor_y", &v->banshee.hwcursor.y, BASE_HEX);
+    new bx_shadow_num_c(banshee, "hwcursor_color0", &v->banshee.hwcursor.color[0], BASE_HEX);
+    new bx_shadow_num_c(banshee, "hwcursor_color1", &v->banshee.hwcursor.color[1], BASE_HEX);
     // TODO
   }
   bx_list_c *vdraw = new bx_list_c(list, "vdraw", "Voodoo Draw State");
@@ -1452,7 +1462,7 @@ Bit32u bx_voodoo_c::banshee_blt_reg_read(Bit8u reg)
       result = register_r(0);
       break;
     default:
-      result = v->banshee.blt[reg];
+      result = v->banshee.blt.reg[reg];
   }
   BX_DEBUG(("2D read register 0x%03x result = 0x%08x", reg<<2, result));
   return result;
@@ -1460,67 +1470,43 @@ Bit32u bx_voodoo_c::banshee_blt_reg_read(Bit8u reg)
 
 void bx_voodoo_c::banshee_blt_reg_write(Bit8u reg, Bit32u value)
 {
-  Bit32u start = v->banshee.io[io_vidDesktopStartAddr] & v->fbi.mask;
-  Bit8u *disp_ptr = &v->fbi.ram[start];
-  Bit8u *vid_ptr, *vid_ptr2;
-  Bit32u pitch = v->banshee.io[io_vidDesktopOverlayStride] & 0x7fff;
-  Bit32u color;
-  Bit16u x0, y0, x, y, w, h;
-
   BX_DEBUG(("2D write register 0x%03x value = 0x%08x", reg<<2, value));
-  v->banshee.blt[reg] = value;
+  v->banshee.blt.reg[reg] = value;
   if (reg == blt_intrCtrl) {
     BX_ERROR(("intrCtrl register not supported yet"));
   } else if (reg == blt_command) {
-    switch (value & 0x0f) {
+    v->banshee.blt.cmd = (value & 0x0f);
+    v->banshee.blt.immed = (value >> 8) & 1;
+    v->banshee.blt.x_dir = (value >> 14) & 1;
+    v->banshee.blt.y_dir = (value >> 15) & 1;
+    v->banshee.blt.rop0 = (value >> 24);
+    v->banshee.blt.src_x = v->banshee.blt.reg[blt_srcXY] & 0x1fff;
+    v->banshee.blt.src_y= (v->banshee.blt.reg[blt_srcXY] >> 16) & 0x1fff;
+    v->banshee.blt.dst_x = v->banshee.blt.reg[blt_dstXY] & 0x1fff;
+    v->banshee.blt.dst_y= (v->banshee.blt.reg[blt_dstXY] >> 16) & 0x1fff;
+    v->banshee.blt.dst_w = v->banshee.blt.reg[blt_dstSize] & 0x1fff;
+    v->banshee.blt.dst_h = (v->banshee.blt.reg[blt_dstSize] >> 16) & 0x1fff;
+    v->banshee.blt.busy = 1;
+    switch (v->banshee.blt.cmd) {
       case 0: // NOP
         break;
       case 1:
-        BX_INFO(("TODO: 2D Screen to screen blt"));
+        v->banshee.blt.busy = 1;
+        banshee_blt_screen_to_screen();
         break;
       case 2:
         BX_INFO(("TODO: 2D Screen to screen stretch blt"));
         break;
       case 3:
-        BX_INFO(("TODO: 2D Host to screen blt"));
+        v->banshee.blt.busy = 1;
+        banshee_blt_host_to_screen();
         break;
       case 4:
         BX_INFO(("TODO: 2D Host to screen stretch blt"));
         break;
       case 5:
-        color = v->banshee.blt[blt_colorFore];
-        x0 = v->banshee.blt[blt_dstXY] & 0x1fff;
-        y0 = (v->banshee.blt[blt_dstXY] >> 16) & 0x1fff;
-        w = v->banshee.blt[blt_dstSize] & 0x1fff;
-        h = (v->banshee.blt[blt_dstSize] >> 16) & 0x1fff;
-        vid_ptr = disp_ptr + (y0 * pitch + x0);
-        for (y = y0; y < (y0 + h); y++) {
-          vid_ptr2 = vid_ptr;
-          for (x = x0; x < (x0 + w); x++) {
-            switch (v->banshee.bpp) {
-              case 8:
-                *(vid_ptr2++) = (color & 0xff);
-                break;
-              case 16:
-                *(vid_ptr2++) = (color & 0xff);
-                *(vid_ptr2++) = ((color >> 8) & 0xff);
-                break;
-              case 24:
-                *(vid_ptr2++) = (color & 0xff);
-                *(vid_ptr2++) = ((color >> 8) & 0xff);
-                *(vid_ptr2++) = ((color >> 16) & 0xff);
-                break;
-              case 32:
-                *(vid_ptr2++) = (color & 0xff);
-                *(vid_ptr2++) = ((color >> 8) & 0xff);
-                *(vid_ptr2++) = ((color >> 16) & 0xff);
-                *(vid_ptr2++) = ((color >> 24) & 0xff);
-                break;
-            }
-          }
-          vid_ptr += pitch;
-        }
-        theVoodooVga->redraw_area(x0, y0, w, h);
+        v->banshee.blt.busy = 1;
+        banshee_blt_rectangle_fill();
         break;
       case 6:
         BX_INFO(("TODO: 2D Line"));
@@ -1533,17 +1519,114 @@ void bx_voodoo_c::banshee_blt_reg_write(Bit8u reg, Bit32u value)
         break;
       case 13:
         BX_INFO(("TODO: 2D Write Sgram Mode register"));
-        break;
+        return;
       case 14:
         BX_INFO(("TODO: 2D Write Sgram Mask register"));
-        break;
+        return;
       case 15:
         BX_INFO(("TODO: 2D Write Sgram Color register"));
-        break;
+        return;
       default:
         BX_ERROR(("Unsupported 2D mode"));
     }
+    if (v->banshee.blt.immed) {
+      banshee_blt_complete();
+    }
+  } else if ((reg >= 0x20) && (reg < 0x40)) {
+    banshee_blt_launch_area_write(value);
+  } else if ((reg >= 0x40) && (reg < 0x80)) {
+    BX_DEBUG(("colorPattern write"));
   }
+}
+
+void bx_voodoo_c::banshee_blt_launch_area_write(Bit32u value)
+{
+  BX_INFO(("launchArea write not handled yet"));
+}
+
+void bx_voodoo_c::banshee_blt_complete()
+{
+  Bit32u cmd = v->banshee.blt.reg[blt_command];
+  bx_bool xinc = (cmd >> 10) & 1;
+  bx_bool yinc = (cmd >> 11) & 1;
+
+  theVoodooVga->redraw_area(v->banshee.blt.dst_x, v->banshee.blt.dst_y,
+                            v->banshee.blt.dst_w, v->banshee.blt.dst_h);
+  if (xinc) {
+    if (v->banshee.blt.x_dir) {
+      v->banshee.blt.dst_x -= v->banshee.blt.dst_w;
+    } else {
+      v->banshee.blt.dst_x += v->banshee.blt.dst_w;
+    }
+    v->banshee.blt.reg[blt_dstXY] &= ~0xffff;
+    v->banshee.blt.reg[blt_dstXY] |= v->banshee.blt.dst_x;
+  }
+  if (yinc) {
+    if (v->banshee.blt.y_dir) {
+      v->banshee.blt.dst_y -= v->banshee.blt.dst_h;
+    } else {
+      v->banshee.blt.dst_y += v->banshee.blt.dst_h;
+    }
+    v->banshee.blt.reg[blt_dstXY] &= 0xffff;
+    v->banshee.blt.reg[blt_dstXY] |= (v->banshee.blt.dst_y << 16);
+  }
+}
+
+void bx_voodoo_c::banshee_blt_rectangle_fill()
+{
+  Bit32u start = v->banshee.io[io_vidDesktopStartAddr] & v->fbi.mask;
+  Bit8u *disp_ptr = &v->fbi.ram[start];
+  Bit8u *vid_ptr, *vid_ptr2;
+  Bit32u pitch = v->banshee.io[io_vidDesktopOverlayStride] & 0x7fff;
+  Bit32u color;
+  Bit16u x, y, x0, y0, w, h;
+
+  BX_DEBUG(("Rectangle fill"));
+  x0 = v->banshee.blt.dst_x;
+  y0 = v->banshee.blt.dst_y;
+  w = v->banshee.blt.dst_w;
+  h = v->banshee.blt.dst_h;
+  color = v->banshee.blt.reg[blt_colorFore];
+  vid_ptr = disp_ptr + y0 * pitch + x0 * (v->banshee.bpp >> 3);
+  for (y = y0; y < (y0 + h); y++) {
+    vid_ptr2 = vid_ptr;
+    for (x = x0; x < (x0 + w); x++) {
+      switch (v->banshee.bpp) {
+        case 8:
+          *(vid_ptr2++) = (color & 0xff);
+          break;
+        case 16:
+          *(vid_ptr2++) = (color & 0xff);
+          *(vid_ptr2++) = ((color >> 8) & 0xff);
+          break;
+        case 24:
+          *(vid_ptr2++) = (color & 0xff);
+          *(vid_ptr2++) = ((color >> 8) & 0xff);
+          *(vid_ptr2++) = ((color >> 16) & 0xff);
+          break;
+        case 32:
+          *(vid_ptr2++) = (color & 0xff);
+          *(vid_ptr2++) = ((color >> 8) & 0xff);
+          *(vid_ptr2++) = ((color >> 16) & 0xff);
+          *(vid_ptr2++) = ((color >> 24) & 0xff);
+          break;
+      }
+    }
+    vid_ptr += pitch;
+  }
+  v->banshee.blt.busy = 0;
+}
+
+void bx_voodoo_c::banshee_blt_screen_to_screen()
+{
+  BX_INFO(("TODO: 2D Screen to screen blt (command=0x%08x)", v->banshee.blt.reg[blt_command]));
+  v->banshee.blt.busy = 0;
+}
+
+void bx_voodoo_c::banshee_blt_host_to_screen()
+{
+  BX_INFO(("TODO: 2D Host to screen blt (command=0x%08x)", v->banshee.blt.reg[blt_command]));
+  v->banshee.blt.busy = 0;
 }
 
 #undef LOG_THIS
@@ -1726,8 +1809,8 @@ void bx_voodoo_vga_c::banshee_draw_hwcursor(unsigned xc, unsigned yc, bx_svga_ti
       ch = h - (v->banshee.hwcursor.y - 63 - yc);
       py = 0;
     }
-    tile_ptr += ((h - ch) * info->pitch);
-    tile_ptr += ((w - cw) * (info->bpp >> 3));
+    tile_ptr += ((cy - yc) * info->pitch);
+    tile_ptr += ((cx - xc) * (info->bpp >> 3));
     cpat0 = &v->fbi.ram[v->banshee.hwcursor.addr] + (py * 16);
     for (y = cy; y < (cy + ch); y++) {
       cpat1 = cpat0 + (px >> 3);

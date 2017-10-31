@@ -3048,6 +3048,8 @@ Bit32u register_r(Bit32u offset)
       else
       {
         /* bit 10 is 2D busy */
+        if (v->banshee.blt.busy)
+          result |= 1 << 10;
 
         /* bit 11 is cmd FIFO 0 busy */
         if (v->fbi.cmdfifo[0].enabled && v->fbi.cmdfifo[0].depth > 0)
