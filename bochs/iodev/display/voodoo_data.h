@@ -1041,6 +1041,29 @@ static const char *const banshee_agp_reg_name[] =
 
 /*************************************
  *
+ *  Register string table for debug
+ *
+ *************************************/
+
+static const char *const banshee_blt_reg_name[] =
+{
+  /* 0x000 */
+  "status", "intrCtrl", "clip0Min", "clip0Max",
+  "dstBaseAddr", "dstFormat", "srcColorkeyMin", "srcColorkeyMax",
+  "dstColorkeyMin", "dstColorkeyMax", "bresError0", "bresError1",
+  "rop", "srcBaseAddr", "commandExtra", "lineStipple",
+
+  /* 0x040 */
+ "lineStyle", "pattern0Alias", "pattern1Alias", "clip1Min",
+ "clip1Max", "srcFormat", "srcSize", "srcXY",
+ "colorBack", "colorFore", "dstSize", "dstXY",
+ "command", "RESERVED", "RESERVED", "RESERVED"
+};
+
+
+
+/*************************************
+ *
  *  Dithering tables
  *
  *************************************/
@@ -1709,18 +1732,29 @@ struct _banshee_info
   } hwcursor;
   struct {
     Bit32u reg[0x80];  /* 2D registers */
+    bx_bool busy;
     Bit8u cmd;
     bx_bool immed;
-    bx_bool busy;
+    bx_bool x_dir;
+    bx_bool y_dir;
+    bx_bool transp;
+    bx_bool clip_sel;
+    Bit8u rop0;
     Bit16u src_x;
     Bit16u src_y;
+    Bit16u src_w;
+    Bit16u src_h;
     Bit16u dst_x;
     Bit16u dst_y;
     Bit16u dst_w;
     Bit16u dst_h;
-    bx_bool x_dir;
-    bx_bool y_dir;
-    Bit8u rop0;
+    Bit16u clipx0[2];
+    Bit16u clipy0[2];
+    Bit16u clipx1[2];
+    Bit16u clipy1[2];
+    Bit32u dwcount;
+    Bit8u lpmem[4096];
+    Bit32u lpidx;
   } blt;
 };
 
