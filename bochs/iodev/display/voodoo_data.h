@@ -1740,6 +1740,8 @@ struct _banshee_info
     bx_bool transp;
     bx_bool clip_sel;
     Bit8u rop0;
+    bx_bitblt_rop_t rop_fn;
+    bx_bitblt_rop_t rop_handler[2][0x100];
     Bit16u src_x;
     Bit16u src_y;
     Bit16u src_w;

@@ -57,11 +57,6 @@
 #define CIRRUS_VIDEO_MEMORY_KB    (CIRRUS_VIDEO_MEMORY_MB * 1024)
 #define CIRRUS_VIDEO_MEMORY_BYTES (CIRRUS_VIDEO_MEMORY_KB * 1024)
 
-typedef void (*bx_cirrus_bitblt_rop_t)(
-    Bit8u *dst,const Bit8u *src,
-    int dstpitch,int srcpitch,
-    int bltwidth,int bltheight);
-
 class bx_svga_cirrus_c : public bx_vgacore_c
 {
 public:
@@ -172,8 +167,8 @@ private:
   BX_CIRRUS_SMF void svga_colorexpand_transp_memsrc();
 
   BX_CIRRUS_SMF bx_bool svga_asyncbitblt_next();
-  BX_CIRRUS_SMF bx_cirrus_bitblt_rop_t svga_get_fwd_rop_handler(Bit8u rop);
-  BX_CIRRUS_SMF bx_cirrus_bitblt_rop_t svga_get_bkwd_rop_handler(Bit8u rop);
+  BX_CIRRUS_SMF bx_bitblt_rop_t svga_get_fwd_rop_handler(Bit8u rop);
+  BX_CIRRUS_SMF bx_bitblt_rop_t svga_get_bkwd_rop_handler(Bit8u rop);
 
   struct {
     Bit8u index;
@@ -212,7 +207,7 @@ private:
   Bit8u *disp_ptr;
 
   struct {
-    bx_cirrus_bitblt_rop_t rop_handler;
+    bx_bitblt_rop_t rop_handler;
     int pixelwidth;
     int bltwidth;
     int bltheight;

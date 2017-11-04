@@ -3019,7 +3019,7 @@ Bit32u register_r(Bit32u offset)
         result |= 1 << 8;
 
       /* bit 9 is overall busy */
-      if (v->pci.op_pending)
+      if ((v->pci.op_pending) || (v->banshee.blt.busy))
         result |= 1 << 9;
 
       if (v->type == VOODOO_2) {
@@ -3302,6 +3302,29 @@ void init_tmu_shared(tmu_shared_state *s)
     EXTRACT_4444_TO_8888(val, a, r, g, b);
     s->argb4444[val] = MAKE_ARGB(a, r, g, b);
   }
+}
+
+#define SETUP_BITBLT(num, name) \
+  do { \
+    v->banshee.blt.rop_handler[0][num] = bitblt_rop_fwd_##name; \
+    v->banshee.blt.rop_handler[1][num] = bitblt_rop_bkwd_nop; \
+  } while (0);
+
+void banshee_bitblt_init()
+{
+  for (int i = 0; i < 0x100; i++) {
+    v->banshee.blt.rop_handler[0][i] = bitblt_rop_fwd_nop;
+    v->banshee.blt.rop_handler[1][i] = bitblt_rop_bkwd_nop;
+  }
+  SETUP_BITBLT(0x00, 0);
+  SETUP_BITBLT(0x33, notsrc);
+  SETUP_BITBLT(0x55, notdst);
+  SETUP_BITBLT(0x66, src_xor_dst);
+  SETUP_BITBLT(0x88, src_and_dst);
+  SETUP_BITBLT(0xaa, nop);
+  SETUP_BITBLT(0xcc, src);
+  SETUP_BITBLT(0xee, src_or_dst);
+  SETUP_BITBLT(0xff, 1);
 }
 
 void voodoo_init(Bit8u _type)

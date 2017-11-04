@@ -39,6 +39,7 @@
 
 #include "iodev.h"
 #include "vgacore.h"
+#include "bitblt.h"
 #include "svga_cirrus.h"
 #include "virt_timer.h"
 
@@ -3152,83 +3153,9 @@ cleanup:
 //
 /////////////////////////////////////////////////////////////////////////
 
-#define IMPLEMENT_FORWARD_BITBLT(name,opline) \
-  static void bitblt_rop_fwd_##name( \
-    Bit8u *dst,const Bit8u *src, \
-    int dstpitch,int srcpitch, \
-    int bltwidth,int bltheight) \
-  { \
-    int x,y; \
-    dstpitch -= bltwidth; \
-    srcpitch -= bltwidth; \
-    for (y = 0; y < bltheight; y++) { \
-      for (x = 0; x < bltwidth; x++) { \
-        opline; \
-        dst++; \
-        src++; \
-      } \
-      dst += dstpitch; \
-      src += srcpitch; \
-    } \
-  }
-
-#define IMPLEMENT_BACKWARD_BITBLT(name,opline) \
-  static void bitblt_rop_bkwd_##name( \
-    Bit8u *dst,const Bit8u *src, \
-    int dstpitch,int srcpitch, \
-    int bltwidth,int bltheight) \
-  { \
-    int x,y; \
-    dstpitch += bltwidth; \
-    srcpitch += bltwidth; \
-    for (y = 0; y < bltheight; y++) { \
-      for (x = 0; x < bltwidth; x++) { \
-        opline; \
-        dst--; \
-        src--; \
-      } \
-      dst += dstpitch; \
-      src += srcpitch; \
-    } \
-  }
-
-IMPLEMENT_FORWARD_BITBLT(0, *dst = 0)
-IMPLEMENT_FORWARD_BITBLT(src_and_dst, *dst = (*src) & (*dst))
-IMPLEMENT_FORWARD_BITBLT(nop, (void)0)
-IMPLEMENT_FORWARD_BITBLT(src_and_notdst, *dst = (*src) & (~(*dst)))
-IMPLEMENT_FORWARD_BITBLT(notdst, *dst = ~(*dst))
-IMPLEMENT_FORWARD_BITBLT(src, *dst = *src)
-IMPLEMENT_FORWARD_BITBLT(1, *dst = 0xff)
-IMPLEMENT_FORWARD_BITBLT(notsrc_and_dst, *dst = (~(*src)) & (*dst))
-IMPLEMENT_FORWARD_BITBLT(src_xor_dst, *dst = (*src) ^ (*dst))
-IMPLEMENT_FORWARD_BITBLT(src_or_dst, *dst = (*src) | (*dst))
-IMPLEMENT_FORWARD_BITBLT(notsrc_or_notdst, *dst = (~(*src)) | (~(*dst)))
-IMPLEMENT_FORWARD_BITBLT(src_notxor_dst, *dst = ~((*src) ^ (*dst)))
-IMPLEMENT_FORWARD_BITBLT(src_or_notdst, *dst = (*src) | (~(*dst)))
-IMPLEMENT_FORWARD_BITBLT(notsrc, *dst = (~(*src)))
-IMPLEMENT_FORWARD_BITBLT(notsrc_or_dst, *dst = (~(*src)) | (*dst))
-IMPLEMENT_FORWARD_BITBLT(notsrc_and_notdst, *dst = (~(*src)) & (~(*dst)))
-
-IMPLEMENT_BACKWARD_BITBLT(0, *dst = 0)
-IMPLEMENT_BACKWARD_BITBLT(src_and_dst, *dst = (*src) & (*dst))
-IMPLEMENT_BACKWARD_BITBLT(nop, (void)0)
-IMPLEMENT_BACKWARD_BITBLT(src_and_notdst, *dst = (*src) & (~(*dst)))
-IMPLEMENT_BACKWARD_BITBLT(notdst, *dst = ~(*dst))
-IMPLEMENT_BACKWARD_BITBLT(src, *dst = *src)
-IMPLEMENT_BACKWARD_BITBLT(1, *dst = 0xff)
-IMPLEMENT_BACKWARD_BITBLT(notsrc_and_dst, *dst = (~(*src)) & (*dst))
-IMPLEMENT_BACKWARD_BITBLT(src_xor_dst, *dst = (*src) ^ (*dst))
-IMPLEMENT_BACKWARD_BITBLT(src_or_dst, *dst = (*src) | (*dst))
-IMPLEMENT_BACKWARD_BITBLT(notsrc_or_notdst, *dst = (~(*src)) | (~(*dst)))
-IMPLEMENT_BACKWARD_BITBLT(src_notxor_dst, *dst = ~((*src) ^ (*dst)))
-IMPLEMENT_BACKWARD_BITBLT(src_or_notdst, *dst = (*src) | (~(*dst)))
-IMPLEMENT_BACKWARD_BITBLT(notsrc, *dst = (~(*src)))
-IMPLEMENT_BACKWARD_BITBLT(notsrc_or_dst, *dst = (~(*src)) | (*dst))
-IMPLEMENT_BACKWARD_BITBLT(notsrc_and_notdst, *dst = (~(*src)) & (~(*dst)))
-
-bx_cirrus_bitblt_rop_t bx_svga_cirrus_c::svga_get_fwd_rop_handler(Bit8u rop)
+bx_bitblt_rop_t bx_svga_cirrus_c::svga_get_fwd_rop_handler(Bit8u rop)
 {
-  bx_cirrus_bitblt_rop_t rop_handler = bitblt_rop_fwd_nop;
+  bx_bitblt_rop_t rop_handler = bitblt_rop_fwd_nop;
 
   switch (rop)
   {
@@ -3288,9 +3215,9 @@ bx_cirrus_bitblt_rop_t bx_svga_cirrus_c::svga_get_fwd_rop_handler(Bit8u rop)
   return rop_handler;
 }
 
-bx_cirrus_bitblt_rop_t bx_svga_cirrus_c::svga_get_bkwd_rop_handler(Bit8u rop)
+bx_bitblt_rop_t bx_svga_cirrus_c::svga_get_bkwd_rop_handler(Bit8u rop)
 {
-  bx_cirrus_bitblt_rop_t rop_handler = bitblt_rop_bkwd_nop;
+  bx_bitblt_rop_t rop_handler = bitblt_rop_bkwd_nop;
 
   switch (rop)
   {
