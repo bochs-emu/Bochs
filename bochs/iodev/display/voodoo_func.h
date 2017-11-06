@@ -3304,27 +3304,48 @@ void init_tmu_shared(tmu_shared_state *s)
   }
 }
 
-#define SETUP_BITBLT(num, name) \
+#define SETUP_BITBLT(num, name, flags) \
   do { \
     v->banshee.blt.rop_handler[0][num] = bitblt_rop_fwd_##name; \
-    v->banshee.blt.rop_handler[1][num] = bitblt_rop_bkwd_nop; \
+    v->banshee.blt.rop_handler[1][num] = bitblt_rop_bkwd_##name; \
+    v->banshee.blt.rop_flags[num] = flags; \
   } while (0);
+
+#define BX_ROP_PATTERN     0x01
+#define BX_ROP_UNSUPPORTED 0x80
 
 void banshee_bitblt_init()
 {
   for (int i = 0; i < 0x100; i++) {
-    v->banshee.blt.rop_handler[0][i] = bitblt_rop_fwd_nop;
-    v->banshee.blt.rop_handler[1][i] = bitblt_rop_bkwd_nop;
+    SETUP_BITBLT(i, nop, BX_ROP_UNSUPPORTED);
   }
-  SETUP_BITBLT(0x00, 0);
-  SETUP_BITBLT(0x33, notsrc);
-  SETUP_BITBLT(0x55, notdst);
-  SETUP_BITBLT(0x66, src_xor_dst);
-  SETUP_BITBLT(0x88, src_and_dst);
-  SETUP_BITBLT(0xaa, nop);
-  SETUP_BITBLT(0xcc, src);
-  SETUP_BITBLT(0xee, src_or_dst);
-  SETUP_BITBLT(0xff, 1);
+  SETUP_BITBLT(0x00, 0, 0);                              // 0
+  SETUP_BITBLT(0x05, notsrc_and_notdst, BX_ROP_PATTERN); // DSan
+  SETUP_BITBLT(0x0a, src_and_notdst, BX_ROP_PATTERN);    // DPna
+  SETUP_BITBLT(0x0f, notsrc, BX_ROP_PATTERN);            // Pn
+  SETUP_BITBLT(0x11, notsrc_and_notdst, 0);              // DSon
+  SETUP_BITBLT(0x22, src_and_notdst, 0);                 // DSna
+  SETUP_BITBLT(0x33, notsrc, 0);                         // Sn
+  SETUP_BITBLT(0x44, notsrc_and_dst, 0);                 // SDna
+  SETUP_BITBLT(0x50, notsrc_and_dst, 0);                 // PDna
+  SETUP_BITBLT(0x55, notdst, 0);                         // Dn
+  SETUP_BITBLT(0x5a, src_xor_dst, BX_ROP_PATTERN);       // DPx
+  SETUP_BITBLT(0x5f, notsrc_or_notdst, BX_ROP_PATTERN);  // DSan
+  SETUP_BITBLT(0x66, src_xor_dst, 0);                    // DSx
+  SETUP_BITBLT(0x77, notsrc_or_notdst, 0);               // DSan
+  SETUP_BITBLT(0x88, src_and_dst, 0);                    // DSa
+  SETUP_BITBLT(0x99, src_notxor_dst, 0);                 // DSxn
+  SETUP_BITBLT(0xaa, nop, 0);                            // D
+  SETUP_BITBLT(0xad, src_and_dst, BX_ROP_PATTERN);       // DPa
+  SETUP_BITBLT(0xaf, src_or_notdst, BX_ROP_PATTERN);     // DPno
+  SETUP_BITBLT(0xbb, src_or_notdst, 0);                  // DSno
+  SETUP_BITBLT(0xcc, src, 0);                            // S
+  SETUP_BITBLT(0xdd, notsrc_or_dst, 0);                  // SDna
+  SETUP_BITBLT(0xee, src_or_dst, 0);                     // DSo
+  SETUP_BITBLT(0xf0, src, BX_ROP_PATTERN);               // P
+  SETUP_BITBLT(0xf5, src_or_notdst, BX_ROP_PATTERN);     // DPno
+  SETUP_BITBLT(0xfa, src_or_dst, BX_ROP_PATTERN);        // DPo
+  SETUP_BITBLT(0xff, 1, 0);                              // 1
 }
 
 void voodoo_init(Bit8u _type)

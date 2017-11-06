@@ -77,6 +77,8 @@ public:
   void   banshee_blt_launch_area_write(Bit32u value);
   void   banshee_blt_complete(void);
   void   banshee_blt_rectangle_fill(void);
+  void   banshee_blt_pattern_fill_mono(void);
+  void   banshee_blt_pattern_fill_color(void);
   void   banshee_blt_screen_to_screen(void);
   void   banshee_blt_host_to_screen(void);
 

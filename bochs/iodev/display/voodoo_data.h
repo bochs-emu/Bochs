@@ -1731,7 +1731,8 @@ struct _banshee_info
     Bit32u color[2];
   } hwcursor;
   struct {
-    Bit32u reg[0x80];  /* 2D registers */
+    Bit32u reg[0x20];  /* 2D registers */
+    Bit8u cpat[0x40][4];
     bx_bool busy;
     Bit8u cmd;
     bx_bool immed;
@@ -1742,6 +1743,7 @@ struct _banshee_info
     Bit8u rop0;
     bx_bitblt_rop_t rop_fn;
     bx_bitblt_rop_t rop_handler[2][0x100];
+    Bit8u rop_flags[0x100];
     Bit16u src_x;
     Bit16u src_y;
     Bit16u src_w;
@@ -1754,9 +1756,9 @@ struct _banshee_info
     Bit16u clipy0[2];
     Bit16u clipx1[2];
     Bit16u clipy1[2];
-    Bit32u dwcount;
-    Bit8u lpmem[4096];
+    Bit32u lpcnt;
     Bit32u lpidx;
+    Bit8u lpmem[4096];
   } blt;
 };
 
