@@ -64,6 +64,8 @@ Bit32u voodoo_last_msg = 255;
 BX_THREAD_VAR(fifo_thread_var);
 /* CMDFIFO thread mutex (Voodoo2) */
 BX_MUTEX(cmdfifo_mutex);
+/* render mutex (Banshee) */
+BX_MUTEX(render_mutex);
 
 /* fast dither lookup */
 static Bit8u dither4_lookup[256*16*2];

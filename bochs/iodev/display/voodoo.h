@@ -76,6 +76,7 @@ public:
 
   void   banshee_blt_launch_area_write(Bit32u value);
   void   banshee_blt_complete(void);
+  void   banshee_blt_apply_clipwindow(int *x0, int *y0, int *x1, int *y1, int *w, int *h);
   void   banshee_blt_rectangle_fill(void);
   void   banshee_blt_pattern_fill_mono(void);
   void   banshee_blt_pattern_fill_color(void);

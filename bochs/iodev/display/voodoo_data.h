@@ -1756,6 +1756,7 @@ struct _banshee_info
     Bit16u clipy0[2];
     Bit16u clipx1[2];
     Bit16u clipy1[2];
+    Bit16u h2s_pitch;
     Bit32u lpcnt;
     Bit32u lpidx;
     Bit8u lpmem[4096];
