@@ -1721,7 +1721,9 @@ struct _banshee_info
   Bit32u io[0x40];   /* I/O registers */
   Bit32u agp[0x80];  /* AGP registers */
   Bit8u  crtc[0x27]; /* VGA CRTC registers */
-  Bit8u  bpp;
+  Bit8u  disp_bpp;
+  bx_bool half_mode;
+  bx_bool dac_8bit;
   struct {
     bx_bool enabled;
     bx_bool mode;

@@ -46,6 +46,11 @@ typedef struct {
   int mode_change_timer_id;
   int vertical_timer_id;
   Bit8u devfunc;
+  Bit16u max_xres;
+  Bit16u max_yres;
+  Bit16u num_x_tiles;
+  Bit16u num_y_tiles;
+  bx_bool  *vga_tile_updated;
 } bx_voodoo_t;
 
 
@@ -70,6 +75,9 @@ public:
   static void update_screen_start(void);
   static bx_bool update_timing(void);
   Bit8u get_model(void) {return s.model;}
+
+  void banshee_draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *info);
+  void set_tile_updated(unsigned xti, unsigned yti, bx_bool flag);
 
   Bit32u banshee_blt_reg_read(Bit8u reg);
   void   banshee_blt_reg_write(Bit8u reg, Bit32u value);
@@ -127,18 +135,11 @@ public:
   void banshee_update_mode(void);
   void banshee_set_dac_mode(bx_bool mode);
   void banshee_set_vclk3(Bit32u value);
-  void banshee_draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *info);
 
   static Bit32u banshee_vga_read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   banshee_vga_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
 
 protected:
   virtual void  update(void);
-
-private:
-  struct {
-    bx_bool dac_8bit;
-    bx_bool half_mode;
-  } vbe;
 };
 #endif
