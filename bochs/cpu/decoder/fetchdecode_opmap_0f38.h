@@ -563,13 +563,13 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0F38F1[] = {
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0F38F6[] = {
   /* --    */ { 0, BX_IA_ERROR },
   /* 66    */ { 0, BX_IA_ADCX_GdEd },
-  /* F3    */ { 0, BX_IA_ERROR },
-  /* F2    */ { 0, BX_IA_ADOX_GdEd },
+  /* F3    */ { 0, BX_IA_ADOX_GdEd },
+  /* F2    */ { 0, BX_IA_ERROR },
 #if BX_SUPPORT_X86_64
   /* -- /q */ { 0, BX_IA_ERROR },
   /* 66 /q */ { 0, BX_IA_ADCX_GqEq },
-  /* F3 /q */ { 0, BX_IA_ERROR },
-  /* F2 /q */ { 0, BX_IA_ADOX_GqEq },
+  /* F3 /q */ { 0, BX_IA_ADOX_GqEq },
+  /* F2 /q */ { 0, BX_IA_ERROR },
 #endif
 };
 
