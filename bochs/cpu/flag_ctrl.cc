@@ -303,7 +303,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POPF_Fd(bxInstruction_c *i)
 
   RSP_SPECULATIVE;
 
-  Bit32u flags32 = pop_32();
+  // RF is always zero after the execution of POPF.
+  Bit32u flags32 = pop_32() & ~EFlagsRFMask;
 
   if (protected_mode()) {
     // IOPL changed only if (CPL == 0),
@@ -365,7 +366,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::POPF_Fq(bxInstruction_c *i)
 
   BX_ASSERT (protected_mode());
 
-  Bit32u eflags32 = (Bit32u) pop_64();
+  // RF is always zero after the execution of POPF.
+  Bit32u eflags32 = (Bit32u) pop_64() & ~EFlagsRFMask;
 
   if (CPL==0)
     changeMask |= EFlagsIOPLMask;
