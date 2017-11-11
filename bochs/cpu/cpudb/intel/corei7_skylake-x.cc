@@ -80,6 +80,8 @@ corei7_skylake_x_t::corei7_skylake_x_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_RDTSCP);
   enable_cpu_extension(BX_ISA_XSAVE);
   enable_cpu_extension(BX_ISA_XSAVEOPT);
+  enable_cpu_extension(BX_ISA_XSAVEC);
+  enable_cpu_extension(BX_ISA_XSAVES);
   enable_cpu_extension(BX_ISA_AES_PCLMULQDQ);
   enable_cpu_extension(BX_ISA_MOVBE);
   enable_cpu_extension(BX_ISA_AVX);
