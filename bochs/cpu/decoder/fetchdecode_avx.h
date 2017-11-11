@@ -93,10 +93,21 @@ static const BxExtOpcodeInfo_t BxOpcodeGroupAVX128_0f10[2] = {
   /* M */ { BxPrefixSSE, BX_IA_V128_VMOVUPS_VpsWps, BxOpcodeGroupAVX128_0f10M },
 };
 
-static const BxExtOpcodeInfo_t BxOpcodeGroupAVX256_0f10[3] = {
+static const BxExtOpcodeInfo_t BxOpcodeGroupAVX256_0f10R[3] = {
   /* 66 */ { 0, BX_IA_V256_VMOVUPD_VpdWpd },
-  /* F3 */ { 0, BX_IA_ERROR },
-  /* F2 */ { 0, BX_IA_ERROR }
+  /* F3 */ { 0, BX_IA_V128_VMOVSS_VssHpsWss },
+  /* F2 */ { 0, BX_IA_V128_VMOVSD_VsdHpdWsd }
+};
+
+static const BxExtOpcodeInfo_t BxOpcodeGroupAVX256_0f10M[3] = {
+  /* 66 */ { 0, BX_IA_V256_VMOVUPD_VpdWpd },
+  /* F3 */ { 0, BX_IA_V128_VMOVSS_VssWss },
+  /* F2 */ { 0, BX_IA_V128_VMOVSD_VsdWsd }
+};
+
+static const BxExtOpcodeInfo_t BxOpcodeGroupAVX256_0f10[2] = {
+  /* R */ { BxPrefixSSE, BX_IA_V256_VMOVUPS_VpsWps, BxOpcodeGroupAVX256_0f10R },
+  /* M */ { BxPrefixSSE, BX_IA_V256_VMOVUPS_VpsWps, BxOpcodeGroupAVX256_0f10M },
 };
 
 static const BxExtOpcodeInfo_t BxOpcodeGroupAVX128_0f11R[3] = {
@@ -116,10 +127,21 @@ static const BxExtOpcodeInfo_t BxOpcodeGroupAVX128_0f11[2] = {
   /* M */ { BxPrefixSSE, BX_IA_V128_VMOVUPS_WpsVps, BxOpcodeGroupAVX128_0f11M },
 };
 
-static const BxExtOpcodeInfo_t BxOpcodeGroupAVX256_0f11[3] = {
+static const BxExtOpcodeInfo_t BxOpcodeGroupAVX256_0f11R[3] = {
   /* 66 */ { 0, BX_IA_V256_VMOVUPD_WpdVpd },
-  /* F3 */ { 0, BX_IA_ERROR },
-  /* F2 */ { 0, BX_IA_ERROR }
+  /* F3 */ { 0, BX_IA_V128_VMOVSS_WssHpsVss },
+  /* F2 */ { 0, BX_IA_V128_VMOVSD_WsdHpdVsd }
+};
+
+static const BxExtOpcodeInfo_t BxOpcodeGroupAVX256_0f11M[3] = {
+  /* 66 */ { 0, BX_IA_V256_VMOVUPD_WpdVpd },
+  /* F3 */ { 0, BX_IA_V128_VMOVSS_WssVss },
+  /* F2 */ { 0, BX_IA_V128_VMOVSD_WsdVsd }
+};
+
+static const BxExtOpcodeInfo_t BxOpcodeGroupAVX256_0f11[2] = {
+  /* R */ { BxPrefixSSE, BX_IA_V256_VMOVUPS_WpsVps, BxOpcodeGroupAVX256_0f11R },
+  /* M */ { BxPrefixSSE, BX_IA_V256_VMOVUPS_WpsVps, BxOpcodeGroupAVX256_0f11M },
 };
 
 static const BxExtOpcodeInfo_t BxOpcodeGroupAVX128_0f12[3] = {
@@ -542,9 +564,9 @@ static const BxExtOpcodeInfo_t BxOpcodeTableAVX[256*3*2] = {
   /* 0F /0 */ { 0, BX_IA_ERROR },
   /* 0F /1 */ { 0, BX_IA_ERROR },
   /* 10 /0 */ { BxSplitMod11B, BX_IA_ERROR, BxOpcodeGroupAVX128_0f10 }, // split because of VMOVSS/VMOVSD encoding issue
-  /* 10 /1 */ { BxPrefixSSE, BX_IA_V256_VMOVUPS_VpsWps, BxOpcodeGroupAVX256_0f10 },
+  /* 10 /1 */ { BxSplitMod11B, BX_IA_ERROR, BxOpcodeGroupAVX256_0f10 }, // split because of VMOVSS/VMOVSD encoding issue
   /* 11 /0 */ { BxSplitMod11B, BX_IA_ERROR, BxOpcodeGroupAVX128_0f11 }, // split because of VMOVSS/VMOVSD encoding issue
-  /* 11 /1 */ { BxPrefixSSE, BX_IA_V256_VMOVUPS_WpsVps, BxOpcodeGroupAVX256_0f11 },
+  /* 11 /1 */ { BxSplitMod11B, BX_IA_ERROR, BxOpcodeGroupAVX256_0f11 }, // split because of VMOVSS/VMOVSD encoding issue
   /* 12 /0 */ { BxPrefixSSE, BX_IA_V128_VMOVLPS_VpsHpsMq, BxOpcodeGroupAVX128_0f12 },
   /* 12 /1 */ { BxPrefixSSE, BX_IA_ERROR, BxOpcodeGroupAVX256_0f12 },
   /* 13 /0 */ { BxPrefixSSE2, BX_IA_ERROR, BxOpcodeGroupAVX128_0f13M },
