@@ -1462,11 +1462,13 @@ Bit32u bx_generic_cpuid_t::get_ext4_cpuid_features(void) const
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_RDPID))
     features |= BX_CPUID_EXT4_RDPID;
 
+#if BX_SUPPORT_PKEYS
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PKU)) {
     features |= BX_CPUID_EXT4_PKU;
     if (cpu->cr4.get_PKE())
       features |= BX_CPUID_EXT4_OSPKE;
   }
+#endif
 
   return features;
 }
