@@ -1724,6 +1724,7 @@ struct _banshee_info
   Bit8u  disp_bpp;
   bx_bool half_mode;
   bx_bool dac_8bit;
+  bx_bool desktop_tiled;
   struct {
     bx_bool enabled;
     bx_bool mode;
@@ -1759,9 +1760,10 @@ struct _banshee_info
     Bit16u clipx1[2];
     Bit16u clipy1[2];
     Bit16u h2s_pitch;
-    Bit32u lpcnt;
-    Bit32u lpidx;
-    Bit8u lpmem[4096];
+    Bit16u h2s_lcount;
+    Bit32u lacnt;
+    Bit32u laidx;
+    Bit8u *lamem;
   } blt;
 };
 

@@ -3322,14 +3322,14 @@ void banshee_bitblt_init()
     SETUP_BITBLT(i, nop, BX_ROP_UNSUPPORTED);
   }
   SETUP_BITBLT(0x00, 0, 0);                              // 0
-  SETUP_BITBLT(0x05, notsrc_and_notdst, BX_ROP_PATTERN); // DSan
-  SETUP_BITBLT(0x0a, src_and_notdst, BX_ROP_PATTERN);    // DPna
+  SETUP_BITBLT(0x05, notsrc_and_notdst, BX_ROP_PATTERN); // PSan
+  SETUP_BITBLT(0x0a, notsrc_and_dst, BX_ROP_PATTERN);    // DPna
   SETUP_BITBLT(0x0f, notsrc, BX_ROP_PATTERN);            // Pn
   SETUP_BITBLT(0x11, notsrc_and_notdst, 0);              // DSon
-  SETUP_BITBLT(0x22, src_and_notdst, 0);                 // DSna
+  SETUP_BITBLT(0x22, notsrc_and_dst, 0);                 // DSna
   SETUP_BITBLT(0x33, notsrc, 0);                         // Sn
-  SETUP_BITBLT(0x44, notsrc_and_dst, 0);                 // SDna
-  SETUP_BITBLT(0x50, notsrc_and_dst, 0);                 // PDna
+  SETUP_BITBLT(0x44, src_and_notdst, 0);                 // SDna
+  SETUP_BITBLT(0x50, src_and_notdst, 0);                 // PDna
   SETUP_BITBLT(0x55, notdst, 0);                         // Dn
   SETUP_BITBLT(0x5a, src_xor_dst, BX_ROP_PATTERN);       // DPx
   SETUP_BITBLT(0x5f, notsrc_or_notdst, BX_ROP_PATTERN);  // DSan
@@ -3339,13 +3339,13 @@ void banshee_bitblt_init()
   SETUP_BITBLT(0x99, src_notxor_dst, 0);                 // DSxn
   SETUP_BITBLT(0xaa, nop, 0);                            // D
   SETUP_BITBLT(0xad, src_and_dst, BX_ROP_PATTERN);       // DPa
-  SETUP_BITBLT(0xaf, src_or_notdst, BX_ROP_PATTERN);     // DPno
-  SETUP_BITBLT(0xbb, src_or_notdst, 0);                  // DSno
+  SETUP_BITBLT(0xaf, notsrc_or_dst, BX_ROP_PATTERN);     // DPno
+  SETUP_BITBLT(0xbb, notsrc_or_dst, 0);                  // DSno
   SETUP_BITBLT(0xcc, src, 0);                            // S
-  SETUP_BITBLT(0xdd, notsrc_or_dst, 0);                  // SDna
+  SETUP_BITBLT(0xdd, src_and_notdst, 0);                 // SDna
   SETUP_BITBLT(0xee, src_or_dst, 0);                     // DSo
   SETUP_BITBLT(0xf0, src, BX_ROP_PATTERN);               // P
-  SETUP_BITBLT(0xf5, src_or_notdst, BX_ROP_PATTERN);     // DPno
+  SETUP_BITBLT(0xf5, src_or_notdst, BX_ROP_PATTERN);     // PDno
   SETUP_BITBLT(0xfa, src_or_dst, BX_ROP_PATTERN);        // DPo
   SETUP_BITBLT(0xff, 1, 0);                              // 1
 }
