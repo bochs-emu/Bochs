@@ -89,6 +89,7 @@ public:
   void   banshee_blt_pattern_fill_mono(void);
   void   banshee_blt_pattern_fill_color(void);
   void   banshee_blt_screen_to_screen(void);
+  void   banshee_blt_screen_to_screen_pattern(void);
   void   banshee_blt_host_to_screen(void);
 
 private:

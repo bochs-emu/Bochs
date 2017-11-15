@@ -3313,13 +3313,12 @@ void init_tmu_shared(tmu_shared_state *s)
     v->banshee.blt.rop_flags[num] = flags; \
   } while (0);
 
-#define BX_ROP_PATTERN     0x01
-#define BX_ROP_UNSUPPORTED 0x80
+#define BX_ROP_PATTERN 0x01
 
 void banshee_bitblt_init()
 {
   for (int i = 0; i < 0x100; i++) {
-    SETUP_BITBLT(i, nop, BX_ROP_UNSUPPORTED);
+    SETUP_BITBLT(i, nop, BX_ROP_PATTERN);
   }
   SETUP_BITBLT(0x00, 0, 0);                              // 0
   SETUP_BITBLT(0x05, notsrc_and_notdst, BX_ROP_PATTERN); // PSan

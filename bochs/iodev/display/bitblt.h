@@ -100,4 +100,25 @@ IMPLEMENT_BACKWARD_BITBLT(notsrc, *dst = (~(*src)))
 IMPLEMENT_BACKWARD_BITBLT(notsrc_or_dst, *dst = (~(*src)) | (*dst))
 IMPLEMENT_BACKWARD_BITBLT(notsrc_and_notdst, *dst = (~(*src)) & (~(*dst)))
 
+void bx_ternary_rop(Bit8u rop0, Bit8u *dst_ptr, Bit8u *src_ptr, Bit8u *pat_ptr,
+                    int dpxsize)
+{
+  Bit8u mask, inbits, outbits;
+
+  for (int i = 0; i < dpxsize; i++) {
+    mask = 0x80;
+    outbits = 0;
+    for (int b = 7; b >= 0; b--) {
+      inbits = (*dst_ptr & mask) > 0;
+      inbits |= ((*src_ptr & mask) > 0) << 1;
+      inbits |= ((*pat_ptr & mask) > 0) << 2;
+      outbits |= ((rop0 & (1 << inbits)) > 0) << b;
+      mask >>= 1;
+    }
+    *dst_ptr++ = outbits;
+    src_ptr++;
+    pat_ptr++;
+  }
+}
+
 #endif

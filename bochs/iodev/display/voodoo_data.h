@@ -1747,10 +1747,18 @@ struct _banshee_info
     bx_bitblt_rop_t rop_fn;
     bx_bitblt_rop_t rop_handler[2][0x100];
     Bit8u rop_flags[0x100];
+    Bit32u src_base;
+    bx_bool src_tiled;
+    Bit8u src_fmt;
+    Bit16u src_pitch;
     Bit16u src_x;
     Bit16u src_y;
     Bit16u src_w;
     Bit16u src_h;
+    Bit32u dst_base;
+    bx_bool dst_tiled;
+    Bit8u dst_fmt;
+    Bit16u dst_pitch;
     Bit16u dst_x;
     Bit16u dst_y;
     Bit16u dst_w;
