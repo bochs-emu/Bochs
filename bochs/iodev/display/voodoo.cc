@@ -1688,13 +1688,16 @@ void bx_voodoo_c::banshee_mem_write(bx_phy_address addr, unsigned len, void *dat
       } else {
         if (offset >= start) {
           if (!v->banshee.desktop_tiled) {
+            BX_LOCK(render_mutex);
             for (i = 0; i < len; i++) {
               value8 = (value >> (i*8)) & 0xff;
               v->fbi.ram[offset + i] = value8;
             }
+            offset -= start;
             x = (offset % pitch) / (v->banshee.disp_bpp >> 3);
             y = offset / pitch;
             theVoodooVga->redraw_area(x, y, len / (v->banshee.disp_bpp >> 3), 1);
+            BX_UNLOCK(render_mutex);
           } else {
             BX_ERROR(("write to desktop tile space not supported yet"));
           }
@@ -2084,41 +2087,29 @@ void bx_voodoo_c::banshee_blt_launch_area_write(Bit32u value)
 
 void bx_voodoo_c::banshee_blt_complete()
 {
-  Bit32u start0 = v->banshee.io[io_vidDesktopStartAddr] & v->fbi.mask;
-  Bit32u start1 = BLT.dst_base;
-  Bit16u pitch0 = v->banshee.io[io_vidDesktopOverlayStride] & 0x7fff;
-  Bit32u pitch1 = BLT.dst_pitch;
+  Bit32u vstart = v->banshee.io[io_vidDesktopStartAddr] & v->fbi.mask;
+  Bit16u vpitch = v->banshee.io[io_vidDesktopOverlayStride] & 0x7fff;
+  Bit8u vpxsize = (v->banshee.disp_bpp >> 3);
+  Bit32u dstart = BLT.dst_base;
+  Bit16u dpitch = BLT.dst_pitch;
+  Bit8u dpxsize = BLT.dst_fmt;
   Bit32u cmd = BLT.reg[blt_command];
   bx_bool xinc = (cmd >> 10) & 1;
   bx_bool yinc = (cmd >> 11) & 1;
-  Bit32u offset0, offset1;
-  Bit16u x, y, w, h;
+  int x, y;
 
-  if (BLT.x_dir) {
-    x = BLT.dst_x - BLT.dst_w + 1;
-  } else {
-    x = BLT.dst_x;
-  }
-  if (BLT.y_dir) {
-    y = BLT.dst_y - BLT.dst_h + 1;
-  } else {
-    y = BLT.dst_y;
-  }
-  w = BLT.dst_w;
-  h = BLT.dst_h;
-  if (start1 == start0) {
-    offset0 = start1 + y * pitch1 + x * (v->banshee.disp_bpp >> 3);
-    offset1 = offset0 + h * pitch1 + w * (v->banshee.disp_bpp >> 3);
-    if (offset1 >= start0) {
-      if (offset0 >= start0) {
-        offset0 -= start0;
-      } else {
-        offset0 = 0;
-      }
-      x = (offset0 % pitch0) / (v->banshee.disp_bpp >> 3);
-      y = offset0 / pitch0;
-      theVoodooVga->redraw_area(x, y, w, h);
+  if ((dstart == vstart) && (dpitch == vpitch) && (dpxsize == vpxsize)) {
+    if (BLT.x_dir) {
+      x = BLT.dst_x + 1 - BLT.dst_w;
+    } else {
+      x = BLT.dst_x;
     }
+    if (BLT.y_dir) {
+      y = BLT.dst_y + 1 - BLT.dst_h;
+    } else {
+      y = BLT.dst_y;
+    }
+    theVoodooVga->redraw_area(x, y, BLT.dst_w, BLT.dst_h);
   }
   if (xinc) {
     BLT.dst_x += BLT.dst_w;
@@ -2395,7 +2386,7 @@ void bx_voodoo_c::banshee_blt_screen_to_screen_pattern()
   w = BLT.dst_w;
   h = BLT.dst_h;
   rop0 = BLT.rop0;
-  BX_DEBUG(("Screen to screen blt: %d x %d  ROP %02X", w, h, rop0));
+  BX_DEBUG(("Screen to screen pattern blt: %d x %d  ROP %02X", w, h, rop0));
   banshee_blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h);
   if (BLT.x_dir) {
     dpxsize *= -1;
@@ -2445,7 +2436,7 @@ void bx_voodoo_c::banshee_blt_screen_to_screen_pattern()
         patcolor = pat_ptr2;
       }
       bx_ternary_rop(rop0, dst_ptr1, src_ptr1, patcolor, abs(dpxsize));
-      src_ptr1 += abs(dpxsize);
+      src_ptr1 += dpxsize;
       dst_ptr1 += dpxsize;
       if (patmono) {
         pmask >>= 1;
