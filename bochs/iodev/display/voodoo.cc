@@ -857,7 +857,11 @@ void bx_voodoo_c::banshee_draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tilein
           vid_ptr = disp_ptr + y * pitch + x * (v->banshee.disp_bpp >> 3);
           switch (v->banshee.disp_bpp) {
             case 8:
-              colour = v->fbi.clut[*vid_ptr];
+              if (info->is_indexed) {
+                colour = *vid_ptr;
+              } else {
+                colour = v->fbi.clut[*vid_ptr];
+              }
               break;
             case 16:
               colour = *vid_ptr;
@@ -874,18 +878,22 @@ void bx_voodoo_c::banshee_draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tilein
           }
           if (ccode == 3) colour ^= 0xffffff;
         }
-        colour = MAKE_COLOUR(
-          colour, 24, info->red_shift, info->red_mask,
-          colour, 16, info->green_shift, info->green_mask,
-          colour, 8, info->blue_shift, info->blue_mask);
-        if (info->is_little_endian) {
-          for (i=0; i<info->bpp; i+=8) {
-            *(tile_ptr2++) = (Bit8u)(colour >> i);
+        if (!info->is_indexed) {
+          colour = MAKE_COLOUR(
+            colour, 24, info->red_shift, info->red_mask,
+            colour, 16, info->green_shift, info->green_mask,
+            colour, 8, info->blue_shift, info->blue_mask);
+          if (info->is_little_endian) {
+            for (i=0; i<info->bpp; i+=8) {
+              *(tile_ptr2++) = (Bit8u)(colour >> i);
+            }
+          } else {
+            for (i=info->bpp-8; i>-8; i-=8) {
+              *(tile_ptr2++) = (Bit8u)(colour >> i);
+            }
           }
         } else {
-          for (i=info->bpp-8; i>-8; i-=8) {
-            *(tile_ptr2++) = (Bit8u)(colour >> i);
-          }
+          *(tile_ptr2++) = (Bit8u)colour;
         }
         if (--pbits == 0) {
           cpat1++;
@@ -952,7 +960,32 @@ void bx_voodoo_c::update(void)
         }
       }
     } else if (info.is_indexed) {
-      BX_ERROR(("current guest pixel format is unsupported on indexed colour host displays"));
+      if ((bpp == 8) && (info.bpp == 8)) {
+        for (yc=0, yti = 0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
+          for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
+            if (GET_TILE_UPDATED (xti, yti)) {
+              vid_ptr = disp_ptr + (yc * pitch + xc);
+              tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
+              for (r=0; r<h; r++) {
+                vid_ptr2  = vid_ptr;
+                tile_ptr2 = tile_ptr;
+                for (c=0; c<w; c++) {
+                  *(tile_ptr2++) = *(vid_ptr2++);
+                }
+                vid_ptr  += pitch;
+                tile_ptr += info.pitch;
+              }
+              if (v->banshee.hwcursor.enabled) {
+                banshee_draw_hwcursor(xc, yc, &info);
+              }
+              SET_TILE_UPDATED(BX_VOODOO_THIS, xti, yti, 0);
+              bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
+            }
+          }
+        }
+      } else {
+        BX_ERROR(("current guest pixel format is unsupported on indexed colour host displays"));
+      }
     } else {
       switch (bpp) {
         case 8:
