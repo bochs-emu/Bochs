@@ -1968,12 +1968,11 @@ void bx_voodoo_c::banshee_blt_reg_write(Bit8u reg, Bit32u value)
             if (cmdextra_3) {
               BX_ERROR(("host to screen blt: commandExtra bit #3 undocumented effect ?"));
             }
-            if ((BLT.reg[blt_srcXY] & 0x1f) != 0) {
-              BX_ERROR(("host to screen blt: srcXY: start bit/byte not supported yet"));
-            }
             undoc_bits = (BLT.reg[blt_srcXY] & 0x3fe0) != 0;
             if (undoc_bits) {
               BX_ERROR(("host to screen blt: srcXY: undocumented bit(s) set"));
+            } else if ((BLT.reg[blt_srcXY] & 0x1f) != 0) {
+              BX_ERROR(("host to screen blt: srcXY: start bit/byte not supported yet"));
             }
             if ((pxpack == 0) && !cmdextra_3) {
               pbytes = BLT.reg[blt_srcFormat] & 0x3fff;
@@ -2092,7 +2091,7 @@ void bx_voodoo_c::banshee_blt_complete()
   Bit8u vpxsize = (v->banshee.disp_bpp >> 3);
   Bit32u dstart = BLT.dst_base;
   Bit16u dpitch = BLT.dst_pitch;
-  Bit8u dpxsize = BLT.dst_fmt;
+  Bit8u dpxsize = (BLT.dst_fmt > 1) ? (BLT.dst_fmt - 1) : 1;
   Bit32u cmd = BLT.reg[blt_command];
   bx_bool xinc = (cmd >> 10) & 1;
   bx_bool yinc = (cmd >> 11) & 1;
@@ -2375,7 +2374,7 @@ void bx_voodoo_c::banshee_blt_screen_to_screen_pattern()
   Bit8u fgcolor[4], bgcolor[4], dstcolor[4];
   Bit8u *patcolor;
   int x, x0, x1, y, y0, y1, w, h;
-  Bit8u pmask, rop0, patcol = 0, patline;
+  Bit8u pmask = 0, rop0, patcol = 0, patline;
   bx_bool set;
 
   BX_LOCK(render_mutex);
