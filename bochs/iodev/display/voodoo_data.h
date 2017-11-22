@@ -1496,7 +1496,7 @@ typedef struct _cmdfifo_info cmdfifo_info;
 struct _cmdfifo_info
 {
   bx_bool enabled;      /* enabled? */
-  Bit8u   count_holes;  /* count holes? */
+  bx_bool count_holes;  /* count holes? */
   Bit32u  base;         /* base address in framebuffer RAM */
   Bit32u  end;          /* end address in framebuffer RAM */
   Bit32u  rdptr;        /* current read pointer */

@@ -1630,6 +1630,9 @@ void bx_voodoo_c::banshee_mem_read(bx_phy_address addr, unsigned len, void *data
   Bit32u *data_ptr = (Bit32u*)data;
   Bit32u value = 0xffffffff;
   Bit32u offset = (addr & 0x1ffffff);
+  Bit32u start = v->banshee.io[io_vidDesktopStartAddr];
+  Bit32u pitch = v->banshee.io[io_vidDesktopOverlayStride] & 0x7fff;
+  unsigned i, x, y;
 
   if (BX_VOODOO_THIS pci_rom_size > 0) {
     Bit32u mask = (BX_VOODOO_THIS pci_rom_size - 1);
@@ -1666,11 +1669,16 @@ void bx_voodoo_c::banshee_mem_read(bx_phy_address addr, unsigned len, void *data
     }
   } else if ((addr & ~0x1ffffff) == BX_VOODOO_THIS pci_base_address[1]) {
     if (offset < v->fbi.lfb_base) {
-      if (offset <= v->fbi.mask) {
-        value = 0;
-        for (unsigned i = 0; i < len; i++) {
-          value |= (v->fbi.ram[offset + i] << (i*8));
-        }
+      if (v->banshee.desktop_tiled && (offset >= start)) {
+        offset -= start;
+        pitch *= 128;
+        x = (offset << 0) & ((1 << v->fbi.lfb_stride) - 1);
+        y = (offset >> v->fbi.lfb_stride) & 0x7ff;
+        offset = start + y * pitch + x;
+      }
+      value = 0;
+      for (i = 0; i < len; i++) {
+        value |= (v->fbi.ram[offset + i] << (i*8));
       }
     } else {
       value = lfb_r((offset - v->fbi.lfb_base) >> 2);
@@ -1720,20 +1728,23 @@ void bx_voodoo_c::banshee_mem_write(bx_phy_address addr, unsigned len, void *dat
         BX_INFO(("TODO: CMDFIFO #1 write"));
       } else {
         if (offset >= start) {
-          if (!v->banshee.desktop_tiled) {
-            BX_LOCK(render_mutex);
-            for (i = 0; i < len; i++) {
-              value8 = (value >> (i*8)) & 0xff;
-              v->fbi.ram[offset + i] = value8;
-            }
+          if (v->banshee.desktop_tiled) {
             offset -= start;
-            x = (offset % pitch) / (v->banshee.disp_bpp >> 3);
-            y = offset / pitch;
-            theVoodooVga->redraw_area(x, y, len / (v->banshee.disp_bpp >> 3), 1);
-            BX_UNLOCK(render_mutex);
-          } else {
-            BX_ERROR(("write to desktop tile space not supported yet"));
+            pitch *= 128;
+            x = (offset << 0) & ((1 << v->fbi.lfb_stride) - 1);
+            y = (offset >> v->fbi.lfb_stride) & 0x7ff;
+            offset = start + y * pitch + x;
           }
+          BX_LOCK(render_mutex);
+          for (i = 0; i < len; i++) {
+            value8 = (value >> (i*8)) & 0xff;
+            v->fbi.ram[offset + i] = value8;
+          }
+          offset -= start;
+          x = (offset % pitch) / (v->banshee.disp_bpp >> 3);
+          y = offset / pitch;
+          theVoodooVga->redraw_area(x, y, len / (v->banshee.disp_bpp >> 3), 1);
+          BX_UNLOCK(render_mutex);
         } else {
           for (i = 0; i < len; i++) {
             value8 = (value >> (i*8)) & 0xff;
@@ -1805,12 +1816,13 @@ void bx_voodoo_c::banshee_agp_reg_write(Bit8u reg, Bit32u value)
         v->fbi.cmdfifo[1].end = v->fbi.cmdfifo[1].base + (((value & 0xff) + 1) << 12);
       }
       v->fbi.cmdfifo[fifo_idx].enabled = ((value >> 8) & 1);
+      v->fbi.cmdfifo[fifo_idx].count_holes = (((value >> 10) & 1) == 0);
       BX_UNLOCK(cmdfifo_mutex);
       break;
     case cmdBump0:
     case cmdBump1:
       if (value > 0) {
-        BX_ERROR(("cmdBump0 not supported yet"));
+        BX_ERROR(("cmdBump%d not supported yet", fifo_idx));
       }
       break;
     case cmdRdPtrL0:
@@ -1827,11 +1839,15 @@ void bx_voodoo_c::banshee_agp_reg_write(Bit8u reg, Bit32u value)
       break;
     case cmdAMin0:
     case cmdAMin1:
+      BX_LOCK(cmdfifo_mutex);
       v->fbi.cmdfifo[fifo_idx].amin = value;
+      BX_UNLOCK(cmdfifo_mutex);
       break;
     case cmdAMax0:
     case cmdAMax1:
+      BX_LOCK(cmdfifo_mutex);
       v->fbi.cmdfifo[fifo_idx].amax = value;
+      BX_UNLOCK(cmdfifo_mutex);
       break;
     case cmdFifoDepth0:
     case cmdFifoDepth1:
@@ -2130,6 +2146,9 @@ void bx_voodoo_c::banshee_blt_complete()
   bx_bool yinc = (cmd >> 11) & 1;
   int x, y;
 
+  if (v->banshee.desktop_tiled) {
+    vpitch *= 128;
+  }
   if ((dstart == vstart) && (dpitch == vpitch) && (dpxsize == vpxsize)) {
     if (BLT.x_dir) {
       x = BLT.dst_x + 1 - BLT.dst_w;

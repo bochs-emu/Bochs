@@ -2444,7 +2444,15 @@ void cmdfifo_w(Bit32u fbi_offset, Bit32u data)
 {
   BX_LOCK(cmdfifo_mutex);
   *(Bit32u*)(&v->fbi.ram[fbi_offset]) = data;
-  v->fbi.cmdfifo[0].depth++;
+  if (v->fbi.cmdfifo[0].count_holes) {
+    v->fbi.cmdfifo[0].amax = fbi_offset;
+    if (fbi_offset == (v->fbi.cmdfifo[0].amin + 4)) {
+      v->fbi.cmdfifo[0].amin = fbi_offset;
+      v->fbi.cmdfifo[0].depth = (v->fbi.cmdfifo[0].amin - v->fbi.cmdfifo[0].rdptr) / 4;
+    }
+  } else {
+    v->fbi.cmdfifo[0].depth++;
+  }
   if (v->fbi.cmdfifo[0].depth_needed == BX_MAX_BIT32U) {
     v->fbi.cmdfifo[0].depth_needed = cmdfifo_calc_depth_needed();
   }
@@ -2463,7 +2471,15 @@ Bit32u cmdfifo_r(void)
 
   data = *(Bit32u*)(&v->fbi.ram[v->fbi.cmdfifo[0].rdptr & v->fbi.mask]);
   v->fbi.cmdfifo[0].rdptr += 4;
-  v->fbi.cmdfifo[0].depth--;
+  if (v->fbi.cmdfifo[0].rdptr >= v->fbi.cmdfifo[0].end) {
+    BX_INFO(("CMDFIFO rollover"));
+    v->fbi.cmdfifo[0].rdptr = v->fbi.cmdfifo[0].base;
+  }
+  if (v->fbi.cmdfifo[0].count_holes) {
+    v->fbi.cmdfifo[0].depth = (v->fbi.cmdfifo[0].amin - v->fbi.cmdfifo[0].rdptr) / 4;
+  } else {
+    v->fbi.cmdfifo[0].depth--;
+  }
   return data;
 }
 
