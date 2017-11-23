@@ -1004,9 +1004,9 @@ void bx_voodoo_c::update(void)
                   for (c=0; c<w; c++) {
                     colour = v->fbi.clut[*(vid_ptr2++)];
                     colour = MAKE_COLOUR(
-                    colour & 0xff0000, 24, info.red_shift, info.red_mask,
-                    colour & 0x00ff00, 16, info.green_shift, info.green_mask,
-                    colour & 0x0000ff, 8, info.blue_shift, info.blue_mask);
+                      colour & 0xff0000, 24, info.red_shift, info.red_mask,
+                      colour & 0x00ff00, 16, info.green_shift, info.green_mask,
+                      colour & 0x0000ff, 8, info.blue_shift, info.blue_mask);
                     if (info.is_little_endian) {
                       for (i=0; i<info.bpp; i+=8) {
                         *(tile_ptr2++) = (Bit8u)(colour >> i);
@@ -1555,9 +1555,7 @@ void bx_voodoo_c::banshee_write_handler(void *this_ptr, Bit32u address, Bit32u v
       if (v->banshee.io[reg] & 0x1000) {
         BX_ERROR(("vidProcCfg: CLUT high bank not supported yet"));
       }
-      if ((v->banshee.io[reg] >> 24) & 1) {
-        v->banshee.desktop_tiled = ((v->banshee.io[reg] >> 24) & 1);
-      }
+      v->banshee.desktop_tiled = ((v->banshee.io[reg] >> 24) & 1);
       BX_UNLOCK(render_mutex);
       break;
 
@@ -1779,6 +1777,10 @@ Bit32u bx_voodoo_c::banshee_agp_reg_read(Bit8u reg)
     case cmdFifoDepth1:
       result = v->fbi.cmdfifo[fifo_idx].depth;
       break;
+    case cmdHoleCnt0:
+    case cmdHoleCnt1:
+      result = v->fbi.cmdfifo[fifo_idx].holes;
+      break;
     default:
       result = v->banshee.agp[reg];
   }
@@ -1816,7 +1818,7 @@ void bx_voodoo_c::banshee_agp_reg_write(Bit8u reg, Bit32u value)
         v->fbi.cmdfifo[1].end = v->fbi.cmdfifo[1].base + (((value & 0xff) + 1) << 12);
       }
       v->fbi.cmdfifo[fifo_idx].enabled = ((value >> 8) & 1);
-      v->fbi.cmdfifo[fifo_idx].count_holes = (((value >> 10) & 1) == 0);
+//      v->fbi.cmdfifo[fifo_idx].count_holes = (((value >> 10) & 1) == 0);
       BX_UNLOCK(cmdfifo_mutex);
       break;
     case cmdBump0:
