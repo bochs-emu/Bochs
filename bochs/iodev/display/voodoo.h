@@ -82,16 +82,6 @@ public:
   Bit32u banshee_blt_reg_read(Bit8u reg);
   void   banshee_blt_reg_write(Bit8u reg, Bit32u value);
 
-  void   banshee_blt_launch_area_write(Bit32u value);
-  void   banshee_blt_complete(void);
-  void   banshee_blt_apply_clipwindow(int *x0, int *y0, int *x1, int *y1, int *w, int *h);
-  void   banshee_blt_rectangle_fill(void);
-  void   banshee_blt_pattern_fill_mono(void);
-  void   banshee_blt_pattern_fill_color(void);
-  void   banshee_blt_screen_to_screen(void);
-  void   banshee_blt_screen_to_screen_pattern(void);
-  void   banshee_blt_host_to_screen(void);
-
 private:
   bx_voodoo_t s;
 
@@ -113,6 +103,19 @@ private:
 
   Bit32u banshee_agp_reg_read(Bit8u reg);
   void   banshee_agp_reg_write(Bit8u reg, Bit32u value);
+
+  void   banshee_blt_launch_area_setup(void);
+  void   banshee_blt_launch_area_write(Bit32u value);
+  void   banshee_blt_complete(void);
+  void   banshee_blt_apply_clipwindow(int *x0, int *y0, int *x1, int *y1, int *w, int *h);
+
+  void   banshee_blt_rectangle_fill(void);
+  void   banshee_blt_pattern_fill_mono(void);
+  void   banshee_blt_pattern_fill_color(void);
+  void   banshee_blt_screen_to_screen(void);
+  void   banshee_blt_screen_to_screen_pattern(void);
+  void   banshee_blt_host_to_screen(void);
+  void   banshee_blt_line(bx_bool pline);
 };
 
 class bx_voodoo_vga_c : public bx_vgacore_c {

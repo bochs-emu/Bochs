@@ -1768,7 +1768,8 @@ struct _banshee_info
     Bit16u clipx1[2];
     Bit16u clipy1[2];
     Bit16u h2s_pitch;
-    Bit16u h2s_lcount;
+    Bit8u h2s_pxstart;
+    Bit16u h2s_undoc;
     Bit32u lacnt;
     Bit32u laidx;
     Bit8u *lamem;
