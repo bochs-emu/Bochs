@@ -21,7 +21,9 @@
 /////////////////////////////////////////////////////////////////////////
 
 #include "bochs.h"
-#include "../cpu.h"
+
+#include "instr.h"
+#include "decoder.h"
 
 #define LOG_THIS genlog->
 
@@ -2319,7 +2321,7 @@ int decodeImmediate64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, u
   return 0;
 }
 
-int fetchDecode64(const Bit8u *iptr, Bit32u fetchModeMask, bx_bool handle_lock_cr0, bxInstruction_c *i, unsigned remainingInPage)
+int fetchDecode64(const Bit8u *iptr, bx_bool handle_lock_cr0, bxInstruction_c *i, unsigned remainingInPage)
 {
   if (remainingInPage > 15) remainingInPage = 15;
 
@@ -2455,26 +2457,6 @@ fetch_b1:
   if (! BX_NULL_SEG_REG(seg_override))
      i->setSeg(seg_override);
 
-  if (! i->modC0()) {
-    i->execute1 = BxOpcodesTable[ia_opcode].execute1;
-    i->handlers.execute2 = BxOpcodesTable[ia_opcode].execute2;
-
-    if (ia_opcode == BX_IA_MOV_GqEq) {
-      if (i->seg() == BX_SEG_REG_SS)
-        i->execute1 = &BX_CPU_C::MOV64S_GqEqM;
-    }
-    if (ia_opcode == BX_IA_MOV_EqGq) {
-      if (i->seg() == BX_SEG_REG_SS)
-        i->execute1 = &BX_CPU_C::MOV64S_EqGqM;
-    }
-  }
-  else {
-    i->execute1 = BxOpcodesTable[ia_opcode].execute2;
-    i->handlers.execute2 = NULL;
-  }
-
-  BX_ASSERT(i->execute1);
-
   Bit32u op_flags = BxOpcodesTable[ia_opcode].opflags;
 
   if (lock) {
@@ -2489,58 +2471,10 @@ fetch_b1:
       }
       else {
         // replace execution function with undefined-opcode
-        i->execute1 = &BX_CPU_C::BxError;
+        i->setIaOpcode(BX_IA_ERROR);
       }
     }
   }
-
-#if BX_SUPPORT_EVEX
-  if ((op_flags & BX_PREPARE_EVEX) != 0 && i->getEvexb()) {
-    if (! i->modC0()) {
-      if ((op_flags & BX_PREPARE_EVEX_NO_BROADCAST) == BX_PREPARE_EVEX_NO_BROADCAST) {
-        BX_DEBUG(("%s: broadcast is not supported for this instruction", i->getIaOpcodeNameShort()));
-        i->execute1 = &BX_CPU_C::BxError;
-      }
-    }
-    else {
-      if ((op_flags & BX_PREPARE_EVEX_NO_SAE) == BX_PREPARE_EVEX_NO_SAE) {
-        BX_DEBUG(("%s: EVEX.b in reg form is not allowed for instructions which cannot cause floating point exception", i->getIaOpcodeNameShort()));
-        i->execute1 = &BX_CPU_C::BxError;
-      }
-    }
-  }
-#endif
-  if (! (fetchModeMask & BX_FETCH_MODE_SSE_OK)) {
-     if (op_flags & BX_PREPARE_SSE) {
-        if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoSSE;
-        return(1);
-     }
-  }
-#if BX_SUPPORT_AVX
-  if (! (fetchModeMask & BX_FETCH_MODE_AVX_OK)) {
-    if (op_flags & BX_PREPARE_AVX) {
-       if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoAVX;
-       return(1);
-    }
-  }
-#if BX_SUPPORT_EVEX
-  if (! (fetchModeMask & BX_FETCH_MODE_OPMASK_OK)) {
-    if (op_flags & BX_PREPARE_OPMASK) {
-       if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoOpMask;
-       return(1);
-    }
-  }
-  if (! (fetchModeMask & BX_FETCH_MODE_EVEX_OK)) {
-    if (op_flags & BX_PREPARE_EVEX) {
-       if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoEVEX;
-       return(1);
-    }
-  }
-#endif
-#endif
-
-  if ((op_flags & BX_TRACE_END) != 0 || i->execute1 == &BX_CPU_C::BxError)
-     return(1);
 
   return(0);
 }

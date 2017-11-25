@@ -26,9 +26,9 @@
 
 #include "fetchdecode.h"
 
-extern int fetchDecode32(const Bit8u *fetchPtr, Bit32u fetchModeMask, bx_bool handle_lock_cr0, bxInstruction_c *i, unsigned remainingInPage);
+extern int fetchDecode32(const Bit8u *fetchPtr, bx_bool is_32, bx_bool handle_lock_cr0, bxInstruction_c *i, unsigned remainingInPage);
 #if BX_SUPPORT_X86_64
-extern int fetchDecode64(const Bit8u *fetchPtr, Bit32u fetchModeMask, bx_bool handle_lock_cr0, bxInstruction_c *i, unsigned remainingInPage);
+extern int fetchDecode64(const Bit8u *fetchPtr, bx_bool handle_lock_cr0, bxInstruction_c *i, unsigned remainingInPage);
 #endif
 
 // table of all Bochs opcodes
@@ -603,22 +603,14 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
 
 char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr, bxInstruction_c *i, bx_address cs_base, bx_address rip)
 {
-  Bit32u fetchModeMask = BX_FETCH_MODE_SSE_OK |
-                         BX_FETCH_MODE_AVX_OK |
-                         BX_FETCH_MODE_OPMASK_OK |
-                         BX_FETCH_MODE_EVEX_OK;
-
-  if (is_64) fetchModeMask |= BX_FETCH_MODE_IS64_MASK;
-  else if (is_32) fetchModeMask |= BX_FETCH_MODE_IS32_MASK;
-
   int ret;
 
 #if BX_SUPPORT_X86_64
   if (is_64)
-    ret = fetchDecode64(opcode, fetchModeMask, BX_CPU(0)->is_cpu_extension_supported(BX_ISA_ALT_MOV_CR8), i, 16);
+    ret = fetchDecode64(opcode, BX_CPU(0)->is_cpu_extension_supported(BX_ISA_ALT_MOV_CR8), i, 16);
   else
 #endif
-    ret = fetchDecode32(opcode, fetchModeMask, BX_CPU(0)->is_cpu_extension_supported(BX_ISA_ALT_MOV_CR8), i, 16);
+    ret = fetchDecode32(opcode, is_32, BX_CPU(0)->is_cpu_extension_supported(BX_ISA_ALT_MOV_CR8), i, 16);
 
   if (ret < 0)
     sprintf(disbufptr, "decode failed");

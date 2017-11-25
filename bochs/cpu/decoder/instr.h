@@ -28,6 +28,19 @@ extern bx_address bx_asize_mask[];
 
 const char *get_bx_opcode_name(Bit16u ia_opcode);
 
+class BX_CPU_C;
+class bxInstruction_c;
+
+typedef void BX_INSF_TYPE;
+
+// <TAG-TYPE-EXECUTEPTR-START>
+#if BX_USE_CPU_SMF
+typedef BX_INSF_TYPE (BX_CPP_AttrRegparmN(1) *BxExecutePtr_tR)(bxInstruction_c *);
+#else
+typedef BX_INSF_TYPE (BX_CPU_C::*BxExecutePtr_tR)(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#endif
+// <TAG-TYPE-EXECUTEPTR-END>
+
 // <TAG-CLASS-INSTRUCTION-START>
 class bxInstruction_c {
 public:

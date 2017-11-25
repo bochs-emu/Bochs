@@ -23,6 +23,9 @@
 #include "bochs.h"
 #include "../cpu.h"
 
+#include "decoder.h"
+#include "instr.h"
+
 #define LOG_THIS genlog->
 
 ///////////////////////////
@@ -66,6 +69,13 @@ struct BxOpcodeDecodeDescriptor32 {
   BxFetchDecode32Ptr decode_method;
   const BxOpcodeInfo_t *opcode_table;
 };
+
+// table of all Bochs opcodes
+bxIAOpcodeTable BxOpcodesTable[] = {
+#define bx_define_opcode(a, b, c, d, s1, s2, s3, s4, e) { b, c, { s1, s2, s3, s4 }, e },
+#include "ia_opcodes.def"
+};
+#undef  bx_define_opcode
 
 // Some info on the opcodes at {0F A6} and {0F A7}
 //
@@ -1192,13 +1202,6 @@ static unsigned sreg_mod1or2_base32[8] = {
   BX_SEG_REG_DS,
   BX_SEG_REG_DS
 };
-
-// table of all Bochs opcodes
-bxIAOpcodeTable BxOpcodesTable[] = {
-#define bx_define_opcode(a, b, c, d, s1, s2, s3, s4, e) { b, c, { s1, s2, s3, s4 }, e },
-#include "ia_opcodes.def"
-};
-#undef  bx_define_opcode
 
 extern const Bit8u *decodeModrm32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned mod, unsigned nnn, unsigned rm);
 extern const Bit8u *parseModrm32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, struct bx_modrm *modrm);
@@ -2494,204 +2497,6 @@ int decoder_ud32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsign
   return BX_IA_ERROR;
 }
 
-int fetchDecode32(const Bit8u *iptr, Bit32u fetchModeMask, bx_bool handle_lock_cr0, bxInstruction_c *i, unsigned remainingInPage)
-{
-  if (remainingInPage > 15) remainingInPage = 15;
-
-  unsigned remain = remainingInPage; // remain must be at least 1
-  unsigned b1;
-  int ia_opcode = BX_IA_ERROR;
-  unsigned seg_override = BX_SEG_REG_NULL;
-  bx_bool is_32, os_32, lock = 0;
-  unsigned sse_prefix = SSE_PREFIX_NONE;
-
-  os_32 = is_32 = fetchModeMask & BX_FETCH_MODE_IS32_MASK;
-
-  i->init(/*os32*/ is_32,  /*as32*/ is_32,
-          /*os64*/     0,  /*as64*/     0);
-
-fetch_b1:
-  b1 = *iptr++;
-  remain--;
-
-  switch (b1) {
-    case 0x0f: // 2-byte escape
-      if (remain != 0) {
-        remain--;
-        b1 = 0x100 | *iptr++;
-        break;
-      }
-      return(-1);
-    case 0x66: // OpSize
-      os_32 = !is_32;
-      if(!sse_prefix) sse_prefix = SSE_PREFIX_66;
-      i->setOs32B(os_32);
-      if (remain != 0) {
-        goto fetch_b1;
-      }
-      return(-1);
-    case 0x67: // AddrSize
-      i->setAs32B(!is_32);
-      if (remain != 0) {
-        goto fetch_b1;
-      }
-      return(-1);
-    case 0xf2: // REPNE/REPNZ
-    case 0xf3: // REP/REPE/REPZ
-      sse_prefix = (b1 & 3) ^ 1;
-      i->setLockRepUsed(b1 & 3);
-      if (remain != 0) {
-        goto fetch_b1;
-      }
-      return(-1);
-    case 0x26: // ES:
-    case 0x2e: // CS:
-    case 0x36: // SS:
-    case 0x3e: // DS:
-      seg_override = (b1 >> 3) & 3;
-      if (remain != 0) {
-        goto fetch_b1;
-      }
-      return(-1);
-    case 0x64: // FS:
-    case 0x65: // GS:
-      seg_override = (b1 & 0xf);
-      if (remain != 0) {
-        goto fetch_b1;
-      }
-      return(-1);
-    case 0xf0: // LOCK:
-      lock = 1;
-      if (remain != 0) {
-        goto fetch_b1;
-      }
-      return(-1);
-    default:
-      break;
-  }
-
-#if BX_CPU_LEVEL >= 6
-  if (b1 == 0x138 || b1 == 0x13a) {
-    if (remain == 0)
-      return(-1);
-    if (b1 == 0x138) b1 = 0x200 | *iptr++;
-    else             b1 = 0x300 | *iptr++;
-    remain--;
-  }
-#endif
-
-  i->setSeg(BX_SEG_REG_DS); // default segment is DS:
-
-  i->modRMForm.Id = 0;
- 
-  BxOpcodeDecodeDescriptor32 *decode_descriptor = &decode32_descriptor[b1];
-  ia_opcode = decode_descriptor->decode_method(iptr, remain, i, b1, sse_prefix, decode_descriptor->opcode_table);
-  if (ia_opcode < 0)
-    return(-1);
-
-  i->setILen(remainingInPage - remain);
-  i->setIaOpcode(ia_opcode);
-
-  // assign memory segment override
-  if (! BX_NULL_SEG_REG(seg_override))
-    i->setSeg(seg_override);
-
-  if (! i->modC0()) {
-    i->execute1 = BxOpcodesTable[ia_opcode].execute1;
-    i->handlers.execute2 = BxOpcodesTable[ia_opcode].execute2;
-
-    if (ia_opcode == BX_IA_MOV_Op32_GdEd) {
-      if (i->seg() == BX_SEG_REG_SS)
-        i->execute1 = &BX_CPU_C::MOV32S_GdEdM;
-    }
-    if (ia_opcode == BX_IA_MOV_Op32_EdGd) {
-      if (i->seg() == BX_SEG_REG_SS)
-        i->execute1 = &BX_CPU_C::MOV32S_EdGdM;
-    }
-  }
-  else {
-    i->execute1 = BxOpcodesTable[ia_opcode].execute2;
-    i->handlers.execute2 = NULL;
-  }
-
-  BX_ASSERT(i->execute1);
-
-  Bit32u op_flags = BxOpcodesTable[ia_opcode].opflags;
-
-  if (lock) {
-    i->setLock();
-    // lock prefix not allowed or destination operand is not memory
-    if (i->modC0() || !(op_flags & BX_LOCKABLE)) {
-#if BX_CPU_LEVEL >= 6
-      if (handle_lock_cr0 && (ia_opcode == BX_IA_MOV_CR0Rd || ia_opcode == BX_IA_MOV_RdCR0)) {
-        if (ia_opcode == BX_IA_MOV_CR0Rd)
-          i->setSrcReg(0, 8); // extend CR0 -> CR8
-        if (ia_opcode == BX_IA_MOV_RdCR0)
-          i->setSrcReg(1, 8); // extend CR0 -> CR8
-      }
-      else
-#endif
-      {
-        // replace execution function with undefined-opcode
-        i->execute1 = &BX_CPU_C::BxError;
-      }
-    }
-  }
-
-
-#if BX_SUPPORT_EVEX
-  if ((op_flags & BX_PREPARE_EVEX) != 0 && i->getEvexb()) {
-    if (! i->modC0()) {
-      if ((op_flags & BX_PREPARE_EVEX_NO_BROADCAST) == BX_PREPARE_EVEX_NO_BROADCAST) {
-//      BX_DEBUG(("%s: broadcast is not supported for this instruction", i->getIaOpcodeNameShort()));
-        i->execute1 = &BX_CPU_C::BxError;
-      }
-    }
-    else {
-      if ((op_flags & BX_PREPARE_EVEX_NO_SAE) == BX_PREPARE_EVEX_NO_SAE) {
-//      BX_DEBUG(("%s: EVEX.b in reg form is not allowed for instructions which cannot cause floating point exception", i->getIaOpcodeNameShort()));
-        i->execute1 = &BX_CPU_C::BxError;
-      }
-    }
-  }
-#endif
-#if BX_CPU_LEVEL >= 6
-  if (! (fetchModeMask & BX_FETCH_MODE_SSE_OK)) {
-     if (op_flags & BX_PREPARE_SSE) {
-        if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoSSE;
-        return(1);
-     }
-  }
-#if BX_SUPPORT_AVX
-  if (! (fetchModeMask & BX_FETCH_MODE_AVX_OK)) {
-    if (op_flags & BX_PREPARE_AVX) {
-       if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoAVX;
-       return(1);
-    }
-  }
-#if BX_SUPPORT_EVEX
-  if (! (fetchModeMask & BX_FETCH_MODE_OPMASK_OK)) {
-    if (op_flags & BX_PREPARE_OPMASK) {
-       if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoOpMask;
-       return(1);
-    }
-  }
-  if (! (fetchModeMask & BX_FETCH_MODE_EVEX_OK)) {
-    if (op_flags & BX_PREPARE_EVEX) {
-       if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoEVEX;
-       return(1);
-    }
-  }
-#endif
-#endif
-#endif
-
-  if ((op_flags & BX_TRACE_END) != 0 || i->execute1 == &BX_CPU_C::BxError)
-     return(1);
-
-  return(0);
-}
-
 Bit16u WalkOpcodeTables(const BxExtOpcodeInfo_t *OpcodeInfoPtr, Bit16u &attr, bx_bool is_64, unsigned modrm, unsigned sse_prefix, unsigned osize, unsigned vex_vl, bx_bool vex_w)
 {
   // Parse mod-nnn-rm and related bytes
@@ -2803,6 +2608,210 @@ Bit16u WalkOpcodeTables(const BxExtOpcodeInfo_t *OpcodeInfoPtr, Bit16u &attr, bx
   }
 
   return (ia_opcode);
+}
+
+int fetchDecode32(const Bit8u *iptr, bx_bool is_32, bx_bool handle_lock_cr0, bxInstruction_c *i, unsigned remainingInPage)
+{
+  if (remainingInPage > 15) remainingInPage = 15;
+
+  unsigned remain = remainingInPage; // remain must be at least 1
+  unsigned b1;
+  int ia_opcode = BX_IA_ERROR;
+  unsigned seg_override = BX_SEG_REG_NULL;
+  bx_bool os_32 = is_32, lock = 0;
+  unsigned sse_prefix = SSE_PREFIX_NONE;
+
+  i->init(/*os32*/ is_32,  /*as32*/ is_32,
+          /*os64*/     0,  /*as64*/     0);
+
+fetch_b1:
+  b1 = *iptr++;
+  remain--;
+
+  switch (b1) {
+    case 0x0f: // 2-byte escape
+      if (remain != 0) {
+        remain--;
+        b1 = 0x100 | *iptr++;
+        break;
+      }
+      return(-1);
+    case 0x66: // OpSize
+      os_32 = !is_32;
+      if(!sse_prefix) sse_prefix = SSE_PREFIX_66;
+      i->setOs32B(os_32);
+      if (remain != 0) {
+        goto fetch_b1;
+      }
+      return(-1);
+    case 0x67: // AddrSize
+      i->setAs32B(!is_32);
+      if (remain != 0) {
+        goto fetch_b1;
+      }
+      return(-1);
+    case 0xf2: // REPNE/REPNZ
+    case 0xf3: // REP/REPE/REPZ
+      sse_prefix = (b1 & 3) ^ 1;
+      i->setLockRepUsed(b1 & 3);
+      if (remain != 0) {
+        goto fetch_b1;
+      }
+      return(-1);
+    case 0x26: // ES:
+    case 0x2e: // CS:
+    case 0x36: // SS:
+    case 0x3e: // DS:
+      seg_override = (b1 >> 3) & 3;
+      if (remain != 0) {
+        goto fetch_b1;
+      }
+      return(-1);
+    case 0x64: // FS:
+    case 0x65: // GS:
+      seg_override = (b1 & 0xf);
+      if (remain != 0) {
+        goto fetch_b1;
+      }
+      return(-1);
+    case 0xf0: // LOCK:
+      lock = 1;
+      if (remain != 0) {
+        goto fetch_b1;
+      }
+      return(-1);
+    default:
+      break;
+  }
+
+#if BX_CPU_LEVEL >= 6
+  if (b1 == 0x138 || b1 == 0x13a) {
+    if (remain == 0)
+      return(-1);
+    if (b1 == 0x138) b1 = 0x200 | *iptr++;
+    else             b1 = 0x300 | *iptr++;
+    remain--;
+  }
+#endif
+
+  i->setSeg(BX_SEG_REG_DS); // default segment is DS:
+
+  i->modRMForm.Id = 0;
+ 
+  BxOpcodeDecodeDescriptor32 *decode_descriptor = &decode32_descriptor[b1];
+  ia_opcode = decode_descriptor->decode_method(iptr, remain, i, b1, sse_prefix, decode_descriptor->opcode_table);
+  if (ia_opcode < 0)
+    return(-1);
+
+  i->setILen(remainingInPage - remain);
+  i->setIaOpcode(ia_opcode);
+
+  // assign memory segment override
+  if (! BX_NULL_SEG_REG(seg_override))
+    i->setSeg(seg_override);
+
+  Bit32u op_flags = BxOpcodesTable[ia_opcode].opflags;
+
+  if (lock) {
+    i->setLock();
+    // lock prefix not allowed or destination operand is not memory
+    if (i->modC0() || !(op_flags & BX_LOCKABLE)) {
+#if BX_CPU_LEVEL >= 6
+      if (handle_lock_cr0 && (ia_opcode == BX_IA_MOV_CR0Rd || ia_opcode == BX_IA_MOV_RdCR0)) {
+        if (ia_opcode == BX_IA_MOV_CR0Rd)
+          i->setSrcReg(0, 8); // extend CR0 -> CR8
+        if (ia_opcode == BX_IA_MOV_RdCR0)
+          i->setSrcReg(1, 8); // extend CR0 -> CR8
+      }
+      else
+#endif
+      {
+        // replace execution function with undefined-opcode
+        i->setIaOpcode(BX_IA_ERROR);
+      }
+    }
+  }
+
+  return(0);
+}
+
+int assignHandler(bxInstruction_c *i, Bit32u fetchModeMask)
+{
+  unsigned ia_opcode = i->getIaOpcode();
+
+  if (! i->modC0()) {
+    i->execute1 = BxOpcodesTable[ia_opcode].execute1;
+    i->handlers.execute2 = BxOpcodesTable[ia_opcode].execute2;
+
+    if (ia_opcode == BX_IA_MOV_Op32_GdEd) {
+      if (i->seg() == BX_SEG_REG_SS)
+        i->execute1 = &BX_CPU_C::MOV32S_GdEdM;
+    }
+    if (ia_opcode == BX_IA_MOV_Op32_EdGd) {
+      if (i->seg() == BX_SEG_REG_SS)
+        i->execute1 = &BX_CPU_C::MOV32S_EdGdM;
+    }
+  }
+  else {
+    i->execute1 = BxOpcodesTable[ia_opcode].execute2;
+    i->handlers.execute2 = NULL;
+  }
+
+  BX_ASSERT(i->execute1);
+
+  Bit32u op_flags = BxOpcodesTable[ia_opcode].opflags;
+
+#if BX_SUPPORT_EVEX
+  if ((op_flags & BX_PREPARE_EVEX) != 0 && i->getEvexb()) {
+    if (! i->modC0()) {
+      if ((op_flags & BX_PREPARE_EVEX_NO_BROADCAST) == BX_PREPARE_EVEX_NO_BROADCAST) {
+//      BX_DEBUG(("%s: broadcast is not supported for this instruction", i->getIaOpcodeNameShort()));
+        i->execute1 = &BX_CPU_C::BxError;
+      }
+    }
+    else {
+      if ((op_flags & BX_PREPARE_EVEX_NO_SAE) == BX_PREPARE_EVEX_NO_SAE) {
+//      BX_DEBUG(("%s: EVEX.b in reg form is not allowed for instructions which cannot cause floating point exception", i->getIaOpcodeNameShort()));
+        i->execute1 = &BX_CPU_C::BxError;
+      }
+    }
+  }
+#endif
+#if BX_CPU_LEVEL >= 6
+  if (! (fetchModeMask & BX_FETCH_MODE_SSE_OK)) {
+     if (op_flags & BX_PREPARE_SSE) {
+        if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoSSE;
+        return(1);
+     }
+  }
+#if BX_SUPPORT_AVX
+  if (! (fetchModeMask & BX_FETCH_MODE_AVX_OK)) {
+    if (op_flags & BX_PREPARE_AVX) {
+       if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoAVX;
+       return(1);
+    }
+  }
+#if BX_SUPPORT_EVEX
+  if (! (fetchModeMask & BX_FETCH_MODE_OPMASK_OK)) {
+    if (op_flags & BX_PREPARE_OPMASK) {
+       if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoOpMask;
+       return(1);
+    }
+  }
+  if (! (fetchModeMask & BX_FETCH_MODE_EVEX_OK)) {
+    if (op_flags & BX_PREPARE_EVEX) {
+       if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoEVEX;
+       return(1);
+    }
+  }
+#endif
+#endif
+#endif
+
+  if ((op_flags & BX_TRACE_END) != 0 || i->execute1 == &BX_CPU_C::BxError)
+     return(1);
+
+  return(0);
 }
 
 const char *get_bx_opcode_name(Bit16u ia_opcode)

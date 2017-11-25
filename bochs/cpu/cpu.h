@@ -26,13 +26,6 @@
 
 #include "decoder/decoder.h"
 
-#define BX_16BIT_REG_IP  (BX_GENERAL_REGISTERS)
-#define BX_32BIT_REG_EIP (BX_GENERAL_REGISTERS)
-#define BX_64BIT_REG_RIP (BX_GENERAL_REGISTERS)
-
-#define BX_TMP_REGISTER  (BX_GENERAL_REGISTERS+1)
-#define BX_NIL_REGISTER  (BX_GENERAL_REGISTERS+2)
-
 #if defined(NEED_CPU_REG_SHORTCUTS)
 
 /* WARNING:
@@ -475,14 +468,12 @@ class BX_CPU_C;
 class BX_MEM_C;
 class bxInstruction_c;
 
-typedef void BX_INSF_TYPE;
-
 // <TAG-TYPE-EXECUTEPTR-START>
 #if BX_USE_CPU_SMF
-typedef BX_INSF_TYPE (BX_CPP_AttrRegparmN(1) *BxExecutePtr_tR)(bxInstruction_c *);
+//typedef BX_INSF_TYPE (BX_CPP_AttrRegparmN(1) *BxExecutePtr_tR)(bxInstruction_c *);
 typedef void (BX_CPP_AttrRegparmN(1) *BxRepIterationPtr_tR)(bxInstruction_c *);
 #else
-typedef BX_INSF_TYPE (BX_CPU_C::*BxExecutePtr_tR)(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+//typedef BX_INSF_TYPE (BX_CPU_C::*BxExecutePtr_tR)(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 typedef void (BX_CPU_C::*BxRepIterationPtr_tR)(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 // <TAG-TYPE-EXECUTEPTR-END>

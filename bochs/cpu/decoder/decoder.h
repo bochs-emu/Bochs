@@ -238,6 +238,13 @@ enum BxRegs64 {
 # define BX_GENERAL_REGISTERS 8
 #endif
 
+const unsigned BX_16BIT_REG_IP  = (BX_GENERAL_REGISTERS),
+               BX_32BIT_REG_EIP = (BX_GENERAL_REGISTERS),
+               BX_64BIT_REG_RIP = (BX_GENERAL_REGISTERS);
+
+const unsigned BX_TMP_REGISTER = (BX_GENERAL_REGISTERS+1);
+const unsigned BX_NIL_REGISTER = (BX_GENERAL_REGISTERS+2);
+
 enum OpmaskRegs {
   BX_REG_OPMASK_K0,
   BX_REG_OPMASK_K1,
@@ -248,6 +255,36 @@ enum OpmaskRegs {
   BX_REG_OPMASK_K6,
   BX_REG_OPMASK_K7
 };
+
+// AVX Registers
+enum bx_avx_vector_length {
+  BX_NO_VL,
+  BX_VL128  = 1,
+  BX_VL256  = 2,
+  BX_VL512  = 4,
+};
+
+#if BX_SUPPORT_EVEX
+#  define BX_VLMAX BX_VL512
+#else
+#  if BX_SUPPORT_AVX
+#    define BX_VLMAX BX_VL256
+#  else
+#    define BX_VLMAX BX_VL128
+#  endif
+#endif
+
+#if BX_SUPPORT_EVEX
+#  define BX_XMM_REGISTERS 32
+#else
+#  if BX_SUPPORT_X86_64
+#    define BX_XMM_REGISTERS 16
+#  else
+#    define BX_XMM_REGISTERS 8
+#  endif
+#endif
+
+const unsigned BX_VECTOR_TMP_REGISTER = (BX_XMM_REGISTERS);
 
 #endif // BX_X86_DECODER_H
 
