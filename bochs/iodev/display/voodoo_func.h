@@ -2445,11 +2445,11 @@ void cmdfifo_w(Bit32u fbi_offset, Bit32u data)
   BX_LOCK(cmdfifo_mutex);
   *(Bit32u*)(&v->fbi.ram[fbi_offset]) = data;
   if (v->fbi.cmdfifo[0].count_holes) {
-    v->fbi.cmdfifo[0].amax = fbi_offset;
     if (fbi_offset == (v->fbi.cmdfifo[0].amin + 4)) {
       v->fbi.cmdfifo[0].amin = fbi_offset;
       v->fbi.cmdfifo[0].depth = (v->fbi.cmdfifo[0].amin - v->fbi.cmdfifo[0].rdptr) / 4;
     }
+    v->fbi.cmdfifo[0].amax = fbi_offset;
   } else {
     v->fbi.cmdfifo[0].depth++;
   }
@@ -2502,6 +2502,9 @@ void cmdfifo_process(void)
           break;
         case 3: // JMP
           v->fbi.cmdfifo[0].rdptr = (command >> 4) & 0xfffffc;
+          if (v->fbi.cmdfifo[0].count_holes) {
+            BX_INFO(("cmdfifo_process(): JMP 0x%08x", v->fbi.cmdfifo[0].rdptr));
+          }
           break;
         default:
           BX_ERROR(("CMDFIFO packet type 0: unsupported code %d", code));

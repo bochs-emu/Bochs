@@ -135,6 +135,7 @@ public:
 
   virtual bx_bool init_vga_extension(void);
   virtual void   get_crtc_params(Bit32u *htotal, Bit32u *vtotal);
+  bx_bool get_retrace(void);
 
   void banshee_update_mode(void);
   void banshee_set_dac_mode(bx_bool mode);

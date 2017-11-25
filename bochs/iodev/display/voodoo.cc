@@ -495,7 +495,7 @@ void bx_voodoo_c::register_state(void)
   for (i = 0; i < 2; i++) {
     sprintf(name, "%d", i);
     bx_list_c *num = new bx_list_c(cmdfifo, name, "");
-    new bx_shadow_bool_c(num, "enabled", &v->fbi.cmdfifo[i].enabled, BASE_HEX);
+    new bx_shadow_bool_c(num, "enabled", &v->fbi.cmdfifo[i].enabled);
     new bx_shadow_num_c(num, "base", &v->fbi.cmdfifo[i].base, BASE_HEX);
     new bx_shadow_num_c(num, "end", &v->fbi.cmdfifo[i].end, BASE_HEX);
     new bx_shadow_num_c(num, "rdptr", &v->fbi.cmdfifo[i].rdptr, BASE_HEX);
@@ -1199,19 +1199,23 @@ void bx_voodoo_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
 
 Bit32u bx_voodoo_c::get_retrace(bx_bool hv)
 {
-  Bit64u time_in_frame = bx_virt_timer.time_usec(0) - BX_VOODOO_THIS s.vdraw.frame_start;
-  if (time_in_frame >= BX_VOODOO_THIS s.vdraw.vsync_usec) {
-    return 0;
-  } else {
-    Bit32u value = (Bit32u)(time_in_frame / BX_VOODOO_THIS s.vdraw.htotal_usec + 1);
-    if (hv) {
-      Bit32u time_in_line = (Bit32u)(time_in_frame % BX_VOODOO_THIS s.vdraw.htotal_usec);
-      Bit32u hpixel = (Bit32u)(time_in_line * BX_VOODOO_THIS s.vdraw.htime_to_pixel);
-      if (time_in_line < BX_VOODOO_THIS s.vdraw.hsync_usec) {
-        value |= ((hpixel + 1) << 16);
+  if (BX_VOODOO_THIS s.model < VOODOO_BANSHEE) {
+    Bit64u time_in_frame = bx_virt_timer.time_usec(0) - BX_VOODOO_THIS s.vdraw.frame_start;
+    if (time_in_frame >= BX_VOODOO_THIS s.vdraw.vsync_usec) {
+      return 0;
+    } else {
+      Bit32u value = (Bit32u)(time_in_frame / BX_VOODOO_THIS s.vdraw.htotal_usec + 1);
+      if (hv) {
+        Bit32u time_in_line = (Bit32u)(time_in_frame % BX_VOODOO_THIS s.vdraw.htotal_usec);
+        Bit32u hpixel = (Bit32u)(time_in_line * BX_VOODOO_THIS s.vdraw.htime_to_pixel);
+        if (time_in_line < BX_VOODOO_THIS s.vdraw.hsync_usec) {
+          value |= ((hpixel + 1) << 16);
+        }
       }
+      return value;
     }
-    return value;
+  } else {
+    return theVoodooVga->get_retrace();
   }
 }
 
@@ -2967,6 +2971,17 @@ void bx_voodoo_vga_c::banshee_set_vclk3(Bit32u value)
   if (BX_VVGA_THIS s.misc_output.clock_select == 3) {
     calculate_retrace_timing();
   }
+}
+
+Bit32u bx_voodoo_vga_c::get_retrace()
+{
+  Bit32u retval = 1;
+  Bit64u display_usec = bx_virt_timer.time_usec(0) % BX_VVGA_THIS s.vtotal_usec;
+  if ((display_usec >= BX_VVGA_THIS s.vrstart_usec) &&
+      (display_usec <= BX_VVGA_THIS s.vrend_usec)) {
+    retval = 0;
+  }
+  return retval;
 }
 
 void bx_voodoo_vga_c::get_crtc_params(Bit32u *htotal, Bit32u *vtotal)
