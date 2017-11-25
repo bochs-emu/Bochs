@@ -12,7 +12,7 @@ Changes after 2.6.9 release:
   ! CPUID Added Skylake-X CPU definition with AVX-512 support
 
 - Bochs Debugger and Instrumentation
-  - Added support for conditional stepping/continue and conditional breakpoints in Bochs debugger
+  - Added support for conditional breakpoints and conditional step/continue to Bochs debugger
   - Bochs debugger improvements patch by Doug Gale
     - better handling of 64-bit addresses in the debugger, added support for 64 bit symbols,
       added more symbol lookups.
