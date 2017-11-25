@@ -649,10 +649,10 @@ void bx_uhci_core_c::uhci_timer(void)
           bx_bool depthbreadth = (td.dword0 & 0x0004) ? 1 : 0;     // 1 = depth first, 0 = breadth first
           stack[stk].q = (td.dword0 & 0x0002) ? 1 : 0;
           stack[stk].t = (td.dword0 & 0x0001) ? 1 : 0;
-          if (td.dword1 & (1<<24)) interrupt = 1;
           if (td.dword1 & (1<<23)) {  // is it an active TD
             BX_DEBUG(("Frame: %04i (0x%04X)", hub.usb_frame_num.frame_num, hub.usb_frame_num.frame_num));
             if (DoTransfer(address, queue_num, &td)) {
+              if (td.dword1 & (1<<24)) interrupt = 1;
               // issue short packet?
               Bit16u r_actlen = (((td.dword1 & 0x7FF)+1) & 0x7FF);
               Bit16u r_maxlen = (((td.dword2>>21)+1) & 0x7FF);
