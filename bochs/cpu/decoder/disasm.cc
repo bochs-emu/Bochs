@@ -509,7 +509,7 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
   }
 #endif
 
-  if (i->execute1 == &BX_CPU_C::BxError) {
+  if (i->getIaOpcode() == BX_IA_ERROR || i->execute1 == &BX_CPU_C::BxError) {
     disbufptr = dis_sprintf(disbufptr, "(invalid)");
     return disbufptr;
   }
