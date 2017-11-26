@@ -1440,7 +1440,7 @@ void register_w(Bit32u offset, Bit32u data, bx_bool log)
     regnum = offset & 0xff;
 
   if (log)
-    BX_DEBUG(("write chip 0x%x reg 0x%x value 0x%08x(%s)", chips, regnum<<2, data, voodoo_reg_name[regnum]));
+    BX_DEBUG(("write chip 0x%x reg 0x%x value 0x%08x(%s)", chips, regnum<<2, data, v->regnames[regnum]));
 
   switch (regnum) {
     /* Vertex data is 12.4 formatted fixed point */
@@ -2383,15 +2383,15 @@ nextpixel:
   return 0;
 }
 
-Bit32u cmdfifo_calc_depth_needed(void)
+Bit32u cmdfifo_calc_depth_needed(cmdfifo_info *f)
 {
   Bit32u command, needed = BX_MAX_BIT32U;
   Bit8u type;
   int i, count = 0;
 
-  if (v->fbi.cmdfifo[0].depth == 0)
+  if (f->depth == 0)
     return needed;
-  command = *(Bit32u*)(&v->fbi.ram[v->fbi.cmdfifo[0].rdptr & v->fbi.mask]);
+  command = *(Bit32u*)(&v->fbi.ram[f->rdptr & v->fbi.mask]);
   type = (Bit8u)(command & 0x07);
   switch (type) {
     case 0:
@@ -2440,50 +2440,50 @@ Bit32u cmdfifo_calc_depth_needed(void)
   return needed;
 }
 
-void cmdfifo_w(Bit32u fbi_offset, Bit32u data)
+void cmdfifo_w(cmdfifo_info *f, Bit32u fbi_offset, Bit32u data)
 {
   BX_LOCK(cmdfifo_mutex);
   *(Bit32u*)(&v->fbi.ram[fbi_offset]) = data;
-  if (v->fbi.cmdfifo[0].count_holes) {
-    if (fbi_offset == (v->fbi.cmdfifo[0].amin + 4)) {
-      v->fbi.cmdfifo[0].amin = fbi_offset;
-      v->fbi.cmdfifo[0].depth = (v->fbi.cmdfifo[0].amin - v->fbi.cmdfifo[0].rdptr) / 4;
+  if (f->count_holes) {
+    if (fbi_offset == (f->amin + 4)) {
+      f->amin = fbi_offset;
+      f->depth++;
     }
-    v->fbi.cmdfifo[0].amax = fbi_offset;
+    f->amax = fbi_offset;
   } else {
-    v->fbi.cmdfifo[0].depth++;
+    f->depth++;
   }
-  if (v->fbi.cmdfifo[0].depth_needed == BX_MAX_BIT32U) {
-    v->fbi.cmdfifo[0].depth_needed = cmdfifo_calc_depth_needed();
+  if (f->depth_needed == BX_MAX_BIT32U) {
+    f->depth_needed = cmdfifo_calc_depth_needed(f);
   }
-  if (v->fbi.cmdfifo[0].depth >= v->fbi.cmdfifo[0].depth_needed) {
-    v->fbi.cmdfifo[0].cmd_ready = 1;
-    if (!FBIINIT0_VGA_PASSTHRU(v->reg[fbiInit0].u)) {
+  if (f->depth >= f->depth_needed) {
+    f->cmd_ready = 1;
+    if ((v->type > VOODOO_2) || (!FBIINIT0_VGA_PASSTHRU(v->reg[fbiInit0].u))) {
       bx_set_event(&fifo_wakeup);
     }
   }
   BX_UNLOCK(cmdfifo_mutex);
 }
 
-Bit32u cmdfifo_r(void)
+Bit32u cmdfifo_r(cmdfifo_info *f)
 {
   Bit32u data;
 
-  data = *(Bit32u*)(&v->fbi.ram[v->fbi.cmdfifo[0].rdptr & v->fbi.mask]);
-  v->fbi.cmdfifo[0].rdptr += 4;
-  if (v->fbi.cmdfifo[0].rdptr >= v->fbi.cmdfifo[0].end) {
-    BX_INFO(("CMDFIFO rollover"));
-    v->fbi.cmdfifo[0].rdptr = v->fbi.cmdfifo[0].base;
+  data = *(Bit32u*)(&v->fbi.ram[f->rdptr & v->fbi.mask]);
+  f->rdptr += 4;
+  if (f->rdptr >= f->end) {
+    BX_INFO(("CMDFIFO RdPtr rollover"));
+    f->rdptr = f->base;
   }
-  if (v->fbi.cmdfifo[0].count_holes) {
-    v->fbi.cmdfifo[0].depth = (v->fbi.cmdfifo[0].amin - v->fbi.cmdfifo[0].rdptr) / 4;
+  if (f->count_holes) {
+    f->depth = (f->amin - f->rdptr) / 4;
   } else {
-    v->fbi.cmdfifo[0].depth--;
+    f->depth--;
   }
   return data;
 }
 
-void cmdfifo_process(void)
+void cmdfifo_process(cmdfifo_info *f)
 {
   Bit32u command, data, mask, nwords, regaddr;
   Bit8u type, code, nvertex, smode;
@@ -2492,7 +2492,7 @@ void cmdfifo_process(void)
   int i;
   setup_vertex svert = {0};
 
-  command = cmdfifo_r();
+  command = cmdfifo_r(f);
   type = (Bit8u)(command & 0x07);
   switch (type) {
     case 0:
@@ -2501,9 +2501,9 @@ void cmdfifo_process(void)
         case 0: // NOP
           break;
         case 3: // JMP
-          v->fbi.cmdfifo[0].rdptr = (command >> 4) & 0xfffffc;
-          if (v->fbi.cmdfifo[0].count_holes) {
-            BX_INFO(("cmdfifo_process(): JMP 0x%08x", v->fbi.cmdfifo[0].rdptr));
+          f->rdptr = (command >> 4) & 0xfffffc;
+          if (f->count_holes) {
+            BX_INFO(("cmdfifo_process(): JMP 0x%08x", f->rdptr));
           }
           break;
         default:
@@ -2516,7 +2516,7 @@ void cmdfifo_process(void)
       blt = (regaddr >> 11) & 1;
       inc = (command >> 15) & 1;
       for (i = 0; i < (int)nwords; i++) {
-        data = cmdfifo_r();
+        data = cmdfifo_r(f);
         BX_UNLOCK(cmdfifo_mutex);
         if ((v->type < VOODOO_BANSHEE) || !blt) {
           register_w(regaddr, data, 1);
@@ -2536,7 +2536,7 @@ void cmdfifo_process(void)
       }
       while (mask) {
         if (mask & 1) {
-          data = cmdfifo_r();
+          data = cmdfifo_r(f);
           BX_UNLOCK(cmdfifo_mutex);
           if (v->type < VOODOO_BANSHEE) {
             register_w(regaddr, data, 1);
@@ -2560,13 +2560,13 @@ void cmdfifo_process(void)
       v->reg[sSetupMode].u = ((smode << 16) | mask);
       /* loop over triangles */
       for (i = 0; i < nvertex; i++) {
-        reg.u = cmdfifo_r();
+        reg.u = cmdfifo_r(f);
         svert.x = reg.f;
-        reg.u = cmdfifo_r();
+        reg.u = cmdfifo_r(f);
         svert.y = reg.f;
         if (pcolor) {
           if (mask & 0x03) {
-            data = cmdfifo_r();
+            data = cmdfifo_r(f);
             if (mask & 0x01) {
               svert.r = (float)RGB_RED(data);
               svert.g = (float)RGB_GREEN(data);
@@ -2578,44 +2578,44 @@ void cmdfifo_process(void)
           }
         } else {
           if (mask & 0x01) {
-            reg.u = cmdfifo_r();
+            reg.u = cmdfifo_r(f);
             svert.r = reg.f;
-            reg.u = cmdfifo_r();
+            reg.u = cmdfifo_r(f);
             svert.g = reg.f;
-            reg.u = cmdfifo_r();
+            reg.u = cmdfifo_r(f);
             svert.b = reg.f;
           }
           if (mask & 0x02) {
-            reg.u = cmdfifo_r();
+            reg.u = cmdfifo_r(f);
             svert.a = reg.f;
           }
         }
         if (mask & 0x04) {
-          reg.u = cmdfifo_r();
+          reg.u = cmdfifo_r(f);
           svert.z = reg.f;
         }
         if (mask & 0x08) {
-          reg.u = cmdfifo_r();
+          reg.u = cmdfifo_r(f);
           svert.wb = reg.f;
         }
         if (mask & 0x10) {
-          reg.u = cmdfifo_r();
+          reg.u = cmdfifo_r(f);
           svert.w0 = reg.f;
         }
         if (mask & 0x20) {
-          reg.u = cmdfifo_r();
+          reg.u = cmdfifo_r(f);
           svert.s0 = reg.f;
-          reg.u = cmdfifo_r();
+          reg.u = cmdfifo_r(f);
           svert.t0 = reg.f;
         }
         if (mask & 0x40) {
-          reg.u = cmdfifo_r();
+          reg.u = cmdfifo_r(f);
           svert.w1 = reg.f;
         }
         if (mask & 0x80) {
-          reg.u = cmdfifo_r();
+          reg.u = cmdfifo_r(f);
           svert.s1 = reg.f;
-          reg.u = cmdfifo_r();
+          reg.u = cmdfifo_r(f);
           svert.t1 = reg.f;
         }
         /* if we're starting a new strip, or if this is the first of a set of verts */
@@ -2640,7 +2640,7 @@ void cmdfifo_process(void)
           }
         }
       }
-      while (nwords--) cmdfifo_r();
+      while (nwords--) cmdfifo_r(f);
       break;
     case 4:
       nwords = (command >> 29);
@@ -2649,7 +2649,7 @@ void cmdfifo_process(void)
       blt = (regaddr >> 11) & 1;
       while (mask) {
         if (mask & 1) {
-          data = cmdfifo_r();
+          data = cmdfifo_r(f);
           BX_UNLOCK(cmdfifo_mutex);
           if ((v->type < VOODOO_BANSHEE) || !blt) {
             register_w(regaddr, data, 1);
@@ -2661,19 +2661,19 @@ void cmdfifo_process(void)
         regaddr++;
         mask >>= 1;
       }
-      while (nwords--) cmdfifo_r();
+      while (nwords--) cmdfifo_r(f);
       break;
     case 5:
       if ((command & 0x3fc00000) > 0) {
         BX_ERROR(("CMDFIFO packet type 5: byte disable not supported yet"));
       }
       nwords = (command >> 3) & 0x7ffff;
-      regaddr = (cmdfifo_r() & 0xffffff) >> 2;
+      regaddr = (cmdfifo_r(f) & 0xffffff) >> 2;
       code = (command >> 30);
       switch (code) {
         case 2:
           for (i = 0; i < (int)nwords; i++) {
-            data = cmdfifo_r();
+            data = cmdfifo_r(f);
             BX_UNLOCK(cmdfifo_mutex);
             lfb_w(regaddr, data, 0xffffffff);
             BX_LOCK(cmdfifo_mutex);
@@ -2682,7 +2682,7 @@ void cmdfifo_process(void)
           break;
         case 3:
           for (i = 0; i < (int)nwords; i++) {
-            data = cmdfifo_r();
+            data = cmdfifo_r(f);
             BX_UNLOCK(cmdfifo_mutex);
             texture_w(regaddr, data);
             BX_LOCK(cmdfifo_mutex);
@@ -2696,9 +2696,9 @@ void cmdfifo_process(void)
     default:
       BX_ERROR(("CMDFIFO: unsupported packet type %d", type));
   }
-  v->fbi.cmdfifo[0].depth_needed = cmdfifo_calc_depth_needed();
-  if (v->fbi.cmdfifo[0].depth < v->fbi.cmdfifo[0].depth_needed) {
-    v->fbi.cmdfifo[0].cmd_ready = 0;
+  f->depth_needed = cmdfifo_calc_depth_needed(f);
+  if (f->depth < f->depth_needed) {
+    f->cmd_ready = 0;
   }
 }
 
@@ -2742,7 +2742,7 @@ void register_w_common(Bit32u offset, Bit32u data)
       } else {
         Bit32u fbi_offset = (v->fbi.cmdfifo[0].base + ((offset & 0xffff) << 2)) & v->fbi.mask;
         if (LOG_CMDFIFO) BX_DEBUG(("CMDFIFO write: FBI offset=0x%08x, data=0x%08x", fbi_offset, data));
-        cmdfifo_w(fbi_offset, data);
+        cmdfifo_w(&v->fbi.cmdfifo[0], fbi_offset, data);
       }
       return;
     } else {
@@ -2773,7 +2773,7 @@ void register_w_common(Bit32u offset, Bit32u data)
     return;
   }
 
-  BX_DEBUG(("write chip 0x%x reg 0x%x value 0x%08x(%s)", chips, regnum<<2, data, voodoo_reg_name[regnum]));
+  BX_DEBUG(("write chip 0x%x reg 0x%x value 0x%08x(%s)", chips, regnum<<2, data, v->regnames[regnum]));
 
   switch (regnum) {
     /* external DAC access -- Voodoo/Voodoo2 only */
@@ -2893,6 +2893,9 @@ void register_w_common(Bit32u offset, Bit32u data)
         if (v->fbi.cmdfifo[0].enabled != FBIINIT7_CMDFIFO_ENABLE(data)) {
           v->fbi.cmdfifo[0].enabled = FBIINIT7_CMDFIFO_ENABLE(data);
           BX_INFO(("CMDFIFO now %sabled", v->fbi.cmdfifo[0].enabled ? "en" : "dis"));
+          if (!FBIINIT7_DISABLE_CMDFIFO_HOLES(data)) {
+            BX_ERROR(("CMDFIFO hole count feature not supported yet"));
+          }
         }
         v->reg[regnum].u = data;
       } else if (v->type >= VOODOO_BANSHEE) {
@@ -2903,7 +2906,7 @@ void register_w_common(Bit32u offset, Bit32u data)
     case cmdFifoBaseAddr:
       BX_LOCK(cmdfifo_mutex);
       v->fbi.cmdfifo[0].base = (data & 0x3ff) << 12;
-      v->fbi.cmdfifo[0].end = ((data >> 16) & 0x3ff) << 12;
+      v->fbi.cmdfifo[0].end = (((data >> 16) & 0x3ff) + 1) << 12;
       BX_UNLOCK(cmdfifo_mutex);
       break;
 
@@ -2990,7 +2993,7 @@ Bit32u register_r(Bit32u offset)
   Bit32u chips   = (offset>>8) & 0xf;
 
   if (!((voodoo_last_msg == regnum) && (regnum == status))) //show status reg only once
-    BX_DEBUG(("read chip 0x%x reg 0x%x (%s)", chips, regnum<<2, voodoo_reg_name[regnum]));
+    BX_DEBUG(("read chip 0x%x reg 0x%x (%s)", chips, regnum<<2, v->regnames[regnum]));
   voodoo_last_msg = regnum;
 
   /* first make sure this register is readable */

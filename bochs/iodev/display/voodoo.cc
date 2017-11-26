@@ -228,12 +228,14 @@ BX_THREAD_FUNC(fifo_thread, indata)
       }
       v->pci.op_pending = 0;
       BX_UNLOCK(fifo_mutex);
-      if (v->fbi.cmdfifo[0].enabled) {
-        BX_LOCK(cmdfifo_mutex);
-        while (v->fbi.cmdfifo[0].cmd_ready) {
-          cmdfifo_process();
+      for (int i = 0; i < 2; i++) {
+        if (v->fbi.cmdfifo[i].enabled) {
+          BX_LOCK(cmdfifo_mutex);
+          while (v->fbi.cmdfifo[i].cmd_ready) {
+            cmdfifo_process(&v->fbi.cmdfifo[i]);
+          }
+          BX_UNLOCK(cmdfifo_mutex);
         }
-        BX_UNLOCK(cmdfifo_mutex);
       }
     }
   }
@@ -333,6 +335,7 @@ void bx_voodoo_c::init(void)
   BX_INIT_MUTEX(render_mutex);
   if (BX_VOODOO_THIS s.model >= VOODOO_2) {
     v->fbi.cmdfifo[0].depth_needed = BX_MAX_BIT32U;
+    v->fbi.cmdfifo[1].depth_needed = BX_MAX_BIT32U;
     BX_INIT_MUTEX(cmdfifo_mutex);
   }
 
@@ -496,6 +499,7 @@ void bx_voodoo_c::register_state(void)
     sprintf(name, "%d", i);
     bx_list_c *num = new bx_list_c(cmdfifo, name, "");
     new bx_shadow_bool_c(num, "enabled", &v->fbi.cmdfifo[i].enabled);
+    new bx_shadow_bool_c(num, "count_holes", &v->fbi.cmdfifo[i].count_holes);
     new bx_shadow_num_c(num, "base", &v->fbi.cmdfifo[i].base, BASE_HEX);
     new bx_shadow_num_c(num, "end", &v->fbi.cmdfifo[i].end, BASE_HEX);
     new bx_shadow_num_c(num, "rdptr", &v->fbi.cmdfifo[i].rdptr, BASE_HEX);
@@ -503,6 +507,7 @@ void bx_voodoo_c::register_state(void)
     new bx_shadow_num_c(num, "amax", &v->fbi.cmdfifo[i].amax, BASE_HEX);
     new bx_shadow_num_c(num, "depth", &v->fbi.cmdfifo[i].depth);
     new bx_shadow_num_c(num, "depth_needed", &v->fbi.cmdfifo[i].depth_needed);
+    new bx_shadow_num_c(num, "holes", &v->fbi.cmdfifo[i].holes);
     new bx_shadow_bool_c(num, "cmd_ready", &v->fbi.cmdfifo[i].cmd_ready);
   }
   bx_list_c *fogblend = new bx_list_c(fbi, "fogblend", "");
@@ -769,7 +774,7 @@ void bx_voodoo_c::vertical_timer_handler(void *this_ptr)
     bx_set_event(&fifo_wakeup);
   }
   BX_UNLOCK(fifo_mutex);
-  if (v->fbi.cmdfifo[0].cmd_ready) {
+  if (v->fbi.cmdfifo[0].cmd_ready || v->fbi.cmdfifo[1].cmd_ready) {
     bx_set_event(&fifo_wakeup);
   }
 
@@ -1724,10 +1729,11 @@ void bx_voodoo_c::banshee_mem_write(bx_phy_address addr, unsigned len, void *dat
     if (offset < v->fbi.lfb_base) {
       if (v->fbi.cmdfifo[0].enabled && (offset >= v->fbi.cmdfifo[0].base) &&
           (offset < v->fbi.cmdfifo[0].end)) {
-        cmdfifo_w(offset, value);
+        cmdfifo_w(&v->fbi.cmdfifo[0], offset, value);
       } else if (v->fbi.cmdfifo[1].enabled && (offset >= v->fbi.cmdfifo[1].base) &&
           (offset < v->fbi.cmdfifo[1].end)) {
-        BX_INFO(("TODO: CMDFIFO #1 write"));
+        BX_INFO(("CMDFIFO #1 write"));
+        cmdfifo_w(&v->fbi.cmdfifo[1], offset, value);
       } else {
         if (offset >= start) {
           if (v->banshee.desktop_tiled) {
@@ -1822,6 +1828,9 @@ void bx_voodoo_c::banshee_agp_reg_write(Bit8u reg, Bit32u value)
         v->fbi.cmdfifo[1].end = v->fbi.cmdfifo[1].base + (((value & 0xff) + 1) << 12);
       }
       v->fbi.cmdfifo[fifo_idx].enabled = ((value >> 8) & 1);
+      if (((value >> 10) & 1) == 0) {
+        BX_ERROR(("CMDFIFO hole count feature not supported yet"));
+      }
 //      v->fbi.cmdfifo[fifo_idx].count_holes = (((value >> 10) & 1) == 0);
       BX_UNLOCK(cmdfifo_mutex);
       break;
@@ -1881,6 +1890,9 @@ Bit32u bx_voodoo_c::banshee_blt_reg_read(Bit8u reg)
     case blt_status:
       result = register_r(0);
       break;
+    case blt_intrCtrl:
+      result = register_r(1);
+      break;
     default:
       if (reg < 0x20) {
         result = BLT.reg[reg];
@@ -1902,7 +1914,7 @@ void bx_voodoo_c::banshee_blt_reg_write(Bit8u reg, Bit32u value)
   }
   switch (reg) {
     case blt_intrCtrl:
-      BX_ERROR(("intrCtrl register not supported yet"));
+      register_w_common(1, value);
       break;
     case blt_clip0Min:
       BLT.clipx0[0] = BLT.reg[reg] & 0xfff;
