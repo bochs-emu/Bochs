@@ -31,6 +31,8 @@ const char *get_bx_opcode_name(Bit16u ia_opcode);
 class BX_CPU_C;
 class bxInstruction_c;
 
+#ifndef BX_STANDALONE_DECODER
+
 typedef void BX_INSF_TYPE;
 
 // <TAG-TYPE-EXECUTEPTR-START>
@@ -41,9 +43,13 @@ typedef BX_INSF_TYPE (BX_CPU_C::*BxExecutePtr_tR)(bxInstruction_c *) BX_CPP_Attr
 #endif
 // <TAG-TYPE-EXECUTEPTR-END>
 
+#endif
+
 // <TAG-CLASS-INSTRUCTION-START>
 class bxInstruction_c {
 public:
+
+#ifndef BX_STANDALONE_DECODER
   // Function pointers; a function to resolve the modRM address
   // given the current state of the CPU and the instruction data,
   // and a function to execute the instruction after resolving
@@ -54,6 +60,7 @@ public:
     BxExecutePtr_tR execute2;
     bxInstruction_c *next;
   } handlers;
+#endif
 
   struct {
     // 15...0 opcode
@@ -130,9 +137,11 @@ public:
   }
 #endif
 
+#ifndef BX_STANDALONE_DECODER
   BX_CPP_INLINE BxExecutePtr_tR execute2(void) const {
     return handlers.execute2;
   }
+#endif
 
   BX_CPP_INLINE unsigned seg(void) const {
     return metaData[BX_INSTR_METADATA_SEG];
@@ -369,7 +378,7 @@ public:
     metaInfo.metaInfo1 |= (1<<4);
   }
 
-#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS && BX_ENABLE_TRACE_LINKING
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS && BX_ENABLE_TRACE_LINKING && !defined(BX_STANDALONE_DECODER)
   BX_CPP_INLINE bxInstruction_c* getNextTrace(Bit32u currTraceLinkTimeStamp) {
     if (currTraceLinkTimeStamp > modRMForm.Id2) handlers.next = NULL;
     return handlers.next;

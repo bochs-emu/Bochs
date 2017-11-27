@@ -177,8 +177,10 @@ BX_CPP_INLINE Bit64u FetchQWORD(const Bit8u *iptr)
 #define BX_TRACE_END                 (0x01)
 
 struct bxIAOpcodeTable {
+#ifdef BX_STANDALONE_DECODER
   BxExecutePtr_tR execute1;
   BxExecutePtr_tR execute2;
+#endif
   Bit8u src[4];
   Bit8u opflags;
 };

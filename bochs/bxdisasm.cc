@@ -95,10 +95,10 @@ int main(int argn, const char **argv)
   printf("\n");
 
   bx_disassemble.set_syntax_intel();
-  unsigned ilen = bx_disassemble.disasm(is_32, is_64, 0U, 0U, ibuf, disbuf);
+  unsigned ilen = bx_disassemble.disasm(is_32, is_64, 0, 0, ibuf, disbuf);
   printf("disasm: %s\n", disbuf);
 
   bx_disassemble.set_syntax_att();
-  ilen = bx_disassemble.disasm(is_32, is_64, 0U, 0U, ibuf, disbuf);
+  ilen = bx_disassemble.disasm(is_32, is_64, 0, 0, ibuf, disbuf);
   printf("disasm: %s\n", disbuf);
 }

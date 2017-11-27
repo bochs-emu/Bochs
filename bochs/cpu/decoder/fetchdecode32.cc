@@ -21,7 +21,9 @@
 /////////////////////////////////////////////////////////////////////////
 
 #include "bochs.h"
+#ifndef BX_STANDALONE_DECODER
 #include "../cpu.h"
+#endif
 
 #include "decoder.h"
 #include "instr.h"
@@ -2735,6 +2737,8 @@ fetch_b1:
   return(0);
 }
 
+#ifndef BX_STANDALONE_DECODER
+
 int assignHandler(bxInstruction_c *i, Bit32u fetchModeMask)
 {
   unsigned ia_opcode = i->getIaOpcode();
@@ -2814,18 +2818,6 @@ int assignHandler(bxInstruction_c *i, Bit32u fetchModeMask)
   return(0);
 }
 
-const char *get_bx_opcode_name(Bit16u ia_opcode)
-{
-  static const char* BxOpcodeNamesTable[BX_IA_LAST] =
-  {
-#define bx_define_opcode(a, b, c, d, s1, s2, s3, s4, e) #a,
-#include "ia_opcodes.def"
-  };
-#undef  bx_define_opcode
-
-  return (ia_opcode < BX_IA_LAST) ? BxOpcodeNamesTable[ia_opcode] : 0;
-}
-
 void BX_CPU_C::init_FetchDecodeTables(void)
 {
   static Bit8u BxOpcodeFeatures[BX_IA_LAST] =
@@ -2888,4 +2880,18 @@ void BX_CPU_C::init_FetchDecodeTables(void)
     BxOpcodesTable[BX_IA_TZCNT_GqEq] = BxOpcodesTable[BX_IA_BSF_GqEq];
 #endif
   }
+}
+
+#endif
+
+const char *get_bx_opcode_name(Bit16u ia_opcode)
+{
+  static const char* BxOpcodeNamesTable[BX_IA_LAST] =
+  {
+#define bx_define_opcode(a, b, c, d, s1, s2, s3, s4, e) #a,
+#include "ia_opcodes.def"
+  };
+#undef  bx_define_opcode
+
+  return (ia_opcode < BX_IA_LAST) ? BxOpcodeNamesTable[ia_opcode] : 0;
 }

@@ -24,6 +24,8 @@
 #include "bochs.h"
 #include "../cpu.h"
 
+#include "instr.h"
+#include "decoder.h"
 #include "fetchdecode.h"
 
 extern int fetchDecode32(const Bit8u *fetchPtr, bx_bool is_32, bx_bool handle_lock_cr0, bxInstruction_c *i, unsigned remainingInPage);
@@ -509,10 +511,17 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
   }
 #endif
 
-  if (i->getIaOpcode() == BX_IA_ERROR || i->execute1 == &BX_CPU_C::BxError) {
+  if (i->getIaOpcode() == BX_IA_ERROR) {
     disbufptr = dis_sprintf(disbufptr, "(invalid)");
     return disbufptr;
   }
+
+#ifndef BX_STANDALONE_DECODER
+  if (i->execute1 == &BX_CPU_C::BxError) {
+    disbufptr = dis_sprintf(disbufptr, "(invalid)");
+    return disbufptr;
+  }
+#endif
 
   const char *opname = i->getIaOpcodeNameShort(); // skip the "BX_IA_"
   unsigned n;
