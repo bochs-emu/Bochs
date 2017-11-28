@@ -1737,13 +1737,15 @@ struct _banshee_info
     Bit32u reg[0x20];  /* 2D registers */
     Bit8u cpat[0x40][4];
     bx_bool busy;
-    Bit8u cmd;
+    Bit8u   cmd;
     bx_bool immed;
     bx_bool x_dir;
     bx_bool y_dir;
     bx_bool transp;
+    Bit8u   patsx;
+    Bit8u   patsy;
     bx_bool clip_sel;
-    Bit8u rop0;
+    Bit8u   rop0;
     bx_bitblt_rop_t rop_fn;
     bx_bitblt_rop_t rop_handler[2][0x100];
     Bit8u rop_flags[0x100];

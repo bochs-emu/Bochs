@@ -106,6 +106,7 @@ private:
 
   void   banshee_blt_launch_area_setup(void);
   void   banshee_blt_launch_area_write(Bit32u value);
+  void   banshee_blt_execute(void);
   void   banshee_blt_complete(void);
   void   banshee_blt_apply_clipwindow(int *x0, int *y0, int *x1, int *y1, int *w, int *h);
 

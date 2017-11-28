@@ -3503,12 +3503,11 @@ void voodoo_init(Bit8u _type)
   soft_reset(v);
 }
 
+#if 0
 bx_bool voodoo_update(const rectangle *cliprect)
 {
   bx_bool changed = v->fbi.video_changed;
-#if 0
   int x, y;
-#endif
 
   /* reset the video changed flag */
   v->fbi.video_changed = 0;
@@ -3520,7 +3519,6 @@ bx_bool voodoo_update(const rectangle *cliprect)
 
   /* if the CLUT is dirty, recompute the pens array */
   if (v->fbi.clut_dirty) {
-#if 0
     Bit8u rtable[32], gtable[64], btable[32];
 
     /* Voodoo/Voodoo-2 have an internal 33-entry CLUT */
@@ -3580,7 +3578,6 @@ bx_bool voodoo_update(const rectangle *cliprect)
       int b = btable[x & 0x1f];
       v->fbi.pen[x] = MAKE_RGB(r, g, b);
     }
-#endif
     /* no longer dirty */
     v->fbi.clut_dirty = 0;
     changed = 1;
@@ -3588,3 +3585,4 @@ bx_bool voodoo_update(const rectangle *cliprect)
 
   return changed;
 }
+#endif
