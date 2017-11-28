@@ -410,18 +410,23 @@ void bx_vgacore_c::determine_screen_dimensions(unsigned *piHeight, unsigned *piW
   }
 }
 
-void bx_vgacore_c::get_crtc_params(Bit32u *htotal, Bit32u *vtotal)
+void bx_vgacore_c::get_crtc_params(bx_crtc_params_t *crtcp)
 {
-  *htotal = BX_VGA_THIS s.CRTC.reg[0] + 5;
-  *vtotal = BX_VGA_THIS s.CRTC.reg[6] + ((BX_VGA_THIS s.CRTC.reg[7] & 0x01) << 8) +
-            ((BX_VGA_THIS s.CRTC.reg[7] & 0x20) << 4) + 2;
+  crtcp->htotal = BX_VGA_THIS s.CRTC.reg[0] + 5;
+  crtcp->vtotal = BX_VGA_THIS s.CRTC.reg[6] +
+                  ((BX_VGA_THIS s.CRTC.reg[7] & 0x01) << 8) +
+                  ((BX_VGA_THIS s.CRTC.reg[7] & 0x20) << 4) + 2;
+  crtcp->vrstart = BX_VGA_THIS s.CRTC.reg[16] +
+                   ((BX_VGA_THIS s.CRTC.reg[7] & 0x04) << 6) +
+                   ((BX_VGA_THIS s.CRTC.reg[7] & 0x80) << 2);
 }
 
 void bx_vgacore_c::calculate_retrace_timing()
 {
-  Bit32u htotal, hbstart, hbend, clock, cwidth, vtotal, vrstart, vrend, hfreq, vfreq;
+  Bit32u hbstart, hbend, clock, cwidth, hfreq, vfreq, vrend;
+  bx_crtc_params_t crtcp;
 
-  BX_VGA_THIS get_crtc_params(&htotal, &vtotal);
+  BX_VGA_THIS get_crtc_params(&crtcp);
   cwidth = ((BX_VGA_THIS s.sequencer.reg1 & 0x01) == 1) ? 8 : 9;
   clock = BX_VGA_THIS s.vclk[BX_VGA_THIS s.misc_output.clock_select];
   if (BX_VGA_THIS s.x_dotclockdiv2) clock >>= 1;
@@ -431,21 +436,19 @@ void bx_vgacore_c::calculate_retrace_timing()
   } else {
     BX_DEBUG(("Using video clock %.3f MHz", (double)clock / 1000000.0f));
   }
-  hfreq = clock / (htotal * cwidth);
+  hfreq = clock / (crtcp.htotal * cwidth);
   BX_VGA_THIS s.htotal_usec = 1000000 / hfreq;
   hbstart = BX_VGA_THIS s.CRTC.reg[2];
   BX_VGA_THIS s.hbstart_usec = (1000000 * hbstart * cwidth) / clock;
   hbend = (BX_VGA_THIS s.CRTC.reg[3] & 0x1f) + ((BX_VGA_THIS s.CRTC.reg[5] & 0x80) >> 2);
   hbend = hbstart + ((hbend - hbstart) & 0x3f);
   BX_VGA_THIS s.hbend_usec = (1000000 * hbend * cwidth) / clock;
-  vrstart = BX_VGA_THIS s.CRTC.reg[16] + ((BX_VGA_THIS s.CRTC.reg[7] & 0x04) << 6) +
-            ((BX_VGA_THIS s.CRTC.reg[7] & 0x80) << 2);
-  vrend = ((BX_VGA_THIS s.CRTC.reg[17] & 0x0f) - vrstart) & 0x0f;
-  vrend = vrstart + vrend + 1;
-  vfreq = hfreq / vtotal;
+  vrend = ((BX_VGA_THIS s.CRTC.reg[17] & 0x0f) - crtcp.vrstart) & 0x0f;
+  vrend += crtcp.vrstart;
+  vfreq = hfreq / crtcp.vtotal;
   BX_VGA_THIS s.vtotal_usec = 1000000 / vfreq;
   BX_VGA_THIS s.vblank_usec = BX_VGA_THIS s.htotal_usec * BX_VGA_THIS s.vertical_display_end;
-  BX_VGA_THIS s.vrstart_usec = BX_VGA_THIS s.htotal_usec * vrstart;
+  BX_VGA_THIS s.vrstart_usec = BX_VGA_THIS s.htotal_usec * crtcp.vrstart;
   BX_VGA_THIS s.vrend_usec = BX_VGA_THIS s.htotal_usec * vrend;
   BX_DEBUG(("hfreq = %.1f kHz / vfreq = %d Hz", ((double)hfreq / 1000), vfreq));
 }
@@ -501,7 +504,7 @@ Bit32u bx_vgacore_c::read(Bit32u address, unsigned io_len)
       // bit0: Display Enable
       //       0 = display is in the display mode
       //       1 = display is not in the display mode; either the
-      //           horizontal or vertical retrace period is active
+      //           horizontal or vertical blanking period is active
 
       retval = 0;
       display_usec = bx_virt_timer.time_usec(BX_VGA_THIS realtime) % BX_VGA_THIS s.vtotal_usec;

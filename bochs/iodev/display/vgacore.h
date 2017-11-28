@@ -60,6 +60,12 @@
      s.vga_tile_updated[(xtile)+(ytile)* s.num_x_tiles]      \
      : 0)
 
+typedef struct {
+  Bit16u htotal;
+  Bit16u vtotal;
+  Bit16u vrstart;
+} bx_crtc_params_t;
+
 #if BX_SUPPORT_PCI
 class bx_nonvga_device_c : public bx_pci_device_c {
 public:
@@ -95,7 +101,7 @@ public:
   virtual void   get_text_snapshot(Bit8u **text_snapshot, unsigned *txHeight,
                                    unsigned *txWidth);
   virtual bx_bool init_vga_extension(void) {return 0;}
-  virtual void   get_crtc_params(Bit32u *htotal, Bit32u *vtotal);
+  virtual void   get_crtc_params(bx_crtc_params_t *crtcp);
 
   static void    vga_timer_handler(void *);
   static Bit64s  vga_param_handler(bx_param_c *param, int set, Bit64s val);

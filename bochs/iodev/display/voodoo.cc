@@ -2996,12 +2996,16 @@ Bit32u bx_voodoo_vga_c::get_retrace()
   return retval;
 }
 
-void bx_voodoo_vga_c::get_crtc_params(Bit32u *htotal, Bit32u *vtotal)
+void bx_voodoo_vga_c::get_crtc_params(bx_crtc_params_t *crtcp)
 {
-  *htotal = BX_VVGA_THIS s.CRTC.reg[0] + ((v->banshee.crtc[0x1a] & 0x01) << 8) + 5;
-  *vtotal = BX_VVGA_THIS s.CRTC.reg[6] + ((BX_VVGA_THIS s.CRTC.reg[7] & 0x01) << 8) +
-            ((BX_VVGA_THIS s.CRTC.reg[7] & 0x20) << 4) +
-            ((v->banshee.crtc[0x1b] & 0x01) << 10) + 2;
+  crtcp->htotal = BX_VVGA_THIS s.CRTC.reg[0] + ((v->banshee.crtc[0x1a] & 0x01) << 8) + 5;
+  crtcp->vtotal = BX_VVGA_THIS s.CRTC.reg[6] + ((BX_VVGA_THIS s.CRTC.reg[7] & 0x01) << 8) +
+                  ((BX_VVGA_THIS s.CRTC.reg[7] & 0x20) << 4) +
+                  ((v->banshee.crtc[0x1b] & 0x01) << 10) + 2;
+  crtcp->vrstart = BX_VVGA_THIS s.CRTC.reg[16] +
+                   ((BX_VVGA_THIS s.CRTC.reg[7] & 0x04) << 6) +
+                   ((BX_VVGA_THIS s.CRTC.reg[7] & 0x80) << 2) +
+                   ((v->banshee.crtc[0x1b] & 0x40) << 4);
 }
 
 void bx_voodoo_vga_c::update(void)
