@@ -22,7 +22,9 @@
 /////////////////////////////////////////////////////////////////////////
 
 #include "bochs.h"
+#ifndef BX_STANDALONE_DECODER
 #include "../cpu.h"
+#endif
 
 #include "instr.h"
 #include "decoder.h"

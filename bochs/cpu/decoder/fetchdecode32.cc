@@ -74,7 +74,11 @@ struct BxOpcodeDecodeDescriptor32 {
 
 // table of all Bochs opcodes
 bxIAOpcodeTable BxOpcodesTable[] = {
+#ifndef BX_STANDALONE_DECODER
 #define bx_define_opcode(a, b, c, d, s1, s2, s3, s4, e) { b, c, { s1, s2, s3, s4 }, e },
+#else
+#define bx_define_opcode(a, b, c, d, s1, s2, s3, s4, e) {       { s1, s2, s3, s4 }, e },
+#endif
 #include "ia_opcodes.def"
 };
 #undef  bx_define_opcode
