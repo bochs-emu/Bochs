@@ -1822,11 +1822,12 @@ void bx_voodoo_c::banshee_agp_reg_write(Bit8u reg, Bit32u value)
       } else {
         v->fbi.cmdfifo[1].end = v->fbi.cmdfifo[1].base + (((value & 0xff) + 1) << 12);
       }
-      v->fbi.cmdfifo[fifo_idx].enabled = ((value >> 8) & 1);
-      if (((value >> 10) & 1) == 0) {
-        BX_ERROR(("CMDFIFO hole count feature not supported yet"));
+      v->fbi.cmdfifo[fifo_idx].count_holes = (((value >> 10) & 1) == 0);
+      if (v->fbi.cmdfifo[fifo_idx].enabled != ((value >> 8) & 1)) {
+        v->fbi.cmdfifo[fifo_idx].enabled = ((value >> 8) & 1);
+        BX_INFO(("CMDFIFO #%d now %sabled", fifo_idx + 1,
+                 v->fbi.cmdfifo[fifo_idx].enabled ? "en" : "dis"));
       }
-//      v->fbi.cmdfifo[fifo_idx].count_holes = (((value >> 10) & 1) == 0);
       BX_UNLOCK(cmdfifo_mutex);
       break;
     case cmdBump0:

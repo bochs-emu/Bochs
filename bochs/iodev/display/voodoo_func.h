@@ -2444,14 +2444,32 @@ void cmdfifo_w(cmdfifo_info *f, Bit32u fbi_offset, Bit32u data)
 {
   BX_LOCK(cmdfifo_mutex);
   *(Bit32u*)(&v->fbi.ram[fbi_offset]) = data;
+  /* count holes? */
   if (f->count_holes) {
-    if (fbi_offset == (f->amin + 4)) {
-      f->amin = fbi_offset;
+    if ((f->holes == 0) && (fbi_offset == (f->amin + 4))) {
+      /* in-order, no holes */
+      f->amin = f->amax = fbi_offset;
       f->depth++;
+    } else if (fbi_offset < f->amin) {
+      /* out-of-order, below the minimum */
+      if (f->holes != 0) {
+        BX_ERROR(("Unexpected CMDFIFO: AMin=0x%08x AMax=0x%08x Holes=%d WroteTo:0x%08x RdPtr:0x%08x",
+                  f->amin, f->amax, f->holes, fbi_offset, f->rdptr));
+      }
+      f->amin = f->amax = fbi_offset;
+      f->depth++;
+    } else if (fbi_offset < f->amax) {
+      /* out-of-order, but within the min-max range */
+      f->holes--;
+      if (f->holes == 0) {
+        f->depth += (f->amax - f->amin) / 4;
+        f->amin = f->amax;
+      }
+    } else {
+      /* out-of-order, bumping max */
+      f->holes += (fbi_offset - f->amax) / 4 - 1;
+      f->amax = fbi_offset;
     }
-    f->amax = fbi_offset;
-  } else {
-    f->depth++;
   }
   if (f->depth_needed == BX_MAX_BIT32U) {
     f->depth_needed = cmdfifo_calc_depth_needed(f);
@@ -2475,11 +2493,7 @@ Bit32u cmdfifo_r(cmdfifo_info *f)
     BX_INFO(("CMDFIFO RdPtr rollover"));
     f->rdptr = f->base;
   }
-  if (f->count_holes) {
-    f->depth = (f->amin - f->rdptr) / 4;
-  } else {
-    f->depth--;
-  }
+  f->depth--;
   return data;
 }
 
@@ -2890,12 +2904,10 @@ void register_w_common(Bit32u offset, Bit32u data)
 
       if (v->type == VOODOO_2 && (chips & 1) && INITEN_ENABLE_HW_INIT(v->pci.init_enable))
       {
+        v->fbi.cmdfifo[0].count_holes = !FBIINIT7_DISABLE_CMDFIFO_HOLES(data);
         if (v->fbi.cmdfifo[0].enabled != FBIINIT7_CMDFIFO_ENABLE(data)) {
           v->fbi.cmdfifo[0].enabled = FBIINIT7_CMDFIFO_ENABLE(data);
           BX_INFO(("CMDFIFO now %sabled", v->fbi.cmdfifo[0].enabled ? "en" : "dis"));
-          if (!FBIINIT7_DISABLE_CMDFIFO_HOLES(data)) {
-            BX_ERROR(("CMDFIFO hole count feature not supported yet"));
-          }
         }
         v->reg[regnum].u = data;
       } else if (v->type >= VOODOO_BANSHEE) {
@@ -2918,16 +2930,20 @@ void register_w_common(Bit32u offset, Bit32u data)
 
     case cmdFifoAMin:
 /*  case colBufferAddr: -- Banshee */
-      if (v->type == VOODOO_2 && (chips & 1))
+      if (v->type == VOODOO_2 && (chips & 1)) {
+        BX_LOCK(cmdfifo_mutex);
         v->fbi.cmdfifo[0].amin = data;
-      else if (v->type >= VOODOO_BANSHEE && (chips & 1))
+        BX_UNLOCK(cmdfifo_mutex);
+      } else if (v->type >= VOODOO_BANSHEE && (chips & 1))
         v->fbi.rgboffs[1] = data & v->fbi.mask & ~0x0f;
       break;
 
     case cmdFifoAMax:
 /*  case colBufferStride: -- Banshee */
       if (v->type == VOODOO_2 && (chips & 1)) {
+        BX_LOCK(cmdfifo_mutex);
         v->fbi.cmdfifo[0].amax = data;
+        BX_UNLOCK(cmdfifo_mutex);
       } else if (v->type >= VOODOO_BANSHEE && (chips & 1)) {
         if (data & 0x8000)
           v->fbi.rowpixels = (data & 0x7f) << 6;
@@ -2951,7 +2967,9 @@ void register_w_common(Bit32u offset, Bit32u data)
     case cmdFifoHoles:
 /*  case auxBufferStride: -- Banshee */
       if (v->type == VOODOO_2 && (chips & 1)) {
+        BX_LOCK(cmdfifo_mutex);
         v->fbi.cmdfifo[0].holes = data;
+        BX_UNLOCK(cmdfifo_mutex);
       } else if (v->type >= VOODOO_BANSHEE && (chips & 1)) {
         Bit32u rowpixels;
 
