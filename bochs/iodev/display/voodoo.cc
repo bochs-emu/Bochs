@@ -427,7 +427,7 @@ void bx_voodoo_c::register_state(void)
     new bx_shadow_num_c(dac, name, &v->dac.reg[i], BASE_HEX);
   }
   new bx_shadow_num_c(dac, "read_result", &v->dac.read_result, BASE_HEX);
-  new bx_shadow_num_c(dac, "clk0_freq", &v->dac.clk0_freq);
+  new bx_shadow_num_c(dac, "vidclk", &v->vidclk);
   bx_list_c *fbi = new bx_list_c(vstate, "fbi", "framebuffer");
   if ((BX_VOODOO_THIS s.model < VOODOO_BANSHEE) || (theVoodooVga == NULL)) {
     new bx_shadow_data_c(fbi, "ram", v->fbi.ram, v->fbi.mask + 1);
@@ -649,6 +649,7 @@ void bx_voodoo_c::after_restore_state(void)
       BX_INFO(("new i/o base address: 0x%04x", BX_VOODOO_THIS pci_base_address[2]));
     }
     if ((v->banshee.io[io_vidProcCfg] & 0x01) && (theVoodooVga != NULL)) {
+      BX_VOODOO_THIS update_timing();
       theVoodooVga->banshee_update_mode();
     }
     // TODO
@@ -716,40 +717,52 @@ void bx_voodoo_c::mode_change_timer_handler(void *this_ptr)
 bx_bool bx_voodoo_c::update_timing(void)
 {
   int htotal, vtotal, hsync, vsync;
+  float hfreq;
+  bx_crtc_params_t crtcp;
 
-  if (!BX_VOODOO_THIS s.vdraw.clock_enabled || !BX_VOODOO_THIS s.vdraw.output_on)
-    return 0;
-  if ((v->reg[hSync].u == 0) || (v->reg[vSync].u == 0))
-    return 0;
-  if (BX_VOODOO_THIS s.model == VOODOO_2) {
-    htotal = ((v->reg[hSync].u >> 16) & 0x7ff) + 1 + (v->reg[hSync].u & 0x1ff) + 1;
-    vtotal = ((v->reg[vSync].u >> 16) & 0x1fff) + (v->reg[vSync].u & 0x1fff);
-    hsync = ((v->reg[hSync].u >> 16) & 0x7ff);
-    vsync = ((v->reg[vSync].u >> 16) & 0x1fff);
+  if (BX_VOODOO_THIS s.model < VOODOO_BANSHEE) {
+    if (!BX_VOODOO_THIS s.vdraw.clock_enabled || !BX_VOODOO_THIS s.vdraw.output_on)
+      return 0;
+    if ((v->reg[hSync].u == 0) || (v->reg[vSync].u == 0))
+      return 0;
+    if (BX_VOODOO_THIS s.model == VOODOO_2) {
+      htotal = ((v->reg[hSync].u >> 16) & 0x7ff) + 1 + (v->reg[hSync].u & 0x1ff) + 1;
+      vtotal = ((v->reg[vSync].u >> 16) & 0x1fff) + (v->reg[vSync].u & 0x1fff);
+      hsync = ((v->reg[hSync].u >> 16) & 0x7ff);
+      vsync = ((v->reg[vSync].u >> 16) & 0x1fff);
+    } else {
+      htotal = ((v->reg[hSync].u >> 16) & 0x3ff) + 1 + (v->reg[hSync].u & 0xff) + 1;
+      vtotal = ((v->reg[vSync].u >> 16) & 0xfff) + (v->reg[vSync].u & 0xfff);
+      hsync = ((v->reg[hSync].u >> 16) & 0x3ff);
+      vsync = ((v->reg[vSync].u >> 16) & 0xfff);
+    }
+    hfreq = v->vidclk / (float)htotal;
+    if (((v->reg[fbiInit1].u >> 20) & 3) == 1) { // VCLK div 2
+      hfreq /= 2;
+    }
+    v->vertfreq = hfreq / (float)vtotal;
+    BX_VOODOO_THIS s.vdraw.htotal_usec = (unsigned)(1000000.0 / hfreq);
+    BX_VOODOO_THIS s.vdraw.vtotal_usec = (unsigned)(1000000.0 / v->vertfreq);
+    BX_VOODOO_THIS s.vdraw.htime_to_pixel = (double)htotal / (1000000.0 / hfreq);
+    BX_VOODOO_THIS s.vdraw.hsync_usec = BX_VOODOO_THIS s.vdraw.htotal_usec * hsync / htotal;
+    BX_VOODOO_THIS s.vdraw.vsync_usec = vsync * BX_VOODOO_THIS s.vdraw.htotal_usec;
+    if ((BX_VOODOO_THIS s.vdraw.width != v->fbi.width) ||
+        (BX_VOODOO_THIS s.vdraw.height != v->fbi.height)) {
+      BX_VOODOO_THIS s.vdraw.width = v->fbi.width;
+      BX_VOODOO_THIS s.vdraw.height = v->fbi.height;
+      bx_gui->dimension_update(v->fbi.width, v->fbi.height, 0, 0, 16);
+      vertical_timer_handler(NULL);
+    }
+    BX_INFO(("Voodoo output %dx%d@%uHz", v->fbi.width, v->fbi.height, (unsigned)v->vertfreq));
   } else {
-    htotal = ((v->reg[hSync].u >> 16) & 0x3ff) + 1 + (v->reg[hSync].u & 0xff) + 1;
-    vtotal = ((v->reg[vSync].u >> 16) & 0xfff) + (v->reg[vSync].u & 0xfff);
-    hsync = ((v->reg[hSync].u >> 16) & 0x3ff);
-    vsync = ((v->reg[vSync].u >> 16) & 0xfff);
-  }
-  float hfreq = v->dac.clk0_freq / (float)htotal;
-  if (((v->reg[fbiInit1].u >> 20) & 3) == 1) { // VCLK div 2
-    hfreq /= 2;
-  }
-  float vfreq = hfreq / (float)vtotal;
-  BX_VOODOO_THIS s.vdraw.htotal_usec = (unsigned)(1000000.0 / hfreq);
-  BX_VOODOO_THIS s.vdraw.vtotal_usec = (unsigned)(1000000.0 / vfreq);
-  BX_VOODOO_THIS s.vdraw.htime_to_pixel = (double)htotal / (1000000.0 / hfreq);
-  BX_VOODOO_THIS s.vdraw.hsync_usec = BX_VOODOO_THIS s.vdraw.htotal_usec * hsync / htotal;
-  BX_VOODOO_THIS s.vdraw.vsync_usec = vsync * BX_VOODOO_THIS s.vdraw.htotal_usec;
-  if ((BX_VOODOO_THIS s.vdraw.width != v->fbi.width) ||
-      (BX_VOODOO_THIS s.vdraw.height != v->fbi.height)) {
+    BX_VVGA_THIS get_crtc_params(&crtcp);
+    hfreq = v->vidclk / (float)(crtcp.htotal * 8);
+    v->vertfreq = hfreq / (float)crtcp.vtotal;
+    BX_VOODOO_THIS s.vdraw.vtotal_usec = (unsigned)(1000000.0 / v->vertfreq);
     BX_VOODOO_THIS s.vdraw.width = v->fbi.width;
     BX_VOODOO_THIS s.vdraw.height = v->fbi.height;
-    bx_gui->dimension_update(v->fbi.width, v->fbi.height, 0, 0, 16);
     vertical_timer_handler(NULL);
   }
-  BX_INFO(("Voodoo output %dx%d@%uHz", v->fbi.width, v->fbi.height, (unsigned)vfreq));
   bx_virt_timer.activate_timer(BX_VOODOO_THIS s.vertical_timer_id, (Bit32u)BX_VOODOO_THIS s.vdraw.vtotal_usec, 1);
   return 1;
 }
@@ -783,11 +796,13 @@ void bx_voodoo_c::vertical_timer_handler(void *this_ptr)
   }
 
   if (v->fbi.video_changed || v->fbi.clut_dirty) {
-    // TODO: use tile-based update mechanism
     BX_VOODOO_THIS redraw_area(0, 0, BX_VOODOO_THIS s.vdraw.width, BX_VOODOO_THIS s.vdraw.height);
     v->fbi.clut_dirty = 0;
     v->fbi.video_changed = 0;
-    BX_VOODOO_THIS s.vdraw.gui_update_pending = 1;
+    if (BX_VOODOO_THIS s.model < VOODOO_BANSHEE) {
+      // TODO: use tile-based update mechanism
+      BX_VOODOO_THIS s.vdraw.gui_update_pending = 1;
+    }
   }
 }
 
@@ -930,26 +945,19 @@ void bx_voodoo_c::update(void)
       BX_UNLOCK(render_mutex);
       return;
     }
-    iWidth = BX_VOODOO_THIS s.vdraw.width;
-    iHeight = BX_VOODOO_THIS s.vdraw.height;
     bpp = 16;
     start = v->fbi.rgboffs[v->fbi.frontbuf];
     pitch = v->fbi.rowpixels * 2;
   } else {
-    iWidth = v->fbi.width;
-    iHeight = v->fbi.height;
     bpp = v->banshee.disp_bpp;
     start = v->banshee.io[io_vidDesktopStartAddr];
     pitch = v->banshee.io[io_vidDesktopOverlayStride] & 0x7fff;
     if (v->banshee.desktop_tiled) {
       pitch *= 128;
     }
-    if (v->fbi.clut_dirty || v->fbi.video_changed) {
-      redraw_area(0, 0, iWidth, iHeight);
-      v->fbi.clut_dirty = 0;
-      v->fbi.video_changed = 0;
-    }
   }
+  iWidth = BX_VOODOO_THIS s.vdraw.width;
+  iHeight = BX_VOODOO_THIS s.vdraw.height;
   Bit8u *disp_ptr = &v->fbi.ram[start & v->fbi.mask];
 
   if (bx_gui->graphics_tile_info_common(&info)) {
@@ -1474,7 +1482,6 @@ void bx_voodoo_c::banshee_write_handler(void *this_ptr, Bit32u address, Bit32u v
   Bit8u offset = (Bit8u)(address & 0xff);
   Bit8u reg = (offset>>2), dac_idx, k, m, n;
   Bit32u old = v->banshee.io[reg];
-  double vfreq;
   bx_bool prev_hwce = v->banshee.hwcursor.enabled;
   Bit16u prev_hwcx = v->banshee.hwcursor.x;
   Bit16u prev_hwcy = v->banshee.hwcursor.y;
@@ -1517,10 +1524,10 @@ void bx_voodoo_c::banshee_write_handler(void *this_ptr, Bit32u address, Bit32u v
         k = (Bit8u)(value & 0x03);
         m = (Bit8u)((value >> 2) & 0x3f);
         n = (Bit8u)((value >> 8) & 0xff);
-        vfreq = 14318180.0f * ((double)n + 2.0f) / ((double)m + 2.0f) / (double)(1 << k);
-        BX_INFO(("Setting VCLK #3 (pllCtrl0) = %.3f MHz", vfreq / 1000000.0f));
+        v->vidclk = 14318180.0f * ((double)n + 2.0f) / ((double)m + 2.0f) / (double)(1 << k);
+        BX_INFO(("Setting VCLK #3 (pllCtrl0) = %.3f MHz", v->vidclk / 1000000.0f));
         if (theVoodooVga != NULL) {
-          theVoodooVga->banshee_set_vclk3((Bit32u)vfreq);
+          theVoodooVga->banshee_set_vclk3((Bit32u)v->vidclk);
         }
       }
       break;
@@ -1543,9 +1550,12 @@ void bx_voodoo_c::banshee_write_handler(void *this_ptr, Bit32u address, Bit32u v
       if ((v->banshee.io[reg] ^ old) & 0x2800)
         v->fbi.clut_dirty = 1;
       if ((v->banshee.io[reg] & 0x01) && ((old & 0x01) == 0x00)) {
+        BX_VOODOO_THIS update_timing();
         if (theVoodooVga != NULL) {
           theVoodooVga->banshee_update_mode();
         }
+      } else if (!(v->banshee.io[reg] & 0x01) && ((old & 0x01) == 0x01)) {
+        bx_virt_timer.deactivate_timer(BX_VOODOO_THIS s.vertical_timer_id);
       }
       v->banshee.hwcursor.enabled = ((v->banshee.io[reg] >> 27) & 1);
       v->banshee.hwcursor.mode = ((v->banshee.io[reg] >> 1) & 1);
@@ -2919,7 +2929,8 @@ void bx_voodoo_vga_c::banshee_update_mode(void)
     return;
   }
   v->banshee.half_mode = (v->banshee.io[io_vidProcCfg] >> 4) & 1;
-  BX_INFO(("switched to %d x %d x %d", v->fbi.width, v->fbi.height, v->banshee.disp_bpp));
+  BX_INFO(("switched to %d x %d x %d @ %d Hz", v->fbi.width, v->fbi.height,
+           v->banshee.disp_bpp, (unsigned)v->vertfreq));
   bx_gui->dimension_update(v->fbi.width, v->fbi.height, 0, 0, v->banshee.disp_bpp);
   // compatibilty settings for VGA core
   BX_VVGA_THIS s.last_xres = v->fbi.width;

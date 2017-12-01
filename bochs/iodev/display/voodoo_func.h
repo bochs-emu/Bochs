@@ -1377,10 +1377,10 @@ void dacdata_w(dac_state *d, Bit8u regnum, Bit8u data)
           break;
         case 0x0e:
           if ((d->data_size == 1) && (data == 0xf8)) {
-            d->clk0_freq = 14318184.0f * ((float)(d->clk0_m + 2) / (float)(d->clk0_n + 2)) / (float)(1 << d->clk0_p);
+            v->vidclk = 14318184.0f * ((float)(d->clk0_m + 2) / (float)(d->clk0_n + 2)) / (float)(1 << d->clk0_p);
             Bit8u dacr6 = d->reg[6] & 0xf0;
             if ((dacr6 == 0x20) || (dacr6 == 0x60) || (dacr6 == 0x70)) {
-              d->clk0_freq /= 2.0f;
+              v->vidclk /= 2.0f;
             }
             Voodoo_update_timing();
           }
@@ -2517,7 +2517,7 @@ void cmdfifo_process(cmdfifo_info *f)
         case 3: // JMP
           f->rdptr = (command >> 4) & 0xfffffc;
           if (f->count_holes) {
-            BX_INFO(("cmdfifo_process(): JMP 0x%08x", f->rdptr));
+            BX_DEBUG(("cmdfifo_process(): JMP 0x%08x", f->rdptr));
           }
           break;
         default:

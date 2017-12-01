@@ -1676,7 +1676,6 @@ struct _dac_state
   Bit8u clk0_m;
   Bit8u clk0_n;
   Bit8u clk0_p;
-  float clk0_freq;
 };
 
 
@@ -1796,6 +1795,8 @@ struct _voodoo_state
 
   pci_state   pci;           /* PCI state */
   dac_state   dac;           /* DAC state */
+  float       vidclk;        /* video clock */
+  float       vertfreq;      /* vertical frequency */
 
   fbi_state   fbi;           /* FBI states */
   tmu_state   tmu[MAX_TMU];  /* TMU states */
