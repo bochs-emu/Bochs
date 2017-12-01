@@ -2321,7 +2321,7 @@ int decodeImmediate64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, u
   return 0;
 }
 
-int fetchDecode64(const Bit8u *iptr, bx_bool handle_lock_cr0, bxInstruction_c *i, unsigned remainingInPage)
+int fetchDecode64(const Bit8u *iptr, bxInstruction_c *i, unsigned remainingInPage)
 {
   if (remainingInPage > 15) remainingInPage = 15;
 
@@ -2463,11 +2463,13 @@ fetch_b1:
     i->setLock();
     // lock prefix not allowed or destination operand is not memory
     if (i->modC0() || !(op_flags & BX_LOCKABLE)) {
-      if (handle_lock_cr0 && (ia_opcode == BX_IA_MOV_CR0Rq || ia_opcode == BX_IA_MOV_RqCR0)) {
+      if ((op_flags & BX_LOCKABLE) != 0) {
         if (ia_opcode == BX_IA_MOV_CR0Rq)
           i->setSrcReg(0, 8); // extend CR0 -> CR8
-        if (ia_opcode == BX_IA_MOV_RqCR0)
+        else if (ia_opcode == BX_IA_MOV_RqCR0)
           i->setSrcReg(1, 8); // extend CR0 -> CR8
+        else
+          assert(0);
       }
       else {
         // replace execution function with undefined-opcode

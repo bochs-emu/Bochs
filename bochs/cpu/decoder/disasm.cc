@@ -30,9 +30,9 @@
 #include "decoder.h"
 #include "fetchdecode.h"
 
-extern int fetchDecode32(const Bit8u *fetchPtr, bx_bool is_32, bx_bool handle_lock_cr0, bxInstruction_c *i, unsigned remainingInPage);
+extern int fetchDecode32(const Bit8u *fetchPtr, bx_bool is_32, bxInstruction_c *i, unsigned remainingInPage);
 #if BX_SUPPORT_X86_64
-extern int fetchDecode64(const Bit8u *fetchPtr, bx_bool handle_lock_cr0, bxInstruction_c *i, unsigned remainingInPage);
+extern int fetchDecode64(const Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage);
 #endif
 
 // table of all Bochs opcodes
@@ -618,10 +618,10 @@ char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr, bxIns
 
 #if BX_SUPPORT_X86_64
   if (is_64)
-    ret = fetchDecode64(opcode, BX_CPU(0)->is_cpu_extension_supported(BX_ISA_ALT_MOV_CR8), i, 16);
+    ret = fetchDecode64(opcode, i, 16);
   else
 #endif
-    ret = fetchDecode32(opcode, is_32, BX_CPU(0)->is_cpu_extension_supported(BX_ISA_ALT_MOV_CR8), i, 16);
+    ret = fetchDecode32(opcode, is_32, i, 16);
 
   if (ret < 0)
     sprintf(disbufptr, "decode failed");

@@ -2616,7 +2616,7 @@ Bit16u WalkOpcodeTables(const BxExtOpcodeInfo_t *OpcodeInfoPtr, Bit16u &attr, bx
   return (ia_opcode);
 }
 
-int fetchDecode32(const Bit8u *iptr, bx_bool is_32, bx_bool handle_lock_cr0, bxInstruction_c *i, unsigned remainingInPage)
+int fetchDecode32(const Bit8u *iptr, bx_bool is_32, bxInstruction_c *i, unsigned remainingInPage)
 {
   if (remainingInPage > 15) remainingInPage = 15;
 
@@ -2723,11 +2723,13 @@ fetch_b1:
     // lock prefix not allowed or destination operand is not memory
     if (i->modC0() || !(op_flags & BX_LOCKABLE)) {
 #if BX_CPU_LEVEL >= 6
-      if (handle_lock_cr0 && (ia_opcode == BX_IA_MOV_CR0Rd || ia_opcode == BX_IA_MOV_RdCR0)) {
+      if ((op_flags & BX_LOCKABLE) != 0) {
         if (ia_opcode == BX_IA_MOV_CR0Rd)
           i->setSrcReg(0, 8); // extend CR0 -> CR8
-        if (ia_opcode == BX_IA_MOV_RdCR0)
+        else if (ia_opcode == BX_IA_MOV_RdCR0)
           i->setSrcReg(1, 8); // extend CR0 -> CR8
+        else
+          assert(0);
       }
       else
 #endif
@@ -2864,7 +2866,7 @@ void BX_CPU_C::init_FetchDecodeTables(void)
       BxOpcodesTable[n].execute1 = &BX_CPU_C::BxError;
       BxOpcodesTable[n].execute2 = &BX_CPU_C::BxError;
       // won't allow this new #UD opcode to check prepare_SSE and similar
-      BxOpcodesTable[n].src[3] = 0;
+      BxOpcodesTable[n].opflags = 0;
     }
   }
 
@@ -2882,6 +2884,16 @@ void BX_CPU_C::init_FetchDecodeTables(void)
     BxOpcodesTable[BX_IA_TZCNT_GdEd] = BxOpcodesTable[BX_IA_BSF_GdEd];
 #if BX_SUPPORT_X86_64
     BxOpcodesTable[BX_IA_TZCNT_GqEq] = BxOpcodesTable[BX_IA_BSF_GqEq];
+#endif
+  }
+
+  // handle lock MOV CR0 AMD extension
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_ALT_MOV_CR8)) {
+    BxOpcodesTable[BX_IA_MOV_CR0Rd].opflags |= BX_LOCKABLE;
+    BxOpcodesTable[BX_IA_MOV_RdCR0].opflags |= BX_LOCKABLE;
+#if BX_SUPPORT_X86_64
+    BxOpcodesTable[BX_IA_MOV_CR0Rq].opflags |= BX_LOCKABLE;
+    BxOpcodesTable[BX_IA_MOV_RqCR0].opflags |= BX_LOCKABLE;
 #endif
   }
 }
