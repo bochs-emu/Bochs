@@ -185,6 +185,23 @@ struct bxIAOpcodeTable {
   Bit8u opflags;
 };
 
+#ifdef BX_STANDALONE_DECODER
+// disable all the logging for stand-alone decoder
+#undef BX_INFO
+#undef BX_DEBUG
+#undef BX_ERROR
+#undef BX_PANIC
+#undef BX_FATAL
+#undef BX_ASSERT
+
+#define BX_INFO(x)
+#define BX_DEBUG(x)
+#define BX_ERROR(x)
+#define BX_PANIC(x)
+#define BX_FATAL(x)
+#define BX_ASSERT(x)
+#endif
+
 // where the source should be taken from
 enum {
   BX_SRC_NONE = 0,          // no source, implicit source or immediate
