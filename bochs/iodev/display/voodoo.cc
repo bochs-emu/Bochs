@@ -698,6 +698,7 @@ void bx_voodoo_c::mode_change_timer_handler(void *this_ptr)
   if ((!BX_VOODOO_THIS s.vdraw.clock_enabled || !BX_VOODOO_THIS s.vdraw.output_on) && BX_VOODOO_THIS s.vdraw.override_on) {
     // switching off
     bx_virt_timer.deactivate_timer(BX_VOODOO_THIS s.vertical_timer_id);
+    v->vtimer_running = 0;
     DEV_vga_set_override(0, NULL);
     BX_VOODOO_THIS s.vdraw.override_on = 0;
     BX_VOODOO_THIS s.vdraw.width = 0;
@@ -764,6 +765,7 @@ bx_bool bx_voodoo_c::update_timing(void)
     vertical_timer_handler(NULL);
   }
   bx_virt_timer.activate_timer(BX_VOODOO_THIS s.vertical_timer_id, (Bit32u)BX_VOODOO_THIS s.vdraw.vtotal_usec, 1);
+  v->vtimer_running = 1;
   return 1;
 }
 
@@ -1464,7 +1466,7 @@ Bit32u bx_voodoo_c::banshee_read_handler(void *this_ptr, Bit32u address, unsigne
       break;
 
     case io_vidSerialParallelPort:
-      result = v->banshee.io[reg] | 0x0c600000;
+      result = v->banshee.io[reg] | 0x0f780000;
       break;
 
     default:
@@ -1556,6 +1558,7 @@ void bx_voodoo_c::banshee_write_handler(void *this_ptr, Bit32u address, Bit32u v
         }
       } else if (!(v->banshee.io[reg] & 0x01) && ((old & 0x01) == 0x01)) {
         bx_virt_timer.deactivate_timer(BX_VOODOO_THIS s.vertical_timer_id);
+        v->vtimer_running = 0;
       }
       v->banshee.hwcursor.enabled = ((v->banshee.io[reg] >> 27) & 1);
       v->banshee.hwcursor.mode = ((v->banshee.io[reg] >> 1) & 1);
@@ -2055,6 +2058,7 @@ void bx_voodoo_c::banshee_blt_launch_area_setup()
     case 3:
       srcfmt = (BLT.reg[blt_srcFormat] >> 16) & 0x0f;
       pxpack = (BLT.reg[blt_srcFormat] >> 22) & 3;
+      BLT.src_wizzle = (BLT.reg[blt_srcFormat] >> 20) & 0x03;
       cmdextra_3 = (BLT.reg[blt_commandExtra] & 0x08) > 0;
       if (cmdextra_3) {
         BX_ERROR(("host to screen blt: commandExtra bit #3 undocumented effect ?"));
@@ -2110,11 +2114,20 @@ void bx_voodoo_c::banshee_blt_launch_area_write(Bit32u value)
   if (BLT.lacnt > 0) {
     BX_DEBUG(("launchArea write: value = 0x%08x", value));
     if (BLT.lamem != NULL) {
-      BLT.lamem[BLT.laidx++] = (value & 0xff);
-      BLT.lamem[BLT.laidx++] = ((value >> 8) & 0xff);
-      BLT.lamem[BLT.laidx++] = ((value >> 16) & 0xff);
-      BLT.lamem[BLT.laidx++] = ((value >> 24) & 0xff);
-    } if ((BLT.cmd == 1) || (BLT.cmd == 2)) {
+      if (BLT.src_wizzle == 0) {
+        BLT.lamem[BLT.laidx++] = (value & 0xff);
+        BLT.lamem[BLT.laidx++] = ((value >> 8) & 0xff);
+        BLT.lamem[BLT.laidx++] = ((value >> 16) & 0xff);
+        BLT.lamem[BLT.laidx++] = ((value >> 24) & 0xff);
+      } else if ((BLT.src_wizzle & 2) > 0) {
+        BLT.lamem[BLT.laidx++] = ((value >> 16) & 0xff);
+        BLT.lamem[BLT.laidx++] = ((value >> 24) & 0xff);
+        BLT.lamem[BLT.laidx++] = (value & 0xff);
+        BLT.lamem[BLT.laidx++] = ((value >> 8) & 0xff);
+      } else {
+        BX_ERROR(("launchArea write: byte wizzle mode not supported yet"));
+      }
+    } else if ((BLT.cmd == 1) || (BLT.cmd == 2)) {
       BLT.reg[blt_srcXY] = value;
       BLT.src_x = value & 0x1fff;
       BLT.src_y = (value >> 16) & 0x1fff;

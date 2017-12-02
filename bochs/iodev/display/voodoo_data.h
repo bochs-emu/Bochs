@@ -1752,6 +1752,7 @@ struct _banshee_info
     bx_bool src_tiled;
     Bit8u src_fmt;
     Bit16u src_pitch;
+    Bit8u src_wizzle;
     Bit16u src_x;
     Bit16u src_y;
     Bit16u src_w;
@@ -1797,6 +1798,7 @@ struct _voodoo_state
   dac_state   dac;           /* DAC state */
   float       vidclk;        /* video clock */
   float       vertfreq;      /* vertical frequency */
+  bx_bool     vtimer_running; /* vertical timer running */
 
   fbi_state   fbi;           /* FBI states */
   tmu_state   tmu[MAX_TMU];  /* TMU states */

@@ -2476,7 +2476,7 @@ void cmdfifo_w(cmdfifo_info *f, Bit32u fbi_offset, Bit32u data)
   }
   if (f->depth >= f->depth_needed) {
     f->cmd_ready = 1;
-    if ((v->type > VOODOO_2) || (!FBIINIT0_VGA_PASSTHRU(v->reg[fbiInit0].u))) {
+    if (!v->vtimer_running) {
       bx_set_event(&fifo_wakeup);
     }
   }
