@@ -2729,7 +2729,7 @@ fetch_b1:
         else if (ia_opcode == BX_IA_MOV_RdCR0)
           i->setSrcReg(1, 8); // extend CR0 -> CR8
         else
-          assert(0);
+          i->setIaOpcode(BX_IA_ERROR); // replace execution function with undefined-opcode
       }
       else
 #endif
