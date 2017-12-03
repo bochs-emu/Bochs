@@ -35,19 +35,10 @@
 #define fltype double
 
 /*
-  define Bits, Bitu, Bit32s, Bit32u, Bit16s, Bit16u, Bit8s, Bit8u here
+  define Bits, Bitu here
 */
-#include <stdint.h>
 typedef Bit64u    Bitu;
 typedef Bit64s    Bits;
-/*
-typedef uint32_t  Bit32u;
-typedef int32_t   Bit32s;
-typedef uint16_t  Bit16u;
-typedef int16_t   Bit16s;
-typedef uint8_t   Bit8u;
-typedef int8_t    Bit8s;
-*/
 
 
 #ifdef OPL_SOURCE
