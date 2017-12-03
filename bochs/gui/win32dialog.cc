@@ -691,8 +691,10 @@ static int win32_ci_callback(void *userdata, ci_command_t command)
 #endif
           return -1;
         }
+#if BX_USE_TEXTCONFIG
       } else {
         bx_text_config_interface(BX_CI_RUNTIME);
+#endif
       }
       break;
     case CI_SHUTDOWN:
