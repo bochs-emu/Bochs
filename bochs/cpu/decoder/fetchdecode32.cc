@@ -1630,6 +1630,9 @@ bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bx_bool is_64, unsig
       break;
     case BX_SRC_RM:
       if (i->modC0()) {
+        if (type == BX_KMASK_REG)
+          rm &= 0x7;
+
         i->setSrcReg(n, rm);
       }
       else {
