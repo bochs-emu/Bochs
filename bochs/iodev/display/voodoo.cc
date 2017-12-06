@@ -2043,7 +2043,6 @@ void bx_voodoo_c::banshee_blt_launch_area_setup()
 {
   Bit32u pbytes;
   Bit8u srcfmt, pxpack;
-  bx_bool cmdextra_3;
 
   BLT.lacnt = 0;
   BLT.laidx = 0;
@@ -2059,49 +2058,34 @@ void bx_voodoo_c::banshee_blt_launch_area_setup()
       srcfmt = (BLT.reg[blt_srcFormat] >> 16) & 0x0f;
       pxpack = (BLT.reg[blt_srcFormat] >> 22) & 3;
       BLT.src_wizzle = (BLT.reg[blt_srcFormat] >> 20) & 0x03;
-      cmdextra_3 = (BLT.reg[blt_commandExtra] & 0x08) > 0;
-      if (cmdextra_3) {
-        BX_ERROR(("host to screen blt: commandExtra bit #3 undocumented effect ?"));
-      }
-      BLT.h2s_pxstart = 0;
-      BLT.h2s_undoc = 0;
-      if ((BLT.reg[blt_srcXY] & 0x3fe0) != 0) {
+      if ((BLT.reg[blt_srcXY] & 0xffe0) != 0) {
         BX_ERROR(("host to screen blt: srcXY: undocumented bit(s) set"));
-        BLT.h2s_undoc = BLT.reg[blt_srcXY] & 0x3fff;
-      } else if ((BLT.reg[blt_srcXY] & 0x1f) != 0) {
+      }
+      if ((BLT.reg[blt_srcXY] & 0x1f) != 0) {
         if (srcfmt == 0) {
           BLT.h2s_pxstart = BLT.reg[blt_srcXY] & 0x1f;
         } else {
           BLT.h2s_pxstart = BLT.reg[blt_srcXY] & 0x03;
         }
-      }
-      if ((pxpack == 0) && !cmdextra_3) {
-        pbytes = BLT.reg[blt_srcFormat] & 0x3fff;
-        BLT.lacnt = ((pbytes + 3) >> 2) * BLT.dst_h;
-        BLT.h2s_pitch = pbytes;
       } else {
-        if (srcfmt == 0) {
-          pbytes = ((BLT.dst_w + 7) >> 3);
-        } else if (srcfmt == 1) {
-          pbytes = BLT.dst_w;
-        } else if ((srcfmt >= 3) && (srcfmt <= 3))  {
-          pbytes = BLT.dst_w * (srcfmt - 1);
-        } else {
-          pbytes = 0;
-          BX_INFO(("Source format %d not handled yet", srcfmt));
-        }
-        if (!cmdextra_3) {
-          pbytes = (pbytes + (1 << (pxpack - 1)) - 1) / (1 << (pxpack - 1));
-          BLT.h2s_pitch = pbytes;
-          pbytes *= BLT.dst_h;
-          BLT.lacnt = (pbytes + 3) >> 2;
-        } else {
-          // HACK: fixes pitch in some cases
-          BLT.h2s_pitch = pbytes;
-          BLT.lacnt = (pbytes + 3) >> 2;
-          BLT.lacnt *= BLT.dst_h;
-        }
+        BLT.h2s_pxstart = 0;
       }
+      if (srcfmt == 0) {
+        pbytes = ((BLT.dst_w + BLT.h2s_pxstart + 7) >> 3);
+      } else if (srcfmt == 1) {
+        pbytes = BLT.dst_w + BLT.h2s_pxstart;
+      } else if ((srcfmt >= 3) && (srcfmt <= 5))  {
+        pbytes = (BLT.dst_w + BLT.h2s_pxstart) * (srcfmt - 1);
+      } else {
+        pbytes = 0;
+        BX_INFO(("Source format %d not handled yet", srcfmt));
+      }
+      if (pxpack == 0) {
+        BLT.h2s_pitch = (pbytes + 3) & ~0x03;
+      } else {
+        BLT.h2s_pitch = (pbytes + (1 << (pxpack - 1)) - 1) / (1 << (pxpack - 1));
+      }
+      BLT.lacnt = (BLT.h2s_pitch * BLT.dst_h + 3) >> 2;
       BLT.lamem = new Bit8u[BLT.lacnt * 4];
       break;
     default:
@@ -2631,7 +2615,6 @@ void bx_voodoo_c::banshee_blt_host_to_screen()
   Bit8u *pat_ptr = &BLT.cpat[0][0];
   Bit16u spitch = BLT.h2s_pitch;
   Bit8u srcfmt = (BLT.reg[blt_srcFormat] >> 16) & 0x0f;
-  Bit8u pxpack = (BLT.reg[blt_srcFormat] >> 22) & 3;
   bx_bool patmono = (BLT.reg[blt_command] >> 13) & 1;
   bx_bool patrow0 = (BLT.reg[blt_commandExtra] & 0x08) > 0;
   Bit8u spxsize = 0;
@@ -2748,11 +2731,7 @@ void bx_voodoo_c::banshee_blt_host_to_screen()
       }
       dst_ptr1 += dpxsize;
     }
-    if (pxpack == 0) {
-      src_ptr += ((spitch + 3) & ~0x03);
-    } else {
-      src_ptr += (w + (4 << pxpack) - 1) / (4 << pxpack);
-    }
+    src_ptr += spitch;
     dst_ptr += dpitch;
     if (!patrow0) {
       if (patmono) {
