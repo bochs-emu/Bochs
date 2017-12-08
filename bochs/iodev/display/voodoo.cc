@@ -230,11 +230,11 @@ BX_THREAD_FUNC(fifo_thread, indata)
       BX_UNLOCK(fifo_mutex);
       for (int i = 0; i < 2; i++) {
         if (v->fbi.cmdfifo[i].enabled) {
-          BX_LOCK(cmdfifo_mutex);
-          while (v->fbi.cmdfifo[i].cmd_ready) {
+          while (v->fbi.cmdfifo[i].enabled && v->fbi.cmdfifo[i].cmd_ready) {
+            BX_LOCK(cmdfifo_mutex);
             cmdfifo_process(&v->fbi.cmdfifo[i]);
+            BX_UNLOCK(cmdfifo_mutex);
           }
-          BX_UNLOCK(cmdfifo_mutex);
         }
       }
     }
@@ -1671,7 +1671,7 @@ void bx_voodoo_c::banshee_mem_read(bx_phy_address addr, unsigned len, void *data
     } else if (offset < 0x200000) {
       value = banshee_blt_reg_read((offset >> 2) & 0x7f);
     } else if (offset < 0x600000) {
-      value = register_r((offset & 0x1fffff) >> 2);
+      value = register_r((offset - 0x200000) >> 2);
     } else if (offset < 0xc00000) {
       BX_ERROR(("reserved read from offset 0x%08x", offset));
     } else if (offset < 0x1000000) {
@@ -1689,7 +1689,7 @@ void bx_voodoo_c::banshee_mem_read(bx_phy_address addr, unsigned len, void *data
         pitch *= 128;
         x = (offset << 0) & ((1 << v->fbi.lfb_stride) - 1);
         y = (offset >> v->fbi.lfb_stride) & 0x7ff;
-        offset = start + y * pitch + x;
+        offset = (start + y * pitch + x) & v->fbi.mask;
       }
       value = 0;
       for (i = 0; i < len; i++) {
@@ -1706,6 +1706,7 @@ void bx_voodoo_c::banshee_mem_write(bx_phy_address addr, unsigned len, void *dat
 {
   Bit32u offset = (addr & 0x1ffffff);
   Bit32u value = *(Bit32u*)data;
+  Bit32u mask = 0xffffffff;
   Bit8u value8;
   Bit32u start = v->banshee.io[io_vidDesktopStartAddr];
   Bit32u pitch = v->banshee.io[io_vidDesktopOverlayStride] & 0x7fff;
@@ -1719,7 +1720,7 @@ void bx_voodoo_c::banshee_mem_write(bx_phy_address addr, unsigned len, void *dat
     } else if (offset < 0x200000) {
       banshee_blt_reg_write((offset >> 2) & 0x7f, value);
     } else if (offset < 0x600000) {
-      register_w_common((offset & 0x1fffff) >> 2, value);
+      register_w_common((offset - 0x200000) >> 2, value);
     } else if (offset < 0x800000) {
       texture_w((offset & 0x1fffff) >> 2, value);
     } else if (offset < 0xc00000) {
@@ -1729,7 +1730,14 @@ void bx_voodoo_c::banshee_mem_write(bx_phy_address addr, unsigned len, void *dat
     } else {
       Bit8u temp = v->fbi.lfb_stride;
       v->fbi.lfb_stride = 11;
-      lfb_w((offset & 0xffffff) >> 2, value, 0xffffffff);
+      if (len == 2) {
+        if ((offset & 3) == 0) {
+          mask = 0x0000ffff;
+        } else {
+          mask = 0xffff0000;
+        }
+      }
+      lfb_w((offset & 0xffffff) >> 2, value, mask);
       v->fbi.lfb_stride = temp;
     }
   } else if ((addr & ~0x1ffffff) == BX_VOODOO_THIS pci_base_address[1]) {
@@ -1749,7 +1757,7 @@ void bx_voodoo_c::banshee_mem_write(bx_phy_address addr, unsigned len, void *dat
             pitch *= 128;
             x = (offset << 0) & ((1 << v->fbi.lfb_stride) - 1);
             y = (offset >> v->fbi.lfb_stride) & 0x7ff;
-            offset = start + y * pitch + x;
+            offset = (start + y * pitch + x) & v->fbi.mask;
           }
           BX_LOCK(render_mutex);
           for (i = 0; i < len; i++) {
@@ -1838,7 +1846,7 @@ void bx_voodoo_c::banshee_agp_reg_write(Bit8u reg, Bit32u value)
       v->fbi.cmdfifo[fifo_idx].count_holes = (((value >> 10) & 1) == 0);
       if (v->fbi.cmdfifo[fifo_idx].enabled != ((value >> 8) & 1)) {
         v->fbi.cmdfifo[fifo_idx].enabled = ((value >> 8) & 1);
-        BX_INFO(("CMDFIFO #%d now %sabled", fifo_idx + 1,
+        BX_INFO(("CMDFIFO #%d now %sabled", fifo_idx,
                  v->fbi.cmdfifo[fifo_idx].enabled ? "en" : "dis"));
       }
       BX_UNLOCK(cmdfifo_mutex);

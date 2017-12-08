@@ -2749,7 +2749,7 @@ void register_w_common(Bit32u offset, Bit32u data)
   Bit32u chips   = (offset>>8) & 0xf;
 
   /* Voodoo 2 CMDFIFO handling */
-  if (v->fbi.cmdfifo[0].enabled) {
+  if ((v->type == VOODOO_2) && v->fbi.cmdfifo[0].enabled) {
     if ((offset & 0x80000) > 0) {
       if (!FBIINIT7_CMDFIFO_MEMORY_STORE(v->reg[fbiInit7].u)) {
         BX_ERROR(("CMDFIFO-to-FIFO mode not supported yet"));
@@ -3019,7 +3019,7 @@ Bit32u register_r(Bit32u offset)
     BX_DEBUG(("Invalid attempt to read %s", v->regnames[regnum]));
     return 0;
   }
-  if (v->fbi.cmdfifo[0].enabled && ((offset & 0x80000) > 0)) {
+  if ((v->type == VOODOO_2) && v->fbi.cmdfifo[0].enabled && ((offset & 0x80000) > 0)) {
     BX_DEBUG(("Invalid attempt to read from CMDFIFO"));
     return 0;
   }
@@ -3061,7 +3061,7 @@ Bit32u register_r(Bit32u offset)
         result |= 1 << 8;
 
       /* bit 9 is overall busy */
-      if ((v->pci.op_pending) || (v->banshee.blt.busy))
+      if (v->pci.op_pending || v->banshee.blt.busy)
         result |= 1 << 9;
 
       if (v->type == VOODOO_2) {
@@ -3401,6 +3401,7 @@ void voodoo_init(Bit8u _type)
   v->reg[fbiInit3].u = (2 << 13) | (0xf << 17);
   v->reg[fbiInit4].u = (1 << 0);
   v->type = _type;
+  v->chipmask = 0x01 | 0x02 | 0x04 | 0x08;
   switch (v->type) {
     case VOODOO_1:
       v->regaccess = voodoo_register_access;
@@ -3421,9 +3422,9 @@ void voodoo_init(Bit8u _type)
       v->regnames = banshee_reg_name;
       v->alt_regmap = 1;
       v->fbi.lfb_stride = 11;
+      v->chipmask = 0x01 | 0x02;
       break;
   }
-  v->chipmask = 0x01 | 0x02 | 0x04 | 0x08;
   memset(v->dac.reg, 0, sizeof(v->dac.reg));
   v->dac.read_result = 0;
   v->dac.clk0_m = 0x37;
