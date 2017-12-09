@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2010-2016  Benjamin D Lunt (fys [at] fysnet [dot] net)
+//  Copyright (C) 2010-2017  Benjamin D Lunt (fys [at] fysnet [dot] net)
 //                2011-2017  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
@@ -558,6 +558,7 @@ private:
 
   static void reset_hc();
   static void reset_port(int);
+  static void reset_port_usb3(int, const int);
   static bx_bool save_hc_state(void);
   static bx_bool restore_hc_state(void);
 

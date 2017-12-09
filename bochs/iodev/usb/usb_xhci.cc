@@ -627,6 +627,28 @@ void bx_usb_xhci_c::reset_port(int p)
   BX_XHCI_THIS hub.usb_port[p].has_been_reset = 0;
 }
 
+void bx_usb_xhci_c::reset_port_usb3(int port, const int reset_type)
+{
+  BX_INFO(("Reset port #%i, type=%i", port + 1, reset_type));
+  BX_XHCI_THIS hub.usb_port[port].portsc.pr = 0;
+  BX_XHCI_THIS hub.usb_port[port].has_been_reset = 1;
+  if (BX_XHCI_THIS hub.usb_port[port].portsc.ccs) {
+    BX_XHCI_THIS hub.usb_port[port].portsc.prc = 1;
+    BX_XHCI_THIS hub.usb_port[port].portsc.pls = PLS_U0;
+    BX_XHCI_THIS hub.usb_port[port].portsc.ped = 1;
+    if (BX_XHCI_THIS hub.usb_port[port].device != NULL) {
+      BX_XHCI_THIS hub.usb_port[port].device->usb_send_msg(USB_MSG_RESET);
+      if (BX_XHCI_THIS hub.usb_port[port].is_usb3 && (reset_type == WARM_RESET))
+        BX_XHCI_THIS hub.usb_port[port].portsc.wrc = 1;
+      BX_XHCI_THIS hub.usb_port[port].portsc.prc = 1;
+    }
+  } else {
+    BX_XHCI_THIS hub.usb_port[port].portsc.pls = PLS_RXDETECT;
+    BX_XHCI_THIS hub.usb_port[port].portsc.ped = 0;
+    BX_XHCI_THIS hub.usb_port[port].portsc.speed = 0;
+  }
+}
+
 /* This is the Save/Restore part of the controller.  The host will issue a save state 
  *  (via a bit in the command register) before it powers down the controller.  The controller
  *  will use the scratch pad buffers (or its own memory if HCSPARAMS2:ScratchPadRestore == 0)
@@ -1367,7 +1389,6 @@ bx_bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *da
   const Bit32u offset = (Bit32u) (addr - BX_XHCI_THIS pci_base_address[0]);
   Bit32u temp;
   int i;
-  bx_bool reset_type;
 
   // modify val and val_hi per len of data to write
   switch (len) {
@@ -1462,6 +1483,13 @@ bx_bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *da
         if (BX_XHCI_THIS hub.op_regs.HcCommand.hcrst) {
           BX_XHCI_THIS reset_hc();
           BX_XHCI_THIS hub.op_regs.HcCommand.hcrst = 0;
+          // the controller will send a reset to all USB 3.0 ports,
+          //  enabling the port if a device is attached.
+          for (int port=0; port<USB_XHCI_PORTS; port++) {
+            if (BX_XHCI_THIS hub.usb_port[port].is_usb3) {
+              reset_port_usb3(port, HOT_RESET);
+            }
+          }
         }
 
         // if run/stop bit cleared, stop command ring
@@ -1617,7 +1645,7 @@ bx_bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *da
           if (BX_XHCI_THIS hub.usb_port[port].is_usb3) {
             BX_XHCI_THIS hub.usb_port[port].portsc.wpr = (value & (1 << 31)) ? 1 : 0;
             BX_XHCI_THIS hub.usb_port[port].portsc.cec = (value & (1 << 23)) ? 1 : 0;
-            BX_XHCI_THIS hub.usb_port[port].portsc.wrc = (value & (1 << 20)) ? 0 : BX_XHCI_THIS hub.usb_port[port].portsc.wrc;
+            BX_XHCI_THIS hub.usb_port[port].portsc.wrc = (value & (1 << 19)) ? 0 : BX_XHCI_THIS hub.usb_port[port].portsc.wrc;
             if (value & (1<<18))
               BX_ERROR(("Write to USB3 port: bit 18"));
           } else {
@@ -1669,25 +1697,7 @@ bx_bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *da
           // if port reset bit is set, reset the port, then enable the port (if ccs == 1).
           if (((value & (1 << 31)) && BX_XHCI_THIS hub.usb_port[port].is_usb3) ||
                (value & (1 << 4))) {
-            reset_type = (value & (1 << 4)) ? HOT_RESET : WARM_RESET;
-            BX_INFO(("Reset port #%i, type=%i", port + 1, reset_type));
-            BX_XHCI_THIS hub.usb_port[port].portsc.pr = 0;
-            BX_XHCI_THIS hub.usb_port[port].has_been_reset = 1;
-            if (BX_XHCI_THIS hub.usb_port[port].portsc.ccs) {
-              BX_XHCI_THIS hub.usb_port[port].portsc.prc = 1;
-              BX_XHCI_THIS hub.usb_port[port].portsc.pls = PLS_U0;
-              BX_XHCI_THIS hub.usb_port[port].portsc.ped = 1;
-              if (BX_XHCI_THIS hub.usb_port[port].device != NULL) {
-                BX_XHCI_THIS hub.usb_port[port].device->usb_send_msg(USB_MSG_RESET);
-                if (BX_XHCI_THIS hub.usb_port[port].is_usb3 && (reset_type == WARM_RESET))
-                  BX_XHCI_THIS hub.usb_port[port].portsc.wrc = 1;
-                BX_XHCI_THIS hub.usb_port[port].portsc.prc = 1;
-              }
-            } else {
-              BX_XHCI_THIS hub.usb_port[port].portsc.pls = PLS_RXDETECT;
-              BX_XHCI_THIS hub.usb_port[port].portsc.ped = 0;
-              BX_XHCI_THIS hub.usb_port[port].portsc.speed = 0;
-            }
+            reset_port_usb3(port, (value & (1 << 4)) ? HOT_RESET : WARM_RESET);
           }
         } else
           BX_XHCI_THIS hub.usb_port[port].portsc.pp = 0;
@@ -2053,25 +2063,26 @@ void bx_usb_xhci_c::process_transfer_ring(const int slot, const int ep)
           break;
 
         // Event TRB
+        // xHCI version 1.10 (Nov 2017), page 184
         case EVENT_DATA:
           if (!spd_occurred || (spd_occurred && !first_event_trb_encountered)) {
             comp_code = (spd_occurred) ? SHORT_PACKET : TRB_SUCCESS;
-            if (spd_occurred && !first_event_trb_encountered) {
-              write_event_TRB(int_target, trb.parameter, 
-                TRB_SET_COMP_CODE(comp_code) | (BX_XHCI_THIS hub.slots[slot].ep_context[ep].edtla & 0x00FFFFFF),
-                TRB_SET_SLOT(slot) | TRB_SET_EP(ep) | TRB_SET_TYPE(TRANS_EVENT) | (1<<2),
-                ioc);
-            } else {
-              write_event_TRB(int_target, trb.parameter, TRB_SET_COMP_CODE(comp_code), 
-                TRB_SET_SLOT(slot) | TRB_SET_EP(ep) | TRB_SET_TYPE(TRANS_EVENT) | (1<<2),
-                ioc);
-            }
-            BX_XHCI_THIS hub.slots[slot].ep_context[ep].edtla = 0;
+            write_event_TRB(int_target, trb.parameter,
+              TRB_SET_COMP_CODE(comp_code) | (BX_XHCI_THIS hub.slots[slot].ep_context[ep].edtla & 0x00FFFFFF),
+              TRB_SET_SLOT(slot) | TRB_SET_EP(ep) | TRB_SET_TYPE(TRANS_EVENT) | (1<<2),
+              ioc);
           }
+
+// in version 1.00+, we need to check the PARSE_ALL_EVENT bit
+// to see if we parse all of them
+#if (((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x00)) && PARSE_ALL_EVENT)
+          first_event_trb_encountered = 0;
+#else
           if (spd_occurred)
             first_event_trb_encountered = 1;
+#endif
 
-          BX_DEBUG(("0x" FORMATADDRESS ": Transfer Ring (slot = %i) (ep = %i) (trnsfrd = %i): Found EVENT_DATA TRB: (returning %i)", 
+          BX_DEBUG(("0x" FORMATADDRESS ": Transfer Ring (slot = %i) (ep = %i) (trnsfrd = %i): Found EVENT_DATA TRB: (returning %i)",
             (bx_phy_address) org_addr, slot, ep, BX_XHCI_THIS hub.slots[slot].ep_context[ep].edtla, comp_code));
           break;
 
