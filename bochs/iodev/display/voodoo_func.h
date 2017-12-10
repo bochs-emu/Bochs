@@ -2500,10 +2500,10 @@ Bit32u cmdfifo_r(cmdfifo_info *f)
 void cmdfifo_process(cmdfifo_info *f)
 {
   Bit32u command, data, mask, nwords, regaddr;
-  Bit8u type, code, nvertex, smode;
+  Bit8u type, code, nvertex, smode, data8;
   bx_bool blt, inc, pcolor;
   voodoo_reg reg;
-  int i;
+  int i, j;
   setup_vertex svert = {0};
 
   command = cmdfifo_r(f);
@@ -2678,13 +2678,24 @@ void cmdfifo_process(cmdfifo_info *f)
       while (nwords--) cmdfifo_r(f);
       break;
     case 5:
-      if ((command & 0x3fc00000) > 0) {
-        BX_ERROR(("CMDFIFO packet type 5: byte disable not supported yet"));
-      }
       nwords = (command >> 3) & 0x7ffff;
       regaddr = (cmdfifo_r(f) & 0xffffff) >> 2;
       code = (command >> 30);
+      if ((command & 0x3fc00000) > 0) {
+        BX_ERROR(("CMDFIFO packet type 5: byte disable not supported yet (dest code = %d)", code));
+      }
       switch (code) {
+        case 0:
+          regaddr <<= 2;
+          for (i = 0; i < (int)nwords; i++) {
+            data = cmdfifo_r(f);
+            for (j = 0; j < 4; j++) {
+              data8 = (data >> (j*8)) & 0xff;
+              v->fbi.ram[regaddr + j] = data8;
+            }
+            regaddr += 4;
+          }
+          break;
         case 2:
           for (i = 0; i < (int)nwords; i++) {
             data = cmdfifo_r(f);

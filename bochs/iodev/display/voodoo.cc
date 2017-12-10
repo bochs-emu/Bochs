@@ -951,11 +951,18 @@ void bx_voodoo_c::update(void)
     start = v->fbi.rgboffs[v->fbi.frontbuf];
     pitch = v->fbi.rowpixels * 2;
   } else {
-    bpp = v->banshee.disp_bpp;
-    start = v->banshee.io[io_vidDesktopStartAddr];
-    pitch = v->banshee.io[io_vidDesktopOverlayStride] & 0x7fff;
-    if (v->banshee.desktop_tiled) {
-      pitch *= 128;
+    if ((v->banshee.io[io_vidProcCfg] & 0x181) == 0x81) {
+      bpp = v->banshee.disp_bpp;
+      start = v->banshee.io[io_vidDesktopStartAddr];
+      pitch = v->banshee.io[io_vidDesktopOverlayStride] & 0x7fff;
+      if (v->banshee.desktop_tiled) {
+        pitch *= 128;
+      }
+    } else {
+      bpp = 16;
+      start = v->fbi.rgboffs[0];
+      pitch = v->fbi.rowpixels * 2;
+      BX_VOODOO_THIS redraw_area(0, 0, BX_VOODOO_THIS s.vdraw.width, BX_VOODOO_THIS s.vdraw.height);
     }
   }
   iWidth = BX_VOODOO_THIS s.vdraw.width;
@@ -1493,7 +1500,7 @@ void bx_voodoo_c::banshee_write_handler(void *this_ptr, Bit32u address, Bit32u v
   switch (reg) {
     case io_lfbMemoryConfig:
       v->banshee.io[reg] = value;
-      v->fbi.lfb_base = (value & 0x1fff) << 13;
+      v->fbi.lfb_base = (value & 0x1fff) << 12;
       v->fbi.lfb_stride = ((value >> 13) & 7) + 10;
       break;
 
