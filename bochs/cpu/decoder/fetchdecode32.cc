@@ -1583,6 +1583,7 @@ bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, unsigned nnn, unsign
       i->setSrcReg(n, nnn);
       break;
     case BX_SRC_RM:
+    case BX_SRC_VECTOR_RM:
       if (i->modC0()) {
         i->setSrcReg(n, rm);
       }
@@ -1648,19 +1649,19 @@ bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bx_bool is_64, unsig
         i->setSrcReg(n, (type == BX_VMM_REG) ? BX_VECTOR_TMP_REGISTER : BX_TMP_REGISTER);
       }
       break;
-#if BX_SUPPORT_EVEX
     case BX_SRC_VECTOR_RM:
       if (i->modC0()) {
         i->setSrcReg(n, rm);
       }
       else {
-        mem_src = BX_TRUE;
         i->setSrcReg(n, BX_VECTOR_TMP_REGISTER);
+#if BX_SUPPORT_EVEX
+        mem_src = BX_TRUE;
         if (n == 0) // zero masking is not allowed for memory destination
           if (i->isZeroMasking()) return BX_FALSE;
+#endif
       }
       break;
-#endif
     case BX_SRC_VVV:
       i->setSrcReg(n, vvv);
       use_vvv = BX_TRUE;
