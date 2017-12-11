@@ -1509,8 +1509,11 @@ unsigned evex_displ8_compression(const bxInstruction_c *i, unsigned ia_opcode, u
     return 1;
   }
 
-  if (ia_opcode == BX_IA_V512_VMOVDDUP_VpdWpd && i->getVL() == BX_VL128)
-    return 8;
+  // VMOVDDUP special case
+  if ((ia_opcode == BX_IA_V512_VMOVDDUP_VpdWpd ||
+       ia_opcode == BX_IA_V512_VMOVDDUP_VpdWpd_Kmask ||
+       ia_opcode == BX_IA_V256_VMOVDDUP_VpdWpd ||
+       ia_opcode == BX_IA_V128_VMOVDDUP_VpdWpd) && i->getVL() == BX_VL128) return 8;
 
   unsigned len = i->getVL();
   if (len == BX_NO_VL) len = BX_VL128;
@@ -1584,7 +1587,6 @@ bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, unsigned nnn, unsign
       i->setSrcReg(n, nnn);
       break;
     case BX_SRC_RM:
-    case BX_SRC_VECTOR_RM:
       if (i->modC0()) {
         i->setSrcReg(n, rm);
       }
@@ -1594,6 +1596,14 @@ bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, unsigned nnn, unsign
         if (type == BX_VMM_REG) tmpreg = BX_VECTOR_TMP_REGISTER;
 #endif
         i->setSrcReg(n, tmpreg);
+      }
+      break;
+    case BX_SRC_VECTOR_RM:
+      if (i->modC0()) {
+        i->setSrcReg(n, rm);
+      }
+      else {
+        i->setSrcReg(n, BX_VECTOR_TMP_REGISTER);
       }
       break;
     default:
