@@ -1513,6 +1513,7 @@ unsigned evex_displ8_compression(const bxInstruction_c *i, unsigned ia_opcode, u
     return 8;
 
   unsigned len = i->getVL();
+  if (len == BX_NO_VL) len = BX_VL128;
 
   switch (type) {
   case BX_VMM_FULL_VECTOR:
