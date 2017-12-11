@@ -208,7 +208,7 @@ enum {
   BX_SRC_EAX = 1,           // the src is AL/AX/EAX/RAX or ST(0) for x87
   BX_SRC_NNN = 2,           // the src should be taken from modrm.nnn
   BX_SRC_RM = 3,            // the src is register or memory reference, register should be taken from modrm.rm
-  BX_SRC_EVEX_RM = 4,       // the src is register or EVEX memory reference, register should be taken from modrm.rm
+  BX_SRC_VECTOR_RM = 4,     // the src is register or EVEX memory reference, register should be taken from modrm.rm
   BX_SRC_VVV = 5,           // the src should be taken from (e)vex.vvv
   BX_SRC_VIB = 6,           // the src should be taken from immediate byte
   BX_SRC_VSIB = 7,          // the src is gather/scatter vector index
@@ -237,18 +237,20 @@ enum {
   // encodings 0xE to 0xF are still free
 };
 
-// to be used together with BX_SRC_EVEX_RM
+// to be used together with BX_SRC_VECTOR_RM
 enum {
-  BX_VMM_FULL_VECTOR = 0,
-  BX_VMM_SCALAR_BYTE = 1,
-  BX_VMM_SCALAR_WORD = 2,
-  BX_VMM_SCALAR = 3,
-  BX_VMM_HALF_VECTOR = 4,
-  BX_VMM_QUARTER_VECTOR = 5,
-  BX_VMM_OCT_VECTOR = 6,
-  BX_VMM_VEC128 = 7,
-  BX_VMM_VEC256 = 8
-  // encodings 0x9 to 0xF are still free
+  BX_VMM_FULL_VECTOR = 0x0,
+  BX_VMM_SCALAR_BYTE = 0x1,
+  BX_VMM_SCALAR_WORD = 0x2,
+  BX_VMM_SCALAR_DWORD = 0x3,
+  BX_VMM_SCALAR_QWORD = 0x4,
+  BX_VMM_SCALAR = 0x5,
+  BX_VMM_HALF_VECTOR = 0x6,
+  BX_VMM_QUARTER_VECTOR = 0x7,
+  BX_VMM_OCT_VECTOR = 0x8,
+  BX_VMM_VEC128 = 0x9,
+  BX_VMM_VEC256 = 0xA
+  // encodings 0xB to 0xF are still free
 };
 
 // immediate forms
@@ -325,7 +327,7 @@ const Bit8u OP_Jq = BX_FORM_SRC(BX_IMM_BrOff64, BX_SRC_IMM);
 
 const Bit8u OP_M  = BX_FORM_SRC(BX_NO_REGISTER, BX_SRC_RM);
 const Bit8u OP_Mt = BX_FORM_SRC(BX_FPU_REG, BX_SRC_RM);
-const Bit8u OP_Mdq = BX_FORM_SRC(BX_VMM_REG, BX_SRC_RM);
+const Bit8u OP_Mdq = BX_FORM_SRC(BX_VMM_FULL_VECTOR, BX_SRC_VECTOR_RM);
 
 const Bit8u OP_Mb = OP_Eb;
 const Bit8u OP_Mw = OP_Ew;
@@ -344,32 +346,32 @@ const Bit8u OP_Vsd = BX_FORM_SRC(BX_VMM_REG, BX_SRC_NNN);
 const Bit8u OP_Vq  = BX_FORM_SRC(BX_VMM_REG, BX_SRC_NNN);
 const Bit8u OP_Vd  = BX_FORM_SRC(BX_VMM_REG, BX_SRC_NNN);
 
-const Bit8u OP_Wq = BX_FORM_SRC(BX_VMM_REG, BX_SRC_RM);
-const Bit8u OP_Wd = BX_FORM_SRC(BX_VMM_REG, BX_SRC_RM);
-const Bit8u OP_Ww = BX_FORM_SRC(BX_VMM_REG, BX_SRC_RM);
-const Bit8u OP_Wb = BX_FORM_SRC(BX_VMM_REG, BX_SRC_RM);
-const Bit8u OP_Wdq = BX_FORM_SRC(BX_VMM_REG, BX_SRC_RM);
-const Bit8u OP_Wps = BX_FORM_SRC(BX_VMM_REG, BX_SRC_RM);
-const Bit8u OP_Wpd = BX_FORM_SRC(BX_VMM_REG, BX_SRC_RM);
-const Bit8u OP_Wss = BX_FORM_SRC(BX_VMM_REG, BX_SRC_RM);
-const Bit8u OP_Wsd = BX_FORM_SRC(BX_VMM_REG, BX_SRC_RM);
+const Bit8u OP_Wq = BX_FORM_SRC(BX_VMM_SCALAR_QWORD, BX_SRC_VECTOR_RM);
+const Bit8u OP_Wd = BX_FORM_SRC(BX_VMM_SCALAR_DWORD, BX_SRC_VECTOR_RM);
+const Bit8u OP_Ww = BX_FORM_SRC(BX_VMM_SCALAR_WORD, BX_SRC_VECTOR_RM);
+const Bit8u OP_Wb = BX_FORM_SRC(BX_VMM_SCALAR_BYTE, BX_SRC_VECTOR_RM);
+const Bit8u OP_Wdq = BX_FORM_SRC(BX_VMM_FULL_VECTOR, BX_SRC_VECTOR_RM);
+const Bit8u OP_Wps = BX_FORM_SRC(BX_VMM_FULL_VECTOR, BX_SRC_VECTOR_RM);
+const Bit8u OP_Wpd = BX_FORM_SRC(BX_VMM_FULL_VECTOR, BX_SRC_VECTOR_RM);
+const Bit8u OP_Wss = BX_FORM_SRC(BX_VMM_SCALAR_DWORD, BX_SRC_VECTOR_RM);
+const Bit8u OP_Wsd = BX_FORM_SRC(BX_VMM_SCALAR_QWORD, BX_SRC_VECTOR_RM);
 
-const Bit8u OP_mVps = BX_FORM_SRC(BX_VMM_FULL_VECTOR, BX_SRC_EVEX_RM);
-const Bit8u OP_mVpd = BX_FORM_SRC(BX_VMM_FULL_VECTOR, BX_SRC_EVEX_RM);
-const Bit8u OP_mVps32 = BX_FORM_SRC(BX_VMM_SCALAR, BX_SRC_EVEX_RM);
-const Bit8u OP_mVpd64 = BX_FORM_SRC(BX_VMM_SCALAR, BX_SRC_EVEX_RM);
-const Bit8u OP_mVdq = BX_FORM_SRC(BX_VMM_FULL_VECTOR, BX_SRC_EVEX_RM);
-const Bit8u OP_mVss = BX_FORM_SRC(BX_VMM_SCALAR, BX_SRC_EVEX_RM);
-const Bit8u OP_mVsd = BX_FORM_SRC(BX_VMM_SCALAR, BX_SRC_EVEX_RM);
-const Bit8u OP_mVdq8 = BX_FORM_SRC(BX_VMM_SCALAR_BYTE, BX_SRC_EVEX_RM);
-const Bit8u OP_mVdq16 = BX_FORM_SRC(BX_VMM_SCALAR_WORD, BX_SRC_EVEX_RM);
-const Bit8u OP_mVdq32 = BX_FORM_SRC(BX_VMM_SCALAR, BX_SRC_EVEX_RM);
-const Bit8u OP_mVdq64 = BX_FORM_SRC(BX_VMM_SCALAR, BX_SRC_EVEX_RM);
-const Bit8u OP_mVHV = BX_FORM_SRC(BX_VMM_HALF_VECTOR, BX_SRC_EVEX_RM);
-const Bit8u OP_mVQV = BX_FORM_SRC(BX_VMM_QUARTER_VECTOR, BX_SRC_EVEX_RM);
-const Bit8u OP_mVOV = BX_FORM_SRC(BX_VMM_OCT_VECTOR, BX_SRC_EVEX_RM);
-const Bit8u OP_mVdq128 = BX_FORM_SRC(BX_VMM_VEC128, BX_SRC_EVEX_RM);
-const Bit8u OP_mVdq256 = BX_FORM_SRC(BX_VMM_VEC256, BX_SRC_EVEX_RM);
+const Bit8u OP_mVps = BX_FORM_SRC(BX_VMM_FULL_VECTOR, BX_SRC_VECTOR_RM);
+const Bit8u OP_mVpd = BX_FORM_SRC(BX_VMM_FULL_VECTOR, BX_SRC_VECTOR_RM);
+const Bit8u OP_mVps32 = BX_FORM_SRC(BX_VMM_SCALAR_DWORD, BX_SRC_VECTOR_RM);
+const Bit8u OP_mVpd64 = BX_FORM_SRC(BX_VMM_SCALAR_QWORD, BX_SRC_VECTOR_RM);
+const Bit8u OP_mVdq = BX_FORM_SRC(BX_VMM_FULL_VECTOR, BX_SRC_VECTOR_RM);
+const Bit8u OP_mVss = BX_FORM_SRC(BX_VMM_SCALAR_DWORD, BX_SRC_VECTOR_RM);
+const Bit8u OP_mVsd = BX_FORM_SRC(BX_VMM_SCALAR_QWORD, BX_SRC_VECTOR_RM);
+const Bit8u OP_mVdq8 = BX_FORM_SRC(BX_VMM_SCALAR_BYTE, BX_SRC_VECTOR_RM);
+const Bit8u OP_mVdq16 = BX_FORM_SRC(BX_VMM_SCALAR_WORD, BX_SRC_VECTOR_RM);
+const Bit8u OP_mVdq32 = BX_FORM_SRC(BX_VMM_SCALAR_DWORD, BX_SRC_VECTOR_RM);
+const Bit8u OP_mVdq64 = BX_FORM_SRC(BX_VMM_SCALAR_QWORD, BX_SRC_VECTOR_RM);
+const Bit8u OP_mVHV = BX_FORM_SRC(BX_VMM_HALF_VECTOR, BX_SRC_VECTOR_RM);
+const Bit8u OP_mVQV = BX_FORM_SRC(BX_VMM_QUARTER_VECTOR, BX_SRC_VECTOR_RM);
+const Bit8u OP_mVOV = BX_FORM_SRC(BX_VMM_OCT_VECTOR, BX_SRC_VECTOR_RM);
+const Bit8u OP_mVdq128 = BX_FORM_SRC(BX_VMM_VEC128, BX_SRC_VECTOR_RM);
+const Bit8u OP_mVdq256 = BX_FORM_SRC(BX_VMM_VEC256, BX_SRC_VECTOR_RM);
 
 const Bit8u OP_VSib = BX_FORM_SRC(BX_VMM_SCALAR, BX_SRC_VSIB);
 

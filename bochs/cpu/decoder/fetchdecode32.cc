@@ -1494,7 +1494,7 @@ int decodeImmediate32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, u
 }
 
 #if BX_SUPPORT_EVEX
-unsigned evex_displ8_compression(bxInstruction_c *i, unsigned ia_opcode, unsigned src, unsigned type, unsigned vex_w)
+unsigned evex_displ8_compression(const bxInstruction_c *i, unsigned ia_opcode, unsigned src, unsigned type, unsigned vex_w)
 {
   if (src == BX_SRC_RM) {
     switch (type) {
@@ -1528,6 +1528,12 @@ unsigned evex_displ8_compression(bxInstruction_c *i, unsigned ia_opcode, unsigne
 
   case BX_VMM_SCALAR_WORD:
     return 2;
+
+  case BX_VMM_SCALAR_DWORD:
+    return 4;
+
+  case BX_VMM_SCALAR_QWORD:
+    return 8;
 
   case BX_VMM_SCALAR:
     return (4 << vex_w);
@@ -1643,11 +1649,8 @@ bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bx_bool is_64, unsig
       }
       break;
 #if BX_SUPPORT_EVEX
-    case BX_SRC_EVEX_RM:
+    case BX_SRC_VECTOR_RM:
       if (i->modC0()) {
-        if (type == BX_KMASK_REG)
-          rm &= 0x7;
-
         i->setSrcReg(n, rm);
       }
       else {

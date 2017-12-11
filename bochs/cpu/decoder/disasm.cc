@@ -34,6 +34,9 @@ extern int fetchDecode32(const Bit8u *fetchPtr, bx_bool is_32, bxInstruction_c *
 #if BX_SUPPORT_X86_64
 extern int fetchDecode64(const Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage);
 #endif
+#if BX_SUPPORT_EVEX
+unsigned evex_displ8_compression(const bxInstruction_c *i, unsigned ia_opcode, unsigned src, unsigned type, unsigned vex_w);
+#endif
 
 // table of all Bochs opcodes
 extern struct bxIAOpcodeTable BxOpcodesTable[];
@@ -173,7 +176,42 @@ char *resolve_memref(char *disbufptr, const bxInstruction_c *i, const char *regn
 
 char *resolve_memsize(char *disbufptr, const bxInstruction_c *i, unsigned src_index, unsigned src_type)
 {
-  if (src_index == BX_SRC_RM) {
+  if (src_index == BX_SRC_VECTOR_RM) {
+    unsigned memsize = evex_displ8_compression(i, i->getIaOpcode(), src_index, src_type, !!i->getVexW());
+    switch(memsize) {
+    case 1:
+      disbufptr = dis_sprintf(disbufptr, "byte ptr ");
+      break;
+
+    case 2:
+      disbufptr = dis_sprintf(disbufptr, "word ptr ");
+      break;
+
+    case 4:
+      disbufptr = dis_sprintf(disbufptr, "dword ptr ");
+      break;
+        
+    case 8:
+      disbufptr = dis_sprintf(disbufptr, "qword ptr ");
+      break;
+
+    case 16:
+      disbufptr = dis_sprintf(disbufptr, "xmmword ptr ");
+      break;
+
+    case 32:
+      disbufptr = dis_sprintf(disbufptr, "ymmword ptr ");
+      break;
+
+    case 64:
+      disbufptr = dis_sprintf(disbufptr, "zmmword ptr ");
+      break;
+
+    default:
+      break;
+    }
+  }
+  else if (src_index == BX_SRC_RM) {
     switch(src_type) {
     case BX_GPR8:
     case BX_GPR8_32:      // 8-bit  memory ref but 32-bit GPR
@@ -569,21 +607,20 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
     unsigned src = (unsigned) BxOpcodesTable[ia_opcode].src[n];
     unsigned src_type = BX_DISASM_SRC_TYPE(src);
     unsigned src_index = BX_DISASM_SRC_ORIGIN(src);
-    if (! src_type && src_index != BX_SRC_RM && src_index != BX_SRC_EVEX_RM) continue;
+    if (! src_type && src_index != BX_SRC_RM && src_index != BX_SRC_VECTOR_RM) continue;
     if (srcs_used++ > 0)
       disbufptr = dis_sprintf(disbufptr, ", ");
 
-    if (! i->modC0() && (src_index == BX_SRC_RM || src_index == BX_SRC_EVEX_RM || src_index == BX_SRC_VSIB)) {
+    if (! i->modC0() && (src_index == BX_SRC_RM || src_index == BX_SRC_VECTOR_RM || src_index == BX_SRC_VSIB)) {
       disbufptr = resolve_memref(disbufptr, i, src_index, src_type);
 #if BX_SUPPORT_EVEX
-      // EVEX.z is ignored for memory destination forms
-      if (n == 0 && (src_index == BX_SRC_EVEX_RM || src_index == BX_SRC_VSIB || src_type == BX_VMM_REG) && i->opmask()) {
+      if (n == 0 && (src_index == BX_SRC_VECTOR_RM || src_index == BX_SRC_VSIB || src_type == BX_VMM_REG) && i->opmask()) {
         disbufptr = dis_sprintf(disbufptr, "{k%d}", i->opmask());
       }
 #endif
     }
     else {
-      if (src_index == BX_SRC_EVEX_RM) src_type = BX_VMM_REG;
+      if (src_index == BX_SRC_VECTOR_RM) src_type = BX_VMM_REG;
 
       if (src_index == BX_SRC_IMM) {
         // this is immediate value (including branch targets)

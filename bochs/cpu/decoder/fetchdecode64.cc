@@ -1211,6 +1211,7 @@ int decoder_vex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
   int vvv = 15 - ((vex >> 3) & 0xf);
   unsigned vex_l = (vex >> 2) & 0x1;
   i->setVL(BX_VL128 + vex_l);
+  i->setVexW(vex_w);
   sse_prefix = vex & 0x3;
 
   if (remain == 0)
@@ -1368,6 +1369,7 @@ int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
   unsigned evex_vl_rc = (evex >> 21) & 0x3;
   i->setRC(evex_vl_rc);
   i->setVL(1 << evex_vl_rc);
+  i->setVexW(vex_w);
 
   unsigned evex_z = (evex >> 23) & 0x1;
   i->setZeroMasking(evex_z);
@@ -1523,6 +1525,7 @@ int decoder_xop64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
   int vvv = 15 - ((vex >> 3) & 0xf);
   unsigned vex_l = (vex >> 2) & 0x1;
   i->setVL(BX_VL128 + vex_l);
+  i->setVexW(vex_w);
   sse_prefix = vex & 0x3;
   if (sse_prefix)
     return(ia_opcode);
