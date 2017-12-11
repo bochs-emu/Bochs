@@ -1256,7 +1256,7 @@ bx_define_opcode(BX_IA_MOVNTDQA_VdqMdq, &BX_CPU_C::MOVAPS_VpsWpsM, &BX_CPU_C::Bx
 // SSE4.1
 
 // SSE4.2
-bx_define_opcode(BX_IA_CRC32_GdEb, &BX_CPU_C::LOAD_Eb, &BX_CPU_C::CRC32_GdEbR, BX_ISA_SSE4_2, OP_Gb, OP_Eb, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_CRC32_GdEb, &BX_CPU_C::LOAD_Eb, &BX_CPU_C::CRC32_GdEbR, BX_ISA_SSE4_2, OP_Gd, OP_Eb, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_CRC32_GdEw, &BX_CPU_C::LOAD_Ew, &BX_CPU_C::CRC32_GdEwR, BX_ISA_SSE4_2, OP_Gd, OP_Ew, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_CRC32_GdEd, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::CRC32_GdEdR, BX_ISA_SSE4_2, OP_Gd, OP_Ed, OP_NONE, OP_NONE, 0)
 #if BX_SUPPORT_X86_64
