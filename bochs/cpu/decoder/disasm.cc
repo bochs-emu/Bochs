@@ -592,13 +592,25 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
   }
 
   // Step 2: print opcode name
-  unsigned opname_len = strlen(opname);
-  for (n=0;n < opname_len; n++) {
-    if (opname[n] == '_') break;
-    disbufptr = dis_putc(disbufptr, tolower(opname[n]));
-  }
 
-  disbufptr = dis_putc(disbufptr, ' ');
+  // special case: MOVLPS opcode in reg form is MOVHLPS
+  //               MOVHPS opcode in reg form is MOVLHPS
+  if ((i->getIaOpcode() == BX_IA_MOVLPS_VpsMq ||
+       i->getIaOpcode() == BX_IA_V128_VMOVLPS_VpsHpsMq ||
+       i->getIaOpcode() == BX_IA_V512_VMOVLPS_VpsHpsMq) && i->modC0())
+    disbufptr = dis_sprintf(disbufptr, "%smovhlps ", (i->getVL() == BX_VL128) ? "v" : "");
+  else if ((i->getIaOpcode() == BX_IA_MOVHPS_VpsMq ||
+         i->getIaOpcode() == BX_IA_V128_VMOVHPS_VpsHpsMq ||
+         i->getIaOpcode() == BX_IA_V512_VMOVHPS_VpsHpsMq) && i->modC0())
+    disbufptr = dis_sprintf(disbufptr, "%smovlhps ", (i->getVL() == BX_VL128) ? "v" : "");
+  else {
+    unsigned opname_len = strlen(opname);
+    for (n=0;n < opname_len; n++) {
+      if (opname[n] == '_') break;
+      disbufptr = dis_putc(disbufptr, tolower(opname[n]));
+    }
+    disbufptr = dis_putc(disbufptr, ' ');
+  }
 
   // Step 3: print sources
   Bit16u ia_opcode = i->getIaOpcode();
