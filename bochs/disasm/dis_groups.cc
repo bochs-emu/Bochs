@@ -24,7 +24,7 @@
 #include "disasm.h"
 #include "osdep.h"
 
-#if BX_DEBUGGER
+#if BX_DEBUGGER && 0
 #include "../bx_debug/debug.h"
 #define SYMBOLIC_JUMP(fmt)  fmt " (%s)"
 #define GET_SYMBOL(addr) bx_dbg_disasm_symbolic_address((addr), 0)
@@ -247,7 +247,7 @@ void disassembler::By(const x86_insn *insn)
 void disassembler::I1(const x86_insn *insn)
 {
   if (! intel_mode) dis_putc('$');
-  dis_putc ('1');
+  dis_sprintf("0x01");
 }
 
 void disassembler::Ib(const x86_insn *insn)
