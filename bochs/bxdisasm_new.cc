@@ -20,6 +20,9 @@
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 /////////////////////////////////////////////////////////////////////////
 
+// Compile using:
+// g++ -I. -I./instrument/stubs -DBX_STANDALONE_DECODER bxdisasm_new.cc cpu/decoder/*.cc -o bxdisasm
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
