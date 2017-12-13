@@ -311,6 +311,8 @@ public:
   BX_CPP_INLINE unsigned getVexW(void) const {
     return modRMForm.Ib[2] & (1 << 4);
   }
+#else
+  BX_CPP_INLINE unsigned getVexW(void) const { return 0; }
 #endif
 
 #if BX_SUPPORT_EVEX

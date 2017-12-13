@@ -110,11 +110,17 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0F3A15[4] = {
 };
 
 // opcode 0F 3A 16
-static const BxOpcodeInfo_t BxOpcodeGroupSSE_0F3A16[4] = {
+static const BxOpcodeInfo_t BxOpcodeGroupSSE_0F3A16[] = {
   /* -- */ { 0, BX_IA_ERROR },
   /* 66 */ { BxImmediate_Ib, BX_IA_PEXTRD_EdVdqIb },
   /* F3 */ { 0, BX_IA_ERROR },
   /* F2 */ { 0, BX_IA_ERROR },
+#if BX_SUPPORT_X86_64
+  /* -- */ { 0, BX_IA_ERROR },
+  /* 66 */ { BxImmediate_Ib, BX_IA_PEXTRQ_EqVdqIb },
+  /* F3 */ { 0, BX_IA_ERROR },
+  /* F2 */ { 0, BX_IA_ERROR },
+#endif
 };
 
 // opcode 0F 3A 17

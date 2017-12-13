@@ -1900,13 +1900,13 @@ static const BxExtOpcodeInfo_t BxOpcodeTableEVEX[256*3*2] = {
   /* 12    */ { 0, BX_IA_ERROR },
   /* 13 k0 */ { 0, BX_IA_ERROR },
   /* 13    */ { 0, BX_IA_ERROR },
-  /* 14 k0 */ { BxPrefixSSE66 | BxImmediate_Ib, BX_IA_V512_VPEXTRB_EbdVdqIb },
+  /* 14 k0 */ { BxPrefixSSE66 | BxVexL0 | BxImmediate_Ib, BX_IA_V512_VPEXTRB_EbdVdqIb },
   /* 14    */ { 0, BX_IA_ERROR }, // #UD
-  /* 15 k0 */ { BxPrefixSSE66 | BxImmediate_Ib, BX_IA_V512_VPEXTRW_EwdVdqIb },
+  /* 15 k0 */ { BxPrefixSSE66 | BxVexL0 | BxImmediate_Ib, BX_IA_V512_VPEXTRW_EwdVdqIb },
   /* 15    */ { 0, BX_IA_ERROR }, // #UD
-  /* 16 k0 */ { BxPrefixSSE66 | BxAliasVexW64 | BxImmediate_Ib, BX_IA_V512_VPEXTRD_EdVdqIb },
+  /* 16 k0 */ { BxPrefixSSE66 | BxVexL0 | BxAliasVexW64 | BxImmediate_Ib, BX_IA_V512_VPEXTRD_EdVdqIb },
   /* 16    */ { 0, BX_IA_ERROR }, // #UD
-  /* 17 k0 */ { BxPrefixSSE66 | BxVexW0 | BxImmediate_Ib, BX_IA_V512_VEXTRACTPS_EdVpsIb },
+  /* 17 k0 */ { BxPrefixSSE66 | BxVexL0 | BxVexW0 | BxImmediate_Ib, BX_IA_V512_VEXTRACTPS_EdVpsIb },
   /* 17    */ { 0, BX_IA_ERROR }, // #UD
   /* 18 k0 */ { BxAliasVexW | BxVexL1 | BxPrefixSSE66 | BxImmediate_Ib, BX_IA_V512_VINSERTF32x4_VpsHpsWpsIb },
   /* 18    */ { BxAliasVexW | BxVexL1 | BxPrefixSSE66 | BxImmediate_Ib, BX_IA_V512_VINSERTF32x4_VpsHpsWpsIb_Kmask },

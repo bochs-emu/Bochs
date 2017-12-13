@@ -1493,7 +1493,6 @@ int decodeImmediate32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, u
   return 0;
 }
 
-#if BX_SUPPORT_EVEX
 unsigned evex_displ8_compression(const bxInstruction_c *i, unsigned ia_opcode, unsigned src, unsigned type, unsigned vex_w)
 {
   if (src == BX_SRC_RM) {
@@ -1510,22 +1509,22 @@ unsigned evex_displ8_compression(const bxInstruction_c *i, unsigned ia_opcode, u
   }
 
   // VMOVDDUP special case
-  if ((ia_opcode == BX_IA_V512_VMOVDDUP_VpdWpd ||
-       ia_opcode == BX_IA_V512_VMOVDDUP_VpdWpd_Kmask ||
-       ia_opcode == BX_IA_V256_VMOVDDUP_VpdWpd ||
-       ia_opcode == BX_IA_V128_VMOVDDUP_VpdWpd) && i->getVL() == BX_VL128) return 8;
+#if BX_SUPPORT_EVEX
+  if ((ia_opcode == BX_IA_V512_VMOVDDUP_VpdWpd || ia_opcode == BX_IA_V512_VMOVDDUP_VpdWpd_Kmask) && (i->getVL() == BX_VL128))
+    return 8;
+#endif
 
   unsigned len = i->getVL();
   if (len == BX_NO_VL) len = BX_VL128;
 
   switch (type) {
   case BX_VMM_FULL_VECTOR:
-    if (i->getEvexb()) { // broadcast
+#if BX_SUPPORT_EVEX
+    if (i->getEvexb()) // broadcast
        return (4 << vex_w);
-    }
-    else {
+    else
+#endif
        return (16 * len);
-    }
 
   case BX_VMM_SCALAR_BYTE:
     return 1;
@@ -1543,19 +1542,23 @@ unsigned evex_displ8_compression(const bxInstruction_c *i, unsigned ia_opcode, u
     return (4 << vex_w);
 
   case BX_VMM_HALF_VECTOR:
-    if (i->getEvexb()) { // broadcast
+#if BX_SUPPORT_EVEX
+    if (i->getEvexb()) // broadcast
        return (4 << vex_w);
-    }
-    else {
+    else
+#endif
        return (8 * len);
-    }
 
   case BX_VMM_QUARTER_VECTOR:
+#if BX_SUPPORT_EVEX
     BX_ASSERT(! i->getEvexb());
+#endif
     return (4 * len);
 
   case BX_VMM_OCT_VECTOR:
+#if BX_SUPPORT_EVEX
     BX_ASSERT(! i->getEvexb());
+#endif
     return (2 * len);
 
   case BX_VMM_VEC128:
@@ -1567,7 +1570,6 @@ unsigned evex_displ8_compression(const bxInstruction_c *i, unsigned ia_opcode, u
 
   return 1;
 }
-#endif
 
 bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, unsigned nnn, unsigned rm)
 {

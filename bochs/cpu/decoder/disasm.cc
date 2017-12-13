@@ -34,9 +34,7 @@ extern int fetchDecode32(const Bit8u *fetchPtr, bx_bool is_32, bxInstruction_c *
 #if BX_SUPPORT_X86_64
 extern int fetchDecode64(const Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage);
 #endif
-#if BX_SUPPORT_EVEX
 unsigned evex_displ8_compression(const bxInstruction_c *i, unsigned ia_opcode, unsigned src, unsigned type, unsigned vex_w);
-#endif
 
 // table of all Bochs opcodes
 extern struct bxIAOpcodeTable BxOpcodesTable[];
@@ -92,9 +90,11 @@ static const char *intel_segment_name[8] = {
     "es",  "cs",  "ss",  "ds",  "fs",  "gs",  "??",  "??"
 };
 
+#if BX_SUPPORT_AVX
 static const char *intel_vector_reg_name[4] = {
      "xmm", "ymm", "???", "zmm"
 };
+#endif
 
 #if BX_SUPPORT_EVEX
 static const char *rounding_mode[4] = {
@@ -595,14 +595,22 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
 
   // special case: MOVLPS opcode in reg form is MOVHLPS
   //               MOVHPS opcode in reg form is MOVLHPS
-  if ((i->getIaOpcode() == BX_IA_MOVLPS_VpsMq ||
-       i->getIaOpcode() == BX_IA_V128_VMOVLPS_VpsHpsMq ||
-       i->getIaOpcode() == BX_IA_V512_VMOVLPS_VpsHpsMq) && i->modC0())
+  if (i->modC0() && (i->getIaOpcode() == BX_IA_MOVLPS_VpsMq 
+#if BX_SUPPORT_AVX
+       || i->getIaOpcode() == BX_IA_V128_VMOVLPS_VpsHpsMq
+       || i->getIaOpcode() == BX_IA_V512_VMOVLPS_VpsHpsMq
+#endif
+    )) {
     disbufptr = dis_sprintf(disbufptr, "%smovhlps ", (i->getVL() == BX_VL128) ? "v" : "");
-  else if ((i->getIaOpcode() == BX_IA_MOVHPS_VpsMq ||
-         i->getIaOpcode() == BX_IA_V128_VMOVHPS_VpsHpsMq ||
-         i->getIaOpcode() == BX_IA_V512_VMOVHPS_VpsHpsMq) && i->modC0())
+  }
+  else if (i->modC0() && (i->getIaOpcode() == BX_IA_MOVHPS_VpsMq
+#if BX_SUPPORT_AVX
+       || i->getIaOpcode() == BX_IA_V128_VMOVHPS_VpsHpsMq
+       || i->getIaOpcode() == BX_IA_V512_VMOVHPS_VpsHpsMq
+#endif
+    )) {
     disbufptr = dis_sprintf(disbufptr, "%smovlhps ", (i->getVL() == BX_VL128) ? "v" : "");
+  }
   else {
     unsigned opname_len = strlen(opname);
     for (n=0;n < opname_len; n++) {

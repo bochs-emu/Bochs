@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2003-2015 Stanislav Shwartsman
+//   Copyright (c) 2003-2017 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -304,19 +304,17 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRW_EwdVdqIbM(bxInstruction_c *
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRD_EdVdqIbR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
+  Bit32u result = op.xmm32u(i->Ib() & 3);
+  BX_WRITE_32BIT_REGZ(i->dst(), result);
+  BX_NEXT_INSTR(i);
+}
 
-#if BX_SUPPORT_X86_64
-  if (i->os64L())  /* 64 bit operand size mode */
-  {
-     Bit64u result = op.xmm64u(i->Ib() & 1);
-     BX_WRITE_64BIT_REG(i->dst(), result);
-  }
-  else
-#endif
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRD_EdVdqIbM(bxInstruction_c *i)
 {
-     Bit32u result = op.xmm32u(i->Ib() & 3);
-     BX_WRITE_32BIT_REGZ(i->dst(), result);
-  }
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
+  Bit32u result = op.xmm32u(i->Ib() & 3);
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+  write_virtual_dword(i->seg(), eaddr, result);
 
   BX_NEXT_INSTR(i);
 }
@@ -325,68 +323,21 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRD_EdVdqIbR(bxInstruction_c *i
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRQ_EqVdqIbR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
-
   Bit64u result = op.xmm64u(i->Ib() & 1);
   BX_WRITE_64BIT_REG(i->dst(), result);
-
-  BX_NEXT_INSTR(i);
-}
-#endif
-
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRD_EdVdqIbM(bxInstruction_c *i)
-{
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
-
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-
-#if BX_SUPPORT_X86_64
-  if (i->os64L())  /* 64 bit operand size mode */
-  {
-     Bit64u result = op.xmm64u(i->Ib() & 1);
-     write_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr), result);
-  }
-  else
-#endif
-{
-     Bit32u result = op.xmm32u(i->Ib() & 3);
-     write_virtual_dword(i->seg(), eaddr, result);
-  }
-
   BX_NEXT_INSTR(i);
 }
 
-#if BX_SUPPORT_X86_64
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRQ_EqVdqIbM(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
-
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
   Bit64u result = op.xmm64u(i->Ib() & 1);
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
   write_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr), result);
 
   BX_NEXT_INSTR(i);
 }
 #endif
-
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::EXTRACTPS_EdVpsIbR(bxInstruction_c *i)
-{
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
-  Bit32u result = op.xmm32u(i->Ib() & 3);
-  BX_WRITE_32BIT_REGZ(i->dst(), result);
-
-  BX_NEXT_INSTR(i);
-}
-
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::EXTRACTPS_EdVpsIbM(bxInstruction_c *i)
-{
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
-  Bit32u result = op.xmm32u(i->Ib() & 3);
-
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-  write_virtual_dword(i->seg(), eaddr, result);
-
-  BX_NEXT_INSTR(i);
-}
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRB_VdqHdqEbIbR(bxInstruction_c *i)
 {
