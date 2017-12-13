@@ -1224,9 +1224,9 @@ static const BxExtOpcodeInfo_t BxOpcodeTableEVEX[256*3*2] = {
   /* C2    */ { BxPrefixSSE4, BX_IA_ERROR, BxOpcodeGroupEVEX_0fc2 },
   /* C3 k0 */ { 0, BX_IA_ERROR },
   /* C3    */ { 0, BX_IA_ERROR },
-  /* C4 k0 */ { BxPrefixSSE66 | BxImmediate_Ib, BX_IA_V512_VPINSRW_VdqEwIb },
+  /* C4 k0 */ { BxPrefixSSE66 | BxVexL0 | BxImmediate_Ib, BX_IA_V512_VPINSRW_VdqEwIb },
   /* C4    */ { 0, BX_IA_ERROR }, // #UD
-  /* C5 k0 */ { BxPrefixSSE66 | BxImmediate_Ib, BX_IA_V512_VPEXTRW_GdUdqIb },
+  /* C5 k0 */ { BxPrefixSSE66 | BxVexL0 | BxImmediate_Ib, BX_IA_V512_VPEXTRW_GdUdqIb },
   /* C5    */ { 0, BX_IA_ERROR }, // #UD
   /* C6 k0 */ { BxPrefixSSE2, BX_IA_ERROR, BxOpcodeGroupEVEX_0fc6 },
   /* C6    */ { BxPrefixSSE2, BX_IA_ERROR, BxOpcodeGroupEVEX_0fc6_Mask },
@@ -1924,11 +1924,11 @@ static const BxExtOpcodeInfo_t BxOpcodeTableEVEX[256*3*2] = {
   /* 1E    */ { BxAliasVexW | BxPrefixSSE66 | BxImmediate_Ib, BX_IA_V512_VPCMPUD_KGwHdqWdqIb },
   /* 1F k0 */ { BxAliasVexW | BxPrefixSSE66 | BxImmediate_Ib, BX_IA_V512_VPCMPD_KGwHdqWdqIb },
   /* 1F    */ { BxAliasVexW | BxPrefixSSE66 | BxImmediate_Ib, BX_IA_V512_VPCMPD_KGwHdqWdqIb },
-  /* 20 k0 */ { BxPrefixSSE66 | BxImmediate_Ib, BX_IA_V512_VPINSRB_VdqEbIb },
+  /* 20 k0 */ { BxPrefixSSE66 | BxVexL0 | BxImmediate_Ib, BX_IA_V512_VPINSRB_VdqEbIb },
   /* 20    */ { 0, BX_IA_ERROR }, // #UD
-  /* 21 k0 */ { BxVexW0 | BxPrefixSSE66 | BxImmediate_Ib, BX_IA_V512_VINSERTPS_VpsWssIb },
+  /* 21 k0 */ { BxPrefixSSE66 | BxVexL0 | BxVexW0 | BxImmediate_Ib, BX_IA_V512_VINSERTPS_VpsWssIb },
   /* 21    */ { 0, BX_IA_ERROR }, // #UD
-  /* 22 k0 */ { BxPrefixSSE66 | BxAliasVexW64 | BxImmediate_Ib, BX_IA_V512_VPINSRD_VdqEdIb },
+  /* 22 k0 */ { BxPrefixSSE66 | BxVexL0  | BxAliasVexW64 | BxImmediate_Ib, BX_IA_V512_VPINSRD_VdqEdIb },
   /* 22    */ { 0, BX_IA_ERROR }, // #UD
   /* 23 k0 */ { BxAliasVexW | BxVexL1 | BxPrefixSSE66 | BxImmediate_Ib, BX_IA_V512_VSHUFF32x4_VpsHpsWpsIb_Kmask },
   /* 23    */ { BxAliasVexW | BxVexL1 | BxPrefixSSE66 | BxImmediate_Ib, BX_IA_V512_VSHUFF32x4_VpsHpsWpsIb_Kmask },
