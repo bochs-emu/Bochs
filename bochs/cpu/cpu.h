@@ -2575,11 +2575,19 @@ public: // for now...
   BX_SMF BX_INSF_TYPE PEXTRW_EwdVdqIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE PEXTRD_EdVdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE PEXTRD_EdVdqIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#if BX_SUPPORT_X86_64
+  BX_SMF BX_INSF_TYPE PEXTRQ_EqVdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE PEXTRQ_EqVdqIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#endif
   BX_SMF BX_INSF_TYPE PINSRB_VdqHdqEbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE PINSRB_VdqHdqEbIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE INSERTPS_VpsHpsWssIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE PINSRD_VdqHdqEdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE PINSRD_VdqHdqEdIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#if BX_SUPPORT_X86_64
+  BX_SMF BX_INSF_TYPE PINSRQ_VdqHdqEqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE PINSRQ_VdqHdqEqIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#endif
   BX_SMF BX_INSF_TYPE DPPS_VpsWpsIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE DPPD_VpdHpdWpdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE MPSADBW_VdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -4249,9 +4257,6 @@ public: // for now...
   BX_SMF BX_INSF_TYPE CVTTSS2SI_GqWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE CVTSD2SI_GqWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE CVTSS2SI_GqWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-
-  BX_SMF BX_INSF_TYPE PEXTRQ_EqVdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE PEXTRQ_EqVdqIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif  // #if BX_SUPPORT_X86_64
 
   BX_SMF BX_INSF_TYPE RDTSCP(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

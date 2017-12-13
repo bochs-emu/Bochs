@@ -1252,6 +1252,9 @@ bx_define_opcode(BX_IA_EXTRACTPS_EdVpsIb, &BX_CPU_C::PEXTRD_EdVdqIbM, &BX_CPU_C:
 bx_define_opcode(BX_IA_PINSRB_VdqEbIb, &BX_CPU_C::PINSRB_VdqHdqEbIbM, &BX_CPU_C::PINSRB_VdqHdqEbIbR, BX_ISA_SSE4_1, OP_Vdq, OP_Vdq, OP_Ew, OP_Ib, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_INSERTPS_VpsWssIb, &BX_CPU_C::INSERTPS_VpsHpsWssIb, &BX_CPU_C::INSERTPS_VpsHpsWssIb, BX_ISA_SSE4_1, OP_Vps, OP_Vps, OP_Wss, OP_Ib, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_PINSRD_VdqEdIb, &BX_CPU_C::PINSRD_VdqHdqEdIbM, &BX_CPU_C::PINSRD_VdqHdqEdIbR, BX_ISA_SSE4_1, OP_Vdq, OP_Vdq, OP_Ed, OP_Ib, BX_PREPARE_SSE)
+#if BX_SUPPORT_X86_64
+bx_define_opcode(BX_IA_PINSRQ_VdqEqIb, &BX_CPU_C::PINSRQ_VdqHdqEqIbM, &BX_CPU_C::PINSRQ_VdqHdqEqIbR, BX_ISA_SSE4_1, OP_Vdq, OP_Vdq, OP_Eq, OP_Ib, BX_PREPARE_SSE)
+#endif
 bx_define_opcode(BX_IA_DPPS_VpsWpsIb, &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::DPPS_VpsWpsIbR, BX_ISA_SSE4_1, OP_Vps, OP_Wps, OP_Ib, OP_NONE, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_DPPD_VpdWpdIb, &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::DPPD_VpdHpdWpdIbR, BX_ISA_SSE4_1, OP_Vpd, OP_Vpd, OP_Wpd, OP_Ib, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_MPSADBW_VdqWdqIb, &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::MPSADBW_VdqWdqIbR, BX_ISA_SSE4_1, OP_Vdq, OP_Wdq, OP_Ib, OP_NONE, BX_PREPARE_SSE)
@@ -2269,7 +2272,7 @@ bx_define_opcode(BX_IA_BEXTR_GqEqBq, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::BEXTR_GqEqBq
 
 // BMI2 - VexW64 aliased
 bx_define_opcode(BX_IA_MULX_GdBdEd, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::MULX_GdBdEdR, BX_ISA_BMI2, OP_Gd, OP_Bd, OP_Ed, OP_NONE, 0)
-bx_define_opcode(BX_IA_MULX_GqBqEq, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::MULX_GqBqEqR, BX_ISA_BMI2, OP_Gq, OP_Bq, OP_Ed, OP_NONE, 0)
+bx_define_opcode(BX_IA_MULX_GqBqEq, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::MULX_GqBqEqR, BX_ISA_BMI2, OP_Gq, OP_Bq, OP_Eq, OP_NONE, 0)
 bx_define_opcode(BX_IA_RORX_GdEdIb, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::RORX_GdEdIbR, BX_ISA_BMI2, OP_Gd, OP_Ed, OP_Ib, OP_NONE, 0)
 bx_define_opcode(BX_IA_RORX_GqEqIb, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::RORX_GqEqIbR, BX_ISA_BMI2, OP_Gq, OP_Eq, OP_Ib, OP_NONE, 0)
 bx_define_opcode(BX_IA_SHLX_GdEdBd, &BX_CPU_C::LOAD_Ed, &BX_CPU_C::SHLX_GdEdBdR, BX_ISA_BMI2, OP_Gd, OP_Ed, OP_Bd, OP_NONE, 0)

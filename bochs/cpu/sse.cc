@@ -394,17 +394,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INSERTPS_VpsHpsWssIb(bxInstruction
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRD_VdqHdqEdIbR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
-
-#if BX_SUPPORT_X86_64
-  if (i->os64L()) { /* 64 bit operand size mode */
-    op1.xmm64u(i->Ib() & 1) = BX_READ_64BIT_REG(i->src2());
-  }
-  else
-#endif
-  {
-    op1.xmm32u(i->Ib() & 3) = BX_READ_32BIT_REG(i->src2());
-  }
-
+  op1.xmm32u(i->Ib() & 3) = BX_READ_32BIT_REG(i->src2());
   BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
 
   BX_NEXT_INSTR(i);
@@ -415,23 +405,35 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRD_VdqHdqEdIbM(bxInstruction_c
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+  Bit32u op2 = read_virtual_dword(i->seg(), eaddr);
+  op1.xmm32u(i->Ib() & 3) = op2;
+
+  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
+  BX_NEXT_INSTR(i);
+}
 
 #if BX_SUPPORT_X86_64
-  if (i->os64L()) {  /* 64 bit operand size mode */
-    Bit64u op2 = read_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
-    op1.xmm64u(i->Ib() & 1) = op2;
-  }
-  else
-#endif
-  {
-    Bit32u op2 = read_virtual_dword(i->seg(), eaddr);
-    op1.xmm32u(i->Ib() & 3) = op2;
-  }
-
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRQ_VdqHdqEqIbR(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+  op1.xmm64u(i->Ib() & 1) = BX_READ_64BIT_REG(i->src2());
   BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
 
   BX_NEXT_INSTR(i);
 }
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRQ_VdqHdqEqIbM(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+  Bit64u op2 = read_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
+  op1.xmm64u(i->Ib() & 1) = op2;
+
+  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
+  BX_NEXT_INSTR(i);
+}
+#endif
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MPSADBW_VdqWdqIbR(bxInstruction_c *i)
 {
