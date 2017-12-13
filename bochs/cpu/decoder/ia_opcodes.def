@@ -1434,7 +1434,7 @@ bx_define_opcode(BX_IA_MOVZX_GqEb, &BX_CPU_C::MOVZX_GqEbM, &BX_CPU_C::MOVZX_GqEb
 bx_define_opcode(BX_IA_MOVZX_GqEw, &BX_CPU_C::MOVZX_GqEwM, &BX_CPU_C::MOVZX_GqEwR, 0, OP_Gq, OP_Ew, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_MOVSX_GqEb, &BX_CPU_C::MOVSX_GqEbM, &BX_CPU_C::MOVSX_GqEbR, 0, OP_Gq, OP_Eb, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_MOVSX_GqEw, &BX_CPU_C::MOVSX_GqEwM, &BX_CPU_C::MOVSX_GqEwR, 0, OP_Gq, OP_Ew, OP_NONE, OP_NONE, 0)
-bx_define_opcode(BX_IA_MOVSX_GqEd, &BX_CPU_C::MOVSX_GqEdM, &BX_CPU_C::MOVSX_GqEdR, 0, OP_Gq, OP_Ed, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_MOVSXD_GqEd, &BX_CPU_C::MOVSX_GqEdM, &BX_CPU_C::MOVSX_GqEdR, 0, OP_Gq, OP_Ed, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_BSWAP_RRX, NULL, &BX_CPU_C::BSWAP_RRX, 0, OP_Eq, OP_NONE, OP_NONE, OP_NONE, 0)
 
 bx_define_opcode(BX_IA_BSF_GqEq, &BX_CPU_C::LOAD_Eq, &BX_CPU_C::BSF_GqEqR, 0, OP_Gq, OP_Eq, OP_NONE, OP_NONE, 0)

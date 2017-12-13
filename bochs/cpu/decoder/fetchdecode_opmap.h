@@ -583,7 +583,7 @@ static const BxOpcodeInfo_t BxOpcodeTable63_32[] = {
 static const BxOpcodeInfo_t BxOpcodeTable63_64[] = {
   /* 63 /w */ { 0, BX_IA_MOV_GwEw },        // MOVSX_GwEw
   /* 63 /d */ { 0, BX_IA_MOV_Op64_GdEd },   // MOVSX_GdEd
-  /* 63 /q */ { 0, BX_IA_MOVSX_GqEd },
+  /* 63 /q */ { 0, BX_IA_MOVSXD_GqEd },
 };
 #endif
 
