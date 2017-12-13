@@ -1879,6 +1879,40 @@ void register_w(Bit32u offset, Bit32u data, bx_bool log)
       }
       break;
 
+    case colBufferAddr: /* Banshee */
+      if (v->type >= VOODOO_BANSHEE && (chips & 1)) {
+        v->fbi.rgboffs[1] = data & v->fbi.mask & ~0x0f;
+      }
+      break;
+
+    case colBufferStride: /* Banshee */
+      if (v->type >= VOODOO_BANSHEE && (chips & 1)) {
+        if (data & 0x8000)
+          v->fbi.rowpixels = (data & 0x7f) << 6;
+        else
+          v->fbi.rowpixels = (data & 0x3fff) >> 1;
+      }
+      break;
+
+    case auxBufferAddr: /* Banshee */
+      if (v->type >= VOODOO_BANSHEE && (chips & 1)) {
+        v->fbi.auxoffs = data & v->fbi.mask & ~0x0f;
+      }
+      break;
+
+    case auxBufferStride: /* Banshee */
+      if (v->type >= VOODOO_BANSHEE && (chips & 1)) {
+        Bit32u rowpixels;
+
+        if (data & 0x8000)
+          rowpixels = (data & 0x7f) << 6;
+        else
+          rowpixels = (data & 0x3fff) >> 1;
+        if (v->fbi.rowpixels != rowpixels)
+          BX_PANIC(("aux buffer stride differs from color buffer stride"));
+      }
+      break;
+
     /* these registers are referenced in the renderer; we must wait for pending work before changing */
     case chromaRange:
     case chromaKey:

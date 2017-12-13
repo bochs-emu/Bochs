@@ -116,6 +116,7 @@ private:
   void   banshee_blt_screen_to_screen(void);
   void   banshee_blt_screen_to_screen_pattern(void);
   void   banshee_blt_host_to_screen(void);
+  void   banshee_blt_host_to_screen_pattern(void);
   void   banshee_blt_line(bx_bool pline);
 };
 

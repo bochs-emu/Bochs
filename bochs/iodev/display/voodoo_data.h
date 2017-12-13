@@ -1765,6 +1765,8 @@ struct _banshee_info
     Bit16u dst_y;
     Bit16u dst_w;
     Bit16u dst_h;
+    Bit8u fgcolor[4];
+    Bit8u bgcolor[4];
     Bit16u clipx0[2];
     Bit16u clipy0[2];
     Bit16u clipx1[2];

@@ -1748,8 +1748,8 @@ void bx_voodoo_c::banshee_mem_write(bx_phy_address addr, unsigned len, void *dat
       v->fbi.lfb_stride = temp;
     }
   } else if ((addr & ~0x1ffffff) == BX_VOODOO_THIS pci_base_address[1]) {
-    offset &= v->fbi.mask;
     if (offset < v->fbi.lfb_base) {
+      offset &= v->fbi.mask;
       if (v->fbi.cmdfifo[0].enabled && (offset >= v->fbi.cmdfifo[0].base) &&
           (offset < v->fbi.cmdfifo[0].end)) {
         cmdfifo_w(&v->fbi.cmdfifo[0], offset, value);
@@ -2006,6 +2006,18 @@ void bx_voodoo_c::banshee_blt_reg_write(Bit8u reg, Bit32u value)
       BLT.src_x = BLT.reg[reg] & 0x1fff;
       BLT.src_y = (BLT.reg[reg] >> 16) & 0x1fff;
       break;
+    case blt_colorBack:
+      BLT.bgcolor[0] = BLT.reg[reg] & 0xff;
+      BLT.bgcolor[1] = (BLT.reg[reg] >> 8) & 0xff;
+      BLT.bgcolor[2] = (BLT.reg[reg] >> 16) & 0xff;
+      BLT.bgcolor[3] = (BLT.reg[reg] >> 24) & 0xff;
+      break;
+    case blt_colorFore:
+      BLT.fgcolor[0] = BLT.reg[reg] & 0xff;
+      BLT.fgcolor[1] = (BLT.reg[reg] >> 8) & 0xff;
+      BLT.fgcolor[2] = (BLT.reg[reg] >> 16) & 0xff;
+      BLT.fgcolor[3] = (BLT.reg[reg] >> 24) & 0xff;
+      break;
     case blt_dstSize:
       BLT.dst_w = BLT.reg[reg] & 0x1fff;
       BLT.dst_h = (BLT.reg[reg] >> 16) & 0x1fff;
@@ -2162,7 +2174,11 @@ void bx_voodoo_c::banshee_blt_execute()
     case 3:
       if (!BLT.immed) {
         BLT.busy = 1;
-        banshee_blt_host_to_screen();
+        if (BLT.rop_flags[BLT.rop0] & BX_ROP_PATTERN) {
+          banshee_blt_host_to_screen_pattern();
+        } else {
+          banshee_blt_host_to_screen();
+        }
         delete [] BLT.lamem;
         BLT.lamem = NULL;
       } else {
@@ -2332,7 +2348,6 @@ void bx_voodoo_c::banshee_blt_rectangle_fill()
   Bit8u dpxsize = (BLT.dst_fmt > 1) ? (BLT.dst_fmt - 1) : 1;
   Bit8u *dst_ptr = &v->fbi.ram[BLT.dst_base];
   Bit8u *dst_ptr1;
-  Bit8u color[4];
   int x, y, x1, y1, w, h;
 
   BX_LOCK(render_mutex);
@@ -2342,15 +2357,11 @@ void bx_voodoo_c::banshee_blt_rectangle_fill()
   h = BLT.dst_h;
   BX_DEBUG(("Rectangle fill: %d x %d  ROP %02X", w, h, BLT.rop0));
   banshee_blt_apply_clipwindow(NULL, NULL, &x1, &y1, &w, &h);
-  color[0] = BLT.reg[blt_colorFore] & 0xff;
-  color[1] = (BLT.reg[blt_colorFore] >> 8) & 0xff;
-  color[2] = (BLT.reg[blt_colorFore] >> 16) & 0xff;
-  color[3] = (BLT.reg[blt_colorFore] >> 24) & 0xff;
   dst_ptr += (y1 * dpitch + x1 * dpxsize);
   for (y = y1; y < (y1 + h); y++) {
     dst_ptr1 = dst_ptr;
     for (x = x1; x < (x1 + w); x++) {
-      BLT.rop_fn(dst_ptr1, color, dpitch, dpxsize, dpxsize, 1);
+      BLT.rop_fn(dst_ptr1, BLT.fgcolor, dpitch, dpxsize, dpxsize, 1);
       dst_ptr1 += dpxsize;
     }
     dst_ptr += dpitch;
@@ -2367,7 +2378,7 @@ void bx_voodoo_c::banshee_blt_pattern_fill_mono()
   Bit8u *pat_ptr = &BLT.cpat[0][0];
   Bit8u *dst_ptr1, *pat_ptr1;
   bx_bool patrow0 = (BLT.reg[blt_commandExtra] & 0x08) > 0;
-  Bit8u *color, fgcolor[4], bgcolor[4];
+  Bit8u *color;
   int x, y, x0, y0, x1, y1, w, h;
   Bit8u mask, patcol, patline;
   bx_bool set;
@@ -2381,14 +2392,6 @@ void bx_voodoo_c::banshee_blt_pattern_fill_mono()
   x0 = 0;
   y0 = 0;
   banshee_blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h);
-  fgcolor[0] = BLT.reg[blt_colorFore] & 0xff;
-  fgcolor[1] = (BLT.reg[blt_colorFore] >> 8) & 0xff;
-  fgcolor[2] = (BLT.reg[blt_colorFore] >> 16) & 0xff;
-  fgcolor[3] = (BLT.reg[blt_colorFore] >> 24) & 0xff;
-  bgcolor[0] = BLT.reg[blt_colorBack] & 0xff;
-  bgcolor[1] = (BLT.reg[blt_colorBack] >> 8) & 0xff;
-  bgcolor[2] = (BLT.reg[blt_colorBack] >> 16) & 0xff;
-  bgcolor[3] = (BLT.reg[blt_colorBack] >> 24) & 0xff;
   dst_ptr += (y1 * dpitch + x1 * dpxsize);
   patcol = (x0 + BLT.patsx) & 7;
   patline = (y0 + BLT.patsy) & 7;
@@ -2399,9 +2402,9 @@ void bx_voodoo_c::banshee_blt_pattern_fill_mono()
     for (x = x1; x < (x1 + w); x++) {
       set = (*pat_ptr1 & mask) > 0;
       if (set) {
-        color = &fgcolor[0];
+        color = &BLT.fgcolor[0];
       } else {
-        color = &bgcolor[0];
+        color = &BLT.bgcolor[0];
       }
       if ((set) || !BLT.transp) {
         BLT.rop_fn(dst_ptr1, color, dpitch, dpxsize, dpxsize, 1);
@@ -2484,7 +2487,6 @@ void bx_voodoo_c::banshee_blt_screen_to_screen()
   int spitch = BLT.src_pitch;
   int dpitch = BLT.dst_pitch;
   int x0, x1, y0, y1, w, h;
-  Bit8u rop0;
 
   BX_LOCK(render_mutex);
   x0 = BLT.src_x;
@@ -2493,8 +2495,7 @@ void bx_voodoo_c::banshee_blt_screen_to_screen()
   y1 = BLT.dst_y;
   w = BLT.dst_w;
   h = BLT.dst_h;
-  rop0 = BLT.rop0;
-  BX_DEBUG(("Screen to screen blt: %d x %d  ROP %02X", w, h, rop0));
+  BX_DEBUG(("Screen to screen blt: %d x %d  ROP %02X", w, h, BLT.rop0));
   banshee_blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h);
   if (BLT.y_dir) {
     spitch *= -1;
@@ -2518,7 +2519,7 @@ void bx_voodoo_c::banshee_blt_screen_to_screen_pattern()
   int dpitch = BLT.dst_pitch;
   bx_bool patmono = (BLT.reg[blt_command] >> 13) & 1;
   bx_bool patrow0 = (BLT.reg[blt_commandExtra] & 0x08) > 0;
-  Bit8u fgcolor[4], bgcolor[4], dstcolor[4];
+  Bit8u dstcolor[4];
   Bit8u *patcolor;
   int x, x0, x1, y, y0, y1, w, h;
   Bit8u pmask = 0, rop0, patcol, patline;
@@ -2541,14 +2542,6 @@ void bx_voodoo_c::banshee_blt_screen_to_screen_pattern()
     spitch *= -1;
     dpitch *= -1;
   }
-  fgcolor[0] = BLT.reg[blt_colorFore] & 0xff;
-  fgcolor[1] = (BLT.reg[blt_colorFore] >> 8) & 0xff;
-  fgcolor[2] = (BLT.reg[blt_colorFore] >> 16) & 0xff;
-  fgcolor[3] = (BLT.reg[blt_colorFore] >> 24) & 0xff;
-  bgcolor[0] = BLT.reg[blt_colorBack] & 0xff;
-  bgcolor[1] = (BLT.reg[blt_colorBack] >> 8) & 0xff;
-  bgcolor[2] = (BLT.reg[blt_colorBack] >> 16) & 0xff;
-  bgcolor[3] = (BLT.reg[blt_colorBack] >> 24) & 0xff;
   src_ptr += (y0 * abs(spitch) + x0 * dpxsize);
   dst_ptr += (y1 * abs(dpitch) + x1 * dpxsize);
   patcol = (x0 - BLT.src_x + BLT.patsx) & 7;
@@ -2571,11 +2564,11 @@ void bx_voodoo_c::banshee_blt_screen_to_screen_pattern()
       if (patmono) {
         set = (*pat_ptr & pmask) > 0;
         if (set) {
-          patcolor = &fgcolor[0];
+          patcolor = &BLT.fgcolor[0];
         } else if (BLT.transp) {
           patcolor = dstcolor;
         } else {
-          patcolor = &bgcolor[0];
+          patcolor = &BLT.bgcolor[0];
         }
       } else {
         patcolor = pat_ptr2;
@@ -2626,6 +2619,82 @@ void bx_voodoo_c::banshee_blt_host_to_screen()
   Bit8u dpxsize = (BLT.dst_fmt > 1) ? (BLT.dst_fmt - 1) : 1;
   Bit8u *dst_ptr = &v->fbi.ram[BLT.dst_base];
   Bit8u *src_ptr = &BLT.lamem[0];
+  Bit8u *src_ptr1, *dst_ptr1;
+  Bit16u spitch = BLT.h2s_pitch;
+  Bit8u srcfmt = (BLT.reg[blt_srcFormat] >> 16) & 0x0f;
+  Bit8u spxsize = 0;
+  Bit8u dstcolor[4];
+  Bit8u *srccolor;
+  int x, y, x0, y0, x1, y1, w, h;
+  Bit8u smask;
+  bx_bool set;
+
+  BX_LOCK(render_mutex);
+  x1 = BLT.dst_x;
+  y1 = BLT.dst_y;
+  w = BLT.dst_w;
+  h = BLT.dst_h;
+  BX_DEBUG(("Host to screen blt: %d x %d  ROP %02X", w, h, BLT.rop0));
+  x0 = 0;
+  y0 = 0;
+  banshee_blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h);
+  if (srcfmt == 0) {
+    x0 += BLT.h2s_pxstart;
+    src_ptr += (y0 * spitch + x0 / 8);
+  } else {
+    if (srcfmt == 1) {
+      spxsize = 1;
+    } else if ((srcfmt >= 3) && (srcfmt <= 5)) {
+      spxsize = srcfmt - 1;
+    } else {
+      spxsize = 4;
+    }
+    src_ptr += (y0 * spitch + x0 * spxsize + BLT.h2s_pxstart);
+  }
+  dst_ptr += (y1 * dpitch + x1 * dpxsize);
+  for (y = y1; y < (y1 + h); y++) {
+    src_ptr1 = src_ptr;
+    dst_ptr1 = dst_ptr;
+    smask = 0x80 >> (x0 & 7);
+    for (x = x1; x < (x1 + w); x++) {
+      if (srcfmt == 0) {
+        memcpy(dstcolor, dst_ptr1, dpxsize);
+        set = (*src_ptr1 & smask) > 0;
+        if (set) {
+          srccolor = &BLT.fgcolor[0];
+        } else if (BLT.transp) {
+          srccolor = dstcolor;
+        } else {
+          srccolor = &BLT.bgcolor[0];
+        }
+        BLT.rop_fn(dst_ptr1, srccolor, dpitch, dpxsize, dpxsize, 1);
+      } else {
+        BLT.rop_fn(dst_ptr1, src_ptr1, dpitch, dpxsize, dpxsize, 1);
+      }
+      if (srcfmt == 0) {
+        smask >>= 1;
+        if (smask == 0) {
+          src_ptr1++;
+          smask = 0x80;
+        }
+      } else {
+        src_ptr1 += spxsize;
+      }
+      dst_ptr1 += dpxsize;
+    }
+    src_ptr += spitch;
+    dst_ptr += dpitch;
+  }
+  banshee_blt_complete();
+  BX_UNLOCK(render_mutex);
+}
+
+void bx_voodoo_c::banshee_blt_host_to_screen_pattern()
+{
+  Bit32u dpitch = BLT.dst_pitch;
+  Bit8u dpxsize = (BLT.dst_fmt > 1) ? (BLT.dst_fmt - 1) : 1;
+  Bit8u *dst_ptr = &v->fbi.ram[BLT.dst_base];
+  Bit8u *src_ptr = &BLT.lamem[0];
   Bit8u *src_ptr1, *dst_ptr1, *pat_ptr1, *pat_ptr2 = NULL;
   Bit8u *pat_ptr = &BLT.cpat[0][0];
   Bit16u spitch = BLT.h2s_pitch;
@@ -2633,10 +2702,10 @@ void bx_voodoo_c::banshee_blt_host_to_screen()
   bx_bool patmono = (BLT.reg[blt_command] >> 13) & 1;
   bx_bool patrow0 = (BLT.reg[blt_commandExtra] & 0x08) > 0;
   Bit8u spxsize = 0;
-  Bit8u fgcolor[4], bgcolor[4], dstcolor[4];
+  Bit8u dstcolor[4];
   Bit8u *srccolor, *patcolor;
   int x, y, x0, y0, x1, y1, w, h;
-  Bit8u smask, pmask = 0, rop0, ropflag, patcol, patline;
+  Bit8u smask, pmask = 0, rop0, patcol, patline;
   bx_bool set;
 
   BX_LOCK(render_mutex);
@@ -2645,19 +2714,10 @@ void bx_voodoo_c::banshee_blt_host_to_screen()
   w = BLT.dst_w;
   h = BLT.dst_h;
   rop0 = BLT.rop0;
-  ropflag = BLT.rop_flags[rop0];
-  BX_DEBUG(("Host to screen blt: %d x %d  ROP %02X", w, h, rop0));
+  BX_DEBUG(("Host to screen pattern blt: %d x %d  ROP %02X", w, h, rop0));
   x0 = 0;
   y0 = 0;
   banshee_blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h);
-  fgcolor[0] = BLT.reg[blt_colorFore] & 0xff;
-  fgcolor[1] = (BLT.reg[blt_colorFore] >> 8) & 0xff;
-  fgcolor[2] = (BLT.reg[blt_colorFore] >> 16) & 0xff;
-  fgcolor[3] = (BLT.reg[blt_colorFore] >> 24) & 0xff;
-  bgcolor[0] = BLT.reg[blt_colorBack] & 0xff;
-  bgcolor[1] = (BLT.reg[blt_colorBack] >> 8) & 0xff;
-  bgcolor[2] = (BLT.reg[blt_colorBack] >> 16) & 0xff;
-  bgcolor[3] = (BLT.reg[blt_colorBack] >> 24) & 0xff;
   if (srcfmt == 0) {
     x0 += BLT.h2s_pxstart;
     src_ptr += (y0 * spitch + x0 / 8);
@@ -2693,35 +2753,27 @@ void bx_voodoo_c::banshee_blt_host_to_screen()
         memcpy(dstcolor, dst_ptr1, dpxsize);
         set = (*src_ptr1 & smask) > 0;
         if (set) {
-          srccolor = &fgcolor[0];
+          srccolor = &BLT.fgcolor[0];
         } else if (BLT.transp) {
           srccolor = dstcolor;
         } else {
-          srccolor = &bgcolor[0];
+          srccolor = &BLT.bgcolor[0];
         }
-        if ((ropflag & BX_ROP_PATTERN) == 0) {
-          BLT.rop_fn(dst_ptr1, srccolor, dpitch, dpxsize, dpxsize, 1);
-        } else {
-          if (patmono) {
-            set = (*pat_ptr1 & pmask) > 0;
-            if (set) {
-              patcolor = &fgcolor[0];
-            } else if (BLT.transp) {
-              patcolor = dstcolor;
-            } else {
-              patcolor = &bgcolor[0];
-            }
+        if (patmono) {
+          set = (*pat_ptr1 & pmask) > 0;
+          if (set) {
+            patcolor = &BLT.fgcolor[0];
+          } else if (BLT.transp) {
+            patcolor = dstcolor;
           } else {
-            patcolor = pat_ptr2;
+            patcolor = &BLT.bgcolor[0];
           }
-          bx_ternary_rop(rop0, dst_ptr1, srccolor, patcolor, dpxsize);
-        }
-      } else {
-        if ((ropflag & BX_ROP_PATTERN) == 0) {
-          BLT.rop_fn(dst_ptr1, src_ptr1, dpitch, dpxsize, dpxsize, 1);
         } else {
-          BX_INFO(("Host to screen blt: %d x %d  ROP %02X (color source) not supported yet", w, h, rop0));
+          patcolor = pat_ptr2;
         }
+        bx_ternary_rop(rop0, dst_ptr1, srccolor, patcolor, dpxsize);
+      } else {
+        BX_INFO(("Host to screen pattern blt: %d x %d  ROP %02X (color source) not supported yet", w, h, rop0));
       }
       if (srcfmt == 0) {
         smask >>= 1;
@@ -2776,7 +2828,6 @@ void bx_voodoo_c::banshee_blt_line(bx_bool pline)
   Bit8u dpxsize = (BLT.dst_fmt > 1) ? (BLT.dst_fmt - 1) : 1;
   Bit8u *dst_ptr = &v->fbi.ram[BLT.dst_base];
   Bit8u *dst_ptr1;
-  Bit8u color[4];
   int i, deltax, deltay, numpixels, d, dinc1, dinc2;
   int x, xinc1, xinc2, y, yinc1, yinc2;
   int x0, y0, x1, y1, cx0, cx1, cy0, cy1;
@@ -2794,10 +2845,6 @@ void bx_voodoo_c::banshee_blt_line(bx_bool pline)
   cy0 = BLT.clipy0[BLT.clip_sel];
   cx1 = BLT.clipx1[BLT.clip_sel];
   cy1 = BLT.clipy1[BLT.clip_sel];
-  color[0] = BLT.reg[blt_colorFore] & 0xff;
-  color[1] = (BLT.reg[blt_colorFore] >> 8) & 0xff;
-  color[2] = (BLT.reg[blt_colorFore] >> 16) & 0xff;
-  color[3] = (BLT.reg[blt_colorFore] >> 24) & 0xff;
   deltax = abs(x1 - x0);
   deltay = abs(y1 - y0);
   if (deltax >= deltay) {
@@ -2834,7 +2881,7 @@ void bx_voodoo_c::banshee_blt_line(bx_bool pline)
   for (i = 0; i < (numpixels - 1); i++) {
     if ((x >= cx0) && (x < cx1) && (y >= cy0) && (y < cy1)) {
       dst_ptr1 = dst_ptr + y * dpitch + x * dpxsize;
-      BLT.rop_fn(dst_ptr1, color, dpitch, dpxsize, dpxsize, 1);
+      BLT.rop_fn(dst_ptr1, BLT.fgcolor, dpitch, dpxsize, dpxsize, 1);
     }
     if (d < 0) {
       d = d + dinc1;
@@ -2849,7 +2896,7 @@ void bx_voodoo_c::banshee_blt_line(bx_bool pline)
 
   if (!pline) {
     dst_ptr1 = dst_ptr + y1 * dpitch + x1 * dpxsize;
-    BLT.rop_fn(dst_ptr1, color, dpitch, dpxsize, dpxsize, 1);
+    BLT.rop_fn(dst_ptr1, BLT.fgcolor, dpitch, dpxsize, dpxsize, 1);
   }
   banshee_blt_complete();
   BLT.reg[blt_srcXY] = BLT.reg[blt_dstXY];
