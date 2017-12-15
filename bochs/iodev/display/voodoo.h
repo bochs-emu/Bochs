@@ -82,6 +82,8 @@ public:
   Bit32u banshee_blt_reg_read(Bit8u reg);
   void   banshee_blt_reg_write(Bit8u reg, Bit32u value);
 
+  void banshee_mem_write_linear(Bit32u offset, Bit32u value, unsigned len);
+
 private:
   bx_voodoo_t s;
 

@@ -798,13 +798,11 @@ void bx_voodoo_c::vertical_timer_handler(void *this_ptr)
   }
 
   if (v->fbi.video_changed || v->fbi.clut_dirty) {
+    // TODO: use tile-based update mechanism
     BX_VOODOO_THIS redraw_area(0, 0, BX_VOODOO_THIS s.vdraw.width, BX_VOODOO_THIS s.vdraw.height);
     v->fbi.clut_dirty = 0;
     v->fbi.video_changed = 0;
-    if (BX_VOODOO_THIS s.model < VOODOO_BANSHEE) {
-      // TODO: use tile-based update mechanism
-      BX_VOODOO_THIS s.vdraw.gui_update_pending = 1;
-    }
+    BX_VOODOO_THIS s.vdraw.gui_update_pending = 1;
   }
 }
 
@@ -942,7 +940,15 @@ void bx_voodoo_c::update(void)
   bx_svga_tileinfo_t info;
 
   BX_LOCK(render_mutex);
-  if (BX_VOODOO_THIS s.model < VOODOO_BANSHEE) {
+  if ((BX_VOODOO_THIS s.model >= VOODOO_BANSHEE) &&
+      ((v->banshee.io[io_vidProcCfg] & 0x181) == 0x81)) {
+    bpp = v->banshee.disp_bpp;
+    start = v->banshee.io[io_vidDesktopStartAddr];
+    pitch = v->banshee.io[io_vidDesktopOverlayStride] & 0x7fff;
+    if (v->banshee.desktop_tiled) {
+      pitch *= 128;
+    }
+  } else {
     if (!BX_VOODOO_THIS s.vdraw.gui_update_pending) {
       BX_UNLOCK(render_mutex);
       return;
@@ -950,20 +956,6 @@ void bx_voodoo_c::update(void)
     bpp = 16;
     start = v->fbi.rgboffs[v->fbi.frontbuf];
     pitch = v->fbi.rowpixels * 2;
-  } else {
-    if ((v->banshee.io[io_vidProcCfg] & 0x181) == 0x81) {
-      bpp = v->banshee.disp_bpp;
-      start = v->banshee.io[io_vidDesktopStartAddr];
-      pitch = v->banshee.io[io_vidDesktopOverlayStride] & 0x7fff;
-      if (v->banshee.desktop_tiled) {
-        pitch *= 128;
-      }
-    } else {
-      bpp = 16;
-      start = v->fbi.rgboffs[0];
-      pitch = v->fbi.rowpixels * 2;
-      BX_VOODOO_THIS redraw_area(0, 0, BX_VOODOO_THIS s.vdraw.width, BX_VOODOO_THIS s.vdraw.height);
-    }
   }
   iWidth = BX_VOODOO_THIS s.vdraw.width;
   iHeight = BX_VOODOO_THIS s.vdraw.height;
@@ -1686,7 +1678,7 @@ void bx_voodoo_c::banshee_mem_read(bx_phy_address addr, unsigned len, void *data
     } else {
       Bit8u temp = v->fbi.lfb_stride;
       v->fbi.lfb_stride = 11;
-      value = lfb_r((offset & 0xffffff) >> 2);
+      value = lfb_r((offset & v->fbi.mask) >> 2);
       v->fbi.lfb_stride = temp;
     }
   } else if ((addr & ~0x1ffffff) == BX_VOODOO_THIS pci_base_address[1]) {
@@ -1714,10 +1706,6 @@ void bx_voodoo_c::banshee_mem_write(bx_phy_address addr, unsigned len, void *dat
   Bit32u offset = (addr & 0x1ffffff);
   Bit32u value = *(Bit32u*)data;
   Bit32u mask = 0xffffffff;
-  Bit8u value8;
-  Bit32u start = v->banshee.io[io_vidDesktopStartAddr];
-  Bit32u pitch = v->banshee.io[io_vidDesktopOverlayStride] & 0x7fff;
-  unsigned i, x, y;
 
   if ((addr & ~0x1ffffff) == BX_VOODOO_THIS pci_base_address[0]) {
     if (offset < 0x80000) {
@@ -1744,7 +1732,7 @@ void bx_voodoo_c::banshee_mem_write(bx_phy_address addr, unsigned len, void *dat
           mask = 0xffff0000;
         }
       }
-      lfb_w((offset & 0xffffff) >> 2, value, mask);
+      lfb_w((offset & v->fbi.mask) >> 2, value, mask);
       v->fbi.lfb_stride = temp;
     }
   } else if ((addr & ~0x1ffffff) == BX_VOODOO_THIS pci_base_address[1]) {
@@ -1758,33 +1746,50 @@ void bx_voodoo_c::banshee_mem_write(bx_phy_address addr, unsigned len, void *dat
         BX_INFO(("CMDFIFO #1 write"));
         cmdfifo_w(&v->fbi.cmdfifo[1], offset, value);
       } else {
-        if (offset >= start) {
-          if (v->banshee.desktop_tiled) {
-            offset -= start;
-            pitch *= 128;
-            x = (offset << 0) & ((1 << v->fbi.lfb_stride) - 1);
-            y = (offset >> v->fbi.lfb_stride) & 0x7ff;
-            offset = (start + y * pitch + x) & v->fbi.mask;
-          }
-          BX_LOCK(render_mutex);
-          for (i = 0; i < len; i++) {
-            value8 = (value >> (i*8)) & 0xff;
-            v->fbi.ram[offset + i] = value8;
-          }
-          offset -= start;
-          x = (offset % pitch) / (v->banshee.disp_bpp >> 3);
-          y = offset / pitch;
-          theVoodooVga->redraw_area(x, y, len / (v->banshee.disp_bpp >> 3), 1);
-          BX_UNLOCK(render_mutex);
-        } else {
-          for (i = 0; i < len; i++) {
-            value8 = (value >> (i*8)) & 0xff;
-            v->fbi.ram[offset + i] = value8;
-          }
-        }
+        banshee_mem_write_linear(offset, value, len);
       }
     } else {
-      lfb_w((offset - v->fbi.lfb_base) >> 2, value, 0xffffffff);
+      if (len == 2) {
+        if ((offset & 3) == 0) {
+          mask = 0x0000ffff;
+        } else {
+          mask = 0xffff0000;
+        }
+      }
+      lfb_w((offset - v->fbi.lfb_base) >> 2, value, mask);
+    }
+  }
+}
+
+void bx_voodoo_c::banshee_mem_write_linear(Bit32u offset, Bit32u value, unsigned len)
+{
+  Bit8u value8;
+  Bit32u start = v->banshee.io[io_vidDesktopStartAddr];
+  Bit32u pitch = v->banshee.io[io_vidDesktopOverlayStride] & 0x7fff;
+  unsigned i, x, y;
+
+  if (offset >= start) {
+    if (v->banshee.desktop_tiled) {
+      offset -= start;
+      pitch *= 128;
+      x = (offset << 0) & ((1 << v->fbi.lfb_stride) - 1);
+      y = (offset >> v->fbi.lfb_stride) & 0x7ff;
+      offset = (start + y * pitch + x) & v->fbi.mask;
+    }
+    BX_LOCK(render_mutex);
+    for (i = 0; i < len; i++) {
+      value8 = (value >> (i*8)) & 0xff;
+      v->fbi.ram[offset + i] = value8;
+    }
+    offset -= start;
+    x = (offset % pitch) / (v->banshee.disp_bpp >> 3);
+    y = offset / pitch;
+    theVoodooVga->redraw_area(x, y, len / (v->banshee.disp_bpp >> 3), 1);
+    BX_UNLOCK(render_mutex);
+  } else {
+    for (i = 0; i < len; i++) {
+      value8 = (value >> (i*8)) & 0xff;
+      v->fbi.ram[offset + i] = value8;
     }
   }
 }

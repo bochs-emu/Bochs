@@ -1909,7 +1909,7 @@ void register_w(Bit32u offset, Bit32u data, bx_bool log)
         else
           rowpixels = (data & 0x3fff) >> 1;
         if (v->fbi.rowpixels != rowpixels)
-          BX_PANIC(("aux buffer stride differs from color buffer stride"));
+          BX_ERROR(("aux buffer stride differs from color buffer stride"));
       }
       break;
 
@@ -2534,10 +2534,10 @@ Bit32u cmdfifo_r(cmdfifo_info *f)
 void cmdfifo_process(cmdfifo_info *f)
 {
   Bit32u command, data, mask, nwords, regaddr;
-  Bit8u type, code, nvertex, smode, data8;
+  Bit8u type, code, nvertex, smode, disbytes;
   bx_bool blt, inc, pcolor;
   voodoo_reg reg;
-  int i, j;
+  int i, w0, wn;
   setup_vertex svert = {0};
 
   command = cmdfifo_r(f);
@@ -2715,18 +2715,33 @@ void cmdfifo_process(cmdfifo_info *f)
       nwords = (command >> 3) & 0x7ffff;
       regaddr = (cmdfifo_r(f) & 0xffffff) >> 2;
       code = (command >> 30);
-      if ((command & 0x3fc00000) > 0) {
+      disbytes = (command >> 22) & 0xff;
+      if ((disbytes > 0) && (code != 0)) {
         BX_ERROR(("CMDFIFO packet type 5: byte disable not supported yet (dest code = %d)", code));
       }
       switch (code) {
         case 0:
           regaddr <<= 2;
-          for (i = 0; i < (int)nwords; i++) {
+          w0 = 0;
+          wn = nwords;
+          if ((disbytes > 0) && (disbytes != 0x0c) && (disbytes != 0xc0)) {
+            BX_ERROR(("CMDFIFO packet type 5: byte disable not complete yet (dest code = 0)"));
+          }
+          if ((disbytes & 0xf0) > 0) {
             data = cmdfifo_r(f);
-            for (j = 0; j < 4; j++) {
-              data8 = (data >> (j*8)) & 0xff;
-              v->fbi.ram[regaddr + j] = data8;
+            if ((disbytes & 0xf0) == 0x30) {
+              Voodoo_Banshee_LFB_write(regaddr + 2, data >> 16, 2);
+            } else if ((disbytes & 0xf0) == 0xc0) {
+              Voodoo_Banshee_LFB_write(regaddr, data, 2);
             }
+            w0++;
+            regaddr += 4;
+          }
+          for (i = w0; i < wn; i++) {
+            data = cmdfifo_r(f);
+            BX_UNLOCK(cmdfifo_mutex);
+            Voodoo_Banshee_LFB_write(regaddr, data, 4);
+            BX_LOCK(cmdfifo_mutex);
             regaddr += 4;
           }
           break;
