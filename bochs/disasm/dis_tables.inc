@@ -1435,7 +1435,7 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodes32[256*2] = {
   /* E0 */ { 0, &Ia_loopne_Jb     },
   /* E1 */ { 0, &Ia_loope_Jb      },
   /* E2 */ { 0, &Ia_loop_Jb       },
-  /* E3 */ { 0, &Ia_jcxz_Jb       },
+  /* E3 */ { 0, &Ia_jecxz_Jb      },
   /* E4 */ { 0, &Ia_inb_AL_Ib     },
   /* E5 */ { 0, &Ia_inl_EAX_Ib    },
   /* E6 */ { 0, &Ia_outb_Ib_AL    },
