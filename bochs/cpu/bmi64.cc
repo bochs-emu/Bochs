@@ -179,11 +179,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BEXTR_GqEqBqR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BZHI_GqBqEqR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BZHI_GqEqBqR(bxInstruction_c *i)
 {
-  unsigned control = BX_READ_8BIT_REGL(i->src1());
+  unsigned control = BX_READ_8BIT_REGL(i->src2());
   bx_bool tmpCF = 0;
-  Bit64u op1_64 = BX_READ_64BIT_REG(i->src2());
+  Bit64u op1_64 = BX_READ_64BIT_REG(i->src1());
   
   if (control < 64) {
     Bit64u mask = (BX_CONST64(1) << control) - 1;

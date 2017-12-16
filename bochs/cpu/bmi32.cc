@@ -168,11 +168,11 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BEXTR_GdEdBdR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BZHI_GdBdEdR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::BZHI_GdEdBdR(bxInstruction_c *i)
 {
-  unsigned control = BX_READ_8BIT_REGL(i->src1());
+  unsigned control = BX_READ_8BIT_REGL(i->src2());
   bx_bool tmpCF = 0;
-  Bit32u op1_32 = BX_READ_32BIT_REG(i->src2());
+  Bit32u op1_32 = BX_READ_32BIT_REG(i->src1());
   
   if (control < 32) {
     Bit32u mask = (1 << control) - 1;

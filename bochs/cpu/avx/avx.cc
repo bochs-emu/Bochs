@@ -675,4 +675,87 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VMASKMOVPD_MpdHpdVpd(bxInstruction
   BX_NEXT_INSTR(i);
 }
 
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPINSRB_VdqHdqEbIbR(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+  op1.xmmubyte(i->Ib() & 0xF) = BX_READ_8BIT_REGL(i->src2()); // won't allow reading of AH/CH/BH/DH
+  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPINSRB_VdqHdqEbIbM(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+  op1.xmmubyte(i->Ib() & 0xF) = read_virtual_byte(i->seg(), eaddr);
+
+  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPINSRW_VdqHdqEwIbR(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+  op1.xmm16u(i->Ib() & 0x7) = BX_READ_16BIT_REG(i->src2());
+  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPINSRW_VdqHdqEwIbM(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+  op1.xmm16u(i->Ib() & 0x7) = read_virtual_word(i->seg(), eaddr);
+
+  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPINSRD_VdqHdqEdIbR(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+  op1.xmm32u(i->Ib() & 3) = BX_READ_32BIT_REG(i->src2());
+  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPINSRD_VdqHdqEdIbM(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+  op1.xmm32u(i->Ib() & 3) = read_virtual_dword(i->seg(), eaddr);
+
+  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPINSRQ_VdqHdqEqIbR(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+  op1.xmm64u(i->Ib() & 1) = BX_READ_64BIT_REG(i->src2());
+  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VPINSRQ_VdqHdqEqIbM(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+  Bit64u op2 = read_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
+  op1.xmm64u(i->Ib() & 1) = op2;
+
+  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
+  BX_NEXT_INSTR(i);
+}
+
 #endif // BX_SUPPORT_AVX

@@ -339,26 +339,23 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRQ_EqVdqIbM(bxInstruction_c *i
 }
 #endif
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRB_VdqHdqEbIbR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRB_VdqEbIbR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
-
-  op1.xmmubyte(i->Ib() & 0xF) = BX_READ_8BIT_REGL(i->src2()); // won't allow reading of AH/CH/BH/DH
-
-  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst());
+  op1.xmmubyte(i->Ib() & 0xF) = BX_READ_8BIT_REGL(i->src()); // won't allow reading of AH/CH/BH/DH
+  BX_WRITE_XMM_REG(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRB_VdqHdqEbIbM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRB_VdqEbIbM(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst());
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-
   op1.xmmubyte(i->Ib() & 0xF) = read_virtual_byte(i->seg(), eaddr);
 
-  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
+  BX_WRITE_XMM_REG(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
@@ -391,46 +388,45 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INSERTPS_VpsHpsWssIb(bxInstruction
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRD_VdqHdqEdIbR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRD_VdqEdIbR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
-  op1.xmm32u(i->Ib() & 3) = BX_READ_32BIT_REG(i->src2());
-  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst());
+  op1.xmm32u(i->Ib() & 3) = BX_READ_32BIT_REG(i->src());
+  BX_WRITE_XMM_REG(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRD_VdqHdqEdIbM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRD_VdqEdIbM(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst());
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-  Bit32u op2 = read_virtual_dword(i->seg(), eaddr);
-  op1.xmm32u(i->Ib() & 3) = op2;
+  op1.xmm32u(i->Ib() & 3) = read_virtual_dword(i->seg(), eaddr);
 
-  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
+  BX_WRITE_XMM_REG(i->dst(), op1);
   BX_NEXT_INSTR(i);
 }
 
 #if BX_SUPPORT_X86_64
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRQ_VdqHdqEqIbR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRQ_VdqEqIbR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
-  op1.xmm64u(i->Ib() & 1) = BX_READ_64BIT_REG(i->src2());
-  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst());
+  op1.xmm64u(i->Ib() & 1) = BX_READ_64BIT_REG(i->src());
+  BX_WRITE_XMM_REG(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRQ_VdqHdqEqIbM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRQ_VdqEqIbM(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst());
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   Bit64u op2 = read_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
   op1.xmm64u(i->Ib() & 1) = op2;
 
-  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
+  BX_WRITE_XMM_REG(i->dst(), op1);
   BX_NEXT_INSTR(i);
 }
 #endif
@@ -488,15 +484,26 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PSHUFLW_VdqWdqIbR(bxInstruction_c 
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRW_VdqHdqEwIbR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRW_VdqEwIbR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
-  Bit8u count = i->Ib() & 0x7;
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst());
+  op1.xmm16u(i->Ib() & 0x7) = BX_READ_16BIT_REG(i->src());
+  BX_WRITE_XMM_REG(i->dst(), op1);
+#endif
 
-  op1.xmm16u(count) = BX_READ_16BIT_REG(i->src2());
+  BX_NEXT_INSTR(i);
+}
 
-  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRW_VdqEwIbM(bxInstruction_c *i)
+{
+#if BX_CPU_LEVEL >= 6
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst());
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+  op1.xmm16u(i->Ib() & 0x7) = read_virtual_word(i->seg(), eaddr);
+
+  BX_WRITE_XMM_REG(i->dst(), op1);
 #endif
 
   BX_NEXT_INSTR(i);
