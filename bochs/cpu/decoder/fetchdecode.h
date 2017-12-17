@@ -336,8 +336,8 @@ const Bit8u OP_Md = OP_Ed;
 const Bit8u OP_Mq = OP_Eq;
 
 const Bit8u OP_Pq = BX_FORM_SRC(BX_MMX_REG, BX_SRC_NNN);
+const Bit8u OP_Qd = BX_FORM_SRC(BX_MMX_HALF_REG, BX_SRC_RM);
 const Bit8u OP_Qq = BX_FORM_SRC(BX_MMX_REG, BX_SRC_RM);
-const Bit8u OP_Qd = BX_FORM_SRC(BX_MMX_REG, BX_SRC_RM);
 
 const Bit8u OP_Vdq = BX_FORM_SRC(BX_VMM_REG, BX_SRC_NNN);
 const Bit8u OP_Vps = BX_FORM_SRC(BX_VMM_REG, BX_SRC_NNN);
