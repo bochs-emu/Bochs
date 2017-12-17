@@ -755,6 +755,7 @@ bx_bool bx_voodoo_c::update_timing(void)
       vertical_timer_handler(NULL);
     }
     BX_INFO(("Voodoo output %dx%d@%uHz", v->fbi.width, v->fbi.height, (unsigned)v->vertfreq));
+    v->vtimer_running = 1;
   } else {
     BX_VVGA_THIS get_crtc_params(&crtcp);
     hfreq = v->vidclk / (float)(crtcp.htotal * 8);
@@ -765,7 +766,6 @@ bx_bool bx_voodoo_c::update_timing(void)
     vertical_timer_handler(NULL);
   }
   bx_virt_timer.activate_timer(BX_VOODOO_THIS s.vertical_timer_id, (Bit32u)BX_VOODOO_THIS s.vdraw.vtotal_usec, 1);
-  v->vtimer_running = 1;
   return 1;
 }
 
@@ -2290,7 +2290,7 @@ void bx_voodoo_c::banshee_blt_complete()
   BLT.busy = 0;
 }
 
-void bx_voodoo_c::banshee_blt_apply_clipwindow(int *x0, int *y0, int *x1, int *y1, int *w, int *h)
+bx_bool bx_voodoo_c::banshee_blt_apply_clipwindow(int *x0, int *y0, int *x1, int *y1, int *w, int *h)
 {
   int cx0, cx1, cy0, cy1, xd, yd;
 
@@ -2344,6 +2344,7 @@ void bx_voodoo_c::banshee_blt_apply_clipwindow(int *x0, int *y0, int *x1, int *y
       *h -= yd;
     }
   }
+  return ((*w > 0) && (*h > 0));
 }
 
 void bx_voodoo_c::banshee_blt_rectangle_fill()
@@ -2360,7 +2361,11 @@ void bx_voodoo_c::banshee_blt_rectangle_fill()
   w = BLT.dst_w;
   h = BLT.dst_h;
   BX_DEBUG(("Rectangle fill: %d x %d  ROP %02X", w, h, BLT.rop0));
-  banshee_blt_apply_clipwindow(NULL, NULL, &x1, &y1, &w, &h);
+  if (!banshee_blt_apply_clipwindow(NULL, NULL, &x1, &y1, &w, &h)) {
+    BLT.busy = 0;
+    BX_UNLOCK(render_mutex);
+    return;
+  }
   dst_ptr += (y1 * dpitch + x1 * dpxsize);
   nrows = h;
   do {
@@ -2397,7 +2402,11 @@ void bx_voodoo_c::banshee_blt_pattern_fill_mono()
   BX_DEBUG(("Pattern fill mono: %d x %d  ROP %02X", w, h, BLT.rop0));
   x0 = 0;
   y0 = 0;
-  banshee_blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h);
+  if (!banshee_blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h)) {
+    BLT.busy = 0;
+    BX_UNLOCK(render_mutex);
+    return;
+  }
   dst_ptr += (y1 * dpitch + x1 * dpxsize);
   patcol = (x0 + BLT.patsx) & 7;
   patline = (y0 + BLT.patsy) & 7;
@@ -2456,7 +2465,11 @@ void bx_voodoo_c::banshee_blt_pattern_fill_color()
   BX_DEBUG(("Pattern fill color: %d x %d  ROP %02X", w, h, BLT.rop0));
   x0 = BLT.patsx;
   y0 = BLT.patsy;
-  banshee_blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h);
+  if (!banshee_blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h)) {
+    BLT.busy = 0;
+    BX_UNLOCK(render_mutex);
+    return;
+  }
   dst_ptr += (y1 * dpitch + x1 * dpxsize);
   patcol = (x0 + BLT.patsx) & 7;
   patline = (y0 + BLT.patsy) & 7;
@@ -2506,7 +2519,11 @@ void bx_voodoo_c::banshee_blt_screen_to_screen()
   w = BLT.dst_w;
   h = BLT.dst_h;
   BX_DEBUG(("Screen to screen blt: %d x %d  ROP %02X", w, h, BLT.rop0));
-  banshee_blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h);
+  if (!banshee_blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h)) {
+    BLT.busy = 0;
+    BX_UNLOCK(render_mutex);
+    return;
+  }
   if (BLT.y_dir) {
     spitch *= -1;
     dpitch *= -1;
@@ -2544,7 +2561,11 @@ void bx_voodoo_c::banshee_blt_screen_to_screen_pattern()
   h = BLT.dst_h;
   rop0 = BLT.rop0;
   BX_DEBUG(("Screen to screen pattern blt: %d x %d  ROP %02X", w, h, rop0));
-  banshee_blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h);
+  if (!banshee_blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h)) {
+    BLT.busy = 0;
+    BX_UNLOCK(render_mutex);
+    return;
+  }
   if (BLT.x_dir) {
     dpxsize *= -1;
   }
@@ -2649,7 +2670,11 @@ void bx_voodoo_c::banshee_blt_host_to_screen()
   BX_DEBUG(("Host to screen blt: %d x %d  ROP %02X", w, h, BLT.rop0));
   x0 = 0;
   y0 = 0;
-  banshee_blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h);
+  if (!banshee_blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h)) {
+    BLT.busy = 0;
+    BX_UNLOCK(render_mutex);
+    return;
+  }
   if (srcfmt == 0) {
     x0 += BLT.h2s_pxstart;
     src_ptr += (y0 * spitch + x0 / 8);
@@ -2731,7 +2756,11 @@ void bx_voodoo_c::banshee_blt_host_to_screen_pattern()
   BX_DEBUG(("Host to screen pattern blt: %d x %d  ROP %02X", w, h, rop0));
   x0 = 0;
   y0 = 0;
-  banshee_blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h);
+  if (!banshee_blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h)) {
+    BLT.busy = 0;
+    BX_UNLOCK(render_mutex);
+    return;
+  }
   if (srcfmt == 0) {
     x0 += BLT.h2s_pxstart;
     src_ptr += (y0 * spitch + x0 / 8);
