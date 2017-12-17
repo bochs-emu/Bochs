@@ -222,19 +222,20 @@ enum {
 enum {
   BX_NO_REGISTER = 0,
   BX_GPR8 = 0x1,
-  BX_GPR8_32 = 0x2,  // 8-bit memory reference but 32-bit GPR
+  BX_GPR32_MEM8 = 0x2,  // 8-bit memory reference but 32-bit GPR
   BX_GPR16 = 0x3,
-  BX_GPR16_32 = 0x4, // 16-bit memory reference but 32-bit GPR
+  BX_GPR32_MEM16 = 0x4, // 16-bit memory reference but 32-bit GPR
   BX_GPR32 = 0x5,
   BX_GPR64 = 0x6,
   BX_FPU_REG = 0x7,
   BX_MMX_REG = 0x8,
-  BX_VMM_REG = 0x9,
-  BX_KMASK_REG = 0xA,
-  BX_SEGREG = 0xB,
-  BX_CREG = 0xC,
-  BX_DREG = 0xD,
-  // encodings 0xE to 0xF are still free
+  BX_MMX_HALF_REG = 0x9,
+  BX_VMM_REG = 0xA,
+  BX_KMASK_REG = 0xB,
+  BX_SEGREG = 0xC,
+  BX_CREG = 0xD,
+  BX_DREG = 0xE,
+  // encoding 0xF still free
 };
 
 // to be used together with BX_SRC_VECTOR_RM
@@ -295,9 +296,9 @@ enum {
 const Bit8u OP_NONE = BX_SRC_NONE;
 
 const Bit8u OP_Eb = BX_FORM_SRC(BX_GPR8, BX_SRC_RM);
-const Bit8u OP_Ebd = BX_FORM_SRC(BX_GPR8_32, BX_SRC_RM);
+const Bit8u OP_Ebd = BX_FORM_SRC(BX_GPR32_MEM8, BX_SRC_RM);
 const Bit8u OP_Ew = BX_FORM_SRC(BX_GPR16, BX_SRC_RM);
-const Bit8u OP_Ewd = BX_FORM_SRC(BX_GPR16_32, BX_SRC_RM);
+const Bit8u OP_Ewd = BX_FORM_SRC(BX_GPR32_MEM16, BX_SRC_RM);
 const Bit8u OP_Ed = BX_FORM_SRC(BX_GPR32, BX_SRC_RM);
 const Bit8u OP_Eq = BX_FORM_SRC(BX_GPR64, BX_SRC_RM);
 

@@ -214,17 +214,18 @@ char *resolve_memsize(char *disbufptr, const bxInstruction_c *i, unsigned src_in
   else if (src_index == BX_SRC_RM) {
     switch(src_type) {
     case BX_GPR8:
-    case BX_GPR8_32:      // 8-bit  memory ref but 32-bit GPR
+    case BX_GPR32_MEM8:      // 8-bit  memory ref but 32-bit GPR
       disbufptr = dis_sprintf(disbufptr, "byte ptr ");
       break;
 
     case BX_GPR16:
-    case BX_GPR16_32:     // 16-bit memory ref but 32-bit GPR
+    case BX_GPR32_MEM16:     // 16-bit memory ref but 32-bit GPR
     case BX_SEGREG:
       disbufptr = dis_sprintf(disbufptr, "word ptr ");
       break;
 
     case BX_GPR32:
+    case BX_MMX_HALF_REG:
       disbufptr = dis_sprintf(disbufptr, "dword ptr ");
       break;
 
@@ -296,8 +297,8 @@ char *disasm_regref(char *disbufptr, const bxInstruction_c *i, unsigned src_num,
     break;
 
   case BX_GPR32:
-  case BX_GPR8_32:      // 8-bit  memory ref but 32-bit GPR
-  case BX_GPR16_32:     // 16-bit memory ref but 32-bit GPR
+  case BX_GPR32_MEM8:      // 8-bit  memory ref but 32-bit GPR
+  case BX_GPR32_MEM16:     // 16-bit memory ref but 32-bit GPR
     disbufptr = dis_sprintf(disbufptr, "%s", intel_general_32bit_regname[srcreg]);
     break;
 
@@ -312,6 +313,7 @@ char *disasm_regref(char *disbufptr, const bxInstruction_c *i, unsigned src_num,
     break;
 
   case BX_MMX_REG:
+  case BX_MMX_HALF_REG:
     disbufptr = dis_sprintf(disbufptr, "mm%d", srcreg & 0x7);
     break;
 
