@@ -978,7 +978,7 @@ bx_define_opcode(BX_IA_MOVNTQ_MqPq, &BX_CPU_C::MOVQ_QqPqM, &BX_CPU_C::BxError, B
 bx_define_opcode(BX_IA_PMINSW_PqQq, &BX_CPU_C::PMINSW_PqQq, &BX_CPU_C::PMINSW_PqQq, BX_ISA_SSE/* | BX_ISA_3DNOW */, OP_Pq, OP_Qq, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_PMAXSW_PqQq, &BX_CPU_C::PMAXSW_PqQq, &BX_CPU_C::PMAXSW_PqQq, BX_ISA_SSE, OP_Pq, OP_Qq, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_PSADBW_PqQq, &BX_CPU_C::PSADBW_PqQq, &BX_CPU_C::PSADBW_PqQq, BX_ISA_SSE/* | BX_ISA_3DNOW */, OP_Pq, OP_Qq, OP_NONE, OP_NONE, 0)
-bx_define_opcode(BX_IA_MASKMOVQ_PqNq, &BX_CPU_C::BxError, &BX_CPU_C::MASKMOVQ_PqNq, BX_ISA_SSE/* | BX_ISA_3DNOW */, OP_NONE, OP_Pq, OP_Qq, OP_NONE, 0)
+bx_define_opcode(BX_IA_MASKMOVQ_PqNq, &BX_CPU_C::BxError, &BX_CPU_C::MASKMOVQ_PqNq, BX_ISA_SSE/* | BX_ISA_3DNOW */, OP_NONE, OP_Pq, OP_Qq, OP_sYq, 0)
 
 // SSE alias
 bx_define_opcode(BX_IA_ADDPS_VpsWps, &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::ADDPS_VpsWpsR, BX_ISA_SSE, OP_Vps, OP_Wps, OP_NONE, OP_NONE, BX_PREPARE_SSE)
@@ -1130,7 +1130,7 @@ bx_define_opcode(BX_IA_PMULUDQ_PqQq, &BX_CPU_C::PMULUDQ_PqQq, &BX_CPU_C::PMULUDQ
 bx_define_opcode(BX_IA_PMULUDQ_VdqWdq, &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::PMULUDQ_VdqWdqR, BX_ISA_SSE2, OP_Vdq, OP_Wdq, OP_NONE, OP_NONE, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_PMADDWD_VdqWdq, &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::PMADDWD_VdqWdqR, BX_ISA_SSE2, OP_Vdq, OP_Wdq, OP_NONE, OP_NONE, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_PSADBW_VdqWdq, &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::PSADBW_VdqWdqR, BX_ISA_SSE2, OP_Vdq, OP_Wdq, OP_NONE, OP_NONE, BX_PREPARE_SSE)
-bx_define_opcode(BX_IA_MASKMOVDQU_VdqUdq, &BX_CPU_C::BxError, &BX_CPU_C::MASKMOVDQU_VdqUdq, BX_ISA_SSE2, OP_NONE, OP_Vdq, OP_Wdq, OP_NONE, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_MASKMOVDQU_VdqUdq, &BX_CPU_C::BxError, &BX_CPU_C::MASKMOVDQU_VdqUdq, BX_ISA_SSE2, OP_NONE, OP_Vdq, OP_Wdq, OP_sYdq, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_PSUBB_VdqWdq, &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::PSUBB_VdqWdqR, BX_ISA_SSE2, OP_Vdq, OP_Wdq, OP_NONE, OP_NONE, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_PSUBW_VdqWdq, &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::PSUBW_VdqWdqR, BX_ISA_SSE2, OP_Vdq, OP_Wdq, OP_NONE, OP_NONE, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_PSUBD_VdqWdq, &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::PSUBD_VdqWdqR, BX_ISA_SSE2, OP_Vdq, OP_Wdq, OP_NONE, OP_NONE, BX_PREPARE_SSE)
@@ -1909,7 +1909,7 @@ bx_define_opcode(BX_IA_V256_VPMULHUW_VdqHdqWdq, &BX_CPU_C::LOAD_Vector, &BX_CPU_
 bx_define_opcode(BX_IA_V128_VPSADBW_VdqHdqWdq, &BX_CPU_C::LOADU_Wdq, &BX_CPU_C::VPSADBW_VdqHdqWdqR, BX_ISA_AVX, OP_Vdq, OP_Hdq, OP_Wdq, OP_NONE, BX_PREPARE_AVX)
 bx_define_opcode(BX_IA_V256_VPSADBW_VdqHdqWdq, &BX_CPU_C::LOAD_Vector, &BX_CPU_C::VPSADBW_VdqHdqWdqR, BX_ISA_AVX2, OP_Vdq, OP_Hdq, OP_Wdq, OP_NONE, BX_PREPARE_AVX)
 
-bx_define_opcode(BX_IA_V128_VMASKMOVDQU_VdqUdq, &BX_CPU_C::BxError, &BX_CPU_C::MASKMOVDQU_VdqUdq, BX_ISA_AVX, OP_NONE, OP_Vdq, OP_Wdq, OP_NONE, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_V128_VMASKMOVDQU_VdqUdq, &BX_CPU_C::BxError, &BX_CPU_C::MASKMOVDQU_VdqUdq, BX_ISA_AVX, OP_NONE, OP_Vdq, OP_Wdq, OP_sYdq, BX_PREPARE_AVX)
 
 bx_define_opcode(BX_IA_V128_VPSUBB_VdqHdqWdq, &BX_CPU_C::LOADU_Wdq, &BX_CPU_C::VPSUBB_VdqHdqWdqR, BX_ISA_AVX, OP_Vdq, OP_Hdq, OP_Wdq, OP_NONE, BX_PREPARE_AVX)
 bx_define_opcode(BX_IA_V256_VPSUBB_VdqHdqWdq, &BX_CPU_C::LOAD_Vector, &BX_CPU_C::VPSUBB_VdqHdqWdqR, BX_ISA_AVX2, OP_Vdq, OP_Hdq, OP_Wdq, OP_NONE, BX_PREPARE_AVX)

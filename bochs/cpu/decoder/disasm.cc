@@ -485,7 +485,11 @@ char *disasm_implicit_src(char *disbufptr, const bxInstruction_c *i, unsigned sr
     break;
   case BX_RSIREF_Q:
   case BX_RDIREF_Q:
+  case BX_MMX_RDIREF:
     disbufptr = resolve_memsize(disbufptr, i, BX_SRC_RM, BX_GPR64);
+    break;
+  case BX_VEC_RDIREF:
+    disbufptr = resolve_memsize(disbufptr, i, BX_SRC_RM, BX_VMM_REG);
     break;
   default: break;
   };
@@ -515,6 +519,23 @@ char *disasm_implicit_src(char *disbufptr, const bxInstruction_c *i, unsigned sr
   case BX_RDIREF_D:
   case BX_RDIREF_Q:
     disbufptr = dis_sprintf(disbufptr, "%s:", intel_segment_name[BX_SEG_REG_ES]);
+#if BX_SUPPORT_X86_64
+    if (i->as64L()) {
+      disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_64bit_regname[BX_64BIT_REG_RDI]);
+    }
+    else
+#endif
+    {
+      if (i->as32L())
+        disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_32bit_regname[BX_32BIT_REG_EDI]);
+      else
+        disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_16bit_regname[BX_16BIT_REG_DI]);
+    }
+    break;
+
+  case BX_MMX_RDIREF:
+  case BX_VEC_RDIREF:
+    disbufptr = dis_sprintf(disbufptr, "%s:", intel_segment_name[i->seg()]);
 #if BX_SUPPORT_X86_64
     if (i->as64L()) {
       disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_64bit_regname[BX_64BIT_REG_RDI]);

@@ -283,9 +283,11 @@ enum {
   BX_RDIREF_W = 0x6,
   BX_RDIREF_D = 0x7,
   BX_RDIREF_Q = 0x8,
-  BX_USECL = 0x9,
-  BX_USEDX = 0xA,
-  // encodings 0xB to 0xF are still free
+  BX_MMX_RDIREF = 0x9,
+  BX_VEC_RDIREF = 0xA,
+  BX_USECL = 0xB,
+  BX_USEDX = 0xC,
+  // encodings 0xD to 0xF are still free
 };
 
 #define BX_FORM_SRC(type, src) (((type) << 4) | (src))
@@ -429,6 +431,9 @@ const Bit8u OP_Yb = BX_FORM_SRC(BX_RDIREF_B, BX_SRC_IMPLICIT);
 const Bit8u OP_Yw = BX_FORM_SRC(BX_RDIREF_W, BX_SRC_IMPLICIT);
 const Bit8u OP_Yd = BX_FORM_SRC(BX_RDIREF_D, BX_SRC_IMPLICIT);
 const Bit8u OP_Yq = BX_FORM_SRC(BX_RDIREF_Q, BX_SRC_IMPLICIT);
+
+const Bit8u OP_sYq  = BX_FORM_SRC(BX_MMX_RDIREF, BX_SRC_IMPLICIT);
+const Bit8u OP_sYdq = BX_FORM_SRC(BX_VEC_RDIREF, BX_SRC_IMPLICIT);
 
 struct bx_modrm {
   unsigned modrm, mod, nnn, rm;
