@@ -360,34 +360,6 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRB_VdqEbIbM(bxInstruction_c *i
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INSERTPS_VpsHpsWssIb(bxInstruction_c *i)
-{
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
-  Bit8u control = i->Ib();
-  Bit32u op2;
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    BxPackedXmmRegister temp = BX_READ_XMM_REG(i->src2());
-    op2 = temp.xmm32u((control >> 6) & 3);
-  }
-  else {
-    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-    op2 = read_virtual_dword(i->seg(), eaddr);
-  }
-
-  op1.xmm32u((control >> 4) & 3) = op2;
-
-  if (control & 1) op1.xmm32u(0) = 0;
-  if (control & 2) op1.xmm32u(1) = 0;
-  if (control & 4) op1.xmm32u(2) = 0;
-  if (control & 8) op1.xmm32u(3) = 0;
-
-  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
-
-  BX_NEXT_INSTR(i);
-}
-
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRD_VdqEdIbR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst());
@@ -430,6 +402,36 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRQ_VdqEqIbM(bxInstruction_c *i
   BX_NEXT_INSTR(i);
 }
 #endif
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INSERTPS_VpsHpsWssIbR(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+  Bit8u control = i->Ib();
+
+  BxPackedXmmRegister temp = BX_READ_XMM_REG(i->src2());
+  Bit32u op2 = temp.xmm32u((control >> 6) & 3);
+
+  op1.xmm32u((control >> 4) & 3) = op2;
+  xmm_zero_blendps(&op1, &op1, ~control);
+
+  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
+
+  BX_NEXT_INSTR(i);
+}
+
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INSERTPS_VpsHpsWssIbM(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+  Bit8u control = i->Ib();
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+  op1.xmm32u((control >> 4) & 3) = read_virtual_dword(i->seg(), eaddr);
+  xmm_zero_blendps(&op1, &op1, ~control);
+
+  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
+
+  BX_NEXT_INSTR(i);
+}
 
 BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MPSADBW_VdqWdqIbR(bxInstruction_c *i)
 {
