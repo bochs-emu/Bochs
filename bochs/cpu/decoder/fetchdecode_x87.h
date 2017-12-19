@@ -274,7 +274,7 @@ static const Bit16u BxOpcodeInfo_FloatingPointDA[64+8] = {
 static const Bit16u BxOpcodeInfo_FloatingPointDB[64+8] = {
   /* /m form */
   /* 0 */ BX_IA_FILD_DWORD_INTEGER,
-  /* 1 */ BX_IA_FISTTP32,
+  /* 1 */ BX_IA_FISTTP_Md,
   /* 2 */ BX_IA_FIST_DWORD_INTEGER,
   /* 3 */ BX_IA_FISTP_DWORD_INTEGER,
   /* 4 */ BX_IA_ERROR,
@@ -432,7 +432,7 @@ static const Bit16u BxOpcodeInfo_FloatingPointDC[64+8] = {
 static const Bit16u BxOpcodeInfo_FloatingPointDD[64+8] = {
   /* /m form */
   /* 0 */ BX_IA_FLD_DOUBLE_REAL,
-  /* 1 */ BX_IA_FISTTP64,
+  /* 1 */ BX_IA_FISTTP_Mq,
   /* 2 */ BX_IA_FST_DOUBLE_REAL,
   /* 3 */ BX_IA_FSTP_DOUBLE_REAL,
   /* 4 */ BX_IA_FRSTOR,
@@ -590,7 +590,7 @@ static const Bit16u BxOpcodeInfo_FloatingPointDE[64+8] = {
 static const Bit16u BxOpcodeInfo_FloatingPointDF[64+8] = {
   /* /m form */
   /* 0 */ BX_IA_FILD_WORD_INTEGER,
-  /* 1 */ BX_IA_FISTTP16,
+  /* 1 */ BX_IA_FISTTP_Mw,
   /* 2 */ BX_IA_FIST_WORD_INTEGER,
   /* 3 */ BX_IA_FISTP_WORD_INTEGER,
   /* 4 */ BX_IA_FBLD_PACKED_BCD,
