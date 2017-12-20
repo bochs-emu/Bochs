@@ -1486,6 +1486,7 @@ void bx_voodoo_c::banshee_write_handler(void *this_ptr, Bit32u address, Bit32u v
   bx_bool prev_hwce = v->banshee.hwcursor.enabled;
   Bit16u prev_hwcx = v->banshee.hwcursor.x;
   Bit16u prev_hwcy = v->banshee.hwcursor.y;
+  bx_bool mode_change = 0;
 
   BX_DEBUG(("banshee write to offset 0x%02x: value = 0x%08x len=%d (%s)", offset, value,
             io_len, banshee_io_reg_name[reg]));
@@ -1555,9 +1556,23 @@ void bx_voodoo_c::banshee_write_handler(void *this_ptr, Bit32u address, Bit32u v
         if (theVoodooVga != NULL) {
           theVoodooVga->banshee_update_mode();
         }
+        mode_change = 1;
       } else if (!(v->banshee.io[reg] & 0x01) && ((old & 0x01) == 0x01)) {
         bx_virt_timer.deactivate_timer(BX_VOODOO_THIS s.vertical_timer_id);
         v->vtimer_running = 0;
+      }
+      if ((v->banshee.io[reg] & 0x01) && ((v->banshee.io[reg] & 0x180) != (old & 0x180))) {
+        mode_change = 1;
+      }
+      if (mode_change) {
+        if ((v->banshee.io[reg] & 0x180) == 0x080) {
+          BX_INFO(("2D desktop mode enabled"));
+        } else if ((v->banshee.io[reg] & 0x180) == 0x100) {
+          BX_INFO(("3D overlay mode enabled"));
+          v->vtimer_running = 1;
+        } else {
+          BX_INFO(("Mixed 2D/3D mode not supported yet"));
+        }
       }
       v->banshee.hwcursor.enabled = ((v->banshee.io[reg] >> 27) & 1);
       v->banshee.hwcursor.mode = ((v->banshee.io[reg] >> 1) & 1);
@@ -2519,6 +2534,9 @@ void bx_voodoo_c::banshee_blt_screen_to_screen()
   w = BLT.dst_w;
   h = BLT.dst_h;
   BX_DEBUG(("Screen to screen blt: %d x %d  ROP %02X", w, h, BLT.rop0));
+  if (BLT.dst_fmt != BLT.src_fmt) {
+    BX_ERROR(("Pixel format conversion not supported yet"));
+  }
   if (!banshee_blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h)) {
     BLT.busy = 0;
     BX_UNLOCK(render_mutex);
@@ -2561,6 +2579,9 @@ void bx_voodoo_c::banshee_blt_screen_to_screen_pattern()
   h = BLT.dst_h;
   rop0 = BLT.rop0;
   BX_DEBUG(("Screen to screen pattern blt: %d x %d  ROP %02X", w, h, rop0));
+  if (BLT.dst_fmt != BLT.src_fmt) {
+    BX_ERROR(("Pixel format conversion not supported yet"));
+  }
   if (!banshee_blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h)) {
     BLT.busy = 0;
     BX_UNLOCK(render_mutex);
@@ -2668,6 +2689,9 @@ void bx_voodoo_c::banshee_blt_host_to_screen()
   w = BLT.dst_w;
   h = BLT.dst_h;
   BX_DEBUG(("Host to screen blt: %d x %d  ROP %02X", w, h, BLT.rop0));
+  if ((srcfmt != 0) && (BLT.dst_fmt != srcfmt)) {
+    BX_ERROR(("Pixel format conversion not supported yet"));
+  }
   x0 = 0;
   y0 = 0;
   if (!banshee_blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h)) {
@@ -2754,6 +2778,9 @@ void bx_voodoo_c::banshee_blt_host_to_screen_pattern()
   h = BLT.dst_h;
   rop0 = BLT.rop0;
   BX_DEBUG(("Host to screen pattern blt: %d x %d  ROP %02X", w, h, rop0));
+  if ((srcfmt != 0) && (BLT.dst_fmt != srcfmt)) {
+    BX_ERROR(("Pixel format conversion not supported yet"));
+  }
   x0 = 0;
   y0 = 0;
   if (!banshee_blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h)) {
