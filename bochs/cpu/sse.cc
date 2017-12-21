@@ -403,32 +403,32 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRQ_VdqEqIbM(bxInstruction_c *i
 }
 #endif
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INSERTPS_VpsHpsWssIbR(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INSERTPS_VpsWssIbR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst());
   Bit8u control = i->Ib();
 
-  BxPackedXmmRegister temp = BX_READ_XMM_REG(i->src2());
+  BxPackedXmmRegister temp = BX_READ_XMM_REG(i->src());
   Bit32u op2 = temp.xmm32u((control >> 6) & 3);
 
   op1.xmm32u((control >> 4) & 3) = op2;
   xmm_zero_blendps(&op1, &op1, ~control);
 
-  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
+  BX_WRITE_XMM_REG(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INSERTPS_VpsHpsWssIbM(bxInstruction_c *i)
+BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INSERTPS_VpsWssIbM(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst());
   Bit8u control = i->Ib();
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   op1.xmm32u((control >> 4) & 3) = read_virtual_dword(i->seg(), eaddr);
   xmm_zero_blendps(&op1, &op1, ~control);
 
-  BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
+  BX_WRITE_XMM_REG(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }

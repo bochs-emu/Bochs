@@ -2582,8 +2582,6 @@ public: // for now...
 #endif
   BX_SMF BX_INSF_TYPE PINSRB_VdqEbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE PINSRB_VdqEbIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE INSERTPS_VpsHpsWssIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF BX_INSF_TYPE INSERTPS_VpsHpsWssIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE PINSRD_VdqEdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE PINSRD_VdqEdIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #if BX_SUPPORT_X86_64
@@ -2593,6 +2591,9 @@ public: // for now...
   BX_SMF BX_INSF_TYPE DPPS_VpsWpsIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE DPPD_VpdHpdWpdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE MPSADBW_VdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF BX_INSF_TYPE INSERTPS_VpsWssIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE INSERTPS_VpsWssIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   /* SSE4.1 */
 
   /* SSE4.2 */
@@ -2820,6 +2821,8 @@ public: // for now...
   BX_SMF BX_INSF_TYPE VPINSRD_VdqHdqEdIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VPINSRQ_VdqHdqEqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VPINSRQ_VdqHdqEqIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VINSERTPS_VpsHpsWssIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF BX_INSF_TYPE VINSERTPS_VpsHpsWssIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF BX_INSF_TYPE VCVTPH2PS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF BX_INSF_TYPE VCVTPS2PH_WpsVpsIb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
