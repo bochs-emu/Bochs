@@ -189,13 +189,13 @@ static struct _CDTOC * ReadTOC(const char *devpath)
   CFDictionaryRef properties = 0;
   CFDataRef data = 0;
   mach_port_t port = 0;
-  char *devname;
+  const char *devname;
 
   if ((devname = strrchr(devpath, '/')) != NULL) {
     ++devname;
   }
   else {
-    devname = (char *) devpath;
+    devname = (const char *) devpath;
   }
 
   if (IOMasterPort(bootstrap_port, &port) != KERN_SUCCESS) {
