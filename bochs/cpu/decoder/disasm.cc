@@ -254,9 +254,11 @@ char *resolve_memsize(char *disbufptr, const bxInstruction_c *i, unsigned src_in
       break;
     }
   }
+#if BX_SUPPORT_AVX
   else if (src_index == BX_SRC_VSIB) {
     disbufptr = dis_sprintf(disbufptr, "%sword ptr ", intel_vector_reg_name[i->getVL() - 1]);
   }
+#endif
 
   return disbufptr;
 }
