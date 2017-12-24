@@ -2724,7 +2724,7 @@ void cmdfifo_process(cmdfifo_info *f)
           regaddr <<= 2;
           w0 = 0;
           wn = nwords;
-          if ((disbytes > 0) && (disbytes != 0x0c) && (disbytes != 0xc0)) {
+          if ((disbytes > 0) && (disbytes != 0x30) && (disbytes != 0xc0)) {
             BX_ERROR(("CMDFIFO packet type 5: byte disable not complete yet (dest code = 0)"));
           }
           if ((disbytes & 0xf0) > 0) {
@@ -3121,7 +3121,7 @@ Bit32u register_r(Bit32u offset)
         result |= 1 << 8;
 
       /* bit 9 is overall busy */
-      if (v->pci.op_pending || v->banshee.blt.busy)
+      if (v->pci.op_pending)
         result |= 1 << 9;
 
       if (v->type == VOODOO_2) {
@@ -3151,15 +3151,15 @@ Bit32u register_r(Bit32u offset)
       {
         /* bit 10 is 2D busy */
         if (v->banshee.blt.busy)
-          result |= 1 << 10;
+          result |= 3 << 9;
 
         /* bit 11 is cmd FIFO 0 busy */
         if (v->fbi.cmdfifo[0].enabled && v->fbi.cmdfifo[0].depth > 0)
-          result |= 1 << 11;
+          result |= 5 << 9;
 
         /* bit 12 is cmd FIFO 1 busy */
         if (v->fbi.cmdfifo[1].enabled && v->fbi.cmdfifo[1].depth > 0)
-          result |= 1 << 12;
+          result |= 9 << 9;
       }
 
       /* bits 30:28 are the number of pending swaps */

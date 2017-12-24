@@ -1986,17 +1986,10 @@ void bx_voodoo_c::banshee_blt_reg_write(Bit8u reg, Bit32u value)
     case blt_srcBaseAddr:
       BLT.src_base = BLT.reg[reg] & v->fbi.mask;
       BLT.src_tiled = BLT.reg[reg] >> 31;
-      BLT.src_pitch = BLT.reg[blt_srcFormat] & 0x3fff;
-      if (BLT.src_tiled) {
-        BLT.src_pitch *= 128;
-      }
       break;
     case blt_srcFormat:
       BLT.src_fmt = (BLT.reg[reg] >> 16) & 0x0f;
       BLT.src_pitch = BLT.reg[reg] & 0x3fff;
-      if (BLT.src_tiled) {
-        BLT.src_pitch *= 128;
-      }
       break;
     case blt_pattern0Alias:
       BLT.cpat[0][0] = value & 0xff;
@@ -2522,7 +2515,7 @@ void bx_voodoo_c::banshee_blt_screen_to_screen()
   Bit8u *src_ptr = &v->fbi.ram[BLT.src_base];
   Bit8u *dst_ptr = &v->fbi.ram[BLT.dst_base];
   Bit8u dpxsize = (BLT.dst_fmt > 1) ? (BLT.dst_fmt - 1) : 1;
-  int spitch = BLT.src_pitch;
+  int spitch;
   int dpitch = BLT.dst_pitch;
   int x0, x1, y0, y1, w, h;
 
@@ -2542,6 +2535,11 @@ void bx_voodoo_c::banshee_blt_screen_to_screen()
     BX_UNLOCK(render_mutex);
     return;
   }
+  if (BLT.src_tiled) {
+    spitch = BLT.src_pitch * 128;
+  } else {
+    spitch = BLT.src_pitch;
+  }
   if (BLT.y_dir) {
     spitch *= -1;
     dpitch *= -1;
@@ -2560,7 +2558,7 @@ void bx_voodoo_c::banshee_blt_screen_to_screen_pattern()
   Bit8u *pat_ptr = &BLT.cpat[0][0];
   Bit8u *src_ptr1, *dst_ptr1, *pat_ptr1, *pat_ptr2 = NULL;
   int dpxsize = (BLT.dst_fmt > 1) ? (BLT.dst_fmt - 1) : 1;
-  int spitch = BLT.src_pitch;
+  int spitch;
   int dpitch = BLT.dst_pitch;
   bx_bool patmono = (BLT.reg[blt_command] >> 13) & 1;
   bx_bool patrow0 = (BLT.reg[blt_commandExtra] & 0x08) > 0;
@@ -2586,6 +2584,11 @@ void bx_voodoo_c::banshee_blt_screen_to_screen_pattern()
     BLT.busy = 0;
     BX_UNLOCK(render_mutex);
     return;
+  }
+  if (BLT.src_tiled) {
+    spitch = BLT.src_pitch * 128;
+  } else {
+    spitch = BLT.src_pitch;
   }
   if (BLT.x_dir) {
     dpxsize *= -1;
