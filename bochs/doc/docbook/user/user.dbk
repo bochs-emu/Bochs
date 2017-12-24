@@ -3154,18 +3154,19 @@ system BIOS and VGA BIOS images.
 <para>
 Bochs must be set up to use system and VGA BIOS like this:
 <screen>
-  romimage: file=BIOS-bochs-latest, address=0xe0000
+  romimage: file=BIOS-bochs-latest, address=0xfffe0000
   vgaromimage: file=VGABIOS-lgpl-latest
 </screen>
 We recommend to use the ROM images distributed with Bochs or one of the latest
 <ulink url="http://www.seabios.org/">SeaBIOS</ulink> images. BIOS images designed
-for real hardware mostly do not work properly.
+for real hardware mostly do not work properly. Please see the <xref linkend="bochsopt-romimage">
+for more information.
 </para>
 
 <para>
 Bochs supports optional ROM images to be loaded into the ISA ROM space,
 typically between C8000 and EFFFF (see <xref linkend="bochsopt-optrom">). The PCI
-versions of the Bochs network adapter emulation support loading a boot ROM into
+versions of the Bochs network adapter emulations support loading a boot ROM into
 the PCI ROM space (see <xref linkend="bochsopt-ne2k">).
 </para>
 
@@ -3724,7 +3725,7 @@ value. In all other cases the 'memory' option should be used instead.
 </para>
 </section>
 
-<section><title>romimage</title>
+<section id="bochsopt-romimage"><title>romimage</title>
 <para>
 Examples:
 <screen>
