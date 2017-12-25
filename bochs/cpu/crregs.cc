@@ -705,7 +705,12 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR3Rq(bxInstruction_c *i)
   }
 #endif
 
-  // no PDPTR checks in long mode
+  // allow bit 63 (hint that TLB doesn't need to be cleared) to be set when
+  // PCIDE is set, but ignore the hint if given
+  if (BX_CPU_THIS_PTR cr4.get_PCIDE()) {
+    val_64 &= ~(BX_CONST64(1)<<63);
+  }
+
   if (! SetCR3(val_64))
     exception(BX_GP_EXCEPTION, 0);
 
