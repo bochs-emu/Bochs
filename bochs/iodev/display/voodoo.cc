@@ -2095,6 +2095,7 @@ void bx_voodoo_c::banshee_blt_launch_area_setup()
       BLT.lacnt = 1;
       break;
     case 3:
+      BLT.h2s_alt_align = 0;
       pxpack = (BLT.reg[blt_srcFormat] >> 22) & 3;
       BLT.src_wizzle = (BLT.reg[blt_srcFormat] >> 20) & 0x03;
       if ((BLT.reg[blt_srcXY] & 0xffe0) != 0) {
@@ -2114,13 +2115,14 @@ void bx_voodoo_c::banshee_blt_launch_area_setup()
       } else if (BLT.src_fmt == 1) {
         pbytes = BLT.dst_w + BLT.h2s_pxstart;
       } else if ((BLT.src_fmt >= 3) && (BLT.src_fmt <= 5))  {
-        pbytes = (BLT.dst_w + BLT.h2s_pxstart) * (BLT.src_fmt - 1);
+        pbytes = BLT.dst_w * (BLT.src_fmt - 1) + BLT.h2s_pxstart;
       } else {
         pbytes = 0;
         BX_INFO(("Source format %d not handled yet", BLT.src_fmt));
       }
       if (pxpack == 0) {
         BLT.h2s_pitch = (pbytes + 3) & ~0x03;
+        BLT.h2s_alt_align = ((BLT.src_fmt == 0) && (BLT.h2s_pitch > BLT.src_pitch));
       } else {
         BLT.h2s_pitch = (pbytes + (1 << (pxpack - 1)) - 1) / (1 << (pxpack - 1));
       }
@@ -2679,8 +2681,8 @@ void bx_voodoo_c::banshee_blt_host_to_screen()
   Bit8u *src_ptr1, *dst_ptr1;
   Bit16u spitch = BLT.h2s_pitch;
   Bit8u srcfmt = BLT.src_fmt;
-  Bit8u spxsize = 0;
-  Bit8u dstcolor[4];
+  Bit8u spxsize = 0, r, g, b;
+  Bit8u dstcolor[4], scolor[4];
   Bit8u *srccolor;
   int ncols, nrows, x0, y0, x1, y1, w, h;
   Bit8u smask;
@@ -2692,7 +2694,7 @@ void bx_voodoo_c::banshee_blt_host_to_screen()
   w = BLT.dst_w;
   h = BLT.dst_h;
   BX_DEBUG(("Host to screen blt: %d x %d  ROP %02X", w, h, BLT.rop0));
-  if ((srcfmt != 0) && (BLT.dst_fmt != srcfmt)) {
+  if ((srcfmt != 0) && (dpxsize != 2) && (BLT.dst_fmt != srcfmt)) {
     BX_ERROR(("Pixel format conversion not supported yet"));
   }
   x0 = 0;
@@ -2735,7 +2737,18 @@ void bx_voodoo_c::banshee_blt_host_to_screen()
         }
         BLT.rop_fn(dst_ptr1, srccolor, dpitch, dpxsize, dpxsize, 1);
       } else {
-        BLT.rop_fn(dst_ptr1, src_ptr1, dpitch, dpxsize, dpxsize, 1);
+        if (BLT.dst_fmt != srcfmt) {
+          if ((dpxsize == 2) && ((srcfmt == 4) || (srcfmt == 5))) {
+            b = src_ptr1[0];
+            g = src_ptr1[1];
+            r = src_ptr1[2];
+            scolor[0] = (b >> 3) | ((g & 0x1c) << 3);
+            scolor[1] = (g >> 5) | (r & 0xf8);
+            BLT.rop_fn(dst_ptr1, scolor, dpitch, dpxsize, dpxsize, 1);
+          }
+        } else {
+          BLT.rop_fn(dst_ptr1, src_ptr1, dpitch, dpxsize, dpxsize, 1);
+        }
       }
       if (srcfmt == 0) {
         smask >>= 1;
@@ -2748,7 +2761,15 @@ void bx_voodoo_c::banshee_blt_host_to_screen()
       }
       dst_ptr1 += dpxsize;
     } while (--ncols);
-    src_ptr += spitch;
+    if (BLT.h2s_alt_align) {
+      if ((h - nrows) & 1) {
+        src_ptr += BLT.src_pitch;
+      } else {
+        src_ptr += (spitch * 2 - BLT.src_pitch);
+      }
+    } else {
+      src_ptr += spitch;
+    }
     dst_ptr += dpitch;
   } while (--nrows);
   banshee_blt_complete();
@@ -2783,6 +2804,9 @@ void bx_voodoo_c::banshee_blt_host_to_screen_pattern()
   BX_DEBUG(("Host to screen pattern blt: %d x %d  ROP %02X", w, h, rop0));
   if ((srcfmt != 0) && (BLT.dst_fmt != srcfmt)) {
     BX_ERROR(("Pixel format conversion not supported yet"));
+  }
+  if (BLT.h2s_alt_align) {
+    BX_ERROR(("Alternating alignment not handled yet"));
   }
   x0 = 0;
   y0 = 0;
