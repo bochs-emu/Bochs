@@ -54,72 +54,115 @@ typedef struct {
 } bx_voodoo_t;
 
 
-class bx_voodoo_c : public bx_nonvga_device_c {
+class bx_voodoo_base_c : public bx_nonvga_device_c {
 public:
-  bx_voodoo_c();
-  virtual ~bx_voodoo_c();
+  bx_voodoo_base_c();
+  virtual ~bx_voodoo_base_c();
   virtual void init(void);
-  virtual void reset(unsigned type);
-  virtual void register_state(void);
-  virtual void after_restore_state(void);
+  virtual void init_model(void) {}
+  virtual void register_state(void) {}
 
   virtual void refresh_display(void *this_ptr, bx_bool redraw);
   virtual void redraw_area(unsigned x0, unsigned y0,
                            unsigned width, unsigned height);
   virtual void update(void);
+  virtual bx_bool update_timing(void) {return 0;}
+  virtual Bit32u get_retrace(bx_bool hv) {return 0;}
+
+  virtual void output_enable(bx_bool enabled) {}
+  virtual void update_screen_start(void) {}
+
+  virtual void blt_reg_write(Bit8u reg, Bit32u value) {}
+  virtual void mem_write_linear(Bit32u offset, Bit32u value, unsigned len) {}
+  virtual void draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *info) {}
+  virtual void set_tile_updated(unsigned xti, unsigned yti, bx_bool flag) {}
+
+  static void vertical_timer_handler(void *);
+
+protected:
+  bx_voodoo_t s;
+
+  void register_state(bx_list_c *parent);
+  void set_irq_level(bx_bool level);
+  void vertical_timer(void);
+};
+
+class bx_voodoo_1_2_c : public bx_voodoo_base_c {
+public:
+  bx_voodoo_1_2_c();
+  virtual ~bx_voodoo_1_2_c() {}
+  virtual void init_model(void);
+  virtual void reset(unsigned type);
+  virtual void register_state(void);
+  virtual void after_restore_state(void);
+
+  virtual bx_bool update_timing(void);
+  virtual Bit32u get_retrace(bx_bool hv);
+
+  virtual void output_enable(bx_bool enabled);
+  virtual void update_screen_start(void);
 
   virtual void pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 
-  static Bit32u get_retrace(bx_bool hv);
-  static void output_enable(bx_bool enabled);
-  static void update_screen_start(void);
-  static bx_bool update_timing(void);
-  Bit8u get_model(void) {return s.model;}
-
-  void banshee_draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *info);
-  void set_tile_updated(unsigned xti, unsigned yti, bx_bool flag);
-
-  Bit32u banshee_blt_reg_read(Bit8u reg);
-  void   banshee_blt_reg_write(Bit8u reg, Bit32u value);
-
-  void banshee_mem_write_linear(Bit32u offset, Bit32u value, unsigned len);
-
 private:
-  bx_voodoo_t s;
-
-  static void    set_irq_level(bx_bool level);
-
   static bx_bool mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
   static bx_bool mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
 
   static void mode_change_timer_handler(void *);
-  static void vertical_timer_handler(void *);
+  void mode_change_timer(void);
+};
 
-  void banshee_pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
+class bx_banshee_c : public bx_voodoo_base_c {
+public:
+  bx_banshee_c();
+  virtual ~bx_banshee_c() {}
+  virtual void init_model(void);
+  virtual void reset(unsigned type);
+  virtual void register_state(void);
+  virtual void after_restore_state(void);
 
-  static Bit32u banshee_read_handler(void *this_ptr, Bit32u address, unsigned io_len);
-  static void   banshee_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
+  virtual bx_bool update_timing(void);
+  virtual Bit32u get_retrace(bx_bool hv);
 
-  void banshee_mem_read(bx_phy_address addr, unsigned len, void *data);
-  void banshee_mem_write(bx_phy_address addr, unsigned len, void *data);
+  virtual void blt_reg_write(Bit8u reg, Bit32u value);
+  virtual void mem_write_linear(Bit32u offset, Bit32u value, unsigned len);
+  virtual void draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *info);
+  virtual void set_tile_updated(unsigned xti, unsigned yti, bx_bool flag);
 
-  Bit32u banshee_agp_reg_read(Bit8u reg);
-  void   banshee_agp_reg_write(Bit8u reg, Bit32u value);
+  virtual void pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 
-  void   banshee_blt_launch_area_setup(void);
-  void   banshee_blt_launch_area_write(Bit32u value);
-  void   banshee_blt_execute(void);
-  void   banshee_blt_complete(void);
-  bx_bool banshee_blt_apply_clipwindow(int *x0, int *y0, int *x1, int *y1, int *w, int *h);
+  Bit32u blt_reg_read(Bit8u reg);
 
-  void   banshee_blt_rectangle_fill(void);
-  void   banshee_blt_pattern_fill_mono(void);
-  void   banshee_blt_pattern_fill_color(void);
-  void   banshee_blt_screen_to_screen(void);
-  void   banshee_blt_screen_to_screen_pattern(void);
-  void   banshee_blt_host_to_screen(void);
-  void   banshee_blt_host_to_screen_pattern(void);
-  void   banshee_blt_line(bx_bool pline);
+private:
+  static bx_bool mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  static bx_bool mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+
+  void mem_read(bx_phy_address addr, unsigned len, void *data);
+  void mem_write(bx_phy_address addr, unsigned len, void *data);
+
+  static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
+  static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
+
+  Bit32u read(Bit32u address, unsigned io_len);
+  void   write(Bit32u address, Bit32u value, unsigned io_len);
+
+  Bit32u agp_reg_read(Bit8u reg);
+  void   agp_reg_write(Bit8u reg, Bit32u value);
+
+  void   blt_launch_area_setup(void);
+  void   blt_launch_area_write(Bit32u value);
+  void   blt_execute(void);
+  void   blt_complete(void);
+  bx_bool blt_apply_clipwindow(int *x0, int *y0, int *x1, int *y1, int *w, int *h);
+
+  void   blt_rectangle_fill(void);
+  void   blt_pattern_fill_mono(void);
+  void   blt_pattern_fill_color(void);
+  void   blt_screen_to_screen(void);
+  void   blt_screen_to_screen_pattern(void);
+  void   blt_host_to_screen(void);
+  void   blt_host_to_screen_pattern(void);
+  void   blt_line(bx_bool pline);
 };
 
 class bx_voodoo_vga_c : public bx_vgacore_c {

@@ -72,7 +72,7 @@ enum
 #define Voodoo_Output_Enable(x)    theVoodooDevice->output_enable(x)
 #define Voodoo_get_retrace(a)      theVoodooDevice->get_retrace(a)
 #define Voodoo_update_timing()     theVoodooDevice->update_timing()
-#define Voodoo_Banshee_2D_write(a,b) theVoodooDevice->banshee_blt_reg_write(a,b)
-#define Voodoo_Banshee_LFB_write(a,b,c) theVoodooDevice->banshee_mem_write_linear(a,b,c)
+#define Voodoo_Banshee_2D_write(a,b) theVoodooDevice->blt_reg_write(a,b)
+#define Voodoo_Banshee_LFB_write(a,b,c) theVoodooDevice->mem_write_linear(a,b,c)
 
 #endif

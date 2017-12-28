@@ -89,7 +89,7 @@ const Bit8u banshee_iomask[256] = {4,0,0,0,7,1,3,1,7,1,3,1,7,1,3,1,7,1,3,1,
                                    7,1,3,1,7,1,3,1,7,1,3,1,7,1,3,1,7,1,3,1,
                                    7,1,3,1,7,1,3,1,7,1,3,1,7,1,3,1};
 
-bx_voodoo_c* theVoodooDevice = NULL;
+bx_voodoo_base_c* theVoodooDevice = NULL;
 bx_voodoo_vga_c* theVoodooVga = NULL;
 
 #include "voodoo_types.h"
@@ -150,12 +150,12 @@ Bit32s voodoo_options_save(FILE *fp)
 
 int CDECL libvoodoo_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
 {
-  theVoodooDevice = new bx_voodoo_c();
   if (type == PLUGTYPE_VGA) {
     theVoodooVga = new bx_voodoo_vga_c();
     bx_devices.pluginVgaDevice = theVoodooVga;
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theVoodooVga, BX_PLUGIN_VOODOO);
   } else {
+    theVoodooDevice = new bx_voodoo_1_2_c();
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theVoodooDevice, BX_PLUGIN_VOODOO);
   }
   // add new configuration parameter for the config interface
@@ -173,7 +173,9 @@ void CDECL libvoodoo_LTX_plugin_fini(void)
   if (theVoodooVga != NULL) {
     delete theVoodooVga;
   }
-  delete theVoodooDevice;
+  if (theVoodooDevice != NULL) {
+    delete theVoodooDevice;
+  }
 }
 
 // FIFO thread
@@ -242,22 +244,23 @@ BX_THREAD_FUNC(fifo_thread, indata)
   BX_THREAD_EXIT;
 }
 
-// the device object
+// the device objects
 
-bx_voodoo_c::bx_voodoo_c()
+// the base class bx_voodoo_base_c
+
+bx_voodoo_base_c::bx_voodoo_base_c()
 {
   put("VOODOO");
-  s.mode_change_timer_id = BX_NULL_TIMER_HANDLE;
   s.vertical_timer_id = BX_NULL_TIMER_HANDLE;
   v = NULL;
 }
 
-bx_voodoo_c::~bx_voodoo_c()
+bx_voodoo_base_c::~bx_voodoo_base_c()
 {
   BX_THREAD_KILL(fifo_thread_var);
   BX_FINI_MUTEX(fifo_mutex);
   BX_FINI_MUTEX(render_mutex);
-  if (BX_VOODOO_THIS s.model >= VOODOO_2) {
+  if (s.model >= VOODOO_2) {
     BX_FINI_MUTEX(cmdfifo_mutex);
   }
   bx_destroy_event(&fifo_wakeup);
@@ -265,7 +268,7 @@ bx_voodoo_c::~bx_voodoo_c()
 
   if (v != NULL) {
     free(v->fbi.ram);
-    if (BX_VOODOO_THIS s.model < VOODOO_BANSHEE) {
+    if (s.model < VOODOO_BANSHEE) {
       free(v->tmu[0].ram);
       free(v->tmu[1].ram);
     }
@@ -275,7 +278,7 @@ bx_voodoo_c::~bx_voodoo_c()
   BX_DEBUG(("Exit"));
 }
 
-void bx_voodoo_c::init(void)
+void bx_voodoo_base_c::init(void)
 {
   // Read in values from config interface
   bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_VOODOO);
@@ -286,73 +289,39 @@ void bx_voodoo_c::init(void)
     ((bx_param_bool_c*)((bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL))->get_by_name("voodoo"))->set(0);
     return;
   }
-  BX_VOODOO_THIS s.model = (Bit8u)SIM->get_param_enum("model", base)->get();
-  BX_VOODOO_THIS s.devfunc = 0x00;
-  if (BX_VOODOO_THIS s.model < VOODOO_BANSHEE) {
-    DEV_register_pci_handlers(this, &BX_VOODOO_THIS s.devfunc, BX_PLUGIN_VOODOO,
-                              "Experimental 3dfx Voodoo Graphics (SST-1/2)");
-    if (BX_VOODOO_THIS s.model == VOODOO_1) {
-      init_pci_conf(0x121a, 0x0001, 0x02, 0x000000, 0x00);
-    } else if (BX_VOODOO_THIS s.model == VOODOO_2) {
-      init_pci_conf(0x121a, 0x0002, 0x02, 0x038000, 0x00);
-      BX_VOODOO_THIS pci_conf[0x10] = 0x08;
-    }
-    BX_VOODOO_THIS pci_conf[0x3d] = BX_PCI_INTA;
-    BX_VOODOO_THIS pci_base_address[0] = 0;
-  } else {
-    if (theVoodooVga == NULL) {
-      BX_PANIC(("Voodoo Banshee with VGA disabled not supported yet"));
-    }
-    DEV_register_pci_handlers(this, &BX_VOODOO_THIS s.devfunc, BX_PLUGIN_VOODOO,
-                              "Experimental 3dfx Voodoo Banshee");
-    init_pci_conf(0x121a, 0x0003, 0x01, 0x030000, 0x00);
-    BX_VOODOO_THIS pci_conf[0x14] = 0x08;
-    BX_VOODOO_THIS pci_conf[0x18] = 0x01;
-    BX_VOODOO_THIS pci_conf[0x3d] = BX_PCI_INTA;
-    BX_VOODOO_THIS pci_base_address[0] = 0;
-    BX_VOODOO_THIS pci_base_address[1] = 0;
-    BX_VOODOO_THIS pci_base_address[2] = 0;
-    BX_VOODOO_THIS pci_rom_address = 0;
-    BX_VOODOO_THIS load_pci_rom(SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr());
-  }
-  if (BX_VOODOO_THIS s.mode_change_timer_id == BX_NULL_TIMER_HANDLE) {
-    BX_VOODOO_THIS s.mode_change_timer_id = bx_virt_timer.register_timer(this, mode_change_timer_handler,
-       1000, 0, 0, 0, "voodoo_mode_change");
-  }
-  if (BX_VOODOO_THIS s.vertical_timer_id == BX_NULL_TIMER_HANDLE) {
-    BX_VOODOO_THIS s.vertical_timer_id = bx_virt_timer.register_timer(this, vertical_timer_handler,
+  s.model = (Bit8u)SIM->get_param_enum("model", base)->get();
+  s.devfunc = 0x00;
+  init_model();
+  if (s.vertical_timer_id == BX_NULL_TIMER_HANDLE) {
+    s.vertical_timer_id = bx_virt_timer.register_timer(this, vertical_timer_handler,
        50000, 1, 0, 0, "vertical_timer");
   }
-  BX_VOODOO_THIS s.vdraw.clock_enabled = 1;
-  BX_VOODOO_THIS s.vdraw.output_on = 0;
-  BX_VOODOO_THIS s.vdraw.override_on = 0;
-  BX_VOODOO_THIS s.vdraw.screen_update_pending = 0;
-  BX_VOODOO_THIS s.vdraw.gui_update_pending = 0;
+  s.vdraw.gui_update_pending = 0;
 
   v = new voodoo_state;
   memset(v, 0, sizeof(voodoo_state));
   BX_INIT_MUTEX(fifo_mutex);
   BX_INIT_MUTEX(render_mutex);
-  if (BX_VOODOO_THIS s.model >= VOODOO_2) {
+  if (s.model >= VOODOO_2) {
     v->fbi.cmdfifo[0].depth_needed = BX_MAX_BIT32U;
     v->fbi.cmdfifo[1].depth_needed = BX_MAX_BIT32U;
     BX_INIT_MUTEX(cmdfifo_mutex);
   }
 
-  voodoo_init(BX_VOODOO_THIS s.model);
-  if (BX_VOODOO_THIS s.model >= VOODOO_BANSHEE) {
+  voodoo_init(s.model);
+  if (s.model >= VOODOO_BANSHEE) {
     banshee_bitblt_init();
-    BX_VOODOO_THIS s.max_xres = 1600;
-    BX_VOODOO_THIS s.max_yres = 1280;
+    s.max_xres = 1600;
+    s.max_yres = 1280;
   } else {
-    BX_VOODOO_THIS s.max_xres = 800;
-    BX_VOODOO_THIS s.max_yres = 680;
+    s.max_xres = 800;
+    s.max_yres = 680;
   }
-  BX_VOODOO_THIS s.num_x_tiles = (BX_VOODOO_THIS s.max_xres + X_TILESIZE - 1) / X_TILESIZE;
-  BX_VOODOO_THIS s.num_y_tiles = (BX_VOODOO_THIS s.max_yres + Y_TILESIZE - 1) / Y_TILESIZE;
-  BX_VOODOO_THIS s.vga_tile_updated = new bx_bool[BX_VOODOO_THIS s.num_x_tiles * BX_VOODOO_THIS s.num_y_tiles];
-  for (unsigned y = 0; y < BX_VOODOO_THIS s.num_y_tiles; y++)
-    for (unsigned x = 0; x < BX_VOODOO_THIS s.num_x_tiles; x++)
+  s.num_x_tiles = (s.max_xres + X_TILESIZE - 1) / X_TILESIZE;
+  s.num_y_tiles = (s.max_yres + Y_TILESIZE - 1) / Y_TILESIZE;
+  s.vga_tile_updated = new bx_bool[s.num_x_tiles * s.num_y_tiles];
+  for (unsigned y = 0; y < s.num_y_tiles; y++)
+    for (unsigned x = 0; x < s.num_x_tiles; x++)
       SET_TILE_UPDATED(BX_VOODOO_THIS, x, y, 0);
 
   bx_create_event(&fifo_wakeup);
@@ -364,60 +333,12 @@ void bx_voodoo_c::init(void)
            SIM->get_param_enum("model", base)->get_selected()));
 }
 
-void bx_voodoo_c::reset(unsigned type)
-{
-  unsigned i;
-
-  static const struct reset_vals_t {
-    unsigned      addr;
-    unsigned char val;
-  } reset_vals[] = {
-    { 0x04, 0x00 }, { 0x05, 0x00 }, // command io / memory
-    { 0x06, 0x00 }, { 0x07, 0x00 }, // status
-    // address space 0x10 - 0x13
-    { 0x11, 0x00 },
-    { 0x12, 0x00 }, { 0x13, 0x00 },
-    { 0x3c, 0x00 },                 // IRQ
-    // initEnable
-    { 0x40, 0x00 }, { 0x41, 0x00 },
-    { 0x42, 0x00 }, { 0x43, 0x00 },
-    // busSnoop0
-    { 0x44, 0x00 }, { 0x45, 0x00 },
-    { 0x46, 0x00 }, { 0x47, 0x00 },
-    // busSnoop1
-    { 0x48, 0x00 }, { 0x49, 0x00 },
-    { 0x4a, 0x00 }, { 0x4b, 0x00 },
-
-  };
-  if (BX_VOODOO_THIS s.model < VOODOO_BANSHEE) {
-    for (i = 0; i < sizeof(reset_vals) / sizeof(*reset_vals); ++i) {
-      BX_VOODOO_THIS pci_conf[reset_vals[i].addr] = reset_vals[i].val;
-    }
-    if (BX_VOODOO_THIS s.model == VOODOO_2) {
-      BX_VOODOO_THIS pci_conf[0x41] = 0x50;
-      v->pci.init_enable = 0x5000;
-    } else {
-      v->pci.init_enable = 0x0000;
-    }
-  } else {
-    // TODO
-  }
-
-  if ((!BX_VOODOO_THIS s.vdraw.clock_enabled || !BX_VOODOO_THIS s.vdraw.output_on) && BX_VOODOO_THIS s.vdraw.override_on) {
-    mode_change_timer_handler(NULL);
-  }
-
-  // Deassert IRQ
-  set_irq_level(0);
-}
-
-void bx_voodoo_c::register_state(void)
+void bx_voodoo_base_c::register_state(bx_list_c *parent)
 {
   char name[8];
   int i, j, k;
 
-  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "voodoo", "Voodoo State");
-  bx_list_c *vstate = new bx_list_c(list, "vstate", "Voodoo Device State");
+  bx_list_c *vstate = new bx_list_c(parent, "vstate", "Voodoo Device State");
   new bx_shadow_data_c(vstate, "reg", (Bit8u*)v->reg, sizeof(v->reg));
   new bx_shadow_num_c(vstate, "alt_regmap", &v->alt_regmap);
   new bx_shadow_num_c(vstate, "pci_init_enable", &v->pci.init_enable, BASE_HEX);
@@ -429,7 +350,7 @@ void bx_voodoo_c::register_state(void)
   new bx_shadow_num_c(dac, "read_result", &v->dac.read_result, BASE_HEX);
   new bx_shadow_num_c(dac, "vidclk", &v->vidclk);
   bx_list_c *fbi = new bx_list_c(vstate, "fbi", "framebuffer");
-  if ((BX_VOODOO_THIS s.model < VOODOO_BANSHEE) || (theVoodooVga == NULL)) {
+  if ((s.model < VOODOO_BANSHEE) || (theVoodooVga == NULL)) {
     new bx_shadow_data_c(fbi, "ram", v->fbi.ram, v->fbi.mask + 1);
   }
   new bx_shadow_num_c(fbi, "rgboffs0", &v->fbi.rgboffs[0], BASE_HEX);
@@ -526,7 +447,7 @@ void bx_voodoo_c::register_state(void)
   for (i = 0; i < MAX_TMU; i++) {
     sprintf(name, "%d", i);
     bx_list_c *num = new bx_list_c(tmu, name, "");
-    if (BX_VOODOO_THIS s.model < VOODOO_BANSHEE) {
+    if (s.model < VOODOO_BANSHEE) {
       new bx_shadow_data_c(num, "ram", v->tmu[i].ram, (4 << 20));
     }
     new bx_shadow_bool_c(num, "regdirty", &v->tmu[i].regdirty);
@@ -583,193 +504,11 @@ void bx_voodoo_c::register_state(void)
     new bx_shadow_data_c(num, "palettea", (Bit8u*)v->tmu[i].palettea, 256 * sizeof(rgb_t));
   }
   new bx_shadow_num_c(vstate, "send_config", &v->send_config);
-  if (BX_VOODOO_THIS s.model >= VOODOO_BANSHEE) {
-    bx_list_c *banshee = new bx_list_c(list, "banshee", "Voodoo Banshee State");
-    new bx_shadow_data_c(banshee, "io", (Bit8u*)v->banshee.io, 256, 1);
-    new bx_shadow_data_c(banshee, "agp", (Bit8u*)v->banshee.agp, 0x80, 1);
-    new bx_shadow_data_c(banshee, "crtc", (Bit8u*)v->banshee.crtc, 0x27, 1);
-    new bx_shadow_num_c(banshee, "disp_bpp", &v->banshee.disp_bpp);
-    new bx_shadow_bool_c(banshee, "half_mode", &v->banshee.half_mode);
-    new bx_shadow_bool_c(banshee, "dac_8bit", &v->banshee.dac_8bit);
-    new bx_shadow_bool_c(banshee, "hwcursor_enabled", &v->banshee.hwcursor.enabled);
-    new bx_shadow_bool_c(banshee, "hwcursor_mode", &v->banshee.hwcursor.mode);
-    new bx_shadow_num_c(banshee, "hwcursor_addr", &v->banshee.hwcursor.addr, BASE_HEX);
-    new bx_shadow_num_c(banshee, "hwcursor_x", &v->banshee.hwcursor.x, BASE_HEX);
-    new bx_shadow_num_c(banshee, "hwcursor_y", &v->banshee.hwcursor.y, BASE_HEX);
-    new bx_shadow_num_c(banshee, "hwcursor_color0", &v->banshee.hwcursor.color[0], BASE_HEX);
-    new bx_shadow_num_c(banshee, "hwcursor_color1", &v->banshee.hwcursor.color[1], BASE_HEX);
-    new bx_shadow_data_c(banshee, "blt_reg", (Bit8u*)v->banshee.blt.reg, 0x20, 1);
-    new bx_shadow_data_c(banshee, "blt_cpat", (Bit8u*)v->banshee.blt.cpat, 0x100, 1);
-    new bx_shadow_bool_c(banshee, "blt_busy", &v->banshee.blt.busy);
-    new bx_shadow_num_c(banshee, "blt_cmd", &v->banshee.blt.cmd);
-    // TODO
-  }
-  bx_list_c *vdraw = new bx_list_c(list, "vdraw", "Voodoo Draw State");
-  new bx_shadow_bool_c(vdraw, "clock_enabled", &BX_VOODOO_THIS s.vdraw.clock_enabled);
-  new bx_shadow_bool_c(vdraw, "output_on", &BX_VOODOO_THIS s.vdraw.output_on);
-  new bx_shadow_bool_c(vdraw, "override_on", &BX_VOODOO_THIS s.vdraw.override_on);
 
-  register_pci_state(list);
+  register_pci_state(parent);
 }
 
-void bx_voodoo_c::after_restore_state(void)
-{
-  if (BX_VOODOO_THIS s.model < VOODOO_BANSHEE) {
-    if (DEV_pci_set_base_mem(BX_VOODOO_THIS_PTR, mem_read_handler, mem_write_handler,
-                             &BX_VOODOO_THIS pci_base_address[0],
-                             &BX_VOODOO_THIS pci_conf[0x10],
-                             0x1000000)) {
-      BX_INFO(("new mem base address: 0x%08x", BX_VOODOO_THIS pci_base_address[0]));
-    }
-    if (BX_VOODOO_THIS s.vdraw.override_on) {
-      // force update
-      v->fbi.video_changed = 1;
-      BX_VOODOO_THIS s.vdraw.frame_start = bx_virt_timer.time_usec(0);
-      BX_VOODOO_THIS update_timing();
-      DEV_vga_set_override(1, BX_VOODOO_THIS_PTR);
-    }
-  } else {
-    bx_pci_device_c::after_restore_pci_state(mem_read_handler);
-    if (DEV_pci_set_base_mem(BX_VOODOO_THIS_PTR, mem_read_handler, mem_write_handler,
-                             &BX_VOODOO_THIS pci_base_address[0],
-                             &BX_VOODOO_THIS pci_conf[0x10],
-                             0x2000000)) {
-      BX_INFO(("new mem base address: 0x%08x", BX_VOODOO_THIS pci_base_address[0]));
-    }
-    if (DEV_pci_set_base_mem(BX_VOODOO_THIS_PTR, mem_read_handler, mem_write_handler,
-                             &BX_VOODOO_THIS pci_base_address[1],
-                             &BX_VOODOO_THIS pci_conf[0x14],
-                             0x2000000)) {
-      BX_INFO(("new lfb base address: 0x%08x", BX_VOODOO_THIS pci_base_address[1]));
-    }
-    if (DEV_pci_set_base_io(BX_VOODOO_THIS_PTR, banshee_read_handler, banshee_write_handler,
-                            &BX_VOODOO_THIS pci_base_address[2],
-                            &BX_VOODOO_THIS pci_conf[0x18],
-                            256, &banshee_iomask[0], "banshee")) {
-      BX_INFO(("new i/o base address: 0x%04x", BX_VOODOO_THIS pci_base_address[2]));
-    }
-    if ((v->banshee.io[io_vidProcCfg] & 0x01) && (theVoodooVga != NULL)) {
-      BX_VOODOO_THIS update_timing();
-      theVoodooVga->banshee_update_mode();
-    }
-    // TODO
-  }
-}
-
-bx_bool bx_voodoo_c::mem_read_handler(bx_phy_address addr, unsigned len,
-                                      void *data, void *param)
-{
-  Bit32u *data_ptr = (Bit32u*)data;
-
-  if (BX_VOODOO_THIS s.model < VOODOO_BANSHEE) {
-    *data_ptr = voodoo_r((addr>>2) & 0x3FFFFF);
-  } else {
-    BX_VOODOO_THIS banshee_mem_read(addr, len, data);
-  }
-  return 1;
-}
-
-bx_bool bx_voodoo_c::mem_write_handler(bx_phy_address addr, unsigned len,
-                                       void *data, void *param)
-{
-  Bit32u val = *(Bit32u*)data;
-
-  if (BX_VOODOO_THIS s.model < VOODOO_BANSHEE) {
-    if (len == 4) {
-      voodoo_w((addr>>2) & 0x3FFFFF, val, 0xffffffff);
-    } else if (len == 2) {
-      if (addr & 3) {
-        voodoo_w((addr>>2) & 0x3FFFFF, val<<16, 0xffff0000);
-      } else {
-        voodoo_w((addr>>2) & 0x3FFFFF, val, 0x0000ffff);
-      }
-    }
-  } else {
-    BX_VOODOO_THIS banshee_mem_write(addr, len, data);
-  }
-  return 1;
-}
-
-void bx_voodoo_c::mode_change_timer_handler(void *this_ptr)
-{
-  UNUSED(this_ptr);
-  BX_VOODOO_THIS s.vdraw.screen_update_pending = 0;
-
-  if ((!BX_VOODOO_THIS s.vdraw.clock_enabled || !BX_VOODOO_THIS s.vdraw.output_on) && BX_VOODOO_THIS s.vdraw.override_on) {
-    // switching off
-    bx_virt_timer.deactivate_timer(BX_VOODOO_THIS s.vertical_timer_id);
-    v->vtimer_running = 0;
-    DEV_vga_set_override(0, NULL);
-    BX_VOODOO_THIS s.vdraw.override_on = 0;
-    BX_VOODOO_THIS s.vdraw.width = 0;
-    BX_VOODOO_THIS s.vdraw.height = 0;
-    BX_INFO(("Voodoo output disabled"));
-  }
-
-  if ((BX_VOODOO_THIS s.vdraw.clock_enabled && BX_VOODOO_THIS s.vdraw.output_on) && !BX_VOODOO_THIS s.vdraw.override_on) {
-    // switching on
-    if (!BX_VOODOO_THIS update_timing())
-      return;
-    DEV_vga_set_override(1, BX_VOODOO_THIS_PTR);
-    BX_VOODOO_THIS s.vdraw.override_on = 1;
-  }
-}
-
-bx_bool bx_voodoo_c::update_timing(void)
-{
-  int htotal, vtotal, hsync, vsync;
-  float hfreq;
-  bx_crtc_params_t crtcp;
-
-  if (BX_VOODOO_THIS s.model < VOODOO_BANSHEE) {
-    if (!BX_VOODOO_THIS s.vdraw.clock_enabled || !BX_VOODOO_THIS s.vdraw.output_on)
-      return 0;
-    if ((v->reg[hSync].u == 0) || (v->reg[vSync].u == 0))
-      return 0;
-    if (BX_VOODOO_THIS s.model == VOODOO_2) {
-      htotal = ((v->reg[hSync].u >> 16) & 0x7ff) + 1 + (v->reg[hSync].u & 0x1ff) + 1;
-      vtotal = ((v->reg[vSync].u >> 16) & 0x1fff) + (v->reg[vSync].u & 0x1fff);
-      hsync = ((v->reg[hSync].u >> 16) & 0x7ff);
-      vsync = ((v->reg[vSync].u >> 16) & 0x1fff);
-    } else {
-      htotal = ((v->reg[hSync].u >> 16) & 0x3ff) + 1 + (v->reg[hSync].u & 0xff) + 1;
-      vtotal = ((v->reg[vSync].u >> 16) & 0xfff) + (v->reg[vSync].u & 0xfff);
-      hsync = ((v->reg[hSync].u >> 16) & 0x3ff);
-      vsync = ((v->reg[vSync].u >> 16) & 0xfff);
-    }
-    hfreq = v->vidclk / (float)htotal;
-    if (((v->reg[fbiInit1].u >> 20) & 3) == 1) { // VCLK div 2
-      hfreq /= 2;
-    }
-    v->vertfreq = hfreq / (float)vtotal;
-    BX_VOODOO_THIS s.vdraw.htotal_usec = (unsigned)(1000000.0 / hfreq);
-    BX_VOODOO_THIS s.vdraw.vtotal_usec = (unsigned)(1000000.0 / v->vertfreq);
-    BX_VOODOO_THIS s.vdraw.htime_to_pixel = (double)htotal / (1000000.0 / hfreq);
-    BX_VOODOO_THIS s.vdraw.hsync_usec = BX_VOODOO_THIS s.vdraw.htotal_usec * hsync / htotal;
-    BX_VOODOO_THIS s.vdraw.vsync_usec = vsync * BX_VOODOO_THIS s.vdraw.htotal_usec;
-    if ((BX_VOODOO_THIS s.vdraw.width != v->fbi.width) ||
-        (BX_VOODOO_THIS s.vdraw.height != v->fbi.height)) {
-      BX_VOODOO_THIS s.vdraw.width = v->fbi.width;
-      BX_VOODOO_THIS s.vdraw.height = v->fbi.height;
-      bx_gui->dimension_update(v->fbi.width, v->fbi.height, 0, 0, 16);
-      vertical_timer_handler(NULL);
-    }
-    BX_INFO(("Voodoo output %dx%d@%uHz", v->fbi.width, v->fbi.height, (unsigned)v->vertfreq));
-    v->vtimer_running = 1;
-  } else {
-    BX_VVGA_THIS get_crtc_params(&crtcp);
-    hfreq = v->vidclk / (float)(crtcp.htotal * 8);
-    v->vertfreq = hfreq / (float)crtcp.vtotal;
-    BX_VOODOO_THIS s.vdraw.vtotal_usec = (unsigned)(1000000.0 / v->vertfreq);
-    BX_VOODOO_THIS s.vdraw.width = v->fbi.width;
-    BX_VOODOO_THIS s.vdraw.height = v->fbi.height;
-    vertical_timer_handler(NULL);
-  }
-  bx_virt_timer.activate_timer(BX_VOODOO_THIS s.vertical_timer_id, (Bit32u)BX_VOODOO_THIS s.vdraw.vtotal_usec, 1);
-  return 1;
-}
-
-void bx_voodoo_c::refresh_display(void *this_ptr, bx_bool redraw)
+void bx_voodoo_base_c::refresh_display(void *this_ptr, bx_bool redraw)
 {
   if (redraw) {
     redraw_area(0, 0, v->fbi.width, v->fbi.height);
@@ -778,11 +517,297 @@ void bx_voodoo_c::refresh_display(void *this_ptr, bx_bool redraw)
   update();
 }
 
-void bx_voodoo_c::vertical_timer_handler(void *this_ptr)
+void bx_voodoo_base_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
+                                   unsigned height)
 {
-  UNUSED(this_ptr);
+  unsigned xt0, xt1, xti, yt0, yt1, yti;
 
-  BX_VOODOO_THIS s.vdraw.frame_start = bx_virt_timer.time_usec(0);
+  xt0 = x0 / X_TILESIZE;
+  yt0 = y0 / Y_TILESIZE;
+  xt1 = (x0 + width  - 1) / X_TILESIZE;
+  yt1 = (y0 + height - 1) / Y_TILESIZE;
+  for (yti=yt0; yti<=yt1; yti++) {
+    for (xti=xt0; xti<=xt1; xti++) {
+      SET_TILE_UPDATED(BX_VOODOO_THIS, xti, yti, 1);
+    }
+  }
+}
+
+void bx_voodoo_base_c::update(void)
+{
+  Bit32u start;
+  unsigned iHeight, iWidth;
+  unsigned pitch, xc, yc, xti, yti;
+  unsigned r, c, w, h;
+  int i;
+  Bit32u red, green, blue, colour;
+  Bit8u *vid_ptr, *vid_ptr2;
+  Bit8u *tile_ptr, *tile_ptr2;
+  Bit8u bpp;
+  bx_svga_tileinfo_t info;
+
+  BX_LOCK(render_mutex);
+  if ((s.model >= VOODOO_BANSHEE) &&
+      ((v->banshee.io[io_vidProcCfg] & 0x181) == 0x81)) {
+    bpp = v->banshee.disp_bpp;
+    start = v->banshee.io[io_vidDesktopStartAddr];
+    pitch = v->banshee.io[io_vidDesktopOverlayStride] & 0x7fff;
+    if (v->banshee.desktop_tiled) {
+      pitch *= 128;
+    }
+  } else {
+    if (!s.vdraw.gui_update_pending) {
+      BX_UNLOCK(render_mutex);
+      return;
+    }
+    bpp = 16;
+    start = v->fbi.rgboffs[v->fbi.frontbuf];
+    pitch = v->fbi.rowpixels * 2;
+  }
+  iWidth = s.vdraw.width;
+  iHeight = s.vdraw.height;
+  Bit8u *disp_ptr = &v->fbi.ram[start & v->fbi.mask];
+
+  if (bx_gui->graphics_tile_info_common(&info)) {
+    if (info.snapshot_mode) {
+      vid_ptr = disp_ptr;
+      tile_ptr = bx_gui->get_snapshot_buffer();
+      if (tile_ptr != NULL) {
+        for (yc = 0; yc < iHeight; yc++) {
+          memcpy(tile_ptr, vid_ptr, info.pitch);
+          vid_ptr += pitch;
+          tile_ptr += info.pitch;
+        }
+      }
+    } else if (info.is_indexed) {
+      if ((bpp == 8) && (info.bpp == 8)) {
+        for (yc=0, yti = 0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
+          for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
+            if (GET_TILE_UPDATED (xti, yti)) {
+              vid_ptr = disp_ptr + (yc * pitch + xc);
+              tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
+              for (r=0; r<h; r++) {
+                vid_ptr2  = vid_ptr;
+                tile_ptr2 = tile_ptr;
+                for (c=0; c<w; c++) {
+                  *(tile_ptr2++) = *(vid_ptr2++);
+                }
+                vid_ptr  += pitch;
+                tile_ptr += info.pitch;
+              }
+              if (v->banshee.hwcursor.enabled) {
+                draw_hwcursor(xc, yc, &info);
+              }
+              SET_TILE_UPDATED(BX_VOODOO_THIS, xti, yti, 0);
+              bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
+            }
+          }
+        }
+      } else {
+        BX_ERROR(("current guest pixel format is unsupported on indexed colour host displays"));
+      }
+    } else {
+      switch (bpp) {
+        case 8:
+          for (yc=0, yti = 0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
+            for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
+              if (GET_TILE_UPDATED(xti, yti)) {
+                if (v->banshee.half_mode) {
+                  vid_ptr = disp_ptr + ((yc >> 1) * pitch + xc);
+                } else {
+                  vid_ptr = disp_ptr + (yc * pitch + xc);
+                }
+                tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
+                for (r=0; r<h; r++) {
+                  vid_ptr2  = vid_ptr;
+                  tile_ptr2 = tile_ptr;
+                  for (c=0; c<w; c++) {
+                    colour = v->fbi.clut[*(vid_ptr2++)];
+                    colour = MAKE_COLOUR(
+                      colour & 0xff0000, 24, info.red_shift, info.red_mask,
+                      colour & 0x00ff00, 16, info.green_shift, info.green_mask,
+                      colour & 0x0000ff, 8, info.blue_shift, info.blue_mask);
+                    if (info.is_little_endian) {
+                      for (i=0; i<info.bpp; i+=8) {
+                        *(tile_ptr2++) = (Bit8u)(colour >> i);
+                      }
+                    } else {
+                      for (i=info.bpp-8; i>-8; i-=8) {
+                        *(tile_ptr2++) = (Bit8u)(colour >> i);
+                      }
+                    }
+                  }
+                  if (!v->banshee.half_mode || (r & 1)) {
+                    vid_ptr += pitch;
+                  }
+                  tile_ptr += info.pitch;
+                }
+                if (v->banshee.hwcursor.enabled) {
+                  draw_hwcursor(xc, yc, &info);
+                }
+                SET_TILE_UPDATED(BX_VOODOO_THIS, xti, yti, 0);
+                bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
+              }
+            }
+          }
+          break;
+        case 16:
+          for (yc=0, yti = 0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
+            for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
+              if (GET_TILE_UPDATED(xti, yti)) {
+                if (v->banshee.half_mode) {
+                  vid_ptr = disp_ptr + ((yc >> 1) * pitch + (xc << 1));
+                } else {
+                  vid_ptr = disp_ptr + (yc * pitch + (xc << 1));
+                }
+                tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
+                for (r=0; r<h; r++) {
+                  vid_ptr2  = vid_ptr;
+                  tile_ptr2 = tile_ptr;
+                  for (c=0; c<w; c++) {
+                    colour = *(vid_ptr2++);
+                    colour |= *(vid_ptr2++) << 8;
+                    colour = MAKE_COLOUR(
+                      colour & 0x001f, 5, info.blue_shift, info.blue_mask,
+                      colour & 0x07e0, 11, info.green_shift, info.green_mask,
+                      colour & 0xf800, 16, info.red_shift, info.red_mask);
+                    if (info.is_little_endian) {
+                      for (i=0; i<info.bpp; i+=8) {
+                        *(tile_ptr2++) = (Bit8u)(colour >> i);
+                      }
+                    } else {
+                      for (i=info.bpp-8; i>-8; i-=8) {
+                        *(tile_ptr2++) = (Bit8u)(colour >> i);
+                      }
+                    }
+                  }
+                  if (!v->banshee.half_mode || (r & 1)) {
+                    vid_ptr += pitch;
+                  }
+                  tile_ptr += info.pitch;
+                }
+                if (v->banshee.hwcursor.enabled) {
+                  draw_hwcursor(xc, yc, &info);
+                }
+                SET_TILE_UPDATED(BX_VOODOO_THIS, xti, yti, 0);
+                bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
+              }
+            }
+          }
+          break;
+        case 24:
+          for (yc=0, yti = 0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
+            for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
+              if (GET_TILE_UPDATED(xti, yti)) {
+                if (v->banshee.half_mode) {
+                  vid_ptr = disp_ptr + ((yc >> 1) * pitch + 3*xc);
+                } else {
+                  vid_ptr = disp_ptr + (yc * pitch + 3*xc);
+                }
+                tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
+                for (r=0; r<h; r++) {
+                  vid_ptr2  = vid_ptr;
+                  tile_ptr2 = tile_ptr;
+                  for (c=0; c<w; c++) {
+                    blue = *(vid_ptr2++);
+                    green = *(vid_ptr2++);
+                    red = *(vid_ptr2++);
+                    colour = MAKE_COLOUR(
+                      red, 8, info.red_shift, info.red_mask,
+                      green, 8, info.green_shift, info.green_mask,
+                      blue, 8, info.blue_shift, info.blue_mask);
+                    if (info.is_little_endian) {
+                      for (i=0; i<info.bpp; i+=8) {
+                        *(tile_ptr2++) = (Bit8u)(colour >> i);
+                      }
+                    } else {
+                      for (i=info.bpp-8; i>-8; i-=8) {
+                        *(tile_ptr2++) = (Bit8u)(colour >> i);
+                      }
+                    }
+                  }
+                  if (!v->banshee.half_mode || (r & 1)) {
+                    vid_ptr += pitch;
+                  }
+                  tile_ptr += info.pitch;
+                }
+                if (v->banshee.hwcursor.enabled) {
+                  draw_hwcursor(xc, yc, &info);
+                }
+                SET_TILE_UPDATED(BX_VOODOO_THIS, xti, yti, 0);
+                bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
+              }
+            }
+          }
+          break;
+        case 32:
+          for (yc=0, yti = 0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
+            for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
+              if (GET_TILE_UPDATED(xti, yti)) {
+                if (v->banshee.half_mode) {
+                  vid_ptr = disp_ptr + ((yc >> 1) * pitch + (xc << 2));
+                } else {
+                  vid_ptr = disp_ptr + (yc * pitch + (xc << 2));
+                }
+                tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
+                for (r=0; r<h; r++) {
+                  vid_ptr2  = vid_ptr;
+                  tile_ptr2 = tile_ptr;
+                  for (c=0; c<w; c++) {
+                    blue = *(vid_ptr2++);
+                    green = *(vid_ptr2++);
+                    red = *(vid_ptr2++);
+                    vid_ptr2++;
+                    colour = MAKE_COLOUR(
+                      red, 8, info.red_shift, info.red_mask,
+                      green, 8, info.green_shift, info.green_mask,
+                      blue, 8, info.blue_shift, info.blue_mask);
+                    if (info.is_little_endian) {
+                      for (i=0; i<info.bpp; i+=8) {
+                        *(tile_ptr2++) = (Bit8u)(colour >> i);
+                      }
+                    } else {
+                      for (i=info.bpp-8; i>-8; i-=8) {
+                        *(tile_ptr2++) = (Bit8u)(colour >> i);
+                      }
+                    }
+                  }
+                  if (!v->banshee.half_mode || (r & 1)) {
+                    vid_ptr += pitch;
+                  }
+                  tile_ptr += info.pitch;
+                }
+                if (v->banshee.hwcursor.enabled) {
+                  draw_hwcursor(xc, yc, &info);
+                }
+                SET_TILE_UPDATED(BX_VOODOO_THIS, xti, yti, 0);
+                bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
+              }
+            }
+          }
+          break;
+        default:
+          BX_ERROR(("Ignoring reserved pixel format"));
+      }
+    }
+  } else {
+    BX_PANIC(("cannot get svga tile info"));
+  }
+  s.vdraw.gui_update_pending = 0;
+  BX_UNLOCK(render_mutex);
+}
+
+void bx_voodoo_base_c::vertical_timer_handler(void *this_ptr)
+{
+  // this doesn't work yet
+  //bx_voodoo_base_c *class_ptr = (bx_voodoo_base_c*)this_ptr;
+  //class_ptr->vertical_timer();
+  theVoodooDevice->vertical_timer();
+}
+
+void bx_voodoo_base_c::vertical_timer(void)
+{
+  s.vdraw.frame_start = bx_virt_timer.time_usec(0);
 
   BX_LOCK(fifo_mutex);
   if (!fifo_empty(&v->pci.fifo) || !fifo_empty(&v->fbi.fifo)) {
@@ -799,19 +824,433 @@ void bx_voodoo_c::vertical_timer_handler(void *this_ptr)
 
   if (v->fbi.video_changed || v->fbi.clut_dirty) {
     // TODO: use tile-based update mechanism
-    BX_VOODOO_THIS redraw_area(0, 0, BX_VOODOO_THIS s.vdraw.width, BX_VOODOO_THIS s.vdraw.height);
+    redraw_area(0, 0, s.vdraw.width, s.vdraw.height);
     v->fbi.clut_dirty = 0;
     v->fbi.video_changed = 0;
-    BX_VOODOO_THIS s.vdraw.gui_update_pending = 1;
+    s.vdraw.gui_update_pending = 1;
   }
 }
 
-void bx_voodoo_c::set_tile_updated(unsigned xti, unsigned yti, bx_bool flag)
+void bx_voodoo_base_c::set_irq_level(bx_bool level)
 {
-  SET_TILE_UPDATED(BX_VOODOO_THIS, xti, yti, flag);
+  DEV_pci_set_irq(s.devfunc, pci_conf[0x3d], level);
 }
 
-void bx_voodoo_c::banshee_draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *info)
+// the class bx_voodoo_1_2_c
+
+bx_voodoo_1_2_c::bx_voodoo_1_2_c() : bx_voodoo_base_c()
+{
+  s.mode_change_timer_id = BX_NULL_TIMER_HANDLE;
+}
+
+void bx_voodoo_1_2_c::init_model(void)
+{
+  if (s.mode_change_timer_id == BX_NULL_TIMER_HANDLE) {
+    s.mode_change_timer_id = bx_virt_timer.register_timer(this, mode_change_timer_handler,
+       1000, 0, 0, 0, "voodoo_mode_change");
+  }
+  DEV_register_pci_handlers(this, &s.devfunc, BX_PLUGIN_VOODOO,
+                            "Experimental 3dfx Voodoo Graphics (SST-1/2)");
+  if (s.model == VOODOO_1) {
+    init_pci_conf(0x121a, 0x0001, 0x02, 0x000000, 0x00);
+  } else if (s.model == VOODOO_2) {
+    init_pci_conf(0x121a, 0x0002, 0x02, 0x038000, 0x00);
+    pci_conf[0x10] = 0x08;
+  }
+  pci_conf[0x3d] = BX_PCI_INTA;
+  pci_base_address[0] = 0;
+  s.vdraw.clock_enabled = 1;
+  s.vdraw.output_on = 0;
+  s.vdraw.override_on = 0;
+  s.vdraw.screen_update_pending = 0;
+}
+
+void bx_voodoo_1_2_c::reset(unsigned type)
+{
+  unsigned i;
+
+  static const struct reset_vals_t {
+    unsigned      addr;
+    unsigned char val;
+  } reset_vals[] = {
+    { 0x04, 0x00 }, { 0x05, 0x00 }, // command io / memory
+    { 0x06, 0x00 }, { 0x07, 0x00 }, // status
+    // address space 0x10 - 0x13
+    { 0x11, 0x00 },
+    { 0x12, 0x00 }, { 0x13, 0x00 },
+    { 0x3c, 0x00 },                 // IRQ
+    // initEnable
+    { 0x40, 0x00 }, { 0x41, 0x00 },
+    { 0x42, 0x00 }, { 0x43, 0x00 },
+    // busSnoop0
+    { 0x44, 0x00 }, { 0x45, 0x00 },
+    { 0x46, 0x00 }, { 0x47, 0x00 },
+    // busSnoop1
+    { 0x48, 0x00 }, { 0x49, 0x00 },
+    { 0x4a, 0x00 }, { 0x4b, 0x00 },
+
+  };
+  for (i = 0; i < sizeof(reset_vals) / sizeof(*reset_vals); ++i) {
+    pci_conf[reset_vals[i].addr] = reset_vals[i].val;
+  }
+  if (s.model == VOODOO_2) {
+    pci_conf[0x41] = 0x50;
+    v->pci.init_enable = 0x5000;
+  } else {
+    v->pci.init_enable = 0x0000;
+  }
+
+  if ((!s.vdraw.clock_enabled || !s.vdraw.output_on) && s.vdraw.override_on) {
+    mode_change_timer_handler(NULL);
+  }
+
+  // Deassert IRQ
+  set_irq_level(0);
+}
+
+void bx_voodoo_1_2_c::register_state(void)
+{
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "voodoo", "Voodoo 1/2 State");
+  bx_voodoo_base_c::register_state(list);
+  bx_list_c *vdraw = new bx_list_c(list, "vdraw", "Voodoo Draw State");
+  new bx_shadow_bool_c(vdraw, "clock_enabled", &s.vdraw.clock_enabled);
+  new bx_shadow_bool_c(vdraw, "output_on", &s.vdraw.output_on);
+  new bx_shadow_bool_c(vdraw, "override_on", &s.vdraw.override_on);
+}
+
+void bx_voodoo_1_2_c::after_restore_state(void)
+{
+  if (DEV_pci_set_base_mem(BX_VOODOO_THIS_PTR, mem_read_handler, mem_write_handler,
+                           &pci_base_address[0],
+                           &pci_conf[0x10],
+                           0x1000000)) {
+    BX_INFO(("new mem base address: 0x%08x", pci_base_address[0]));
+  }
+  if (s.vdraw.override_on) {
+    // force update
+    v->fbi.video_changed = 1;
+    s.vdraw.frame_start = bx_virt_timer.time_usec(0);
+    update_timing();
+    DEV_vga_set_override(1, BX_VOODOO_THIS_PTR);
+  }
+}
+
+bx_bool bx_voodoo_1_2_c::mem_read_handler(bx_phy_address addr, unsigned len,
+                                          void *data, void *param)
+{
+  Bit32u *data_ptr = (Bit32u*)data;
+
+  *data_ptr = voodoo_r((addr>>2) & 0x3FFFFF);
+  return 1;
+}
+
+bx_bool bx_voodoo_1_2_c::mem_write_handler(bx_phy_address addr, unsigned len,
+                                           void *data, void *param)
+{
+  Bit32u val = *(Bit32u*)data;
+
+  if (len == 4) {
+    voodoo_w((addr>>2) & 0x3FFFFF, val, 0xffffffff);
+  } else if (len == 2) {
+    if (addr & 3) {
+      voodoo_w((addr>>2) & 0x3FFFFF, val<<16, 0xffff0000);
+    } else {
+      voodoo_w((addr>>2) & 0x3FFFFF, val, 0x0000ffff);
+    }
+  }
+  return 1;
+}
+
+void bx_voodoo_1_2_c::mode_change_timer_handler(void *this_ptr)
+{
+  bx_voodoo_1_2_c *class_ptr = (bx_voodoo_1_2_c*)this_ptr;
+  class_ptr->mode_change_timer();
+}
+
+void bx_voodoo_1_2_c::mode_change_timer()
+{
+  s.vdraw.screen_update_pending = 0;
+
+  if ((!s.vdraw.clock_enabled || !s.vdraw.output_on) && s.vdraw.override_on) {
+    // switching off
+    bx_virt_timer.deactivate_timer(s.vertical_timer_id);
+    v->vtimer_running = 0;
+    DEV_vga_set_override(0, NULL);
+    s.vdraw.override_on = 0;
+    s.vdraw.width = 0;
+    s.vdraw.height = 0;
+    BX_INFO(("Voodoo output disabled"));
+  }
+
+  if ((s.vdraw.clock_enabled && s.vdraw.output_on) && !s.vdraw.override_on) {
+    // switching on
+    if (!update_timing())
+      return;
+    DEV_vga_set_override(1, BX_VOODOO_THIS_PTR);
+    s.vdraw.override_on = 1;
+  }
+}
+
+bx_bool bx_voodoo_1_2_c::update_timing(void)
+{
+  int htotal, vtotal, hsync, vsync;
+  float hfreq;
+
+  if (!s.vdraw.clock_enabled || !s.vdraw.output_on)
+    return 0;
+  if ((v->reg[hSync].u == 0) || (v->reg[vSync].u == 0))
+    return 0;
+  if (s.model == VOODOO_2) {
+    htotal = ((v->reg[hSync].u >> 16) & 0x7ff) + 1 + (v->reg[hSync].u & 0x1ff) + 1;
+    vtotal = ((v->reg[vSync].u >> 16) & 0x1fff) + (v->reg[vSync].u & 0x1fff);
+    hsync = ((v->reg[hSync].u >> 16) & 0x7ff);
+    vsync = ((v->reg[vSync].u >> 16) & 0x1fff);
+  } else {
+    htotal = ((v->reg[hSync].u >> 16) & 0x3ff) + 1 + (v->reg[hSync].u & 0xff) + 1;
+    vtotal = ((v->reg[vSync].u >> 16) & 0xfff) + (v->reg[vSync].u & 0xfff);
+    hsync = ((v->reg[hSync].u >> 16) & 0x3ff);
+    vsync = ((v->reg[vSync].u >> 16) & 0xfff);
+  }
+  hfreq = v->vidclk / (float)htotal;
+  if (((v->reg[fbiInit1].u >> 20) & 3) == 1) { // VCLK div 2
+    hfreq /= 2;
+  }
+  v->vertfreq = hfreq / (float)vtotal;
+  s.vdraw.htotal_usec = (unsigned)(1000000.0 / hfreq);
+  s.vdraw.vtotal_usec = (unsigned)(1000000.0 / v->vertfreq);
+  s.vdraw.htime_to_pixel = (double)htotal / (1000000.0 / hfreq);
+  s.vdraw.hsync_usec = s.vdraw.htotal_usec * hsync / htotal;
+  s.vdraw.vsync_usec = vsync * s.vdraw.htotal_usec;
+  if ((s.vdraw.width != v->fbi.width) ||
+      (s.vdraw.height != v->fbi.height)) {
+    s.vdraw.width = v->fbi.width;
+    s.vdraw.height = v->fbi.height;
+    bx_gui->dimension_update(v->fbi.width, v->fbi.height, 0, 0, 16);
+    vertical_timer_handler(NULL);
+  }
+  BX_INFO(("Voodoo output %dx%d@%uHz", v->fbi.width, v->fbi.height, (unsigned)v->vertfreq));
+  v->vtimer_running = 1;
+  bx_virt_timer.activate_timer(s.vertical_timer_id, (Bit32u)s.vdraw.vtotal_usec, 1);
+  return 1;
+}
+
+Bit32u bx_voodoo_1_2_c::get_retrace(bx_bool hv)
+{
+  Bit64u time_in_frame = bx_virt_timer.time_usec(0) - s.vdraw.frame_start;
+  if (time_in_frame >= s.vdraw.vsync_usec) {
+    return 0;
+  } else {
+    Bit32u value = (Bit32u)(time_in_frame / s.vdraw.htotal_usec + 1);
+    if (hv) {
+      Bit32u time_in_line = (Bit32u)(time_in_frame % s.vdraw.htotal_usec);
+      Bit32u hpixel = (Bit32u)(time_in_line * s.vdraw.htime_to_pixel);
+      if (time_in_line < s.vdraw.hsync_usec) {
+        value |= ((hpixel + 1) << 16);
+      }
+    }
+    return value;
+  }
+}
+
+void bx_voodoo_1_2_c::output_enable(bx_bool enabled)
+{
+  if (s.vdraw.output_on != enabled) {
+    s.vdraw.output_on = enabled;
+    update_screen_start();
+  }
+}
+
+void bx_voodoo_1_2_c::update_screen_start(void)
+{
+  if (!s.vdraw.screen_update_pending) {
+    s.vdraw.screen_update_pending = 1;
+    bx_virt_timer.activate_timer(s.mode_change_timer_id, 1000, 0);
+  }
+}
+
+// pci configuration space write callback handler
+void bx_voodoo_1_2_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
+{
+  Bit8u value8, oldval;
+  bx_bool baseaddr_change = 0;
+
+  if ((address >= 0x14) && (address < 0x34))
+    return;
+
+  for (unsigned i=0; i<io_len; i++) {
+    value8 = (value >> (i*8)) & 0xFF;
+    oldval = pci_conf[address+i];
+    switch (address+i) {
+      case 0x04:
+        value8 &= 0x02;
+        break;
+      case 0x3c:
+        if (value8 != oldval) {
+          BX_INFO(("new irq line = %d", value8));
+        }
+        break;
+      case 0x10:
+        value8 = (value8 & 0xf0) | (oldval & 0x0f);
+      case 0x11:
+      case 0x12:
+      case 0x13:
+        baseaddr_change |= (value8 != oldval);
+        break;
+      case 0x40:
+      case 0x41:
+      case 0x42:
+      case 0x43:
+        if (((address+i) == 0x40) && ((value8 ^ oldval) & 0x02)) {
+          v->pci.fifo.enabled = ((value8 & 0x02) > 0);
+          if (!v->pci.fifo.enabled && !fifo_empty(&v->pci.fifo)) {
+            bx_set_event(&fifo_wakeup);
+          }
+          BX_DEBUG(("PCI FIFO now %sabled", v->pci.fifo.enabled ? "en":"dis"));
+        }
+        if (((address+i) == 0x41) && (s.model == VOODOO_2)) {
+          value8 &= 0x0f;
+          value8 |= 0x50;
+        }
+        v->pci.init_enable &= ~(0xff << (i*8));
+        v->pci.init_enable |= (value8 << (i*8));
+        break;
+      case 0xc0:
+        s.vdraw.clock_enabled = 1;
+        update_screen_start();
+        break;
+      case 0xe0:
+        s.vdraw.clock_enabled = 0;
+        update_screen_start();
+        break;
+      default:
+        value8 = oldval;
+    }
+    pci_conf[address+i] = value8;
+  }
+  if (baseaddr_change) {
+    if (DEV_pci_set_base_mem(BX_VOODOO_THIS_PTR, mem_read_handler, mem_write_handler,
+                             &pci_base_address[0],
+                             &pci_conf[0x10],
+                             0x1000000)) {
+      BX_INFO(("new mem base address: 0x%08x", pci_base_address[0]));
+    }
+  }
+
+  if (io_len == 1)
+    BX_DEBUG(("write PCI register 0x%02x value 0x%02x", address, value));
+  else if (io_len == 2)
+    BX_DEBUG(("write PCI register 0x%02x value 0x%04x", address, value));
+  else if (io_len == 4)
+    BX_DEBUG(("write PCI register 0x%02x value 0x%08x", address, value));
+}
+
+// the class bx_banshee_c
+
+bx_banshee_c::bx_banshee_c() : bx_voodoo_base_c()
+{
+}
+
+void bx_banshee_c::init_model(void)
+{
+  if (theVoodooVga == NULL) {
+    BX_PANIC(("Voodoo Banshee with VGA disabled not supported yet"));
+  }
+  DEV_register_pci_handlers(this, &s.devfunc, BX_PLUGIN_VOODOO,
+                            "Experimental 3dfx Voodoo Banshee");
+  init_pci_conf(0x121a, 0x0003, 0x01, 0x030000, 0x00);
+  pci_conf[0x14] = 0x08;
+  pci_conf[0x18] = 0x01;
+  pci_conf[0x3d] = BX_PCI_INTA;
+  pci_base_address[0] = 0;
+  pci_base_address[1] = 0;
+  pci_base_address[2] = 0;
+  pci_rom_address = 0;
+  load_pci_rom(SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr());
+}
+
+void bx_banshee_c::reset(unsigned type)
+{
+  // TODO
+
+  // Deassert IRQ
+  set_irq_level(0);
+}
+
+void bx_banshee_c::register_state(void)
+{
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "voodoo", "Voodoo Banshee State");
+  bx_voodoo_base_c::register_state(list);
+  bx_list_c *banshee = new bx_list_c(list, "banshee", "Banshee State");
+  new bx_shadow_data_c(banshee, "io", (Bit8u*)v->banshee.io, 256, 1);
+  new bx_shadow_data_c(banshee, "agp", (Bit8u*)v->banshee.agp, 0x80, 1);
+  new bx_shadow_data_c(banshee, "crtc", (Bit8u*)v->banshee.crtc, 0x27, 1);
+  new bx_shadow_num_c(banshee, "disp_bpp", &v->banshee.disp_bpp);
+  new bx_shadow_bool_c(banshee, "half_mode", &v->banshee.half_mode);
+  new bx_shadow_bool_c(banshee, "dac_8bit", &v->banshee.dac_8bit);
+  new bx_shadow_bool_c(banshee, "hwcursor_enabled", &v->banshee.hwcursor.enabled);
+  new bx_shadow_bool_c(banshee, "hwcursor_mode", &v->banshee.hwcursor.mode);
+  new bx_shadow_num_c(banshee, "hwcursor_addr", &v->banshee.hwcursor.addr, BASE_HEX);
+  new bx_shadow_num_c(banshee, "hwcursor_x", &v->banshee.hwcursor.x, BASE_HEX);
+  new bx_shadow_num_c(banshee, "hwcursor_y", &v->banshee.hwcursor.y, BASE_HEX);
+  new bx_shadow_num_c(banshee, "hwcursor_color0", &v->banshee.hwcursor.color[0], BASE_HEX);
+  new bx_shadow_num_c(banshee, "hwcursor_color1", &v->banshee.hwcursor.color[1], BASE_HEX);
+  new bx_shadow_data_c(banshee, "blt_reg", (Bit8u*)v->banshee.blt.reg, 0x20, 1);
+  new bx_shadow_data_c(banshee, "blt_cpat", (Bit8u*)v->banshee.blt.cpat, 0x100, 1);
+  new bx_shadow_bool_c(banshee, "blt_busy", &v->banshee.blt.busy);
+  new bx_shadow_num_c(banshee, "blt_cmd", &v->banshee.blt.cmd);
+  // TODO
+}
+
+void bx_banshee_c::after_restore_state(void)
+{
+  bx_pci_device_c::after_restore_pci_state(mem_read_handler);
+  if (DEV_pci_set_base_mem(BX_VOODOO_THIS_PTR, mem_read_handler, mem_write_handler,
+                           &pci_base_address[0],
+                           &pci_conf[0x10],
+                           0x2000000)) {
+    BX_INFO(("new mem base address: 0x%08x", pci_base_address[0]));
+  }
+  if (DEV_pci_set_base_mem(BX_VOODOO_THIS_PTR, mem_read_handler, mem_write_handler,
+                           &pci_base_address[1],
+                           &pci_conf[0x14],
+                           0x2000000)) {
+    BX_INFO(("new lfb base address: 0x%08x", pci_base_address[1]));
+  }
+  if (DEV_pci_set_base_io(BX_VOODOO_THIS_PTR, read_handler, write_handler,
+                          &pci_base_address[2],
+                          &pci_conf[0x18],
+                          256, &banshee_iomask[0], "banshee")) {
+    BX_INFO(("new i/o base address: 0x%04x", pci_base_address[2]));
+  }
+  if ((v->banshee.io[io_vidProcCfg] & 0x01) && (theVoodooVga != NULL)) {
+    update_timing();
+    theVoodooVga->banshee_update_mode();
+  }
+  // TODO
+}
+
+bx_bool bx_banshee_c::update_timing(void)
+{
+  float hfreq;
+  bx_crtc_params_t crtcp;
+
+  BX_VVGA_THIS get_crtc_params(&crtcp);
+  hfreq = v->vidclk / (float)(crtcp.htotal * 8);
+  v->vertfreq = hfreq / (float)crtcp.vtotal;
+  s.vdraw.vtotal_usec = (unsigned)(1000000.0 / v->vertfreq);
+  s.vdraw.width = v->fbi.width;
+  s.vdraw.height = v->fbi.height;
+  vertical_timer_handler(NULL);
+  bx_virt_timer.activate_timer(s.vertical_timer_id, (Bit32u)s.vdraw.vtotal_usec, 1);
+  return 1;
+}
+
+void bx_banshee_c::set_tile_updated(unsigned xti, unsigned yti, bx_bool flag)
+{
+  SET_TILE_UPDATED(, xti, yti, flag);
+}
+
+void bx_banshee_c::draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *info)
 {
   unsigned cx, cy, cw, ch, px, py, w, h, x, y;
   Bit8u *cpat0, *cpat1, *tile_ptr, *tile_ptr2, *vid_ptr;
@@ -926,413 +1365,13 @@ void bx_voodoo_c::banshee_draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tilein
   }
 }
 
-void bx_voodoo_c::update(void)
+Bit32u bx_banshee_c::get_retrace(bx_bool hv)
 {
-  Bit32u start;
-  unsigned iHeight, iWidth;
-  unsigned pitch, xc, yc, xti, yti;
-  unsigned r, c, w, h;
-  int i;
-  Bit32u red, green, blue, colour;
-  Bit8u *vid_ptr, *vid_ptr2;
-  Bit8u *tile_ptr, *tile_ptr2;
-  Bit8u bpp;
-  bx_svga_tileinfo_t info;
-
-  BX_LOCK(render_mutex);
-  if ((BX_VOODOO_THIS s.model >= VOODOO_BANSHEE) &&
-      ((v->banshee.io[io_vidProcCfg] & 0x181) == 0x81)) {
-    bpp = v->banshee.disp_bpp;
-    start = v->banshee.io[io_vidDesktopStartAddr];
-    pitch = v->banshee.io[io_vidDesktopOverlayStride] & 0x7fff;
-    if (v->banshee.desktop_tiled) {
-      pitch *= 128;
-    }
-  } else {
-    if (!BX_VOODOO_THIS s.vdraw.gui_update_pending) {
-      BX_UNLOCK(render_mutex);
-      return;
-    }
-    bpp = 16;
-    start = v->fbi.rgboffs[v->fbi.frontbuf];
-    pitch = v->fbi.rowpixels * 2;
-  }
-  iWidth = BX_VOODOO_THIS s.vdraw.width;
-  iHeight = BX_VOODOO_THIS s.vdraw.height;
-  Bit8u *disp_ptr = &v->fbi.ram[start & v->fbi.mask];
-
-  if (bx_gui->graphics_tile_info_common(&info)) {
-    if (info.snapshot_mode) {
-      vid_ptr = disp_ptr;
-      tile_ptr = bx_gui->get_snapshot_buffer();
-      if (tile_ptr != NULL) {
-        for (yc = 0; yc < iHeight; yc++) {
-          memcpy(tile_ptr, vid_ptr, info.pitch);
-          vid_ptr += pitch;
-          tile_ptr += info.pitch;
-        }
-      }
-    } else if (info.is_indexed) {
-      if ((bpp == 8) && (info.bpp == 8)) {
-        for (yc=0, yti = 0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
-          for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
-            if (GET_TILE_UPDATED (xti, yti)) {
-              vid_ptr = disp_ptr + (yc * pitch + xc);
-              tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
-              for (r=0; r<h; r++) {
-                vid_ptr2  = vid_ptr;
-                tile_ptr2 = tile_ptr;
-                for (c=0; c<w; c++) {
-                  *(tile_ptr2++) = *(vid_ptr2++);
-                }
-                vid_ptr  += pitch;
-                tile_ptr += info.pitch;
-              }
-              if (v->banshee.hwcursor.enabled) {
-                banshee_draw_hwcursor(xc, yc, &info);
-              }
-              SET_TILE_UPDATED(BX_VOODOO_THIS, xti, yti, 0);
-              bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
-            }
-          }
-        }
-      } else {
-        BX_ERROR(("current guest pixel format is unsupported on indexed colour host displays"));
-      }
-    } else {
-      switch (bpp) {
-        case 8:
-          for (yc=0, yti = 0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
-            for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
-              if (GET_TILE_UPDATED(xti, yti)) {
-                if (v->banshee.half_mode) {
-                  vid_ptr = disp_ptr + ((yc >> 1) * pitch + xc);
-                } else {
-                  vid_ptr = disp_ptr + (yc * pitch + xc);
-                }
-                tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
-                for (r=0; r<h; r++) {
-                  vid_ptr2  = vid_ptr;
-                  tile_ptr2 = tile_ptr;
-                  for (c=0; c<w; c++) {
-                    colour = v->fbi.clut[*(vid_ptr2++)];
-                    colour = MAKE_COLOUR(
-                      colour & 0xff0000, 24, info.red_shift, info.red_mask,
-                      colour & 0x00ff00, 16, info.green_shift, info.green_mask,
-                      colour & 0x0000ff, 8, info.blue_shift, info.blue_mask);
-                    if (info.is_little_endian) {
-                      for (i=0; i<info.bpp; i+=8) {
-                        *(tile_ptr2++) = (Bit8u)(colour >> i);
-                      }
-                    } else {
-                      for (i=info.bpp-8; i>-8; i-=8) {
-                        *(tile_ptr2++) = (Bit8u)(colour >> i);
-                      }
-                    }
-                  }
-                  if (!v->banshee.half_mode || (r & 1)) {
-                    vid_ptr += pitch;
-                  }
-                  tile_ptr += info.pitch;
-                }
-                if (v->banshee.hwcursor.enabled) {
-                  banshee_draw_hwcursor(xc, yc, &info);
-                }
-                SET_TILE_UPDATED(BX_VOODOO_THIS, xti, yti, 0);
-                bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
-              }
-            }
-          }
-          break;
-        case 16:
-          for (yc=0, yti = 0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
-            for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
-              if (GET_TILE_UPDATED(xti, yti)) {
-                if (v->banshee.half_mode) {
-                  vid_ptr = disp_ptr + ((yc >> 1) * pitch + (xc << 1));
-                } else {
-                  vid_ptr = disp_ptr + (yc * pitch + (xc << 1));
-                }
-                tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
-                for (r=0; r<h; r++) {
-                  vid_ptr2  = vid_ptr;
-                  tile_ptr2 = tile_ptr;
-                  for (c=0; c<w; c++) {
-                    colour = *(vid_ptr2++);
-                    colour |= *(vid_ptr2++) << 8;
-                    colour = MAKE_COLOUR(
-                      colour & 0x001f, 5, info.blue_shift, info.blue_mask,
-                      colour & 0x07e0, 11, info.green_shift, info.green_mask,
-                      colour & 0xf800, 16, info.red_shift, info.red_mask);
-                    if (info.is_little_endian) {
-                      for (i=0; i<info.bpp; i+=8) {
-                        *(tile_ptr2++) = (Bit8u)(colour >> i);
-                      }
-                    } else {
-                      for (i=info.bpp-8; i>-8; i-=8) {
-                        *(tile_ptr2++) = (Bit8u)(colour >> i);
-                      }
-                    }
-                  }
-                  if (!v->banshee.half_mode || (r & 1)) {
-                    vid_ptr += pitch;
-                  }
-                  tile_ptr += info.pitch;
-                }
-                if (v->banshee.hwcursor.enabled) {
-                  banshee_draw_hwcursor(xc, yc, &info);
-                }
-                SET_TILE_UPDATED(BX_VOODOO_THIS, xti, yti, 0);
-                bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
-              }
-            }
-          }
-          break;
-        case 24:
-          for (yc=0, yti = 0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
-            for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
-              if (GET_TILE_UPDATED(xti, yti)) {
-                if (v->banshee.half_mode) {
-                  vid_ptr = disp_ptr + ((yc >> 1) * pitch + 3*xc);
-                } else {
-                  vid_ptr = disp_ptr + (yc * pitch + 3*xc);
-                }
-                tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
-                for (r=0; r<h; r++) {
-                  vid_ptr2  = vid_ptr;
-                  tile_ptr2 = tile_ptr;
-                  for (c=0; c<w; c++) {
-                    blue = *(vid_ptr2++);
-                    green = *(vid_ptr2++);
-                    red = *(vid_ptr2++);
-                    colour = MAKE_COLOUR(
-                      red, 8, info.red_shift, info.red_mask,
-                      green, 8, info.green_shift, info.green_mask,
-                      blue, 8, info.blue_shift, info.blue_mask);
-                    if (info.is_little_endian) {
-                      for (i=0; i<info.bpp; i+=8) {
-                        *(tile_ptr2++) = (Bit8u)(colour >> i);
-                      }
-                    } else {
-                      for (i=info.bpp-8; i>-8; i-=8) {
-                        *(tile_ptr2++) = (Bit8u)(colour >> i);
-                      }
-                    }
-                  }
-                  if (!v->banshee.half_mode || (r & 1)) {
-                    vid_ptr += pitch;
-                  }
-                  tile_ptr += info.pitch;
-                }
-                if (v->banshee.hwcursor.enabled) {
-                  banshee_draw_hwcursor(xc, yc, &info);
-                }
-                SET_TILE_UPDATED(BX_VOODOO_THIS, xti, yti, 0);
-                bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
-              }
-            }
-          }
-          break;
-        case 32:
-          for (yc=0, yti = 0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
-            for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
-              if (GET_TILE_UPDATED(xti, yti)) {
-                if (v->banshee.half_mode) {
-                  vid_ptr = disp_ptr + ((yc >> 1) * pitch + (xc << 2));
-                } else {
-                  vid_ptr = disp_ptr + (yc * pitch + (xc << 2));
-                }
-                tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
-                for (r=0; r<h; r++) {
-                  vid_ptr2  = vid_ptr;
-                  tile_ptr2 = tile_ptr;
-                  for (c=0; c<w; c++) {
-                    blue = *(vid_ptr2++);
-                    green = *(vid_ptr2++);
-                    red = *(vid_ptr2++);
-                    vid_ptr2++;
-                    colour = MAKE_COLOUR(
-                      red, 8, info.red_shift, info.red_mask,
-                      green, 8, info.green_shift, info.green_mask,
-                      blue, 8, info.blue_shift, info.blue_mask);
-                    if (info.is_little_endian) {
-                      for (i=0; i<info.bpp; i+=8) {
-                        *(tile_ptr2++) = (Bit8u)(colour >> i);
-                      }
-                    } else {
-                      for (i=info.bpp-8; i>-8; i-=8) {
-                        *(tile_ptr2++) = (Bit8u)(colour >> i);
-                      }
-                    }
-                  }
-                  if (!v->banshee.half_mode || (r & 1)) {
-                    vid_ptr += pitch;
-                  }
-                  tile_ptr += info.pitch;
-                }
-                if (v->banshee.hwcursor.enabled) {
-                  banshee_draw_hwcursor(xc, yc, &info);
-                }
-                SET_TILE_UPDATED(BX_VOODOO_THIS, xti, yti, 0);
-                bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
-              }
-            }
-          }
-          break;
-        default:
-          BX_ERROR(("Ignoring reserved pixel format"));
-      }
-    }
-  } else {
-    BX_PANIC(("cannot get svga tile info"));
-  }
-  BX_VOODOO_THIS s.vdraw.gui_update_pending = 0;
-  BX_UNLOCK(render_mutex);
+  return theVoodooVga->get_retrace();
 }
 
-void bx_voodoo_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
-                      unsigned height)
-{
-  unsigned xt0, xt1, xti, yt0, yt1, yti;
-
-  xt0 = x0 / X_TILESIZE;
-  yt0 = y0 / Y_TILESIZE;
-  xt1 = (x0 + width  - 1) / X_TILESIZE;
-  yt1 = (y0 + height - 1) / Y_TILESIZE;
-  for (yti=yt0; yti<=yt1; yti++) {
-    for (xti=xt0; xti<=xt1; xti++) {
-      SET_TILE_UPDATED(BX_VOODOO_THIS, xti, yti, 1);
-    }
-  }
-}
-
-Bit32u bx_voodoo_c::get_retrace(bx_bool hv)
-{
-  if (BX_VOODOO_THIS s.model < VOODOO_BANSHEE) {
-    Bit64u time_in_frame = bx_virt_timer.time_usec(0) - BX_VOODOO_THIS s.vdraw.frame_start;
-    if (time_in_frame >= BX_VOODOO_THIS s.vdraw.vsync_usec) {
-      return 0;
-    } else {
-      Bit32u value = (Bit32u)(time_in_frame / BX_VOODOO_THIS s.vdraw.htotal_usec + 1);
-      if (hv) {
-        Bit32u time_in_line = (Bit32u)(time_in_frame % BX_VOODOO_THIS s.vdraw.htotal_usec);
-        Bit32u hpixel = (Bit32u)(time_in_line * BX_VOODOO_THIS s.vdraw.htime_to_pixel);
-        if (time_in_line < BX_VOODOO_THIS s.vdraw.hsync_usec) {
-          value |= ((hpixel + 1) << 16);
-        }
-      }
-      return value;
-    }
-  } else {
-    return theVoodooVga->get_retrace();
-  }
-}
-
-void bx_voodoo_c::output_enable(bx_bool enabled)
-{
-  if (BX_VOODOO_THIS s.vdraw.output_on != enabled) {
-    BX_VOODOO_THIS s.vdraw.output_on = enabled;
-    update_screen_start();
-  }
-}
-
-void bx_voodoo_c::update_screen_start(void)
-{
-  if (!BX_VOODOO_THIS s.vdraw.screen_update_pending) {
-    BX_VOODOO_THIS s.vdraw.screen_update_pending = 1;
-    bx_virt_timer.activate_timer(BX_VOODOO_THIS s.mode_change_timer_id, 1000, 0);
-  }
-}
-
-void bx_voodoo_c::set_irq_level(bx_bool level)
-{
-  DEV_pci_set_irq(BX_VOODOO_THIS s.devfunc, BX_VOODOO_THIS pci_conf[0x3d], level);
-}
-
-
-// pci configuration space write callback handler
-void bx_voodoo_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
-{
-  Bit8u value8, oldval;
-  bx_bool baseaddr_change = 0;
-
-  if (BX_VOODOO_THIS s.model >= VOODOO_BANSHEE) {
-    banshee_pci_write_handler(address, value, io_len);
-    return;
-  }
-
-  if ((address >= 0x14) && (address < 0x34))
-    return;
-
-  for (unsigned i=0; i<io_len; i++) {
-    value8 = (value >> (i*8)) & 0xFF;
-    oldval = BX_VOODOO_THIS pci_conf[address+i];
-    switch (address+i) {
-      case 0x04:
-        value8 &= 0x02;
-        break;
-      case 0x3c:
-        if (value8 != oldval) {
-          BX_INFO(("new irq line = %d", value8));
-        }
-        break;
-      case 0x10:
-        value8 = (value8 & 0xf0) | (oldval & 0x0f);
-      case 0x11:
-      case 0x12:
-      case 0x13:
-        baseaddr_change |= (value8 != oldval);
-        break;
-      case 0x40:
-      case 0x41:
-      case 0x42:
-      case 0x43:
-        if (((address+i) == 0x40) && ((value8 ^ oldval) & 0x02)) {
-          v->pci.fifo.enabled = ((value8 & 0x02) > 0);
-          if (!v->pci.fifo.enabled && !fifo_empty(&v->pci.fifo)) {
-            bx_set_event(&fifo_wakeup);
-          }
-          BX_DEBUG(("PCI FIFO now %sabled", v->pci.fifo.enabled ? "en":"dis"));
-        }
-        if (((address+i) == 0x41) && (BX_VOODOO_THIS s.model == VOODOO_2)) {
-          value8 &= 0x0f;
-          value8 |= 0x50;
-        }
-        v->pci.init_enable &= ~(0xff << (i*8));
-        v->pci.init_enable |= (value8 << (i*8));
-        break;
-      case 0xc0:
-        BX_VOODOO_THIS s.vdraw.clock_enabled = 1;
-        update_screen_start();
-        break;
-      case 0xe0:
-        BX_VOODOO_THIS s.vdraw.clock_enabled = 0;
-        update_screen_start();
-        break;
-      default:
-        value8 = oldval;
-    }
-    BX_VOODOO_THIS pci_conf[address+i] = value8;
-  }
-  if (baseaddr_change) {
-    if (DEV_pci_set_base_mem(BX_VOODOO_THIS_PTR, mem_read_handler, mem_write_handler,
-                             &BX_VOODOO_THIS pci_base_address[0],
-                             &BX_VOODOO_THIS pci_conf[0x10],
-                             0x1000000)) {
-      BX_INFO(("new mem base address: 0x%08x", BX_VOODOO_THIS pci_base_address[0]));
-    }
-  }
-
-  if (io_len == 1)
-    BX_DEBUG(("write PCI register 0x%02x value 0x%02x", address, value));
-  else if (io_len == 2)
-    BX_DEBUG(("write PCI register 0x%02x value 0x%04x", address, value));
-  else if (io_len == 4)
-    BX_DEBUG(("write PCI register 0x%02x value 0x%08x", address, value));
-}
-
-// Banshee pci configuration space write handler
-void bx_voodoo_c::banshee_pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
+// pci configuration space write handler
+void bx_banshee_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {
   Bit8u value8, oldval;
   bx_bool baseaddr0_change = 0, baseaddr1_change = 0, baseaddr2_change = 0;
@@ -1343,7 +1382,7 @@ void bx_voodoo_c::banshee_pci_write_handler(Bit8u address, Bit32u value, unsigne
 
   for (unsigned i=0; i<io_len; i++) {
     value8 = (value >> (i*8)) & 0xFF;
-    oldval = BX_VOODOO_THIS pci_conf[address+i];
+    oldval = pci_conf[address+i];
     switch (address+i) {
       case 0x04:
         value8 &= 0x03;
@@ -1378,7 +1417,7 @@ void bx_voodoo_c::banshee_pci_write_handler(Bit8u address, Bit32u value, unsigne
       case 0x31:
       case 0x32:
       case 0x33:
-        if (BX_VOODOO_THIS pci_rom_size > 0) {
+        if (pci_rom_size > 0) {
           if ((address+i) == 0x30) {
             value8 &= 0x01;
           } else if ((address+i) == 0x31) {
@@ -1392,38 +1431,38 @@ void bx_voodoo_c::banshee_pci_write_handler(Bit8u address, Bit32u value, unsigne
           value8 = oldval;
         }
     }
-    BX_VOODOO_THIS pci_conf[address+i] = value8;
+    pci_conf[address+i] = value8;
   }
   if (baseaddr0_change) {
     if (DEV_pci_set_base_mem(BX_VOODOO_THIS_PTR, mem_read_handler, mem_write_handler,
-                             &BX_VOODOO_THIS pci_base_address[0],
-                             &BX_VOODOO_THIS pci_conf[0x10],
+                             &pci_base_address[0],
+                             &pci_conf[0x10],
                              0x2000000)) {
-      BX_INFO(("new mem base address: 0x%08x", BX_VOODOO_THIS pci_base_address[0]));
+      BX_INFO(("new mem base address: 0x%08x", pci_base_address[0]));
     }
   }
   if (baseaddr1_change) {
     if (DEV_pci_set_base_mem(BX_VOODOO_THIS_PTR, mem_read_handler, mem_write_handler,
-                             &BX_VOODOO_THIS pci_base_address[1],
-                             &BX_VOODOO_THIS pci_conf[0x14],
+                             &pci_base_address[1],
+                             &pci_conf[0x14],
                              0x2000000)) {
-      BX_INFO(("new lfb base address: 0x%08x", BX_VOODOO_THIS pci_base_address[1]));
+      BX_INFO(("new lfb base address: 0x%08x", pci_base_address[1]));
     }
   }
   if (baseaddr2_change) {
-    if (DEV_pci_set_base_io(BX_VOODOO_THIS_PTR, banshee_read_handler, banshee_write_handler,
-                            &BX_VOODOO_THIS pci_base_address[2],
-                            &BX_VOODOO_THIS pci_conf[0x18],
+    if (DEV_pci_set_base_io(BX_VOODOO_THIS_PTR, read_handler, write_handler,
+                            &pci_base_address[2],
+                            &pci_conf[0x18],
                             256, &banshee_iomask[0], "banshee")) {
-      BX_INFO(("new i/o base address: 0x%04x", BX_VOODOO_THIS pci_base_address[2]));
+      BX_INFO(("new i/o base address: 0x%04x", pci_base_address[2]));
     }
   }
   if (romaddr_change) {
     if (DEV_pci_set_base_mem(BX_VOODOO_THIS_PTR, mem_read_handler, NULL,
-                             &BX_VOODOO_THIS pci_rom_address,
-                             &BX_VOODOO_THIS pci_conf[0x30],
-                             BX_VOODOO_THIS pci_rom_size)) {
-      BX_INFO(("new ROM address: 0x%08x", BX_VOODOO_THIS pci_rom_address));
+                             &pci_rom_address,
+                             &pci_conf[0x30],
+                             pci_rom_size)) {
+      BX_INFO(("new ROM address: 0x%08x", pci_rom_address));
     }
   }
 
@@ -1435,10 +1474,14 @@ void bx_voodoo_c::banshee_pci_write_handler(Bit8u address, Bit32u value, unsigne
     BX_DEBUG(("write PCI register 0x%02x value 0x%08x", address, value));
 }
 
-Bit32u bx_voodoo_c::banshee_read_handler(void *this_ptr, Bit32u address, unsigned io_len)
+Bit32u bx_banshee_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
 {
-  UNUSED(this_ptr);
+  bx_banshee_c *class_ptr = (bx_banshee_c*)this_ptr;
+  return class_ptr->read(address, io_len);
+}
 
+Bit32u bx_banshee_c::read(Bit32u address, unsigned io_len)
+{
   Bit32u result;
 
   Bit8u offset = (Bit8u)(address & 0xff);
@@ -1476,10 +1519,14 @@ Bit32u bx_voodoo_c::banshee_read_handler(void *this_ptr, Bit32u address, unsigne
   return result;
 }
 
-void bx_voodoo_c::banshee_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
+void bx_banshee_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
 {
-  UNUSED(this_ptr);
+  bx_banshee_c *class_ptr = (bx_banshee_c*)this_ptr;
+  return class_ptr->write(address, value, io_len);
+}
 
+void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
+{
   Bit8u offset = (Bit8u)(address & 0xff);
   Bit8u reg = (offset>>2), dac_idx, k, m, n;
   Bit32u old = v->banshee.io[reg];
@@ -1510,11 +1557,11 @@ void bx_voodoo_c::banshee_write_handler(void *this_ptr, Bit32u address, Bit32u v
       break;
 
     case io_dramCommand:
-      BX_VOODOO_THIS banshee_blt_reg_write(0x1c, value);
+      blt_reg_write(0x1c, value);
       break;
 
     case io_dramData:
-      BX_VOODOO_THIS banshee_blt_reg_write(0x19, value);
+      blt_reg_write(0x19, value);
       break;
 
     case io_strapInfo:
@@ -1552,13 +1599,13 @@ void bx_voodoo_c::banshee_write_handler(void *this_ptr, Bit32u address, Bit32u v
       if ((v->banshee.io[reg] ^ old) & 0x2800)
         v->fbi.clut_dirty = 1;
       if ((v->banshee.io[reg] & 0x01) && ((old & 0x01) == 0x00)) {
-        BX_VOODOO_THIS update_timing();
+        update_timing();
         if (theVoodooVga != NULL) {
           theVoodooVga->banshee_update_mode();
         }
         mode_change = 1;
       } else if (!(v->banshee.io[reg] & 0x01) && ((old & 0x01) == 0x01)) {
-        bx_virt_timer.deactivate_timer(BX_VOODOO_THIS s.vertical_timer_id);
+        bx_virt_timer.deactivate_timer(s.vertical_timer_id);
         v->vtimer_running = 0;
       }
       if ((v->banshee.io[reg] & 0x01) && ((v->banshee.io[reg] & 0x180) != (old & 0x180))) {
@@ -1654,7 +1701,23 @@ void bx_voodoo_c::banshee_write_handler(void *this_ptr, Bit32u address, Bit32u v
   }
 }
 
-void bx_voodoo_c::banshee_mem_read(bx_phy_address addr, unsigned len, void *data)
+bx_bool bx_banshee_c::mem_read_handler(bx_phy_address addr, unsigned len,
+                                       void *data, void *param)
+{
+  bx_banshee_c *class_ptr = (bx_banshee_c*)param;
+  class_ptr->mem_read(addr, len, data);
+  return 1;
+}
+
+bx_bool bx_banshee_c::mem_write_handler(bx_phy_address addr, unsigned len,
+                                        void *data, void *param)
+{
+  bx_banshee_c *class_ptr = (bx_banshee_c*)param;
+  class_ptr->mem_write(addr, len, data);
+  return 1;
+}
+
+void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
 {
   Bit32u *data_ptr = (Bit32u*)data;
   Bit32u value = 0xffffffff;
@@ -1663,27 +1726,27 @@ void bx_voodoo_c::banshee_mem_read(bx_phy_address addr, unsigned len, void *data
   Bit32u pitch = v->banshee.io[io_vidDesktopOverlayStride] & 0x7fff;
   unsigned i, x, y;
 
-  if (BX_VOODOO_THIS pci_rom_size > 0) {
-    Bit32u mask = (BX_VOODOO_THIS pci_rom_size - 1);
-    if ((addr & ~mask) == BX_VOODOO_THIS pci_rom_address) {
-      if (BX_VOODOO_THIS pci_conf[0x30] & 0x01) {
+  if (pci_rom_size > 0) {
+    Bit32u mask = (pci_rom_size - 1);
+    if ((addr & ~mask) == pci_rom_address) {
+      if (pci_conf[0x30] & 0x01) {
         value = 0;
         for (unsigned i = 0; i < len; i++) {
           value <<= 8;
-          value |= BX_VOODOO_THIS pci_rom[(addr & mask) + i];
+          value |= pci_rom[(addr & mask) + i];
         }
       }
       *data_ptr = value;
       return;
     }
   }
-  if ((addr & ~0x1ffffff) == BX_VOODOO_THIS pci_base_address[0]) {
+  if ((addr & ~0x1ffffff) == pci_base_address[0]) {
     if (offset < 0x80000) {
-      value = BX_VOODOO_THIS banshee_read_handler(BX_VOODOO_THIS_PTR, offset, len);
+      value = read(offset, len);
     } else if (offset < 0x100000) {
-      value = banshee_agp_reg_read((offset >> 2) & 0x7f);
+      value = agp_reg_read((offset >> 2) & 0x7f);
     } else if (offset < 0x200000) {
-      value = banshee_blt_reg_read((offset >> 2) & 0x7f);
+      value = blt_reg_read((offset >> 2) & 0x7f);
     } else if (offset < 0x600000) {
       value = register_r((offset - 0x200000) >> 2);
     } else if (offset < 0xc00000) {
@@ -1696,7 +1759,7 @@ void bx_voodoo_c::banshee_mem_read(bx_phy_address addr, unsigned len, void *data
       value = lfb_r((offset & v->fbi.mask) >> 2);
       v->fbi.lfb_stride = temp;
     }
-  } else if ((addr & ~0x1ffffff) == BX_VOODOO_THIS pci_base_address[1]) {
+  } else if ((addr & ~0x1ffffff) == pci_base_address[1]) {
     if (offset < v->fbi.lfb_base) {
       if (v->banshee.desktop_tiled && (offset >= start)) {
         offset -= start;
@@ -1716,19 +1779,19 @@ void bx_voodoo_c::banshee_mem_read(bx_phy_address addr, unsigned len, void *data
   *data_ptr = value;
 }
 
-void bx_voodoo_c::banshee_mem_write(bx_phy_address addr, unsigned len, void *data)
+void bx_banshee_c::mem_write(bx_phy_address addr, unsigned len, void *data)
 {
   Bit32u offset = (addr & 0x1ffffff);
   Bit32u value = *(Bit32u*)data;
   Bit32u mask = 0xffffffff;
 
-  if ((addr & ~0x1ffffff) == BX_VOODOO_THIS pci_base_address[0]) {
+  if ((addr & ~0x1ffffff) == pci_base_address[0]) {
     if (offset < 0x80000) {
-      BX_VOODOO_THIS banshee_write_handler(BX_VOODOO_THIS_PTR, offset, value, len);
+      write(offset, value, len);
     } else if (offset < 0x100000) {
-      banshee_agp_reg_write((offset >> 2) & 0x7f, value);
+      agp_reg_write((offset >> 2) & 0x7f, value);
     } else if (offset < 0x200000) {
-      banshee_blt_reg_write((offset >> 2) & 0x7f, value);
+      blt_reg_write((offset >> 2) & 0x7f, value);
     } else if (offset < 0x600000) {
       register_w_common((offset - 0x200000) >> 2, value);
     } else if (offset < 0x800000) {
@@ -1750,7 +1813,7 @@ void bx_voodoo_c::banshee_mem_write(bx_phy_address addr, unsigned len, void *dat
       lfb_w((offset & v->fbi.mask) >> 2, value, mask);
       v->fbi.lfb_stride = temp;
     }
-  } else if ((addr & ~0x1ffffff) == BX_VOODOO_THIS pci_base_address[1]) {
+  } else if ((addr & ~0x1ffffff) == pci_base_address[1]) {
     if (offset < v->fbi.lfb_base) {
       offset &= v->fbi.mask;
       if (v->fbi.cmdfifo[0].enabled && (offset >= v->fbi.cmdfifo[0].base) &&
@@ -1761,7 +1824,7 @@ void bx_voodoo_c::banshee_mem_write(bx_phy_address addr, unsigned len, void *dat
         BX_INFO(("CMDFIFO #1 write"));
         cmdfifo_w(&v->fbi.cmdfifo[1], offset, value);
       } else {
-        banshee_mem_write_linear(offset, value, len);
+        mem_write_linear(offset, value, len);
       }
     } else {
       if (len == 2) {
@@ -1776,7 +1839,7 @@ void bx_voodoo_c::banshee_mem_write(bx_phy_address addr, unsigned len, void *dat
   }
 }
 
-void bx_voodoo_c::banshee_mem_write_linear(Bit32u offset, Bit32u value, unsigned len)
+void bx_banshee_c::mem_write_linear(Bit32u offset, Bit32u value, unsigned len)
 {
   Bit8u value8;
   Bit32u start = v->banshee.io[io_vidDesktopStartAddr];
@@ -1809,7 +1872,7 @@ void bx_voodoo_c::banshee_mem_write_linear(Bit32u offset, Bit32u value, unsigned
   }
 }
 
-Bit32u bx_voodoo_c::banshee_agp_reg_read(Bit8u reg)
+Bit32u bx_banshee_c::agp_reg_read(Bit8u reg)
 {
   Bit32u result = 0;
   Bit8u fifo_idx = (reg >= cmdBaseAddr1);
@@ -1842,7 +1905,7 @@ Bit32u bx_voodoo_c::banshee_agp_reg_read(Bit8u reg)
   return result;
 }
 
-void bx_voodoo_c::banshee_agp_reg_write(Bit8u reg, Bit32u value)
+void bx_banshee_c::agp_reg_write(Bit8u reg, Bit32u value)
 {
   Bit8u fifo_idx = (reg >= cmdBaseAddr1);
 
@@ -1926,7 +1989,7 @@ void bx_voodoo_c::banshee_agp_reg_write(Bit8u reg, Bit32u value)
 
 #define BLT v->banshee.blt
 
-Bit32u bx_voodoo_c::banshee_blt_reg_read(Bit8u reg)
+Bit32u bx_banshee_c::blt_reg_read(Bit8u reg)
 {
   Bit32u result = 0;
 
@@ -1949,7 +2012,7 @@ Bit32u bx_voodoo_c::banshee_blt_reg_read(Bit8u reg)
   return result;
 }
 
-void bx_voodoo_c::banshee_blt_reg_write(Bit8u reg, Bit32u value)
+void bx_banshee_c::blt_reg_write(Bit8u reg, Bit32u value)
 {
   if (reg < 0x20) {
     BLT.reg[reg] = value;
@@ -2060,14 +2123,14 @@ void bx_voodoo_c::banshee_blt_reg_write(Bit8u reg, Bit32u value)
         BLT.lamem = NULL;
       }
       if (BLT.immed) {
-        banshee_blt_execute();
+        blt_execute();
       } else {
-        banshee_blt_launch_area_setup();
+        blt_launch_area_setup();
       }
       break;
     default:
       if ((reg >= 0x20) && (reg < 0x40)) {
-        banshee_blt_launch_area_write(value);
+        blt_launch_area_write(value);
       } else if ((reg >= 0x40) && (reg < 0x80)) {
         reg -= 0x40;
         BX_DEBUG(("colorPattern write reg 0x%02x: value = 0x%08x", reg, value));
@@ -2079,7 +2142,7 @@ void bx_voodoo_c::banshee_blt_reg_write(Bit8u reg, Bit32u value)
   }
 }
 
-void bx_voodoo_c::banshee_blt_launch_area_setup()
+void bx_banshee_c::blt_launch_area_setup()
 {
   Bit32u pbytes;
   Bit8u pxpack;
@@ -2134,7 +2197,7 @@ void bx_voodoo_c::banshee_blt_launch_area_setup()
   }
 }
 
-void bx_voodoo_c::banshee_blt_launch_area_write(Bit32u value)
+void bx_banshee_c::blt_launch_area_write(Bit32u value)
 {
   if (BLT.lacnt > 0) {
     BX_DEBUG(("launchArea write: value = 0x%08x", value));
@@ -2162,14 +2225,14 @@ void bx_voodoo_c::banshee_blt_launch_area_write(Bit32u value)
       BLT.dst_y = (value >> 16) & 0x1fff;
     }
     if (--BLT.lacnt == 0) {
-      banshee_blt_execute();
+      blt_execute();
     }
   } else {
     BX_ERROR(("launchArea write: ignoring extra data"));
   }
 }
 
-void bx_voodoo_c::banshee_blt_execute()
+void bx_banshee_c::blt_execute()
 {
   switch (BLT.cmd) {
     case 0: // NOP
@@ -2177,9 +2240,9 @@ void bx_voodoo_c::banshee_blt_execute()
     case 1:
       BLT.busy = 1;
       if (BLT.rop_flags[BLT.rop0] & BX_ROP_PATTERN) {
-        banshee_blt_screen_to_screen_pattern();
+        blt_screen_to_screen_pattern();
       } else {
-        banshee_blt_screen_to_screen();
+        blt_screen_to_screen();
       }
       break;
     case 2:
@@ -2189,9 +2252,9 @@ void bx_voodoo_c::banshee_blt_execute()
       if (!BLT.immed) {
         BLT.busy = 1;
         if (BLT.rop_flags[BLT.rop0] & BX_ROP_PATTERN) {
-          banshee_blt_host_to_screen_pattern();
+          blt_host_to_screen_pattern();
         } else {
-          banshee_blt_host_to_screen();
+          blt_host_to_screen();
         }
         delete [] BLT.lamem;
         BLT.lamem = NULL;
@@ -2206,18 +2269,18 @@ void bx_voodoo_c::banshee_blt_execute()
       BLT.busy = 1;
       if (BLT.rop_flags[BLT.rop0] & BX_ROP_PATTERN) {
         if ((BLT.reg[blt_command] >> 13) & 1) {
-          banshee_blt_pattern_fill_mono();
+          blt_pattern_fill_mono();
         } else {
-          banshee_blt_pattern_fill_color();
+          blt_pattern_fill_color();
         }
       } else {
-        banshee_blt_rectangle_fill();
+        blt_rectangle_fill();
       }
       break;
     case 6:
     case 7:
       BLT.busy = 1;
-      banshee_blt_line(BLT.cmd == 7);
+      blt_line(BLT.cmd == 7);
       if (!BLT.immed) {
         BLT.lacnt = 1;
       }
@@ -2239,7 +2302,7 @@ void bx_voodoo_c::banshee_blt_execute()
   }
 }
 
-void bx_voodoo_c::banshee_blt_complete()
+void bx_banshee_c::blt_complete()
 {
   Bit32u vstart = v->banshee.io[io_vidDesktopStartAddr] & v->fbi.mask;
   Bit16u vpitch = v->banshee.io[io_vidDesktopOverlayStride] & 0x7fff;
@@ -2300,7 +2363,7 @@ void bx_voodoo_c::banshee_blt_complete()
   BLT.busy = 0;
 }
 
-bx_bool bx_voodoo_c::banshee_blt_apply_clipwindow(int *x0, int *y0, int *x1, int *y1, int *w, int *h)
+bx_bool bx_banshee_c::blt_apply_clipwindow(int *x0, int *y0, int *x1, int *y1, int *w, int *h)
 {
   int cx0, cx1, cy0, cy1, xd, yd;
 
@@ -2357,7 +2420,7 @@ bx_bool bx_voodoo_c::banshee_blt_apply_clipwindow(int *x0, int *y0, int *x1, int
   return ((*w > 0) && (*h > 0));
 }
 
-void bx_voodoo_c::banshee_blt_rectangle_fill()
+void bx_banshee_c::blt_rectangle_fill()
 {
   Bit32u dpitch = BLT.dst_pitch;
   Bit8u dpxsize = (BLT.dst_fmt > 1) ? (BLT.dst_fmt - 1) : 1;
@@ -2371,7 +2434,7 @@ void bx_voodoo_c::banshee_blt_rectangle_fill()
   w = BLT.dst_w;
   h = BLT.dst_h;
   BX_DEBUG(("Rectangle fill: %d x %d  ROP %02X", w, h, BLT.rop0));
-  if (!banshee_blt_apply_clipwindow(NULL, NULL, &x1, &y1, &w, &h)) {
+  if (!blt_apply_clipwindow(NULL, NULL, &x1, &y1, &w, &h)) {
     BLT.busy = 0;
     BX_UNLOCK(render_mutex);
     return;
@@ -2387,11 +2450,11 @@ void bx_voodoo_c::banshee_blt_rectangle_fill()
     } while (--ncols);
     dst_ptr += dpitch;
   } while (--nrows);
-  banshee_blt_complete();
+  blt_complete();
   BX_UNLOCK(render_mutex);
 }
 
-void bx_voodoo_c::banshee_blt_pattern_fill_mono()
+void bx_banshee_c::blt_pattern_fill_mono()
 {
   Bit32u dpitch = BLT.dst_pitch;
   Bit8u dpxsize = (BLT.dst_fmt > 1) ? (BLT.dst_fmt - 1) : 1;
@@ -2412,7 +2475,7 @@ void bx_voodoo_c::banshee_blt_pattern_fill_mono()
   BX_DEBUG(("Pattern fill mono: %d x %d  ROP %02X", w, h, BLT.rop0));
   x0 = 0;
   y0 = 0;
-  if (!banshee_blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h)) {
+  if (!blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h)) {
     BLT.busy = 0;
     BX_UNLOCK(render_mutex);
     return;
@@ -2452,11 +2515,11 @@ void bx_voodoo_c::banshee_blt_pattern_fill_mono()
       }
     }
   } while (--nrows);
-  banshee_blt_complete();
+  blt_complete();
   BX_UNLOCK(render_mutex);
 }
 
-void bx_voodoo_c::banshee_blt_pattern_fill_color()
+void bx_banshee_c::blt_pattern_fill_color()
 {
   Bit32u dpitch = BLT.dst_pitch;
   Bit8u dpxsize = (BLT.dst_fmt > 1) ? (BLT.dst_fmt - 1) : 1;
@@ -2475,7 +2538,7 @@ void bx_voodoo_c::banshee_blt_pattern_fill_color()
   BX_DEBUG(("Pattern fill color: %d x %d  ROP %02X", w, h, BLT.rop0));
   x0 = BLT.patsx;
   y0 = BLT.patsy;
-  if (!banshee_blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h)) {
+  if (!blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h)) {
     BLT.busy = 0;
     BX_UNLOCK(render_mutex);
     return;
@@ -2508,11 +2571,11 @@ void bx_voodoo_c::banshee_blt_pattern_fill_color()
       }
     }
   } while (--nrows);
-  banshee_blt_complete();
+  blt_complete();
   BX_UNLOCK(render_mutex);
 }
 
-void bx_voodoo_c::banshee_blt_screen_to_screen()
+void bx_banshee_c::blt_screen_to_screen()
 {
   Bit8u *src_ptr = &v->fbi.ram[BLT.src_base];
   Bit8u *dst_ptr = &v->fbi.ram[BLT.dst_base];
@@ -2532,7 +2595,7 @@ void bx_voodoo_c::banshee_blt_screen_to_screen()
   if (BLT.dst_fmt != BLT.src_fmt) {
     BX_ERROR(("Pixel format conversion not supported yet"));
   }
-  if (!banshee_blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h)) {
+  if (!blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h)) {
     BLT.busy = 0;
     BX_UNLOCK(render_mutex);
     return;
@@ -2549,11 +2612,11 @@ void bx_voodoo_c::banshee_blt_screen_to_screen()
   src_ptr += (y0 * abs(spitch) + x0 * dpxsize);
   dst_ptr += (y1 * abs(dpitch) + x1 * dpxsize);
   BLT.rop_fn(dst_ptr, src_ptr, dpitch, spitch, w * dpxsize, h);
-  banshee_blt_complete();
+  blt_complete();
   BX_UNLOCK(render_mutex);
 }
 
-void bx_voodoo_c::banshee_blt_screen_to_screen_pattern()
+void bx_banshee_c::blt_screen_to_screen_pattern()
 {
   Bit8u *src_ptr = &v->fbi.ram[BLT.src_base];
   Bit8u *dst_ptr = &v->fbi.ram[BLT.dst_base];
@@ -2582,7 +2645,7 @@ void bx_voodoo_c::banshee_blt_screen_to_screen_pattern()
   if (BLT.dst_fmt != BLT.src_fmt) {
     BX_ERROR(("Pixel format conversion not supported yet"));
   }
-  if (!banshee_blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h)) {
+  if (!blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h)) {
     BLT.busy = 0;
     BX_UNLOCK(render_mutex);
     return;
@@ -2668,11 +2731,11 @@ void bx_voodoo_c::banshee_blt_screen_to_screen_pattern()
       }
     }
   } while (--nrows);
-  banshee_blt_complete();
+  blt_complete();
   BX_UNLOCK(render_mutex);
 }
 
-void bx_voodoo_c::banshee_blt_host_to_screen()
+void bx_banshee_c::blt_host_to_screen()
 {
   Bit32u dpitch = BLT.dst_pitch;
   Bit8u dpxsize = (BLT.dst_fmt > 1) ? (BLT.dst_fmt - 1) : 1;
@@ -2699,7 +2762,7 @@ void bx_voodoo_c::banshee_blt_host_to_screen()
   }
   x0 = 0;
   y0 = 0;
-  if (!banshee_blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h)) {
+  if (!blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h)) {
     BLT.busy = 0;
     BX_UNLOCK(render_mutex);
     return;
@@ -2772,11 +2835,11 @@ void bx_voodoo_c::banshee_blt_host_to_screen()
     }
     dst_ptr += dpitch;
   } while (--nrows);
-  banshee_blt_complete();
+  blt_complete();
   BX_UNLOCK(render_mutex);
 }
 
-void bx_voodoo_c::banshee_blt_host_to_screen_pattern()
+void bx_banshee_c::blt_host_to_screen_pattern()
 {
   Bit32u dpitch = BLT.dst_pitch;
   Bit8u dpxsize = (BLT.dst_fmt > 1) ? (BLT.dst_fmt - 1) : 1;
@@ -2810,7 +2873,7 @@ void bx_voodoo_c::banshee_blt_host_to_screen_pattern()
   }
   x0 = 0;
   y0 = 0;
-  if (!banshee_blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h)) {
+  if (!blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h)) {
     BLT.busy = 0;
     BX_UNLOCK(render_mutex);
     return;
@@ -2917,11 +2980,11 @@ void bx_voodoo_c::banshee_blt_host_to_screen_pattern()
       }
     }
   } while (--nrows);
-  banshee_blt_complete();
+  blt_complete();
   BX_UNLOCK(render_mutex);
 }
 
-void bx_voodoo_c::banshee_blt_line(bx_bool pline)
+void bx_banshee_c::blt_line(bx_bool pline)
 {
   Bit32u dpitch = BLT.dst_pitch;
   Bit8u dpxsize = (BLT.dst_fmt > 1) ? (BLT.dst_fmt - 1) : 1;
@@ -2997,7 +3060,7 @@ void bx_voodoo_c::banshee_blt_line(bx_bool pline)
     dst_ptr1 = dst_ptr + y1 * dpitch + x1 * dpxsize;
     BLT.rop_fn(dst_ptr1, BLT.fgcolor, dpitch, dpxsize, dpxsize, 1);
   }
-  banshee_blt_complete();
+  blt_complete();
   BLT.reg[blt_srcXY] = BLT.reg[blt_dstXY];
   BLT.src_x = BLT.dst_x;
   BLT.src_y = BLT.dst_y;
@@ -3021,8 +3084,15 @@ bx_voodoo_vga_c::~bx_voodoo_vga_c()
 
 bx_bool bx_voodoo_vga_c::init_vga_extension(void)
 {
-  theVoodooDevice->init();
-  if (theVoodooDevice->get_model() == VOODOO_BANSHEE) {
+  Bit8u model = (Bit8u)SIM->get_param_enum("model", (bx_list_c*)SIM->get_param(BXPN_VOODOO))->get();
+  if (model < VOODOO_BANSHEE) {
+    theVoodooDevice = new bx_voodoo_1_2_c();
+    theVoodooDevice->init();
+    init_iohandlers(read_handler, write_handler);
+    return 0;
+  } else {
+    theVoodooDevice = new bx_banshee_c();
+    theVoodooDevice->init();
     BX_VVGA_THIS s.memory = v->fbi.ram;
     BX_VVGA_THIS s.memsize = v->fbi.mask + 1;
     init_iohandlers(banshee_vga_read_handler, banshee_vga_write_handler);
@@ -3037,9 +3107,6 @@ bx_bool bx_voodoo_vga_c::init_vga_extension(void)
     BX_VVGA_THIS s.vclk[3] = 25175000;
     BX_VVGA_THIS pci_enabled = 1;
     return 1;
-  } else {
-    init_iohandlers(read_handler, write_handler);
-    return 0;
   }
 }
 
