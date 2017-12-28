@@ -37,6 +37,7 @@
 #define _GRP3BOP       12
 #define _GRP64B        13
 #define _GRPVEXW       14
+#define _GRPVEXL       15
 
 /* ************************************************************************ */
 #define GRPSSE(n)       _GRPSSE,   BxDisasmGroupSSE_##n
@@ -51,6 +52,7 @@
 #define GR3BTAB(n)      _GRP3BOP,  BxDisasm3ByteOpTable##n
 #define GR64BIT(n)      _GRP64B,   BxDisasmGrpOs64B_##n
 #define GRPVEXW(n)      _GRPVEXW,  BxDisasmGrpVexW_##n
+#define GRPVEXL(n)      _GRPVEXL,  BxDisasmGrpVexL_##n
 /* ************************************************************************ */
 
 /* ************************************************************************ */

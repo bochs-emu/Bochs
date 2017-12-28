@@ -249,6 +249,11 @@ static BxDisasmOpcodeTable_t BxDisasmGroupAVX_0f70[4] = {
   /* F2 */ { 0, &Ia_vpshuflw_Vdq_Hdq_Wdq_Ib }
 };
 
+static BxDisasmOpcodeTable_t BxDisasmGrpVexL_0f77[4] = {
+  /* 128 */ { GRPSSENONE(Ia_vzeroupper) },
+  /* 256 */ { GRPSSENONE(Ia_vzeroall) }
+};
+
 static BxDisasmOpcodeTable_t BxDisasmGroupAVX_0f7c[4] = {
   /* -- */ { 0, &Ia_Invalid },
   /* 66 */ { 0, &Ia_vhaddpd_Vpd_Hpd_Wpd },
@@ -822,7 +827,7 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodesAVX[256*3] = {
   /* 74 */ { GRPSSE66(Ia_vpcmpeqb_Vdq_Hdq_Wdq) },
   /* 75 */ { GRPSSE66(Ia_vpcmpeqw_Vdq_Hdq_Wdq) },
   /* 76 */ { GRPSSE66(Ia_vpcmpeqd_Vdq_Hdq_Wdq) },
-  /* 77 */ { GRPSSENONE(Ia_vzeroupper) },
+  /* 77 */ { GRPVEXL(0f77) },
   /* 78 */ { 0, &Ia_Invalid },
   /* 79 */ { 0, &Ia_Invalid },
   /* 7A */ { 0, &Ia_Invalid },
