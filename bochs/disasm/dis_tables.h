@@ -33,11 +33,12 @@
 #define _GRPSSEF3      8
 #define _GRPSSENONE    9
 #define _GRPSSE2       10
-#define _GRPRM         11
-#define _GRP3BOP       12
-#define _GRP64B        13
-#define _GRPVEXW       14
-#define _GRPVEXL       15
+#define _GRPREP        11
+#define _GRPRM         12
+#define _GRP3BOP       13
+#define _GRP64B        14
+#define _GRPVEXW       15
+#define _GRPVEXL       16
 
 /* ************************************************************************ */
 #define GRPSSE(n)       _GRPSSE,   BxDisasmGroupSSE_##n
@@ -60,6 +61,7 @@
 #define GRPSSEF2(n)     _GRPSSEF2,   &n
 #define GRPSSEF3(n)     _GRPSSEF3,   &n
 #define GRPSSENONE(n)   _GRPSSENONE, &n
+#define GRPREP(n)       _GRPREP,     &n
 /* ************************************************************************ */
 
 #define Apw &disassembler::Apw

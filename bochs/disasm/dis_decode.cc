@@ -92,7 +92,7 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address cs_base, 
 #define SSE_PREFIX_66   1
 #define SSE_PREFIX_F3   2
 #define SSE_PREFIX_F2   3      /* only one SSE prefix could be used */
-  unsigned sse_prefix = SSE_PREFIX_NONE, sse_opcode = 0;
+  unsigned sse_prefix = SSE_PREFIX_NONE, rep_opcode = 0;
   unsigned rex_prefix = 0, prefixes = 0;
 
   for(;;)
@@ -264,7 +264,6 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address cs_base, 
 
        case _GRPSSE66:
          /* SSE opcode group with only prefix 0x66 allowed */
-         sse_opcode = 1;
          if (sse_prefix != SSE_PREFIX_66)
              entry = &(BxDisasmGroupSSE_ERR[sse_prefix]);
          attr = 0;
@@ -272,7 +271,6 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address cs_base, 
 
        case _GRPSSEF2:
          /* SSE opcode group with only prefix 0xF2 allowed */
-         sse_opcode = 1;
          if (sse_prefix != SSE_PREFIX_F2)
              entry = &(BxDisasmGroupSSE_ERR[sse_prefix]);
          attr = 0;
@@ -280,29 +278,30 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address cs_base, 
 
        case _GRPSSEF3:
          /* SSE opcode group with only prefix 0xF3 allowed */
-         sse_opcode = 1;
          if (sse_prefix != SSE_PREFIX_F3)
              entry = &(BxDisasmGroupSSE_ERR[sse_prefix]);
          attr = 0;
          continue;
 
+       case _GRPREP:
+         rep_opcode = 1;
+         attr = 0;
+         continue;
+
        case _GRPSSENONE:
          /* SSE opcode group with no prefix only allowed */
-         sse_opcode = 1;
          if (sse_prefix != SSE_PREFIX_NONE)
              entry = &(BxDisasmGroupSSE_ERR[sse_prefix]);
          attr = 0;
          continue;
 
        case _GRPSSE:
-         sse_opcode = 1;
          /* For SSE opcodes, look into another 4 entries table
             with the opcode prefixes (NONE, 0x66, 0xF2, 0xF3) */
          entry = &(OPCODE_TABLE(entry)[sse_prefix]);
          break;
 
        case _GRPSSE2:
-         sse_opcode = 1;
          /* For SSE opcodes, look into another 2 entries table
             with the opcode prefixes (NONE, 0x66)
             SSE prefixes 0xF2 and 0xF3 are not allowed */
@@ -374,7 +373,7 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address cs_base, 
         continue;
 
       if (prefix_byte == 0xF3 || prefix_byte == 0xF2) {
-        if (! sse_opcode) {
+        if (rep_opcode) {
           const BxDisasmOpcodeTable_t *prefix = &(opcode_table[prefix_byte]);
           dis_sprintf("%s ", OPCODE(prefix)->IntelOpcode);
         }
