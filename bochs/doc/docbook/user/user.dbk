@@ -2462,6 +2462,7 @@ SMP, x86_64 support) and the devices options (e.g. PCI, USB, Cirrus graphics).
       <entry>no</entry>
       <entry>Enable experimental 3dfx Voodoo Graphics emulation. The Voodoo1 is
       known to work, the Voodoo2 support is not yet complete, but almost usable.
+      The Banshee support is under construction, but basicly usable.
       </entry>
     </row>
     <row>
@@ -3806,9 +3807,11 @@ This defines parameters related to the VGA display
 The 'extension' option can be used to specify the VGA display extension.
 With the value 'none' you can use standard VGA with no extension. Other supported
 values are 'vbe' for Bochs VBE (needs <filename>VGABIOS-lgpl-latest</filename> as
-VGA BIOS, see <link linkend="bochsopt-vgaromimage">vgaromimage option</link>)
-and 'cirrus' for Cirrus SVGA support (needs
-<filename>VGABIOS-lgpl-latest-cirrus</filename> as VGA BIOS).
+VGA BIOS, see <link linkend="bochsopt-vgaromimage">vgaromimage option</link>),
+'cirrus' for Cirrus SVGA support (needs
+<filename>VGABIOS-lgpl-latest-cirrus</filename> as VGA BIOS) and
+'voodoo' for Voodoo Graphics support (needs external VGA BIOS / see 'voodoo'
+option for more information).
 </para>
 <para>
 The VGA update frequency specifies the number of display updates per second.
@@ -3832,9 +3835,11 @@ Example:
   voodoo: enabled=1, model=voodoo1
 </screen>
 This defines the Voodoo Graphics emulation (experimental). Currently
-supported models are 'voodoo1' and 'voodoo2'. The Voodoo2 support is
-not yet complete, but almost usable. The gui screen update timing is
-controlled by the related 'vga' options.
+supported models are 'voodoo1', 'voodoo2' and 'banshee'. The Voodoo2 support
+is not yet complete, but almost usable. The Banshee support is under
+construction, but basicly usable. It requires an external VGA BIOS and the vga
+extension option to be set to 'voodoo'. The gui screen update timing for all
+models is controlled by the related 'vga' options.
 </para>
 </section>
 

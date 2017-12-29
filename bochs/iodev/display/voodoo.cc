@@ -797,6 +797,11 @@ void bx_voodoo_base_c::update(void)
   BX_UNLOCK(render_mutex);
 }
 
+void bx_voodoo_base_c::reg_write(Bit32u reg, Bit32u value)
+{
+  register_w(reg, value, 1);
+}
+
 void bx_voodoo_base_c::vertical_timer_handler(void *this_ptr)
 {
   // this doesn't work yet
@@ -1170,6 +1175,29 @@ void bx_banshee_c::init_model(void)
 
 void bx_banshee_c::reset(unsigned type)
 {
+  unsigned i;
+
+  static const struct reset_vals_t {
+    unsigned      addr;
+    unsigned char val;
+  } reset_vals2[] = {
+    { 0x04, 0x00 }, { 0x05, 0x00 }, // command io / memory
+    { 0x06, 0x00 }, { 0x07, 0x00 }, // status
+    // address space 0x10 - 0x13
+    { 0x11, 0x00 },
+    { 0x12, 0x00 }, { 0x13, 0x00 },
+    // address space 0x14 - 0x17
+    { 0x15, 0x00 },
+    { 0x16, 0x00 }, { 0x17, 0x00 },
+    // address space 0x18 - 0x1b
+    { 0x19, 0x00 },
+    { 0x1a, 0x00 }, { 0x1b, 0x00 },
+    { 0x3c, 0x00 },                 // IRQ
+
+  };
+  for (i = 0; i < sizeof(reset_vals2) / sizeof(*reset_vals2); ++i) {
+    pci_conf[reset_vals2[i].addr] = reset_vals2[i].val;
+  }
   // TODO
 
   // Deassert IRQ
@@ -1198,6 +1226,44 @@ void bx_banshee_c::register_state(void)
   new bx_shadow_data_c(banshee, "blt_cpat", (Bit8u*)v->banshee.blt.cpat, 0x100, 1);
   new bx_shadow_bool_c(banshee, "blt_busy", &v->banshee.blt.busy);
   new bx_shadow_num_c(banshee, "blt_cmd", &v->banshee.blt.cmd);
+  new bx_shadow_bool_c(banshee, "blt_immed", &v->banshee.blt.immed);
+  new bx_shadow_bool_c(banshee, "blt_x_dir", &v->banshee.blt.x_dir);
+  new bx_shadow_bool_c(banshee, "blt_y_dir", &v->banshee.blt.y_dir);
+  new bx_shadow_bool_c(banshee, "blt_transp", &v->banshee.blt.transp);
+  new bx_shadow_num_c(banshee, "blt_patsx", &v->banshee.blt.patsx);
+  new bx_shadow_num_c(banshee, "blt_patsy", &v->banshee.blt.patsy);
+  new bx_shadow_bool_c(banshee, "blt_clip_sel", &v->banshee.blt.clip_sel);
+  new bx_shadow_num_c(banshee, "blt_rop0", &v->banshee.blt.rop0);
+  new bx_shadow_num_c(banshee, "blt_src_base", &v->banshee.blt.src_base);
+  new bx_shadow_bool_c(banshee, "blt_src_tiled", &v->banshee.blt.src_tiled);
+  new bx_shadow_num_c(banshee, "blt_src_fmt", &v->banshee.blt.src_fmt);
+  new bx_shadow_num_c(banshee, "blt_src_pitch", &v->banshee.blt.src_pitch);
+  new bx_shadow_num_c(banshee, "blt_src_wizzle", &v->banshee.blt.src_wizzle);
+  new bx_shadow_num_c(banshee, "blt_src_x", &v->banshee.blt.src_x);
+  new bx_shadow_num_c(banshee, "blt_src_y", &v->banshee.blt.src_y);
+  new bx_shadow_num_c(banshee, "blt_src_w", &v->banshee.blt.src_w);
+  new bx_shadow_num_c(banshee, "blt_src_h", &v->banshee.blt.src_h);
+  new bx_shadow_num_c(banshee, "blt_dst_base", &v->banshee.blt.dst_base);
+  new bx_shadow_bool_c(banshee, "blt_dst_tiled", &v->banshee.blt.dst_tiled);
+  new bx_shadow_num_c(banshee, "blt_dst_fmt", &v->banshee.blt.dst_fmt);
+  new bx_shadow_num_c(banshee, "blt_dst_pitch", &v->banshee.blt.dst_pitch);
+  new bx_shadow_num_c(banshee, "blt_dst_x", &v->banshee.blt.dst_x);
+  new bx_shadow_num_c(banshee, "blt_dst_y", &v->banshee.blt.dst_y);
+  new bx_shadow_num_c(banshee, "blt_dst_w", &v->banshee.blt.dst_w);
+  new bx_shadow_num_c(banshee, "blt_dst_h", &v->banshee.blt.dst_h);
+  new bx_shadow_num_c(banshee, "blt_fgcolor", (Bit32u*)&v->banshee.blt.fgcolor);
+  new bx_shadow_num_c(banshee, "blt_bgcolor", (Bit32u*)&v->banshee.blt.bgcolor);
+  new bx_shadow_num_c(banshee, "blt_clipx0_0", &v->banshee.blt.clipx0[0]);
+  new bx_shadow_num_c(banshee, "blt_clipx0_1", &v->banshee.blt.clipx0[1]);
+  new bx_shadow_num_c(banshee, "blt_clipy0_0", &v->banshee.blt.clipy0[0]);
+  new bx_shadow_num_c(banshee, "blt_clipy0_1", &v->banshee.blt.clipy0[1]);
+  new bx_shadow_num_c(banshee, "blt_clipx1_0", &v->banshee.blt.clipx1[0]);
+  new bx_shadow_num_c(banshee, "blt_clipx1_1", &v->banshee.blt.clipx1[1]);
+  new bx_shadow_num_c(banshee, "blt_clipy1_0", &v->banshee.blt.clipy1[0]);
+  new bx_shadow_num_c(banshee, "blt_clipy1_1", &v->banshee.blt.clipy1[1]);
+  new bx_shadow_num_c(banshee, "blt_h2s_pitch", &v->banshee.blt.h2s_pitch);
+  new bx_shadow_num_c(banshee, "blt_h2s_pxstart", &v->banshee.blt.h2s_pxstart);
+  new bx_shadow_bool_c(banshee, "blt_h2s_alt_align", &v->banshee.blt.h2s_alt_align);
   // TODO
 }
 
@@ -1370,6 +1436,15 @@ Bit32u bx_banshee_c::get_retrace(bx_bool hv)
   return theVoodooVga->get_retrace();
 }
 
+void bx_banshee_c::reg_write(Bit32u reg, Bit32u value)
+{
+  if ((reg >> 11) & 1) {
+    blt_reg_write(reg & 0xff, value);
+  } else {
+    register_w(reg, value, 1);
+  }
+}
+
 // pci configuration space write handler
 void bx_banshee_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {
@@ -1385,7 +1460,7 @@ void bx_banshee_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_le
     oldval = pci_conf[address+i];
     switch (address+i) {
       case 0x04:
-        value8 &= 0x03;
+        value8 &= 0x23;
         break;
       case 0x3c:
         if (value8 != oldval) {

@@ -2535,7 +2535,7 @@ void cmdfifo_process(cmdfifo_info *f)
 {
   Bit32u command, data, mask, nwords, regaddr;
   Bit8u type, code, nvertex, smode, disbytes;
-  bx_bool blt, inc, pcolor;
+  bx_bool inc, pcolor;
   voodoo_reg reg;
   int i, w0, wn;
   setup_vertex svert = {0};
@@ -2561,16 +2561,11 @@ void cmdfifo_process(cmdfifo_info *f)
     case 1:
       nwords = (command >> 16);
       regaddr = (command & 0x7ff8) >> 3;
-      blt = (regaddr >> 11) & 1;
       inc = (command >> 15) & 1;
       for (i = 0; i < (int)nwords; i++) {
         data = cmdfifo_r(f);
         BX_UNLOCK(cmdfifo_mutex);
-        if ((v->type < VOODOO_BANSHEE) || !blt) {
-          register_w(regaddr, data, 1);
-        } else {
-          Voodoo_Banshee_2D_write(regaddr & 0xff, data);
-        }
+        Voodoo_reg_write(regaddr, data);
         BX_LOCK(cmdfifo_mutex);
         if (inc) regaddr++;
       }
@@ -2589,7 +2584,7 @@ void cmdfifo_process(cmdfifo_info *f)
           if (v->type < VOODOO_BANSHEE) {
             register_w(regaddr, data, 1);
           } else {
-            Voodoo_Banshee_2D_write(regaddr, data);
+            Banshee_2D_write(regaddr, data);
           }
           BX_LOCK(cmdfifo_mutex);
         }
@@ -2694,16 +2689,11 @@ void cmdfifo_process(cmdfifo_info *f)
       nwords = (command >> 29);
       mask = (command >> 15) & 0x3fff;
       regaddr = (command & 0x7ff8) >> 3;
-      blt = (regaddr >> 11) & 1;
       while (mask) {
         if (mask & 1) {
           data = cmdfifo_r(f);
           BX_UNLOCK(cmdfifo_mutex);
-          if ((v->type < VOODOO_BANSHEE) || !blt) {
-            register_w(regaddr, data, 1);
-          } else {
-            Voodoo_Banshee_2D_write(regaddr & 0xff, data);
-          }
+          Voodoo_reg_write(regaddr, data);
           BX_LOCK(cmdfifo_mutex);
         }
         regaddr++;
@@ -2730,9 +2720,9 @@ void cmdfifo_process(cmdfifo_info *f)
           if ((disbytes & 0xf0) > 0) {
             data = cmdfifo_r(f);
             if ((disbytes & 0xf0) == 0x30) {
-              Voodoo_Banshee_LFB_write(regaddr + 2, data >> 16, 2);
+              Banshee_LFB_write(regaddr + 2, data >> 16, 2);
             } else if ((disbytes & 0xf0) == 0xc0) {
-              Voodoo_Banshee_LFB_write(regaddr, data, 2);
+              Banshee_LFB_write(regaddr, data, 2);
             }
             w0++;
             regaddr += 4;
@@ -2740,7 +2730,7 @@ void cmdfifo_process(cmdfifo_info *f)
           for (i = w0; i < wn; i++) {
             data = cmdfifo_r(f);
             BX_UNLOCK(cmdfifo_mutex);
-            Voodoo_Banshee_LFB_write(regaddr, data, 4);
+            Banshee_LFB_write(regaddr, data, 4);
             BX_LOCK(cmdfifo_mutex);
             regaddr += 4;
           }

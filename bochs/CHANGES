@@ -25,6 +25,7 @@ Changes after 2.6.9 release:
       and multi-threading support (separate FIFO thread).
     - Voodoo2 model now working after some fixes and implementation of the
       CMDFIFO (using FIFO thread) and one of the bitBLT functions.
+    - Added Voodoo Banshee emulation support (still under construction).
   - USB
     - Now creating separate plugins for each USB device implementation.
   - Networking

@@ -72,6 +72,7 @@ public:
   virtual void output_enable(bx_bool enabled) {}
   virtual void update_screen_start(void) {}
 
+  virtual void reg_write(Bit32u reg, Bit32u value);
   virtual void blt_reg_write(Bit8u reg, Bit32u value) {}
   virtual void mem_write_linear(Bit32u offset, Bit32u value, unsigned len) {}
   virtual void draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *info) {}
@@ -124,6 +125,7 @@ public:
   virtual bx_bool update_timing(void);
   virtual Bit32u get_retrace(bx_bool hv);
 
+  virtual void reg_write(Bit32u reg, Bit32u value);
   virtual void blt_reg_write(Bit8u reg, Bit32u value);
   virtual void mem_write_linear(Bit32u offset, Bit32u value, unsigned len);
   virtual void draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *info);
