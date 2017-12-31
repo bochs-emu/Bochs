@@ -1648,7 +1648,7 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
         k = (Bit8u)(value & 0x03);
         m = (Bit8u)((value >> 2) & 0x3f);
         n = (Bit8u)((value >> 8) & 0xff);
-        v->vidclk = 14318180.0f * ((double)n + 2.0f) / ((double)m + 2.0f) / (double)(1 << k);
+        v->vidclk = (float)(14318180.0f * ((double)n + 2.0f) / ((double)m + 2.0f) / (double)(1 << k));
         BX_INFO(("Setting VCLK #3 (pllCtrl0) = %.3f MHz", v->vidclk / 1000000.0f));
         if (theVoodooVga != NULL) {
           theVoodooVga->banshee_set_vclk3((Bit32u)v->vidclk);
@@ -1807,8 +1807,7 @@ void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
       if (pci_conf[0x30] & 0x01) {
         value = 0;
         for (unsigned i = 0; i < len; i++) {
-          value <<= 8;
-          value |= pci_rom[(addr & mask) + i];
+          value |= (pci_rom[(addr & mask) + i] << (i * 8));
         }
       }
       *data_ptr = value;
