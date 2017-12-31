@@ -2327,6 +2327,7 @@ int decodeImmediate64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, u
 int fetchDecode64(const Bit8u *iptr, bxInstruction_c *i, unsigned remainingInPage)
 {
   if (remainingInPage > 15) remainingInPage = 15;
+  i->setILen(remainingInPage);
 
   unsigned remain = remainingInPage; // remain must be at least 1
   unsigned b1;
