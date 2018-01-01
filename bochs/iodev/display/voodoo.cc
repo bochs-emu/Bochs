@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2012-2017  The Bochs Project
+//  Copyright (C) 2012-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -88,6 +88,9 @@ const Bit8u banshee_iomask[256] = {4,0,0,0,7,1,3,1,7,1,3,1,7,1,3,1,7,1,3,1,
                                    7,1,3,1,7,1,3,1,7,1,3,1,7,1,3,1,7,1,3,1,
                                    7,1,3,1,7,1,3,1,7,1,3,1,7,1,3,1,7,1,3,1,
                                    7,1,3,1,7,1,3,1,7,1,3,1,7,1,3,1};
+
+const Bit8u pxconv_table[16] = {0x3a,0x02,0x00,0x38,0x38,0x38,0x00,0x00,
+                                0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
 
 bx_voodoo_base_c* theVoodooDevice = NULL;
 bx_voodoo_vga_c* theVoodooVga = NULL;
@@ -1557,12 +1560,12 @@ Bit32u bx_banshee_c::read_handler(void *this_ptr, Bit32u address, unsigned io_le
 
 Bit32u bx_banshee_c::read(Bit32u address, unsigned io_len)
 {
+  static Bit8u lastreg = 0xff;
   Bit32u result;
 
   Bit8u offset = (Bit8u)(address & 0xff);
   Bit8u reg = (offset>>2);
-  BX_DEBUG(("banshee read from offset 0x%02x (%s)", offset, banshee_io_reg_name[reg]));
-  switch (offset>>2) {
+  switch (reg) {
     case io_status:
       result = register_r(0);
       break;
@@ -1590,7 +1593,11 @@ Bit32u bx_banshee_c::read(Bit32u address, unsigned io_len)
       result = v->banshee.io[reg];
       break;
   }
-  BX_DEBUG(("banshee read result = 0x%08x", result));
+  if ((reg != io_status) || (lastreg != io_status)) {
+    BX_DEBUG(("banshee read from offset 0x%02x (%s) result = 0x%08x", offset,
+              banshee_io_reg_name[reg], result));
+  }
+  lastreg = reg;
   return result;
 }
 
@@ -1797,7 +1804,6 @@ void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
   Bit32u *data_ptr = (Bit32u*)data;
   Bit32u value = 0xffffffff;
   Bit32u offset = (addr & 0x1ffffff);
-  Bit32u start = v->banshee.io[io_vidDesktopStartAddr];
   Bit32u pitch = v->banshee.io[io_vidDesktopOverlayStride] & 0x7fff;
   unsigned i, x, y;
 
@@ -1834,20 +1840,16 @@ void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
       v->fbi.lfb_stride = temp;
     }
   } else if ((addr & ~0x1ffffff) == pci_base_address[1]) {
-    if (offset < v->fbi.lfb_base) {
-      if (v->banshee.desktop_tiled && (offset >= start)) {
-        offset -= start;
-        pitch *= 128;
-        x = (offset << 0) & ((1 << v->fbi.lfb_stride) - 1);
-        y = (offset >> v->fbi.lfb_stride) & 0x7ff;
-        offset = (start + y * pitch + x) & v->fbi.mask;
-      }
-      value = 0;
-      for (i = 0; i < len; i++) {
-        value |= (v->fbi.ram[offset + i] << (i*8));
-      }
-    } else {
-      value = lfb_r((offset - v->fbi.lfb_base) >> 2);
+    if (offset >= v->fbi.lfb_base) {
+      offset -= v->fbi.lfb_base;
+      pitch *= 128;
+      x = (offset << 0) & ((1 << v->fbi.lfb_stride) - 1);
+      y = (offset >> v->fbi.lfb_stride) & 0x7ff;
+      offset = (v->fbi.lfb_base + y * pitch + x) & v->fbi.mask;
+    }
+    value = 0;
+    for (i = 0; i < len; i++) {
+      value |= (v->fbi.ram[offset + i] << (i*8));
     }
   }
   *data_ptr = value;
@@ -1888,27 +1890,14 @@ void bx_banshee_c::mem_write(bx_phy_address addr, unsigned len, void *data)
       v->fbi.lfb_stride = temp;
     }
   } else if ((addr & ~0x1ffffff) == pci_base_address[1]) {
-    if (offset < v->fbi.lfb_base) {
-      offset &= v->fbi.mask;
-      if (v->fbi.cmdfifo[0].enabled && (offset >= v->fbi.cmdfifo[0].base) &&
-          (offset < v->fbi.cmdfifo[0].end)) {
-        cmdfifo_w(&v->fbi.cmdfifo[0], offset, value);
-      } else if (v->fbi.cmdfifo[1].enabled && (offset >= v->fbi.cmdfifo[1].base) &&
-          (offset < v->fbi.cmdfifo[1].end)) {
-        BX_INFO(("CMDFIFO #1 write"));
-        cmdfifo_w(&v->fbi.cmdfifo[1], offset, value);
-      } else {
-        mem_write_linear(offset, value, len);
-      }
+    if (v->fbi.cmdfifo[0].enabled && (offset >= v->fbi.cmdfifo[0].base) &&
+        (offset < v->fbi.cmdfifo[0].end)) {
+      cmdfifo_w(&v->fbi.cmdfifo[0], offset, value);
+    } else if (v->fbi.cmdfifo[1].enabled && (offset >= v->fbi.cmdfifo[1].base) &&
+               (offset < v->fbi.cmdfifo[1].end)) {
+      cmdfifo_w(&v->fbi.cmdfifo[1], offset, value);
     } else {
-      if (len == 2) {
-        if ((offset & 3) == 0) {
-          mask = 0x0000ffff;
-        } else {
-          mask = 0xffff0000;
-        }
-      }
-      lfb_w((offset - v->fbi.lfb_base) >> 2, value, mask);
+      mem_write_linear(offset, value, len);
     }
   }
 }
@@ -1920,30 +1909,27 @@ void bx_banshee_c::mem_write_linear(Bit32u offset, Bit32u value, unsigned len)
   Bit32u pitch = v->banshee.io[io_vidDesktopOverlayStride] & 0x7fff;
   unsigned i, x, y;
 
+  if (offset >= v->fbi.lfb_base) {
+    offset -= v->fbi.lfb_base;
+    pitch *= 128;
+    x = (offset << 0) & ((1 << v->fbi.lfb_stride) - 1);
+    y = (offset >> v->fbi.lfb_stride) & 0x7ff;
+    offset = (start + y * pitch + x) & v->fbi.mask;
+  } else {
+    offset &= v->fbi.mask;
+  }
+  BX_LOCK(render_mutex);
+  for (i = 0; i < len; i++) {
+    value8 = (value >> (i*8)) & 0xff;
+    v->fbi.ram[offset + i] = value8;
+  }
   if (offset >= start) {
-    if (v->banshee.desktop_tiled) {
-      offset -= start;
-      pitch *= 128;
-      x = (offset << 0) & ((1 << v->fbi.lfb_stride) - 1);
-      y = (offset >> v->fbi.lfb_stride) & 0x7ff;
-      offset = (start + y * pitch + x) & v->fbi.mask;
-    }
-    BX_LOCK(render_mutex);
-    for (i = 0; i < len; i++) {
-      value8 = (value >> (i*8)) & 0xff;
-      v->fbi.ram[offset + i] = value8;
-    }
     offset -= start;
     x = (offset % pitch) / (v->banshee.disp_bpp >> 3);
     y = offset / pitch;
     theVoodooVga->redraw_area(x, y, len / (v->banshee.disp_bpp >> 3), 1);
-    BX_UNLOCK(render_mutex);
-  } else {
-    for (i = 0; i < len; i++) {
-      value8 = (value >> (i*8)) & 0xff;
-      v->fbi.ram[offset + i] = value8;
-    }
   }
+  BX_UNLOCK(render_mutex);
 }
 
 Bit32u bx_banshee_c::agp_reg_read(Bit8u reg)
@@ -2818,7 +2804,7 @@ void bx_banshee_c::blt_host_to_screen()
   Bit8u *src_ptr1, *dst_ptr1;
   Bit16u spitch = BLT.h2s_pitch;
   Bit8u srcfmt = BLT.src_fmt;
-  Bit8u spxsize = 0, r, g, b;
+  Bit8u spxsize = 0, r = 0, g = 0, b = 0;
   Bit8u dstcolor[4], scolor[4];
   Bit8u *srccolor;
   int ncols, nrows, x0, y0, x1, y1, w, h;
@@ -2831,8 +2817,8 @@ void bx_banshee_c::blt_host_to_screen()
   w = BLT.dst_w;
   h = BLT.dst_h;
   BX_DEBUG(("Host to screen blt: %d x %d  ROP %02X", w, h, BLT.rop0));
-  if ((srcfmt != 0) && (dpxsize != 2) && (BLT.dst_fmt != srcfmt)) {
-    BX_ERROR(("Pixel format conversion not supported yet"));
+  if ((pxconv_table[srcfmt] & (1 << BLT.dst_fmt)) == 0) {
+    BX_ERROR(("Pixel format conversion not supported"));
   }
   x0 = 0;
   y0 = 0;
@@ -2875,12 +2861,24 @@ void bx_banshee_c::blt_host_to_screen()
         BLT.rop_fn(dst_ptr1, srccolor, dpitch, dpxsize, dpxsize, 1);
       } else {
         if (BLT.dst_fmt != srcfmt) {
-          if ((dpxsize == 2) && ((srcfmt == 4) || (srcfmt == 5))) {
+          if ((srcfmt == 4) || (srcfmt == 5)) {
             b = src_ptr1[0];
             g = src_ptr1[1];
             r = src_ptr1[2];
+          } else if (srcfmt == 3) {
+            b = src_ptr1[0] << 3;
+            g = ((src_ptr1[1] & 0x07) << 5) | ((src_ptr1[0] & 0xe0) >> 3);
+            r = src_ptr1[1] & 0xf8;
+          }
+          if (dpxsize == 2) {
             scolor[0] = (b >> 3) | ((g & 0x1c) << 3);
             scolor[1] = (g >> 5) | (r & 0xf8);
+            BLT.rop_fn(dst_ptr1, scolor, dpitch, dpxsize, dpxsize, 1);
+          } else if ((dpxsize == 3) || (dpxsize == 4)) {
+            scolor[0] = b;
+            scolor[1] = g;
+            scolor[2] = r;
+            scolor[3] = 0;
             BLT.rop_fn(dst_ptr1, scolor, dpitch, dpxsize, dpxsize, 1);
           }
         } else {
