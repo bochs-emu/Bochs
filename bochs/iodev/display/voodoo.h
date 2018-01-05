@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2012-2017  The Bochs Project
+//  Copyright (C) 2012-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -196,4 +196,8 @@ public:
 protected:
   virtual void  update(void);
 };
+
+extern bx_voodoo_base_c* theVoodooDevice;
+extern bx_voodoo_vga_c* theVoodooVga;
+
 #endif

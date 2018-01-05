@@ -5,7 +5,7 @@
 //  Copyright (c) 2004 Makoto Suzuki (suzu)
 //                     Volker Ruppert (vruppert)
 //                     Robin Kay (komadori)
-//  Copyright (C) 2004-2017  The Bochs Project
+//  Copyright (C) 2004-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -39,6 +39,7 @@
 
 #include "iodev.h"
 #include "vgacore.h"
+#define BX_USE_BINARY_ROP
 #include "bitblt.h"
 #include "svga_cirrus.h"
 #include "virt_timer.h"

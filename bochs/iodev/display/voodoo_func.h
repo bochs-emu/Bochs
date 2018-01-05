@@ -66,6 +66,10 @@ BX_THREAD_VAR(fifo_thread_var);
 BX_MUTEX(cmdfifo_mutex);
 /* render mutex (Banshee) */
 BX_MUTEX(render_mutex);
+/* FIFO event stuff */
+BX_MUTEX(fifo_mutex);
+bx_thread_event_t fifo_wakeup;
+bx_thread_event_t fifo_not_full;
 
 /* fast dither lookup */
 static Bit8u dither4_lookup[256*16*2];
@@ -3402,8 +3406,6 @@ void init_tmu_shared(tmu_shared_state *s)
     v->banshee.blt.rop_handler[1][num] = bitblt_rop_bkwd_##name; \
     v->banshee.blt.rop_flags[num] = flags; \
   } while (0);
-
-#define BX_ROP_PATTERN 0x01
 
 void banshee_bitblt_init()
 {

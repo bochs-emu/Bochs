@@ -1714,6 +1714,8 @@ struct _poly_extra_data
 };
 
 
+#define BX_ROP_PATTERN 0x01
+
 typedef struct _banshee_info banshee_info;
 struct _banshee_info
 {
@@ -1820,9 +1822,9 @@ struct _voodoo_state
 
 // FIFO event handling
 
-BX_MUTEX(fifo_mutex);
-bx_thread_event_t fifo_wakeup;
-bx_thread_event_t fifo_not_full;
+extern BX_MUTEX(fifo_mutex);
+extern bx_thread_event_t fifo_wakeup;
+extern bx_thread_event_t fifo_not_full;
 
 
 /*************************************
