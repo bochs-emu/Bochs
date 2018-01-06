@@ -162,6 +162,7 @@ private:
   void   blt_pattern_fill_color(void);
   void   blt_screen_to_screen(void);
   void   blt_screen_to_screen_pattern(void);
+  void   blt_screen_to_screen_stretch(void);
   void   blt_host_to_screen(void);
   void   blt_host_to_screen_pattern(void);
   void   blt_line(bx_bool pline);

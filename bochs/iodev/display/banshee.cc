@@ -1263,7 +1263,12 @@ void bx_banshee_c::blt_execute()
       }
       break;
     case 2:
-      BX_INFO(("TODO: 2D Screen to screen stretch blt"));
+      if (BLT.rop_flags[BLT.rop0] & BX_ROP_PATTERN) {
+        BX_INFO(("TODO: 2D Screen to screen stretch pattern blt"));
+      } else {
+        BLT.busy = 1;
+        blt_screen_to_screen_stretch();
+      }
       break;
     case 3:
       if (!BLT.immed) {
@@ -1747,6 +1752,86 @@ void bx_banshee_c::blt_screen_to_screen_pattern()
         }
       }
     }
+  } while (--nrows);
+  blt_complete();
+  BX_UNLOCK(render_mutex);
+}
+
+void bx_banshee_c::blt_screen_to_screen_stretch()
+{
+  Bit8u *src_ptr = &v->fbi.ram[BLT.src_base];
+  Bit8u *dst_ptr = &v->fbi.ram[BLT.dst_base];
+  Bit8u *src_ptr1, *dst_ptr1;
+  Bit8u dpxsize = (BLT.dst_fmt > 1) ? (BLT.dst_fmt - 1) : 1;
+  int spitch;
+  int dpitch = BLT.dst_pitch;
+  int nrows, ncols, stepx, stepy;
+  int x0, x1, x2, x3, y0, y1, y2, y3, w0, h0, w1, h1;
+  double fx, fy;
+
+  BX_LOCK(render_mutex);
+  x1 = BLT.dst_x;
+  y1 = BLT.dst_y;
+  w0 = BLT.src_w;
+  h0 = BLT.src_h;
+  w1 = BLT.dst_w;
+  h1 = BLT.dst_h;
+  BX_DEBUG(("Screen to screen stretch blt: : %d x %d -> %d x %d  ROP %02X",
+            w0, h0, w1, h1, BLT.rop0));
+  if (BLT.dst_fmt != BLT.src_fmt) {
+    BX_ERROR(("Pixel format conversion not supported yet"));
+  }
+  if (!blt_apply_clipwindow(NULL, NULL, &x1, &y1, &w1, &h1)) {
+    BLT.busy = 0;
+    BX_UNLOCK(render_mutex);
+    return;
+  }
+  if (BLT.src_tiled) {
+    spitch = BLT.src_pitch * 128;
+  } else {
+    spitch = BLT.src_pitch;
+  }
+  if (BLT.x_dir) {
+    stepx = -1;
+    x0 = BLT.src_x - BLT.src_w + 1;
+  } else {
+    stepx = 1;
+    x0 = BLT.src_x;
+  }
+  if (BLT.y_dir) {
+    spitch *= -1;
+    dpitch *= -1;
+    stepy = -1;
+    y0 = BLT.src_y - BLT.src_h + 1;
+    y2 = y1 - (BLT.dst_y - BLT.dst_h + 1);
+  } else {
+    stepy = 1;
+    y0 = BLT.src_y;
+    y2 = y1 - BLT.dst_y;
+  }
+  fx = (double)(w1 - 1) / (double)(w0 - 1);
+  fy = (double)(h1 - 1) / (double)(h0 - 1);
+  src_ptr += (y0 * abs(spitch) + x0 * dpxsize);
+  dst_ptr += (y1 * abs(dpitch) + x1 * dpxsize);
+  nrows = h1;
+  do {
+    dst_ptr1 = dst_ptr;
+    ncols = w1;
+    if (BLT.x_dir) {
+      x2 = x1 - (BLT.dst_x - BLT.dst_w + 1);
+    } else {
+      x2 = x1 - BLT.dst_x;
+    }
+    do {
+      x3 = (int)((double)x2 / fx + 0.5f);
+      y3 = (int)((double)y2 / fy + 0.5f);
+      src_ptr1 = src_ptr + (y3 * abs(spitch) + x3 * dpxsize);
+      BLT.rop_fn(dst_ptr1, src_ptr1, dpitch, dpxsize, dpxsize, 1);
+      dst_ptr1 += dpxsize;
+      x2 += stepx;
+    } while (--ncols);
+    dst_ptr += dpitch;
+    y2 += stepy;
   } while (--nrows);
   blt_complete();
   BX_UNLOCK(render_mutex);
