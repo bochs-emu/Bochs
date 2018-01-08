@@ -152,6 +152,9 @@ void bx_banshee_c::reset(unsigned type)
     // address space 0x18 - 0x1b
     { 0x19, 0x00 },
     { 0x1a, 0x00 }, { 0x1b, 0x00 },
+    // address space 0x2c - 0x2f
+    { 0x2c, 0x1a }, { 0x2d, 0x12 }, // subsystem ID
+    { 0x2e, 0x04 }, { 0x2f, 0x00 },
     { 0x3c, 0x00 },                 // IRQ
 
   };
@@ -412,7 +415,7 @@ void bx_banshee_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_le
   bx_bool baseaddr0_change = 0, baseaddr1_change = 0, baseaddr2_change = 0;
   bx_bool romaddr_change = 0;
 
-  if ((address >= 0x1c) && (address < 0x30))
+  if ((address >= 0x1c) && (address < 0x2c))
     return;
 
   for (unsigned i=0; i<io_len; i++) {
@@ -459,6 +462,14 @@ void bx_banshee_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_le
             value8 &= 0xfc;
           }
           romaddr_change = 1;
+        }
+        break;
+      case 0x2c:
+      case 0x2d:
+      case 0x2e:
+      case 0x2f:
+        if ((v->banshee.io[io_miscInit1] & 0x08) == 0) {
+          value8 = oldval;
         }
         break;
       default:
@@ -1809,8 +1820,8 @@ void bx_banshee_c::blt_screen_to_screen_stretch()
     y0 = BLT.src_y;
     y2 = y1 - BLT.dst_y;
   }
-  fx = (double)(w1 - 1) / (double)(w0 - 1);
-  fy = (double)(h1 - 1) / (double)(h0 - 1);
+  fx = (double)w1 / (double)w0;
+  fy = (double)h1 / (double)h0;
   src_ptr += (y0 * abs(spitch) + x0 * dpxsize);
   dst_ptr += (y1 * abs(dpitch) + x1 * dpxsize);
   nrows = h1;
@@ -1823,8 +1834,8 @@ void bx_banshee_c::blt_screen_to_screen_stretch()
       x2 = x1 - BLT.dst_x;
     }
     do {
-      x3 = (int)((double)x2 / fx + 0.5f);
-      y3 = (int)((double)y2 / fy + 0.5f);
+      x3 = (int)((double)x2 / fx + 0.49f);
+      y3 = (int)((double)y2 / fy + 0.49f);
       src_ptr1 = src_ptr + (y3 * abs(spitch) + x3 * dpxsize);
       BLT.rop_fn(dst_ptr1, src_ptr1, dpitch, dpxsize, dpxsize, 1);
       dst_ptr1 += dpxsize;
