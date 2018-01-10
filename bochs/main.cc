@@ -210,15 +210,15 @@ void print_tree(bx_param_c *node, int level, bx_bool xml)
       break;
     case BXT_LIST:
       {
+        if (!xml) dbg_printf("{");
         dbg_printf("\n");
         bx_list_c *list = (bx_list_c*)node;
         for (i=0; i < list->get_size(); i++) {
           print_tree(list->get(i), level+1, xml);
         }
-        if (xml) {
-          for (i=0; i<level; i++)
-            dbg_printf("  ");
-        }
+        for (i=0; i<level; i++)
+          dbg_printf("  ");
+        if (!xml) dbg_printf("}");
         break;
       }
     case BXT_PARAM_DATA:
