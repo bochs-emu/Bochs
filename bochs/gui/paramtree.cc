@@ -279,27 +279,69 @@ void bx_param_num_c::set_enabled(int en)
   update_dependents();
 }
 
-int bx_param_num_c::parse_param(const char *value)
+int bx_param_num_c::parse_param(const char *ptr)
 {
-  if (value != NULL) {
-    if ((value[0] == '0') && (value[1] == 'x')) {
-      set(strtoul(value, NULL, 16));
+  if (ptr != NULL) {
+    Bit64u value;
+    if (get_base() == BASE_DOUBLE) {
+      double f2value = strtod(ptr, NULL);
+      memcpy(&value, &f2value, sizeof(double));
+      set(value);
+    } else if (get_base() == BASE_FLOAT) {
+      float f1value = (float)strtod(ptr, NULL);
+      memcpy(&value, &f1value, sizeof(float));
+      set(value);
+    } else if ((ptr[0] == '0') && (ptr[1] == 'x')) {
+      set(strtoull(ptr, NULL, 16));
     } else {
-      if (value[strlen(value)-1] == 'K') {
-        set(1000 * strtoul(value, NULL, 10));
+      if (ptr[strlen(ptr)-1] == 'K') {
+        set(1000 * strtoul(ptr, NULL, 10));
       }
-      else if (value[strlen(value)-1] == 'M') {
-        set(1000000 * strtoul(value, NULL, 10));
+      else if (ptr[strlen(ptr)-1] == 'M') {
+        set(1000000 * strtoul(ptr, NULL, 10));
       }
       else {
-        set(strtoul(value, NULL, 10));
+        set(strtoul(ptr, NULL, 10));
       }
     }
-
     return 1;
   }
 
   return 0;
+}
+
+void bx_param_num_c::dump_param(FILE *fp)
+{
+  Bit64s value = get64();
+  if (get_base() == BASE_DOUBLE) {
+    double f2value;
+    memcpy(&f2value, &value, sizeof(double));
+    fprintf(fp, "%f", f2value);
+  } else if (get_base() == BASE_FLOAT) {
+    float f1value;
+    memcpy(&f1value, &value, sizeof(float));
+    fprintf(fp, "%f", f1value);
+  } else if (get_base() == BASE_DEC) {
+    if (get_min() >= BX_MIN_BIT64U) {
+      if ((Bit64u) get_max() > BX_MAX_BIT32U) {
+        fprintf(fp, FMT_LL"u", value);
+      } else {
+        fprintf(fp, "%u", (Bit32u) value);
+      }
+    } else {
+      fprintf(fp, "%d", (Bit32s) value);
+    }
+  } else {
+    if (get_format()) {
+      fprintf(fp, get_format(), value);
+    } else {
+      if ((Bit64u)get_max() > BX_MAX_BIT32U) {
+        fprintf(fp, "0x" FMT_LL "x", (Bit64u) value);
+      } else {
+        fprintf(fp, "0x%x", (Bit32u) value);
+      }
+    }
+  }
 }
 
 // Signed 64 bit
@@ -552,18 +594,23 @@ bx_param_bool_c::bx_param_bool_c(bx_param_c *parent,
   set_type(BXT_PARAM_BOOL);
 }
 
-int bx_param_bool_c::parse_param(const char *value)
+int bx_param_bool_c::parse_param(const char *ptr)
 {
-  if (value != NULL) {
-    if (!strcmp(value, "0") || !stricmp(value, "false")) {
+  if (ptr != NULL) {
+    if (!strcmp(ptr, "0") || !stricmp(ptr, "false")) {
       set(0); return 1;
     } 
-    if (!strcmp(value, "1") || !stricmp(value, "true")) {
+    if (!strcmp(ptr, "1") || !stricmp(ptr, "true")) {
       set(1); return 1;
     }
   }
 
   return 0;
+}
+
+void bx_param_bool_c::dump_param(FILE *fp)
+{
+  fprintf(fp, "%s", get()?"true":"false");
 }
 
 bx_shadow_bool_c::bx_shadow_bool_c(bx_param_c *parent,
@@ -718,13 +765,18 @@ void bx_param_enum_c::set_enabled(int en)
   update_dependents();
 }
 
-int bx_param_enum_c::parse_param(const char *value)
+int bx_param_enum_c::parse_param(const char *ptr)
 {
-  if (value != NULL) {
-    return set_by_name(value);
+  if (ptr != NULL) {
+    return set_by_name(ptr);
   }
 
   return 0;
+}
+
+void bx_param_enum_c::dump_param(FILE *fp)
+{
+  fprintf(fp, "%s", get_selected());
 }
 
 bx_param_string_c::bx_param_string_c(bx_param_c *parent,
@@ -890,15 +942,22 @@ bx_bool bx_param_string_c::isempty()
   }
 }
 
-int bx_param_string_c::parse_param(const char *value)
+int bx_param_string_c::parse_param(const char *ptr)
 {
-  if (value != NULL) {
-    set(value);
+  if (ptr != NULL) {
+    set(ptr);
   } else {
     set("");
   }
 
   return 1;
+}
+
+void bx_param_string_c::dump_param(FILE *fp)
+{
+  char tmpstr[BX_PATHNAME_LEN+1];
+  sprint(tmpstr, BX_PATHNAME_LEN, 0);
+  fputs(tmpstr, fp);
 }
 
 int bx_param_string_c::sprint(char *buf, int len, bx_bool dquotes)

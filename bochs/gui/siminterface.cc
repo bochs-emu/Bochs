@@ -1205,9 +1205,6 @@ bx_bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path,
   char *ptr;
   int i, j, p;
   unsigned n;
-  float f1value;
-  double f2value;
-  Bit64u value;
   bx_param_c *param = NULL;
   FILE *fp, *fp2;
 
@@ -1247,25 +1244,9 @@ bx_bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path,
               }
               switch (param->get_type()) {
                 case BXT_PARAM_NUM:
-                  if (((bx_param_num_c*)param)->get_base() == BASE_DOUBLE) {
-                    f2value = strtod(ptr, NULL);
-                    memcpy(&value, &f2value, sizeof(double));
-                    ((bx_param_num_c*)param)->set(value);
-                  } else if (((bx_param_num_c*)param)->get_base() == BASE_FLOAT) {
-                    f1value = (float)strtod(ptr, NULL);
-                    memcpy(&value, &f1value, sizeof(float));
-                    ((bx_param_num_c*)param)->set(value);
-                  } else if ((ptr[0] == '0') && (ptr[1] == 'x')) {
-                    ((bx_param_num_c*)param)->set(strtoull(ptr, NULL, 16));
-                  } else {
-                    ((bx_param_num_c*)param)->set(strtoull(ptr, NULL, 10));
-                  }
-                  break;
                 case BXT_PARAM_BOOL:
-                  ((bx_param_bool_c*)param)->set(!strcmp(ptr, "true"));
-                  break;
                 case BXT_PARAM_ENUM:
-                  ((bx_param_enum_c*)param)->set_by_name(ptr);
+                  param->parse_param(ptr);
                   break;
                 case BXT_PARAM_STRING:
                   {
@@ -1373,9 +1354,6 @@ bx_bool bx_real_sim_c::restore_hardware()
 bx_bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_path, int level)
 {
   int i, j;
-  Bit64s value;
-  float f1value;
-  double f2value;
   char pname[BX_PATHNAME_LEN], tmpstr[BX_PATHNAME_LEN];
   FILE *fp2;
 
@@ -1388,45 +1366,11 @@ bx_bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_
   fprintf(fp, "%s = ", node->get_name());
   switch (node->get_type()) {
     case BXT_PARAM_NUM:
-      value = ((bx_param_num_c*)node)->get64();
-      if (((bx_param_num_c*)node)->get_base() == BASE_DOUBLE) {
-        memcpy(&f2value, &value, sizeof(double));
-        fprintf(fp, "%f\n", f2value);
-      } else if (((bx_param_num_c*)node)->get_base() == BASE_FLOAT) {
-        memcpy(&f1value, &value, sizeof(float));
-        fprintf(fp, "%f\n", f1value);
-      } else if (((bx_param_num_c*)node)->get_base() == BASE_DEC) {
-        if (((bx_param_num_c*)node)->get_min() >= BX_MIN_BIT64U) {
-          if ((Bit64u)((bx_param_num_c*)node)->get_max() > BX_MAX_BIT32U) {
-            fprintf(fp, FMT_LL"u\n", value);
-          } else {
-            fprintf(fp, "%u\n", (Bit32u) value);
-          }
-        } else {
-          fprintf(fp, "%d\n", (Bit32s) value);
-        }
-      } else {
-        if (node->get_format()) {
-          fprintf(fp, node->get_format(), value);
-        } else {
-          if ((Bit64u)((bx_param_num_c*)node)->get_max() > BX_MAX_BIT32U) {
-            fprintf(fp, "0x" FMT_LL "x", (Bit64u) value);
-          } else {
-            fprintf(fp, "0x%x", (Bit32u) value);
-          }
-        }
-        fprintf(fp, "\n");
-      }
-      break;
     case BXT_PARAM_BOOL:
-      fprintf(fp, "%s\n", ((bx_param_bool_c*)node)->get()?"true":"false");
-      break;
     case BXT_PARAM_ENUM:
-      fprintf(fp, "%s\n", ((bx_param_enum_c*)node)->get_selected());
-      break;
     case BXT_PARAM_STRING:
-      ((bx_param_string_c*)node)->sprint(tmpstr, BX_PATHNAME_LEN, 0);
-      fprintf(fp, "%s\n", tmpstr);
+      node->dump_param(fp);
+      fprintf(fp, "\n");
       break;
     case BXT_PARAM_DATA:
       {
