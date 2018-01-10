@@ -312,36 +312,45 @@ int bx_param_num_c::parse_param(const char *ptr)
 
 void bx_param_num_c::dump_param(FILE *fp)
 {
+  char tmpstr[BX_PATHNAME_LEN+1];
+  dump_param(tmpstr, BX_PATHNAME_LEN, 0);
+  fputs(tmpstr, fp);
+}
+
+int bx_param_num_c::dump_param(char *buf, int len, bx_bool dquotes)
+{
   Bit64s value = get64();
   if (get_base() == BASE_DOUBLE) {
     double f2value;
     memcpy(&f2value, &value, sizeof(double));
-    fprintf(fp, "%f", f2value);
+    snprintf(buf, len, "%f", f2value);
   } else if (get_base() == BASE_FLOAT) {
     float f1value;
     memcpy(&f1value, &value, sizeof(float));
-    fprintf(fp, "%f", f1value);
+    snprintf(buf, len, "%f", f1value);
   } else if (get_base() == BASE_DEC) {
     if (get_min() >= BX_MIN_BIT64U) {
       if ((Bit64u) get_max() > BX_MAX_BIT32U) {
-        fprintf(fp, FMT_LL"u", value);
+        snprintf(buf, len, FMT_LL"u", value);
       } else {
-        fprintf(fp, "%u", (Bit32u) value);
+        snprintf(buf, len, "%u", (Bit32u) value);
       }
     } else {
-      fprintf(fp, "%d", (Bit32s) value);
+      snprintf(buf, len, "%d", (Bit32s) value);
     }
   } else {
     if (get_format()) {
-      fprintf(fp, get_format(), value);
+      snprintf(buf, len, get_format(), value);
     } else {
       if ((Bit64u)get_max() > BX_MAX_BIT32U) {
-        fprintf(fp, "0x" FMT_LL "x", (Bit64u) value);
+        snprintf(buf, len, "0x" FMT_LL "x", (Bit64u) value);
       } else {
-        fprintf(fp, "0x%x", (Bit32u) value);
+        snprintf(buf, len, "0x%x", (Bit32u) value);
       }
     }
   }
+
+  return strlen(buf);
 }
 
 // Signed 64 bit
@@ -613,6 +622,12 @@ void bx_param_bool_c::dump_param(FILE *fp)
   fprintf(fp, "%s", get()?"true":"false");
 }
 
+int bx_param_bool_c::dump_param(char *buf, int len, bx_bool dquotes)
+{
+  snprintf(buf, len, "%s", get()?"true":"false");
+  return strlen(buf);
+}
+
 bx_shadow_bool_c::bx_shadow_bool_c(bx_param_c *parent,
       const char *name,
       const char *label,
@@ -779,6 +794,12 @@ void bx_param_enum_c::dump_param(FILE *fp)
   fprintf(fp, "%s", get_selected());
 }
 
+int bx_param_enum_c::dump_param(char *buf, int len, bx_bool dquotes)
+{
+  snprintf(buf, len, "%s", get_selected());
+  return strlen(buf);
+}
+
 bx_param_string_c::bx_param_string_c(bx_param_c *parent,
     const char *name,
     const char *label,
@@ -933,7 +954,7 @@ void bx_param_string_c::set_initial_val(const char *buf)
   set(initial_val);
 }
 
-bx_bool bx_param_string_c::isempty()
+bx_bool bx_param_string_c::isempty() const
 {
   if (options & RAW_BYTES) {
     return (memcmp(val, initial_val, maxsize) == 0);
@@ -956,11 +977,11 @@ int bx_param_string_c::parse_param(const char *ptr)
 void bx_param_string_c::dump_param(FILE *fp)
 {
   char tmpstr[BX_PATHNAME_LEN+1];
-  sprint(tmpstr, BX_PATHNAME_LEN, 0);
+  dump_param(tmpstr, BX_PATHNAME_LEN, 0);
   fputs(tmpstr, fp);
 }
 
-int bx_param_string_c::sprint(char *buf, int len, bx_bool dquotes)
+int bx_param_string_c::dump_param(char *buf, int len, bx_bool dquotes)
 {
   char tmpbyte[4];
 

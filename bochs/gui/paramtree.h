@@ -175,6 +175,7 @@ public:
   virtual int parse_param(const char *value) { return -1; }
 
   virtual void dump_param(FILE *fp) {}
+  virtual int dump_param(char *buf, int buflen, bx_bool dquotes = BX_FALSE) { return 0; }
 };
 
 typedef Bit64s (*param_event_handler)(class bx_param_c *, int set, Bit64s val);
@@ -239,6 +240,7 @@ public:
 #endif
   virtual int parse_param(const char *value);
   virtual void dump_param(FILE *fp);
+  virtual int dump_param(char *buf, int buflen, bx_bool dquotes = BX_FALSE);
 };
 
 // a bx_shadow_num_c is like a bx_param_num_c except that it doesn't
@@ -327,6 +329,7 @@ public:
 #endif
   virtual int parse_param(const char *value);
   virtual void dump_param(FILE *fp);
+  virtual int dump_param(char *buf, int buflen, bx_bool dquotes = BX_FALSE);
 };
 
 // a bx_shadow_bool_c is a shadow param based on bx_param_bool_c.
@@ -377,6 +380,7 @@ public:
 #endif
   virtual int parse_param(const char *value);
   virtual void dump_param(FILE *fp);
+  virtual int dump_param(char *buf, int buflen, bx_bool dquotes = BX_FALSE);
 };
 
 typedef const char* (*param_string_event_handler)(class bx_param_string_c *,
@@ -419,14 +423,14 @@ public:
   char get_separator() const {return separator; }
   int get_maxsize() const {return maxsize; }
   void set_initial_val(const char *buf);
-  bx_bool isempty();
-  int sprint(char *buf, int buflen, bx_bool dquotes);
+  bx_bool isempty() const;
 #if BX_USE_TEXTCONFIG
   virtual void text_print();
   virtual int text_ask();
 #endif
   virtual int parse_param(const char *value);
   virtual void dump_param(FILE *fp);
+  virtual int dump_param(char *buf, int buflen, bx_bool dquotes = BX_FALSE);
 };
 
 // Declare a filename class.  It is identical to a string, except that

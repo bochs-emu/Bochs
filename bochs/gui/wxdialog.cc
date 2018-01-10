@@ -880,7 +880,7 @@ void ParamDialog::AddParam(
         bool isFilename = param->get_options() & param->IS_FILENAME;
         wxTextCtrl *txtctrl = new wxTextCtrl(context->parent, pstr->id, wxT(""), wxDefaultPosition, isFilename? longTextSize : normalTextSize);
         if (description) txtctrl->SetToolTip(wxString(description, wxConvUTF8));
-        param->sprint(value, 1024, 0);
+        param->dump_param(value, 1024);
         txtctrl->SetValue(wxString(value, wxConvUTF8));
         if ((param->get_options() & param->RAW_BYTES) == 0) {
           txtctrl->SetMaxLength(param->get_maxsize());

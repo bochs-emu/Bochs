@@ -2396,28 +2396,24 @@ void MakeBL(TreeParent *h_P, bx_param_c *p)
     int j = strlen (tmpcb);
     switch (p->get_type())
     {
-        case BXT_PARAM_NUM:
-            if (((bx_param_num_c*)p)->get_base() == BASE_DEC)
-                sprintf (tmpcb + j,": " FMT_LL "d",((bx_param_num_c*)p)->get64());
-            else
-                sprintf (tmpcb + j,": 0x" FMT_LL "X",((bx_param_num_c*)p)->get64());
-            break;
         case BXT_LIST:
             as_list = (bx_list_c *)p;
             n = as_list->get_size();
             break;
-        case BXT_PARAM_BOOL:
             sprintf (tmpcb + j,": %s",((bx_param_bool_c*)p)->get()?"true":"false");
             break;
-        case BXT_PARAM_ENUM:
             sprintf (tmpcb + j,": %s",((bx_param_enum_c*)p)->get_selected());
             break;
+        case BXT_PARAM_BOOL:
+        case BXT_PARAM_ENUM:
+        case BXT_PARAM_NUM:
         case BXT_PARAM_STRING:
-            ((bx_param_string_c*)p)->sprint(tmpstr, BX_PATHNAME_LEN, 0);
+            p->dump_param(tmpstr, BX_PATHNAME_LEN);
             sprintf(tmpcb + j,": %s", tmpstr);
             break;
         case BXT_PARAM_DATA:
             sprintf (tmpcb + j,": binary data, size=%d",((bx_shadow_data_c*)p)->get_size());
+            break;
     }
     MakeTreeChild (h_P, n, &h_new);
     if (n > 0)

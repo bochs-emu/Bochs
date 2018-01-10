@@ -3094,20 +3094,10 @@ int bx_write_param_list(FILE *fp, bx_list_c *base, const char *optname, bx_bool 
       strcat(bxrcline, tmpstr);
       switch (param->get_type()) {
         case BXT_PARAM_NUM:
-          if (((bx_param_num_c*)param)->get_base() == BASE_DEC) {
-            sprintf(tmpstr, FMT_LL "d", ((bx_param_num_c*)param)->get64());
-          } else {
-            sprintf(tmpstr, "0x" FMT_LL "x", ((bx_param_num_c*)param)->get64());
-          }
-          break;
         case BXT_PARAM_BOOL:
-          sprintf(tmpstr, "%d", ((bx_param_bool_c*)param)->get());
-          break;
         case BXT_PARAM_ENUM:
-          sprintf(tmpstr, "%s", ((bx_param_enum_c*)param)->get_selected());
-          break;
         case BXT_PARAM_STRING:
-          ((bx_param_string_c*)param)->sprint(tmpstr, BX_PATHNAME_LEN, 1);
+          param->dump_param(tmpstr, BX_PATHNAME_LEN, 1);
           break;
         default:
           BX_ERROR(("bx_write_param_list(): unsupported parameter type"));
@@ -3177,10 +3167,10 @@ int bx_write_usb_options(FILE *fp, int maxports, bx_list_c *base)
   if (SIM->get_param_bool("enabled", base)->get()) {
     for (i = 1; i <= maxports; i++) {
       sprintf(tmpname, "port%d.device", i);
-      SIM->get_param_string(tmpname, base)->sprint(tmpstr, BX_PATHNAME_LEN, 1);
+      SIM->get_param_string(tmpname, base)->dump_param(tmpstr, BX_PATHNAME_LEN, 1);
       fprintf(fp, ", port%d=%s", i, tmpstr);
       sprintf(tmpname, "port%d.options", i);
-      SIM->get_param_string(tmpname, base)->sprint(tmpstr, BX_PATHNAME_LEN, 1);
+      SIM->get_param_string(tmpname, base)->dump_param(tmpstr, BX_PATHNAME_LEN, 1);
       fprintf(fp, ", options%d=%s", i, tmpstr);
     }
   }

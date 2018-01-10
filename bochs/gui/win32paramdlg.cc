@@ -529,7 +529,7 @@ HWND CreateInput(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide, bx_param_
   style = WS_CHILD | WS_TABSTOP;
   if (param->get_type() == BXT_PARAM_STRING) {
     sparam = (bx_param_string_c*)param;
-    sparam->sprint(buffer, 512, 0);
+    sparam->dump_param(buffer, 512);
     if ((sparam->get_options() & sparam->RAW_BYTES) == 0) {
       style |= ES_AUTOHSCROLL;
     }

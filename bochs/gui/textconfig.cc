@@ -827,7 +827,7 @@ void bx_param_string_c::text_print()
 {
   char value[1024];
 
-  this->sprint(value, 1024, 0);
+  this->dump_param(value, 1024);
   if (get_format()) {
     bx_printf(get_format(), value);
   } else {
