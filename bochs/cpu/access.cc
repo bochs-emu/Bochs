@@ -82,7 +82,7 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned le
     case 2: case 3: /* read/write */
       if (seg->cache.u.segment.limit_scaled == 0xffffffff && seg->cache.u.segment.base == 0) {
         seg->cache.valid |= SegAccessROK | SegAccessWOK | SegAccessROK4G | SegAccessWOK4G;
-	break;
+    break;
       }
 
       if (offset > (seg->cache.u.segment.limit_scaled - length)
@@ -155,7 +155,7 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len
     case 14: case 15: /* execute/read-only, conforming */
       if (seg->cache.u.segment.limit_scaled == 0xffffffff && seg->cache.u.segment.base == 0) {
         seg->cache.valid |= SegAccessROK | SegAccessROK4G;
-	break;
+    break;
       }
 
       if (offset > (seg->cache.u.segment.limit_scaled - length)
@@ -222,7 +222,7 @@ BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned 
     case 14: case 15: /* execute/read-only, conforming */
       if (seg->cache.u.segment.limit_scaled == 0xffffffff && seg->cache.u.segment.base == 0) {
         seg->cache.valid |= SegAccessROK | SegAccessROK4G;
-    	break;
+        break;
       }
 
       if (offset > (seg->cache.u.segment.limit_scaled - length)
