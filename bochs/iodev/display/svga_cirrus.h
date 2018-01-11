@@ -243,6 +243,8 @@ private:
     Bit16u x, y, w, h;
   } redraw;
 
+  bx_ddc_c ddc;
+
   bx_bool is_unlocked() { return svga_unlock_special; }
 
   bx_bool banking_granularity_is_16k() { return !!(control.reg[0x0B] & 0x20); }

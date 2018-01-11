@@ -68,6 +68,7 @@
 
 #include "pci.h"
 #include "vgacore.h"
+#include "ddc.h"
 #include "voodoo.h"
 #include "virt_timer.h"
 #include "bxthread.h"
@@ -554,7 +555,13 @@ Bit32u bx_banshee_c::read(Bit32u address, unsigned io_len)
       break;
 
     case io_vidSerialParallelPort:
-      result = v->banshee.io[reg] | 0x0f780000;
+      result = v->banshee.io[reg] & 0xff87ffff;
+      if ((v->banshee.io[reg] >> 18) & 1) {
+        result |= ((Bit32u)ddc.read() << 19);
+      } else {
+        result |= 0x00780000;
+      }
+      result |= 0x0f000000;
       break;
 
     default:
@@ -717,6 +724,13 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case io_hwCurC1:
       v->banshee.io[reg] = value;
       v->banshee.hwcursor.color[1] = v->banshee.io[reg] & 0xffffff;
+      break;
+
+    case io_vidSerialParallelPort:
+      v->banshee.io[reg] = value;
+      if ((v->banshee.io[reg] >> 18) & 1) {
+        ddc.write((v->banshee.io[reg] >> 19) & 1, (v->banshee.io[reg] >> 20) & 1);
+      }
       break;
 
     case io_vidScreenSize:

@@ -41,6 +41,7 @@
 #include "vgacore.h"
 #define BX_USE_BINARY_ROP
 #include "bitblt.h"
+#include "ddc.h"
 #include "svga_cirrus.h"
 #include "virt_timer.h"
 
@@ -1637,6 +1638,8 @@ void bx_svga_cirrus_c::svga_write_crtc(Bit32u address, unsigned index, Bit8u val
 
 Bit8u bx_svga_cirrus_c::svga_read_sequencer(Bit32u address, unsigned index)
 {
+  Bit8u value;
+
   switch (index) {
     case 0x00:  // VGA
     case 0x01:  // VGA
@@ -1669,6 +1672,13 @@ Bit8u bx_svga_cirrus_c::svga_read_sequencer(Bit32u address, unsigned index)
     case 0xd1:
     case 0xf1:
       return BX_CIRRUS_THIS sequencer.reg[0x11];
+    case 0x08: // DDC / EEPROM
+      if ((BX_CIRRUS_THIS sequencer.reg[0x08] & 0x40) != 0) {
+        value = BX_CIRRUS_THIS ddc.read();
+        value = (value & 0x07) | ((value & 0x08) << 4);
+        return (BX_CIRRUS_THIS sequencer.reg[0x08] & 0x40) | value;
+      }
+      break;
     default:
       BX_DEBUG(("sequencer index 0x%02x is unknown(read)", index));
       break;
@@ -1727,7 +1737,11 @@ void bx_svga_cirrus_c::svga_write_sequencer(Bit32u address, unsigned index, Bit8
         BX_CIRRUS_THIS svga_needs_update_mode = 1;
       }
       break;
-    case 0x08:
+    case 0x08: // DDC / EEPROM
+      if ((value & 0x40) != 0) {
+        BX_CIRRUS_THIS ddc.write(value & 1, (value >> 1) & 1);
+      }
+      break;
     case 0x09:
     case 0x0a: // cirrus scratch reg 1
       break;

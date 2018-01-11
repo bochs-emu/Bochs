@@ -68,6 +68,7 @@
 
 #include "pci.h"
 #include "vgacore.h"
+#include "ddc.h"
 #include "voodoo.h"
 #include "virt_timer.h"
 #include "bxthread.h"

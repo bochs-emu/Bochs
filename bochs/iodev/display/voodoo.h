@@ -166,6 +166,8 @@ private:
   void   blt_host_to_screen(void);
   void   blt_host_to_screen_pattern(void);
   void   blt_line(bx_bool pline);
+
+  bx_ddc_c ddc;
 };
 
 class bx_voodoo_vga_c : public bx_vgacore_c {
