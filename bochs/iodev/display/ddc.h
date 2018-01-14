@@ -32,14 +32,18 @@ public:
 
 private:
 
-  void combine_signals(void);
+  Bit8u get_edid_byte(void);
 
   struct {
     bx_bool DCKhost;
     bx_bool DDAhost;
-    bx_bool DCKmon;
     bx_bool DDAmon;
-    Bit8u   retval;
+    Bit8u   ddc_stage;
+    Bit8u   ddc_bitshift;
+    bx_bool ddc_ack;
+    bx_bool ddc_rw;
+    Bit8u   ddc_byte;
+    Bit8u   edid_index;
   } s;  // state information
 };
 
