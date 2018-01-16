@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003       David N. Welton <davidw@dedasys.com>.
-//  Copyright (C) 2003-2017  The Bochs Project
+//  Copyright (C) 2003-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -185,7 +185,7 @@ void bx_speaker_c::init(void)
   if (!SIM->get_param_bool("enabled", base)->get()) {
     BX_INFO(("PC speaker output disabled"));
     // mark unused plugin for removal
-    ((bx_param_bool_c*)((bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL))->get_by_name("sb16"))->set(0);
+    ((bx_param_bool_c*)((bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL))->get_by_name("speaker"))->set(0);
     return;
   }
   output_mode = SIM->get_param_enum("mode", base)->get();
