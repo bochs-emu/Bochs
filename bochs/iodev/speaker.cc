@@ -241,10 +241,14 @@ Bit32u bx_speaker_c::beep_generator(Bit16u rate, Bit8u *buffer, Bit32u len)
 
   BX_LOCK(beep_mutex);
   if (!beep_active) {
+    beep_samples = 0;
+  } else {
+    beep_samples = (Bit32u)((float)rate / beep_frequency / 2);
+  }
+  if (beep_samples == 0) {
     BX_UNLOCK(beep_mutex);
     return 0;
   }
-  beep_samples = (Bit32u)((float)rate / beep_frequency / 2);
   do {
     buffer[j++] = 0;
     buffer[j++] = beep_level;
@@ -254,6 +258,7 @@ Bit32u bx_speaker_c::beep_generator(Bit16u rate, Bit8u *buffer, Bit32u len)
       beep_level ^= 0x80;
       beep_pos = 0;
       beep_samples = (Bit32u)((float)rate / beep_frequency / 2);
+      if (beep_samples == 0) break;
     }
   } while (j < len);
   BX_UNLOCK(beep_mutex);
