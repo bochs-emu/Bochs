@@ -1268,7 +1268,7 @@ bx_bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path,
                 case BXT_PARAM_DATA:
                   {
                     bx_shadow_data_c *dparam = (bx_shadow_data_c*)param;
-                    if (!dparam->get_format()) {
+                    if (!dparam->is_text_format()) {
                       sprintf(devdata, "%s/%s", sr_path, ptr);
                       fp2 = fopen(devdata, "rb");
                       if (fp2 != NULL) {

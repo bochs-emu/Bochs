@@ -1035,13 +1035,13 @@ bx_shadow_data_c::bx_shadow_data_c(bx_param_c *parent,
     const char *name,
     Bit8u *ptr_to_data,
     Bit32u data_size,
-    bx_bool text_fmt)
+    bx_bool is_text)
   : bx_param_c(SIM->gen_param_id(), name, "")
 {
   set_type(BXT_PARAM_DATA);
   this->data_ptr = ptr_to_data;
   this->data_size = data_size;
-  this->text_fmt = text_fmt;
+  this->is_text = is_text;
   if (parent) {
     BX_ASSERT(parent->get_type() == BXT_LIST);
     this->parent = (bx_list_c *)parent;
