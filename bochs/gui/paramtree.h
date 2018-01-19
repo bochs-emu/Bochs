@@ -147,22 +147,20 @@ public:
   const char *get_description() const { return description; }
 
   virtual void set_runtime_param(int val) { runtime_param = val; }
-  int get_runtime_param() { return runtime_param; }
+  int get_runtime_param() const { return runtime_param; }
 
   void set_group(const char *group);
   const char *get_group() const {return group_name;}
 
   int get_enabled() const { return enabled; }
-  virtual void set_enabled(int enabled) { this->enabled = enabled; }
-
-  int getint() const {return -1;}
+  virtual void set_enabled(int enabled) { enabled = enabled; }
 
   static const char* set_default_format(const char *f);
   static const char *get_default_format() { return default_text_format; }
 
   bx_list_c *get_dependent_list() { return dependent_list; }
 
-  void set_options(Bit32u options) { this->options = options; }
+  void set_options(Bit32u options) { options = options; }
   Bit32u get_options() const { return options; }
 
   void set_device_param(void *dev) { device = dev; }
