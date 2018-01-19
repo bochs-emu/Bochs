@@ -58,6 +58,21 @@
 
 // 3dfx Voodoo Banshee emulation (partly based on a patch for DOSBox)
 
+// TODO:
+// - 2D polygon fill
+// - 2D host-to-screen stretching support
+// - 2D chromaKey support
+// - upper 256 CLUT entries
+// - pixel format conversion not supported in all cases
+// - Voodoo3 support
+
+// FIXME:
+// - Minor issues in all Banshee modes (e.g. forward/back buttons in explorer)
+// - Display errors in 16 bpp mode after leaving 3D mode
+// - Display errors in 16 bpp mode with debug messages turned on (timing issue)
+// - Bochs crashes on Windows host (MSVC in some cases, MSYS2 64-bit build also
+//   reported, but not yet reproduced)
+
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
@@ -555,13 +570,17 @@ Bit32u bx_banshee_c::read(Bit32u address, unsigned io_len)
       break;
 
     case io_vidSerialParallelPort:
-      result = v->banshee.io[reg] & 0xff87ffff;
+      result = v->banshee.io[reg] & 0xf387ffff;
       if ((v->banshee.io[reg] >> 18) & 1) {
         result |= ((Bit32u)ddc.read() << 19);
       } else {
         result |= 0x00780000;
       }
-      result |= 0x0f000000;
+      if ((v->banshee.io[reg] >> 23) & 1) {
+        result |= ((v->banshee.io[reg] & 0x03000000) << 2);
+      } else {
+        result |= 0x0f000000;
+      }
       break;
 
     default:
@@ -688,7 +707,7 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_ERROR(("vidProcCfg: chromaKey mode not supported yet"));
       }
       if (v->banshee.io[reg] & 0x1000) {
-        BX_ERROR(("vidProcCfg: CLUT high bank not supported yet"));
+        BX_ERROR(("vidProcCfg: upper 256 CLUT entries not supported yet"));
       }
       v->banshee.desktop_tiled = ((v->banshee.io[reg] >> 24) & 1);
       BX_UNLOCK(render_mutex);
@@ -2132,6 +2151,12 @@ void bx_banshee_c::blt_line(bx_bool pline)
   int i, deltax, deltay, numpixels, d, dinc1, dinc2;
   int x, xinc1, xinc2, y, yinc1, yinc2;
   int x0, y0, x1, y1, cx0, cx1, cy0, cy1;
+  bx_bool lstipple = ((BLT.reg[blt_command] >> 12) & 1);
+  Bit8u lpattern = BLT.reg[blt_lineStipple];
+  Bit8u lrepeat = (BLT.reg[blt_lineStyle] & 0xff);
+  Bit8u lpat_max = ((BLT.reg[blt_lineStyle] >> 8) & 0x1f);
+  Bit8u lrep_cnt = lrepeat - ((BLT.reg[blt_lineStyle] >> 16) & 0xff);
+  Bit8u lpat_idx = ((BLT.reg[blt_lineStyle] >> 24) & 0x1f);
 
   BX_LOCK(render_mutex);
   x0 = BLT.src_x;
@@ -2139,9 +2164,6 @@ void bx_banshee_c::blt_line(bx_bool pline)
   x1 = BLT.dst_x;
   y1 = BLT.dst_y;
   BX_DEBUG(("Line/Polyline: %d/%d  -> %d/%d  ROP %02X", x0, y0, x1, y1, BLT.rop0));
-  if ((BLT.reg[blt_command] >> 12) & 1) {
-    BX_ERROR(("Line/Polyline: only solid lines supported yet"));
-  }
   cx0 = BLT.clipx0[BLT.clip_sel];
   cy0 = BLT.clipy0[BLT.clip_sel];
   cx1 = BLT.clipx1[BLT.clip_sel];
@@ -2182,7 +2204,23 @@ void bx_banshee_c::blt_line(bx_bool pline)
   for (i = 0; i < (numpixels - 1); i++) {
     if ((x >= cx0) && (x < cx1) && (y >= cy0) && (y < cy1)) {
       dst_ptr1 = dst_ptr + y * dpitch + x * dpxsize;
-      BLT.rop_fn(dst_ptr1, BLT.fgcolor, dpitch, dpxsize, dpxsize, 1);
+      if (!lstipple) {
+        BLT.rop_fn(dst_ptr1, BLT.fgcolor, dpitch, dpxsize, dpxsize, 1);
+      } else {
+        if ((lpattern & (1 << lpat_idx)) != 0) {
+          BLT.rop_fn(dst_ptr1, BLT.fgcolor, dpitch, dpxsize, dpxsize, 1);
+        } else if (!BLT.transp) {
+          BLT.rop_fn(dst_ptr1, BLT.bgcolor, dpitch, dpxsize, dpxsize, 1);
+        }
+        if (lrep_cnt == 0) {
+          if (++lpat_idx > lpat_max) {
+            lpat_idx = 0;
+          }
+          lrep_cnt = lrepeat;
+        } else {
+          lrep_cnt--;
+        }
+      }
     }
     if (d < 0) {
       d = d + dinc1;
