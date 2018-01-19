@@ -60,6 +60,7 @@ typedef enum {
   BXT_PARAM_BOOL,
   BXT_PARAM_ENUM,
   BXT_PARAM_STRING,
+  BXT_PARAM_BYTESTRING,
   BXT_PARAM_DATA,
   BXT_PARAM_FILEDATA,
   BXT_LIST
@@ -387,20 +388,19 @@ typedef const char* (*param_string_event_handler)(class bx_param_string_c *,
                      int set, const char *oldval, const char *newval, int maxlen);
 
 class BOCHSAPI bx_param_string_c : public bx_param_c {
+protected:
   int maxsize;
   char *val, *initial_val;
   param_string_event_handler handler;
   param_enable_handler enable_handler;
-  char separator;
   void update_dependents();
 public:
   enum {
-    RAW_BYTES = 1,         // use binary text editor, like MAC addr
-    IS_FILENAME = 2,       // 1=yes it's a filename, 0=not a filename.
+    IS_FILENAME = 1,       // 1=yes it's a filename, 0=not a filename.
                            // Some guis have a file browser. This
                            // bit suggests that they use it.
-    SAVE_FILE_DIALOG = 4,  // Use save dialog opposed to open file dialog
-    SELECT_FOLDER_DLG = 8  // Use folder selection dialog
+    SAVE_FILE_DIALOG = 2,  // Use save dialog opposed to open file dialog
+    SELECT_FOLDER_DLG = 4  // Use folder selection dialog
   } bx_string_opt_bits;
   bx_param_string_c(bx_param_c *parent,
       const char *name,
@@ -418,9 +418,7 @@ public:
   char *getptr() {return val; }
   const char *getptr() const {return val; }
   void set(const char *buf);
-  bx_bool equals(const char *buf);
-  void set_separator(char sep) {separator = sep; }
-  char get_separator() const {return separator; }
+  bx_bool equals(const char *buf) const;
   int get_maxsize() const {return maxsize; }
   void set_initial_val(const char *buf);
   bx_bool isempty() const;
@@ -430,6 +428,35 @@ public:
 #endif
   virtual int parse_param(const char *value);
   virtual void dump_param(FILE *fp);
+  virtual int dump_param(char *buf, int buflen, bx_bool dquotes = BX_FALSE);
+};
+
+class BOCHSAPI bx_param_bytestring_c : public bx_param_string_c {
+  char separator;
+public:
+  bx_param_bytestring_c(bx_param_c *parent,
+      const char *name,
+      const char *label,
+      const char *description,
+      const char *initial_val,
+      int maxsize) : bx_param_string_c(parent, name, label, description, initial_val, maxsize)
+  {
+    set_type(BXT_PARAM_BYTESTRING);
+  }
+
+  void set_separator(char sep) {separator = sep; }
+  char get_separator() const {return separator; }
+
+  Bit32s get(char *buf, int len);
+  void set(const char *buf);
+  bx_bool equals(const char *buf) const;
+  void set_initial_val(const char *buf);
+  bx_bool isempty() const;
+
+#if BX_USE_TEXTCONFIG
+  virtual int text_ask();
+#endif
+
   virtual int dump_param(char *buf, int buflen, bx_bool dquotes = BX_FALSE);
 };
 

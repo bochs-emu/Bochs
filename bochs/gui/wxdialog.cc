@@ -873,6 +873,7 @@ void ParamDialog::AddParam(
         break;
       }
     case BXT_PARAM_STRING:
+    case BXT_PARAM_BYTESTRING:
       {
         bx_param_string_c *param = (bx_param_string_c*) param_generic;
         char value[1024];
@@ -882,7 +883,7 @@ void ParamDialog::AddParam(
         if (description) txtctrl->SetToolTip(wxString(description, wxConvUTF8));
         param->dump_param(value, 1024);
         txtctrl->SetValue(wxString(value, wxConvUTF8));
-        if ((param->get_options() & param->RAW_BYTES) == 0) {
+        if (type != BXT_PARAM_BYTESTRING) {
           txtctrl->SetMaxLength(param->get_maxsize());
         }
         sizer->Add(txtctrl, 0, wxALL, 2);
@@ -1079,28 +1080,33 @@ bool ParamDialog::CopyGuiToParam(bx_param_c *param)
       bx_param_string_c *stringp = (bx_param_string_c*) pstr->param;
       char buf[1024];
       wxString tmp(pstr->u.text->GetValue());
-      if (stringp->get_options() & stringp->RAW_BYTES) {
-        char src[1024];
-        int p = 0;
-        unsigned int n;
-        strcpy(src, tmp.mb_str(wxConvUTF8));
-        for (i=0; i<stringp->get_maxsize(); i++)
-          buf[i] = 0;
-        for (i=0; i<stringp->get_maxsize(); i++) {
-          while (src[p] == stringp->get_separator())
-            p++;
-          if (src[p] == 0) break;
-          // try to read a byte of hex
-          if (sscanf(src+p, "%02x", &n) == 1) {
-            buf[i] = n;
-            p+=2;
-          } else {
-            wxMessageBox(wxT("Illegal raw byte format"), wxT("Error"), wxOK | wxICON_ERROR, this);
-            return false;
-          }
+      strncpy(buf, tmp.mb_str(wxConvUTF8), sizeof(buf));
+      buf[sizeof(buf)-1] = 0;
+      if (!stringp->equals(buf)) stringp->set(buf);
+      break;
+    }
+    case BXT_PARAM_BYTESTRING: {
+      bx_param_bytestring_c *stringp = (bx_param_bytestring_c*) pstr->param;
+      char buf[1024];
+      wxString tmp(pstr->u.text->GetValue());
+      char src[1024];
+      int p = 0;
+      unsigned int n;
+      strcpy(src, tmp.mb_str(wxConvUTF8));
+      for (i=0; i<stringp->get_maxsize(); i++)
+        buf[i] = 0;
+      for (i=0; i<stringp->get_maxsize(); i++) {
+        while (src[p] == stringp->get_separator())
+          p++;
+        if (src[p] == 0) break;
+        // try to read a byte of hex
+        if (sscanf(src+p, "%02x", &n) == 1) {
+          buf[i] = n;
+          p+=2;
+        } else {
+          wxMessageBox(wxT("Illegal raw byte format"), wxT("Error"), wxOK | wxICON_ERROR, this);
+          return false;
         }
-      } else {
-        strncpy(buf, tmp.mb_str(wxConvUTF8), sizeof(buf));
       }
       buf[sizeof(buf)-1] = 0;
       if (!stringp->equals(buf)) stringp->set(buf);
@@ -1180,7 +1186,8 @@ void ParamDialog::ProcessDependentList(ParamStruct *pstrChanged, bool enabled)
       }
     } else if ((pstrChanged->param->get_type() == BXT_PARAM_BOOL) ||
                (pstrChanged->param->get_type() == BXT_PARAM_NUM) ||
-               (pstrChanged->param->get_type() == BXT_PARAM_STRING)) {
+               (pstrChanged->param->get_type() == BXT_PARAM_STRING) ||
+               (pstrChanged->param->get_type() == BXT_PARAM_BYTESTRING)) {
       bx_param_c *param = pstrChanged->param;
       if (param->get_type() == BXT_PARAM_BOOL) {
         value = pstrChanged->u.checkbox->GetValue();
@@ -1242,7 +1249,8 @@ void ParamDialog::CopyParamToGui()
         pstr->u.choice->SetSelection(enump->get() - enump->get_min());
         break;
         }
-      case BXT_PARAM_STRING: {
+      case BXT_PARAM_STRING:
+      case BXT_PARAM_BYTESTRING: {
         bx_param_string_c *stringp = (bx_param_string_c*) pstr->param;
         pstr->u.text->SetValue(wxString(stringp->getptr(), wxConvUTF8));
         break;
@@ -1271,6 +1279,7 @@ void ParamDialog::OnEvent(wxCommandEvent& event)
         case BXT_PARAM_NUM:
         case BXT_PARAM_ENUM:
         case BXT_PARAM_STRING:
+        case BXT_PARAM_BYTESTRING:
           EnableChanged(pstr);
           break;
       }

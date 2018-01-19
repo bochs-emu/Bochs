@@ -2408,6 +2408,7 @@ void MakeBL(TreeParent *h_P, bx_param_c *p)
         case BXT_PARAM_ENUM:
         case BXT_PARAM_NUM:
         case BXT_PARAM_STRING:
+        case BXT_PARAM_BYTESTRING:
             p->dump_param(tmpstr, BX_PATHNAME_LEN);
             sprintf(tmpcb + j,": %s", tmpstr);
             break;

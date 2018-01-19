@@ -623,7 +623,7 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
       return event;
     case BX_SYNC_EVT_ASK_PARAM:
       param = event->u.param.param;
-      if (param->get_type() == BXT_PARAM_STRING) {
+      if (param->get_type() == BXT_PARAM_STRING || param->get_type() == BXT_PARAM_BYTESTRING) {
         sparam = (bx_param_string_c *)param;
         opts = sparam->get_options();
         if (opts & sparam->IS_FILENAME) {

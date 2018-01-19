@@ -946,7 +946,6 @@ int parse_raw_bytes(char *dest, char *src, int destsize, char separator)
 int bx_param_string_c::text_ask()
 {
   bx_printf("\n");
-  int status;
   const char *prompt = get_ask_format();
   if (prompt == NULL) {
     if (options & SELECT_FOLDER_DLG) {
@@ -961,23 +960,46 @@ int bx_param_string_c::text_ask()
   }
   while (1) {
     char buffer[1024];
-    status = ask_string(prompt, getptr(), buffer);
+    int status = ask_string(prompt, getptr(), buffer);
     if (status == -2) {
       bx_printf("\n%s\n", get_description());
       continue;
     }
     if (status < 0) return status;
-    int opts = options;
     char buffer2[1024];
     strcpy(buffer2, buffer);
-    if (opts & RAW_BYTES) {
-      if (status == 0) return 0;
-      // copy raw hex into buffer
-      status = parse_raw_bytes(buffer, buffer2, maxsize, separator);
-      if (status < 0) {
-        bx_printf("Illegal raw byte format.  I expected something like 3A%c03%c12%c...\n", separator, separator, separator);
-        continue;
-      }
+    if (!equals(buffer))
+      set(buffer);
+    return 0;
+  }
+}
+
+int bx_param_bytestring_c::text_ask()
+{
+  bx_printf("\n");
+  const char *prompt = get_ask_format();
+  if (prompt == NULL) {
+    // default prompt, if they didn't set an ask format string
+    text_print();
+    bx_printf("\n");
+    prompt = "Enter a new value, '?' for help, or press return for no change.\n";
+  }
+  while (1) {
+    char buffer[1024];
+    int status = ask_string(prompt, getptr(), buffer);
+    if (status == -2) {
+      bx_printf("\n%s\n", get_description());
+      continue;
+    }
+    if (status < 0) return status;
+    char buffer2[1024];
+    strcpy(buffer2, buffer);
+    if (status == 0) return 0;
+    // copy raw hex into buffer
+    status = parse_raw_bytes(buffer, buffer2, maxsize, separator);
+    if (status < 0) {
+      bx_printf("Illegal raw byte format.  I expected something like 3A%c03%c12%c...\n", separator, separator, separator);
+      continue;
     }
     if (!equals(buffer))
       set(buffer);

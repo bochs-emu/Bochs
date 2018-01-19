@@ -285,7 +285,7 @@ bx_param_num_c *bx_real_sim_c::get_param_num(const char *pname, bx_param_c *base
   int type = gen->get_type();
   if (type == BXT_PARAM_NUM || type == BXT_PARAM_BOOL || type == BXT_PARAM_ENUM)
     return (bx_param_num_c *)gen;
-  BX_ERROR(("get_param_num(%s) could not find an integer parameter with that name", pname));
+  BX_ERROR(("get_param_num(%s) could not find a number parameter with that name", pname));
   return NULL;
 }
 
@@ -296,9 +296,9 @@ bx_param_string_c *bx_real_sim_c::get_param_string(const char *pname, bx_param_c
     BX_ERROR(("get_param_string(%s) could not find a parameter", pname));
     return NULL;
   }
-  if (gen->get_type() == BXT_PARAM_STRING)
+  if (gen->get_type() == BXT_PARAM_STRING || gen->get_type() == BXT_PARAM_BYTESTRING)
     return (bx_param_string_c *)gen;
-  BX_ERROR(("get_param_string(%s) could not find an integer parameter with that name", pname));
+  BX_ERROR(("get_param_string(%s) could not find a string parameter with that name", pname));
   return NULL;
 }
 
@@ -1246,26 +1246,23 @@ bx_bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path,
                 case BXT_PARAM_NUM:
                 case BXT_PARAM_BOOL:
                 case BXT_PARAM_ENUM:
+                case BXT_PARAM_STRING:
                   param->parse_param(ptr);
                   break;
-                case BXT_PARAM_STRING:
+                case BXT_PARAM_BYTESTRING:
                   {
-                    bx_param_string_c *sparam = (bx_param_string_c*)param;
-                    if (sparam->get_options() & bx_param_string_c::RAW_BYTES) {
-                      p = 0;
-                      for (j = 0; j < sparam->get_maxsize(); j++) {
-                        if (ptr[p] == sparam->get_separator()) {
-                          p++;
-                        }
-                        if (sscanf(ptr+p, "%02x", &n) == 1) {
-                          buf[j] = n;
-                          p += 2;
-                        }
+                    bx_param_bytestring_c *sparam = (bx_param_bytestring_c*)param;
+                    p = 0;
+                    for (j = 0; j < sparam->get_maxsize(); j++) {
+                      if (ptr[p] == sparam->get_separator()) {
+                        p++;
                       }
-                      if (!sparam->equals(buf)) sparam->set(buf);
-                    } else {
-                      if (!sparam->equals(ptr)) sparam->set(ptr);
+                      if (sscanf(ptr+p, "%02x", &n) == 1) {
+                        buf[j] = n;
+                        p += 2;
+                      }
                     }
+                    if (!sparam->equals(buf)) sparam->set(buf);
                   }
                   break;
                 case BXT_PARAM_DATA:
@@ -1369,6 +1366,7 @@ bx_bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_
     case BXT_PARAM_BOOL:
     case BXT_PARAM_ENUM:
     case BXT_PARAM_STRING:
+    case BXT_PARAM_BYTESTRING:
       node->dump_param(fp);
       fprintf(fp, "\n");
       break;

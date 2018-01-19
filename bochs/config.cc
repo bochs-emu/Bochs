@@ -174,17 +174,16 @@ void bx_init_std_nic_options(const char *name, bx_list_c *menu)
   };
 
   bx_param_enum_c *ethmod;
-  bx_param_string_c *macaddr;
+  bx_param_bytestring_c *macaddr;
   bx_param_filename_c *path, *bootrom;
   char descr[120];
 
   sprintf(descr, "MAC address of the %s device. Don't use an address of a machine on your net.", name);
-  macaddr = new bx_param_string_c(menu,
+  macaddr = new bx_param_bytestring_c(menu,
     "mac",
     "MAC Address",
     descr,
     "", 6);
-  macaddr->set_options(macaddr->RAW_BYTES);
   macaddr->set_initial_val("\xfe\xfd\xde\xad\xbe\xef");
   macaddr->set_separator(':');
   ethmod = new bx_param_enum_c(menu,
