@@ -553,7 +553,7 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0F38F1[] = {
 #if BX_SUPPORT_X86_64
   // osize = 64 bit
   /* -- /q */ { 0, BX_IA_MOVBE_MqGq },
-  /* 66 /q */ { 0, BX_IA_MOVBE_GqMq },
+  /* 66 /q */ { 0, BX_IA_MOVBE_MqGq },
   /* F3 /q */ { 0, BX_IA_ERROR },
   /* F2 /q */ { 0, BX_IA_CRC32_GdEq },
 #endif
