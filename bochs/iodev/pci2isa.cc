@@ -169,11 +169,7 @@ void bx_piix3_c::register_state(void)
   BXRS_HEX_PARAM_FIELD(list, apms, BX_P2I_THIS s.apms);
   BXRS_HEX_PARAM_FIELD(list, pci_reset, BX_P2I_THIS s.pci_reset);
 
-  bx_list_c *irqr = new bx_list_c(list, "irq_registry");
-  for (i=0; i<16; i++) {
-    sprintf(name, "%u", i);
-    new bx_shadow_num_c(irqr, name, &BX_P2I_THIS s.irq_registry[i]);
-  }
+  new bx_shadow_data_c(list, "irq_registry", BX_P2I_THIS s.irq_registry, 16, 1);
   bx_list_c *irql = new bx_list_c(list, "irq_level");
   for (i=0; i<4; i++) {
     for (j=0; j<16; j++) {
