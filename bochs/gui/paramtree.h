@@ -153,14 +153,14 @@ public:
   const char *get_group() const {return group_name;}
 
   int get_enabled() const { return enabled; }
-  virtual void set_enabled(int enabled) { enabled = enabled; }
+  virtual void set_enabled(int _enabled) { enabled = _enabled; }
 
   static const char* set_default_format(const char *f);
   static const char *get_default_format() { return default_text_format; }
 
   bx_list_c *get_dependent_list() { return dependent_list; }
 
-  void set_options(Bit32u options) { options = options; }
+  void set_options(Bit32u _options) { options = _options; }
   Bit32u get_options() const { return options; }
 
   void set_device_param(void *dev) { device = dev; }
@@ -225,12 +225,12 @@ public:
   virtual Bit32s get() { return (Bit32s) get64(); }
   virtual Bit64s get64();
   virtual void set(Bit64s val);
-  void set_base(int base) { this->base = base; }
+  void set_base(int _base) { base = _base; }
   void set_initial_val(Bit64s initial_val);
   int get_base() const { return base; }
   void set_range(Bit64u min, Bit64u max);
-  Bit64s get_min() { return min; }
-  Bit64s get_max() { return max; }
+  Bit64s get_min() const { return min; }
+  Bit64s get_max() const { return max; }
   static Bit32u set_default_base(Bit32u val);
   static Bit32u get_default_base() { return default_base; }
 #if BX_USE_TEXTCONFIG
