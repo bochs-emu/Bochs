@@ -2310,8 +2310,10 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       pname = strtok(param, "=");
       val = strtok(NULL, "");
       if (val != NULL) {
-        if (isdigit(val[0])) {
-          SIM->opt_plugin_ctrl(pname, atoi(val));
+        if (!strcmp(val, "0") || !stricmp(val, "false")) {
+          SIM->opt_plugin_ctrl(pname, 0);
+        } else if (!strcmp(val, "1") || !stricmp(val, "true")) {
+          SIM->opt_plugin_ctrl(pname, 1);
         } else {
           PARSE_ERR(("%s: plugin_ctrl directive malformed", context));
         }

@@ -1275,13 +1275,13 @@ bx_bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path,
                         fread(dparam->getptr(), 1, dparam->get_size(), fp2);
                         fclose(fp2);
                       }
-                    } else if (!strcmp(ptr, "{")) {
+                    } else if (!strcmp(ptr, "[")) {
                       i = 0;
                       do {
                         bx_restore_getline(fp, buf, BX_PATHNAME_LEN);
                         ptr = strtok(buf, " ");
                         while (ptr) {
-                          if (!strcmp(ptr, "}")) {
+                          if (!strcmp(ptr, "]")) {
                             i = 0;
                             break;
                           } else {
@@ -1373,7 +1373,7 @@ bx_bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_
     case BXT_PARAM_DATA:
       {
         bx_shadow_data_c *dparam = (bx_shadow_data_c*)node;
-        if (!dparam->get_format()) {
+        if (!dparam->is_text_format()) {
           node->get_param_path(pname, BX_PATHNAME_LEN);
           if (!strncmp(pname, "bochs.", 6)) {
             strcpy(pname, pname+6);
@@ -1389,7 +1389,7 @@ bx_bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_
             fclose(fp2);
           }
         } else {
-          fprintf(fp, "{\n");
+          fprintf(fp, "[\n");
           for (i=0; i < (int)dparam->get_size(); i++) {
             if ((i % 16) == 0) {
               for (j=0; j<(level+1); j++)
@@ -1406,7 +1406,7 @@ bx_bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_
           }
           for (i=0; i<level; i++)
             fprintf(fp, "  ");
-          fprintf(fp, "}\n");
+          fprintf(fp, "]\n");
         }
       }
       break;
