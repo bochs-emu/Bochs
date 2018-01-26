@@ -91,8 +91,10 @@ For any information on Qemu, visit the website http://wiki.qemu.org/
 
 History
 -------
-vgabios-CVS : Jul 08 2014
+vgabios-CVS : Jan 26 2018
   - Volker
+    - added VESA BIOS function 0x4f15 (get EDID) to both the Bochs VBE and
+      the Cirrus version.
     - fixed building VBE modes list (check maximum y resolution)
     - ensure PCIR is aligned to 4 bytes (patch by David Woodhouse)
     - README: update feedback address and Qemu link

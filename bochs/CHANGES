@@ -26,9 +26,9 @@ Changes after 2.6.9 release:
     - Voodoo2 model now working after some fixes and implementation of the
       CMDFIFO (using FIFO thread) and one of the bitBLT functions.
     - Added Voodoo Banshee emulation support (still under construction).
-  - Display
-    - Added basic DDC support for Cirrus and Voodoo Banshee adapters (plug&play
-      monitor "Bochs Screen").
+  - Display (general)
+    - Added basic DDC support for Bochs VBE, Cirrus and Voodoo Banshee adapters
+      (reporting plug&play monitor "Bochs Screen").
   - USB
     - Now creating separate plugins for each USB device implementation.
   - Networking
@@ -40,6 +40,9 @@ Changes after 2.6.9 release:
     - wx: Fixes and updates for wxWidgets 3.0 support.
     - Removed legacy guis "macos" and "svga" from display library auto-
       detection (still available using --with-XXX option).
+
+  - LGPL'd VGABIOS updated from CVS (VESA extension 'read EDID' for Bochs VBE
+    and Cirrus added).
 
 -------------------------------------------------------------------------
 Changes in 2.6.9 (April 9, 2017):
