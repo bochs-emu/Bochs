@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2017  The Bochs Project
+//  Copyright (C) 2002-2018  The Bochs Project
 //  PCI VGA dummy adapter Copyright (C) 2002,2003  Mike Nordell
 //
 //  This library is free software; you can redistribute it and/or
@@ -36,6 +36,7 @@
 
 #include "iodev.h"
 #include "vgacore.h"
+#include "ddc.h"
 #include "vga.h"
 #include "virt_timer.h"
 
@@ -84,6 +85,7 @@ bx_bool bx_vga_c::init_vga_extension(void)
   BX_VGA_THIS vbe_present = 0;
   BX_VGA_THIS vbe.enabled = 0;
   BX_VGA_THIS vbe.dac_8bit = 0;
+  BX_VGA_THIS vbe.ddc_enabled = 0;
   BX_VGA_THIS vbe.base_address = 0x0000;
   if (!strcmp(BX_VGA_THIS vgaext->getptr(), "vbe")) {
     BX_VGA_THIS put("BXVGA");
@@ -212,6 +214,7 @@ void bx_vga_c::register_state(void)
     new bx_shadow_bool_c(vbe, "lfb_enabled", &BX_VGA_THIS vbe.lfb_enabled);
     new bx_shadow_bool_c(vbe, "get_capabilities", &BX_VGA_THIS vbe.get_capabilities);
     new bx_shadow_bool_c(vbe, "dac_8bit", &BX_VGA_THIS vbe.dac_8bit);
+    new bx_shadow_bool_c(vbe, "ddc_enabled", &BX_VGA_THIS vbe.ddc_enabled);
   }
 }
 
@@ -846,7 +849,7 @@ Bit32u bx_vga_c::vbe_read(Bit32u address, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif  // BX_USE_VGA_SMF == 0
-  Bit16u retval;
+  Bit16u retval = 0;
 
 //  BX_INFO(("VBE_read %x (len %x)", address, io_len));
 
@@ -911,13 +914,20 @@ Bit32u bx_vga_c::vbe_read(Bit32u address, unsigned io_len)
       case VBE_DISPI_INDEX_VIDEO_MEMORY_64K:
         return (VBE_DISPI_TOTAL_VIDEO_MEMORY_KB >> 6);
 
+      case VBE_DISPI_INDEX_DDC:
+        if (BX_VGA_THIS vbe.ddc_enabled) {
+          retval = (1 << 7) | BX_VGA_THIS ddc.read();
+        } else {
+          retval = 0x000f;
+        }
+        break;
+
       default:
-        BX_PANIC(("VBE unknown data read index 0x%x",BX_VGA_THIS vbe.curindex));
+        BX_ERROR(("VBE unknown data read index 0x%x",BX_VGA_THIS vbe.curindex));
         break;
     }
   }
-  BX_PANIC(("VBE_read shouldn't reach this"));
-  return 0; /* keep compiler happy */
+  return retval;
 }
 
 void bx_vga_c::vbe_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
@@ -1264,6 +1274,14 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
         } break;
         case VBE_DISPI_INDEX_VIRT_HEIGHT:
           BX_ERROR(("VBE: write to virtual height register ignored"));
+          break;
+        case VBE_DISPI_INDEX_DDC:
+          if ((value >> 7) & 1) {
+            BX_VGA_THIS vbe.ddc_enabled = 1;
+            BX_VGA_THIS ddc.write(value & 1, (value >> 1) & 1);
+          } else {
+            BX_VGA_THIS vbe.ddc_enabled = 0;
+          }
           break;
         default:
           BX_ERROR(("VBE: write unsupported register at index 0x%x",BX_VGA_THIS vbe.curindex));

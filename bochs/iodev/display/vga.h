@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2017  The Bochs Project
+//  Copyright (C) 2002-2018  The Bochs Project
 //  PCI VGA dummy adapter Copyright (C) 2002,2003  Mike Nordell
 //
 //  This library is free software; you can redistribute it and/or
@@ -50,6 +50,7 @@
 #define VBE_DISPI_INDEX_X_OFFSET         0x8
 #define VBE_DISPI_INDEX_Y_OFFSET         0x9
 #define VBE_DISPI_INDEX_VIDEO_MEMORY_64K 0xa
+#define VBE_DISPI_INDEX_DDC              0xb
 
 #define VBE_DISPI_ID0                    0xB0C0
 #define VBE_DISPI_ID1                    0xB0C1
@@ -162,7 +163,10 @@ private:
     bx_bool lfb_enabled;
     bx_bool get_capabilities;
     bx_bool dac_8bit;
+    bx_bool ddc_enabled;
   } vbe;  // VBE state information
+
+  bx_ddc_c ddc;
 };
 
 #endif

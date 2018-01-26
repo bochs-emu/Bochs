@@ -93,8 +93,8 @@ libbx_%.la: %.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH)
 
 # special link rules for plugins that require more than one object file
-libbx_vga.la: vga.lo vgacore.lo
-	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module vga.lo vgacore.lo -o libbx_vga.la -rpath $(PLUGIN_PATH)
+libbx_vga.la: vga.lo vgacore.lo ddc.lo
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module vga.lo vgacore.lo ddc.lo -o libbx_vga.la -rpath $(PLUGIN_PATH)
 
 libbx_svga_cirrus.la: svga_cirrus.lo vgacore.lo ddc.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module svga_cirrus.lo vgacore.lo ddc.lo -o libbx_svga_cirrus.la -rpath $(PLUGIN_PATH)
@@ -107,8 +107,8 @@ bx_%.dll: %.o
 	$(CXX) $(CXXFLAGS) -shared -o $@ $< $(WIN32_DLL_IMPORT_LIBRARY)
 
 # special link rules for plugins with Cygwin, MinGW/MSYS and MSVC nmake
-bx_vga.dll: vga.o vgacore.o
-	@LINK_DLL@ vga.o vgacore.o $(WIN32_DLL_IMPORT_LIBRARY)
+bx_vga.dll: vga.o vgacore.o ddc.o
+	@LINK_DLL@ vga.o vgacore.o ddc.o $(WIN32_DLL_IMPORT_LIBRARY)
 
 bx_svga_cirrus.dll: svga_cirrus.o vgacore.o ddc.o
 	@LINK_DLL@ svga_cirrus.o vgacore.o ddc.o $(WIN32_DLL_IMPORT_LIBRARY)
@@ -158,7 +158,7 @@ vga.o: vga.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
  ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
- ../../param_names.h vgacore.h vga.h ../virt_timer.h
+ ../../param_names.h vgacore.h ddc.h vga.h ../virt_timer.h
 vgacore.o: vgacore.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
@@ -197,7 +197,7 @@ vga.lo: vga.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
  ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
- ../../param_names.h vgacore.h vga.h ../virt_timer.h
+ ../../param_names.h vgacore.h ddc.h vga.h ../virt_timer.h
 vgacore.lo: vgacore.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
