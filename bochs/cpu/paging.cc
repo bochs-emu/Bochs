@@ -277,12 +277,11 @@ static const Bit8u priv_check[BX_PRIV_CHECK_SIZE] =
 #endif
 };
 
-#define BX_PAGING_PHY_ADDRESS_RESERVED_BITS \
-    (BX_PHY_ADDRESS_RESERVED_BITS & BX_CONST64(0xfffffffffffff))
+const Bit64u BX_PAGING_PHY_ADDRESS_RESERVED_BITS = BX_PHY_ADDRESS_RESERVED_BITS & BX_CONST64(0xfffffffffffff);
 
-#define PAGE_DIRECTORY_NX_BIT (BX_CONST64(0x8000000000000000))
+const Bit64u PAGE_DIRECTORY_NX_BIT = BX_CONST64(0x8000000000000000);
 
-#define BX_CR3_PAGING_MASK    (BX_CONST64(0x000ffffffffff000))
+const Bit64u BX_CR3_PAGING_MASK = BX_CONST64(0x000ffffffffff000);
 
 // Each entry in the TLB cache has 3 entries:
 //
@@ -502,11 +501,13 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPG(bxInstruction_c* i)
 }
 
 // error checking order - page not present, reserved bits, protection
-#define ERROR_NOT_PRESENT       0x00
-#define ERROR_PROTECTION        0x01
-#define ERROR_RESERVED          0x08
-#define ERROR_CODE_ACCESS       0x10
-#define ERROR_PKEY              0x20
+enum {
+  ERROR_NOT_PRESENT = 0x00,
+  ERROR_PROTECTION  = 0x01,
+  ERROR_RESERVED    = 0x08,
+  ERROR_CODE_ACCESS = 0x10,
+  ERROR_PKEY        = 0x20
+};
 
 void BX_CPU_C::page_fault(unsigned fault, bx_address laddr, unsigned user, unsigned rw)
 {
@@ -543,10 +544,12 @@ void BX_CPU_C::page_fault(unsigned fault, bx_address laddr, unsigned user, unsig
   exception(BX_PF_EXCEPTION, error_code);
 }
 
-#define BX_LEVEL_PML4  3
-#define BX_LEVEL_PDPTE 2
-#define BX_LEVEL_PDE   1
-#define BX_LEVEL_PTE   0
+enum {
+  BX_LEVEL_PML4 = 3,
+  BX_LEVEL_PDPTE = 2,
+  BX_LEVEL_PDE = 1,
+  BX_LEVEL_PTE = 0
+};
 
 static const char *bx_paging_level[4] = { "PTE", "PDE", "PDPE", "PML4" }; // keep it 4 letters
 
@@ -569,11 +572,10 @@ static const char *bx_paging_level[4] = { "PTE", "PDE", "PDPE", "PML4" }; // kee
 // 63    | Execute-Disable (XD) (if EFER.NXE=1, reserved otherwise)
 // -----------------------------------------------------------
 
-#define PAGING_PAE_RESERVED_BITS (BX_PAGING_PHY_ADDRESS_RESERVED_BITS)
+const Bit64u PAGING_PAE_RESERVED_BITS = BX_PAGING_PHY_ADDRESS_RESERVED_BITS;
 
 // in legacy PAE mode bits [62:52] are reserved. bit 63 is NXE
-#define PAGING_LEGACY_PAE_RESERVED_BITS \
-             (BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x7ff0000000000000))
+const Bit64u PAGING_LEGACY_PAE_RESERVED_BITS = BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x7ff0000000000000);
 
 //       Format of a PDPTE that References a 1-GByte Page
 // -----------------------------------------------------------
@@ -595,8 +597,7 @@ static const char *bx_paging_level[4] = { "PTE", "PDE", "PDPE", "PML4" }; // kee
 // 63    | Execute-Disable (XD) (if EFER.NXE=1, reserved otherwise)
 // -----------------------------------------------------------
 
-#define PAGING_PAE_PDPTE1G_RESERVED_BITS \
-    (BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x3FFFE000))
+const Bit64u PAGING_PAE_PDPTE1G_RESERVED_BITS = BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x3FFFE000);
 
 //        Format of a PAE PDE that Maps a 2-MByte Page
 // -----------------------------------------------------------
@@ -618,8 +619,7 @@ static const char *bx_paging_level[4] = { "PTE", "PDE", "PDPE", "PML4" }; // kee
 // 63    | Execute-Disable (XD) (if EFER.NXE=1, reserved otherwise)
 // -----------------------------------------------------------
 
-#define PAGING_PAE_PDE2M_RESERVED_BITS \
-    (BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x001FE000))
+const Bit64u PAGING_PAE_PDE2M_RESERVED_BITS = BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x001FE000);
 
 //        Format of a PAE PTE that Maps a 4-KByte Page
 // -----------------------------------------------------------
@@ -836,8 +836,7 @@ void BX_CPU_C::update_access_dirty_PAE(bx_phy_address *entry_addr, Bit64u *entry
 // 63-PA | Reserved (must be zero)
 // -----------------------------------------------------------
 
-#define PAGING_PAE_PDPTE_RESERVED_BITS \
-    (BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0xFFF00000000001E6))
+const Bit64u PAGING_PAE_PDPTE_RESERVED_BITS = BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0xFFF00000000001E6);
 
 bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckPDPTR(bx_phy_address cr3_val)
 {
@@ -1043,8 +1042,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
 // 31-22 | Bits 31-22 of physical address of the 4-MByte page
 // -----------------------------------------------------------
 
-#define PAGING_PDE4M_RESERVED_BITS \
-    (((1 << (41-BX_PHY_ADDRESS_WIDTH))-1) << (13 + BX_PHY_ADDRESS_WIDTH - 32))
+const Bit32u PAGING_PDE4M_RESERVED_BITS = ((1 << (41-BX_PHY_ADDRESS_WIDTH))-1) << (13 + BX_PHY_ADDRESS_WIDTH - 32);
 
 // Translate a linear address to a physical address in legacy paging mode
 bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_mask, unsigned user, unsigned rw)
@@ -1701,9 +1699,11 @@ bx_phy_address BX_CPU_C::nested_walk(bx_phy_address guest_paddr, unsigned rw, bx
 #if BX_SUPPORT_VMX >= 2
 
 /* EPT access type */
-#define BX_EPT_READ    0x01
-#define BX_EPT_WRITE   0x02
-#define BX_EPT_EXECUTE 0x04
+enum {
+  BX_EPT_READ    = 0x01,
+  BX_EPT_WRITE   = 0x02,
+  BX_EPT_EXECUTE = 0x04
+};
 
 /* EPT access mask */
 #define BX_EPT_ENTRY_NOT_PRESENT        0x00
@@ -1715,7 +1715,7 @@ bx_phy_address BX_CPU_C::nested_walk(bx_phy_address guest_paddr, unsigned rw, bx
 #define BX_EPT_ENTRY_WRITE_EXECUTE      0x06
 #define BX_EPT_ENTRY_READ_WRITE_EXECUTE 0x07
 
-#define BX_SUPPRESS_EPT_VIOLATION_EXCEPTION BX_CONST64(0x8000000000000000)
+const Bit64u BX_SUPPRESS_EPT_VIOLATION_EXCEPTION = BX_CONST64(0x8000000000000000);
 
 #define BX_VMX_EPT_ACCESS_DIRTY_ENABLED (BX_CPU_THIS_PTR vmcs.eptptr & 0x40)
 
@@ -1735,7 +1735,7 @@ bx_phy_address BX_CPU_C::nested_walk(bx_phy_address guest_paddr, unsigned rw, bx
 // 63-52 | (ignored)
 // -----------------------------------------------------------
 
-#define PAGING_EPT_RESERVED_BITS (BX_PAGING_PHY_ADDRESS_RESERVED_BITS)
+const Bit64u PAGING_EPT_RESERVED_BITS = BX_PAGING_PHY_ADDRESS_RESERVED_BITS;
 
 bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx_address guest_laddr, bx_bool guest_laddr_valid, bx_bool is_page_walk, unsigned rw)
 {
