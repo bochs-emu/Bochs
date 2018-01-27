@@ -4,7 +4,7 @@ Changes after 2.6.9 release:
   - Disabled legacy "load32bitOShack" feature.
 
 - CPU / CPUDB
-  - Bugfixes for CPU emulation correctness (critical bugfixes for PCID, ADCX/ADOX, AVX/AVX-512 and VMX emulation)
+  - Bugfixes for CPU emulation correctness (critical bugfixes for PCID, ADCX/ADOX, MOVBE, AVX/AVX-512 and VMX emulation)
   ! x87: implemented FOPCODE and FDP deprecation features
   ! AVX-512: implemented AVX-512 VBMI2/VNNI/BITALG instructions
   ! Implemented VAES instructions / VPCLMULQDQ instruction
