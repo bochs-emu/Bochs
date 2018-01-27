@@ -163,8 +163,9 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_VMX_VMCS_SHADOWING                   (1 << 20)   /* VMCS Shadowing */
 #define BX_VMX_EPT_EXCEPTION                    (1 << 21)   /* EPT Violation (#VE) exception */
 #define BX_VMX_PML                              (1 << 22)   /* Page Modification Logging - not implemented yet */
-#define BX_VMX_TSC_SCALING                      (1 << 23)   /* TSC Scaling */
-#define BX_VMX_SW_INTERRUPT_INJECTION_ILEN_0  	(1 << 24)   /* Allow software interrupt injection with instruction length 0 */
+#define BX_VMX_SPP                              (1 << 23)   /* Sub Page Protection */
+#define BX_VMX_TSC_SCALING                      (1 << 24)   /* TSC Scaling */
+#define BX_VMX_SW_INTERRUPT_INJECTION_ILEN_0    (1 << 25)   /* Allow software interrupt injection with instruction length 0 */
 
 // CPUID defines - STD features CPUID[0x00000001].EDX
 // ----------------------------

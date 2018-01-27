@@ -4609,6 +4609,7 @@ public: // for now...
   BX_SMF bx_phy_address translate_guest_physical(bx_phy_address guest_paddr, bx_address guest_laddr, bx_bool guest_laddr_valid, bx_bool is_page_walk, unsigned rw);
   BX_SMF void update_ept_access_dirty(bx_phy_address *entry_addr, Bit64u *entry, BxMemtype eptptr_memtype, unsigned leaf, unsigned write);
   BX_SMF bx_bool is_eptptr_valid(Bit64u eptptr);
+  BX_SMF bx_bool spp_walk(bx_phy_address guest_paddr, bx_address guest_laddr, BxMemtype memtype);
 #endif
 #if BX_SUPPORT_SVM
   BX_SMF void nested_page_fault(unsigned fault, bx_phy_address guest_paddr, unsigned rw, unsigned is_page_walk);

@@ -253,15 +253,8 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
 
   if(BX_CPU_THIS_PTR cr4.get_OSFXSR() && is_cpu_extension_supported(BX_ISA_SSE))
   {
-    /* store XMM register file */
-    for(index=0; index < 16; index++)
-    {
-      // save XMM8-XMM15 only in 64-bit mode
-      if (index < 8 || long64_mode()) {
-         write_virtual_xmmword(i->seg(),
-             (eaddr+index*16+160) & asize_mask, &BX_READ_XMM_REG(index));
-      }
-    }
+    /* save XMM register file */
+    xsave_sse_state(i, eaddr+160);
   }
 
   /* do not touch reserved fields */
@@ -374,15 +367,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
   if(BX_CPU_THIS_PTR cr4.get_OSFXSR() && is_cpu_extension_supported(BX_ISA_SSE))
   {
     /* load XMM register file */
-    for(index=0; index < 16; index++)
-    {
-      // restore XMM8-XMM15 only in 64-bit mode
-      if (index < 8 || long64_mode()) {
-         read_virtual_xmmword(i->seg(),
-             (eaddr+index*16+160) & asize_mask, &BX_READ_XMM_REG(index));
-
-      }
-    }
+    xrstor_sse_state(i, eaddr+160);
   }
 #endif
 

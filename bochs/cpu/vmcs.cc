@@ -392,6 +392,12 @@ bx_bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
       return BX_SUPPORT_VMX_EXTENSION(BX_VMX_TSC_SCALING);
 
 #if BX_SUPPORT_VMX >= 2
+    case VMCS_64BIT_CONTROL_SPPTP:
+    case VMCS_64BIT_CONTROL_SPPTP_HI:
+      return BX_SUPPORT_VMX_EXTENSION(BX_VMX_SPP);
+#endif
+
+#if BX_SUPPORT_VMX >= 2
     /* VMCS 64-bit host state fields */
     /* binary 0010_11xx_xxxx_xxx0 */
     case VMCS_64BIT_HOST_IA32_PAT:
@@ -593,8 +599,8 @@ void BX_CPU_C::init_vmx_capabilities(void)
   //   [19] Reserved (must be '0)
   //   [20] XSAVES Exiting
   //   [21] Reserved (must be '0)
-  //   [22] Reserved (must be '0)
-  //   [23] Reserved (must be '0)
+  //   [22] Mode Based Execution Control (MBE) (not implemented yet)
+  //   [23] Sub Page Protection
   //   [24] Reserved (must be '0)
   //   [25] Enable TSC Scaling
 
@@ -653,6 +659,13 @@ void BX_CPU_C::init_vmx_capabilities(void)
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_XSAVES)) {
     cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_XSAVES_XRSTORS;
+  }
+#endif
+#if BX_SUPPORT_VMX >= 2
+  if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_SPP)) {
+    if (! BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT))
+      BX_PANIC(("VMX SPP feature requires EPT support !"));
+    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_SUBPAGE_WR_PROTECT_CTRL;
   }
 #endif
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_TSC_SCALING)) {

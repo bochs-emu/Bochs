@@ -785,6 +785,19 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
     }
     vm->pml_index = VMread16(VMCS_16BIT_GUEST_PML_INDEX);
   }
+
+  if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_SUBPAGE_WR_PROTECT_CTRL) {
+    if ((vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_EPT_ENABLE) == 0) {
+       BX_ERROR(("VMFAIL: VMCS EXEC CTRL: SPP is enabled without EPT"));
+       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+    }
+
+    vm->spptp = (bx_phy_address) VMread64(VMCS_64BIT_CONTROL_SPPTP);
+    if (! IsValidPageAlignedPhyAddr(vm->spptp)) {
+       BX_ERROR(("VMFAIL: VMCS EXEC CTRL: SPP base phy addr malformed"));
+       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+    }
+  }
 #endif
 
   if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_XSAVES_XRSTORS)
@@ -3776,6 +3789,7 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vpid, BX_CPU_THIS_PTR vmcs.vpid);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, pml_address, BX_CPU_THIS_PTR vmcs.pml_address);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, pml_index, BX_CPU_THIS_PTR vmcs.pml_index);
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, spptp, BX_CPU_THIS_PTR vmcs.spptp);
 #endif
 #if BX_SUPPORT_VMX >= 2
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, pause_loop_exiting_gap, BX_CPU_THIS_PTR vmcs.ple.pause_loop_exiting_gap);
