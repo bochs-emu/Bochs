@@ -1922,7 +1922,7 @@ bx_bool BX_CPU_C::spp_walk(bx_phy_address guest_paddr, bx_address guest_laddr, B
   for (leaf = BX_LEVEL_PML4;; --leaf) {
     entry_addr[leaf] = ppf + ((guest_paddr >> (9 + 9*leaf)) & 0xff8);
     access_read_physical(entry_addr[leaf], 8, &entry[leaf]);
-    BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 8, MEMTYPE(memtype), BX_READ, (BX_EPT_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
+    BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 8, MEMTYPE(memtype), BX_READ, (BX_EPT_SPP_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
 
     if (leaf == BX_LEVEL_PTE) break;
 
