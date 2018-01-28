@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2017  The Bochs Project
+//  Copyright (C) 2001-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -10522,11 +10522,26 @@ pnpbios_real:
 pnpbios_code:
   mov  ax, 8[ebp]
   cmp  ax, #0x60 ;; Get Version and Installation Check
+  jnz  pnpbios_00
+  push es
+  push di
+  les  di, 10[ebp]
+  mov  ax, #0x0101
+  stosw
+  pop  di
+  pop  es
+  xor  ax, ax ;; SUCCESS
+  jmp  pnpbios_exit
+pnpbios_00:
+  cmp  ax, #0x00 ;; Get Number of System Device Nodes
   jnz  pnpbios_fail
   push es
   push di
-  les  di, 10[bp]
-  mov  ax, #0x0101
+  les  di, 10[ebp]
+  mov  al, #0x00
+  stosb
+  les  di, 14[ebp]
+  mov  ax, #0x0000
   stosw
   pop  di
   pop  es
