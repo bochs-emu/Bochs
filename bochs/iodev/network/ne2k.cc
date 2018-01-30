@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2017  The Bochs Project
+//  Copyright (C) 2001-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -526,7 +526,17 @@ void bx_ne2k_c::write_cr(Bit32u value)
 
     // Send the packet to the system driver
     BX_NE2K_THIS s.CR.tx_packet = 1;
-    BX_NE2K_THIS ethdev->sendpkt(& BX_NE2K_THIS s.mem[BX_NE2K_THIS s.tx_page_start*256 - BX_NE2K_MEMSTART], BX_NE2K_THIS s.tx_bytes);
+    Bit16u tx_start_ofs = BX_NE2K_THIS s.tx_page_start*256;
+    // The following test and decrement is required for Novell Netware
+    // 3.11-3.12, see
+    // https://lists.gnu.org/archive/html/qemu-devel/2005-03/msg00313.html
+    // for the corresponding change in QEMU.
+    if (tx_start_ofs >= BX_NE2K_MEMEND)
+      tx_start_ofs -= BX_NE2K_MEMSIZ;
+    if (tx_start_ofs + BX_NE2K_THIS s.tx_bytes > BX_NE2K_MEMEND)
+      BX_PANIC(("tx start with start offset %d and byte count %d would overrun memory",
+                tx_start_ofs, BX_NE2K_THIS s.tx_bytes));
+    BX_NE2K_THIS ethdev->sendpkt(& BX_NE2K_THIS s.mem[tx_start_ofs - BX_NE2K_MEMSTART], BX_NE2K_THIS s.tx_bytes);
 
     // some more debug
     if (BX_NE2K_THIS s.tx_timer_active)
