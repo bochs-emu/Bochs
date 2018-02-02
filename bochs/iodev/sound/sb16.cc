@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2017  The Bochs Project
+//  Copyright (C) 2001-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -137,8 +137,8 @@ Bit32s sb16_options_parser(const char *context, int num_params, char *params[])
     SIM->get_param_bool("enabled", base)->set(1);
     for (int i = 1; i < num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
-        enable = atol(&params[i][8]);
-        SIM->get_param_bool("enabled", base)->set(enable);
+        SIM->get_param_bool("enabled", base)->parse_param(&params[i][8]);
+        enable = SIM->get_param_bool("enabled", base)->get();
       } else if (!strncmp(params[i], "midi=", 5)) {
         SIM->get_param_string("midifile", base)->set(&params[i][5]);
       } else if (!strncmp(params[i], "wave=", 5)) {

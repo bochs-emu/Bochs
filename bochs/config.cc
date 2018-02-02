@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2017  The Bochs Project
+//  Copyright (C) 2002-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -2148,8 +2148,7 @@ static int parse_debug_symbols(const char *context, const char **params, int num
 
 static int parse_param_bool(const char *input, int len, const char *param)
 {
-  if (input[len] == '0' || input[len] == '1') {
-    SIM->get_param_bool(param)->set(input[len] - '0');
+  if (SIM->get_param_bool(param)->parse_param(&input[len]) == 1) {
     return 0;
   }
 
@@ -2233,8 +2232,8 @@ int bx_parse_nic_params(const char *context, const char *param, bx_list_c *base)
   int n;
 
   if (!strncmp(param, "enabled=", 8)) {
-    n = atol(&param[8]);
-    SIM->get_param_bool("enabled", base)->set(n);
+    SIM->get_param_bool("enabled", base)->parse_param(&param[8]);
+    n = SIM->get_param_bool("enabled", base)->get();
     if (n == 0) valid |= 0x80;
     else valid &= 0x7f;
   } else if (!strncmp(param, "mac=", 4)) {
@@ -3098,10 +3097,12 @@ int bx_write_param_list(FILE *fp, bx_list_c *base, const char *optname, bx_bool 
         case BXT_PARAM_BOOL:
         case BXT_PARAM_ENUM:
         case BXT_PARAM_STRING:
+        case BXT_PARAM_BYTESTRING:
           param->dump_param(tmpstr, BX_PATHNAME_LEN, 1);
           break;
         default:
           BX_ERROR(("bx_write_param_list(): unsupported parameter type"));
+          tmpstr[0] = 0;
       }
       strcat(bxrcline, tmpstr);
       p++;
