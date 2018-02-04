@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010-2017  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2011-2017  The Bochs Project
+//                2011-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -269,7 +269,7 @@ void bx_usb_xhci_c::init(void)
   // revision number (0x03 = uPD720201, 0x02 = uPD720202)
   init_pci_conf(0x1912, 0x0015, 0x02, 0x0c0330, 0x00);
   BX_XHCI_THIS pci_conf[0x3d] = BX_PCI_INTD;
-  BX_XHCI_THIS pci_base_address[0] = 0x0;
+  BX_XHCI_THIS init_bar_mem(0, IO_SPACE_SIZE, read_handler, write_handler);
 
   // initialize capability registers
   BX_XHCI_THIS hub.cap_regs.HcCapLength  = (VERSION_MAJOR << 24) | (VERSION_MINOR << 16) | OPS_REGS_OFFSET;
@@ -969,12 +969,7 @@ void bx_usb_xhci_c::register_state(void)
 
 void bx_usb_xhci_c::after_restore_state(void)
 {
-  if (DEV_pci_set_base_mem(BX_XHCI_THIS_PTR, read_handler, write_handler,
-                         &BX_XHCI_THIS pci_base_address[0],
-                         &BX_XHCI_THIS pci_conf[0x10],
-                         4096))  {
-     BX_INFO(("new base address: 0x%04X", BX_XHCI_THIS pci_base_address[0]));
-  }
+  bx_pci_device_c::after_restore_pci_state(NULL);
   for (int j=0; j<USB_XHCI_PORTS; j++) {
     if (BX_XHCI_THIS hub.usb_port[j].device != NULL) {
       BX_XHCI_THIS hub.usb_port[j].device->after_restore_state();
@@ -1029,7 +1024,7 @@ bx_bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *dat
   Bit32u val = 0, val_hi = 0;
   int i, speed = 0;
 
-  const Bit32u offset = (Bit32u) (addr - BX_XHCI_THIS pci_base_address[0]);
+  const Bit32u offset = (Bit32u) (addr - BX_XHCI_THIS pci_bar[0].addr);
 
   // Even though the controller allows reads other than 32-bits & on odd boundaries,
   //  we are going to ASSUME dword reads and writes unless specified below
@@ -1386,7 +1381,7 @@ bx_bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *da
 {
   Bit32u value = *((Bit32u *) data);
   Bit32u value_hi = *((Bit32u *) ((Bit8u *) data + 4));
-  const Bit32u offset = (Bit32u) (addr - BX_XHCI_THIS pci_base_address[0]);
+  const Bit32u offset = (Bit32u) (addr - BX_XHCI_THIS pci_bar[0].addr);
   Bit32u temp;
   int i;
 
@@ -3113,7 +3108,6 @@ void bx_usb_xhci_c::runtime_config(void)
 void bx_usb_xhci_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {
   Bit8u value8, oldval;
-  bx_bool baseaddr_change = 0;
 
   if (((address >= 0x14) && (address <= 0x34)))
     return;
@@ -3138,15 +3132,6 @@ void bx_usb_xhci_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_l
           BX_XHCI_THIS pci_conf[address+i] = value8;
         }
         break;
-      case 0x10:  // low 12 bits of BAR are R/O
-        value8 = 0x00;
-      case 0x11:  // low 12 bits of BAR are R/O
-        value8 &= 0xF0;
-      case 0x12:
-      case 0x13:
-        baseaddr_change |= (value8 != oldval);
-        BX_XHCI_THIS pci_conf[address+i] = value8;
-        break;
       case 0x54:
         if ((((value8 & 0x03) == 0x03) && ((BX_XHCI_THIS pci_conf[address+i] & 0x03) == 0x00)) &&
           (BX_XHCI_THIS hub.op_regs.HcCommand.rs || !BX_XHCI_THIS hub.op_regs.HcStatus.hch))
@@ -3160,14 +3145,6 @@ void bx_usb_xhci_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_l
         break;
       default:
         BX_XHCI_THIS pci_conf[address+i] = value8;
-    }
-  }
-  if (baseaddr_change) {
-    if (DEV_pci_set_base_mem(BX_XHCI_THIS_PTR, read_handler, write_handler,
-                             &BX_XHCI_THIS pci_base_address[0],
-                             &BX_XHCI_THIS pci_conf[0x10],
-                             IO_SPACE_SIZE)) {
-      BX_INFO(("new base address: 0x%04X", BX_XHCI_THIS pci_base_address[0]));
     }
   }
 
@@ -3274,7 +3251,7 @@ const char *bx_usb_xhci_c::usb_param_handler(bx_param_string_c *param, int set,
 
 void bx_usb_xhci_c::dump_xhci_core(const int slots, const int eps)
 {
-  bx_phy_address addr = BX_XHCI_THIS pci_base_address[0];
+  bx_phy_address addr = BX_XHCI_THIS pci_bar[0].addr;
   Bit32u dword;
   Bit64u qword, slot_addr;
   int p, i;

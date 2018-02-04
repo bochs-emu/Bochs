@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009-2017  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2009-2017  The Bochs Project
+//                2009-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -87,7 +87,7 @@ void bx_uhci_core_c::init_uhci(Bit8u devfunc, Bit16u devid, Bit8u headt, Bit8u i
   // initialize readonly registers
   init_pci_conf(0x8086, devid, 0x01, 0x0c0300, headt);
   pci_conf[0x3d] = intp;
-  pci_base_address[4] = 0x0;
+  init_bar_io(4, 32, read_handler, write_handler, &uhci_iomask[0]);
 
   for (int i=0; i<USB_UHCI_PORTS; i++) {
     hub.usb_port[i].device = NULL;
@@ -227,13 +227,7 @@ void bx_uhci_core_c::register_state(bx_list_c *parent)
 
 void bx_uhci_core_c::after_restore_state(void)
 {
-  if (DEV_pci_set_base_io(this, read_handler, write_handler,
-                         &pci_base_address[4],
-                         &pci_conf[0x20],
-                         32, &uhci_iomask[0], "USB UHCI Hub"))
-  {
-     BX_INFO(("new base address: 0x%04x", pci_base_address[4]));
-  }
+  bx_pci_device_c::after_restore_pci_state(NULL);
   for (int j=0; j<USB_UHCI_PORTS; j++) {
     if (hub.usb_port[j].device != NULL) {
       hub.usb_port[j].device->after_restore_state();
@@ -272,7 +266,7 @@ Bit32u bx_uhci_core_c::read(Bit32u address, unsigned io_len)
   Bit32u val = 0x0;
   Bit8u  offset,port;
 
-  offset = address - pci_base_address[4];
+  offset = address - pci_bar[4].addr;
 
   switch (offset) {
     case 0x00: // command register (16-bit)
@@ -368,7 +362,7 @@ void bx_uhci_core_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
   BX_DEBUG(("register write to  address 0x%04X:  0x%08X (%2i bits)", (unsigned) address, (unsigned) value, io_len * 8));
 
-  offset = address - pci_base_address[4];
+  offset = address - pci_bar[4].addr;
 
   switch (offset) {
     case 0x00: // command register (16-bit) (R/W)
@@ -900,7 +894,6 @@ void bx_uhci_core_c::set_status(struct TD *td, bx_bool stalled, bx_bool data_buf
 void bx_uhci_core_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {
   Bit8u value8, oldval;
-  bx_bool baseaddr_change = 0;
 
   if (((address >= 0x10) && (address < 0x20)) ||
       ((address > 0x23) && (address < 0x34)))
@@ -926,22 +919,8 @@ void bx_uhci_core_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_
           pci_conf[address+i] = value8;
         }
         break;
-      case 0x20:
-        value8 = (value8 & 0xfc) | 0x01;
-      case 0x21:
-      case 0x22:
-      case 0x23:
-        baseaddr_change |= (value8 != oldval);
       default:
         pci_conf[address+i] = value8;
-    }
-  }
-  if (baseaddr_change) {
-    if (DEV_pci_set_base_io(this, read_handler, write_handler,
-                            &pci_base_address[4],
-                            &pci_conf[0x20],
-                            32, &uhci_iomask[0], "USB UHCI Hub")) {
-      BX_INFO(("new base address: 0x%04x", pci_base_address[4]));
     }
   }
 

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2017  The Bochs Project
+//  Copyright (C) 2001-2018  The Bochs Project
 //
 //  I/O port handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -87,27 +87,61 @@ class cdrom_base_c;
 //////////////////////////////////////////////////////////////////////
 
 #if BX_SUPPORT_PCI
+
+#define BX_PCI_BAR_TYPE_NONE 0
+#define BX_PCI_BAR_TYPE_MEM  1
+#define BX_PCI_BAR_TYPE_IO   2
+
+typedef struct {
+  Bit8u  type;
+  Bit32u size;
+  Bit32u addr;
+  union {
+    struct {
+      memory_handler_t rh;
+      memory_handler_t wh;
+      const Bit8u *dummy;
+    } mem;
+    struct {
+      bx_read_handler_t rh;
+      bx_write_handler_t wh;
+      const Bit8u *mask;
+    } io;
+  };
+} bx_pci_bar_t;
+
 class BOCHSAPI bx_pci_device_c : public bx_devmodel_c {
 public:
-  bx_pci_device_c(): pci_rom(NULL), pci_rom_size(0) {}
+  bx_pci_device_c(): pci_rom(NULL), pci_rom_size(0) {
+    for (int i = 0; i < 6; i++) pci_bar[i].type = BX_PCI_BAR_TYPE_NONE;
+  }
   virtual ~bx_pci_device_c() {
     if (pci_rom != NULL) delete [] pci_rom;
   }
 
   virtual Bit32u pci_read_handler(Bit8u address, unsigned io_len);
+  void pci_write_handler_common(Bit8u address, Bit32u value, unsigned io_len);
   virtual void pci_write_handler(Bit8u address, Bit32u value, unsigned io_len) {}
+  virtual void pci_bar_change_notify(void) {}
 
   void init_pci_conf(Bit16u vid, Bit16u did, Bit8u rev, Bit32u classc, Bit8u headt);
+  void init_bar_io(Bit8u num, Bit16u size, bx_read_handler_t rh,
+                   bx_write_handler_t wh, const Bit8u *mask);
+  void init_bar_mem(Bit8u num, Bit32u size, memory_handler_t rh, memory_handler_t wh);
   void register_pci_state(bx_list_c *list);
   void after_restore_pci_state(memory_handler_t mem_read_handler);
   void load_pci_rom(const char *path);
 
+  void set_name(const char *name) {pci_name = name;}
+
 protected:
+  const char *pci_name;
   Bit8u pci_conf[256];
-  Bit32u pci_base_address[6];
+  bx_pci_bar_t pci_bar[6];
   Bit8u  *pci_rom;
   Bit32u pci_rom_address;
   Bit32u pci_rom_size;
+  memory_handler_t pci_rom_read_handler;
 };
 #endif
 

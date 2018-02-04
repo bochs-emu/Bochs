@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2017  The Bochs Project
+//  Copyright (C) 2002-2018  The Bochs Project
 //
 //  I/O port handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -503,7 +503,7 @@ void bx_devices_c::write(Bit32u address, Bit32u value, unsigned io_len)
         Bit32u handle = BX_DEV_THIS pci.handler_id[devfunc];
         if ((io_len <= 4) && (handle < BX_MAX_PCI_DEVICES)) {
           if (((regnum>=4) && (regnum<=7)) || (regnum==12) || (regnum==13) || (regnum>14)) {
-            BX_DEV_THIS pci.pci_handler[handle].handler->pci_write_handler(regnum, value, io_len);
+            BX_DEV_THIS pci.pci_handler[handle].handler->pci_write_handler_common(regnum, value, io_len);
           }
           else
             BX_DEBUG(("read only register, write ignored"));
@@ -1218,6 +1218,7 @@ bx_bool bx_devices_c::register_pci_handlers(bx_pci_device_c *dev,
     pci.handler_id[*devfunc] = handle;
     BX_INFO(("%s present at device %d, function %d", descr, *devfunc >> 3,
              *devfunc & 0x07));
+    dev->set_name(descr);
     return 1; // device/function mapped successfully
   } else {
     return 0; // device/function not available, return false.
@@ -1310,6 +1311,30 @@ void bx_pci_device_c::init_pci_conf(Bit16u vid, Bit16u did, Bit8u rev, Bit32u cl
   pci_conf[0x0e] = headt;
 }
 
+void bx_pci_device_c::init_bar_io(Bit8u num, Bit16u size, bx_read_handler_t rh,
+                                  bx_write_handler_t wh, const Bit8u *mask)
+{
+  if (num < 6) {
+    pci_bar[num].type = BX_PCI_BAR_TYPE_IO;
+    pci_bar[num].size = size;
+    pci_bar[num].io.rh = rh;
+    pci_bar[num].io.wh = wh;
+    pci_bar[num].io.mask = mask;
+    pci_conf[0x10 + num * 4] = 0x01;
+  }
+}
+
+void bx_pci_device_c::init_bar_mem(Bit8u num, Bit32u size, memory_handler_t rh,
+                                   memory_handler_t wh)
+{
+  if (num < 6) {
+    pci_bar[num].type = BX_PCI_BAR_TYPE_MEM;
+    pci_bar[num].size = size;
+    pci_bar[num].mem.rh = rh;
+    pci_bar[num].mem.wh = wh;
+  }
+}
+
 void bx_pci_device_c::register_pci_state(bx_list_c *list)
 {
   new bx_shadow_data_c(list, "pci_conf", pci_conf, 256, 1);
@@ -1317,6 +1342,23 @@ void bx_pci_device_c::register_pci_state(bx_list_c *list)
 
 void bx_pci_device_c::after_restore_pci_state(memory_handler_t mem_read_handler)
 {
+  for (int i = 0; i < 6; i++) {
+    if (pci_bar[i].type == BX_PCI_BAR_TYPE_MEM) {
+      if (DEV_pci_set_base_mem(this, pci_bar[i].mem.rh, pci_bar[i].mem.wh,
+                           &pci_bar[i].addr, &pci_conf[0x10 + i * 4],
+                           pci_bar[i].size)) {
+        BX_INFO(("BAR #%d: mem base address = 0x%08x", i, pci_bar[i].addr));
+        pci_bar_change_notify();
+      }
+    } else if (pci_bar[i].type == BX_PCI_BAR_TYPE_IO) {
+      if (DEV_pci_set_base_io(this, pci_bar[i].io.rh, pci_bar[i].io.wh,
+                              &pci_bar[i].addr, &pci_conf[0x10 + i * 4],
+                              pci_bar[i].size, pci_bar[i].io.mask, pci_name)) {
+        BX_INFO(("BAR #%d: i/o base address = 0x%04x", i, pci_bar[i].addr));
+        pci_bar_change_notify();
+      }
+    }
+  }
   if (pci_rom_size > 0) {
     if (DEV_pci_set_base_mem(this, mem_read_handler, NULL, &pci_rom_address,
                              &pci_conf[0x30], pci_rom_size)) {
@@ -1380,6 +1422,66 @@ void bx_pci_device_c::load_pci_rom(const char *path)
   close(fd);
 
   BX_INFO(("loaded PCI ROM '%s' (size=%u / PCI=%uk)", path, (unsigned) stat_buf.st_size, pci_rom_size >> 10));
+}
+
+// pci configuration space write callback handler (common)
+void bx_pci_device_c::pci_write_handler_common(Bit8u address, Bit32u value, unsigned io_len)
+{
+  Bit8u bnum, value8, oldval;
+  bx_bool bar_change = 0, rom_change = 0;
+
+  if ((address >= 0x10) && (address < 0x28)) {
+    bnum = ((address - 0x10) >> 2);
+    if (pci_bar[bnum].type != BX_PCI_BAR_TYPE_NONE) {
+      for (unsigned i=0; i<io_len; i++) {
+        value8 = (value >> (i*8)) & 0xff;
+        oldval = pci_conf[address+i];
+        if (((address+i) & 0x03) == 0) {
+          if (pci_bar[bnum].type == BX_PCI_BAR_TYPE_IO) {
+            value8 = (value8 & 0xfc) | 0x01;
+          } else {
+            value8 = (value8 & 0xf0) | (oldval & 0x0f);
+          }
+        }
+        bar_change |= (value8 != oldval);
+        pci_conf[address+i] = value8;
+      }
+      if (bar_change) {
+        if (pci_bar[bnum].type == BX_PCI_BAR_TYPE_IO) {
+          if (DEV_pci_set_base_io(this, pci_bar[bnum].io.rh, pci_bar[bnum].io.wh,
+                                  &pci_bar[bnum].addr, &pci_conf[0x10 + bnum * 4],
+                                  pci_bar[bnum].size, pci_bar[bnum].io.mask, pci_name)) {
+            BX_INFO(("BAR #%d: i/o base address = 0x%04x", bnum, pci_bar[bnum].addr));
+            pci_bar_change_notify();
+          }
+        } else {
+          if (DEV_pci_set_base_mem(this, pci_bar[bnum].mem.rh, pci_bar[bnum].mem.wh,
+                                   &pci_bar[bnum].addr, &pci_conf[0x10 + bnum * 4],
+                                   pci_bar[bnum].size)) {
+            BX_INFO(("BAR #%d: mem base address = 0x%08x", bnum, pci_bar[bnum].addr));
+            pci_bar_change_notify();
+          }
+        }
+      }
+    }
+  } else if ((address & 0xfc) == 0x30) {
+    value &= (0xfffffc01 >> ((address & 0x03) * 8));
+    for (unsigned i=0; i<io_len; i++) {
+      value8 = (value >> (i*8)) & 0xff;
+      oldval = pci_conf[address+i];
+      rom_change |= (value8 != oldval);
+      pci_conf[address+i] = value8;
+    }
+    if (rom_change) {
+      if (DEV_pci_set_base_mem(this, pci_rom_read_handler, NULL,
+                               &pci_rom_address, &pci_conf[0x30],
+                               pci_rom_size)) {
+        BX_INFO(("new ROM address = 0x%08x", pci_rom_address));
+      }
+    }
+  } else {
+    pci_write_handler(address, value, io_len);
+  }
 }
 
 // pci configuration space read callback handler

@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009-2016  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2009-2017  The Bochs Project
+//                2009-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -183,7 +183,7 @@ void bx_usb_ohci_c::init(void)
   // initialize readonly registers
   init_pci_conf(0x11c1, 0x5803, 0x11, 0x0c0310, 0x00);
 
-  BX_OHCI_THIS pci_base_address[0] = 0x0;
+  BX_OHCI_THIS init_bar_mem(0, 4096, read_handler, write_handler);
   BX_OHCI_THIS hub.ohci_done_count = 7;
   BX_OHCI_THIS hub.use_control_head = 0;
   BX_OHCI_THIS hub.use_bulk_head = 0;
@@ -476,12 +476,7 @@ void bx_usb_ohci_c::register_state(void)
 
 void bx_usb_ohci_c::after_restore_state(void)
 {
-  if (DEV_pci_set_base_mem(BX_OHCI_THIS_PTR, read_handler, write_handler,
-                         &BX_OHCI_THIS pci_base_address[0],
-                         &BX_OHCI_THIS pci_conf[0x10],
-                         4096))  {
-     BX_INFO(("new base address: 0x%04x", BX_OHCI_THIS pci_base_address[0]));
-  }
+  bx_pci_device_c::after_restore_pci_state(NULL);
   for (int j=0; j<USB_OHCI_PORTS; j++) {
     if (BX_OHCI_THIS hub.usb_port[j].device != NULL) {
       BX_OHCI_THIS hub.usb_port[j].device->after_restore_state();
@@ -551,7 +546,7 @@ bx_bool bx_usb_ohci_c::read_handler(bx_phy_address addr, unsigned len, void *dat
     return 1;
   }
 
-  Bit32u  offset = (Bit32u)(addr - BX_OHCI_THIS pci_base_address[0]);
+  Bit32u  offset = (Bit32u)(addr - BX_OHCI_THIS pci_bar[0].addr);
   switch (offset) {
     case 0x00: // HcRevision
       val = BX_OHCI_THIS hub.op_regs.HcRevision;
@@ -721,7 +716,7 @@ bx_bool bx_usb_ohci_c::read_handler(bx_phy_address addr, unsigned len, void *dat
 bx_bool bx_usb_ohci_c::write_handler(bx_phy_address addr, unsigned len, void *data, void *param)
 {
   Bit32u value = *((Bit32u *) data);
-  Bit32u  offset = (Bit32u)addr - BX_OHCI_THIS pci_base_address[0];
+  Bit32u  offset = (Bit32u)addr - BX_OHCI_THIS pci_bar[0].addr;
   int p, org_state;
 
   int name = offset >> 2;
@@ -1441,7 +1436,6 @@ void bx_usb_ohci_c::runtime_config(void)
 void bx_usb_ohci_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {
   Bit8u value8, oldval;
-  bx_bool baseaddr_change = 0;
 
   if (((address >= 0x14) && (address <= 0x34)))
     return;
@@ -1466,23 +1460,8 @@ void bx_usb_ohci_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_l
           BX_OHCI_THIS pci_conf[address+i] = value8;
         }
         break;
-      case 0x10:  // low 12 bits of BAR are R/O
-        value8 = 0x00;
-      case 0x11:  // low 12 bits of BAR are R/O
-        value8 &= 0xF0;
-      case 0x12:
-      case 0x13:
-        baseaddr_change |= (value8 != oldval);
       default:
         BX_OHCI_THIS pci_conf[address+i] = value8;
-    }
-  }
-  if (baseaddr_change) {
-    if (DEV_pci_set_base_mem(BX_OHCI_THIS_PTR, read_handler, write_handler,
-                             &BX_OHCI_THIS pci_base_address[0],
-                             &BX_OHCI_THIS pci_conf[0x10],
-                             4096)) {
-      BX_INFO(("new base address: 0x%04x", BX_OHCI_THIS pci_base_address[0]));
     }
   }
 

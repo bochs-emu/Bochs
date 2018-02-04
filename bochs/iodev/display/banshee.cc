@@ -142,10 +142,11 @@ void bx_banshee_c::init_model(void)
   pci_conf[0x14] = 0x08;
   pci_conf[0x18] = 0x01;
   pci_conf[0x3d] = BX_PCI_INTA;
-  pci_base_address[0] = 0;
-  pci_base_address[1] = 0;
-  pci_base_address[2] = 0;
+  init_bar_mem(0, 0x2000000, mem_read_handler, mem_write_handler);
+  init_bar_mem(1, 0x2000000, mem_read_handler, mem_write_handler);
+  init_bar_io(2, 256, read_handler, write_handler, &banshee_iomask[0]);
   pci_rom_address = 0;
+  pci_rom_read_handler = mem_read_handler;
   load_pci_rom(SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr());
 }
 
@@ -249,24 +250,6 @@ void bx_banshee_c::register_state(void)
 void bx_banshee_c::after_restore_state(void)
 {
   bx_pci_device_c::after_restore_pci_state(mem_read_handler);
-  if (DEV_pci_set_base_mem(BX_VOODOO_THIS_PTR, mem_read_handler, mem_write_handler,
-                           &pci_base_address[0],
-                           &pci_conf[0x10],
-                           0x2000000)) {
-    BX_INFO(("new mem base address: 0x%08x", pci_base_address[0]));
-  }
-  if (DEV_pci_set_base_mem(BX_VOODOO_THIS_PTR, mem_read_handler, mem_write_handler,
-                           &pci_base_address[1],
-                           &pci_conf[0x14],
-                           0x2000000)) {
-    BX_INFO(("new lfb base address: 0x%08x", pci_base_address[1]));
-  }
-  if (DEV_pci_set_base_io(BX_VOODOO_THIS_PTR, read_handler, write_handler,
-                          &pci_base_address[2],
-                          &pci_conf[0x18],
-                          256, &banshee_iomask[0], "banshee")) {
-    BX_INFO(("new i/o base address: 0x%04x", pci_base_address[2]));
-  }
   if ((v->banshee.io[io_vidProcCfg] & 0x01) && (theVoodooVga != NULL)) {
     update_timing();
     theVoodooVga->banshee_update_mode();
@@ -428,8 +411,6 @@ void bx_banshee_c::reg_write(Bit32u reg, Bit32u value)
 void bx_banshee_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {
   Bit8u value8, oldval;
-  bx_bool baseaddr0_change = 0, baseaddr1_change = 0, baseaddr2_change = 0;
-  bx_bool romaddr_change = 0;
 
   if ((address >= 0x1c) && (address < 0x2c))
     return;
@@ -446,40 +427,6 @@ void bx_banshee_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_le
           BX_INFO(("new irq line = %d", value8));
         }
         break;
-      case 0x10:
-        value8 = (value8 & 0xf0) | (oldval & 0x0f);
-      case 0x11:
-      case 0x12:
-      case 0x13:
-        baseaddr0_change |= (value8 != oldval);
-        break;
-      case 0x14:
-        value8 = (value8 & 0xf0) | (oldval & 0x0f);
-      case 0x15:
-      case 0x16:
-      case 0x17:
-        baseaddr1_change |= (value8 != oldval);
-        break;
-      case 0x18:
-        value8 = (value8 & 0xf0) | (oldval & 0x0f);
-      case 0x19:
-      case 0x1a:
-      case 0x1b:
-        baseaddr2_change |= (value8 != oldval);
-        break;
-      case 0x30:
-      case 0x31:
-      case 0x32:
-      case 0x33:
-        if (pci_rom_size > 0) {
-          if ((address+i) == 0x30) {
-            value8 &= 0x01;
-          } else if ((address+i) == 0x31) {
-            value8 &= 0xfc;
-          }
-          romaddr_change = 1;
-        }
-        break;
       case 0x2c:
       case 0x2d:
       case 0x2e:
@@ -494,38 +441,6 @@ void bx_banshee_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_le
         }
     }
     pci_conf[address+i] = value8;
-  }
-  if (baseaddr0_change) {
-    if (DEV_pci_set_base_mem(BX_VOODOO_THIS_PTR, mem_read_handler, mem_write_handler,
-                             &pci_base_address[0],
-                             &pci_conf[0x10],
-                             0x2000000)) {
-      BX_INFO(("new mem base address: 0x%08x", pci_base_address[0]));
-    }
-  }
-  if (baseaddr1_change) {
-    if (DEV_pci_set_base_mem(BX_VOODOO_THIS_PTR, mem_read_handler, mem_write_handler,
-                             &pci_base_address[1],
-                             &pci_conf[0x14],
-                             0x2000000)) {
-      BX_INFO(("new lfb base address: 0x%08x", pci_base_address[1]));
-    }
-  }
-  if (baseaddr2_change) {
-    if (DEV_pci_set_base_io(BX_VOODOO_THIS_PTR, read_handler, write_handler,
-                            &pci_base_address[2],
-                            &pci_conf[0x18],
-                            256, &banshee_iomask[0], "banshee")) {
-      BX_INFO(("new i/o base address: 0x%04x", pci_base_address[2]));
-    }
-  }
-  if (romaddr_change) {
-    if (DEV_pci_set_base_mem(BX_VOODOO_THIS_PTR, mem_read_handler, NULL,
-                             &pci_rom_address,
-                             &pci_conf[0x30],
-                             pci_rom_size)) {
-      BX_INFO(("new ROM address: 0x%08x", pci_rom_address));
-    }
   }
 
   if (io_len == 1)
@@ -821,7 +736,7 @@ void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
       return;
     }
   }
-  if ((addr & ~0x1ffffff) == pci_base_address[0]) {
+  if ((addr & ~0x1ffffff) == pci_bar[0].addr) {
     if (offset < 0x80000) {
       value = read(offset, len);
     } else if (offset < 0x100000) {
@@ -840,7 +755,7 @@ void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
       value = lfb_r((offset & v->fbi.mask) >> 2);
       v->fbi.lfb_stride = temp;
     }
-  } else if ((addr & ~0x1ffffff) == pci_base_address[1]) {
+  } else if ((addr & ~0x1ffffff) == pci_bar[1].addr) {
     if (offset >= v->fbi.lfb_base) {
       offset -= v->fbi.lfb_base;
       pitch *= 128;
@@ -862,7 +777,7 @@ void bx_banshee_c::mem_write(bx_phy_address addr, unsigned len, void *data)
   Bit32u value = *(Bit32u*)data;
   Bit32u mask = 0xffffffff;
 
-  if ((addr & ~0x1ffffff) == pci_base_address[0]) {
+  if ((addr & ~0x1ffffff) == pci_bar[0].addr) {
     if (offset < 0x80000) {
       write(offset, value, len);
     } else if (offset < 0x100000) {
@@ -890,7 +805,7 @@ void bx_banshee_c::mem_write(bx_phy_address addr, unsigned len, void *data)
       lfb_w((offset & v->fbi.mask) >> 2, value, mask);
       v->fbi.lfb_stride = temp;
     }
-  } else if ((addr & ~0x1ffffff) == pci_base_address[1]) {
+  } else if ((addr & ~0x1ffffff) == pci_bar[1].addr) {
     if (v->fbi.cmdfifo[0].enabled && (offset >= v->fbi.cmdfifo[0].base) &&
         (offset < v->fbi.cmdfifo[0].end)) {
       cmdfifo_w(&v->fbi.cmdfifo[0], offset, value);

@@ -851,7 +851,7 @@ void bx_voodoo_1_2_c::init_model(void)
     pci_conf[0x10] = 0x08;
   }
   pci_conf[0x3d] = BX_PCI_INTA;
-  pci_base_address[0] = 0;
+  init_bar_mem(0, 0x1000000, mem_read_handler, mem_write_handler);
   s.vdraw.clock_enabled = 1;
   s.vdraw.output_on = 0;
   s.vdraw.override_on = 0;
@@ -913,12 +913,7 @@ void bx_voodoo_1_2_c::register_state(void)
 
 void bx_voodoo_1_2_c::after_restore_state(void)
 {
-  if (DEV_pci_set_base_mem(BX_VOODOO_THIS_PTR, mem_read_handler, mem_write_handler,
-                           &pci_base_address[0],
-                           &pci_conf[0x10],
-                           0x1000000)) {
-    BX_INFO(("new mem base address: 0x%08x", pci_base_address[0]));
-  }
+  bx_pci_device_c::after_restore_pci_state(NULL);
   if (s.vdraw.override_on) {
     // force update
     v->fbi.video_changed = 1;
@@ -1065,7 +1060,6 @@ void bx_voodoo_1_2_c::update_screen_start(void)
 void bx_voodoo_1_2_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {
   Bit8u value8, oldval;
-  bx_bool baseaddr_change = 0;
 
   if ((address >= 0x14) && (address < 0x34))
     return;
@@ -1081,13 +1075,6 @@ void bx_voodoo_1_2_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io
         if (value8 != oldval) {
           BX_INFO(("new irq line = %d", value8));
         }
-        break;
-      case 0x10:
-        value8 = (value8 & 0xf0) | (oldval & 0x0f);
-      case 0x11:
-      case 0x12:
-      case 0x13:
-        baseaddr_change |= (value8 != oldval);
         break;
       case 0x40:
       case 0x41:
@@ -1119,14 +1106,6 @@ void bx_voodoo_1_2_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io
         value8 = oldval;
     }
     pci_conf[address+i] = value8;
-  }
-  if (baseaddr_change) {
-    if (DEV_pci_set_base_mem(BX_VOODOO_THIS_PTR, mem_read_handler, mem_write_handler,
-                             &pci_base_address[0],
-                             &pci_conf[0x10],
-                             0x1000000)) {
-      BX_INFO(("new mem base address: 0x%08x", pci_base_address[0]));
-    }
   }
 
   if (io_len == 1)

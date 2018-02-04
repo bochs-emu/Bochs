@@ -154,9 +154,11 @@ bx_bool bx_vga_c::init_vga_extension(void)
 
     if (BX_VGA_THIS vbe_present) {
       BX_VGA_THIS pci_conf[0x10] = 0x08;
-      BX_VGA_THIS pci_base_address[0] = 0;
+      BX_VGA_THIS init_bar_mem(0, VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES,
+                               mem_read_handler, mem_write_handler);
     }
     BX_VGA_THIS pci_rom_address = 0;
+    BX_VGA_THIS pci_rom_read_handler = mem_read_handler;
     BX_VGA_THIS load_pci_rom(SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr());
   }
 #endif
@@ -224,12 +226,6 @@ void bx_vga_c::after_restore_state(void)
 #if BX_SUPPORT_PCI
   if (BX_VGA_THIS pci_enabled) {
     bx_pci_device_c::after_restore_pci_state(mem_read_handler);
-    if (BX_VGA_THIS vbe_present) {
-      if (BX_VGA_THIS vbe_set_base_addr(&BX_VGA_THIS pci_base_address[0],
-                                        &BX_VGA_THIS pci_conf[0x10])) {
-        BX_INFO(("new base address: 0x%08x", BX_VGA_THIS pci_base_address[0]));
-      }
-    }
   }
 #endif
   if (BX_VGA_THIS vbe.enabled) {
@@ -743,15 +739,9 @@ void bx_vga_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
 }
 
 #if BX_SUPPORT_PCI
-bx_bool bx_vga_c::vbe_set_base_addr(Bit32u *addr, Bit8u *pci_conf)
+void bx_vga_c::pci_bar_change_notify(void)
 {
-  if (DEV_pci_set_base_mem(BX_VGA_THIS_PTR, mem_read_handler,
-                           mem_write_handler,
-                           addr, pci_conf, VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES)) {
-    BX_VGA_THIS vbe.base_address = *addr;
-    return 1;
-  }
-  return 0;
+  BX_VGA_THIS vbe.base_address = pci_bar[0].addr;
 }
 #endif
 
@@ -1304,8 +1294,6 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
 // static pci configuration space write callback handler
 void bx_vga_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {
-  bx_bool baseaddr_change = 0, romaddr_change = 0;
-
   if (io_len == 1)
     BX_DEBUG(("write PCI register 0x%02x value 0x%02x", address, value));
   else if (io_len == 2)
@@ -1316,11 +1304,6 @@ void bx_vga_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
   if ((address >= 0x14) && (address < 0x30))
     return;
 
-  if (address == 0x30) {
-    value = value & 0xfffffc01;
-    romaddr_change = 1;
-  }
-
   for (unsigned i = 0; i < io_len; i++) {
     unsigned write_addr = address + i;
     Bit8u old_value = BX_VGA_THIS pci_conf[write_addr];
@@ -1329,34 +1312,12 @@ void bx_vga_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
       case 0x04: // disallowing write to command
       case 0x06: // disallowing write to status lo-byte (is that expected?)
         break;
-      case 0x10: // base address #0
-        new_value = (new_value & 0xf0) | (old_value & 0x0f);
-      case 0x11: case 0x12: case 0x13:
-        if (BX_VGA_THIS vbe_present) {
-          baseaddr_change |= (old_value != new_value);
-        } else {
-          break;
-        }
       default:
         BX_VGA_THIS pci_conf[write_addr] = new_value;
     }
     value >>= 8;
   }
 
-  if (baseaddr_change) {
-    if (BX_VGA_THIS vbe_set_base_addr(&BX_VGA_THIS pci_base_address[0],
-                                      &BX_VGA_THIS pci_conf[0x10])) {
-      BX_INFO(("new base address: 0x%08x", BX_VGA_THIS pci_base_address[0]));
-    }
-  }
-  if (romaddr_change) {
-    if (DEV_pci_set_base_mem(this, mem_read_handler, NULL,
-                             &BX_VGA_THIS pci_rom_address,
-                             &BX_VGA_THIS pci_conf[0x30],
-                             BX_VGA_THIS pci_rom_size)) {
-      BX_INFO(("new ROM address: 0x%08x", BX_VGA_THIS pci_rom_address));
-    }
-  }
 }
 #endif
 
