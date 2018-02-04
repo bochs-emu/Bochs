@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2010-2017  The Bochs Project
+//  Copyright (C) 2010-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -996,6 +996,29 @@ void bx_param_bytestring_c::set_initial_val(const char *buf)
 bx_bool bx_param_bytestring_c::isempty() const
 {
   return (memcmp(val, initial_val, maxsize) == 0);
+}
+
+int bx_param_bytestring_c::parse_param(const char *ptr)
+{
+  int j, p = 0, ret = 1;
+  unsigned n;
+  char buf[512];
+
+  memset(buf, 0, get_maxsize());
+  for (j = 0; j < get_maxsize(); j++) {
+    if (ptr[p] == get_separator()) {
+      p++;
+    }
+    if (sscanf(ptr+p, "%02x", &n) == 1) {
+      buf[j] = n;
+      p += 2;
+    } else {
+      ret = 0;
+    }
+  }
+  if (!equals(buf)) set(buf);
+
+  return ret;
 }
 
 int bx_param_bytestring_c::dump_param(char *buf, int len, bx_bool dquotes)

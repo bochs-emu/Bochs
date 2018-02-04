@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2017  The Bochs Project
+//  Copyright (C) 2002-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -922,27 +922,6 @@ int bx_param_enum_c::text_ask()
   return 0;
 }
 
-int parse_raw_bytes(char *dest, char *src, int destsize, char separator)
-{
-  int i;
-  unsigned int n;
-  for (i=0; i<destsize; i++)
-    dest[i] = 0;
-  for (i=0; i<destsize; i++) {
-    while (*src == separator)
-      src++;
-    if (*src == 0) break;
-    // try to read a byte of hex
-    if (sscanf(src, "%02x", &n) == 1) {
-      dest[i] = n;
-      src+=2;
-    } else {
-      return -1;
-    }
-  }
-  return 0;
-}
-
 int bx_param_string_c::text_ask()
 {
   bx_printf("\n");
@@ -966,8 +945,6 @@ int bx_param_string_c::text_ask()
       continue;
     }
     if (status < 0) return status;
-    char buffer2[1024];
-    strcpy(buffer2, buffer);
     if (!equals(buffer))
       set(buffer);
     return 0;
@@ -992,17 +969,13 @@ int bx_param_bytestring_c::text_ask()
       continue;
     }
     if (status < 0) return status;
-    char buffer2[1024];
-    strcpy(buffer2, buffer);
     if (status == 0) return 0;
     // copy raw hex into buffer
-    status = parse_raw_bytes(buffer, buffer2, maxsize, separator);
-    if (status < 0) {
+    status = parse_param(buffer);
+    if (status == 0) {
       bx_printf("Illegal raw byte format.  I expected something like 3A%c03%c12%c...\n", separator, separator, separator);
       continue;
     }
-    if (!equals(buffer))
-      set(buffer);
     return 0;
   }
 }

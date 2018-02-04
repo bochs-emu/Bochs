@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2010-2017  The Bochs Project
+//  Copyright (C) 2010-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -455,6 +455,7 @@ public:
   virtual int text_ask();
 #endif
 
+  virtual int parse_param(const char *value);
   virtual int dump_param(char *buf, int buflen, bx_bool dquotes = BX_FALSE);
 };
 

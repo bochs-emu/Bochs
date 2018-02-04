@@ -2226,10 +2226,9 @@ int bx_parse_usb_port_params(const char *context, bx_bool devopt, const char *pa
 
 int bx_parse_nic_params(const char *context, const char *param, bx_list_c *base)
 {
-  int tmp[6];
-  char tmpchar[6];
   int valid = 0;
   int n;
+  bx_param_bytestring_c *bsp;
 
   if (!strncmp(param, "enabled=", 8)) {
     SIM->get_param_bool("enabled", base)->parse_param(&param[8]);
@@ -2237,15 +2236,12 @@ int bx_parse_nic_params(const char *context, const char *param, bx_list_c *base)
     if (n == 0) valid |= 0x80;
     else valid &= 0x7f;
   } else if (!strncmp(param, "mac=", 4)) {
-    n = sscanf(&param[4], "%x:%x:%x:%x:%x:%x",
-               &tmp[0],&tmp[1],&tmp[2],&tmp[3],&tmp[4],&tmp[5]);
-    if (n != 6) {
+    bsp = (bx_param_bytestring_c*)SIM->get_param_string("mac", base);
+    if (bsp->parse_param(&param[4]) == 0) {
       PARSE_ERR(("%s: '%s' mac address malformed.", context, base->get_name()));
+    } else {
+      valid |= 0x04;
     }
-    for (n=0;n<6;n++)
-      tmpchar[n] = (unsigned char)tmp[n];
-    SIM->get_param_string("mac", base)->set(tmpchar);
-    valid |= 0x04;
   } else if (!strncmp(param, "ethmod=", 7)) {
     if (!SIM->get_param_enum("ethmod", base)->set_by_name(&param[7]))
       PARSE_ERR(("%s: ethernet module '%s' not available", context, &param[7]));

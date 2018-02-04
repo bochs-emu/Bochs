@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2016  The Bochs Project
+//  Copyright (C) 2002-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1087,29 +1087,13 @@ bool ParamDialog::CopyGuiToParam(bx_param_c *param)
     }
     case BXT_PARAM_BYTESTRING: {
       bx_param_bytestring_c *stringp = (bx_param_bytestring_c*) pstr->param;
-      char buf[1024];
       wxString tmp(pstr->u.text->GetValue());
       char src[1024];
-      int p = 0;
-      unsigned int n;
       strcpy(src, tmp.mb_str(wxConvUTF8));
-      for (i=0; i<stringp->get_maxsize(); i++)
-        buf[i] = 0;
-      for (i=0; i<stringp->get_maxsize(); i++) {
-        while (src[p] == stringp->get_separator())
-          p++;
-        if (src[p] == 0) break;
-        // try to read a byte of hex
-        if (sscanf(src+p, "%02x", &n) == 1) {
-          buf[i] = n;
-          p+=2;
-        } else {
-          wxMessageBox(wxT("Illegal raw byte format"), wxT("Error"), wxOK | wxICON_ERROR, this);
-          return false;
-        }
+      if (!stringp->parse_param(src)) {
+        wxMessageBox(wxT("Illegal raw byte format"), wxT("Error"), wxOK | wxICON_ERROR, this);
+        return false;
       }
-      buf[sizeof(buf)-1] = 0;
-      if (!stringp->equals(buf)) stringp->set(buf);
       break;
     }
     case BXT_LIST: {

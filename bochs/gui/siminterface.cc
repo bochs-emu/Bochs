@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2017  The Bochs Project
+//  Copyright (C) 2002-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1203,7 +1203,7 @@ bx_bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path,
   char devstate[BX_PATHNAME_LEN], devdata[BX_PATHNAME_LEN];
   char line[512], buf[512], pname[80];
   char *ptr;
-  int i, j, p;
+  int i;
   unsigned n;
   bx_param_c *param = NULL;
   FILE *fp, *fp2;
@@ -1247,23 +1247,8 @@ bx_bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path,
                 case BXT_PARAM_BOOL:
                 case BXT_PARAM_ENUM:
                 case BXT_PARAM_STRING:
-                  param->parse_param(ptr);
-                  break;
                 case BXT_PARAM_BYTESTRING:
-                  {
-                    bx_param_bytestring_c *sparam = (bx_param_bytestring_c*)param;
-                    p = 0;
-                    for (j = 0; j < sparam->get_maxsize(); j++) {
-                      if (ptr[p] == sparam->get_separator()) {
-                        p++;
-                      }
-                      if (sscanf(ptr+p, "%02x", &n) == 1) {
-                        buf[j] = n;
-                        p += 2;
-                      }
-                    }
-                    if (!sparam->equals(buf)) sparam->set(buf);
-                  }
+                  param->parse_param(ptr);
                   break;
                 case BXT_PARAM_DATA:
                   {
