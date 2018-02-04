@@ -245,8 +245,7 @@ void bx_usb_ehci_c::init(void)
   // 0x8086 = vendor (Intel)
   // 0x24cd = device (82801D)
   // revision number (0x10)
-  init_pci_conf(0x8086, 0x24cd, 0x10, 0x0c0320, 0x00);
-  BX_EHCI_THIS pci_conf[0x3d] = BX_PCI_INTD;
+  init_pci_conf(0x8086, 0x24cd, 0x10, 0x0c0320, 0x00, BX_PCI_INTD);
   BX_EHCI_THIS pci_conf[0x60] = 0x20;
   BX_EHCI_THIS init_bar_mem(0, IO_SPACE_SIZE, read_handler, write_handler);
 
@@ -2256,12 +2255,6 @@ void bx_usb_ehci_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_l
       case 0x3e: //
       case 0x3f: //
       case 0x60: //
-        break;
-      case 0x3c:
-        if (value8 != oldval) {
-          BX_INFO(("new irq line = %d", value8));
-          BX_EHCI_THIS pci_conf[address+i] = value8;
-        }
         break;
       case 0x2c:
       case 0x2d:

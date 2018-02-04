@@ -199,11 +199,9 @@ void bx_ne2k_c::init(void)
         BX_PLUGIN_NE2K, devname);
 
     // initialize readonly registers
-    init_pci_conf(0x10ec, 0x8029, 0x00, 0x020000, 0x00);
+    init_pci_conf(0x10ec, 0x8029, 0x00, 0x020000, 0x00, BX_PCI_INTA);
     BX_NE2K_THIS pci_conf[0x04] = 0x01;
     BX_NE2K_THIS pci_conf[0x07] = 0x02;
-    BX_NE2K_THIS pci_conf[0x10] = 0x01;
-    BX_NE2K_THIS pci_conf[0x3d] = BX_PCI_INTA;
     init_bar_io(0, 32, read_handler, write_handler, &ne2k_iomask[0]);
     BX_NE2K_THIS s.base_address = 0x0;
     BX_NE2K_THIS pci_rom_address = 0;
@@ -1700,11 +1698,6 @@ void bx_ne2k_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
     switch (address+i) {
       case 0x04:
         value8 &= 0x03;
-        break;
-      case 0x3c:
-        if (value8 != oldval) {
-          BX_INFO(("new irq line = %d", value8));
-        }
         break;
       default:
         value8 = oldval;

@@ -85,8 +85,7 @@ void bx_uhci_core_c::init_uhci(Bit8u devfunc, Bit16u devid, Bit8u headt, Bit8u i
                             "USB UHCI");
 
   // initialize readonly registers
-  init_pci_conf(0x8086, devid, 0x01, 0x0c0300, headt);
-  pci_conf[0x3d] = intp;
+  init_pci_conf(0x8086, devid, 0x01, 0x0c0300, headt, intp);
   init_bar_io(4, 32, read_handler, write_handler, &uhci_iomask[0]);
 
   for (int i=0; i<USB_UHCI_PORTS; i++) {
@@ -912,12 +911,6 @@ void bx_uhci_core_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_
       case 0x3f: //
       case 0x05: // disallowing write to command hi-byte
       case 0x06: // disallowing write to status lo-byte (is that expected?)
-        break;
-      case 0x3c:
-        if (value8 != oldval) {
-          BX_INFO(("new irq line = %d", value8));
-          pci_conf[address+i] = value8;
-        }
         break;
       default:
         pci_conf[address+i] = value8;

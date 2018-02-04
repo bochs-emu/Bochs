@@ -460,8 +460,7 @@ void bx_e1000_c::init(void)
                             "Intel(R) Gigabit Ethernet");
 
   // initialize readonly registers
-  init_pci_conf(0x8086, 0x100e, 0x03, 0x020000, 0x00);
-  BX_E1000_THIS pci_conf[0x3d] = BX_PCI_INTA;
+  init_pci_conf(0x8086, 0x100e, 0x03, 0x020000, 0x00, BX_PCI_INTA);
 
   BX_E1000_THIS init_bar_mem(0, 0x20000, mem_read_handler, mem_write_handler);
   BX_E1000_THIS init_bar_io(1, 64, read_handler, write_handler, &e1000_iomask[0]);
@@ -1463,11 +1462,6 @@ void bx_e1000_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
     switch (address+i) {
       case 0x04:
         value8 &= 0x07;
-        break;
-      case 0x3c:
-        if (value8 != oldval) {
-          BX_INFO(("new irq line = %d", value8));
-        }
         break;
       default:
         value8 = oldval;

@@ -253,8 +253,7 @@ void bx_es1370_c::init(void)
                             "ES1370 soundcard");
 
   // initialize readonly registers
-  init_pci_conf(0x1274, 0x5000, 0x00, 0x040100, 0x00);
-  BX_ES1370_THIS pci_conf[0x3d] = BX_PCI_INTA;
+  init_pci_conf(0x1274, 0x5000, 0x00, 0x040100, 0x00, BX_PCI_INTA);
 
   BX_ES1370_THIS init_bar_io(0, 64, read_handler, write_handler, &es1370_iomask[0]);
 
@@ -1105,12 +1104,6 @@ void bx_es1370_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len
         break;
       case 0x3d: //
       case 0x06: // disallowing write to status lo-byte (is that expected?)
-        break;
-      case 0x3c:
-        if (value8 != oldval) {
-          BX_INFO(("new irq line = %d", value8));
-          BX_ES1370_THIS pci_conf[address+i] = value8;
-        }
         break;
       default:
         BX_ES1370_THIS pci_conf[address+i] = value8;

@@ -150,7 +150,7 @@ bx_bool bx_vga_c::init_vga_extension(void)
     // Note that the values for vendor and device id are selected at random!
     // There might actually be "real" values for "experimental" vendor and
     // device that should be used!
-    init_pci_conf(0x1234, 0x1111, 0x00, 0x030000, 0x00);
+    init_pci_conf(0x1234, 0x1111, 0x00, 0x030000, 0x00, 0);
 
     if (BX_VGA_THIS vbe_present) {
       BX_VGA_THIS pci_conf[0x10] = 0x08;

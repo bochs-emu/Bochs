@@ -124,7 +124,8 @@ public:
   virtual void pci_write_handler(Bit8u address, Bit32u value, unsigned io_len) {}
   virtual void pci_bar_change_notify(void) {}
 
-  void init_pci_conf(Bit16u vid, Bit16u did, Bit8u rev, Bit32u classc, Bit8u headt);
+  void init_pci_conf(Bit16u vid, Bit16u did, Bit8u rev, Bit32u classc,
+                     Bit8u headt, Bit8u intpin);
   void init_bar_io(Bit8u num, Bit16u size, bx_read_handler_t rh,
                    bx_write_handler_t wh, const Bit8u *mask);
   void init_bar_mem(Bit8u num, Bit32u size, memory_handler_t rh, memory_handler_t wh);

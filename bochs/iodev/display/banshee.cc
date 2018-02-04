@@ -138,10 +138,8 @@ void bx_banshee_c::init_model(void)
   }
   DEV_register_pci_handlers(this, &s.devfunc, BX_PLUGIN_VOODOO,
                             "Experimental 3dfx Voodoo Banshee");
-  init_pci_conf(0x121a, 0x0003, 0x01, 0x030000, 0x00);
+  init_pci_conf(0x121a, 0x0003, 0x01, 0x030000, 0x00, BX_PCI_INTA);
   pci_conf[0x14] = 0x08;
-  pci_conf[0x18] = 0x01;
-  pci_conf[0x3d] = BX_PCI_INTA;
   init_bar_mem(0, 0x2000000, mem_read_handler, mem_write_handler);
   init_bar_mem(1, 0x2000000, mem_read_handler, mem_write_handler);
   init_bar_io(2, 256, read_handler, write_handler, &banshee_iomask[0]);
@@ -421,11 +419,6 @@ void bx_banshee_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_le
     switch (address+i) {
       case 0x04:
         value8 &= 0x23;
-        break;
-      case 0x3c:
-        if (value8 != oldval) {
-          BX_INFO(("new irq line = %d", value8));
-        }
         break;
       case 0x2c:
       case 0x2d:

@@ -502,11 +502,7 @@ void bx_devices_c::write(Bit32u address, Bit32u value, unsigned io_len)
         Bit8u regnum = (BX_DEV_THIS pci.confAddr & 0xfc) + (address & 0x03);
         Bit32u handle = BX_DEV_THIS pci.handler_id[devfunc];
         if ((io_len <= 4) && (handle < BX_MAX_PCI_DEVICES)) {
-          if (((regnum>=4) && (regnum<=7)) || (regnum==12) || (regnum==13) || (regnum>14)) {
-            BX_DEV_THIS pci.pci_handler[handle].handler->pci_write_handler_common(regnum, value, io_len);
-          }
-          else
-            BX_DEBUG(("read only register, write ignored"));
+          BX_DEV_THIS pci.pci_handler[handle].handler->pci_write_handler_common(regnum, value, io_len);
         }
       }
       break;
@@ -1297,7 +1293,8 @@ bx_bool bx_devices_c::pci_set_base_io(void *this_ptr, bx_read_handler_t f1, bx_w
 #undef LOG_THIS
 #define LOG_THIS
 
-void bx_pci_device_c::init_pci_conf(Bit16u vid, Bit16u did, Bit8u rev, Bit32u classc, Bit8u headt)
+void bx_pci_device_c::init_pci_conf(Bit16u vid, Bit16u did, Bit8u rev,
+                                    Bit32u classc, Bit8u headt, Bit8u intpin)
 {
   memset(pci_conf, 0, 256);
   pci_conf[0x00] = (Bit8u)(vid & 0xff);
@@ -1309,6 +1306,7 @@ void bx_pci_device_c::init_pci_conf(Bit16u vid, Bit16u did, Bit8u rev, Bit32u cl
   pci_conf[0x0a] = (Bit8u)((classc >> 8) & 0xff);
   pci_conf[0x0b] = (Bit8u)((classc >> 16) & 0xff);
   pci_conf[0x0e] = headt;
+  pci_conf[0x3d] = intpin;
 }
 
 void bx_pci_device_c::init_bar_io(Bit8u num, Bit16u size, bx_read_handler_t rh,
@@ -1424,11 +1422,17 @@ void bx_pci_device_c::load_pci_rom(const char *path)
   BX_INFO(("loaded PCI ROM '%s' (size=%u / PCI=%uk)", path, (unsigned) stat_buf.st_size, pci_rom_size >> 10));
 }
 
-// pci configuration space write callback handler (common)
+// pci configuration space write callback handler (common registers)
 void bx_pci_device_c::pci_write_handler_common(Bit8u address, Bit32u value, unsigned io_len)
 {
   Bit8u bnum, value8, oldval;
   bx_bool bar_change = 0, rom_change = 0;
+
+  if ((address < 4) || ((address > 7) && (address < 12)) || (address == 14) ||
+      (address == 0x3d)) {
+    BX_DEBUG(("read only register, write ignored"));
+    return;
+  }
 
   if ((address >= 0x10) && (address < 0x28)) {
     bnum = ((address - 0x10) >> 2);
@@ -1478,6 +1482,13 @@ void bx_pci_device_c::pci_write_handler_common(Bit8u address, Bit32u value, unsi
                                pci_rom_size)) {
         BX_INFO(("new ROM address = 0x%08x", pci_rom_address));
       }
+    }
+  } else if (address == 0x3c) {
+    if (value != pci_conf[0x3c]) {
+      if (pci_conf[0x3d] != 0) {
+        BX_INFO(("new IRQ line = %d", value));
+      }
+      pci_conf[0x3c] = (Bit8u)value;
     }
   } else {
     pci_write_handler(address, value, io_len);

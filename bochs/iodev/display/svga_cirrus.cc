@@ -2313,7 +2313,7 @@ void bx_svga_cirrus_c::svga_init_pcihandlers(void)
   // initialize readonly registers
   BX_CIRRUS_THIS init_pci_conf(PCI_VENDOR_CIRRUS, PCI_DEVICE_CLGD5446, 0x00,
     (PCI_CLASS_BASE_DISPLAY << 16) | (PCI_CLASS_SUB_VGA << 8),
-    PCI_CLASS_HEADERTYPE_00h);
+    PCI_CLASS_HEADERTYPE_00h, 0);
   BX_CIRRUS_THIS pci_conf[0x04] = (PCI_COMMAND_IOACCESS | PCI_COMMAND_MEMACCESS);
 
   BX_CIRRUS_THIS pci_conf[0x10] =

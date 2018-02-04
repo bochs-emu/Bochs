@@ -267,8 +267,7 @@ void bx_usb_xhci_c::init(void)
   // 0x1912 = vendor (Renesas)
   // 0x0015 = device (0x0014 = uPD720201, 0x0015 = uPD720202)
   // revision number (0x03 = uPD720201, 0x02 = uPD720202)
-  init_pci_conf(0x1912, 0x0015, 0x02, 0x0c0330, 0x00);
-  BX_XHCI_THIS pci_conf[0x3d] = BX_PCI_INTD;
+  init_pci_conf(0x1912, 0x0015, 0x02, 0x0c0330, 0x00, BX_PCI_INTD);
   BX_XHCI_THIS init_bar_mem(0, IO_SPACE_SIZE, read_handler, write_handler);
 
   // initialize capability registers
@@ -3125,12 +3124,6 @@ void bx_usb_xhci_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_l
       case 0x3f: //
       case 0x05: // disallowing write to command hi-byte
       case 0x06: // disallowing write to status lo-byte (is that expected?)
-        break;
-      case 0x3c:
-        if (value8 != oldval) {
-          BX_INFO(("new irq line = %d", value8));
-          BX_XHCI_THIS pci_conf[address+i] = value8;
-        }
         break;
       case 0x54:
         if ((((value8 & 0x03) == 0x03) && ((BX_XHCI_THIS pci_conf[address+i] & 0x03) == 0x00)) &&

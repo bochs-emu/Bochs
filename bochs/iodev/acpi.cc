@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2006-2017  The Bochs Project
+//  Copyright (C) 2006-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -138,8 +138,7 @@ void bx_acpi_ctrl_c::init(void)
   BX_ACPI_THIS s.sm_base = 0x0;
 
   // initialize readonly registers
-  init_pci_conf(0x8086, 0x7113, 0x03, 0x068000, 0x00);
-  BX_ACPI_THIS pci_conf[0x3d] = BX_PCI_INTA;
+  init_pci_conf(0x8086, 0x7113, 0x03, 0x068000, 0x00, BX_PCI_INTA);
 }
 
 void bx_acpi_ctrl_c::reset(unsigned type)
@@ -492,12 +491,6 @@ void bx_acpi_ctrl_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_
         goto set_value;
         break;
       case 0x06: // disallowing write to status lo-byte (is that expected?)
-        break;
-      case 0x3c:
-        if (value8 != oldval) {
-          BX_INFO(("new irq line = %d", value8));
-        }
-        goto set_value;
         break;
       case 0x40:
         value8 = (value8 & 0xc0) | 0x01;

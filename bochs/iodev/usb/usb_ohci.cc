@@ -181,7 +181,7 @@ void bx_usb_ohci_c::init(void)
                             "USB OHCI");
 
   // initialize readonly registers
-  init_pci_conf(0x11c1, 0x5803, 0x11, 0x0c0310, 0x00);
+  init_pci_conf(0x11c1, 0x5803, 0x11, 0x0c0310, 0x00, BX_PCI_INTD);
 
   BX_OHCI_THIS init_bar_mem(0, 4096, read_handler, write_handler);
   BX_OHCI_THIS hub.ohci_done_count = 7;
@@ -234,7 +234,6 @@ void bx_usb_ohci_c::reset(unsigned type)
       { 0x34, 0x50 },                 // offset of capabilities list within configuration space
 
       { 0x3c, 0x0B },                 // IRQ
-      { 0x3d, BX_PCI_INTD },          // INT
       { 0x3E, 0x03 },                 // minimum time bus master needs PCI bus ownership, in 250ns units
       { 0x3F, 0x56 },                 // maximum latency, in 250ns units (bus masters only) (read-only)
 
@@ -1453,12 +1452,6 @@ void bx_usb_ohci_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_l
       case 0x3f: //
       case 0x05: // disallowing write to command hi-byte
       case 0x06: // disallowing write to status lo-byte (is that expected?)
-        break;
-      case 0x3c:
-        if (value8 != oldval) {
-          BX_INFO(("new irq line = %d", value8));
-          BX_OHCI_THIS pci_conf[address+i] = value8;
-        }
         break;
       default:
         BX_OHCI_THIS pci_conf[address+i] = value8;

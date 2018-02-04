@@ -156,8 +156,7 @@ void bx_pcipnic_c::init(void)
                             "Experimental PCI Pseudo NIC");
 
   // initialize readonly registers
-  init_pci_conf(PNIC_PCI_VENDOR, PNIC_PCI_DEVICE, 0x01, 0x020000, 0x00);
-  BX_PNIC_THIS pci_conf[0x3d] = BX_PCI_INTA;
+  init_pci_conf(PNIC_PCI_VENDOR, PNIC_PCI_DEVICE, 0x01, 0x020000, 0x00, BX_PCI_INTA);
 
   BX_PNIC_THIS s.statusbar_id = bx_gui->register_statusitem("PNIC", 1);
 
@@ -396,11 +395,6 @@ void bx_pcipnic_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_le
     switch (address+i) {
       case 0x04:
         value8 &= 0x01;
-        break;
-      case 0x3c:
-        if (value8 != oldval) {
-          BX_INFO(("new irq line = %d", value8));
-        }
         break;
       default:
         value8 = oldval;

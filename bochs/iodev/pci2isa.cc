@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2017  The Bochs Project
+//  Copyright (C) 2002-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -97,9 +97,9 @@ void bx_piix3_c::init(void)
   }
   // initialize readonly registers
   if (BX_P2I_THIS s.chipset == BX_PCI_CHIPSET_I440FX) {
-    init_pci_conf(0x8086, 0x7000, 0x00, 0x060100, 0x80);
+    init_pci_conf(0x8086, 0x7000, 0x00, 0x060100, 0x80, 0);
   } else {
-    init_pci_conf(0x8086, 0x122e, 0x01, 0x060100, 0x80);
+    init_pci_conf(0x8086, 0x122e, 0x01, 0x060100, 0x80, 0);
   }
   BX_P2I_THIS pci_conf[0x04] = 0x07;
   // irq routing registers
