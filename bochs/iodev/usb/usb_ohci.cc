@@ -1434,14 +1434,14 @@ void bx_usb_ohci_c::runtime_config(void)
 // pci configuration space write callback handler
 void bx_usb_ohci_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {
-  Bit8u value8, oldval;
+  Bit8u value8;
 
   if (((address >= 0x14) && (address <= 0x34)))
     return;
 
   for (unsigned i=0; i<io_len; i++) {
     value8 = (value >> (i*8)) & 0xFF;
-    oldval = BX_OHCI_THIS pci_conf[address+i];
+//  Bit8u oldval = BX_OHCI_THIS pci_conf[address+i];
     switch (address+i) {
       case 0x04:
         value8 &= 0x06; // (bit 0 is read only for this card) (we don't allow port IO)
@@ -1519,13 +1519,10 @@ void bx_usb_ohci_c::usb_set_connect_status(Bit8u port, int type, bx_bool connect
 }
 
 // USB runtime parameter handler
-const char *bx_usb_ohci_c::usb_param_handler(bx_param_string_c *param, int set,
-                                           const char *oldval, const char *val, int maxlen)
+const char *bx_usb_ohci_c::usb_param_handler(bx_param_string_c *param, int set, const char *oldval, const char *val, int maxlen)
 {
-  int portnum;
-
   if (set) {
-    portnum = atoi((param->get_parent())->get_name()+4) - 1;
+    int portnum = atoi((param->get_parent())->get_name()+4) - 1;
     bx_bool empty = ((strlen(val) == 0) || (!strcmp(val, "none")));
     if ((portnum >= 0) && (portnum < USB_OHCI_PORTS)) {
       if (empty && BX_OHCI_THIS hub.usb_port[portnum].HcRhPortStatus.ccs) {

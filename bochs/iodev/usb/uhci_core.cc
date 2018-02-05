@@ -892,15 +892,13 @@ void bx_uhci_core_c::set_status(struct TD *td, bx_bool stalled, bx_bool data_buf
 // pci configuration space write callback handler
 void bx_uhci_core_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {
-  Bit8u value8, oldval;
-
   if (((address >= 0x10) && (address < 0x20)) ||
       ((address > 0x23) && (address < 0x34)))
     return;
 
   for (unsigned i=0; i<io_len; i++) {
-    value8 = (value >> (i*8)) & 0xFF;
-    oldval = pci_conf[address+i];
+    Bit8u value8 = (value >> (i*8)) & 0xFF;
+//  Bit8u oldval = pci_conf[address+i];
     switch (address+i) {
       case 0x04:
         value8 &= 0x05;

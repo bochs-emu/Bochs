@@ -2235,14 +2235,12 @@ void bx_usb_ehci_c::runtime_config(void)
 // pci configuration space write callback handler
 void bx_usb_ehci_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {
-  Bit8u value8, oldval;
-
   if (((address >= 0x14) && (address <= 0x3b)) || (address > 0x80))
     return;
 
   for (unsigned i=0; i<io_len; i++) {
-    value8 = (value >> (i*8)) & 0xFF;
-    oldval = BX_EHCI_THIS pci_conf[address+i];
+    Bit8u value8 = (value >> (i*8)) & 0xFF;
+//  Bit8u oldval = BX_EHCI_THIS pci_conf[address+i];
     switch (address+i) {
       case 0x04:
         value8 &= 0x06; // (bit 0 is read only for this card) (we don't allow port IO)

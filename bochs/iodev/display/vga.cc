@@ -1306,7 +1306,7 @@ void bx_vga_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 
   for (unsigned i = 0; i < io_len; i++) {
     unsigned write_addr = address + i;
-    Bit8u old_value = BX_VGA_THIS pci_conf[write_addr];
+//  Bit8u old_value = BX_VGA_THIS pci_conf[write_addr];
     Bit8u new_value = (Bit8u)(value & 0xff);
     switch (write_addr) {
       case 0x04: // disallowing write to command

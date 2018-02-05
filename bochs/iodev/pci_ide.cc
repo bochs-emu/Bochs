@@ -415,14 +415,13 @@ void bx_pci_ide_c::write(Bit32u address, Bit32u value, unsigned io_len)
 // pci configuration space write callback handler
 void bx_pci_ide_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {
-  Bit8u value8, oldval;
-
   if (((address >= 0x10) && (address < 0x20)) ||
       ((address > 0x23) && (address < 0x40)))
     return;
+
   for (unsigned i=0; i<io_len; i++) {
-    oldval = BX_PIDE_THIS pci_conf[address+i];
-    value8 = (value >> (i*8)) & 0xFF;
+//  Bit8u oldval = BX_PIDE_THIS pci_conf[address+i];
+    Bit8u value8 = (value >> (i*8)) & 0xFF;
     switch (address+i) {
       case 0x05:
       case 0x06:
