@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009-2015  Volker Ruppert
+//  Copyright (C) 2009-2018  Volker Ruppert
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -801,10 +801,9 @@ SIZE CreateParamList(HWND hDlg, UINT lid, UINT xpos, UINT ypos, BOOL hide, bx_li
 void SetParamList(HWND hDlg, bx_list_c *list)
 {
   bx_param_c *param;
-  int j;
   Bit64s val;
   const char *src;
-  char buffer[512], rawbuf[512];
+  char buffer[512];
   UINT cid, i, items, lid;
 
   lid = findDlgListBaseID(list);
@@ -850,19 +849,7 @@ void SetParamList(HWND hDlg, bx_list_c *list)
             GetWindowText(GetDlgItem(hDlg, ID_PARAM + cid), buffer, 511);
             bx_param_bytestring_c *sparam = (bx_param_bytestring_c*)param;
             src = &buffer[0];
-            memset(rawbuf, 0, sparam->get_maxsize());
-            for (j = 0; j < sparam->get_maxsize(); j++) {
-              while (*src == sparam->get_separator())
-                src++;
-              if (*src == 0) break;
-              if (sscanf(src, "%02x", &val)) {
-                rawbuf[j] = (char) val;
-                src += 2;
-              } else {
-                break;
-              }
-            }
-            sparam->set(rawbuf);
+            sparam->parse_param(src);
           }
         }
       }
