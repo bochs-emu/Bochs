@@ -1152,11 +1152,19 @@ void bx_banshee_c::blt_launch_area_setup()
         pbytes = 0;
         BX_INFO(("Source format %d not handled yet", BLT.src_fmt));
       }
-      if (pxpack == 0) {
-        BLT.h2s_pitch = (pbytes + 3) & ~0x03;
-        BLT.h2s_alt_align = ((BLT.src_fmt == 0) && (BLT.h2s_pitch > BLT.src_pitch));
-      } else {
-        BLT.h2s_pitch = (pbytes + (1 << (pxpack - 1)) - 1) / (1 << (pxpack - 1));
+      switch (pxpack) {
+        case 1:
+          BLT.h2s_pitch = pbytes;
+          break;
+        case 2:
+          BLT.h2s_pitch = (pbytes + 1) & ~1;
+          break;
+        case 3:
+          BLT.h2s_pitch = (pbytes + 3) & ~3;
+          break;
+        default:
+          BLT.h2s_pitch = (pbytes + 3) & ~0x03;
+          BLT.h2s_alt_align = ((BLT.src_fmt == 0) && (BLT.h2s_pitch > BLT.src_pitch));
       }
       BLT.lacnt = (BLT.h2s_pitch * BLT.dst_h + 3) >> 2;
       BLT.lamem = new Bit8u[BLT.lacnt * 4];
@@ -1213,6 +1221,9 @@ void bx_banshee_c::blt_execute()
       } else {
         blt_screen_to_screen();
       }
+      if (!BLT.immed) {
+        BLT.lacnt = 1;
+      }
       break;
     case 2:
       if (BLT.rop_flags[BLT.rop0] & BX_ROP_PATTERN) {
@@ -1249,6 +1260,9 @@ void bx_banshee_c::blt_execute()
         }
       } else {
         blt_rectangle_fill();
+      }
+      if (!BLT.immed) {
+        BLT.lacnt = 1;
       }
       break;
     case 6:
@@ -1553,10 +1567,16 @@ void bx_banshee_c::blt_screen_to_screen()
 {
   Bit8u *src_ptr = &v->fbi.ram[BLT.src_base];
   Bit8u *dst_ptr = &v->fbi.ram[BLT.dst_base];
+  Bit8u *src_ptr1, *dst_ptr1;
+  Bit8u pxpack = (BLT.reg[blt_srcFormat] >> 22) & 3;
   Bit8u dpxsize = (BLT.dst_fmt > 1) ? (BLT.dst_fmt - 1) : 1;
+  Bit8u dstcolor[4];
+  Bit8u *srccolor;
   int spitch;
   int dpitch = BLT.dst_pitch;
-  int x0, x1, y0, y1, w, h;
+  int ncols, nrows, x0, x1, y0, y1, w, h;
+  Bit8u smask;
+  bx_bool set;
 
   BX_LOCK(render_mutex);
   x0 = BLT.src_x;
@@ -1566,7 +1586,7 @@ void bx_banshee_c::blt_screen_to_screen()
   w = BLT.dst_w;
   h = BLT.dst_h;
   BX_DEBUG(("Screen to screen blt: %d x %d  ROP %02X", w, h, BLT.rop0));
-  if (BLT.dst_fmt != BLT.src_fmt) {
+  if ((BLT.src_fmt != 0) && (BLT.dst_fmt != BLT.src_fmt)) {
     BX_ERROR(("Pixel format conversion not supported yet"));
   }
   if (!blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h)) {
@@ -1576,6 +1596,8 @@ void bx_banshee_c::blt_screen_to_screen()
   }
   if (BLT.src_tiled) {
     spitch = BLT.src_pitch * 128;
+  } else if ((BLT.src_fmt == 0) && (pxpack == 1)) {
+    spitch = (BLT.dst_w + 7) / 8;
   } else {
     spitch = BLT.src_pitch;
   }
@@ -1583,9 +1605,41 @@ void bx_banshee_c::blt_screen_to_screen()
     spitch *= -1;
     dpitch *= -1;
   }
-  src_ptr += (y0 * abs(spitch) + x0 * dpxsize);
-  dst_ptr += (y1 * abs(dpitch) + x1 * dpxsize);
-  BLT.rop_fn(dst_ptr, src_ptr, dpitch, spitch, w * dpxsize, h);
+  if ((BLT.src_fmt == 0) && (pxpack == 1)) {
+    src_ptr += (y0 * spitch + x0 / 8);
+    dst_ptr += (y1 * dpitch + x1 * dpxsize);
+    nrows = h;
+    do {
+      src_ptr1 = src_ptr;
+      dst_ptr1 = dst_ptr;
+      smask = 0x80 >> (x0 & 7);
+      ncols = w;
+      do {
+        memcpy(dstcolor, dst_ptr1, dpxsize);
+        set = (*src_ptr1 & smask) > 0;
+        if (set) {
+          srccolor = &BLT.fgcolor[0];
+        } else if (BLT.transp) {
+          srccolor = dstcolor;
+        } else {
+          srccolor = &BLT.bgcolor[0];
+        }
+        BLT.rop_fn(dst_ptr1, srccolor, dpitch, dpxsize, dpxsize, 1);
+        smask >>= 1;
+        if (smask == 0) {
+          src_ptr1++;
+          smask = 0x80;
+        }
+        dst_ptr1 += dpxsize;
+      } while (--ncols);
+      src_ptr += spitch;
+      dst_ptr += dpitch;
+    } while (--nrows);
+  } else {
+    src_ptr += (y0 * abs(spitch) + x0 * dpxsize);
+    dst_ptr += (y1 * abs(dpitch) + x1 * dpxsize);
+    BLT.rop_fn(dst_ptr, src_ptr, dpitch, spitch, w * dpxsize, h);
+  }
   blt_complete();
   BX_UNLOCK(render_mutex);
 }

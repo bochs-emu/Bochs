@@ -1430,7 +1430,7 @@ void bx_pci_device_c::pci_write_handler_common(Bit8u address, Bit32u value, unsi
 
   if ((address < 4) || ((address > 7) && (address < 12)) || (address == 14) ||
       (address == 0x3d)) {
-    BX_DEBUG(("read only register, write ignored"));
+    BX_DEBUG(("write to r/o PCI register 0x%02x ignored", address));
     return;
   }
 
@@ -1484,11 +1484,12 @@ void bx_pci_device_c::pci_write_handler_common(Bit8u address, Bit32u value, unsi
       }
     }
   } else if (address == 0x3c) {
-    if (value != pci_conf[0x3c]) {
+    value8 = (Bit8u)value;
+    if (value8 != pci_conf[0x3c]) {
       if (pci_conf[0x3d] != 0) {
-        BX_INFO(("new IRQ line = %d", value));
+        BX_INFO(("new IRQ line = %d", value8));
       }
-      pci_conf[0x3c] = (Bit8u)value;
+      pci_conf[0x3c] = value8;
     }
   } else {
     pci_write_handler(address, value, io_len);
