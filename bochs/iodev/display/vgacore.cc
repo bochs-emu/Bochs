@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2017  The Bochs Project
+//  Copyright (C) 2001-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1678,7 +1678,7 @@ void bx_vgacore_c::update(void)
     MSL = BX_VGA_THIS s.CRTC.reg[0x09] & 0x1f;
     cols = BX_VGA_THIS s.CRTC.reg[1] + 1;
     // workaround for update() calls before VGABIOS init
-    if (cols == 1) {
+    if ((cols == 1) || (MSL == 0)) {
       cols = 80;
       MSL = 15;
     }
