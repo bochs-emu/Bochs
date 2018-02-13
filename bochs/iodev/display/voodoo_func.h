@@ -3476,6 +3476,14 @@ void voodoo_init(Bit8u _type)
       v->fbi.lfb_stride = 11;
       v->chipmask = 0x01 | 0x02;
       break;
+
+    case VOODOO_3:
+      v->regaccess = banshee_register_access;
+      v->regnames = banshee_reg_name;
+      v->alt_regmap = 1;
+      v->fbi.lfb_stride = 11;
+      v->chipmask = 0x01 | 0x02 | 0x04;
+      break;
   }
   memset(v->dac.reg, 0, sizeof(v->dac.reg));
   v->dac.read_result = 0;
@@ -3483,7 +3491,7 @@ void voodoo_init(Bit8u _type)
   v->dac.clk0_n = 0x02;
   v->dac.clk0_p = 0x03;
 
-  if (v->type == VOODOO_BANSHEE) {
+  if (v->type >= VOODOO_BANSHEE) {
     /* initialize banshee registers */
     memset(v->banshee.io, 0, sizeof(v->banshee.io));
     v->banshee.io[io_pciInit0] = 0x01800040;

@@ -94,6 +94,7 @@ void voodoo_init_options(void)
     "voodoo1",
     "voodoo2",
     "banshee",
+    "voodoo3",
     NULL
   };
 

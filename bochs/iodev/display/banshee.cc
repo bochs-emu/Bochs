@@ -136,9 +136,17 @@ void bx_banshee_c::init_model(void)
   if (theVoodooVga == NULL) {
     BX_PANIC(("Voodoo Banshee with VGA disabled not supported yet"));
   }
-  DEV_register_pci_handlers(this, &s.devfunc, BX_PLUGIN_VOODOO,
-                            "Experimental 3dfx Voodoo Banshee");
-  init_pci_conf(0x121a, 0x0003, 0x01, 0x030000, 0x00, BX_PCI_INTA);
+  if (s.model == VOODOO_BANSHEE) {
+    DEV_register_pci_handlers(this, &s.devfunc, BX_PLUGIN_VOODOO,
+                              "Experimental 3dfx Voodoo Banshee");
+    init_pci_conf(0x121a, 0x0003, 0x01, 0x030000, 0x00, BX_PCI_INTA);
+  } else if (s.model == VOODOO_3) {
+    DEV_register_pci_handlers(this, &s.devfunc, BX_PLUGIN_VOODOO,
+                              "Experimental 3dfx Voodoo 3");
+    init_pci_conf(0x121a, 0x0005, 0x01, 0x030000, 0x00, BX_PCI_INTA);
+  } else {
+    BX_PANIC(("Unknown Voodoo Banshee compatible model"));
+  }
   pci_conf[0x14] = 0x08;
   init_bar_mem(0, 0x2000000, mem_read_handler, mem_write_handler);
   init_bar_mem(1, 0x2000000, mem_read_handler, mem_write_handler);
@@ -175,6 +183,10 @@ void bx_banshee_c::reset(unsigned type)
   };
   for (i = 0; i < sizeof(reset_vals2) / sizeof(*reset_vals2); ++i) {
     pci_conf[reset_vals2[i].addr] = reset_vals2[i].val;
+  }
+  if (s.model == VOODOO_3) {
+    pci_conf[0x2e] = 0x52; // FIXME: this is an AGP subsystem ID - find a
+                           // VGABIOS ROM image with the correct value for PCI
   }
   // TODO
 
@@ -781,6 +793,8 @@ void bx_banshee_c::mem_write(bx_phy_address addr, unsigned len, void *data)
       register_w_common((offset - 0x200000) >> 2, value);
     } else if (offset < 0x800000) {
       texture_w((offset & 0x1fffff) >> 2, value);
+    } else if ((offset < 0xa00000) && (s.model == VOODOO_3)) {
+      texture_w((1 << 19) | ((offset & 0x1fffff) >> 2), value);
     } else if (offset < 0xc00000) {
       BX_ERROR(("reserved write to offset 0x%08x", offset));
     } else if (offset < 0x1000000) {
@@ -1132,9 +1146,6 @@ void bx_banshee_c::blt_launch_area_setup()
       BLT.h2s_alt_align = 0;
       pxpack = (BLT.reg[blt_srcFormat] >> 22) & 3;
       BLT.src_wizzle = (BLT.reg[blt_srcFormat] >> 20) & 0x03;
-      if ((BLT.reg[blt_srcXY] & 0xffe0) != 0) {
-        BX_ERROR(("host to screen blt: srcXY: undocumented bit(s) set"));
-      }
       if ((BLT.reg[blt_srcXY] & 0x1f) != 0) {
         if (BLT.src_fmt == 0) {
           BLT.h2s_pxstart = BLT.reg[blt_srcXY] & 0x1f;
