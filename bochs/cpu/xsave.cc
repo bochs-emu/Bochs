@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2017 Stanislav Shwartsman
+//   Copyright (c) 2008-2018 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -31,7 +31,7 @@
 const Bit64u XSAVEC_COMPACTION_ENABLED = BX_CONST64(0x8000000000000000);
 
 /* 0F AE /4 */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR prepareXSAVE();
@@ -169,7 +169,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
 }
 
 /* 0F C7 /4 */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR prepareXSAVE();
@@ -305,7 +305,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
 }
 
 /* 0F AE /5 */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR prepareXSAVE();
@@ -1043,7 +1043,7 @@ Bit32u BX_CPU_C::get_xinuse_vector(Bit32u requested_feature_bitmap)
 #endif // BX_CPU_LEVEL >= 6
 
 /* 0F 01 D0 */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XGETBV(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::XGETBV(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   if(! BX_CPU_THIS_PTR cr4.get_OSXSAVE()) {
@@ -1077,7 +1077,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XGETBV(bxInstruction_c *i)
 }
 
 /* 0F 01 D1 */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::XSETBV(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSETBV(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   if(! BX_CPU_THIS_PTR cr4.get_OSXSAVE()) {

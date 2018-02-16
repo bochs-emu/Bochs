@@ -61,7 +61,7 @@ void handleSMC(bx_phy_address pAddr, Bit32u mask)
 
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
 
-BX_INSF_TYPE BX_CPU_C::BxEndTrace(bxInstruction_c *i)
+void BX_CPU_C::BxEndTrace(bxInstruction_c *i)
 {
   // do nothing, return to main cpu_loop
 }

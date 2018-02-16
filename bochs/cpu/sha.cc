@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2013 Stanislav Shwartsman
+//   Copyright (c) 2013-2018 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -121,7 +121,7 @@ BX_CPP_INLINE Bit32u sha256_transformation(Bit32u val_32, unsigned rotate1, unsi
 }
 
 /* 0F 38 C8 */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHA1NEXTE_VdqWdqR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHA1NEXTE_VdqWdqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
 
@@ -133,7 +133,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHA1NEXTE_VdqWdqR(bxInstruction_c 
 }
 
 /* 0F 38 C9 */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHA1MSG1_VdqWdqR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHA1MSG1_VdqWdqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
 
@@ -148,7 +148,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHA1MSG1_VdqWdqR(bxInstruction_c *
 }
 
 /* 0F 38 CA */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHA1MSG2_VdqWdqR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHA1MSG2_VdqWdqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
 
@@ -163,7 +163,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHA1MSG2_VdqWdqR(bxInstruction_c *
 }
 
 /* 0F 38 CB */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHA256RNDS2_VdqWdqR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHA256RNDS2_VdqWdqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src()), wk = BX_READ_XMM_REG(0);
 
@@ -202,7 +202,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHA256RNDS2_VdqWdqR(bxInstruction_
 }
 
 /* 0F 38 CC */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHA256MSG1_VdqWdqR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHA256MSG1_VdqWdqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst());
   Bit32u op2 = BX_READ_XMM_REG_LO_DWORD(i->src());
@@ -218,7 +218,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHA256MSG1_VdqWdqR(bxInstruction_c
 }
 
 /* 0F 38 CD */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHA256MSG2_VdqWdqR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHA256MSG2_VdqWdqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
 
@@ -233,7 +233,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHA256MSG2_VdqWdqR(bxInstruction_c
 }
 
 /* 0F 3A CC */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::SHA1RNDS4_VdqWdqIbR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHA1RNDS4_VdqWdqIbR(bxInstruction_c *i)
 {
   // SHA1 Constants dependent on immediate i
   static const Bit32u sha_Ki[4] = { 0x5A827999, 0x6ED9EBA1, 0X8F1BBCDC, 0xCA62C1D6 };

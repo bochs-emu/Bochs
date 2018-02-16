@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2013 Stanislav Shwartsman
+//   Copyright (c) 2013-2018 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -38,7 +38,7 @@ extern float_status_t mxcsr_to_softfloat_status_word(bx_mxcsr_t mxcsr);
 //////////////////////////////
 
 #define EVEX_FMA_PACKED_SINGLE(HANDLER, func)                                   \
-  BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)   \
+  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)           \
   {                                                                             \
     BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());                       \
     BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());                       \
@@ -75,7 +75,7 @@ EVEX_FMA_PACKED_SINGLE(VFNMADDPS_MASK_VpsHpsWpsR, xmm_fnmaddps_mask)
 EVEX_FMA_PACKED_SINGLE(VFNMSUBPS_MASK_VpsHpsWpsR, xmm_fnmsubps_mask)
 
 #define EVEX_FMA_PACKED_DOUBLE(HANDLER, func)                                   \
-  BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)   \
+  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)           \
   {                                                                             \
     BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());                       \
     BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());                       \
@@ -112,7 +112,7 @@ EVEX_FMA_PACKED_DOUBLE(VFNMADDPD_MASK_VpdHpdWpdR, xmm_fnmaddpd_mask)
 EVEX_FMA_PACKED_DOUBLE(VFNMSUBPD_MASK_VpdHpdWpdR, xmm_fnmsubpd_mask)
 
 #define EVEX_FMA_SCALAR_SINGLE(HANDLER, func)                                 \
-  BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i) \
+  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)         \
   {                                                                           \
     if (BX_SCALAR_ELEMENT_MASK(i->opmask())) {                                \
       float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->src1());                      \
@@ -141,7 +141,7 @@ EVEX_FMA_SCALAR_SINGLE(VFNMADDSS_MASK_VpsHssWssR, float32_fnmadd)
 EVEX_FMA_SCALAR_SINGLE(VFNMSUBSS_MASK_VpsHssWssR, float32_fnmsub)
 
 #define EVEX_FMA_SCALAR_DOUBLE(HANDLER, func)                                 \
-  BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i) \
+  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)         \
   {                                                                           \
     if (BX_SCALAR_ELEMENT_MASK(i->opmask())) {                                \
       float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->src1());                      \

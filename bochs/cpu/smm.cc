@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2006-2015 Stanislav Shwartsman
+//   Copyright (c) 2006-2018 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -28,7 +28,7 @@
 
 #if BX_CPU_LEVEL >= 3
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RSM(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSM(bxInstruction_c *i)
 {
   /* If we are not in System Management Mode, then #UD should be generated */
   if (! BX_CPU_THIS_PTR smm_mode()) {

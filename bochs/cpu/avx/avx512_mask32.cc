@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2014-2015 Stanislav Shwartsman
+//   Copyright (c) 2014-2018 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -28,7 +28,7 @@
 
 #if BX_SUPPORT_AVX
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KADDD_KGdKHdKEdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::KADDD_KGdKHdKEdR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_EVEX
   Bit32u opmask = BX_READ_32BIT_OPMASK(i->src1()) + BX_READ_32BIT_OPMASK(i->src2());
@@ -38,7 +38,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KADDD_KGdKHdKEdR(bxInstruction_c *
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KANDD_KGdKHdKEdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::KANDD_KGdKHdKEdR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_EVEX
   Bit32u opmask = BX_READ_32BIT_OPMASK(i->src1()) & BX_READ_32BIT_OPMASK(i->src2());
@@ -48,7 +48,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KANDD_KGdKHdKEdR(bxInstruction_c *
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KANDND_KGdKHdKEdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::KANDND_KGdKHdKEdR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_EVEX
   Bit32u opmask = ~(BX_READ_32BIT_OPMASK(i->src1())) & BX_READ_32BIT_OPMASK(i->src2());
@@ -58,7 +58,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KANDND_KGdKHdKEdR(bxInstruction_c 
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KMOVD_KGdKEdM(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::KMOVD_KGdKEdM(bxInstruction_c *i)
 {
 #if BX_SUPPORT_EVEX
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
@@ -69,7 +69,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KMOVD_KGdKEdM(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KMOVD_KGdKEdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::KMOVD_KGdKEdR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_EVEX
   BX_WRITE_OPMASK(i->dst(), BX_READ_32BIT_OPMASK(i->src()));
@@ -78,7 +78,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KMOVD_KGdKEdR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KMOVD_KEdKGdM(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::KMOVD_KEdKGdM(bxInstruction_c *i)
 {
 #if BX_SUPPORT_EVEX
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
@@ -88,7 +88,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KMOVD_KEdKGdM(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KMOVD_KGdEdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::KMOVD_KGdEdR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_EVEX
   BX_WRITE_OPMASK(i->dst(), BX_READ_32BIT_REG(i->src()));
@@ -97,7 +97,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KMOVD_KGdEdR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KMOVD_GdKEdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::KMOVD_GdKEdR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_EVEX
   BX_WRITE_32BIT_REGZ(i->dst(), BX_READ_32BIT_OPMASK(i->src()));
@@ -106,7 +106,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KMOVD_GdKEdR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KUNPCKWD_KGdKHwKEwR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::KUNPCKWD_KGdKHwKEwR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_EVEX
   Bit32u opmask = BX_READ_16BIT_OPMASK(i->src1());
@@ -118,7 +118,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KUNPCKWD_KGdKHwKEwR(bxInstruction_
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KNOTD_KGdKEdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::KNOTD_KGdKEdR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_EVEX
   Bit32u opmask = ~BX_READ_32BIT_OPMASK(i->src());
@@ -128,7 +128,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KNOTD_KGdKEdR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KORD_KGdKHdKEdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::KORD_KGdKHdKEdR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_EVEX
   Bit32u opmask = BX_READ_32BIT_OPMASK(i->src1()) | BX_READ_32BIT_OPMASK(i->src2());
@@ -138,7 +138,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KORD_KGdKHdKEdR(bxInstruction_c *i
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KORTESTD_KGdKEdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::KORTESTD_KGdKEdR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_EVEX
   Bit32u tmp = BX_READ_32BIT_OPMASK(i->src1()) | BX_READ_32BIT_OPMASK(i->src2());
@@ -152,7 +152,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KORTESTD_KGdKEdR(bxInstruction_c *
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KSHIFTLD_KGdKEdIbR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::KSHIFTLD_KGdKEdIbR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_EVEX
   unsigned count = i->Ib();
@@ -166,7 +166,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KSHIFTLD_KGdKEdIbR(bxInstruction_c
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KSHIFTRD_KGdKEdIbR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::KSHIFTRD_KGdKEdIbR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_EVEX
   unsigned count = i->Ib();
@@ -180,7 +180,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KSHIFTRD_KGdKEdIbR(bxInstruction_c
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KXNORD_KGdKHdKEdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::KXNORD_KGdKHdKEdR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_EVEX
   Bit32u opmask = ~(BX_READ_32BIT_OPMASK(i->src1()) ^ BX_READ_32BIT_OPMASK(i->src2()));
@@ -190,7 +190,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KXNORD_KGdKHdKEdR(bxInstruction_c 
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KXORD_KGdKHdKEdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::KXORD_KGdKHdKEdR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_EVEX
   Bit32u opmask = BX_READ_32BIT_OPMASK(i->src1()) ^ BX_READ_32BIT_OPMASK(i->src2());
@@ -200,7 +200,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KXORD_KGdKHdKEdR(bxInstruction_c *
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::KTESTD_KGdKEdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::KTESTD_KGdKEdR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_EVEX
   Bit32u op1 = BX_READ_32BIT_OPMASK(i->src1()), op2 = BX_READ_32BIT_OPMASK(i->src2());

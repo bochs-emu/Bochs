@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2017 Stanislav Shwartsman
+//   Copyright (c) 2017-2018 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -31,7 +31,7 @@
 #include "simd_int.h"
 
 #define AVX512_3OP_DWORD_EL(HANDLER, func)                                                                                   \
-  BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER(bxInstruction_c *i)                                                \
+  void BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER(bxInstruction_c *i)                                                        \
   {                                                                                                                          \
     BxPackedAvxRegister dst = BX_READ_AVX_REG(i->dst()), op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2()); \
     unsigned len = i->getVL();                                                                                               \
@@ -42,7 +42,7 @@
     if (i->opmask())                                                                                                         \
       avx512_write_regd_masked(i, &dst, len, BX_READ_16BIT_OPMASK(i->opmask()));                                             \
     else                                                                                                                     \
-      BX_WRITE_AVX_REGZ(i->dst(), dst, len);                                                                                  \
+      BX_WRITE_AVX_REGZ(i->dst(), dst, len);                                                                                 \
                                                                                                                              \
     BX_NEXT_INSTR(i);                                                                                                        \
   }

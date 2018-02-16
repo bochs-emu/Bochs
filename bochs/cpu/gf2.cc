@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2017 Stanislav Shwartsman
+//   Copyright (c) 2017-2018 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -94,7 +94,7 @@ BX_CPP_INLINE void xmm_gf2p8affineinvqb(BxPackedXmmRegister *dst, const BxPacked
   }
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::GF2P8AFFINEINVQB_VdqWdqIbR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::GF2P8AFFINEINVQB_VdqWdqIbR(bxInstruction_c *i)
 {
   BxPackedXmmRegister dst = BX_READ_XMM_REG(i->dst()), src = BX_READ_XMM_REG(i->src());
 
@@ -106,7 +106,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::GF2P8AFFINEINVQB_VdqWdqIbR(bxInstr
 }
 
 #if BX_SUPPORT_AVX
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGF2P8AFFINEINVQB_VdqHdqWdqIbR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGF2P8AFFINEINVQB_VdqHdqWdqIbR(bxInstruction_c *i)
 {
   BxPackedAvxRegister dst = BX_READ_AVX_REG(i->src1()), src2 = BX_READ_AVX_REG(i->src2());
   unsigned len = i->getVL();
@@ -126,7 +126,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGF2P8AFFINEINVQB_VdqHdqWdqIbR(bxI
 }
 #endif
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::GF2P8AFFINEQB_VdqWdqIbR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::GF2P8AFFINEQB_VdqWdqIbR(bxInstruction_c *i)
 {
   BxPackedXmmRegister dst = BX_READ_XMM_REG(i->dst()), src = BX_READ_XMM_REG(i->src());
 
@@ -138,7 +138,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::GF2P8AFFINEQB_VdqWdqIbR(bxInstruct
 }
 
 #if BX_SUPPORT_AVX
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGF2P8AFFINEQB_VdqHdqWdqIbR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGF2P8AFFINEQB_VdqHdqWdqIbR(bxInstruction_c *i)
 {
   BxPackedAvxRegister dst = BX_READ_AVX_REG(i->src1()), src2 = BX_READ_AVX_REG(i->src2());
   unsigned len = i->getVL();
@@ -266,7 +266,7 @@ BX_CPP_INLINE Bit8u gf2p8mul(Bit8u a, Bit8u b)
   return GF256_Exp[tmp];
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::GF2P8MULB_VdqWdqR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::GF2P8MULB_VdqWdqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister dst = BX_READ_XMM_REG(i->dst()), src = BX_READ_XMM_REG(i->src());
 
@@ -279,7 +279,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::GF2P8MULB_VdqWdqR(bxInstruction_c 
 }
 
 #if BX_SUPPORT_AVX
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGF2P8MULB_VdqHdqWdqR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGF2P8MULB_VdqHdqWdqR(bxInstruction_c *i)
 {
   BxPackedAvxRegister dst = BX_READ_AVX_REG(i->src1()), src = BX_READ_AVX_REG(i->src2());
   unsigned len = i->getVL();

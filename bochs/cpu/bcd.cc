@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2011  The Bochs Project
+//  Copyright (C) 2001-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -24,7 +24,7 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AAA(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::AAA(bxInstruction_c *i)
 {
   int tmpCF = 0, tmpAF = 0;
 
@@ -70,7 +70,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AAA(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AAS(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::AAS(bxInstruction_c *i)
 {
   int tmpCF = 0, tmpAF = 0;
 
@@ -96,7 +96,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AAS(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AAM(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::AAM(bxInstruction_c *i)
 {
   Bit8u al, imm8 = i->Ib();
 
@@ -115,7 +115,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AAM(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AAD(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::AAD(bxInstruction_c *i)
 {
   Bit16u tmp = AH;
   tmp *= i->Ib();
@@ -131,7 +131,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::AAD(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::DAA(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::DAA(bxInstruction_c *i)
 {
   Bit8u tmpAL = AL;
   int   tmpCF = 0, tmpAF = 0;
@@ -160,7 +160,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::DAA(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::DAS(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::DAS(bxInstruction_c *i)
 {
   /* The algorithm for DAS is fashioned after the pseudo code in the
    * Pentium Processor Family Developer's Manual, volume 3.  It seems

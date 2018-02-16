@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2012 Stanislav Shwartsman
+//   Copyright (c) 2008-2018 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -72,7 +72,7 @@ static Bit32u mod2_64bit(Bit64u divisor, Bit64u dividend)
   return (Bit32u) remainder;
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEbR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEbR(bxInstruction_c *i)
 {
   Bit8u op1 = BX_READ_8BIT_REGx(i->src(), i->extend8bitL());
 
@@ -89,7 +89,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEbR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEwR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEwR(bxInstruction_c *i)
 {
   Bit32u op2 = BX_READ_32BIT_REG(i->dst());
   op2 = BitReflect32(op2);
@@ -105,7 +105,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEwR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEdR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEdR(bxInstruction_c *i)
 {
   Bit32u op2 = BX_READ_32BIT_REG(i->dst());
   op2 = BitReflect32(op2);
@@ -123,7 +123,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEdR(bxInstruction_c *i)
 
 #if BX_SUPPORT_X86_64
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEqR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CRC32_GdEqR(bxInstruction_c *i)
 {
   Bit32u op2 = BX_READ_32BIT_REG(i->dst());
   op2 = BitReflect32(op2);

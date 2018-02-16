@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2014 Stanislav Shwartsman
+//   Copyright (c) 2011-2018 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -48,7 +48,7 @@ bx_address BX_CPP_AttrRegparmN(2) BX_CPU_C::BxResolveGatherQ(bxInstruction_c *i,
     return (Bit32u) (BX_READ_32BIT_REG(i->sibBase()) + (index << i->sibScale()) + i->displ32s());
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPS_VpsHps(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPS_VpsHps(bxInstruction_c *i)
 {
   if (i->sibIndex() == i->src2() || i->sibIndex() == i->dst() || i->src2() == i->dst()) {
     BX_ERROR(("%s: incorrect source operands", i->getIaOpcodeNameShort()));
@@ -100,7 +100,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPS_VpsHps(bxInstruction_c 
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPS_VpsHps(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPS_VpsHps(bxInstruction_c *i)
 {
   if (i->sibIndex() == i->src2() || i->sibIndex() == i->dst() || i->src2() == i->dst()) {
     BX_ERROR(("%s: incorrect source operands", i->getIaOpcodeNameShort()));
@@ -151,7 +151,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPS_VpsHps(bxInstruction_c 
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPD_VpdHpd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPD_VpdHpd(bxInstruction_c *i)
 {
   if (i->sibIndex() == i->src2() || i->sibIndex() == i->dst() || i->src2() == i->dst()) {
     BX_ERROR(("%s: incorrect source operands", i->getIaOpcodeNameShort()));
@@ -202,7 +202,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPD_VpdHpd(bxInstruction_c 
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPD_VpdHpd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPD_VpdHpd(bxInstruction_c *i)
 {
   if (i->sibIndex() == i->src2() || i->sibIndex() == i->dst() || i->src2() == i->dst()) {
     BX_ERROR(("VGATHERQPD_VpdHpd: incorrect source operands"));
@@ -255,7 +255,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPD_VpdHpd(bxInstruction_c 
 
 #if BX_SUPPORT_EVEX
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPS_MASK_VpsVSib(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPS_MASK_VpsVSib(bxInstruction_c *i)
 {
   if (i->sibIndex() == i->dst()) {
     BX_ERROR(("%s: incorrect source operands", i->getIaOpcodeNameShort()));
@@ -296,7 +296,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPS_MASK_VpsVSib(bxInstruct
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPS_MASK_VpsVSib(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPS_MASK_VpsVSib(bxInstruction_c *i)
 {
   if (i->sibIndex() == i->dst()) {
     BX_ERROR(("%s: incorrect source operands", i->getIaOpcodeNameShort()));
@@ -341,7 +341,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPS_MASK_VpsVSib(bxInstruct
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPD_MASK_VpdVSib(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPD_MASK_VpdVSib(bxInstruction_c *i)
 {
   if (i->sibIndex() == i->dst()) {
     BX_ERROR(("%s: incorrect source operands", i->getIaOpcodeNameShort()));
@@ -382,7 +382,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERDPD_MASK_VpdVSib(bxInstruct
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPD_MASK_VpdVSib(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPD_MASK_VpdVSib(bxInstruction_c *i)
 {
   if (i->sibIndex() == i->dst()) {
     BX_ERROR(("VGATHERQPD_VpdHpd: incorrect source operands"));
@@ -423,7 +423,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPD_MASK_VpdVSib(bxInstruct
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCATTERDPS_MASK_VSibVps(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCATTERDPS_MASK_VSibVps(bxInstruction_c *i)
 {
   BxPackedAvxRegister *src = &BX_AVX_REG(i->src());
   Bit64u opmask = BX_READ_OPMASK(i->opmask()), mask;
@@ -458,7 +458,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCATTERDPS_MASK_VSibVps(bxInstruc
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCATTERQPS_MASK_VSibVps(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCATTERQPS_MASK_VSibVps(bxInstruction_c *i)
 {
   BxPackedAvxRegister *src = &BX_AVX_REG(i->src());
   Bit64u opmask = BX_READ_OPMASK(i->opmask()), mask;
@@ -493,7 +493,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCATTERQPS_MASK_VSibVps(bxInstruc
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCATTERDPD_MASK_VSibVpd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCATTERDPD_MASK_VSibVpd(bxInstruction_c *i)
 {
   BxPackedAvxRegister *src = &BX_AVX_REG(i->src());
   Bit64u opmask = BX_READ_OPMASK(i->opmask()), mask;
@@ -528,7 +528,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCATTERDPD_MASK_VSibVpd(bxInstruc
   BX_NEXT_INSTR(i);
 }
 
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCATTERQPD_MASK_VSibVpd(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCATTERQPD_MASK_VSibVpd(bxInstruction_c *i)
 {
   BxPackedAvxRegister *src = &BX_AVX_REG(i->src());
   Bit64u opmask = BX_READ_OPMASK(i->opmask()), mask;

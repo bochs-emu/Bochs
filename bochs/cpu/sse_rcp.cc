@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2003-2014 Stanislav Shwartsman
+//   Copyright (c) 2003-2018 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -339,7 +339,7 @@ float32 approximate_rcp(float32 op)
  * Approximate reciprocals of packed single precision FP values from XMM2/MEM.
  * Possible floating point exceptions: -
  */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCPPS_VpsWpsR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCPPS_VpsWpsR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
@@ -360,7 +360,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCPPS_VpsWpsR(bxInstruction_c *i)
  * Approximate reciprocal of scalar single precision FP value from XMM2/MEM32.
  * Possible floating point exceptions: -
  */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RCPSS_VssWssR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCPSS_VssWssR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   float32 op = BX_READ_XMM_REG_LO_DWORD(i->src());
@@ -689,7 +689,7 @@ float32 approximate_rsqrt(float32 op)
  * from XMM2/MEM32.
  * Possible floating point exceptions: -
  */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RSQRTSS_VssWssR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSQRTSS_VssWssR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   float32 op = BX_READ_XMM_REG_LO_DWORD(i->src());
@@ -706,7 +706,7 @@ BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RSQRTSS_VssWssR(bxInstruction_c *i
  * from XMM2/MEM.
  * Possible floating point exceptions: -
  */
-BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C::RSQRTPS_VpsWpsR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSQRTPS_VpsWpsR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());

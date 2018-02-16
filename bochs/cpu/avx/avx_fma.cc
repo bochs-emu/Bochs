@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2013 Stanislav Shwartsman
+//   Copyright (c) 2011-2018 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -37,7 +37,7 @@ extern float_status_t mxcsr_to_softfloat_status_word(bx_mxcsr_t mxcsr);
 //////////////////////////
 
 #define AVX2_FMA_PACKED(HANDLER, func)                                        \
-  BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i) \
+  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)         \
   {                                                                           \
     BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());                     \
     BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());                     \
@@ -70,7 +70,7 @@ AVX2_FMA_PACKED(VFNMSUBPD_VpdHpdWpdR, xmm_fnmsubpd)
 AVX2_FMA_PACKED(VFNMSUBPS_VpsHpsWpsR, xmm_fnmsubps)
 
 #define AVX2_FMA_SCALAR_SINGLE(HANDLER, func)                                 \
-  BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i) \
+  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)         \
   {                                                                           \
     float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->src1());                        \
     float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->src2());                        \
@@ -93,7 +93,7 @@ AVX2_FMA_SCALAR_SINGLE(VFNMADDSS_VpsHssWssR, float32_fnmadd)
 AVX2_FMA_SCALAR_SINGLE(VFNMSUBSS_VpsHssWssR, float32_fnmsub)
 
 #define AVX2_FMA_SCALAR_DOUBLE(HANDLER, func)                                 \
-  BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i) \
+  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)         \
   {                                                                           \
     float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->src1());                        \
     float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->src2());                        \
@@ -120,7 +120,7 @@ AVX2_FMA_SCALAR_DOUBLE(VFNMSUBSD_VpdHsdWsdR, float64_fnmsub)
 //////////////////////////////////
 
 #define FMA4_SINGLE_SCALAR(HANDLER, func)                                     \
-  BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i) \
+  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)         \
   {                                                                           \
     float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->src1());                        \
     float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->src2());                        \
@@ -146,7 +146,7 @@ FMA4_SINGLE_SCALAR(VFNMADDSS_VssHssWssVIbR, float32_fnmadd)
 FMA4_SINGLE_SCALAR(VFNMSUBSS_VssHssWssVIbR, float32_fnmsub)
 
 #define FMA4_DOUBLE_SCALAR(HANDLER, func)                                     \
-  BX_INSF_TYPE BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i) \
+  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)         \
   {                                                                           \
     float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->src1());                        \
     float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->src2());                        \
