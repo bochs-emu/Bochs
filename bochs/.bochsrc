@@ -433,11 +433,12 @@ vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
 #=======================================================================
 # VOODOO:
 # This defines the Voodoo Graphics emulation (experimental). Currently
-# supported models are 'voodoo1', 'voodoo2' and 'banshee'. The Voodoo2 support
-# is not yet complete, but almost usable. The Banshee support is under
-# construction, but basicly usable. It requires an external VGA BIOS the vga
-# extension option to be set to 'voodoo'. The gui screen update timing for all
-# models is controlled by the related 'vga' options.
+# supported models are 'voodoo1', 'voodoo2', 'banshee' and 'voodoo3'. The
+# Voodoo2 support is not yet complete, but almost usable. The Banshee and
+# Voodoo3 support is under construction, but basicly usable. It requires an
+# external VGA BIOS the vga extension option to be set to 'voodoo'. The gui
+# screen update timing for all models is controlled by the related 'vga'
+# options.
 #
 # Examples:
 #   voodoo: enabled=1, model=voodoo2

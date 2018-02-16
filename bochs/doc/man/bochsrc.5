@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "29 Dec 2017" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "15 Feb 2018" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -483,11 +483,12 @@ Examples:
 .TP
 .I "voodoo:"
 This defines the Voodoo Graphics emulation (experimental). Currently
-supported models are 'voodoo1', 'voodoo2' and 'banshee'. The Voodoo2 support
-is not yet complete, but almost usable. The Banshee support is under
-construction, but basicly usable. It requires an external VGA BIOS and the
-vga extension option to be set to 'voodoo'. The gui screen update timing
-for all models is controlled by the related 'vga' options.
+supported models are 'voodoo1', 'voodoo2', 'banshee' and 'voodoo3'.
+The Voodoo2 support is not yet complete, but almost usable. The Banshee /
+Voodoo3 support is under construction, but basicly usable. It requires an
+external VGA BIOS and the vga extension option to be set to 'voodoo'.
+The gui screen update timing for all models is controlled by the related
+\&'vga' options.
 
 Example:
   voodoo: enabled=1, model=voodoo1

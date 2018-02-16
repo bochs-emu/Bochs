@@ -25,10 +25,11 @@ Changes after 2.6.9 release:
       and multi-threading support (separate FIFO thread).
     - Voodoo2 model now working after some fixes and implementation of the
       CMDFIFO (using FIFO thread) and one of the bitBLT functions.
-    - Added Voodoo Banshee emulation support (still under construction).
+    - Added Voodoo Banshee / Voodoo3 emulation support (still under construction,
+      but basicly usable).
   - Display (general)
-    - Added basic DDC support for Bochs VBE, Cirrus and Voodoo Banshee adapters
-      (reporting plug&play monitor "Bochs Screen").
+    - Added basic DDC support for Bochs VBE, Cirrus and Voodoo Banshee / Voodoo3
+      adapters (reporting plug&play monitor "Bochs Screen").
   - USB
     - Now creating separate plugins for each USB device implementation.
   - Networking

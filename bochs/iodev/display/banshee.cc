@@ -62,9 +62,8 @@
 // - 2D polygon fill
 // - 2D host-to-screen stretching support
 // - 2D chromaKey support
-// - upper 256 CLUT entries
+// - using upper 256 CLUT entries
 // - pixel format conversion not supported in all cases
-// - Voodoo3 support
 
 // FIXME:
 // - Minor issues in all Banshee modes (e.g. forward/back buttons in explorer)
@@ -185,8 +184,7 @@ void bx_banshee_c::reset(unsigned type)
     pci_conf[reset_vals2[i].addr] = reset_vals2[i].val;
   }
   if (s.model == VOODOO_3) {
-    pci_conf[0x2e] = 0x52; // FIXME: this is an AGP subsystem ID - find a
-                           // VGABIOS ROM image with the correct value for PCI
+    pci_conf[0x2e] = 0x36; // Subsystem ID.for a PCI model
   }
   // TODO
 
