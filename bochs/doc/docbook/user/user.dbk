@@ -413,6 +413,21 @@ currently work with.
       For more information see <xref linkend="cirrus-notes">.</entry>
   </row>
   <row>
+    <entry>3D video card</entry>
+    <entry>Yes</entry>
+    <entry>Some of the 3dfx Voodoo graphics adapter models are supported now.
+      The code is still experimental, but at least the Voodoo1 is known to work.
+      For more information see <xref linkend="voodoo-notes">.</entry>
+  </row>
+  <row>
+    <entry>Plug&amp;play monitor</entry>
+    <entry>Yes</entry>
+    <entry>VESA DDC is now supported by all VGA compatible display adapters.
+    The LGPL'd VGABIOS has been updated use this feature for both the VBE and
+    Cirrus version.
+    </entry>
+  </row>
+  <row>
     <entry>Floppy disk</entry>
     <entry>Yes</entry>
     <entry>Supports floppy disk images on all platforms: 2.88M 3.5", 1.44M 3.5", 1.2M 5.25",
@@ -2462,7 +2477,8 @@ SMP, x86_64 support) and the devices options (e.g. PCI, USB, Cirrus graphics).
       <entry>no</entry>
       <entry>Enable experimental 3dfx Voodoo Graphics emulation. The Voodoo1 is
       known to work, the Voodoo2 support is not yet complete, but almost usable.
-      The Banshee support is under construction, but basicly usable.
+      The Banshee / Voodoo3 support is under construction, but basicly usable.
+      For more information see <xref linkend="voodoo-notes">.
       </entry>
     </row>
     <row>
@@ -3810,8 +3826,8 @@ values are 'vbe' for Bochs VBE (needs <filename>VGABIOS-lgpl-latest</filename> a
 VGA BIOS, see <link linkend="bochsopt-vgaromimage">vgaromimage option</link>),
 'cirrus' for Cirrus SVGA support (needs
 <filename>VGABIOS-lgpl-latest-cirrus</filename> as VGA BIOS) and
-'voodoo' for Voodoo Graphics support (needs external VGA BIOS / see 'voodoo'
-option for more information).
+'voodoo' for Voodoo Graphics support (needs external VGA BIOS / see
+<xref linkend="voodoo-notes"> for more information).
 </para>
 <para>
 The VGA update frequency specifies the number of display updates per second.
@@ -3840,7 +3856,7 @@ The Voodoo2 support is not yet complete, but almost usable. The Banshee /
 Voodoo3 support is under construction, but basicly usable. It requires an
 external VGA BIOS and the vga extension option to be set to 'voodoo'.
 The gui screen update timing for all models is controlled by the related
-'vga' options.
+'vga' options. See <xref linkend="voodoo-notes"> for more information.
 </para>
 </section>
 
@@ -8750,6 +8766,45 @@ Bochs VBE Display Drivers for Windows NT/2000
   <note><para>
     The VGABIOS is already included in the Bochs release, so no separate download is necessary.
   </para></note>
+</section>
+
+<section id="voodoo-notes">
+  <title>Notes about Voodoo Graphics usage</title>
+
+  <para>
+  Bochs supports the emulation of 4 different 3dfx Voodoo Graphics adapter models.
+  The Voodoo1 and Voodoo2 models are 3D-only add-on cards and require a VGA
+  compatible primary device. The Voodoo Banshee and it's successor Voodoo3 have
+  both a VGA core and a 2D/3D core, so no other VGA card is required.
+  </para>
+  <para>
+  To emulate the Voodoo1 or Voodoo2 device only the "model" parameter of the
+  bochsrc option "voodoo" needs to be set. If the vga extension option is set
+  to "voodoo" in that case, the primary display adapter is an ISA VGA card.
+  </para>
+  <para>
+  For emulating the Voodoo Banshee or Voodoo3 adapter, the vga extension option
+  currently must be set to "voodoo". Using a different primary display adapter
+  and a Banshee compatible device with it's VGA interface disabled is not
+  implemented yet. Both Banshee and Voodoo3 need a specific external VGA BIOS,
+  since a Voodoo extension for the LGPL'd VGABIOS is not written yet.
+  </para>
+  <para>
+  These bochsrc settings should be used for Voodoo Banshee:
+  <screen>
+  vga: extension=voodoo
+  vgaromimage: file=Pci_sg.rom
+  voodoo: model=banshee
+  </screen>
+  </para>
+  <para>
+  These settings are required for the Voodoo3:
+  <screen>
+  vga: extension=voodoo
+  vgaromimage: file=V3_2000_PCI_SG_2.15.06_LC.rom
+  voodoo: model=voodoo3
+  </screen>
+  </para>
 </section>
 
 <section id="harddisk-modes"><title>Disk Image Modes</title>
