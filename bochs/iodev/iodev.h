@@ -134,6 +134,7 @@ public:
   void load_pci_rom(const char *path);
 
   void set_name(const char *name) {pci_name = name;}
+  const char* get_name(void) {return pci_name;}
 
 protected:
   const char *pci_name;

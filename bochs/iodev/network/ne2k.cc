@@ -172,7 +172,7 @@ bx_ne2k_c::~bx_ne2k_c()
 
 void bx_ne2k_c::init(void)
 {
-  char devname[16];
+  static char devname[16];
   Bit8u macaddr[6];
   bx_param_string_c *bootrom;
 

@@ -470,6 +470,8 @@ void bx_devices_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif  // !BX_USE_DEV_SMF
+  Bit8u bus, devfunc;
+  bx_pci_device_c *dev = NULL;
 
   switch (address) {
     case 0x0092:
@@ -485,11 +487,21 @@ void bx_devices_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #if BX_SUPPORT_PCI
     case 0xCF8:
       BX_DEV_THIS pci.confAddr = value;
-      if ((value & 0x80FFFF00) == 0x80000000) {
-        BX_DEBUG(("440FX PMC register 0x%02x selected", value & 0xfc));
-      } else if ((value & 0x80000000) == 0x80000000) {
-        BX_DEBUG(("440FX request for bus 0x%02x device 0x%02x function 0x%02x",
-                  (value >> 16) & 0xFF, (value >> 11) & 0x1F, (value >> 8) & 0x07));
+      if ((value & 0x80000000) == 0x80000000) {
+        bus = (BX_DEV_THIS pci.confAddr >> 16) & 0xff;
+        devfunc = (BX_DEV_THIS pci.confAddr >> 8) & 0xff;
+        if ((bus == 0) && (BX_DEV_THIS pci.handler_id[devfunc] != BX_MAX_PCI_DEVICES)) {
+          dev = BX_DEV_THIS pci.pci_handler[BX_DEV_THIS pci.handler_id[devfunc]].handler;
+        }
+        if ((bus == 0) && (devfunc == 0x00)) {
+          BX_DEBUG(("%s register 0x%02x selected", dev->get_name(), value & 0xfc));
+        } else if (dev != NULL) {
+          BX_DEBUG(("PCI: request for bus %d device %d function %d (%s)", bus,
+                    (devfunc >> 3), devfunc & 0x07, dev->get_name()));
+        } else {
+          BX_DEBUG(("PCI: request for bus %d device %d function %d", bus,
+                    (devfunc >> 3), devfunc & 0x07));
+        }
       }
       break;
 
@@ -498,7 +510,7 @@ void bx_devices_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case 0xCFE:
     case 0xCFF:
       if ((BX_DEV_THIS pci.confAddr & 0x80FF0000) == 0x80000000) {
-        Bit8u devfunc = (BX_DEV_THIS pci.confAddr >> 8) & 0xff;
+        devfunc = (BX_DEV_THIS pci.confAddr >> 8) & 0xff;
         Bit8u regnum = (BX_DEV_THIS pci.confAddr & 0xfc) + (address & 0x03);
         Bit32u handle = BX_DEV_THIS pci.handler_id[devfunc];
         if ((io_len <= 4) && (handle < BX_MAX_PCI_DEVICES)) {
