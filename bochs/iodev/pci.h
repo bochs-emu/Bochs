@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2017  The Bochs Project
+//  Copyright (C) 2002-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -36,6 +36,8 @@
 #define BX_PCI_INTC 3
 #define BX_PCI_INTD 4
 
+class bx_pci_vbridge_c;
+
 class bx_pci_bridge_c : public bx_pci_device_c {
 public:
   bx_pci_bridge_c();
@@ -56,5 +58,18 @@ private:
   unsigned chipset;
   Bit8u DRBA[8];
   Bit8u dram_detect;
+  bx_pci_vbridge_c *vbridge;
+};
+
+class bx_pci_vbridge_c : public bx_pci_device_c {
+public:
+  bx_pci_vbridge_c();
+  virtual ~bx_pci_vbridge_c();
+  virtual void init(void);
+  virtual void reset(unsigned type);
+  virtual void register_state(void);
+  virtual void after_restore_state(void);
+
+  virtual void pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 };
 #endif

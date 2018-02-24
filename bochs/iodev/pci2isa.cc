@@ -21,6 +21,7 @@
 // PCI-to-ISA bridge
 // i430FX - PIIX
 // i440FX - PIIX3
+// i440BX - PIIX4
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE
@@ -71,10 +72,14 @@ void bx_piix3_c::init(void)
   unsigned i, j;
   // called once when bochs initializes
 
-  Bit8u devfunc = BX_PCI_DEVICE(1,0);
-  DEV_register_pci_handlers(this, &devfunc, BX_PLUGIN_PCI2ISA,
-      "PIIX3 PCI-to-ISA bridge");
   BX_P2I_THIS s.chipset = SIM->get_param_enum(BXPN_PCI_CHIPSET)->get();
+  if (BX_P2I_THIS s.chipset == BX_PCI_CHIPSET_I440BX) {
+    BX_P2I_THIS s.devfunc = BX_PCI_DEVICE(7, 0);
+  } else {
+    BX_P2I_THIS s.devfunc = BX_PCI_DEVICE(1, 0);
+  }
+  DEV_register_pci_handlers(this, &BX_P2I_THIS s.devfunc, BX_PLUGIN_PCI2ISA,
+      "PIIX3 PCI-to-ISA bridge");
 
   DEV_register_iowrite_handler(this, write_handler, 0x00B2, "PIIX3 PCI-to-ISA bridge", 1);
   DEV_register_iowrite_handler(this, write_handler, 0x00B3, "PIIX3 PCI-to-ISA bridge", 1);
@@ -96,10 +101,12 @@ void bx_piix3_c::init(void)
     }
   }
   // initialize readonly registers
-  if (BX_P2I_THIS s.chipset == BX_PCI_CHIPSET_I440FX) {
-    init_pci_conf(0x8086, 0x7000, 0x00, 0x060100, 0x80, 0);
-  } else {
+  if (BX_P2I_THIS s.chipset == BX_PCI_CHIPSET_I430FX) {
     init_pci_conf(0x8086, 0x122e, 0x01, 0x060100, 0x80, 0);
+  } else if (BX_P2I_THIS s.chipset == BX_PCI_CHIPSET_I440BX) {
+    init_pci_conf(0x8086, 0x7110, 0x00, 0x060100, 0x80, 0);
+  } else {
+    init_pci_conf(0x8086, 0x7000, 0x00, 0x060100, 0x80, 0);
   }
   BX_P2I_THIS pci_conf[0x04] = 0x07;
   // irq routing registers
@@ -143,7 +150,7 @@ void bx_piix3_c::reset(unsigned type)
   BX_P2I_THIS pci_conf[0xae] = 0x00;
 
   for (unsigned i = 0; i < 4; i++) {
-    pci_set_irq(0x08, i+1, 0);
+    pci_set_irq(BX_P2I_THIS s.devfunc, i+1, 0);
     pci_unregister_irq(i, 0x80);
   }
 
@@ -208,7 +215,7 @@ void bx_piix3_c::pci_unregister_irq(unsigned pirq, Bit8u irq)
   if (oldirq < 16) {
     BX_P2I_THIS s.irq_registry[oldirq] &= ~(1 << pirq);
     if (!BX_P2I_THIS s.irq_registry[oldirq]) {
-      BX_P2I_THIS pci_set_irq(0x08, pirq+1, 0);
+      BX_P2I_THIS pci_set_irq(BX_P2I_THIS s.devfunc, pirq+1, 0);
       DEV_unregister_irq(oldirq, "PIIX3 IRQ routing");
     }
     BX_P2I_THIS pci_conf[0x60 + pirq] = irq;
@@ -217,7 +224,8 @@ void bx_piix3_c::pci_unregister_irq(unsigned pirq, Bit8u irq)
 
 void bx_piix3_c::pci_set_irq(Bit8u devfunc, unsigned line, bx_bool level)
 {
-  Bit8u pirq = ((devfunc >> 3) + line - 2) & 0x03;
+  Bit8u offset = (BX_P2I_THIS s.chipset == BX_PCI_CHIPSET_I440BX) ? 8 : 2;
+  Bit8u pirq = ((devfunc >> 3) + line - offset) & 0x03;
 #if BX_SUPPORT_APIC
   // forward this function call to the ioapic too
   if (DEV_ioapic_present()) {
@@ -353,17 +361,17 @@ void bx_piix3_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
         BX_P2I_THIS pci_conf[address+i] = (value8 & 0x08) | 0x07;
         break;
       case 0x05:
-        if (BX_P2I_THIS s.chipset == BX_PCI_CHIPSET_I440FX) {
+        if (BX_P2I_THIS s.chipset != BX_PCI_CHIPSET_I430FX) {
           BX_P2I_THIS pci_conf[address+i] = (value8 & 0x01);
         }
         break;
       case 0x06:
         break;
       case 0x07:
-        if (BX_P2I_THIS s.chipset == BX_PCI_CHIPSET_I440FX) {
-          value8 &= 0x78;
-        } else {
+        if (BX_P2I_THIS s.chipset == BX_PCI_CHIPSET_I430FX) {
           value8 &= 0x38;
+        } else {
+          value8 &= 0x78;
         }
         BX_P2I_THIS pci_conf[address+i] = (oldval & ~value8) | 0x02;
         break;
@@ -374,7 +382,7 @@ void bx_piix3_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
         BX_P2I_THIS pci_conf[address+i] = value8;
         break;
       case 0x4f:
-        if (BX_P2I_THIS s.chipset == BX_PCI_CHIPSET_I440FX) {
+        if (BX_P2I_THIS s.chipset != BX_PCI_CHIPSET_I430FX) {
           BX_P2I_THIS pci_conf[address+i] = (value8 & 0x01);
 #if BX_SUPPORT_APIC
           if (DEV_ioapic_present()) {
@@ -399,13 +407,13 @@ void bx_piix3_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
         }
         break;
       case 0x6a:
-        if (BX_P2I_THIS s.chipset == BX_PCI_CHIPSET_I440FX) {
+        if (BX_P2I_THIS s.chipset != BX_PCI_CHIPSET_I430FX) {
           // TODO: bit #4: enable / disable USB function at boot time
           BX_P2I_THIS pci_conf[address+i] = (value8 & 0xd7);
         }
         break;
       case 0x80:
-        if (BX_P2I_THIS s.chipset == BX_PCI_CHIPSET_I440FX) {
+        if (BX_P2I_THIS s.chipset != BX_PCI_CHIPSET_I430FX) {
           BX_P2I_THIS pci_conf[address+i] = (value8 & 0x7f);
 #if BX_SUPPORT_APIC
           if (DEV_ioapic_present()) {

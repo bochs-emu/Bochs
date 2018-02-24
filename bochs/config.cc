@@ -855,7 +855,7 @@ void bx_init_options()
   bx_list_c *pci = new bx_list_c(root_param, "pci", "PCI Options");
 
   // pci options
-  static const char *pci_chipset_names[] = { "i430fx", "i440fx", NULL };
+  static const char *pci_chipset_names[] = { "i430fx", "i440fx", "i440bx", NULL };
   deplist = new bx_list_c(NULL);
 
   enabled = new bx_param_bool_c(pci,

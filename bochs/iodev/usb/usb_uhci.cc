@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009-2015  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2009-2017  The Bochs Project
+//                2009-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -131,6 +131,7 @@ void bx_usb_uhci_c::init(void)
   bx_list_c *uhci, *port;
   bx_param_string_c *device;
   Bit8u devfunc;
+  Bit16u devid;
 
   // Read in values from config interface
   uhci = (bx_list_c*) SIM->get_param(BXPN_USB_UHCI);
@@ -143,11 +144,16 @@ void bx_usb_uhci_c::init(void)
   }
 
   if (SIM->get_param_enum(BXPN_PCI_CHIPSET)->get() == BX_PCI_CHIPSET_I440FX) {
-    devfunc = BX_PCI_DEVICE(1,2);
+    devfunc = BX_PCI_DEVICE(1, 2);
+    devid = 0x7020;
+  } else if (SIM->get_param_enum(BXPN_PCI_CHIPSET)->get() == BX_PCI_CHIPSET_I440BX) {
+    devfunc = BX_PCI_DEVICE(7, 2);
+    devid = 0x7112;
   } else {
     devfunc = 0x00;
+    devid = 0x7020;
   }
-  BX_UHCI_THIS init_uhci(devfunc, 0x7020, 0x00, BX_PCI_INTD);
+  BX_UHCI_THIS init_uhci(devfunc, devid, 0x00, BX_PCI_INTD);
 
   bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
   bx_list_c *uhci_rt = new bx_list_c(usb_rt, "uhci", "UHCI Runtime Options");

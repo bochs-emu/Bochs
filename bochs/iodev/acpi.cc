@@ -39,7 +39,7 @@
 bx_acpi_ctrl_c* theACPIController = NULL;
 
 // FIXME
-const Bit8u acpi_pm_iomask[64] = {2, 0, 2, 0, 2, 0, 0, 0, 4, 0, 0, 0, 7, 7, 7, 7,
+const Bit8u acpi_pm_iomask[64] = {3, 0, 3, 0, 3, 0, 0, 0, 4, 0, 0, 0, 7, 7, 7, 7,
                                   7, 7, 7, 7, 1, 1, 0, 0, 7, 7, 0, 0, 7, 7, 7, 7,
                                   7, 7, 0, 0, 0, 0, 0, 0, 7, 7, 7, 7, 7, 7, 7, 7,
                                   1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -124,7 +124,12 @@ void bx_acpi_ctrl_c::init(void)
 {
   // called once when bochs initializes
 
-  BX_ACPI_THIS s.devfunc = BX_PCI_DEVICE(1, 3);
+  Bit8u chipset = SIM->get_param_enum(BXPN_PCI_CHIPSET)->get();
+  if (chipset == BX_PCI_CHIPSET_I440BX) {
+    BX_ACPI_THIS s.devfunc = BX_PCI_DEVICE(7, 3);
+  } else {
+    BX_ACPI_THIS s.devfunc = BX_PCI_DEVICE(1, 3);
+  }
   DEV_register_pci_handlers(this, &BX_ACPI_THIS s.devfunc, BX_PLUGIN_ACPI,
                             "ACPI Controller");
 
@@ -311,10 +316,18 @@ Bit32u bx_acpi_ctrl_c::read(Bit32u address, unsigned io_len)
       case 0x08:
         value = BX_ACPI_THIS get_pmtmr();
         break;
+      case 0x0c: // GPSTS
+      case 0x18: // GLBSTS
+      case 0x1c: // DEVSTS
+      case 0x30: // GPI
+      case 0x31: // GPI
+      case 0x32: // GPI
+        value = 0x00;
+        break;
       default:
-        BX_INFO(("ACPI read from PM register 0x%02x not implemented yet", reg));
+        BX_INFO(("read from PM register 0x%02x not implemented yet", reg));
     }
-    BX_DEBUG(("ACPI read from PM register 0x%02x returns 0x%08x", reg, value));
+    BX_DEBUG(("read from PM register 0x%02x returns 0x%08x", reg, value));
   } else {
     if (((BX_ACPI_THIS pci_conf[0x04] & 0x01) == 0) &&
         ((BX_ACPI_THIS pci_conf[0xd2] & 0x01) == 0)) {
@@ -348,9 +361,9 @@ Bit32u bx_acpi_ctrl_c::read(Bit32u address, unsigned io_len)
         break;
       default:
         value = 0;
-        BX_INFO(("ACPI read from SMBus register 0x%02x not implemented yet", reg));
+        BX_INFO(("read from SMBus register 0x%02x not implemented yet", reg));
     }
-    BX_DEBUG(("ACPI read from SMBus register 0x%02x returns 0x%08x", reg, value));
+    BX_DEBUG(("read from SMBus register 0x%02x returns 0x%08x", reg, value));
   }
   return value;
 }
@@ -376,7 +389,7 @@ void bx_acpi_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
     if ((BX_ACPI_THIS pci_conf[0x80] & 0x01) == 0) {
       return;
     }
-    BX_DEBUG(("ACPI write to PM register 0x%02x, value = 0x%04x", reg, value));
+    BX_DEBUG(("write to PM register 0x%02x, value = 0x%04x", reg, value));
     switch (reg) {
       case 0x00:
         {
@@ -418,14 +431,14 @@ void bx_acpi_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
         }
         break;
       default:
-        BX_INFO(("ACPI write to PM register 0x%02x not implemented yet", reg));
+        BX_INFO(("write to PM register 0x%02x not implemented yet", reg));
     }
   } else if ((address & 0xfff0) == BX_ACPI_THIS s.sm_base) {
     if (((BX_ACPI_THIS pci_conf[0x04] & 0x01) == 0) &&
         ((BX_ACPI_THIS pci_conf[0xd2] & 0x01) == 0)) {
       return;
     }
-    BX_DEBUG(("ACPI write to SMBus register 0x%02x, value = 0x%04x", reg, value));
+    BX_DEBUG(("write to SMBus register 0x%02x, value = 0x%04x", reg, value));
     switch (reg) {
       case 0x00:
         BX_ACPI_THIS s.smbus.stat = 0;
@@ -454,7 +467,7 @@ void bx_acpi_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
         }
         break;
       default:
-        BX_INFO(("ACPI write to SMBus register 0x%02x not implemented yet", reg));
+        BX_INFO(("write to SMBus register 0x%02x not implemented yet", reg));
     }
   } else {
     BX_DEBUG(("DBG: 0x%08x", value));

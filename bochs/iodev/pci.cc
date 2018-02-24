@@ -21,6 +21,7 @@
 // PCI host bridge support
 // i430FX - TSC/TDP
 // i440FX - PMC/DBX
+// i440BX - Host bridge
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE
@@ -35,7 +36,7 @@
 
 #define LOG_THIS thePciBridge->
 
-const char csname[2][20] = {"i430FX TSC", "i440FX PMC"};
+const char csname[3][20] = {"i430FX TSC", "i440FX PMC", "i440BX Host bridge"};
 
 bx_pci_bridge_c *thePciBridge = NULL;
 
@@ -58,10 +59,14 @@ void CDECL libpci_LTX_plugin_fini(void)
 bx_pci_bridge_c::bx_pci_bridge_c()
 {
   put("PCI");
+  vbridge = NULL;
 }
 
 bx_pci_bridge_c::~bx_pci_bridge_c()
 {
+  if (vbridge != NULL) {
+    delete vbridge;
+  }
   SIM->get_bochs_root()->remove("pci_bridge");
   BX_DEBUG(("Exit"));
 }
@@ -72,15 +77,23 @@ void bx_pci_bridge_c::init(void)
   unsigned i;
   Bit32u ramsize;
 
-  Bit8u devfunc = BX_PCI_DEVICE(0,0);
+  Bit8u devfunc = BX_PCI_DEVICE(0, 0);
   BX_PCI_THIS chipset = SIM->get_param_enum(BXPN_PCI_CHIPSET)->get();
   DEV_register_pci_handlers(this, &devfunc, BX_PLUGIN_PCI, csname[BX_PCI_THIS chipset]);
 
   // initialize readonly registers
-  if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440FX) {
-    init_pci_conf(0x8086, 0x1237, 0x00, 0x060000, 0x00, 0);
-  } else {
+  if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I430FX) {
     init_pci_conf(0x8086, 0x0122, 0x02, 0x060000, 0x00, 0);
+  } else if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440BX) {
+    init_pci_conf(0x8086, 0x7190, 0x02, 0x060000, 0x00, 0);
+    BX_PCI_THIS pci_conf[0x06] = 0x10;
+    BX_PCI_THIS pci_conf[0x34] = 0xa0;
+    BX_PCI_THIS pci_conf[0xa0] = 0x02;
+    BX_PCI_THIS pci_conf[0xa2] = 0x10;
+    BX_PCI_THIS vbridge = new bx_pci_vbridge_c();
+    BX_PCI_THIS vbridge->init();
+  } else { // i440FX
+    init_pci_conf(0x8086, 0x1237, 0x00, 0x060000, 0x00, 0);
   }
 
   // DRAM module setup
@@ -135,7 +148,7 @@ void bx_pci_bridge_c::init(void)
         BX_PCI_THIS DRBA[i] = 0x20;
       }
     }
-  } else if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440FX) {
+  } else { // i440FX
     const Bit8u type[3] = {128, 32, 8};
     if (ramsize > 1024) ramsize = 1024;
     Bit8u drbval = 0;
@@ -182,13 +195,15 @@ bx_pci_bridge_c::reset(unsigned type)
   BX_PCI_THIS pci_conf[0x55] = 0x00;
   BX_PCI_THIS pci_conf[0x56] = 0x00;
   BX_PCI_THIS pci_conf[0x57] = 0x01;
-  if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440FX) {
+  if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I430FX) {
+    BX_PCI_THIS pci_conf[0x06] = 0x00;
+    BX_PCI_THIS pci_conf[0x58] = 0x00;
+  } else if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440BX) {
+    BX_PCI_THIS vbridge->reset(type);
+  } else { // i440FX
     BX_PCI_THIS pci_conf[0x06] = 0x80;
     BX_PCI_THIS pci_conf[0x51] = 0x01;
     BX_PCI_THIS pci_conf[0x58] = 0x10;
-  } else {
-    BX_PCI_THIS pci_conf[0x06] = 0x00;
-    BX_PCI_THIS pci_conf[0x58] = 0x00;
   }
   for (i=0x59; i<0x60; i++)
     BX_PCI_THIS pci_conf[i] = 0x00;
@@ -199,11 +214,17 @@ void bx_pci_bridge_c::register_state(void)
 {
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "pci_bridge", "PCI Bridge State");
   register_pci_state(list);
+  if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440BX) {
+    BX_PCI_THIS vbridge->register_state();
+  }
 }
 
 void bx_pci_bridge_c::after_restore_state(void)
 {
   BX_PCI_THIS smram_control(BX_PCI_THIS pci_conf[0x72]);
+  if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440BX) {
+    BX_PCI_THIS vbridge->after_restore_state();
+  }
 }
 
 // pci configuration space write callback handler
@@ -222,22 +243,24 @@ void bx_pci_bridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io
     oldval = BX_PCI_THIS pci_conf[address+i];
     switch (address+i) {
       case 0x04:
-        if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440FX) {
-          BX_PCI_THIS pci_conf[address+i] = (value8 & 0x40) | 0x06;
-        } else {
+        if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I430FX) {
           BX_PCI_THIS pci_conf[address+i] = (value8 & 0x02) | 0x04;
+        } else {
+          BX_PCI_THIS pci_conf[address+i] = (value8 & 0x40) | 0x06;
         }
         break;
       case 0x05:
-        if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440FX) {
+        if (BX_PCI_THIS chipset != BX_PCI_CHIPSET_I430FX) {
           BX_PCI_THIS pci_conf[address+i] = (value8 & 0x01);
         }
         break;
       case 0x07:
-        if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440FX) {
-          value8 &= 0xf9;
-        } else {
+        if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I430FX) {
           value8 &= 0x30;
+        } else if (BX_PCI_THIS chipset != BX_PCI_CHIPSET_I440BX) {
+          value8 = (BX_PCI_THIS pci_conf[0x07] & ~value8) | 0x02;
+        } else {
+          value8 &= 0xf9;
         }
         BX_PCI_THIS pci_conf[address+i] &= ~value8;
         break;
@@ -249,14 +272,14 @@ void bx_pci_bridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io
       case 0x0f:
         break;
       case 0x50:
-        if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440FX) {
-          BX_PCI_THIS pci_conf[address+i] = (value8 & 0x70);
-        } else {
+        if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I430FX) {
           BX_PCI_THIS pci_conf[address+i] = (value8 & 0xef);
+        } else {
+          BX_PCI_THIS pci_conf[address+i] = (value8 & 0x70);
         }
         break;
       case 0x51:
-        if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440FX) {
+        if (BX_PCI_THIS chipset != BX_PCI_CHIPSET_I430FX) {
           BX_PCI_THIS pci_conf[address+i] = (value8 & 0x80) | 0x01;
         }
         break;
@@ -296,32 +319,31 @@ void bx_pci_bridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io
         BX_PCI_THIS pci_conf[address+i] = value8;
         drba_reg = (address + i) & 0x07;
         drba_changed = (BX_PCI_THIS pci_conf[0x60 + drba_reg] != BX_PCI_THIS DRBA[drba_reg]);
-        if ((BX_PCI_THIS chipset == BX_PCI_CHIPSET_I430FX) ||
-            (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440FX)) {
-          if (drba_changed) {
-            BX_PCI_THIS dram_detect |= (1 << drba_reg);
-          } else if (!drba_changed && dram_detect) {
-            BX_PCI_THIS dram_detect &= ~(1 << drba_reg);
-          }
+        if (drba_changed) {
+          BX_PCI_THIS dram_detect |= (1 << drba_reg);
+        } else if (!drba_changed && dram_detect) {
+          BX_PCI_THIS dram_detect &= ~(1 << drba_reg);
         }
         break;
       case 0x72:
         smram_control(value8); // SMRAM control register
+        break;
+      case 0xf0:
+        if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440BX) {
+          BX_PCI_THIS pci_conf[address+i] = value8 & 0xc0;
+        }
         break;
       default:
         BX_PCI_THIS pci_conf[address+i] = value8;
         BX_DEBUG(("%s write register 0x%02x value 0x%02x", csname[BX_PCI_THIS chipset], address+i, value8));
     }
   }
-  if ((BX_PCI_THIS chipset == BX_PCI_CHIPSET_I430FX) ||
-      (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440FX)) {
-    if ((BX_PCI_THIS dram_detect > 0) && (old_dram_detect == 0)) {
-      // TODO
-      BX_ERROR(("FIXME: DRAM module detection"));
-    } else if ((BX_PCI_THIS dram_detect == 0) && (old_dram_detect > 0)) {
-      // TODO
-      BX_INFO(("normal memory access mode"));
-    }
+  if ((BX_PCI_THIS dram_detect > 0) && (old_dram_detect == 0)) {
+    // TODO
+    BX_ERROR(("FIXME: DRAM module detection"));
+  } else if ((BX_PCI_THIS dram_detect == 0) && (old_dram_detect > 0)) {
+    // TODO
+    BX_INFO(("normal memory access mode"));
   }
 }
 
@@ -386,12 +408,14 @@ void bx_pci_bridge_c::debug_dump(int argc, char **argv)
 {
   int arg, i, j, r;
 
-  if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440FX) {
-    dbg_printf("i440FX PMC/DBX\n\n");
+  if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I430FX) {
+    dbg_printf("i430FX TSC/TDP");
+  } else if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440BX) {
+    dbg_printf("i440BX Host bridge");
   } else {
-    dbg_printf("i430FX TSC/TDP\n\n");
+    dbg_printf("i440FX PMC/DBX");
   }
-  dbg_printf("confAddr = 0x%08x\n\n", DEV_pci_get_confAddr());
+  dbg_printf("\n\nconfAddr = 0x%08x\n\n", DEV_pci_get_confAddr());
 
   if (argc == 0) {
     for (i = 0x59; i < 0x60; i++) {
@@ -420,4 +444,113 @@ void bx_pci_bridge_c::debug_dump(int argc, char **argv)
 }
 #endif
 
+// i440BX PCI-to-AGP bridge
+
+#undef LOG_THIS
+#define LOG_THIS
+
+bx_pci_vbridge_c::bx_pci_vbridge_c()
+{
+  put("PCIAGP");
+}
+
+bx_pci_vbridge_c::~bx_pci_vbridge_c()
+{
+  SIM->get_bochs_root()->remove("pci_vbridge");
+  BX_DEBUG(("Exit"));
+}
+
+void bx_pci_vbridge_c::init(void)
+{
+  Bit8u devfunc = BX_PCI_DEVICE(1, 0);
+  DEV_register_pci_handlers(this, &devfunc, BX_PLUGIN_PCI, "i440BX PCI-to-AGP bridge");
+  init_pci_conf(0x8086, 0x7191, 0x02, 0x060400, 0x01, 0);
+  pci_conf[0x06] = 0x20;
+  pci_conf[0x07] = 0x02;
+  pci_conf[0x1e] = 0xa0;
+}
+
+void bx_pci_vbridge_c::reset(unsigned type)
+{
+  pci_conf[0x04] = 0x00;
+  pci_conf[0x05] = 0x00;
+  pci_conf[0x1c] = 0xf0;
+  pci_conf[0x1f] = 0x02;
+  pci_conf[0x20] = 0xf0;
+  pci_conf[0x21] = 0xff;
+  pci_conf[0x22] = 0x00;
+  pci_conf[0x23] = 0x00;
+  pci_conf[0x24] = 0xf0;
+  pci_conf[0x25] = 0xff;
+  pci_conf[0x26] = 0x00;
+  pci_conf[0x27] = 0x00;
+  pci_conf[0x3e] = 0x80;
+}
+
+void bx_pci_vbridge_c::register_state(void)
+{
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "pci_vbridge", "PCI/AGP Bridge State");
+  register_pci_state(list);
+}
+
+void bx_pci_vbridge_c::after_restore_state(void)
+{
+  // TODO
+}
+
+// pci configuration space write callback handler
+void bx_pci_vbridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
+{
+  for (unsigned i=0; i<io_len; i++) {
+    Bit8u value8 = (value >> (i*8)) & 0xff;
+    Bit8u oldval = pci_conf[address+i];
+    switch (address+i) {
+      case 0x04: // PCICMD1
+        value8 &= 0x3f;
+        break;
+      case 0x05:
+        value8 &= 0x01;
+        break;
+      case 0x0d: // MLT1
+      case 0x1b: // SMLT
+        value8 &= 0xf8;
+        break;
+      case 0x1c: // IOBASE
+      case 0x1d: // IOLIMIT
+      case 0x20: // MBASE lo
+      case 0x22: // MLIMIT lo
+      case 0x24: // PMBASE lo
+      case 0x26: // PMLIMIT lo
+        value8 &= 0xf0;
+        break;
+      case 0x1f: // SSTS hi
+        value8 = (pci_conf[0x1f] & ~value8) | 0x02;
+        break;
+      case 0x3e: // BCTRL
+        value8 = (value8 & 0xc1) | 0x80;
+        break;
+      case 0x19: // SBUSN - all bits r/w
+      case 0x1a: // SUBUSN
+      case 0x21: // MBASE hi
+      case 0x23: // MLIMIT hi
+      case 0x25: // PMBASE hi
+      case 0x27: // PMLIMIT hi
+        break;
+      case 0x06: // PCISTS1 - all bits r/o
+      case 0x07:
+      case 0x18: // PBUSN
+      case 0x1e: // SSTS lo
+      default:
+        value8 = oldval;
+    }
+    pci_conf[address+i] = value8;
+  }
+
+  if (io_len == 1)
+    BX_DEBUG(("write PCI register 0x%02x value 0x%02x", address, value));
+  else if (io_len == 2)
+    BX_DEBUG(("write PCI register 0x%02x value 0x%04x", address, value));
+  else if (io_len == 4)
+    BX_DEBUG(("write PCI register 0x%02x value 0x%08x", address, value));
+}
 #endif /* BX_SUPPORT_PCI */

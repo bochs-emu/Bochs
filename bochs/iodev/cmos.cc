@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2017  The Bochs Project
+//  Copyright (C) 2002-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -227,8 +227,17 @@ void bx_cmos_c::init(void)
     if (ret) {
       BX_PANIC(("CMOS: could not fstat() image file."));
     }
-    if ((stat_buf.st_size != 64) && (stat_buf.st_size != 128)) {
-      BX_PANIC(("CMOS: image file size must be 64 or 128"));
+    if ((stat_buf.st_size != 64) && (stat_buf.st_size != 128) &&
+        (stat_buf.st_size != 256)) {
+      BX_PANIC(("CMOS: image file size must be 64, 128 or 256"));
+    } else {
+      BX_CMOS_THIS s.max_reg = stat_buf.st_size - 1;
+      if (BX_CMOS_THIS s.max_reg == 255) {
+        DEV_register_ioread_handler(this, read_handler, 0x0072, "Ext CMOS RAM", 1);
+        DEV_register_ioread_handler(this, read_handler, 0x0073, "Ext CMOS RAM", 1);
+        DEV_register_iowrite_handler(this, write_handler, 0x0072, "Ext CMOS RAM", 1);
+        DEV_register_iowrite_handler(this, write_handler, 0x0073, "Ext CMOS RAM", 1);
+      }
     }
 
     ret = ::read(fd, (bx_ptr_t) BX_CMOS_THIS s.reg, (unsigned)stat_buf.st_size);
@@ -246,6 +255,7 @@ void bx_cmos_c::init(void)
       update_clock();
     }
   } else {
+    BX_CMOS_THIS s.max_reg = 128;
     // CMOS values generated
     BX_CMOS_THIS s.reg[REG_STAT_A] = 0x26;
     BX_CMOS_THIS s.reg[REG_STAT_B] = 0x02;
@@ -307,8 +317,8 @@ void bx_cmos_c::save_image(void)
        | O_BINARY
 #endif
         );
-    ret = ::write(fd, (bx_ptr_t) BX_CMOS_THIS s.reg, 128);
-    if (ret != 128) {
+    ret = ::write(fd, (bx_ptr_t) BX_CMOS_THIS s.reg, BX_CMOS_THIS s.max_reg + 1);
+    if (ret != (BX_CMOS_THIS s.max_reg + 1)) {
       BX_PANIC(("CMOS: error writing cmos file."));
     }
     close(fd);
@@ -380,9 +390,11 @@ Bit32u bx_cmos_c::read(Bit32u address, unsigned io_len)
 
   switch (address) {
     case 0x0070:
+    case 0x0072:
       // this register is write-only on most machines
-      BX_DEBUG(("read of index port 0x70. returning 0xff"));
-      return(0xff);
+      BX_DEBUG(("read of index port 0x%02x returning 0xff", address));
+      return 0xff;
+
     case 0x0071:
       ret8 = BX_CMOS_THIS s.reg[BX_CMOS_THIS s.cmos_mem_address];
       // all bits of Register C are cleared after a read occurs.
@@ -392,11 +404,14 @@ Bit32u bx_cmos_c::read(Bit32u address, unsigned io_len)
           DEV_pic_lower_irq(8);
         }
       }
-      return(ret8);
+      return ret8;
+
+    case 0x0073:
+      return BX_CMOS_THIS s.reg[BX_CMOS_THIS s.cmos_ext_mem_addr];
 
     default:
       BX_PANIC(("unsupported cmos read, address=0x%04x!", (unsigned) address));
-      return(0);
+      return 0;
   }
 }
 
@@ -421,6 +436,10 @@ void bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
   switch (address) {
     case 0x0070:
       BX_CMOS_THIS s.cmos_mem_address = value & 0x7F;
+      break;
+
+    case 0x0072:
+      BX_CMOS_THIS s.cmos_ext_mem_addr = value | 0x80;
       break;
 
     case 0x0071:
@@ -638,6 +657,10 @@ void bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
             BX_CMOS_THIS s.cmos_mem_address, value));
           BX_CMOS_THIS s.reg[BX_CMOS_THIS s.cmos_mem_address] = value;
       }
+      break;
+
+    case 0x0073:
+      BX_CMOS_THIS s.reg[BX_CMOS_THIS s.cmos_ext_mem_addr] = value;
       break;
   }
 }

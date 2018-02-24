@@ -201,10 +201,10 @@ public:
 
 class BOCHSAPI bx_cmos_stub_c : public bx_devmodel_c {
 public:
-  virtual Bit32u get_reg(unsigned reg) {
+  virtual Bit32u get_reg(Bit8u reg) {
     STUBFUNC(cmos, get_reg); return 0;
   }
-  virtual void set_reg(unsigned reg, Bit32u val) {
+  virtual void set_reg(Bit8u reg, Bit32u val) {
     STUBFUNC(cmos, set_reg);
   }
   virtual void checksum_cmos(void) {

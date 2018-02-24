@@ -183,16 +183,19 @@ void bx_devices_c::init(BX_MEM_C *newmem)
     usb_enabled = is_usb_enabled();
     if (usb_enabled)
       bx_usbdev_ctl.init();
-    if (chipset == BX_PCI_CHIPSET_I440FX) {
-      // UHCI is a part of the PIIX3, so load / enable it
+    if ((chipset == BX_PCI_CHIPSET_I440FX) ||
+        (chipset == BX_PCI_CHIPSET_I440BX)) {
+      // UHCI is a part of the PIIX3/PIIX4, so load / enable it
       if (!PLUG_device_present("usb_uhci")) {
         PLUG_load_plugin(usb_uhci, PLUGTYPE_OPTIONAL);
       }
       SIM->get_param_bool(BXPN_UHCI_ENABLED)->set(1);
     }
 #endif
-    if (chipset == BX_PCI_CHIPSET_I440FX) {
+    if (chipset != BX_PCI_CHIPSET_I430FX) {
       PLUG_load_plugin(acpi, PLUGTYPE_STANDARD);
+    }
+    if (chipset == BX_PCI_CHIPSET_I440FX) {
       PLUG_load_plugin(hpet, PLUGTYPE_STANDARD);
     }
 #else
@@ -498,6 +501,9 @@ void bx_devices_c::write(Bit32u address, Bit32u value, unsigned io_len)
         } else if (dev != NULL) {
           BX_DEBUG(("PCI: request for bus %d device %d function %d (%s)", bus,
                     (devfunc >> 3), devfunc & 0x07, dev->get_name()));
+        } else if (bus == 1) {
+          BX_DEBUG(("PCI: request for AGP bus device %d function %d", (devfunc >> 3),
+                    devfunc & 0x07));
         } else {
           BX_DEBUG(("PCI: request for bus %d device %d function %d", bus,
                     (devfunc >> 3), devfunc & 0x07));
@@ -1178,19 +1184,24 @@ bx_bool bx_devices_c::register_pci_handlers(bx_pci_device_c *dev,
                                             Bit8u *devfunc, const char *name,
                                             const char *descr)
 {
-  unsigned i, handle;
+  unsigned i, offset, handle;
   int first_free_slot = -1;
   char devname[80];
   char *device;
 
   if (strcmp(name, "pci") && strcmp(name, "pci2isa") && strcmp(name, "pci_ide")
       && ((*devfunc & 0xf8) == 0x00)) {
+    if (SIM->get_param_enum(BXPN_PCI_CHIPSET)->get() == BX_PCI_CHIPSET_I440BX) {
+      offset = 8;
+    } else {
+      offset = 2;
+    }
     for (i = 0; i < BX_N_PCI_SLOTS; i++) {
       sprintf(devname, "pci.slot.%d", i+1);
       device = SIM->get_param_string(devname)->getptr();
       if (strlen(device) > 0) {
         if (!strcmp(name, device)) {
-          *devfunc = ((i + 2) << 3) | (*devfunc & 0x07);
+          *devfunc = ((i + offset) << 3) | (*devfunc & 0x07);
           pci.slot_used[i] = 1;
           BX_INFO(("PCI slot #%d used by plugin '%s'", i+1, name));
           break;
@@ -1205,7 +1216,7 @@ bx_bool bx_devices_c::register_pci_handlers(bx_pci_device_c *dev,
         i = (unsigned)first_free_slot;
         sprintf(devname, "pci.slot.%d", i+1);
         SIM->get_param_string(devname)->set(name);
-        *devfunc = ((i + 2) << 3) | (*devfunc & 0x07);
+        *devfunc = ((i + offset) << 3) | (*devfunc & 0x07);
         pci.slot_used[i] = 1;
         BX_INFO(("PCI slot #%d used by plugin '%s'", i+1, name));
       } else {
@@ -1440,13 +1451,15 @@ void bx_pci_device_c::pci_write_handler_common(Bit8u address, Bit32u value, unsi
   Bit8u bnum, value8, oldval;
   bx_bool bar_change = 0, rom_change = 0;
 
+  // ignore readonly registers
   if ((address < 4) || ((address > 7) && (address < 12)) || (address == 14) ||
       (address == 0x3d)) {
     BX_DEBUG(("write to r/o PCI register 0x%02x ignored", address));
     return;
   }
 
-  if ((address >= 0x10) && (address < 0x28)) {
+  // handle base address registers if header type bit #0 and #1 are clear
+  if (((pci_conf[0x0e] & 0x03) == 0) && (address >= 0x10) && (address < 0x28)) {
     bnum = ((address - 0x10) >> 2);
     if (pci_bar[bnum].type != BX_PCI_BAR_TYPE_NONE) {
       for (unsigned i=0; i<io_len; i++) {

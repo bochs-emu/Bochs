@@ -21,6 +21,7 @@
 // PCI IDE controller
 // i430FX - PIIX
 // i440FX - PIIX3
+// i440BX - PIIX4
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE
@@ -77,8 +78,14 @@ bx_pci_ide_c::~bx_pci_ide_c()
 void bx_pci_ide_c::init(void)
 {
   unsigned i;
+  Bit8u devfunc;
 
-  Bit8u devfunc = BX_PCI_DEVICE(1,1);
+  BX_PIDE_THIS s.chipset = SIM->get_param_enum(BXPN_PCI_CHIPSET)->get();
+  if (BX_PIDE_THIS s.chipset == BX_PCI_CHIPSET_I440BX) {
+    devfunc = BX_PCI_DEVICE(7, 1);
+  } else {
+    devfunc = BX_PCI_DEVICE(1, 1);
+  }
   DEV_register_pci_handlers(this, &devfunc,
       BX_PLUGIN_PCI_IDE, "PIIX3 PCI IDE controller");
 
@@ -94,12 +101,13 @@ void bx_pci_ide_c::init(void)
   BX_PIDE_THIS s.bmdma[0].buffer = new Bit8u[0x20000];
   BX_PIDE_THIS s.bmdma[1].buffer = new Bit8u[0x20000];
 
-  BX_PIDE_THIS s.chipset = SIM->get_param_enum(BXPN_PCI_CHIPSET)->get();
   // initialize readonly registers
-  if (BX_PIDE_THIS s.chipset == BX_PCI_CHIPSET_I440FX) {
-    init_pci_conf(0x8086, 0x7010, 0x00, 0x010180, 0x00, 0);
-  } else {
+  if (BX_PIDE_THIS s.chipset == BX_PCI_CHIPSET_I430FX) {
     init_pci_conf(0x8086, 0x1230, 0x00, 0x010180, 0x00, 0);
+  } else if (BX_PIDE_THIS s.chipset == BX_PCI_CHIPSET_I440BX) {
+    init_pci_conf(0x8086, 0x7111, 0x00, 0x010180, 0x00, 0);
+  } else {
+    init_pci_conf(0x8086, 0x7010, 0x00, 0x010180, 0x00, 0);
   }
   BX_PIDE_THIS init_bar_io(4, 16, read_handler, write_handler, &bmdma_iomask[0]);
 }
