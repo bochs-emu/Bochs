@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2017  The Bochs Project
+//  Copyright (C) 2002-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -238,7 +238,9 @@ extern "C" {
 
 ///////// PCI macros
 #define DEV_register_pci_handlers(a,b,c,d) \
-  (bx_devices.register_pci_handlers(a,b,c,d))
+  (bx_devices.register_pci_handlers(a,b,c,d,0))
+#define DEV_register_pci_handlers2(a,b,c,d,e) \
+  (bx_devices.register_pci_handlers(a,b,c,d,e))
 #define DEV_pci_get_confAddr() bx_devices.pci_get_confAddr()
 #define DEV_pci_set_irq(a,b,c) bx_devices.pluginPci2IsaBridge->pci_set_irq(a,b,c)
 #define DEV_pci_set_base_mem(a,b,c,d,e,f) \

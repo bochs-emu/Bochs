@@ -156,6 +156,7 @@ public:
     return get_first_atadevice(BX_ATA_DEVICE_DISK);
   }
   virtual bx_bool is_pci_device(const char *name);
+  virtual bx_bool is_agp_device(const char *name);
 #if BX_DEBUGGER
   virtual void debug_break();
   virtual void debug_interpret_cmd(char *cmd);
@@ -788,17 +789,34 @@ bx_param_c *bx_real_sim_c::get_first_atadevice(Bit32u search_type)
 bx_bool bx_real_sim_c::is_pci_device(const char *name)
 {
 #if BX_SUPPORT_PCI
-  unsigned i;
+  unsigned i, max_pci_slots = BX_N_PCI_SLOTS;
   char devname[80];
   char *device;
 
   if (SIM->get_param_bool(BXPN_PCI_ENABLED)->get()) {
-    for (i = 0; i < BX_N_PCI_SLOTS; i++) {
+    if (SIM->get_param_enum(BXPN_PCI_CHIPSET)->get() == BX_PCI_CHIPSET_I440BX) {
+      max_pci_slots = 4;
+    }
+    for (i = 0; i < max_pci_slots; i++) {
       sprintf(devname, "pci.slot.%d", i+1);
       device = SIM->get_param_string(devname)->getptr();
       if ((strlen(device) > 0) && (!strcmp(name, device))) {
         return 1;
       }
+    }
+  }
+#endif
+  return 0;
+}
+
+bx_bool bx_real_sim_c::is_agp_device(const char *name)
+{
+#if BX_SUPPORT_PCI
+  if (get_param_bool(BXPN_PCI_ENABLED)->get() &&
+      (SIM->get_param_enum(BXPN_PCI_CHIPSET)->get() == BX_PCI_CHIPSET_I440BX)) {
+    const char *device = SIM->get_param_string("pci.slot.5")->getptr();
+    if ((strlen(device) > 0) && (!strcmp(name, device))) {
+      return 1;
     }
   }
 #endif

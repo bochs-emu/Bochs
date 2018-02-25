@@ -427,7 +427,7 @@ public:
 #if BX_SUPPORT_PCI
   Bit32u pci_get_confAddr(void) {return pci.confAddr;}
   bx_bool register_pci_handlers(bx_pci_device_c *device, Bit8u *devfunc,
-                                const char *name, const char *descr);
+                                const char *name, const char *descr, Bit8u bus = 0);
   bx_bool pci_set_base_mem(void *this_ptr, memory_handler_t f1, memory_handler_t f2,
                            Bit32u *addr, Bit8u *pci_conf, unsigned size);
   bx_bool pci_set_base_io(void *this_ptr, bx_read_handler_t f1, bx_write_handler_t f2,
@@ -545,7 +545,7 @@ private:
   struct {
     bx_bool enabled;
 #if BX_SUPPORT_PCI
-    Bit8u handler_id[0x100];  // 256 devices/functions
+    Bit8u handler_id[0x101];  // 256 PCI devices/functions + 1 AGP device
     struct {
       bx_pci_device_c *handler;
     } pci_handler[BX_MAX_PCI_DEVICES];

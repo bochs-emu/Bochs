@@ -135,13 +135,14 @@ void bx_banshee_c::init_model(void)
   if (theVoodooVga == NULL) {
     BX_PANIC(("Voodoo Banshee with VGA disabled not supported yet"));
   }
+  Bit8u bus = SIM->is_agp_device(BX_PLUGIN_VOODOO);
   if (s.model == VOODOO_BANSHEE) {
-    DEV_register_pci_handlers(this, &s.devfunc, BX_PLUGIN_VOODOO,
-                              "Experimental 3dfx Voodoo Banshee");
+    DEV_register_pci_handlers2(this, &s.devfunc, BX_PLUGIN_VOODOO,
+                               "Experimental 3dfx Voodoo Banshee", bus);
     init_pci_conf(0x121a, 0x0003, 0x01, 0x030000, 0x00, BX_PCI_INTA);
   } else if (s.model == VOODOO_3) {
-    DEV_register_pci_handlers(this, &s.devfunc, BX_PLUGIN_VOODOO,
-                              "Experimental 3dfx Voodoo 3");
+    DEV_register_pci_handlers2(this, &s.devfunc, BX_PLUGIN_VOODOO,
+                               "Experimental 3dfx Voodoo 3", bus);
     init_pci_conf(0x121a, 0x0005, 0x01, 0x030000, 0x00, BX_PCI_INTA);
   } else {
     BX_PANIC(("Unknown Voodoo Banshee compatible model"));
