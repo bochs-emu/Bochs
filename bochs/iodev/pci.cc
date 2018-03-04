@@ -86,10 +86,18 @@ void bx_pci_bridge_c::init(void)
     init_pci_conf(0x8086, 0x0122, 0x02, 0x060000, 0x00, 0);
   } else if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440BX) {
     init_pci_conf(0x8086, 0x7190, 0x02, 0x060000, 0x00, 0);
+    BX_PCI_THIS pci_conf[0x10] = 0x08;
+    init_bar_mem(0, 0xf0000000, agp_ap_read_handler, agp_ap_write_handler);
     BX_PCI_THIS pci_conf[0x06] = 0x10;
     BX_PCI_THIS pci_conf[0x34] = 0xa0;
     BX_PCI_THIS pci_conf[0xa0] = 0x02;
     BX_PCI_THIS pci_conf[0xa2] = 0x10;
+    BX_PCI_THIS pci_conf[0xa4] = 0x03;
+    BX_PCI_THIS pci_conf[0xa5] = 0x02;
+    BX_PCI_THIS pci_conf[0xa7] = 0x1f;
+    BX_PCI_THIS pci_conf[0xf3] = 0xf8;
+    BX_PCI_THIS pci_conf[0xf8] = 0x20;
+    BX_PCI_THIS pci_conf[0xf9] = 0x0f;
     BX_PCI_THIS vbridge = new bx_pci_vbridge_c();
     BX_PCI_THIS vbridge->init();
   } else { // i440FX
@@ -204,9 +212,18 @@ bx_pci_bridge_c::reset(unsigned type)
     BX_PCI_THIS pci_conf[0x06] = 0x80;
     BX_PCI_THIS pci_conf[0x51] = 0x01;
     BX_PCI_THIS pci_conf[0x58] = 0x10;
+    BX_PCI_THIS pci_conf[0xb4] = 0x00;
+    BX_PCI_THIS pci_conf[0xb9] = 0x00;
+    BX_PCI_THIS pci_conf[0xba] = 0x00;
+    BX_PCI_THIS pci_conf[0xbb] = 0x00;
+    BX_PCI_THIS gart_base = 0;
   }
   for (i=0x59; i<0x60; i++)
     BX_PCI_THIS pci_conf[i] = 0x00;
+  for (i = 0; i <= BX_MEM_AREA_F0000; i++) {
+    DEV_mem_set_memory_type(i, 0, 0);
+    DEV_mem_set_memory_type(i, 1, 0);
+  }
   BX_PCI_THIS pci_conf[0x72] = 0x02;
 }
 
@@ -234,6 +251,8 @@ void bx_pci_bridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io
   unsigned area;
   Bit8u drba_reg, old_dram_detect;
   bx_bool drba_changed;
+  bx_bool attbase_changed = 0;
+  Bit32u apsize;
 
   old_dram_detect = BX_PCI_THIS dram_detect;
   if ((address >= 0x10) && (address < 0x34))
@@ -274,6 +293,8 @@ void bx_pci_bridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io
       case 0x50:
         if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I430FX) {
           BX_PCI_THIS pci_conf[address+i] = (value8 & 0xef);
+        } else if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440BX) {
+          BX_PCI_THIS pci_conf[address+i] = (value8 & 0xec);
         } else {
           BX_PCI_THIS pci_conf[address+i] = (value8 & 0x70);
         }
@@ -281,6 +302,8 @@ void bx_pci_bridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io
       case 0x51:
         if (BX_PCI_THIS chipset != BX_PCI_CHIPSET_I430FX) {
           BX_PCI_THIS pci_conf[address+i] = (value8 & 0x80) | 0x01;
+        } else if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440BX) {
+          BX_PCI_THIS pci_conf[address+i] = (value8 & 0x8f);
         }
         break;
       case 0x59:
@@ -328,6 +351,51 @@ void bx_pci_bridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io
       case 0x72:
         smram_control(value8); // SMRAM control register
         break;
+      case 0xb4:
+        if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440BX) {
+          BX_PCI_THIS pci_conf[address+i] = value8 & 0x3f;
+          switch (BX_PCI_THIS pci_conf[0xb4]) {
+            case 0x00:
+              apsize = (1 << 28);
+              break;
+            case 0x20:
+              apsize = (1 << 27);
+              break;
+            case 0x30:
+              apsize = (1 << 26);
+              break;
+            case 0x38:
+              apsize = (1 << 25);
+              break;
+            case 0x3c:
+              apsize = (1 << 24);
+              break;
+            case 0x3e:
+              apsize = (1 << 23);
+              break;
+            case 0x3f:
+              apsize = (1 << 22);
+              break;
+            default:
+              BX_ERROR(("Invalid AGP aperture size mask"));
+              apsize = 0;
+          }
+          BX_INFO(("AGP aperture size set to %d MB", apsize >> 20));
+          pci_bar[0].size = apsize;
+        }
+        break;
+      case 0xb8:
+        break;
+      case 0xb9:
+        value8 &= 0xf0;
+      case 0xba:
+      case 0xbb:
+        if ((BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440BX) &&
+            (value8 != oldval)) {
+          BX_PCI_THIS pci_conf[address+i] = value8;
+          attbase_changed |= 1;
+        }
+        break;
       case 0xf0:
         if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440BX) {
           BX_PCI_THIS pci_conf[address+i] = value8 & 0xc0;
@@ -344,6 +412,75 @@ void bx_pci_bridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io
   } else if ((BX_PCI_THIS dram_detect == 0) && (old_dram_detect > 0)) {
     // TODO
     BX_INFO(("normal memory access mode"));
+  }
+  if (attbase_changed) {
+    BX_PCI_THIS gart_base = ((BX_PCI_THIS pci_conf[0xbb] << 24) |
+                             (BX_PCI_THIS pci_conf[0xba] << 16) |
+                             (BX_PCI_THIS pci_conf[0xb9] << 8));
+    BX_INFO(("New GART base address = 0x%08x", BX_PCI_THIS gart_base));
+  }
+}
+
+bx_bool bx_pci_bridge_c::agp_ap_read_handler(bx_phy_address addr, unsigned len,
+                                             void *data, void *param)
+{
+  bx_pci_bridge_c *class_ptr = (bx_pci_bridge_c*)param;
+  Bit32u value = class_ptr->agp_aperture_read(addr, len, 0);
+  switch (len) {
+    case 1:
+      value &= 0xFF;
+      *((Bit8u *) data) = (Bit8u) value;
+      break;
+    case 2:
+      value &= 0xFFFF;
+      *((Bit16u *) data) = (Bit16u) value;
+      break;
+    case 4:
+      *((Bit32u *) data) = value;
+      break;
+  }
+  return 1;
+}
+
+Bit32u bx_pci_bridge_c::agp_aperture_read(bx_phy_address addr, unsigned len,
+                                          bx_bool agp)
+{
+  Bit32u gart_addr, gart_index, offset, page_addr, page_offset;
+
+  if (BX_PCI_THIS pci_conf[0x51] & 0x02) {
+    offset = (addr - pci_bar[0].addr);
+    gart_index = (Bit32u)(offset >> 12);
+    page_offset = (Bit32u)(offset & 0xfff);
+    gart_addr = BX_PCI_THIS gart_base + (gart_index << 2);
+    DEV_MEM_READ_PHYSICAL(gart_addr, 4, (Bit8u*)&page_addr);
+    BX_INFO(("AGP aperture read: page address = 0x%08x", page_addr));
+    // TODO
+  }
+  return 0;
+}
+
+bx_bool bx_pci_bridge_c::agp_ap_write_handler(bx_phy_address addr, unsigned len,
+                                              void *data, void *param)
+{
+  bx_pci_bridge_c *class_ptr = (bx_pci_bridge_c*)param;
+  Bit32u value = *(Bit32u*)data;
+  class_ptr->agp_aperture_write(addr, value, len, 0);
+  return 1;
+}
+
+void bx_pci_bridge_c::agp_aperture_write(bx_phy_address addr, Bit32u value,
+                                         unsigned len, bx_bool agp)
+{
+  Bit32u gart_addr, gart_index, offset, page_addr, page_offset;
+
+  if (BX_PCI_THIS pci_conf[0x51] & 0x02) {
+    offset = (addr - pci_bar[0].addr);
+    gart_index = (Bit32u)(offset >> 12);
+    page_offset = (Bit32u)(offset & 0xfff);
+    gart_addr = BX_PCI_THIS gart_base + (gart_index << 2);
+    DEV_MEM_READ_PHYSICAL(gart_addr, 4, (Bit8u*)&page_addr);
+    BX_INFO(("AGP aperture write: page address = 0x%08x", page_addr));
+    // TODO
   }
 }
 

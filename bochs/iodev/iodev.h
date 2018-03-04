@@ -113,7 +113,7 @@ typedef struct {
 class BOCHSAPI bx_pci_device_c : public bx_devmodel_c {
 public:
   bx_pci_device_c(): pci_rom(NULL), pci_rom_size(0) {
-    for (int i = 0; i < 6; i++) pci_bar[i].type = BX_PCI_BAR_TYPE_NONE;
+    for (int i = 0; i < 6; i++) memset(&pci_bar[i], 0, sizeof(bx_pci_bar_t));
   }
   virtual ~bx_pci_device_c() {
     if (pci_rom != NULL) delete [] pci_rom;

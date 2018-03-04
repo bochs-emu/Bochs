@@ -168,6 +168,7 @@ private:
   void   blt_line(bx_bool pline);
 
   bx_ddc_c ddc;
+  Bit8u    bus;
 };
 
 class bx_voodoo_vga_c : public bx_vgacore_c {

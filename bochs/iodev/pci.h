@@ -47,6 +47,12 @@ public:
   virtual void register_state(void);
   virtual void after_restore_state(void);
 
+  static bx_bool agp_ap_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  static bx_bool agp_ap_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+
+  Bit32u agp_aperture_read(bx_phy_address addr, unsigned len, bx_bool agp);
+  void   agp_aperture_write(bx_phy_address addr, Bit32u value, unsigned len, bx_bool agp);
+
   virtual void pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 #if BX_DEBUGGER
   virtual void debug_dump(int argc, char **argv);
@@ -58,6 +64,7 @@ private:
   unsigned chipset;
   Bit8u DRBA[8];
   Bit8u dram_detect;
+  Bit32u gart_base;
   bx_pci_vbridge_c *vbridge;
 };
 

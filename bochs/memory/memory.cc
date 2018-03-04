@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2017  The Bochs Project
+//  Copyright (C) 2001-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -162,6 +162,22 @@ mem_write:
           // Writes to ShadowRAM
           BX_DEBUG(("Writing to ShadowRAM: address 0x" FMT_PHY_ADDRX ", data %02x", a20addr, *data_ptr));
           *(BX_MEM_THIS get_vector(a20addr)) = *data_ptr;
+        } else if ((area >= BX_MEM_AREA_E0000) && BX_MEM_THIS bios_write_enabled) {
+          // volatile BIOS write support
+#ifdef BX_LITTLE_ENDIAN
+          data_ptr = (Bit8u *) data;
+#else // BX_BIG_ENDIAN
+          data_ptr = (Bit8u *) data + (len - 1);
+#endif
+          for (unsigned i = 0; i < len; i++) {
+            BX_MEM_THIS rom[BIOS_MAP_LAST128K(a20addr)] = *data_ptr;
+            a20addr++;
+#ifdef BX_LITTLE_ENDIAN
+            data_ptr++;
+#else // BX_BIG_ENDIAN
+            data_ptr--;
+#endif
+          }
         } else {
           // Writes to ROM, Inhibit
           BX_DEBUG(("Write to ROM ignored: address 0x" FMT_PHY_ADDRX ", data %02x", a20addr, *data_ptr));

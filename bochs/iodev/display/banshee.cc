@@ -132,17 +132,27 @@ bx_banshee_c::bx_banshee_c() : bx_voodoo_base_c()
 
 void bx_banshee_c::init_model(void)
 {
+  static char model[40];
+
   if (theVoodooVga == NULL) {
     BX_PANIC(("Voodoo Banshee with VGA disabled not supported yet"));
   }
-  Bit8u bus = SIM->is_agp_device(BX_PLUGIN_VOODOO);
+  bus = SIM->is_agp_device(BX_PLUGIN_VOODOO);
   if (s.model == VOODOO_BANSHEE) {
-    DEV_register_pci_handlers2(this, &s.devfunc, BX_PLUGIN_VOODOO,
-                               "Experimental 3dfx Voodoo Banshee", bus);
+    if (bus == 0) {
+      strcpy(model, "Experimental 3dfx Voodoo Banshee PCI");
+    } else {
+      strcpy(model, "Experimental 3dfx Voodoo Banshee AGP");
+    }
+    DEV_register_pci_handlers2(this, &s.devfunc, BX_PLUGIN_VOODOO, model, bus);
     init_pci_conf(0x121a, 0x0003, 0x01, 0x030000, 0x00, BX_PCI_INTA);
   } else if (s.model == VOODOO_3) {
-    DEV_register_pci_handlers2(this, &s.devfunc, BX_PLUGIN_VOODOO,
-                               "Experimental 3dfx Voodoo 3", bus);
+    if (bus == 0) {
+      strcpy(model, "Experimental 3dfx Voodoo 3 PCI");
+    } else {
+      strcpy(model, "Experimental 3dfx Voodoo 3 AGP");
+    }
+    DEV_register_pci_handlers2(this, &s.devfunc, BX_PLUGIN_VOODOO, model, bus);
     init_pci_conf(0x121a, 0x0005, 0x01, 0x030000, 0x00, BX_PCI_INTA);
   } else {
     BX_PANIC(("Unknown Voodoo Banshee compatible model"));
@@ -177,15 +187,18 @@ void bx_banshee_c::reset(unsigned type)
     { 0x1a, 0x00 }, { 0x1b, 0x00 },
     // address space 0x2c - 0x2f
     { 0x2c, 0x1a }, { 0x2d, 0x12 }, // subsystem ID
-    { 0x2e, 0x04 }, { 0x2f, 0x00 },
+    { 0x2e, 0x04 }, { 0x2f, 0x00 }, // for Banshee PCI and Voodoo 3 AGP
     { 0x3c, 0x00 },                 // IRQ
 
   };
   for (i = 0; i < sizeof(reset_vals2) / sizeof(*reset_vals2); ++i) {
     pci_conf[reset_vals2[i].addr] = reset_vals2[i].val;
   }
-  if (s.model == VOODOO_3) {
-    pci_conf[0x2e] = 0x36; // Subsystem ID.for a PCI model
+  // Special subsystem IDs
+  if ((s.model == VOODOO_3) && (bus == 0)) {
+    pci_conf[0x2e] = 0x36; // Voodoo 3 PCI model
+  } else if ((s.model == VOODOO_BANSHEE) && (bus == 1)) {
+    pci_conf[0x2e] = 0x03; // Banshee AGP model
   }
   // TODO
 

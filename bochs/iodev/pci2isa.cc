@@ -377,6 +377,7 @@ void bx_piix3_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
         break;
       case 0x4e:
         if ((value8 & 0x04) != (oldval & 0x04)) {
+          BX_DEBUG(("Set BIOS write support to %d", (value8 & 0x04) != 0));
           DEV_mem_set_bios_write((value8 & 0x04) != 0);
         }
         BX_P2I_THIS pci_conf[address+i] = value8;
