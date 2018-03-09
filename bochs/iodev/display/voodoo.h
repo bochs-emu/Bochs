@@ -168,7 +168,7 @@ private:
   void   blt_line(bx_bool pline);
 
   bx_ddc_c ddc;
-  Bit8u    bus;
+  bx_bool  is_agp;
 };
 
 class bx_voodoo_vga_c : public bx_vgacore_c {

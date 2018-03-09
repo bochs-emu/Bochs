@@ -137,22 +137,22 @@ void bx_banshee_c::init_model(void)
   if (theVoodooVga == NULL) {
     BX_PANIC(("Voodoo Banshee with VGA disabled not supported yet"));
   }
-  bus = SIM->is_agp_device(BX_PLUGIN_VOODOO);
+  is_agp = SIM->is_agp_device(BX_PLUGIN_VOODOO);
   if (s.model == VOODOO_BANSHEE) {
-    if (bus == 0) {
+    if (!is_agp) {
       strcpy(model, "Experimental 3dfx Voodoo Banshee PCI");
     } else {
       strcpy(model, "Experimental 3dfx Voodoo Banshee AGP");
     }
-    DEV_register_pci_handlers2(this, &s.devfunc, BX_PLUGIN_VOODOO, model, bus);
+    DEV_register_pci_handlers2(this, &s.devfunc, BX_PLUGIN_VOODOO, model, is_agp);
     init_pci_conf(0x121a, 0x0003, 0x01, 0x030000, 0x00, BX_PCI_INTA);
   } else if (s.model == VOODOO_3) {
-    if (bus == 0) {
+    if (is_agp) {
       strcpy(model, "Experimental 3dfx Voodoo 3 PCI");
     } else {
       strcpy(model, "Experimental 3dfx Voodoo 3 AGP");
     }
-    DEV_register_pci_handlers2(this, &s.devfunc, BX_PLUGIN_VOODOO, model, bus);
+    DEV_register_pci_handlers2(this, &s.devfunc, BX_PLUGIN_VOODOO, model, is_agp);
     init_pci_conf(0x121a, 0x0005, 0x01, 0x030000, 0x00, BX_PCI_INTA);
   } else {
     BX_PANIC(("Unknown Voodoo Banshee compatible model"));
@@ -175,7 +175,7 @@ void bx_banshee_c::reset(unsigned type)
     unsigned char val;
   } reset_vals2[] = {
     { 0x04, 0x00 }, { 0x05, 0x00 }, // command io / memory
-    { 0x06, 0x00 }, { 0x07, 0x00 }, // status
+    { 0x06, 0x10 }, { 0x07, 0x00 }, // status
     // address space 0x10 - 0x13
     { 0x11, 0x00 },
     { 0x12, 0x00 }, { 0x13, 0x00 },
@@ -188,16 +188,35 @@ void bx_banshee_c::reset(unsigned type)
     // address space 0x2c - 0x2f
     { 0x2c, 0x1a }, { 0x2d, 0x12 }, // subsystem ID
     { 0x2e, 0x04 }, { 0x2f, 0x00 }, // for Banshee PCI and Voodoo 3 AGP
+    // capabilities pointer 0x34 - 0x37
+    { 0x34, 0x60 }, { 0x35, 0x00 },
+    { 0x36, 0x00 }, { 0x37, 0x00 },
     { 0x3c, 0x00 },                 // IRQ
-
+    // ACPI capabilities ID 0x60 - 0x63
+    { 0x60, 0x01 }, { 0x61, 0x00 },
+    { 0x62, 0x21 }, { 0x63, 0x00 },
+    // ACPI control/status 0x64 - 0x67
+    { 0x60, 0x00 }, { 0x61, 0x00 },
+    { 0x62, 0x00 }, { 0x63, 0x00 },
   };
   for (i = 0; i < sizeof(reset_vals2) / sizeof(*reset_vals2); ++i) {
     pci_conf[reset_vals2[i].addr] = reset_vals2[i].val;
   }
+  // AGP reported by PCI status, new capabilities and strapInfo
+  if (is_agp) {
+    pci_conf[0x06] |= 0x20;
+    pci_conf[0x34] = 0x54;
+    pci_conf[0x54] = 0x02;
+    pci_conf[0x55] = 0x60;
+    pci_conf[0x56] = 0x10;
+    pci_conf[0x57] = 0x00;
+    v->banshee.io[io_strapInfo] |= 0x0000000c;
+    v->banshee.io[io_miscInit1] |= 0x0c000000;
+  }
   // Special subsystem IDs
-  if ((s.model == VOODOO_3) && (bus == 0)) {
+  if ((s.model == VOODOO_3) && !is_agp) {
     pci_conf[0x2e] = 0x36; // Voodoo 3 PCI model
-  } else if ((s.model == VOODOO_BANSHEE) && (bus == 1)) {
+  } else if ((s.model == VOODOO_BANSHEE) && is_agp) {
     pci_conf[0x2e] = 0x03; // Banshee AGP model
   }
   // TODO
@@ -451,6 +470,10 @@ void bx_banshee_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_le
         if ((v->banshee.io[io_miscInit1] & 0x08) == 0) {
           value8 = oldval;
         }
+        break;
+      case 0x06:
+      case 0x07:
+        value8 = oldval;
         break;
       default:
         if (address >= 0x54) {
