@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2017  The Bochs Project
+//  Copyright (C) 2001-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -295,6 +295,9 @@ void bx_hard_drive_c::init(void)
         int cyl = SIM->get_param_num("cylinders", base)->get();
         int heads = SIM->get_param_num("heads", base)->get();
         int spt = SIM->get_param_num("spt", base)->get();
+        if (SIM->get_param_num("sect_size", base)->get() != BX_SECT_SIZE_512) {
+          BX_PANIC(("Disk sector size other than 512 not yet supported"));
+        }
         Bit64u disk_size = (Bit64u)cyl * heads * spt * 512;
 
         image_mode = SIM->get_param_enum("mode", base)->get();

@@ -1391,6 +1391,17 @@ void bx_init_options()
         0);
       spt->set_ask_format("Enter number of sectors per track: [%d] ");
 
+      static const char *sector_size_names[] = { "512", "1024", "4096", NULL };
+
+      bx_param_enum_c *sect_size = new bx_param_enum_c(menu,
+        "sect_size",
+        "Sector size",
+        "Size of a disk sector in bytes",
+        sector_size_names,
+        BX_SECT_SIZE_512,
+        BX_SECT_SIZE_512);
+      sect_size->set_ask_format("Enter sector size: [%s]");
+
       bx_param_string_c *model = new bx_param_string_c(menu,
         "model",
         "Model name",
@@ -1427,8 +1438,8 @@ void bx_init_options()
 
       // all items depend on the drive type
       type->set_dependent_list(menu->clone(), 0);
-      type->set_dependent_bitmap(BX_ATA_DEVICE_DISK, 0x7e6);
-      type->set_dependent_bitmap(BX_ATA_DEVICE_CDROM, 0x30a);
+      type->set_dependent_bitmap(BX_ATA_DEVICE_DISK, 0xfe6);
+      type->set_dependent_bitmap(BX_ATA_DEVICE_CDROM, 0x60a);
 
       type->set_handler(bx_param_handler);
     }

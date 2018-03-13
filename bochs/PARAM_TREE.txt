@@ -186,6 +186,7 @@ ata
       cylinders
       heads
       spt
+      sect_size
       status
       model
       biosdetect
