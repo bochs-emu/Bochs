@@ -10,7 +10,7 @@
  * Contact: snrrrub@yahoo.com
  *
  * Copyright (C) 2003       Net Integration Technologies, Inc.
- * Copyright (C) 2003-2017  The Bochs Project
+ * Copyright (C) 2003-2018  The Bochs Project
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -290,16 +290,17 @@ int vmware3_image_t::open(const char* _pathname, int flags)
   }
   current = &images[0];
   requested_offset = 0;
+  sect_size = 512;
   if (header.total_sectors_in_disk != 0) {
     cylinders = header.cylinders_in_disk;
     heads = header.heads_in_disk;
     spt = header.sectors_in_disk;
-    hd_size = header.total_sectors_in_disk * 512;
+    hd_size = header.total_sectors_in_disk * sect_size;
   } else {
     cylinders = header.cylinders;
     heads = header.heads;
     spt = header.sectors;
-    hd_size = header.total_sectors * 512;
+    hd_size = header.total_sectors * sect_size;
   }
   return 1;
 }

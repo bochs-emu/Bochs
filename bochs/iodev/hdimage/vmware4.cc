@@ -10,7 +10,7 @@
  * Contact: snrrrub@gmail.com
  *
  * Copyright (C) 2006       Sharvil Nanavati.
- * Copyright (C) 2006-2017  The Bochs Project
+ * Copyright (C) 2006-2018  The Bochs Project
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -90,7 +90,8 @@ int vmware4_image_t::open(const char* _pathname, int flags)
   current_offset = 0;
   is_dirty = 0;
 
-  hd_size = header.total_sectors * SECTOR_SIZE;
+  sect_size = SECTOR_SIZE;
+  hd_size = header.total_sectors * sect_size;
   cylinders = (unsigned)(header.total_sectors / (16 * 63));
   heads = 16;
   spt = 63;
@@ -100,6 +101,7 @@ int vmware4_image_t::open(const char* _pathname, int flags)
   BX_DEBUG(("   .cylinders = %d", cylinders));
   BX_DEBUG(("   .heads     = %d", heads));
   BX_DEBUG(("   .sectors   = %d", spt));
+  BX_DEBUG(("   .sect size = %d", sect_size));
 
   return 1;
 }

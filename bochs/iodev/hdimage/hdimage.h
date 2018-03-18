@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2005-2017  The Bochs Project
+//  Copyright (C) 2005-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -207,6 +207,7 @@ class device_image_t
       unsigned cylinders;
       unsigned heads;
       unsigned spt;
+      unsigned sect_size;
       Bit64u   hd_size;
   protected:
 #ifndef WIN32

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2017  The Bochs Project
+//  Copyright (C) 2002-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -492,6 +492,7 @@ bx_bool hdimage_copy_file(const char *src, const char *dst)
 device_image_t::device_image_t()
 {
   hd_size = 0;
+  sect_size = 512;
 }
 
 int device_image_t::open(const char* _pathname)
@@ -527,7 +528,9 @@ int flat_image_t::open(const char* _pathname, int flags)
   }
   BX_INFO(("hd_size: " FMT_LL "u", hd_size));
   if (hd_size <= 0) BX_PANIC(("size of disk image not detected / invalid"));
-  if ((hd_size % 512) != 0) BX_PANIC(("size of disk image must be multiple of 512 bytes"));
+  if ((hd_size % sect_size) != 0) {
+    BX_PANIC(("size of disk image must be multiple of %d bytes", sect_size));
+  }
   return fd;
 }
 
@@ -641,7 +644,7 @@ int concat_image_t::open(const char* _pathname0, int flags)
       BX_PANIC(("block devices should REALLY NOT be used as concat images"));
     }
 #endif
-    if ((stat_buf.st_size % 512) != 0) {
+    if ((stat_buf.st_size % sect_size) != 0) {
       BX_PANIC(("size of disk image must be multiple of 512 bytes"));
     }
     start_offset_table[i] = start_offset;
@@ -676,8 +679,8 @@ void concat_image_t::close()
 
 Bit64s concat_image_t::lseek(Bit64s offset, int whence)
 {
-  if ((offset % 512) != 0)
-    BX_PANIC(("lseek HD with offset not multiple of 512"));
+  if ((offset % sect_size) != 0)
+    BX_PANIC(("lseek HD with offset not multiple of %d", sect_size));
   BX_DEBUG(("concat_image_t.lseek(%d)", whence));
   switch (whence) {
     case SEEK_SET:
@@ -928,6 +931,9 @@ int sparse_image_t::open(const char* pathname0, int flags)
   if ((underlying_filesize % pagesize) != 0)
     panic("size of sparse disk image is not multiple of page size");
 
+  if ((pagesize % sect_size) != 0)
+    panic("page size of sparse disk image is not multiple of sector size");
+
   underlying_current_filepos = 0;
   if (-1 == ::lseek(fd, 0, SEEK_SET))
     panic("error while seeking to start of file");
@@ -990,8 +996,8 @@ void sparse_image_t::close()
 
 Bit64s sparse_image_t::lseek(Bit64s offset, int whence)
 {
-  if ((offset % 512) != 0)
-    BX_PANIC(("lseek HD with offset not multiple of 512"));
+  if ((offset % sect_size) != 0)
+    BX_PANIC(("lseek HD with offset not multiple of %d", sect_size));
   if (whence != SEEK_SET)
     BX_PANIC(("lseek HD with whence not SEEK_SET"));
 
@@ -1395,6 +1401,7 @@ int dll_image_t::open(const char* pathname, int flags)
     vunit = vdisk_open(pathname, flags);
     if (vunit >= 0) {
       hd_size = (Bit64u)vdisk_get_size(vunit) << 9;
+      sect_size = 512;
       vblk = 0;
     }
   } else {
@@ -1989,6 +1996,7 @@ int growing_image_t::open(const char* _pathname, int flags)
   pathname = _pathname;
   int filedes = redolog->open(pathname, REDOLOG_SUBTYPE_GROWING, flags);
   hd_size = redolog->get_size();
+  sect_size = 512;
   BX_INFO(("'growing' disk opened, growing file is '%s'", pathname));
   return filedes;
 }
@@ -2146,6 +2154,7 @@ int undoable_image_t::open(const char* pathname, int flags)
     return -1;
 
   hd_size = ro_disk->hd_size;
+  sect_size = 512;
 
   // If not set, we make up the redolog filename from the pathname
   if (redolog_name == NULL) {
@@ -2292,6 +2301,7 @@ int volatile_image_t::open(const char* pathname, int flags)
     return -1;
 
   hd_size = ro_disk->hd_size;
+  sect_size = 512;
 
   // If not set, use pathname as template
   if (redolog_name == NULL) {

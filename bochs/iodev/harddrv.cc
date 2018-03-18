@@ -295,10 +295,11 @@ void bx_hard_drive_c::init(void)
         int cyl = SIM->get_param_num("cylinders", base)->get();
         int heads = SIM->get_param_num("heads", base)->get();
         int spt = SIM->get_param_num("spt", base)->get();
-        if (SIM->get_param_num("sect_size", base)->get() != BX_SECT_SIZE_512) {
+        int sect_size = atoi(SIM->get_param_enum("sect_size", base)->get_selected());
+        if (sect_size != 512) {
           BX_PANIC(("Disk sector size other than 512 not yet supported"));
         }
-        Bit64u disk_size = (Bit64u)cyl * heads * spt * 512;
+        Bit64u disk_size = (Bit64u)cyl * heads * spt * sect_size;
 
         image_mode = SIM->get_param_enum("mode", base)->get();
         channels[channel].drives[device].hdimage = DEV_hdimage_init_image(image_mode,
@@ -315,6 +316,7 @@ void bx_hard_drive_c::init(void)
         BX_HD_THIS channels[channel].drives[device].hdimage->cylinders = cyl;
         BX_HD_THIS channels[channel].drives[device].hdimage->heads = heads;
         BX_HD_THIS channels[channel].drives[device].hdimage->spt = spt;
+        BX_HD_THIS channels[channel].drives[device].hdimage->sect_size = sect_size;
 
         /* open hard drive image file */
         if ((BX_HD_THIS channels[channel].drives[device].hdimage->open(SIM->get_param_string("path", base)->getptr())) < 0) {
@@ -328,7 +330,9 @@ void bx_hard_drive_c::init(void)
           cyl = BX_HD_THIS channels[channel].drives[device].hdimage->cylinders;
           heads = BX_HD_THIS channels[channel].drives[device].hdimage->heads;
           spt = BX_HD_THIS channels[channel].drives[device].hdimage->spt;
-          BX_INFO(("ata%d-%d: image geometry: CHS=%d/%d/%d", channel, device, cyl, heads, spt));
+          sect_size = BX_HD_THIS channels[channel].drives[device].hdimage->sect_size;
+          BX_INFO(("ata%d-%d: image geometry: CHS=%d/%d/%d (sector size=%d)",
+                   channel, device, cyl, heads, spt, sect_size));
         } else {
           if ((cyl == 0) && (image_caps & HDIMAGE_AUTO_GEOMETRY)) {
             // Autodetect number of cylinders
@@ -336,15 +340,17 @@ void bx_hard_drive_c::init(void)
               BX_PANIC(("ata%d-%d cannot have zero heads, or sectors/track", channel, device));
             }
             cyl = (int)(BX_HD_THIS channels[channel].drives[device].hdimage->hd_size / (heads * spt * 512));
-            disk_size = ((Bit64u)cyl * heads * spt * 512);
+            disk_size = ((Bit64u)cyl * heads * spt * sect_size);
             BX_HD_THIS channels[channel].drives[device].hdimage->cylinders = cyl;
-            BX_INFO(("ata%d-%d: autodetect geometry: CHS=%d/%d/%d", channel, device, cyl, heads, spt));
+            BX_INFO(("ata%d-%d: autodetect geometry: CHS=%d/%d/%d (sector size=%d)",
+                     channel, device, cyl, heads, spt, sect_size));
           } else {
             // Default method: use CHS from configuration.
             if (cyl == 0 || heads == 0 || spt == 0) {
               BX_PANIC(("ata%d-%d cannot have zero cylinders, heads, or sectors/track", channel, device));
             }
-            BX_INFO(("ata%d-%d: using specified geometry: CHS=%d/%d/%d", channel, device, cyl, heads, spt));
+            BX_INFO(("ata%d-%d: using specified geometry: CHS=%d/%d/%d (sector size=%d)",
+                     channel, device, cyl, heads, spt, sect_size));
           }
           if (disk_size > BX_HD_THIS channels[channel].drives[device].hdimage->hd_size) {
             BX_PANIC(("ata%d-%d: specified geometry doesn't fit on disk image", channel, device));

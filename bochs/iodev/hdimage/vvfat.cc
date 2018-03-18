@@ -6,7 +6,7 @@
 // ported from QEMU block driver with some additions (see below)
 //
 // Copyright (c) 2004,2005  Johannes E. Schindelin
-// Copyright (C) 2010-2016  The Bochs Project
+// Copyright (C) 2010-2018  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -1200,6 +1200,7 @@ int vvfat_image_t::open(const char* dirname, int flags)
       if (fat_type != 0) {
         sector_count = partition->start_sector_long + partition->length_sector_long;
         spt = partition->start_sector_long;
+        sect_size = 512;
         if (partition->end_CHS.head > 15) {
           heads = 16;
         } else {

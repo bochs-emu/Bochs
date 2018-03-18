@@ -10,7 +10,7 @@
  * Contact: fys [at] fysnet [dot] net
  *
  * Copyright (C) 2015       Benjamin D Lunt.
- * Copyright (C) 2006-2017  The Bochs Project
+ * Copyright (C) 2006-2018  The Bochs Project
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -123,12 +123,13 @@ int vbox_image_t::open(const char* _pathname, int flags)
   current_offset = 0;
 
   hd_size = header.disk_size;
+  sect_size = (unsigned) header.sector_size;
   if ((unsigned) header.cylinders > 0) {
     cylinders = (unsigned) header.cylinders;
     heads = (unsigned) header.heads;
     spt = (unsigned) header.sectors;
   } else {
-    cylinders = (unsigned) ((header.disk_size / 512) / 16) / 63;
+    cylinders = (unsigned) ((header.disk_size / sect_size) / 16) / 63;
     heads = 16;
     spt = 63;
   }
@@ -138,6 +139,7 @@ int vbox_image_t::open(const char* _pathname, int flags)
   BX_DEBUG(("   .cylinders = %d", cylinders));
   BX_DEBUG(("   .heads     = %d", heads));
   BX_DEBUG(("   .sectors   = %d", spt));
+  BX_DEBUG(("   .sect_size = %d", sect_size));
 
   return 1;
 }
