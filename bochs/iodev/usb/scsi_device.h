@@ -9,7 +9,7 @@
 //
 //  Written by Paul Brook
 //
-//  Copyright (C) 2007-2015  The Bochs Project
+//  Copyright (C) 2007-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -108,7 +108,7 @@ private:
   enum scsidev_type type;
   device_image_t *hdimage;
   cdrom_base_c *cdrom;
-  int cluster_size;
+  int block_size;
   int tcq;
   scsi_completionfn completion;
   void *dev;

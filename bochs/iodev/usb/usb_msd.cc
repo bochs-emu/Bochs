@@ -6,7 +6,7 @@
 //
 //  Copyright (c) 2006 CodeSourcery.
 //  Written by Paul Brook
-//  Copyright (C) 2009-2017  The Bochs Project
+//  Copyright (C) 2009-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -363,6 +363,7 @@ usb_msd_device_c::usb_msd_device_c(usbdev_type type, const char *filename)
     }
     s.journal[0] = 0;
     s.size = 0;
+    s.sect_size = 512;
   } else if (d.type == USB_DEV_TYPE_CDROM) {
     strcpy(d.devname, "BOCHS USB CDROM");
     s.fname = filename;
@@ -445,6 +446,20 @@ bx_bool usb_msd_device_c::set_option(const char *option)
     } else {
       BX_ERROR(("Option 'size' is only valid for USB VVFAT disks"));
     }
+  } else if (!strncmp(option, "sect_size:", 10)) {
+    if (d.type == USB_DEV_TYPE_DISK) {
+      s.sect_size = (unsigned)strtol(option+10, &suffix, 10);
+      if (strlen(suffix) > 0) {
+        BX_ERROR(("Option 'sect_size': ignoring extra data"));
+      }
+      if ((s.sect_size != 512) && (s.sect_size != 1024) && (s.sect_size != 4096)) {
+        BX_ERROR(("Option 'sect_size': invalid value, using default"));
+        s.sect_size = 512;
+      }
+      return 1;
+    } else {
+      BX_ERROR(("Option 'sect_size' is only valid for USB disks"));
+    }
   }
   return 0;
 }
@@ -458,6 +473,9 @@ bx_bool usb_msd_device_c::init()
       s.hdimage->cylinders = (unsigned)(hdsize/16.0/63.0/512.0);
       s.hdimage->heads = 16;
       s.hdimage->spt = 63;
+      s.hdimage->sect_size = 512;
+    } else {
+      s.hdimage->sect_size = s.sect_size;
     }
     if (s.hdimage->open(s.fname) < 0) {
       BX_ERROR(("could not open hard drive image file '%s'", s.fname));
@@ -465,7 +483,8 @@ bx_bool usb_msd_device_c::init()
     } else {
       s.scsi_dev = new scsi_device_t(s.hdimage, 0, usb_msd_command_complete, (void*)this);
     }
-    sprintf(s.info_txt, "USB HD: path='%s', mode='%s'", s.fname, hdimage_mode_names[s.image_mode]);
+    sprintf(s.info_txt, "USB HD: path='%s', mode='%s', sect_size=%d", s.fname,
+            hdimage_mode_names[s.image_mode], s.hdimage->sect_size);
   } else if (d.type == USB_DEV_TYPE_CDROM) {
     s.cdrom = DEV_hdimage_init_cdrom(s.fname);
     s.scsi_dev = new scsi_device_t(s.cdrom, 0, usb_msd_command_complete, (void*)this);

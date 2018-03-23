@@ -9,7 +9,7 @@
 //
 //  Written by Paul Brook
 //
-//  Copyright (C) 2007-2015  The Bochs Project
+//  Copyright (C) 2007-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -87,10 +87,10 @@ scsi_device_t::scsi_device_t(device_image_t *_hdimage, int _tcq,
   tcq = _tcq;
   completion = _completion;
   dev = _dev;
-  cluster_size = 1;
+  block_size = hdimage->sect_size;
   locked = 0;
   inserted = 1;
-  max_lba = (hdimage->hd_size / 512) - 1;
+  max_lba = (hdimage->hd_size / block_size) - 1;
   curr_lba = max_lba;
   sprintf(drive_serial_str, "%d", serial_number++);
   seek_timer_index =
@@ -111,7 +111,7 @@ scsi_device_t::scsi_device_t(cdrom_base_c *_cdrom, int _tcq,
   tcq = _tcq;
   completion = _completion;
   dev = _dev;
-  cluster_size = 4;
+  block_size = 2048;
   locked = 0;
   inserted = 0;
   max_lba = 0;
@@ -439,7 +439,7 @@ void scsi_device_t::scsi_write_complete(void *req, int ret)
   if (r->sector_count == 0) {
     scsi_command_complete(r, STATUS_GOOD, SENSE_NO_SENSE);
   } else {
-    len = r->sector_count * 512;
+    len = r->sector_count * block_size;
     if (len > SCSI_DMA_BUF_SIZE) {
       len = SCSI_DMA_BUF_SIZE;
     }
@@ -460,7 +460,7 @@ void scsi_device_t::scsi_write_data(Bit32u tag)
     return;
   }
   if (type == SCSIDEV_TYPE_DISK) {
-    if ((r->buf_len / 512) > 0) {
+    if ((r->buf_len / block_size) > 0) {
       if ((r->async_mode) && (r->seek_pending == 2)) {
         start_seek(r);
       } else if (!r->seek_pending) {
@@ -796,7 +796,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun, bx_bool
       if (type == SCSIDEV_TYPE_CDROM) {
         nb_sectors = max_lba;
       } else {
-        nb_sectors = hdimage->hd_size / 512;
+        nb_sectors = hdimage->hd_size / block_size;
         nb_sectors--;
       }
       /* Returned value is the address of the last sector.  */
@@ -807,7 +807,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun, bx_bool
         outbuf[3] = (Bit8u)(nb_sectors & 0xff);
         outbuf[4] = 0;
         outbuf[5] = 0;
-        outbuf[6] = cluster_size * 2;
+        outbuf[6] = (block_size >> 8);
         outbuf[7] = 0;
         r->buf_len = 8;
       } else {
@@ -925,7 +925,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun, bx_bool
       if (type == SCSIDEV_TYPE_CDROM) {
         nb_sectors = max_lba;
       } else {
-        nb_sectors = (hdimage->hd_size / 512);
+        nb_sectors = (hdimage->hd_size / block_size);
         nb_sectors--;
       }
       /* Returned value is the address of the last sector.  */
@@ -935,7 +935,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun, bx_bool
       outbuf[7] = (Bit8u)(nb_sectors & 0xff);
       outbuf[8] = 2; // formatted (1 = unformatted)
       outbuf[9] = 0;
-      outbuf[10] = cluster_size * 2;
+      outbuf[10] = (block_size >> 8);
       outbuf[11] = 0;
 
       r->buf_len = (len < OUR_LEN) ? len : OUR_LEN;
@@ -954,7 +954,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun, bx_bool
   if (r->sector_count == 0 && r->buf_len == 0) {
     scsi_command_complete(r, STATUS_GOOD, SENSE_NO_SENSE);
   }
-  len = r->sector_count * 512 * cluster_size + r->buf_len;
+  len = r->sector_count * block_size + r->buf_len;
   if (r->write_cmd) {
     return -len;
   } else {
@@ -1019,9 +1019,9 @@ void scsi_device_t::seek_complete(SCSIRequest *r)
   if (!r->write_cmd) {
     bx_gui->statusbar_setitem(statusbar_id, 1);
     n = r->sector_count;
-    if (n > (Bit32u)(SCSI_DMA_BUF_SIZE / (512 * cluster_size)))
-      n = SCSI_DMA_BUF_SIZE / (512 * cluster_size);
-    r->buf_len = n * 512 * cluster_size;
+    if (n > (Bit32u)(SCSI_DMA_BUF_SIZE / block_size))
+      n = SCSI_DMA_BUF_SIZE / block_size;
+    r->buf_len = n * block_size;
     if (type == SCSIDEV_TYPE_CDROM) {
       i = 0;
       do {
@@ -1032,7 +1032,7 @@ void scsi_device_t::seek_complete(SCSIRequest *r)
         return;
       }
     } else {
-      ret = (int)hdimage->lseek(r->sector * 512, SEEK_SET);
+      ret = (int)hdimage->lseek(r->sector * block_size, SEEK_SET);
       if (ret < 0) {
         BX_ERROR(("could not lseek() hard drive image file"));
         scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_HARDWARE_ERROR);
@@ -1040,9 +1040,10 @@ void scsi_device_t::seek_complete(SCSIRequest *r)
       }
       i = 0;
       do {
-        ret = (int)hdimage->read((bx_ptr_t)(r->dma_buf + (i * 512)), 512);
-      } while ((++i < n) && (ret == 512));
-      if (ret != 512) {
+        ret = (int)hdimage->read((bx_ptr_t)(r->dma_buf + (i * block_size)),
+                                 block_size);
+      } while ((++i < n) && (ret == block_size));
+      if (ret != block_size) {
         BX_ERROR(("could not read() hard drive image file"));
         scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_HARDWARE_ERROR);
         return;
@@ -1053,18 +1054,19 @@ void scsi_device_t::seek_complete(SCSIRequest *r)
     scsi_read_complete((void*)r, 0);
   } else {
     bx_gui->statusbar_setitem(statusbar_id, 1, 1);
-    n = r->buf_len / 512;
+    n = r->buf_len / block_size;
     if (n) {
-      ret = (int)hdimage->lseek(r->sector * 512, SEEK_SET);
+      ret = (int)hdimage->lseek(r->sector * block_size, SEEK_SET);
       if (ret < 0) {
         BX_ERROR(("could not lseek() hard drive image file"));
         scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_HARDWARE_ERROR);
       }
       i = 0;
       do {
-        ret = (int)hdimage->write((bx_ptr_t)(r->dma_buf + (i * 512)), 512);
-      } while ((++i < n) && (ret == 512));
-      if (ret != 512) {
+        ret = (int)hdimage->write((bx_ptr_t)(r->dma_buf + (i * block_size)),
+                                  block_size);
+      } while ((++i < n) && (ret == block_size));
+      if (ret != block_size) {
         BX_ERROR(("could not write() hard drive image file"));
         scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_HARDWARE_ERROR);
         return;
