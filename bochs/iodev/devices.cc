@@ -1282,8 +1282,7 @@ bx_bool bx_devices_c::pci_set_base_mem(void *this_ptr, memory_handler_t f1, memo
   Bit32u mask = ~(size - 1);
   Bit8u pci_flags = pci_conf[0x00] & 0x0f;
   if ((pci_flags & 0x06) > 0) {
-    BX_PANIC(("PCI base memory flag 0x%02x not supported", pci_flags));
-    return 0;
+    BX_ERROR(("Ignoring PCI base memory flag 0x%02x for now", pci_flags));
   }
   pci_conf[0x00] &= (mask & 0xf0);
   pci_conf[0x01] &= (mask >> 8) & 0xff;
