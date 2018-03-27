@@ -645,7 +645,7 @@ int concat_image_t::open(const char* _pathname0, int flags)
     }
 #endif
     if ((stat_buf.st_size % sect_size) != 0) {
-      BX_PANIC(("size of disk image must be multiple of 512 bytes"));
+      BX_PANIC(("size of disk image must be multiple of %d bytes", sect_size));
     }
     start_offset_table[i] = start_offset;
     start_offset += length_table[i];
@@ -1996,7 +1996,6 @@ int growing_image_t::open(const char* _pathname, int flags)
   pathname = _pathname;
   int filedes = redolog->open(pathname, REDOLOG_SUBTYPE_GROWING, flags);
   hd_size = redolog->get_size();
-  sect_size = 512;
   BX_INFO(("'growing' disk opened, growing file is '%s'", pathname));
   return filedes;
 }
@@ -2154,7 +2153,7 @@ int undoable_image_t::open(const char* pathname, int flags)
     return -1;
 
   hd_size = ro_disk->hd_size;
-  sect_size = 512;
+  sect_size = ro_disk->hd_size;
 
   // If not set, we make up the redolog filename from the pathname
   if (redolog_name == NULL) {
@@ -2301,7 +2300,7 @@ int volatile_image_t::open(const char* pathname, int flags)
     return -1;
 
   hd_size = ro_disk->hd_size;
-  sect_size = 512;
+  sect_size = ro_disk->hd_size;
 
   // If not set, use pathname as template
   if (redolog_name == NULL) {

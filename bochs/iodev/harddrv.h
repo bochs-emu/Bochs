@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2015  The Bochs Project
+//  Copyright (C) 2001-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -75,7 +75,8 @@ typedef struct {
     Bit16u   cylinder_no;
     Bit16u   byte_count;
   };
-  Bit8u    buffer[MAX_MULTIPLE_SECTORS*512 + 4];
+  Bit8u    *buffer;
+  Bit32u   buffer_total_size;
   Bit32u   buffer_size;
   Bit32u   buffer_index;
   Bit32u   drq_index;
@@ -126,7 +127,6 @@ struct error_recovery_t {
 
 Bit16u read_16bit(const Bit8u* buf) BX_CPP_AttrRegparmN(1);
 Bit32u read_32bit(const Bit8u* buf) BX_CPP_AttrRegparmN(1);
-
 
 struct cdrom_t
 {
@@ -248,6 +248,7 @@ private:
       device_image_t* hdimage;
       Bit64s curr_lsector;
       Bit64s next_lsector;
+      unsigned sect_size;
 
       Bit8u model_no[41];
       int statusbar_id;
