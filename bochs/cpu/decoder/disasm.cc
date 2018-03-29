@@ -626,7 +626,9 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
   if (i->modC0() && (i->getIaOpcode() == BX_IA_MOVLPS_VpsMq 
 #if BX_SUPPORT_AVX
        || i->getIaOpcode() == BX_IA_V128_VMOVLPS_VpsHpsMq
+#if BX_SUPPORT_EVEX
        || i->getIaOpcode() == BX_IA_V512_VMOVLPS_VpsHpsMq
+#endif
 #endif
     )) {
     disbufptr = dis_sprintf(disbufptr, "%smovhlps ", (i->getVL() == BX_VL128) ? "v" : "");
@@ -634,7 +636,9 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
   else if (i->modC0() && (i->getIaOpcode() == BX_IA_MOVHPS_VpsMq
 #if BX_SUPPORT_AVX
        || i->getIaOpcode() == BX_IA_V128_VMOVHPS_VpsHpsMq
+#if BX_SUPPORT_EVEX
        || i->getIaOpcode() == BX_IA_V512_VMOVHPS_VpsHpsMq
+#endif
 #endif
     )) {
     disbufptr = dis_sprintf(disbufptr, "%smovlhps ", (i->getVL() == BX_VL128) ? "v" : "");
