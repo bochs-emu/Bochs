@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001-2013  The Bochs Project
-//  Copyright (C) 2013-2017  Volker Ruppert
+//  Copyright (C) 2013-2018  Volker Ruppert
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -112,6 +112,8 @@ int  bx_hdsize;
 int  bx_imagemode;
 int  bx_backup;
 int  bx_interactive;
+int  bx_sectsize_idx;
+unsigned bx_sectsize_val;
 char bx_filename_1[512];
 char bx_filename_2[512];
 
@@ -148,6 +150,11 @@ const int hdmode_choice_id[] = {BX_HDIMAGE_MODE_FLAT, BX_HDIMAGE_MODE_SPARSE,
                                 BX_HDIMAGE_MODE_GROWING, BX_HDIMAGE_MODE_VPC,
                                 BX_HDIMAGE_MODE_VMWARE4};
 int hdmode_n_choices = 5;
+
+// menu data for choosing hard disk sector size
+const char *sectsize_menu = "\nChoose the size of hard disk sectors.\nPlease type 512, 1024 or 4096. ";
+const char *sectsize_choices[] = { "512","1024","4096" };
+int sectsize_n_choices = 3;
 
 #if !BX_HAVE_SNPRINTF
 #include <stdarg.h>
@@ -884,6 +891,7 @@ void print_usage()
     "  -hd=...       create/resize: hard disk image with size in megabytes (M)\n"
     "                or gigabytes (G)\n"
     "  -imgmode=...  create/convert: hard disk image mode\n"
+    "  -sectsize=... create: hard disk sector size\n"
     "  -b            convert/resize: create a backup of the source image\n"
     "                commit: create backups of the base image and redolog file\n"
     "  -q            quiet mode (don't prompt for user input)\n"
@@ -945,6 +953,8 @@ int parse_cmdline(int argc, char *argv[])
   bx_imagemode = -1;
   bx_backup = 0;
   bx_interactive = 1;
+  bx_sectsize_idx = 0;
+  bx_sectsize_val = 512;
   bx_filename_1[0] = 0;
   bx_filename_2[0] = 0;
   while ((arg < argc) && (ret == 1)) {
@@ -1003,6 +1013,15 @@ int parse_cmdline(int argc, char *argv[])
       if (bx_imagemode < 0) {
         printf("Unknown image mode: %s\n\n", &argv[arg][9]);
         ret = 0;
+      }
+    }
+    else if (!strncmp("-sectsize=", argv[arg], 10)) {
+      bx_sectsize_idx = get_menu_index(&argv[arg][10], sectsize_n_choices, sectsize_choices);
+      if (bx_sectsize_idx < 0) {
+        printf("Unsupported hard disk sector size: %s\n\n", &argv[arg][10]);
+        ret = 0;
+      } else {
+        bx_sectsize_val = atoi(sectsize_choices[bx_sectsize_idx]);
       }
     }
     else if (!strcmp("-b", argv[arg])) {
@@ -1126,6 +1145,16 @@ int CDECL main(int argc, char *argv[])
         } else { // hard disk
           if (ask_menu(hdmode_menu, hdmode_n_choices, hdmode_choices, bx_imagemode, &bx_imagemode) < 0)
             fatal(EOF_ERR);
+          imgmode = hdmode_choice_id[bx_imagemode];
+          if ((imgmode == BX_HDIMAGE_MODE_FLAT) ||
+              (imgmode == BX_HDIMAGE_MODE_SPARSE) ||
+              (imgmode == BX_HDIMAGE_MODE_GROWING)) {
+            if (ask_menu(sectsize_menu, sectsize_n_choices, sectsize_choices, bx_sectsize_idx, &bx_sectsize_idx) < 0)
+              fatal(EOF_ERR);
+            bx_sectsize_val = atoi(sectsize_choices[bx_sectsize_idx]);
+          } else if (bx_sectsize_val != 512) {
+            fatal(EOF_ERR);
+          }
           sprintf(prompt, "\nEnter the hard disk size in megabytes, between %d and %d\n",
                   bx_min_hd_megs, bx_max_hd_megs);
           if (ask_int(prompt, bx_min_hd_megs, bx_max_hd_megs, bx_hdsize, &bx_hdsize) < 0)
@@ -1227,15 +1256,21 @@ int CDECL main(int argc, char *argv[])
         } else {
           int heads = 16, spt = 63;
 
-          sprintf(bochsrc_line, "ata0-master: type=disk, path=\"%s\", mode=%s", bx_filename_1, hdmode_choices[bx_imagemode]);
+          if (bx_sectsize_val == 512) {
+            sprintf(bochsrc_line, "ata0-master: type=disk, path=\"%s\", mode=%s",
+                    bx_filename_1, hdmode_choices[bx_imagemode]);
+          } else {
+            sprintf(bochsrc_line, "ata0-master: type=disk, path=\"%s\", mode=%s, sect_size=%d",
+                    bx_filename_1, hdmode_choices[bx_imagemode], bx_sectsize_val);
+          }
           imgmode = hdmode_choice_id[bx_imagemode];
           hdsize = ((Bit64u)bx_hdsize) << 20;
-          Bit64u cyl = (Bit64u)(hdsize/16.0/63.0/512.0);
+          Bit64u cyl = (Bit64u)(hdsize/16.0/63.0/bx_sectsize_val);
           if (cyl >= (1 << BX_MAX_CYL_BITS))
             fatal("ERROR: number of cylinders out of range !\n");
-          printf("\nCreating hard disk image '%s' with CHS=" FMT_LL "d/%d/%d\n",
-                 bx_filename_1, cyl, heads, spt);
-          hdsize = cyl * heads * spt * 512;
+          printf("\nCreating hard disk image '%s' with CHS=" FMT_LL "d/%d/%d (sector size = %d)\n",
+                 bx_filename_1, cyl, heads, spt, bx_sectsize_val);
+          hdsize = cyl * heads * spt * bx_sectsize_val;
           create_hard_disk_image(bx_filename_1, imgmode, hdsize);
         }
         printf("\nThe following line should appear in your bochsrc:\n");

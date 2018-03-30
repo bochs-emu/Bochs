@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "15 Feb 2018" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "30 Mar 2018" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -1242,6 +1242,7 @@ Examples:
   usb_uhci: enabled=1, port1=mouse, port2=disk:usbstick.img
   usb_uhci: enabled=1, port1=hub:7, port2=disk:growing:usbdisk.img
   usb_uhci: enabled=1, port2=disk:undoable:usbdisk.img, options2=journal:redo.log
+  usb_uhci: enabled=1, port2=disk:usbdisk2.img, options2=sect_size:1024
   usb_uhci: enabled=1, port2=disk:vvfat:vvfat, options2="debug,speed:full"
   usb_uhci: enabled=1, port1=printer:printdata.bin, port2=cdrom:image.iso
   usb_uhci: enabled=1, port2=floppy:vvfat:diskette, options2="model:teac"

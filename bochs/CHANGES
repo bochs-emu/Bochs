@@ -32,18 +32,23 @@ Changes after 2.6.9 release:
       adapters (reporting plug&play monitor "Bochs Screen").
   - USB
     - Now creating separate plugins for each USB device implementation.
+    - Added sector size option for USB disks (size 1024 and 4096 supported).
   - Networking
     - bxhub: Added DNS service support for the server "vnet" and connected
       clients.
 
-  - GUI and display libraries
-    - Added new win32 gui option "traphotkeys" for fullscreen mode.
-    - wx: Fixes and updates for wxWidgets 3.0 support.
-    - Removed legacy guis "macos" and "svga" from display library auto-
-      detection (still available using --with-XXX option).
+- GUI and display libraries
+  - Added new win32 gui option "traphotkeys" for fullscreen mode.
+  - wx: Fixes and updates for wxWidgets 3.0 support.
+  - Removed legacy guis "macos" and "svga" from display library auto-
+    detection (still available using --with-XXX option).
 
-  - LGPL'd VGABIOS updated from CVS (VESA extension 'read EDID' for Bochs VBE
-    and Cirrus added).
+- LGPL'd VGABIOS updated from CVS (VESA extension 'read EDID' for Bochs VBE
+  and Cirrus added).
+
+- Misc
+  - Added sector size option to bximage for creating flat, sparse and growing
+    mode images with big sectors (size 1024 and 4096 currently supported).
 
 -------------------------------------------------------------------------
 Changes in 2.6.9 (April 9, 2017):
