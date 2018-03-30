@@ -2153,7 +2153,7 @@ int undoable_image_t::open(const char* pathname, int flags)
     return -1;
 
   hd_size = ro_disk->hd_size;
-  sect_size = ro_disk->hd_size;
+  sect_size = ro_disk->sect_size;
 
   // If not set, we make up the redolog filename from the pathname
   if (redolog_name == NULL) {
@@ -2300,7 +2300,7 @@ int volatile_image_t::open(const char* pathname, int flags)
     return -1;
 
   hd_size = ro_disk->hd_size;
-  sect_size = ro_disk->hd_size;
+  sect_size = ro_disk->sect_size;
 
   // If not set, use pathname as template
   if (redolog_name == NULL) {
