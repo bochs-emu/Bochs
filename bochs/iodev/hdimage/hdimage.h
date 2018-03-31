@@ -539,6 +539,9 @@ class undoable_image_t : public device_image_t
       // written (count).
       ssize_t write(const void* buf, size_t count);
 
+      // Get image capabilities
+      virtual Bit32u get_capabilities() {return caps;}
+
 #ifndef BXIMAGE
       // Save/restore support
       bx_bool save_state(const char *backup_fname);
@@ -549,6 +552,7 @@ class undoable_image_t : public device_image_t
       redolog_t       *redolog;       // Redolog instance
       device_image_t  *ro_disk;       // Read-only base disk instance
       char            *redolog_name;  // Redolog name
+      Bit32u          caps;
 };
 
 
@@ -578,6 +582,9 @@ class volatile_image_t : public device_image_t
       // written (count).
       ssize_t write(const void* buf, size_t count);
 
+      // Get image capabilities
+      virtual Bit32u get_capabilities() {return caps;}
+
 #ifndef BXIMAGE
       // Save/restore support
       bx_bool save_state(const char *backup_fname);
@@ -589,6 +596,7 @@ class volatile_image_t : public device_image_t
       device_image_t  *ro_disk;       // Read-only base disk instance
       char            *redolog_name;  // Redolog name
       char            *redolog_temp;  // Redolog temporary file name
+      Bit32u          caps;
 };
 
 

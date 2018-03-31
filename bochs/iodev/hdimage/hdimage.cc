@@ -2153,6 +2153,14 @@ int undoable_image_t::open(const char* pathname, int flags)
     return -1;
 
   hd_size = ro_disk->hd_size;
+  if (ro_disk->get_capabilities() & HDIMAGE_HAS_GEOMETRY) {
+    cylinders = ro_disk->cylinders;
+    heads = ro_disk->heads;
+    spt = ro_disk->spt;
+    caps = HDIMAGE_HAS_GEOMETRY;
+  } else if (cylinders == 0) {
+    caps = HDIMAGE_AUTO_GEOMETRY;
+  }
   sect_size = ro_disk->sect_size;
 
   // If not set, we make up the redolog filename from the pathname
@@ -2300,6 +2308,14 @@ int volatile_image_t::open(const char* pathname, int flags)
     return -1;
 
   hd_size = ro_disk->hd_size;
+  if (ro_disk->get_capabilities() & HDIMAGE_HAS_GEOMETRY) {
+    cylinders = ro_disk->cylinders;
+    heads = ro_disk->heads;
+    spt = ro_disk->spt;
+    caps = HDIMAGE_HAS_GEOMETRY;
+  } else if (cylinders == 0) {
+    caps = HDIMAGE_AUTO_GEOMETRY;
+  }
   sect_size = ro_disk->sect_size;
 
   // If not set, use pathname as template
