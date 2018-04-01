@@ -219,6 +219,10 @@ void bx_banshee_c::reset(unsigned type)
   } else if ((s.model == VOODOO_BANSHEE) && is_agp) {
     pci_conf[0x2e] = 0x03; // Banshee AGP model
   }
+  v->vidclk = 14318180;
+  if (theVoodooVga != NULL) {
+    theVoodooVga->banshee_set_vclk3((Bit32u)v->vidclk);
+  }
   // TODO
 
   // Deassert IRQ
@@ -729,6 +733,9 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case io_vidDesktopStartAddr:
     case io_vidDesktopOverlayStride:
       BX_LOCK(render_mutex);
+      if ((v->banshee.io[io_vidProcCfg] & 0x01) && (v->banshee.io[reg] != value)) {
+        v->fbi.video_changed = 1;
+      }
       v->banshee.io[reg] = value;
       BX_UNLOCK(render_mutex);
       break;
