@@ -317,6 +317,8 @@ Bit32u bx_acpi_ctrl_c::read(Bit32u address, unsigned io_len)
         value = BX_ACPI_THIS get_pmtmr();
         break;
       case 0x0c: // GPSTS
+      case 0x14: // PLVL2
+      case 0x15: // PLVL3
       case 0x18: // GLBSTS
       case 0x1c: // DEVSTS
       case 0x30: // GPI
@@ -325,9 +327,9 @@ Bit32u bx_acpi_ctrl_c::read(Bit32u address, unsigned io_len)
         value = 0x00;
         break;
       default:
-        BX_INFO(("read from PM register 0x%02x not implemented yet", reg));
+        BX_INFO(("read from PM register 0x%02x not implemented yet (len=%d)", reg, io_len));
     }
-    BX_DEBUG(("read from PM register 0x%02x returns 0x%08x", reg, value));
+    BX_DEBUG(("read from PM register 0x%02x returns 0x%08x (len=%d)", reg, value, io_len));
   } else {
     if (((BX_ACPI_THIS pci_conf[0x04] & 0x01) == 0) &&
         ((BX_ACPI_THIS pci_conf[0xd2] & 0x01) == 0)) {
@@ -389,7 +391,7 @@ void bx_acpi_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
     if ((BX_ACPI_THIS pci_conf[0x80] & 0x01) == 0) {
       return;
     }
-    BX_DEBUG(("write to PM register 0x%02x, value = 0x%04x", reg, value));
+    BX_DEBUG(("write to PM register 0x%02x, value = 0x%08x (len=%d)", reg, value, io_len));
     switch (reg) {
       case 0x00:
         {
@@ -431,7 +433,7 @@ void bx_acpi_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
         }
         break;
       default:
-        BX_INFO(("write to PM register 0x%02x not implemented yet", reg));
+        BX_INFO(("write to PM register 0x%02x not implemented yet (len=%d)", reg, io_len));
     }
   } else if ((address & 0xfff0) == BX_ACPI_THIS s.sm_base) {
     if (((BX_ACPI_THIS pci_conf[0x04] & 0x01) == 0) &&
