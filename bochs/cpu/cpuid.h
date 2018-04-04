@@ -382,7 +382,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [2:2]    UMIP: Supports user-mode instruction prevention
 //   [3:3]    PKU: Protection keys for user-mode pages.
 //   [4:4]    OSPKE: OS has set CR4.PKE to enable protection keys
-//   [5:5]    reserved
+//   [5:5]    WAITPKG (TPAUSE/UMONITOR/UMWAIT) support
 //   [6:6]    AVX512 VBMI2 instructions support
 //   [7:7]    reserved
 //   [8:8]    GFNI instructions support
@@ -396,7 +396,12 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 // [16:16]    LA57: LA57 and 5-level paging
 // [21:17]    reserved
 // [22:22]    RDPID: Read Processor ID support
-// [29:23]    reserved
+// [24:23]    reserved
+// [25:25]    CLDEMOTE: CLDEMOTE instruction support
+// [26:26]    reserved
+// [27:27]    MOVDIRI: MOVDIRI instruction support
+// [28:28]    MOVDIRI64: MOVDIRI64 instruction support
+// [29:29]    reserved
 // [30:30]    SGX_LC: SGX Launch Configuration
 // [31:31]    reserved
 
@@ -405,7 +410,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT4_UMIP                   (1 <<  2)
 #define BX_CPUID_EXT4_PKU                    (1 <<  3)
 #define BX_CPUID_EXT4_OSPKE                  (1 <<  4)
-#define BX_CPUID_EXT4_RESERVED5              (1 <<  5)
+#define BX_CPUID_EXT4_WAITPKG                (1 <<  5)
 #define BX_CPUID_EXT4_AVX512_VBMI2           (1 <<  6)
 #define BX_CPUID_EXT4_RESERVED7              (1 <<  7)
 #define BX_CPUID_EXT4_GFNI                   (1 <<  8)
@@ -425,10 +430,10 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT4_RDPID                  (1 << 22)
 #define BX_CPUID_EXT4_RESERVED23             (1 << 23)
 #define BX_CPUID_EXT4_RESERVED24             (1 << 24)
-#define BX_CPUID_EXT4_RESERVED25             (1 << 25)
+#define BX_CPUID_EXT4_CLDEMOTE               (1 << 25)
 #define BX_CPUID_EXT4_RESERVED26             (1 << 26)
-#define BX_CPUID_EXT4_RESERVED27             (1 << 27)
-#define BX_CPUID_EXT4_RESERVED28             (1 << 28)
+#define BX_CPUID_EXT4_MOVDIRI                (1 << 27)
+#define BX_CPUID_EXT4_MOVDIRI64              (1 << 28)
 #define BX_CPUID_EXT4_RESERVED29             (1 << 29)
 #define BX_CPUID_EXT4_SGX_LAUNCH_CONFIG      (1 << 30)
 #define BX_CPUID_EXT4_RESERVED31             (1 << 31)
@@ -438,11 +443,14 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [1:0]    reserved
 //   [2:2]    AVX512 4VNNIW instructions support
 //   [3:3]    AVX512 4FMAPS instructions support
+//   [4:4]    Support of Fast REP MOV instructions with short length
+//   ...
 
 #define BX_CPUID_EXT5_RESERVED0              (1 <<  0)
 #define BX_CPUID_EXT5_RESERVED1              (1 <<  1)
 #define BX_CPUID_EXT5_AVX512_4VNNIW          (1 <<  2)
 #define BX_CPUID_EXT5_AVX512_4FMAPS          (1 <<  3)
+#define BX_CPUID_EXT5_FAST_SHORT_REP_MOV     (1 <<  4)
 // ...
 
 // CPUID defines - STD2 features CPUID[0x80000001].EDX

@@ -44,6 +44,7 @@ enum {
   BX_ISA_CLFLUSH,                 /* CLFLUSH instruction */
   BX_ISA_CLFLUSHOPT,              /* CLFLUSHOPT instruction */
   BX_ISA_CLWB,                    /* CLWB instruction */
+  BX_ISA_CLDEMOTE,                /* CLDEMOTE instruction */
   BX_ISA_SSE,                     /* SSE  instruction */
   BX_ISA_SSE2,                    /* SSE2 instruction */
   BX_ISA_SSE3,                    /* SSE3 instruction */
