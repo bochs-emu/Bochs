@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2016-2017  The Bochs Project
+//  Copyright (C) 2016-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -54,6 +54,7 @@ enum {
   BX_ISA_POPCNT,                  /* POPCNT instruction */
   BX_ISA_MONITOR_MWAIT,           /* MONITOR/MWAIT instruction */
   BX_ISA_MONITORX_MWAITX,         /* MONITORX/MWAITX instruction (AMD) */
+  BX_ISA_WAITPKG,                 /* TPAUSE/UMONITOR/UMWAIT instructions */
   BX_ISA_VMX,                     /* VMX instruction */
   BX_ISA_SMX,                     /* SMX instruction */
   BX_ISA_LONG_MODE,               /* Long Mode (x86-64) support */
@@ -119,6 +120,8 @@ enum {
   BX_ISA_RDPID,                   /* RDPID Support */
   BX_ISA_TCE,                     /* Translation Cache Extensions (TCE) support (AMD) */
   BX_ISA_CLZERO,                  /* CLZERO instruction support (AMD) */
+  BX_ISA_MOVDIRI,                 /* MOVDIRI instruction support */
+  BX_ISA_MOVDIRI64,               /* MOVDIRI64 instruction support */
   BX_ISA_EXTENSION_LAST
 };                            
 

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2015 Stanislav Shwartsman
+//   Copyright (c) 2008-2018 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -191,7 +191,6 @@ BX_CPU_C::write_linear_xmmword_aligned(unsigned s, bx_address laddr, const BxPac
     exception(int_number(s), 0);
 }
 
-#if BX_SUPPORT_AVX
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_linear_ymmword(unsigned s, bx_address laddr, const BxPackedYmmRegister *data)
 {
@@ -248,9 +247,7 @@ BX_CPU_C::write_linear_ymmword_aligned(unsigned s, bx_address laddr, const BxPac
   if (access_write_linear(laddr, 32, CPL, 0x0, (void *) data) < 0)
     exception(int_number(s), 0);
 }
-#endif
 
-#if BX_SUPPORT_EVEX
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_linear_zmmword(unsigned s, bx_address laddr, const BxPackedZmmRegister *data)
 {
@@ -307,7 +304,6 @@ BX_CPU_C::write_linear_zmmword_aligned(unsigned s, bx_address laddr, const BxPac
   if (access_write_linear(laddr, 64, CPL, 0x0, (void *) data) < 0)
     exception(int_number(s), 0);
 }
-#endif
 
 #endif
 
@@ -510,7 +506,6 @@ BX_CPU_C::read_linear_xmmword_aligned(unsigned s, bx_address laddr, BxPackedXmmR
     exception(int_number(s), 0);
 }
 
-#if BX_SUPPORT_AVX
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::read_linear_ymmword(unsigned s, bx_address laddr, BxPackedYmmRegister *data)
 {
@@ -563,9 +558,7 @@ BX_CPU_C::read_linear_ymmword_aligned(unsigned s, bx_address laddr, BxPackedYmmR
   if (access_read_linear(laddr, 32, CPL, BX_READ, 0x0, (void *) data) < 0)
     exception(int_number(s), 0);
 }
-#endif
 
-#if BX_SUPPORT_EVEX
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::read_linear_zmmword(unsigned s, bx_address laddr, BxPackedZmmRegister *data)
 {
@@ -618,7 +611,6 @@ BX_CPU_C::read_linear_zmmword_aligned(unsigned s, bx_address laddr, BxPackedZmmR
   if (access_read_linear(laddr, 64, CPL, BX_READ, 0x0, (void *) data) < 0)
     exception(int_number(s), 0);
 }
-#endif
 
 #endif
 

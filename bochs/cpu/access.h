@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2015 Stanislav Shwartsman
+//   Copyright (c) 2015-2018 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -68,8 +68,6 @@ BX_CPU_C::write_virtual_xmmword_aligned_32(unsigned s, Bit32u offset, const BxPa
   write_linear_xmmword_aligned(s, laddr, data);
 }
 
-#if BX_SUPPORT_AVX
-
   BX_CPP_INLINE void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_virtual_ymmword_32(unsigned s, Bit32u offset, const BxPackedYmmRegister *data)
 {
@@ -84,10 +82,6 @@ BX_CPU_C::write_virtual_ymmword_aligned_32(unsigned s, Bit32u offset, const BxPa
   write_linear_ymmword_aligned(s, laddr, data);
 }
 
-#endif // BX_SUPPORT_AVX
-
-#if BX_SUPPORT_EVEX
-
   BX_CPP_INLINE void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_virtual_zmmword_32(unsigned s, Bit32u offset, const BxPackedZmmRegister *data)
 {
@@ -101,8 +95,6 @@ BX_CPU_C::write_virtual_zmmword_aligned_32(unsigned s, Bit32u offset, const BxPa
   Bit32u laddr = agen_write_aligned32(s, offset, 64);
   write_linear_zmmword_aligned(s, laddr, data);
 }
-
-#endif // BX_SUPPORT_EVEX
 
 #endif // BX_CPU_LEVEL >= 6
 
@@ -157,8 +149,6 @@ BX_CPU_C::read_virtual_xmmword_aligned_32(unsigned s, Bit32u offset, BxPackedXmm
   read_linear_xmmword_aligned(s, laddr, data);
 }
 
-#if BX_SUPPORT_AVX
-
   BX_CPP_INLINE void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::read_virtual_ymmword_32(unsigned s, Bit32u offset, BxPackedYmmRegister *data)
 {
@@ -173,10 +163,6 @@ BX_CPU_C::read_virtual_ymmword_aligned_32(unsigned s, Bit32u offset, BxPackedYmm
   read_linear_ymmword_aligned(s, laddr, data);
 }
 
-#endif // BX_SUPPORT_AVX
-
-#if BX_SUPPORT_EVEX
-
   BX_CPP_INLINE void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::read_virtual_zmmword_32(unsigned s, Bit32u offset, BxPackedZmmRegister *data)
 {
@@ -190,8 +176,6 @@ BX_CPU_C::read_virtual_zmmword_aligned_32(unsigned s, Bit32u offset, BxPackedZmm
   Bit32u laddr = agen_read_aligned32(s, offset, 64);
   read_linear_zmmword_aligned(s, laddr, data);
 }
-
-#endif // BX_SUPPORT_EVEX
 
 #endif // BX_CPU_LEVEL >= 6
 
@@ -239,8 +223,6 @@ BX_CPU_C::write_virtual_xmmword_aligned(unsigned s, bx_address offset, const BxP
   write_linear_xmmword_aligned(s, laddr, data);
 }
 
-#if BX_SUPPORT_AVX
-
   BX_CPP_INLINE void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_virtual_ymmword(unsigned s, bx_address offset, const BxPackedYmmRegister *data)
 {
@@ -255,10 +237,6 @@ BX_CPU_C::write_virtual_ymmword_aligned(unsigned s, bx_address offset, const BxP
   write_linear_ymmword_aligned(s, laddr, data);
 }
 
-#endif // BX_SUPPORT_AVX
-
-#if BX_SUPPORT_EVEX
-
   BX_CPP_INLINE void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_virtual_zmmword(unsigned s, bx_address offset, const BxPackedZmmRegister *data)
 {
@@ -272,8 +250,6 @@ BX_CPU_C::write_virtual_zmmword_aligned(unsigned s, bx_address offset, const BxP
   bx_address laddr = agen_write_aligned(s, offset, 64);
   write_linear_zmmword_aligned(s, laddr, data);
 }
-
-#endif // BX_SUPPORT_EVEX
 
 #endif // BX_CPU_LEVEL >= 6
 
@@ -328,8 +304,6 @@ BX_CPU_C::read_virtual_xmmword_aligned(unsigned s, bx_address offset, BxPackedXm
   read_linear_xmmword_aligned(s, laddr, data);
 }
 
-#if BX_SUPPORT_AVX
-
   BX_CPP_INLINE void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::read_virtual_ymmword(unsigned s, bx_address offset, BxPackedYmmRegister *data)
 {
@@ -344,10 +318,6 @@ BX_CPU_C::read_virtual_ymmword_aligned(unsigned s, bx_address offset, BxPackedYm
   read_linear_ymmword_aligned(s, laddr, data);
 }
 
-#endif // BX_SUPPORT_AVX
-
-#if BX_SUPPORT_EVEX
-
   BX_CPP_INLINE void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::read_virtual_zmmword(unsigned s, bx_address offset, BxPackedZmmRegister *data)
 {
@@ -361,8 +331,6 @@ BX_CPU_C::read_virtual_zmmword_aligned(unsigned s, bx_address offset, BxPackedZm
   bx_address laddr = agen_read_aligned(s, offset, 64);
   read_linear_zmmword_aligned(s, laddr, data);
 }
-
-#endif // BX_SUPPORT_EVEX
 
 #endif // BX_CPU_LEVEL >= 6
 

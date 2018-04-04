@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2017  The Bochs Project
+//  Copyright (C) 2001-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -4391,14 +4391,10 @@ public: // for now...
 #if BX_CPU_LEVEL >= 6
   BX_SMF void read_linear_xmmword(unsigned seg, bx_address off, BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void read_linear_xmmword_aligned(unsigned seg, bx_address off, BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
-#if BX_SUPPORT_AVX
   BX_SMF void read_linear_ymmword(unsigned seg, bx_address off, BxPackedYmmRegister *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void read_linear_ymmword_aligned(unsigned seg, bx_address off, BxPackedYmmRegister *data) BX_CPP_AttrRegparmN(3);
-#endif
-#if BX_SUPPORT_EVEX
   BX_SMF void read_linear_zmmword(unsigned seg, bx_address off, BxPackedZmmRegister *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void read_linear_zmmword_aligned(unsigned seg, bx_address off, BxPackedZmmRegister *data) BX_CPP_AttrRegparmN(3);
-#endif
 #endif
 
   BX_SMF void write_linear_byte(unsigned seg, bx_address offset, Bit8u data) BX_CPP_AttrRegparmN(3);
@@ -4408,14 +4404,10 @@ public: // for now...
 #if BX_CPU_LEVEL >= 6
   BX_SMF void write_linear_xmmword(unsigned seg, bx_address offset, const BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void write_linear_xmmword_aligned(unsigned seg, bx_address offset, const BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
-#if BX_SUPPORT_AVX
   BX_SMF void write_linear_ymmword(unsigned seg, bx_address off, const BxPackedYmmRegister *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void write_linear_ymmword_aligned(unsigned seg, bx_address off, const BxPackedYmmRegister *data) BX_CPP_AttrRegparmN(3);
-#endif
-#if BX_SUPPORT_EVEX
   BX_SMF void write_linear_zmmword(unsigned seg, bx_address off, const BxPackedZmmRegister *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void write_linear_zmmword_aligned(unsigned seg, bx_address off, const BxPackedZmmRegister *data) BX_CPP_AttrRegparmN(3);
-#endif
 #endif
 
   BX_SMF void tickle_read_linear(unsigned seg, bx_address offset) BX_CPP_AttrRegparmN(2);
@@ -4429,14 +4421,10 @@ public: // for now...
 #if BX_CPU_LEVEL >= 6
   BX_SMF void read_virtual_xmmword_32(unsigned seg, Bit32u off, BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void read_virtual_xmmword_aligned_32(unsigned seg, Bit32u off, BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
-#if BX_SUPPORT_AVX
   BX_SMF void read_virtual_ymmword_32(unsigned seg, Bit32u off, BxPackedYmmRegister *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void read_virtual_ymmword_aligned_32(unsigned seg, Bit32u off, BxPackedYmmRegister *data) BX_CPP_AttrRegparmN(3);
-#endif
-#if BX_SUPPORT_EVEX
   BX_SMF void read_virtual_zmmword_32(unsigned seg, Bit32u off, BxPackedZmmRegister *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void read_virtual_zmmword_aligned_32(unsigned seg, Bit32u off, BxPackedZmmRegister *data) BX_CPP_AttrRegparmN(3);
-#endif
 #endif
 
   BX_SMF void write_virtual_byte_32(unsigned seg, Bit32u offset, Bit8u data) BX_CPP_AttrRegparmN(3);
@@ -4446,14 +4434,10 @@ public: // for now...
 #if BX_CPU_LEVEL >= 6
   BX_SMF void write_virtual_xmmword_32(unsigned seg, Bit32u offset, const BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void write_virtual_xmmword_aligned_32(unsigned seg, Bit32u offset, const BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
-#if BX_SUPPORT_AVX
   BX_SMF void write_virtual_ymmword_32(unsigned seg, Bit32u off, const BxPackedYmmRegister *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void write_virtual_ymmword_aligned_32(unsigned seg, Bit32u off, const BxPackedYmmRegister *data) BX_CPP_AttrRegparmN(3);
-#endif
-#if BX_SUPPORT_EVEX
   BX_SMF void write_virtual_zmmword_32(unsigned seg, Bit32u off, const BxPackedZmmRegister *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void write_virtual_zmmword_aligned_32(unsigned seg, Bit32u off, const BxPackedZmmRegister *data) BX_CPP_AttrRegparmN(3);
-#endif
 #endif
 
   BX_SMF Bit8u read_virtual_byte(unsigned seg, bx_address offset) BX_CPP_AttrRegparmN(2);
@@ -4463,14 +4447,10 @@ public: // for now...
 #if BX_CPU_LEVEL >= 6
   BX_SMF void read_virtual_xmmword(unsigned seg, bx_address off, BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void read_virtual_xmmword_aligned(unsigned seg, bx_address off, BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
-#if BX_SUPPORT_AVX
   BX_SMF void read_virtual_ymmword(unsigned seg, bx_address off, BxPackedYmmRegister *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void read_virtual_ymmword_aligned(unsigned seg, bx_address off, BxPackedYmmRegister *data) BX_CPP_AttrRegparmN(3);
-#endif
-#if BX_SUPPORT_EVEX
   BX_SMF void read_virtual_zmmword(unsigned seg, bx_address off, BxPackedZmmRegister *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void read_virtual_zmmword_aligned(unsigned seg, bx_address off, BxPackedZmmRegister *data) BX_CPP_AttrRegparmN(3);
-#endif
 #endif
 
   BX_SMF void write_virtual_byte(unsigned seg, bx_address offset, Bit8u data) BX_CPP_AttrRegparmN(3);
@@ -4480,14 +4460,10 @@ public: // for now...
 #if BX_CPU_LEVEL >= 6
   BX_SMF void write_virtual_xmmword(unsigned seg, bx_address offset, const BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void write_virtual_xmmword_aligned(unsigned seg, bx_address offset, const BxPackedXmmRegister *data) BX_CPP_AttrRegparmN(3);
-#if BX_SUPPORT_AVX
   BX_SMF void write_virtual_ymmword(unsigned seg, bx_address off, const BxPackedYmmRegister *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void write_virtual_ymmword_aligned(unsigned seg, bx_address off, const BxPackedYmmRegister *data) BX_CPP_AttrRegparmN(3);
-#endif
-#if BX_SUPPORT_EVEX
   BX_SMF void write_virtual_zmmword(unsigned seg, bx_address off, const BxPackedZmmRegister *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void write_virtual_zmmword_aligned(unsigned seg, bx_address off, const BxPackedZmmRegister *data) BX_CPP_AttrRegparmN(3);
-#endif
 #endif
 
   BX_SMF Bit8u read_RMW_linear_byte(unsigned seg, bx_address offset) BX_CPP_AttrRegparmN(2);

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2003-2017 Stanislav Shwartsman
+//   Copyright (c) 2003-2018 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -65,8 +65,6 @@ union bx_xmm_reg_t {
 
 /* AVX REGISTER */
 
-#if BX_SUPPORT_AVX
-
 typedef
 #if defined(_MSC_VER) && (_MSC_VER>=1300)
 __declspec(align(32))
@@ -109,10 +107,6 @@ union bx_ymm_reg_t {
 #define ymm64u(i)   ymm_u64[(i)]
 #define ymm128(i)   ymm_v128[(i)]
 #endif
-
-#endif
-
-#if BX_SUPPORT_EVEX
 
 typedef
 #if defined(_MSC_VER) && (_MSC_VER>=1300)
@@ -158,8 +152,6 @@ union bx_zmm_reg_t {
 #define zmm64u(i)   zmm_u64[(i)]
 #define zmm128(i)   zmm_v128[(i)]
 #define zmm256(i)   zmm_v256[(i)]
-#endif
-
 #endif
 
 #if BX_SUPPORT_EVEX
