@@ -674,7 +674,7 @@ typedef struct {
 
   // for access to EBDA area
   //     The EBDA structure should conform to
-  //     http://www.frontiernet.net/~fys/rombios.htm document
+  //     http://www.fysnet.net/rombios.htm document
   //     I made the ata and cdemu structs begin at 0x121 in the EBDA seg
   // EBDA must be at most 768 bytes; it lives at EBDA_SEG, and the boot
   // device tables are at IPL_SEG
@@ -929,7 +929,7 @@ Bit16u cdrom_boot();
 
 static char bios_cvs_version_string[] = "$Revision$ $Date$";
 
-#define BIOS_COPYRIGHT_STRING "(c) 2001-2017  The Bochs Project"
+#define BIOS_COPYRIGHT_STRING "(c) 2001-2018  The Bochs Project"
 
 #if DEBUG_ATA
 #  define BX_DEBUG_ATA(a...) BX_DEBUG(a)
@@ -2592,7 +2592,7 @@ void ata_detect( )
   hdcount=cdcount=0;
 
   for(device=0; device<BX_MAX_ATA_DEVICES; device++) {
-    Bit16u iobase1, iobase2;
+    Bit16u iobase1, iobase2, blksize;
     Bit8u  channel, slave, shift;
     Bit8u  sc, sn, cl, ch, st;
 
@@ -2648,7 +2648,7 @@ void ata_detect( )
     // Now we send a IDENTIFY command to ATA device
     if(type == ATA_TYPE_ATA) {
       Bit32u sectors_low, sectors_high;
-      Bit16u cylinders, heads, spt, blksize;
+      Bit16u cylinders, heads, spt;
       Bit8u  translation, removable, mode;
 
       //Temporary values to do the transfer
@@ -2756,7 +2756,6 @@ void ata_detect( )
     if(type == ATA_TYPE_ATAPI) {
 
       Bit8u  type, removable, mode;
-      Bit16u blksize;
 
       //Temporary values to do the transfer
       write_byte_DS(&EbdaData->ata.devices[device].device,ATA_DEVICE_CDROM);
@@ -2783,12 +2782,26 @@ void ata_detect( )
     {
       Bit32u sizeinmb;
       Bit16u ataversion;
-      Bit8u  c, i, version, model[41];
+      Bit8u  c, i, lshift, rshift, version, model[41];
 
       switch (type) {
         case ATA_TYPE_ATA:
-          sizeinmb = (read_dword_DS(&EbdaData->ata.devices[device].sectors_high) << 21)
-            | (read_dword_DS(&EbdaData->ata.devices[device].sectors_low) >> 11);
+          // Ben: be sides, this trick doesn't work an very large disks...
+          switch (blksize) {
+            case 1024:
+              lshift = 22;
+              rshift = 10;
+              break;
+            case 4096:
+              lshift = 24;
+              rshift = 8;
+              break;
+            default:
+              lshift = 21;
+              rshift = 11;
+          }
+          sizeinmb = (read_dword_DS(&EbdaData->ata.devices[device].sectors_high) << lshift)
+            | (read_dword_DS(&EbdaData->ata.devices[device].sectors_low) >> rshift);
         case ATA_TYPE_ATAPI:
           // Read ATA/ATAPI version
           ataversion=((Bit16u)(read_byte_SS(buffer+161))<<8)|read_byte_SS(buffer+160);
@@ -2956,7 +2969,12 @@ Bit32u lba_low, lba_high;
   iobase1 = read_word_DS(&EbdaData->ata.channels[channel].iobase1);
   iobase2 = read_word_DS(&EbdaData->ata.channels[channel].iobase2);
   mode    = read_byte_DS(&EbdaData->ata.devices[device].mode);
-  blksize = 0x200; // was = read_word_DS(&EbdaData->ata.devices[device].blksize);
+  if ((command == ATA_CMD_IDENTIFY_DEVICE) ||
+      (command == ATA_CMD_IDENTIFY_DEVICE_PACKET)) {
+    blksize = 0x200;
+  } else {
+    blksize = read_word_DS(&EbdaData->ata.devices[device].blksize);
+  }
   if (mode == ATA_MODE_PIO32) blksize>>=2;
   else blksize>>=1;
 
