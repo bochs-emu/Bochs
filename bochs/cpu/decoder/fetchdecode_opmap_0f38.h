@@ -573,6 +573,19 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0F38F6[] = {
 #endif
 };
 
+// opcode 0F 38 F9
+static const BxOpcodeInfo_t BxOpcodeTable0F38F9_32[] = {
+  /* 0F C3 /w */ { BxNoPrefixSSE, BX_IA_MOVDIRI_Op32_MdGd },
+  /* 0F C3 /d */ { BxNoPrefixSSE, BX_IA_MOVDIRI_Op32_MdGd },
+};
+#if BX_SUPPORT_X86_64
+static const BxOpcodeInfo_t BxOpcodeTable0F38F9_64[] = {
+  /* 0F C3 /w */ { BxNoPrefixSSE, BX_IA_MOVDIRI_Op64_MdGd },
+  /* 0F C3 /d */ { BxNoPrefixSSE, BX_IA_MOVDIRI_Op64_MdGd },
+  /* 0F C3 /q */ { BxNoPrefixSSE, BX_IA_MOVDIRI_MqGq },
+};
+#endif
+
 #endif
 
 #endif // BX_FETCHDECODE_OPMAP_0F38_H

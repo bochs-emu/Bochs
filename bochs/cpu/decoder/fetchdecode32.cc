@@ -873,7 +873,7 @@ static BxOpcodeDecodeDescriptor32 decode32_descriptor[] =
    /* 0F 38 F6 */ { &decoder32_sse, BxOpcodeGroupSSE_0F38F6 },
    /* 0F 38 F7 */ { &decoder_ud32, NULL },
    /* 0F 38 F8 */ { &decoder_ud32, NULL },
-   /* 0F 38 F9 */ { &decoder_ud32, NULL },
+   /* 0F 38 F9 */ { &decoder_modrm32, BxOpcodeTable0F38F9_32 },
    /* 0F 38 FA */ { &decoder_ud32, NULL },
    /* 0F 38 FB */ { &decoder_ud32, NULL },
    /* 0F 38 FC */ { &decoder_ud32, NULL },

@@ -400,7 +400,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 // [25:25]    CLDEMOTE: CLDEMOTE instruction support
 // [26:26]    reserved
 // [27:27]    MOVDIRI: MOVDIRI instruction support
-// [28:28]    MOVDIRI64: MOVDIRI64 instruction support
+// [28:28]    MOVDIR64: MOVDIR64 instruction support
 // [29:29]    reserved
 // [30:30]    SGX_LC: SGX Launch Configuration
 // [31:31]    reserved
@@ -433,7 +433,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT4_CLDEMOTE               (1 << 25)
 #define BX_CPUID_EXT4_RESERVED26             (1 << 26)
 #define BX_CPUID_EXT4_MOVDIRI                (1 << 27)
-#define BX_CPUID_EXT4_MOVDIRI64              (1 << 28)
+#define BX_CPUID_EXT4_MOVDIR64               (1 << 28)
 #define BX_CPUID_EXT4_RESERVED29             (1 << 29)
 #define BX_CPUID_EXT4_SGX_LAUNCH_CONFIG      (1 << 30)
 #define BX_CPUID_EXT4_RESERVED31             (1 << 31)
