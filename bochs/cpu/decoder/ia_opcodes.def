@@ -3736,5 +3736,7 @@ bx_define_opcode(BX_IA_V512_VGF2P8MULB_VdqHdqWdq_Kmask, &BX_CPU_C::LOAD_Vector, 
 #endif // BX_SUPPORT_EVEX
 
 bx_define_opcode(BX_IA_MOVDIRI_Op32_MdGd, &BX_CPU_C::MOV32_EdGdM, &BX_CPU_C::BxError, BX_ISA_MOVDIRI, OP_Ed, OP_Gd, OP_NONE, OP_NONE, 0)
+#if BX_SUPPORT_X86_64
 bx_define_opcode(BX_IA_MOVDIRI_Op64_MdGd, &BX_CPU_C::MOV64_EdGdM, &BX_CPU_C::BxError, BX_ISA_MOVDIRI, OP_Ed, OP_Gd, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_MOVDIRI_MqGq, &BX_CPU_C::MOV_EqGqM, &BX_CPU_C::BxError, BX_ISA_MOVDIRI, OP_Eq, OP_Gq, OP_NONE, OP_NONE, 0)
+#endif
