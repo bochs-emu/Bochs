@@ -770,6 +770,10 @@ static void pci_bios_init_bridges(PCIDevice *d)
               (device_id == PCI_DEVICE_ID_INTEL_82441 || device_id == PCI_DEVICE_ID_INTEL_82437)) {
         /* i440FX / i430FX PCI bridge */
         bios_shadow_init(d);
+    } else if (vendor_id == PCI_VENDOR_ID_INTEL && device_id == PCI_DEVICE_ID_INTEL_82443) {
+        /* i440BX PCI bridge */
+        bios_shadow_init(d);
+        pci_config_writeb(d, 0xb4, 0x30); /* AGP aperture size 64 MB */
     }
 }
 
@@ -884,13 +888,14 @@ static void pci_bios_init_device(PCIDevice *d)
     PCIDevice d1, *i440fx = &d1;
     uint16_t class;
     uint32_t *paddr;
-    int i, pin, pic_irq, vendor_id, device_id;
+    int headt, i, pin, pic_irq, vendor_id, device_id;
 
     i440fx->bus = 0;
     i440fx->devfn = 0;
     class = pci_config_readw(d, PCI_CLASS_DEVICE);
     vendor_id = pci_config_readw(d, PCI_VENDOR_ID);
     device_id = pci_config_readw(d, PCI_DEVICE_ID);
+    headt = pci_config_readb(d, PCI_HEADER_TYPE);
     BX_INFO("PCI: bus=%d devfn=0x%02x: vendor_id=0x%04x device_id=0x%04x class=0x%04x\n",
             d->bus, d->devfn, vendor_id, device_id, class);
     switch(class) {
@@ -929,6 +934,8 @@ static void pci_bios_init_device(PCIDevice *d)
         break;
     default:
     default_map:
+        if ((headt & 0x03) != 0)
+          break;
         /* default memory mappings */
         for(i = 0; i < PCI_NUM_REGIONS; i++) {
             int ofs;
@@ -1004,7 +1011,7 @@ void pci_for_each_device(void (*init_func)(PCIDevice *d))
     int bus, devfn;
     uint16_t vendor_id, device_id;
 
-    for(bus = 0; bus < 1; bus++) {
+    for(bus = 0; bus < 2; bus++) {
         for(devfn = 0; devfn < 256; devfn++) {
             d->bus = bus;
             d->devfn = devfn;

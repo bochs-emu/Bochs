@@ -134,6 +134,7 @@
 // i440FX is emulated by Bochs and QEMU
 #define PCI_FIXED_HOST_BRIDGE 0x12378086  ;; i440FX PCI bridge
 #define PCI_FIXED_HOST_BRIDGE2 0x01228086 ;; i430FX PCI bridge
+#define PCI_FIXED_HOST_BRIDGE3 0x71908086 ;; i440BX PCI bridge
 
 // #20  is dec 20
 // #$20 is hex 20 = 32
@@ -9590,16 +9591,19 @@ bios32_entry_point:
   in  eax, dx
 #ifdef PCI_FIXED_HOST_BRIDGE
   cmp eax, #PCI_FIXED_HOST_BRIDGE
-  je pci_found
+  je  pci_found
+#endif
 #ifdef PCI_FIXED_HOST_BRIDGE2
   cmp eax, #PCI_FIXED_HOST_BRIDGE2
-  jne unknown_service
+  je  pci_found
 #endif
-#else
+#ifdef PCI_FIXED_HOST_BRIDGE3
+  cmp eax, #PCI_FIXED_HOST_BRIDGE3
+  je  pci_found
+#endif
   ;; say ok if a device is present
   cmp eax, #0xffffffff
   je unknown_service
-#endif
 pci_found:
   mov ebx, #0x000f0000
   mov ecx, #0x10000
@@ -9646,7 +9650,7 @@ pci_pro_devloop:
   dec si
 pci_pro_nextdev:
   inc bx
-  cmp bx, #0x0100
+  cmp bx, #0x0200
   jne pci_pro_devloop
   mov ah, #0x86
   jmp pci_pro_fail
@@ -9667,7 +9671,7 @@ pci_pro_devloop2:
   dec si
 pci_pro_nextdev2:
   inc bx
-  cmp bx, #0x0100
+  cmp bx, #0x0200
   jne pci_pro_devloop2
   mov ah, #0x86
   jmp pci_pro_fail
@@ -9787,15 +9791,18 @@ pcibios_real:
 #ifdef PCI_FIXED_HOST_BRIDGE
   cmp eax, #PCI_FIXED_HOST_BRIDGE
   je  pci_present
+#endif
 #ifdef PCI_FIXED_HOST_BRIDGE2
   cmp eax, #PCI_FIXED_HOST_BRIDGE2
   je  pci_present
 #endif
-#else
+#ifdef PCI_FIXED_HOST_BRIDGE3
+  cmp eax, #PCI_FIXED_HOST_BRIDGE3
+  je  pci_present
+#endif
   ;; say ok if a device is present
   cmp eax, #0xffffffff
   jne  pci_present
-#endif
   pop dx
   pop eax
   mov ah, #0xff
@@ -9834,7 +9841,7 @@ pci_real_devloop:
   dec si
 pci_real_nextdev:
   inc bx
-  cmp bx, #0x0100
+  cmp bx, #0x0200
   jne pci_real_devloop
   mov dx, cx
   shr ecx, #16
@@ -9857,7 +9864,7 @@ pci_real_devloop2:
   dec si
 pci_real_nextdev2:
   inc bx
-  cmp bx, #0x0100
+  cmp bx, #0x0200
   jne pci_real_devloop2
   mov dx, cx
   shr ecx, #16
