@@ -4,7 +4,7 @@
 //
 //  32 bit Bochs BIOS init code
 //  Copyright (C) 2006       Fabrice Bellard
-//  Copyright (C) 2001-2017  The Bochs Project
+//  Copyright (C) 2001-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -710,6 +710,17 @@ static void find_bios_table_area(void)
     return;
 }
 
+static long find_pir_table(void)
+{
+    unsigned long addr;
+    for(addr = 0xf0000; addr < 0x100000; addr += 16) {
+        if (*(uint32_t *)addr == 0x52495024) {
+            return addr;
+        }
+    }
+    return 0;
+}
+
 static void bios_shadow_init(PCIDevice *d)
 {
     int v;
@@ -744,14 +755,15 @@ static void bios_lock_shadow_ram(void)
 static void pci_bios_init_bridges(PCIDevice *d)
 {
     uint16_t vendor_id, device_id;
+    long addr;
 
     vendor_id = pci_config_readw(d, PCI_VENDOR_ID);
     device_id = pci_config_readw(d, PCI_DEVICE_ID);
 
-    if (vendor_id == PCI_VENDOR_ID_INTEL &&
-       (device_id == PCI_DEVICE_ID_INTEL_82371FB_0 ||
-        device_id == PCI_DEVICE_ID_INTEL_82371SB_0 ||
-        device_id == PCI_DEVICE_ID_INTEL_82371AB_0)) {
+    if (vendor_id == PCI_VENDOR_ID_INTEL) {
+      if (device_id == PCI_DEVICE_ID_INTEL_82371FB_0 ||
+          device_id == PCI_DEVICE_ID_INTEL_82371SB_0 ||
+          device_id == PCI_DEVICE_ID_INTEL_82371AB_0) {
         int i, irq;
         uint8_t elcr[2];
 
@@ -770,14 +782,25 @@ static void pci_bios_init_bridges(PCIDevice *d)
         outb(0x4d1, elcr[1]);
         BX_INFO("PIIX3/PIIX4 init: elcr=%02x %02x\n",
                 elcr[0], elcr[1]);
-    } else if (vendor_id == PCI_VENDOR_ID_INTEL &&
-              (device_id == PCI_DEVICE_ID_INTEL_82441 || device_id == PCI_DEVICE_ID_INTEL_82437)) {
+      } else if (device_id == PCI_DEVICE_ID_INTEL_82441 || device_id == PCI_DEVICE_ID_INTEL_82437) {
         /* i440FX / i430FX PCI bridge */
         bios_shadow_init(d);
-    } else if (vendor_id == PCI_VENDOR_ID_INTEL && device_id == PCI_DEVICE_ID_INTEL_82443) {
+      } else if (device_id == PCI_DEVICE_ID_INTEL_82443) {
         /* i440BX PCI bridge */
         bios_shadow_init(d);
+        addr = find_pir_table();
+        BX_INFO("Modify pir_table at: 0x%08lx\n", addr);
+        writeb((uint8_t *)addr + 0x09, 0x38); // IRQ router DevFunc
+        writeb((uint8_t *)addr + 0x1f, 0x07); // Checksum
+        writeb((uint8_t *)addr + 0x21, 0x38); // 1st entry: PCI2ISA
+        writeb((uint8_t *)addr + 0x31, 0x40); // 2nd entry: 1st slot
+        writeb((uint8_t *)addr + 0x41, 0x48); // 3rd entry: 2nd slot
+        writeb((uint8_t *)addr + 0x51, 0x50); // 4th entry: 3rd slot
+        writeb((uint8_t *)addr + 0x61, 0x58); // 5th entry: 4th slot
+        writeb((uint8_t *)addr + 0x70, 0x01); // 6th entry: AGP bus
+        writeb((uint8_t *)addr + 0x71, 0x00); // 6th entry: AGP slot
         pci_config_writeb(d, 0xb4, 0x30); /* AGP aperture size 64 MB */
+      }
     }
 }
 
@@ -2327,7 +2350,8 @@ static void find_440fx(PCIDevice *d)
     device_id = pci_config_readw(d, PCI_DEVICE_ID);
 
     if (vendor_id == PCI_VENDOR_ID_INTEL &&
-       (device_id == PCI_DEVICE_ID_INTEL_82441 || device_id == PCI_DEVICE_ID_INTEL_82437))
+       (device_id == PCI_DEVICE_ID_INTEL_82441 || device_id == PCI_DEVICE_ID_INTEL_82437 ||
+        device_id == PCI_DEVICE_ID_INTEL_82443))
         i440_pcidev = *d;
 }
 

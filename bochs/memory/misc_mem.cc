@@ -356,24 +356,6 @@ void BX_MEM_C::cleanup_memory()
   }
 }
 
-Bit8u* get_pir_ptr(Bit8u *data)
-{
-  Bit8u *result = NULL;
-  Bit64u offset = 0;
-
-  while (offset + 16 < 0x10000) {
-    offset = offset + 16;
-    if( *( data + offset + 0 ) == '$' && \
-        *( data + offset + 1 ) == 'P' && \
-        *( data + offset + 2 ) == 'I' && \
-        *( data + offset + 3 ) == 'R' ) {
-      result = &data[offset];
-      break;
-    }
-  }
-  return result;
-}
-
 //
 // Values for type:
 //   0 : System Bios
@@ -386,7 +368,6 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
   int fd, ret, i, start_idx, end_idx;
   unsigned long size, max_size, offset;
   bx_bool is_bochs_bios = 0;
-  Bit8u *pir;
 
   if (*path == '\0') {
     if (type == 2) {
@@ -513,21 +494,6 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
       } else if (is_bochs_bios) {
         BX_ERROR(("ROM: checksum error in BIOS image: '%s'", path));
       }
-    }
-  }
-  if (is_bochs_bios && BX_MEM_THIS pci_enabled) {
-    unsigned chipset = SIM->get_param_enum(BXPN_PCI_CHIPSET)->get();
-    if (chipset == BX_PCI_CHIPSET_I440BX) {
-      pir = get_pir_ptr(&BX_MEM_THIS rom[BIOSROMSZ - 0x10000]);
-      pir[0x09] = 0x38; // IRQ router DevFunc
-      pir[0x1f] = 0x07; // Checksum
-      pir[0x21] = 0x38; // 1st entry: PCI2ISA
-      pir[0x31] = 0x40; // 2nd entry: 1st slot
-      pir[0x41] = 0x48; // 3rd entry: 2nd slot
-      pir[0x51] = 0x50; // 4th entry: 3rd slot
-      pir[0x61] = 0x58; // 5th entry: 4th slot
-      pir[0x70] = 0x01; // 6th entry: AGP bus
-      pir[0x71] = 0x00; // 6th entry: AGP slot
     }
   }
   BX_INFO(("rom at 0x%05x/%u ('%s')",
