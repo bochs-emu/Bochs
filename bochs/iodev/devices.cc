@@ -1490,6 +1490,7 @@ void bx_pci_device_c::pci_write_handler_common(Bit8u address, Bit32u value, unsi
   if (((pci_conf[0x0e] & 0x03) == 0) && (address >= 0x10) && (address < 0x28)) {
     bnum = ((address - 0x10) >> 2);
     if (pci_bar[bnum].type != BX_PCI_BAR_TYPE_NONE) {
+      BX_DEBUG_PCI_WRITE(address, value, io_len);
       for (unsigned i=0; i<io_len; i++) {
         value8 = (value >> (i*8)) & 0xff;
         oldval = pci_conf[address+i];
@@ -1522,6 +1523,7 @@ void bx_pci_device_c::pci_write_handler_common(Bit8u address, Bit32u value, unsi
       }
     }
   } else if ((address & 0xfc) == 0x30) {
+    BX_DEBUG_PCI_WRITE(address, value, io_len);
     value &= (0xfffffc01 >> ((address & 0x03) * 8));
     for (unsigned i=0; i<io_len; i++) {
       value8 = (value >> (i*8)) & 0xff;
@@ -1558,12 +1560,7 @@ Bit32u bx_pci_device_c::pci_read_handler(Bit8u address, unsigned io_len)
     value |= (pci_conf[address+i] << (i*8));
   }
 
-  if (io_len == 1)
-    BX_DEBUG(("read  PCI register 0x%02X value 0x%02X (len=1)", address, value));
-  else if (io_len == 2)
-    BX_DEBUG(("read  PCI register 0x%02X value 0x%04X (len=2)", address, value));
-  else if (io_len == 4)
-    BX_DEBUG(("read  PCI register 0x%02X value 0x%08X (len=4)", address, value));
+  BX_DEBUG_PCI_READ(address, value, io_len);
 
   return value;
 }

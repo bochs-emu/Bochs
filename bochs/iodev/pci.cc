@@ -257,6 +257,8 @@ void bx_pci_bridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io
   old_dram_detect = BX_PCI_THIS dram_detect;
   if ((address >= 0x10) && (address < 0x34))
     return;
+
+  BX_DEBUG_PCI_WRITE(address, value, io_len);
   for (unsigned i=0; i<io_len; i++) {
     value8 = (value >> (i*8)) & 0xFF;
     oldval = BX_PCI_THIS pci_conf[address+i];
@@ -638,6 +640,8 @@ void bx_pci_vbridge_c::after_restore_state(void)
 // pci configuration space write callback handler
 void bx_pci_vbridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {
+  BX_DEBUG_PCI_WRITE(address, value, io_len);
+
   for (unsigned i=0; i<io_len; i++) {
     Bit8u value8 = (value >> (i*8)) & 0xff;
     Bit8u oldval = pci_conf[address+i];
@@ -682,12 +686,5 @@ void bx_pci_vbridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned i
     }
     pci_conf[address+i] = value8;
   }
-
-  if (io_len == 1)
-    BX_DEBUG(("write PCI register 0x%02x value 0x%02x", address, value));
-  else if (io_len == 2)
-    BX_DEBUG(("write PCI register 0x%02x value 0x%04x", address, value));
-  else if (io_len == 4)
-    BX_DEBUG(("write PCI register 0x%02x value 0x%08x", address, value));
 }
 #endif /* BX_SUPPORT_PCI */

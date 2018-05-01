@@ -2336,12 +2336,10 @@ void bx_svga_cirrus_c::pci_write_handler(Bit8u address, Bit32u value, unsigned i
   unsigned write_addr;
   Bit8u new_value, old_value;
 
-  BX_DEBUG(("pci_write: address 0x%02x, io_len 0x%02x, value 0x%x",
-    (unsigned)address, (unsigned)io_len, (unsigned)value));
-
   if ((address > 0x17) && (address < 0x30))
     return;
 
+  BX_DEBUG_PCI_WRITE(address, value, io_len);
   for (i = 0; i < io_len; i++) {
     write_addr = address + i;
     old_value = BX_CIRRUS_THIS pci_conf[write_addr];

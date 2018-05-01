@@ -196,8 +196,8 @@ void bx_banshee_c::reset(unsigned type)
     { 0x60, 0x01 }, { 0x61, 0x00 },
     { 0x62, 0x21 }, { 0x63, 0x00 },
     // ACPI control/status 0x64 - 0x67
-    { 0x60, 0x00 }, { 0x61, 0x00 },
-    { 0x62, 0x00 }, { 0x63, 0x00 },
+    { 0x64, 0x00 }, { 0x65, 0x00 },
+    { 0x66, 0x00 }, { 0x67, 0x00 },
   };
   for (i = 0; i < sizeof(reset_vals2) / sizeof(*reset_vals2); ++i) {
     pci_conf[reset_vals2[i].addr] = reset_vals2[i].val;
@@ -210,6 +210,9 @@ void bx_banshee_c::reset(unsigned type)
     pci_conf[0x55] = 0x60;
     pci_conf[0x56] = 0x10;
     pci_conf[0x57] = 0x00;
+    pci_conf[0x58] = 0x21;
+    pci_conf[0x59] = 0x02;
+    pci_conf[0x5b] = 0x07;
     v->banshee.io[io_strapInfo] |= 0x0000000c;
     v->banshee.io[io_miscInit1] |= 0x0c000000;
   }
@@ -460,6 +463,7 @@ void bx_banshee_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_le
   if ((address >= 0x1c) && (address < 0x2c))
     return;
 
+  BX_DEBUG_PCI_WRITE(address, value, io_len);
   for (unsigned i=0; i<io_len; i++) {
     value8 = (value >> (i*8)) & 0xFF;
     oldval = pci_conf[address+i];
@@ -486,13 +490,6 @@ void bx_banshee_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_le
     }
     pci_conf[address+i] = value8;
   }
-
-  if (io_len == 1)
-    BX_DEBUG(("write PCI register 0x%02x value 0x%02x", address, value));
-  else if (io_len == 2)
-    BX_DEBUG(("write PCI register 0x%02x value 0x%04x", address, value));
-  else if (io_len == 4)
-    BX_DEBUG(("write PCI register 0x%02x value 0x%08x", address, value));
 }
 
 Bit32u bx_banshee_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)

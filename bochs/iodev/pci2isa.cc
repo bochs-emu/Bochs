@@ -353,6 +353,8 @@ void bx_piix3_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 
   if ((address >= 0x10) && (address < 0x34))
     return;
+
+  BX_DEBUG_PCI_WRITE(address, value, io_len);
   for (unsigned i=0; i<io_len; i++) {
     value8 = (value >> (i*8)) & 0xFF;
     oldval = BX_P2I_THIS pci_conf[address+i];

@@ -3109,6 +3109,7 @@ void bx_usb_xhci_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_l
   if (((address >= 0x14) && (address <= 0x34)))
     return;
 
+  BX_DEBUG_PCI_WRITE(address, value, io_len);
   for (unsigned i=0; i<io_len; i++) {
     Bit8u value8 = (value >> (i*8)) & 0xFF;
 //  Bit8u oldval = BX_XHCI_THIS pci_conf[address+i];
@@ -3138,13 +3139,6 @@ void bx_usb_xhci_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_l
         BX_XHCI_THIS pci_conf[address+i] = value8;
     }
   }
-
-  if (io_len == 1)
-    BX_DEBUG(("write PCI register 0x%02X value 0x%02X (len=1)", address, value));
-  else if (io_len == 2)
-    BX_DEBUG(("write PCI register 0x%02X value 0x%04X (len=2)", address, value));
-  else if (io_len == 4)
-    BX_DEBUG(("write PCI register 0x%02X value 0x%08X (len=4)", address, value));
 }
 
 void bx_usb_xhci_c::usb_set_connect_status(Bit8u port, int type, bx_bool connected)

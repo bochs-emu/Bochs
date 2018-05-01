@@ -1294,16 +1294,10 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
 // static pci configuration space write callback handler
 void bx_vga_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {
-  if (io_len == 1)
-    BX_DEBUG(("write PCI register 0x%02x value 0x%02x", address, value));
-  else if (io_len == 2)
-    BX_DEBUG(("write PCI register 0x%02x value 0x%04x", address, value));
-  else if (io_len == 4)
-    BX_DEBUG(("write PCI register 0x%02x value 0x%08x", address, value));
-
   if ((address >= 0x14) && (address < 0x30))
     return;
 
+  BX_DEBUG_PCI_WRITE(address, value, io_len);
   for (unsigned i = 0; i < io_len; i++) {
     unsigned write_addr = address + i;
 //  Bit8u old_value = BX_VGA_THIS pci_conf[write_addr];
