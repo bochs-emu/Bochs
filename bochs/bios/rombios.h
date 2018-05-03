@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2006 Volker Ruppert
+//  Copyright (C) 2006-2018 Volker Ruppert
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -250,6 +250,7 @@
 #define PCI_DEVICE_ID_INTEL_82437       0x0122
 #define PCI_DEVICE_ID_INTEL_82441       0x1237
 #define PCI_DEVICE_ID_INTEL_82443       0x7190
+#define PCI_DEVICE_ID_INTEL_82443_1     0x7191
 #define PCI_DEVICE_ID_INTEL_82371FB_0   0x122e
 #define PCI_DEVICE_ID_INTEL_82371FB_1   0x1230
 #define PCI_DEVICE_ID_INTEL_82371SB_0   0x7000

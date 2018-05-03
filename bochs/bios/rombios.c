@@ -9628,7 +9628,7 @@ pcibios_protected:
   cmp al, #0x01 ;; installation check
   jne pci_pro_f02
   mov bx, #0x0210
-  mov cx, #0
+  call pci_pro_get_max_bus ;; sets CX
   mov edx, #0x20494350 ;; "PCI "
   mov al, #0x01
   jmp pci_pro_ok
@@ -9765,6 +9765,23 @@ pci_pro_ok:
   clc
   retf
 
+pci_pro_get_max_bus:
+  push eax
+  mov  eax, #0x80000000
+  mov  dx, #0x0cf8
+  out  dx, eax
+  mov  dx, #0x0cfc
+  in   eax, dx
+  mov  cx, #0
+#ifdef PCI_FIXED_HOST_BRIDGE3
+  cmp  eax, #PCI_FIXED_HOST_BRIDGE3
+  jne  pci_pro_no_i440bx
+  mov  cx, #0x0001
+#endif
+pci_pro_no_i440bx:
+  pop  eax
+  ret
+
 pci_pro_select_reg:
   push edx
   mov eax, #0x800000
@@ -9815,7 +9832,7 @@ pci_present:
   jne pci_real_f02
   mov ax, #0x0001
   mov bx, #0x0210
-  mov cx, #0
+  call pci_real_get_max_bus ;; sets CX
   mov edx, #0x20494350 ;; "PCI "
   mov edi, #0xf0000
   mov di, #pcibios_protected
@@ -9983,6 +10000,23 @@ pci_real_ok:
   pop edi
   pop esi
   clc
+  ret
+
+pci_real_get_max_bus:
+  push eax
+  mov  eax, #0x80000000
+  mov  dx, #0x0cf8
+  out  dx, eax
+  mov  dx, #0x0cfc
+  in   eax, dx
+  mov  cx, #0
+#ifdef PCI_FIXED_HOST_BRIDGE3
+  cmp  eax, #PCI_FIXED_HOST_BRIDGE3
+  jne  pci_real_no_i440bx
+  mov  cx, #0x0001
+#endif
+pci_real_no_i440bx:
+  pop  eax
   ret
 
 pci_real_select_reg:

@@ -611,7 +611,9 @@ typedef struct PCIDevice {
 } PCIDevice;
 
 static uint32_t pci_bios_io_addr;
+static uint32_t pci_bios_agp_io_addr;
 static uint32_t pci_bios_mem_addr;
+static uint32_t pci_bios_agp_mem_addr;
 static uint32_t pci_bios_rom_start;
 /* host irqs corresponding to PCI irqs A-D */
 static uint8_t pci_irqs[4] = { 11, 9, 11, 9 };
@@ -756,6 +758,7 @@ static void pci_bios_init_bridges(PCIDevice *d)
 {
     uint16_t vendor_id, device_id;
     long addr;
+    uint8_t *pir;
 
     vendor_id = pci_config_readw(d, PCI_VENDOR_ID);
     device_id = pci_config_readw(d, PCI_DEVICE_ID);
@@ -789,17 +792,32 @@ static void pci_bios_init_bridges(PCIDevice *d)
         /* i440BX PCI bridge */
         bios_shadow_init(d);
         addr = find_pir_table();
+        pir = (uint8_t *)addr;
         BX_INFO("Modify pir_table at: 0x%08lx\n", addr);
-        writeb((uint8_t *)addr + 0x09, 0x38); // IRQ router DevFunc
-        writeb((uint8_t *)addr + 0x1f, 0x07); // Checksum
-        writeb((uint8_t *)addr + 0x21, 0x38); // 1st entry: PCI2ISA
-        writeb((uint8_t *)addr + 0x31, 0x40); // 2nd entry: 1st slot
-        writeb((uint8_t *)addr + 0x41, 0x48); // 3rd entry: 2nd slot
-        writeb((uint8_t *)addr + 0x51, 0x50); // 4th entry: 3rd slot
-        writeb((uint8_t *)addr + 0x61, 0x58); // 5th entry: 4th slot
-        writeb((uint8_t *)addr + 0x70, 0x01); // 6th entry: AGP bus
-        writeb((uint8_t *)addr + 0x71, 0x00); // 6th entry: AGP slot
+        writeb(pir + 0x09, 0x38); // IRQ router DevFunc
+        writeb(pir + 0x1f, 0x07); // Checksum
+        writeb(pir + 0x21, 0x38); // 1st entry: PCI2ISA
+        writeb(pir + 0x31, 0x40); // 2nd entry: 1st slot
+        writeb(pir + 0x41, 0x48); // 3rd entry: 2nd slot
+        writeb(pir + 0x51, 0x50); // 4th entry: 3rd slot
+        writeb(pir + 0x61, 0x58); // 5th entry: 4th slot
+        writeb(pir + 0x70, 0x01); // 6th entry: AGP bus
+        writeb(pir + 0x71, 0x00); // 6th entry: AGP slot
         pci_config_writeb(d, 0xb4, 0x30); /* AGP aperture size 64 MB */
+      } else if (device_id == PCI_DEVICE_ID_INTEL_82443_1) {
+        /* i440BX PCI/AGP bridge */
+        pci_config_writew(d, 0x04, 0x0107);
+        pci_config_writeb(d, 0x0d, 0x40);
+        pci_config_writeb(d, 0x19, 0x01);
+        pci_config_writeb(d, 0x1a, 0x01);
+        pci_config_writeb(d, 0x1b, 0x40);
+        pci_config_writeb(d, 0x1c, 0xe0);
+        pci_config_writeb(d, 0x1d, 0xf0);
+        pci_config_writew(d, 0x20, 0xd000);
+        pci_config_writew(d, 0x22, 0xd1f0);
+        pci_config_writew(d, 0x24, 0xd200);
+        pci_config_writew(d, 0x26, 0xd3f0);
+        pci_config_writeb(d, 0xee, 0x88);
       }
     }
 }
@@ -984,10 +1002,18 @@ static void pci_bios_init_device(PCIDevice *d)
             if (val != 0) {
                 size = (~(val & ~0xf)) + 1;
                 if (val & PCI_ADDRESS_SPACE_IO) {
-                    paddr = &pci_bios_io_addr;
+                    if (d->bus == 1) {
+                        paddr = &pci_bios_agp_io_addr;
+                    } else {
+                        paddr = &pci_bios_io_addr;
+                    }
                     align = 0x10;
                 } else {
-                    paddr = &pci_bios_mem_addr;
+                    if (d->bus == 1) {
+                        paddr = &pci_bios_agp_mem_addr;
+                    } else {
+                        paddr = &pci_bios_mem_addr;
+                    }
                     align = 0x10000;
                 }
                 *paddr = (*paddr + size - 1) & ~(size - 1);
@@ -1059,7 +1085,9 @@ void pci_for_each_device(void (*init_func)(PCIDevice *d))
 void pci_bios_init(void)
 {
     pci_bios_io_addr = 0xc000;
+    pci_bios_agp_io_addr = 0xe000;
     pci_bios_mem_addr = 0xc0000000;
+    pci_bios_agp_mem_addr = 0xd0000000;
     pci_bios_rom_start = 0xc0000;
 
     pci_for_each_device(pci_bios_init_bridges);
