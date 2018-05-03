@@ -435,9 +435,10 @@ vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
 # This defines the Voodoo Graphics emulation (experimental). Currently
 # supported models are 'voodoo1', 'voodoo2', 'banshee' and 'voodoo3'. The
 # Voodoo2 support is not yet complete, but almost usable. The Banshee and
-# Voodoo3 support is under construction, but basicly usable. It requires an
-# external VGA BIOS the vga extension option to be set to 'voodoo'. The gui
-# screen update timing for all models is controlled by the related 'vga'
+# Voodoo3 support is under construction, but basicly usable. The 2D/3D cards
+# require an external VGA BIOS the vga extension option to be set to 'voodoo'.
+# If the i440BX PCI chipset is selected, they can be assigned to AGP (slot #5).
+# The gui screen update timing for all models is controlled by the related 'vga'
 # options.
 #
 # Examples:
@@ -526,13 +527,15 @@ mouse: enabled=0
 
 #=======================================================================
 # PCI:
-# This option controls the presence of a PCI chipset in Bochs. Currently it only
-# supports the i430FX and i440FX chipsets. You can also specify the devices
-# connected to PCI slots. Up to 5 slots are available. For these combined PCI/ISA
-# devices assigning to slot is mandatory if you want to emulate the PCI model:
-# cirrus, ne2k and pcivga. These PCI-only devices are also supported, but they
-# are auto-assigned if you don't use the slot configuration: e1000, es1370,
-# pcidev, pcipnic, usb_ehci, usb_ohci, usb_xhci and voodoo.
+# This option controls the presence of a PCI chipset in Bochs. Currently it
+# supports the i430FX, i440FX and i440BX chipsets. You can also specify the
+# devices connected to PCI slots. Up to 5 slots are available. For these
+# combined PCI/ISA devices assigning to slot is mandatory if you want to emulate
+# the PCI model: cirrus, ne2k and pcivga. These PCI-only devices are also
+# supported, but they are auto-assigned if you don't use the slot configuration:
+# e1000, es1370, pcidev, pcipnic, usb_ehci, usb_ohci, usb_xhci and voodoo.
+# In case of the i440BX chipset, slot #5 is the AGP slot. Currently only the
+# 'voodoo' device can be assigned to AGP.
 #
 # Example:
 #   pci: enabled=1, chipset=i440fx, slot1=pcivga, slot2=ne2k

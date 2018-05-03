@@ -18,6 +18,8 @@ Changes after 2.6.9 release:
       added more symbol lookups.
 
 - I/O Devices
+  - PCI
+    Added basic support for the i440BX PCI/AGP chipset.
   - Timers
     - Implemented HPET emulation (ported from Qemu).
   - Voodoo
@@ -26,7 +28,7 @@ Changes after 2.6.9 release:
     - Voodoo2 model now working after some fixes and implementation of the
       CMDFIFO (using FIFO thread) and one of the bitBLT functions.
     - Added Voodoo Banshee / Voodoo3 emulation support (still under construction,
-      but basicly usable).
+      but basicly usable). The AGP models are available if chipset is i440BX.
   - Display (general)
     - Added basic DDC support for Bochs VBE, Cirrus and Voodoo Banshee / Voodoo3
       adapters (reporting plug&play monitor "Bochs Screen").

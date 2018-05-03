@@ -507,7 +507,7 @@ Bit32u bx_banshee_c::read(Bit32u address, unsigned io_len)
   Bit8u reg = (offset>>2);
   switch (reg) {
     case io_status:
-      result = register_r(0);
+      result = register_r(0) >> ((offset & 3) * 8);
       break;
 
     case io_dacData:

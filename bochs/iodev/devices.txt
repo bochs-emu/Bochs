@@ -2,11 +2,11 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 
-MOTHER BOARD (i440FX support)                                   devices.cc
+MOTHER BOARD (i430FX / i440FX / i440BX support)                                   devices.cc
   |
-  +---- 82441FX (PMC) and 82442 (DBX) emulation                 pci.cc
+  +---- Host bridge 82430FX / 82441FX / 82443BX                 pci.cc
   |
-  +---- 82371SB (PIIX3) PCI ISA IDE XCELERATOR
+  +---- PIIX/PIIX3/PIIX4 (ISA / IDE / USB / ACPI)
   |        |
   |        +---- PCI-to-ISA bridge                              pci2isa.cc
   |        +---- PCI IDE controller                             pci_ide.cc
@@ -73,7 +73,8 @@ Attached devices
   |        |      +- Cirrus Logic PCI/ISA CLGD5446 SVGA adapter svga_cirrus.cc
   |        |      +- 3dfx Voodoo Banshee / Voodoo3 adapter      banshee.cc
   |        |
-  |        +---- 3dfx Voodoo Graphics adapter (SST-1/2)         voodoo.cc
+  |        +---- 3dfx Voodoo Graphics adapter (4 models)        voodoo.cc
+  |        |
   |        |
   |        +---- VESA DDC support (plug&play monitor)           ddc.cc
   |
@@ -123,7 +124,7 @@ Attached devices
            |             |
            |             +---- USB EHCI adapter                 usb_ehci.cc
            |             +---- USB OHCI adapter                 usb_ohci.cc
-           |             +---- USB UHCI adapter (PIIX3)         usb_uhci.cc
+           |             +---- USB UHCI adapter (PIIX3/PIIX4)   usb_uhci.cc
            |             +---- USB xHCI adapter                 usb_xhci.cc
            |
            +---- Attached USB devices
