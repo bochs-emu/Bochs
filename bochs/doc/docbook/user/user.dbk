@@ -424,7 +424,8 @@ currently work with.
     <entry>Yes</entry>
     <entry>VESA DDC is now supported by all VGA compatible display adapters.
     The LGPL'd VGABIOS has been updated use this feature for both the VBE and
-    Cirrus version.
+    Cirrus version. The interface reports a plug&amp;play monitor called
+    "Bochs Screen".
     </entry>
   </row>
   <row>
@@ -534,10 +535,11 @@ currently work with.
   <row>
     <entry>PCI</entry>
     <entry>Yes</entry>
-    <entry>Emulates most of the i440FX PCI chipset. The Host-to-PCI bridge
-    (PMC/DBX), the PCI-to-ISA bridge and the PCI IDE controller (PIIX3) are
-    available. For PCI cards there are 5 PCI slots supported. ACPI and HPET
-    features are also available.
+    <entry>Emulates most of the i430FX, i440FX or i440BX PCI chipset.
+    The Host-to-PCI bridge, the PCI-to-ISA bridge and the PCI IDE controller
+    (PIIX3/PIIX4) are available. For PCI cards there are 5 PCI slots supported.
+    ACPI and HPET features are also available. The i440BX chipset has basic
+    support for AGP.
     </entry>
   </row>
   <row>
@@ -2497,8 +2499,8 @@ SMP, x86_64 support) and the devices options (e.g. PCI, USB, Cirrus graphics).
     <row>
       <entry>--enable-pci</entry>
       <entry>yes</entry>
-      <entry>Enable limited i440FX / i430FX PCI support. This is still incomplete,
-      but usable.
+      <entry>Enable limited i440FX / i430FX / i440BX PCI support. This is still
+      incomplete, but usable.
       </entry>
     </row>
     <row>
@@ -2514,8 +2516,8 @@ SMP, x86_64 support) and the devices options (e.g. PCI, USB, Cirrus graphics).
       <entry>--enable-usb</entry>
       <entry>no</entry>
       <entry>
-        Enable i440FX PCI USB support (UHCI). The host controller with 2-port
-        root hub and 8 USB device types are available.
+        Enable i440FX / i440BX PCI USB support (UHCI). The host controller with
+        2-port root hub and 8 USB device types are available.
       </entry>
     </row>
     <row>
@@ -3853,8 +3855,9 @@ Example:
 This defines the Voodoo Graphics emulation (experimental). Currently
 supported models are 'voodoo1', 'voodoo2', 'banshee' and 'voodoo3'.
 The Voodoo2 support is not yet complete, but almost usable. The Banshee /
-Voodoo3 support is under construction, but basicly usable. It requires an
-external VGA BIOS and the vga extension option to be set to 'voodoo'.
+Voodoo3 support is under construction, but basicly usable. The 2D/3D cards
+require an external VGA BIOS the vga extension option to be set to 'voodoo'.
+If the i440BX PCI chipset is selected, they can be assigned to AGP (slot #5).
 The gui screen update timing for all models is controlled by the related
 'vga' options. See <xref linkend="voodoo-notes"> for more information.
 </para>
@@ -3969,14 +3972,17 @@ Examples:
 <screen>
   pci: enabled=1, chipset=i440fx # default if compiled with PCI support
   pci: enabled=1, chipset=i440fx, slot1=pcivga, slot2=ne2k
+  pci: enabled=1, chipset=i440bx, slot5=voodoo, slot1=e1000
 </screen>
-This option controls the presence of a PCI chipset in Bochs. Currently it only
-supports the i430FX and i440FX chipsets. You can also specify the devices
-connected to PCI slots. Up to 5 slots are available. For these combined PCI/ISA
-devices assigning to slot is mandatory if you want to emulate the PCI model:
-cirrus, ne2k and pcivga. These PCI-only devices are also supported, but they are
-auto-assigned if you don't use the slot configuration: e1000, es1370, pcidev,
-pcipnic, usb_ohci, usb_ehci and usb_xhci.
+This option controls the presence of a PCI chipset in Bochs. Currently it
+supports the i430FX, i440FX and i440BX chipsets. You can also specify the
+devices connected to PCI slots. Up to 5 slots are available. For these
+combined PCI/ISA devices assigning to slot is mandatory if you want to emulate
+the PCI model: cirrus, ne2k and pcivga. These PCI-only devices are also
+supported, but they are auto-assigned if you don't use the slot configuration:
+e1000, es1370, pcidev, pcipnic, usb_ehci, usb_ohci, usb_xhci and voodoo.
+In case of the i440BX chipset, slot #5 is the AGP slot. Currently only the
+'voodoo' device can be assigned to AGP.
 </para>
 </section>
 
@@ -8776,7 +8782,8 @@ Bochs VBE Display Drivers for Windows NT/2000
   Bochs supports the emulation of 4 different 3dfx Voodoo Graphics adapter models.
   The Voodoo1 and Voodoo2 models are 3D-only add-on cards and require a VGA
   compatible primary device. The Voodoo Banshee and it's successor Voodoo3 have
-  both a VGA core and a 2D/3D core, so no other VGA card is required.
+  both a VGA core and a 2D/3D core, so no other VGA card is required. The 2D/3D
+  cards can be assigned to AGP if the i440BX chipset is selected (slot #5).
   </para>
   <para>
   To emulate the Voodoo1 or Voodoo2 device only the "model" parameter of the
@@ -8785,13 +8792,13 @@ Bochs VBE Display Drivers for Windows NT/2000
   </para>
   <para>
   For emulating the Voodoo Banshee or Voodoo3 adapter, the vga extension option
-  currently must be set to "voodoo". Using a different primary display adapter
-  and a Banshee compatible device with it's VGA interface disabled is not
-  implemented yet. Both Banshee and Voodoo3 need a specific external VGA BIOS,
-  since a Voodoo extension for the LGPL'd VGABIOS is not written yet.
+  must be set to "voodoo". Using a different primary display adapter and a
+  Banshee compatible device with it's VGA interface disabled is not
+  implemented yet. Both Banshee and Voodoo3 currently need a specific external
+  VGA BIOS, since a Voodoo extension for the LGPL'd VGABIOS is not written yet.
   </para>
   <para>
-  These bochsrc settings should be used for Voodoo Banshee:
+  These bochsrc settings should be used for Voodoo Banshee PCI:
   <screen>
   vga: extension=voodoo
   vgaromimage: file=Pci_sg.rom
@@ -8799,10 +8806,28 @@ Bochs VBE Display Drivers for Windows NT/2000
   </screen>
   </para>
   <para>
-  These settings are required for the Voodoo3:
+  These settings are required for the Voodoo3 PCI:
   <screen>
   vga: extension=voodoo
   vgaromimage: file=V3_2000_PCI_SG_2.15.06_LC.rom
+  voodoo: model=voodoo3
+  </screen>
+  </para>
+  <para>
+  These settings are required for Voodoo Banshee AGP:
+  <screen>
+  pci: chipset=i440bx, slot5=voodoo
+  vga: extension=voodoo
+  vgaromimage: file=Agp_sg.rom
+  voodoo: model=banshee
+  </screen>
+  </para>
+  <para>
+  These settings are required for the Voodoo3 AGP:
+  <screen>
+  pci: chipset=i440bx, slot5=voodoo
+  vga: extension=voodoo
+  vgaromimage: file=1k11sg.rom
   voodoo: model=voodoo3
   </screen>
   </para>
