@@ -56,7 +56,7 @@
 
 ***************************************************************************/
 
-// 3dfx Voodoo Banshee emulation (partly based on a patch for DOSBox)
+// 3dfx Voodoo Banshee / Voodoo3 emulation (partly based on a patch for DOSBox)
 
 // TODO:
 // - 2D polygon fill
@@ -64,6 +64,7 @@
 // - 2D chromaKey support
 // - using upper 256 CLUT entries
 // - pixel format conversion not supported in all cases
+// - full AGP support
 
 // FIXME:
 // - Minor issues in all Banshee modes (e.g. forward/back buttons in explorer)
@@ -187,7 +188,7 @@ void bx_banshee_c::reset(unsigned type)
     { 0x1a, 0x00 }, { 0x1b, 0x00 },
     // address space 0x2c - 0x2f
     { 0x2c, 0x1a }, { 0x2d, 0x12 }, // subsystem ID
-    { 0x2e, 0x04 }, { 0x2f, 0x00 }, // for Banshee PCI and Voodoo 3 AGP
+    { 0x2e, 0x04 }, { 0x2f, 0x00 }, // for Banshee PCI
     // capabilities pointer 0x34 - 0x37
     { 0x34, 0x60 }, { 0x35, 0x00 },
     { 0x36, 0x00 }, { 0x37, 0x00 },
@@ -217,8 +218,12 @@ void bx_banshee_c::reset(unsigned type)
     v->banshee.io[io_miscInit1] |= 0x0c000000;
   }
   // Special subsystem IDs
-  if ((s.model == VOODOO_3) && !is_agp) {
-    pci_conf[0x2e] = 0x36; // Voodoo 3 PCI model
+  if (s.model == VOODOO_3) {
+    if (!is_agp) {
+      pci_conf[0x2e] = 0x36; // Voodoo 3 PCI model
+    } else {
+      pci_conf[0x2e] = 0x52; // Voodoo 3 AGP model
+    }
   } else if ((s.model == VOODOO_BANSHEE) && is_agp) {
     pci_conf[0x2e] = 0x03; // Banshee AGP model
   }
