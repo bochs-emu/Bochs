@@ -38,6 +38,8 @@ Changes after 2.6.9 release:
   - Networking
     - bxhub: Added DNS service support for the server "vnet" and connected
       clients.
+  - Sound
+    - PC speaker now can play digitized sound by driving speaker gate.
 
 - GUI and display libraries
   - Added new win32 gui option "traphotkeys" for fullscreen mode.

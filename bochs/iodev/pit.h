@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2017  The Bochs Project
+//  Copyright (C) 2001-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -59,6 +59,7 @@ private:
     pit_82C54 timer;
     bx_bool speaker_data_on;
     bx_bool speaker_active;
+    bx_bool speaker_level;
     Bit64u  last_usec;
     Bit32u  last_next_event_time;
     Bit64u  total_ticks;

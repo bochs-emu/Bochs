@@ -324,6 +324,7 @@ public:
   virtual void beep_off() {
     bx_gui->beep_off();
   }
+  virtual void set_line(bx_bool level) {}
 };
 
 #if BX_SUPPORT_PCI

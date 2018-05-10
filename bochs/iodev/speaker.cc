@@ -195,6 +195,12 @@ void bx_speaker_c::init(void)
       waveout = DEV_sound_get_waveout(0);
       if (waveout != NULL) {
         beep_active = 0;
+#if BX_HAVE_REALTIME_USEC
+        dsp_active = 0;
+        dsp_start_usec = bx_get_realtime64_usec();
+        dsp_cb_usec = 0;
+        dsp_count = 0;
+#endif
         BX_INIT_MUTEX(beep_mutex);
         beep_callback_id = waveout->register_wave_callback(theSpeaker, beep_callback);
         BX_INFO(("Using lowlevel sound support for output"));
@@ -234,7 +240,7 @@ void bx_speaker_c::reset(unsigned type)
 #if BX_SUPPORT_SOUNDLOW
 Bit32u bx_speaker_c::beep_generator(Bit16u rate, Bit8u *buffer, Bit32u len)
 {
-  Bit32u j = 0;
+  Bit32u j = 0, ret = 0;
   Bit16u beep_samples;
   static Bit8u beep_level = 0x40;
   static Bit16u beep_pos = 0;
@@ -246,8 +252,13 @@ Bit32u bx_speaker_c::beep_generator(Bit16u rate, Bit8u *buffer, Bit32u len)
     beep_samples = (Bit32u)((float)rate / beep_frequency / 2);
   }
   if (beep_samples == 0) {
+#if BX_SUPPORT_SOUNDLOW && BX_HAVE_REALTIME_USEC
+    if (dsp_active) {
+      ret = dsp_generator(rate, buffer, len);
+    }
+#endif
     BX_UNLOCK(beep_mutex);
-    return 0;
+    return ret;
   }
   do {
     buffer[j++] = 0;
@@ -264,6 +275,37 @@ Bit32u bx_speaker_c::beep_generator(Bit16u rate, Bit8u *buffer, Bit32u len)
   BX_UNLOCK(beep_mutex);
   return len;
 }
+
+#if BX_SUPPORT_SOUNDLOW && BX_HAVE_REALTIME_USEC
+Bit32u bx_speaker_c::dsp_generator(Bit16u rate, Bit8u *buffer, Bit32u len)
+{
+  Bit32u i = 0, j = 0;
+  double tmp_dsp_usec, step_usec;
+  static Bit8u dsp_level = 0x40;
+
+  Bit64u new_dsp_cb_usec = bx_get_realtime64_usec() - dsp_start_usec;
+  if (dsp_cb_usec == 0) {
+    dsp_cb_usec = new_dsp_cb_usec - 25000;
+  }
+  tmp_dsp_usec = (double)dsp_cb_usec;
+  step_usec = 1000000.0 / (double)rate;
+  do {
+    if ((i < dsp_count) && (dsp_event_buffer[i] < (Bit64u)tmp_dsp_usec)) {
+      dsp_level ^= 0x80;
+      i++;
+    }
+    buffer[j++] = 0;
+    buffer[j++] = dsp_level;
+    buffer[j++] = 0;
+    buffer[j++] = dsp_level;
+    tmp_dsp_usec += step_usec;
+  } while (j < len);
+  dsp_active = 0;
+  dsp_count = 0;
+  dsp_cb_usec = new_dsp_cb_usec;
+  return len;
+}
+#endif
 
 Bit32u beep_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len)
 {
@@ -366,4 +408,21 @@ void bx_speaker_c::beep_off()
       break;
   }
   beep_frequency = 0.0;
+}
+
+void bx_speaker_c::set_line(bx_bool level)
+{
+  if (output_mode == BX_SPK_MODE_SOUND) {
+#if BX_SUPPORT_SOUNDLOW && BX_HAVE_REALTIME_USEC
+    BX_LOCK(beep_mutex);
+    Bit64u timestamp = bx_get_realtime64_usec() - dsp_start_usec;
+    dsp_active = 1;
+    if (dsp_count < 500) {
+      dsp_event_buffer[dsp_count++] = timestamp;
+    } else {
+      BX_ERROR(("DSP event buffer full"));
+    }
+    BX_UNLOCK(beep_mutex);
+#endif
+  }
 }
