@@ -740,6 +740,7 @@ void bx_sb16_c::dsp_datawrite(Bit32u value)
        case 0x40:
        case 0x38:
        case 0xe0:
+       case 0xe2:
        case 0xe4:
        case 0xf9:
          bytesneeded = 1;
@@ -1150,6 +1151,13 @@ void bx_sb16_c::dsp_datawrite(Bit32u value)
          {
              writelog(WAVELOG(3), "DSP version couldn't be written - buffer overflow");
          }
+         break;
+
+       case 0xe2:
+         DSP.datain.get(&value8);
+         // TODO
+         writelog(WAVELOG(3), "undocumented DSP command %x ignored (value = 0x%02x)",
+                 DSP.datain.currentcommand(), value8);
          break;
 
        case 0xe3:
