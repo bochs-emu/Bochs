@@ -19,9 +19,14 @@ Changes after 2.6.9 release:
 
 - I/O Devices
   - PCI
-    Added basic support for the i440BX PCI/AGP chipset.
+    - Added basic support for the i440BX PCI/AGP chipset.
   - Timers
     - Implemented HPET emulation (ported from Qemu).
+  - Hard drive / HD image
+    - Added support for unlocking disk images (locks leftover from previous
+      Bochs session) with the new command line argument '-unlock'.
+    - Bugfix: undoable/volatile mode images now inherit the base image geometry
+      if present.
   - Voodoo
     - Voodoo1 emulation speedup with combined PCI / memory FIFO implementation
       and multi-threading support (separate FIFO thread).

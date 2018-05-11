@@ -554,6 +554,7 @@ void print_usage(void)
 #endif
     "  -r path          restore the Bochs state from path\n"
     "  -log filename    specify Bochs log file name\n"
+    "  -unlock          unlock Bochs images leftover from previous session\n"
 #if BX_DEBUGGER
     "  -rc filename     execute debugger commands stored in file\n"
     "  -dbglog filename specify Bochs internal debugger log file name\n"
@@ -678,6 +679,9 @@ int bx_init_main(int argc, char *argv[])
     else if (!strcmp("-log", argv[arg])) {
       if (++arg >= argc) BX_PANIC(("-log must be followed by a filename"));
       else SIM->get_param_string(BXPN_LOG_FILENAME)->set(argv[arg]);
+    }
+    else if (!strcmp("-unlock", argv[arg])) {
+      SIM->get_param_bool(BXPN_UNLOCK_IMAGES)->set(1);
     }
 #if BX_DEBUGGER
     else if (!strcmp("-dbglog", argv[arg])) {

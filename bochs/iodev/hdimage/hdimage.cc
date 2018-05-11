@@ -231,10 +231,17 @@ int hdimage_open_file(const char *pathname, int flags, Bit64u *fsize, FILETIME *
   sprintf(lockfn, "%s.lock", pathname);
   lockfd = ::open(lockfn, O_RDONLY);
   if (lockfd >= 0) {
-    // Opening image must fail if lock file exists.
     ::close(lockfd);
-    BX_ERROR(("image locked: '%s'", pathname));
-    return -1;
+    if (SIM->get_param_bool(BXPN_UNLOCK_IMAGES)->get()) {
+      // Remove lock file if requested
+      if (access(lockfn, F_OK) == 0) {
+        unlink(lockfn);
+      }
+    } else {
+      // Opening image must fail if lock file exists.
+      BX_ERROR(("image locked: '%s'", pathname));
+      return -1;
+    }
   }
 #endif
 
