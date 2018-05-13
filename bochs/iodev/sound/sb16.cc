@@ -338,6 +338,8 @@ void bx_sb16_c::init(void)
   DSP.dma.mode = 0;
   DSP.irqpending = 0;
   DSP.midiuartmode = 0;
+  DSP.nondma_mode = 0;
+  DSP.samplebyte = 0;
   DSP.resetport = 1;  // so that one call to dsp_reset is sufficient
   dsp_reset(0);       // (reset is 1 to 0 transition)
   DSP.testreg = 0;
@@ -474,6 +476,8 @@ void bx_sb16_c::register_state(void)
   new bx_shadow_num_c(dsp, "prostereo", &DSP.prostereo, BASE_HEX);
   new bx_shadow_bool_c(dsp, "irqpending", &DSP.irqpending);
   new bx_shadow_bool_c(dsp, "midiuartmode", &DSP.midiuartmode);
+  new bx_shadow_bool_c(dsp, "nondma_mode", &DSP.nondma_mode);
+  new bx_shadow_num_c(dsp, "samplebyte", &DSP.samplebyte);
   new bx_shadow_num_c(dsp, "testreg", &DSP.testreg, BASE_HEX);
   bx_list_c *dma = new bx_list_c(dsp, "dma");
   new bx_shadow_num_c(dma, "mode", &DSP.dma.mode);
@@ -590,16 +594,20 @@ void bx_sb16_c::dsp_dmatimer(void *this_ptr)
   // output buffer and the output functions are not ready yet
   // or if buffer is empty in input mode.
 
-  if ((This->dsp.dma.chunkindex + 1 < BX_SOUNDLOW_WAVEPACKETSIZE) &&
+  if (!This->dsp.nondma_mode) {
+    if ((This->dsp.dma.chunkindex + 1 < BX_SOUNDLOW_WAVEPACKETSIZE) &&
         (This->dsp.dma.count > 0)) {
-    if (((This->dsp.dma.output == 0) && (This->dsp.dma.chunkcount > 0)) ||
-        (This->dsp.dma.output == 1)) {
-      if ((DSP.dma.param.bits == 8) || (BX_SB16_DMAH == 0)) {
-        DEV_dma_set_drq(BX_SB16_DMAL, 1);
-      } else {
-        DEV_dma_set_drq(BX_SB16_DMAH, 1);
+      if (((This->dsp.dma.output == 0) && (This->dsp.dma.chunkcount > 0)) ||
+          (This->dsp.dma.output == 1)) {
+        if ((DSP.dma.param.bits == 8) || (BX_SB16_DMAH == 0)) {
+          DEV_dma_set_drq(BX_SB16_DMAL, 1);
+        } else {
+          DEV_dma_set_drq(BX_SB16_DMAH, 1);
+        }
       }
     }
+  } else {
+    dsp_getsamplebyte(DSP.samplebyte);
   }
 }
 
@@ -617,6 +625,11 @@ void bx_sb16_c::opl_timer (void *this_ptr)
 void bx_sb16_c::dsp_reset(Bit32u value)
 {
   writelog(WAVELOG(4), "DSP Reset port write value %x", value);
+
+  if (DSP.nondma_mode) {
+    bx_pc_system.deactivate_timer(DSP.timer_handle);
+    DSP.nondma_mode = 0;
+  }
 
   // just abort high speed mode if it is set
   if (DSP.dma.highspeed != 0)
@@ -836,7 +849,17 @@ void bx_sb16_c::dsp_datawrite(Bit32u value)
          // direct mode DAC
        case 0x10:
          // 1: 8bit sample
-         DSP.datain.get(&value8);   // sample is ignored
+         if (!DSP.nondma_mode) {
+           DSP.dma.param.samplerate = 22050;
+           DSP.dma.param.bits = 8;
+           DSP.dma.param.channels = 1;
+           DSP.dma.param.format = 1;
+           DSP.dma.chunkcount = 2205;
+           DSP.dma.chunkindex = 0;
+           bx_pc_system.activate_timer(DSP.timer_handle, 45, 1);
+           DSP.nondma_mode = 1;
+         }
+         DSP.datain.get(&DSP.samplebyte);
          break;
 
          // uncomp'd, normal DAC DMA
@@ -1235,6 +1258,10 @@ void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
   writelog(WAVELOG(4), "DMA initialized. Cmd %02x, mode %02x, length %d, comp %d",
            command, mode, length, comp);
 
+  if (DSP.nondma_mode) {
+    bx_pc_system.deactivate_timer(DSP.timer_handle);
+    DSP.nondma_mode = 0;
+  }
   if ((command >> 4) == 0xb)  // 0xb? = 16 bit DMA
   {
     DSP.dma.param.bits = 16;

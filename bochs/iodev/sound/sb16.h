@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2015  The Bochs Project
+//  Copyright (C) 2001-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -183,6 +183,8 @@ private:
     Bit8u speaker,prostereo;                   // properties of the sound input/output
     bx_bool irqpending;                        // Is an IRQ pending (not ack'd)
     bx_bool midiuartmode;                      // Is the DSP in MIDI UART mode
+    bx_bool nondma_mode;                       // Set if DSP command 0x10 active
+    Bit8u samplebyte;                          // Current data from DSP command 0x10
     Bit8u testreg;
     struct bx_sb16_dsp_dma_struct {
       // Properties of the current DMA transfer:
