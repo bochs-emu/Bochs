@@ -75,6 +75,7 @@ private:
   BX_PIT_SMF bx_bool periodic(Bit32u usec_delta);
 
   BX_PIT_SMF void  irq_handler(bx_bool value);
+  BX_PIT_SMF void  speaker_handler(bx_bool value);
 
   BX_PIT_SMF Bit16u get_timer(int Timer);
   BX_PIT_SMF Bit16u new_timer_count(int Timer);

@@ -123,6 +123,7 @@ void bx_pit_c::init(void)
 
   BX_PIT_THIS s.timer.init();
   BX_PIT_THIS s.timer.set_OUT_handler(0, irq_handler);
+  BX_PIT_THIS s.timer.set_OUT_handler(2, speaker_handler);
 
   Bit64u my_time_usec = bx_virt_timer.time_usec(BX_PIT_THIS is_realtime);
 
@@ -183,7 +184,7 @@ void bx_pit_c::register_state(void)
 
 void bx_pit_c::after_restore_state(void)
 {
-  if (BX_PIT_THIS s.speaker_active) {
+  if (BX_PIT_THIS s.speaker_active && (BX_PIT_THIS s.timer.get_mode(2) == 3)) {
     Bit32u value32 = BX_PIT_THIS get_timer(2);
     if (value32 == 0) value32 = 0x10000;
     DEV_speaker_beep_on((float)(1193180.0 / value32));
@@ -319,7 +320,8 @@ void bx_pit_c::write(Bit32u address, Bit32u dvalue, unsigned io_len)
 
     case 0x42: /* timer 2: write count register */
       BX_PIT_THIS s.timer.write(2, value);
-      if (BX_PIT_THIS s.speaker_active && BX_PIT_THIS new_timer_count(2)) {
+      if (BX_PIT_THIS s.speaker_active && (BX_PIT_THIS s.timer.get_mode(2) == 3) &&
+          BX_PIT_THIS new_timer_count(2)) {
         value32 = BX_PIT_THIS get_timer(2);
         if (value32 == 0) value32 = 0x10000;
         DEV_speaker_beep_on((float)(1193180.0 / value32));
@@ -334,17 +336,18 @@ void bx_pit_c::write(Bit32u address, Bit32u dvalue, unsigned io_len)
       BX_PIT_THIS s.timer.set_GATE(2, value & 0x01);
       BX_PIT_THIS s.speaker_data_on = (value >> 1) & 0x01;
       new_speaker_active = ((value & 3) == 3);
-      if (BX_PIT_THIS s.speaker_active != new_speaker_active) {
-        if (new_speaker_active) {
-          value32 = BX_PIT_THIS get_timer(2);
-          if (value32 == 0) value32 = 0x10000;
-          DEV_speaker_beep_on((float)(1193180.0 / value32));
-        } else {
-          DEV_speaker_beep_off();
+      if (BX_PIT_THIS s.timer.get_mode(2) == 3) {
+        if (BX_PIT_THIS s.speaker_active != new_speaker_active) {
+          if (new_speaker_active) {
+            value32 = BX_PIT_THIS get_timer(2);
+            if (value32 == 0) value32 = 0x10000;
+            DEV_speaker_beep_on((float)(1193180.0 / value32));
+          } else {
+            DEV_speaker_beep_off();
+          }
+          BX_PIT_THIS s.speaker_active = new_speaker_active;
         }
-        BX_PIT_THIS s.speaker_active = new_speaker_active;
-      }
-      if (!BX_PIT_THIS s.speaker_active) {
+      } else {
         new_speaker_level = BX_PIT_THIS s.speaker_data_on & BX_PIT_THIS s.timer.read_OUT(2);
         if (BX_PIT_THIS s.speaker_level != new_speaker_level) {
           DEV_speaker_set_line(new_speaker_level);
@@ -410,6 +413,13 @@ void bx_pit_c::irq_handler(bx_bool value)
     } else {
       DEV_pic_lower_irq(0);
     }
+  }
+}
+
+void bx_pit_c::speaker_handler(bx_bool value)
+{
+  if (BX_PIT_THIS s.timer.get_mode(2) != 3) {
+    DEV_speaker_set_line(value & BX_PIT_THIS s.speaker_data_on);
   }
 }
 
