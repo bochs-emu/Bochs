@@ -179,12 +179,13 @@ private:
   // the DSP variables
   struct bx_sb16_dsp_struct {
     bx_sb16_buffer datain, dataout;
-    Bit8u resetport;                           // last value written to the reset port
-    Bit8u speaker,prostereo;                   // properties of the sound input/output
-    bx_bool irqpending;                        // Is an IRQ pending (not ack'd)
-    bx_bool midiuartmode;                      // Is the DSP in MIDI UART mode
-    bx_bool nondma_mode;                       // Set if DSP command 0x10 active
-    Bit8u samplebyte;                          // Current data from DSP command 0x10
+    Bit8u resetport;                    // last value written to the reset port
+    Bit8u speaker,prostereo;            // properties of the sound input/output
+    bx_bool irqpending;                 // Is an IRQ pending (not ack'd)
+    bx_bool midiuartmode;               // Is the DSP in MIDI UART mode
+    bx_bool nondma_mode;                // Set if DSP command 0x10 active
+    Bit32u nondma_count;                // Number of samples sent in non-DMA mode
+    Bit8u samplebyte;                   // Current data byte in non-DMA mode
     Bit8u testreg;
     struct bx_sb16_dsp_dma_struct {
       // Properties of the current DMA transfer:
@@ -268,6 +269,7 @@ private:
   BX_SB16_SMF void   dsp_dmadone();		     // stop a DMA transfer
   BX_SB16_SMF void   dsp_enabledma();		     // enable the transfer
   BX_SB16_SMF void   dsp_disabledma();		     // temporarily disable DMA
+  BX_SB16_SMF void   dsp_disable_nondma();	     // disable DSP direct mode
   static void   dsp_dmatimer(void *);
   static Bit32u sb16_adc_handler(void *, Bit32u len);
   Bit32u dsp_adc_handler(Bit32u len);

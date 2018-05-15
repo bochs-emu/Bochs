@@ -339,6 +339,7 @@ void bx_sb16_c::init(void)
   DSP.irqpending = 0;
   DSP.midiuartmode = 0;
   DSP.nondma_mode = 0;
+  DSP.nondma_count = 0;
   DSP.samplebyte = 0;
   DSP.resetport = 1;  // so that one call to dsp_reset is sufficient
   dsp_reset(0);       // (reset is 1 to 0 transition)
@@ -477,7 +478,8 @@ void bx_sb16_c::register_state(void)
   new bx_shadow_bool_c(dsp, "irqpending", &DSP.irqpending);
   new bx_shadow_bool_c(dsp, "midiuartmode", &DSP.midiuartmode);
   new bx_shadow_bool_c(dsp, "nondma_mode", &DSP.nondma_mode);
-  new bx_shadow_num_c(dsp, "samplebyte", &DSP.samplebyte);
+  new bx_shadow_num_c(dsp, "nondma_count", &DSP.nondma_count);
+  new bx_shadow_num_c(dsp, "samplebyte", &DSP.samplebyte, BASE_HEX);
   new bx_shadow_num_c(dsp, "testreg", &DSP.testreg, BASE_HEX);
   bx_list_c *dma = new bx_list_c(dsp, "dma");
   new bx_shadow_num_c(dma, "mode", &DSP.dma.mode);
@@ -607,7 +609,11 @@ void bx_sb16_c::dsp_dmatimer(void *this_ptr)
       }
     }
   } else {
-    dsp_getsamplebyte(DSP.samplebyte);
+    dsp_getsamplebyte(0);
+    dsp_getsamplebyte(This->dsp.samplebyte);
+    dsp_getsamplebyte(0);
+    dsp_getsamplebyte(This->dsp.samplebyte);
+    This->dsp.nondma_count++;
   }
 }
 
@@ -626,10 +632,7 @@ void bx_sb16_c::dsp_reset(Bit32u value)
 {
   writelog(WAVELOG(4), "DSP Reset port write value %x", value);
 
-  if (DSP.nondma_mode) {
-    bx_pc_system.deactivate_timer(DSP.timer_handle);
-    DSP.nondma_mode = 0;
-  }
+  dsp_disable_nondma();
 
   // just abort high speed mode if it is set
   if (DSP.dma.highspeed != 0)
@@ -851,13 +854,14 @@ void bx_sb16_c::dsp_datawrite(Bit32u value)
          // 1: 8bit sample
          if (!DSP.nondma_mode) {
            DSP.dma.param.samplerate = 22050;
-           DSP.dma.param.bits = 8;
-           DSP.dma.param.channels = 1;
+           DSP.dma.param.bits = 16;
+           DSP.dma.param.channels = 2;
            DSP.dma.param.format = 1;
-           DSP.dma.chunkcount = 2205;
+           DSP.dma.chunkcount = 8820;
            DSP.dma.chunkindex = 0;
            bx_pc_system.activate_timer(DSP.timer_handle, 45, 1);
            DSP.nondma_mode = 1;
+           DSP.nondma_count = 0;
          }
          DSP.datain.get(&DSP.samplebyte);
          break;
@@ -1258,10 +1262,8 @@ void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
   writelog(WAVELOG(4), "DMA initialized. Cmd %02x, mode %02x, length %d, comp %d",
            command, mode, length, comp);
 
-  if (DSP.nondma_mode) {
-    bx_pc_system.deactivate_timer(DSP.timer_handle);
-    DSP.nondma_mode = 0;
-  }
+  dsp_disable_nondma();
+
   if ((command >> 4) == 0xb)  // 0xb? = 16 bit DMA
   {
     DSP.dma.param.bits = 16;
@@ -1395,6 +1397,14 @@ void bx_sb16_c::dsp_disabledma()
   bx_pc_system.deactivate_timer(DSP.timer_handle);
 }
 
+void bx_sb16_c::dsp_disable_nondma()
+{
+  if (DSP.nondma_mode) {
+    bx_pc_system.deactivate_timer(DSP.timer_handle);
+    DSP.nondma_mode = 0;
+  }
+}
+
 // dsp_bufferstatus() checks if the DSP is ready for data/commands
 Bit32u bx_sb16_c::dsp_bufferstatus()
 {
@@ -1460,6 +1470,14 @@ Bit32u bx_sb16_c::dsp_irq16ack()
 // write a wave packet to the output device
 void bx_sb16_c::dsp_sendwavepacket()
 {
+  if (DSP.nondma_mode) {
+    if (DSP.nondma_count == 0) {
+      dsp_disable_nondma();
+      return;
+    }
+    DSP.nondma_count = 0;
+  }
+
   if (DSP.dma.chunkindex == 0)
     return;
 
