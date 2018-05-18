@@ -233,7 +233,7 @@ void bx_vgacore_c::init_iohandlers(bx_read_handler_t f_read, bx_write_handler_t 
   }
 
   for (addr=0x03DA; addr<=0x03DA; addr++) {
-    DEV_register_ioread_handler(this, f_read, addr, "vga video", 1);
+    DEV_register_ioread_handler(this, f_read, addr, "vga video", 3);
     DEV_register_iowrite_handler(this, f_write, addr, "vga video", 3);
   }
 }
@@ -748,6 +748,10 @@ Bit32u bx_vgacore_c::read(Bit32u address, unsigned io_len)
         RETURN(0);
       }
       RETURN(BX_VGA_THIS s.CRTC.reg[BX_VGA_THIS s.CRTC.address]);
+      break;
+
+    case 0x03db: /* Ignore this address (16-bit read from 0x03da) */
+      RETURN(0); /* keep compiler happy */
       break;
 
     case 0x03b4: /* CRTC Index Register (monochrome emulation modes) */
@@ -1641,6 +1645,9 @@ void bx_vgacore_c::update(void)
 
     tm_info.start_address = 2*((BX_VGA_THIS s.CRTC.reg[12] << 8) +
                             BX_VGA_THIS s.CRTC.reg[13]);
+    if ((BX_VGA_THIS s.CRTC.reg[0x08] & 0x60) > 0) {
+      BX_ERROR(("byte panning not implemented yet"));
+    }
     tm_info.cs_start = BX_VGA_THIS s.CRTC.reg[0x0a] & 0x3f;
     if (!cs_visible) {
       tm_info.cs_start |= 0x20;
