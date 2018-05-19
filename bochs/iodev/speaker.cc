@@ -412,8 +412,8 @@ void bx_speaker_c::beep_off()
 
 void bx_speaker_c::set_line(bx_bool level)
 {
-  if (output_mode == BX_SPK_MODE_SOUND) {
 #if BX_SUPPORT_SOUNDLOW && BX_HAVE_REALTIME_USEC
+  if (output_mode == BX_SPK_MODE_SOUND) {
     BX_LOCK(beep_mutex);
     Bit64u timestamp = bx_get_realtime64_usec() - dsp_start_usec;
     dsp_active = 1;
@@ -423,6 +423,8 @@ void bx_speaker_c::set_line(bx_bool level)
       BX_ERROR(("DSP event buffer full"));
     }
     BX_UNLOCK(beep_mutex);
-#endif
   }
+#else
+  BX_DEBUG(("setting speaker line to %d", level));
+#endif
 }
