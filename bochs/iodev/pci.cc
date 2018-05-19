@@ -450,11 +450,12 @@ Bit32u bx_pci_bridge_c::agp_aperture_read(bx_phy_address addr, unsigned len,
   if (BX_PCI_THIS pci_conf[0x51] & 0x02) {
     Bit32u offset = (addr - pci_bar[0].addr);
     Bit32u gart_index = (Bit32u)(offset >> 12);
-//  Bit32u page_offset = (Bit32u)(offset & 0xfff);
+    Bit32u page_offset = (Bit32u)(offset & 0xfff);
     Bit32u gart_addr = BX_PCI_THIS gart_base + (gart_index << 2);
     Bit32u page_addr;
     DEV_MEM_READ_PHYSICAL(gart_addr, 4, (Bit8u*)&page_addr);
-    BX_INFO(("AGP aperture read: page address = 0x%08x", page_addr));
+    BX_INFO(("TODO: AGP aperture read: page address = 0x%08x / offset = 0x%04x",
+             page_addr, (Bit16u)page_offset));
     // TODO
   }
   return 0;
@@ -475,11 +476,12 @@ void bx_pci_bridge_c::agp_aperture_write(bx_phy_address addr, Bit32u value,
   if (BX_PCI_THIS pci_conf[0x51] & 0x02) {
     Bit32u offset = (addr - pci_bar[0].addr);
     Bit32u gart_index = (Bit32u)(offset >> 12);
-//  Bit32u page_offset = (Bit32u)(offset & 0xfff);
+    Bit32u page_offset = (Bit32u)(offset & 0xfff);
     Bit32u gart_addr = BX_PCI_THIS gart_base + (gart_index << 2);
     Bit32u page_addr;
     DEV_MEM_READ_PHYSICAL(gart_addr, 4, (Bit8u*)&page_addr);
-    BX_INFO(("AGP aperture write: page address = 0x%08x", page_addr));
+    BX_INFO(("TODO: AGP aperture write: page address = 0x%08x / offset = 0x%04x",
+             page_addr, (Bit16u)page_offset));
     // TODO
   }
 }
