@@ -211,7 +211,11 @@ void bx_banshee_c::reset(unsigned type)
     pci_conf[0x55] = 0x60;
     pci_conf[0x56] = 0x10;
     pci_conf[0x57] = 0x00;
-    pci_conf[0x58] = 0x21;
+    if (s.model == VOODOO_3) {
+      pci_conf[0x58] = 0x23;
+    } else {
+      pci_conf[0x58] = 0x21;
+    }
     pci_conf[0x59] = 0x02;
     pci_conf[0x5b] = 0x07;
     v->banshee.io[io_strapInfo] |= 0x0000000c;
@@ -926,6 +930,9 @@ Bit32u bx_banshee_c::agp_reg_read(Bit8u reg)
     case cmdHoleCnt1:
       result = v->fbi.cmdfifo[fifo_idx].holes;
       break;
+    case cmdStatus0:
+    case cmdStatus1:
+      BX_ERROR(("cmdStatus%d not implemented yet", fifo_idx));
     default:
       result = v->banshee.agp[reg];
   }
@@ -963,6 +970,9 @@ void bx_banshee_c::agp_reg_write(Bit8u reg, Bit32u value)
         v->fbi.cmdfifo[1].end = v->fbi.cmdfifo[1].base + (((value & 0xff) + 1) << 12);
       }
       v->fbi.cmdfifo[fifo_idx].count_holes = (((value >> 10) & 1) == 0);
+      if ((value >> 9) & 1) {
+        BX_ERROR(("CMDFIFO in AGP memory not supported yet"));
+      }
       if (v->fbi.cmdfifo[fifo_idx].enabled != ((value >> 8) & 1)) {
         v->fbi.cmdfifo[fifo_idx].enabled = ((value >> 8) & 1);
         BX_INFO(("CMDFIFO #%d now %sabled", fifo_idx,
