@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2017  The Bochs Project
+//  Copyright (C) 2001-2018  The Bochs Project
 //
 //  I/O memory handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -156,7 +156,7 @@ public:
 
   BX_MEM_SMF Bit64u  get_memory_len(void);
   BX_MEM_SMF void allocate_block(Bit32u index);
-  BX_MEM_SMF Bit8u* alloc_vector_aligned(Bit32u bytes, Bit32u alignment);
+  BX_MEM_SMF Bit8u* alloc_vector_aligned(Bit64u bytes, Bit64u alignment);
 
 #if BX_SUPPORT_MONITOR_MWAIT
   BX_MEM_SMF bx_bool is_monitor(bx_phy_address begin_addr, unsigned len);

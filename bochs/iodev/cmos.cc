@@ -231,7 +231,7 @@ void bx_cmos_c::init(void)
         (stat_buf.st_size != 256)) {
       BX_PANIC(("CMOS: image file size must be 64, 128 or 256"));
     } else {
-      BX_CMOS_THIS s.max_reg = stat_buf.st_size - 1;
+      BX_CMOS_THIS s.max_reg = (Bit8u)(stat_buf.st_size - 1);
       if (BX_CMOS_THIS s.max_reg == 255) {
         DEV_register_ioread_handler(this, read_handler, 0x0072, "Ext CMOS RAM", 1);
         DEV_register_ioread_handler(this, read_handler, 0x0073, "Ext CMOS RAM", 1);

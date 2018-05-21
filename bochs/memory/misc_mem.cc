@@ -54,7 +54,7 @@ BX_MEM_C::BX_MEM_C()
 #endif
 }
 
-Bit8u* BX_MEM_C::alloc_vector_aligned(Bit32u bytes, Bit32u alignment)
+Bit8u* BX_MEM_C::alloc_vector_aligned(Bit64u bytes, Bit64u alignment)
 {
   Bit64u test_mask = alignment - 1;
   BX_MEM_THIS actual_vector = new Bit8u [(Bit32u)(bytes + test_mask)];
@@ -429,7 +429,7 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
         return;
       }
     } else {
-      romaddress = -size;
+      romaddress = ~(size - 1);
     }
     offset = romaddress & BIOS_MASK;
     if ((romaddress & 0xf0000) < 0xf0000) {
@@ -531,7 +531,7 @@ void BX_MEM_C::load_RAM(const char *path, bx_phy_address ramaddress)
 
   size = (unsigned long)stat_buf.st_size;
 
-  offset = ramaddress;
+  offset = (unsigned long)ramaddress;
   while (size > 0) {
     ret = read(fd, (bx_ptr_t) BX_MEM_THIS get_vector(offset), size);
     if (ret <= 0) {

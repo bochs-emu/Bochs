@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2017  The Bochs Project
+//  Copyright (C) 2001-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -345,7 +345,7 @@ BX_CPP_INLINE void bx_ppc_store_le64(Bit64u *p, Bit64u v)
 
 #if BX_HAVE_REALTIME_USEC
 // 64-bit time in useconds.
-extern Bit64u bx_get_realtime64_usec (void);
+BOCHSAPI_MSVCONLY extern Bit64u bx_get_realtime64_usec (void);
 #endif
 
 #ifdef WIN32
