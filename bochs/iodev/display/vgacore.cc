@@ -240,16 +240,19 @@ void bx_vgacore_c::init_iohandlers(bx_read_handler_t f_read, bx_write_handler_t 
 
 void bx_vgacore_c::init_systemtimer(void)
 {
-  BX_VGA_THIS realtime = SIM->get_param_bool(BXPN_VGA_REALTIME)->get();
+  BX_VGA_THIS update_realtime = SIM->get_param_bool(BXPN_VGA_REALTIME)->get();
   bx_param_num_c *vga_update_freq = SIM->get_param_num(BXPN_VGA_UPDATE_FREQUENCY);
   Bit32u update_interval = (Bit32u)(1000000 / vga_update_freq->get());
-  BX_INFO(("interval=%u, mode=%s", update_interval, BX_VGA_THIS realtime ? "realtime":"standard"));
+  BX_INFO(("interval=%u, mode=%s", update_interval, BX_VGA_THIS update_realtime ? "realtime":"standard"));
   if (BX_VGA_THIS timer_id == BX_NULL_TIMER_HANDLE) {
     BX_VGA_THIS timer_id = bx_virt_timer.register_timer(this, vga_timer_handler,
-       update_interval, 1, 1, BX_VGA_THIS realtime, "vga");
+       update_interval, 1, 1, BX_VGA_THIS update_realtime, "vga");
     vga_update_freq->set_handler(vga_param_handler);
     vga_update_freq->set_device_param(this);
   }
+  BX_VGA_THIS vsync_realtime =
+    (SIM->get_param_enum(BXPN_CLOCK_SYNC)->get() & BX_CLOCK_SYNC_REALTIME) > 0;
+  BX_INFO(("VSYNC using %s mode", BX_VGA_THIS vsync_realtime ? "realtime":"standard"));
   // VGA text mode cursor blink frequency 1.875 Hz
   if (update_interval < 266666) {
     BX_VGA_THIS s.blink_counter = 266666 / (unsigned)update_interval;
@@ -507,7 +510,7 @@ Bit32u bx_vgacore_c::read(Bit32u address, unsigned io_len)
       //           horizontal or vertical blanking period is active
 
       retval = 0;
-      display_usec = bx_virt_timer.time_usec(BX_VGA_THIS realtime) % BX_VGA_THIS s.vtotal_usec;
+      display_usec = bx_virt_timer.time_usec(BX_VGA_THIS vsync_realtime) % BX_VGA_THIS s.vtotal_usec;
       if ((display_usec >= BX_VGA_THIS s.vrstart_usec) &&
           (display_usec <= BX_VGA_THIS s.vrend_usec)) {
         retval |= 0x08;
@@ -1377,7 +1380,7 @@ bx_bool bx_vgacore_c::skip_update(void)
     return 1;
 
   /* skip screen update if the vertical retrace is in progress */
-  display_usec = bx_virt_timer.time_usec(BX_VGA_THIS realtime) % BX_VGA_THIS s.vtotal_usec;
+  display_usec = bx_virt_timer.time_usec(BX_VGA_THIS vsync_realtime) % BX_VGA_THIS s.vtotal_usec;
   if ((display_usec > BX_VGA_THIS s.vrstart_usec) &&
       (display_usec < BX_VGA_THIS s.vrend_usec)) {
     return 1;

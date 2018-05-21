@@ -2391,7 +2391,8 @@ void bx_voodoo_vga_c::banshee_set_vclk3(Bit32u value)
 Bit32u bx_voodoo_vga_c::get_retrace()
 {
   Bit32u retval = 1;
-  Bit64u display_usec = bx_virt_timer.time_usec(0) % BX_VVGA_THIS s.vtotal_usec;
+  Bit64u display_usec =
+    bx_virt_timer.time_usec(BX_VVGA_THIS vsync_realtime) % BX_VVGA_THIS s.vtotal_usec;
   if ((display_usec >= BX_VVGA_THIS s.vrstart_usec) &&
       (display_usec <= BX_VVGA_THIS s.vrend_usec)) {
     retval = 0;

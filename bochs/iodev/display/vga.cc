@@ -323,7 +323,7 @@ void bx_vga_c::update(void)
 
     /* skip screen update if the vertical retrace is in progress
        (using 72 Hz vertical frequency) */
-    if ((bx_virt_timer.time_usec(BX_VGA_THIS realtime) % 13888) < 70)
+    if ((bx_virt_timer.time_usec(BX_VGA_THIS vsync_realtime) % 13888) < 70)
       return;
 
     if (BX_VGA_THIS vbe.bpp != VBE_DISPI_BPP_4) {
