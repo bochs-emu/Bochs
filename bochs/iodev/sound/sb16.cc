@@ -613,7 +613,6 @@ void bx_sb16_c::dsp_dmatimer(void *this_ptr)
     dsp_getsamplebyte(This->dsp.samplebyte);
     dsp_getsamplebyte(0);
     dsp_getsamplebyte(This->dsp.samplebyte);
-    This->dsp.nondma_count++;
   }
 }
 
@@ -864,6 +863,7 @@ void bx_sb16_c::dsp_datawrite(Bit32u value)
            DSP.nondma_count = 0;
          }
          DSP.datain.get(&DSP.samplebyte);
+         DSP.nondma_count++;
          break;
 
          // uncomp'd, normal DAC DMA
