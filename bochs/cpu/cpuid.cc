@@ -373,8 +373,8 @@ void bx_cpuid_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
   leaf->eax = phy_addr_width | (lin_addr_width << 8);
 
   // [0:0] CLZERO support
-  // [1:1] Instruction Retired Counter support (???)
-  // [2:2] Error Pointer Zero/Restore (???)
+  // [1:1] Instruction Retired Counter MSR available
+  // [2:2] FP Error Pointers Restored by XRSTOR
   leaf->ebx = 0;
   if (is_cpu_extension_supported(BX_ISA_CLZERO))
     leaf->ebx |= 0x1;
