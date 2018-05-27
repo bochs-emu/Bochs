@@ -502,6 +502,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCLMULQDQ_VdqHdqWdqIbR(bxInstruction_c *i
   unsigned len = i->getVL();
   Bit8u imm8 = i->Ib();
 
+  r.clear();
+
   for (unsigned n=0; n < len; n++) {
     BxPackedXmmRegister op1 = BX_READ_AVX_REG_LANE(i->src1(), n), op2 = BX_READ_AVX_REG_LANE(i->src2(), n);
 
@@ -511,7 +513,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCLMULQDQ_VdqHdqWdqIbR(bxInstruction_c *i
     xmm_pclmulqdq(&r.vmm128(n), op1.xmm64u(imm8 & 1), op2.xmm64u((imm8 >> 4) & 1));
   }
 
-  BX_WRITE_AVX_REGZ(i->dst(), r, len);
+  BX_WRITE_AVX_REG(i->dst(), r);
 
   BX_NEXT_INSTR(i);
 }

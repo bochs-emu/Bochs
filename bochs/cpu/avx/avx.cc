@@ -339,10 +339,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSHUFPS_VpsHpsWpsIbR(bxInstruction_c *i)
   BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2()), result;
   unsigned len = i->getVL();
 
+  result.clear();
+
   for (unsigned n=0; n < len; n++)
     xmm_shufps(&result.vmm128(n), &op1.vmm128(n), &op2.vmm128(n), i->Ib());
 
-  BX_WRITE_AVX_REGZ(i->dst(), result, len);
+  BX_WRITE_AVX_REG(i->dst(), result);
 
   BX_NEXT_INSTR(i);
 }
@@ -356,12 +358,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSHUFPD_VpdHpdWpdIbR(bxInstruction_c *i)
   unsigned len = i->getVL();
   Bit8u order = i->Ib();
 
+  result.clear();
+
   for (unsigned n=0; n < len; n++) {
     xmm_shufpd(&result.vmm128(n), &op1.vmm128(n), &op2.vmm128(n), order);
     order >>= 2;
   }
 
-  BX_WRITE_AVX_REGZ(i->dst(), result, len);
+  BX_WRITE_AVX_REG(i->dst(), result);
 
   BX_NEXT_INSTR(i);
 }
@@ -390,6 +394,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VBROADCASTF128_VdqMdq(bxInstruction_c *i)
   BxPackedAvxRegister dst;
   BxPackedXmmRegister src;
   unsigned len = i->getVL();
+
+  dst.clear();
   
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   read_virtual_xmmword(i->seg(), eaddr, &src);
@@ -398,7 +404,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VBROADCASTF128_VdqMdq(bxInstruction_c *i)
     dst.vmm128(n) = src;
   }
 
-  BX_WRITE_AVX_REGZ(i->dst(), dst, len);
+  BX_WRITE_AVX_REG(i->dst(), dst);
 
   BX_NEXT_INSTR(i);
 }
@@ -524,10 +530,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMILPS_VpsHpsWpsR(bxInstruction_c *i)
   BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2()), result;
   unsigned len = i->getVL();
 
+  result.clear();
+
   for (unsigned n=0; n < len; n++)
     xmm_permilps(&result.vmm128(n), &op1.vmm128(n), &op2.vmm128(n));
 
-  BX_WRITE_AVX_REGZ(i->dst(), result, len);
+  BX_WRITE_AVX_REG(i->dst(), result);
 
   BX_NEXT_INSTR(i);
 }
@@ -539,10 +547,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMILPD_VpdHpdWpdR(bxInstruction_c *i)
   BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2()), result;
   unsigned len = i->getVL();
 
+  result.clear();
+
   for (unsigned n=0; n < len; n++)
     xmm_permilpd(&result.vmm128(n), &op1.vmm128(n), &op2.vmm128(n));
 
-  BX_WRITE_AVX_REGZ(i->dst(), result, len);
+  BX_WRITE_AVX_REG(i->dst(), result);
 
   BX_NEXT_INSTR(i);
 }
@@ -552,11 +562,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMILPS_VpsWpsIbR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src()), result;
   unsigned len = i->getVL();
+  result.clear();
 
   for (unsigned n=0; n < len; n++)
     xmm_shufps(&result.vmm128(n), &op1.vmm128(n), &op1.vmm128(n), i->Ib());
 
-  BX_WRITE_AVX_REGZ(i->dst(), result, len);
+  BX_WRITE_AVX_REG(i->dst(), result);
 
   BX_NEXT_INSTR(i);
 }
@@ -568,12 +579,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMILPD_VpdWpdIbR(bxInstruction_c *i)
   unsigned len = i->getVL();
   Bit8u order = i->Ib();
 
+  result.clear();
+
   for (unsigned n=0; n < len; n++) {
     xmm_shufpd(&result.vmm128(n), &op1.vmm128(n), &op1.vmm128(n), order);
     order >>= 2;
   }
 
-  BX_WRITE_AVX_REGZ(i->dst(), result, len);
+  BX_WRITE_AVX_REG(i->dst(), result);
 
   BX_NEXT_INSTR(i);
 }
