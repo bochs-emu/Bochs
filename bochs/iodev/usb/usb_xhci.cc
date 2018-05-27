@@ -692,7 +692,7 @@ bx_bool bx_usb_xhci_c::save_hc_state(void)
 
   // get MAX_SCRATCH_PADS worth of pointers
   for (i=0; i<MAX_SCRATCH_PADS; i++) {
-    DEV_MEM_READ_PHYSICAL((bx_phy_address) (addr + i * 8), 8, (Bit8u*)temp[i]);
+    DEV_MEM_READ_PHYSICAL((bx_phy_address) (addr + i * 8), 8, (Bit8u*)&temp[i]);
   }
 
   for (i=0; i<MAX_SCRATCH_PADS; i++) {
@@ -733,7 +733,7 @@ bx_bool bx_usb_xhci_c::restore_hc_state(void)
 
   // get MAX_SCRATCH_PADS worth of pointers
   for (i=0; i<MAX_SCRATCH_PADS; i++) {
-    DEV_MEM_READ_PHYSICAL_DMA((bx_phy_address) (addr + i * 8), 8, (Bit8u*)temp[i]);
+    DEV_MEM_READ_PHYSICAL_DMA((bx_phy_address) (addr + i * 8), 8, (Bit8u*)&temp[i]);
   }
 
   // we read it in to a temp buffer just to check the crc.
