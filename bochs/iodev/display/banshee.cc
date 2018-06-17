@@ -770,7 +770,6 @@ bx_bool bx_banshee_c::mem_write_handler(bx_phy_address addr, unsigned len,
 
 void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
 {
-  Bit32u *data_ptr = (Bit32u*)data;
   Bit32u value = 0xffffffff;
   Bit32u offset = (addr & 0x1ffffff);
   Bit32u pitch = v->banshee.io[io_vidDesktopOverlayStride] & 0x7fff;
@@ -785,7 +784,16 @@ void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
           value |= (pci_rom[(addr & mask) + i] << (i * 8));
         }
       }
-      *data_ptr = value;
+      switch (len) {
+        case 1:
+          *((Bit8u*)data) = (Bit8u)value;
+          break;
+        case 2:
+          *((Bit16u*)data) = (Bit16u)value;
+          break;
+        default:
+          *((Bit32u*)data) = value;
+      }
       return;
     }
   }
@@ -821,15 +829,34 @@ void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
       value |= (v->fbi.ram[offset + i] << (i*8));
     }
   }
-  *data_ptr = value;
+  switch (len) {
+    case 1:
+      *((Bit8u*)data) = (Bit8u)value;
+      break;
+    case 2:
+      *((Bit16u*)data) = (Bit16u)value;
+      break;
+    default:
+      *((Bit32u*)data) = value;
+  }
 }
 
 void bx_banshee_c::mem_write(bx_phy_address addr, unsigned len, void *data)
 {
   Bit32u offset = (addr & 0x1ffffff);
-  Bit32u value = *(Bit32u*)data;
+  Bit32u value;
   Bit32u mask = 0xffffffff;
 
+  switch (len) {
+    case 1:
+      value = *(Bit8u*)data;
+      break;
+    case 2:
+      value = *(Bit16u*)data;
+      break;
+    default:
+      value = *(Bit32u*)data;
+  }
   if ((addr & ~0x1ffffff) == pci_bar[0].addr) {
     if (offset < 0x80000) {
       write(offset, value, len);
