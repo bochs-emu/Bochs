@@ -148,7 +148,7 @@ void bx_banshee_c::init_model(void)
     DEV_register_pci_handlers2(this, &s.devfunc, BX_PLUGIN_VOODOO, model, is_agp);
     init_pci_conf(0x121a, 0x0003, 0x01, 0x030000, 0x00, BX_PCI_INTA);
   } else if (s.model == VOODOO_3) {
-    if (is_agp) {
+    if (!is_agp) {
       strcpy(model, "Experimental 3dfx Voodoo 3 PCI");
     } else {
       strcpy(model, "Experimental 3dfx Voodoo 3 AGP");
