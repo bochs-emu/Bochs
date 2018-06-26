@@ -823,6 +823,8 @@ void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
       x = (offset << 0) & ((1 << v->fbi.lfb_stride) - 1);
       y = (offset >> v->fbi.lfb_stride) & 0x7ff;
       offset = (v->fbi.lfb_base + y * pitch + x) & v->fbi.mask;
+    } else {
+      offset &= v->fbi.mask;
     }
     value = 0;
     for (i = 0; i < len; i++) {
