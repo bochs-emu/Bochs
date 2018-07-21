@@ -340,7 +340,7 @@ void bx_banshee_c::draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *i
   unsigned cx, cy, cw, ch, px, py, w, h, x, y;
   Bit8u *cpat0, *cpat1, *tile_ptr, *tile_ptr2, *vid_ptr;
   Bit8u ccode, pbits, pval0, pval1;
-  Bit32u colour = 0;
+  Bit32u colour = 0, start;
   int i;
 
   if ((xc <= v->banshee.hwcursor.x) &&
@@ -348,7 +348,11 @@ void bx_banshee_c::draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *i
       (yc <= v->banshee.hwcursor.y) &&
       ((int)(yc + Y_TILESIZE) > (v->banshee.hwcursor.y - 63))) {
 
-    Bit32u start = v->banshee.io[io_vidDesktopStartAddr];
+    if ((v->banshee.io[io_vidProcCfg] & 0x181) == 0x81) {
+      start = v->banshee.io[io_vidDesktopStartAddr];
+    } else {
+      start = v->fbi.rgboffs[v->fbi.frontbuf];
+    }
     Bit8u *disp_ptr = &v->fbi.ram[start & v->fbi.mask];
     Bit16u pitch = v->banshee.io[io_vidDesktopOverlayStride] & 0x7fff;
     if (v->banshee.desktop_tiled) {
