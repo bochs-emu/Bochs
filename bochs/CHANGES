@@ -13,6 +13,7 @@ Changes after 2.6.9 release:
 
 - Bochs Debugger and Instrumentation
   - Added support for conditional breakpoints and conditional step/continue to Bochs debugger
+  - Support 'info tab' command for 64-bit mode as well
   - Bochs debugger improvements patch by Doug Gale
     - better handling of 64-bit addresses in the debugger, added support for 64 bit symbols,
       added more symbol lookups.
