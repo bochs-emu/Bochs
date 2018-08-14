@@ -2074,9 +2074,10 @@ bx_bool BX_CPU_C::dbg_translate_guest_physical(bx_phy_address guest_paddr, bx_ph
 }
 #endif
 
-bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx_bool verbose)
+bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx_address *lpf_mask, bx_bool verbose)
 {
   bx_phy_address paddress;
+  bx_address offset_mask = 0xfff;
 
 #if BX_SUPPORT_X86_64
   if (! long_mode()) laddr &= 0xffffffff;
@@ -2090,15 +2091,17 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx
 
 #if BX_CPU_LEVEL >= 6
     if (BX_CPU_THIS_PTR cr4.get_PAE()) {
-      Bit64u offset_mask = BX_CONST64(0x0000ffffffffffff);
+      offset_mask = BX_CONST64(0x0000ffffffffffff);
 
       int level = 3;
       if (! long_mode()) {
         pt_address = BX_CPU_THIS_PTR PDPTR_CACHE.entry[(laddr >> 30) & 3];
-        if (! (pt_address & 0x1))
+        if (! (pt_address & 0x1)) {
+           offset_mask = 0x3fffffff;
            goto page_fault;
-        pt_address &= BX_CONST64(0x000ffffffffff000);
+	}
         offset_mask >>= 18;
+        pt_address &= BX_CONST64(0x000ffffffffff000);
         level = 1;
       }
 
@@ -2140,7 +2143,7 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx
     else   // not PAE
 #endif
     {
-      Bit32u offset_mask = 0xfff;
+      offset_mask = 0xfff;
       for (int level = 1; level >= 0; --level) {
         Bit32u pte;
         pt_address += ((laddr >> (10 + 10*level)) & 0xffc);
@@ -2183,10 +2186,14 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx
   }
 #endif
 
+  if (lpf_mask)
+    *lpf_mask = offset_mask;
   *phy = A20ADDR(paddress);
   return 1;
 
 page_fault:
+  if (lpf_mask)
+    *lpf_mask = offset_mask;
   *phy = 0;
   return 0;
 }

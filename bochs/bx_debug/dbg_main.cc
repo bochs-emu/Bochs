@@ -1465,9 +1465,11 @@ static void dbg_print_guard_found(unsigned cpu_mode, Bit32u cs, bx_address eip, 
 void bx_dbg_xlate_address(bx_lin_address laddr)
 {
   bx_phy_address paddr;
+  bx_address lpf_mask;
+
   laddr &= BX_CONST64(0xfffffffffffff000);
 
-  bx_bool paddr_valid = BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(laddr, &paddr, 1);
+  bx_bool paddr_valid = BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(laddr, &paddr, &lpf_mask, 1);
   if (paddr_valid) {
     dbg_printf("linear page 0x" FMT_ADDRX " maps to physical page 0x" FMT_PHY_ADDRX "\n", laddr, paddr);
   }
@@ -3522,16 +3524,17 @@ void bx_dbg_post_dma_reports(void)
 
 void bx_dbg_dump_table(void)
 {
-  Bit32u lin, start_lin; // show only low 32 bit
+  Bit64u lin, start_lin; // show only low 32 bit
   bx_phy_address phy, start_phy; // start of a valid translation interval
+  bx_address lpf_mask = 0;
   bx_bool valid;
 
   if (! BX_CPU(dbg_cpu)->cr0.get_PG()) {
-    printf("paging off\n");
+    dbg_printf("paging off\n");
     return;
   }
 
-  printf("cr3: 0x" FMT_PHY_ADDRX "\n", (bx_phy_address)BX_CPU(dbg_cpu)->cr3);
+  dbg_printf("cr3: 0x" FMT_PHY_ADDRX "\n", (bx_phy_address)BX_CPU(dbg_cpu)->cr3);
 
   lin = 0;
   phy = 0;
@@ -3539,29 +3542,36 @@ void bx_dbg_dump_table(void)
   start_lin = 1;
   start_phy = 2;
   while(1) {
-    valid = BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(lin, &phy);
+    valid = BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(lin, &phy, &lpf_mask);
     if(valid) {
       if((lin - start_lin) != (phy - start_phy)) {
         if(start_lin != 1)
-          dbg_printf("0x%08x-0x%08x -> 0x" FMT_PHY_ADDRX "-0x" FMT_PHY_ADDRX "\n",
+          dbg_printf("0x" FMT_ADDRX "-0x" FMT_ADDRX " -> 0x" FMT_PHY_ADDRX "-0x" FMT_PHY_ADDRX "\n",
             start_lin, lin - 1, start_phy, start_phy + (lin-1-start_lin));
         start_lin = lin;
         start_phy = phy;
       }
     } else {
       if(start_lin != 1)
-        dbg_printf("0x%08x-0x%08x -> 0x" FMT_PHY_ADDRX "-0x" FMT_PHY_ADDRX "\n",
+        dbg_printf("0x" FMT_ADDRX "-0x" FMT_ADDRX " -> 0x" FMT_PHY_ADDRX "-0x" FMT_PHY_ADDRX "\n",
           start_lin, lin - 1, start_phy, start_phy + (lin-1-start_lin));
       start_lin = 1;
       start_phy = 2;
     }
 
-    if(lin == 0xfffff000) break;
-    lin += 0x1000;
+    lin += lpf_mask;
+    if (!BX_CPU(dbg_cpu)->long64_mode() && lin >= BX_CONST64(0xfffff000)) break;
+    if (lin >= BX_CONST64(0x00007ffffffff000)) {
+      if (lin < BX_CONST64(0xfffff00000000000))
+        lin = BX_CONST64(0xfffff00000000000) - 1;
+      if (lin >= BX_CONST64(0xfffffffffffff000))
+        break;
+    }
+    lin++;
   }
   if(start_lin != 1)
-    dbg_printf("0x%08x-0x%08x -> 0x" FMT_PHY_ADDRX "-0x" FMT_PHY_ADDRX "\n",
-         start_lin, 0xffffffff, start_phy, start_phy + (0xffffffff-start_lin));
+    dbg_printf("0x" FMT_ADDRX "-0x" FMT_ADDRX " -> 0x" FMT_PHY_ADDRX "-0x" FMT_PHY_ADDRX "\n",
+         start_lin, lin, start_phy, start_phy + (lin-start_lin));
 }
 
 void bx_dbg_print_help(void)
