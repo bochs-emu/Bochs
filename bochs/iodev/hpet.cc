@@ -9,7 +9,7 @@
 //
 //  Authors: Beth Kon <bkon@us.ibm.com>
 //
-//  Copyright (C) 2017  The Bochs Project
+//  Copyright (C) 2017-2018  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -367,7 +367,7 @@ Bit32u bx_hpet_c::read_aligned(bx_phy_address address)
       case HPET_STATUS:
         value = (Bit32u)s.isr;
         break;
-      case HPET_STATUS + 2:
+      case HPET_STATUS + 4:
         value = (Bit32u)(s.isr >> 32);
         break;
       case HPET_COUNTER:
