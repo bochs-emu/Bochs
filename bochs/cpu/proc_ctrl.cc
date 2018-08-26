@@ -306,6 +306,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLFLUSH(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLZERO(bxInstruction_c *i)
 {
+#if BX_CPU_LEVEL >= 6
   bx_address eaddr = RAX & ~BX_CONST64(CACHE_LINE_SIZE-1) & i->asize_mask();
 
   BxPackedZmmRegister zmmzero; // zmm is always made available even if EVEX is not compiled in
@@ -313,6 +314,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLZERO(bxInstruction_c *i)
   for (unsigned n=0; n<CACHE_LINE_SIZE; n += 64) {
     write_virtual_zmmword(i->seg(), eaddr+n, &zmmzero);
   }
+#endif
+
+  BX_NEXT_INSTR(i);
 }
 
 void BX_CPU_C::handleCpuModeChange(void)
