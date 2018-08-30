@@ -1204,6 +1204,10 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
     // in our TLB cache entry.  Re-walk the page tables, in case there is
     // updated information in the memory image, and let the long path code
     // generate an exception if one is warranted.
+
+    // Invalidate the TLB entry before re-walk as re-walk may end with paging fault.
+    // The entry will be reinitialized later if page walk succeeds.
+    tlbEntry->invalidate();
   }
 
   INC_TLB_STAT(tlbMisses);
