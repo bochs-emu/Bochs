@@ -592,10 +592,10 @@ void bx_dbg_watchpoint_continue(bx_bool watch_continue)
 {
   watchpoint_continue = watch_continue;
   if (watchpoint_continue) {
-     dbg_printf("Will stop on watch points\n");
+     dbg_printf("Will not stop on watch points (they will still be logged)\n");
   }
   else {
-     dbg_printf("Will not stop on watch points (they will still be logged)\n");
+     dbg_printf("Will stop on watch points\n");
   }
 }
 
