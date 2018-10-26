@@ -9,7 +9,8 @@ Changes after 2.6.9 release:
   ! AVX-512: implemented AVX-512 VBMI2/VNNI/BITALG instructions
   ! Crypto: Implemented VAES instructions / VPCLMULQDQ / GFNI instruction
   ! VMX: Implement EPT-Based Sub-Page Protection
-  ! CPUID Added Skylake-X CPU definition with AVX-512 support
+  ! CPUID: Added Skylake-X CPU definition (features AVX-512 support)
+  ! CPUID: Added Cannonlake CPU definition (features more AVX-512 levels and SHA support)
 
 - Bochs Debugger and Instrumentation
   - Added support for conditional breakpoints and conditional step/continue to Bochs debugger
