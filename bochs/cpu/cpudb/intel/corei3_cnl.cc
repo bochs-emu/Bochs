@@ -109,8 +109,13 @@ corei3_cnl_t::corei3_cnl_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_AVX512_BW);
   enable_cpu_extension(BX_ISA_AVX512_VL);
   enable_cpu_extension(BX_ISA_AVX512_IFMA52);
+  enable_cpu_extension(BX_ISA_AVX512_VBMI);
 #endif
   enable_cpu_extension(BX_ISA_CLFLUSHOPT);
+  enable_cpu_extension(BX_ISA_UMIP);
+#if BX_SUPPORT_PKEYS
+  enable_cpu_extension(BX_ISA_PKU);
+#endif
 }
 
 void corei3_cnl_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
@@ -214,11 +219,11 @@ void corei3_cnl_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_fun
 // MSR 00000486: 0000-0000-8000-0021	BX_MSR_VMX_CR0_FIXED0
 // MSR 00000487: 0000-0000-FFFF-FFFF	BX_MSR_VMX_CR0_FIXED1
 // MSR 00000488: 0000-0000-0000-2000	BX_MSR_VMX_CR4_FIXED0
-// MSR 00000489: 0000-0000-0037-27FF	BX_MSR_VMX_CR4_FIXED1
+// MSR 00000489: 0000-0000-0037-2FFF	BX_MSR_VMX_CR4_FIXED1
 // MSR 0000048A: 0000-0000-0000-002E	BX_MSR_VMX_VMCS_ENUM
-// MSR 0000048B: 025D-3FFF-0000-0000	BX_MSR_VMX_PROCBASED_CTRLS2
+// MSR 0000048B: 025F-3CFF-0000-0000	BX_MSR_VMX_PROCBASED_CTRLS2
 // MSR 0000048C: 0000-0F01-0673-4141	BX_MSR_VMX_MSR_VMX_EPT_VPID_CAP
-// MSR 0000048D: 0000-00FF-0000-0016	BX_MSR_VMX_TRUE_PINBASED_CTRLS
+// MSR 0000048D: 0000-007F-0000-0016	BX_MSR_VMX_TRUE_PINBASED_CTRLS
 // MSR 0000048E: FFF9-FFFE-0400-6172    BX_MSR_VMX_TRUE_PROCBASED_CTRLS
 // MSR 0000048F: 01FF-FFFF-0003-6DFB	BX_MSR_VMX_TRUE_VMEXIT_CTRLS
 // MSR 00000490: 0003-FFFF-0000-11FB	BX_MSR_VMX_TRUE_VMENTRY_CTRLS
@@ -243,11 +248,9 @@ Bit32u corei3_cnl_t::get_vmx_extensions_bitmask(void) const
          BX_VMX_PAUSE_LOOP_EXITING |
          BX_VMX_EPTP_SWITCHING |
          BX_VMX_EPT_ACCESS_DIRTY |
-         BX_VMX_VINTR_DELIVERY |
          BX_VMX_VMCS_SHADOWING |
          BX_VMX_EPT_EXCEPTION |
          BX_VMX_SW_INTERRUPT_INJECTION_ILEN_0 |
-      /* BX_VMX_POSTED_INSTERRUPTS - not implemented yet */
       /* BX_VMX_MBE_CONTROL - not implemeted yet */
          BX_VMX_TSC_SCALING;
 }
@@ -612,7 +615,44 @@ void corei3_cnl_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *le
 #endif
                 BX_CPUID_EXT3_SHA;
 
-    leaf->ecx = 0;
+    //   [0:0]    PREFETCHWT1 instruction support
+    // * [1:1]    AVX512 VBMI instructions support
+    // * [2:2]    UMIP: Supports user-mode instruction prevention
+    // * [3:3]    PKU: Protection keys for user-mode pages.
+    // * [4:4]    OSPKE: OS has set CR4.PKE to enable protection keys
+    //   [5:5]    WAITPKG (TPAUSE/UMONITOR/UMWAIT) support
+    //   [6:6]    AVX512 VBMI2 instructions support
+    //   [7:7]    reserved
+    //   [8:8]    GFNI instructions support
+    //   [9:9]    VAES instructions support
+    // [10:10]    VPCLMULQDQ instruction support
+    // [11:11]    AVX512 VNNI instructions support
+    // [12:12]    AVX512 BITALG instructions support
+    // [13:13]    reserved
+    // [14:14]    AVX512 VPOPCNTDQ: AVX512 VPOPCNTD/VPOPCNTQ instructions
+    // [15:15]    reserved
+    // [16:16]    LA57: LA57 and 5-level paging
+    // [21:17]    reserved
+    // [22:22]    RDPID: Read Processor ID support
+    // [24:23]    reserved
+    // [25:25]    CLDEMOTE: CLDEMOTE instruction support
+    // [26:26]    reserved
+    // [27:27]    MOVDIRI: MOVDIRI instruction support
+    // [28:28]    MOVDIR64: MOVDIR64 instruction support
+    // [29:29]    reserved
+    // [30:30]    SGX_LC: SGX Launch Configuration
+    // [31:31]    reserved
+    leaf->ecx = BX_CPUID_EXT4_AVX512_VBMI |
+                BX_CPUID_EXT4_UMIP |
+#if BX_SUPPORT_PKEYS
+                BX_CPUID_EXT4_PKU |
+#endif
+                0;
+#if BX_SUPPORT_PKEYS
+    if (cpu->cr4.get_PKE())
+      leaf->ecx |= BX_CPUID_EXT4_OSPKE;
+#endif
+
     leaf->edx = 0;
     break;
   default:
