@@ -51,6 +51,7 @@ CPUDB_OBJS = intel/pentium.o \
              intel/corei7_haswell_4770.o \
              intel/broadwell_ult.o \
              intel/corei7_skylake-x.o \
+             intel/corei3_cnl.o \
              amd/amd_k6_2_chomper.o  \
              amd/athlon64_clawhammer.o \
              amd/athlon64_venice.o \
@@ -265,6 +266,16 @@ intel/corei7_skylake-x.o: intel/corei7_skylake-x.@CPP_SUFFIX@ ../../bochs.h \
  ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../apic.h \
  ../xmm.h ../vmx.h ../svm.h ../cpuid.h ../access.h ../../param_names.h \
  intel/corei7_skylake-x.h ../../cpu/cpuid.h
+intel/corei3_cnl.o: intel/corei3_cnl.@CPP_SUFFIX@ ../../bochs.h \
+ ../../config.h ../../osdep.h ../../bx_debug/debug.h ../../config.h \
+ ../../osdep.h ../../gui/siminterface.h ../../cpudb.h \
+ ../../gui/paramtree.h ../../memory/memory-bochs.h ../../pc_system.h \
+ ../../gui/gui.h ../../instrument/stubs/instrument.h ../cpu.h \
+ ../decoder/decoder.h ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h \
+ ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
+ ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../apic.h \
+ ../xmm.h ../vmx.h ../svm.h ../cpuid.h ../access.h ../../param_names.h \
+ intel/corei3_cnl.h ../../cpu/cpuid.h
 intel/p2_klamath.o: intel/p2_klamath.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \

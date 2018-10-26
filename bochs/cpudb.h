@@ -50,6 +50,7 @@ bx_define_cpudb(corei7_ivy_bridge_3770k)
 bx_define_cpudb(corei7_haswell_4770)
 bx_define_cpudb(broadwell_ult)
 bx_define_cpudb(corei7_skylake_x)
+bx_define_cpudb(corei3_cnl)
 #endif
 #endif
 #endif

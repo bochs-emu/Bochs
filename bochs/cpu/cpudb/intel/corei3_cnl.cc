@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2017 Stanislav Shwartsman
+//   Copyright (c) 2018 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -24,16 +24,16 @@
 #include "bochs.h"
 #include "cpu.h"
 #include "param_names.h"
-#include "corei7_skylake-x.h"
+#include "corei3_cnl.h"
 
 #define LOG_THIS cpu->
 
 #if BX_SUPPORT_X86_64 && BX_SUPPORT_AVX
 
-corei7_skylake_x_t::corei7_skylake_x_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
+corei3_cnl_t::corei3_cnl_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
   if (BX_SUPPORT_VMX == 1)
-    BX_INFO(("You must compile with --enable-vmx=2 for Intel Core i7 Skylake-X VMX configuration"));
+    BX_INFO(("You must compile with --enable-vmx=2 for Intel Core i3 Cannonlake VMX configuration"));
 
   if (! BX_SUPPORT_MONITOR_MWAIT)
     BX_INFO(("WARNING: MONITOR/MWAIT support is not compiled in !"));
@@ -101,20 +101,21 @@ corei7_skylake_x_t::corei7_skylake_x_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_ADX);
   enable_cpu_extension(BX_ISA_SMAP);
   enable_cpu_extension(BX_ISA_FDP_DEPRECATION);
+  enable_cpu_extension(BX_ISA_SHA);
 #if BX_SUPPORT_EVEX
   enable_cpu_extension(BX_ISA_AVX512);
   enable_cpu_extension(BX_ISA_AVX512_DQ);
   enable_cpu_extension(BX_ISA_AVX512_CD);
   enable_cpu_extension(BX_ISA_AVX512_BW);
   enable_cpu_extension(BX_ISA_AVX512_VL);
+  enable_cpu_extension(BX_ISA_AVX512_IFMA52);
 #endif
   enable_cpu_extension(BX_ISA_CLFLUSHOPT);
-  enable_cpu_extension(BX_ISA_CLWB);
 }
 
-void corei7_skylake_x_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+void corei3_cnl_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
-  static const char* brand_string = "Intel(R) Core(TM) i7-7800X CPU @ 3.50GHz\0\0\0\0\0\0\0\0";
+  static const char* brand_string = "Intel(R) Core(TM) i3-8121U CPU @ 2.20GHz\0\0\0\0\0\0\0\0";
   static bx_bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
   if (cpuid_limit_winnt)
     if (function > 2 && function < 0x80000000) function = 2;
@@ -222,7 +223,7 @@ void corei7_skylake_x_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpu
 // MSR 0000048F: 01FF-FFFF-0003-6DFB	BX_MSR_VMX_TRUE_VMEXIT_CTRLS
 // MSR 00000490: 0003-FFFF-0000-11FB	BX_MSR_VMX_TRUE_VMENTRY_CTRLS
 
-Bit32u corei7_skylake_x_t::get_vmx_extensions_bitmask(void) const
+Bit32u corei3_cnl_t::get_vmx_extensions_bitmask(void) const
 {
   return BX_VMX_TPR_SHADOW |
          BX_VMX_VIRTUAL_NMI |
@@ -254,7 +255,7 @@ Bit32u corei7_skylake_x_t::get_vmx_extensions_bitmask(void) const
 #endif
 
 // leaf 0x00000000 //
-void corei7_skylake_x_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
+void corei3_cnl_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
 {
   static const char* vendor_string = "GenuineIntel";
 
@@ -271,7 +272,7 @@ void corei7_skylake_x_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
 }
 
 // leaf 0x00000001 //
-void corei7_skylake_x_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
+void corei3_cnl_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 {
   // EAX:       CPU Version Information
   //   [3:0]   Stepping ID
@@ -280,7 +281,7 @@ void corei7_skylake_x_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [13:12] Type: 0=OEM, 1=overdrive, 2=dual cpu, 3=reserved
   //   [19:16] Extended Model
   //   [27:20] Extended Family
-  leaf->eax = 0x00050654;
+  leaf->eax = 0x00060663;
 
   // EBX:
   //   [7:0]   Brand ID
@@ -314,7 +315,7 @@ void corei7_skylake_x_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   // * [15:15] PDCM - Perfon and Debug Capability MSR
   //   [16:16] reserved
   // * [17:17] PCID: Process Context Identifiers
-  // * [18:18] DCA - Direct Cache Access
+  //   [18:18] DCA - Direct Cache Access
   // * [19:19] SSE4.1 Instructions
   // * [20:20] SSE4.2 Instructions
   // * [21:21] X2APIC
@@ -429,7 +430,7 @@ void corei7_skylake_x_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 }
 
 // leaf 0x00000002 //
-void corei7_skylake_x_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf) const
+void corei3_cnl_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000002 - Cache and TLB Descriptors
   leaf->eax = 0x76036301;
@@ -441,7 +442,7 @@ void corei7_skylake_x_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf) const
 // leaf 0x00000003 - Processor Serial Number (not supported) //
 
 // leaf 0x00000004 //
-void corei7_skylake_x_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_t *leaf) const
+void corei3_cnl_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000004 - Deterministic Cache Parameters
 
@@ -503,7 +504,7 @@ void corei7_skylake_x_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function
 }
 
 // leaf 0x00000005 //
-void corei7_skylake_x_t::get_std_cpuid_leaf_5(cpuid_function_t *leaf) const
+void corei3_cnl_t::get_std_cpuid_leaf_5(cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000005 - MONITOR/MWAIT Leaf
 
@@ -524,7 +525,7 @@ void corei7_skylake_x_t::get_std_cpuid_leaf_5(cpuid_function_t *leaf) const
   leaf->eax = CACHE_LINE_SIZE;
   leaf->ebx = CACHE_LINE_SIZE;
   leaf->ecx = 3;
-  leaf->edx = 0x00002020;
+  leaf->edx = 0x11142020;
 #else
   leaf->eax = 0;
   leaf->ebx = 0;
@@ -534,17 +535,17 @@ void corei7_skylake_x_t::get_std_cpuid_leaf_5(cpuid_function_t *leaf) const
 }
 
 // leaf 0x00000006 //
-void corei7_skylake_x_t::get_std_cpuid_leaf_6(cpuid_function_t *leaf) const
+void corei3_cnl_t::get_std_cpuid_leaf_6(cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000006 - Thermal and Power Management Leaf
-  leaf->eax = 0x00000075;
+  leaf->eax = 0x00002ff7;
   leaf->ebx = 0x00000002;
   leaf->ecx = 0x00000009;
   leaf->edx = 0x00000000;
 }
 
 // leaf 0x00000007 //
-void corei7_skylake_x_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *leaf) const
+void corei3_cnl_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *leaf) const
 {
   switch(subfunction) {
   case 0:
@@ -554,34 +555,35 @@ void corei7_skylake_x_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function
     // * [1:1]   Support for IA32_TSC_ADJUST MSR
     //   [2:2]   SGX: Intel Software Guard Extensions
     // * [3:3]   BMI1: Advanced Bit Manipulation Extensions
-    // x [4:4]   HLE: Hardware Lock Elision
+    //   [4:4]   HLE: Hardware Lock Elision
     // * [5:5]   AVX2
     // * [6:6]   FDP Deprecation
     // * [7:7]   SMEP: Supervisor Mode Execution Protection
     // * [8:8]   BMI2: Advanced Bit Manipulation Extensions
     // * [9:9]   Support for Enhanced REP MOVSB/STOSB
     // * [10:10] Support for INVPCID instruction
-    // x [11:11] RTM: Restricted Transactional Memory
-    // x [12:12] Supports Quality of Service (QoS) capability
+    //   [11:11] RTM: Restricted Transactional Memory
+    //   [12:12] Supports Quality of Service (QoS) capability
     // * [13:13] Deprecates FPU CS and FPU DS values
-    //   [14:14] Intel Memory Protection Extensions
-    // x [15:15] Supports Platform Quality of Service Enforcement (PQE) capability
+    // x [14:14] Intel Memory Protection Extensions
+    //   [15:15] Supports Platform Quality of Service Enforcement (PQE) capability
     // * [16:16] AVX512F instructions support
     // * [17:17] AVX512DQ instructions support
     // * [18:18] RDSEED instruction support
     // * [19:19] ADCX/ADOX instructions support
     // * [20:20] SMAP: Supervisor Mode Access Prevention
-    //   [21:21] AVX512IFMA52 instructions support
+    // * [21:21] AVX512IFMA52 instructions support
     //   [22:22] reserved
     // * [23:23] CLFLUSHOPT instruction
-    // * [24:24] CLWB instruction
+    //   [24:24] CLWB instruction
     // x [25:25] Intel Processor Trace
     //   [26:26] AVX512PF instructions support
     //   [27:27] AVX512ER instructions support
     // * [28:28] AVX512CD instructions support
-    //   [29:29] SHA instructions support
+    // * [29:29] SHA instructions support
     // * [30:30] AVX512BW instructions support
     // * [31:31] AVX512VL variable vector length support
+
     leaf->ebx = BX_CPUID_EXT3_FSGSBASE | 
              /* BX_CPUID_EXT3_TSC_ADJUST | */ // not implemented yet
                 BX_CPUID_EXT3_BMI1 | 
@@ -599,14 +601,16 @@ void corei7_skylake_x_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function
                 BX_CPUID_EXT3_RDSEED |
                 BX_CPUID_EXT3_ADX |
                 BX_CPUID_EXT3_SMAP |
+#if BX_SUPPORT_EVEX
+                BX_CPUID_EXT3_AVX512IFMA52 |
+#endif
                 BX_CPUID_EXT3_CLFLUSHOPT |
-                BX_CPUID_EXT3_CLWB |
 #if BX_SUPPORT_EVEX
                 BX_CPUID_EXT3_AVX512CD |
                 BX_CPUID_EXT3_AVX512BW |
                 BX_CPUID_EXT3_AVX512VL |
 #endif
-                0;
+                BX_CPUID_EXT3_SHA;
 
     leaf->ecx = 0;
     leaf->edx = 0;
@@ -623,7 +627,7 @@ void corei7_skylake_x_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function
 // leaf 0x00000009 direct cache access not supported //
 
 // leaf 0x0000000A //
-void corei7_skylake_x_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
+void corei3_cnl_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
 {
   // CPUID function 0x0000000A - Architectural Performance Monitoring Leaf
 
@@ -671,26 +675,26 @@ void corei7_skylake_x_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
 // leaf 0x00000013 reserved //
 // leaf 0x00000014 Intel Processor Trace (not implemented) //
 
-void corei7_skylake_x_t::get_std_cpuid_leaf_15(cpuid_function_t *leaf) const
+void corei3_cnl_t::get_std_cpuid_leaf_15(cpuid_function_t *leaf) const
 {
   // CPUID function 0x000000015 - Time Stamp Counter and Nominal Core Crystal Clock Information
   leaf->eax = 0x00000002;
-  leaf->ebx = 0x00000124;
-  leaf->ecx = 0x00000000;
+  leaf->ebx = 0x000000b8;
+  leaf->ecx = 0x016e3600;
   leaf->edx = 0x00000000;
 }
 
-void corei7_skylake_x_t::get_std_cpuid_leaf_16(cpuid_function_t *leaf) const
+void corei3_cnl_t::get_std_cpuid_leaf_16(cpuid_function_t *leaf) const
 {
   // CPUID function 0x000000016 - Processor Frequency Information
-  leaf->eax = 0x00000dac;
-  leaf->ebx = 0x00000fa0;
+  leaf->eax = 0x00000898;
+  leaf->ebx = 0x00000c80;
   leaf->ecx = 0x00000064;
   leaf->edx = 0x00000000;
 }
 
 // leaf 0x80000000 //
-void corei7_skylake_x_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
+void corei3_cnl_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
 {
   // EAX: highest extended function understood by CPUID
   // EBX: reserved
@@ -700,7 +704,7 @@ void corei7_skylake_x_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
 }
 
 // leaf 0x80000001 //
-void corei7_skylake_x_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
+void corei3_cnl_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 {
   // EAX:       CPU Version Information (reserved for Intel)
   leaf->eax = 0;
@@ -775,7 +779,7 @@ void corei7_skylake_x_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000005 - L1 Cache and TLB Identifiers (reserved for Intel)
 
 // leaf 0x80000006 //
-void corei7_skylake_x_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
+void corei3_cnl_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
 {
   // CPUID function 0x800000006 - L2 Cache and TLB Identifiers
   leaf->eax = 0x00000000;
@@ -785,7 +789,7 @@ void corei7_skylake_x_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
 }
 
 // leaf 0x80000007 //
-void corei7_skylake_x_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
+void corei3_cnl_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
 {
   // CPUID function 0x800000007 - Advanced Power Management
   leaf->eax = 0;
@@ -794,11 +798,11 @@ void corei7_skylake_x_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
   leaf->edx = 0x00000100; // bit 8 - invariant TSC
 }
 
-void corei7_skylake_x_t::dump_cpuid(void) const
+void corei3_cnl_t::dump_cpuid(void) const
 {
   bx_cpuid_t::dump_cpuid(0x16, 0x8);
 }
 
-bx_cpuid_t *create_corei7_skylake_x_cpuid(BX_CPU_C *cpu) { return new corei7_skylake_x_t(cpu); }
+bx_cpuid_t *create_corei3_cnl_cpuid(BX_CPU_C *cpu) { return new corei3_cnl_t(cpu); }
 
 #endif
