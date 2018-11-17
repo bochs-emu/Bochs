@@ -32,25 +32,26 @@
 //   When there are collisions, the old entry is overwritten with
 //   one for the newest access.
 
-#define BX_TLB_SIZE 1024
-#define BX_TLB_MASK ((BX_TLB_SIZE-1) << 12)
+const Bit32u BX_TLB_SIZE = 1024;
+const Bit32u BX_TLB_MASK = ((BX_TLB_SIZE-1) << 12);
+
 #define BX_TLB_INDEX_OF(lpf, len) ((((unsigned)(lpf) + (len)) & BX_TLB_MASK) >> 12)
 
 typedef bx_ptr_equiv_t bx_hostpageaddr_t;
 
 #if BX_SUPPORT_X86_64
-  #define BX_INVALID_TLB_ENTRY BX_CONST64(0xffffffffffffffff)
+const bx_address BX_INVALID_TLB_ENTRY = BX_CONST64(0xffffffffffffffff);
 #else
-  #define BX_INVALID_TLB_ENTRY 0xffffffff
+const bx_address BX_INVALID_TLB_ENTRY = 0xffffffff;
 #endif
 
 // accessBits
-#define TLB_SysReadOK     (0x01)
-#define TLB_UserReadOK    (0x02)
-#define TLB_SysWriteOK    (0x04)
-#define TLB_UserWriteOK   (0x08)
-#define TLB_SysExecuteOK  (0x10)
-#define TLB_UserExecuteOK (0x20)
+const Bit32u TLB_SysReadOK     = 0x01;
+const Bit32u TLB_UserReadOK    = 0x02;
+const Bit32u TLB_SysWriteOK    = 0x04;
+const Bit32u TLB_UserWriteOK   = 0x08;
+const Bit32u TLB_SysExecuteOK  = 0x10;
+const Bit32u TLB_UserExecuteOK = 0x20;
 
 #if BX_SUPPORT_PKEYS
 
@@ -121,15 +122,15 @@ typedef struct {
 } bx_TLB_entry;
 
 #if BX_SUPPORT_X86_64
-  #define LPF_MASK BX_CONST64(0xfffffffffffff000)
+const bx_address LPF_MASK = BX_CONST64(0xfffffffffffff000);
 #else
-  #define LPF_MASK (0xfffff000)
+const bx_address LPF_MASK = 0xfffff000;
 #endif
 
 #if BX_PHY_ADDRESS_LONG
-  #define PPF_MASK BX_CONST64(0xfffffffffffff000)
+const bx_phy_address PPF_MASK = BX_CONST64(0xfffffffffffff000);
 #else
-  #define PPF_MASK (0xfffff000)
+const bx_phy_address PPF_MASK = 0xfffff000;
 #endif
 
 BX_CPP_INLINE Bit32u PAGE_OFFSET(bx_address laddr)

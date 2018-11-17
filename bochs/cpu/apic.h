@@ -25,10 +25,13 @@
 
 #if BX_SUPPORT_APIC
 
-#define APIC_LEVEL_TRIGGERED	1
-#define APIC_EDGE_TRIGGERED	0
+enum {
+  APIC_EDGE_TRIGGERED  = 0,
+  APIC_LEVEL_TRIGGERED = 1
+};
 
-#define BX_LAPIC_BASE_ADDR  0xfee00000  // default Local APIC address
+const bx_phy_address BX_LAPIC_BASE_ADDR = 0xfee00000;  // default Local APIC address
+
 #define BX_NUM_LOCAL_APICS  BX_SMP_PROCESSORS
 #define BX_LAPIC_MAX_INTS   256
 
@@ -108,6 +111,28 @@ typedef Bit32u apic_dest_t; /* same definition in ioapic.h */
 #define BX_LAPIC_IER7                 0x4E0
 #define BX_LAPIC_IER8                 0x4F0
 
+/* APIC delivery modes */
+enum {
+  APIC_DM_FIXED	   = 0,
+  APIC_DM_LOWPRI   = 1,
+  APIC_DM_SMI      = 2,
+  APIC_DM_RESERVED = 3,
+  APIC_DM_NMI      = 4,
+  APIC_DM_INIT     = 5,
+  APIC_DM_SIPI     = 6,
+  APIC_DM_EXTINT   = 7
+};
+
+#define APIC_LVT_ENTRIES 6
+enum {
+  APIC_LVT_TIMER   = 0,
+  APIC_LVT_THERMAL = 1,
+  APIC_LVT_PERFMON = 2,
+  APIC_LVT_LINT0   = 3,
+  APIC_LVT_LINT1   = 4,
+  APIC_LVT_ERROR   = 5
+};
+
 class BOCHSAPI bx_local_apic_c : public logfunctions
 {
   bx_phy_address base_addr;
@@ -160,14 +185,7 @@ class BOCHSAPI bx_local_apic_c : public logfunctions
   Bit32u icr_hi;                // Interrupt command register (ICR)
   Bit32u icr_lo;
 
-#define APIC_LVT_ENTRIES 6
   Bit32u lvt[APIC_LVT_ENTRIES];
-#define APIC_LVT_TIMER   0
-#define APIC_LVT_THERMAL 1
-#define APIC_LVT_PERFMON 2
-#define APIC_LVT_LINT0   3
-#define APIC_LVT_LINT1   4
-#define APIC_LVT_ERROR   5
 
   Bit32u timer_initial;         // Initial timer count (in order to reload periodic timer)
   Bit32u timer_current;         // Current timer count
@@ -179,16 +197,6 @@ class BOCHSAPI bx_local_apic_c : public logfunctions
   // Internal timer state, not accessible from bus
   bx_bool timer_active;
   int timer_handle;
-
-/* APIC delivery modes */
-#define APIC_DM_FIXED	0
-#define APIC_DM_LOWPRI	1
-#define APIC_DM_SMI	2
-/* RESERVED		3 */
-#define APIC_DM_NMI	4
-#define APIC_DM_INIT	5
-#define APIC_DM_SIPI	6
-#define APIC_DM_EXTINT	7
 
 #if BX_SUPPORT_VMX >= 2
   int vmx_timer_handle;
