@@ -1042,7 +1042,11 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
 // 31-22 | Bits 31-22 of physical address of the 4-MByte page
 // -----------------------------------------------------------
 
+#if BX_PHY_ADDRESS_WIDTH > 40
+const Bit32u PAGING_PDE4M_RESERVED_BITS = 0; // there are no reserved bits in PDE4M when physical address is wider than 40 bit
+#else
 const Bit32u PAGING_PDE4M_RESERVED_BITS = ((1 << (41-BX_PHY_ADDRESS_WIDTH))-1) << (13 + BX_PHY_ADDRESS_WIDTH - 32);
+#endif
 
 // Translate a linear address to a physical address in legacy paging mode
 bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_mask, unsigned user, unsigned rw)
