@@ -536,8 +536,11 @@ void ryzen_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
               BX_CPUID_EXT2_PERFCTR_EXT_CORE |
               BX_CPUID_EXT2_PERFCTR_EXT_NB |
               BX_CPUID_EXT2_DATA_BREAKPOINT_EXT |
-              BX_CPUID_EXT2_PERFCTR_EXT_L2I;
-           /* BX_CPUID_EXT2_MONITORX_MWAITX - not implemented yet */
+              BX_CPUID_EXT2_PERFCTR_EXT_L2I |
+#if BX_SUPPORT_MONITOR_MWAIT
+              BX_CPUID_EXT2_MONITORX_MWAITX |
+#endif
+              0;
 
   // EDX:
   // Many of the bits in EDX are the same as FN 0x00000001 for AMD
