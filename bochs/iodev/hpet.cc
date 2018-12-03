@@ -272,8 +272,8 @@ void bx_hpet_c::update_irq(HPETTimer *timer, bx_bool set)
     DEV_pic_raise_irq(route);
   } else {
     s.isr &= ~mask;
-    DEV_pic_raise_irq(route);
     DEV_pic_lower_irq(route);
+    DEV_pic_raise_irq(route);
   }
 }
 
