@@ -294,27 +294,26 @@ int bx_soundlow_waveout_c::set_pcm_params(bx_pcm_param_t *param)
 int bx_soundlow_waveout_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param)
 {
   unsigned len1 = length;
-  audio_buffer_t *inbuffer, *outbuffer;
 
   if (src_param->bits == 16) len1 >>= 1;
   if (pcm_callback_id >= 0) {
     BX_LOCK(resampler_mutex);
-    inbuffer = audio_buffers[0]->new_buffer(len1);
+    audio_buffer_t *inbuffer = audio_buffers[0]->new_buffer(len1);
     memcpy(&inbuffer->param, src_param, sizeof(bx_pcm_param_t));
     convert_to_float(data, length, inbuffer);
     BX_UNLOCK(resampler_mutex);
   } else {
-    inbuffer = new audio_buffer_t;
+    audio_buffer_t *inbuffer = new audio_buffer_t;
     inbuffer->fdata = new float[len1];
     inbuffer->size = len1;
     memcpy(&inbuffer->param, src_param, sizeof(bx_pcm_param_t));
-    outbuffer = new audio_buffer_t;
+    audio_buffer_t *outbuffer = new audio_buffer_t;
     memset(outbuffer, 0, sizeof(audio_buffer_t));
     convert_to_float(data, length, inbuffer);
     resampler(inbuffer, outbuffer);
     output(outbuffer->size, outbuffer->data);
-    delete [] outbuffer;
-    delete [] inbuffer;
+    delete outbuffer;
+    delete inbuffer;
   }
   return BX_SOUNDLOW_OK;
 }
