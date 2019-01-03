@@ -798,12 +798,12 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
        return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
     }
   }
-#endif
 
   if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_XSAVES_XRSTORS)
      vm->xss_exiting_bitmap = VMread64(VMCS_64BIT_CONTROL_XSS_EXITING_BITMAP);
   else
      vm->xss_exiting_bitmap = 0;
+#endif
 
 #endif // BX_SUPPORT_X86_64
 
