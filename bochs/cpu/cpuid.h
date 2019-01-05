@@ -68,6 +68,8 @@ public:
 
   virtual void dump_cpuid(void) const = 0;
 
+  void dump_features() const;
+
 #if BX_CPU_LEVEL >= 5
   virtual int rdmsr(Bit32u index, Bit64u *msr) { return -1; }
   virtual int wrmsr(Bit32u index, Bit64u  msr) { return -1; }
@@ -136,6 +138,8 @@ protected:
   VMCS_Mapping vmcs_map;
 #endif
 };
+
+extern const char *get_cpu_feature_name(unsigned feature);
 
 typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 

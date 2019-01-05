@@ -1050,6 +1050,8 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR cpuid->dump_cpuid();
 #endif
 
+  BX_CPU_THIS_PTR cpuid->dump_features();
+
   BX_INSTR_RESET(BX_CPU_ID, source);
 }
 

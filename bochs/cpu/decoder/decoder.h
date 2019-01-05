@@ -23,7 +23,7 @@
 #define BX_X86_DECODER_H
 
 // x86 Arch features
-enum {
+enum x86_feature_name {
   BX_ISA_386 = 0,                 /* 386 or earlier instruction */
   BX_ISA_X87,                     /* FPU (X87) instruction */
   BX_ISA_486,                     /* 486 new instruction */
