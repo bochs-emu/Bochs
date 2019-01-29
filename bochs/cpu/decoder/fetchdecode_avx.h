@@ -57,11 +57,6 @@ static const BxExtOpcodeInfo_t BxOpcodeInfoAVX_0f38f5[4] = {
   /* F2 */ { BxAliasVexW64, BX_IA_PDEP_GdBdEd }
 };
 
-static const BxExtOpcodeInfo_t BxOpcodeInfoAVX_VexW_0f38f6[2] = {
-  /* 0 */ { BxPrefixSSEF2, BX_IA_MULX_GdBdEd },
-  /* 1 */ { BxPrefixSSEF2, BX_IA_MULX_GqBqEq }
-};
-
 static const BxExtOpcodeInfo_t BxOpcodeInfoAVX_0f38f7[4] = {
   /* -- */ { BxAliasVexW64, BX_IA_BEXTR_GdEdBd },
   /* 66 */ { BxAliasVexW64, BX_IA_SHLX_GdEdBd },
