@@ -3025,8 +3025,8 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodes64q[256*2] = {
   // 256 entries for two byte opcodes
   /* 0F 00 */ { GRPN(G6)          },
   /* 0F 01 */ { GRPMOD(G7)        },
-  /* 0F 02 */ { 0, &Ia_larq_Gd_Ew },
-  /* 0F 03 */ { 0, &Ia_lslq_Gd_Ew },
+  /* 0F 02 */ { 0, &Ia_larl_Gd_Ew },
+  /* 0F 03 */ { 0, &Ia_lsll_Gd_Ew },
   /* 0F 04 */ { 0, &Ia_Invalid    },
   /* 0F 05 */ { 0, &Ia_syscall    },
   /* 0F 06 */ { 0, &Ia_clts       },
