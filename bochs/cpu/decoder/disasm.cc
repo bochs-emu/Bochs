@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2013-2017 Stanislav Shwartsman
+//   Copyright (c) 2013-2019 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -372,7 +372,7 @@ char *disasm_regref(char *disbufptr, const bxInstruction_c *i, unsigned src_num,
   return disbufptr;
 }
 
-char *disasm_immediate(char *disbufptr, const bxInstruction_c *i, unsigned src_type, bx_address cs_base, bx_address rip)
+char *disasm_immediate(char *disbufptr, const bxInstruction_c *i, unsigned src_type)
 {
   switch(src_type) {
   case BX_DIRECT_MEMREF_B:
@@ -391,23 +391,30 @@ char *disasm_immediate(char *disbufptr, const bxInstruction_c *i, unsigned src_t
   };
 
   switch(src_type) {
+  case BX_IMM1:
+    disbufptr = dis_sprintf(disbufptr, "0x01");
+    break;
+
   case BX_IMMB:
     disbufptr = dis_sprintf(disbufptr, "0x%02x", i->Ib());
     break;
 
   case BX_IMMW:
+  case BX_IMMBW_SE: // 8-bit signed value sign extended to 16-bit size
     disbufptr = dis_sprintf(disbufptr, "0x%04x", i->Iw());
     break;
 
   case BX_IMMD:
-    disbufptr = dis_sprintf(disbufptr, "0x%08x", i->Id());
+  case BX_IMMBD_SE: // 8-bit signed value sign extended to 32-bit size
+#if BX_SUPPORT_X86_64
+    if (i->os64L())
+      disbufptr = dis_sprintf(disbufptr, "0x" FMT_ADDRX64, (Bit64u) (Bit32s) i->Id());
+    else
+#endif
+      disbufptr = dis_sprintf(disbufptr, "0x%08x", i->Id());
     break;
 
 #if BX_SUPPORT_X86_64
-  case BX_IMMD_SE:
-    disbufptr = dis_sprintf(disbufptr, "0x" FMT_ADDRX64, (Bit64u) (Bit32s) i->Id());
-    break;
-
   case BX_IMMQ:
     disbufptr = dis_sprintf(disbufptr, "0x" FMT_ADDRX64, i->Iq());
     break;
@@ -416,32 +423,6 @@ char *disasm_immediate(char *disbufptr, const bxInstruction_c *i, unsigned src_t
   case BX_IMMB2:
     disbufptr = dis_sprintf(disbufptr, "0x%02x", i->Ib2());
     break;
-
-  case BX_IMM_BrOff16:
-    disbufptr = dis_sprintf(disbufptr, ".%+d", (Bit32s) (Bit16s) i->Iw());
-    if (cs_base != BX_JUMP_TARGET_NOT_REQ) {
-      Bit16u target = (rip + i->ilen() + (Bit16s) i->Iw()) & 0xffff;
-      disbufptr = dis_sprintf(disbufptr, " (0x%08x)", (Bit32u)(cs_base + target));
-    }
-    break;
-
-  case BX_IMM_BrOff32:
-    disbufptr = dis_sprintf(disbufptr, ".%+d", (Bit32s) i->Id());
-    if (cs_base != BX_JUMP_TARGET_NOT_REQ) {
-      Bit32u target = (Bit32u)(rip + i->ilen() + (Bit32s) i->Id());
-      disbufptr = dis_sprintf(disbufptr, " (0x%08x)", (Bit32u) (cs_base + target));
-    }
-    break;
-
-#if BX_SUPPORT_X86_64
-  case BX_IMM_BrOff64:
-    disbufptr = dis_sprintf(disbufptr, ".%+d", (Bit32s) i->Id());
-    if (cs_base != BX_JUMP_TARGET_NOT_REQ) {
-      Bit64u target = rip + i->ilen() + (Bit32s) i->Id();
-      disbufptr = dis_sprintf(disbufptr, " (0x" FMT_ADDRX ")", (Bit64u) (cs_base + target));
-    }
-    break;
-#endif
 
   case BX_DIRECT_PTR:
     if (i->os32L())
@@ -468,6 +449,34 @@ char *disasm_immediate(char *disbufptr, const bxInstruction_c *i, unsigned src_t
 
   default:
     disbufptr = dis_sprintf(disbufptr, "(unknown immediate form for disasm %d)", src_type);
+  }
+
+  return disbufptr;
+}
+
+char *disasm_branch_target(char *disbufptr, const bxInstruction_c *i, unsigned src_type, bx_address cs_base, bx_address rip)
+{
+  switch(src_type) {
+  case BX_IMMW:
+  case BX_IMMBW_SE: // 8-bit signed value sign extended to 16-bit size
+    disbufptr = dis_sprintf(disbufptr, ".%+d", (Bit32s) (Bit16s) i->Iw());
+    if (cs_base != BX_JUMP_TARGET_NOT_REQ) {
+      Bit16u target = (rip + i->ilen() + (Bit16s) i->Iw()) & 0xffff;
+      disbufptr = dis_sprintf(disbufptr, " (0x%08x)", (Bit32u)(cs_base + target));
+    }
+    break;
+
+  case BX_IMMD:
+  case BX_IMMBD_SE: // 8-bit signed value sign extended to 32-bit size
+    disbufptr = dis_sprintf(disbufptr, ".%+d", (Bit32s) i->Id());
+    if (cs_base != BX_JUMP_TARGET_NOT_REQ) {
+      Bit32u target = rip + i->ilen() + (Bit32s) i->Id();
+      disbufptr = dis_sprintf(disbufptr, " (0x" FMT_ADDRX ")", (Bit64u) (cs_base + target));
+    }
+    break;
+
+  default:
+    disbufptr = dis_sprintf(disbufptr, "(unknown branch target immediate form for disasm %d)", src_type);
   }
 
   return disbufptr;
@@ -620,37 +629,12 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
   }
 
   // Step 2: print opcode name
-
-  // special case: MOVLPS opcode in reg form is MOVHLPS
-  //               MOVHPS opcode in reg form is MOVLHPS
-  if (i->modC0() && (i->getIaOpcode() == BX_IA_MOVLPS_VpsMq 
-#if BX_SUPPORT_AVX
-       || i->getIaOpcode() == BX_IA_V128_VMOVLPS_VpsHpsMq
-#if BX_SUPPORT_EVEX
-       || i->getIaOpcode() == BX_IA_V512_VMOVLPS_VpsHpsMq
-#endif
-#endif
-    )) {
-    disbufptr = dis_sprintf(disbufptr, "%smovhlps ", (i->getVL() == BX_VL128) ? "v" : "");
+  unsigned opname_len = strlen(opname);
+  for (n=0;n < opname_len; n++) {
+    if (opname[n] == '_') break;
+    disbufptr = dis_putc(disbufptr, tolower(opname[n]));
   }
-  else if (i->modC0() && (i->getIaOpcode() == BX_IA_MOVHPS_VpsMq
-#if BX_SUPPORT_AVX
-       || i->getIaOpcode() == BX_IA_V128_VMOVHPS_VpsHpsMq
-#if BX_SUPPORT_EVEX
-       || i->getIaOpcode() == BX_IA_V512_VMOVHPS_VpsHpsMq
-#endif
-#endif
-    )) {
-    disbufptr = dis_sprintf(disbufptr, "%smovlhps ", (i->getVL() == BX_VL128) ? "v" : "");
-  }
-  else {
-    unsigned opname_len = strlen(opname);
-    for (n=0;n < opname_len; n++) {
-      if (opname[n] == '_') break;
-      disbufptr = dis_putc(disbufptr, tolower(opname[n]));
-    }
-    disbufptr = dis_putc(disbufptr, ' ');
-  }
+  disbufptr = dis_putc(disbufptr, ' ');
 
   // Step 3: print sources
   Bit16u ia_opcode = i->getIaOpcode();
@@ -675,8 +659,12 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
       if (src_index == BX_SRC_VECTOR_RM) src_type = BX_VMM_REG;
 
       if (src_index == BX_SRC_IMM) {
-        // this is immediate value (including branch targets)
-        disbufptr = disasm_immediate(disbufptr, i, src_type, cs_base, rip);
+        // this is immediate value
+        disbufptr = disasm_immediate(disbufptr, i, src_type);
+      }
+      else if (src_index == BX_SRC_BRANCH_OFFSET) {
+        // this is immediate value used as branch target
+        disbufptr = disasm_branch_target(disbufptr, i, src_type, cs_base, rip);
       }
       else if (src_index == BX_SRC_IMPLICIT) {
         // this is implicit register or memory reference

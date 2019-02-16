@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2013-2017 Stanislav Shwartsman
+//   Copyright (c) 2013-2019 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //                     	
 //  This library is free software; you can redistribute it and/or
@@ -33,79 +33,6 @@
 #define SSE_PREFIX_F3   2
 #define SSE_PREFIX_F2   3
 
-// If the BxImmediate mask is set, the lowest 4 bits of the attribute
-// specify which kinds of immediate data required by instruction.
-
-#define BxImmediate         0x000f // bits 3..0: any immediate
-#define BxImmediate_I1      0x0001 // imm8 = 1
-#define BxImmediate_Ib      0x0002 // 8 bit
-#define BxImmediate_Ib_SE   0x0003 // sign extend to operand size
-#define BxImmediate_Iw      0x0004 // 16 bit
-#define BxImmediate_Id      0x0005 // 32 bit
-#define BxImmediate_O       0x0006 // MOV_ALOd, mov_OdAL, mov_eAXOv, mov_OveAX
-#if BX_SUPPORT_X86_64
-#define BxImmediate_Iq      0x0007 // 64 bit override
-#endif
-#define BxImmediate_BrOff8  0x0008 // Relative branch offset byte
-#define BxImmediate_BrOff16 BxImmediate_Iw // Relative branch offset word, not encodable in 64-bit mode
-#define BxImmediate_BrOff32 BxImmediate_Id // Relative branch offset dword
-
-#define BxImmediate_Ib4     BxImmediate_Ib // Register encoded in Ib[7:4]
-#define BxImmediate_Ib5     BxImmediate_Ib
-
-// Lookup for opcode and attributes in another opcode tables
-// Totally 15 opcode groups supported
-#define BxGroupX            0x00f0 // bits 7..4: opcode groups definition
-#define BxPrefixSSE66       0x0010 // Group encoding: 0001, SSE_PREFIX_66 only
-#define BxPrefixSSEF3       0x0020 // Group encoding: 0010, SSE_PREFIX_F3 only
-#define BxPrefixSSEF2       0x0030 // Group encoding: 0011, SSE_PREFIX_F2 only
-#define BxPrefixSSE         0x0040 // Group encoding: 0100
-#define BxPrefixSSE2        0x0050 // Group encoding: 0101, do not allow SSE_PREFIX_F2 or SSE_PREFIX_F3
-#define BxPrefixSSE4        0x0060 // Group encoding: 0110
-#define BxPrefixSSEF2F3     0x0070 // Group encoding: 0111, ignore SSE_PREFIX_66
-#define BxNoPrefixSSE       0x0080 // Group encoding: 1000, no SSE prefix allowed
-#define BxGroupN            0x0090 // Group encoding: 1001
-#define BxSplitGroupN       0x00A0 // Group encoding: 1010
-#define BxSplitMod11B       0x00B0 // Group encoding: 1011
-#define BxSplitVexVL        0x00C0 // Group encoding: 1100
-
-// The BxImmediate2 mask specifies kind of second immediate data
-// required by instruction.
-#define BxImmediate2        0x0300 // bits 8.9: any immediate
-#define BxImmediate_Ib2     0x0100
-#define BxImmediate_Iw2     0x0200
-#define BxImmediate_Id2     0x0300
-
-#define BxVexL0             0x0100 // bit 8 (aliased with imm2)
-#define BxVexL1             0x0200 // bit 9 (aliased with imm2)
-#define BxVexW0             0x0400 // bit 10
-#define BxVexW1             0x0800 // bit 11
-
-#define BxAlias             0x3000 // bits 12..13
-#define BxAliasSSE          0x1000 // Encoding 01: form final opcode using SSE prefix and current opcode
-#define BxAliasVexW         0x2000 // Encoding 10: form final opcode using VEX.W and current opcode
-#define BxAliasVexW64       0x3000 // Encoding 11: form final opcode using VEX.W and current opcode in 64-bit mode only
-
-#define BxGroup1          BxGroupN
-#define BxGroup1A         BxGroupN
-#define BxGroup2          BxGroupN
-#define BxGroup3          BxGroupN
-#define BxGroup4          BxGroupN
-#define BxGroup5          BxGroupN
-#define BxGroup6          BxGroupN
-//      BxGroup7          handled separately
-#define BxGroup8          BxGroupN
-#define BxGroup9          BxSplitGroupN
-
-#define BxGroup11         BxGroupN
-#define BxGroup12         BxGroupN
-#define BxGroup13         BxGroupN
-#define BxGroup14         BxGroupN
-//      BxGroup15         handled separately
-#define BxGroup16         BxGroupN
-#define BxGroup17         BxGroupN
-//      BxGroup17         handled separately
-
 enum {
   BX_ILLEGAL_OPCODE,
   BX_ILLEGAL_LOCK_PREFIX,
@@ -126,17 +53,6 @@ enum {
   BX_EVEX_ILLEGAL_ZERO_MASKING_VSIB,
   BX_EVEX_ILLEGAL_ZERO_MASKING_MEMORY_DESTINATION,
 };
-
-typedef struct BxOpcodeInfo_t {
-  Bit16u Attr;
-  Bit16u IA;
-} BxOpcodeInfo_t;
-
-typedef struct BxExtOpcodeInfo_t {
-  Bit16u Attr;
-  Bit16u IA;
-  const BxExtOpcodeInfo_t *AnotherArray;
-} BxExtOpcodeInfo_t;
 
 //
 // This file contains common IA-32/X86-64 opcode tables, like FPU opcode
@@ -213,10 +129,11 @@ enum {
   BX_SRC_VIB = 6,           // the src should be taken from immediate byte
   BX_SRC_VSIB = 7,          // the src is gather/scatter vector index
   BX_SRC_IMM = 8,           // the src is immediate value
-  BX_SRC_IMPLICIT = 9,      // the src is implicit register or memory reference
+  BX_SRC_BRANCH_OFFSET = 9, // the src is immediate value used as branch offset
+  BX_SRC_IMPLICIT = 10,     // the src is implicit register or memory reference
 };
 
-// for diassembly:
+// for disasm:
 // when the source is register, indicates the register type and size
 // when the source is memory reference, give hint about the memory access size
 enum {
@@ -256,21 +173,20 @@ enum {
 
 // immediate forms
 enum {
+  BX_IMM1 = 0x0,
   BX_IMMB = 0x1,
-  BX_IMMW = 0x2,
-  BX_IMMD = 0x3,
-  BX_IMMD_SE = 0x4,
-  BX_IMMQ = 0x5,
-  BX_IMMB2 = 0x6,
-  BX_IMM_BrOff16 = 0x7,
-  BX_IMM_BrOff32 = 0x8,
-  BX_IMM_BrOff64 = 0x9,
-  BX_DIRECT_PTR = 0xA,
-  BX_DIRECT_MEMREF_B = 0xB,
-  BX_DIRECT_MEMREF_W = 0xC,
-  BX_DIRECT_MEMREF_D = 0xD,
-  BX_DIRECT_MEMREF_Q = 0xE,
-  // encoding 0xF still free
+  BX_IMMBW_SE = 0x2,
+  BX_IMMBD_SE = 0x3,
+  BX_IMMW = 0x4,
+  BX_IMMD = 0x5,
+  BX_IMMQ = 0x6,
+  BX_IMMB2 = 0x7,
+  BX_DIRECT_PTR = 0x8,
+  // encodings 0x9 to 0xB are still free
+  BX_DIRECT_MEMREF_B = 0xC,
+  BX_DIRECT_MEMREF_W = 0xD,
+  BX_DIRECT_MEMREF_D = 0xE,
+  BX_DIRECT_MEMREF_Q = 0xF,
 };
 
 // implicit register or memory references
@@ -317,16 +233,23 @@ const Bit8u OP_RAXReg = BX_FORM_SRC(BX_GPR64, BX_SRC_EAX);
 const Bit8u OP_CLReg  = BX_FORM_SRC(BX_USECL, BX_SRC_IMPLICIT);
 const Bit8u OP_DXReg  = BX_FORM_SRC(BX_USEDX, BX_SRC_IMPLICIT);
 
+const Bit8u OP_I1 = BX_FORM_SRC(BX_IMM1, BX_SRC_IMM);
 const Bit8u OP_Ib = BX_FORM_SRC(BX_IMMB, BX_SRC_IMM);
+const Bit8u OP_sIbw = BX_FORM_SRC(BX_IMMBW_SE, BX_SRC_IMM);
+const Bit8u OP_sIbd = BX_FORM_SRC(BX_IMMBD_SE, BX_SRC_IMM);
 const Bit8u OP_Iw = BX_FORM_SRC(BX_IMMW, BX_SRC_IMM);
 const Bit8u OP_Id = BX_FORM_SRC(BX_IMMD, BX_SRC_IMM);
-const Bit8u OP_sId = BX_FORM_SRC(BX_IMMD_SE, BX_SRC_IMM);
+const Bit8u OP_sId = BX_FORM_SRC(BX_IMMD, BX_SRC_IMM);
 const Bit8u OP_Iq = BX_FORM_SRC(BX_IMMQ, BX_SRC_IMM);
 const Bit8u OP_Ib2 = BX_FORM_SRC(BX_IMMB2, BX_SRC_IMM);
 
-const Bit8u OP_Jw = BX_FORM_SRC(BX_IMM_BrOff16, BX_SRC_IMM);
-const Bit8u OP_Jd = BX_FORM_SRC(BX_IMM_BrOff32, BX_SRC_IMM);
-const Bit8u OP_Jq = BX_FORM_SRC(BX_IMM_BrOff64, BX_SRC_IMM);
+const Bit8u OP_Jw = BX_FORM_SRC(BX_IMMW, BX_SRC_BRANCH_OFFSET);
+const Bit8u OP_Jd = BX_FORM_SRC(BX_IMMD, BX_SRC_BRANCH_OFFSET);
+const Bit8u OP_Jq = BX_FORM_SRC(BX_IMMD, BX_SRC_BRANCH_OFFSET);
+
+const Bit8u OP_Jbw = BX_FORM_SRC(BX_IMMBW_SE, BX_SRC_BRANCH_OFFSET);
+const Bit8u OP_Jbd = BX_FORM_SRC(BX_IMMBD_SE, BX_SRC_BRANCH_OFFSET);
+const Bit8u OP_Jbq = BX_FORM_SRC(BX_IMMBD_SE, BX_SRC_BRANCH_OFFSET);
 
 const Bit8u OP_M  = BX_FORM_SRC(BX_NO_REGISTER, BX_SRC_RM);
 const Bit8u OP_Mt = BX_FORM_SRC(BX_FPU_REG, BX_SRC_RM);
@@ -441,112 +364,124 @@ struct bx_modrm {
 
 #include "ia_opcodes.h"
 
-//
-// Common FetchDecode Opcode Tables
-//
+// New Opcode Tables 
 
-#include "fetchdecode_x87.h"
+/*
+2222 1111 1111 11
+3210 9876 5432 1098 7654 3210
+-----------------------------
+OOAA SSLM IVEX VVVM  RRR  NNN
+SSSS SSoo SEVO EEEA
+6363 EEcd 6XEP XXXS
+4242 PPkC 4 X  ...K
+ / / PR 0      VVWK
+ 1 1 EE        LL 0
+ 6 6 FF        50 
+     II        1/ 
+	 XX        21 
+*/
+
+const unsigned OS64_OFFSET = 23;
+const unsigned OS32_OFFSET = 22;
+const unsigned AS64_OFFSET = 21;
+const unsigned AS32_OFFSET = 20;
+const unsigned SSE_PREFIX_F2_F3_OFFSET = 19;
+const unsigned SSE_PREFIX_OFFSET = 18;
+const unsigned LOCK_PREFIX_OFFSET = 17;
+const unsigned MODC0_OFFSET = 16;
+const unsigned IS64_OFFSET = 15;
+const unsigned VEX_OFFSET = 14;
+const unsigned EVEX_OFFSET = 13;
+const unsigned XOP_OFFSET = 12;
+const unsigned VEX_VL_512_OFFSET = 11;
+const unsigned VEX_VL_128_256_OFFSET = 10;
+const unsigned VEX_W_OFFSET = 9;
+const unsigned MASK_K0_OFFSET = 8;
+const unsigned RRR_OFFSET = 4;
+const unsigned NNN_OFFSET = 0;
+
+const Bit64u ATTR_OS64 = ((BX_CONST64(3)<<OS32_OFFSET) << 24) | (BX_CONST64(3)<<OS32_OFFSET);
+const Bit64u ATTR_OS32 = ((BX_CONST64(1)<<OS32_OFFSET) << 24) | (BX_CONST64(3)<<OS32_OFFSET);
+const Bit64u ATTR_OS16 = ((BX_CONST64(0)<<OS32_OFFSET) << 24) | (BX_CONST64(3)<<OS32_OFFSET);
+
+const Bit64u ATTR_OS16_32 = ((BX_CONST64(0)<<OS64_OFFSET) << 24) | (BX_CONST64(1)<<OS64_OFFSET);
+const Bit64u ATTR_OS32_64 = ((BX_CONST64(1)<<OS32_OFFSET) << 24) | (BX_CONST64(1)<<OS32_OFFSET);
+
+const Bit64u ATTR_AS64 = ((BX_CONST64(3)<<AS32_OFFSET) << 24) | (BX_CONST64(3)<<AS32_OFFSET);
+const Bit64u ATTR_AS32 = ((BX_CONST64(1)<<AS32_OFFSET) << 24) | (BX_CONST64(3)<<AS32_OFFSET);
+const Bit64u ATTR_AS16 = ((BX_CONST64(0)<<AS32_OFFSET) << 24) | (BX_CONST64(3)<<AS32_OFFSET);
+
+const Bit64u ATTR_AS16_32 = ((BX_CONST64(0)<<AS64_OFFSET) << 24) | (BX_CONST64(1)<<AS64_OFFSET);
+const Bit64u ATTR_AS32_64 = ((BX_CONST64(1)<<AS32_OFFSET) << 24) | (BX_CONST64(1)<<AS32_OFFSET);
+
+const Bit64u ATTR_IS32 = ((BX_CONST64(0)<<IS64_OFFSET) << 24) | (BX_CONST64(1)<<IS64_OFFSET);
+const Bit64u ATTR_IS64 = ((BX_CONST64(1)<<IS64_OFFSET) << 24) | (BX_CONST64(1)<<IS64_OFFSET);
+
+const Bit64u ATTR_SSE_NO_PREFIX = ((BX_CONST64(0)<<SSE_PREFIX_OFFSET) << 24) | (BX_CONST64(3)<<SSE_PREFIX_OFFSET);
+const Bit64u ATTR_SSE_PREFIX_66 = ((BX_CONST64(1)<<SSE_PREFIX_OFFSET) << 24) | (BX_CONST64(3)<<SSE_PREFIX_OFFSET);
+const Bit64u ATTR_SSE_PREFIX_F3 = ((BX_CONST64(2)<<SSE_PREFIX_OFFSET) << 24) | (BX_CONST64(3)<<SSE_PREFIX_OFFSET);
+const Bit64u ATTR_SSE_PREFIX_F2 = ((BX_CONST64(3)<<SSE_PREFIX_OFFSET) << 24) | (BX_CONST64(3)<<SSE_PREFIX_OFFSET);
+
+const Bit64u ATTR_NO_SSE_PREFIX_F2_F3 = ((BX_CONST64(0)<<SSE_PREFIX_F2_F3_OFFSET) << 24) | (BX_CONST64(1)<<SSE_PREFIX_F2_F3_OFFSET);
+
+const Bit64u ATTR_LOCK_PREFIX_NOT_ALLOWED = ((BX_CONST64(0)<<LOCK_PREFIX_OFFSET) << 24) | (BX_CONST64(1)<<LOCK_PREFIX_OFFSET);
+const Bit64u ATTR_LOCK = ((BX_CONST64(1)<<LOCK_PREFIX_OFFSET) << 24) | (BX_CONST64(1)<<LOCK_PREFIX_OFFSET);
+
+const Bit64u ATTR_MODC0    = ((BX_CONST64(1)<<MODC0_OFFSET) << 24) | (BX_CONST64(1)<<MODC0_OFFSET);
+const Bit64u ATTR_NO_MODC0 = ((BX_CONST64(0)<<MODC0_OFFSET) << 24) | (BX_CONST64(1)<<MODC0_OFFSET);
+
+const Bit64u ATTR_MOD_REG = ATTR_MODC0;
+const Bit64u ATTR_MOD_MEM = ATTR_NO_MODC0;
+
+const Bit64u ATTR_VEX = ((BX_CONST64(1)<<VEX_OFFSET) << 24) | (BX_CONST64(1)<<VEX_OFFSET);
+const Bit64u ATTR_EVEX = ((BX_CONST64(1)<<EVEX_OFFSET) << 24) | (BX_CONST64(1)<<EVEX_OFFSET);
+const Bit64u ATTR_XOP = ((BX_CONST64(1)<<XOP_OFFSET) << 24) | (BX_CONST64(1)<<XOP_OFFSET);
+
+const Bit64u ATTR_VL128 =     ((BX_CONST64(0)<<VEX_VL_128_256_OFFSET) << 24) | (BX_CONST64(3)<<VEX_VL_128_256_OFFSET);
+const Bit64u ATTR_VL256 =     ((BX_CONST64(1)<<VEX_VL_128_256_OFFSET) << 24) | (BX_CONST64(3)<<VEX_VL_128_256_OFFSET);
+const Bit64u ATTR_VL512 =     ((BX_CONST64(3)<<VEX_VL_128_256_OFFSET) << 24) | (BX_CONST64(3)<<VEX_VL_128_256_OFFSET);
+const Bit64u ATTR_VL256_512 = ((BX_CONST64(1)<<VEX_VL_128_256_OFFSET) << 24) | (BX_CONST64(1)<<VEX_VL_128_256_OFFSET);
+const Bit64u ATTR_VL128_256 = ((BX_CONST64(0)<<VEX_VL_512_OFFSET)     << 24) | (BX_CONST64(1)<<VEX_VL_512_OFFSET);
+
+const Bit64u ATTR_VEX_L0 = ATTR_VL128;
+
+const Bit64u ATTR_VEX_W0 = ((BX_CONST64(0)<<VEX_W_OFFSET) << 24) | (BX_CONST64(1)<<VEX_W_OFFSET);
+const Bit64u ATTR_VEX_W1 = ((BX_CONST64(1)<<VEX_W_OFFSET) << 24) | (BX_CONST64(1)<<VEX_W_OFFSET);
+
+const Bit64u ATTR_NO_VEX_EVEX_XOP = ((BX_CONST64(0)<<XOP_OFFSET) << 24) | (BX_CONST64(3)<<XOP_OFFSET);
+
+const Bit64u ATTR_MASK_K0 = ((BX_CONST64(1)<<MASK_K0_OFFSET) << 24) | (BX_CONST64(1)<<MASK_K0_OFFSET);
+const Bit64u ATTR_MASK_REQUIRED = ((BX_CONST64(0)<<MASK_K0_OFFSET) << 24) | (BX_CONST64(1)<<MASK_K0_OFFSET);
+
+const Bit64u ATTR_RRR0 = ((BX_CONST64(0)<<RRR_OFFSET) << 24) | (BX_CONST64(7)<<RRR_OFFSET);
+const Bit64u ATTR_RRR1 = ((BX_CONST64(1)<<RRR_OFFSET) << 24) | (BX_CONST64(7)<<RRR_OFFSET);
+const Bit64u ATTR_RRR2 = ((BX_CONST64(2)<<RRR_OFFSET) << 24) | (BX_CONST64(7)<<RRR_OFFSET);
+const Bit64u ATTR_RRR3 = ((BX_CONST64(3)<<RRR_OFFSET) << 24) | (BX_CONST64(7)<<RRR_OFFSET);
+const Bit64u ATTR_RRR4 = ((BX_CONST64(4)<<RRR_OFFSET) << 24) | (BX_CONST64(7)<<RRR_OFFSET);
+const Bit64u ATTR_RRR5 = ((BX_CONST64(5)<<RRR_OFFSET) << 24) | (BX_CONST64(7)<<RRR_OFFSET);
+const Bit64u ATTR_RRR6 = ((BX_CONST64(6)<<RRR_OFFSET) << 24) | (BX_CONST64(7)<<RRR_OFFSET);
+const Bit64u ATTR_RRR7 = ((BX_CONST64(7)<<RRR_OFFSET) << 24) | (BX_CONST64(7)<<RRR_OFFSET);
+
+const Bit64u ATTR_NNN0 = ((BX_CONST64(0)<<NNN_OFFSET) << 24) | (BX_CONST64(7)<<NNN_OFFSET);
+const Bit64u ATTR_NNN1 = ((BX_CONST64(1)<<NNN_OFFSET) << 24) | (BX_CONST64(7)<<NNN_OFFSET);
+const Bit64u ATTR_NNN2 = ((BX_CONST64(2)<<NNN_OFFSET) << 24) | (BX_CONST64(7)<<NNN_OFFSET);
+const Bit64u ATTR_NNN3 = ((BX_CONST64(3)<<NNN_OFFSET) << 24) | (BX_CONST64(7)<<NNN_OFFSET);
+const Bit64u ATTR_NNN4 = ((BX_CONST64(4)<<NNN_OFFSET) << 24) | (BX_CONST64(7)<<NNN_OFFSET);
+const Bit64u ATTR_NNN5 = ((BX_CONST64(5)<<NNN_OFFSET) << 24) | (BX_CONST64(7)<<NNN_OFFSET);
+const Bit64u ATTR_NNN6 = ((BX_CONST64(6)<<NNN_OFFSET) << 24) | (BX_CONST64(7)<<NNN_OFFSET);
+const Bit64u ATTR_NNN7 = ((BX_CONST64(7)<<NNN_OFFSET) << 24) | (BX_CONST64(7)<<NNN_OFFSET);
+
+const Bit64u ATTR_LAST_OPCODE = BX_CONST64(0x8000000000000000);
+
+#define form_opcode(attr, ia_opcode) 		        ((attr) | (Bit64u(ia_opcode) << 48) | ATTR_LOCK_PREFIX_NOT_ALLOWED)
+#define last_opcode(attr, ia_opcode) 		        ((attr) | (Bit64u(ia_opcode) << 48) | ATTR_LOCK_PREFIX_NOT_ALLOWED | ATTR_LAST_OPCODE)
+
+#define form_opcode_lockable(attr, ia_opcode)       ((attr) | (Bit64u(ia_opcode) << 48))
+#define last_opcode_lockable(attr, ia_opcode)       ((attr) | (Bit64u(ia_opcode) << 48) | ATTR_LAST_OPCODE)
 
 /* ************************************************************************ */
 /* Opcode Groups */
 
-static const BxExtOpcodeInfo_t BxOpcodeGroupSSE_ERR[3] = {
-  /* 66 */ { 0, BX_IA_ERROR },
-  /* F3 */ { 0, BX_IA_ERROR },
-  /* F2 */ { 0, BX_IA_ERROR }
-};
-
-/* ******* */
-/* Group 9 */
-/* ******* */
-
-static const BxExtOpcodeInfo_t BxOpcodeGroupSSE_RDPID[3] = {
-  /* 66 */ { 0, BX_IA_ERROR },
-  /* F3 */ { 0, BX_IA_RDPID_Ed },
-  /* F2 */ { 0, BX_IA_ERROR }
-};
-
-static const BxExtOpcodeInfo_t BxOpcodeGroupSSE_G9VMX6[3] = {
-  /* 66 */ { 0, BX_IA_VMCLEAR_Mq },
-  /* F3 */ { 0, BX_IA_VMXON_Mq },
-  /* F2 */ { 0, BX_IA_ERROR }
-};
-
-static const BxExtOpcodeInfo_t BxOpcodeInfoG9w[8*2] = {
-  /* /r form */
-  /* 0 */ { 0, BX_IA_ERROR },
-  /* 1 */ { 0, BX_IA_ERROR },
-  /* 2 */ { 0, BX_IA_ERROR },
-  /* 3 */ { 0, BX_IA_ERROR },
-  /* 4 */ { 0, BX_IA_ERROR },
-  /* 5 */ { 0, BX_IA_ERROR },
-  /* 6 */ { BxPrefixSSEF2F3, BX_IA_RDRAND_Ew, BxOpcodeGroupSSE_ERR },
-  /* 7 */ { BxPrefixSSEF2F3, BX_IA_RDSEED_Ew, BxOpcodeGroupSSE_RDPID },
-
-  /* /m form */
-  /* 0 */ { 0, BX_IA_ERROR },
-  /* 1 */ { 0, BX_IA_CMPXCHG8B },
-  /* 2 */ { 0, BX_IA_ERROR },
-  /* 3 */ { BxPrefixSSE, BX_IA_XRSTORS, BxOpcodeGroupSSE_ERR },
-  /* 4 */ { BxPrefixSSE, BX_IA_XSAVEC, BxOpcodeGroupSSE_ERR },
-  /* 5 */ { BxPrefixSSE, BX_IA_XSAVES, BxOpcodeGroupSSE_ERR },
-  /* 6 */ { BxPrefixSSE, BX_IA_VMPTRLD_Mq, BxOpcodeGroupSSE_G9VMX6 },
-  /* 7 */ { BxPrefixSSE, BX_IA_VMPTRST_Mq, BxOpcodeGroupSSE_ERR }
-};
-
-static const BxExtOpcodeInfo_t BxOpcodeInfoG9d[8*2] = {
-  /* /r form */
-  /* 0 */ { 0, BX_IA_ERROR },
-  /* 1 */ { 0, BX_IA_ERROR },
-  /* 2 */ { 0, BX_IA_ERROR },
-  /* 3 */ { 0, BX_IA_ERROR },
-  /* 4 */ { 0, BX_IA_ERROR },
-  /* 5 */ { 0, BX_IA_ERROR },
-  /* 6 */ { BxPrefixSSEF2F3, BX_IA_RDRAND_Ed, BxOpcodeGroupSSE_ERR },
-  /* 7 */ { BxPrefixSSEF2F3, BX_IA_RDSEED_Ed, BxOpcodeGroupSSE_RDPID },
-
-  /* /m form */
-  /* 0 */ { 0, BX_IA_ERROR },
-  /* 1 */ { 0, BX_IA_CMPXCHG8B },
-  /* 2 */ { 0, BX_IA_ERROR },
-  /* 3 */ { BxPrefixSSE, BX_IA_XRSTORS, BxOpcodeGroupSSE_ERR },
-  /* 4 */ { BxPrefixSSE, BX_IA_XSAVEC, BxOpcodeGroupSSE_ERR },
-  /* 5 */ { BxPrefixSSE, BX_IA_XSAVES, BxOpcodeGroupSSE_ERR },
-  /* 6 */ { BxPrefixSSE, BX_IA_VMPTRLD_Mq, BxOpcodeGroupSSE_G9VMX6 },
-  /* 7 */ { BxPrefixSSE, BX_IA_VMPTRST_Mq, BxOpcodeGroupSSE_ERR }
-};
-
-#if BX_SUPPORT_X86_64
-static const BxExtOpcodeInfo_t BxOpcodeInfo64G9q[8*2] = {
-  /* /r form */
-  /* 0 */ { 0, BX_IA_ERROR },
-  /* 1 */ { 0, BX_IA_ERROR },
-  /* 2 */ { 0, BX_IA_ERROR },
-  /* 3 */ { 0, BX_IA_ERROR },
-  /* 4 */ { 0, BX_IA_ERROR },
-  /* 5 */ { 0, BX_IA_ERROR },
-  /* 6 */ { BxPrefixSSEF2F3, BX_IA_RDRAND_Eq, BxOpcodeGroupSSE_ERR },
-  /* 7 */ { BxPrefixSSEF2F3, BX_IA_RDSEED_Eq, BxOpcodeGroupSSE_RDPID },
-
-  /* /m form */
-  /* 0 */ { 0, BX_IA_ERROR },
-  /* 1 */ { 0, BX_IA_CMPXCHG16B },
-  /* 2 */ { 0, BX_IA_ERROR },
-  /* 3 */ { BxPrefixSSE, BX_IA_XRSTORS, BxOpcodeGroupSSE_ERR },
-  /* 4 */ { BxPrefixSSE, BX_IA_XSAVEC, BxOpcodeGroupSSE_ERR },
-  /* 5 */ { BxPrefixSSE, BX_IA_XSAVES, BxOpcodeGroupSSE_ERR },
-  /* 6 */ { BxPrefixSSE, BX_IA_VMPTRLD_Mq, BxOpcodeGroupSSE_G9VMX6 },
-  /* 7 */ { BxPrefixSSE, BX_IA_VMPTRST_Mq, BxOpcodeGroupSSE_ERR }
-};
-#endif
-
-#if BX_SUPPORT_AVX
-#include "fetchdecode_avx.h"
-#include "fetchdecode_xop.h"
-#endif
-
-#if BX_SUPPORT_EVEX
-#include "fetchdecode_evex.h"
-#endif
+static const Bit64u BxOpcodeGroup_ERR[] = { last_opcode(0, BX_IA_ERROR) };
 
 #endif // BX_COMMON_FETCHDECODE_TABLES_H
