@@ -1628,7 +1628,9 @@ static const Bit64u BxOpcodeTable0F20[] = {
 
 // opcode 0F 21
 static const Bit64u BxOpcodeTable0F21[] = {
+#if BX_SUPPORT_X86_64
   form_opcode(ATTR_IS64, BX_IA_MOV_RqDq),
+#endif
   last_opcode(ATTR_IS32, BX_IA_MOV_RdDd)
 };
 
@@ -1648,7 +1650,9 @@ static const Bit64u BxOpcodeTable0F22[] = {
 
 // opcode 0F 23
 static const Bit64u BxOpcodeTable0F23[] = {
+#if BX_SUPPORT_X86_64
   form_opcode(ATTR_IS64, BX_IA_MOV_DqRq),
+#endif
   last_opcode(ATTR_IS32, BX_IA_MOV_DdRd)
 };
 
