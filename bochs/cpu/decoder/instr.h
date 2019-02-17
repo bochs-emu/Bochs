@@ -68,6 +68,7 @@ public:
     //  3...0 ilen (0..15)
     Bit8u ilen;
 
+#define BX_LOCK_PREFIX_USED 1
     //  7...6 lockUsed, repUsed (0=none, 1=0xF0, 2=0xF2, 3=0xF3)
     //  5...5 extend8bit
     //  4...4 mod==c0 (modrm)
@@ -288,7 +289,10 @@ public:
   }
 
   BX_CPP_INLINE void setLock(void) {
-    setLockRepUsed(1);
+    setLockRepUsed(BX_LOCK_PREFIX_USED);
+  }
+  BX_CPP_INLINE bx_bool getLock(void) const {
+    return lockRepUsedValue() == BX_LOCK_PREFIX_USED;
   }
 
   BX_CPP_INLINE unsigned getVL(void) const {

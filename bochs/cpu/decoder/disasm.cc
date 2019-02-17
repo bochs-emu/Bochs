@@ -614,7 +614,7 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
   }
 
   // Step 1: print prefixes
-  if (i->lockRepUsedValue() == 1)
+  if (i->getLock())
     disbufptr = dis_sprintf(disbufptr, "lock ");
 
   if (! strncmp(opname, "REP_", 4)) {
