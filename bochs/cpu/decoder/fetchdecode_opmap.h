@@ -2258,22 +2258,22 @@ static const Bit64u BxOpcodeTable0F7F[] = {
 
 // opcode 0F 80
 static const Bit64u BxOpcodeTable0F80_32[] = { 
-  form_opcode(ATTR_OS32, BX_IA_JO_Jbd),
-  last_opcode(ATTR_OS16, BX_IA_JO_Jbw)
+  form_opcode(ATTR_OS32, BX_IA_JO_Jd),
+  last_opcode(ATTR_OS16, BX_IA_JO_Jw)
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable0F80_64[] = { last_opcode(0, BX_IA_JO_Jbq) };
+static const Bit64u BxOpcodeTable0F80_64[] = { last_opcode(0, BX_IA_JO_Jq) };
 #endif
 
 // opcode 0F 81
 static const Bit64u BxOpcodeTable0F81_32[] = { 
-  form_opcode(ATTR_OS32, BX_IA_JNO_Jbd),
-  last_opcode(ATTR_OS16, BX_IA_JNO_Jbw)
+  form_opcode(ATTR_OS32, BX_IA_JNO_Jd),
+  last_opcode(ATTR_OS16, BX_IA_JNO_Jw)
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable0F81_64[] = { last_opcode(0, BX_IA_JNO_Jbq) };
+static const Bit64u BxOpcodeTable0F81_64[] = { last_opcode(0, BX_IA_JNO_Jq) };
 #endif
 
 // opcode 0F 82
