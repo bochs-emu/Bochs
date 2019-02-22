@@ -124,8 +124,6 @@ static const char *cpu_feature_name[]
   "rdpid",                  // BX_ISA_RDPID
   "tce",                    // BX_ISA_TCE
   "clzero",                 // BX_ISA_CLZERO
-  "movdiri",                // BX_ISA_MOVDIRI
-  "movdiri64",              // BX_ISA_MOVDIRI64
 };
 
 const char *get_cpu_feature_name(unsigned feature) { return cpu_feature_name[feature]; }
