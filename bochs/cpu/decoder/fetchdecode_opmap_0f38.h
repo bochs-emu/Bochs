@@ -202,4 +202,6 @@ static const Bit64u BxOpcodeTable0F38F6[] = {
   last_opcode(ATTR_SSE_PREFIX_F3, BX_IA_ADOX_GdEd)
 };
 
+#endif // BX_CPU_LEVEL >= 6
+
 #endif // BX_FETCHDECODE_OPMAP_0F38_H
