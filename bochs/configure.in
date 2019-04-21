@@ -2328,6 +2328,7 @@ use_gui_console=0
 # handled later.
 
 XPM_LIB=''
+XRANDR_LIB=''
 if test "$with_x11" = yes; then
   display_libs="$display_libs X11"
   if test "$no_x" = yes; then
@@ -2358,12 +2359,16 @@ if test "$with_x11" = yes; then
         XPM_LIB='-lXpm'
       ])
   fi
+  AC_CHECK_HEADER(X11/extensions/Xrandr.h, [
+    AC_DEFINE(BX_HAVE_XRANDR_H)
+    XRANDR_LIB='-lXrandr'
+    ])
 
   if test "$PKGCONFIG" != not_found; then
     X_CFLAGS="`pkg-config --cflags x11`"
-    X_LIBS="`pkg-config --libs x11` $XPM_LIB -lXrandr"
+    X_LIBS="`pkg-config --libs x11` $XPM_LIB $XRANDR_LIB"
   else
-    X_LIBS="$X_LIBS -lX11 $XPM_LIB -lXrandr"
+    X_LIBS="$X_LIBS -lX11 $XPM_LIB $XRANDR_LIB"
   fi
 
   AC_DEFINE(BX_WITH_X11, 1)

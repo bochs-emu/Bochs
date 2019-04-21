@@ -128,6 +128,7 @@
 #define BX_HAVE_MKSTEMP 0
 #define BX_HAVE_SYS_MMAN_H 0
 #define BX_HAVE_XPM_H 0
+#define BX_HAVE_XRANDR_H 0
 #define BX_HAVE_TIMELOCAL 0
 #define BX_HAVE_GMTIME 0
 #define BX_HAVE_MKTIME 0
