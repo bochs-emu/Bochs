@@ -1,4 +1,4 @@
-Changes after 2.6.9 release:
+Changes in 2.6.10 (not yet released):
 
 - General
   - Disabled legacy "load32bitOShack" feature.
@@ -27,6 +27,7 @@ Changes after 2.6.9 release:
   - Hard drive / HD image
     - Added support for unlocking disk images (locks leftover from previous
       Bochs session) with the new command line argument '-unlock'.
+    - Added ATAPI command "get event status notification".
     - Bugfix: undoable/volatile mode images now inherit the base image geometry
       if present.
   - Voodoo

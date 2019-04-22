@@ -1846,6 +1846,46 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                 raise_interrupt(channel);
                 break;
 
+              case 0x4a: // get event status notification
+                {
+                  bx_bool polled = (controller->buffer[1] & (1<<0)) > 0;
+                  int event_length, request = controller->buffer[4];
+                  Bit16u alloc_length = read_16bit(controller->buffer + 7);
+                  bx_bool inserted = BX_SELECTED_DRIVE(channel).cdrom.ready;
+                  if (polled) {
+                    // we currently only support the MEDIA event (bit 4)
+                    if (request == (1<<4)) {
+                      controller->buffer[0] = 0;
+                      controller->buffer[1] = 4;  // MEDIA event is 4 bytes long
+                      controller->buffer[2] = (0<<7) | 4;  // 4 = MEDIA event
+                      controller->buffer[3] = (1<<4);  // we only support the MEDIA event (bit 4)
+                      controller->buffer[4] =
+                        (!BX_SELECTED_DRIVE(channel).status_changed) ? 0 : // Event code: 0 = no change
+                        (inserted) ? 4 : 3;      // Event code: 4 = media changed, 3 = removed
+                      controller->buffer[5] =
+                        (inserted) ? (1<<1) : 0; // Media Status (bit 1 = Media Present)
+                      controller->buffer[6] = 0;
+                      controller->buffer[7] = 0;
+                      event_length = (alloc_length <= 4) ? 4 : 8;
+                    } else {
+                      controller->buffer[0] = 0;
+                      controller->buffer[1] = 0;
+                      controller->buffer[2] = (1<<7) | (Bit8u) request;
+                      controller->buffer[3] = (1<<4);  // we only support the MEDIA event (bit 4)
+                      event_length = 4;
+                    }
+                    init_send_atapi_command(channel, atapi_command,
+                                            event_length, event_length);
+                    ready_to_send_atapi(channel);
+                  } else {
+                    BX_ERROR(("Event Status: Polled only supported"));
+                    atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST,
+                                             ASC_INV_FIELD_IN_CMD_PACKET, 1);
+                    raise_interrupt(channel);
+                  }
+                }
+                break;
+
               case 0x55: // mode select
               case 0xa6: // load/unload cd
               case 0x4b: // pause/resume
@@ -1858,7 +1898,6 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
               case 0xbb: // set cd speed
               case 0x4e: // stop play/scan
               case 0x46: // get configuration
-              case 0x4a: // get event status notification
                 BX_DEBUG_ATAPI(("ATAPI command 0x%x not implemented yet", atapi_command));
                 atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_ILLEGAL_OPCODE, 0);
                 raise_interrupt(channel);
