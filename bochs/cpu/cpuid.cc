@@ -26,7 +26,7 @@
 #include "param_names.h"
 #include "cpuid.h"
 
-static const char *cpu_feature_name[]
+static const char *cpu_feature_name[] =
 {
   "386ni",                  // BX_ISA_386
   "x87",                    // BX_ISA_X87
