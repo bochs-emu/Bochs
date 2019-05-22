@@ -109,6 +109,8 @@ static const char *VMX_vmexit_reason_name[] =
   /* 64 */  "XRSTORS",
   /* 65 */  "Reserved65",
   /* 66 */  "Sub-Page Protection",
+  /* 67 */  "UMWAIT",
+  /* 68 */  "TPAUSE",
 };
 
 #include "decoder/ia_opcodes.h"
