@@ -149,10 +149,10 @@ enum {
   BX_MMX_HALF_REG = 0x9,
   BX_VMM_REG = 0xA,
   BX_KMASK_REG = 0xB,
-  BX_SEGREG = 0xC,
-  BX_CREG = 0xD,
-  BX_DREG = 0xE,
-  // encoding 0xF still free
+  BX_KMASK_REG_PAIR = 0xC,
+  BX_SEGREG = 0xD,
+  BX_CREG = 0xE,
+  BX_DREG = 0xF
 };
 
 // to be used together with BX_SRC_VECTOR_RM
@@ -341,6 +341,8 @@ const Bit8u OP_KHd = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_VVV);
 const Bit8u OP_KGq = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_NNN);
 const Bit8u OP_KEq = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_RM);
 const Bit8u OP_KHq = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_VVV);
+
+const Bit8u OP_KGq2 = BX_FORM_SRC(BX_KMASK_REG_PAIR, BX_SRC_NNN);
 
 const Bit8u OP_ST0 = BX_FORM_SRC(BX_FPU_REG, BX_SRC_EAX);
 const Bit8u OP_STi = BX_FORM_SRC(BX_FPU_REG, BX_SRC_RM);

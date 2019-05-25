@@ -349,6 +349,10 @@ char *disasm_regref(char *disbufptr, const bxInstruction_c *i, unsigned src_num,
         i->isZeroMasking() ? "{z}" : "");
     }
     break;
+
+  case BX_KMASK_REG_PAIR:
+    disbufptr = dis_sprintf(disbufptr, "[k%d, k%d]", srcreg & ~1, 1 + (srcreg & ~1));
+    assert(srcreg < 8);
 #endif
 
   case BX_SEGREG:

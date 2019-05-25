@@ -106,6 +106,7 @@ enum x86_feature_name {
   BX_ISA_AVX512_VPOPCNTDQ,        /* AVX-512 VPOPCNTD/VPOPCNTQ Instructions */
   BX_ISA_AVX512_VNNI,             /* AVX-512 VNNI Instructions */
   BX_ISA_AVX512_BITALG,           /* AVX-512 BITALG Instructions */
+  BX_ISA_AVX512_VP2INTERSECT,     /* AVX-512 VP2INTERSECT Instructions */
   BX_ISA_XAPIC,                   /* XAPIC support */
   BX_ISA_X2APIC,                  /* X2APIC support */
   BX_ISA_XAPIC_EXT,               /* XAPIC Extensions support */
