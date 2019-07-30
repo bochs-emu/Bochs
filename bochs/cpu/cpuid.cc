@@ -478,6 +478,12 @@ void bx_cpuid_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
   // [0:0] CLZERO support
   // [1:1] Instruction Retired Counter MSR available
   // [2:2] FP Error Pointers Restored by XRSTOR
+  // [3:3] reserved
+  // [4:4] RDPRU support
+  // [5:5] reserved
+  // [6:6] Memory Bandwidth Enforcement (MBE) support
+  // [8:7] reserved
+  // [9:9] WBNOINVD support
   leaf->ebx = 0;
   if (is_cpu_extension_supported(BX_ISA_CLZERO))
     leaf->ebx |= 0x1;
