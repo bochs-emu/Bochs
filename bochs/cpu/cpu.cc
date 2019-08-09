@@ -26,6 +26,8 @@
 
 #include "cpustats.h"
 
+jmp_buf BX_CPU_C::jmp_buf_env;
+
 void BX_CPU_C::cpu_loop(void)
 {
 #if BX_DEBUGGER
@@ -134,12 +136,6 @@ void BX_CPU_C::cpu_loop(void)
 
 void BX_CPU_C::cpu_run_trace(void)
 {
-  if (setjmp(BX_CPU_THIS_PTR jmp_buf_env)) {
-    // can get here only from exception function or VMEXIT
-    BX_CPU_THIS_PTR icount++;
-    return;
-  }
-
   // check on events which occurred for previous instructions (traps)
   // and ones which are asynchronous to the CPU (hardware interrupts)
   if (BX_CPU_THIS_PTR async_event) {

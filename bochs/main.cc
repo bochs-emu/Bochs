@@ -1060,14 +1060,22 @@ int bx_begin_simulation(int argc, char *argv[])
 
       static int quantum = SIM->get_param_num(BXPN_SMP_QUANTUM)->get();
       Bit32u executed = 0, processor = 0;
+      bool run = true;
 
+      if (setjmp(BX_CPU_C::jmp_buf_env)) {
+        // can get here only from exception function or VMEXIT
+        BX_CPU(processor)->icount++;
+        run = false;
+      }
       while (1) {
          // do some instructions in each processor
-         Bit64u icount = BX_CPU(processor)->icount_last_sync = BX_CPU(processor)->get_icount();
-         BX_CPU(processor)->cpu_run_trace();
+        if (run)
+          BX_CPU(processor)->cpu_run_trace();
+        else
+          run = true;
 
          // see how many instruction it was able to run
-         Bit32u n = (Bit32u)(BX_CPU(processor)->get_icount() - icount);
+         Bit32u n = (Bit32u)(BX_CPU(processor)->get_icount() - BX_CPU(processor)->icount_last_sync);
          if (n == 0) n = quantum; // the CPU was halted
          executed += n;
 
@@ -1076,6 +1084,8 @@ int bx_begin_simulation(int argc, char *argv[])
            BX_TICKN(executed / BX_SMP_PROCESSORS);
            executed %= BX_SMP_PROCESSORS;
          }
+
+         BX_CPU(processor)->icount_last_sync = BX_CPU(processor)->get_icount();
 
          if (bx_pc_system.kill_bochs_request)
            break;
