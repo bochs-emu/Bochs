@@ -4,6 +4,7 @@ Changes in 2.6.10 (not yet released):
   - Disabled legacy "load32bitOShack" feature.
 
 - CPU / CPUDB
+  - Significant speedup to milti-threaded simulation (patch by Luigu.B)
   - Bugfixes for CPU emulation correctness (critical bugfixes for PCID, ADCX/ADOX, MOVBE, AVX/AVX-512 and VMX emulation)
   ! x87: implemented FOPCODE and FDP deprecation features
   ! AVX-512: implemented AVX-512 VBMI2/VNNI/BITALG instructions
