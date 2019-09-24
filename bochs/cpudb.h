@@ -51,6 +51,7 @@ bx_define_cpudb(corei7_haswell_4770)
 bx_define_cpudb(broadwell_ult)
 bx_define_cpudb(corei7_skylake_x)
 bx_define_cpudb(corei3_cnl)
+bx_define_cpudb(corei7_icelake_u)
 #endif
 #endif
 #endif

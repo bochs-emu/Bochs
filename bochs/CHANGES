@@ -12,6 +12,7 @@ Changes in 2.6.10 (not yet released):
   ! VMX: Implement EPT-Based Sub-Page Protection
   ! CPUID: Added Skylake-X CPU definition (features AVX-512 support)
   ! CPUID: Added Cannonlake CPU definition (features more AVX-512 levels, UMIP, SHA, PKU support)
+  ! CPUID: Added Icelake-U CPU definition (features more AVX-512 levels, UMIP, SHA, GFNI, VAES, PKU support)
 
 - Bochs Debugger and Instrumentation
   - Added support for conditional breakpoints and conditional step/continue to Bochs debugger
