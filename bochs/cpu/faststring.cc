@@ -188,22 +188,10 @@ Bit32u BX_CPU_C::FastRepSTOSW(bxInstruction_c *i, bx_address laddrDst, Bit16u va
   // Check that native host access was not vetoed for that page
   if (!hostAddrDst) return 0;
 
-  Bit32u wordsFitDst;
-  signed int pointerDelta;
+  assert(! BX_CPU_THIS_PTR get_DF());
 
   // See how many words can fit in the rest of this page.
-  if (BX_CPU_THIS_PTR get_DF()) {
-    // Counting downward.
-    // Note: 1st word must not cross page boundary.
-    if ((laddrDst & 0xfff) > 0xffe) return 0;
-    wordsFitDst = (2 + PAGE_OFFSET(laddrDst)) >> 1;
-    pointerDelta = (signed int) -2;
-  }
-  else {
-    // Counting upward.
-    wordsFitDst = (0x1000 - PAGE_OFFSET(laddrDst)) >> 1;
-    pointerDelta = (signed int)  2;
-  }
+  Bit32u wordsFitDst = (0x1000 - PAGE_OFFSET(laddrDst)) >> 1;
 
   // Restrict word count to the number that will fit in either
   // source or dest pages.
@@ -217,7 +205,7 @@ Bit32u BX_CPU_C::FastRepSTOSW(bxInstruction_c *i, bx_address laddrDst, Bit16u va
     // Transfer data directly using host addresses
     for (unsigned j=0; j<count; j++) {
       WriteHostWordToLittleEndian(hostAddrDst, val);
-      hostAddrDst += pointerDelta;
+      hostAddrDst += 2;
     }
 
     return count;
@@ -254,22 +242,10 @@ Bit32u BX_CPU_C::FastRepSTOSD(bxInstruction_c *i, bx_address laddrDst, Bit32u va
   // Check that native host access was not vetoed for that page
   if (!hostAddrDst) return 0;
 
-  Bit32u dwordsFitDst;
-  signed int pointerDelta;
+  assert(! BX_CPU_THIS_PTR get_DF());
 
   // See how many dwords can fit in the rest of this page.
-  if (BX_CPU_THIS_PTR get_DF()) {
-    // Counting downward.
-    // Note: 1st dword must not cross page boundary.
-    if ((laddrDst & 0xfff) > 0xffc) return 0;
-    dwordsFitDst = (4 + PAGE_OFFSET(laddrDst)) >> 2;
-    pointerDelta = (signed int) -4;
-  }
-  else {
-    // Counting upward.
-    dwordsFitDst = (0x1000 - PAGE_OFFSET(laddrDst)) >> 2;
-    pointerDelta = (signed int)  4;
-  }
+  Bit32u dwordsFitDst = (0x1000 - PAGE_OFFSET(laddrDst)) >> 2;
 
   // Restrict dword count to the number that will fit in either
   // source or dest pages.
@@ -283,7 +259,7 @@ Bit32u BX_CPU_C::FastRepSTOSD(bxInstruction_c *i, bx_address laddrDst, Bit32u va
     // Transfer data directly using host addresses
     for (unsigned j=0; j<count; j++) {
       WriteHostDWordToLittleEndian(hostAddrDst, val);
-      hostAddrDst += pointerDelta;
+      hostAddrDst += 4;
     }
 
     return count;
