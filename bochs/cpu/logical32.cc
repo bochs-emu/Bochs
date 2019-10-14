@@ -24,6 +24,13 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::ZERO_IDIOM_GdR(bxInstruction_c *i)
+{
+  BX_WRITE_32BIT_REGZ(i->dst(), 0);
+  SET_FLAGS_OSZAPC_LOGIC_32(0);
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_EdGdM(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32;

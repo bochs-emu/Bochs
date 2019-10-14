@@ -221,6 +221,15 @@ bx_define_opcode(BX_IA_XOR_EdsIb, &BX_CPU_C::XOR_EdIdM, &BX_CPU_C::XOR_EdIdR, 0,
 bx_define_opcode(BX_IA_TEST_EdsIb, &BX_CPU_C::TEST_EdIdM, &BX_CPU_C::TEST_EdIdR, 0, OP_Ed, OP_sIbd, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_CMP_EdsIb, &BX_CPU_C::CMP_EdIdM, &BX_CPU_C::CMP_EdIdR, 0, OP_Ed, OP_sIbd, OP_NONE, OP_NONE, 0)
 
+bx_define_opcode(BX_IA_XOR_EwGw_ZERO_IDIOM, NULL, &BX_CPU_C::ZERO_IDIOM_GwR, 0, OP_Ew, OP_Gw, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_XOR_GwEw_ZERO_IDIOM, NULL, &BX_CPU_C::ZERO_IDIOM_GwR, 0, OP_Gw, OP_Ew, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_XOR_EdGd_ZERO_IDIOM, NULL, &BX_CPU_C::ZERO_IDIOM_GdR, 0, OP_Ed, OP_Gd, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_XOR_GdEd_ZERO_IDIOM, NULL, &BX_CPU_C::ZERO_IDIOM_GdR, 0, OP_Gd, OP_Ed, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_SUB_EwGw_ZERO_IDIOM, NULL, &BX_CPU_C::ZERO_IDIOM_GwR, 0, OP_Ew, OP_Gw, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_SUB_GwEw_ZERO_IDIOM, NULL, &BX_CPU_C::ZERO_IDIOM_GwR, 0, OP_Gw, OP_Ew, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_SUB_EdGd_ZERO_IDIOM, NULL, &BX_CPU_C::ZERO_IDIOM_GdR, 0, OP_Ed, OP_Gd, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_SUB_GdEd_ZERO_IDIOM, NULL, &BX_CPU_C::ZERO_IDIOM_GdR, 0, OP_Gd, OP_Ed, OP_NONE, OP_NONE, 0)
+
 bx_define_opcode(BX_IA_ADD_GbEb, &BX_CPU_C::ADD_GbEbM, &BX_CPU_C::ADD_GbEbR, 0, OP_Gb, OP_Eb, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_OR_GbEb, &BX_CPU_C::OR_GbEbM, &BX_CPU_C::OR_GbEbR, 0, OP_Gb, OP_Eb, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_ADC_GbEb, &BX_CPU_C::ADC_GbEbM, &BX_CPU_C::ADC_GbEbR, 0, OP_Gb, OP_Eb, OP_NONE, OP_NONE, 0)
@@ -1428,6 +1437,11 @@ bx_define_opcode(BX_IA_SAHF_LM, NULL, &BX_CPU_C::SAHF, BX_ISA_LM_LAHF_SAHF, OP_N
 
 bx_define_opcode(BX_IA_SYSCALL, NULL, &BX_CPU_C::SYSCALL, 0, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
 bx_define_opcode(BX_IA_SYSRET, NULL, &BX_CPU_C::SYSRET, 0, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
+
+bx_define_opcode(BX_IA_XOR_EqGq_ZERO_IDIOM, NULL, &BX_CPU_C::ZERO_IDIOM_GdR, 0, OP_Eq, OP_Gq, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_XOR_GqEq_ZERO_IDIOM, NULL, &BX_CPU_C::ZERO_IDIOM_GdR, 0, OP_Gq, OP_Eq, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_SUB_EqGq_ZERO_IDIOM, NULL, &BX_CPU_C::ZERO_IDIOM_GdR, 0, OP_Eq, OP_Gq, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_SUB_GqEq_ZERO_IDIOM, NULL, &BX_CPU_C::ZERO_IDIOM_GdR, 0, OP_Gq, OP_Eq, OP_NONE, OP_NONE, 0)
 
 bx_define_opcode(BX_IA_ADD_GqEq, &BX_CPU_C::ADD_GqEqM, &BX_CPU_C::ADD_GqEqR, 0, OP_Gq, OP_Eq, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_OR_GqEq, &BX_CPU_C::OR_GqEqM, &BX_CPU_C::OR_GqEqR, 0, OP_Gq, OP_Eq, OP_NONE, OP_NONE, 0)

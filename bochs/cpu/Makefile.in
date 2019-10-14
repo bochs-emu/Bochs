@@ -116,6 +116,7 @@ OBJS = \
 	bit32.o \
 	bmi32.o \
 	string.o \
+	faststring.o \
 	paging.o \
 	rdrand.o \
 	decoder/disasm.o
@@ -719,6 +720,13 @@ stack64.o: stack64.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  crregs.h descriptor.h decoder/instr.h lazy_flags.h tlb.h icache.h apic.h \
  xmm.h vmx.h svm.h cpuid.h stack.h access.h
 string.o: string.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
+ ../config.h ../osdep.h ../gui/siminterface.h ../cpudb.h \
+ ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h ../gui/gui.h \
+ ../instrument/stubs/instrument.h cpu.h decoder/decoder.h i387.h \
+ fpu/softfloat.h fpu/tag_w.h fpu/status_w.h fpu/control_w.h crregs.h \
+ descriptor.h decoder/instr.h lazy_flags.h tlb.h icache.h apic.h xmm.h \
+ vmx.h svm.h cpuid.h stack.h access.h
+faststring.o: faststring.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../gui/siminterface.h ../cpudb.h \
  ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h ../gui/gui.h \
  ../instrument/stubs/instrument.h cpu.h decoder/decoder.h i387.h \

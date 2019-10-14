@@ -1914,6 +1914,8 @@ int decoder_vex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
                    (rm << RRR_OFFSET) |
                    (vex_w << VEX_W_OFFSET) |
                    (vex_l << VEX_VL_128_256_OFFSET);
+  if (i->modC0() && nnn == rm)
+    decmask |= (1 << SRC_EQ_DST_OFFSET);
 
   ia_opcode = findOpcode(BxOpcodeTableVEX[opcode_byte], decmask);
 
@@ -2045,6 +2047,8 @@ int decoder_evex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
                    (modrm.rm << RRR_OFFSET) |
                    (vex_w << VEX_W_OFFSET) |
                    (vl << VEX_VL_128_256_OFFSET);
+  if (i->modC0() && modrm.nnn == modrm.rm)
+    decmask |= (1 << SRC_EQ_DST_OFFSET);
   if (!opmask)
     decmask |= (1 << MASK_K0_OFFSET);
 
@@ -2131,6 +2135,8 @@ int decoder_xop32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
                    (modrm.rm << RRR_OFFSET) |
                    (vex_w << VEX_W_OFFSET) |
                    (vex_l << VEX_VL_128_256_OFFSET);
+  if (i->modC0() && modrm.nnn == modrm.rm)
+    decmask |= (1 << SRC_EQ_DST_OFFSET);
 
   ia_opcode = findOpcode(BxOpcodeTableXOP[opcode_byte], decmask);
 
@@ -2197,6 +2203,8 @@ int decoder32_modrm(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, uns
                    (i->modC0() ? (1 << MODC0_OFFSET) : 0) |
                    (modrm.nnn << NNN_OFFSET) |
                    (modrm.rm << RRR_OFFSET);
+  if (i->modC0() && modrm.nnn == modrm.rm)
+    decmask |= (1 << SRC_EQ_DST_OFFSET);
 
   Bit16u ia_opcode = findOpcode((Bit64u *) opcode_table, decmask);
 
@@ -2218,6 +2226,8 @@ int decoder32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned 
                    (i->asize() << AS32_OFFSET) |
                    (sse_prefix << SSE_PREFIX_OFFSET) |
                    (1 << MODC0_OFFSET);
+  if (nnn == rm)
+    decmask |= (1 << SRC_EQ_DST_OFFSET);
 
   Bit16u ia_opcode = findOpcode((Bit64u *) opcode_table, decmask);
 

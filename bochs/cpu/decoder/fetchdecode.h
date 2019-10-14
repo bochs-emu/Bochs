@@ -372,13 +372,13 @@ struct bx_modrm {
 2222 1111 1111 11
 3210 9876 5432 1098 7654 3210
 -----------------------------
-OOAA SSLM IVEX VVVM  RRR  NNN
-SSSS SSoo SEVO EEEA
-6363 EEcd 6XEP XXXS
-4242 PPkC 4 X  ...K
- / / PR 0      VVWK
- 1 1 EE        LL 0
- 6 6 FF        50 
+OOAA SSLM IVEX VVVM SRRR  NNN
+SSSS SSoo SEVO EEEA R
+6363 EEcd 6XEP XXXS C
+4242 PPkC 4 X  ...K =
+ / / PR 0      VVWK D
+ 1 1 EE        LL 0 S
+ 6 6 FF        50   T
      II        1/ 
 	 XX        21 
 */
@@ -399,6 +399,7 @@ const unsigned VEX_VL_512_OFFSET = 11;
 const unsigned VEX_VL_128_256_OFFSET = 10;
 const unsigned VEX_W_OFFSET = 9;
 const unsigned MASK_K0_OFFSET = 8;
+const unsigned SRC_EQ_DST_OFFSET = 7;
 const unsigned RRR_OFFSET = 4;
 const unsigned NNN_OFFSET = 0;
 
@@ -454,6 +455,8 @@ const Bit64u ATTR_NO_VEX_EVEX_XOP = ((BX_CONST64(0)<<XOP_OFFSET) << 24) | (BX_CO
 
 const Bit64u ATTR_MASK_K0 = ((BX_CONST64(1)<<MASK_K0_OFFSET) << 24) | (BX_CONST64(1)<<MASK_K0_OFFSET);
 const Bit64u ATTR_MASK_REQUIRED = ((BX_CONST64(0)<<MASK_K0_OFFSET) << 24) | (BX_CONST64(1)<<MASK_K0_OFFSET);
+
+const Bit64u ATTR_SRC_EQ_DST = ATTR_MOD_REG | ((BX_CONST64(1)<<SRC_EQ_DST_OFFSET) << 24) | (BX_CONST64(1)<<SRC_EQ_DST_OFFSET);
 
 const Bit64u ATTR_RRR0 = ((BX_CONST64(0)<<RRR_OFFSET) << 24) | (BX_CONST64(7)<<RRR_OFFSET);
 const Bit64u ATTR_RRR1 = ((BX_CONST64(1)<<RRR_OFFSET) << 24) | (BX_CONST64(7)<<RRR_OFFSET);

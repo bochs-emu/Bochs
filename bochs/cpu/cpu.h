@@ -1762,6 +1762,9 @@ public: // for now...
   BX_SMF void BSWAP_RX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BSWAP_ERX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
+  BX_SMF void ZERO_IDIOM_GwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ZERO_IDIOM_GdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
   BX_SMF void ADD_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void OR_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void ADC_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -4540,19 +4543,21 @@ public: // for now...
        bx_descriptor_t *descriptor, bx_address rip, Bit8u cpl);
 
 #if BX_SUPPORT_REPEAT_SPEEDUPS
-  BX_SMF Bit32u FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, Bit32u srcOff,
-       unsigned dstSeg, Bit32u dstOff, Bit32u  byteCount);
-  BX_SMF Bit32u FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, Bit32u srcOff,
-       unsigned dstSeg, Bit32u dstOff, Bit32u  wordCount);
-  BX_SMF Bit32u FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, Bit32u srcOff,
-       unsigned dstSeg, Bit32u dstOff, Bit32u dwordCount);
+  BX_SMF Bit32u FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, Bit32u srcOff, unsigned dstSeg, Bit32u dstOff, Bit32u  byteCount);
+  BX_SMF Bit32u FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, Bit32u srcOff, unsigned dstSeg, Bit32u dstOff, Bit32u  wordCount);
+  BX_SMF Bit32u FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, Bit32u srcOff, unsigned dstSeg, Bit32u dstOff, Bit32u dwordCount);
 
-  BX_SMF Bit32u FastRepSTOSB(bxInstruction_c *i, unsigned dstSeg, Bit32u dstOff,
-       Bit8u  val, Bit32u  byteCount);
-  BX_SMF Bit32u FastRepSTOSW(bxInstruction_c *i, unsigned dstSeg, Bit32u dstOff,
-       Bit16u val, Bit32u  wordCount);
-  BX_SMF Bit32u FastRepSTOSD(bxInstruction_c *i, unsigned dstSeg, Bit32u dstOff,
-       Bit32u val, Bit32u dwordCount);
+  BX_SMF Bit32u FastRepMOVSB(bxInstruction_c *i, bx_address laddrSrc, bx_address laddrDst, Bit32u  byteCount);
+  BX_SMF Bit32u FastRepMOVSW(bxInstruction_c *i, bx_address laddrSrc, bx_address laddrDst, Bit32u  wordCount);
+  BX_SMF Bit32u FastRepMOVSD(bxInstruction_c *i, bx_address laddrSrc, bx_address laddrDst, Bit32u dwordCount);
+
+  BX_SMF Bit32u FastRepSTOSB(bxInstruction_c *i, unsigned dstSeg, Bit32u dstOff, Bit8u  val, Bit32u  byteCount);
+  BX_SMF Bit32u FastRepSTOSW(bxInstruction_c *i, unsigned dstSeg, Bit32u dstOff, Bit16u val, Bit32u  wordCount);
+  BX_SMF Bit32u FastRepSTOSD(bxInstruction_c *i, unsigned dstSeg, Bit32u dstOff, Bit32u val, Bit32u dwordCount);
+
+  BX_SMF Bit32u FastRepSTOSB(bxInstruction_c *i, bx_address laddrDst, Bit8u  val, Bit32u  byteCount);
+  BX_SMF Bit32u FastRepSTOSW(bxInstruction_c *i, bx_address laddrDst, Bit16u val, Bit32u  wordCount);
+  BX_SMF Bit32u FastRepSTOSD(bxInstruction_c *i, bx_address laddrDst, Bit32u val, Bit32u dwordCount);
 
   BX_SMF Bit32u FastRepINSW(bxInstruction_c *i, Bit32u dstOff,
        Bit16u port, Bit32u wordCount);
@@ -4564,10 +4569,8 @@ public: // for now...
   BX_SMF void repeat_ZF(bxInstruction_c *i, BxRepIterationPtr_tR execute) BX_CPP_AttrRegparmN(2);
 
   // linear address for access_linear expected to be canonical !
-  BX_SMF int access_read_linear(bx_address laddr, unsigned len, unsigned curr_pl,
-       unsigned rw, Bit32u ac_mask, void *data);
-  BX_SMF int access_write_linear(bx_address laddr, unsigned len, unsigned curr_pl,
-       Bit32u ac_mask, void *data);
+  BX_SMF int access_read_linear(bx_address laddr, unsigned len, unsigned curr_pl, unsigned rw, Bit32u ac_mask, void *data);
+  BX_SMF int access_write_linear(bx_address laddr, unsigned len, unsigned curr_pl, Bit32u ac_mask, void *data);
   BX_SMF void page_fault(unsigned fault, bx_address laddr, unsigned user, unsigned rw);
 
   BX_SMF void access_read_physical(bx_phy_address paddr, unsigned len, void *data);
