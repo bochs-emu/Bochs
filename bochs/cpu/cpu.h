@@ -4543,13 +4543,8 @@ public: // for now...
        bx_descriptor_t *descriptor, bx_address rip, Bit8u cpl);
 
 #if BX_SUPPORT_REPEAT_SPEEDUPS
-  BX_SMF Bit32u FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, Bit32u srcOff, unsigned dstSeg, Bit32u dstOff, Bit32u  byteCount);
-  BX_SMF Bit32u FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, Bit32u srcOff, unsigned dstSeg, Bit32u dstOff, Bit32u  wordCount);
-  BX_SMF Bit32u FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, Bit32u srcOff, unsigned dstSeg, Bit32u dstOff, Bit32u dwordCount);
-
-  BX_SMF Bit32u FastRepMOVSB(bxInstruction_c *i, bx_address laddrSrc, bx_address laddrDst, Bit32u  byteCount);
-  BX_SMF Bit32u FastRepMOVSW(bxInstruction_c *i, bx_address laddrSrc, bx_address laddrDst, Bit32u  wordCount);
-  BX_SMF Bit32u FastRepMOVSD(bxInstruction_c *i, bx_address laddrSrc, bx_address laddrDst, Bit32u dwordCount);
+  BX_SMF Bit32u FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, Bit32u srcOff, unsigned dstSeg, Bit32u dstOff, Bit32u byteCount, Bit32u granularity);
+  BX_SMF Bit32u FastRepMOVSB(bxInstruction_c *i, bx_address laddrSrc, bx_address laddrDst, Bit32u byteCount, Bit32u granularity);
 
   BX_SMF Bit32u FastRepSTOSB(bxInstruction_c *i, unsigned dstSeg, Bit32u dstOff, Bit8u  val, Bit32u  byteCount);
   BX_SMF Bit32u FastRepSTOSW(bxInstruction_c *i, unsigned dstSeg, Bit32u dstOff, Bit16u val, Bit32u  wordCount);

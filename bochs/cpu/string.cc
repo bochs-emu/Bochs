@@ -133,9 +133,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSB32_YbXb(bxInstruction_c *i)
 #if (BX_SUPPORT_REPEAT_SPEEDUPS) && (BX_DEBUGGER == 0)
   /* If conditions are right, we can transfer IO to physical memory
    * in a batch, rather than one instruction at a time */
-  if (i->repUsedL() && !BX_CPU_THIS_PTR async_event)
+  if (i->repUsedL() && !BX_CPU_THIS_PTR get_DF() && !BX_CPU_THIS_PTR async_event)
   {
-    Bit32u byteCount = FastRepMOVSB(i, i->seg(), ESI, BX_SEG_REG_ES, EDI, ECX);
+    Bit32u byteCount = FastRepMOVSB(i, i->seg(), ESI, BX_SEG_REG_ES, EDI, ECX, 1);
     if (byteCount) {
       // Decrement the ticks count by the number of iterations, minus
       // one, since the main cpu loop will decrement one.  Also,
@@ -312,10 +312,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD32_YdXd(bxInstruction_c *i)
   /* If conditions are right, we can transfer IO to physical memory
    * in a batch, rather than one instruction at a time.
    */
-  if (i->repUsedL() && !BX_CPU_THIS_PTR async_event)
+  if (i->repUsedL() && !BX_CPU_THIS_PTR get_DF() && !BX_CPU_THIS_PTR async_event)
   {
-    Bit32u dwordCount = FastRepMOVSD(i, i->seg(), esi, BX_SEG_REG_ES, edi, ECX);
-    if (dwordCount) {
+    Bit32u byteCount = FastRepMOVSB(i, i->seg(), esi, BX_SEG_REG_ES, edi, ECX*4, 4);
+    if (byteCount) {
+      Bit32u dwordCount = byteCount >> 2;
+
       // Decrement the ticks count by the number of iterations, minus
       // one, since the main cpu loop will decrement one.  Also,
       // the count is predecremented before examined, so defintely
@@ -326,7 +328,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD32_YdXd(bxInstruction_c *i)
       // decrement by one less than expected, like the case above.
       RCX = ECX - (dwordCount-1);
 
-      incr = dwordCount << 2; // count * 4
+      incr = byteCount;
     }
     else {
       temp32 = read_virtual_dword(i->seg(), esi);
@@ -1279,7 +1281,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STOSB32_YbAL(bxInstruction_c *i)
   /* If conditions are right, we can transfer IO to physical memory
    * in a batch, rather than one instruction at a time.
    */
-  if (i->repUsedL() && !BX_CPU_THIS_PTR async_event)
+  if (i->repUsedL() && !BX_CPU_THIS_PTR get_DF() && !BX_CPU_THIS_PTR async_event)
   {
     Bit32u byteCount = FastRepSTOSB(i, BX_SEG_REG_ES, edi, AL, ECX);
     if (byteCount) {

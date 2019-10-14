@@ -29,7 +29,7 @@
 //
 
 #if BX_SUPPORT_REPEAT_SPEEDUPS
-Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, Bit32u srcOff, unsigned dstSeg, Bit32u dstOff, Bit32u count)
+Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, Bit32u srcOff, unsigned dstSeg, Bit32u dstOff, Bit32u count, Bit32u granularity)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
@@ -61,10 +61,10 @@ Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, Bit32u srcOff
     laddrDst = get_laddr32(dstSeg, dstOff);
   }
 
-  return FastRepMOVSB(i, laddrSrc, laddrDst, count);
+  return FastRepMOVSB(i, laddrSrc, laddrDst, count, granularity);
 }
 
-Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, bx_address laddrSrc, bx_address laddrDst, Bit32u count)
+Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, bx_address laddrSrc, bx_address laddrDst, Bit32u count, Bit32u granularity)
 {
   Bit8u *hostAddrSrc = v2h_read_byte(laddrSrc, USER_PL);
   // Check that native host access was not vetoed for that page
@@ -74,22 +74,11 @@ Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, bx_address laddrSrc, bx_addres
   // Check that native host access was not vetoed for that page
   if (!hostAddrDst) return 0;
 
-  Bit32u bytesFitSrc, bytesFitDst;
-  signed int pointerDelta;
+  assert(! BX_CPU_THIS_PTR get_DF());
 
   // See how many bytes can fit in the rest of this page.
-  if (BX_CPU_THIS_PTR get_DF()) {
-    // Counting downward.
-    bytesFitSrc = 1 + PAGE_OFFSET(laddrSrc);
-    bytesFitDst = 1 + PAGE_OFFSET(laddrDst);
-    pointerDelta = (signed int) -1;
-  }
-  else {
-    // Counting upward.
-    bytesFitSrc = 0x1000 - PAGE_OFFSET(laddrSrc);
-    bytesFitDst = 0x1000 - PAGE_OFFSET(laddrDst);
-    pointerDelta = (signed int)  1;
-  }
+  Bit32u bytesFitSrc = 0x1000 - PAGE_OFFSET(laddrSrc);
+  Bit32u bytesFitDst = 0x1000 - PAGE_OFFSET(laddrDst);
 
   // Restrict word count to the number that will fit in either
   // source or dest pages.
@@ -100,191 +89,15 @@ Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, bx_address laddrSrc, bx_addres
   if (count > bx_pc_system.getNumCpuTicksLeftNextEvent())
     count = bx_pc_system.getNumCpuTicksLeftNextEvent();
 
+  count &= ~(granularity-1);
+
   // If after all the restrictions, there is anything left to do...
   if (count) {
     // Transfer data directly using host addresses
     for (unsigned j=0; j<count; j++) {
       * (Bit8u *) hostAddrDst = * (Bit8u *) hostAddrSrc;
-      hostAddrDst += pointerDelta;
-      hostAddrSrc += pointerDelta;
-    }
-
-    return count;
-  }
-
-  return 0;
-}
-
-Bit32u BX_CPU_C::FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, Bit32u srcOff, unsigned dstSeg, Bit32u dstOff, Bit32u count)
-{
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
-
-  bx_address laddrSrc, laddrDst;
-
-  bx_segment_reg_t *srcSegPtr = &BX_CPU_THIS_PTR sregs[srcSeg];
-  if (srcSegPtr->cache.valid & SegAccessROK4G) {
-    laddrSrc = srcOff;
-  }
-  else {
-    if (!(srcSegPtr->cache.valid & SegAccessROK))
-      return 0;
-    if ((srcOff | 0xfff) > srcSegPtr->cache.u.segment.limit_scaled)
-      return 0;
-
-    laddrSrc = get_laddr32(srcSeg, srcOff);
-  }
-
-  bx_segment_reg_t *dstSegPtr = &BX_CPU_THIS_PTR sregs[dstSeg];
-  if (dstSegPtr->cache.valid & SegAccessWOK4G) {
-    laddrDst = dstOff;
-  }
-  else {
-    if (!(dstSegPtr->cache.valid & SegAccessWOK))
-      return 0;
-    if ((dstOff | 0xfff) > dstSegPtr->cache.u.segment.limit_scaled)
-      return 0;
-
-    laddrDst = get_laddr32(dstSeg, dstOff);
-  }
-
-  return FastRepMOVSW(i, laddrSrc, laddrDst, count);
-}
-
-Bit32u BX_CPU_C::FastRepMOVSW(bxInstruction_c *i, bx_address laddrSrc, bx_address laddrDst, Bit32u count)
-{
-  Bit8u *hostAddrSrc = v2h_read_byte(laddrSrc, USER_PL);
-  // Check that native host access was not vetoed for that page
-  if (! hostAddrSrc) return 0;
-
-  Bit8u *hostAddrDst = v2h_write_byte(laddrDst, USER_PL);
-  // Check that native host access was not vetoed for that page
-  if (!hostAddrDst) return 0;
-
-  Bit32u wordsFitSrc, wordsFitDst;
-  signed int pointerDelta;
-
-  // See how many words can fit in the rest of this page.
-  if (BX_CPU_THIS_PTR get_DF()) {
-    // Counting downward.
-    // Note: 1st word must not cross page boundary.
-    if (((laddrSrc & 0xfff) > 0xffe) || ((laddrDst & 0xfff) > 0xffe))
-       return 0;
-    wordsFitSrc = (2 + PAGE_OFFSET(laddrSrc)) >> 1;
-    wordsFitDst = (2 + PAGE_OFFSET(laddrDst)) >> 1;
-    pointerDelta = (signed int) -2;
-  }
-  else {
-    // Counting upward.
-    wordsFitSrc = (0x1000 - PAGE_OFFSET(laddrSrc)) >> 1;
-    wordsFitDst = (0x1000 - PAGE_OFFSET(laddrDst)) >> 1;
-    pointerDelta = (signed int)  2;
-  }
-
-  // Restrict word count to the number that will fit in either
-  // source or dest pages.
-  if (count > wordsFitSrc)
-    count = wordsFitSrc;
-  if (count > wordsFitDst)
-    count = wordsFitDst;
-  if (count > bx_pc_system.getNumCpuTicksLeftNextEvent())
-    count = bx_pc_system.getNumCpuTicksLeftNextEvent();
-
-  // If after all the restrictions, there is anything left to do...
-  if (count) {
-    // Transfer data directly using host addresses
-    for (unsigned j=0; j<count; j++) {
-      CopyHostWordLittleEndian(hostAddrDst, hostAddrSrc);
-      hostAddrDst += pointerDelta;
-      hostAddrSrc += pointerDelta;
-    }
-
-    return count;
-  }
-
-  return 0;
-}
-
-Bit32u BX_CPU_C::FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, Bit32u srcOff, unsigned dstSeg, Bit32u dstOff, Bit32u count)
-{
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
-
-  bx_address laddrSrc, laddrDst;
-
-  bx_segment_reg_t *srcSegPtr = &BX_CPU_THIS_PTR sregs[srcSeg];
-  if (srcSegPtr->cache.valid & SegAccessROK4G) {
-    laddrSrc = srcOff;
-  }
-  else {
-    if (!(srcSegPtr->cache.valid & SegAccessROK))
-      return 0;
-    if ((srcOff | 0xfff) > srcSegPtr->cache.u.segment.limit_scaled)
-      return 0;
-
-    laddrSrc = get_laddr32(srcSeg, srcOff);
-  }
-
-  bx_segment_reg_t *dstSegPtr = &BX_CPU_THIS_PTR sregs[dstSeg];
-  if (dstSegPtr->cache.valid & SegAccessWOK4G) {
-    laddrDst = dstOff;
-  }
-  else {
-    if (!(dstSegPtr->cache.valid & SegAccessWOK))
-      return 0;
-    if ((dstOff | 0xfff) > dstSegPtr->cache.u.segment.limit_scaled)
-      return 0;
-
-    laddrDst = get_laddr32(dstSeg, dstOff);
-  }
-
-  return FastRepMOVSD(i, laddrSrc, laddrDst, count);
-}
-
-Bit32u BX_CPU_C::FastRepMOVSD(bxInstruction_c *i, bx_address laddrSrc, bx_address laddrDst, Bit32u count)
-{
-  Bit8u *hostAddrSrc = v2h_read_byte(laddrSrc, USER_PL);
-  // Check that native host access was not vetoed for that page
-  if (! hostAddrSrc) return 0;
-
-  Bit8u *hostAddrDst = v2h_write_byte(laddrDst, USER_PL);
-  // Check that native host access was not vetoed for that page
-  if (!hostAddrDst) return 0;
-
-  Bit32u dwordsFitSrc, dwordsFitDst;
-  signed int pointerDelta;
-
-  // See how many dwords can fit in the rest of this page.
-  if (BX_CPU_THIS_PTR get_DF()) {
-    // Counting downward.
-    // Note: 1st dword must not cross page boundary.
-    if (((laddrSrc & 0xfff) > 0xffc) || ((laddrDst & 0xfff) > 0xffc))
-      return 0;
-    dwordsFitSrc = (4 + PAGE_OFFSET(laddrSrc)) >> 2;
-    dwordsFitDst = (4 + PAGE_OFFSET(laddrDst)) >> 2;
-    pointerDelta = (signed int) -4;
-  }
-  else {
-    // Counting upward.
-    dwordsFitSrc = (0x1000 - PAGE_OFFSET(laddrSrc)) >> 2;
-    dwordsFitDst = (0x1000 - PAGE_OFFSET(laddrDst)) >> 2;
-    pointerDelta = (signed int)  4;
-  }
-
-  // Restrict dword count to the number that will fit in either
-  // source or dest pages.
-  if (count > dwordsFitSrc)
-    count = dwordsFitSrc;
-  if (count > dwordsFitDst)
-    count = dwordsFitDst;
-  if (count > bx_pc_system.getNumCpuTicksLeftNextEvent())
-    count = bx_pc_system.getNumCpuTicksLeftNextEvent();
-
-  // If after all the restrictions, there is anything left to do...
-  if (count) {
-    // Transfer data directly using host addresses
-    for (unsigned j=0; j<count; j++) {
-      CopyHostDWordLittleEndian(hostAddrDst, hostAddrSrc);
-      hostAddrDst += pointerDelta;
-      hostAddrSrc += pointerDelta;
+      hostAddrDst++;
+      hostAddrSrc++;
     }
 
     return count;
@@ -321,20 +134,10 @@ Bit32u BX_CPU_C::FastRepSTOSB(bxInstruction_c *i, bx_address laddrDst, Bit8u val
   // Check that native host access was not vetoed for that page
   if (!hostAddrDst) return 0;
 
-  Bit32u bytesFitDst;
-  signed int pointerDelta;
+  assert(! BX_CPU_THIS_PTR get_DF());
 
   // See how many bytes can fit in the rest of this page.
-  if (BX_CPU_THIS_PTR get_DF()) {
-    // Counting downward.
-    bytesFitDst = 1 + PAGE_OFFSET(laddrDst);
-    pointerDelta = (signed int) -1;
-  }
-  else {
-    // Counting upward.
-    bytesFitDst = 0x1000 - PAGE_OFFSET(laddrDst);
-    pointerDelta = (signed int)  1;
-  }
+  Bit32u bytesFitDst = 0x1000 - PAGE_OFFSET(laddrDst);
 
   // Restrict word count to the number that will fit in either
   // source or dest pages.
@@ -348,7 +151,7 @@ Bit32u BX_CPU_C::FastRepSTOSB(bxInstruction_c *i, bx_address laddrDst, Bit8u val
     // Transfer data directly using host addresses
     for (unsigned j=0; j<count; j++) {
       * (Bit8u *) hostAddrDst = val;
-      hostAddrDst += pointerDelta;
+      hostAddrDst++;
     }
 
     return count;
