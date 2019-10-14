@@ -135,7 +135,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSB32_YbXb(bxInstruction_c *i)
     if (byteCount) {
       // Decrement the ticks count by the number of iterations, minus
       // one, since the main cpu loop will decrement one.  Also,
-      // the count is predecremented before examined, so defintely
+      // the count is predecremented before examined, so definitely
       // don't roll it under zero.
       BX_TICKN(byteCount-1);
 
@@ -164,23 +164,43 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSB32_YbXb(bxInstruction_c *i)
 // 64 bit address size
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSB64_YbXb(bxInstruction_c *i)
 {
+  Bit32u increment = 0;
+
   Bit64u rsi = RSI;
   Bit64u rdi = RDI;
 
-  Bit8u temp8 = read_linear_byte(i->seg(), get_laddr64(i->seg(), rsi));
-  write_linear_byte(BX_SEG_REG_ES, rdi, temp8);
+#if (BX_SUPPORT_REPEAT_SPEEDUPS) && (BX_DEBUGGER == 0)
+  /* If conditions are right, we can transfer IO to physical memory
+   * in a batch, rather than one instruction at a time */
+  if (i->repUsedL() && !BX_CPU_THIS_PTR get_DF() && !BX_CPU_THIS_PTR async_event)
+  {
+    Bit32u byteCount = FastRepMOVSB(i, get_laddr64(i->seg(), rsi), rdi, ECX, 1);
+    if (byteCount) {
+      // Decrement the ticks count by the number of iterations, minus
+      // one, since the main cpu loop will decrement one.  Also,
+      // the count is predecremented before examined, so definitely
+      // don't roll it under zero.
+      BX_TICKN(byteCount-1);
 
-  if (BX_CPU_THIS_PTR get_DF()) {
-    rsi--;
-    rdi--;
-  }
-  else {
-    rsi++;
-    rdi++;
+      // Decrement RCX. Note, the main loop will decrement 1 also, so
+      // decrement by one less than expected, like the case above.
+      RCX -= (byteCount-1);
+
+      increment = byteCount;
+    }
   }
 
-  RSI = rsi;
-  RDI = rdi;
+  if (increment == 0)
+#endif
+  {
+    Bit8u temp8 = read_linear_byte(i->seg(), get_laddr64(i->seg(), rsi));
+    write_linear_byte(BX_SEG_REG_ES, rdi, temp8);
+
+    increment = BX_CPU_THIS_PTR get_DF() ? -1 : 1;
+  }
+
+  RSI = rsi + increment;
+  RDI = rdi + increment;
 }
 #endif
 
@@ -209,47 +229,24 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSW16_YwXw(bxInstruction_c *i)
 /* 16 bit opsize mode, 32 bit address size */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSW32_YwXw(bxInstruction_c *i)
 {
-  Bit32u increment = 0;
-
   Bit32u esi = ESI;
   Bit32u edi = EDI;
 
-#if (BX_SUPPORT_REPEAT_SPEEDUPS) && (BX_DEBUGGER == 0)
-  /* If conditions are right, we can transfer IO to physical memory
-   * in a batch, rather than one instruction at a time.
-   */
-  if (i->repUsedL() && !BX_CPU_THIS_PTR get_DF() && !BX_CPU_THIS_PTR async_event)
-  {
-    Bit32u byteCount = FastRepMOVSB(i, i->seg(), esi, BX_SEG_REG_ES, edi, ECX*2, 2);
-    if (byteCount) {
-      Bit32u wordCount = byteCount >> 1;
+  Bit16u temp16 = read_virtual_word(i->seg(), esi);
+  write_virtual_word(BX_SEG_REG_ES, edi, temp16);
 
-      // Decrement the ticks count by the number of iterations, minus
-      // one, since the main cpu loop will decrement one.  Also,
-      // the count is predecremented before examined, so defintely
-      // don't roll it under zero.
-      BX_TICKN(wordCount-1);
-
-      // Decrement eCX. Note, the main loop will decrement 1 also, so
-      // decrement by one less than expected, like the case above.
-      RCX = ECX - (wordCount-1);
-
-      increment = byteCount;
-    }
+  if (BX_CPU_THIS_PTR get_DF()) {
+    esi -= 2;
+    edi -= 2;
   }
-
-  if (increment == 0)
-#endif
-  {
-    Bit16u temp16 = read_virtual_word(i->seg(), esi);
-    write_virtual_word(BX_SEG_REG_ES, edi, temp16);
-
-    increment = BX_CPU_THIS_PTR get_DF() ? -2 : 2;
+  else {
+    esi += 2;
+    edi += 2;
   }
 
   // zero extension of RSI/RDI
-  RSI = esi + increment;
-  RDI = edi + increment;
+  RSI = esi;
+  RDI = edi;
 }
 
 #if BX_SUPPORT_X86_64
@@ -318,7 +315,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD32_YdXd(bxInstruction_c *i)
 
       // Decrement the ticks count by the number of iterations, minus
       // one, since the main cpu loop will decrement one.  Also,
-      // the count is predecremented before examined, so defintely
+      // the count is predecremented before examined, so definitely
       // don't roll it under zero.
       BX_TICKN(dwordCount-1);
 
@@ -349,23 +346,46 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD32_YdXd(bxInstruction_c *i)
 /* 32 bit opsize mode, 64 bit address size */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD64_YdXd(bxInstruction_c *i)
 {
+  Bit32u increment = 0;
+
   Bit64u rsi = RSI;
   Bit64u rdi = RDI;
 
-  Bit32u temp32 = read_linear_dword(i->seg(), get_laddr64(i->seg(), rsi));
-  write_linear_dword(BX_SEG_REG_ES, rdi, temp32);
+#if (BX_SUPPORT_REPEAT_SPEEDUPS) && (BX_DEBUGGER == 0)
+  /* If conditions are right, we can transfer IO to physical memory
+   * in a batch, rather than one instruction at a time.
+   */
+  if (i->repUsedL() && !BX_CPU_THIS_PTR get_DF() && !BX_CPU_THIS_PTR async_event)
+  {
+    Bit32u byteCount = FastRepMOVSB(i, get_laddr64(i->seg(), rsi), rdi, ECX*4, 4);
+    if (byteCount) {
+      Bit32u dwordCount = byteCount >> 2;
 
-  if (BX_CPU_THIS_PTR get_DF()) {
-    rsi -= 4;
-    rdi -= 4;
-  }
-  else {
-    rsi += 4;
-    rdi += 4;
+      // Decrement the ticks count by the number of iterations, minus
+      // one, since the main cpu loop will decrement one.  Also,
+      // the count is predecremented before examined, so definitely
+      // don't roll it under zero.
+      BX_TICKN(dwordCount-1);
+
+      // Decrement RCX. Note, the main loop will decrement 1 also, so
+      // decrement by one less than expected, like the case above.
+      RCX -= (dwordCount-1);
+
+      increment = byteCount;
+    }
   }
 
-  RSI = rsi;
-  RDI = rdi;
+  if (increment == 0)
+#endif
+  {
+    Bit32u temp32 = read_linear_dword(i->seg(), get_laddr64(i->seg(), rsi));
+    write_linear_dword(BX_SEG_REG_ES, rdi, temp32);
+
+    increment = BX_CPU_THIS_PTR get_DF() ? -4 : 4;
+  }
+
+  RSI = rsi + increment;
+  RDI = rdi + increment;
 }
 
 /* 64 bit opsize mode, 32 bit address size */
@@ -394,23 +414,46 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSQ32_YqXq(bxInstruction_c *i)
 /* 64 bit opsize mode, 64 bit address size */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSQ64_YqXq(bxInstruction_c *i)
 {
+  Bit32u increment = 0;
+
   Bit64u rsi = RSI;
   Bit64u rdi = RDI;
 
-  Bit64u temp64 = read_linear_qword(i->seg(), get_laddr64(i->seg(), rsi));
-  write_linear_qword(BX_SEG_REG_ES, rdi, temp64);
+#if (BX_SUPPORT_REPEAT_SPEEDUPS) && (BX_DEBUGGER == 0)
+  /* If conditions are right, we can transfer IO to physical memory
+   * in a batch, rather than one instruction at a time.
+   */
+  if (i->repUsedL() && !BX_CPU_THIS_PTR get_DF() && !BX_CPU_THIS_PTR async_event)
+  {
+    Bit32u byteCount = FastRepMOVSB(i, get_laddr64(i->seg(), rsi), rdi, ECX*8, 8);
+    if (byteCount) {
+      Bit32u qwordCount = byteCount >> 3;
 
-  if (BX_CPU_THIS_PTR get_DF()) {
-    rsi -= 8;
-    rdi -= 8;
-  }
-  else {
-    rsi += 8;
-    rdi += 8;
+      // Decrement the ticks count by the number of iterations, minus
+      // one, since the main cpu loop will decrement one.  Also,
+      // the count is predecremented before examined, so definitely
+      // don't roll it under zero.
+      BX_TICKN(qwordCount-1);
+
+      // Decrement RCX. Note, the main loop will decrement 1 also, so
+      // decrement by one less than expected, like the case above.
+      RCX -= (qwordCount-1);
+
+      increment = byteCount;
+    }
   }
 
-  RSI = rsi;
-  RDI = rdi;
+  if (increment == 0)
+#endif
+  {
+    Bit64u temp64 = read_linear_qword(i->seg(), get_laddr64(i->seg(), rsi));
+    write_linear_qword(BX_SEG_REG_ES, rdi, temp64);
+
+    increment = BX_CPU_THIS_PTR get_DF() ? -8 : 8;
+  }
+
+  RSI = rsi + increment;
+  RDI = rdi + increment;
 }
 
 #endif
@@ -1269,7 +1312,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STOSB32_YbAL(bxInstruction_c *i)
     if (byteCount) {
       // Decrement the ticks count by the number of iterations, minus
       // one, since the main cpu loop will decrement one.  Also,
-      // the count is predecremented before examined, so defintely
+      // the count is predecremented before examined, so definitely
       // don't roll it under zero.
       BX_TICKN(byteCount-1);
 
@@ -1298,17 +1341,39 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STOSB32_YbAL(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::STOSB64_YbAL(bxInstruction_c *i)
 {
   Bit64u rdi = RDI;
+  Bit32u increment = 0;
 
-  write_linear_byte(BX_SEG_REG_ES, rdi, AL);
+#if (BX_SUPPORT_REPEAT_SPEEDUPS) && (BX_DEBUGGER == 0)
+  /* If conditions are right, we can transfer IO to physical memory
+   * in a batch, rather than one instruction at a time.
+   */
+  if (i->repUsedL() && !BX_CPU_THIS_PTR get_DF() && !BX_CPU_THIS_PTR async_event)
+  {
+    Bit32u byteCount = FastRepSTOSB(i, rdi, AL, ECX);
+    if (byteCount) {
+      // Decrement the ticks count by the number of iterations, minus
+      // one, since the main cpu loop will decrement one.  Also,
+      // the count is predecremented before examined, so definitely
+      // don't roll it under zero.
+      BX_TICKN(byteCount-1);
 
-  if (BX_CPU_THIS_PTR get_DF()) {
-    rdi--;
+      // Decrement RCX.  Note, the main loop will decrement 1 also, so
+      // decrement by one less than expected, like the case above.
+      RCX -= (byteCount-1);
+
+      increment = byteCount;
+    }
   }
-  else {
-    rdi++;
+
+  if (increment == 0)
+#endif
+  {
+    write_linear_byte(BX_SEG_REG_ES, rdi, AL);
+
+    increment = BX_CPU_THIS_PTR get_DF() ? -1 : 1;
   }
 
-  RDI = rdi;
+  RDI = rdi + increment;
 }
 #endif
 

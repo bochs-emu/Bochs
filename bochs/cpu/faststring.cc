@@ -29,7 +29,7 @@
 //
 
 #if BX_SUPPORT_REPEAT_SPEEDUPS
-Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, Bit32u srcOff, unsigned dstSeg, Bit32u dstOff, Bit32u count, Bit32u granularity)
+Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, Bit32u srcOff, unsigned dstSeg, Bit32u dstOff, Bit32u byteCount, Bit32u granularity)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
@@ -61,14 +61,14 @@ Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, Bit32u srcOff
     laddrDst = get_laddr32(dstSeg, dstOff);
   }
 
-  return FastRepMOVSB(i, laddrSrc, laddrDst, count, granularity);
+  return FastRepMOVSB(i, laddrSrc, laddrDst, byteCount, granularity);
 }
 
-Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, bx_address laddrSrc, bx_address laddrDst, Bit32u count, Bit32u granularity)
+Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, bx_address laddrSrc, bx_address laddrDst, Bit64u byteCount, Bit32u granularity)
 {
   Bit8u *hostAddrSrc = v2h_read_byte(laddrSrc, USER_PL);
   // Check that native host access was not vetoed for that page
-  if (! hostAddrSrc) return 0;
+  if (!hostAddrSrc) return 0;
 
   Bit8u *hostAddrDst = v2h_write_byte(laddrDst, USER_PL);
   // Check that native host access was not vetoed for that page
@@ -82,28 +82,26 @@ Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, bx_address laddrSrc, bx_addres
 
   // Restrict word count to the number that will fit in either
   // source or dest pages.
-  if (count > bytesFitSrc)
-    count = bytesFitSrc;
-  if (count > bytesFitDst)
-    count = bytesFitDst;
-  if (count > bx_pc_system.getNumCpuTicksLeftNextEvent())
-    count = bx_pc_system.getNumCpuTicksLeftNextEvent();
+  if (byteCount > bytesFitSrc)
+    byteCount = bytesFitSrc;
+  if (byteCount > bytesFitDst)
+    byteCount = bytesFitDst;
+  if (byteCount > bx_pc_system.getNumCpuTicksLeftNextEvent())
+    byteCount = bx_pc_system.getNumCpuTicksLeftNextEvent();
 
-  count &= ~(granularity-1);
+  byteCount &= ~(granularity-1);
 
   // If after all the restrictions, there is anything left to do...
-  if (count) {
+  if (byteCount) {
     // Transfer data directly using host addresses
-    for (unsigned j=0; j<count; j++) {
+    for (unsigned j=0; j<byteCount; j++) {
       * (Bit8u *) hostAddrDst = * (Bit8u *) hostAddrSrc;
       hostAddrDst++;
       hostAddrSrc++;
     }
-
-    return count;
   }
 
-  return 0;
+  return byteCount;
 }
 
 Bit32u BX_CPU_C::FastRepSTOSB(bxInstruction_c *i, unsigned dstSeg, Bit32u dstOff, Bit8u val, Bit32u count)
@@ -153,11 +151,9 @@ Bit32u BX_CPU_C::FastRepSTOSB(bxInstruction_c *i, bx_address laddrDst, Bit8u val
       * (Bit8u *) hostAddrDst = val;
       hostAddrDst++;
     }
-
-    return count;
   }
 
-  return 0;
+  return count;
 }
 
 Bit32u BX_CPU_C::FastRepSTOSW(bxInstruction_c *i, unsigned dstSeg, Bit32u dstOff, Bit16u val, Bit32u count)
@@ -207,11 +203,9 @@ Bit32u BX_CPU_C::FastRepSTOSW(bxInstruction_c *i, bx_address laddrDst, Bit16u va
       WriteHostWordToLittleEndian(hostAddrDst, val);
       hostAddrDst += 2;
     }
-
-    return count;
   }
 
-  return 0;
+  return count;
 }
 
 Bit32u BX_CPU_C::FastRepSTOSD(bxInstruction_c *i, unsigned dstSeg, Bit32u dstOff, Bit32u val, Bit32u count)
@@ -261,10 +255,8 @@ Bit32u BX_CPU_C::FastRepSTOSD(bxInstruction_c *i, bx_address laddrDst, Bit32u va
       WriteHostDWordToLittleEndian(hostAddrDst, val);
       hostAddrDst += 4;
     }
-
-    return count;
   }
 
-  return 0;
+  return count;
 }
 #endif

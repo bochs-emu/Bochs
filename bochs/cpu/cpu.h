@@ -4544,7 +4544,7 @@ public: // for now...
 
 #if BX_SUPPORT_REPEAT_SPEEDUPS
   BX_SMF Bit32u FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, Bit32u srcOff, unsigned dstSeg, Bit32u dstOff, Bit32u byteCount, Bit32u granularity);
-  BX_SMF Bit32u FastRepMOVSB(bxInstruction_c *i, bx_address laddrSrc, bx_address laddrDst, Bit32u byteCount, Bit32u granularity);
+  BX_SMF Bit32u FastRepMOVSB(bxInstruction_c *i, bx_address laddrSrc, bx_address laddrDst, Bit64u byteCount, Bit32u granularity);
 
   BX_SMF Bit32u FastRepSTOSB(bxInstruction_c *i, unsigned dstSeg, Bit32u dstOff, Bit8u  val, Bit32u  byteCount);
   BX_SMF Bit32u FastRepSTOSW(bxInstruction_c *i, unsigned dstSeg, Bit32u dstOff, Bit16u val, Bit32u  wordCount);
