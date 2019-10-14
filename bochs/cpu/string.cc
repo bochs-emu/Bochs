@@ -126,8 +126,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSB16_YbXb(bxInstruction_c *i)
 // 32 bit address size
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSB32_YbXb(bxInstruction_c *i)
 {
-  Bit8u temp8;
-
   Bit32u incr = 1;
 
 #if (BX_SUPPORT_REPEAT_SPEEDUPS) && (BX_DEBUGGER == 0)
@@ -150,14 +148,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSB32_YbXb(bxInstruction_c *i)
       incr = byteCount;
     }
     else {
-      temp8 = read_virtual_byte(i->seg(), ESI);
+      Bit8u temp8 = read_virtual_byte(i->seg(), ESI);
       write_virtual_byte(BX_SEG_REG_ES, EDI, temp8);
     }
   }
   else
 #endif
   {
-    temp8 = read_virtual_byte(i->seg(), ESI);
+    Bit8u temp8 = read_virtual_byte(i->seg(), ESI);
     write_virtual_byte(BX_SEG_REG_ES, EDI, temp8);
   }
 
@@ -175,12 +173,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSB32_YbXb(bxInstruction_c *i)
 // 64 bit address size
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSB64_YbXb(bxInstruction_c *i)
 {
-  Bit8u temp8;
-
   Bit64u rsi = RSI;
   Bit64u rdi = RDI;
 
-  temp8 = read_linear_byte(i->seg(), get_laddr64(i->seg(), rsi));
+  Bit8u temp8 = read_linear_byte(i->seg(), get_laddr64(i->seg(), rsi));
   write_linear_byte(BX_SEG_REG_ES, rdi, temp8);
 
   if (BX_CPU_THIS_PTR get_DF()) {
@@ -226,21 +222,52 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSW16_YwXw(bxInstruction_c *i)
 /* 16 bit opsize mode, 32 bit address size */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSW32_YwXw(bxInstruction_c *i)
 {
-  Bit16u temp16;
+  Bit32u incr = 2;
 
   Bit32u esi = ESI;
   Bit32u edi = EDI;
 
-  temp16 = read_virtual_word(i->seg(), esi);
-  write_virtual_word(BX_SEG_REG_ES, edi, temp16);
+#if (BX_SUPPORT_REPEAT_SPEEDUPS) && (BX_DEBUGGER == 0)
+  /* If conditions are right, we can transfer IO to physical memory
+   * in a batch, rather than one instruction at a time.
+   */
+  if (i->repUsedL() && !BX_CPU_THIS_PTR get_DF() && !BX_CPU_THIS_PTR async_event)
+  {
+    Bit32u byteCount = FastRepMOVSB(i, i->seg(), esi, BX_SEG_REG_ES, edi, ECX*2, 2);
+    if (byteCount) {
+      Bit32u wordCount = byteCount >> 1;
+
+      // Decrement the ticks count by the number of iterations, minus
+      // one, since the main cpu loop will decrement one.  Also,
+      // the count is predecremented before examined, so defintely
+      // don't roll it under zero.
+      BX_TICKN(wordCount-1);
+
+      // Decrement eCX. Note, the main loop will decrement 1 also, so
+      // decrement by one less than expected, like the case above.
+      RCX = ECX - (wordCount-1);
+
+      incr = byteCount;
+    }
+    else {
+      Bit16u temp16 = read_virtual_word(i->seg(), esi);
+      write_virtual_word(BX_SEG_REG_ES, edi, temp16);
+    }
+  }
+  else
+#endif
+  {
+    Bit16u temp16 = read_virtual_word(i->seg(), esi);
+    write_virtual_word(BX_SEG_REG_ES, edi, temp16);
+  }
 
   if (BX_CPU_THIS_PTR get_DF()) {
-    esi -= 2;
-    edi -= 2;
+    esi -= incr;
+    edi -= incr;
   }
   else {
-    esi += 2;
-    edi += 2;
+    esi += incr;
+    edi += incr;
   }
 
   // zero extension of RSI/RDI
@@ -252,12 +279,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSW32_YwXw(bxInstruction_c *i)
 /* 16 bit opsize mode, 64 bit address size */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSW64_YwXw(bxInstruction_c *i)
 {
-  Bit16u temp16;
-
   Bit64u rsi = RSI;
   Bit64u rdi = RDI;
 
-  temp16 = read_linear_word(i->seg(), get_laddr64(i->seg(), rsi));
+  Bit16u temp16 = read_linear_word(i->seg(), get_laddr64(i->seg(), rsi));
   write_linear_word(BX_SEG_REG_ES, rdi, temp16);
 
   if (BX_CPU_THIS_PTR get_DF()) {
@@ -277,12 +302,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSW64_YwXw(bxInstruction_c *i)
 /* 32 bit opsize mode, 16 bit address size */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD16_YdXd(bxInstruction_c *i)
 {
-  Bit32u temp32;
-
   Bit16u si = SI;
   Bit16u di = DI;
 
-  temp32 = read_virtual_dword_32(i->seg(), si);
+  Bit32u temp32 = read_virtual_dword_32(i->seg(), si);
   write_virtual_dword_32(BX_SEG_REG_ES, di, temp32);
 
   if (BX_CPU_THIS_PTR get_DF()) {
@@ -301,8 +324,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD16_YdXd(bxInstruction_c *i)
 /* 32 bit opsize mode, 32 bit address size */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD32_YdXd(bxInstruction_c *i)
 {
-  Bit32u temp32;
-
   Bit32u incr = 4;
 
   Bit32u esi = ESI;
@@ -331,14 +352,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD32_YdXd(bxInstruction_c *i)
       incr = byteCount;
     }
     else {
-      temp32 = read_virtual_dword(i->seg(), esi);
+      Bit32u temp32 = read_virtual_dword(i->seg(), esi);
       write_virtual_dword(BX_SEG_REG_ES, edi, temp32);
     }
   }
   else
 #endif
   {
-    temp32 = read_virtual_dword(i->seg(), esi);
+    Bit32u temp32 = read_virtual_dword(i->seg(), esi);
     write_virtual_dword(BX_SEG_REG_ES, edi, temp32);
   }
 
@@ -361,12 +382,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD32_YdXd(bxInstruction_c *i)
 /* 32 bit opsize mode, 64 bit address size */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD64_YdXd(bxInstruction_c *i)
 {
-  Bit32u temp32;
-
   Bit64u rsi = RSI;
   Bit64u rdi = RDI;
 
-  temp32 = read_linear_dword(i->seg(), get_laddr64(i->seg(), rsi));
+  Bit32u temp32 = read_linear_dword(i->seg(), get_laddr64(i->seg(), rsi));
   write_linear_dword(BX_SEG_REG_ES, rdi, temp32);
 
   if (BX_CPU_THIS_PTR get_DF()) {
@@ -385,12 +404,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD64_YdXd(bxInstruction_c *i)
 /* 64 bit opsize mode, 32 bit address size */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSQ32_YqXq(bxInstruction_c *i)
 {
-  Bit64u temp64;
-
   Bit32u esi = ESI;
   Bit32u edi = EDI;
 
-  temp64 = read_linear_qword(i->seg(), get_laddr64(i->seg(), esi));
+  Bit64u temp64 = read_linear_qword(i->seg(), get_laddr64(i->seg(), esi));
   write_linear_qword(BX_SEG_REG_ES, edi, temp64);
 
   if (BX_CPU_THIS_PTR get_DF()) {
@@ -410,12 +427,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSQ32_YqXq(bxInstruction_c *i)
 /* 64 bit opsize mode, 64 bit address size */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSQ64_YqXq(bxInstruction_c *i)
 {
-  Bit64u temp64;
-
   Bit64u rsi = RSI;
   Bit64u rdi = RDI;
 
-  temp64 = read_linear_qword(i->seg(), get_laddr64(i->seg(), rsi));
+  Bit64u temp64 = read_linear_qword(i->seg(), get_laddr64(i->seg(), rsi));
   write_linear_qword(BX_SEG_REG_ES, rdi, temp64);
 
   if (BX_CPU_THIS_PTR get_DF()) {
