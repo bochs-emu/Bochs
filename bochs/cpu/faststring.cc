@@ -200,7 +200,7 @@ Bit32u BX_CPU_C::FastRepSTOSW(bx_address laddrDst, Bit16u val, Bit32u count)
   if (count) {
     // Transfer data directly using host addresses
     for (unsigned j=0; j<count; j++) {
-      WriteHostWordToLittleEndian(hostAddrDst, val);
+      WriteHostWordToLittleEndian((Bit16u*)hostAddrDst, val);
       hostAddrDst += 2;
     }
   }
@@ -252,7 +252,7 @@ Bit32u BX_CPU_C::FastRepSTOSD(bx_address laddrDst, Bit32u val, Bit32u count)
   if (count) {
     // Transfer data directly using host addresses
     for (unsigned j=0; j<count; j++) {
-      WriteHostDWordToLittleEndian(hostAddrDst, val);
+      WriteHostDWordToLittleEndian((Bit32u*)hostAddrDst, val);
       hostAddrDst += 4;
     }
   }

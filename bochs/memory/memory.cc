@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2018  The Bochs Project
+//  Copyright (C) 2001-2019  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -91,17 +91,17 @@ mem_write:
     {
       if (len == 8) {
         pageWriteStampTable.decWriteStamp(a20addr, 8);
-        WriteHostQWordToLittleEndian(BX_MEM_THIS get_vector(a20addr), *(Bit64u*)data);
+        WriteHostQWordToLittleEndian((Bit64u*) BX_MEM_THIS get_vector(a20addr), *(Bit64u*)data);
         return;
       }
       if (len == 4) {
         pageWriteStampTable.decWriteStamp(a20addr, 4);
-        WriteHostDWordToLittleEndian(BX_MEM_THIS get_vector(a20addr), *(Bit32u*)data);
+        WriteHostDWordToLittleEndian((Bit32u*) BX_MEM_THIS get_vector(a20addr), *(Bit32u*)data);
         return;
       }
       if (len == 2) {
         pageWriteStampTable.decWriteStamp(a20addr, 2);
-        WriteHostWordToLittleEndian(BX_MEM_THIS get_vector(a20addr), *(Bit16u*)data);
+        WriteHostWordToLittleEndian((Bit16u*) BX_MEM_THIS get_vector(a20addr), *(Bit16u*)data);
         return;
       }
       if (len == 1) {

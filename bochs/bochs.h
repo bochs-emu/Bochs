@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2017  The Bochs Project
+//  Copyright (C) 2001-2019  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -527,26 +527,33 @@ BX_CPP_INLINE Bit64u bx_bswap64(Bit64u val64)
 
 #ifdef BX_LITTLE_ENDIAN
 
-#define WriteHostWordToLittleEndian(hostPtr, nativeVar16) \
-    *((Bit16u*)(hostPtr)) = (nativeVar16)
-#define WriteHostDWordToLittleEndian(hostPtr, nativeVar32) \
-    *((Bit32u*)(hostPtr)) = (nativeVar32)
+BX_CPP_INLINE void WriteHostWordToLittleEndian(Bit16u *hostPtr, Bit16u nativeVar16)
+{
+  *(hostPtr) = nativeVar16;
+}
+
+BX_CPP_INLINE void WriteHostDWordToLittleEndian(Bit32u *hostPtr, Bit32u nativeVar32)
+{
+  *(hostPtr) = nativeVar32;
+}
+
+BX_CPP_INLINE void WriteHostQWordToLittleEndian(Bit64u *hostPtr, Bit64u nativeVar64)
+{
 #ifdef ANDROID
 // Resolve problems with unaligned access
-#define WriteHostQWordToLittleEndian(hostPtr, nativeVar64) { \
-    ((Bit8u *)(hostPtr))[0] = (Bit8u) (nativeVar64); \
-    ((Bit8u *)(hostPtr))[1] = (Bit8u) ((nativeVar64)>>8); \
-    ((Bit8u *)(hostPtr))[2] = (Bit8u) ((nativeVar64)>>16); \
-    ((Bit8u *)(hostPtr))[3] = (Bit8u) ((nativeVar64)>>24); \
-    ((Bit8u *)(hostPtr))[4] = (Bit8u) ((nativeVar64)>>32); \
-    ((Bit8u *)(hostPtr))[5] = (Bit8u) ((nativeVar64)>>40); \
-    ((Bit8u *)(hostPtr))[6] = (Bit8u) ((nativeVar64)>>48); \
-    ((Bit8u *)(hostPtr))[7] = (Bit8u) ((nativeVar64)>>56); \
-}
+  ((Bit8u *)(hostPtr))[0] = (Bit8u) (nativeVar64);
+  ((Bit8u *)(hostPtr))[1] = (Bit8u) ((nativeVar64)>>8);
+  ((Bit8u *)(hostPtr))[2] = (Bit8u) ((nativeVar64)>>16);
+  ((Bit8u *)(hostPtr))[3] = (Bit8u) ((nativeVar64)>>24);
+  ((Bit8u *)(hostPtr))[4] = (Bit8u) ((nativeVar64)>>32);
+  ((Bit8u *)(hostPtr))[5] = (Bit8u) ((nativeVar64)>>40);
+  ((Bit8u *)(hostPtr))[6] = (Bit8u) ((nativeVar64)>>48);
+  ((Bit8u *)(hostPtr))[7] = (Bit8u) ((nativeVar64)>>56);
 #else
-#define WriteHostQWordToLittleEndian(hostPtr, nativeVar64) \
-    *((Bit64u*)(hostPtr)) = (nativeVar64)
+  *(hostPtr) = nativeVar64;
 #endif
+}
+
 #define ReadHostWordFromLittleEndian(hostPtr, nativeVar16) \
     (nativeVar16) = *((Bit16u*)(hostPtr))
 #define ReadHostDWordFromLittleEndian(hostPtr, nativeVar32) \
@@ -576,14 +583,19 @@ BX_CPP_INLINE Bit64u bx_bswap64(Bit64u val64)
 #define bx_bswap32 bx_ppc_bswap32
 #define bx_bswap64 bx_ppc_bswap64
 
-#define WriteHostWordToLittleEndian(hostPtr, nativeVar16) {        \
-    bx_ppc_store_le16((Bit16u *)(hostPtr), (Bit16u)(nativeVar16)); \
+BX_CPP_INLINE void WriteHostWordToLittleEndian(Bit16u *hostPtr, Bit16u nativeVar16)
+{
+  bx_ppc_store_le16(hostPtr, nativeVar16);
 }
-#define WriteHostDWordToLittleEndian(hostPtr, nativeVar32) {       \
-    bx_ppc_store_le32((Bit32u *)(hostPtr), (Bit32u)(nativeVar32)); \
+
+BX_CPP_INLINE void WriteHostDWordToLittleEndian(Bit32u *hostPtr, Bit32u nativeVar32)
+{
+  bx_ppc_store_le32(hostPtr, nativeVar32);
 }
-#define WriteHostQWordToLittleEndian(hostPtr, nativeVar64) {       \
-    bx_ppc_store_le64((Bit64u *)(hostPtr), (Bit64u)(nativeVar64)); \
+
+BX_CPP_INLINE void WriteHostQWordToLittleEndian(Bit64u *hostPtr, Bit64u nativeVar64)
+{
+  bx_ppc_store_le64(hostPtr, nativeVar64);
 }
 
 #define ReadHostWordFromLittleEndian(hostPtr, nativeVar16) {  \
@@ -596,16 +608,21 @@ BX_CPP_INLINE Bit64u bx_bswap64(Bit64u val64)
     (nativeVar64) =  bx_ppc_load_le64((Bit64u *)(hostPtr));   \
 }
 
-#else
+#else // !__MORPHOS__
 
-#define WriteHostWordToLittleEndian(hostPtr,  nativeVar16) {  \
-    *(Bit16u *)(hostPtr) = bx_bswap16((Bit16u)(nativeVar16)); \
+BX_CPP_INLINE void WriteHostWordToLittleEndian(Bit16u *hostPtr, Bit16u nativeVar16)
+{
+  *(hostPtr) = bx_bswap16(nativeVar16);
 }
-#define WriteHostDWordToLittleEndian(hostPtr, nativeVar32) {  \
-    *(Bit32u *)(hostPtr) = bx_bswap32((Bit32u)(nativeVar32)); \
+
+BX_CPP_INLINE void WriteHostDWordToLittleEndian(Bit8u *hostPtr, Bit32u nativeVar32)
+{
+  *(hostPtr) = bx_bswap32(nativeVar32);
 }
-#define WriteHostQWordToLittleEndian(hostPtr, nativeVar64) {  \
-    *(Bit64u *)(hostPtr) = bx_bswap64((Bit64u)(nativeVar64)); \
+
+BX_CPP_INLINE void WriteHostQWordToLittleEndian(Bit8u *hostPtr, Bit64u nativeVar64)
+{
+  *(hostPtr) = bx_bswap64(nativeVar64);
 }
 
 #define ReadHostWordFromLittleEndian(hostPtr, nativeVar16) {  \
@@ -621,12 +638,5 @@ BX_CPP_INLINE Bit64u bx_bswap64(Bit64u val64)
 #endif
 
 #endif
-
-#define CopyHostWordLittleEndian(hostAddrDst,  hostAddrSrc)  \
-    (* (Bit16u *)(hostAddrDst)) = (* (Bit16u *)(hostAddrSrc));
-#define CopyHostDWordLittleEndian(hostAddrDst,  hostAddrSrc) \
-    (* (Bit32u *)(hostAddrDst)) = (* (Bit32u *)(hostAddrSrc));
-#define CopyHostQWordLittleEndian(hostAddrDst,  hostAddrSrc) \
-    (* (Bit64u *)(hostAddrDst)) = (* (Bit64u *)(hostAddrSrc));
 
 #endif  /* BX_BOCHS_H */

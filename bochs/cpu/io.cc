@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2018  The Bochs Project
+//  Copyright (C) 2001-2019  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -95,7 +95,7 @@ Bit32u BX_CPU_C::FastRepINSW(Bit32u dstOff, Bit16u port, Bit32u wordCount)
         count += bx_devices.bulkIOQuantumsTransferred;
       }
       else {
-        WriteHostWordToLittleEndian(hostAddrDst, temp16);
+        WriteHostWordToLittleEndian((Bit16u*)hostAddrDst, temp16);
         hostAddrDst += pointerDelta;
         count++;
       }
