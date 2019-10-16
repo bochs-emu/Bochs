@@ -4543,16 +4543,16 @@ public: // for now...
        bx_descriptor_t *descriptor, bx_address rip, Bit8u cpl);
 
 #if BX_SUPPORT_REPEAT_SPEEDUPS
-  BX_SMF Bit32u FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, Bit32u srcOff, unsigned dstSeg, Bit32u dstOff, Bit32u byteCount, Bit32u granularity);
-  BX_SMF Bit32u FastRepMOVSB(bxInstruction_c *i, bx_address laddrSrc, bx_address laddrDst, Bit64u byteCount, Bit32u granularity);
+  BX_SMF Bit32u FastRepMOVSB(unsigned srcSeg, Bit32u srcOff, unsigned dstSeg, Bit32u dstOff, Bit32u byteCount, Bit32u granularity);
+  BX_SMF Bit32u FastRepMOVSB(bx_address laddrSrc, bx_address laddrDst, Bit64u byteCount, Bit32u granularity);
 
-  BX_SMF Bit32u FastRepSTOSB(bxInstruction_c *i, unsigned dstSeg, Bit32u dstOff, Bit8u  val, Bit32u  byteCount);
-  BX_SMF Bit32u FastRepSTOSW(bxInstruction_c *i, unsigned dstSeg, Bit32u dstOff, Bit16u val, Bit32u  wordCount);
-  BX_SMF Bit32u FastRepSTOSD(bxInstruction_c *i, unsigned dstSeg, Bit32u dstOff, Bit32u val, Bit32u dwordCount);
+  BX_SMF Bit32u FastRepSTOSB(unsigned dstSeg, Bit32u dstOff, Bit8u  val, Bit32u  byteCount);
+  BX_SMF Bit32u FastRepSTOSW(unsigned dstSeg, Bit32u dstOff, Bit16u val, Bit32u  wordCount);
+  BX_SMF Bit32u FastRepSTOSD(unsigned dstSeg, Bit32u dstOff, Bit32u val, Bit32u dwordCount);
 
-  BX_SMF Bit32u FastRepSTOSB(bxInstruction_c *i, bx_address laddrDst, Bit8u  val, Bit32u  byteCount);
-  BX_SMF Bit32u FastRepSTOSW(bxInstruction_c *i, bx_address laddrDst, Bit16u val, Bit32u  wordCount);
-  BX_SMF Bit32u FastRepSTOSD(bxInstruction_c *i, bx_address laddrDst, Bit32u val, Bit32u dwordCount);
+  BX_SMF Bit32u FastRepSTOSB(bx_address laddrDst, Bit8u  val, Bit32u  byteCount);
+  BX_SMF Bit32u FastRepSTOSW(bx_address laddrDst, Bit16u val, Bit32u  wordCount);
+  BX_SMF Bit32u FastRepSTOSD(bx_address laddrDst, Bit32u val, Bit32u dwordCount);
 
   BX_SMF Bit32u FastRepINSW(bxInstruction_c *i, Bit32u dstOff,
        Bit16u port, Bit32u wordCount);

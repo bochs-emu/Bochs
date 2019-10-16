@@ -29,7 +29,7 @@
 //
 
 #if BX_SUPPORT_REPEAT_SPEEDUPS
-Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, Bit32u srcOff, unsigned dstSeg, Bit32u dstOff, Bit32u byteCount, Bit32u granularity)
+Bit32u BX_CPU_C::FastRepMOVSB(unsigned srcSeg, Bit32u srcOff, unsigned dstSeg, Bit32u dstOff, Bit32u byteCount, Bit32u granularity)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
 
@@ -61,10 +61,10 @@ Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, Bit32u srcOff
     laddrDst = get_laddr32(dstSeg, dstOff);
   }
 
-  return FastRepMOVSB(i, laddrSrc, laddrDst, byteCount, granularity);
+  return FastRepMOVSB(laddrSrc, laddrDst, byteCount, granularity);
 }
 
-Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, bx_address laddrSrc, bx_address laddrDst, Bit64u byteCount, Bit32u granularity)
+Bit32u BX_CPU_C::FastRepMOVSB(bx_address laddrSrc, bx_address laddrDst, Bit64u byteCount, Bit32u granularity)
 {
   Bit8u *hostAddrSrc = v2h_read_byte(laddrSrc, USER_PL);
   // Check that native host access was not vetoed for that page
@@ -104,7 +104,7 @@ Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, bx_address laddrSrc, bx_addres
   return byteCount;
 }
 
-Bit32u BX_CPU_C::FastRepSTOSB(bxInstruction_c *i, unsigned dstSeg, Bit32u dstOff, Bit8u val, Bit32u count)
+Bit32u BX_CPU_C::FastRepSTOSB(unsigned dstSeg, Bit32u dstOff, Bit8u val, Bit32u count)
 {
   bx_address laddrDst;
 
@@ -123,10 +123,10 @@ Bit32u BX_CPU_C::FastRepSTOSB(bxInstruction_c *i, unsigned dstSeg, Bit32u dstOff
     laddrDst = get_laddr32(dstSeg, dstOff);
   }
 
-  return FastRepSTOSB(i, laddrDst, val, count);
+  return FastRepSTOSB(laddrDst, val, count);
 }
 
-Bit32u BX_CPU_C::FastRepSTOSB(bxInstruction_c *i, bx_address laddrDst, Bit8u val, Bit32u count)
+Bit32u BX_CPU_C::FastRepSTOSB(bx_address laddrDst, Bit8u val, Bit32u count)
 {
   Bit8u *hostAddrDst = v2h_write_byte(laddrDst, USER_PL);
   // Check that native host access was not vetoed for that page
@@ -156,7 +156,7 @@ Bit32u BX_CPU_C::FastRepSTOSB(bxInstruction_c *i, bx_address laddrDst, Bit8u val
   return count;
 }
 
-Bit32u BX_CPU_C::FastRepSTOSW(bxInstruction_c *i, unsigned dstSeg, Bit32u dstOff, Bit16u val, Bit32u count)
+Bit32u BX_CPU_C::FastRepSTOSW(unsigned dstSeg, Bit32u dstOff, Bit16u val, Bit32u count)
 {
   bx_address laddrDst;
 
@@ -175,10 +175,10 @@ Bit32u BX_CPU_C::FastRepSTOSW(bxInstruction_c *i, unsigned dstSeg, Bit32u dstOff
     laddrDst = get_laddr32(dstSeg, dstOff);
   }
 
-  return FastRepSTOSW(i, laddrDst, val, count);
+  return FastRepSTOSW(laddrDst, val, count);
 }
 
-Bit32u BX_CPU_C::FastRepSTOSW(bxInstruction_c *i, bx_address laddrDst, Bit16u val, Bit32u count)
+Bit32u BX_CPU_C::FastRepSTOSW(bx_address laddrDst, Bit16u val, Bit32u count)
 {
   Bit8u *hostAddrDst = v2h_write_byte(laddrDst, USER_PL);
   // Check that native host access was not vetoed for that page
@@ -208,7 +208,7 @@ Bit32u BX_CPU_C::FastRepSTOSW(bxInstruction_c *i, bx_address laddrDst, Bit16u va
   return count;
 }
 
-Bit32u BX_CPU_C::FastRepSTOSD(bxInstruction_c *i, unsigned dstSeg, Bit32u dstOff, Bit32u val, Bit32u count)
+Bit32u BX_CPU_C::FastRepSTOSD(unsigned dstSeg, Bit32u dstOff, Bit32u val, Bit32u count)
 {
   bx_address laddrDst;
 
@@ -227,10 +227,10 @@ Bit32u BX_CPU_C::FastRepSTOSD(bxInstruction_c *i, unsigned dstSeg, Bit32u dstOff
     laddrDst = get_laddr32(dstSeg, dstOff);
   }
 
-  return FastRepSTOSD(i, laddrDst, val, count);
+  return FastRepSTOSD(laddrDst, val, count);
 }
 
-Bit32u BX_CPU_C::FastRepSTOSD(bxInstruction_c *i, bx_address laddrDst, Bit32u val, Bit32u count)
+Bit32u BX_CPU_C::FastRepSTOSD(bx_address laddrDst, Bit32u val, Bit32u count)
 {
   Bit8u *hostAddrDst = v2h_write_byte(laddrDst, USER_PL);
   // Check that native host access was not vetoed for that page
