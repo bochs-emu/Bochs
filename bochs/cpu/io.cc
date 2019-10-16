@@ -32,7 +32,7 @@
 //
 
 #if BX_SUPPORT_REPEAT_SPEEDUPS
-Bit32u BX_CPU_C::FastRepINSW(bxInstruction_c *i, Bit32u dstOff, Bit16u port, Bit32u wordCount)
+Bit32u BX_CPU_C::FastRepINSW(Bit32u dstOff, Bit16u port, Bit32u wordCount)
 {
   Bit32u wordsFitDst;
   signed int pointerDelta;
@@ -112,7 +112,7 @@ Bit32u BX_CPU_C::FastRepINSW(bxInstruction_c *i, Bit32u dstOff, Bit16u port, Bit
   return 0;
 }
 
-Bit32u BX_CPU_C::FastRepOUTSW(bxInstruction_c *i, unsigned srcSeg, Bit32u srcOff, Bit16u port, Bit32u wordCount)
+Bit32u BX_CPU_C::FastRepOUTSW(unsigned srcSeg, Bit32u srcOff, Bit16u port, Bit32u wordCount)
 {
   Bit32u wordsFitSrc;
   signed int pointerDelta;
@@ -323,7 +323,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSW32_YwDX(bxInstruction_c *i)
 {
   Bit16u value16=0;
   Bit32u edi = EDI;
-  unsigned incr = 2;
+  unsigned increment = 2;
 
 #if (BX_SUPPORT_REPEAT_SPEEDUPS) && (BX_DEBUGGER == 0)
   /* If conditions are right, we can transfer IO to physical memory
@@ -333,7 +333,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSW32_YwDX(bxInstruction_c *i)
   {
     Bit32u wordCount = ECX;
     BX_ASSERT(wordCount > 0);
-    wordCount = FastRepINSW(i, edi, DX, wordCount);
+    wordCount = FastRepINSW(edi, DX, wordCount);
     if (wordCount) {
       // Decrement the ticks count by the number of iterations, minus
       // one, since the main cpu loop will decrement one.  Also,
@@ -341,7 +341,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSW32_YwDX(bxInstruction_c *i)
       // don't roll it under zero.
       BX_TICKN(wordCount-1);
       RCX = ECX - (wordCount-1);
-      incr = wordCount << 1; // count * 2.
+      increment = wordCount << 1; // count * 2.
     }
     else {
       // trigger any segment or page faults before reading from IO port
@@ -364,9 +364,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSW32_YwDX(bxInstruction_c *i)
   }
 
   if (BX_CPU_THIS_PTR get_DF())
-    RDI = EDI - incr;
+    RDI = EDI - increment;
   else
-    RDI = EDI + incr;
+    RDI = EDI + increment;
 }
 
 #if BX_SUPPORT_X86_64
@@ -574,7 +574,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSW32_DXXw(bxInstruction_c *i)
 {
   Bit16u value16;
   Bit32u esi = ESI;
-  unsigned incr = 2;
+  unsigned increment = 2;
 
 #if (BX_SUPPORT_REPEAT_SPEEDUPS) && (BX_DEBUGGER == 0)
   /* If conditions are right, we can transfer IO to physical memory
@@ -582,13 +582,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSW32_DXXw(bxInstruction_c *i)
    */
   if (i->repUsedL() && !BX_CPU_THIS_PTR async_event) {
     Bit32u wordCount = ECX;
-    wordCount = FastRepOUTSW(i, i->seg(), esi, DX, wordCount);
+    wordCount = FastRepOUTSW(i->seg(), esi, DX, wordCount);
     if (wordCount) {
       // Decrement eCX.  Note, the main loop will decrement 1 also, so
       // decrement by one less than expected, like the case above.
       BX_TICKN(wordCount-1); // Main cpu loop also decrements one more.
       RCX = ECX - (wordCount-1);
-      incr = wordCount << 1; // count * 2.
+      increment = wordCount << 1; // count * 2.
     }
     else {
       value16 = read_virtual_word(i->seg(), esi);
@@ -603,9 +603,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSW32_DXXw(bxInstruction_c *i)
   }
 
   if (BX_CPU_THIS_PTR get_DF())
-    RSI = ESI - incr;
+    RSI = ESI - increment;
   else
-    RSI = ESI + incr;
+    RSI = ESI + increment;
 }
 
 #if BX_SUPPORT_X86_64

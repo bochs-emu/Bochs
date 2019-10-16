@@ -4554,10 +4554,8 @@ public: // for now...
   BX_SMF Bit32u FastRepSTOSW(bx_address laddrDst, Bit16u val, Bit32u  wordCount);
   BX_SMF Bit32u FastRepSTOSD(bx_address laddrDst, Bit32u val, Bit32u dwordCount);
 
-  BX_SMF Bit32u FastRepINSW(bxInstruction_c *i, Bit32u dstOff,
-       Bit16u port, Bit32u wordCount);
-  BX_SMF Bit32u FastRepOUTSW(bxInstruction_c *i, unsigned srcSeg, Bit32u srcOff,
-       Bit16u port, Bit32u wordCount);
+  BX_SMF Bit32u FastRepINSW(Bit32u dstOff, Bit16u port, Bit32u wordCount);
+  BX_SMF Bit32u FastRepOUTSW(unsigned srcSeg, Bit32u srcOff, Bit16u port, Bit32u wordCount);
 #endif
 
   BX_SMF void repeat(bxInstruction_c *i, BxRepIterationPtr_tR execute) BX_CPP_AttrRegparmN(2);
