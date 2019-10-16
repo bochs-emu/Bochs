@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2005-2015  The Bochs Project
+//  Copyright (C) 2005-2019  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -331,7 +331,7 @@ BX_CPU_C::system_read_word(bx_address laddr)
       bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
       Bit32u pageOffset = PAGE_OFFSET(laddr);
       Bit16u *hostAddr = (Bit16u*) (hostPageAddr | pageOffset);
-      ReadHostWordFromLittleEndian(hostAddr, data);
+      data = ReadHostWordFromLittleEndian(hostAddr);
       BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, (tlbEntry->ppf | pageOffset), 2, tlbEntry->get_memtype(), BX_READ, (Bit8u*) &data);
       return data;
     }
@@ -357,7 +357,7 @@ BX_CPU_C::system_read_dword(bx_address laddr)
       bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
       Bit32u pageOffset = PAGE_OFFSET(laddr);
       Bit32u *hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
-      ReadHostDWordFromLittleEndian(hostAddr, data);
+      data = ReadHostDWordFromLittleEndian(hostAddr);
       BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, (tlbEntry->ppf | pageOffset), 4, tlbEntry->get_memtype(), BX_READ, (Bit8u*) &data);
       return data;
     }
@@ -383,7 +383,7 @@ BX_CPU_C::system_read_qword(bx_address laddr)
       bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
       Bit32u pageOffset = PAGE_OFFSET(laddr);
       Bit64u *hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
-      ReadHostQWordFromLittleEndian(hostAddr, data);
+      data = ReadHostQWordFromLittleEndian(hostAddr);
       BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, (tlbEntry->ppf | pageOffset), 8, tlbEntry->get_memtype(), BX_READ, (Bit8u*) &data);
       return data;
     }

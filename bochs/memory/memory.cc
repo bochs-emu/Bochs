@@ -263,15 +263,15 @@ mem_read:
     if (a20addr < 0x000a0000 || a20addr >= 0x00100000)
     {
       if (len == 8) {
-        ReadHostQWordFromLittleEndian(BX_MEM_THIS get_vector(a20addr), * (Bit64u*) data);
+        * (Bit64u*) data = ReadHostQWordFromLittleEndian((Bit64u*) BX_MEM_THIS get_vector(a20addr));
         return;
       }
       if (len == 4) {
-        ReadHostDWordFromLittleEndian(BX_MEM_THIS get_vector(a20addr), * (Bit32u*) data);
+        * (Bit32u*) data = ReadHostDWordFromLittleEndian((Bit32u*) BX_MEM_THIS get_vector(a20addr));
         return;
       }
       if (len == 2) {
-        ReadHostWordFromLittleEndian(BX_MEM_THIS get_vector(a20addr), * (Bit16u*) data);
+        * (Bit16u*) data = ReadHostWordFromLittleEndian((Bit16u*) BX_MEM_THIS get_vector(a20addr));
         return;
       }
       if (len == 1) {

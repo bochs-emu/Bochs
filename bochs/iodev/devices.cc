@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2018  The Bochs Project
+//  Copyright (C) 2002-2019  The Bochs Project
 //
 //  I/O port handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -1276,9 +1276,7 @@ bx_bool bx_devices_c::register_pci_handlers(bx_pci_device_c *dev,
 bx_bool bx_devices_c::pci_set_base_mem(void *this_ptr, memory_handler_t f1, memory_handler_t f2,
                                        Bit32u *addr, Bit8u *pci_conf, unsigned size)
 {
-  Bit32u newbase;
-
-  Bit32u oldbase = *addr;
+  Bit32u oldbase = *addr, newbase;
   Bit32u mask = ~(size - 1);
   Bit8u pci_flags = pci_conf[0x00] & 0x0f;
   if ((pci_flags & 0x06) > 0) {
@@ -1288,7 +1286,7 @@ bx_bool bx_devices_c::pci_set_base_mem(void *this_ptr, memory_handler_t f1, memo
   pci_conf[0x01] &= (mask >> 8) & 0xff;
   pci_conf[0x02] &= (mask >> 16) & 0xff;
   pci_conf[0x03] &= (mask >> 24) & 0xff;
-  ReadHostDWordFromLittleEndian(pci_conf, newbase);
+  newbase = ReadHostDWordFromLittleEndian((Bit32u*)pci_conf);
   pci_conf[0x00] |= pci_flags;
   if (newbase != mask && newbase != oldbase) { // skip PCI probe
     if (oldbase > 0) {
@@ -1308,14 +1306,12 @@ bx_bool bx_devices_c::pci_set_base_io(void *this_ptr, bx_read_handler_t f1, bx_w
                                       const Bit8u *iomask, const char *name)
 {
   unsigned i;
-  Bit32u newbase;
-
-  Bit32u oldbase = *addr;
+  Bit32u oldbase = *addr, newbase;
   Bit16u mask = ~(size - 1);
   Bit8u pci_flags = pci_conf[0x00] & 0x03;
   pci_conf[0x00] &= (mask & 0xfc);
   pci_conf[0x01] &= (mask >> 8);
-  ReadHostDWordFromLittleEndian(pci_conf, newbase);
+  newbase = ReadHostDWordFromLittleEndian((Bit32u*)pci_conf);
   pci_conf[0x00] |= pci_flags;
   if (((newbase & 0xfffc) != mask) && (newbase != oldbase)) { // skip PCI probe
     if (oldbase > 0) {

@@ -70,7 +70,7 @@ BX_CPP_INLINE Bit16u BX_CPU_C::vmcb_read16(unsigned offset)
 
   if (BX_CPU_THIS_PTR vmcbhostptr) {
     Bit16u *hostAddr = (Bit16u*) (BX_CPU_THIS_PTR vmcbhostptr | offset);
-    ReadHostWordFromLittleEndian(hostAddr, val_16);
+    val_16 = ReadHostWordFromLittleEndian(hostAddr);
   }
   else {
     access_read_physical(pAddr, 2, (Bit8u*)(&val_16));
@@ -87,7 +87,7 @@ BX_CPP_INLINE Bit32u BX_CPU_C::vmcb_read32(unsigned offset)
 
   if (BX_CPU_THIS_PTR vmcbhostptr) {
     Bit32u *hostAddr = (Bit32u*) (BX_CPU_THIS_PTR vmcbhostptr | offset);
-    ReadHostDWordFromLittleEndian(hostAddr, val_32);
+    val_32 = ReadHostDWordFromLittleEndian(hostAddr);
   }
   else {
     access_read_physical(pAddr, 4, (Bit8u*)(&val_32));
@@ -104,7 +104,7 @@ BX_CPP_INLINE Bit64u BX_CPU_C::vmcb_read64(unsigned offset)
 
   if (BX_CPU_THIS_PTR vmcbhostptr) {
     Bit64u *hostAddr = (Bit64u*) (BX_CPU_THIS_PTR vmcbhostptr | offset);
-    ReadHostQWordFromLittleEndian(hostAddr, val_64);
+    val_64 = ReadHostQWordFromLittleEndian(hostAddr);
   }
   else {
     access_read_physical(pAddr, 8, (Bit8u*)(&val_64));

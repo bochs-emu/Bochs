@@ -169,8 +169,7 @@ Bit32u BX_CPU_C::FastRepOUTSW(unsigned srcSeg, Bit32u srcOff, Bit16u port, Bit32
       }
       else
         bx_devices.bulkIOQuantumsRequested = 0;
-      Bit16u temp16;
-      ReadHostWordFromLittleEndian(hostAddrSrc, temp16);
+      Bit16u temp16 = ReadHostWordFromLittleEndian((Bit16u*)hostAddrSrc);
       BX_OUTP(port, temp16, 2);
       if (bx_devices.bulkIOQuantumsTransferred) {
         hostAddrSrc = bx_devices.bulkIOHostAddr;

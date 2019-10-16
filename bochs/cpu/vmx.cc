@@ -148,7 +148,7 @@ Bit16u BX_CPP_AttrRegparmN(1) BX_CPU_C::VMread16(unsigned encoding)
 
   if (BX_CPU_THIS_PTR vmcshostptr) {
     Bit16u *hostAddr = (Bit16u*) (BX_CPU_THIS_PTR vmcshostptr | offset);
-    ReadHostWordFromLittleEndian(hostAddr, field);
+    field = ReadHostWordFromLittleEndian(hostAddr);
   }
   else {
     access_read_physical(pAddr, 2, (Bit8u*)(&field));
@@ -190,7 +190,7 @@ Bit32u BX_CPP_AttrRegparmN(1) BX_CPU_C::VMread32(unsigned encoding)
 
   if (BX_CPU_THIS_PTR vmcshostptr) {
     Bit32u *hostAddr = (Bit32u*) (BX_CPU_THIS_PTR vmcshostptr | offset);
-    ReadHostDWordFromLittleEndian(hostAddr, field);
+    field = ReadHostDWordFromLittleEndian(hostAddr);
   }
   else {
     access_read_physical(pAddr, 4, (Bit8u*)(&field));
@@ -234,7 +234,7 @@ Bit64u BX_CPP_AttrRegparmN(1) BX_CPU_C::VMread64(unsigned encoding)
 
   if (BX_CPU_THIS_PTR vmcshostptr) {
     Bit64u *hostAddr = (Bit64u*) (BX_CPU_THIS_PTR vmcshostptr | offset);
-    ReadHostQWordFromLittleEndian(hostAddr, field);
+    field = ReadHostQWordFromLittleEndian(hostAddr);
   }
   else {
     access_read_physical(pAddr, 8, (Bit8u*)(&field));

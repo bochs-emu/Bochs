@@ -62,24 +62,18 @@ enum {
 
 BX_CPP_INLINE Bit16u FetchWORD(const Bit8u *iptr)
 {
-   Bit16u data;
-   ReadHostWordFromLittleEndian(iptr, data);
-   return data;
+   return ReadHostWordFromLittleEndian((Bit16u*)iptr);
 }
 
 BX_CPP_INLINE Bit32u FetchDWORD(const Bit8u *iptr)
 {
-   Bit32u data;
-   ReadHostDWordFromLittleEndian(iptr, data);
-   return data;
+   return ReadHostDWordFromLittleEndian((Bit32u*)iptr);
 }
 
 #if BX_SUPPORT_X86_64
 BX_CPP_INLINE Bit64u FetchQWORD(const Bit8u *iptr)
 {
-   Bit64u data;
-   ReadHostQWordFromLittleEndian(iptr, data);
-   return data;
+   return ReadHostQWordFromLittleEndian((Bit64u*)iptr);
 }
 #endif
 

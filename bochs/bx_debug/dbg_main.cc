@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2016  The Bochs Project
+//  Copyright (C) 2001-2019  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -2507,7 +2507,7 @@ void bx_dbg_examine_command(const char *command, const char *format, bx_bool for
         break;
 
       case 2:
-        ReadHostWordFromLittleEndian(databuf, data16);
+        data16 = ReadHostWordFromLittleEndian((Bit16u*)databuf);
 
         if (memory_dump)
           switch (display_format) {
@@ -2532,7 +2532,7 @@ void bx_dbg_examine_command(const char *command, const char *format, bx_bool for
         break;
 
       case 4:
-        ReadHostDWordFromLittleEndian(databuf, data32);
+        data32 = ReadHostDWordFromLittleEndian((Bit32u*)databuf);
 
         if (memory_dump)
           switch (display_format) {
@@ -2559,7 +2559,7 @@ void bx_dbg_examine_command(const char *command, const char *format, bx_bool for
         break;
 
       case 8:
-        ReadHostQWordFromLittleEndian(databuf, data64);
+        data64 = ReadHostQWordFromLittleEndian((Bit64u*)databuf);
 
         if (memory_dump)
           switch (display_format) {
@@ -2601,28 +2601,26 @@ void bx_dbg_examine_command(const char *command, const char *format, bx_bool for
 Bit32u bx_dbg_lin_indirect(bx_address addr)
 {
   Bit8u  databuf[4];
-  Bit32u result;
 
   if (! bx_dbg_read_linear(dbg_cpu, addr, 4, databuf)) {
     /* bx_dbg_read_linear already printed an error message if failed */
     return 0;
   }
 
-  ReadHostDWordFromLittleEndian(databuf, result);
+  Bit32u result = ReadHostDWordFromLittleEndian((Bit32u*) databuf);
   return result;
 }
 
 Bit32u bx_dbg_phy_indirect(bx_phy_address paddr)
 {
   Bit8u  databuf[4];
-  Bit32u result;
 
   if (! BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), paddr, 4, databuf)) {
     /* dbg_fetch_mem already printed an error message if failed */
     return 0;
   }
 
-  ReadHostDWordFromLittleEndian(databuf, result);
+  Bit32u result = ReadHostDWordFromLittleEndian((Bit32u*) databuf);
   return result;
 }
 

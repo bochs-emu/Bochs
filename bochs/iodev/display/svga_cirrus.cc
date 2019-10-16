@@ -5,7 +5,7 @@
 //  Copyright (c) 2004 Makoto Suzuki (suzu)
 //                     Volker Ruppert (vruppert)
 //                     Robin Kay (komadori)
-//  Copyright (C) 2004-2018  The Bochs Project
+//  Copyright (C) 2004-2019  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -2407,17 +2407,17 @@ void bx_svga_cirrus_c::svga_bitblt()
   Bit32u offset;
   Bit8u *cregs = BX_CIRRUS_THIS control.reg;
 
-  ReadHostWordFromLittleEndian(&cregs[0x20], tmp16);
+  tmp16 = ReadHostWordFromLittleEndian((Bit16u*) &cregs[0x20]);
   BX_CIRRUS_THIS bitblt.bltwidth = ((int)(tmp16 & 0x1fff)) + 1;
-  ReadHostWordFromLittleEndian(&cregs[0x22], tmp16);
+  tmp16 = ReadHostWordFromLittleEndian((Bit16u*) &cregs[0x22]);
   BX_CIRRUS_THIS bitblt.bltheight = ((int)(tmp16 & 0x07ff)) + 1;
-  ReadHostWordFromLittleEndian(&cregs[0x24], tmp16);
+  tmp16 = ReadHostWordFromLittleEndian((Bit16u*) &cregs[0x24]);
   BX_CIRRUS_THIS bitblt.dstpitch = (int)(tmp16 & 0x1fff);
-  ReadHostWordFromLittleEndian(&cregs[0x26], tmp16);
+  tmp16 = ReadHostWordFromLittleEndian((Bit16u*) &cregs[0x26]);
   BX_CIRRUS_THIS bitblt.srcpitch = (int)(tmp16 & 0x1fff);
-  ReadHostDWordFromLittleEndian(&cregs[0x28], tmp32);
+  tmp32 = ReadHostDWordFromLittleEndian((Bit32u*) &cregs[0x28]);
   dstaddr = tmp32 & BX_CIRRUS_THIS memsize_mask;
-  ReadHostDWordFromLittleEndian(&cregs[0x2c], tmp32);
+  tmp32 = ReadHostDWordFromLittleEndian((Bit32u*) &cregs[0x2c]);
   srcaddr = tmp32 & BX_CIRRUS_THIS memsize_mask;
   BX_CIRRUS_THIS bitblt.srcaddr = srcaddr;
   BX_CIRRUS_THIS bitblt.bltmode = BX_CIRRUS_THIS control.reg[0x30];
