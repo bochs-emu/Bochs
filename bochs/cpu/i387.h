@@ -52,32 +52,32 @@ struct BOCHSAPI_MSVCONLY i387_t
     i387_t() {}
 
 public:
-    void	init();		// used by FINIT/FNINIT instructions
-    void	reset();	// called on CPU reset
+    void    init();        // used by FINIT/FNINIT instructions
+    void    reset();    // called on CPU reset
 
-    int 	is_IA_masked() const { return (cwd & FPU_CW_Invalid); }
+    int     is_IA_masked() const { return (cwd & FPU_CW_Invalid); }
 
-    Bit16u 	get_control_word() const { return cwd; }
-    Bit16u 	get_tag_word() const { return twd; }
-    Bit16u 	get_status_word() const { return (swd & ~FPU_SW_Top & 0xFFFF) | ((tos << 11) & FPU_SW_Top); }
-    Bit16u 	get_partial_status() const { return swd; }
+    Bit16u    get_control_word() const { return cwd; }
+    Bit16u    get_tag_word() const { return twd; }
+    Bit16u    get_status_word() const { return (swd & ~FPU_SW_Top & 0xFFFF) | ((tos << 11) & FPU_SW_Top); }
+    Bit16u    get_partial_status() const { return swd; }
 
-    void   	FPU_pop ();
-    void   	FPU_push();
+    void      FPU_pop ();
+    void      FPU_push();
 
-    void   	FPU_settagi(int tag, int stnr);
-    void   	FPU_settagi_valid(int stnr);
-    int    	FPU_gettagi(int stnr);
+    void      FPU_settagi(int tag, int stnr);
+    void      FPU_settagi_valid(int stnr);
+    int       FPU_gettagi(int stnr);
 
-    floatx80 	FPU_read_regi(int stnr) { return st_space[(tos+stnr) & 7]; }
-    void  	FPU_save_regi(floatx80 reg, int stnr);
-    void  	FPU_save_regi(floatx80 reg, int tag, int stnr);
+    floatx80  FPU_read_regi(int stnr) { return st_space[(tos+stnr) & 7]; }
+    void      FPU_save_regi(floatx80 reg, int stnr);
+    void      FPU_save_regi(floatx80 reg, int tag, int stnr);
 
 public:
-    Bit16u cwd; 	// control word
-    Bit16u swd; 	// status word
-    Bit16u twd;		// tag word
-    Bit16u foo; 	// last instruction opcode
+    Bit16u cwd;     // control word
+    Bit16u swd;     // status word
+    Bit16u twd;        // tag word
+    Bit16u foo;     // last instruction opcode
 
     bx_address fip;
     bx_address fdp;
@@ -92,10 +92,10 @@ public:
     unsigned char align3;
 };
 
-#define IS_TAG_EMPTY(i) 		                                \
+#define IS_TAG_EMPTY(i)                                                 \
   ((BX_CPU_THIS_PTR the_i387.FPU_gettagi(i)) == FPU_Tag_Empty)
 
-#define BX_READ_FPU_REG(i)		                                \
+#define BX_READ_FPU_REG(i)                                              \
   (BX_CPU_THIS_PTR the_i387.FPU_read_regi(i))
 
 #define BX_WRITE_FPU_REG(value, i)                                      \
@@ -255,15 +255,15 @@ typedef BxPackedRegister BxPackedMmxRegister;
 
 #define BX_MMX_REG(index) (BX_FPU_REG(index).fraction)
 
-#define BX_READ_MMX_REG(index) 						\
+#define BX_READ_MMX_REG(index)                         \
     (*((const BxPackedMmxRegister*)(&(BX_MMX_REG(index)))))
 
-#define BX_WRITE_MMX_REG(index, value)                                  \
-{                                 					\
-   (BX_FPU_REG(index)).fraction = MMXUQ(value);		                \
-   (BX_FPU_REG(index)).exp = 0xffff;       			        \
+#define BX_WRITE_MMX_REG(index, value)                 \
+{                                                      \
+   (BX_FPU_REG(index)).fraction = MMXUQ(value);        \
+   (BX_FPU_REG(index)).exp = 0xffff;                   \
 }
 
-#endif		/* BX_SUPPORT_FPU */
+#endif        /* BX_SUPPORT_FPU */
 
 #endif

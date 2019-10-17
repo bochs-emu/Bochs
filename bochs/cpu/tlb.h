@@ -35,7 +35,10 @@
 const Bit32u BX_TLB_SIZE = 1024;
 const Bit32u BX_TLB_MASK = ((BX_TLB_SIZE-1) << 12);
 
-#define BX_TLB_INDEX_OF(lpf, len) ((((unsigned)(lpf) + (len)) & BX_TLB_MASK) >> 12)
+BX_CPP_INLINE unsigned BX_TLB_INDEX_OF(bx_address lpf, unsigned len)
+{
+  return (((unsigned(lpf) + len) & BX_TLB_MASK) >> 12);
+}
 
 typedef bx_ptr_equiv_t bx_hostpageaddr_t;
 
