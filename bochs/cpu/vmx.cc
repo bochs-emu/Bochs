@@ -3626,25 +3626,27 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVVPID(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVPCID(bxInstruction_c *i)
 {
-  if (v8086_mode()) {
-    BX_ERROR(("INVPCID: #GP - not recognized in v8086 mode"));
-    exception(BX_GP_EXCEPTION, 0);
-  }
-
 #if BX_SUPPORT_VMX
-  // INVPCID will always #UD in legacy VMX mode
+  // INVPCID will always #UD in legacy VMX mode, the #UD takes priority over any other exception the instruction may incur.
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_INVPCID)) {
        BX_ERROR(("INVPCID in VMX guest: not allowed to use instruction !"));
        exception(BX_UD_EXCEPTION, 0);
     }
+  }
+#endif
+
+  if (v8086_mode()) {
+    BX_ERROR(("INVPCID: #GP - not recognized in v8086 mode"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
 
 #if BX_SUPPORT_VMX >= 2
+  // INVPCID will always #UD in legacy VMX mode
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (VMEXIT(VMX_VM_EXEC_CTRL2_INVLPG_VMEXIT)) {
       VMexit_Instruction(i, VMX_VMEXIT_INVPCID);
     }
-#endif
-
   }
 #endif
 
