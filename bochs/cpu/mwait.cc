@@ -61,21 +61,23 @@ void BX_CPU_C::wakeup_monitor(void)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MONITOR_MWAIT
-  // CPL is always 0 in real mode
-  if (CPL != 0 && i->getIaOpcode() != BX_IA_MONITORX) {
-    BX_DEBUG(("%s: instruction not recognized when CPL != 0", i->getIaOpcodeNameShort()));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
   BX_DEBUG(("%s instruction executed EAX = 0x%08x", i->getIaOpcodeNameShort(), EAX));
 
-#if BX_SUPPORT_VMX
-  if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (VMEXIT(VMX_VM_EXEC_CTRL2_MONITOR_VMEXIT)) {
-      VMexit(VMX_VMEXIT_MONITOR, 0);
+  if (i->getIaOpcode() == BX_IA_MONITOR) {
+    // CPL is always 0 in real mode
+    if (CPL != 0) {
+      BX_DEBUG(("%s: instruction not recognized when CPL != 0", i->getIaOpcodeNameShort()));
+      exception(BX_UD_EXCEPTION, 0);
     }
-  }
+
+#if BX_SUPPORT_VMX
+    if (BX_CPU_THIS_PTR in_vmx_guest) {
+      if (VMEXIT(VMX_VM_EXEC_CTRL2_MONITOR_VMEXIT)) {
+        VMexit(VMX_VMEXIT_MONITOR, 0);
+      }
+    }
 #endif
+  }
 
   if (RCX != 0) {
     BX_ERROR(("%s: no optional extensions supported", i->getIaOpcodeNameShort()));
@@ -114,21 +116,23 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MONITOR_MWAIT
-  // CPL is always 0 in real mode
-  if (CPL != 0 && i->getIaOpcode() != BX_IA_MWAITX) {
-    BX_DEBUG(("%s: instruction not recognized when CPL != 0", i->getIaOpcodeNameShort()));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
   BX_DEBUG(("%s instruction executed ECX = 0x%08x", i->getIaOpcodeNameShort(), ECX));
 
-#if BX_SUPPORT_VMX
-  if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (VMEXIT(VMX_VM_EXEC_CTRL2_MWAIT_VMEXIT)) {
-      VMexit(VMX_VMEXIT_MWAIT, BX_CPU_THIS_PTR monitor.armed);
+  if (i->getIaOpcode() == BX_IA_MWAIT) {
+    // CPL is always 0 in real mode
+    if (CPL != 0) {
+      BX_DEBUG(("%s: instruction not recognized when CPL != 0", i->getIaOpcodeNameShort()));
+      exception(BX_UD_EXCEPTION, 0);
     }
-  }
+
+#if BX_SUPPORT_VMX
+    if (BX_CPU_THIS_PTR in_vmx_guest) {
+      if (VMEXIT(VMX_VM_EXEC_CTRL2_MWAIT_VMEXIT)) {
+        VMexit(VMX_VMEXIT_MWAIT, BX_CPU_THIS_PTR monitor.armed);
+      }
+    }
 #endif
+  }
 
   // extension supported:
   //   ECX[0] - interrupt MWAIT even if EFLAGS.IF = 0
