@@ -391,10 +391,12 @@ void BX_CPU_C::register_state(void)
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_XSAVES)) {
     BXRS_HEX_PARAM_FIELD(MSR, msr_xss, msr.msr_xss);
   }
+#endif
+
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SCA_MITIGATIONS)) {
     BXRS_HEX_PARAM_FIELD(MSR, ia32_spec_ctrl, msr.ia32_spec_ctrl);
   }
-#endif
+
 #if BX_CONFIGURE_MSRS
   bx_list_c *MSRS = new bx_list_c(cpu, "USER_MSR");
   for(n=0; n < BX_MSR_MAX_INDEX; n++) {
