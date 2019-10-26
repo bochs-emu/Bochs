@@ -24,6 +24,7 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu.h"
+#include "msr.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 #include "iodev/iodev.h"

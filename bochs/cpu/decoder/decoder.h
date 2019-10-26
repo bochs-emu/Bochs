@@ -121,6 +121,7 @@ enum x86_feature_name {
   BX_ISA_RDPID,                   /* RDPID Support */
   BX_ISA_TCE,                     /* Translation Cache Extensions (TCE) support (AMD) */
   BX_ISA_CLZERO,                  /* CLZERO instruction support (AMD) */
+  BX_ISA_SCA_MITIGATIONS,         /* SCA Mitigations */
   BX_ISA_EXTENSION_LAST
 };                            
 

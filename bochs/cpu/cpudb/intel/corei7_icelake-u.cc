@@ -124,6 +124,7 @@ corei7_icelake_t::corei7_icelake_t(BX_CPU_C *cpu):
 #endif
   enable_cpu_extension(BX_ISA_UMIP);
   enable_cpu_extension(BX_ISA_RDPID);
+  enable_cpu_extension(BX_ISA_SCA_MITIGATIONS);
 }
 
 void corei7_icelake_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
@@ -642,15 +643,22 @@ void corei7_icelake_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t
     //   [17:09]    reserved
     //   [18:18]    PCONFIG support
     //   [25:19]    reserved
-    // ! [26:26]    IBRS: indirect branch restricted speculation
-    // ! [27:27]    STIBP: single thread indirect branch predictors
-    // ! [28:28]    L1D_FLUSH support
-    // ! [29:29]    Support for the IA32_ARCH_CAPABILITIES MSR.
+    // * [26:26]    IBRS: indirect branch restricted speculation
+    // * [27:27]    STIBP: single thread indirect branch predictors
+    // * [28:28]    L1D_FLUSH support
+    // * [29:29]    Support for the IA32_ARCH_CAPABILITIES MSR.
     //   [30:30]    Support for the IA32_CORE_CAPABILITIES MSR.
-    // ! [31:31]    SSBD: Speculative Store Bypass Disable
+    // * [31:31]    SSBD: Speculative Store Bypass Disable
 
     leaf->edx = BX_CPUID_EXT5_FAST_SHORT_REP_MOV |
                 BX_CPUID_EXT5_AVX512_VPINTERSECT;
+
+    if (is_cpu_extension_supported(BX_ISA_SCA_MITIGATIONS))
+      leaf->edx |= BX_CPUID_EXT5_SCA_IBRS_IBPB |
+                   BX_CPUID_EXT5_SCA_STIBP |
+                   BX_CPUID_EXT5_L1D_FLUSH |
+                   BX_CPUID_EXT5_ARCH_CAPABILITIES_MSR |
+                   BX_CPUID_EXT5_SCA_SSBD;
     break;
 
   default:

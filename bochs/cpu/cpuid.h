@@ -451,6 +451,12 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [7:5]    reserved
 //   [8:8]    AVX512 VP2INTERSECT instructions support
 //   ...
+//   [26:26]  IBRS and IBPB: Indirect branch restricted speculation (SCA)
+//   [27:27]  STIBP: Single Thread Indirect Branch Predictors supported (SCA)
+//   [28:28]  L1D_FLUSH supported (SCA)
+//   [29:29]  MSR_IA32_ARCH_CAPABILITIES supported (SCA)
+//   [30:30]  MSR_IA32_CORE_CAPABILITIES supported (SCA)
+//   [31:31]  SSBD: Speculative Store Bypass Disable supported (SCA)
 
 #define BX_CPUID_EXT5_RESERVED0              (1 <<  0)
 #define BX_CPUID_EXT5_RESERVED1              (1 <<  1)
@@ -462,6 +468,12 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT5_RESERVED7              (1 <<  7)
 #define BX_CPUID_EXT5_AVX512_VPINTERSECT     (1 <<  8)
 // ...
+#define BX_CPUID_EXT5_SCA_IBRS_IBPB          (1 << 26)
+#define BX_CPUID_EXT5_SCA_STIBP              (1 << 27)
+#define BX_CPUID_EXT5_L1D_FLUSH              (1 << 28)
+#define BX_CPUID_EXT5_ARCH_CAPABILITIES_MSR  (1 << 29)
+#define BX_CPUID_EXT5_CORE_CAPABILITIES_MSR  (1 << 30)
+#define BX_CPUID_EXT5_SCA_SSBD               (1 << 31)
 
 // CPUID defines - STD2 features CPUID[0x80000001].EDX
 // -----------------------------

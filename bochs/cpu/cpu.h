@@ -320,125 +320,6 @@ enum BX_Exception {
 
 const unsigned BX_CPU_HANDLED_EXCEPTIONS = 32;
 
-/* MSR registers */
-#define BX_MSR_TSC                 0x010
-#define BX_MSR_APICBASE            0x01b
-#define BX_MSR_TSC_ADJUST          0x03b
-
-#if BX_CPU_LEVEL >= 6
-  #define BX_MSR_SYSENTER_CS       0x174
-  #define BX_MSR_SYSENTER_ESP      0x175
-  #define BX_MSR_SYSENTER_EIP      0x176
-#endif
-
-#define BX_MSR_DEBUGCTLMSR         0x1d9
-#define BX_MSR_LASTBRANCHFROMIP    0x1db
-#define BX_MSR_LASTBRANCHTOIP      0x1dc
-#define BX_MSR_LASTINTOIP          0x1dd
-
-const unsigned BX_NUM_VARIABLE_RANGE_MTRRS = 8;
-
-#if BX_CPU_LEVEL >= 6
-  #define BX_MSR_MTRRCAP           0x0fe
-  #define BX_MSR_MTRRPHYSBASE0     0x200
-  #define BX_MSR_MTRRPHYSMASK0     0x201
-  #define BX_MSR_MTRRPHYSBASE1     0x202
-  #define BX_MSR_MTRRPHYSMASK1     0x203
-  #define BX_MSR_MTRRPHYSBASE2     0x204
-  #define BX_MSR_MTRRPHYSMASK2     0x205
-  #define BX_MSR_MTRRPHYSBASE3     0x206
-  #define BX_MSR_MTRRPHYSMASK3     0x207
-  #define BX_MSR_MTRRPHYSBASE4     0x208
-  #define BX_MSR_MTRRPHYSMASK4     0x209
-  #define BX_MSR_MTRRPHYSBASE5     0x20a
-  #define BX_MSR_MTRRPHYSMASK5     0x20b
-  #define BX_MSR_MTRRPHYSBASE6     0x20c
-  #define BX_MSR_MTRRPHYSMASK6     0x20d
-  #define BX_MSR_MTRRPHYSBASE7     0x20e
-  #define BX_MSR_MTRRPHYSMASK7     0x20f
-  #define BX_MSR_MTRRFIX64K_00000  0x250
-  #define BX_MSR_MTRRFIX16K_80000  0x258
-  #define BX_MSR_MTRRFIX16K_A0000  0x259
-  #define BX_MSR_MTRRFIX4K_C0000   0x268
-  #define BX_MSR_MTRRFIX4K_C8000   0x269
-  #define BX_MSR_MTRRFIX4K_D0000   0x26a
-  #define BX_MSR_MTRRFIX4K_D8000   0x26b
-  #define BX_MSR_MTRRFIX4K_E0000   0x26c
-  #define BX_MSR_MTRRFIX4K_E8000   0x26d
-  #define BX_MSR_MTRRFIX4K_F0000   0x26e
-  #define BX_MSR_MTRRFIX4K_F8000   0x26f
-  #define BX_MSR_PAT               0x277
-  #define BX_MSR_MTRR_DEFTYPE      0x2ff
-#endif
-
-#if BX_SUPPORT_PERFMON
-  #define BX_MSR_PMC0              0x0c1  /* PERFCTR0 */
-  #define BX_MSR_PMC1              0x0c2  /* PERFCTR1 */
-  #define BX_MSR_PMC2              0x0c3
-  #define BX_MSR_PMC3              0x0c4
-  #define BX_MSR_PMC4              0x0c5
-  #define BX_MSR_PMC5              0x0c6
-  #define BX_MSR_PMC6              0x0c7
-  #define BX_MSR_PMC7              0x0c8
-  #define BX_MSR_PERFEVTSEL0       0x186
-  #define BX_MSR_PERFEVTSEL1       0x187
-  #define BX_MSR_PERFEVTSEL2       0x188
-  #define BX_MSR_PERFEVTSEL3       0x189
-  #define BX_MSR_PERFEVTSEL4       0x18a
-  #define BX_MSR_PERFEVTSEL5       0x18b 
-  #define BX_MSR_PERFEVTSEL6       0x18c
-  #define BX_MSR_PERFEVTSEL7       0x18d
-  #define BX_MSR_PERF_FIXED_CTR0   0x309  /* Fixed Performance Counter 0 (R/W): Counts Instr_Retired.Any */
-  #define BX_MSR_PERF_FIXED_CTR1   0x30a  /* Fixed Performance Counter 1 (R/W): Counts CPU_CLK_Unhalted.Core */
-  #define BX_MSR_PERF_FIXED_CTR2   0x30b  /* Fixed Performance Counter 2 (R/W): Counts CPU_CLK_Unhalted.Ref */
-  #define BX_MSR_FIXED_CTR_CTRL    0x38d  /* Fixed Performance Counter Control (R/W) */
-  #define BX_MSR_PERF_GLOBAL_CTRL  0x38f  /* Global Performance Counter Control */
-#endif
-
-#define BX_MSR_TSC_DEADLINE        0x6E0
-
-#define BX_MSR_MAX_INDEX          0x1000
-
-#if BX_SUPPORT_VMX
-  #define BX_MSR_VMX_BASIC                0x480
-  #define BX_MSR_VMX_PINBASED_CTRLS       0x481
-  #define BX_MSR_VMX_PROCBASED_CTRLS      0x482
-  #define BX_MSR_VMX_VMEXIT_CTRLS         0x483
-  #define BX_MSR_VMX_VMENTRY_CTRLS        0x484
-  #define BX_MSR_VMX_MISC                 0x485
-  #define BX_MSR_VMX_CR0_FIXED0           0x486
-  #define BX_MSR_VMX_CR0_FIXED1           0x487
-  #define BX_MSR_VMX_CR4_FIXED0           0x488
-  #define BX_MSR_VMX_CR4_FIXED1           0x489
-  #define BX_MSR_VMX_VMCS_ENUM            0x48a
-  #define BX_MSR_VMX_PROCBASED_CTRLS2     0x48b
-  #define BX_MSR_VMX_EPT_VPID_CAP         0x48c
-  #define BX_MSR_VMX_TRUE_PINBASED_CTRLS  0x48d
-  #define BX_MSR_VMX_TRUE_PROCBASED_CTRLS 0x48e
-  #define BX_MSR_VMX_TRUE_VMEXIT_CTRLS    0x48f
-  #define BX_MSR_VMX_TRUE_VMENTRY_CTRLS   0x490
-  #define BX_MSR_VMX_VMFUNC               0x491
-  #define BX_MSR_IA32_FEATURE_CONTROL     0x03A
-  #define BX_MSR_IA32_SMM_MONITOR_CTL     0x09B
-#endif
-
-#define BX_MSR_EFER             0xc0000080
-#define BX_MSR_STAR             0xc0000081
-#define BX_MSR_LSTAR            0xc0000082
-#define BX_MSR_CSTAR            0xc0000083
-#define BX_MSR_FMASK            0xc0000084
-#define BX_MSR_FSBASE           0xc0000100
-#define BX_MSR_GSBASE           0xc0000101
-#define BX_MSR_KERNELGSBASE     0xc0000102
-#define BX_MSR_TSC_AUX          0xc0000103
-
-#define BX_SVM_VM_CR_MSR        0xc0010114
-#define BX_SVM_IGNNE_MSR        0xc0010115
-#define BX_SVM_SMM_CTL_MSR      0xc0010116
-#define BX_SVM_HSAVE_PA_MSR     0xc0010117
-
-#define BX_MSR_XSS              0xda0
-
 enum BxCpuMode {
   BX_MODE_IA32_REAL = 0,        // CR0.PE=0                |
   BX_MODE_IA32_V8086 = 1,       // CR0.PE=1, EFLAGS.VM=1   | EFER.LMA=0
@@ -446,6 +327,8 @@ enum BxCpuMode {
   BX_MODE_LONG_COMPAT = 3,      // EFER.LMA = 1, CR0.PE=1, CS.L=0
   BX_MODE_LONG_64 = 4           // EFER.LMA = 1, CR0.PE=1, CS.L=1
 };
+
+const unsigned BX_MSR_MAX_INDEX = 0x800;
 
 extern const char* cpu_mode_string(unsigned cpu_mode);
 
@@ -750,6 +633,8 @@ typedef struct
 #if BX_CPU_LEVEL >= 6
   Bit64u msr_xss;
 #endif
+
+  Bit32u ia32_spec_ctrl; // SCA
 
   /* TODO finish of the others */
 } bx_regs_msr_t;
