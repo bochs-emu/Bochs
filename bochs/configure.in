@@ -2263,6 +2263,7 @@ ok_wx_version=0
 wx_multi_lib=0
 needs_gtk2=0
 wx_needs_gdk2=0
+wx_needs_gdk3=0
 wx_msw_unicode=0
 AC_MSG_CHECKING(for wxWidgets library version)
 if test x$WX_CONFIG != xnot_found; then
@@ -2291,6 +2292,7 @@ if test x$WX_CONFIG != xnot_found; then
       wx_multi_lib=1
       case x$WX_BASENAME in
         xwx_gtk2|xwx_gtk2u) wx_needs_gdk2=1 ;;
+        xwx_gtk3|xwx_gtk3u) wx_needs_gdk3=1 ;;
         *) ;;
       esac
       ;;
@@ -2575,6 +2577,11 @@ if test "$with_wx" = yes; then
   WX_CXXFLAGS="`$WX_CONFIG --cxxflags`"
   if test "$wx_needs_gdk2" = 1; then
     GDK_CFLAGS="`pkg-config --cflags gdk-2.0`"
+    WX_CFLAGS="$WX_CFLAGS $GDK_CFLAGS"
+    WX_CXXFLAGS="$WX_CXXFLAGS $GDK_CFLAGS"
+  fi
+  if test "$wx_needs_gdk3" = 1; then
+    GDK_CFLAGS="`pkg-config --cflags gdk-3.0`"
     WX_CFLAGS="$WX_CFLAGS $GDK_CFLAGS"
     WX_CXXFLAGS="$WX_CXXFLAGS $GDK_CFLAGS"
   fi

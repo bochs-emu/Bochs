@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2018  The Bochs Project
+//  Copyright (C) 2002-2019  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -48,6 +48,10 @@
 #include "bxversion.h"           // get version string
 #include "wxdialog.h"            // custom dialog boxes
 #include "wxmain.h"              // wxwidgets shared stuff
+
+#if !defined(wxADJUST_MINSIZE)
+#define wxADJUST_MINSIZE 0
+#endif
 
 //////////////////////////////////////////////////////////////////////
 // constants, prototypes
