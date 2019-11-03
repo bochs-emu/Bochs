@@ -64,6 +64,7 @@ static u_int dns_addr_time;
 #if defined(_WIN32) || defined(__CYGWIN__)
 
 #include <iphlpapi.h>
+#include <winerror.h>
 
 int get_dns_addr(struct in_addr *pdns_addr)
 {
