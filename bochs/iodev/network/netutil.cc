@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2004-2017  The Bochs Project
+//  Copyright (C) 2004-2019  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -620,7 +620,7 @@ int tftp_send_error(Bit8u *buffer, unsigned code, const char *msg, tftp_session_
 
 int tftp_send_data(Bit8u *buffer, unsigned block_nr, tftp_session_t *s)
 {
-  char msg[BX_PATHNAME_LEN];
+  char msg[BX_PATHNAME_LEN + 16];
   int rd;
 
   FILE *fp = fopen(s->filename, "rb");

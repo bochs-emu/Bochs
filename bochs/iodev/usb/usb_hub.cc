@@ -5,7 +5,7 @@
 // USB hub emulation support (ported from QEMU)
 //
 // Copyright (C) 2005       Fabrice Bellard
-// Copyright (C) 2009-2016  The Bochs Project
+// Copyright (C) 2009-2019  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -273,7 +273,7 @@ usb_hub_device_c::~usb_hub_device_c(void)
 void usb_hub_device_c::register_state_specific(bx_list_c *parent)
 {
   Bit8u i;
-  char portnum[6];
+  char portnum[16];
   bx_list_c *port, *pconf, *config;
 
   hub.state = new bx_list_c(parent, "hub", "USB HUB Device State");

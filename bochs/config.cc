@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2018  The Bochs Project
+//  Copyright (C) 2002-2019  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -3176,7 +3176,7 @@ int bx_write_floppy_options(FILE *fp, int drive)
 int bx_write_usb_options(FILE *fp, int maxports, bx_list_c *base)
 {
   int i;
-  char tmpname[20], tmpstr[BX_PATHNAME_LEN];
+  char tmpname[24], tmpstr[BX_PATHNAME_LEN];
 
   fprintf(fp, "usb_%s: enabled=%d", base->get_name(), SIM->get_param_bool("enabled", base)->get());
   if (SIM->get_param_bool("enabled", base)->get()) {

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2018  The Bochs Project
+//  Copyright (C) 2001-2019  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -176,7 +176,7 @@ void bx_hard_drive_c::init(void)
   char  string[5];
   char  sbtext[8];
   char  ata_name[20];
-  char  pname[8];
+  char  pname[10];
   bx_list_c *base;
 
   BX_DEBUG(("Init $Id$"));
@@ -3323,7 +3323,7 @@ bx_bool bx_hard_drive_c::get_cd_media_status(Bit32u handle)
 
 bx_bool bx_hard_drive_c::set_cd_media_status(Bit32u handle, bx_bool status)
 {
-  char ata_name[20];
+  char ata_name[22];
 
   if (handle >= BX_MAX_ATA_CHANNEL*2) return 0;
 

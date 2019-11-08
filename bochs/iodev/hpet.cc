@@ -9,7 +9,7 @@
 //
 //  Authors: Beth Kon <bkon@us.ibm.com>
 //
-//  Copyright (C) 2017-2018  The Bochs Project
+//  Copyright (C) 2017-2019  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -199,14 +199,14 @@ void bx_hpet_c::reset(unsigned type)
 
 void bx_hpet_c::register_state(void)
 {
-  char tnum[10];
+  char tnum[16];
   bx_list_c *tim;
 
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "hpet", "HPET State");
   BXRS_HEX_PARAM_FIELD(list, config, s.config);
   BXRS_HEX_PARAM_FIELD(list, isr, s.isr);
   BXRS_HEX_PARAM_FIELD(list, hpet_counter, s.hpet_counter);
-  for (int i = 0; i < s.num_timers; i++) {
+  for (Bit8u i = 0; i < s.num_timers; i++) {
     sprintf(tnum, "timer%d", i);
     tim = new bx_list_c(list, tnum);
     BXRS_HEX_PARAM_FIELD(tim, config, s.timer[i].config);
