@@ -241,13 +241,13 @@ bx_bool ShowAskDialog()
     {
         AskPrompt = gtk_label_new (ask_str.prompt);
         gtk_widget_show (AskPrompt);
-        gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), AskPrompt, TRUE, TRUE, 5);
+        gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dialog))), AskPrompt, TRUE, TRUE, 5);
         AskEntry = gtk_entry_new ();
         // "Enter" (activate) = OK button
         gtk_entry_set_activates_default (GTK_ENTRY (AskEntry), TRUE);
         // increase the width of the Entry to about 80 chars
         gtk_entry_set_width_chars (GTK_ENTRY (AskEntry), 80);
-        gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), AskEntry, TRUE, TRUE, 5);
+        gtk_box_pack_start (GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dialog))), AskEntry, TRUE, TRUE, 5);
     }
 
     gtk_widget_show (AskEntry);
@@ -589,8 +589,8 @@ int GetASMTopIdx()
     ListLineRatio = (int) (gtk_adjustment_get_upper(va) - gtk_adjustment_get_lower(va)) / AsmLineCount;
     if (ListLineRatio == 0)
         return 0;
-    AsmPgSize = (int) va->page_size / ListLineRatio;
-    return ((int) va->value / ListLineRatio);
+    AsmPgSize = (int) gtk_adjustment_get_page_size(va) / ListLineRatio;
+    return ((int) gtk_adjustment_get_value(va) / ListLineRatio);
 }
 
 // "pixels" is a multiple of (and therefore proportional to) ListLineRatio
@@ -598,7 +598,7 @@ int GetASMTopIdx()
 void ScrollASM(int pixels)
 {
     GtkAdjustment *va = gtk_tree_view_get_vadjustment ( GTK_TREE_VIEW(LV[ASM_WND]) );
-    gtk_adjustment_set_value (GTK_ADJUSTMENT(va), va->value + pixels);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(va), gtk_adjustment_get_value(va) + pixels);
 }
 
 // handle checkmarks in the "wordsize" popup menu
@@ -687,7 +687,7 @@ void VSizeChange()
     if (ShowIOWindows == FALSE)
     {
         gtk_widget_hide(IOVbox);
-        GTK_TABLE(TreeTbl)->nrows = 3;  // IO windows do not exist, so total table rows = 3
+        gtk_table_resize(GTK_TABLE(TreeTbl), 3, 1);  // IO windows do not exist, so total table rows = 3
     }
     else
     {
@@ -697,7 +697,7 @@ void VSizeChange()
         gcp = gtk_entry_get_text(GTK_ENTRY(IEntry));
         strcpy (tmpcb, gcp);
         gtk_entry_set_text(GTK_ENTRY(IEntry),"");
-        GTK_TABLE(TreeTbl)->nrows = 4;  // IO windows exist, so total table rows = 4
+        gtk_table_resize(GTK_TABLE(TreeTbl), 4, 1);  // IO windows exist, so total table rows = 4
         gtk_widget_show(IOVbox);
         gtk_widget_grab_focus(IEntry);  // Input window loses focus while it is hidden
         gtk_entry_set_text(GTK_ENTRY(IEntry),tmpcb);
@@ -805,10 +805,10 @@ void RedrawColumns(int listnum)
 // autosize the columns that may be used by other dumps, once, on a DViewMode change
 void SetAutoSize6_9()
 {
-    AllCols[6]->column_type = GTK_TREE_VIEW_COLUMN_AUTOSIZE;
-    AllCols[7]->column_type = GTK_TREE_VIEW_COLUMN_AUTOSIZE;
-    AllCols[8]->column_type = GTK_TREE_VIEW_COLUMN_AUTOSIZE;
-    AllCols[9]->column_type = GTK_TREE_VIEW_COLUMN_AUTOSIZE;
+    gtk_tree_view_column_set_sizing(AllCols[6], GTK_TREE_VIEW_COLUMN_AUTOSIZE);
+    gtk_tree_view_column_set_sizing(AllCols[7], GTK_TREE_VIEW_COLUMN_AUTOSIZE);
+    gtk_tree_view_column_set_sizing(AllCols[8], GTK_TREE_VIEW_COLUMN_AUTOSIZE);
+    gtk_tree_view_column_set_sizing(AllCols[9], GTK_TREE_VIEW_COLUMN_AUTOSIZE);
 }
 
 // Show/Hide the typical pattern of Dump window columns (show the first n, hide the rest out to 17)
@@ -817,9 +817,9 @@ void ShowDListCols (int totcols)
     int i = 5;
     int firsthide = totcols + 5;        // convert from a col# to an acolnum
     while (++i < firsthide)
-        AllCols[i]->visible = TRUE;
+        gtk_tree_view_column_set_visible(AllCols[i], TRUE);
     while (i < 23)
-        AllCols[i++]->visible = FALSE;
+        gtk_tree_view_column_set_visible(AllCols[i], FALSE);
 }
 
 // OS-dependent code that runs before each ListFill routine of each type
@@ -844,9 +844,9 @@ void StartListUpdate(int listnum)
     {
         // autosize Reg "hex" column, Asm "L.Addr" column
         if (listnum == REG_WND)
-            AllCols[1]->column_type = GTK_TREE_VIEW_COLUMN_AUTOSIZE;
+            gtk_tree_view_column_set_sizing(AllCols[1], GTK_TREE_VIEW_COLUMN_AUTOSIZE);
         else if (listnum == ASM_WND)
-            AllCols[3]->column_type = GTK_TREE_VIEW_COLUMN_AUTOSIZE;
+            gtk_tree_view_column_set_sizing(AllCols[3], GTK_TREE_VIEW_COLUMN_AUTOSIZE);
         // otherwise, autosize/rename/hide all the proper Dump list columns
         else
         {
@@ -871,7 +871,7 @@ void StartListUpdate(int listnum)
                     }
                     else
                     {
-                        AllCols[6]->column_type = GTK_TREE_VIEW_COLUMN_AUTOSIZE;
+                        gtk_tree_view_column_set_sizing(AllCols[6], GTK_TREE_VIEW_COLUMN_AUTOSIZE);
                         if (PrevDV == VIEW_MEMDUMP)     // autosizing address column only?
                             break;
                         PrevDAD = DumpAlign;
@@ -882,9 +882,10 @@ void StartListUpdate(int listnum)
                             ShowDListCols (2);      // show only columns 0 and 17
                             break;
                         }
-                        AllCols[7]->visible = TRUE;     // columns must be visible to set col titles!
-                        AllCols[8]->visible = TRUE;
-                        AllCols[9]->visible = TRUE;
+                        // columns must be visible to set col titles!
+                        gtk_tree_view_column_set_visible(AllCols[7], TRUE);
+                        gtk_tree_view_column_set_visible(AllCols[8], TRUE);
+                        gtk_tree_view_column_set_visible(AllCols[9], TRUE);
                         gtk_tree_view_column_set_title(AllCols[7], "0");
                         gtk_tree_view_column_set_title(AllCols[8], "1");
                         gtk_tree_view_column_set_title(AllCols[9], "2");
@@ -892,11 +893,11 @@ void StartListUpdate(int listnum)
                         {
                             if (((i - 7) & (DumpAlign - 1)) == 0)       // either autosize,
                             {
-                                AllCols[i]->column_type = GTK_TREE_VIEW_COLUMN_AUTOSIZE;
-                                AllCols[i]->visible = TRUE;
+                                gtk_tree_view_column_set_sizing(AllCols[i], GTK_TREE_VIEW_COLUMN_AUTOSIZE);
+                                gtk_tree_view_column_set_visible(AllCols[i], TRUE);
                             }
                             else            // or set the column invisible
-                                AllCols[i]->visible = FALSE;
+                                gtk_tree_view_column_set_visible(AllCols[i], FALSE);
                         }
                     }
                     break;
@@ -914,7 +915,7 @@ void StartListUpdate(int listnum)
                     break;
 
                 case VIEW_IDT:
-                    AllCols[6]->column_type = GTK_TREE_VIEW_COLUMN_AUTOSIZE;
+                    gtk_tree_view_column_set_sizing(AllCols[6], GTK_TREE_VIEW_COLUMN_AUTOSIZE);
                     if (PrevDV == VIEW_IDT)     // autosizing only?
                         break;
                     ShowDListCols (2);      // show 1 column, hide the rest out to 17
@@ -923,7 +924,7 @@ void StartListUpdate(int listnum)
                     break;
 
                 case VIEW_PAGING:
-                    AllCols[6]->column_type = GTK_TREE_VIEW_COLUMN_AUTOSIZE;
+                    gtk_tree_view_column_set_sizing(AllCols[6], GTK_TREE_VIEW_COLUMN_AUTOSIZE);
                     if (PrevDV == VIEW_PAGING)      // autosizing only?
                         break;
                     ShowDListCols (2);      // show 1 column, hide the rest out to 17
@@ -932,8 +933,8 @@ void StartListUpdate(int listnum)
                     break;
 
                 case VIEW_STACK:
-                    AllCols[6]->column_type = GTK_TREE_VIEW_COLUMN_AUTOSIZE;
-                    AllCols[7]->column_type = GTK_TREE_VIEW_COLUMN_AUTOSIZE;
+                    gtk_tree_view_column_set_sizing(AllCols[6], GTK_TREE_VIEW_COLUMN_AUTOSIZE);
+                    gtk_tree_view_column_set_sizing(AllCols[7], GTK_TREE_VIEW_COLUMN_AUTOSIZE);
                     if (PrevDV == VIEW_STACK)       // autosizing only?
                         break;
                     ShowDListCols (3);      // show 2 columns, hide the rest out to 17
@@ -943,8 +944,8 @@ void StartListUpdate(int listnum)
                     break;
 
                 case VIEW_BREAK:
-                    AllCols[6]->column_type = GTK_TREE_VIEW_COLUMN_AUTOSIZE;
-                    AllCols[7]->column_type = GTK_TREE_VIEW_COLUMN_AUTOSIZE;
+                    gtk_tree_view_column_set_sizing(AllCols[6], GTK_TREE_VIEW_COLUMN_AUTOSIZE);
+                    gtk_tree_view_column_set_sizing(AllCols[7], GTK_TREE_VIEW_COLUMN_AUTOSIZE);
                     if (PrevDV == VIEW_STACK)       // autosizing only?
                         break;
                     ShowDListCols (3);      // show 2 columns, hide the rest out to 17
@@ -1132,7 +1133,7 @@ void sizing_cancel()
         gtk_event_box_set_above_child (GTK_EVENT_BOX(VSepEvtBox2), TRUE);
         if (Sizing < 10)    // cancel (p)resize mode motion detection
             g_signal_handler_disconnect (LVEvtBox, mmov_hID);
-        gdk_window_set_cursor (GTK_WIDGET(LVEvtBox)->window, NULL); // change the cursor to normal
+        gdk_window_set_cursor (gtk_widget_get_window(LVEvtBox), NULL); // change the cursor to normal
         Sizing = 0;
     }
     EnterSizeMode = FALSE;
@@ -1145,16 +1146,19 @@ void sizing_cancel()
 void enter_resize_mode()
 {
     // need reasonably accurate column widths in horz. limit calculations -- update widths
+    GtkAllocation alloc;
     int width0, width1;
     gint totwidth;
     EnterSizeMode = FALSE;      // presize mode may never have reset this
     // a GtkAllocation structure (inside every widget) is a rectangle: relative x, y, + width & height
-    width0 = ScrlWin[0]->allocation.width;
+    gtk_widget_get_allocation(ScrlWin[0], &alloc);
+    width0 = alloc.width;
     ListWidthPix[0] = width0;
-    width1 = ScrlWin[1]->allocation.width;
+    gtk_widget_get_allocation(ScrlWin[1], &alloc);
+    width1 = alloc.width;
     ListWidthPix[1] = width1;
 
-    totwidth = gdk_window_get_width(window->window);
+    totwidth = gdk_window_get_width(gtk_widget_get_window(window));
     ListWidthPix[2] = totwidth - (width0 + width1);
 
     if (Sizing < 0)         // in presize mode? -- enter full resize mode
@@ -1284,7 +1288,7 @@ gboolean MemMouseDown_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
 
     while (event->x >= cellx && column < 23)
     {
-        int j = cellx += AllCols[column]->width;
+        int j = cellx += gtk_tree_view_column_get_width(AllCols[column]);
         if (event->x >= j){
             ++column;
             cellx = j;
@@ -1611,7 +1615,7 @@ gboolean VsEnter(GtkWidget *widget, GdkEventCrossing *event, gpointer SepNum)
     if (Sizing == 0)
     {
         Sizing = VsepNum - 2;       // Sizing = -1 or -2 for "presize"
-        gdk_window_set_cursor (GTK_WIDGET(LVEvtBox)->window, SizeCurs);
+        gdk_window_set_cursor (gtk_widget_get_window(LVEvtBox), SizeCurs);
         EnterSizeMode = TRUE;
         CurScrX = (unsigned int) (event->x_root + 0.5);
         gtk_event_box_set_above_child (GTK_EVENT_BOX(LVEvtBox), TRUE);
@@ -1634,15 +1638,17 @@ gboolean LV_MouseUp(GtkWidget *widget, GdkEventButton *event, gpointer data)
 // either cancel or complete a dock or sizing
 gboolean LEB_MouseUp(GtkWidget *widget, GdkEventButton *event, gpointer data)
 {
+    GtkAllocation alloc;
     int width0, width1, fList, oldcList, dest;
     gint totwidth, heightLV, x, zip;
     if (Sizing != 0 || xClick >= 0)     // complete a resize or dock operation
     {
         int cx = (int)(event->x + 0.5);
         int cy = (int)(event->y + 0.5);
-        heightLV = ScrlWin[0]->allocation.height;
-        totwidth = gdk_window_get_width(window->window);
-        zip = gdk_window_get_height(window->window);
+        gtk_widget_get_allocation(ScrlWin[0], &alloc);
+        heightLV = alloc.height;
+        totwidth = gdk_window_get_width(gtk_widget_get_window(window));
+        zip = gdk_window_get_height(gtk_widget_get_window(window));
         dest = fList = (DockOrder >> 8) -1;
 
         if (Sizing < 10)    // complete a resize operation
@@ -1664,14 +1670,16 @@ gboolean LEB_MouseUp(GtkWidget *widget, GdkEventButton *event, gpointer data)
         else    // complete a Docking operation
         {
             // get "local" x mouse coordinate value (main window relative)
-            gdk_window_get_pointer (GTK_WIDGET(LVEvtBox)->window, &x, &zip, NULL);
+            gdk_window_get_pointer(gtk_widget_get_window(LVEvtBox), &x, &zip, NULL);
             // verify that mouseup was within a LV window
             if (x >= 0 && cy >= 0 && x < totwidth && cy < heightLV)
             {
                 // update the widths of the LVs
-                width0 = ScrlWin[0]->allocation.width;
+                gtk_widget_get_allocation(ScrlWin[0], &alloc);
+                width0 = alloc.width;
                 ListWidthPix[0] = width0;
-                width1 = ScrlWin[1]->allocation.width;
+                gtk_widget_get_allocation(ScrlWin[1], &alloc);
+                width1 = alloc.width;
                 ListWidthPix[1] = width1;
                 ListWidthPix[2] = totwidth - (width0 + width1);
                 oldcList = CurCenterList;
@@ -1824,7 +1832,7 @@ static gboolean VGAWrefreshTick(GtkWidget *widget)
             gtk_event_box_set_above_child (GTK_EVENT_BOX(VSepEvtBox2), FALSE);
             gtk_event_box_set_above_child (GTK_EVENT_BOX(LVEvtBox), TRUE);
             Sizing = SizeList;      // Sizing tells which ListView is being moved
-            gdk_window_set_cursor (GTK_WIDGET(LVEvtBox)->window, DockCurs);
+            gdk_window_set_cursor (gtk_widget_get_window(LVEvtBox), DockCurs);
         }
     }
     UpdateStatus();
@@ -2370,9 +2378,9 @@ bx_bool OSInit()
     g_timeout_add(50, (GSourceFunc) BochsUpdateTick, (gpointer) window);
 
     g_signal_connect (G_OBJECT (window), "configure_event", G_CALLBACK (TblSizeEvent), NULL);
-    // could use: gtk_tree_view_column_get_width(), etc.
-    AllCols[4]->fixed_width = AllCols[4]->width;
-    AllCols[4]->column_type = GTK_TREE_VIEW_COLUMN_FIXED;
+    width = gtk_tree_view_column_get_width(AllCols[4]);
+    gtk_tree_view_column_set_fixed_width(AllCols[4], width);
+    gtk_tree_view_column_set_sizing(AllCols[4], GTK_TREE_VIEW_COLUMN_FIXED);
 
     if (!SIM->is_wx_selected()) {
       MakeGTKthreads();
