@@ -2327,7 +2327,7 @@ bx_bool OSInit()
 
     g_object_ref(PTree);     // keep an extra ref to both ScrlWin[2] widgets,
     g_object_ref(LV[2]);     // so they don't get deleted when removed from their container
-    g_object_ref_sink(GTK_OBJECT (PTree));   // the PTree reference is "floating", so "sink" it
+    g_object_ref_sink(G_OBJECT(PTree));   // the PTree reference is "floating", so "sink" it
 
     AttachSignals();        // this must be called AFTER InitMenus()
     TakeInputFocus();

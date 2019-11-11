@@ -622,58 +622,10 @@ bx_bool MyPanel::fillBxKeyEvent_MSW (wxKeyEvent& wxev, BxKeyEvent& bxev, bx_bool
 
 #if defined (wxHAS_RAW_KEY_CODES) && defined(__WXGTK__)
 // get those keysym definitions
+#if WX_GDK_VERSION == 3
+#include <gdk/gdkkeysyms-compat.h>
+#else
 #include <gdk/gdkkeysyms.h>
-
-#if defined(GDK_KEY_space)
-#define GDK_space       GDK_KEY_space
-#define GDK_asciitilde  GDK_KEY_asciitilde
-#define GDK_KP_1        GDK_KEY_KP_1
-#define GDK_KP_2        GDK_KEY_KP_2
-#define GDK_KP_3        GDK_KEY_KP_3
-#define GDK_KP_4        GDK_KEY_KP_4
-#define GDK_KP_5        GDK_KEY_KP_5
-#define GDK_KP_6        GDK_KEY_KP_6
-#define GDK_KP_7        GDK_KEY_KP_7
-#define GDK_KP_8        GDK_KEY_KP_8
-#define GDK_KP_9        GDK_KEY_KP_9
-#define GDK_KP_0        GDK_KEY_KP_0
-#define GDK_KP_Decimal  GDK_KEY_KP_Decimal
-#define GDK_KP_Subtract  GDK_KEY_KP_Subtract
-#define GDK_KP_Add      GDK_KEY_KP_Add
-#define GDK_KP_Multiply GDK_KEY_KP_Multiply
-#define GDK_KP_Divide   GDK_KEY_KP_Divide
-#define GDK_Up          GDK_KEY_Up
-#define GDK_Down        GDK_KEY_Down
-#define GDK_Left        GDK_KEY_Left
-#define GDK_Right       GDK_KEY_Right
-#define GDK_Delete      GDK_KEY_Delete
-#define GDK_BackSpace   GDK_KEY_BackSpace
-#define GDK_Tab         GDK_KEY_Tab
-#define GDK_Return      GDK_KEY_Return
-#define GDK_Escape      GDK_KEY_Escape
-#define GDK_F1          GDK_KEY_F1
-#define GDK_F2          GDK_KEY_F2
-#define GDK_F3          GDK_KEY_F3
-#define GDK_F4          GDK_KEY_F4
-#define GDK_F5          GDK_KEY_F5
-#define GDK_F6          GDK_KEY_F6
-#define GDK_F7          GDK_KEY_F7
-#define GDK_F8          GDK_KEY_F8
-#define GDK_F9          GDK_KEY_F9
-#define GDK_F10         GDK_KEY_F10
-#define GDK_F11         GDK_KEY_F11
-#define GDK_F12         GDK_KEY_F12
-#define GDK_Control_L   GDK_KEY_Control_L
-#define GDK_Shift_L     GDK_KEY_Shift_L
-#define GDK_Shift_R     GDK_KEY_Shift_R
-#define GDK_Alt_L       GDK_KEY_Alt_L
-#define GDK_Caps_Lock   GDK_KEY_Caps_Lock
-#define GDK_Num_Lock    GDK_KEY_Num_Lock
-#define GDK_Insert      GDK_KEY_Insert
-#define GDK_Home        GDK_KEY_Home
-#define GDK_End         GDK_KEY_End
-#define GDK_Page_Up     GDK_KEY_Page_Up
-#define GDK_Page_Down   GDK_KEY_Page_Down
 #endif
 
 #endif

@@ -2262,8 +2262,7 @@ AC_MSG_RESULT($WX_CONFIG)
 ok_wx_version=0
 wx_multi_lib=0
 needs_gtk2=0
-wx_needs_gdk2=0
-wx_needs_gdk3=0
+wx_needs_gdk_version=0
 wx_msw_unicode=0
 AC_MSG_CHECKING(for wxWidgets library version)
 if test x$WX_CONFIG != xnot_found; then
@@ -2283,7 +2282,7 @@ if test x$WX_CONFIG != xnot_found; then
       ok_wx_version=1
       wx_multi_lib=1
       case x$WX_BASENAME in
-        xwx_gtk2|xwx_gtk2u) wx_needs_gdk2=1 ;;
+        xwx_gtk2|xwx_gtk2u) wx_needs_gdk_version=2 ;;
         *) ;;
       esac
       ;;
@@ -2291,8 +2290,8 @@ if test x$WX_CONFIG != xnot_found; then
       ok_wx_version=1
       wx_multi_lib=1
       case x$WX_BASENAME in
-        xwx_gtk2|xwx_gtk2u) wx_needs_gdk2=1 ;;
-        xwx_gtk3|xwx_gtk3u) wx_needs_gdk3=1 ;;
+        xwx_gtk2|xwx_gtk2u) wx_needs_gdk_version=2 ;;
+        xwx_gtk3|xwx_gtk3u) wx_needs_gdk_version=3 ;;
         *) ;;
       esac
       ;;
@@ -2575,15 +2574,17 @@ if test "$with_wx" = yes; then
   SPECIFIC_GUI_SUPPORT_OBJS="$SPECIFIC_GUI_SUPPORT_OBJS \$(GUI_OBJS_WX_SUPPORT)"
   WX_CFLAGS="`$WX_CONFIG --cflags`"
   WX_CXXFLAGS="`$WX_CONFIG --cxxflags`"
-  if test "$wx_needs_gdk2" = 1; then
+  if test "$wx_needs_gdk_version" = 2; then
     GDK_CFLAGS="`pkg-config --cflags gdk-2.0`"
     WX_CFLAGS="$WX_CFLAGS $GDK_CFLAGS"
     WX_CXXFLAGS="$WX_CXXFLAGS $GDK_CFLAGS"
+    AC_DEFINE(WX_GDK_VERSION, 2)
   fi
-  if test "$wx_needs_gdk3" = 1; then
+  if test "$wx_needs_gdk_version" = 3; then
     GDK_CFLAGS="`pkg-config --cflags gdk-3.0`"
     WX_CFLAGS="$WX_CFLAGS $GDK_CFLAGS"
     WX_CXXFLAGS="$WX_CXXFLAGS $GDK_CFLAGS"
+    AC_DEFINE(WX_GDK_VERSION, 3)
   fi
   if test "$wx_multi_lib" = 1; then
     GUI_LINK_OPTS_WX="`$WX_CONFIG --libs core,base`"
@@ -2634,15 +2635,25 @@ if test "$display_libs" = ""; then
 fi
 
 # some display libraries and the enhanced debugger may depend on the GTK+ software package
-bx_have_gtk2=0
+bx_have_gtk_version=0
 if test "$needs_gtk2" = 1; then
   # pkg-config is required to set TOOLKIT_CXXFLAGS and LIBS
   if test "$PKGCONFIG" != not_found; then
-    pkg-config --exists gtk+-2.0
-    if test x$? = x0; then
-      TOOLKIT_CXXFLAGS="`pkg-config --cflags gtk+-2.0`"
-      LIBS="$LIBS `pkg-config --libs gtk+-2.0`"
-      bx_have_gtk2=1
+    # if wxGTK is based on GTK 3.0, use it for gui debugger to avoid conflicts
+    if test "$wx_needs_gdk_version" = 3; then
+      pkg-config --exists gtk+-3.0
+      if test x$? = x0; then
+        TOOLKIT_CXXFLAGS="`pkg-config --cflags gtk+-3.0`"
+        LIBS="$LIBS `pkg-config --libs gtk+-3.0`"
+        bx_have_gtk_version=3
+      fi
+    else
+      pkg-config --exists gtk+-2.0
+      if test x$? = x0; then
+        TOOLKIT_CXXFLAGS="`pkg-config --cflags gtk+-2.0`"
+        LIBS="$LIBS `pkg-config --libs gtk+-2.0`"
+        bx_have_gtk_version=2
+      fi
     fi
   else
     echo "ERROR: pkg-config was not found, or unable to access the gtk+-2.0 package."
@@ -2818,7 +2829,7 @@ AC_SUBST(CXXFLAGS_CONSOLE)
 
 ENH_DBG_OBJS=""
 if test "$gui_debugger" = 1; then
-  if test "$bx_have_gtk2" = 1; then
+  if test "$bx_have_gtk_version" > 1; then
     ENH_DBG_OBJS="enh_dbg.o gtk_enh_dbg_osdep.o"
     AC_DEFINE(BX_DEBUGGER_GUI, 1)
   elif test "$DEFAULT_GUI" = win32 -o "$with_win32" = yes; then

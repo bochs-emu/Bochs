@@ -1,5 +1,5 @@
 //
-//  Copyright (C) 2001-2017  The Bochs Project
+//  Copyright (C) 2001-2019  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -311,6 +311,8 @@
 
 // set to 1 if wxMSW is a unicode version
 #define WX_MSW_UNICODE 0
+// set to GDK major version for wxGTK
+#define WX_GDK_VERSION 0
 
 // A certain functions must NOT be fastcall even if compiled with fastcall
 // option, and those are callbacks from Windows which are defined either 
