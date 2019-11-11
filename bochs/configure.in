@@ -2903,10 +2903,17 @@ AC_SUBST(DIALOG_OBJS)
 AC_SUBST(EXPORT_DYNAMIC)
 
 if test "$use_curses" = yes -a "$cross_configure" = 0; then
-  AC_CHECK_LIB(curses, mvaddch, GUI_LINK_OPTS_TERM='-lcurses')
-  AC_CHECK_LIB(ncurses, mvaddch, GUI_LINK_OPTS_TERM='-lncurses')
-  AC_CHECK_LIB(termlib, mvaddch, GUI_LINK_OPTS_TERM='-ltermlib')
-  AC_CHECK_LIB(pdcurses, mvaddch, GUI_LINK_OPTS_TERM='-lpdcurses')
+  if test "$PKGCONFIG" != not_found; then
+    AC_CHECK_LIB(curses, mvaddch, GUI_LINK_OPTS_TERM="`pkg-config --libs curses`")
+    AC_CHECK_LIB(ncurses, mvaddch, GUI_LINK_OPTS_TERM="`pkg-config --libs ncurses`")
+    AC_CHECK_LIB(termlib, mvaddch, GUI_LINK_OPTS_TERM="`pkg-config --libs termlib`")
+    AC_CHECK_LIB(pdcurses, mvaddch, GUI_LINK_OPTS_TERM="`pkg-config --libs pdcurses`")
+  else
+    AC_CHECK_LIB(curses, mvaddch, GUI_LINK_OPTS_TERM='-lcurses')
+    AC_CHECK_LIB(ncurses, mvaddch, GUI_LINK_OPTS_TERM='-lncurses')
+    AC_CHECK_LIB(termlib, mvaddch, GUI_LINK_OPTS_TERM='-ltermlib')
+    AC_CHECK_LIB(pdcurses, mvaddch, GUI_LINK_OPTS_TERM='-lpdcurses')
+  fi
   if test "$GUI_LINK_OPTS_TERM" = ""; then
     echo Curses library not found: tried curses, ncurses, termlib and pdcurses.
     exit 1
