@@ -241,6 +241,7 @@ const unsigned XSAVE_YMM_STATE_LEN          = 256;
 const unsigned XSAVE_OPMASK_STATE_LEN       = 64;
 const unsigned XSAVE_ZMM_HI256_STATE_LEN    = 512;
 const unsigned XSAVE_HI_ZMM_STATE_LEN       = 1024;
+const unsigned XSAVE_PKRU_STATE_LEN         = 64;
 
 const unsigned XSAVE_SSE_STATE_OFFSET       = 160;
 const unsigned XSAVE_YMM_STATE_OFFSET       = 576;
