@@ -893,8 +893,11 @@ Bit8u bx_local_apic_c::acknowledge_int(void)
     BX_PANIC(("APIC %d acknowledged an interrupt, but INTR=0", apic_id));
 
   int vector = highest_priority_int(irr);
-  if (vector < 0) goto spurious;
-  if((vector & 0xf0) <= get_ppr()) goto spurious;
+  if (vector < 0 || (vector & 0xf0) <= get_ppr()) {
+    cpu->clear_event(BX_EVENT_PENDING_LAPIC_INTR);
+    return spurious_vector;
+  }
+
   BX_ASSERT(get_vector(irr, vector));
   BX_DEBUG(("acknowledge_int() returning vector 0x%02x", vector));
   clear_vector(irr, vector);
@@ -907,10 +910,6 @@ Bit8u bx_local_apic_c::acknowledge_int(void)
   cpu->clear_event(BX_EVENT_PENDING_LAPIC_INTR);
   service_local_apic();  // will set INTR again if another is ready
   return vector;
-
-spurious:
-  cpu->clear_event(BX_EVENT_PENDING_LAPIC_INTR);
-  return spurious_vector;
 }
 
 void bx_local_apic_c::print_status(void)
