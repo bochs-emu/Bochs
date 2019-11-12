@@ -388,7 +388,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [4:4]    OSPKE: OS has set CR4.PKE to enable protection keys
 //   [5:5]    WAITPKG (TPAUSE/UMONITOR/UMWAIT) support
 //   [6:6]    AVX512 VBMI2 instructions support
-//   [7:7]    reserved
+//   [7:7]    CET_SS: Support CET Shadow Stack
 //   [8:8]    GFNI instructions support
 //   [9:9]    VAES instructions support
 // [10:10]    VPCLMULQDQ instruction support
@@ -416,7 +416,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT4_OSPKE                  (1 <<  4)
 #define BX_CPUID_EXT4_WAITPKG                (1 <<  5)
 #define BX_CPUID_EXT4_AVX512_VBMI2           (1 <<  6)
-#define BX_CPUID_EXT4_RESERVED7              (1 <<  7)
+#define BX_CPUID_EXT4_CET_SS                 (1 <<  7)
 #define BX_CPUID_EXT4_GFNI                   (1 <<  8)
 #define BX_CPUID_EXT4_VAES                   (1 <<  9)
 #define BX_CPUID_EXT4_VPCLMULQDQ             (1 << 10)
@@ -451,6 +451,8 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [7:5]    reserved
 //   [8:8]    AVX512 VP2INTERSECT instructions support
 //   ...
+//   [20:20]  CET IBT: Support CET indirect branch tracking
+//   [25:21]  reserved
 //   [26:26]  IBRS and IBPB: Indirect branch restricted speculation (SCA)
 //   [27:27]  STIBP: Single Thread Indirect Branch Predictors supported (SCA)
 //   [28:28]  L1D_FLUSH supported (SCA)
@@ -468,6 +470,12 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT5_RESERVED7              (1 <<  7)
 #define BX_CPUID_EXT5_AVX512_VPINTERSECT     (1 <<  8)
 // ...
+#define BX_CPUID_EXT5_CET_IBT                (1 << 20)
+#define BX_CPUID_EXT5_RESERVED21             (1 << 21)
+#define BX_CPUID_EXT5_RESERVED22             (1 << 22)
+#define BX_CPUID_EXT5_RESERVED23             (1 << 23)
+#define BX_CPUID_EXT5_RESERVED24             (1 << 24)
+#define BX_CPUID_EXT5_RESERVED25             (1 << 25)
 #define BX_CPUID_EXT5_SCA_IBRS_IBPB          (1 << 26)
 #define BX_CPUID_EXT5_SCA_STIBP              (1 << 27)
 #define BX_CPUID_EXT5_L1D_FLUSH              (1 << 28)
