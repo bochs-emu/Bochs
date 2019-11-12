@@ -236,19 +236,18 @@ struct bx_efer_t {
 
 #if BX_CPU_LEVEL >= 6
 
-#define XSAVE_SSE_STATE_LEN           (256)
-#define XSAVE_YMM_STATE_LEN           (256)
-#define XSAVE_OPMASK_STATE_LEN         (64)
-#define XSAVE_ZMM_HI256_STATE_LEN     (512)
-#define XSAVE_HI_ZMM_STATE_LEN       (1024)
-#define XSAVE_PKRU_STATE_LEN           (64)
+const unsigned XSAVE_SSE_STATE_LEN          = 256;
+const unsigned XSAVE_YMM_STATE_LEN          = 256;
+const unsigned XSAVE_OPMASK_STATE_LEN       = 64;
+const unsigned XSAVE_ZMM_HI256_STATE_LEN    = 512;
+const unsigned XSAVE_HI_ZMM_STATE_LEN       = 1024;
 
-#define XSAVE_SSE_STATE_OFFSET        (160)
-#define XSAVE_YMM_STATE_OFFSET        (576)
-#define XSAVE_OPMASK_STATE_OFFSET    (1088)
-#define XSAVE_ZMM_HI256_STATE_OFFSET (1152)
-#define XSAVE_HI_ZMM_STATE_OFFSET    (1664)
-#define XSAVE_PKRU_STATE_OFFSET      (2688)
+const unsigned XSAVE_SSE_STATE_OFFSET       = 160;
+const unsigned XSAVE_YMM_STATE_OFFSET       = 576;
+const unsigned XSAVE_OPMASK_STATE_OFFSET    = 1088;
+const unsigned XSAVE_ZMM_HI256_STATE_OFFSET = 1152;
+const unsigned XSAVE_HI_ZMM_STATE_OFFSET    = 1664;
+const unsigned XSAVE_PKRU_STATE_OFFSET      = 2688;
 
 struct xcr0_t {
   Bit32u  val32; // 32bit value of register

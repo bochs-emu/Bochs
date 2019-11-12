@@ -213,9 +213,9 @@ class BOCHSAPI bx_local_apic_c : public logfunctions
 
   BX_CPU_C *cpu;
 
-  bx_bool get_vector(Bit32u *reg, uint vector);
-  void set_vector(Bit32u *reg, uint vector);
-  void clear_vector(Bit32u *reg, uint vector);
+  bx_bool get_vector(Bit32u *reg, unsigned vector);
+  void set_vector(Bit32u *reg, unsigned vector);
+  void clear_vector(Bit32u *reg, unsigned vector);
 
 public:
   bx_bool INTR;
