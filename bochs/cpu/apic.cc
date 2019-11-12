@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2002-2017 Zwane Mwaikambo, Stanislav Shwartsman
+//  Copyright (c) 2002-2019 Zwane Mwaikambo, Stanislav Shwartsman
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -23,6 +23,7 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu.h"
+#include "scalar_arith.h"
 #include "iodev/iodev.h"
 
 #if BX_SUPPORT_APIC
@@ -33,8 +34,8 @@ extern bx_bool simulate_xapic;
 
 #define BX_CPU_APIC(i) (&(BX_CPU(i)->lapic))
 
-#define BX_LAPIC_FIRST_VECTOR	0x10
-#define BX_LAPIC_LAST_VECTOR	0xff
+const unsigned BX_LAPIC_FIRST_VECTOR = 0x10;
+const unsigned BX_LAPIC_LAST_VECTOR  = 0xff;
 
 ///////////// APIC BUS /////////////
 
@@ -768,11 +769,17 @@ void bx_local_apic_c::clear_vector(Bit32u *reg, unsigned vector)
 
 int bx_local_apic_c::highest_priority_int(Bit32u *array)
 {
-  for(int i=BX_LAPIC_LAST_VECTOR; i>=BX_LAPIC_FIRST_VECTOR; i--) {
+  for (int reg=7; reg>=0; reg--) {
+    Bit32u tmp = array[reg];
 #if BX_CPU_LEVEL >= 6
-    if (! get_vector(ier, i)) continue;
+    tmp &= ier[reg];
 #endif
-    if (get_vector(array, i)) return i;
+// ignore of interrupt vectors < 16 happen naturally as there is no way to ISR to it
+//  if (reg == 0) tmp &= 0xffff0000;
+    if (tmp) {
+      int vector = (reg * 32) + (31 - lzcntd(tmp));
+      return vector;
+    }
   }
 
   return -1;
@@ -909,7 +916,7 @@ spurious:
 void bx_local_apic_c::print_status(void)
 {
   BX_INFO(("lapic %d: status is {:", apic_id));
-  for(int vec=0; vec<256; vec++) {
+  for(unsigned vec=0; vec<=BX_LAPIC_LAST_VECTOR; vec++) {
     if(get_vector(irr, vec) || get_vector(isr, vec)) {
       BX_INFO(("vec: %u, irr=%u, isr=%u", get_vector(irr, vec), get_vector(isr, vec)));
     }
