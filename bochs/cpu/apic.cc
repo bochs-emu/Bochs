@@ -222,10 +222,10 @@ void bx_local_apic_c::reset(unsigned type)
   icr_lo = 0;
   task_priority = 0;
 
-  for(i=0; i<BX_LAPIC_MAX_INTS; i++) {
+  for(i=0; i<8; i++) {
     irr[i] = isr[i] = tmr[i] = 0;
 #if BX_CPU_LEVEL >= 6
-    ier[i] = 1; // all interrupts are enabled
+    ier[i] = 0xFFFFFFFF; // all interrupts are enabled
 #endif
   }
 
@@ -395,43 +395,28 @@ Bit32u bx_local_apic_c::read_aligned(bx_phy_address addr)
   case BX_LAPIC_ISR5: case BX_LAPIC_ISR6:
   case BX_LAPIC_ISR7: case BX_LAPIC_ISR8:
     {
-      unsigned index = (apic_reg - BX_LAPIC_ISR1) << 1;
-      Bit32u value = 0, mask = 1;
-      for(int i=0;i<32;i++) {
-        if(isr[index+i]) value |= mask;
-        mask <<= 1;
-      }
-      data = value;
+      int index = (apic_reg - BX_LAPIC_ISR1) >> 4;
+      data = isr[index];
+      break;
     }
-    break;
   case BX_LAPIC_TMR1: case BX_LAPIC_TMR2:
   case BX_LAPIC_TMR3: case BX_LAPIC_TMR4:
   case BX_LAPIC_TMR5: case BX_LAPIC_TMR6:
   case BX_LAPIC_TMR7: case BX_LAPIC_TMR8:
     {
-      unsigned index = (apic_reg - BX_LAPIC_TMR1) << 1;
-      Bit32u value = 0, mask = 1;
-      for(int i=0;i<32;i++) {
-        if(tmr[index+i]) value |= mask;
-        mask <<= 1;
-      }
-      data = value;
+      int index = (apic_reg - BX_LAPIC_TMR1) >> 4;
+      data = tmr[index];
+      break;
     }
-    break;
   case BX_LAPIC_IRR1: case BX_LAPIC_IRR2:
   case BX_LAPIC_IRR3: case BX_LAPIC_IRR4:
   case BX_LAPIC_IRR5: case BX_LAPIC_IRR6:
   case BX_LAPIC_IRR7: case BX_LAPIC_IRR8:
     {
-      unsigned index = (apic_reg - BX_LAPIC_IRR1) << 1;
-      Bit32u value = 0, mask = 1;
-      for(int i=0;i<32;i++) {
-        if(irr[index+i]) value |= mask;
-        mask <<= 1;
-      }
-      data = value;
+      int index = (apic_reg - BX_LAPIC_IRR1) >> 4;
+      data = irr[index];
+      break;
     }
-    break;
   case BX_LAPIC_ESR:     // error status reg
     data = error_status; break;
   case BX_LAPIC_ICR_LO:  // interrupt command reg  0-31
@@ -479,15 +464,10 @@ Bit32u bx_local_apic_c::read_aligned(bx_phy_address addr)
   case BX_LAPIC_IER5: case BX_LAPIC_IER6:
   case BX_LAPIC_IER7: case BX_LAPIC_IER8:
     {
-      unsigned index = (apic_reg - BX_LAPIC_IER1) << 1;
-      Bit32u value = 0, mask = 1;
-      for(int i=0;i<32;i++) {
-        if(ier[index+i]) value |= mask;
-        mask <<= 1;
-      }
-      data = value;
+      int index = (apic_reg - BX_LAPIC_IER1) >> 4;
+      data = ier[index];
+      break;
     }
-    break;
 #endif
   default:
       shadow_error_status |= APIC_ERR_ILLEGAL_ADDR;
@@ -609,12 +589,8 @@ void bx_local_apic_c::write_aligned(bx_phy_address addr, Bit32u value)
           break;
         }
 
-        unsigned index = (apic_reg - BX_LAPIC_IER1) << 1;
-        Bit32u mask = 1;
-        for(int i=0;i<32;i++) {
-          if(value & mask) ier[index+i] = 1;
-          mask <<= 1;
-        }
+        int index = (apic_reg - BX_LAPIC_IER1) >> 4;
+        ier[index] = value;
       }
       break;
 #endif
@@ -736,10 +712,10 @@ void bx_local_apic_c::receive_EOI(Bit32u value)
   else {
     if ((Bit32u) vec != spurious_vector) {
        BX_DEBUG(("local apic received EOI, hopefully for vector 0x%02x", vec));
-       isr[vec] = 0;
-       if(tmr[vec]) {
+       clear_vector(isr, vec);
+       if(get_vector(tmr, vec)) {
            apic_bus_broadcast_eoi(vec);
-           tmr[vec] = 0;
+           clear_vector(tmr, vec);
        }
        service_local_apic();
     }
@@ -756,12 +732,12 @@ void bx_local_apic_c::receive_SEOI(Bit8u vec)
      return;
   }
 
-  if (isr[vec]) {
+  if (get_vector(isr, vec)) {
      BX_DEBUG(("local apic received SEOI for vector 0x%02x", vec));
-     isr[vec] = 0;
-     if(tmr[vec]) {
+     clear_vector(isr, vec);
+     if(get_vector(tmr, vec)) {
          apic_bus_broadcast_eoi(vec);
-         tmr[vec] = 0;
+         clear_vector(tmr, vec);
      }
      service_local_apic();
   }
@@ -775,13 +751,28 @@ void bx_local_apic_c::startup_msg(Bit8u vector)
   cpu->deliver_SIPI(vector);
 }
 
-int bx_local_apic_c::highest_priority_int(Bit8u *array)
+bx_bool bx_local_apic_c::get_vector(Bit32u *reg, unsigned vector)
+{
+  return (reg[vector / 32] >> (vector % 32)) & 0x1;
+}
+
+void bx_local_apic_c::set_vector(Bit32u *reg, unsigned vector)
+{
+  reg[vector / 32] |= (1 << (vector % 32));
+}
+
+void bx_local_apic_c::clear_vector(Bit32u *reg, unsigned vector)
+{
+  reg[vector / 32] &= ~(1 << (vector % 32));
+}
+
+int bx_local_apic_c::highest_priority_int(Bit32u *array)
 {
   for(int i=BX_LAPIC_LAST_VECTOR; i>=BX_LAPIC_FIRST_VECTOR; i--) {
 #if BX_CPU_LEVEL >= 6
-    if (! ier[i]) continue;
+    if (! get_vector(ier, i)) continue;
 #endif
-    if (array[i]) return i;
+    if (get_vector(array, i)) return i;
   }
 
   return -1;
@@ -862,18 +853,19 @@ void bx_local_apic_c::trigger_irq(Bit8u vector, unsigned trigger_mode, bx_bool b
 
   BX_DEBUG(("triggered vector %#02x", vector));
 
-  if(bypass_irr_isr) {
-    goto service_vector;
+  if(! bypass_irr_isr) {
+    if(get_vector(irr, vector)) {
+      BX_DEBUG(("triggered vector %#02x not accepted", vector));
+      return;
+    }
   }
 
-  if(irr[vector] != 0) {
-    BX_DEBUG(("triggered vector %#02x not accepted", vector));
-    return;
-  }
+  set_vector(irr, vector);
+  if (trigger_mode)
+      set_vector(tmr, vector); // set for level triggered
+  else
+    clear_vector(tmr, vector);
 
-service_vector:
-  irr[vector] = 1;
-  tmr[vector] = trigger_mode;	// set for level triggered
   service_local_apic();
 }
 
@@ -882,8 +874,8 @@ void bx_local_apic_c::untrigger_irq(Bit8u vector, unsigned trigger_mode)
   BX_DEBUG(("untrigger interrupt vector=0x%02x", vector));
   // hardware says "no more".  clear the bit.  If the CPU hasn't yet
   // acknowledged the interrupt, it will never be serviced.
-  BX_ASSERT(irr[vector] == 1);
-  irr[vector] = 0;
+  BX_ASSERT(get_vector(irr, vector));
+  clear_vector(irr, vector);
   if(bx_dbg.apic) print_status();
 }
 
@@ -896,10 +888,10 @@ Bit8u bx_local_apic_c::acknowledge_int(void)
   int vector = highest_priority_int(irr);
   if (vector < 0) goto spurious;
   if((vector & 0xf0) <= get_ppr()) goto spurious;
-  BX_ASSERT(irr[vector] == 1);
+  BX_ASSERT(get_vector(irr, vector));
   BX_DEBUG(("acknowledge_int() returning vector 0x%02x", vector));
-  irr[vector] = 0;
-  isr[vector] = 1;
+  clear_vector(irr, vector);
+  set_vector(isr, vector);
   if(bx_dbg.apic) {
     BX_INFO(("Status after setting isr:"));
     print_status();
@@ -917,9 +909,9 @@ spurious:
 void bx_local_apic_c::print_status(void)
 {
   BX_INFO(("lapic %d: status is {:", apic_id));
-  for(int vec=0; vec<BX_LAPIC_MAX_INTS; vec++) {
-    if(irr[vec] || isr[vec]) {
-      BX_INFO(("vec 0x%x: irr=%d, isr=%d", vec,(int)irr[vec],(int)isr[vec]));
+  for(int vec=0; vec<256; vec++) {
+    if(get_vector(irr, vec) || get_vector(isr, vec)) {
+      BX_INFO(("vec: %u, irr=%u, isr=%u", get_vector(irr, vec), get_vector(isr, vec)));
     }
   }
   BX_INFO(("}"));
@@ -1010,7 +1002,7 @@ Bit8u bx_local_apic_c::get_apr(void)
 bx_bool bx_local_apic_c::is_focus(Bit8u vector)
 {
   if(focus_disable) return 0;
-  return(irr[vector] || isr[vector]) ? 1 : 0;
+  return get_vector(irr, vector) || get_vector(isr, vector);
 }
 
 void bx_local_apic_c::periodic_smf(void *this_ptr)
@@ -1394,23 +1386,23 @@ void bx_local_apic_c::register_state(bx_param_c *parent)
   BXRS_HEX_PARAM_SIMPLE(lapic, ldr);
   BXRS_HEX_PARAM_SIMPLE(lapic, dest_format);
 
-  bx_list_c *ISR = new bx_list_c(lapic, "isr");
-  bx_list_c *TMR = new bx_list_c(lapic, "tmr");
-  bx_list_c *IRR = new bx_list_c(lapic, "irr");
-  for (i=0; i<BX_LAPIC_MAX_INTS; i++) {
-    sprintf(name, "0x%02x", i);
-    new bx_shadow_num_c(ISR, name, &isr[i]);
-    new bx_shadow_num_c(TMR, name, &tmr[i]);
-    new bx_shadow_num_c(IRR, name, &irr[i]);
+  for (i=0; i<8; i++) {
+    sprintf(name, "isr%u", i);
+    new bx_shadow_num_c(lapic, name, &isr[i], BASE_HEX);
+
+    sprintf(name, "tmr%u", i);
+    new bx_shadow_num_c(lapic, name, &tmr[i], BASE_HEX);
+
+    sprintf(name, "irr%u", i);
+    new bx_shadow_num_c(lapic, name, &irr[i], BASE_HEX);
   }
 
 #if BX_CPU_LEVEL >= 6
   if (cpu->is_cpu_extension_supported(BX_ISA_XAPIC_EXT)) {
     BXRS_HEX_PARAM_SIMPLE(lapic, xapic_ext);
-    bx_list_c *IER = new bx_list_c(lapic, "ier");
-    for (i=0; i<BX_LAPIC_MAX_INTS; i++) {
-      sprintf(name, "0x%02x", i);
-      new bx_shadow_num_c(IER, name, &ier[i]);
+    for (i=0; i<8; i++) {
+      sprintf(name, "ier%u", i);
+      new bx_shadow_num_c(lapic, name, &ier[i], BASE_HEX);
     }
   }
 #endif
@@ -1420,10 +1412,9 @@ void bx_local_apic_c::register_state(bx_param_c *parent)
   BXRS_HEX_PARAM_SIMPLE(lapic, icr_hi);
   BXRS_HEX_PARAM_SIMPLE(lapic, icr_lo);
 
-  bx_list_c *LVT = new bx_list_c(lapic, "lvt");
   for (i=0; i<APIC_LVT_ENTRIES; i++) {
-    sprintf(name, "%u", i);
-    new bx_shadow_num_c(LVT, name, &lvt[i], BASE_HEX);
+    sprintf(name, "lvt%u", i);
+    new bx_shadow_num_c(lapic, name, &lvt[i], BASE_HEX);
   }
 
   BXRS_HEX_PARAM_SIMPLE(lapic, timer_initial);

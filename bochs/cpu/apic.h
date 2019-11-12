@@ -33,7 +33,6 @@ enum {
 const bx_phy_address BX_LAPIC_BASE_ADDR = 0xfee00000;  // default Local APIC address
 
 #define BX_NUM_LOCAL_APICS  BX_SMP_PROCESSORS
-#define BX_LAPIC_MAX_INTS   256
 
 enum {
   BX_APIC_GLOBALLY_DISABLED = 0,
@@ -155,19 +154,19 @@ class BOCHSAPI bx_local_apic_c : public logfunctions
 
   // ISR=in-service register. When an IRR bit is cleared, the corresponding
   // bit in ISR is set.
-  Bit8u isr[BX_LAPIC_MAX_INTS];
+  Bit32u isr[8];
   // TMR=trigger mode register.  Cleared for edge-triggered interrupts
   // and set for level-triggered interrupts. If set, local APIC must send
   // EOI message to all other APICs.
-  Bit8u tmr[BX_LAPIC_MAX_INTS];
+  Bit32u tmr[8];
   // IRR=interrupt request register. When an interrupt is triggered by
   // the I/O APIC or another processor, it sets a bit in irr. The bit is
   // cleared when the interrupt is acknowledged by the processor.
-  Bit8u irr[BX_LAPIC_MAX_INTS];
+  Bit32u irr[8];
 #if BX_CPU_LEVEL >= 6
   // IER=interrupt enable register. Only vectors that are enabled in IER
   // participare in APIC's computation of highest priority pending interrupt.
-  Bit8u ier[BX_LAPIC_MAX_INTS];
+  Bit32u ier[8];
 #endif
 
 #define APIC_ERR_ILLEGAL_ADDR    0x80
@@ -214,6 +213,10 @@ class BOCHSAPI bx_local_apic_c : public logfunctions
 
   BX_CPU_C *cpu;
 
+  bx_bool get_vector(Bit32u *reg, uint vector);
+  void set_vector(Bit32u *reg, uint vector);
+  void clear_vector(Bit32u *reg, uint vector);
+
 public:
   bx_bool INTR;
   bx_local_apic_c(BX_CPU_C *cpu, unsigned id);
@@ -238,7 +241,7 @@ public:
   void trigger_irq(Bit8u vector, unsigned trigger_mode, bx_bool bypass_irr_isr = 0);
   void untrigger_irq(Bit8u vector, unsigned trigger_mode);
   Bit8u acknowledge_int(void);  // only the local CPU should call this
-  int highest_priority_int(Bit8u *array);
+  int highest_priority_int(Bit32u *array);
   void receive_EOI(Bit32u value);
   void send_ipi(apic_dest_t dest, Bit32u lo_cmd);
   void write_spurious_interrupt_register(Bit32u value);
