@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2012-2018  The Bochs Project
+//  Copyright (C) 2012-2019  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -169,14 +169,17 @@ void CDECL libvoodoo_LTX_plugin_fini(void)
 
 // FIFO thread
 
+static bx_bool voodoo_keep_alive = 1;
+
 BX_THREAD_FUNC(fifo_thread, indata)
 {
   Bit32u type, offset = 0, data = 0, regnum;
   fifo_state *fifo;
 
   UNUSED(indata);
-  while (1) {
+  while (voodoo_keep_alive) {
     if (bx_wait_for_event(&fifo_wakeup)) {
+      if (!voodoo_keep_alive) break;
       BX_LOCK(fifo_mutex);
       while (1) {
         if (!fifo_empty(&v->fbi.fifo)) {
@@ -246,7 +249,8 @@ bx_voodoo_base_c::bx_voodoo_base_c()
 
 bx_voodoo_base_c::~bx_voodoo_base_c()
 {
-  BX_THREAD_KILL(fifo_thread_var);
+  voodoo_keep_alive = 0;
+  bx_set_event(&fifo_wakeup);
   BX_FINI_MUTEX(fifo_mutex);
   BX_FINI_MUTEX(render_mutex);
   if (s.model >= VOODOO_2) {
