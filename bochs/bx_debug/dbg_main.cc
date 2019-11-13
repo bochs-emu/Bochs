@@ -840,7 +840,8 @@ void bx_dbg_print_sse_state(void)
     bx_dbg_print_mxcsr_state();
 
     char param_name[20];
-    for(unsigned i=0;i</*BX_XMM_REGISTERS*/16;i++) {
+    unsigned registers = BX_SUPPORT_X86_64 ? 16 : 8; // don't want to print XMM16..31 in EVEX mode
+    for(unsigned i=0;i<registers;i++) {
       sprintf(param_name, "SSE.xmm%02d_1", i);
       Bit64u hi = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
       sprintf(param_name, "SSE.xmm%02d_0", i);
