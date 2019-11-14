@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2017  The Bochs Project
+//  Copyright (C) 2002-2019  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -808,7 +808,7 @@ void MyFrame::OnQuit(wxCommandEvent& event)
 void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 {
   wxString str(wxT("Bochs x86 Emulator version "));
-  str += wxString(VER_STRING, wxConvUTF8);
+  str += wxString(VERSION, wxConvUTF8);
   str += wxT(" (wxWidgets port)");
   wxMessageBox(str, wxT("About Bochs"), wxOK | wxICON_INFORMATION, this);
 }

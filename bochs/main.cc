@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2018  The Bochs Project
+//  Copyright (C) 2001-2019  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -99,7 +99,7 @@ void bx_print_header()
 {
   printf("%s\n", divider);
   char buffer[128];
-  sprintf (buffer, "Bochs x86 Emulator %s\n", VER_STRING);
+  sprintf (buffer, "Bochs x86 Emulator %s\n", VERSION);
   bx_center_print(stdout, buffer, 72);
   if (REL_STRING[0]) {
     sprintf(buffer, "%s\n", REL_STRING);
@@ -1166,7 +1166,7 @@ void bx_init_hardware()
 
   // Output to the log file the cpu and device settings
   // This will by handy for bug reports
-  BX_INFO(("Bochs x86 Emulator %s", VER_STRING));
+  BX_INFO(("Bochs x86 Emulator %s", VERSION));
   BX_INFO(("  %s", REL_STRING));
 #ifdef __DATE__
 #ifdef __TIME__

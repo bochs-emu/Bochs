@@ -3,5 +3,9 @@
 // substitutes variables and creates bxversion.h.
 /////////////////////////////////////////////////////////////////////////
 
-#define VER_STRING "@VER_STRING@"
+#define VERSION "@VERSION@"
+#define VER_MAJOR "@VER_MAJOR@"
+#define VER_MINOR "@VER_MINOR@"
+#define VER_PATCH "@VER_PATCH@"
+#define VER_SVN   "@VER_SVN@"
 #define REL_STRING "@REL_STRING@"

@@ -3015,21 +3015,24 @@ with non-interesting ones.</para></listitem>
 <para>
 Update version number and strings in configure.in.
 <screen>
-VERSION="2.5"
-VER_STRING="2.5"
-REL_STRING="Build from SVN snapshot on November 27, 2011"
+VERSION="2.6.9"
+VER_MAJOR=2
+VER_MINOR=6
+VER_PATCH=9
+VER_SVN=0
+REL_STRING="Build from SVN snapshot on April  9, 2017"
 </screen>
 In the README file you have to update version number and date. Add some
 information about new features if necessary.
 <screen>
 Bochs x86 Pentium+ Emulator
-Updated: Sun Nov 27 16:55:00 CET 2011
-Version: 2.5
+Updated: Sun Apr  9 08:45:00 CEST 2017
+Version: 2.6.9
 </screen>
 In the file <filename>bochs.manifest</filename> you have to update the version
 number for the Windows build.
 <screen>
-  version="2.5.0.0"
+  version="2.6.9.0"
 </screen>
 Check date, update/sumup info in CHANGES. Run autoconf to regenerate configure and check them in.
 Create an SVN tag that contains all files of the revision that was used in the release.

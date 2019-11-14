@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2000-2017  The Bochs Project
+//  Copyright (C) 2000-2019  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -164,7 +164,7 @@ bx_bool open_screen(void)
 
   struct Hook screenreqhook = { 0, 0, (ULONG(*)())&GATEDispatcherFunc, (ULONG(*)())screenreqfunc, 0 };
 
-  sprintf (verstr, "Bochs x86 Emulator %s", VER_STRING);
+  sprintf (verstr, "Bochs x86 Emulator %s", VERSION);
 
   if (SIM->get_param_bool(BXPN_FULLSCREEN)->get())
   {

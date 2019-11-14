@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2017  The Bochs Project
+# Copyright (C) 2001-2019  The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -38,7 +38,6 @@ top_srcdir      = $(srcdir)
 DESTDIR =
 
 VERSION=@VERSION@
-VER_STRING=@VER_STRING@
 REL_STRING=@REL_STRING@
 MAN_PAGE_1_LIST=bochs bximage bochs-dlx
 MAN_PAGE_5_LIST=bochsrc
