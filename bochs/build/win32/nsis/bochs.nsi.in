@@ -8,7 +8,7 @@
 ;
 ; Based on Example Script by Joost Verburg
 ; also original BOCHS script by Robert (segra)
-; updated for NSIS 2.44 by Volker Ruppert
+; updated for NSIS 3.04 by Volker Ruppert
 ;
 ;---------------------
 ;Include Modern UI 2
@@ -22,18 +22,13 @@
 !define MULTIUSER_EXECUTIONLEVEL Highest
 !define MULTIUSER_MUI
 !include MultiUser.nsh
-
-Function .onInit
-  !insertmacro MULTIUSER_INIT
-FunctionEnd
-
-Function un.onInit
-  !insertmacro MULTIUSER_UNINIT
-FunctionEnd
-
  ;--------------------------------
 
-!define VERSION @VERSION@
+!define VERSION   @VERSION@
+!define VER_MAJOR @VER_MAJOR@
+!define VER_MINOR @VER_MINOR@
+!define VER_PATCH @VER_PATCH@
+!define VER_SVN   @VER_SVN@
 !define NAME "Bochs ${VERSION}"
 
 
@@ -45,8 +40,9 @@ FunctionEnd
 !define SRCDIR bochs-${VERSION}
 !define PGDIR "$SMPROGRAMS\Bochs ${VERSION}"
 !define DESKTOP_DLXLINK "$DESKTOP\Linux Demo in ${NAME}.lnk"
-!define DESKTOP_DLX_PIF "$DESKTOP\Linux Demo in ${NAME}.pif"
 
+;--------------------------------
+Var IndependentSectionState
 ;--------------------------------
 
 ;General
@@ -144,7 +140,7 @@ Section "DLX Linux Demo" SecDLX
   FileClose $1
 SectionEnd
 
-Section "Add Bochs to the Start Menu and Desktop" SecIcons
+Section "Add Bochs to the Start Menu" SecStartMenu
   SectionIn 1 2
   
   ; Set the Program Group as output to ensure it exists
@@ -186,10 +182,15 @@ Section "Add Bochs to the Start Menu and Desktop" SecIcons
   IfFileExists "$INSTDIR\dlxlinux\*" 0 no
 	CreateShortCut "${PGDIR}\DLX Linux.lnk" "$INSTDIR\dlxlinux\run.bat" "" "$INSTDIR\penguin.ico" "0"
 
-  ; Add a link to the DLX demo to the desktop
-  CreateShortCut "${DESKTOP_DLXLINK}" "$INSTDIR\dlxlinux\run.bat" "" "$INSTDIR\bochs.ico" "0"
 no:
 
+SectionEnd
+
+Section "Add DLX Demo icon to Desktop" SecDLXIcon
+  SectionIn 2
+
+  ; Add a link to the DLX demo to the desktop
+  CreateShortCut "${DESKTOP_DLXLINK}" "$INSTDIR\dlxlinux\run.bat" "" "$INSTDIR\bochs.ico" "0"
 
 SectionEnd
 
@@ -276,12 +277,10 @@ Section "Uninstall"
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}"
 
   Delete "${PGDIR}\*.lnk"
-  Delete "${PGDIR}\*.pif"
   Delete "${PGDIR}\*.url"
   RMDir "${PGDIR}"
 
   Delete "${DESKTOP_DLXLINK}"
-  Delete "${DESKTOP_DLX_PIF}"
 
   Delete "$INSTDIR\*.exe"
   Delete "$INSTDIR\*.txt"
@@ -309,5 +308,74 @@ Section "Uninstall"
   RMDIR "$INSTDIR"
 
 SectionEnd
+
+;--------------------------------
+
+Function .onInit
+  !insertmacro MULTIUSER_INIT
+
+  # This is necessary otherwise SecDLXIcon won't be selectable for the first time you click it.
+  SectionGetFlags ${SecDLX} $R0
+  IntOp $R0 $R0 & ${SF_SELECTED}
+  StrCpy $IndependentSectionState $R0
+
+FunctionEnd
+
+Function un.onInit
+  !insertmacro MULTIUSER_UNINIT
+FunctionEnd
+
+Function .onSelChange
+Push $R0
+Push $R1
+ 
+  # Check if SecDLX was just selected then select SecDLXIcon.
+  SectionGetFlags ${SecDLX} $R0
+  IntOp $R0 $R0 & ${SF_SELECTED}
+  StrCmp $R0 $IndependentSectionState +3
+    StrCpy $IndependentSectionState $R0
+  Goto UnselectDependentSections
+    StrCpy $IndependentSectionState $R0
+ 
+  Goto CheckDependentSections
+ 
+  # Select SecDLX if SecDLXIcon was selected.
+  SelectIndependentSection:
+ 
+    SectionGetFlags ${SecDLX} $R0
+    IntOp $R1 $R0 & ${SF_SELECTED}
+    StrCmp $R1 ${SF_SELECTED} +3
+ 
+    IntOp $R0 $R0 | ${SF_SELECTED}
+    SectionSetFlags ${SecDLX} $R0
+ 
+    StrCpy $IndependentSectionState ${SF_SELECTED}
+ 
+  Goto End
+ 
+  # Were SecDLXIcon just unselected?
+  CheckDependentSections:
+ 
+  SectionGetFlags ${SecDLXIcon} $R0
+  IntOp $R0 $R0 & ${SF_SELECTED}
+  StrCmp $R0 ${SF_SELECTED} SelectIndependentSection
+ 
+  Goto End
+ 
+  # Unselect SecDLXIcon if SecDLX was unselected.
+  UnselectDependentSections:
+ 
+    SectionGetFlags ${SecDLXIcon} $R0
+    IntOp $R1 $R0 & ${SF_SELECTED}
+    StrCmp $R1 ${SF_SELECTED} 0 +3
+ 
+    IntOp $R0 $R0 ^ ${SF_SELECTED}
+    SectionSetFlags ${SecDLXIcon} $R0
+ 
+  End:
+ 
+Pop $R1
+Pop $R0
+FunctionEnd
 
 ;eof
