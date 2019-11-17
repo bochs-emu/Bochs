@@ -78,3 +78,16 @@ many ways you could help out.  For example:
   - writing/cleaning up documentation
   - testing out Bochs on every imaginable operating system and
     reporting how it goes.
+
+CHANGES
+
+Brief summary of changes in 2.6.9:
+  - CPU: implemented new instructions and x86 architecture extensions.
+  - Bugfixes for CPU emulation correctness.
+  - Added Android host platform support.
+  - Added USB EHCI device emulation support.
+  - Added USB floppy (UFI/CBI) support.
+  - Added ethernet module 'socket', designed to interconnect Bochs instances.
+  - Show textconfig at runtime in the Bochs VGA window (gui console).
+
+See CHANGES file for more information!

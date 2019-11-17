@@ -68,13 +68,34 @@ Var IndependentSectionState
 
 ;--------------------------------
 ;Pages
+  !define MUI_WELCOMEFINISHPAGE_BITMAP "bochs-logo.bmp"
+  !define MUI_WELCOMEFINISHPAGE_BITMAP_NOSTRETCH
 
+  !define MUI_WELCOMEPAGE_TITLE "Welcome to the Bochs ${VERSION} Setup Wizard"
+  !define MUI_WELCOMEPAGE_TEXT "This wizard will guide you through the installation of the Bochs x86 emulator version ${VERSION}.$\r$\n$\r$\n$_CLICK"
+
+  !insertmacro MUI_PAGE_WELCOME
   !insertmacro MUI_PAGE_LICENSE ${SRCDIR}\COPYING.txt
   !insertmacro MULTIUSER_PAGE_INSTALLMODE
   !insertmacro MUI_PAGE_COMPONENTS
   !insertmacro MUI_PAGE_DIRECTORY
   !insertmacro MUI_PAGE_INSTFILES
-  
+
+  !define MUI_FINISHPAGE_TEXT "Thank you for installing Bochs, think inside the bochs."
+
+  !define MUI_FINISHPAGE_LINK "Visit the Bochs website for the latest news, FAQs and support"
+  !define MUI_FINISHPAGE_LINK_LOCATION "http://bochs.sourceforge.net/"
+
+  !define MUI_FINISHPAGE_RUN "$INSTDIR\Bochs.exe"
+  !define MUI_FINISHPAGE_RUN_NOTCHECKED
+  !define MUI_FINISHPAGE_NOREBOOTSUPPORT
+
+  !define MUI_FINISHPAGE_SHOWREADME "$INSTDIR\README.txt"
+  !define MUI_FINISHPAGE_SHOWREADME_TEXT "Show Bochs README file"
+
+  !insertmacro MUI_PAGE_FINISH
+
+  !insertmacro MUI_UNPAGE_WELCOME
   !insertmacro MUI_UNPAGE_CONFIRM
   !insertmacro MUI_UNPAGE_INSTFILES
   
@@ -238,24 +259,6 @@ Section -post
 SectionEnd
 
 ;--------------------------------
-;Installer Functions
-
-Function .onInstSuccess
-  MessageBox MB_YESNO|MB_ICONQUESTION \
-             "Would you like to see a list of changes?" /SD IDNO \
-             IDNO NoChanges
-  ExecWait 'notepad.exe $INSTDIR\CHANGES.TXT'
-  NoChanges:
-  MessageBox MB_YESNO|MB_ICONQUESTION \
-             "Setup has completed. Show README now?" /SD IDNO \
-             IDNO NoReadme
-  ExecWait 'notepad.exe $INSTDIR\README.txt'
-
-  NoReadme:
-  MessageBox MB_OK "Thank you for installing Bochs, think inside the bochs." /SD IDOK
-FunctionEnd
-
-;--------------------------------
 ;Uninstaller Section
 
 Section "Uninstall"
@@ -310,6 +313,7 @@ Section "Uninstall"
 SectionEnd
 
 ;--------------------------------
+;Installer Functions
 
 Function .onInit
   !insertmacro MULTIUSER_INIT
