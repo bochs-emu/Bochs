@@ -475,7 +475,7 @@ char *disasm_branch_target(char *disbufptr, const bxInstruction_c *i, unsigned s
   case BX_IMMBD_SE: // 8-bit signed value sign extended to 32-bit size
     disbufptr = dis_sprintf(disbufptr, ".%+d", (Bit32s) i->Id());
     if (cs_base != BX_JUMP_TARGET_NOT_REQ) {
-      Bit32u target = rip + i->ilen() + (Bit32s) i->Id();
+      bx_address target = rip + i->ilen() + (Bit32s) i->Id();
       disbufptr = dis_sprintf(disbufptr, " (0x" FMT_ADDRX ")", (Bit64u) (cs_base + target));
     }
     break;
