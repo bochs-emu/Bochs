@@ -479,7 +479,7 @@ static const Bit64u BxOpcodeGroup_VEX_0F91[] = {
 
 static const Bit64u BxOpcodeGroup_VEX_0F92[] = { 
   form_opcode(ATTR_VEX_W0 | ATTR_VL128 | ATTR_MODC0 | ATTR_SSE_NO_PREFIX, BX_IA_KMOVW_KGwEw),
-  form_opcode(ATTR_VEX_W0 | ATTR_VL128 | ATTR_MODC0 | ATTR_SSE_PREFIX_66, BX_IA_KMOVB_GdKEb),
+  form_opcode(ATTR_VEX_W0 | ATTR_VL128 | ATTR_MODC0 | ATTR_SSE_PREFIX_66, BX_IA_KMOVB_KGbEb),
   form_opcode(ATTR_VEX_W0 | ATTR_VL128 | ATTR_MODC0 | ATTR_SSE_PREFIX_F2,             BX_IA_KMOVD_KGdEd),
   last_opcode(ATTR_VEX_W1 | ATTR_VL128 | ATTR_MODC0 | ATTR_SSE_PREFIX_F2 | ATTR_IS64, BX_IA_KMOVQ_KGqEq)
 };
