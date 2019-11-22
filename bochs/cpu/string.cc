@@ -124,7 +124,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSB16_YbXb(bxInstruction_c *i)
 // 32 bit address size
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSB32_YbXb(bxInstruction_c *i)
 {
-  Bit32u increment = 0;
+  Bit32s increment = 0;
 
 #if (BX_SUPPORT_REPEAT_SPEEDUPS) && (BX_DEBUGGER == 0)
   /* If conditions are right, we can transfer IO to physical memory
@@ -164,7 +164,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSB32_YbXb(bxInstruction_c *i)
 // 64 bit address size
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSB64_YbXb(bxInstruction_c *i)
 {
-  Bit32u increment = 0;
+  Bit32s increment = 0;
 
   Bit64u rsi = RSI;
   Bit64u rdi = RDI;
@@ -298,7 +298,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD16_YdXd(bxInstruction_c *i)
 /* 32 bit opsize mode, 32 bit address size */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD32_YdXd(bxInstruction_c *i)
 {
-  Bit32u increment = 0;
+  Bit32s increment = 0;
 
   Bit32u esi = ESI;
   Bit32u edi = EDI;
@@ -346,7 +346,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD32_YdXd(bxInstruction_c *i)
 /* 32 bit opsize mode, 64 bit address size */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD64_YdXd(bxInstruction_c *i)
 {
-  Bit32u increment = 0;
+  Bit32s increment = 0;
 
   Bit64u rsi = RSI;
   Bit64u rdi = RDI;
@@ -414,7 +414,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSQ32_YqXq(bxInstruction_c *i)
 /* 64 bit opsize mode, 64 bit address size */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSQ64_YqXq(bxInstruction_c *i)
 {
-  Bit32u increment = 0;
+  Bit32s increment = 0;
 
   Bit64u rsi = RSI;
   Bit64u rdi = RDI;
@@ -1299,7 +1299,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STOSB16_YbAL(bxInstruction_c *i)
 // 32 bit address size
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::STOSB32_YbAL(bxInstruction_c *i)
 {
-  Bit32u increment = 0;
+  Bit32s increment = 0;
   Bit32u edi = EDI;
 
 #if (BX_SUPPORT_REPEAT_SPEEDUPS) && (BX_DEBUGGER == 0)
@@ -1341,7 +1341,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STOSB32_YbAL(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::STOSB64_YbAL(bxInstruction_c *i)
 {
   Bit64u rdi = RDI;
-  Bit32u increment = 0;
+  Bit32s increment = 0;
 
 #if (BX_SUPPORT_REPEAT_SPEEDUPS) && (BX_DEBUGGER == 0)
   /* If conditions are right, we can transfer IO to physical memory
