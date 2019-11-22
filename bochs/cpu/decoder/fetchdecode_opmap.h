@@ -1249,32 +1249,32 @@ static const Bit64u BxOpcodeTableD7[] = { last_opcode(0, BX_IA_XLAT) };
 
 // opcode E0
 static const Bit64u BxOpcodeTableE0_32[] = { 
-  form_opcode(ATTR_IS32, BX_IA_LOOPNE_Jbd),
-  last_opcode(ATTR_IS32, BX_IA_LOOPNE_Jbw)
+  form_opcode(ATTR_IS32 | ATTR_OS32, BX_IA_LOOPNE_Jbd),
+  last_opcode(ATTR_IS32 | ATTR_OS16, BX_IA_LOOPNE_Jbw)
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTableE0_64[] = { last_opcode(0, BX_IA_LOOPNE_Jbq) };
+static const Bit64u BxOpcodeTableE0_64[] = { last_opcode(ATTR_IS64, BX_IA_LOOPNE_Jbq) };
 #endif
 
 // opcode E1
 static const Bit64u BxOpcodeTableE1_32[] = { 
-  form_opcode(ATTR_IS32, BX_IA_LOOPE_Jbd),
-  last_opcode(ATTR_IS32, BX_IA_LOOPE_Jbw)
+  form_opcode(ATTR_IS32 | ATTR_OS32, BX_IA_LOOPE_Jbd),
+  last_opcode(ATTR_IS32 | ATTR_OS16, BX_IA_LOOPE_Jbw)
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTableE1_64[] = { last_opcode(0, BX_IA_LOOPE_Jbq) };
+static const Bit64u BxOpcodeTableE1_64[] = { last_opcode(ATTR_IS64, BX_IA_LOOPE_Jbq) };
 #endif
 
 // opcode E2
 static const Bit64u BxOpcodeTableE2_32[] = { 
-  form_opcode(ATTR_IS32, BX_IA_LOOP_Jbd),
-  last_opcode(ATTR_IS32, BX_IA_LOOP_Jbw)
+  form_opcode(ATTR_IS32 | ATTR_OS32, BX_IA_LOOP_Jbd),
+  last_opcode(ATTR_IS32 | ATTR_OS16, BX_IA_LOOP_Jbw)
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTableE2_64[] = { last_opcode(0, BX_IA_LOOP_Jbq) };
+static const Bit64u BxOpcodeTableE2_64[] = { last_opcode(ATTR_IS64, BX_IA_LOOP_Jbq) };
 #endif
 
 // opcode E3
@@ -1284,7 +1284,7 @@ static const Bit64u BxOpcodeTableE3_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTableE3_64[] = { last_opcode(0, BX_IA_JRCXZ_Jbq) };
+static const Bit64u BxOpcodeTableE3_64[] = { last_opcode(ATTR_IS64, BX_IA_JRCXZ_Jbq) };
 #endif
 
 // opcode E4
