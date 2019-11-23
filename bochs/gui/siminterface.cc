@@ -1219,7 +1219,8 @@ static int bx_restore_getline(FILE *fp, char *line, int maxlen)
 bx_bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path, const char *restore_name)
 {
   char devstate[BX_PATHNAME_LEN], devdata[BX_PATHNAME_LEN];
-  char line[512], buf[512], pname[80];
+  char line[512], buf[512];
+  char pname[81]; // take extra 81st character for /0
   char *ptr;
   int i;
   unsigned n;
