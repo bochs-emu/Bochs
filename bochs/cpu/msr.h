@@ -126,7 +126,7 @@ enum MSR_Register {
 
   BX_MSR_XSS = 0xda0,
 
-  /* ANMD MSRs */
+  /* AMD MSRs */
   BX_MSR_EFER         = 0xc0000080,
   BX_MSR_STAR         = 0xc0000081,
   BX_MSR_LSTAR        = 0xc0000082,
