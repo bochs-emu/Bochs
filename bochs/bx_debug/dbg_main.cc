@@ -313,7 +313,7 @@ reparse:
     if ((*tmp_buf_ptr == '\n') || (*tmp_buf_ptr == 0))
     {
         if ((*tmp_buf_prev != '\n') && (*tmp_buf_prev != 0)) {
-          strncpy(tmp_buf, tmp_buf_prev, sizeof(tmp_buf_prev));
+          strncpy(tmp_buf, tmp_buf_prev, sizeof(tmp_buf));
           tmp_buf[sizeof(tmp_buf) - 1] = '\0';
           goto reparse;
         }
@@ -400,7 +400,7 @@ void bx_get_command(void)
   else {
     if (bx_infile_stack_index == 0)
       dbg_printf("%s", prompt);
-    strncpy(tmp_buf_prev, tmp_buf, sizeof(tmp_buf));
+    strncpy(tmp_buf_prev, tmp_buf, sizeof(tmp_buf_prev));
     charptr_ret = fgets(tmp_buf, sizeof(tmp_buf), bx_infile_stack[bx_infile_stack_index].fp);
   }
 #endif
