@@ -3736,9 +3736,7 @@ public: // for now...
 
   BX_SMF void CMPXCHG8B(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void RETnear32_Iw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void RETnear32(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void RETnear16_Iw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void RETnear16(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void RETfar32_Iw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void RETfar16_Iw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
@@ -4098,7 +4096,6 @@ public: // for now...
   BX_SMF void XADD_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void RETnear64_Iw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void RETnear64(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void RETfar64_Iw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void CMOVO_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

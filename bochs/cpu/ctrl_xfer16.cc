@@ -139,33 +139,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear16_Iw(bxInstruction_c *i)
   BX_NEXT_TRACE(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear16(bxInstruction_c *i)
-{
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
-
-#if BX_DEBUGGER
-  BX_CPU_THIS_PTR show_flag |= Flag_ret;
-#endif
-
-  RSP_SPECULATIVE;
-
-  Bit16u return_IP = pop_16();
-
-  if (return_IP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
-  {
-    BX_ERROR(("%s: offset outside of CS limits", i->getIaOpcodeNameShort()));
-    exception(BX_GP_EXCEPTION, 0);
-  }
-
-  EIP = return_IP;
-
-  RSP_COMMIT;
-
-  BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET, PREV_RIP, EIP);
-
-  BX_NEXT_TRACE(i);
-}
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar16_Iw(bxInstruction_c *i)
 {
   Bit16u ip, cs_raw;

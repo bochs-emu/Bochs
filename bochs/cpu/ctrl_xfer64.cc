@@ -64,27 +64,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear64_Iw(bxInstruction_c *i)
   BX_NEXT_TRACE(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear64(bxInstruction_c *i)
-{
-#if BX_DEBUGGER
-  BX_CPU_THIS_PTR show_flag |= Flag_ret;
-#endif
-
-  Bit64u return_RIP = stack_read_qword(RSP);
-
-  if (! IsCanonical(return_RIP)) {
-    BX_ERROR(("%s: canonical RIP violation", i->getIaOpcodeNameShort()));
-    exception(BX_GP_EXCEPTION, 0);
-  }
-
-  RIP = return_RIP;
-  RSP += 8;
-
-  BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET, PREV_RIP, RIP);
-
-  BX_NEXT_TRACE(i);
-}
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar64_Iw(bxInstruction_c *i)
 {
   invalidate_prefetch_q();
