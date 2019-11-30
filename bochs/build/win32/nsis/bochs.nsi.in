@@ -9,6 +9,7 @@
 ; Based on Example Script by Joost Verburg
 ; also original BOCHS script by Robert (segra)
 ; updated for NSIS 3.04 by Volker Ruppert
+; version check and reinstall page based on NSIS example
 ;
 ;---------------------
 ;Include Modern UI 2
@@ -31,6 +32,10 @@
 !define VER_SVN   @VER_SVN@
 !define NAME "Bochs ${VERSION}"
 
+;---------------------
+;Include WordFunc for version check
+
+!include WordFunc.nsh
 
 !define CURRENTPAGE $9
 
@@ -80,10 +85,13 @@ VIAddVersionKey "LegalCopyright" "Copyright 2001-2019 The Bochs Project"
   !define MUI_WELCOMEFINISHPAGE_BITMAP_NOSTRETCH
 
   !define MUI_WELCOMEPAGE_TITLE "Welcome to the Bochs ${VERSION} Setup Wizard"
-  !define MUI_WELCOMEPAGE_TEXT "This wizard will guide you through the installation of the Bochs x86 emulator version ${VERSION}.$\r$\n$\r$\n$_CLICK"
+  !define MUI_WELCOMEPAGE_TEXT "This wizard will guide you through the installation of the Bochs x86 emulator version ${VERSION}.$\r$\rNOTE: If you have installed a Bochs version older than 2.6.9, you need to uninstall it before installing this version, since setup cannot detect it.$\r$\n$\r$\n$_CLICK"
 
   !insertmacro MUI_PAGE_WELCOME
   !insertmacro MUI_PAGE_LICENSE ${SRCDIR}\COPYING.txt
+!ifdef VER_MAJOR & VER_MINOR & VER_PATCH & VER_SVN
+  Page custom PageReinstall PageLeaveReinstall
+!endif
   !insertmacro MULTIUSER_PAGE_INSTALLMODE
   !insertmacro MUI_PAGE_COMPONENTS
   !insertmacro MUI_PAGE_DIRECTORY
@@ -393,5 +401,146 @@ Push $R1
 Pop $R1
 Pop $R0
 FunctionEnd
+
+!ifdef VER_MAJOR & VER_MINOR & VER_PATCH & VER_SVN
+
+Var ReinstallPageCheck
+Var OldInstDir
+
+Function PageReinstall
+
+  ReadRegStr $R0 HKLM "Software\Bochs 2.6.9" ""
+  ReadRegStr $R1 HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs 2.6.9" "UninstallString"
+  ReadRegStr $R2 HKLM "Software\Bochs" ""
+  ReadRegStr $R3 HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs" "UninstallString"
+
+  StrCpy $R4 "older"
+  ${If} "$R0$R1" != ""
+    StrCpy $R0 "2"
+    StrCpy $R1 "6"
+    StrCpy $R2 "9"
+    StrCpy $R3 "0"
+  ${ElseIf}  "$R2$R3" != ""
+    ReadRegDWORD $R0 HKLM "Software\Bochs" "VersionMajor"
+    ReadRegDWORD $R1 HKLM "Software\Bochs" "VersionMinor"
+    ReadRegDWORD $R2 HKLM "Software\Bochs" "VersionPatch"
+    ReadRegDWORD $R3 HKLM "Software\Bochs" "VersionSVN"
+  ${Else}
+    Abort
+  ${Endif}
+
+  StrCpy $R0 $R0.$R1.$R2.$R3
+  ${VersionCompare} ${VER_MAJOR}.${VER_MINOR}.${VER_PATCH}.${VER_SVN} $R0 $R0
+  ${If} $R0 == 0
+    StrCpy $R1 "Bochs ${VERSION} is already installed. Select the operation you want to perform and click Next to continue."
+    StrCpy $R2 "Add/Reinstall components"
+    StrCpy $R3 "Uninstall Bochs"
+    !insertmacro MUI_HEADER_TEXT "Already Installed" "Choose the maintenance option to perform."
+    StrCpy $R0 "2"
+  ${ElseIf} $R0 == 1
+    StrCpy $R1 "An $R4 version of Bochs is installed on your system. It's recommended that you uninstall the current version before installing. Select the operation you want to perform and click Next to continue."
+    StrCpy $R2 "Uninstall before installing"
+    StrCpy $R3 "Do not uninstall"
+    !insertmacro MUI_HEADER_TEXT "Already Installed" "Choose how you want to install Bochs."
+    StrCpy $R0 "1"
+  ${ElseIf} $R0 == 2
+    StrCpy $R1 "A newer version of Bochs is already installed! It is not recommended that you install an older version. If you really want to install this older version, it's better to uninstall the current version first. Select the operation you want to perform and click Next to continue."
+    StrCpy $R2 "Uninstall before installing"
+    StrCpy $R3 "Do not uninstall"
+    !insertmacro MUI_HEADER_TEXT "Already Installed" "Choose how you want to install Bochs."
+    StrCpy $R0 "1"
+  ${Else}
+    Abort
+  ${EndIf}
+
+  nsDialogs::Create 1018
+  Pop $R4
+
+  ${NSD_CreateLabel} 0 0 100% 24u $R1
+  Pop $R1
+
+  ${NSD_CreateRadioButton} 30u 50u -30u 8u $R2
+  Pop $R2
+  ${NSD_OnClick} $R2 PageReinstallUpdateSelection
+
+  ${NSD_CreateRadioButton} 30u 70u -30u 8u $R3
+  Pop $R3
+  ${NSD_OnClick} $R3 PageReinstallUpdateSelection
+
+  ${If} $ReinstallPageCheck != 2
+    SendMessage $R2 ${BM_SETCHECK} ${BST_CHECKED} 0
+  ${Else}
+    SendMessage $R3 ${BM_SETCHECK} ${BST_CHECKED} 0
+  ${EndIf}
+
+  ${NSD_SetFocus} $R2
+
+  nsDialogs::Show
+
+FunctionEnd
+
+Function PageReinstallUpdateSelection
+
+  Pop $R1
+
+  ${NSD_GetState} $R2 $R1
+
+  ${If} $R1 == ${BST_CHECKED}
+    StrCpy $ReinstallPageCheck 1
+  ${Else}
+    StrCpy $ReinstallPageCheck 2
+  ${EndIf}
+
+FunctionEnd
+
+Function PageLeaveReinstall
+
+  ${NSD_GetState} $R2 $R1
+
+  StrCmp $R0 "1" 0 +2 ; Existing install is not the same version?
+    StrCmp $R1 "1" reinst_uninstall reinst_done
+
+  StrCmp $R1 "1" reinst_done ; Same version, skip to add/reinstall components?
+
+  reinst_uninstall:
+  ReadRegStr $R1 HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs" "UninstallString"
+  ${If} $R1 == ""
+    ReadRegStr $R1 HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs 2.6.9" "UninstallString"
+    ReadRegStr $OldInstDir HKLM "Software\Bochs 2.6.9" ""
+  ${Else}
+    StrCpy $OldInstDir $INSTDIR
+  ${Endif}
+
+  ;Run uninstaller
+    HideWindow
+
+    ClearErrors
+    ExecWait '$R1 _?=$OldInstDir' $0
+
+    BringToFront
+
+    ${IfThen} ${Errors} ${|} StrCpy $0 2 ${|} ; ExecWait failed, set fake exit code
+
+    ${If} $0 <> 0
+    ${OrIf} ${FileExists} "$OldInstDir\bochs.exe"
+      ${If} $0 = 1 ; User aborted uninstaller?
+        StrCmp $R0 "2" 0 +2 ; Is the existing install the same version?
+          Quit ; ...yes, already installed, we are done
+        Abort
+      ${EndIf}
+      MessageBox MB_ICONEXCLAMATION "Unable to uninstall!"
+      Abort
+    ${Else}
+      StrCpy $0 $R1 1
+      ${IfThen} $0 == '"' ${|} StrCpy $R1 $R1 -1 1 ${|} ; Strip quotes from UninstallString
+      Delete $R1
+      RMDir $OldInstDir
+    ${EndIf}
+
+  reinst_done:
+
+FunctionEnd
+
+!endif # VER_MAJOR & VER_MINOR & VER_PATCH & VER_SVN
 
 ;eof

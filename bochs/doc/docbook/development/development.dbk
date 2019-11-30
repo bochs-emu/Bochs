@@ -3147,7 +3147,7 @@ Bochs website, copies all the files into <emphasis>./build/win32/nsis/bochs-2.5<
 and then creates a binary ZIP file in the NSIS folder.
 </para>
 <para>
-Now make the NSIS installer package (the current script is known to work with NSIS 2.44)
+Now make the NSIS installer package (the current script is known to work with NSIS 3.04)
 <screen>
   cd build/win32/nsis
   make

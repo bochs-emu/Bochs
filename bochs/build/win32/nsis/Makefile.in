@@ -1,4 +1,4 @@
-# To build an NSIS installer, get NSIS version 2.44 or newer from
+# To build an NSIS installer, get NSIS version 3.04 or newer from
 # http://sourceforge.net/projects/nsis
 # Fix the MAKENSIS variable so that you have the correct path.
 # Unzip the windows binary release into a subdirectory of this 
