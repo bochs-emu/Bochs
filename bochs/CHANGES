@@ -2,6 +2,7 @@ Changes in 2.6.10 (not yet released):
 
 - General
   - Disabled legacy "load32bitOShack" feature.
+  - Improved NSIS win32 installer script.
 
 - CPU / CPUDB
   - Significant speedup to simulation of milti-threaded guest (patch by Luigu.B)

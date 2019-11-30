@@ -3018,7 +3018,7 @@ Update version number and strings in configure.in.
 VERSION="2.6.9"
 VER_MAJOR=2
 VER_MINOR=6
-VER_PATCH=9
+VER_REVISION=9
 VER_SVN=0
 REL_STRING="Build from SVN snapshot on April  9, 2017"
 </screen>

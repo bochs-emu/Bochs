@@ -28,7 +28,7 @@
 !define VERSION   @VERSION@
 !define VER_MAJOR @VER_MAJOR@
 !define VER_MINOR @VER_MINOR@
-!define VER_PATCH @VER_PATCH@
+!define VER_REVISION @VER_REVISION@
 !define VER_SVN   @VER_SVN@
 !define NAME "Bochs ${VERSION}"
 
@@ -74,7 +74,7 @@ Var IndependentSectionState
 ;--------------------------------
 ;Version information
 
-VIProductVersion ${VER_MAJOR}.${VER_MINOR}.${VER_PATCH}.${VER_SVN}
+VIProductVersion ${VER_MAJOR}.${VER_MINOR}.${VER_REVISION}.${VER_SVN}
 VIAddVersionKey "FileVersion" "${VERSION}"
 VIAddVersionKey "FileDescription" "Bochs Setup"
 VIAddVersionKey "LegalCopyright" "Copyright 2001-2019 The Bochs Project"
@@ -89,7 +89,7 @@ VIAddVersionKey "LegalCopyright" "Copyright 2001-2019 The Bochs Project"
 
   !insertmacro MUI_PAGE_WELCOME
   !insertmacro MUI_PAGE_LICENSE ${SRCDIR}\COPYING.txt
-!ifdef VER_MAJOR & VER_MINOR & VER_PATCH & VER_SVN
+!ifdef VER_MAJOR & VER_MINOR & VER_REVISION & VER_SVN
   Page custom PageReinstall PageLeaveReinstall
 !endif
   !insertmacro MULTIUSER_PAGE_INSTALLMODE
@@ -261,7 +261,7 @@ Section -post
   WriteRegStr HKLM "Sostware\Bochs" "" $INSTDIR
   WriteRegDword HKLM "Software\Bochs" "VersionMajor" "${VER_MAJOR}"
   WriteRegDword HKLM "Software\Bochs" "VersionMinor" "${VER_MINOR}"
-  WriteRegDword HKLM "Software\Bochs" "VersionPatch" "${VER_PATCH}"
+  WriteRegDword HKLM "Software\Bochs" "VersionRevision" "${VER_REVISION}"
   WriteRegDword HKLM "Software\Bochs" "VersionSVN" "${VER_SVN}"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs" "DisplayName" "${NAME} (remove only)"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs" "DisplayIcon" "$INSTDIR\bochs.ico,0"
@@ -402,7 +402,7 @@ Pop $R1
 Pop $R0
 FunctionEnd
 
-!ifdef VER_MAJOR & VER_MINOR & VER_PATCH & VER_SVN
+!ifdef VER_MAJOR & VER_MINOR & VER_REVISION & VER_SVN
 
 Var ReinstallPageCheck
 Var OldInstDir
@@ -423,14 +423,14 @@ Function PageReinstall
   ${ElseIf}  "$R2$R3" != ""
     ReadRegDWORD $R0 HKLM "Software\Bochs" "VersionMajor"
     ReadRegDWORD $R1 HKLM "Software\Bochs" "VersionMinor"
-    ReadRegDWORD $R2 HKLM "Software\Bochs" "VersionPatch"
+    ReadRegDWORD $R2 HKLM "Software\Bochs" "VersionRevision"
     ReadRegDWORD $R3 HKLM "Software\Bochs" "VersionSVN"
   ${Else}
     Abort
   ${Endif}
 
   StrCpy $R0 $R0.$R1.$R2.$R3
-  ${VersionCompare} ${VER_MAJOR}.${VER_MINOR}.${VER_PATCH}.${VER_SVN} $R0 $R0
+  ${VersionCompare} ${VER_MAJOR}.${VER_MINOR}.${VER_REVISION}.${VER_SVN} $R0 $R0
   ${If} $R0 == 0
     StrCpy $R1 "Bochs ${VERSION} is already installed. Select the operation you want to perform and click Next to continue."
     StrCpy $R2 "Add/Reinstall components"
@@ -541,6 +541,6 @@ Function PageLeaveReinstall
 
 FunctionEnd
 
-!endif # VER_MAJOR & VER_MINOR & VER_PATCH & VER_SVN
+!endif # VER_MAJOR & VER_MINOR & VER_REVISION & VER_SVN
 
 ;eof
