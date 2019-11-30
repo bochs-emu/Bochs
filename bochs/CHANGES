@@ -1,4 +1,13 @@
-Changes in 2.6.10 (not yet released):
+Changes in 2.6.10 (not yet released / ETA December 2019):
+
+Brief summary :
+  - TODO: CPU
+  - Added basic support for the i440BX PCI/AGP chipset.
+  - Added basic Voodoo Banshee / Voodoo3 emulation support.
+  - Added basic DDC support for the VGA-compatible adapters.
+  - Implemented HPET emulation (ported from Qemu).
+
+Detailed change log :
 
 - General
   - Disabled legacy "load32bitOShack" feature.
