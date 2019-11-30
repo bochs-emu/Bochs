@@ -258,7 +258,7 @@ SectionEnd
 
 Section -post
   ; Register Uninstaller
-  WriteRegStr HKLM "Sostware\Bochs" "" $INSTDIR
+  WriteRegStr HKLM "Software\Bochs" "" $INSTDIR
   WriteRegDword HKLM "Software\Bochs" "VersionMajor" "${VER_MAJOR}"
   WriteRegDword HKLM "Software\Bochs" "VersionMinor" "${VER_MINOR}"
   WriteRegDword HKLM "Software\Bochs" "VersionRevision" "${VER_REVISION}"

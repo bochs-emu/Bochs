@@ -1879,7 +1879,7 @@ const char *get_builtin_variable(const char *varname)
   else {
     if (!strcmp(varname, "BXSHARE")) {
 #ifdef WIN32
-      wsprintf(keyname, "Software\\Bochs %s", VERSION);
+      wsprintf(keyname, "Software\\Bochs");
       code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, keyname, 0, KEY_READ, &hkey);
       if (code == ERROR_SUCCESS) {
         data[0] = 0;
