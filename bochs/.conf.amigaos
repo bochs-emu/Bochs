@@ -1,0 +1,6 @@
+#!/bin/sh
+#
+# These options should work on Amiga/MorphOS
+#
+
+./configure --with-amigaos --disable-shared ${CONFIGURE_ARGS}
