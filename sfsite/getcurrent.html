@@ -7,7 +7,48 @@
  <!--content starts here-->
  <img src="images/logo.gif" alt="A Window, Tux, and the BSD Daemon" width="160" height="175" align="right">
 
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.6.9</font><BR><BR>
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.6.10</font><BR><BR>
+
+Bochs 2.6.10 is an intermediate (bugfix+) release. Here is the summary of changes :
+
+<ul>
+<li>CPU: Bugfixes for CPU emulation correctness (critical bugfixes for PCID, ADCX/ADOX, MOVBE, AVX/AVX-512 and VMX emulation)
+<li>CPU: implemented AVX-512 VBMI2/VNNI/BITALG, VAES, VPCLMULQDQ / GFNI instructions emulation
+<li>VMX: Implement EPT-Based Sub-Page Protection
+<li>CPUID: Added new CPU models Skylake-X, Cannonlake and Icelake-U
+<li>CPUID: Implemented side-channel attack prevention reporting and corresponding MSR registers, enabled for Icelake-U
+<li>Added basic support for the i440BX PCI/AGP chipset
+<li>Added basic Voodoo Banshee / Voodoo3 emulation support
+<li>Added basic DDC support for the VGA-compatible adapters
+<li>Implemented HPET emulation (ported from Qemu)
+</ul>
+
+The binary packages for Linux and Windows are built with these features :
+<ul>
+<li> x86-64 emulation with all optimizations enabled
+<li> devices:
+ <ul>
+ <li> chipset: PCI (i430FX / i440FX / i440BX), ACPI
+ <li> video: Bochs VBE, Cirrus SVGA and 4 Voodoo models
+ <li> sound: SB16 (ISA) and ES1370 (PCI)
+ <li> network: NE2000 (ISA/PCI) and E1000 (PCI)
+ <li> USB: OHCI, UHCI, EHCI, xHCI and 8 pluggable device types
+ <li> other: game port, bus mouse
+ </ul>
+<li> Display libraries:
+ <ul>
+ <li> Linux: nogui, rfb, sdl2, term, vncsrv, wx, x
+ <li> Windows: nogui, rfb, win32
+ </ul>
+</ul>
+
+<a href="http://svn.code.sf.net/p/bochs/code/tags/REL_2_6_10_FINAL/bochs/CHANGES">
+Details on what has changed since version 2.6.9
+</a>
+
+<BR/><BR/>
+
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous release:</b> Bochs 2.6.9</font><BR><BR>
 
 Bochs 2.6.9 is an intermediate (bugfix+) release. Here is the summary of changes :
 
@@ -21,50 +62,10 @@ Bochs 2.6.9 is an intermediate (bugfix+) release. Here is the summary of changes
 <li>Show textconfig at runtime in the Bochs VGA window (gui console).
 </ul>
 
-The binary packages for Linux and Windows are built with these features :
-<ul>
-<li> x86-64 emulation with all optimizations enabled
-<li> devices:
- <ul>
- <li> chipset: PCI (i430FX / i440FX), ACPI
- <li> video: Bochs VBE, Cirrus SVGA and Voodoo1
- <li> sound: SB16 (ISA) and ES1370 (PCI)
- <li> network: NE2000 (ISA/PCI) and E1000 (PCI)
- <li> USB: OHCI, UHCI, EHCI, xHCI and 8 pluggable device types
- <li> other: game port, bus mouse
- </ul>
-<li> Display libraries:
- <ul>
- <li> Linux: nogui, rfb, sdl2, term, vncsrv, wx, x
- <li> Windows: nogui, rfb, win32
- </ul>
-</ul>
+<BR>
 
 <a href="http://svn.code.sf.net/p/bochs/code/tags/REL_2_6_9_FINAL/bochs/CHANGES">
 Details on what has changed since version 2.6.8
-</a>
-
-<BR/><BR/>
-
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous release:</b> Bochs 2.6.8</font><BR><BR>
-
-Bochs 2.6.8 is an intermediate (bugfix+) release. Here is the summary of changes :
-
-<ul>
-<li>Bugfixes for CPU emulation correctness (critical bugfix for x86-64 emulation).
-<li>Memory type calculation support for Bochs debugger and instrumentation.
-<li>Added Pentium (P54C) and Broadwell ULT CPU models.
-<li>Full save/restore support for enhanced gui debugger settings.
-<li>Added Oracle(tm) VM VirtualBox image support (VDI version 1.1).
-<li>SB16: Ported OPL3 emulation from DOSBox.
-<li>Major rewrite of the lowlevel sound code (mixer thread, more detailed configuration, WAV file output).
-<li>Bugfixes in the floppy, lowlevel cdrom, rombios, slirp and win32 gui code.
-</ul>
-
-<BR>
-
-<a href="http://svn.code.sf.net/p/bochs/code/tags/REL_2_6_8_FINAL/bochs/CHANGES">
-Details on what has changed since version 2.6.7
 </a>
 
  <BR><BR>
@@ -74,7 +75,7 @@ The latest release of Bochs is available in these file formats :<BR>
 <li> Win32 binary NSIS installer package (EXE)
 <li> Win32 binary with P4 CPU + SMP support (ZIP) - Bochs installation is required
 <li> Win64 binary - Bochs installation is required
-<li> Linux binary RPM (32 / 64 bit)
+<li> Linux binary RPM (64 bit)
 <li> Platform independant source package (TAR.GZ)
 <li> Win32 specific source package prepared for MSVC (ZIP)
 <li> Linux source RPM
