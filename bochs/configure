@@ -3181,12 +3181,12 @@ ac_config_headers="$ac_config_headers config.h"
 ac_config_headers="$ac_config_headers ltdlconf.h"
 
 
-VERSION="2.6.10"
+VERSION="2.6.10.svn"
 VER_MAJOR=2
 VER_MINOR=6
 VER_REVISION=10
-VER_SVN=0
-REL_STRING="Built from SVN snapshot on December 1, 2019"
+VER_SVN=1
+REL_STRING="Built from SVN snapshot after release 2.6.10"
 
 
 

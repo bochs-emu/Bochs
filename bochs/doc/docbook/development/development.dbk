@@ -3239,6 +3239,7 @@ Use the "timeleft" command to see how much time remains before shutdown.
 Use the "shutdown" command to destroy the shell before the time limit.
 For path information and login help, type "sf-help".
 
+[vruppert@shell-24002 ~]$ svnserve -d -r /home/svn/p/bochs/code
 [vruppert@shell-24002 ~]$ cd /home/project-web/bochs/htdocs/
 [vruppert@shell-24002 htdocs]$ svn update
 U    index.html
