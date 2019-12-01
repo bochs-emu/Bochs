@@ -1,6 +1,6 @@
 Bochs - The cross platform IA-32 (x86) emulator
-Updated: Sun Apr  9 08:45:00 CEST 2017
-Version: 2.6.9
+Updated: Sun Dec  1 08:45:00 CET 2019
+Version: 2.6.10
 
 WHAT IS BOCHS?
 
@@ -81,13 +81,18 @@ many ways you could help out.  For example:
 
 CHANGES
 
-Brief summary of changes in 2.6.9:
-  - CPU: implemented new instructions and x86 architecture extensions.
-  - Bugfixes for CPU emulation correctness.
-  - Added Android host platform support.
-  - Added USB EHCI device emulation support.
-  - Added USB floppy (UFI/CBI) support.
-  - Added ethernet module 'socket', designed to interconnect Bochs instances.
-  - Show textconfig at runtime in the Bochs VGA window (gui console).
+Brief summary of changes in 2.6.10:
+  - CPU: Bugfixes for CPU emulation correctness (critical bugfixes for
+    PCID, ADCX/ADOX, MOVBE, AVX/AVX-512 and VMX emulation)
+  - CPU: implemented AVX-512 VBMI2/VNNI/BITALG, VAES, VPCLMULQDQ / GFNI
+    instructions emulation
+  - VMX: Implement EPT-Based Sub-Page Protection
+  - CPUID: Added new CPU models Skylake-X, Cannonlake and Icelake-U
+  - CPUID: Implemented side-channel attack prevention reporting and
+    corresponding MSR registers, enabled for Icelake-U
+  - Added basic support for the i440BX PCI/AGP chipset.
+  - Added basic Voodoo Banshee / Voodoo3 emulation support.
+  - Added basic DDC support for the VGA-compatible adapters.
+  - Implemented HPET emulation (ported from Qemu).
 
 See CHANGES file for more information!

@@ -1,4 +1,4 @@
-Changes in 2.6.10 (not yet released / ETA December 2019):
+Changes in 2.6.10 (December 1, 2019):
 
 Brief summary :
   - CPU: Bugfixes for CPU emulation correctness (critical bugfixes for PCID, ADCX/ADOX, MOVBE, AVX/AVX-512 and VMX emulation)
