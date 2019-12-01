@@ -1,7 +1,11 @@
 Changes in 2.6.10 (not yet released / ETA December 2019):
 
 Brief summary :
-  - TODO: CPU
+  - CPU: Bugfixes for CPU emulation correctness (critical bugfixes for PCID, ADCX/ADOX, MOVBE, AVX/AVX-512 and VMX emulation)
+  - CPU: implemented AVX-512 VBMI2/VNNI/BITALG, VAES, VPCLMULQDQ / GFNI instructions emulation
+  - VMX: Implement EPT-Based Sub-Page Protection
+  - CPUID: Added new CPU models Skylake-X, Cannonlake and Icelake-U
+  - CPUID: Implemented side-channel attack prevention reporting and corresponding MSR registers, enabled for Icelake-U
   - Added basic support for the i440BX PCI/AGP chipset.
   - Added basic Voodoo Banshee / Voodoo3 emulation support.
   - Added basic DDC support for the VGA-compatible adapters.
