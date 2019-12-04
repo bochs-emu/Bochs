@@ -2782,8 +2782,7 @@ void bx_dbg_restore_command(const char *param_name, const char *restore_path)
 
 void bx_dbg_disassemble_current(const char *format)
 {
-  Bit64u addr = bx_dbg_get_laddr(bx_dbg_get_selector_value(BX_SEG_REG_CS), 
-     BX_CPU(dbg_cpu)->get_instruction_pointer());
+  Bit64u addr = BX_CPU(dbg_cpu)->get_laddr(BX_SEG_REG_CS, BX_CPU(dbg_cpu)->get_instruction_pointer());
   bx_dbg_disassemble_command(format, addr, addr);
 }
 
@@ -3859,26 +3858,27 @@ bx_address bx_dbg_get_laddr(Bit16u sel, bx_address ofs)
   bx_address laddr;
 
   if (BX_CPU(dbg_cpu)->protected_mode()) {
-    bx_descriptor_t descriptor;
-    Bit32u lowaddr, highaddr;
 
+    bx_descriptor_t descriptor;
     if (! bx_dbg_read_pmode_descriptor(sel, &descriptor))
       return 0;
 
-    // expand-down
-    if (IS_DATA_SEGMENT(descriptor.type) && IS_DATA_SEGMENT_EXPAND_DOWN(descriptor.type)) {
-      lowaddr = descriptor.u.segment.limit_scaled;
-      highaddr = descriptor.u.segment.g ? 0xffffffff : 0xffff;
-    }
-    else {
-      lowaddr = 0;
-      highaddr = descriptor.u.segment.limit_scaled;
-    }
+    if (BX_CPU(dbg_cpu)->get_cpu_mode() != BX_MODE_LONG_64) {
+      Bit32u lowaddr, highaddr;
 
-    if ((ofs < lowaddr || ofs > highaddr) &&
-        BX_CPU(dbg_cpu)->get_cpu_mode() != BX_MODE_LONG_64) {
-      dbg_printf("WARNING: Offset %08X is out of selector %04x limit (%08x...%08x)!\n",
-        ofs, sel, lowaddr, highaddr);
+      // expand-down
+      if (IS_DATA_SEGMENT(descriptor.type) && IS_DATA_SEGMENT_EXPAND_DOWN(descriptor.type)) {
+        lowaddr = descriptor.u.segment.limit_scaled;
+        highaddr = descriptor.u.segment.g ? 0xffffffff : 0xffff;
+      }
+       else {
+        lowaddr = 0;
+        highaddr = descriptor.u.segment.limit_scaled;
+      }
+
+      if (ofs < lowaddr || ofs > highaddr) {
+        dbg_printf("WARNING: Offset %08X is out of selector %04x limit (%08x...%08x)!\n", ofs, sel, lowaddr, highaddr);
+      }
     }
 
     laddr = descriptor.u.segment.base + ofs;
