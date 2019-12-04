@@ -758,18 +758,22 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
                         (combined_access | isWrite);          // bit 2,1,0
 
 #if BX_SUPPORT_PKEYS
-  if (BX_CPU_THIS_PTR cr4.get_PKE()) {
+  if (BX_CPU_THIS_PTR cr4.get_PKE() && user) {
     pkey = (entry[leaf] >> 59) & 0xf;
 
     if (rw != BX_EXECUTE) {
       // check of accessDisable bit set
-      if (BX_CPU_THIS_PTR pkru & (1<<(pkey*2)))
+      if (BX_CPU_THIS_PTR pkru & (1<<(pkey*2))) {
+        BX_ERROR(("PAE: protection key access not allowed PKRU=%x pkey=%d", BX_CPU_THIS_PTR pkru, pkey));
         page_fault(ERROR_PROTECTION | ERROR_PKEY, laddr, user, rw);
+      }
 
       // check of writeDisable bit set
       if (BX_CPU_THIS_PTR pkru & (1<<(pkey*2+1))) {
-        if (isWrite && (user || BX_CPU_THIS_PTR cr0.get_WP()))
+        if (isWrite && (user || BX_CPU_THIS_PTR cr0.get_WP())) {
+          BX_ERROR(("PAE: protection key write not allowed PKRU=%x pkey=%d", BX_CPU_THIS_PTR pkru, pkey));
           page_fault(ERROR_PROTECTION | ERROR_PKEY, laddr, user, rw);
+        }
       }
     }
   }
