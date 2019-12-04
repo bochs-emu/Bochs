@@ -2254,7 +2254,15 @@ void bx_dbg_disassemble_hex_mode_switch(int mode)
 
 void bx_dbg_take_command(const char *what, unsigned n)
 {
-  if (! strcmp(what, "dma")) {
+  if (! strcmp(what, "smi")) {
+    dbg_printf("Delivering SMI to cpu0\n");
+    BX_CPU(0)->deliver_SMI();
+  }
+  else if (! strcmp(what, "nmi")) {
+    dbg_printf("Delivering NMI to cpu0\n");
+    BX_CPU(0)->deliver_NMI();
+  }
+  else if (! strcmp(what, "dma")) {
     if (n == 0) {
       dbg_printf("Error: take what n=0.\n");
       return;

@@ -84,6 +84,8 @@ Bit64u eval_value;
 %token <sval> BX_TOKEN_TAKE
 %token <sval> BX_TOKEN_DMA
 %token <sval> BX_TOKEN_IRQ
+%token <sval> BX_TOKEN_SMI
+%token <sval> BX_TOKEN_NMI
 %token <sval> BX_TOKEN_TLB
 %token <sval> BX_TOKEN_HEX
 %token <sval> BX_TOKEN_DISASM
@@ -901,6 +903,16 @@ take_command:
         free($1); free($2);
       }
     | BX_TOKEN_TAKE BX_TOKEN_IRQ '\n'
+      {
+        bx_dbg_take_command($2, 1);
+        free($1); free($2);
+      }
+    | BX_TOKEN_TAKE BX_TOKEN_SMI '\n'
+      {
+        bx_dbg_take_command($2, 1);
+        free($1); free($2);
+      }
+    | BX_TOKEN_TAKE BX_TOKEN_NMI '\n'
       {
         bx_dbg_take_command($2, 1);
         free($1); free($2);
