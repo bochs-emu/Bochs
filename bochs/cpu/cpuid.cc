@@ -393,7 +393,7 @@ void bx_cpuid_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *
       break;
 
 #if BX_SUPPPORT_PKEYS
-    case 9: // Ptotection keys
+    case 9: // Protection keys
       if (cpu->xcr0_suppmask & BX_XCR0_PKRU_MASK) {
         leaf->eax = XSAVE_PKRU_STATE_LEN;
         leaf->ebx = XSAVE_PKRU_STATE_OFFSET;

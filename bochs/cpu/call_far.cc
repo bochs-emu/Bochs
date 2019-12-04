@@ -223,14 +223,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
   bx_descriptor_t cs_descriptor;
 
   // examine code segment selector in call gate descriptor
-  BX_DEBUG(("call_protected: call gate"));
+  BX_DEBUG(("call_gate: call gate"));
 
   Bit16u dest_selector = gate_descriptor->u.gate.dest_selector;
   Bit32u new_EIP       = gate_descriptor->u.gate.dest_offset;
 
   // selector must not be null else #GP(0)
   if ((dest_selector & 0xfffc) == 0) {
-    BX_ERROR(("call_protected: selector in gate null"));
+    BX_ERROR(("call_gate: selector in gate null"));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -247,13 +247,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
   if (cs_descriptor.valid==0 || cs_descriptor.segment==0 ||
       IS_DATA_SEGMENT(cs_descriptor.type) || cs_descriptor.dpl > CPL)
   {
-    BX_ERROR(("call_protected: selected descriptor is not code"));
+    BX_ERROR(("call_gate: selected descriptor is not code"));
     exception(BX_GP_EXCEPTION, dest_selector & 0xfffc);
   }
 
   // code segment must be present else #NP(selector)
   if (! IS_PRESENT(cs_descriptor)) {
-    BX_ERROR(("call_protected: code segment not present !"));
+    BX_ERROR(("call_gate: code segment not present !"));
     exception(BX_NP_EXCEPTION, dest_selector & 0xfffc);
   }
 
@@ -276,7 +276,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
     // check selector & descriptor for new SS:
     // selector must not be null, else #TS(0)
     if ((SS_for_cpl_x & 0xfffc) == 0) {
-      BX_ERROR(("call_protected: new SS null"));
+      BX_ERROR(("call_gate: new SS null"));
       exception(BX_TS_EXCEPTION, 0);
     }
 
@@ -289,14 +289,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
     // selector's RPL must equal DPL of code segment,
     //   else #TS(SS selector)
     if (ss_selector.rpl != cs_descriptor.dpl) {
-      BX_ERROR(("call_protected: SS selector.rpl != CS descr.dpl"));
+      BX_ERROR(("call_gate: SS selector.rpl != CS descr.dpl"));
       exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc);
     }
 
     // stack segment DPL must equal DPL of code segment,
     //   else #TS(SS selector)
     if (ss_descriptor.dpl != cs_descriptor.dpl) {
-      BX_ERROR(("call_protected: SS descr.rpl != CS descr.dpl"));
+      BX_ERROR(("call_gate: SS descr.rpl != CS descr.dpl"));
       exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc);
     }
 
@@ -305,13 +305,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
     if (ss_descriptor.valid==0 || ss_descriptor.segment==0 ||
         IS_CODE_SEGMENT(ss_descriptor.type) || !IS_DATA_SEGMENT_WRITEABLE(ss_descriptor.type))
     {
-      BX_ERROR(("call_protected: ss descriptor is not writable data seg"));
+      BX_ERROR(("call_gate: ss descriptor is not writable data seg"));
       exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc);
     }
 
     // segment must be present, else #SS(SS selector)
     if (! IS_PRESENT(ss_descriptor)) {
-      BX_ERROR(("call_protected: ss descriptor not present"));
+      BX_ERROR(("call_gate: ss descriptor not present"));
       exception(BX_SS_EXCEPTION, SS_for_cpl_x & 0xfffc);
     }
 
@@ -419,7 +419,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
 
     // new eIP must be in code segment limit else #GP(0)
     if (new_EIP > cs_descriptor.u.segment.limit_scaled) {
-      BX_ERROR(("call_protected: EIP not within CS limits"));
+      BX_ERROR(("call_gate: EIP not within CS limits"));
       exception(BX_GP_EXCEPTION, 0);
     }
 
