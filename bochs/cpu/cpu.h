@@ -328,7 +328,7 @@ enum BxCpuMode {
   BX_MODE_LONG_64 = 4           // EFER.LMA = 1, CR0.PE=1, CS.L=1
 };
 
-const unsigned BX_MSR_MAX_INDEX = 0x800;
+const unsigned BX_MSR_MAX_INDEX = 0x1000;
 
 extern const char* cpu_mode_string(unsigned cpu_mode);
 

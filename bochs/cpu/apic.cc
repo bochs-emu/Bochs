@@ -1280,7 +1280,7 @@ bx_bool bx_local_apic_c::read_x2apic(unsigned index, Bit64u *val_64)
     *val_64 = read_aligned(index);
     break;
   default:
-    BX_DEBUG(("read_x2apic: not supported apic register 0x%08x", index));
+    BX_ERROR(("read_x2apic: not supported apic register 0x%08x", index));
     return 0;
   }
 
@@ -1366,7 +1366,7 @@ bx_bool bx_local_apic_c::write_x2apic(unsigned index, Bit32u val32_hi, Bit32u va
   case BX_LAPIC_TIMER_DIVIDE_CFG:
     break; // use legacy write
   default:
-    BX_DEBUG(("write_x2apic: not supported apic register 0x%08x", index));
+    BX_ERROR(("write_x2apic: not supported apic register 0x%08x", index));
     return 0;
   }
 
