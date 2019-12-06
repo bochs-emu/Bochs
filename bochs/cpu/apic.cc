@@ -435,6 +435,9 @@ Bit32u bx_local_apic_c::read_aligned(bx_phy_address addr)
       data = lvt[index];
       break;
     }
+  case BX_LAPIC_LVT_CMCI:
+    data = lvt[APIC_LVT_CMCI];
+    break;
   case BX_LAPIC_TIMER_INITIAL_COUNT: // initial count for timer
     data = timer_initial;
     break;
@@ -532,6 +535,7 @@ void bx_local_apic_c::write_aligned(bx_phy_address addr, Bit32u value)
     case BX_LAPIC_LVT_LINT0:   // LVT LINT0 Reg
     case BX_LAPIC_LVT_LINT1:   // LVT LINT1 Reg
     case BX_LAPIC_LVT_ERROR:   // LVT Error Reg
+    case BX_LAPIC_LVT_CMCI:
       set_lvt_entry(apic_reg, value);
       break;
     case BX_LAPIC_TIMER_INITIAL_COUNT:
@@ -610,10 +614,11 @@ void bx_local_apic_c::set_lvt_entry(unsigned apic_reg, Bit32u value)
     0x000117ff, /* PERFMON */
     0x0001f7ff, /* LINT0 */
     0x0001f7ff, /* LINT1 */
-    0x000110ff  /* ERROR */
+    0x000110ff, /* ERROR */
+    0x000117ff, /* CMCI */
   };
 
-  unsigned lvt_entry = (apic_reg - BX_LAPIC_LVT_TIMER) >> 4;
+  unsigned lvt_entry = (apic_reg == BX_LAPIC_LVT_CMCI) ? APIC_LVT_CMCI : (apic_reg - BX_LAPIC_LVT_TIMER) >> 4;
 #if BX_CPU_LEVEL >= 6
   if (apic_reg == BX_LAPIC_LVT_TIMER) {
     if (! cpu->is_cpu_extension_supported(BX_ISA_TSC_DEADLINE)) {
@@ -1274,6 +1279,7 @@ bx_bool bx_local_apic_c::read_x2apic(unsigned index, Bit64u *val_64)
   case BX_LAPIC_LVT_LINT0:
   case BX_LAPIC_LVT_LINT1:
   case BX_LAPIC_LVT_ERROR:
+  case BX_LAPIC_LVT_CMCI:
   case BX_LAPIC_TIMER_INITIAL_COUNT:
   case BX_LAPIC_TIMER_CURRENT_COUNT:
   case BX_LAPIC_TIMER_DIVIDE_CFG:
@@ -1362,6 +1368,7 @@ bx_bool bx_local_apic_c::write_x2apic(unsigned index, Bit32u val32_hi, Bit32u va
   case BX_LAPIC_LVT_LINT0:
   case BX_LAPIC_LVT_LINT1:
   case BX_LAPIC_LVT_ERROR:
+  case BX_LAPIC_LVT_CMCI:
   case BX_LAPIC_TIMER_INITIAL_COUNT:
   case BX_LAPIC_TIMER_DIVIDE_CFG:
     break; // use legacy write

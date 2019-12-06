@@ -122,14 +122,15 @@ enum {
   APIC_DM_EXTINT   = 7
 };
 
-#define APIC_LVT_ENTRIES 6
 enum {
   APIC_LVT_TIMER   = 0,
   APIC_LVT_THERMAL = 1,
   APIC_LVT_PERFMON = 2,
   APIC_LVT_LINT0   = 3,
   APIC_LVT_LINT1   = 4,
-  APIC_LVT_ERROR   = 5
+  APIC_LVT_ERROR   = 5,
+  APIC_LVT_CMCI    = 6,
+  APIC_LVT_ENTRIES
 };
 
 class BOCHSAPI bx_local_apic_c : public logfunctions
