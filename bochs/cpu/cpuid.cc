@@ -46,7 +46,7 @@ static const char *cpu_feature_name[] =
   "legacy_syscall_sysret",  // BX_ISA_SYSCALL_SYSRET_LEGACY
   "sysenter_sysexit",       // BX_ISA_SYSENTER_SYSEXIT
   "clflush",                // BX_ISA_CLFLUSH
-  "clflushout",             // BX_ISA_CLFLUSHOPT
+  "clflushopt",             // BX_ISA_CLFLUSHOPT
   "clwb",                   // BX_ISA_CLWB
   "cldemote",               // BX_ISA_CLDEMOTE
   "sse",                    // BX_ISA_SSE
