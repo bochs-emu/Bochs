@@ -320,7 +320,7 @@ void bx_cpuid_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *
       leaf->ebx = 0;
       if (is_cpu_extension_supported(BX_ISA_XSAVES)) {
         xcr0_t xcr0_xss = cpu->xcr0;
-        xcr0_xss.val32 |= cpu->msr.msr_xss;
+        xcr0_xss.val32 |= cpu->msr.ia32_xss;
 #if BX_SUPPORT_AVX
         if (xcr0_xss.get_YMM())
           leaf->ebx = XSAVE_YMM_STATE_OFFSET + XSAVE_YMM_STATE_LEN;

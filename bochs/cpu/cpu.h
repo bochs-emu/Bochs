@@ -631,7 +631,7 @@ typedef struct
 #endif
 
 #if BX_CPU_LEVEL >= 6
-  Bit64u msr_xss;
+  Bit64u ia32_xss;
 #endif
 
   Bit32u ia32_spec_ctrl; // SCA
@@ -4817,6 +4817,8 @@ public: // for now...
 #endif
 
 #if BX_CPU_LEVEL >= 6
+  BX_SMF Bit32u get_xcr0_allow_mask(void);
+
   BX_SMF bx_bool xsave_x87_state_xinuse(void);
   BX_SMF bx_bool xsave_sse_state_xinuse(void);
 #if BX_SUPPORT_AVX

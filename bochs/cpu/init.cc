@@ -389,7 +389,7 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_FIELD(MSR, mtrr_deftype, msr.mtrr_deftype);
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_XSAVES)) {
-    BXRS_HEX_PARAM_FIELD(MSR, msr_xss, msr.msr_xss);
+    BXRS_HEX_PARAM_FIELD(MSR, ia32_xss, msr.ia32_xss);
   }
 #endif
 
@@ -828,20 +828,9 @@ void BX_CPU_C::reset(unsigned source)
   if (source == BX_RESET_HARDWARE) {
     BX_CPU_THIS_PTR xcr0.set32(0x1);
   }
-  BX_CPU_THIS_PTR xcr0_suppmask = 0x3;
-#if BX_SUPPORT_AVX
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX))
-    BX_CPU_THIS_PTR xcr0_suppmask |= BX_XCR0_YMM_MASK;
-#if BX_SUPPORT_EVEX
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX512))
-    BX_CPU_THIS_PTR xcr0_suppmask |= BX_XCR0_OPMASK_MASK | BX_XCR0_ZMM_HI256_MASK | BX_XCR0_HI_ZMM_MASK;
-#endif
-#endif // BX_SUPPORT_AVX
-#if BX_SUPPORT_PKEYS
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PKU))
-    BX_CPU_THIS_PTR xcr0_suppmask |= BX_XCR0_PKRU_MASK;
-#endif
-  BX_CPU_THIS_PTR msr.msr_xss = 0;
+  BX_CPU_THIS_PTR xcr0_suppmask = get_xcr0_allow_mask();
+
+  BX_CPU_THIS_PTR msr.ia32_xss = 0;
 #endif // BX_CPU_LEVEL >= 6
 
   BX_CPU_THIS_PTR msr.ia32_spec_ctrl = 0;

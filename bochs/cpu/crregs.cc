@@ -1633,3 +1633,24 @@ void BX_CPU_C::iobreakpoint_match(unsigned port, unsigned len)
 #endif
 
 #endif
+
+#if BX_CPU_LEVEL >= 6
+Bit32u BX_CPU_C::get_xcr0_allow_mask()
+{
+  Bit32u allowMask = 0x3;
+#if BX_SUPPORT_AVX
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX))
+    allowMask |= BX_XCR0_YMM_MASK;
+#if BX_SUPPORT_EVEX
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX512))
+    allowMask |= BX_XCR0_OPMASK_MASK | BX_XCR0_ZMM_HI256_MASK | BX_XCR0_HI_ZMM_MASK;
+#endif
+#endif // BX_SUPPORT_AVX
+#if BX_SUPPORT_PKEYS
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PKU))
+    allowMask |= BX_XCR0_PKRU_MASK;
+#endif
+
+  return allowMask;
+}
+#endif

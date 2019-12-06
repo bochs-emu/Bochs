@@ -164,7 +164,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_XSS:
-      val64 = BX_CPU_THIS_PTR msr.msr_xss;
+      val64 = BX_CPU_THIS_PTR msr.ia32_xss;
       break;
 #endif
 

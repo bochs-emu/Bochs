@@ -190,7 +190,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
 
       VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
       Bit64u requested_features = (((Bit64u) EDX) << 32) | EAX;
-      if (requested_features & BX_CPU_THIS_PTR msr.msr_xss & vm->xss_exiting_bitmap)
+      if (requested_features & BX_CPU_THIS_PTR msr.ia32_xss & vm->xss_exiting_bitmap)
         VMexit_Instruction(i, VMX_VMEXIT_XSAVES);
     }
 #endif
@@ -221,7 +221,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
 
   Bit32u xcr0 = BX_CPU_THIS_PTR xcr0.get32();
   if (xsaves)
-    xcr0 |= BX_CPU_THIS_PTR msr.msr_xss;
+    xcr0 |= BX_CPU_THIS_PTR msr.ia32_xss;
 
   Bit32u requested_feature_bitmap = xcr0 & EAX;
   Bit32u xinuse = get_xinuse_vector(requested_feature_bitmap);
@@ -326,7 +326,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
 
       VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
       Bit64u requested_features = (((Bit64u) EDX) << 32) | EAX;
-      if (requested_features & BX_CPU_THIS_PTR msr.msr_xss & vm->xss_exiting_bitmap)
+      if (requested_features & BX_CPU_THIS_PTR msr.ia32_xss & vm->xss_exiting_bitmap)
         VMexit_Instruction(i, VMX_VMEXIT_XRSTORS);
     }
 #endif
@@ -373,7 +373,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
 
   Bit32u xcr0 = BX_CPU_THIS_PTR xcr0.get32();
   if (xrstors)
-    xcr0 |= BX_CPU_THIS_PTR msr.msr_xss;
+    xcr0 |= BX_CPU_THIS_PTR msr.ia32_xss;
 
   if (! compaction) {
     if ((~xcr0 & xstate_bv) != 0 || (GET32H(xstate_bv) << 1) != 0) {
