@@ -61,7 +61,7 @@ typedef PCHAR   (CDECL *PGetVersion)();
 PGetAdapterNames PacketGetAdapterNames = NULL;
 PGetVersion      PacketGetVersion = NULL;
 
-void myexit (int code)
+void myexit(int code)
 {
 #ifndef __CYGWIN__
   printf ("\nPress any key to continue\n");
@@ -74,7 +74,6 @@ int CDECL main(int argc, char **argv)
 {
     int i;
     HINSTANCE     hPacket;
-    DWORD         dwVersion, dwMajorVersion;
     char          AdapterInfo[NIC_BUFFER_SIZE] = { '\0','\0' };
     ULONG         AdapterLength = NIC_BUFFER_SIZE;
     LPWSTR        wstrName;
@@ -86,21 +85,17 @@ int CDECL main(int argc, char **argv)
 
     // Attemp to load the WinpCap packet library
     hPacket = LoadLibrary("PACKET.DLL");
-    if(hPacket)
+    if (hPacket)
     {
         // Now look up the address
         PacketGetAdapterNames = (PGetAdapterNames)GetProcAddress(hPacket, "PacketGetAdapterNames");
         PacketGetVersion = (PGetVersion)GetProcAddress(hPacket, "PacketGetVersion");
-    }
-    else {
+    } else {
         printf("Could not load WinPCap driver!\n");
         printf ("You can download them for free from\n");
         printf ("http://www.winpcap.org/\n");
         myexit(1);
     }
-
-    dwVersion      = GetVersion();
-    dwMajorVersion = (DWORD)(LOBYTE(LOWORD(dwVersion)));
 
     // Get DLL Version and Tokenize
     dllVersion = PacketGetVersion();
@@ -125,12 +120,11 @@ int CDECL main(int argc, char **argv)
     }
 
     // Get out blob of adapter info
-    PacketGetAdapterNames(AdapterInfo,&AdapterLength);
+    PacketGetAdapterNames(AdapterInfo, &AdapterLength);
 
-    // If this is Windows NT ... And DLL Returns UNICODE
-    if(!(dwVersion >= 0x80000000 && dwMajorVersion >= 4) &&
-       (nDLLMajorVersion < 3 || (nDLLMajorVersion == 3 && nDLLMinorVersion < 1)))
+    if (nDLLMajorVersion < 3 || (nDLLMajorVersion == 3 && nDLLMinorVersion < 1))
     {
+        // DLL returns UNICODE
         wstrName=(LPWSTR)AdapterInfo;
 
         // Obtain Names
@@ -146,7 +140,7 @@ int CDECL main(int argc, char **argv)
         strDesc = (LPSTR)++wstrName;
 
         // Obtain descriptions ....
-        for(i=0;i<nAdapterCount;i++)
+        for (i=0;i<nAdapterCount;i++)
         {
             // store pointer to description
             niNT[i].strDesc=strDesc;
@@ -157,16 +151,14 @@ int CDECL main(int argc, char **argv)
             wprintf(L"     Device: %s",niNT[i].wstrName);
         }
 
-        if(i) {
+        if (i) {
             printf("\n\nExample config for bochsrc:\n");
             wprintf(L"ne2k: ioaddr=0x300, irq=3, mac=b0:c4:20:00:00:00, ethmod=win32, ethdev=%s",niNT[0].wstrName);
             printf("\n");
         }
 
-    }
-    else
-    {
-        // Windows 9x
+    } else {
+        // DLL returns ANSI
         strName=(LPSTR)AdapterInfo;
 
         // Obtain Names
@@ -182,7 +174,7 @@ int CDECL main(int argc, char **argv)
         strDesc = (LPSTR)++strName;
 
         // Obtain descriptions ....
-        for(i=0;i<nAdapterCount;i++)
+        for (i=0;i<nAdapterCount;i++)
         {
             // store pointer to description
             ni9X[i].strDesc=strDesc;
@@ -193,8 +185,7 @@ int CDECL main(int argc, char **argv)
             printf("     Device: %s",ni9X[i].strName);
         }
 
-        if(i)
-        {
+        if (i) {
             printf("\n\nExample config for bochsrc:\n");
             printf("ne2k: ioaddr=0x300, irq=3, mac=b0:c4:20:00:00:00, ethmod=win32, ethdev=%s",ni9X[0].strName);
             printf("\n");
