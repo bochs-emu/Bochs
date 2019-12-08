@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2015  The Bochs Project
+//  Copyright (C) 2002-2019  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -48,7 +48,6 @@ extern "C" {
 
 
 static BOOL isWindowsXP;
-static BOOL isOldWindows;
 
 #define BX_CD_FRAMESIZE 2048
 #define CD_FRAMESIZE    2048
@@ -100,10 +99,40 @@ typedef struct _CDROM_TOC_SESSION_DATA {
 
 #include <stdio.h>
 
+BOOL Is_WinXP_SP2_or_Later()
+{
+   OSVERSIONINFOEX osvi;
+   DWORDLONG dwlConditionMask = 0;
+   int op = VER_GREATER_EQUAL;
+
+   // Initialize the OSVERSIONINFOEX structure.
+
+   ZeroMemory(&osvi, sizeof(OSVERSIONINFOEX));
+   osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+   osvi.dwMajorVersion = 5;
+   osvi.dwMinorVersion = 1;
+   osvi.wServicePackMajor = 2;
+   osvi.wServicePackMinor = 0;
+
+   // Initialize the condition mask.
+
+   VER_SET_CONDITION( dwlConditionMask, VER_MAJORVERSION, op );
+   VER_SET_CONDITION( dwlConditionMask, VER_MINORVERSION, op );
+   VER_SET_CONDITION( dwlConditionMask, VER_SERVICEPACKMAJOR, op );
+   VER_SET_CONDITION( dwlConditionMask, VER_SERVICEPACKMINOR, op );
+
+   // Perform the test.
+
+   return VerifyVersionInfo(
+      &osvi, 
+      VER_MAJORVERSION | VER_MINORVERSION | 
+      VER_SERVICEPACKMAJOR | VER_SERVICEPACKMINOR,
+      dwlConditionMask);
+}
+
 cdrom_win32_c::cdrom_win32_c(const char *dev)
 {
   char prefix[6];
-  OSVERSIONINFO osinfo;
 
   sprintf(prefix, "CD%d", ++bx_cdrom_count);
   put(prefix);
@@ -115,11 +144,7 @@ cdrom_win32_c::cdrom_win32_c(const char *dev)
     path = strdup(dev);
   }
   using_file = 0;
-  osinfo.dwOSVersionInfoSize = sizeof(osinfo);
-  GetVersionEx(&osinfo);
-  isWindowsXP = (osinfo.dwMajorVersion > 5) ||
-                ((osinfo.dwMajorVersion == 5) && (osinfo.dwMinorVersion >= 1));
-  isOldWindows = (osinfo.dwPlatformId != VER_PLATFORM_WIN32_NT);
+  isWindowsXP = Is_WinXP_SP2_or_Later();
 }
 
 cdrom_win32_c::~cdrom_win32_c(void)
@@ -140,8 +165,8 @@ bx_bool cdrom_win32_c::insert_cdrom(const char *dev)
   char drive[256];
   if ((path[1] == ':') && (strlen(path) == 2))
   {
-    if (!isOldWindows) {
-      // Use direct device access under windows NT/2k/XP
+    if (isWindowsXP) {
+      // Use direct device access under Windows XP or newer
 
       // With all the backslashes it's hard to see, but to open D: drive
       // the name would be: \\.\d:
@@ -158,7 +183,7 @@ bx_bool cdrom_win32_c::insert_cdrom(const char *dev)
     using_file = 1;
     BX_INFO (("Opening image file as a cd"));
   }
-  if (!isOldWindows) {
+  if (isWindowsXP) {
     hFile = CreateFile((char *)&drive, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
       fd = 1;
@@ -186,7 +211,7 @@ void cdrom_win32_c::eject_cdrom()
 
   if (fd >= 0) {
     if (using_file == 0) {
-      if (!isOldWindows) {
+      if (isWindowsXP) {
         DWORD lpBytesReturned;
         DeviceIoControl(hFile, IOCTL_STORAGE_EJECT_MEDIA, NULL, 0, NULL, 0, &lpBytesReturned, NULL);
       }
@@ -205,13 +230,12 @@ bx_bool cdrom_win32_c::read_toc(Bit8u* buf, int* length, bx_bool msf, int start_
   }
 
   // This is a hack and works okay if there's one rom track only
-  if (!isWindowsXP || using_file) {
+  if (using_file) {
     return cdrom_base_c::read_toc(buf, length, msf, start_track, format);
-  }
-  // the implementation below is the platform-dependent code required
-  // to read the TOC from a physical cdrom.
-  if (isWindowsXP) {
-    // This only works with WinXP
+  } else if (isWindowsXP) {
+    // the implementation below is the platform-dependent code required
+    // to read the TOC from a physical cdrom.
+    // This only works with WinXP or newer
     CDROM_READ_TOC_EX input;
     memset(&input, 0, sizeof(input));
     input.Format = format;
@@ -242,19 +266,11 @@ Bit32u cdrom_win32_c::capacity()
     ULARGE_INTEGER FileSize;
     FileSize.LowPart = GetFileSize(hFile, &FileSize.HighPart);
     return (Bit32u)(FileSize.QuadPart / 2048);
-  } else if (!isOldWindows) {  /* direct device access */
-    if (isWindowsXP) {
-      LARGE_INTEGER length;
-      DWORD iBytesReturned;
-      DeviceIoControl(hFile, IOCTL_DISK_GET_LENGTH_INFO, NULL, 0, &length, sizeof(length), &iBytesReturned, NULL);
-      return (Bit32u)(length.QuadPart / 2048);
-    } else {
-      ULARGE_INTEGER FreeBytesForCaller;
-      ULARGE_INTEGER TotalNumOfBytes;
-      ULARGE_INTEGER TotalFreeBytes;
-      GetDiskFreeSpaceEx(path, &FreeBytesForCaller, &TotalNumOfBytes, &TotalFreeBytes);
-      return (Bit32u)(TotalNumOfBytes.QuadPart / 2048);
-    }
+  } else if (isWindowsXP) {  /* direct device access for XP or newer */
+    LARGE_INTEGER length;
+    DWORD iBytesReturned;
+    DeviceIoControl(hFile, IOCTL_DISK_GET_LENGTH_INFO, NULL, 0, &length, sizeof(length), &iBytesReturned, NULL);
+    return (Bit32u)(length.QuadPart / 2048);
   } else {
     return 0;
   }
@@ -282,7 +298,7 @@ bx_bool BX_CPP_AttrRegparmN(3) cdrom_win32_c::read_block(Bit8u* buf, Bit32u lba,
     buf1 = buf;
   }
   do {
-    if (using_file || !isOldWindows) {
+    if (using_file || isWindowsXP) {
       pos.QuadPart = (LONGLONG)lba*BX_CD_FRAMESIZE;
       pos.LowPart = SetFilePointer(hFile, pos.LowPart, &pos.HighPart, SEEK_SET);
       if ((pos.LowPart == 0xffffffff) && (GetLastError() != NO_ERROR)) {
