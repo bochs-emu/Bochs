@@ -570,7 +570,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
   if (vm->vmexec_ctrls1 & ~VMX_CHECKS_USE_MSR_VMX_PINBASED_CTRLS_HI) {
-     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX pin-based controls allowed 1-settings"));
+     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX pin-based controls allowed 1-settings [0x%08x]", vm->vmexec_ctrls1 & ~VMX_CHECKS_USE_MSR_VMX_PINBASED_CTRLS_HI));
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
 
@@ -579,7 +579,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
   if (vm->vmexec_ctrls2 & ~VMX_CHECKS_USE_MSR_VMX_PROCBASED_CTRLS_HI) {
-     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX proc-based controls allowed 1-settings"));
+     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX proc-based controls allowed 1-settings [0x%08x]", vm->vmexec_ctrls2 & ~VMX_CHECKS_USE_MSR_VMX_PROCBASED_CTRLS_HI));
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
 
@@ -588,7 +588,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
   if (vm->vmexec_ctrls3 & ~VMX_MSR_VMX_PROCBASED_CTRLS2_HI) {
-     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX secondary proc-based controls allowed 1-settings"));
+     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX secondary controls allowed 1-settings [0x%08x]", vm->vmexec_ctrls3 & ~VMX_MSR_VMX_PROCBASED_CTRLS2_HI));
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
 
@@ -834,7 +834,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
   if (vm->vmexit_ctrls & ~VMX_CHECKS_USE_MSR_VMX_VMEXIT_CTRLS_HI) {
-     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX vmexit controls allowed 1-settings"));
+     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX vmexit controls allowed 1-settings [0x%08x]", vm->vmexit_ctrls & ~VMX_CHECKS_USE_MSR_VMX_VMEXIT_CTRLS_HI));
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
 
@@ -889,7 +889,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
   if (vm->vmentry_ctrls & ~VMX_CHECKS_USE_MSR_VMX_VMENTRY_CTRLS_HI) {
-     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX vmentry controls allowed 1-settings"));
+     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX vmentry controls allowed 1-settings [0x%08x]", vm->vmentry_ctrls & ~VMX_CHECKS_USE_MSR_VMX_VMENTRY_CTRLS_HI));
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
 

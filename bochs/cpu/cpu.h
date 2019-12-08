@@ -4918,7 +4918,16 @@ public: // for now...
   BX_SMF void VMexitSaveGuestMSRs(void);
   BX_SMF void VMexitLoadHostState(void);
   BX_SMF void set_VMCSPTR(Bit64u vmxptr);
-  BX_SMF void init_vmx_capabilities();
+  BX_SMF void init_vmx_capabilities(void);
+#if BX_SUPPORT_VMX >= 2
+  BX_SMF void init_ept_vpid_capabilities(void);
+  BX_SMF void init_vmfunc_capabilities(void);
+#endif
+  BX_SMF void init_pin_based_vmexec_ctrls(void);
+  BX_SMF void init_secondary_proc_based_vmexec_ctrls(void);
+  BX_SMF void init_primary_proc_based_vmexec_ctrls(void);
+  BX_SMF void init_vmexit_ctrls(void);
+  BX_SMF void init_vmentry_ctrls(void);
   BX_SMF void init_VMCS(void);
   BX_SMF bx_bool vmcs_field_supported(Bit32u encoding);
   BX_SMF void register_vmx_state(bx_param_c *parent);
