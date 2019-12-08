@@ -34,7 +34,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 
 #if BX_CPU_LEVEL >= 6
   if (is_cpu_extension_supported(BX_ISA_X2APIC)) {
-    if (index >= 0x800 && index <= 0xBFF) {
+    if (index >= 0x800 && index <= 0x8FF) {
       if (BX_CPU_THIS_PTR msr.apicbase & 0x400)  // X2APIC mode
         return BX_CPU_THIS_PTR lapic.read_x2apic(index, msr);
       else
@@ -524,7 +524,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 
 #if BX_CPU_LEVEL >= 6
   if (is_cpu_extension_supported(BX_ISA_X2APIC)) {
-    if (index >= 0x800 && index <= 0xBFF) {
+    if (index >= 0x800 && index <= 0x8FF) {
       if (BX_CPU_THIS_PTR msr.apicbase & 0x400)  // X2APIC mode
         return BX_CPU_THIS_PTR lapic.write_x2apic(index, val32_hi, val32_lo);
       else
