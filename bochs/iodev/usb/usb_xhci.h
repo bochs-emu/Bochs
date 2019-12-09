@@ -52,7 +52,7 @@
 // HCSPARAMS1
 #define MAX_SLOTS           32   // (1 based)
 #define INTERRUPTERS         8   //
-#define USB_XHCI_PORTS       4   // physical sockets, each supporting USB3 or USB2 (0x08 = uPD720201, 0x04 = uPD720202)
+#define USB_XHCI_PORTS       4   // Port Registers, each supporting USB3 or USB2 (0x08 = uPD720201, 0x04 = uPD720202)
 
 #if (USB_XHCI_PORTS != 4)
   #error "USB_XHCI_PORTS must equal 4"
