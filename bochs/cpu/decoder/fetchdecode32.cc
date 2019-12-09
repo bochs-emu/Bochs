@@ -1700,13 +1700,13 @@ bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, unsigned nnn, unsign
     }
   }
 
-  return BX_TRUE;
+  return true;
 }
 
 #if BX_SUPPORT_AVX
-bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bx_bool is_64, unsigned nnn, unsigned rm, unsigned vvv, unsigned vex_w, bx_bool had_evex = BX_FALSE, bx_bool displ8 = BX_FALSE)
+bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bx_bool is_64, unsigned nnn, unsigned rm, unsigned vvv, unsigned vex_w, bx_bool had_evex = false, bx_bool displ8 = false)
 {
-  bx_bool use_vvv = BX_FALSE;
+  bx_bool use_vvv = false;
 #if BX_SUPPORT_EVEX
   unsigned displ8_scale = 1;
 #endif
@@ -1717,7 +1717,7 @@ bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bx_bool is_64, unsig
     unsigned type = BX_DISASM_SRC_TYPE(src);
     src = BX_DISASM_SRC_ORIGIN(src);
 #if BX_SUPPORT_EVEX
-    bx_bool mem_src = BX_FALSE;
+    bx_bool mem_src = false;
 #endif
 
     switch(src) {
@@ -1732,7 +1732,7 @@ bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bx_bool is_64, unsig
     case BX_SRC_NNN:
       i->setSrcReg(n, nnn);
       if (type == BX_KMASK_REG) {
-        if (nnn >= 8) return BX_FALSE;
+        if (nnn >= 8) return false;
       }
       break;
     case BX_SRC_RM:
@@ -1744,7 +1744,7 @@ bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bx_bool is_64, unsig
       }
       else {
 #if BX_SUPPORT_EVEX
-        mem_src = BX_TRUE;
+        mem_src = true;
 #endif
         i->setSrcReg(n, (type == BX_VMM_REG) ? BX_VECTOR_TMP_REGISTER : BX_TMP_REGISTER);
       }
@@ -1756,17 +1756,17 @@ bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bx_bool is_64, unsig
       else {
         i->setSrcReg(n, BX_VECTOR_TMP_REGISTER);
 #if BX_SUPPORT_EVEX
-        mem_src = BX_TRUE;
+        mem_src = true;
         if (n == 0) // zero masking is not allowed for memory destination
-          if (i->isZeroMasking()) return BX_FALSE;
+          if (i->isZeroMasking()) return false;
 #endif
       }
       break;
     case BX_SRC_VVV:
       i->setSrcReg(n, vvv);
-      use_vvv = BX_TRUE;
+      use_vvv = true;
       if (type == BX_KMASK_REG) {
-        if (vvv >= 8) return BX_FALSE;
+        if (vvv >= 8) return false;
       }
       break;
     case BX_SRC_VIB:
@@ -1784,13 +1784,13 @@ bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bx_bool is_64, unsig
       break;
     case BX_SRC_VSIB:
       if (! i->as32L() || i->sibIndex() == BX_NIL_REGISTER) {
-        return BX_FALSE;
+        return false;
       }
 #if BX_SUPPORT_EVEX
       i->setSibIndex(i->sibIndex() | (vvv & 0x10));
       // zero masking is not allowed for gather/scatter
-      if (i->isZeroMasking()) return BX_FALSE;
-      mem_src = BX_TRUE;
+      if (i->isZeroMasking()) return false;
+      mem_src = true;
 #endif
       break;
     default:
@@ -1815,10 +1815,10 @@ bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bx_bool is_64, unsig
 #endif
 
   if (! use_vvv && vvv != 0) {
-    return BX_FALSE;
+    return false;
   }
 
-  return BX_TRUE;
+  return true;
 }
 #endif
 
@@ -1930,7 +1930,7 @@ int decoder_vex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
     }
   }
 
-  if (! assign_srcs(i, ia_opcode, BX_FALSE, nnn, rm, vvv, vex_w))
+  if (! assign_srcs(i, ia_opcode, false, nnn, rm, vvv, vex_w))
     ia_opcode = BX_IA_ERROR;
 #endif
 
@@ -1952,7 +1952,7 @@ int decoder_evex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
   }
 
 #if BX_SUPPORT_EVEX
-  bx_bool displ8 = BX_FALSE;
+  bx_bool displ8 = false;
 
   if (sse_prefix)
     return(BX_IA_ERROR);
@@ -2030,7 +2030,7 @@ int decoder_evex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
     return(-1);
 
   if (modrm.mod == 0x40) { // mod==01b
-    displ8 = BX_TRUE;
+    displ8 = true;
   }
 
   // EVEX.b in reg form implies 512-bit vector length
@@ -2065,7 +2065,7 @@ int decoder_evex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
     }
   }
 
-  if (! assign_srcs(i, ia_opcode, BX_FALSE, modrm.nnn, modrm.rm, vvv, vex_w, BX_TRUE, displ8))
+  if (! assign_srcs(i, ia_opcode, false, modrm.nnn, modrm.rm, vvv, vex_w, true, displ8))
     ia_opcode = BX_IA_ERROR;
 
   // EVEX specific #UD conditions
@@ -2140,10 +2140,10 @@ int decoder_xop32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
 
   ia_opcode = findOpcode(BxOpcodeTableXOP[opcode_byte], decmask);
 
-  if (fetchImmediate(iptr, remain, i, ia_opcode, BX_FALSE) < 0)
+  if (fetchImmediate(iptr, remain, i, ia_opcode, false) < 0)
     return (-1);
 
-  if (! assign_srcs(i, ia_opcode, BX_FALSE, modrm.nnn, modrm.rm, vvv, vex_w))
+  if (! assign_srcs(i, ia_opcode, false, modrm.nnn, modrm.rm, vvv, vex_w))
     ia_opcode = BX_IA_ERROR;
 #endif
 
@@ -2208,7 +2208,7 @@ int decoder32_modrm(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, uns
 
   Bit16u ia_opcode = findOpcode((Bit64u *) opcode_table, decmask);
 
-  if (fetchImmediate(iptr, remain, i, ia_opcode, BX_FALSE) < 0)
+  if (fetchImmediate(iptr, remain, i, ia_opcode, false) < 0)
     return (-1);
 
   assign_srcs(i, ia_opcode, modrm.nnn, modrm.rm);
@@ -2231,7 +2231,7 @@ int decoder32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned 
 
   Bit16u ia_opcode = findOpcode((Bit64u *) opcode_table, decmask);
 
-  if (fetchImmediate(iptr, remain, i, ia_opcode, BX_FALSE) < 0)
+  if (fetchImmediate(iptr, remain, i, ia_opcode, false) < 0)
     return (-1);
 
   assign_srcs(i, ia_opcode, nnn, rm);

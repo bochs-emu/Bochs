@@ -104,7 +104,7 @@ extern Bit16u findOpcode(const Bit64u *opMap, Bit32u opMsk);
 
 extern bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, unsigned nnn, unsigned rm);
 #if BX_SUPPORT_AVX
-extern bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bx_bool is_64, unsigned nnn, unsigned rm, unsigned vvv, unsigned vex_w, bx_bool had_evex = BX_FALSE, bx_bool displ8 = BX_FALSE);
+extern bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bx_bool is_64, unsigned nnn, unsigned rm, unsigned vvv, unsigned vex_w, bx_bool had_evex = false, bx_bool displ8 = false);
 #endif
 
 extern const Bit8u *decodeModrm64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned mod, unsigned nnn, unsigned rm, unsigned rex_r, unsigned rex_x, unsigned rex_b);
@@ -1276,7 +1276,7 @@ int decoder_vex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
     }
   }
 
-  if (! assign_srcs(i, ia_opcode, BX_TRUE, nnn, rm, vvv, vex_w))
+  if (! assign_srcs(i, ia_opcode, true, nnn, rm, vvv, vex_w))
     ia_opcode = BX_IA_ERROR;
 #endif
 
@@ -1295,7 +1295,7 @@ int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
   unsigned rm = 0, mod = 0, nnn = 0;
   unsigned b2 = 0;
 
-  bx_bool displ8 = BX_FALSE;
+  bx_bool displ8 = false;
 
   // EVEX prefix 0x62
   assert(b1 == 0x62);
@@ -1396,7 +1396,7 @@ int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
     if (! iptr) 
       return(-1);
     if (mod == 0x40) { // mod==01b
-      displ8 = BX_TRUE;
+      displ8 = true;
     }
   }
 
@@ -1433,7 +1433,7 @@ int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
     }
   }
 
-  if (! assign_srcs(i, ia_opcode, BX_TRUE, nnn, rm, vvv, vex_w, BX_TRUE, displ8))
+  if (! assign_srcs(i, ia_opcode, true, nnn, rm, vvv, vex_w, true, displ8))
     ia_opcode = BX_IA_ERROR;
 
   // EVEX specific #UD conditions
@@ -1537,10 +1537,10 @@ int decoder_xop64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
 
   ia_opcode = findOpcode(BxOpcodeTableXOP[opcode_byte], decmask);
 
-  if (fetchImmediate(iptr, remain, i, ia_opcode, BX_TRUE) < 0)
+  if (fetchImmediate(iptr, remain, i, ia_opcode, true) < 0)
     return (-1);
 
-  if (! assign_srcs(i, ia_opcode, BX_TRUE, nnn, rm, vvv, vex_w))
+  if (! assign_srcs(i, ia_opcode, true, nnn, rm, vvv, vex_w))
     ia_opcode = BX_IA_ERROR;
 #endif
 
@@ -1606,7 +1606,7 @@ int decoder64_modrm(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, uns
 
   Bit16u ia_opcode = findOpcode((const Bit64u*) opcode_table, decmask);
 
-  if (fetchImmediate(iptr, remain, i, ia_opcode, BX_TRUE) < 0)
+  if (fetchImmediate(iptr, remain, i, ia_opcode, true) < 0)
     return (-1);
 
   assign_srcs(i, ia_opcode, modrm.nnn, modrm.rm);
@@ -1637,7 +1637,7 @@ int decoder64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned 
 
   Bit16u ia_opcode = findOpcode((const Bit64u*) opcode_table, decmask);
 
-  if (fetchImmediate(iptr, remain, i, ia_opcode, BX_TRUE) < 0)
+  if (fetchImmediate(iptr, remain, i, ia_opcode, true) < 0)
     return (-1);
 
   assign_srcs(i, ia_opcode, nnn, rm);

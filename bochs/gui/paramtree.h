@@ -174,7 +174,7 @@ public:
   virtual int parse_param(const char *value) { return -1; }
 
   virtual void dump_param(FILE *fp) {}
-  virtual int dump_param(char *buf, int buflen, bx_bool dquotes = BX_FALSE) { return 0; }
+  virtual int dump_param(char *buf, int buflen, bx_bool dquotes = false) { return 0; }
 };
 
 typedef Bit64s (*param_event_handler)(class bx_param_c *, int set, Bit64s val);
@@ -239,7 +239,7 @@ public:
 #endif
   virtual int parse_param(const char *value);
   virtual void dump_param(FILE *fp);
-  virtual int dump_param(char *buf, int buflen, bx_bool dquotes = BX_FALSE);
+  virtual int dump_param(char *buf, int buflen, bx_bool dquotes = false);
 };
 
 // a bx_shadow_num_c is like a bx_param_num_c except that it doesn't
@@ -328,7 +328,7 @@ public:
 #endif
   virtual int parse_param(const char *value);
   virtual void dump_param(FILE *fp);
-  virtual int dump_param(char *buf, int buflen, bx_bool dquotes = BX_FALSE);
+  virtual int dump_param(char *buf, int buflen, bx_bool dquotes = false);
 };
 
 // a bx_shadow_bool_c is a shadow param based on bx_param_bool_c.
@@ -379,7 +379,7 @@ public:
 #endif
   virtual int parse_param(const char *value);
   virtual void dump_param(FILE *fp);
-  virtual int dump_param(char *buf, int buflen, bx_bool dquotes = BX_FALSE);
+  virtual int dump_param(char *buf, int buflen, bx_bool dquotes = false);
 };
 
 typedef const char* (*param_string_event_handler)(class bx_param_string_c *,
@@ -426,7 +426,7 @@ public:
 #endif
   virtual int parse_param(const char *value);
   virtual void dump_param(FILE *fp);
-  virtual int dump_param(char *buf, int buflen, bx_bool dquotes = BX_FALSE);
+  virtual int dump_param(char *buf, int buflen, bx_bool dquotes = false);
 };
 
 class BOCHSAPI bx_param_bytestring_c : public bx_param_string_c {
@@ -456,7 +456,7 @@ public:
 #endif
 
   virtual int parse_param(const char *value);
-  virtual int dump_param(char *buf, int buflen, bx_bool dquotes = BX_FALSE);
+  virtual int dump_param(char *buf, int buflen, bx_bool dquotes = false);
 };
 
 // Declare a filename class.  It is identical to a string, except that

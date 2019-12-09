@@ -731,14 +731,14 @@ bx_bool BX_CPU_C::xsave_x87_state_xinuse(void)
       BX_CPU_THIS_PTR the_i387.get_tag_word() != 0xFFFF ||
       BX_CPU_THIS_PTR the_i387.foo != 0 ||
       BX_CPU_THIS_PTR the_i387.fip != 0 || BX_CPU_THIS_PTR the_i387.fcs != 0 ||
-      BX_CPU_THIS_PTR the_i387.fdp != 0 || BX_CPU_THIS_PTR the_i387.fds != 0) return BX_TRUE;
+      BX_CPU_THIS_PTR the_i387.fdp != 0 || BX_CPU_THIS_PTR the_i387.fds != 0) return true;
 
   for (unsigned index=0;index<8;index++) {
     floatx80 reg = BX_FPU_REG(index);
-    if (reg.exp != 0 || reg.fraction != 0) return BX_TRUE;
+    if (reg.exp != 0 || reg.fraction != 0) return true;
   }
 
-  return BX_FALSE;
+  return false;
 }
 
 // SSE state management //
@@ -784,11 +784,11 @@ bx_bool BX_CPU_C::xsave_sse_state_xinuse(void)
     // set XMM8-XMM15 only in 64-bit mode
     if (index < 8 || long64_mode()) {
       const BxPackedXmmRegister *reg = &BX_XMM_REG(index);
-      if (! is_clear(reg)) return BX_TRUE;
+      if (! is_clear(reg)) return true;
     }
   }
 
-  return BX_FALSE;
+  return false;
 }
 
 #if BX_SUPPORT_AVX
@@ -836,11 +836,11 @@ bx_bool BX_CPU_C::xsave_ymm_state_xinuse(void)
     // set YMM8-YMM15 only in 64-bit mode
     if (index < 8 || long64_mode()) {
       const BxPackedXmmRegister *reg = &BX_READ_AVX_REG_LANE(index, 1);
-      if (! is_clear(reg)) return BX_TRUE;
+      if (! is_clear(reg)) return true;
     }
   }
 
-  return BX_FALSE;
+  return false;
 }
 
 #if BX_SUPPORT_EVEX
@@ -879,10 +879,10 @@ void BX_CPU_C::xrstor_init_opmask_state(void)
 bx_bool BX_CPU_C::xsave_opmask_state_xinuse(void)
 {
   for(unsigned index=0; index < 8; index++) {
-    if (BX_READ_OPMASK(index)) return BX_TRUE;
+    if (BX_READ_OPMASK(index)) return true;
   }
 
-  return BX_FALSE;
+  return false;
 }
 
 // ZMM_HI256 (upper part of zmm0..zmm15 registers) state management //
@@ -920,11 +920,11 @@ bx_bool BX_CPU_C::xsave_zmm_hi256_state_xinuse(void)
   for(unsigned index=0; index < 16; index++) {
     for (unsigned n=2; n < 4; n++) {
       const BxPackedXmmRegister *reg = &BX_READ_AVX_REG_LANE(index, n);
-      if (! is_clear(reg)) return BX_TRUE;
+      if (! is_clear(reg)) return true;
     }
   }
 
-  return BX_FALSE;
+  return false;
 }
 
 // HI_ZMM (zmm15..zmm31) state management //
@@ -962,11 +962,11 @@ bx_bool BX_CPU_C::xsave_hi_zmm_state_xinuse(void)
   for(unsigned index=16; index < 32; index++) {
     for (unsigned n=0; n < 4; n++) {
       const BxPackedXmmRegister *reg = &BX_READ_AVX_REG_LANE(index, n);
-      if (! is_clear(reg)) return BX_TRUE;
+      if (! is_clear(reg)) return true;
     }
   }
 
-  return BX_FALSE;
+  return false;
 }
 #endif // BX_SUPPORT_EVEX
 

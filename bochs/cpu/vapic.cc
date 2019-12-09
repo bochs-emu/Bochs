@@ -33,32 +33,32 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::is_virtual_apic_page(bx_phy_address pad
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES))
-      if (PPFOf(paddr) == vm->apic_access_page) return BX_TRUE;
+      if (PPFOf(paddr) == vm->apic_access_page) return true;
   }
 
-  return BX_FALSE;
+  return false;
 }
 
 bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::virtual_apic_access_vmexit(unsigned offset, unsigned len)
 {
   if((offset & ~0x3) != ((offset+len-1) & ~0x3)) {
     BX_ERROR(("Virtual APIC access at offset 0x%08x spans 32-bit boundary !", offset));
-    return BX_TRUE;
+    return true;
   }
 
   if (is_pending(BX_EVENT_VMX_VTPR_UPDATE | BX_EVENT_VMX_VEOI_UPDATE | BX_EVENT_VMX_VIRTUAL_APIC_WRITE)) {
     if (BX_CPU_THIS_PTR vmcs.apic_access != offset) {
       BX_ERROR(("Second APIC virtualization at offset 0x%08x (first access at offset 0x%08x)", offset, BX_CPU_THIS_PTR vmcs.apic_access));
-      return BX_TRUE;
+      return true;
     }
   }
 
   // access is not instruction fetch because cpu::prefetch will crash them
   if (! VMEXIT(VMX_VM_EXEC_CTRL2_TPR_SHADOW) || len > 4 || offset >= 0x400)
-    return BX_TRUE;
+    return true;
 
   BX_CPU_THIS_PTR vmcs.apic_access = offset;
-  return BX_FALSE;
+  return false;
 }
 
 Bit32u BX_CPU_C::VMX_Read_Virtual_APIC(unsigned offset)
@@ -467,7 +467,7 @@ bx_bool BX_CPU_C::Virtualize_X2APIC_Write(unsigned msr, Bit64u val_64)
     VMX_Write_Virtual_APIC(BX_LAPIC_TPR + 4, 0);
     VMX_TPR_Virtualization();
 
-    return BX_TRUE;
+    return true;
   }
 
 #if BX_SUPPORT_VMX >= 2
@@ -479,7 +479,7 @@ bx_bool BX_CPU_C::Virtualize_X2APIC_Write(unsigned msr, Bit64u val_64)
 
       VMX_EOI_Virtualization();
 
-      return BX_TRUE;
+      return true;
     }
 
     if (msr == 0x83f) {
@@ -497,12 +497,12 @@ bx_bool BX_CPU_C::Virtualize_X2APIC_Write(unsigned msr, Bit64u val_64)
         VMX_Self_IPI_Virtualization(vector);
       }
 
-      return BX_TRUE;
+      return true;
     }
   }
 #endif
 
-  return BX_FALSE;
+  return false;
 }
 
 #endif // BX_SUPPORT_VMX && BX_SUPPORT_X86_64

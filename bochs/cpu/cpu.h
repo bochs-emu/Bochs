@@ -4268,8 +4268,8 @@ public: // for now...
     BX_CPU_THIS_PTR espPageWindowSize = 0;
   }
 
-  BX_SMF bx_bool write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len, bx_bool align = BX_FALSE) BX_CPP_AttrRegparmN(4);
-  BX_SMF bx_bool read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len, bx_bool align = BX_FALSE) BX_CPP_AttrRegparmN(4);
+  BX_SMF bx_bool write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len, bx_bool align = false) BX_CPP_AttrRegparmN(4);
+  BX_SMF bx_bool read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len, bx_bool align = false) BX_CPP_AttrRegparmN(4);
   BX_SMF bx_bool execute_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len) BX_CPP_AttrRegparmN(3);
 
   BX_SMF Bit8u read_linear_byte(unsigned seg, bx_address offset) BX_CPP_AttrRegparmN(2);

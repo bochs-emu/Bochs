@@ -608,13 +608,13 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
   const char *opname = i->getIaOpcodeNameShort(); // skip the "BX_IA_"
   unsigned n;
 #if BX_SUPPORT_EVEX
-  bx_bool is_vector = BX_FALSE;
+  bx_bool is_vector = false;
 #endif
 
   if (! strncmp(opname, "V128_", 5) || ! strncmp(opname, "V256_", 5) || ! strncmp(opname, "V512_", 5)) {
     opname += 5;
 #if BX_SUPPORT_EVEX
-    is_vector = BX_TRUE;
+    is_vector = true;
 #endif
   }
 

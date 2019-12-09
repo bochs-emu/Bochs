@@ -480,9 +480,9 @@ bx_bool isMemTypeValidMTRR(unsigned memtype)
   case BX_MEMTYPE_WT:
   case BX_MEMTYPE_WP:
   case BX_MEMTYPE_WB:
-    return BX_TRUE;
+    return true;
   default:
-    return BX_FALSE;
+    return false;
   }
 }
 
@@ -496,9 +496,9 @@ bx_bool isValidMSR_PAT(Bit64u pat_val)
   // use packed register as 64-bit value with convinient accessors
   BxPackedRegister pat_msr = pat_val;
   for (unsigned i=0; i<8; i++)
-    if (! isMemTypeValidPAT(pat_msr.ubyte(i))) return BX_FALSE;
+    if (! isMemTypeValidPAT(pat_msr.ubyte(i))) return false;
 
-  return BX_TRUE;
+  return true;
 }
 
 bx_bool isValidMSR_FixedMTRR(Bit64u fixed_mtrr_val)
@@ -506,9 +506,9 @@ bx_bool isValidMSR_FixedMTRR(Bit64u fixed_mtrr_val)
   // use packed register as 64-bit value with convinient accessors
   BxPackedRegister fixed_mtrr_msr = fixed_mtrr_val;
   for (unsigned i=0; i<8; i++)
-    if (! isMemTypeValidMTRR(fixed_mtrr_msr.ubyte(i))) return BX_FALSE;
+    if (! isMemTypeValidMTRR(fixed_mtrr_msr.ubyte(i))) return false;
 
-  return BX_TRUE;
+  return true;
 }
 #endif
 

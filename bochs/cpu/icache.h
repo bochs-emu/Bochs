@@ -203,9 +203,9 @@ public:
     // break all links bewteen traces
     if (++traceLinkTimeStamp == 0xffffffff) {
       flushICacheEntries();
-      return BX_TRUE;
+      return true;
     }
-    return BX_FALSE;
+    return false;
   }
 };
 

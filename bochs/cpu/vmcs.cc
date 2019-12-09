@@ -89,14 +89,14 @@ bx_bool VMCS_Mapping::clear_mapping(Bit32u encoding)
 bx_bool VMCS_Mapping::set_mapping(Bit32u encoding, Bit32u offset)
 {
   if (is_reserved(encoding))
-    return BX_FALSE;
+    return false;
 
   unsigned field = VMCS_FIELD(encoding);
   if (field >= VMX_HIGHEST_VMCS_ENCODING)
-    return BX_FALSE;
+    return false;
 
   vmcs_map[VMCS_FIELD_INDEX(encoding)][field] = offset;
-  return BX_TRUE;
+  return true;
 }
 
 unsigned VMCS_Mapping::vmcs_field_offset(Bit32u encoding) const
