@@ -846,7 +846,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun, bx_bool
       r->async_mode = async;
       break;
     case 0x35:
-      BX_DEBUG(("Syncronise cache (sector " FMT_LL "d, count %d)", lba, len));
+      BX_DEBUG(("Synchronise cache (sector " FMT_LL "d, count %d)", lba, len));
       // TODO: flush cache
       break;
     case 0x43:

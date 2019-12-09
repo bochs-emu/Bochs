@@ -1220,7 +1220,7 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           //   virt_height >=yres
           //   virt_width*virt_height < MAX_VIDEO_MEMORY
 
-          // basicly 2 situations
+          // basically 2 situations
 
           // situation 1:
           //   MAX_VIDEO_MEMORY / virt_width >= yres

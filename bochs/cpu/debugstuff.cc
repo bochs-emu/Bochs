@@ -98,7 +98,7 @@ const char* cpu_state_string(unsigned state)
      "in shutdown",
      "waiting for SIPI",
      "executing mwait",
-     "executing mwait inhibit interrups",
+     "executing mwait inhibit interrupts",
      "unknown state"
   };
 

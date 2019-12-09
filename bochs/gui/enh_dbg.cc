@@ -1081,7 +1081,7 @@ void LoadRegList()
             ++itemnum;
         }
     }
-    // display System regsiters (if requested)
+    // display System registers (if requested)
     // displaying these once may be necessary for column resizing
     if (SeeReg[2] || (ResizeColmns != FALSE && NeedSysRresize != FALSE))
     {

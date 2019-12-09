@@ -245,7 +245,7 @@ void bx_cmos_c::init(void)
       BX_PANIC(("CMOS: error reading cmos file."));
     }
     close(fd);
-    BX_INFO(("successfuly read from image file '%s'.",
+    BX_INFO(("successfully read from image file '%s'.",
       SIM->get_param_string(BXPN_CMOSIMAGE_PATH)->getptr()));
     BX_CMOS_THIS s.rtc_mode_12hour = ((BX_CMOS_THIS s.reg[REG_STAT_B] & 0x02) == 0);
     BX_CMOS_THIS s.rtc_mode_binary = ((BX_CMOS_THIS s.reg[REG_STAT_B] & 0x04) != 0);

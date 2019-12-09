@@ -53,7 +53,7 @@ Detailed change log :
     - Voodoo2 model now working after some fixes and implementation of the
       CMDFIFO (using FIFO thread) and one of the bitBLT functions.
     - Added Voodoo Banshee / Voodoo3 emulation support (still under construction,
-      but basicly usable). The AGP models are available if chipset is i440BX.
+      but basically usable). The AGP models are available if chipset is i440BX.
   - Display (general)
     - Added basic DDC support for Bochs VBE, Cirrus and Voodoo Banshee / Voodoo3
       adapters (reporting plug&play monitor "Bochs Screen").
@@ -1103,7 +1103,7 @@ Detailed change log :
  [2905385] Bochs crash
  [2901481] Instruction SYSRET and SS(PL)
  [2900632] Broken long mode RETF to outer priviledge with null SS
- [1429011] Use bx_phyaddr_t for physaddr vars and bx_adress for lin adr
+ [1429011] Use bx_phyaddr_t for physaddr vars and bx_address for lin adr
 
 - these S.F. feature requests were closed/implemented
  [2955911] RPM preuninstall scriptlet removes /core
@@ -2010,7 +2010,7 @@ Detailed change log :
 
 - CPU
   - fixed XMM registers restore in FXRSTOR instruction (Andrej Palkovsky)
-  - print registers dump to the log if tripple fault occured
+  - print registers dump to the log if tripple fault occurred
   - fixed PANIC in LTR instruction (Stanislav)
   - added virtual 8086 mode extensions (VME) implementation, to enable
     configure with --enable-vme (Stanislav)
@@ -2528,7 +2528,7 @@ Detailed change log :
  #1112836 PGE-Bit crashes Bochs
   #947586 The specification difference in x86-64 emulation
  #1117145 Push reset Button, APIC0 Error occur
- #1123043 fpu stack pointer changed *despite* fault occured (e.g. #pf)
+ #1123043 fpu stack pointer changed *despite* fault occurred (e.g. #pf)
  #1122066 PANIC: iret: IP > descriptor limit when installing os/2 warp
   #809574 rm -f segfaults
   #593952 SuSE rm segfaults
@@ -2706,7 +2706,7 @@ Changes in 2.1.1 (February 8, 2004):
 - notify display libraries on change of bpp (Volker)
 - fix bug in int13h function 0x10 (Volker)
 - fix floppy dialog error on win2k (Volker)
-- fix adress check in TSS IO permission bitmap (Christophe)
+- fix address check in TSS IO permission bitmap (Christophe)
 - fix buffer overflow vulnerability pointed out by SeSoX (Christophe)
 - updates for MacOS compile (Daniel Gimpelevich)
 

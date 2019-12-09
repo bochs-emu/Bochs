@@ -606,7 +606,7 @@ int bx_term_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 
 bx_bool bx_term_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green, Bit8u blue)
 {
-  BX_DEBUG(("color pallete request (%d,%d,%d,%d) ignored", index,red,green,blue));
+  BX_DEBUG(("color palette request (%d,%d,%d,%d) ignored", index,red,green,blue));
   return(0);
 }
 

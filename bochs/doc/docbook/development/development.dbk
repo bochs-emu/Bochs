@@ -2395,21 +2395,21 @@ disk image <emphasis>size</emphasis>. Returns 0.
 <emphasis>int create(const char* filename, const char* type, Bit64u size);</emphasis>
 creates a new empty redolog file, with header and catalog, named <emphasis>filename</emphasis>
 of type <emphasis>type</emphasis> for a <emphasis>size</emphasis> bytes image.
-Returns 0 for OK or -1 if a problem occured.
+Returns 0 for OK or -1 if a problem occurred.
 </para>
 <para>
 <emphasis>int create(int filedes, const char* type, Bit64u size);</emphasis>
 creates a new empty redolog file, with header and catalog, in a previously
 opened file described by <emphasis>filedes</emphasis>, of type <emphasis>type</emphasis>
 for a <emphasis>size</emphasis> bytes image.
-Returns 0 for OK or -1 if a problem occured.
+Returns 0 for OK or -1 if a problem occurred.
 </para>
 <para>
 <emphasis>int open(const char* filename, const char* type, Bit64u size);</emphasis>
 opens a redolog file named <emphasis>filename</emphasis>, and checks
 for consistency of header values against a <emphasis>type</emphasis> and
 <emphasis>size</emphasis>.
-Returns 0 for OK or -1 if a problem occured.
+Returns 0 for OK or -1 if a problem occurred.
 </para>
 <para>
 <emphasis>int open(const char* filename, const char* type, Bit64u size, int flags);</emphasis>
@@ -2426,7 +2426,7 @@ closes a redolog file.
 seeks at logical data offset <emphasis>offset</emphasis> in a redolog.
 <emphasis>offset</emphasis> must be a multiple of 512.
 Only SEEK_SET and SEEK_CUR are supported for <emphasis>whence</emphasis>.
-Returns -1 if a problem occured, or the current logical offset in
+Returns -1 if a problem occurred, or the current logical offset in
 the redolog.
 </para>
 <para>
@@ -2535,7 +2535,7 @@ as an undoable disk image. The image mode of this base image is auto-detected.
 All supported disk image modes can be used here. The associated
 redolog will be named <emphasis>pathname</emphasis> with a
 <emphasis>UNDOABLE_REDOLOG_EXTENSION</emphasis> suffix, unless set in the
-constructor. Returns 0 for OK or -1 if a problem occured.
+constructor. Returns 0 for OK or -1 if a problem occurred.
 </para>
 
 <para>
@@ -2552,7 +2552,7 @@ off_t lseek(off_t offset, int whence);
 seeks at logical data position <emphasis>offset</emphasis> in
 the undoable disk image.
 Only SEEK_SET and SEEK_CUR are supported for <emphasis>whence</emphasis>.
-Returns -1 if a problem occured, or the current logical
+Returns -1 if a problem occurred, or the current logical
 offset in the undoable disk image.
 </para>
 
@@ -2618,7 +2618,7 @@ int open(const char* pathname);
 opens the disk image <emphasis>pathname</emphasis> in read-only mode,
 as a volatile disk image. The image mode is auto-detected. The associated
 redolog will be named <emphasis>pathname</emphasis> with a random suffix,
-unless set in the constructor. Returns 0 for OK or -1 if a problem occured.
+unless set in the constructor. Returns 0 for OK or -1 if a problem occurred.
 </para>
 
 <para>
@@ -2636,7 +2636,7 @@ off_t lseek(off_t offset, int whence);
 seeks at logical data position <emphasis>offset</emphasis> in
 the volatile disk image.
 Only SEEK_SET and SEEK_CUR are supported for <emphasis>whence</emphasis>.
-Returns -1 if a problem occured, or the current logical offset in
+Returns -1 if a problem occurred, or the current logical offset in
 the volatile disk image.
 </para>
 
@@ -2698,7 +2698,7 @@ object. This disk image logical length is <emphasis>size</emphasis> bytes.
 int open(const char* pathname);
 </emphasis>
 opens the growing disk image <emphasis>pathname</emphasis>,
-Returns 0 for OK or -1 if a problem occured.
+Returns 0 for OK or -1 if a problem occurred.
 </para>
 
 <para>
@@ -2715,7 +2715,7 @@ off_t lseek(off_t offset, int whence);
 seeks at logical data position <emphasis>offset</emphasis> in
 the growable disk image.
 Only SEEK_SET and SEEK_CUR are supported for <emphasis>whence</emphasis>.
-Returns -1 if a problem occured, or the current logical offset in
+Returns -1 if a problem occurred, or the current logical offset in
 the grwoing image.
 </para>
 

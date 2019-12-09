@@ -95,6 +95,6 @@ main(int argc, char *argv[])
   }
 
   close(fd);
-  printf("CMOS data successfuly written to file '%s'.\n", argv[1]);
+  printf("CMOS data successfully written to file '%s'.\n", argv[1]);
   return 0;
 }

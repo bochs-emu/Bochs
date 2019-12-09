@@ -30,7 +30,7 @@
 //
 // the idea is to provide a software multiport 'ethernet hub' and allow
 // communication between multiple bochs instances on the same machine
-// entirely in userspace and without need for root priviledges.
+// entirely in userspace and without need for root privileges.
 //
 // The config line in .bochsrc should look like:
 //
@@ -225,7 +225,7 @@ bx_socket_pktmover_c::bx_socket_pktmover_c(const char *netif,
 #ifndef WIN32
     this->fd = INVALID_SOCKET;
     if (errno == EACCES)
-      BX_PANIC(("eth_socket: insufficient priviledges to open socket"));
+      BX_PANIC(("eth_socket: insufficient privileges to open socket"));
     else
       BX_PANIC(("eth_socket: could not open socket: %s", strerror(errno)));
 #else

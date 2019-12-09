@@ -159,7 +159,7 @@
 #  IGNORE_BAD_MSRS:
 #    Ignore MSR references that Bochs does not understand; print a warning
 #    message instead of generating #GP exception. This option is enabled
-#    by default but will not be avaiable if configurable MSRs are enabled.
+#    by default but will not be available if configurable MSRs are enabled.
 #
 #  MWAIT_IS_NOP:
 #    When this option is enabled MWAIT will not put the CPU into a sleep state.
@@ -435,7 +435,7 @@ vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
 # This defines the Voodoo Graphics emulation (experimental). Currently
 # supported models are 'voodoo1', 'voodoo2', 'banshee' and 'voodoo3'. The
 # Voodoo2 support is not yet complete, but almost usable. The Banshee and
-# Voodoo3 support is under construction, but basicly usable. The 2D/3D cards
+# Voodoo3 support is under construction, but basically usable. The 2D/3D cards
 # require an external VGA BIOS the vga extension option to be set to 'voodoo'.
 # If the i440BX PCI chipset is selected, they can be assigned to AGP (slot #5).
 # The gui screen update timing for all models is controlled by the related 'vga'
@@ -1118,7 +1118,7 @@ speaker: enabled=1, mode=sound
 # The optionsX parameter can be used to assign specific options to the device
 # connected to the corresponding USB port. Currently this feature is used to
 # set the speed reported by device ('low', 'full', 'high' or 'super'). The
-# availabe speed choices depend on both HC and device. The option 'debug' turns
+# available speed choices depend on both HC and device. The option 'debug' turns
 # on debug output for the device at connection time.
 # For the USB 'disk' device the optionsX parameter can be used to specify an
 # alternative redolog file (journal) of some image modes. For 'vvfat' mode USB

@@ -1102,7 +1102,7 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
         (unsigned) address));
   }
 
-  BX_PANIC(("hard drive: shouldnt get here!"));
+  BX_PANIC(("hard drive: shouldn't get here!"));
   return(0);
 
 return_value32:

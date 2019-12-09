@@ -654,7 +654,7 @@ int BX_CPU_C::check_entry_PAE(const char *s, Bit64u entry, Bit64u reserved, unsi
 
   if (entry & PAGE_DIRECTORY_NX_BIT) {
     if (rw == BX_EXECUTE) {
-      BX_DEBUG(("PAE %s: non-executable page fault occured", s));
+      BX_DEBUG(("PAE %s: non-executable page fault occurred", s));
       *nx_fault = 1;
     }
   }

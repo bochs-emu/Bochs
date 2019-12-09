@@ -429,7 +429,7 @@ void bx_init_options()
 #endif
   new bx_param_bool_c(cpu_param,
       "reset_on_triple_fault", "Enable CPU reset on triple fault",
-      "Enable CPU reset if triple fault occured (highly recommended)",
+      "Enable CPU reset if triple fault occurred (highly recommended)",
       1);
 #if BX_CPU_LEVEL >= 5
   new bx_param_bool_c(cpu_param,
@@ -1021,7 +1021,7 @@ void bx_init_options()
       250);
   new bx_param_num_c(keyboard,
       "paste_delay", "Keyboard paste delay",
-      "Approximate time in microseconds between attemps to paste characters to the keyboard controller.",
+      "Approximate time in microseconds between attempts to paste characters to the keyboard controller.",
       1000, BX_MAX_BIT32U,
       100000);
   bx_param_bool_c *use_kbd_mapping = new bx_param_bool_c(keyboard,
@@ -1289,7 +1289,7 @@ void bx_init_options()
     ioaddr = new bx_param_num_c(ata_res[channel],
       "ioaddr1",
       "I/O Address 1",
-      "IO adress of ata command block",
+      "IO address of ata command block",
       0, 0xffff,
       ata_default_ioaddr1[channel]);
     ioaddr->set_base(16);
@@ -1298,7 +1298,7 @@ void bx_init_options()
     ioaddr2 = new bx_param_num_c(ata_res[channel],
       "ioaddr2",
       "I/O Address 2",
-      "IO adress of ata control block",
+      "IO address of ata control block",
       0, 0xffff,
       ata_default_ioaddr2[channel]);
     ioaddr2->set_base(16);

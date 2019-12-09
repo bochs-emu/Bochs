@@ -662,7 +662,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VERR_Ew(bxInstruction_c *i)
     }
     /* readable, non-conforming code segment */
     if ((descriptor.dpl<CPL) || (descriptor.dpl<selector.rpl)) {
-      BX_DEBUG(("VERR: non-conforming code not withing priv level"));
+      BX_DEBUG(("VERR: non-conforming code not within priv level"));
       clear_ZF();  /* inaccessible */
     }
     else {
@@ -671,7 +671,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VERR_Ew(bxInstruction_c *i)
   }
   else { /* data segment */
     if ((descriptor.dpl<CPL) || (descriptor.dpl<selector.rpl)) {
-      BX_DEBUG(("VERR: data seg not withing priv level"));
+      BX_DEBUG(("VERR: data seg not within priv level"));
       clear_ZF(); /* not accessible */
     }
     else {

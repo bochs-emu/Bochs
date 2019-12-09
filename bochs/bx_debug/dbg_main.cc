@@ -561,11 +561,11 @@ void bx_dbg_exception(unsigned cpu, Bit8u vector, Bit16u error_code)
   if (BX_CPU(dbg_cpu)->trace || bx_dbg.exceptions)
   {
     if (vector <= BX_XM_EXCEPTION) {
-      dbg_printf("CPU %d: Exception 0x%02x - %s occured (error_code=0x%04x)\n",
+      dbg_printf("CPU %d: Exception 0x%02x - %s occurred (error_code=0x%04x)\n",
         cpu, vector, exception[vector], error_code);
     }
     else {
-      dbg_printf("CPU %d: Exception 0x%02x occured (error_code=0x%04x)\n",
+      dbg_printf("CPU %d: Exception 0x%02x occurred (error_code=0x%04x)\n",
         cpu, vector, error_code);
     }
   }
@@ -575,7 +575,7 @@ void bx_dbg_interrupt(unsigned cpu, Bit8u vector, Bit16u error_code)
 {
   if (BX_CPU(dbg_cpu)->trace || bx_dbg.interrupts)
   {
-    dbg_printf("CPU %d: Interrupt 0x%02x occured (error_code=0x%04x)\n",
+    dbg_printf("CPU %d: Interrupt 0x%02x occurred (error_code=0x%04x)\n",
       cpu, vector, error_code);
   }
 }
@@ -2781,7 +2781,7 @@ void bx_dbg_restore_command(const char *param_name, const char *restore_path)
   dbg_printf("restoring param (%s) state from file (%s/%s)\n",
       param_name, path, param_name);
   if (! SIM->restore_bochs_param(SIM->get_bochs_root(), path, param_name)) {
-    dbg_printf("Error: error occured during restore\n");
+    dbg_printf("Error: error occurred during restore\n");
   }
   else {
     bx_sr_after_restore_state();

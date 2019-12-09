@@ -53,7 +53,7 @@ void BX_CPU_C::FPU_stack_underflow(bxInstruction_c *i, int stnr, int pop_stack)
   FPU_exception(i, FPU_EX_Stack_Underflow);
 }
 
-/* Returns unmasked exceptions if occured */
+/* Returns unmasked exceptions if occurred */
 unsigned BX_CPU_C::FPU_exception(bxInstruction_c *i, unsigned exception, bx_bool is_store)
 {
   /* Extract only the bits which we use to set the status word */
@@ -119,7 +119,7 @@ unsigned BX_CPU_C::FPU_exception(bxInstruction_c *i, unsigned exception, bx_bool
     }
   }
 
-  // If #P unmasked exception occured the result still has to be
+  // If #P unmasked exception occurred the result still has to be
   // written to the destination.
   unmasked &= ~FPU_EX_Precision;
 

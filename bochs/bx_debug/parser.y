@@ -1087,7 +1087,7 @@ help_command:
        }
      | BX_TOKEN_HELP BX_TOKEN_TRACEMEM '\n'
        {
-         dbg_printf("trace-mem on  - print all memory accesses occured during instruction execution\n");
+         dbg_printf("trace-mem on  - print all memory accesses occurred during instruction execution\n");
          dbg_printf("trace-mem off - disable memory accesses tracing\n");
          free($1);free($2);
        }

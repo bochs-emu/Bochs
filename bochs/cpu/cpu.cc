@@ -575,7 +575,7 @@ void BX_CPU_C::prefetch(void)
        if (EIP == (Bit32u) BX_CPU_THIS_PTR prev_rip) {
          Bit32u dr6_bits = code_breakpoint_match(laddr);
          if (dr6_bits & BX_DEBUG_TRAP_HIT) {
-           BX_ERROR(("#DB: x86 code breakpoint catched"));
+           BX_ERROR(("#DB: x86 code breakpoint caught"));
            BX_CPU_THIS_PTR debug_trap |= dr6_bits;
            exception(BX_DB_EXCEPTION, 0);
          }
