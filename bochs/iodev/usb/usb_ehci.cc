@@ -1047,7 +1047,7 @@ void bx_usb_ehci_c::free_queue(EHCIQueue *q, const char *warn)
 
   cancelled = BX_EHCI_THIS cancel_queue(q);
   if (warn && cancelled > 0) {
-    BX_ERROR((warn));
+    BX_ERROR(("%s", warn));
   }
   QTAILQ_REMOVE(head, q, next);
   free(q);

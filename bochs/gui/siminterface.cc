@@ -1545,7 +1545,7 @@ int bx_real_sim_c::bx_printf(const char *fmt, ...)
       return bx_gui->bx_printf(buf);
     }
   }
-  return printf(buf);
+  return printf("%s", buf);
 }
 
 char* bx_real_sim_c::bx_gets(char *s, int size, FILE *stream)
