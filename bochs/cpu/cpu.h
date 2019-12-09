@@ -1167,8 +1167,10 @@ public: // for now...
 #define BX_INSTR_FAR_BRANCH_ORIGIN()
 #endif
 
-#define BX_TLB_SIZE 2048
-  TLB<BX_TLB_SIZE> TLB BX_CPP_AlignN(16);
+#define BX_DTLB_SIZE 2048
+#define BX_ITLB_SIZE 2048
+  TLB<BX_DTLB_SIZE> DTLB BX_CPP_AlignN(16);
+  TLB<BX_ITLB_SIZE> ITLB BX_CPP_AlignN(16);
 
 #if BX_CPU_LEVEL >= 6
   struct {

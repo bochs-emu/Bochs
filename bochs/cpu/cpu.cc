@@ -590,10 +590,10 @@ void BX_CPU_C::prefetch(void)
   BX_CPU_THIS_PTR clear_RF();
 
   bx_address lpf = LPFOf(laddr);
-  bx_TLB_entry *tlbEntry = BX_TLB_ENTRY_OF(laddr, 0);
+  bx_TLB_entry *tlbEntry = BX_ITLB_ENTRY_OF(laddr, 0);
   Bit8u *fetchPtr = 0;
 
-  if ((tlbEntry->lpf == lpf) && (tlbEntry->accessBits & (0x10 << USER_PL)) != 0) {
+  if ((tlbEntry->lpf == lpf) && (tlbEntry->accessBits & (1<<USER_PL)) != 0) {
     BX_CPU_THIS_PTR pAddrFetchPage = tlbEntry->ppf;
     fetchPtr = (Bit8u*) tlbEntry->hostPageAddr;
   }  

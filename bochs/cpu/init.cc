@@ -483,22 +483,41 @@ void BX_CPU_C::register_state(void)
   BXRS_PARAM_BOOL(cpu, in_smm, in_smm);
 
 #if BX_DEBUGGER
-  bx_list_c *tlb = new bx_list_c(cpu, "TLB");
+  bx_list_c *dtlb = new bx_list_c(cpu, "DTLB");
 #if BX_CPU_LEVEL >= 5
-  BXRS_PARAM_BOOL(tlb, split_large, TLB.split_large);
+  BXRS_PARAM_BOOL(dtlb, split_large, DTLB.split_large);
 #endif
-  for (n=0; n<BX_TLB_SIZE; n++) {
+  for (n=0; n<BX_DTLB_SIZE; n++) {
     sprintf(name, "entry%u", n);
-    bx_list_c *tlb_entry = new bx_list_c(tlb, name);
-    BXRS_HEX_PARAM_FIELD(tlb_entry, lpf, TLB.entry[n].lpf);
-    BXRS_HEX_PARAM_FIELD(tlb_entry, lpf_mask, TLB.entry[n].lpf_mask);
-    BXRS_HEX_PARAM_FIELD(tlb_entry, ppf, TLB.entry[n].ppf);
-    BXRS_HEX_PARAM_FIELD(tlb_entry, accessBits, TLB.entry[n].accessBits);
+    bx_list_c *tlb_entry = new bx_list_c(dtlb, name);
+    BXRS_HEX_PARAM_FIELD(tlb_entry, lpf, DTLB.entry[n].lpf);
+    BXRS_HEX_PARAM_FIELD(tlb_entry, lpf_mask, DTLB.entry[n].lpf_mask);
+    BXRS_HEX_PARAM_FIELD(tlb_entry, ppf, DTLB.entry[n].ppf);
+    BXRS_HEX_PARAM_FIELD(tlb_entry, accessBits, DTLB.entry[n].accessBits);
 #if BX_SUPPORT_PKEYS
-    BXRS_HEX_PARAM_FIELD(tlb_entry, pkey, TLB.entry[n].pkey);
+    BXRS_HEX_PARAM_FIELD(tlb_entry, pkey, DTLB.entry[n].pkey);
 #endif
 #if BX_SUPPORT_MEMTYPE
-    BXRS_HEX_PARAM_FIELD(tlb_entry, memtype, TLB.entry[n].memtype);
+    BXRS_HEX_PARAM_FIELD(tlb_entry, memtype, DTLB.entry[n].memtype);
+#endif
+  }
+
+  bx_list_c *itlb = new bx_list_c(cpu, "ITLB");
+#if BX_CPU_LEVEL >= 5
+  BXRS_PARAM_BOOL(itlb, split_large, ITLB.split_large);
+#endif
+  for (n=0; n<BX_ITLB_SIZE; n++) {
+    sprintf(name, "entry%u", n);
+    bx_list_c *tlb_entry = new bx_list_c(itlb, name);
+    BXRS_HEX_PARAM_FIELD(tlb_entry, lpf, ITLB.entry[n].lpf);
+    BXRS_HEX_PARAM_FIELD(tlb_entry, lpf_mask, ITLB.entry[n].lpf_mask);
+    BXRS_HEX_PARAM_FIELD(tlb_entry, ppf, ITLB.entry[n].ppf);
+    BXRS_HEX_PARAM_FIELD(tlb_entry, accessBits, ITLB.entry[n].accessBits);
+#if BX_SUPPORT_PKEYS
+    BXRS_HEX_PARAM_FIELD(tlb_entry, pkey, ITLB.entry[n].pkey);
+#endif
+#if BX_SUPPORT_MEMTYPE
+    BXRS_HEX_PARAM_FIELD(tlb_entry, memtype, ITLB.entry[n].memtype);
 #endif
   }
 #endif

@@ -344,7 +344,7 @@ const Bit64u BX_CR3_PAGING_MASK = BX_CONST64(0x000ffffffffff000);
 //       result when the direct access is not allowed.
 //
 
-#define TLB_NoHostPtr     (0x800) /* set this bit when direct access is NOT allowed */
+const Bit32u TLB_NoHostPtr = 0x800; /* set this bit when direct access is NOT allowed */
 
 #include "cpustats.h"
 
@@ -357,7 +357,8 @@ void BX_CPU_C::TLB_flush(void)
   invalidate_prefetch_q();
   invalidate_stack_cache();
 
-  BX_CPU_THIS_PTR TLB.flush();
+  BX_CPU_THIS_PTR DTLB.flush();
+  BX_CPU_THIS_PTR ITLB.flush();
 
 #if BX_SUPPORT_MONITOR_MWAIT
   // invalidating of the TLB might change translation for monitored page
@@ -377,7 +378,8 @@ void BX_CPU_C::TLB_flushNonGlobal(void)
   invalidate_prefetch_q();
   invalidate_stack_cache();
 
-  BX_CPU_THIS_PTR TLB.flushNonGlobal();
+  BX_CPU_THIS_PTR DTLB.flushNonGlobal();
+  BX_CPU_THIS_PTR ITLB.flushNonGlobal();
 
 #if BX_SUPPORT_MONITOR_MWAIT
   // invalidating of the TLB might change translation for monitored page
@@ -396,7 +398,8 @@ void BX_CPU_C::TLB_invlpg(bx_address laddr)
   invalidate_stack_cache();
 
   BX_DEBUG(("TLB_invlpg(0x" FMT_ADDRX "): invalidate TLB entry", laddr));
-  BX_CPU_THIS_PTR TLB.invlpg(laddr);
+  BX_CPU_THIS_PTR DTLB.invlpg(laddr);
+  BX_CPU_THIS_PTR ITLB.invlpg(laddr);
 
 #if BX_SUPPORT_MONITOR_MWAIT
   // invalidating of the TLB entry might change translation for monitored
@@ -1147,7 +1150,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
         return paddress;
     }
 #else
-    if (tlbEntry->accessBits & (1 << (/*(isExecute<<2) |*/ (isWrite<<1) | user)))
+    if (tlbEntry->accessBits & (1 << ((isWrite<<1) | user)))
       return paddress;
 #endif
 
@@ -1198,8 +1201,12 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
     paddress = (paddress & ~((Bit64u) lpf_mask)) | (laddr & lpf_mask);
 
 #if BX_CPU_LEVEL >= 5
-    if (lpf_mask > 0xfff)
-      BX_CPU_THIS_PTR TLB.split_large = 1;
+    if (lpf_mask > 0xfff) {
+      if (isExecute)
+        BX_CPU_THIS_PTR ITLB.split_large = true;
+      else
+        BX_CPU_THIS_PTR DTLB.split_large = true;
+    }
 #endif
   }
   else {
@@ -1233,11 +1240,14 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
   tlbEntry->ppf = ppf;
   tlbEntry->accessBits = 0;
 
-  tlbEntry->accessBits |= TLB_SysReadOK;
-  if (isWrite)
-    tlbEntry->accessBits |= TLB_SysWriteOK;
-  if (isExecute)
+  if (isExecute) {
     tlbEntry->accessBits |= TLB_SysExecuteOK;
+  }
+  else {
+    tlbEntry->accessBits |= TLB_SysReadOK;
+    if (isWrite)
+      tlbEntry->accessBits |= TLB_SysWriteOK;
+  }
 
   if (! BX_CPU_THIS_PTR cr0.get_PG()
 #if BX_SUPPORT_VMX >= 2
@@ -1247,29 +1257,35 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
         && ! (BX_CPU_THIS_PTR in_svm_guest && SVM_NESTED_PAGING_ENABLED)
 #endif
     ) {
-    tlbEntry->accessBits |= TLB_UserReadOK |
-                            TLB_UserWriteOK |
-                            TLB_UserExecuteOK;
+    if (isExecute)
+      tlbEntry->accessBits |= TLB_UserExecuteOK;
+    else
+      tlbEntry->accessBits |= TLB_UserReadOK | TLB_UserWriteOK;
   }
   else {
     if ((combined_access & 4) != 0) { // User Page
 
       if (user) {
-        tlbEntry->accessBits |= TLB_UserReadOK;
-        if (isWrite)
-          tlbEntry->accessBits |= TLB_UserWriteOK;
-        if (isExecute)
+        if (isExecute) {
           tlbEntry->accessBits |= TLB_UserExecuteOK;
+        }
+        else {
+          tlbEntry->accessBits |= TLB_UserReadOK;
+          if (isWrite)
+            tlbEntry->accessBits |= TLB_UserWriteOK;
+        }
       }
 
 #if BX_CPU_LEVEL >= 6
-      if (BX_CPU_THIS_PTR cr4.get_SMEP())
-        tlbEntry->accessBits &= ~TLB_SysExecuteOK;
-
-      if (BX_CPU_THIS_PTR cr4.get_SMAP())
-        tlbEntry->accessBits &= ~(TLB_SysReadOK | TLB_SysWriteOK);
+      if (isExecute) {
+        if (BX_CPU_THIS_PTR cr4.get_SMEP())
+          tlbEntry->accessBits &= ~TLB_SysExecuteOK;
+      }
+      else {
+        if (BX_CPU_THIS_PTR cr4.get_SMAP())
+          tlbEntry->accessBits &= ~(TLB_SysReadOK | TLB_SysWriteOK);
+      }
 #endif
-
     }
   }
 
@@ -2160,7 +2176,7 @@ int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_
 
   bx_bool user = (curr_pl == 3);
 
-  bx_TLB_entry *tlbEntry = BX_TLB_ENTRY_OF(laddr, 0);
+  bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(laddr, 0);
 
 #if BX_SUPPORT_X86_64
   if (! IsCanonical(laddr)) {
@@ -2212,7 +2228,7 @@ int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_
     }
 #endif
 
-    bx_TLB_entry *tlbEntry2 = BX_TLB_ENTRY_OF(laddr2, 0);
+    bx_TLB_entry *tlbEntry2 = BX_DTLB_ENTRY_OF(laddr2, 0);
 
     BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, user, BX_WRITE);
     BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(tlbEntry2, laddr2, user, BX_WRITE);
@@ -2280,7 +2296,7 @@ int BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_p
   }
 #endif
 
-  bx_TLB_entry *tlbEntry = BX_TLB_ENTRY_OF(laddr, 0);
+  bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(laddr, 0);
 
   /* check for reference across multiple pages */
   if ((pageOffset + len) <= 4096) {
@@ -2313,7 +2329,7 @@ int BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_p
     }
 #endif
 
-    bx_TLB_entry *tlbEntry2 = BX_TLB_ENTRY_OF(laddr2, 0);
+    bx_TLB_entry *tlbEntry2 = BX_DTLB_ENTRY_OF(laddr2, 0);
 
     BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, user, xlate_rw);
     BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(tlbEntry2, laddr2, user, xlate_rw);
@@ -2412,14 +2428,24 @@ bx_hostpageaddr_t BX_CPU_C::getHostMemAddr(bx_phy_address paddr, unsigned rw)
 #if BX_LARGE_RAMFILE
 bx_bool BX_CPU_C::check_addr_in_tlb_buffers(const Bit8u *addr, const Bit8u *end)
 {
-  for (unsigned tlb_entry_num=0; tlb_entry_num < BX_TLB_SIZE; tlb_entry_num++) {
-    bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlb_entry_num];
+  for (unsigned tlb_entry_num=0; tlb_entry_num < BX_DTLB_SIZE; tlb_entry_num++) {
+    bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR DTLB.entry[tlb_entry_num];
     if (tlbEntry->valid()) {
       if (((tlbEntry->hostPageAddr) >= (const bx_hostpageaddr_t)addr) &&
           ((tlbEntry->hostPageAddr)  < (const bx_hostpageaddr_t)end))
         return true;
     }
   }
+
+  for (unsigned tlb_entry_num=0; tlb_entry_num < BX_ITLB_SIZE; tlb_entry_num++) {
+    bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR ITLB.entry[tlb_entry_num];
+    if (tlbEntry->valid()) {
+      if (((tlbEntry->hostPageAddr) >= (const bx_hostpageaddr_t)addr) &&
+          ((tlbEntry->hostPageAddr)  < (const bx_hostpageaddr_t)end))
+        return true;
+    }
+  }
+
   return false;
 }
 #endif

@@ -55,8 +55,11 @@ BX_CPP_INLINE bx_address AlignedAccessLPFOf(bx_address laddr, unsigned alignment
 //   There will be a many-to-one mapping to each TLB cache slot.
 //   When there are collisions, the old entry is overwritten with
 //   one for the newest access.
-#define BX_TLB_ENTRY_OF(lpf, len) (BX_CPU_THIS_PTR TLB.get_entry_of((lpf), (len)))
-#define BX_TLB_INDEX_OF(lpf, len) (BX_CPU_THIS_PTR TLB.get_index_of((lpf), (len)))
+#define BX_DTLB_ENTRY_OF(lpf, len) (BX_CPU_THIS_PTR DTLB.get_entry_of((lpf), (len)))
+#define BX_DTLB_INDEX_OF(lpf, len) (BX_CPU_THIS_PTR DTLB.get_index_of((lpf), (len)))
+
+#define BX_ITLB_ENTRY_OF(lpf, len) (BX_CPU_THIS_PTR ITLB.get_entry_of((lpf), (len)))
+#define BX_ITLB_INDEX_OF(lpf, len) (BX_CPU_THIS_PTR ITLB.get_index_of((lpf), (len)))
 
 typedef bx_ptr_equiv_t bx_hostpageaddr_t;
 
@@ -66,13 +69,15 @@ const bx_address BX_INVALID_TLB_ENTRY = BX_CONST64(0xffffffffffffffff);
 const bx_address BX_INVALID_TLB_ENTRY = 0xffffffff;
 #endif
 
-// accessBits
+// accessBits in DTLB
 const Bit32u TLB_SysReadOK     = 0x01;
 const Bit32u TLB_UserReadOK    = 0x02;
 const Bit32u TLB_SysWriteOK    = 0x04;
 const Bit32u TLB_UserWriteOK   = 0x08;
-const Bit32u TLB_SysExecuteOK  = 0x10;
-const Bit32u TLB_UserExecuteOK = 0x20;
+// accessBits in ITLB
+const Bit32u TLB_SysExecuteOK  = 0x01;
+const Bit32u TLB_UserExecuteOK = 0x02;
+// global
 const Bit32u TLB_GlobalPage    = 0x80000000;
 
 #if BX_SUPPORT_PKEYS
