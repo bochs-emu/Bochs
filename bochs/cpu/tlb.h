@@ -56,6 +56,7 @@ BX_CPP_INLINE bx_address AlignedAccessLPFOf(bx_address laddr, unsigned alignment
 //   When there are collisions, the old entry is overwritten with
 //   one for the newest access.
 #define BX_TLB_ENTRY_OF(lpf, len) (BX_CPU_THIS_PTR TLB.get_entry_of((lpf), (len)))
+#define BX_TLB_INDEX_OF(lpf, len) (BX_CPU_THIS_PTR TLB.get_index_of((lpf), (len)))
 
 typedef bx_ptr_equiv_t bx_hostpageaddr_t;
 
@@ -153,7 +154,7 @@ struct TLB {
 public:
   TLB() { flush(); }
 
-  BX_CPP_INLINE static unsigned get_index_of(bx_address lpf, unsigned len = 0)
+  BX_CPP_INLINE unsigned get_index_of(bx_address lpf, unsigned len = 0)
   {
     const Bit32u tlb_mask = ((size-1) << 12);
     return (((unsigned(lpf) + len) & tlb_mask) >> 12);
