@@ -590,7 +590,7 @@ void BX_CPU_C::prefetch(void)
   BX_CPU_THIS_PTR clear_RF();
 
   bx_address lpf = LPFOf(laddr);
-  bx_TLB_entry *tlbEntry = BX_ITLB_ENTRY_OF(laddr, 0);
+  bx_TLB_entry *tlbEntry = BX_ITLB_ENTRY_OF(laddr);
   Bit8u *fetchPtr = 0;
 
   if ((tlbEntry->lpf == lpf) && (tlbEntry->accessBits & (1<<USER_PL)) != 0) {

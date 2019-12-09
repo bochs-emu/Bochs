@@ -1483,11 +1483,11 @@ void bx_dbg_tlb_lookup(bx_lin_address laddr)
 {
   char cpu_param_name[16];
 
-  index = BX_ITLB_INDEX_OF(laddr, 0);
+  Bit32u index = BX_ITLB_INDEX_OF(laddr);
   sprintf(cpu_param_name, "ITLB.entry%d", index);
   bx_dbg_show_param_command(cpu_param_name, 0);
 
-  Bit32u index = BX_DTLB_INDEX_OF(laddr, 0);
+  index = BX_DTLB_INDEX_OF(laddr, 0);
   sprintf(cpu_param_name, "DTLB.entry%d", index);
   bx_dbg_show_param_command(cpu_param_name, 0);
 }

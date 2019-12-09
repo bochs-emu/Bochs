@@ -58,8 +58,8 @@ BX_CPP_INLINE bx_address AlignedAccessLPFOf(bx_address laddr, unsigned alignment
 #define BX_DTLB_ENTRY_OF(lpf, len) (BX_CPU_THIS_PTR DTLB.get_entry_of((lpf), (len)))
 #define BX_DTLB_INDEX_OF(lpf, len) (BX_CPU_THIS_PTR DTLB.get_index_of((lpf), (len)))
 
-#define BX_ITLB_ENTRY_OF(lpf, len) (BX_CPU_THIS_PTR ITLB.get_entry_of((lpf), (len)))
-#define BX_ITLB_INDEX_OF(lpf, len) (BX_CPU_THIS_PTR ITLB.get_index_of((lpf), (len)))
+#define BX_ITLB_ENTRY_OF(lpf) (BX_CPU_THIS_PTR ITLB.get_entry_of(lpf))
+#define BX_ITLB_INDEX_OF(lpf) (BX_CPU_THIS_PTR ITLB.get_index_of(lpf))
 
 typedef bx_ptr_equiv_t bx_hostpageaddr_t;
 
@@ -134,7 +134,7 @@ struct bx_TLB_entry
 #endif
   Bit32u lpf_mask;      // linear address mask of the page size
 #if BX_SUPPORT_MEMTYPE
-  Bit32u memtype;      // keep it Bit32u for alignment
+  Bit32u memtype;       // keep it Bit32u for alignment
 #endif
 
   bx_TLB_entry() { invalidate(); }
