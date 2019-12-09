@@ -419,7 +419,7 @@ void bx_generic_cpuid_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000005 //
 void bx_generic_cpuid_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
 {
-  // CPUID function 0x800000005 - L1 Cache and TLB Identifiers
+  // CPUID function 0x80000005 - L1 Cache and TLB Identifiers
   leaf->eax = 0x01ff01ff;
   leaf->ebx = 0x01ff01ff;
   leaf->ecx = 0x40020140;
@@ -429,7 +429,7 @@ void bx_generic_cpuid_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
 // leaf 0x80000006 //
 void bx_generic_cpuid_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
 {
-  // CPUID function 0x800000006 - L2 Cache and TLB Identifiers
+  // CPUID function 0x80000006 - L2 Cache and TLB Identifiers
   leaf->eax = 0;
   leaf->ebx = 0x42004200;
   leaf->ecx = 0x02008140;
@@ -439,7 +439,7 @@ void bx_generic_cpuid_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
 // leaf 0x80000007 //
 void bx_generic_cpuid_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
 {
-  // CPUID function 0x800000007 - Advanced Power Management
+  // CPUID function 0x80000007 - Advanced Power Management
   leaf->eax = 0;
   leaf->ebx = 0;
   leaf->ecx = 0;
