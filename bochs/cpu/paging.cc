@@ -345,7 +345,6 @@ const Bit64u BX_CR3_PAGING_MASK = BX_CONST64(0x000ffffffffff000);
 //
 
 #define TLB_NoHostPtr     (0x800) /* set this bit when direct access is NOT allowed */
-#define TLB_GlobalPage    (0x80000000)
 
 #include "cpustats.h"
 
@@ -356,16 +355,9 @@ void BX_CPU_C::TLB_flush(void)
   INC_TLBFLUSH_STAT(tlbGlobalFlushes);
 
   invalidate_prefetch_q();
-
   invalidate_stack_cache();
 
-  for (unsigned n=0; n < BX_TLB_SIZE; n++) {
-    BX_CPU_THIS_PTR TLB.entry[n].invalidate();
-  }
-
-#if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR TLB.split_large = 0;  // flush whole TLB
-#endif
+  BX_CPU_THIS_PTR TLB.flush();
 
 #if BX_SUPPORT_MONITOR_MWAIT
   // invalidating of the TLB might change translation for monitored page
@@ -383,26 +375,9 @@ void BX_CPU_C::TLB_flushNonGlobal(void)
   INC_TLBFLUSH_STAT(tlbNonGlobalFlushes);
 
   invalidate_prefetch_q();
-
   invalidate_stack_cache();
 
-  BX_CPU_THIS_PTR TLB.split_large = 0;
-  Bit32u lpf_mask = 0;
-
-  for (unsigned n=0; n<BX_TLB_SIZE; n++) {
-    bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[n];
-    if (tlbEntry->valid()) {
-      if (!(tlbEntry->accessBits & TLB_GlobalPage)) {
-        tlbEntry->invalidate();
-      }
-      else {
-        lpf_mask |= tlbEntry->lpf_mask;
-      }
-    }
-  }
-
-  if (lpf_mask > 0xfff)
-    BX_CPU_THIS_PTR TLB.split_large = 1;
+  BX_CPU_THIS_PTR TLB.flushNonGlobal();
 
 #if BX_SUPPORT_MONITOR_MWAIT
   // invalidating of the TLB might change translation for monitored page
@@ -418,43 +393,10 @@ void BX_CPU_C::TLB_flushNonGlobal(void)
 void BX_CPU_C::TLB_invlpg(bx_address laddr)
 {
   invalidate_prefetch_q();
-
   invalidate_stack_cache();
 
   BX_DEBUG(("TLB_invlpg(0x" FMT_ADDRX "): invalidate TLB entry", laddr));
-
-#if BX_CPU_LEVEL >= 5
-  if (BX_CPU_THIS_PTR TLB.split_large)
-  {
-    Bit32u lpf_mask = 0;
-    BX_CPU_THIS_PTR TLB.split_large = 0;
-
-    // make sure INVLPG handles correctly large pages
-    for (unsigned n=0; n<BX_TLB_SIZE; n++) {
-      bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[n];
-      if (tlbEntry->valid()) {
-        bx_address entry_lpf_mask = tlbEntry->lpf_mask;
-        if ((laddr & ~entry_lpf_mask) == (tlbEntry->lpf & ~entry_lpf_mask)) {
-          tlbEntry->invalidate();
-        }
-        else {
-          lpf_mask |= entry_lpf_mask;
-        }
-      }
-    }
-
-    if (lpf_mask > 0xfff)
-      BX_CPU_THIS_PTR TLB.split_large = 1;
-  }
-  else
-#endif
-  {
-    bx_TLB_entry *tlbEntry = BX_TLB_ENTRY_OF(laddr, 0);
-    bx_address lpf = LPFOf(laddr);
-    if (TLB_LPFOf(tlbEntry->lpf) == lpf) {
-      tlbEntry->invalidate();
-    }
-  }
+  BX_CPU_THIS_PTR TLB.invlpg(laddr);
 
 #if BX_SUPPORT_MONITOR_MWAIT
   // invalidating of the TLB entry might change translation for monitored

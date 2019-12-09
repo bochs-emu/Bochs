@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2015-2017 Stanislav Shwartsman
+//   Copyright (c) 2015-2019 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -24,21 +24,38 @@
 #ifndef BX_TLB_H
 #define BX_TLB_H
 
-// BX_TLB_SIZE: Number of entries in TLB
+#if BX_SUPPORT_X86_64
+const bx_address LPF_MASK = BX_CONST64(0xfffffffffffff000);
+#else
+const bx_address LPF_MASK = 0xfffff000;
+#endif
+
+#if BX_PHY_ADDRESS_LONG
+const bx_phy_address PPF_MASK = BX_CONST64(0xfffffffffffff000);
+#else
+const bx_phy_address PPF_MASK = 0xfffff000;
+#endif
+
+BX_CPP_INLINE Bit32u PAGE_OFFSET(bx_address laddr)
+{
+  return Bit32u(laddr) & 0xfff;
+}
+
+BX_CPP_INLINE bx_address LPFOf(bx_address laddr) { return laddr & LPF_MASK; }
+BX_CPP_INLINE bx_address PPFOf(bx_phy_address paddr) { return paddr & PPF_MASK; }
+
+BX_CPP_INLINE bx_address AlignedAccessLPFOf(bx_address laddr, unsigned alignment_mask)
+{
+  return laddr & (LPF_MASK | alignment_mask);
+}
+
 // BX_TLB_INDEX_OF(lpf): This macro is passed the linear page frame
-//   (top 20 bits of the linear address.  It must map these bits to
+//   (top bits of the linear address).  It must map these bits to
 //   one of the TLB cache slots, given the size of BX_TLB_SIZE.
 //   There will be a many-to-one mapping to each TLB cache slot.
 //   When there are collisions, the old entry is overwritten with
 //   one for the newest access.
-
-const Bit32u BX_TLB_SIZE = 1024;
-const Bit32u BX_TLB_MASK = ((BX_TLB_SIZE-1) << 12);
-
-BX_CPP_INLINE unsigned BX_TLB_INDEX_OF(bx_address lpf, unsigned len)
-{
-  return (((unsigned(lpf) + len) & BX_TLB_MASK) >> 12);
-}
+#define BX_TLB_ENTRY_OF(lpf, len) (BX_CPU_THIS_PTR TLB.get_entry_of((lpf), (len)))
 
 typedef bx_ptr_equiv_t bx_hostpageaddr_t;
 
@@ -55,6 +72,7 @@ const Bit32u TLB_SysWriteOK    = 0x04;
 const Bit32u TLB_UserWriteOK   = 0x08;
 const Bit32u TLB_SysExecuteOK  = 0x10;
 const Bit32u TLB_UserExecuteOK = 0x20;
+const Bit32u TLB_GlobalPage    = 0x80000000;
 
 #if BX_SUPPORT_PKEYS
 
@@ -99,7 +117,8 @@ typedef unsigned BxMemtype;
   #define MEMTYPE(memtype) (BX_MEMTYPE_UC)
 #endif
 
-typedef struct {
+struct bx_TLB_entry
+{
   bx_address lpf;       // linear page frame
   bx_phy_address ppf;   // physical page frame
   bx_hostpageaddr_t hostPageAddr;
@@ -108,10 +127,11 @@ typedef struct {
   Bit32u pkey;
 #endif
   Bit32u lpf_mask;      // linear address mask of the page size
-
 #if BX_SUPPORT_MEMTYPE
   Bit32u memtype;      // keep it Bit32u for alignment
 #endif
+
+  bx_TLB_entry() { invalidate(); }
 
   BX_CPP_INLINE bx_bool valid() const { return lpf != BX_INVALID_TLB_ENTRY; }
 
@@ -121,34 +141,88 @@ typedef struct {
   }
 
   BX_CPP_INLINE Bit32u get_memtype() const { return MEMTYPE(memtype); }
+};
 
-} bx_TLB_entry;
-
-#if BX_SUPPORT_X86_64
-const bx_address LPF_MASK = BX_CONST64(0xfffffffffffff000);
-#else
-const bx_address LPF_MASK = 0xfffff000;
+template <unsigned size>
+struct TLB {
+  bx_TLB_entry entry[size];
+#if BX_CPU_LEVEL >= 5
+  bx_bool split_large;
 #endif
 
-#if BX_PHY_ADDRESS_LONG
-const bx_phy_address PPF_MASK = BX_CONST64(0xfffffffffffff000);
-#else
-const bx_phy_address PPF_MASK = 0xfffff000;
+public:
+  TLB() { flush(); }
+
+  BX_CPP_INLINE static unsigned get_index_of(bx_address lpf, unsigned len = 0)
+  {
+    const Bit32u tlb_mask = ((size-1) << 12);
+    return (((unsigned(lpf) + len) & tlb_mask) >> 12);
+  }
+
+  BX_CPP_INLINE bx_TLB_entry *get_entry_of(bx_address lpf, unsigned len = 0)
+  {
+    return &entry[get_index_of(lpf, len)];
+  }
+
+  BX_CPP_INLINE void flush(void)
+  {
+    for (unsigned n=0; n < size; n++)
+      entry[n].invalidate();
+
+#if BX_CPU_LEVEL >= 5
+    split_large = false;  // flushing whole TLB
+#endif
+  }
+
+#if BX_CPU_LEVEL >= 6
+  BX_CPP_INLINE void flushNonGlobal(void)
+  {
+    Bit32u lpf_mask = 0;
+
+    for (unsigned n=0; n<size; n++) {
+      bx_TLB_entry *tlbEntry = &entry[n];
+      if (tlbEntry->valid()) {
+        if (!(tlbEntry->accessBits & TLB_GlobalPage))
+          tlbEntry->invalidate();
+        else
+          lpf_mask |= tlbEntry->lpf_mask;
+      }
+    }
+
+    split_large = (lpf_mask > 0xfff);
+  }
 #endif
 
-BX_CPP_INLINE Bit32u PAGE_OFFSET(bx_address laddr)
-{
-  return (Bit32u)(laddr) & 0xfff;
-}
+  BX_CPP_INLINE void invlpg(bx_address laddr)
+  {
+#if BX_CPU_LEVEL >= 5
+    if (split_large) {
+      Bit32u lpf_mask = 0;
 
-BX_CPP_INLINE bx_address LPFOf(bx_address laddr) { return laddr & LPF_MASK; }
-BX_CPP_INLINE bx_address PPFOf(bx_phy_address paddr) { return paddr & PPF_MASK; }
+      // make sure INVLPG handles correctly large pages
+      for (unsigned n=0; n<size; n++) {
+        bx_TLB_entry *tlbEntry = &entry[n];
+        if (tlbEntry->valid()) {
+          bx_address entry_lpf_mask = tlbEntry->lpf_mask;
+          if ((laddr & ~entry_lpf_mask) == (tlbEntry->lpf & ~entry_lpf_mask)) {
+            tlbEntry->invalidate();
+          }
+          else {
+            lpf_mask |= entry_lpf_mask;
+          }
+        }
+      }
 
-BX_CPP_INLINE bx_address AlignedAccessLPFOf(bx_address laddr, unsigned alignment_mask)
-{
-  return laddr & (LPF_MASK | alignment_mask);
-}
-
-#define BX_TLB_ENTRY_OF(lpf, len) (&BX_CPU_THIS_PTR TLB.entry[BX_TLB_INDEX_OF((lpf), (len))])
+      split_large = (lpf_mask > 0xfff);
+    }
+    else
+#endif
+    {
+      bx_TLB_entry *tlbEntry = get_entry_of(laddr);
+      if (LPFOf(tlbEntry->lpf) == LPFOf(laddr))
+        tlbEntry->invalidate();
+    }
+  }
+};
 
 #endif

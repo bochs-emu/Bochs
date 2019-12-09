@@ -1167,13 +1167,8 @@ public: // for now...
 #define BX_INSTR_FAR_BRANCH_ORIGIN()
 #endif
 
-  // for paging
-  struct {
-    bx_TLB_entry entry[BX_TLB_SIZE] BX_CPP_AlignN(16);
-#if BX_CPU_LEVEL >= 5
-    bx_bool split_large;
-#endif
-  } TLB;
+#define BX_TLB_SIZE 2048
+  TLB<BX_TLB_SIZE> TLB BX_CPP_AlignN(16);
 
 #if BX_CPU_LEVEL >= 6
   struct {
