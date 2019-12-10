@@ -2109,26 +2109,33 @@ Bit32u BX_CPU_C::LoadMSRs(Bit32u msr_cnt, bx_phy_address pAddr)
     BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 8, MEMTYPE(resolve_memtype(pAddr)), BX_READ, BX_VMX_LOAD_MSR_ACCESS, (Bit8u*)(&msr_lo));
     access_read_physical(pAddr + 8, 8, &msr_hi);
     BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr + 8, 8, MEMTYPE(resolve_memtype(pAddr)), BX_READ, BX_VMX_LOAD_MSR_ACCESS, (Bit8u*)(&msr_hi));
+    pAddr += 16; // to next MSR
 
-    if (GET32H(msr_lo))
+    if (GET32H(msr_lo)) {
+      BX_ERROR(("VMX LoadMSRs %d: broken msr index 0x" FMT_LL "x", msr, msr_lo));
       return msr;
+    }
 
     Bit32u index = GET32L(msr_lo);
 
 #if BX_SUPPORT_X86_64
-    if (index == BX_MSR_FSBASE || index == BX_MSR_GSBASE)
+    if (index == BX_MSR_FSBASE || index == BX_MSR_GSBASE) {
+      BX_ERROR(("VMX LoadMSRs %d: unable to restore FSBASE or GSBASE", msr));
       return msr;
+    }
 #endif
 
     if (is_cpu_extension_supported(BX_ISA_X2APIC)) {
-      if ((index & 0xfffff800) == 0x800) // X2APIC range
+      if (is_x2apic_msr_range(index)) {
+        BX_ERROR(("VMX LoadMSRs %d: unable to restore X2APIC range MSR %x", msr, index));
         return msr;
+      }
     }
 
-    if (! wrmsr(index, msr_hi))
+    if (! wrmsr(index, msr_hi)) {
+      BX_ERROR(("VMX LoadMSRs %d: unable to set up MSR %x", msr, index));
       return msr;
-
-    pAddr += 16; // to next MSR
+    }
   }
 
   return 0;
@@ -2143,18 +2150,24 @@ Bit32u BX_CPU_C::StoreMSRs(Bit32u msr_cnt, bx_phy_address pAddr)
     BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 8, MEMTYPE(resolve_memtype(pAddr)),
                                           BX_READ, BX_VMX_STORE_MSR_ACCESS, (Bit8u*)(&msr_lo));
 
-    if (GET32H(msr_lo))
+    if (GET32H(msr_lo)) {
+      BX_ERROR(("VMX StoreMSRs %d: broken msr index 0x" FMT_LL "x", msr, msr_lo));
       return msr;
+    }
 
     Bit32u index = GET32L(msr_lo);
 
     if (is_cpu_extension_supported(BX_ISA_X2APIC)) {
-      if ((index & 0xfffff800) == 0x800) // X2APIC range
+      if (is_x2apic_msr_range(index)) {
+        BX_ERROR(("VMX StoreMSRs %d: unable to save X2APIC range MSR %x", msr, index));
         return msr;
+      }
     }
 
-    if (! rdmsr(index, &msr_hi))
+    if (! rdmsr(index, &msr_hi)) {
+      BX_ERROR(("VMX StoreMSRs %d: unable to read MSR %x", msr, index));
       return msr;
+    }
 
     access_write_physical(pAddr + 8, 8, &msr_hi);
     BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr + 8, 8, MEMTYPE(resolve_memtype(pAddr)),
