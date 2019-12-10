@@ -2877,7 +2877,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
 
   Bit32u msr = LoadMSRs(BX_CPU_THIS_PTR vmcs.vmentry_msr_load_cnt, BX_CPU_THIS_PTR vmcs.vmentry_msr_load_addr);
   if (msr) {
-    BX_ERROR(("VMEXIT: Error when loading guest MSR 0x%08x", msr));
+    BX_ERROR(("VMEXIT: Error when loading guest MSR number %d", msr));
     VMexit(VMX_VMEXIT_VMENTRY_FAILURE_MSR | (1 << 31), msr);
   }
 
