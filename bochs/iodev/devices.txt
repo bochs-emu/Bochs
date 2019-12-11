@@ -13,6 +13,8 @@ MOTHER BOARD (i430FX / i440FX / i440BX support)                                 
   |        |
   |        +---- PIIX4 ACPI support                             acpi.cc
   |
+  +---- High Precision Event Timer                              hpet.cc
+  |
   +---- PCI host device mapping (Linux only)                    pcidev.cc
   |
   +---- Integrated peripherals
