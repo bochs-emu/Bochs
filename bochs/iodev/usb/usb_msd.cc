@@ -715,7 +715,7 @@ int usb_msd_device_c::handle_data(USBPacket *p)
 
           s.usb_buf = data;
           s.usb_len = len;
-          if (s.scsi_len) {
+          while (s.usb_len && s.scsi_len) {
             copy_data();
           }
           if (s.residue && s.usb_len) {
@@ -771,7 +771,7 @@ int usb_msd_device_c::handle_data(USBPacket *p)
             len = s.data_len;
           s.usb_buf = data;
           s.usb_len = len;
-          if (s.scsi_len) {
+          while (s.usb_len && s.scsi_len) {
             copy_data();
           }
           if (s.residue && s.usb_len) {
