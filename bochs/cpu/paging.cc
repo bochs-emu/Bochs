@@ -2428,11 +2428,18 @@ bx_hostpageaddr_t BX_CPU_C::getHostMemAddr(bx_phy_address paddr, unsigned rw)
 #if BX_LARGE_RAMFILE
 bx_bool BX_CPU_C::check_addr_in_tlb_buffers(const Bit8u *addr, const Bit8u *end)
 {
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR vmcshostptr) {
+      if ((BX_CPU_THIS_PTR vmcshostptr >= (const bx_hostpageaddr_t)addr) &&
+          (BX_CPU_THIS_PTR vmcshostptr  < (const bx_hostpageaddr_t)end)) return true;
+  }
+#endif
+
   for (unsigned tlb_entry_num=0; tlb_entry_num < BX_DTLB_SIZE; tlb_entry_num++) {
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR DTLB.entry[tlb_entry_num];
     if (tlbEntry->valid()) {
-      if (((tlbEntry->hostPageAddr) >= (const bx_hostpageaddr_t)addr) &&
-          ((tlbEntry->hostPageAddr)  < (const bx_hostpageaddr_t)end))
+      if ((tlbEntry->hostPageAddr >= (const bx_hostpageaddr_t)addr) &&
+          (tlbEntry->hostPageAddr  < (const bx_hostpageaddr_t)end))
         return true;
     }
   }
@@ -2440,8 +2447,8 @@ bx_bool BX_CPU_C::check_addr_in_tlb_buffers(const Bit8u *addr, const Bit8u *end)
   for (unsigned tlb_entry_num=0; tlb_entry_num < BX_ITLB_SIZE; tlb_entry_num++) {
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR ITLB.entry[tlb_entry_num];
     if (tlbEntry->valid()) {
-      if (((tlbEntry->hostPageAddr) >= (const bx_hostpageaddr_t)addr) &&
-          ((tlbEntry->hostPageAddr)  < (const bx_hostpageaddr_t)end))
+      if ((tlbEntry->hostPageAddr >= (const bx_hostpageaddr_t)addr) &&
+          (tlbEntry->hostPageAddr  < (const bx_hostpageaddr_t)end))
         return true;
     }
   }
