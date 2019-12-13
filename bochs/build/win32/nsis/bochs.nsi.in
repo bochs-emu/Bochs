@@ -23,8 +23,15 @@
 !define MULTIUSER_EXECUTIONLEVEL Highest
 !define MULTIUSER_MUI
 !include MultiUser.nsh
- ;--------------------------------
+;---------------------
 
+;Include 64-bit support
+
+!include "x64.nsh"
+
+;--------------------------------
+
+!define BITS @BOCHS_BITS@
 !define VERSION   @VERSION@
 !define VER_MAJOR @VER_MAJOR@
 !define VER_MINOR @VER_MINOR@
@@ -60,7 +67,7 @@ Var IndependentSectionState
   InstType "Full (with DLX Linux demo)"
 
   ;Folder-select dialog
-  InstallDir $PROGRAMFILES\Bochs-${VERSION}
+  InstallDir $PROGRAMFILES${BITS}\Bochs-${VERSION}
   InstallDirRegKey HKLM "Software\Bochs" ""
 
 ;--------------------------------
@@ -257,6 +264,7 @@ SectionEnd
 
 
 Section -post
+  SetRegView ${BITS}
   ; Register Uninstaller
   WriteRegStr HKLM "Software\Bochs" "" $INSTDIR
   WriteRegDword HKLM "Software\Bochs" "VersionMajor" "${VER_MAJOR}"
@@ -282,6 +290,8 @@ SectionEnd
 ;Uninstaller Section
 
 Section "Uninstall"
+
+  SetRegView ${BITS}
 
   ReadRegStr $1 HKCR ".bxrc" ""
 
@@ -338,6 +348,12 @@ SectionEnd
 Function .onInit
   !insertmacro MULTIUSER_INIT
 
+!if ${BITS} == 64
+  ${IfNot} ${RunningX64}
+    MessageBox MB_ICONSTOP "This Bochs package does not run on 32-bit Windows"
+    Abort
+  ${Endif}
+!endif
   # This is necessary otherwise SecDLXIcon won't be selectable for the first time you click it.
   SectionGetFlags ${SecDLX} $R0
   IntOp $R0 $R0 & ${SF_SELECTED}
@@ -409,6 +425,7 @@ Var OldInstDir
 
 Function PageReinstall
 
+  SetRegView ${BITS}
   ReadRegStr $R0 HKLM "Software\Bochs 2.6.9" ""
   ReadRegStr $R1 HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs 2.6.9" "UninstallString"
   ReadRegStr $R2 HKLM "Software\Bochs" ""
@@ -503,6 +520,7 @@ Function PageLeaveReinstall
   StrCmp $R1 "1" reinst_done ; Same version, skip to add/reinstall components?
 
   reinst_uninstall:
+  SetRegView ${BITS}
   ReadRegStr $R1 HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs" "UninstallString"
   ${If} $R1 == ""
     ReadRegStr $R1 HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs 2.6.9" "UninstallString"
