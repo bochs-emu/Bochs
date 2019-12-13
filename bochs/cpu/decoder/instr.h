@@ -79,14 +79,16 @@ public:
     Bit8u metaInfo1;
   } metaInfo;
 
-#define BX_INSTR_METADATA_DST   0
-#define BX_INSTR_METADATA_SRC1  1
-#define BX_INSTR_METADATA_SRC2  2
-#define BX_INSTR_METADATA_SRC3  3
-#define BX_INSTR_METADATA_SEG   4
-#define BX_INSTR_METADATA_BASE  5
-#define BX_INSTR_METADATA_INDEX 6
-#define BX_INSTR_METADATA_SCALE 7
+  enum {
+    BX_INSTR_METADATA_DST   = 0,
+    BX_INSTR_METADATA_SRC1  = 1,
+    BX_INSTR_METADATA_SRC2  = 2,
+    BX_INSTR_METADATA_SRC3  = 3,
+    BX_INSTR_METADATA_SEG   = 4,
+    BX_INSTR_METADATA_BASE  = 5,
+    BX_INSTR_METADATA_INDEX = 6,
+    BX_INSTR_METADATA_SCALE = 7
+  };
 
   // using 5-bit field for registers (16 regs in 64-bit, RIP, NIL)
   Bit8u metaData[8];

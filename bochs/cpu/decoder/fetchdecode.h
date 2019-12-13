@@ -28,10 +28,12 @@
 // Metadata for decoder...
 //
 
-#define SSE_PREFIX_NONE 0
-#define SSE_PREFIX_66   1
-#define SSE_PREFIX_F3   2
-#define SSE_PREFIX_F2   3
+enum {
+  SSE_PREFIX_NONE = 0,
+  SSE_PREFIX_66   = 1,
+  SSE_PREFIX_F3   = 2,
+  SSE_PREFIX_F2   = 3
+};
 
 enum {
   BX_ILLEGAL_OPCODE,
