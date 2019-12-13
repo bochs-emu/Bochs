@@ -2435,6 +2435,13 @@ bx_bool BX_CPU_C::check_addr_in_tlb_buffers(const Bit8u *addr, const Bit8u *end)
   }
 #endif
 
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR vmcbhostptr) {
+    if ((BX_CPU_THIS_PTR vmcbhostptr >= (const bx_hostpageaddr_t)addr) &&
+        (BX_CPU_THIS_PTR vmcbhostptr  < (const bx_hostpageaddr_t)end)) return true;
+  }
+#endif
+
   for (unsigned tlb_entry_num=0; tlb_entry_num < BX_DTLB_SIZE; tlb_entry_num++) {
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR DTLB.entry[tlb_entry_num];
     if (tlbEntry->valid()) {
