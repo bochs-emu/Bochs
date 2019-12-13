@@ -280,7 +280,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_MASK_VectorD(bxInstruction_
   unsigned len = i->getVL();
 
   if (i->getEvexb()) {
-    Bit32u val_32 = read_virtual_dword(i->seg(), eaddr);
+    Bit32u val_32 = (opmask & 0x1) ? read_virtual_dword(i->seg(), eaddr) : 0;
     simd_pbroadcastd(&BX_AVX_REG(BX_VECTOR_TMP_REGISTER), val_32, len * 4);
   }
   else {
@@ -326,7 +326,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_MASK_VectorQ(bxInstruction_
   unsigned len = i->getVL();
 
   if (i->getEvexb()) {
-    Bit64u val_64 = read_virtual_qword(i->seg(), eaddr);
+    Bit64u val_64 = (opmask & 0x1) ? read_virtual_qword(i->seg(), eaddr) : 0;
     simd_pbroadcastq(&BX_AVX_REG(BX_VECTOR_TMP_REGISTER), val_64, len * 2);
   }
   else {
@@ -378,7 +378,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_MASK_Half_VectorD(bxInstruc
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
 
   if (i->getEvexb()) {
-    Bit32u val_32 = read_virtual_dword(i->seg(), eaddr);
+    Bit32u val_32 = (opmask & 0x1) ? read_virtual_dword(i->seg(), eaddr) : 0;
     simd_pbroadcastd(&BX_AVX_REG(BX_VECTOR_TMP_REGISTER), val_32, len * 2);
   }
   else {
