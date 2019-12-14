@@ -8,7 +8,7 @@
 //
 //  Modified by Bruce Ewing
 //
-//  Copyright (C) 2008-2014  The Bochs Project
+//  Copyright (C) 2008-2019  The Bochs Project
 
 
 #ifndef BX_ENH_DBG_DEF_H
@@ -394,7 +394,7 @@ extern Bit8u RegColor[TOT_REG_NUM];    // specifies foreground and background co
 extern int RitemToRnum[TOT_REG_NUM];   // mapping from Reg List Item# to register number
 
 // do the linear breakpoint list as 2 arrays, rather than a structure -- much easier to search!
-extern bx_address BrkLAddr[BX_DBG_MAX_LIN_BPOINTS];
+extern bx_address BrkLAddr[BX_DBG_MAX_LIN_BPOINTS+1];
 extern int BreakCount;
 
 // Breakpoint Dump Window stuff

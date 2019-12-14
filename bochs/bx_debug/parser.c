@@ -3582,7 +3582,7 @@ yyreduce:
   case 211:
 #line 1089 "parser.y" /* yacc.c:1646  */
     {
-         dbg_printf("trace-mem on  - print all memory accesses occured during instruction execution\n");
+         dbg_printf("trace-mem on  - print all memory accesses occurred during instruction execution\n");
          dbg_printf("trace-mem off - disable memory accesses tracing\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }

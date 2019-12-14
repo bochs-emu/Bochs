@@ -8,7 +8,7 @@
 //
 //  Modified by Bruce Ewing
 //
-//  Copyright (C) 2008-2017  The Bochs Project
+//  Copyright (C) 2008-2019  The Bochs Project
 
 #include "config.h"
 
@@ -222,8 +222,8 @@ static const char *BrkName[5] = {
    "Read Watchpoint",
 };
 
-bx_address BrkLAddr[BX_DBG_MAX_LIN_BPOINTS];
-unsigned BrkIdx[BX_DBG_MAX_LIN_BPOINTS];
+bx_address BrkLAddr[BX_DBG_MAX_LIN_BPOINTS+1];
+unsigned BrkIdx[BX_DBG_MAX_LIN_BPOINTS+1];
 int BreakCount = 0;
 
 // Breakpoint Dump Window stuff
