@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2013  The Bochs Project
+//  Copyright (C) 2001-2019  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -174,7 +174,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_error
     }
 
     // load CS:RIP (guaranteed to be in 64 bit mode)
-    branch_far64(&cs_selector, &cs_descriptor, gate_dest_offset, cs_descriptor.dpl);
+    branch_far(&cs_selector, &cs_descriptor, gate_dest_offset, cs_descriptor.dpl);
 
     // set up null SS descriptor
     load_null_selector(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], cs_descriptor.dpl);
@@ -215,7 +215,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_error
     }
 
     // set the RPL field of CS to CPL
-    branch_far64(&cs_selector, &cs_descriptor, gate_dest_offset, CPL);
+    branch_far(&cs_selector, &cs_descriptor, gate_dest_offset, CPL);
   }
   else {
     BX_ERROR(("interrupt(long mode): bad descriptor type %u (CS.DPL=%u CPL=%u)",

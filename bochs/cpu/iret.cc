@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2005-2017 Stanislav Shwartsman
+//   Copyright (c) 2005-2019 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -167,7 +167,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
   if (cs_selector.rpl == CPL) { /* INTERRUPT RETURN TO SAME LEVEL */
 
     /* load CS-cache with new code segment descriptor */
-    branch_far32(&cs_selector, &cs_descriptor, new_eip, cs_selector.rpl);
+    branch_far(&cs_selector, &cs_descriptor, new_eip, cs_selector.rpl);
 
     /* top 6/12 bytes on stack must be within limits, else #SS(0) */
     /* satisfied above */
@@ -287,7 +287,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     /* load CS:EIP from stack */
     /* load the CS-cache with CS descriptor */
     /* set CPL to the RPL of the return CS selector */
-    branch_far32(&cs_selector, &cs_descriptor, new_eip, cs_selector.rpl);
+    branch_far(&cs_selector, &cs_descriptor, new_eip, cs_selector.rpl);
 
     // IF only changed if (prev_CPL <= EFLAGS.IOPL)
     // VIF, VIP, IOPL only changed if prev_CPL == 0
@@ -397,12 +397,7 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
 
     /* load CS:EIP from stack */
     /* load CS-cache with new code segment descriptor */
-    if(cs_descriptor.u.segment.l) {
-      branch_far64(&cs_selector, &cs_descriptor, new_rip, CPL);
-    }
-    else {
-      branch_far32(&cs_selector, &cs_descriptor, (Bit32u) new_rip, CPL);
-    }
+    branch_far(&cs_selector, &cs_descriptor, new_rip, CPL);
 
     // ID,VIP,VIF,AC,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
     Bit32u changeMask = EFlagsOSZAPCMask | EFlagsTFMask | EFlagsDFMask |
@@ -514,7 +509,7 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
       changeMask &= 0xffff;
 
     /* set CPL to the RPL of the return CS selector */
-    branch_far64(&cs_selector, &cs_descriptor, new_rip, cs_selector.rpl);
+    branch_far(&cs_selector, &cs_descriptor, new_rip, cs_selector.rpl);
 
     // IF only changed if (prev_CPL <= EFLAGS.IOPL)
     // VIF, VIP, IOPL only changed if prev_CPL == 0

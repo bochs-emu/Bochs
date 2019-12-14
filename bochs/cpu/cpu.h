@@ -4416,10 +4416,8 @@ public: // for now...
 #if BX_SUPPORT_X86_64
   BX_SMF void branch_near64(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
-  BX_SMF void branch_far32(bx_selector_t *selector,
-       bx_descriptor_t *descriptor, Bit32u eip, Bit8u cpl);
-  BX_SMF void branch_far64(bx_selector_t *selector,
-       bx_descriptor_t *descriptor, bx_address rip, Bit8u cpl);
+  BX_SMF void branch_far(bx_selector_t *selector,
+       bx_descriptor_t *descriptor, bx_address rip, unsigned cpl);
 
 #if BX_SUPPORT_REPEAT_SPEEDUPS
   BX_SMF Bit32u FastRepMOVSB(unsigned srcSeg, Bit32u srcOff, unsigned dstSeg, Bit32u dstOff, Bit32u byteCount, Bit32u granularity);

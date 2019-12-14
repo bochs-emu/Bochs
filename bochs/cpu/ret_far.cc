@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2005-2012 Stanislav Shwartsman
+//   Copyright (c) 2005-2019 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -103,7 +103,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
   {
     BX_DEBUG(("return_protected: return to SAME PRIVILEGE LEVEL"));
 
-    branch_far64(&cs_selector, &cs_descriptor, return_RIP, CPL);
+    branch_far(&cs_selector, &cs_descriptor, return_RIP, CPL);
 
 #if BX_SUPPORT_X86_64
     if (long64_mode())
@@ -200,7 +200,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
       }
     }
 
-    branch_far64(&cs_selector, &cs_descriptor, return_RIP, cs_selector.rpl);
+    branch_far(&cs_selector, &cs_descriptor, return_RIP, cs_selector.rpl);
 
     if ((raw_ss_selector & 0xfffc) != 0) {
       // load SS:RSP from stack

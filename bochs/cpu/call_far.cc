@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2005-2012 Stanislav Shwartsman
+//   Copyright (c) 2005-2019 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -81,7 +81,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
       // load code segment descriptor into CS cache
       // load CS with new code segment selector
       // set RPL of CS to CPL
-      branch_far64(&cs_selector, &cs_descriptor, disp, CPL);
+      branch_far(&cs_selector, &cs_descriptor, disp, CPL);
 
       RSP = temp_rsp;
     }
@@ -127,7 +127,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
       // load code segment descriptor into CS cache
       // load CS with new code segment selector
       // set RPL of CS to CPL
-      branch_far64(&cs_selector, &cs_descriptor, disp, CPL);
+      branch_far(&cs_selector, &cs_descriptor, disp, CPL);
 
       if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
         ESP = (Bit32u) temp_RSP;
@@ -451,7 +451,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
     // load CS:EIP from gate
     // load code segment descriptor into CS register
     // set RPL of CS to CPL
-    branch_far32(&cs_selector, &cs_descriptor, new_EIP, CPL);
+    branch_far(&cs_selector, &cs_descriptor, new_EIP, CPL);
   }
 }
 
@@ -535,7 +535,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
     RSP_for_cpl_x -= 32;
 
     // load CS:RIP (guaranteed to be in 64 bit mode)
-    branch_far64(&cs_selector, &cs_descriptor, new_RIP, cs_descriptor.dpl);
+    branch_far(&cs_selector, &cs_descriptor, new_RIP, cs_descriptor.dpl);
 
     // set up null SS descriptor
     load_null_selector(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], cs_descriptor.dpl);
@@ -551,7 +551,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
     write_new_stack_qword(RSP - 16, CPL, old_RIP);
 
     // load CS:RIP (guaranteed to be in 64 bit mode)
-    branch_far64(&cs_selector, &cs_descriptor, new_RIP, CPL);
+    branch_far(&cs_selector, &cs_descriptor, new_RIP, CPL);
 
     RSP -= 16;
   }
