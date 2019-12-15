@@ -141,8 +141,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear16_Iw(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar16_Iw(bxInstruction_c *i)
 {
-  Bit16u ip, cs_raw;
-
   BX_INSTR_FAR_BRANCH_ORIGIN();
 
   invalidate_prefetch_q();
@@ -153,33 +151,31 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar16_Iw(bxInstruction_c *i)
 
   Bit16s imm16 = (Bit16s) i->Iw();
 
-  if (protected_mode()) {
-    return_protected(i, imm16);
-    goto done;
-  }
-
   RSP_SPECULATIVE;
 
-  ip     = pop_16();
-  cs_raw = pop_16();
+  if (protected_mode()) {
+    return_protected(i, imm16);
+  }
+  else {
+    Bit16u ip     = pop_16();
+    Bit16u cs_raw = pop_16();
 
-  // CS.LIMIT can't change when in real/v8086 mode
-  if (ip > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-    BX_ERROR(("%s: instruction pointer not within code segment limits", i->getIaOpcodeNameShort()));
-    exception(BX_GP_EXCEPTION, 0);
+    // CS.LIMIT can't change when in real/v8086 mode
+    if (ip > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
+      BX_ERROR(("%s: instruction pointer not within code segment limits", i->getIaOpcodeNameShort()));
+      exception(BX_GP_EXCEPTION, 0);
+    }
+
+    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
+    EIP = (Bit32u) ip;
+
+    if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
+      ESP += imm16;
+    else
+       SP += imm16;
   }
 
-  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
-  EIP = (Bit32u) ip;
-
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
-    ESP += imm16;
-  else
-     SP += imm16;
-
   RSP_COMMIT;
-
-done:
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET,
                       FAR_BRANCH_PREV_CS, FAR_BRANCH_PREV_RIP,
@@ -522,36 +518,34 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET16(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_iret;
 #endif
 
-  if (protected_mode()) {
-    iret_protected(i);
-    goto done;
-  }
-
   RSP_SPECULATIVE;
 
-  if (v8086_mode()) {
-    // IOPL check in stack_return_from_v86()
-    iret16_stack_return_from_v86(i);
+  if (protected_mode()) {
+    iret_protected(i);
   }
   else {
-    Bit16u ip     = pop_16();
-    Bit16u cs_raw = pop_16(); // #SS has higher priority
-    Bit16u flags  = pop_16();
-
-    // CS.LIMIT can't change when in real/v8086 mode
-    if(ip > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-      BX_ERROR(("%s: instruction pointer not within code segment limits", i->getIaOpcodeNameShort()));
-      exception(BX_GP_EXCEPTION, 0);
+    if (v8086_mode()) {
+      // IOPL check in stack_return_from_v86()
+      iret16_stack_return_from_v86(i);
     }
+    else {
+      Bit16u ip     = pop_16();
+      Bit16u cs_raw = pop_16(); // #SS has higher priority
+      Bit16u flags  = pop_16();
 
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
-    EIP = (Bit32u) ip;
-    write_flags(flags, /* change IOPL? */ 1, /* change IF? */ 1);
+      // CS.LIMIT can't change when in real/v8086 mode
+      if(ip > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
+        BX_ERROR(("%s: instruction pointer not within code segment limits", i->getIaOpcodeNameShort()));
+        exception(BX_GP_EXCEPTION, 0);
+      }
+
+      load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
+      EIP = (Bit32u) ip;
+      write_flags(flags, /* change IOPL? */ 1, /* change IF? */ 1);
+    }
   }
 
   RSP_COMMIT;
-
-done:
 
 #if BX_SUPPORT_VMX
   BX_CPU_THIS_PTR nmi_unblocking_iret = 0;

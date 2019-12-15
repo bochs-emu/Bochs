@@ -499,6 +499,21 @@ enum {
 
 static const char *bx_paging_level[4] = { "PTE", "PDE", "PDPE", "PML4" }; // keep it 4 letters
 
+// combined_access legend:
+// -----------------------
+// 00    |
+// 01    | R/W
+// 02    | U/S
+// 03    |
+// 08    | Global
+// 11-09 | memtype (3 bits)
+
+enum {
+  BX_COMBINED_ACCESS_WRITE = 0x2,
+  BX_COMBINED_ACCESS_USER  = 0x4,
+  BX_COMBINED_GLOBAL_PAGE  = 0x100,
+};
+
 #if BX_CPU_LEVEL >= 6
 
 //                Format of a Long Mode Non-Leaf Entry
@@ -640,7 +655,7 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
 
   Bit64u offset_mask = BX_CONST64(0x0000ffffffffffff);
   lpf_mask = 0xfff;
-  Bit32u combined_access = 0x06;
+  Bit32u combined_access = (BX_COMBINED_ACCESS_WRITE | BX_COMBINED_ACCESS_USER);
   Bit64u curr_entry = BX_CPU_THIS_PTR cr3;
 
   Bit64u reserved = PAGING_PAE_RESERVED_BITS;
@@ -728,13 +743,13 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
     page_fault(ERROR_PROTECTION, laddr, user, rw);
 
   if (BX_CPU_THIS_PTR cr4.get_SMEP() && rw == BX_EXECUTE && !user) {
-    if (combined_access & 0x4) // User page
+    if (combined_access & BX_COMBINED_ACCESS_USER)
       page_fault(ERROR_PROTECTION, laddr, user, rw);
   }
 
   // SMAP protections are disabled if EFLAGS.AC=1
   if (BX_CPU_THIS_PTR cr4.get_SMAP() && ! BX_CPU_THIS_PTR get_AC() && rw != BX_EXECUTE && ! user) {
-    if (combined_access & 0x4) // User page
+    if (combined_access & BX_COMBINED_ACCESS_USER)
       page_fault(ERROR_PROTECTION, laddr, user, rw);
   }
 
@@ -885,7 +900,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
   int leaf;
 
   lpf_mask = 0xfff;
-  Bit32u combined_access = 0x06;
+  Bit32u combined_access = (BX_COMBINED_ACCESS_WRITE | BX_COMBINED_ACCESS_USER);
 
   Bit64u reserved = PAGING_LEGACY_PAE_RESERVED_BITS;
   if (! BX_CPU_THIS_PTR efer.get_NXE())
@@ -949,13 +964,13 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
     page_fault(ERROR_PROTECTION, laddr, user, rw);
 
   if (BX_CPU_THIS_PTR cr4.get_SMEP() && rw == BX_EXECUTE && !user) {
-    if (combined_access & 0x4) // User page
+    if (combined_access & BX_COMBINED_ACCESS_USER)
       page_fault(ERROR_PROTECTION, laddr, user, rw);
   }
 
   // SMAP protections are disabled if EFLAGS.AC=1
   if (BX_CPU_THIS_PTR cr4.get_SMAP() && ! BX_CPU_THIS_PTR get_AC() && rw != BX_EXECUTE && ! user) {
-    if (combined_access & 0x4) // User page
+    if (combined_access & BX_COMBINED_ACCESS_USER)
       page_fault(ERROR_PROTECTION, laddr, user, rw);
   }
 
@@ -1007,7 +1022,7 @@ bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_m
   int leaf;
 
   lpf_mask = 0xfff;
-  Bit32u combined_access = 0x06;
+  Bit32u combined_access = (BX_COMBINED_ACCESS_WRITE | BX_COMBINED_ACCESS_USER);
   Bit32u curr_entry = (Bit32u) BX_CPU_THIS_PTR cr3;
 
   for (leaf = BX_LEVEL_PDE;; --leaf) {
@@ -1074,13 +1089,13 @@ bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_m
 
 #if BX_CPU_LEVEL >= 6
   if (BX_CPU_THIS_PTR cr4.get_SMEP() && rw == BX_EXECUTE && !user) {
-    if (combined_access & 0x4) // User page
+    if (combined_access & BX_COMBINED_ACCESS_USER)
       page_fault(ERROR_PROTECTION, laddr, user, rw);
   }
 
   // SMAP protections are disabled if EFLAGS.AC=1
   if (BX_CPU_THIS_PTR cr4.get_SMAP() && ! BX_CPU_THIS_PTR get_AC() && rw != BX_EXECUTE && ! user) {
-    if (combined_access & 0x4) // User page
+    if (combined_access & BX_COMBINED_ACCESS_USER)
       page_fault(ERROR_PROTECTION, laddr, user, rw);
   }
 
@@ -1171,7 +1186,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
     INC_TLB_STAT(tlbWriteMisses);
 
   Bit32u lpf_mask = 0xfff; // 4K pages
-  Bit32u combined_access = 0x06;
+  Bit32u combined_access = (BX_COMBINED_ACCESS_WRITE | BX_COMBINED_ACCESS_USER);
 #if BX_SUPPORT_X86_64
   Bit32u pkey = 0;
 #endif
@@ -1263,7 +1278,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
       tlbEntry->accessBits |= TLB_UserReadOK | TLB_UserWriteOK;
   }
   else {
-    if ((combined_access & 4) != 0) { // User Page
+    if ((combined_access & BX_COMBINED_ACCESS_USER) != 0) {
 
       if (user) {
         if (isExecute) {
@@ -1464,7 +1479,7 @@ bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsig
   SVM_HOST_STATE *host_state = &BX_CPU_THIS_PTR vmcb.host_state;
   bx_phy_address ppf = ctrls->ncr3 & BX_CR3_PAGING_MASK;
   Bit64u offset_mask = BX_CONST64(0x0000ffffffffffff);
-  unsigned combined_access = 0x06;
+  unsigned combined_access = BX_COMBINED_ACCESS_WRITE | BX_COMBINED_ACCESS_USER;
 
   Bit64u reserved = PAGING_PAE_RESERVED_BITS;
   if (! host_state->efer.get_NXE())
@@ -1524,7 +1539,7 @@ bx_phy_address BX_CPU_C::nested_walk_PAE(bx_phy_address guest_paddr, unsigned rw
   bx_bool nx_fault = 0;
   int leaf;
 
-  unsigned combined_access = 0x06;
+  unsigned combined_access = BX_COMBINED_ACCESS_WRITE | BX_COMBINED_ACCESS_USER;
 
   SVM_CONTROLS *ctrls = &BX_CPU_THIS_PTR vmcb.ctrls;
   SVM_HOST_STATE *host_state = &BX_CPU_THIS_PTR vmcb.host_state;
@@ -1604,7 +1619,7 @@ bx_phy_address BX_CPU_C::nested_walk_legacy(bx_phy_address guest_paddr, unsigned
   SVM_CONTROLS *ctrls = &BX_CPU_THIS_PTR vmcb.ctrls;
   SVM_HOST_STATE *host_state = &BX_CPU_THIS_PTR vmcb.host_state;
   bx_phy_address ppf = ctrls->ncr3 & BX_CR3_PAGING_MASK;
-  unsigned combined_access = 0x06;
+  unsigned combined_access = BX_COMBINED_ACCESS_WRITE | BX_COMBINED_ACCESS_USER;
 
   for (leaf = BX_LEVEL_PDE;; --leaf) {
     entry_addr[leaf] = ppf + ((guest_paddr >> (10 + 10*leaf)) & 0xffc);
@@ -1677,14 +1692,16 @@ enum {
 };
 
 /* EPT access mask */
-#define BX_EPT_ENTRY_NOT_PRESENT        0x00
-#define BX_EPT_ENTRY_READ_ONLY          0x01
-#define BX_EPT_ENTRY_WRITE_ONLY         0x02
-#define BX_EPT_ENTRY_READ_WRITE         0x03
-#define BX_EPT_ENTRY_EXECUTE_ONLY       0x04
-#define BX_EPT_ENTRY_READ_EXECUTE       0x05
-#define BX_EPT_ENTRY_WRITE_EXECUTE      0x06
-#define BX_EPT_ENTRY_READ_WRITE_EXECUTE 0x07
+enum {
+  BX_EPT_ENTRY_NOT_PRESENT        = 0x00,
+  BX_EPT_ENTRY_READ_ONLY          = 0x01,
+  BX_EPT_ENTRY_WRITE_ONLY         = 0x02,
+  BX_EPT_ENTRY_READ_WRITE         = 0x03,
+  BX_EPT_ENTRY_EXECUTE_ONLY       = 0x04,
+  BX_EPT_ENTRY_READ_EXECUTE       = 0x05,
+  BX_EPT_ENTRY_WRITE_EXECUTE      = 0x06,
+  BX_EPT_ENTRY_READ_WRITE_EXECUTE = 0x07
+};
 
 #define BX_VMX_EPT_ACCESS_DIRTY_ENABLED (BX_CPU_THIS_PTR vmcs.eptptr & 0x40)
 
