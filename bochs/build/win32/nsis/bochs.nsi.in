@@ -59,7 +59,7 @@ Var IndependentSectionState
 
 ;General
   Name "${NAME}"
-  OutFile Bochs-${VERSION}.exe
+  OutFile Bochs-win${BITS}-${VERSION}.exe
   SetOverwrite on
 
   ; Installation Types
