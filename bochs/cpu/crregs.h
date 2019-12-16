@@ -236,6 +236,7 @@ struct bx_efer_t {
 
 #if BX_CPU_LEVEL >= 6
 
+const unsigned XSAVE_FPU_STATE_LEN          = 160;
 const unsigned XSAVE_SSE_STATE_LEN          = 256;
 const unsigned XSAVE_YMM_STATE_LEN          = 256;
 const unsigned XSAVE_OPMASK_STATE_LEN       = 64;
@@ -263,7 +264,8 @@ struct xcr0_t {
     BX_XCR0_ZMM_HI256_BIT = 6,
     BX_XCR0_HI_ZMM_BIT = 7,
     BX_XCR0_PT_BIT = 8,
-    BX_XCR0_PKRU_BIT = 9
+    BX_XCR0_PKRU_BIT = 9,
+    BX_XCR0_LAST
   };
 
 #define BX_XCR0_FPU_MASK       (1 << xcr0_t::BX_XCR0_FPU_BIT)
@@ -291,6 +293,28 @@ struct xcr0_t {
   BX_CPP_INLINE Bit32u get32() const { return val32; }
   BX_CPP_INLINE void set32(Bit32u val) { val32 = val; }
 };
+
+#if BX_USE_CPU_SMF
+typedef bx_bool (*XSaveStateInUsePtr_tR)(void);
+typedef void (*XSavePtr_tR)(bxInstruction_c *i, bx_address offset);
+typedef void (*XRestorPtr_tR)(bxInstruction_c *i, bx_address offset);
+typedef void (*XRestorInitPtr_tR)(void);
+#else
+typedef bx_bool (BX_CPU_C::*XsaveStateInUsePtr_tR)(void);
+typedef void (BX_CPU_C::*XSavePtr_tR)(bxInstruction_c *i, bx_address offset);
+typedef void (BX_CPU_C::*XRestorPtr_tR)(bxInstruction_c *i, bx_address offset);
+typedef void (BX_CPU_C::*XRestorInitPtr_tR)(void);
+#endif
+
+struct XSaveRestoreStateHelper {
+  unsigned len;
+  unsigned offset;
+  XSaveStateInUsePtr_tR xstate_in_use_method;
+  XSavePtr_tR xsave_method;
+  XRestorPtr_tR xrstor_method;
+  XRestorInitPtr_tR xrstor_init_method;
+};
+
 #endif
 
 #undef IMPLEMENT_CRREG_ACCESSORS

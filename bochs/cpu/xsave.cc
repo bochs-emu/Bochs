@@ -30,6 +30,10 @@
 
 const Bit64u XSAVEC_COMPACTION_ENABLED = BX_CONST64(0x8000000000000000);
 
+#if BX_CPU_LEVEL >= 6
+extern XSaveRestoreStateHelper xsave_restore[];
+#endif
+
 /* 0F AE /4 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
 {
@@ -59,10 +63,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
 
   bx_address asize_mask = i->asize_mask();
 
-  //
-  // We will go feature-by-feature and not run over all XCR0 bits
-  //
-
   Bit64u xstate_bv = read_virtual_qword(i->seg(), (eaddr + 512) & asize_mask);
 
   Bit32u requested_feature_bitmap = BX_CPU_THIS_PTR xcr0.get32() & EAX;
@@ -89,77 +89,28 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
   }
 
   /////////////////////////////////////////////////////////////////////////////
-  if ((requested_feature_bitmap & BX_XCR0_SSE_MASK) != 0)
+  for (unsigned feature = xcr0_t::BX_XCR0_SSE_BIT; feature < xcr0_t::BX_XCR0_LAST; feature++)
   {
-    if (! xsaveopt || (xinuse & BX_XCR0_SSE_MASK) != 0)
-      xsave_sse_state(i, eaddr+XSAVE_SSE_STATE_OFFSET);
+    Bit32u feature_mask = (1 << feature);
 
-    if (xinuse & BX_XCR0_SSE_MASK)
-      xstate_bv |=  BX_XCR0_SSE_MASK;
-    else
-      xstate_bv &= ~BX_XCR0_SSE_MASK;
+    if ((requested_feature_bitmap & feature_mask) != 0)
+    {
+      if (! xsave_restore[feature].len) {
+        BX_ERROR(("%s: feature #%d requested to save but not implemented !", i->getIaOpcodeNameShort(), feature));
+        continue;
+      }
+
+      if (! xsaveopt || (xinuse & feature_mask) != 0) {
+        BX_ASSERT(xsave_restore[feature].xsave_method);
+        xsave_restore[feature].xsave_method(i, eaddr+xsave_restore[feature].offset);
+      }
+
+      if (xinuse & feature_mask)
+        xstate_bv |=  Bit64u(feature_mask);
+      else
+        xstate_bv &= ~Bit64u(feature_mask);
+    }
   }
-
-#if BX_SUPPORT_AVX
-  if ((requested_feature_bitmap & BX_XCR0_YMM_MASK) != 0)
-  {
-    if (! xsaveopt || (xinuse & BX_XCR0_YMM_MASK) != 0)
-      xsave_ymm_state(i, eaddr+XSAVE_YMM_STATE_OFFSET);
-
-    if (xinuse & BX_XCR0_YMM_MASK)
-      xstate_bv |=  BX_XCR0_YMM_MASK;
-    else
-      xstate_bv &= ~BX_XCR0_YMM_MASK;
-  }
-#endif
-
-#if BX_SUPPORT_EVEX
-  if ((requested_feature_bitmap & BX_XCR0_OPMASK_MASK) != 0)
-  {
-    if (! xsaveopt || (xinuse & BX_XCR0_OPMASK_MASK) != 0)
-      xsave_opmask_state(i, eaddr+XSAVE_OPMASK_STATE_OFFSET);
-
-    if (xinuse & BX_XCR0_OPMASK_MASK)
-      xstate_bv |=  BX_XCR0_OPMASK_MASK;
-    else
-      xstate_bv &= ~BX_XCR0_OPMASK_MASK;
-  }
-
-  if ((requested_feature_bitmap & BX_XCR0_ZMM_HI256_MASK) != 0)
-  {
-    if (! xsaveopt || (xinuse & BX_XCR0_ZMM_HI256_MASK) != 0)
-      xsave_zmm_hi256_state(i, eaddr+XSAVE_ZMM_HI256_STATE_OFFSET);
-
-    if (xinuse & BX_XCR0_ZMM_HI256_MASK)
-      xstate_bv |=  BX_XCR0_ZMM_HI256_MASK;
-    else
-      xstate_bv &= ~BX_XCR0_ZMM_HI256_MASK;
-  }
-
-  if ((requested_feature_bitmap & BX_XCR0_HI_ZMM_MASK) != 0)
-  {
-    if (! xsaveopt || (xinuse & BX_XCR0_HI_ZMM_MASK) != 0)
-      xsave_hi_zmm_state(i, eaddr+XSAVE_HI_ZMM_STATE_OFFSET);
-
-    if (xinuse & BX_XCR0_HI_ZMM_MASK)
-      xstate_bv |=  BX_XCR0_HI_ZMM_MASK;
-    else
-      xstate_bv &= ~BX_XCR0_HI_ZMM_MASK;
-  }
-#endif
-
-#if BX_SUPPORT_PKEYS
-  if ((requested_feature_bitmap & BX_XCR0_PKRU_MASK) != 0)
-  {
-    if (! xsaveopt || (xinuse & BX_XCR0_PKRU_MASK) != 0)
-      xsave_pkru_state(i, eaddr+XSAVE_PKRU_STATE_OFFSET);
-
-    if (xinuse & BX_XCR0_PKRU_MASK)
-      xstate_bv |=  BX_XCR0_PKRU_MASK;
-    else
-      xstate_bv &= ~BX_XCR0_PKRU_MASK;
-  }
-#endif
 
   // always update header to 'dirty' state
   write_virtual_qword(i->seg(), (eaddr + 512) & asize_mask, xstate_bv);
@@ -215,9 +166,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  //
-  // We will go feature-by-feature and not run over all XCR0 bits
-  //
+  bx_address asize_mask = i->asize_mask();
 
   Bit32u xcr0 = BX_CPU_THIS_PTR xcr0.get32();
   if (xsaves)
@@ -240,61 +189,30 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
     // write cannot cause any boundary cross because XSAVE image is 64-byte aligned
     write_virtual_dword(i->seg(), eaddr + 24, BX_MXCSR_REGISTER);
     write_virtual_dword(i->seg(), eaddr + 28, MXCSR_MASK);
+  }
 
-    if (xinuse & BX_XCR0_SSE_MASK) {
-      xsave_sse_state(i, eaddr+XSAVE_SSE_STATE_OFFSET);
+  Bit32u offset = XSAVE_SSE_STATE_OFFSET;
+
+  /////////////////////////////////////////////////////////////////////////////
+  for (unsigned feature = xcr0_t::BX_XCR0_SSE_BIT; feature < xcr0_t::BX_XCR0_LAST; feature++)
+  {
+    Bit32u feature_mask = (1 << feature);
+
+    if ((requested_feature_bitmap & feature_mask) != 0)
+    {
+      if (! xsave_restore[feature].len) {
+        BX_ERROR(("%s: feature #%d requested to save but not implemented !", i->getIaOpcodeNameShort(), feature));
+        continue;
+      }
+
+      if (xinuse & feature_mask) {
+        BX_ASSERT(xsave_restore[feature].xsave_method);
+        xsave_restore[feature].xsave_method(i, eaddr+offset);
+      }
+
+      offset += xsave_restore[feature].len;
     }
   }
-
-  Bit32u offset = XSAVE_YMM_STATE_OFFSET;
-
-#if BX_SUPPORT_AVX
-  if ((requested_feature_bitmap & BX_XCR0_YMM_MASK) != 0)
-  {
-    if (xinuse & BX_XCR0_YMM_MASK)
-      xsave_ymm_state(i, eaddr+offset);
-
-    offset += XSAVE_YMM_STATE_LEN;
-  }
-#endif
-
-#if BX_SUPPORT_EVEX
-  if ((requested_feature_bitmap & BX_XCR0_OPMASK_MASK) != 0)
-  {
-    if (xinuse & BX_XCR0_OPMASK_MASK)
-      xsave_opmask_state(i, eaddr+offset);
-
-    offset += XSAVE_OPMASK_STATE_LEN;
-  }
-
-  if ((requested_feature_bitmap & BX_XCR0_ZMM_HI256_MASK) != 0)
-  {
-    if (xinuse & BX_XCR0_ZMM_HI256_MASK)
-      xsave_zmm_hi256_state(i, eaddr+offset);
-
-    offset += XSAVE_ZMM_HI256_STATE_LEN;
-  }
-
-  if ((requested_feature_bitmap & BX_XCR0_HI_ZMM_MASK) != 0)
-  {
-    if (xinuse & BX_XCR0_HI_ZMM_MASK)
-      xsave_hi_zmm_state(i, eaddr+offset);
-
-    offset += XSAVE_HI_ZMM_STATE_LEN;
-  }
-#endif
-
-#if BX_SUPPORT_PKEYS
-  if ((requested_feature_bitmap & BX_XCR0_PKRU_MASK) != 0)
-  {
-    if (xinuse & BX_XCR0_PKRU_MASK)
-      xsave_pkru_state(i, eaddr+offset);
-
-    offset += XSAVE_PKRU_STATE_LEN;
-  }
-#endif
-
-  bx_address asize_mask = i->asize_mask();
 
   // always update header to 'dirty' state
   write_virtual_qword(i->seg(), (eaddr + 512) & asize_mask, xstate_bv);
@@ -442,119 +360,55 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   if (compaction) {
     Bit32u offset = XSAVE_YMM_STATE_OFFSET;
 
-#if BX_SUPPORT_AVX
     /////////////////////////////////////////////////////////////////////////////
-    if ((requested_feature_bitmap & BX_XCR0_YMM_MASK) != 0)
+    for (unsigned feature = xcr0_t::BX_XCR0_YMM_BIT; feature < xcr0_t::BX_XCR0_LAST; feature++)
     {
-      if (xstate_bv & BX_XCR0_YMM_MASK)
-        xrstor_ymm_state(i, eaddr+offset);
-      else
-        xrstor_init_ymm_state();
+      Bit32u feature_mask = (1 << feature);
+    
+      if ((requested_feature_bitmap & feature_mask) != 0)
+      {
+        if (! xsave_restore[feature].len) {
+          BX_ERROR(("%s: feature #%d requested to restore but not implemented !", i->getIaOpcodeNameShort(), feature));
+          continue;
+        }
 
-      offset += XSAVE_YMM_STATE_LEN;
+        if (xstate_bv & feature_mask) {
+          BX_ASSERT(xsave_restore[feature].xrstor_method);
+          xsave_restore[feature].xrstor_method(i, eaddr+offset);
+        }
+        else {
+          BX_ASSERT(xsave_restore[feature].xrstor_init_method);
+          xsave_restore[feature].xrstor_init_method();
+        }
+
+        offset += xsave_restore[feature].len;
+      }
     }
-#endif
-
-#if BX_SUPPORT_EVEX
-    /////////////////////////////////////////////////////////////////////////////
-    if ((requested_feature_bitmap & BX_XCR0_OPMASK_MASK) != 0)
-    {
-      if (xstate_bv & BX_XCR0_OPMASK_MASK)
-        xrstor_opmask_state(i, eaddr+offset);
-      else
-        xrstor_init_opmask_state();
-
-      offset += XSAVE_OPMASK_STATE_LEN;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////
-    if ((requested_feature_bitmap & BX_XCR0_ZMM_HI256_MASK) != 0)
-    {
-      if (xstate_bv & BX_XCR0_ZMM_HI256_MASK)
-        xrstor_zmm_hi256_state(i, eaddr+offset);
-      else
-        xrstor_init_zmm_hi256_state();
-
-      offset += XSAVE_ZMM_HI256_STATE_LEN;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////
-    if ((requested_feature_bitmap & BX_XCR0_HI_ZMM_MASK) != 0)
-    {
-      if (xstate_bv & BX_XCR0_HI_ZMM_MASK)
-        xrstor_hi_zmm_state(i, eaddr+offset);
-      else
-        xrstor_init_hi_zmm_state();
-
-      offset += XSAVE_HI_ZMM_STATE_LEN;
-    }
-#endif
-
-#if BX_SUPPORT_PKEYS
-    /////////////////////////////////////////////////////////////////////////////
-    if ((requested_feature_bitmap & BX_XCR0_PKRU_MASK) != 0)
-    {
-      if (xstate_bv & BX_XCR0_PKRU_MASK)
-        xrstor_pkru_state(i, eaddr+offset);
-      else
-        xrstor_init_pkru_state();
-
-      offset += XSAVE_PKRU_STATE_LEN;
-    }
-#endif
   }
   else {
-#if BX_SUPPORT_AVX
-    /////////////////////////////////////////////////////////////////////////////
-    if ((requested_feature_bitmap & BX_XCR0_YMM_MASK) != 0)
-    {
-      if (xstate_bv & BX_XCR0_YMM_MASK)
-        xrstor_ymm_state(i, eaddr+XSAVE_YMM_STATE_OFFSET);
-      else
-        xrstor_init_ymm_state();
-    }
-#endif
-
-#if BX_SUPPORT_EVEX
-    /////////////////////////////////////////////////////////////////////////////
-    if ((requested_feature_bitmap & BX_XCR0_OPMASK_MASK) != 0)
-    {
-      if (xstate_bv & BX_XCR0_OPMASK_MASK)
-        xrstor_opmask_state(i, eaddr+XSAVE_OPMASK_STATE_OFFSET);
-      else
-        xrstor_init_opmask_state();
-    }
 
     /////////////////////////////////////////////////////////////////////////////
-    if ((requested_feature_bitmap & BX_XCR0_ZMM_HI256_MASK) != 0)
+    for (unsigned feature = xcr0_t::BX_XCR0_YMM_BIT; feature < xcr0_t::BX_XCR0_LAST; feature++)
     {
-      if (xstate_bv & BX_XCR0_ZMM_HI256_MASK)
-        xrstor_zmm_hi256_state(i, eaddr+XSAVE_ZMM_HI256_STATE_OFFSET);
-      else
-        xrstor_init_zmm_hi256_state();
-    }
+      Bit32u feature_mask = (1 << feature);
+    
+      if ((requested_feature_bitmap & feature_mask) != 0)
+      {
+        if (! xsave_restore[feature].len) {
+          BX_ERROR(("%s: feature #%d requested to restore but not implemented !", i->getIaOpcodeNameShort(), feature));
+          continue;
+        }
 
-    /////////////////////////////////////////////////////////////////////////////
-    if ((requested_feature_bitmap & BX_XCR0_HI_ZMM_MASK) != 0)
-    {
-      if (xstate_bv & BX_XCR0_HI_ZMM_MASK)
-        xrstor_hi_zmm_state(i, eaddr+XSAVE_HI_ZMM_STATE_OFFSET);
-      else
-        xrstor_init_hi_zmm_state();
+        if (xstate_bv & feature_mask) {
+          BX_ASSERT(xsave_restore[feature].xrstor_method);
+          xsave_restore[feature].xrstor_method(i, eaddr+xsave_restore[feature].offset);
+        }
+        else {
+          BX_ASSERT(xsave_restore[feature].xrstor_init_method);
+          xsave_restore[feature].xrstor_init_method();
+        }
+      }
     }
-#endif
-
-#if BX_SUPPORT_PKEYS
-    /////////////////////////////////////////////////////////////////////////////
-    if ((requested_feature_bitmap & BX_XCR0_PKRU_MASK) != 0)
-    {
-      if (xstate_bv & BX_XCR0_PKRU_MASK)
-        xrstor_pkru_state(i, eaddr+XSAVE_PKRU_STATE_OFFSET);
-      else
-        xrstor_init_pkru_state();
-    }
-#endif
-
   }
 #endif // BX_CPU_LEVEL >= 6
 
@@ -1001,41 +855,29 @@ Bit32u BX_CPU_C::get_xinuse_vector(Bit32u requested_feature_bitmap)
 {
   Bit32u xinuse = 0;
 
-  if (requested_feature_bitmap & BX_XCR0_FPU_MASK) {
-    if (xsave_x87_state_xinuse()) 
-      xinuse |= BX_XCR0_FPU_MASK;
+  /////////////////////////////////////////////////////////////////////////////
+  for (unsigned feature = xcr0_t::BX_XCR0_FPU_BIT; feature < xcr0_t::BX_XCR0_LAST; feature++)
+  {
+    Bit32u feature_mask = (1 << feature);
+  
+    if ((requested_feature_bitmap & feature_mask) != 0)
+    {
+      if (! xsave_restore[feature].len) {
+        BX_ERROR(("get_xinuse_vector(0x%08x): feature #%d requested but not implemented !", requested_feature_bitmap, feature));
+        continue;
+      }
+
+      BX_ASSERT(xsave_restore[feature].xstate_in_use_method);
+      if (xsave_restore[feature].xstate_in_use_method()) 
+        xinuse |= feature_mask;
+    }
   }
+
+  /////////////////////////////////////////////////////////////////////////////
   if (requested_feature_bitmap & BX_XCR0_SSE_MASK) {
-    if (xsave_sse_state_xinuse() || BX_MXCSR_REGISTER != MXCSR_RESET)
+    if (BX_MXCSR_REGISTER != MXCSR_RESET)
       xinuse |= BX_XCR0_SSE_MASK;
   }
-#if BX_SUPPORT_AVX
-  if (requested_feature_bitmap & BX_XCR0_YMM_MASK) {
-    if (xsave_ymm_state_xinuse()) 
-      xinuse |= BX_XCR0_YMM_MASK;
-  }
-#if BX_SUPPORT_EVEX
-  if (requested_feature_bitmap & BX_XCR0_OPMASK_MASK) {
-    if (xsave_opmask_state_xinuse()) 
-      xinuse |= BX_XCR0_OPMASK_MASK;
-  }
-  if (requested_feature_bitmap & BX_XCR0_ZMM_HI256_MASK) {
-    if (xsave_zmm_hi256_state_xinuse()) 
-      xinuse |= BX_XCR0_ZMM_HI256_MASK;
-  }
-  if (requested_feature_bitmap & BX_XCR0_HI_ZMM_MASK) {
-    if (xsave_hi_zmm_state_xinuse()) 
-      xinuse |= BX_XCR0_HI_ZMM_MASK;
-  }
-#endif
-#endif
-
-#if BX_SUPPORT_PKEYS
-  if (requested_feature_bitmap & BX_XCR0_PKRU_MASK) {
-    if (xsave_pkru_state_xinuse()) 
-      xinuse |= BX_XCR0_PKRU_MASK;
-  }
-#endif
 
   return xinuse;
 }

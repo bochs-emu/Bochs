@@ -1635,8 +1635,83 @@ void BX_CPU_C::iobreakpoint_match(unsigned port, unsigned len)
 #endif
 
 #if BX_CPU_LEVEL >= 6
+
+XSaveRestoreStateHelper xsave_restore[xcr0_t::BX_XCR0_LAST] = { {0, 0, NULL, NULL, NULL, NULL} };
+
 Bit32u BX_CPU_C::get_xcr0_allow_mask()
 {
+  // XCR0[0]: x87 state
+  xsave_restore[xcr0_t::BX_XCR0_FPU_BIT].len    = XSAVE_FPU_STATE_LEN;
+  xsave_restore[xcr0_t::BX_XCR0_FPU_BIT].xstate_in_use_method = xsave_x87_state_xinuse;
+  xsave_restore[xcr0_t::BX_XCR0_FPU_BIT].xsave_method = xsave_x87_state;
+  xsave_restore[xcr0_t::BX_XCR0_FPU_BIT].xrstor_method = xrstor_x87_state;
+  xsave_restore[xcr0_t::BX_XCR0_FPU_BIT].xrstor_init_method = xrstor_init_x87_state;
+
+  // XCR0[1]: SSE state
+  xsave_restore[xcr0_t::BX_XCR0_SSE_BIT].len    = XSAVE_SSE_STATE_LEN;
+  xsave_restore[xcr0_t::BX_XCR0_SSE_BIT].offset = XSAVE_SSE_STATE_OFFSET;
+  xsave_restore[xcr0_t::BX_XCR0_SSE_BIT].xstate_in_use_method = xsave_sse_state_xinuse;
+  xsave_restore[xcr0_t::BX_XCR0_SSE_BIT].xsave_method = xsave_sse_state;
+  xsave_restore[xcr0_t::BX_XCR0_SSE_BIT].xrstor_method = xrstor_sse_state;
+  xsave_restore[xcr0_t::BX_XCR0_SSE_BIT].xrstor_init_method = xrstor_init_sse_state;
+
+#if BX_SUPPORT_AVX
+  // XCR0[2]: YMM state
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX)) {
+    xsave_restore[xcr0_t::BX_XCR0_YMM_BIT].len    = XSAVE_YMM_STATE_LEN;
+    xsave_restore[xcr0_t::BX_XCR0_YMM_BIT].offset = XSAVE_YMM_STATE_OFFSET;
+    xsave_restore[xcr0_t::BX_XCR0_YMM_BIT].xstate_in_use_method = xsave_ymm_state_xinuse;
+    xsave_restore[xcr0_t::BX_XCR0_YMM_BIT].xsave_method = xsave_ymm_state;
+    xsave_restore[xcr0_t::BX_XCR0_YMM_BIT].xrstor_method = xrstor_ymm_state;
+    xsave_restore[xcr0_t::BX_XCR0_YMM_BIT].xrstor_init_method = xrstor_init_ymm_state;
+  }
+#endif
+
+  // XCR0[3]: BNDREGS state (not implemented)
+  // XCR0[4]: BNDCFG state (not implemented)
+
+#if BX_SUPPORT_EVEX
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX512)) {
+    // XCR0[5]: OPMASK state
+    xsave_restore[xcr0_t::BX_XCR0_OPMASK_BIT].len    = XSAVE_OPMASK_STATE_LEN;
+    xsave_restore[xcr0_t::BX_XCR0_OPMASK_BIT].offset = XSAVE_OPMASK_STATE_OFFSET;
+    xsave_restore[xcr0_t::BX_XCR0_OPMASK_BIT].xstate_in_use_method = xsave_opmask_state_xinuse;
+    xsave_restore[xcr0_t::BX_XCR0_OPMASK_BIT].xsave_method = xsave_opmask_state;
+    xsave_restore[xcr0_t::BX_XCR0_OPMASK_BIT].xrstor_method = xrstor_opmask_state;
+    xsave_restore[xcr0_t::BX_XCR0_OPMASK_BIT].xrstor_init_method = xrstor_init_opmask_state;
+
+    // XCR0[6]: ZMM_HI256 state
+    xsave_restore[xcr0_t::BX_XCR0_ZMM_HI256_BIT].len    = XSAVE_ZMM_HI256_STATE_LEN;
+    xsave_restore[xcr0_t::BX_XCR0_ZMM_HI256_BIT].offset = XSAVE_ZMM_HI256_STATE_OFFSET;
+    xsave_restore[xcr0_t::BX_XCR0_ZMM_HI256_BIT].xstate_in_use_method = xsave_zmm_hi256_state_xinuse;
+    xsave_restore[xcr0_t::BX_XCR0_ZMM_HI256_BIT].xsave_method = xsave_zmm_hi256_state;
+    xsave_restore[xcr0_t::BX_XCR0_ZMM_HI256_BIT].xrstor_method = xrstor_zmm_hi256_state;
+    xsave_restore[xcr0_t::BX_XCR0_ZMM_HI256_BIT].xrstor_init_method = xrstor_init_zmm_hi256_state;
+
+    // XCR0[7]: ZMM_HI state
+    xsave_restore[xcr0_t::BX_XCR0_HI_ZMM_BIT].len    = XSAVE_HI_ZMM_STATE_LEN;
+    xsave_restore[xcr0_t::BX_XCR0_HI_ZMM_BIT].offset = XSAVE_HI_ZMM_STATE_OFFSET;
+    xsave_restore[xcr0_t::BX_XCR0_HI_ZMM_BIT].xstate_in_use_method = xsave_hi_zmm_state_xinuse;
+    xsave_restore[xcr0_t::BX_XCR0_HI_ZMM_BIT].xsave_method = xsave_hi_zmm_state;
+    xsave_restore[xcr0_t::BX_XCR0_HI_ZMM_BIT].xrstor_method = xrstor_hi_zmm_state;
+    xsave_restore[xcr0_t::BX_XCR0_HI_ZMM_BIT].xrstor_init_method = xrstor_init_hi_zmm_state;
+  }
+#endif
+
+  // XCR0[8]: Processor Trace state (not implemented)
+
+#if BX_SUPPORT_PKEYS
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PKU)) {
+    // XCR0[9]: PKRU state
+    xsave_restore[xcr0_t::BX_XCR0_PKRU_BIT].len    = XSAVE_PKRU_STATE_LEN;
+    xsave_restore[xcr0_t::BX_XCR0_PKRU_BIT].offset = XSAVE_PKRU_STATE_OFFSET;
+    xsave_restore[xcr0_t::BX_XCR0_PKRU_BIT].xstate_in_use_method = xsave_pkru_state_xinuse;
+    xsave_restore[xcr0_t::BX_XCR0_PKRU_BIT].xsave_method = xsave_pkru_state;
+    xsave_restore[xcr0_t::BX_XCR0_PKRU_BIT].xrstor_method = xrstor_pkru_state;
+    xsave_restore[xcr0_t::BX_XCR0_PKRU_BIT].xrstor_init_method = xrstor_init_pkru_state;
+  }
+#endif
+
   Bit32u allowMask = 0x3;
 #if BX_SUPPORT_AVX
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX))
@@ -1653,4 +1728,5 @@ Bit32u BX_CPU_C::get_xcr0_allow_mask()
 
   return allowMask;
 }
+
 #endif
