@@ -300,7 +300,7 @@ typedef void (*XSavePtr_tR)(bxInstruction_c *i, bx_address offset);
 typedef void (*XRestorPtr_tR)(bxInstruction_c *i, bx_address offset);
 typedef void (*XRestorInitPtr_tR)(void);
 #else
-typedef bx_bool (BX_CPU_C::*XsaveStateInUsePtr_tR)(void);
+typedef bx_bool (BX_CPU_C::*XSaveStateInUsePtr_tR)(void);
 typedef void (BX_CPU_C::*XSavePtr_tR)(bxInstruction_c *i, bx_address offset);
 typedef void (BX_CPU_C::*XRestorPtr_tR)(bxInstruction_c *i, bx_address offset);
 typedef void (BX_CPU_C::*XRestorInitPtr_tR)(void);
