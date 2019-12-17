@@ -34,6 +34,12 @@ const Bit64u XSAVEC_COMPACTION_ENABLED = BX_CONST64(0x8000000000000000);
 extern XSaveRestoreStateHelper xsave_restore[];
 #endif
 
+#if BX_USE_CPU_SMF == 0
+#define CALL_XSAVE_FN(ptrToFunc)  (this->*(ptrToFunc))
+#else
+#define CALL_XSAVE_FN(ptrToFunc)  (ptrToFunc)
+#endif
+
 /* 0F AE /4 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
 {
@@ -102,7 +108,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
 
       if (! xsaveopt || (xinuse & feature_mask) != 0) {
         BX_ASSERT(xsave_restore[feature].xsave_method);
-        xsave_restore[feature].xsave_method(i, eaddr+xsave_restore[feature].offset);
+        CALL_XSAVE_FN(xsave_restore[feature].xsave_method)(i, eaddr+xsave_restore[feature].offset);
       }
 
       if (xinuse & feature_mask)
@@ -207,7 +213,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
 
       if (xinuse & feature_mask) {
         BX_ASSERT(xsave_restore[feature].xsave_method);
-        xsave_restore[feature].xsave_method(i, eaddr+offset);
+        CALL_XSAVE_FN(xsave_restore[feature].xsave_method)(i, eaddr+offset);
       }
 
       offset += xsave_restore[feature].len;
@@ -374,11 +380,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
 
         if (xstate_bv & feature_mask) {
           BX_ASSERT(xsave_restore[feature].xrstor_method);
-          xsave_restore[feature].xrstor_method(i, eaddr+offset);
+          CALL_XSAVE_FN(xsave_restore[feature].xrstor_method)(i, eaddr+offset);
         }
         else {
           BX_ASSERT(xsave_restore[feature].xrstor_init_method);
-          xsave_restore[feature].xrstor_init_method();
+          CALL_XSAVE_FN(xsave_restore[feature].xrstor_init_method)();
         }
 
         offset += xsave_restore[feature].len;
@@ -401,11 +407,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
 
         if (xstate_bv & feature_mask) {
           BX_ASSERT(xsave_restore[feature].xrstor_method);
-          xsave_restore[feature].xrstor_method(i, eaddr+xsave_restore[feature].offset);
+          CALL_XSAVE_FN(xsave_restore[feature].xrstor_method)(i, eaddr+xsave_restore[feature].offset);
         }
         else {
           BX_ASSERT(xsave_restore[feature].xrstor_init_method);
-          xsave_restore[feature].xrstor_init_method();
+          CALL_XSAVE_FN(xsave_restore[feature].xrstor_init_method)();
         }
       }
     }
@@ -868,7 +874,7 @@ Bit32u BX_CPU_C::get_xinuse_vector(Bit32u requested_feature_bitmap)
       }
 
       BX_ASSERT(xsave_restore[feature].xstate_in_use_method);
-      if (xsave_restore[feature].xstate_in_use_method()) 
+      if (CALL_XSAVE_FN(xsave_restore[feature].xstate_in_use_method)())
         xinuse |= feature_mask;
     }
   }
