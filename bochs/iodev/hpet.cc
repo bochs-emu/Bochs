@@ -57,14 +57,28 @@ void CDECL libhpet_LTX_plugin_fini(void)
 
 // helper functions
 
-static Bit32u hpet_time_after(Bit64u a, Bit64u b)
+// Start is assumed to be not later than end.
+// If start == end, it describes one point in time.
+// Returns true if value happened after start but before end.
+static Bit32u hpet_time_between(Bit64u start, Bit64u end, Bit64u value)
 {
-    return ((Bit32s)(b - a) < 0);
+  if (start <= end) { // No wraparound after start and before end
+    return (start <= value) && (value <= end);
+  } else { // Wraparound
+    return (start <= value) || (value <= end);
+  }
 }
 
-static Bit32u hpet_time_after64(Bit64u a, Bit64u b)
+/* Returns earliest 64-bit tick value that is after reference
+ * and has same lower 32 bits as value
+ */
+static Bit64u hpet_cmp32_to_cmp64(Bit64u reference, Bit32u value)
 {
-    return ((Bit64s)(b - a) < 0);
+  if ((Bit32u)reference <= (Bit32u)value) {
+    return (reference & 0xFFFFFFFF00000000ull) | (Bit64u)value;
+  } else {
+    return ((reference + 0x100000000ull) & 0xFFFFFFFF00000000ull) | (Bit64u)value;
+  }
 }
 
 static Bit64u ticks_to_ns(Bit64u value)
@@ -169,11 +183,11 @@ void bx_hpet_c::init(void)
   s.isr = 0x00;
   DEV_register_memory_handlers(theHPET, hpet_read, hpet_write,
       HPET_BASE, HPET_BASE + HPET_LEN - 1);
-  for (int i = 0; i < HPET_MAX_TIMERS; i++) {
+  for (int i = 0; i < s.num_timers; i++) {
     s.timer[i].tn = i;
     s.timer[i].timer_id =
       DEV_register_timer(this, timer_handler, 1, 0, 0, "hpet");
-      bx_pc_system.setTimerParam(s.timer[i].timer_id, i);
+    bx_pc_system.setTimerParam(s.timer[i].timer_id, i);
   }
 #if BX_DEBUGGER
   // register device for the 'info device' command (calls debug_dump())
@@ -188,12 +202,13 @@ void bx_hpet_c::reset(unsigned type)
 
     hpet_del_timer(timer);
     timer->cmp = ~BX_CONST64(0);
-    timer->config = HPET_TN_PERIODIC_CAP | HPET_TN_SIZE_CAP;
-    timer->period = BX_CONST64(0);
-    timer->wrap_flag = 0;
+    timer->period = ~BX_CONST64(0);
+    timer->config = HPET_TN_PERIODIC_CAP | HPET_TN_SIZE_CAP | (HPET_ROUTING_CAP << 32);
+    timer->last_checked = BX_CONST64(0);
   }
   s.hpet_counter = BX_CONST64(0);
-  s.hpet_offset = BX_CONST64(0);
+  s.hpet_reference_value = BX_CONST64(0);
+  s.hpet_reference_time = BX_CONST64(0);
   s.config = BX_CONST64(0);
 }
 
@@ -206,20 +221,19 @@ void bx_hpet_c::register_state(void)
   BXRS_HEX_PARAM_FIELD(list, config, s.config);
   BXRS_HEX_PARAM_FIELD(list, isr, s.isr);
   BXRS_HEX_PARAM_FIELD(list, hpet_counter, s.hpet_counter);
-  for (Bit8u i = 0; i < s.num_timers; i++) {
+  for (int i = 0; i < s.num_timers; i++) {
     sprintf(tnum, "timer%d", i);
     tim = new bx_list_c(list, tnum);
     BXRS_HEX_PARAM_FIELD(tim, config, s.timer[i].config);
     BXRS_HEX_PARAM_FIELD(tim, cmp, s.timer[i].cmp);
     BXRS_HEX_PARAM_FIELD(tim, fsb, s.timer[i].fsb);
     BXRS_DEC_PARAM_FIELD(tim, period, s.timer[i].period);
-    BXRS_DEC_PARAM_FIELD(tim, wrap_flag, s.timer[i].wrap_flag);
   }
 }
 
 Bit64u bx_hpet_c::hpet_get_ticks(void)
 {
-  return ns_to_ticks(bx_pc_system.time_nsec() + s.hpet_offset);
+  return ns_to_ticks(bx_pc_system.time_nsec() - s.hpet_reference_time) + s.hpet_reference_value;
 }
 
 /*
@@ -232,14 +246,12 @@ Bit64u bx_hpet_c::hpet_calculate_diff(HPETTimer *t, Bit64u current)
 
     cmp = (Bit32u)t->cmp;
     diff = cmp - (Bit32u)current;
-    diff = (Bit32s)diff > 0 ? diff : (Bit32u)1;
     return (Bit64u)diff;
   } else {
     Bit64u diff2, cmp2;
 
     cmp2 = t->cmp;
     diff2 = cmp2 - current;
-    diff2 = (Bit64s)diff2 > 0 ? diff2 : (Bit64u)1;
     return diff2;
   }
 }
@@ -248,6 +260,7 @@ void bx_hpet_c::update_irq(HPETTimer *timer, bx_bool set)
 {
   Bit64u mask;
   int route;
+  BX_DEBUG(("Timer %d irq level set to %d", timer->tn, set));
 
   if ((timer->tn <= 1) && hpet_in_legacy_mode()) {
     /* if LegacyReplacementRoute bit is set, HPET specification requires
@@ -259,21 +272,26 @@ void bx_hpet_c::update_irq(HPETTimer *timer, bx_bool set)
     route = timer_int_route(timer);
   }
   mask = (BX_CONST64(1) << timer->tn);
-  if (!set || !timer_enabled(timer) || !hpet_enabled()) {
-    s.isr &= ~mask;
-    if (!timer_fsb_route(timer)) {
-      DEV_pic_lower_irq(route);
-    }
-  } else if (timer_fsb_route(timer)) {
-    Bit32u val32 = (Bit32u)timer->fsb;
-    DEV_MEM_WRITE_PHYSICAL((bx_phy_address) (timer->fsb >> 32), sizeof(Bit32u), (Bit8u *) &val32);
-  } else if (timer->config & HPET_TN_TYPE_LEVEL) {
-    s.isr |= mask;
-    DEV_pic_raise_irq(route);
-  } else {
-    s.isr &= ~mask;
+  if (!set || !hpet_enabled()) {
     DEV_pic_lower_irq(route);
-    DEV_pic_raise_irq(route);
+  } else {
+    if (timer->config & HPET_TN_TYPE_LEVEL) {
+      /* If HPET_TN_ENABLE bit is 0, "the timer will still operate and
+       * generate appropriate status bits, but will not cause an interrupt"
+       */
+      s.isr |= mask;
+    }
+    if (timer_enabled(timer)) {
+      if (timer_fsb_route(timer)) {
+        Bit32u val32 = (Bit32u)timer->fsb;
+        DEV_MEM_WRITE_PHYSICAL((bx_phy_address) (timer->fsb >> 32), sizeof(Bit32u), (Bit8u *) &val32);
+      } else if (timer->config & HPET_TN_TYPE_LEVEL) {
+        DEV_pic_raise_irq(route);
+      } else {
+        DEV_pic_lower_irq(route);
+        DEV_pic_raise_irq(route);
+      }
+    }
   }
 }
 
@@ -286,60 +304,83 @@ void bx_hpet_c::timer_handler(void *this_ptr)
 void bx_hpet_c::hpet_timer()
 {
   HPETTimer *t = &s.timer[bx_pc_system.triggeredTimerParam()];
-  Bit64u diff;
-  Bit64u period = t->period;
+  Bit64u cur_time = bx_pc_system.time_nsec();
   Bit64u cur_tick = hpet_get_ticks();
 
-  if (timer_is_periodic(t) && (period != 0)) {
+  if (timer_is_periodic(t)) {
     if (t->config & HPET_TN_32BIT) {
-      while (hpet_time_after(cur_tick, t->cmp)) {
-        t->cmp = (Bit32u)(t->cmp + t->period);
+      Bit64u cmp64 = hpet_cmp32_to_cmp64(t->last_checked, t->cmp);
+      if (hpet_time_between(t->last_checked, cur_tick, cmp64)) {
+        update_irq(t, 1);
+        if ((Bit32u)t->period != 0) {
+          do {
+            cmp64 += (Bit64u)(Bit32u)t->period;
+          } while (hpet_time_between(t->last_checked, cur_tick, cmp64));
+          t->cmp = (Bit32u)cmp64;
+        }
       }
-    } else {
-      while (hpet_time_after64(cur_tick, t->cmp)) {
-        t->cmp += period;
+    } else { // 64-bit timer
+      if (hpet_time_between(t->last_checked, cur_tick, t->cmp)) {
+        update_irq(t, 1);
+        if (t->period != 0) {
+          do {
+            t->cmp += t->period;
+          } while (hpet_time_between(t->last_checked, cur_tick, t->cmp));
+        }
       }
     }
-    diff = hpet_calculate_diff(t, cur_tick);
-    bx_pc_system.activate_timer_nsec(t->timer_id, ticks_to_ns(diff),
-                                     timer_is_periodic(t));
-  } else if ((t->config & HPET_TN_32BIT) && !timer_is_periodic(t)) {
-    if (t->wrap_flag) {
-      diff = hpet_calculate_diff(t, cur_tick);
-      bx_pc_system.activate_timer_nsec(t->timer_id, ticks_to_ns(diff),
-                                       timer_is_periodic(t));
-      t->wrap_flag = 0;
+  } else { // One-shot timer
+    if (t->config & HPET_TN_32BIT) {
+      Bit64u cmp64 = hpet_cmp32_to_cmp64(t->last_checked, t->cmp);
+      Bit64u wrap = hpet_cmp32_to_cmp64(t->last_checked, 0);
+      if (hpet_time_between(t->last_checked, cur_tick, cmp64) || hpet_time_between(t->last_checked, cur_tick, wrap)) {
+        update_irq(t, 1);
+      }
+    } else { // 64-bit timer
+      if (hpet_time_between(t->last_checked, cur_tick, t->cmp)) {
+        update_irq(t, 1);
+      }
     }
   }
-  update_irq(t, 1);
+  hpet_set_timer(t);
+  t->last_checked = cur_tick;
+  
+  Bit64u ticks_passed = ns_to_ticks(cur_time - s.hpet_reference_time);
+  if (ticks_passed != 0) {
+    s.hpet_reference_time += ticks_to_ns(ticks_passed);
+    s.hpet_reference_value += ticks_passed;
+  }
 }
 
 void bx_hpet_c::hpet_set_timer(HPETTimer *t)
 {
-  Bit64u diff;
-  Bit32u wrap_diff;  /* how many ticks until we wrap? */
   Bit64u cur_tick = hpet_get_ticks();
-
-  /* whenever new timer is being set up, make sure wrap_flag is 0 */
-  t->wrap_flag = 0;
-  diff = hpet_calculate_diff(t, cur_tick);
-
+  Bit64u diff = hpet_calculate_diff(t, cur_tick);
+  if (diff == 0) {
+    if (t->config & HPET_TN_32BIT) {
+      diff = 0x100000000ull;
+    } else {
+      diff = HPET_MAX_ALLOWED_PERIOD;
+    }
+  }
   /* hpet spec says in one-shot 32-bit mode, generate an interrupt when
    * counter wraps in addition to an interrupt with comparator match.
    */
-  if ((t->config & HPET_TN_32BIT) && !timer_is_periodic(t)) {
-    wrap_diff = 0xffffffff - (Bit32u)cur_tick;
-    if (wrap_diff < (Bit32u)diff) {
-      diff = wrap_diff;
-      t->wrap_flag = 1;
+  if (!timer_is_periodic(t)) {
+    if (t->config & HPET_TN_32BIT) {
+      Bit64u wrap_diff = 0x100000000ull - (Bit64u)(Bit32u)cur_tick;
+      if (wrap_diff < diff) diff = wrap_diff;
     }
   }
-  bx_pc_system.activate_timer_nsec(t->timer_id, ticks_to_ns(diff),
-                                   timer_is_periodic(t));
+  if (diff < HPET_MIN_ALLOWED_PERIOD) diff = HPET_MIN_ALLOWED_PERIOD;
+  if (diff > HPET_MAX_ALLOWED_PERIOD) diff = HPET_MAX_ALLOWED_PERIOD;
+  BX_DEBUG(("Timer %d to fire in 0x%lX ticks", t->tn, diff));
+  bx_pc_system.activate_timer_nsec(t->timer_id, ticks_to_ns(diff), 0);
 }
 
 void bx_hpet_c::hpet_del_timer(HPETTimer *t)
 {
+  BX_DEBUG(("Timer %d deactivated", t->tn));
   bx_pc_system.deactivate_timer(t->timer_id);
   update_irq(t, 0);
 }
@@ -348,7 +389,7 @@ Bit32u bx_hpet_c::read_aligned(bx_phy_address address)
 {
   Bit32u value = 0;
 
-  BX_DEBUG(("read aligned addr=0x" FMT_PHY_ADDRX, address));
+  // BX_DEBUG(("read aligned addr=0x" FMT_PHY_ADDRX, address));
   Bit16u index = (Bit16u)(address & 0x3ff);
   if (index < 0x100) {
     switch (index) {
@@ -424,23 +465,29 @@ void bx_hpet_c::write_aligned(bx_phy_address address, Bit32u value)
 {
   int i;
   Bit16u index = (Bit16u)(address & 0x3ff);
-  Bit64u val, new_val = value, old_val = read_aligned(address);
+  Bit64u val;
+  Bit64u new_val = value;
+  Bit64u old_val = read_aligned(address);
 
   BX_DEBUG(("write aligned addr=0x" FMT_PHY_ADDRX ", data=0x%08x", address, value));
   if (index < 0x100) {
     switch (index) {
       case HPET_ID:
-        return;
+        break;
+      case HPET_ID + 4:
+        break;
       case HPET_CFG:
         val = hpet_fixup_reg(new_val, old_val, HPET_CFG_WRITE_MASK);
         s.config = (s.config & BX_CONST64(0xffffffff00000000)) | val;
         if (activating_bit(old_val, new_val, HPET_CFG_ENABLE)) {
           /* Enable main counter and interrupt generation. */
-          s.hpet_offset = ticks_to_ns(s.hpet_counter) - bx_pc_system.time_nsec();
+          s.hpet_reference_value = s.hpet_counter;
+          s.hpet_reference_time = bx_pc_system.time_nsec();
           for (i = 0; i < s.num_timers; i++) {
-            if (s.timer[i].cmp != ~BX_CONST64(0U)) {
-              hpet_set_timer(&s.timer[i]);
+            if (timer_enabled(&s.timer[i]) && (s.isr & (BX_CONST64(1) << i))) {
+              update_irq(&s.timer[i], 1);
             }
+            hpet_set_timer(&s.timer[i]);
           }
         } else if (deactivating_bit(old_val, new_val, HPET_CFG_ENABLE)) {
           /* Halt main counter and disable interrupt generation. */
@@ -461,25 +508,38 @@ void bx_hpet_c::write_aligned(bx_phy_address address, Bit32u value)
           DEV_cmos_enable_irq(1);
         }
         break;
+      case HPET_CFG + 4:
+        break;
       case HPET_STATUS:
         val = new_val & s.isr;
         for (i = 0; i < s.num_timers; i++) {
           if (val & (BX_CONST64(1) << i)) {
             update_irq(&s.timer[i], 0);
+            s.isr &= ~(BX_CONST64(1) << i);
           }
         }
         break;
+      case HPET_STATUS + 4:
+        break;
       case HPET_COUNTER:
         if (hpet_enabled()) {
-          BX_DEBUG(("Writing counter while HPET enabled!"));
+          BX_ERROR(("Writing counter while HPET enabled!"));
+        } else {
+          s.hpet_counter = (s.hpet_counter & BX_CONST64(0xffffffff00000000)) | value;
+          for (i = 0; i < s.num_timers; i++) {
+            s.timer[i].last_checked = s.hpet_counter;
+          }
         }
-        s.hpet_counter = (s.hpet_counter & BX_CONST64(0xffffffff00000000)) | value;
         break;
       case HPET_COUNTER + 4:
         if (hpet_enabled()) {
-          BX_DEBUG(("Writing counter while HPET enabled!"));
+          BX_ERROR(("Writing counter while HPET enabled!"));
+        } else {
+          s.hpet_counter = (s.hpet_counter & BX_CONST64(0xffffffff)) | (((Bit64u)value) << 32);
+          for (i = 0; i < s.num_timers; i++) {
+            s.timer[i].last_checked = s.hpet_counter;
+          }
         }
-        s.hpet_counter = (s.hpet_counter & BX_CONST64(0xffffffff)) | (((Bit64u)value) << 32);
         break;
       default:
         BX_ERROR(("write to reserved offset 0x%04x", index));
@@ -493,52 +553,44 @@ void bx_hpet_c::write_aligned(bx_phy_address address, Bit32u value)
     HPETTimer *timer = &s.timer[id];
     switch (index & 0x1f) {
       case HPET_TN_CFG:
-        if (activating_bit(old_val, new_val, HPET_TN_FSB_ENABLE)) {
-          update_irq(timer, 0);
-        }
         val = hpet_fixup_reg(new_val, old_val, HPET_TN_CFG_WRITE_MASK);
         timer->config = (timer->config & BX_CONST64(0xffffffff00000000)) | val;
-        if (new_val & HPET_TN_32BIT) {
+        if (timer->config & HPET_TN_32BIT) {
           timer->cmp = (Bit32u)timer->cmp;
           timer->period = (Bit32u)timer->period;
         }
-        if (activating_bit(old_val, new_val, HPET_TN_ENABLE) && hpet_enabled()) {
+        if (timer_fsb_route(timer) || !(timer->config & HPET_TN_TYPE_LEVEL)) {
+          s.isr &= ~(BX_CONST64(1) << id);
+        }
+        if (timer_enabled(timer) && hpet_enabled()) {
+          if (s.isr & (BX_CONST64(1) << id)) {
+            update_irq(timer, 1);
+          } else {
+            update_irq(timer, 0);
+          }
+        }
+        if (hpet_enabled()) {
           hpet_set_timer(timer);
-        } else if (deactivating_bit(old_val, new_val, HPET_TN_ENABLE)) {
-          hpet_del_timer(timer);
         }
         break;
+      case HPET_TN_CFG + 4:
+        break;
       case HPET_TN_CMP:
-        if (timer->config & HPET_TN_32BIT) {
-          new_val = (Bit32u)new_val;
-        }
         if (!timer_is_periodic(timer) || (timer->config & HPET_TN_SETVAL)) {
           timer->cmp = (timer->cmp & BX_CONST64(0xffffffff00000000)) | new_val;
         }
-        if (timer_is_periodic(timer)) {
-          /*
-           * FIXME: Clamp period to reasonable min value?
-           * Clamp period to reasonable max value
-           */
-          new_val &= (timer->config & HPET_TN_32BIT ? ~0u : ~BX_CONST64(0)) >> 1;
-          timer->period = (timer->period & BX_CONST64(0xffffffff00000000)) | new_val;
-        }
+        timer->period = (timer->period & BX_CONST64(0xffffffff00000000)) | new_val;
         timer->config &= ~HPET_TN_SETVAL;
         if (hpet_enabled()) {
           hpet_set_timer(timer);
         }
         break;
       case HPET_TN_CMP + 4:
+        if (timer->config & HPET_TN_32BIT) break;
         if (!timer_is_periodic(timer) || (timer->config & HPET_TN_SETVAL)) {
           timer->cmp = (timer->cmp & BX_CONST64(0xffffffff)) | (new_val << 32);
-        } else {
-          /*
-           * FIXME: Clamp period to reasonable min value?
-           * Clamp period to reasonable max value
-           */
-          new_val &= (timer->config & HPET_TN_32BIT ? ~0u : ~BX_CONST64(0)) >> 1;
-          timer->period = (timer->period & BX_CONST64(0xffffffff)) | (new_val << 32);
         }
+        timer->period = (timer->period & BX_CONST64(0xffffffff)) | (new_val << 32);
         timer->config &= ~HPET_TN_SETVAL;
         if (hpet_enabled()) {
           hpet_set_timer(timer);

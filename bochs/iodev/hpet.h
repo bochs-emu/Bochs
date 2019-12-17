@@ -9,7 +9,7 @@
 //
 //  Authors: Beth Kon <bkon@us.ibm.com>
 //
-//  Copyright (C) 2017  The Bochs Project
+//  Copyright (C) 2017-2019  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -32,11 +32,19 @@
 
 #if BX_SUPPORT_PCI
 
+/* HPET will set up timers to fire after a certain period of time.
+ * These values can be used to clamp this period to reasonable/supported values.
+ * The values are in ticks.
+ */
+#define HPET_MAX_ALLOWED_PERIOD 0x0400000000000000ull // Must not overflow when multiplied by HPET_CLK_PERIOD
+#define HPET_MIN_ALLOWED_PERIOD 1
+
 #define RTC_ISA_IRQ 8
 
 #define HPET_BASE               0xfed00000
 #define HPET_LEN                0x400
 #define HPET_CLK_PERIOD         10 // 10 ns
+#define HPET_ROUTING_CAP        0xffffffull // allowed irq routing
 
 #define FS_PER_NS 1000000       /* 1000000 femtosectons == 1 ns */
 #define HPET_MIN_TIMERS         3
@@ -69,12 +77,12 @@
 
 typedef struct {
   Bit8u  tn;
+  int    timer_id;
   Bit64u config;
   Bit64u cmp;
   Bit64u fsb;
   Bit64u period;
-  Bit8u  wrap_flag;
-  int    timer_id;
+  Bit64u last_checked;
 } HPETTimer;
 
 class bx_hpet_c : public bx_devmodel_c {
@@ -112,7 +120,8 @@ private:
 
   struct {
     Bit8u  num_timers;
-    Bit64u hpet_offset;
+    Bit64u hpet_reference_value;
+    Bit64u hpet_reference_time;
     Bit64u capability;
     Bit64u config;
     Bit64u isr;
