@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2013-2018 Stanislav Shwartsman
+//   Copyright (c) 2013-2019 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -115,7 +115,12 @@ BX_CPP_INLINE Bit32u rotate_l(Bit32u val_32, unsigned count)
 }
 
 // A bit oriented logical and rotational transformation performed on a dword for SHA256
-BX_CPP_INLINE Bit32u sha256_transformation(Bit32u val_32, unsigned rotate1, unsigned rotate2, unsigned shr)
+BX_CPP_INLINE Bit32u sha256_transformation_rrr(Bit32u val_32, unsigned rotate1, unsigned rotate2, unsigned rotate3)
+{
+  return rotate_r(val_32, rotate1) ^ rotate_r(val_32, rotate2) ^ rotate_r(val_32, rotate3);
+}
+
+BX_CPP_INLINE Bit32u sha256_transformation_rrs(Bit32u val_32, unsigned rotate1, unsigned rotate2, unsigned shr)
 {
   return rotate_r(val_32, rotate1) ^ rotate_r(val_32, rotate2) ^ (val_32 >> shr);
 }
@@ -180,8 +185,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHA256RNDS2_VdqWdqR(bxInstruction_c *i)
   H[0] = op1.xmm32u(0);
 
   for (unsigned n=0; n < 2; n++) {
-    Bit32u   tmp = sha_ch (E[n], F[n], G[n]) + sha256_transformation(E[n], 6, 11, 25) + wk.xmm32u(n) + H[n];
-    A[n+1] = tmp + sha_maj(A[n], B[n], C[n]) + sha256_transformation(A[n], 2, 13, 22);
+    Bit32u   tmp = sha_ch (E[n], F[n], G[n]) + sha256_transformation_rrr(E[n], 6, 11, 25) + wk.xmm32u(n) + H[n];
+    A[n+1] = tmp + sha_maj(A[n], B[n], C[n]) + sha256_transformation_rrr(A[n], 2, 13, 22);
     B[n+1] = A[n];
     C[n+1] = B[n];
     D[n+1] = C[n];
@@ -207,10 +212,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHA256MSG1_VdqWdqR(bxInstruction_c *i)
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst());
   Bit32u op2 = BX_READ_XMM_REG_LO_DWORD(i->src());
 
-  op1.xmm32u(0) += sha256_transformation(op1.xmm32u(1), 7, 18, 3);
-  op1.xmm32u(1) += sha256_transformation(op1.xmm32u(2), 7, 18, 3);
-  op1.xmm32u(2) += sha256_transformation(op1.xmm32u(3), 7, 18, 3);
-  op1.xmm32u(3) += sha256_transformation(op2,           7, 18, 3);
+  op1.xmm32u(0) += sha256_transformation_rrs(op1.xmm32u(1), 7, 18, 3);
+  op1.xmm32u(1) += sha256_transformation_rrs(op1.xmm32u(2), 7, 18, 3);
+  op1.xmm32u(2) += sha256_transformation_rrs(op1.xmm32u(3), 7, 18, 3);
+  op1.xmm32u(3) += sha256_transformation_rrs(op2,           7, 18, 3);
 
   BX_WRITE_XMM_REG(i->dst(), op1);
 
@@ -222,10 +227,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHA256MSG2_VdqWdqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
 
-  op1.xmm32u(0) += sha256_transformation(op2.xmm32u(2), 17, 19, 10);
-  op1.xmm32u(1) += sha256_transformation(op2.xmm32u(3), 17, 19, 10);
-  op1.xmm32u(2) += sha256_transformation(op1.xmm32u(0), 17, 19, 10);
-  op1.xmm32u(3) += sha256_transformation(op1.xmm32u(1), 17, 19, 10);
+  op1.xmm32u(0) += sha256_transformation_rrs(op2.xmm32u(2), 17, 19, 10);
+  op1.xmm32u(1) += sha256_transformation_rrs(op2.xmm32u(3), 17, 19, 10);
+  op1.xmm32u(2) += sha256_transformation_rrs(op1.xmm32u(0), 17, 19, 10);
+  op1.xmm32u(3) += sha256_transformation_rrs(op1.xmm32u(1), 17, 19, 10);
 
   BX_WRITE_XMM_REG(i->dst(), op1);
 
