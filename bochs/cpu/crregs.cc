@@ -1705,10 +1705,10 @@ Bit32u BX_CPU_C::get_xcr0_allow_mask()
     // XCR0[9]: PKRU state
     xsave_restore[xcr0_t::BX_XCR0_PKRU_BIT].len    = XSAVE_PKRU_STATE_LEN;
     xsave_restore[xcr0_t::BX_XCR0_PKRU_BIT].offset = XSAVE_PKRU_STATE_OFFSET;
-    xsave_restore[xcr0_t::BX_XCR0_PKRU_BIT].xstate_in_use_method = &xsave_pkru_state_xinuse;
-    xsave_restore[xcr0_t::BX_XCR0_PKRU_BIT].xsave_method = &xsave_pkru_state;
-    xsave_restore[xcr0_t::BX_XCR0_PKRU_BIT].xrstor_method = &xrstor_pkru_state;
-    xsave_restore[xcr0_t::BX_XCR0_PKRU_BIT].xrstor_init_method = &xrstor_init_pkru_state;
+    xsave_restore[xcr0_t::BX_XCR0_PKRU_BIT].xstate_in_use_method = &BX_CPU_C::xsave_pkru_state_xinuse;
+    xsave_restore[xcr0_t::BX_XCR0_PKRU_BIT].xsave_method = &BX_CPU_C::xsave_pkru_state;
+    xsave_restore[xcr0_t::BX_XCR0_PKRU_BIT].xrstor_method = &BX_CPU_C::xrstor_pkru_state;
+    xsave_restore[xcr0_t::BX_XCR0_PKRU_BIT].xrstor_init_method = &BX_CPU_C::xrstor_init_pkru_state;
   }
 #endif
 
