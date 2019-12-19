@@ -1,8 +1,14 @@
 Changes after 2.6.10 release:
 
+- General
+  - Added 64-bit support to the NSIS installer script.
+
 - CPU / CPUDB
   - Bugfixes for CPU emulation correctness
     - A lot of critical bugfixes for Protection Keys, AVX512*, VMX/SVM, SHA, GFNI
+
+- I/O Devices
+  - Some fixes in HPET emulation (patch by Oleg)
 
 -------------------------------------------------------------------------
 Changes in 2.6.10 (December 1, 2019):
