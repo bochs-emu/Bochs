@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2018 Stanislav Shwartsman
+//   Copyright (c) 2008-2019 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -227,6 +227,22 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Oct_Vector(bxInstruction_c *i)
 #if BX_SUPPORT_EVEX
 
 #include "simd_int.h"
+
+// load vector of bytes, support masked fault suppression, no broadcast
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_MASK_VectorB(bxInstruction_c *i)
+{
+  Bit32u opmask = (i->opmask() != 0) ? BX_READ_OPMASK(i->opmask()) : BX_CONST64(0xffffffffffffffff);
+
+  if (opmask == 0) {
+    BX_CPU_CALL_METHOD(i->execute2(), (i)); // for now let execute method to deal with zero/merge masking semantics
+    return;
+  }
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+  avx_masked_load8(i, eaddr, &BX_READ_AVX_REG(BX_VECTOR_TMP_REGISTER), opmask);
+
+  BX_CPU_CALL_METHOD(i->execute2(), (i));
+}
 
 // load vector of words, support masked fault suppression, no broadcast
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_MASK_VectorW(bxInstruction_c *i)
