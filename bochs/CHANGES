@@ -1,3 +1,10 @@
+Changes after 2.6.10 release:
+
+- CPU / CPUDB
+  - Bugfixes for CPU emulation correctness
+    - A lot of critical bugfixes for Protection Keys, AVX512*, VMX/SVM, SHA, GFNI
+
+-------------------------------------------------------------------------
 Changes in 2.6.10 (December 1, 2019):
 
 Brief summary :
