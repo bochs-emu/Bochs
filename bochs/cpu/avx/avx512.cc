@@ -706,7 +706,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPSHLDVD_MASK_VdqHdqWdqR(bxInstruction_c *
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
-    unsigned count = op2.vmm16u(n) & 31;
+    unsigned count = op2.vmm32u(n) & 31;
     if (count) {
       dst.vmm32u(n) = (dst.vmm32u(n) << count) | (op1.vmm32u(n) >> (32 - count));
     }
@@ -746,7 +746,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPSHLDVQ_MASK_VdqHdqWdqR(bxInstruction_c *
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
-    unsigned count = op2.vmm16u(n) & 63;
+    unsigned count = op2.vmm64u(n) & 63;
     if (count) {
       dst.vmm64u(n) = (dst.vmm64u(n) << count) | (op1.vmm64u(n) >> (64 - count));
     }
@@ -826,7 +826,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPSHRDVD_MASK_VdqHdqWdqR(bxInstruction_c *
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
-    unsigned count = op2.vmm16u(n) & 31;
+    unsigned count = op2.vmm32u(n) & 31;
     if (count) {
       dst.vmm32u(n) = (dst.vmm32u(n) >> count) | (op1.vmm32u(n) << (32 - count));
     }
@@ -866,7 +866,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPSHRDVQ_MASK_VdqHdqWdqR(bxInstruction_c *
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
-    unsigned count = op2.vmm16u(n) & 63;
+    unsigned count = op2.vmm64u(n) & 63;
     if (count) {
       dst.vmm64u(n) = (dst.vmm64u(n) >> count) | (op1.vmm64u(n) << (64 - count));
     }
