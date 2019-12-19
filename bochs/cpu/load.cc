@@ -89,6 +89,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Wss(bxInstruction_c *i)
 #endif
 }
 
+#if BX_SUPPORT_EVEX
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_MASK_Wss(bxInstruction_c *i)
+{
+  Bit32u val_32 = 0;
+
+  if (BX_SCALAR_ELEMENT_MASK(i->opmask())) {
+    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+    val_32 = read_virtual_dword(i->seg(), eaddr);
+  }
+
+  BX_WRITE_XMM_REG_LO_DWORD(BX_VECTOR_TMP_REGISTER, val_32);
+  BX_CPU_CALL_METHOD(i->execute2(), (i));
+}
+#endif
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Wsd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
@@ -99,6 +114,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Wsd(bxInstruction_c *i)
   BX_CPU_CALL_METHOD(i->execute2(), (i));
 #endif
 }
+
+#if BX_SUPPORT_EVEX
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_MASK_Wsd(bxInstruction_c *i)
+{
+  Bit64u val_64 = 0;
+
+  if (BX_SCALAR_ELEMENT_MASK(i->opmask())) {
+    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+    val_64 = read_virtual_qword(i->seg(), eaddr);
+  }
+
+  BX_WRITE_XMM_REG_LO_DWORD(BX_VECTOR_TMP_REGISTER, val_64);
+  BX_CPU_CALL_METHOD(i->execute2(), (i));
+}
+#endif
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Wdq(bxInstruction_c *i)
 {
