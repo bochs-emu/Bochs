@@ -204,7 +204,7 @@
 #define BX_READ_32BIT_OPMASK(index) (BX_CPU_THIS_PTR opmask[index].dword.erx)
 #define BX_READ_OPMASK(index)       (BX_CPU_THIS_PTR opmask[index].rrx)
 
-#define BX_SCALAR_ELEMENT_MASK(index) (BX_READ_32BIT_OPMASK(index) & 0x1)
+#define BX_SCALAR_ELEMENT_MASK(index) ((index) == 0 || (BX_READ_32BIT_OPMASK(index) & 0x1))
 
 #define BX_WRITE_OPMASK(index, val_64) { \
   BX_CPU_THIS_PTR opmask[index].rrx = val_64; \
