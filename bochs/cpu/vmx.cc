@@ -947,6 +947,11 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
      unsigned push_error_reference = 0;
      if (event_type == BX_HARDWARE_EXCEPTION && vector < BX_CPU_HANDLED_EXCEPTIONS)
         push_error_reference = exceptions_info[vector].push_error;
+#if BX_SUPPORT_CET
+     if (! BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) {
+        if (vector == BX_CP_EXCEPTION) push_error_reference = false;
+     }
+#endif     
 
      if (vm->vmentry_interr_info & 0x7ffff000) {
         BX_ERROR(("VMFAIL: VMENTRY broken interruption info field"));
