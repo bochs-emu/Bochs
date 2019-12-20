@@ -193,7 +193,20 @@ static const Bit64u BxOpcodeTable0F38F1[] = {
 };
 
 // opcode 0F 38 F6
+#if BX_SUPPORT_CET
+static const Bit64u BxOpcodeTable0F38F5[] = {
+  form_opcode(ATTR_OS64    | ATTR_MOD_MEM | ATTR_SSE_PREFIX_66, BX_IA_WRUSSQ),
+  last_opcode(ATTR_OS16_32 | ATTR_MOD_MEM | ATTR_SSE_PREFIX_66, BX_IA_WRUSSD),
+};
+#endif
+
+// opcode 0F 38 F6
 static const Bit64u BxOpcodeTable0F38F6[] = {
+#if BX_SUPPORT_CET
+  form_opcode(ATTR_OS64    | ATTR_MOD_MEM | ATTR_SSE_NO_PREFIX, BX_IA_WRSSQ),
+  form_opcode(ATTR_OS16_32 | ATTR_MOD_MEM | ATTR_SSE_NO_PREFIX, BX_IA_WRSSD),
+#endif
+
 #if BX_SUPPORT_X86_64
   form_opcode(ATTR_SSE_PREFIX_66 | ATTR_OS64, BX_IA_ADCX_GqEq),
   form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_OS64, BX_IA_ADOX_GqEq),

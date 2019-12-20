@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2007-2017 Stanislav Shwartsman
+//   Copyright (c) 2007-2019 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -108,6 +108,7 @@ struct bx_cr0_t {
 #define BX_CR4_SMEP_MASK       (1 << 20)
 #define BX_CR4_SMAP_MASK       (1 << 21)
 #define BX_CR4_PKE_MASK        (1 << 22)
+#define BX_CR4_CET_MASK        (1 << 23)
 
 struct bx_cr4_t {
   Bit32u  val32; // 32bit value of register
@@ -136,6 +137,7 @@ struct bx_cr4_t {
   IMPLEMENT_CRREG_ACCESSORS(SMEP, 20);
   IMPLEMENT_CRREG_ACCESSORS(SMAP, 21);
   IMPLEMENT_CRREG_ACCESSORS(PKE, 22);
+  IMPLEMENT_CRREG_ACCESSORS(CET, 23);
 
   BX_CPP_INLINE Bit32u get32() const { return val32; }
   BX_CPP_INLINE void set32(Bit32u val) { val32 = val; }
@@ -243,6 +245,8 @@ const unsigned XSAVE_OPMASK_STATE_LEN       = 64;
 const unsigned XSAVE_ZMM_HI256_STATE_LEN    = 512;
 const unsigned XSAVE_HI_ZMM_STATE_LEN       = 1024;
 const unsigned XSAVE_PKRU_STATE_LEN         = 64;
+const unsigned XSAVE_CET_U_STATE_LEN        = 16;
+const unsigned XSAVE_CET_S_STATE_LEN        = 24;
 
 const unsigned XSAVE_SSE_STATE_OFFSET       = 160;
 const unsigned XSAVE_YMM_STATE_OFFSET       = 576;
@@ -265,6 +269,8 @@ struct xcr0_t {
     BX_XCR0_HI_ZMM_BIT = 7,
     BX_XCR0_PT_BIT = 8,
     BX_XCR0_PKRU_BIT = 9,
+    BX_XCR0_CET_U_BIT = 11,
+    BX_XCR0_CET_S_BIT = 12,
     BX_XCR0_LAST
   };
 
@@ -278,6 +284,8 @@ struct xcr0_t {
 #define BX_XCR0_HI_ZMM_MASK    (1 << xcr0_t::BX_XCR0_HI_ZMM_BIT)
 #define BX_XCR0_PT_MASK        (1 << xcr0_t::BX_XCR0_PT_BIT)
 #define BX_XCR0_PKRU_MASK      (1 << xcr0_t::BX_XCR0_PKRU_BIT)
+#define BX_XCR0_CET_U_MASK     (1 << xcr0_t::BX_XCR0_CET_U_BIT)
+#define BX_XCR0_CET_S_MASK     (1 << xcr0_t::BX_XCR0_CET_S_BIT)
 
   IMPLEMENT_CRREG_ACCESSORS(FPU, BX_XCR0_FPU_BIT);
   IMPLEMENT_CRREG_ACCESSORS(SSE, BX_XCR0_SSE_BIT);

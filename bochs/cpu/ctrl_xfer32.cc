@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2018  The Bochs Project
+//  Copyright (C) 2001-2019  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -118,6 +118,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear32_Iw(bxInstruction_c *i)
   RSP_SPECULATIVE;
 
   Bit32u return_EIP = pop_32();
+#if BX_SUPPORT_CET
+  if (ShadowStackEnabled(CPL)) {
+    Bit32u shadow_EIP = shadow_stack_pop_32();
+    if (shadow_EIP != return_EIP)
+      exception(BX_CP_EXCEPTION, BX_CP_NEAR_RET);
+  }
+#endif
+
   if (return_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
   {
     BX_ERROR(("%s: offset outside of CS limits", i->getIaOpcodeNameShort()));
@@ -189,13 +197,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_Jd(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_call;
 #endif
 
-  Bit32u new_EIP = EIP + i->Id();
-
   RSP_SPECULATIVE;
 
   /* push 32 bit EA of next instruction */
   push_32(EIP);
+#if BX_SUPPORT_CET
+  if (ShadowStackEnabled(CPL) && i->Id())
+    shadow_stack_push_32(EIP);
+#endif
 
+  Bit32u new_EIP = EIP + i->Id();
   branch_near32(new_EIP);
 
   RSP_COMMIT;
@@ -229,10 +240,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_EdR(bxInstruction_c *i)
 
   /* push 32 bit EA of next instruction */
   push_32(EIP);
+#if BX_SUPPORT_CET
+  if (ShadowStackEnabled(CPL))
+    shadow_stack_push_32(EIP);
+#endif
 
   branch_near32(new_EIP);
 
   RSP_COMMIT;
+
+#if BX_SUPPORT_CET
+  track_indirect_if_not_suppressed(i, CPL);
+#endif
 
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL_INDIRECT, PREV_RIP, EIP);
 
@@ -493,6 +512,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_EdR(bxInstruction_c *i)
   Bit32u new_EIP = BX_READ_32BIT_REG(i->dst());
   branch_near32(new_EIP);
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP_INDIRECT, PREV_RIP, new_EIP);
+
+#if BX_SUPPORT_CET
+  track_indirect_if_not_suppressed(i, CPL);
+#endif
 
   BX_NEXT_TRACE(i);
 }

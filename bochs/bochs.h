@@ -450,10 +450,18 @@ BOCHSAPI extern Bit32u apic_id_mask;
 #endif
 
 // memory access type (read/write/execute/rw)
-#define BX_READ         0
-#define BX_WRITE        1
-#define BX_EXECUTE      2
-#define BX_RW           3
+enum {
+  BX_READ    = 0,
+  BX_WRITE   = 1,
+  BX_EXECUTE = 2,
+  BX_RW      = 3,
+#if BX_SUPPORT_CET
+  BX_SHADOW_STACK_READ    = 4,
+  BX_SHADOW_STACK_WRITE   = 5,
+  BX_SHADOW_STACK_INVALID = 6,  // can't execute shadow stack
+  BX_SHADOW_STACK_RW      = 7,
+#endif
+};
 
 // types of reset
 #define BX_RESET_SOFTWARE 10

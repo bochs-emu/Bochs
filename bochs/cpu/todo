@@ -67,3 +67,10 @@ TODO (know issues in CPU model):
     Could be implemented through instrumentation if ***really*** needed.
 ------------------------------------------------------------------------------------
 
+[!]: Some system operations have to be done atomically.
+     This is the list for future reference:
+     - A/D bit update in page table
+     - A bit update in segment descriptor
+     - BUSY bit in TSS
+     - Busy bit in shadow stack
+     - RSTORSSP

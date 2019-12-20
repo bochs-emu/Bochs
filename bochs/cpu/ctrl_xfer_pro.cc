@@ -124,6 +124,15 @@ void BX_CPU_C::branch_far(bx_selector_t *selector, bx_descriptor_t *descriptor, 
   else
 #endif
   {
+#if BX_SUPPORT_CET
+    if (ShadowStackEnabled(cpl)) {
+      if (GET32H(SSP) != 0) {
+        BX_ERROR(("branch_far64: 64-bit SSP when jumping to legacy mode"));
+        exception(BX_GP_EXCEPTION, 0);
+      }
+    }
+#endif
+
     rip &= 0xffffffff;
 
     /* instruction pointer must be in code segment limit else #GP(0) */

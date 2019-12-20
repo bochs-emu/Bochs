@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2018  The Bochs Project
+//  Copyright (C) 2001-2019  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -49,7 +49,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear64_Iw(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
 #endif
 
-  Bit64u return_RIP = stack_read_qword(RSP);
+  RSP_SPECULATIVE;
+
+  Bit64u return_RIP = pop_64();
+#if BX_SUPPORT_CET
+  if (ShadowStackEnabled(CPL)) {
+    Bit64u shadow_RIP = shadow_stack_pop_64();
+    if (shadow_RIP != return_RIP)
+      exception(BX_CP_EXCEPTION, BX_CP_NEAR_RET);
+  }
+#endif
 
   if (! IsCanonical(return_RIP)) {
     BX_ERROR(("%s: canonical RIP violation", i->getIaOpcodeNameShort()));
@@ -57,7 +66,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear64_Iw(bxInstruction_c *i)
   }
 
   RIP = return_RIP;
-  RSP += 8 + i->Iw();
+  RSP += i->Iw();
+
+  RSP_COMMIT;
 
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET, PREV_RIP, RIP);
 
@@ -76,8 +87,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar64_Iw(bxInstruction_c *i)
 
   BX_ASSERT(protected_mode());
 
+  RSP_SPECULATIVE;
+
   // return_protected is RSP safe
   return_protected(i, i->Iw());
+
+  RSP_COMMIT;
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET,
                       FAR_BRANCH_PREV_CS, FAR_BRANCH_PREV_RIP,
@@ -94,8 +109,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_Jq(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_call;
 #endif
 
+  RSP_SPECULATIVE;
+
   /* push 64 bit EA of next instruction */
-  stack_write_qword(RSP-8, RIP);
+  push_64(RIP);
+#if BX_SUPPORT_CET
+  if (ShadowStackEnabled(CPL) && i->Id())
+    shadow_stack_push_64(RIP);
+#endif
 
   if (! IsCanonical(new_RIP)) {
     BX_ERROR(("%s: canonical RIP violation", i->getIaOpcodeNameShort()));
@@ -103,7 +124,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_Jq(bxInstruction_c *i)
   }
 
   RIP = new_RIP;
-  RSP -= 8;
+
+  RSP_COMMIT;
 
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL, PREV_RIP, RIP);
 
@@ -118,8 +140,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_EqR(bxInstruction_c *i)
 
   Bit64u new_RIP = BX_READ_64BIT_REG(i->dst());
 
+  RSP_SPECULATIVE;
+
   /* push 64 bit EA of next instruction */
-  stack_write_qword(RSP-8, RIP);
+  push_64(RIP);
+#if BX_SUPPORT_CET
+  if (ShadowStackEnabled(CPL))
+    shadow_stack_push_64(RIP);
+#endif
 
   if (! IsCanonical(new_RIP))
   {
@@ -128,7 +156,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_EqR(bxInstruction_c *i)
   }
 
   RIP = new_RIP;
-  RSP -= 8;
+
+  RSP_COMMIT;
+
+#if BX_SUPPORT_CET
+  track_indirect_if_not_suppressed(i, CPL);
+#endif
 
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL_INDIRECT, PREV_RIP, RIP);
 
@@ -153,8 +186,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL64_Ep(bxInstruction_c *i)
 
   BX_ASSERT(protected_mode());
 
-  // call_protected is RSP safe for 64-bit mode
+  RSP_SPECULATIVE;
+
   call_protected(i, cs_raw, op1_64);
+
+  RSP_COMMIT;
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL_INDIRECT,
                       FAR_BRANCH_PREV_CS, FAR_BRANCH_PREV_RIP,
@@ -381,8 +417,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_EqR(bxInstruction_c *i)
   }
 
   RIP = op1_64;
-
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP_INDIRECT, PREV_RIP, RIP);
+
+#if BX_SUPPORT_CET
+  track_indirect_if_not_suppressed(i, CPL);
+#endif
 
   BX_NEXT_TRACE(i);
 }
@@ -440,7 +479,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET64(bxInstruction_c *i)
 
   BX_ASSERT(long_mode());
 
+  RSP_SPECULATIVE;
+
   long_iret(i);
+
+  RSP_COMMIT;
 
 #if BX_SUPPORT_VMX
   BX_CPU_THIS_PTR nmi_unblocking_iret = 0;

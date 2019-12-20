@@ -133,6 +133,7 @@ Bit64u eval_value;
 %token BX_TOKEN_REG_IP
 %token BX_TOKEN_REG_EIP
 %token BX_TOKEN_REG_RIP
+%token BX_TOKEN_REG_SSP
 %type <uval> optional_numeric
 %type <uval> vexpression
 %type <uval> expression
@@ -1331,6 +1332,7 @@ vexpression:
    | BX_TOKEN_REG_IP                 { $$ = bx_dbg_get_ip (); }
    | BX_TOKEN_REG_EIP                { $$ = bx_dbg_get_eip(); }
    | BX_TOKEN_REG_RIP                { $$ = bx_dbg_get_rip(); }
+   | BX_TOKEN_REG_SSP                { $$ = bx_dbg_get_ssp(); }
    | vexpression '+' vexpression     { $$ = $1 + $3; }
    | vexpression '-' vexpression     { $$ = $1 - $3; }
    | vexpression '*' vexpression     { $$ = $1 * $3; }
@@ -1360,6 +1362,7 @@ expression:
    | BX_TOKEN_REG_IP                 { $$ = bx_dbg_get_ip (); }
    | BX_TOKEN_REG_EIP                { $$ = bx_dbg_get_eip(); }
    | BX_TOKEN_REG_RIP                { $$ = bx_dbg_get_rip(); }
+   | BX_TOKEN_REG_SSP                { $$ = bx_dbg_get_ssp(); }
    | expression ':' expression       { $$ = bx_dbg_get_laddr ($1, $3); }
    | expression '+' expression       { $$ = $1 + $3; }
    | expression '-' expression       { $$ = $1 - $3; }

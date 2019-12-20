@@ -184,6 +184,8 @@ void BX_CPU_C::cpu_run_trace(void)
 
 #endif
 
+#include "decoder/ia_opcodes.h"
+
 bxICacheEntry_c* BX_CPU_C::getICacheEntry(void)
 {
   bx_address eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
@@ -205,6 +207,18 @@ bxICacheEntry_c* BX_CPU_C::getICacheEntry(void)
     INC_ICACHE_STAT(iCacheMisses);
     entry = serveICacheMiss((Bit32u) eipBiased, pAddr);
   }
+
+#if BX_SUPPORT_CET
+  if (WaitingForEndbranch(CPL)) {
+    bxInstruction_c *i = entry->i;
+    if (i->getIaOpcode() != (long64_mode() ? BX_IA_ENDBRANCH64 : BX_IA_ENDBRANCH32) && i->getIaOpcode() != BX_IA_INT3) {
+      if (LegacyEndbranchTreatment(CPL)) {
+        BX_ERROR(("Endbranch is expected for CPL=%d", CPL));
+        exception(BX_CP_EXCEPTION, BX_CP_ENDBRANCH);
+      }
+    }
+  }
+#endif
 
   return entry;
 }

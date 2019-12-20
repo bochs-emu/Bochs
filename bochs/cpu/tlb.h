@@ -70,10 +70,16 @@ const bx_address BX_INVALID_TLB_ENTRY = 0xffffffff;
 #endif
 
 // accessBits in DTLB
-const Bit32u TLB_SysReadOK     = 0x01;
-const Bit32u TLB_UserReadOK    = 0x02;
-const Bit32u TLB_SysWriteOK    = 0x04;
-const Bit32u TLB_UserWriteOK   = 0x08;
+const Bit32u TLB_SysReadOK   = 0x01;
+const Bit32u TLB_UserReadOK  = 0x02;
+const Bit32u TLB_SysWriteOK  = 0x04;
+const Bit32u TLB_UserWriteOK = 0x08;
+
+const Bit32u TLB_SysReadShadowStackOK   = 0x10;
+const Bit32u TLB_UserReadShadowStackOK  = 0x20;
+const Bit32u TLB_SysWriteShadowStackOK  = 0x40;
+const Bit32u TLB_UserWriteShadowStackOK = 0x80;
+
 // accessBits in ITLB
 const Bit32u TLB_SysExecuteOK  = 0x01;
 const Bit32u TLB_UserExecuteOK = 0x02;
@@ -90,7 +96,17 @@ const Bit32u TLB_GlobalPage    = 0x80000000;
 #define isReadOK(tlbEntry, user) \
   (tlbEntry->accessBits & (0x01 << (user)) & BX_CPU_THIS_PTR rd_pkey[tlbEntry->pkey])
 
-#else // protection keys are not enabled
+#if BX_SUPPORT_CET
+// check if page from a TLB entry can be written for shadow stack access
+#define isShadowStackWriteOK(tlbEntry, user) \
+  (tlbEntry->accessBits & (0x40 << (user)) & BX_CPU_THIS_PTR wr_pkey[tlbEntry->pkey])
+
+// check if page from a TLB entry can be read
+#define isShadowStackReadOK(tlbEntry, user) \
+  (tlbEntry->accessBits & (0x10 << (user)) & BX_CPU_THIS_PTR rd_pkey[tlbEntry->pkey])
+#endif
+
+#else // ! BX_SUPPORT_PKEYS
 
 // check if page from a TLB entry can be written
 #define isWriteOK(tlbEntry, user) \
@@ -99,6 +115,16 @@ const Bit32u TLB_GlobalPage    = 0x80000000;
 // check if page from a TLB entry can be read
 #define isReadOK(tlbEntry, user) \
   (tlbEntry->accessBits & (0x01 << (user)))
+
+#if BX_SUPPORT_CET
+// check if page from a TLB entry can be written for shadow stack access
+#define isShadowStackWriteOK(tlbEntry, user) \
+  (tlbEntry->accessBits & (0x40 << (user)))
+
+// check if page from a TLB entry can be read
+#define isShadowStackReadOK(tlbEntry, user) \
+  (tlbEntry->accessBits & (0x10 << (user)))
+#endif
 
 #endif
 

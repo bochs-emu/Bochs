@@ -458,6 +458,10 @@ bx_bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
     case VMCS_GUEST_IA32_SYSENTER_ESP_MSR:
     case VMCS_GUEST_IA32_SYSENTER_EIP_MSR:
       return 1;
+    case VMCS_GUEST_IA32_S_CET:
+    case VMCS_GUEST_SSP:
+    case VMCS_GUEST_INTERRUPT_SSP_TABLE_ADDR:
+      return is_cpu_extension_supported(BX_ISA_CET);
 
     /* VMCS natural width host state fields */
     /* binary 0110_11xx_xxxx_xxx0 */
@@ -474,6 +478,10 @@ bx_bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
     case VMCS_HOST_RSP:
     case VMCS_HOST_RIP:
       return 1;
+    case VMCS_HOST_IA32_S_CET:
+    case VMCS_HOST_SSP:
+    case VMCS_HOST_INTERRUPT_SSP_TABLE_ADDR:
+      return is_cpu_extension_supported(BX_ISA_CET);
 
     default:
       return 0;
@@ -512,6 +520,7 @@ void BX_CPU_C::init_ept_vpid_capabilities(void)
   // [20] - INVEPT instruction supported
   // [21] - EPT A/D bits supported
   // [22] - advanced VM-exit information for EPT violations (not implemented yet)
+  // [23] - Enable Shadow Stack control bit is supported in EPTP (CET)
   // [25] - INVEPT single-context invalidation supported
   // [26] - INVEPT all-context invalidation supported
   // [32] - INVVPID instruction supported
@@ -526,6 +535,8 @@ void BX_CPU_C::init_ept_vpid_capabilities(void)
       cap->vmx_ept_vpid_cap_supported_bits |= (1 << 17);
     if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT_ACCESS_DIRTY))
       cap->vmx_ept_vpid_cap_supported_bits |= (1 << 21);
+    if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET))
+      cap->vmx_ept_vpid_cap_supported_bits |= (1 << 23);
   }
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_VPID))
     cap->vmx_ept_vpid_cap_supported_bits |= BX_CONST64(0x00000f01) << 32;
@@ -560,6 +571,7 @@ void BX_CPU_C::init_pin_based_vmexec_ctrls(void)
   // 1 [04] Reserved (must be '1)
   //   [05] Virtual NMI (require Virtual NMI support)
   //   [06] Activate VMX Preemption Timer (require VMX Preemption Timer support)
+  //   [07] Process Posted interrupts
 
   cap->vmx_pin_vmexec_ctrl_supported_bits =
        VMX_VM_EXEC_CTRL1_EXTERNAL_INTERRUPT_VMEXIT |
@@ -800,6 +812,10 @@ void BX_CPU_C::init_vmexit_ctrls(void)
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_PREEMPTION_TIMER))
     cap->vmx_vmexit_ctrl_supported_bits |= VMX_VMEXIT_CTRL1_STORE_VMX_PREEMPTION_TIMER;
 #endif
+#if BX_SUPPORT_CET
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET))
+    cap->vmx_vmexit_ctrl_supported_bits |= VMX_VMEXIT_CTRL1_LOAD_HOST_CET_STATE;
+#endif
 }
 
 void BX_CPU_C::init_vmentry_ctrls(void)
@@ -834,6 +850,10 @@ void BX_CPU_C::init_vmentry_ctrls(void)
     cap->vmx_vmentry_ctrl_supported_bits |= VMX_VMENTRY_CTRL1_LOAD_PAT_MSR;
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EFER))
     cap->vmx_vmentry_ctrl_supported_bits |= VMX_VMENTRY_CTRL1_LOAD_EFER_MSR;
+#endif
+#if BX_SUPPORT_CET
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET))
+    cap->vmx_vmentry_ctrl_supported_bits |= VMX_VMENTRY_CTRL1_LOAD_GUEST_CET_STATE;
 #endif
 }
 

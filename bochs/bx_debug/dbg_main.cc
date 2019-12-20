@@ -556,11 +556,13 @@ void bx_dbg_exception(unsigned cpu, Bit8u vector, Bit16u error_code)
      "(#AC) alignment check",
      "(#MC) machine check",
      "(#XF) SIMD floating point exception",
+     "(#VE) Virtualization Exception",
+     "(#CP) Shadow Stack Protection",
   };
 
   if (BX_CPU(dbg_cpu)->trace || bx_dbg.exceptions)
   {
-    if (vector <= BX_XM_EXCEPTION) {
+    if (vector <= BX_CP_EXCEPTION) {
       dbg_printf("CPU %d: Exception 0x%02x - %s occurred (error_code=0x%04x)\n",
         cpu, vector, exception[vector], error_code);
     }
@@ -634,9 +636,10 @@ void bx_dbg_lin_memory_access(unsigned cpu, bx_address lin, bx_phy_address phy, 
   if (! BX_CPU(cpu)->trace_mem)
     return;
 
+  const char *access_type[] = {"RD","WR","EX","RW","SR","SW","--","SRW"};
+
   dbg_printf("[CPU%d %s]: LIN 0x" FMT_ADDRX " PHY 0x" FMT_PHY_ADDRX " (len=%d, %s)",
-     cpu, 
-     (rw == BX_WRITE) ? "WR" : "RD",
+     cpu, access_type[rw],
      lin, phy, len, get_memtype_name(memtype));
 
   if (len == 1) {
@@ -729,9 +732,10 @@ void bx_dbg_phy_memory_access(unsigned cpu, bx_phy_address phy, unsigned len, un
 
   if (memtype > BX_MEMTYPE_INVALID) memtype = BX_MEMTYPE_INVALID;
 
+  const char *access_type[] = {"RD","WR","EX","RW","SR","SW","--","SRW"};
+
   dbg_printf("[CPU%d %s]: PHY 0x" FMT_PHY_ADDRX " (len=%d, %s)",
-     cpu, 
-     (rw == BX_WRITE) ? "WR" : "RD",
+     cpu, access_type[rw],
      phy, len, get_memtype_name(memtype));
 
   if (len == 1) {
@@ -1019,7 +1023,8 @@ void bx_dbg_info_control_regs_command(void)
   dbg_printf("    PWT=page-level write-through=%d\n", (cr3>>3) & 1);
 #if BX_CPU_LEVEL >= 5
   Bit32u cr4 = SIM->get_param_num("CR4", dbg_cpu_list)->get();
-  dbg_printf("CR4=0x%08x: %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n", cr4,
+  dbg_printf("CR4=0x%08x: %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n", cr4,
+    (cr4 & (1<<23)) ? "CET" : "cet",
     (cr4 & (1<<22)) ? "PKE" : "pke",
     (cr4 & (1<<21)) ? "SMAP" : "smap",
     (cr4 & (1<<20)) ? "SMEP" : "smep",
@@ -1169,6 +1174,10 @@ void bx_dbg_info_registers_command(int which_regs_mask)
     dbg_printf("r15: %08x_%08x\n", GET32H(reg), GET32L(reg));
     reg = bx_dbg_get_rip();
     dbg_printf("rip: %08x_%08x\n", GET32H(reg), GET32L(reg));
+#if BX_SUPPORT_CET
+    reg = BX_CPU(dbg_cpu)->get_ssp();
+    dbg_printf("ssp: %08x_%08x\n", GET32H(reg), GET32L(reg));
+#endif
 #endif
     reg = BX_CPU(dbg_cpu)->read_eflags();
     dbg_printf("eflags 0x%08x: ", (unsigned) reg);
@@ -3618,6 +3627,15 @@ bx_bool bx_dbg_eval_condition(char *condition)
   extern Bit64u eval_value;
   bx_dbg_interpret_line(condition);
   return eval_value != 0;
+}
+
+bx_address bx_dbg_get_ssp(void)
+{
+#if BX_SUPPORT_CET
+  return BX_CPU(dbg_cpu)->get_ssp();
+#else
+  return 0;
+#endif
 }
 
 Bit8u bx_dbg_get_reg8l_value(unsigned reg)

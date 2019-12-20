@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2018 Stanislav Shwartsman
+//   Copyright (c) 2008-2019 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -27,6 +27,10 @@
 #include "msr.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#if BX_SUPPORT_CET
+extern bx_bool is_invalid_cet_control(bx_address val);
+#endif
+
 #if BX_CPU_LEVEL >= 5
 bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 {
@@ -44,7 +48,6 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 #endif
 
   switch(index) {
-
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_SYSENTER_CS:
       if (! is_cpu_extension_supported(BX_ISA_SYSENTER_SYSEXIT)) {
@@ -165,6 +168,36 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_XSS:
       val64 = BX_CPU_THIS_PTR msr.ia32_xss;
+      break;
+#endif
+
+#if BX_SUPPORT_CET
+    case BX_MSR_IA32_U_CET:
+    case BX_MSR_IA32_S_CET:
+      if (! is_cpu_extension_supported(BX_ISA_CET)) {
+        BX_ERROR(("RDMSR BX_MSR_IA32_U_CET/BX_MSR_IA32_S_CET: CET not enabled in the cpu model"));
+        return handle_unknown_rdmsr(index, msr);
+      }
+      val64 = BX_CPU_THIS_PTR msr.ia32_cet_control[index == BX_MSR_IA32_U_CET];
+      break;
+
+    case BX_MSR_IA32_PL0_SSP:
+    case BX_MSR_IA32_PL1_SSP:
+    case BX_MSR_IA32_PL2_SSP:
+    case BX_MSR_IA32_PL3_SSP:
+      if (! is_cpu_extension_supported(BX_ISA_CET)) {
+        BX_ERROR(("RDMSR BX_MSR_IA32_PLi_SSP: CET not enabled in the cpu model"));
+        return handle_unknown_rdmsr(index, msr);
+      }
+      val64 = BX_CPU_THIS_PTR msr.ia32_pl_ssp[index - BX_MSR_IA32_PL0_SSP];
+      break;
+
+    case BX_MSR_IA32_INTERRUPT_SSP_TABLE_ADDR:
+      if (! is_cpu_extension_supported(BX_ISA_CET)) {
+        BX_ERROR(("RDMSR BX_MSR_IA32_INTERRUPT_SSP_TABLE_ADDR: CET not enabled in the cpu model"));
+        return handle_unknown_rdmsr(index, msr);
+      }
+      val64 = BX_CPU_THIS_PTR msr.ia32_interrupt_ssp_table;
       break;
 #endif
 
@@ -729,12 +762,68 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_XSS:
-      if (! is_cpu_extension_supported(BX_ISA_XSAVES)) {
-        BX_ERROR(("WRMSR BX_MSR_XSS: XSAVES not enabled in the cpu model"));
+      {
+        if (! is_cpu_extension_supported(BX_ISA_XSAVES)) {
+          BX_ERROR(("WRMSR BX_MSR_XSS: XSAVES not enabled in the cpu model"));
+          return handle_unknown_wrmsr(index, val_64);
+        }
+        Bit64u ia32_xss_support_mask = 0;
+#if BX_SUPPORT_CET
+               ia32_xss_support_mask = BX_XCR0_CET_U_MASK | BX_XCR0_CET_S_MASK;
+#endif
+        if (val_64 & ~ia32_xss_support_mask) {
+          BX_ERROR(("WRMSR: attempt to set reserved/not supported bit in BX_MSR_XSS"));
+          return 0;
+        }
+        BX_CPU_THIS_PTR msr.ia32_xss = val_64;
+        break;
+      }
+#endif
+
+#if BX_SUPPORT_CET
+    case BX_MSR_IA32_U_CET:
+    case BX_MSR_IA32_S_CET:
+      if (! is_cpu_extension_supported(BX_ISA_CET)) {
+        BX_ERROR(("WRMSR BX_MSR_IA32_U_CET/BX_MSR_IA32_S_CET: CET not enabled in the cpu model"));
         return handle_unknown_wrmsr(index, val_64);
       }
-      BX_ERROR(("WRMSR: attempt to set reserved bit in BX_MSR_XSS"));
-      return 0;
+      if (! IsCanonical(val_64) || is_invalid_cet_control(val_64)) {
+        BX_ERROR(("WRMSR: attempt to write non-canonical or invalid value to BX_MSR_IA32_U_CET/BX_MSR_IA32_S_CET !"));
+        return 0;
+      }
+      BX_CPU_THIS_PTR msr.ia32_cet_control[index == BX_MSR_IA32_U_CET] = val_64;
+      break;
+
+    case BX_MSR_IA32_PL0_SSP:
+    case BX_MSR_IA32_PL1_SSP:
+    case BX_MSR_IA32_PL2_SSP:
+    case BX_MSR_IA32_PL3_SSP:
+      if (! is_cpu_extension_supported(BX_ISA_CET)) {
+        BX_ERROR(("WRMSR BX_MSR_IA32_PLi_SSP: CET not enabled in the cpu model"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
+      if (! IsCanonical(val_64)) {
+        BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_PLi_SSP !"));
+        return 0;
+      }
+      if (val_64 & 0x03) {
+        BX_ERROR(("WRMSR: attempt to write non 4byte-aligned address to BX_MSR_IA32_PLi_SSP !"));
+        return 0;
+      }
+      BX_CPU_THIS_PTR msr.ia32_pl_ssp[index - BX_MSR_IA32_PL0_SSP] = val_64;
+      break;
+
+    case BX_MSR_IA32_INTERRUPT_SSP_TABLE_ADDR:
+      if (! is_cpu_extension_supported(BX_ISA_CET)) {
+        BX_ERROR(("WRMSR BX_MSR_IA32_INTERRUPT_SSP_TABLE_ADDR: CET not enabled in the cpu model"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
+      if (! IsCanonical(val_64)) {
+        BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_INTERRUPT_SSP_TABLE_ADDR !"));
+        return 0;
+      }
+      BX_CPU_THIS_PTR msr.ia32_interrupt_ssp_table = val_64;
+      break;
 #endif
 
 #if BX_CPU_LEVEL >= 6

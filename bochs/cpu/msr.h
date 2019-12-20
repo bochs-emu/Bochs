@@ -124,6 +124,17 @@ enum MSR_Register {
   BX_MSR_IA32_SMM_MONITOR_CTL     = 0x09B,
 #endif
 
+  /* Shadow Stack */
+  BX_MSR_IA32_U_CET = 0x6A0,
+  BX_MSR_IA32_S_CET = 0x6A2,
+
+  BX_MSR_IA32_PL0_SSP = 0x6A4,
+  BX_MSR_IA32_PL1_SSP = 0x6A5,
+  BX_MSR_IA32_PL2_SSP = 0x6A6,
+  BX_MSR_IA32_PL3_SSP = 0x6A7,
+
+  BX_MSR_IA32_INTERRUPT_SSP_TABLE_ADDR = 0x6A8,
+
   BX_MSR_XSS = 0xda0,
 
   /* AMD MSRs */

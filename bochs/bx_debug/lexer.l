@@ -224,6 +224,7 @@ r15             { LONG_MODE_64B_REG(BX_64BIT_REG_R15); }
 ip              { return(BX_TOKEN_REG_IP); }
 eip             { return(BX_TOKEN_REG_EIP);}
 rip             { return(BX_TOKEN_REG_RIP);}
+ssp             { return(BX_TOKEN_REG_SSP);}
 cs              { bxlval.uval = BX_SEG_REG_CS; return(BX_TOKEN_CS); }
 es              { bxlval.uval = BX_SEG_REG_ES; return(BX_TOKEN_ES); }
 ss              { bxlval.uval = BX_SEG_REG_SS; return(BX_TOKEN_SS); }

@@ -49,6 +49,17 @@ void BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector, Bit32
   // Must be 32bit effective opsize, VM is set in upper 16bits of eFLAGS
   // and CPL = 0 to get here
 
+  BX_ASSERT(CPL == 0);
+  BX_ASSERT(protected_mode());
+
+#if BX_SUPPORT_CET
+  // If shadow stack or indirect branch tracking at CPL3 in vm8086 then #GP(0)
+  if (ShadowStackEnabled(3) || EndbranchEnabled(3)) {
+    BX_ERROR(("stack_return_to_v86: CR4.CET and shadow stack controls enabled in v8086 mode !"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+#endif
+
   // ----------------
   // |     | OLD GS | eSP+32
   // |     | OLD FS | eSP+28
@@ -60,6 +71,12 @@ void BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector, Bit32
   // |     | OLD CS | eSP+4
   // |  OLD EIP     | eSP+0
   // ----------------
+
+//
+//  if (new_eip > 0xffff) {
+//    BX_ERROR(("stack_return_to_v86: EIP not within CS limits !"));
+//    exception(BX_GP_EXCEPTION, 0);
+//  }
 
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
     temp_ESP = ESP;
@@ -76,6 +93,15 @@ void BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector, Bit32
   raw_fs_selector = (Bit16u) stack_read_dword(temp_ESP+28);
   raw_gs_selector = (Bit16u) stack_read_dword(temp_ESP+32);
 
+#if BX_SUPPORT_CET
+  if (ShadowStackEnabled(0)) {
+    if (SSP & 0x7) {
+      BX_ERROR(("stack_return_to_v86: SSP is not 8-byte aligned"));
+      exception(BX_CP_EXCEPTION, BX_CP_FAR_RET_IRET);
+    }
+  }
+#endif
+
   writeEFlags(flags32, EFlagsValidMask);
 
   // load CS:IP from stack; already read and passed as args
@@ -90,6 +116,11 @@ void BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector, Bit32
   ESP = new_esp;	// full 32 bit are loaded
 
   init_v8086_mode();
+
+#if BX_SUPPORT_CET
+  if (ShadowStackEnabled(0))
+    shadow_stack_atomic_clear_busy(SSP, 0);
+#endif
 }
 
 #if BX_CPU_LEVEL >= 5

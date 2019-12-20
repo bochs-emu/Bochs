@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2010-2018 Stanislav Shwartsman
+//   Copyright (c) 2010-2019 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -1030,6 +1030,13 @@ bx_bool BX_CPU_C::SetCR0(bxInstruction_c *i, bx_address val)
 
   Bit32u val_32 = GET32L(val);
 
+#if BX_SUPPORT_CET
+  if ((val_32 & BX_CR0_WP_MASK) == 0 && BX_CPU_THIS_PTR cr4.get_CET()) {
+    BX_ERROR(("SetCR0: attempt to clear CR0.WP when CR4.CET=1"));
+    return 0;
+  }
+#endif
+
 #if BX_CPU_LEVEL >= 6
   bx_bool pg = (val_32 >> 31) & 0x1;
 #endif
@@ -1147,7 +1154,8 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
   Bit32u allowMask = 0;
 
   // CR4 bits definitions:
-  //   [31-22] Reserved, Must be Zero
+  //   [31-24] Reserved, Must be Zero
+  //   [23]    CET: Control Flow Enforcement R/W
   //   [22]    PKE: Protection Keys Enable R/W
   //   [21]    SMAP: Supervisor Mode Access Prevention R/W
   //   [20]    SMEP: Supervisor Mode Execution Protection R/W
@@ -1233,11 +1241,19 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
   if (is_cpu_extension_supported(BX_ISA_SMAP))
     allowMask |= BX_CR4_SMAP_MASK;
 
+#if BX_SUPPORT_PKEYS
   if (is_cpu_extension_supported(BX_ISA_PKU))
     allowMask |= BX_CR4_PKE_MASK;
+#endif
 
   if (is_cpu_extension_supported(BX_ISA_UMIP))
     allowMask |= BX_CR4_UMIP_MASK;
+
+#if BX_SUPPORT_CET
+  if (is_cpu_extension_supported(BX_ISA_CET))
+    allowMask |= BX_CR4_CET_MASK;
+#endif
+
 #endif
 
   return allowMask;
@@ -1290,6 +1306,13 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::check_CR4(bx_address cr4_val)
 bx_bool BX_CPU_C::SetCR4(bxInstruction_c *i, bx_address val)
 {
   if (! check_CR4(val)) return 0;
+
+#if BX_SUPPORT_CET
+  if((val & BX_CR4_CET_MASK) && !BX_CPU_THIS_PTR cr0.get_WP()) {
+    BX_ERROR(("check_CR4(): attempt to set CR4.CET when CR0.WP=0"));
+    return 0;
+  }
+#endif
 
 #if BX_CPU_LEVEL >= 6
   // Modification of PGE,PAE,PSE,PCIDE,SMEP flushes TLB cache according to docs.
@@ -1638,7 +1661,7 @@ void BX_CPU_C::iobreakpoint_match(unsigned port, unsigned len)
 
 XSaveRestoreStateHelper xsave_restore[xcr0_t::BX_XCR0_LAST] = { {0, 0, NULL, NULL, NULL, NULL} };
 
-Bit32u BX_CPU_C::get_xcr0_allow_mask()
+void BX_CPU_C::xsave_xrestor_init(void)
 {
   // XCR0[0]: x87 state
   xsave_restore[xcr0_t::BX_XCR0_FPU_BIT].len    = XSAVE_FPU_STATE_LEN;
@@ -1712,6 +1735,31 @@ Bit32u BX_CPU_C::get_xcr0_allow_mask()
   }
 #endif
 
+  // XCR0[10]: Reserved
+
+#if BX_SUPPORT_CET
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) {
+    // XCR0[11]: CET User State
+    xsave_restore[xcr0_t::BX_XCR0_CET_U_BIT].len    = XSAVE_CET_U_STATE_LEN;
+    xsave_restore[xcr0_t::BX_XCR0_CET_U_BIT].offset = 0;    // IA32_XSS only
+    xsave_restore[xcr0_t::BX_XCR0_CET_U_BIT].xstate_in_use_method = &BX_CPU_C::xsave_cet_u_state_xinuse;
+    xsave_restore[xcr0_t::BX_XCR0_CET_U_BIT].xsave_method = &BX_CPU_C::xsave_cet_u_state;
+    xsave_restore[xcr0_t::BX_XCR0_CET_U_BIT].xrstor_method = &BX_CPU_C::xrstor_cet_u_state;
+    xsave_restore[xcr0_t::BX_XCR0_CET_U_BIT].xrstor_init_method = &BX_CPU_C::xrstor_init_cet_u_state;
+
+    // XCR0[12]: CET Supervisor State
+    xsave_restore[xcr0_t::BX_XCR0_CET_S_BIT].len    = XSAVE_CET_S_STATE_LEN;
+    xsave_restore[xcr0_t::BX_XCR0_CET_S_BIT].offset = 0;    // IA32_XSS only
+    xsave_restore[xcr0_t::BX_XCR0_CET_S_BIT].xstate_in_use_method = &BX_CPU_C::xsave_cet_s_state_xinuse;
+    xsave_restore[xcr0_t::BX_XCR0_CET_S_BIT].xsave_method = &BX_CPU_C::xsave_cet_s_state;
+    xsave_restore[xcr0_t::BX_XCR0_CET_S_BIT].xrstor_method = &BX_CPU_C::xrstor_cet_s_state;
+    xsave_restore[xcr0_t::BX_XCR0_CET_S_BIT].xrstor_init_method = &BX_CPU_C::xrstor_init_cet_s_state;
+  }
+#endif
+}
+
+Bit32u BX_CPU_C::get_xcr0_allow_mask(void)
+{
   Bit32u allowMask = 0x3;
 #if BX_SUPPORT_AVX
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX))

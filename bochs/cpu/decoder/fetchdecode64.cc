@@ -418,7 +418,11 @@ static BxOpcodeDecodeDescriptor64 decode64_descriptor[] =
    /*    0F 1B */ { &decoder64_modrm, BxOpcodeTableMultiByteNOP },
    /*    0F 1C */ { &decoder64_modrm, BxOpcodeTableMultiByteNOP },
    /*    0F 1D */ { &decoder64_modrm, BxOpcodeTableMultiByteNOP },
+#if BX_SUPPORT_CET
+   /*    0F 1E */ { &decoder64_modrm, BxOpcodeTable0F1E },
+#else
    /*    0F 1E */ { &decoder64_modrm, BxOpcodeTableMultiByteNOP },
+#endif
    /*    0F 1F */ { &decoder64_modrm, BxOpcodeTableMultiByteNOP },
    /*    0F 20 */ { &decoder_creg64, BxOpcodeTable0F20_64 },
    /*    0F 21 */ { &decoder_creg64, BxOpcodeTable0F21_64 },
@@ -891,7 +895,11 @@ static BxOpcodeDecodeDescriptor64 decode64_descriptor[] =
    /* 0F 38 F2 */ { &decoder_ud64, NULL },
    /* 0F 38 F3 */ { &decoder_ud64, NULL },
    /* 0F 38 F4 */ { &decoder_ud64, NULL },
+#if BX_SUPPORT_CET
+   /* 0F 38 F5 */ { &decoder64_modrm, BxOpcodeTable0F38F5 },
+#else
    /* 0F 38 F5 */ { &decoder_ud64, NULL },
+#endif
    /* 0F 38 F6 */ { &decoder64_modrm, BxOpcodeTable0F38F6 },
    /* 0F 38 F7 */ { &decoder_ud64, NULL },
    /* 0F 38 F8 */ { &decoder_ud64, NULL },
@@ -1923,7 +1931,7 @@ fetch_b1:
     case 0x26: // ES:
     case 0x36: // SS:
     case 0x3e: // DS:
-      /* ignore segment override prefix */
+      seg_override = (b1 >> 3) & 3;
       rex_prefix = 0;
       if (remain != 0) {
         goto fetch_b1;
@@ -1981,6 +1989,9 @@ fetch_b1:
   }
 
   i->setSeg(BX_SEG_REG_DS); // default segment is DS:
+#if BX_SUPPORT_CET
+  i->setSegOverride(seg_override);
+#endif
 
   i->modRMForm.Id = 0;
 
@@ -1993,7 +2004,7 @@ fetch_b1:
   i->setIaOpcode(ia_opcode);
 
   // assign memory segment override
-  if (! BX_NULL_SEG_REG(seg_override))
+  if (seg_override == BX_SEG_REG_FS || seg_override == BX_SEG_REG_GS)
      i->setSeg(seg_override);
 
   Bit32u op_flags = BxOpcodesTable[ia_opcode].opflags;

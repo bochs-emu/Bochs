@@ -51,6 +51,9 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
   if (descriptor.segment) {
     check_cs(&descriptor, cs_raw, BX_SELECTOR_RPL(cs_raw), CPL);
     branch_far(&selector, &descriptor, disp, CPL);
+#if BX_SUPPORT_CET
+    track_indirect(CPL);
+#endif
     return;
   }
   else {
@@ -211,6 +214,10 @@ BX_CPU_C::jmp_call_gate(bx_selector_t *selector, bx_descriptor_t *gate_descripto
 
   Bit32u temp_EIP = gate_descriptor->u.gate.dest_offset;
   branch_far(&gate_cs_selector, &gate_cs_descriptor, temp_EIP, CPL);
+
+#if BX_SUPPORT_CET
+  track_indirect(CPL);
+#endif
 }
 
 #if BX_SUPPORT_X86_64
@@ -265,5 +272,9 @@ BX_CPU_C::jmp_call_gate64(bx_selector_t *gate_selector)
   check_cs(&cs_descriptor, dest_selector, 0, CPL);
   // and transfer the control
   branch_far(&cs_selector, &cs_descriptor, new_RIP, CPL);
+
+#if BX_SUPPORT_CET
+  track_indirect(CPL);
+#endif
 }
 #endif

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2018  The Bochs Project
+//  Copyright (C) 2001-2019  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -116,6 +116,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear16_Iw(bxInstruction_c *i)
   RSP_SPECULATIVE;
 
   Bit16u return_IP = pop_16();
+#if BX_SUPPORT_CET
+  if (ShadowStackEnabled(CPL)) {
+    Bit32u shadow_IP = shadow_stack_pop_32();
+    if (shadow_IP != Bit32u(return_IP))
+      exception(BX_CP_EXCEPTION, BX_CP_NEAR_RET);
+  }
+#endif
 
   if (return_IP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
   {
@@ -194,6 +201,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_Jw(bxInstruction_c *i)
 
   /* push 16 bit EA of next instruction */
   push_16(IP);
+#if BX_SUPPORT_CET
+  if (ShadowStackEnabled(CPL) && i->Iw())
+    shadow_stack_push_32(IP);
+#endif
 
   Bit16u new_IP = IP + i->Iw();
   branch_near16(new_IP);
@@ -229,10 +240,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_EwR(bxInstruction_c *i)
 
   /* push 16 bit EA of next instruction */
   push_16(IP);
+#if BX_SUPPORT_CET
+  if (ShadowStackEnabled(CPL))
+    shadow_stack_push_32(IP);
+#endif
 
   branch_near16(new_IP);
 
   RSP_COMMIT;
+
+#if BX_SUPPORT_CET
+  track_indirect_if_not_suppressed(i, CPL);
+#endif
 
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL_INDIRECT, PREV_RIP, EIP);
 
@@ -473,6 +492,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_EwR(bxInstruction_c *i)
   Bit16u new_IP = BX_READ_16BIT_REG(i->dst());
   branch_near16(new_IP);
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP_INDIRECT, PREV_RIP, new_IP);
+
+#if BX_SUPPORT_CET
+  track_indirect_if_not_suppressed(i, CPL);
+#endif
 
   BX_NEXT_TRACE(i);
 }

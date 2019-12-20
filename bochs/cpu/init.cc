@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2017  The Bochs Project
+//  Copyright (C) 2001-2019  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -113,6 +113,10 @@ void BX_CPU_C::initialize(void)
 #endif
 
   init_FetchDecodeTables(); // must be called after init_isa_features_bitmask()
+
+#if BX_CPU_LEVEL >= 6
+  xsave_xrestor_init();
+#endif
 
 #if BX_CONFIGURE_MSRS
   for (unsigned n=0; n < BX_MSR_MAX_INDEX; n++) {
@@ -233,6 +237,11 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_SIMPLE(cpu, ESI);
   BXRS_HEX_PARAM_SIMPLE(cpu, EDI);
   BXRS_HEX_PARAM_SIMPLE(cpu, EIP);
+#endif
+#if BX_SUPPORT_CET
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) {
+    BXRS_HEX_PARAM_SIMPLE(cpu, SSP);
+  }
 #endif
   BXRS_PARAM_SPECIAL32(cpu, EFLAGS,
          param_save_handler, param_restore_handler);
@@ -392,7 +401,17 @@ void BX_CPU_C::register_state(void)
     BXRS_HEX_PARAM_FIELD(MSR, ia32_xss, msr.ia32_xss);
   }
 #endif
-
+#if BX_SUPPORT_CET
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) {
+    BXRS_HEX_PARAM_FIELD(MSR, ia32_interrupt_ssp_table, msr.ia32_interrupt_ssp_table);
+    BXRS_HEX_PARAM_FIELD(MSR, ia32_cet_s_ctrl, msr.ia32_cet_control[0]);
+    BXRS_HEX_PARAM_FIELD(MSR, ia32_cet_u_ctrl, msr.ia32_cet_control[1]);
+    BXRS_HEX_PARAM_FIELD(MSR, ia32_pl0_ssp, msr.ia32_pl_ssp[0]);
+    BXRS_HEX_PARAM_FIELD(MSR, ia32_pl1_ssp, msr.ia32_pl_ssp[1]);
+    BXRS_HEX_PARAM_FIELD(MSR, ia32_pl2_ssp, msr.ia32_pl_ssp[2]);
+    BXRS_HEX_PARAM_FIELD(MSR, ia32_pl3_ssp, msr.ia32_pl_ssp[3]);
+  }
+#endif
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SCA_MITIGATIONS)) {
     BXRS_HEX_PARAM_FIELD(MSR, ia32_spec_ctrl, msr.ia32_spec_ctrl);
   }
@@ -850,6 +869,14 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR xcr0_suppmask = get_xcr0_allow_mask();
 
   BX_CPU_THIS_PTR msr.ia32_xss = 0;
+
+#if BX_SUPPORT_CET
+  BX_CPU_THIS_PTR msr.ia32_interrupt_ssp_table = 0;
+  BX_CPU_THIS_PTR msr.ia32_cet_control[0] = BX_CPU_THIS_PTR msr.ia32_cet_control[1] = 0;
+  for (n=0;n<4;n++)
+    BX_CPU_THIS_PTR msr.ia32_pl_ssp[n] = 0;
+  SSP = 0;
+#endif
 #endif // BX_CPU_LEVEL >= 6
 
   BX_CPU_THIS_PTR msr.ia32_spec_ctrl = 0;

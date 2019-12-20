@@ -415,7 +415,7 @@ BX_CPU_C::system_write_byte(bx_address laddr, Bit8u data)
     }
   }
 
-  if (access_write_linear(laddr, 1, 0, 0x0, (void *) &data) < 0)
+  if (access_write_linear(laddr, 1, 0, BX_WRITE, 0x0, (void *) &data) < 0)
     exception(BX_GP_EXCEPTION, 0);
 }
 
@@ -439,7 +439,7 @@ BX_CPU_C::system_write_word(bx_address laddr, Bit16u data)
     }
   }
 
-  if (access_write_linear(laddr, 2, 0, 0x0, (void *) &data) < 0)
+  if (access_write_linear(laddr, 2, 0, BX_WRITE, 0x0, (void *) &data) < 0)
     exception(BX_GP_EXCEPTION, 0);
 }
 
@@ -463,7 +463,7 @@ BX_CPU_C::system_write_dword(bx_address laddr, Bit32u data)
     }
   }
 
-  if (access_write_linear(laddr, 4, 0, 0x0, (void *) &data) < 0)
+  if (access_write_linear(laddr, 4, 0, BX_WRITE, 0x0, (void *) &data) < 0)
     exception(BX_GP_EXCEPTION, 0);
 }
 

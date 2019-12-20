@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2018 Stanislav Shwartsman
+//   Copyright (c) 2008-2019 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -24,6 +24,7 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu.h"
+#include "msr.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 #include "decoder/ia_opcodes.h"
@@ -834,7 +835,6 @@ bx_bool BX_CPU_C::xsave_hi_zmm_state_xinuse(void)
 
 #if BX_SUPPORT_PKEYS
 // PKRU state management //
-
 void BX_CPU_C::xsave_pkru_state(bxInstruction_c *i, bx_address offset)
 {
   write_virtual_qword(i->seg(), offset, (Bit64u) BX_CPU_THIS_PTR pkru);
@@ -854,6 +854,79 @@ void BX_CPU_C::xrstor_init_pkru_state(void)
 bx_bool BX_CPU_C::xsave_pkru_state_xinuse(void)
 {
   return (BX_CPU_THIS_PTR pkru != 0);
+}
+#endif
+
+#if BX_SUPPORT_CET
+// CET U state management //
+void BX_CPU_C::xsave_cet_u_state(bxInstruction_c *i, bx_address offset)
+{
+  bx_address asize_mask = i->asize_mask();
+
+  write_virtual_qword(i->seg(), offset, BX_CPU_THIS_PTR msr.ia32_cet_control[1]);
+  write_virtual_qword(i->seg(), (offset + 8) & asize_mask, BX_CPU_THIS_PTR msr.ia32_pl_ssp[3]);
+}
+
+void BX_CPU_C::xrstor_cet_u_state(bxInstruction_c *i, bx_address offset)
+{
+  bx_address asize_mask = i->asize_mask();
+
+  Bit64u ctrl = read_virtual_qword(i->seg(), offset);
+  Bit64u ia32_pl3_ssp = read_virtual_qword(i->seg(), (offset + 8) & asize_mask);
+
+  // XRSTOR on CET state does all reserved bits and canonicality check like WRMSR would do
+  wrmsr(BX_MSR_IA32_U_CET, ctrl);
+  wrmsr(BX_MSR_IA32_PL3_SSP, ia32_pl3_ssp);
+}
+
+void BX_CPU_C::xrstor_init_cet_u_state(void)
+{
+  BX_CPU_THIS_PTR msr.ia32_cet_control[1] = 0;
+  BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = 0;
+}
+
+bx_bool BX_CPU_C::xsave_cet_u_state_xinuse(void)
+{
+  return BX_CPU_THIS_PTR msr.ia32_cet_control[1] == 0 &&
+         BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] == 0;
+}
+
+// CET S state management //
+void BX_CPU_C::xsave_cet_s_state(bxInstruction_c *i, bx_address offset)
+{
+  bx_address asize_mask = i->asize_mask();
+
+  write_virtual_qword(i->seg(),  offset,                    BX_CPU_THIS_PTR msr.ia32_pl_ssp[0]);
+  write_virtual_qword(i->seg(), (offset +  8) & asize_mask, BX_CPU_THIS_PTR msr.ia32_pl_ssp[1]);
+  write_virtual_qword(i->seg(), (offset + 16) & asize_mask, BX_CPU_THIS_PTR msr.ia32_pl_ssp[2]);
+}
+
+void BX_CPU_C::xrstor_cet_s_state(bxInstruction_c *i, bx_address offset)
+{
+  bx_address asize_mask = i->asize_mask();
+
+  Bit64u ia32_pl0_ssp = read_virtual_qword(i->seg(),  offset);
+  Bit64u ia32_pl1_ssp = read_virtual_qword(i->seg(), (offset +  8) & asize_mask);
+  Bit64u ia32_pl2_ssp = read_virtual_qword(i->seg(), (offset + 16) & asize_mask);
+
+  // XRSTOR on CET state does all reserved bits and canonicality check like WRMSR would do
+  wrmsr(BX_MSR_IA32_PL0_SSP, ia32_pl0_ssp);
+  wrmsr(BX_MSR_IA32_PL1_SSP, ia32_pl1_ssp);
+  wrmsr(BX_MSR_IA32_PL2_SSP, ia32_pl2_ssp);
+}
+
+void BX_CPU_C::xrstor_init_cet_s_state(void)
+{
+  for (unsigned n=0;n<3;n++)
+    BX_CPU_THIS_PTR msr.ia32_pl_ssp[n] = 0;
+}
+
+bx_bool BX_CPU_C::xsave_cet_s_state_xinuse(void)
+{
+  for (unsigned n=0;n<3;n++)
+    return BX_CPU_THIS_PTR msr.ia32_pl_ssp[n] != 0;
+
+  return false;
 }
 #endif
 

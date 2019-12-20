@@ -1253,6 +1253,29 @@ if test "$support_pkeys" -gt 0 -a "$use_x86_64" = 0; then
   AC_MSG_ERROR([User-Mode Protection Keys feature emulation require x86-64 enabled])
 fi
 
+support_cet=0
+AC_MSG_CHECKING(for Control Flow Enforcement Technology support)
+AC_ARG_ENABLE(cet,
+  AS_HELP_STRING([--enable-cet], [Control Flow Enforcement Technology support (no)]),
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_CET, 1)
+    support_cet=1
+   elif test "$enableval" = no; then
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_CET, 0)
+   fi
+   ],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_CET, 0)
+  ]
+  )
+
+if test "$support_cet" -gt 0 -a "$use_x86_64" = 0; then
+  AC_MSG_ERROR([Control Flow Enforcement Technology feature emulation require x86-64 enabled])
+fi
+
 AC_MSG_CHECKING(for 3DNow! support)
 AC_ARG_ENABLE(3dnow,
   AS_HELP_STRING([--enable-3dnow], [3DNow! support (no - incomplete)]),

@@ -100,6 +100,8 @@
 // access to 64 bit instruction pointer
 #define RIP (BX_CPU_THIS_PTR gen_reg[BX_64BIT_REG_RIP].rrx)
 
+#define SSP (BX_CPU_THIS_PTR gen_reg[BX_64BIT_REG_SSP].rrx)
+
 #define TMP64 (BX_CPU_THIS_PTR gen_reg[BX_TMP_REGISTER].rrx)
 
 // access to 64 bit MSR registers
@@ -315,7 +317,16 @@ enum BX_Exception {
   BX_AC_EXCEPTION = 17,
   BX_MC_EXCEPTION = 18,
   BX_XM_EXCEPTION = 19,
-  BX_VE_EXCEPTION = 20
+  BX_VE_EXCEPTION = 20,
+  BX_CP_EXCEPTION = 21  // Control Protection (fault)
+};
+
+enum CP_Exception_Error_Code {
+  BX_CP_NEAR_RET = 1,
+  BX_CP_FAR_RET_IRET = 2,
+  BX_CP_ENDBRANCH = 3,
+  BX_CP_RSTORSSP = 4,
+  BX_CP_SETSSBSY = 5
 };
 
 const unsigned BX_CPU_HANDLED_EXCEPTIONS = 32;
@@ -632,6 +643,13 @@ typedef struct
   Bit64u ia32_xss;
 #endif
 
+  // CET
+#if BX_SUPPORT_CET
+  Bit64u ia32_cet_control[2]; // indexed by CPL==3
+  Bit64u ia32_pl_ssp[4];
+  Bit64u ia32_interrupt_ssp_table;
+#endif
+
   Bit32u ia32_spec_ctrl; // SCA
 
   /* TODO finish of the others */
@@ -814,9 +832,10 @@ public: // for now...
   // esp: stack pointer
   // r8..r15 x86-64 extended registers
   // rip: instruction pointer
+  // ssp: shadow stack pointer
   // tmp: temp register
   // nil: null register
-  bx_gen_reg_t gen_reg[BX_GENERAL_REGISTERS+3];
+  bx_gen_reg_t gen_reg[BX_GENERAL_REGISTERS+4];
 
   /* 31|30|29|28| 27|26|25|24| 23|22|21|20| 19|18|17|16
    * ==|==|=====| ==|==|==|==| ==|==|==|==| ==|==|==|==
@@ -836,6 +855,9 @@ public: // for now...
   // each fetch/execute cycle.
   bx_address prev_rip;
   bx_address prev_rsp;
+#if BX_SUPPORT_CET
+  bx_address prev_ssp;
+#endif
   bx_bool    speculative_rsp;
 
   Bit64u icount;
@@ -2588,6 +2610,25 @@ public: // for now...
 
   BX_SMF void INVPCID(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
+
+  /* CET instructions */
+#if BX_SUPPORT_CET
+  BX_SMF void INCSSPD(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void INCSSPQ(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void RDSSPD(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void RDSSPQ(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SAVEPREVSSP(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void RSTORSSP(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void WRSSD(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void WRUSSD(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void WRSSQ(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void WRUSSQ(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SETSSBSY(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CLRSSBSY(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ENDBRANCH32(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ENDBRANCH64(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#endif
+  /* CET instructions */
 
 #if BX_SUPPORT_AVX
   /* AVX */
@@ -4397,6 +4438,18 @@ public: // for now...
   BX_SMF Bit32u stack_read_dword(bx_address offset) BX_CPP_AttrRegparmN(1);
   BX_SMF Bit64u stack_read_qword(bx_address offset) BX_CPP_AttrRegparmN(1);
 
+#if BX_SUPPORT_CET
+  BX_SMF void shadow_stack_write_dword(bx_address offset, unsigned curr_pl, Bit32u data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void shadow_stack_write_qword(bx_address offset, unsigned curr_pl, Bit64u data) BX_CPP_AttrRegparmN(3);
+
+  BX_SMF Bit32u shadow_stack_read_dword(bx_address offset, unsigned curr_pl) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit64u shadow_stack_read_qword(bx_address offset, unsigned curr_pl) BX_CPP_AttrRegparmN(2);
+
+  BX_SMF bx_bool shadow_stack_lock_cmpxchg8b(bx_address offset, unsigned curr_pl, Bit64u data, Bit64u expected_data) BX_CPP_AttrRegparmN(4);
+  BX_SMF bx_bool shadow_stack_atomic_set_busy(bx_address offset, unsigned curr_pl) BX_CPP_AttrRegparmN(2);
+  BX_SMF bx_bool shadow_stack_atomic_clear_busy(bx_address offset, unsigned curr_pl) BX_CPP_AttrRegparmN(2);
+#endif
+
   BX_SMF void stackPrefetch(bx_address offset, unsigned len) BX_CPP_AttrRegparmN(2);
 
   // dedicated system linear read/write methods with no segment
@@ -4440,8 +4493,8 @@ public: // for now...
   BX_SMF void repeat_ZF(bxInstruction_c *i, BxRepIterationPtr_tR execute) BX_CPP_AttrRegparmN(2);
 
   // linear address for access_linear expected to be canonical !
-  BX_SMF int access_read_linear(bx_address laddr, unsigned len, unsigned curr_pl, unsigned rw, Bit32u ac_mask, void *data);
-  BX_SMF int access_write_linear(bx_address laddr, unsigned len, unsigned curr_pl, Bit32u ac_mask, void *data);
+  BX_SMF int access_read_linear(bx_address laddr, unsigned len, unsigned curr_pl, unsigned xlate_rw, Bit32u ac_mask, void *data);
+  BX_SMF int access_write_linear(bx_address laddr, unsigned len, unsigned curr_pl, unsigned xlate_rw, Bit32u ac_mask, void *data);
   BX_SMF void page_fault(unsigned fault, bx_address laddr, unsigned user, unsigned rw);
 
   BX_SMF void access_read_physical(bx_phy_address paddr, unsigned len, void *data);
@@ -4594,6 +4647,11 @@ public: // for now...
 #if BX_SUPPORT_X86_64
   BX_SMF void long_iret(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
+#if BX_SUPPORT_CET
+  BX_SMF void shadow_stack_switch(bx_address new_SSP) BX_CPP_AttrRegparmN(1);
+  BX_SMF void call_far_shadow_stack_push(Bit16u cs, bx_address lip, bx_address old_ssp) BX_CPP_AttrRegparmN(3);
+  BX_SMF bx_address shadow_stack_restore(Bit16u raw_cs_selector, const bx_descriptor_t &cs_descriptor, bx_address return_rip) BX_CPP_AttrRegparmN(3);
+#endif
   BX_SMF void validate_seg_reg(unsigned seg);
   BX_SMF void validate_seg_regs(void);
   BX_SMF void stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector, Bit32u flags32);
@@ -4644,6 +4702,12 @@ public: // for now...
 #if BX_SUPPORT_X86_64
   BX_SMF void    push_64(Bit64u value64) BX_CPP_AttrRegparmN(1);
   BX_SMF Bit64u  pop_64(void);
+#endif
+#if BX_SUPPORT_CET
+  BX_SMF void    shadow_stack_push_32(Bit32u value32) BX_CPP_AttrRegparmN(1);
+  BX_SMF Bit32u  shadow_stack_pop_32(void);
+  BX_SMF void    shadow_stack_push_64(Bit64u value64) BX_CPP_AttrRegparmN(1);
+  BX_SMF Bit64u  shadow_stack_pop_64(void);
 #endif
   BX_SMF void    sanity_checks(void);
   BX_SMF void    assert_checks(void);
@@ -4700,6 +4764,12 @@ public: // for now...
   BX_SMF BX_CPP_INLINE Bit16u get_ip (void) { return (BX_CPU_THIS_PTR gen_reg[BX_16BIT_REG_IP].word.rx); }
 #if BX_SUPPORT_X86_64
   BX_SMF BX_CPP_INLINE Bit64u get_rip(void) { return (BX_CPU_THIS_PTR gen_reg[BX_64BIT_REG_RIP].rrx); }
+#endif
+
+  BX_SMF BX_CPP_INLINE Bit32u get_cpl(void) { return (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl); }
+
+#if BX_SUPPORT_CET
+  BX_SMF BX_CPP_INLINE bx_address get_ssp(void) { return (BX_CPU_THIS_PTR gen_reg[BX_64BIT_REG_SSP].rrx); }
 #endif
 
   BX_SMF BX_CPP_INLINE Bit8u get_reg8l(unsigned reg);
@@ -4813,6 +4883,7 @@ public: // for now...
 #endif
 
 #if BX_CPU_LEVEL >= 6
+  BX_SMF void xsave_xrestor_init(void);
   BX_SMF Bit32u get_xcr0_allow_mask(void);
   BX_SMF Bit32u get_xinuse_vector(Bit32u requested_feature_bitmap);
 
@@ -4855,6 +4926,30 @@ public: // for now...
   BX_SMF void xrstor_pkru_state(bxInstruction_c *i, bx_address offset);
   BX_SMF void xrstor_init_pkru_state(void);
 #endif
+
+#if BX_SUPPORT_CET
+  BX_SMF bx_bool xsave_cet_u_state_xinuse(void);
+  BX_SMF void xsave_cet_u_state(bxInstruction_c *i, bx_address offset);
+  BX_SMF void xrstor_cet_u_state(bxInstruction_c *i, bx_address offset);
+  BX_SMF void xrstor_init_cet_u_state(void);
+
+  BX_SMF bx_bool xsave_cet_s_state_xinuse(void);
+  BX_SMF void xsave_cet_s_state(bxInstruction_c *i, bx_address offset);
+  BX_SMF void xrstor_cet_s_state(bxInstruction_c *i, bx_address offset);
+  BX_SMF void xrstor_init_cet_s_state(void);
+#endif
+#endif
+
+#if BX_SUPPORT_CET
+ BX_SMF bx_bool ShadowStackEnabled(unsigned cpl) BX_CPP_AttrRegparmN(1);
+ BX_SMF bx_bool ShadowStackWriteEnabled(unsigned cpl) BX_CPP_AttrRegparmN(1);
+ BX_SMF bx_bool EndbranchEnabled(unsigned cpl) BX_CPP_AttrRegparmN(1);
+ BX_SMF bx_bool EndbranchEnabledAndNotSuppressed(unsigned cpl) BX_CPP_AttrRegparmN(1);
+ BX_SMF bx_bool WaitingForEndbranch(unsigned cpl) BX_CPP_AttrRegparmN(1);
+ BX_SMF bx_bool LegacyEndbranchTreatment(unsigned cpl) BX_CPP_AttrRegparmN(1);
+ BX_SMF void track_indirect(unsigned cpl) BX_CPP_AttrRegparmN(1);
+ BX_SMF void track_indirect_if_not_suppressed(bxInstruction_c *i, unsigned cpl) BX_CPP_AttrRegparmN(2);
+ BX_SMF void reset_endbranch_tracker(unsigned cpl, bx_bool suppress=false) BX_CPP_AttrRegparmN(2);
 #endif
 
 #if BX_SUPPORT_MONITOR_MWAIT
@@ -5059,14 +5154,20 @@ BX_CPP_INLINE Bit32u BX_CPP_AttrRegparmN(1) BX_CPU_C::BxResolve32(bxInstruction_
 
 #include "stack.h"
 
+#define PRESERVE_RSP { BX_CPU_THIS_PTR prev_rsp = RSP; }
+#if BX_SUPPORT_CET
+#define PRESERVE_SSP { BX_CPU_THIS_PTR prev_ssp = SSP; }
+#else
+#define PRESERVE_SSP 
+#endif
+
 #define RSP_SPECULATIVE {              \
   BX_CPU_THIS_PTR speculative_rsp = 1; \
-  BX_CPU_THIS_PTR prev_rsp = RSP;      \
+  PRESERVE_RSP;                        \
+  PRESERVE_SSP;                        \
 }
 
-#define RSP_COMMIT {                   \
-  BX_CPU_THIS_PTR speculative_rsp = 0; \
-}
+#define RSP_COMMIT { BX_CPU_THIS_PTR speculative_rsp = 0; }
 
 #endif // defined(NEED_CPU_REG_SHORTCUTS)
 

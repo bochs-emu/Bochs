@@ -388,7 +388,11 @@ static BxOpcodeDecodeDescriptor32 decode32_descriptor[] =
    /*    0F 1B */ { &decoder32_modrm, BxOpcodeTableMultiByteNOP },
    /*    0F 1C */ { &decoder32_modrm, BxOpcodeTableMultiByteNOP },
    /*    0F 1D */ { &decoder32_modrm, BxOpcodeTableMultiByteNOP },
+#if BX_SUPPORT_CET
+   /*    0F 1E */ { &decoder32_modrm, BxOpcodeTable0F1E },
+#else
    /*    0F 1E */ { &decoder32_modrm, BxOpcodeTableMultiByteNOP },
+#endif
    /*    0F 1F */ { &decoder32_modrm, BxOpcodeTableMultiByteNOP },
 #else
    /*    0F 18 */ { &decoder_ud32, NULL },
@@ -871,7 +875,11 @@ static BxOpcodeDecodeDescriptor32 decode32_descriptor[] =
    /* 0F 38 F2 */ { &decoder_ud32, NULL },
    /* 0F 38 F3 */ { &decoder_ud32, NULL },
    /* 0F 38 F4 */ { &decoder_ud32, NULL },
+#if BX_SUPPORT_CET
+   /* 0F 38 F5 */ { &decoder32_modrm, BxOpcodeTable0F38F5 },
+#else
    /* 0F 38 F5 */ { &decoder_ud32, NULL },
+#endif
    /* 0F 38 F6 */ { &decoder32_modrm, BxOpcodeTable0F38F6 },
    /* 0F 38 F7 */ { &decoder_ud32, NULL },
    /* 0F 38 F8 */ { &decoder_ud32, NULL },
@@ -2430,6 +2438,9 @@ fetch_b1:
 #endif
 
   i->setSeg(BX_SEG_REG_DS); // default segment is DS:
+#if BX_SUPPORT_CET
+  i->setSegOverride(seg_override);
+#endif
 
   i->modRMForm.Id = 0;
  

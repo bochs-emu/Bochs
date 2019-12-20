@@ -55,6 +55,11 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
   {
     check_cs(&cs_descriptor, cs_raw, BX_SELECTOR_RPL(cs_raw), CPL);
 
+#if BX_SUPPORT_CET
+    bx_address temp_LIP = get_laddr(BX_SEG_REG_CS, RIP);
+    Bit16u old_CS = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
+#endif
+
 #if BX_SUPPORT_X86_64
     if (long_mode() && cs_descriptor.u.segment.l) {
       Bit64u temp_rsp = RSP; 
@@ -82,7 +87,6 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
       // load CS with new code segment selector
       // set RPL of CS to CPL
       branch_far(&cs_selector, &cs_descriptor, disp, CPL);
-
       RSP = temp_rsp;
     }
     else
@@ -134,6 +138,13 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
       else
          SP = (Bit16u) temp_RSP;
     }
+
+#if BX_SUPPORT_CET
+    if (ShadowStackEnabled(CPL)) {
+      call_far_shadow_stack_push(old_CS, temp_LIP, SSP);
+    }
+    track_indirect(CPL);
+#endif
 
     return;
   }
@@ -423,6 +434,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
       exception(BX_GP_EXCEPTION, 0);
     }
 
+#if BX_SUPPORT_CET
+    bx_address temp_LIP = get_laddr(BX_SEG_REG_CS, return_EIP);
+    unsigned old_SS_DPL = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl;
+    unsigned old_CPL = CPL;
+#endif
+
     /* load SS descriptor */
     load_ss(&ss_selector, &ss_descriptor, cs_descriptor.dpl);
 
@@ -431,7 +448,23 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
     /* set CPL to stack segment DPL */
     /* set RPL of CS to CPL */
     load_cs(&cs_selector, &cs_descriptor, cs_descriptor.dpl);
+
     EIP = new_EIP;
+
+#if BX_SUPPORT_CET
+    if (ShadowStackEnabled(old_CPL)) {
+      if (old_CPL == 3)
+        BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = SSP;
+    }
+
+    if(ShadowStackEnabled(CPL)) {
+      bx_address old_SSP = SSP;
+      shadow_stack_switch(BX_CPU_THIS_PTR msr.ia32_pl_ssp[CPL]);
+      if (old_SS_DPL != 3)
+        call_far_shadow_stack_push(return_CS, temp_LIP, old_SSP);
+    }
+    track_indirect(CPL);
+#endif
   }
   else   // CALL GATE TO SAME PRIVILEGE
   {
@@ -448,10 +481,22 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
       push_16(IP);
     }
 
+#if BX_SUPPORT_CET
+    Bit32u temp_LIP = get_segment_base(BX_SEG_REG_CS) + ((gate_descriptor->type == BX_386_CALL_GATE) ? EIP : IP);
+    Bit16u old_CS = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
+#endif
+
     // load CS:EIP from gate
     // load code segment descriptor into CS register
     // set RPL of CS to CPL
     branch_far(&cs_selector, &cs_descriptor, new_EIP, CPL);
+
+#if BX_SUPPORT_CET
+    if (ShadowStackEnabled(CPL)) {
+      call_far_shadow_stack_push(old_CS, temp_LIP, SSP);
+    }
+    track_indirect(CPL);
+#endif
   }
 }
 
@@ -515,11 +560,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
   Bit64u old_CS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
   Bit64u old_RIP = RIP;
 
+#if BX_SUPPORT_CET
+  bx_address temp_LIP = get_laddr(BX_SEG_REG_CS, RIP);
+  unsigned old_SS_DPL = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl;
+  unsigned old_CPL = CPL;
+#endif
+
   // CALL GATE TO MORE PRIVILEGE
   // if non-conforming code segment and DPL < CPL then
   if (IS_CODE_SEGMENT_NON_CONFORMING(cs_descriptor.type) && (cs_descriptor.dpl < CPL))
   {
-    BX_DEBUG(("CALL GATE TO MORE PRIVILEGE LEVEL"));
+    BX_DEBUG(("CALL GATE64 TO MORE PRIVILEGE LEVEL"));
 
     // get new RSP for new privilege level from TSS
     Bit64u RSP_for_cpl_x  = get_RSP_from_TSS(cs_descriptor.dpl);
@@ -541,10 +592,24 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
     load_null_selector(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], cs_descriptor.dpl);
 
     RSP = RSP_for_cpl_x;
+
+#if BX_SUPPORT_CET
+    if(ShadowStackEnabled(old_CPL)) {
+      if (old_CPL == 3)
+        BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = SSP;
+    }
+    if(ShadowStackEnabled(CPL)) {
+      bx_address old_SSP = SSP;
+      shadow_stack_switch(BX_CPU_THIS_PTR msr.ia32_pl_ssp[CPL]);
+      if (old_SS_DPL != 3)
+        call_far_shadow_stack_push(old_CS, temp_LIP, old_SSP);
+    }
+    track_indirect(CPL);
+#endif
   }
   else
   {
-    BX_DEBUG(("CALL GATE TO SAME PRIVILEGE"));
+    BX_DEBUG(("CALL GATE64 TO SAME PRIVILEGE"));
 
     // push to 64-bit stack, switch to long64 guaranteed
     write_new_stack_qword(RSP -  8, CPL, old_CS);
@@ -554,6 +619,46 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
     branch_far(&cs_selector, &cs_descriptor, new_RIP, CPL);
 
     RSP -= 16;
+
+#if BX_SUPPORT_CET
+    if (ShadowStackEnabled(CPL)) {
+      call_far_shadow_stack_push(old_CS, temp_LIP, SSP);
+    }
+    track_indirect(CPL);
+#endif
   }
 }
+
+#if BX_SUPPORT_CET
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::shadow_stack_switch(bx_address new_SSP)
+{
+  SSP = new_SSP;
+
+  if (SSP & 0x7) {
+    BX_ERROR(("shadow_stack_switch: SSP is not aligned to 8 byte boundary"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+  if (!long64_mode() && GET32H(SSP) != 0) {
+    BX_ERROR(("shadow_stack_switch: 64-bit SSP not in 64-bit mode"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+  if (!shadow_stack_atomic_set_busy(SSP, CPL)) {
+    BX_ERROR(("shadow_stack_switch: failure to set busy bit"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_far_shadow_stack_push(Bit16u cs, bx_address lip, bx_address old_ssp)
+{
+  if (SSP & 0x7) {
+    shadow_stack_write_dword(SSP-4, CPL, 0);
+    SSP &= ~BX_CONST64(0x7);
+  }
+
+  shadow_stack_push_64(cs);
+  shadow_stack_push_64(lip);
+  shadow_stack_push_64(old_ssp);
+}
+#endif
+
 #endif

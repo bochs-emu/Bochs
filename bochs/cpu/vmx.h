@@ -413,6 +413,9 @@ const Bit64u VMX_VMFUNC_EPTP_SWITCHING_MASK = (BX_CONST64(1) << VMX_VMFUNC_EPTP_
 #define VMCS_GUEST_PENDING_DBG_EXCEPTIONS                  0x00006822
 #define VMCS_GUEST_IA32_SYSENTER_ESP_MSR                   0x00006824
 #define VMCS_GUEST_IA32_SYSENTER_EIP_MSR                   0x00006826
+#define VMCS_GUEST_IA32_S_CET                              0x00006828
+#define VMCS_GUEST_SSP                                     0x0000682A
+#define VMCS_GUEST_INTERRUPT_SSP_TABLE_ADDR                0x0000682C
 
 /* VMCS natural width host state fields */
 /* binary 0110_11xx_xxxx_xxx0 */
@@ -428,6 +431,9 @@ const Bit64u VMX_VMFUNC_EPTP_SWITCHING_MASK = (BX_CONST64(1) << VMX_VMFUNC_EPTP_
 #define VMCS_HOST_IA32_SYSENTER_EIP_MSR                    0x00006C12
 #define VMCS_HOST_RSP                                      0x00006C14
 #define VMCS_HOST_RIP                                      0x00006C16
+#define VMCS_HOST_IA32_S_CET                               0x00006C18
+#define VMCS_HOST_SSP                                      0x00006C1A
+#define VMCS_HOST_INTERRUPT_SSP_TABLE_ADDR                 0x00006C1C
 
 #define VMX_HIGHEST_VMCS_ENCODING   (0x34)
 
@@ -520,7 +526,7 @@ public:
 
 #define VMCS_REVISION_ID_FIELD_ADDR              (0x0000)
 #define VMCS_VMX_ABORT_FIELD_ADDR                (0x0004)
-#define VMCS_LAUNCH_STATE_FIELD_ADDR             (0x0008)
+#define VMCS_LAUNCH_STATE_FIELD_ADDR             (0x00d8)
 
 #define VMCS_DATA_OFFSET                         (0x0010)
 
@@ -576,6 +582,12 @@ typedef struct bx_VMCS_GUEST_STATE
    Bit64u pat_msr;
    Bit64u pdptr[4];
 #endif
+
+#if BX_SUPPORT_CET
+   Bit64u msr_ia32_s_cet;
+   bx_address ssp;
+   bx_address interrupt_ssp_table_address;
+#endif
 } VMCS_GUEST_STATE;
 
 typedef struct bx_VMCS_HOST_STATE
@@ -607,6 +619,12 @@ typedef struct bx_VMCS_HOST_STATE
    Bit64u efer_msr;
 #endif
    Bit64u pat_msr;
+#endif
+
+#if BX_SUPPORT_CET
+   Bit64u msr_ia32_s_cet;
+   bx_address ssp;
+   bx_address interrupt_ssp_table_address;
 #endif
 } VMCS_HOST_STATE;
 
@@ -788,6 +806,7 @@ typedef struct bx_VMCS
 #define VMX_VMEXIT_CTRL1_STORE_VMX_PREEMPTION_TIMER (1 << 22) /* VMX preemption timer */
 #define VMX_VMEXIT_CTRL1_CLEAR_BNDCFGS              (1 << 23) /* MPX */
 #define VMX_VMEXIT_CTRL1_SUPPRESS_VMX_PACKETS       (1 << 24) /* Processor Trace */
+#define VMX_VMEXIT_CTRL1_LOAD_HOST_CET_STATE        (1 << 28) /* CET */
 
 #define VMX_VMEXIT_CTRL1_SUPPORTED_BITS \
     (BX_CPU_THIS_PTR vmx_cap.vmx_vmexit_ctrl_supported_bits)
@@ -812,6 +831,7 @@ typedef struct bx_VMCS
 #define VMX_VMENTRY_CTRL1_LOAD_EFER_MSR                     (1 << 15) /* EFER */
 #define VMX_VMENTRY_CTRL1_LOAD_BNDCFGS                      (1 << 16) /* MPX */
 #define VMX_VMENTRY_CTRL1_SUPPRESS_VMX_PACKETS              (1 << 17) /* Processor Trace */
+#define VMX_VMENTRY_CTRL1_LOAD_GUEST_CET_STATE              (1 << 20) /* CET */
 
 #define VMX_VMENTRY_CTRL1_SUPPORTED_BITS \
     (BX_CPU_THIS_PTR vmx_cap.vmx_vmentry_ctrl_supported_bits)
@@ -890,13 +910,16 @@ const Bit32u BX_VMCS_SHADOW_BIT_MASK = 0x80000000;
 //       cleared to `0, also indicates that IA32_VMX_TRUE_PINBASED_CTLS,
 //       IA32_VMX_TRUE_PROCBASED_CTLS, IA32_VMX_TRUE_EXIT_CTLS and
 //       IA32_VMX_TRUE_ENTRY_CTLS MSRs are supported.
-// 56:63 reserved, must be zero
+// 56:56 if set software can use VM entry to deliver a hardware exception
+//       with or without an error code, regardless of vector
+// 57:63 reserved, must be zero
 //
 
 #define VMX_MSR_VMX_BASIC_LO (BX_CPU_THIS_PTR vmcs_map->get_vmcs_revision_id())
 #define VMX_MSR_VMX_BASIC_HI \
      (VMX_VMCS_AREA_SIZE | ((!is_cpu_extension_supported(BX_ISA_LONG_MODE)) << 16) | \
-     (BX_MEMTYPE_WB << 18) | (1<<22)) | ((BX_SUPPORT_VMX >= 2) ? (1<<23) : 0)
+     (BX_MEMTYPE_WB << 18) | (1<<22)) | ((BX_SUPPORT_VMX >= 2) ? (1<<23) : 0) | \
+     (is_cpu_extension_supported(BX_ISA_CET) ? (1<<24) : 0)
 
 #define VMX_MSR_VMX_BASIC \
    ((((Bit64u) VMX_MSR_VMX_BASIC_HI) << 32) | VMX_MSR_VMX_BASIC_LO)

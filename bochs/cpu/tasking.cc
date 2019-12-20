@@ -59,6 +59,7 @@
   // 386 Task State Segment
   // ======================
   // |31            16|15                    0| hex dec
+  // |                SSP                     | 68  104 dynamic
   // |I/O Map Base    |000000000000000000000|T| 64  100 static
   // |0000000000000000| LDT                   | 60  96  static
   // |0000000000000000| GS selector           | 5c  92  dynamic
@@ -122,6 +123,12 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   Bit32u newEAX, newECX, newEDX, newEBX;
   Bit32u newESP, newEBP, newESI, newEDI;
   Bit32u newEFLAGS, newEIP;
+#if BX_SUPPORT_CET
+  bx_bool pushCSLIPSSP = false, verifyCSLIP = false;
+  Bit64u tempSSP = 0, shadowLIP = 0, shadowCS = 0; // silence compiler warnings
+  Bit32u oldSSP = 0, oldCS = 0, oldRIP = 0;
+  Bit32u newSSP = 0;
+#endif
 
   BX_DEBUG(("TASKING: ENTER"));
 
@@ -151,6 +158,16 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   else { // tss_descriptor->type = {9,11}
     new_TSS_max = 0x67;
   }
+
+#if BX_SUPPORT_CET
+  if (BX_CPU_THIS_PTR cr4.get_CET()) {
+    if (tss_descriptor->type <= 3) {
+      BX_ERROR(("task_switch(): 286 TSS when CR4.CET is enabled"));
+      exception(BX_TS_EXCEPTION, tss_selector->value & 0xfffc);
+    }
+    new_TSS_max = 0x6B; // add space for SPP
+  }
+#endif
 
   nbase32 = (Bit32u) tss_descriptor->u.segment.base;
   new_TSS_limit = tss_descriptor->u.segment.limit_scaled;
@@ -224,7 +241,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
     Bit32u laddr = (Bit32u) BX_CPU_THIS_PTR gdtr.base + (BX_CPU_THIS_PTR tr.selector.index<<3) + 4;
     access_read_linear(laddr, 4, 0, BX_RW, 0x0, &temp32);
     temp32 &= ~0x200;
-    access_write_linear(laddr, 4, 0, 0x0, &temp32);
+    access_write_linear(laddr, 4, 0, BX_WRITE, 0x0, &temp32);
   }
 
   // STEP 4: If the task switch was initiated with an IRET instruction,
@@ -382,6 +399,11 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
     raw_gs_selector  = system_read_word(Bit32u(nbase32 + 0x5c));
     raw_ldt_selector = system_read_word(Bit32u(nbase32 + 0x60));
     trap_word        = system_read_word(Bit32u(nbase32 + 0x64));
+
+#if BX_SUPPORT_CET
+    if (BX_CPU_THIS_PTR cr4.get_CET() && source != BX_TASK_FROM_IRET)
+      newSSP = system_read_dword(Bit32u(nbase32 + 0x68));
+#endif
   }
 
   // Step 7: If CALL, interrupt, or JMP, set busy flag in new task's
@@ -393,8 +415,38 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
     Bit32u laddr = (Bit32u)(BX_CPU_THIS_PTR gdtr.base) + (tss_selector->index<<3) + 4;
     access_read_linear(laddr, 4, 0, BX_RW, 0x0, &dword2);
     dword2 |= 0x200;
-    access_write_linear(laddr, 4, 0, 0x0, &dword2);
+    access_write_linear(laddr, 4, 0, BX_WRITE, 0x0, &dword2);
   }
+
+#if BX_SUPPORT_CET
+  if (ShadowStackEnabled(CPL)) {
+    unsigned new_CPL = (newEFLAGS & EFlagsVMMask) ? 3 : BX_SELECTOR_RPL(raw_cs_selector);
+    if (source == BX_TASK_FROM_CALL || source == BX_TASK_FROM_INT) {
+      if (new_CPL < CPL && CPL == 3) {
+        BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = SSP;
+      }
+      else {
+         pushCSLIPSSP = true;
+         oldSSP = SSP;
+         oldCS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
+         oldRIP = get_laddr(BX_SEG_REG_CS, EIP);
+      }
+    }
+    if (source == BX_TASK_FROM_IRET) {
+      if (new_CPL == CPL || new_CPL < 3) {
+        tempSSP   = shadow_stack_pop_64();
+        shadowLIP = shadow_stack_pop_64();
+        shadowCS  = shadow_stack_pop_64();
+        verifyCSLIP = true;
+      }
+      else {
+        tempSSP = BX_CPU_THIS_PTR msr.ia32_pl_ssp[3];
+      }
+      shadow_stack_atomic_clear_busy(SSP, CPL);
+      SSP = 0;
+    }
+  }
+#endif
 
   //
   // Commit point.  At this point, we commit to the new
@@ -715,6 +767,48 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   BX_DEBUG(("TASKING: LEAVE"));
 
   RSP_SPECULATIVE;
+
+#if BX_SUPPORT_CET
+  if (ShadowStackEnabled(CPL) || EndbranchEnabled(CPL)) {
+    if (v8086_mode()) {
+      BX_ERROR(("task_switch: Shadowstack or Enbranch enabled in vm8086 mode"));
+      exception(BX_TS_EXCEPTION, BX_CPU_THIS_PTR tr.selector.value & 0xfffc);
+    }
+  }
+
+  if (source != BX_TASK_FROM_IRET) {
+    if (ShadowStackEnabled(CPL)) {
+      shadow_stack_switch(newSSP);
+      if (pushCSLIPSSP) {
+        call_far_shadow_stack_push(oldCS, oldRIP, oldSSP);
+      }
+    }
+    track_indirect(CPL);
+  }
+  else {
+    if (verifyCSLIP) {
+      if (raw_cs_selector != shadowCS) {
+        BX_ERROR(("task switch: CS mismatch on shadow stack restore"));
+        exception(BX_CP_EXCEPTION, BX_CP_FAR_RET_IRET);
+      }
+      if (get_laddr(BX_SEG_REG_CS, EIP) != shadowLIP) {
+        BX_ERROR(("task switch: LIP mismatch on shadow stack restore"));
+        exception(BX_CP_EXCEPTION, BX_CP_FAR_RET_IRET);
+      }
+    }
+    if (ShadowStackEnabled(CPL)) {
+      if (tempSSP & 0x3) {
+        BX_ERROR(("shadow_stack_restore: tempSSP must be 4-byte aligned"));
+        exception(BX_CP_EXCEPTION, BX_CP_FAR_RET_IRET);
+      }
+      if (GET32H(tempSSP)!=0) {
+        BX_ERROR(("shadow_stack_restore: prevSSP must be 32-bit in 32-bit mode"));
+        exception(BX_CP_EXCEPTION, BX_CP_FAR_RET_IRET);
+      }
+      SSP = tempSSP;
+    }
+  }
+#endif
 
   // push error code onto stack
   if (push_error) {

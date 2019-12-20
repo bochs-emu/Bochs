@@ -84,6 +84,7 @@ public:
     BX_INSTR_METADATA_SRC1  = 1,
     BX_INSTR_METADATA_SRC2  = 2,
     BX_INSTR_METADATA_SRC3  = 3,
+    BX_INSTR_METADATA_CET_SEGOVERRIDE = 3, // share src3
     BX_INSTR_METADATA_SEG   = 4,
     BX_INSTR_METADATA_BASE  = 5,
     BX_INSTR_METADATA_INDEX = 6,
@@ -150,6 +151,15 @@ public:
   BX_CPP_INLINE void setSeg(unsigned val) {
     metaData[BX_INSTR_METADATA_SEG] = val;
   }
+
+#if BX_SUPPORT_CET
+  BX_CPP_INLINE unsigned segOverride(void) const {
+    return metaData[BX_INSTR_METADATA_CET_SEGOVERRIDE];
+  }
+  BX_CPP_INLINE void setSegOverride(unsigned val) {
+    metaData[BX_INSTR_METADATA_CET_SEGOVERRIDE] = val;
+  }
+#endif
 
   BX_CPP_INLINE void setFoo(unsigned foo) {
     // none of x87 instructions has immediate

@@ -103,6 +103,12 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
   {
     BX_DEBUG(("return_protected: return to SAME PRIVILEGE LEVEL"));
 
+#if BX_SUPPORT_CET
+    if (ShadowStackEnabled(CPL)) {
+      SSP = shadow_stack_restore(raw_cs_selector, cs_descriptor, return_RIP);
+    }
+#endif
+
     branch_far(&cs_selector, &cs_descriptor, return_RIP, CPL);
 
 #if BX_SUPPORT_X86_64
@@ -200,6 +206,20 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
       }
     }
 
+#if BX_SUPPORT_CET
+    unsigned prev_cpl = CPL;
+    bx_address new_SSP = BX_CPU_THIS_PTR msr.ia32_pl_ssp[3];
+    if (ShadowStackEnabled(CPL)) {
+      if (SSP & 0x7) {
+        BX_ERROR(("return_protected: SSP is not 8-byte aligned"));
+        exception(BX_CP_EXCEPTION, BX_CP_FAR_RET_IRET);
+      }
+      if (cs_selector.rpl != 3) {
+        new_SSP = shadow_stack_restore(raw_cs_selector, cs_descriptor, return_RIP);
+      }
+    }
+#endif
+
     branch_far(&cs_selector, &cs_descriptor, return_RIP, cs_selector.rpl);
 
     if ((raw_ss_selector & 0xfffc) != 0) {
@@ -224,7 +244,59 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
         SP  = (Bit16u)(return_RSP + pop_bytes);
     }
 
+#if BX_SUPPORT_CET
+    bx_address old_SSP = SSP;
+    if (ShadowStackEnabled(CPL)) {
+      if (!long64_mode() && GET32H(new_SSP) != 0) {
+        BX_ERROR(("return_protected: 64-bit SSP in legacy mode"));
+        exception(BX_GP_EXCEPTION, 0);
+      }
+      SSP = new_SSP;
+    }
+    if (ShadowStackEnabled(prev_cpl)) {
+      shadow_stack_atomic_clear_busy(old_SSP, prev_cpl);
+    }
+#endif
+
     /* check ES, DS, FS, GS for validity */
     validate_seg_regs();
   }
 }
+
+#if BX_SUPPORT_CET
+  bx_address BX_CPP_AttrRegparmN(3)
+BX_CPU_C::shadow_stack_restore(Bit16u raw_cs_selector, const bx_descriptor_t &cs_descriptor, bx_address return_rip)
+{
+  bx_address return_lip = return_rip;
+  if (! long_mode() || ! cs_descriptor.u.segment.l)
+    return_lip = (Bit32u) (return_lip + cs_descriptor.u.segment.base);
+
+  if (SSP & 0x7) {
+    BX_ERROR(("return_protected: SSP must be 8-byte aligned"));
+    exception(BX_CP_EXCEPTION, BX_CP_FAR_RET_IRET);
+  }
+
+  Bit64u prevSSP   = shadow_stack_pop_64();
+  Bit64u shadowLIP = shadow_stack_pop_64();
+  Bit64u shadowCS  = shadow_stack_pop_64();
+
+  if (raw_cs_selector != shadowCS) {
+    BX_ERROR(("shadow_stack_restore: CS mismatch"));
+    exception(BX_CP_EXCEPTION, BX_CP_FAR_RET_IRET);
+  }
+  if (return_lip != shadowLIP) {
+    BX_ERROR(("shadow_stack_restore: LIP mismatch"));
+    exception(BX_CP_EXCEPTION, BX_CP_FAR_RET_IRET);
+  }
+  if (prevSSP & 0x3) {
+    BX_ERROR(("shadow_stack_restore: prevSSP must be 4-byte aligned"));
+    exception(BX_CP_EXCEPTION, BX_CP_FAR_RET_IRET);
+  }
+  if (!long64_mode() && (prevSSP>>32)!=0) {
+    BX_ERROR(("shadow_stack_restore: prevSSP must be 32-bit in 32-bit mode"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
+  return prevSSP;
+}
+#endif

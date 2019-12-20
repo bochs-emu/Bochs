@@ -122,6 +122,7 @@ enum x86_feature_name {
   BX_ISA_TCE,                     /* Translation Cache Extensions (TCE) support (AMD) */
   BX_ISA_CLZERO,                  /* CLZERO instruction support (AMD) */
   BX_ISA_SCA_MITIGATIONS,         /* SCA Mitigations */
+  BX_ISA_CET,                     /* Control Flow Enforcement */
   BX_ISA_EXTENSION_LAST
 };                            
 
@@ -246,8 +247,11 @@ static const unsigned BX_16BIT_REG_IP  = (BX_GENERAL_REGISTERS),
                       BX_32BIT_REG_EIP = (BX_GENERAL_REGISTERS),
                       BX_64BIT_REG_RIP = (BX_GENERAL_REGISTERS);
 
-static const unsigned BX_TMP_REGISTER = (BX_GENERAL_REGISTERS+1);
-static const unsigned BX_NIL_REGISTER = (BX_GENERAL_REGISTERS+2);
+static const unsigned BX_32BIT_REG_SSP = (BX_GENERAL_REGISTERS+1),
+                      BX_64BIT_REG_SSP = (BX_GENERAL_REGISTERS+1);
+
+static const unsigned BX_TMP_REGISTER = (BX_GENERAL_REGISTERS+2);
+static const unsigned BX_NIL_REGISTER = (BX_GENERAL_REGISTERS+3);
 
 enum OpmaskRegs {
   BX_REG_OPMASK_K0,

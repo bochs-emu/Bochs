@@ -92,8 +92,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_error
   }
 
   Bit16u gate_dest_selector = gate_descriptor.u.gate.dest_selector;
-  Bit64u gate_dest_offset   = ((Bit64u)dword3 << 32) |
-                       gate_descriptor.u.gate.dest_offset;
+  Bit64u gate_dest_offset   = ((Bit64u)dword3 << 32) | gate_descriptor.u.gate.dest_offset;
 
   unsigned ist = gate_descriptor.u.gate.param_count & 0x7;
 
@@ -135,6 +134,13 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_error
   }
  
   Bit64u RSP_for_cpl_x;
+#if BX_SUPPORT_CET
+  bx_address new_SSP = 0; // keep warning silent
+  unsigned old_SS_DPL = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl;
+  unsigned old_CPL = CPL;
+  bx_address return_LIP = get_laddr(BX_SEG_REG_CS, RIP);
+  bx_bool check_ss_token = true;
+#endif
 
   Bit64u old_CS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
   Bit64u old_RIP = RIP;
@@ -151,9 +157,18 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_error
     if (ist > 0) {
       BX_DEBUG(("interrupt(long mode): trap to IST, vector = %d", ist));
       RSP_for_cpl_x = get_RSP_from_TSS(ist+3);
+#if BX_SUPPORT_CET
+      if (ShadowStackEnabled(0)) {
+        bx_address new_SSP_addr = BX_CPU_THIS_PTR msr.ia32_interrupt_ssp_table + (ist<<3);
+        new_SSP = system_read_qword(new_SSP_addr);
+      }
+#endif
     }
     else {
       RSP_for_cpl_x = get_RSP_from_TSS(cs_descriptor.dpl);
+#if BX_SUPPORT_CET
+      new_SSP = BX_CPU_THIS_PTR msr.ia32_pl_ssp[cs_descriptor.dpl];
+#endif
     }
 
     // align stack
@@ -190,9 +205,19 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_error
     if (ist > 0) {
       BX_DEBUG(("interrupt(long mode): trap to IST, vector = %d", ist));
       RSP_for_cpl_x = get_RSP_from_TSS(ist+3);
+#if BX_SUPPORT_CET
+      if (ShadowStackEnabled(CPL)) {
+        bx_address new_SSP_addr = BX_CPU_THIS_PTR msr.ia32_interrupt_ssp_table + (ist<<3);
+        new_SSP = system_read_qword(new_SSP_addr);
+      }
+#endif
     }
     else {
       RSP_for_cpl_x = RSP;
+#if BX_SUPPORT_CET
+      new_SSP = SSP;
+      check_ss_token = false;
+#endif
     }
 
     // align stack
@@ -223,6 +248,21 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_error
     exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc);
   }
 
+#if BX_SUPPORT_CET
+  if(ShadowStackEnabled(old_CPL)) {
+    if (old_CPL == 3)
+      BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = SSP;
+  }
+  if (ShadowStackEnabled(CPL)) {
+    bx_address old_SSP = SSP;
+    if(check_ss_token)
+      shadow_stack_switch(new_SSP);
+    if (old_SS_DPL != 3)
+      call_far_shadow_stack_push(old_CS, return_LIP, old_SSP);
+  }
+  track_indirect(CPL);
+#endif
+
   RSP = RSP_for_cpl_x;
 
   // if interrupt gate then set IF to 0
@@ -243,9 +283,6 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_
   Bit16u raw_tss_selector;
   bx_selector_t   tss_selector;
   bx_descriptor_t tss_descriptor;
-
-  Bit16u gate_dest_selector;
-  Bit32u gate_dest_offset;
 
   // interrupt vector must be within IDT table limits,
   // else #GP(vector*8 + 2 + EXT)
@@ -341,8 +378,9 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_
   case BX_286_TRAP_GATE:
   case BX_386_INTERRUPT_GATE:
   case BX_386_TRAP_GATE:
-    gate_dest_selector = gate_descriptor.u.gate.dest_selector;
-    gate_dest_offset   = gate_descriptor.u.gate.dest_offset;
+  {
+    Bit16u gate_dest_selector = gate_descriptor.u.gate.dest_selector;
+    Bit32u gate_dest_offset   = gate_descriptor.u.gate.dest_offset;
 
     // examine CS selector and descriptor given in gate descriptor
     // selector must be non-null else #GP(EXT)
@@ -374,12 +412,24 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_
       exception(BX_NP_EXCEPTION, cs_selector.value & 0xfffc);
     }
 
+    Bit32u old_ESP = ESP;
+    Bit16u old_SS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
+    Bit32u old_EIP = EIP;
+    Bit16u old_CS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
+
+#if BX_SUPPORT_CET
+    bx_address new_SSP = BX_CPU_THIS_PTR msr.ia32_pl_ssp[cs_descriptor.dpl];
+    Bit32u return_LIP = get_laddr(BX_SEG_REG_CS, EIP);
+    unsigned old_SS_DPL = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl;
+    unsigned old_CPL = CPL;
+#endif
+
     // if code segment is non-conforming and DPL < CPL then
     // INTERRUPT TO INNER PRIVILEGE
     if(IS_CODE_SEGMENT_NON_CONFORMING(cs_descriptor.type) && cs_descriptor.dpl < CPL)
     {
-      Bit16u old_SS, old_CS, SS_for_cpl_x;
-      Bit32u ESP_for_cpl_x, old_EIP, old_ESP;
+      Bit16u SS_for_cpl_x;
+      Bit32u ESP_for_cpl_x;
       bx_descriptor_t ss_descriptor;
       bx_selector_t   ss_selector;
       int is_v8086_mode = v8086_mode();
@@ -387,8 +437,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_
       BX_DEBUG(("interrupt(): INTERRUPT TO INNER PRIVILEGE"));
 
       // check selector and descriptor for new stack in current TSS
-      get_SS_ESP_from_TSS(cs_descriptor.dpl,
-                              &SS_for_cpl_x, &ESP_for_cpl_x);
+      get_SS_ESP_from_TSS(cs_descriptor.dpl, &SS_for_cpl_x, &ESP_for_cpl_x);
 
       if (is_v8086_mode && cs_descriptor.dpl != 0) {
         // if code segment DPL != 0 then #GP(new code segment selector)
@@ -445,19 +494,13 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_
         exception(BX_GP_EXCEPTION, 0);
       }
 
-      old_ESP = ESP;
-      old_SS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
-      old_EIP = EIP;
-      old_CS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
-
       // Prepare new stack segment
       bx_segment_reg_t new_stack;
       new_stack.selector = ss_selector;
       new_stack.cache = ss_descriptor;
       new_stack.selector.rpl = cs_descriptor.dpl;
       // add cpl to the selector value
-      new_stack.selector.value = (0xfffc & new_stack.selector.value) |
-        new_stack.selector.rpl;
+      new_stack.selector.value = (0xfffc & new_stack.selector.value) | new_stack.selector.rpl;
 
       if (ss_descriptor.u.segment.d_b) {
         Bit32u temp_ESP = ESP_for_cpl_x;
@@ -588,6 +631,21 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_
       // load new SS:eSP values from TSS
       load_ss(&ss_selector, &ss_descriptor, cs_descriptor.dpl);
 
+#if BX_SUPPORT_CET
+      if(ShadowStackEnabled(old_CPL)) {
+        if (old_CPL == 3)
+          BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = SSP;
+      }
+      if (ShadowStackEnabled(CPL)) {
+        bx_address old_SSP = SSP;
+        shadow_stack_switch(new_SSP);
+        if (old_SS_DPL != 3) {
+          call_far_shadow_stack_push(old_CS, return_LIP, old_SSP);
+        }
+      }
+      track_indirect(CPL);
+#endif
+
       if (is_v8086_mode)
       {
         BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.valid = 0;
@@ -634,6 +692,13 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_
           push_16(error_code);
       }
 
+#if BX_SUPPORT_CET
+      if(ShadowStackEnabled(CPL)) {
+        call_far_shadow_stack_push(old_CS, return_LIP, SSP);
+      }
+      track_indirect(CPL);
+#endif
+
       // load CS:IP from gate
       // load CS descriptor
       // set the RPL field of CS to CPL
@@ -650,7 +715,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_
     BX_CPU_THIS_PTR clear_VM();
     BX_CPU_THIS_PTR clear_RF();
     return;
-
+  }
   default:
     BX_PANIC(("bad descriptor type in interrupt()!"));
     break;
@@ -732,6 +797,8 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bx_bool push_error, Bit16u
   BX_CPU_THIS_PTR in_event = 1;
 #endif
 
+  RSP_SPECULATIVE;
+
 #if BX_SUPPORT_X86_64
   if (long_mode()) {
     long_mode_int(vector, soft_int, push_error, error_code);
@@ -739,8 +806,6 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bx_bool push_error, Bit16u
   else
 #endif
   {
-    RSP_SPECULATIVE;
-
     // software interrupt can be redirected in v8086 mode
     if (type != BX_SOFTWARE_INTERRUPT || !v8086_mode() || !v86_redirect_interrupt(vector))
     {
@@ -751,9 +816,9 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bx_bool push_error, Bit16u
         protected_mode_int(vector, soft_int, push_error, error_code);
       }
     }
-
-    RSP_COMMIT;
   }
+
+  RSP_COMMIT;
 
 #if BX_X86_DEBUGGER
   BX_CPU_THIS_PTR in_repeat = 0;
@@ -811,7 +876,7 @@ struct BxExceptionInfo exceptions_info[BX_CPU_HANDLED_EXCEPTIONS] = {
   /* MC */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_ABORT, 0 },
   /* XM */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 },
   /* VE */ { BX_ET_PAGE_FAULT,   BX_EXCEPTION_CLASS_FAULT, 0 },
-  /* 21 */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 },
+  /* CP */ { BX_ET_CONTRIBUTORY, BX_EXCEPTION_CLASS_FAULT, 1 },
   /* 22 */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 },
   /* 23 */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 },
   /* 24 */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 },
@@ -845,7 +910,7 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
    * least significant bit set correctly. This correction is applied first
    * to make the change transparent to any instrumentation.
    */
-  if (vector != BX_PF_EXCEPTION && vector != BX_DF_EXCEPTION) {
+  if (vector != BX_PF_EXCEPTION && vector != BX_DF_EXCEPTION && vector != BX_CP_EXCEPTION) {
     // Page faults have different format
     error_code = (error_code & 0xfffe) | BX_CPU_THIS_PTR EXT;
   }
@@ -870,8 +935,12 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
   {
     // restore RIP/RSP to value before error occurred
     RIP = BX_CPU_THIS_PTR prev_rip;
-    if (BX_CPU_THIS_PTR speculative_rsp)
+    if (BX_CPU_THIS_PTR speculative_rsp) {
       RSP = BX_CPU_THIS_PTR prev_rsp;
+#if BX_SUPPORT_CET
+      SSP = BX_CPU_THIS_PTR prev_ssp;
+#endif
+    }
     BX_CPU_THIS_PTR speculative_rsp = 0;
 
     if (BX_CPU_THIS_PTR last_exception_type == BX_ET_DOUBLE_FAULT)

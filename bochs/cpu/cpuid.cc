@@ -126,6 +126,7 @@ static const char *cpu_feature_name[] =
   "tce",                    // BX_ISA_TCE
   "clzero",                 // BX_ISA_CLZERO
   "sca_mitigations",        // BX_ISA_SCA_MITIGATIONS
+  "cet",                    // BX_ISA_CET
 };
 
 const char *get_cpu_feature_name(unsigned feature) { return cpu_feature_name[feature]; }
@@ -343,7 +344,10 @@ void bx_cpuid_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *
       //             IA32_XSS[n]    can be set to 1 only if ECX[n] is 1
       // EDX[31:0] - Reports the supported bits of the upper 32 bits of the IA32_XSS MSR.
       //             IA32_XSS[n+32] can be set to 1 only if EDX[n] is 1
-      leaf->ecx = 0; // no supported bits in MSR_XSS for now
+      leaf->ecx = 0;
+#if BX_SUPPPORT_CET
+      leaf->ecx |= BX_XCR0_CET_U_MASK | BX_XCR0_CET_S_MASK;
+#endif
       leaf->edx = 0;
       break;
 
@@ -402,6 +406,26 @@ void bx_cpuid_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *
       }
       break;
 #endif
+
+#if BX_SUPPPORT_CET
+    case 10:
+      if (cpu->xcr0_suppmask & BX_XCR0_CET_U_MASK) {
+        leaf->eax = XSAVE_CET_U_STATE_LEN;
+        leaf->ebx = 0;  // doesn't map to a valid bit in XCR0 register
+        leaf->ecx = 1;  // managed through IA32_XSS register
+        leaf->edx = 0;
+      }
+      break;
+    case 11:
+      if (cpu->xcr0_suppmask & BX_XCR0_CET_S_MASK) {
+        leaf->eax = XSAVE_CET_S_STATE_LEN;
+        leaf->ebx = 0;  // doesn't map to a valid bit in XCR0 register
+        leaf->ecx = 1;  // managed through IA32_XSS register
+        leaf->edx = 0;
+      }
+      break;
+#endif
+
     }
   }
 }
