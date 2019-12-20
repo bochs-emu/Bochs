@@ -6,6 +6,7 @@ Changes after 2.6.10 release:
 - CPU / CPUDB
   - Bugfixes for CPU emulation correctness
     - A lot of critical bugfixes for Protection Keys, AVX512*, VMX/SVM, SHA, GFNI
+  ! Implemented CET (Control Flow Enforcement Technology) emulation according to Intel SDM rev071
 
 - I/O Devices
   - Some fixes in HPET emulation (patch by Oleg)
