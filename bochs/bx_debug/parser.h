@@ -156,9 +156,10 @@ extern int bxdebug;
     BX_TOKEN_REG_IP = 366,
     BX_TOKEN_REG_EIP = 367,
     BX_TOKEN_REG_RIP = 368,
-    NOT = 369,
-    NEG = 370,
-    INDIRECT = 371
+    BX_TOKEN_REG_SSP = 369,
+    NOT = 370,
+    NEG = 371,
+    INDIRECT = 372
   };
 #endif
 /* Tokens.  */
@@ -273,9 +274,10 @@ extern int bxdebug;
 #define BX_TOKEN_REG_IP 366
 #define BX_TOKEN_REG_EIP 367
 #define BX_TOKEN_REG_RIP 368
-#define NOT 369
-#define NEG 370
-#define INDIRECT 371
+#define BX_TOKEN_REG_SSP 369
+#define NOT 370
+#define NEG 371
+#define INDIRECT 372
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -288,7 +290,7 @@ union YYSTYPE
   Bit64u   uval;
   bx_bool  bval;
 
-#line 292 "y.tab.h" /* yacc.c:1909  */
+#line 294 "y.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

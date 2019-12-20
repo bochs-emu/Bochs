@@ -1175,8 +1175,10 @@ void bx_dbg_info_registers_command(int which_regs_mask)
     reg = bx_dbg_get_rip();
     dbg_printf("rip: %08x_%08x\n", GET32H(reg), GET32L(reg));
 #if BX_SUPPORT_CET
-    reg = BX_CPU(dbg_cpu)->get_ssp();
-    dbg_printf("ssp: %08x_%08x\n", GET32H(reg), GET32L(reg));
+    if (BX_CPU(dbg_cpu)->is_cpu_extension_supported(BX_ISA_CET)) {
+      reg = BX_CPU(dbg_cpu)->get_ssp();
+      dbg_printf("ssp: %08x_%08x\n", GET32H(reg), GET32L(reg));
+    }
 #endif
 #endif
     reg = BX_CPU(dbg_cpu)->read_eflags();
