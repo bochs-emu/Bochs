@@ -1648,7 +1648,7 @@ unsigned evex_displ8_compression(const bxInstruction_c *i, unsigned ia_opcode, u
 #endif
     return (4 * len);
 
-  case BX_VMM_OCT_VECTOR:
+  case BX_VMM_EIGHTH_VECTOR:
 #if BX_SUPPORT_EVEX
     BX_ASSERT(! i->getEvexb());
 #endif
