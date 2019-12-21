@@ -1947,10 +1947,14 @@ public: // for now...
   BX_SMF void LOAD_Oct_Vector(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 #if BX_SUPPORT_EVEX
+  BX_SMF void LOAD_MASK_Wb(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOAD_MASK_Ww(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOAD_MASK_Wss(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOAD_MASK_Wsd(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOAD_MASK_VectorB(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOAD_MASK_VectorW(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOAD_MASK_VectorD(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOAD_MASK_VectorQ(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOAD_BROADCAST_VectorD(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOAD_BROADCAST_MASK_VectorD(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOAD_BROADCAST_VectorQ(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
