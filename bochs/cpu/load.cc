@@ -125,7 +125,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_MASK_Wsd(bxInstruction_c *i)
     val_64 = read_virtual_qword(i->seg(), eaddr);
   }
 
-  BX_WRITE_XMM_REG_LO_DWORD(BX_VECTOR_TMP_REGISTER, val_64);
+  BX_WRITE_XMM_REG_LO_QWORD(BX_VECTOR_TMP_REGISTER, val_64);
   BX_CPU_CALL_METHOD(i->execute2(), (i));
 }
 #endif
