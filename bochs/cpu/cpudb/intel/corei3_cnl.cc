@@ -642,7 +642,10 @@ void corei3_cnl_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *le
     // [29:29]    reserved
     // [30:30]    SGX_LC: SGX Launch Configuration
     // [31:31]    reserved
-    leaf->ecx = BX_CPUID_EXT4_AVX512_VBMI |
+    leaf->ecx = 
+#if BX_SUPPORT_EVEX
+                BX_CPUID_EXT4_AVX512_VBMI |
+#endif
                 BX_CPUID_EXT4_UMIP |
 #if BX_SUPPORT_PKEYS
                 BX_CPUID_EXT4_PKU |
