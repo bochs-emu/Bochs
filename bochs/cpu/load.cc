@@ -256,7 +256,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Quarter_Vector(bxInstruction_c *i)
   BX_CPU_CALL_METHOD(i->execute2(), (i));
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Oct_Vector(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Eighth_Vector(bxInstruction_c *i)
 {
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   unsigned len = i->getVL();
