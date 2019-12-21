@@ -212,6 +212,8 @@
   BX_CPU_THIS_PTR opmask[index].rrx = val_64; \
 }
 
+BX_CPP_INLINE Bit64u CUT_OPMASK_TO(unsigned nelements) { return (BX_CONST64(1) << (nelements)) - 1; }
+
 #endif
 
 #endif  // defined(NEED_CPU_REG_SHORTCUTS)
@@ -1947,8 +1949,6 @@ public: // for now...
   BX_SMF void LOAD_Eighth_Vector(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 #if BX_SUPPORT_EVEX
-  BX_SMF void LOAD_MASK_Wb(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
-  BX_SMF void LOAD_MASK_Ww(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOAD_MASK_Wss(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOAD_MASK_Wsd(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOAD_MASK_VectorB(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3579,6 +3579,10 @@ public: // for now...
   BX_SMF void VPBROADCASTW_MASK_VdqWwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VPBROADCASTD_MASK_VdqWdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VPBROADCASTQ_MASK_VdqWqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPBROADCASTB_MASK_VdqWbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPBROADCASTW_MASK_VdqWwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPBROADCASTD_MASK_VdqWdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPBROADCASTQ_MASK_VdqWqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void VPBROADCASTB_VdqEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VPBROADCASTW_VdqEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3590,6 +3594,7 @@ public: // for now...
   BX_SMF void VPBROADCASTQ_MASK_VdqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void VBROADCASTF32x2_MASK_VpsWqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VBROADCASTF32x2_MASK_VpsWqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void VBROADCASTF64x2_MASK_VpdMpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VBROADCASTF32x4_MASK_VpsMps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

@@ -48,6 +48,7 @@ AVX_OBJS = \
 	avx_fma.o \
 	avx2.o \
 	avx512.o \
+	avx512_broadcast.o \
 	avx512_move.o \
 	avx512_pfp.o \
 	avx512_rcp14.o \
@@ -138,6 +139,16 @@ avx2.o: avx2.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../svm.h ../cpuid.h ../stack.h ../access.h ../simd_int.h \
  ../simd_compare.h
 avx512.o: avx512.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
+ ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
+ ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
+ ../../instrument/stubs/instrument.h ../cpu.h ../decoder/decoder.h \
+ ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
+ ../fpu/control_w.h ../crregs.h ../descriptor.h ../decoder/instr.h \
+ ../lazy_flags.h ../tlb.h ../icache.h ../apic.h ../xmm.h ../vmx.h \
+ ../svm.h ../cpuid.h ../stack.h ../access.h ../simd_int.h \
+ ../simd_compare.h
+avx512_broadcast.o: avx512_broadcast.@CPP_SUFFIX@ ../../bochs.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
  ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \

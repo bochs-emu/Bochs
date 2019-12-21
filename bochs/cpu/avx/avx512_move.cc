@@ -383,7 +383,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPS_MASK_VpsWpsM(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   bx_address laddr = get_laddr(i->seg(), eaddr);
 
-  unsigned len = i->getVL(), len_in_bytes = 16 * len;
+  unsigned len = i->getVL(), len_in_bytes = BYTE_ELEMENTS(len);
   if (laddr & (len_in_bytes-1)) {
     BX_ERROR(("AVX masked read len=%d: #GP misaligned access", len_in_bytes));
     exception(BX_GP_EXCEPTION, 0);
@@ -411,7 +411,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPD_MASK_VpdWpdM(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   bx_address laddr = get_laddr(i->seg(), eaddr);
 
-  unsigned len = i->getVL(), len_in_bytes = 16 * len;
+  unsigned len = i->getVL(), len_in_bytes = BYTE_ELEMENTS(len);
   if (laddr & (len_in_bytes-1)) {
     BX_ERROR(("AVX masked read len=%d: #GP misaligned access", len_in_bytes));
     exception(BX_GP_EXCEPTION, 0);
@@ -439,7 +439,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPS_MASK_WpsVpsM(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   bx_address laddr = get_laddr(i->seg(), eaddr);
 
-  unsigned len_in_bytes = 16 * i->getVL();
+  unsigned len_in_bytes = BYTE_ELEMENTS(i->getVL());
   if (laddr & (len_in_bytes-1)) {
     BX_ERROR(("AVX masked write len=%d: #GP misaligned access", len_in_bytes));
     exception(BX_GP_EXCEPTION, 0);
@@ -455,7 +455,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPD_MASK_WpdVpdM(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   bx_address laddr = get_laddr(i->seg(), eaddr);
 
-  unsigned len_in_bytes = 16 * i->getVL();
+  unsigned len_in_bytes = BYTE_ELEMENTS(i->getVL());
   if (laddr & (len_in_bytes-1)) {
     BX_ERROR(("AVX masked write len=%d: #GP misaligned access", len_in_bytes));
     exception(BX_GP_EXCEPTION, 0);
@@ -714,7 +714,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVQB_MASK_WdqVdqM(bxInstruction_c *i)
   }
 
   Bit32u opmask = i->opmask() ? BX_READ_8BIT_OPMASK(i->opmask()) : (Bit32u) -1;
-  opmask &= (1 << QWORD_ELEMENTS(len)) - 1;
+  opmask &= CUT_OPMASK_TO(QWORD_ELEMENTS(len));
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   avx_masked_store8(i, eaddr, &dst, opmask);
@@ -775,7 +775,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSQB_MASK_WdqVdqM(bxInstruction_c *i)
   }
 
   Bit32u opmask = i->opmask() ? BX_READ_8BIT_OPMASK(i->opmask()) : (Bit32u) -1;
-  opmask &= (1 << QWORD_ELEMENTS(len)) - 1;
+  opmask &= CUT_OPMASK_TO(QWORD_ELEMENTS(len));
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   avx_masked_store8(i, eaddr, &dst, opmask);
@@ -836,7 +836,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSQB_MASK_WdqVdqM(bxInstruction_c *i)
   }
 
   Bit32u opmask = i->opmask() ? BX_READ_8BIT_OPMASK(i->opmask()) : (Bit32u) -1;
-  opmask &= (1 << QWORD_ELEMENTS(len)) - 1;
+  opmask &= CUT_OPMASK_TO(QWORD_ELEMENTS(len));
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   avx_masked_store8(i, eaddr, &dst, opmask);
@@ -897,7 +897,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVDB_MASK_WdqVdqM(bxInstruction_c *i)
   }
 
   Bit32u opmask = i->opmask() ? BX_READ_16BIT_OPMASK(i->opmask()) : (Bit32u) -1;
-  opmask &= (1 << DWORD_ELEMENTS(len)) - 1;
+  opmask &= CUT_OPMASK_TO(DWORD_ELEMENTS(len));
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   avx_masked_store8(i, eaddr, &dst, opmask);
@@ -954,7 +954,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSDB_MASK_WdqVdqM(bxInstruction_c *i)
   }
 
   Bit32u opmask = i->opmask() ? BX_READ_16BIT_OPMASK(i->opmask()) : (Bit32u) -1;
-  opmask &= (1 << DWORD_ELEMENTS(len)) - 1;
+  opmask &= CUT_OPMASK_TO(DWORD_ELEMENTS(len));
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   avx_masked_store8(i, eaddr, &dst, opmask);
@@ -1011,7 +1011,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSDB_MASK_WdqVdqM(bxInstruction_c *i)
   }
 
   Bit32u opmask = i->opmask() ? BX_READ_16BIT_OPMASK(i->opmask()) : (Bit32u) -1;
-  opmask &= (1 << DWORD_ELEMENTS(len)) - 1;
+  opmask &= CUT_OPMASK_TO(DWORD_ELEMENTS(len));
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   avx_masked_store8(i, eaddr, &dst, opmask);
@@ -1069,7 +1069,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVWB_MASK_WdqVdqM(bxInstruction_c *i)
   }
 
   Bit32u opmask = i->opmask() ? BX_READ_32BIT_OPMASK(i->opmask()) : (Bit32u) -1;
-  opmask &= (1 << WORD_ELEMENTS(len)) - 1;
+  opmask &= CUT_OPMASK_TO(WORD_ELEMENTS(len));
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   avx_masked_store8(i, eaddr, &dst, opmask);
@@ -1126,7 +1126,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSWB_MASK_WdqVdqM(bxInstruction_c *i)
   }
 
   Bit32u opmask = i->opmask() ? BX_READ_32BIT_OPMASK(i->opmask()) : (Bit32u) -1;
-  opmask &= (1 << WORD_ELEMENTS(len)) - 1;
+  opmask &= CUT_OPMASK_TO(WORD_ELEMENTS(len));
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   avx_masked_store8(i, eaddr, &dst, opmask);
@@ -1183,7 +1183,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSWB_MASK_WdqVdqM(bxInstruction_c *i)
   }
 
   Bit32u opmask = i->opmask() ? BX_READ_32BIT_OPMASK(i->opmask()) : (Bit32u) -1;
-  opmask &= (1 << WORD_ELEMENTS(len)) - 1;
+  opmask &= CUT_OPMASK_TO(WORD_ELEMENTS(len));
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   avx_masked_store8(i, eaddr, &dst, opmask);
@@ -1241,7 +1241,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVDW_MASK_WdqVdqM(bxInstruction_c *i)
   }
 
   Bit32u opmask = i->opmask() ? BX_READ_16BIT_OPMASK(i->opmask()) : (Bit32u) -1;
-  opmask &= (1 << DWORD_ELEMENTS(len)) - 1;
+  opmask &= CUT_OPMASK_TO(DWORD_ELEMENTS(len));
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   avx_masked_store16(i, eaddr, &dst, opmask);
@@ -1298,7 +1298,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSDW_MASK_WdqVdqM(bxInstruction_c *i)
   }
 
   Bit32u opmask = i->opmask() ? BX_READ_16BIT_OPMASK(i->opmask()) : (Bit32u) -1;
-  opmask &= (1 << DWORD_ELEMENTS(len)) - 1;
+  opmask &= CUT_OPMASK_TO(DWORD_ELEMENTS(len));
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   avx_masked_store16(i, eaddr, &dst, opmask);
@@ -1355,7 +1355,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSDW_MASK_WdqVdqM(bxInstruction_c *i)
   }
 
   Bit32u opmask = i->opmask() ? BX_READ_16BIT_OPMASK(i->opmask()) : (Bit32u) -1;
-  opmask &= (1 << DWORD_ELEMENTS(len)) - 1;
+  opmask &= CUT_OPMASK_TO(DWORD_ELEMENTS(len));
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   avx_masked_store16(i, eaddr, &dst, opmask);
@@ -1413,7 +1413,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVQW_MASK_WdqVdqM(bxInstruction_c *i)
   }
 
   Bit32u opmask = i->opmask() ? BX_READ_8BIT_OPMASK(i->opmask()) : (Bit32u) -1;
-  opmask &= (1 << QWORD_ELEMENTS(len)) - 1;
+  opmask &= CUT_OPMASK_TO(QWORD_ELEMENTS(len));
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   avx_masked_store16(i, eaddr, &dst, opmask);
@@ -1470,7 +1470,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSQW_MASK_WdqVdqM(bxInstruction_c *i)
   }
 
   Bit32u opmask = i->opmask() ? BX_READ_8BIT_OPMASK(i->opmask()) : (Bit32u) -1;
-  opmask &= (1 << QWORD_ELEMENTS(len)) - 1;
+  opmask &= CUT_OPMASK_TO(QWORD_ELEMENTS(len));
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   avx_masked_store16(i, eaddr, &dst, opmask);
@@ -1527,7 +1527,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSQW_MASK_WdqVdqM(bxInstruction_c *i)
   }
 
   Bit32u opmask = i->opmask() ? BX_READ_8BIT_OPMASK(i->opmask()) : (Bit32u) -1;
-  opmask &= (1 << QWORD_ELEMENTS(len)) - 1;
+  opmask &= CUT_OPMASK_TO(QWORD_ELEMENTS(len));
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   avx_masked_store16(i, eaddr, &dst, opmask);
@@ -1585,7 +1585,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVQD_MASK_WdqVdqM(bxInstruction_c *i)
   }
 
   Bit32u opmask = i->opmask() ? BX_READ_8BIT_OPMASK(i->opmask()) : (Bit32u) -1;
-  opmask &= (1 << QWORD_ELEMENTS(len)) - 1;
+  opmask &= CUT_OPMASK_TO(QWORD_ELEMENTS(len));
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   avx_masked_store32(i, eaddr, &dst, opmask);
@@ -1642,7 +1642,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSQD_MASK_WdqVdqM(bxInstruction_c *i)
   }
 
   Bit32u opmask = i->opmask() ? BX_READ_8BIT_OPMASK(i->opmask()) : (Bit32u) -1;
-  opmask &= (1 << QWORD_ELEMENTS(len)) - 1;
+  opmask &= CUT_OPMASK_TO(QWORD_ELEMENTS(len));
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   avx_masked_store32(i, eaddr, &dst, opmask);
@@ -1699,7 +1699,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSQD_MASK_WdqVdqM(bxInstruction_c *i)
   }
 
   Bit32u opmask = i->opmask() ? BX_READ_8BIT_OPMASK(i->opmask()) : (Bit32u) -1;
-  opmask &= (1 << QWORD_ELEMENTS(len)) - 1;
+  opmask &= CUT_OPMASK_TO(QWORD_ELEMENTS(len));
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   avx_masked_store32(i, eaddr, &dst, opmask);

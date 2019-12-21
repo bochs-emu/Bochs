@@ -67,21 +67,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Wb(bxInstruction_c *i)
 #endif
 }
 
-#if BX_SUPPORT_EVEX
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_MASK_Wb(bxInstruction_c *i)
-{
-  Bit8u val_8 = 0;
-
-  if (BX_SCALAR_ELEMENT_MASK(i->opmask())) {
-    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-    val_8 = read_virtual_byte(i->seg(), eaddr);
-  }
-
-  BX_WRITE_XMM_REG_LO_BYTE(BX_VECTOR_TMP_REGISTER, val_8);
-  BX_CPU_CALL_METHOD(i->execute2(), (i));
-}
-#endif
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Ww(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
@@ -92,21 +77,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Ww(bxInstruction_c *i)
   BX_CPU_CALL_METHOD(i->execute2(), (i));
 #endif
 }
-
-#if BX_SUPPORT_EVEX
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_MASK_Ww(bxInstruction_c *i)
-{
-  Bit8u val_16 = 0;
-
-  if (BX_SCALAR_ELEMENT_MASK(i->opmask())) {
-    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-    val_16 = read_virtual_byte(i->seg(), eaddr);
-  }
-
-  BX_WRITE_XMM_REG_LO_WORD(BX_VECTOR_TMP_REGISTER, val_16);
-  BX_CPU_CALL_METHOD(i->execute2(), (i));
-}
-#endif
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Wss(bxInstruction_c *i)
 {
@@ -379,7 +349,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_MASK_VectorD(bxInstruction_
 {
   unsigned len = i->getVL();
   Bit32u opmask = (i->opmask() != 0) ? BX_READ_16BIT_OPMASK(i->opmask()) : 0xffff;
-  opmask &= (1 << DWORD_ELEMENTS(len)) - 1;
+  opmask &= CUT_OPMASK_TO(DWORD_ELEMENTS(len));
 
   if (opmask == 0) {
     BX_CPU_CALL_METHOD(i->execute2(), (i)); // for now let execute method to deal with zero/merge masking semantics
@@ -426,7 +396,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_MASK_VectorQ(bxInstruction_
 {
   unsigned len = i->getVL();
   Bit32u opmask = (i->opmask() != 0) ? BX_READ_8BIT_OPMASK(i->opmask()) : 0xff;
-  opmask &= (1 << QWORD_ELEMENTS(len)) - 1;
+  opmask &= CUT_OPMASK_TO(QWORD_ELEMENTS(len));
 
   if (opmask == 0) {
     BX_CPU_CALL_METHOD(i->execute2(), (i)); // for now let execute method to deal with zero/merge masking semantics
@@ -477,7 +447,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_MASK_Half_VectorD(bxInstruc
 {
   unsigned len = i->getVL();
   Bit32u opmask = (i->opmask() != 0) ? BX_READ_16BIT_OPMASK(i->opmask()) : 0xffff;
-  opmask &= (1 << (DWORD_ELEMENTS(len) - 1)) - 1;
+  opmask &= CUT_OPMASK_TO(DWORD_ELEMENTS(len)-1);
 
   if (opmask == 0) {
     BX_CPU_CALL_METHOD(i->execute2(), (i)); // for now let execute method to deal with zero/merge masking semantics
