@@ -1251,19 +1251,19 @@ static const Bit64u BxOpcodeGroup_EVEX_0F3879[] = {
   last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0,                BX_IA_V512_VPBROADCASTW_VdqWw_Kmask)
 };
 static const Bit64u BxOpcodeGroup_EVEX_0F387A[] = {
-  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0 | ATTR_MASK_K0, BX_IA_V512_VPBROADCASTB_VdqEb),
-  last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0,                BX_IA_V512_VPBROADCASTB_VdqEb_Kmask)
+  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0 | ATTR_MODC0 | ATTR_MASK_K0, BX_IA_V512_VPBROADCASTB_VdqEb),
+  last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0 | ATTR_MODC0,                BX_IA_V512_VPBROADCASTB_VdqEb_Kmask)
 };
 static const Bit64u BxOpcodeGroup_EVEX_0F387B[] = {
-  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0 | ATTR_MASK_K0, BX_IA_V512_VPBROADCASTW_VdqEw),
-  last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0,                BX_IA_V512_VPBROADCASTW_VdqEw_Kmask)
+  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0 | ATTR_MODC0 | ATTR_MASK_K0, BX_IA_V512_VPBROADCASTW_VdqEw),
+  last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0 | ATTR_MODC0,                BX_IA_V512_VPBROADCASTW_VdqEw_Kmask)
 };
 
 static const Bit64u BxOpcodeGroup_EVEX_0F387C[] = {
-  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0 | ATTR_MASK_K0,             BX_IA_V512_VPBROADCASTD_VdqEd),
-  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0,                            BX_IA_V512_VPBROADCASTD_VdqEd_Kmask),
-  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W1 | ATTR_MASK_K0 | ATTR_IS64, BX_IA_V512_VPBROADCASTQ_VdqEq),
-  last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W1 |                ATTR_IS64, BX_IA_V512_VPBROADCASTQ_VdqEq_Kmask)
+  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0 | ATTR_MODC0 | ATTR_MASK_K0,             BX_IA_V512_VPBROADCASTD_VdqEd),
+  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0 | ATTR_MODC0,                            BX_IA_V512_VPBROADCASTD_VdqEd_Kmask),
+  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W1 | ATTR_MODC0 | ATTR_MASK_K0 | ATTR_IS64, BX_IA_V512_VPBROADCASTQ_VdqEq),
+  last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W1 | ATTR_MODC0 |                ATTR_IS64, BX_IA_V512_VPBROADCASTQ_VdqEq_Kmask)
 };
 
 static const Bit64u BxOpcodeGroup_EVEX_0F387D[] = {
