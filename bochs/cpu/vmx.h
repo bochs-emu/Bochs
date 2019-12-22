@@ -172,10 +172,10 @@ enum VMX_vmabort_code {
 };
 
 // VMX APIC ACCESS VMEXIT qualification
-#define VMX_APIC_READ_INSTRUCTION_EXECUTION   0x0000
-#define VMX_APIC_WRITE_INSTRUCTION_EXECUTION  0x1000
-#define VMX_APIC_INSTRUCTION_FETCH            0x2000 /* won't happen because cpu::prefetch will crash */
-#define VMX_APIC_ACCESS_DURING_EVENT_DELIVERY 0x3000
+const Bit32u VMX_APIC_READ_INSTRUCTION_EXECUTION   = 0x0000;
+const Bit32u VMX_APIC_WRITE_INSTRUCTION_EXECUTION  = 0x1000;
+const Bit32u VMX_APIC_INSTRUCTION_FETCH            = 0x2000; /* won't happen because cpu::prefetch will crash */
+const Bit32u VMX_APIC_ACCESS_DURING_EVENT_DELIVERY = 0x3000;
 
 // VM Functions List
 enum VMFunctions {
@@ -470,7 +470,7 @@ enum {
 #define VMCS_FIELD_INDEX(encoding) \
     ((VMCS_FIELD_WIDTH(encoding) << 2) + VMCS_FIELD_TYPE(encoding))
 
-#define VMCS_ENCODING_RESERVED_BITS (0xffff9000)
+const Bit32u VMCS_ENCODING_RESERVED_BITS = 0xffff9000;
 
 // =============
 //  VMCS layout
@@ -483,9 +483,17 @@ enum VMCS_Access_Rights_Format {
    VMCS_AR_PACK		// Intel Skylake packs AR into 16 bit form
 };
 
+#define VMCS_LAUNCH_STATE_FIELD_ENCODING         (0xfffffffe)
+#define VMCS_VMX_ABORT_FIELD_ENCODING            (0xfffffffc)
+#define VMCS_REVISION_ID_FIELD_ENCODING          (0xfffffffa)
+
 class VMCS_Mapping {
 private:
    Bit32u revision_id;
+
+   unsigned vmcs_revision_id_field_offset;
+   unsigned vmx_abort_field_offset;
+   unsigned vmcs_launch_state_field_offset;
 
    VMCS_Access_Rights_Format ar_format; // in which form segment selectors Access Rights are stored in the VMCS
 
@@ -508,6 +516,10 @@ public:
 
    void set_access_rights_format(VMCS_Access_Rights_Format f) { ar_format = f; }
    VMCS_Access_Rights_Format get_access_rights_format() const { return ar_format; }
+
+   void set_vmcs_recision_id_offset(unsigned offset) { vmcs_revision_id_field_offset = offset; }
+   void set_vmx_abort_field_offset(unsigned offset) { vmx_abort_field_offset = offset; }
+   void set_vmcs_launch_state_field_offset(unsigned offset) { vmcs_launch_state_field_offset = offset; }
    
    unsigned vmcs_field_offset(Bit32u encoding) const;
 
@@ -519,14 +531,6 @@ public:
      return ! is_reserved(encoding) && (vmcs_field_offset(encoding) != 0xffffffff);
    }
 };
-
-#define VMCS_LAUNCH_STATE_FIELD_ENCODING         (0xfffffffe)
-#define VMCS_VMX_ABORT_FIELD_ENCODING            (0xfffffffc)
-#define VMCS_REVISION_ID_FIELD_ENCODING          (0xfffffffa)
-
-#define VMCS_REVISION_ID_FIELD_ADDR              (0x0000)
-#define VMCS_VMX_ABORT_FIELD_ADDR                (0x0004)
-#define VMCS_LAUNCH_STATE_FIELD_ADDR             (0x00d8)
 
 #define VMCS_DATA_OFFSET                         (0x0010)
 
@@ -879,15 +883,13 @@ typedef struct bx_VMCS
 
 #define SECONDARY_VMEXEC_CONTROL(ctrl) (BX_CPU_THIS_PTR vmcs.vmexec_ctrls3 & (ctrl))
 
-#define BX_VMX_INTERRUPTS_BLOCKED_BY_STI      (1 << 0)
-#define BX_VMX_INTERRUPTS_BLOCKED_BY_MOV_SS   (1 << 1)
-#define BX_VMX_INTERRUPTS_BLOCKED_SMI_BLOCKED (1 << 2)
-#define BX_VMX_INTERRUPTS_BLOCKED_NMI_BLOCKED (1 << 3)
+const Bit32u BX_VMX_INTERRUPTS_BLOCKED_BY_STI      = (1 << 0);
+const Bit32u BX_VMX_INTERRUPTS_BLOCKED_BY_MOV_SS   = (1 << 1);
+const Bit32u BX_VMX_INTERRUPTS_BLOCKED_SMI_BLOCKED = (1 << 2);
+const Bit32u BX_VMX_INTERRUPTS_BLOCKED_NMI_BLOCKED = (1 << 3);
 
-#define BX_VMX_INTERRUPTIBILITY_STATE_MASK \
-    (BX_VMX_INTERRUPTS_BLOCKED_BY_STI | BX_VMX_INTERRUPTS_BLOCKED_BY_MOV_SS | \
-     BX_VMX_INTERRUPTS_BLOCKED_SMI_BLOCKED | \
-     BX_VMX_INTERRUPTS_BLOCKED_NMI_BLOCKED)
+const Bit32u BX_VMX_INTERRUPTIBILITY_STATE_MASK = \
+  (BX_VMX_INTERRUPTS_BLOCKED_BY_STI | BX_VMX_INTERRUPTS_BLOCKED_BY_MOV_SS | BX_VMX_INTERRUPTS_BLOCKED_SMI_BLOCKED | BX_VMX_INTERRUPTS_BLOCKED_NMI_BLOCKED);
 
 //
 // IA32_VMX_BASIC MSR (0x480)

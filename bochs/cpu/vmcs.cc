@@ -29,6 +29,10 @@
 
 #if BX_SUPPORT_VMX
 
+#define VMCS_REVISION_ID_FIELD_ADDR              (0x0000)
+#define VMCS_VMX_ABORT_FIELD_ADDR                (0x0004)
+#define VMCS_LAUNCH_STATE_FIELD_ADDR             (0x0008)
+
 VMCS_Mapping::VMCS_Mapping(Bit32u revision): revision_id(revision), ar_format(VMCS_AR_ROTATE)
 {
   clear();
@@ -53,6 +57,10 @@ BX_CPP_INLINE Bit32u vmcs_encoding(Bit32u type, Bit32u field)
 
 void VMCS_Mapping::init_generic_mapping()
 {
+  vmcs_revision_id_field_offset = VMCS_REVISION_ID_FIELD_ADDR;
+  vmx_abort_field_offset = VMCS_VMX_ABORT_FIELD_ADDR;
+  vmcs_launch_state_field_offset = VMCS_LAUNCH_STATE_FIELD_ADDR;
+
   // try to build generic VMCS map
   // 16 types, 48 encodings (0x30), 4 bytes each field => 3072 bytes
   // reserve VMCS_DATA_OFFSET bytes in the beginning for special (hidden) VMCS fields
@@ -103,9 +111,9 @@ unsigned VMCS_Mapping::vmcs_field_offset(Bit32u encoding) const
 {
   if (is_reserved(encoding)) {
     switch(encoding) {
-      case VMCS_REVISION_ID_FIELD_ENCODING:  return VMCS_REVISION_ID_FIELD_ADDR;
-      case VMCS_VMX_ABORT_FIELD_ENCODING:    return VMCS_VMX_ABORT_FIELD_ADDR;
-      case VMCS_LAUNCH_STATE_FIELD_ENCODING: return VMCS_LAUNCH_STATE_FIELD_ADDR;
+      case VMCS_REVISION_ID_FIELD_ENCODING:  return vmcs_revision_id_field_offset;
+      case VMCS_VMX_ABORT_FIELD_ENCODING:    return vmx_abort_field_offset;
+      case VMCS_LAUNCH_STATE_FIELD_ENCODING: return vmcs_launch_state_field_offset;
     }
     return 0xffffffff;
   }

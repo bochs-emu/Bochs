@@ -415,9 +415,13 @@ void BX_CPU_C::VMabort(VMX_vmabort_code error_code)
 
 Bit32u BX_CPU_C::VMXReadRevisionID(bx_phy_address pAddr)
 {
+  unsigned revision_id_field_offset = BX_CPU_THIS_PTR vmcs_map->vmcs_field_offset(VMCS_REVISION_ID_FIELD_ENCODING);
+  if(revision_id_field_offset >= VMX_VMCS_AREA_SIZE)
+    BX_PANIC(("Can't access VMCS_REVISION_ID encoding, offset=0x%x", revision_id_field_offset));
+
   Bit32u revision;
-  access_read_physical(pAddr + VMCS_REVISION_ID_FIELD_ADDR, 4, &revision);
-  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr + VMCS_REVISION_ID_FIELD_ADDR, 4, MEMTYPE(BX_CPU_THIS_PTR vmcs_memtype),
+  access_read_physical(pAddr + revision_id_field_offset, 4, &revision);
+  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr + revision_id_field_offset, 4, MEMTYPE(BX_CPU_THIS_PTR vmcs_memtype),
           BX_READ, BX_VMCS_ACCESS, (Bit8u*)(&revision));
 
   return revision;
@@ -3586,9 +3590,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMCLEAR(bxInstruction_c *i)
     // initialize implementation-specific data in VMCS region
 
     // clear VMCS launch state
+    unsigned launch_field_offset = BX_CPU_THIS_PTR vmcs_map->vmcs_field_offset(VMCS_LAUNCH_STATE_FIELD_ENCODING);
+    if(launch_field_offset >= VMX_VMCS_AREA_SIZE)
+      BX_PANIC(("VMCLEAR: can't access VMCS_LAUNCH_STATE encoding, offset=0x%x", launch_field_offset));
+
     Bit32u launch_state = VMCS_STATE_CLEAR;
-    access_write_physical(pAddr + VMCS_LAUNCH_STATE_FIELD_ADDR, 4, &launch_state);
-    BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr + VMCS_LAUNCH_STATE_FIELD_ADDR, 4,
+    access_write_physical(pAddr + launch_field_offset, 4, &launch_state);
+    BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr + launch_field_offset, 4,
             MEMTYPE(BX_CPU_THIS_PTR vmcs_memtype), BX_WRITE, BX_VMCS_ACCESS, (Bit8u*)(&launch_state));
 
     if (pAddr == BX_CPU_THIS_PTR vmcsptr) {
