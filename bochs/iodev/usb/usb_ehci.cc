@@ -4,7 +4,7 @@
 //
 //  Experimental USB EHCI adapter (partly ported from Qemu)
 //
-//  Copyright (C) 2015-2018  The Bochs Project
+//  Copyright (C) 2015-2019  The Bochs Project
 //
 //  Copyright(c) 2008  Emutex Ltd. (address@hidden)
 //  Copyright(c) 2011-2012 Red Hat, Inc.
@@ -650,9 +650,10 @@ bx_bool bx_usb_ehci_c::read_handler(bx_phy_address addr, unsigned len, void *dat
     switch (offset) {
       case 0x00:
         val = BX_EHCI_THIS hub.cap_regs.CapLength;
+        if (len == 4) val |= (BX_EHCI_THIS hub.cap_regs.HciVersion << 16);
         break;
       case 0x02:
-        val = BX_EHCI_THIS hub.cap_regs.HciVersion;
+        if (len == 2) val = BX_EHCI_THIS hub.cap_regs.HciVersion;
         break;
       case 0x04:
         val = BX_EHCI_THIS hub.cap_regs.HcsParams;
@@ -662,61 +663,69 @@ bx_bool bx_usb_ehci_c::read_handler(bx_phy_address addr, unsigned len, void *dat
         break;
     }
   } else {
-    switch (offset - OPS_REGS_OFFSET) {
-      case 0x00:
-        val = ((BX_EHCI_THIS hub.op_regs.UsbCmd.itc     << 16)
-             | (BX_EHCI_THIS hub.op_regs.UsbCmd.iaad    << 6)
-             | (BX_EHCI_THIS hub.op_regs.UsbCmd.ase     << 5)
-             | (BX_EHCI_THIS hub.op_regs.UsbCmd.pse     << 4)
-             | (BX_EHCI_THIS hub.op_regs.UsbCmd.hcreset << 1)
-             |  BX_EHCI_THIS hub.op_regs.UsbCmd.rs);
-        break;
-      case 0x04:
-        val = ((BX_EHCI_THIS hub.op_regs.UsbSts.ass      << 15)
-             | (BX_EHCI_THIS hub.op_regs.UsbSts.pss      << 14)
-             | (BX_EHCI_THIS hub.op_regs.UsbSts.recl     << 13)
-             | (BX_EHCI_THIS hub.op_regs.UsbSts.hchalted << 12)
-             |  BX_EHCI_THIS hub.op_regs.UsbSts.inti);
-        break;
-      case 0x08:
-        val = BX_EHCI_THIS hub.op_regs.UsbIntr;
-        break;
-      case 0x0c:
-        val = BX_EHCI_THIS hub.op_regs.FrIndex;
-        break;
-      case 0x10:
-        val = BX_EHCI_THIS hub.op_regs.CtrlDsSegment;
-        break;
-      case 0x14:
-        val = BX_EHCI_THIS hub.op_regs.PeriodicListBase;
-        break;
-      case 0x18:
-        val = BX_EHCI_THIS hub.op_regs.AsyncListAddr;
-        break;
-      case 0x40:
-        val = BX_EHCI_THIS hub.op_regs.ConfigFlag;
-        break;
-      default:
-        port = (offset - OPS_REGS_OFFSET - 0x44) / 4;
-        if (port < USB_EHCI_PORTS) {
-          val = ((BX_EHCI_THIS hub.usb_port[port].portsc.woe << 22)
-               | (BX_EHCI_THIS hub.usb_port[port].portsc.wde << 21)
-               | (BX_EHCI_THIS hub.usb_port[port].portsc.wce << 20)
-               | (BX_EHCI_THIS hub.usb_port[port].portsc.ptc << 16)
-               | (BX_EHCI_THIS hub.usb_port[port].portsc.pic << 14)
-               | (BX_EHCI_THIS hub.usb_port[port].portsc.po << 13)
-               | (BX_EHCI_THIS hub.usb_port[port].portsc.pp << 12)
-               | (BX_EHCI_THIS hub.usb_port[port].portsc.ls << 10)
-               | (BX_EHCI_THIS hub.usb_port[port].portsc.pr << 8)
-               | (BX_EHCI_THIS hub.usb_port[port].portsc.sus << 7)
-               | (BX_EHCI_THIS hub.usb_port[port].portsc.fpr << 6)
-               | (BX_EHCI_THIS hub.usb_port[port].portsc.occ << 5)
-               | (BX_EHCI_THIS hub.usb_port[port].portsc.oca << 4)
-               | (BX_EHCI_THIS hub.usb_port[port].portsc.pec << 3)
-               | (BX_EHCI_THIS hub.usb_port[port].portsc.ped << 2)
-               | (BX_EHCI_THIS hub.usb_port[port].portsc.csc << 1)
-               | BX_EHCI_THIS hub.usb_port[port].portsc.ccs);
-        }
+    // Specs say that we should read dwords only
+    if (len == 4) {
+      switch (offset - OPS_REGS_OFFSET) {
+        case 0x00:
+          val = ((BX_EHCI_THIS hub.op_regs.UsbCmd.itc     << 16)
+               | (BX_EHCI_THIS hub.op_regs.UsbCmd.iaad    << 6)
+               | (BX_EHCI_THIS hub.op_regs.UsbCmd.ase     << 5)
+               | (BX_EHCI_THIS hub.op_regs.UsbCmd.pse     << 4)
+               | (BX_EHCI_THIS hub.op_regs.UsbCmd.hcreset << 1)
+               |  BX_EHCI_THIS hub.op_regs.UsbCmd.rs);
+          break;
+        case 0x04:
+          val = ((BX_EHCI_THIS hub.op_regs.UsbSts.ass      << 15)
+               | (BX_EHCI_THIS hub.op_regs.UsbSts.pss      << 14)
+               | (BX_EHCI_THIS hub.op_regs.UsbSts.recl     << 13)
+               | (BX_EHCI_THIS hub.op_regs.UsbSts.hchalted << 12)
+               |  BX_EHCI_THIS hub.op_regs.UsbSts.inti);
+          break;
+        case 0x08:
+          val = BX_EHCI_THIS hub.op_regs.UsbIntr;
+          break;
+        case 0x0c:
+          val = BX_EHCI_THIS hub.op_regs.FrIndex;
+          break;
+        case 0x10:
+          val = BX_EHCI_THIS hub.op_regs.CtrlDsSegment;
+          break;
+        case 0x14:
+          val = BX_EHCI_THIS hub.op_regs.PeriodicListBase;
+          break;
+        case 0x18:
+          val = BX_EHCI_THIS hub.op_regs.AsyncListAddr;
+          break;
+        case 0x40:
+          val = BX_EHCI_THIS hub.op_regs.ConfigFlag;
+          break;
+        default:
+          port = (offset - OPS_REGS_OFFSET - 0x44) / 4;
+          if (port < USB_EHCI_PORTS) {
+            val = ((BX_EHCI_THIS hub.usb_port[port].portsc.woe << 22)
+                 | (BX_EHCI_THIS hub.usb_port[port].portsc.wde << 21)
+                 | (BX_EHCI_THIS hub.usb_port[port].portsc.wce << 20)
+                 | (BX_EHCI_THIS hub.usb_port[port].portsc.ptc << 16)
+                 | (BX_EHCI_THIS hub.usb_port[port].portsc.pic << 14)
+                 | (BX_EHCI_THIS hub.usb_port[port].portsc.po << 13)
+                 | (BX_EHCI_THIS hub.usb_port[port].portsc.pp << 12)
+                 | (BX_EHCI_THIS hub.usb_port[port].portsc.ls << 10)
+                 | (BX_EHCI_THIS hub.usb_port[port].portsc.pr << 8)
+                 | (BX_EHCI_THIS hub.usb_port[port].portsc.sus << 7)
+                 | (BX_EHCI_THIS hub.usb_port[port].portsc.fpr << 6)
+                 | (BX_EHCI_THIS hub.usb_port[port].portsc.occ << 5)
+                 | (BX_EHCI_THIS hub.usb_port[port].portsc.oca << 4)
+                 | (BX_EHCI_THIS hub.usb_port[port].portsc.pec << 3)
+                 | (BX_EHCI_THIS hub.usb_port[port].portsc.ped << 2)
+                 | (BX_EHCI_THIS hub.usb_port[port].portsc.csc << 1)
+                 | BX_EHCI_THIS hub.usb_port[port].portsc.ccs);
+          }
+      }
+    } else {
+      // a non-dword read from an operational register is undefined.
+      BX_ERROR(("Read non-dword read from offset 0x%08X", offset));
+      // we return -1 for easier debugging purposes.
+      val_hi = val = 0xFFFFFFFF;
     }
   }
 
@@ -770,98 +779,104 @@ bx_bool bx_usb_ehci_c::write_handler(bx_phy_address addr, unsigned len, void *da
 #endif
 
   if (offset >= OPS_REGS_OFFSET) {
-    switch (offset - OPS_REGS_OFFSET) {
-      case 0x00:
-        BX_EHCI_THIS hub.op_regs.UsbCmd.itc   = (value >> 16) & 0x7f;
-        BX_EHCI_THIS hub.op_regs.UsbCmd.iaad  = (value >> 6) & 1;
-        BX_EHCI_THIS hub.op_regs.UsbCmd.ase   = (value >> 5) & 1;
-        BX_EHCI_THIS hub.op_regs.UsbCmd.pse   = (value >> 4) & 1;
-        BX_EHCI_THIS hub.op_regs.UsbCmd.hcreset = (value >> 1) & 1;
-        BX_EHCI_THIS hub.op_regs.UsbCmd.rs    = (value & 1);
-        if (BX_EHCI_THIS hub.op_regs.UsbCmd.iaad) {
-          BX_EHCI_THIS hub.async_stepdown = 0;
-          // TODO
-        }
-        if (BX_EHCI_THIS hub.op_regs.UsbCmd.hcreset) {
-          BX_EHCI_THIS reset_hc();
-          BX_EHCI_THIS hub.op_regs.UsbCmd.hcreset = 0;
-        }
-        if (BX_EHCI_THIS hub.op_regs.UsbCmd.rs) {
-          BX_EHCI_THIS hub.op_regs.UsbSts.hchalted = 0;
-        } else {
-          BX_EHCI_THIS hub.op_regs.UsbSts.hchalted = 1;
-        }
-        break;
-      case 0x04:
-        BX_EHCI_THIS hub.op_regs.UsbSts.inti ^= (value & USBINTR_MASK);
-        BX_EHCI_THIS update_irq();
-        break;
-      case 0x08:
-        BX_EHCI_THIS hub.op_regs.UsbIntr = (Bit8u)(value & USBINTR_MASK);
-        break;
-      case 0x0c:
-        if (!BX_EHCI_THIS hub.op_regs.UsbCmd.rs) {
-          BX_EHCI_THIS hub.op_regs.FrIndex = (value & 0x1fff);
-        }
-        break;
-      case 0x10:
-        BX_EHCI_THIS hub.op_regs.CtrlDsSegment = value;
-        break;
-      case 0x14:
-        BX_EHCI_THIS hub.op_regs.PeriodicListBase = (value & 0xfffff000);
-        break;
-      case 0x18:
-        BX_EHCI_THIS hub.op_regs.AsyncListAddr = (value & 0xffffffe0);
-        break;
-      case 0x40:
-        oldcfg = (BX_EHCI_THIS hub.op_regs.ConfigFlag & 1);
-        BX_EHCI_THIS hub.op_regs.ConfigFlag = (value & 1);
-        if (!oldcfg && (value & 1)) {
-          for (i=0; i<USB_EHCI_PORTS; i++) {
-            BX_EHCI_THIS hub.usb_port[i].owner_change = BX_EHCI_THIS hub.usb_port[i].portsc.po;
+    // Specs say that we should write dwords only
+    if (len == 4) {
+      switch (offset - OPS_REGS_OFFSET) {
+        case 0x00:
+          BX_EHCI_THIS hub.op_regs.UsbCmd.itc   = (value >> 16) & 0x7f;
+          BX_EHCI_THIS hub.op_regs.UsbCmd.iaad  = (value >> 6) & 1;
+          BX_EHCI_THIS hub.op_regs.UsbCmd.ase   = (value >> 5) & 1;
+          BX_EHCI_THIS hub.op_regs.UsbCmd.pse   = (value >> 4) & 1;
+          BX_EHCI_THIS hub.op_regs.UsbCmd.hcreset = (value >> 1) & 1;
+          BX_EHCI_THIS hub.op_regs.UsbCmd.rs    = (value & 1);
+          if (BX_EHCI_THIS hub.op_regs.UsbCmd.iaad) {
+            BX_EHCI_THIS hub.async_stepdown = 0;
+            // TODO
           }
-        } else if (!(value & 1)) {
-          for (i=0; i<USB_EHCI_PORTS; i++) {
-            BX_EHCI_THIS hub.usb_port[i].owner_change = !BX_EHCI_THIS hub.usb_port[i].portsc.po;
+          if (BX_EHCI_THIS hub.op_regs.UsbCmd.hcreset) {
+            BX_EHCI_THIS reset_hc();
+            BX_EHCI_THIS hub.op_regs.UsbCmd.hcreset = 0;
           }
-        }
-        BX_EHCI_THIS change_port_owner(-1);
-        break;
-      default:
-        port = (offset - OPS_REGS_OFFSET - 0x44) / 4;
-        if (port < USB_EHCI_PORTS) {
-          oldpo = BX_EHCI_THIS hub.usb_port[port].portsc.po;
-          oldpr = BX_EHCI_THIS hub.usb_port[port].portsc.pr;
-          oldfpr = BX_EHCI_THIS hub.usb_port[port].portsc.fpr;
-          BX_EHCI_THIS hub.usb_port[port].portsc.woe = (value >> 22) & 1;
-          BX_EHCI_THIS hub.usb_port[port].portsc.wde = (value >> 21) & 1;
-          BX_EHCI_THIS hub.usb_port[port].portsc.wce = (value >> 20) & 1;
-          BX_EHCI_THIS hub.usb_port[port].portsc.ptc = (value >> 16) & 0xf;
-          BX_EHCI_THIS hub.usb_port[port].portsc.pic = (value >> 14) & 3;
-          BX_EHCI_THIS hub.usb_port[port].portsc.pr = (value >> 8) & 1;
-          if ((value >> 7) & 1) BX_EHCI_THIS hub.usb_port[port].portsc.sus = 1;
-          BX_EHCI_THIS hub.usb_port[port].portsc.fpr = (value >> 6) & 1;
-          if ((value >> 5) & 1) BX_EHCI_THIS hub.usb_port[port].portsc.occ = 0;
-          if ((value >> 3) & 1) BX_EHCI_THIS hub.usb_port[port].portsc.pec = 0;
-          if (!((value >> 2) & 1)) BX_EHCI_THIS hub.usb_port[port].portsc.ped = 0;
-          if ((value >> 1) & 1) BX_EHCI_THIS hub.usb_port[port].portsc.csc = 0;
-          if (oldpo != ((value >> 13) & 1)) {
-            BX_EHCI_THIS hub.usb_port[port].owner_change = 1;
-            BX_EHCI_THIS change_port_owner(port);
+          if (BX_EHCI_THIS hub.op_regs.UsbCmd.rs) {
+            BX_EHCI_THIS hub.op_regs.UsbSts.hchalted = 0;
+          } else {
+            BX_EHCI_THIS hub.op_regs.UsbSts.hchalted = 1;
           }
-          if (oldpr && !BX_EHCI_THIS hub.usb_port[port].portsc.pr) {
-            if (BX_EHCI_THIS hub.usb_port[port].device != NULL) {
-              BX_EHCI_THIS hub.usb_port[port].device->usb_send_msg(USB_MSG_RESET);
-              BX_EHCI_THIS hub.usb_port[port].portsc.csc = 0;
-              if (BX_EHCI_THIS hub.usb_port[port].device->get_speed() == USB_SPEED_HIGH) {
-                BX_EHCI_THIS hub.usb_port[port].portsc.ped = 1;
-              }
+          break;
+        case 0x04:
+          BX_EHCI_THIS hub.op_regs.UsbSts.inti ^= (value & USBINTR_MASK);
+          BX_EHCI_THIS update_irq();
+          break;
+        case 0x08:
+          BX_EHCI_THIS hub.op_regs.UsbIntr = (Bit8u)(value & USBINTR_MASK);
+          break;
+        case 0x0c:
+          if (!BX_EHCI_THIS hub.op_regs.UsbCmd.rs) {
+            BX_EHCI_THIS hub.op_regs.FrIndex = (value & 0x1fff);
+          }
+          break;
+        case 0x10:
+          BX_EHCI_THIS hub.op_regs.CtrlDsSegment = value;
+          break;
+        case 0x14:
+          BX_EHCI_THIS hub.op_regs.PeriodicListBase = (value & 0xfffff000);
+          break;
+        case 0x18:
+          BX_EHCI_THIS hub.op_regs.AsyncListAddr = (value & 0xffffffe0);
+          break;
+        case 0x40:
+          oldcfg = (BX_EHCI_THIS hub.op_regs.ConfigFlag & 1);
+          BX_EHCI_THIS hub.op_regs.ConfigFlag = (value & 1);
+          if (!oldcfg && (value & 1)) {
+            for (i=0; i<USB_EHCI_PORTS; i++) {
+              BX_EHCI_THIS hub.usb_port[i].owner_change = BX_EHCI_THIS hub.usb_port[i].portsc.po;
+            }
+          } else if (!(value & 1)) {
+            for (i=0; i<USB_EHCI_PORTS; i++) {
+              BX_EHCI_THIS hub.usb_port[i].owner_change = !BX_EHCI_THIS hub.usb_port[i].portsc.po;
             }
           }
-          if (oldfpr && !BX_EHCI_THIS hub.usb_port[port].portsc.fpr) {
-            BX_EHCI_THIS hub.usb_port[port].portsc.sus = 0;
+          BX_EHCI_THIS change_port_owner(-1);
+          break;
+        default:
+          port = (offset - OPS_REGS_OFFSET - 0x44) / 4;
+          if (port < USB_EHCI_PORTS) {
+            oldpo = BX_EHCI_THIS hub.usb_port[port].portsc.po;
+            oldpr = BX_EHCI_THIS hub.usb_port[port].portsc.pr;
+            oldfpr = BX_EHCI_THIS hub.usb_port[port].portsc.fpr;
+            BX_EHCI_THIS hub.usb_port[port].portsc.woe = (value >> 22) & 1;
+            BX_EHCI_THIS hub.usb_port[port].portsc.wde = (value >> 21) & 1;
+            BX_EHCI_THIS hub.usb_port[port].portsc.wce = (value >> 20) & 1;
+            BX_EHCI_THIS hub.usb_port[port].portsc.ptc = (value >> 16) & 0xf;
+            BX_EHCI_THIS hub.usb_port[port].portsc.pic = (value >> 14) & 3;
+            BX_EHCI_THIS hub.usb_port[port].portsc.pr = (value >> 8) & 1;
+            if ((value >> 7) & 1) BX_EHCI_THIS hub.usb_port[port].portsc.sus = 1;
+            BX_EHCI_THIS hub.usb_port[port].portsc.fpr = (value >> 6) & 1;
+            if ((value >> 5) & 1) BX_EHCI_THIS hub.usb_port[port].portsc.occ = 0;
+            if ((value >> 3) & 1) BX_EHCI_THIS hub.usb_port[port].portsc.pec = 0;
+            if (!((value >> 2) & 1)) BX_EHCI_THIS hub.usb_port[port].portsc.ped = 0;
+            if ((value >> 1) & 1) BX_EHCI_THIS hub.usb_port[port].portsc.csc = 0;
+            if (oldpo != ((value >> 13) & 1)) {
+              BX_EHCI_THIS hub.usb_port[port].owner_change = 1;
+              BX_EHCI_THIS change_port_owner(port);
+            }
+            if (oldpr && !BX_EHCI_THIS hub.usb_port[port].portsc.pr) {
+              if (BX_EHCI_THIS hub.usb_port[port].device != NULL) {
+                BX_EHCI_THIS hub.usb_port[port].device->usb_send_msg(USB_MSG_RESET);
+                BX_EHCI_THIS hub.usb_port[port].portsc.csc = 0;
+                if (BX_EHCI_THIS hub.usb_port[port].device->get_speed() == USB_SPEED_HIGH) {
+                  BX_EHCI_THIS hub.usb_port[port].portsc.ped = 1;
+                }
+              }
+            }
+            if (oldfpr && !BX_EHCI_THIS hub.usb_port[port].portsc.fpr) {
+              BX_EHCI_THIS hub.usb_port[port].portsc.sus = 0;
+            }
           }
-        }
+      }
+    } else {
+      // a non-dword write to an operational register is undefined.
+      BX_ERROR(("Write non-dword to offset 0x%08X", offset));
     }
   }
 
