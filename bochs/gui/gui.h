@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2017  The Bochs Project
+//  Copyright (C) 2002-2019  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -371,149 +371,151 @@ virtual void graphics_tile_update_in_place(unsigned x, unsigned y,          \
 
 #define BX_KEY_UNHANDLED 0x10000000
 
-#define BX_KEY_CTRL_L   0
-#define BX_KEY_SHIFT_L  1
+enum {
+  BX_KEY_CTRL_L,
+  BX_KEY_SHIFT_L,
 
-#define BX_KEY_F1     2
-#define BX_KEY_F2     3
-#define BX_KEY_F3     4
-#define BX_KEY_F4     5
-#define BX_KEY_F5     6
-#define BX_KEY_F6     7
-#define BX_KEY_F7     8
-#define BX_KEY_F8     9
-#define BX_KEY_F9    10
-#define BX_KEY_F10   11
-#define BX_KEY_F11   12
-#define BX_KEY_F12   13
+  BX_KEY_F1,
+  BX_KEY_F2,
+  BX_KEY_F3,
+  BX_KEY_F4,
+  BX_KEY_F5,
+  BX_KEY_F6,
+  BX_KEY_F7,
+  BX_KEY_F8,
+  BX_KEY_F9,
+  BX_KEY_F10,
+  BX_KEY_F11,
+  BX_KEY_F12,
 
-#define BX_KEY_CTRL_R    14
-#define BX_KEY_SHIFT_R   15
-#define BX_KEY_CAPS_LOCK 16
-#define BX_KEY_NUM_LOCK  17
-#define BX_KEY_ALT_L     18
-#define BX_KEY_ALT_R     19
+  BX_KEY_CTRL_R,
+  BX_KEY_SHIFT_R,
+  BX_KEY_CAPS_LOCK,
+  BX_KEY_NUM_LOCK,
+  BX_KEY_ALT_L,
+  BX_KEY_ALT_R,
 
-#define BX_KEY_A     20
-#define BX_KEY_B     21
-#define BX_KEY_C     22
-#define BX_KEY_D     23
-#define BX_KEY_E     24
-#define BX_KEY_F     25
-#define BX_KEY_G     26
-#define BX_KEY_H     27
-#define BX_KEY_I     28
-#define BX_KEY_J     29
-#define BX_KEY_K     30
-#define BX_KEY_L     31
-#define BX_KEY_M     32
-#define BX_KEY_N     33
-#define BX_KEY_O     34
-#define BX_KEY_P     35
-#define BX_KEY_Q     36
-#define BX_KEY_R     37
-#define BX_KEY_S     38
-#define BX_KEY_T     39
-#define BX_KEY_U     40
-#define BX_KEY_V     41
-#define BX_KEY_W     42
-#define BX_KEY_X     43
-#define BX_KEY_Y     44
-#define BX_KEY_Z     45
+  BX_KEY_A,
+  BX_KEY_B,
+  BX_KEY_C,
+  BX_KEY_D,
+  BX_KEY_E,
+  BX_KEY_F,
+  BX_KEY_G,
+  BX_KEY_H,
+  BX_KEY_I,
+  BX_KEY_J,
+  BX_KEY_K,
+  BX_KEY_L,
+  BX_KEY_M,
+  BX_KEY_N,
+  BX_KEY_O,
+  BX_KEY_P,
+  BX_KEY_Q,
+  BX_KEY_R,
+  BX_KEY_S,
+  BX_KEY_T,
+  BX_KEY_U,
+  BX_KEY_V,
+  BX_KEY_W,
+  BX_KEY_X,
+  BX_KEY_Y,
+  BX_KEY_Z,
 
-#define BX_KEY_0     46
-#define BX_KEY_1     47
-#define BX_KEY_2     48
-#define BX_KEY_3     49
-#define BX_KEY_4     50
-#define BX_KEY_5     51
-#define BX_KEY_6     52
-#define BX_KEY_7     53
-#define BX_KEY_8     54
-#define BX_KEY_9     55
+  BX_KEY_0,
+  BX_KEY_1,
+  BX_KEY_2,
+  BX_KEY_3,
+  BX_KEY_4,
+  BX_KEY_5,
+  BX_KEY_6,
+  BX_KEY_7,
+  BX_KEY_8,
+  BX_KEY_9,
 
-#define BX_KEY_ESC    56
+  BX_KEY_ESC,
 
-#define BX_KEY_SPACE         57
-#define BX_KEY_SINGLE_QUOTE  58
-#define BX_KEY_COMMA         59
-#define BX_KEY_PERIOD        60
-#define BX_KEY_SLASH         61
+  BX_KEY_SPACE,
+  BX_KEY_SINGLE_QUOTE,
+  BX_KEY_COMMA,
+  BX_KEY_PERIOD,
+  BX_KEY_SLASH,
 
-#define BX_KEY_SEMICOLON     62
-#define BX_KEY_EQUALS        63
+  BX_KEY_SEMICOLON,
+  BX_KEY_EQUALS,
 
-#define BX_KEY_LEFT_BRACKET  64
-#define BX_KEY_BACKSLASH     65
-#define BX_KEY_RIGHT_BRACKET 66
-#define BX_KEY_MINUS         67
-#define BX_KEY_GRAVE         68
+  BX_KEY_LEFT_BRACKET,
+  BX_KEY_BACKSLASH,
+  BX_KEY_RIGHT_BRACKET,
+  BX_KEY_MINUS,
+  BX_KEY_GRAVE,
 
-#define BX_KEY_BACKSPACE     69
-#define BX_KEY_ENTER         70
-#define BX_KEY_TAB           71
+  BX_KEY_BACKSPACE,
+  BX_KEY_ENTER,
+  BX_KEY_TAB,
 
-#define BX_KEY_LEFT_BACKSLASH 72
-#define BX_KEY_PRINT         73
-#define BX_KEY_SCRL_LOCK     74
-#define BX_KEY_PAUSE         75
+  BX_KEY_LEFT_BACKSLASH,
+  BX_KEY_PRINT,
+  BX_KEY_SCRL_LOCK,
+  BX_KEY_PAUSE,
 
-#define BX_KEY_INSERT        76
-#define BX_KEY_DELETE        77
-#define BX_KEY_HOME          78
-#define BX_KEY_END           79
-#define BX_KEY_PAGE_UP       80
-#define BX_KEY_PAGE_DOWN     81
+  BX_KEY_INSERT,
+  BX_KEY_DELETE,
+  BX_KEY_HOME,
+  BX_KEY_END,
+  BX_KEY_PAGE_UP,
+  BX_KEY_PAGE_DOWN,
 
-#define BX_KEY_KP_ADD        82
-#define BX_KEY_KP_SUBTRACT   83
-#define BX_KEY_KP_END        84
-#define BX_KEY_KP_DOWN       85
-#define BX_KEY_KP_PAGE_DOWN  86
-#define BX_KEY_KP_LEFT       87
-#define BX_KEY_KP_RIGHT      88
-#define BX_KEY_KP_HOME       89
-#define BX_KEY_KP_UP         90
-#define BX_KEY_KP_PAGE_UP    91
-#define BX_KEY_KP_INSERT     92
-#define BX_KEY_KP_DELETE     93
-#define BX_KEY_KP_5          94
+  BX_KEY_KP_ADD,
+  BX_KEY_KP_SUBTRACT,
+  BX_KEY_KP_END,
+  BX_KEY_KP_DOWN,
+  BX_KEY_KP_PAGE_DOWN,
+  BX_KEY_KP_LEFT,
+  BX_KEY_KP_RIGHT,
+  BX_KEY_KP_HOME,
+  BX_KEY_KP_UP,
+  BX_KEY_KP_PAGE_UP,
+  BX_KEY_KP_INSERT,
+  BX_KEY_KP_DELETE,
+  BX_KEY_KP_5,
 
-#define BX_KEY_UP            95
-#define BX_KEY_DOWN          96
-#define BX_KEY_LEFT          97
-#define BX_KEY_RIGHT         98
+  BX_KEY_UP,
+  BX_KEY_DOWN,
+  BX_KEY_LEFT,
+  BX_KEY_RIGHT,
 
-#define BX_KEY_KP_ENTER      99
-#define BX_KEY_KP_MULTIPLY  100
-#define BX_KEY_KP_DIVIDE    101
+  BX_KEY_KP_ENTER,
+  BX_KEY_KP_MULTIPLY,
+  BX_KEY_KP_DIVIDE,
 
-#define BX_KEY_WIN_L        102
-#define BX_KEY_WIN_R        103
-#define BX_KEY_MENU         104
+  BX_KEY_WIN_L,
+  BX_KEY_WIN_R,
+  BX_KEY_MENU,
 
-#define BX_KEY_ALT_SYSREQ   105
-#define BX_KEY_CTRL_BREAK   106
+  BX_KEY_ALT_SYSREQ,
+  BX_KEY_CTRL_BREAK,
 
-#define BX_KEY_INT_BACK     107
-#define BX_KEY_INT_FORWARD  108
-#define BX_KEY_INT_STOP     109
-#define BX_KEY_INT_MAIL     110
-#define BX_KEY_INT_SEARCH   111
-#define BX_KEY_INT_FAV      112
-#define BX_KEY_INT_HOME     113
+  BX_KEY_INT_BACK,
+  BX_KEY_INT_FORWARD,
+  BX_KEY_INT_STOP,
+  BX_KEY_INT_MAIL,
+  BX_KEY_INT_SEARCH,
+  BX_KEY_INT_FAV,
+  BX_KEY_INT_HOME,
 
-#define BX_KEY_POWER_MYCOMP 114
-#define BX_KEY_POWER_CALC   115
-#define BX_KEY_POWER_SLEEP  116
-#define BX_KEY_POWER_POWER  117
-#define BX_KEY_POWER_WAKE   118
+  BX_KEY_POWER_MYCOMP,
+  BX_KEY_POWER_CALC,
+  BX_KEY_POWER_SLEEP,
+  BX_KEY_POWER_POWER,
+  BX_KEY_POWER_WAKE,
 
-#define BX_KEY_NBKEYS       119
-// If you add BX_KEYs Please update
-// - BX_KEY_NBKEYS
-// - the scancodes table in the file iodev/scancodes.cc
-// - the bx_key_symbol table in the file gui/keymap.cc
+  BX_KEY_NBKEYS
+};
+// If you add BX_KEYs, don't forget this:
+// - the last entry must be BX_KEY_NBKEYS
+// - upate the scancodes table in the file iodev/scancodes.cc
+// - update the bx_key_symbol table in the file gui/keymap.cc
 
 
 /////////////// GUI plugin support
