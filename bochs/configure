@@ -866,7 +866,8 @@ DOCBOOK2HTML
 BUSM_OBJS
 GAME_OBJS
 SOUNDHW_DLL_TARGETS
-SOUND_LINK_OPTS
+SDL_SOUND_LINK_OPTS
+ALSA_SOUND_LINK_OPTS
 SOUNDLOW_OBJS
 SOUNDHW_OBJS
 SOUND_LIB_VAR
@@ -970,7 +971,6 @@ infodir
 docdir
 oldincludedir
 includedir
-runstatedir
 localstatedir
 sharedstatedir
 sysconfdir
@@ -1130,7 +1130,6 @@ datadir='${datarootdir}'
 sysconfdir='${prefix}/etc'
 sharedstatedir='${prefix}/com'
 localstatedir='${prefix}/var'
-runstatedir='${localstatedir}/run'
 includedir='${prefix}/include'
 oldincludedir='/usr/include'
 docdir='${datarootdir}/doc/${PACKAGE}'
@@ -1383,15 +1382,6 @@ do
   | -silent | --silent | --silen | --sile | --sil)
     silent=yes ;;
 
-  -runstatedir | --runstatedir | --runstatedi | --runstated \
-  | --runstate | --runstat | --runsta | --runst | --runs \
-  | --run | --ru | --r)
-    ac_prev=runstatedir ;;
-  -runstatedir=* | --runstatedir=* | --runstatedi=* | --runstated=* \
-  | --runstate=* | --runstat=* | --runsta=* | --runst=* | --runs=* \
-  | --run=* | --ru=* | --r=*)
-    runstatedir=$ac_optarg ;;
-
   -sbindir | --sbindir | --sbindi | --sbind | --sbin | --sbi | --sb)
     ac_prev=sbindir ;;
   -sbindir=* | --sbindir=* | --sbindi=* | --sbind=* | --sbin=* \
@@ -1529,7 +1519,7 @@ fi
 for ac_var in	exec_prefix prefix bindir sbindir libexecdir datarootdir \
 		datadir sysconfdir sharedstatedir localstatedir includedir \
 		oldincludedir docdir infodir htmldir dvidir pdfdir psdir \
-		libdir localedir mandir runstatedir
+		libdir localedir mandir
 do
   eval ac_val=\$$ac_var
   # Remove trailing slashes.
@@ -1682,7 +1672,6 @@ Fine tuning of the installation directories:
   --sysconfdir=DIR        read-only single-machine data [PREFIX/etc]
   --sharedstatedir=DIR    modifiable architecture-independent data [PREFIX/com]
   --localstatedir=DIR     modifiable single-machine data [PREFIX/var]
-  --runstatedir=DIR       modifiable per-process data [LOCALSTATEDIR/run]
   --libdir=DIR            object code libraries [EPREFIX/lib]
   --includedir=DIR        C header files [PREFIX/include]
   --oldincludedir=DIR     C header files for non-gcc [/usr/include]
@@ -5208,7 +5197,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 5211 "configure"' > conftest.$ac_ext
+  echo '#line 5200 "configure"' > conftest.$ac_ext
   if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_compile\""; } >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -6896,11 +6885,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:6899: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:6888: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:6903: \$? = $ac_status" >&5
+   echo "$as_me:6892: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -7129,11 +7118,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7132: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7121: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7136: \$? = $ac_status" >&5
+   echo "$as_me:7125: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -7196,11 +7185,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7199: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7188: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:7203: \$? = $ac_status" >&5
+   echo "$as_me:7192: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -8986,7 +8975,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 8989 "configure"
+#line 8978 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -9084,7 +9073,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9087 "configure"
+#line 9076 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11199,11 +11188,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:11202: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:11191: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:11206: \$? = $ac_status" >&5
+   echo "$as_me:11195: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -11266,11 +11255,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:11269: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:11258: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:11273: \$? = $ac_status" >&5
+   echo "$as_me:11262: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -12291,7 +12280,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 12294 "configure"
+#line 12283 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -12389,7 +12378,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 12392 "configure"
+#line 12381 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -13212,11 +13201,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13215: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13204: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:13219: \$? = $ac_status" >&5
+   echo "$as_me:13208: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -13279,11 +13268,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13282: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13271: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:13286: \$? = $ac_status" >&5
+   echo "$as_me:13275: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -15244,11 +15233,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15247: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15236: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:15251: \$? = $ac_status" >&5
+   echo "$as_me:15240: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -15477,11 +15466,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15480: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15469: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:15484: \$? = $ac_status" >&5
+   echo "$as_me:15473: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -15544,11 +15533,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15547: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15536: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:15551: \$? = $ac_status" >&5
+   echo "$as_me:15540: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -17334,7 +17323,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 17337 "configure"
+#line 17326 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -17432,7 +17421,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 17435 "configure"
+#line 17424 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -19119,7 +19108,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 19122 "configure"
+#line 19111 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -24035,7 +24024,7 @@ fi
         $as_echo "#define BX_HAVE_SOUND_ALSA 1" >>confdefs.h
 
         if test "$bx_plugins" = 1; then
-          SOUND_LINK_OPTS="$SOUND_LINK_OPTS -lasound"
+          ALSA_SOUND_LINK_OPTS="$ALSA_SOUND_LINK_OPTS -lasound"
         else
           DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lasound"
         fi
@@ -24073,7 +24062,7 @@ fi
   if test "$with_sdl" = yes; then
     SOUNDLOW_OBJS="$SOUNDLOW_OBJS soundsdl.o"
     if test "$bx_plugins" = 1; then
-      SOUND_LINK_OPTS="$SOUND_LINK_OPTS `sdl-config --libs`"
+      SDL_SOUND_LINK_OPTS="$SDL_SOUND_LINK_OPTS `sdl-config --libs`"
     fi
     soundlow_drivers="$soundlow_drivers sdl"
     if test "$soundlow_default" = "dummy"; then
@@ -24084,7 +24073,7 @@ fi
   elif test "$with_sdl2" = yes; then
     SOUNDLOW_OBJS="$SOUNDLOW_OBJS soundsdl.o"
     if test "$bx_plugins" = 1; then
-      SOUND_LINK_OPTS="$SOUND_LINK_OPTS `sdl2-config --libs`"
+      SDL_SOUND_LINK_OPTS="$SDL_SOUND_LINK_OPTS `sdl2-config --libs`"
     fi
     soundlow_drivers="$soundlow_drivers sdl"
     if test "$soundlow_default" = "dummy"; then
@@ -24148,6 +24137,7 @@ else
   $as_echo "#define BX_SUPPORT_SOUNDLOW 0" >>confdefs.h
 
 fi
+
 
 
 
@@ -25290,7 +25280,7 @@ esac
 
 
 
-if test "$use_curses" = yes -a "$cross_configure" = 0; then
+if test "$use_curses" = yes; then
   if test "$PKGCONFIG" != not_found; then
     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for mvaddch in -lcurses" >&5
 $as_echo_n "checking for mvaddch in -lcurses... " >&6; }
@@ -26064,35 +26054,35 @@ fi
 
 # since some features need the pthread library, check that it was found.
 # But on win32 platforms, the pthread library is not needed.
-if test "$cross_configure" = 0; then
-  # assuming that the GUI debuggers require pthreads or are for Win32
-  if test "$pthread_ok" = yes; then
-    if test "$with_rfb" = yes; then
-      RFB_LIBS="$RFB_LIBS $PTHREAD_LIBS"
-    fi
-    if test "$with_vncsrv" = yes; then
-      GUI_LINK_OPTS_VNCSRV="$GUI_LINK_OPTS_VNCSRV $PTHREAD_LIBS"
-    fi
-    if test "$soundcard_present" = 1; then
-      if test "$bx_plugins" = 1; then
-        SOUND_LINK_OPTS="$SOUND_LINK_OPTS $PTHREAD_LIBS"
-      else
-        DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS $PTHREAD_LIBS"
+case "$target" in
+  *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw32*)
+    # pthread not needed for win32 platform
+    ;;
+  *)
+    # assuming that some GUIs and the sound subsystem require pthreads
+    if test "$pthread_ok" = yes; then
+      if test "$with_rfb" = yes; then
+        RFB_LIBS="$RFB_LIBS $PTHREAD_LIBS"
       fi
+      if test "$with_vncsrv" = yes; then
+        GUI_LINK_OPTS_VNCSRV="$GUI_LINK_OPTS_VNCSRV $PTHREAD_LIBS"
+      fi
+      if test "$soundcard_present" = 1; then
+        if test "$bx_plugins" = 1; then
+          ALSA_SOUND_LINK_OPTS="$ALSA_SOUND_LINK_OPTS $PTHREAD_LIBS"
+          SDL_SOUND_LINK_OPTS="$SDL_SOUND_LINK_OPTS $PTHREAD_LIBS"
+        else
+          DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS $PTHREAD_LIBS"
+        fi
+      fi
+      CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+      CXXFLAGS="$CXXFLAGS $PTHREAD_CFLAGS"
+      CC="$PTHREAD_CC"
+    else
+      echo ERROR: the pthread library is required, but could not be found.; exit 1
     fi
-    CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
-    CXXFLAGS="$CXXFLAGS $PTHREAD_CFLAGS"
-    CC="$PTHREAD_CC"
-  else
-    case "$target" in
-      *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw32*)
-        # pthread not needed for win32 platform
-        ;;
-      *)
-        echo ERROR: the pthread library is required, but could not be found.; exit 1
-    esac
-  fi
-fi
+	;;
+esac
 
 
 

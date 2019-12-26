@@ -1992,7 +1992,7 @@ if test "$soundcard_present" = 1; then
         soundlow_drivers="alsa $soundlow_drivers"
         AC_DEFINE(BX_HAVE_SOUND_ALSA, 1)
         if test "$bx_plugins" = 1; then
-          SOUND_LINK_OPTS="$SOUND_LINK_OPTS -lasound"
+          ALSA_SOUND_LINK_OPTS="$ALSA_SOUND_LINK_OPTS -lasound"
         else
           DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lasound"
         fi
@@ -2027,7 +2027,7 @@ if test "$soundcard_present" = 1; then
   if test "$with_sdl" = yes; then
     SOUNDLOW_OBJS="$SOUNDLOW_OBJS soundsdl.o"
     if test "$bx_plugins" = 1; then
-      SOUND_LINK_OPTS="$SOUND_LINK_OPTS `sdl-config --libs`"
+      SDL_SOUND_LINK_OPTS="$SDL_SOUND_LINK_OPTS `sdl-config --libs`"
     fi
     soundlow_drivers="$soundlow_drivers sdl"
     if test "$soundlow_default" = "dummy"; then
@@ -2037,7 +2037,7 @@ if test "$soundcard_present" = 1; then
   elif test "$with_sdl2" = yes; then
     SOUNDLOW_OBJS="$SOUNDLOW_OBJS soundsdl.o"
     if test "$bx_plugins" = 1; then
-      SOUND_LINK_OPTS="$SOUND_LINK_OPTS `sdl2-config --libs`"
+      SDL_SOUND_LINK_OPTS="$SDL_SOUND_LINK_OPTS `sdl2-config --libs`"
     fi
     soundlow_drivers="$soundlow_drivers sdl"
     if test "$soundlow_default" = "dummy"; then
@@ -2081,7 +2081,8 @@ else
 fi
 AC_SUBST(SOUNDHW_OBJS)
 AC_SUBST(SOUNDLOW_OBJS)
-AC_SUBST(SOUND_LINK_OPTS)
+AC_SUBST(ALSA_SOUND_LINK_OPTS)
+AC_SUBST(SDL_SOUND_LINK_OPTS)
 AC_SUBST(SOUNDHW_DLL_TARGETS)
 
 
@@ -2927,7 +2928,7 @@ esac
 AC_SUBST(DIALOG_OBJS)
 AC_SUBST(EXPORT_DYNAMIC)
 
-if test "$use_curses" = yes -a "$cross_configure" = 0; then
+if test "$use_curses" = yes; then
   if test "$PKGCONFIG" != not_found; then
     AC_CHECK_LIB(curses, mvaddch, GUI_LINK_OPTS_TERM="`pkg-config --libs curses`")
     AC_CHECK_LIB(ncurses, mvaddch, GUI_LINK_OPTS_TERM="`pkg-config --libs ncurses`")
@@ -3189,35 +3190,35 @@ ACX_PTHREAD([
 
 # since some features need the pthread library, check that it was found.
 # But on win32 platforms, the pthread library is not needed.
-if test "$cross_configure" = 0; then
-  # assuming that the GUI debuggers require pthreads or are for Win32
-  if test "$pthread_ok" = yes; then
-    if test "$with_rfb" = yes; then
-      RFB_LIBS="$RFB_LIBS $PTHREAD_LIBS"
-    fi
-    if test "$with_vncsrv" = yes; then
-      GUI_LINK_OPTS_VNCSRV="$GUI_LINK_OPTS_VNCSRV $PTHREAD_LIBS"
-    fi
-    if test "$soundcard_present" = 1; then
-      if test "$bx_plugins" = 1; then
-        SOUND_LINK_OPTS="$SOUND_LINK_OPTS $PTHREAD_LIBS"
-      else
-        DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS $PTHREAD_LIBS"
+case "$target" in
+  *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw32*)
+    # pthread not needed for win32 platform
+    ;;
+  *)
+    # assuming that some GUIs and the sound subsystem require pthreads
+    if test "$pthread_ok" = yes; then
+      if test "$with_rfb" = yes; then
+        RFB_LIBS="$RFB_LIBS $PTHREAD_LIBS"
       fi
+      if test "$with_vncsrv" = yes; then
+        GUI_LINK_OPTS_VNCSRV="$GUI_LINK_OPTS_VNCSRV $PTHREAD_LIBS"
+      fi
+      if test "$soundcard_present" = 1; then
+        if test "$bx_plugins" = 1; then
+          ALSA_SOUND_LINK_OPTS="$ALSA_SOUND_LINK_OPTS $PTHREAD_LIBS"
+          SDL_SOUND_LINK_OPTS="$SDL_SOUND_LINK_OPTS $PTHREAD_LIBS"
+        else
+          DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS $PTHREAD_LIBS"
+        fi
+      fi
+      CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+      CXXFLAGS="$CXXFLAGS $PTHREAD_CFLAGS"
+      CC="$PTHREAD_CC"
+    else
+      echo ERROR: the pthread library is required, but could not be found.; exit 1
     fi
-    CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
-    CXXFLAGS="$CXXFLAGS $PTHREAD_CFLAGS"
-    CC="$PTHREAD_CC"
-  else
-    case "$target" in
-      *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw32*)
-        # pthread not needed for win32 platform
-        ;;
-      *)
-        echo ERROR: the pthread library is required, but could not be found.; exit 1
-    esac
-  fi
-fi
+	;;
+esac
 
 dnl // DEPRECATED configure options - force users to remove them
 

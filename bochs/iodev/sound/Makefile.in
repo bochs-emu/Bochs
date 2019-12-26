@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2017  The Bochs Project
+# Copyright (C) 2012-2019  The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -51,9 +51,6 @@ WIN32_DLL_IMPORT_LIBRARY=../../@WIN32_DLL_IMPORT_LIB@
 
 SOUNDLOW_OBJS = sounddummy.o soundfile.o @SOUNDLOW_OBJS@
 
-SOUNDMOD_LINK_OPTS = -lwinmm
-SOUNDMOD_LINK_OPTS_VCPP = winmm.lib
-
 BX_INCDIRS = -I.. -I../.. -I$(srcdir)/.. -I$(srcdir)/../.. -I../../@INSTRUMENT_DIR@ -I$(srcdir)/../../@INSTRUMENT_DIR@
 LOCAL_CXXFLAGS = $(MCH_CFLAGS)
 
@@ -69,7 +66,11 @@ OBJS_THAT_SUPPORT_OTHER_PLUGINS = opl.o
 
 NONPLUGIN_OBJS = @IODEV_EXT_NON_PLUGIN_OBJS@
 PLUGIN_OBJS = @IODEV_EXT_PLUGIN_OBJS@
-SOUND_LINK_OPTS = @SOUND_LINK_OPTS@
+ALSA_SOUND_LINK_OPTS = @ALSA_SOUND_LINK_OPTS@
+SDL_SOUND_LINK_OPTS = @SDL_SOUND_LINK_OPTS@
+WIN_SOUND_LINK_OPTS = -lwinmm
+WIN_SOUND_LINK_OPTS_VCPP = winmm.lib
+
 SOUNDHW_DLL_TARGETS = @SOUNDHW_DLL_TARGETS@
 
 all: libsound.a
@@ -101,10 +102,10 @@ libbx_sb16.la: sb16.lo opl.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module sb16.lo opl.lo -o libbx_sb16.la -rpath $(PLUGIN_PATH)
 
 libbx_soundalsa.la: soundalsa.lo
-	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module soundalsa.lo -o libbx_soundalsa.la -rpath $(PLUGIN_PATH) $(SOUND_LINK_OPTS)
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module soundalsa.lo -o libbx_soundalsa.la -rpath $(PLUGIN_PATH) $(ALSA_SOUND_LINK_OPTS)
 
 libbx_soundsdl.la: soundsdl.lo
-	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module soundsdl.lo -o libbx_soundsdl.la -rpath $(PLUGIN_PATH) $(SOUND_LINK_OPTS)
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module soundsdl.lo -o libbx_soundsdl.la -rpath $(PLUGIN_PATH) $(SDL_SOUND_LINK_OPTS)
 
 #### building DLLs for win32 (Cygwin and MinGW/MSYS)
 bx_%.dll: %.o
@@ -124,7 +125,7 @@ bx_soundfile.dll: soundfile.o
 	@LINK_DLL@ soundfile.o $(WIN32_DLL_IMPORT_LIBRARY)
 
 bx_soundwin.dll: soundwin.o
-	@LINK_DLL@ soundwin.o $(WIN32_DLL_IMPORT_LIBRARY) $(SOUNDMOD_LINK_OPTS@LINK_VAR@)
+	@LINK_DLL@ soundwin.o $(WIN32_DLL_IMPORT_LIBRARY) $(WIN_SOUND_LINK_OPTS@LINK_VAR@)
 
 ##### end DLL section
 

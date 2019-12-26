@@ -33,6 +33,7 @@
  * in_cksum.c,v 1.2 1994/08/02 07:48:16 davidg Exp
  */
 
+// NOTE: <stdint.h> included in slirp.h
 #include "slirp.h"
 
 #if BX_NETWORKING && BX_NETMOD_SLIRP
