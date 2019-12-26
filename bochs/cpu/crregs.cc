@@ -382,7 +382,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
 }
 #endif // #if BX_SUPPORT_X86_64
 
-#define BX_SVM_CR_WRITE_MASK (BX_CONST64(1) << 63)
+#if BX_SUPPORT_SVM
+const Bit64u BX_SVM_CR_WRITE_MASK = (BX_CONST64(1) << 63);
+#endif
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR0Rd(bxInstruction_c *i)
 {

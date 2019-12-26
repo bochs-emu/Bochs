@@ -30,7 +30,7 @@
 
 // 3-byte opcodes
 
-#define CRC32_POLYNOMIAL BX_CONST64(0x11edc6f41)
+const Bit64u CRC32_POLYNOMIAL = BX_CONST64(0x11edc6f41);
 
 // primitives for CRC32 usage
 BX_CPP_INLINE Bit8u BitReflect8(Bit8u val8)

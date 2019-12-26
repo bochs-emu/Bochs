@@ -311,10 +311,10 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_TaskSwitch(Bit16u tss_selector, uns
   VMexit(VMX_VMEXIT_TASK_SWITCH, tss_selector | (source << 30));
 }
 
-#define BX_VMX_LO_MSR_START  0x00000000
-#define BX_VMX_LO_MSR_END    0x00001FFF
-#define BX_VMX_HI_MSR_START  0xC0000000
-#define BX_VMX_HI_MSR_END    0xC0001FFF
+const Bit32u BX_VMX_LO_MSR_START = 0x00000000;
+const Bit32u BX_VMX_LO_MSR_END   = 0x00001FFF;
+const Bit32u BX_VMX_HI_MSR_START = 0xC0000000;
+const Bit32u BX_VMX_HI_MSR_END   = 0xC0001FFF;
 
 void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_MSR(unsigned op, Bit32u msr)
 {
