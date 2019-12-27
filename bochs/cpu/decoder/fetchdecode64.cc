@@ -102,9 +102,9 @@ extern struct bxIAOpcodeTable BxOpcodesTable[];
 
 extern Bit16u findOpcode(const Bit64u *opMap, Bit32u opMsk);
 
-extern bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, unsigned nnn, unsigned rm);
+extern BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, unsigned nnn, unsigned rm);
 #if BX_SUPPORT_AVX
-extern bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bx_bool is_64, unsigned nnn, unsigned rm, unsigned vvv, unsigned vex_w, bx_bool had_evex = false, bx_bool displ8 = false);
+extern BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bx_bool is_64, unsigned nnn, unsigned rm, unsigned vvv, unsigned vex_w, bx_bool had_evex = false, bx_bool displ8 = false);
 #endif
 
 extern const Bit8u *decodeModrm64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned mod, unsigned nnn, unsigned rm, unsigned rex_r, unsigned rex_x, unsigned rex_b);
@@ -1284,7 +1284,8 @@ int decoder_vex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
     }
   }
 
-  if (! assign_srcs(i, ia_opcode, true, nnn, rm, vvv, vex_w))
+  BxDecodeError decode_err = assign_srcs(i, ia_opcode, true, nnn, rm, vvv, vex_w);
+  if (decode_err != BX_DECODE_OK)
     ia_opcode = BX_IA_ERROR;
 #endif
 
@@ -1441,7 +1442,8 @@ int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
     }
   }
 
-  if (! assign_srcs(i, ia_opcode, true, nnn, rm, vvv, vex_w, true, displ8))
+  BxDecodeError decode_err = assign_srcs(i, ia_opcode, true, nnn, rm, vvv, vex_w, true, displ8);
+  if (decode_err != BX_DECODE_OK)
     ia_opcode = BX_IA_ERROR;
 
   // EVEX specific #UD conditions
@@ -1548,7 +1550,8 @@ int decoder_xop64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
   if (fetchImmediate(iptr, remain, i, ia_opcode, true) < 0)
     return (-1);
 
-  if (! assign_srcs(i, ia_opcode, true, nnn, rm, vvv, vex_w))
+  BxDecodeError decode_err = assign_srcs(i, ia_opcode, true, nnn, rm, vvv, vex_w);
+  if (decode_err != BX_DECODE_OK)
     ia_opcode = BX_IA_ERROR;
 #endif
 
