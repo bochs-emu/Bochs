@@ -11,6 +11,9 @@ Changes after 2.6.10 release:
 - I/O Devices
   - Some fixes in HPET emulation (patch by Oleg)
 
+- LGPL'd VGABIOS updated from CVS (Fixed VESA extension 'read EDID' for Bochs
+  VBE and Cirrus).
+
 -------------------------------------------------------------------------
 Changes in 2.6.10 (December 1, 2019):
 
