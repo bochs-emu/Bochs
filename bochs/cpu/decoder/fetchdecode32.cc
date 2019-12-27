@@ -1741,12 +1741,17 @@ bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bx_bool is_64, unsig
       i->setSrcReg(n, nnn);
       if (type == BX_KMASK_REG) {
         if (nnn >= 8) return false;
+        // vector instruction using opmask as source or dest
+        if (i->isZeroMasking()) return false;
       }
       break;
     case BX_SRC_RM:
       if (i->modC0()) {
-        if (type == BX_KMASK_REG)
+        if (type == BX_KMASK_REG) {
           rm &= 0x7;
+          // vector instruction using opmask as source or dest
+          if (i->isZeroMasking()) return false;
+        }
 
         i->setSrcReg(n, rm);
       }
@@ -1775,6 +1780,8 @@ bx_bool assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bx_bool is_64, unsig
       use_vvv = true;
       if (type == BX_KMASK_REG) {
         if (vvv >= 8) return false;
+        // vector instruction using opmask as source or dest
+        if (i->isZeroMasking()) return false;
       }
       break;
     case BX_SRC_VIB:
