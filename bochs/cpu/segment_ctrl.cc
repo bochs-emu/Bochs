@@ -25,6 +25,8 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+const char *segname[] = { "ES", "CS", "SS", "DS", "FS", "GS" };
+
 void BX_CPP_AttrRegparmN(2) BX_CPU_C::load_segw(bxInstruction_c *i, unsigned seg)
 {
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);

@@ -30,8 +30,7 @@
 
 #include "decoder/ia_opcodes.h"
 
-// for debugging and save/restore
-static const char *svm_segname[] = { "ES", "CS", "SS", "DS", "FS", "GS", "GDTR", "LDTR", "IDTR", "TR" };
+extern const char *segname[];
 
 // When loading segment bases from the VMCB or the host save area
 // (on VMRUN or #VMEXIT), segment bases are canonicalized (i.e.
@@ -1253,7 +1252,7 @@ void BX_CPU_C::register_svm_state(bx_param_c *parent)
 
   for(unsigned n=0; n<4; n++) {
     bx_segment_reg_t *segment = &BX_CPU_THIS_PTR vmcb.host_state.sregs[n];
-    bx_list_c *sreg = new bx_list_c(host, svm_segname[n]);
+    bx_list_c *sreg = new bx_list_c(host, segname[n]);
     BXRS_HEX_PARAM_FIELD(sreg, selector, segment->selector.value);
     BXRS_HEX_PARAM_FIELD(sreg, valid, segment->cache.valid);
     BXRS_PARAM_BOOL(sreg, p, segment->cache.p);

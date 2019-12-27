@@ -50,7 +50,7 @@ bx_bool is_invalid_cet_control(bx_address val)
 bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::ShadowStackEnabled(unsigned cpl)
 {
   return BX_CPU_THIS_PTR cr4.get_CET() && protected_mode() &&
-        BX_CPU_THIS_PTR msr.ia32_cet_control[cpl==3] & BX_CET_SHADOW_STACK_ENABLED;
+         BX_CPU_THIS_PTR msr.ia32_cet_control[cpl==3] & BX_CET_SHADOW_STACK_ENABLED;
 }
 
 bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::ShadowStackWriteEnabled(unsigned cpl)

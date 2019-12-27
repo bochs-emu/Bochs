@@ -41,6 +41,8 @@ extern bx_bool isValidMSR_PAT(Bit64u pat_msr);
 extern bx_bool is_invalid_cet_control(bx_address val);
 #endif
 
+extern const char *segname[];
+
 ////////////////////////////////////////////////////////////
 // VMEXIT reasons for BX prints
 ////////////////////////////////////////////////////////////
@@ -1295,7 +1297,6 @@ BX_CPP_INLINE bx_bool IsLimitAccessRightsConsistent(Bit32u limit, Bit32u ar)
 
 Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 {
-  static const char *segname[] = { "ES", "CS", "SS", "DS", "FS", "GS" };
   int n;
 
   VMCS_GUEST_STATE guest;
@@ -2307,6 +2308,12 @@ void BX_CPU_C::VMexitSaveGuestState(void)
   VMwrite_natural(VMCS_GUEST_RIP, RIP);
   VMwrite_natural(VMCS_GUEST_RSP, RSP);
   VMwrite_natural(VMCS_GUEST_RFLAGS, read_eflags());
+
+#if BX_SUPPORT_CET
+  VMwrite_natural(VMCS_GUEST_IA32_S_CET, BX_CPU_THIS_PTR msr.ia32_cet_control[0]);
+  VMwrite_natural(VMCS_GUEST_INTERRUPT_SSP_TABLE_ADDR, BX_CPU_THIS_PTR msr.ia32_interrupt_ssp_table);
+  VMwrite_natural(VMCS_GUEST_SSP, SSP);
+#endif
 
   for (n=0; n<6; n++) {
      Bit32u selector = BX_CPU_THIS_PTR sregs[n].selector.value;
