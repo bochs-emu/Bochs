@@ -1889,6 +1889,12 @@ fetch_b1:
   b1 = *iptr++;
   remain--;
 
+#if BX_SUPPORT_CET
+  // in 64-bit mode DS prefix is ignored but still recorded for CET Endranch suppress hint
+  if (b1 == 0x3e)
+    seg_override = BX_SEG_REG_DS;
+#endif
+
   switch (b1) {
     case 0x40:
     case 0x41:
@@ -1931,7 +1937,6 @@ fetch_b1:
     case 0x26: // ES:
     case 0x36: // SS:
     case 0x3e: // DS:
-      seg_override = (b1 >> 3) & 3;
       rex_prefix = 0;
       if (remain != 0) {
         goto fetch_b1;
