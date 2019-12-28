@@ -283,7 +283,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   Bit64u header3 = read_virtual_qword(i->seg(), (eaddr + 528) & asize_mask);
 
   if (header3 != 0) {
-    BX_ERROR(("%s: Reserved header state is not '0", i->getIaOpcodeNameShort()));
+    BX_ERROR(("%s: Reserved header3 state is not '0", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
@@ -291,7 +291,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
 
   if (! BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_XSAVEC) || ! compaction) {
     if (xcomp_bv != 0) {
-      BX_ERROR(("%s: Reserved header state is not '0", i->getIaOpcodeNameShort()));
+      BX_ERROR(("%s: Reserved header2 state is not '0", i->getIaOpcodeNameShort()));
       exception(BX_GP_EXCEPTION, 0);
     }
   }
@@ -324,7 +324,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
     Bit64u header8 = read_virtual_qword(i->seg(), (eaddr + 568) & asize_mask);
 
     if (header4 | header5 | header6 | header7 | header8) {
-      BX_ERROR(("%s: Reserved header state is not '0", i->getIaOpcodeNameShort()));
+      BX_ERROR(("%s: Reserved header4_header7 state is not '0", i->getIaOpcodeNameShort()));
       exception(BX_GP_EXCEPTION, 0);
     }
   }
