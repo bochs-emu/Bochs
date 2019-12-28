@@ -296,8 +296,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
     }
   }
 
-  xcomp_bv &= ~XSAVEC_COMPACTION_ENABLED;
-
   Bit64u xcr0 = (Bit64u) BX_CPU_THIS_PTR xcr0.get32();
   if (xrstors)
     xcr0 |= BX_CPU_THIS_PTR msr.ia32_xss;
@@ -314,13 +312,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
     }
   }
   else {
-    if ((~xcr0 & xcomp_bv) != 0) {
+    if ((~xcr0 & xcomp_bv & ~XSAVEC_COMPACTION_ENABLED) != 0) {
       BX_ERROR(("%s: Invalid xcomp_bv state", i->getIaOpcodeNameShort()));
       exception(BX_GP_EXCEPTION, 0);
     }
     
     if (xstate_bv & ~xcomp_bv) {
-      BX_ERROR(("%s: Invalid xcomp_bv state", i->getIaOpcodeNameShort()));
+      BX_ERROR(("%s: xstate_bv ["FMT_LL"x] set a bit which is not in xcomp_bv ["FMT_LL"x] state", i->getIaOpcodeNameShort(), xstate_bv, xcomp_bv));
       exception(BX_GP_EXCEPTION, 0);
     }
 
@@ -335,10 +333,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
       exception(BX_GP_EXCEPTION, 0);
     }
   }
-
-  //
-  // We will go feature-by-feature and not run over all XCR0 bits
-  //
 
   Bit32u requested_feature_bitmap = xcr0 & EAX;
 
@@ -763,9 +757,9 @@ bx_bool BX_CPU_C::xsave_opmask_state_xinuse(void)
 
 // ZMM_HI256 (upper part of zmm0..zmm15 registers) state management //
 
-// In 64-bit mode, ZMM_Hi256 state is in its initial configuration if each of ZMM0_H–ZMM15_H is 0.
-// Outside 64-bit mode, ZMM_Hi256 state is in its initial configuration if each of ZMM0_H–ZMM7_H is 0.
-// An execution of XRSTOR or XRSTORS outside 64-bit mode does not update ZMM8_H–ZMM15_H.
+// In 64-bit mode, ZMM_Hi256 state is in its initial configuration if each of ZMM0_H-ZMM15_H is 0.
+// Outside 64-bit mode, ZMM_Hi256 state is in its initial configuration if each of ZMM0_H-ZMM7_H is 0.
+// An execution of XRSTOR or XRSTORS outside 64-bit mode does not update ZMM8_H-ZMM15_H.
 
 void BX_CPU_C::xsave_zmm_hi256_state(bxInstruction_c *i, bx_address offset)
 {
@@ -817,9 +811,9 @@ bx_bool BX_CPU_C::xsave_zmm_hi256_state_xinuse(void)
 
 // HI_ZMM (zmm15..zmm31) state management //
 
-// In 64-bit mode, Hi16_ZMM state is in its initial configuration if each of ZMM16–ZMM31 is 0.
+// In 64-bit mode, Hi16_ZMM state is in its initial configuration if each of ZMM16-ZMM31 is 0.
 // Outside 64-bit mode, Hi16_ZMM state is always in its initial configuration.
-// An execution of XRSTOR or XRSTORS outside 64-bit mode does not update ZMM16–ZMM31.
+// An execution of XRSTOR or XRSTORS outside 64-bit mode does not update ZMM16-ZMM31.
 
 void BX_CPU_C::xsave_hi_zmm_state(bxInstruction_c *i, bx_address offset)
 {
