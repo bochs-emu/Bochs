@@ -175,7 +175,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
 
   bx_address asize_mask = i->asize_mask();
 
-  Bit32u xcr0 = BX_CPU_THIS_PTR xcr0.get32();
+  Bit64u xcr0 = (Bit64u) BX_CPU_THIS_PTR xcr0.get32();
   if (xsaves)
     xcr0 |= BX_CPU_THIS_PTR msr.ia32_xss;
 
@@ -296,18 +296,25 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
     }
   }
 
-  Bit32u xcr0 = BX_CPU_THIS_PTR xcr0.get32();
+  xcomp_bv &= ~XSAVEC_COMPACTION_ENABLED;
+
+  Bit64u xcr0 = (Bit64u) BX_CPU_THIS_PTR xcr0.get32();
   if (xrstors)
     xcr0 |= BX_CPU_THIS_PTR msr.ia32_xss;
 
   if (! compaction) {
-    if ((~xcr0 & xstate_bv) != 0 || (GET32H(xstate_bv) << 1) != 0) {
+    if (xrstors) {
+      BX_ERROR(("XRSTORS require compaction XCOMP_BV[63] to be set"));
+      exception(BX_GP_EXCEPTION, 0);
+    }
+
+    if ((~xcr0 & xstate_bv) != 0) {
       BX_ERROR(("%s: Invalid xsave_bv state", i->getIaOpcodeNameShort()));
       exception(BX_GP_EXCEPTION, 0);
     }
   }
   else {
-    if ((~xcr0 & xcomp_bv) != 0 || (GET32H(xcomp_bv) << 1) != 0) {
+    if ((~xcr0 & xcomp_bv) != 0) {
       BX_ERROR(("%s: Invalid xcomp_bv state", i->getIaOpcodeNameShort()));
       exception(BX_GP_EXCEPTION, 0);
     }
