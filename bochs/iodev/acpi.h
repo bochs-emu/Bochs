@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2006-2017  The Bochs Project
+//  Copyright (C) 2006-2019  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -66,6 +66,7 @@ private:
     Bit16u pmsts;
     Bit16u pmen;
     Bit16u pmcntrl;
+    Bit32u glbctl;
     Bit64u tmr_overflow_time;
     int timer_index;
     struct {

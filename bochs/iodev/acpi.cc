@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2006-2018  The Bochs Project
+//  Copyright (C) 2006-2019  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -180,6 +180,7 @@ void bx_acpi_ctrl_c::reset(unsigned type)
   BX_ACPI_THIS s.pmsts = 0;
   BX_ACPI_THIS s.pmen = 0;
   BX_ACPI_THIS s.pmcntrl = 0;
+  BX_ACPI_THIS s.glbctl = 0;
   BX_ACPI_THIS s.tmr_overflow_time = 0xffffff;
 
   BX_ACPI_THIS s.smbus.stat = 0;
@@ -201,6 +202,7 @@ void bx_acpi_ctrl_c::register_state(void)
   BXRS_HEX_PARAM_FIELD(list, pmsts, BX_ACPI_THIS s.pmsts);
   BXRS_HEX_PARAM_FIELD(list, pmen, BX_ACPI_THIS s.pmen);
   BXRS_HEX_PARAM_FIELD(list, pmcntrl, BX_ACPI_THIS s.pmcntrl);
+  BXRS_HEX_PARAM_FIELD(list, glbctl, BX_ACPI_THIS s.glbctl);
   BXRS_HEX_PARAM_FIELD(list, tmr_overflow_time, BX_ACPI_THIS s.tmr_overflow_time);
   bx_list_c *smbus = new bx_list_c(list, "smbus", "ACPI SMBus");
   BXRS_HEX_PARAM_FIELD(smbus, stat, BX_ACPI_THIS s.smbus.stat);
@@ -316,6 +318,9 @@ Bit32u bx_acpi_ctrl_c::read(Bit32u address, unsigned io_len)
       case 0x08:
         value = BX_ACPI_THIS get_pmtmr();
         break;
+      case 0x28:
+        value = (BX_ACPI_THIS s.glbctl & 0xfffffffd);
+        break;
       case 0x0c: // GPSTS
       case 0x14: // PLVL2
       case 0x15: // PLVL3
@@ -430,6 +435,11 @@ void bx_acpi_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
                 break;
             }
           }
+        }
+        break;
+      case 0x28:
+        if (io_len == 4) {
+          BX_ACPI_THIS s.glbctl = value;
         }
         break;
       default:
