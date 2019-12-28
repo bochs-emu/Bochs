@@ -417,6 +417,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
       }
     }
   }
+
+#if BX_SUPPORT_PKEYS
+  // take effect of changing the PKRU state
+  if ((requested_feature_bitmap & BX_XCR0_PKRU_MASK) != 0) {
+    set_PKRU(TMP32);
+  }
+#endif
+
 #endif // BX_CPU_LEVEL >= 6
 
   BX_NEXT_INSTR(i);
@@ -748,37 +756,49 @@ bx_bool BX_CPU_C::xsave_opmask_state_xinuse(void)
 
 // ZMM_HI256 (upper part of zmm0..zmm15 registers) state management //
 
+// In 64-bit mode, ZMM_Hi256 state is in its initial configuration if each of ZMM0_H–ZMM15_H is 0.
+// Outside 64-bit mode, ZMM_Hi256 state is in its initial configuration if each of ZMM0_H–ZMM7_H is 0.
+// An execution of XRSTOR or XRSTORS outside 64-bit mode does not update ZMM8_H–ZMM15_H.
+
 void BX_CPU_C::xsave_zmm_hi256_state(bxInstruction_c *i, bx_address offset)
 {
+  unsigned num_regs = i->os64L() ? 16 : 8;
+
   bx_address asize_mask = i->asize_mask();
 
   // save upper part of ZMM registers to XSAVE area
-  for(unsigned index=0; index < 16; index++) {
+  for(unsigned index=0; index < num_regs; index++) {
     write_virtual_ymmword(i->seg(), (offset+index*32) & asize_mask, &BX_READ_ZMM_REG_HI(index));
   }
 }
 
 void BX_CPU_C::xrstor_zmm_hi256_state(bxInstruction_c *i, bx_address offset)
 {
+  unsigned num_regs = i->os64L() ? 16 : 8;
+
   bx_address asize_mask = i->asize_mask();
 
   // load upper part of ZMM registers from XSAVE area
-  for(unsigned index=0; index < 16; index++) {
+  for(unsigned index=0; index < num_regs; index++) {
     read_virtual_ymmword(i->seg(), (offset+index*32) & asize_mask, &BX_READ_ZMM_REG_HI(index));
   }
 }
 
 void BX_CPU_C::xrstor_init_zmm_hi256_state(void)
 {
+  unsigned num_regs = i->os64L() ? 16 : 8;
+
   // initialize upper part of ZMM registers with reset values
-  for(unsigned index=0; index < 16; index++) {
+  for(unsigned index=0; index < num_regs; index++) {
     BX_CLEAR_AVX_HIGH256(index);
   }
 }
 
 bx_bool BX_CPU_C::xsave_zmm_hi256_state_xinuse(void)
 {
-  for(unsigned index=0; index < 16; index++) {
+  unsigned num_regs = i->os64L() ? 16 : 8;
+
+  for(unsigned index=0; index < num_regs; index++) {
     for (unsigned n=2; n < 4; n++) {
       const BxPackedXmmRegister *reg = &BX_READ_AVX_REG_LANE(index, n);
       if (! is_clear(reg)) return true;
@@ -790,8 +810,14 @@ bx_bool BX_CPU_C::xsave_zmm_hi256_state_xinuse(void)
 
 // HI_ZMM (zmm15..zmm31) state management //
 
+// In 64-bit mode, Hi16_ZMM state is in its initial configuration if each of ZMM16–ZMM31 is 0.
+// Outside 64-bit mode, Hi16_ZMM state is always in its initial configuration.
+// An execution of XRSTOR or XRSTORS outside 64-bit mode does not update ZMM16–ZMM31.
+
 void BX_CPU_C::xsave_hi_zmm_state(bxInstruction_c *i, bx_address offset)
 {
+  if (!i->os64L()) return;
+
   bx_address asize_mask = i->asize_mask();
 
   // save high ZMM state to XSAVE area
@@ -802,6 +828,8 @@ void BX_CPU_C::xsave_hi_zmm_state(bxInstruction_c *i, bx_address offset)
 
 void BX_CPU_C::xrstor_hi_zmm_state(bxInstruction_c *i, bx_address offset)
 {
+  if (!i->os64L()) return;
+
   bx_address asize_mask = i->asize_mask();
 
   // load high ZMM state from XSAVE area
@@ -812,6 +840,8 @@ void BX_CPU_C::xrstor_hi_zmm_state(bxInstruction_c *i, bx_address offset)
 
 void BX_CPU_C::xrstor_init_hi_zmm_state(void)
 {
+  if (!i->os64L()) return;
+
   // initialize high ZMM registers with reset values
   for(unsigned index=16; index < 32; index++) {
     BX_CLEAR_AVX_REG(index);
@@ -820,6 +850,8 @@ void BX_CPU_C::xrstor_init_hi_zmm_state(void)
 
 bx_bool BX_CPU_C::xsave_hi_zmm_state_xinuse(void)
 {
+  if (!i->os64L()) return true;
+
   for(unsigned index=16; index < 32; index++) {
     for (unsigned n=0; n < 4; n++) {
       const BxPackedXmmRegister *reg = &BX_READ_AVX_REG_LANE(index, n);
@@ -842,13 +874,16 @@ void BX_CPU_C::xsave_pkru_state(bxInstruction_c *i, bx_address offset)
 
 void BX_CPU_C::xrstor_pkru_state(bxInstruction_c *i, bx_address offset)
 {
-  Bit32u pkru = read_virtual_dword(i->seg(), offset);
-  set_PKRU(pkru);
+  // just write the pkru to TMP register for now and don't call set_PKRU
+  // calling it will take immediate effect on all future memory accesses including load of other XRSTOR components
+  TMP32 = read_virtual_dword(i->seg(), offset);
 }
 
 void BX_CPU_C::xrstor_init_pkru_state(void)
 {
-  set_PKRU(0);
+  // just write the pkru to TMP register for now and don't call set_PKRU
+  // calling it will take immediate effect on all future memory accesses including load of other XRSTOR components
+  TMP32 = 0;
 }
 
 bx_bool BX_CPU_C::xsave_pkru_state_xinuse(void)
