@@ -303,15 +303,15 @@ struct xcr0_t {
 };
 
 #if BX_USE_CPU_SMF
-typedef bx_bool (*XSaveStateInUsePtr_tR)(bxInstruction_c *i);
+typedef bx_bool (*XSaveStateInUsePtr_tR)(void);
 typedef void (*XSavePtr_tR)(bxInstruction_c *i, bx_address offset);
 typedef void (*XRestorPtr_tR)(bxInstruction_c *i, bx_address offset);
-typedef void (*XRestorInitPtr_tR)(bxInstruction_c *i);
+typedef void (*XRestorInitPtr_tR)(void);
 #else
-typedef bx_bool (BX_CPU_C::*XSaveStateInUsePtr_tR)(bxInstruction_c *i);
+typedef bx_bool (BX_CPU_C::*XSaveStateInUsePtr_tR)(void);
 typedef void (BX_CPU_C::*XSavePtr_tR)(bxInstruction_c *i, bx_address offset);
 typedef void (BX_CPU_C::*XRestorPtr_tR)(bxInstruction_c *i, bx_address offset);
-typedef void (BX_CPU_C::*XRestorInitPtr_tR)(bxInstruction_c *i);
+typedef void (BX_CPU_C::*XRestorInitPtr_tR)(void);
 #endif
 
 struct XSaveRestoreStateHelper {
