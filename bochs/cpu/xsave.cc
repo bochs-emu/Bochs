@@ -154,7 +154,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
 #endif
   }
 
-  BX_DEBUG(("%s: save processor state XCR0=0x%08x", i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR xcr0.get32()));
+  BX_DEBUG(("%s: save processor state XCR0=0x%08x XSS=%08x", i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR xcr0.get32(), BX_CPU_THIS_PTR msr.ia32_xss));
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   bx_address laddr = get_laddr(i->seg(), eaddr);
@@ -257,7 +257,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
 #endif
   }
 
-  BX_DEBUG(("%s: restore processor state XCR0=0x%08x", i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR xcr0.get32()));
+  BX_DEBUG(("%s: restore processor state XCR0=0x%08x XSS=%08x", i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR xcr0.get32(), BX_CPU_THIS_PTR msr.ia32_xss));
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   bx_address laddr = get_laddr(i->seg(), eaddr);
@@ -318,7 +318,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
     }
     
     if (xstate_bv & ~xcomp_bv) {
-      BX_ERROR(("%s: xstate_bv ["FMT_LL"x] set a bit which is not in xcomp_bv ["FMT_LL"x] state", i->getIaOpcodeNameShort(), xstate_bv, xcomp_bv));
+      BX_ERROR(("%s: xstate_bv set a bit which is not in xcomp_bv state", i->getIaOpcodeNameShort()));
       exception(BX_GP_EXCEPTION, 0);
     }
 
