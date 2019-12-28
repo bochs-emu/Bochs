@@ -2310,9 +2310,11 @@ void BX_CPU_C::VMexitSaveGuestState(void)
   VMwrite_natural(VMCS_GUEST_RFLAGS, read_eflags());
 
 #if BX_SUPPORT_CET
-  VMwrite_natural(VMCS_GUEST_IA32_S_CET, BX_CPU_THIS_PTR msr.ia32_cet_control[0]);
-  VMwrite_natural(VMCS_GUEST_INTERRUPT_SSP_TABLE_ADDR, BX_CPU_THIS_PTR msr.ia32_interrupt_ssp_table);
-  VMwrite_natural(VMCS_GUEST_SSP, SSP);
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) {
+    VMwrite_natural(VMCS_GUEST_IA32_S_CET, BX_CPU_THIS_PTR msr.ia32_cet_control[0]);
+    VMwrite_natural(VMCS_GUEST_INTERRUPT_SSP_TABLE_ADDR, BX_CPU_THIS_PTR msr.ia32_interrupt_ssp_table);
+    VMwrite_natural(VMCS_GUEST_SSP, SSP);
+  }
 #endif
 
   for (n=0; n<6; n++) {
