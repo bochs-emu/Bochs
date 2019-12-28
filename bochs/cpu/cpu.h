@@ -4896,56 +4896,56 @@ public: // for now...
   BX_SMF Bit32u get_xcr0_allow_mask(void);
   BX_SMF Bit32u get_xinuse_vector(Bit32u requested_feature_bitmap);
 
-  BX_SMF bx_bool xsave_x87_state_xinuse(void);
+  BX_SMF bx_bool xsave_x87_state_xinuse(bxInstruction_c *i);
   BX_SMF void xsave_x87_state(bxInstruction_c *i, bx_address offset);
   BX_SMF void xrstor_x87_state(bxInstruction_c *i, bx_address offset);
-  BX_SMF void xrstor_init_x87_state(void);
+  BX_SMF void xrstor_init_x87_state(bxInstruction_c *i);
 
-  BX_SMF bx_bool xsave_sse_state_xinuse(void);
+  BX_SMF bx_bool xsave_sse_state_xinuse(bxInstruction_c *i);
   BX_SMF void xsave_sse_state(bxInstruction_c *i, bx_address offset);
   BX_SMF void xrstor_sse_state(bxInstruction_c *i, bx_address offset);
-  BX_SMF void xrstor_init_sse_state(void);
+  BX_SMF void xrstor_init_sse_state(bxInstruction_c *i);
 
 #if BX_SUPPORT_AVX
-  BX_SMF bx_bool xsave_ymm_state_xinuse(void);
+  BX_SMF bx_bool xsave_ymm_state_xinuse(bxInstruction_c *i);
   BX_SMF void xsave_ymm_state(bxInstruction_c *i, bx_address offset);
   BX_SMF void xrstor_ymm_state(bxInstruction_c *i, bx_address offset);
-  BX_SMF void xrstor_init_ymm_state(void);
+  BX_SMF void xrstor_init_ymm_state(bxInstruction_c *i);
 #if BX_SUPPORT_EVEX
-  BX_SMF bx_bool xsave_opmask_state_xinuse(void);
+  BX_SMF bx_bool xsave_opmask_state_xinuse(bxInstruction_c *i);
   BX_SMF void xsave_opmask_state(bxInstruction_c *i, bx_address offset);
   BX_SMF void xrstor_opmask_state(bxInstruction_c *i, bx_address offset);
-  BX_SMF void xrstor_init_opmask_state(void);
+  BX_SMF void xrstor_init_opmask_state(bxInstruction_c *i);
 
-  BX_SMF bx_bool xsave_zmm_hi256_state_xinuse(void);
+  BX_SMF bx_bool xsave_zmm_hi256_state_xinuse(bxInstruction_c *i);
   BX_SMF void xsave_zmm_hi256_state(bxInstruction_c *i, bx_address offset);
   BX_SMF void xrstor_zmm_hi256_state(bxInstruction_c *i, bx_address offset);
-  BX_SMF void xrstor_init_zmm_hi256_state(void);
+  BX_SMF void xrstor_init_zmm_hi256_state(bxInstruction_c *i);
 
-  BX_SMF bx_bool xsave_hi_zmm_state_xinuse(void);
+  BX_SMF bx_bool xsave_hi_zmm_state_xinuse(bxInstruction_c *i);
   BX_SMF void xsave_hi_zmm_state(bxInstruction_c *i, bx_address offset);
   BX_SMF void xrstor_hi_zmm_state(bxInstruction_c *i, bx_address offset);
-  BX_SMF void xrstor_init_hi_zmm_state(void);
+  BX_SMF void xrstor_init_hi_zmm_state(bxInstruction_c *i);
 #endif
 #endif
 
 #if BX_SUPPORT_PKEYS
-  BX_SMF bx_bool xsave_pkru_state_xinuse(void);
+  BX_SMF bx_bool xsave_pkru_state_xinuse(bxInstruction_c *i);
   BX_SMF void xsave_pkru_state(bxInstruction_c *i, bx_address offset);
   BX_SMF void xrstor_pkru_state(bxInstruction_c *i, bx_address offset);
-  BX_SMF void xrstor_init_pkru_state(void);
+  BX_SMF void xrstor_init_pkru_state(bxInstruction_c *i);
 #endif
 
 #if BX_SUPPORT_CET
-  BX_SMF bx_bool xsave_cet_u_state_xinuse(void);
+  BX_SMF bx_bool xsave_cet_u_state_xinuse(bxInstruction_c *i);
   BX_SMF void xsave_cet_u_state(bxInstruction_c *i, bx_address offset);
   BX_SMF void xrstor_cet_u_state(bxInstruction_c *i, bx_address offset);
-  BX_SMF void xrstor_init_cet_u_state(void);
+  BX_SMF void xrstor_init_cet_u_state(bxInstruction_c *i);
 
-  BX_SMF bx_bool xsave_cet_s_state_xinuse(void);
+  BX_SMF bx_bool xsave_cet_s_state_xinuse(bxInstruction_c *i);
   BX_SMF void xsave_cet_s_state(bxInstruction_c *i, bx_address offset);
   BX_SMF void xrstor_cet_s_state(bxInstruction_c *i, bx_address offset);
-  BX_SMF void xrstor_init_cet_s_state(void);
+  BX_SMF void xrstor_init_cet_s_state(bxInstruction_c *i);
 #endif
 #endif
 

@@ -582,7 +582,7 @@ void BX_CPU_C::xrstor_x87_state(bxInstruction_c *i, bx_address offset)
   }
 }
 
-void BX_CPU_C::xrstor_init_x87_state(void)
+void BX_CPU_C::xrstor_init_x87_state(bxInstruction_c *i)
 {
   // initialize FPU with reset values
   BX_CPU_THIS_PTR the_i387.init();
@@ -593,7 +593,7 @@ void BX_CPU_C::xrstor_init_x87_state(void)
   }
 }
 
-bx_bool BX_CPU_C::xsave_x87_state_xinuse(void)
+bx_bool BX_CPU_C::xsave_x87_state_xinuse(bxInstruction_c *i)
 {
   if (BX_CPU_THIS_PTR the_i387.get_control_word() != 0x037F ||
       BX_CPU_THIS_PTR the_i387.get_status_word() != 0 ||
@@ -638,7 +638,7 @@ void BX_CPU_C::xrstor_sse_state(bxInstruction_c *i, bx_address offset)
   }
 }
 
-void BX_CPU_C::xrstor_init_sse_state(void)
+void BX_CPU_C::xrstor_init_sse_state(bxInstruction_c *i)
 {
   // initialize SSE with reset values
   for(unsigned index=0; index < 16; index++) {
@@ -647,7 +647,7 @@ void BX_CPU_C::xrstor_init_sse_state(void)
   }
 }
 
-bx_bool BX_CPU_C::xsave_sse_state_xinuse(void)
+bx_bool BX_CPU_C::xsave_sse_state_xinuse(bxInstruction_c *i)
 {
   for(unsigned index=0; index < 16; index++) {
     // set XMM8-XMM15 only in 64-bit mode
@@ -690,7 +690,7 @@ void BX_CPU_C::xrstor_ymm_state(bxInstruction_c *i, bx_address offset)
   }
 }
 
-void BX_CPU_C::xrstor_init_ymm_state(void)
+void BX_CPU_C::xrstor_init_ymm_state(bxInstruction_c *i)
 {
   // initialize upper part of AVX registers with reset values
   for(unsigned index=0; index < 16; index++) {
@@ -699,7 +699,7 @@ void BX_CPU_C::xrstor_init_ymm_state(void)
   }
 }
 
-bx_bool BX_CPU_C::xsave_ymm_state_xinuse(void)
+bx_bool BX_CPU_C::xsave_ymm_state_xinuse(bxInstruction_c *i)
 {
   for(unsigned index=0; index < 16; index++) {
     // set YMM8-YMM15 only in 64-bit mode
@@ -737,7 +737,7 @@ void BX_CPU_C::xrstor_opmask_state(bxInstruction_c *i, bx_address offset)
   }
 }
 
-void BX_CPU_C::xrstor_init_opmask_state(void)
+void BX_CPU_C::xrstor_init_opmask_state(bxInstruction_c *i)
 {
   // initialize opmask registers with reset values
   for(unsigned index=0; index < 8; index++) {
@@ -745,7 +745,7 @@ void BX_CPU_C::xrstor_init_opmask_state(void)
   }
 }
 
-bx_bool BX_CPU_C::xsave_opmask_state_xinuse(void)
+bx_bool BX_CPU_C::xsave_opmask_state_xinuse(bxInstruction_c *i)
 {
   for(unsigned index=0; index < 8; index++) {
     if (BX_READ_OPMASK(index)) return true;
@@ -784,7 +784,7 @@ void BX_CPU_C::xrstor_zmm_hi256_state(bxInstruction_c *i, bx_address offset)
   }
 }
 
-void BX_CPU_C::xrstor_init_zmm_hi256_state(void)
+void BX_CPU_C::xrstor_init_zmm_hi256_state(bxInstruction_c *i)
 {
   unsigned num_regs = i->os64L() ? 16 : 8;
 
@@ -794,7 +794,7 @@ void BX_CPU_C::xrstor_init_zmm_hi256_state(void)
   }
 }
 
-bx_bool BX_CPU_C::xsave_zmm_hi256_state_xinuse(void)
+bx_bool BX_CPU_C::xsave_zmm_hi256_state_xinuse(bxInstruction_c *i)
 {
   unsigned num_regs = i->os64L() ? 16 : 8;
 
@@ -838,7 +838,7 @@ void BX_CPU_C::xrstor_hi_zmm_state(bxInstruction_c *i, bx_address offset)
   }
 }
 
-void BX_CPU_C::xrstor_init_hi_zmm_state(void)
+void BX_CPU_C::xrstor_init_hi_zmm_state(bxInstruction_c *i)
 {
   if (!i->os64L()) return;
 
@@ -848,7 +848,7 @@ void BX_CPU_C::xrstor_init_hi_zmm_state(void)
   }
 }
 
-bx_bool BX_CPU_C::xsave_hi_zmm_state_xinuse(void)
+bx_bool BX_CPU_C::xsave_hi_zmm_state_xinuse(bxInstruction_c *i)
 {
   if (!i->os64L()) return true;
 
@@ -879,14 +879,14 @@ void BX_CPU_C::xrstor_pkru_state(bxInstruction_c *i, bx_address offset)
   TMP32 = read_virtual_dword(i->seg(), offset);
 }
 
-void BX_CPU_C::xrstor_init_pkru_state(void)
+void BX_CPU_C::xrstor_init_pkru_state(bxInstruction_c *i)
 {
   // just write the pkru to TMP register for now and don't call set_PKRU
   // calling it will take immediate effect on all future memory accesses including load of other XRSTOR components
   TMP32 = 0;
 }
 
-bx_bool BX_CPU_C::xsave_pkru_state_xinuse(void)
+bx_bool BX_CPU_C::xsave_pkru_state_xinuse(bxInstruction_c *i)
 {
   return (BX_CPU_THIS_PTR pkru != 0);
 }
@@ -914,13 +914,13 @@ void BX_CPU_C::xrstor_cet_u_state(bxInstruction_c *i, bx_address offset)
   wrmsr(BX_MSR_IA32_PL3_SSP, ia32_pl3_ssp);
 }
 
-void BX_CPU_C::xrstor_init_cet_u_state(void)
+void BX_CPU_C::xrstor_init_cet_u_state(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR msr.ia32_cet_control[1] = 0;
   BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = 0;
 }
 
-bx_bool BX_CPU_C::xsave_cet_u_state_xinuse(void)
+bx_bool BX_CPU_C::xsave_cet_u_state_xinuse(bxInstruction_c *i)
 {
   return BX_CPU_THIS_PTR msr.ia32_cet_control[1] == 0 &&
          BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] == 0;
@@ -950,13 +950,13 @@ void BX_CPU_C::xrstor_cet_s_state(bxInstruction_c *i, bx_address offset)
   wrmsr(BX_MSR_IA32_PL2_SSP, ia32_pl2_ssp);
 }
 
-void BX_CPU_C::xrstor_init_cet_s_state(void)
+void BX_CPU_C::xrstor_init_cet_s_state(bxInstruction_c *i)
 {
   for (unsigned n=0;n<3;n++)
     BX_CPU_THIS_PTR msr.ia32_pl_ssp[n] = 0;
 }
 
-bx_bool BX_CPU_C::xsave_cet_s_state_xinuse(void)
+bx_bool BX_CPU_C::xsave_cet_s_state_xinuse(bxInstruction_c *i)
 {
   for (unsigned n=0;n<3;n++)
     return BX_CPU_THIS_PTR msr.ia32_pl_ssp[n] != 0;
