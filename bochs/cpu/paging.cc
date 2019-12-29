@@ -1985,8 +1985,6 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
         BX_ERROR(("VMEXIT: supervisor shadow stack access to non supervisor shadow stack page"));
         vmexit_reason = VMX_VMEXIT_EPT_VIOLATION;
       }
-
-      combined_access &= entry[leaf];
     }
     else
 #endif
@@ -2010,8 +2008,9 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
 
     Bit32u vmexit_qualification = 0;
 
+    // no VMExit qualification for EPT Misconfiguration VMExit
     if (vmexit_reason == VMX_VMEXIT_EPT_VIOLATION) {
-      // no VMExit qualification for EPT Misconfiguration VMExit
+      combined_access &= entry[leaf];
       vmexit_qualification = access_mask | (combined_access << 3);
       if (guest_laddr_valid) {
         vmexit_qualification |= (1<<7);
