@@ -1352,7 +1352,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_EPT_ENABLE)) {
-      paddress = translate_guest_physical(paddress, laddr, 1, 0, rw);
+      paddress = translate_guest_physical(paddress, laddr, 1, 0, rw, isShadowStack & !user);
     }
   }
 #endif
@@ -1863,16 +1863,18 @@ enum {
 // PA-12 | Physical address
 // 51-PA | Reserved (must be zero)
 // 61-52 | (ignored)
-// 62    | Supervisor Shadow Stack Page (CET)
+// 60    | Supervisor Shadow Stack Page (CET)
+// 61    | Super Page Protected (SPP)
 // 63    | Suppress #VE
 // -----------------------------------------------------------
 
 const Bit64u BX_SUPPRESS_EPT_VIOLATION_EXCEPTION = (BX_CONST64(1) << 63);
 const Bit64u BX_SUB_PAGE_PROTECTED               = (BX_CONST64(1) << 61);
+const Bit64u BX_SUPERVISOR_SHADOW_STACK_PAGE     = (BX_CONST64(1) << 60);
 
 const Bit64u PAGING_EPT_RESERVED_BITS = BX_PAGING_PHY_ADDRESS_RESERVED_BITS;
 
-bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx_address guest_laddr, bx_bool guest_laddr_valid, bx_bool is_page_walk, unsigned rw)
+bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx_address guest_laddr, bx_bool guest_laddr_valid, bx_bool is_page_walk, unsigned rw, bx_bool supervisor_shadow_stack)
 {
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
   bx_phy_address entry_addr[4], ppf = LPFOf(vm->eptptr);
@@ -1907,8 +1909,6 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
     offset_mask >>= 9;
     Bit64u curr_entry = entry[leaf];
     Bit32u curr_access_mask = curr_entry & 0x7;
-
-    combined_access &= curr_access_mask;
 
     if (curr_access_mask == BX_EPT_ENTRY_NOT_PRESENT) {
       BX_DEBUG(("EPT %s: not present", bx_paging_level[leaf]));
@@ -1965,14 +1965,42 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
       vmexit_reason = VMX_VMEXIT_EPT_MISCONFIGURATION;
       break;
     }
+
+    combined_access &= curr_access_mask;
   }
 
-  if (!vmexit_reason && (access_mask & combined_access) != access_mask) {
-    vmexit_reason = VMX_VMEXIT_EPT_VIOLATION;
-    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_SUBPAGE_WR_PROTECT_CTRL) && (entry[leaf] & BX_SUB_PAGE_PROTECTED) != 0 && leaf == BX_LEVEL_PTE) {
-      if ((access_mask & BX_EPT_WRITE) != 0 && (combined_access & BX_EPT_WRITE) == 0 && guest_laddr_valid && ! is_page_walk)
-        if (!spp_walk(guest_paddr, guest_laddr, MEMTYPE(eptptr_memtype)))
-          vmexit_reason = 0;
+  // defer final combined_access calculation (with leaf entry) until CET is handled
+
+  if (!vmexit_reason) {
+#if BX_SUPPORT_CET
+    if (BX_VMX_EPT_SUPERVISOR_SHADOW_STACK_CTRL_ENABLED && supervisor_shadow_stack) {
+      // The EPT.R bit is set in all EPT paging-structure entry controlling the translation
+      // The EPT.W bit is set in all EPT paging-structure entry controlling the translation except the leaf entry (allowed for shadow stack write access)
+      // The SSS bit (bit 60) is 1 in the EPT paging-structure entry maps the page
+      bx_bool supervisor_shadow_stack_page = ((combined_access & BX_EPT_ENTRY_READ_WRITE) == BX_EPT_ENTRY_READ_WRITE) && 
+                                             ((entry[leaf] & BX_EPT_READ) != 0) &&
+                                             (((entry[leaf] & BX_EPT_WRITE) == 0) || !(access_mask & BX_EPT_WRITE)) &&
+                                             ((entry[leaf] & BX_SUPERVISOR_SHADOW_STACK_PAGE) != 0);
+      if (!supervisor_shadow_stack_page) {
+        BX_ERROR(("VMEXIT: supervisor shadow stack access to non supervisor shadow stack page"));
+        vmexit_reason = VMX_VMEXIT_EPT_VIOLATION;
+      }
+
+      combined_access &= entry[leaf];
+    }
+    else
+#endif
+    {
+      combined_access &= entry[leaf];
+
+      if ((access_mask & combined_access) != access_mask) {
+        vmexit_reason = VMX_VMEXIT_EPT_VIOLATION;
+        if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_SUBPAGE_WR_PROTECT_CTRL) && (entry[leaf] & BX_SUB_PAGE_PROTECTED) != 0 && leaf == BX_LEVEL_PTE) {
+          if ((access_mask & BX_EPT_WRITE) != 0 && (combined_access & BX_EPT_WRITE) == 0 && guest_laddr_valid && ! is_page_walk)
+            if (!spp_walk(guest_paddr, guest_laddr, MEMTYPE(eptptr_memtype)))
+              vmexit_reason = 0;
+        }
+      }
     }
   }
 
@@ -1991,7 +2019,13 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
       }
       if (BX_CPU_THIS_PTR nmi_unblocking_iret)
         vmexit_qualification |= (1 << 12);
+#if BX_SUPPORT_CET
+      if (rw & 4) // shadow stack access
+        vmexit_qualification |= (1 << 13);
 
+      if (BX_VMX_EPT_SUPERVISOR_SHADOW_STACK_CTRL_ENABLED && (entry[leaf] & BX_SUPERVISOR_SHADOW_STACK_PAGE) != 0)
+        vmexit_qualification |= (1 << 14);
+#endif
       if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_EPT_VIOLATION_EXCEPTION)) {
         if ((entry[leaf] & BX_SUPPRESS_EPT_VIOLATION_EXCEPTION) == 0)
           Virtualization_Exception(vmexit_qualification, guest_paddr, guest_laddr);
