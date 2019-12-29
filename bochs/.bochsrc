@@ -371,16 +371,17 @@ memory: guest=512, host=256
 # boot menu delay.
 #=======================================================================
 romimage: file=$BXSHARE/BIOS-bochs-latest, options=fastboot
-#romimage: file=$BXSHARE/bios.bin-1.7.5 # http://www.seabios.org/SeaBIOS
+#romimage: file=$BXSHARE/bios.bin-1.13.0 # http://www.seabios.org/SeaBIOS
 #romimage: file=mybios.bin, address=0xfff80000 # 512k at memory top
 
 #=======================================================================
 # VGAROMIMAGE
 # You now need to load a VGA ROM BIOS into C0000.
 #=======================================================================
-#vgaromimage: file=bios/VGABIOS-elpin-2.40
 vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
 #vgaromimage: file=bios/VGABIOS-lgpl-latest-cirrus
+#vgaromimage: file=$BXSHARE/vgabios-cirrus.bin-1.13.0 # http://www.seabios.org/SeaVGABIOS
+#vgaromimage: file=bios/VGABIOS-elpin-2.40
 
 #=======================================================================
 # OPTROMIMAGE[1-4]:

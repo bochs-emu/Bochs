@@ -1422,7 +1422,7 @@ DLX Linux screenshot.
 </thead>
 <tbody>
 
-<row><entry>bios.bin-1.7.5 </entry> <entry> SeaBIOS ROM image </entry> </row>
+<row><entry>bios.bin-1.13.0 </entry> <entry> SeaBIOS ROM image </entry> </row>
 <row><entry>BIOS-bochs-latest </entry> <entry> default ROM BIOS image for Bochs </entry> </row>
 <row><entry>BIOS-bochs-legacy </entry> <entry> ROM BIOS image without 32-bit init code </entry> </row>
 <row><entry>bochsdbg.exe </entry> <entry> the main Bochs executable with debugger enabled </entry> </row>
@@ -1442,10 +1442,12 @@ DLX Linux screenshot.
 <row><entry>sb16ctrl.exe </entry> <entry> tool to control sb16 in Bochs </entry> </row>
 <row><entry>sb16ctrl.txt </entry> <entry> examples of sb16ctrl commands </entry> </row>
 <row><entry>SeaBIOS-README.txt </entry> <entry> README for SeaBIOS ROM image </entry> </row>
+<row><entry>SeaVGABIOS-README.txt </entry> <entry> README for SeaVGABIOS ROM image </entry> </row>
 <row><entry>slirp.conf </entry> <entry> sample config file for the advanced 'slirp' network configuration </entry> </row>
 <row><entry>TODO.txt </entry> <entry> the TODO file from the source distribution. </entry> </row>
 <row><entry>unbochs.ico </entry> <entry> icon for the uninstaller link </entry> </row>
 <row><entry>uninstall.exe </entry> <entry> uninstall program for Bochs (created by the installation wizard) </entry> </row>
+<row><entry>vgabios-cirrus.bin-1.13.0 </entry> <entry> SeaVGABIOS ROM image (for Cirrus adapter)</entry> </row>
 <row><entry>VGABIOS-elpin-2.40 </entry> <entry> VGA BIOS image for Bochs </entry> </row>
 <row><entry>VGABIOS-elpin-LICENSE.txt </entry> <entry> license for VGA BIOS </entry> </row>
 <row><entry>VGABIOS-lgpl-latest </entry> <entry> LGPL'd VGA BIOS image for Bochs </entry> </row>
@@ -1626,10 +1628,10 @@ description of each one.
 <row><entry>/usr/share/doc/bochs/TODO</entry> <entry> the TODO file from the source distribution. </entry> </row>
 <row><entry>/usr/share/doc/bochs/index.html</entry> <entry> a local copy of all Bochs documentation ( <ulink url="http://bochs.sourceforge.net/doc/docbook/index.html">Online copy</ulink> )</entry> </row>
 <row><entry>/usr/share/doc/bochs/slirp.conf </entry> <entry> sample config file for the advanced 'slirp' network configuration </entry> </row>
-<row><entry>/usr/share/bochs/bios.bin-1.7.5 </entry> <entry> SeaBIOS ROM image </entry> </row>
 <row><entry>/usr/share/bochs/BIOS-bochs-latest </entry> <entry> default ROM BIOS image for Bochs </entry> </row>
 <row><entry>/usr/share/bochs/BIOS-bochs-legacy </entry> <entry> ROM BIOS image without 32-bit init code </entry> </row>
 <row><entry>/usr/share/bochs/SeaBIOS-README </entry> <entry> README for SeaBIOS ROM image </entry> </row>
+<row><entry>/usr/share/bochs/SeaVGABIOS-README </entry> <entry> README for SeaVGABIOS ROM image </entry> </row>
 <row><entry>/usr/share/bochs/VGABIOS-elpin-2.40 </entry> <entry> VGA BIOS image for Bochs </entry> </row>
 <row><entry>/usr/share/bochs/VGABIOS-elpin-LICENSE </entry> <entry> license for VGA BIOS </entry> </row>
 <row><entry>/usr/share/bochs/VGABIOS-lgpl-latest </entry> <entry> LGPL'd VGA BIOS image for Bochs </entry> </row>
@@ -1637,9 +1639,11 @@ description of each one.
 <row><entry>/usr/share/bochs/VGABIOS-lgpl-latest-cirrus </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Cirrus extension enabled </entry> </row>
 <row><entry>/usr/share/bochs/VGABIOS-lgpl-latest-cirrus-debug </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Cirrus extension enabled and debug output to the logfile </entry> </row>
 <row><entry>/usr/share/bochs/VGABIOS-lgpl-README </entry> <entry> readme for the LGPL'd VGA BIOS </entry> </row>
+<row><entry>/usr/share/bochs/bios.bin-1.13.0 </entry> <entry> SeaBIOS ROM image </entry> </row>
 <row><entry>/usr/share/bochs/dlxlinux/ </entry> <entry> directory containing DLX linux sample disk image and configuration files</entry> </row>
 <row><entry>/usr/share/bochs/dlxlinux/readme.txt</entry> <entry> description of DLX linux</entry> </row>
 <row><entry>/usr/share/bochs/keymaps/*.map </entry> <entry>keymap tables for X11, SDL and SDL2 </entry> </row>
+<row><entry>/usr/share/bochs/vgabios-cirrus.bin-1.13.0 </entry> <entry> SeaVGABIOS ROM image (for Cirrus adapter)</entry> </row>
 </tbody>
 </tgroup>
 </table>
@@ -3164,12 +3168,13 @@ system BIOS and VGA BIOS images.
 <tbody>
 <row><entry>BIOS-bochs-latest </entry> <entry> default ROM BIOS image for Bochs </entry> </row>
 <row><entry>BIOS-bochs-legacy </entry> <entry> ROM BIOS image without 32-bit init code (for i386 and ISA graphics card emulation) </entry> </row>
-<row><entry>bios.bin-1.7.5 </entry> <entry> SeaBIOS ROM image </entry> </row>
+<row><entry>bios.bin-1.13.0 </entry> <entry> SeaBIOS ROM image </entry> </row>
 <row><entry>VGABIOS-elpin-2.40 </entry> <entry> legacy VGA BIOS image for Bochs </entry> </row>
 <row><entry>VGABIOS-lgpl-latest </entry> <entry> LGPL'd VGA BIOS image for Bochs </entry> </row>
 <row><entry>VGABIOS-lgpl-latest-debug </entry> <entry> LGPL'd VGA BIOS image for Bochs with debug output to the logfile </entry> </row>
 <row><entry>VGABIOS-lgpl-latest-cirrus </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Cirrus extension enabled </entry> </row>
 <row><entry>VGABIOS-lgpl-latest-cirrus-debug </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Cirrus extension enabled and debug output to the logfile </entry> </row>
+<row><entry>vgabios-cirrus.bin-1.13.0 </entry> <entry> SeaVGABIOS ROM image (for Cirrus adapter)</entry> </row>
 </tbody>
 </tgroup>
 </table>

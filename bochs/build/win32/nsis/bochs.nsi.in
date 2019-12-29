@@ -154,7 +154,9 @@ Section "ROM Images (required)" SecROMs
   File "${SRCDIR}\BIOS-bochs-*"
   File "${SRCDIR}\VGABIOS-*"
   File "${SRCDIR}\bios.bin-*"
+  File "${SRCDIR}\vgabios-cirrus.bin-*"
   File "${SRCDIR}\SeaBIOS-README.txt"
+  File "${SRCDIR}\SeaVGABIOS-README.txt"
 SectionEnd
 
 Section "Documentation in HTML" SecDocs
@@ -323,7 +325,9 @@ Section "Uninstall"
   Delete "$INSTDIR\BIOS-bochs-*"
   Delete "$INSTDIR\VGABIOS-*"
   Delete "$INSTDIR\bios.bin-*"
+  Delete "$INSTDIR\vgabios-cirrus.bin-*"
   Delete "$INSTDIR\SeaBIOS-README.txt"
+  Delete "$INSTDIR\SeaVGABIOS-README.txt"
   Delete "$INSTDIR\dlxlinux\*"
   Delete "$INSTDIR\docs\index.html"
   Delete "$INSTDIR\docs\user\*"

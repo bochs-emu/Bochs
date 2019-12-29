@@ -2,6 +2,7 @@ Changes after 2.6.10 release:
 
 - General
   - Added 64-bit support to the NSIS installer script.
+  - Some fixes in the build system found by Debian.
 
 - CPU / CPUDB
   - Bugfixes for CPU emulation correctness
@@ -11,8 +12,11 @@ Changes after 2.6.10 release:
 - I/O Devices
   - Some fixes in HPET emulation (patch by Oleg)
 
-- LGPL'd VGABIOS updated from CVS (Fixed VESA extension 'read EDID' for Bochs
-  VBE and Cirrus).
+- BIOS / VGABIOS
+  - LGPL'd VGABIOS updated from CVS (Fixed VESA extension 'read EDID' for Bochs
+    VBE and Cirrus).
+  - Updated SeaBIOS ROM image to current version 1.13.0.
+  - Added SeaVGABIOS ROM image for the Cirrus adapter.
 
 -------------------------------------------------------------------------
 Changes in 2.6.10 (December 1, 2019):
