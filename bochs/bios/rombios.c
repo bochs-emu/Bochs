@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2018  The Bochs Project
+//  Copyright (C) 2001-2019  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -11075,6 +11075,17 @@ normal_post:
   mov  ax, #0xc780
   call rom_scan
 
+  ;; Hack fix: SeaVGABIOS does not setup a video mode
+  mov  dx, #0x03d4
+  mov  al, #0x00
+  out  dx, al
+  inc  dx
+  in   al, dx
+  test al, al
+  jnz  vga_init_ok
+  mov  ax, #0x0003
+  int  #0x10
+vga_init_ok:
   call _print_bios_banner
 
   ;;

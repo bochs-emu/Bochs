@@ -4,7 +4,7 @@
 //
 //  32 bit Bochs BIOS init code
 //  Copyright (C) 2006       Fabrice Bellard
-//  Copyright (C) 2001-2018  The Bochs Project
+//  Copyright (C) 2001-2019  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1993,7 +1993,7 @@ smbios_entry_point_init(void *start,
     }
 
 /* Type 0 -- BIOS Information */
-#define RELEASE_DATE_STR "01/01/2007"
+#define RELEASE_DATE_STR "29/12/2019"
 static void *
 smbios_type_0_init(void *start)
 {
