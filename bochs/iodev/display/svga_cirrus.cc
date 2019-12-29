@@ -2007,6 +2007,7 @@ void bx_svga_cirrus_c::svga_write_control(Bit32u address, unsigned index, Bit8u 
       break;
     case 0x34: // BLT TRANSPARENT COLOR 0x00ff
     case 0x35: // BLT TRANSPARENT COLOR 0xff00
+      break;
     case 0x38: // BLT TRANSPARENT COLOR MASK 0x00ff
     case 0x39: // BLT TRANSPARENT COLOR MASK 0xff00
     default:
@@ -2870,8 +2871,8 @@ void bx_svga_cirrus_c::svga_simplebitblt()
 {
   Bit8u color[4];
   Bit8u work_colorexp[2048];
-  Bit16u w, x, y;
-  Bit8u *dst;
+  Bit16u w, x, y, pxcolor, trcolor;
+  Bit8u *src, *dst;
   unsigned bits, bits_xor, bitmask;
   int pattern_x, srcskipleft;
 
@@ -2927,8 +2928,47 @@ void bx_svga_cirrus_c::svga_simplebitblt()
       }
       return;
     }
-  }
-  if (BX_CIRRUS_THIS bitblt.bltmode & ~CIRRUS_BLTMODE_BACKWARDS) {
+  } else if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_TRANSPARENTCOMP) {
+    if (BX_CIRRUS_THIS bitblt.pixelwidth == 1) {
+      trcolor = BX_CIRRUS_THIS control.reg[0x34];
+      for (y = 0; y < BX_CIRRUS_THIS bitblt.bltheight; y++) {
+        src = (Bit8u*)BX_CIRRUS_THIS bitblt.src;
+        dst = BX_CIRRUS_THIS bitblt.dst;
+        for (x = 0; x < BX_CIRRUS_THIS bitblt.bltwidth; x+=BX_CIRRUS_THIS bitblt.pixelwidth) {
+          if (*src != trcolor) {
+            (*BX_CIRRUS_THIS bitblt.rop_handler)(
+              dst, src, 0, 0, BX_CIRRUS_THIS bitblt.pixelwidth, 1);
+          }
+          src += BX_CIRRUS_THIS bitblt.pixelwidth;
+          dst += BX_CIRRUS_THIS bitblt.pixelwidth;
+        }
+        BX_CIRRUS_THIS bitblt.src += BX_CIRRUS_THIS bitblt.srcpitch;
+        BX_CIRRUS_THIS bitblt.dst += BX_CIRRUS_THIS bitblt.dstpitch;
+      }
+      return;
+    } else if (BX_CIRRUS_THIS bitblt.pixelwidth == 2) {
+      trcolor = BX_CIRRUS_THIS control.reg[0x34] | (BX_CIRRUS_THIS control.reg[0x35] << 8);
+      for (y = 0; y < BX_CIRRUS_THIS bitblt.bltheight; y++) {
+        src = (Bit8u*)BX_CIRRUS_THIS bitblt.src;
+        dst = BX_CIRRUS_THIS bitblt.dst;
+        for (x = 0; x < BX_CIRRUS_THIS bitblt.bltwidth; x+=BX_CIRRUS_THIS bitblt.pixelwidth) {
+          pxcolor = src[0] | (src[1] << 8);
+          if (pxcolor != trcolor) {
+            (*BX_CIRRUS_THIS bitblt.rop_handler)(
+              dst, src, 0, 0, BX_CIRRUS_THIS bitblt.pixelwidth, 1);
+          }
+          src += BX_CIRRUS_THIS bitblt.pixelwidth;
+          dst += BX_CIRRUS_THIS bitblt.pixelwidth;
+        }
+        BX_CIRRUS_THIS bitblt.src += BX_CIRRUS_THIS bitblt.srcpitch;
+        BX_CIRRUS_THIS bitblt.dst += BX_CIRRUS_THIS bitblt.dstpitch;
+      }
+      return;
+    } else {
+      BX_ERROR(("SIMPLE BLT: bltmode TRANSPARENTCOMP: depth > 16 bpp unsupported"));
+      return;
+    }
+  } else if (BX_CIRRUS_THIS bitblt.bltmode & ~CIRRUS_BLTMODE_BACKWARDS) {
     BX_ERROR(("SIMPLE BLT: unknown bltmode %02x",BX_CIRRUS_THIS bitblt.bltmode));
     return;
   }

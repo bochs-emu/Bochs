@@ -10,6 +10,7 @@ Changes after 2.6.10 release:
   ! Implemented CET (Control Flow Enforcement Technology) emulation according to Intel SDM rev071
 
 - I/O Devices
+  - Added missing Cirrus SVGA bitblt feature "transparent color compare"
   - Some fixes in HPET emulation (patch by Oleg)
 
 - BIOS / VGABIOS
