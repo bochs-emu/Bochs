@@ -480,9 +480,11 @@ void bx_devices_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif  // !BX_USE_DEV_SMF
+#if BX_SUPPORT_PCI
   Bit8u bus, devfunc, handle;
   Bit16u bus_devfunc;
   bx_pci_device_c *dev = NULL;
+#endif
 
   switch (address) {
     case 0x0092:
