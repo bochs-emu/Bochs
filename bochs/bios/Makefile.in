@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2014  The Bochs Project
+# Copyright (C) 2001-2019  The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -37,11 +37,13 @@ BCC = bcc
 GCC = gcc
 GCC32 = gcc -m32 -fno-stack-protector
 AS86 = as86
+IASL = @IASL@
 
 BX_INCDIRS = -I.. -I$(srcdir)/.. -I../iodev -I$(srcdir)/../iodev
 LOCAL_CXXFLAGS =
 
-BUILDDATE = `date '+%m/%d/%y'`
+UPSTREAM_RELEASE_DATE = $(shell grep "Updated:" ../README | sed 's/Updated://')
+BUILDDATE = `date -d '$(UPSTREAM_RELEASE_DATE)' '+%m/%d/%y'`
 BIOS_BUILD_DATE = "-DBIOS_BUILD_DATE=\"$(BUILDDATE)\""
 #
 # -------- end configurable options --------------------------
@@ -56,6 +58,7 @@ bios: biossums BIOS-bochs-latest BIOS-bochs-legacy
 
 clean:
 	@RMCOMMAND@ *.o *.a *.s _rombios*_.c rombios*.txt rombios*.sym
+	@RMCOMMAND@ acpt-dsdt.aml
 	@RMCOMMAND@ usage biossums rombios16.bin
 	@RMCOMMAND@ rombios32.bin rombios32.out
 
@@ -86,7 +89,6 @@ rombios16.bin: rombios.c apmbios.S biossums rombios.h
 	./biossums rombios16.bin
 	@RMCOMMAND@ _rombios_.s
 
-
 rombios32.bin: rombios32.out rombios.h
 	objcopy -O binary $< $@
 	./biossums -pad $@
@@ -97,7 +99,7 @@ rombios32.out: rombios32start.o rombios32.o rombios32.ld
 rombios32.o: rombios32.c acpi-dsdt.hex rombios.h
 	$(GCC32) -O2 -Wall -c -o $@ $<
 
-ifeq ("1", "0")
+ifneq ($(IASL), not_found)
 acpi-dsdt.hex: acpi-dsdt.dsl
 	cpp -P $< $<.i
 	iasl -tc -p $@ $<.i

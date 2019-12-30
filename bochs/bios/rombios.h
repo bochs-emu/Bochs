@@ -79,7 +79,8 @@
 #  define BX_APPNAME "QEMU"
 #  define BX_APPVENDOR "QEMU"
 #else
-#  define BX_APPNAME "Bochs"
+#  include "../bxversion.h"
+#  define BX_APPNAME "Bochs "VERSION
 #  define BX_APPVENDOR "The Bochs Project"
 #endif
 

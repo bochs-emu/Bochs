@@ -928,7 +928,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision$ $Date$";
+static char bios_svn_version_string[] = "$Revision$ $Date$";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2001-2018  The Bochs Project"
 
@@ -1988,7 +1988,7 @@ void
 print_bios_banner()
 {
   printf(BX_APPNAME" BIOS - build: %s\n%s\nOptions: ",
-    BIOS_BUILD_DATE, bios_cvs_version_string);
+    BIOS_BUILD_DATE, bios_svn_version_string);
   printf(
 #if BX_APM
   "apmbios "
@@ -2240,7 +2240,7 @@ log_bios_start()
 #if BX_DEBUG_SERIAL
   outb(BX_DEBUG_PORT+UART_LCR, 0x03); /* setup for serial logging: 8N1 */
 #endif
-  BX_INFO("%s\n", bios_cvs_version_string);
+  BX_INFO("%s\n", bios_svn_version_string);
 }
 
   bx_bool

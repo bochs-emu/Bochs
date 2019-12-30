@@ -14,5 +14,6 @@ SECTIONS
                      *(.comment)
                      *(.eh_frame)
                      *(.note)
+                     *(.note.gnu.property)
                   }
 }

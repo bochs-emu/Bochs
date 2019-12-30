@@ -370,7 +370,7 @@ void bios_printf(int flags, const char *fmt, ...)
 
 void delay_ms(int n)
 {
-    int i, j;
+    volatile int i, j;
     for(i = 0; i < n; i++) {
 #ifdef BX_QEMU
         volatile int k = 0;
