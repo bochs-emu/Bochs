@@ -2934,13 +2934,12 @@ void bx_svga_cirrus_c::svga_simplebitblt()
       for (y = 0; y < BX_CIRRUS_THIS bitblt.bltheight; y++) {
         src = (Bit8u*)BX_CIRRUS_THIS bitblt.src;
         dst = BX_CIRRUS_THIS bitblt.dst;
-        for (x = 0; x < BX_CIRRUS_THIS bitblt.bltwidth; x+=BX_CIRRUS_THIS bitblt.pixelwidth) {
+        for (x = 0; x < BX_CIRRUS_THIS bitblt.bltwidth; x++) {
           if (*src != trcolor) {
-            (*BX_CIRRUS_THIS bitblt.rop_handler)(
-              dst, src, 0, 0, BX_CIRRUS_THIS bitblt.pixelwidth, 1);
+            (*BX_CIRRUS_THIS bitblt.rop_handler)(dst, src, 0, 0, 1, 1);
           }
-          src += BX_CIRRUS_THIS bitblt.pixelwidth;
-          dst += BX_CIRRUS_THIS bitblt.pixelwidth;
+          src++;
+          dst++;
         }
         BX_CIRRUS_THIS bitblt.src += BX_CIRRUS_THIS bitblt.srcpitch;
         BX_CIRRUS_THIS bitblt.dst += BX_CIRRUS_THIS bitblt.dstpitch;
@@ -2951,14 +2950,13 @@ void bx_svga_cirrus_c::svga_simplebitblt()
       for (y = 0; y < BX_CIRRUS_THIS bitblt.bltheight; y++) {
         src = (Bit8u*)BX_CIRRUS_THIS bitblt.src;
         dst = BX_CIRRUS_THIS bitblt.dst;
-        for (x = 0; x < BX_CIRRUS_THIS bitblt.bltwidth; x+=BX_CIRRUS_THIS bitblt.pixelwidth) {
+        for (x = 0; x < BX_CIRRUS_THIS bitblt.bltwidth; x+=2) {
           pxcolor = src[0] | (src[1] << 8);
           if (pxcolor != trcolor) {
-            (*BX_CIRRUS_THIS bitblt.rop_handler)(
-              dst, src, 0, 0, BX_CIRRUS_THIS bitblt.pixelwidth, 1);
+            (*BX_CIRRUS_THIS bitblt.rop_handler)(dst, src, 0, 0, 2, 1);
           }
-          src += BX_CIRRUS_THIS bitblt.pixelwidth;
-          dst += BX_CIRRUS_THIS bitblt.pixelwidth;
+          src += 2;
+          dst += 2;
         }
         BX_CIRRUS_THIS bitblt.src += BX_CIRRUS_THIS bitblt.srcpitch;
         BX_CIRRUS_THIS bitblt.dst += BX_CIRRUS_THIS bitblt.dstpitch;
