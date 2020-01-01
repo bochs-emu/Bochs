@@ -5,7 +5,7 @@
 //  Copyright (c) 2004 Makoto Suzuki (suzu)
 //                     Volker Ruppert (vruppert)
 //                     Robin Kay (komadori)
-//  Copyright (C) 2004-2019  The Bochs Project
+//  Copyright (C) 2004-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -342,18 +342,10 @@ void bx_svga_cirrus_c::svga_init_members()
   BX_CIRRUS_THIS disp_ptr = BX_CIRRUS_THIS s.memory;
   BX_CIRRUS_THIS memsize_mask = BX_CIRRUS_THIS s.memsize - 1;
 
-  // TODO: This should be done by the VGABIOS
-  BX_CIRRUS_THIS sequencer.reg[0x0b] = 0x4a;
-  BX_CIRRUS_THIS sequencer.reg[0x1b] = 0x2b;
+  // VCLK defaults - should be set up by the VGABIOS
   BX_CIRRUS_THIS s.vclk[0] = 25227000;
-  BX_CIRRUS_THIS sequencer.reg[0x0c] = 0x5b;
-  BX_CIRRUS_THIS sequencer.reg[0x1c] = 0x2f;
   BX_CIRRUS_THIS s.vclk[1] = 28325000;
-  BX_CIRRUS_THIS sequencer.reg[0x0d] = 0x42;
-  BX_CIRRUS_THIS sequencer.reg[0x1d] = 0x1f;
   BX_CIRRUS_THIS s.vclk[2] = 31500000;
-  BX_CIRRUS_THIS sequencer.reg[0x0e] = 0x7e;
-  BX_CIRRUS_THIS sequencer.reg[0x1e] = 0x33;
   BX_CIRRUS_THIS s.vclk[3] = 36082000;
 }
 
