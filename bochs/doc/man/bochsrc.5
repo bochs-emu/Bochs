@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "06 May 2018" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "01 Jan 2020" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -192,13 +192,17 @@ starts to autorepeat,  and the measurement  of
 BogoMips and other benchmarks.
 
 Example Specifications[1]
- Bochs Machine/Compiler                                Mips
- --------------------------------------------------------------------
- 2.4.6 3.4Ghz Intel Core i7 2600 with Win7x64/g++ 4.5.2 85 to 95 Mips
- 2.3.7 3.2Ghz Intel Core 2 Q9770 with WinXP/g++ 3.4     50 to 55 Mips
- 2.3.7 2.6Ghz Intel Core 2 Duo with WinXP/g++ 3.4       38 to 43 Mips
- 2.2.6 2.6Ghz Intel Core 2 Duo with WinXP/g++ 3.4       21 to 25 Mips
- 2.2.6 2.1Ghz Athlon XP with Linux 2.6/g++ 3.4          12 to 15 Mips
+.TS
+tab(@);
+l l l.
+Bochs@Machine/Compiler@Mips
+_
+2.4.6@3.4Ghz Core i7 2600 w/ Win7x64/g++ 4.5.2@85-95 Mips
+2.3.7@3.2Ghz Core 2 Q9770 w/ WinXP/g++ 3.4@50-55 Mips
+2.3.7@2.6Ghz Core 2 Duo w/ WinXP/g++ 3.4@38-43 Mips
+2.2.6@2.6Ghz Core 2 Duo w/ WinXP/g++ 3.4@21-25 Mips
+2.2.6@2.1Ghz Athlon XP w/ Linux 2.6/g++ 3.4@12-15 Mips
+.TE
 
  [1]  IPS measurements depend on OS and compiler
 configuration  in addition  to processor clock

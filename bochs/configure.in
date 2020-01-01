@@ -1483,16 +1483,16 @@ AC_ARG_ENABLE(pcidev,
           AC_MSG_NOTICE([Linux detected as host for PCI host device mapping])
           linux_version=`uname -r`
           case "$linux_version" in
+            2.2*)
+              AC_MSG_ERROR([Linux kernel 2.4, 2.6 or 3.x is required for PCI host device mapping])
+              ;;
             2.4*)
               PCIDEV_MODULE_MAKE_ALL="all-kernel24"
               KERNEL_MODULE_SUFFIX="o"
               ;;
-            2.6*|3.*)
+            *)
               PCIDEV_MODULE_MAKE_ALL="all-kernel26"
               KERNEL_MODULE_SUFFIX="ko"
-              ;;
-            *)
-              AC_MSG_ERROR([Linux kernel 2.4, 2.6 or 3.x is required for PCI host device mapping])
               ;;
           esac
           KERNELDIR="/lib/modules/$linux_version/build"
