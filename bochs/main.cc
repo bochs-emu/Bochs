@@ -97,6 +97,7 @@ char *bochsrc_filename = NULL;
 
 size_t bx_get_timestamp(char *buffer)
 {
+#if VER_SVNFLAG == 1
 #ifdef __DATE__
 #ifdef __TIME__
   sprintf(buffer, "Compiled on %s at %s", __DATE__, __TIME__);
@@ -105,6 +106,10 @@ size_t bx_get_timestamp(char *buffer)
 #endif
 #else
   buffer[0] = 0;
+#endif
+#else
+  // Releases use the timestamp from README file
+  sprintf(buffer, "Timestamp: %s", REL_TIMESTAMP);
 #endif
   return strlen(buffer);
 }
