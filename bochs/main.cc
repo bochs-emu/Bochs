@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2019  The Bochs Project
+//  Copyright (C) 2001-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -95,23 +95,34 @@ BOCHSAPI BX_MEM_C bx_mem;
 
 char *bochsrc_filename = NULL;
 
+size_t bx_get_timestamp(char *buffer)
+{
+#ifdef __DATE__
+#ifdef __TIME__
+  sprintf(buffer, "Compiled on %s at %s", __DATE__, __TIME__);
+#else
+  sprintf(buffer, "Compiled on %s", __DATE__);
+#endif
+#else
+  buffer[0] = 0;
+#endif
+  return strlen(buffer);
+}
+
 void bx_print_header()
 {
-  printf("%s\n", divider);
   char buffer[128];
+
+  printf("%s\n", divider);
   sprintf (buffer, "Bochs x86 Emulator %s\n", VERSION);
   bx_center_print(stdout, buffer, 72);
   if (REL_STRING[0]) {
     sprintf(buffer, "%s\n", REL_STRING);
     bx_center_print(stdout, buffer, 72);
-#ifdef __DATE__
-#ifdef __TIME__
-    sprintf(buffer, "Compiled on %s at %s\n", __DATE__, __TIME__);
-#else
-    sprintf(buffer, "Compiled on %s\n", __DATE__);
-#endif
-    bx_center_print(stdout, buffer, 72);
-#endif
+    if (bx_get_timestamp(buffer) > 0) {
+      bx_center_print(stdout, buffer, 72);
+      printf("\n");
+    }
   }
   printf("%s\n", divider);
 }
@@ -1152,6 +1163,7 @@ void bx_init_hardware()
   int i;
   char pname[16];
   bx_list_c *base;
+  char buffer[128];
 
   // all configuration has been read, now initialize everything.
 
@@ -1168,13 +1180,9 @@ void bx_init_hardware()
   // This will by handy for bug reports
   BX_INFO(("Bochs x86 Emulator %s", VERSION));
   BX_INFO(("  %s", REL_STRING));
-#ifdef __DATE__
-#ifdef __TIME__
-  BX_INFO(("Compiled on %s at %s", __DATE__, __TIME__));
-#else
-  BX_INFO(("Compiled on %s", __DATE__));
-#endif
-#endif
+  if (bx_get_timestamp(buffer) > 0) {
+    BX_INFO(("  %s", buffer));
+  }
   BX_INFO(("System configuration"));
   BX_INFO(("  processors: %d (cores=%u, HT threads=%u)", BX_SMP_PROCESSORS,
     SIM->get_param_num(BXPN_CPU_NCORES)->get(), SIM->get_param_num(BXPN_CPU_NTHREADS)->get()));
