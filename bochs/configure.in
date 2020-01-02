@@ -16,7 +16,7 @@ VER_REVISION=10
 dnl // this should be 0 for release and 1 for svn version
 VER_SVN=1
 REL_STRING="Built from SVN snapshot after release 2.6.10"
-REL_TIMESTAMP=`grep "Updated:" README | sed 's/Updated: //'`
+REL_TIMESTAMP=`grep "Updated:" $srcdir/README | sed 's/Updated: //'`
 
 changequote(<<, >>)
 changequote([, ])

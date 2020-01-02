@@ -3193,7 +3193,7 @@ VER_MINOR=6
 VER_REVISION=10
 VER_SVN=1
 REL_STRING="Built from SVN snapshot after release 2.6.10"
-REL_TIMESTAMP=`grep "Updated:" README | sed 's/Updated: //'`
+REL_TIMESTAMP=`grep "Updated:" $srcdir/README | sed 's/Updated: //'`
 
 
 
