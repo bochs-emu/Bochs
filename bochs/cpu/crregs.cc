@@ -1779,4 +1779,13 @@ Bit32u BX_CPU_C::get_xcr0_allow_mask(void)
   return allowMask;
 }
 
+Bit32u BX_CPU_C::get_ia32_xss_allow_mask(void)
+{
+  Bit64u ia32_xss_support_mask = 0;
+#if BX_SUPPORT_CET
+         ia32_xss_support_mask |= BX_XCR0_CET_U_MASK | BX_XCR0_CET_S_MASK;
+#endif
+  return ia32_xss_support_mask;
+}
+
 #endif

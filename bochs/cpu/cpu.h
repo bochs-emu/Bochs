@@ -4894,6 +4894,7 @@ public: // for now...
 #if BX_CPU_LEVEL >= 6
   BX_SMF void xsave_xrestor_init(void);
   BX_SMF Bit32u get_xcr0_allow_mask(void);
+  BX_SMF Bit32u get_ia32_xss_allow_mask(void);
   BX_SMF Bit32u get_xinuse_vector(Bit32u requested_feature_bitmap);
 
   BX_SMF bx_bool xsave_x87_state_xinuse(void);

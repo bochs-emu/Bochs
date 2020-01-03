@@ -767,11 +767,8 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
           BX_ERROR(("WRMSR BX_MSR_XSS: XSAVES not enabled in the cpu model"));
           return handle_unknown_wrmsr(index, val_64);
         }
-        Bit64u ia32_xss_support_mask = 0;
-#if BX_SUPPORT_CET
-               ia32_xss_support_mask = BX_XCR0_CET_U_MASK | BX_XCR0_CET_S_MASK;
-#endif
-        if (val_64 & ~ia32_xss_support_mask) {
+        Bit32u xss_suport_mask = get_ia32_xss_allow_mask();
+        if (val_64 & ~Bit64u(xss_suport_mask)) {
           BX_ERROR(("WRMSR: attempt to set reserved/not supported bit in BX_MSR_XSS"));
           return 0;
         }
@@ -1023,7 +1020,7 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 
     case BX_MSR_TSC_AUX:
       if (! is_cpu_extension_supported(BX_ISA_RDTSCP)) {
-        BX_ERROR(("WRMSR MSR_TSC_AUX: RTDSCP feature not enabled in the cpu model"));
+        BX_ERROR(("WRMSR MSR_TSC_AUX: RDTSCP feature not enabled in the cpu model"));
         return handle_unknown_wrmsr(index, val_64);
       }
       BX_CPU_THIS_PTR msr.tsc_aux = val32_lo;
