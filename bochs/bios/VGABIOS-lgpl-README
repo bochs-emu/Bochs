@@ -17,28 +17,30 @@ Suzuki (suzu).
 
 Install
 -------
-To compile the VGA Bios you will need :
-- gcc
-- bcc
-- as86
-- ld86
+To compile the VGA Bios you will need the following packages:
+- make
+- gcc (for 'biossums', 'vbetables-gen' and VGABIOS preprocessing)
+- dev86 (bcc, as86)
 
-Untar the archive, and type make. You should get a "VGABIOS-lgpl-latest.bin"
-file. Alternatively, you can use the binary file "VGABIOS-lgpl-latest.bin",
-i have compiled for you.
+Untar the archive, and type 'make'. You should get this set of binary files:
+"VGABIOS-lgpl-latest.bin", "VGABIOS-lgpl-latest.debug.bin",
+"VGABIOS-lgpl-latest.cirrus.bin" and "VGABIOS-lgpl-latest.cirrus.debug.bin".
+Alternatively, you can use one of the precompiled binary files present in
+the archive.
 
-Edit your plex86/bochs conf file, and modify the load-rom command in the
-VGA BIOS section, to point to the new vgabios image file.
+Edit your bochs config file, and modify the 'vgaromimage' directive to point
+it to the VGABIOS image you want to use.
 
 
 Debugging
 ---------
-You can get a very basic debugging system: messages printed by the vgabios.
-You have to register the "unmapped" device driver in plex86 or bochs, and make
-sure it grabs port 0xfff0.
+You can get a very basic debugging system: the VGABIOS sends messages to a
+usually unused ISA i/o port. The emulator prints the received characters to
+log file or console. In Bochs the "unmapped" device plugin must be loaded.
+It registers the VGABIOS info port 0x500.
 
-Comment the #undef DEBUG at the beginning of vgabios.c.
-You can then use the "printf" function in the bios.
+VGABIOS images compiled with the DEBUG symbol set, will use the "printf"
+function to write the messages to the info port.
 
 
 Testing
@@ -50,7 +52,7 @@ your needs.
 
 Copyright and License
 ---------------------
-This program has been written by Christophe Bothamy
+The original version of this program has been written by Christophe Bothamy.
 It is protected by the GNU Lesser Public License, which you should
 have received a copy of along with this package.
 
@@ -91,13 +93,14 @@ For any information on Qemu, visit the website http://wiki.qemu.org/
 
 History
 -------
-vgabios-CVS : Dec 27 2019
+vgabios-0.7b : Jan 03 2020
   - Volker
+    - added VESA BIOS function 0x4f09 (set/get palette data) to the Bochs VBE
+      version
     - added VESA BIOS function 0x4f15 (get EDID) to both the Bochs VBE and
-      the Cirrus version.
+      the Cirrus version
     - fixed building VBE modes list (check maximum y resolution)
     - ensure PCIR is aligned to 4 bytes (patch by David Woodhouse)
-    - README: update feedback address and Qemu link
 
 vgabios-0.7a : Oct 30 2011
   - Volker
