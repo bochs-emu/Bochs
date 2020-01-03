@@ -408,18 +408,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ENDBRANCH32(bxInstruction_c *i)
 {
   if (! long64_mode()) {
     reset_endbranch_tracker(CPL);
+    BX_NEXT_INSTR(i);
   }
 
-  BX_NEXT_INSTR(i);
+  BX_NEXT_TRACE(i);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ENDBRANCH64(bxInstruction_c *i)
 {
   if (long64_mode()) {
     reset_endbranch_tracker(CPL);
+    BX_NEXT_INSTR(i);
   }
 
-  BX_NEXT_INSTR(i);
+  BX_NEXT_TRACE(i);
 }
 
 #endif
