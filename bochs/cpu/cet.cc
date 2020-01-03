@@ -40,8 +40,8 @@ const Bit64u BX_CET_WAIT_FOR_ENBRANCH                      = (1 << 11);
 
 bx_bool is_invalid_cet_control(bx_address val)
 {
-  if ((val & (BX_CET_ENDBRANCH_ENABLED | BX_CET_SUPPRESS_INDIRECT_BRANCH_TRACKING | BX_CET_WAIT_FOR_ENBRANCH)) == 
-             (BX_CET_ENDBRANCH_ENABLED | BX_CET_SUPPRESS_INDIRECT_BRANCH_TRACKING | BX_CET_WAIT_FOR_ENBRANCH)) return true;
+  if ((val & (BX_CET_SUPPRESS_INDIRECT_BRANCH_TRACKING | BX_CET_WAIT_FOR_ENBRANCH)) == 
+             (BX_CET_SUPPRESS_INDIRECT_BRANCH_TRACKING | BX_CET_WAIT_FOR_ENBRANCH)) return true;
 
   if (val & 0x3c0) return true; // reserved bits check
   return false;
