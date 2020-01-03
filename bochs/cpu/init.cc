@@ -879,10 +879,10 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 #endif // BX_CPU_LEVEL >= 6
 
+#if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR msr.ia32_spec_ctrl = 0;
 
 /* initialise MSR registers to defaults */
-#if BX_CPU_LEVEL >= 5
 #if BX_SUPPORT_APIC
   /* APIC Address, APIC enabled and BSP is default, we'll fill in the rest later */
   BX_CPU_THIS_PTR msr.apicbase = BX_LAPIC_BASE_ADDR;
@@ -1090,9 +1090,9 @@ void BX_CPU_C::reset(unsigned source)
 
 #if BX_CPU_LEVEL >= 4
   BX_CPU_THIS_PTR cpuid->dump_cpuid();
-#endif
 
   BX_CPU_THIS_PTR cpuid->dump_features();
+#endif
 
   BX_INSTR_RESET(BX_CPU_ID, source);
 }
