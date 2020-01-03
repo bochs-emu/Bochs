@@ -118,6 +118,11 @@ static const char *VMX_vmexit_reason_name[] =
   /* 66 */  "Sub-Page Protection",
   /* 67 */  "UMWAIT",
   /* 68 */  "TPAUSE",
+  /* 69 */  "Reserved69",
+  /* 70 */  "Reserved70",
+  /* 71 */  "Reserved71",
+  /* 72 */  "ENQCMD PASID Translation",
+  /* 73 */  "ENQCMDS PASID Translation",
 };
 
 #include "decoder/ia_opcodes.h"
