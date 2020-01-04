@@ -2799,6 +2799,138 @@ as an example.
 </screen>
 
 </section>
+<section id="bochsbios"><title>The Bochs BIOS</title>
+<section id="biossums"><title>The biossums utility</title>
+<section><title>Intention</title>
+<para>
+Writing a BIOS for a pc-compatible includes the task of embedding various
+checksums. At least there is the overall bios checksum stored in the very
+last byte of the program. Depending on the number and types of services the
+bios provides there are others, e.g.
+</para>
+<itemizedlist>
+<listitem><para>
+a checksum for the PCI BIOS extensions
+</para></listitem>
+<listitem><para>
+a checksum for the PCI interrupt routing table
+</para></listitem>
+<listitem><para>
+a checksum for the plug and play BIOS extensions
+</para></listitem>
+</itemizedlist>
+<para>
+All these checksums have one common point: using the usual assembler directives
+they are hard (if not impossible) to compute at compile time. You can either
+compute them by hand --- a tedious, error-prone task, where in addition you
+often have to make unreliable assumptions about the memory layout of the
+entire BIOS. Or you patch them directly into your compiled BIOS image. Apart
+from computing the checksums this is what <command>biossums</command> does for you.
+</para>
+</section>
+<section><title>Checksums</title>
+<para>
+With the exception of the overall BIOS checksum, in a modern PC BIOS checksums
+are not used to ensure data integrity. Instead they are used in conjunction
+with certain signatures to securely identify the entry points or the addresses
+of important data of some BIOS extensions. Because these services are often
+invoked from x86 protected mode the original method via interrupts is not
+applicable. Scanning (even only parts) of the BIOS for (short) signatures and
+solely relying on this is insecure though, cause the found signature might not
+refer to the sought service but rather be some obscure machine code resembling
+the signature by accident.
+</para>
+<para>
+Since signatures are usually part of a larger header or table the above
+mentioned problem is being circumvented by checksumming over this header and
+comparing the result to a checksum stored next to the signature. In practice the
+checksum is often part of the header, chosen in a way that the contents of the
+header add up to zero.
+</para>
+</section>
+<section><title>Usage</title>
+<para>
+<command>biossums</command> is very simple and straightforward. The only (and mandatory)
+argument is the file name of the BIOS image. The file is being read, patched and written.
+So if you want to keep your original file for reference, use <command>biossums</command>
+on a copy of your BIOS image.
+</para>
+<para>
+For now, <command>biossums</command> can only rely on signatures to find the locations
+of the accompanying checksums. Therefore <command>biossums</command> refuses to set any
+checksums if it finds more than one signature of the same type.
+</para>
+</section>
+<section><title>Example output</title>
+<para>
+Running upon the current BIOS-bochs-legacy <command>biossums</command> displays:
+<screen>
+PCI-Bios header at: 0x9610
+Current checksum:     0x17
+Calculated checksum:  0x17  
+
+
+$PIR header at:     0x99C0
+Current checksum:     0x37
+Calculated checksum:  0x37
+
+
+$PnP header at:     0x9C80
+Current checksum:     0xD1
+Calculated checksum:  0x0F  Setting checksum.
+
+
+Bios checksum at:   0xFFFF
+Current checksum:     0x00
+Calculated checksum:  0x28  Setting checksum.
+</screen>
+</para>
+<para>
+If we patch in a second "_32_" signature at offset 0x9F00 and reset the $PIR
+checksum to 0x00 we get:
+</para>
+<para>
+<screen>
+PCI-Bios header at: 0x9610
+Current checksum:     0x17
+Calculated checksum:  0x17  
+
+PCI-Bios header at: 0x9F00
+Current checksum:     0x00
+Calculated checksum:  0x00  Multiple PCI headers! No checksum set.
+
+
+$PIR header at:     0x99C0
+Current checksum:     0x00
+Calculated checksum:  0x37  Setting checksum.
+
+
+$PnP header at:     0x9C80
+Current checksum:     0x0F
+Calculated checksum:  0x0F
+
+
+Bios checksum at:   0xFFFF
+Current checksum:     0x28
+Calculated checksum:  0x05  Setting checksum.
+</screen>
+</para>
+</section>
+<section><title>Possible enhancements</title>
+<para>
+Although <command>biossums</command> takes care of all checksums being used by
+the BIOS of the Bochs project (as of version 2.02) there are more to cover, e.g.
+the checksums for "Plug and Play" BIOS extension.
+</para>
+<para>
+In addition it was planned to provide further information to <command>biossums</command>
+via map-/symbol-files to verify the locations of checksums apart from scanning for
+signatures. For now this seems not to be necessary; in practice no double
+signatures have been observed yet.
+</para>
+</section>
+</section>
+</section>
 
 </chapter>
 

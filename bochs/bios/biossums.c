@@ -204,7 +204,7 @@ int main(int argc, char* argv[]) {
     new_val = chksum__pir_calc_value( bios_data, offset );
     printf( "\n\n$PIR header at:     0x%4lX\n", offset  );
     printf( "Current checksum:     0x%02X\n",   cur_val );
-    printf( "Calculated checksum:  0x%02X\n  ",  new_val );
+    printf( "Calculated checksum:  0x%02X  ",  new_val );
     hits++;
   }
   if( hits == 1 && cur_val != new_val ) {
@@ -227,7 +227,7 @@ int main(int argc, char* argv[]) {
     new_val = chksum__pnp_calc_value( bios_data, offset );
     printf( "\n\n$PnP header at:     0x%4lX\n", offset  );
     printf( "Current checksum:     0x%02X\n",   cur_val );
-    printf( "Calculated checksum:  0x%02X\n  ",  new_val );
+    printf( "Calculated checksum:  0x%02X  ",  new_val );
     hits++;
   }
   if( hits == 1 && cur_val != new_val ) {
