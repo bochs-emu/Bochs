@@ -1,8 +1,8 @@
-Changes after 2.6.10 release:
+Changes in 2.6.11 (not yet released):
 
 - General
-  - Added 64-bit support to the NSIS installer script.
-  - Some fixes in the build system found by Debian.
+  - Added 64-bit support to the NSIS installer script
+  - Some fixes in the build system found by Debian
 
 - CPU / CPUDB
   - Bugfixes for CPU emulation correctness
@@ -12,12 +12,13 @@ Changes after 2.6.10 release:
 - I/O Devices
   - Added missing Cirrus SVGA bitblt feature "transparent color compare"
   - Some fixes in HPET emulation (patch by Oleg)
+  - Fixed disk image lock mechanism in the USB MSD case
 
 - BIOS / VGABIOS
   - LGPL'd VGABIOS updated to version 0.7b (Fixed VESA extension 'read EDID'
-    for Bochs VBE and Cirrus).
-  - Updated SeaBIOS ROM image to current version 1.13.0.
-  - Added SeaVGABIOS ROM image for the Cirrus adapter.
+    for Bochs VBE and Cirrus)
+  - Updated SeaBIOS ROM image to current version 1.13.0
+  - Added SeaVGABIOS ROM image for the Cirrus adapter
 
 -------------------------------------------------------------------------
 Changes in 2.6.10 (December 1, 2019):
