@@ -1,6 +1,6 @@
 Bochs - The cross platform IA-32 (x86) emulator
-Updated: Sun Dec  1 08:45:00 CET 2019
-Version: 2.6.10
+Updated: Sun Jan  5 08:36:00 CET 2020
+Version: 2.6.11
 
 WHAT IS BOCHS?
 
@@ -81,18 +81,23 @@ many ways you could help out.  For example:
 
 CHANGES
 
-Brief summary of changes in 2.6.10:
-  - CPU: Bugfixes for CPU emulation correctness (critical bugfixes for
-    PCID, ADCX/ADOX, MOVBE, AVX/AVX-512 and VMX emulation)
-  - CPU: implemented AVX-512 VBMI2/VNNI/BITALG, VAES, VPCLMULQDQ / GFNI
-    instructions emulation
-  - VMX: Implement EPT-Based Sub-Page Protection
-  - CPUID: Added new CPU models Skylake-X, Cannonlake and Icelake-U
-  - CPUID: Implemented side-channel attack prevention reporting and
-    corresponding MSR registers, enabled for Icelake-U
-  - Added basic support for the i440BX PCI/AGP chipset.
-  - Added basic Voodoo Banshee / Voodoo3 emulation support.
-  - Added basic DDC support for the VGA-compatible adapters.
-  - Implemented HPET emulation (ported from Qemu).
+Summary of changes in 2.6.11:
+  - General
+    - Added 64-bit support to the NSIS installer script
+    - Several fixes in the build system based on Debian patches
+  - CPU / CPUDB
+    - Bugfixes for CPU emulation correctness
+      - Many critical bugfixes for Protection Keys, AVX512*, VMX/SVM, SHA, GFNI emulation
+    ! Implemented CET (Control Flow Enforcement Technology) emulation according to Intel SDM rev071
+  - I/O Devices
+    - Added missing Cirrus SVGA bitblt feature "transparent color compare"
+    - Some fixes in HPET emulation (patch by Oleg)
+    - Fixed disk image lock mechanism in the USB MSD case
+  - BIOS / VGABIOS
+    - LGPL'd VGABIOS updated to version 0.7b (Fixed VESA extension 'read EDID'
+      for Bochs VBE and Cirrus)
+    - Updated SeaBIOS ROM image to current version 1.13.0
+    - Added SeaVGABIOS ROM image for the Cirrus adapter
+    - Bochs BIOS built to work with CPU level 5 again
 
 See CHANGES file for more information!

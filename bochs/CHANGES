@@ -1,8 +1,8 @@
-Changes in 2.6.11 (not yet released):
+Changes in 2.6.11 (January 5, 2020):
 
 - General
   - Added 64-bit support to the NSIS installer script
-  - Some fixes in the build system found by Debian
+  - Several fixes in the build system based on Debian patches
 
 - CPU / CPUDB
   - Bugfixes for CPU emulation correctness
@@ -19,6 +19,7 @@ Changes in 2.6.11 (not yet released):
     for Bochs VBE and Cirrus)
   - Updated SeaBIOS ROM image to current version 1.13.0
   - Added SeaVGABIOS ROM image for the Cirrus adapter
+  - Bochs BIOS built to work with CPU level 5 again
 
 -------------------------------------------------------------------------
 Changes in 2.6.10 (December 1, 2019):
