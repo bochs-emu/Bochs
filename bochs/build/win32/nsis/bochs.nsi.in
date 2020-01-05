@@ -1,0 +1,568 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; $Id$
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; Setup Script for NSIS Installer
+;
+; Created: Michael Rich (istan)
+;
+; Based on Example Script by Joost Verburg
+; also original BOCHS script by Robert (segra)
+; updated for NSIS 3.04 by Volker Ruppert
+; version check and reinstall page based on NSIS example
+;
+;---------------------
+;Include Modern UI 2
+
+  !include "MUI2.nsh"
+
+;--------------------------------
+
+;Include MultiUser
+
+!define MULTIUSER_EXECUTIONLEVEL Highest
+!define MULTIUSER_MUI
+!include MultiUser.nsh
+;---------------------
+
+;Include 64-bit support
+
+!include "x64.nsh"
+
+;--------------------------------
+
+!define BITS @BOCHS_BITS@
+!define VERSION   @VERSION@
+!define VER_MAJOR @VER_MAJOR@
+!define VER_MINOR @VER_MINOR@
+!define VER_REVISION @VER_REVISION@
+!define VER_SVN   @VER_SVN@
+!define NAME "Bochs ${VERSION}"
+
+;---------------------
+;Include WordFunc for version check
+
+!include WordFunc.nsh
+
+!define CURRENTPAGE $9
+
+!define TEMP1 $R0
+!define TEMP2 $R1
+
+!define SRCDIR bochs-${VERSION}
+!define PGDIR "$SMPROGRAMS\Bochs ${VERSION}"
+!define DESKTOP_DLXLINK "$DESKTOP\Linux Demo in ${NAME}.lnk"
+
+;--------------------------------
+Var IndependentSectionState
+;--------------------------------
+
+;General
+  Name "${NAME}"
+  OutFile Bochs-win${BITS}-${VERSION}.exe
+  SetOverwrite on
+
+  ; Installation Types
+  InstType "Normal"
+  InstType "Full (with DLX Linux demo)"
+
+  ;Folder-select dialog
+  InstallDir $PROGRAMFILES${BITS}\Bochs-${VERSION}
+  InstallDirRegKey HKLM "Software\Bochs" ""
+
+;--------------------------------
+;Interface Settings
+
+  !define MUI_ABORTWARNING
+  !define MUI_COMPONENTSPAGE_NODESC
+  !define MUI_ICON "bochs.ico"
+  !define MUI_UNICON "unbochs.ico"
+
+;--------------------------------
+;Version information
+
+VIProductVersion ${VER_MAJOR}.${VER_MINOR}.${VER_REVISION}.${VER_SVN}
+VIAddVersionKey "FileVersion" "${VERSION}"
+VIAddVersionKey "FileDescription" "Bochs Setup"
+VIAddVersionKey "LegalCopyright" "Copyright 2001-2019 The Bochs Project"
+
+;--------------------------------
+;Pages
+  !define MUI_WELCOMEFINISHPAGE_BITMAP "bochs-logo.bmp"
+  !define MUI_WELCOMEFINISHPAGE_BITMAP_NOSTRETCH
+
+  !define MUI_WELCOMEPAGE_TITLE "Welcome to the Bochs ${VERSION} Setup Wizard"
+  !define MUI_WELCOMEPAGE_TEXT "This wizard will guide you through the installation of the Bochs x86 emulator version ${VERSION}.$\r$\rNOTE: If you have installed a Bochs version older than 2.6.9, you need to uninstall it before installing this version, since setup cannot detect it.$\r$\n$\r$\n$_CLICK"
+
+  !insertmacro MUI_PAGE_WELCOME
+  !insertmacro MUI_PAGE_LICENSE ${SRCDIR}\COPYING.txt
+!ifdef VER_MAJOR & VER_MINOR & VER_REVISION & VER_SVN
+  Page custom PageReinstall PageLeaveReinstall
+!endif
+  !insertmacro MULTIUSER_PAGE_INSTALLMODE
+  !insertmacro MUI_PAGE_COMPONENTS
+  !insertmacro MUI_PAGE_DIRECTORY
+  !insertmacro MUI_PAGE_INSTFILES
+
+  !define MUI_FINISHPAGE_TEXT "Thank you for installing Bochs, think inside the bochs."
+
+  !define MUI_FINISHPAGE_LINK "Visit the Bochs website for the latest news, FAQs and support"
+  !define MUI_FINISHPAGE_LINK_LOCATION "http://bochs.sourceforge.net/"
+
+  !define MUI_FINISHPAGE_RUN "$INSTDIR\Bochs.exe"
+  !define MUI_FINISHPAGE_RUN_NOTCHECKED
+  !define MUI_FINISHPAGE_NOREBOOTSUPPORT
+
+  !define MUI_FINISHPAGE_SHOWREADME "$INSTDIR\README.txt"
+  !define MUI_FINISHPAGE_SHOWREADME_TEXT "Show Bochs README file"
+
+  !insertmacro MUI_PAGE_FINISH
+
+  !insertmacro MUI_UNPAGE_WELCOME
+  !insertmacro MUI_UNPAGE_CONFIRM
+  !insertmacro MUI_UNPAGE_INSTFILES
+  
+;--------------------------------
+;Languages
+ 
+  !insertmacro MUI_LANGUAGE "English"
+
+;--------------------------------
+;Installer Sections
+
+Section "Bochs Program (required)" SecCore
+  SectionIn 1 2 RO
+
+  SetOutPath "$INSTDIR"
+
+  File "${SRCDIR}\*.exe"
+  File "${SRCDIR}\*.txt"
+  File "${SRCDIR}\slirp.conf"
+  File "*.ico"
+
+  ; Install keymaps
+  SetOutPath "$INSTDIR\keymaps"
+  File "${SRCDIR}\keymaps\*"
+
+SectionEnd
+
+Section "ROM Images (required)" SecROMs
+  SectionIn 1 2 RO
+
+  SetOutPath "$INSTDIR"
+
+  File "${SRCDIR}\BIOS-bochs-*"
+  File "${SRCDIR}\VGABIOS-*"
+  File "${SRCDIR}\bios.bin-*"
+  File "${SRCDIR}\vgabios-cirrus.bin-*"
+  File "${SRCDIR}\SeaBIOS-README.txt"
+  File "${SRCDIR}\SeaVGABIOS-README.txt"
+SectionEnd
+
+Section "Documentation in HTML" SecDocs
+  SectionIn 1 2 
+  SetOutPath "$INSTDIR\docs"
+  File "${SRCDIR}\docs\index.html"
+  SetOutPath "$INSTDIR\docs\user"
+  File "${SRCDIR}\docs\user\*"
+  SetOutPath "$INSTDIR\docs\development"
+  File "${SRCDIR}\docs\development\*"
+  SetOutPath "$INSTDIR\docs\documentation"
+  File "${SRCDIR}\docs\documentation\*"
+  SetOutPath "$INSTDIR\docs\images"
+  File "${SRCDIR}\docs\images\*"
+SectionEnd
+
+Section "DLX Linux Demo" SecDLX
+  SectionIn 2
+
+  SetOutPath "$INSTDIR\dlxlinux"
+  File "${SRCDIR}\dlxlinux\*"
+
+  ; Fix up the path to the Bochs executable
+  FileOpen $1 "$INSTDIR\dlxlinux\run.bat" w
+  FileWrite $1 'cd "$INSTDIR\dlxlinux"$\r$\n'
+  FileWrite $1 "..\bochs -q -f bochsrc.bxrc$\r$\n"
+  FileClose $1
+SectionEnd
+
+Section "Add Bochs to the Start Menu" SecStartMenu
+  SectionIn 1 2
+  
+  ; Set the Program Group as output to ensure it exists
+  SetOutPath "${PGDIR}"
+
+  ; Change the output back to the install folder so the "Start In" paths get set properly
+  SetOutPath "$INSTDIR"
+
+  CreateShortCut "${PGDIR}\${NAME}.lnk" "$INSTDIR\Bochs.exe" "" "$INSTDIR\bochs.ico" "0"
+
+  CreateShortCut "${PGDIR}\Readme.lnk" \
+                 "$INSTDIR\Readme.txt"
+
+  CreateShortCut "${PGDIR}\Bochs Sample Setup.lnk" \
+                 "$INSTDIR\bochsrc-sample.txt"
+
+  CreateShortCut "${PGDIR}\Disk Image Creation Tool.lnk" \
+                 "$INSTDIR\bximage.exe"
+
+  CreateShortCut "${PGDIR}\Virtual Network Hub.lnk" \
+                 "$INSTDIR\bxhub.exe"
+
+  CreateShortCut "${PGDIR}\NIC Lister.lnk" \
+                 "$INSTDIR\niclist.exe"
+
+  WriteINIStr "${PGDIR}\Help.url" \
+	      "InternetShortcut" "URL" "file://$INSTDIR/docs/index.html"
+
+  WriteINIStr "${PGDIR}\Home Page.url" \
+	      "InternetShortcut" "URL" "http://bochs.sourceforge.net/"
+
+  CreateShortCut "${PGDIR}\${NAME} Folder.lnk" \
+                 "$INSTDIR"
+
+  CreateShortCut "${PGDIR}\Uninstall Bochs.lnk" \
+                 "$INSTDIR\Uninstall.exe" "" "$INSTDIR\unbochs.ico" "0"
+
+  ; Create shortcut to DLX Linux if it was installed
+  IfFileExists "$INSTDIR\dlxlinux\*" 0 no
+	CreateShortCut "${PGDIR}\DLX Linux.lnk" "$INSTDIR\dlxlinux\run.bat" "" "$INSTDIR\penguin.ico" "0"
+
+no:
+
+SectionEnd
+
+Section "Add DLX Demo icon to Desktop" SecDLXIcon
+  SectionIn 2
+
+  ; Add a link to the DLX demo to the desktop
+  CreateShortCut "${DESKTOP_DLXLINK}" "$INSTDIR\dlxlinux\run.bat" "" "$INSTDIR\bochs.ico" "0"
+
+SectionEnd
+
+Section "Register .bxrc Extension" SecExtension
+  SectionIn 1 2 RO
+  
+  ; back up old value of .bxrc
+  ReadRegStr $1 HKCR ".bxrc" ""
+
+  StrCmp $1 "" Label1
+    StrCmp $1 "BochsConfigFile" Label1
+    WriteRegStr HKCR ".bxrc" "backup_val" $1
+
+  Label1:
+  WriteRegStr HKCR ".bxrc" "" "BochsConfigFile"
+  WriteRegStr HKCR "BochsConfigFile" "" "${NAME} Config File"
+  WriteRegStr HKCR "BochsConfigFile\DefaultIcon" "" "$INSTDIR\bochs.ico,0"
+  WriteRegStr HKCR "BochsConfigFile\shell" "" "Configure"
+  WriteRegStr HKCR "BochsConfigFile\shell\Configure\command" "" '"$INSTDIR\Bochs.exe" -f "%1"'
+  WriteRegStr HKCR "BochsConfigFile\shell" "" "Edit"
+  WriteRegStr HKCR "BochsConfigFile\shell\Edit\command" "" '$WINDIR\NOTEPAD.EXE "%1"'
+  WriteRegStr HKCR "BochsConfigFile\shell" "" "Debugger"
+  WriteRegStr HKCR "BochsConfigFile\shell\Debugger\command" "" '"$INSTDIR\Bochsdbg.exe" -f "%1"'
+  WriteRegStr HKCR "BochsConfigFile\shell" "" "Run"
+  WriteRegStr HKCR "BochsConfigFile\shell\Run\command" "" '"$INSTDIR\Bochs.exe" -q -f "%1"'
+SectionEnd
+
+
+Section -post
+  SetRegView ${BITS}
+  ; Register Uninstaller
+  WriteRegStr HKLM "Software\Bochs" "" $INSTDIR
+  WriteRegDword HKLM "Software\Bochs" "VersionMajor" "${VER_MAJOR}"
+  WriteRegDword HKLM "Software\Bochs" "VersionMinor" "${VER_MINOR}"
+  WriteRegDword HKLM "Software\Bochs" "VersionRevision" "${VER_REVISION}"
+  WriteRegDword HKLM "Software\Bochs" "VersionSVN" "${VER_SVN}"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs" "DisplayName" "${NAME} (remove only)"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs" "DisplayIcon" "$INSTDIR\bochs.ico,0"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs" "DisplayVersion" "${VERSION}"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs" "Publisher" "The Bochs Project"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs" "URLInfoAbout" "http://bochs.sourceforge.net"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs" "Readme" '$INSTDIR\Readme.txt'
+  WriteRegDWord HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs" "NoModify" "1"
+  WriteRegDWord HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs" "NoRepair" "1"
+  WriteRegExpandStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs" "InstallLocation" '$INSTDIR\'
+  WriteRegExpandStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs" "UninstallString" '"$INSTDIR\Uninstall.exe"'
+
+  ; Write the uninstaller
+  WriteUninstaller "$INSTDIR\Uninstall.exe"
+SectionEnd
+
+;--------------------------------
+;Uninstaller Section
+
+Section "Uninstall"
+
+  SetRegView ${BITS}
+
+  ReadRegStr $1 HKCR ".bxrc" ""
+
+  StrCmp $1 "BochsConfigFile" 0 NoOwn ; only do this if we own it
+    ReadRegStr $1 HKCR ".bxrc" "backup_val"
+    StrCmp $1 "" 0 RestoreBackup ; if backup == "" then delete the whole key
+      DeleteRegKey HKCR ".bxrc"
+    Goto NoOwn
+    RestoreBackup:
+      WriteRegStr HKCR ".bxrc" "" $1
+      DeleteRegValue HKCR ".bxrc" "backup_val"
+  NoOwn:
+
+  DeleteRegKey HKCR "BochsConfigFile"
+  DeleteRegKey HKLM "SOFTWARE\Bochs"
+  DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs"
+
+  Delete "${PGDIR}\*.lnk"
+  Delete "${PGDIR}\*.url"
+  RMDir "${PGDIR}"
+
+  Delete "${DESKTOP_DLXLINK}"
+
+  Delete "$INSTDIR\*.exe"
+  Delete "$INSTDIR\*.txt"
+  Delete "$INSTDIR\slirp.conf"
+  Delete "$INSTDIR\*.ico"
+  Delete "$INSTDIR\keymaps\*"
+  Delete "$INSTDIR\BIOS-bochs-*"
+  Delete "$INSTDIR\VGABIOS-*"
+  Delete "$INSTDIR\bios.bin-*"
+  Delete "$INSTDIR\vgabios-cirrus.bin-*"
+  Delete "$INSTDIR\SeaBIOS-README.txt"
+  Delete "$INSTDIR\SeaVGABIOS-README.txt"
+  Delete "$INSTDIR\dlxlinux\*"
+  Delete "$INSTDIR\docs\index.html"
+  Delete "$INSTDIR\docs\user\*"
+  Delete "$INSTDIR\docs\development\*"
+  Delete "$INSTDIR\docs\documentation\*"
+  Delete "$INSTDIR\docs\images\*"
+
+  RMDIR "$INSTDIR\keymaps"
+  RMDIR "$INSTDIR\dlxlinux"
+  RMDIR "$INSTDIR\docs\user"
+  RMDIR "$INSTDIR\docs\development"
+  RMDIR "$INSTDIR\docs\documentation"
+  RMDIR "$INSTDIR\docs\images"
+  RMDIR "$INSTDIR\docs"
+  RMDIR "$INSTDIR"
+
+SectionEnd
+
+;--------------------------------
+;Installer Functions
+
+Function .onInit
+  !insertmacro MULTIUSER_INIT
+
+!if ${BITS} == 64
+  ${IfNot} ${RunningX64}
+    MessageBox MB_ICONSTOP "This Bochs package does not run on 32-bit Windows"
+    Abort
+  ${Endif}
+!endif
+  # This is necessary otherwise SecDLXIcon won't be selectable for the first time you click it.
+  SectionGetFlags ${SecDLX} $R0
+  IntOp $R0 $R0 & ${SF_SELECTED}
+  StrCpy $IndependentSectionState $R0
+
+FunctionEnd
+
+Function un.onInit
+  !insertmacro MULTIUSER_UNINIT
+FunctionEnd
+
+Function .onSelChange
+Push $R0
+Push $R1
+ 
+  # Check if SecDLX was just selected then select SecDLXIcon.
+  SectionGetFlags ${SecDLX} $R0
+  IntOp $R0 $R0 & ${SF_SELECTED}
+  StrCmp $R0 $IndependentSectionState +3
+    StrCpy $IndependentSectionState $R0
+  Goto UnselectDependentSections
+    StrCpy $IndependentSectionState $R0
+ 
+  Goto CheckDependentSections
+ 
+  # Select SecDLX if SecDLXIcon was selected.
+  SelectIndependentSection:
+ 
+    SectionGetFlags ${SecDLX} $R0
+    IntOp $R1 $R0 & ${SF_SELECTED}
+    StrCmp $R1 ${SF_SELECTED} +3
+ 
+    IntOp $R0 $R0 | ${SF_SELECTED}
+    SectionSetFlags ${SecDLX} $R0
+ 
+    StrCpy $IndependentSectionState ${SF_SELECTED}
+ 
+  Goto End
+ 
+  # Were SecDLXIcon just unselected?
+  CheckDependentSections:
+ 
+  SectionGetFlags ${SecDLXIcon} $R0
+  IntOp $R0 $R0 & ${SF_SELECTED}
+  StrCmp $R0 ${SF_SELECTED} SelectIndependentSection
+ 
+  Goto End
+ 
+  # Unselect SecDLXIcon if SecDLX was unselected.
+  UnselectDependentSections:
+ 
+    SectionGetFlags ${SecDLXIcon} $R0
+    IntOp $R1 $R0 & ${SF_SELECTED}
+    StrCmp $R1 ${SF_SELECTED} 0 +3
+ 
+    IntOp $R0 $R0 ^ ${SF_SELECTED}
+    SectionSetFlags ${SecDLXIcon} $R0
+ 
+  End:
+ 
+Pop $R1
+Pop $R0
+FunctionEnd
+
+!ifdef VER_MAJOR & VER_MINOR & VER_REVISION & VER_SVN
+
+Var ReinstallPageCheck
+Var OldInstDir
+
+Function PageReinstall
+
+  SetRegView ${BITS}
+  ReadRegStr $R0 HKLM "Software\Bochs 2.6.9" ""
+  ReadRegStr $R1 HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs 2.6.9" "UninstallString"
+  ReadRegStr $R2 HKLM "Software\Bochs" ""
+  ReadRegStr $R3 HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs" "UninstallString"
+
+  StrCpy $R4 "older"
+  ${If} "$R0$R1" != ""
+    StrCpy $R0 "2"
+    StrCpy $R1 "6"
+    StrCpy $R2 "9"
+    StrCpy $R3 "0"
+  ${ElseIf}  "$R2$R3" != ""
+    ReadRegDWORD $R0 HKLM "Software\Bochs" "VersionMajor"
+    ReadRegDWORD $R1 HKLM "Software\Bochs" "VersionMinor"
+    ReadRegDWORD $R2 HKLM "Software\Bochs" "VersionRevision"
+    ReadRegDWORD $R3 HKLM "Software\Bochs" "VersionSVN"
+  ${Else}
+    Abort
+  ${Endif}
+
+  StrCpy $R0 $R0.$R1.$R2.$R3
+  ${VersionCompare} ${VER_MAJOR}.${VER_MINOR}.${VER_REVISION}.${VER_SVN} $R0 $R0
+  ${If} $R0 == 0
+    StrCpy $R1 "Bochs ${VERSION} is already installed. Select the operation you want to perform and click Next to continue."
+    StrCpy $R2 "Add/Reinstall components"
+    StrCpy $R3 "Uninstall Bochs"
+    !insertmacro MUI_HEADER_TEXT "Already Installed" "Choose the maintenance option to perform."
+    StrCpy $R0 "2"
+  ${ElseIf} $R0 == 1
+    StrCpy $R1 "An $R4 version of Bochs is installed on your system. It's recommended that you uninstall the current version before installing. Select the operation you want to perform and click Next to continue."
+    StrCpy $R2 "Uninstall before installing"
+    StrCpy $R3 "Do not uninstall"
+    !insertmacro MUI_HEADER_TEXT "Already Installed" "Choose how you want to install Bochs."
+    StrCpy $R0 "1"
+  ${ElseIf} $R0 == 2
+    StrCpy $R1 "A newer version of Bochs is already installed! It is not recommended that you install an older version. If you really want to install this older version, it's better to uninstall the current version first. Select the operation you want to perform and click Next to continue."
+    StrCpy $R2 "Uninstall before installing"
+    StrCpy $R3 "Do not uninstall"
+    !insertmacro MUI_HEADER_TEXT "Already Installed" "Choose how you want to install Bochs."
+    StrCpy $R0 "1"
+  ${Else}
+    Abort
+  ${EndIf}
+
+  nsDialogs::Create 1018
+  Pop $R4
+
+  ${NSD_CreateLabel} 0 0 100% 24u $R1
+  Pop $R1
+
+  ${NSD_CreateRadioButton} 30u 50u -30u 8u $R2
+  Pop $R2
+  ${NSD_OnClick} $R2 PageReinstallUpdateSelection
+
+  ${NSD_CreateRadioButton} 30u 70u -30u 8u $R3
+  Pop $R3
+  ${NSD_OnClick} $R3 PageReinstallUpdateSelection
+
+  ${If} $ReinstallPageCheck != 2
+    SendMessage $R2 ${BM_SETCHECK} ${BST_CHECKED} 0
+  ${Else}
+    SendMessage $R3 ${BM_SETCHECK} ${BST_CHECKED} 0
+  ${EndIf}
+
+  ${NSD_SetFocus} $R2
+
+  nsDialogs::Show
+
+FunctionEnd
+
+Function PageReinstallUpdateSelection
+
+  Pop $R1
+
+  ${NSD_GetState} $R2 $R1
+
+  ${If} $R1 == ${BST_CHECKED}
+    StrCpy $ReinstallPageCheck 1
+  ${Else}
+    StrCpy $ReinstallPageCheck 2
+  ${EndIf}
+
+FunctionEnd
+
+Function PageLeaveReinstall
+
+  ${NSD_GetState} $R2 $R1
+
+  StrCmp $R0 "1" 0 +2 ; Existing install is not the same version?
+    StrCmp $R1 "1" reinst_uninstall reinst_done
+
+  StrCmp $R1 "1" reinst_done ; Same version, skip to add/reinstall components?
+
+  reinst_uninstall:
+  SetRegView ${BITS}
+  ReadRegStr $R1 HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs" "UninstallString"
+  ${If} $R1 == ""
+    ReadRegStr $R1 HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs 2.6.9" "UninstallString"
+    ReadRegStr $OldInstDir HKLM "Software\Bochs 2.6.9" ""
+  ${Else}
+    StrCpy $OldInstDir $INSTDIR
+  ${Endif}
+
+  ;Run uninstaller
+    HideWindow
+
+    ClearErrors
+    ExecWait '$R1 _?=$OldInstDir' $0
+
+    BringToFront
+
+    ${IfThen} ${Errors} ${|} StrCpy $0 2 ${|} ; ExecWait failed, set fake exit code
+
+    ${If} $0 <> 0
+    ${OrIf} ${FileExists} "$OldInstDir\bochs.exe"
+      ${If} $0 = 1 ; User aborted uninstaller?
+        StrCmp $R0 "2" 0 +2 ; Is the existing install the same version?
+          Quit ; ...yes, already installed, we are done
+        Abort
+      ${EndIf}
+      MessageBox MB_ICONEXCLAMATION "Unable to uninstall!"
+      Abort
+    ${Else}
+      StrCpy $0 $R1 1
+      ${IfThen} $0 == '"' ${|} StrCpy $R1 $R1 -1 1 ${|} ; Strip quotes from UninstallString
+      Delete $R1
+      RMDir $OldInstDir
+    ${EndIf}
+
+  reinst_done:
+
+FunctionEnd
+
+!endif # VER_MAJOR & VER_MINOR & VER_REVISION & VER_SVN
+
+;eof

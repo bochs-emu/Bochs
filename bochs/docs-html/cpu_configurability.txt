@@ -1,0 +1,520 @@
+Bochs CPU configurability - go over all CPUID feature extensions and see how and where it affects Bochs configurable CPU engine
+
+1. ISA Feature: X87 (FPU on chip)
+
+ The FPU can be present on chip before CPUID as well, for example in 80386.
+ Enables CPUID[0x00000001].EDX[0] and x87 instructions.
+ Without X87 FPU instruction will execute stub FPU_ESC.
+ Controlled by BX_SUPPORT_X87 configure option only, cannot be toggled in runtime.
+
+2. CPU Feature: VME (Virtual-8086 Mode enhancements)
+
+ First introduced in Pentium.
+ Enables CPUID[0x00000001].EDX[1] flag.
+ Controls ability to set CR4[0] (VME) and CR4[1] (PVE) bits.
+ The CR4 controls enable Virtual-8086 Mode enhancements functionality.
+
+ Dependency: BX_CPU_LEVEL >= 4 for CR4 support.
+
+3. CPU Feature: Debug Extensions (I/O breakpoints)
+
+ Enables CPUID[0x00000001].EDX[2] flag.
+ Controls ability to set CR4[3] (Debug Extensions) bit.
+ The bit controls DR4/DR5 (DR4/DR5 are aliased to DR6/DR7 without CR4.DE set) and enables I/O breakpoints.
+
+ Dependency: BX_CPU_LEVEL >= 4 for CR4 support.
+
+4. CPU Feature: Page Size Extensions
+
+ Enables CPUID[0x00000001].EDX[3] flag.
+ Controls ability to set CR4[4] (PSE) bit.
+ The bit is checked during page walk in order to enable 4MB pages through PDE.PS bit.
+ The PDE.PS bit is ignored if CR4.PSE is clear
+
+ Dependency: BX_CPU_LEVEL >= 4 for CR4 support.
+ 
+5. CPU Feature: Time Stamp Counter
+
+ First introduced in Pentium.
+ Enables CPUID[0x00000001].EDX[4] flag.
+ Controls ability to set CR4[2] (TSD) bit.
+ Enables RDTSC instruction (the instruction will #UD if the Time Stamp Counter is not supported).
+ Enables MSR 0x010 IA_MSR_TSC.
+
+ Dependency: MSR
+
+6. ISA Feature: MSR
+
+ First introduced in Pentium.
+ Enables CPUID[0x00000001].EDX[5] flag.
+ Enables RDMSR/WRMSR instructions (the instructions will #UD if the MSR is not supported).
+ Enables access to Model Specific MSR registers.
+ 
+7. CPU Feature: Physical Address Extensions
+
+ Enables CPUID[0x00000001].EDX[6] flag.
+ Controls ability to set CR4[5] (PAE) bit.
+ The bit is checked during page walk in order to enable PAE paging mode.
+
+ Dependency: BX_CPU_LEVEL >= 4 for CR4 support.
+
+8. CPU Feature: Machine Check
+
+ Enables CPUID[0x00000001].EDX[7] (Machine Check Exception) flag.
+ Enables CPUID[0x00000001].EDX[14] (Machine Check Architecture) flag.
+ Controls ability to set CR4[6] (MCE) bit.
+ Enables Machine Check MSR registers and ability to trigger machine check exception.
+ Note, that Bochs can never trigger the machine check exception.
+
+ Dependency: MSR
+
+9. ISA Feature: CMPXCHG8B instruction
+
+ First introduced in Pentium.
+ Enables CPUID[0x00000001].EDX[8] flag.
+ Enables CMPXCHG8B instruction (the instruction will #UD otherwise).
+
+10. CPU Feature: APIC on chip
+
+ Enables MSR_APIC_BASE register.
+ Enables CPUID[0x00000001].EDX[9] (Apic on Chip) flag. The CPUID bit is read from MSR_APIC_BASE[11] (Global Enable Bit).
+ Enables CPUID[0x00000001].EBX[31:24] (Local Apic ID) reporting.
+ Enables Local APIC functionality.
+ Without Local APIC the system behaves as Local APIC is globally disabled.
+
+ Dependency: MSR
+
+11. ISA Feature: SYSENTER/SYSEXIT support
+
+ First introduced in P6.
+ Enables CPUID[0x00000001].EDX[11] flag.
+ Enables IA_SYSENTER_CS_MSR, IA_SYSENTER_ESP_MSR, IA_SYSENTER_EIP_MSR.
+ Enables SYSENTER/SYSEXIT instructions (will #UD otherwise)
+ 
+ Dependency: MSR
+
+12. CPU Feature: MTRR
+
+ Enables CPUID[0x00000001].EDX[12] flag.
+ Enables MTRR MSR registers.
+ Enables Memory Type (not yet implemented).
+
+ Dependency: MSR
+
+13. CPU Feature: Global Pages
+
+ Enables CPUID[0x00000001].EDX[13] flag. Controls ability to set CR4[7] (PGE) bit.
+ Enables PTE Global bit during page walk and global pages support.
+
+ Dependency: BX_CPU_LEVEL >= 4 for CR4 support.
+
+14. ISA Feature: CMOV
+
+ First introduced in P6.
+ Enables CPUID[0x00000001].EDX[15] flag.
+ Enables CMOV/FCMOV instructions (will #UD otherwise).
+
+15. CPU Feature: PAT
+
+ Enables CPUID[0x00000001].EDX[16] flag.
+ Enables PAT MSR register.
+ Enables PAT bit in page tables.
+ Extends Memory Type calculation algorithm (not yet implemented).
+
+ Dependency: MSR
+
+16. CPU Feature: PSE-36
+
+ Enables CPUID[0x00000001].EDX[17] flag.
+ Enables generation of > 32 bit physical address during regular non-PAE page walk.
+ Current can't be turned on/off on runtime, controlled using BX_PHY_ADDRESS_LONG configure variable.
+
+ Dependency: Indicates > 32bit physical address support.
+
+17. CPU Feature: PSN (Processor Serial Number)
+
+ Enables CPUID[0x00000001].EDX[18] flag.
+ Enables CPUID leaf 0x00000003 (Processor Serial Number).
+ Not implemented in Bochs.
+
+18. ISA Feature: CLFLUSH
+
+ Enables CPUID[0x00000001].EDX[19] flag.
+ Enables CPUID[0x00000001].EBX[15:08] (CLFLUSH cache line size) reporting.
+ Enables CLFLUSH instruction (will #UD otherwise).
+
+19. CPU Feature: Debug Store
+
+ ???
+ Enables CPUID[0x00000001].EDX[21] flag.
+ Not implemented in Bochs.
+
+20. CPU Feature: ACPI: Thermal Monitor and Software Controlled Clock Facilities
+
+ ???
+ Enables CPUID[0x00000001].EDX[22] flag.
+ Not implemented in Bochs.
+
+21. ISA Feature: MMX
+
+ First introduced in Pentium.
+ Enables CPUID[0x00000001].EDX[23] flag.
+ Enables MMX instructions (will #UD otherwise).
+
+ Dependency: X87 (sharing the same registers)
+
+22. ISA Feature: FXSAVE/FXRSTOR
+
+ First introduced in P6 (together with SSE?).
+ Enables CPUID[0x00000001].EDX[24] flag.
+ Controls ability to set CR4[9] (OSFXSR) bit.
+ Enables FXSAVE/FXRSTOR instructions (will #UD otherwise).
+
+23. ISA Feature: SSE
+
+ Enables CPUID[0x00000001].EDX[25] flag.
+ Controls ability to set CR4[10] (OSXMMEXCPT) bit.
+ Enables SSE decoding scheme (0x66, 0xF2 and 0xF3 prefixes as opcode extension).
+ Enables MXCSR and SSE registers.
+ Enables SSE instructions (will #UD otherwise) and new #XF exception.
+
+ Dependency: FXSAVE/FXRSTOR
+
+24. ISA Feature: SSE2
+
+ Enables CPUID[0x00000001].EDX[26] flag.
+ Enables MXCSR.DAZ bit support.
+ Enables SSE2 instructions (will #UD otherwise).
+
+ Dependency: SSE
+
+25. CPU Feature: Self snoop
+
+ Uarch only, not emulation visible.
+ Enables CPUID[0x00000001].EDX[27] flag.
+
+26. CPU Feature: Hyper Threading Technology
+
+ Enables CPUID[0x00000001].EDX[28] flag.
+ Enables CPUID[0x00000001].EBX[23:16] (Number of logical processors in one physical processor) reporting.
+ Indicates that CPU supports hyper-threading technology (not emulation visible).
+
+27. CPU Feature: Thermal Monitor
+
+ ???
+ Enables CPUID[0x00000001].EDX[29] flag.
+ Not implemented in Bochs.
+
+28. CPU Feature: PBE (Pending Break Enable)
+
+ ???
+ Enables CPUID[0x00000001].EDX[31] flag.
+ Not implemented in Bochs.
+
+29. ISA Feature: SSE3
+
+ Enables CPUID[0x00000001].ECX[0] flag.
+ Enables SSE3 instructions (will #UD otherwise).
+
+ Dependency: SSE
+
+30. ISA Feature: AES and PCLMULQDQ instruction
+
+ Enables CPUID[0x00000001].ECX[1] flag (PCLMULQDQ).
+ Enables CPUID[0x00000001].ECX[25] flag (AES).
+ Enables PCLMULQDQ instruction (will #UD otherwise).
+ Enables AES instruction (will #UD otherwise).
+
+ Dependency: SSSE3 (3-byte opcode)
+
+31. CPU Feature: DTES64 (64-bit DS area)
+
+ ???
+ Enables CPUID[0x00000001].ECX[2] flag.
+ Not implemented in Bochs.
+
+32. ISA Feature: MONITOR/MWAIT
+
+ Enables CPUID[0x00000001].ECX[3] flag.
+ Enables CPUID[0x00000005] leaf (MONITOR/MWAIT).
+ Enables MONITOR/MWAIT instructions (will #UD otherwise).
+ Enables power management sleep states (can enter to sleep state with MWAIT).
+
+33. CPU Feature: DS-CPL (CPL qualified debug store)
+
+ ???
+ Enables CPUID[0x00000001].ECX[4] flag.
+ Not implemented in Bochs.
+
+34. ISA Feature: VMX
+
+ Enables CPUID[0x00000001].ECX[5] flag.
+ Controls ability to set CR4[13] (VMXE) bit.
+ Enables VMX MSR registers.
+ Enables VMX instructions (will #UD otherwise).
+ VMX mode can be enabled only using VMX instructions.
+
+35. ISA Feature: SMX
+
+ Enables CPUID[0x00000001].ECX[6] flag.
+ Controls ability to set CR4[14] (SMXE) bit.
+ Enables SMX instruction GETSEC (will #UD otherwise).
+ SMX mode can be enabled only using SMX instruction.
+
+36. CPU Feature: EST (Enhanced Intel SpeedStep Technology)
+
+ ???
+ Enables CPUID[0x00000001].ECX[7] flag.
+ Not implemented in Bochs.
+
+37. CPU Feature: TM2 (Thermal Monitor 2)
+
+ ???
+ Enables CPUID[0x00000001].ECX[8] flag.
+ Not implemented in Bochs.
+
+38. ISA Feature: SSSE3
+
+ Enables CPUID[0x00000001].ECX[9] flag.
+ Enables SSSE3 instructions (will #UD otherwise).
+ Enables 3-byte opcode decoding.
+
+ Dependency: SSE
+
+39. CPU Feature: CNXT-ID: L1 context ID
+
+ ???
+ Enables CPUID[0x00000001].ECX[10] flag.
+ Not implemented in Bochs.
+
+30. ISA Feature: FMA
+
+ Enables CPUID[0x00000001].ECX[12] flag.
+ Enables Intel 3-src FMA instructions (will #UD otherwise).
+
+ Dependency: AVX (VEX encoded)
+
+31. ISA Feature: CMPXCHG16B
+
+ Enables CPUID[0x00000001].ECX[13] flag.
+ Enables CMPXCHG16B instruction (will #UD otherwise).
+
+ Dependency: Long Mode
+
+32. CPU Feature: xTPR update control
+
+ ???
+ Enables CPUID[0x00000001].ECX[14] flag.
+ Not implemented in Bochs.
+
+33. CPU Feature: PDCM (Perfon and Debug Capability MSR)
+
+ ???
+ Enables CPUID[0x00000001].ECX[15] flag.
+ Not implemented in Bochs.
+
+34. CPU Feature: PCID
+
+ Enables CPUID[0x00000001].ECX[17] flag.
+ Controls ability to set CR4[17] (PCID) bit.
+ PCID functionality is enabled under CR4.PCID set.
+ Selective TLB flush on PCID switch is not implemented in Bochs (always flush whole TLB).
+
+35. CPU Feature: DCA (Direct Cache Access)
+
+ Enables CPUID[0x00000001].ECX[18] flag.
+ Enables IA32_PLATFORM_DCA_CAP MSR register.
+ Enables CPUID[0x00000009] Direct Cache Access Information Leaf.
+ Indicates the processor supports the ability to prefetch data from a memory mapped device.
+ Not implemented in Bochs.
+
+36. ISA Feature: SSE4.1
+
+ Enables CPUID[0x00000001].ECX[19] flag.
+ Enables SSE4.1 instructions (will #UD otherwise).
+
+ Dependency: SSSE3 (3-byte opcodes)
+
+37. ISA Feature: SSE4.2
+
+ Enables CPUID[0x00000001].ECX[20] flag.
+ Enables SSE4.2 instructions (will #UD otherwise).
+
+ Dependency: SSSE3 (3-byte opcodes)
+
+38. CPU Feature: X2APIC
+
+ Enables CPUID[0x00000001].ECX[21] flag.
+ Enables X2APIC MSR registers.
+ Enables X2APIC mode in the Local APIC.
+
+39. ISA Feature: MOVBE
+
+ Enables CPUID[0x00000001].ECX[22] flag.
+ Enables MOVBE instruction (will #UD otherwise).
+
+ Dependency: SSSE3 (3-byte opcodes)
+
+40. ISA Feature: POPCNT
+
+ Enables CPUID[0x00000001].ECX[23] flag.
+ Enables POPCNT instruction (will #UD otherwise).
+
+ Dependency: SSE (encoded with SSE prefixes)
+
+41. CPU Feature: TSC Deadline
+
+ ???
+ Enables CPUID[0x00000001].ECX[24] flag.
+ Not implemented in Bochs.
+
+42. ISA Feature: XSAVE
+
+ Enables CPUID[0x00000001].ECX[26] flag.
+ Enables CPUID[0x00000001].ECX[27] flag (copy from CR4.OSXSAVE bit).
+ Controls ability to set CR4[18] (OSXSAVE) bit.
+ Enables CPUID[0x0000000D] leaf (XSAVE).
+ Enables XCR0 register.
+ Enables XSETBW/XGETBV/XSAVE/XRSTOR instructions (will #UD otherwise).
+
+43. ISA Feature: AVX
+
+ Enables CPUID[0x00000001].ECX[28] flag.
+ Enables XCR0[2] (AVX) bit.
+ Enables CPUID[0x0000000D][2] subleaf leaf.
+ Enables AVX registers.
+ Enables VEX prefix decoding and AVX instructions (will #UD otherwise).
+
+ Dependency: XSAVE
+
+44. ISA Feature: AVX_F16C
+
+ Enables CPUID[0x00000001].ECX[29] flag.
+ Enables VCVTPH2PS/VCVTPS2PH instructions (will #UD otherwise).
+
+ Dependency: AVX (VEX encoded)
+
+45. ISA Feature: RDRAND
+
+ Enables CPUID[0x00000001].ECX[30] flag.
+ Enables RDRAND instructions (will #UD otherwise).
+ Not implemented in Bochs.
+
+46. ISA Feature: FS_GS_BASE
+
+ Enables CPUID[0x00000007].EBX[0] flag.
+ Controls ability to set CR4[16] (FSGSBASE) bit.
+ Enables FS/GS BASE access instructions (will #UD otherwise).
+
+ Dependency: Long Mode only
+
+47. CPU Feature: SMEP
+
+ Enables CPUID[0x00000007].EBX[7] flag.
+ Controls ability to set CR4[20] (SMEP) bit.
+ Enables Supervisor Mode Execution Protection during PAE mode page walk.
+
+ Dependency: PAE
+
+48. ISA Feature: SYSCALL/SYSRET
+
+ First introduced in AMD K6-2 processor.
+ Enables CPUID[0x80000001].EDX[11] flag.
+ Controls ability to set EFER.SCE bit.
+ Enables MSR_STAR, MSR_LSTAR, MSR_CSTAR, MSR_FMASK registers (MSR_STAR is required for legacy mode, rest for long64 mode only)
+ Enables SYSCALL/SYSRET instructions (will #UD otherwise).
+ On Intel SYSCALL/SYSRET supported in long mode only, AMD allow protected mode as well.
+
+ Dependency: MSR
+
+49. CPU Feature: NX
+
+ Enables CPUID[0x80000001].EDX[20] flag.
+ Controls ability to set EFER.NX bit.
+ Enables Non-execute protection during PAE mode page walk.
+
+ Dependency: PAE
+
+50. ISA Feature: AMD MMX Extensions
+
+ ???
+ Enables CPUID[0x80000001].EDX[22] flag.
+ Not implemented in Bochs.
+
+51. CPU Feature: FFXSR
+
+ Enables CPUID[0x80000001].EDX[25] flag.
+ Controls ability to set EFER.FFXSR bit.
+ Enables Fast FXSAVE/FXRSTOR functionality under long mode.
+
+ Dependency: Long Mode
+
+52. CPU Feature: 1G pages
+
+ Enables CPUID[0x80000001].EDX[26] flag.
+ Enables PDPE.PS bit and 1G paging support during long mode page walk.
+
+ Dependency: Long Mode
+
+53. ISA Feature: RDTSCP
+
+ Enables CPUID[0x80000001].EDX[27] flag.
+ Enables MSR_TSC_AUX register.
+ Enables RDTSCP instruction (will #UD otherwise).
+
+ Dependency: TSC
+
+54. ISA Feature: Long Mode
+
+ Enables CPUID[0x80000001].EDX[29] flag.
+ Controls setting of EFER.LMA (Long Mode Active) and EFER.LME (Long Mode Enabled) bits.
+ Enables Long Mode with new registers, new instructions and new decoding scheme.
+ Enables long mode MSR registers.
+
+55. ISA Feature: 3DNow! Ext
+
+ Enables CPUID[0x80000001].EDX[30] flag.
+ Enables 3DNow! EXT instructions (will #UD otherwise).
+
+ Dependency: 3DNOW
+
+56. ISA Feature: 3DNow!
+
+ Enables CPUID[0x80000001].EDX[31] flag.
+ Enables 3DNow! instructions (will #UD otherwise).
+
+ Dependency: MMX
+
+57. ISA Feature: Long Mode LAHF/SAHF support
+
+ Enables CPUID[0x80000001].ECX[0] flag.
+ Enables LAHF/SAHF instructions in long mode (will #UD otherwise).
+
+58. CPU Feature: Misaligned SSE
+
+ Enables CPUID[0x80000001].ECX[7] flag.
+ Controls setting of MXCSR.MM bit.
+ Enables misaligned SSE memory accesses without #GP fault.
+ Enables #AC exception checking on all SSE instruction that previously required alignment and caused #GO for misaligned access.
+
+ Dependency: SSE
+
+59. ISA Feature: PrefetchW
+
+ Enables CPUID[0x80000001].ECX[8] flag.
+ Set if PREFETCHW implemented as real HW prefetch.
+ Uarch only. Has no effect for Bochs. 
+
+60. ISA Feature: ADX
+
+ Enables CPUID[0x00000007].EBX[19] flag.
+ Enables ADCX/ADOX instructions (will #UD otherwise).
+
+ Dependency: SSSE3 (3-byte opcodes)
+
+61. CPU Feature: SMAP
+
+ Enables CPUID[0x00000007].EBX[20] flag.
+ Controls ability to set CR4[21] (SMAP) bit.
+ Enables Supervisor Mode Access Protection during page walk.
+ Enables CLAC/STAC instructions.

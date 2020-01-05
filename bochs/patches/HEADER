@@ -1,0 +1,16 @@
+----------------------------------------------------------------------
+Patch name:
+Author:
+Date:
+Status:
+
+Detailed description:
+
+Patch was created with:
+  diff -up VER1 VER2
+Apply patch to what version:
+  svn revision [REVISION]
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+----------------------------------------------------------------------

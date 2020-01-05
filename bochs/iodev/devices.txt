@@ -1,0 +1,150 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id$
+/////////////////////////////////////////////////////////////////////////
+
+MOTHER BOARD (i430FX / i440FX / i440BX support)                                   devices.cc
+  |
+  +---- Host bridge 82430FX / 82441FX / 82443BX                 pci.cc
+  |
+  +---- PIIX/PIIX3/PIIX4 (ISA / IDE / USB / ACPI)
+  |        |
+  |        +---- PCI-to-ISA bridge                              pci2isa.cc
+  |        +---- PCI IDE controller                             pci_ide.cc
+  |        |
+  |        +---- PIIX4 ACPI support                             acpi.cc
+  |
+  +---- High Precision Event Timer                              hpet.cc
+  |
+  +---- PCI host device mapping (Linux only)                    pcidev.cc
+  |
+  +---- Integrated peripherals
+  |        |
+  |        +---- 8259A PIC                                      pic.cc
+  |        +---- 82093AA I/O APIC                               ioapic.cc
+  |        +---- 8254/82C54 Programmable Interval Timer         pit.cc, pit82c54.cc
+  |        |             |
+  |        |             +---- PC Speaker (lowlevel)            speaker.cc
+  |        |
+  |        +---- 8237 DMA controller                            dma.cc
+  |        +---- 82077A Floppy Drive Controller (*)             floppy.cc
+  |        +---- CMOS device                                    cmos.cc
+  |        +---- External circuit for #FERR pin                 extfpuirq.cc
+  |        +---- Parallel ports emulation                       parallel.cc
+  |        +---- UART 16550A Serial Port                        serial.cc
+  |        |             |
+  |        |             +---- Host specific Modules            serial_raw.cc
+  |        |
+  |        +---- Standard PC gameport                           gameport.cc
+  |
+  +------------- Debugging/Instrumentation                      biosdev.cc, iodebug.cc, unmapped.cc
+
+Attached devices
+  |
+  +---- PS/2 Keyboard and Mouse                                 keyboard.cc, scancodes.cc
+  |
+  +---- Bus Mouse (Standard / MS InPort)                        busmouse.cc
+  |
+  +---- Hard Drive + ATA controller                             harddrv.cc
+  |        |
+  |        +---- Hard Drive image support (*)                   hdimage/
+  |        |             |
+  |        |             +---- Core and basic modules           hdimage.cc
+  |        |             |
+  |        |             +---- Additional modules
+  |        |                         |
+  |        |                         +---- VirtualBox (VDI 1.1) vbox.cc
+  |        |                         +---- VMware version 3     vmware3.cc
+  |        |                         +---- VMware 4 (VMDK)      vmware4.cc
+  |        |                         +---- VirtualPC            vpc-img.cc
+  |        |                         +---- Virtual VFAT         vvfat.cc
+  |        |
+  |        +---- CD/DVD-ROM image / device access (*)           hdimage/cdrom.cc
+  |                      |
+  |                      +---- Host specific Modules
+  |                                   |
+  |                                   +---- Amiga/MorphOS       hdimage/cdrom_amigaos.cc
+  |                                   +---- Windows             hdimage/cdrom_win32.cc
+  |                                   +---- Mac OSX             hdimage/cdrom_osx.cc
+  |                                   +---- Linux and others    hdimage/cdrom_misc.cc
+  |
+  +---- Graphics                                                display/
+  |        |
+  |        +---- VGA core                                       vgacore.cc
+  |        |      |
+  |        |      +- VGA adapter with VBE and PCI VGA support   vga.cc
+  |        |      +- Cirrus Logic PCI/ISA CLGD5446 SVGA adapter svga_cirrus.cc
+  |        |      +- 3dfx Voodoo Banshee / Voodoo3 adapter      banshee.cc
+  |        |
+  |        +---- 3dfx Voodoo Graphics adapter (4 models)        voodoo.cc
+  |        |
+  |        |
+  |        +---- VESA DDC support (plug&play monitor)           ddc.cc
+  |
+  +---- Network support                                         network/
+  |        |
+  |        +---- Network Devices
+  |        |             |
+  |        |             +---- NE2000 (ISA/PCI)                 ne2k.cc
+  |        |             +---- PCI Pseudo NIC                   pcipnic.cc
+  |        |             +---- Intel 82540EM Gigabit Ethernet   e1000.cc
+  |        |
+  |        +---- Networking Modules                             netmod.cc
+  |                      | |
+  |                      | +-- Host specific Modules            eth_fbsd.cc, eth_linux.cc, eth_win32.cc
+  |                      |
+  |                      +---- Dummy module                     eth_null.cc
+  |                      +---- TAP Interface                    eth_tap.cc
+  |                      +---- TUN/TAP Interface                eth_tuntap.cc
+  |                      +---- VDE Interface                    eth_vde.cc
+  |                      +---- Virtual network module           eth_vnet.cc
+  |                      +---- Socket network module            eth_socket.cc
+  |                      +---- builtin Slirp support            eth_slirp.cc, slirp/*
+  |
+  +---- Sound support                                           sound/
+  |        |
+  |        +---- Sound devices
+  |        |             |
+  |        |             +---- Sound Blaster SB16 (ISA)         sb16.cc, opl.cc
+  |        |             +---- ES1370 (PCI)                     es1370.cc
+  |        |
+  |        +---- Sound modules                                  soundlow.cc
+  |                      |
+  |                      +---- Control Module                   soundmod.cc
+  |                      +---- Dummy Module                     sounddummy.cc
+  |                      +---- File Output Module               soundfile.cc
+  |                      +---- Library specific Module          soundsdl.cc
+  |                      +---- Host specific Modules
+  |                                   |
+  |                                   +---- FreeBSD / Linux     soundoss.cc
+  |                                   +---- Linux               soundalsa.cc
+  |                                   +---- Mac OSX             soundosx.cc
+  |                                   +---- Windows             soundwin.cc
+  |
+  +---- USB support                                             usb/
+           |
+           +---- Host Controllers
+           |             |
+           |             +---- USB EHCI adapter                 usb_ehci.cc
+           |             +---- USB OHCI adapter                 usb_ohci.cc
+           |             +---- USB UHCI adapter (PIIX3/PIIX4)   usb_uhci.cc
+           |             +---- USB xHCI adapter                 usb_xhci.cc
+           |
+           +---- Attached USB devices
+                         | |
+                         | +-- Control Module                   usb_common.cc
+                         |
+                         +---- USB floppy emulation (*)         usb_cbi.cc
+                         +---- USB HID emulation                usb_hid.cc
+                         +---- USB external HUB                 usb_hub.cc
+                         +---- USB mass storage device (*)      usb_msd.cc, scsi_device.cc
+                         +---- USB HP DeskJet 920C printer      usb_printer.cc
+
+(*) USB MSD uses hdimage / cdrom code for image / device access
+    Floppy uses hdimage code for VVFAT support
+
+BOCHS timer sycronisation modules
+  |
+  +---- Slowdown timer                                          slowdown_timer.cc
+  +---- Virtual timer                                           virt_timer.cc
+
+TODO:

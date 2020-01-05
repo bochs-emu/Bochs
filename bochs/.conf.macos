@@ -1,0 +1,41 @@
+#!/bin/sh
+
+# This script will run configure for a Macintosh/CodeWarrior Pro
+# environment.  I actually run this on my Linux machine, but
+# the generated files are for a Mac.
+
+set echo
+
+# These really just make ./configure happy on your Unix machine.
+# They are not the options used on your Mac.
+CC="gcc"
+CFLAGS=""
+CXX="$CC"
+CXXFLAGS="$CFLAGS"
+
+export CC
+export CXX
+export CFLAGS
+export CXXFLAGS
+
+./configure --target=ppc-macos \
+            --enable-sb16 \
+            --enable-all-optimizations \
+            --enable-cpu-level=6 \
+            --enable-x86-64 \
+            --enable-vmx=2 \
+            --enable-pci \
+            --enable-clgd54xx \
+            --enable-voodoo \
+            --enable-usb \
+            --enable-usb-ohci \
+            --enable-usb-ehci \
+            --enable-usb-xhci \
+            --enable-busmouse \
+            --enable-es1370 \
+            --enable-e1000 \
+            --enable-plugins \
+            --with-macos \
+            ${CONFIGURE_ARGS}
+
+unset echo

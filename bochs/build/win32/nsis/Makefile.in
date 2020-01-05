@@ -1,0 +1,30 @@
+# To build an NSIS installer, get NSIS version 3.04 or newer from
+# http://sourceforge.net/projects/nsis
+# Fix the MAKENSIS variable so that you have the correct path.
+# Unzip the windows binary release into a subdirectory of this 
+# directory, for example "2.6.5".  Make sure the VERSION
+# variable has the same name as the directory.
+#
+# Type make, and it should build an installer called Bochs-${VERSION}.exe
+
+# MAKENSIS='c:/Program Files/NSIS/makensis'
+MAKENSIS='/c/Program Files (x86)/NSIS/makensis'
+
+VERSION=@VERSION@
+TARGET=Bochs-${VERSION}.exe
+DLXDIR=bochs-${VERSION}/dlxlinux
+
+all: ${TARGET}
+
+fixups::
+	if test -f ${DLXDIR}/bochsrc.txt; then mv ${DLXDIR}/bochsrc.txt ${DLXDIR}/bochsrc.bxrc; fi
+	rm -f ${DLXDIR}/*.bat
+
+${TARGET}: fixups bochs.nsi
+	rm -rf ${TARGET}
+	${MAKENSIS} bochs.nsi
+	test -f ${TARGET}
+	ls -l ${TARGET}
+
+clean::
+	rm -rf ${TARGET}
