@@ -1,2 +1,2 @@
-&copy; 2001-2019 The Bochs Project. See the project <a href="https://sourceforge.net/projects/bochs/files/stats/timeline">statistics</a> here.</font></td></tr>
+&copy; 2001-2020 The Bochs Project. See the project <a href="https://sourceforge.net/projects/bochs/files/stats/timeline">statistics</a> here.</font></td></tr>
 </table>
