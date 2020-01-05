@@ -8,14 +8,14 @@ AC_CONFIG_HEADER(ltdlconf.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
 dnl // into all the right places.
-VERSION="2.6.11"
+VERSION="2.6.11.svn"
 VER_MAJOR=2
 VER_MINOR=6
 dnl // this should be > 90 for pre-release of next version otherwise revision level
 VER_REVISION=11
 dnl // this should be 0 for release and 1 for svn version
-VER_SVN=0
-REL_STRING="Built from SVN snapshot on January 5, 2020"
+VER_SVN=1
+REL_STRING="Built from SVN snapshot after release 2.6.11"
 REL_TIMESTAMP=`grep "Updated:" $srcdir/README | sed 's/Updated: //'`
 
 changequote(<<, >>)
