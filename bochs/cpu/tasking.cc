@@ -778,6 +778,10 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
 
   if (source != BX_TASK_FROM_IRET) {
     if (ShadowStackEnabled(CPL)) {
+      if (newSSP & 0x7) {
+        BX_ERROR(("task_switch: newSSP is not aligned to 8 byte boundary"));
+        exception(BX_TS_EXCEPTION, BX_CPU_THIS_PTR tr.selector.value & 0xfffc);
+      }
       shadow_stack_switch(newSSP);
       if (pushCSLIPSSP) {
         call_far_shadow_stack_push(oldCS, oldRIP, oldSSP);
