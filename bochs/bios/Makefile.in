@@ -104,7 +104,7 @@ acpi-dsdt.hex: acpi-dsdt.dsl
 	cpp -P $< $<.i
 	iasl -tc -p $@ $<.i
 	rm $<.i
-	sed -i -e's/^unsigned/const unsigned/' $@
+	sed -i -e's/^unsigned/const unsigned/;s/ACPI-DSDT_HEX/ACPI_DSDT_HEX/g;s/acpi-dsdt_aml_code/AmlCode/g' $@
 endif
 
 rombios32start.o: rombios32start.S
