@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2018  The Bochs Project
+//  Copyright (C) 2002-2020  The Bochs Project
 //  PCI VGA dummy adapter Copyright (C) 2002,2003  Mike Nordell
 //
 //  This library is free software; you can redistribute it and/or
@@ -115,7 +115,6 @@ bx_bool bx_vga_c::init_vga_extension(void)
     BX_VGA_THIS vbe.virtual_yres=480;
     BX_VGA_THIS vbe.bpp_multiplier=1;
     BX_VGA_THIS vbe.virtual_start=0;
-    BX_VGA_THIS vbe.lfb_enabled=0;
     BX_VGA_THIS vbe.get_capabilities=0;
     bx_gui->get_capabilities(&max_xres, &max_yres, &max_bpp);
     if (max_xres > VBE_DISPI_MAX_XRES) {
@@ -213,7 +212,6 @@ void bx_vga_c::register_state(void)
     new bx_shadow_num_c(vbe, "virtual_yres", &BX_VGA_THIS vbe.virtual_yres);
     new bx_shadow_num_c(vbe, "virtual_start", &BX_VGA_THIS vbe.virtual_start);
     new bx_shadow_num_c(vbe, "bpp_multiplier", &BX_VGA_THIS vbe.bpp_multiplier);
-    new bx_shadow_bool_c(vbe, "lfb_enabled", &BX_VGA_THIS vbe.lfb_enabled);
     new bx_shadow_bool_c(vbe, "get_capabilities", &BX_VGA_THIS vbe.get_capabilities);
     new bx_shadow_bool_c(vbe, "dac_8bit", &BX_VGA_THIS vbe.dac_8bit);
     new bx_shadow_bool_c(vbe, "ddc_enabled", &BX_VGA_THIS vbe.ddc_enabled);
@@ -753,8 +751,7 @@ bx_vga_c::vbe_mem_read(bx_phy_address addr)
   if (addr >= BX_VGA_THIS vbe.base_address) {
     // LFB read
     offset = (Bit32u)(addr - BX_VGA_THIS vbe.base_address);
-  }
-  else {
+  } else {
     // banked mode read
     offset = (Bit32u)(BX_VGA_THIS vbe.bank*65536 + addr - 0xA0000);
   }
@@ -772,50 +769,30 @@ bx_vga_c::vbe_mem_write(bx_phy_address addr, Bit8u value)
   Bit32u offset;
   unsigned x_tileno, y_tileno;
 
-  if (BX_VGA_THIS vbe.lfb_enabled)
-  {
-    if (addr >= BX_VGA_THIS vbe.base_address) {
-      // LFB write
-      offset = (Bit32u)(addr - BX_VGA_THIS vbe.base_address);
-    }
-    else {
-      // banked mode write while in LFB mode -> ignore
-      return;
-    }
-  }
-  else
-  {
-    if (addr < BX_VGA_THIS vbe.base_address) {
-      // banked mode write
-      offset = (Bit32u)(BX_VGA_THIS vbe.bank*65536 + (addr - 0xA0000));
-    }
-    else {
-      // LFB write while in banked mode -> ignore
-      return;
-    }
+  if (addr >= BX_VGA_THIS vbe.base_address) {
+    // LFB write
+    offset = (Bit32u)(addr - BX_VGA_THIS vbe.base_address);
+  } else {
+    // banked mode write
+    offset = (Bit32u)(BX_VGA_THIS vbe.bank*65536 + (addr - 0xA0000));
   }
 
   // check for out of memory write
-  if (offset < VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES)
-  {
-    BX_VGA_THIS s.memory[offset]=value;
-  }
-  else
-  {
+  if (offset < VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES) {
+    BX_VGA_THIS s.memory[offset] = value;
+  } else {
     // make sure we don't flood the logfile
     static int count=0;
-    if (count<100)
-    {
+    if (count<100) {
       count ++;
       BX_INFO(("VBE_mem_write out of video memory write at %x",offset));
     }
   }
 
-  offset-=BX_VGA_THIS vbe.virtual_start;
+  offset -= BX_VGA_THIS vbe.virtual_start;
 
   // only update the UI when writing 'onscreen'
-  if (offset < BX_VGA_THIS vbe.visible_screen_size)
-  {
+  if (offset < BX_VGA_THIS vbe.visible_screen_size) {
     y_tileno = ((offset / BX_VGA_THIS vbe.bpp_multiplier) / BX_VGA_THIS vbe.virtual_xres) / Y_TILESIZE;
     x_tileno = ((offset / BX_VGA_THIS vbe.bpp_multiplier) % BX_VGA_THIS vbe.virtual_xres) / X_TILESIZE;
 
@@ -1051,21 +1028,11 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           value=value & 0xff; // FIXME lobyte = vbe bank A?
           unsigned divider = (BX_VGA_THIS vbe.bpp!=VBE_DISPI_BPP_4)?64:256;
           // check for max bank nr
-          if (value < (VBE_DISPI_TOTAL_VIDEO_MEMORY_KB / divider))
-          {
-            if (!BX_VGA_THIS vbe.lfb_enabled)
-            {
-              BX_DEBUG(("VBE set bank to %d", value));
-              BX_VGA_THIS vbe.bank = value;
-              BX_VGA_THIS s.plane_offset = (BX_VGA_THIS vbe.bank << 16);
-            }
-            else
-            {
-              BX_ERROR(("VBE set bank in LFB mode ignored"));
-            }
-          }
-          else
-          {
+          if (value < (VBE_DISPI_TOTAL_VIDEO_MEMORY_KB / divider)) {
+            BX_DEBUG(("VBE set bank to %d", value));
+            BX_VGA_THIS vbe.bank = value;
+            BX_VGA_THIS s.plane_offset = (BX_VGA_THIS vbe.bank << 16);
+          } else {
             BX_ERROR(("VBE set invalid bank (%d)", value));
           }
         } break;
@@ -1129,7 +1096,6 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
             BX_INFO(("VBE enabling x %d, y %d, bpp %d, %u bytes visible", BX_VGA_THIS vbe.xres, BX_VGA_THIS vbe.yres, BX_VGA_THIS vbe.bpp, BX_VGA_THIS vbe.visible_screen_size));
 
             if (depth > 4) {
-              BX_VGA_THIS vbe.lfb_enabled = (bx_bool)((value & VBE_DISPI_LFB_ENABLED) != 0);
               if ((value & VBE_DISPI_NOCLEARMEM) == 0) {
                 memset(BX_VGA_THIS s.memory, 0, BX_VGA_THIS vbe.visible_screen_size);
               }
@@ -1142,7 +1108,6 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
             }
           } else if (((value & VBE_DISPI_ENABLED) == 0) && BX_VGA_THIS vbe.enabled) {
             BX_INFO(("VBE disabling"));
-            BX_VGA_THIS vbe.lfb_enabled = 0;
             BX_VGA_THIS s.plane_shift = 16;
             BX_VGA_THIS s.plane_offset = 0;
           }

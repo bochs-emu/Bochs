@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2018  The Bochs Project
+//  Copyright (C) 2002-2020  The Bochs Project
 //  PCI VGA dummy adapter Copyright (C) 2002,2003  Mike Nordell
 //
 //  This library is free software; you can redistribute it and/or
@@ -157,7 +157,6 @@ private:
     Bit16u  virtual_yres;
     Bit32u  virtual_start;   /**< For dealing with bpp>8, this is where the virtual screen starts. */
     Bit8u   bpp_multiplier;  /**< We have to save this b/c sometimes we need to recalculate stuff with it. */
-    bx_bool lfb_enabled;
     bx_bool get_capabilities;
     bx_bool dac_8bit;
     bx_bool ddc_enabled;
