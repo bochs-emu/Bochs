@@ -234,8 +234,11 @@ void turion64_tyler_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
               BX_CPUID_STD_MMX |
               BX_CPUID_STD_FXSAVE_FXRSTOR |
               BX_CPUID_STD_SSE |
-              BX_CPUID_STD_SSE2 |
-              BX_CPUID_STD_HT;
+              BX_CPUID_STD_SSE2
+#if BX_SUPPORT_SMP
+              | BX_CPUID_STD_HT
+#endif
+              ;
 #if BX_SUPPORT_APIC
   // if MSR_APICBASE APIC Global Enable bit has been cleared,
   // the CPUID feature flag for the APIC is set to 0.

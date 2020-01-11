@@ -1213,7 +1213,9 @@ Bit32u bx_generic_cpuid_t::get_std_cpuid_features(void) const
     features |= BX_CPUID_STD_SELF_SNOOP;
 #endif
 
+#if BX_SUPPORT_SMP
   features |= BX_CPUID_STD_HT;
+#endif
 
   return features;
 }
