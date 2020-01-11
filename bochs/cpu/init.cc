@@ -1048,7 +1048,7 @@ void BX_CPU_C::reset(unsigned source)
   if (source == BX_RESET_HARDWARE) {
     /* enable VMX, should be done in BIOS instead */
     BX_CPU_THIS_PTR msr.ia32_feature_ctrl =
-      /*BX_IA32_FEATURE_CONTROL_LOCK_BIT | */BX_IA32_FEATURE_CONTROL_VMX_ENABLE_BIT;
+      BX_IA32_FEATURE_CONTROL_LOCK_BIT | BX_IA32_FEATURE_CONTROL_VMX_ENABLE_BIT;
   }
 #endif
 
