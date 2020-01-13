@@ -295,13 +295,13 @@ int bx_param_num_c::parse_param(const char *ptr)
       set(strtoull(ptr, NULL, 16));
     } else {
       if (ptr[strlen(ptr)-1] == 'K') {
-        set(1000 * strtoul(ptr, NULL, 10));
+        set(1000 * strtoull(ptr, NULL, 10));
       }
       else if (ptr[strlen(ptr)-1] == 'M') {
-        set(1000000 * strtoul(ptr, NULL, 10));
+        set(1000000 * strtoull(ptr, NULL, 10));
       }
       else {
-        set(strtoul(ptr, NULL, 10));
+        set(strtoull(ptr, NULL, 10));
       }
     }
     return 1;
