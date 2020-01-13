@@ -93,6 +93,9 @@ For any information on Qemu, visit the website http://wiki.qemu.org/
 
 History
 -------
+vgabios-SVN : Jan 13 2020
+  - Volker
+    - fixes in Bochs VBE functions set/get VBE mode and save/restore VBE state
 vgabios-0.7b : Jan 03 2020
   - Volker
     - added VESA BIOS function 0x4f09 (set/get palette data) to the Bochs VBE
