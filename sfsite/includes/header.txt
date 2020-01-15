@@ -53,7 +53,7 @@ A.sidebar:hover {color: blue; text-decoration: underline}
 <br><center><b>Get Bochs</b></center>
 
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="<!--#include virtual="release.txt" -->" class="sidebar">Download Current</a>
-<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://sourceforge.net/projects/bochs/files" class="sidebar">See All Releases</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://sourceforge.net/projects/bochs/files/bochs" class="sidebar">See All Releases</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/diskimages.html" class="sidebar">Disk Images</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="https://sourceforge.net/p/forge/documentation/svn/" class="sidebar">Anonymous SVN</a>
 
