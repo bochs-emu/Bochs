@@ -4,6 +4,7 @@
 //
 //  32 bit Bochs BIOS init code
 //  Copyright (C) 2006 Fabrice Bellard
+//  Copyright (C) 2020 The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -62,6 +63,15 @@ smp_ap_boot_code_start:
   add $12, %ebx
   jmp 11b
 12:
+  mov $1, %eax
+  cpuid
+  and $CPUID_EXT_VMX, %ecx
+  jz 13f
+  mov $MSR_FEATURE_CTRL, %ecx
+  rdmsr
+  or $FEATURE_CTRL_LOCK | FEATURE_CTRL_VMX, %eax
+  wrmsr
+13:
 
   lock incw smp_cpus
 1:

@@ -4,7 +4,7 @@
 //
 //  32 bit Bochs BIOS init code
 //  Copyright (C) 2006       Fabrice Bellard
-//  Copyright (C) 2001-2019  The Bochs Project
+//  Copyright (C) 2001-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -574,6 +574,7 @@ extern uint8_t smp_ap_boot_code_end;
 void smp_probe(void)
 {
     uint32_t val, sipi_vector;
+    uint64_t val64;
 
     writew(&smp_cpus, 1);
     if (cpuid_features & CPUID_APIC) {
@@ -598,6 +599,12 @@ void smp_probe(void)
         while (cmos_readb(0x5f) + 1 != readw(&smp_cpus))
             ;
 #endif
+        /* enable VMX for CPU #0 in IA32_FEATURE_CONTROL */
+        if ((cpuid_ext_features & CPUID_EXT_VMX) > 0) {
+            val64 = rdmsr(MSR_FEATURE_CTRL);
+            val64 |= (FEATURE_CTRL_LOCK | FEATURE_CTRL_VMX);
+            wrmsr(MSR_FEATURE_CTRL, val64);
+        }
     }
     BX_INFO("Found %d cpu(s)\n", readw(&smp_cpus));
 }

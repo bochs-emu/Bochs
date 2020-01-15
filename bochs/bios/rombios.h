@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2006-2018 Volker Ruppert
+//  Copyright (C) 2006-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -173,6 +173,11 @@
 #define CPUID_MSR (1 << 5)
 #define CPUID_APIC (1 << 9)
 #define CPUID_MTRR (1 << 12)
+
+#define CPUID_EXT_VMX (1 << 5)
+#define MSR_FEATURE_CTRL 0x03a
+#define FEATURE_CTRL_LOCK 0x1
+#define FEATURE_CTRL_VMX  0x4
 
 #define APIC_BASE    ((uint8_t *)0xfee00000)
 #define APIC_ICR_LOW 0x300
