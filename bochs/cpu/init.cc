@@ -415,7 +415,9 @@ void BX_CPU_C::register_state(void)
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SCA_MITIGATIONS)) {
     BXRS_HEX_PARAM_FIELD(MSR, ia32_spec_ctrl, msr.ia32_spec_ctrl);
   }
+#if BX_SUPPORT_VMX
   BXRS_HEX_PARAM_FIELD(MSR, ia32_feature_ctrl, msr.ia32_feature_ctrl);
+#endif
 
 #if BX_CONFIGURE_MSRS
   bx_list_c *MSRS = new bx_list_c(cpu, "USER_MSR");
