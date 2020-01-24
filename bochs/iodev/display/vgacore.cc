@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2018  The Bochs Project
+//  Copyright (C) 2001-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -371,8 +371,6 @@ void bx_vgacore_c::after_restore_state(void)
     BX_VGA_THIS s.last_yres = BX_VGA_THIS s.max_yres;
     BX_VGA_THIS vga_redraw_area(0, 0, BX_VGA_THIS s.max_xres, BX_VGA_THIS s.max_yres);
   }
-  BX_VGA_THIS update();
-  bx_gui->flush();
 }
 
 void bx_vgacore_c::determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth)
