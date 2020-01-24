@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2017-2018  The Bochs Project
+//  Copyright (C) 2017-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -129,6 +129,11 @@ void cmdfifo_w(cmdfifo_info *f, Bit32u fbi_offset, Bit32u data);
 
 bx_banshee_c::bx_banshee_c() : bx_voodoo_base_c()
 {
+}
+
+bx_banshee_c::~bx_banshee_c()
+{
+  SIM->get_bochs_root()->remove("voodoo");
 }
 
 void bx_banshee_c::init_model(void)

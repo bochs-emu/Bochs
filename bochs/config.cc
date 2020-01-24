@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2019  The Bochs Project
+//  Copyright (C) 2002-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -269,9 +269,7 @@ void bx_plugin_ctrl_reset(bx_bool init_done)
 #if BX_SUPPORT_IODEBUG && BX_DEBUGGER
   new bx_param_bool_c(base, "iodebug", "", "", 1);
 #endif
-  if (init_done) {
-    SIM->opt_plugin_ctrl("*", 1);
-  }
+  SIM->opt_plugin_ctrl("*", 1);
 }
 
 void bx_init_options()
@@ -363,7 +361,6 @@ void bx_init_options()
 
   // optional plugin control
   new bx_list_c(menu, "plugin_ctrl", "Optional Plugin Control");
-  bx_plugin_ctrl_reset(0);
 
   // subtree for special menus
   bx_list_c *special_menus = new bx_list_c(root_param, "menu", "");

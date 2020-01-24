@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2012-2018  The Bochs Project
+//  Copyright (C) 2012-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -91,7 +91,7 @@ protected:
 class bx_voodoo_1_2_c : public bx_voodoo_base_c {
 public:
   bx_voodoo_1_2_c();
-  virtual ~bx_voodoo_1_2_c() {}
+  virtual ~bx_voodoo_1_2_c();
   virtual void init_model(void);
   virtual void reset(unsigned type);
   virtual void register_state(void);
@@ -116,7 +116,7 @@ private:
 class bx_banshee_c : public bx_voodoo_base_c {
 public:
   bx_banshee_c();
-  virtual ~bx_banshee_c() {}
+  virtual ~bx_banshee_c();
   virtual void init_model(void);
   virtual void reset(unsigned type);
   virtual void register_state(void);

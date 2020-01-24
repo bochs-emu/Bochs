@@ -60,6 +60,7 @@ bx_bool bx_gui_sighandler = 0;
 
 int  bx_init_main(int argc, char *argv[]);
 void bx_init_hardware(void);
+void bx_plugin_ctrl_reset(bx_bool init_done);
 void bx_init_options(void);
 void bx_init_bx_dbg(void);
 
@@ -878,9 +879,10 @@ int bx_init_main(int argc, char *argv[])
   if (SIM->get_param_bool(BXPN_RESTORE_FLAG)->get()) {
     load_rcfile = 0;
     norcfile = 0;
+  } else {
+    // set up and load pre-defined optional plugins before parsing configuration
+    bx_plugin_ctrl_reset(0);
   }
-  // load pre-defined optional plugins before parsing configuration
-  SIM->opt_plugin_ctrl("*", 1);
   SIM->init_save_restore();
   SIM->init_statistics();
   if (load_rcfile) {

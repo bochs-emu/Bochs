@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2012-2019  The Bochs Project
+//  Copyright (C) 2012-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -839,6 +839,11 @@ void bx_voodoo_base_c::set_irq_level(bx_bool level)
 bx_voodoo_1_2_c::bx_voodoo_1_2_c() : bx_voodoo_base_c()
 {
   s.mode_change_timer_id = BX_NULL_TIMER_HANDLE;
+}
+
+bx_voodoo_1_2_c::~bx_voodoo_1_2_c()
+{
+  SIM->get_bochs_root()->remove("voodoo");
 }
 
 void bx_voodoo_1_2_c::init_model(void)
