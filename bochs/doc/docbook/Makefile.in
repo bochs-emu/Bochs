@@ -9,11 +9,22 @@
 
 prefix          = @prefix@
 srcdir          = @srcdir@
+abs_srcdir      = @abs_srcdir@
 docdir          = $(prefix)/share/doc/bochs
-DOCBOOK2HTML = @DOCBOOK2HTML@
 WGET = @WGET@
 TARGZ = bochsdoc.tar.gz
 RENDERED_DOC_URL = http://bochs.sf.net/doc/docbook/$(TARGZ)
+
+# docbook-utils build if found
+DOCBOOK2HTML = @DOCBOOK2HTML@
+ifeq ($(DOCBOOK2HTML), not_found)
+# jade build
+HTML_STYLESHEET = $(abs_srcdir)/include/docbook-utils.dsl\#html
+JADE = @JADE@
+JADE_ARGS = -t sgml -i html -d $(HTML_STYLESHEET)   # -V nochunks
+SGML_VALIDATE = nsgmls -s
+DOCBOOK2HTML = $(JADE) $(JADE_ARGS)
+endif
 
 DESTDIR=
 
@@ -39,15 +50,15 @@ all: $(SECTION_HTML)
 
 user/index.html: $(srcdir)/user/user.dbk
 	-mkdir -p user
-	$(DOCBOOK2HTML) -o user $(srcdir)/user/user.dbk
+	cd user; $(DOCBOOK2HTML) user.dbk
 
 documentation/index.html: $(srcdir)/documentation/documentation.dbk
 	-mkdir -p documentation
-	$(DOCBOOK2HTML) -o documentation $(srcdir)/documentation/documentation.dbk
+	cd documentation; $(DOCBOOK2HTML) documentation.dbk
 
 development/index.html: $(srcdir)/development/development.dbk
 	-mkdir -p development
-	$(DOCBOOK2HTML) -o development $(srcdir)/development/development.dbk
+	cd development; $(DOCBOOK2HTML) development.dbk
 
 fixperm::
 	# fix permissions locally so that tar will install things right

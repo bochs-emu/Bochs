@@ -2140,6 +2140,7 @@ AC_SUBST(BUSM_OBJS)
 
 
 AC_PATH_PROG(DOCBOOK2HTML, docbook2html, not_found)
+AC_CHECK_PROGS([JADE], [jade openjade])
 AC_MSG_CHECKING(whether to build docbook documentation)
 build_docbook=0
 AC_ARG_ENABLE(docbook,
@@ -2148,8 +2149,12 @@ AC_ARG_ENABLE(docbook,
     if test "$enableval" = yes; then build_docbook=1; fi
   ],
   [
-    dnl Not specified. If they have docbook2html, then yes.
-    if test "$DOCBOOK2HTML" != not_found; then build_docbook=1; fi
+    dnl Not specified. If they have docbook2html or jade, then yes.
+    if test "$DOCBOOK2HTML" != not_found; then
+      build_docbook=1
+    else
+      if test "$JADE" != not_found; then build_docbook=1; fi
+    fi
     ]
   )
 
@@ -2158,8 +2163,8 @@ if test $build_docbook = 1; then
   BUILD_DOCBOOK_VAR=build_docbook
   INSTALL_DOCBOOK_VAR=install_docbook
   CLEAN_DOCBOOK_VAR=clean_docbook
-  if test "$DOCBOOK2HTML" = not_found; then
-    echo "ERROR: docbook2html must be installed to build the documentation"
+  if test "$DOCBOOK2HTML" = not_found -a "$JADE" = not_found; then
+    echo "ERROR: docbook2html or jade must be installed to build the documentation"
     exit 1
   fi
 else
