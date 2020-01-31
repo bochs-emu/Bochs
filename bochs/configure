@@ -3371,7 +3371,7 @@ case "$target" in
         ;;
     esac
     ;;
-  *-cygwin* | *-mingw32*)
+  *-cygwin* | *-mingw32* | *-msys)
     NO_LT=1   # do not use libtool at all
     if test "$with_term" = yes; then
       # ncurses won't compile with -DWIN32
@@ -3380,7 +3380,7 @@ case "$target" in
       ADD_FLAGS="-DBROKEN_LINKER=1"
     else
       # default case
-      ADD_FLAGS="-DWIN32"   # required for cygwin/mingw compile+win32 gui
+      ADD_FLAGS="-DWIN32"   # required for cygwin/mingw/msys compile+win32 gui
       DEFAULT_GUI=win32     # default to win32 gui
     fi
     ;;
@@ -21453,7 +21453,7 @@ fi
   if test "$with_rfb" != yes; then
     can_compile_rfb=1
     case $target in
-      *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw32*)
+      *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw32* | *-msys)
 	ac_fn_c_check_header_mongrel "$LINENO" "winsock2.h" "ac_cv_header_winsock2_h" "$ac_includes_default"
 if test "x$ac_cv_header_winsock2_h" = xyes; then :
 
@@ -21509,7 +21509,7 @@ fi
       *-pc-windows* | *-pc-winnt* | *-cygwin*)
         can_compile_vncsrv=0
         ;;
-      *-mingw32*)
+      *-mingw32* | *-msys)
         ac_fn_c_check_header_mongrel "$LINENO" "rfb/rfb.h" "ac_cv_header_rfb_rfb_h" "$ac_includes_default"
 if test "x$ac_cv_header_rfb_rfb_h" = xyes; then :
 
@@ -23601,7 +23601,7 @@ if test "$networking" = yes; then
   ethernet_modules='null vnet'
   can_compile_slirp=0
   case "$target" in
-    *-cygwin* | *-mingw32*)
+    *-cygwin* | *-mingw32* | *-msys)
       can_compile_slirp=1
       DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -liphlpapi"
       ;;
@@ -23653,7 +23653,7 @@ fi
 
   fi
   case "$target" in
-    *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw32*)
+    *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw32* | *-msys)
     NETLOW_OBJS="$NETLOW_OBJS eth_win32.o"
     ethernet_modules="$ethernet_modules win32"
     $as_echo "#define BX_NETMOD_WIN32 1" >>confdefs.h
@@ -23758,7 +23758,7 @@ if test "$bx_plugins" = 0; then
     *-pc-windows*)
       DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS ws2_32.lib"
       ;;
-    *-mingw32* | *-cygwin*)
+    *-mingw32* | *-cygwin* | *-msys)
       DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lws2_32"
       ;;
   esac
@@ -23877,7 +23877,7 @@ if test "$bx_cdrom" = 1; then
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
   case $target in
-    *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw32*)
+    *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw32* | *.msys)
       CDROM_OBJS="$CDROM_OBJS cdrom_win32.o"
       $as_echo "#define LOWLEVEL_CDROM cdrom_win32_c" >>confdefs.h
 
@@ -24042,7 +24042,7 @@ fi
       $as_echo "#define BX_HAVE_SOUND_WIN 1" >>confdefs.h
 
       ;;
-    *-cygwin* | *-mingw32*)
+    *-cygwin* | *-mingw32* | *-msys)
       SOUNDLOW_OBJS='soundwin.o'
       DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lwinmm"
       soundlow_drivers="win"
@@ -24160,7 +24160,7 @@ $as_echo "yes" >&6; }
     if test "$gameport_present" = 0; then
       GAME_OBJS='gameport.o'
       case $target in
-        *-cygwin* | *-mingw32*)
+        *-cygwin* | *-mingw32* | *-msys)
            DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lwinmm"
            ;;
       esac
@@ -24304,6 +24304,7 @@ fi
 
   test -n "$JADE" && break
 done
+test -n "$JADE" || JADE="not_found"
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to build docbook documentation" >&5
 $as_echo_n "checking whether to build docbook documentation... " >&6; }
@@ -24713,7 +24714,7 @@ if test "$with_sdl" = yes; then
          RC_CMD="rc /fo"
          EXTRA_BX_OBJS="$EXTRA_BX_OBJS win32res.o"
          ;;
-      *-cygwin* | *-mingw32*)
+      *-cygwin* | *-mingw32* | *-msys)
          RC_CMD="windres -I. -o "
          EXTRA_BX_OBJS="$EXTRA_BX_OBJS win32res.o"
          ;;
@@ -24749,7 +24750,7 @@ if test "$with_sdl2" = yes; then
          RC_CMD="rc /fo"
          EXTRA_BX_OBJS="$EXTRA_BX_OBJS win32res.o"
          ;;
-      *-cygwin* | *-mingw32*)
+      *-cygwin* | *-mingw32* | *-msys)
          RC_CMD="windres -I. -o "
          EXTRA_BX_OBJS="$EXTRA_BX_OBJS win32res.o"
          ;;
@@ -24864,7 +24865,7 @@ if test "$with_win32" = yes; then
        fi
        GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_WIN32_VCPP)"
        ;;
-    *-cygwin* | *-mingw32*)
+    *-cygwin* | *-mingw32* | *-msys)
        if test "$with_wx" != yes; then
          RC_CMD="windres -I. -o "
          EXTRA_BX_OBJS="$EXTRA_BX_OBJS win32res.o"
@@ -24956,7 +24957,7 @@ if test "$with_wx" = yes; then
   # using debugger with readline is failing due to thread/signal handler
   # problems.
   case $target in
-    *-pc-windows* | *-cygwin* | *-mingw32*)
+    *-pc-windows* | *-cygwin* | *-mingw32* | *-msys)
        EXTRA_BX_OBJS="$EXTRA_BX_OBJS wxbochs_resources.o"
 	   GUI_LINK_OPTS_WX="$GUI_LINK_OPTS_WX"
        ;;
@@ -25217,7 +25218,7 @@ case "$target" in
     $as_echo "#define BX_HAVE_SELECT 1" >>confdefs.h
 
     ;;
-  *-mingw32*)
+  *-mingw32* | *-msys)
     BXIMAGE_LINK_OPTS="-luser32"
     if test "$networking" = yes; then
       OPTIONAL_TARGET="$OPTIONAL_TARGET bxhub niclist"
@@ -25310,7 +25311,7 @@ case $target in
     DIALOG_OBJS="win32dialog.o win32paramdlg.o scrollwin.o"
     EXPORT_DYNAMIC=""
     ;;
-  *-cygwin* | *-mingw*)
+  *-cygwin* | *-mingw* | *-msys)
     if test "$bx_plugins" = 1; then
       # set variables for building DLL plugins
       PRIMARY_TARGET=".win32_dll_plugin_target"
@@ -25709,7 +25710,7 @@ if test "$with_rfb" = yes; then
       RFB_LIBS="$RFB_LIBS ws2_32.lib"
       have_socket=yes
       ;;
-    *-mingw32*)
+    *-mingw32* | *-msys)
       RFB_LIBS="$RFB_LIBS -lws2_32"
       have_socket=yes
       ;;
@@ -26105,7 +26106,7 @@ fi
 # since some features need the pthread library, check that it was found.
 # But on win32 platforms, the pthread library is not needed.
 case "$target" in
-  *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw32*)
+  *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw32* | *-msys)
     # pthread not needed for win32 platform
     ;;
   *)
