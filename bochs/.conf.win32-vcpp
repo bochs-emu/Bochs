@@ -2,7 +2,7 @@
 
 set echo
 
-./configure --target=pentium-windows \
+./configure --target=pentium-pc-windows \
             --enable-sb16 \
             --enable-ne2000 \
             --enable-all-optimizations \

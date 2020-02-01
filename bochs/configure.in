@@ -2059,15 +2059,17 @@ if test "$soundcard_present" = 1; then
       AC_DEFINE(BX_HAVE_SDL2_AUDIO_CAPTURE, 1)
     fi
   fi
-  AC_CHECK_HEADER([samplerate.h], [bx_have_libsamplerate=1])
-  if test "$bx_have_libsamplerate" = 1; then
-    DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lsamplerate"
-    AC_DEFINE(BX_HAVE_LIBSAMPLERATE, 1)
-  else
-    AC_CHECK_HEADER([soxr-lsr.h], [bx_have_soxr_lsr=1])
-    if test "$bx_have_soxr_lsr" = 1; then
-      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lsoxr-lsr"
-      AC_DEFINE(BX_HAVE_SOXR_LSR, 1)
+  if test "$MSVC_TARGET" = 0; then
+    AC_CHECK_HEADER([samplerate.h], [bx_have_libsamplerate=1])
+    if test "$bx_have_libsamplerate" = 1; then
+      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lsamplerate"
+      AC_DEFINE(BX_HAVE_LIBSAMPLERATE, 1)
+    else
+      AC_CHECK_HEADER([soxr-lsr.h], [bx_have_soxr_lsr=1])
+      if test "$bx_have_soxr_lsr" = 1; then
+        DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lsoxr-lsr"
+        AC_DEFINE(BX_HAVE_SOXR_LSR, 1)
+      fi
     fi
   fi
   SOUND_LIB_VAR='iodev/sound/libsound.a'
