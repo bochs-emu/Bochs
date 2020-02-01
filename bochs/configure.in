@@ -370,10 +370,10 @@ if test "$with_all_libs" = yes; then
   if test "$with_vncsrv" != yes; then
     can_compile_vncsrv=1
     case $target in
-      *-pc-windows* | *-pc-winnt* | *-cygwin*)
+      *-pc-windows* | *-pc-winnt*)
         can_compile_vncsrv=0
         ;;
-      *-mingw32* | *-msys)
+      *-cygwin* | *-mingw32* | *-msys)
         AC_CHECK_HEADER([rfb/rfb.h], [], [ can_compile_vncsrv=0 ])
         ;;
       *)
@@ -2510,14 +2510,22 @@ if test "$with_rfb" = yes; then
 fi
 
 if test "$with_vncsrv" = yes; then
-  AC_CHECK_PROG(LIBVNCSERVER_CONFIG, [ libvncserver-config --version ], libvncserver-config, not_found)
-  AC_MSG_CHECKING(for LibVNCServer configuration script)
-  AC_MSG_RESULT($LIBVNCSERVER_CONFIG_CONFIG)
-  if test x$LIBVNCSERVER_CONFIG != xnot_found; then
-    display_libs="$display_libs vncsrv"
-    AC_DEFINE(BX_WITH_VNCSRV, 1)
+  if test "$PKGCONFIG" != not_found; then
+    pkg-config --exists libvncserver
+    if test x$? = x0; then
+      VNCSRV_CXXFLAGS="`pkg-config --cflags libvncserver`"
+      GUI_LINK_OPTS_VNCSRV="`pkg-config --libs libvncserver`"
+    fi
+  else
+    AC_CHECK_PROG(LIBVNCSERVER_CONFIG, [ libvncserver-config --version ], libvncserver-config, not_found)
+    AC_MSG_CHECKING(for LibVNCServer configuration script)
+    AC_MSG_RESULT($LIBVNCSERVER_CONFIG_CONFIG)
     VNCSRV_CXXFLAGS="`$LIBVNCSERVER_CONFIG --cflags`"
     GUI_LINK_OPTS_VNCSRV="`$LIBVNCSERVER_CONFIG --libs`"
+  fi
+  if test "$GUI_LINK_OPTS_VNCSRV" != ""; then
+    display_libs="$display_libs vncsrv"
+    AC_DEFINE(BX_WITH_VNCSRV, 1)
     SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_VNCSRV)"
     GUI_CXXFLAGS="$GUI_CXXFLAGS $VNCSRV_CXXFLAGS"
     GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_VNCSRV)"
