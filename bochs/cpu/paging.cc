@@ -2367,11 +2367,11 @@ page_fault:
 
 int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_pl, unsigned xlate_rw, Bit32u ac_mask, void *data)
 {
-  BX_ASSERT(xlate_rw == BX_WRITE
 #if BX_SUPPORT_CET
-         || xlate_rw == BX_SHADOW_STACK_WRITE
+  BX_ASSERT(xlate_rw == BX_WRITE || xlate_rw == BX_SHADOW_STACK_WRITE);
+#else
+  BX_ASSERT(xlate_rw == BX_WRITE);
 #endif
-  );
 
   Bit32u pageOffset = PAGE_OFFSET(laddr);
 
@@ -2475,13 +2475,11 @@ int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_
 
 int BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_pl, unsigned xlate_rw, Bit32u ac_mask, void *data)
 {
-  BX_ASSERT(xlate_rw == BX_READ 
-         || xlate_rw == BX_RW
 #if BX_SUPPORT_CET
-         || xlate_rw == BX_SHADOW_STACK_READ
-         || xlate_rw == BX_SHADOW_STACK_RW
+  BX_ASSERT(xlate_rw == BX_READ || xlate_rw == BX_RW || xlate_rw == BX_SHADOW_STACK_READ || xlate_rw == BX_SHADOW_STACK_RW);
+#else
+  BX_ASSERT(xlate_rw == BX_READ || xlate_rw == BX_RW);
 #endif
-  );
 
   Bit32u pageOffset = PAGE_OFFSET(laddr);
 
