@@ -30,7 +30,7 @@
 #include <SDL_timer.h>
 #include <SDL_thread.h>
 
-#define BX_THREAD_VAR(name) SDL_Thread* (name) = NULL
+#define BX_THREAD_VAR(name) SDL_Thread* name = NULL
 #define BX_THREAD_FUNC(name,arg) static int name(void* arg)
 #define BX_THREAD_EXIT return 0
 #if BX_WITH_SDL2
@@ -42,7 +42,7 @@
 #endif
 #define BX_LOCK(mutex) SDL_LockMutex(mutex)
 #define BX_UNLOCK(mutex) SDL_UnlockMutex(mutex)
-#define BX_MUTEX(mutex) SDL_mutex (*mutex)
+#define BX_MUTEX(mutex) SDL_mutex *mutex
 #define BX_INIT_MUTEX(mutex) mutex = SDL_CreateMutex()
 #define BX_FINI_MUTEX(mutex) SDL_DestroyMutex(mutex)
 #define BX_MSLEEP(val) SDL_Delay(val)

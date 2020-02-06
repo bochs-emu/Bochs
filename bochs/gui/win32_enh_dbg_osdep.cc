@@ -1269,14 +1269,14 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
             DefFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
 
             // Register Window
-            char* txt0[] = {"Reg Name","Hex Value","Decimal"};
-            LV_COLUMN lvc = {LVCF_SUBITEM | LVCF_TEXT,LVCFMT_LEFT,0,txt0[0]};
+            const char* txt0[] = {"Reg Name","Hex Value","Decimal"};
+            LV_COLUMN lvc = {LVCF_SUBITEM | LVCF_TEXT,LVCFMT_LEFT,0, (char*)txt0[0]};
             hL[REG_WND] = CreateWindowEx(0,"sLV","",LVStyle[0],0,0,100,100,hh,(HMENU)1001,GetModuleHandle(0),0);
             // Note; WM_CREATE only happens once, so don't bother eliminating these SendMessage macros
             ListView_InsertColumn(hL[REG_WND],0,&lvc);
-            lvc.pszText = txt0[1];
+            lvc.pszText = (char*)txt0[1];
             ListView_InsertColumn(hL[REG_WND],1,&lvc);
-            lvc.pszText = txt0[2];
+            lvc.pszText = (char*)txt0[2];
             ListView_InsertColumn(hL[REG_WND],2,&lvc);
 
             // Enable the groupID's for the register window
@@ -1310,13 +1310,13 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
             // Asm Window
             hL[ASM_WND] = CreateWindowEx(0,"sLV","",LVStyle[1] | WS_BORDER,0,0,1,1,hh,(HMENU)1000,GetModuleHandle(0),0);
             CurCenterList = 1;          // ASM window starts with the border
-            char* txt3[] = {"L.Address","Bytes","Mnemonic"};
+            const char* txt3[] = {"L.Address","Bytes","Mnemonic"};
 
-            lvc.pszText = txt3[0];
+            lvc.pszText = (char*)txt3[0];
             ListView_InsertColumn(hL[ASM_WND],0,&lvc);
-            lvc.pszText = txt3[1];
+            lvc.pszText = (char*)txt3[1];
             ListView_InsertColumn(hL[ASM_WND],1,&lvc);
-            lvc.pszText = txt3[2];
+            lvc.pszText = (char*)txt3[2];
             ListView_InsertColumn(hL[ASM_WND],2,&lvc);
 //          SendMessage(hL[ASM_WND], LVM_SETEXTENDEDLISTVIEWSTYLE, LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER,
 //              LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER);
