@@ -7,7 +7,7 @@
 //    Donald Becker
 //    http://www.psyon.org
 //
-//  Copyright (C) 2001-2017  The Bochs Project
+//  Copyright (C) 2001-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1136,6 +1136,7 @@ void vncStartThread()
   BX_THREAD_VAR(thread_var);
 
   BX_THREAD_CREATE(vncServerThreadInit, NULL, thread_var);
+  UNUSED(thread_var);
 }
 
 void DrawBitmap(int x, int y, int width, int height, char *bmap,

@@ -7,7 +7,7 @@
 //    Donald Becker
 //    http://www.psyon.org
 //
-//  Copyright (C) 2001-2017  The Bochs Project
+//  Copyright (C) 2001-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1257,6 +1257,7 @@ void rfbStartThread()
   BX_THREAD_VAR(thread_var);
 
   BX_THREAD_CREATE(rfbServerThreadInit, NULL, thread_var);
+  UNUSED(thread_var);
 }
 
 void HandleRfbClient(SOCKET sClient)

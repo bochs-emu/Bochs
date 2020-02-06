@@ -313,7 +313,7 @@ send:
 		 * give data to the user when a buffer fills or
 		 * a PUSH comes in.)
 		 */
-		if (off + len == so->so_snd.sb_cc)
+		if (off + len == (long)so->so_snd.sb_cc)
 			flags |= TH_PUSH;
 	} else {
 		m = m_get(so->slirp);

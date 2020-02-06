@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2017  The Bochs Project
+//  Copyright (C) 2017-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -49,14 +49,14 @@
 
 #elif defined(WIN32)
 
-#define BX_THREAD_VAR(name) HANDLE (name)
+#define BX_THREAD_VAR(name) HANDLE name
 #define BX_THREAD_FUNC(name,arg) DWORD WINAPI name(LPVOID arg)
 #define BX_THREAD_EXIT return 0
 #define BX_THREAD_CREATE(name,arg,var) do { var = CreateThread(NULL, 0, name, arg, 0, NULL); } while (0)
 #define BX_THREAD_KILL(var) TerminateThread(var, 0)
 #define BX_LOCK(mutex) EnterCriticalSection(&(mutex))
 #define BX_UNLOCK(mutex) LeaveCriticalSection(&(mutex))
-#define BX_MUTEX(mutex) CRITICAL_SECTION (mutex)
+#define BX_MUTEX(mutex) CRITICAL_SECTION mutex
 #define BX_INIT_MUTEX(mutex) InitializeCriticalSection(&(mutex))
 #define BX_FINI_MUTEX(mutex) DeleteCriticalSection(&(mutex))
 #define BX_MSLEEP(val) Sleep(val)
