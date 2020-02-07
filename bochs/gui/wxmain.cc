@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2019  The Bochs Project
+//  Copyright (C) 2002-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -550,7 +550,7 @@ void MyFrame::OnConfigRead(wxCommandEvent& WXUNUSED(event))
   long style = wxFD_OPEN;
   wxFileDialog *fdialog = new wxFileDialog(this, wxT("Read configuration"), wxT(""), wxT(""), wxT("*.*"), style);
   if (fdialog->ShowModal() == wxID_OK) {
-    strncpy(bochsrc, fdialog->GetPath().mb_str(wxConvUTF8), sizeof(bochsrc));
+    strncpy(bochsrc, fdialog->GetPath().mb_str(wxConvUTF8), sizeof(bochsrc) - 1);
     bochsrc[sizeof(bochsrc) - 1] = '\0';
     SIM->reset_all_param();
     SIM->read_rc(bochsrc);
@@ -564,7 +564,7 @@ void MyFrame::OnConfigSave(wxCommandEvent& WXUNUSED(event))
   long style = wxFD_SAVE | wxFD_OVERWRITE_PROMPT;
   wxFileDialog *fdialog = new wxFileDialog(this, wxT("Save configuration"), wxT(""), wxT(""), wxT("*.*"), style);
   if (fdialog->ShowModal() == wxID_OK) {
-    strncpy(bochsrc, fdialog->GetPath().mb_str(wxConvUTF8), sizeof(bochsrc));
+    strncpy(bochsrc, fdialog->GetPath().mb_str(wxConvUTF8), sizeof(bochsrc) - 1);
     bochsrc[sizeof(bochsrc) - 1] = '\0';
     SIM->write_rc(bochsrc, 1);
   }
@@ -581,7 +581,7 @@ void MyFrame::OnStateRestore(wxCommandEvent& WXUNUSED(event))
   wxDirDialog ddialog(this, wxT("Select folder with save/restore data"), dirSaveRestore, wxDD_DEFAULT_STYLE);
 
   if (ddialog.ShowModal() == wxID_OK) {
-    strncpy(sr_path, ddialog.GetPath().mb_str(wxConvUTF8), sizeof(sr_path));
+    strncpy(sr_path, ddialog.GetPath().mb_str(wxConvUTF8), sizeof(sr_path) - 1);
     sr_path[sizeof(sr_path) - 1] = '\0';
     SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(1);
     SIM->get_param_string(BXPN_RESTORE_PATH)->set(sr_path);
@@ -1028,7 +1028,7 @@ int MyFrame::HandleAskParamString(bx_param_string_c *param)
     wxDirDialog *ddialog = new wxDirDialog(this, wxString(msg, wxConvUTF8), homeDir, wxDD_DEFAULT_STYLE);
 
     if (ddialog->ShowModal() == wxID_OK)
-      strncpy(newval, ddialog->GetPath().mb_str(wxConvUTF8), sizeof(newval));
+      strncpy(newval, ddialog->GetPath().mb_str(wxConvUTF8), sizeof(newval) - 1);
     newval[sizeof(newval) - 1] = '\0';
     dialog = ddialog; // so I can delete it
   } else if (n_opt & param->IS_FILENAME) {
@@ -1037,7 +1037,7 @@ int MyFrame::HandleAskParamString(bx_param_string_c *param)
       (n_opt & param->SAVE_FILE_DIALOG) ? wxFD_SAVE|wxFD_OVERWRITE_PROMPT : wxFD_OPEN;
     wxFileDialog *fdialog = new wxFileDialog(this, wxString(msg, wxConvUTF8), wxT(""), wxString(param->getptr(), wxConvUTF8), wxT("*.*"), style);
     if (fdialog->ShowModal() == wxID_OK)
-      strncpy(newval, fdialog->GetPath().mb_str(wxConvUTF8), sizeof(newval));
+      strncpy(newval, fdialog->GetPath().mb_str(wxConvUTF8), sizeof(newval) - 1);
     newval[sizeof(newval) - 1] = '\0';
     dialog = fdialog; // so I can delete it
   } else {
@@ -1045,7 +1045,7 @@ int MyFrame::HandleAskParamString(bx_param_string_c *param)
     long style = wxOK|wxCANCEL;
     wxTextEntryDialog *tdialog = new wxTextEntryDialog(this, wxString(msg, wxConvUTF8), wxT("Enter new value"), wxString(param->getptr(), wxConvUTF8), style);
     if (tdialog->ShowModal() == wxID_OK)
-      strncpy(newval, tdialog->GetValue().mb_str(wxConvUTF8), sizeof(newval));
+      strncpy(newval, tdialog->GetValue().mb_str(wxConvUTF8), sizeof(newval) - 1);
     newval[sizeof(newval) - 1] = '\0';
     dialog = tdialog; // so I can delete it
   }

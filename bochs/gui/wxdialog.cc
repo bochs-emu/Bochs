@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2019  The Bochs Project
+//  Copyright (C) 2002-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -513,7 +513,7 @@ void PluginControlDialog::OnEvent(wxCommandEvent& event)
     case ID_Load:
       {
         wxString tmpname(plugname->GetValue());
-        strncpy(buf, tmpname.mb_str(wxConvUTF8), sizeof(buf));
+        strncpy(buf, tmpname.mb_str(wxConvUTF8), sizeof(buf) - 1);
         buf[sizeof(buf) - 1] = '\0';
         if (SIM->opt_plugin_ctrl(buf, 1)) {
           tmpname.Printf(wxT("Plugin '%s' loaded"), buf);
@@ -526,7 +526,7 @@ void PluginControlDialog::OnEvent(wxCommandEvent& event)
       {
         int i = pluglist->GetSelection();
         wxString tmpname = pluglist->GetString(i);
-        strncpy(buf, tmpname.mb_str(wxConvUTF8), sizeof(buf));
+        strncpy(buf, tmpname.mb_str(wxConvUTF8), sizeof(buf) - 1);
         buf[sizeof(buf) - 1] = '\0';
         if (SIM->opt_plugin_ctrl(buf, 0)) {
           tmpname.Printf(wxT("Plugin '%s' unloaded"), buf);
@@ -1084,7 +1084,7 @@ bool ParamDialog::CopyGuiToParam(bx_param_c *param)
       bx_param_string_c *stringp = (bx_param_string_c*) pstr->param;
       char buf[1024];
       wxString tmp(pstr->u.text->GetValue());
-      strncpy(buf, tmp.mb_str(wxConvUTF8), sizeof(buf));
+      strncpy(buf, tmp.mb_str(wxConvUTF8), sizeof(buf) - 1);
       buf[sizeof(buf)-1] = 0;
       if (!stringp->equals(buf)) stringp->set(buf);
       break;
@@ -1374,7 +1374,7 @@ void FloppyConfigDialog::OnEvent(wxCommandEvent& event)
         {
           int cap = pstrMedia->u.choice->GetSelection();
           char name[1024];
-          strncpy(name, pstrPath->u.text->GetValue().mb_str(wxConvUTF8), sizeof(name));
+          strncpy(name, pstrPath->u.text->GetValue().mb_str(wxConvUTF8), sizeof(name) - 1);
           name[sizeof(name) - 1] = '\0';
           if ((floppy_type_n_sectors[cap] > 0) && (strlen(name) > 0) && (strcmp(name, "none"))) {
             if (CreateImage(0, floppy_type_n_sectors[cap], name)) {
@@ -1526,7 +1526,7 @@ int GetTextCtrlInt(wxTextCtrl *ctrl,
 {
   wxString tmp(ctrl->GetValue());
   char buf[1024];
-  strncpy(buf, tmp.mb_str(wxConvUTF8), sizeof(buf));
+  strncpy(buf, tmp.mb_str(wxConvUTF8), sizeof(buf) - 1);
   buf[sizeof(buf)-1] = '\0';
   int n = strtol(buf, NULL, 0);
   if (n != LONG_MIN && n != LONG_MAX) {
