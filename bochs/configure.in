@@ -2530,7 +2530,9 @@ if test "$with_vncsrv" = yes; then
     AC_DEFINE(BX_WITH_VNCSRV, 1)
     SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_VNCSRV)"
     GUI_CXXFLAGS="$GUI_CXXFLAGS $VNCSRV_CXXFLAGS"
-    GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_VNCSRV)"
+    if test "$bx_plugins" = 0; then
+      GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_VNCSRV)"
+    fi
   else
     AC_MSG_WARN([Bochs for LibVNCServer cannot be compiled here, disabling it])
     with_vncsrv=no

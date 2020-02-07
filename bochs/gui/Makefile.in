@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2014  The Bochs Project
+# Copyright (C) 2001-2020  The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -87,7 +87,6 @@ GUI_LINK_OPTS_CARBON = -framework Carbon
 GUI_LINK_OPTS_NOGUI =
 GUI_LINK_OPTS_TERM = @GUI_LINK_OPTS_TERM@
 GUI_LINK_OPTS_WX = @GUI_LINK_OPTS_WX@
-GUI_LINK_OPTS = @GUI_LINK_OPTS@  @DEVICE_LINK_OPTS@
 
 NONPLUGIN_OBJS = @GUI_NON_PLUGIN_OBJS@
 PLUGIN_OBJS = @GUI_PLUGIN_OBJS@
