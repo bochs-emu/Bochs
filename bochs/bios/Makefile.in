@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2019  The Bochs Project
+# Copyright (C) 2001-2020  The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -35,7 +35,7 @@ RANLIB = @RANLIB@
 
 BCC = bcc
 GCC = gcc
-GCC32 = gcc -m32 -fno-stack-protector
+GCC32 = gcc -m32 -march=i386 -fno-stack-protector
 AS86 = as86
 IASL = @IASL@
 
