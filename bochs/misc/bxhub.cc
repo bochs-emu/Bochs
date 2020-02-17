@@ -2,8 +2,9 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 /*
- * Copyright (C) 2003  by Mariusz Matuszek [NOmrmmSPAM @ users.sourceforge.net]
- * Copyright (C) 2017  The Bochs Project
+ * Copyright (C) 2003       by Mariusz Matuszek
+ *                             [NOmrmmSPAM @ users.sourceforge.net]
+ * Copyright (C) 2017-2020  The Bochs Project
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -53,6 +54,10 @@ typedef int SOCKET;
 
 #ifndef BXHUB
 #define BXHUB
+#endif
+
+#ifdef __APPLE__
+#define MSG_NOSIGNAL 0
 #endif
 
 #ifdef WIN32

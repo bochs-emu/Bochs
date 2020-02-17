@@ -2,8 +2,9 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2003  by Mariusz Matuszek [NOmrmmSPAM @ users.sourceforge.net]
-//  Copyright (C) 2017  The Bochs Project
+//  Copyright (C) 2003       by Mariusz Matuszek
+//                              [NOmrmmSPAM @ users.sourceforge.net]
+//  Copyright (C) 2017-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -95,7 +96,9 @@ extern "C" {
 #include <netinet/in.h>
 #include <net/ethernet.h>
 #include <net/if.h>
+#ifdef __linux__
 #include <linux/types.h>
+#endif
 #include <netdb.h>
 #define closesocket(s) close(s)
 typedef int SOCKET;
@@ -104,6 +107,10 @@ typedef int SOCKET;
 #endif
 #endif
 };
+
+#ifdef __APPLE__
+#define MSG_NOSIGNAL 0
+#endif
 
 #ifdef WIN32
 #define MSG_NOSIGNAL 0
