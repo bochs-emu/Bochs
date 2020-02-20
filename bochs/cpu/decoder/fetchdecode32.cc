@@ -1739,22 +1739,25 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bx_bool is_64,
       break;
     case BX_SRC_NNN:
       i->setSrcReg(n, nnn);
+#if BX_SUPPORT_EVEX
       if (type == BX_KMASK_REG) {
         if (nnn >= 8) return BX_EVEX_ILLEGAL_KMASK_REGISTER;
         // vector instruction using opmask as source or dest
         if (i->isZeroMasking())
           return BX_EVEX_ILLEGAL_ZERO_MASKING_WITH_KMASK_SRC_OR_DEST;
       }
+#endif
       break;
     case BX_SRC_RM:
       if (i->modC0()) {
+#if BX_SUPPORT_EVEX
         if (type == BX_KMASK_REG) {
           rm &= 0x7;
           // vector instruction using opmask as source or dest
           if (i->isZeroMasking())
             return BX_EVEX_ILLEGAL_ZERO_MASKING_WITH_KMASK_SRC_OR_DEST;
         }
-
+#endif
         i->setSrcReg(n, rm);
       }
       else {
@@ -1780,12 +1783,14 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bx_bool is_64,
     case BX_SRC_VVV:
       i->setSrcReg(n, vvv);
       use_vvv = true;
+#if BX_SUPPORT_EVEX
       if (type == BX_KMASK_REG) {
         if (vvv >= 8) return BX_EVEX_ILLEGAL_KMASK_REGISTER;
         // vector instruction using opmask as source or dest
         if (i->isZeroMasking())
           return BX_EVEX_ILLEGAL_ZERO_MASKING_WITH_KMASK_SRC_OR_DEST;
       }
+#endif
       break;
     case BX_SRC_VIB:
       if (is_64) {
