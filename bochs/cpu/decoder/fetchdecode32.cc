@@ -2380,6 +2380,9 @@ int fetchDecode32(const Bit8u *iptr, bx_bool is_32, bxInstruction_c *i, unsigned
   unsigned b1;
   int ia_opcode = BX_IA_ERROR;
   unsigned seg_override = BX_SEG_REG_NULL;
+#if BX_SUPPORT_CET
+  unsigned seg_override_cet = BX_SEG_REG_NULL;
+#endif
   bx_bool os_32 = is_32, lock = 0;
   unsigned sse_prefix = SSE_PREFIX_NONE;
 
@@ -2389,6 +2392,12 @@ int fetchDecode32(const Bit8u *iptr, bx_bool is_32, bxInstruction_c *i, unsigned
 fetch_b1:
   b1 = *iptr++;
   remain--;
+
+#if BX_SUPPORT_CET
+  // DS prefix is still recorded for CET Endranch suppress hint even if overridden by other prefixes later
+  if (b1 == 0x3e)
+    seg_override_cet = BX_SEG_REG_DS;
+#endif
 
   switch (b1) {
     case 0x0f: // 2-byte escape
@@ -2458,7 +2467,7 @@ fetch_b1:
 
   i->setSeg(BX_SEG_REG_DS); // default segment is DS:
 #if BX_SUPPORT_CET
-  i->setSegOverride(seg_override);
+  i->setCetSegOverride(seg_override_cet);
 #endif
 
   i->modRMForm.Id = 0;

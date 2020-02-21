@@ -1879,6 +1879,9 @@ int fetchDecode64(const Bit8u *iptr, bxInstruction_c *i, unsigned remainingInPag
   unsigned b1;
   int ia_opcode = BX_IA_ERROR;
   unsigned seg_override = BX_SEG_REG_NULL;
+#if BX_SUPPORT_CET
+  unsigned seg_override_cet = BX_SEG_REG_NULL;
+#endif
   bx_bool lock = 0;
   unsigned sse_prefix = SSE_PREFIX_NONE;
   unsigned rex_prefix = 0;
@@ -1894,8 +1897,9 @@ fetch_b1:
 
 #if BX_SUPPORT_CET
   // in 64-bit mode DS prefix is ignored but still recorded for CET Endranch suppress hint
+  // keep it even if overridden by FS: or GS:
   if (b1 == 0x3e)
-    seg_override = BX_SEG_REG_DS;
+    seg_override_cet = BX_SEG_REG_DS;
 #endif
 
   switch (b1) {
@@ -1998,7 +2002,7 @@ fetch_b1:
 
   i->setSeg(BX_SEG_REG_DS); // default segment is DS:
 #if BX_SUPPORT_CET
-  i->setSegOverride(seg_override);
+  i->setCetSegOverride(seg_override_cet);
 #endif
 
   i->modRMForm.Id = 0;
@@ -2012,8 +2016,7 @@ fetch_b1:
   i->setIaOpcode(ia_opcode);
 
   // assign memory segment override
-  if (seg_override == BX_SEG_REG_FS || seg_override == BX_SEG_REG_GS)
-     i->setSeg(seg_override);
+  i->setSeg(seg_override);
 
   Bit32u op_flags = BxOpcodesTable[ia_opcode].opflags;
 

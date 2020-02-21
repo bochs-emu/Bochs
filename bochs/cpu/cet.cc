@@ -88,7 +88,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::track_indirect(unsigned cpl)
 void BX_CPP_AttrRegparmN(2) BX_CPU_C::track_indirect_if_not_suppressed(bxInstruction_c *i, unsigned cpl)
 {
   if (EndbranchEnabledAndNotSuppressed(cpl)) {
-    if (i->segOverride() == BX_SEG_REG_DS && (BX_CPU_THIS_PTR msr.ia32_cet_control[cpl==3] & BX_CET_ENABLE_NO_TRACK_INDIRECT_BRANCH_PREFIX) != 0)
+    if (i->segOverrideCet() == BX_SEG_REG_DS && (BX_CPU_THIS_PTR msr.ia32_cet_control[cpl==3] & BX_CET_ENABLE_NO_TRACK_INDIRECT_BRANCH_PREFIX) != 0)
       return;
 
     BX_CPU_THIS_PTR msr.ia32_cet_control[cpl==3] |= BX_CET_WAIT_FOR_ENBRANCH;

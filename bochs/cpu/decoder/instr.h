@@ -153,10 +153,10 @@ public:
   }
 
 #if BX_SUPPORT_CET
-  BX_CPP_INLINE unsigned segOverride(void) const {
+  BX_CPP_INLINE unsigned segOverrideCet(void) const {
     return metaData[BX_INSTR_METADATA_CET_SEGOVERRIDE];
   }
-  BX_CPP_INLINE void setSegOverride(unsigned val) {
+  BX_CPP_INLINE void setCetSegOverride(unsigned val) {
     metaData[BX_INSTR_METADATA_CET_SEGOVERRIDE] = val;
   }
 #endif
