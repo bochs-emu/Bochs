@@ -1,3 +1,20 @@
+-------------------------------------------------------------------------
+Changes after 2.6.11:
+
+- General
+  - Save/Restore bugfixes
+
+- CPU/CPUDB
+  - Bugfixes for CPU emulation correctness (CPUID/VMX initialization fixes to support Windows Hyper-V as guest in Bochs)
+
+- Bochs Debugger and Instrumentation
+  - Add more symbol lookups to disasm methods
+
+- I/O Devides
+  - VGA: Removed lfb_enabled switch from Bochs VBE code. Now banked and LFB writes to VRAM are possible at the same time.
+    This makes the GRUB bootloader menu visible when using the Bochs VBE adapter.
+
+-------------------------------------------------------------------------
 Changes in 2.6.11 (January 5, 2020):
 
 - General
