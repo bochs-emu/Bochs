@@ -24,9 +24,9 @@
 #include "disasm.h"
 #include "osdep.h"
 
-#if BX_DEBUGGER && 0
+#if BX_DEBUGGER
 #include "../bx_debug/debug.h"
-#define SYMBOLIC_JUMP(fmt)  fmt " (%s)"
+#define SYMBOLIC_JUMP(fmt)  fmt " %s"
 #define GET_SYMBOL(addr) bx_dbg_disasm_symbolic_address((addr), 0)
 #else
 #define SYMBOLIC_JUMP(fmt)  fmt "%s"
@@ -40,20 +40,57 @@
 #define BX_64BIT_REG_RDI BX_32BIT_REG_EDI
 #endif
 
+#if BX_DEBUGGER
+extern "C" {
+  bx_address bx_dbg_get_laddr(Bit16u sel, bx_address ofs);
+}
+#endif
+
 void disassembler::Apw(const x86_insn *insn)
 {
   Bit16u imm16 = fetch_word();
   Bit16u cs_selector = fetch_word();
-  dis_sprintf("0x%04x:%04x", (unsigned) cs_selector, (unsigned) imm16);
+
+#if BX_DEBUGGER
+  // get the linear adress from the selector/offset adress
+  bx_address laddr = bx_dbg_get_laddr(cs_selector, imm16);
+
+  // get the symbol
+  const char *ptStrSymbol = bx_dbg_disasm_symbolic_address(laddr, 0);
+  if (ptStrSymbol != NULL)
+  {
+    // with global symbol
+    dis_sprintf("0x%04x:%04x <%s>", (unsigned) cs_selector, (unsigned) imm16, ptStrSymbol); 
+  }
+  else
+#endif
+  {
+    // as usual
+    dis_sprintf("0x%04x:%04x", (unsigned) cs_selector, (unsigned) imm16);     
+  }
 }
 
 void disassembler::Apd(const x86_insn *insn)
 {
   Bit32u imm32 = fetch_dword();
   Bit16u cs_selector = fetch_word();
-  dis_sprintf("0x%04x:%08x", (unsigned) cs_selector, (unsigned) imm32);
-}
 
+#if BX_DEBUGGER
+  bx_address laddr = bx_dbg_get_laddr(cs_selector, imm32);
+  const char *ptStrSymbol = bx_dbg_disasm_symbolic_address(laddr, 0);
+
+  if (ptStrSymbol != NULL)
+  {
+    // with global symbol
+    dis_sprintf("0x%04x:%08x <%s>", (unsigned) cs_selector, (unsigned) imm32, ptStrSymbol);
+  }
+  else
+#endif
+  {
+    // as usual
+    dis_sprintf("0x%04x:%08x", (unsigned) cs_selector, (unsigned) imm32);
+  }
+}
 // 8-bit general purpose registers
 void disassembler::AL_Reg(const x86_insn *insn) { dis_sprintf("%s", general_8bit_regname[BX_8BIT_REG_AL]); }
 void disassembler::CL_Reg(const x86_insn *insn) { dis_sprintf("%s", general_8bit_regname[BX_8BIT_REG_CL]); }
@@ -664,7 +701,7 @@ void disassembler::Jb(const x86_insn *insn)
     Bit64u imm64 = (Bit8s) imm8;
     Bit64u target = db_eip + imm64;
     sym = GET_SYMBOL(target);
-    sym = sym ? sym : "<unknown>";
+    sym = sym ? sym : "";
 
     if (offset_mode_hex) {
       dis_sprintf(SYMBOLIC_JUMP(".+0x" FMT_ADDRX64), imm64, sym);
@@ -684,7 +721,7 @@ void disassembler::Jb(const x86_insn *insn)
     Bit32u imm32 = (Bit8s) imm8;
     Bit32u target = (Bit32u)(db_cs_base + db_eip + (Bit32s) imm32);
     sym = GET_SYMBOL(target);
-    sym = sym ? sym : "<unknown>";
+    sym = sym ? sym : "";
 
     if (offset_mode_hex) {
       dis_sprintf(SYMBOLIC_JUMP(".+0x%08x"), (unsigned) imm32, sym);
@@ -701,7 +738,7 @@ void disassembler::Jb(const x86_insn *insn)
     Bit16u imm16 = (Bit8s) imm8;
     Bit16u target = (Bit16u)((db_eip + (Bit16s) imm16) & 0xffff);
     sym = GET_SYMBOL(target);
-    sym = sym ? sym : "<unknown>";
+    sym = sym ? sym : "";
 
     if (offset_mode_hex) {
       dis_sprintf(SYMBOLIC_JUMP(".+0x%04x"), (unsigned) imm16, sym);
@@ -726,7 +763,7 @@ void disassembler::Jw(const x86_insn *insn)
 
   Bit16u target = (db_eip + imm16) & 0xffff;
   sym = GET_SYMBOL(target);
-  sym = sym ? sym : "<unknown>";
+  sym = sym ? sym : "";
   if (offset_mode_hex) {
     dis_sprintf(SYMBOLIC_JUMP(".+0x%04x"),
         (unsigned) (Bit16u) imm16, sym);
@@ -749,7 +786,7 @@ void disassembler::Jd(const x86_insn *insn)
     Bit64u imm64 = (Bit32s) imm32;
     Bit64u target = db_eip + (Bit64s) imm64;
     sym = GET_SYMBOL(target);
-    sym = sym ? sym : "<unknown>";
+    sym = sym ? sym : "";
 
     if (offset_mode_hex) {
       dis_sprintf(SYMBOLIC_JUMP(".+0x" FMT_ADDRX64),
@@ -768,7 +805,7 @@ void disassembler::Jd(const x86_insn *insn)
 
   Bit32u target = (Bit32u)(db_cs_base + db_eip + (Bit32s) imm32);
   sym = GET_SYMBOL(target);
-  sym = sym ? sym : "<unknown>";
+  sym = sym ? sym : "";
   if (offset_mode_hex) {
     dis_sprintf(SYMBOLIC_JUMP(".+0x%08x"), (unsigned) imm32, sym);
   }
