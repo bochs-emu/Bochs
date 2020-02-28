@@ -2016,7 +2016,8 @@ fetch_b1:
   i->setIaOpcode(ia_opcode);
 
   // assign memory segment override
-  i->setSeg(seg_override);
+  if (seg_override == BX_SEG_REG_FS || seg_override == BX_SEG_REG_GS)
+     i->setSeg(seg_override);
 
   Bit32u op_flags = BxOpcodesTable[ia_opcode].opflags;
 
