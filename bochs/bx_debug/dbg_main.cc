@@ -3902,7 +3902,7 @@ bx_address bx_dbg_get_laddr(Bit16u sel, bx_address ofs)
       // expand-down
       if (IS_DATA_SEGMENT(descriptor.type) && IS_DATA_SEGMENT_EXPAND_DOWN(descriptor.type)) {
         lowaddr = descriptor.u.segment.limit_scaled;
-        highaddr = descriptor.u.segment.g ? 0xffffffff : 0xffff;
+        highaddr = descriptor.u.segment.d_b ? 0xffffffff : 0xffff;
       }
        else {
         lowaddr = 0;
