@@ -2247,8 +2247,9 @@ int bx_parse_nic_params(const char *context, const char *param, bx_list_c *base)
   if (!strncmp(param, "enabled=", 8)) {
     SIM->get_param_bool("enabled", base)->parse_param(&param[8]);
     n = SIM->get_param_bool("enabled", base)->get();
+    valid &= 0x3f;
     if (n == 0) valid |= 0x80;
-    else valid &= 0x7f;
+    else valid |= 0x40;
   } else if (!strncmp(param, "mac=", 4)) {
     bsp = (bx_param_bytestring_c*)SIM->get_param_string("mac", base);
     if (bsp->parse_param(&param[4]) == 0) {

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009-2018  The Bochs Project
+//  Copyright (C) 2009-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -162,11 +162,8 @@
 #define BXPN_USB_XHCI                    "ports.usb.xhci"
 #define BXPN_XHCI_ENABLED                "ports.usb.xhci.enabled"
 #define BXPN_NE2K                        "network.ne2k"
-#define BXPN_NE2K_ENABLED                "network.ne2k.enabled"
 #define BXPN_PNIC                        "network.pcipnic"
-#define BXPN_PNIC_ENABLED                "network.pcipnic.enabled"
 #define BXPN_E1000                       "network.e1000"
-#define BXPN_E1000_ENABLED               "network.e1000.enabled"
 #define BXPN_SOUNDLOW                    "sound.lowlevel"
 #define BXPN_SOUND_WAVEOUT_DRV           "sound.lowlevel.waveoutdrv"
 #define BXPN_SOUND_WAVEOUT               "sound.lowlevel.waveout"

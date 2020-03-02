@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2018  The Bochs Project
+//  Copyright (C) 2001-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -30,15 +30,8 @@
 #ifndef BX_IODEV_NE2K
 #define BX_IODEV_NE2K
 
-#if BX_USE_NE2K_SMF
-#  define BX_NE2K_SMF  static
-#  define BX_NE2K_THIS theNE2kDevice->
-#  define BX_NE2K_THIS_PTR theNE2kDevice
-#else
-#  define BX_NE2K_SMF
-#  define BX_NE2K_THIS this->
-#  define BX_NE2K_THIS_PTR this
-#endif
+#define BX_NE2K_THIS this->
+#define BX_NE2K_THIS_PTR this
 
 #define  BX_NE2K_MEMSIZ    (32*1024)
 #define  BX_NE2K_MEMSTART  (16*1024)
@@ -195,7 +188,10 @@ typedef struct {
 #if BX_SUPPORT_PCI
     Bit8u devfunc;
 #endif
+    char devname[16];
+    char ldevname[20];
 } bx_ne2k_t;
+
 
 class bx_ne2k_c
 #if BX_SUPPORT_PCI
@@ -207,9 +203,9 @@ class bx_ne2k_c
 public:
   bx_ne2k_c();
   virtual ~bx_ne2k_c();
-  virtual void init(void);
+  virtual void init(Bit8u card);
   virtual void reset(unsigned type);
-  virtual void register_state(void);
+  virtual void register_state(bx_list_c *parent, Bit8u card);
 #if BX_SUPPORT_PCI
   virtual void after_restore_state(void);
 #endif
@@ -227,46 +223,60 @@ private:
 
   eth_pktmover_c *ethdev;
 
-  BX_NE2K_SMF Bit32u read_cr(void);
-  BX_NE2K_SMF void   write_cr(Bit32u value);
-  BX_NE2K_SMF void   set_irq_level(bx_bool level);
+  Bit32u read_cr(void);
+  void   write_cr(Bit32u value);
+  void   set_irq_level(bx_bool level);
 
-  BX_NE2K_SMF Bit32u chipmem_read(Bit32u address, unsigned io_len) BX_CPP_AttrRegparmN(2);
-  BX_NE2K_SMF Bit32u asic_read(Bit32u offset, unsigned io_len) BX_CPP_AttrRegparmN(2);
-  BX_NE2K_SMF Bit32u page0_read(Bit32u offset, unsigned io_len);
-  BX_NE2K_SMF Bit32u page1_read(Bit32u offset, unsigned io_len);
-  BX_NE2K_SMF Bit32u page2_read(Bit32u offset, unsigned io_len);
-  BX_NE2K_SMF Bit32u page3_read(Bit32u offset, unsigned io_len);
+  Bit32u chipmem_read(Bit32u address, unsigned io_len) BX_CPP_AttrRegparmN(2);
+  Bit32u asic_read(Bit32u offset, unsigned io_len) BX_CPP_AttrRegparmN(2);
+  Bit32u page0_read(Bit32u offset, unsigned io_len);
+  Bit32u page1_read(Bit32u offset, unsigned io_len);
+  Bit32u page2_read(Bit32u offset, unsigned io_len);
+  Bit32u page3_read(Bit32u offset, unsigned io_len);
 
-  BX_NE2K_SMF void chipmem_write(Bit32u address, Bit32u value, unsigned io_len) BX_CPP_AttrRegparmN(3);
-  BX_NE2K_SMF void asic_write(Bit32u address, Bit32u value, unsigned io_len);
-  BX_NE2K_SMF void page0_write(Bit32u address, Bit32u value, unsigned io_len);
-  BX_NE2K_SMF void page1_write(Bit32u address, Bit32u value, unsigned io_len);
-  BX_NE2K_SMF void page2_write(Bit32u address, Bit32u value, unsigned io_len);
-  BX_NE2K_SMF void page3_write(Bit32u address, Bit32u value, unsigned io_len);
+  void chipmem_write(Bit32u address, Bit32u value, unsigned io_len) BX_CPP_AttrRegparmN(3);
+  void asic_write(Bit32u address, Bit32u value, unsigned io_len);
+  void page0_write(Bit32u address, Bit32u value, unsigned io_len);
+  void page1_write(Bit32u address, Bit32u value, unsigned io_len);
+  void page2_write(Bit32u address, Bit32u value, unsigned io_len);
+  void page3_write(Bit32u address, Bit32u value, unsigned io_len);
 
   static void tx_timer_handler(void *);
-  BX_NE2K_SMF void tx_timer(void);
+  void tx_timer(void);
 
   static Bit32u rx_status_handler(void *arg);
-  BX_NE2K_SMF Bit32u rx_status(void);
+  Bit32u rx_status(void);
   static void rx_handler(void *arg, const void *buf, unsigned len);
-  BX_NE2K_SMF unsigned mcast_index(const void *dst);
-  BX_NE2K_SMF void rx_frame(const void *buf, unsigned io_len);
+  unsigned mcast_index(const void *dst);
+  void rx_frame(const void *buf, unsigned io_len);
 
 #if BX_SUPPORT_PCI
-  BX_NE2K_SMF bx_bool mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  static bx_bool mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  bx_bool mem_read(bx_phy_address addr, unsigned len, void *data);
 #endif
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
-#if !BX_USE_NE2K_SMF
   Bit32u read(Bit32u address, unsigned io_len);
   void   write(Bit32u address, Bit32u value, unsigned io_len);
-#endif
 #if BX_DEBUGGER
   void print_info(int page, int reg, int nodups);
 #endif
+};
+
+class bx_ne2k_main_c : public bx_devmodel_c
+{
+public:
+  bx_ne2k_main_c();
+  virtual ~bx_ne2k_main_c();
+  virtual void init(void);
+  virtual void reset(unsigned type);
+  virtual void register_state(void);
+#if BX_SUPPORT_PCI
+  virtual void after_restore_state(void);
+#endif
+private:
+  bx_ne2k_c *theNE2kDev[4];
 };
 
 #endif

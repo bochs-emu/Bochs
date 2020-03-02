@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2017  The Bochs Project
+//  Copyright (C) 2001-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -384,7 +384,7 @@ void logfunctions::put(const char *n, const char *p)
     len = strlen(tmpbuf) - 2;
   }
   for(size_t i=1;i <= len;i++) {
-    tmpbuf[i]=p[i-1];
+    tmpbuf[i] = toupper(p[i-1]);
   }
 
   prefix = tmpbuf;

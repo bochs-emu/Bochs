@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2018  The Bochs Project
+//  Copyright (C) 2001-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -41,9 +41,14 @@
 // hit the unclear completely full buffer condition.
 #define BX_NE2K_NEVER_FULL_RING (1)
 
-#define LOG_THIS theNE2kDevice->
+#define LOG_THIS NE2kDevMain->
 
-bx_ne2k_c *theNE2kDevice = NULL;
+bx_ne2k_main_c *NE2kDevMain = NULL;
+
+#define BX_NE2K_TYPE_ISA  1
+#define BX_NE2K_TYPE_PCI  2
+
+const char *ne2k_types_list[] = {"isa", "pci", NULL};
 
 const Bit8u ne2k_iomask[32] = {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
                                7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
@@ -52,71 +57,109 @@ const Bit8u ne2k_iomask[32] = {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 
 void ne2k_init_options(void)
 {
+  char name[12], label[16];
+  bx_list_c *deplist;
+
   bx_param_c *network = SIM->get_param("network");
-  bx_list_c *menu = new bx_list_c(network, "ne2k", "NE2000");
-  menu->set_options(menu->SHOW_PARENT);
-  bx_param_bool_c *enabled = new bx_param_bool_c(menu,
-    "enabled",
-    "Enable NE2K NIC emulation",
-    "Enables the NE2K NIC emulation",
-    1);
-  bx_param_num_c *ioaddr = new bx_param_num_c(menu,
-    "ioaddr",
-    "NE2K I/O Address",
-    "I/O base address of the emulated NE2K device",
-    0, 0xffff,
-    0x300);
-  ioaddr->set_base(16);
-  bx_param_num_c *irq = new bx_param_num_c(menu,
-    "irq",
-    "NE2K Interrupt",
-    "IRQ used by the NE2K device",
-    0, 15,
-    9);
-  irq->set_options(irq->USE_SPIN_CONTROL);
-  SIM->init_std_nic_options("NE2K", menu);
-  enabled->set_dependent_list(menu->clone());
+  for (Bit8u card = 0; card < 4; card++) {
+    sprintf(name, "ne2k%d", card);
+    sprintf(label, "NE2000 #%d", card);
+    bx_list_c *menu = new bx_list_c(network, name, label);
+    menu->set_options(menu->SHOW_PARENT | menu->SERIES_ASK);
+    bx_param_bool_c *enabled = new bx_param_bool_c(menu,
+      "enabled",
+      "Enable NE2K NIC emulation",
+      "Enables the NE2K NIC emulation",
+      (card==0));
+    bx_param_enum_c *type = new bx_param_enum_c(menu,
+      "type",
+      "Type of NE2K NIC emulation",
+      "Type of the NE2K NIC emulation",
+      ne2k_types_list,
+      (card==0)?BX_NE2K_TYPE_PCI:BX_NE2K_TYPE_ISA,
+      BX_NE2K_TYPE_ISA);
+    bx_param_num_c *ioaddr = new bx_param_num_c(menu,
+      "ioaddr",
+      "NE2K I/O Address",
+      "I/O base address of the emulated NE2K device",
+      0, 0xffff,
+      0x300);
+    ioaddr->set_base(16);
+    bx_param_num_c *irq = new bx_param_num_c(menu,
+      "irq",
+      "NE2K Interrupt",
+      "IRQ used by the NE2K device",
+      0, 15,
+      9);
+    irq->set_options(irq->USE_SPIN_CONTROL);
+    SIM->init_std_nic_options(label, menu);
+    deplist = menu->clone();
+    deplist->remove("ioaddr");
+    deplist->remove("irq");
+    enabled->set_dependent_list(deplist);
+    deplist = new bx_list_c(NULL);
+    deplist->add(ioaddr);
+    deplist->add(irq);
+    type->set_dependent_list(deplist, 1);
+    type->set_dependent_bitmap(BX_NE2K_TYPE_PCI, 0);
+  }
 }
 
 Bit32s ne2k_options_parser(const char *context, int num_params, char *params[])
 {
-  int ret, valid = 0;
+  int ret, card = 0, first = 1, valid = 0;
+  char pname[16];
 
   if (!strcmp(params[0], "ne2k")) {
-    bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_NE2K);
+    if (!strncmp(params[1], "card=", 5)) {
+      card = atol(&params[1][5]);
+      if ((card < 0) || (card > 3)) {
+        BX_ERROR(("%s: 'ne2k' directive: illegal card number", context));
+      }
+      first = 2;
+    }
+    sprintf(pname, "%s%d", BXPN_NE2K, card);
+    bx_list_c *base = (bx_list_c*) SIM->get_param(pname);
     if (!SIM->get_param_bool("enabled", base)->get()) {
       SIM->get_param_enum("ethmod", base)->set_by_name("null");
-    }
-    if (SIM->is_pci_device(BX_PLUGIN_NE2K)) {
-      valid |= 0x03;
     }
     if (!SIM->get_param_string("mac", base)->isempty()) {
       // MAC address is already initialized
       valid |= 0x04;
     }
-    for (int i = 1; i < num_params; i++) {
-      if (!strncmp(params[i], "ioaddr=", 7)) {
+    for (int i = first; i < num_params; i++) {
+      if (!strncmp(params[i], "type=", 5)) {
+        SIM->get_param_enum("type", base)->set_by_name(&params[i][5]);
+      } else if (!strncmp(params[i], "ioaddr=", 7)) {
         SIM->get_param_num("ioaddr", base)->set(strtoul(&params[i][7], NULL, 16));
         valid |= 0x01;
       } else if (!strncmp(params[i], "irq=", 4)) {
         SIM->get_param_num("irq", base)->set(atol(&params[i][4]));
         valid |= 0x02;
       } else {
-        if (valid == 0x07) {
-          SIM->get_param_bool("enabled", base)->set(1);
-        }
         ret = SIM->parse_nic_params(context, params[i], base);
         if (ret > 0) {
           valid |= ret;
         }
       }
     }
+    if (SIM->get_param_enum("type", base)->get() == BX_NE2K_TYPE_PCI) {
+      valid |= 0x08;
+    }
+    if ((valid & 0xc0) == 0) {
+      SIM->get_param_bool("enabled", base)->set(1);
+    }
     if (valid < 0x80) {
-      if ((valid & 0x03) != 0x03) {
+      if (((valid & 0x08) == 0) && ((valid & 0x03) != 0x03)) {
         BX_ERROR(("%s: 'ne2k' directive incomplete (ioaddr and irq are required)", context));
+        valid |= 0x80;
       }
       if ((valid & 0x04) == 0) {
         BX_ERROR(("%s: 'ne2k' directive incomplete (mac address is required)", context));
+        valid |= 0x80;
+      }
+      if ((valid & 0x80) != 0) {
+        SIM->get_param_bool("enabled", base)->set(0);
       }
     }
   } else {
@@ -134,8 +177,8 @@ Bit32s ne2k_options_save(FILE *fp)
 
 int CDECL libne2k_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
 {
-  theNE2kDevice = new bx_ne2k_c();
-  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theNE2kDevice, BX_PLUGIN_NE2K);
+  NE2kDevMain = new bx_ne2k_main_c();
+  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, NE2kDevMain, BX_PLUGIN_NE2K);
   // add new configuration parameter for the config interface
   ne2k_init_options();
   // register add-on option for bochsrc and command line
@@ -147,14 +190,88 @@ void CDECL libne2k_LTX_plugin_fini(void)
 {
   SIM->unregister_addon_option("ne2k");
   ((bx_list_c*)SIM->get_param("network"))->remove("ne2k");
-  delete theNE2kDevice;
+  delete NE2kDevMain;
 }
+
+// the main object creates up to 4 device objects
+
+bx_ne2k_main_c::bx_ne2k_main_c()
+{
+  for (Bit8u card = 0; card < 4; card++) {
+    theNE2kDev[card] = NULL;
+  }
+}
+
+bx_ne2k_main_c::~bx_ne2k_main_c()
+{
+  for (Bit8u card = 0; card < 4; card++) {
+    if (theNE2kDev[card] != NULL) {
+      delete theNE2kDev[card];
+    }
+  }
+}
+
+void bx_ne2k_main_c::init(void)
+{
+  Bit8u count = 0;
+  char pname[16];
+
+  for (Bit8u card = 0; card < 4; card++) {
+    // Read in values from config interface
+    sprintf(pname, "%s%d", BXPN_NE2K, card); // TODO
+    bx_list_c *base = (bx_list_c*) SIM->get_param(pname);
+    if (SIM->get_param_bool("enabled", base)->get()) {
+      theNE2kDev[card] = new bx_ne2k_c();
+      theNE2kDev[card]->init(card);
+      count++;
+    }
+  }
+  // Check if the device plugin in use
+  if (count == 0) {
+    BX_INFO(("NE2000 disabled"));
+    // mark unused plugin for removal
+    ((bx_param_bool_c*)((bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL))->get_by_name("ne2k"))->set(0);
+    return;
+  }
+}
+
+void bx_ne2k_main_c::reset(unsigned type)
+{
+  for (Bit8u card = 0; card < 4; card++) {
+    if (theNE2kDev[card] != NULL) {
+      theNE2kDev[card]->reset(type);
+    }
+  }
+}
+
+void bx_ne2k_main_c::register_state()
+{
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "ne2k", "NE2000 State");
+  for (Bit8u card = 0; card < 4; card++) {
+    if (theNE2kDev[card] != NULL) {
+      theNE2kDev[card]->register_state(list, card);
+    }
+  }
+}
+
+#if BX_SUPPORT_PCI
+void bx_ne2k_main_c::after_restore_state()
+{
+  for (Bit8u card = 0; card < 4; card++) {
+    if (theNE2kDev[card] != NULL) {
+      theNE2kDev[card]->after_restore_state();
+    }
+  }
+}
+#endif
 
 // the device object
 
+#undef LOG_THIS
+#define LOG_THIS
+
 bx_ne2k_c::bx_ne2k_c()
 {
-  put("NE2K");
   memset(&s, 0, sizeof(bx_ne2k_t));
   s.tx_timer_index = BX_NULL_TIMER_HANDLE;
   ethdev = NULL;
@@ -170,33 +287,28 @@ bx_ne2k_c::~bx_ne2k_c()
   BX_DEBUG(("Exit"));
 }
 
-void bx_ne2k_c::init(void)
+void bx_ne2k_c::init(Bit8u card)
 {
-  static char devname[16];
+  char pname[20];
   Bit8u macaddr[6];
   bx_param_string_c *bootrom;
 
   BX_DEBUG(("Init $Id$"));
 
   // Read in values from config interface
-  bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_NE2K);
-  // Check if the device is disabled or not configured
-  if (!SIM->get_param_bool("enabled", base)->get()) {
-    BX_INFO(("NE2000 disabled"));
-    // mark unused plugin for removal
-    ((bx_param_bool_c*)((bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL))->get_by_name("ne2k"))->set(0);
-    return;
-  }
+  sprintf(pname, "%s%d", BXPN_NE2K, card);
+  bx_list_c *base = (bx_list_c*) SIM->get_param(pname);
   memcpy(macaddr, SIM->get_param_string("mac", base)->getptr(), 6);
-  strcpy(devname, "NE2000 NIC");
-  BX_NE2K_THIS s.pci_enabled = SIM->is_pci_device(BX_PLUGIN_NE2K);
+  sprintf(s.devname, "ne2k%d", card);
+  put(s.devname);
+  sprintf(s.ldevname, "NE2000 NIC #%d", card);
+  BX_NE2K_THIS s.pci_enabled = (SIM->get_param_enum("type", base)->get() == BX_NE2K_TYPE_PCI);
 
 #if BX_SUPPORT_PCI
   if (BX_NE2K_THIS s.pci_enabled) {
-    strcpy(devname, "NE2000 PCI NIC");
+    sprintf(s.ldevname, "NE2000 PCI NIC #%d", card);
     BX_NE2K_THIS s.devfunc = 0x00;
-    DEV_register_pci_handlers(this, &BX_NE2K_THIS s.devfunc,
-        BX_PLUGIN_NE2K, devname);
+    DEV_register_pci_handlers(this, &s.devfunc, BX_PLUGIN_NE2K, s.ldevname);
 
     // initialize readonly registers
     init_pci_conf(0x10ec, 0x8029, 0x00, 0x020000, 0x00, BX_PCI_INTA);
@@ -228,31 +340,31 @@ void bx_ne2k_c::init(void)
     DEV_register_ioread_handler_range(BX_NE2K_THIS_PTR, read_handler,
                                       BX_NE2K_THIS s.base_address,
                                       BX_NE2K_THIS s.base_address + 0x0F,
-                                      devname, 3);
+                                      s.ldevname, 3);
     DEV_register_iowrite_handler_range(BX_NE2K_THIS_PTR, write_handler,
                                        BX_NE2K_THIS s.base_address,
                                        BX_NE2K_THIS s.base_address + 0x0F,
-                                       devname, 3);
+                                       s.ldevname, 3);
     DEV_register_ioread_handler(BX_NE2K_THIS_PTR, read_handler,
                                 BX_NE2K_THIS s.base_address + 0x10,
-                                devname, 3);
+                                s.ldevname, 3);
     DEV_register_iowrite_handler(BX_NE2K_THIS_PTR, write_handler,
                                  BX_NE2K_THIS s.base_address + 0x10,
-                                 devname, 3);
+                                 s.ldevname, 3);
     DEV_register_ioread_handler(BX_NE2K_THIS_PTR, read_handler,
                                 BX_NE2K_THIS s.base_address + 0x1F,
-                                devname, 1);
+                                s.ldevname, 1);
     DEV_register_iowrite_handler(BX_NE2K_THIS_PTR, write_handler,
                                  BX_NE2K_THIS s.base_address + 0x1F,
-                                 devname, 1);
+                                 s.ldevname, 1);
 
     bootrom = SIM->get_param_string("bootrom", base);
     if (!bootrom->isempty()) {
-      BX_PANIC(("%s: boot ROM support not present yet", devname));
+      BX_PANIC(("%s: boot ROM support not present yet", s.ldevname));
     }
 
     BX_INFO(("%s initialized port 0x%x/32 irq %d mac %02x:%02x:%02x:%02x:%02x:%02x",
-             devname,
+             s.ldevname,
              BX_NE2K_THIS s.base_address,
              BX_NE2K_THIS s.base_irq,
              macaddr[0], macaddr[1],
@@ -260,7 +372,7 @@ void bx_ne2k_c::init(void)
              macaddr[4], macaddr[5]));
   } else {
     BX_INFO(("%s initialized mac %02x:%02x:%02x:%02x:%02x:%02x",
-             devname,
+             s.ldevname,
              macaddr[0], macaddr[1],
              macaddr[2], macaddr[3],
              macaddr[4], macaddr[5]));
@@ -291,7 +403,7 @@ void bx_ne2k_c::init(void)
 
 #if BX_DEBUGGER
   // register device for the 'info device' command (calls debug_dump())
-  bx_dbg_register_debug_info("ne2k", this);
+  bx_dbg_register_debug_info(s.devname, this);
 #endif
 }
 
@@ -345,9 +457,12 @@ void bx_ne2k_c::reset(unsigned type)
   BX_NE2K_THIS s.ISR.reset = 1;
 }
 
-void bx_ne2k_c::register_state(void)
+void bx_ne2k_c::register_state(bx_list_c *parent, Bit8u card)
 {
-  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "ne2k", "NE2000 State");
+  char pname[8];
+
+  sprintf(pname, "%d", card);
+  bx_list_c *list = new bx_list_c(parent, pname, "NE2000 State");
   bx_list_c *CR = new bx_list_c(list, "CR");
   new bx_shadow_bool_c(CR, "stop", &BX_NE2K_THIS s.CR.stop);
   new bx_shadow_bool_c(CR, "start", &BX_NE2K_THIS s.CR.start);
@@ -689,7 +804,7 @@ bx_ne2k_c::asic_read(Bit32u offset, unsigned int io_len)
     break;
 
   case 0xf:  // Reset register
-    theNE2kDevice->reset(BX_RESET_SOFTWARE);
+    BX_NE2K_THIS reset(BX_RESET_SOFTWARE);
     break;
 
   default:
@@ -1344,6 +1459,13 @@ void bx_ne2k_c::tx_timer(void)
 bx_bool bx_ne2k_c::mem_read_handler(bx_phy_address addr, unsigned len,
                                     void *data, void *param)
 {
+  bx_ne2k_c *class_ptr = (bx_ne2k_c *) param;
+
+  return class_ptr->mem_read(addr, len, data);
+}
+
+bx_bool bx_ne2k_c::mem_read(bx_phy_address addr, unsigned len, void *data)
+{
   Bit8u  *data_ptr;
 
   Bit32u mask = (BX_NE2K_THIS pci_rom_size - 1);
@@ -1376,7 +1498,6 @@ bx_bool bx_ne2k_c::mem_read_handler(bx_phy_address addr, unsigned len,
 //
 Bit32u bx_ne2k_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
 {
-#if !BX_USE_NE2K_SMF
   bx_ne2k_c *class_ptr = (bx_ne2k_c *) this_ptr;
 
   return class_ptr->read(address, io_len);
@@ -1384,9 +1505,6 @@ Bit32u bx_ne2k_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
 
 Bit32u bx_ne2k_c::read(Bit32u address, unsigned io_len)
 {
-#else
-  UNUSED(this_ptr);
-#endif  // !BX_USE_NE2K_SMF
   BX_DEBUG(("read addr %x, len %d", address, io_len));
   Bit32u retval = 0;
   int offset = address - BX_NE2K_THIS s.base_address;
@@ -1430,16 +1548,12 @@ Bit32u bx_ne2k_c::read(Bit32u address, unsigned io_len)
 void bx_ne2k_c::write_handler(void *this_ptr, Bit32u address, Bit32u value,
 			 unsigned io_len)
 {
-#if !BX_USE_NE2K_SMF
   bx_ne2k_c *class_ptr = (bx_ne2k_c *) this_ptr;
   class_ptr->write(address, value, io_len);
 }
 
 void bx_ne2k_c::write(Bit32u address, Bit32u value, unsigned io_len)
 {
-#else
-  UNUSED(this_ptr);
-#endif  // !BX_USE_NE2K_SMF
   BX_DEBUG(("write addr %x, value %x len %d", address, value, io_len));
   int offset = address - BX_NE2K_THIS s.base_address;
 
@@ -1753,7 +1867,7 @@ void bx_ne2k_c::print_info(int page, int reg, int brief)
   int n = 0;
   if (page < 0) {
     for (page=0; page<=2; page++)
-      theNE2kDevice->print_info(page, reg, 1);
+      BX_NE2K_THIS print_info(page, reg, 1);
     // tell them how to use this command
     dbg_printf("\nSupported options:\n");
     dbg_printf("info device 'ne2k' 'page=N' - show registers in page N\n");
@@ -1768,7 +1882,7 @@ void bx_ne2k_c::print_info(int page, int reg, int brief)
     dbg_printf("NE2K registers, page %d\n", page);
     dbg_printf("----------------------\n");
     for (reg=0; reg<=15; reg++)
-      theNE2kDevice->print_info(page, reg, 1);
+      BX_NE2K_THIS print_info(page, reg, 1);
     dbg_printf("----------------------\n");
     return;
   }

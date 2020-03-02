@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2019  The Bochs Project
+//  Copyright (C) 2002-2020  The Bochs Project
 //
 //  I/O port handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -1219,7 +1219,7 @@ bx_bool bx_devices_c::register_pci_handlers(bx_pci_device_c *dev,
         sprintf(devname, "pci.slot.%d", i+1);
         device = SIM->get_param_string(devname)->getptr();
         if (strlen(device) > 0) {
-          if (!strcmp(name, device)) {
+          if (!strcmp(name, device) && !pci.slot_used[i]) {
             *devfunc = ((i + offset) << 3) | (*devfunc & 0x07);
             pci.slot_used[i] = 1;
             BX_INFO(("PCI slot #%d used by plugin '%s'", i+1, name));
