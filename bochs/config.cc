@@ -3090,6 +3090,8 @@ int bx_write_param_list(FILE *fp, bx_list_c *base, const char *optname, bx_bool 
       }
       if (optname == NULL) {
         sprintf(bxrcline, "%s: ", base->get_name());
+      } else if (isspace(optname[strlen(optname)-1])) {
+        sprintf(bxrcline, "%s", optname);
       } else {
         sprintf(bxrcline, "%s: ", optname);
       }

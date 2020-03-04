@@ -76,7 +76,7 @@ void ne2k_init_options(void)
       "Type of NE2K NIC emulation",
       "Type of the NE2K NIC emulation",
       ne2k_types_list,
-      (card==0)?BX_NE2K_TYPE_PCI:BX_NE2K_TYPE_ISA,
+      BX_NE2K_TYPE_ISA,
       BX_NE2K_TYPE_ISA);
     bx_param_num_c *ioaddr = new bx_param_num_c(menu,
       "ioaddr",
@@ -96,12 +96,15 @@ void ne2k_init_options(void)
     deplist = menu->clone();
     deplist->remove("ioaddr");
     deplist->remove("irq");
+    deplist->remove("bootrom");
     enabled->set_dependent_list(deplist);
     deplist = new bx_list_c(NULL);
     deplist->add(ioaddr);
     deplist->add(irq);
-    type->set_dependent_list(deplist, 1);
-    type->set_dependent_bitmap(BX_NE2K_TYPE_PCI, 0);
+    deplist->add(menu->get_by_name("bootrom"));
+    type->set_dependent_list(deplist, 0);
+    type->set_dependent_bitmap(BX_NE2K_TYPE_ISA, 0x3);
+    type->set_dependent_bitmap(BX_NE2K_TYPE_PCI, 0x4);
   }
 }
 
@@ -130,6 +133,7 @@ Bit32s ne2k_options_parser(const char *context, int num_params, char *params[])
     for (int i = first; i < num_params; i++) {
       if (!strncmp(params[i], "type=", 5)) {
         SIM->get_param_enum("type", base)->set_by_name(&params[i][5]);
+        valid |= 0x08;
       } else if (!strncmp(params[i], "ioaddr=", 7)) {
         SIM->get_param_num("ioaddr", base)->set(strtoul(&params[i][7], NULL, 16));
         valid |= 0x01;
@@ -143,14 +147,17 @@ Bit32s ne2k_options_parser(const char *context, int num_params, char *params[])
         }
       }
     }
-    if (SIM->get_param_enum("type", base)->get() == BX_NE2K_TYPE_PCI) {
-      valid |= 0x08;
+    if (((valid & 0x08) == 0) && (card == 0) && SIM->is_pci_device("ne2k")) {
+      SIM->get_param_enum("type", base)->set(BX_NE2K_TYPE_PCI);
+      valid |= 0x10;
+    } else if (SIM->get_param_enum("type", base)->get() == BX_NE2K_TYPE_PCI) {
+      valid |= 0x10;
     }
     if ((valid & 0xc0) == 0) {
       SIM->get_param_bool("enabled", base)->set(1);
     }
     if (valid < 0x80) {
-      if (((valid & 0x08) == 0) && ((valid & 0x03) != 0x03)) {
+      if (((valid & 0x10) == 0) && ((valid & 0x03) != 0x03)) {
         BX_ERROR(("%s: 'ne2k' directive incomplete (ioaddr and irq are required)", context));
         valid |= 0x80;
       }
@@ -170,7 +177,14 @@ Bit32s ne2k_options_parser(const char *context, int num_params, char *params[])
 
 Bit32s ne2k_options_save(FILE *fp)
 {
-  return SIM->write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_NE2K), NULL, 0);
+  char pname[16], ne2kstr[20];
+
+  for (Bit8u card = 0; card < 4; card++) {
+    sprintf(pname, "%s%d", BXPN_NE2K, card);
+    sprintf(ne2kstr, "ne2k: card=%d, ", card);
+    SIM->write_param_list(fp, (bx_list_c*) SIM->get_param(pname), ne2kstr, 0);
+  }
+  return 0;
 }
 
 // device plugin entry points
