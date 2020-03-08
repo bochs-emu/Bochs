@@ -199,7 +199,6 @@
 #define BX_USE_USB_EHCI_SMF 1  // USB EHCI hub
 #define BX_USE_USB_XHCI_SMF 1  // USB xHCI hub
 #define BX_USE_PCIPNIC_SMF  1  // PCI pseudo NIC
-#define BX_USE_E1000_SMF    1  // Intel(R) Gigabit Ethernet
 #define BX_USE_EFI_SMF      1  // External FPU IRQ
 #define BX_USE_GAMEPORT_SMF 1  // Gameport
 #define BX_USE_CIRRUS_SMF   1  // SVGA Cirrus
@@ -219,8 +218,8 @@
    || !BX_USE_PCI_SMF || !BX_USE_P2I_SMF || !BX_USE_USB_UHCI_SMF \
    || !BX_USE_USB_OHCI_SMF || !BX_USE_USB_EHCI_SMF || !BX_USE_USB_XHCI_SMF \
    || !BX_USE_PCIPNIC_SMF || !BX_USE_PIDE_SMF || !BX_USE_ACPI_SMF \
-   || !BX_USE_EFI_SMF || !BX_USE_GAMEPORT_SMF || !BX_USE_E1000_SMF \
-   || !BX_USE_PCIDEV_SMF || !BX_USE_CIRRUS_SMF)
+   || !BX_USE_EFI_SMF || !BX_USE_GAMEPORT_SMF || !BX_USE_PCIDEV_SMF \
+   || !BX_USE_CIRRUS_SMF)
 #error You must use SMF to have plugins
 #endif
 

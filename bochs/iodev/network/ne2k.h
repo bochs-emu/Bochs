@@ -30,6 +30,8 @@
 #ifndef BX_IODEV_NE2K
 #define BX_IODEV_NE2K
 
+#define BX_NE2K_MAX_DEVS 4
+
 #define BX_NE2K_THIS this->
 #define BX_NE2K_THIS_PTR this
 
@@ -276,7 +278,7 @@ public:
   virtual void after_restore_state(void);
 #endif
 private:
-  bx_ne2k_c *theNE2kDev[4];
+  bx_ne2k_c *theNE2kDev[BX_NE2K_MAX_DEVS];
 };
 
 #endif

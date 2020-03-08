@@ -12,7 +12,7 @@
 //  Copyright (c) 2007 Dan Aloni
 //  Copyright (c) 2004 Antony T Curtis
 //
-//  Copyright (C) 2011-2017  The Bochs Project
+//  Copyright (C) 2011-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -32,15 +32,10 @@
 #ifndef BX_IODEV_E1000_H
 #define BX_IODEV_E1000_H
 
-#if BX_USE_E1000_SMF
-#  define BX_E1000_SMF  static
-#  define BX_E1000_THIS theE1000Device->
-#  define BX_E1000_THIS_PTR theE1000Device
-#else
-#  define BX_E1000_SMF
-#  define BX_E1000_THIS this->
-#  define BX_E1000_THIS_PTR this
-#endif
+#define BX_E1000_MAX_DEVS 4
+
+#define BX_E1000_THIS this->
+#define BX_E1000_THIS_PTR this
 
 struct e1000_tx_desc {
   Bit64u buffer_addr;   // Address of the descriptor's data buffer
@@ -110,6 +105,8 @@ typedef struct {
   int statusbar_id;
 
   Bit8u devfunc;
+  char devname[16];
+  char ldevname[32];
 } bx_e1000_t;
 
 
@@ -117,9 +114,9 @@ class bx_e1000_c : public bx_pci_device_c {
 public:
   bx_e1000_c();
   virtual ~bx_e1000_c();
-  virtual void init(void);
+  virtual void init(Bit8u card);
   virtual void reset(unsigned type);
-  virtual void register_state(void);
+  virtual void register_state(bx_list_c *parent, Bit8u card);
   virtual void after_restore_state(void);
 
   virtual void pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
@@ -129,48 +126,61 @@ private:
 
   eth_pktmover_c *ethdev;
 
-  BX_E1000_SMF void    set_irq_level(bx_bool level);
-  BX_E1000_SMF void    set_interrupt_cause(Bit32u val);
-  BX_E1000_SMF void    set_ics(Bit32u value);
-  BX_E1000_SMF int     rxbufsize(Bit32u v);
-  BX_E1000_SMF void    set_rx_control(Bit32u value);
-  BX_E1000_SMF void    set_mdic(Bit32u value);
-  BX_E1000_SMF Bit32u  get_eecd(void);
-  BX_E1000_SMF void    set_eecd(Bit32u value);
-  BX_E1000_SMF Bit32u  flash_eerd_read(void);
-  BX_E1000_SMF void    putsum(Bit8u *data, Bit32u n, Bit32u sloc, Bit32u css, Bit32u cse);
-  BX_E1000_SMF bx_bool vlan_enabled(void);
-  BX_E1000_SMF bx_bool vlan_rx_filter_enabled(void);
-  BX_E1000_SMF bx_bool is_vlan_packet(const Bit8u *buf);
-  BX_E1000_SMF bx_bool is_vlan_txd(Bit32u txd_lower);
-  BX_E1000_SMF int     fcs_len(void);
-  BX_E1000_SMF void    xmit_seg(void);
-  BX_E1000_SMF void    process_tx_desc(struct e1000_tx_desc *dp);
-  BX_E1000_SMF Bit32u  txdesc_writeback(bx_phy_address base, struct e1000_tx_desc *dp);
-  BX_E1000_SMF Bit64u  tx_desc_base(void);
-  BX_E1000_SMF void    start_xmit(void);
+  void    set_irq_level(bx_bool level);
+  void    set_interrupt_cause(Bit32u val);
+  void    set_ics(Bit32u value);
+  int     rxbufsize(Bit32u v);
+  void    set_rx_control(Bit32u value);
+  void    set_mdic(Bit32u value);
+  Bit32u  get_eecd(void);
+  void    set_eecd(Bit32u value);
+  Bit32u  flash_eerd_read(void);
+  void    putsum(Bit8u *data, Bit32u n, Bit32u sloc, Bit32u css, Bit32u cse);
+  bx_bool vlan_enabled(void);
+  bx_bool vlan_rx_filter_enabled(void);
+  bx_bool is_vlan_packet(const Bit8u *buf);
+  bx_bool is_vlan_txd(Bit32u txd_lower);
+  int     fcs_len(void);
+  void    xmit_seg(void);
+  void    process_tx_desc(struct e1000_tx_desc *dp);
+  Bit32u  txdesc_writeback(bx_phy_address base, struct e1000_tx_desc *dp);
+  Bit64u  tx_desc_base(void);
+  void    start_xmit(void);
 
   static void tx_timer_handler(void *);
   void tx_timer(void);
 
-  BX_E1000_SMF int     receive_filter(const Bit8u *buf, int size);
-  BX_E1000_SMF bx_bool e1000_has_rxbufs(size_t total_size);
-  BX_E1000_SMF Bit64u  rx_desc_base(void);
+  int     receive_filter(const Bit8u *buf, int size);
+  bx_bool e1000_has_rxbufs(size_t total_size);
+  Bit64u  rx_desc_base(void);
 
   static Bit32u rx_status_handler(void *arg);
-  BX_E1000_SMF Bit32u rx_status(void);
+  Bit32u rx_status(void);
   static void rx_handler(void *arg, const void *buf, unsigned len);
-  BX_E1000_SMF void rx_frame(const void *buf, unsigned io_len);
+  void rx_frame(const void *buf, unsigned io_len);
 
-  BX_E1000_SMF bx_bool mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
-  BX_E1000_SMF bx_bool mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  static bx_bool mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  static bx_bool mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  bx_bool mem_read(bx_phy_address addr, unsigned len, void *data);
+  bx_bool mem_write(bx_phy_address addr, unsigned len, void *data);
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
-#if !BX_USE_E1000_SMF
   Bit32u read(Bit32u address, unsigned io_len);
   void   write(Bit32u address, Bit32u value, unsigned io_len);
-#endif
+};
+
+class bx_e1000_main_c : public bx_devmodel_c
+{
+public:
+  bx_e1000_main_c();
+  virtual ~bx_e1000_main_c();
+  virtual void init(void);
+  virtual void reset(unsigned type);
+  virtual void register_state(void);
+  virtual void after_restore_state(void);
+private:
+  bx_e1000_c *theE1000Dev[BX_E1000_MAX_DEVS];
 };
 
 #endif

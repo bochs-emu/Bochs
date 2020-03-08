@@ -61,7 +61,7 @@ void ne2k_init_options(void)
   bx_list_c *deplist;
 
   bx_param_c *network = SIM->get_param("network");
-  for (Bit8u card = 0; card < 4; card++) {
+  for (Bit8u card = 0; card < BX_NE2K_MAX_DEVS; card++) {
     sprintf(name, "ne2k%d", card);
     sprintf(label, "NE2000 #%d", card);
     bx_list_c *menu = new bx_list_c(network, name, label);
@@ -116,7 +116,7 @@ Bit32s ne2k_options_parser(const char *context, int num_params, char *params[])
   if (!strcmp(params[0], "ne2k")) {
     if (!strncmp(params[1], "card=", 5)) {
       card = atol(&params[1][5]);
-      if ((card < 0) || (card > 3)) {
+      if ((card < 0) || (card >= BX_NE2K_MAX_DEVS)) {
         BX_ERROR(("%s: 'ne2k' directive: illegal card number", context));
       }
       first = 2;
@@ -179,7 +179,7 @@ Bit32s ne2k_options_save(FILE *fp)
 {
   char pname[16], ne2kstr[20];
 
-  for (Bit8u card = 0; card < 4; card++) {
+  for (Bit8u card = 0; card < BX_NE2K_MAX_DEVS; card++) {
     sprintf(pname, "%s%d", BXPN_NE2K, card);
     sprintf(ne2kstr, "ne2k: card=%d, ", card);
     SIM->write_param_list(fp, (bx_list_c*) SIM->get_param(pname), ne2kstr, 0);
@@ -211,14 +211,14 @@ void CDECL libne2k_LTX_plugin_fini(void)
 
 bx_ne2k_main_c::bx_ne2k_main_c()
 {
-  for (Bit8u card = 0; card < 4; card++) {
+  for (Bit8u card = 0; card < BX_NE2K_MAX_DEVS; card++) {
     theNE2kDev[card] = NULL;
   }
 }
 
 bx_ne2k_main_c::~bx_ne2k_main_c()
 {
-  for (Bit8u card = 0; card < 4; card++) {
+  for (Bit8u card = 0; card < BX_NE2K_MAX_DEVS; card++) {
     if (theNE2kDev[card] != NULL) {
       delete theNE2kDev[card];
     }
@@ -230,9 +230,9 @@ void bx_ne2k_main_c::init(void)
   Bit8u count = 0;
   char pname[16];
 
-  for (Bit8u card = 0; card < 4; card++) {
+  for (Bit8u card = 0; card < BX_NE2K_MAX_DEVS; card++) {
     // Read in values from config interface
-    sprintf(pname, "%s%d", BXPN_NE2K, card); // TODO
+    sprintf(pname, "%s%d", BXPN_NE2K, card);
     bx_list_c *base = (bx_list_c*) SIM->get_param(pname);
     if (SIM->get_param_bool("enabled", base)->get()) {
       theNE2kDev[card] = new bx_ne2k_c();
@@ -251,7 +251,7 @@ void bx_ne2k_main_c::init(void)
 
 void bx_ne2k_main_c::reset(unsigned type)
 {
-  for (Bit8u card = 0; card < 4; card++) {
+  for (Bit8u card = 0; card < BX_NE2K_MAX_DEVS; card++) {
     if (theNE2kDev[card] != NULL) {
       theNE2kDev[card]->reset(type);
     }
@@ -261,7 +261,7 @@ void bx_ne2k_main_c::reset(unsigned type)
 void bx_ne2k_main_c::register_state()
 {
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "ne2k", "NE2000 State");
-  for (Bit8u card = 0; card < 4; card++) {
+  for (Bit8u card = 0; card < BX_NE2K_MAX_DEVS; card++) {
     if (theNE2kDev[card] != NULL) {
       theNE2kDev[card]->register_state(list, card);
     }
@@ -271,7 +271,7 @@ void bx_ne2k_main_c::register_state()
 #if BX_SUPPORT_PCI
 void bx_ne2k_main_c::after_restore_state()
 {
-  for (Bit8u card = 0; card < 4; card++) {
+  for (Bit8u card = 0; card < BX_NE2K_MAX_DEVS; card++) {
     if (theNE2kDev[card] != NULL) {
       theNE2kDev[card]->after_restore_state();
     }

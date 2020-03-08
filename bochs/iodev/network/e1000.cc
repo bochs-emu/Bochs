@@ -12,7 +12,7 @@
 //  Copyright (c) 2007 Dan Aloni
 //  Copyright (c) 2004 Antony T Curtis
 //
-//  Copyright (C) 2011-2018  The Bochs Project
+//  Copyright (C) 2011-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -41,9 +41,9 @@
 #include "netmod.h"
 #include "e1000.h"
 
-#define LOG_THIS theE1000Device->
+#define LOG_THIS E1000DevMain->
 
-bx_e1000_c* theE1000Device = NULL;
+bx_e1000_main_c* E1000DevMain = NULL;
 
 const Bit8u e1000_iomask[64] = {7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
                                 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
@@ -289,24 +289,39 @@ static const Bit16u e1000_eeprom_template[64] = {
 
 void e1000_init_options(void)
 {
+  char name[12], label[32];
+
   bx_param_c *network = SIM->get_param("network");
-  bx_list_c *menu = new bx_list_c(network, "e1000", "Intel(R) Gigabit Ethernet");
-  menu->set_options(menu->SHOW_PARENT);
-  bx_param_bool_c *enabled = new bx_param_bool_c(menu,
-    "enabled",
-    "Enable Intel(R) Gigabit Ethernet emulation",
-    "Enables the Intel(R) Gigabit Ethernet emulation",
-    1);
-  SIM->init_std_nic_options("Intel(R) Gigabit Ethernet", menu);
-  enabled->set_dependent_list(menu->clone());
+  for (Bit8u card = 0; card < BX_E1000_MAX_DEVS; card++) {
+    sprintf(name, "e1000_%d", card);
+    sprintf(label, "Intel(R) Gigabit Ethernet #%d", card);
+    bx_list_c *menu = new bx_list_c(network, name, label);
+    menu->set_options(menu->SHOW_PARENT | menu->SERIES_ASK);
+    bx_param_bool_c *enabled = new bx_param_bool_c(menu,
+      "enabled",
+      "Enable Intel(R) Gigabit Ethernet emulation",
+      "Enables the Intel(R) Gigabit Ethernet emulation",
+      (card==0));
+    SIM->init_std_nic_options(label, menu);
+    enabled->set_dependent_list(menu->clone());
+  }
 }
 
 Bit32s e1000_options_parser(const char *context, int num_params, char *params[])
 {
-  int ret, valid = 0;
+  int ret, card = 0, first = 1, valid = 0;
+  char pname[16];
 
   if (!strcmp(params[0], "e1000")) {
-    bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_E1000);
+    if (!strncmp(params[1], "card=", 5)) {
+      card = atol(&params[1][5]);
+      if ((card < 0) || (card >= BX_E1000_MAX_DEVS)) {
+        BX_ERROR(("%s: 'e1000' directive: illegal card number", context));
+      }
+      first = 2;
+    }
+    sprintf(pname, "%s_%d", BXPN_E1000, card);
+    bx_list_c *base = (bx_list_c*) SIM->get_param(pname);
     if (!SIM->get_param_bool("enabled", base)->get()) {
       SIM->get_param_enum("ethmod", base)->set_by_name("null");
     }
@@ -314,7 +329,7 @@ Bit32s e1000_options_parser(const char *context, int num_params, char *params[])
       // MAC address is already initialized
       valid |= 0x04;
     }
-    for (int i = 1; i < num_params; i++) {
+    for (int i = first; i < num_params; i++) {
       ret = SIM->parse_nic_params(context, params[i], base);
       if (ret > 0) {
         valid |= ret;
@@ -338,15 +353,22 @@ Bit32s e1000_options_parser(const char *context, int num_params, char *params[])
 
 Bit32s e1000_options_save(FILE *fp)
 {
-  return SIM->write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_E1000), NULL, 0);
+  char pname[16], e1000str[16];
+
+  for (Bit8u card = 0; card < BX_E1000_MAX_DEVS; card++) {
+    sprintf(pname, "%s_%d", BXPN_E1000, card);
+    sprintf(e1000str, "e1000: card=%d, ", card);
+    SIM->write_param_list(fp, (bx_list_c*) SIM->get_param(pname), e1000str, 0);
+  }
+  return 0;
 }
 
 // device plugin entry points
 
 int CDECL libe1000_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
 {
-  theE1000Device = new bx_e1000_c();
-  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theE1000Device, BX_PLUGIN_E1000);
+  E1000DevMain = new bx_e1000_main_c();
+  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, E1000DevMain, BX_PLUGIN_E1000);
   // add new configuration parameter for the config interface
   e1000_init_options();
   // register add-on option for bochsrc and command line
@@ -359,7 +381,7 @@ void CDECL libe1000_LTX_plugin_fini(void)
   SIM->unregister_addon_option("e1000");
   bx_list_c *menu = (bx_list_c*)SIM->get_param("network");
   menu->remove("e1000");
-  delete theE1000Device;
+  delete E1000DevMain;
 }
 
 // macros and helper functions
@@ -400,11 +422,83 @@ Bit16u net_checksum_finish(Bit32u sum)
 }
 
 
+// the main object creates up to 4 device objects
+
+bx_e1000_main_c::bx_e1000_main_c()
+{
+  for (Bit8u card = 0; card < BX_E1000_MAX_DEVS; card++) {
+    theE1000Dev[card] = NULL;
+  }
+}
+
+bx_e1000_main_c::~bx_e1000_main_c()
+{
+  for (Bit8u card = 0; card < BX_E1000_MAX_DEVS; card++) {
+    if (theE1000Dev[card] != NULL) {
+      delete theE1000Dev[card];
+    }
+  }
+}
+
+void bx_e1000_main_c::init(void)
+{
+  Bit8u count = 0;
+  char pname[16];
+
+  for (Bit8u card = 0; card < BX_E1000_MAX_DEVS; card++) {
+    // Read in values from config interface
+    sprintf(pname, "%s_%d", BXPN_E1000, card);
+    bx_list_c *base = (bx_list_c*) SIM->get_param(pname);
+    if (SIM->get_param_bool("enabled", base)->get()) {
+      theE1000Dev[card] = new bx_e1000_c();
+      theE1000Dev[card]->init(card);
+      count++;
+    }
+  }
+  // Check if the device plugin in use
+  if (count == 0) {
+    BX_INFO(("E1000 disabled"));
+    // mark unused plugin for removal
+    ((bx_param_bool_c*)((bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL))->get_by_name("e1000"))->set(0);
+    return;
+  }
+}
+
+void bx_e1000_main_c::reset(unsigned type)
+{
+  for (Bit8u card = 0; card < BX_E1000_MAX_DEVS; card++) {
+    if (theE1000Dev[card] != NULL) {
+      theE1000Dev[card]->reset(type);
+    }
+  }
+}
+
+void bx_e1000_main_c::register_state()
+{
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "e1000", "E1000 State");
+  for (Bit8u card = 0; card < BX_E1000_MAX_DEVS; card++) {
+    if (theE1000Dev[card] != NULL) {
+      theE1000Dev[card]->register_state(list, card);
+    }
+  }
+}
+
+void bx_e1000_main_c::after_restore_state()
+{
+  for (Bit8u card = 0; card < BX_E1000_MAX_DEVS; card++) {
+    if (theE1000Dev[card] != NULL) {
+      theE1000Dev[card]->after_restore_state();
+    }
+  }
+}
+
 // the device object
+
+#undef LOG_THIS
+#define LOG_THIS
 
 bx_e1000_c::bx_e1000_c()
 {
-  put("E1000");
   memset(&s, 0, sizeof(bx_e1000_t));
   s.tx_timer_index = BX_NULL_TIMER_HANDLE;
   ethdev = NULL;
@@ -425,22 +519,20 @@ bx_e1000_c::~bx_e1000_c()
   BX_DEBUG(("Exit"));
 }
 
-void bx_e1000_c::init(void)
+void bx_e1000_c::init(Bit8u card)
 {
+  char pname[20];
   Bit8u macaddr[6];
   int i;
   Bit16u checksum = 0;
   bx_param_string_c *bootrom;
 
   // Read in values from config interface
-  bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_E1000);
-  // Check if the device is disabled or not configured
-  if (!SIM->get_param_bool("enabled", base)->get()) {
-    BX_INFO(("E1000 disabled"));
-    // mark unused plugin for removal
-    ((bx_param_bool_c*)((bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL))->get_by_name("e1000"))->set(0);
-    return;
-  }
+  sprintf(pname, "%s_%d", BXPN_E1000, card);
+  bx_list_c *base = (bx_list_c*) SIM->get_param(pname);
+  sprintf(s.devname, "e1000%c", 65+card);
+  sprintf(s.ldevname, "Intel(R) Gigabit Ethernet #%d", card);
+  put(s.devname);
   memcpy(macaddr, SIM->get_param_string("mac", base)->getptr(), 6);
 
   memcpy(BX_E1000_THIS s.eeprom_data, e1000_eeprom_template,
@@ -457,7 +549,7 @@ void bx_e1000_c::init(void)
 
   BX_E1000_THIS s.devfunc = 0x00;
   DEV_register_pci_handlers(this, &BX_E1000_THIS s.devfunc, BX_PLUGIN_E1000,
-                            "Intel(R) Gigabit Ethernet");
+                            s.ldevname);
 
   // initialize readonly registers
   init_pci_conf(0x8086, 0x100e, 0x03, 0x020000, 0x00, BX_PCI_INTA);
@@ -541,12 +633,13 @@ void bx_e1000_c::reset(unsigned type)
   set_irq_level(0);
 }
 
-void bx_e1000_c::register_state(void)
+void bx_e1000_c::register_state(bx_list_c *parent, Bit8u card)
 {
   unsigned i;
-  char pname[5];
+  char pname[8];
 
-  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "e1000", "E1000 State");
+  sprintf(pname, "%d", card);
+  bx_list_c *list = new bx_list_c(parent, pname, "E1000 State");
   new bx_shadow_data_c(list, "mac_reg", (Bit8u*)BX_E1000_THIS s.mac_reg, 0x20000);
   bx_list_c *phy = new bx_list_c(list, "phy_reg", "");
   for (i = 0; i < 32; i++) {
@@ -600,6 +693,13 @@ void bx_e1000_c::after_restore_state(void)
 
 bx_bool bx_e1000_c::mem_read_handler(bx_phy_address addr, unsigned len,
                                      void *data, void *param)
+{
+  bx_e1000_c *class_ptr = (bx_e1000_c *) param;
+
+  return class_ptr->mem_read(addr, len, data);
+}
+
+bx_bool bx_e1000_c::mem_read(bx_phy_address addr, unsigned len, void *data)
 {
   Bit32u *data_ptr = (Bit32u*) data;
   Bit8u  *data8_ptr = (Bit8u*) data;
@@ -714,6 +814,13 @@ bx_bool bx_e1000_c::mem_read_handler(bx_phy_address addr, unsigned len,
 bx_bool bx_e1000_c::mem_write_handler(bx_phy_address addr, unsigned len,
                                       void *data, void *param)
 {
+  bx_e1000_c *class_ptr = (bx_e1000_c *) param;
+
+  return class_ptr->mem_write(addr, len, data);
+}
+
+bx_bool bx_e1000_c::mem_write(bx_phy_address addr, unsigned len, void *data)
+{
   Bit32u value = *(Bit32u*) data;
   Bit32u offset;
   Bit16u index;
@@ -802,16 +909,12 @@ bx_bool bx_e1000_c::mem_write_handler(bx_phy_address addr, unsigned len,
 
 Bit32u bx_e1000_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
 {
-#if !BX_USE_E1000_SMF
   bx_e1000_c *class_ptr = (bx_e1000_c *) this_ptr;
   return class_ptr->read(address, io_len);
 }
 
 Bit32u bx_e1000_c::read(Bit32u address, unsigned io_len)
 {
-#else
-  UNUSED(this_ptr);
-#endif // !BX_USE_E1000_SMF
   Bit8u offset;
 
   offset = address - BX_E1000_THIS pci_bar[1].addr;
@@ -826,7 +929,6 @@ Bit32u bx_e1000_c::read(Bit32u address, unsigned io_len)
 
 void bx_e1000_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
 {
-#if !BX_USE_E1000_SMF
   bx_e1000_c *class_ptr = (bx_e1000_c *) this_ptr;
 
   class_ptr->write(address, value, io_len);
@@ -834,9 +936,6 @@ void bx_e1000_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, uns
 
 void bx_e1000_c::write(Bit32u address, Bit32u value, unsigned io_len)
 {
-#else
-  UNUSED(this_ptr);
-#endif // !BX_USE_E1000_SMF
   Bit8u  offset;
 
   offset = address - BX_E1000_THIS pci_bar[1].addr;
