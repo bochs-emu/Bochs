@@ -10,9 +10,11 @@ Changes after 2.6.11:
 - Bochs Debugger and Instrumentation
   - Add more symbol lookups to disasm methods
 
-- I/O Devides
-  - VGA: Removed lfb_enabled switch from Bochs VBE code. Now banked and LFB writes to VRAM are possible at the same time.
-    This makes the GRUB bootloader menu visible when using the Bochs VBE adapter.
+- I/O Devices
+  - Added "multiple NICs" support to the NE2000 and E1000 devices. Up to 4 devices
+    per model are supported. Use the zero-based "card" parameter to specify device.
+  - VGA: Removed lfb_enabled switch from Bochs VBE code. Now banked and LFB writes
+    to VRAM are always valid. Fixes GRUB bootloader menu when using Bochs VBE.
 
 -------------------------------------------------------------------------
 Changes in 2.6.11 (January 5, 2020):

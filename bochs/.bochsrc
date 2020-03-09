@@ -535,8 +535,9 @@ mouse: enabled=0
 # the PCI model: cirrus, ne2k and pcivga. These PCI-only devices are also
 # supported, but they are auto-assigned if you don't use the slot configuration:
 # e1000, es1370, pcidev, pcipnic, usb_ehci, usb_ohci, usb_xhci and voodoo.
-# In case of the i440BX chipset, slot #5 is the AGP slot. Currently only the
-# 'voodoo' device can be assigned to AGP.
+# All device models except the network devices ne2k and e1000 can be used only
+# once in the slot configuration. In case of the i440BX chipset, slot #5 is the
+# AGP slot. Currently only the 'voodoo' device can be assigned to AGP.
 #
 # Example:
 #   pci: enabled=1, chipset=i440fx, slot1=pcivga, slot2=ne2k
@@ -994,12 +995,20 @@ speaker: enabled=1, mode=sound
 # ne2k: NE2000 compatible ethernet adapter
 #
 # Format:
-# ne2k: enabled=1, ioaddr=IOADDR, irq=IRQ, mac=MACADDR, ethmod=MODULE,
-#       ethdev=DEVICE, script=SCRIPT, bootrom=BOOTROM
+# ne2k: card=CARD, enabled=1, type=TYPE, ioaddr=IOADDR, irq=IRQ, mac=MACADDR,
+#       ethmod=MODULE, ethdev=DEVICE, script=SCRIPT, bootrom=BOOTROM
+#
+# CARD: This is the zero-based card number to configure with this ne2k config
+# line. Up to 4 devices are supported now (0...3). If not specified, the
+# following parameters apply to card #0.
+#
+# TYPE: This is the card type to emulate ("isa" or "pci"). If not specified,
+# card #0 defaults to "pci" if assigned to a pci slot. For the additional cards
+# the type parameter should be set up.
 #
 # IOADDR, IRQ: You probably won't need to change ioaddr and irq, unless there
 # are IRQ conflicts. These arguments are ignored when assign the ne2k to a
-# PCI slot.
+# PCI slot or set the type to 'pci'.
 #
 # MAC: The MAC address MUST NOT match the address of any machine on the net.
 # Also, the first byte must be an even number (bit 0 set means a multicast
@@ -1073,11 +1082,12 @@ speaker: enabled=1, mode=sound
 # e1000: Intel(R) 82540EM Gigabit Ethernet adapter
 #
 # Format:
-# e1000: enabled=1, mac=MACADDR, ethmod=MODULE, ethdev=DEVICE, script=SCRIPT
-#        bootrom=BOOTROM
+# e1000: card=CARD, enabled=1, mac=MACADDR, ethmod=MODULE, ethdev=DEVICE,
+#        script=SCRIPT, bootrom=BOOTROM
 #
-# The E1000 accepts the same syntax (for mac, ethmod, ethdev, script, bootrom)
-# and supports the same networking modules as the NE2000 adapter.
+# The E1000 accepts the same syntax (for card, mac, ethmod, ethdev, script,
+# bootrom) and supports the same networking modules as the NE2000 adapter.
+# It also supports up to 4 devices selected with the card parameter.
 #=======================================================================
 #e1000: enabled=1, mac=52:54:00:12:34:56, ethmod=slirp, script=slirp.conf
 
