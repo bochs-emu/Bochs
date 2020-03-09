@@ -70,8 +70,13 @@ bx_bool cdrom_base_c::insert_cdrom(const char *dev)
   // Load CD-ROM. Returns 0 if CD is not ready.
   if (dev != NULL) path = strdup(dev);
   BX_INFO(("load cdrom with path='%s'", path));
+
   // all platforms except win32
-  fd = open(path, O_RDONLY);
+  fd = open(path, O_RDONLY
+#ifdef O_BINARY
+            | O_BINARY
+#endif
+           );
   if (fd < 0) {
     BX_ERROR(("open cd failed for '%s': %s", path, strerror(errno)));
     return 0;
