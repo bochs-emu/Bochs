@@ -3996,8 +3996,9 @@ combined PCI/ISA devices assigning to slot is mandatory if you want to emulate
 the PCI model: cirrus, ne2k and pcivga. These PCI-only devices are also
 supported, but they are auto-assigned if you don't use the slot configuration:
 e1000, es1370, pcidev, pcipnic, usb_ehci, usb_ohci, usb_xhci and voodoo.
-In case of the i440BX chipset, slot #5 is the AGP slot. Currently only the
-'voodoo' device can be assigned to AGP.
+All device models except the network devices ne2k and e1000 can be used only
+once in the slot configuration. In case of the i440BX chipset, slot #5 is the
+AGP slot. Currently only the 'voodoo' device can be assigned to AGP.
 </para>
 </section>
 
@@ -4692,8 +4693,16 @@ ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:01, ethmod=vnet, ethdev="c:/temp"
 ne2k: ioaddr=0x300, irq=9, mac=fe:fd:00:00:00:01, ethmod=tap, ethdev=tap0
 ne2k: ioaddr=0x300, irq=9, mac=fe:fd:00:00:00:01, ethmod=tuntap, ethdev=/dev/net/tun0, script=./tunconfig
 ne2k: mac=b0:c4:20:00:00:01, ethmod=socket, ethdev=40000 # use localhost
-ne2k: mac=b0:c4:20:00:00:01, ethmod=socket, ethdev=mymachine:40000
+ne2k: card=0, mac=b0:c4:20:00:00:01, ethmod=socket, ethdev=mymachine:40000
 ne2k: mac=b0:c4:20:00:00:01, ethmod=slirp, script=slirp.conf, bootrom=ne2k_pci.rom
+
+CARD: This is the zero-based card number to configure with this ne2k config
+line. Up to 4 devices are supported now (0...3). If not specified, the
+following parameters apply to card #0.
+
+TYPE: This is the card type to emulate ("isa" or "pci"). If not specified,
+card #0 defaults to "pci" if assigned to a pci slot. For the additional cards
+the type parameter should be set up.
 
 IOADDR, IRQ: You probably won't need to change ioaddr and irq, unless there
 are IRQ conflicts. These parameters are ignored if the NE2000 is assigned to

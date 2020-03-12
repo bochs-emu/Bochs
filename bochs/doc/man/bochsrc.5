@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "01 Jan 2020" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "12 Mar 2020" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -593,8 +593,9 @@ combined PCI/ISA devices assigning to slot is mandatory if you want to emulate
 the PCI model: cirrus, ne2k and pcivga. These PCI-only devices are also
 supported, but they are auto-assigned if you don't use the slot configuration:
 e1000, es1370, pcidev, pcipnic, usb_ehci, usb_ohci, usb_xhci and voodoo.
-In case of the i440BX chipset, slot #5 is the AGP slot. Currently only the
-\&'voodoo' device can be assigned to AGP.
+All device models except the network devices ne2k and e1000 can be used only
+# once in the slot configuration. In case of the i440BX chipset, slot #5 is the
+AGP slot. Currently only the 'voodoo' device can be assigned to AGP.
 
 Example:
   pci: enabled=1, chipset=i440fx, slot1=pcivga, slot2=ne2k
@@ -1094,6 +1095,8 @@ Example for sending output to file:
 .TP
 .I "ne2k:"
 Defines the characteristics of an attached ne2000 isa card :
+   card=CARD,
+   type=TYPE,
    ioaddr=IOADDR,
    irq=IRQ,
    mac=MACADDR,
@@ -1103,6 +1106,16 @@ Defines the characteristics of an attached ne2000 isa card :
    bootrom=BOOTROM
 
 .B PROPERTIES FOR ne2k:
+
+CARD:
+This is the zero-based card number to configure with this ne2k config
+line. Up to 4 devices are supported now (0...3). If not specified, the
+following parameters apply to card #0.
+
+TYPE:
+This is the card type to emulate ('isa' or 'pci'). If not specified,
+card #0 defaults to 'pci' if assigned to a pci slot. For the additional cards
+the type parameter should be set up.
 
 IOADDR, IRQ:
 You probably won't need to change ioaddr and irq, unless there are IRQ conflicts.
@@ -1172,7 +1185,7 @@ Examples:
   ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:01, ethmod=vde, ethdev="/tmp/vde.ctl"
   ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:01, ethmod=vnet, ethdev="c:/temp"
   ne2k: mac=b0:c4:20:00:00:01, ethmod=socket, ethdev=40000 # use localhost
-  ne2k: mac=b0:c4:20:00:00:01, ethmod=socket, ethdev=mymachine:40000
+  ne2k: card=0, mac=b0:c4:20:00:00:01, ethmod=socket, ethdev=mymachine:40000
   ne2k: mac=b0:c4:20:00:00:01, ethmod=slirp, script=slirp.conf, bootrom=ne2k_pci.rom
 
 .TP
@@ -1189,11 +1202,11 @@ Example:
 .I "e1000:"
 To support the Intel(R) 82540EM Gigabit Ethernet adapter, Bochs must be compiled
 with the --eanble-e1000 configure option. The E1000 accepts the same syntax
-(for mac, ethmod, ethdev, script, bootrom) and supports the same networking
+(for card, mac, ethmod, ethdev, script, bootrom) and supports the same networking
 modules as the NE2000 adapter.
 
 Example:
-  e1000: enabled=1, mac=52:54:00:12:34:56, ethmod=slirp, script=slirp.conf
+  e1000: card=0, enabled=1, mac=52:54:00:12:34:56, ethmod=slirp, script=slirp.conf
 
 .TP
 .I "usb_uhci:"
