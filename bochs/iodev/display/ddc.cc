@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2018  The Bochs Project
+//  Copyright (C) 2018-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -18,8 +18,7 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
-// DDC stub (when ready, this code should return the VESA EDID for the
-// Bochs plug&play monitor)
+// DDC support (returns the VESA EDID for the Bochs plug&play monitor)
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE
@@ -28,6 +27,7 @@
 
 #include "bochs.h"
 #include "ddc.h"
+#include "param_names.h"
 
 #define LOG_THIS
 
@@ -153,6 +153,10 @@ const Bit8u vesa_EDID[128] = {
 
 bx_ddc_c::bx_ddc_c(void)
 {
+  int fd, ret;
+  struct stat stat_buf;
+  const char *path;
+
   put("DDC");
   s.DCKhost = 1;
   s.DDAhost = 1;
@@ -161,6 +165,33 @@ bx_ddc_c::bx_ddc_c(void)
   s.ddc_ack = 1;
   s.ddc_rw = 1;
   s.edid_index = 0;
+  s.ddc_mode = SIM->get_param_enum(BXPN_DDC_MODE)->get();
+  if (s.ddc_mode == BX_DDC_MODE_BUILTIN) {
+    memcpy(s.edid_data, vesa_EDID, 128);
+  } else if (s.ddc_mode == BX_DDC_MODE_FILE) {
+    path = SIM->get_param_string(BXPN_DDC_FILE)->getptr();
+    fd = open(path, O_RDONLY
+#ifdef O_BINARY
+       | O_BINARY
+#endif
+        );
+    if (fd < 0) {
+      BX_PANIC(("failed to open monitor EDID file '%s'", path));
+    }
+    ret = fstat(fd, &stat_buf);
+    if (ret) {
+      BX_PANIC(("could not fstat() monitor EDID file."));
+    }
+    if (stat_buf.st_size != 128) {
+      BX_PANIC(("monitor EDID file size must be 128 bytes"));
+    }
+    ret = ::read(fd, (bx_ptr_t) s.edid_data, (unsigned)stat_buf.st_size);
+    if (ret != stat_buf.st_size) {
+      BX_PANIC(("error reading monitor EDID file."));
+    }
+    close(fd);
+    BX_INFO(("Monitor EDID read from image file '%s'.", path));
+  }
 }
 
 bx_ddc_c::~bx_ddc_c(void)
@@ -178,6 +209,9 @@ void bx_ddc_c::write(bx_bool dck, bx_bool dda)
 {
   bx_bool dck_change = 0;
   bx_bool dda_change = 0;
+
+  if (s.ddc_mode == BX_DDC_MODE_OFF)
+    return;
 
   if ((dck != s.DCKhost) || (dda != s.DDAhost)) {
     dck_change = (dck != s.DCKhost);
@@ -283,7 +317,7 @@ void bx_ddc_c::write(bx_bool dck, bx_bool dda)
 
 Bit8u bx_ddc_c::get_edid_byte()
 {
-  Bit8u value = vesa_EDID[s.edid_index++];
+  Bit8u value = s.edid_data[s.edid_index++];
   BX_DEBUG(("Sending EDID byte %d (value = 0x%02x)", s.edid_index - 1, value));
   s.edid_index &= 0x7f;
   return value;

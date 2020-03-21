@@ -15,6 +15,8 @@ Changes after 2.6.11:
     per model are supported. Use the zero-based "card" parameter to specify device.
   - VGA: Removed lfb_enabled switch from Bochs VBE code. Now banked and LFB writes
     to VRAM are always valid. Fixes GRUB bootloader menu when using Bochs VBE.
+  - VGA DDC: Added "ddc" parameter to the "vga" option to make it possible
+    either to disable the DDC feature or to read the monitor EDID from file.
 
 -------------------------------------------------------------------------
 Changes in 2.6.11 (January 5, 2020):

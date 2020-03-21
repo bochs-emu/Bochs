@@ -426,10 +426,15 @@ vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
 #     to 0 and "clock: sync=none" may improve the responsiveness of the guest
 #     GUI when the guest is otherwise idle.
 #
+#   DDC
+#     This parameter defines the behaviour of the DDC emulation that returns
+#     the monitor EDID data. The default value is 'builtin' (use valus for
+#     'Bochs Screen'). Other choices are 'off' (feature disabled) and 'file'
+#     (read monitor EDID from file, name separated with a colon).
 # Examples:
-#   vga: extension=cirrus, update_freq=10
+#   vga: extension=cirrus, update_freq=10, ddc=builtin
 #=======================================================================
-#vga: extension=vbe, update_freq=5, realtime=1
+#vga: extension=vbe, update_freq=5, realtime=1, ddc=file:monitor.bin
 
 #=======================================================================
 # VOODOO:

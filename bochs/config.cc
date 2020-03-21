@@ -995,6 +995,28 @@ void bx_init_options()
   vga_extension->set_initial_val("vbe");
   display->set_options(display->SHOW_PARENT);
 
+  static const char *ddc_mode_list[] = {
+    "off",
+    "builtin",
+    "file",
+    NULL
+  };
+  bx_param_enum_c *ddc_mode = new bx_param_enum_c(display,
+    "ddc_mode", "DDC emulatiion mode",
+    "Select DDC emulation mode",
+    ddc_mode_list,
+    BX_DDC_MODE_BUILTIN,
+    BX_DDC_MODE_OFF);
+  path = new bx_param_filename_c(display,
+      "ddc_file",
+      "DDC definition file",
+      "Set path to a DDC definition file",
+      "", BX_PATHNAME_LEN);
+  deplist = new bx_list_c(NULL);
+  deplist->add(path);
+  ddc_mode->set_dependent_list(deplist, 0);
+  ddc_mode->set_dependent_bitmap(BX_DDC_MODE_FILE, 1);
+
   // keyboard & mouse subtree
   bx_list_c *kbd_mouse = new bx_list_c(root_param, "keyboard_mouse", "Keyboard & Mouse Options");
   bx_list_c *keyboard = new bx_list_c(kbd_mouse, "keyboard", "Keyboard Options");
@@ -2745,6 +2767,14 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         SIM->get_param_num(BXPN_VGA_UPDATE_FREQUENCY)->set(atol(&params[i][12]));
       } else if (!strncmp(params[i], "realtime=", 9)) {
         SIM->get_param_bool(BXPN_VGA_REALTIME)->set(atol(&params[i][9]));
+      } else if (!strncmp(params[i], "ddc=", 4)) {
+        const char *strval = &params[i][4];
+        if (strncmp(strval, "file:", 5)) {
+          SIM->get_param_enum(BXPN_DDC_MODE)->set_by_name(strval);
+        } else {
+          SIM->get_param_enum(BXPN_DDC_MODE)->set(BX_DDC_MODE_FILE);
+          SIM->get_param_string(BXPN_DDC_FILE)->set(strval+5);
+        }
       } else {
         PARSE_ERR(("%s: vga directive malformed.", context));
       }
@@ -3384,10 +3414,15 @@ int bx_write_configuration(const char *rc, int overwrite)
     }
   }
   fprintf(fp, "\n");
-  fprintf(fp, "vga: extension=%s, update_freq=%u, realtime=%u\n",
+  fprintf(fp, "vga: extension=%s, update_freq=%u, realtime=%u, ddc=%s",
     SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr(),
     SIM->get_param_num(BXPN_VGA_UPDATE_FREQUENCY)->get(),
-    SIM->get_param_bool(BXPN_VGA_REALTIME)->get());
+    SIM->get_param_bool(BXPN_VGA_REALTIME)->get(),
+    SIM->get_param_enum(BXPN_DDC_MODE)->get_selected());
+  if (SIM->get_param_enum(BXPN_DDC_MODE)->get() == BX_DDC_MODE_FILE) {
+    fprintf(fp, ":%s", SIM->get_param_string(BXPN_DDC_FILE)->getptr());
+  }
+  fprintf(fp, "\n");
 #if BX_SUPPORT_SMP
   fprintf(fp, "cpu: count=%u:%u:%u, ips=%u, quantum=%d, ",
     SIM->get_param_num(BXPN_CPU_NPROCESSORS)->get(), SIM->get_param_num(BXPN_CPU_NCORES)->get(),

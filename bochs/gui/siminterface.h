@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2018  The Bochs Project
+//  Copyright (C) 2001-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -483,6 +483,12 @@ enum {
   // Run the configuration interface, but make the default action be to
   // start the simulation.
   BX_RUN_START
+};
+
+enum {
+  BX_DDC_MODE_OFF,
+  BX_DDC_MODE_BUILTIN,
+  BX_DDC_MODE_FILE
 };
 
 enum {
