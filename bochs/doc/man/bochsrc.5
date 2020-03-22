@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "12 Mar 2020" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "22 Mar 2020" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -479,9 +479,16 @@ is driven by the cpu and depends on the ips setting. If the host is slow
 to 0 and "clock: sync=none" may improve the responsiveness of the guest
 GUI when the guest is otherwise idle.
 
+ddc:
+
+This parameter defines the behaviour of the DDC emulation that returns
+the monitor EDID data. By default the 'builtin' values for 'Bochs Screen'
+are used. Other choices are 'disabled' (no DDC emulation) and 'file'
+(read monitor EDID from file / path name separated with a colon).
+
 Examples:
-  vga: extension=none, update_freq=10, realtime=0
-  vga: extension=cirrus, update_freq=30
+  vga: extension=none, update_freq=10, realtime=0, ddc=disabled
+  vga: extension=cirrus, update_freq=30, ddc=file:monitor.bin
   vga: extension=vbe
 
 .TP

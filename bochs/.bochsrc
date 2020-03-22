@@ -428,9 +428,9 @@ vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
 #
 #   DDC
 #     This parameter defines the behaviour of the DDC emulation that returns
-#     the monitor EDID data. The default value is 'builtin' (use valus for
-#     'Bochs Screen'). Other choices are 'off' (feature disabled) and 'file'
-#     (read monitor EDID from file, name separated with a colon).
+#     the monitor EDID data. By default the 'builtin' values for 'Bochs Screen'
+#     are used. Other choices are 'disabled' (no DDC emulation) and 'file'
+#     (read monitor EDID from file / path name separated with a colon).
 # Examples:
 #   vga: extension=cirrus, update_freq=10, ddc=builtin
 #=======================================================================

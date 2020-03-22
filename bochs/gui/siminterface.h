@@ -486,7 +486,7 @@ enum {
 };
 
 enum {
-  BX_DDC_MODE_OFF,
+  BX_DDC_MODE_DISABLED,
   BX_DDC_MODE_BUILTIN,
   BX_DDC_MODE_FILE
 };

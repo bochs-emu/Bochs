@@ -3831,7 +3831,7 @@ in the simulation, that can be retrieved by the boot loader
 <para>
 Examples:
 <screen>
-  vga: extension=cirrus, update_freq=10, realtime=1
+  vga: extension=cirrus, update_freq=10, realtime=1, ddc=file:monitor.bin
   vga: extension=vbe
 </screen>
 This defines parameters related to the VGA display
@@ -3857,6 +3857,12 @@ ips setting. If the host is slow (low ips, update_freq) and the guest uses HLT
 appropriately, setting this to 0 and "clock: sync=none" may improve the
 responsiveness of the guest GUI when the guest is otherwise idle. The default
 value is 1.
+</para>
+<para>
+The parameter 'ddc' defines the behaviour of the DDC emulation that returns
+the monitor EDID data. By default the 'builtin' values for 'Bochs Screen'
+are used. Other choices are 'disabled' (no DDC emulation) and 'file'
+(read monitor EDID from file / path name separated with a colon).
 </para>
 </section>
 

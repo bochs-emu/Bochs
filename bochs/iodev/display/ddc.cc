@@ -210,7 +210,7 @@ void bx_ddc_c::write(bx_bool dck, bx_bool dda)
   bx_bool dck_change = 0;
   bx_bool dda_change = 0;
 
-  if (s.ddc_mode == BX_DDC_MODE_OFF)
+  if (s.ddc_mode == BX_DDC_MODE_DISABLED)
     return;
 
   if ((dck != s.DCKhost) || (dda != s.DDAhost)) {

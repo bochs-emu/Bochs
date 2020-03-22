@@ -996,17 +996,17 @@ void bx_init_options()
   display->set_options(display->SHOW_PARENT);
 
   static const char *ddc_mode_list[] = {
-    "off",
+    "disabled",
     "builtin",
     "file",
     NULL
   };
   bx_param_enum_c *ddc_mode = new bx_param_enum_c(display,
-    "ddc_mode", "DDC emulatiion mode",
+    "ddc_mode", "DDC emulation mode",
     "Select DDC emulation mode",
     ddc_mode_list,
     BX_DDC_MODE_BUILTIN,
-    BX_DDC_MODE_OFF);
+    BX_DDC_MODE_DISABLED);
   path = new bx_param_filename_c(display,
       "ddc_file",
       "DDC definition file",
