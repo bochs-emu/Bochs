@@ -168,6 +168,7 @@ bx_ddc_c::bx_ddc_c(void)
   s.ddc_mode = SIM->get_param_enum(BXPN_DDC_MODE)->get();
   if (s.ddc_mode == BX_DDC_MODE_BUILTIN) {
     memcpy(s.edid_data, vesa_EDID, 128);
+    s.edid_extblock = 0;
   } else if (s.ddc_mode == BX_DDC_MODE_FILE) {
     path = SIM->get_param_string(BXPN_DDC_FILE)->getptr();
     fd = open(path, O_RDONLY
@@ -182,8 +183,10 @@ bx_ddc_c::bx_ddc_c(void)
     if (ret) {
       BX_PANIC(("could not fstat() monitor EDID file."));
     }
-    if (stat_buf.st_size != 128) {
-      BX_PANIC(("monitor EDID file size must be 128 bytes"));
+    if ((stat_buf.st_size != 128) && (stat_buf.st_size != 256)) {
+      BX_PANIC(("monitor EDID file size must be 128 or 256 bytes"));
+    } else {
+      s.edid_extblock = (stat_buf.st_size == 256);
     }
     ret = ::read(fd, (bx_ptr_t) s.edid_data, (unsigned)stat_buf.st_size);
     if (ret != stat_buf.st_size) {
@@ -245,7 +248,7 @@ void bx_ddc_c::write(bx_bool dck, bx_bool dda)
               s.ddc_bitshift--;
             } else {
               s.ddc_ack = 0;
-              BX_DEBUG(("Data = 0x%02x", s.ddc_byte));
+              BX_DEBUG(("Data = 0x%02x (setting offset address)", s.ddc_byte));
               s.edid_index = s.ddc_byte;
               s.DDAmon = s.ddc_ack;
               s.ddc_stage = DDC_STAGE_ACK_OUT;
@@ -318,8 +321,7 @@ void bx_ddc_c::write(bx_bool dck, bx_bool dda)
 Bit8u bx_ddc_c::get_edid_byte()
 {
   Bit8u value = s.edid_data[s.edid_index++];
-  BX_DEBUG(("Sending EDID byte %d (value = 0x%02x)", s.edid_index - 1, value));
-  s.edid_index &= 0x7f;
+  BX_DEBUG(("Sending EDID byte 0x%02x (value = 0x%02x)", s.edid_index - 1, value));
+  if (!s.edid_extblock) s.edid_index &= 0x7f;
   return value;
-  
 }

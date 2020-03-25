@@ -45,7 +45,8 @@ private:
     bx_bool ddc_rw;
     Bit8u   ddc_byte;
     Bit8u   edid_index;
-    Bit8u   edid_data[128];
+    bx_bool edid_extblock;
+    Bit8u   edid_data[256];
   } s;  // state information
 };
 
