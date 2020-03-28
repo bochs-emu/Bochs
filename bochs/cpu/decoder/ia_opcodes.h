@@ -25,7 +25,7 @@
 #define BX_OPCODES_ENUM
 
 enum {
-#define bx_define_opcode(a, b, c, d, s1, s2, s3, s4, e) a,
+#define bx_define_opcode(a, b, c, d, e, f, s1, s2, s3, s4, g) a,
 #include "ia_opcodes.def"
    BX_IA_LAST
 };

@@ -77,9 +77,9 @@ struct BxOpcodeDecodeDescriptor32 {
 // table of all Bochs opcodes
 bxIAOpcodeTable BxOpcodesTable[] = {
 #ifndef BX_STANDALONE_DECODER
-#define bx_define_opcode(a, b, c, d, s1, s2, s3, s4, e) { b, c, { s1, s2, s3, s4 }, e },
+#define bx_define_opcode(a, b, c, d, e, f, s1, s2, s3, s4, g) { d, e, { s1, s2, s3, s4 }, g },
 #else
-#define bx_define_opcode(a, b, c, d, s1, s2, s3, s4, e) {       { s1, s2, s3, s4 }, e },
+#define bx_define_opcode(a, b, c, d, e, f, s1, s2, s3, s4, g) {       { s1, s2, s3, s4 }, g },
 #endif
 #include "ia_opcodes.def"
 };
@@ -2596,7 +2596,7 @@ void BX_CPU_C::init_FetchDecodeTables(void)
 {
   static Bit8u BxOpcodeFeatures[BX_IA_LAST] =
   {
-#define bx_define_opcode(a, b, c, d, s1, s2, s3, s4, e) d,
+#define bx_define_opcode(a, b, c, d, e, f, s1, s2, s3, s4, g) f,
 #include "ia_opcodes.def"
   };
 #undef  bx_define_opcode
@@ -2672,7 +2672,7 @@ const char *get_bx_opcode_name(Bit16u ia_opcode)
 {
   static const char* BxOpcodeNamesTable[BX_IA_LAST] =
   {
-#define bx_define_opcode(a, b, c, d, s1, s2, s3, s4, e) #a,
+#define bx_define_opcode(a, b, c, d, e, f, s1, s2, s3, s4, g) #a,
 #include "ia_opcodes.def"
   };
 #undef  bx_define_opcode
