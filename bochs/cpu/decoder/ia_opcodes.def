@@ -1791,32 +1791,26 @@ bx_define_opcode(BX_IA_VZEROALL, "vzeroall", "vzeroall", NULL, &BX_CPU_C::VZEROA
 bx_define_opcode(BX_IA_VLDMXCSR, "vldmxcsr", "vldmxcsr", &BX_CPU_C::LDMXCSR, &BX_CPU_C::BxError, BX_ISA_AVX, OP_Md, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_AVX)
 bx_define_opcode(BX_IA_VSTMXCSR, "vstmxcsr", "vstmxcsr", &BX_CPU_C::STMXCSR, &BX_CPU_C::BxError, BX_ISA_AVX, OP_Md, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_AVX)
 
-bx_define_opcode(BX_IA_V128_VMOVAPS_VpsWps, "vmovaps", "vmovaps", &BX_CPU_C::VMOVAPS_VpsWpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_ISA_AVX, OP_Vps, OP_Wps, OP_NONE, OP_NONE, BX_PREPARE_AVX)
-bx_define_opcode(BX_IA_V256_VMOVAPS_VpsWps, "vmovaps", "vmovaps", &BX_CPU_C::VMOVAPS_VpsWpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_ISA_AVX, OP_Vps, OP_Wps, OP_NONE, OP_NONE, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_VMOVAPS_VpsWps, "vmovaps", "vmovaps", &BX_CPU_C::VMOVAPS_VpsWpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_ISA_AVX, OP_Vps, OP_Wps, OP_NONE, OP_NONE, BX_PREPARE_AVX)
 bx_define_opcode(BX_IA_V128_VMOVAPS_WpsVps, "vmovaps", "vmovaps", &BX_CPU_C::MOVAPS_WpsVpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_ISA_AVX, OP_Wps, OP_Vps, OP_NONE, OP_NONE, BX_PREPARE_AVX)
 bx_define_opcode(BX_IA_V256_VMOVAPS_WpsVps, "vmovaps", "vmovaps", &BX_CPU_C::VMOVAPS_WpsVpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_ISA_AVX, OP_Wps, OP_Vps, OP_NONE, OP_NONE, BX_PREPARE_AVX)
 
-bx_define_opcode(BX_IA_V128_VMOVAPD_VpdWpd, "vmovapd", "vmovapd", &BX_CPU_C::VMOVAPS_VpsWpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_ISA_AVX, OP_Vpd, OP_Wpd, OP_NONE, OP_NONE, BX_PREPARE_AVX)
-bx_define_opcode(BX_IA_V256_VMOVAPD_VpdWpd, "vmovapd", "vmovapd", &BX_CPU_C::VMOVAPS_VpsWpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_ISA_AVX, OP_Vpd, OP_Wpd, OP_NONE, OP_NONE, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_VMOVAPD_VpdWpd, "vmovapd", "vmovapd", &BX_CPU_C::VMOVAPS_VpsWpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_ISA_AVX, OP_Vpd, OP_Wpd, OP_NONE, OP_NONE, BX_PREPARE_AVX)
 bx_define_opcode(BX_IA_V128_VMOVAPD_WpdVpd, "vmovapd", "vmovapd", &BX_CPU_C::MOVAPS_WpsVpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_ISA_AVX, OP_Wpd, OP_Vpd, OP_NONE, OP_NONE, BX_PREPARE_AVX)
 bx_define_opcode(BX_IA_V256_VMOVAPD_WpdVpd, "vmovapd", "vmovapd", &BX_CPU_C::VMOVAPS_WpsVpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_ISA_AVX, OP_Wpd, OP_Vpd, OP_NONE, OP_NONE, BX_PREPARE_AVX)
 
-bx_define_opcode(BX_IA_V128_VMOVUPS_VpsWps, "vmovups", "vmovups", &BX_CPU_C::VMOVUPS_VpsWpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_ISA_AVX, OP_Vps, OP_Wps, OP_NONE, OP_NONE, BX_PREPARE_AVX)
-bx_define_opcode(BX_IA_V256_VMOVUPS_VpsWps, "vmovups", "vmovups", &BX_CPU_C::VMOVUPS_VpsWpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_ISA_AVX, OP_Vps, OP_Wps, OP_NONE, OP_NONE, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_VMOVUPS_VpsWps, "vmovups", "vmovups", &BX_CPU_C::VMOVUPS_VpsWpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_ISA_AVX, OP_Vps, OP_Wps, OP_NONE, OP_NONE, BX_PREPARE_AVX)
 bx_define_opcode(BX_IA_V128_VMOVUPS_WpsVps, "vmovups", "vmovups", &BX_CPU_C::MOVUPS_WpsVpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_ISA_AVX, OP_Wps, OP_Vps, OP_NONE, OP_NONE, BX_PREPARE_AVX)
 bx_define_opcode(BX_IA_V256_VMOVUPS_WpsVps, "vmovups", "vmovups", &BX_CPU_C::VMOVUPS_WpsVpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_ISA_AVX, OP_Wps, OP_Vps, OP_NONE, OP_NONE, BX_PREPARE_AVX)
-bx_define_opcode(BX_IA_V128_VMOVUPD_VpdWpd, "vmovupd", "vmovupd", &BX_CPU_C::VMOVUPS_VpsWpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_ISA_AVX, OP_Vpd, OP_Wpd, OP_NONE, OP_NONE, BX_PREPARE_AVX)
-bx_define_opcode(BX_IA_V256_VMOVUPD_VpdWpd, "vmovupd", "vmovupd", &BX_CPU_C::VMOVUPS_VpsWpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_ISA_AVX, OP_Vpd, OP_Wpd, OP_NONE, OP_NONE, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_VMOVUPD_VpdWpd, "vmovupd", "vmovupd", &BX_CPU_C::VMOVUPS_VpsWpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_ISA_AVX, OP_Vpd, OP_Wpd, OP_NONE, OP_NONE, BX_PREPARE_AVX)
 bx_define_opcode(BX_IA_V128_VMOVUPD_WpdVpd, "vmovupd", "vmovupd", &BX_CPU_C::MOVUPS_WpsVpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_ISA_AVX, OP_Wpd, OP_Vpd, OP_NONE, OP_NONE, BX_PREPARE_AVX)
 bx_define_opcode(BX_IA_V256_VMOVUPD_WpdVpd, "vmovupd", "vmovupd", &BX_CPU_C::VMOVUPS_WpsVpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_ISA_AVX, OP_Wpd, OP_Vpd, OP_NONE, OP_NONE, BX_PREPARE_AVX)
 
-bx_define_opcode(BX_IA_V128_VMOVDQA_VdqWdq, "vmovdqa", "vmovdqa", &BX_CPU_C::VMOVAPS_VpsWpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_ISA_AVX, OP_Vdq, OP_Wdq, OP_NONE, OP_NONE, BX_PREPARE_AVX)
-bx_define_opcode(BX_IA_V256_VMOVDQA_VdqWdq, "vmovdqa", "vmovdqa", &BX_CPU_C::VMOVAPS_VpsWpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_ISA_AVX, OP_Vdq, OP_Wdq, OP_NONE, OP_NONE, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_VMOVDQA_VdqWdq, "vmovdqa", "vmovdqa", &BX_CPU_C::VMOVAPS_VpsWpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_ISA_AVX, OP_Vdq, OP_Wdq, OP_NONE, OP_NONE, BX_PREPARE_AVX)
 bx_define_opcode(BX_IA_V128_VMOVDQA_WdqVdq, "vmovdqa", "vmovdqa", &BX_CPU_C::MOVAPS_WpsVpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_ISA_AVX, OP_Wdq, OP_Vdq, OP_NONE, OP_NONE, BX_PREPARE_AVX)
 bx_define_opcode(BX_IA_V256_VMOVDQA_WdqVdq, "vmovdqa", "vmovdqa", &BX_CPU_C::VMOVAPS_WpsVpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_ISA_AVX, OP_Wdq, OP_Vdq, OP_NONE, OP_NONE, BX_PREPARE_AVX)
 
-bx_define_opcode(BX_IA_V128_VMOVDQU_VdqWdq, "vmovdqu", "vmovdqu", &BX_CPU_C::VMOVUPS_VpsWpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_ISA_AVX, OP_Vdq, OP_Wdq, OP_NONE, OP_NONE, BX_PREPARE_AVX)
-bx_define_opcode(BX_IA_V256_VMOVDQU_VdqWdq, "vmovdqu", "vmovdqu", &BX_CPU_C::VMOVUPS_VpsWpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_ISA_AVX, OP_Vdq, OP_Wdq, OP_NONE, OP_NONE, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_VMOVDQU_VdqWdq, "vmovdqu", "vmovdqu", &BX_CPU_C::VMOVUPS_VpsWpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_ISA_AVX, OP_Vdq, OP_Wdq, OP_NONE, OP_NONE, BX_PREPARE_AVX)
 bx_define_opcode(BX_IA_V128_VMOVDQU_WdqVdq, "vmovdqu", "vmovdqu", &BX_CPU_C::MOVUPS_WpsVpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_ISA_AVX, OP_Wdq, OP_Vdq, OP_NONE, OP_NONE, BX_PREPARE_AVX)
 bx_define_opcode(BX_IA_V256_VMOVDQU_WdqVdq, "vmovdqu", "vmovdqu", &BX_CPU_C::VMOVUPS_WpsVpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_ISA_AVX, OP_Wdq, OP_Vdq, OP_NONE, OP_NONE, BX_PREPARE_AVX)
 
