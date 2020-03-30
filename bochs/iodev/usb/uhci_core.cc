@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009-2017  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2009-2018  The Bochs Project
+//                2009-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -265,6 +265,11 @@ Bit32u bx_uhci_core_c::read(Bit32u address, unsigned io_len)
   Bit32u val = 0x0;
   Bit8u  offset,port;
 
+  // if the host driver has not cleared the reset bit, do nothing (reads are
+  // undefined)
+  if (hub.usb_command.reset)
+    return 0;
+
   offset = address - pci_bar[4].addr;
 
   switch (offset) {
@@ -357,11 +362,16 @@ void bx_uhci_core_c::write_handler(void *this_ptr, Bit32u address, Bit32u value,
 
 void bx_uhci_core_c::write(Bit32u address, Bit32u value, unsigned io_len)
 {
-  Bit8u  offset,port;
-
-  BX_DEBUG(("register write to  address 0x%04X:  0x%08X (%2i bits)", (unsigned) address, (unsigned) value, io_len * 8));
+  Bit8u offset, port;
 
   offset = address - pci_bar[4].addr;
+
+  // if the reset bit is not cleared and this write is not clearing the bit,
+  // do nothing
+  if (hub.usb_command.reset && ((offset != 0) || (value & 0x04)))
+    return;
+
+  BX_DEBUG(("register write to  address 0x%04X:  0x%08X (%2i bits)", (unsigned) address, (unsigned) value, io_len * 8));
 
   switch (offset) {
     case 0x00: // command register (16-bit) (R/W)
