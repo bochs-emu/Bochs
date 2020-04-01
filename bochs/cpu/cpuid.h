@@ -450,7 +450,11 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [4:4]    Support of Fast REP MOV instructions with short length
 //   [7:5]    reserved
 //   [8:8]    AVX512 VP2INTERSECT instructions support
-//   ...
+//   [13:9]   reserved
+//   [14:14]  SERIALIZE instruction support
+//   [15:15]  Hybrid
+//   [16:16]  TSXLDTRK: TSX suspent load tracking support
+//   [19:17]  reserved
 //   [20:20]  CET IBT: Support CET indirect branch tracking
 //   [25:21]  reserved
 //   [26:26]  IBRS and IBPB: Indirect branch restricted speculation (SCA)
@@ -469,7 +473,17 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT5_RESERVED6              (1 <<  6)
 #define BX_CPUID_EXT5_RESERVED7              (1 <<  7)
 #define BX_CPUID_EXT5_AVX512_VPINTERSECT     (1 <<  8)
-// ...
+#define BX_CPUID_EXT5_RESERVED9              (1 <<  9)
+#define BX_CPUID_EXT5_RESERVED10             (1 << 10)
+#define BX_CPUID_EXT5_RESERVED11             (1 << 11)
+#define BX_CPUID_EXT5_RESERVED12             (1 << 12)
+#define BX_CPUID_EXT5_RESERVED13             (1 << 13)
+#define BX_CPUID_EXT5_SERIALIZE              (1 << 14)
+#define BX_CPUID_EXT5_HYBRID                 (1 << 15)
+#define BX_CPUID_EXT5_TSXLDTRK               (1 << 16)
+#define BX_CPUID_EXT5_RESERVED17             (1 << 17)
+#define BX_CPUID_EXT5_RESERVED18             (1 << 18)
+#define BX_CPUID_EXT5_RESERVED19             (1 << 19)
 #define BX_CPUID_EXT5_CET_IBT                (1 << 20)
 #define BX_CPUID_EXT5_RESERVED21             (1 << 21)
 #define BX_CPUID_EXT5_RESERVED22             (1 << 22)
