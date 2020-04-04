@@ -565,9 +565,9 @@ void print_usage(void)
     "  -n               no configuration file\n"
     "  -f configfile    specify configuration file\n"
     "  -q               quick start (skip configuration interface)\n"
-    "  -benchmark N     run bochs in benchmark mode for N millions of emulated ticks\n"
+    "  -benchmark N     run Bochs in benchmark mode for N millions of emulated ticks\n"
 #if BX_ENABLE_STATISTICS
-    "  -dumpstats N     dump bochs stats every N millions of emulated ticks\n"
+    "  -dumpstats N     dump Bochs stats every N millions of emulated ticks\n"
 #endif
     "  -r path          restore the Bochs state from path\n"
     "  -log filename    specify Bochs log file name\n"

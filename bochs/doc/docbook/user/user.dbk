@@ -5391,8 +5391,20 @@ For other arguments, see section <link linkend="bochsrc">bochsrc</link>.
   <entry>don't try to load a configuration file</entry>
 </row>
 <row>
+  <entry>-benchmark <replaceable>N</replaceable></entry>
+  <entry>run Bochs in benchmark mode for N millions of emulated ticks</entry>
+</row>
+<row>
+  <entry>-dumpstats <replaceable>N</replaceable></entry>
+  <entry>dump Bochs stats every N millions of emulated ticks</entry>
+</row>
+<row>
   <entry>-r <replaceable>path</replaceable></entry>
   <entry>specify path for restoring state</entry>
+</row>
+<row>
+  <entry>-unlock</entry>
+  <entry>unlock Bochs images leftover from previous session</entry>
 </row>
 <row>
   <entry>-noconsole</entry>

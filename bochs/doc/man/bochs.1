@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochs 1 "19 Jun 2014" "bochs @version@" "The Bochs Project"
+.TH bochs 1 "4 Apr 2020" "bochs @version@" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochs \- Portable x86 Emulator.
@@ -18,7 +18,7 @@ Linux and Microsoft(R) Windows(R).
 .\".\"DONT_SPLIT"
 .SH OPTIONS
 .LP
-When you run bochs without one of the following options, it
+When you run Bochs without one of the following options, it
 will search for a configuration file called .bochsrc in
 the current directory and your home directory and display
 the start menu.
@@ -31,13 +31,19 @@ the configuration file.
 This option specifies the name of the configuration file.
 .TP
 .BI \-qf\ configfile
-When you run bochs with this option, it will skip the start
+When you run Bochs with this option, it will skip the start
 menu and use the specified configuration file.
 .TP
 .BI \-n
-With this option bochs doesn't load a configuration file.
+With this option Bochs doesn't load a configuration file.
 In that case the setup for the emulation must be done with
 bochsrc options on the command line or in the start menu.
+.TP
+.BI \-benchmark\ N
+Run Bochs in benchmark mode for N millions of emulated ticks
+.TP
+.BI \-dumpstats\ N
+Dump Bochs stats every N millions of emulated ticks
 .TP
 .BI \-r\ path
 Restore the Bochs state from path
@@ -45,8 +51,11 @@ Restore the Bochs state from path
 .BI \-log\ filename
 Specify Bochs log file name
 .TP
+.BI \-unlock
+Unlock Bochs images leftover from previous session
+.TP
 .BI \-h,\ --help
-Print a summary of the command line options for bochs and exit.
+Print a summary of the command line options for Bochs and exit
 .TP
 .BI \-h,\ --help\ features
 Display available features / devices and exit
