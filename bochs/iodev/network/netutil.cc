@@ -25,7 +25,6 @@
 
 #ifdef BXHUB
 #include "config.h"
-#include "osdep.h"
 #else
 #include "iodev.h"
 #endif
@@ -64,6 +63,7 @@ Bit16u ip_checksum(const Bit8u *buf, unsigned buf_len)
 
 #ifdef BXHUB
 #include "misc/bxcompat.h"
+#include "osdep.h"
 #else
 #define LOG_THIS netdev->
 #endif
