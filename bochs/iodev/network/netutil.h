@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2004-2017  The Bochs Project
+//  Copyright (C) 2004-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -24,18 +24,7 @@
 #ifndef BX_NETUTIL_H
 #define BX_NETUTIL_H
 
-#define ETHERNET_MAC_ADDR_LEN   6
-#define ETHERNET_TYPE_IPV4 0x0800
-#define ETHERNET_TYPE_ARP  0x0806
-
-#define ARP_OPCODE_REQUEST     1
-#define ARP_OPCODE_REPLY       2
-#define ARP_OPCODE_REV_REQUEST 3
-#define ARP_OPCODE_REV_REPLY   4
-
-#define ICMP_ECHO_PACKET_MAX  128
-
-#define TFTP_BUFFER_SIZE 1024
+#define ETHERNET_MAC_ADDR_LEN 6
 
 #if defined(_MSC_VER)
 #pragma pack(push, 1)
@@ -124,12 +113,8 @@ udp_header_t;
 // DHCP configuration structure
 typedef struct {
   Bit8u host_macaddr[6];
-  Bit8u guest_macaddr[6];
   Bit8u host_ipv4addr[4];
-  Bit8u default_guest_ipv4addr[4];
-  Bit8u guest_ipv4addr[4];
   Bit8u dns_ipv4addr[4];
-  char *hostname;
 } dhcp_cfg_t;
 
 // vnet functions shared with bxhub
@@ -137,14 +122,91 @@ typedef struct {
 #define bx_devmodel_c void
 #endif
 Bit16u ip_checksum(const Bit8u *buf, unsigned buf_len);
-void vnet_prepare_reply(Bit8u *replybuf, unsigned l3type, dhcp_cfg_t *dhcpc);
-bx_bool vnet_process_arp_request(const Bit8u *buf, Bit8u *reply, dhcp_cfg_t *dhcp);
-bx_bool vnet_process_icmp_echo(const Bit8u *l3pkt, unsigned l3header_len,
-                               const Bit8u *l4pkt, unsigned l4pkt_len,
-                               Bit8u *reply);
-int vnet_process_dhcp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len,
-                      Bit8u *reply, dhcp_cfg_t *dhcp);
-int vnet_process_tftp(bx_devmodel_c *netdev, const Bit8u *data, unsigned data_len,
-                      Bit16u req_tid, Bit8u *reply, const char *tftp_rootdir);
+
+// VNET server
+
+#define VNET_MAX_CLIENTS 6
+#define LAYER4_LISTEN_MAX  128
+
+typedef int (*layer4_handler_t)(
+  void *this_ptr,
+  const Bit8u *ipheader,
+  unsigned ipheader_len,
+  unsigned sourceport,
+  unsigned targetport,
+  const Bit8u *data,
+  unsigned data_len,
+  Bit8u *reply
+  );
+
+class vnet_server_c {
+public:
+  vnet_server_c();
+  virtual ~vnet_server_c();
+
+  void init(bx_devmodel_c *netdev, dhcp_cfg_t *dhcpc, const char *tftp_rootdir);
+  void init_client(Bit8u clientid, const Bit8u *macaddr, const Bit8u *default_ipv4addr);
+  int handle_packet(const Bit8u *buf, unsigned len, Bit8u *reply);
+
+  layer4_handler_t get_layer4_handler(unsigned ipprotocol, unsigned port);
+  bx_bool register_layer4_handler(unsigned ipprotocol, unsigned port,
+                                  layer4_handler_t func);
+  bx_bool unregister_layer4_handler(unsigned ipprotocol, unsigned port);
+
+private:
+  bx_bool find_client(const Bit8u *mac_addr, Bit8u *clientid);
+
+  int process_arp(Bit8u clientid, const Bit8u *buf, unsigned len, Bit8u *reply);
+  int process_ipv4(Bit8u clientid, const Bit8u *buf, unsigned len, Bit8u *reply);
+
+  int process_icmpipv4(Bit8u clientid, const Bit8u *ipheader, unsigned ipheader_len,
+                       const Bit8u *l4pkt, unsigned l4pkt_len, Bit8u *reply);
+  int process_tcpipv4(Bit8u clientid, const Bit8u *ipheader, unsigned ipheader_len,
+                      const Bit8u *l4pkt, unsigned l4pkt_len, Bit8u *reply);
+  int process_udpipv4(Bit8u clientid, const Bit8u *ipheader, unsigned ipheader_len,
+                      const Bit8u *l4pkt, unsigned l4pkt_len, Bit8u *reply);
+
+  static int udpipv4_dhcp_handler(void *this_ptr, const Bit8u *ipheader,
+                                  unsigned ipheader_len, unsigned sourceport,
+                                  unsigned targetport, const Bit8u *data,
+                                  unsigned data_len, Bit8u *reply);
+  int udpipv4_dhcp_handler_ns(const Bit8u *ipheader, unsigned ipheader_len,
+                              unsigned sourceport, unsigned targetport,
+                              const Bit8u *data, unsigned data_len, Bit8u *reply);
+  static int udpipv4_tftp_handler(void *this_ptr, const Bit8u *ipheader,
+                                  unsigned ipheader_len, unsigned sourceport,
+                                  unsigned targetport, const Bit8u *data,
+                                  unsigned data_len, Bit8u *reply);
+  int udpipv4_tftp_handler_ns(const Bit8u *ipheader, unsigned ipheader_len,
+                              unsigned sourceport, unsigned targetport,
+                              const Bit8u *data, unsigned data_len, Bit8u *reply);
+  static int udpipv4_dns_handler(void *this_ptr, const Bit8u *ipheader,
+                                 unsigned ipheader_len, unsigned sourceport,
+                                 unsigned targetport, const Bit8u *data,
+                                 unsigned data_len, Bit8u *reply);
+  int udpipv4_dns_handler_ns(const Bit8u *ipheader, unsigned ipheader_len,
+                             unsigned sourceport, unsigned targetport,
+                             const Bit8u *data, unsigned data_len, Bit8u *reply);
+
+  bx_devmodel_c *netdev;
+  dhcp_cfg_t *dhcp;
+  const char *tftp_root;
+
+  struct {
+    bx_bool init;
+    const Bit8u *macaddr;
+    const Bit8u *default_ipv4addr;
+    Bit8u ipv4addr[4];
+    char *hostname;
+  } client[VNET_MAX_CLIENTS];
+
+  struct {
+    unsigned ipprotocol;
+    unsigned port;
+    layer4_handler_t func;
+  } l4data[LAYER4_LISTEN_MAX];
+
+  unsigned l4data_used;
+};
 
 #endif
