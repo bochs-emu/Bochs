@@ -25,6 +25,7 @@
 
 #ifdef BXHUB
 #include "config.h"
+#include "misc/bxcompat.h"
 #else
 #include "iodev.h"
 #endif
@@ -62,6 +63,7 @@ Bit16u ip_checksum(const Bit8u *buf, unsigned buf_len)
 // VNET server definitions
 
 #ifdef BXHUB
+#include <stdarg.h>
 #include "misc/bxcompat.h"
 #include "osdep.h"
 #else
@@ -166,6 +168,9 @@ static const Bit8u subnetmask_ipv4addr[4] = {0xff,0xff,0xff,0x00};
 
 vnet_server_c::vnet_server_c()
 {
+#ifdef BXHUB
+  logfd = stderr;
+#endif
   l4data_used = 0;
 
   register_layer4_handler(0x11, INET_PORT_BOOTP_SERVER, udpipv4_dhcp_handler);
@@ -184,6 +189,12 @@ vnet_server_c::~vnet_server_c()
       delete [] client[c].hostname;
     }
   }
+#ifdef BXHUB
+  if (logfd != stderr) {
+    fclose(logfd);
+  }
+  logfd = stderr;
+#endif
 }
 
 void vnet_server_c::init(bx_devmodel_c *_netdev, dhcp_cfg_t *dhcpc, const char *tftp_rootdir)
@@ -205,6 +216,24 @@ void vnet_server_c::init_client(Bit8u clientid, const Bit8u *macaddr, const Bit8
     client[clientid].init = 1;
   }
 }
+
+#ifdef BXHUB
+void vnet_server_c::init_log(const char *logfn)
+{
+  logfd = fopen(logfn, "w");
+}
+
+void vnet_server_c::bx_printf(const char *fmt, ...)
+{
+  va_list ap;
+  char msg[128];
+
+  va_start(ap, fmt);
+  vsnprintf(msg, sizeof(msg), fmt, ap);
+  fprintf(logfd, "%s\n", msg);
+  va_end(ap);
+}
+#endif
 
 bx_bool vnet_server_c::find_client(const Bit8u *mac_addr, Bit8u *clientid)
 {
@@ -928,18 +957,6 @@ int vnet_server_c::udpipv4_dhcp_handler_ns(const Bit8u *ipheader,
 
 // TFTP support
 
-typedef struct tftp_session {
-  char     filename[BX_PATHNAME_LEN];
-  Bit16u   tid;
-  bx_bool  write;
-  unsigned options;
-  size_t   tsize_val;
-  unsigned blksize_val;
-  unsigned timeout_val;
-  unsigned timestamp;
-  struct tftp_session *next;
-} tftp_session_t;
-
 tftp_session_t *tftp_sessions = NULL;
 
 tftp_session_t *tftp_new_session(Bit16u req_tid, bx_bool mode, const char *tpath, const char *tname)
@@ -1097,8 +1114,8 @@ int tftp_send_optack(Bit8u *buffer, tftp_session_t *s)
   return (p - buffer);
 }
 
-void tftp_parse_options(bx_devmodel_c *netdev, const char *mode, const Bit8u *data,
-                        unsigned data_len, tftp_session_t *s)
+void vnet_server_c::tftp_parse_options(const char *mode, const Bit8u *data,
+                                       unsigned data_len, tftp_session_t *s)
 {
   while (mode < (const char*)data + data_len) {
     if (memcmp(mode, "octet\0", 6) == 0) {
@@ -1174,7 +1191,7 @@ int vnet_server_c::udpipv4_tftp_handler_ns(const Bit8u *ipheader,
         // options
         if (strlen((char*)reply) < data_len - 2) {
           const char *mode = (const char*)data + 2 + strlen((char*)reply) + 1;
-          tftp_parse_options(netdev, mode, data, data_len, s);
+          tftp_parse_options(mode, data, data_len, s);
         }
         if (!(s->options & TFTP_OPTION_OCTET)) {
           return tftp_send_error(reply, 4, "Unsupported transfer mode", NULL);
@@ -1211,7 +1228,7 @@ int vnet_server_c::udpipv4_tftp_handler_ns(const Bit8u *ipheader,
         // options
         if (strlen((char*)reply) < data_len - 2) {
           const char *mode = (const char*)data + 2 + strlen((char*)reply) + 1;
-          tftp_parse_options(netdev, mode, data, data_len, s);
+          tftp_parse_options(mode, data, data_len, s);
         }
         if (!(s->options & TFTP_OPTION_OCTET)) {
           return tftp_send_error(reply, 4, "Unsupported transfer mode", NULL);

@@ -8160,6 +8160,7 @@ extensions:
 <listitem><para>Command line options for 'bxhub' added for base UDP port and 'vnet' server features</para></listitem>
 <listitem><para>Support for connects from up to 6 Bochs sessions</para></listitem>
 <listitem><para>Support for connecting 'bxhub' on other machine</para></listitem>
+<listitem><para>Limited DNS server for 'vnet' and connected clients</para></listitem>
 </itemizedlist>
 </para>
 <para>
@@ -8201,6 +8202,8 @@ Supported options:
   -base=...     base UDP port (bxhub uses 2 ports per Bochs session)
   -mac=...      host MAC address (default is b0:c4:20:00:00:0f)
   -tftp=...     enable TFTP support using specified directory
+  -loglev=...   set log level (0 - 3, default 1)
+  -logfile=...  send log output to file
   --help        display this help and exit
 </screen>
 </para>

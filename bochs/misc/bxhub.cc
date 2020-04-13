@@ -97,6 +97,7 @@ static Bit8u default_guest_ipv4addr[4] = {10, 0, 2, 15};
 static dhcp_cfg_t dhcp;
 static vnet_server_c vnet_server;
 int bx_loglev;
+static char bx_logfname[BX_PATHNAME_LEN];
 
 
 bx_bool handle_packet(hub_client_t *client, Bit8u *buf, unsigned len)
@@ -167,6 +168,7 @@ void print_usage()
     "  -mac=...      host MAC address (default is b0:c4:20:00:00:0f)\n"
     "  -tftp=...     enable TFTP support using specified directory\n"
     "  -loglev=...   set log level (0 - 3, default 1)\n"
+    "  -logfile=...  send log output to file\n"
     "  --help        display this help and exit\n\n");
 }
 
@@ -181,6 +183,7 @@ int parse_cmdline(int argc, char *argv[])
   bx_loglev = 1;
   port_base = 40000;
   tftp_root[0] = 0;
+  bx_logfname[0] = 0;
   memcpy(host_macaddr, default_host_macaddr, ETHERNET_MAC_ADDR_LEN);
   while ((arg < argc) && (ret == 1)) {
     // parse next arg
@@ -227,6 +230,9 @@ int parse_cmdline(int argc, char *argv[])
         printf("Unsupported log level %d (must be 0 - 3)\n\n", n);
         ret = 0;
       }
+    }
+    else if (!strncmp("-logfile=", argv[arg], 9)) {
+      strcpy(bx_logfname, &argv[arg][9]);
     }
     else if (argv[arg][0] == '-') {
       printf("Unknown option: %s\n\n", argv[arg]);
@@ -320,6 +326,11 @@ int CDECL main(int argc, char **argv)
     printf("TFTP using root directory '%s'\n", tftp_root);
   } else {
     printf("TFTP support disabled\n");
+  }
+
+  if (strlen(bx_logfname) > 0) {
+    vnet_server.init_log(bx_logfname);
+    printf("Using log file '%s'\n", bx_logfname);
   }
   printf("Press CTRL+C to quit bxhub\n");
 

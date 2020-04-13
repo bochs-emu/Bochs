@@ -123,6 +123,18 @@ typedef struct {
 #endif
 Bit16u ip_checksum(const Bit8u *buf, unsigned buf_len);
 
+typedef struct tftp_session {
+  char     filename[BX_PATHNAME_LEN];
+  Bit16u   tid;
+  bx_bool  write;
+  unsigned options;
+  size_t   tsize_val;
+  unsigned blksize_val;
+  unsigned timeout_val;
+  unsigned timestamp;
+  struct tftp_session *next;
+} tftp_session_t;
+
 // VNET server
 
 #define VNET_MAX_CLIENTS 6
@@ -147,6 +159,9 @@ public:
   void init(bx_devmodel_c *netdev, dhcp_cfg_t *dhcpc, const char *tftp_rootdir);
   void init_client(Bit8u clientid, const Bit8u *macaddr, const Bit8u *default_ipv4addr);
   int handle_packet(const Bit8u *buf, unsigned len, Bit8u *reply);
+#ifdef BXHUB
+  void init_log(const char *logfn);
+#endif
 
   layer4_handler_t get_layer4_handler(unsigned ipprotocol, unsigned port);
   bx_bool register_layer4_handler(unsigned ipprotocol, unsigned port,
@@ -154,6 +169,9 @@ public:
   bx_bool unregister_layer4_handler(unsigned ipprotocol, unsigned port);
 
 private:
+#ifdef BXHUB
+  void bx_printf(const char *fmt, ...);
+#endif
   bx_bool find_client(const Bit8u *mac_addr, Bit8u *clientid);
 
   int process_arp(Bit8u clientid, const Bit8u *buf, unsigned len, Bit8u *reply);
@@ -188,6 +206,12 @@ private:
                              unsigned sourceport, unsigned targetport,
                              const Bit8u *data, unsigned data_len, Bit8u *reply);
 
+  void tftp_parse_options(const char *mode, const Bit8u *data, unsigned data_len,
+                          tftp_session_t *s);
+
+#ifdef BXHUB
+  FILE *logfd;
+#endif
   bx_devmodel_c *netdev;
   dhcp_cfg_t *dhcp;
   const char *tftp_root;
