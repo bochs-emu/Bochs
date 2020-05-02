@@ -104,6 +104,51 @@ typedef struct udp_header {
 #endif
 udp_header_t;
 
+typedef struct tcp_header {
+#if defined(_MSC_VER) && (_MSC_VER>=1300)
+  __declspec(align(1))
+#endif
+  Bit16u src_port;
+  Bit16u dst_port;
+  Bit32u seq_num;
+  Bit32u ack_num;
+#ifdef BX_LITTLE_ENDIAN
+  Bit8u reserved : 4;
+  Bit8u data_offset : 4;
+#else
+  Bit8u data_offset : 4;
+  Bit8u reserved : 4;
+#endif
+  struct {
+#ifdef BX_LITTLE_ENDIAN
+    Bit8u fin : 1;
+    Bit8u syn : 1;
+    Bit8u rst : 1;
+    Bit8u psh : 1;
+    Bit8u ack : 1;
+    Bit8u urg : 1;
+    Bit8u ece : 1;
+    Bit8u cwr : 1;
+#else
+    Bit8u cwr : 1;
+    Bit8u ece : 1;
+    Bit8u urg : 1;
+    Bit8u ack : 1;
+    Bit8u psh : 1;
+    Bit8u rst : 1;
+    Bit8u syn : 1;
+    Bit8u fin : 1;
+#endif
+  } flags;
+  Bit16u window;
+  Bit16u checksum;
+  Bit16u urgent_ptr;
+} 
+#if !defined(_MSC_VER)
+  GCC_ATTRIBUTE((packed))
+#endif
+tcp_header_t;
+
 #if defined(_MSC_VER)
 #pragma pack(pop)
 #elif defined(__MWERKS__) && defined(macintosh)

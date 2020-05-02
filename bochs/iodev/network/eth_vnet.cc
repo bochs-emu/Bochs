@@ -59,7 +59,6 @@ void CDECL libvnet_net_plugin_fini(void)
 
 #define LOG_THIS netdev->
 
-#define BX_ETH_VNET_LOGGING 1
 #define BX_ETH_VNET_PCAP_LOGGING 0
 
 #if BX_ETH_VNET_PCAP_LOGGING
@@ -100,9 +99,8 @@ private:
   unsigned netdev_speed;
   unsigned tx_time;
 
-#if BX_ETH_VNET_LOGGING
+  bx_bool vnet_logging;
   FILE *pktlog_txt;
-#endif // BX_ETH_VNET_LOGGING
 #if BX_ETH_VNET_PCAP_LOGGING
   pcap_t *pcapp;
   pcap_dumper_t *pktlog_pcap;
@@ -159,25 +157,25 @@ void bx_vnet_pktmover_c::pktmover_init(
   BX_INFO(("'vnet' network driver initialized"));
   bx_vnet_instances++;
 
-#if BX_ETH_VNET_LOGGING
   if ((strlen(script) > 0) && (strcmp(script, "none"))) {
     pktlog_txt = fopen(script, "wb");
+    vnet_logging = (pktlog_txt != NULL);
   } else {
-    pktlog_txt = fopen("vnet-pktlog.txt", "wb");
+    vnet_logging = 0;
   }
-  if (!pktlog_txt) BX_PANIC(("vnet-pktlog.txt failed"));
-  fprintf(pktlog_txt, "vnet packetmover readable log file\n");
-  fprintf(pktlog_txt, "TFTP root = %s\n", netif);
-  fprintf(pktlog_txt, "host MAC address = ");
-  int i;
-  for (i=0; i<6; i++)
-    fprintf(pktlog_txt, "%02x%s", 0xff & dhcp.host_macaddr[i], i<5?":" : "\n");
-  fprintf(pktlog_txt, "guest MAC address = ");
-  for (i=0; i<6; i++)
-    fprintf(pktlog_txt, "%02x%s", 0xff & macaddr[i], i<5?":" : "\n");
-  fprintf(pktlog_txt, "--\n");
-  fflush(pktlog_txt);
-#endif
+  if (vnet_logging) {
+    fprintf(pktlog_txt, "vnet packetmover readable log file\n");
+    fprintf(pktlog_txt, "TFTP root = %s\n", netif);
+    fprintf(pktlog_txt, "host MAC address = ");
+    int i;
+    for (i=0; i<6; i++)
+      fprintf(pktlog_txt, "%02x%s", 0xff & dhcp.host_macaddr[i], i<5?":" : "\n");
+    fprintf(pktlog_txt, "guest MAC address = ");
+    for (i=0; i<6; i++)
+      fprintf(pktlog_txt, "%02x%s", 0xff & macaddr[i], i<5?":" : "\n");
+    fprintf(pktlog_txt, "--\n");
+    fflush(pktlog_txt);
+  }
 #if BX_ETH_VNET_PCAP_LOGGING
   pcapp = pcap_open_dead(DLT_EN10MB, BX_PACKET_BUFSIZE);
   pktlog_pcap = pcap_dump_open(pcapp, "vnet-pktlog.pcap");
@@ -187,9 +185,9 @@ void bx_vnet_pktmover_c::pktmover_init(
 
 bx_vnet_pktmover_c::~bx_vnet_pktmover_c()
 {
-#if BX_ETH_VNET_LOGGING
-  fclose(pktlog_txt);
-#endif
+  if (vnet_logging) {
+    fclose(pktlog_txt);
+  }
   bx_vnet_instances--;
 }
 
@@ -200,9 +198,9 @@ void bx_vnet_pktmover_c::sendpkt(void *buf, unsigned io_len)
 
 void bx_vnet_pktmover_c::guest_to_host(const Bit8u *buf, unsigned io_len)
 {
-#if BX_ETH_VNET_LOGGING
-  write_pktlog_txt(pktlog_txt, buf, io_len, 0);
-#endif
+  if (vnet_logging) {
+    write_pktlog_txt(pktlog_txt, buf, io_len, 0);
+  }
 #if BX_ETH_VNET_PCAP_LOGGING
   if (pktlog_pcap && !ferror((FILE *)pktlog_pcap)) {
     Bit64u time = bx_pc_system.time_usec();
@@ -217,9 +215,11 @@ void bx_vnet_pktmover_c::guest_to_host(const Bit8u *buf, unsigned io_len)
 
   this->tx_time = (64 + 96 + 4 * 8 + io_len * 8) / this->netdev_speed;
   packet_len = vnet_server.handle_packet(buf, io_len, packet_buffer);
-  // host-to-guest
-  unsigned rx_time = (64 + 96 + 4 * 8 + io_len * 8) / this->netdev_speed;
-  bx_pc_system.activate_timer(this->rx_timer_index, this->tx_time + rx_time + 100, 0);
+  if (packet_len > 0) {
+    // host-to-guest
+    unsigned rx_time = (64 + 96 + 4 * 8 + io_len * 8) / this->netdev_speed;
+    bx_pc_system.activate_timer(this->rx_timer_index, this->tx_time + rx_time + 100, 0);
+  }
 }
 
 // The receive poll process
@@ -234,9 +234,9 @@ void bx_vnet_pktmover_c::rx_timer(void)
 {
   if (this->rxstat(this->netdev) & BX_NETDEV_RXREADY) {
     this->rxh(this->netdev, (void *)packet_buffer, packet_len);
-#if BX_ETH_VNET_LOGGING
-    write_pktlog_txt(pktlog_txt, packet_buffer, packet_len, 1);
-#endif
+    if (vnet_logging) {
+      write_pktlog_txt(pktlog_txt, packet_buffer, packet_len, 1);
+    }
 #if BX_ETH_VNET_PCAP_LOGGING
     if (pktlog_pcap && !ferror((FILE *)pktlog_pcap)) {
       Bit64u time = bx_pc_system.time_usec();
