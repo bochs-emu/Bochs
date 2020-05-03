@@ -473,11 +473,56 @@ int vnet_server_c::process_tcpipv4(Bit8u clientid, const Bit8u *ipheader,
                                 unsigned ipheader_len, const Bit8u *l4pkt,
                                 unsigned l4pkt_len, Bit8u *reply)
 {
-  if (l4pkt_len < 20) return 0;
+  unsigned tcp_src_port, tcp_dst_port, tcphdr_len, tcpdata_len = 0;
+  Bit32u guest_seq_num;
+  static Bit32u host_seq_num = 0;
 
-  BX_ERROR(("tcp packet - not implemented"));
-  // TODO
-  return 0;
+  if (l4pkt_len < 20) return 0;
+  tcp_header_t *tcphdr = (tcp_header_t *)l4pkt;
+  tcp_header_t *tcprhdr = (tcp_header_t *)&reply[34];
+  tcp_src_port = ntohs(tcphdr->src_port);
+  tcp_dst_port = ntohs(tcphdr->dst_port);
+  guest_seq_num = ntohl(tcphdr->seq_num);
+  if (tcphdr->flags.syn) {
+    memset(tcprhdr, 0, sizeof(tcp_header_t));
+    tcprhdr->flags.syn = 0;
+    tcprhdr->flags.rst = 1;
+    tcprhdr->flags.ack = 1;
+    tcprhdr->seq_num = htonl(host_seq_num);
+    tcprhdr->ack_num = htonl(guest_seq_num+1);
+    tcprhdr->window = 0;
+    tcphdr_len = 20;
+    tcpdata_len = 0;
+  }
+  BX_ERROR(("tcp packet - not implemented (port = %d)", tcp_dst_port));
+  // host-to-guest
+  if ((tcpdata_len + 54U) > BX_PACKET_BUFSIZE) {
+    BX_ERROR(("generated tcp data is too long"));
+    return 0;
+  }
+  // tcp pseudo-header
+  reply[34U-12U]=0;
+  reply[34U-11U]=0x06; // TCP
+  put_net2(&reply[34U-10U],tcphdr_len+tcpdata_len);
+  memcpy(&reply[34U-8U], dhcp->host_ipv4addr, 4);
+  memcpy(&reply[34U-4U], client[clientid].ipv4addr, 4);
+  // tcp header
+  tcprhdr->src_port = htons(tcp_dst_port);
+  tcprhdr->dst_port = htons(tcp_src_port);
+  tcprhdr->data_offset = tcphdr_len >> 2;
+  tcprhdr->checksum = 0;
+  put_net2(&reply[34U+16U], ip_checksum(&reply[34U-12U],12U+tcphdr_len+tcpdata_len) ^ (Bit16u)0xffff);
+  // ip header
+  memset(&reply[14U],0,20U);
+  reply[14U+0] = 0x45;
+  reply[14U+1] = 0x00;
+  put_net2(&reply[14U+2],20U+tcphdr_len+tcpdata_len);
+  put_net2(&reply[14U+4],1);
+  reply[14U+6] = 0x00;
+  reply[14U+7] = 0x00;
+  reply[14U+8] = 0x07; // TTL
+  reply[14U+9] = 0x06; // TCP
+  return (tcpdata_len+tcphdr_len+34);
 }
 
 layer4_handler_t vnet_server_c::get_layer4_handler(
