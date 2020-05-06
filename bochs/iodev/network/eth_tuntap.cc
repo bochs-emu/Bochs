@@ -176,7 +176,7 @@ bx_tuntap_pktmover_c::bx_tuntap_pktmover_c(const char *netif,
 
   fd = open (filename, O_RDWR);
 #endif
-  char intname[IFNAMSIZ];
+  char intname[MAXPATHLEN];
   strcpy(intname,netif);
   fd=tun_alloc(intname);
   if (fd < 0) {
