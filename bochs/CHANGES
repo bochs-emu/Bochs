@@ -24,7 +24,7 @@ Changes after 2.6.11:
       either to disable the DDC feature or to read the monitor EDID from file.
 
 - GUI and display libraries
-    - Added Swiss-German keymap for X11.
+    - X11 keymaps: added new one for Swiss-German and extended Italian map.
 
 -------------------------------------------------------------------------
 Changes in 2.6.11 (January 5, 2020):
