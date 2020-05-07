@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2014-2017  The Bochs Project
+//  Copyright (C) 2014-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -54,6 +54,8 @@ void CDECL libslirp_net_plugin_fini(void)
 
 #define LOG_THIS netdev->
 
+#define BX_ETH_SLIRP_LOGGING 0
+
 #define MAX_HOSTFWD 5
 
 static int rx_timer_index = BX_NULL_TIMER_HANDLE;
@@ -88,6 +90,9 @@ private:
 #ifndef WIN32
   char *smb_export, *smb_tmpdir;
   struct in_addr smb_srv;
+#endif
+#if BX_ETH_SLIRP_LOGGING
+  FILE *pktlog_txt;
 #endif
 
   bx_bool parse_slirp_conf(const char *conf);
@@ -135,6 +140,9 @@ bx_slirp_pktmover_c::~bx_slirp_pktmover_c()
       signal(SIGPIPE, SIG_DFL);
 #endif
     }
+#if BX_ETH_SLIRP_LOGGING
+    fclose(pktlog_txt);
+#endif
   }
 }
 
@@ -357,11 +365,25 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
     }
   }
 #endif
+#if BX_ETH_SLIRP_LOGGING
+  pktlog_txt = fopen("slirp-pktlog.txt", "wb");
+  fprintf(pktlog_txt, "slirp packetmover readable log file\n");
+  fprintf(pktlog_txt, "TFTP root = %s\n", netif);
+  fprintf(pktlog_txt, "guest MAC address = ");
+  int i;
+  for (i=0; i<6; i++)
+    fprintf(pktlog_txt, "%02x%s", 0xff & macaddr[i], i<5?":" : "\n");
+  fprintf(pktlog_txt, "--\n");
+  fflush(pktlog_txt);
+#endif
   bx_slirp_instances++;
 }
 
 void bx_slirp_pktmover_c::sendpkt(void *buf, unsigned io_len)
 {
+#if BX_ETH_SLIRP_LOGGING
+  write_pktlog_txt(pktlog_txt, (const Bit8u*)buf, io_len, 0);
+#endif
   slirp_input(slirp, (Bit8u*)buf, io_len);
 }
 
@@ -407,6 +429,9 @@ void bx_slirp_pktmover_c::receive(void *pkt, unsigned pkt_len)
 {
   if (this->rxstat(this->netdev) & BX_NETDEV_RXREADY) {
     if (pkt_len < MIN_RX_PACKET_LEN) pkt_len = MIN_RX_PACKET_LEN;
+#if BX_ETH_SLIRP_LOGGING
+    write_pktlog_txt(pktlog_txt, (const Bit8u*)pkt, pkt_len, 1);
+#endif
     this->rxh(this->netdev, pkt, pkt_len);
   } else {
     BX_ERROR(("device not ready to receive data"));
