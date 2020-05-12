@@ -87,6 +87,7 @@ public:
   void sendpkt(void *buf, unsigned io_len);
 private:
   void guest_to_host(const Bit8u *buf, unsigned io_len);
+  void host_to_guest(void);
 
   vnet_server_c vnet_server;
 
@@ -214,10 +215,16 @@ void bx_vnet_pktmover_c::guest_to_host(const Bit8u *buf, unsigned io_len)
 #endif
 
   this->tx_time = (64 + 96 + 4 * 8 + io_len * 8) / this->netdev_speed;
-  packet_len = vnet_server.handle_packet(buf, io_len, packet_buffer);
+  vnet_server.handle_packet(buf, io_len);
+
+  host_to_guest();
+}
+
+void bx_vnet_pktmover_c::host_to_guest(void)
+{
+  packet_len = vnet_server.get_packet(packet_buffer);
   if (packet_len > 0) {
-    // host-to-guest
-    unsigned rx_time = (64 + 96 + 4 * 8 + io_len * 8) / this->netdev_speed;
+    unsigned rx_time = (64 + 96 + 4 * 8 + packet_len * 8) / this->netdev_speed;
     bx_pc_system.activate_timer(this->rx_timer_index, this->tx_time + rx_time + 100, 0);
   }
 }
@@ -248,6 +255,8 @@ void bx_vnet_pktmover_c::rx_timer(void)
       fflush((FILE *)pktlog_pcap);
     }
 #endif
+    // check for another pending packet
+    host_to_guest();
   } else {
     BX_ERROR(("device not ready to receive data"));
   }

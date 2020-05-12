@@ -173,13 +173,10 @@ vnet_server_c::vnet_server_c()
 #endif
   l4data_used = 0;
 
-  register_layer4_handler(0x11, INET_PORT_BOOTP_SERVER, udpipv4_dhcp_handler);
-  register_layer4_handler(0x11, INET_PORT_TFTP_SERVER, udpipv4_tftp_handler);
-  register_layer4_handler(0x11, INET_PORT_DOMAIN, udpipv4_dns_handler);
-
   for (Bit8u c = 0; c < VNET_MAX_CLIENTS; c++) {
     client[c].init = 0;
   }
+  packet_count = 0;
 }
 
 vnet_server_c::~vnet_server_c()
@@ -203,6 +200,13 @@ void vnet_server_c::init(bx_devmodel_c *_netdev, dhcp_cfg_t *dhcpc, const char *
   dhcp = dhcpc;
   memcpy(broadcast_ipv4addr[2], dhcp->host_ipv4addr, 3);
   tftp_root = tftp_rootdir;
+
+  register_layer4_handler(0x11, INET_PORT_BOOTP_SERVER, udpipv4_dhcp_handler);
+  register_layer4_handler(0x11, INET_PORT_DOMAIN, udpipv4_dns_handler);
+  if (strlen(tftp_root) > 0) {
+    register_layer4_handler(0x11, INET_PORT_TFTP_SERVER, udpipv4_tftp_handler);
+    register_tcp_handler(INET_PORT_FTP, tcpipv4_ftp_handler);
+  }
 }
 
 void vnet_server_c::init_client(Bit8u clientid, const Bit8u *macaddr, const Bit8u *default_ipv4addr)
@@ -248,55 +252,87 @@ bx_bool vnet_server_c::find_client(const Bit8u *mac_addr, Bit8u *clientid)
   return (*clientid < VNET_MAX_CLIENTS);
 }
 
-int vnet_server_c::handle_packet(const Bit8u *buf, unsigned len, Bit8u *reply)
+void vnet_server_c::handle_packet(const Bit8u *buf, unsigned len)
 {
   ethernet_header_t *ethhdr = (ethernet_header_t *)buf;
   Bit8u clientid = 0xff;
-  int ret = 0;
 
   if (len >= 14) {
     if (!find_client(ethhdr->src_mac_addr, &clientid))
-      return ret;
+      return;
     if (!memcmp(&ethhdr->dst_mac_addr, dhcp->host_macaddr, 6) ||
         !memcmp(&ethhdr->dst_mac_addr, &broadcast_macaddr[0], 6)) {
       switch (ntohs(ethhdr->type)) {
         case ETHERNET_TYPE_IPV4: 
-          ret = process_ipv4((Bit8u)clientid, buf, len, reply);
+          process_ipv4(clientid, buf, len);
           break;
         case ETHERNET_TYPE_ARP:
-          ret = process_arp((Bit8u)clientid, buf, len, reply);
+          process_arp(clientid, buf, len);
           break;
         default: // unknown packet type.
           break;
       }
     }
   }
-  if (ret > 0) {
-    if (ret < 14) {
-      BX_ERROR(("host_to_guest: io_len < 14!"));
-      return 0;
-    }
-    if (ret < MIN_RX_PACKET_LEN) {
-      ret = MIN_RX_PACKET_LEN;
-    }
-    ethernet_header_t *ethrhdr = (ethernet_header_t *)reply;
-    memcpy(ethrhdr->dst_mac_addr, ethhdr->src_mac_addr, ETHERNET_MAC_ADDR_LEN);
-    memcpy(ethrhdr->src_mac_addr, dhcp->host_macaddr, ETHERNET_MAC_ADDR_LEN);
-    ethrhdr->type = ethhdr->type;
-  }
-  return ret;
 }
 
-int vnet_server_c::process_arp(Bit8u clientid, const Bit8u *buf, unsigned len, Bit8u *reply)
+unsigned vnet_server_c::get_packet(Bit8u *buf)
 {
-  int ret = 0;
+  unsigned len = 0;
 
-  if (len < 22) return 0;
-  if (len < (unsigned)(22+buf[18]*2+buf[19]*2)) return 0;
+  if (packet_count > 0) {
+    len = packet_len[0];
+    memcpy(buf, packet_buffer[0], len);
+    packet_len[0] = 0;
+    delete [] packet_buffer[0];
+    if (packet_count > 1) {
+      packet_buffer[0] = packet_buffer[1];
+      packet_len[0] = packet_len[1];
+    } else {
+      packet_buffer[0] = NULL;
+    }
+    packet_count--;
+  }
+  return len;
+}
+
+void vnet_server_c::host_to_guest(Bit8u clientid, Bit8u *buf, unsigned len, unsigned l3type)
+{
+  if (len < 14) {
+    BX_ERROR(("host_to_guest: io_len < 14!"));
+    return;
+  }
+  if (len < MIN_RX_PACKET_LEN) {
+    len = MIN_RX_PACKET_LEN;
+  }
+  ethernet_header_t *ethrhdr = (ethernet_header_t *)buf;
+  memcpy(ethrhdr->dst_mac_addr, client[clientid].macaddr, ETHERNET_MAC_ADDR_LEN);
+  memcpy(ethrhdr->src_mac_addr, dhcp->host_macaddr, ETHERNET_MAC_ADDR_LEN);
+  ethrhdr->type = htons(l3type);
+
+  if (packet_count < 2) {
+    packet_buffer[packet_count] = new Bit8u[len];
+    memcpy(packet_buffer[packet_count], buf, len);
+    packet_len[packet_count++] = len;
+  } else {
+    BX_ERROR(("host_to_guest(): too many pending packets"));
+  }
+}
+
+/////////////////////////////////////////////////////////////////////////
+// ARP
+/////////////////////////////////////////////////////////////////////////
+
+void vnet_server_c::process_arp(Bit8u clientid, const Bit8u *buf, unsigned len)
+{
+  Bit8u replybuf[MIN_RX_PACKET_LEN];
+
+  if (len < 22) return;
+  if (len < (unsigned)(22+buf[18]*2+buf[19]*2)) return;
 
   arp_header_t *arphdr = (arp_header_t *)((Bit8u *)buf +
                                           sizeof(ethernet_header_t));
-  arp_header_t *arprhdr = (arp_header_t *)(reply + sizeof(ethernet_header_t));
+  arp_header_t *arprhdr = (arp_header_t *)(replybuf + sizeof(ethernet_header_t));
 
   if ((ntohs(arphdr->hw_addr_space) != 0x0001) ||
       (ntohs(arphdr->proto_addr_space) != 0x0800) ||
@@ -305,7 +341,7 @@ int vnet_server_c::process_arp(Bit8u clientid, const Bit8u *buf, unsigned len, B
     BX_ERROR(("Unhandled ARP message hw: 0x%04x (%d) proto: 0x%04x (%d)",
               ntohs(arphdr->hw_addr_space), arphdr->hw_addr_len,
               ntohs(arphdr->proto_addr_space), arphdr->proto_addr_len));
-    return 0;
+    return;
   }
 
   switch (ntohs(arphdr->opcode)) {
@@ -314,14 +350,14 @@ int vnet_server_c::process_arp(Bit8u clientid, const Bit8u *buf, unsigned len, B
         memcpy(client[clientid].ipv4addr, &buf[28], 4);
         if (!memcmp(&buf[38], dhcp->host_ipv4addr, 4) ||
             !memcmp(&buf[38], dhcp->dns_ipv4addr, 4)) {
-          memset(reply, 0, MIN_RX_PACKET_LEN);
+          memset(replybuf, 0, MIN_RX_PACKET_LEN);
           memcpy(arprhdr, &buf[14], 6);
           put_net2((Bit8u*)&arprhdr->opcode, ARP_OPCODE_REPLY);
           memcpy((Bit8u *)arprhdr+8, dhcp->host_macaddr, ETHERNET_MAC_ADDR_LEN);
           memcpy((Bit8u *)arprhdr+14, &buf[38], 4);
           memcpy((Bit8u *)arprhdr+18, client[clientid].macaddr, ETHERNET_MAC_ADDR_LEN);
           memcpy((Bit8u *)arprhdr+24, client[clientid].ipv4addr, 4);
-          ret = MIN_RX_PACKET_LEN;
+          host_to_guest(clientid, replybuf, MIN_RX_PACKET_LEN, ETHERNET_TYPE_ARP);
         }
       }
       break;
@@ -338,12 +374,14 @@ int vnet_server_c::process_arp(Bit8u clientid, const Bit8u *buf, unsigned len, B
       BX_ERROR(("arp: unknown ARP opcode 0x%04x", ntohs(arphdr->opcode)));
       break;
   }
-  return ret;
 }
 
-int vnet_server_c::process_ipv4(Bit8u clientid, const Bit8u *buf, unsigned len, Bit8u *reply)
+/////////////////////////////////////////////////////////////////////////
+// IPv4
+/////////////////////////////////////////////////////////////////////////
+
+void vnet_server_c::process_ipv4(Bit8u clientid, const Bit8u *buf, unsigned len)
 {
-  int ret = 0;
   unsigned total_len;
   unsigned fragment_flags;
   unsigned fragment_offset;
@@ -355,23 +393,23 @@ int vnet_server_c::process_ipv4(Bit8u clientid, const Bit8u *buf, unsigned len, 
 
   if (len < (14U+20U)) {
     BX_ERROR(("ip packet - too small packet"));
-    return 0;
+    return;
   }
 
   ip_header_t *iphdr = (ip_header_t *)((Bit8u *)buf +
                                        sizeof(ethernet_header_t));
   if (iphdr->version != 4) {
     BX_ERROR(("ipv%u packet - not implemented", iphdr->version));
-    return 0;
+    return;
   }
   l3header_len = (iphdr->header_len << 2);
   if (l3header_len != 20) {
     BX_ERROR(("ip: option header is not implemented"));
-    return 0;
+    return;
   }
   if (ip_checksum((Bit8u*)iphdr, l3header_len) != (Bit16u)0xffff) {
     BX_ERROR(("ip: invalid checksum"));
-    return 0;
+    return;
   }
 
   total_len = ntohs(iphdr->total_len);
@@ -391,7 +429,7 @@ int vnet_server_c::process_ipv4(Bit8u clientid, const Bit8u *buf, unsigned len, 
     BX_ERROR(("target IP address %u.%u.%u.%u is unknown",
       (unsigned)buf[14+16],(unsigned)buf[14+17],
       (unsigned)buf[14+18],(unsigned)buf[14+19]));
-    return 0;
+    return;
   }
 
   fragment_flags = ntohs(iphdr->frag_offs) >> 13;
@@ -399,7 +437,7 @@ int vnet_server_c::process_ipv4(Bit8u clientid, const Bit8u *buf, unsigned len, 
 
   if ((fragment_flags & 0x1) || (fragment_offset != 0)) {
     BX_ERROR(("ignore fragmented packet!"));
-    return 0;
+    return;
   }
 
   l4pkt = &buf[14 + l3header_len];
@@ -407,123 +445,432 @@ int vnet_server_c::process_ipv4(Bit8u clientid, const Bit8u *buf, unsigned len, 
 
   switch (iphdr->protocol) {
     case 0x01: // ICMP
-      ret = process_icmpipv4(clientid, &buf[14], l3header_len, l4pkt, l4pkt_len, reply);
+      process_icmpipv4(clientid, &buf[14], l3header_len, l4pkt, l4pkt_len);
       break;
     case 0x06: // TCP
-      ret = process_tcpipv4(clientid, &buf[14], l3header_len, l4pkt, l4pkt_len, reply);
+      process_tcpipv4(clientid, &buf[14], l3header_len, l4pkt, l4pkt_len);
       break;
     case 0x11: // UDP
-      ret = process_udpipv4(clientid, &buf[14], l3header_len, l4pkt, l4pkt_len, reply);
+      process_udpipv4(clientid, &buf[14], l3header_len, l4pkt, l4pkt_len);
       break;
     default:
       BX_ERROR(("unknown IP protocol %02x", iphdr->protocol));
       break;
   }
-  if (ret > 0) {
-    // host-to-guest IPv4
-    reply[14] = (reply[14] & 0x0f) | 0x40;
-    l3header_len = ((unsigned)(reply[14] & 0x0f) << 2);
-    memcpy(&reply[26], srv_ipv4addr, 4);
-    memcpy(&reply[30], client[clientid].ipv4addr, 4);
-    put_net2(&reply[24], 0);
-    put_net2(&reply[24], ip_checksum(&reply[14], l3header_len) ^ (Bit16u)0xffff);
-  }
-  return ret;
 }
 
-int vnet_server_c::process_icmpipv4(Bit8u clientid, const Bit8u *ipheader,
-                                    unsigned ipheader_len, const Bit8u *l4pkt,
-                                    unsigned l4pkt_len, Bit8u *reply)
+void vnet_server_c::host_to_guest_ipv4(const Bit8u clientid, bx_bool dns_srv, Bit8u *buf, unsigned len)
 {
-  int ret = 0;
+  unsigned l3header_len;
+
+  buf[14] = (buf[14] & 0x0f) | 0x40;
+  l3header_len = ((unsigned)(buf[14] & 0x0f) << 2);
+  if (dns_srv) {
+    memcpy(&buf[26], dhcp->dns_ipv4addr, 4);
+  } else {
+    memcpy(&buf[26], dhcp->host_ipv4addr, 4);
+  }
+  memcpy(&buf[30], client[clientid].ipv4addr, 4);
+  put_net2(&buf[24], 0);
+  put_net2(&buf[24], ip_checksum(&buf[14], l3header_len) ^ (Bit16u)0xffff);
+
+  host_to_guest(clientid, buf, len, ETHERNET_TYPE_IPV4);
+}
+
+/////////////////////////////////////////////////////////////////////////
+// ICMP/IPv4
+/////////////////////////////////////////////////////////////////////////
+
+void vnet_server_c::process_icmpipv4(Bit8u clientid, const Bit8u *ipheader,
+                                     unsigned ipheader_len, const Bit8u *l4pkt,
+                                     unsigned l4pkt_len)
+{
   unsigned icmptype;
   unsigned icmpcode;
+  Bit8u replybuf[ICMP_ECHO_PACKET_MAX];
 
-  if (l4pkt_len < 8) return 0;
+  if (l4pkt_len < 8) return;
   icmptype = l4pkt[0];
   icmpcode = l4pkt[1];
   if (ip_checksum(l4pkt, l4pkt_len) != (Bit16u)0xffff) {
     BX_ERROR(("icmp: invalid checksum"));
-    return 0;
+    return;
   }
 
   switch (icmptype) {
     case 0x08: // ECHO
       if (icmpcode == 0) {
         if ((14U+ipheader_len+l4pkt_len) > ICMP_ECHO_PACKET_MAX) {
-          return 0;
+          return;
         }
-        memcpy(&reply[14], ipheader, ipheader_len);
-        memcpy(&reply[14+ipheader_len], l4pkt, l4pkt_len);
-        reply[14+ipheader_len+0] = 0x00; // echo reply
-        put_net2(&reply[14+ipheader_len+2],0);
-        put_net2(&reply [14+ipheader_len+2],
-          ip_checksum(&reply[14+ipheader_len],l4pkt_len) ^ (Bit16u)0xffff);
-        ret = ICMP_ECHO_PACKET_MAX;
+        memcpy(&replybuf[14], ipheader, ipheader_len);
+        memcpy(&replybuf[14+ipheader_len], l4pkt, l4pkt_len);
+        replybuf[14+ipheader_len+0] = 0x00; // echo reply
+        put_net2(&replybuf[14+ipheader_len+2],0);
+        put_net2(&replybuf[14+ipheader_len+2],
+          ip_checksum(&replybuf[14+ipheader_len],l4pkt_len) ^ (Bit16u)0xffff);
+        host_to_guest_ipv4(clientid, 0, replybuf, 14U+ipheader_len+l4pkt_len);
       }
       break;
     default:
       BX_ERROR(("unhandled icmp packet: type=%u code=%u", icmptype, icmpcode));
       break;
   }
-  return ret;
 }
 
-int vnet_server_c::process_tcpipv4(Bit8u clientid, const Bit8u *ipheader,
-                                unsigned ipheader_len, const Bit8u *l4pkt,
-                                unsigned l4pkt_len, Bit8u *reply)
-{
-  unsigned tcp_src_port, tcp_dst_port, tcphdr_len, tcpdata_len = 0;
-  Bit32u guest_seq_num;
-  static Bit32u host_seq_num = 0;
+/////////////////////////////////////////////////////////////////////////
+// TCP/IPv4
+/////////////////////////////////////////////////////////////////////////
 
-  if (l4pkt_len < 20) return 0;
+#define TCP_DISCONNECTED  0
+#define TCP_CONNECTING    1
+#define TCP_CONNECTED     2
+#define TCP_DISCONNECTING 3
+
+// TCP handler methods
+
+tcp_handler_t vnet_server_c::get_tcp_handler(unsigned port)
+{
+  unsigned n;
+
+  for (n = 0; n < tcpfn_used; n++) {
+    if (tcpfn[n].port == port)
+      return tcpfn[n].func;
+  }
+
+  return (tcp_handler_t)NULL;
+}
+
+bx_bool vnet_server_c::register_tcp_handler(unsigned port, tcp_handler_t func)
+{
+  if (get_tcp_handler(port) != (tcp_handler_t)NULL) {
+    BX_ERROR(("TCP port %u is already in use", port));
+    return 0;
+  }
+
+  unsigned n;
+
+  for (n = 0; n < tcpfn_used; n++) {
+    if (tcpfn[n].func == (tcp_handler_t)NULL) {
+      break;
+    }
+  }
+
+  if (n == tcpfn_used) {
+    if (n >= LAYER4_LISTEN_MAX) {
+      BX_ERROR(("vnet: LAYER4_LISTEN_MAX is too small"));
+      return 0;
+    }
+    tcpfn_used++;
+  }
+
+  tcpfn[n].port = port;
+  tcpfn[n].func = func;
+
+  return 1;
+}
+
+bx_bool vnet_server_c::unregister_tcp_handler(unsigned port)
+{
+  unsigned n;
+
+  for (n = 0; n < tcpfn_used; n++) {
+    if (tcpfn[n].port == port) {
+      tcpfn[n].func = (tcp_handler_t)NULL;
+      return 1;
+    }
+  }
+
+  BX_ERROR(("TCP port %u is not registered", port));
+  return 0;
+}
+
+// TCP connection handling functions
+
+tcp_conn_t *tcp_connections = NULL;
+
+tcp_conn_t *tcp_new_connection(Bit8u clientid, Bit16u src_port, Bit16u dst_port)
+{
+  tcp_conn_t *tc = new tcp_conn_t;
+  tc->clientid = clientid;
+  tc->src_port = src_port;
+  tc->dst_port = dst_port;
+  tc->state = TCP_DISCONNECTED;
+  tc->data = NULL;
+  tc->next = tcp_connections;
+  tcp_connections = tc;
+  return tc;
+}
+
+tcp_conn_t *tcp_find_connection(Bit8u clientid, Bit16u src_port, Bit16u dst_port)
+{
+  tcp_conn_t *tc = tcp_connections;
+  while (tc != NULL) {
+    if ((tc->clientid != clientid) || (tc->src_port != src_port) || (tc->dst_port != dst_port))
+      tc = tc->next;
+    else
+      break;
+  }
+  return tc;
+}
+
+void tcp_remove_connection(tcp_conn_t *tc)
+{
+  tcp_conn_t *last;
+
+  if (tcp_connections == tc) {
+    tcp_connections = tc->next;
+  } else {
+    last = tcp_connections;
+    while (last != NULL) {
+      if (last->next != tc)
+        last = last->next;
+      else
+        break;
+    }
+    if (last) {
+      last->next = tc->next;
+    }
+  }
+  delete tc;
+}
+
+void vnet_server_c::process_tcpipv4(Bit8u clientid, const Bit8u *ipheader,
+                                    unsigned ipheader_len, const Bit8u *l4pkt,
+                                    unsigned l4pkt_len)
+{
+  unsigned tcphdr_len, tcpdata_len, tcprhdr_len, tcprdata_len = 0;
+  Bit32u tcp_seq_num, tcp_ack_num;
+  Bit16u tcp_src_port, tcp_dst_port, tcp_window;
+  Bit8u replybuf[MIN_RX_PACKET_LEN];
+  const Bit8u *tcp_data;
+  tcp_handler_t func;
+  tcp_conn_t *tcp_conn;
+  bx_bool tcp_error = 1;
+
+  if (l4pkt_len < 20) return;
   tcp_header_t *tcphdr = (tcp_header_t *)l4pkt;
-  tcp_header_t *tcprhdr = (tcp_header_t *)&reply[34];
+  tcp_header_t *tcprhdr = (tcp_header_t *)&replybuf[34];
   tcp_src_port = ntohs(tcphdr->src_port);
   tcp_dst_port = ntohs(tcphdr->dst_port);
-  guest_seq_num = ntohl(tcphdr->seq_num);
-  if (tcphdr->flags.syn) {
-    memset(tcprhdr, 0, sizeof(tcp_header_t));
+  tcp_seq_num = ntohl(tcphdr->seq_num);
+  tcp_ack_num = ntohl(tcphdr->ack_num);
+  tcphdr_len = tcphdr->data_offset << 2;
+  tcp_window = ntohs(tcphdr->window);
+  tcpdata_len = l4pkt_len - tcphdr_len;
+  tcp_data = (Bit8u*)tcphdr + tcphdr_len;
+  if (tcphdr_len > 20) {
+    BX_ERROR(("TCP options not supported yet"));
+  }
+  // check header
+  func = get_tcp_handler(tcp_dst_port);
+  tcp_conn = tcp_find_connection(clientid, tcp_src_port, tcp_dst_port);
+  tcprhdr_len = sizeof(tcp_header_t);
+  memset(tcprhdr, 0, tcprhdr_len);
+  if (func != (tcp_handler_t)NULL) {
+    if (tcp_conn == (tcp_conn_t*)NULL) {
+      if (tcphdr->flags.syn) {
+        tcprhdr->flags.syn = 1;
+        tcprhdr->flags.ack = 1;
+        tcprhdr->seq_num = htonl(1);
+        tcprhdr->ack_num = htonl(tcp_seq_num+1);
+        tcprhdr->window = htons(tcp_window);
+        tcprdata_len = 0;
+        tcp_conn = tcp_new_connection(clientid, tcp_src_port, tcp_dst_port);
+        tcp_conn->state = TCP_CONNECTING;
+        tcp_error = 0;
+      }
+    } else {
+      if ((tcphdr->flags.fin) && (tcp_conn->state == TCP_CONNECTED)) {
+        tcprhdr->flags.fin = 1;
+        tcprhdr->flags.ack = 1;
+        tcprhdr->seq_num = htonl(tcp_conn->host_seq_num);
+        tcprhdr->ack_num = htonl(tcp_seq_num+1);
+        tcprhdr->window = htons(tcp_window);
+        tcprdata_len = 0;
+        tcp_conn->state = TCP_DISCONNECTING;
+        tcp_error = 0;
+      } else if (tcphdr->flags.ack) {
+        if (tcp_conn->state == TCP_CONNECTING) {
+          tcp_conn->state = TCP_CONNECTED;
+          tcp_conn->guest_seq_num = tcp_seq_num;
+          tcp_conn->host_seq_num = tcp_ack_num;
+          tcp_conn->window = tcp_window;
+          (*func)((void *)this, tcp_conn, tcp_data, tcpdata_len);
+        } else if (tcp_conn->state == TCP_DISCONNECTING) {
+          tcp_remove_connection(tcp_conn);
+        } else {
+          tcp_conn->guest_seq_num = tcp_seq_num;
+          tcp_conn->host_seq_num = tcp_ack_num;
+          if (tcpdata_len > 0) {
+            tcpipv4_send_ack(tcp_conn, tcpdata_len);
+            (*func)((void *)this, tcp_conn, tcp_data, tcpdata_len);
+          }
+        }
+        return;
+      } else {
+        BX_ERROR(("TCP: unhandled"));
+        return;
+      }
+    }
+  }
+  if (tcp_error) {
     tcprhdr->flags.syn = 0;
     tcprhdr->flags.rst = 1;
     tcprhdr->flags.ack = 1;
-    tcprhdr->seq_num = htonl(host_seq_num);
-    tcprhdr->ack_num = htonl(guest_seq_num+1);
+    tcprhdr->seq_num = htonl(1);
+    tcprhdr->ack_num = htonl(tcp_seq_num+1);
     tcprhdr->window = 0;
-    tcphdr_len = 20;
-    tcpdata_len = 0;
+    tcprdata_len = 0;
+    BX_ERROR(("tcp - port %u unhandled or in use", tcp_dst_port));
   }
-  BX_ERROR(("tcp packet - not implemented (port = %d)", tcp_dst_port));
-  // host-to-guest
-  if ((tcpdata_len + 54U) > BX_PACKET_BUFSIZE) {
-    BX_ERROR(("generated tcp data is too long"));
-    return 0;
-  }
-  // tcp pseudo-header
-  reply[34U-12U]=0;
-  reply[34U-11U]=0x06; // TCP
-  put_net2(&reply[34U-10U],tcphdr_len+tcpdata_len);
-  memcpy(&reply[34U-8U], dhcp->host_ipv4addr, 4);
-  memcpy(&reply[34U-4U], client[clientid].ipv4addr, 4);
-  // tcp header
-  tcprhdr->src_port = htons(tcp_dst_port);
-  tcprhdr->dst_port = htons(tcp_src_port);
-  tcprhdr->data_offset = tcphdr_len >> 2;
-  tcprhdr->checksum = 0;
-  put_net2(&reply[34U+16U], ip_checksum(&reply[34U-12U],12U+tcphdr_len+tcpdata_len) ^ (Bit16u)0xffff);
-  // ip header
-  memset(&reply[14U],0,20U);
-  reply[14U+0] = 0x45;
-  reply[14U+1] = 0x00;
-  put_net2(&reply[14U+2],20U+tcphdr_len+tcpdata_len);
-  put_net2(&reply[14U+4],1);
-  reply[14U+6] = 0x00;
-  reply[14U+7] = 0x00;
-  reply[14U+8] = 0x07; // TTL
-  reply[14U+9] = 0x06; // TCP
-  return (tcpdata_len+tcphdr_len+34);
+  host_to_guest_tcpipv4(clientid, tcp_dst_port, tcp_src_port, replybuf,
+                        tcprdata_len, tcprhdr_len);
 }
+
+void vnet_server_c::host_to_guest_tcpipv4(Bit8u clientid, Bit16u src_port,
+                                          Bit16u dst_port, Bit8u *data,
+                                          unsigned data_len, unsigned hdr_len)
+{
+  tcp_header_t *tcphdr = (tcp_header_t *)&data[34];
+
+  // tcp pseudo-header
+  data[34U-12U]=0;
+  data[34U-11U]=0x06; // TCP
+  put_net2(&data[34U-10U], hdr_len+data_len);
+  memcpy(&data[34U-8U], dhcp->host_ipv4addr, 4);
+  memcpy(&data[34U-4U], client[clientid].ipv4addr, 4);
+  // tcp header
+  tcphdr->src_port = htons(src_port);
+  tcphdr->dst_port = htons(dst_port);
+  tcphdr->data_offset = hdr_len >> 2;
+  tcphdr->checksum = 0;
+  put_net2(&data[34U+16U], ip_checksum(&data[34U-12U],12U+hdr_len+data_len) ^ (Bit16u)0xffff);
+  // ip header
+  memset(&data[14U],0,20U);
+  data[14U+0] = 0x45;
+  data[14U+1] = 0x00;
+  put_net2(&data[14U+2],20U+hdr_len+data_len);
+  put_net2(&data[14U+4],1);
+  data[14U+6] = 0x00;
+  data[14U+7] = 0x00;
+  data[14U+8] = 0x07; // TTL
+  data[14U+9] = 0x06; // TCP
+
+  host_to_guest_ipv4(clientid, 0, data, data_len + hdr_len + 34U);
+}
+
+void vnet_server_c::tcpipv4_send_data(const tcp_conn_t *tcp_conn, const Bit8u *data, unsigned data_len, bx_bool push)
+{
+  Bit8u buffer[BX_PACKET_BUFSIZE];
+  tcp_header_t *tcphdr = (tcp_header_t *)&buffer[34];
+  unsigned tcphdr_len = sizeof(tcp_header_t);
+  Bit8u *tcp_data;
+
+  memset(tcphdr, 0, tcphdr_len);
+  if (push) {
+    tcphdr->flags.psh = 1;
+  }
+  tcphdr->flags.ack = 1;
+  tcphdr->seq_num = htonl(tcp_conn->host_seq_num);
+  tcphdr->ack_num = htonl(tcp_conn->guest_seq_num);
+  tcphdr->window = htons(tcp_conn->window);
+  tcp_data = (Bit8u*)tcphdr + tcphdr_len;
+  if ((data_len + 54U) > BX_PACKET_BUFSIZE) {
+    BX_ERROR(("generated tcp data is too long"));
+    return;
+  }
+  memcpy(tcp_data, data, data_len);
+  host_to_guest_tcpipv4(tcp_conn->clientid, tcp_conn->dst_port, tcp_conn->src_port,
+                        buffer, data_len, tcphdr_len);
+}
+
+void vnet_server_c::tcpipv4_send_ack(const tcp_conn_t *tcp_conn, unsigned data_len)
+{
+  Bit8u replybuf[MIN_RX_PACKET_LEN];
+  tcp_header_t *tcphdr = (tcp_header_t *)&replybuf[34];
+  unsigned tcphdr_len = sizeof(tcp_header_t);
+
+  memset(replybuf, 0, MIN_RX_PACKET_LEN);
+  tcphdr->flags.ack = 1;
+  tcphdr->seq_num = htonl(tcp_conn->host_seq_num);
+  tcphdr->ack_num = htonl(tcp_conn->guest_seq_num + data_len);
+  tcphdr->window = htons(tcp_conn->window);
+  host_to_guest_tcpipv4(tcp_conn->clientid, tcp_conn->dst_port, tcp_conn->src_port,
+                        replybuf, 0, tcphdr_len);
+}
+
+void vnet_server_c::tcpipv4_ftp_handler(void *this_ptr, tcp_conn_t *tcp_conn, const Bit8u *data, unsigned data_len)
+{
+  ((vnet_server_c *)this_ptr)->tcpipv4_ftp_handler_ns(tcp_conn, data, data_len);
+}
+
+void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *data, unsigned data_len)
+{
+  char *ftpcmd, *cmd = NULL, *arg = NULL;
+  char reply[80];
+  ftp_session_t *fs;
+
+  reply[0] = 0;
+  if (tcp_conn->data == NULL) {
+    // send greeting message
+    sprintf(reply, "220 Bochs FTP server ready.%c%c", 13, 10);
+    fs = new ftp_session_t;
+    fs->state = 1;
+    tcp_conn->data = fs;
+  } else if (data_len > 0) {
+    ftpcmd = new char[data_len + 1];
+    memcpy(ftpcmd, data, data_len);
+    ftpcmd[data_len] = 0;
+    cmd = strtok(ftpcmd, " \r");
+    arg = strtok(NULL, "\r");
+    fs = (ftp_session_t*)tcp_conn->data;
+    if (fs->state == 1) {
+      if (!strcasecmp(cmd, "USER")) {
+        fs->anonymous = !strcmp(arg, "anonymous");
+        if (!strcmp(arg, "bochs") || fs->anonymous) {
+          sprintf(reply, "331 Password required for %s.%c%c", arg, 13, 10);
+          fs->state = 2;
+        } else {
+          sprintf(reply, "430 Invalid username or password.%c%c", 13, 10);
+        }
+      }
+    } else if (fs->state == 2) {
+      if (!strcasecmp(cmd, "PASS")) {
+        if (!strcmp(arg, "bochs") || fs->anonymous) {
+          sprintf(reply, "230 User %s logged in.%c%c", fs->anonymous ? "anonymous":"bochs", 13, 10);
+          fs->state = 3;
+        } else {
+          sprintf(reply, "530 Login incorrect.%c%c", 13, 10);
+        }
+      }
+    } else {
+      if (!strcasecmp(cmd, "SYST")) {
+        sprintf(reply, "215 UNIX Type: Bochs Version: 2.6.11%c%c", 13, 10);
+      } else if (!strcasecmp(cmd, "FEAT")) {
+        sprintf(reply, "211 end%c%c", 13, 10);
+      } else if (!strcasecmp(cmd, "NOOP")) {
+        sprintf(reply, "200 OK.%c%c", 13, 10);
+      } else if (!strcasecmp(cmd, "OPTS")) {
+        sprintf(reply, "501 Feature '%s' not supported.%c%c", arg, 13, 10);
+      } else if (!strcasecmp(cmd, "PWD")) {
+        sprintf(reply, "257 \"/\" is current directory.%c%c", 13, 10);
+      } else if (!strcasecmp(cmd, "QUIT")) {
+        sprintf(reply, "221 Goodbye.%c%c", 13, 10);
+        delete fs;
+        tcp_conn->data = NULL;
+      } else {
+        sprintf(reply, "502 Command '%s' not implemented.%c%c", cmd, 13, 10);
+      }
+    }
+    delete [] ftpcmd;
+  }
+  if (strlen(reply) > 0) {
+    tcpipv4_send_data(tcp_conn, (Bit8u*)reply, strlen(reply), 1);
+  }
+}
+
+// Layer 4 handler methods
 
 layer4_handler_t vnet_server_c::get_layer4_handler(
   unsigned ipprotocol, unsigned port)
@@ -587,25 +934,30 @@ bx_bool vnet_server_c::unregister_layer4_handler(
   return false;
 }
 
-int vnet_server_c::process_udpipv4(Bit8u clientid, const Bit8u *ipheader,
+/////////////////////////////////////////////////////////////////////////
+// UDP/IPv4
+/////////////////////////////////////////////////////////////////////////
+
+void vnet_server_c::process_udpipv4(Bit8u clientid, const Bit8u *ipheader,
                                    unsigned ipheader_len, const Bit8u *l4pkt,
-                                   unsigned l4pkt_len, Bit8u *reply)
+                                   unsigned l4pkt_len)
 {
   unsigned udp_dst_port;
   unsigned udp_src_port;
   int udp_len = 0;
-  Bit8u *udpreply = &reply[42];
+  Bit8u replybuf[BX_PACKET_BUFSIZE];
+  Bit8u *udpreply = &replybuf[42];
   layer4_handler_t func;
 
-  if (l4pkt_len < 8) return 0;
+  if (l4pkt_len < 8) return;
   udp_header_t *udphdr = (udp_header_t *)l4pkt;
   udp_src_port = ntohs(udphdr->src_port);
   udp_dst_port = ntohs(udphdr->dst_port);
 //  udp_len = ntohs(udphdr->length);
   ip_header_t *iphdr = (ip_header_t *)ipheader;
-  bx_bool dns_service = !memcmp(&iphdr->dst_addr, dhcp->dns_ipv4addr, 4);
-  if (dns_service != (udp_dst_port ==INET_PORT_DOMAIN))
-    return 0;
+  bx_bool dns_srv = !memcmp(&iphdr->dst_addr, dhcp->dns_ipv4addr, 4);
+  if (dns_srv != (udp_dst_port ==INET_PORT_DOMAIN))
+    return;
 
   func = get_layer4_handler(0x11, udp_dst_port);
   if (func != (layer4_handler_t)NULL) {
@@ -617,36 +969,37 @@ int vnet_server_c::process_udpipv4(Bit8u clientid, const Bit8u *ipheader,
   if (udp_len > 0) {
     if ((udp_len + 42U) > BX_PACKET_BUFSIZE) {
       BX_ERROR(("generated udp data is too long"));
-      return 0;
+      return;
     }
     // udp pseudo-header
-    reply[34U-12U] = 0;
-    reply[34U-11U] = 0x11; // UDP
-    put_net2(&reply[34U-10U], 8U+udp_len);
-    if (dns_service) {
-      memcpy(&reply[34U-8U], dhcp->dns_ipv4addr, 4);
+    replybuf[34U-12U] = 0;
+    replybuf[34U-11U] = 0x11; // UDP
+    put_net2(&replybuf[34U-10U], 8U+udp_len);
+    if (dns_srv) {
+      memcpy(&replybuf[34U-8U], dhcp->dns_ipv4addr, 4);
     } else {
-      memcpy(&reply[34U-8U], dhcp->host_ipv4addr, 4);
+      memcpy(&replybuf[34U-8U], dhcp->host_ipv4addr, 4);
     }
-    memcpy(&reply[34U-4U], client[clientid].ipv4addr, 4);
+    memcpy(&replybuf[34U-4U], client[clientid].ipv4addr, 4);
     // udp header
-    put_net2(&reply[34U+0], udp_dst_port);
-    put_net2(&reply[34U+2], udp_src_port);
-    put_net2(&reply[34U+4],8U+udp_len);
-    put_net2(&reply[34U+6],0);
-    put_net2(&reply[34U+6], ip_checksum(&reply[34U-12U],12U+8U+udp_len) ^ (Bit16u)0xffff);
+    put_net2(&replybuf[34U+0], udp_dst_port);
+    put_net2(&replybuf[34U+2], udp_src_port);
+    put_net2(&replybuf[34U+4],8U+udp_len);
+    put_net2(&replybuf[34U+6],0);
+    put_net2(&replybuf[34U+6], ip_checksum(&replybuf[34U-12U],12U+8U+udp_len) ^ (Bit16u)0xffff);
     // ip header
-    memset(&reply[14U], 0, 20U);
-    reply[14U+0] = 0x45;
-    reply[14U+1] = 0x00;
-    put_net2(&reply[14U+2], 20U+8U+udp_len);
-    put_net2(&reply[14U+4], 1);
-    reply[14U+6] = 0x00;
-    reply[14U+7] = 0x00;
-    reply[14U+8] = 0x07; // TTL
-    reply[14U+9] = 0x11; // UDP
+    memset(&replybuf[14U], 0, 20U);
+    replybuf[14U+0] = 0x45;
+    replybuf[14U+1] = 0x00;
+    put_net2(&replybuf[14U+2], 20U+8U+udp_len);
+    put_net2(&replybuf[14U+4], 1);
+    replybuf[14U+6] = 0x00;
+    replybuf[14U+7] = 0x00;
+    replybuf[14U+8] = 0x07; // TTL
+    replybuf[14U+9] = 0x11; // UDP
+
+    host_to_guest_ipv4(clientid, dns_srv, replybuf, udp_len + 42U);
   }
-  return (udp_len + 42);
 }
 
 int vnet_server_c::udpipv4_dhcp_handler(void *this_ptr, const Bit8u *ipheader,

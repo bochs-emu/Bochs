@@ -196,6 +196,32 @@ typedef int (*layer4_handler_t)(
   Bit8u *reply
   );
 
+typedef struct tcp_conn {
+  Bit8u  clientid;
+  Bit16u src_port;
+  Bit16u dst_port;
+  Bit32u host_seq_num;
+  Bit32u guest_seq_num;
+  Bit16u window;
+  Bit8u  state;
+  void   *data;
+  struct tcp_conn *next;
+} tcp_conn_t;
+
+typedef void (*tcp_handler_t)(
+  void *this_ptr,
+  tcp_conn_t *tcp_conn,
+  const Bit8u *data,
+  unsigned data_len
+  );
+
+typedef struct ftp_session {
+  Bit8u state;
+  bx_bool anonymous;
+  struct ftp_session *next;
+} ftp_session_t;
+
+
 class vnet_server_c {
 public:
   vnet_server_c();
@@ -203,7 +229,8 @@ public:
 
   void init(bx_devmodel_c *netdev, dhcp_cfg_t *dhcpc, const char *tftp_rootdir);
   void init_client(Bit8u clientid, const Bit8u *macaddr, const Bit8u *default_ipv4addr);
-  int handle_packet(const Bit8u *buf, unsigned len, Bit8u *reply);
+  void handle_packet(const Bit8u *buf, unsigned len);
+  unsigned get_packet(Bit8u *buf);
 #ifdef BXHUB
   void init_log(const char *logfn);
 #endif
@@ -213,21 +240,41 @@ public:
                                   layer4_handler_t func);
   bx_bool unregister_layer4_handler(unsigned ipprotocol, unsigned port);
 
+  tcp_handler_t get_tcp_handler(unsigned port);
+  bx_bool register_tcp_handler(unsigned port, tcp_handler_t func);
+  bx_bool unregister_tcp_handler(unsigned port);
+
 private:
 #ifdef BXHUB
   void bx_printf(const char *fmt, ...);
 #endif
   bx_bool find_client(const Bit8u *mac_addr, Bit8u *clientid);
+  bx_bool find_client2(const Bit8u *ipv4addr, Bit8u *clientid);
 
-  int process_arp(Bit8u clientid, const Bit8u *buf, unsigned len, Bit8u *reply);
-  int process_ipv4(Bit8u clientid, const Bit8u *buf, unsigned len, Bit8u *reply);
+  void host_to_guest(Bit8u clientid, Bit8u *buf, unsigned len, unsigned l3type);
 
-  int process_icmpipv4(Bit8u clientid, const Bit8u *ipheader, unsigned ipheader_len,
-                       const Bit8u *l4pkt, unsigned l4pkt_len, Bit8u *reply);
-  int process_tcpipv4(Bit8u clientid, const Bit8u *ipheader, unsigned ipheader_len,
-                      const Bit8u *l4pkt, unsigned l4pkt_len, Bit8u *reply);
-  int process_udpipv4(Bit8u clientid, const Bit8u *ipheader, unsigned ipheader_len,
-                      const Bit8u *l4pkt, unsigned l4pkt_len, Bit8u *reply);
+  void process_arp(Bit8u clientid, const Bit8u *buf, unsigned len);
+
+  void process_ipv4(Bit8u clientid, const Bit8u *buf, unsigned len);
+  void host_to_guest_ipv4(Bit8u clientid, bx_bool dns_srv, Bit8u *buf, unsigned len);
+
+  void process_icmpipv4(Bit8u clientid, const Bit8u *ipheader, unsigned ipheader_len,
+                        const Bit8u *l4pkt, unsigned l4pkt_len);
+  void process_tcpipv4(Bit8u clientid, const Bit8u *ipheader, unsigned ipheader_len,
+                       const Bit8u *l4pkt, unsigned l4pkt_len);
+  void process_udpipv4(Bit8u clientid, const Bit8u *ipheader, unsigned ipheader_len,
+                       const Bit8u *l4pkt, unsigned l4pkt_len);
+
+  void host_to_guest_tcpipv4(Bit8u clientid, Bit16u src_port, Bit16u dst_port,
+                             Bit8u *data, unsigned data_len, unsigned hdr_len);
+  void tcpipv4_send_data(const tcp_conn_t *tcp_conn, const Bit8u *data,
+                         unsigned data_len, bx_bool push);
+  void tcpipv4_send_ack(const tcp_conn_t *tcp_conn, unsigned data_len);
+
+  static void tcpipv4_ftp_handler(void *this_ptr, tcp_conn_t *tcp_conn,
+                                  const Bit8u *data, unsigned data_len);
+  void tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *data,
+                              unsigned data_len);
 
   static int udpipv4_dhcp_handler(void *this_ptr, const Bit8u *ipheader,
                                   unsigned ipheader_len, unsigned sourceport,
@@ -275,7 +322,17 @@ private:
     layer4_handler_t func;
   } l4data[LAYER4_LISTEN_MAX];
 
+  struct {
+    unsigned port;
+    tcp_handler_t func;
+  } tcpfn[LAYER4_LISTEN_MAX];
+
   unsigned l4data_used;
+  unsigned tcpfn_used;
+
+  Bit8u *packet_buffer[2];
+  unsigned packet_len[2];
+  Bit8u packet_count;
 };
 
 #endif

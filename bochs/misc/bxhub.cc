@@ -80,7 +80,7 @@ typedef struct {
   Bit8u      macaddr[6];
   Bit8u      default_ipv4addr[4];
   Bit8u      *reply_buffer;
-  int        pending_reply_size;
+  unsigned   pending_reply_size;
 } hub_client_t;
 
 const Bit8u default_host_macaddr[6] = {0xb0, 0xc4, 0x20, 0x00, 0x00, 0x0f};
@@ -120,10 +120,8 @@ bx_bool handle_packet(hub_client_t *client, Bit8u *buf, unsigned len)
     }
   }
 
-  if (client->pending_reply_size > 0)
-    return 0;
-
-  client->pending_reply_size = vnet_server.handle_packet(buf, len, client->reply_buffer);
+  vnet_server.handle_packet(buf, len);
+  client->pending_reply_size = vnet_server.get_packet(client->reply_buffer);
   return (client->pending_reply_size > 0);
 }
 
@@ -366,7 +364,8 @@ int CDECL main(int argc, char **argv)
       // send reply from builtin service
       if (hclient[i].pending_reply_size > 0) {
         send_packet(&hclient[i], hclient[i].reply_buffer, hclient[i].pending_reply_size);
-        hclient[i].pending_reply_size = 0;
+        // check for another pending packet
+        hclient[i].pending_reply_size = vnet_server.get_packet(hclient[i].reply_buffer);
       }
       // check MAC address of new client
       if (hclient[i].init != 0) {
