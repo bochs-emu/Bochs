@@ -320,6 +320,14 @@ bx_bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
 #endif
 
 #if BX_SUPPORT_VMX >= 2
+    case VMCS_64BIT_CONTROL_VMFUNC_CTRLS:
+    case VMCS_64BIT_CONTROL_VMFUNC_CTRLS_HI:
+      return BX_CPU_THIS_PTR vmx_cap.vmx_vmfunc_supported_bits != 0;
+
+    case VMCS_64BIT_CONTROL_EPTPTR:
+    case VMCS_64BIT_CONTROL_EPTPTR_HI:
+      return BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT);
+
     case VMCS_64BIT_CONTROL_EOI_EXIT_BITMAP0:
     case VMCS_64BIT_CONTROL_EOI_EXIT_BITMAP0_HI:
     case VMCS_64BIT_CONTROL_EOI_EXIT_BITMAP1:
@@ -329,14 +337,6 @@ bx_bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
     case VMCS_64BIT_CONTROL_EOI_EXIT_BITMAP3:
     case VMCS_64BIT_CONTROL_EOI_EXIT_BITMAP3_HI:
       return BX_SUPPORT_VMX_EXTENSION(BX_VMX_VINTR_DELIVERY);
-
-    case VMCS_64BIT_CONTROL_EPTPTR:
-    case VMCS_64BIT_CONTROL_EPTPTR_HI:
-      return BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT);
-
-    case VMCS_64BIT_CONTROL_VMFUNC_CTRLS:
-    case VMCS_64BIT_CONTROL_VMFUNC_CTRLS_HI:
-      return BX_CPU_THIS_PTR vmx_cap.vmx_vmfunc_supported_bits != 0;
 
     case VMCS_64BIT_CONTROL_EPTP_LIST_ADDRESS:
     case VMCS_64BIT_CONTROL_EPTP_LIST_ADDRESS_HI:
@@ -355,7 +355,15 @@ bx_bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
     case VMCS_64BIT_CONTROL_XSS_EXITING_BITMAP:
     case VMCS_64BIT_CONTROL_XSS_EXITING_BITMAP_HI:
       return is_cpu_extension_supported(BX_ISA_XSAVES);
+
+    case VMCS_64BIT_CONTROL_SPPTP:
+    case VMCS_64BIT_CONTROL_SPPTP_HI:
+      return BX_SUPPORT_VMX_EXTENSION(BX_VMX_SPP);
 #endif
+
+    case VMCS_64BIT_CONTROL_TSC_MULTIPLIER:
+    case VMCS_64BIT_CONTROL_TSC_MULTIPLIER_HI:
+      return BX_SUPPORT_VMX_EXTENSION(BX_VMX_TSC_SCALING);
 
 #if BX_SUPPORT_VMX >= 2
     /* VMCS 64-bit read only data fields */
@@ -397,16 +405,6 @@ bx_bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
     case VMCS_64BIT_GUEST_IA32_PDPTE3:
     case VMCS_64BIT_GUEST_IA32_PDPTE3_HI:
       return BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT);
-#endif
-
-    case VMCS_64BIT_CONTROL_TSC_MULTIPLIER:
-    case VMCS_64BIT_CONTROL_TSC_MULTIPLIER_HI:
-      return BX_SUPPORT_VMX_EXTENSION(BX_VMX_TSC_SCALING);
-
-#if BX_SUPPORT_VMX >= 2
-    case VMCS_64BIT_CONTROL_SPPTP:
-    case VMCS_64BIT_CONTROL_SPPTP_HI:
-      return BX_SUPPORT_VMX_EXTENSION(BX_VMX_SPP);
 #endif
 
 #if BX_SUPPORT_VMX >= 2

@@ -196,7 +196,7 @@ const Bit64u VMX_VMFUNC_EPTP_SWITCHING_MASK = (BX_CONST64(1) << VMX_VMFUNC_EPTP_
 /* VMCS 16-bit control fields */
 /* binary 0000_00xx_xxxx_xxx0 */
 #define VMCS_16BIT_CONTROL_VPID                            0x00000000 /* VPID */
-#define VMCS_16BIT_CONTROL_POSTED_INTERRUPT_VECTOR         0x00000002 /* Posted Interrupts */
+#define VMCS_16BIT_CONTROL_POSTED_INTERRUPT_VECTOR         0x00000002 /* Posted Interrupts - not implememted yet */
 #define VMCS_16BIT_CONTROL_EPTP_INDEX                      0x00000004 /* #VE Exception */
 
 /* VMCS 16-bit guest-state fields */
@@ -246,7 +246,7 @@ const Bit64u VMX_VMFUNC_EPTP_SWITCHING_MASK = (BX_CONST64(1) << VMX_VMFUNC_EPTP_
 #define VMCS_64BIT_CONTROL_VIRTUAL_APIC_PAGE_ADDR_HI       0x00002013
 #define VMCS_64BIT_CONTROL_APIC_ACCESS_ADDR                0x00002014 /* APIC virtualization */
 #define VMCS_64BIT_CONTROL_APIC_ACCESS_ADDR_HI             0x00002015
-#define VMCS_64BIT_CONTROL_POSTED_INTERRUPT_DESC_ADDR      0x00002016 /* Posted Interrupts */
+#define VMCS_64BIT_CONTROL_POSTED_INTERRUPT_DESC_ADDR      0x00002016 /* Posted Interrupts - not implemented yet */
 #define VMCS_64BIT_CONTROL_POSTED_INTERRUPT_DESC_ADDR_HI   0x00002017
 #define VMCS_64BIT_CONTROL_VMFUNC_CTRLS                    0x00002018 /* VM Functions */
 #define VMCS_64BIT_CONTROL_VMFUNC_CTRLS_HI                 0x00002019
