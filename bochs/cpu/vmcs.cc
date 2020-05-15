@@ -351,6 +351,10 @@ bx_bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
     case VMCS_64BIT_CONTROL_VE_EXCEPTION_INFO_ADDR:
     case VMCS_64BIT_CONTROL_VE_EXCEPTION_INFO_ADDR_HI:
       return BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT_EXCEPTION);
+
+    case VMCS_64BIT_CONTROL_XSS_EXITING_BITMAP:
+    case VMCS_64BIT_CONTROL_XSS_EXITING_BITMAP_HI:
+      return is_cpu_extension_supported(BX_ISA_XSAVES);
 #endif
 
 #if BX_SUPPORT_VMX >= 2
