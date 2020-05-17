@@ -295,6 +295,15 @@ void bx_local_apic_c::set_base(bx_phy_address newbase)
   base_addr = newbase;
   BX_INFO(("allocate APIC id=%d (MMIO %s) to 0x" FMT_PHY_ADDRX,
     apic_id, (mode == BX_APIC_XAPIC_MODE) ? "enabled" : "disabled", newbase));
+
+  if (mode == BX_APIC_GLOBALLY_DISABLED) {
+    // if local apic becomes globally disabled reset some fields back to defaults
+    spurious_vector = 0xff;
+
+    for(int i=0; i<APIC_LVT_ENTRIES; i++) {
+      lvt[i] = 0x10000;	// all LVT are masked
+    }
+  }
 }
 
 bx_bool bx_local_apic_c::is_selected(bx_phy_address addr)
