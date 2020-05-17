@@ -604,14 +604,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)
 }
 
 #if BX_CPU_LEVEL >= 5
+
+extern void long_mul(Bit128u *product, Bit64u op1, Bit64u op2);
+
 Bit64u BX_CPU_C::get_TSC(void)
 {
   Bit64u tsc = bx_pc_system.time_ticks() - BX_CPU_THIS_PTR tsc_last_reset;
 #if BX_SUPPORT_VMX || BX_SUPPORT_SVM
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (VMEXIT(VMX_VM_EXEC_CTRL2_TSC_OFFSET) && SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_TSC_SCALING))
-      tsc = (tsc * BX_CPU_THIS_PTR vmcs.tsc_multiplier) >> 48;
+    if (VMEXIT(VMX_VM_EXEC_CTRL2_TSC_OFFSET) && SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_TSC_SCALING)) {
+      Bit128u product_128;
+      long_mul(&product_128,tsc,BX_CPU_THIS_PTR vmcs.tsc_multiplier);   
+      tsc = (product_128.lo >> 48) | (product_128.hi << 16);   // tsc = (uint64) (long128(tsc_value * tsc_multiplier) >> 48);
+    }
   }
 #endif
   tsc += BX_CPU_THIS_PTR tsc_offset;
