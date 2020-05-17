@@ -1995,7 +1995,7 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
         vmexit_reason = VMX_VMEXIT_EPT_VIOLATION;
         if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_SUBPAGE_WR_PROTECT_CTRL) && (entry[leaf] & BX_SUB_PAGE_PROTECTED) != 0 && leaf == BX_LEVEL_PTE) {
           if ((access_mask & BX_EPT_WRITE) != 0 && (combined_access & BX_EPT_WRITE) == 0 && guest_laddr_valid && ! is_page_walk)
-            if (!spp_walk(guest_paddr, guest_laddr, MEMTYPE(eptptr_memtype)))
+            if (spp_walk(guest_paddr, guest_laddr, MEMTYPE(eptptr_memtype)))
               vmexit_reason = 0;
         }
       }
