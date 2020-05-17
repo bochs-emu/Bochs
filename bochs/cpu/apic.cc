@@ -298,16 +298,7 @@ void bx_local_apic_c::set_base(bx_phy_address newbase)
 
   if (mode == BX_APIC_GLOBALLY_DISABLED) {
     // if local apic becomes globally disabled reset some fields back to defaults
-    spurious_vector = 0xff;
-
-    for(int i=0; i<APIC_LVT_ENTRIES; i++) {
-      lvt[i] = 0x10000;	// all LVT are masked
-    }
-
-    if(timer_active) {
-      bx_pc_system.deactivate_timer(timer_handle);
-      timer_active = 0;
-    }
+    write_spurious_interrupt_register(0xff);
   }
 }
 
