@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2017  The Bochs Project
+//  Copyright (C) 2001-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -41,7 +41,7 @@ public:
 BOCHSAPI extern bx_netmod_ctl_c bx_netmod_ctl;
 #endif
 
-#define BX_PACKET_BUFSIZE 2048 // Enough for an ether frame
+#define BX_PACKET_BUFSIZE 1514 // Maximum size of an ethernet frame
 
 // device receive status definitions
 #define BX_NETDEV_RXREADY  0x0001

@@ -97,6 +97,7 @@ private:
   void rx_timer(void);
 
   int rx_timer_index;
+  bx_bool rx_timer_pending;
   unsigned netdev_speed;
   unsigned tx_time;
 
@@ -154,6 +155,7 @@ void bx_vnet_pktmover_c::pktmover_init(
                        (status == BX_NETDEV_100MBIT) ? 100 : 10;
   this->rx_timer_index =
     DEV_register_timer(this, this->rx_timer_handler, 1000, 0, 0, "eth_vnet");
+  rx_timer_pending = 0;
 
   BX_INFO(("'vnet' network driver initialized"));
   bx_vnet_instances++;
@@ -222,10 +224,13 @@ void bx_vnet_pktmover_c::guest_to_host(const Bit8u *buf, unsigned io_len)
 
 void bx_vnet_pktmover_c::host_to_guest(void)
 {
-  packet_len = vnet_server.get_packet(packet_buffer);
-  if (packet_len > 0) {
-    unsigned rx_time = (64 + 96 + 4 * 8 + packet_len * 8) / this->netdev_speed;
-    bx_pc_system.activate_timer(this->rx_timer_index, this->tx_time + rx_time + 100, 0);
+  if (!rx_timer_pending) {
+    packet_len = vnet_server.get_packet(packet_buffer);
+    if (packet_len > 0) {
+      unsigned rx_time = (64 + 96 + 4 * 8 + packet_len * 8) / this->netdev_speed;
+      bx_pc_system.activate_timer(this->rx_timer_index, this->tx_time + rx_time + 100, 0);
+      rx_timer_pending = 1;
+    }
   }
 }
 
@@ -255,6 +260,7 @@ void bx_vnet_pktmover_c::rx_timer(void)
       fflush((FILE *)pktlog_pcap);
     }
 #endif
+    rx_timer_pending = 0;
     // check for another pending packet
     host_to_guest();
   } else {
