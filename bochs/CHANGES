@@ -15,8 +15,8 @@ Changes after 2.6.11:
     - Added "multiple NICs" support to the NE2000 and E1000 devices. Up to 4 devices
       per model are supported. Use the zero-based "card" parameter to specify device.
     - Added log file support to 'bxhub' utility (networking module 'socket').
-    - Enable 'vnet' packet logging in text format if file name is specified with the
-      "script" parameter.
+    - Packet logging in text format for the 'slirp' and 'vnet' modules controlled
+      by runtime option (slirp: "pktlog" option in config / vnet: "script" parameter).
   - VGA
     - Removed lfb_enabled switch from Bochs VBE code. Now banked and LFB writes
       to VRAM are always valid. Fixes GRUB bootloader menu when using Bochs VBE.
@@ -24,7 +24,7 @@ Changes after 2.6.11:
       either to disable the DDC feature or to read the monitor EDID from file.
 
 - GUI and display libraries
-    - X11 keymaps: added new one for Swiss-German and extended Italian map.
+    - X11 keymaps: added new one for Swiss-German and improved Italian map.
 
 -------------------------------------------------------------------------
 Changes in 2.6.11 (January 5, 2020):

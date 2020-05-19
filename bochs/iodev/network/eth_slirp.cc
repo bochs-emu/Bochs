@@ -54,8 +54,6 @@ void CDECL libslirp_net_plugin_fini(void)
 
 #define LOG_THIS netdev->
 
-#define BX_ETH_SLIRP_LOGGING 0
-
 #define MAX_HOSTFWD 5
 
 static int rx_timer_index = BX_NULL_TIMER_HANDLE;
@@ -91,9 +89,9 @@ private:
   char *smb_export, *smb_tmpdir;
   struct in_addr smb_srv;
 #endif
-#if BX_ETH_SLIRP_LOGGING
+  char *pktlog_fn;
   FILE *pktlog_txt;
-#endif
+  bx_bool slirp_logging;
 
   bx_bool parse_slirp_conf(const char *conf);
   static void rx_timer_handler(void *);
@@ -140,9 +138,9 @@ bx_slirp_pktmover_c::~bx_slirp_pktmover_c()
       signal(SIGPIPE, SIG_DFL);
 #endif
     }
-#if BX_ETH_SLIRP_LOGGING
-    fclose(pktlog_txt);
-#endif
+    if (slirp_logging) {
+      fclose(pktlog_txt);
+    }
   }
 }
 
@@ -284,6 +282,13 @@ bx_bool bx_slirp_pktmover_c::parse_slirp_conf(const char *conf)
           } else {
             BX_ERROR(("slirp: wrong format for 'hostfwd'"));
           }
+        } else if (!stricmp(param, "pktlog")) {
+          if (len2 < BX_PATHNAME_LEN) {
+            pktlog_fn = (char*)malloc(len2+1);
+            strcpy(pktlog_fn, val);
+          } else {
+            BX_ERROR(("slirp: wrong format for 'pktlog'"));
+          }
         } else {
           BX_ERROR(("slirp: unknown option '%s'", line));
         }
@@ -309,6 +314,7 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
   hostname = NULL;
   bootfile = NULL;
   dnssearch = NULL;
+  pktlog_fn = NULL;
   n_hostfwd = 0;
   /* default settings according to historic slirp */
   net.s_addr  = htonl(0x0a000200); /* 10.0.2.0 */
@@ -365,25 +371,33 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
     }
   }
 #endif
-#if BX_ETH_SLIRP_LOGGING
-  pktlog_txt = fopen("slirp-pktlog.txt", "wb");
-  fprintf(pktlog_txt, "slirp packetmover readable log file\n");
-  fprintf(pktlog_txt, "TFTP root = %s\n", netif);
-  fprintf(pktlog_txt, "guest MAC address = ");
-  int i;
-  for (i=0; i<6; i++)
-    fprintf(pktlog_txt, "%02x%s", 0xff & macaddr[i], i<5?":" : "\n");
-  fprintf(pktlog_txt, "--\n");
-  fflush(pktlog_txt);
-#endif
+  if (pktlog_fn != NULL) {
+    pktlog_txt = fopen(pktlog_fn, "wb");
+    slirp_logging = (pktlog_txt != NULL);
+    if (slirp_logging) {
+      fprintf(pktlog_txt, "slirp packetmover readable log file\n");
+      if (strlen(netif) > 0) {
+        fprintf(pktlog_txt, "TFTP root = %s\n", netif);
+      } else {
+        fprintf(pktlog_txt, "TFTP service disabled\n");
+      }
+      fprintf(pktlog_txt, "guest MAC address = ");
+      int i;
+      for (i=0; i<6; i++)
+        fprintf(pktlog_txt, "%02x%s", 0xff & macaddr[i], i<5?":" : "\n");
+      fprintf(pktlog_txt, "--\n");
+      fflush(pktlog_txt);
+    }
+    free(pktlog_fn);
+  }
   bx_slirp_instances++;
 }
 
 void bx_slirp_pktmover_c::sendpkt(void *buf, unsigned io_len)
 {
-#if BX_ETH_SLIRP_LOGGING
-  write_pktlog_txt(pktlog_txt, (const Bit8u*)buf, io_len, 0);
-#endif
+  if (slirp_logging) {
+    write_pktlog_txt(pktlog_txt, (const Bit8u*)buf, io_len, 0);
+  }
   slirp_input(slirp, (Bit8u*)buf, io_len);
 }
 
@@ -429,9 +443,9 @@ void bx_slirp_pktmover_c::receive(void *pkt, unsigned pkt_len)
 {
   if (this->rxstat(this->netdev) & BX_NETDEV_RXREADY) {
     if (pkt_len < MIN_RX_PACKET_LEN) pkt_len = MIN_RX_PACKET_LEN;
-#if BX_ETH_SLIRP_LOGGING
-    write_pktlog_txt(pktlog_txt, (const Bit8u*)pkt, pkt_len, 1);
-#endif
+    if (slirp_logging) {
+      write_pktlog_txt(pktlog_txt, (const Bit8u*)pkt, pkt_len, 1);
+    }
     this->rxh(this->netdev, pkt, pkt_len);
   } else {
     BX_ERROR(("device not ready to receive data"));
