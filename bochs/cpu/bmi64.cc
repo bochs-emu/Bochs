@@ -30,6 +30,7 @@
 #if BX_SUPPORT_AVX
 
 #include "scalar_arith.h"
+#include "wide_int.h"
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ANDN_GqBqEqR(bxInstruction_c *i)
 {
@@ -44,8 +45,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ANDN_GqBqEqR(bxInstruction_c *i)
 
   BX_NEXT_INSTR(i);
 }
-
-extern void long_mul(Bit128u *product, Bit64u op1, Bit64u op2);
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MULX_GqBqEqR(bxInstruction_c *i)
 {

@@ -120,6 +120,7 @@ OBJS = \
 	faststring.o \
 	paging.o \
 	rdrand.o \
+	wide_int.o \
 	decoder/disasm.o
 	
 # Objects which are only used for x86-64 code
@@ -802,6 +803,7 @@ vmx.o: vmx.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
  vmx.h svm.h cpuid.h stack.h access.h msr.h ../iodev/iodev.h ../plugin.h \
  ../extplugin.h ../param_names.h decoder/ia_opcodes.h \
  decoder/ia_opcodes.def
+wide_int.o: wide_int.@CPP_SUFFIX@ ../config.h
 xsave.o: xsave.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../gui/siminterface.h ../cpudb.h \
  ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h ../gui/gui.h \

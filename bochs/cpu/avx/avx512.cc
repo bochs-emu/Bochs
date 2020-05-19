@@ -30,6 +30,7 @@
 
 #include "simd_int.h"
 #include "simd_compare.h"
+#include "wide_int.h"
 
 // compare
 
@@ -2271,8 +2272,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMULTISHIFTQB_MASK_VdqHdqWdqR(bxInstructi
 }
 
 // 52-bit integer FMA
-
-extern void long_mul(Bit128u *product, Bit64u op1, Bit64u op2);
 
 BX_CPP_INLINE Bit64u pmadd52luq_scalar(Bit64u dst, Bit64u op1, Bit64u op2)
 {

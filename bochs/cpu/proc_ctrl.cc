@@ -25,6 +25,7 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#include "wide_int.h"
 #include "decoder/ia_opcodes.h"
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxError(bxInstruction_c *i)
@@ -604,8 +605,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)
 }
 
 #if BX_CPU_LEVEL >= 5
-
-extern void long_mul(Bit128u *product, Bit64u op1, Bit64u op2);
 
 Bit64u BX_CPU_C::get_TSC(void)
 {
