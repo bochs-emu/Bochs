@@ -41,6 +41,16 @@
 #include <winsock2.h>
 #endif
 
+typedef struct ftp_session {
+  Bit8u state;
+  bx_bool anonymous;
+  Bit16u pasv_port;
+  Bit16u client_cmd_port;
+  Bit16u client_data_port;
+  struct ftp_session *next;
+} ftp_session_t;
+
+
 Bit16u ip_checksum(const Bit8u *buf, unsigned buf_len)
 {
   Bit32u sum = 0;
@@ -176,7 +186,7 @@ vnet_server_c::vnet_server_c()
   for (Bit8u c = 0; c < VNET_MAX_CLIENTS; c++) {
     client[c].init = 0;
   }
-  packet_count = 0;
+  packets = NULL;
 }
 
 vnet_server_c::~vnet_server_c()
@@ -279,25 +289,23 @@ void vnet_server_c::handle_packet(const Bit8u *buf, unsigned len)
 unsigned vnet_server_c::get_packet(Bit8u *buf)
 {
   unsigned len = 0;
+  packet_item_t *tmp;
 
-  if (packet_count > 0) {
-    len = packet_len[0];
-    memcpy(buf, packet_buffer[0], len);
-    packet_len[0] = 0;
-    delete [] packet_buffer[0];
-    if (packet_count > 1) {
-      packet_buffer[0] = packet_buffer[1];
-      packet_len[0] = packet_len[1];
-    } else {
-      packet_buffer[0] = NULL;
-    }
-    packet_count--;
+  if (packets != NULL) {
+    len = packets->len;
+    memcpy(buf, packets->buffer, len);
+    tmp = packets->next;
+    delete [] packets->buffer;
+    delete packets;
+    packets = tmp;
   }
   return len;
 }
 
 void vnet_server_c::host_to_guest(Bit8u clientid, Bit8u *buf, unsigned len, unsigned l3type)
 {
+  packet_item_t *pitem, *tmp;
+
   if (len < 14) {
     BX_ERROR(("host_to_guest: io_len < 14!"));
     return;
@@ -310,12 +318,19 @@ void vnet_server_c::host_to_guest(Bit8u clientid, Bit8u *buf, unsigned len, unsi
   memcpy(ethrhdr->src_mac_addr, dhcp->host_macaddr, ETHERNET_MAC_ADDR_LEN);
   ethrhdr->type = htons(l3type);
 
-  if (packet_count < 2) {
-    packet_buffer[packet_count] = new Bit8u[len];
-    memcpy(packet_buffer[packet_count], buf, len);
-    packet_len[packet_count++] = len;
+  pitem = new packet_item_t;
+  pitem->buffer = new Bit8u[len];
+  memcpy(pitem->buffer, buf, len);
+  pitem->len = len;
+  pitem->next = NULL;
+  if (packets == NULL) {
+    packets = pitem;
   } else {
-    BX_ERROR(("host_to_guest(): too many pending packets"));
+    tmp = packets;
+    while (tmp->next != NULL) {
+      tmp = tmp->next;
+    }
+    tmp->next = pitem;
   }
 }
 
@@ -592,11 +607,10 @@ tcp_conn_t *tcp_connections = NULL;
 tcp_conn_t *tcp_new_connection(Bit8u clientid, Bit16u src_port, Bit16u dst_port)
 {
   tcp_conn_t *tc = new tcp_conn_t;
+  memset(tc, 0, sizeof(tcp_conn_t));
   tc->clientid = clientid;
   tc->src_port = src_port;
   tc->dst_port = dst_port;
-  tc->state = TCP_DISCONNECTED;
-  tc->data = NULL;
   tc->next = tcp_connections;
   tcp_connections = tc;
   return tc;
@@ -649,6 +663,7 @@ void vnet_server_c::process_tcpipv4(Bit8u clientid, const Bit8u *ipheader,
   bx_bool tcp_error = 1;
 
   if (l4pkt_len < 20) return;
+  memset(replybuf, 0, MIN_RX_PACKET_LEN);
   tcp_header_t *tcphdr = (tcp_header_t *)l4pkt;
   tcp_header_t *tcprhdr = (tcp_header_t *)&replybuf[34];
   tcp_src_port = ntohs(tcphdr->src_port);
@@ -659,6 +674,7 @@ void vnet_server_c::process_tcpipv4(Bit8u clientid, const Bit8u *ipheader,
   tcp_window = ntohs(tcphdr->window);
   tcpdata_len = l4pkt_len - tcphdr_len;
   tcp_data = (Bit8u*)tcphdr + tcphdr_len;
+  // TODO: parse options
   if (tcphdr_len > 20) {
     BX_ERROR(("TCP options not supported yet"));
   }
@@ -666,7 +682,6 @@ void vnet_server_c::process_tcpipv4(Bit8u clientid, const Bit8u *ipheader,
   func = get_tcp_handler(tcp_dst_port);
   tcp_conn = tcp_find_connection(clientid, tcp_src_port, tcp_dst_port);
   tcprhdr_len = sizeof(tcp_header_t);
-  memset(tcprhdr, 0, tcprhdr_len);
   if (func != (tcp_handler_t)NULL) {
     if (tcp_conn == (tcp_conn_t*)NULL) {
       if (tcphdr->flags.syn) {
@@ -800,6 +815,54 @@ void vnet_server_c::tcpipv4_send_ack(const tcp_conn_t *tcp_conn, unsigned data_l
                         replybuf, 0, tcphdr_len);
 }
 
+// FTP support
+
+ftp_session_t *ftp_sessions = NULL;
+
+ftp_session_t *ftp_new_session(tcp_conn_t *tcp_conn, Bit16u client_cmd_port)
+{
+  ftp_session_t *fs = new ftp_session_t;
+  memset(fs, 0, sizeof(ftp_session_t));
+  fs->state = 1;
+  fs->client_cmd_port = client_cmd_port;
+  fs->next = ftp_sessions;
+  ftp_sessions = fs;
+  return fs;
+}
+
+ftp_session_t *ftp_find_cmd_session(Bit16u pasv_port)
+{
+  ftp_session_t *s = ftp_sessions;
+  while (s != NULL) {
+    if (s->pasv_port != pasv_port)
+      s = s->next;
+    else
+      break;
+  }
+  return s;
+}
+
+void ftp_remove_session(ftp_session_t *s)
+{
+  ftp_session_t *last;
+
+  if (ftp_sessions == s) {
+    ftp_sessions = s->next;
+  } else {
+    last = ftp_sessions;
+    while (last != NULL) {
+      if (last->next != s)
+        last = last->next;
+      else
+        break;
+    }
+    if (last) {
+      last->next = s->next;
+    }
+  }
+  delete s;
+}
+
 void vnet_server_c::tcpipv4_ftp_handler(void *this_ptr, tcp_conn_t *tcp_conn, const Bit8u *data, unsigned data_len)
 {
   ((vnet_server_c *)this_ptr)->tcpipv4_ftp_handler_ns(tcp_conn, data, data_len);
@@ -811,62 +874,86 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
   char reply[80];
   ftp_session_t *fs;
 
-  reply[0] = 0;
-  if (tcp_conn->data == NULL) {
-    // send greeting message
-    sprintf(reply, "220 Bochs FTP server ready.%c%c", 13, 10);
-    fs = new ftp_session_t;
-    fs->state = 1;
-    tcp_conn->data = fs;
-  } else if (data_len > 0) {
-    ftpcmd = new char[data_len + 1];
-    memcpy(ftpcmd, data, data_len);
-    ftpcmd[data_len] = 0;
-    cmd = strtok(ftpcmd, " \r");
-    arg = strtok(NULL, "\r");
-    fs = (ftp_session_t*)tcp_conn->data;
-    if (fs->state == 1) {
-      if (!strcasecmp(cmd, "USER")) {
-        fs->anonymous = !strcmp(arg, "anonymous");
-        if (!strcmp(arg, "bochs") || fs->anonymous) {
-          sprintf(reply, "331 Password required for %s.%c%c", arg, 13, 10);
-          fs->state = 2;
-        } else {
-          sprintf(reply, "430 Invalid username or password.%c%c", 13, 10);
+  if (tcp_conn->dst_port == INET_PORT_FTP) {
+    if (tcp_conn->data == NULL) {
+      // send welcome message
+      ftp_send_reply(tcp_conn, "220 Bochs FTP server ready.");
+      fs = ftp_new_session(tcp_conn, tcp_conn->src_port);
+      tcp_conn->data = fs;
+    } else if (data_len > 0) {
+      ftpcmd = new char[data_len + 1];
+      memcpy(ftpcmd, data, data_len);
+      ftpcmd[data_len] = 0;
+      cmd = strtok(ftpcmd, " \r");
+      arg = strtok(NULL, "\r");
+      fs = (ftp_session_t*)tcp_conn->data;
+      if (fs->state == 1) {
+        if (!strcasecmp(cmd, "USER")) {
+          fs->anonymous = !strcmp(arg, "anonymous");
+          if (!strcmp(arg, "bochs") || fs->anonymous) {
+            sprintf(reply, "331 Password required for %s.", arg);
+            ftp_send_reply(tcp_conn, reply);
+            fs->state = 2;
+          } else {
+            ftp_send_reply(tcp_conn, "430 Invalid username or password.");
+          }
         }
-      }
-    } else if (fs->state == 2) {
-      if (!strcasecmp(cmd, "PASS")) {
-        if (!strcmp(arg, "bochs") || fs->anonymous) {
-          sprintf(reply, "230 User %s logged in.%c%c", fs->anonymous ? "anonymous":"bochs", 13, 10);
-          fs->state = 3;
-        } else {
-          sprintf(reply, "530 Login incorrect.%c%c", 13, 10);
+      } else if (fs->state == 2) {
+        if (!strcasecmp(cmd, "PASS")) {
+          if (!strcmp(arg, "bochs") || fs->anonymous) {
+            sprintf(reply, "230 User %s logged in.", fs->anonymous ? "anonymous":"bochs");
+            ftp_send_reply(tcp_conn, reply);
+            fs->state = 3;
+          } else {
+            ftp_send_reply(tcp_conn, "530 Login incorrect.");
+          }
         }
-      }
-    } else {
-      if (!strcasecmp(cmd, "SYST")) {
-        sprintf(reply, "215 UNIX Type: Bochs Version: 2.6.11%c%c", 13, 10);
-      } else if (!strcasecmp(cmd, "FEAT")) {
-        sprintf(reply, "211 end%c%c", 13, 10);
-      } else if (!strcasecmp(cmd, "NOOP")) {
-        sprintf(reply, "200 OK.%c%c", 13, 10);
-      } else if (!strcasecmp(cmd, "OPTS")) {
-        sprintf(reply, "501 Feature '%s' not supported.%c%c", arg, 13, 10);
-      } else if (!strcasecmp(cmd, "PWD")) {
-        sprintf(reply, "257 \"/\" is current directory.%c%c", 13, 10);
-      } else if (!strcasecmp(cmd, "QUIT")) {
-        sprintf(reply, "221 Goodbye.%c%c", 13, 10);
-        delete fs;
-        tcp_conn->data = NULL;
       } else {
-        sprintf(reply, "502 Command '%s' not implemented.%c%c", cmd, 13, 10);
+        if (!strcasecmp(cmd, "CWD")) {
+          if (!strcmp(arg, "/")) {
+            ftp_send_reply(tcp_conn, "250 CWD command successful.");
+          } else {
+            ftp_send_reply(tcp_conn, "550 CWD operation not permitted.");
+          }
+        } else if (!strcasecmp(cmd, "FEAT")) {
+          ftp_send_reply(tcp_conn, "211 end");
+        } else if (!strcasecmp(cmd, "NOOP")) {
+          ftp_send_reply(tcp_conn, "200 Command OK.");
+        } else if (!strcasecmp(cmd, "OPTS")) {
+          sprintf(reply, "501 Feature '%s' not supported.", arg);
+          ftp_send_reply(tcp_conn, reply);
+        } else if (!strcasecmp(cmd, "PWD")) {
+          sprintf(reply, "257 \"/\" is current directory.");
+          ftp_send_reply(tcp_conn, reply);
+        } else if (!strcasecmp(cmd, "QUIT")) {
+          ftp_send_reply(tcp_conn, "221 Goodbye.");
+          ftp_remove_session(fs);
+          tcp_conn->data = NULL;
+        } else if (!strcasecmp(cmd, "SYST")) {
+          ftp_send_reply(tcp_conn, "215 UNIX Type: Bochs Version: 2.6.11");
+        } else if (!strcasecmp(cmd, "TYPE")) {
+          sprintf(reply, "200 Type set to %s.", arg);
+          ftp_send_reply(tcp_conn, reply);
+        } else {
+          sprintf(reply, "502 Command '%s' not implemented.", cmd);
+          ftp_send_reply(tcp_conn, reply);
+        }
       }
+      delete [] ftpcmd;
     }
-    delete [] ftpcmd;
+  } else {
+    // FTP data port
+    // TODO
   }
-  if (strlen(reply) > 0) {
+}
+
+void vnet_server_c::ftp_send_reply(tcp_conn_t *tcp_conn, const char *msg)
+{
+  if (strlen(msg) > 0) {
+    char *reply = new char[strlen(msg) + 3];
+    sprintf(reply, "%s%c%c", msg, 13, 10);
     tcpipv4_send_data(tcp_conn, (Bit8u*)reply, strlen(reply), 1);
+    delete [] reply;
   }
 }
 

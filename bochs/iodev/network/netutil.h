@@ -196,6 +196,16 @@ typedef int (*layer4_handler_t)(
   Bit8u *reply
   );
 
+// dynamic packet handling
+
+typedef struct packet_item {
+  Bit8u *buffer;
+  unsigned len;
+  struct packet_item *next;
+} packet_item_t;
+
+// TCP support
+
 typedef struct tcp_conn {
   Bit8u  clientid;
   Bit16u src_port;
@@ -214,12 +224,6 @@ typedef void (*tcp_handler_t)(
   const Bit8u *data,
   unsigned data_len
   );
-
-typedef struct ftp_session {
-  Bit8u state;
-  bx_bool anonymous;
-  struct ftp_session *next;
-} ftp_session_t;
 
 
 class vnet_server_c {
@@ -275,6 +279,7 @@ private:
                                   const Bit8u *data, unsigned data_len);
   void tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *data,
                               unsigned data_len);
+  void ftp_send_reply(tcp_conn_t *tcp_conn, const char *msg);
 
   static int udpipv4_dhcp_handler(void *this_ptr, const Bit8u *ipheader,
                                   unsigned ipheader_len, unsigned sourceport,
@@ -330,9 +335,7 @@ private:
   unsigned l4data_used;
   unsigned tcpfn_used;
 
-  Bit8u *packet_buffer[2];
-  unsigned packet_len[2];
-  Bit8u packet_count;
+  packet_item_t *packets;
 };
 
 #endif
