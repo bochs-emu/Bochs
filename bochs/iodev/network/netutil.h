@@ -82,8 +82,8 @@ typedef struct ip_header {
   Bit8u ttl;
   Bit8u protocol;
   Bit16u checksum;
-  Bit32u src_addr;
-  Bit32u dst_addr;
+  Bit8u src_addr[4];
+  Bit8u dst_addr[4];
 } 
 #if !defined(_MSC_VER)
   GCC_ATTRIBUTE((packed))
@@ -214,6 +214,8 @@ typedef struct tcp_conn {
   Bit32u guest_seq_num;
   Bit16u window;
   Bit8u  state;
+  bx_bool host_xfer_fin;
+  bx_bool host_port_fin;
   void   *data;
   struct tcp_conn *next;
 } tcp_conn_t;
@@ -271,15 +273,17 @@ private:
 
   void host_to_guest_tcpipv4(Bit8u clientid, Bit16u src_port, Bit16u dst_port,
                              Bit8u *data, unsigned data_len, unsigned hdr_len);
-  void tcpipv4_send_data(const tcp_conn_t *tcp_conn, const Bit8u *data,
+  void tcpipv4_send_data(tcp_conn_t *tcp_conn, const Bit8u *data,
                          unsigned data_len, bx_bool push);
-  void tcpipv4_send_ack(const tcp_conn_t *tcp_conn, unsigned data_len);
+  void tcpipv4_send_ack(tcp_conn_t *tcp_conn, unsigned data_len);
+  void tcpipv4_send_fin(tcp_conn_t *tcp_conn);
 
   static void tcpipv4_ftp_handler(void *this_ptr, tcp_conn_t *tcp_conn,
                                   const Bit8u *data, unsigned data_len);
   void tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *data,
                               unsigned data_len);
   void ftp_send_reply(tcp_conn_t *tcp_conn, const char *msg);
+  void ftp_read_directory(tcp_conn_t *tcp_conn);
 
   static int udpipv4_dhcp_handler(void *this_ptr, const Bit8u *ipheader,
                                   unsigned ipheader_len, unsigned sourceport,
@@ -335,6 +339,7 @@ private:
   unsigned l4data_used;
   unsigned tcpfn_used;
 
+  Bit16u packet_counter;
   packet_item_t *packets;
 };
 

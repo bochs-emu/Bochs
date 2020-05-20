@@ -186,6 +186,7 @@ vnet_server_c::vnet_server_c()
   for (Bit8u c = 0; c < VNET_MAX_CLIENTS; c++) {
     client[c].init = 0;
   }
+  packet_counter = 0;
   packets = NULL;
 }
 
@@ -216,6 +217,7 @@ void vnet_server_c::init(bx_devmodel_c *_netdev, dhcp_cfg_t *dhcpc, const char *
   if (strlen(tftp_root) > 0) {
     register_layer4_handler(0x11, INET_PORT_TFTP_SERVER, udpipv4_tftp_handler);
     register_tcp_handler(INET_PORT_FTP, tcpipv4_ftp_handler);
+    srand(time(NULL)); // for random FTP data port
   }
 }
 
@@ -477,17 +479,19 @@ void vnet_server_c::process_ipv4(Bit8u clientid, const Bit8u *buf, unsigned len)
 void vnet_server_c::host_to_guest_ipv4(const Bit8u clientid, bx_bool dns_srv, Bit8u *buf, unsigned len)
 {
   unsigned l3header_len;
-
-  buf[14] = (buf[14] & 0x0f) | 0x40;
-  l3header_len = ((unsigned)(buf[14] & 0x0f) << 2);
+  ip_header_t *iphdr = (ip_header_t *)((Bit8u *)buf +
+                                       sizeof(ethernet_header_t));
+  iphdr->version = 4;
+  l3header_len = (iphdr->header_len << 2);
+  iphdr->id = htons(++packet_counter);
   if (dns_srv) {
-    memcpy(&buf[26], dhcp->dns_ipv4addr, 4);
+    memcpy(iphdr->src_addr, dhcp->dns_ipv4addr, 4);
   } else {
-    memcpy(&buf[26], dhcp->host_ipv4addr, 4);
+    memcpy(iphdr->src_addr, dhcp->host_ipv4addr, 4);
   }
-  memcpy(&buf[30], client[clientid].ipv4addr, 4);
-  put_net2(&buf[24], 0);
-  put_net2(&buf[24], ip_checksum(&buf[14], l3header_len) ^ (Bit16u)0xffff);
+  memcpy(iphdr->dst_addr, client[clientid].ipv4addr, 4);
+  iphdr->checksum = 0;
+  iphdr->checksum = htons(ip_checksum((Bit8u*)iphdr, l3header_len) ^ (Bit16u)0xffff);
 
   host_to_guest(clientid, buf, len, ETHERNET_TYPE_IPV4);
 }
@@ -696,15 +700,27 @@ void vnet_server_c::process_tcpipv4(Bit8u clientid, const Bit8u *ipheader,
         tcp_error = 0;
       }
     } else {
-      if ((tcphdr->flags.fin) && (tcp_conn->state == TCP_CONNECTED)) {
-        tcprhdr->flags.fin = 1;
-        tcprhdr->flags.ack = 1;
-        tcprhdr->seq_num = htonl(tcp_conn->host_seq_num);
-        tcprhdr->ack_num = htonl(tcp_seq_num+1);
-        tcprhdr->window = htons(tcp_window);
-        tcprdata_len = 0;
-        tcp_conn->state = TCP_DISCONNECTING;
-        tcp_error = 0;
+      if (tcphdr->flags.fin) {
+        if (tcp_conn->state == TCP_CONNECTED) {
+          tcprhdr->flags.fin = 1;
+          tcprhdr->flags.ack = 1;
+          tcprhdr->seq_num = htonl(tcp_conn->host_seq_num);
+          tcprhdr->ack_num = htonl(tcp_seq_num+1);
+          tcprhdr->window = htons(tcp_window);
+          tcprdata_len = 0;
+          tcp_conn->state = TCP_DISCONNECTING;
+          tcp_error = 0;
+        } else if (tcp_conn->state == TCP_DISCONNECTING) {
+          if (tcphdr->flags.ack) {
+            tcp_conn->host_seq_num = tcp_ack_num;
+          }
+          tcpipv4_send_ack(tcp_conn, 1);
+          tcp_remove_connection(tcp_conn);
+          if (tcp_dst_port > 1023) {
+            unregister_tcp_handler(tcp_dst_port);
+          }
+          return;
+        }
       } else if (tcphdr->flags.ack) {
         if (tcp_conn->state == TCP_CONNECTING) {
           tcp_conn->state = TCP_CONNECTED;
@@ -713,13 +729,20 @@ void vnet_server_c::process_tcpipv4(Bit8u clientid, const Bit8u *ipheader,
           tcp_conn->window = tcp_window;
           (*func)((void *)this, tcp_conn, tcp_data, tcpdata_len);
         } else if (tcp_conn->state == TCP_DISCONNECTING) {
-          tcp_remove_connection(tcp_conn);
+          if (!tcp_conn->host_port_fin) {
+            tcp_remove_connection(tcp_conn);
+          } else {
+            tcp_conn->host_seq_num = tcp_ack_num;
+            tcp_conn->host_port_fin = 0;
+          }
         } else {
           tcp_conn->guest_seq_num = tcp_seq_num;
-          tcp_conn->host_seq_num = tcp_ack_num;
-          if (tcpdata_len > 0) {
-            tcpipv4_send_ack(tcp_conn, tcpdata_len);
+          if ((tcpdata_len > 0) || tcp_conn->host_xfer_fin) {
+            if (tcpdata_len > 0) {
+              tcpipv4_send_ack(tcp_conn, tcpdata_len);
+            }
             (*func)((void *)this, tcp_conn, tcp_data, tcpdata_len);
+            tcp_conn->host_xfer_fin = 0;
           }
         }
         return;
@@ -775,10 +798,10 @@ void vnet_server_c::host_to_guest_tcpipv4(Bit8u clientid, Bit16u src_port,
   host_to_guest_ipv4(clientid, 0, data, data_len + hdr_len + 34U);
 }
 
-void vnet_server_c::tcpipv4_send_data(const tcp_conn_t *tcp_conn, const Bit8u *data, unsigned data_len, bx_bool push)
+void vnet_server_c::tcpipv4_send_data(tcp_conn_t *tcp_conn, const Bit8u *data, unsigned data_len, bx_bool push)
 {
-  Bit8u buffer[BX_PACKET_BUFSIZE];
-  tcp_header_t *tcphdr = (tcp_header_t *)&buffer[34];
+  Bit8u sendbuf[BX_PACKET_BUFSIZE];
+  tcp_header_t *tcphdr = (tcp_header_t *)&sendbuf[34];
   unsigned tcphdr_len = sizeof(tcp_header_t);
   Bit8u *tcp_data;
 
@@ -788,19 +811,21 @@ void vnet_server_c::tcpipv4_send_data(const tcp_conn_t *tcp_conn, const Bit8u *d
   }
   tcphdr->flags.ack = 1;
   tcphdr->seq_num = htonl(tcp_conn->host_seq_num);
+  tcp_conn->host_seq_num += data_len;
   tcphdr->ack_num = htonl(tcp_conn->guest_seq_num);
   tcphdr->window = htons(tcp_conn->window);
   tcp_data = (Bit8u*)tcphdr + tcphdr_len;
   if ((data_len + 54U) > BX_PACKET_BUFSIZE) {
-    BX_ERROR(("generated tcp data is too long"));
-    return;
+    BX_ERROR(("generated TCP data is too long"));
+  } else {
+    memcpy(tcp_data, data, data_len);
+    host_to_guest_tcpipv4(tcp_conn->clientid, tcp_conn->dst_port, tcp_conn->src_port,
+                          sendbuf, data_len, tcphdr_len);
   }
-  memcpy(tcp_data, data, data_len);
-  host_to_guest_tcpipv4(tcp_conn->clientid, tcp_conn->dst_port, tcp_conn->src_port,
-                        buffer, data_len, tcphdr_len);
+  tcp_conn->host_xfer_fin = 1;
 }
 
-void vnet_server_c::tcpipv4_send_ack(const tcp_conn_t *tcp_conn, unsigned data_len)
+void vnet_server_c::tcpipv4_send_ack(tcp_conn_t *tcp_conn, unsigned data_len)
 {
   Bit8u replybuf[MIN_RX_PACKET_LEN];
   tcp_header_t *tcphdr = (tcp_header_t *)&replybuf[34];
@@ -809,8 +834,27 @@ void vnet_server_c::tcpipv4_send_ack(const tcp_conn_t *tcp_conn, unsigned data_l
   memset(replybuf, 0, MIN_RX_PACKET_LEN);
   tcphdr->flags.ack = 1;
   tcphdr->seq_num = htonl(tcp_conn->host_seq_num);
-  tcphdr->ack_num = htonl(tcp_conn->guest_seq_num + data_len);
+  tcp_conn->guest_seq_num += data_len;
+  tcphdr->ack_num = htonl(tcp_conn->guest_seq_num);
   tcphdr->window = htons(tcp_conn->window);
+  host_to_guest_tcpipv4(tcp_conn->clientid, tcp_conn->dst_port, tcp_conn->src_port,
+                        replybuf, 0, tcphdr_len);
+}
+
+void vnet_server_c::tcpipv4_send_fin(tcp_conn_t *tcp_conn)
+{
+  Bit8u replybuf[MIN_RX_PACKET_LEN];
+  tcp_header_t *tcphdr = (tcp_header_t *)&replybuf[34];
+  unsigned tcphdr_len = sizeof(tcp_header_t);
+
+  memset(replybuf, 0, MIN_RX_PACKET_LEN);
+  tcphdr->flags.fin = 1;
+  tcphdr->flags.ack = 1;
+  tcphdr->seq_num = htonl(tcp_conn->host_seq_num);
+  tcphdr->ack_num = htonl(tcp_conn->guest_seq_num);
+  tcphdr->window = htons(tcp_conn->window);
+  tcp_conn->state = TCP_DISCONNECTING;
+  tcp_conn->host_port_fin = 1;
   host_to_guest_tcpipv4(tcp_conn->clientid, tcp_conn->dst_port, tcp_conn->src_port,
                         replybuf, 0, tcphdr_len);
 }
@@ -832,35 +876,35 @@ ftp_session_t *ftp_new_session(tcp_conn_t *tcp_conn, Bit16u client_cmd_port)
 
 ftp_session_t *ftp_find_cmd_session(Bit16u pasv_port)
 {
-  ftp_session_t *s = ftp_sessions;
-  while (s != NULL) {
-    if (s->pasv_port != pasv_port)
-      s = s->next;
+  ftp_session_t *fs = ftp_sessions;
+  while (fs != NULL) {
+    if (fs->pasv_port != pasv_port)
+      fs = fs->next;
     else
       break;
   }
-  return s;
+  return fs;
 }
 
-void ftp_remove_session(ftp_session_t *s)
+void ftp_remove_session(ftp_session_t *fs)
 {
   ftp_session_t *last;
 
-  if (ftp_sessions == s) {
-    ftp_sessions = s->next;
+  if (ftp_sessions == fs) {
+    ftp_sessions = fs->next;
   } else {
     last = ftp_sessions;
     while (last != NULL) {
-      if (last->next != s)
+      if (last->next != fs)
         last = last->next;
       else
         break;
     }
     if (last) {
-      last->next = s->next;
+      last->next = fs->next;
     }
   }
-  delete s;
+  delete fs;
 }
 
 void vnet_server_c::tcpipv4_ftp_handler(void *this_ptr, tcp_conn_t *tcp_conn, const Bit8u *data, unsigned data_len)
@@ -873,6 +917,9 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
   char *ftpcmd, *cmd = NULL, *arg = NULL;
   char reply[80];
   ftp_session_t *fs;
+  const Bit8u *hostip;
+  bx_bool pasv_port_ok;
+  tcp_conn_t *tcp_conn_2;
 
   if (tcp_conn->dst_port == INET_PORT_FTP) {
     if (tcp_conn->data == NULL) {
@@ -917,10 +964,29 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
           }
         } else if (!strcasecmp(cmd, "FEAT")) {
           ftp_send_reply(tcp_conn, "211 end");
+        } else if (!strcasecmp(cmd, "LIST")) {
+          tcp_conn_2 = tcp_find_connection(tcp_conn->clientid, fs->client_data_port, fs->pasv_port);
+          if (tcp_conn_2 != NULL) {
+            ftp_send_reply(tcp_conn, "150 Opening ASCII mode connection for file list.");
+            ftp_read_directory(tcp_conn_2);
+          } else {
+            BX_ERROR(("FTP data connection not found"));
+          }
         } else if (!strcasecmp(cmd, "NOOP")) {
           ftp_send_reply(tcp_conn, "200 Command OK.");
         } else if (!strcasecmp(cmd, "OPTS")) {
           sprintf(reply, "501 Feature '%s' not supported.", arg);
+          ftp_send_reply(tcp_conn, reply);
+        } else if (!strcasecmp(cmd, "PASV")) {
+          do {
+            fs->pasv_port = (((rand() & 0x7f) | 0x80) << 8) | (rand() & 0xff);
+            pasv_port_ok = register_tcp_handler(fs->pasv_port, tcpipv4_ftp_handler);
+          } while (!pasv_port_ok);
+          BX_DEBUG(("Passive FTP mode using port %d", fs->pasv_port));
+          hostip = dhcp->host_ipv4addr;
+          sprintf(reply, "227 Entering passive mode (%d, %d, %d, %d, %d, %d).",
+                  hostip[0], hostip[1], hostip[2], hostip[3], (fs->pasv_port >> 8),
+                  (fs->pasv_port & 0xff));
           ftp_send_reply(tcp_conn, reply);
         } else if (!strcasecmp(cmd, "PWD")) {
           sprintf(reply, "257 \"/\" is current directory.");
@@ -943,7 +1009,23 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
     }
   } else {
     // FTP data port
-    // TODO
+    fs = ftp_find_cmd_session(tcp_conn->dst_port);
+    if (fs == NULL) {
+      BX_ERROR(("FTP command connection not found"));
+      return;
+    }
+    if (tcp_conn->data == NULL) {
+      fs->client_data_port = tcp_conn->src_port;
+      tcp_conn->data = fs;
+    } else if (tcp_conn->host_xfer_fin) {
+      tcp_conn_2 = tcp_find_connection(tcp_conn->clientid, fs->client_cmd_port, INET_PORT_FTP);
+      if (tcp_conn_2 != NULL) {
+        tcpipv4_send_fin(tcp_conn);
+        ftp_send_reply(tcp_conn_2, "226 Transfer complete.");
+      } else {
+        BX_ERROR(("FTP command connection not found"));
+      }
+    }
   }
 }
 
@@ -955,6 +1037,11 @@ void vnet_server_c::ftp_send_reply(tcp_conn_t *tcp_conn, const char *msg)
     tcpipv4_send_data(tcp_conn, (Bit8u*)reply, strlen(reply), 1);
     delete [] reply;
   }
+}
+
+void vnet_server_c::ftp_read_directory(tcp_conn_t *tcp_conn)
+{
+  ftp_send_reply(tcp_conn, "-rw-rw-r-- 1 ftp ftp 1234 May 14 20:00 test.txt");
 }
 
 // Layer 4 handler methods
