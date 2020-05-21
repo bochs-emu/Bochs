@@ -171,7 +171,7 @@ Bit16u ip_checksum(const Bit8u *buf, unsigned buf_len);
 typedef struct tftp_session {
   char     filename[BX_PATHNAME_LEN];
   Bit16u   tid;
-  bx_bool  write;
+  bx_bool  iswrite;
   unsigned options;
   size_t   tsize_val;
   unsigned blksize_val;

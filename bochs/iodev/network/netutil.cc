@@ -25,6 +25,7 @@
 
 #ifdef BXHUB
 #include "config.h"
+#define WIN32_LEAN_AND_MEAN
 #include "misc/bxcompat.h"
 #else
 #include "iodev.h"
@@ -217,7 +218,7 @@ void vnet_server_c::init(bx_devmodel_c *_netdev, dhcp_cfg_t *dhcpc, const char *
   if (strlen(tftp_root) > 0) {
     register_layer4_handler(0x11, INET_PORT_TFTP_SERVER, udpipv4_tftp_handler);
     register_tcp_handler(INET_PORT_FTP, tcpipv4_ftp_handler);
-    srand(time(NULL)); // for random FTP data port
+    srand((unsigned)time(NULL)); // for random FTP data port
   }
 }
 
@@ -481,6 +482,7 @@ void vnet_server_c::host_to_guest_ipv4(const Bit8u clientid, bx_bool dns_srv, Bi
   unsigned l3header_len;
   ip_header_t *iphdr = (ip_header_t *)((Bit8u *)buf +
                                        sizeof(ethernet_header_t));
+
   iphdr->version = 4;
   l3header_len = (iphdr->header_len << 2);
   iphdr->id = htons(++packet_counter);
@@ -665,6 +667,8 @@ void vnet_server_c::process_tcpipv4(Bit8u clientid, const Bit8u *ipheader,
   tcp_handler_t func;
   tcp_conn_t *tcp_conn;
   bx_bool tcp_error = 1;
+  Bit8u option, optlen;
+  Bit16u value16;
 
   if (l4pkt_len < 20) return;
   memset(replybuf, 0, MIN_RX_PACKET_LEN);
@@ -680,7 +684,27 @@ void vnet_server_c::process_tcpipv4(Bit8u clientid, const Bit8u *ipheader,
   tcp_data = (Bit8u*)tcphdr + tcphdr_len;
   // TODO: parse options
   if (tcphdr_len > 20) {
-    BX_ERROR(("TCP options not supported yet"));
+    int i = 0;
+    do {
+      option = l4pkt[20+i];
+      if (option < 2) {
+        optlen = 1;
+      } else {
+        optlen = l4pkt[20+i+1];
+      }
+      if (option == 0) {
+        break;
+      }
+      if (option == 2) {
+        value16 = get_net2(&l4pkt[20+i+2]);
+        if (value16 != 1460) {
+          BX_ERROR(("TCP: MSS = %d (unhandled)", value16));
+        }
+      } else {
+        BX_ERROR(("TCP option %d not supported yet", option));
+      }
+      i += optlen;
+    } while (i < (int)(tcphdr_len - 20));
   }
   // check header
   func = get_tcp_handler(tcp_dst_port);
@@ -700,7 +724,13 @@ void vnet_server_c::process_tcpipv4(Bit8u clientid, const Bit8u *ipheader,
         tcp_error = 0;
       }
     } else {
-      if (tcphdr->flags.fin) {
+      if (tcphdr->flags.rst) {
+        tcp_remove_connection(tcp_conn);
+        if (tcp_dst_port > 1023) {
+          unregister_tcp_handler(tcp_dst_port);
+        }
+        return;
+      } else if (tcphdr->flags.fin) {
         if (tcp_conn->state == TCP_CONNECTED) {
           tcprhdr->flags.fin = 1;
           tcprhdr->flags.ack = 1;
@@ -747,7 +777,7 @@ void vnet_server_c::process_tcpipv4(Bit8u clientid, const Bit8u *ipheader,
         }
         return;
       } else {
-        BX_ERROR(("TCP: unhandled"));
+        BX_ERROR(("TCP: unhandled flag"));
         return;
       }
     }
@@ -935,7 +965,7 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
       arg = strtok(NULL, "\r");
       fs = (ftp_session_t*)tcp_conn->data;
       if (fs->state == 1) {
-        if (!strcasecmp(cmd, "USER")) {
+        if (!stricmp(cmd, "USER")) {
           fs->anonymous = !strcmp(arg, "anonymous");
           if (!strcmp(arg, "bochs") || fs->anonymous) {
             sprintf(reply, "331 Password required for %s.", arg);
@@ -946,7 +976,7 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
           }
         }
       } else if (fs->state == 2) {
-        if (!strcasecmp(cmd, "PASS")) {
+        if (!stricmp(cmd, "PASS")) {
           if (!strcmp(arg, "bochs") || fs->anonymous) {
             sprintf(reply, "230 User %s logged in.", fs->anonymous ? "anonymous":"bochs");
             ftp_send_reply(tcp_conn, reply);
@@ -956,15 +986,19 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
           }
         }
       } else {
-        if (!strcasecmp(cmd, "CWD")) {
+        if (!stricmp(cmd, "ABOR")) {
+          tcp_conn_2 = tcp_find_connection(tcp_conn->clientid, fs->client_data_port, fs->pasv_port);
+          tcp_conn_2->host_xfer_fin = 1;
+          ftp_send_reply(tcp_conn, "226 Transfer complete.");
+        } else if (!stricmp(cmd, "CWD")) {
           if (!strcmp(arg, "/")) {
             ftp_send_reply(tcp_conn, "250 CWD command successful.");
           } else {
             ftp_send_reply(tcp_conn, "550 CWD operation not permitted.");
           }
-        } else if (!strcasecmp(cmd, "FEAT")) {
+        } else if (!stricmp(cmd, "FEAT")) {
           ftp_send_reply(tcp_conn, "211 end");
-        } else if (!strcasecmp(cmd, "LIST")) {
+        } else if (!stricmp(cmd, "LIST")) {
           tcp_conn_2 = tcp_find_connection(tcp_conn->clientid, fs->client_data_port, fs->pasv_port);
           if (tcp_conn_2 != NULL) {
             ftp_send_reply(tcp_conn, "150 Opening ASCII mode connection for file list.");
@@ -972,12 +1006,12 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
           } else {
             BX_ERROR(("FTP data connection not found"));
           }
-        } else if (!strcasecmp(cmd, "NOOP")) {
+        } else if (!stricmp(cmd, "NOOP")) {
           ftp_send_reply(tcp_conn, "200 Command OK.");
-        } else if (!strcasecmp(cmd, "OPTS")) {
+        } else if (!stricmp(cmd, "OPTS")) {
           sprintf(reply, "501 Feature '%s' not supported.", arg);
           ftp_send_reply(tcp_conn, reply);
-        } else if (!strcasecmp(cmd, "PASV")) {
+        } else if (!stricmp(cmd, "PASV")) {
           do {
             fs->pasv_port = (((rand() & 0x7f) | 0x80) << 8) | (rand() & 0xff);
             pasv_port_ok = register_tcp_handler(fs->pasv_port, tcpipv4_ftp_handler);
@@ -988,16 +1022,16 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
                   hostip[0], hostip[1], hostip[2], hostip[3], (fs->pasv_port >> 8),
                   (fs->pasv_port & 0xff));
           ftp_send_reply(tcp_conn, reply);
-        } else if (!strcasecmp(cmd, "PWD")) {
+        } else if (!stricmp(cmd, "PWD")) {
           sprintf(reply, "257 \"/\" is current directory.");
           ftp_send_reply(tcp_conn, reply);
-        } else if (!strcasecmp(cmd, "QUIT")) {
+        } else if (!stricmp(cmd, "QUIT")) {
           ftp_send_reply(tcp_conn, "221 Goodbye.");
           ftp_remove_session(fs);
           tcp_conn->data = NULL;
-        } else if (!strcasecmp(cmd, "SYST")) {
+        } else if (!stricmp(cmd, "SYST")) {
           ftp_send_reply(tcp_conn, "215 UNIX Type: Bochs Version: 2.6.11");
-        } else if (!strcasecmp(cmd, "TYPE")) {
+        } else if (!stricmp(cmd, "TYPE")) {
           sprintf(reply, "200 Type set to %s.", arg);
           ftp_send_reply(tcp_conn, reply);
         } else {
@@ -1025,6 +1059,9 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
       } else {
         BX_ERROR(("FTP command connection not found"));
       }
+    } else if (data_len > 0) {
+      fs = (ftp_session_t*)tcp_conn->data;
+      BX_INFO(("FTP data port %d (data)", fs->pasv_port));
     }
   }
 }
@@ -1535,7 +1572,7 @@ tftp_session_t *tftp_new_session(Bit16u req_tid, bx_bool mode, const char *tpath
 {
   tftp_session_t *s = new tftp_session_t;
   s->tid = req_tid;
-  s->write = mode;
+  s->iswrite = mode;
   s->options = 0;
   s->blksize_val = TFTP_DEFAULT_BLKSIZE;
   s->timeout_val = TFTP_DEFAULT_TIMEOUT;
@@ -1696,7 +1733,7 @@ void vnet_server_c::tftp_parse_options(const char *mode, const Bit8u *data,
     } else if (memcmp(mode, "tsize\0", 6) == 0) {
       s->options |= TFTP_OPTION_TSIZE;             // size needed
       mode += 6;
-      if (s->write) {
+      if (s->iswrite) {
         s->tsize_val = atoi(mode);
       }
       mode += strlen(mode)+1;
@@ -1828,7 +1865,7 @@ int vnet_server_c::udpipv4_tftp_handler_ns(const Bit8u *ipheader,
 
     case TFTP_DATA:
       if (s != NULL) {
-        if (s->write == 1) {
+        if (s->iswrite == 1) {
           block_nr = get_net2(data + 2);
           strncpy((char*)reply, (const char*)data + 4, data_len - 4);
           tftp_len = data_len - 4;
@@ -1863,7 +1900,7 @@ int vnet_server_c::udpipv4_tftp_handler_ns(const Bit8u *ipheader,
 
     case TFTP_ACK:
       if (s != NULL) {
-        if (s->write == 0) {
+        if (s->iswrite == 0) {
           return tftp_send_data(reply, get_net2(data + 2) + 1, s);
         } else {
           return tftp_send_error(reply, 4, "Illegal request", s);
