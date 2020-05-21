@@ -116,6 +116,7 @@ static const char *cpu_feature_name[] =
   "xapicext",               // BX_ISA_XAPICEXT
   "pcid",                   // BX_ISA_PCID
   "smep",                   // BX_ISA_SMEP
+  "tsc_adjust",             // BX_ISA_TSC_ADJUST
   "tsc_deadline",           // BX_ISA_TSC_DEADLINE
   "fopcode_deprecation",    // BX_ISA_FOPCODE_DEPRECATION
   "fcs_fds_deprecation",    // BX_ISA_FCS_FDS_DEPRECATION

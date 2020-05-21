@@ -269,7 +269,7 @@ void BX_CPU_C::register_state(void)
 #endif
 
 #if BX_CPU_LEVEL >= 5
-  BXRS_HEX_PARAM_FIELD(cpu, tsc_last_reset, tsc_last_reset);
+  BXRS_HEX_PARAM_FIELD(cpu, tsc_adjust, tsc_adjust);
 #if BX_SUPPORT_VMX || BX_SUPPORT_SVM
   BXRS_HEX_PARAM_FIELD(cpu, tsc_offset, tsc_offset);
 #endif

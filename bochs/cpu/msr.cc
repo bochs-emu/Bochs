@@ -156,6 +156,17 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 
     case BX_MSR_TSC:
       val64 = BX_CPU_THIS_PTR get_TSC();
+#if BX_SUPPORT_SVM || BX_SUPPORT_VMX
+      val64 = BX_CPU_THIS_PTR get_TSC_VMXAdjust(val64);
+#endif
+      break;
+
+    case BX_MSR_TSC_ADJUST:
+      if (! is_cpu_extension_supported(BX_ISA_TSC_ADJUST)) {
+        BX_ERROR(("RDMSR BX_MSR_TSC_ADJUST: TSC_ADJUST is not enabled in the cpu model"));
+        return handle_unknown_rdmsr(index, msr);
+      }
+      val64 = BX_CPU_THIS_PTR tsc_adjust;
       break;
 
 #if BX_SUPPORT_APIC
@@ -753,6 +764,14 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_TSC:
       BX_INFO(("WRMSR: write 0x%08x%08x to MSR_TSC", val32_hi, val32_lo));
       BX_CPU_THIS_PTR set_TSC(val_64);
+      break;
+
+    case BX_MSR_TSC_ADJUST:
+      if (! is_cpu_extension_supported(BX_ISA_TSC_ADJUST)) {
+        BX_ERROR(("WRMSR BX_MSR_TSC_ADJUST: TSC_ADJUST is not enabled in the cpu model"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
+      BX_CPU_THIS_PTR tsc_adjust = (Bit64s) val_64;
       break;
 
 #if BX_SUPPORT_APIC

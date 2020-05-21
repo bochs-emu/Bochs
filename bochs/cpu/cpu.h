@@ -910,7 +910,7 @@ public: // for now...
   // remember the time in ticks that it was reset to zero.  With a little
   // algebra, we can also support setting it to something other than zero.
   // Don't read this directly; use get_TSC and set_TSC to access the TSC.
-  Bit64u tsc_last_reset;
+  Bit64s tsc_adjust;
 #if BX_SUPPORT_VMX || BX_SUPPORT_SVM
   Bit64s tsc_offset;
 #endif
@@ -4855,6 +4855,9 @@ public: // for now...
 #if BX_CPU_LEVEL >= 5
   BX_SMF Bit64u get_TSC();
   BX_SMF void   set_TSC(Bit64u tsc);
+#if BX_SUPPORT_VMX || BX_SUPPORT_SVM
+  BX_SMF Bit64u get_TSC_VMXAdjust(Bit64u tsc);
+#endif
 #endif
 
 #if BX_SUPPORT_PKEYS

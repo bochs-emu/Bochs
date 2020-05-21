@@ -63,6 +63,7 @@ corei7_skylake_x_t::corei7_skylake_x_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_NX);
   enable_cpu_extension(BX_ISA_1G_PAGES);
   enable_cpu_extension(BX_ISA_PCID);
+  enable_cpu_extension(BX_ISA_TSC_ADJUST);
   enable_cpu_extension(BX_ISA_TSC_DEADLINE);
   enable_cpu_extension(BX_ISA_SSE);
   enable_cpu_extension(BX_ISA_SSE2);
@@ -95,7 +96,6 @@ corei7_skylake_x_t::corei7_skylake_x_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_INVPCID);
   enable_cpu_extension(BX_ISA_SMEP);
   enable_cpu_extension(BX_ISA_RDRAND);
-  enable_cpu_extension(BX_ISA_TSC_DEADLINE);
   enable_cpu_extension(BX_ISA_FCS_FDS_DEPRECATION);
   enable_cpu_extension(BX_ISA_RDSEED);
   enable_cpu_extension(BX_ISA_ADX);
@@ -586,7 +586,7 @@ void corei7_skylake_x_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function
     // * [30:30] AVX512BW instructions support
     // * [31:31] AVX512VL variable vector length support
     leaf->ebx = BX_CPUID_EXT3_FSGSBASE | 
-             /* BX_CPUID_EXT3_TSC_ADJUST | */ // not implemented yet
+                BX_CPUID_EXT3_TSC_ADJUST |
                 BX_CPUID_EXT3_BMI1 | 
                 BX_CPUID_EXT3_AVX2 |
                 BX_CPUID_EXT3_FDP_DEPRECATION |

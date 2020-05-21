@@ -608,8 +608,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)
 
 Bit64u BX_CPU_C::get_TSC(void)
 {
-  Bit64u tsc = bx_pc_system.time_ticks() - BX_CPU_THIS_PTR tsc_last_reset;
+  Bit64u tsc = bx_pc_system.time_ticks() + BX_CPU_THIS_PTR tsc_adjust;
+  return tsc;
+}
+
 #if BX_SUPPORT_VMX || BX_SUPPORT_SVM
+Bit64u BX_CPU_C::get_TSC_VMXAdjust(Bit64u tsc)
+{
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (VMEXIT(VMX_VM_EXEC_CTRL2_TSC_OFFSET) && SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_TSC_SCALING)) {
@@ -619,16 +624,16 @@ Bit64u BX_CPU_C::get_TSC(void)
     }
   }
 #endif
-  tsc += BX_CPU_THIS_PTR tsc_offset;
-#endif
+  tsc += BX_CPU_THIS_PTR tsc_offset;    // BX_CPU_THIS_PTR tsc_offset = 0 if not in VMX or SVM guest
   return tsc;
 }
+#endif
 
 void BX_CPU_C::set_TSC(Bit64u newval)
 {
-  // compute the correct setting of tsc_last_reset so that a get_TSC()
+  // compute the correct setting of tsc_adjust so that a get_TSC()
   // will return newval
-  BX_CPU_THIS_PTR tsc_last_reset = bx_pc_system.time_ticks() - newval;
+  BX_CPU_THIS_PTR tsc_adjust = newval - bx_pc_system.time_ticks();
 
   // verify
   BX_ASSERT(get_TSC() == newval);
@@ -658,6 +663,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSC(bxInstruction_c *i)
 
   // return ticks
   Bit64u ticks = BX_CPU_THIS_PTR get_TSC();
+#if BX_SUPPORT_SVM || BX_SUPPORT_VMX
+  ticks = BX_CPU_THIS_PTR get_TSC_VMXAdjust(ticks);
+#endif
 
   RAX = GET32L(ticks);
   RDX = GET32H(ticks);
@@ -702,6 +710,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSCP(bxInstruction_c *i)
 
   // return ticks
   Bit64u ticks = BX_CPU_THIS_PTR get_TSC();
+#if BX_SUPPORT_SVM || BX_SUPPORT_VMX
+  ticks = BX_CPU_THIS_PTR get_TSC_VMXAdjust(ticks);
+#endif
 
   RAX = GET32L(ticks);
   RDX = GET32H(ticks);

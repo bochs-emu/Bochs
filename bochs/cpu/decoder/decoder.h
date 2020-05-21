@@ -112,6 +112,7 @@ enum x86_feature_name {
   BX_ISA_XAPIC_EXT,               /* XAPIC Extensions support */
   BX_ISA_PCID,                    /* PCID pages support */
   BX_ISA_SMEP,                    /* SMEP support */
+  BX_ISA_TSC_ADJUST,              /* TSC-Adjust MSR */
   BX_ISA_TSC_DEADLINE,            /* TSC-Deadline */
   BX_ISA_FOPCODE_DEPRECATION,     /* FOPCODE Deprecation - FOPCODE update on unmasked x87 exception only */
   BX_ISA_FCS_FDS_DEPRECATION,     /* FCS/FDS Deprecation */

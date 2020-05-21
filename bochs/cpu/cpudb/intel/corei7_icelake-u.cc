@@ -67,6 +67,7 @@ corei7_icelake_t::corei7_icelake_t(BX_CPU_C *cpu):
   enable_cpu_extension(BX_ISA_NX);
   enable_cpu_extension(BX_ISA_1G_PAGES);
   enable_cpu_extension(BX_ISA_PCID);
+  enable_cpu_extension(BX_ISA_TSC_ADJUST);
   enable_cpu_extension(BX_ISA_TSC_DEADLINE);
   enable_cpu_extension(BX_ISA_SSE);
   enable_cpu_extension(BX_ISA_SSE2);
@@ -100,7 +101,6 @@ corei7_icelake_t::corei7_icelake_t(BX_CPU_C *cpu):
   enable_cpu_extension(BX_ISA_SMAP);
   enable_cpu_extension(BX_ISA_RDRAND);
   enable_cpu_extension(BX_ISA_RDSEED);
-  enable_cpu_extension(BX_ISA_TSC_DEADLINE);
   enable_cpu_extension(BX_ISA_FCS_FDS_DEPRECATION);
   enable_cpu_extension(BX_ISA_SHA);
 #if BX_SUPPORT_EVEX
@@ -540,7 +540,7 @@ void corei7_icelake_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t
     leaf->eax = 0; /* report max sub-leaf that supported in leaf 7 */
 
     // * [0:0]    FS/GS BASE access instructions
-    // ! [1:1]    Support for IA32_TSC_ADJUST MSR
+    // * [1:1]    Support for IA32_TSC_ADJUST MSR
     // ! [2:2]    SGX: Intel Software Guard Extensions
     // * [3:3]    BMI1: Advanced Bit Manipulation Extensions
     //   [4:4]    HLE: Hardware Lock Elision
@@ -573,7 +573,7 @@ void corei7_icelake_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t
     // * [31:31]  AVX512VL variable vector length support
 
     leaf->ebx = BX_CPUID_EXT3_FSGSBASE | 
-             /* BX_CPUID_EXT3_TSC_ADJUST - not implemented yet */
+                BX_CPUID_EXT3_TSC_ADJUST |
                 BX_CPUID_EXT3_BMI1 | 
                 BX_CPUID_EXT3_AVX2 | 
                 BX_CPUID_EXT3_FDP_DEPRECATION | 
