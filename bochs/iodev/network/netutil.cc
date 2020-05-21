@@ -38,6 +38,8 @@
 
 #if !defined(WIN32) || defined(__CYGWIN__)
 #include <arpa/inet.h> /* ntohs, htons */
+#include <dirent.h> /* opendir, readdir */
+#include <locale.h> /* setlocale */
 #else
 #include <winsock2.h>
 #endif
@@ -692,7 +694,7 @@ void vnet_server_c::process_tcpipv4(Bit8u clientid, const Bit8u *ipheader,
       } else {
         optlen = l4pkt[20+i+1];
       }
-      if (option == 0) {
+      if (option == 0) { // EOL
         break;
       }
       if (option == 2) {
@@ -700,7 +702,7 @@ void vnet_server_c::process_tcpipv4(Bit8u clientid, const Bit8u *ipheader,
         if (value16 != 1460) {
           BX_ERROR(("TCP: MSS = %d (unhandled)", value16));
         }
-      } else {
+      } else if (option != 1) { // NOP
         BX_ERROR(("TCP option %d not supported yet", option));
       }
       i += optlen;
@@ -741,9 +743,6 @@ void vnet_server_c::process_tcpipv4(Bit8u clientid, const Bit8u *ipheader,
           tcp_conn->state = TCP_DISCONNECTING;
           tcp_error = 0;
         } else if (tcp_conn->state == TCP_DISCONNECTING) {
-          if (tcphdr->flags.ack) {
-            tcp_conn->host_seq_num = tcp_ack_num;
-          }
           tcpipv4_send_ack(tcp_conn, 1);
           tcp_remove_connection(tcp_conn);
           if (tcp_dst_port > 1023) {
@@ -763,10 +762,18 @@ void vnet_server_c::process_tcpipv4(Bit8u clientid, const Bit8u *ipheader,
             tcp_remove_connection(tcp_conn);
           } else {
             tcp_conn->host_seq_num = tcp_ack_num;
-            tcp_conn->host_port_fin = 0;
           }
         } else {
           tcp_conn->guest_seq_num = tcp_seq_num;
+          tcp_conn->guest_ack_num = tcp_ack_num;
+          if ((tcp_ack_num == tcp_conn->host_seq_num) && (tcp_window > 0)) {
+            tcp_conn->window = tcp_window;
+            if (tcp_conn->buffer_size > 0) {
+              tcpipv4_send_buffer(tcp_conn);
+            } else {
+              tcp_conn->host_xfer_fin = 1;
+            }
+          }
           if ((tcpdata_len > 0) || tcp_conn->host_xfer_fin) {
             if (tcpdata_len > 0) {
               tcpipv4_send_ack(tcp_conn, tcpdata_len);
@@ -828,31 +835,57 @@ void vnet_server_c::host_to_guest_tcpipv4(Bit8u clientid, Bit16u src_port,
   host_to_guest_ipv4(clientid, 0, data, data_len + hdr_len + 34U);
 }
 
-void vnet_server_c::tcpipv4_send_data(tcp_conn_t *tcp_conn, const Bit8u *data, unsigned data_len, bx_bool push)
+void vnet_server_c::tcpipv4_send_buffer(tcp_conn_t *tcp_conn)
 {
   Bit8u sendbuf[BX_PACKET_BUFSIZE];
   tcp_header_t *tcphdr = (tcp_header_t *)&sendbuf[34];
   unsigned tcphdr_len = sizeof(tcp_header_t);
   Bit8u *tcp_data;
+  unsigned count = 0, sendsize, total;
 
+  if (tcp_conn->host_xfer_fin) {
+    delete [] tcp_conn->buffer;
+    tcp_conn->buffer_size = 0;
+    return;
+  }
   memset(tcphdr, 0, tcphdr_len);
-  if (push) {
+  if ((tcp_conn->buffer_size + 54U) <= BX_PACKET_BUFSIZE) {
     tcphdr->flags.psh = 1;
   }
   tcphdr->flags.ack = 1;
-  tcphdr->seq_num = htonl(tcp_conn->host_seq_num);
-  tcp_conn->host_seq_num += data_len;
   tcphdr->ack_num = htonl(tcp_conn->guest_seq_num);
   tcphdr->window = htons(tcp_conn->window);
   tcp_data = (Bit8u*)tcphdr + tcphdr_len;
-  if ((data_len + 54U) > BX_PACKET_BUFSIZE) {
-    BX_ERROR(("generated TCP data is too long"));
-  } else {
-    memcpy(tcp_data, data, data_len);
+  do {
+    total = tcp_conn->buffer_size - tcp_conn->buffer_pos;
+    if ((total + 54U) > BX_PACKET_BUFSIZE) {
+      sendsize = BX_PACKET_BUFSIZE - 54U;
+    } else {
+      sendsize = total;
+    }
+    if ((count + sendsize) > tcp_conn->window)
+      break;
+    tcphdr->seq_num = htonl(tcp_conn->host_seq_num);
+    memcpy(tcp_data, tcp_conn->buffer+tcp_conn->buffer_pos, sendsize);
     host_to_guest_tcpipv4(tcp_conn->clientid, tcp_conn->dst_port, tcp_conn->src_port,
-                          sendbuf, data_len, tcphdr_len);
-  }
-  tcp_conn->host_xfer_fin = 1;
+                          sendbuf, sendsize, tcphdr_len);
+    tcp_conn->buffer_pos += sendsize;
+    if (tcp_conn->buffer_pos == tcp_conn->buffer_size) {
+      delete [] tcp_conn->buffer;
+      tcp_conn->buffer_size = 0;
+    }
+    tcp_conn->host_seq_num += sendsize;
+    count += sendsize;
+  } while (tcp_conn->buffer_size > 0);
+}
+
+void vnet_server_c::tcpipv4_send_data(tcp_conn_t *tcp_conn, const Bit8u *data, unsigned data_len)
+{
+  tcp_conn->host_xfer_fin = 0;
+  tcp_conn->buffer = data;
+  tcp_conn->buffer_size = data_len;
+  tcp_conn->buffer_pos = 0;
+  tcpipv4_send_buffer(tcp_conn);
 }
 
 void vnet_server_c::tcpipv4_send_ack(tcp_conn_t *tcp_conn, unsigned data_len)
@@ -1029,6 +1062,14 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
           ftp_send_reply(tcp_conn, "221 Goodbye.");
           ftp_remove_session(fs);
           tcp_conn->data = NULL;
+        } else if (!stricmp(cmd, "RETR")) {
+          tcp_conn_2 = tcp_find_connection(tcp_conn->clientid, fs->client_data_port, fs->pasv_port);
+          if (tcp_conn_2 != NULL) {
+            ftp_send_reply(tcp_conn, "150 Opening binary mode connection for file download.");
+            ftp_download_file(tcp_conn_2, arg);
+          } else {
+            BX_ERROR(("FTP data connection not found"));
+          }
         } else if (!stricmp(cmd, "SYST")) {
           ftp_send_reply(tcp_conn, "215 UNIX Type: Bochs Version: 2.6.11");
         } else if (!stricmp(cmd, "TYPE")) {
@@ -1071,14 +1112,156 @@ void vnet_server_c::ftp_send_reply(tcp_conn_t *tcp_conn, const char *msg)
   if (strlen(msg) > 0) {
     char *reply = new char[strlen(msg) + 3];
     sprintf(reply, "%s%c%c", msg, 13, 10);
-    tcpipv4_send_data(tcp_conn, (Bit8u*)reply, strlen(reply), 1);
-    delete [] reply;
+    tcpipv4_send_data(tcp_conn, (Bit8u*)reply, strlen(reply));
   }
 }
 
 void vnet_server_c::ftp_read_directory(tcp_conn_t *tcp_conn)
 {
-  ftp_send_reply(tcp_conn, "-rw-rw-r-- 1 ftp ftp 1234 May 14 20:00 test.txt");
+  Bit8u *dirlist = NULL;
+  char linebuf[BX_PATHNAME_LEN], tmptime[20];
+  unsigned size = 0, pos = 0;
+  Bit8u pass = 1;
+#ifndef WIN32
+  DIR *dir;
+  struct dirent *dent;
+  struct stat st;
+  char path[BX_PATHNAME_LEN];
+  time_t now = time(NULL);
+
+  setlocale(LC_ALL, "en_US");
+  do {
+    dir = opendir(tftp_root);
+    if (dir != NULL) {
+      while ((dent=readdir(dir)) != NULL) {
+        if (strcmp(dent->d_name, ".") && strcmp(dent->d_name, "..") && (dent->d_name[0] != '.' )) {
+          sprintf(path, "%s/%s", tftp_root, dent->d_name);
+          if (stat(path, &st) >= 0) {
+            if (st.st_mtime < (now - 31536000)) {
+              strftime(tmptime, 20, "%b %d %Y", localtime(&st.st_mtime));
+            } else {
+              strftime(tmptime, 20, "%b %d %H:%M", localtime(&st.st_mtime));
+            }
+            if (S_ISDIR(st.st_mode)) {
+              sprintf(linebuf, "drwxrwxr-x 1 ftp ftp %ld %s %s%c%c", st.st_size,
+                      tmptime, dent->d_name, 13, 10);
+            } else {
+              sprintf(linebuf, "-rw-rw-r-- 1 ftp ftp %ld %s %s%c%c", st.st_size,
+                      tmptime, dent->d_name, 13, 10);
+            }
+            if (pass == 1) {
+              size += strlen(linebuf);
+            } else {
+              memcpy(dirlist + pos, linebuf, strlen(linebuf));
+              pos += strlen(linebuf);
+            }
+          }
+        }
+      }
+      closedir(dir);
+      if (pass == 1) {
+        dirlist = new Bit8u[size];
+      }
+    }
+  } while (++pass <= 2);
+#else
+  WIN32_FIND_DATA finddata;
+  HANDLE hFind;
+  SYSTEMTIME gmtsystime, systime, now;
+  TIME_ZONE_INFORMATION tzi;
+  const char month[][12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
+                            "Aug", "Sep", "Oct", "Nov", "Dec"};
+  char filter[MAX_PATH];
+
+  sprintf(filter, "%s\\*.*", tftp_root);
+  do {
+    hFind = FindFirstFile(filter, &finddata);
+    if (hFind == INVALID_HANDLE_VALUE) {
+      break;
+    }
+    do {
+      if (strcmp(finddata.cFileName, ".") && strcmp(finddata.cFileName, "..")) {
+        FileTimeToSystemTime(&finddata.ftLastWriteTime, &gmtsystime);
+        GetTimeZoneInformation(&tzi);
+        SystemTimeToTzSpecificLocalTime(&tzi, &gmtsystime, &systime);
+		GetLocalTime(&now);
+		if ((systime.wYear == now.wYear) ||
+		    ((systime.wYear == (now.wYear - 1)) && (systime.wMonth > now.wMonth))) {
+          sprintf(tmptime, "%s %d %02d:%02d", month[systime.wMonth-1], systime.wDay,
+                  systime.wHour, systime.wMinute);
+        } else {
+          sprintf(tmptime, "%s %d %d", month[systime.wMonth-1], systime.wDay,
+                  systime.wYear);
+        }
+        if (finddata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+          sprintf(linebuf, "drwxrwxr-x 1 ftp ftp %ld %s %s%c%c", 0, tmptime,
+		          finddata.cFileName, 13, 10);
+        } else {
+          sprintf(linebuf, "-rw-rw-r-- 1 ftp ftp %ld %s %s%c%c", finddata.nFileSizeLow,
+                  tmptime, finddata.cFileName, 13, 10);
+        }
+        if (pass == 1) {
+          size += strlen(linebuf);
+        } else {
+          memcpy(dirlist + pos, linebuf, strlen(linebuf));
+          pos += strlen(linebuf);
+        }
+      }
+    } while (FindNextFile(hFind, &finddata));
+    FindClose(hFind);
+    if (pass == 1) {
+      dirlist = new Bit8u[size];
+    }
+  } while (++pass <= 2);
+#endif
+  tcpipv4_send_data(tcp_conn, dirlist, size);
+}
+
+void vnet_server_c::ftp_download_file(tcp_conn_t *tcp_conn, const char *fname)
+{
+  char path[BX_PATHNAME_LEN];
+  Bit8u *buffer = NULL;
+  unsigned size = 0;
+  int fd = -1;
+#ifndef WIN32
+  struct stat stat_buf;
+#endif
+
+  sprintf(path, "%s/%s", tftp_root, fname);
+#ifdef WIN32
+  HANDLE hFile = CreateFile(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, NULL);
+  if (hFile != INVALID_HANDLE_VALUE) {
+    ULARGE_INTEGER FileSize;
+    FileSize.LowPart = GetFileSize(hFile, &FileSize.HighPart);
+    CloseHandle(hFile);
+    if (((FileSize.LowPart != INVALID_FILE_SIZE) || (GetLastError() == NO_ERROR)) &&
+	    (FileSize.HighPart == 0)) {
+      size = FileSize.LowPart;
+    } else {
+      return;
+    }
+  } else {
+    return;
+  }
+#endif
+  fd = open(path, O_RDONLY
+#ifdef O_BINARY
+            | O_BINARY
+#endif
+            );
+  if (fd < 0)
+    return;
+#ifndef WIN32
+  if (fstat(fd, &stat_buf))
+    return;
+  size = stat_buf.st_size;
+#endif
+  if (size > 0) {
+    buffer = new Bit8u[size];
+    read(fd, buffer, size);
+    tcpipv4_send_data(tcp_conn, buffer, size);
+  }
+  close(fd);
 }
 
 // Layer 4 handler methods
