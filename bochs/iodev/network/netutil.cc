@@ -728,6 +728,9 @@ void vnet_server_c::process_tcpipv4(Bit8u clientid, const Bit8u *ipheader,
       }
     } else {
       if (tcphdr->flags.rst) {
+        if (tcp_conn->data != NULL) {
+          (*func)((void *)this, tcp_conn, NULL, 0);
+        }
         tcp_remove_connection(tcp_conn);
         if (tcp_dst_port > 1023) {
           unregister_tcp_handler(tcp_dst_port);
@@ -1030,13 +1033,18 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
       ftp_send_reply(tcp_conn, "220 Bochs FTP server ready.");
       fs = ftp_new_session(tcp_conn, tcp_conn->src_port);
       tcp_conn->data = fs;
+    } else {
+      fs = (ftp_session_t*)tcp_conn->data;
+    }
+    if (fs->state == 4) {
+      ftp_remove_session(fs);
+      tcp_conn->data = NULL;
     } else if (data_len > 0) {
       ftpcmd = new char[data_len + 1];
       memcpy(ftpcmd, data, data_len);
       ftpcmd[data_len] = 0;
       cmd = strtok(ftpcmd, " \r");
       arg = strtok(NULL, "\r");
-      fs = (ftp_session_t*)tcp_conn->data;
       if (fs->state == 1) {
         if (!stricmp(cmd, "USER")) {
           fs->anonymous = !strcmp(arg, "anonymous");
@@ -1097,7 +1105,9 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
             ftp_send_reply(tcp_conn, "550 CWD operation not permitted.");
           }
         } else if (!stricmp(cmd, "FEAT")) {
-          ftp_send_reply(tcp_conn, "211 end");
+          sprintf(reply, "211- Extension supported:%c%c SIZE%c%c211 end",
+                  13, 10, 13, 10);
+          ftp_send_reply(tcp_conn, reply);
         } else if (!stricmp(cmd, "LIST")) {
           tcp_conn_2 = tcp_find_connection(tcp_conn->clientid, fs->client_data_port, fs->pasv_port);
           if (tcp_conn_2 != NULL) {
@@ -1129,18 +1139,16 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
           ftp_send_reply(tcp_conn, reply);
         } else if (!stricmp(cmd, "QUIT")) {
           ftp_send_reply(tcp_conn, "221 Goodbye.");
-          ftp_remove_session(fs);
-          tcp_conn->data = NULL;
+          fs->state = 4;
         } else if (!stricmp(cmd, "RETR")) {
           tcp_conn_2 = tcp_find_connection(tcp_conn->clientid, fs->client_data_port, fs->pasv_port);
           if (tcp_conn_2 != NULL) {
-            ftp_send_reply(tcp_conn, "150 Opening binary mode connection for file download.");
-            if (!ftp_download_file(tcp_conn_2, arg)) {
-              ftp_send_reply(tcp_conn, "226 Transfer complete.");
-            }
+            ftp_download_file(tcp_conn, tcp_conn_2, arg);
           } else {
             BX_ERROR(("FTP data connection not found"));
           }
+        } else if (!stricmp(cmd, "SIZE")) {
+          ftp_get_filesize(tcp_conn, arg);
         } else if (!stricmp(cmd, "SYST")) {
           ftp_send_reply(tcp_conn, "215 UNIX Type: Bochs Version: 2.6.11");
         } else if (!stricmp(cmd, "TYPE")) {
@@ -1299,56 +1307,92 @@ bx_bool vnet_server_c::ftp_read_directory(tcp_conn_t *tcp_conn)
   return (size > 0);
 }
 
-bx_bool vnet_server_c::ftp_download_file(tcp_conn_t *tcp_conn, const char *fname)
+bx_bool ftp_file_exists(const char *fname, unsigned *size)
 {
-  char path[BX_PATHNAME_LEN];
-  ftp_session_t *fs;
-  Bit8u *buffer = NULL;
-  unsigned size = 0;
-  int fd = -1;
+  bx_bool exists = 0;
 #ifndef WIN32
   struct stat stat_buf;
 #endif
 
-  fs = (ftp_session_t*)tcp_conn->data;
-  sprintf(path, "%s%s/%s", tftp_root, fs->rel_path, fname);
+  *size = 0;
 #ifdef WIN32
-  HANDLE hFile = CreateFile(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, NULL);
+  HANDLE hFile = CreateFile(fname, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, NULL);
   if (hFile != INVALID_HANDLE_VALUE) {
     ULARGE_INTEGER FileSize;
     FileSize.LowPart = GetFileSize(hFile, &FileSize.HighPart);
     CloseHandle(hFile);
     if (((FileSize.LowPart != INVALID_FILE_SIZE) || (GetLastError() == NO_ERROR)) &&
         (FileSize.HighPart == 0)) {
-      size = FileSize.LowPart;
-    } else {
-      size = 0;
+      *size = FileSize.LowPart;
+      exists = 1;
     }
-  } else {
-    size = 0;
   }
-#endif
-  fd = open(path, O_RDONLY
+#else
+  int fd = open(fname, O_RDONLY
 #ifdef O_BINARY
-            | O_BINARY
+                | O_BINARY
 #endif
-            );
+                );
   if (fd >= 0) {
-#ifndef WIN32
     if (fstat(fd, &stat_buf) == 0) {
-      size = stat_buf.st_size;
-    } else {
-      size = 0;
-    }
-#endif
-    if (size > 0) {
-      buffer = new Bit8u[size];
-      read(fd, buffer, size);
+      *size = stat_buf.st_size;
+      exists = 1;
     }
     close(fd);
   }
-  tcpipv4_send_data(tcp_conn, buffer, size);
-  return (size > 0);
+#endif
+  return exists;
+}
+
+void vnet_server_c::ftp_download_file(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data,
+                                      const char *fname)
+{
+  char path[BX_PATHNAME_LEN];
+  ftp_session_t *fs;
+  Bit8u *buffer = NULL;
+  unsigned size = 0;
+  int fd = -1;
+
+  fs = (ftp_session_t*)tcpc_cmd->data;
+  sprintf(path, "%s%s/%s", tftp_root, fs->rel_path, fname);
+  if (ftp_file_exists(path, &size)) {
+    ftp_send_reply(tcpc_cmd, "150 Opening binary mode connection for file download.");
+    fd = open(path, O_RDONLY
+#ifdef O_BINARY
+              | O_BINARY
+#endif
+              );
+    if (fd >= 0) {
+      if (size > 0) {
+        buffer = new Bit8u[size];
+        read(fd, buffer, size);
+      }
+      close(fd);
+    }
+    tcpipv4_send_data(tcpc_data, buffer, size);
+    if (size == 0) {
+      ftp_send_reply(tcpc_cmd, "226 Transfer complete.");
+    }
+  } else {
+    ftp_send_reply(tcpc_cmd, "550 File not found.");
+  }
+}
+
+void vnet_server_c::ftp_get_filesize(tcp_conn_t *tcp_conn, const char *fname)
+{
+  char path[BX_PATHNAME_LEN];
+  ftp_session_t *fs;
+  char reply[20];
+  unsigned size = 0;
+
+  fs = (ftp_session_t*)tcp_conn->data;
+  sprintf(path, "%s%s/%s", tftp_root, fs->rel_path, fname);
+  if (ftp_file_exists(path, &size)) {
+    sprintf(reply, "213 %d", size);
+    ftp_send_reply(tcp_conn, reply);
+  } else {
+    ftp_send_reply(tcp_conn, "550 File not found.");
+  }
 }
 
 // Layer 4 handler methods

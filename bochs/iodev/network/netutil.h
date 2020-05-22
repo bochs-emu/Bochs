@@ -288,7 +288,8 @@ private:
                               unsigned data_len);
   void ftp_send_reply(tcp_conn_t *tcp_conn, const char *msg);
   bx_bool ftp_read_directory(tcp_conn_t *tcp_conn);
-  bx_bool ftp_download_file(tcp_conn_t *tcp_conn, const char *fname);
+  void ftp_download_file(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data, const char *fname);
+  void ftp_get_filesize(tcp_conn_t *tcp_conn, const char *fname);
 
   static int udpipv4_dhcp_handler(void *this_ptr, const Bit8u *ipheader,
                                   unsigned ipheader_len, unsigned sourceport,
