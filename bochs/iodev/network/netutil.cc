@@ -78,7 +78,6 @@ Bit16u ip_checksum(const Bit8u *buf, unsigned buf_len)
 
 #ifdef BXHUB
 #include <stdarg.h>
-#include "misc/bxcompat.h"
 #include "osdep.h"
 #else
 #define LOG_THIS netdev->
