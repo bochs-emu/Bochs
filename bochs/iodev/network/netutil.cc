@@ -1036,7 +1036,7 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
   ftp_session_t *fs;
   const Bit8u *hostip;
   bx_bool pasv_port_ok, path_ok;
-  tcp_conn_t *tcp_conn_2;
+  tcp_conn_t *tcpc_cmd = NULL, *tcpc_data =NULL;
   char tmp_path[BX_PATHNAME_LEN];
   unsigned len;
 
@@ -1051,6 +1051,12 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
       ftp_remove_session(fs);
       tcp_conn->data = NULL;
     } else if (data_len > 0) {
+      // skip special sequence for abort
+      while ((data[0] > 0xf0) && (data_len > 0)) {
+        data++;
+        data_len--;
+      }
+      if (data_len == 0) return;
       fs = (ftp_session_t*)tcp_conn->data;
       ftpcmd = new char[data_len + 1];
       memcpy(ftpcmd, data, data_len);
@@ -1079,13 +1085,22 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
           }
         }
       } else if (fs->state != 4) {
+        if (fs->pasv_port > 0) {
+          tcpc_data = tcp_find_connection(tcp_conn->clientid, fs->client_data_port, fs->pasv_port);
+          if (tcpc_data == NULL) {
+            BX_ERROR(("FTP data connection not found"));
+          }
+        }
         if (!stricmp(cmd, "ABOR")) {
           if (fs->host_xfer_size > 0) {
             fs->host_xfer_size = 0;
             delete [] fs->host_xfer_data;
+            tcpipv4_send_fin(tcpc_data);
             ftp_send_reply(tcp_conn, "426 Transfer aborted.");
+            ftp_send_reply(tcp_conn, "226 Transfer abort complete.");
+          } else {
+            ftp_send_reply(tcp_conn, "226 Transfer complete.");
           }
-          ftp_send_reply(tcp_conn, "226 Transfer complete.");
         } else if (!stricmp(cmd, "CDUP")) {
           if (!strcmp(fs->rel_path, "/")) {
             ftp_send_reply(tcp_conn, "550 CDUP operation not permitted.");
@@ -1124,11 +1139,8 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
                   13, 10, 13, 10);
           ftp_send_reply(tcp_conn, reply);
         } else if (!stricmp(cmd, "LIST")) {
-          tcp_conn_2 = tcp_find_connection(tcp_conn->clientid, fs->client_data_port, fs->pasv_port);
-          if (tcp_conn_2 != NULL) {
-            ftp_list_directory(tcp_conn, tcp_conn_2);
-          } else {
-            BX_ERROR(("FTP data connection not found"));
+          if (tcpc_data != NULL) {
+            ftp_list_directory(tcp_conn, tcpc_data);
           }
         } else if (!stricmp(cmd, "NOOP")) {
           ftp_send_reply(tcp_conn, "200 Command OK.");
@@ -1150,14 +1162,18 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
           sprintf(reply, "257 \"%s\" is current directory.", fs->rel_path);
           ftp_send_reply(tcp_conn, reply);
         } else if (!stricmp(cmd, "QUIT")) {
+          if (fs->pasv_port > 0) {
+            if (fs->host_xfer_size > 0) {
+              fs->host_xfer_size = 0;
+              delete [] fs->host_xfer_data;
+            }
+            unregister_tcp_handler(fs->pasv_port);
+          }
           ftp_send_reply(tcp_conn, "221 Goodbye.");
           fs->state = 4;
         } else if (!stricmp(cmd, "RETR")) {
-          tcp_conn_2 = tcp_find_connection(tcp_conn->clientid, fs->client_data_port, fs->pasv_port);
-          if (tcp_conn_2 != NULL) {
-            ftp_send_file(tcp_conn, tcp_conn_2, arg);
-          } else {
-            BX_ERROR(("FTP data connection not found"));
+          if (tcpc_data != NULL) {
+            ftp_send_file(tcp_conn, tcpc_data, arg);
           }
         } else if (!stricmp(cmd, "SIZE")) {
           ftp_get_filesize(tcp_conn, arg);
@@ -1189,17 +1205,18 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
       fs->client_data_port = tcp_conn->src_port;
       tcp_conn->data = fs;
     } else if (tcp_conn->state == TCP_DISCONNECTING) {
+      fs->pasv_port = 0;
       unregister_tcp_handler(tcp_conn->dst_port);
     } else {
       fs = (ftp_session_t*)tcp_conn->data;
-      tcp_conn_2 = tcp_find_connection(tcp_conn->clientid, fs->client_cmd_port,
-                                       INET_PORT_FTP);
-      if (tcp_conn_2 != NULL) {
+      tcpc_cmd = tcp_find_connection(tcp_conn->clientid, fs->client_cmd_port,
+                                     INET_PORT_FTP);
+      if (tcpc_cmd != NULL) {
         if (data_len > 0) {
           BX_INFO(("FTP data port %d (data)", fs->pasv_port));
         } else {
           if (fs->host_xfer_size > 0) {
-            ftp_send_data_2(tcp_conn_2, tcp_conn);
+            ftp_send_data_2(tcpc_cmd, tcp_conn);
           } else {
             tcpipv4_send_fin(tcp_conn);
           }
