@@ -14,6 +14,7 @@ Changes after 2.6.11:
   - Networking
     - Added "multiple NICs" support to the NE2000 and E1000 devices. Up to 4 devices
       per model are supported. Use the zero-based "card" parameter to specify device.
+    - Added experimental FTP service for networking modules 'vnet' and 'socket'.
     - Added log file support to 'bxhub' utility (networking module 'socket').
     - Packet logging in text format for the 'slirp' and 'vnet' modules controlled
       by runtime option (slirp: "pktlog" option in config / vnet: "script" parameter).

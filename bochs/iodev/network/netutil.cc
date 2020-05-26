@@ -51,6 +51,7 @@ typedef struct ftp_session {
   Bit16u client_cmd_port;
   Bit16u client_data_port;
   bx_bool ascii_mode;
+  int data_xfer_fd;
   unsigned host_xfer_size;
   unsigned host_xfer_pos;
   const Bit8u *host_xfer_data;
@@ -915,6 +916,7 @@ ftp_session_t *ftp_new_session(tcp_conn_t *tcp_conn, Bit16u client_cmd_port)
   fs->state = 1;
   fs->client_cmd_port = client_cmd_port;
   fs->ascii_mode = 1;
+  fs->data_xfer_fd = -1;
   fs->rel_path = new char[BX_PATHNAME_LEN];
   strcpy(fs->rel_path, "/");
   fs->next = ftp_sessions;
@@ -951,6 +953,12 @@ void ftp_remove_session(ftp_session_t *fs)
     if (last) {
       last->next = fs->next;
     }
+  }
+  if (fs->data_xfer_fd >= 0) {
+    close(fs->data_xfer_fd);
+  }
+  if (fs->host_xfer_size > 0) {
+    delete [] fs->host_xfer_data;
   }
   delete [] fs->rel_path;
   delete fs;
@@ -1092,9 +1100,15 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
           }
         }
         if (!stricmp(cmd, "ABOR")) {
-          if (fs->host_xfer_size > 0) {
-            fs->host_xfer_size = 0;
-            delete [] fs->host_xfer_data;
+          if ((fs->host_xfer_size > 0) || (fs->data_xfer_fd >= 0)) {
+            if (fs->data_xfer_fd >= 0) {
+              close(fs->data_xfer_fd);
+              fs->data_xfer_fd = -1;
+            }
+            if (fs->host_xfer_size > 0) {
+              fs->host_xfer_size = 0;
+              delete [] fs->host_xfer_data;
+            }
             tcpipv4_send_fin(tcpc_data);
             ftp_send_reply(tcp_conn, "426 Transfer aborted.");
             ftp_send_reply(tcp_conn, "226 Transfer abort complete.");
@@ -1177,6 +1191,14 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
           }
         } else if (!stricmp(cmd, "SIZE")) {
           ftp_get_filesize(tcp_conn, arg);
+        } else if (!stricmp(cmd, "STOR")) {
+          if (tcpc_data != NULL) {
+            if (!fs->anonymous) {
+              ftp_recv_file(tcp_conn, tcpc_data, arg);
+            } else {
+              ftp_send_reply(tcpc_cmd, "550 File creation not permitted.");
+            }
+          }
         } else if (!stricmp(cmd, "SYST")) {
           ftp_send_reply(tcp_conn, "215 UNIX Type: Bochs Version: 2.6.11");
         } else if (!stricmp(cmd, "TYPE")) {
@@ -1197,7 +1219,9 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
   } else {
     // FTP data port
     fs = ftp_find_cmd_session(tcp_conn->dst_port);
-    if (fs == NULL) {
+    tcpc_cmd = tcp_find_connection(tcp_conn->clientid, fs->client_cmd_port,
+                                   INET_PORT_FTP);
+    if ((fs == NULL) || (tcpc_cmd == NULL)) {
       BX_ERROR(("FTP command connection not found"));
       return;
     }
@@ -1205,24 +1229,26 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
       fs->client_data_port = tcp_conn->src_port;
       tcp_conn->data = fs;
     } else if (tcp_conn->state == TCP_DISCONNECTING) {
+      if (fs->data_xfer_fd >= 0) {
+        close(fs->data_xfer_fd);
+        fs->data_xfer_fd = -1;
+        ftp_send_reply(tcpc_cmd, "226 Transfer complete.");
+      }
       fs->pasv_port = 0;
       unregister_tcp_handler(tcp_conn->dst_port);
     } else {
-      fs = (ftp_session_t*)tcp_conn->data;
-      tcpc_cmd = tcp_find_connection(tcp_conn->clientid, fs->client_cmd_port,
-                                     INET_PORT_FTP);
-      if (tcpc_cmd != NULL) {
-        if (data_len > 0) {
-          BX_INFO(("FTP data port %d (data)", fs->pasv_port));
+      if (data_len > 0) {
+        if (fs->data_xfer_fd >= 0) {
+          write(fs->data_xfer_fd, data, data_len);
         } else {
-          if (fs->host_xfer_size > 0) {
-            ftp_send_data_2(tcpc_cmd, tcp_conn);
-          } else {
-            tcpipv4_send_fin(tcp_conn);
-          }
+          BX_ERROR(("FTP data port %d: unexpected data", fs->pasv_port));
         }
       } else {
-        BX_ERROR(("FTP command connection not found"));
+        if (fs->host_xfer_size > 0) {
+          ftp_send_data_2(tcpc_cmd, tcp_conn);
+        } else {
+          tcpipv4_send_fin(tcp_conn);
+        }
       }
     }
   }
@@ -1376,6 +1402,30 @@ void vnet_server_c::ftp_list_directory(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_da
   ftp_send_data(tcpc_cmd, tcpc_data, dirlist, size);
 }
 
+void vnet_server_c::ftp_recv_file(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data,
+                                  const char *fname)
+{
+  char path[BX_PATHNAME_LEN], reply[80];
+  ftp_session_t *fs;
+  int fd = -1;
+
+  fs = (ftp_session_t*)tcpc_cmd->data;
+  sprintf(path, "%s%s/%s", tftp_root, fs->rel_path, fname);
+  fd = ::open(path, O_CREAT | O_WRONLY | O_TRUNC
+#ifdef O_BINARY
+              | O_BINARY
+#endif
+              , 0644);
+  if (fd >= 0) {
+    sprintf(reply, "150 Opening %s mode connection to receive file.",
+            fs->ascii_mode ? "ASCII":"BINARY");
+    ftp_send_reply(tcpc_cmd, reply);
+    fs->data_xfer_fd = fd;
+  } else {
+    ftp_send_reply(tcpc_cmd, "550 File creation failed.");
+  }
+}
+
 void vnet_server_c::ftp_send_file(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data,
                                   const char *fname)
 {
@@ -1388,7 +1438,7 @@ void vnet_server_c::ftp_send_file(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data,
   fs = (ftp_session_t*)tcpc_cmd->data;
   sprintf(path, "%s%s/%s", tftp_root, fs->rel_path, fname);
   if (ftp_file_exists(path, &size)) {
-    sprintf(reply, "150 Opening %s mode connection for file download.",
+    sprintf(reply, "150 Opening %s mode connection to send file.",
             fs->ascii_mode ? "ASCII":"BINARY");
     ftp_send_reply(tcpc_cmd, reply);
     fd = open(path, O_RDONLY
