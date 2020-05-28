@@ -52,10 +52,10 @@ typedef struct ftp_session {
   Bit16u client_data_port;
   bx_bool ascii_mode;
   int data_xfer_fd;
-  unsigned host_xfer_size;
-  unsigned host_xfer_pos;
-  const Bit8u *host_xfer_data;
+  unsigned data_xfer_size;
+  unsigned data_xfer_pos;
   char *rel_path;
+  char dirlist_tmp[16];
   struct ftp_session *next;
 } ftp_session_t;
 
@@ -957,9 +957,6 @@ void ftp_remove_session(ftp_session_t *fs)
   if (fs->data_xfer_fd >= 0) {
     close(fs->data_xfer_fd);
   }
-  if (fs->host_xfer_size > 0) {
-    delete [] fs->host_xfer_data;
-  }
   delete [] fs->rel_path;
   delete fs;
 }
@@ -1100,15 +1097,9 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
           }
         }
         if (!stricmp(cmd, "ABOR")) {
-          if ((fs->host_xfer_size > 0) || (fs->data_xfer_fd >= 0)) {
-            if (fs->data_xfer_fd >= 0) {
-              close(fs->data_xfer_fd);
-              fs->data_xfer_fd = -1;
-            }
-            if (fs->host_xfer_size > 0) {
-              fs->host_xfer_size = 0;
-              delete [] fs->host_xfer_data;
-            }
+          if (fs->data_xfer_fd >= 0) {
+            close(fs->data_xfer_fd);
+            fs->data_xfer_fd = -1;
             tcpipv4_send_fin(tcpc_data);
             ftp_send_reply(tcp_conn, "426 Transfer aborted.");
             ftp_send_reply(tcp_conn, "226 Transfer abort complete.");
@@ -1177,9 +1168,8 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
           ftp_send_reply(tcp_conn, reply);
         } else if (!stricmp(cmd, "QUIT")) {
           if (fs->pasv_port > 0) {
-            if (fs->host_xfer_size > 0) {
-              fs->host_xfer_size = 0;
-              delete [] fs->host_xfer_data;
+            if (fs->data_xfer_fd >= 0) {
+              close(fs->data_xfer_fd);
             }
             unregister_tcp_handler(fs->pasv_port);
           }
@@ -1244,8 +1234,8 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
           BX_ERROR(("FTP data port %d: unexpected data", fs->pasv_port));
         }
       } else {
-        if (fs->host_xfer_size > 0) {
-          ftp_send_data_2(tcpc_cmd, tcp_conn);
+        if (fs->data_xfer_fd >= 0) {
+          ftp_send_data(tcpc_cmd, tcp_conn);
         } else {
           tcpipv4_send_fin(tcp_conn);
         }
@@ -1264,38 +1254,58 @@ void vnet_server_c::ftp_send_reply(tcp_conn_t *tcp_conn, const char *msg)
   }
 }
 
-void vnet_server_c::ftp_send_data(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data,
-                                  const Bit8u *data, unsigned data_len)
+void vnet_server_c::ftp_send_data_prep(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data,
+                                       const char *path, unsigned data_len)
 {
   ftp_session_t *fs = (ftp_session_t*)tcpc_cmd->data;
-  fs->host_xfer_data = data;
-  fs->host_xfer_size = data_len;
-  fs->host_xfer_pos = 0;
-  ftp_send_data_2(tcpc_cmd, tcpc_data);
+  fs->data_xfer_fd = open(path, O_RDONLY
+#ifdef O_BINARY
+                          | O_BINARY
+#endif
+                          );
+  fs->data_xfer_size = data_len;
+  fs->data_xfer_pos = 0;
+  ftp_send_data(tcpc_cmd, tcpc_data);
 }
 
-void vnet_server_c::ftp_send_data_2(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data)
+void vnet_server_c::ftp_send_data(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data)
 {
   ftp_session_t *fs = (ftp_session_t*)tcpc_cmd->data;
-  const Bit8u *data_ptr = fs->host_xfer_data + fs->host_xfer_pos;
-  unsigned data_len = fs->host_xfer_size - fs->host_xfer_pos;
+  Bit8u *buffer = NULL;
+  unsigned data_len = fs->data_xfer_size - fs->data_xfer_pos;
 
-  fs->host_xfer_pos += tcpipv4_send_data(tcpc_data, data_ptr, data_len, 0);
-  if (fs->host_xfer_pos == fs->host_xfer_size) {
+  if (tcpc_data->window == 0)
+    return;
+  if (data_len > tcpc_data->window) {
+    data_len = tcpc_data->window;
+  }
+  if (data_len > 0) {
+    buffer = new Bit8u[data_len];
+    lseek(fs->data_xfer_fd, fs->data_xfer_pos, SEEK_SET);
+    read(fs->data_xfer_fd, buffer, data_len);
+  }
+  fs->data_xfer_pos += tcpipv4_send_data(tcpc_data, buffer, data_len, 0);
+  if (fs->data_xfer_pos == fs->data_xfer_size) {
     ftp_send_reply(tcpc_cmd, "226 Transfer complete.");
-    fs->host_xfer_size = 0;
-    delete [] fs->host_xfer_data;
+    close(fs->data_xfer_fd);
+    fs->data_xfer_fd = -1;
+    if (strlen(fs->dirlist_tmp) > 0) {
+      unlink(fs->dirlist_tmp);
+      fs->dirlist_tmp[0] = 0;
+    }
+  }
+  if (data_len > 0) {
+    delete [] buffer;
   }
 }
 
 void vnet_server_c::ftp_list_directory(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data)
 {
-  Bit8u *dirlist = NULL;
   ftp_session_t *fs;
   char abspath[BX_PATHNAME_LEN], reply[80];
   char linebuf[BX_PATHNAME_LEN], tmptime[20];
-  unsigned size = 0, pos = 0;
-  Bit8u pass = 1;
+  unsigned size = 0;
+  int fd = -1;
 #ifndef WIN32
   DIR *dir;
   struct dirent *dent;
@@ -1313,9 +1323,20 @@ void vnet_server_c::ftp_list_directory(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_da
   } else {
     sprintf(abspath, "%s%s", tftp_root, fs->rel_path);
   }
+  strcpy(fs->dirlist_tmp, "dirlist.XXXXXX");
+#if BX_HAVE_MKSTEMP
+  fd = mkstemp(fs->dirlist_tmp);
+#else
+  mktemp(fs->dirlist_tmp);
+  fd = open(fs->dirlist_tmp, O_CREAT | O_WRONLY | O_TRUNC
+#ifdef O_BINARY
+            | O_BINARY
+#endif
+            , 0644);
+#endif
+  if (fd >= 0) {
 #ifndef WIN32
-  setlocale(LC_ALL, "en_US");
-  do {
+    setlocale(LC_ALL, "en_US");
     dir = opendir(abspath);
     if (dir != NULL) {
       while ((dent=readdir(dir)) != NULL) {
@@ -1334,72 +1355,56 @@ void vnet_server_c::ftp_list_directory(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_da
               sprintf(linebuf, "-rw-rw-r-- 1 ftp ftp %ld %s %s%c%c", st.st_size,
                       tmptime, dent->d_name, 13, 10);
             }
-            if (pass == 1) {
-              size += strlen(linebuf);
-            } else {
-              memcpy(dirlist + pos, linebuf, strlen(linebuf));
-              pos += strlen(linebuf);
-            }
+            write(fd, linebuf, strlen(linebuf));
+            size += strlen(linebuf);
           }
         }
       }
       closedir(dir);
-      if ((pass == 1) && (size > 0)) {
-        dirlist = new Bit8u[size];
-      }
     }
-  } while ((++pass <= 2) && (size > 0));
 #else
-  WIN32_FIND_DATA finddata;
-  HANDLE hFind;
-  SYSTEMTIME gmtsystime, systime, now;
-  TIME_ZONE_INFORMATION tzi;
-  const char month[][12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
+    WIN32_FIND_DATA finddata;
+    HANDLE hFind;
+    SYSTEMTIME gmtsystime, systime, now;
+    TIME_ZONE_INFORMATION tzi;
+    const char month[][12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
                             "Aug", "Sep", "Oct", "Nov", "Dec"};
-  char filter[MAX_PATH];
+    char filter[MAX_PATH];
 
-  sprintf(filter, "%s\\*.*", abspath);
-  do {
+    sprintf(filter, "%s\\*.*", abspath);
     hFind = FindFirstFile(filter, &finddata);
-    if (hFind == INVALID_HANDLE_VALUE) {
-      break;
-    }
-    do {
-      if (strcmp(finddata.cFileName, ".") && strcmp(finddata.cFileName, "..")) {
-        FileTimeToSystemTime(&finddata.ftLastWriteTime, &gmtsystime);
-        GetTimeZoneInformation(&tzi);
-        SystemTimeToTzSpecificLocalTime(&tzi, &gmtsystime, &systime);
-        GetLocalTime(&now);
-        if ((systime.wYear == now.wYear) ||
-            ((systime.wYear == (now.wYear - 1)) && (systime.wMonth > now.wMonth))) {
-          sprintf(tmptime, "%s %d %02d:%02d", month[systime.wMonth-1], systime.wDay,
-                  systime.wHour, systime.wMinute);
-        } else {
-          sprintf(tmptime, "%s %d %d", month[systime.wMonth-1], systime.wDay,
-                  systime.wYear);
-        }
-        if (finddata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-          sprintf(linebuf, "drwxrwxr-x 1 ftp ftp %ld %s %s%c%c", 0, tmptime,
-                  finddata.cFileName, 13, 10);
-        } else {
-          sprintf(linebuf, "-rw-rw-r-- 1 ftp ftp %ld %s %s%c%c", finddata.nFileSizeLow,
-                  tmptime, finddata.cFileName, 13, 10);
-        }
-        if (pass == 1) {
+    if (hFind != INVALID_HANDLE_VALUE) {
+      do {
+        if (strcmp(finddata.cFileName, ".") && strcmp(finddata.cFileName, "..")) {
+          FileTimeToSystemTime(&finddata.ftLastWriteTime, &gmtsystime);
+          GetTimeZoneInformation(&tzi);
+          SystemTimeToTzSpecificLocalTime(&tzi, &gmtsystime, &systime);
+          GetLocalTime(&now);
+          if ((systime.wYear == now.wYear) ||
+              ((systime.wYear == (now.wYear - 1)) && (systime.wMonth > now.wMonth))) {
+            sprintf(tmptime, "%s %d %02d:%02d", month[systime.wMonth-1], systime.wDay,
+                    systime.wHour, systime.wMinute);
+          } else {
+            sprintf(tmptime, "%s %d %d", month[systime.wMonth-1], systime.wDay,
+                    systime.wYear);
+          }
+          if (finddata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+            sprintf(linebuf, "drwxrwxr-x 1 ftp ftp %ld %s %s%c%c", 0, tmptime,
+                    finddata.cFileName, 13, 10);
+          } else {
+            sprintf(linebuf, "-rw-rw-r-- 1 ftp ftp %ld %s %s%c%c", finddata.nFileSizeLow,
+                    tmptime, finddata.cFileName, 13, 10);
+          }
+          write(fd, linebuf, strlen(linebuf));
           size += strlen(linebuf);
-        } else {
-          memcpy(dirlist + pos, linebuf, strlen(linebuf));
-          pos += strlen(linebuf);
         }
-      }
-    } while (FindNextFile(hFind, &finddata));
-    FindClose(hFind);
-    if ((pass == 1) && (size > 0)) {
-      dirlist = new Bit8u[size];
+      } while (FindNextFile(hFind, &finddata));
+      FindClose(hFind);
     }
-  } while ((++pass <= 2) && (size > 0));
 #endif
-  ftp_send_data(tcpc_cmd, tcpc_data, dirlist, size);
+    close(fd);
+  }
+  ftp_send_data_prep(tcpc_cmd, tcpc_data, fs->dirlist_tmp, size);
 }
 
 void vnet_server_c::ftp_recv_file(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data,
@@ -1411,11 +1416,11 @@ void vnet_server_c::ftp_recv_file(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data,
 
   fs = (ftp_session_t*)tcpc_cmd->data;
   sprintf(path, "%s%s/%s", tftp_root, fs->rel_path, fname);
-  fd = ::open(path, O_CREAT | O_WRONLY | O_TRUNC
+  fd = open(path, O_CREAT | O_WRONLY | O_TRUNC
 #ifdef O_BINARY
-              | O_BINARY
+            | O_BINARY
 #endif
-              , 0644);
+            , 0644);
   if (fd >= 0) {
     sprintf(reply, "150 Opening %s mode connection to receive file.",
             fs->ascii_mode ? "ASCII":"BINARY");
@@ -1431,9 +1436,7 @@ void vnet_server_c::ftp_send_file(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data,
 {
   char path[BX_PATHNAME_LEN], reply[80];
   ftp_session_t *fs;
-  Bit8u *buffer = NULL;
   unsigned size = 0;
-  int fd = -1;
 
   fs = (ftp_session_t*)tcpc_cmd->data;
   sprintf(path, "%s%s/%s", tftp_root, fs->rel_path, fname);
@@ -1441,19 +1444,7 @@ void vnet_server_c::ftp_send_file(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data,
     sprintf(reply, "150 Opening %s mode connection to send file.",
             fs->ascii_mode ? "ASCII":"BINARY");
     ftp_send_reply(tcpc_cmd, reply);
-    fd = open(path, O_RDONLY
-#ifdef O_BINARY
-              | O_BINARY
-#endif
-              );
-    if (fd >= 0) {
-      if (size > 0) {
-        buffer = new Bit8u[size];
-        read(fd, buffer, size);
-      }
-      close(fd);
-    }
-    ftp_send_data(tcpc_cmd, tcpc_data, buffer, size);
+    ftp_send_data_prep(tcpc_cmd, tcpc_data, path, size);
   } else {
     ftp_send_reply(tcpc_cmd, "550 File not found.");
   }

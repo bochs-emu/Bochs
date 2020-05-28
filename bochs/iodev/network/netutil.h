@@ -282,9 +282,9 @@ private:
   void tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *data,
                               unsigned data_len);
   void ftp_send_reply(tcp_conn_t *tcp_conn, const char *msg);
-  void ftp_send_data(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data,
-                     const Bit8u *data, unsigned data_len);
-  void ftp_send_data_2(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data);
+  void ftp_send_data_prep(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data,
+                          const char *path, unsigned data_len);
+  void ftp_send_data(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data);
   void ftp_list_directory(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data);
   void ftp_recv_file(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data, const char *fname);
   void ftp_send_file(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data, const char *fname);
