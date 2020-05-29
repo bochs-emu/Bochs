@@ -863,7 +863,7 @@ void BX_CPU_C::init_vmentry_ctrls(void)
   //      [14] Load guest MSR_PAT
   //      [15] Load guest MSR_EFER
   //      [17] Load guest CET state
-  //      [17] Load guest MSR_IA32_PKRS value
+  //      [22] Load guest MSR_IA32_PKRS value
 
   cap->vmx_vmentry_ctrl_supported_bits = VMX_VMENTRY_CTRL1_LOAD_DBG_CTRLS |
                                          VMX_VMENTRY_CTRL1_SMM_ENTER |
