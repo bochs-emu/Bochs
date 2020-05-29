@@ -1143,7 +1143,7 @@ bx_bool BX_CPU_C::SetCR0(bxInstruction_c *i, bx_address val)
   if ((oldCR0 & 0x80010001) != (val_32 & 0x80010001)) {
     TLB_flush(); // Flush Global entries also
 #if BX_SUPPORT_PKEYS
-    set_PKRU(BX_CPU_THIS_PTR pkru); // recalculate protection keys due to CR0.WP change
+    set_PKeys(BX_CPU_THIS_PTR pkru, BX_CPU_THIS_PTR pkrs); // recalculate protection keys due to CR0.WP change
 #endif
   }
 
@@ -1256,6 +1256,11 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
     allowMask |= BX_CR4_CET_MASK;
 #endif
 
+#if BX_SUPPORT_PKEYS
+  if (is_cpu_extension_supported(BX_ISA_PKS))
+    allowMask |= BX_CR4_PKS_MASK;
+#endif
+
 #endif
 
   return allowMask;
@@ -1361,9 +1366,9 @@ bx_bool BX_CPU_C::SetCR4(bxInstruction_c *i, bx_address val)
 #endif
 #endif
 
-  // re-calculate protection keys if CR4.PKE was set
+  // re-calculate protection keys if CR4.PKE/CR4.PKS was set
 #if BX_SUPPORT_PKEYS
-  set_PKRU(BX_CPU_THIS_PTR pkru);
+  set_PKeys(BX_CPU_THIS_PTR pkru, BX_CPU_THIS_PTR pkrs);
 #endif
 
   return 1;

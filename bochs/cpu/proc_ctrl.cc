@@ -375,7 +375,7 @@ void BX_CPU_C::handleCpuModeChange(void)
 
   // re-initialize protection keys
 #if BX_SUPPORT_PKEYS
-  set_PKRU(BX_CPU_THIS_PTR pkru);
+  set_PKeys(BX_CPU_THIS_PTR pkru, BX_CPU_THIS_PTR pkrs);
 #endif
 
   if (mode != BX_CPU_THIS_PTR cpu_mode) {
@@ -1347,26 +1347,43 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRGSBASE_Eq(bxInstruction_c *i)
 
 #if BX_SUPPORT_PKEYS
 
-void BX_CPU_C::set_PKRU(Bit32u pkru_val)
+void BX_CPU_C::set_PKeys(Bit32u pkru_val, Bit32u pkrs_val)
 {
   BX_CPU_THIS_PTR pkru = pkru_val;
+  BX_CPU_THIS_PTR pkrs = pkrs_val;
 
   for (unsigned i=0; i<16; i++) {
     BX_CPU_THIS_PTR rd_pkey[i] = BX_CPU_THIS_PTR wr_pkey[i] =
       TLB_SysReadOK | TLB_UserReadOK | TLB_SysWriteOK | TLB_UserWriteOK;
 
-    if (long_mode() && BX_CPU_THIS_PTR cr4.get_PKE()) {
-      // accessDisable bit set
-      if (pkru_val & (1<<(i*2))) {
-        BX_CPU_THIS_PTR rd_pkey[i] &= ~(TLB_UserReadOK | TLB_UserWriteOK);
-        BX_CPU_THIS_PTR wr_pkey[i] &= ~(TLB_UserReadOK | TLB_UserWriteOK);
+    if (long_mode()) {
+      if (BX_CPU_THIS_PTR cr4.get_PKE()) {
+        // accessDisable bit set
+        if (pkru_val & (1<<(i*2))) {
+          BX_CPU_THIS_PTR rd_pkey[i] &= ~(TLB_UserReadOK | TLB_UserWriteOK);
+          BX_CPU_THIS_PTR wr_pkey[i] &= ~(TLB_UserReadOK | TLB_UserWriteOK);
+        }
+
+        // writeDisable bit set
+        if (pkru_val & (1<<(i*2+1))) {
+          BX_CPU_THIS_PTR wr_pkey[i] &= ~(TLB_UserWriteOK);
+          if (BX_CPU_THIS_PTR cr0.get_WP())
+            BX_CPU_THIS_PTR wr_pkey[i] &= ~(TLB_SysWriteOK);
+        }
       }
+
+      if (BX_CPU_THIS_PTR cr4.get_PKS()) {
+        // accessDisable bit set
+        if (pkrs_val & (1<<(i*2))) {
+          BX_CPU_THIS_PTR rd_pkey[i] &= ~(TLB_SysReadOK | TLB_SysWriteOK);
+          BX_CPU_THIS_PTR wr_pkey[i] &= ~(TLB_SysReadOK | TLB_SysWriteOK);
+        }
     
-      // writeDisable bit set
-      if (pkru_val & (1<<(i*2+1))) {
-        BX_CPU_THIS_PTR wr_pkey[i] &= ~(TLB_UserWriteOK);
-        if (BX_CPU_THIS_PTR cr0.get_WP())
-          BX_CPU_THIS_PTR wr_pkey[i] &= ~(TLB_SysWriteOK);
+        // writeDisable bit set
+        if (pkrs_val & (1<<(i*2+1))) {
+          if (BX_CPU_THIS_PTR cr0.get_WP())
+            BX_CPU_THIS_PTR wr_pkey[i] &= ~(TLB_SysWriteOK);
+        }
       }
     }
 
@@ -1400,7 +1417,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRPKRU(bxInstruction_c *i)
   if ((ECX|EDX) != 0)
     exception(BX_GP_EXCEPTION, 0);
 
-  BX_CPU_THIS_PTR set_PKRU(EAX);
+  BX_CPU_THIS_PTR set_PKeys(EAX, BX_CPU_THIS_PTR pkrs);
 
   BX_NEXT_TRACE(i);
 }

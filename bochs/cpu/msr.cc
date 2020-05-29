@@ -212,6 +212,16 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
 #endif
 
+#if BX_SUPPORT_PKEYS
+    case BX_MSR_IA32_PKRS:
+      if (! is_cpu_extension_supported(BX_ISA_PKS)) {
+        BX_ERROR(("RDMSR BX_MSR_IS32_PKS: Supervisor-Mode Protection Keys not enabled in the cpu model"));
+        return handle_unknown_rdmsr(index, msr);
+      }
+      val64 = BX_CPU_THIS_PTR pkrs;
+      break;
+#endif
+
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_TSC_DEADLINE:
       if (! is_cpu_extension_supported(BX_ISA_TSC_DEADLINE)) {
@@ -839,6 +849,17 @@ bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
         return 0;
       }
       BX_CPU_THIS_PTR msr.ia32_interrupt_ssp_table = val_64;
+      break;
+#endif
+
+#if BX_SUPPORT_PKEYS
+    case BX_MSR_IA32_PKRS:
+      if (! is_cpu_extension_supported(BX_ISA_PKS)) {
+        BX_ERROR(("WRMSR BX_MSR_IS32_PKS: Supervisor-Mode Protection Keys not enabled in the cpu model"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
+      BX_CPU_THIS_PTR pkrs = val_64;
+      set_PKeys(BX_CPU_THIS_PTR pkru, BX_CPU_THIS_PTR pkrs);
       break;
 #endif
 

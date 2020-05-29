@@ -407,7 +407,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 // [28:28]    MOVDIR64B: MOVDIR64B instruction support
 // [29:29]    ENQCMD: Enqueue Stores support
 // [30:30]    SGX_LC: SGX Launch Configuration
-// [31:31]    reserved
+// [31:31]    PKS: Protection keys for supervisor-mode pages
 
 #define BX_CPUID_EXT4_PREFETCHWT1            (1 <<  0)
 #define BX_CPUID_EXT4_AVX512_VBMI            (1 <<  1)
@@ -440,7 +440,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT4_MOVDIR64B              (1 << 28)
 #define BX_CPUID_EXT4_ENQCMD                 (1 << 29)
 #define BX_CPUID_EXT4_SGX_LAUNCH_CONFIG      (1 << 30)
-#define BX_CPUID_EXT4_RESERVED31             (1 << 31)
+#define BX_CPUID_EXT4_PKS                    (1 << 31)
 
 // CPUID defines - EXT5 features CPUID[0x00000007].EDX
 // -----------------------------
@@ -450,7 +450,9 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [4:4]    Support of Fast REP MOV instructions with short length
 //   [7:5]    reserved
 //   [8:8]    AVX512 VP2INTERSECT instructions support
-//   [13:9]   reserved
+//   [9:9]    reserved
+//   [10:10]  MD clear
+//   [13:11]  reserved
 //   [14:14]  SERIALIZE instruction support
 //   [15:15]  Hybrid
 //   [16:16]  TSXLDTRK: TSX suspent load tracking support
@@ -474,7 +476,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT5_RESERVED7              (1 <<  7)
 #define BX_CPUID_EXT5_AVX512_VPINTERSECT     (1 <<  8)
 #define BX_CPUID_EXT5_RESERVED9              (1 <<  9)
-#define BX_CPUID_EXT5_RESERVED10             (1 << 10)
+#define BX_CPUID_EXT5_MD_CLEAR               (1 << 10)
 #define BX_CPUID_EXT5_RESERVED11             (1 << 11)
 #define BX_CPUID_EXT5_RESERVED12             (1 << 12)
 #define BX_CPUID_EXT5_RESERVED13             (1 << 13)

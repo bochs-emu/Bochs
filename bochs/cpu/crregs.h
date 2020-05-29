@@ -100,6 +100,7 @@ struct bx_cr0_t {
 #define BX_CR4_OSFXSR_MASK     (1 << 9)
 #define BX_CR4_OSXMMEXCPT_MASK (1 << 10)
 #define BX_CR4_UMIP_MASK       (1 << 11)
+#define BX_CR4_LA57_MASK       (1 << 12)
 #define BX_CR4_VMXE_MASK       (1 << 13)
 #define BX_CR4_SMXE_MASK       (1 << 14)
 #define BX_CR4_FSGSBASE_MASK   (1 << 16)
@@ -109,6 +110,7 @@ struct bx_cr0_t {
 #define BX_CR4_SMAP_MASK       (1 << 21)
 #define BX_CR4_PKE_MASK        (1 << 22)
 #define BX_CR4_CET_MASK        (1 << 23)
+#define BX_CR4_PKS_MASK        (1 << 24)
 
 struct bx_cr4_t {
   Bit32u  val32; // 32bit value of register
@@ -125,6 +127,7 @@ struct bx_cr4_t {
   IMPLEMENT_CRREG_ACCESSORS(OSFXSR, 9);
   IMPLEMENT_CRREG_ACCESSORS(OSXMMEXCPT, 10);
   IMPLEMENT_CRREG_ACCESSORS(UMIP, 11);
+  IMPLEMENT_CRREG_ACCESSORS(LA57, 12);
 #if BX_SUPPORT_VMX
   IMPLEMENT_CRREG_ACCESSORS(VMXE, 13);
 #endif
@@ -138,12 +141,13 @@ struct bx_cr4_t {
   IMPLEMENT_CRREG_ACCESSORS(SMAP, 21);
   IMPLEMENT_CRREG_ACCESSORS(PKE, 22);
   IMPLEMENT_CRREG_ACCESSORS(CET, 23);
+  IMPLEMENT_CRREG_ACCESSORS(PKS, 24);
 
   BX_CPP_INLINE Bit32u get32() const { return val32; }
   BX_CPP_INLINE void set32(Bit32u val) { val32 = val; }
 };
 
-const Bit32u BX_CR4_FLUSH_TLB_MASK = (BX_CR4_PSE_MASK | BX_CR4_PAE_MASK | BX_CR4_PGE_MASK | BX_CR4_PCIDE_MASK | BX_CR4_SMEP_MASK | BX_CR4_SMAP_MASK | BX_CR4_PKE_MASK | BX_CR4_CET_MASK);
+const Bit32u BX_CR4_FLUSH_TLB_MASK = (BX_CR4_PSE_MASK | BX_CR4_PAE_MASK | BX_CR4_PGE_MASK | BX_CR4_PCIDE_MASK | BX_CR4_SMEP_MASK | BX_CR4_SMAP_MASK | BX_CR4_PKE_MASK | BX_CR4_CET_MASK | BX_CR4_PKS_MASK);
 
 #endif  // #if BX_CPU_LEVEL >= 5
 

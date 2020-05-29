@@ -122,6 +122,7 @@ static const char *cpu_feature_name[] =
   "fcs_fds_deprecation",    // BX_ISA_FCS_FDS_DEPRECATION
   "fdp_deprecation",        // BX_ISA_FDP_DEPRECATION
   "pku",                    // BX_ISA_PKU
+  "pks",                    // BX_ISA_PKS
   "umip",                   // BX_ISA_UMIP
   "rdpid",                  // BX_ISA_RDPID
   "tce",                    // BX_ISA_TCE

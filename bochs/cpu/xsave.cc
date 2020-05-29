@@ -422,7 +422,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
 #if BX_SUPPORT_PKEYS
   // take effect of changing the PKRU state
   if ((requested_feature_bitmap & BX_XCR0_PKRU_MASK) != 0) {
-    set_PKRU(TMP32);
+    set_PKeys(TMP32, BX_CPU_THIS_PTR pkrs);
   }
 #endif
 
@@ -875,14 +875,14 @@ void BX_CPU_C::xsave_pkru_state(bxInstruction_c *i, bx_address offset)
 
 void BX_CPU_C::xrstor_pkru_state(bxInstruction_c *i, bx_address offset)
 {
-  // just write the pkru to TMP register for now and don't call set_PKRU
+  // just write the pkru to TMP register for now and don't call set_PKeys
   // calling it will take immediate effect on all future memory accesses including load of other XRSTOR components
   TMP32 = read_virtual_dword(i->seg(), offset);
 }
 
 void BX_CPU_C::xrstor_init_pkru_state(void)
 {
-  // just write the pkru to TMP register for now and don't call set_PKRU
+  // just write the pkru to TMP register for now and don't call set_PKeys
   // calling it will take immediate effect on all future memory accesses including load of other XRSTOR components
   TMP32 = 0;
 }

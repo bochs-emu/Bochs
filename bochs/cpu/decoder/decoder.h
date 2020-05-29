@@ -118,6 +118,7 @@ enum x86_feature_name {
   BX_ISA_FCS_FDS_DEPRECATION,     /* FCS/FDS Deprecation */
   BX_ISA_FDP_DEPRECATION,         /* FDP Deprecation - FDP update on unmasked x87 exception only */
   BX_ISA_PKU,                     /* User-Mode Protection Keys */
+  BX_ISA_PKS,                     /* Supervisor-Mode Protection Keys */
   BX_ISA_UMIP,                    /* User-Mode Instructions Prevention */
   BX_ISA_RDPID,                   /* RDPID Support */
   BX_ISA_TCE,                     /* Translation Cache Extensions (TCE) support (AMD) */

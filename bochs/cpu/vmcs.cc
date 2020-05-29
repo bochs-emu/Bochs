@@ -407,6 +407,12 @@ bx_bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
       return BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT);
 #endif
 
+#if BX_SUPPORT_PKEYS
+    case VMCS_64BIT_GUEST_IA32_PKRS:
+    case VMCS_64BIT_GUEST_IA32_PKRS_HI:
+      return is_cpu_extension_supported(BX_ISA_PKS);
+#endif
+
 #if BX_SUPPORT_VMX >= 2
     /* VMCS 64-bit host state fields */
     /* binary 0010_11xx_xxxx_xxx0 */
@@ -422,6 +428,12 @@ bx_bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
     case VMCS_64BIT_HOST_IA32_PERF_GLOBAL_CTRL:
     case VMCS_64BIT_HOST_IA32_PERF_GLOBAL_CTRL_HI:
       return BX_SUPPORT_VMX_EXTENSION(BX_VMX_PERF_GLOBAL_CTRL);
+
+#if BX_SUPPORT_PKEYS
+    case VMCS_64BIT_HOST_IA32_PKRS:
+    case VMCS_64BIT_HOST_IA32_PKRS_HI:
+      return is_cpu_extension_supported(BX_ISA_PKS);
+#endif
 
     /* VMCS natural width control fields */
     /* binary 0110_00xx_xxxx_xxx0 */
@@ -800,6 +812,8 @@ void BX_CPU_C::init_vmexit_ctrls(void)
   //      [20] Save guest MSR_EFER on VMEXIT
   //      [21] Load host MSR_EFER on VMEXIT
   //      [22] Save VMX preemption timer counter on VMEXIT
+  //      [28] Save host CET state on VMEXIT
+  //      [29] Save host MSR_IA32_PKRS on VMEXIT
 
   cap->vmx_vmexit_ctrl_supported_bits = 
       VMX_VMEXIT_CTRL1_INTA_ON_VMEXIT | VMX_VMEXIT_CTRL1_SAVE_DBG_CTRLS;
@@ -826,6 +840,10 @@ void BX_CPU_C::init_vmexit_ctrls(void)
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET))
     cap->vmx_vmexit_ctrl_supported_bits |= VMX_VMEXIT_CTRL1_LOAD_HOST_CET_STATE;
 #endif
+#if BX_SUPPORT_PKEYS
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PKS))
+    cap->vmx_vmexit_ctrl_supported_bits |= VMX_VMEXIT_CTRL1_LOAD_HOST_PKRS;
+#endif
 }
 
 void BX_CPU_C::init_vmentry_ctrls(void)
@@ -844,6 +862,8 @@ void BX_CPU_C::init_vmentry_ctrls(void)
   //      [13] Load guest MSR_PERF_GLOBAL_CTRL
   //      [14] Load guest MSR_PAT
   //      [15] Load guest MSR_EFER
+  //      [17] Load guest CET state
+  //      [17] Load guest MSR_IA32_PKRS value
 
   cap->vmx_vmentry_ctrl_supported_bits = VMX_VMENTRY_CTRL1_LOAD_DBG_CTRLS |
                                          VMX_VMENTRY_CTRL1_SMM_ENTER |
@@ -864,6 +884,10 @@ void BX_CPU_C::init_vmentry_ctrls(void)
 #if BX_SUPPORT_CET
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET))
     cap->vmx_vmentry_ctrl_supported_bits |= VMX_VMENTRY_CTRL1_LOAD_GUEST_CET_STATE;
+#endif
+#if BX_SUPPORT_PKEYS
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PKS))
+    cap->vmx_vmentry_ctrl_supported_bits |= VMX_VMENTRY_CTRL1_LOAD_GUEST_PKRS;
 #endif
 }
 

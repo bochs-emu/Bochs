@@ -277,6 +277,7 @@ void BX_CPU_C::register_state(void)
 
 #if BX_SUPPORT_PKEYS
   BXRS_HEX_PARAM_FIELD(cpu, pkru, pkru);
+  BXRS_HEX_PARAM_FIELD(cpu, pkrs, pkrs);
 #endif
 
   for(n=0; n<6; n++) {
@@ -656,7 +657,7 @@ void BX_CPU_C::after_restore_state(void)
 #endif
 
 #if BX_SUPPORT_PKEYS
-  set_PKRU(BX_CPU_THIS_PTR pkru);
+  set_PKeys(BX_CPU_THIS_PTR pkru, BX_CPU_THIS_PTR pkrs);
 #endif
 
   assert_checks();
@@ -942,7 +943,7 @@ void BX_CPU_C::reset(unsigned source)
   if (source == BX_RESET_HARDWARE) {
 
 #if BX_SUPPORT_PKEYS
-    BX_CPU_THIS_PTR set_PKRU(0);
+    BX_CPU_THIS_PTR set_PKeys(0, 0);
 #endif
 
 #if BX_CPU_LEVEL >= 6

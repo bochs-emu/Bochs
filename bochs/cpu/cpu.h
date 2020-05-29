@@ -924,6 +924,7 @@ public: // for now...
 #if BX_SUPPORT_PKEYS
   // protection keys
   Bit32u pkru;
+  Bit32u pkrs;
 
   // unpacked protection keys to be tested together with accessBits from TLB
   // the unpacked key is stored in the accessBits format:
@@ -4861,7 +4862,7 @@ public: // for now...
 #endif
 
 #if BX_SUPPORT_PKEYS
-  BX_SMF void set_PKRU(Bit32u pkru);
+  BX_SMF void set_PKeys(Bit32u pkru, Bit32u pkrs);
 #endif
 
 #if BX_SUPPORT_FPU

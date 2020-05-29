@@ -1222,6 +1222,10 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
        BX_ERROR(("VMFAIL: VMCS host SSP non canonical or invalid"));
        return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
     }
+    if ((host_state->ssp & 0x3) != 0) {
+       BX_ERROR(("VMFAIL: VMCS host SSP[1:0] not zero"));
+       return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
+    }
 
     host_state->interrupt_ssp_table_address = VMread_natural(VMCS_HOST_INTERRUPT_SSP_TABLE_ADDR);
     if (!IsCanonical(host_state->interrupt_ssp_table_address)) {
@@ -1230,7 +1234,17 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
     }
 
     if ((host_state->cr4 & BX_CR4_CET_MASK) && (host_state->cr0 & BX_CR0_WP_MASK) == 0) {
-      BX_ERROR(("VMENTER FAIL: VMCS host CR4.CET=1 when CR0.WP=0"));
+      BX_ERROR(("FAIL: VMCS host CR4.CET=1 when CR0.WP=0"));
+      return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
+    }
+  }
+#endif
+
+#if BX_SUPPORT_PKEYS
+  if (vmexit_ctrls & VMX_VMEXIT_CTRL1_LOAD_HOST_PKRS) {
+    host_state->pkrs = VMread64(VMCS_64BIT_HOST_IA32_PKRS);
+    if (GET32H(host_state->pkrs) != 0) {
+      BX_ERROR(("VMFAIL: invalid host IA32_PKRS value"));
       return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
     }
   }
@@ -1444,11 +1458,25 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
        BX_ERROR(("VMFAIL: VMCS guest SSP non canonical or invalid"));
        return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
     }
+    if ((guest.ssp & 0x3) != 0) {
+       BX_ERROR(("VMFAIL: VMCS guest SSP[1:0] not zero"));
+       return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+    }
 
     guest.interrupt_ssp_table_address = VMread_natural(VMCS_GUEST_INTERRUPT_SSP_TABLE_ADDR);
     if (!IsCanonical(guest.interrupt_ssp_table_address)) {
        BX_ERROR(("VMFAIL: VMCS guest INTERRUPT_SSP_TABLE_ADDR non canonical or invalid"));
        return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+    }
+  }
+#endif
+
+#if BX_SUPPORT_PKEYS
+  if (vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_GUEST_PKRS) {
+    guest.pkrs = VMread64(VMCS_64BIT_GUEST_IA32_PKRS);
+    if (GET32H(guest.pkrs) != 0) {
+      BX_ERROR(("VMFAIL: invalid guest IA32_PKRS value"));
+      return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
     }
   }
 #endif
@@ -2041,6 +2069,12 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   }
 #endif
 
+#if BX_SUPPORT_PKEYS
+  if (vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_GUEST_PKRS) {
+    set_PKeys(BX_CPU_THIS_PTR pkru, guest.pkrs);
+  }
+#endif
+
   BX_CPU_THIS_PTR async_event = 0;
 
   setEFlags((Bit32u) guest.rflags);
@@ -2319,6 +2353,12 @@ void BX_CPU_C::VMexitSaveGuestState(void)
     VMwrite_natural(VMCS_GUEST_IA32_S_CET, BX_CPU_THIS_PTR msr.ia32_cet_control[0]);
     VMwrite_natural(VMCS_GUEST_INTERRUPT_SSP_TABLE_ADDR, BX_CPU_THIS_PTR msr.ia32_interrupt_ssp_table);
     VMwrite_natural(VMCS_GUEST_SSP, SSP);
+  }
+#endif
+
+#if BX_SUPPORT_PKEYS
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PKS)) {
+    VMwrite64(VMCS_64BIT_GUEST_IA32_PKRS, BX_CPU_THIS_PTR pkrs);
   }
 #endif
 
@@ -2610,6 +2650,12 @@ void BX_CPU_C::VMexitLoadHostState(void)
     SSP = host_state->ssp;
     BX_CPU_THIS_PTR msr.ia32_interrupt_ssp_table = host_state->interrupt_ssp_table_address;
     BX_CPU_THIS_PTR msr.ia32_cet_control[0] = host_state->msr_ia32_s_cet;
+  }
+#endif
+
+#if BX_SUPPORT_PKEYS
+  if (vmexit_ctrls & VMX_VMEXIT_CTRL1_LOAD_HOST_PKRS) {
+    set_PKeys(BX_CPU_THIS_PTR pkru, host_state->pkrs);
   }
 #endif
 
@@ -4027,6 +4073,9 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(host, ia32_s_cet_msr, BX_CPU_THIS_PTR vmcs.host_state.msr_ia32_s_cet);
   BXRS_HEX_PARAM_FIELD(host, SSP, BX_CPU_THIS_PTR vmcs.host_state.ssp);
   BXRS_HEX_PARAM_FIELD(host, interrupt_ssp_table_address, BX_CPU_THIS_PTR vmcs.host_state.interrupt_ssp_table_address);
+#endif
+#if BX_SUPPORT_PKEYS
+  BXRS_HEX_PARAM_FIELD(host, pkrs, BX_CPU_THIS_PTR vmcs.host_state.pkrs);
 #endif
 }
 

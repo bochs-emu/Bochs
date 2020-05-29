@@ -135,6 +135,8 @@ enum MSR_Register {
 
   BX_MSR_IA32_INTERRUPT_SSP_TABLE_ADDR = 0x6A8,
 
+  BX_MSR_IA32_PKRS = 0x6E1,
+
   BX_MSR_XSS = 0xda0,
 
   /* AMD MSRs */
