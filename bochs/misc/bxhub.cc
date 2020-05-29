@@ -26,7 +26,7 @@
 
 // Extensions by Volker Ruppert (2017):
 // - Windows support added.
-// - Integrated 'vnet' server features (ARP, ICMP-echo, DHCP and TFTP).
+// - Integrated 'vnet' server features (ARP, ICMP-echo, DHCP, FTP and TFTP).
 // - Command line options added for base UDP port and 'vnet' server features.
 // - Support for connects from up to 6 Bochs sessions.
 // - Support for connecting from other machines.
@@ -164,7 +164,7 @@ void print_usage()
     "  -ports=...    number of virtual ethernet ports (2 - 6)\n"
     "  -base=...     base UDP port (bxhub uses 2 ports per Bochs session)\n"
     "  -mac=...      host MAC address (default is b0:c4:20:00:00:0f)\n"
-    "  -tftp=...     enable TFTP support using specified directory\n"
+    "  -tftp=...     enable FTP and TFTP support using specified directory\n"
     "  -loglev=...   set log level (0 - 3, default 1)\n"
     "  -logfile=...  send log output to file\n"
     "  --help        display this help and exit\n\n");
@@ -321,9 +321,9 @@ int CDECL main(int argc, char **argv)
          host_macaddr[3], host_macaddr[4], host_macaddr[5]
          );
   if (strlen(tftp_root) > 0) {
-    printf("TFTP using root directory '%s'\n", tftp_root);
+    printf("FTP / TFTP using root directory '%s'\n", tftp_root);
   } else {
-    printf("TFTP support disabled\n");
+    printf("FTP / TFTP support disabled\n");
   }
 
   if (strlen(bx_logfname) > 0) {
