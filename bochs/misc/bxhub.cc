@@ -362,7 +362,7 @@ int CDECL main(int argc, char **argv)
         }
       }
       // send reply from builtin service
-      if (hclient[i].pending_reply_size > 0) {
+      while (hclient[i].pending_reply_size > 0) {
         send_packet(&hclient[i], hclient[i].reply_buffer, hclient[i].pending_reply_size);
         // check for another pending packet
         hclient[i].pending_reply_size = vnet_server.get_packet(hclient[i].reply_buffer);

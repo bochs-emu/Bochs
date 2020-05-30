@@ -275,13 +275,14 @@ private:
   unsigned tcpipv4_send_data(tcp_conn_t *tcp_conn, const Bit8u *data,
                              unsigned data_len, bx_bool push);
   void tcpipv4_send_ack(tcp_conn_t *tcp_conn, unsigned data_len);
-  void tcpipv4_send_fin(tcp_conn_t *tcp_conn);
+  void tcpipv4_send_fin(tcp_conn_t *tcp_conn, bx_bool host_fin);
 
   static void tcpipv4_ftp_handler(void *this_ptr, tcp_conn_t *tcp_conn,
                                   const Bit8u *data, unsigned data_len);
   void tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *data,
                               unsigned data_len);
   void ftp_send_reply(tcp_conn_t *tcp_conn, const char *msg);
+  void ftp_send_status(tcp_conn_t *tcp_conn);
   void ftp_send_data_prep(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data,
                           const char *path, unsigned data_len);
   void ftp_send_data(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data);
