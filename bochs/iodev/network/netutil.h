@@ -281,6 +281,8 @@ private:
                                   const Bit8u *data, unsigned data_len);
   void tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *data,
                               unsigned data_len);
+  bx_bool ftp_file_exists(tcp_conn_t *tcpc_cmd, const char *arg, char *path,
+                          unsigned *size);
   bx_bool ftp_subdir_exists(tcp_conn_t *tcpc_cmd, const char *arg, char *path);
   void ftp_send_reply(tcp_conn_t *tcp_conn, const char *msg);
   void ftp_send_status(tcp_conn_t *tcp_conn);
@@ -290,8 +292,8 @@ private:
   void ftp_list_directory(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data,
                           const char *subdir);
   void ftp_recv_file(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data, const char *fname);
-  void ftp_send_file(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data, const char *fname);
-  void ftp_get_filesize(tcp_conn_t *tcp_conn, const char *fname);
+  void ftp_send_file(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data, const char *arg);
+  void ftp_get_filesize(tcp_conn_t *tcp_conn, const char *arg);
 
   static int udpipv4_dhcp_handler(void *this_ptr, const Bit8u *ipheader,
                                   unsigned ipheader_len, unsigned sourceport,

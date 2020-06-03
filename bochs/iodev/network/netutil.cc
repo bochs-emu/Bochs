@@ -978,50 +978,7 @@ void ftp_remove_session(ftp_session_t *fs)
   delete fs;
 }
 
-// FTP directory and file helper functions
-
-bx_bool ftp_file_exists(const char *fname, unsigned *size)
-{
-  bx_bool exists = 0;
-#ifndef WIN32
-  struct stat stat_buf;
-#endif
-
-  if (size != NULL) {
-    *size = 0;
-  }
-#ifdef WIN32
-  HANDLE hFile = CreateFile(fname, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, NULL);
-  if (hFile != INVALID_HANDLE_VALUE) {
-    ULARGE_INTEGER FileSize;
-    FileSize.LowPart = GetFileSize(hFile, &FileSize.HighPart);
-    CloseHandle(hFile);
-    if (((FileSize.LowPart != INVALID_FILE_SIZE) || (GetLastError() == NO_ERROR)) &&
-        (FileSize.HighPart == 0)) {
-      if (size != NULL) {
-        *size = FileSize.LowPart;
-      }
-      exists = 1;
-    }
-  }
-#else
-  int fd = open(fname, O_RDONLY
-#ifdef O_BINARY
-                | O_BINARY
-#endif
-                );
-  if (fd >= 0) {
-    if (fstat(fd, &stat_buf) == 0) {
-      if (size != NULL) {
-        *size = stat_buf.st_size;
-      }
-      exists = 1;
-    }
-    close(fd);
-  }
-#endif
-  return exists;
-}
+// FTP directory helper functions
 
 bx_bool ftp_mkdir(const char *path)
 {
@@ -1041,7 +998,7 @@ bx_bool ftp_rmdir(const char *path)
 #endif
 }
 
-// FTP commands
+// FTP command decoder
 
 enum {
   FTPCMD_UNKNOWN,
@@ -1209,20 +1166,15 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
             if (ftp_subdir_exists(tcpc_cmd, arg, tmp_path)) {
               strcpy(fs->rel_path, tmp_path);
               ftp_send_reply(tcpc_cmd, "250 CWD command successful.");
-            } else {
-              ftp_send_reply(tcpc_cmd, "550 CWD operation not permitted.");
             }
             break;
           case FTPCMD_DELE:
-            sprintf(tmp_path, "%s%s/%s", tftp_root, fs->rel_path, arg);
-            if (ftp_file_exists(tmp_path, NULL)) {
+            if (ftp_file_exists(tcpc_cmd, arg, tmp_path, NULL)) {
               if (unlink(tmp_path) >= 0) {
                 ftp_send_reply(tcpc_cmd, "250 File deletion successful.");
               } else {
                 ftp_send_reply(tcpc_cmd, "550 File deletion failed.");
               }
-            } else {
-                ftp_send_reply(tcpc_cmd, "550 File not found.");
             }
             break;
           case FTPCMD_FEAT:
@@ -1241,8 +1193,6 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
               }
               if (path_ok) {
                 ftp_list_directory(tcpc_cmd, tcpc_data, tmp_path);
-              } else {
-                ftp_send_reply(tcpc_cmd, "550 Directory not found.");
               }
             }
             break;
@@ -1302,31 +1252,23 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
               } else {
                 ftp_send_reply(tcpc_cmd, "550 RMD operation failed.");
               }
-            } else {
-              ftp_send_reply(tcpc_cmd, "550 Directory not found.");
             }
             break;
           case FTPCMD_RNFR:
-            sprintf(tmp_path, "%s%s/%s", tftp_root, fs->rel_path, arg);
-            if (ftp_file_exists(tmp_path, NULL)) {
+            if (ftp_file_exists(tcpc_cmd, arg, tmp_path, NULL)) {
               fs->ren_old_name = new char[strlen(tmp_path)+1];
               strcpy(fs->ren_old_name, tmp_path);
               ftp_send_reply(tcpc_cmd, "350 File exists. Ready for new name.");
-            } else {
-              ftp_send_reply(tcpc_cmd, "550 File not found.");
             }
             break;
           case FTPCMD_RNTO:
             if (fs->ren_old_name != NULL) {
-              sprintf(tmp_path, "%s%s/%s", tftp_root, fs->rel_path, arg);
-              if (!ftp_file_exists(tmp_path, NULL)) {
+              if (!ftp_file_exists(tcpc_cmd, arg, tmp_path, NULL)) {
                 if (rename(fs->ren_old_name, tmp_path) == 0) {
                   ftp_send_reply(tcpc_cmd, "250 File renamed successfully.");
                 } else {
                   ftp_send_reply(tcpc_cmd, "550 Rename operation failed.");
                 }
-              } else {
-                ftp_send_reply(tcpc_cmd, "550 File exists.");
               }
               delete [] fs->ren_old_name;
               fs->ren_old_name = NULL;
@@ -1407,13 +1349,78 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
   }
 }
 
+bx_bool vnet_server_c::ftp_file_exists(tcp_conn_t *tcpc_cmd, const char *arg,
+                                       char *path, unsigned *size)
+{
+  ftp_session_t *fs = (ftp_session_t*)tcpc_cmd->data;
+  bx_bool exists = 0, notfile = 1;
+#ifndef WIN32
+  struct stat stat_buf;
+#endif
+
+  if (size != NULL) {
+    *size = 0;
+  }
+  if (arg[0] != '/') {
+    sprintf(path, "%s%s/%s", tftp_root, fs->rel_path, arg);
+  } else {
+    sprintf(path, "%s%s", tftp_root, arg);
+  }
+#ifdef WIN32
+  HANDLE hFile = CreateFile(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, NULL);
+  if (hFile != INVALID_HANDLE_VALUE) {
+    ULARGE_INTEGER FileSize;
+    FileSize.LowPart = GetFileSize(hFile, &FileSize.HighPart);
+    CloseHandle(hFile);
+    exists = 1;
+    if (((FileSize.LowPart != INVALID_FILE_SIZE) || (GetLastError() == NO_ERROR)) &&
+        (FileSize.HighPart == 0)) {
+      if (size != NULL) {
+        *size = FileSize.LowPart;
+      }
+      notfile = 0;
+    }
+  }
+#else
+  int fd = open(path, O_RDONLY
+#ifdef O_BINARY
+                | O_BINARY
+#endif
+                );
+  if (fd >= 0) {
+    if (fstat(fd, &stat_buf) == 0) {
+      if (S_ISREG(stat_buf.st_mode)) {
+        notfile = 0;
+      }
+      if (size != NULL) {
+        *size = stat_buf.st_size;
+      }
+      exists = 1;
+    }
+    close(fd);
+  }
+#endif
+  if (!exists) {
+    if (fs->cmdcode != FTPCMD_RNTO) {
+      ftp_send_reply(tcpc_cmd, "550 File not found.");
+    }
+  } else {
+    if (fs->cmdcode == FTPCMD_RNTO) {
+      ftp_send_reply(tcpc_cmd, "550 File exists.");
+    } else if (notfile) {
+      ftp_send_reply(tcpc_cmd, "550 Not a regular file.");
+    }
+  }
+  return (exists && !notfile);
+}
+
 bx_bool vnet_server_c::ftp_subdir_exists(tcp_conn_t *tcpc_cmd, const char *arg,
                                          char *path)
 {
   ftp_session_t *fs = (ftp_session_t*)tcpc_cmd->data;
   char abspath[BX_PATHNAME_LEN];
   char relpath[BX_PATHNAME_LEN];
-  bx_bool ret = 0;
+  bx_bool exists = 0, notdir = 1;
 #ifndef WIN32
   DIR *dir;
 #endif
@@ -1436,23 +1443,35 @@ bx_bool vnet_server_c::ftp_subdir_exists(tcp_conn_t *tcpc_cmd, const char *arg,
   dir = opendir(abspath);
   if (dir != NULL) {
     closedir(dir);
-    ret = 1;
+    exists = 1;
+  } else if (errno != ENOTDIR) {
+    notdir = 0;
   }
 #else
   DWORD dwAttrib = GetFileAttributes(abspath);
-  ret = ((dwAttrib != INVALID_FILE_ATTRIBUTES) &&
-         ((dwAttrib & FILE_ATTRIBUTE_DIRECTORY) != 0));
+  exists = ((dwAttrib != INVALID_FILE_ATTRIBUTES) &&
+            ((dwAttrib & FILE_ATTRIBUTE_DIRECTORY) != 0));
+  if (!exists) {
+    notdir = ((dwAttrib != INVALID_FILE_ATTRIBUTES) &&
+              ((dwAttrib & FILE_ATTRIBUTE_DIRECTORY) == 0));
+  }
 #endif
-  if (ret) {
+  if (exists) {
     if (fs->cmdcode == FTPCMD_RMD) {
       strcpy(path, abspath);
     } else {
       strcpy(path, relpath);
     }
-  } else if (fs->cmdcode == FTPCMD_MKD) {
-    strcpy(path, abspath);
+  } else {
+    if (fs->cmdcode == FTPCMD_MKD) {
+      strcpy(path, abspath);
+    } else if (notdir) {
+      ftp_send_reply(tcpc_cmd, "550 Not a directory.");
+    } else {
+      ftp_send_reply(tcpc_cmd, "550 Directory not found.");
+    }
   }
-  return ret;
+  return exists;
 }
 
 void vnet_server_c::ftp_send_reply(tcp_conn_t *tcp_conn, const char *msg)
@@ -1659,10 +1678,9 @@ void vnet_server_c::ftp_recv_file(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data,
                                   const char *fname)
 {
   char path[BX_PATHNAME_LEN], reply[80];
-  ftp_session_t *fs;
+  ftp_session_t *fs = (ftp_session_t*)tcpc_cmd->data;
   int fd = -1;
 
-  fs = (ftp_session_t*)tcpc_cmd->data;
   sprintf(path, "%s%s/%s", tftp_root, fs->rel_path, fname);
   fd = open(path, O_CREAT | O_WRONLY | O_TRUNC
 #ifdef O_BINARY
@@ -1680,34 +1698,27 @@ void vnet_server_c::ftp_recv_file(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data,
 }
 
 void vnet_server_c::ftp_send_file(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data,
-                                  const char *fname)
+                                  const char *arg)
 {
+  ftp_session_t *fs = (ftp_session_t*)tcpc_cmd->data;
   char path[BX_PATHNAME_LEN], reply[80];
-  ftp_session_t *fs;
   unsigned size = 0;
 
-  fs = (ftp_session_t*)tcpc_cmd->data;
-  sprintf(path, "%s%s/%s", tftp_root, fs->rel_path, fname);
-  if (ftp_file_exists(path, &size)) {
+  if (ftp_file_exists(tcpc_cmd, arg, path, &size)) {
     sprintf(reply, "150 Opening %s mode connection to send file.",
             fs->ascii_mode ? "ASCII":"BINARY");
     ftp_send_reply(tcpc_cmd, reply);
     ftp_send_data_prep(tcpc_cmd, tcpc_data, path, size);
-  } else {
-    ftp_send_reply(tcpc_cmd, "550 File not found.");
   }
 }
 
-void vnet_server_c::ftp_get_filesize(tcp_conn_t *tcp_conn, const char *fname)
+void vnet_server_c::ftp_get_filesize(tcp_conn_t *tcp_conn, const char *arg)
 {
   char path[BX_PATHNAME_LEN];
-  ftp_session_t *fs;
   char reply[20];
   unsigned size = 0;
 
-  fs = (ftp_session_t*)tcp_conn->data;
-  sprintf(path, "%s%s/%s", tftp_root, fs->rel_path, fname);
-  if (ftp_file_exists(path, &size)) {
+  if (ftp_file_exists(tcp_conn, arg, path, &size)) {
     sprintf(reply, "213 %d", size);
     ftp_send_reply(tcp_conn, reply);
   } else {
