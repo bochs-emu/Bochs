@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "2 May 2020" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "4 Jun 2020" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -1149,11 +1149,11 @@ If you don't want to make connections to any physical networks,
 you can use the following 'ethmod's to simulate a virtual network.
  - null   : All packets are discarded, but logged to a few files
  - vde    : Virtual Distributed Ethernet
- - vnet   : ARP, ICMP-echo(ping), DHCP and TFTP are simulated
+ - vnet   : ARP, ICMP-echo(ping), DHCP, DNS, FTP and TFTP are simulated
             The virtual host uses 192.168.10.1
-            DHCP assigns 192.168.10.2 to the guest
-            The TFTP server use 'ethdev' for the root directory and doesn't
-            overwrite files
+            DHCP assigns 192.168.10.15 to the guest
+            The FTP and TFTP servers use 'ethdev' for the root directory
+            TFTP doesn't overwrite files, DNS for server and client only
  - socket : Connect up to 6 Bochs instances with external program 'bxhub'
             (simulating an ethernet hub). It provides the same services as the
             'vnet' module and assigns IP addresses like 'slirp' (10.0.2.x).

@@ -1048,11 +1048,11 @@ speaker: enabled=1, mode=sound
 # you can use the following 'ethmod's to simulate a virtual network.
 #   null: All packets are discarded, but logged to a few files.
 #   vde:  Virtual Distributed Ethernet
-#   vnet: ARP, ICMP-echo(ping), DHCP and read/write TFTP are simulated.
+#   vnet: ARP, ICMP-echo(ping), DHCP, DNS, FTP and TFTP are simulated.
 #         The virtual host uses 192.168.10.1.
-#         DHCP assigns 192.168.10.2 to the guest.
-#         TFTP uses the 'ethdev' value for the root directory and doesn't
-#         overwrite files.
+#         DHCP assigns 192.168.10.15 to the guest.
+#         FTP/TFTP using the 'ethdev' value for the root directory.
+#         TFTP doesn't overwrite files, DNS for server and client only.
 # socket: Connect up to 6 Bochs instances with external program 'bxhub'
 #         (simulating an ethernet hub). It provides the same services as the
 #         'vnet' module and assigns IP addresses like 'slirp' (10.0.2.x).

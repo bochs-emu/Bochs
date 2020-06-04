@@ -1015,6 +1015,7 @@ enum {
   FTPCMD_OPTS,
   FTPCMD_PASS,
   FTPCMD_PASV,
+  FTPCMD_PORT,
   FTPCMD_PWD,
   FTPCMD_QUIT,
   FTPCMD_RETR,
@@ -1024,6 +1025,7 @@ enum {
   FTPCMD_SIZE,
   FTPCMD_STAT,
   FTPCMD_STOR,
+  FTPCMD_STOU,
   FTPCMD_SYST,
   FTPCMD_TYPE,
   FTPCMD_USER
@@ -1035,17 +1037,18 @@ typedef struct {
   bx_bool rw;
 } ftp_cmd_t;
 
-#define FTP_N_CMDS 24
+#define FTP_N_CMDS 26
 
 const ftp_cmd_t ftpCmd[FTP_N_CMDS] = {
   {"ABOR", FTPCMD_ABOR, 0}, {"CDUP", FTPCMD_CDUP, 0}, {"CWD", FTPCMD_CWD, 0},
   {"DELE", FTPCMD_DELE, 1}, {"FEAT", FTPCMD_FEAT, 0}, {"LIST", FTPCMD_LIST, 0},
   {"MKD",  FTPCMD_MKD, 1},  {"NLST", FTPCMD_NLST, 0}, {"NOOP", FTPCMD_NOOP, 0},
   {"OPTS", FTPCMD_OPTS, 0}, {"PASS", FTPCMD_PASS, 0}, {"PASV", FTPCMD_PASV, 0},
-  {"PWD", FTPCMD_PWD, 0},   {"QUIT", FTPCMD_QUIT, 0}, {"RETR", FTPCMD_RETR, 0},
-  {"RMD", FTPCMD_RMD, 1},   {"RNFR", FTPCMD_RNFR, 1}, {"RNTO", FTPCMD_RNTO, 1},
-  {"SIZE", FTPCMD_SIZE, 0}, {"STAT", FTPCMD_STAT, 0}, {"STOR", FTPCMD_STOR, 1},
-  {"SYST", FTPCMD_SYST, 0}, {"TYPE", FTPCMD_TYPE, 0}, {"USER", FTPCMD_USER, 0}
+  {"PORT", FTPCMD_PORT, 0}, {"PWD", FTPCMD_PWD, 0},   {"QUIT", FTPCMD_QUIT, 0},
+  {"RETR", FTPCMD_RETR, 0}, {"RMD", FTPCMD_RMD, 1},   {"RNFR", FTPCMD_RNFR, 1},
+  {"RNTO", FTPCMD_RNTO, 1}, {"SIZE", FTPCMD_SIZE, 0}, {"STAT", FTPCMD_STAT, 0},
+  {"STOR", FTPCMD_STOR, 1}, {"STOU", FTPCMD_STOU, 1}, {"SYST", FTPCMD_SYST, 0},
+  {"TYPE", FTPCMD_TYPE, 0}, {"USER", FTPCMD_USER, 0}
   };
 
 unsigned ftp_get_command(const char *cmdstr, bx_bool anonuser)
@@ -1129,6 +1132,7 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
             fs->state = FTP_STATE_READY;
           } else {
             ftp_send_reply(tcpc_cmd, "530 Login incorrect.");
+            fs->state = FTP_STATE_LOGIN;
           }
         }
       } else if (fs->state != FTP_STATE_LOGOUT) {
@@ -1280,7 +1284,7 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
             ftp_get_filesize(tcpc_cmd, arg);
             break;
           case FTPCMD_STAT:
-          ftp_send_status(tcpc_cmd);
+            ftp_send_status(tcpc_cmd);
             break;
           case FTPCMD_STOR:
             if (tcpc_data != NULL) {
@@ -1298,6 +1302,12 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
               sprintf(reply, "501 Type %s not supported.", arg);
             }
             ftp_send_reply(tcpc_cmd, reply);
+            break;
+          case FTPCMD_STOU:
+            ftp_send_reply(tcpc_cmd, "502 STOU command not supported yet");
+            break;
+          case FTPCMD_PORT:
+            ftp_send_reply(tcpc_cmd, "502 PORT command not supported by server");
             break;
           case FTPCMD_NOPERM:
             sprintf(reply, "550 %s operation not permitted.", cmdstr);
@@ -1486,6 +1496,7 @@ void vnet_server_c::ftp_send_reply(tcp_conn_t *tcp_conn, const char *msg)
 
 void vnet_server_c::ftp_send_status(tcp_conn_t *tcp_conn)
 {
+  ftp_session_t *fs = (ftp_session_t*)tcp_conn->data;
   char reply[256], linebuf[80];
   Bit8u *ipv4addr = client[tcp_conn->clientid].ipv4addr;
 
@@ -1493,7 +1504,11 @@ void vnet_server_c::ftp_send_status(tcp_conn_t *tcp_conn)
   sprintf(linebuf, "     Connected to %u.%u.%u.%u%c%c", ipv4addr[0], ipv4addr[1],
           ipv4addr[2], ipv4addr[3], 13, 10);
   strcat(reply, linebuf);
-  sprintf(linebuf, "     Logged in as ftpuser%c%c", 13, 10);
+  if (fs->anonymous) {
+    sprintf(linebuf, "     Logged in anonymously%c%c", 13, 10);
+  } else {
+    sprintf(linebuf, "     Logged in as ftpuser%c%c", 13, 10);
+  }
   strcat(reply, linebuf);
   sprintf(linebuf, "     Type: ASCII, Form: Nonprint; STRUcture: File; Transfer MODE: Stream%c%c", 13, 10);
   strcat(reply, linebuf);

@@ -24,13 +24,13 @@
 // bxhub.c: a simple, two-port software 'ethernet hub' for use with
 // eth_socket Bochs ethernet pktmover.
 
-// Extensions by Volker Ruppert (2017):
+// Extensions by Volker Ruppert (2017-2020):
 // - Windows support added.
-// - Integrated 'vnet' server features (ARP, ICMP-echo, DHCP, FTP and TFTP).
+// - Integrated 'vnet' server features (ARP, ICMP-echo, DHCP, DNS, FTP and TFTP).
+// - Added DNS service support for the server 'vnet' and connected clients.
 // - Command line options added for base UDP port and 'vnet' server features.
 // - Support for connects from up to 6 Bochs sessions.
 // - Support for connecting from other machines.
-// - Added DNS service support for the server 'vnet' and connected clients.
 
 #ifdef __CYGWIN__
 #define __USE_W32_SOCKETS
@@ -164,7 +164,7 @@ void print_usage()
     "  -ports=...    number of virtual ethernet ports (2 - 6)\n"
     "  -base=...     base UDP port (bxhub uses 2 ports per Bochs session)\n"
     "  -mac=...      host MAC address (default is b0:c4:20:00:00:0f)\n"
-    "  -tftp=...     enable FTP and TFTP support using specified directory\n"
+    "  -tftp=...     enable FTP and TFTP support using specified directory as root\n"
     "  -loglev=...   set log level (0 - 3, default 1)\n"
     "  -logfile=...  send log output to file\n"
     "  --help        display this help and exit\n\n");

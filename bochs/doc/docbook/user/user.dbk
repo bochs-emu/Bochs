@@ -4817,11 +4817,12 @@ version where this module was added.
   </row>
   <row>
     <entry>vnet</entry>
-    <entry>ARP, ping (ICMP-echo), DHCP and read/write TFTP simulation. The virtual
-    host uses 192.168.10.1. DHCP assigns 192.168.10.2 to the guest. The TFTP server
-    uses the 'ethdev' value for the root directory and doesn't overwrite files.
+    <entry>ARP, ping (ICMP-echo), DHCP, DNS , FTP and TFTP simulation.
+    The virtual host uses 192.168.10.1. DHCP assigns 192.168.10.15 to the guest.
+    The FTP and TFTP servers use the 'ethdev' value for the root directory.
+    TFTP doesn't overwrite files, DNS for server and client only.
     </entry>
-    <entry>Yes, for TFTP</entry>
+    <entry>Yes, for FTP and TFTP root</entry>
     <entry>Yes, for log file name</entry>
     <entry>2.2</entry>
   </row>
@@ -4833,7 +4834,7 @@ version where this module was added.
     an alternative IP configuration or additional features. The TFTP server
     uses the 'ethdev' value for the root directory and doesn't overwrite files.
     </entry>
-    <entry>Yes, for TFTP</entry>
+    <entry>Yes, for TFTP root</entry>
     <entry>Yes, for Slirp config</entry>
     <entry>2.6.5</entry>
   </row>
@@ -8128,6 +8129,11 @@ binary packages (<filename>misc/slirp.conf</filename>).
     (see below for details)</entry>
     <entry>undefined</entry>
   </row>
+  <row>
+    <entry>pktlog</entry>
+    <entry>specify log file to enable packet logging in text format</entry>
+    <entry>disabled</entry>
+  </row>
 </tbody>
 </tgroup>
 </table>
@@ -8159,11 +8165,11 @@ running on the same machine via UDP using an external program called 'bxhub'.
 The 'socket' networking module is now integrated in the Bochs code with these
 extensions:
 <itemizedlist>
-<listitem><para>Integrated 'vnet' server features (ARP, ICMP-echo, DHCP and TFTP)</para></listitem>
+<listitem><para>Integrated 'vnet' server features (ARP, ICMP-echo, DHCP, DNS, FTP and TFTP)</para></listitem>
+<listitem><para>Limited DNS server for 'vnet' and connected clients</para></listitem>
 <listitem><para>Command line options for 'bxhub' added for base UDP port and 'vnet' server features</para></listitem>
 <listitem><para>Support for connects from up to 6 Bochs sessions</para></listitem>
 <listitem><para>Support for connecting 'bxhub' on other machine</para></listitem>
-<listitem><para>Limited DNS server for 'vnet' and connected clients</para></listitem>
 </itemizedlist>
 </para>
 <para>
@@ -8192,7 +8198,7 @@ default values are used:
 <listitem><para>UDP base port 40000</para></listitem>
 <listitem><para>2 client connections</para></listitem>
 <listitem><para>Server MAC address b0:c4:20:00:00:0f</para></listitem>
-<listitem><para>TFTP support disabled</para></listitem>
+<listitem><para>FTP / TFTP support disabled</para></listitem>
 </itemizedlist>
 </para>
 <para>
@@ -8204,11 +8210,21 @@ Supported options:
   -ports=...    number of virtual ethernet ports (2 - 6)
   -base=...     base UDP port (bxhub uses 2 ports per Bochs session)
   -mac=...      host MAC address (default is b0:c4:20:00:00:0f)
-  -tftp=...     enable TFTP support using specified directory
+  -tftp=...     enable FTP and TFTP support using specified directory as root
   -loglev=...   set log level (0 - 3, default 1)
   -logfile=...  send log output to file
   --help        display this help and exit
 </screen>
+</para>
+</section>
+<section><title>The vnet FTP service</title>
+<para>
+The 'vnet' server now provides passive FTP support also using the TFTP directory
+as root. For read only access the user name must be set to <emphasis>anonymous</emphasis>
+with any password. This mode supports browing the directory subtree and downloading
+files. For read/write access, the user must be set to <emphasis>bochs</emphasis>
+with password <emphasis>bochs</emphasis>. This enables support for uploading,
+renaming and deleting files, creating and removing directories.
 </para>
 </section>
 </section>
