@@ -56,7 +56,7 @@ typedef struct ftp_session {
   unsigned data_xfer_pos;
   unsigned cmdcode;
   char *rel_path;
-  char *ren_old_name;
+  char *last_fname;
   char dirlist_tmp[16];
   struct ftp_session *next;
 } ftp_session_t;
@@ -1078,7 +1078,7 @@ void vnet_server_c::tcpipv4_ftp_handler(void *this_ptr, tcp_conn_t *tcp_conn, co
 void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *data, unsigned data_len)
 {
   char *ftpcmd, *cmdstr = NULL, *arg = NULL;
-  char reply[80];
+  char reply[256];
   ftp_session_t *fs;
   const Bit8u *hostip;
   bx_bool pasv_port_ok, path_ok;
@@ -1127,8 +1127,11 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
       } else if (fs->state == FTP_STATE_ASKPASS) {
         if (fs->cmdcode == FTPCMD_PASS) {
           if (!strcmp(arg, "bochs") || fs->anonymous) {
-            sprintf(reply, "230 User %s logged in.", fs->anonymous ? "anonymous":"bochs");
-            ftp_send_reply(tcpc_cmd, reply);
+            if (!fs->anonymous) {
+              ftp_send_reply(tcpc_cmd, "230 User bochs logged in.");
+            } else {
+              ftp_send_reply(tcpc_cmd, "230 Guest login with read-only access.");
+            }
             fs->state = FTP_STATE_READY;
           } else {
             ftp_send_reply(tcpc_cmd, "530 Login incorrect.");
@@ -1260,22 +1263,22 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
             break;
           case FTPCMD_RNFR:
             if (ftp_file_exists(tcpc_cmd, arg, tmp_path, NULL)) {
-              fs->ren_old_name = new char[strlen(tmp_path)+1];
-              strcpy(fs->ren_old_name, tmp_path);
+              fs->last_fname = new char[strlen(tmp_path)+1];
+              strcpy(fs->last_fname, tmp_path);
               ftp_send_reply(tcpc_cmd, "350 File exists. Ready for new name.");
             }
             break;
           case FTPCMD_RNTO:
-            if (fs->ren_old_name != NULL) {
+            if (fs->last_fname != NULL) {
               if (!ftp_file_exists(tcpc_cmd, arg, tmp_path, NULL)) {
-                if (rename(fs->ren_old_name, tmp_path) == 0) {
+                if (rename(fs->last_fname, tmp_path) == 0) {
                   ftp_send_reply(tcpc_cmd, "250 File renamed successfully.");
                 } else {
                   ftp_send_reply(tcpc_cmd, "550 Rename operation failed.");
                 }
               }
-              delete [] fs->ren_old_name;
-              fs->ren_old_name = NULL;
+              delete [] fs->last_fname;
+              fs->last_fname = NULL;
             } else {
               ftp_send_reply(tcpc_cmd, "550 Rename operation not permitted.");
             }
@@ -1287,6 +1290,7 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
             ftp_send_status(tcpc_cmd);
             break;
           case FTPCMD_STOR:
+          case FTPCMD_STOU:
             if (tcpc_data != NULL) {
               ftp_recv_file(tcpc_cmd, tcpc_data, arg);
             }
@@ -1302,9 +1306,6 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
               sprintf(reply, "501 Type %s not supported.", arg);
             }
             ftp_send_reply(tcpc_cmd, reply);
-            break;
-          case FTPCMD_STOU:
-            ftp_send_reply(tcpc_cmd, "502 STOU command not supported yet");
             break;
           case FTPCMD_PORT:
             ftp_send_reply(tcpc_cmd, "502 PORT command not supported by server");
@@ -1337,7 +1338,15 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
       if (fs->data_xfer_fd >= 0) {
         close(fs->data_xfer_fd);
         fs->data_xfer_fd = -1;
-        ftp_send_reply(tcpc_cmd, "226 Transfer complete.");
+        if (fs->last_fname != NULL) {
+          sprintf(reply, "226 Transfer complete (unique file name %s).",
+                  fs->last_fname);
+          ftp_send_reply(tcpc_cmd, reply);
+          delete [] fs->last_fname;
+          fs->last_fname = NULL;
+        } else {
+          ftp_send_reply(tcpc_cmd, "226 Transfer complete.");
+        }
       }
       fs->pasv_port = 0;
       unregister_tcp_handler(tcpc_data->dst_port);
@@ -1371,10 +1380,12 @@ bx_bool vnet_server_c::ftp_file_exists(tcp_conn_t *tcpc_cmd, const char *arg,
   if (size != NULL) {
     *size = 0;
   }
-  if (arg[0] != '/') {
-    sprintf(path, "%s%s/%s", tftp_root, fs->rel_path, arg);
-  } else {
-    sprintf(path, "%s%s", tftp_root, arg);
+  if (arg != NULL) {
+    if (arg[0] != '/') {
+      sprintf(path, "%s%s/%s", tftp_root, fs->rel_path, arg);
+    } else {
+      sprintf(path, "%s%s", tftp_root, arg);
+    }
   }
 #ifdef WIN32
   HANDLE hFile = CreateFile(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, NULL);
@@ -1411,7 +1422,7 @@ bx_bool vnet_server_c::ftp_file_exists(tcp_conn_t *tcpc_cmd, const char *arg,
   }
 #endif
   if (!exists) {
-    if (fs->cmdcode != FTPCMD_RNTO) {
+    if ((fs->cmdcode != FTPCMD_RNTO) && (fs->cmdcode != FTPCMD_STOU)) {
       ftp_send_reply(tcpc_cmd, "550 File not found.");
     }
   } else {
@@ -1692,11 +1703,23 @@ void vnet_server_c::ftp_list_directory(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_da
 void vnet_server_c::ftp_recv_file(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data,
                                   const char *fname)
 {
-  char path[BX_PATHNAME_LEN], reply[80];
+  char path[BX_PATHNAME_LEN], tmp_path[BX_PATHNAME_LEN], *cptr, reply[80];
   ftp_session_t *fs = (ftp_session_t*)tcpc_cmd->data;
   int fd = -1;
+  bx_bool exists;
+  Bit8u n = 1;
 
-  sprintf(path, "%s%s/%s", tftp_root, fs->rel_path, fname);
+  exists = ftp_file_exists(tcpc_cmd, fname, path, NULL);
+  if (exists && (fs->cmdcode == FTPCMD_STOU)) {
+    do {
+      sprintf(tmp_path, "%s.%d", path, n++);
+    } while (ftp_file_exists(tcpc_cmd, NULL, tmp_path, NULL));
+    strcpy(path, tmp_path);
+    cptr = strrchr(path, '/');
+    cptr++;
+    fs->last_fname = new char[strlen(cptr)+1];
+    strcpy(fs->last_fname, cptr);
+  }
   fd = open(path, O_CREAT | O_WRONLY | O_TRUNC
 #ifdef O_BINARY
             | O_BINARY
