@@ -1007,6 +1007,8 @@ enum {
   FTPCMD_CDUP,
   FTPCMD_CWD,
   FTPCMD_DELE,
+  FTPCMD_EPRT,
+  FTPCMD_EPSV,
   FTPCMD_FEAT,
   FTPCMD_LIST,
   FTPCMD_MKD,
@@ -1037,18 +1039,19 @@ typedef struct {
   bx_bool rw;
 } ftp_cmd_t;
 
-#define FTP_N_CMDS 26
+#define FTP_N_CMDS 28
 
 const ftp_cmd_t ftpCmd[FTP_N_CMDS] = {
   {"ABOR", FTPCMD_ABOR, 0}, {"CDUP", FTPCMD_CDUP, 0}, {"CWD", FTPCMD_CWD, 0},
-  {"DELE", FTPCMD_DELE, 1}, {"FEAT", FTPCMD_FEAT, 0}, {"LIST", FTPCMD_LIST, 0},
-  {"MKD",  FTPCMD_MKD, 1},  {"NLST", FTPCMD_NLST, 0}, {"NOOP", FTPCMD_NOOP, 0},
-  {"OPTS", FTPCMD_OPTS, 0}, {"PASS", FTPCMD_PASS, 0}, {"PASV", FTPCMD_PASV, 0},
-  {"PORT", FTPCMD_PORT, 0}, {"PWD", FTPCMD_PWD, 0},   {"QUIT", FTPCMD_QUIT, 0},
-  {"RETR", FTPCMD_RETR, 0}, {"RMD", FTPCMD_RMD, 1},   {"RNFR", FTPCMD_RNFR, 1},
-  {"RNTO", FTPCMD_RNTO, 1}, {"SIZE", FTPCMD_SIZE, 0}, {"STAT", FTPCMD_STAT, 0},
-  {"STOR", FTPCMD_STOR, 1}, {"STOU", FTPCMD_STOU, 1}, {"SYST", FTPCMD_SYST, 0},
-  {"TYPE", FTPCMD_TYPE, 0}, {"USER", FTPCMD_USER, 0}
+  {"DELE", FTPCMD_DELE, 1}, {"EPRT", FTPCMD_EPRT, 0}, {"EPSV", FTPCMD_EPSV, 0},
+  {"FEAT", FTPCMD_FEAT, 0}, {"LIST", FTPCMD_LIST, 0}, {"MKD",  FTPCMD_MKD, 1},
+  {"NLST", FTPCMD_NLST, 0}, {"NOOP", FTPCMD_NOOP, 0}, {"OPTS", FTPCMD_OPTS, 0},
+  {"PASS", FTPCMD_PASS, 0}, {"PASV", FTPCMD_PASV, 0}, {"PORT", FTPCMD_PORT, 0},
+  {"PWD", FTPCMD_PWD, 0},   {"QUIT", FTPCMD_QUIT, 0}, {"RETR", FTPCMD_RETR, 0},
+  {"RMD", FTPCMD_RMD, 1},   {"RNFR", FTPCMD_RNFR, 1}, {"RNTO", FTPCMD_RNTO, 1},
+  {"SIZE", FTPCMD_SIZE, 0}, {"STAT", FTPCMD_STAT, 0}, {"STOR", FTPCMD_STOR, 1},
+  {"STOU", FTPCMD_STOU, 1}, {"SYST", FTPCMD_SYST, 0}, {"TYPE", FTPCMD_TYPE, 0},
+  {"USER", FTPCMD_USER, 0}
   };
 
 unsigned ftp_get_command(const char *cmdstr, bx_bool anonuser)
@@ -1077,7 +1080,7 @@ void vnet_server_c::tcpipv4_ftp_handler(void *this_ptr, tcp_conn_t *tcp_conn, co
 
 void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *data, unsigned data_len)
 {
-  char *ftpcmd, *cmdstr = NULL, *arg = NULL;
+  char *ftpcmd, *cmdstr = NULL, *arg = NULL, *opt = NULL;
   char reply[256];
   ftp_session_t *fs;
   const Bit8u *hostip;
@@ -1110,7 +1113,7 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
       ftpcmd[data_len] = 0;
       cmdstr = strtok(ftpcmd, " \r");
       arg = strtok(NULL, "\r");
-      if (!strcmp(arg, "\n")) arg[0] = 0;
+      if (arg[0] == '\n') arg++;
       fs = (ftp_session_t*)tcpc_cmd->data;
       fs->cmdcode = ftp_get_command(cmdstr, fs->anonymous);
       if (fs->state == FTP_STATE_LOGIN) {
@@ -1192,6 +1195,13 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
           case FTPCMD_LIST:
           case FTPCMD_NLST:
             if (tcpc_data != NULL) {
+              if (arg[0] == '-') {
+                opt = strtok(arg, " \n");
+                arg += (strlen(opt) + 1);
+                if (arg[0] == '\n') arg++;
+              } else {
+                opt = &arg[strlen(arg)];
+              }
               if (strlen(arg) == 0) {
                 strcpy(tmp_path, fs->rel_path);
                 path_ok = 1;
@@ -1199,7 +1209,7 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
                 path_ok = ftp_subdir_exists(tcpc_cmd, arg, tmp_path);
               }
               if (path_ok) {
-                ftp_list_directory(tcpc_cmd, tcpc_data, tmp_path);
+                ftp_list_directory(tcpc_cmd, tcpc_data, opt, tmp_path);
               }
             }
             break;
@@ -1221,16 +1231,23 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
             sprintf(reply, "501 Feature '%s' not supported.", arg);
             ftp_send_reply(tcpc_cmd, reply);
             break;
+          case FTPCMD_EPSV:
           case FTPCMD_PASV:
             do {
               fs->pasv_port = (((rand() & 0x7f) | 0x80) << 8) | (rand() & 0xff);
               pasv_port_ok = register_tcp_handler(fs->pasv_port, tcpipv4_ftp_handler);
             } while (!pasv_port_ok);
-            BX_DEBUG(("Passive FTP mode using port %d", fs->pasv_port));
-            hostip = dhcp->host_ipv4addr;
-            sprintf(reply, "227 Entering passive mode (%d, %d, %d, %d, %d, %d).",
-                    hostip[0], hostip[1], hostip[2], hostip[3], (fs->pasv_port >> 8),
-                    (fs->pasv_port & 0xff));
+            if (fs->cmdcode == FTPCMD_EPSV) {
+              BX_DEBUG(("Extended passive FTP mode using port %d", fs->pasv_port));
+              sprintf(reply, "229 Entering extended passive mode (|||%d|).",
+                      fs->pasv_port);
+            } else {
+              BX_DEBUG(("Passive FTP mode using port %d", fs->pasv_port));
+              hostip = dhcp->host_ipv4addr;
+              sprintf(reply, "227 Entering passive mode (%d, %d, %d, %d, %d, %d).",
+                      hostip[0], hostip[1], hostip[2], hostip[3], (fs->pasv_port >> 8),
+                      (fs->pasv_port & 0xff));
+            }
             ftp_send_reply(tcpc_cmd, reply);
             break;
           case FTPCMD_PWD:
@@ -1307,8 +1324,10 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
             }
             ftp_send_reply(tcpc_cmd, reply);
             break;
+          case FTPCMD_EPRT:
           case FTPCMD_PORT:
-            ftp_send_reply(tcpc_cmd, "502 PORT command not supported by server");
+            sprintf(reply, "502 %s command not supported by server", cmdstr);
+            ftp_send_reply(tcpc_cmd, reply);
             break;
           case FTPCMD_NOPERM:
             sprintf(reply, "550 %s operation not permitted.", cmdstr);
@@ -1576,14 +1595,14 @@ void vnet_server_c::ftp_send_data(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data)
 }
 
 void vnet_server_c::ftp_list_directory(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data,
-                                       const char *subdir)
+                                       const char *options, const char *subdir)
 {
   ftp_session_t *fs;
   char abspath[BX_PATHNAME_LEN], reply[80];
   char linebuf[BX_PATHNAME_LEN], tmptime[20];
   unsigned size = 0;
   int fd = -1;
-  bx_bool nlst;
+  bx_bool nlst, hidden = 0;
 #ifndef WIN32
   DIR *dir;
   struct dirent *dent;
@@ -1594,6 +1613,11 @@ void vnet_server_c::ftp_list_directory(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_da
 
   fs = (ftp_session_t*)tcpc_cmd->data;
   nlst = (fs->cmdcode == FTPCMD_NLST);
+  if (nlst) {
+    hidden = 1;
+  } else {
+    hidden = (strchr(options, 'a') != NULL);
+  }
   sprintf(reply, "150 Opening %s mode connection for file list.",
           fs->ascii_mode ? "ASCII":"BINARY");
   ftp_send_reply(tcpc_cmd, reply);
@@ -1620,7 +1644,8 @@ void vnet_server_c::ftp_list_directory(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_da
     if (dir != NULL) {
       while ((dent=readdir(dir)) != NULL) {
         linebuf[0] = 0;
-        if (strcmp(dent->d_name, ".") && strcmp(dent->d_name, "..") && (dent->d_name[0] != '.' )) {
+        if (strcmp(dent->d_name, ".") && strcmp(dent->d_name, "..") &&
+            (hidden || (dent->d_name[0] != '.' ))) {
           sprintf(path, "%s/%s", abspath, dent->d_name);
           if (!nlst) {
             if (stat(path, &st) >= 0) {

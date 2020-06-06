@@ -290,7 +290,7 @@ private:
                           const char *path, unsigned data_len);
   void ftp_send_data(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data);
   void ftp_list_directory(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data,
-                          const char *subdir);
+                          const char *options, const char *subdir);
   void ftp_recv_file(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data, const char *fname);
   void ftp_send_file(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data, const char *arg);
   void ftp_get_filesize(tcp_conn_t *tcp_conn, const char *arg);
