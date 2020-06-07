@@ -3,6 +3,7 @@ Changes after 2.6.11:
 
 - General
   - Save/Restore bugfixes
+  - Removed legacy "load32bitOShack" feature.
 
 - CPU/CPUDB
   - Bugfixes for CPU emulation correctness (CPUID/VMX initialization fixes to support Windows Hyper-V as guest in Bochs)

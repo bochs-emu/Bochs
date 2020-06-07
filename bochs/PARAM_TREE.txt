@@ -151,11 +151,6 @@ boot_params
   boot_drive2
   boot_drive3
   floppy_sig_check
-  load32bitos
-    which
-    path
-    iolog
-    initrd
 
 floppy
   0
