@@ -2640,12 +2640,12 @@ int vnet_server_c::udpipv4_dns_handler_ns(const Bit8u *ipheader,
     unsigned ipheader_len, unsigned sourceport, unsigned targetport,
     const Bit8u *data, unsigned data_len, Bit8u *reply)
 {
-  char host[256];
+  char host[256], suffix[16];
   Bit8u len1, p1, p2;
   Bit8u ipaddr[4];
-  Bit16u val16[6];
+  Bit16u val16[6], qtype, qclass;
   bx_bool host_found = 0;
-  int i, rlen = 0;
+  int i, n, rlen = 0, tmpval[4];
 
   for (i = 0; i < 6; i++) {
     val16[i] = get_net2(&data[i * 2]);
@@ -2664,18 +2664,50 @@ int vnet_server_c::udpipv4_dns_handler_ns(const Bit8u *ipheader,
     p1 += (len1 + 1);
   };
   host[p2] = 0;
-  if ((get_net2(&data[p1 + 1]) != 0x0001) || (get_net2(&data[p1 + 3]) != 0x0001))
-    return 0;
-  if (!stricmp(host, "vnet")) {
-    host_found = 1;
-    memcpy(&ipaddr, dhcp->host_ipv4addr, 4);
+  qtype = get_net2(&data[p1 + 1]);
+  qclass = get_net2(&data[p1 + 3]);
+  if (((qtype != 1) && (qtype != 12)) || (qclass != 1)) {
+    memcpy(reply, data, data_len);
+    put_net2(&reply[2], 0x8181);
+    return data_len;
+  }
+  if (qtype == 12) {
+    n = sscanf(host, "%d.%d.%d.%d.%s", &tmpval[3], &tmpval[2], &tmpval[1], &tmpval[0], suffix);
+    if ((n == 5) && (!strcmp(suffix, "in-addr.arpa"))) {
+      for (i = 0; i < 4; i++) {
+        ipaddr[i] = (Bit8u)tmpval[i];
+      }
+      if (!memcmp(&ipaddr, dhcp->host_ipv4addr, 4)) {
+        host_found = 1;
+        strcpy(host, "vnet");
+      } else {
+        for (i = 0; i < VNET_MAX_CLIENTS; i++) {
+          if (client[i].init) {
+            if (!memcmp(&ipaddr, client[i].ipv4addr, 4)) {
+              host_found = 1;
+              strcpy(host, client[i].hostname);
+              break;
+            }
+          }
+        }
+      }
+    } else {
+      memcpy(reply, data, data_len);
+      put_net2(&reply[2], 0x8181);
+      return data_len;
+    }
   } else {
-    for (i = 0; i < VNET_MAX_CLIENTS; i++) {
-      if (client[i].init) {
-        if (!stricmp(host, client[i].hostname)) {
-          host_found = 1;
-          memcpy(&ipaddr, client[i].ipv4addr, 4);
-          break;
+    if (!stricmp(host, "vnet")) {
+      host_found = 1;
+      memcpy(&ipaddr, dhcp->host_ipv4addr, 4);
+    } else {
+      for (i = 0; i < VNET_MAX_CLIENTS; i++) {
+        if (client[i].init) {
+          if (!stricmp(host, client[i].hostname)) {
+            host_found = 1;
+            memcpy(&ipaddr, client[i].ipv4addr, 4);
+            break;
+          }
         }
       }
     }
@@ -2686,12 +2718,21 @@ int vnet_server_c::udpipv4_dns_handler_ns(const Bit8u *ipheader,
     put_net2(&reply[6], 0x0001);
     reply[data_len] = 0xc0;
     reply[data_len + 1] = 12;
-    put_net2(&reply[data_len + 2], 0x0001);
-    put_net2(&reply[data_len + 4], 0x0001);
+    put_net2(&reply[data_len + 2], qtype);
+    put_net2(&reply[data_len + 4], qclass);
     put_net4(&reply[data_len + 6], 86400);
-    put_net2(&reply[data_len + 10], 4);
-    memcpy(&reply[data_len + 12], ipaddr, 4);
-    rlen = data_len + 16;
+    if (qtype == 12) {
+      len1 = strlen(host);
+      put_net2(&reply[data_len + 10], len1 + 2);
+      reply[data_len + 12] = len1;
+      memcpy(&reply[data_len + 13], host, len1);
+      reply[data_len + len1 + 13] = 0;
+      rlen = data_len + len1 + 14;
+    } else {
+      put_net2(&reply[data_len + 10], 4);
+      memcpy(&reply[data_len + 12], ipaddr, 4);
+      rlen = data_len + 16;
+    }
   } else {
     BX_ERROR(("DNS: unknown host '%s'", host));
     memcpy(reply, data, data_len);
