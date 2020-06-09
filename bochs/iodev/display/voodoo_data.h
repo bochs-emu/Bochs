@@ -1837,11 +1837,11 @@ extern bx_thread_event_t fifo_not_full;
 
 /* fifo content defines */
 #define FIFO_TYPES  (7 << 29)
-#define FIFO_WR_REG     (1 << 29)
-#define FIFO_WR_TEX     (2 << 29)
-#define FIFO_WR_FBI_32  (3 << 29)
-#define FIFO_WR_FBI_16L (4 << 29)
-#define FIFO_WR_FBI_16H (5 << 29)
+#define FIFO_WR_REG     (1U << 29)
+#define FIFO_WR_TEX     (2U << 29)
+#define FIFO_WR_FBI_32  (3U << 29)
+#define FIFO_WR_FBI_16L (4U << 29)
+#define FIFO_WR_FBI_16H (5U << 29)
 
 BX_CPP_INLINE void fifo_reset(fifo_state *f)
 {
