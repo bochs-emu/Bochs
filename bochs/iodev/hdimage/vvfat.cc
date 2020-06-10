@@ -6,7 +6,7 @@
 // ported from QEMU block driver with some additions (see below)
 //
 // Copyright (c) 2004,2005  Johannes E. Schindelin
-// Copyright (C) 2010-2018  The Bochs Project
+// Copyright (C) 2010-2020  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -418,7 +418,7 @@ void vvfat_image_t::init_mbr(void)
   real_mbr->magic[1] = 0xaa;
 }
 
-// dest is assumed to hold 258 bytes, and pads with 0xffff up to next multiple of 26
+// dest is assumed to hold 260 bytes, and pads with 0xffff up to next multiple of 26
 static inline int short2long_name(char* dest,const char* src)
 {
   int i;
@@ -437,7 +437,7 @@ static inline int short2long_name(char* dest,const char* src)
 
 direntry_t* vvfat_image_t::create_long_filename(const char* filename)
 {
-  char buffer[258];
+  char buffer[260];
   int length = short2long_name(buffer, filename),
       number_of_entries = (length+25) / 26, i;
   direntry_t* entry;
