@@ -493,7 +493,7 @@ int bxwrap(void)
 }
 
 #ifdef WIN32
-char* bxtext;
+extern "C" char* bxtext;
 #endif
 
 void bxerror(const char *s)
