@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2018  The Bochs Project
+//  Copyright (C) 2001-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -164,53 +164,61 @@ private:
 
   // the MPU 401 relevant variables
   struct bx_sb16_mpu_struct {
-    bx_sb16_buffer datain, dataout, cmd, midicmd;
-    bx_bool uartmode, irqpending, forceuartmode, singlecommand;
+    struct {
+      bx_sb16_buffer datain, dataout, cmd, midicmd;
+    } b;
+    struct {
+      bx_bool uartmode, irqpending, forceuartmode, singlecommand;
 
-    int banklsb[16];
-    int bankmsb[16];   // current patch lists
-    int program[16];
+      int banklsb[16];
+      int bankmsb[16];   // current patch lists
+      int program[16];
 
-    int timer_handle, current_timer;           // no. of delta times passed
-    Bit32u last_delta_time;                    // timer value at last command
-    Bit8u outputinit;
+      int timer_handle, current_timer;           // no. of delta times passed
+      Bit32u last_delta_time;                    // timer value at last command
+      Bit8u outputinit;
+    } d;
   } mpu401;
 
   // the DSP variables
   struct bx_sb16_dsp_struct {
-    bx_sb16_buffer datain, dataout;
-    Bit8u resetport;                    // last value written to the reset port
-    Bit8u speaker,prostereo;            // properties of the sound input/output
-    bx_bool irqpending;                 // Is an IRQ pending (not ack'd)
-    bx_bool midiuartmode;               // Is the DSP in MIDI UART mode
-    bx_bool nondma_mode;                // Set if DSP command 0x10 active
-    Bit32u nondma_count;                // Number of samples sent in non-DMA mode
-    Bit8u samplebyte;                   // Current data byte in non-DMA mode
-    Bit8u testreg;
-    struct bx_sb16_dsp_dma_struct {
-      // Properties of the current DMA transfer:
-      // mode= 0: no transfer, 1: single-cycle transfer, 2: auto-init DMA
-      // bits= 8 or 16
-      // fifo= ??  Bit used in DMA command, no idea what it means...
-      // output= 0: input, 1: output
-      // bps= bytes per sample; =(dmabits/8)*(dmastereo+1)
-      // stereo= 0: mono, 1: stereo
-      // issigned= 0: unsigned data, 1: signed data
-      // highspeed= 0: normal mode, 1: highspeed mode (only SBPro)
-      // timer= so many us between data bytes
-      int mode, bps, timer;
-      bx_bool fifo, output, highspeed;
-      bx_pcm_param_t param;
-      Bit16u count;     // bytes remaining in this transfer
-      Bit8u *chunk;     // buffers up to BX_SOUNDLOW_WAVEPACKETSIZE bytes
-      int chunkindex;   // index into the buffer
-      int chunkcount;   // for input: size of the recorded input
-      Bit16u timeconstant;
-      Bit16u blocklength;
-    } dma;
-    int timer_handle;   // handle for the DMA timer
-    Bit8u outputinit; // have the lowlevel output been initialized
-    bx_bool inputinit;  // have the lowlevel input been initialized
+    struct {
+      bx_sb16_buffer datain, dataout;
+    } b;
+    struct {
+      Bit8u resetport;                    // last value written to the reset port
+      Bit8u speaker,prostereo;            // properties of the sound input/output
+      bx_bool irqpending;                 // Is an IRQ pending (not ack'd)
+      bx_bool midiuartmode;               // Is the DSP in MIDI UART mode
+      bx_bool nondma_mode;                // Set if DSP command 0x10 active
+      Bit32u nondma_count;                // Number of samples sent in non-DMA mode
+      Bit8u samplebyte;                   // Current data byte in non-DMA mode
+      Bit8u testreg;
+      struct bx_sb16_dsp_dma_struct {
+        // Properties of the current DMA transfer:
+        // mode= 0: no transfer, 1: single-cycle transfer, 2: auto-init DMA
+        // bits= 8 or 16
+        // fifo= ??  Bit used in DMA command, no idea what it means...
+        // output= 0: input, 1: output
+        // bps= bytes per sample; =(dmabits/8)*(dmastereo+1)
+        // stereo= 0: mono, 1: stereo
+        // issigned= 0: unsigned data, 1: signed data
+        // highspeed= 0: normal mode, 1: highspeed mode (only SBPro)
+        // timer= so many us between data bytes
+        int mode, bps, timer;
+        bx_bool fifo, output, highspeed;
+        bx_pcm_param_t param;
+        Bit16u count;     // bytes remaining in this transfer
+        Bit8u *chunk;     // buffers up to BX_SOUNDLOW_WAVEPACKETSIZE bytes
+        int chunkindex;   // index into the buffer
+        int chunkcount;   // for input: size of the recorded input
+        Bit16u timeconstant;
+        Bit16u blocklength;
+      } dma;
+      int timer_handle;   // handle for the DMA timer
+      Bit8u outputinit; // have the lowlevel output been initialized
+      bx_bool inputinit;  // have the lowlevel input been initialized
+    } d;
   } dsp;
 
   // the ASP/CSP registers
@@ -270,7 +278,8 @@ private:
   BX_SB16_SMF void   dsp_enabledma();		     // enable the transfer
   BX_SB16_SMF void   dsp_disabledma();		     // temporarily disable DMA
   BX_SB16_SMF void   dsp_disable_nondma();	     // disable DSP direct mode
-  static void   dsp_dmatimer(void *);
+  static void dsp_dmatimer_handler(void *);
+  void dsp_dmatimer(void);
   static Bit32u sb16_adc_handler(void *, Bit32u len);
   Bit32u dsp_adc_handler(Bit32u len);
 
