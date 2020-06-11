@@ -231,11 +231,12 @@ void vnet_server_c::init(bx_devmodel_c *_netdev, dhcp_cfg_t *dhcpc, const char *
   }
 }
 
-void vnet_server_c::init_client(Bit8u clientid, const Bit8u *macaddr, const Bit8u *default_ipv4addr)
+void vnet_server_c::init_client(Bit8u clientid, const Bit8u *macaddr)
 {
   if (clientid < VNET_MAX_CLIENTS) {
     client[clientid].macaddr = macaddr;
-    client[clientid].default_ipv4addr = default_ipv4addr;
+    memcpy(client[clientid].default_ipv4addr, dhcp->client_base_ipv4addr, 4);
+    client[clientid].default_ipv4addr[3] += clientid;
     memset(client[clientid].ipv4addr, 0, 4);
     client[clientid].hostname = new char[256];
     client[clientid].hostname[0] = 0;
@@ -494,7 +495,8 @@ void vnet_server_c::host_to_guest_ipv4(const Bit8u clientid, bx_bool dns_srv, Bi
 
   iphdr->version = 4;
   l3header_len = (iphdr->header_len << 2);
-  iphdr->id = htons(++packet_counter);
+  iphdr->id = htons(packet_counter);
+  packet_counter++;
   if (dns_srv) {
     memcpy(iphdr->src_addr, dhcp->dns_ipv4addr, 4);
   } else {
@@ -906,7 +908,8 @@ void vnet_server_c::tcpipv4_send_fin(tcp_conn_t *tcp_conn, bx_bool host_fin)
   memset(replybuf, 0, MIN_RX_PACKET_LEN);
   tcphdr->flags.fin = 1;
   tcphdr->flags.ack = 1;
-  tcphdr->seq_num = htonl(tcp_conn->host_seq_num++);
+  tcphdr->seq_num = htonl(tcp_conn->host_seq_num);
+  tcp_conn->host_seq_num++;
   tcphdr->ack_num = htonl(tcp_conn->guest_seq_num);
   tcphdr->window = htons(tcp_conn->window);
   tcp_conn->state = TCP_DISCONNECTING;
@@ -1645,7 +1648,7 @@ void vnet_server_c::ftp_list_directory(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_da
       while ((dent=readdir(dir)) != NULL) {
         linebuf[0] = 0;
         if (strcmp(dent->d_name, ".") && strcmp(dent->d_name, "..") &&
-            (hidden || (dent->d_name[0] != '.' ))) {
+            (hidden || (dent->d_name[0] != '.'))) {
           sprintf(path, "%s/%s", abspath, dent->d_name);
           if (!nlst) {
             if (stat(path, &st) >= 0) {
@@ -1687,7 +1690,8 @@ void vnet_server_c::ftp_list_directory(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_da
     if (hFind != INVALID_HANDLE_VALUE) {
       do {
         linebuf[0] = 0;
-        if (strcmp(finddata.cFileName, ".") && strcmp(finddata.cFileName, "..")) {
+        if (strcmp(finddata.cFileName, ".") && strcmp(finddata.cFileName, "..") &&
+            (hidden || (finddata.cFileName[0] != '.'))) {
           if (!nlst) {
             FileTimeToSystemTime(&finddata.ftLastWriteTime, &gmtsystime);
             GetTimeZoneInformation(&tzi);

@@ -160,6 +160,7 @@ typedef struct {
   Bit8u host_macaddr[6];
   Bit8u host_ipv4addr[4];
   Bit8u dns_ipv4addr[4];
+  Bit8u client_base_ipv4addr[4];
 } dhcp_cfg_t;
 
 // vnet functions shared with bxhub
@@ -233,7 +234,7 @@ public:
   virtual ~vnet_server_c();
 
   void init(bx_devmodel_c *netdev, dhcp_cfg_t *dhcpc, const char *tftp_rootdir);
-  void init_client(Bit8u clientid, const Bit8u *macaddr, const Bit8u *default_ipv4addr);
+  void init_client(Bit8u clientid, const Bit8u *macaddr);
   void handle_packet(const Bit8u *buf, unsigned len);
   unsigned get_packet(Bit8u *buf);
 #ifdef BXHUB
@@ -254,7 +255,6 @@ private:
   void bx_printf(const char *fmt, ...);
 #endif
   bx_bool find_client(const Bit8u *mac_addr, Bit8u *clientid);
-  bx_bool find_client2(const Bit8u *ipv4addr, Bit8u *clientid);
 
   void host_to_guest(Bit8u clientid, Bit8u *buf, unsigned len, unsigned l3type);
 
@@ -330,7 +330,7 @@ private:
   struct {
     bx_bool init;
     const Bit8u *macaddr;
-    const Bit8u *default_ipv4addr;
+    Bit8u default_ipv4addr[4];
     Bit8u ipv4addr[4];
     char *hostname;
   } client[VNET_MAX_CLIENTS];

@@ -86,6 +86,7 @@ typedef struct {
 const Bit8u default_host_macaddr[6] = {0xb0, 0xc4, 0x20, 0x00, 0x00, 0x0f};
 const Bit8u default_host_ipv4addr[4] = {10, 0, 2, 2};
 const Bit8u default_dns_ipv4addr[4] = {10, 0, 2, 3};
+const Bit8u dhcp_base_ipv4addr[4] = {10, 0, 2, 15};
 
 static Bit16u port_base = 40000;
 static char tftp_root[BX_PATHNAME_LEN];
@@ -93,7 +94,6 @@ static Bit8u host_macaddr[6];
 static int client_max;
 static Bit8u n_clients;
 static hub_client_t hclient[BXHUB_MAX_CLIENTS];
-static Bit8u default_guest_ipv4addr[4] = {10, 0, 2, 15};
 static dhcp_cfg_t dhcp;
 static vnet_server_c vnet_server;
 int bx_loglev;
@@ -112,9 +112,7 @@ bx_bool handle_packet(hub_client_t *client, Bit8u *buf, unsigned len)
       client->sout.sin_addr.s_addr = client->sin.sin_addr.s_addr;
       client->id = n_clients++;
       memcpy(client->macaddr, ethhdr->src_mac_addr, 6);
-      memcpy(client->default_ipv4addr, default_guest_ipv4addr, 4);
-      client->default_ipv4addr[3] += client->id;
-      vnet_server.init_client(client->id, client->macaddr, client->default_ipv4addr);
+      vnet_server.init_client(client->id, client->macaddr);
       client->reply_buffer = new Bit8u[BX_PACKET_BUFSIZE];
       client->init = 1;
     }
@@ -315,6 +313,7 @@ int CDECL main(int argc, char **argv)
   memcpy(dhcp.host_macaddr, host_macaddr, ETHERNET_MAC_ADDR_LEN);
   memcpy(dhcp.host_ipv4addr, &default_host_ipv4addr[0], 4);
   memcpy(dhcp.dns_ipv4addr, &default_dns_ipv4addr, 4);
+  memcpy(dhcp.client_base_ipv4addr, &dhcp_base_ipv4addr, 4);
   vnet_server.init(NULL, &dhcp, tftp_root);
   printf("Host MAC address: %02x:%02x:%02x:%02x:%02x:%02x\n",
          host_macaddr[0], host_macaddr[1], host_macaddr[2],
