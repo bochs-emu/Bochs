@@ -1735,7 +1735,7 @@ if test "$networking" = yes; then
     ;;
     *)
     AC_CHECK_HEADER(net/if.h, [
-        use_ethertap=yes
+        use_vde=yes
         AC_DEFINE(BX_HAVE_NET_IF_H, 1)
       ], [],
       [
@@ -1743,17 +1743,16 @@ if test "$networking" = yes; then
       #include <sys/socket.h>
     ])
     AC_CHECK_HEADER(linux/netlink.h, [
-        use_ethertap=yes
+        use_vde=yes
       ], [],
       [
       #include <asm/types.h>
       #include <sys/socket.h>
     ])
 
-    if test "$use_ethertap" = yes; then
-      NETLOW_OBJS="$NETLOW_OBJS eth_tap.o eth_vde.o"
-      ethernet_modules="$ethernet_modules tap vde"
-      AC_DEFINE(BX_NETMOD_TAP, 1)
+    if test "$use_vde" = yes; then
+      NETLOW_OBJS="$NETLOW_OBJS eth_vde.o"
+      ethernet_modules="$ethernet_modules vde"
       AC_DEFINE(BX_NETMOD_VDE, 1)
     fi
 
@@ -2768,7 +2767,6 @@ case "$target" in
     AC_DEFINE(BX_HAVE_GETTIMEOFDAY, 0)
     AC_DEFINE(BX_NO_ATTRIBUTES, 1)
     AC_DEFINE(BX_NETMOD_TUNTAP, 0)
-    AC_DEFINE(BX_NETMOD_TAP, 0)
     ;;
   *-pc-windows*)
     INSTALL_TARGET='install_win32'
@@ -2824,7 +2822,6 @@ case "$target" in
     AC_DEFINE(HAVE_READLINE_HISTORY_H, 0)
     READLINE_LIB="";
     AC_DEFINE(BX_HAVE_DLFCN_H, 0)
-    AC_DEFINE(BX_NETMOD_TAP, 0)
     ;;
   *-cygwin*)
     EXE=".exe"
