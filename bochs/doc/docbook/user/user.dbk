@@ -8220,10 +8220,11 @@ Supported options:
 <section><title>The vnet FTP service</title>
 <para>
 The 'vnet' server now provides passive FTP support also using the TFTP directory
-as root. For read only access the user name must be set to <emphasis>anonymous</emphasis>
-with any password. This mode supports browing the directory subtree and downloading
-files. For read/write access, the user must be set to <emphasis>bochs</emphasis>
-with password <emphasis>bochs</emphasis>. This enables support for uploading,
+as root. The FTP server name is <emphasis>vnet-ftp</emphasis>. For read only access
+the user name must be set to <emphasis>anonymous</emphasis> with any password.
+This mode supports browing the directory subtree and downloading files. For
+read/write access, the user must be set to <emphasis>bochs</emphasis> with
+password <emphasis>bochs</emphasis>. This enables support for uploading,
 renaming and deleting files, creating and removing directories.
 </para>
 </section>

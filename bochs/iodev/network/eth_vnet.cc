@@ -28,6 +28,7 @@
 // Virtual host name:     vnet
 // Virtual server IP:     192.168.10.1
 // Virtual DNS server IP: 192.168.10.2
+// Virtual FTP server IP: 192.168.10.3
 // Guest IP:              192.168.10.15
 // Guest netmask:         255.255.255.0
 // Guest broadcast:       192.168.10.255
@@ -72,6 +73,7 @@ void CDECL libvnet_net_plugin_fini(void)
 
 static const Bit8u default_host_ipv4addr[4] = {192,168,10,1};
 static const Bit8u default_dns_ipv4addr[4] = {192,168,10,2};
+static const Bit8u default_ftp_ipv4addr[4] = {192,168,10,3};
 static const Bit8u dhcp_base_ipv4addr[4] = {192,168,10,15};
 
 static Bit8u    packet_buffer[BX_PACKET_BUFSIZE];
@@ -146,8 +148,9 @@ void bx_vnet_pktmover_c::pktmover_init(
   memcpy(&dhcp.host_macaddr[0], macaddr, 6);
   dhcp.host_macaddr[5] ^= 0x03;
 
-  memcpy(dhcp.host_ipv4addr, default_host_ipv4addr, 4);
-  memcpy(dhcp.dns_ipv4addr, default_dns_ipv4addr, 4);
+  memcpy(dhcp.srv_ipv4addr[VNET_SRV], default_host_ipv4addr, 4);
+  memcpy(dhcp.srv_ipv4addr[VNET_DNS], default_dns_ipv4addr, 4);
+  memcpy(dhcp.srv_ipv4addr[VNET_MISC], default_ftp_ipv4addr, 4);
   memcpy(dhcp.client_base_ipv4addr, dhcp_base_ipv4addr, 4);
   vnet_server.init(dev, &dhcp, netif);
   vnet_server.init_client(0, (Bit8u*)macaddr);

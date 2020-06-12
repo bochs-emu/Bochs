@@ -86,6 +86,7 @@ typedef struct {
 const Bit8u default_host_macaddr[6] = {0xb0, 0xc4, 0x20, 0x00, 0x00, 0x0f};
 const Bit8u default_host_ipv4addr[4] = {10, 0, 2, 2};
 const Bit8u default_dns_ipv4addr[4] = {10, 0, 2, 3};
+const Bit8u default_ftp_ipv4addr[4] = {10, 0, 2, 4};
 const Bit8u dhcp_base_ipv4addr[4] = {10, 0, 2, 15};
 
 static Bit16u port_base = 40000;
@@ -311,8 +312,9 @@ int CDECL main(int argc, char **argv)
   }
 
   memcpy(dhcp.host_macaddr, host_macaddr, ETHERNET_MAC_ADDR_LEN);
-  memcpy(dhcp.host_ipv4addr, &default_host_ipv4addr[0], 4);
-  memcpy(dhcp.dns_ipv4addr, &default_dns_ipv4addr, 4);
+  memcpy(dhcp.srv_ipv4addr[VNET_SRV], default_host_ipv4addr, 4);
+  memcpy(dhcp.srv_ipv4addr[VNET_DNS], default_dns_ipv4addr, 4);
+  memcpy(dhcp.srv_ipv4addr[VNET_MISC], default_ftp_ipv4addr, 4);
   memcpy(dhcp.client_base_ipv4addr, &dhcp_base_ipv4addr, 4);
   vnet_server.init(NULL, &dhcp, tftp_root);
   printf("Host MAC address: %02x:%02x:%02x:%02x:%02x:%02x\n",

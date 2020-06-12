@@ -219,7 +219,7 @@ void vnet_server_c::init(bx_devmodel_c *_netdev, dhcp_cfg_t *dhcpc, const char *
 {
   netdev = _netdev;
   dhcp = dhcpc;
-  memcpy(broadcast_ipv4addr[2], dhcp->host_ipv4addr, 3);
+  memcpy(broadcast_ipv4addr[2], dhcp->srv_ipv4addr[VNET_SRV], 3);
   tftp_root = tftp_rootdir;
 
   register_layer4_handler(0x11, INET_PORT_BOOTP_SERVER, udpipv4_dhcp_handler);
@@ -327,7 +327,11 @@ void vnet_server_c::host_to_guest(Bit8u clientid, Bit8u *buf, unsigned len, unsi
     len = MIN_RX_PACKET_LEN;
   }
   ethernet_header_t *ethrhdr = (ethernet_header_t *)buf;
-  memcpy(ethrhdr->dst_mac_addr, client[clientid].macaddr, ETHERNET_MAC_ADDR_LEN);
+  if (clientid != 0xff) {
+    memcpy(ethrhdr->dst_mac_addr, client[clientid].macaddr, ETHERNET_MAC_ADDR_LEN);
+  } else {
+    memcpy(ethrhdr->dst_mac_addr, broadcast_macaddr, ETHERNET_MAC_ADDR_LEN);
+  }
   memcpy(ethrhdr->src_mac_addr, dhcp->host_macaddr, ETHERNET_MAC_ADDR_LEN);
   ethrhdr->type = htons(l3type);
 
@@ -376,8 +380,9 @@ void vnet_server_c::process_arp(Bit8u clientid, const Bit8u *buf, unsigned len)
     case ARP_OPCODE_REQUEST:
       if (!memcmp(&buf[22], client[clientid].macaddr, 6)) {
         memcpy(client[clientid].ipv4addr, &buf[28], 4);
-        if (!memcmp(&buf[38], dhcp->host_ipv4addr, 4) ||
-            !memcmp(&buf[38], dhcp->dns_ipv4addr, 4)) {
+        if (!memcmp(&buf[38], dhcp->srv_ipv4addr[VNET_SRV], 4) ||
+            !memcmp(&buf[38], dhcp->srv_ipv4addr[VNET_DNS], 4) ||
+            !memcmp(&buf[38], dhcp->srv_ipv4addr[VNET_MISC], 4)) {
           memset(replybuf, 0, MIN_RX_PACKET_LEN);
           memcpy(arprhdr, &buf[14], 6);
           put_net2((Bit8u*)&arprhdr->opcode, ARP_OPCODE_REPLY);
@@ -416,8 +421,7 @@ void vnet_server_c::process_ipv4(Bit8u clientid, const Bit8u *buf, unsigned len)
   unsigned l3header_len;
   const Bit8u *l4pkt;
   unsigned l4pkt_len;
-  Bit8u srv_ipv4addr[4];
-  bx_bool dns_service = 0;
+  Bit8u srv_id = VNET_SRV;
 
   if (len < (14U+20U)) {
     BX_ERROR(("ip packet - too small packet"));
@@ -442,14 +446,14 @@ void vnet_server_c::process_ipv4(Bit8u clientid, const Bit8u *buf, unsigned len)
 
   total_len = ntohs(iphdr->total_len);
 
-  if (!memcmp(&iphdr->dst_addr, dhcp->dns_ipv4addr, 4)) {
-    memcpy(srv_ipv4addr, dhcp->dns_ipv4addr, 4);
-    dns_service = 1;
-  } else {
-    memcpy(srv_ipv4addr, dhcp->host_ipv4addr, 4);
+  if (!memcmp(&iphdr->dst_addr, dhcp->srv_ipv4addr[VNET_DNS], 4)) {
+    srv_id = VNET_DNS;
+  } else if (!memcmp(&iphdr->dst_addr, dhcp->srv_ipv4addr[VNET_MISC], 4)) {
+    srv_id = VNET_MISC;
   }
 
-  if (memcmp(&iphdr->dst_addr, dhcp->host_ipv4addr, 4) && !dns_service &&
+  if (memcmp(&iphdr->dst_addr, dhcp->srv_ipv4addr[VNET_SRV], 4) &&
+      (srv_id != VNET_DNS) && (srv_id != VNET_MISC) &&
       memcmp(&iphdr->dst_addr, broadcast_ipv4addr[0], 4) &&
       memcmp(&iphdr->dst_addr, broadcast_ipv4addr[1], 4) &&
       memcmp(&iphdr->dst_addr, broadcast_ipv4addr[2], 4))
@@ -473,13 +477,13 @@ void vnet_server_c::process_ipv4(Bit8u clientid, const Bit8u *buf, unsigned len)
 
   switch (iphdr->protocol) {
     case 0x01: // ICMP
-      process_icmpipv4(clientid, &buf[14], l3header_len, l4pkt, l4pkt_len);
+      process_icmpipv4(clientid, srv_id, &buf[14], l3header_len, l4pkt, l4pkt_len);
       break;
     case 0x06: // TCP
-      process_tcpipv4(clientid, &buf[14], l3header_len, l4pkt, l4pkt_len);
+      process_tcpipv4(clientid, srv_id, &buf[14], l3header_len, l4pkt, l4pkt_len);
       break;
     case 0x11: // UDP
-      process_udpipv4(clientid, &buf[14], l3header_len, l4pkt, l4pkt_len);
+      process_udpipv4(clientid, srv_id, &buf[14], l3header_len, l4pkt, l4pkt_len);
       break;
     default:
       BX_ERROR(("unknown IP protocol %02x", iphdr->protocol));
@@ -487,7 +491,7 @@ void vnet_server_c::process_ipv4(Bit8u clientid, const Bit8u *buf, unsigned len)
   }
 }
 
-void vnet_server_c::host_to_guest_ipv4(const Bit8u clientid, bx_bool dns_srv, Bit8u *buf, unsigned len)
+void vnet_server_c::host_to_guest_ipv4(Bit8u clientid, Bit8u srv_id, Bit8u *buf, unsigned len)
 {
   unsigned l3header_len;
   ip_header_t *iphdr = (ip_header_t *)((Bit8u *)buf +
@@ -497,11 +501,7 @@ void vnet_server_c::host_to_guest_ipv4(const Bit8u clientid, bx_bool dns_srv, Bi
   l3header_len = (iphdr->header_len << 2);
   iphdr->id = htons(packet_counter);
   packet_counter++;
-  if (dns_srv) {
-    memcpy(iphdr->src_addr, dhcp->dns_ipv4addr, 4);
-  } else {
-    memcpy(iphdr->src_addr, dhcp->host_ipv4addr, 4);
-  }
+  memcpy(iphdr->src_addr, dhcp->srv_ipv4addr[srv_id], 4);
   memcpy(iphdr->dst_addr, client[clientid].ipv4addr, 4);
   iphdr->checksum = 0;
   iphdr->checksum = htons(ip_checksum((Bit8u*)iphdr, l3header_len) ^ (Bit16u)0xffff);
@@ -513,9 +513,9 @@ void vnet_server_c::host_to_guest_ipv4(const Bit8u clientid, bx_bool dns_srv, Bi
 // ICMP/IPv4
 /////////////////////////////////////////////////////////////////////////
 
-void vnet_server_c::process_icmpipv4(Bit8u clientid, const Bit8u *ipheader,
-                                     unsigned ipheader_len, const Bit8u *l4pkt,
-                                     unsigned l4pkt_len)
+void vnet_server_c::process_icmpipv4(Bit8u clientid, Bit8u srv_id,
+                                     const Bit8u *ipheader, unsigned ipheader_len,
+                                     const Bit8u *l4pkt, unsigned l4pkt_len)
 {
   unsigned icmptype;
   unsigned icmpcode;
@@ -541,7 +541,7 @@ void vnet_server_c::process_icmpipv4(Bit8u clientid, const Bit8u *ipheader,
         put_net2(&replybuf[14+ipheader_len+2],0);
         put_net2(&replybuf[14+ipheader_len+2],
           ip_checksum(&replybuf[14+ipheader_len],l4pkt_len) ^ (Bit16u)0xffff);
-        host_to_guest_ipv4(clientid, 0, replybuf, 14U+ipheader_len+l4pkt_len);
+        host_to_guest_ipv4(clientid, srv_id, replybuf, 14U+ipheader_len+l4pkt_len);
       }
       break;
     default:
@@ -666,9 +666,9 @@ void tcp_remove_connection(tcp_conn_t *tc)
   delete tc;
 }
 
-void vnet_server_c::process_tcpipv4(Bit8u clientid, const Bit8u *ipheader,
-                                    unsigned ipheader_len, const Bit8u *l4pkt,
-                                    unsigned l4pkt_len)
+void vnet_server_c::process_tcpipv4(Bit8u clientid, Bit8u srv_id,
+                                    const Bit8u *ipheader, unsigned ipheader_len,
+                                    const Bit8u *l4pkt, unsigned l4pkt_len)
 {
   unsigned tcphdr_len, tcpdata_len, tcprhdr_len;
   Bit32u tcp_seq_num, tcp_ack_num;
@@ -721,7 +721,7 @@ void vnet_server_c::process_tcpipv4(Bit8u clientid, const Bit8u *ipheader,
   func = get_tcp_handler(tcp_dst_port);
   tcp_conn = tcp_find_connection(clientid, tcp_src_port, tcp_dst_port);
   tcprhdr_len = sizeof(tcp_header_t);
-  if (func != (tcp_handler_t)NULL) {
+  if ((srv_id == VNET_MISC) && (func != (tcp_handler_t)NULL)) {
     if (tcp_conn == (tcp_conn_t*)NULL) {
       if (tcphdr->flags.syn) {
         tcprhdr->flags.syn = 1;
@@ -805,13 +805,13 @@ void vnet_server_c::process_tcpipv4(Bit8u clientid, const Bit8u *ipheader,
     tcprhdr->window = 0;
     BX_ERROR(("tcp - port %u unhandled or in use", tcp_dst_port));
   }
-  host_to_guest_tcpipv4(clientid, tcp_dst_port, tcp_src_port, replybuf, 0,
+  host_to_guest_tcpipv4(clientid, srv_id, tcp_dst_port, tcp_src_port, replybuf, 0,
                         tcprhdr_len);
 }
 
-void vnet_server_c::host_to_guest_tcpipv4(Bit8u clientid, Bit16u src_port,
-                                          Bit16u dst_port, Bit8u *data,
-                                          unsigned data_len, unsigned hdr_len)
+void vnet_server_c::host_to_guest_tcpipv4(Bit8u clientid, Bit8u srv_id,
+                                          Bit16u src_port,Bit16u dst_port,
+                                          Bit8u *data, unsigned data_len, unsigned hdr_len)
 {
   tcp_header_t *tcphdr = (tcp_header_t *)&data[34];
 
@@ -819,7 +819,7 @@ void vnet_server_c::host_to_guest_tcpipv4(Bit8u clientid, Bit16u src_port,
   data[34U-12U]=0;
   data[34U-11U]=0x06; // TCP
   put_net2(&data[34U-10U], hdr_len+data_len);
-  memcpy(&data[34U-8U], dhcp->host_ipv4addr, 4);
+  memcpy(&data[34U-8U], dhcp->srv_ipv4addr[srv_id], 4);
   memcpy(&data[34U-4U], client[clientid].ipv4addr, 4);
   // tcp header
   tcphdr->src_port = htons(src_port);
@@ -838,7 +838,7 @@ void vnet_server_c::host_to_guest_tcpipv4(Bit8u clientid, Bit16u src_port,
   data[14U+8] = 0x07; // TTL
   data[14U+9] = 0x06; // TCP
 
-  host_to_guest_ipv4(clientid, 0, data, data_len + hdr_len + 34U);
+  host_to_guest_ipv4(clientid, srv_id, data, data_len + hdr_len + 34U);
 }
 
 unsigned vnet_server_c::tcpipv4_send_data(tcp_conn_t *tcp_conn, const Bit8u *data,
@@ -872,8 +872,8 @@ unsigned vnet_server_c::tcpipv4_send_data(tcp_conn_t *tcp_conn, const Bit8u *dat
       if (sendsize > 0) {
         memcpy(tcp_data, data + pos, sendsize);
       }
-      host_to_guest_tcpipv4(tcp_conn->clientid, tcp_conn->dst_port, tcp_conn->src_port,
-                            sendbuf, sendsize, tcphdr_len);
+      host_to_guest_tcpipv4(tcp_conn->clientid, VNET_MISC, tcp_conn->dst_port,
+                            tcp_conn->src_port, sendbuf, sendsize, tcphdr_len);
       tcp_conn->host_seq_num += sendsize;
       pos += sendsize;
     } while (pos < data_len);
@@ -895,8 +895,8 @@ void vnet_server_c::tcpipv4_send_ack(tcp_conn_t *tcp_conn, unsigned data_len)
   tcp_conn->guest_seq_num += data_len;
   tcphdr->ack_num = htonl(tcp_conn->guest_seq_num);
   tcphdr->window = htons(tcp_conn->window);
-  host_to_guest_tcpipv4(tcp_conn->clientid, tcp_conn->dst_port, tcp_conn->src_port,
-                        replybuf, 0, tcphdr_len);
+  host_to_guest_tcpipv4(tcp_conn->clientid, VNET_MISC, tcp_conn->dst_port,
+                        tcp_conn->src_port, replybuf, 0, tcphdr_len);
 }
 
 void vnet_server_c::tcpipv4_send_fin(tcp_conn_t *tcp_conn, bx_bool host_fin)
@@ -914,8 +914,8 @@ void vnet_server_c::tcpipv4_send_fin(tcp_conn_t *tcp_conn, bx_bool host_fin)
   tcphdr->window = htons(tcp_conn->window);
   tcp_conn->state = TCP_DISCONNECTING;
   tcp_conn->host_port_fin = host_fin;
-  host_to_guest_tcpipv4(tcp_conn->clientid, tcp_conn->dst_port, tcp_conn->src_port,
-                        replybuf, 0, tcphdr_len);
+  host_to_guest_tcpipv4(tcp_conn->clientid, VNET_MISC, tcp_conn->dst_port,
+                        tcp_conn->src_port, replybuf, 0, tcphdr_len);
 }
 
 // FTP support
@@ -1246,7 +1246,7 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
                       fs->pasv_port);
             } else {
               BX_DEBUG(("Passive FTP mode using port %d", fs->pasv_port));
-              hostip = dhcp->host_ipv4addr;
+              hostip = dhcp->srv_ipv4addr[VNET_MISC];
               sprintf(reply, "227 Entering passive mode (%d, %d, %d, %d, %d, %d).",
                       hostip[0], hostip[1], hostip[2], hostip[3], (fs->pasv_port >> 8),
                       (fs->pasv_port & 0xff));
@@ -1861,9 +1861,9 @@ bx_bool vnet_server_c::unregister_layer4_handler(
 // UDP/IPv4
 /////////////////////////////////////////////////////////////////////////
 
-void vnet_server_c::process_udpipv4(Bit8u clientid, const Bit8u *ipheader,
-                                   unsigned ipheader_len, const Bit8u *l4pkt,
-                                   unsigned l4pkt_len)
+void vnet_server_c::process_udpipv4(Bit8u clientid, Bit8u srv_id,
+                                    const Bit8u *ipheader, unsigned ipheader_len,
+                                    const Bit8u *l4pkt, unsigned l4pkt_len)
 {
   unsigned udp_dst_port;
   unsigned udp_src_port;
@@ -1877,9 +1877,7 @@ void vnet_server_c::process_udpipv4(Bit8u clientid, const Bit8u *ipheader,
   udp_src_port = ntohs(udphdr->src_port);
   udp_dst_port = ntohs(udphdr->dst_port);
 //  udp_len = ntohs(udphdr->length);
-  ip_header_t *iphdr = (ip_header_t *)ipheader;
-  bx_bool dns_srv = !memcmp(&iphdr->dst_addr, dhcp->dns_ipv4addr, 4);
-  if (dns_srv != (udp_dst_port ==INET_PORT_DOMAIN))
+  if ((srv_id == VNET_DNS) != (udp_dst_port ==INET_PORT_DOMAIN))
     return;
 
   func = get_layer4_handler(0x11, udp_dst_port);
@@ -1898,11 +1896,7 @@ void vnet_server_c::process_udpipv4(Bit8u clientid, const Bit8u *ipheader,
     replybuf[34U-12U] = 0;
     replybuf[34U-11U] = 0x11; // UDP
     put_net2(&replybuf[34U-10U], 8U+udp_len);
-    if (dns_srv) {
-      memcpy(&replybuf[34U-8U], dhcp->dns_ipv4addr, 4);
-    } else {
-      memcpy(&replybuf[34U-8U], dhcp->host_ipv4addr, 4);
-    }
+    memcpy(&replybuf[34U-8U], dhcp->srv_ipv4addr[srv_id], 4);
     memcpy(&replybuf[34U-4U], client[clientid].ipv4addr, 4);
     // udp header
     put_net2(&replybuf[34U+0], udp_dst_port);
@@ -1921,7 +1915,7 @@ void vnet_server_c::process_udpipv4(Bit8u clientid, const Bit8u *ipheader,
     replybuf[14U+8] = 0x07; // TTL
     replybuf[14U+9] = 0x11; // UDP
 
-    host_to_guest_ipv4(clientid, dns_srv, replybuf, udp_len + 42U);
+    host_to_guest_ipv4(clientid, srv_id, replybuf, udp_len + 42U);
   }
 }
 
@@ -2009,7 +2003,7 @@ int vnet_server_c::udpipv4_dhcp_handler_ns(const Bit8u *ipheader,
     case BOOTPOPT_SERVER_IDENTIFIER:
       if (extlen != 4)
         break;
-      if (memcmp(extdata, dhcp->host_ipv4addr, 4)) {
+      if (memcmp(extdata, dhcp->srv_ipv4addr[VNET_SRV], 4)) {
         BX_INFO(("dhcp: request to another server"));
         return 0;
       }
@@ -2062,7 +2056,7 @@ int vnet_server_c::udpipv4_dhcp_handler_ns(const Bit8u *ipheader,
   replybuf[2] = 6;
   memcpy(&replybuf[4],&data[4],4);
   memcpy(&replybuf[16], client[clientid].default_ipv4addr, 4);
-  memcpy(&replybuf[20], dhcp->host_ipv4addr, 4);
+  memcpy(&replybuf[20], dhcp->srv_ipv4addr[VNET_SRV], 4);
   memcpy(&replybuf[28],&data[28],6);
   memcpy(&replybuf[44],"vnet",4);
   memcpy(&replybuf[108],"pxelinux.0",10);
@@ -2145,22 +2139,20 @@ int vnet_server_c::udpipv4_dhcp_handler_ns(const Bit8u *ipheader,
         opts_len -= 6;
         *replyopts ++ = BOOTPOPT_ROUTER_OPTION;
         *replyopts ++ = 4;
-        memcpy(replyopts, dhcp->host_ipv4addr, 4);
+        memcpy(replyopts, dhcp->srv_ipv4addr[VNET_SRV], 4);
         replyopts += 4;
         break;
       case BOOTPOPT_DOMAIN_NAMESERVER:
-        if (dhcp->dns_ipv4addr[0] != 0) {
-          BX_DEBUG(("provide BOOTPOPT_DOMAIN_NAMESERVER"));
-          if (opts_len < 6) {
-            BX_ERROR(("option buffer is insufficient"));
-            return 0;
-          }
-          opts_len -= 6;
-          *replyopts ++ = BOOTPOPT_DOMAIN_NAMESERVER;
-          *replyopts ++ = 4;
-          memcpy(replyopts, dhcp->dns_ipv4addr, 4);
-          replyopts += 4;
+        BX_DEBUG(("provide BOOTPOPT_DOMAIN_NAMESERVER"));
+        if (opts_len < 6) {
+          BX_ERROR(("option buffer is insufficient"));
+          return 0;
         }
+        opts_len -= 6;
+        *replyopts ++ = BOOTPOPT_DOMAIN_NAMESERVER;
+        *replyopts ++ = 4;
+        memcpy(replyopts, dhcp->srv_ipv4addr[VNET_DNS], 4);
+        replyopts += 4;
         break;
       case BOOTPOPT_BROADCAST_ADDRESS:
         BX_DEBUG(("provide BOOTPOPT_BROADCAST_ADDRESS"));
@@ -2171,7 +2163,7 @@ int vnet_server_c::udpipv4_dhcp_handler_ns(const Bit8u *ipheader,
         opts_len -= 6;
         *replyopts ++ = BOOTPOPT_BROADCAST_ADDRESS;
         *replyopts ++ = 4;
-        memcpy(replyopts, dhcp->host_ipv4addr, 3);
+        memcpy(replyopts, dhcp->srv_ipv4addr[VNET_SRV], 3);
         replyopts += 3;
         *replyopts ++ = 0xff;
         break;
@@ -2200,7 +2192,7 @@ int vnet_server_c::udpipv4_dhcp_handler_ns(const Bit8u *ipheader,
         opts_len -= 6;
         *replyopts ++ = BOOTPOPT_SERVER_IDENTIFIER;
         *replyopts ++ = 4;
-        memcpy(replyopts, dhcp->host_ipv4addr,4);
+        memcpy(replyopts, dhcp->srv_ipv4addr[VNET_SRV], 4);
         replyopts += 4;
         break;
       case BOOTPOPT_RENEWAL_TIME:
@@ -2681,9 +2673,15 @@ int vnet_server_c::udpipv4_dns_handler_ns(const Bit8u *ipheader,
       for (i = 0; i < 4; i++) {
         ipaddr[i] = (Bit8u)tmpval[i];
       }
-      if (!memcmp(&ipaddr, dhcp->host_ipv4addr, 4)) {
+      if (!memcmp(&ipaddr, dhcp->srv_ipv4addr[VNET_SRV], 4)) {
         host_found = 1;
         strcpy(host, "vnet");
+      } else if (!memcmp(&ipaddr, dhcp->srv_ipv4addr[VNET_DNS], 4)) {
+        host_found = 1;
+        strcpy(host, "vnet-dns");
+      } else if (!memcmp(&ipaddr, dhcp->srv_ipv4addr[VNET_MISC], 4)) {
+        host_found = 1;
+        strcpy(host, "vnet-ftp");
       } else {
         for (i = 0; i < VNET_MAX_CLIENTS; i++) {
           if (client[i].init) {
@@ -2703,7 +2701,13 @@ int vnet_server_c::udpipv4_dns_handler_ns(const Bit8u *ipheader,
   } else {
     if (!stricmp(host, "vnet")) {
       host_found = 1;
-      memcpy(&ipaddr, dhcp->host_ipv4addr, 4);
+      memcpy(&ipaddr, dhcp->srv_ipv4addr[VNET_SRV], 4);
+    } else if (!stricmp(host, "vnet-dns")) {
+      host_found = 1;
+      memcpy(&ipaddr, dhcp->srv_ipv4addr[VNET_DNS], 4);
+    } else if (!stricmp(host, "vnet-ftp")) {
+      host_found = 1;
+      memcpy(&ipaddr, dhcp->srv_ipv4addr[VNET_MISC], 4);
     } else {
       for (i = 0; i < VNET_MAX_CLIENTS; i++) {
         if (client[i].init) {

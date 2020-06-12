@@ -155,11 +155,15 @@ tcp_header_t;
 #pragma options align=reset
 #endif
 
+// VNET service IDs
+#define VNET_SRV  0
+#define VNET_DNS  1
+#define VNET_MISC 2
+
 // DHCP configuration structure
 typedef struct {
   Bit8u host_macaddr[6];
-  Bit8u host_ipv4addr[4];
-  Bit8u dns_ipv4addr[4];
+  Bit8u srv_ipv4addr[3][4];
   Bit8u client_base_ipv4addr[4];
 } dhcp_cfg_t;
 
@@ -261,17 +265,18 @@ private:
   void process_arp(Bit8u clientid, const Bit8u *buf, unsigned len);
 
   void process_ipv4(Bit8u clientid, const Bit8u *buf, unsigned len);
-  void host_to_guest_ipv4(Bit8u clientid, bx_bool dns_srv, Bit8u *buf, unsigned len);
+  void host_to_guest_ipv4(Bit8u clientid, Bit8u srv_id, Bit8u *buf, unsigned len);
 
-  void process_icmpipv4(Bit8u clientid, const Bit8u *ipheader, unsigned ipheader_len,
-                        const Bit8u *l4pkt, unsigned l4pkt_len);
-  void process_tcpipv4(Bit8u clientid, const Bit8u *ipheader, unsigned ipheader_len,
-                       const Bit8u *l4pkt, unsigned l4pkt_len);
-  void process_udpipv4(Bit8u clientid, const Bit8u *ipheader, unsigned ipheader_len,
-                       const Bit8u *l4pkt, unsigned l4pkt_len);
+  void process_icmpipv4(Bit8u clientid, Bit8u srv_id, const Bit8u *ipheader,
+                        unsigned ipheader_len, const Bit8u *l4pkt, unsigned l4pkt_len);
+  void process_tcpipv4(Bit8u clientid, Bit8u srv_id, const Bit8u *ipheader,
+                       unsigned ipheader_len, const Bit8u *l4pkt, unsigned l4pkt_len);
+  void process_udpipv4(Bit8u clientid, Bit8u srv_id, const Bit8u *ipheader,
+                       unsigned ipheader_len, const Bit8u *l4pkt, unsigned l4pkt_len);
 
-  void host_to_guest_tcpipv4(Bit8u clientid, Bit16u src_port, Bit16u dst_port,
-                             Bit8u *data, unsigned data_len, unsigned hdr_len);
+  void host_to_guest_tcpipv4(Bit8u clientid, Bit8u srv_id, Bit16u src_port,
+                             Bit16u dst_port, Bit8u *data, unsigned data_len,
+                             unsigned hdr_len);
   unsigned tcpipv4_send_data(tcp_conn_t *tcp_conn, const Bit8u *data,
                              unsigned data_len, bx_bool push);
   void tcpipv4_send_ack(tcp_conn_t *tcp_conn, unsigned data_len);
