@@ -92,6 +92,7 @@ Bit16u ip_checksum(const Bit8u *buf, unsigned buf_len)
 
 #define ETHERNET_TYPE_IPV4 0x0800
 #define ETHERNET_TYPE_ARP  0x0806
+#define ETHERNET_TYPE_IPV6 0x86dd
 
 #define ARP_OPCODE_REQUEST     1
 #define ARP_OPCODE_REPLY       2
@@ -174,6 +175,8 @@ Bit16u ip_checksum(const Bit8u *buf, unsigned buf_len)
 #define TFTP_DEFAULT_TIMEOUT   5
 
 #define TFTP_BUFFER_SIZE 1024
+
+static const Bit8u mcast_ipv6_mac_prefix[2] = {0x33,0x33};
 
 static Bit8u broadcast_ipv4addr[3][4] =
 {
@@ -284,13 +287,17 @@ void vnet_server_c::handle_packet(const Bit8u *buf, unsigned len)
     if (!find_client(ethhdr->src_mac_addr, &clientid))
       return;
     if (!memcmp(&ethhdr->dst_mac_addr, dhcp->host_macaddr, 6) ||
-        !memcmp(&ethhdr->dst_mac_addr, &broadcast_macaddr[0], 6)) {
+        !memcmp(&ethhdr->dst_mac_addr, broadcast_macaddr, 6) ||
+        !memcmp(&ethhdr->dst_mac_addr, mcast_ipv6_mac_prefix, 2)) {
       switch (ntohs(ethhdr->type)) {
         case ETHERNET_TYPE_IPV4: 
           process_ipv4(clientid, buf, len);
           break;
         case ETHERNET_TYPE_ARP:
           process_arp(clientid, buf, len);
+          break;
+        case ETHERNET_TYPE_IPV6: 
+          BX_ERROR(("IPv6 packet not supported yet"));
           break;
         default: // unknown packet type.
           break;

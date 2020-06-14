@@ -725,6 +725,7 @@ void slirp_input(Slirp *slirp, const uint8_t *pkt, int pkt_len)
         arp_input(slirp, pkt, pkt_len);
         break;
     case ETH_P_IP:
+    case ETH_P_IPV6:
         m = m_get(slirp);
         if (!m)
             return;
@@ -738,7 +739,11 @@ void slirp_input(Slirp *slirp, const uint8_t *pkt, int pkt_len)
         m->m_data += 2 + ETH_HLEN;
         m->m_len -= 2 + ETH_HLEN;
 
-        ip_input(m);
+        if (proto = ETH_P_IP) {
+          ip_input(m);
+        } else {
+          BX_ERROR(("IPv6 packet not supported yet"));
+        }
         break;
     default:
         break;
