@@ -2737,7 +2737,7 @@ int vnet_server_c::udpipv4_dns_handler_ns(const Bit8u *ipheader,
     put_net2(&reply[data_len + 4], qclass);
     put_net4(&reply[data_len + 6], 86400);
     if (qtype == 12) {
-      len1 = strlen(host);
+      len1 = (Bit8u)strlen(host);
       put_net2(&reply[data_len + 10], len1 + 2);
       reply[data_len + 12] = len1;
       memcpy(&reply[data_len + 13], host, len1);

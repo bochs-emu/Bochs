@@ -739,7 +739,7 @@ void slirp_input(Slirp *slirp, const uint8_t *pkt, int pkt_len)
         m->m_data += 2 + ETH_HLEN;
         m->m_len -= 2 + ETH_HLEN;
 
-        if (proto = ETH_P_IP) {
+        if (proto == ETH_P_IP) {
           ip_input(m);
         } else {
           BX_ERROR(("IPv6 packet not supported yet"));
