@@ -195,6 +195,7 @@ vnet_server_c::vnet_server_c()
   logfd = stderr;
 #endif
   l4data_used = 0;
+  tcpfn_used = 0;
 
   for (Bit8u c = 0; c < VNET_MAX_CLIENTS; c++) {
     client[c].init = 0;
