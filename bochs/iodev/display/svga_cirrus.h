@@ -5,7 +5,7 @@
 //  Copyright (c) 2004 Makoto Suzuki (suzu)
 //                     Volker Ruppert (vruppert)
 //                     Robin Kay (komadori)
-//  Copyright (C) 2004-2017  The Bochs Project
+//  Copyright (C) 2004-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -217,6 +217,7 @@ private:
     Bit8u bltmodeext;
     Bit8u bltrop;
     Bit8u *dst;
+    Bit32u dstaddr;
     const Bit8u *src;
     Bit32u srcaddr;
 #if BX_USE_CIRRUS_SMF

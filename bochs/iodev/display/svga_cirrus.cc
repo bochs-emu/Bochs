@@ -2413,6 +2413,7 @@ void bx_svga_cirrus_c::svga_bitblt()
   tmp32 = ReadHostDWordFromLittleEndian((Bit32u*) &cregs[0x2c]);
   srcaddr = tmp32 & BX_CIRRUS_THIS memsize_mask;
   BX_CIRRUS_THIS bitblt.srcaddr = srcaddr;
+  BX_CIRRUS_THIS bitblt.dstaddr = dstaddr;
   BX_CIRRUS_THIS bitblt.bltmode = BX_CIRRUS_THIS control.reg[0x30];
   BX_CIRRUS_THIS bitblt.bltmodeext = BX_CIRRUS_THIS control.reg[0x33];
   BX_CIRRUS_THIS bitblt.bltrop = BX_CIRRUS_THIS control.reg[0x32];
@@ -2469,7 +2470,6 @@ void bx_svga_cirrus_c::svga_bitblt()
     BX_CIRRUS_THIS bitblt.dst = BX_CIRRUS_THIS s.memory + dstaddr;
     svga_solidfill();
   } else {
-
     if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_BACKWARDS) {
       BX_CIRRUS_THIS bitblt.dstpitch = -BX_CIRRUS_THIS bitblt.dstpitch;
       BX_CIRRUS_THIS bitblt.srcpitch = -BX_CIRRUS_THIS bitblt.srcpitch;
@@ -2778,8 +2778,8 @@ void bx_svga_cirrus_c::svga_patterncopy()
 {
   Bit8u color[4];
   Bit8u work_colorexp[256];
-  Bit8u *src, *dst;
-  Bit8u *dstc, *srcc, *src2;
+  Bit8u *src, *dst, dstaddr;
+  Bit8u *srcc, *src2;
   int x, y, pattern_x, pattern_y, srcskipleft;
   int patternbytes = 8 * BX_CIRRUS_THIS bitblt.pixelwidth;
   int pattern_pitch = patternbytes;
@@ -2807,7 +2807,7 @@ void bx_svga_cirrus_c::svga_patterncopy()
 
       pattern_y = BX_CIRRUS_THIS bitblt.srcaddr & 0x07;
       for (y = 0; y < BX_CIRRUS_THIS bitblt.bltheight; y++) {
-        dst = BX_CIRRUS_THIS bitblt.dst + pattern_x;
+        dstaddr = (BX_CIRRUS_THIS bitblt.dstaddr + pattern_x) & BX_CIRRUS_THIS memsize_mask;
         bitmask = 0x80 >> srcskipleft;
         bits = BX_CIRRUS_THIS bitblt.src[pattern_y] ^ bits_xor;
         for (x = pattern_x; x < BX_CIRRUS_THIS bitblt.bltwidth; x+=BX_CIRRUS_THIS bitblt.pixelwidth) {
@@ -2815,15 +2815,16 @@ void bx_svga_cirrus_c::svga_patterncopy()
             bitmask = 0x80;
             bits = BX_CIRRUS_THIS bitblt.src[pattern_y] ^ bits_xor;
           }
+          dst = BX_CIRRUS_THIS s.memory + dstaddr;
           if (bits & bitmask) {
             (*BX_CIRRUS_THIS bitblt.rop_handler)(
               dst, &color[0], 0, 0, BX_CIRRUS_THIS bitblt.pixelwidth, 1);
           }
-          dst += BX_CIRRUS_THIS bitblt.pixelwidth;
+          dstaddr = (dstaddr + BX_CIRRUS_THIS bitblt.pixelwidth) & BX_CIRRUS_THIS memsize_mask;
           bitmask >>= 1;
         }
         pattern_y = (pattern_y + 1) & 7;
-        BX_CIRRUS_THIS bitblt.dst += BX_CIRRUS_THIS bitblt.dstpitch;
+        BX_CIRRUS_THIS bitblt.dstaddr += BX_CIRRUS_THIS bitblt.dstpitch;
       }
       return;
     } else {
@@ -2842,20 +2843,20 @@ void bx_svga_cirrus_c::svga_patterncopy()
   }
 
   BX_DEBUG(("svga_cirrus: PATTERN COPY"));
-  dst = BX_CIRRUS_THIS bitblt.dst;
   pattern_y = BX_CIRRUS_THIS bitblt.srcaddr & 0x07;
   src = (Bit8u *)BX_CIRRUS_THIS bitblt.src;
   for (y = 0; y < BX_CIRRUS_THIS bitblt.bltheight; y++) {
     srcc = src + pattern_y * pattern_pitch;
-    dstc = dst + pattern_x;
+    dstaddr = (BX_CIRRUS_THIS bitblt.dstaddr + pattern_x) & BX_CIRRUS_THIS memsize_mask;
     for (x = pattern_x; x < bltbytes; x += BX_CIRRUS_THIS bitblt.pixelwidth) {
       src2 = srcc + (x % patternbytes);
+      dst = BX_CIRRUS_THIS s.memory + dstaddr;
       (*BX_CIRRUS_THIS bitblt.rop_handler)(
-        dstc, src2, 0, 0, BX_CIRRUS_THIS bitblt.pixelwidth, 1);
-      dstc += BX_CIRRUS_THIS bitblt.pixelwidth;
+        dst, src2, 0, 0, BX_CIRRUS_THIS bitblt.pixelwidth, 1);
+      dstaddr = (dstaddr + BX_CIRRUS_THIS bitblt.pixelwidth) & BX_CIRRUS_THIS memsize_mask;
     }
     pattern_y = (pattern_y + 1) & 7;
-    dst += BX_CIRRUS_THIS bitblt.dstpitch;
+    BX_CIRRUS_THIS bitblt.dstaddr += BX_CIRRUS_THIS bitblt.dstpitch;
   }
 }
 
