@@ -389,6 +389,8 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
       fflush(pktlog_txt);
     }
     free(pktlog_fn);
+  } else {
+    slirp_logging = 0;
   }
   bx_slirp_instances++;
 }
