@@ -6,7 +6,7 @@
 // ported from QEMU block driver with some additions (see vvfat.cc)
 //
 // Copyright (c) 2004,2005  Johannes E. Schindelin
-// Copyright (C) 2010-2012  The Bochs Project
+// Copyright (C) 2010-2020  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -53,8 +53,7 @@ typedef
   __declspec(align(1))
 #endif
   struct direntry_t {
-    Bit8u name[8];
-    Bit8u extension[3];
+    Bit8u name[8 + 3];
     Bit8u attributes;
     Bit8u reserved[2];
     Bit16u ctime;

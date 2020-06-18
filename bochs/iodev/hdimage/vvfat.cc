@@ -473,13 +473,11 @@ static void set_begin_of_direntry(direntry_t* direntry, Bit32u begin)
 
 static inline Bit8u fat_chksum(const direntry_t* entry)
 {
-  Bit8u chksum = 0;
+  Bit8u c, chksum = 0;
   int i;
 
   for (i = 0; i < 11; i++) {
-    unsigned char c;
-
-    c = (i < 8) ? entry->name[i] : entry->extension[i-8];
+    c = entry->name[i];
     chksum = (((chksum & 0xfe) >> 1) | ((chksum & 0x01) ? 0x80:0)) + c;
   }
 
@@ -567,7 +565,7 @@ direntry_t* vvfat_image_t::create_short_and_long_name(
 
   if (j > 0)
     for (i = 0; i < 3 && tempfn[j+1+i]; i++)
-      entry->extension[i] = tempfn[j+1+i];
+      entry->name[i + 8] = tempfn[j+1+i];
 
   // upcase & remove unwanted characters
   for (i=10;i>=0;i--) {
@@ -942,8 +940,7 @@ int vvfat_image_t::init_directories(const char* dirname)
     entry->attributes = 0x28; // archive | volume label
     entry->mdate = 0x3d81; // 01.12.2010
     entry->mtime = 0x6000; // 12:00:00
-    memcpy(entry->name, "BOCHS VV", 8);
-    memcpy(entry->extension, "FAT", 3);
+    memcpy(entry->name, "BOCHS VVFAT", 11);
   }
 
   // Now build FAT, and write back information into directory
@@ -1406,8 +1403,8 @@ direntry_t* vvfat_image_t::read_direntry(Bit8u *buffer, char *filename)
           memcpy(filename, entry->name, 8);
           i = 7;
           while ((i > 0) && (filename[i] == ' ')) filename[i--] = 0;
-          if (entry->extension[0] != ' ') strcat(filename, ".");
-          memcpy(filename+i+2, entry->extension, 3);
+          if (entry->name[8] != ' ') strcat(filename, ".");
+          memcpy(filename+i+2, entry->name + 8, 3);
           i = strlen(filename) - 1;
           while (filename[i] == ' ') filename[i--] = 0;
           for (i = 0; i < (int)strlen(filename); i++) {
