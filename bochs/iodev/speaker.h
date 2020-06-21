@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003       David N. Welton <davidw@dedasys.com>.
-//  Copyright (C) 2003-2018  The Bochs Project
+//  Copyright (C) 2003-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -62,6 +62,8 @@ private:
   bx_soundlow_waveout_c *waveout;
   int beep_callback_id;
   bx_bool beep_active;
+  Bit16s beep_level;
+  Bit8u beep_volume;
 #if BX_HAVE_REALTIME_USEC
   bx_bool dsp_active;
   Bit64u dsp_start_usec;
