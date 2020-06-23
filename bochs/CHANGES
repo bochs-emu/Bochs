@@ -30,6 +30,8 @@ Changes after 2.6.11:
 - GUI and display libraries
     - X11 keymaps: added new one for Swiss-German and improved Italian map.
 
+- LGPL'd VGABIOS updated from SVN (fixed text output in VGA graphics modes).
+
 -------------------------------------------------------------------------
 Changes in 2.6.11 (January 5, 2020):
 
