@@ -145,14 +145,15 @@ static struct _rfbUpdateRegion {
 #define BX_RFB_DEF_XDIM 720
 #define BX_RFB_DEF_YDIM 480
 
-const unsigned char status_led_green = 0x38;
-const unsigned char status_gray_text = 0xa4;
-const unsigned char status_led_red = 0x07;
+static unsigned char status_led_green = 0x38;
+static unsigned char status_gray_text = 0xa4;
+static unsigned char status_led_red = 0x07;
 const unsigned char headerbar_bg = 0xff;
 const unsigned char headerbar_fg = 0x00;
 
 static char *rfbScreen;
 static char rfbPalette[256];
+static bx_bool rfbBGR233Format;
 
 static unsigned rfbWindowX, rfbWindowY;
 static unsigned rfbDimensionX, rfbDimensionY;
@@ -201,6 +202,9 @@ DWORD WINAPI rfbShowIPSthread(LPVOID);
 
 static const rfbPixelFormat BGR233Format = {
     8, 8, 1, 1, 7, 7, 3, 0, 3, 6
+};
+static const rfbPixelFormat RGB332Format = {
+    8, 8, 0, 1, 7, 7, 3, 5, 2, 0
 };
 
 // VNCViewer code to be replaced
@@ -453,7 +457,11 @@ int bx_rfb_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 
 bx_bool bx_rfb_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green, Bit8u blue)
 {
-  rfbPalette[index] = (((red * 7 + 127) / 255) << 0) | (((green * 7 + 127) / 255) << 3) | (((blue * 3 + 127) / 255) << 6);
+  if (rfbBGR233Format) {
+    rfbPalette[index] = (((red * 7 + 127) / 255) << 0) | (((green * 7 + 127) / 255) << 3) | (((blue * 3 + 127) / 255) << 6);
+  } else {
+    rfbPalette[index] = (((red * 7 + 127) / 255) << 5) | (((green * 7 + 127) / 255) << 2) | (((blue * 3 + 127) / 255) << 0);
+  }
   return 1;
 }
 
@@ -1349,7 +1357,13 @@ void HandleRfbClient(SOCKET sClient)
           spf.pixelFormat.greenMax = ntohs(spf.pixelFormat.greenMax);
           spf.pixelFormat.blueMax = ntohs(spf.pixelFormat.blueMax);
 
-          if (!PF_EQ(spf.pixelFormat, BGR233Format)) {
+          rfbBGR233Format = 1;
+          if (PF_EQ(spf.pixelFormat, RGB332Format)) {
+            rfbBGR233Format = 0;
+            status_led_green = 0x1c;
+            status_gray_text = 0x92;
+            status_led_red = 0xe0;
+          } else if (!PF_EQ(spf.pixelFormat, BGR233Format)) {
             BX_ERROR(("client has wrong pixel format (%d %d %d %d %d %d %d %d %d %d)",
                       spf.pixelFormat.bitsPerPixel,spf.pixelFormat.depth,spf.pixelFormat.bigEndianFlag,
                       spf.pixelFormat.trueColourFlag,spf.pixelFormat.redMax,spf.pixelFormat.greenMax,
