@@ -75,7 +75,6 @@ bx_vga_c::~bx_vga_c()
 bx_bool bx_vga_c::init_vga_extension(void)
 {
   unsigned addr;
-  Bit16u max_xres, max_yres, max_bpp;
   bx_bool ret = 0;
 
   BX_VGA_THIS init_iohandlers(read_handler, write_handler);
@@ -116,22 +115,9 @@ bx_bool bx_vga_c::init_vga_extension(void)
     BX_VGA_THIS vbe.bpp_multiplier=1;
     BX_VGA_THIS vbe.virtual_start=0;
     BX_VGA_THIS vbe.get_capabilities=0;
-    bx_gui->get_capabilities(&max_xres, &max_yres, &max_bpp);
-    if (max_xres > VBE_DISPI_MAX_XRES) {
-      BX_VGA_THIS vbe.max_xres=VBE_DISPI_MAX_XRES;
-    } else {
-      BX_VGA_THIS vbe.max_xres=max_xres;
-    }
-    if (max_yres > VBE_DISPI_MAX_YRES) {
-      BX_VGA_THIS vbe.max_yres=VBE_DISPI_MAX_YRES;
-    } else {
-      BX_VGA_THIS vbe.max_yres=max_yres;
-    }
-    if (max_bpp > VBE_DISPI_MAX_BPP) {
-      BX_VGA_THIS vbe.max_bpp=VBE_DISPI_MAX_BPP;
-    } else {
-      BX_VGA_THIS vbe.max_bpp=max_bpp;
-    }
+    BX_VGA_THIS vbe.max_xres=VBE_DISPI_MAX_XRES;
+    BX_VGA_THIS vbe.max_yres=VBE_DISPI_MAX_YRES;
+    BX_VGA_THIS vbe.max_bpp=VBE_DISPI_MAX_BPP;
     BX_VGA_THIS s.max_xres = BX_VGA_THIS vbe.max_xres;
     BX_VGA_THIS s.max_yres = BX_VGA_THIS vbe.max_yres;
     BX_VGA_THIS vbe_present = 1;
@@ -909,6 +895,7 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif
+  Bit16u max_xres, max_yres, max_bpp;
   bx_bool new_vbe_8bit_dac;
   bx_bool needs_update = 0;
   unsigned i;
@@ -960,7 +947,7 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           if (!BX_VGA_THIS vbe.enabled)
           {
             // check for within max xres range
-            if (value <= VBE_DISPI_MAX_XRES)
+            if (value <= BX_VGA_THIS vbe.max_xres)
             {
               BX_VGA_THIS vbe.xres=(Bit16u) value;
               BX_INFO(("VBE set xres (%d)", value));
@@ -982,7 +969,7 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           if (!BX_VGA_THIS vbe.enabled)
           {
             // check for within max yres range
-            if (value <= VBE_DISPI_MAX_YRES)
+            if (value <= BX_VGA_THIS vbe.max_yres)
             {
               BX_VGA_THIS vbe.yres=(Bit16u) value;
               BX_INFO(("VBE set yres (%d)", value));
@@ -1113,6 +1100,18 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           }
           BX_VGA_THIS vbe.enabled = (bx_bool)((value & VBE_DISPI_ENABLED) != 0);
           BX_VGA_THIS vbe.get_capabilities = (bx_bool)((value & VBE_DISPI_GETCAPS) != 0);
+          if (BX_VGA_THIS vbe.get_capabilities) {
+            bx_gui->get_capabilities(&max_xres, &max_yres, &max_bpp);
+            if (max_xres < BX_VGA_THIS vbe.max_xres) {
+              BX_VGA_THIS vbe.max_xres = max_xres;
+            }
+            if (max_yres < BX_VGA_THIS vbe.max_yres) {
+              BX_VGA_THIS vbe.max_yres = max_yres;
+            }
+            if (max_bpp < BX_VGA_THIS vbe.max_bpp) {
+              BX_VGA_THIS vbe.max_bpp = max_bpp;
+            }
+          }
           new_vbe_8bit_dac = (bx_bool)((value & VBE_DISPI_8BIT_DAC) != 0);
           if (new_vbe_8bit_dac != BX_VGA_THIS vbe.dac_8bit) {
             if (new_vbe_8bit_dac) {
