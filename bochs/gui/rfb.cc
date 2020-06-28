@@ -193,6 +193,7 @@ void DrawChar(int x, int y, int width, int height, int fonty, char *bmap,
 void UpdateScreen(unsigned char *newBits, int x, int y, int width, int height,
         bx_bool update_client);
 void SendUpdate(int x, int y, int width, int height, Bit32u encoding);
+void rfbSetUpdateRegion(unsigned x0, unsigned y0, unsigned w, unsigned h);
 void rfbAddUpdateRegion(unsigned x0, unsigned y0, unsigned w, unsigned h);
 void rfbSetStatusText(int element, const char *text, bx_bool active, bx_bool w = 0);
 static Bit32u convertStringToRfbKey(const char *string);
@@ -262,11 +263,7 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   rfbScreen = new char[rfbWindowX * rfbWindowY];
   memset(&rfbPalette, 0, sizeof(rfbPalette));
 
-  rfbUpdateRegion.x = rfbWindowX;
-  rfbUpdateRegion.y = rfbWindowY;
-  rfbUpdateRegion.width  = 0;
-  rfbUpdateRegion.height = 0;
-  rfbUpdateRegion.updated = 0;
+  rfbSetUpdateRegion(rfbWindowX, rfbWindowY, 0, 0);
 
   clientEncodingsCount=0;
   clientEncodings=NULL;
@@ -333,15 +330,6 @@ void bx_rfb_gui_c::handle_events(void)
   }
   bKeyboardInUse = 0;
 
-  if (rfbUpdateRegion.updated) {
-    SendUpdate(rfbUpdateRegion.x, rfbUpdateRegion.y, rfbUpdateRegion.width,
-               rfbUpdateRegion.height, rfbEncodingRaw);
-    rfbUpdateRegion.x = rfbWindowX;
-    rfbUpdateRegion.y = rfbWindowY;
-    rfbUpdateRegion.width  = 0;
-    rfbUpdateRegion.height = 0;
-    rfbUpdateRegion.updated = 0;
-  }
 #if BX_SHOW_IPS
   if (rfbIPSupdate) {
     rfbIPSupdate = 0;
@@ -352,11 +340,17 @@ void bx_rfb_gui_c::handle_events(void)
 
 void bx_rfb_gui_c::flush(void)
 {
+  if (rfbUpdateRegion.updated) {
+    SendUpdate(rfbUpdateRegion.x, rfbUpdateRegion.y, rfbUpdateRegion.width,
+               rfbUpdateRegion.height, rfbEncodingRaw);
+    rfbSetUpdateRegion(rfbWindowX, rfbWindowY, 0, 0);
+  }
 }
 
 void bx_rfb_gui_c::clear_screen(void)
 {
   memset(&rfbScreen[rfbWindowX * rfbHeaderbarY], 0, rfbWindowX * rfbDimensionY);
+  rfbAddUpdateRegion(0, rfbHeaderbarY, rfbWindowX, rfbDimensionY);
 }
 
 void bx_rfb_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long cursor_x, unsigned long cursor_y, bx_vga_tminfo_t *tm_info)
@@ -522,6 +516,7 @@ void bx_rfb_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, un
       rfbScreen = new char[rfbWindowX * rfbWindowY];
       SendUpdate(0, 0, rfbWindowX, rfbWindowY, rfbEncodingDesktopSize);
       bx_gui->show_headerbar();
+      rfbSetUpdateRegion(0, 0, rfbWindowX, rfbWindowY);
     } else {
       if ((x > BX_RFB_DEF_XDIM) || (y > BX_RFB_DEF_YDIM)) {
         BX_PANIC(("dimension_update(): RFB doesn't support graphics mode %dx%d", x, y));
@@ -1435,11 +1430,7 @@ void HandleRfbClient(SOCKET sClient)
 
           ReadExact(sClient, (char *)&fur, sizeof(rfbFramebufferUpdateRequestMessage));
           if(!fur.incremental) {
-            rfbUpdateRegion.x = 0;
-            rfbUpdateRegion.y = 0;
-            rfbUpdateRegion.width  = rfbWindowX;
-            rfbUpdateRegion.height = rfbWindowY;
-            rfbUpdateRegion.updated = 1;
+            rfbSetUpdateRegion(0, 0, rfbWindowX, rfbWindowY);
           } //else {
           //    if(fur.x < rfbUpdateRegion.x) rfbUpdateRegion.x = fur.x;
           //    if(fur.y < rfbUpdateRegion.x) rfbUpdateRegion.y = fur.y;
@@ -1675,20 +1666,48 @@ void SendUpdate(int x, int y, int width, int height, Bit32u encoding)
     }
 }
 
+void rfbSetUpdateRegion(unsigned x0, unsigned y0, unsigned w, unsigned h)
+{
+  rfbUpdateRegion.x = x0;
+  rfbUpdateRegion.y = y0;
+  rfbUpdateRegion.width  = w;
+  rfbUpdateRegion.height = h;
+  rfbUpdateRegion.updated = ((w > 0) && (h > 0));
+}
+
 void rfbAddUpdateRegion(unsigned x0, unsigned y0, unsigned w, unsigned h)
 {
-  if (x0 < rfbUpdateRegion.x) rfbUpdateRegion.x = x0;
-  if (y0 < rfbUpdateRegion.y) rfbUpdateRegion.y = y0;
-  if ((y0 + h - rfbUpdateRegion.y) > rfbUpdateRegion.height) {
-    rfbUpdateRegion.height = y0 + h - rfbUpdateRegion.y;
+  unsigned x1, y1;
+
+  if (!rfbUpdateRegion.updated) {
+    rfbSetUpdateRegion(x0, y0, w, h);
+  } else {
+    x1 = rfbUpdateRegion.x + rfbUpdateRegion.width;
+    y1 = rfbUpdateRegion.y + rfbUpdateRegion.height;
+    if (x0 < rfbUpdateRegion.x) {
+      rfbUpdateRegion.x = x0;
+    }
+    if (y0 < rfbUpdateRegion.y) {
+      rfbUpdateRegion.y = y0;
+    }
+    if ((x0 + w) > x1) {
+      rfbUpdateRegion.width = x0 + w - rfbUpdateRegion.x;
+    } else {
+      rfbUpdateRegion.width= x1 - rfbUpdateRegion.x;
+    }
+    if ((y0 + h) > y1) {
+      rfbUpdateRegion.height = y0 + h - rfbUpdateRegion.y;
+    } else {
+      rfbUpdateRegion.height = y1 - rfbUpdateRegion.y;
+    }
+    if ((rfbUpdateRegion.x + rfbUpdateRegion.width) > rfbWindowX) {
+      rfbUpdateRegion.width = rfbWindowX - rfbUpdateRegion.x;
+    }
+    if ((rfbUpdateRegion.y + rfbUpdateRegion.height) > rfbWindowY) {
+      rfbUpdateRegion.height = rfbWindowY - rfbUpdateRegion.y;
+    }
+    rfbUpdateRegion.updated = 1;
   }
-  if ((x0 + w - rfbUpdateRegion.x) > rfbUpdateRegion.width) {
-    rfbUpdateRegion.width = x0 + w - rfbUpdateRegion.x;
-  }
-  if ((rfbUpdateRegion.x + rfbUpdateRegion.width) > rfbWindowX) {
-    rfbUpdateRegion.width = rfbWindowX - rfbUpdateRegion.x;
-  }
-  rfbUpdateRegion.updated = 1;
 }
 
 void rfbSetStatusText(int element, const char *text, bx_bool active, bx_bool w)
