@@ -36,7 +36,6 @@
 // TODO:
 // fix random segfaults in dimension_update()
 // fix Windows (MinGW) support
-// fixes for clients not supporting 'rfbEncodingNewFBSize'
 // fix cursor shape after dimension update()
 
 
@@ -107,7 +106,6 @@ IMPLEMENT_GUI_PLUGIN_CODE(vncsrv)
 #endif
 
 static bx_bool client_connected;
-static bx_bool desktop_resizable = 1;
 #if BX_SHOW_IPS
 static bx_bool rfbHideIPS = 0;
 static bx_bool rfbIPSupdate = 0;
@@ -161,6 +159,7 @@ const rfbPixel headerbar_fg = 0x10101000;
 static rfbPixel rfbPalette[256];
 
 static bool rfbServerDown = false;
+static rfbClientPtr clientPtr = NULL;
 
 static unsigned rfbWindowX, rfbWindowY;
 static unsigned rfbDimensionX, rfbDimensionY;
@@ -527,7 +526,7 @@ void bx_vncsrv_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight,
     text_rows = y / fheight;
   }
   if ((x != rfbDimensionX) || (y != rfbDimensionY)) {
-    if (desktop_resizable) {
+    if (clientPtr->useNewFBSize) {
       if ((x > BX_RFB_MAX_XDIM) || (y > BX_RFB_MAX_YDIM)) {
         BX_PANIC(("dimension_update(): VNC doesn't support graphics mode %dx%d", x, y));
       }
@@ -713,7 +712,7 @@ void bx_vncsrv_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
 }
 void bx_vncsrv_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
 {
-  if (desktop_resizable) {
+  if (clientPtr->useNewFBSize) {
     *xres = BX_RFB_MAX_XDIM;
     *yres = BX_RFB_MAX_YDIM;
   } else {
@@ -1328,6 +1327,7 @@ enum rfbNewClientAction newclient(rfbClientPtr cl)
 {
   cl->clientData = NULL;
   cl->clientGoneHook = clientgone;
+  clientPtr = cl;
   client_connected = 1;
   return RFB_CLIENT_ACCEPT;
 }
