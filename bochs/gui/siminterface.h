@@ -283,6 +283,7 @@ typedef enum {
   BX_ASYNC_EVT_DBG_MSG,           // simulator -> CI
   BX_ASYNC_EVT_VALUE_CHANGED,     // simulator -> CI
   BX_ASYNC_EVT_TOOLBAR,           // CI -> simulator
+  BX_ASYNC_EVT_STATUSBAR,         // simulator -> CI
   BX_ASYNC_EVT_REFRESH,           // simulator -> CI
   BX_ASYNC_EVT_QUIT_SIM           // simulator -> CI
 } BxEventType;
@@ -440,7 +441,7 @@ typedef struct {
 
 
 
-// Event type: BX_EVT_TOOLBAR
+// Event type: BX_ASYNC_EVT_TOOLBAR
 // Asynchronous event from the VGAW to the simulator, sent when the user
 // clicks on a toolbar button.  This may one day become something more
 // general, like a command event, but at the moment it's only needed for
@@ -450,6 +451,14 @@ typedef struct {
   bx_bool on; // for toggling buttons, on=true means the toolbar button is
               // pressed. on=false means it is not pressed.
 } BxToolbarEvent;
+
+// Event type: BX_ASYNC_EVT_STATUSAR
+typedef struct {
+  int element;
+  char *text;
+  bx_bool active;
+  bx_bool w;
+} BxStatusbarEvent;
 
 // The BxEvent structure should be used for all events.  Every event has
 // a type and a spot for a return code (only used for synchronous events).
@@ -462,6 +471,7 @@ typedef struct {
     BxParamEvent param;
     BxLogMsgEvent logmsg;
     BxToolbarEvent toolbar;
+    BxStatusbarEvent statbar;
     BxDebugCommand debugcmd;
   } u;
 } BxEvent;

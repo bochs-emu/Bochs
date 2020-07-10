@@ -397,11 +397,6 @@ END_EVENT_TABLE()
 //   | Pause/Resume         |
 //   | Stop                 |
 //   +----------------------|
-// - Debug
-//   +----------------------|
-//   | Show CPU             |
-//   | Debug Console        |
-//   +----------------------|
 // - Event Log
 //   +----------------------+
 //   | View                 |
@@ -458,7 +453,6 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   menuSimulate->Append(ID_Simulate_Start, wxT("&Start..."));
   menuSimulate->Append(ID_Simulate_PauseResume, wxT("&Pause..."));
   menuSimulate->Append(ID_Simulate_Stop, wxT("S&top..."));
-  menuSimulate->AppendSeparator();
   menuSimulate->Enable(ID_Simulate_PauseResume, FALSE);
   menuSimulate->Enable(ID_Simulate_Stop, FALSE);
 
@@ -488,8 +482,12 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   CreateStatusBar();
   wxStatusBar *sb = GetStatusBar();
   sb->SetFieldsCount(12);
-  const int sbwidth[12] = {160, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, -1};
+  const int sbwidth[12] = {160, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, -1};
   sb->SetStatusWidths(12, sbwidth);
+  const int sbstyle[12] = {wxSB_SUNKEN, wxSB_SUNKEN, wxSB_SUNKEN, wxSB_SUNKEN,
+                           wxSB_SUNKEN, wxSB_SUNKEN, wxSB_SUNKEN, wxSB_SUNKEN,
+                           wxSB_SUNKEN, wxSB_SUNKEN, wxSB_SUNKEN, wxSB_NORMAL};
+  sb->SetStatusStyles(12, sbstyle);
 
   CreateToolBar(wxNO_BORDER|wxHORIZONTAL|wxTB_FLAT);
   bxToolBar = GetToolBar();
@@ -1102,6 +1100,27 @@ int MyFrame::HandleAskParam(BxEvent *event)
   return -1;  // could not display
 }
 
+void MyFrame::StatusbarUpdate(BxEvent *event)
+{
+  int element = event->u.statbar.element;
+#if defined(__WXMSW__)
+  char status_text[10];
+#endif
+
+  if (event->u.statbar.active) {
+#if defined(__WXMSW__)
+    status_text[0] = 9;
+    strcpy(status_text+1, event->u.statbar.text);
+    SetStatusText(status_text, element+1);
+#else
+    SetStatusText(wxString(event->u.statbar.text, wxConvUTF8), element+1);
+#endif
+  } else {
+    SetStatusText(wxT(""), element+1);
+  }
+  delete [] event->u.statbar.text;
+}
+
 // This is called from the wxWidgets GUI thread, when a Sim2CI event
 // is found.  (It got there via wxPostEvent in SiminterfaceCallback2, which is
 // executed in the simulator Thread.)
@@ -1131,6 +1150,9 @@ void MyFrame::OnSim2CIEvent(wxCommandEvent& event)
   case BX_ASYNC_EVT_QUIT_SIM:
     wxMessageBox(wxT("Bochs simulation has stopped."), wxT("Bochs Stopped"),
         wxOK | wxICON_INFORMATION, this);
+    break;
+  case BX_ASYNC_EVT_STATUSBAR:
+    StatusbarUpdate(be);
     break;
   default:
     wxLogDebug(wxT("OnSim2CIEvent: event type %d ignored"), (int)be->type);

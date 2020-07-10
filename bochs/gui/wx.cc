@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2019  The Bochs Project
+//  Copyright (C) 2002-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1177,24 +1177,15 @@ void bx_wx_gui_c::handle_events(void)
 
 void bx_wx_gui_c::statusbar_setitem_specific(int element, bx_bool active, bx_bool w)
 {
-#if defined(__WXMSW__)
-  char status_text[10];
-#endif
-
-  wxMutexGuiEnter();
-  if (active) {
-#if defined(__WXMSW__)
-    status_text[0] = 9;
-    strcpy(status_text+1, statusitem[element].text);
-    theFrame->SetStatusText(status_text, element+1);
-#else
-    theFrame->SetStatusText(wxString(statusitem[element].text, wxConvUTF8),
-                            element+1);
-#endif
-  } else {
-    theFrame->SetStatusText(wxT(""), element+1);
-  }
-  wxMutexGuiLeave();
+  char *sbtext = new char[strlen(statusitem[element].text) + 1];
+  strcpy(sbtext, statusitem[element].text);
+  BxEvent *event = new BxEvent;
+  event->type = BX_ASYNC_EVT_STATUSBAR;
+  event->u.statbar.element = element;
+  event->u.statbar.text = sbtext;
+  event->u.statbar.active = active;
+  event->u.statbar.w = w;
+  SIM->sim_to_ci_event(event);
 }
 
 void bx_wx_gui_c::flush(void)
