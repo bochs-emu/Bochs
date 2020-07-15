@@ -3364,15 +3364,12 @@ Examples:
 Some display libraries now support specific options to control their
 behaviour. These options are supported by more than one display library:
 <screen>
+  "cmdmode"     - call a headerbar button handler after pressing F7 (x, sdl2)
+  "fullscreen"  - startup in fullscreen mode (sdl, sdl2)
   "gui_debug"   - use GTK debugger gui (sdl, x) / Win32 debugger gui (sdl, sdl2, win32)
   "hideIPS"     - disable IPS output in status bar (rfb, sdl, sdl2, vncsrv, win32, wx, x)
   "nokeyrepeat" - turn off host keyboard repeat (sdl, sdl2, win32, x)
   "timeout"     - time (in seconds) to wait for client (rfb, vncsrv)
-</screen>
-See the examples below for other currently supported options.
-<screen>
-  display_library: sdl, options="fullscreen"  # startup in fullscreen mode
-  display_library: sdl2, options="fullscreen"  # startup in fullscreen mode
 </screen>
 </para>
 
@@ -5625,7 +5622,78 @@ could be restored back using bochs -r command. For more details read the
 </itemizedlist>
 </para>
 <para>
-Some of this features may not be implemented or work different on your host platform.
+Some of these features may not be implemented or work different on your host platform.
+</para>
+</section>
+
+<section id="command-mode"><title>Command mode</title>
+<para>
+When using 'x' or 'sdl2' as the <command>display_library</command>, the option
+'cmdmode' enables the "command mode" support. If enabled, pressing the F7 key
+will enter 'command mode' (shown in the info item of the statusbar);
+the next key that is pressed will exit command-mode. When in command-mode,
+if the pressed key is in the list below, the corresponding action will be
+performed. With the exception of F7, any key pressed while in command-mode
+will not be received by the OS running in Bochs.
+</para>
+<para>
+<table><title>Supported keys</title>
+<tgroup cols="2" align="left" colsep="1" rowsep="1">
+<thead>
+  <row>
+    <entry>Key</entry>
+    <entry>Action</entry>
+  </row>
+</thead>
+<tbody>
+  <row>
+    <entry>c</entry>
+    <entry>Press the Copy button</entry>
+  </row>
+  <row>
+    <entry>e</entry>
+    <entry>Press the Config button</entry>
+  </row>
+  <row>
+    <entry>f</entry>
+    <entry>Toggle fullscreen mode (sdl2 only)</entry>
+  </row>
+  <row>
+    <entry>n</entry>
+    <entry>Press the Snapshot button</entry>
+  </row>
+  <row>
+    <entry>o</entry>
+    <entry>Press the Power button</entry>
+  </row>
+  <row>
+    <entry>p</entry>
+    <entry>Press the Paste button</entry>
+  </row>
+  <row>
+    <entry>r</entry>
+    <entry>Press the Reset button</entry>
+  </row>
+  <row>
+    <entry>s</entry>
+    <entry>Press the Suspend button</entry>
+  </row>
+  <row>
+    <entry>u</entry>
+    <entry>Press the User button</entry>
+  </row>
+  <row>
+    <entry>F7</entry>
+    <entry>Send F7 keypress to emulation</entry>
+  </row>
+</tbody>
+</tgroup>
+</table>
+</para>
+<para>
+In fullscreen mode (sdl2) the snapshot and user button handlers do not bring up
+a dialog box. For the snapshot the hardcoded file names are used and the configured
+user button shortcut is used.
 </para>
 </section>
 <section><title>The runtime configuration</title>

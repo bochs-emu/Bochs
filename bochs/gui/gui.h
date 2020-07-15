@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2019  The Bochs Project
+//  Copyright (C) 2002-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -193,6 +193,10 @@ public:
   void console_refresh(bx_bool force) {}
   void console_key_enq(Bit8u key) {}
 #endif
+  bx_bool has_command_mode(void) {return command_mode.present;}
+  bx_bool command_mode_active(void) {return command_mode.active;}
+  void set_command_mode(bx_bool active);
+  void set_fullscreen_mode(bx_bool active) {fullscreen_mode = active;}
 
 protected:
   // And these are defined and used privately in gui.cc
@@ -320,6 +324,12 @@ protected:
     Bit8u n_keys;
   } console;
 #endif
+  // command mode
+  struct {
+    bx_bool present;
+    bx_bool active;
+  } command_mode;
+  bx_bool fullscreen_mode;
 };
 
 

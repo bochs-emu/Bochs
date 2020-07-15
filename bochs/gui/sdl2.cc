@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2014-2017  The Bochs Project
+//  Copyright (C) 2014-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -40,6 +40,8 @@
 #ifdef WIN32
 #include "win32dialog.h"
 #endif
+
+#define COMMAND_MODE_KEYSYM SDLK_F7
 
 class bx_sdl2_gui_c : public bx_gui_c {
 public:
@@ -86,7 +88,8 @@ struct bitmaps {
 static SDL_Window *window;
 SDL_Surface *sdl_screen, *sdl_fullscreen;
 SDL_DisplayMode sdl_maxres;
-int sdl_fullscreen_toggle;
+bx_bool sdl_init_done;
+bx_bool sdl_fullscreen_toggle;
 int sdl_grab;
 unsigned res_x, res_y;
 unsigned half_res_x, half_res_y;
@@ -119,6 +122,7 @@ SDL_TimerID timer_id;
 static bx_bool sdl_hide_ips = 0;
 static bx_bool sdl_ips_update = 0;
 static char sdl_ips_text[20];
+static bx_bool sdl_show_info_msg = 0;
 #endif
 #ifndef WIN32
 BxEvent *sdl2_notify_callback(void *unused, BxEvent *event);
@@ -333,7 +337,7 @@ void switch_to_windowed(void)
   sdl_screen = SDL_GetWindowSurface(window);
   sdl_fullscreen = NULL;
   bx_gui->show_headerbar();
-  DEV_vga_redraw_area(0, 0, res_x, res_y);
+  DEV_vga_refresh(1);
   if (sdl_grab) {
     bx_gui->toggle_mouse_enable();
   }
@@ -346,10 +350,10 @@ void switch_to_fullscreen(void)
     bx_gui->toggle_mouse_enable();
   }
   SDL_SetWindowSize(window, res_x, res_y);
-  SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
+  SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
   sdl_fullscreen = SDL_GetWindowSurface(window);
   sdl_screen = NULL;
-  DEV_vga_redraw_area(0, 0, res_x, res_y);
+  if (sdl_init_done) DEV_vga_refresh(1);
 }
 
 
@@ -397,6 +401,7 @@ bx_sdl2_gui_c::bx_sdl2_gui_c()
   atexit(SDL_Quit);
   SDL_GetDisplayMode(0, 0, &sdl_maxres);
   info("maximum host resolution: x=%d y=%d", sdl_maxres.w, sdl_maxres.h);
+  sdl_init_done = 0;
 }
 
 // SDL2 implementation of the bx_gui_c methods (see nogui.cc for details)
@@ -484,8 +489,10 @@ void bx_sdl2_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
         BX_INFO(("hide IPS display in status bar"));
         sdl_hide_ips = 1;
 #endif
+      } else if (!strcmp(argv[i], "cmdmode")) {
+        command_mode.present = 1;
       } else {
-        BX_PANIC(("Unknown sdl option '%s'", argv[i]));
+        BX_PANIC(("Unknown sdl2 option '%s'", argv[i]));
       }
     }
   }
@@ -499,6 +506,7 @@ void bx_sdl2_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   } else {
     console.present = 1;
   }
+  sdl_init_done = 1;
 }
 
 
@@ -893,14 +901,60 @@ void bx_sdl2_gui_c::handle_events(void)
           }
         }
 
+        if (bx_gui->command_mode_active()) {
+          if (sdl_event.key.keysym.sym == SDLK_c) {
+            bx_gui->copy_handler();
+          } else if (sdl_event.key.keysym.sym == SDLK_e) {
+            bx_gui->config_handler();
+          } else if (sdl_event.key.keysym.sym == SDLK_f) {
+            sdl_fullscreen_toggle = !sdl_fullscreen_toggle;
+            if (sdl_fullscreen_toggle == 0) {
+              switch_to_windowed();
+            } else {
+              switch_to_fullscreen();
+            }
+            bx_gui->set_fullscreen_mode(sdl_fullscreen_toggle);
+          } else if (sdl_event.key.keysym.sym == SDLK_n) {
+            bx_gui->snapshot_handler();
+          } else if (sdl_event.key.keysym.sym == SDLK_o) {
+            bx_gui->power_handler();
+          } else if (sdl_event.key.keysym.sym == SDLK_p) {
+            bx_gui->paste_handler();
+          } else if (sdl_event.key.keysym.sym == SDLK_r) {
+            bx_gui->reset_handler();
+          } else if (sdl_event.key.keysym.sym == SDLK_s) {
+            bx_gui->save_restore_handler();
+          } else if (sdl_event.key.keysym.sym == SDLK_u) {
+            bx_gui->userbutton_handler();
+          }
+          bx_gui->set_command_mode(0);
+#if BX_SHOW_IPS
+          sdl_show_info_msg = 0;
+#endif
+          if (sdl_event.key.keysym.sym != COMMAND_MODE_KEYSYM) {
+            return;
+          }
+        } else {
+          if (bx_gui->has_command_mode() &&
+              (sdl_event.key.keysym.sym == COMMAND_MODE_KEYSYM)) {
+            bx_gui->set_command_mode(1);
+            sdl_set_status_text(0, "Command mode", 1);
+#if BX_SHOW_IPS
+            sdl_show_info_msg = 1;
+#endif
+            return;
+          }
+        }
+
         // Window/Fullscreen toggle-check
         if (sdl_event.key.keysym.sym == SDLK_SCROLLLOCK) {
-          sdl_fullscreen_toggle = ~sdl_fullscreen_toggle;
+          sdl_fullscreen_toggle = !sdl_fullscreen_toggle;
           if (sdl_fullscreen_toggle == 0) {
             switch_to_windowed();
           } else {
             switch_to_fullscreen();
           }
+          bx_gui->set_fullscreen_mode(sdl_fullscreen_toggle);
           break;
         }
 
@@ -972,7 +1026,7 @@ void bx_sdl2_gui_c::handle_events(void)
     }
   }
 #if BX_SHOW_IPS
-  if (sdl_ips_update) {
+  if (sdl_ips_update && !sdl_show_info_msg) {
     sdl_ips_update = 0;
     sdl_set_status_text(0, sdl_ips_text, 1);
   }

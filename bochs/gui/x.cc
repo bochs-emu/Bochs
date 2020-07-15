@@ -55,6 +55,8 @@ extern "C" {
 
 #include "font/vga.bitmap.h"
 
+#define COMMAND_MODE_KEYSYM XK_F7
+
 class bx_x_gui_c : public bx_gui_c {
 public:
   bx_x_gui_c(void);
@@ -166,7 +168,8 @@ static char bx_status_info_text[34];
 #if BX_SHOW_IPS
 static bx_bool x11_ips_update = 0, x11_hide_ips = 0;
 static char x11_ips_text[20];
-static Bit8u x11_mouse_msg_counter = 0;
+static Bit8u x11_show_info_msg = 0;
+static Bit8u x11_info_msg_counter = 0;
 #endif
 
 Bit32u ascii_to_key_event[0x5f] = {
@@ -393,8 +396,19 @@ void x11_set_status_text(int element, const char *text, bx_bool active, bx_bool 
     }
     XFillRectangle(bx_x_display, win, gc_headerbar_inv, xleft, sb_ypos+2, xsize,
                    bx_statusbar_y-2);
-    XDrawString(bx_x_display, win, gc_headerbar, xleft, sb_ypos+bx_statusbar_y-2,
-                text, strlen(text));
+    if (strlen(text) > 0) {
+      XDrawString(bx_x_display, win, gc_headerbar, xleft, sb_ypos+bx_statusbar_y-2,
+                  text, strlen(text));
+    }
+#if BX_SHOW_IPS
+    if (!active) {
+      if (!w) { // volatile info text for 3 seconds
+        x11_info_msg_counter = 3;
+      } else {
+        x11_show_info_msg = (strlen(text) > 0);
+      }
+    }
+#endif
   } else if (element <= BX_MAX_STATUSITEMS) {
     bx_statusitem_active[element] = active;
     if (active) {
@@ -606,6 +620,8 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
         BX_INFO(("hide IPS display in status bar"));
         x11_hide_ips = 1;
 #endif
+      } else if (!strcmp(argv[i], "cmdmode")) {
+        command_mode.present = 1;
       } else {
         BX_PANIC(("Unknown x11 option '%s'", argv[i]));
       }
@@ -1114,7 +1130,7 @@ void bx_x_gui_c::handle_events(void)
     send_mouse_status();
   }
 #if BX_SHOW_IPS
-  if (x11_ips_update) {
+  if (x11_ips_update && !x11_show_info_msg) {
     x11_ips_update = 0;
     x11_set_status_text(0, x11_ips_text, 1);
   }
@@ -1664,9 +1680,6 @@ void bx_x_gui_c::mouse_enabled_changed_specific(bx_bool val)
     enable_cursor();
     warp_cursor(mouse_enable_x-current_x, mouse_enable_y-current_y);
   }
-#if BX_SHOW_IPS
-  x11_mouse_msg_counter = 3;
-#endif
 }
 
 void bx_x_gui_c::exit(void)
@@ -1854,14 +1867,14 @@ void bx_x_gui_c::set_mouse_mode_absxy(bx_bool mode)
 #if BX_SHOW_IPS
 void bx_x_gui_c::show_ips(Bit32u ips_count)
 {
-  if (x11_mouse_msg_counter == 0) {
+  if (x11_info_msg_counter == 0) {
     if (!x11_ips_update && !x11_hide_ips) {
       ips_count /= 1000;
       sprintf(x11_ips_text, "IPS: %u.%3.3uM", ips_count / 1000, ips_count % 1000);
       x11_ips_update = 1;
     }
   } else {
-    x11_mouse_msg_counter--;
+    x11_info_msg_counter--;
   }
 }
 #endif
@@ -1949,6 +1962,39 @@ void bx_x_gui_c::xkeypress(KeySym keysym, int press_release)
   if (mouse_toggle) {
     toggle_mouse_enable();
     return;
+  }
+
+  if (!press_release) {
+    if (bx_gui->command_mode_active()) {
+      if (keysym == XK_c) {
+        bx_gui->copy_handler();
+      } else if (keysym == XK_e) {
+        bx_gui->config_handler();
+      } else if (keysym == XK_n) {
+        bx_gui->snapshot_handler();
+      } else if (keysym == XK_o) {
+        bx_gui->power_handler();
+      } else if (keysym == XK_p) {
+        bx_gui->paste_handler();
+      } else if (keysym == XK_r) {
+        bx_gui->reset_handler();
+      } else if (keysym == XK_s) {
+        bx_gui->save_restore_handler();
+      } else if (keysym == XK_u) {
+        bx_gui->userbutton_handler();
+      }
+      bx_gui->set_command_mode(0);
+      x11_set_status_text(0, "", 0, 1);
+      if (keysym != COMMAND_MODE_KEYSYM) {
+        return;
+      }
+    } else {
+      if ((bx_gui->has_command_mode()) && (keysym == COMMAND_MODE_KEYSYM)) {
+        bx_gui->set_command_mode(1);
+        x11_set_status_text(0, "Command mode", 0, 1);
+        return;
+      }
+    }
   }
 
   /* Old (no mapping) behavior */

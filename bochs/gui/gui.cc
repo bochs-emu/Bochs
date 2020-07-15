@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2017  The Bochs Project
+//  Copyright (C) 2002-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -145,6 +145,8 @@ bx_gui_c::bx_gui_c(void): disp_mode(DISP_MODE_SIM)
   guest_bpp = 8;
   snapshot_mode = 0;
   snapshot_buffer = NULL;
+  command_mode.present = 0;
+  command_mode.active = 0;
   memset(palette, 0, sizeof(palette));
 }
 
@@ -511,7 +513,8 @@ void bx_gui_c::snapshot_handler(void)
 
   if (BX_GUI_THIS guest_textmode) {
     make_text_snapshot((char**)&snapshot_ptr, &len);
-    if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_SNAPSHOT) {
+    if (!BX_GUI_THIS fullscreen_mode &&
+        (BX_GUI_THIS dialog_caps & BX_GUI_DLG_SNAPSHOT)) {
       int ret = SIM->ask_filename (filename, sizeof(filename),
                                    "Save snapshot as...", "snapshot.txt",
                                    bx_param_string_c::SAVE_FILE_DIALOG);
@@ -532,7 +535,8 @@ void bx_gui_c::snapshot_handler(void)
     fclose(fp);
     delete [] snapshot_ptr;
   } else {
-    if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_SNAPSHOT) {
+    if (!BX_GUI_THIS fullscreen_mode &&
+        (BX_GUI_THIS dialog_caps & BX_GUI_DLG_SNAPSHOT)) {
       int ret = SIM->ask_filename (filename, sizeof(filename),
                                    "Save snapshot as...", "snapshot.bmp",
                                    bx_param_string_c::SAVE_FILE_DIALOG);
@@ -733,7 +737,8 @@ void bx_gui_c::userbutton_handler(void)
 {
   int i, ret = 1;
 
-  if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_USER) {
+  if (!BX_GUI_THIS fullscreen_mode &&
+      (BX_GUI_THIS dialog_caps & BX_GUI_DLG_USER)) {
     ret = SIM->ask_param(BXPN_USER_SHORTCUT);
   }
   if ((ret > 0) && (BX_GUI_THIS user_shortcut_len > 0)) {
@@ -1276,3 +1281,10 @@ char* bx_gui_c::bx_gets(char *s, int size)
   return s;
 }
 #endif
+
+void bx_gui_c::set_command_mode(bx_bool active)
+{
+  if (command_mode.present) {
+    command_mode.active = active;
+  }
+}
