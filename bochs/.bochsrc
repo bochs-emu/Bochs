@@ -70,6 +70,8 @@
 # Some display libraries now support specific options to control their
 # behaviour. These options are supported by more than one display library:
 #
+# "cmdmode"     - call a headerbar button handler after pressing F7 (x, sdl, sdl2)
+# "fullscreen"  - startup in fullscreen mode (sdl, sdl2)
 # "gui_debug"   - use GTK debugger gui (sdl, sdl2, x) / Win32 debugger gui (sdl,
 #                 sdl2, win32)
 # "hideIPS"     - disable IPS output in status bar (rfb, sdl, sdl2, vncsrv,
@@ -84,8 +86,8 @@
 #display_library: macintosh
 #display_library: nogui
 #display_library: rfb
-#display_library: sdl, options="fullscreen" # startup in fullscreen mode
-#display_library: sdl2, options="fullscreen" # startup in fullscreen mode
+#display_library: sdl
+#display_library: sdl2
 #display_library: term
 #display_library: vncsrv
 # "traphotkeys" - system hotkeys not handled by host OS, but sent to guest

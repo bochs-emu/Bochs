@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "21 Jun 2020" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "16 Jul 2020" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -109,18 +109,12 @@ the "wx" display library.
 Some display libraries now support specific options to control their
 behaviour. These options are supported by more than one display library:
 
+  "cmdmode"     - call a headerbar button handler after pressing F7 (x, sdl, sdl2)
+  "fullscreen"  - startup in fullscreen mode (sdl, sdl2)
   "gui_debug"   - use GTK debugger gui (sdl, sdl2, x)
   "hideIPS"     - disable IPS output in status bar (rfb, sdl, sdl2, vncsrv, wx, x)
   "nokeyrepeat" - turn off host keyboard repeat (sdl, sdl2, x)
   "timeout"     - time (in seconds) to wait for client (rfb, vncsrv)
-
-See the examples below for other currently supported options.
-
-Examples:
-  display_library: x
-  display_library: sdl, options="fullscreen"  # startup in fullscreen mode
-  display_library: sdl2, options="fullscreen"  # startup in fullscreen mode
-
 
 .TP
 .I "cpu:"
