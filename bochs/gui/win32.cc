@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2017  The Bochs Project
+//  Copyright (C) 2002-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -41,6 +41,8 @@
 // windows.h is included by bochs.h
 #include <commctrl.h>
 #include <process.h>
+
+#define COMMAND_MODE_VKEY VK_F7
 
 class bx_win32_gui_c : public bx_gui_c {
 public:
@@ -673,6 +675,8 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
         BX_INFO(("hide IPS display in status bar"));
         hideIPS = TRUE;
 #endif
+      } else if (!strcmp(argv[i], "cmdmode")) {
+        command_mode.present = 1;
       } else {
         BX_PANIC(("Unknown win32 option '%s'", argv[i]));
       }
@@ -1132,6 +1136,15 @@ LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
   return DefWindowProc(hwnd, iMsg, wParam, lParam);
 }
 
+void SetMouseToggleInfo()
+{
+  if (mouseCaptureMode) {
+    SetStatusText(0, szMouseDisable, TRUE);
+  } else {
+    SetStatusText(0, szMouseEnable, TRUE);
+  }
+}
+
 void SetMouseCapture()
 {
   POINT pt = { 0, 0 };
@@ -1155,11 +1168,10 @@ void SetMouseCapture()
     re.right = pt.x + stretched_x;
     re.bottom = pt.y + stretched_y;
     ClipCursor(&re);
-    SetStatusText(0, szMouseDisable, TRUE);
   } else {
     ClipCursor(NULL);
-    SetStatusText(0, szMouseEnable, TRUE);
   }
+  SetMouseToggleInfo();
 }
 
 LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
@@ -1167,6 +1179,7 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
   HDC hdc, hdcMem;
   PAINTSTRUCT ps;
   bx_bool mouse_toggle = 0;
+  Bit32u toolbar_cmd = 0;
   static BOOL mouseModeChange = FALSE;
 
   switch (iMsg) {
@@ -1323,6 +1336,53 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
       mouseCaptureMode = !mouseCaptureMode;
       SetMouseCapture();
       return 0;
+    }
+    if (bx_gui->command_mode_active()) {
+      if (wParam == 'C') {
+        toolbar_cmd = 10; // Copy
+      } else if (wParam == 'E') {
+        toolbar_cmd = 7; // Config
+      } else if (wParam == 'F') {
+        if (!saveParent) {
+          BX_INFO(("entering fullscreen mode"));
+          set_fullscreen_mode(TRUE);
+          bx_gui->set_fullscreen_mode(1);
+        } else {
+          BX_INFO(("leaving fullscreen mode"));
+          resize_main_window(TRUE);
+          bx_gui->set_fullscreen_mode(0);
+        }
+        return 0;
+      } else if (wParam == 'N') {
+        toolbar_cmd = 8; // Snapshot
+      } else if (wParam == 'O') {
+        toolbar_cmd = 4; // Power
+      } else if (wParam == 'P') {
+        toolbar_cmd = 9; // Paste
+      } else if (wParam == 'R') {
+        toolbar_cmd = 6; // Reset
+      } else if (wParam == 'S') {
+        toolbar_cmd = 5; // Suspend
+      } else if (wParam == 'U') {
+        toolbar_cmd = 11; // User
+      }
+      bx_gui->set_command_mode(0);
+      SetMouseToggleInfo();
+      if (toolbar_cmd > 0) {
+        EnterCriticalSection(&stInfo.keyCS);
+        enq_key_event(toolbar_cmd, TOOLBAR_CLICKED);
+        LeaveCriticalSection(&stInfo.keyCS);
+        return 0;
+      }
+      if (wParam != COMMAND_MODE_VKEY) {
+        return 0;
+      }
+    } else {
+      if (bx_gui->has_command_mode() && (wParam == COMMAND_MODE_VKEY)) {
+        bx_gui->set_command_mode(1);
+        SetStatusText(0, "Command mode", TRUE);
+        return 0;
+      }
     }
     EnterCriticalSection(&stInfo.keyCS);
     if (((lParam & 0x40000000) == 0) || !win32_nokeyrepeat) {

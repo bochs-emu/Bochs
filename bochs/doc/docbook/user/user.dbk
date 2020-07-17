@@ -3364,7 +3364,7 @@ Examples:
 Some display libraries now support specific options to control their
 behaviour. These options are supported by more than one display library:
 <screen>
-  "cmdmode"     - call a headerbar button handler after pressing F7 (x, sdl, sdl2)
+  "cmdmode"     - call a headerbar button handler after pressing F7 (sdl, sdl2, win32, x)
   "fullscreen"  - startup in fullscreen mode (sdl, sdl2)
   "gui_debug"   - use GTK debugger gui (sdl, x) / Win32 debugger gui (sdl, sdl2, win32)
   "hideIPS"     - disable IPS output in status bar (rfb, sdl, sdl2, vncsrv, win32, wx, x)
@@ -5635,7 +5635,7 @@ Some of these features may not be implemented or work different on your host pla
 
 <section id="command-mode"><title>Command mode</title>
 <para>
-When using 'x', 'sdl' or 'sdl2' as the <command>display_library</command>, the 
+When using 'sdl', 'sdl2', 'win32' or 'x' as the <command>display_library</command>, the 
 option 'cmdmode' enables the "command mode" support. If enabled, pressing the F7
 key will enter 'command mode' (shown in the info item of the statusbar);
 the next key that is pressed will exit command-mode. When in command-mode,
@@ -5663,7 +5663,7 @@ will not be received by the OS running in Bochs.
   </row>
   <row>
     <entry>f</entry>
-    <entry>Toggle windowed / fullscreen mode (sdl / sdl2 only)</entry>
+    <entry>Toggle windowed / fullscreen mode (sdl, sdl2 and win32 only)</entry>
   </row>
   <row>
     <entry>n</entry>
@@ -5698,8 +5698,8 @@ will not be received by the OS running in Bochs.
 </table>
 </para>
 <para>
-In fullscreen mode (sdl / sdl2) the snapshot and user button handlers do not
-bring up a dialog box. The snapshot feature uses the hardcoded file name and
+In fullscreen mode (sdl, sdl2, win32) the snapshot and user button handlers do
+not bring up a dialog box. The snapshot feature uses the hardcoded file name and
 the user button sends the configured shortcut.
 </para>
 </section>

@@ -28,6 +28,8 @@ Changes after 2.6.11:
     - Added PC speaker volume control for the lowlevel sound support.
 
 - GUI and display libraries
+    - Added support for calling a headerbar handler after pressing F7 (enabled
+      with "cmdmode" option / present in sdl, sdl2, win32 and x).
     - X11 keymaps: added new one for Swiss-German and improved Italian map.
     - RFB: added support for the pixel format RGB332.
 
