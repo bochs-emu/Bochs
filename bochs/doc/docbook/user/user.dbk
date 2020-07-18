@@ -5654,6 +5654,14 @@ will not be received by the OS running in Bochs.
 </thead>
 <tbody>
   <row>
+    <entry>a</entry>
+    <entry>Press the Floppy A button</entry>
+  </row>
+  <row>
+    <entry>b</entry>
+    <entry>Press the Floppy B button</entry>
+  </row>
+  <row>
     <entry>c</entry>
     <entry>Press the Copy button</entry>
   </row>
@@ -5698,9 +5706,9 @@ will not be received by the OS running in Bochs.
 </table>
 </para>
 <para>
-In fullscreen mode (sdl, sdl2, win32) the snapshot and user button handlers do
-not bring up a dialog box. The snapshot feature uses the hardcoded file name and
-the user button sends the configured shortcut.
+In fullscreen mode (sdl, sdl2, win32) some handlers do not bring up a dialog
+box. The floppy buttons just toggle the status, the snapshot feature uses the
+hardcoded file name and the user button sends the configured shortcut.
 </para>
 </section>
 <section><title>The runtime configuration</title>

@@ -1966,7 +1966,11 @@ void bx_x_gui_c::xkeypress(KeySym keysym, int press_release)
 
   if (!press_release) {
     if (bx_gui->command_mode_active()) {
-      if (keysym == XK_c) {
+      if (keysym == XK_a) {
+        bx_gui->floppyA_handler();
+      } else if (keysym == XK_b) {
+        bx_gui->floppyB_handler();
+      } else if (keysym == XK_c) {
         bx_gui->copy_handler();
       } else if (keysym == XK_e) {
         bx_gui->config_handler();

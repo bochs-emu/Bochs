@@ -1179,7 +1179,7 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
   HDC hdc, hdcMem;
   PAINTSTRUCT ps;
   bx_bool mouse_toggle = 0;
-  Bit32u toolbar_cmd = 0;
+  int toolbar_cmd = -1;
   static BOOL mouseModeChange = FALSE;
 
   switch (iMsg) {
@@ -1338,7 +1338,11 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
       return 0;
     }
     if (bx_gui->command_mode_active()) {
-      if (wParam == 'C') {
+      if (wParam == 'A') {
+        toolbar_cmd = 0; // Floppy A
+      } else if (wParam == 'B') {
+        toolbar_cmd = 1; // Floppy B
+      } else if (wParam == 'C') {
         toolbar_cmd = 10; // Copy
       } else if (wParam == 'E') {
         toolbar_cmd = 7; // Config
@@ -1352,7 +1356,6 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
           resize_main_window(TRUE);
           bx_gui->set_fullscreen_mode(0);
         }
-        return 0;
       } else if (wParam == 'N') {
         toolbar_cmd = 8; // Snapshot
       } else if (wParam == 'O') {
@@ -1368,9 +1371,9 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
       }
       bx_gui->set_command_mode(0);
       SetMouseToggleInfo();
-      if (toolbar_cmd > 0) {
+      if (toolbar_cmd >= 0) {
         EnterCriticalSection(&stInfo.keyCS);
-        enq_key_event(toolbar_cmd, TOOLBAR_CLICKED);
+        enq_key_event((Bit32u)toolbar_cmd, TOOLBAR_CLICKED);
         LeaveCriticalSection(&stInfo.keyCS);
         return 0;
       }

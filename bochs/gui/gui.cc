@@ -352,7 +352,8 @@ void bx_gui_c::floppyA_handler(void)
 {
   if (SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->get() == BX_FDD_NONE)
     return; // no primary floppy device present
-  if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_FLOPPY) {
+  if (!BX_GUI_THIS fullscreen_mode &&
+      (BX_GUI_THIS dialog_caps & BX_GUI_DLG_FLOPPY)) {
     // instead of just toggling the status, bring up a dialog asking what disk
     // image you want to switch to.
     int ret = SIM->ask_param(BXPN_FLOPPYA);
@@ -370,7 +371,8 @@ void bx_gui_c::floppyB_handler(void)
 {
   if (SIM->get_param_enum(BXPN_FLOPPYB_DEVTYPE)->get() == BX_FDD_NONE)
     return; // no secondary floppy device present
-  if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_FLOPPY) {
+  if (!BX_GUI_THIS fullscreen_mode &&
+      (BX_GUI_THIS dialog_caps & BX_GUI_DLG_FLOPPY)) {
     // instead of just toggling the status, bring up a dialog asking what disk
     // image you want to switch to.
     int ret = SIM->ask_param(BXPN_FLOPPYB);

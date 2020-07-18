@@ -902,7 +902,11 @@ void bx_sdl2_gui_c::handle_events(void)
         }
 
         if (bx_gui->command_mode_active()) {
-          if (sdl_event.key.keysym.sym == SDLK_c) {
+          if (sdl_event.key.keysym.sym == SDLK_a) {
+            bx_gui->floppyA_handler();
+          } else if (sdl_event.key.keysym.sym == SDLK_b) {
+            bx_gui->floppyB_handler();
+          } else if (sdl_event.key.keysym.sym == SDLK_c) {
             bx_gui->copy_handler();
           } else if (sdl_event.key.keysym.sym == SDLK_e) {
             bx_gui->config_handler();
