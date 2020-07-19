@@ -584,7 +584,7 @@ BX_CPP_INLINE Bit64u ReadHostQWordFromLittleEndian(Bit64u *hostPtr)
                        (((Bit64u) ((Bit8u *)(hostPtr))[5])<<40) |
                        (((Bit64u) ((Bit8u *)(hostPtr))[6])<<48) |
                        (((Bit64u) ((Bit8u *)(hostPtr))[7])<<56);
-  return nativeVar64
+  return nativeVar64;
 #else
   return *(hostPtr);
 #endif
