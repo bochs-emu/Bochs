@@ -202,8 +202,14 @@ int CDECL libne2k_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
 
 void CDECL libne2k_LTX_plugin_fini(void)
 {
+  char name[12];
+
   SIM->unregister_addon_option("ne2k");
-  ((bx_list_c*)SIM->get_param("network"))->remove("ne2k");
+  bx_list_c *network = (bx_list_c*)SIM->get_param("network");
+  for (Bit8u card = 0; card < BX_NE2K_MAX_DEVS; card++) {
+    sprintf(name, "ne2k%d", card);
+    network->remove(name);
+  }
   delete NE2kDevMain;
 }
 

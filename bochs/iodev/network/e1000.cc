@@ -378,9 +378,14 @@ int CDECL libe1000_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
 
 void CDECL libe1000_LTX_plugin_fini(void)
 {
+  char name[12];
+
   SIM->unregister_addon_option("e1000");
-  bx_list_c *menu = (bx_list_c*)SIM->get_param("network");
-  menu->remove("e1000");
+  bx_list_c *network = (bx_list_c*)SIM->get_param("network");
+  for (Bit8u card = 0; card < BX_E1000_MAX_DEVS; card++) {
+    sprintf(name, "e1000_%d", card);
+    network->remove(name);
+  }
   delete E1000DevMain;
 }
 
