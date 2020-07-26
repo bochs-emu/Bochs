@@ -1060,9 +1060,19 @@ static void pci_bios_init_device(PCIDevice *d)
 
 static void pci_bios_init_optrom(PCIDevice *d)
 {
-    uint32_t paddr;
+    uint32_t paddr, size;
     uint16_t class;
 
+    if (pci_bios_rom_start == 0xc0000) {
+        /* skip VGA BIOS area in case it's ISA */
+        size = readb((void *)0xc0002);
+        if (size & 0x1f) {
+            size &= 0xe0;
+            size += 0x20;
+        }
+        size <<= 9;
+        pci_bios_rom_start += size;
+    }
     class = pci_config_readw(d, PCI_CLASS_DEVICE);
     if (class != PCI_CLASS_DISPLAY_VGA) {
         paddr = pci_config_readl(d, PCI_ROM_ADDRESS) & 0xfffffc00;
