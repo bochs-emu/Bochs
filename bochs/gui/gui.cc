@@ -706,6 +706,35 @@ const char* bx_gui_c::get_toggle_info(void)
   return mouse_toggle_text;
 }
 
+Bit8u bx_gui_c::get_modifier_keys(void)
+{
+  if ((keymodstate & BX_MOD_KEY_CAPS) > 0) {
+    return ((keymodstate & ~BX_MOD_KEY_CAPS) | BX_MOD_KEY_SHIFT);
+  } else {
+    return keymodstate;
+  }
+}
+
+Bit8u bx_gui_c::set_modifier_keys(Bit8u modifier, bx_bool pressed)
+{
+  Bit8u newstate = keymodstate, changestate = 0;
+
+  if (modifier == BX_MOD_KEY_CAPS) {
+    if (pressed) {
+      newstate ^= modifier;
+    }
+  } else {
+    if (pressed) {
+      newstate |= modifier;
+    } else {
+      newstate &= ~modifier;
+    }
+  }
+  changestate = keymodstate ^ newstate;
+  keymodstate = newstate;
+  return changestate;
+}
+
 bx_bool bx_gui_c::parse_user_shortcut(const char *val)
 {
   char *ptr, shortcut_tmp[512];

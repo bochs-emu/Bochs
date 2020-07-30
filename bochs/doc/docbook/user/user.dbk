@@ -5666,7 +5666,7 @@ will not be received by the OS running in Bochs.
     <entry>Press the Copy button</entry>
   </row>
   <row>
-    <entry>e</entry>
+    <entry>SHIFT + c</entry>
     <entry>Press the Config button</entry>
   </row>
   <row>
@@ -5674,16 +5674,12 @@ will not be received by the OS running in Bochs.
     <entry>Toggle windowed / fullscreen mode (sdl, sdl2 and win32 only)</entry>
   </row>
   <row>
-    <entry>n</entry>
-    <entry>Press the Snapshot button</entry>
-  </row>
-  <row>
-    <entry>o</entry>
-    <entry>Press the Power button</entry>
-  </row>
-  <row>
     <entry>p</entry>
     <entry>Press the Paste button</entry>
+  </row>
+  <row>
+    <entry>SHIFT + p</entry>
+    <entry>Press the Power button</entry>
   </row>
   <row>
     <entry>r</entry>
@@ -5691,6 +5687,10 @@ will not be received by the OS running in Bochs.
   </row>
   <row>
     <entry>s</entry>
+    <entry>Press the Snapshot button</entry>
+  </row>
+  <row>
+    <entry>SHIFT + s</entry>
     <entry>Press the Suspend button</entry>
   </row>
   <row>

@@ -1180,6 +1180,8 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
   PAINTSTRUCT ps;
   bx_bool mouse_toggle = 0;
   int toolbar_cmd = -1;
+  Bit8u kmodchange = 0;
+  bx_bool keymod = 0;
   static BOOL mouseModeChange = FALSE;
 
   switch (iMsg) {
@@ -1323,9 +1325,24 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 
   case WM_KEYDOWN:
   case WM_SYSKEYDOWN:
-    if (wParam == VK_CONTROL) {
-      mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_CTRL, 1);
+    // check modifier keys
+    if (wParam == VK_SHIFT) {
+      kmodchange = bx_gui->set_modifier_keys(BX_MOD_KEY_SHIFT, 1);
+      keymod = 1;
+    } else if (wParam == VK_CONTROL) {
+      kmodchange = bx_gui->set_modifier_keys(BX_MOD_KEY_CTRL, 1);
+      keymod = 1;
     } else if (wParam == VK_MENU) {
+      kmodchange = bx_gui->set_modifier_keys(BX_MOD_KEY_ALT, 1);
+      keymod = 1;
+    } else if (wParam == VK_CAPITAL) {
+      kmodchange = bx_gui->set_modifier_keys(BX_MOD_KEY_CAPS, 1);
+      keymod = 1;
+    }
+    // mouse capture toggle-check
+    if (kmodchange == BX_MOD_KEY_CTRL) {
+      mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_CTRL, 1);
+    } else if (kmodchange == BX_MOD_KEY_ALT) {
       mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_ALT, 1);
     } else if (wParam == VK_F10) {
       mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_F10, 1);
@@ -1338,39 +1355,45 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
       return 0;
     }
     if (bx_gui->command_mode_active()) {
-      if (wParam == 'A') {
-        toolbar_cmd = 0; // Floppy A
-      } else if (wParam == 'B') {
-        toolbar_cmd = 1; // Floppy B
-      } else if (wParam == 'C') {
-        toolbar_cmd = 10; // Copy
-      } else if (wParam == 'E') {
-        toolbar_cmd = 7; // Config
-      } else if (wParam == 'F') {
-        if (!saveParent) {
-          BX_INFO(("entering fullscreen mode"));
-          set_fullscreen_mode(TRUE);
-          bx_gui->set_fullscreen_mode(1);
-        } else {
-          BX_INFO(("leaving fullscreen mode"));
-          resize_main_window(TRUE);
-          bx_gui->set_fullscreen_mode(0);
+      if (bx_gui->get_modifier_keys() == 0) {
+        if (wParam == 'A') {
+          toolbar_cmd = 0; // Floppy A
+        } else if (wParam == 'B') {
+          toolbar_cmd = 1; // Floppy B
+        } else if (wParam == 'C') {
+          toolbar_cmd = 10; // Copy
+        } else if (wParam == 'F') {
+          if (!saveParent) {
+            BX_INFO(("entering fullscreen mode"));
+            set_fullscreen_mode(TRUE);
+            bx_gui->set_fullscreen_mode(1);
+          } else {
+            BX_INFO(("leaving fullscreen mode"));
+            resize_main_window(TRUE);
+            bx_gui->set_fullscreen_mode(0);
+          }
+        } else if (wParam == 'P') {
+          toolbar_cmd = 9; // Paste
+        } else if (wParam == 'R') {
+          toolbar_cmd = 6; // Reset
+        } else if (wParam == 'S') {
+          toolbar_cmd = 8; // Snapshot
+        } else if (wParam == 'U') {
+          toolbar_cmd = 11; // User
         }
-      } else if (wParam == 'N') {
-        toolbar_cmd = 8; // Snapshot
-      } else if (wParam == 'O') {
-        toolbar_cmd = 4; // Power
-      } else if (wParam == 'P') {
-        toolbar_cmd = 9; // Paste
-      } else if (wParam == 'R') {
-        toolbar_cmd = 6; // Reset
-      } else if (wParam == 'S') {
-        toolbar_cmd = 5; // Suspend
-      } else if (wParam == 'U') {
-        toolbar_cmd = 11; // User
+      } else if (bx_gui->get_modifier_keys() == BX_MOD_KEY_SHIFT) {
+        if (wParam == 'C') {
+          toolbar_cmd = 7; // Config
+        } else if (wParam == 'P') {
+          toolbar_cmd = 4; // Power
+        } else if (wParam == 'S') {
+          toolbar_cmd = 5; // Suspend
+        }
       }
-      bx_gui->set_command_mode(0);
-      SetMouseToggleInfo();
+      if (!keymod) {
+        bx_gui->set_command_mode(0);
+        SetMouseToggleInfo();
+      }
       if (toolbar_cmd >= 0) {
         EnterCriticalSection(&stInfo.keyCS);
         enq_key_event((Bit32u)toolbar_cmd, TOOLBAR_CLICKED);
@@ -1381,7 +1404,8 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
         return 0;
       }
     } else {
-      if (bx_gui->has_command_mode() && (wParam == COMMAND_MODE_VKEY)) {
+      if (bx_gui->has_command_mode() && (bx_gui->get_modifier_keys() == 0) &&
+          (wParam == COMMAND_MODE_VKEY)) {
         bx_gui->set_command_mode(1);
         SetStatusText(0, "Command mode", TRUE);
         return 0;
@@ -1408,9 +1432,18 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
         resize_main_window(TRUE);
       }
     } else {
-      if (wParam == VK_CONTROL) {
-        bx_gui->mouse_toggle_check(BX_MT_KEY_CTRL, 0);
+      // check modifier keys
+      if (wParam == VK_SHIFT) {
+        kmodchange = bx_gui->set_modifier_keys(BX_MOD_KEY_SHIFT, 0);
+      } else if (wParam == VK_CONTROL) {
+        kmodchange = bx_gui->set_modifier_keys(BX_MOD_KEY_CTRL, 0);
       } else if (wParam == VK_MENU) {
+        kmodchange = bx_gui->set_modifier_keys(BX_MOD_KEY_ALT, 0);
+      }
+      // mouse capture toggle-check
+      if (kmodchange == BX_MOD_KEY_CTRL) {
+        bx_gui->mouse_toggle_check(BX_MT_KEY_CTRL, 0);
+      } else if (kmodchange == BX_MOD_KEY_ALT) {
         bx_gui->mouse_toggle_check(BX_MT_KEY_ALT, 0);
       } else if (wParam == VK_F10) {
         bx_gui->mouse_toggle_check(BX_MT_KEY_F10, 0);

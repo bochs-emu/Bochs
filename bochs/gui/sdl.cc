@@ -831,7 +831,7 @@ void bx_sdl_gui_c::handle_events(void)
 {
   SDL_Event sdl_event;
   Bit32u key_event;
-  Bit8u mouse_state;
+  Bit8u mouse_state, kmodchange = 0;
   int dx, dy, wheel_status;
   bx_bool mouse_toggle = 0;
 
@@ -948,6 +948,19 @@ void bx_sdl_gui_c::handle_events(void)
         break;
 
       case SDL_KEYDOWN:
+        // check modifier keys
+        if ((sdl_event.key.keysym.sym == SDLK_LSHIFT) ||
+            (sdl_event.key.keysym.sym == SDLK_RSHIFT)) {
+          kmodchange = set_modifier_keys(BX_MOD_KEY_SHIFT, 1);
+        } else if ((sdl_event.key.keysym.sym == SDLK_LCTRL) ||
+                   (sdl_event.key.keysym.sym == SDLK_RCTRL)) {
+          kmodchange = set_modifier_keys(BX_MOD_KEY_CTRL, 1);
+        } else if (sdl_event.key.keysym.sym == SDLK_LALT) {
+          kmodchange = set_modifier_keys(BX_MOD_KEY_ALT, 1);
+        } else if (sdl_event.key.keysym.sym == SDLK_CAPSLOCK) {
+          kmodchange = set_modifier_keys(BX_MOD_KEY_CAPS, 1);
+        }
+        // handle gui console mode
         if (console_running()) {
           SDLKey keysym = sdl_event.key.keysym.sym;
           Bit8u ascii = (Bit8u)sdl_event.key.keysym.unicode;
@@ -961,10 +974,9 @@ void bx_sdl_gui_c::handle_events(void)
         }
         // mouse capture toggle-check
         if (sdl_fullscreen_toggle == 0) {
-          if ((sdl_event.key.keysym.sym == SDLK_LCTRL) ||
-              (sdl_event.key.keysym.sym == SDLK_RCTRL)) {
+          if ((kmodchange & BX_MOD_KEY_CTRL) > 0) {
             mouse_toggle = mouse_toggle_check(BX_MT_KEY_CTRL, 1);
-          } else if (sdl_event.key.keysym.sym == SDLK_LALT) {
+          } else if ((kmodchange & BX_MOD_KEY_ALT) > 0) {
             mouse_toggle = mouse_toggle_check(BX_MT_KEY_ALT, 1);
           } else if (sdl_event.key.keysym.sym == SDLK_F10) {
             mouse_toggle = mouse_toggle_check(BX_MT_KEY_F10, 1);
@@ -975,46 +987,52 @@ void bx_sdl_gui_c::handle_events(void)
             toggle_mouse_enable();
           }
         }
-
+        // handle command mode
         if (bx_gui->command_mode_active()) {
-          if (sdl_event.key.keysym.sym == SDLK_a) {
-            bx_gui->floppyA_handler();
-          } else if (sdl_event.key.keysym.sym == SDLK_b) {
-            bx_gui->floppyB_handler();
-          } else if (sdl_event.key.keysym.sym == SDLK_c) {
-            bx_gui->copy_handler();
-          } else if (sdl_event.key.keysym.sym == SDLK_e) {
-            bx_gui->config_handler();
-          } else if (sdl_event.key.keysym.sym == SDLK_f) {
-            sdl_fullscreen_toggle = !sdl_fullscreen_toggle;
-            if (sdl_fullscreen_toggle == 0) {
-              switch_to_windowed();
-            } else {
-              switch_to_fullscreen();
+          if (bx_gui->get_modifier_keys() == 0) {
+            if (sdl_event.key.keysym.sym == SDLK_a) {
+              bx_gui->floppyA_handler();
+            } else if (sdl_event.key.keysym.sym == SDLK_b) {
+              bx_gui->floppyB_handler();
+            } else if (sdl_event.key.keysym.sym == SDLK_c) {
+              bx_gui->copy_handler();
+            } else if (sdl_event.key.keysym.sym == SDLK_f) {
+              sdl_fullscreen_toggle = !sdl_fullscreen_toggle;
+              if (sdl_fullscreen_toggle == 0) {
+                switch_to_windowed();
+              } else {
+                switch_to_fullscreen();
+              }
+              bx_gui->set_fullscreen_mode(sdl_fullscreen_toggle);
+            } else if (sdl_event.key.keysym.sym == SDLK_p) {
+              bx_gui->paste_handler();
+            } else if (sdl_event.key.keysym.sym == SDLK_r) {
+              bx_gui->reset_handler();
+            } else if (sdl_event.key.keysym.sym == SDLK_s) {
+              bx_gui->snapshot_handler();
+            } else if (sdl_event.key.keysym.sym == SDLK_u) {
+              bx_gui->userbutton_handler();
             }
-            bx_gui->set_fullscreen_mode(sdl_fullscreen_toggle);
-          } else if (sdl_event.key.keysym.sym == SDLK_n) {
-            bx_gui->snapshot_handler();
-          } else if (sdl_event.key.keysym.sym == SDLK_o) {
-            bx_gui->power_handler();
-          } else if (sdl_event.key.keysym.sym == SDLK_p) {
-            bx_gui->paste_handler();
-          } else if (sdl_event.key.keysym.sym == SDLK_r) {
-            bx_gui->reset_handler();
-          } else if (sdl_event.key.keysym.sym == SDLK_s) {
-            bx_gui->save_restore_handler();
-          } else if (sdl_event.key.keysym.sym == SDLK_u) {
-            bx_gui->userbutton_handler();
+          } else if (bx_gui->get_modifier_keys() == BX_MOD_KEY_SHIFT) {
+            if (sdl_event.key.keysym.sym == SDLK_c) {
+              bx_gui->config_handler();
+            } else if (sdl_event.key.keysym.sym == SDLK_p) {
+              bx_gui->power_handler();
+            } else if (sdl_event.key.keysym.sym == SDLK_s) {
+              bx_gui->save_restore_handler();
+            }
           }
-          bx_gui->set_command_mode(0);
+          if (kmodchange == 0) {
+            bx_gui->set_command_mode(0);
 #if BX_SHOW_IPS
-          sdl_show_info_msg = 0;
+            sdl_show_info_msg = 0;
 #endif
+          }
           if (sdl_event.key.keysym.sym != COMMAND_MODE_KEYSYM) {
             return;
           }
         } else {
-          if (bx_gui->has_command_mode() &&
+          if (bx_gui->has_command_mode() && (bx_gui->get_modifier_keys() == 0) &&
               (sdl_event.key.keysym.sym == COMMAND_MODE_KEYSYM)) {
             bx_gui->set_command_mode(1);
             sdl_set_status_text(0, "Command mode", 1);
@@ -1062,11 +1080,20 @@ void bx_sdl_gui_c::handle_events(void)
         break;
 
       case SDL_KEYUP:
-        // mouse capture toggle-check
-        if ((sdl_event.key.keysym.sym == SDLK_LCTRL) ||
-            (sdl_event.key.keysym.sym == SDLK_RCTRL)) {
-          mouse_toggle_check(BX_MT_KEY_CTRL, 0);
+        // check modifier keys
+        if ((sdl_event.key.keysym.sym == SDLK_LSHIFT) ||
+            (sdl_event.key.keysym.sym == SDLK_RSHIFT)) {
+          kmodchange = set_modifier_keys(BX_MOD_KEY_SHIFT, 0);
+        } else if ((sdl_event.key.keysym.sym == SDLK_LCTRL) ||
+                   (sdl_event.key.keysym.sym == SDLK_RCTRL)) {
+          kmodchange = set_modifier_keys(BX_MOD_KEY_CTRL, 0);
         } else if (sdl_event.key.keysym.sym == SDLK_LALT) {
+          kmodchange = set_modifier_keys(BX_MOD_KEY_ALT, 0);
+        }
+        // mouse capture toggle-check
+        if ((kmodchange & BX_MOD_KEY_CTRL) > 0) {
+          mouse_toggle_check(BX_MT_KEY_CTRL, 0);
+        } else if ((kmodchange & BX_MOD_KEY_ALT) > 0) {
           mouse_toggle_check(BX_MT_KEY_ALT, 0);
         } else if (sdl_event.key.keysym.sym == SDLK_F10) {
           mouse_toggle_check(BX_MT_KEY_F10, 0);

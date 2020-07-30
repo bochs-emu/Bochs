@@ -1941,7 +1941,18 @@ void bx_x_gui_c::send_mouse_status(void)
 void bx_x_gui_c::xkeypress(KeySym keysym, int press_release)
 {
   Bit32u key_event;
+  Bit8u kmodchange = 0;
   bx_bool mouse_toggle = 0;
+
+  if ((keysym == XK_Shift_L) || (keysym == XK_Shift_R)) {
+    kmodchange = set_modifier_keys(BX_MOD_KEY_SHIFT, !press_release);
+  } else if ((keysym == XK_Control_L) || (keysym == XK_Control_R)) {
+    kmodchange = set_modifier_keys(BX_MOD_KEY_CTRL, !press_release);
+  } else if (keysym == XK_Alt_L) {
+    kmodchange = set_modifier_keys(BX_MOD_KEY_ALT, !press_release);
+  } else if (keysym == XK_Caps_Lock) {
+    kmodchange = set_modifier_keys(BX_MOD_KEY_CAPS, !press_release);
+  }
 
   if (console_running() && !press_release) {
     if (((keysym >= XK_space) && (keysym <= XK_asciitilde)) ||
@@ -1950,14 +1961,15 @@ void bx_x_gui_c::xkeypress(KeySym keysym, int press_release)
     }
     return;
   }
-  if ((keysym == XK_Control_L) || (keysym == XK_Control_R)) {
-     mouse_toggle = mouse_toggle_check(BX_MT_KEY_CTRL, !press_release);
-  } else if (keysym == XK_Alt_L) {
-     mouse_toggle = mouse_toggle_check(BX_MT_KEY_ALT, !press_release);
+
+  if ((kmodchange & BX_MOD_KEY_CTRL) > 0) {
+    mouse_toggle = mouse_toggle_check(BX_MT_KEY_CTRL, !press_release);
+  } else if ((kmodchange & BX_MOD_KEY_ALT) > 0) {
+    mouse_toggle = mouse_toggle_check(BX_MT_KEY_ALT, !press_release);
   } else if (keysym == XK_F10) {
-     mouse_toggle = mouse_toggle_check(BX_MT_KEY_F10, !press_release);
+    mouse_toggle = mouse_toggle_check(BX_MT_KEY_F10, !press_release);
   } else if (keysym == XK_F12) {
-     mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_F12, !press_release);
+    mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_F12, !press_release);
   }
   if (mouse_toggle) {
     toggle_mouse_enable();
@@ -1972,28 +1984,31 @@ void bx_x_gui_c::xkeypress(KeySym keysym, int press_release)
         bx_gui->floppyB_handler();
       } else if (keysym == XK_c) {
         bx_gui->copy_handler();
-      } else if (keysym == XK_e) {
+      } else if (keysym == XK_C) {
         bx_gui->config_handler();
-      } else if (keysym == XK_n) {
-        bx_gui->snapshot_handler();
-      } else if (keysym == XK_o) {
-        bx_gui->power_handler();
       } else if (keysym == XK_p) {
         bx_gui->paste_handler();
+      } else if (keysym == XK_P) {
+        bx_gui->power_handler();
       } else if (keysym == XK_r) {
         bx_gui->reset_handler();
       } else if (keysym == XK_s) {
+        bx_gui->snapshot_handler();
+      } else if (keysym == XK_S) {
         bx_gui->save_restore_handler();
       } else if (keysym == XK_u) {
         bx_gui->userbutton_handler();
       }
-      bx_gui->set_command_mode(0);
-      x11_set_status_text(0, "", 0, 1);
+      if (kmodchange == 0) {
+        bx_gui->set_command_mode(0);
+        x11_set_status_text(0, "", 0, 1);
+      }
       if (keysym != COMMAND_MODE_KEYSYM) {
         return;
       }
     } else {
-      if ((bx_gui->has_command_mode()) && (keysym == COMMAND_MODE_KEYSYM)) {
+      if ((bx_gui->has_command_mode()) && (bx_gui->get_modifier_keys() == 0) &&
+          (keysym == COMMAND_MODE_KEYSYM)) {
         bx_gui->set_command_mode(1);
         x11_set_status_text(0, "Command mode", 0, 1);
         return;

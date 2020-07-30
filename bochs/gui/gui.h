@@ -44,6 +44,12 @@
 #define BX_TEXT_BLINK_TOGGLE    0x02
 #define BX_TEXT_BLINK_STATE     0x04
 
+// modifier keys
+#define BX_MOD_KEY_SHIFT        0x01
+#define BX_MOD_KEY_CTRL         0x02
+#define BX_MOD_KEY_ALT          0x04
+#define BX_MOD_KEY_CAPS         0x08
+
 // mouse capture toggle feature
 #define BX_MT_KEY_CTRL          0x01
 #define BX_MT_KEY_ALT           0x02
@@ -175,6 +181,8 @@ public:
   static void toggle_mouse_enable(void);
   bx_bool mouse_toggle_check(Bit32u key, bx_bool pressed);
   const char* get_toggle_info(void);
+  Bit8u get_modifier_keys(void);
+  Bit8u set_modifier_keys(Bit8u modifier, bx_bool pressed);
   bx_bool parse_user_shortcut(const char *val);
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
   void init_debug_dialog(void);
@@ -297,6 +305,8 @@ protected:
     Bit8u red;
     Bit8u reserved;
   } palette[256];
+  // modifier keys
+  Bit8u keymodstate;
   // mouse toggle setup
   Bit8u toggle_method;
   Bit32u toggle_keystate;
