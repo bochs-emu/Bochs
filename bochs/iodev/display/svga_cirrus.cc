@@ -2778,8 +2778,9 @@ void bx_svga_cirrus_c::svga_patterncopy()
 {
   Bit8u color[4];
   Bit8u work_colorexp[256];
-  Bit8u *src, *dst, dstaddr;
+  Bit8u *src, *dst;
   Bit8u *srcc, *src2;
+  Bit32u dstaddr;
   int x, y, pattern_x, pattern_y, srcskipleft;
   int patternbytes = 8 * BX_CIRRUS_THIS bitblt.pixelwidth;
   int pattern_pitch = patternbytes;
