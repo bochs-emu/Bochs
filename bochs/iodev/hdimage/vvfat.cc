@@ -1108,7 +1108,7 @@ bx_bool vvfat_image_t::read_sector_from_file(const char *path, Bit8u *buffer, Bi
 void vvfat_image_t::set_file_attributes(void)
 {
   char path[BX_PATHNAME_LEN];
-  char fpath[BX_PATHNAME_LEN];
+  char fpath[BX_PATHNAME_LEN+1];
   char line[512];
   char *ret, *ptr;
   FILE *fd;
@@ -1566,7 +1566,7 @@ void vvfat_image_t::parse_directory(const char *path, Bit32u start_cluster)
   Bit8u *buffer, *ptr;
   direntry_t *entry, *newentry;
   char filename[BX_PATHNAME_LEN];
-  char full_path[BX_PATHNAME_LEN];
+  char full_path[BX_PATHNAME_LEN+1];
   char attr_txt[4];
   const char *rel_path;
   mapping_t *mapping;

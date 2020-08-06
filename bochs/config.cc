@@ -227,16 +227,16 @@ void bx_init_usb_options(const char *usb_name, const char *pname, int maxports)
   sprintf(descr, "Enables the %s emulation", usb_name);
   bx_param_bool_c *enabled = new bx_param_bool_c(menu, "enabled", label, descr, 1);
   bx_list_c *deplist = new bx_list_c(NULL);
-  for (int i = 0; i < maxports; i++) {
-    sprintf(name, "port%d", i+1);
-    sprintf(label, "Port #%d Configuration", i+1);
-    sprintf(descr, "Device connected to %s port #%d and it's options", usb_name, i+1);
+  for (Bit8u i = 0; i < maxports; i++) {
+    sprintf(name, "port%u", i+1);
+    sprintf(label, "Port #%u Configuration", i+1);
+    sprintf(descr, "Device connected to %s port #%u and it's options", usb_name, i+1);
     bx_list_c *port = new bx_list_c(menu, name, label);
     port->set_options(port->SERIES_ASK | port->USE_BOX_TITLE);
     sprintf(descr, "Device connected to %s port #%d", usb_name, i+1);
     bx_param_string_c *device = new bx_param_string_c(port, "device", "Device",
                                                       descr, "", BX_PATHNAME_LEN);
-    sprintf(descr, "Options for device connected to %s port #%d", usb_name, i+1);
+    sprintf(descr, "Options for device connected to %s port #%u", usb_name, i+1);
     bx_param_string_c *options = new bx_param_string_c(port, "options", "Options",
                                                        descr, "", BX_PATHNAME_LEN);
     port->set_group(group);

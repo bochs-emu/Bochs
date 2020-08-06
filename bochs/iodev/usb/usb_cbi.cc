@@ -5,7 +5,7 @@
 //  UFI/CBI floppy disk storage device support
 //
 //  Copyright (c) 2015       Benjamin David Lunt
-//  Copyright (C) 2015-2016  The Bochs Project
+//  Copyright (C) 2015-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -312,7 +312,7 @@ const char *fdimage_mode_names[] = {
   NULL
 };
 
-static int usb_floppy_count = 0;
+static Bit8u usb_floppy_count = 0;
 
 usb_cbi_device_c::usb_cbi_device_c(const char *filename)
 {
@@ -368,8 +368,8 @@ usb_cbi_device_c::usb_cbi_device_c(const char *filename)
     DEV_register_timer(this, floppy_timer_handler, CBI_SECTOR_TIME, 0, 0, "USB FD timer");
   // config options
   bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
-  sprintf(pname, "floppy%d", ++usb_floppy_count);
-  sprintf(label, "USB floppy #%d Configuration", usb_floppy_count);
+  sprintf(pname, "floppy%u", ++usb_floppy_count);
+  sprintf(label, "USB floppy #%u Configuration", usb_floppy_count);
   s.config = new bx_list_c(usb_rt, pname, label);
   s.config->set_options(bx_list_c::SERIES_ASK | bx_list_c::USE_BOX_TITLE);
   s.config->set_device_param(this);

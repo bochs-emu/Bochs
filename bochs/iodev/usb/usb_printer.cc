@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009-2016  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2009-2017  The Bochs Project
+//                2009-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -135,11 +135,11 @@ static const Bit8u bx_device_id_string[] =
   "VP:0800,FL,B0;"
   "VJ: ;";
 
-static int usb_printer_count = 0;
+static Bit8u usb_printer_count = 0;
 
 usb_printer_device_c::usb_printer_device_c(usbdev_type type, const char *filename)
 {
-  char pname[10];
+  char pname[12];
   char label[32];
   bx_param_string_c *fname;
 
@@ -158,8 +158,8 @@ usb_printer_device_c::usb_printer_device_c(usbdev_type type, const char *filenam
   s.fp = NULL;
   // config options
   bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
-  sprintf(pname, "printer%d", ++usb_printer_count);
-  sprintf(label, "USB Printer #%d Configuration", usb_printer_count);
+  sprintf(pname, "printer%u", ++usb_printer_count);
+  sprintf(label, "USB Printer #%u Configuration", usb_printer_count);
   s.config = new bx_list_c(usb_rt, pname, label);
   s.config->set_options(bx_list_c::SHOW_PARENT | bx_list_c::USE_BOX_TITLE);
   s.config->set_device_param(this);

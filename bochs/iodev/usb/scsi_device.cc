@@ -9,7 +9,7 @@
 //
 //  Written by Paul Brook
 //
-//  Copyright (C) 2007-2018  The Bochs Project
+//  Copyright (C) 2007-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -48,7 +48,7 @@ static Bit32u serial_number = 12345678;
 Bit64s scsireq_save_handler(void *class_ptr, bx_param_c *param)
 {
   char fname[BX_PATHNAME_LEN];
-  char path[BX_PATHNAME_LEN];
+  char path[BX_PATHNAME_LEN+1];
 
   param->get_param_path(fname, BX_PATHNAME_LEN);
   if (!strncmp(fname, "bochs.", 6)) {
@@ -64,7 +64,7 @@ Bit64s scsireq_save_handler(void *class_ptr, bx_param_c *param)
 void scsireq_restore_handler(void *class_ptr, bx_param_c *param, Bit64s value)
 {
   char fname[BX_PATHNAME_LEN];
-  char path[BX_PATHNAME_LEN];
+  char path[BX_PATHNAME_LEN+1];
 
   if (value != 0) {
     param->get_param_path(fname, BX_PATHNAME_LEN);

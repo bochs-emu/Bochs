@@ -642,7 +642,7 @@ void logfunctions::fatal1(const char *fmt, ...)
 void logfunctions::fatal(int level, const char *prefix, const char *fmt, va_list ap, int exit_status)
 {
   char tmpbuf[1024];
-  char exit_msg[1024];
+  char exit_msg[1024+1];
 
   vsnprintf(tmpbuf, sizeof(tmpbuf), fmt, ap);
   va_end(ap);

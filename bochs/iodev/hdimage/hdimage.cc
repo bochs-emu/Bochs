@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2018  The Bochs Project
+//  Copyright (C) 2002-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -355,7 +355,7 @@ Bit16u fat_datetime(FILETIME time, int return_time)
 Bit64s hdimage_save_handler(void *class_ptr, bx_param_c *param)
 {
   char imgname[BX_PATHNAME_LEN];
-  char path[BX_PATHNAME_LEN];
+  char path[BX_PATHNAME_LEN+1];
 
   param->get_param_path(imgname, BX_PATHNAME_LEN);
   if (!strncmp(imgname, "bochs.", 6)) {
@@ -371,7 +371,7 @@ Bit64s hdimage_save_handler(void *class_ptr, bx_param_c *param)
 void hdimage_restore_handler(void *class_ptr, bx_param_c *param, Bit64s value)
 {
   char imgname[BX_PATHNAME_LEN];
-  char path[BX_PATHNAME_LEN];
+  char path[BX_PATHNAME_LEN+1];
 
   if (value != 0) {
     param->get_param_path(imgname, BX_PATHNAME_LEN);

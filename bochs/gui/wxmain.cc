@@ -1239,9 +1239,9 @@ void MyFrame::editFirstCdrom()
 void MyFrame::OnEditATA(wxCommandEvent& event)
 {
   int id = event.GetId();
-  int channel = id - ID_Edit_ATA0;
+  Bit8u channel = id - ID_Edit_ATA0;
   char ata_name[10];
-  sprintf(ata_name, "ata.%d", channel);
+  sprintf(ata_name, "ata.%u", channel);
   ParamDialog dlg(this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param(ata_name);
   dlg.SetTitle(wxString(list->get_title(), wxConvUTF8));

@@ -333,7 +333,7 @@ static const Bit8u bx_msd_bos_descriptor3[] = {
 
 void usb_msd_restore_handler(void *dev, bx_list_c *conf);
 
-static int usb_cdrom_count = 0;
+static Bit8u usb_cdrom_count = 0;
 
 usb_msd_device_c::usb_msd_device_c(usbdev_type type, const char *filename)
 {
@@ -369,8 +369,8 @@ usb_msd_device_c::usb_msd_device_c(usbdev_type type, const char *filename)
     strcpy(s.fname, filename);
     // config options
     bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
-    sprintf(pname, "cdrom%d", ++usb_cdrom_count);
-    sprintf(label, "USB CD-ROM #%d Configuration", usb_cdrom_count);
+    sprintf(pname, "cdrom%u", ++usb_cdrom_count);
+    sprintf(label, "USB CD-ROM #%u Configuration", usb_cdrom_count);
     s.config = new bx_list_c(usb_rt, pname, label);
     s.config->set_options(bx_list_c::SERIES_ASK | bx_list_c::USE_BOX_TITLE);
     s.config->set_device_param(this);

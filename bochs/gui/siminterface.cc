@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2018  The Bochs Project
+//  Copyright (C) 2002-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1355,7 +1355,7 @@ bx_bool bx_real_sim_c::restore_hardware()
 bx_bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_path, int level)
 {
   int i, j;
-  char pname[BX_PATHNAME_LEN], tmpstr[BX_PATHNAME_LEN];
+  char pname[BX_PATHNAME_LEN], tmpstr[BX_PATHNAME_LEN+1];
   FILE *fp2;
 
   for (i=0; i<level; i++)
