@@ -203,10 +203,8 @@ static void bootp_reply(Slirp *slirp, const struct bootp_t *bp)
     struct sockaddr_in saddr, daddr;
     struct in_addr bcast_addr;
     int val;
-    uint8_t *q, *pp, plen, dhcp_def_params_len;
+    uint8_t *q, *pp, plen;
     uint8_t client_ethaddr[ETH_ALEN];
-    uint8_t dhcp_def_params[8];
-    bx_bool dhcp_def_params_valid = 0;
     dhcp_options_t dhcp_opts;
     size_t spaceleft;
     char msg[80];
@@ -237,7 +235,6 @@ static void bootp_reply(Slirp *slirp, const struct bootp_t *bp)
     rbp = (struct bootp_t *)m->m_data;
     m->m_data += sizeof(struct udpiphdr);
     memset(rbp, 0, sizeof(struct bootp_t));
-    dhcp_def_params_len = 0;
 
     if (dhcp_opts.msg_type == DHCPDISCOVER) {
         if (dhcp_opts.req_addr.s_addr != htonl(0L)) {
@@ -255,24 +252,11 @@ static void bootp_reply(Slirp *slirp, const struct bootp_t *bp)
             }
         }
         memcpy(bc->macaddr, client_ethaddr, ETH_ALEN);
-        dhcp_def_params[0] = RFC2132_LEASE_TIME;
-        dhcp_def_params[1] = RFC2132_SRV_ID;
-        dhcp_def_params_len = 2;
-        if (*slirp->client_hostname || (dhcp_opts.hostname != NULL)) {
-            dhcp_def_params[dhcp_def_params_len++] = RFC1533_HOSTNAME;
-        }
-        dhcp_def_params_valid = 1;
     } else if (dhcp_opts.req_addr.s_addr != htonl(0L)) {
         bc = request_addr(slirp, &dhcp_opts.req_addr, client_ethaddr);
         if (bc) {
             daddr.sin_addr = dhcp_opts.req_addr;
             memcpy(bc->macaddr, client_ethaddr, ETH_ALEN);
-            dhcp_def_params[0] = RFC2132_LEASE_TIME;
-            dhcp_def_params_len = 1;
-            if (!dhcp_opts.found_srv_id) {
-                dhcp_def_params[dhcp_def_params_len++] = RFC2132_SRV_ID;
-            }
-            dhcp_def_params_valid = 1;
         } else {
             /* DHCPNAKs should be sent to broadcast */
             daddr.sin_addr.s_addr = 0xffffffff;
@@ -328,107 +312,98 @@ static void bootp_reply(Slirp *slirp, const struct bootp_t *bp)
 
         strcpy((char *)rbp->bp_sname, "slirp");
 
+        // Default DHCP options must be on top of reply
+        *q++ = RFC2132_SRV_ID;
+        *q++ = 4;
+        memcpy(q, &saddr.sin_addr, 4);
+        q += 4;
+        *q++ = RFC2132_LEASE_TIME;
+        *q++ = 4;
+        if ((dhcp_opts.lease_time != 0) &&
+            (ntohl(dhcp_opts.lease_time) < LEASE_TIME)) {
+            memcpy(q, &dhcp_opts.lease_time, 4);
+        } else {
+            val = htonl(LEASE_TIME);
+            memcpy(q, &val, 4);
+        }
+        q += 4;
+        dhcp_opts.lease_time = 0;
+        if (*slirp->client_hostname || (dhcp_opts.hostname != NULL)) {
+            val = 0;
+            if (*slirp->client_hostname) {
+                val = strlen(slirp->client_hostname);
+            } else if (dhcp_opts.hostname != NULL) {
+                val = strlen(dhcp_opts.hostname);
+            }
+            if ((val > 0) && (spaceleft >= (size_t)(val + 2))) {
+                *q++ = RFC1533_HOSTNAME;
+                *q++ = val;
+                if (*slirp->client_hostname) {
+                    memcpy(q, slirp->client_hostname, val);
+                } else {
+                    memcpy(q, dhcp_opts.hostname, val);
+                }
+                q += val;
+            }
+            if (dhcp_opts.hostname != NULL) {
+                free(dhcp_opts.hostname);
+                dhcp_opts.hostname = NULL;
+            }
+        }
         pp = dhcp_opts.params;
         plen = dhcp_opts.params_len;
-        while (1) {
-            while (plen-- > 0) {
-                spaceleft = sizeof(rbp->bp_vend) - (q - rbp->bp_vend);
-                if (spaceleft < 6) break;
-                switch (*pp++) {
-                    case RFC1533_NETMASK:
-                        *q++ = RFC1533_NETMASK;
-                        *q++ = 4;
-                        memcpy(q, &slirp->vnetwork_mask, 4);
-                        q += 4;
-                        break;
-                    case RFC1533_GATEWAY:
-                        if (!slirp->restricted) {
-                            *q++ = RFC1533_GATEWAY;
-                            *q++ = 4;
-                            memcpy(q, &saddr.sin_addr, 4);
-                            q += 4;
-                        }
-                        break;
-                    case RFC1533_DNS:
-                        if (!slirp->restricted) {
-                            *q++ = RFC1533_DNS;
-                            *q++ = 4;
-                            memcpy(q, &slirp->vnameserver_addr, 4);
-                            q += 4;
-                        }
-                        break;
-                    case RFC1533_HOSTNAME:
-                        val = 0;
-                        if (*slirp->client_hostname) {
-                            val = strlen(slirp->client_hostname);
-                        } else if (dhcp_opts.hostname != NULL) {
-                            val = strlen(dhcp_opts.hostname);
-                        }
-                        if ((val > 0) && (spaceleft >= (size_t)(val + 2))) {
-                            *q++ = RFC1533_HOSTNAME;
-                            *q++ = val;
-                            if (*slirp->client_hostname) {
-                                memcpy(q, slirp->client_hostname, val);
-                            } else {
-                                memcpy(q, dhcp_opts.hostname, val);
-                            }
-                            q += val;
-                        }
-                        if (dhcp_opts.hostname != NULL) {
-                            free(dhcp_opts.hostname);
-                            dhcp_opts.hostname = NULL;
-                        }
-                        break;
-                    case RFC1533_INTBROADCAST:
-                        *q++ = RFC1533_INTBROADCAST;
-                        *q++ = 4;
-                        bcast_addr.s_addr = slirp->vhost_addr.s_addr | ~slirp->vnetwork_mask.s_addr;
-                        memcpy(q, &bcast_addr, 4);
-                        q += 4;
-                        break;
-                    case RFC2132_LEASE_TIME:
-                        *q++ = RFC2132_LEASE_TIME;
-                        *q++ = 4;
-                        if ((dhcp_opts.lease_time != 0) &&
-                            (ntohl(dhcp_opts.lease_time) < LEASE_TIME)) {
-                            memcpy(q, &dhcp_opts.lease_time, 4);
-                        } else {
-                            val = htonl(LEASE_TIME);
-                            memcpy(q, &val, 4);
-                        }
-                        q += 4;
-                        dhcp_opts.lease_time = 0;
-                        break;
-                    case RFC2132_SRV_ID:
-                        *q++ = RFC2132_SRV_ID;
+        while (plen-- > 0) {
+            spaceleft = sizeof(rbp->bp_vend) - (q - rbp->bp_vend);
+            if (spaceleft < 6) break;
+            switch (*pp++) {
+                case RFC1533_NETMASK:
+                    *q++ = RFC1533_NETMASK;
+                    *q++ = 4;
+                    memcpy(q, &slirp->vnetwork_mask, 4);
+                    q += 4;
+                    break;
+                case RFC1533_GATEWAY:
+                    if (!slirp->restricted) {
+                        *q++ = RFC1533_GATEWAY;
                         *q++ = 4;
                         memcpy(q, &saddr.sin_addr, 4);
                         q += 4;
-                        break;
-                    case RFC2132_RENEWAL_TIME:
-                        *q++ = RFC2132_RENEWAL_TIME;
+                    }
+                    break;
+                case RFC1533_DNS:
+                    if (!slirp->restricted) {
+                        *q++ = RFC1533_DNS;
                         *q++ = 4;
-                        val = htonl(600);
-                        memcpy(q, &val, 4);
+                        memcpy(q, &slirp->vnameserver_addr, 4);
                         q += 4;
-                        break;
-                    case RFC2132_REBIND_TIME:
-                        *q++ = RFC2132_REBIND_TIME;
-                        *q++ = 4;
-                        val = htonl(1800);
-                        memcpy(q, &val, 4);
-                        q += 4;
-                        break;
-                    default:
-                        sprintf(msg, "DHCP server: requested parameter %u not supported yet",
-                                *(pp-1));
-                        slirp_warning(slirp, msg);
-                }
+                    }
+                    break;
+                case RFC1533_INTBROADCAST:
+                    *q++ = RFC1533_INTBROADCAST;
+                    *q++ = 4;
+                    bcast_addr.s_addr = slirp->vhost_addr.s_addr | ~slirp->vnetwork_mask.s_addr;
+                    memcpy(q, &bcast_addr, 4);
+                    q += 4;
+                    break;
+                case RFC2132_RENEWAL_TIME:
+                    *q++ = RFC2132_RENEWAL_TIME;
+                    *q++ = 4;
+                    val = htonl(600);
+                    memcpy(q, &val, 4);
+                    q += 4;
+                    break;
+                case RFC2132_REBIND_TIME:
+                    *q++ = RFC2132_REBIND_TIME;
+                    *q++ = 4;
+                    val = htonl(1800);
+                    memcpy(q, &val, 4);
+                    q += 4;
+                    break;
+                default:
+                    sprintf(msg, "DHCP server: requested parameter %u not supported yet",
+                            *(pp-1));
+                    slirp_warning(slirp, msg);
             }
-            if (!dhcp_def_params_valid) break;
-            pp = dhcp_def_params;
-            plen = dhcp_def_params_len;
-            dhcp_def_params_valid = 0;
         }
 
         if (slirp->vdnssearch) {

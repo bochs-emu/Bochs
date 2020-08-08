@@ -174,7 +174,7 @@ Bit16u ip_checksum(const Bit8u *buf, unsigned buf_len)
 #define TFTP_DEFAULT_BLKSIZE 512
 #define TFTP_DEFAULT_TIMEOUT   5
 
-#define TFTP_BUFFER_SIZE 1024
+#define TFTP_BUFFER_SIZE     1432
 
 static const Bit8u mcast_ipv6_mac_prefix[2] = {0x33,0x33};
 
@@ -1946,16 +1946,11 @@ int vnet_server_c::udpipv4_dhcp_handler_ns(const Bit8u *ipheader,
   unsigned extlen;
   const Bit8u *extdata;
   unsigned dhcpmsgtype = 0;
-  bx_bool found_serverid = false;
-  bx_bool found_leasetime = false;
-  bx_bool found_guest_ipaddr = false;
-  bx_bool found_host_name = false;
+  bx_bool found_serverid = 0;
+  bx_bool found_guest_ipaddr = 0;
   Bit32u leasetime = BX_MAX_BIT32U;
   const Bit8u *dhcpreqparams = NULL;
   unsigned dhcpreqparams_len = 0;
-  Bit8u dhcpreqparam_default[8];
-  bx_bool dhcpreqparam_default_validflag = false;
-  unsigned dhcpreqparams_default_len = 0;
   Bit8u *replyopts;
   Bit8u replybuf[576];
   char *hostname = NULL;
@@ -2015,19 +2010,18 @@ int vnet_server_c::udpipv4_dhcp_handler_ns(const Bit8u *ipheader,
         BX_INFO(("dhcp: request to another server"));
         return 0;
       }
-      found_serverid = true;
+      found_serverid = 1;
       break;
     case BOOTPOPT_IP_ADDRESS_LEASE_TIME:
       if (extlen != 4)
         break;
       leasetime = get_net4(&extdata[0]);
-      found_leasetime = true;
       break;
     case BOOTPOPT_REQUESTED_IP_ADDRESS:
       if (extlen != 4)
         break;
       if (!memcmp(extdata, client[clientid].default_ipv4addr, 4)) {
-        found_guest_ipaddr = true;
+        found_guest_ipaddr = 1;
         memcpy(client[clientid].ipv4addr, client[clientid].default_ipv4addr, 4);
       }
       break;
@@ -2041,7 +2035,6 @@ int vnet_server_c::udpipv4_dhcp_handler_ns(const Bit8u *ipheader,
         memcpy(client[clientid].hostname, extdata, extlen);
         client[clientid].hostname[extlen] = 0;
       }
-      found_host_name = true;
       break;
     case BOOTPOPT_MAX_DHCP_MESSAGE_SIZE:
       if (extlen < 2)
@@ -2057,7 +2050,6 @@ int vnet_server_c::udpipv4_dhcp_handler_ns(const Bit8u *ipheader,
     }
   }
 
-  memset(&dhcpreqparam_default,0,sizeof(dhcpreqparam_default));
   memset(&replybuf[0],0,sizeof(replybuf));
   replybuf[0] = BOOTREPLY;
   replybuf[1] = 1;
@@ -2083,12 +2075,6 @@ int vnet_server_c::udpipv4_dhcp_handler_ns(const Bit8u *ipheader,
     *replyopts ++ = 1;
     *replyopts ++ = DHCPOFFER;
     opts_len -= 3;
-    dhcpreqparam_default[0] = BOOTPOPT_IP_ADDRESS_LEASE_TIME;
-    dhcpreqparam_default[1] = BOOTPOPT_SERVER_IDENTIFIER;
-    if (found_host_name) {
-      dhcpreqparam_default[2] = BOOTPOPT_HOST_NAME;
-    }
-    dhcpreqparam_default_validflag = true;
     break;
   case DHCPREQUEST:
     BX_DEBUG(("dhcp server: DHCPREQUEST"));
@@ -2098,24 +2084,11 @@ int vnet_server_c::udpipv4_dhcp_handler_ns(const Bit8u *ipheader,
       *replyopts ++ = 1;
       *replyopts ++ = DHCPACK;
       opts_len -= 3;
-      dhcpreqparam_default[0] = BOOTPOPT_IP_ADDRESS_LEASE_TIME;
-      if (!found_serverid) {
-        dhcpreqparam_default[1] = BOOTPOPT_SERVER_IDENTIFIER;
-      }
-      dhcpreqparam_default_validflag = true;
     } else {
       *replyopts ++ = BOOTPOPT_DHCP_MESSAGETYPE;
       *replyopts ++ = 1;
       *replyopts ++ = DHCPNAK;
       opts_len -= 3;
-      if (found_leasetime) {
-        dhcpreqparam_default[dhcpreqparams_default_len++] = BOOTPOPT_IP_ADDRESS_LEASE_TIME;
-        dhcpreqparam_default_validflag = true;
-      }
-      if (!found_serverid) {
-        dhcpreqparam_default[dhcpreqparams_default_len++] = BOOTPOPT_SERVER_IDENTIFIER;
-        dhcpreqparam_default_validflag = true;
-      }
     }
     break;
   default:
@@ -2123,9 +2096,36 @@ int vnet_server_c::udpipv4_dhcp_handler_ns(const Bit8u *ipheader,
     return 0;
   }
 
-  while (1) {
-    while (dhcpreqparams_len-- > 0) {
-      switch (*dhcpreqparams++) {
+  // default DHCP options must be on top of reply
+  BX_DEBUG(("provide BOOTPOPT_SERVER_IDENTIFIER"));
+  opts_len -= 6;
+  *replyopts ++ = BOOTPOPT_SERVER_IDENTIFIER;
+  *replyopts ++ = 4;
+  memcpy(replyopts, dhcp->srv_ipv4addr[VNET_SRV], 4);
+  replyopts += 4;
+  BX_DEBUG(("provide BOOTPOPT_IP_ADDRESS_LEASE_TIME"));
+  opts_len -= 6;
+  *replyopts ++ = BOOTPOPT_IP_ADDRESS_LEASE_TIME;
+  *replyopts ++ = 4;
+  if (leasetime < DEFAULT_LEASE_TIME) {
+    put_net4(replyopts, leasetime);
+  } else {
+    put_net4(replyopts, DEFAULT_LEASE_TIME);
+  }
+  replyopts += 4;
+  if (hostname != NULL) {
+    BX_DEBUG(("provide BOOTPOPT_HOST_NAME"));
+    opts_len -= (hostname_len + 2);
+    *replyopts ++ = BOOTPOPT_HOST_NAME;
+    *replyopts ++ = hostname_len;
+    memcpy(replyopts, hostname, hostname_len);
+    replyopts += hostname_len;
+    free(hostname);
+    hostname = NULL;
+  }
+
+  while (dhcpreqparams_len-- > 0) {
+    switch (*dhcpreqparams++) {
       case BOOTPOPT_SUBNETMASK:
         BX_DEBUG(("provide BOOTPOPT_SUBNETMASK"));
         if (opts_len < 6) {
@@ -2175,34 +2175,6 @@ int vnet_server_c::udpipv4_dhcp_handler_ns(const Bit8u *ipheader,
         replyopts += 3;
         *replyopts ++ = 0xff;
         break;
-      case BOOTPOPT_IP_ADDRESS_LEASE_TIME:
-        BX_DEBUG(("provide BOOTPOPT_IP_ADDRESS_LEASE_TIME"));
-        if (opts_len < 6) {
-          BX_ERROR(("option buffer is insufficient"));
-          return 0;
-        }
-        opts_len -= 6;
-        *replyopts ++ = BOOTPOPT_IP_ADDRESS_LEASE_TIME;
-        *replyopts ++ = 4;
-        if (leasetime < DEFAULT_LEASE_TIME) {
-          put_net4(replyopts, leasetime);
-        } else {
-          put_net4(replyopts, DEFAULT_LEASE_TIME);
-        }
-        replyopts += 4;
-        break;
-      case BOOTPOPT_SERVER_IDENTIFIER:
-        BX_DEBUG(("provide BOOTPOPT_SERVER_IDENTIFIER"));
-        if (opts_len < 6) {
-          BX_ERROR(("option buffer is insufficient"));
-          return 0;
-        }
-        opts_len -= 6;
-        *replyopts ++ = BOOTPOPT_SERVER_IDENTIFIER;
-        *replyopts ++ = 4;
-        memcpy(replyopts, dhcp->srv_ipv4addr[VNET_SRV], 4);
-        replyopts += 4;
-        break;
       case BOOTPOPT_RENEWAL_TIME:
         BX_DEBUG(("provide BOOTPOPT_RENEWAL_TIME"));
         if (opts_len < 6) {
@@ -2227,35 +2199,12 @@ int vnet_server_c::udpipv4_dhcp_handler_ns(const Bit8u *ipheader,
         put_net4(replyopts, 1800);
         replyopts += 4;
         break;
-      case BOOTPOPT_HOST_NAME:
-        if (hostname != NULL) {
-          BX_DEBUG(("provide BOOTPOPT_HOST_NAME"));
-          if (opts_len < (hostname_len + 2)) {
-            free(hostname);
-            BX_ERROR(("option buffer is insufficient"));
-            return 0;
-          }
-          opts_len -= (hostname_len + 2);
-          *replyopts ++ = BOOTPOPT_HOST_NAME;
-          *replyopts ++ = hostname_len;
-          memcpy(replyopts, hostname, hostname_len);
-          replyopts += hostname_len;
-          free(hostname);
-          hostname = NULL;
-          break;
-        }
       default:
         if (*(dhcpreqparams-1) != 0) {
           BX_ERROR(("dhcp server: requested parameter %u not supported yet",*(dhcpreqparams-1)));
         }
         break;
-      }
     }
-
-    if (!dhcpreqparam_default_validflag) break;
-    dhcpreqparams = &dhcpreqparam_default[0];
-    dhcpreqparams_len = sizeof(dhcpreqparam_default);
-    dhcpreqparam_default_validflag = false;
   }
 
   if (opts_len < 1) {

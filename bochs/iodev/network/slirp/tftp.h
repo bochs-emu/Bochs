@@ -8,9 +8,9 @@
 
 #define TFTP_SESSIONS_MAX 3
 
-#define TFTP_SERVER	69
+#define TFTP_SERVER      69
 
-#define TFTP_BUFFER_SIZE   1024
+#define TFTP_BUFFER_SIZE 1432
 
 struct tftp_t {
   struct ip ip;
