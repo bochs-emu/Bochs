@@ -165,6 +165,7 @@ typedef struct {
   Bit8u host_macaddr[6];
   Bit8u srv_ipv4addr[3][4];
   Bit8u client_base_ipv4addr[4];
+  char  bootfile[128];
 } dhcp_cfg_t;
 
 // vnet functions shared with bxhub

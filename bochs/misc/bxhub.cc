@@ -88,9 +88,11 @@ const Bit8u default_host_ipv4addr[4] = {10, 0, 2, 2};
 const Bit8u default_dns_ipv4addr[4] = {10, 0, 2, 3};
 const Bit8u default_ftp_ipv4addr[4] = {10, 0, 2, 4};
 const Bit8u dhcp_base_ipv4addr[4] = {10, 0, 2, 15};
+const char  default_bootfile[] = "pxelinux.0";
 
 static Bit16u port_base = 40000;
 static char tftp_root[BX_PATHNAME_LEN];
+static char dhcp_bootfile[128];
 static Bit8u host_macaddr[6];
 static int client_max;
 static Bit8u n_clients;
@@ -164,6 +166,7 @@ void print_usage()
     "  -base=...     base UDP port (bxhub uses 2 ports per Bochs session)\n"
     "  -mac=...      host MAC address (default is b0:c4:20:00:00:0f)\n"
     "  -tftp=...     enable FTP and TFTP support using specified directory as root\n"
+    "  -bootfile=... network bootfile reported by DHCP - located on TFTP server\n"
     "  -loglev=...   set log level (0 - 3, default 1)\n"
     "  -logfile=...  send log output to file\n"
     "  --help        display this help and exit\n\n");
@@ -180,6 +183,7 @@ int parse_cmdline(int argc, char *argv[])
   bx_loglev = 1;
   port_base = 40000;
   tftp_root[0] = 0;
+  dhcp_bootfile[0] = 0;
   bx_logfname[0] = 0;
   memcpy(host_macaddr, default_host_macaddr, ETHERNET_MAC_ADDR_LEN);
   while ((arg < argc) && (ret == 1)) {
@@ -208,6 +212,9 @@ int parse_cmdline(int argc, char *argv[])
     }
     else if (!strncmp("-tftp=", argv[arg], 6)) {
       strcpy(tftp_root, &argv[arg][6]);
+    }
+    else if (!strncmp("-bootfile=", argv[arg], 10)) {
+      strcpy(dhcp_bootfile, &argv[arg][10]);
     }
     else if (!strncmp("-mac=", argv[arg], 5)) {
       n = sscanf(&argv[arg][5], "%x:%x:%x:%x:%x:%x",
@@ -316,6 +323,11 @@ int CDECL main(int argc, char **argv)
   memcpy(dhcp.srv_ipv4addr[VNET_DNS], default_dns_ipv4addr, 4);
   memcpy(dhcp.srv_ipv4addr[VNET_MISC], default_ftp_ipv4addr, 4);
   memcpy(dhcp.client_base_ipv4addr, &dhcp_base_ipv4addr, 4);
+  if (strlen(dhcp_bootfile) > 0) {
+    strcpy(dhcp.bootfile, dhcp_bootfile);
+  } else {
+    strcpy(dhcp.bootfile, default_bootfile);
+  }
   vnet_server.init(NULL, &dhcp, tftp_root);
   printf("Host MAC address: %02x:%02x:%02x:%02x:%02x:%02x\n",
          host_macaddr[0], host_macaddr[1], host_macaddr[2],
@@ -323,8 +335,9 @@ int CDECL main(int argc, char **argv)
          );
   if (strlen(tftp_root) > 0) {
     printf("FTP / TFTP using root directory '%s'\n", tftp_root);
+    printf("Network bootfile set to '%s'\n", dhcp.bootfile);
   } else {
-    printf("FTP / TFTP support disabled\n");
+    printf("FTP / TFTP support and network boot disabled\n");
   }
 
   if (strlen(bx_logfname) > 0) {

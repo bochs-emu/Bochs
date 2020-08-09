@@ -8295,6 +8295,7 @@ Supported options:
   -base=...     base UDP port (bxhub uses 2 ports per Bochs session)
   -mac=...      host MAC address (default is b0:c4:20:00:00:0f)
   -tftp=...     enable FTP and TFTP support using specified directory as root
+  -bootfile=... network bootfile reported by DHCP - located on TFTP server
   -loglev=...   set log level (0 - 3, default 1)
   -logfile=...  send log output to file
   --help        display this help and exit

@@ -1740,7 +1740,7 @@ void vnet_server_c::ftp_list_directory(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_da
 void vnet_server_c::ftp_recv_file(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data,
                                   const char *fname)
 {
-  char path[BX_PATHNAME_LEN], tmp_path[BX_PATHNAME_LEN], *cptr, reply[80];
+  char path[BX_PATHNAME_LEN], tmp_path[BX_PATHNAME_LEN+4], *cptr, reply[80];
   ftp_session_t *fs = (ftp_session_t*)tcpc_cmd->data;
   int fd = -1;
   bx_bool exists;
@@ -2059,7 +2059,9 @@ int vnet_server_c::udpipv4_dhcp_handler_ns(const Bit8u *ipheader,
   memcpy(&replybuf[20], dhcp->srv_ipv4addr[VNET_SRV], 4);
   memcpy(&replybuf[28],&data[28],6);
   memcpy(&replybuf[44],"vnet",4);
-  memcpy(&replybuf[108],"pxelinux.0",10);
+  if (strlen(dhcp->bootfile) > 0) {
+    memcpy(&replybuf[108], dhcp->bootfile, strlen(dhcp->bootfile));
+  }
   replybuf[236] = 0x63;
   replybuf[237] = 0x82;
   replybuf[238] = 0x53;
@@ -2472,7 +2474,7 @@ int vnet_server_c::udpipv4_tftp_handler_ns(const Bit8u *ipheader,
             s->options &= ~TFTP_OPTION_TSIZE;
           } else {
             s->tsize_val = (size_t)stbuf.st_size;
-            BX_DEBUG(("tftp filesize: %lu", (unsigned long)s->tsize_val));
+            BX_DEBUG(("TFTP RRQ: filesize=%lu", (unsigned long)s->tsize_val));
           }
         }
         if ((s->options & ~TFTP_OPTION_OCTET) > 0) {

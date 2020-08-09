@@ -75,6 +75,7 @@ static const Bit8u default_host_ipv4addr[4] = {192,168,10,1};
 static const Bit8u default_dns_ipv4addr[4] = {192,168,10,2};
 static const Bit8u default_ftp_ipv4addr[4] = {192,168,10,3};
 static const Bit8u dhcp_base_ipv4addr[4] = {192,168,10,15};
+static const char default_bootfile[] = "pxelinux.0";
 
 static Bit8u    packet_buffer[BX_PACKET_BUFSIZE];
 static unsigned packet_len;
@@ -152,6 +153,7 @@ void bx_vnet_pktmover_c::pktmover_init(
   memcpy(dhcp.srv_ipv4addr[VNET_DNS], default_dns_ipv4addr, 4);
   memcpy(dhcp.srv_ipv4addr[VNET_MISC], default_ftp_ipv4addr, 4);
   memcpy(dhcp.client_base_ipv4addr, dhcp_base_ipv4addr, 4);
+  strcpy(dhcp.bootfile, default_bootfile);
   vnet_server.init(dev, &dhcp, netif);
   vnet_server.init_client(0, (Bit8u*)macaddr);
 
