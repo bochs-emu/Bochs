@@ -257,6 +257,7 @@ void bx_banshee_c::register_state(void)
   new bx_shadow_num_c(banshee, "disp_bpp", &v->banshee.disp_bpp);
   new bx_shadow_bool_c(banshee, "half_mode", &v->banshee.half_mode);
   new bx_shadow_bool_c(banshee, "dac_8bit", &v->banshee.dac_8bit);
+  new bx_shadow_bool_c(banshee, "desktop_tiled", &v->banshee.desktop_tiled);
   new bx_shadow_bool_c(banshee, "hwcursor_enabled", &v->banshee.hwcursor.enabled);
   new bx_shadow_bool_c(banshee, "hwcursor_mode", &v->banshee.hwcursor.mode);
   new bx_shadow_num_c(banshee, "hwcursor_addr", &v->banshee.hwcursor.addr, BASE_HEX);
@@ -264,7 +265,7 @@ void bx_banshee_c::register_state(void)
   new bx_shadow_num_c(banshee, "hwcursor_y", &v->banshee.hwcursor.y, BASE_HEX);
   new bx_shadow_num_c(banshee, "hwcursor_color0", &v->banshee.hwcursor.color[0], BASE_HEX);
   new bx_shadow_num_c(banshee, "hwcursor_color1", &v->banshee.hwcursor.color[1], BASE_HEX);
-  new bx_shadow_data_c(banshee, "blt_reg", (Bit8u*)v->banshee.blt.reg, 0x20, 1);
+  new bx_shadow_data_c(banshee, "blt_reg", (Bit8u*)v->banshee.blt.reg, 0x80, 1);
   new bx_shadow_data_c(banshee, "blt_cpat", (Bit8u*)v->banshee.blt.cpat, 0x100, 1);
   new bx_shadow_bool_c(banshee, "blt_busy", &v->banshee.blt.busy);
   new bx_shadow_num_c(banshee, "blt_cmd", &v->banshee.blt.cmd);
@@ -276,7 +277,7 @@ void bx_banshee_c::register_state(void)
   new bx_shadow_num_c(banshee, "blt_patsy", &v->banshee.blt.patsy);
   new bx_shadow_bool_c(banshee, "blt_clip_sel", &v->banshee.blt.clip_sel);
   new bx_shadow_num_c(banshee, "blt_rop0", &v->banshee.blt.rop0);
-  new bx_shadow_num_c(banshee, "blt_src_base", &v->banshee.blt.src_base);
+  new bx_shadow_num_c(banshee, "blt_src_base", &v->banshee.blt.src_base, BASE_HEX);
   new bx_shadow_bool_c(banshee, "blt_src_tiled", &v->banshee.blt.src_tiled);
   new bx_shadow_num_c(banshee, "blt_src_fmt", &v->banshee.blt.src_fmt);
   new bx_shadow_num_c(banshee, "blt_src_pitch", &v->banshee.blt.src_pitch);
@@ -285,7 +286,7 @@ void bx_banshee_c::register_state(void)
   new bx_shadow_num_c(banshee, "blt_src_y", &v->banshee.blt.src_y);
   new bx_shadow_num_c(banshee, "blt_src_w", &v->banshee.blt.src_w);
   new bx_shadow_num_c(banshee, "blt_src_h", &v->banshee.blt.src_h);
-  new bx_shadow_num_c(banshee, "blt_dst_base", &v->banshee.blt.dst_base);
+  new bx_shadow_num_c(banshee, "blt_dst_base", &v->banshee.blt.dst_base, BASE_HEX);
   new bx_shadow_bool_c(banshee, "blt_dst_tiled", &v->banshee.blt.dst_tiled);
   new bx_shadow_num_c(banshee, "blt_dst_fmt", &v->banshee.blt.dst_fmt);
   new bx_shadow_num_c(banshee, "blt_dst_pitch", &v->banshee.blt.dst_pitch);
@@ -293,8 +294,8 @@ void bx_banshee_c::register_state(void)
   new bx_shadow_num_c(banshee, "blt_dst_y", &v->banshee.blt.dst_y);
   new bx_shadow_num_c(banshee, "blt_dst_w", &v->banshee.blt.dst_w);
   new bx_shadow_num_c(banshee, "blt_dst_h", &v->banshee.blt.dst_h);
-  new bx_shadow_num_c(banshee, "blt_fgcolor", (Bit32u*)&v->banshee.blt.fgcolor);
-  new bx_shadow_num_c(banshee, "blt_bgcolor", (Bit32u*)&v->banshee.blt.bgcolor);
+  new bx_shadow_num_c(banshee, "blt_fgcolor", (Bit32u*)&v->banshee.blt.fgcolor, BASE_HEX);
+  new bx_shadow_num_c(banshee, "blt_bgcolor", (Bit32u*)&v->banshee.blt.bgcolor, BASE_HEX);
   new bx_shadow_num_c(banshee, "blt_clipx0_0", &v->banshee.blt.clipx0[0]);
   new bx_shadow_num_c(banshee, "blt_clipx0_1", &v->banshee.blt.clipx0[1]);
   new bx_shadow_num_c(banshee, "blt_clipy0_0", &v->banshee.blt.clipy0[0]);
@@ -346,6 +347,7 @@ void bx_banshee_c::draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *i
   Bit8u *cpat0, *cpat1, *tile_ptr, *tile_ptr2, *vid_ptr;
   Bit8u ccode, pbits, pval0, pval1;
   Bit32u colour = 0, start;
+  Bit16u pitch;
   int i;
 
   if ((xc <= v->banshee.hwcursor.x) &&
@@ -355,11 +357,12 @@ void bx_banshee_c::draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *i
 
     if ((v->banshee.io[io_vidProcCfg] & 0x181) == 0x81) {
       start = v->banshee.io[io_vidDesktopStartAddr];
+      pitch = v->banshee.io[io_vidDesktopOverlayStride] & 0x7fff;
     } else {
       start = v->fbi.rgboffs[v->fbi.frontbuf];
+      pitch = (v->banshee.io[io_vidDesktopOverlayStride] >> 16) & 0x7fff;
     }
     Bit8u *disp_ptr = &v->fbi.ram[start & v->fbi.mask];
-    Bit16u pitch = v->banshee.io[io_vidDesktopOverlayStride] & 0x7fff;
     if (v->banshee.desktop_tiled) {
       pitch *= 128;
     }

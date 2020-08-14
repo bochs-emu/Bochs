@@ -353,6 +353,8 @@ void bx_voodoo_base_c::register_state(bx_list_c *parent)
   new bx_shadow_num_c(fbi, "frontbuf", &v->fbi.frontbuf);
   new bx_shadow_num_c(fbi, "backbuf", &v->fbi.backbuf);
   new bx_shadow_num_c(fbi, "swaps_pending", &v->fbi.swaps_pending);
+  new bx_shadow_num_c(fbi, "lfb_base", &v->fbi.lfb_base, BASE_HEX);
+  new bx_shadow_num_c(fbi, "lfb_stride", &v->fbi.lfb_stride);
   new bx_shadow_num_c(fbi, "yorigin", &v->fbi.yorigin);
   new bx_shadow_num_c(fbi, "width", &v->fbi.width);
   new bx_shadow_num_c(fbi, "height", &v->fbi.height);
