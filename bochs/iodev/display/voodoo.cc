@@ -317,10 +317,9 @@ void bx_voodoo_base_c::init(void)
     for (unsigned x = 0; x < s.num_x_tiles; x++)
       SET_TILE_UPDATED(BX_VOODOO_THIS, x, y, 0);
 
-  bx_create_event(&fifo_wakeup);
-  bx_create_event(&fifo_not_full);
-  bx_set_event(&fifo_not_full);
-  BX_THREAD_CREATE(fifo_thread, this, fifo_thread_var);
+  if (!SIM->get_param_bool(BXPN_RESTORE_FLAG)->get()) {
+    start_fifo_thread();
+  }
 
   BX_INFO(("3dfx Voodoo Graphics adapter (model=%s) initialized",
            SIM->get_param_enum("model", base)->get_selected()));
@@ -503,6 +502,14 @@ void bx_voodoo_base_c::register_state(bx_list_c *parent)
   register_pci_state(parent);
 }
 
+void bx_voodoo_base_c::start_fifo_thread(void)
+{
+  bx_create_event(&fifo_wakeup);
+  bx_create_event(&fifo_not_full);
+  bx_set_event(&fifo_not_full);
+  BX_THREAD_CREATE(fifo_thread, this, fifo_thread_var);
+}
+
 void bx_voodoo_base_c::refresh_display(void *this_ptr, bx_bool redraw)
 {
   if (redraw) {
@@ -556,7 +563,11 @@ void bx_voodoo_base_c::update(void)
       return;
     }
     bpp = 16;
-    start = v->fbi.rgboffs[v->fbi.frontbuf];
+    if (s.model >= VOODOO_BANSHEE) {
+      start = v->fbi.rgboffs[0];
+    } else {
+      start = v->fbi.rgboffs[v->fbi.frontbuf];
+    }
     pitch = v->fbi.rowpixels * 2;
   }
   iWidth = s.vdraw.width;
@@ -932,6 +943,7 @@ void bx_voodoo_1_2_c::after_restore_state(void)
     update_timing();
     DEV_vga_set_override(1, BX_VOODOO_THIS_PTR);
   }
+  start_fifo_thread();
 }
 
 bx_bool bx_voodoo_1_2_c::mem_read_handler(bx_phy_address addr, unsigned len,

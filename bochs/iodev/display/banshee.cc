@@ -317,6 +317,7 @@ void bx_banshee_c::after_restore_state(void)
     update_timing();
     theVoodooVga->banshee_update_mode();
   }
+  start_fifo_thread();
   // TODO
 }
 
@@ -1208,6 +1209,11 @@ void bx_banshee_c::blt_reg_write(Bit8u reg, Bit32u value)
         blt_launch_area_setup();
       }
       break;
+    case blt_commandExtra:
+      if ((value & 0x03) > 0) {
+        BX_ERROR(("colorkey feature not supported yet"));
+      }
+      break;
     default:
       if ((reg >= 0x20) && (reg < 0x40)) {
         blt_launch_area_write(value);
@@ -1678,8 +1684,7 @@ void bx_banshee_c::blt_screen_to_screen()
   Bit8u *src_ptr1, *dst_ptr1;
   Bit8u pxpack = (BLT.reg[blt_srcFormat] >> 22) & 3;
   Bit8u dpxsize = (BLT.dst_fmt > 1) ? (BLT.dst_fmt - 1) : 1;
-  Bit8u dstcolor[4];
-  Bit8u *srccolor;
+  Bit8u *color;
   int spitch;
   int dpitch = BLT.dst_pitch;
   int ncols, nrows, x0, x1, y0, y1, w, h;
@@ -1723,16 +1728,15 @@ void bx_banshee_c::blt_screen_to_screen()
       smask = 0x80 >> (x0 & 7);
       ncols = w;
       do {
-        memcpy(dstcolor, dst_ptr1, dpxsize);
         set = (*src_ptr1 & smask) > 0;
         if (set) {
-          srccolor = &BLT.fgcolor[0];
-        } else if (BLT.transp) {
-          srccolor = dstcolor;
+          color = &BLT.fgcolor[0];
         } else {
-          srccolor = &BLT.bgcolor[0];
+          color = &BLT.bgcolor[0];
         }
-        BLT.rop_fn(dst_ptr1, srccolor, dpitch, dpxsize, dpxsize, 1);
+        if (set || !BLT.transp) {
+          BLT.rop_fn(dst_ptr1, color, dpitch, dpxsize, dpxsize, 1);
+        }
         smask >>= 1;
         if (smask == 0) {
           src_ptr1++;
@@ -1961,8 +1965,8 @@ void bx_banshee_c::blt_host_to_screen()
   Bit16u spitch = BLT.h2s_pitch;
   Bit8u srcfmt = BLT.src_fmt;
   Bit8u spxsize = 0, r = 0, g = 0, b = 0;
-  Bit8u dstcolor[4], scolor[4];
-  Bit8u *srccolor;
+  Bit8u scolor[4];
+  Bit8u *color;
   int ncols, nrows, x0, y0, x1, y1, w, h;
   Bit8u smask;
   bx_bool set;
@@ -2005,16 +2009,15 @@ void bx_banshee_c::blt_host_to_screen()
     ncols = w;
     do {
       if (srcfmt == 0) {
-        memcpy(dstcolor, dst_ptr1, dpxsize);
         set = (*src_ptr1 & smask) > 0;
         if (set) {
-          srccolor = &BLT.fgcolor[0];
-        } else if (BLT.transp) {
-          srccolor = dstcolor;
+          color = &BLT.fgcolor[0];
         } else {
-          srccolor = &BLT.bgcolor[0];
+          color = &BLT.bgcolor[0];
         }
-        BLT.rop_fn(dst_ptr1, srccolor, dpitch, dpxsize, dpxsize, 1);
+        if (set || !BLT.transp) {
+          BLT.rop_fn(dst_ptr1, color, dpitch, dpxsize, dpxsize, 1);
+        }
       } else {
         if (BLT.dst_fmt != srcfmt) {
           if ((srcfmt == 4) || (srcfmt == 5)) {
