@@ -1241,6 +1241,7 @@ void bx_banshee_c::blt_launch_area_setup()
     case 5:
     case 6:
     case 7:
+    case 8:
       BLT.lacnt = 1;
       break;
     case 3:
@@ -1389,6 +1390,7 @@ void bx_banshee_c::blt_execute()
       break;
     case 8:
       BX_INFO(("TODO: 2D Polygon fill"));
+      BLT.lacnt = 1;
       break;
     case 13:
       BX_INFO(("TODO: 2D Write Sgram Mode register"));
@@ -2152,22 +2154,22 @@ void bx_banshee_c::blt_host_to_screen_pattern()
         } else {
           srccolor = &BLT.bgcolor[0];
         }
-        if (patmono) {
-          set = (*pat_ptr1 & pmask) > 0;
-          if (set) {
-            patcolor = &BLT.fgcolor[0];
-          } else if (BLT.transp) {
-            patcolor = dstcolor;
-          } else {
-            patcolor = &BLT.bgcolor[0];
-          }
-        } else {
-          patcolor = pat_ptr2;
-        }
-        bx_ternary_rop(rop0, dst_ptr1, srccolor, patcolor, dpxsize);
       } else {
-        BX_INFO(("Host to screen pattern blt: %d x %d  ROP %02X (color source) not supported yet", w, h, rop0));
+        srccolor = src_ptr1;
       }
+      if (patmono) {
+        set = (*pat_ptr1 & pmask) > 0;
+        if (set) {
+          patcolor = &BLT.fgcolor[0];
+        } else if (BLT.transp) {
+          patcolor = dstcolor;
+        } else {
+          patcolor = &BLT.bgcolor[0];
+        }
+      } else {
+        patcolor = pat_ptr2;
+      }
+      bx_ternary_rop(rop0, dst_ptr1, srccolor, patcolor, dpxsize);
       if (srcfmt == 0) {
         smask >>= 1;
         if (smask == 0) {
