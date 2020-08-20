@@ -1778,6 +1778,9 @@ struct _banshee_info
     Bit16u h2s_pitch;
     Bit8u h2s_pxstart;
     bx_bool h2s_alt_align;
+    Bit16u pgn_index;
+    Bit16u pgn_x;
+    Bit16u pgn_y;
     Bit32u lacnt;
     Bit32u laidx;
     Bit8u *lamem;

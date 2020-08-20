@@ -1203,6 +1203,9 @@ void bx_banshee_c::blt_reg_write(Bit8u reg, Bit32u value)
         delete [] BLT.lamem;
         BLT.lamem = NULL;
       }
+      if (BLT.cmd == 8) {
+        BLT.pgn_index = 0;
+      }
       if (BLT.immed) {
         blt_execute();
       } else {
@@ -1245,6 +1248,7 @@ void bx_banshee_c::blt_launch_area_setup()
       BLT.lacnt = 1;
       break;
     case 3:
+    case 4:
       BLT.h2s_alt_align = 0;
       pxpack = (BLT.reg[blt_srcFormat] >> 22) & 3;
       BLT.src_wizzle = (BLT.reg[blt_srcFormat] >> 20) & 0x03;
@@ -1315,6 +1319,9 @@ void bx_banshee_c::blt_launch_area_write(Bit32u value)
       BLT.reg[blt_dstXY] = value;
       BLT.dst_x = value & 0x1fff;
       BLT.dst_y = (value >> 16) & 0x1fff;
+    } if (BLT.cmd >= 8) {
+      BLT.pgn_x = value & 0x1fff;
+      BLT.pgn_y = (value >> 16) & 0x1fff;
     }
     if (--BLT.lacnt == 0) {
       blt_execute();
@@ -1349,21 +1356,23 @@ void bx_banshee_c::blt_execute()
       }
       break;
     case 3:
+    case 4:
       if (!BLT.immed) {
-        BLT.busy = 1;
-        if (BLT.rop_flags[BLT.rop0] & BX_ROP_PATTERN) {
-          blt_host_to_screen_pattern();
+        if (BLT.cmd == 3) {
+          BLT.busy = 1;
+          if (BLT.rop_flags[BLT.rop0] & BX_ROP_PATTERN) {
+            blt_host_to_screen_pattern();
+          } else {
+            blt_host_to_screen();
+          }
         } else {
-          blt_host_to_screen();
+          BX_INFO(("TODO: 2D Host to screen stretch blt"));
         }
         delete [] BLT.lamem;
         BLT.lamem = NULL;
       } else {
         BX_ERROR(("Host to screen blt: immediate execution not supported"));
       }
-      break;
-    case 4:
-      BX_INFO(("TODO: 2D Host to screen stretch blt"));
       break;
     case 5:
       BLT.busy = 1;
@@ -1389,7 +1398,18 @@ void bx_banshee_c::blt_execute()
       }
       break;
     case 8:
-      BX_INFO(("TODO: 2D Polygon fill"));
+      if (!BLT.immed) {
+        if (BLT.pgn_index == 0) {
+          BX_INFO(("TODO: 2D Polygon fill start (x0 = %d y0 = %d x1 = %d y1 = %d)",
+                   BLT.src_x, BLT.src_y, BLT.dst_x, BLT.dst_y));
+        }
+        BX_INFO(("TODO: 2D Polygon fill launch value (x = %d y = %d)",
+                 BLT.pgn_x, BLT.pgn_y));
+        BLT.pgn_index++;
+      } else {
+        BLT.reg[blt_dstXY] = BLT.reg[blt_srcXY];
+        BLT.immed = 0;
+      }
       BLT.lacnt = 1;
       break;
     case 13:
