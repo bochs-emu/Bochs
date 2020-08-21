@@ -929,6 +929,8 @@ void bx_sdl2_gui_c::handle_events(void)
                 switch_to_fullscreen();
               }
               bx_gui->set_fullscreen_mode(sdl_fullscreen_toggle);
+            } else if (sdl_event.key.keysym.sym == SDLK_m) {
+              bx_gui->marklog_handler();
             } else if (sdl_event.key.keysym.sym == SDLK_p) {
               bx_gui->paste_handler();
             } else if (sdl_event.key.keysym.sym == SDLK_r) {

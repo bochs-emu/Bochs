@@ -1372,6 +1372,8 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
             resize_main_window(TRUE);
             bx_gui->set_fullscreen_mode(0);
           }
+        } else if (wParam == 'M') {
+          bx_gui->marklog_handler();
         } else if (wParam == 'P') {
           toolbar_cmd = 9; // Paste
         } else if (wParam == 'R') {

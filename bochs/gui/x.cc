@@ -1986,6 +1986,8 @@ void bx_x_gui_c::xkeypress(KeySym keysym, int press_release)
         bx_gui->copy_handler();
       } else if (keysym == XK_C) {
         bx_gui->config_handler();
+      } else if (keysym == XK_m) {
+        bx_gui->marklog_handler();
       } else if (keysym == XK_p) {
         bx_gui->paste_handler();
       } else if (keysym == XK_P) {

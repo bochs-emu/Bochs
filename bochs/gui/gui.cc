@@ -147,6 +147,7 @@ bx_gui_c::bx_gui_c(void): disp_mode(DISP_MODE_SIM)
   snapshot_buffer = NULL;
   command_mode.present = 0;
   command_mode.active = 0;
+  marker_count = 0;
   memset(palette, 0, sizeof(palette));
 }
 
@@ -808,6 +809,11 @@ void bx_gui_c::save_restore_handler(void)
     }
     BX_GUI_THIS set_display_mode(DISP_MODE_SIM);
   }
+}
+
+void bx_gui_c::marklog_handler(void)
+{
+  BX_INFO(("### MARKER #%u", BX_GUI_THIS marker_count++));
 }
 
 void bx_gui_c::headerbar_click(int x)

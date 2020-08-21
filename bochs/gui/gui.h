@@ -220,6 +220,8 @@ protected:
   static void config_handler(void);
   static void userbutton_handler(void);
   static void save_restore_handler(void);
+  // marklog handler without button, called in gui command mode
+  static void marklog_handler(void);
   // process clicks on the "classic" Bochs headerbar
   void headerbar_click(int x);
   // snapshot helper functions
@@ -340,6 +342,7 @@ protected:
     bx_bool active;
   } command_mode;
   bx_bool fullscreen_mode;
+  Bit32u marker_count;
 };
 
 
