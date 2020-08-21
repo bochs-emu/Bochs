@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009-2018  Volker Ruppert
+//  Copyright (C) 2009-2020  Volker Ruppert
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -19,11 +19,11 @@
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
 #include "win32dialog.h"
+#include "bochs.h"
+#include "win32res.h"
 
 #if BX_USE_WIN32CONFIG
 
-#include "bochs.h"
-#include "win32res.h"
 #include "scrollwin.h"
 
 #define ID_LABEL 1000
@@ -835,7 +835,7 @@ void SetParamList(HWND hDlg, bx_list_c *list)
             bx_param_num_c *nparam = (bx_param_num_c*)param;
             if (nparam->get_base() == BASE_HEX) {
               GetWindowText(GetDlgItem(hDlg, ID_PARAM + cid), buffer, 511);
-              sscanf(buffer, "%x", &val);
+              sscanf(buffer, "%llx", &val);
             } else {
               GetWindowText(GetDlgItem(hDlg, ID_PARAM + cid), buffer, 511);
               val = strtoll(buffer, NULL, 10);

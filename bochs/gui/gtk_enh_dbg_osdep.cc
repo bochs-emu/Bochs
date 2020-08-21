@@ -8,14 +8,12 @@
 //
 //  Modified by Bruce Ewing
 //
-//  Copyright (C) 2008-2019  The Bochs Project
-
-#include "config.h"
-
-#if BX_DEBUGGER && BX_DEBUGGER_GUI
+//  Copyright (C) 2008-2020  The Bochs Project
 
 #include "bochs.h"
 #include "enh_dbg.h"
+
+#if BX_DEBUGGER && BX_DEBUGGER_GUI
 
 #include <gtk/gtk.h>
 #include <glib.h>

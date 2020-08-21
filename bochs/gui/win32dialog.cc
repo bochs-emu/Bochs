@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2003-2017  The Bochs Project
+//  Copyright (C) 2003-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -19,14 +19,13 @@
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
 #include "win32dialog.h"
-
-#if BX_USE_WIN32CONFIG
-
 #include "bochs.h"
 #include "param_names.h"
 #include "win32res.h"
 #include "win32paramdlg.h"
 #include "textconfig.h"
+
+#if BX_USE_WIN32CONFIG
 
 const char log_choices[N_ACT+1][16] = {"ignore", "log", "warn user", "ask user", "end simulation", "no change"};
 

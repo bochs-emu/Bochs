@@ -8,15 +8,13 @@
 //
 //  Modified by Bruce Ewing
 //
-//  Copyright (C) 2008-2014  The Bochs Project
-
-#include "config.h"
-
-#if BX_DEBUGGER && BX_DEBUGGER_GUI
+//  Copyright (C) 2008-2020  The Bochs Project
 
 #include "bochs.h"
 #include "win32dialog.h"
 #include "enh_dbg.h"
+
+#if BX_DEBUGGER && BX_DEBUGGER_GUI
 
 // Important Note! All the string manipulation functions assume one byte chars -- ie. "ascii",
 // instead of "wide" chars. If there exists a compiler that automatically assumes wide chars
