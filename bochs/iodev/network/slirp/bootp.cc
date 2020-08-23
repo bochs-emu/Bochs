@@ -335,7 +335,7 @@ static void bootp_reply(Slirp *slirp, const struct bootp_t *bp)
             } else if (dhcp_opts.hostname != NULL) {
                 val = strlen(dhcp_opts.hostname);
             }
-            if ((val > 0) && (spaceleft >= (size_t)(val + 2))) {
+            if (val > 0) {
                 *q++ = RFC1533_HOSTNAME;
                 *q++ = val;
                 if (*slirp->client_hostname) {
