@@ -205,6 +205,8 @@ public:
   bx_bool command_mode_active(void) {return command_mode.active;}
   void set_command_mode(bx_bool active);
   void set_fullscreen_mode(bx_bool active) {fullscreen_mode = active;}
+  // marklog handler without button, called in gui command mode
+  static void marklog_handler(void);
 
 protected:
   // And these are defined and used privately in gui.cc
@@ -220,8 +222,6 @@ protected:
   static void config_handler(void);
   static void userbutton_handler(void);
   static void save_restore_handler(void);
-  // marklog handler without button, called in gui command mode
-  static void marklog_handler(void);
   // process clicks on the "classic" Bochs headerbar
   void headerbar_click(int x);
   // snapshot helper functions
