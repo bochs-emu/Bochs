@@ -155,7 +155,7 @@ void bx_vnet_pktmover_c::pktmover_init(
   memcpy(dhcp.client_base_ipv4addr, dhcp_base_ipv4addr, 4);
   strcpy(dhcp.bootfile, default_bootfile);
   vnet_server.init(dev, &dhcp, netif);
-  vnet_server.init_client(0, (Bit8u*)macaddr);
+  vnet_server.init_client(0, (Bit8u*)macaddr, NULL);
 
   Bit32u status = this->rxstat(this->netdev) & BX_NETDEV_SPEED;
   this->netdev_speed = (status == BX_NETDEV_1GBIT) ? 1000 :

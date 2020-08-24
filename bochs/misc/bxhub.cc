@@ -115,7 +115,7 @@ bx_bool handle_packet(hub_client_t *client, Bit8u *buf, unsigned len)
       client->sout.sin_addr.s_addr = client->sin.sin_addr.s_addr;
       client->id = n_clients++;
       memcpy(client->macaddr, ethhdr->src_mac_addr, 6);
-      vnet_server.init_client(client->id, client->macaddr);
+      vnet_server.init_client(client->id, client->macaddr, NULL);
       client->reply_buffer = new Bit8u[BX_PACKET_BUFSIZE];
       client->init = 1;
     }

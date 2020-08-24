@@ -239,7 +239,7 @@ public:
   virtual ~vnet_server_c();
 
   void init(bx_devmodel_c *netdev, dhcp_cfg_t *dhcpc, const char *tftp_rootdir);
-  void init_client(Bit8u clientid, const Bit8u *macaddr);
+  void init_client(Bit8u clientid, const Bit8u *macaddr, char *hostname);
   void handle_packet(const Bit8u *buf, unsigned len);
   unsigned get_packet(Bit8u *buf);
 #ifdef BXHUB

@@ -235,7 +235,7 @@ void vnet_server_c::init(bx_devmodel_c *_netdev, dhcp_cfg_t *dhcpc, const char *
   }
 }
 
-void vnet_server_c::init_client(Bit8u clientid, const Bit8u *macaddr)
+void vnet_server_c::init_client(Bit8u clientid, const Bit8u *macaddr, char *hostname)
 {
   if (clientid < VNET_MAX_CLIENTS) {
     client[clientid].macaddr = macaddr;
@@ -243,7 +243,11 @@ void vnet_server_c::init_client(Bit8u clientid, const Bit8u *macaddr)
     client[clientid].default_ipv4addr[3] += clientid;
     memset(client[clientid].ipv4addr, 0, 4);
     client[clientid].hostname = new char[256];
-    client[clientid].hostname[0] = 0;
+    if (hostname != NULL) {
+      strcpy(client[clientid].hostname, hostname);
+    } else {
+      client[clientid].hostname[0] = 0;
+    }
     client[clientid].init = 1;
   }
 }
@@ -1953,14 +1957,14 @@ int vnet_server_c::udpipv4_dhcp_handler_ns(const Bit8u *ipheader,
   unsigned dhcpreqparams_len = 0;
   Bit8u *replyopts;
   Bit8u replybuf[576];
-  char *hostname = NULL;
-  unsigned hostname_len = 0;
+  unsigned hostname_len;
   Bit16u maxsize = 0;
 
   if (data_len < (236U+4U)) return 0;
   if (data[0] != BOOTREQUEST) return 0;
   if (data[1] != 1 || data[2] != 6) return 0;
   if (!find_client(&data[28U], &clientid)) return 0;
+  hostname_len = strlen(client[clientid].hostname);
   if (data[236] != 0x63 || data[237] != 0x82 ||
       data[238] != 0x53 || data[239] != 0x63) return 0;
 
@@ -2028,12 +2032,10 @@ int vnet_server_c::udpipv4_dhcp_handler_ns(const Bit8u *ipheader,
     case BOOTPOPT_HOST_NAME:
       if (extlen < 1)
         break;
-      hostname = (char*)malloc(extlen);
-      memcpy(hostname, extdata, extlen);
-      hostname_len = extlen;
-      if ((client[clientid].hostname != NULL) && (extlen < 256)) {
+      if ((hostname_len == 0) && (extlen < 256)) {
         memcpy(client[clientid].hostname, extdata, extlen);
         client[clientid].hostname[extlen] = 0;
+        hostname_len = extlen;
       }
       break;
     case BOOTPOPT_MAX_DHCP_MESSAGE_SIZE:
@@ -2115,15 +2117,13 @@ int vnet_server_c::udpipv4_dhcp_handler_ns(const Bit8u *ipheader,
     put_net4(replyopts, DEFAULT_LEASE_TIME);
   }
   replyopts += 4;
-  if (hostname != NULL) {
+  if (hostname_len > 0) {
     BX_DEBUG(("provide BOOTPOPT_HOST_NAME"));
     opts_len -= (hostname_len + 2);
     *replyopts ++ = BOOTPOPT_HOST_NAME;
     *replyopts ++ = hostname_len;
-    memcpy(replyopts, hostname, hostname_len);
+    memcpy(replyopts, client[clientid].hostname, hostname_len);
     replyopts += hostname_len;
-    free(hostname);
-    hostname = NULL;
   }
 
   while (dhcpreqparams_len-- > 0) {
