@@ -144,21 +144,6 @@ bx_slirp_pktmover_c::~bx_slirp_pktmover_c()
   }
 }
 
-static size_t strip_whitespace(char *s)
-{
-  size_t ptr = 0;
-  char *tmp = (char*)malloc(strlen(s)+1);
-  strcpy(tmp, s);
-  while (s[ptr] == ' ') ptr++;
-  if (ptr > 0) strcpy(s, tmp+ptr);
-  free(tmp);
-  ptr = strlen(s);
-  while ((ptr > 0) && (s[ptr-1] == ' ')) {
-    s[--ptr] = 0;
-  }
-  return ptr;
-}
-
 bx_bool bx_slirp_pktmover_c::parse_slirp_conf(const char *conf)
 {
   FILE *fd = NULL;

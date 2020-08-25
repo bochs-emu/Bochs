@@ -90,12 +90,14 @@ public:
     bx_devmodel_c *dev, const char *script);
   void sendpkt(void *buf, unsigned io_len);
 private:
+  bx_bool parse_vnet_conf(const char *conf);
   void guest_to_host(const Bit8u *buf, unsigned io_len);
   void host_to_guest(void);
 
   vnet_server_c vnet_server;
 
   dhcp_cfg_t dhcp;
+  char *hostname;
 
   static void rx_timer_handler(void *);
   void rx_timer(void);
@@ -106,6 +108,7 @@ private:
   unsigned tx_time;
 
   bx_bool vnet_logging;
+  char *pktlog_fn;
   FILE *pktlog_txt;
 #if BX_ETH_VNET_PCAP_LOGGING
   pcap_t *pcapp;
@@ -134,6 +137,85 @@ bx_vnet_pktmover_c::bx_vnet_pktmover_c()
 {
 }
 
+bx_vnet_pktmover_c::~bx_vnet_pktmover_c()
+{
+  if (vnet_logging) {
+    fclose(pktlog_txt);
+  }
+  bx_vnet_instances--;
+}
+
+bx_bool bx_vnet_pktmover_c::parse_vnet_conf(const char *conf)
+{
+  FILE *fd = NULL;
+  char line[512];
+  char *ret, *param, *val;
+  bx_bool format_checked = 0;
+  size_t len1 = 0, len2;
+
+  fd = fopen(conf, "r");
+  if (fd == NULL) return 0;
+
+  do {
+    ret = fgets(line, sizeof(line)-1, fd);
+    line[sizeof(line) - 1] = '\0';
+    size_t len = strlen(line);
+    if ((len>0) && (line[len-1] < ' '))
+      line[len-1] = '\0';
+    if ((ret != NULL) && (strlen(line) > 0)) {
+      if (!format_checked) {
+        if (!strncmp(line, "# vnet config", 14)) {
+          format_checked = 1;
+        } else {
+          BX_ERROR(("vnet config: wrong file format"));
+          fclose(fd);
+          return 0;
+        }
+      } else {
+        if (line[0] == '#') continue;
+        param = strtok(line, "=");
+        if (param != NULL) {
+          len1 = strip_whitespace(param);
+          val = strtok(NULL, "");
+          if (val == NULL) {
+            BX_ERROR(("vnet config: missing value for parameter '%s'", param));
+            continue;
+          }
+        } else {
+          continue;
+        }
+        len2 = strip_whitespace(val);
+        if ((len1 == 0) || (len2 == 0)) continue;
+        if (!stricmp(param, "hostname")) {
+          if (len2 < 33) {
+            hostname = (char*)malloc(len2+1);
+            strcpy(hostname, val);
+          } else {
+            BX_ERROR(("vnet: wrong format for 'hostname'"));
+          }
+        } else if (!stricmp(param, "bootfile")) {
+          if (len2 < 128) {
+            strcpy(dhcp.bootfile, val);
+          } else {
+            BX_ERROR(("vnet: wrong format for 'bootfile'"));
+          }
+        } else if (!stricmp(param, "pktlog")) {
+          if (len2 < BX_PATHNAME_LEN) {
+            pktlog_fn = (char*)malloc(len2+1);
+            strcpy(pktlog_fn, val);
+          } else {
+            BX_ERROR(("vnet: wrong format for 'pktlog'"));
+          }
+        } else {
+          BX_ERROR(("vnet: unknown option '%s'", line));
+        }
+      }
+    }
+  } while (!feof(fd));
+  fclose(fd);
+  return 1;
+}
+
 void bx_vnet_pktmover_c::pktmover_init(
   const char *netif, const char *macaddr,
   eth_rx_handler_t rxh, eth_rx_status_t rxstat,
@@ -154,8 +236,15 @@ void bx_vnet_pktmover_c::pktmover_init(
   memcpy(dhcp.srv_ipv4addr[VNET_MISC], default_ftp_ipv4addr, 4);
   memcpy(dhcp.client_base_ipv4addr, dhcp_base_ipv4addr, 4);
   strcpy(dhcp.bootfile, default_bootfile);
+  hostname = NULL;
+  pktlog_fn = NULL;
+  if ((strlen(script) > 0) && (strcmp(script, "none"))) {
+    if (!parse_vnet_conf(script)) {
+      BX_ERROR(("reading vnet config failed"));
+    }
+  }
   vnet_server.init(dev, &dhcp, netif);
-  vnet_server.init_client(0, (Bit8u*)macaddr, NULL);
+  vnet_server.init_client(0, (Bit8u*)macaddr, hostname);
 
   Bit32u status = this->rxstat(this->netdev) & BX_NETDEV_SPEED;
   this->netdev_speed = (status == BX_NETDEV_1GBIT) ? 1000 :
@@ -167,8 +256,8 @@ void bx_vnet_pktmover_c::pktmover_init(
   BX_INFO(("'vnet' network driver initialized"));
   bx_vnet_instances++;
 
-  if ((strlen(script) > 0) && (strcmp(script, "none"))) {
-    pktlog_txt = fopen(script, "wb");
+  if (pktlog_fn != NULL) {
+    pktlog_txt = fopen(pktlog_fn, "wb");
     vnet_logging = (pktlog_txt != NULL);
   } else {
     vnet_logging = 0;
@@ -191,14 +280,6 @@ void bx_vnet_pktmover_c::pktmover_init(
   pktlog_pcap = pcap_dump_open(pcapp, "vnet-pktlog.pcap");
   if (pktlog_pcap == NULL) BX_PANIC(("vnet-pktlog.pcap failed"));
 #endif
-}
-
-bx_vnet_pktmover_c::~bx_vnet_pktmover_c()
-{
-  if (vnet_logging) {
-    fclose(pktlog_txt);
-  }
-  bx_vnet_instances--;
 }
 
 void bx_vnet_pktmover_c::sendpkt(void *buf, unsigned io_len)

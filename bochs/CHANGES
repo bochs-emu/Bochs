@@ -16,10 +16,11 @@ Changes after 2.6.11:
     - Added "multiple NICs" support to the NE2000 and E1000 devices. Up to 4 devices
       per model are supported. Use the zero-based "card" parameter to specify device.
     - Added experimental FTP service for networking modules 'vnet' and 'socket'.
-    - Fixes for network boot support with iPXE (modules 'slirp' and 'socket').
+    - Fixes for iPXE network boot support (modules 'slirp', 'socket', 'vnet').
+    - Added config file support for the 'vnet' module (similar to 'slirp').
     - Added log file support to 'bxhub' utility (networking module 'socket').
     - Packet logging in text format for the 'slirp' and 'vnet' modules controlled
-      by runtime option (slirp: "pktlog" option in config / vnet: "script" parameter).
+      by runtime option ("pktlog" option in config).
   - VGA
     - Removed lfb_enabled switch from Bochs VBE code. Now banked and LFB writes
       to VRAM are always valid. Fixes GRUB bootloader menu when using Bochs VBE.

@@ -1033,16 +1033,16 @@ speaker: enabled=1, mode=sound, volume=15
 # The 'socket' module uses this parameter to specify the UDP port for
 # receiving packets and (optional) the host to connect.
 #
-# SCRIPT: The script value is optional, and is the name of a script that 
-# is executed after bochs initialize the network interface. You can use 
+# SCRIPT: The script value is optional, and is the name of a script that
+# is executed after bochs initialize the network interface. You can use
 # this script to configure this network interface, or enable masquerading.
 # This is mainly useful for the tun/tap devices that only exist during
 # Bochs execution. The network interface name is supplied to the script
 # as first parameter.
 # The 'slirp' module uses this parameter to specify a config file for
 # setting up an alternative IP configuration or additional features.
-# The 'vnet' module uses this parameter to specify a file name for logging
-# packets in text format.
+# The 'vnet' module also uses this parameter to specify a config file similar
+# to slirp, but with only a few settings.
 #
 # BOOTROM: The bootrom value is optional, and is the name of the ROM image
 # to load. Note that this feature is only implemented for the PCI version of

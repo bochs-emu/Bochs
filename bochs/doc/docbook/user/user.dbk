@@ -4743,8 +4743,8 @@ This is mainly useful for the tun/tap devices that only exist during
 Bochs execution. The network interface name is supplied to the script
 as first parameter. The 'slirp' module uses this parameter to specify a config
 file for setting up an alternative IP configuration or additional features.
-The 'vnet' module uses this parameter to specify a file name for logging
-packets in text format.
+The 'vnet' module also uses this parameter to specify a config file similar
+to slirp, but with only a few settings.
 
 BOOTROM: The bootrom value is optional, and is the name of the ROM image
 to load. Note that this feature is only implemented for the PCI version of
