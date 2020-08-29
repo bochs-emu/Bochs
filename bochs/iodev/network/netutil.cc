@@ -2444,6 +2444,7 @@ int vnet_server_c::udpipv4_tftp_handler_ns(const Bit8u *ipheader,
   unsigned tftp_len;
   unsigned req_tid = sourceport;
   tftp_session_t *s;
+  char msg[BX_PATHNAME_LEN + 16];
 
   tftp_timeout_check();
   s = tftp_find_session(req_tid);
@@ -2459,6 +2460,13 @@ int vnet_server_c::udpipv4_tftp_handler_ns(const Bit8u *ipheader,
         s = tftp_new_session(req_tid, 0, tftp_root, (const char*)reply);
         if (strlen(s->filename) == 0) {
           return tftp_send_error(reply, 1, "Illegal file name", s);
+        }
+        fp = fopen(s->filename, "rb");
+        if (!fp) {
+          sprintf(msg, "File not found: %s", s->filename);
+          return tftp_send_error(reply, 1, msg, s);
+        } else {
+          fclose(fp);
         }
         // options
         if (strlen((char*)reply) < data_len - 2) {

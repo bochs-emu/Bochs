@@ -82,12 +82,10 @@ static unsigned packet_len;
 
 class bx_vnet_pktmover_c : public eth_pktmover_c {
 public:
-  bx_vnet_pktmover_c();
+  bx_vnet_pktmover_c(const char *netif, const char *macaddr,
+                     eth_rx_handler_t rxh, eth_rx_status_t rxstat,
+                     bx_devmodel_c *dev, const char *script);
   virtual ~bx_vnet_pktmover_c();
-  void pktmover_init(
-    const char *netif, const char *macaddr,
-    eth_rx_handler_t rxh, eth_rx_status_t rxstat,
-    bx_devmodel_c *dev, const char *script);
   void sendpkt(void *buf, unsigned io_len);
 private:
   bx_bool parse_vnet_conf(const char *conf);
@@ -121,28 +119,28 @@ class bx_vnet_locator_c : public eth_locator_c {
 public:
   bx_vnet_locator_c(void) : eth_locator_c("vnet") {}
 protected:
-  eth_pktmover_c *allocate(
-      const char *netif, const char *macaddr,
-      eth_rx_handler_t rxh, eth_rx_status_t rxstat,
-      bx_devmodel_c *dev, const char *script) {
-    bx_vnet_pktmover_c *pktmover;
-    pktmover = new bx_vnet_pktmover_c();
-    pktmover->pktmover_init(netif, macaddr, rxh, rxstat, dev, script);
-    return pktmover;
+  eth_pktmover_c *allocate(const char *netif, const char *macaddr,
+                           eth_rx_handler_t rxh, eth_rx_status_t rxstat,
+                           bx_devmodel_c *dev, const char *script) {
+    return (new bx_vnet_pktmover_c(netif, macaddr, rxh, rxstat, dev, script));
   }
 } bx_vnet_match;
 
 
-bx_vnet_pktmover_c::bx_vnet_pktmover_c()
+bx_bool get_ipv4_address(char *value, Bit8u *addr)
 {
-}
+  unsigned tmp[4];
 
-bx_vnet_pktmover_c::~bx_vnet_pktmover_c()
-{
-  if (vnet_logging) {
-    fclose(pktlog_txt);
+  if (sscanf(value, "%u.%u.%u.%u", &tmp[0], &tmp[1], &tmp[2], &tmp[3]) == 4) {
+    if ((tmp[0] < 256) && (tmp[1] < 256) && (tmp[2] < 256) && (tmp[3] < 256)) {
+      addr[0] = tmp[0];
+      addr[1] = tmp[1];
+      addr[2] = tmp[2];
+      addr[3] = tmp[3];
+      return 1;
+    }
   }
-  bx_vnet_instances--;
+  return 0;
 }
 
 bx_bool bx_vnet_pktmover_c::parse_vnet_conf(const char *conf)
@@ -199,6 +197,18 @@ bx_bool bx_vnet_pktmover_c::parse_vnet_conf(const char *conf)
           } else {
             BX_ERROR(("vnet: wrong format for 'bootfile'"));
           }
+        } else if (!stricmp(param, "host")) {
+          if (!get_ipv4_address(val, (Bit8u*)&dhcp.srv_ipv4addr[VNET_SRV])) {
+            BX_ERROR(("vnet: wrong format for 'host'"));
+          }
+        } else if (!stricmp(param, "dhcpstart")) {
+          if (!get_ipv4_address(val, (Bit8u*)&dhcp.client_base_ipv4addr)) {
+            BX_ERROR(("vnet: wrong format for 'dhcpstart'"));
+          }
+        } else if (!stricmp(param, "dns")) {
+          if (!get_ipv4_address(val, (Bit8u*)&dhcp.srv_ipv4addr[VNET_DNS])) {
+            BX_ERROR(("vnet: wrong format for 'dns'"));
+          }
         } else if (!stricmp(param, "pktlog")) {
           if (len2 < BX_PATHNAME_LEN) {
             pktlog_fn = (char*)malloc(len2+1);
@@ -216,10 +226,12 @@ bx_bool bx_vnet_pktmover_c::parse_vnet_conf(const char *conf)
   return 1;
 }
 
-void bx_vnet_pktmover_c::pktmover_init(
-  const char *netif, const char *macaddr,
-  eth_rx_handler_t rxh, eth_rx_status_t rxstat,
-  bx_devmodel_c *dev, const char *script)
+bx_vnet_pktmover_c::bx_vnet_pktmover_c(const char *netif,
+                                       const char *macaddr,
+                                       eth_rx_handler_t rxh,
+                                       eth_rx_status_t rxstat,
+                                       bx_devmodel_c *dev,
+                                       const char *script)
 {
   if (bx_vnet_instances > 0) {
     BX_PANIC(("only one 'vnet' instance supported yet"));
@@ -280,6 +292,14 @@ void bx_vnet_pktmover_c::pktmover_init(
   pktlog_pcap = pcap_dump_open(pcapp, "vnet-pktlog.pcap");
   if (pktlog_pcap == NULL) BX_PANIC(("vnet-pktlog.pcap failed"));
 #endif
+}
+
+bx_vnet_pktmover_c::~bx_vnet_pktmover_c()
+{
+  if (vnet_logging) {
+    fclose(pktlog_txt);
+  }
+  bx_vnet_instances--;
 }
 
 void bx_vnet_pktmover_c::sendpkt(void *buf, unsigned io_len)
