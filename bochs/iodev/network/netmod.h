@@ -88,7 +88,7 @@ typedef Bit32u (*eth_rx_status_t)(void *arg);
 
 int execute_script(bx_devmodel_c *netdev, const char *name, char* arg1);
 void BOCHSAPI_MSVCONLY write_pktlog_txt(FILE *pktlog_txt, const Bit8u *buf, unsigned len, bx_bool host_to_guest);
-size_t strip_whitespace(char *s);
+size_t BOCHSAPI_MSVCONLY strip_whitespace(char *s);
 
 //
 //  The eth_pktmover class is used by ethernet chip emulations
