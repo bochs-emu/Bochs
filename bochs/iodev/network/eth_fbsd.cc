@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2017  The Bochs Project
+//  Copyright (C) 2001-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -101,10 +101,12 @@ static const struct bpf_insn macfilter[] = {
     BPF_STMT(BPF_RET, 0),                               // Reject packet
 };
 
+#ifdef notdef
 // template filter for all frames
 static const struct bpf_insn promiscfilter[] = {
   BPF_STMT(BPF_RET, 1514)
 };
+#endif
 
 //
 //  Define the class. This is private to this module
@@ -126,7 +128,9 @@ private:
   void rx_timer(void);
   int rx_timer_index;
   struct bpf_insn filter[BX_BPF_INSNSIZ];
+#if BX_ETH_FBSD_LOGGING
   FILE *pktlog, *pktlog_txt;
+#endif
 };
 
 
@@ -165,7 +169,6 @@ bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif,
                                        const char *script)
 {
   char device[sizeof "/dev/bpf000"];
-  int tmpfd;
   int n = 0;
   struct ifreq ifr;
   struct bpf_version bv;
@@ -355,7 +358,6 @@ bx_fbsd_pktmover_c::rx_timer(void)
   struct bpf_hdr *bhdr;
     struct bpf_stat bstat;
     static struct bpf_stat previous_bstat;
-    int counter = 10;
 #define phdr ((unsigned char*)bhdr)
 
   bhdr = (struct bpf_hdr *) rxbuf;

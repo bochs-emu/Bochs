@@ -2028,7 +2028,7 @@ BX_CPP_INLINE Bit32s fast_reciplog(Bit64s value, Bit32s *log2)
     temp = (Bit32u)value;
 
   /* if the resulting value is 0, the reciprocal is infinite */
-  if ((temp == 0))
+  if (temp == 0)
   {
     *log2 = 1000 << LOG_OUTPUT_PREC;
     return neg ? 0x80000000 : 0x7fffffff;

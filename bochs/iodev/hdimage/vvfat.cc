@@ -131,6 +131,7 @@ static inline void* array_get_next(array_t* array)
   return result;
 }
 
+#if 0
 static inline void* array_insert(array_t* array,unsigned int index,unsigned int count)
 {
   if ((array->next+count)*array->item_size > array->size) {
@@ -182,7 +183,6 @@ static inline int array_roll(array_t* array, int index_to, int index_from, int c
   return 0;
 }
 
-#if 0
 static inline int array_remove_slice(array_t* array,int index, int count)
 {
   assert(index >=0);

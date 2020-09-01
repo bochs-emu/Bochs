@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003       Renzo Davoli
-//  Copyright (C) 2003-2017  The Bochs Project
+//  Copyright (C) 2003-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -95,7 +95,9 @@ private:
   int rx_timer_index;
   static void rx_timer_handler(void *);
   void rx_timer();
+#if BX_ETH_VDE_LOGGING
   FILE *txlog, *txlog_txt, *rxlog, *rxlog_txt;
+#endif
   int fddata;
   struct sockaddr_un dataout;
 };

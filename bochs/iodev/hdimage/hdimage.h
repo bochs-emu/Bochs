@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2005-2018  The Bochs Project
+//  Copyright (C) 2005-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -296,7 +296,7 @@ class concat_image_t : public device_image_t
       // This can be supported pretty easily, but needs additional checks.
       // 0=something other than seek was last operation
       // 1=seek was last operation
-      int seek_was_last_op;
+      //int seek_was_last_op;
 
       // the following variables tell which partial image file to use for
       // the next read and write.
@@ -372,7 +372,7 @@ class sparse_image_t : public device_image_t
 
     char *pathname;
 
-    Bit64s position;
+    //Bit64s position;
 
     Bit32u position_virtual_page;
     Bit32u position_physical_page;

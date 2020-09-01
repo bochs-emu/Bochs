@@ -2,8 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2013  The Bochs Project
-//  Copyright (C) 2013-2018  Volker Ruppert
+//  Copyright (C) 2001-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -113,9 +112,9 @@ int  bx_imagemode;
 int  bx_backup;
 int  bx_interactive;
 int  bx_sectsize_idx;
-unsigned bx_sectsize_val;
+Bit16u bx_sectsize_val;
 char bx_filename_1[512];
-char bx_filename_2[512];
+char bx_filename_2[522];
 
 const char *EOF_ERR = "ERROR: End of input";
 const char *svnid = "$Id$";
@@ -1053,7 +1052,7 @@ int parse_cmdline(int argc, char *argv[])
       bx_interactive = 1;
     }
     if ((bximage_mode == BXIMAGE_MODE_COMMIT_UNDOABLE) && (fnargs == 1)) {
-      snprintf(bx_filename_2, 256, "%s%s", bx_filename_1, UNDOABLE_REDOLOG_EXTENSION);
+      snprintf(bx_filename_2, 520, "%s%s", bx_filename_1, UNDOABLE_REDOLOG_EXTENSION);
     }
   }
   return ret;
@@ -1077,13 +1076,13 @@ void image_overwrite_check(const char *filename)
 
 void check_image_names()
 {
-  char backup_fname[512];
+  char backup_fname[520];
 
   if (!strlen(bx_filename_2)) {
     strcpy(bx_filename_2, bx_filename_1);
   }
   if ((!strcmp(bx_filename_1, bx_filename_2)) && bx_backup) {
-    snprintf(backup_fname, 256, "%s%s", bx_filename_1, ".orig");
+    snprintf(backup_fname, 517, "%s%s", bx_filename_1, ".orig");
     if (hdimage_copy_file(bx_filename_1, backup_fname) != 1)
       fatal("backup of source image file failed");
   } else if (strcmp(bx_filename_1, bx_filename_2)) {
@@ -1110,7 +1109,7 @@ int get_image_mode_and_hdsize(const char *filename, int *hdsize_megs)
 
 int CDECL main(int argc, char *argv[])
 {
-  char bochsrc_line[256], prompt[80], tmpfname[512];
+  char bochsrc_line[1024], prompt[80], tmpfname[528];
   int imgmode = 0;
   Bit64u hdsize = 0;
   device_image_t *hdimage;
@@ -1223,7 +1222,7 @@ int CDECL main(int argc, char *argv[])
         if (ask_string("\nWhat is the name of the base image?\n", bx_filename_1, bx_filename_1) < 0)
           fatal(EOF_ERR);
         if (!strlen(bx_filename_2)) {
-          snprintf(tmpfname, 256, "%s%s", bx_filename_1, UNDOABLE_REDOLOG_EXTENSION);
+          snprintf(tmpfname, 520, "%s%s", bx_filename_1, UNDOABLE_REDOLOG_EXTENSION);
         } else {
           strcpy(tmpfname, bx_filename_2);
         }
@@ -1306,13 +1305,13 @@ int CDECL main(int argc, char *argv[])
 
       case BXIMAGE_MODE_COMMIT_UNDOABLE:
         if (bx_backup) {
-          snprintf(tmpfname, 256, "%s%s", bx_filename_1, ".orig");
+          snprintf(tmpfname, 517, "%s%s", bx_filename_1, ".orig");
           if (hdimage_copy_file(bx_filename_1, tmpfname) != 1)
             fatal("backup of base image file failed");
         }
         commit_redolog();
         if (bx_backup) {
-          snprintf(tmpfname, 256, "%s%s", bx_filename_2, ".orig");
+          snprintf(tmpfname, 527, "%s%s", bx_filename_2, ".orig");
           if (rename(bx_filename_2, tmpfname) != 0)
             fatal("rename of redolog file failed");
         } else {
