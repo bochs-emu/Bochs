@@ -48,9 +48,9 @@
 
 static struct ip *ip_reass(Slirp *slirp, struct ip *ip, struct ipq *fp);
 static void ip_freef(Slirp *slirp, struct ipq *fp);
-static void ip_enq(register struct ipasfrag *p,
-                   register struct ipasfrag *prev);
-static void ip_deq(register struct ipasfrag *p);
+static void ip_enq(struct ipasfrag *p,
+                   struct ipasfrag *prev);
+static void ip_deq(struct ipasfrag *p);
 
 /*
  * IP initialization: fill in IP protocol switch table.
@@ -84,7 +84,7 @@ static inline struct ipq *container_of_ip_link(void *ptr)
 void ip_input(struct mbuf *m)
 {
 	Slirp *slirp = m->slirp;
-	register struct ip *ip;
+	struct ip *ip;
 	int hlen;
 
 	DEBUG_CALL("ip_input");
@@ -154,7 +154,7 @@ void ip_input(struct mbuf *m)
 	 * XXX This should fail, don't fragment yet
 	 */
 	if (ip->ip_off &~ IP_DF) {
-	  register struct ipq *fp;
+	  struct ipq *fp;
       struct qlink *l;
 		/*
 		 * Look for queue of fragments
@@ -234,8 +234,8 @@ bad:
 static struct ip *
 ip_reass(Slirp *slirp, struct ip *ip, struct ipq *fp)
 {
-	register struct mbuf *m = dtom(slirp, ip);
-	register struct ipasfrag *q;
+	struct mbuf *m = dtom(slirp, ip);
+	struct ipasfrag *q;
 	int hlen = ip->ip_hl << 2;
 	int i, next;
 
@@ -389,7 +389,7 @@ dropfrag:
 static void
 ip_freef(Slirp *slirp, struct ipq *fp)
 {
-	register struct ipasfrag *q, *p;
+	struct ipasfrag *q, *p;
 
 	for (q = (struct ipasfrag *)fp->frag_link.next; q != (struct ipasfrag*)&fp->frag_link; q = p) {
 		p = (struct ipasfrag *)q->ipf_next;
@@ -405,7 +405,7 @@ ip_freef(Slirp *slirp, struct ipq *fp)
  * Like insque, but pointers in middle of structure.
  */
 static void
-ip_enq(register struct ipasfrag *p, register struct ipasfrag *prev)
+ip_enq(struct ipasfrag *p, struct ipasfrag *prev)
 {
 	DEBUG_CALL("ip_enq");
 	DEBUG_ARG("prev = %lx", (long)prev);
@@ -419,7 +419,7 @@ ip_enq(register struct ipasfrag *p, register struct ipasfrag *prev)
  * To ip_enq as remque is to insque.
  */
 static void
-ip_deq(register struct ipasfrag *p)
+ip_deq(struct ipasfrag *p)
 {
 	((struct ipasfrag *)(p->ipf_prev))->ipf_next = p->ipf_next;
 	((struct ipasfrag *)(p->ipf_next))->ipf_prev = p->ipf_prev;
@@ -465,10 +465,10 @@ int
 ip_dooptions(m)
 	struct mbuf *m;
 {
-	register struct ip *ip = mtod(m, struct ip *);
-	register u_char *cp;
-	register struct ip_timestamp *ipt;
-	register struct in_ifaddr *ia;
+	struct ip *ip = mtod(m, struct ip *);
+	u_char *cp;
+	struct ip_timestamp *ipt;
+	struct in_ifaddr *ia;
 	int opt, optlen, cnt, off, code, type, forward = 0;
 	struct in_addr *sin, dst;
 typedef uint32_t n_time;
@@ -659,11 +659,11 @@ bad:
  * (XXX) should be deleted; last arg currently ignored.
  */
 void
-ip_stripoptions(register struct mbuf *m, struct mbuf *mopt)
+ip_stripoptions(struct mbuf *m, struct mbuf *mopt)
 {
-	register int i;
+	int i;
 	struct ip *ip = mtod(m, struct ip *);
-	register caddr_t opts;
+	caddr_t opts;
 	int olen;
 
 	olen = (ip->ip_hl<<2) - sizeof (struct ip);

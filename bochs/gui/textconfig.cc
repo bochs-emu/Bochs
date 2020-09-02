@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2018  The Bochs Project
+//  Copyright (C) 2002-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -646,7 +646,7 @@ int bx_write_rc(char *rc)
       // return code -2 indicates the file already exists, and overwrite
       // confirmation is required.
       Bit32u overwrite = 0;
-      char prompt[256];
+      char prompt[570];
       sprintf(prompt, "Configuration file '%s' already exists.  Overwrite it? [no] ", newrc);
       if (ask_yn(prompt, "", 0, &overwrite) < 0) return -1;
       if (!overwrite) continue;  // if "no", start loop over, asking for a different file

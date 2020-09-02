@@ -1622,7 +1622,7 @@ void vnet_server_c::ftp_list_directory(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_da
   DIR *dir;
   struct dirent *dent;
   struct stat st;
-  char path[BX_PATHNAME_LEN];
+  char path[768];
   time_t now = time(NULL);
 #endif
 

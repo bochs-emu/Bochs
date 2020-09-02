@@ -77,7 +77,7 @@ void
 tcp_template(struct tcpcb *tp)
 {
 	struct socket *so = tp->t_socket;
-	register struct tcpiphdr *n = &tp->t_template;
+	struct tcpiphdr *n = &tp->t_template;
 
 	n->ti_mbuf = NULL;
 	n->ti_x1 = 0;
@@ -115,7 +115,7 @@ void
 tcp_respond(struct tcpcb *tp, struct tcpiphdr *ti, struct mbuf *m,
             tcp_seq ack, tcp_seq seq, int flags)
 {
-	register int tlen;
+	int tlen;
 	int win = 0;
 
 	DEBUG_CALL("tcp_respond");
@@ -186,7 +186,7 @@ tcp_respond(struct tcpcb *tp, struct tcpiphdr *ti, struct mbuf *m,
 struct tcpcb *
 tcp_newtcpcb(struct socket *so)
 {
-	register struct tcpcb *tp;
+	struct tcpcb *tp;
 
 	tp = (struct tcpcb *)malloc(sizeof(*tp));
 	if (tp == NULL)
@@ -248,10 +248,10 @@ struct tcpcb *tcp_drop(struct tcpcb *tp, int err)
 struct tcpcb *
 tcp_close(struct tcpcb *tp)
 {
-	register struct tcpiphdr *t;
+	struct tcpiphdr *t;
 	struct socket *so = tp->t_socket;
 	Slirp *slirp = so->slirp;
-	register struct mbuf *m;
+	struct mbuf *m;
 
 	DEBUG_CALL("tcp_close");
 	DEBUG_ARG("tp = %lx", (long )tp);

@@ -37,7 +37,7 @@
 
 #if BX_NETWORKING && BX_NETMOD_SLIRP
 
-static struct tcpcb *tcp_timers(register struct tcpcb *tp, int timer);
+static struct tcpcb *tcp_timers(struct tcpcb *tp, int timer);
 
 /*
  * Fast timeout routine for processing delayed acks
@@ -45,8 +45,8 @@ static struct tcpcb *tcp_timers(register struct tcpcb *tp, int timer);
 void
 tcp_fasttimo(Slirp *slirp)
 {
-	register struct socket *so;
-	register struct tcpcb *tp;
+	struct socket *so;
+	struct tcpcb *tp;
 
 	DEBUG_CALL("tcp_fasttimo");
 
@@ -69,9 +69,9 @@ tcp_fasttimo(Slirp *slirp)
 void
 tcp_slowtimo(Slirp *slirp)
 {
-	register struct socket *ip, *ipnxt;
-	register struct tcpcb *tp;
-	register int i;
+	struct socket *ip, *ipnxt;
+	struct tcpcb *tp;
+	int i;
 
 	DEBUG_CALL("tcp_slowtimo");
 
@@ -111,7 +111,7 @@ tpgone:
 void
 tcp_canceltimers(struct tcpcb *tp)
 {
-	register int i;
+	int i;
 
 	for (i = 0; i < TCPT_NTIMERS; i++)
 		tp->t_timer[i] = 0;
@@ -124,9 +124,9 @@ const int tcp_backoff[TCP_MAXRXTSHIFT + 1] =
  * TCP timer processing.
  */
 static struct tcpcb *
-tcp_timers(register struct tcpcb *tp, int timer)
+tcp_timers(struct tcpcb *tp, int timer)
 {
-	register int rexmt;
+	int rexmt;
 
 	DEBUG_CALL("tcp_timers");
 

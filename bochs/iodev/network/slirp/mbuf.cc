@@ -69,7 +69,7 @@ void m_cleanup(Slirp *slirp)
 struct mbuf *
 m_get(Slirp *slirp)
 {
-	register struct mbuf *m;
+	struct mbuf *m;
 	int flags = 0;
 
 	DEBUG_CALL("m_get");

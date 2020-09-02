@@ -124,8 +124,8 @@ void icmp_detach(struct socket *so)
 void
 icmp_input(struct mbuf *m, int hlen)
 {
-  register struct icmp *icp;
-  register struct ip *ip=mtod(m, struct ip *);
+  struct icmp *icp;
+  struct ip *ip=mtod(m, struct ip *);
   int icmplen=ip->ip_len;
   Slirp *slirp = m->slirp;
 
@@ -252,9 +252,9 @@ icmp_error(struct mbuf *msrc, u_char type, u_char code, int minsize,
            const char *message)
 {
   unsigned hlen, shlen, s_ip_len;
-  register struct ip *ip;
-  register struct icmp *icp;
-  register struct mbuf *m;
+  struct ip *ip;
+  struct icmp *icp;
+  struct mbuf *m;
 
   DEBUG_CALL("icmp_error");
   DEBUG_ARG("msrc = %lx", (long )msrc);
@@ -373,10 +373,10 @@ end_error:
 void
 icmp_reflect(struct mbuf *m)
 {
-  register struct ip *ip = mtod(m, struct ip *);
+  struct ip *ip = mtod(m, struct ip *);
   int hlen = ip->ip_hl << 2;
   int optlen = hlen - sizeof(struct ip );
-  register struct icmp *icp;
+  struct icmp *icp;
 
   /*
    * Send an icmp packet back to the ip level,

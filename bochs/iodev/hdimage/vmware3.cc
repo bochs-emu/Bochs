@@ -10,7 +10,7 @@
  * Contact: snrrrub@yahoo.com
  *
  * Copyright (C) 2003       Net Integration Technologies, Inc.
- * Copyright (C) 2003-2018  The Bochs Project
+ * Copyright (C) 2003-2020  The Bochs Project
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -180,18 +180,21 @@ int vmware3_image_t::write_ints(int fd, Bit32u *buffer, size_t count)
 char* vmware3_image_t::generate_cow_name(const char * filename, unsigned chain)
 {
   char * name = new char[strlen(filename) + 4];
-  if(name == NULL)
+  if (name == NULL)
     BX_PANIC(("unable to allocate %u bytes for vmware3 COW file name (base: %s, chain: %u)", (unsigned)strlen(filename) + 4, filename, chain));
   strcpy(name, filename);
   if (chain != 0) {
+    char chainstr[12];
+    sprintf(chainstr, "-%02u", chain + 1);
     char * period = strrchr(name, '.');
     if (period != 0) {
       char temp[1024];
-      strcpy(temp, period + 1);
+      strcpy(temp, period);
       *period = 0;
-      sprintf(name, "%s-%02d.%s", name, chain + 1, temp);
+      strcat(name, chainstr);
+      strcat(name, temp);
     } else {
-      sprintf(name, "%s-%02d", name, chain + 1);
+      strcat(name, chainstr);
     }
   }
   return name;

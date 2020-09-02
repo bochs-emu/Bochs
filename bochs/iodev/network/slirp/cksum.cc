@@ -53,9 +53,9 @@
 
 int cksum(struct mbuf *m, int len)
 {
-	register uint16_t *w;
-	register int sum = 0;
-	register int mlen = 0;
+	uint16_t *w;
+	int sum = 0;
+	int mlen = 0;
 	int byte_swapped = 0;
 
 	union {

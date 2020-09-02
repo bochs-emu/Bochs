@@ -349,26 +349,26 @@ void ip_init(Slirp *);
 void ip_cleanup(Slirp *);
 void ip_input(struct mbuf *);
 void ip_slowtimo(Slirp *);
-void ip_stripoptions(register struct mbuf *, struct mbuf *);
+void ip_stripoptions(struct mbuf *, struct mbuf *);
 
 /* ip_output.c */
 int ip_output(struct socket *, struct mbuf *);
 
 /* tcp_input.c */
-void tcp_input(register struct mbuf *, int, struct socket *);
-int tcp_mss(register struct tcpcb *, u_int);
+void tcp_input(struct mbuf *, int, struct socket *);
+int tcp_mss(struct tcpcb *, u_int);
 
 /* tcp_output.c */
-int tcp_output(register struct tcpcb *);
-void tcp_setpersist(register struct tcpcb *);
+int tcp_output(struct tcpcb *);
+void tcp_setpersist(struct tcpcb *);
 
 /* tcp_subr.c */
 void tcp_init(Slirp *);
 void tcp_cleanup(Slirp *);
 void tcp_template(struct tcpcb *);
-void tcp_respond(struct tcpcb *, register struct tcpiphdr *, register struct mbuf *, tcp_seq, tcp_seq, int);
+void tcp_respond(struct tcpcb *, struct tcpiphdr *, struct mbuf *, tcp_seq, tcp_seq, int);
 struct tcpcb * tcp_newtcpcb(struct socket *);
-struct tcpcb * tcp_close(register struct tcpcb *);
+struct tcpcb * tcp_close(struct tcpcb *);
 void tcp_sockclosed(struct tcpcb *);
 int tcp_fconnect(struct socket *);
 void tcp_connect(struct socket *);

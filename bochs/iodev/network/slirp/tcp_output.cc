@@ -61,11 +61,11 @@ static const u_char  tcp_outflags[TCP_NSTATES] = {
 int
 tcp_output(struct tcpcb *tp)
 {
-	register struct socket *so = tp->t_socket;
-	register long len, win;
+	struct socket *so = tp->t_socket;
+	long len, win;
 	int off, flags, error;
-	register struct mbuf *m;
-	register struct tcpiphdr *ti;
+	struct mbuf *m;
+	struct tcpiphdr *ti;
 	u_char opt[MAX_TCPOPTLEN];
 	unsigned optlen, hdrlen;
 	int idle, sendalot;

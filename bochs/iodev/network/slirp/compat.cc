@@ -163,7 +163,7 @@ int slirp_smb(Slirp *s, char *smb_tmpdir, const char *exported_dir,
 {
     static int instance;
     int i;
-    char smb_conf[128], smb_cmdline[128];
+    char smb_conf[128], smb_cmdline[150];
     char share[64], error_msg[256];
     struct passwd *passwd;
     FILE *f;
