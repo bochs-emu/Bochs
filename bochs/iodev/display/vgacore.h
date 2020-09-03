@@ -90,7 +90,7 @@ public:
   void           vgacore_register_state(bx_list_c *parent);
   virtual void   after_restore_state(void);
 #if BX_DEBUGGER
-  virtual void   debug_dump(void);
+  virtual void   debug_dump(int argc, char **argv);
 #endif
 
   virtual void   vga_redraw_area(unsigned x0, unsigned y0, unsigned width,

@@ -3283,11 +3283,11 @@ void bx_svga_cirrus_c::debug_dump(int argc, char **argv)
     }
     dbg_printf("current mode: %u x %u x %u\n", BX_CIRRUS_THIS svga_xres,
                BX_CIRRUS_THIS svga_yres, BX_CIRRUS_THIS svga_dispbpp);
+    if (argc > 0) {
+      dbg_printf("\nAdditional options not supported\n");
+    }
   } else {
-    bx_vgacore_c::debug_dump();
-  }
-  if (argc > 0) {
-    dbg_printf("\nAdditional options not supported\n");
+    bx_vgacore_c::debug_dump(argc, argv);
   }
 }
 #endif

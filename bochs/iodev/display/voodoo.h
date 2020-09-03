@@ -135,6 +135,9 @@ public:
   virtual void pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 
   Bit32u blt_reg_read(Bit8u reg);
+#if BX_DEBUGGER
+  virtual void debug_dump(int argc, char **argv);
+#endif
 
 private:
   static bx_bool mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);

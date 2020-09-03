@@ -2339,6 +2339,34 @@ void bx_banshee_c::blt_line(bx_bool pline)
   BX_UNLOCK(render_mutex);
 }
 
+#if BX_DEBUGGER
+void bx_banshee_c::debug_dump(int argc, char **argv)
+{
+  bx_bool is_agp = SIM->is_agp_device(BX_PLUGIN_VOODOO);
+  if (v->banshee.io[io_vidProcCfg] & 0x01) {
+    if (s.model == VOODOO_BANSHEE) {
+      dbg_printf("Voodoo Banshee %s adapter\n\n", is_agp ? "AGP":"PCI");
+    } else {
+      dbg_printf("Voodoo3 %s adapter\n\n", is_agp ? "AGP":"PCI");
+    }
+    dbg_printf("current mode : %u x %u x %u ", v->fbi.width,
+               v->fbi.height, v->banshee.disp_bpp);
+    if ((v->banshee.io[io_vidProcCfg] & 0x180) == 0x080) {
+      dbg_printf("(2D desktop mode)\n");
+    } else if ((v->banshee.io[io_vidProcCfg] & 0x180) == 0x100) {
+      dbg_printf("(3D overlay mode)\n");
+    } else {
+      dbg_printf("\n");
+    }
+    if (argc > 0) {
+      dbg_printf("\nAdditional options not supported\n");
+    }
+  } else {
+    theVoodooVga->debug_dump(argc, argv);
+  }
+}
+#endif
+
 #undef BLT
 
 #undef LOG_THIS
@@ -2356,12 +2384,13 @@ bx_voodoo_vga_c::~bx_voodoo_vga_c()
 
 bx_bool bx_voodoo_vga_c::init_vga_extension(void)
 {
+  bx_bool ret = 0;
+
   Bit8u model = (Bit8u)SIM->get_param_enum("model", (bx_list_c*)SIM->get_param(BXPN_VOODOO))->get();
   if (model < VOODOO_BANSHEE) {
     theVoodooDevice = new bx_voodoo_1_2_c();
     theVoodooDevice->init();
     init_iohandlers(read_handler, write_handler);
-    return 0;
   } else {
     theVoodooDevice = new bx_banshee_c();
     theVoodooDevice->init();
@@ -2378,8 +2407,13 @@ bx_bool bx_voodoo_vga_c::init_vga_extension(void)
     BX_VVGA_THIS s.vclk[2] = 50000000;
     BX_VVGA_THIS s.vclk[3] = 25175000;
     BX_VVGA_THIS pci_enabled = 1;
-    return 1;
+    ret = 1;
   }
+#if BX_DEBUGGER
+  // register device for the 'info device' command (calls debug_dump())
+  bx_dbg_register_debug_info("voodoo", theVoodooDevice);
+#endif
+  return ret;
 }
 
 void bx_voodoo_vga_c::reset(unsigned type)

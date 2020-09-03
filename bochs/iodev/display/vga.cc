@@ -1286,11 +1286,11 @@ void bx_vga_c::debug_dump(int argc, char **argv)
     dbg_printf("Bochs VGA/VBE adapter\n\n");
     dbg_printf("current mode : %u x %u x %u\n", BX_VGA_THIS vbe.xres,
                BX_VGA_THIS vbe.yres, BX_VGA_THIS vbe.bpp);
+    if (argc > 0) {
+      dbg_printf("\nAdditional options not supported\n");
+    }
   } else {
-    bx_vgacore_c::debug_dump();
-  }
-  if (argc > 0) {
-    dbg_printf("\nAdditional options not supported\n");
+    bx_vgacore_c::debug_dump(argc, argv);
   }
 }
 #endif

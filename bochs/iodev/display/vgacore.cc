@@ -2285,7 +2285,7 @@ void bx_vgacore_c::get_text_snapshot(Bit8u **text_snapshot, unsigned *txHeight,
 }
 
 #if BX_DEBUGGER
-void bx_vgacore_c::debug_dump(void)
+void bx_vgacore_c::debug_dump(int argc, char **argv)
 {
   dbg_printf("Standard VGA adapter\n\n");
   dbg_printf("s.misc_output.color_emulation = %u\n",
@@ -2346,6 +2346,10 @@ void bx_vgacore_c::debug_dump(void)
             (unsigned) BX_VGA_THIS s.attribute_ctrl.mode_ctrl.internal_palette_size);
   dbg_printf("s.attribute_ctrl.mode_ctrl.pixel_clock_select = %u\n",
             (unsigned) BX_VGA_THIS s.attribute_ctrl.mode_ctrl.pixel_clock_select);
+
+  if (argc > 0) {
+    dbg_printf("\nAdditional options not supported\n");
+  }
 }
 #endif
 
