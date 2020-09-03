@@ -2699,10 +2699,8 @@ if test "$needs_gtk2" = 1; then
       fi
     fi
   else
-    echo "ERROR: pkg-config was not found, or unable to access the gtk+-2.0 package."
-    echo "Install pkg-config and the gtk+ development package,"
-    echo "or disable the gui debugger, or the wxWidgets display library (whichever is being used)."
-    exit 1
+    echo "ERROR: pkg-config was not found, unable to access the gtk+-2.0 package."
+    echo "The gui debugger support is disabled now."
   fi
 fi
 
@@ -2878,6 +2876,7 @@ if test "$gui_debugger" = 1; then
     AC_DEFINE(BX_DEBUGGER_GUI, 1)
   else
     AC_MSG_WARN([The Bochs debugger gui cannot be compiled here, disabling it])
+    AC_DEFINE(BX_DEBUGGER_GUI, 0)
   fi
 fi
 AC_SUBST(ENH_DBG_OBJS)
