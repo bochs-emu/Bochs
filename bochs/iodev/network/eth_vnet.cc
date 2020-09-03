@@ -26,6 +26,7 @@
 // There are no connections between the virtual host and real ethernets.
 //
 // Virtual host name:     vnet
+// Virtual net IP space:  192.168.10.0
 // Virtual server IP:     192.168.10.1
 // Virtual DNS server IP: 192.168.10.2
 // Virtual FTP server IP: 192.168.10.3
@@ -71,6 +72,7 @@ void CDECL libvnet_net_plugin_fini(void)
 // handler to send/receive packets
 /////////////////////////////////////////////////////////////////////////
 
+static const Bit8u default_net_ipv4addr[4] = {192,168,10,0};
 static const Bit8u default_host_ipv4addr[4] = {192,168,10,1};
 static const Bit8u default_dns_ipv4addr[4] = {192,168,10,2};
 static const Bit8u default_ftp_ipv4addr[4] = {192,168,10,3};
@@ -150,6 +152,7 @@ bx_bool bx_vnet_pktmover_c::parse_vnet_conf(const char *conf)
   char *ret, *param, *val;
   bx_bool format_checked = 0;
   size_t len1 = 0, len2;
+  Bit8u tmp_ipv4addr[4];
 
   fd = fopen(conf, "r");
   if (fd == NULL) return 0;
@@ -197,17 +200,49 @@ bx_bool bx_vnet_pktmover_c::parse_vnet_conf(const char *conf)
           } else {
             BX_ERROR(("vnet: wrong format for 'bootfile'"));
           }
+        } else if (!stricmp(param, "net")) {
+          if (!get_ipv4_address(val, (Bit8u*)&dhcp.net_ipv4addr)) {
+            BX_ERROR(("vnet: wrong format for 'net'"));
+          }
+          if (dhcp.net_ipv4addr[3] != 0) {
+            BX_ERROR(("vnet: IP address space must be set to x.y.z.0"));
+            dhcp.net_ipv4addr[3] = 0;
+          }
         } else if (!stricmp(param, "host")) {
-          if (!get_ipv4_address(val, (Bit8u*)&dhcp.srv_ipv4addr[VNET_SRV])) {
+          if (!get_ipv4_address(val, (Bit8u*)tmp_ipv4addr)) {
             BX_ERROR(("vnet: wrong format for 'host'"));
           }
+          if (!memcmp(tmp_ipv4addr, dhcp.net_ipv4addr, 3)) {
+            memcpy(dhcp.srv_ipv4addr[VNET_SRV], tmp_ipv4addr, 4);
+          } else {
+            BX_ERROR(("vnet: wrong IP address space for 'host'"));
+          }
         } else if (!stricmp(param, "dhcpstart")) {
-          if (!get_ipv4_address(val, (Bit8u*)&dhcp.client_base_ipv4addr)) {
+          if (!get_ipv4_address(val, (Bit8u*)tmp_ipv4addr)) {
             BX_ERROR(("vnet: wrong format for 'dhcpstart'"));
           }
+          if (!memcmp(tmp_ipv4addr, dhcp.net_ipv4addr, 3)) {
+            memcpy(dhcp.client_base_ipv4addr, tmp_ipv4addr, 4);
+          } else {
+            BX_ERROR(("vnet: wrong IP address space for 'dhcpstart'"));
+          }
         } else if (!stricmp(param, "dns")) {
-          if (!get_ipv4_address(val, (Bit8u*)&dhcp.srv_ipv4addr[VNET_DNS])) {
+          if (!get_ipv4_address(val, (Bit8u*)tmp_ipv4addr)) {
             BX_ERROR(("vnet: wrong format for 'dns'"));
+          }
+          if (!memcmp(tmp_ipv4addr, dhcp.net_ipv4addr, 3)) {
+            memcpy(dhcp.srv_ipv4addr[VNET_DNS], tmp_ipv4addr, 4);
+          } else {
+            BX_ERROR(("vnet: wrong IP address space for 'dns'"));
+          }
+        } else if (!stricmp(param, "ftp")) {
+          if (!get_ipv4_address(val, (Bit8u*)tmp_ipv4addr)) {
+            BX_ERROR(("vnet: wrong format for 'ftp'"));
+          }
+          if (!memcmp(tmp_ipv4addr, dhcp.net_ipv4addr, 3)) {
+            memcpy(dhcp.srv_ipv4addr[VNET_MISC], tmp_ipv4addr, 4);
+          } else {
+            BX_ERROR(("vnet: wrong IP address space for 'ftp'"));
           }
         } else if (!stricmp(param, "pktlog")) {
           if (len2 < BX_PATHNAME_LEN) {
@@ -243,6 +278,7 @@ bx_vnet_pktmover_c::bx_vnet_pktmover_c(const char *netif,
   memcpy(&dhcp.host_macaddr[0], macaddr, 6);
   dhcp.host_macaddr[5] ^= 0x03;
 
+  memcpy(dhcp.net_ipv4addr, default_net_ipv4addr, 4);
   memcpy(dhcp.srv_ipv4addr[VNET_SRV], default_host_ipv4addr, 4);
   memcpy(dhcp.srv_ipv4addr[VNET_DNS], default_dns_ipv4addr, 4);
   memcpy(dhcp.srv_ipv4addr[VNET_MISC], default_ftp_ipv4addr, 4);
