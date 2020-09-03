@@ -420,7 +420,7 @@ void bx_usb_ehci_c::register_state(void)
   for (i = 0; i < 3; i++) {
     sprintf(tmpname, "uhci%d", i);
     uhcic = new bx_list_c(list, tmpname);
-    uhci[i]->register_state(uhcic);
+    uhci[i]->uhci_register_state(uhcic);
   }
 
   register_pci_state(hub);

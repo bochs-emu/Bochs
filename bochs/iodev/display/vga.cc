@@ -175,7 +175,7 @@ void bx_vga_c::reset(unsigned type)
 void bx_vga_c::register_state(void)
 {
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "vga", "VGA Adapter State");
-  bx_vgacore_c::register_state(list);
+  BX_VGA_THIS vgacore_register_state(list);
 #if BX_SUPPORT_PCI
   if (BX_VGA_THIS pci_enabled) {
     register_pci_state(list);

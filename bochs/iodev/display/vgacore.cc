@@ -261,7 +261,7 @@ void bx_vgacore_c::init_systemtimer(void)
   }
 }
 
-void bx_vgacore_c::register_state(bx_list_c *parent)
+void bx_vgacore_c::vgacore_register_state(bx_list_c *parent)
 {
   char name[4];
 

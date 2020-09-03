@@ -207,7 +207,7 @@ public:
   virtual ~bx_ne2k_c();
   virtual void init(Bit8u card);
   virtual void reset(unsigned type);
-  virtual void register_state(bx_list_c *parent, Bit8u card);
+  void         ne2k_register_state(bx_list_c *parent, Bit8u card);
 #if BX_SUPPORT_PCI
   virtual void after_restore_state(void);
 #endif

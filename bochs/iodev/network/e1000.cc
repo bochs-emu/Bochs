@@ -483,7 +483,7 @@ void bx_e1000_main_c::register_state()
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "e1000", "E1000 State");
   for (Bit8u card = 0; card < BX_E1000_MAX_DEVS; card++) {
     if (theE1000Dev[card] != NULL) {
-      theE1000Dev[card]->register_state(list, card);
+      theE1000Dev[card]->e1000_register_state(list, card);
     }
   }
 }
@@ -638,7 +638,7 @@ void bx_e1000_c::reset(unsigned type)
   set_irq_level(0);
 }
 
-void bx_e1000_c::register_state(bx_list_c *parent, Bit8u card)
+void bx_e1000_c::e1000_register_state(bx_list_c *parent, Bit8u card)
 {
   unsigned i;
   char pname[8];

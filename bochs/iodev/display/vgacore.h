@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2018  The Bochs Project
+//  Copyright (C) 2001-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -87,7 +87,7 @@ public:
   virtual Bit8u  mem_read(bx_phy_address addr);
   virtual void   mem_write(bx_phy_address addr, Bit8u value);
   virtual void   set_override(bx_bool enabled, void *dev);
-  virtual void   register_state(bx_list_c *parent);
+  void           vgacore_register_state(bx_list_c *parent);
   virtual void   after_restore_state(void);
 #if BX_DEBUGGER
   virtual void   debug_dump(void);

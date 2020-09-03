@@ -360,7 +360,7 @@ void bx_svga_cirrus_c::reset(unsigned type)
 void bx_svga_cirrus_c::register_state(void)
 {
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "svga_cirrus", "Cirrus SVGA State");
-  bx_vgacore_c::register_state(list);
+  BX_CIRRUS_THIS vgacore_register_state(list);
   bx_list_c *crtc = new bx_list_c(list, "crtc");
   new bx_shadow_num_c(crtc, "index", &BX_CIRRUS_THIS crtc.index, BASE_HEX);
   new bx_shadow_data_c(crtc, "reg", BX_CIRRUS_THIS crtc.reg, CIRRUS_CRTC_MAX, 1);

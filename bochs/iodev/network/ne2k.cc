@@ -269,7 +269,7 @@ void bx_ne2k_main_c::register_state()
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "ne2k", "NE2000 State");
   for (Bit8u card = 0; card < BX_NE2K_MAX_DEVS; card++) {
     if (theNE2kDev[card] != NULL) {
-      theNE2kDev[card]->register_state(list, card);
+      theNE2kDev[card]->ne2k_register_state(list, card);
     }
   }
 }
@@ -477,7 +477,7 @@ void bx_ne2k_c::reset(unsigned type)
   BX_NE2K_THIS s.ISR.reset = 1;
 }
 
-void bx_ne2k_c::register_state(bx_list_c *parent, Bit8u card)
+void bx_ne2k_c::ne2k_register_state(bx_list_c *parent, Bit8u card)
 {
   char pname[8];
 

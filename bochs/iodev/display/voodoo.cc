@@ -325,7 +325,7 @@ void bx_voodoo_base_c::init(void)
            SIM->get_param_enum("model", base)->get_selected()));
 }
 
-void bx_voodoo_base_c::register_state(bx_list_c *parent)
+void bx_voodoo_base_c::voodoo_register_state(bx_list_c *parent)
 {
   char name[8];
   int i, j, k;
@@ -926,7 +926,7 @@ void bx_voodoo_1_2_c::reset(unsigned type)
 void bx_voodoo_1_2_c::register_state(void)
 {
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "voodoo", "Voodoo 1/2 State");
-  bx_voodoo_base_c::register_state(list);
+  voodoo_register_state(list);
   bx_list_c *vdraw = new bx_list_c(list, "vdraw", "Voodoo Draw State");
   new bx_shadow_bool_c(vdraw, "clock_enabled", &s.vdraw.clock_enabled);
   new bx_shadow_bool_c(vdraw, "output_on", &s.vdraw.output_on);

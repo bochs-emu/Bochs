@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009-2016  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2009-2017  The Bochs Project
+//                2009-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -176,7 +176,7 @@ public:
   virtual ~bx_uhci_core_c();
   virtual void init_uhci(Bit8u devfunc, Bit16u devid, Bit8u headt, Bit8u intp);
   virtual void reset_uhci(unsigned);
-  virtual void register_state(bx_list_c *parent);
+  void    uhci_register_state(bx_list_c *parent);
   virtual void after_restore_state(void);
   virtual void set_port_device(int port, usb_device_c *dev);
   virtual void pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);

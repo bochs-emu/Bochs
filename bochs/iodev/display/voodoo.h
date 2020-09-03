@@ -84,7 +84,7 @@ public:
 protected:
   bx_voodoo_t s;
 
-  void register_state(bx_list_c *parent);
+  void voodoo_register_state(bx_list_c *parent);
   void set_irq_level(bx_bool level);
   void vertical_timer(void);
 };

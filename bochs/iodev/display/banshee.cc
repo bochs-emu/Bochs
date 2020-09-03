@@ -249,7 +249,7 @@ void bx_banshee_c::reset(unsigned type)
 void bx_banshee_c::register_state(void)
 {
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "voodoo", "Voodoo Banshee State");
-  bx_voodoo_base_c::register_state(list);
+  voodoo_register_state(list);
   bx_list_c *banshee = new bx_list_c(list, "banshee", "Banshee State");
   new bx_shadow_data_c(banshee, "io", (Bit8u*)v->banshee.io, 256, 1);
   new bx_shadow_data_c(banshee, "agp", (Bit8u*)v->banshee.agp, 0x80, 1);
@@ -2390,7 +2390,7 @@ void bx_voodoo_vga_c::reset(unsigned type)
 void bx_voodoo_vga_c::register_state(void)
 {
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "voodoo_vga", "Voodoo VGA State");
-  bx_vgacore_c::register_state(list);
+  BX_VVGA_THIS vgacore_register_state(list);
   theVoodooDevice->register_state();
 }
 

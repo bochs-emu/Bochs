@@ -168,7 +168,7 @@ void bx_uhci_core_c::reset_uhci(unsigned type)
   }
 }
 
-void bx_uhci_core_c::register_state(bx_list_c *parent)
+void bx_uhci_core_c::uhci_register_state(bx_list_c *parent)
 {
   unsigned j;
   char portnum[8];
