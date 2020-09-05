@@ -84,6 +84,7 @@ typedef struct {
 } hub_client_t;
 
 const Bit8u default_host_macaddr[6] = {0xb0, 0xc4, 0x20, 0x00, 0x00, 0x0f};
+const Bit8u default_net_ipv4addr[4] = {10, 0, 2, 0};
 const Bit8u default_host_ipv4addr[4] = {10, 0, 2, 2};
 const Bit8u default_dns_ipv4addr[4] = {10, 0, 2, 3};
 const Bit8u default_ftp_ipv4addr[4] = {10, 0, 2, 4};
@@ -319,10 +320,11 @@ int CDECL main(int argc, char **argv)
   }
 
   memcpy(dhcp.host_macaddr, host_macaddr, ETHERNET_MAC_ADDR_LEN);
+  memcpy(dhcp.net_ipv4addr, default_net_ipv4addr, 4);
   memcpy(dhcp.srv_ipv4addr[VNET_SRV], default_host_ipv4addr, 4);
   memcpy(dhcp.srv_ipv4addr[VNET_DNS], default_dns_ipv4addr, 4);
   memcpy(dhcp.srv_ipv4addr[VNET_MISC], default_ftp_ipv4addr, 4);
-  memcpy(dhcp.client_base_ipv4addr, &dhcp_base_ipv4addr, 4);
+  memcpy(dhcp.client_base_ipv4addr, dhcp_base_ipv4addr, 4);
   if (strlen(dhcp_bootfile) > 0) {
     strcpy(dhcp.bootfile, dhcp_bootfile);
   } else {

@@ -153,7 +153,7 @@ Bit16u ip_checksum(const Bit8u *buf, unsigned buf_len)
 #define DHCPRELEASE  7
 #define DHCPINFORM   8
 
-#define DEFAULT_LEASE_TIME 28800
+#define DEFAULT_LEASE_TIME 86400
 
 // TFTP server support by EaseWay <easeway@123.com>
 
@@ -223,7 +223,7 @@ void vnet_server_c::init(bx_devmodel_c *_netdev, dhcp_cfg_t *dhcpc, const char *
 {
   netdev = _netdev;
   dhcp = dhcpc;
-  memcpy(broadcast_ipv4addr[2], dhcp->srv_ipv4addr[VNET_SRV], 3);
+  memcpy(broadcast_ipv4addr[2], dhcp->net_ipv4addr, 3);
   tftp_root = tftp_rootdir;
 
   register_layer4_handler(0x11, INET_PORT_BOOTP_SERVER, udpipv4_dhcp_handler);
@@ -2173,9 +2173,8 @@ int vnet_server_c::udpipv4_dhcp_handler_ns(const Bit8u *ipheader,
         opts_len -= 6;
         *replyopts ++ = BOOTPOPT_BROADCAST_ADDRESS;
         *replyopts ++ = 4;
-        memcpy(replyopts, dhcp->srv_ipv4addr[VNET_SRV], 3);
-        replyopts += 3;
-        *replyopts ++ = 0xff;
+        memcpy(replyopts, broadcast_ipv4addr[2], 4);
+        replyopts += 4;
         break;
       case BOOTPOPT_RENEWAL_TIME:
         BX_DEBUG(("provide BOOTPOPT_RENEWAL_TIME"));
