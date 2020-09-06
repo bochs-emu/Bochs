@@ -648,7 +648,6 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
       break;
 
     case io_vidProcCfg:
-      BX_LOCK(render_mutex);
       v->banshee.io[reg] = value;
       if ((v->banshee.io[reg] ^ old) & 0x2800)
         v->fbi.clut_dirty = 1;
@@ -688,7 +687,6 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_ERROR(("vidProcCfg: upper 256 CLUT entries not supported yet"));
       }
       v->banshee.desktop_tiled = ((v->banshee.io[reg] >> 24) & 1);
-      BX_UNLOCK(render_mutex);
       break;
 
     case io_hwCurPatAddr:
@@ -701,7 +699,6 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
       break;
 
     case io_hwCurLoc:
-      BX_LOCK(render_mutex);
       v->banshee.io[reg] = value;
       v->banshee.hwcursor.x = v->banshee.io[reg] & 0x7ff;
       v->banshee.hwcursor.y = (v->banshee.io[reg] >> 16) & 0x7ff;
@@ -710,7 +707,6 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
         theVoodooVga->redraw_area(v->banshee.hwcursor.x - 63, v->banshee.hwcursor.y - 63,
                                   v->banshee.hwcursor.x, v->banshee.hwcursor.y);
       }
-      BX_UNLOCK(render_mutex);
       break;
 
     case io_hwCurC0:
@@ -731,11 +727,9 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
       break;
 
     case io_vidScreenSize:
-      BX_LOCK(render_mutex);
       v->banshee.io[reg] = value;
       v->fbi.width = (value & 0xfff);
       v->fbi.height = (value >> 12) & 0xfff;
-      BX_UNLOCK(render_mutex);
       break;
 
     case io_vgab0:  case io_vgab4:  case io_vgab8:  case io_vgabc:
@@ -751,12 +745,10 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
     case io_vidDesktopStartAddr:
     case io_vidDesktopOverlayStride:
-      BX_LOCK(render_mutex);
       if ((v->banshee.io[io_vidProcCfg] & 0x01) && (v->banshee.io[reg] != value)) {
         v->fbi.video_changed = 1;
       }
       v->banshee.io[reg] = value;
-      BX_UNLOCK(render_mutex);
       break;
 
     default:

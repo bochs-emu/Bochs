@@ -915,8 +915,9 @@ void bx_voodoo_1_2_c::reset(unsigned type)
     v->pci.init_enable = 0x0000;
   }
 
-  if ((!s.vdraw.clock_enabled || !s.vdraw.output_on) && s.vdraw.override_on) {
-    mode_change_timer_handler(NULL);
+  s.vdraw.output_on = 0;
+  if (s.vdraw.override_on) {
+    mode_change_timer_handler(this);
   }
 
   // Deassert IRQ
