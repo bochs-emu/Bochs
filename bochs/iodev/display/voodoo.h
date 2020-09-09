@@ -170,6 +170,7 @@ private:
   void   blt_host_to_screen(void);
   void   blt_host_to_screen_pattern(void);
   void   blt_line(bx_bool pline);
+  void   blt_polygon_fill(bx_bool force);
 
   bx_ddc_c ddc;
   bx_bool  is_agp;

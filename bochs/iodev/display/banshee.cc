@@ -1087,6 +1087,8 @@ Bit32u bx_banshee_c::blt_reg_read(Bit8u reg)
 
 void bx_banshee_c::blt_reg_write(Bit8u reg, Bit32u value)
 {
+  Bit8u old_cmd;
+
   if (reg < 0x20) {
     BLT.reg[reg] = value;
     BX_DEBUG(("2D write register 0x%03x (%s) value = 0x%08x", reg<<2,
@@ -1176,6 +1178,7 @@ void bx_banshee_c::blt_reg_write(Bit8u reg, Bit32u value)
       BLT.dst_y = (BLT.reg[reg] >> 16) & 0x1fff;
       break;
     case blt_command:
+      old_cmd = BLT.cmd;
       BLT.cmd = (value & 0x0f);
       BLT.immed = (value >> 8) & 1;
       BLT.x_dir = (value >> 14) & 1;
@@ -1195,8 +1198,11 @@ void bx_banshee_c::blt_reg_write(Bit8u reg, Bit32u value)
         delete [] BLT.lamem;
         BLT.lamem = NULL;
       }
+      if (old_cmd == 8) {
+        blt_polygon_fill(1);
+      }
       if (BLT.cmd == 8) {
-        BLT.pgn_index = 0;
+        BLT.pgn_init = 0;
       }
       if (BLT.immed) {
         blt_execute();
@@ -1312,8 +1318,7 @@ void bx_banshee_c::blt_launch_area_write(Bit32u value)
       BLT.dst_x = value & 0x1fff;
       BLT.dst_y = (value >> 16) & 0x1fff;
     } if (BLT.cmd >= 8) {
-      BLT.pgn_x = value & 0x1fff;
-      BLT.pgn_y = (value >> 16) & 0x1fff;
+      BLT.pgn_val = value;
     }
     if (--BLT.lacnt == 0) {
       blt_execute();
@@ -1325,6 +1330,8 @@ void bx_banshee_c::blt_launch_area_write(Bit32u value)
 
 void bx_banshee_c::blt_execute()
 {
+  Bit16u x, y;
+
   switch (BLT.cmd) {
     case 0: // NOP
       break;
@@ -1391,13 +1398,29 @@ void bx_banshee_c::blt_execute()
       break;
     case 8:
       if (!BLT.immed) {
-        if (BLT.pgn_index == 0) {
-          BX_INFO(("TODO: 2D Polygon fill start (x0 = %d y0 = %d x1 = %d y1 = %d)",
-                   BLT.src_x, BLT.src_y, BLT.dst_x, BLT.dst_y));
+        if (!BLT.pgn_init) {
+          BLT.pgn_l0x = BLT.pgn_l1x = BLT.src_x;
+          BLT.pgn_l0y = BLT.pgn_l1y = BLT.src_y;
+          BLT.pgn_r0x = BLT.pgn_r1x = BLT.dst_x;
+          BLT.pgn_r0y = BLT.pgn_r1y = BLT.dst_y;
+          BLT.pgn_init = 1;
         }
-        BX_INFO(("TODO: 2D Polygon fill launch value (x = %d y = %d)",
-                 BLT.pgn_x, BLT.pgn_y));
-        BLT.pgn_index++;
+        x = (Bit16u)BLT.pgn_val;
+        y = (Bit16u)(BLT.pgn_val >> 16);
+        if (BLT.pgn_r1y >= BLT.pgn_l1y) {
+          BLT.pgn_l1x = x;
+          BLT.pgn_l1y = y;
+          if ((y == BLT.pgn_l0y) && (x < BLT.pgn_l0x)) {
+            BLT.pgn_l0x = x;
+          }
+        } else {
+          BLT.pgn_r1x = x;
+          BLT.pgn_r1y = y;
+          if ((y == BLT.pgn_r0y) && (x > BLT.pgn_r0x)) {
+            BLT.pgn_l0x = x;
+          }
+        }
+        blt_polygon_fill(0);
       } else {
         BLT.reg[blt_dstXY] = BLT.reg[blt_srcXY];
         BLT.immed = 0;
@@ -2329,6 +2352,54 @@ void bx_banshee_c::blt_line(bx_bool pline)
   BLT.src_x = BLT.dst_x;
   BLT.src_y = BLT.dst_y;
   BX_UNLOCK(render_mutex);
+}
+
+void bx_banshee_c::blt_polygon_fill(bx_bool force)
+{
+  Bit32u dpitch = BLT.dst_pitch;
+  Bit8u dpxsize = (BLT.dst_fmt > 1) ? (BLT.dst_fmt - 1) : 1;
+  Bit8u *dst_ptr = &v->fbi.ram[BLT.dst_base];
+  Bit8u *dst_ptr1;
+  Bit16u x0, y0, y1;
+
+  if (force) {
+    if (BLT.pgn_l1y == BLT.pgn_r1y) {
+      return;
+    } else if (BLT.pgn_l1y < BLT.pgn_r1y) {
+      BLT.pgn_l1x = BLT.pgn_r1x;
+      BLT.pgn_l1y = BLT.pgn_r1y;
+    } else {
+      BLT.pgn_r1x = BLT.pgn_l1x;
+      BLT.pgn_r1y = BLT.pgn_l1y;
+    }
+  }
+  if ((BLT.pgn_l1y > BLT.pgn_l0y) && (BLT.pgn_r1y > BLT.pgn_r0y)) {
+    BLT.busy = 1;
+    BX_LOCK(render_mutex);
+    y0 = BLT.pgn_l0y;
+    if (BLT.pgn_l1y < BLT.pgn_r1y) {
+      y1 = BLT.pgn_l1y;
+    } else {
+      y1 = BLT.pgn_r1y;
+    }
+    // drawing upper left vertex for now
+    x0 = BLT.pgn_l0x;
+    dst_ptr1 = dst_ptr + y0 * dpitch + x0 * dpxsize;
+    BLT.rop_fn(dst_ptr1, BLT.fgcolor, dpitch, dpxsize, dpxsize, 1);
+    BX_INFO(("TODO: 2D Polygon fill"));
+    BX_INFO(("  L0=(%d,%d) L1=(%d,%d) R0=(%d,%d) R1=(%d,%d)", BLT.pgn_l0x, BLT.pgn_l0y,
+             BLT.pgn_l1x, BLT.pgn_l1y, BLT.pgn_r0x, BLT.pgn_r0y, BLT.pgn_r1x, BLT.pgn_r1y));
+    if (y1 == BLT.pgn_l1y) {
+      BLT.pgn_l0x = BLT.pgn_l1x;
+      BLT.pgn_l0y = BLT.pgn_l1y;
+    }
+    if (y1 == BLT.pgn_r1y) {
+      BLT.pgn_r0x = BLT.pgn_r1x;
+      BLT.pgn_r0y = BLT.pgn_r1y;
+    }
+    blt_complete();
+    BX_UNLOCK(render_mutex);
+  }
 }
 
 #if BX_DEBUGGER
