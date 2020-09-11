@@ -3572,7 +3572,9 @@ void voodoo_init(Bit8u _type)
     v->tmu[1].mask = (4<<20)-1;
   } else {
     v->tmu[0].ram = v->fbi.ram;
+    v->tmu[1].ram = v->fbi.ram;
     v->tmu[0].mask = (16<<20)-1;
+    v->tmu[1].mask = (16<<20)-1;
   }
 
   v->tmu_config = 64;
