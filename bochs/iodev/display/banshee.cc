@@ -59,7 +59,6 @@
 // 3dfx Voodoo Banshee / Voodoo3 emulation (partly based on a patch for DOSBox)
 
 // TODO:
-// - 2D polygon fill
 // - 2D host-to-screen stretching support
 // - 2D chromaKey support
 // - using upper 256 CLUT entries
@@ -812,7 +811,7 @@ void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
     } else if (offset < 0x600000) {
       value = register_r((offset - 0x200000) >> 2);
     } else if (offset < 0xc00000) {
-      BX_ERROR(("reserved read from offset 0x%08x", offset));
+      BX_DEBUG(("reserved read from offset 0x%08x", offset));
     } else if (offset < 0x1000000) {
       BX_INFO(("TODO: YUV planar space read from offset 0x%08x", offset));
     } else {
@@ -878,7 +877,7 @@ void bx_banshee_c::mem_write(bx_phy_address addr, unsigned len, void *data)
     } else if ((offset < 0xa00000) && (s.model == VOODOO_3)) {
       texture_w((1 << 19) | ((offset & 0x1fffff) >> 2), value);
     } else if (offset < 0xc00000) {
-      BX_ERROR(("reserved write to offset 0x%08x", offset));
+      BX_DEBUG(("reserved write to offset 0x%08x", offset));
     } else if (offset < 0x1000000) {
       BX_INFO(("TODO: YUV planar space write to offset 0x%08x", offset));
     } else {
@@ -1410,14 +1409,14 @@ void bx_banshee_c::blt_execute()
         if (BLT.pgn_r1y >= BLT.pgn_l1y) {
           BLT.pgn_l1x = x;
           BLT.pgn_l1y = y;
-          if ((y == BLT.pgn_l0y) && (x < BLT.pgn_l0x)) {
+          if (y == BLT.pgn_l0y) {
             BLT.pgn_l0x = x;
           }
         } else {
           BLT.pgn_r1x = x;
           BLT.pgn_r1y = y;
-          if ((y == BLT.pgn_r0y) && (x > BLT.pgn_r0x)) {
-            BLT.pgn_l0x = x;
+          if (y == BLT.pgn_r0y) {
+            BLT.pgn_r0x = x;
           }
         }
         blt_polygon_fill(0);
@@ -2354,13 +2353,80 @@ void bx_banshee_c::blt_line(bx_bool pline)
   BX_UNLOCK(render_mutex);
 }
 
+int calc_line_xpos(int x1, int y1, int x2, int y2, int yc, bx_bool r)
+{
+  int i, deltax, deltay, numpixels,
+      d, dinc1, dinc2,
+      x, xinc1, xinc2,
+      y, yinc1, yinc2;
+  int xl = -1, xr = -1;
+
+  if (x1 == x2) {
+    xl = xr = x1;
+  } else {
+    deltax = abs(x2 - x1);
+    deltay = abs(y2 - y1);
+    if (deltax >= deltay) {
+      numpixels = deltax + 1;
+      d = (deltay << 1) - deltax;
+      dinc1 = deltay << 1;
+      dinc2 = (deltay - deltax) << 1;
+      xinc1 = 1;
+      xinc2 = 1;
+      yinc1 = 0;
+      yinc2 = 1;
+    } else {
+      numpixels = deltay + 1;
+      d = (deltax << 1) - deltay;
+      dinc1 = deltax << 1;
+      dinc2 = (deltax - deltay) << 1;
+      xinc1 = 0;
+      xinc2 = 1;
+      yinc1 = 1;
+      yinc2 = 1;
+    }
+
+    if (x1 > x2) {
+      xinc1 = - xinc1;
+      xinc2 = - xinc2;
+    }
+    if (y1 > y2) {
+      yinc1 = - yinc1;
+      yinc2 = - yinc2;
+    }
+    x = x1;
+    y = y1;
+
+    for (i = 0; i < numpixels; i++) {
+      if (y == yc) {
+        if (xl == -1) {
+          xl = xr = x;
+        } else {
+          if (x < xl) xl = x;
+          if (x > xr) xr = x;
+        }
+      }
+      if (d < 0) {
+        d = d + dinc1;
+        x = x + xinc1;
+        y = y + yinc1;
+      } else {
+        d = d + dinc2;
+        x = x + xinc2;
+        y = y + yinc2;
+      }
+    }
+  }
+  return (r ? xr : xl);
+}
+
 void bx_banshee_c::blt_polygon_fill(bx_bool force)
 {
   Bit32u dpitch = BLT.dst_pitch;
   Bit8u dpxsize = (BLT.dst_fmt > 1) ? (BLT.dst_fmt - 1) : 1;
   Bit8u *dst_ptr = &v->fbi.ram[BLT.dst_base];
   Bit8u *dst_ptr1;
-  Bit16u x0, y0, y1;
+  Bit16u x, y, x0, x1, y0, y1;
 
   if (force) {
     if (BLT.pgn_l1y == BLT.pgn_r1y) {
@@ -2382,13 +2448,24 @@ void bx_banshee_c::blt_polygon_fill(bx_bool force)
     } else {
       y1 = BLT.pgn_r1y;
     }
-    // drawing upper left vertex for now
-    x0 = BLT.pgn_l0x;
-    dst_ptr1 = dst_ptr + y0 * dpitch + x0 * dpxsize;
-    BLT.rop_fn(dst_ptr1, BLT.fgcolor, dpitch, dpxsize, dpxsize, 1);
-    BX_INFO(("TODO: 2D Polygon fill"));
-    BX_INFO(("  L0=(%d,%d) L1=(%d,%d) R0=(%d,%d) R1=(%d,%d)", BLT.pgn_l0x, BLT.pgn_l0y,
-             BLT.pgn_l1x, BLT.pgn_l1y, BLT.pgn_r0x, BLT.pgn_r0y, BLT.pgn_r1x, BLT.pgn_r1y));
+    for (y = y0; y < y1; y++) {
+      x0 = calc_line_xpos(BLT.pgn_l0x, BLT.pgn_l0y, BLT.pgn_l1x, BLT.pgn_l1y, y, 0);
+      if (y <= BLT.pgn_r0y) {
+        x1 = calc_line_xpos(BLT.pgn_l0x, BLT.pgn_l0y, BLT.pgn_r0x, BLT.pgn_r0y, y, 1);
+      } else {
+        x1 = calc_line_xpos(BLT.pgn_r0x, BLT.pgn_r0y, BLT.pgn_r1x, BLT.pgn_r1y, y, 1);
+      }
+      dst_ptr1 = dst_ptr + y * dpitch + x0 * dpxsize;
+      BLT.rop_fn(dst_ptr1, BLT.fgcolor, dpitch, dpxsize, dpxsize, 1);
+      dst_ptr1 += dpxsize;
+      for (x = x0 + 1; x < x1; x++) {
+        BLT.rop_fn(dst_ptr1, BLT.fgcolor, dpitch, dpxsize, dpxsize, 1);
+        dst_ptr1 += dpxsize;
+      }
+    }
+    BX_INFO(("Polygon fill: L0=(%d,%d) L1=(%d,%d) R0=(%d,%d) R1=(%d,%d)",
+             BLT.pgn_l0x, BLT.pgn_l0y, BLT.pgn_l1x, BLT.pgn_l1y,
+             BLT.pgn_r0x, BLT.pgn_r0y, BLT.pgn_r1x, BLT.pgn_r1y));
     if (y1 == BLT.pgn_l1y) {
       BLT.pgn_l0x = BLT.pgn_l1x;
       BLT.pgn_l0y = BLT.pgn_l1y;
