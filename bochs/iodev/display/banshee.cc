@@ -918,7 +918,7 @@ void bx_banshee_c::mem_write_linear(Bit32u offset, Bit32u value, unsigned len)
     pitch *= 128;
     x = (offset << 0) & ((1 << v->fbi.lfb_stride) - 1);
     y = (offset >> v->fbi.lfb_stride) & 0x7ff;
-    offset = (start + y * pitch + x) & v->fbi.mask;
+    offset = (v->fbi.lfb_base + y * pitch + x) & v->fbi.mask;
   } else {
     offset &= v->fbi.mask;
   }
