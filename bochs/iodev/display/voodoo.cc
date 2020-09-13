@@ -513,7 +513,7 @@ void bx_voodoo_base_c::start_fifo_thread(void)
 void bx_voodoo_base_c::refresh_display(void *this_ptr, bx_bool redraw)
 {
   if (redraw) {
-    redraw_area(0, 0, v->fbi.width, v->fbi.height);
+    v->fbi.video_changed = 1;
   }
   vertical_timer_handler(this_ptr);
   update();
@@ -563,11 +563,13 @@ void bx_voodoo_base_c::update(void)
       return;
     }
     bpp = 16;
+    BX_LOCK(fifo_mutex);
     if (s.model >= VOODOO_BANSHEE) {
       start = v->fbi.rgboffs[0];
     } else {
       start = v->fbi.rgboffs[v->fbi.frontbuf];
     }
+    BX_UNLOCK(fifo_mutex);
     pitch = v->fbi.rowpixels * 2;
   }
   iWidth = s.vdraw.width;
@@ -810,10 +812,8 @@ void bx_voodoo_base_c::reg_write(Bit32u reg, Bit32u value)
 
 void bx_voodoo_base_c::vertical_timer_handler(void *this_ptr)
 {
-  // this doesn't work yet
-  //bx_voodoo_base_c *class_ptr = (bx_voodoo_base_c*)this_ptr;
-  //class_ptr->vertical_timer();
-  theVoodooDevice->vertical_timer();
+  bx_voodoo_base_c *class_ptr = (bx_voodoo_base_c*)this_ptr;
+  class_ptr->vertical_timer();
 }
 
 void bx_voodoo_base_c::vertical_timer(void)
@@ -1038,7 +1038,7 @@ bx_bool bx_voodoo_1_2_c::update_timing(void)
     s.vdraw.width = v->fbi.width;
     s.vdraw.height = v->fbi.height;
     bx_gui->dimension_update(v->fbi.width, v->fbi.height, 0, 0, 16);
-    vertical_timer_handler(NULL);
+    vertical_timer_handler(this);
   }
   BX_INFO(("Voodoo output %dx%d@%uHz", v->fbi.width, v->fbi.height, (unsigned)v->vertfreq));
   v->vtimer_running = 1;

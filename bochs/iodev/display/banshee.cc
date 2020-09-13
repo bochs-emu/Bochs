@@ -331,7 +331,7 @@ bx_bool bx_banshee_c::update_timing(void)
   s.vdraw.vtotal_usec = (unsigned)(1000000.0 / v->vertfreq);
   s.vdraw.width = v->fbi.width;
   s.vdraw.height = v->fbi.height;
-  vertical_timer_handler(NULL);
+  vertical_timer_handler(this);
   bx_virt_timer.activate_timer(s.vertical_timer_id, (Bit32u)s.vdraw.vtotal_usec, 1);
   return 1;
 }
