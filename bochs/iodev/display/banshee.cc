@@ -1803,7 +1803,6 @@ void bx_banshee_c::blt_screen_to_screen_pattern()
   int dpitch = BLT.dst_pitch;
   bx_bool patmono = (BLT.reg[blt_command] >> 13) & 1;
   bx_bool patrow0 = (BLT.reg[blt_commandExtra] & 0x08) > 0;
-  Bit8u dstcolor[4];
   Bit8u *patcolor;
   int ncols, nrows, x0, x1, y0, y1, w, h;
   Bit8u pmask = 0, rop0, patcol, patline;
@@ -1858,20 +1857,20 @@ void bx_banshee_c::blt_screen_to_screen_pattern()
     }
     ncols = w;
     do {
-      memcpy(dstcolor, dst_ptr1, abs(dpxsize));
       if (patmono) {
         set = (*pat_ptr & pmask) > 0;
         if (set) {
           patcolor = &BLT.fgcolor[0];
-        } else if (BLT.transp) {
-          patcolor = dstcolor;
         } else {
           patcolor = &BLT.bgcolor[0];
         }
+        if (set || !BLT.transp) {
+          bx_ternary_rop(rop0, dst_ptr1, src_ptr1, patcolor, abs(dpxsize));
+        }
       } else {
         patcolor = pat_ptr2;
+        bx_ternary_rop(rop0, dst_ptr1, src_ptr1, patcolor, abs(dpxsize));
       }
-      bx_ternary_rop(rop0, dst_ptr1, src_ptr1, patcolor, abs(dpxsize));
       src_ptr1 += dpxsize;
       dst_ptr1 += dpxsize;
       if (patmono) {
@@ -2119,7 +2118,6 @@ void bx_banshee_c::blt_host_to_screen_pattern()
   bx_bool patmono = (BLT.reg[blt_command] >> 13) & 1;
   bx_bool patrow0 = (BLT.reg[blt_commandExtra] & 0x08) > 0;
   Bit8u spxsize = 0;
-  Bit8u dstcolor[4];
   Bit8u *srccolor, *patcolor;
   int ncols, nrows, x0, y0, x1, y1, w, h;
   Bit8u smask, pmask = 0, rop0, patcol, patline;
@@ -2179,12 +2177,9 @@ void bx_banshee_c::blt_host_to_screen_pattern()
     ncols = w;
     do {
       if (srcfmt == 0) {
-        memcpy(dstcolor, dst_ptr1, dpxsize);
         set = (*src_ptr1 & smask) > 0;
         if (set) {
           srccolor = &BLT.fgcolor[0];
-        } else if (BLT.transp) {
-          srccolor = dstcolor;
         } else {
           srccolor = &BLT.bgcolor[0];
         }
@@ -2195,15 +2190,16 @@ void bx_banshee_c::blt_host_to_screen_pattern()
         set = (*pat_ptr1 & pmask) > 0;
         if (set) {
           patcolor = &BLT.fgcolor[0];
-        } else if (BLT.transp) {
-          patcolor = dstcolor;
         } else {
           patcolor = &BLT.bgcolor[0];
         }
+        if (set || !BLT.transp) {
+          bx_ternary_rop(rop0, dst_ptr1, srccolor, patcolor, dpxsize);
+        }
       } else {
         patcolor = pat_ptr2;
+        bx_ternary_rop(rop0, dst_ptr1, srccolor, patcolor, dpxsize);
       }
-      bx_ternary_rop(rop0, dst_ptr1, srccolor, patcolor, dpxsize);
       if (srcfmt == 0) {
         smask >>= 1;
         if (smask == 0) {
@@ -2427,6 +2423,7 @@ void bx_banshee_c::blt_polygon_fill(bx_bool force)
   Bit8u *dst_ptr = &v->fbi.ram[BLT.dst_base];
   Bit8u *dst_ptr1;
   Bit16u x, y, x0, x1, y0, y1;
+  Bit16u cx0, cx1, cy0, cy1;
 
   if (force) {
     if (BLT.pgn_l1y == BLT.pgn_r1y) {
@@ -2442,30 +2439,42 @@ void bx_banshee_c::blt_polygon_fill(bx_bool force)
   if ((BLT.pgn_l1y > BLT.pgn_l0y) && (BLT.pgn_r1y > BLT.pgn_r0y)) {
     BLT.busy = 1;
     BX_LOCK(render_mutex);
+    cx0 = BLT.clipx0[BLT.clip_sel];
+    cy0 = BLT.clipy0[BLT.clip_sel];
+    cx1 = BLT.clipx1[BLT.clip_sel];
+    cy1 = BLT.clipy1[BLT.clip_sel];
     y0 = BLT.pgn_l0y;
     if (BLT.pgn_l1y < BLT.pgn_r1y) {
       y1 = BLT.pgn_l1y;
     } else {
       y1 = BLT.pgn_r1y;
     }
-    for (y = y0; y < y1; y++) {
-      x0 = calc_line_xpos(BLT.pgn_l0x, BLT.pgn_l0y, BLT.pgn_l1x, BLT.pgn_l1y, y, 0);
-      if (y <= BLT.pgn_r0y) {
-        x1 = calc_line_xpos(BLT.pgn_l0x, BLT.pgn_l0y, BLT.pgn_r0x, BLT.pgn_r0y, y, 1);
-      } else {
-        x1 = calc_line_xpos(BLT.pgn_r0x, BLT.pgn_r0y, BLT.pgn_r1x, BLT.pgn_r1y, y, 1);
-      }
-      dst_ptr1 = dst_ptr + y * dpitch + x0 * dpxsize;
-      BLT.rop_fn(dst_ptr1, BLT.fgcolor, dpitch, dpxsize, dpxsize, 1);
-      dst_ptr1 += dpxsize;
-      for (x = x0 + 1; x < x1; x++) {
-        BLT.rop_fn(dst_ptr1, BLT.fgcolor, dpitch, dpxsize, dpxsize, 1);
+    if (BLT.rop_flags[BLT.rop0] & BX_ROP_PATTERN) {
+      BX_ERROR(("Polygon fill with pattern not supported yet"));
+    } else {
+      for (y = y0; y < y1; y++) {
+        x0 = calc_line_xpos(BLT.pgn_l0x, BLT.pgn_l0y, BLT.pgn_l1x, BLT.pgn_l1y, y, 0);
+        if (y <= BLT.pgn_r0y) {
+          x1 = calc_line_xpos(BLT.pgn_l0x, BLT.pgn_l0y, BLT.pgn_r0x, BLT.pgn_r0y, y, 1);
+        } else {
+          x1 = calc_line_xpos(BLT.pgn_r0x, BLT.pgn_r0y, BLT.pgn_r1x, BLT.pgn_r1y, y, 1);
+        }
+        dst_ptr1 = dst_ptr + y * dpitch + x0 * dpxsize;
+        if ((x0 >= cx0) && (x0 < cx1) && (y >= cy0) && (y < cy1)) {
+          BLT.rop_fn(dst_ptr1, BLT.fgcolor, dpitch, dpxsize, dpxsize, 1);
+        }
         dst_ptr1 += dpxsize;
+        for (x = x0 + 1; x < x1; x++) {
+          if ((x >= cx0) && (x < cx1) && (y >= cy0) && (y < cy1)) {
+            BLT.rop_fn(dst_ptr1, BLT.fgcolor, dpitch, dpxsize, dpxsize, 1);
+          }
+          dst_ptr1 += dpxsize;
+        }
       }
+      BX_INFO(("Polygon fill: L0=(%d,%d) L1=(%d,%d) R0=(%d,%d) R1=(%d,%d)",
+               BLT.pgn_l0x, BLT.pgn_l0y, BLT.pgn_l1x, BLT.pgn_l1y,
+               BLT.pgn_r0x, BLT.pgn_r0y, BLT.pgn_r1x, BLT.pgn_r1y));
     }
-    BX_INFO(("Polygon fill: L0=(%d,%d) L1=(%d,%d) R0=(%d,%d) R1=(%d,%d)",
-             BLT.pgn_l0x, BLT.pgn_l0y, BLT.pgn_l1x, BLT.pgn_l1y,
-             BLT.pgn_r0x, BLT.pgn_r0y, BLT.pgn_r1x, BLT.pgn_r1y));
     if (y1 == BLT.pgn_l1y) {
       BLT.pgn_l0x = BLT.pgn_l1x;
       BLT.pgn_l0y = BLT.pgn_l1y;
