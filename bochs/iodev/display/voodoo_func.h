@@ -68,8 +68,9 @@ BX_MUTEX(cmdfifo_mutex);
 BX_MUTEX(render_mutex);
 /* FIFO event stuff */
 BX_MUTEX(fifo_mutex);
-bx_thread_event_t fifo_wakeup;
-bx_thread_event_t fifo_not_full;
+bx_thread_sem_t fifo_wakeup;
+bx_thread_sem_t fifo_not_full;
+static bx_thread_sem_t vertical_sem;
 
 /* fast dither lookup */
 static Bit8u dither4_lookup[256*16*2];
@@ -1135,10 +1136,16 @@ Bit32s swapbuffer(voodoo_state *v, Bit32u data)
   v->fbi.vblank_dont_swap = (data >> 9) & 1;
 
   /* if we're not syncing to the retrace, process the command immediately */
-//  if (!(data & 1))
+  if (!(data & 1))
   {
+    BX_LOCK(fifo_mutex);
     swap_buffers(v);
+    BX_UNLOCK(fifo_mutex);
     return 0;
+  } else {
+    if (v->vtimer_running) {
+      bx_wait_sem(&vertical_sem);
+    }
   }
 
   /* determine how many cycles to wait; we deliberately overshoot here because */
@@ -2515,7 +2522,7 @@ void cmdfifo_w(cmdfifo_info *f, Bit32u fbi_offset, Bit32u data)
   if (f->depth >= f->depth_needed) {
     f->cmd_ready = 1;
     if (!v->vtimer_running) {
-      bx_set_event(&fifo_wakeup);
+      bx_set_sem(&fifo_wakeup);
     }
   }
   BX_UNLOCK(cmdfifo_mutex);
@@ -2771,6 +2778,44 @@ void cmdfifo_process(cmdfifo_info *f)
 }
 
 
+#define FBI_TRICK 1
+#if FBI_TRICK
+bx_bool fifo_add_fbi(Bit32u type_offset, Bit32u data)
+{
+  bx_bool ret = 0;
+
+  BX_LOCK(fifo_mutex);
+  if (v->fbi.fifo.enabled) {
+    fifo_add(&v->fbi.fifo, type_offset, data);
+    ret = 1;
+    if ((fifo_space(&v->fbi.fifo)/2) <= 0xe000)
+      bx_set_sem(&fifo_wakeup);
+  }
+  BX_UNLOCK(fifo_mutex);
+  return ret;
+}
+
+bx_bool fifo_add_common(Bit32u type_offset, Bit32u data)
+{
+  bx_bool ret = 0;
+
+  BX_LOCK(fifo_mutex);
+  if (v->fbi.fifo.enabled) {
+    fifo_add(&v->fbi.fifo, type_offset, data);
+    ret = 1;
+    if ((fifo_space(&v->fbi.fifo)/2) <= 0xe000)
+      bx_set_sem(&fifo_wakeup);
+  } else
+  if (v->pci.fifo.enabled) {
+    fifo_add(&v->pci.fifo, type_offset, data);
+    ret = 1;
+    if ((fifo_space(&v->pci.fifo)/2) <= 16)
+      bx_set_sem(&fifo_wakeup);
+  }
+  BX_UNLOCK(fifo_mutex);
+  return ret;
+}
+#else
 bx_bool fifo_add_common(Bit32u type_offset, Bit32u data)
 {
   bx_bool ret = 0;
@@ -2784,17 +2829,18 @@ bx_bool fifo_add_common(Bit32u type_offset, Bit32u data)
         fifo_move(&v->pci.fifo, &v->fbi.fifo);
       }
       if ((fifo_space(&v->fbi.fifo)/2) <= 0xe000) {
-        bx_set_event(&fifo_wakeup);
+        bx_set_sem(&fifo_wakeup);
       }
     } else {
       if ((fifo_space(&v->pci.fifo)/2) <= 16) {
-        bx_set_event(&fifo_wakeup);
+        bx_set_sem(&fifo_wakeup);
       }
     }
   }
   BX_UNLOCK(fifo_mutex);
   return ret;
 }
+#endif
 
 
 void register_w_common(Bit32u offset, Bit32u data)
@@ -3049,7 +3095,7 @@ void register_w_common(Bit32u offset, Bit32u data)
           if (regnum == swapbufferCMD) {
             v->fbi.swaps_pending++;
           }
-          bx_set_event(&fifo_wakeup);
+          bx_set_sem(&fifo_wakeup);
         }
         BX_UNLOCK(fifo_mutex);
       } else {
@@ -3293,7 +3339,11 @@ void voodoo_w(Bit32u offset, Bit32u data, Bit32u mask)
     } else {
       type = FIFO_WR_FBI_16H;
     }
+#if FBI_TRICK
+    if (!fifo_add_fbi(type | offset, data)) {
+#else
     if (!fifo_add_common(type | offset, data)) {
+#endif
       lfb_w(offset, data, mask);
     }
   }

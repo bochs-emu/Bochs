@@ -178,7 +178,7 @@ BX_THREAD_FUNC(fifo_thread, indata)
 
   UNUSED(indata);
   while (voodoo_keep_alive) {
-    if (bx_wait_for_event(&fifo_wakeup)) {
+    if (bx_wait_sem(&fifo_wakeup),1) {
       if (!voodoo_keep_alive) break;
       BX_LOCK(fifo_mutex);
       while (1) {
@@ -250,14 +250,18 @@ bx_voodoo_base_c::bx_voodoo_base_c()
 bx_voodoo_base_c::~bx_voodoo_base_c()
 {
   voodoo_keep_alive = 0;
-  bx_set_event(&fifo_wakeup);
+  bx_set_sem(&fifo_wakeup);
+  bx_set_sem(&fifo_not_full);
+  BX_THREAD_JOIN(fifo_thread_var);
   BX_FINI_MUTEX(fifo_mutex);
   BX_FINI_MUTEX(render_mutex);
   if (s.model >= VOODOO_2) {
     BX_FINI_MUTEX(cmdfifo_mutex);
   }
-  bx_destroy_event(&fifo_wakeup);
-  bx_destroy_event(&fifo_not_full);
+  bx_destroy_sem(&fifo_wakeup);
+  bx_destroy_sem(&fifo_not_full);
+  bx_set_sem(&vertical_sem);
+  bx_destroy_sem(&vertical_sem);
 
   if (v != NULL) {
     free(v->fbi.ram);
@@ -504,10 +508,11 @@ void bx_voodoo_base_c::voodoo_register_state(bx_list_c *parent)
 
 void bx_voodoo_base_c::start_fifo_thread(void)
 {
-  bx_create_event(&fifo_wakeup);
-  bx_create_event(&fifo_not_full);
-  bx_set_event(&fifo_not_full);
+  bx_create_sem(&fifo_wakeup);
+  bx_create_sem(&fifo_not_full);
+  bx_set_sem(&fifo_not_full);
   BX_THREAD_CREATE(fifo_thread, this, fifo_thread_var);
+  bx_create_sem(&vertical_sem);
 }
 
 void bx_voodoo_base_c::refresh_display(void *this_ptr, bx_bool redraw)
@@ -822,15 +827,16 @@ void bx_voodoo_base_c::vertical_timer(void)
 
   BX_LOCK(fifo_mutex);
   if (!fifo_empty(&v->pci.fifo) || !fifo_empty(&v->fbi.fifo)) {
-    bx_set_event(&fifo_wakeup);
+    bx_set_sem(&fifo_wakeup);
   }
   BX_UNLOCK(fifo_mutex);
   if (v->fbi.cmdfifo[0].cmd_ready || v->fbi.cmdfifo[1].cmd_ready) {
-    bx_set_event(&fifo_wakeup);
+    bx_set_sem(&fifo_wakeup);
   }
 
   if (v->fbi.vblank_swap_pending) {
     swap_buffers(v);
+    bx_set_sem(&vertical_sem);
   }
 
   if (v->fbi.video_changed || v->fbi.clut_dirty) {
@@ -987,10 +993,19 @@ void bx_voodoo_1_2_c::mode_change_timer()
     // switching off
     bx_virt_timer.deactivate_timer(s.vertical_timer_id);
     v->vtimer_running = 0;
+    if (v->fbi.vblank_swap_pending) {
+      bx_set_sem(&vertical_sem);
+    }
     DEV_vga_set_override(0, NULL);
     s.vdraw.override_on = 0;
     s.vdraw.width = 0;
     s.vdraw.height = 0;
+    v->fbi.vblank_swap_pending = 0;
+    v->fbi.frontbuf = 0;
+    v->fbi.backbuf = 1;
+    v->fbi.video_changed = 0;
+    v->fbi.clut_dirty = 0;
+    s.vdraw.gui_update_pending = 0;
     BX_INFO(("Voodoo output disabled"));
   }
 
@@ -1103,7 +1118,7 @@ void bx_voodoo_1_2_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io
         if (((address+i) == 0x40) && ((value8 ^ oldval) & 0x02)) {
           v->pci.fifo.enabled = ((value8 & 0x02) > 0);
           if (!v->pci.fifo.enabled && !fifo_empty(&v->pci.fifo)) {
-            bx_set_event(&fifo_wakeup);
+            bx_set_sem(&fifo_wakeup);
           }
           BX_DEBUG(("PCI FIFO now %sabled", v->pci.fifo.enabled ? "en":"dis"));
         }
