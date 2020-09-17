@@ -60,7 +60,7 @@
 
 // TODO:
 // - 2D host-to-screen stretching support
-// - 2D chromaKey support
+// - 2D chromaKey and colorkey support
 // - using upper 256 CLUT entries
 // - pixel format conversion not supported in all cases
 // - full AGP support
@@ -682,6 +682,9 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if (v->banshee.io[reg] & 0x0020) {
         BX_ERROR(("vidProcCfg: chromaKey mode not supported yet"));
       }
+      if (v->banshee.io[reg] & 0x0c00) {
+        BX_ERROR(("vidProcCfg: CLUT bypass not supported yet"));
+      }
       if (v->banshee.io[reg] & 0x1000) {
         BX_ERROR(("vidProcCfg: upper 256 CLUT entries not supported yet"));
       }
@@ -825,7 +828,7 @@ void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
       offset -= v->fbi.lfb_base;
       pitch *= 128;
       x = (offset << 0) & ((1 << v->fbi.lfb_stride) - 1);
-      y = (offset >> v->fbi.lfb_stride) & 0x7ff;
+      y = (offset >> v->fbi.lfb_stride) & 0x1fff;
       offset = (v->fbi.lfb_base + y * pitch + x) & v->fbi.mask;
     } else {
       offset &= v->fbi.mask;
@@ -917,7 +920,7 @@ void bx_banshee_c::mem_write_linear(Bit32u offset, Bit32u value, unsigned len)
     offset -= v->fbi.lfb_base;
     pitch *= 128;
     x = (offset << 0) & ((1 << v->fbi.lfb_stride) - 1);
-    y = (offset >> v->fbi.lfb_stride) & 0x7ff;
+    y = (offset >> v->fbi.lfb_stride) & 0x1fff;
     offset = (v->fbi.lfb_base + y * pitch + x) & v->fbi.mask;
   } else {
     offset &= v->fbi.mask;
@@ -1213,6 +1216,9 @@ void bx_banshee_c::blt_reg_write(Bit8u reg, Bit32u value)
       if ((value & 0x03) > 0) {
         BX_ERROR(("colorkey feature not supported yet"));
       }
+      if ((value & 0x04) != 0) {
+        BX_ERROR(("wait for vsync not supported yet"));
+      }
       break;
     default:
       if ((reg >= 0x20) && (reg < 0x40)) {
@@ -1279,6 +1285,8 @@ void bx_banshee_c::blt_launch_area_setup()
           BLT.h2s_pitch = (pbytes + 3) & ~3;
           break;
         default:
+          // The specs say that BLT.src_pitch is used here, but that's wrong
+          // These lines fix most of the issues, but some others remain
           BLT.h2s_pitch = (pbytes + 3) & ~0x03;
           BLT.h2s_alt_align = ((BLT.src_fmt == 0) && (BLT.h2s_pitch > BLT.src_pitch));
       }
