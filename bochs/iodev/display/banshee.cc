@@ -777,7 +777,7 @@ bx_bool bx_banshee_c::mem_write_handler(bx_phy_address addr, unsigned len,
 
 void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
 {
-  Bit32u value = 0xffffffff;
+  Bit64u value = BX_MAX_BIT64U;
   Bit32u offset = (addr & 0x1ffffff);
   Bit32u pitch = v->banshee.io[io_vidDesktopOverlayStride] & 0x7fff;
   unsigned i, x, y;
@@ -835,7 +835,7 @@ void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
     }
     value = 0;
     for (i = 0; i < len; i++) {
-      value |= (v->fbi.ram[offset + i] << (i*8));
+      value |= ((Bit64u)v->fbi.ram[offset + i] << (i*8));
     }
   }
   switch (len) {
@@ -845,8 +845,11 @@ void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
     case 2:
       *((Bit16u*)data) = (Bit16u)value;
       break;
+    case 4:
+      *((Bit32u*)data) = (Bit32u)value;
+      break;
     default:
-      *((Bit32u*)data) = value;
+      *((Bit64u*)data) = value;
   }
 }
 
