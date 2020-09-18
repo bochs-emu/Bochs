@@ -5,7 +5,7 @@
 // ES1370 soundcard support (ported from QEMU)
 //
 // Copyright (c) 2005  Vassili Karpov (malc)
-// Copyright (C) 2011-2018  The Bochs Project
+// Copyright (C) 2011-2020  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -45,7 +45,7 @@
 
 bx_es1370_c* theES1370Device = NULL;
 
-const Bit8u es1370_iomask[64] = {7, 1, 3, 1, 7, 1, 3, 1, 1, 3, 1, 0, 7, 0, 0, 0,
+const Bit8u es1370_iomask[64] = {7, 1, 3, 1, 4, 0, 0, 0, 7, 1, 1, 0, 7, 0, 0, 0,
                                  6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
                                  7, 1, 3, 1, 6, 0, 2, 0, 6, 0, 2, 0, 6, 0, 2, 0,
                                  4, 0, 0, 0, 6, 0, 2, 0, 4, 0, 0, 0, 6, 0, 2, 0};
@@ -563,7 +563,7 @@ Bit32u bx_es1370_c::read(Bit32u address, unsigned io_len)
         val = BX_ES1370_THIS s.legacy1B;
       } else if (offset >= 0x30) {
         val = ~0U; // keep compiler happy
-        BX_ERROR(("unsupported read from memory offset=0x%02x!",
+        BX_DEBUG(("unsupported read from memory offset=0x%02x!",
                   (BX_ES1370_THIS s.mempage << 4) | (offset & 0x0f)));
       } else {
         val = ~0U; // keep compiler happy
@@ -619,6 +619,9 @@ void bx_es1370_c::write(Bit32u address, Bit32u value, unsigned io_len)
         #endif
       }
       BX_ES1370_THIS update_voices(value, BX_ES1370_THIS s.sctl, 0);
+      break;
+    case ES1370_STATUS:
+      BX_DEBUG(("ignoring write to status register"));
       break;
     case ES1370_UART_DATA:
     case ES1370_UART_CTL:
@@ -706,7 +709,7 @@ void bx_es1370_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_ES1370_THIS s.legacy1B = (Bit8u)(value & 0xff);
         set_irq_level(BX_ES1370_THIS s.legacy1B & 0x01);
       } else if (offset >= 0x30) {
-        BX_ERROR(("unsupported write to memory offset=0x%02x!",
+        BX_DEBUG(("unsupported write to memory offset=0x%02x!",
                   (BX_ES1370_THIS s.mempage << 4) | (offset & 0x0f)));
       } else {
         BX_ERROR(("unsupported io write to offset=0x%04x!", offset));
