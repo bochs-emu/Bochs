@@ -1258,14 +1258,10 @@ void bx_banshee_c::blt_launch_area_setup()
       BLT.h2s_alt_align = 0;
       pxpack = (BLT.reg[blt_srcFormat] >> 22) & 3;
       BLT.src_wizzle = (BLT.reg[blt_srcFormat] >> 20) & 0x03;
-      if ((BLT.reg[blt_srcXY] & 0x1f) != 0) {
-        if (BLT.src_fmt == 0) {
-          BLT.h2s_pxstart = BLT.reg[blt_srcXY] & 0x1f;
-        } else {
-          BLT.h2s_pxstart = BLT.reg[blt_srcXY] & 0x03;
-        }
+      if (BLT.src_fmt == 0) {
+        BLT.h2s_pxstart = BLT.reg[blt_srcXY] & 0x1f;
       } else {
-        BLT.h2s_pxstart = 0;
+        BLT.h2s_pxstart = BLT.reg[blt_srcXY] & 0x03;
       }
       if (BLT.src_fmt == 0) {
         pbytes = ((BLT.dst_w + BLT.h2s_pxstart + 7) >> 3);

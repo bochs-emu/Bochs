@@ -1440,6 +1440,7 @@ void register_w(Bit32u offset, Bit32u data, bx_bool log)
   Bit32u regnum  = (offset) & 0xff;
   Bit32u chips   = (offset>>8) & 0xf;
   Bit64s data64;
+  static Bit32u count = 0;
 
   if (chips == 0)
     chips = 0xf;
@@ -1866,6 +1867,10 @@ void register_w(Bit32u offset, Bit32u data, bx_bool log)
       {
         v->tmu[1].reg[regnum].u = data;
         v->tmu[1].regdirty = 1;
+      }
+      if ((chips & 6) && (regnum == textureMode) && TEXMODE_TRILINEAR(data)) {
+        if (count < 50) BX_INFO(("Trilinear textures not implemented yet"));
+        count++;
       }
       break;
 
