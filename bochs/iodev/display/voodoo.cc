@@ -440,7 +440,6 @@ void bx_voodoo_base_c::voodoo_register_state(bx_list_c *parent)
     new bx_shadow_num_c(fogdelta, name, &v->fbi.fogdelta[i]);
   }
   new bx_shadow_data_c(fbi, "clut", (Bit8u*)v->fbi.clut, sizeof(v->fbi.clut));
-  new bx_shadow_bool_c(fbi, "clut_dirty", &v->fbi.clut_dirty);
   bx_list_c *tmu = new bx_list_c(vstate, "tmu", "textures");
   for (i = 0; i < MAX_TMU; i++) {
     sprintf(name, "%d", i);
@@ -551,6 +550,7 @@ void bx_voodoo_base_c::update(void)
   Bit8u *vid_ptr, *vid_ptr2;
   Bit8u *tile_ptr, *tile_ptr2;
   Bit8u bpp;
+  Bit16u index;
   bx_svga_tileinfo_t info;
 
   BX_LOCK(render_mutex);
@@ -678,12 +678,12 @@ void bx_voodoo_base_c::update(void)
                   vid_ptr2  = vid_ptr;
                   tile_ptr2 = tile_ptr;
                   for (c=0; c<w; c++) {
-                    colour = *(vid_ptr2++);
-                    colour |= *(vid_ptr2++) << 8;
+                    index = *(vid_ptr2++);
+                    index |= *(vid_ptr2++) << 8;
                     colour = MAKE_COLOUR(
-                      colour & 0x001f, 5, info.blue_shift, info.blue_mask,
-                      colour & 0x07e0, 11, info.green_shift, info.green_mask,
-                      colour & 0xf800, 16, info.red_shift, info.red_mask);
+                      v->fbi.pen[index] & 0x0000ff, 8, info.blue_shift, info.blue_mask,
+                      v->fbi.pen[index] & 0x00ff00, 16, info.green_shift, info.green_mask,
+                      v->fbi.pen[index] & 0xff0000, 24, info.red_shift, info.red_mask);
                     if (info.is_little_endian) {
                       for (i=0; i<info.bpp; i+=8) {
                         *(tile_ptr2++) = (Bit8u)(colour >> i);
@@ -842,7 +842,9 @@ void bx_voodoo_base_c::vertical_timer(void)
   if (v->fbi.video_changed || v->fbi.clut_dirty) {
     // TODO: use tile-based update mechanism
     redraw_area(0, 0, s.vdraw.width, s.vdraw.height);
-    v->fbi.clut_dirty = 0;
+    if (v->fbi.clut_dirty) {
+      update_pens();
+    }
     v->fbi.video_changed = 0;
     s.vdraw.gui_update_pending = 1;
   }
@@ -946,6 +948,7 @@ void bx_voodoo_1_2_c::after_restore_state(void)
   if (s.vdraw.override_on) {
     // force update
     v->fbi.video_changed = 1;
+    v->fbi.clut_dirty = 1;
     s.vdraw.frame_start = bx_virt_timer.time_usec(0);
     update_timing();
     DEV_vga_set_override(1, BX_VOODOO_THIS_PTR);

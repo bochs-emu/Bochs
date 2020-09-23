@@ -3639,19 +3639,9 @@ void voodoo_init(Bit8u _type)
   soft_reset(v);
 }
 
-#if 0
-bx_bool voodoo_update(const rectangle *cliprect)
+void update_pens(void)
 {
-  bx_bool changed = v->fbi.video_changed;
   int x, y;
-
-  /* reset the video changed flag */
-  v->fbi.video_changed = 0;
-
-  /* if we are blank, just fill with black */
-  if (v->type <= VOODOO_2 && FBIINIT1_SOFTWARE_BLANK(v->reg[fbiInit1].u)) {
-    return changed;
-  }
 
   /* if the CLUT is dirty, recompute the pens array */
   if (v->fbi.clut_dirty) {
@@ -3685,8 +3675,9 @@ bx_bool voodoo_update(const rectangle *cliprect)
     /* Banshee and later have a 512-entry CLUT that can be bypassed */
     else
     {
-      int which = (v->banshee.io[io_vidProcCfg] >> 13) & 1;
-      int bypass = (v->banshee.io[io_vidProcCfg] >> 11) & 1;
+      int mode3d = (v->banshee.io[io_vidProcCfg] >> 8) & 1;
+      int which = (v->banshee.io[io_vidProcCfg] >> (12 + mode3d)) & 1;
+      int bypass = (v->banshee.io[io_vidProcCfg] >> (10 + mode3d)) & 1;
 
       /* compute R/G/B pens first */
       for (x = 0; x < 32; x++) {
@@ -3716,9 +3707,5 @@ bx_bool voodoo_update(const rectangle *cliprect)
     }
     /* no longer dirty */
     v->fbi.clut_dirty = 0;
-    changed = 1;
   }
-
-  return changed;
 }
-#endif

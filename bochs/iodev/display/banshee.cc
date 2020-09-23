@@ -61,7 +61,6 @@
 // TODO:
 // - 2D host-to-screen stretching support
 // - 2D chromaKey and colorkey support
-// - using upper 256 CLUT entries
 // - pixel format conversion not supported in all cases
 // - full AGP support
 
@@ -313,6 +312,7 @@ void bx_banshee_c::after_restore_state(void)
 {
   bx_pci_device_c::after_restore_pci_state(mem_read_handler);
   if ((v->banshee.io[io_vidProcCfg] & 0x01) && (theVoodooVga != NULL)) {
+    v->fbi.clut_dirty = 1;
     update_timing();
     theVoodooVga->banshee_update_mode();
   }
@@ -639,16 +639,18 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if (v->banshee.io[reg] != v->fbi.clut[v->banshee.io[io_dacAddr] & 0x1ff]) {
         v->fbi.clut[v->banshee.io[io_dacAddr] & 0x1ff] = v->banshee.io[reg];
         v->fbi.clut_dirty = 1;
-        dac_idx = v->banshee.io[io_dacAddr] & 0xff;
-        bx_gui->palette_change_common(dac_idx, (v->fbi.clut[dac_idx] >> 16) & 0xff,
-                                      (v->fbi.clut[dac_idx] >> 8) & 0xff,
-                                      v->fbi.clut[dac_idx] & 0xff);
+        if (v->banshee.io[io_dacAddr] <= 0xff) {
+          dac_idx = v->banshee.io[io_dacAddr] & 0xff;
+          bx_gui->palette_change_common(dac_idx, (v->fbi.clut[dac_idx] >> 16) & 0xff,
+                                        (v->fbi.clut[dac_idx] >> 8) & 0xff,
+                                        v->fbi.clut[dac_idx] & 0xff);
+        }
       }
       break;
 
     case io_vidProcCfg:
       v->banshee.io[reg] = value;
-      if ((v->banshee.io[reg] ^ old) & 0x2800)
+      if ((v->banshee.io[reg] ^ old) & 0x3c00)
         v->fbi.clut_dirty = 1;
       if ((v->banshee.io[reg] & 0x01) && ((old & 0x01) == 0x00)) {
         update_timing();
@@ -681,12 +683,6 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
       }
       if (v->banshee.io[reg] & 0x0020) {
         BX_ERROR(("vidProcCfg: chromaKey mode not supported yet"));
-      }
-      if (v->banshee.io[reg] & 0x0c00) {
-        BX_ERROR(("vidProcCfg: CLUT bypass not supported yet"));
-      }
-      if (v->banshee.io[reg] & 0x1000) {
-        BX_ERROR(("vidProcCfg: upper 256 CLUT entries not supported yet"));
       }
       v->banshee.desktop_tiled = ((v->banshee.io[reg] >> 24) & 1);
       break;
