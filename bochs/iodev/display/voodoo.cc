@@ -1007,7 +1007,6 @@ void bx_voodoo_1_2_c::mode_change_timer()
     v->fbi.frontbuf = 0;
     v->fbi.backbuf = 1;
     v->fbi.video_changed = 0;
-    v->fbi.clut_dirty = 0;
     s.vdraw.gui_update_pending = 0;
     BX_INFO(("Voodoo output disabled"));
   }

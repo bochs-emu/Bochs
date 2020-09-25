@@ -2992,7 +2992,6 @@ void register_w_common(Bit32u offset, Bit32u data)
         v->reg[regnum].u = data;
         recompute_video_memory(v);
         v->fbi.video_changed = 1;
-        v->fbi.clut_dirty = 1;
       }
       break;
 
