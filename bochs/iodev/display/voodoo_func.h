@@ -364,6 +364,9 @@ void recompute_texture_params(tmu_state *t)
   /* LODs 1-3 are different depending on whether we are in multitex mode */
   /* Several Voodoo 2 games leave the upper bits of TLOD == 0xff, meaning we think */
   /* they want multitex mode when they really don't -- disable for now */
+  if (TEXLOD_TMULTIBASEADDR(t->reg[tLOD].u)) {
+    BX_ERROR(("TEXLOD_TMULTIBASEADDR disabled for now"));
+  }
   if (0)//TEXLOD_TMULTIBASEADDR(t->reg[tLOD].u))
   {
     base = (t->reg[texBaseAddr_1].u & t->texaddr_mask) << t->texaddr_shift;
@@ -1851,6 +1854,10 @@ void register_w(Bit32u offset, Bit32u data, bx_bool log)
 
     /* texture modifications cause us to recompute everything */
     case textureMode:
+      if (((chips & 6) > 0) && TEXMODE_TRILINEAR(data)) {
+        if (count < 50) BX_INFO(("Trilinear textures not implemented yet"));
+        count++;
+      }
     case tLOD:
     case tDetail:
     case texBaseAddr:
@@ -1867,10 +1874,6 @@ void register_w(Bit32u offset, Bit32u data, bx_bool log)
       {
         v->tmu[1].reg[regnum].u = data;
         v->tmu[1].regdirty = 1;
-      }
-      if ((chips & 6) && (regnum == textureMode) && TEXMODE_TRILINEAR(data)) {
-        if (count < 50) BX_INFO(("Trilinear textures not implemented yet"));
-        count++;
       }
       break;
 
@@ -2989,6 +2992,7 @@ void register_w_common(Bit32u offset, Bit32u data)
         v->reg[regnum].u = data;
         recompute_video_memory(v);
         v->fbi.video_changed = 1;
+        v->fbi.clut_dirty = 1;
       }
       break;
 
