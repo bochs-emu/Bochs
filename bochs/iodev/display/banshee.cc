@@ -60,7 +60,8 @@
 
 // TODO:
 // - 2D host-to-screen stretching support
-// - 2D chromaKey and colorkey support
+// - 2D chromaKey support
+// - colorkey support for most of the BitBlt functions
 // - pixel format conversion not supported in all cases
 // - full AGP support
 
@@ -274,7 +275,10 @@ void bx_banshee_c::register_state(void)
   new bx_shadow_num_c(banshee, "blt_patsx", &v->banshee.blt.patsx);
   new bx_shadow_num_c(banshee, "blt_patsy", &v->banshee.blt.patsy);
   new bx_shadow_bool_c(banshee, "blt_clip_sel", &v->banshee.blt.clip_sel);
-  new bx_shadow_num_c(banshee, "blt_rop0", &v->banshee.blt.rop0);
+  new bx_shadow_num_c(banshee, "blt_rop0", &v->banshee.blt.rop[0]);
+  new bx_shadow_num_c(banshee, "blt_rop1", &v->banshee.blt.rop[1]);
+  new bx_shadow_num_c(banshee, "blt_rop2", &v->banshee.blt.rop[2]);
+  new bx_shadow_num_c(banshee, "blt_rop3", &v->banshee.blt.rop[3]);
   new bx_shadow_num_c(banshee, "blt_src_base", &v->banshee.blt.src_base, BASE_HEX);
   new bx_shadow_bool_c(banshee, "blt_src_tiled", &v->banshee.blt.src_tiled);
   new bx_shadow_num_c(banshee, "blt_src_fmt", &v->banshee.blt.src_fmt);
@@ -1187,11 +1191,26 @@ void bx_banshee_c::blt_reg_write(Bit8u reg, Bit32u value)
       BLT.patsx = (value >> 17) & 7;
       BLT.patsy = (value >> 20) & 7;
       BLT.clip_sel = (value >> 23) & 1;
-      BLT.rop0 = (value >> 24);
+      BLT.rop[0] = (value >> 24);
+      BLT.rop[1] = BLT.reg[blt_rop] & 0xff;
+      BLT.rop[2] = (BLT.reg[blt_rop] >> 8) & 0xff;
+      BLT.rop[3] = (BLT.reg[blt_rop] >> 16) & 0xff;
+      if ((BLT.cmd != 1) && (BLT.reg[blt_commandExtra] & 1)) {
+        BX_ERROR(("src colorkeying not supported yet"));
+      }
+      if ((BLT.cmd != 1) && ((BLT.reg[blt_commandExtra] >> 1) & 1)) {
+        BX_ERROR(("dst colorkeying not supported yet"));
+      }
       if (BLT.x_dir) {
-        BLT.rop_fn = BLT.rop_handler[1][BLT.rop0];
+        BLT.rop_fn0 = BLT.rop_handler[1][BLT.rop[0]];
+        BLT.rop_fn1 = BLT.rop_handler[1][BLT.rop[1]];
+        BLT.rop_fn2 = BLT.rop_handler[1][BLT.rop[2]];
+        BLT.rop_fn3 = BLT.rop_handler[1][BLT.rop[3]];
       } else {
-        BLT.rop_fn = BLT.rop_handler[0][BLT.rop0];
+        BLT.rop_fn0 = BLT.rop_handler[0][BLT.rop[0]];
+        BLT.rop_fn1 = BLT.rop_handler[0][BLT.rop[1]];
+        BLT.rop_fn2 = BLT.rop_handler[0][BLT.rop[2]];
+        BLT.rop_fn3 = BLT.rop_handler[0][BLT.rop[3]];
       }
       if (BLT.lamem != NULL) {
         BX_ERROR(("Writing new command while another one is still pending"));
@@ -1211,9 +1230,6 @@ void bx_banshee_c::blt_reg_write(Bit8u reg, Bit32u value)
       }
       break;
     case blt_commandExtra:
-      if ((value & 0x03) > 0) {
-        BX_ERROR(("colorkey feature not supported yet"));
-      }
       if ((value & 0x04) != 0) {
         BX_ERROR(("wait for vsync not supported yet"));
       }
@@ -1338,7 +1354,10 @@ void bx_banshee_c::blt_execute()
       break;
     case 1:
       BLT.busy = 1;
-      if (BLT.rop_flags[BLT.rop0] & BX_ROP_PATTERN) {
+      if (BLT.rop_flags[BLT.rop[0]] & BX_ROP_PATTERN) {
+        if ((BLT.reg[blt_commandExtra] & 3) > 0) {
+          BX_ERROR(("Screen to screen pattern: colorkeying not supported yet"));
+        }
         blt_screen_to_screen_pattern();
       } else {
         blt_screen_to_screen();
@@ -1348,7 +1367,7 @@ void bx_banshee_c::blt_execute()
       }
       break;
     case 2:
-      if (BLT.rop_flags[BLT.rop0] & BX_ROP_PATTERN) {
+      if (BLT.rop_flags[BLT.rop[0]] & BX_ROP_PATTERN) {
         BX_INFO(("TODO: 2D Screen to screen stretch pattern blt"));
       } else {
         BLT.busy = 1;
@@ -1360,7 +1379,7 @@ void bx_banshee_c::blt_execute()
       if (!BLT.immed) {
         if (BLT.cmd == 3) {
           BLT.busy = 1;
-          if (BLT.rop_flags[BLT.rop0] & BX_ROP_PATTERN) {
+          if (BLT.rop_flags[BLT.rop[0]] & BX_ROP_PATTERN) {
             blt_host_to_screen_pattern();
           } else {
             blt_host_to_screen();
@@ -1376,7 +1395,7 @@ void bx_banshee_c::blt_execute()
       break;
     case 5:
       BLT.busy = 1;
-      if (BLT.rop_flags[BLT.rop0] & BX_ROP_PATTERN) {
+      if (BLT.rop_flags[BLT.rop[0]] & BX_ROP_PATTERN) {
         if ((BLT.reg[blt_command] >> 13) & 1) {
           blt_pattern_fill_mono();
         } else {
@@ -1573,7 +1592,7 @@ void bx_banshee_c::blt_rectangle_fill()
   y1 = BLT.dst_y;
   w = BLT.dst_w;
   h = BLT.dst_h;
-  BX_DEBUG(("Rectangle fill: %d x %d  ROP %02X", w, h, BLT.rop0));
+  BX_DEBUG(("Rectangle fill: %d x %d  ROP %02X", w, h, BLT.rop[0]));
   if (!blt_apply_clipwindow(NULL, NULL, &x1, &y1, &w, &h)) {
     BLT.busy = 0;
     BX_UNLOCK(render_mutex);
@@ -1585,7 +1604,7 @@ void bx_banshee_c::blt_rectangle_fill()
     ncols = w;
     dst_ptr1 = dst_ptr;
     do {
-      BLT.rop_fn(dst_ptr1, BLT.fgcolor, dpitch, dpxsize, dpxsize, 1);
+      BLT.rop_fn0(dst_ptr1, BLT.fgcolor, dpitch, dpxsize, dpxsize, 1);
       dst_ptr1 += dpxsize;
     } while (--ncols);
     dst_ptr += dpitch;
@@ -1612,7 +1631,7 @@ void bx_banshee_c::blt_pattern_fill_mono()
   y1 = BLT.dst_y;
   w = BLT.dst_w;
   h = BLT.dst_h;
-  BX_DEBUG(("Pattern fill mono: %d x %d  ROP %02X", w, h, BLT.rop0));
+  BX_DEBUG(("Pattern fill mono: %d x %d  ROP %02X", w, h, BLT.rop[0]));
   x0 = 0;
   y0 = 0;
   if (!blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h)) {
@@ -1637,7 +1656,7 @@ void bx_banshee_c::blt_pattern_fill_mono()
         color = &BLT.bgcolor[0];
       }
       if ((set) || !BLT.transp) {
-        BLT.rop_fn(dst_ptr1, color, dpitch, dpxsize, dpxsize, 1);
+        BLT.rop_fn0(dst_ptr1, color, dpitch, dpxsize, dpxsize, 1);
       }
       dst_ptr1 += dpxsize;
       mask >>= 1;
@@ -1675,7 +1694,7 @@ void bx_banshee_c::blt_pattern_fill_color()
   y1 = BLT.dst_y;
   w = BLT.dst_w;
   h = BLT.dst_h;
-  BX_DEBUG(("Pattern fill color: %d x %d  ROP %02X", w, h, BLT.rop0));
+  BX_DEBUG(("Pattern fill color: %d x %d  ROP %02X", w, h, BLT.rop[0]));
   x0 = BLT.patsx;
   y0 = BLT.patsy;
   if (!blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h)) {
@@ -1693,7 +1712,7 @@ void bx_banshee_c::blt_pattern_fill_color()
     dst_ptr1 = dst_ptr;
     ncols = w;
     do {
-      BLT.rop_fn(dst_ptr1, pat_ptr2, dpitch, dpxsize, dpxsize, 1);
+      BLT.rop_fn0(dst_ptr1, pat_ptr2, dpitch, dpxsize, dpxsize, 1);
       dst_ptr1 += dpxsize;
       pat_ptr2 += dpxsize;
       patcol = (patcol + 1) & 7;
@@ -1715,6 +1734,47 @@ void bx_banshee_c::blt_pattern_fill_color()
   BX_UNLOCK(render_mutex);
 }
 
+bx_bool colorkey_check(Bit8u *ptr, Bit32u min, Bit32u max, Bit8u pxsize)
+{
+  bx_bool pass = 0;
+  Bit32u color;
+  Bit8u r, g, b, rmin, rmax, gmin, gmax, bmin, bmax;
+
+  if (pxsize == 1) {
+    pass = ((*ptr >= (Bit8u)min) && (*ptr <= (Bit8u)max));
+  } else {
+    if (pxsize == 2) {
+      color = *ptr;
+      color |= *(ptr + 1) << 8;
+      r = (color >> 11);
+      g = (color >> 5) & 0x3f;
+      b = color & 0x1f;
+      rmin = (min >> 11) & 0x1f;
+      rmax = (max >> 11) & 0x1f;
+      gmin = (min >> 5) & 0x3f;
+      gmax = (max >> 5) & 0x3f;
+      bmin = min & 0x1f;
+      bmax = max & 0x1f;
+    } else {
+      color = *ptr;
+      color |= *(ptr + 1) << 8;
+      color |= *(ptr + 2) << 16;
+      r = (color >> 16);
+      g = (color >> 8) & 0xff;
+      b = color & 0xff;
+      rmin = (min >> 16) & 0xff;
+      rmax = (max >> 16) & 0xff;
+      gmin = (min >> 8) & 0xff;
+      gmax = (max >> 8) & 0xff;
+      bmin = min & 0xff;
+      bmax = max & 0xff;
+    }
+    pass = ((r >= rmin) && (r <= rmax) && (g >= gmin) && (g <= gmax) &&
+            (b >= bmin) && (b <= bmax));
+  }
+  return pass;
+}
+
 void bx_banshee_c::blt_screen_to_screen()
 {
   Bit8u *src_ptr = &v->fbi.ram[BLT.src_base];
@@ -1723,11 +1783,16 @@ void bx_banshee_c::blt_screen_to_screen()
   Bit8u pxpack = (BLT.reg[blt_srcFormat] >> 22) & 3;
   Bit8u dpxsize = (BLT.dst_fmt > 1) ? (BLT.dst_fmt - 1) : 1;
   Bit8u *color;
+  Bit8u colorkey_en = BLT.reg[blt_commandExtra] & 3;
+  Bit32u srcCkmin = BLT.reg[blt_srcColorkeyMin];
+  Bit32u srcCkmax = BLT.reg[blt_srcColorkeyMax];
+  Bit32u dstCkmin = BLT.reg[blt_dstColorkeyMin];
+  Bit32u dstCkmax = BLT.reg[blt_dstColorkeyMax];
   int spitch;
   int dpitch = BLT.dst_pitch;
   int ncols, nrows, x0, x1, y0, y1, w, h;
   Bit8u smask;
-  bx_bool set;
+  bx_bool pass1 = 0, pass2 = 0, set;
 
   BX_LOCK(render_mutex);
   x0 = BLT.src_x;
@@ -1736,7 +1801,7 @@ void bx_banshee_c::blt_screen_to_screen()
   y1 = BLT.dst_y;
   w = BLT.dst_w;
   h = BLT.dst_h;
-  BX_DEBUG(("Screen to screen blt: %d x %d  ROP %02X", w, h, BLT.rop0));
+  BX_DEBUG(("Screen to screen blt: %d x %d  ROP %02X", w, h, BLT.rop[0]));
   if ((BLT.src_fmt != 0) && (BLT.dst_fmt != BLT.src_fmt)) {
     BX_ERROR(("Pixel format conversion not supported yet"));
   }
@@ -1773,7 +1838,7 @@ void bx_banshee_c::blt_screen_to_screen()
           color = &BLT.bgcolor[0];
         }
         if (set || !BLT.transp) {
-          BLT.rop_fn(dst_ptr1, color, dpitch, dpxsize, dpxsize, 1);
+          BLT.rop_fn0(dst_ptr1, color, dpitch, dpxsize, dpxsize, 1);
         }
         smask >>= 1;
         if (smask == 0) {
@@ -1785,10 +1850,40 @@ void bx_banshee_c::blt_screen_to_screen()
       src_ptr += spitch;
       dst_ptr += dpitch;
     } while (--nrows);
+  } else if (colorkey_en > 0) {
+    src_ptr += (y0 * abs(spitch) + x0 * dpxsize);
+    dst_ptr += (y1 * abs(dpitch) + x1 * dpxsize);
+    nrows = h;
+    do {
+      src_ptr1 = src_ptr;
+      dst_ptr1 = dst_ptr;
+      ncols = w;
+      do {
+        if (colorkey_en & 1) {
+          pass1 = colorkey_check(src_ptr1, srcCkmin, srcCkmax, dpxsize);
+        }
+        if (colorkey_en & 2) {
+          pass2 = colorkey_check(dst_ptr1, dstCkmin, dstCkmax, dpxsize);
+        }
+        if (pass1 && pass2) {
+          BLT.rop_fn3(dst_ptr1, src_ptr1, dpitch, spitch, dpxsize, 1);
+        } else if (pass1 && !pass2) {
+          BLT.rop_fn2(dst_ptr1, src_ptr1, dpitch, spitch, dpxsize, 1);
+        } else if (!pass1 && pass2) {
+          BLT.rop_fn1(dst_ptr1, src_ptr1, dpitch, spitch, dpxsize, 1);
+        } else {
+          BLT.rop_fn0(dst_ptr1, src_ptr1, dpitch, spitch, dpxsize, 1);
+        }
+        src_ptr1 += dpxsize;
+        dst_ptr1 += dpxsize;
+      } while (--ncols);
+      src_ptr += spitch;
+      dst_ptr += dpitch;
+    } while (--nrows);
   } else {
     src_ptr += (y0 * abs(spitch) + x0 * dpxsize);
     dst_ptr += (y1 * abs(dpitch) + x1 * dpxsize);
-    BLT.rop_fn(dst_ptr, src_ptr, dpitch, spitch, w * dpxsize, h);
+    BLT.rop_fn0(dst_ptr, src_ptr, dpitch, spitch, w * dpxsize, h);
   }
   blt_complete();
   BX_UNLOCK(render_mutex);
@@ -1817,7 +1912,7 @@ void bx_banshee_c::blt_screen_to_screen_pattern()
   y1 = BLT.dst_y;
   w = BLT.dst_w;
   h = BLT.dst_h;
-  rop0 = BLT.rop0;
+  rop0 = BLT.rop[0];
   BX_DEBUG(("Screen to screen pattern blt: %d x %d  ROP %02X", w, h, rop0));
   if (BLT.dst_fmt != BLT.src_fmt) {
     BX_ERROR(("Pixel format conversion not supported yet"));
@@ -1932,7 +2027,7 @@ void bx_banshee_c::blt_screen_to_screen_stretch()
   w1 = BLT.dst_w;
   h1 = BLT.dst_h;
   BX_DEBUG(("Screen to screen stretch blt: : %d x %d -> %d x %d  ROP %02X",
-            w0, h0, w1, h1, BLT.rop0));
+            w0, h0, w1, h1, BLT.rop[0]));
   if (BLT.dst_fmt != BLT.src_fmt) {
     BX_ERROR(("Pixel format conversion not supported yet"));
   }
@@ -1981,7 +2076,7 @@ void bx_banshee_c::blt_screen_to_screen_stretch()
       x3 = (int)((double)x2 / fx + 0.49f);
       y3 = (int)((double)y2 / fy + 0.49f);
       src_ptr1 = src_ptr + (y3 * abs(spitch) + x3 * dpxsize);
-      BLT.rop_fn(dst_ptr1, src_ptr1, dpitch, dpxsize, dpxsize, 1);
+      BLT.rop_fn0(dst_ptr1, src_ptr1, dpitch, dpxsize, dpxsize, 1);
       dst_ptr1 += dpxsize;
       x2 += stepx;
     } while (--ncols);
@@ -2013,7 +2108,7 @@ void bx_banshee_c::blt_host_to_screen()
   y1 = BLT.dst_y;
   w = BLT.dst_w;
   h = BLT.dst_h;
-  BX_DEBUG(("Host to screen blt: %d x %d  ROP %02X", w, h, BLT.rop0));
+  BX_DEBUG(("Host to screen blt: %d x %d  ROP %02X", w, h, BLT.rop[0]));
   if ((pxconv_table[srcfmt] & (1 << BLT.dst_fmt)) == 0) {
     BX_ERROR(("Pixel format conversion not supported"));
   }
@@ -2053,7 +2148,7 @@ void bx_banshee_c::blt_host_to_screen()
           color = &BLT.bgcolor[0];
         }
         if (set || !BLT.transp) {
-          BLT.rop_fn(dst_ptr1, color, dpitch, dpxsize, dpxsize, 1);
+          BLT.rop_fn0(dst_ptr1, color, dpitch, dpxsize, dpxsize, 1);
         }
       } else {
         if (BLT.dst_fmt != srcfmt) {
@@ -2069,16 +2164,16 @@ void bx_banshee_c::blt_host_to_screen()
           if (dpxsize == 2) {
             scolor[0] = (b >> 3) | ((g & 0x1c) << 3);
             scolor[1] = (g >> 5) | (r & 0xf8);
-            BLT.rop_fn(dst_ptr1, scolor, dpitch, dpxsize, dpxsize, 1);
+            BLT.rop_fn0(dst_ptr1, scolor, dpitch, dpxsize, dpxsize, 1);
           } else if ((dpxsize == 3) || (dpxsize == 4)) {
             scolor[0] = b;
             scolor[1] = g;
             scolor[2] = r;
             scolor[3] = 0;
-            BLT.rop_fn(dst_ptr1, scolor, dpitch, dpxsize, dpxsize, 1);
+            BLT.rop_fn0(dst_ptr1, scolor, dpitch, dpxsize, dpxsize, 1);
           }
         } else {
-          BLT.rop_fn(dst_ptr1, src_ptr1, dpitch, dpxsize, dpxsize, 1);
+          BLT.rop_fn0(dst_ptr1, src_ptr1, dpitch, dpxsize, dpxsize, 1);
         }
       }
       if (srcfmt == 0) {
@@ -2130,7 +2225,7 @@ void bx_banshee_c::blt_host_to_screen_pattern()
   y1 = BLT.dst_y;
   w = BLT.dst_w;
   h = BLT.dst_h;
-  rop0 = BLT.rop0;
+  rop0 = BLT.rop[0];
   BX_DEBUG(("Host to screen pattern blt: %d x %d  ROP %02X", w, h, rop0));
   if ((srcfmt != 0) && (BLT.dst_fmt != srcfmt)) {
     BX_ERROR(("Pixel format conversion not supported yet"));
@@ -2270,7 +2365,7 @@ void bx_banshee_c::blt_line(bx_bool pline)
   y0 = BLT.src_y;
   x1 = BLT.dst_x;
   y1 = BLT.dst_y;
-  BX_DEBUG(("Line/Polyline: %d/%d  -> %d/%d  ROP %02X", x0, y0, x1, y1, BLT.rop0));
+  BX_DEBUG(("Line/Polyline: %d/%d  -> %d/%d  ROP %02X", x0, y0, x1, y1, BLT.rop[0]));
   cx0 = BLT.clipx0[BLT.clip_sel];
   cy0 = BLT.clipy0[BLT.clip_sel];
   cx1 = BLT.clipx1[BLT.clip_sel];
@@ -2312,12 +2407,12 @@ void bx_banshee_c::blt_line(bx_bool pline)
     if ((x >= cx0) && (x < cx1) && (y >= cy0) && (y < cy1)) {
       dst_ptr1 = dst_ptr + y * dpitch + x * dpxsize;
       if (!lstipple) {
-        BLT.rop_fn(dst_ptr1, BLT.fgcolor, dpitch, dpxsize, dpxsize, 1);
+        BLT.rop_fn0(dst_ptr1, BLT.fgcolor, dpitch, dpxsize, dpxsize, 1);
       } else {
         if ((lpattern & (1 << lpat_idx)) != 0) {
-          BLT.rop_fn(dst_ptr1, BLT.fgcolor, dpitch, dpxsize, dpxsize, 1);
+          BLT.rop_fn0(dst_ptr1, BLT.fgcolor, dpitch, dpxsize, dpxsize, 1);
         } else if (!BLT.transp) {
-          BLT.rop_fn(dst_ptr1, BLT.bgcolor, dpitch, dpxsize, dpxsize, 1);
+          BLT.rop_fn0(dst_ptr1, BLT.bgcolor, dpitch, dpxsize, dpxsize, 1);
         }
         if (lrep_cnt == 0) {
           if (++lpat_idx > lpat_max) {
@@ -2342,7 +2437,7 @@ void bx_banshee_c::blt_line(bx_bool pline)
 
   if (!pline) {
     dst_ptr1 = dst_ptr + y1 * dpitch + x1 * dpxsize;
-    BLT.rop_fn(dst_ptr1, BLT.fgcolor, dpitch, dpxsize, dpxsize, 1);
+    BLT.rop_fn0(dst_ptr1, BLT.fgcolor, dpitch, dpxsize, dpxsize, 1);
   }
   blt_complete();
   BLT.reg[blt_srcXY] = BLT.reg[blt_dstXY];
@@ -2451,7 +2546,7 @@ void bx_banshee_c::blt_polygon_fill(bx_bool force)
     } else {
       y1 = BLT.pgn_r1y;
     }
-    if (BLT.rop_flags[BLT.rop0] & BX_ROP_PATTERN) {
+    if (BLT.rop_flags[BLT.rop[0]] & BX_ROP_PATTERN) {
       BX_ERROR(("Polygon fill with pattern not supported yet"));
     } else {
       for (y = y0; y < y1; y++) {
@@ -2463,12 +2558,12 @@ void bx_banshee_c::blt_polygon_fill(bx_bool force)
         }
         dst_ptr1 = dst_ptr + y * dpitch + x0 * dpxsize;
         if ((x0 >= cx0) && (x0 < cx1) && (y >= cy0) && (y < cy1)) {
-          BLT.rop_fn(dst_ptr1, BLT.fgcolor, dpitch, dpxsize, dpxsize, 1);
+          BLT.rop_fn0(dst_ptr1, BLT.fgcolor, dpitch, dpxsize, dpxsize, 1);
         }
         dst_ptr1 += dpxsize;
         for (x = x0 + 1; x < x1; x++) {
           if ((x >= cx0) && (x < cx1) && (y >= cy0) && (y < cy1)) {
-            BLT.rop_fn(dst_ptr1, BLT.fgcolor, dpitch, dpxsize, dpxsize, 1);
+            BLT.rop_fn0(dst_ptr1, BLT.fgcolor, dpitch, dpxsize, dpxsize, 1);
           }
           dst_ptr1 += dpxsize;
         }
