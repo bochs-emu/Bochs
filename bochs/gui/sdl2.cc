@@ -90,7 +90,7 @@ SDL_Surface *sdl_screen, *sdl_fullscreen;
 SDL_DisplayMode sdl_maxres;
 bx_bool sdl_init_done;
 bx_bool sdl_fullscreen_toggle;
-int sdl_grab;
+bx_bool sdl_grab = 0;
 unsigned res_x, res_y;
 unsigned half_res_x, half_res_y;
 int headerbar_height;
@@ -329,7 +329,6 @@ static Bit32u sdl_sym_to_bx_key(SDL_Keycode sym)
   }
 }
 
-
 void switch_to_windowed(void)
 {
   SDL_SetWindowFullscreen(window, 0);
@@ -338,11 +337,10 @@ void switch_to_windowed(void)
   sdl_fullscreen = NULL;
   bx_gui->show_headerbar();
   DEV_vga_refresh(1);
-  if (sdl_grab) {
+  if (sdl_grab != 0) {
     bx_gui->toggle_mouse_enable();
   }
 }
-
 
 void switch_to_fullscreen(void)
 {
@@ -356,6 +354,16 @@ void switch_to_fullscreen(void)
   if (sdl_init_done) DEV_vga_refresh(1);
 }
 
+void set_mouse_capture(bx_bool enable)
+{
+  if (enable) {
+    SDL_ShowCursor(0);
+    SDL_SetWindowGrab(window, SDL_TRUE);
+  } else {
+    SDL_ShowCursor(1);
+    SDL_SetWindowGrab(window, SDL_FALSE);
+  }
+}
 
 #if BX_SHOW_IPS
 #if defined(__MINGW32__) || defined(_MSC_VER)
@@ -811,14 +819,8 @@ void bx_sdl2_gui_c::handle_events(void)
         if ((sdl_event.button.button == SDL_BUTTON_MIDDLE)
             && (sdl_fullscreen_toggle == 0)) {
           if (mouse_toggle_check(BX_MT_MBUTTON, 1)) {
-            if (sdl_grab == 0) {
-              SDL_ShowCursor(0);
-              SDL_SetWindowGrab(window, SDL_TRUE);
-            } else {
-              SDL_ShowCursor(1);
-              SDL_SetWindowGrab(window, SDL_FALSE);
-            }
-            sdl_grab = ~sdl_grab;
+            set_mouse_capture(!sdl_grab);
+            sdl_grab = !sdl_grab;
             toggle_mouse_enable();
           }
           break;
@@ -864,7 +866,7 @@ void bx_sdl2_gui_c::handle_events(void)
         break;
 
       case SDL_MOUSEWHEEL:
-        if (sdl_grab && !console_running()) {
+        if ((sdl_grab != 0) && !console_running()) {
           wheel_status = sdl_event.wheel.y;
           if (sdl_mouse_mode_absxy) {
             DEV_mouse_motion(old_mousex, old_mousey, wheel_status, old_mousebuttons, 1);
@@ -1375,21 +1377,14 @@ int bx_sdl2_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 
 void bx_sdl2_gui_c::mouse_enabled_changed_specific(bx_bool val)
 {
-  if (val == 1) {
-    SDL_ShowCursor(0);
-    SDL_SetWindowGrab(window, SDL_TRUE);
-  } else {
-    SDL_ShowCursor(1);
-    SDL_SetWindowGrab(window, SDL_FALSE);
-  }
+  set_mouse_capture(val);
   sdl_grab = val;
 }
 
 
 void bx_sdl2_gui_c::exit(void)
 {
-  SDL_ShowCursor(1);
-  SDL_SetWindowGrab(window, SDL_FALSE);
+  set_mouse_capture(0);
   while (n_sdl_bitmaps) {
     SDL_FreeSurface(sdl_bitmaps[n_sdl_bitmaps-1]->surface);
     n_sdl_bitmaps--;
@@ -1576,7 +1571,7 @@ int sdl2_ask_dialog(BxEvent *event)
 {
   SDL_MessageBoxData msgboxdata;
   SDL_MessageBoxButtonData buttondata[4];
-  int i = 0, level, mode, retcode;
+  int i = 0, level, mode, retcode = -1;
   char message[512];
 
   level = event->u.logmsg.level;
@@ -1613,18 +1608,23 @@ int sdl2_ask_dialog(BxEvent *event)
     i++;
   }
   msgboxdata.numbuttons = i;
-  if (SDL_ShowMessageBox(&msgboxdata, &retcode) < 0) {
-    return -1;
-  } else {
-    return retcode;
+  if (sdl_grab != 0) {
+    set_mouse_capture(0);
   }
+  if (SDL_ShowMessageBox(&msgboxdata, &retcode) < 0) {
+    retcode = -1;
+  }
+  if (sdl_grab != 0) {
+    set_mouse_capture(1);
+  }
+  return retcode;
 }
 
 int sdl2_yesno_dialog(bx_param_bool_c *bparam)
 {
   SDL_MessageBoxData msgboxdata;
   SDL_MessageBoxButtonData buttondata[2];
-  int retcode;
+  int retcode = -1;
 
   msgboxdata.flags = SDL_MESSAGEBOX_ERROR;
   msgboxdata.window = window;
@@ -1639,12 +1639,18 @@ int sdl2_yesno_dialog(bx_param_bool_c *bparam)
   buttondata[1].flags = SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT;
   buttondata[1].buttonid = 0;
   buttondata[1].text = "No";
+  if (sdl_grab != 0) {
+    set_mouse_capture(0);
+  }
   if (SDL_ShowMessageBox(&msgboxdata, &retcode) < 0) {
-    return -1;
+    retcode = -1;
   } else {
     bparam->set(retcode);
-    return retcode;
   }
+  if (sdl_grab != 0) {
+    set_mouse_capture(1);
+  }
+  return retcode;
 }
 
 BxEvent *sdl2_notify_callback(void *unused, BxEvent *event)
