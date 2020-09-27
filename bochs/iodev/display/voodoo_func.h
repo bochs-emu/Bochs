@@ -2725,24 +2725,26 @@ void cmdfifo_process(cmdfifo_info *f)
       regaddr = (cmdfifo_r(f) & 0xffffff) >> 2;
       code = (command >> 30);
       disbytes = (command >> 22) & 0xff;
-      if ((disbytes > 0) && (code != 0)) {
-        BX_ERROR(("CMDFIFO packet type 5: byte disable not supported yet (dest code = %d)", code));
+      if ((disbytes > 0) && (code != 0) && (code != 3)) {
+        BX_ERROR(("CMDFIFO packet type 5: byte disable not supported yet (dest code = %d disbytes = 0x%02x)", code, disbytes));
       }
       switch (code) {
         case 0:
           regaddr <<= 2;
           w0 = 0;
           wn = nwords;
-          if ((disbytes > 0) && (disbytes != 0x30) && (disbytes != 0xc0)) {
-            BX_ERROR(("CMDFIFO packet type 5: byte disable not complete yet (dest code = 0)"));
-          }
           if ((disbytes & 0xf0) > 0) {
             data = cmdfifo_r(f);
             if ((disbytes & 0xf0) == 0x30) {
-              Banshee_LFB_write(regaddr + 2, data >> 16, 2);
+              data >>= 16;
             } else if ((disbytes & 0xf0) == 0xc0) {
-              Banshee_LFB_write(regaddr, data, 2);
+              data &= 0xffff;
+            } else {
+              BX_ERROR(("CMDFIFO packet type 5: byte disable not complete (dest code = 0)"));
             }
+            BX_UNLOCK(cmdfifo_mutex);
+            Banshee_LFB_write(regaddr, data, 2);
+            BX_LOCK(cmdfifo_mutex);
             w0++;
             regaddr += 4;
           }
@@ -2752,6 +2754,9 @@ void cmdfifo_process(cmdfifo_info *f)
             Banshee_LFB_write(regaddr, data, 4);
             BX_LOCK(cmdfifo_mutex);
             regaddr += 4;
+          }
+          if ((disbytes & 0x0f) > 0) {
+            BX_ERROR(("CMDFIFO packet type 5: byte disable not complete (dest code = 0)"));
           }
           break;
         case 2:
@@ -2764,12 +2769,34 @@ void cmdfifo_process(cmdfifo_info *f)
           }
           break;
         case 3:
-          for (i = 0; i < (int)nwords; i++) {
+          w0 = 0;
+          wn = nwords;
+          if ((disbytes & 0xf0) > 0) {
+            data = cmdfifo_r(f);
+            if ((disbytes & 0xf0) == 0x30) {
+              data >>= 16;
+            } else if ((disbytes & 0xf0) == 0xc0) {
+              data &= 0xffff;
+            } else if ((disbytes & 0xf0) == 0xe0) {
+              data &= 0xff;
+            } else {
+              BX_ERROR(("CMDFIFO packet type 5: byte disable not complete (dest code = 3)"));
+            }
+            BX_UNLOCK(cmdfifo_mutex);
+            texture_w(regaddr, data);
+            BX_LOCK(cmdfifo_mutex);
+            w0++;
+            regaddr += 4;
+          }
+          for (i = w0; i < wn; i++) {
             data = cmdfifo_r(f);
             BX_UNLOCK(cmdfifo_mutex);
             texture_w(regaddr, data);
             BX_LOCK(cmdfifo_mutex);
             regaddr++;
+          }
+          if ((disbytes & 0x0f) > 0) {
+            BX_ERROR(("CMDFIFO packet type 5: byte disable not complete (dest code = 3)"));
           }
           break;
         default:
