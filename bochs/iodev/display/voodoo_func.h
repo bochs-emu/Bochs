@@ -1315,38 +1315,53 @@ void recompute_video_memory(voodoo_state *v)
 void voodoo_bitblt(void)
 {
   Bit8u command = (Bit8u)(v->reg[bltCommand].u & 0x07);
+  Bit16u rop = (Bit16u)v->reg[bltRop].u;
   Bit8u b1, b2;
   Bit16u c, cols, dst_x, dst_y, fgcolor, r, rows, size;
   Bit32u offset, loffset, stride;
+  int dst_w, dst_h;
 
+  dst_w = (v->reg[bltSize].u & 0x7ff) + 1;
+  if ((v->reg[bltSize].u >> 11) & 1) {
+    dst_w *= -1;
+  }
+  dst_h = ((v->reg[bltSize].u >> 16) & 0x7ff) + 1;
+  if ((v->reg[bltSize].u >> 27) & 1) {
+    dst_h *= -1;
+  }
   switch (command) {
     case 0:
-      BX_ERROR(("Screen-to-Screen bitBLT not implemented yet"));
+      BX_ERROR(("TODO: Screen-to-Screen bitBLT: w = %d, h = %d, rop0 = %d",
+                abs(dst_w), abs(dst_h), rop & 0x0f));
       break;
     case 1:
-      BX_ERROR(("CPU-to-Screen bitBLT not implemented yet"));
+      BX_ERROR(("TODO: CPU-to-Screen bitBLT: w = %d, h = %d, rop0 = %d",
+                abs(dst_w), abs(dst_h), rop & 0x0f));
       break;
     case 2:
-      BX_ERROR(("bitBLT Rectangle fill not implemented yet"));
+      BX_ERROR(("TODO: bitBLT Rectangle fill: w = %d, h = %d, rop0 = %d",
+                abs(dst_w), abs(dst_h), rop & 0x0f));
       break;
     case 3:
-      dst_x = (Bit16u)(v->reg[bltDstXY].u & 0x7ff);
-      dst_y = (Bit16u)((v->reg[bltDstXY].u >> 16) & 0x7ff);
+      dst_x = (Bit16u)(v->reg[bltDstXY].u & 0x1ff);
+      dst_y = (Bit16u)((v->reg[bltDstXY].u >> 16) & 0x1ff);
       cols = (Bit16u)(v->reg[bltSize].u & 0x1ff);
       rows = (Bit16u)((v->reg[bltSize].u >> 16) & 0x1ff);
       fgcolor = (Bit16u)(v->reg[bltColor].u & 0xffff);
+      BX_DEBUG(("SGRAM fill: x = %d y = %d w = %d h = %d color = 0x%04x",
+                dst_x, dst_y, cols, rows, fgcolor));
       b1 = (Bit8u)(fgcolor & 0xff);
       b2 = (Bit8u)(fgcolor >> 8);
-      stride = (4 << v->fbi.lfb_stride);
+      stride = (1 << 12);
       loffset = dst_y * stride;
       for (r = 0; r <= rows; r++) {
         if (r == 0) {
-          offset = (loffset + dst_x * 2) & v->fbi.mask;
-          size = stride / 2 - dst_x;
+          offset = (loffset + dst_x * 8) & v->fbi.mask;
+          size = stride / 2 - (dst_x * 4) ;
         } else {
           offset = (loffset & v->fbi.mask);
           if (r == rows) {
-            size = cols;
+            size = cols * 4;
           } else {
             size = stride / 2;
           }
@@ -1884,8 +1899,12 @@ void register_w(Bit32u offset, Bit32u data, bx_bool log)
       break;
 
     case userIntrCMD:
-    case bltData:
       BX_ERROR(("Writing to register %s not supported yet", v->regnames[regnum]));
+      v->reg[regnum].u = data;
+      break;
+
+    case bltData:
+      BX_DEBUG(("Writing to register %s not supported yet", v->regnames[regnum]));
       v->reg[regnum].u = data;
       break;
 
