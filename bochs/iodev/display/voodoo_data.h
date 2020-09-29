@@ -1419,6 +1419,8 @@ static const Bit8u dither_matrix_2x2[16] =
 #define TEXLOD_TDATA_SWIZZLE(val)     (((val) >> 25) & 1)
 #define TEXLOD_TDATA_SWAP(val)        (((val) >> 26) & 1)
 #define TEXLOD_TDIRECT_WRITE(val)     (((val) >> 27) & 1)   /* Voodoo 2 only */
+#define TEXLOD_TMIRROR_S(val)         (((val) >> 28) & 1)   /* Banshee only */
+#define TEXLOD_TMIRROR_T(val)         (((val) >> 29) & 1)   /* Banshee only */
 
 #define TEXDETAIL_DETAIL_MAX(val)     (((val) >> 0) & 0xff)
 #define TEXDETAIL_DETAIL_BIAS(val)      (((val) >> 8) & 0x3f)

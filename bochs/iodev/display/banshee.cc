@@ -671,11 +671,9 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if (mode_change) {
         if ((v->banshee.io[reg] & 0x180) == 0x080) {
           BX_INFO(("2D desktop mode enabled"));
-        } else if ((v->banshee.io[reg] & 0x180) == 0x100) {
+        } else if ((old & 0x100) == 0) {
           BX_INFO(("3D overlay mode enabled"));
           v->vtimer_running = 1;
-        } else {
-          BX_INFO(("Mixed 2D/3D mode not supported yet"));
         }
       }
       v->banshee.hwcursor.enabled = ((v->banshee.io[reg] >> 27) & 1);
@@ -1021,7 +1019,7 @@ void bx_banshee_c::agp_reg_write(Bit8u reg, Bit32u value)
     case cmdBump0:
     case cmdBump1:
       if (value > 0) {
-        BX_ERROR(("cmdBump%d not supported yet", fifo_idx));
+        BX_ERROR(("cmdBump%d not implemented (value = 0x%04x)", fifo_idx, (Bit16u)value));
       }
       break;
     case cmdRdPtrL0:

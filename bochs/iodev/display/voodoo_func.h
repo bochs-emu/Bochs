@@ -330,6 +330,17 @@ void recompute_texture_params(tmu_state *t)
   Bit32u base;
   int lod;
 
+  /* Unimplemented switch */
+  if (TEXLOD_LOD_ZEROFRAC(t->reg[tLOD].u)) {
+    BX_ERROR(("TEXLOD_LOD_ZEROFRAC not implemented yet"));
+  }
+  /* Banshee: unimplemented switches */
+  if (TEXLOD_TMIRROR_S(t->reg[tLOD].u)) {
+    BX_ERROR(("TEXLOD_TMIRROR_S not implemented yet"));
+  }
+  if (TEXLOD_TMIRROR_T(t->reg[tLOD].u)) {
+    BX_ERROR(("TEXLOD_TMIRROR_T not implemented yet"));
+  }
   /* extract LOD parameters */
   t->lodmin = TEXLOD_LODMIN(t->reg[tLOD].u) << 6;
   t->lodmax = TEXLOD_LODMAX(t->reg[tLOD].u) << 6;
