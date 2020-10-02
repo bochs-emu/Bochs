@@ -1751,12 +1751,10 @@ struct _banshee_info
     Bit8u   patsy;
     bx_bool clip_sel;
     Bit8u   rop[4];
-    bx_bitblt_rop_t rop_fn0;
-    bx_bitblt_rop_t rop_fn1;
-    bx_bitblt_rop_t rop_fn2;
-    bx_bitblt_rop_t rop_fn3;
+    bx_bitblt_rop_t rop_fn[4];
     bx_bitblt_rop_t rop_handler[2][0x100];
     Bit8u rop_flags[0x100];
+    bx_bool pattern_blt;
     Bit32u src_base;
     bx_bool src_tiled;
     Bit8u src_fmt;
