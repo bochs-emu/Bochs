@@ -1355,9 +1355,9 @@ void voodoo_bitblt(void)
       break;
     case 3:
       dst_x = (Bit16u)(v->reg[bltDstXY].u & 0x1ff);
-      dst_y = (Bit16u)((v->reg[bltDstXY].u >> 16) & 0x1ff);
+      dst_y = (Bit16u)((v->reg[bltDstXY].u >> 16) & 0x3ff);
       cols = (Bit16u)(v->reg[bltSize].u & 0x1ff);
-      rows = (Bit16u)((v->reg[bltSize].u >> 16) & 0x1ff);
+      rows = (Bit16u)((v->reg[bltSize].u >> 16) & 0x3ff);
       fgcolor = (Bit16u)(v->reg[bltColor].u & 0xffff);
       BX_DEBUG(("SGRAM fill: x = %d y = %d w = %d h = %d color = 0x%04x",
                 dst_x, dst_y, cols, rows, fgcolor));
@@ -2816,7 +2816,7 @@ void cmdfifo_process(cmdfifo_info *f)
             texture_w(regaddr, data);
             BX_LOCK(cmdfifo_mutex);
             w0++;
-            regaddr += 4;
+            regaddr++;
           }
           for (i = w0; i < wn; i++) {
             data = cmdfifo_r(f);
@@ -3049,6 +3049,7 @@ void register_w_common(Bit32u offset, Bit32u data)
         v->reg[regnum].u = data;
         recompute_video_memory(v);
         v->fbi.video_changed = 1;
+        v->fbi.clut_dirty = 1;
       }
       break;
 
