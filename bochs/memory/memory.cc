@@ -112,8 +112,6 @@ mem_write:
       // len == other, just fall thru to special cases handling
     }
 
-    pageWriteStampTable.decWriteStamp(a20addr);
-
 #ifdef BX_LITTLE_ENDIAN
     data_ptr = (Bit8u *) data;
 #else // BX_BIG_ENDIAN
@@ -124,17 +122,35 @@ mem_write:
     {
       // addr *not* in range 000A0000 .. 000FFFFF
       while(1) {
-        *(BX_MEM_THIS get_vector(a20addr)) = *data_ptr;
-        if (len == 1) return;
-        len--;
-        a20addr++;
-#ifdef BX_LITTLE_ENDIAN
-        data_ptr++;
-#else // BX_BIG_ENDIAN
-        data_ptr--;
-#endif
+        // Write in chunks of 8 bytes if we can
+        if ((len & 7) == 0) {
+          pageWriteStampTable.decWriteStamp(a20addr, 8);
+          WriteHostQWordToLittleEndian((Bit64u*) BX_MEM_THIS get_vector(a20addr), *(Bit64u*)data_ptr);
+          len -= 8;
+          a20addr += 8;
+          #ifdef BX_LITTLE_ENDIAN
+            data_ptr += 8;
+          #else
+            data_ptr -= 8;
+          #endif
+
+          if (len == 0) return;
+        } else {
+          pageWriteStampTable.decWriteStamp(a20addr, 1);
+          *(BX_MEM_THIS get_vector(a20addr)) = *data_ptr;
+          if (len == 1) return;
+          len--;
+          a20addr++;
+  #ifdef BX_LITTLE_ENDIAN
+          data_ptr++;
+  #else // BX_BIG_ENDIAN
+          data_ptr--;
+  #endif
+        }
       }
     }
+
+    pageWriteStampTable.decWriteStamp(a20addr);
 
     // addr must be in range 000A0000 .. 000FFFFF
 
@@ -291,15 +307,29 @@ mem_read:
     {
       // addr *not* in range 000A0000 .. 000FFFFF
       while(1) {
-        *data_ptr = *(BX_MEM_THIS get_vector(a20addr));
-        if (len == 1) return;
-        len--;
-        a20addr++;
-#ifdef BX_LITTLE_ENDIAN
-        data_ptr++;
-#else // BX_BIG_ENDIAN
-        data_ptr--;
-#endif
+        // Read in chunks of 8 bytes if we can
+        if ((len & 7) == 0) {
+          *((Bit64u*)data_ptr) = ReadHostQWordFromLittleEndian((Bit64u*) BX_MEM_THIS get_vector(a20addr));
+          len -= 8;
+          a20addr += 8;
+          #ifdef BX_LITTLE_ENDIAN
+            data_ptr += 8;
+          #else
+            data_ptr -= 8;
+          #endif
+
+          if (len == 0) return;
+        } else {
+          *data_ptr = *(BX_MEM_THIS get_vector(a20addr));
+          if (len == 1) return;
+          len--;
+          a20addr++;
+  #ifdef BX_LITTLE_ENDIAN
+          data_ptr++;
+  #else // BX_BIG_ENDIAN
+          data_ptr--;
+  #endif
+        }
       }
     }
 
