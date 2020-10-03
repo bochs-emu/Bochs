@@ -445,12 +445,12 @@ BX_CPP_INLINE float64 convert_to_QNaN(float64 op)
  * MM 17    Misaligned Exception Mask               0
  */
 
-#define MXCSR_EXCEPTIONS                 0x0000003F
-#define MXCSR_DAZ                        0x00000040
-#define MXCSR_MASKED_EXCEPTIONS          0x00001F80
-#define MXCSR_ROUNDING_CONTROL           0x00006000
-#define MXCSR_FLUSH_MASKED_UNDERFLOW     0x00008000
-#define MXCSR_MISALIGNED_EXCEPTION_MASK  0x00020000
+const Bit32u MXCSR_EXCEPTIONS                = 0x0000003F;
+const Bit32u MXCSR_DAZ                       = 0x00000040;
+const Bit32u MXCSR_MASKED_EXCEPTIONS         = 0x00001F80;
+const Bit32u MXCSR_ROUNDING_CONTROL          = 0x00006000;
+const Bit32u MXCSR_FLUSH_MASKED_UNDERFLOW    = 0x00008000;
+const Bit32u MXCSR_MISALIGNED_EXCEPTION_MASK = 0x00020000;
 
 #define MXCSR_IE 0x00000001
 #define MXCSR_DE 0x00000002
@@ -466,7 +466,7 @@ BX_CPP_INLINE float64 convert_to_QNaN(float64 op)
 #define MXCSR_UM 0x00000800
 #define MXCSR_PM 0x00001000
 
-#define MXCSR_RESET 0x00001F80  /* reset value of the MXCSR register */
+const Bit32u MXCSR_RESET = 0x00001F80;  /* reset value of the MXCSR register */
 
 struct BOCHSAPI bx_mxcsr_t
 {

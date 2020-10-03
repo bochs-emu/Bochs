@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2019  The Bochs Project
+//  Copyright (C) 2001-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -3077,6 +3077,12 @@ public: // for now...
   BX_SMF void VGF2P8AFFINEQB_VdqHdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VGF2P8MULB_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
+  /* AVX encoded VNNI instructions */
+  BX_SMF void VPDPBUSD_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPDPBUSDS_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPDPWSSD_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPDPWSSDS_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
   // AVX512 OPMASK instructions (VEX encoded)
   BX_SMF void KADDB_KGbKHbKEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void KANDB_KGbKHbKEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3742,10 +3748,10 @@ public: // for now...
   BX_SMF void VPMULTISHIFTQB_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VPMULTISHIFTQB_MASK_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void VPDPBUSD_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VPDPBUSDS_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VPDPWSSD_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VPDPWSSDS_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPDPBUSD_MASK_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPDPBUSDS_MASK_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPDPWSSD_MASK_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPDPWSSDS_MASK_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void VPSHLDW_MASK_VdqHdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VPSHLDVW_MASK_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

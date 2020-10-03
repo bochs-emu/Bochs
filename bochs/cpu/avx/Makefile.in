@@ -60,7 +60,7 @@ AVX_OBJS = \
 	avx512_mask32.o \
 	avx512_mask64.o \
 	avx512_bitalg.o \
-	avx512_vnni.o \
+	vnni.o \
 	gather.o \
 	tbm32.o \
 	tbm64.o \
@@ -261,7 +261,7 @@ avx512_rsqrt14.o: avx512_rsqrt14.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../lazy_flags.h ../tlb.h ../icache.h ../apic.h ../xmm.h ../vmx.h \
  ../svm.h ../cpuid.h ../stack.h ../access.h ../fpu/softfloat-specialize.h \
  ../fpu/softfloat.h ../fpu/softfloat-round-pack.h ../simd_int.h
-avx512_vnni.o: avx512_vnni.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
+vnni.o: vnni.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
  ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \

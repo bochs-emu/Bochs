@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2017-2018 Stanislav Shwartsman
+//   Copyright (c) 2017-2020 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -26,9 +26,32 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-#if BX_SUPPORT_EVEX
+#if BX_SUPPORT_AVX
 
 #include "simd_int.h"
+
+#define AVX_3OP_VNNI(HANDLER, func)                                                                                          \
+  void BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER(bxInstruction_c *i)                                                        \
+  {                                                                                                                          \
+    BxPackedAvxRegister dst = BX_READ_AVX_REG(i->dst()), op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2()); \
+    unsigned len = i->getVL();                                                                                               \
+                                                                                                                             \
+    for (unsigned n=0; n < len; n++)                                                                                         \
+      (func) (&dst.vmm128(n), &op1.vmm128(n), &op2.vmm128(n));                                                               \
+                                                                                                                             \
+    BX_WRITE_AVX_REGZ(i->dst(), dst, len);                                                                                   \
+                                                                                                                             \
+    BX_NEXT_INSTR(i);                                                                                                        \
+  }
+
+AVX_3OP_VNNI(VPDPBUSD_VdqHdqWdqR, xmm_pdpbusd)
+AVX_3OP_VNNI(VPDPBUSDS_VdqHdqWdqR, xmm_pdpbusds)
+AVX_3OP_VNNI(VPDPWSSD_VdqHdqWdqR, xmm_pdpwssd)
+AVX_3OP_VNNI(VPDPWSSDS_VdqHdqWdqR, xmm_pdpwssds)
+
+#endif
+
+#if BX_SUPPORT_EVEX
 
 #define AVX512_3OP_DWORD_EL(HANDLER, func)                                                                                   \
   void BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER(bxInstruction_c *i)                                                        \
@@ -47,9 +70,9 @@
     BX_NEXT_INSTR(i);                                                                                                        \
   }
 
-AVX512_3OP_DWORD_EL(VPDPBUSD_VdqHdqWdqR, xmm_pdpbusd)
-AVX512_3OP_DWORD_EL(VPDPBUSDS_VdqHdqWdqR, xmm_pdpbusds)
-AVX512_3OP_DWORD_EL(VPDPWSSD_VdqHdqWdqR, xmm_pdpwssd)
-AVX512_3OP_DWORD_EL(VPDPWSSDS_VdqHdqWdqR, xmm_pdpwssds)
+AVX512_3OP_DWORD_EL(VPDPBUSD_MASK_VdqHdqWdqR, xmm_pdpbusd)
+AVX512_3OP_DWORD_EL(VPDPBUSDS_MASK_VdqHdqWdqR, xmm_pdpbusds)
+AVX512_3OP_DWORD_EL(VPDPWSSD_MASK_VdqHdqWdqR, xmm_pdpwssd)
+AVX512_3OP_DWORD_EL(VPDPWSSDS_MASK_VdqHdqWdqR, xmm_pdpwssds)
 
 #endif

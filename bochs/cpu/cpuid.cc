@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2014-2019 Stanislav Shwartsman
+//   Copyright (c) 2014-2020 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -107,10 +107,11 @@ static const char *cpu_feature_name[] =
   "avx512vbmi",             // BX_ISA_AVX512_VBMI
   "avx512vbmi2",            // BX_ISA_AVX512_VBMI2
   "avx512ifma52",           // BX_ISA_AVX512_IFMA52
-  "avx512ivpopcnt",         // BX_ISA_AVX512_VPOPCNTDQ
-  "avx512ivnni",            // BX_ISA_AVX512_VNNI
-  "avx512ibitalg",          // BX_ISA_AVX512_BITALG
+  "avx512vpopcnt",          // BX_ISA_AVX512_VPOPCNTDQ
+  "avx512vnni",             // BX_ISA_AVX512_VNNI
+  "avx512bitalg",           // BX_ISA_AVX512_BITALG
   "avx512vp2intersect",     // BX_ISA_AVX512_VP2INTERSECT
+  "avx_vnni",               // BX_ISA_AVX_VNNI
   "xapic",                  // BX_ISA_XAPIC
   "x2apic",                 // BX_ISA_X2APIC
   "xapicext",               // BX_ISA_XAPICEXT

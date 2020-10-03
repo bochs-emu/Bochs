@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2019 Stanislav Shwartsman
+//   Copyright (c) 2008-2020 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -2407,6 +2407,13 @@ bx_define_opcode(BX_IA_VFNMSUB231SS_VpsHssWss, "vfnmsub231ss", "vfnmsub231ss", &
 bx_define_opcode(BX_IA_VFNMSUB231SD_VpdHsdWsd, "vfnmsub231sd", "vfnmsub231sd", &BX_CPU_C::LOAD_Wsd, &BX_CPU_C::VFNMSUBSD_VpdHsdWsdR, BX_ISA_AVX_FMA, OP_Vpd, OP_Hpd, OP_Wpd, OP_Vpd, BX_PREPARE_AVX)
 // AVX2 FMA - VexW aliased
 
+// AVX VNNI
+bx_define_opcode(BX_IA_VPDPBUSD_VdqHdqWdq, "vpdpbusd", "vpdpbusd", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::VPDPBUSD_VdqHdqWdqR, BX_ISA_AVX_VNNI, OP_Vdq, OP_Hdq, OP_Wdq, OP_NONE, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_VPDPBUSDS_VdqHdqWdq, "vpdpbusds", "vpdpbusds", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::VPDPBUSDS_VdqHdqWdqR, BX_ISA_AVX_VNNI, OP_Vdq, OP_Hdq, OP_Wdq, OP_NONE, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_VPDPWSSD_VdqHdqWdq, "vpdpwssd", "vpdpwssd", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::VPDPWSSD_VdqHdqWdqR, BX_ISA_AVX_VNNI, OP_Vdq, OP_Hdq, OP_Wdq, OP_NONE, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_VPDPWSSDS_VdqHdqWdq, "vpdpwssds", "vpdpwssds", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::VPDPWSSDS_VdqHdqWdqR, BX_ISA_AVX_VNNI, OP_Vdq, OP_Hdq, OP_Wdq, OP_NONE, BX_PREPARE_AVX)
+// AVX VNNI
+
 // BMI1 - VexW64 aliased
 bx_define_opcode(BX_IA_ANDN_GdBdEd, "andn", "andnl", &BX_CPU_C::LOAD_Ed, &BX_CPU_C::ANDN_GdBdEdR, BX_ISA_BMI1, OP_Gd, OP_Bd, OP_Ed, OP_NONE, 0)
 bx_define_opcode(BX_IA_ANDN_GqBqEq, "andn", "andnq", &BX_CPU_C::LOAD_Eq, &BX_CPU_C::ANDN_GqBqEqR, BX_ISA_BMI1, OP_Gq, OP_Bq, OP_Eq, OP_NONE, 0)
@@ -3857,10 +3864,10 @@ bx_define_opcode(BX_IA_V512_VPEXTRQ_EqVdqIb, "vpextrq", "vpextrq", &BX_CPU_C::PE
 bx_define_opcode(BX_IA_V512_VPBROADCASTMB2Q_VdqKEb, "vpbroadcastmb2q", "vpbroadcastmb2q", &BX_CPU_C::BxError, &BX_CPU_C::VPBROADCASTMB2Q_VdqKEbR, BX_ISA_AVX512, OP_Vdq, OP_KEb, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
 bx_define_opcode(BX_IA_V512_VPBROADCASTMW2D_VdqKEw, "vpbroadcastmw2d", "vpbroadcastmw2d", &BX_CPU_C::BxError, &BX_CPU_C::VPBROADCASTMW2D_VdqKEwR, BX_ISA_AVX512, OP_Vdq, OP_KEw, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
 
-bx_define_opcode(BX_IA_V512_VPDPBUSD_VdqHdqWdq_Kmask, "vpdpbusd", "vpdpbusd", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorD, &BX_CPU_C::VPDPBUSD_VdqHdqWdqR, BX_ISA_AVX512_VNNI, OP_Vdq, OP_Hdq, OP_mVdq, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
-bx_define_opcode(BX_IA_V512_VPDPBUSDS_VdqHdqWdq_Kmask, "vpdpbusds", "vpdpbusds", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorD, &BX_CPU_C::VPDPBUSDS_VdqHdqWdqR, BX_ISA_AVX512_VNNI, OP_Vdq, OP_Hdq, OP_mVdq, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
-bx_define_opcode(BX_IA_V512_VPDPWSSD_VdqHdqWdq_Kmask, "vpdpwssd", "vpdpwssd", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorD, &BX_CPU_C::VPDPWSSD_VdqHdqWdqR, BX_ISA_AVX512_VNNI, OP_Vdq, OP_Hdq, OP_mVdq, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
-bx_define_opcode(BX_IA_V512_VPDPWSSDS_VdqHdqWdq_Kmask, "vpdpwssds", "vpdpwssds", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorD, &BX_CPU_C::VPDPWSSDS_VdqHdqWdqR, BX_ISA_AVX512_VNNI, OP_Vdq, OP_Hdq, OP_mVdq, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+bx_define_opcode(BX_IA_V512_VPDPBUSD_VdqHdqWdq_Kmask, "vpdpbusd", "vpdpbusd", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorD, &BX_CPU_C::VPDPBUSD_MASK_VdqHdqWdqR, BX_ISA_AVX512_VNNI, OP_Vdq, OP_Hdq, OP_mVdq, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+bx_define_opcode(BX_IA_V512_VPDPBUSDS_VdqHdqWdq_Kmask, "vpdpbusds", "vpdpbusds", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorD, &BX_CPU_C::VPDPBUSDS_MASK_VdqHdqWdqR, BX_ISA_AVX512_VNNI, OP_Vdq, OP_Hdq, OP_mVdq, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+bx_define_opcode(BX_IA_V512_VPDPWSSD_VdqHdqWdq_Kmask, "vpdpwssd", "vpdpwssd", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorD, &BX_CPU_C::VPDPWSSD_MASK_VdqHdqWdqR, BX_ISA_AVX512_VNNI, OP_Vdq, OP_Hdq, OP_mVdq, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+bx_define_opcode(BX_IA_V512_VPDPWSSDS_VdqHdqWdq_Kmask, "vpdpwssds", "vpdpwssds", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorD, &BX_CPU_C::VPDPWSSDS_MASK_VdqHdqWdqR, BX_ISA_AVX512_VNNI, OP_Vdq, OP_Hdq, OP_mVdq, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
 
 bx_define_opcode(BX_IA_V512_VPSHUFBITQMB_KGqHdqWdq_Kmask, "vpshufbitqmb", "vpshufbitqmb", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::VPSHUFBITQMB_MASK_KGqHdqWdqR, BX_ISA_AVX512_BITALG, OP_KGq, OP_Hdq, OP_mVdq, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
 

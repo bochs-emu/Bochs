@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2016-2019  The Bochs Project
+//  Copyright (C) 2016-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -107,6 +107,7 @@ enum x86_feature_name {
   BX_ISA_AVX512_VNNI,             /* AVX-512 VNNI Instructions */
   BX_ISA_AVX512_BITALG,           /* AVX-512 BITALG Instructions */
   BX_ISA_AVX512_VP2INTERSECT,     /* AVX-512 VP2INTERSECT Instructions */
+  BX_ISA_AVX_VNNI,                /* AVX encoded VNNI Instructions */
   BX_ISA_XAPIC,                   /* XAPIC support */
   BX_ISA_X2APIC,                  /* X2APIC support */
   BX_ISA_XAPIC_EXT,               /* XAPIC Extensions support */
