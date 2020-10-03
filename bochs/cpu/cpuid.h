@@ -400,6 +400,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 // [16:16]    LA57: LA57 and 5-level paging
 // [21:17]    reserved
 // [22:22]    RDPID: Read Processor ID support
+// [23:23]    Keylocker
 // [24:23]    reserved
 // [25:25]    CLDEMOTE: CLDEMOTE instruction support
 // [26:26]    reserved
@@ -432,7 +433,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT4_RESERVED20             (1 << 20)
 #define BX_CPUID_EXT4_RESERVED21             (1 << 21)
 #define BX_CPUID_EXT4_RDPID                  (1 << 22)
-#define BX_CPUID_EXT4_RESERVED23             (1 << 23)
+#define BX_CPUID_EXT4_KEYLOCKER              (1 << 23)
 #define BX_CPUID_EXT4_RESERVED24             (1 << 24)
 #define BX_CPUID_EXT4_CLDEMOTE               (1 << 25)
 #define BX_CPUID_EXT4_RESERVED26             (1 << 26)
@@ -448,7 +449,8 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [2:2]    AVX512 4VNNIW instructions support
 //   [3:3]    AVX512 4FMAPS instructions support
 //   [4:4]    Support of Fast REP MOV instructions with short length
-//   [7:5]    reserved
+//   [5:5]    UINTR: User interrupts support
+//   [7:6]    reserved
 //   [8:8]    AVX512 VP2INTERSECT instructions support
 //   [9:9]    reserved
 //   [10:10]  MD clear
@@ -458,7 +460,11 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [16:16]  TSXLDTRK: TSX suspent load tracking support
 //   [19:17]  reserved
 //   [20:20]  CET IBT: Support CET indirect branch tracking
-//   [25:21]  reserved
+//   [21:21]  reserved
+//   [22:22]  AMX BF16 support
+//   [23:23]  AVX512_FP16 instructions support
+//   [24:24]  AMX TILE architecture support
+//   [25:25]  AMX INT8 support
 //   [26:26]  IBRS and IBPB: Indirect branch restricted speculation (SCA)
 //   [27:27]  STIBP: Single Thread Indirect Branch Predictors supported (SCA)
 //   [28:28]  L1D_FLUSH supported (SCA)
@@ -471,7 +477,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT5_AVX512_4VNNIW          (1 <<  2)
 #define BX_CPUID_EXT5_AVX512_4FMAPS          (1 <<  3)
 #define BX_CPUID_EXT5_FAST_SHORT_REP_MOV     (1 <<  4)
-#define BX_CPUID_EXT5_RESERVED5              (1 <<  5)
+#define BX_CPUID_EXT5_UINTR                  (1 <<  5)
 #define BX_CPUID_EXT5_RESERVED6              (1 <<  6)
 #define BX_CPUID_EXT5_RESERVED7              (1 <<  7)
 #define BX_CPUID_EXT5_AVX512_VPINTERSECT     (1 <<  8)
@@ -488,10 +494,10 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT5_RESERVED19             (1 << 19)
 #define BX_CPUID_EXT5_CET_IBT                (1 << 20)
 #define BX_CPUID_EXT5_RESERVED21             (1 << 21)
-#define BX_CPUID_EXT5_RESERVED22             (1 << 22)
-#define BX_CPUID_EXT5_RESERVED23             (1 << 23)
-#define BX_CPUID_EXT5_RESERVED24             (1 << 24)
-#define BX_CPUID_EXT5_RESERVED25             (1 << 25)
+#define BX_CPUID_EXT5_AMX_BF16               (1 << 22)
+#define BX_CPUID_EXT5_AVX512_FP16            (1 << 23)
+#define BX_CPUID_EXT5_AMX_TILE               (1 << 24)
+#define BX_CPUID_EXT5_AMX_INT8               (1 << 25)
 #define BX_CPUID_EXT5_SCA_IBRS_IBPB          (1 << 26)
 #define BX_CPUID_EXT5_SCA_STIBP              (1 << 27)
 #define BX_CPUID_EXT5_L1D_FLUSH              (1 << 28)
