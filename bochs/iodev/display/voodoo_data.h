@@ -1824,6 +1824,43 @@ struct _voodoo_state
   tmu_shared_state tmushare; /* TMU shared state */
   banshee_info banshee;      /* Banshee state */
 
+  struct {
+    Bit8u   cmd;
+    bx_bool x_dir;
+    bx_bool y_dir;
+    bx_bool transp;
+    bx_bool clip_en;
+    Bit8u   chroma_en;
+    Bit8u   rop[4];
+    Bit32u  src_base;
+    bx_bool src_tiled;
+    Bit8u   src_fmt;
+    Bit16u  src_pitch;
+    Bit8u   src_wizzle;
+    Bit16u  src_x;
+    Bit16u  src_y;
+    Bit16u  src_w;
+    Bit16u  src_h;
+    Bit16u  src_col_min;
+    Bit16u  src_col_max;
+    Bit32u  dst_base;
+    bx_bool dst_tiled;
+    Bit8u   dst_fmt;
+    Bit16u  dst_pitch;
+    Bit16u  dst_x;
+    Bit16u  dst_y;
+    Bit16u  dst_w;
+    Bit16u  dst_h;
+    Bit16u  dst_col_min;
+    Bit16u  dst_col_max;
+    Bit8u   fgcolor[2];
+    Bit8u   bgcolor[2];
+    Bit16u  clipx0;
+    Bit16u  clipx1;
+    Bit16u  clipy0;
+    Bit16u  clipy1;
+  } blt;
+
   Bit32u      send_config;
   Bit32u      tmu_config;
 

@@ -1323,46 +1323,152 @@ void recompute_video_memory(voodoo_state *v)
 }
 
 
-void voodoo_bitblt(void)
+void voodoo2_bitblt_mux(Bit8u rop, Bit8u *dst_ptr, Bit8u *src_ptr, int dpxsize)
 {
-  Bit8u command = (Bit8u)(v->reg[bltCommand].u & 0x07);
-  Bit16u rop = (Bit16u)v->reg[bltRop].u;
-  Bit8u b1, b2;
-  Bit16u c, cols, dst_x, dst_y, fgcolor, r, rows, size;
-  Bit32u offset, loffset, stride;
-  int dst_w, dst_h;
+  Bit8u mask, inbits, outbits;
 
-  dst_w = (v->reg[bltSize].u & 0x7ff) + 1;
-  if ((v->reg[bltSize].u >> 11) & 1) {
-    dst_w *= -1;
+  for (int i = 0; i < dpxsize; i++) {
+    mask = 0x80;
+    outbits = 0;
+    for (int b = 7; b >= 0; b--) {
+      inbits = (*dst_ptr & mask) > 0;
+      inbits |= ((*src_ptr & mask) > 0) << 1;
+      outbits |= ((rop & (1 << inbits)) > 0) << b;
+      mask >>= 1;
+    }
+    *dst_ptr++ = outbits;
+    src_ptr++;
   }
-  dst_h = ((v->reg[bltSize].u >> 16) & 0x7ff) + 1;
-  if ((v->reg[bltSize].u >> 27) & 1) {
-    dst_h *= -1;
+}
+
+#define BLT v->blt
+
+bx_bool clip_check(Bit16u x, Bit16u y)
+{
+  if (!BLT.clip_en)
+    return 1;
+  if ((x >= BLT.clipx0) && (x < BLT.clipx1) &&
+      (y >= BLT.clipy0) && (y < BLT.clipy1)) {
+    return 1;
   }
-  switch (command) {
+  return 0;
+}
+
+
+Bit8u chroma_check(Bit8u *ptr, Bit32u min, Bit32u max, Bit8u pxsize, Bit8u shift)
+{
+  Bit8u pass = 0;
+  Bit32u color;
+  Bit8u r, g, b, rmin, rmax, gmin, gmax, bmin, bmax;
+
+  if  (pxsize > 1) {
+    if (pxsize == 2) {
+      color = *ptr;
+      color |= *(ptr + 1) << 8;
+      r = (color >> 11);
+      g = (color >> 5) & 0x3f;
+      b = color & 0x1f;
+      rmin = (min >> 11) & 0x1f;
+      rmax = (max >> 11) & 0x1f;
+      gmin = (min >> 5) & 0x3f;
+      gmax = (max >> 5) & 0x3f;
+      bmin = min & 0x1f;
+      bmax = max & 0x1f;
+    } else if (pxsize == 3) {
+      color = *ptr;
+      color |= *(ptr + 1) << 8;
+      color |= *(ptr + 2) << 16;
+      r = (color >> 16);
+      g = (color >> 8) & 0xff;
+      b = color & 0xff;
+      rmin = (min >> 16) & 0xff;
+      rmax = (max >> 16) & 0xff;
+      gmin = (min >> 8) & 0xff;
+      gmax = (max >> 8) & 0xff;
+      bmin = min & 0xff;
+      bmax = max & 0xff;
+    }
+    pass = ((r >= rmin) && (r <= rmax) && (g >= gmin) && (g <= gmax) &&
+            (b >= bmin) && (b <= bmax));
+  }
+  return (pass << shift);
+}
+
+void voodoo2_bitblt(void)
+{
+  Bit8u rop = 0, *dst_ptr;
+  Bit16u c, cols, dst_x, dst_y, r, rows, size, x;
+  Bit32u offset, loffset, stride;
+
+  BLT.cmd = (Bit8u)(v->reg[bltCommand].u & 0x07);
+  BLT.src_fmt = (Bit8u)((v->reg[bltCommand].u >> 3) & 0x1f);
+  BLT.src_wizzle = (Bit8u)((v->reg[bltCommand].u >> 8) & 0x03);
+  BLT.chroma_en = (Bit8u)((v->reg[bltCommand].u >> 10) & 0x01);
+  BLT.chroma_en |= (Bit8u)((v->reg[bltCommand].u >> 11) & 0x02);
+  BLT.src_tiled = ((v->reg[bltCommand].u >> 14) & 0x01);
+  BLT.dst_tiled = ((v->reg[bltCommand].u >> 15) & 0x01);
+  BLT.clip_en = ((v->reg[bltCommand].u >> 16) & 0x01);
+  BLT.transp = ((v->reg[bltCommand].u >> 17) & 0x01);
+  BLT.dst_w = (v->reg[bltSize].u & 0x7ff) + 1;
+  BLT.x_dir = (v->reg[bltSize].u >> 11) & 1;
+  BLT.dst_h = ((v->reg[bltSize].u >> 16) & 0x7ff) + 1;
+  BLT.y_dir = (v->reg[bltSize].u >> 27) & 1;
+  if (BLT.src_tiled) {
+    BLT.src_base = (v->reg[bltSrcBaseAddr].u & 0x3ff) << 12;
+    BLT.src_pitch = (v->reg[bltXYStrides].u & 0x3f) << 6;
+  } else {
+    BLT.src_base = v->reg[bltSrcBaseAddr].u & 0x3ffff8;
+    BLT.src_pitch = v->reg[bltXYStrides].u & 0xff8;
+  }
+  if (BLT.dst_tiled) {
+    BLT.dst_base = (v->reg[bltDstBaseAddr].u & 0x3ff) << 12;
+    BLT.src_pitch = (v->reg[bltXYStrides].u >> 10) & 0xfc0;
+  } else {
+    BLT.dst_base = v->reg[bltDstBaseAddr].u & 0x3ffff8;
+    BLT.dst_pitch = (v->reg[bltXYStrides].u >> 16) & 0xff8;
+  }
+  switch (BLT.cmd) {
     case 0:
       BX_ERROR(("TODO: Screen-to-Screen bitBLT: w = %d, h = %d, rop0 = %d",
-                abs(dst_w), abs(dst_h), rop & 0x0f));
+                BLT.dst_w, BLT.dst_h, BLT.rop[0]));
       break;
     case 1:
       BX_ERROR(("TODO: CPU-to-Screen bitBLT: w = %d, h = %d, rop0 = %d",
-                abs(dst_w), abs(dst_h), rop & 0x0f));
+                BLT.dst_w, BLT.dst_h, BLT.rop[0]));
       break;
     case 2:
-      BX_ERROR(("TODO: bitBLT Rectangle fill: w = %d, h = %d, rop0 = %d",
-                abs(dst_w), abs(dst_h), rop & 0x0f));
+      BX_DEBUG(("Rectangle fill: w = %d, h = %d, rop0 = %d",
+                BLT.dst_w, BLT.dst_h, BLT.rop[0]));
+      dst_x = (Bit16u)(v->reg[bltDstXY].u & 0x7ff);
+      dst_y = (Bit16u)((v->reg[bltDstXY].u >> 16) & 0x7ff);
+      cols = BLT.dst_w;
+      rows = BLT.dst_h;
+      stride = BLT.dst_pitch;
+      loffset = BLT.dst_base + dst_y * stride;
+      for (r = 0; r <= rows; r++) {
+        x = dst_x;
+        dst_ptr = &v->fbi.ram[loffset & v->fbi.mask];
+        for (c = 0; c < cols; c++) {
+          if (clip_check(x, dst_y)) {
+            if (BLT.chroma_en & 2) {
+              rop = chroma_check(dst_ptr, BLT.dst_col_min, BLT.dst_col_max, 2, 0);
+            }
+            voodoo2_bitblt_mux(BLT.rop[rop], dst_ptr, BLT.fgcolor, 2);
+          }
+          dst_ptr += 2;
+          x++;
+        }
+        loffset += stride;
+        dst_y++;
+      }
       break;
     case 3:
       dst_x = (Bit16u)(v->reg[bltDstXY].u & 0x1ff);
       dst_y = (Bit16u)((v->reg[bltDstXY].u >> 16) & 0x3ff);
       cols = (Bit16u)(v->reg[bltSize].u & 0x1ff);
       rows = (Bit16u)((v->reg[bltSize].u >> 16) & 0x3ff);
-      fgcolor = (Bit16u)(v->reg[bltColor].u & 0xffff);
-      BX_DEBUG(("SGRAM fill: x = %d y = %d w = %d h = %d color = 0x%04x",
-                dst_x, dst_y, cols, rows, fgcolor));
-      b1 = (Bit8u)(fgcolor & 0xff);
-      b2 = (Bit8u)(fgcolor >> 8);
+      BX_DEBUG(("SGRAM fill: x = %d y = %d w = %d h = %d color = 0x%02x%02x",
+                dst_x, dst_y, cols, rows, BLT.fgcolor[1], BLT.fgcolor[0]));
       stride = (1 << 12);
       loffset = dst_y * stride;
       for (r = 0; r <= rows; r++) {
@@ -1378,14 +1484,14 @@ void voodoo_bitblt(void)
           }
         }
         for (c = 0; c < size; c++) {
-          v->fbi.ram[offset++] = b1;
-          v->fbi.ram[offset++] = b2;
+          v->fbi.ram[offset++] = BLT.fgcolor[0];
+          v->fbi.ram[offset++] = BLT.fgcolor[1];
         }
         loffset += stride;
       }
       break;
     default:
-      BX_ERROR(("Voodoo bitBLT: unknown command %d)", command));
+      BX_ERROR(("Voodoo bitBLT: unknown command %d)", BLT.cmd));
   }
   v->fbi.video_changed = 1;
 }
@@ -1915,8 +2021,52 @@ void register_w(Bit32u offset, Bit32u data, bx_bool log)
       break;
 
     case bltData:
-      BX_DEBUG(("Writing to register %s not supported yet", v->regnames[regnum]));
       v->reg[regnum].u = data;
+      if (BLT.cmd == 1) {
+        BX_DEBUG(("Writing to register %s not supported yet", v->regnames[regnum]));
+      } else {
+        BX_ERROR(("Write to register %s ignored", v->regnames[regnum]));
+      }
+      break;
+
+    case bltSrcChromaRange:
+      v->reg[regnum].u = data;
+      BLT.src_col_min = (Bit16u)data;
+      BLT.src_col_max = (Bit16u)(data >> 16);
+      break;
+
+    case bltDstChromaRange:
+      v->reg[regnum].u = data;
+      BLT.dst_col_min = (Bit16u)data;
+      BLT.dst_col_max = (Bit16u)(data >> 16);
+      break;
+
+    case bltClipX:
+      v->reg[regnum].u = data;
+      BLT.clipx0 = (Bit16u)(data >> 16);
+      BLT.clipx1 = (Bit16u)(data & 0x0fff);
+      break;
+
+    case bltClipY:
+      v->reg[regnum].u = data;
+      BLT.clipy0 = (Bit16u)(data >> 16);
+      BLT.clipy1 = (Bit16u)(data & 0x0fff);
+      break;
+
+    case bltRop:
+      v->reg[regnum].u = data;
+      BLT.rop[0] = (Bit8u)(data & 0x0f);
+      BLT.rop[1] = (Bit8u)((data >> 4) & 0x0f);
+      BLT.rop[2] = (Bit8u)((data >> 8) & 0x0f);
+      BLT.rop[3] = (Bit8u)((data >> 12) & 0x0f);
+      break;
+
+    case bltColor:
+      v->reg[regnum].u = data;
+      BLT.fgcolor[0] = (Bit8u)data;
+      BLT.fgcolor[1] = (Bit8u)(data >> 8);
+      BLT.bgcolor[0] = (Bit8u)(data >> 16);
+      BLT.bgcolor[1] = (Bit8u)(data >> 24);
       break;
 
     case bltDstXY:
@@ -1924,7 +2074,7 @@ void register_w(Bit32u offset, Bit32u data, bx_bool log)
     case bltCommand:
       v->reg[regnum].u = data;
       if ((data >> 31) & 1) {
-        voodoo_bitblt();
+        voodoo2_bitblt();
       }
       break;
 
