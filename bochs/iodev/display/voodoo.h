@@ -160,6 +160,7 @@ private:
   void   blt_execute(void);
   void   blt_complete(void);
   bx_bool blt_apply_clipwindow(int *x0, int *y0, int *x1, int *y1, int *w, int *h);
+  Bit8u  colorkey_check(Bit8u *ptr, Bit8u pxsize, bx_bool dst);
 
   void   blt_rectangle_fill(void);
   void   blt_pattern_fill_mono(void);
