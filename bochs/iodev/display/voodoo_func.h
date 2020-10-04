@@ -1355,50 +1355,34 @@ bx_bool clip_check(Bit16u x, Bit16u y)
 }
 
 
-Bit8u chroma_check(Bit8u *ptr, Bit32u min, Bit32u max, Bit8u pxsize, Bit8u shift)
+Bit8u chroma_check(Bit8u *ptr, Bit16u min, Bit16u max, bx_bool dst)
 {
   Bit8u pass = 0;
   Bit32u color;
   Bit8u r, g, b, rmin, rmax, gmin, gmax, bmin, bmax;
 
-  if  (pxsize > 1) {
-    if (pxsize == 2) {
-      color = *ptr;
-      color |= *(ptr + 1) << 8;
-      r = (color >> 11);
-      g = (color >> 5) & 0x3f;
-      b = color & 0x1f;
-      rmin = (min >> 11) & 0x1f;
-      rmax = (max >> 11) & 0x1f;
-      gmin = (min >> 5) & 0x3f;
-      gmax = (max >> 5) & 0x3f;
-      bmin = min & 0x1f;
-      bmax = max & 0x1f;
-    } else if (pxsize == 3) {
-      color = *ptr;
-      color |= *(ptr + 1) << 8;
-      color |= *(ptr + 2) << 16;
-      r = (color >> 16);
-      g = (color >> 8) & 0xff;
-      b = color & 0xff;
-      rmin = (min >> 16) & 0xff;
-      rmax = (max >> 16) & 0xff;
-      gmin = (min >> 8) & 0xff;
-      gmax = (max >> 8) & 0xff;
-      bmin = min & 0xff;
-      bmax = max & 0xff;
-    }
-    pass = ((r >= rmin) && (r <= rmax) && (g >= gmin) && (g <= gmax) &&
-            (b >= bmin) && (b <= bmax));
-  }
-  return (pass << shift);
+  color = *ptr;
+  color |= *(ptr + 1) << 8;
+  r = (color >> 11);
+  g = (color >> 5) & 0x3f;
+  b = color & 0x1f;
+  rmin = (min >> 11) & 0x1f;
+  rmax = (max >> 11) & 0x1f;
+  gmin = (min >> 5) & 0x3f;
+  gmax = (max >> 5) & 0x3f;
+  bmin = min & 0x1f;
+  bmax = max & 0x1f;
+  pass = ((r >= rmin) && (r <= rmax) && (g >= gmin) && (g <= gmax) &&
+          (b >= bmin) && (b <= bmax));
+  if (!dst) pass <<= 1;
+  return pass;
 }
 
 void voodoo2_bitblt(void)
 {
-  Bit8u rop = 0, *dst_ptr;
-  Bit16u c, cols, dst_x, dst_y, r, rows, size, x;
-  Bit32u offset, loffset, stride;
+  Bit8u rop = 0, *dst_ptr, *src_ptr;
+  Bit16u c, cols, dst_x, dst_y, src_x, src_y, r, rows, size, x;
+  Bit32u doffset, soffset, dstride, sstride;
 
   BLT.cmd = (Bit8u)(v->reg[bltCommand].u & 0x07);
   BLT.src_fmt = (Bit8u)((v->reg[bltCommand].u >> 3) & 0x1f);
@@ -1422,15 +1406,59 @@ void voodoo2_bitblt(void)
   }
   if (BLT.dst_tiled) {
     BLT.dst_base = (v->reg[bltDstBaseAddr].u & 0x3ff) << 12;
-    BLT.src_pitch = (v->reg[bltXYStrides].u >> 10) & 0xfc0;
+    BLT.dst_pitch = (v->reg[bltXYStrides].u >> 10) & 0xfc0;
   } else {
     BLT.dst_base = v->reg[bltDstBaseAddr].u & 0x3ffff8;
     BLT.dst_pitch = (v->reg[bltXYStrides].u >> 16) & 0xff8;
   }
   switch (BLT.cmd) {
     case 0:
-      BX_ERROR(("TODO: Screen-to-Screen bitBLT: w = %d, h = %d, rop0 = %d",
+      BX_DEBUG(("Screen-to-Screen bitBLT: w = %d, h = %d, rop0 = %d",
                 BLT.dst_w, BLT.dst_h, BLT.rop[0]));
+      src_x = (Bit16u)(v->reg[bltSrcXY].u & 0x7ff);
+      src_y = (Bit16u)((v->reg[bltSrcXY].u >> 16) & 0x7ff);
+      dst_x = (Bit16u)(v->reg[bltDstXY].u & 0x7ff);
+      dst_y = (Bit16u)((v->reg[bltDstXY].u >> 16) & 0x7ff);
+      cols = BLT.dst_w;
+      rows = BLT.dst_h;
+      dstride = BLT.dst_pitch;
+      sstride = BLT.src_pitch;
+      doffset = BLT.dst_base + dst_y * dstride;
+      soffset = BLT.src_base + src_y * sstride;
+      for (r = 0; r <= rows; r++) {
+        dst_ptr = &v->fbi.ram[(doffset + dst_x * 2) & v->fbi.mask];
+        src_ptr = &v->fbi.ram[(soffset + src_x * 2) & v->fbi.mask];
+        x = dst_x;
+        for (c = 0; c < cols; c++) {
+          if (clip_check(x, dst_y)) {
+            if (BLT.chroma_en & 1) {
+              rop = chroma_check(src_ptr, BLT.src_col_min, BLT.src_col_max, 0);
+            }
+            if (BLT.chroma_en & 2) {
+              rop |= chroma_check(dst_ptr, BLT.dst_col_min, BLT.dst_col_max, 1);
+            }
+            voodoo2_bitblt_mux(BLT.rop[rop], dst_ptr, src_ptr, 2);
+          }
+          if (BLT.x_dir) {
+            dst_ptr -= 2;
+            src_ptr -= 2;
+            x--;
+          } else {
+            dst_ptr += 2;
+            src_ptr += 2;
+            x++;
+          }
+        }
+        if (BLT.y_dir) {
+          doffset -= dstride;
+          soffset -= sstride;
+          dst_y--;
+        } else {
+          doffset += dstride;
+          soffset += sstride;
+          dst_y++;
+        }
+      }
       break;
     case 1:
       BX_ERROR(("TODO: CPU-to-Screen bitBLT: w = %d, h = %d, rop0 = %d",
@@ -1443,23 +1471,33 @@ void voodoo2_bitblt(void)
       dst_y = (Bit16u)((v->reg[bltDstXY].u >> 16) & 0x7ff);
       cols = BLT.dst_w;
       rows = BLT.dst_h;
-      stride = BLT.dst_pitch;
-      loffset = BLT.dst_base + dst_y * stride;
+      dstride = BLT.dst_pitch;
+      doffset = BLT.dst_base + dst_y * dstride;
       for (r = 0; r <= rows; r++) {
+        dst_ptr = &v->fbi.ram[(doffset + dst_x * 2) & v->fbi.mask];
         x = dst_x;
-        dst_ptr = &v->fbi.ram[loffset & v->fbi.mask];
         for (c = 0; c < cols; c++) {
           if (clip_check(x, dst_y)) {
             if (BLT.chroma_en & 2) {
-              rop = chroma_check(dst_ptr, BLT.dst_col_min, BLT.dst_col_max, 2, 0);
+              rop = chroma_check(dst_ptr, BLT.dst_col_min, BLT.dst_col_max, 1);
             }
             voodoo2_bitblt_mux(BLT.rop[rop], dst_ptr, BLT.fgcolor, 2);
           }
-          dst_ptr += 2;
-          x++;
+          if (BLT.x_dir) {
+            dst_ptr -= 2;
+            x--;
+          } else {
+            dst_ptr += 2;
+            x++;
+          }
         }
-        loffset += stride;
-        dst_y++;
+        if (BLT.y_dir) {
+          doffset -= dstride;
+          dst_y--;
+        } else {
+          doffset += dstride;
+          dst_y++;
+        }
       }
       break;
     case 3:
@@ -1469,25 +1507,26 @@ void voodoo2_bitblt(void)
       rows = (Bit16u)((v->reg[bltSize].u >> 16) & 0x3ff);
       BX_DEBUG(("SGRAM fill: x = %d y = %d w = %d h = %d color = 0x%02x%02x",
                 dst_x, dst_y, cols, rows, BLT.fgcolor[1], BLT.fgcolor[0]));
-      stride = (1 << 12);
-      loffset = dst_y * stride;
+      dstride = (1 << 12);
+      doffset = dst_y * dstride;
       for (r = 0; r <= rows; r++) {
         if (r == 0) {
-          offset = (loffset + dst_x * 8) & v->fbi.mask;
-          size = stride / 2 - (dst_x * 4) ;
+          dst_ptr = &v->fbi.ram[(doffset + dst_x * 8) & v->fbi.mask];
+          size = dstride / 2 - (dst_x * 4);
         } else {
-          offset = (loffset & v->fbi.mask);
+          dst_ptr = &v->fbi.ram[doffset & v->fbi.mask];
           if (r == rows) {
             size = cols * 4;
           } else {
-            size = stride / 2;
+            size = dstride / 2;
           }
         }
         for (c = 0; c < size; c++) {
-          v->fbi.ram[offset++] = BLT.fgcolor[0];
-          v->fbi.ram[offset++] = BLT.fgcolor[1];
+          *dst_ptr = BLT.fgcolor[0];
+          *(dst_ptr + 1) = BLT.fgcolor[1];
+          dst_ptr += 2;
         }
-        loffset += stride;
+        doffset += dstride;
       }
       break;
     default:
