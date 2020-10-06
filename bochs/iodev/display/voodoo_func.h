@@ -1539,8 +1539,8 @@ void voodoo2_bitblt(void)
 
 void voodoo2_bitblt_cpu_to_screen(Bit32u data)
 {
-  Bit8u rop = 0, *dst_ptr, *src_ptr, color[2];
-  Bit8u b, c, g, i, r;
+  Bit8u rop = 0, *dst_ptr, *dst_ptr1, *src_ptr, color[2];
+  Bit8u b, c, g, i, j, r;
   Bit16u count = BLT.dst_x + BLT.dst_w - BLT.cur_x;
   Bit32u doffset = BLT.dst_base + BLT.dst_y * BLT.dst_pitch + BLT.cur_x * 2;
   dst_ptr = &v->fbi.ram[doffset & v->fbi.mask];
@@ -1553,30 +1553,60 @@ void voodoo2_bitblt_cpu_to_screen(Bit32u data)
     BX_ERROR(("Voodoo bitBLT: color order other than ARGB not supported yet"));
     BLT.src_fmt &= 0x07;
   }
-  if (BLT.src_fmt == 0) {
-    c = (count > 32) ? 32 : count;
-    for (i = 0; i < c; i++) {
-      b = (i & 0x18) + (7 - (i & 7));
-      set = (data & (1 << b)) > 0;
-      if (set) {
-        src_ptr = BLT.fgcolor;
-      } else {
-        src_ptr = BLT.bgcolor;
-      }
-      if (set || !BLT.transp) {
-        if (clip_check(BLT.cur_x, BLT.dst_y)) {
-          if (BLT.chroma_en & 2) {
-            rop = chroma_check(dst_ptr, BLT.dst_col_min, BLT.dst_col_max, 1);
-          }
-          voodoo2_bitblt_mux(BLT.rop[rop], dst_ptr, src_ptr, 2);
+  if ((BLT.src_fmt == 0) || (BLT.src_fmt == 1)) {
+    if (BLT.src_fmt == 0) {
+      c = (count > 32) ? 32 : count;
+      r = 1;
+    } else {
+      c = (count > 8) ? 8 : count;
+      r = (BLT.dst_h > 4) ? 4 : BLT.dst_h;
+    }
+    for (j = 0; j < r; j++) {
+      dst_ptr1 = dst_ptr;
+      for (i = 0; i < c; i++) {
+        b = (i & 0x18) + (7 - (i & 7));
+        set = (data & (1 << b)) > 0;
+        if (set) {
+          src_ptr = BLT.fgcolor;
+        } else {
+          src_ptr = BLT.bgcolor;
         }
+        if (set || !BLT.transp) {
+          if (clip_check(BLT.cur_x + i, BLT.dst_y + j)) {
+            if (BLT.chroma_en & 2) {
+              rop = chroma_check(dst_ptr1, BLT.dst_col_min, BLT.dst_col_max, 1);
+            }
+            voodoo2_bitblt_mux(BLT.rop[rop], dst_ptr1, src_ptr, 2);
+          }
+        }
+        dst_ptr1 += 2;
       }
-      dst_ptr += 2;
-      BLT.cur_x++;
-      if (--count == 0) {
+      if (BLT.src_fmt == 0) {
+        if (c < count) {
+          BLT.cur_x += c;
+        } else {
+          BLT.cur_x = BLT.dst_x;
+          if (BLT.dst_h > 1) {
+            BLT.dst_y++;
+            BLT.dst_h--;
+          } else {
+            BLT.h2s_mode = 0;
+          }
+        }
+      } else {
+        data >>= 8;
+        dst_ptr += BLT.dst_pitch;
+      }
+    }
+    if (BLT.src_fmt == 1) {
+      if (c < count) {
+        BLT.cur_x += c;
+      } else {
         BLT.cur_x = BLT.dst_x;
-        BLT.dst_y++;
-        if (--BLT.dst_h == 0) {
+        if (BLT.dst_h > 4) {
+          BLT.dst_y += 4;
+          BLT.dst_h -= 4;
+        } else {
           BLT.h2s_mode = 0;
         }
       }
