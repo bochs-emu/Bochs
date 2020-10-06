@@ -1539,8 +1539,8 @@ void voodoo2_bitblt(void)
 
 void voodoo2_bitblt_cpu_to_screen(Bit32u data)
 {
-  Bit8u rop = 0, *dst_ptr, *src_ptr;
-  Bit8u b, c, i;
+  Bit8u rop = 0, *dst_ptr, *src_ptr, color[2];
+  Bit8u b, c, g, i, r;
   Bit16u count = BLT.dst_x + BLT.dst_w - BLT.cur_x;
   Bit32u doffset = BLT.dst_base + BLT.dst_y * BLT.dst_pitch + BLT.cur_x * 2;
   dst_ptr = &v->fbi.ram[doffset & v->fbi.mask];
@@ -1548,6 +1548,10 @@ void voodoo2_bitblt_cpu_to_screen(Bit32u data)
 
   if (BLT.src_wizzle > 0) {
     BX_ERROR(("Voodoo bitBLT: byte / word wizzle not supported yet"));
+  }
+  if ((BLT.src_fmt & 0x18) > 0) {
+    BX_ERROR(("Voodoo bitBLT: color order other than ARGB not supported yet"));
+    BLT.src_fmt &= 0x07;
   }
   if (BLT.src_fmt == 0) {
     c = (count > 32) ? 32 : count;
@@ -1559,7 +1563,7 @@ void voodoo2_bitblt_cpu_to_screen(Bit32u data)
       } else {
         src_ptr = BLT.bgcolor;
       }
-      if (!BLT.transp) {
+      if (set || !BLT.transp) {
         if (clip_check(BLT.cur_x, BLT.dst_y)) {
           if (BLT.chroma_en & 2) {
             rop = chroma_check(dst_ptr, BLT.dst_col_min, BLT.dst_col_max, 1);
@@ -1604,8 +1608,36 @@ void voodoo2_bitblt_cpu_to_screen(Bit32u data)
         }
       }
     }
+  } else if ((BLT.src_fmt >= 3) && (BLT.src_fmt <= 5)) {
+    if (BLT.src_fmt > 3) {
+      BX_ERROR(("Voodoo bitBLT: 24 bpp source dithering not supported yet"));
+      BLT.src_fmt = 3;
+    }
+    r = (Bit8u)((data >> 16) & 0x1f);
+    g = (Bit8u)((data >> 8) & 0x3f);
+    b = (Bit8u)(data & 0x1f);
+    color[0] = (Bit8u)((g << 5) | b);
+    color[1] = (r << 3) | (g >> 3);
+    src_ptr = color;
+    if (clip_check(BLT.cur_x, BLT.dst_y)) {
+      if (BLT.chroma_en & 1) {
+        rop = chroma_check(src_ptr, BLT.src_col_min, BLT.src_col_max, 0);
+      }
+      if (BLT.chroma_en & 2) {
+        rop |= chroma_check(dst_ptr, BLT.dst_col_min, BLT.dst_col_max, 1);
+      }
+      voodoo2_bitblt_mux(BLT.rop[rop], dst_ptr, src_ptr, 2);
+    }
+    BLT.cur_x++;
+    if (--count == 0) {
+      BLT.cur_x = BLT.dst_x;
+      BLT.dst_y++;
+      if (--BLT.dst_h == 0) {
+        BLT.h2s_mode = 0;
+      }
+    }
   } else {
-    BX_ERROR(("CPU-to-Screen bitBLT: format 0x%02x not supported yet", BLT.src_fmt));
+    BX_ERROR(("CPU-to-Screen bitBLT: unknown format 0x%02x", BLT.src_fmt));
   }
   v->fbi.video_changed = 1;
 }
