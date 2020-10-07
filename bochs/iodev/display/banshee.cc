@@ -797,7 +797,7 @@ void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
           *((Bit16u*)data) = (Bit16u)value;
           break;
         default:
-          *((Bit32u*)data) = value;
+          *((Bit32u*)data) = (Bit32u)value;
       }
       return;
     }

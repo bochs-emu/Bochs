@@ -329,10 +329,12 @@ void recompute_texture_params(tmu_state *t)
   int bppscale;
   Bit32u base;
   int lod;
+  static Bit32u count = 0;
 
   /* Unimplemented switch */
   if (TEXLOD_LOD_ZEROFRAC(t->reg[tLOD].u)) {
-    BX_ERROR(("TEXLOD_LOD_ZEROFRAC not implemented yet"));
+    if (count < 50) BX_ERROR(("TEXLOD_LOD_ZEROFRAC not implemented yet"));
+    count++;
   }
   /* Banshee: unimplemented switches */
   if (TEXLOD_TMIRROR_S(t->reg[tLOD].u)) {
@@ -1384,6 +1386,7 @@ void voodoo2_bitblt(void)
   Bit16u c, cols, src_x, src_y, r, rows, size, x;
   Bit32u src_base, doffset, soffset, dstride, sstride;
   bx_bool src_tiled, dst_tiled, x_dir, y_dir;
+  int tmpval;
 
   cmd = (Bit8u)(v->reg[bltCommand].u & 0x07);
   BLT.src_fmt = (Bit8u)((v->reg[bltCommand].u >> 3) & 0x1f);
@@ -1396,8 +1399,17 @@ void voodoo2_bitblt(void)
   BLT.transp = ((v->reg[bltCommand].u >> 17) & 0x01);
   BLT.dst_w = (v->reg[bltSize].u & 0x7ff) + 1;
   x_dir = (v->reg[bltSize].u >> 11) & 1;
-  BLT.dst_h = ((v->reg[bltSize].u >> 16) & 0x7ff) + 1;
+  tmpval = (v->reg[bltSize].u & 0xfff);
+  if (x_dir && ((cmd == 0) || (cmd == 2))) {
+    tmpval |= 0xfffff000;
+  }
+  BLT.dst_w = abs(tmpval) + 1;
   y_dir = (v->reg[bltSize].u >> 27) & 1;
+  tmpval = ((v->reg[bltSize].u >> 16) & 0xfff);
+  if (y_dir && ((cmd == 0) || (cmd == 2))) {
+    tmpval |= 0xfffff000;
+  }
+  BLT.dst_h = abs(tmpval) + 1;
   BLT.dst_x = (Bit16u)(v->reg[bltDstXY].u & 0x7ff);
   BLT.dst_y = (Bit16u)((v->reg[bltDstXY].u >> 16) & 0x7ff);
   if (src_tiled) {
@@ -1565,7 +1577,7 @@ void voodoo2_bitblt_cpu_to_screen(Bit32u data)
       dst_ptr1 = dst_ptr;
       for (i = 0; i < c; i++) {
         b = (i & 0x18) + (7 - (i & 7));
-        set = (data & (1 << b)) > 0;
+        set = (data & (1U << b)) > 0;
         if (set) {
           src_ptr = BLT.fgcolor;
         } else {
