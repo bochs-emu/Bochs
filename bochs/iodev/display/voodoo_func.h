@@ -1553,13 +1553,16 @@ void voodoo2_bitblt_cpu_to_screen(Bit32u data)
 {
   Bit8u rop = 0, *dst_ptr, *dst_ptr1, *src_ptr, color[2];
   Bit8u b, c, g, i, j, r;
+  bx_bool set;
   Bit16u count = BLT.dst_x + BLT.dst_w - BLT.cur_x;
   Bit32u doffset = BLT.dst_base + BLT.dst_y * BLT.dst_pitch + BLT.cur_x * 2;
   dst_ptr = &v->fbi.ram[doffset & v->fbi.mask];
-  bx_bool set;
 
-  if (BLT.src_wizzle > 0) {
-    BX_ERROR(("Voodoo bitBLT: byte / word wizzle not supported yet"));
+  if (BLT.src_wizzle & 1) {
+    data = bx_bswap32(data);
+  }
+  if (BLT.src_wizzle & 2) {
+    data = (data >> 16) | (data << 16);
   }
   if ((BLT.src_fmt & 0x18) > 0) {
     BX_ERROR(("Voodoo bitBLT: color order other than ARGB not supported yet"));

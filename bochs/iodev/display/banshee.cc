@@ -1320,19 +1320,16 @@ void bx_banshee_c::blt_launch_area_write(Bit32u value)
   if (BLT.lacnt > 0) {
     BX_DEBUG(("launchArea write: value = 0x%08x", value));
     if (BLT.lamem != NULL) {
-      if (BLT.src_wizzle == 0) {
-        BLT.lamem[BLT.laidx++] = (value & 0xff);
-        BLT.lamem[BLT.laidx++] = ((value >> 8) & 0xff);
-        BLT.lamem[BLT.laidx++] = ((value >> 16) & 0xff);
-        BLT.lamem[BLT.laidx++] = ((value >> 24) & 0xff);
-      } else if ((BLT.src_wizzle & 2) > 0) {
-        BLT.lamem[BLT.laidx++] = ((value >> 16) & 0xff);
-        BLT.lamem[BLT.laidx++] = ((value >> 24) & 0xff);
-        BLT.lamem[BLT.laidx++] = (value & 0xff);
-        BLT.lamem[BLT.laidx++] = ((value >> 8) & 0xff);
-      } else {
-        BX_ERROR(("launchArea write: byte wizzle mode not supported yet"));
+      if (BLT.src_wizzle & 1) {
+        value = bx_bswap32(value);
       }
+      if (BLT.src_wizzle & 2) {
+        value = (value >> 16) | (value << 16);
+      }
+      BLT.lamem[BLT.laidx++] = (value & 0xff);
+      BLT.lamem[BLT.laidx++] = ((value >> 8) & 0xff);
+      BLT.lamem[BLT.laidx++] = ((value >> 16) & 0xff);
+      BLT.lamem[BLT.laidx++] = ((value >> 24) & 0xff);
     } else if ((BLT.cmd == 1) || (BLT.cmd == 2)) {
       BLT.reg[blt_srcXY] = value;
       BLT.src_x = value & 0x1fff;

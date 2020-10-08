@@ -22,7 +22,9 @@ Changes after 2.6.11:
     - Packet logging in text format for the 'slirp' and 'vnet' modules controlled
       by runtime option ("pktlog" option in config).
   - VGA
-    - Voodoo Banshee: Added "Polygon Fill" command and some other improvements.
+    - Voodoo (all models): Now using CLUT for gamma correction in 16 bpp modes.
+    - Voodoo2: Added most of the bitblt capabilities.
+    - Voodoo Banshee: Added "Polygon Fill" command and 2D colorkey support.
     - Removed lfb_enabled switch from Bochs VBE code. Now banked and LFB writes
       to VRAM are always valid. Fixes GRUB bootloader menu when using Bochs VBE.
     - DDC: Added "ddc" parameter to the "vga" option to make it possible
