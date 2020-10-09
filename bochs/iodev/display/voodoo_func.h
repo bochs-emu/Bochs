@@ -1554,6 +1554,7 @@ void voodoo2_bitblt_cpu_to_screen(Bit32u data)
   Bit8u rop = 0, *dst_ptr, *dst_ptr1, *src_ptr, color[2];
   Bit8u b, c, g, i, j, r;
   bx_bool set;
+  Bit8u colfmt = BLT.src_fmt & 7, rgbfmt = BLT.src_fmt >> 3;
   Bit16u count = BLT.dst_x + BLT.dst_w - BLT.cur_x;
   Bit32u doffset = BLT.dst_base + BLT.dst_y * BLT.dst_pitch + BLT.cur_x * 2;
   dst_ptr = &v->fbi.ram[doffset & v->fbi.mask];
@@ -1564,12 +1565,8 @@ void voodoo2_bitblt_cpu_to_screen(Bit32u data)
   if (BLT.src_wizzle & 2) {
     data = (data >> 16) | (data << 16);
   }
-  if ((BLT.src_fmt & 0x18) > 0) {
-    BX_ERROR(("Voodoo bitBLT: color order other than ARGB not supported yet"));
-    BLT.src_fmt &= 0x07;
-  }
-  if ((BLT.src_fmt == 0) || (BLT.src_fmt == 1)) {
-    if (BLT.src_fmt == 0) {
+  if ((colfmt == 0) || (colfmt == 1)) {
+    if (colfmt == 0) {
       c = (count > 32) ? 32 : count;
       r = 1;
     } else {
@@ -1596,7 +1593,7 @@ void voodoo2_bitblt_cpu_to_screen(Bit32u data)
         }
         dst_ptr1 += 2;
       }
-      if (BLT.src_fmt == 0) {
+      if (colfmt == 0) {
         if (c < count) {
           BLT.cur_x += c;
         } else {
@@ -1613,7 +1610,7 @@ void voodoo2_bitblt_cpu_to_screen(Bit32u data)
         dst_ptr += BLT.dst_pitch;
       }
     }
-    if (BLT.src_fmt == 1) {
+    if (colfmt == 1) {
       if (c < count) {
         BLT.cur_x += c;
       } else {
@@ -1626,7 +1623,10 @@ void voodoo2_bitblt_cpu_to_screen(Bit32u data)
         }
       }
     }
-  } else if (BLT.src_fmt == 2) {
+  } else if (colfmt == 2) {
+    if (rgbfmt & 1) {
+      BX_ERROR(("Voodoo bitBLT: color order other than RGB not supported yet"));
+    }
 #if BX_BIG_ENDIAN
     data = bx_bswap32(data);
 #endif
@@ -1653,14 +1653,32 @@ void voodoo2_bitblt_cpu_to_screen(Bit32u data)
         }
       }
     }
-  } else if ((BLT.src_fmt >= 3) && (BLT.src_fmt <= 5)) {
-    if (BLT.src_fmt > 3) {
+  } else if ((colfmt >= 3) && (colfmt <= 5)) {
+    if (colfmt > 3) {
       BX_ERROR(("Voodoo bitBLT: 24 bpp source dithering not supported yet"));
-      BLT.src_fmt = 3;
+      colfmt = 3;
     }
-    r = (Bit8u)((data >> 16) & 0x1f);
-    g = (Bit8u)((data >> 8) & 0x3f);
-    b = (Bit8u)(data & 0x1f);
+    switch (rgbfmt) {
+      case 1:
+        r = (Bit8u)((data >> 3) & 0x1f);
+        g = (Bit8u)((data >> 10) & 0x3f);
+        b = (Bit8u)((data >> 19) & 0x1f);
+        break;
+      case 2:
+        r = (Bit8u)((data >> 27) & 0x1f);
+        g = (Bit8u)((data >> 18) & 0x3f);
+        b = (Bit8u)((data >> 11) & 0x1f);
+        break;
+      case 3:
+        r = (Bit8u)((data >> 11) & 0x1f);
+        g = (Bit8u)((data >> 18) & 0x3f);
+        b = (Bit8u)((data >> 27) & 0x1f);
+        break;
+      default:
+        r = (Bit8u)((data >> 19) & 0x1f);
+        g = (Bit8u)((data >> 10) & 0x3f);
+        b = (Bit8u)((data >> 3) & 0x1f);
+    }
     color[0] = (Bit8u)((g << 5) | b);
     color[1] = (r << 3) | (g >> 3);
     src_ptr = color;
@@ -1682,7 +1700,7 @@ void voodoo2_bitblt_cpu_to_screen(Bit32u data)
       }
     }
   } else {
-    BX_ERROR(("CPU-to-Screen bitBLT: unknown format 0x%02x", BLT.src_fmt));
+    BX_ERROR(("CPU-to-Screen bitBLT: unknown color format 0x%02x", colfmt));
   }
   v->fbi.video_changed = 1;
 }
