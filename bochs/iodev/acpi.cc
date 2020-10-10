@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2006-2019  The Bochs Project
+//  Copyright (C) 2006-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -39,9 +39,9 @@
 bx_acpi_ctrl_c* theACPIController = NULL;
 
 // FIXME
-const Bit8u acpi_pm_iomask[64] = {3, 0, 3, 0, 3, 0, 0, 0, 4, 0, 0, 0, 7, 7, 7, 7,
-                                  7, 7, 7, 7, 1, 1, 0, 0, 7, 7, 0, 0, 7, 7, 7, 7,
-                                  7, 7, 0, 0, 0, 0, 0, 0, 7, 7, 7, 7, 7, 7, 7, 7,
+const Bit8u acpi_pm_iomask[64] = {3, 0, 3, 0, 3, 0, 0, 0, 4, 0, 0, 0, 3, 1, 3, 1,
+                                  7, 1, 3, 1, 1, 1, 0, 0, 3, 1, 0, 0, 7, 1, 3, 1,
+                                  3, 1, 0, 0, 0, 0, 0, 0, 7, 1, 3, 1, 7, 1, 3, 1,
                                   1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0};
 const Bit8u acpi_sm_iomask[16] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 0, 2, 0, 0, 0};
 
@@ -148,6 +148,8 @@ void bx_acpi_ctrl_c::init(void)
 
 void bx_acpi_ctrl_c::reset(unsigned type)
 {
+  unsigned i;
+
   BX_ACPI_THIS pci_conf[0x04] = 0x00; // command_io + command_mem
   BX_ACPI_THIS pci_conf[0x05] = 0x00;
   BX_ACPI_THIS pci_conf[0x06] = 0x80; // status_devsel_medium
@@ -180,8 +182,10 @@ void bx_acpi_ctrl_c::reset(unsigned type)
   BX_ACPI_THIS s.pmsts = 0;
   BX_ACPI_THIS s.pmen = 0;
   BX_ACPI_THIS s.pmcntrl = 0;
-  BX_ACPI_THIS s.glbctl = 0;
   BX_ACPI_THIS s.tmr_overflow_time = 0xffffff;
+  for (i = 0; i < 0x38; i++) {
+    BX_ACPI_THIS s.pmreg[i] = 0;
+  }
 
   BX_ACPI_THIS s.smbus.stat = 0;
   BX_ACPI_THIS s.smbus.ctl = 0;
@@ -191,7 +195,7 @@ void bx_acpi_ctrl_c::reset(unsigned type)
   BX_ACPI_THIS s.smbus.data1 = 0;
   BX_ACPI_THIS s.smbus.index = 0;
 
-  for (unsigned i = 0; i < 32; i++) {
+  for (i = 0; i < 32; i++) {
     BX_ACPI_THIS s.smbus.data[i] = 0;
   }
 }
@@ -202,8 +206,8 @@ void bx_acpi_ctrl_c::register_state(void)
   BXRS_HEX_PARAM_FIELD(list, pmsts, BX_ACPI_THIS s.pmsts);
   BXRS_HEX_PARAM_FIELD(list, pmen, BX_ACPI_THIS s.pmen);
   BXRS_HEX_PARAM_FIELD(list, pmcntrl, BX_ACPI_THIS s.pmcntrl);
-  BXRS_HEX_PARAM_FIELD(list, glbctl, BX_ACPI_THIS s.glbctl);
   BXRS_HEX_PARAM_FIELD(list, tmr_overflow_time, BX_ACPI_THIS s.tmr_overflow_time);
+  new bx_shadow_data_c(list, "pmreg", BX_ACPI_THIS s.pmreg, 0x38, 1);
   bx_list_c *smbus = new bx_list_c(list, "smbus", "ACPI SMBus");
   BXRS_HEX_PARAM_FIELD(smbus, stat, BX_ACPI_THIS s.smbus.stat);
   BXRS_HEX_PARAM_FIELD(smbus, ctl, BX_ACPI_THIS s.smbus.ctl);
@@ -318,21 +322,15 @@ Bit32u bx_acpi_ctrl_c::read(Bit32u address, unsigned io_len)
       case 0x08:
         value = BX_ACPI_THIS get_pmtmr();
         break;
-      case 0x28:
-        value = (BX_ACPI_THIS s.glbctl & 0xfffffffd);
-        break;
-      case 0x0c: // GPSTS
-      case 0x14: // PLVL2
-      case 0x15: // PLVL3
-      case 0x18: // GLBSTS
-      case 0x1c: // DEVSTS
-      case 0x30: // GPI
-      case 0x31: // GPI
-      case 0x32: // GPI
-        value = 0x00;
-        break;
       default:
-        BX_INFO(("read from PM register 0x%02x not implemented yet (len=%d)", reg, io_len));
+        value = BX_ACPI_THIS s.pmreg[reg];
+        if (io_len >= 2) {
+          value |= (BX_ACPI_THIS s.pmreg[reg + 1] << 8);
+        }
+        if (io_len == 4) {
+          value |= (BX_ACPI_THIS s.pmreg[reg + 2] << 16);
+          value |= (BX_ACPI_THIS s.pmreg[reg + 3] << 24);
+        }
     }
     BX_DEBUG(("read from PM register 0x%02x returns 0x%08x (len=%d)", reg, value, io_len));
   } else {
@@ -437,13 +435,29 @@ void bx_acpi_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
           }
         }
         break;
-      case 0x28:
-        if (io_len == 4) {
-          BX_ACPI_THIS s.glbctl = value;
-        }
+      case 0x0c: // GPSTS
+      case 0x0d: // GPSTS
+      case 0x14: // PLVL2
+      case 0x15: // PLVL3
+      case 0x18: // GLBSTS
+      case 0x19: // GLBSTS
+      case 0x1c: // DEVSTS
+      case 0x1d: // DEVSTS
+      case 0x1e: // DEVSTS
+      case 0x1f: // DEVSTS
+      case 0x30: // GPIREG
+      case 0x31: // GPIREG
+      case 0x32: // GPIREG
         break;
       default:
-        BX_INFO(("write to PM register 0x%02x not implemented yet (len=%d)", reg, io_len));
+        BX_ACPI_THIS s.pmreg[reg] = value;
+        if (io_len >= 2) {
+          BX_ACPI_THIS s.pmreg[reg + 1] = (value >> 8);
+        }
+        if (io_len == 4) {
+          BX_ACPI_THIS s.pmreg[reg + 2] = (value >> 16);
+          BX_ACPI_THIS s.pmreg[reg + 3] = (value >> 24);
+        }
     }
   } else if ((address & 0xfff0) == BX_ACPI_THIS s.sm_base) {
     if (((BX_ACPI_THIS pci_conf[0x04] & 0x01) == 0) &&
