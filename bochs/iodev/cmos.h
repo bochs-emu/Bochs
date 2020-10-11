@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2018  The Bochs Project
+//  Copyright (C) 2002-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -75,6 +75,8 @@ public:
 
     Bit8u   reg[256];
     Bit8u   max_reg;
+
+    bx_bool use_image;
   } s;  // state information
 
 private:

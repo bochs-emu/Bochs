@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2018  The Bochs Project
+//  Copyright (C) 2002-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -210,7 +210,8 @@ void bx_cmos_c::init(void)
   }
 
   // load CMOS from image file if requested.
-  if (SIM->get_param_bool(BXPN_CMOSIMAGE_ENABLED)->get()) {
+  BX_CMOS_THIS s.use_image = SIM->get_param_bool(BXPN_CMOSIMAGE_ENABLED)->get();
+  if (BX_CMOS_THIS s.use_image) {
     int fd, ret;
     struct stat stat_buf;
 
@@ -311,7 +312,7 @@ void bx_cmos_c::save_image(void)
   int fd, ret;
 
   // save CMOS to image file if requested.
-  if (SIM->get_param_bool(BXPN_CMOSIMAGE_ENABLED)->get()) {
+  if (BX_CMOS_THIS s.use_image) {
     fd = open(SIM->get_param_string(BXPN_CMOSIMAGE_PATH)->getptr(), O_WRONLY
 #ifdef O_BINARY
        | O_BINARY
@@ -647,7 +648,11 @@ void bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
                         " to retf to DWORD at 40:67"));
               break;
             default:
-              BX_ERROR(("unsupported shutdown status: 0x%02x!", value));
+              if (!BX_CMOS_THIS s.use_image) {
+                BX_ERROR(("unsupported shutdown status: 0x%02x!", value));
+              } else {
+                BX_DEBUG(("shutdown status register set to 0x%02x", value));
+              }
           }
           BX_CMOS_THIS s.reg[REG_SHUTDOWN_STATUS] = value;
           break;
