@@ -61,7 +61,7 @@
 // TODO:
 // - 2D host-to-screen stretching support
 // - 2D screen-to-screen pattern stretching support
-// - source colorkey support for host-to-screen blts
+// - source colorkey support for host-to-screen pattern blts
 // - 2D chromaKey support
 // - pixel format conversion not supported in all cases
 // - full AGP support
@@ -182,16 +182,7 @@ void bx_banshee_c::reset(unsigned type)
   } reset_vals2[] = {
     { 0x04, 0x00 }, { 0x05, 0x00 }, // command io / memory
     { 0x06, 0x10 }, { 0x07, 0x00 }, // status
-    // address space 0x10 - 0x13
-    { 0x11, 0x00 },
-    { 0x12, 0x00 }, { 0x13, 0x00 },
-    // address space 0x14 - 0x17
-    { 0x15, 0x00 },
-    { 0x16, 0x00 }, { 0x17, 0x00 },
-    // address space 0x18 - 0x1b
-    { 0x19, 0x00 },
-    { 0x1a, 0x00 }, { 0x1b, 0x00 },
-    // address space 0x2c - 0x2f
+    // subsystem ID 0x2c - 0x2f
     { 0x2c, 0x1a }, { 0x2d, 0x12 }, // subsystem ID
     { 0x2e, 0x04 }, { 0x2f, 0x00 }, // for Banshee PCI
     // capabilities pointer 0x34 - 0x37
@@ -284,7 +275,7 @@ void bx_banshee_c::register_state(void)
   new bx_shadow_bool_c(banshee, "blt_src_tiled", &v->banshee.blt.src_tiled);
   new bx_shadow_num_c(banshee, "blt_src_fmt", &v->banshee.blt.src_fmt);
   new bx_shadow_num_c(banshee, "blt_src_pitch", &v->banshee.blt.src_pitch);
-  new bx_shadow_num_c(banshee, "blt_src_wizzle", &v->banshee.blt.src_wizzle);
+  new bx_shadow_num_c(banshee, "blt_src_swizzle", &v->banshee.blt.src_swizzle);
   new bx_shadow_num_c(banshee, "blt_src_x", &v->banshee.blt.src_x);
   new bx_shadow_num_c(banshee, "blt_src_y", &v->banshee.blt.src_y);
   new bx_shadow_num_c(banshee, "blt_src_w", &v->banshee.blt.src_w);
@@ -1197,9 +1188,6 @@ void bx_banshee_c::blt_reg_write(Bit8u reg, Bit32u value)
       BLT.rop[3] = (BLT.reg[blt_rop] >> 16) & 0xff;
       BLT.pattern_blt = (BLT.rop_flags[BLT.rop[0]] & BX_ROP_PATTERN);
       if (colorkey_en & 1) {
-        if ((BLT.cmd == 3) || (BLT.cmd == 4)) {
-          BX_ERROR(("src colorkeying not supported yet"));
-        }
         BLT.pattern_blt |= (BLT.rop_flags[BLT.rop[2]] & BX_ROP_PATTERN);
       }
       if ((colorkey_en >> 1) & 1) {
@@ -1275,7 +1263,7 @@ void bx_banshee_c::blt_launch_area_setup()
     case 4:
       BLT.h2s_alt_align = 0;
       pxpack = (BLT.reg[blt_srcFormat] >> 22) & 3;
-      BLT.src_wizzle = (BLT.reg[blt_srcFormat] >> 20) & 0x03;
+      BLT.src_swizzle = (BLT.reg[blt_srcFormat] >> 20) & 0x03;
       if (BLT.src_fmt == 0) {
         BLT.h2s_pxstart = BLT.reg[blt_srcXY] & 0x1f;
       } else {
@@ -1320,10 +1308,10 @@ void bx_banshee_c::blt_launch_area_write(Bit32u value)
   if (BLT.lacnt > 0) {
     BX_DEBUG(("launchArea write: value = 0x%08x", value));
     if (BLT.lamem != NULL) {
-      if (BLT.src_wizzle & 1) {
+      if (BLT.src_swizzle & 1) {
         value = bx_bswap32(value);
       }
-      if (BLT.src_wizzle & 2) {
+      if (BLT.src_swizzle & 2) {
         value = (value >> 16) | (value << 16);
       }
       BLT.lamem[BLT.laidx++] = (value & 0xff);
@@ -2181,6 +2169,9 @@ void bx_banshee_c::blt_host_to_screen()
           BLT.rop_fn[rop](dst_ptr1, color, dpitch, dpxsize, dpxsize, 1);
         }
       } else {
+        if (colorkey_en & 1) {
+          rop = colorkey_check(src_ptr1, spxsize, 0);
+        }
         if (BLT.dst_fmt != srcfmt) {
           if ((srcfmt == 4) || (srcfmt == 5)) {
             b = src_ptr1[0];
@@ -2195,7 +2186,7 @@ void bx_banshee_c::blt_host_to_screen()
             scolor[0] = (b >> 3) | ((g & 0x1c) << 3);
             scolor[1] = (g >> 5) | (r & 0xf8);
             if (colorkey_en & 2) {
-              rop = colorkey_check(dst_ptr1, dpxsize, 1);
+              rop |= colorkey_check(dst_ptr1, dpxsize, 1);
             }
             BLT.rop_fn[rop](dst_ptr1, scolor, dpitch, dpxsize, dpxsize, 1);
           } else if ((dpxsize == 3) || (dpxsize == 4)) {
@@ -2204,13 +2195,13 @@ void bx_banshee_c::blt_host_to_screen()
             scolor[2] = r;
             scolor[3] = 0;
             if (colorkey_en & 2) {
-              rop = colorkey_check(dst_ptr1, dpxsize, 1);
+              rop |= colorkey_check(dst_ptr1, dpxsize, 1);
             }
             BLT.rop_fn[rop](dst_ptr1, scolor, dpitch, dpxsize, dpxsize, 1);
           }
         } else {
           if (colorkey_en & 2) {
-            rop = colorkey_check(dst_ptr1, dpxsize, 1);
+            rop |= colorkey_check(dst_ptr1, dpxsize, 1);
           }
           BLT.rop_fn[rop](dst_ptr1, src_ptr1, dpitch, dpxsize, dpxsize, 1);
         }
@@ -2270,6 +2261,9 @@ void bx_banshee_c::blt_host_to_screen_pattern()
   }
   if (BLT.h2s_alt_align) {
     BX_ERROR(("Alternating alignment not handled yet"));
+  }
+  if (colorkey_en & 1) {
+    BX_ERROR(("Host to screen pattern blt: src colorkeying not supported yet"));
   }
   x0 = 0;
   y0 = 0;

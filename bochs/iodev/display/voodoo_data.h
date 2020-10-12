@@ -1759,7 +1759,7 @@ struct _banshee_info
     bx_bool src_tiled;
     Bit8u src_fmt;
     Bit16u src_pitch;
-    Bit8u src_wizzle;
+    Bit8u src_swizzle;
     Bit16u src_x;
     Bit16u src_y;
     Bit16u src_w;
@@ -1825,30 +1825,30 @@ struct _voodoo_state
   banshee_info banshee;      /* Banshee state */
 
   struct {
-    bx_bool transp;
-    bx_bool clip_en;
-    Bit8u   chroma_en;
-    Bit8u   rop[4];
-    Bit8u   src_fmt;
-    Bit8u   src_wizzle;
-    Bit16u  src_col_min;
-    Bit16u  src_col_max;
-    Bit32u  dst_base;
-    Bit16u  dst_pitch;
-    Bit16u  dst_x;
-    Bit16u  dst_y;
-    Bit16u  dst_w;
-    Bit16u  dst_h;
-    Bit16u  dst_col_min;
-    Bit16u  dst_col_max;
-    Bit8u   fgcolor[2];
     Bit8u   bgcolor[2];
+    Bit8u   chroma_en;
+    bx_bool clip_en;
     Bit16u  clipx0;
     Bit16u  clipx1;
     Bit16u  clipy0;
     Bit16u  clipy1;
     Bit16u  cur_x;
+    Bit32u  dst_base;
+    Bit16u  dst_h;
+    Bit16u  dst_pitch;
+    Bit16u  dst_w;
+    Bit16u  dst_x;
+    Bit16u  dst_y;
+    Bit16u  dst_col_min;
+    Bit16u  dst_col_max;
+    Bit8u   fgcolor[2];
     bx_bool h2s_mode;
+    Bit8u   rop[4];
+    Bit16u  src_col_min;
+    Bit16u  src_col_max;
+    Bit8u   src_fmt;
+    Bit8u   src_swizzle;
+    bx_bool transp;
   } blt;
 
   Bit32u      send_config;

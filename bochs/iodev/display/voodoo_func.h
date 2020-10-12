@@ -1390,7 +1390,7 @@ void voodoo2_bitblt(void)
 
   cmd = (Bit8u)(v->reg[bltCommand].u & 0x07);
   BLT.src_fmt = (Bit8u)((v->reg[bltCommand].u >> 3) & 0x1f);
-  BLT.src_wizzle = (Bit8u)((v->reg[bltCommand].u >> 8) & 0x03);
+  BLT.src_swizzle = (Bit8u)((v->reg[bltCommand].u >> 8) & 0x03);
   BLT.chroma_en = (Bit8u)((v->reg[bltCommand].u >> 10) & 0x01);
   BLT.chroma_en |= (Bit8u)((v->reg[bltCommand].u >> 11) & 0x02);
   src_tiled = ((v->reg[bltCommand].u >> 14) & 0x01);
@@ -1559,10 +1559,10 @@ void voodoo2_bitblt_cpu_to_screen(Bit32u data)
   Bit32u doffset = BLT.dst_base + BLT.dst_y * BLT.dst_pitch + BLT.cur_x * 2;
   dst_ptr = &v->fbi.ram[doffset & v->fbi.mask];
 
-  if (BLT.src_wizzle & 1) {
+  if (BLT.src_swizzle & 1) {
     data = bx_bswap32(data);
   }
-  if (BLT.src_wizzle & 2) {
+  if (BLT.src_swizzle & 2) {
     data = (data >> 16) | (data << 16);
   }
   if ((colfmt == 0) || (colfmt == 1)) {
