@@ -10214,7 +10214,7 @@ enable_iomem_space:
   call pcibios_init_sel_reg
   mov  dx, #0x0cfc
   in   al, dx
-  or   al, #0x07
+  or   al, #0x03
   out  dx, al
 next_pci_dev:
   mov  byte ptr[bp-8], #0x10

@@ -664,30 +664,17 @@ static uint32_t pci_config_readb(PCIDevice *d, uint32_t addr)
 
 static void pci_set_io_region_addr(PCIDevice *d, int region_num, uint32_t addr)
 {
-    uint16_t cmd;
-    uint32_t ofs, old_addr;
+    uint32_t ofs;
 
-    if ( region_num == PCI_ROM_SLOT ) {
+    if (region_num == PCI_ROM_SLOT) {
         ofs = PCI_ROM_ADDRESS;
         addr |= PCI_ROM_ADDRESS_ENABLE;
-    }else{
+    } else {
         ofs = PCI_BASE_ADDRESS_0 + region_num * 4;
     }
-
-    old_addr = pci_config_readl(d, ofs);
-
     pci_config_writel(d, ofs, addr);
     BX_INFO("region %d: 0x%08x\n", region_num, addr & ~0x01);
 
-    /* enable memory mappings */
-    cmd = pci_config_readw(d, PCI_COMMAND);
-    if ( region_num == PCI_ROM_SLOT )
-        cmd |= PCI_COMMAND_MEMORY;
-    else if (old_addr & PCI_ADDRESS_SPACE_IO)
-        cmd |= PCI_COMMAND_IO;
-    else
-        cmd |= PCI_COMMAND_MEMORY;
-    pci_config_writew(d, PCI_COMMAND, cmd);
 }
 
 /* return the global irq number corresponding to a given device irq
@@ -938,7 +925,7 @@ static void pci_bios_init_pcirom(PCIDevice *d, uint32_t paddr)
 static void pci_bios_init_device(PCIDevice *d)
 {
     PCIDevice d1, *bridge = &d1;
-    uint16_t class;
+    uint16_t class, cmd;
     uint32_t *paddr;
     int headt, i, pin, pic_irq, vendor_id, device_id, is_i440bx = 0;
 
@@ -993,6 +980,10 @@ static void pci_bios_init_device(PCIDevice *d)
     default_map:
         if ((headt & 0x03) != 0)
           break;
+        /* disable i/o and memory access */
+        cmd = pci_config_readw(d, PCI_COMMAND);
+        cmd &= 0xfffc;
+        pci_config_writew(d, PCI_COMMAND, cmd);
         /* default memory mappings */
         for(i = 0; i < PCI_NUM_REGIONS; i++) {
             int ofs;
@@ -1035,6 +1026,10 @@ static void pci_bios_init_device(PCIDevice *d)
                 }
             }
         }
+        /* enable i/o and memory access */
+        cmd = pci_config_readw(d, PCI_COMMAND);
+        cmd |= (PCI_COMMAND_MEMORY | PCI_COMMAND_IO);
+        pci_config_writew(d, PCI_COMMAND, cmd);
         break;
     }
 
