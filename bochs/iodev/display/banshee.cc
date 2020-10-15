@@ -61,7 +61,6 @@
 // TODO:
 // - 2D host-to-screen stretching support
 // - 2D screen-to-screen pattern stretching support
-// - source colorkey support for host-to-screen pattern blts
 // - 2D chromaKey support
 // - pixel format conversion not supported in all cases
 // - full AGP support
@@ -1190,7 +1189,7 @@ void bx_banshee_c::blt_reg_write(Bit8u reg, Bit32u value)
       if (colorkey_en & 1) {
         BLT.pattern_blt |= (BLT.rop_flags[BLT.rop[2]] & BX_ROP_PATTERN);
       }
-      if ((colorkey_en >> 1) & 1) {
+      if (colorkey_en & 2) {
         BLT.pattern_blt |= (BLT.rop_flags[BLT.rop[1]] & BX_ROP_PATTERN);
       }
       if (colorkey_en == 3) {
@@ -1245,7 +1244,7 @@ void bx_banshee_c::blt_reg_write(Bit8u reg, Bit32u value)
 
 void bx_banshee_c::blt_launch_area_setup()
 {
-  Bit32u pbytes;
+  Bit16u pbytes, pbits = 0;
   Bit8u pxpack;
 
   BLT.lacnt = 0;
@@ -1270,7 +1269,8 @@ void bx_banshee_c::blt_launch_area_setup()
         BLT.h2s_pxstart = BLT.reg[blt_srcXY] & 0x03;
       }
       if (BLT.src_fmt == 0) {
-        pbytes = ((BLT.dst_w + BLT.h2s_pxstart + 7) >> 3);
+        pbits = BLT.dst_w + BLT.h2s_pxstart;
+        pbytes = (pbits + 7) >> 3;
       } else if (BLT.src_fmt == 1) {
         pbytes = BLT.dst_w + BLT.h2s_pxstart;
       } else if ((BLT.src_fmt >= 3) && (BLT.src_fmt <= 5))  {
@@ -1290,10 +1290,21 @@ void bx_banshee_c::blt_launch_area_setup()
           BLT.h2s_pitch = (pbytes + 3) & ~3;
           break;
         default:
-          // The specs say that BLT.src_pitch is used here, but that's wrong
-          // These lines fix most of the issues, but some others remain
+          // FIXME: The specs say that BLT.src_pitch is used here, but that's wrong
+          // These hacks are fixing most of the issues, but may others remain
           BLT.h2s_pitch = (pbytes + 3) & ~0x03;
-          BLT.h2s_alt_align = ((BLT.src_fmt == 0) && (BLT.h2s_pitch > BLT.src_pitch));
+          if (BLT.src_fmt == 0) {
+            BLT.h2s_alt_align = (BLT.h2s_pitch > BLT.src_pitch);
+            if (BLT.src_pitch == 10) {
+              if (BLT.h2s_pitch == 4) BLT.h2s_pitch = 6;
+              if ((BLT.h2s_pitch == 8) && ((pbits == 40) || (pbits == 48))) {
+                BLT.h2s_pitch = 6;
+              }
+              if ((BLT.h2s_pitch == 8) && (pbits > 56)) {
+                BLT.h2s_pitch = 10;
+              }
+            }
+          }
       }
       BLT.lacnt = (BLT.h2s_pitch * BLT.dst_h + 3) >> 2;
       BLT.lamem = new Bit8u[BLT.lacnt * 4];
@@ -2262,9 +2273,6 @@ void bx_banshee_c::blt_host_to_screen_pattern()
   if (BLT.h2s_alt_align) {
     BX_ERROR(("Alternating alignment not handled yet"));
   }
-  if (colorkey_en & 1) {
-    BX_ERROR(("Host to screen pattern blt: src colorkeying not supported yet"));
-  }
   x0 = 0;
   y0 = 0;
   if (!blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h)) {
@@ -2323,15 +2331,21 @@ void bx_banshee_c::blt_host_to_screen_pattern()
           patcolor = &BLT.bgcolor[0];
         }
         if (set || !BLT.transp) {
+          if (colorkey_en & 1) {
+            rop = colorkey_check(srccolor, dpxsize, 0);
+          }
           if (colorkey_en & 2) {
-            rop = colorkey_check(dst_ptr1, dpxsize, 1);
+            rop |= colorkey_check(dst_ptr1, dpxsize, 1);
           }
           bx_ternary_rop(BLT.rop[rop], dst_ptr1, srccolor, patcolor, dpxsize);
         }
       } else {
         patcolor = pat_ptr2;
+        if (colorkey_en & 1) {
+          rop = colorkey_check(srccolor, dpxsize, 0);
+        }
         if (colorkey_en & 2) {
-          rop = colorkey_check(dst_ptr1, dpxsize, 1);
+          rop |= colorkey_check(dst_ptr1, dpxsize, 1);
         }
         bx_ternary_rop(BLT.rop[rop], dst_ptr1, srccolor, patcolor, dpxsize);
       }
