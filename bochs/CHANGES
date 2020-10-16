@@ -35,6 +35,7 @@ Changes after 2.6.11:
 - GUI and display libraries
     - Added support for calling a headerbar handler after pressing F7 (enabled
       with "cmdmode" option / present in sdl, sdl2, win32 and x).
+    - Added support for saving text mode snapshot in BMP format.
     - Write marker to log file by pressing "m" button (guis with "cmdmode" on).
     - X11 keymaps: added new one for Swiss-German and improved Italian map.
     - RFB: added support for the pixel format RGB332.

@@ -168,6 +168,9 @@ public:
   void init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
             unsigned x_tilesize, unsigned y_tilesize);
   void cleanup(void);
+  void text_update_common(Bit8u *old_text, Bit8u *new_text,
+                          unsigned long cursor_x, unsigned long cursor_y,
+                          bx_vga_tminfo_t *tm_info);
   void graphics_tile_update_common(Bit8u *tile, unsigned x, unsigned y);
   bx_svga_tileinfo_t *graphics_tile_info_common(bx_svga_tileinfo_t *info);
   Bit8u* get_snapshot_buffer(void) {return snapshot_buffer;}

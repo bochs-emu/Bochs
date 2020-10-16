@@ -504,6 +504,9 @@ void bx_gui_c::copy_handler(void)
   }
 }
 
+#define BX_SNAPSHOT_TXT 0
+#define BX_SNAPSHOT_BMP 1
+
 // create a text snapshot and dump it to a file
 void bx_gui_c::snapshot_handler(void)
 {
@@ -512,43 +515,41 @@ void bx_gui_c::snapshot_handler(void)
   Bit8u *row_buffer, *pixel_ptr, *row_ptr;
   Bit8u bmp_header[54], iBits, b1, b2;
   Bit32u ilen, len, rlen;
-  char filename[BX_PATHNAME_LEN];
+  char filename[BX_PATHNAME_LEN], *ext;
+  Bit8u snap_fmt;
 
   if (BX_GUI_THIS guest_textmode) {
-    make_text_snapshot((char**)&snapshot_ptr, &len);
-    if (!BX_GUI_THIS fullscreen_mode &&
-        (BX_GUI_THIS dialog_caps & BX_GUI_DLG_SNAPSHOT)) {
-      int ret = SIM->ask_filename (filename, sizeof(filename),
-                                   "Save snapshot as...", "snapshot.txt",
-                                   bx_param_string_c::SAVE_FILE_DIALOG);
-      if (ret < 0) { // cancelled
-        delete [] snapshot_ptr;
-        return;
-      }
-    } else {
-      strcpy (filename, "snapshot.txt");
-    }
-    FILE *fp = fopen(filename, "wb");
-    if (fp == NULL) {
-      BX_ERROR(("snapshot button failed: cannot create text file"));
-      delete [] snapshot_ptr;
+    strcpy(filename, "snapshot.txt");
+    snap_fmt = BX_SNAPSHOT_TXT;
+  } else {
+    strcpy(filename, "snapshot.bmp");
+    snap_fmt = BX_SNAPSHOT_BMP;
+  }
+  if (!BX_GUI_THIS fullscreen_mode &&
+      (BX_GUI_THIS dialog_caps & BX_GUI_DLG_SNAPSHOT)) {
+    int ret = SIM->ask_filename(filename, sizeof(filename),
+                                "Save snapshot as...", filename,
+                                bx_param_string_c::SAVE_FILE_DIALOG);
+    if (ret < 0) { // cancelled
       return;
     }
-    fwrite(snapshot_ptr, 1, len, fp);
-    fclose(fp);
-    delete [] snapshot_ptr;
-  } else {
-    if (!BX_GUI_THIS fullscreen_mode &&
-        (BX_GUI_THIS dialog_caps & BX_GUI_DLG_SNAPSHOT)) {
-      int ret = SIM->ask_filename (filename, sizeof(filename),
-                                   "Save snapshot as...", "snapshot.bmp",
-                                   bx_param_string_c::SAVE_FILE_DIALOG);
-      if (ret < 0) { // cancelled
+    ext = strrchr(filename, '.');
+    if (ext == NULL) {
+      BX_ERROR(("Unknown snapshot file format"));
+      return;
+    } else {
+      ext++;
+      if (BX_GUI_THIS guest_textmode && !strcmp(ext, "txt")) {
+        snap_fmt = BX_SNAPSHOT_TXT;
+      } else if (!strcmp(ext, "bmp")) {
+        snap_fmt = BX_SNAPSHOT_BMP;
+      } else {
+        BX_ERROR(("Unsupported snapshot file format '%s'", ext));
         return;
       }
-    } else {
-      strcpy (filename, "snapshot.bmp");
     }
+  }
+  if (snap_fmt == BX_SNAPSHOT_BMP) {
     fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC
 #ifdef O_BINARY
               | O_BINARY
@@ -632,6 +633,16 @@ void bx_gui_c::snapshot_handler(void)
     delete [] row_buffer;
     close(fd);
     BX_GUI_THIS set_snapshot_mode(0);
+  } else {
+    make_text_snapshot((char**)&snapshot_ptr, &len);
+    FILE *fp = fopen(filename, "wb");
+    if (fp != NULL) {
+      fwrite(snapshot_ptr, 1, len, fp);
+      fclose(fp);
+    } else {
+      BX_ERROR(("snapshot button failed: cannot create text file"));
+    }
+    delete [] snapshot_ptr;
   }
 }
 
@@ -1105,6 +1116,83 @@ void bx_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
     }
   }
   delete [] tile;
+}
+
+void bx_gui_c::text_update_common(Bit8u *old_text, Bit8u *new_text,
+                                  unsigned long cursor_x, unsigned long cursor_y,
+                                  bx_vga_tminfo_t *tm_info)
+{
+  Bit16u curs, rows, hchars, text_cols, font_row, mask, offset, y;
+  Bit8u fheight, fwidth, fontline, fontrows, fontpixels, fgcolor, bgcolor;
+  Bit8u *new_line, *font_ptr, *buf, *buf_row, *buf_char;
+  bx_bool cursor_visible, dwidth, gfxcharw9, invert;
+
+  if (BX_GUI_THIS snapshot_mode) {
+    if (BX_GUI_THIS snapshot_buffer != NULL) {
+      fheight = BX_GUI_THIS guest_fsize >> 4;
+      fwidth = BX_GUI_THIS guest_fsize & 0x0f;
+      dwidth = (fwidth > 9);
+      rows = BX_GUI_THIS guest_yres / fheight;
+      text_cols = BX_GUI_THIS guest_xres / fwidth;
+      cursor_visible = ((tm_info->cs_start <= tm_info->cs_end) && (tm_info->cs_start < fheight));
+      if ((cursor_visible) && (cursor_y < rows) && (cursor_x < text_cols)) {
+        curs = cursor_y * tm_info->line_offset + cursor_x * 2;
+      } else {
+        curs = 0xffff;
+      }
+      y = 0;
+      buf_row = BX_GUI_THIS snapshot_buffer;
+      do {
+        buf = buf_row;
+        hchars = text_cols;
+        new_line = new_text;
+        offset = y * tm_info->line_offset;
+        do {
+          font_ptr = &vga_charmap[new_text[0] << 5];
+          gfxcharw9 = ((tm_info->line_graphics) && ((new_text[0] & 0xE0) == 0xC0));
+          fgcolor = tm_info->actl_palette[new_text[1] & 0x0f];
+          bgcolor = tm_info->actl_palette[(new_text[1] >> 4) & 0x07];
+          invert = (offset == curs);
+          fontrows = fheight;
+          fontline = 0;
+          buf_char = buf;
+          do {
+            font_row = *font_ptr++;
+            if (gfxcharw9) {
+              font_row = (font_row << 1) | (font_row & 0x01);
+            } else {
+              font_row <<= 1;
+            }
+            fontpixels = fwidth;
+            if ((invert) && (fontline >= tm_info->cs_start) && (fontline <= tm_info->cs_end))
+              mask = 0x100;
+            else
+              mask = 0x00;
+            do {
+              if ((font_row & 0x100) == mask)
+                *buf = bgcolor;
+              else
+                *buf = fgcolor;
+              buf++;
+              if (!dwidth || (fontpixels & 1)) font_row <<= 1;
+            } while (--fontpixels);
+            buf -= fwidth;
+            buf += BX_GUI_THIS guest_xres;
+            fontline++;
+          } while (--fontrows);
+          buf = buf_char;
+          buf += fwidth;
+          new_text += 2;
+          offset += 2;
+        } while (--hchars);
+        buf_row += (BX_GUI_THIS guest_xres * fheight);
+        new_text = new_line + tm_info->line_offset;
+        y++;
+      } while (--rows);
+    }
+  } else {
+    text_update(old_text, new_text, cursor_x, cursor_y, tm_info);
+  }
 }
 
 void bx_gui_c::graphics_tile_update_common(Bit8u *tile, unsigned x, unsigned y)

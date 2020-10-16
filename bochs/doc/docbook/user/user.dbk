@@ -5604,9 +5604,12 @@ feature work.</para>
 <listitem>
 <para>snapshot button</para>
 <para>Press this button if you want to save a snapshot of the Bochs screen. All
-text and graphics modes are now supported. If gui dialogs are supported (e.g. on win32)
-Bochs presents you a "Save as..." dialog box to specify the filename. All other
-platforms are using the fixed filenames "snapshot.txt" or "snapshot.bmp".</para>
+text and graphics modes are now supported. If gui dialogs are supported (e.g. on
+win32) Bochs presents you a "Save as..." dialog box to specify the filename. In
+text modes the formats BMP and TXT are supported depending on file extension.
+Platforms without gui dialogs are using the fixed filenames "snapshot.txt" or
+"snapshot.bmp".
+</para>
 </listitem>
 <listitem><para>config button</para>
 <para>This button stops the Bochs simulation and starts the runtime configuration.

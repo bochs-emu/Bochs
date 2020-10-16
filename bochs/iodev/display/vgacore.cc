@@ -1727,9 +1727,9 @@ void bx_vgacore_c::update(void)
       cursor_x = ((cursor_address - start_address)/2) % (iWidth/cWidth);
       cursor_y = ((cursor_address - start_address)/2) / (iWidth/cWidth);
     }
-    bx_gui->text_update(BX_VGA_THIS s.text_snapshot,
-                        &BX_VGA_THIS s.memory[start_address],
-                        cursor_x, cursor_y, &tm_info);
+    bx_gui->text_update_common(BX_VGA_THIS s.text_snapshot,
+                               &BX_VGA_THIS s.memory[start_address],
+                               cursor_x, cursor_y, &tm_info);
     if (BX_VGA_THIS s.vga_mem_updated) {
       // screen updated, copy new VGA memory contents into text snapshot
       memcpy(BX_VGA_THIS s.text_snapshot,
