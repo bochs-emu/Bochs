@@ -1119,14 +1119,22 @@ void bx_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
 }
 
 void bx_gui_c::text_update_common(Bit8u *old_text, Bit8u *new_text,
-                                  unsigned long cursor_x, unsigned long cursor_y,
+                                  Bit16u cursor_address,
                                   bx_vga_tminfo_t *tm_info)
 {
-  Bit16u curs, rows, hchars, text_cols, font_row, mask, offset, y;
+  Bit16u cursor_x, cursor_y;
+  Bit16u curs, rows, hchars, text_cols, font_row, mask, offset;
   Bit8u fheight, fwidth, fontline, fontrows, fontpixels, fgcolor, bgcolor;
   Bit8u *new_line, *font_ptr, *buf, *buf_row, *buf_char;
   bx_bool cursor_visible, dwidth, gfxcharw9, invert;
 
+  if (cursor_address >= tm_info->start_address) {
+    cursor_x = ((cursor_address - tm_info->start_address) % tm_info->line_offset) / 2;
+    cursor_y = ((cursor_address - tm_info->start_address) / tm_info->line_offset);
+  } else {
+    cursor_x = 0xffff;
+    cursor_y = 0xffff;
+  }
   if (BX_GUI_THIS snapshot_mode) {
     if (BX_GUI_THIS snapshot_buffer != NULL) {
       fheight = BX_GUI_THIS guest_fsize >> 4;
@@ -1136,17 +1144,16 @@ void bx_gui_c::text_update_common(Bit8u *old_text, Bit8u *new_text,
       text_cols = BX_GUI_THIS guest_xres / fwidth;
       cursor_visible = ((tm_info->cs_start <= tm_info->cs_end) && (tm_info->cs_start < fheight));
       if ((cursor_visible) && (cursor_y < rows) && (cursor_x < text_cols)) {
-        curs = cursor_y * tm_info->line_offset + cursor_x * 2;
+        curs = cursor_address;
       } else {
         curs = 0xffff;
       }
-      y = 0;
+      offset = tm_info->start_address;
       buf_row = BX_GUI_THIS snapshot_buffer;
       do {
         buf = buf_row;
         hchars = text_cols;
         new_line = new_text;
-        offset = y * tm_info->line_offset;
         do {
           font_ptr = &vga_charmap[new_text[0] << 5];
           gfxcharw9 = ((tm_info->line_graphics) && ((new_text[0] & 0xE0) == 0xC0));
@@ -1187,7 +1194,7 @@ void bx_gui_c::text_update_common(Bit8u *old_text, Bit8u *new_text,
         } while (--hchars);
         buf_row += (BX_GUI_THIS guest_xres * fheight);
         new_text = new_line + tm_info->line_offset;
-        y++;
+        offset += tm_info->line_offset;
       } while (--rows);
     }
   } else {

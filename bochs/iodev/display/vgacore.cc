@@ -1638,8 +1638,7 @@ void bx_vgacore_c::update(void)
     return;
   } else {
     // text mode
-    unsigned long start_address;
-    unsigned long cursor_address, cursor_x, cursor_y;
+    Bit16u cursor_address;
     bx_vga_tminfo_t tm_info;
     unsigned VDE, cols, rows, cWidth;
     Bit8u MSL;
@@ -1717,23 +1716,18 @@ void bx_vgacore_c::update(void)
     if (skip_update()) return;
 
     // pass old text snapshot & new VGA memory contents
-    start_address = tm_info.start_address;
     cursor_address = 2*((BX_VGA_THIS s.CRTC.reg[0x0e] << 8) +
                      BX_VGA_THIS s.CRTC.reg[0x0f]);
-    if (cursor_address < start_address) {
-      cursor_x = 0xffff;
-      cursor_y = 0xffff;
-    } else {
-      cursor_x = ((cursor_address - start_address)/2) % (iWidth/cWidth);
-      cursor_y = ((cursor_address - start_address)/2) / (iWidth/cWidth);
+    if (cursor_address < tm_info.start_address) {
+      cursor_address = 0xffff;
     }
     bx_gui->text_update_common(BX_VGA_THIS s.text_snapshot,
-                               &BX_VGA_THIS s.memory[start_address],
-                               cursor_x, cursor_y, &tm_info);
+                               &BX_VGA_THIS s.memory[tm_info.start_address],
+                               cursor_address, &tm_info);
     if (BX_VGA_THIS s.vga_mem_updated) {
       // screen updated, copy new VGA memory contents into text snapshot
       memcpy(BX_VGA_THIS s.text_snapshot,
-             &BX_VGA_THIS s.memory[start_address],
+             &BX_VGA_THIS s.memory[tm_info.start_address],
              tm_info.line_offset*rows);
       BX_VGA_THIS s.vga_mem_updated = 0;
     }

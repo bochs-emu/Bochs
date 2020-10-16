@@ -1769,6 +1769,7 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   if (v_panning) rows++;
   y = 0;
   cs_y = 0;
+  offset = 0;
   text_base = new_text - tm_info->start_address;
   if (line_compare < dimension_y) {
     split_textrow = (line_compare + v_panning) / yChar;
@@ -1815,7 +1816,6 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     new_line = new_text;
     old_line = old_text;
     x = 0;
-    offset = cs_y * tm_info->line_offset;
     do {
       if (h_panning) {
         if (hchars > text_cols) {
@@ -1878,6 +1878,7 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
       new_text = text_base;
       forceUpdate = 1;
       cs_y = 0;
+      curs += tm_info->start_address;
       if (tm_info->split_hpanning) h_panning = 0;
       rows = ((dimension_y - line_compare + yChar - 2) / yChar) + 1;
       split_screen = 1;
@@ -1887,6 +1888,7 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
       new_text = new_line + tm_info->line_offset;
       old_text = old_line + tm_info->line_offset;
     }
+    offset = cs_y * tm_info->line_offset;
   } while (--rows);
 
   h_panning = tm_info->h_panning;
