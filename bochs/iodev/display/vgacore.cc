@@ -1650,7 +1650,7 @@ void bx_vgacore_c::update(void)
     }
     tm_info.cs_start = BX_VGA_THIS s.CRTC.reg[0x0a] & 0x3f;
     tm_info.cs_end = BX_VGA_THIS s.CRTC.reg[0x0b] & 0x1f;
-    tm_info.line_offset = BX_VGA_THIS s.CRTC.reg[0x13] << 2;
+    tm_info.line_offset = BX_VGA_THIS s.line_offset;
     tm_info.line_compare = BX_VGA_THIS s.line_compare;
     tm_info.h_panning = BX_VGA_THIS s.attribute_ctrl.horiz_pel_panning & 0x0f;
     tm_info.v_panning = BX_VGA_THIS s.CRTC.reg[0x08] & 0x1f;
