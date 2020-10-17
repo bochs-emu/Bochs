@@ -1123,18 +1123,12 @@ void bx_gui_c::text_update_common(Bit8u *old_text, Bit8u *new_text,
                                   bx_vga_tminfo_t *tm_info)
 {
   Bit16u cursor_x, cursor_y;
-  Bit16u curs, rows, hchars, text_cols, font_row, mask, offset;
+  Bit16u curs, rows, hchars, text_cols, font_row, mask, offset, loffset;
   Bit8u fheight, fwidth, fontline, fontrows, fontpixels, fgcolor, bgcolor;
-  Bit8u *new_line, *font_ptr, *buf, *buf_row, *buf_char;
-  bx_bool cursor_visible, dwidth, gfxcharw9, invert;
+  Bit8u cfheight, cfwidth, split_textrow, split_fontrows, x, y;
+  Bit8u *new_line, *font_ptr, *buf, *buf_row, *buf_char, *text_base;
+  bx_bool cursor_visible, dwidth, gfxcharw9, invert, split_screen;
 
-  if (cursor_address >= tm_info->start_address) {
-    cursor_x = ((cursor_address - tm_info->start_address) % tm_info->line_offset) / 2;
-    cursor_y = ((cursor_address - tm_info->start_address) / tm_info->line_offset);
-  } else {
-    cursor_x = 0xffff;
-    cursor_y = 0xffff;
-  }
   if (BX_GUI_THIS snapshot_mode) {
     if (BX_GUI_THIS snapshot_buffer != NULL) {
       fheight = BX_GUI_THIS guest_fsize >> 4;
@@ -1143,24 +1137,53 @@ void bx_gui_c::text_update_common(Bit8u *old_text, Bit8u *new_text,
       rows = BX_GUI_THIS guest_yres / fheight;
       text_cols = BX_GUI_THIS guest_xres / fwidth;
       cursor_visible = ((tm_info->cs_start <= tm_info->cs_end) && (tm_info->cs_start < fheight));
-      if ((cursor_visible) && (cursor_y < rows) && (cursor_x < text_cols)) {
+      if (cursor_visible) {
         curs = cursor_address;
       } else {
         curs = 0xffff;
       }
-      offset = tm_info->start_address;
+      if (tm_info->line_compare < 0x3ff) {
+        split_textrow = tm_info->line_compare / fheight;
+        split_fontrows = (tm_info->line_compare % fheight) + 1;
+      } else {
+        split_textrow = 0xff;
+        split_fontrows = 0;
+      }
+      y = 0;
+      split_screen = 0;
+      loffset = tm_info->start_address;
+      text_base = new_text;
+      new_text += tm_info->start_address;
       buf_row = BX_GUI_THIS snapshot_buffer;
       do {
         buf = buf_row;
         hchars = text_cols;
+        if (tm_info->h_panning > 0) hchars++;
+        cfheight = fheight;
+        if (y == split_textrow) {
+          cfheight = split_fontrows;
+        } else if (split_screen && (rows == 1)) {
+          cfheight = (guest_yres - tm_info->line_compare - 1) % fheight;
+          if (cfheight == 0) cfheight = 16;
+        }
         new_line = new_text;
+        offset = loffset;
+        x = 0;
         do {
+          cfwidth = fwidth;
+          if (tm_info->h_panning > 0) {
+            if (x == 0) {
+              cfwidth -= tm_info->h_panning;
+            } else if (hchars == 1) {
+              cfwidth = tm_info->h_panning;
+            }
+          }
           font_ptr = &vga_charmap[new_text[0] << 5];
           gfxcharw9 = ((tm_info->line_graphics) && ((new_text[0] & 0xE0) == 0xC0));
           fgcolor = tm_info->actl_palette[new_text[1] & 0x0f];
           bgcolor = tm_info->actl_palette[(new_text[1] >> 4) & 0x07];
           invert = (offset == curs);
-          fontrows = fheight;
+          fontrows = cfheight;
           fontline = 0;
           buf_char = buf;
           do {
@@ -1170,7 +1193,10 @@ void bx_gui_c::text_update_common(Bit8u *old_text, Bit8u *new_text,
             } else {
               font_row <<= 1;
             }
-            fontpixels = fwidth;
+            if (hchars > text_cols) {
+              font_row <<= tm_info->h_panning;
+            }
+            fontpixels = cfwidth;
             if ((invert) && (fontline >= tm_info->cs_start) && (fontline <= tm_info->cs_end))
               mask = 0x100;
             else
@@ -1183,21 +1209,43 @@ void bx_gui_c::text_update_common(Bit8u *old_text, Bit8u *new_text,
               buf++;
               if (!dwidth || (fontpixels & 1)) font_row <<= 1;
             } while (--fontpixels);
-            buf -= fwidth;
+            buf -= cfwidth;
             buf += BX_GUI_THIS guest_xres;
             fontline++;
           } while (--fontrows);
           buf = buf_char;
-          buf += fwidth;
+          buf += cfwidth;
           new_text += 2;
           offset += 2;
+          x++;
         } while (--hchars);
-        buf_row += (BX_GUI_THIS guest_xres * fheight);
-        new_text = new_line + tm_info->line_offset;
-        offset += tm_info->line_offset;
+        buf_row += (BX_GUI_THIS guest_xres * cfheight);
+        if (y == split_textrow) {
+          new_text = text_base;
+          loffset = 0;
+          if (cfheight < fheight) rows++;
+          if (tm_info->split_hpanning) tm_info->h_panning = 0;
+          split_screen = 1;
+        } else {
+          new_text = new_line + tm_info->line_offset;
+          loffset += tm_info->line_offset;
+        }
+        y++;
       } while (--rows);
     }
   } else {
+    // workarounds for existing text_update() API
+    if (cursor_address >= tm_info->start_address) {
+      cursor_x = ((cursor_address - tm_info->start_address) % tm_info->line_offset) / 2;
+      cursor_y = ((cursor_address - tm_info->start_address) / tm_info->line_offset);
+    } else {
+      cursor_x = 0xffff;
+      cursor_y = 0xffff;
+    }
+    if ((tm_info->blink_flags & BX_TEXT_BLINK_STATE) == 0) {
+      tm_info->cs_start |= 0x20;
+    }
+    new_text += tm_info->start_address;
     text_update(old_text, new_text, cursor_x, cursor_y, tm_info);
   }
 }

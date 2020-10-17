@@ -1649,9 +1649,6 @@ void bx_vgacore_c::update(void)
       BX_ERROR(("byte panning not implemented yet"));
     }
     tm_info.cs_start = BX_VGA_THIS s.CRTC.reg[0x0a] & 0x3f;
-    if (!cs_visible) {
-      tm_info.cs_start |= 0x20;
-    }
     tm_info.cs_end = BX_VGA_THIS s.CRTC.reg[0x0b] & 0x1f;
     tm_info.line_offset = BX_VGA_THIS s.CRTC.reg[0x13] << 2;
     tm_info.line_compare = BX_VGA_THIS s.line_compare;
@@ -1722,7 +1719,7 @@ void bx_vgacore_c::update(void)
       cursor_address = 0xffff;
     }
     bx_gui->text_update_common(BX_VGA_THIS s.text_snapshot,
-                               &BX_VGA_THIS s.memory[tm_info.start_address],
+                               BX_VGA_THIS s.memory,
                                cursor_address, &tm_info);
     if (BX_VGA_THIS s.vga_mem_updated) {
       // screen updated, copy new VGA memory contents into text snapshot
