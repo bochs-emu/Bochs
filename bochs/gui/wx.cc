@@ -1064,8 +1064,8 @@ void bx_wx_gui_c::handle_events(void)
             case BX_TOOLBAR_SAVE_RESTORE: tb_button = 2; break;
             case BX_TOOLBAR_COPY: copy_handler(); break;
             case BX_TOOLBAR_PASTE: paste_handler(); break;
-            case BX_TOOLBAR_SNAPSHOT: snapshot_handler(); break;
-            case BX_TOOLBAR_USER: tb_button = 3; break;
+            case BX_TOOLBAR_SNAPSHOT: tb_button = 3; break;
+            case BX_TOOLBAR_USER: tb_button = 4; break;
             default:
               wxLogDebug (wxT ("unknown toolbar id %d"), event_queue[i].u.toolbar.button);
           }
@@ -1170,6 +1170,9 @@ void bx_wx_gui_c::handle_events(void)
     // save_restore_handler() calls a dialog.
     save_restore_handler();
   } else if (tb_button == 3) {
+    // snapshot_handler() also calls a dialog.
+    snapshot_handler();
+  } else if (tb_button == 4) {
     // userbutton_handler() also calls a dialog.
     userbutton_handler();
   }
@@ -1523,6 +1526,7 @@ void bx_wx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, uns
     BX_PANIC(("%d bpp graphics mode not supported", bpp));
   }
   guest_textmode = (fheight > 0);
+  guest_fsize = (fheight << 4) | fwidth;
   guest_xres = x;
   guest_yres = y;
   if (guest_textmode) {
