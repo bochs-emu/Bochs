@@ -1125,7 +1125,7 @@ void bx_gui_c::text_update_common(Bit8u *old_text, Bit8u *new_text,
   Bit16u cursor_x, cursor_y;
   Bit16u curs, rows, hchars, text_cols, font_row, mask, offset, loffset;
   Bit8u fheight, fwidth, fontline, fontrows, fontpixels, fgcolor, bgcolor;
-  Bit8u cfheight, cfwidth, split_textrow, split_fontrows, x, y;
+  Bit8u cfheight, cfwidth, cfstart, split_textrow, split_fontrows, x, y;
   Bit8u *new_line, *font_ptr, *buf, *buf_row, *buf_char, *text_base;
   bx_bool cursor_visible, dwidth, gfxcharw9, invert, split_screen;
 
@@ -1135,6 +1135,7 @@ void bx_gui_c::text_update_common(Bit8u *old_text, Bit8u *new_text,
       fwidth = BX_GUI_THIS guest_fsize & 0x0f;
       dwidth = (fwidth > 9);
       rows = BX_GUI_THIS guest_yres / fheight;
+      if (tm_info->v_panning > 0) rows++;
       text_cols = BX_GUI_THIS guest_xres / fwidth;
       cursor_visible = ((tm_info->cs_start <= tm_info->cs_end) && (tm_info->cs_start < fheight));
       if (cursor_visible) {
@@ -1143,8 +1144,8 @@ void bx_gui_c::text_update_common(Bit8u *old_text, Bit8u *new_text,
         curs = 0xffff;
       }
       if (tm_info->line_compare < 0x3ff) {
-        split_textrow = tm_info->line_compare / fheight;
-        split_fontrows = (tm_info->line_compare % fheight) + 1;
+        split_textrow = (tm_info->line_compare + tm_info->v_panning) / fheight;
+        split_fontrows = ((tm_info->line_compare + tm_info->v_panning) % fheight) + 1;
       } else {
         split_textrow = 0xff;
         split_fontrows = 0;
@@ -1160,11 +1161,21 @@ void bx_gui_c::text_update_common(Bit8u *old_text, Bit8u *new_text,
         hchars = text_cols;
         if (tm_info->h_panning > 0) hchars++;
         cfheight = fheight;
-        if (y == split_textrow) {
+        cfstart = 0;
+        if (split_screen) {
+          if (rows == 1) {
+            cfheight = (guest_yres - tm_info->line_compare - 1) % fheight;
+            if (cfheight == 0) cfheight = 16;
+          }
+        } else if (y == split_textrow) {
           cfheight = split_fontrows;
-        } else if (split_screen && (rows == 1)) {
-          cfheight = (guest_yres - tm_info->line_compare - 1) % fheight;
-          if (cfheight == 0) cfheight = 16;
+        } else if (tm_info->v_panning > 0) {
+          if (y == 0) {
+            cfheight -= tm_info->v_panning;
+            cfstart = tm_info->v_panning;
+          } else if (rows == 1) {
+            cfheight = tm_info->v_panning;
+          }
         }
         new_line = new_text;
         offset = loffset;
@@ -1178,13 +1189,17 @@ void bx_gui_c::text_update_common(Bit8u *old_text, Bit8u *new_text,
               cfwidth = tm_info->h_panning;
             }
           }
-          font_ptr = &vga_charmap[new_text[0] << 5];
-          gfxcharw9 = ((tm_info->line_graphics) && ((new_text[0] & 0xE0) == 0xC0));
           fgcolor = tm_info->actl_palette[new_text[1] & 0x0f];
           bgcolor = tm_info->actl_palette[(new_text[1] >> 4) & 0x07];
+          gfxcharw9 = ((tm_info->line_graphics) && ((new_text[0] & 0xE0) == 0xC0));
           invert = (offset == curs);
           fontrows = cfheight;
-          fontline = 0;
+          fontline = cfstart;
+          if (y > 0) {
+            font_ptr = &vga_charmap[new_text[0] << 5];
+          } else {
+            font_ptr = &vga_charmap[(new_text[0] << 5) + cfstart];
+          }
           buf_char = buf;
           do {
             font_row = *font_ptr++;
@@ -1209,12 +1224,10 @@ void bx_gui_c::text_update_common(Bit8u *old_text, Bit8u *new_text,
               buf++;
               if (!dwidth || (fontpixels & 1)) font_row <<= 1;
             } while (--fontpixels);
-            buf -= cfwidth;
-            buf += BX_GUI_THIS guest_xres;
+            buf += (BX_GUI_THIS guest_xres - cfwidth);
             fontline++;
           } while (--fontrows);
-          buf = buf_char;
-          buf += cfwidth;
+          buf = buf_char + cfwidth;
           new_text += 2;
           offset += 2;
           x++;
@@ -1223,7 +1236,7 @@ void bx_gui_c::text_update_common(Bit8u *old_text, Bit8u *new_text,
         if (y == split_textrow) {
           new_text = text_base;
           loffset = 0;
-          if (cfheight < fheight) rows++;
+          rows = ((guest_yres - tm_info->line_compare + fheight - 2) / fheight) + 1;
           if (tm_info->split_hpanning) tm_info->h_panning = 0;
           split_screen = 1;
         } else {
