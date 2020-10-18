@@ -515,7 +515,7 @@ void bx_gui_c::snapshot_handler(void)
   Bit8u *row_buffer, *pixel_ptr, *row_ptr;
   Bit8u bmp_header[54], iBits, b1, b2;
   Bit32u ilen, len, rlen;
-  char filename[BX_PATHNAME_LEN], *ext;
+  char filename[BX_PATHNAME_LEN], msg[80], *ext;
   Bit8u snap_fmt;
 
   if (BX_GUI_THIS guest_textmode) {
@@ -535,7 +535,7 @@ void bx_gui_c::snapshot_handler(void)
     }
     ext = strrchr(filename, '.');
     if (ext == NULL) {
-      BX_ERROR(("Unknown snapshot file format"));
+      SIM->message_box("ERROR", "Unknown snapshot file format");
       return;
     } else {
       ext++;
@@ -544,7 +544,8 @@ void bx_gui_c::snapshot_handler(void)
       } else if (!strcmp(ext, "bmp")) {
         snap_fmt = BX_SNAPSHOT_BMP;
       } else {
-        BX_ERROR(("Unsupported snapshot file format '%s'", ext));
+        sprintf(msg, "Unsupported snapshot file format '%s'", ext);
+        SIM->message_box("ERROR", msg);
         return;
       }
     }
@@ -557,7 +558,7 @@ void bx_gui_c::snapshot_handler(void)
               , S_IRUSR | S_IWUSR
               );
     if (fd < 0) {
-      BX_ERROR(("snapshot button failed: cannot create BMP file"));
+      SIM->message_box("ERROR", "snapshot button failed: cannot create BMP file");
       return;
     }
     ilen =  BX_GUI_THIS set_snapshot_mode(1);
@@ -566,7 +567,7 @@ void bx_gui_c::snapshot_handler(void)
                BX_GUI_THIS guest_yres, BX_GUI_THIS guest_bpp, ilen));
     } else {
       close(fd);
-      BX_ERROR(("snapshot button failed: cannot allocate memory"));
+      SIM->message_box("ERROR", "snapshot button failed: cannot allocate memory");
       return;
     }
     iBits = (BX_GUI_THIS guest_bpp == 8) ? 8 : 24;
@@ -640,7 +641,7 @@ void bx_gui_c::snapshot_handler(void)
       fwrite(snapshot_ptr, 1, len, fp);
       fclose(fp);
     } else {
-      BX_ERROR(("snapshot button failed: cannot create text file"));
+      SIM->message_box("ERROR", "snapshot button failed: cannot create text file");
     }
     delete [] snapshot_ptr;
   }
@@ -653,7 +654,7 @@ void bx_gui_c::paste_handler(void)
   Bit32s nbytes;
   Bit8u *bytes;
   if (!bx_keymap.isKeymapLoaded ()) {
-    BX_ERROR (("keyboard_mapping disabled, so paste cannot work"));
+    BX_ERROR(("keyboard_mapping disabled, so paste cannot work"));
     return;
   }
   if (!BX_GUI_THIS get_clipboard_text(&bytes, &nbytes)) {
@@ -816,6 +817,8 @@ void bx_gui_c::save_restore_handler(void)
               "Do you want to continue?", 0)) {
           power_handler();
         }
+      } else {
+        SIM->message_box("ERROR", "Failed to save state");
       }
     }
     BX_GUI_THIS set_display_mode(DISP_MODE_SIM);

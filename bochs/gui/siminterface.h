@@ -275,6 +275,7 @@ typedef enum {
   BX_SYNC_EVT_TICK,               // simulator -> CI, wait for response.
   BX_SYNC_EVT_LOG_DLG,            // simulator -> CI, wait for response.
   BX_SYNC_EVT_GET_DBG_COMMAND,    // simulator -> CI, wait for response.
+  BX_SYNC_EVT_MSG_BOX,            // simulator -> CI, wait for response.
   __ALL_EVENTS_BELOW_ARE_ASYNC__,
   BX_ASYNC_EVT_KEY,               // vga window -> simulator
   BX_ASYNC_EVT_MOUSE,             // vga window -> simulator
@@ -766,6 +767,8 @@ public:
   virtual int ask_filename(const char *filename, int maxlen, const char *prompt, const char *the_default, int flags) {return -1;}
   // yes/no dialog
   virtual int ask_yes_no(const char *title, const char *prompt, bx_bool the_default) {return -1;}
+  // simple message box
+  virtual void message_box(const char *title, const char *message) {}
   // called at a regular interval, currently by the bx_devices_c::timer()
   virtual void periodic() {}
   virtual int create_disk_image(const char *filename, int sectors, bx_bool overwrite) {return -3;}

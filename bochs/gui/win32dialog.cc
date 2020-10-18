@@ -620,6 +620,9 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
     case BX_SYNC_EVT_LOG_DLG:
       LogAskDialog(event);
       return event;
+    case BX_SYNC_EVT_MSG_BOX:
+      MessageBox(GetBochsWindow(), event->u.logmsg.msg, event->u.logmsg.prefix, MB_ICONERROR);
+      return event;
     case BX_SYNC_EVT_ASK_PARAM:
       param = event->u.param.param;
       if (param->get_type() == BXT_PARAM_STRING || param->get_type() == BXT_PARAM_BYTESTRING) {

@@ -1663,6 +1663,10 @@ BxEvent *sdl2_notify_callback(void *unused, BxEvent *event)
     case BX_SYNC_EVT_LOG_DLG:
       event->retcode = sdl2_ask_dialog(event);
       return event;
+    case BX_SYNC_EVT_MSG_BOX:
+       SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, event->u.logmsg.prefix,
+                                event->u.logmsg.msg, window);
+      return event;
     case BX_SYNC_EVT_ASK_PARAM:
       param = event->u.param.param;
       if (param->get_type() == BXT_PARAM_BOOL) {

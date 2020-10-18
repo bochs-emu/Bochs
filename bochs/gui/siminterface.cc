@@ -134,6 +134,8 @@ public:
   virtual int ask_filename(const char *filename, int maxlen, const char *prompt, const char *the_default, int flags);
   // yes/no dialog
   virtual int ask_yes_no(const char *title, const char *prompt, bx_bool the_default);
+  // simple message box
+  virtual void message_box(const char *title, const char *message);
   // called at a regular interval, currently by the keyboard handler.
   virtual void periodic();
   virtual int create_disk_image(const char *filename, int sectors, bx_bool overwrite);
@@ -669,10 +671,19 @@ int bx_real_sim_c::ask_yes_no(const char *title, const char *prompt, bx_bool the
   sim_to_ci_event(&event);
   if (event.retcode >= 0) {
     return param.get();
-  }
-  else {
+  } else {
     return event.retcode;
   }
+}
+
+void bx_real_sim_c::message_box(const char *title, const char *message)
+{
+  BxEvent event;
+
+  event.type = BX_SYNC_EVT_MSG_BOX;
+  event.u.logmsg.prefix = title;
+  event.u.logmsg.msg = message;
+  sim_to_ci_event(&event);
 }
 
 void bx_real_sim_c::periodic()

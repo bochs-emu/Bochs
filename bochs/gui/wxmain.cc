@@ -1147,6 +1147,12 @@ void MyFrame::OnSim2CIEvent(wxCommandEvent& event)
   case BX_SYNC_EVT_LOG_DLG:
     OnLogDlg(be);
     break;
+  case BX_SYNC_EVT_MSG_BOX:
+    wxMessageBox(wxString(be->u.logmsg.msg, wxConvUTF8),
+                 wxString(be->u.logmsg.prefix, wxConvUTF8),
+                 wxOK | wxICON_ERROR, this);
+    sim_thread->SendSyncResponse(be);
+    break;
   case BX_ASYNC_EVT_QUIT_SIM:
     wxMessageBox(wxT("Bochs simulation has stopped."), wxT("Bochs Stopped"),
         wxOK | wxICON_INFORMATION, this);

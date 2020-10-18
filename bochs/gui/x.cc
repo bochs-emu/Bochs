@@ -2811,11 +2811,20 @@ BxEvent *x11_notify_callback(void *unused, BxEvent *event)
   bx_param_string_c *sparam;
   bx_param_enum_c *eparam;
   bx_list_c *list;
+  x11_button_t buttons;
 
   switch (event->type)
   {
     case BX_SYNC_EVT_LOG_DLG:
       event->retcode = x11_ask_dialog(event);
+      return event;
+    case BX_SYNC_EVT_MSG_BOX:
+      buttons.count = 1;
+      buttons.def_id = 0;
+      buttons.ok_id = 0;
+      buttons.btn[0].label = "OK";
+      buttons.btn[0].code = 0;
+      x11_message_box(event->u.logmsg.prefix, event->u.logmsg.msg, &buttons);
       return event;
     case BX_SYNC_EVT_ASK_PARAM:
       param = event->u.param.param;
