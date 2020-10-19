@@ -318,6 +318,7 @@ protected:
   // userbutton shortcut
   Bit32u user_shortcut[4];
   int user_shortcut_len;
+  bx_bool user_shortcut_error;
   // gui dialog capabilities
   Bit32u dialog_caps;
 #if BX_USE_GUI_CONSOLE

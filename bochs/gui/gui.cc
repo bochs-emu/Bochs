@@ -751,28 +751,36 @@ Bit8u bx_gui_c::set_modifier_keys(Bit8u modifier, bx_bool pressed)
 bx_bool bx_gui_c::parse_user_shortcut(const char *val)
 {
   char *ptr, shortcut_tmp[512];
-  Bit32u symbol;
+  Bit32u symbol, new_shortcut[4];
+  int i, len = 0;
 
-  user_shortcut_len = 0;
+  user_shortcut_error = 0;
   if ((strlen(val) == 0) || !strcmp(val, "none")) {
+    user_shortcut_len = 0;
     return 1;
   } else {
+    len = 0;
     strcpy(shortcut_tmp, val);
     ptr = strtok(shortcut_tmp, "-");
     while (ptr) {
       symbol = get_user_key(ptr);
       if (symbol == BX_KEY_UNKNOWN) {
         BX_ERROR(("Unknown key symbol '%s' ignored", ptr));
+        user_shortcut_error = 1;
         return 0;
       }
-      if (user_shortcut_len < 3) {
-        user_shortcut[user_shortcut_len++] = symbol;
+      if (len < 3) {
+        new_shortcut[len++] = symbol;
         ptr = strtok(NULL, "-");
       } else {
         BX_ERROR(("Ignoring extra key symbol '%s'", ptr));
         break;
       }
     }
+    for (i = 0; i < len; i++) {
+      user_shortcut[i] = new_shortcut[i];
+    }
+    user_shortcut_len = len;
     return 1;
   }
 }
@@ -784,6 +792,10 @@ void bx_gui_c::userbutton_handler(void)
   if (!BX_GUI_THIS fullscreen_mode &&
       (BX_GUI_THIS dialog_caps & BX_GUI_DLG_USER)) {
     ret = SIM->ask_param(BXPN_USER_SHORTCUT);
+  }
+  if (BX_GUI_THIS user_shortcut_error) {
+    SIM->message_box("ERROR", "Ignoring invalid user shortcut");
+    return;
   }
   if ((ret > 0) && (BX_GUI_THIS user_shortcut_len > 0)) {
     i = 0;

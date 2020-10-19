@@ -123,7 +123,9 @@ const char *bx_param_string_handler(bx_param_string_c *param, int set,
     }
   } else if (!strcmp(pname, BXPN_USER_SHORTCUT)) {
     if ((set == 1) && (SIM->get_init_done())) {
-      bx_gui->parse_user_shortcut(val);
+      if (!bx_gui->parse_user_shortcut(val)) {
+        val = oldval;
+      }
     }
 #if BX_PLUGINS
   } else if (!strncmp(pname, "misc.user_plugin", 16)) {
