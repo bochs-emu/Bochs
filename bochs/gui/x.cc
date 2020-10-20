@@ -1287,8 +1287,8 @@ void bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
       font_row = 0;
       cfheight = font_height;
     }
-    if (!split_screen && (y == split_textrow)) {
-      if (split_fontrows < cfheight) cfheight = split_fontrows;
+    if (y == split_textrow) {
+      cfheight = split_fontrows - font_row;
     }
     new_line = new_text;
     old_line = old_text;
@@ -1362,7 +1362,7 @@ void bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
       old_text+=2;
       offset+=2;
     } while (--hchars);
-    if (!split_screen && (y == split_textrow)) {
+    if (y == split_textrow) {
       new_text = text_base;
       forceUpdate = 1;
       cs_y = 0;
@@ -1371,11 +1371,11 @@ void bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
       rows = ((dimension_y - line_compare + font_height - 2) / font_height) + 1;
       split_screen = 1;
     } else {
-      y++;
       cs_y++;
       new_text = new_line + tm_info->line_offset;
       old_text = old_line + tm_info->line_offset;
     }
+    y++;
     offset = cs_y * tm_info->line_offset;
   } while (--rows);
 

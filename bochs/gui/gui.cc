@@ -1182,8 +1182,6 @@ void bx_gui_c::text_update_common(Bit8u *old_text, Bit8u *new_text,
             cfheight = (guest_yres - tm_info->line_compare - 1) % fheight;
             if (cfheight == 0) cfheight = 16;
           }
-        } else if (y == split_textrow) {
-          cfheight = split_fontrows;
         } else if (tm_info->v_panning > 0) {
           if (y == 0) {
             cfheight -= tm_info->v_panning;
@@ -1191,6 +1189,9 @@ void bx_gui_c::text_update_common(Bit8u *old_text, Bit8u *new_text,
           } else if (rows == 1) {
             cfheight = tm_info->v_panning;
           }
+        }
+        if (y == split_textrow) {
+          cfheight = split_fontrows - cfstart;
         }
         new_line = new_text;
         offset = loffset;

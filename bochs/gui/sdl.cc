@@ -683,10 +683,8 @@ void bx_sdl_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
         cfheight = v_panning;
       }
     }
-    if (!split_screen && (y == split_textrow)) {
-      if ((split_fontrows - cfstart) < cfheight) {
-        cfheight = split_fontrows - cfstart;
-      }
+    if (y == split_textrow) {
+      cfheight = split_fontrows - cfstart;
     }
     new_line = new_text;
     old_line = old_text;
@@ -769,7 +767,7 @@ void bx_sdl_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 
     // go to next character row location
     buf_row += disp * cfheight;
-    if (!split_screen && (y == split_textrow)) {
+    if (y == split_textrow) {
       new_text = text_base;
       forceUpdate = 1;
       cs_y = 0;
@@ -781,8 +779,8 @@ void bx_sdl_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
       new_text = new_line + tm_info->line_offset;
       old_text = old_line + tm_info->line_offset;
       cs_y++;
-      y++;
     }
+    y++;
     offset = cs_y * tm_info->line_offset;
   } while (--rows);
   h_panning = tm_info->h_panning;
