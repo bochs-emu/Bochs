@@ -104,6 +104,7 @@ static BOOL win32MouseModeAbsXY = 0;
 static HANDLE workerThread = 0;
 static DWORD workerThreadID = 0;
 static int mouse_buttons = 3;
+static bx_bool win32_autoscale = 0;
 static bx_bool win32_nokeyrepeat = 0;
 static bx_bool win32_traphotkeys = 0;
 HHOOK hKeyboardHook;
@@ -120,7 +121,7 @@ static BOOL updated_area_valid = FALSE;
 static HWND desktopWindow;
 static RECT desktop;
 static BOOL queryFullScreen = FALSE;
-static int desktop_x, desktop_y;
+static unsigned desktop_x, desktop_y;
 static BOOL toolbarVisible, statusVisible;
 static BOOL fullscreenMode;
 
@@ -171,7 +172,7 @@ bx_bool SB_ActiveW[BX_MAX_STATUSITEMS];
 // Misc stuff
 static unsigned dimension_x, dimension_y, current_bpp;
 static unsigned stretched_x, stretched_y;
-static unsigned stretch_factor_x, stretch_factor_y;
+static unsigned stretch_factor;
 static BOOL fix_size = FALSE;
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
 static BOOL gui_debug = FALSE;
@@ -677,6 +678,8 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 #endif
       } else if (!strcmp(argv[i], "cmdmode")) {
         command_mode.present = 1;
+      } else if (!strcmp(argv[i], "autoscale")) {
+        win32_autoscale = 1;
       } else {
         BX_PANIC(("Unknown win32 option '%s'", argv[i]));
       }
@@ -704,8 +707,7 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   current_bpp = 8;
   stretched_x = dimension_x;
   stretched_y = dimension_y;
-  stretch_factor_x = 1;
-  stretch_factor_y = 1;
+  stretch_factor = 1;
 
   for(unsigned c=0; c<256; c++) vgafont[c] = NULL;
   create_vga_font();
@@ -832,11 +834,9 @@ void resize_main_window(BOOL disable_fullscreen)
     if (fullscreenMode && disable_fullscreen) {
       set_fullscreen_mode(false);
     }
-    if (stretch_factor_x > 1) {
-      stretched_x *= stretch_factor_x;
-    }
-    if (stretch_factor_y > 1) {
-      stretched_y *= stretch_factor_y;
+    if (stretch_factor > 1) {
+      stretched_x *= stretch_factor;
+      stretched_y *= stretch_factor;
     }
     if (!fullscreenMode) {
       if (toolbarVisible) {
@@ -1203,7 +1203,7 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
     hdcMem = CreateCompatibleDC (hdc);
     SelectObject (hdcMem, MemoryBitmap);
 
-    if ((stretch_factor_x == 1) && (stretch_factor_y == 1)) {
+    if (stretch_factor == 1) {
       BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top,
              ps.rcPaint.right - ps.rcPaint.left + 1,
              ps.rcPaint.bottom - ps.rcPaint.top + 1, hdcMem,
@@ -1212,9 +1212,9 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
       StretchBlt(hdc, ps.rcPaint.left, ps.rcPaint.top,
                  ps.rcPaint.right - ps.rcPaint.left + 1,
                  ps.rcPaint.bottom - ps.rcPaint.top + 1, hdcMem,
-                 ps.rcPaint.left/stretch_factor_x, ps.rcPaint.top/stretch_factor_y,
-                 (ps.rcPaint.right - ps.rcPaint.left+1)/stretch_factor_x,
-                 (ps.rcPaint.bottom - ps.rcPaint.top+1)/stretch_factor_y, SRCCOPY);
+                 ps.rcPaint.left/stretch_factor, ps.rcPaint.top/stretch_factor,
+                 (ps.rcPaint.right - ps.rcPaint.left+1)/stretch_factor,
+                 (ps.rcPaint.bottom - ps.rcPaint.top+1)/stretch_factor, SRCCOPY);
     }
     DeleteDC (hdcMem);
     EndPaint (hwnd, &ps);
@@ -1982,16 +1982,11 @@ void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, 
 {
   guest_textmode = (fheight > 0);
   guest_fsize = (fheight << 4) | fwidth;
-  if (guest_textmode && (fwidth > 9)) {
-    // use existing stretching feature for text mode CO40
-    x >>= 1;
-    fwidth >>= 1;
-  }
-  xChar = fwidth;
-  yChar = fheight;
   guest_xres = x;
   guest_yres = y;
   if (guest_textmode) {
+    yChar = fheight;
+    xChar = fwidth;
     text_cols = x / fwidth;
     text_rows = y / fheight;
   }
@@ -2008,13 +2003,16 @@ void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, 
     stretched_x = x;
     stretched_y = y;
   }
-  stretch_factor_x = 1;
-  stretch_factor_y = 1;
-  if (guest_textmode && (x < 400)) {
-    stretch_factor_x = 2;
-  } else if (x < 400) {
-    stretch_factor_x = 2;
-    stretch_factor_y = 2;
+  stretch_factor = 1;
+  if (x < 400) {
+    stretch_factor = 2;
+  }
+  if (win32_autoscale && !fullscreenMode) {
+	  while (((x * stretch_factor * 2) < (desktop_x - 10)) &&
+	         ((y * stretch_factor * 2) < (desktop_y - 80))) {
+        stretch_factor *= 2;
+      }
+      BX_INFO(("autoscale: %d x %d", x * stretch_factor, y * stretch_factor));
   }
 
   bitmap_info->bmiHeader.biBitCount = bpp;
@@ -2199,27 +2197,32 @@ void DrawBitmap(HDC hdc, HBITMAP hBitmap, int xStart, int yStart, int width,
   POINT ptSize, ptOrg;
   HGDIOBJ oldObj;
 
-  hdcMem = CreateCompatibleDC (hdc);
-  SelectObject (hdcMem, hBitmap);
-  SetMapMode (hdcMem, GetMapMode (hdc));
+  hdcMem = CreateCompatibleDC(hdc);
+  SelectObject(hdcMem, hBitmap);
+  SetMapMode(hdcMem, GetMapMode (hdc));
 
-  GetObject (hBitmap, sizeof (BITMAP), (LPVOID) &bm);
+  GetObject(hBitmap, sizeof (BITMAP), (LPVOID) &bm);
 
   ptSize.x = width;
   ptSize.y = height;
 
-  DPtoLP (hdc, &ptSize, 1);
+  DPtoLP(hdc, &ptSize, 1);
 
   ptOrg.x = fcol;
   ptOrg.y = frow;
-  DPtoLP (hdcMem, &ptOrg, 1);
+  DPtoLP(hdcMem, &ptOrg, 1);
 
   oldObj = SelectObject(MemoryDC, MemoryBitmap);
 
   COLORREF crFore = SetTextColor(MemoryDC, GetColorRef((cColor>>4)&0xf));
   COLORREF crBack = SetBkColor(MemoryDC, GetColorRef(cColor&0xf));
-  BitBlt(MemoryDC, xStart, yStart, ptSize.x, ptSize.y, hdcMem, ptOrg.x,
-         ptOrg.y, dwRop);
+  if (xChar > 9) {
+    StretchBlt(MemoryDC, xStart, yStart, ptSize.x, ptSize.y, hdcMem, ptOrg.x,
+              ptOrg.y, ptSize.x / 2, ptSize.y, dwRop);
+  } else {
+    BitBlt(MemoryDC, xStart, yStart, ptSize.x, ptSize.y, hdcMem, ptOrg.x,
+           ptOrg.y, dwRop);
+  }
   SetBkColor(MemoryDC, crBack);
   SetTextColor(MemoryDC, crFore);
 
@@ -2227,16 +2230,16 @@ void DrawBitmap(HDC hdc, HBITMAP hBitmap, int xStart, int yStart, int width,
 
   updateUpdated(xStart, yStart, ptSize.x + xStart - 1, ptSize.y + yStart - 1);
 
-  DeleteDC (hdcMem);
+  DeleteDC(hdcMem);
 }
 
 
 void updateUpdated(int x1, int y1, int x2, int y2)
 {
-  x1 *= stretch_factor_x;
-  y1 *= stretch_factor_y;
-  x2 *= stretch_factor_x;
-  y2 *= stretch_factor_y;
+  x1 *= stretch_factor;
+  y1 *= stretch_factor;
+  x2 *= stretch_factor;
+  y2 *= stretch_factor;
   if (!updated_area_valid) {
     updated_area.left = x1 ;
     updated_area.top = y1 ;
