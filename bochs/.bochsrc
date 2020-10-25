@@ -94,8 +94,8 @@
 # "traphotkeys" - system hotkeys not handled by host OS, but sent to guest
 #                 (win32 in mouse capture and fullscreen mode: alt-tab, win,
 #                 alt-space, alt-esc, ctrl-esc)
-# "autoscale"   - scale small simulation window by 2, 4 or 8 depending on
-#                 desktop window size (window mode only)
+# "autoscale"   - scale small simulation window by factor 2, 4 or 8 depending
+#                 on desktop window size
 #display_library: win32, options="traphotkeys, autoscale"
 #display_library: wx
 #display_library: x

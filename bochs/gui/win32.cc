@@ -122,8 +122,9 @@ static HWND desktopWindow;
 static RECT desktop;
 static BOOL queryFullScreen = FALSE;
 static unsigned desktop_x, desktop_y;
+static unsigned max_client_x, max_client_y;
 static BOOL toolbarVisible, statusVisible;
-static BOOL fullscreenMode;
+static BOOL fullscreenMode, inFullscreenToggle;
 
 // Text mode screen stuff
 static unsigned prev_cursor_x = 0;
@@ -619,6 +620,8 @@ bx_win32_gui_c::bx_win32_gui_c()
   GetWindowRect(desktopWindow, &desktop);
   desktop_x = desktop.right - desktop.left;
   desktop_y = desktop.bottom - desktop.top;
+  max_client_x = desktop_x - 20;
+  max_client_y = desktop_y - 80;
 }
 
 
@@ -632,7 +635,8 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
   hotKeyReceiver = stInfo.simWnd;
   fullscreenMode = FALSE;
-  BX_INFO(("Desktop Window dimensions: %d x %d", desktop_x, desktop_y));
+  inFullscreenToggle = FALSE;
+  BX_INFO(("Desktop window dimensions: %d x %d", desktop_x, desktop_y));
 
   static RGBQUAD black_quad={ 0, 0, 0, 0};
   stInfo.kill = 0;
@@ -765,18 +769,28 @@ void set_fullscreen_mode(BOOL enable)
 
   if (enable) {
     if (desktop_y > 0) {
+      if (!queryFullScreen) {
+        MessageBox(NULL,
+          "Going into fullscreen mode -- Alt-Enter to revert",
+          "Going fullscreen",
+          MB_APPLMODAL);
+        queryFullScreen = TRUE;
+        enq_key_event(0x38, BX_KEY_RELEASED); // send lost ALT keyup event
+      }
+      inFullscreenToggle = TRUE;
+      BX_INFO(("entering fullscreen mode"));
       stretched_x = desktop_x;
       stretched_y = desktop_y;
     } else {
       return;
     }
-    if (!queryFullScreen) {
-      MessageBox(NULL,
-        "Going into fullscreen mode -- Alt-Enter to revert",
-        "Going fullscreen",
-        MB_APPLMODAL);
-      queryFullScreen = TRUE;
-      enq_key_event(0x38, BX_KEY_RELEASED); // send lost ALT keyup event
+    if (win32_autoscale) {
+      stretch_factor = 1;
+      while (((dimension_x * stretch_factor * 2) <= desktop_x) &&
+             ((dimension_y * stretch_factor * 2) <= desktop_y)) {
+        stretch_factor *= 2;
+      }
+      if (stretch_factor > 1) BX_INFO(("autoscale: factor = %d", stretch_factor));
     }
     // hide toolbar and status bars to get some additional space
     ShowWindow(hwndTB, SW_HIDE);
@@ -796,7 +810,9 @@ void set_fullscreen_mode(BOOL enable)
        desktop.right, desktop.bottom, SWP_SHOWWINDOW);
     }
     fullscreenMode = TRUE;
+    inFullscreenToggle = FALSE;
   } else {
+    BX_INFO(("leaving fullscreen mode"));
     stretched_x = dimension_x;
     stretched_y = dimension_y;
     if (saveParent) {
@@ -828,17 +844,35 @@ void resize_main_window(BOOL disable_fullscreen)
     statusVisible = TRUE;
   }
 
-  if ((desktop_y > 0) && (dimension_y >= (unsigned)desktop_y)) {
+  if ((desktop_y > 0) && (dimension_y >= desktop_y)) {
     set_fullscreen_mode(true);
   } else {
     if (fullscreenMode && disable_fullscreen) {
       set_fullscreen_mode(false);
     }
-    if (stretch_factor > 1) {
-      stretched_x *= stretch_factor;
-      stretched_y *= stretch_factor;
+    if (win32_autoscale) {
+      stretch_factor = 1;
+      if (!fullscreenMode) {
+        while (((dimension_x * stretch_factor * 2) <= max_client_x) &&
+               ((dimension_y * stretch_factor * 2) <= max_client_y)) {
+          stretch_factor *= 2;
+        }
+      } else {
+        while (((dimension_x * stretch_factor * 2) <= desktop_x) &&
+               ((dimension_y * stretch_factor * 2) <= desktop_y)) {
+          stretch_factor *= 2;
+        }
+      }
+      if (stretch_factor > 1) BX_INFO(("autoscale: factor = %d", stretch_factor));
     }
     if (!fullscreenMode) {
+      if (stretch_factor > 1) {
+        stretched_x = dimension_x * stretch_factor;
+        stretched_y = dimension_y * stretch_factor;
+      } else {
+        stretched_x = dimension_x;
+        stretched_y = dimension_y;
+      }
       if (toolbarVisible) {
         ShowWindow(hwndTB, SW_SHOW);
         GetWindowRect(hwndTB, &R);
@@ -1093,7 +1127,7 @@ LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
       GetClientRect(stInfo.simWnd, &R);
       x = R.right - R.left;
       y = R.bottom - R.top;
-      if ((x != (int)stretched_x) || (y != (int)stretched_y)) {
+      if (!inFullscreenToggle && ((x != (int)stretched_x) || (y != (int)stretched_y))) {
         BX_ERROR(("Sim client size(%d, %d) != stretched size(%d, %d)!",
           x, y, stretched_x, stretched_y));
         if (!saveParent) fix_size = TRUE; // no fixing if fullscreen
@@ -1364,11 +1398,9 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
           toolbar_cmd = 10; // Copy
         } else if (wParam == 'F') {
           if (!saveParent) {
-            BX_INFO(("entering fullscreen mode"));
             set_fullscreen_mode(TRUE);
             bx_gui->set_fullscreen_mode(1);
           } else {
-            BX_INFO(("leaving fullscreen mode"));
             resize_main_window(TRUE);
             bx_gui->set_fullscreen_mode(0);
           }
@@ -1427,10 +1459,8 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
     if ((wParam == VK_RETURN) &&
         ((HIWORD(lParam) & BX_SYSKEY) == (KF_ALTDOWN | KF_UP))) {
       if (!saveParent) {
-        BX_INFO(("entering fullscreen mode"));
         set_fullscreen_mode(TRUE);
       } else {
-        BX_INFO(("leaving fullscreen mode"));
         resize_main_window(TRUE);
       }
     } else {
@@ -1464,10 +1494,8 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
     if (wParam == VK_RETURN) {
       if ((HIWORD(lParam) & BX_SYSKEY) == KF_ALTDOWN) {
         if (!saveParent) {
-          BX_INFO(("entering fullscreen mode"));
           set_fullscreen_mode(TRUE);
         } else {
-          BX_INFO(("leaving fullscreen mode"));
           resize_main_window(TRUE);
         }
       }
@@ -1996,23 +2024,15 @@ void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, 
   dimension_x = x;
   dimension_y = y;
 
-  if ((desktop_y > 0) && (((int)x > desktop_x) | ((int)y > desktop_y))) {
+  if ((desktop_y > 0) && ((x > desktop_x) | (y > desktop_y))) {
     BX_ERROR(("dimension_update(): resolution of out of desktop bounds - screen only partly visible"));
   }
-  if (!fullscreenMode) {
-    stretched_x = x;
-    stretched_y = y;
-  }
-  stretch_factor = 1;
-  if (x < 400) {
-    stretch_factor = 2;
-  }
-  if (win32_autoscale && !fullscreenMode) {
-	  while (((x * stretch_factor * 2) < (desktop_x - 10)) &&
-	         ((y * stretch_factor * 2) < (desktop_y - 80))) {
-        stretch_factor *= 2;
-      }
-      BX_INFO(("autoscale: %d x %d", x * stretch_factor, y * stretch_factor));
+  // stretch small simulation window (compatibility code)
+  if (!win32_autoscale) {
+    stretch_factor = 1;
+    if (x < 400) {
+      stretch_factor = 2;
+    }
   }
 
   bitmap_info->bmiHeader.biBitCount = bpp;

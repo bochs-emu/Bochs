@@ -40,8 +40,7 @@ Changes after 2.6.11:
     - X11 keymaps: added new one for Swiss-German and improved Italian map.
     - RFB: added support for the pixel format RGB332.
     - win32: added display library option "autoscale" to scale a small
-      simulation window by 2, 4 or 8 depending in desktop window size
-      (window mode only).
+      simulation window by factor 2, 4 or 8 depending in desktop window size.
     - wx: fixed status bar handling to avoid segfaults and deadlocks.
 
 - LGPL'd VGABIOS updated from SVN (fixed text output in VGA graphics modes).
