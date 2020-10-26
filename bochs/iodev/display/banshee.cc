@@ -165,7 +165,7 @@ void bx_banshee_c::init_model(void)
   pci_conf[0x14] = 0x08;
   init_bar_mem(0, 0x2000000, mem_read_handler, mem_write_handler);
   init_bar_mem(1, 0x2000000, mem_read_handler, mem_write_handler);
-  init_bar_io(2, 256, read_handler, write_handler, &banshee_iomask[0]);
+  init_bar_io(2, 256, read_handler, write_handler, banshee_iomask);
   pci_rom_address = 0;
   pci_rom_read_handler = mem_read_handler;
   load_pci_rom(SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr());
@@ -230,7 +230,6 @@ void bx_banshee_c::reset(unsigned type)
   if (theVoodooVga != NULL) {
     theVoodooVga->banshee_set_vclk3((Bit32u)v->vidclk);
   }
-  // TODO
 
   // Deassert IRQ
   set_irq_level(0);
@@ -300,7 +299,6 @@ void bx_banshee_c::register_state(void)
   new bx_shadow_num_c(banshee, "blt_h2s_pitch", &v->banshee.blt.h2s_pitch);
   new bx_shadow_num_c(banshee, "blt_h2s_pxstart", &v->banshee.blt.h2s_pxstart);
   new bx_shadow_bool_c(banshee, "blt_h2s_alt_align", &v->banshee.blt.h2s_alt_align);
-  // TODO
 }
 
 void bx_banshee_c::after_restore_state(void)
@@ -312,7 +310,6 @@ void bx_banshee_c::after_restore_state(void)
     theVoodooVga->banshee_update_mode();
   }
   start_fifo_thread();
-  // TODO
 }
 
 bx_bool bx_banshee_c::update_timing(void)
@@ -520,6 +517,9 @@ Bit32u bx_banshee_c::read(Bit32u address, unsigned io_len)
 
   Bit8u offset = (Bit8u)(address & 0xff);
   Bit8u reg = (offset>>2);
+  if ((offset & 3) && (reg > io_status) && (reg < io_vgab0)) {
+    BX_ERROR(("unaligned read from address 0x%04x", address));
+  }
   switch (reg) {
     case io_status:
       result = register_r(0) >> ((offset & 3) * 8);
@@ -533,7 +533,8 @@ Bit32u bx_banshee_c::read(Bit32u address, unsigned io_len)
     case io_vgac0:  case io_vgac4:  case io_vgac8:  case io_vgacc:
     case io_vgad0:  case io_vgad4:  case io_vgad8:  case io_vgadc:
       result = 0;
-      if (theVoodooVga != NULL) {
+      // i/o read only, not memory mapped
+      if ((theVoodooVga != NULL) && (address & 0xff00)) {
         for (unsigned i=0; i<io_len; i++) {
           result |= (theVoodooVga->banshee_vga_read_handler(theVoodooVga, 0x300+offset+i, 1) << (i*8));
         }
@@ -584,6 +585,9 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
   BX_DEBUG(("banshee write to offset 0x%02x: value = 0x%08x len=%d (%s)", offset, value,
             io_len, banshee_io_reg_name[reg]));
+  if ((offset & 3) && (reg < io_vgab0)) {
+    BX_ERROR(("unaligned write to address 0x%04x", address));
+  }
   switch (reg) {
     case io_lfbMemoryConfig:
       v->banshee.io[reg] = value;
@@ -725,7 +729,8 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case io_vgab0:  case io_vgab4:  case io_vgab8:  case io_vgabc:
     case io_vgac0:  case io_vgac4:  case io_vgac8:  case io_vgacc:
     case io_vgad0:  case io_vgad4:  case io_vgad8:  case io_vgadc:
-      if (theVoodooVga != NULL) {
+      // i/o write only, not memory mapped
+      if ((theVoodooVga != NULL) && (address & 0xff00)) {
         for (unsigned i=0; i<io_len; i++) {
           Bit8u value8 = (value >> (i*8)) & 0xff;
           theVoodooVga->banshee_vga_write_handler(theVoodooVga, 0x300+offset+i, value8, 1);
@@ -804,7 +809,7 @@ void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
     } else if (offset < 0xc00000) {
       BX_DEBUG(("reserved read from offset 0x%08x", offset));
     } else if (offset < 0x1000000) {
-      BX_INFO(("TODO: YUV planar space read from offset 0x%08x", offset));
+      BX_ERROR(("TODO: YUV planar space read from offset 0x%08x", offset));
     } else {
       Bit8u temp = v->fbi.lfb_stride;
       v->fbi.lfb_stride = 11;
@@ -873,7 +878,7 @@ void bx_banshee_c::mem_write(bx_phy_address addr, unsigned len, void *data)
     } else if (offset < 0xc00000) {
       BX_DEBUG(("reserved write to offset 0x%08x", offset));
     } else if (offset < 0x1000000) {
-      BX_INFO(("TODO: YUV planar space write to offset 0x%08x", offset));
+      BX_ERROR(("TODO: YUV planar space write to offset 0x%08x", offset));
     } else {
       Bit8u temp = v->fbi.lfb_stride;
       v->fbi.lfb_stride = 11;
