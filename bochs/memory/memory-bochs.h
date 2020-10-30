@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2018  The Bochs Project
+//  Copyright (C) 2001-2020  The Bochs Project
 //
 //  I/O memory handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -105,6 +105,8 @@ private:
 
   BX_MEM_SMF void   read_block(Bit32u block);
 #endif
+  BX_MEM_SMF Bit8u flash_read(Bit32u addr);
+  BX_MEM_SMF void  flash_write(Bit32u addr, Bit8u data);
 
 public:
   BX_MEM_C();

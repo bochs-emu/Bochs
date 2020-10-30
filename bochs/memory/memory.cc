@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2019  The Bochs Project
+//  Copyright (C) 2001-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -186,7 +186,7 @@ mem_write:
           data_ptr = (Bit8u *) data + (len - 1);
 #endif
           for (unsigned i = 0; i < len; i++) {
-            BX_MEM_THIS rom[BIOS_MAP_LAST128K(a20addr)] = *data_ptr;
+            BX_MEM_THIS flash_write(BIOS_MAP_LAST128K(a20addr), *data_ptr);
             a20addr++;
 #ifdef BX_LITTLE_ENDIAN
             data_ptr++;
@@ -218,7 +218,11 @@ inc_one:
     data_ptr = (Bit8u *) data + (len - 1);
 #endif
     for (unsigned i = 0; i < len; i++) {
-      BX_MEM_THIS rom[a20addr & BIOS_MASK] = *data_ptr;
+      if (BX_MEM_THIS pci_enabled) {
+        BX_MEM_THIS flash_write(a20addr & BIOS_MASK, *data_ptr);
+      } else {
+        BX_MEM_THIS rom[a20addr & BIOS_MASK] = *data_ptr;
+      }
       a20addr++;
 #ifdef BX_LITTLE_ENDIAN
       data_ptr++;
@@ -352,7 +356,7 @@ mem_read:
           // Read from ROM
           if ((a20addr & 0xfffe0000) == 0x000e0000) {
             // last 128K of BIOS ROM mapped to 0xE0000-0xFFFFF
-            *data_ptr = BX_MEM_THIS rom[BIOS_MAP_LAST128K(a20addr)];
+            *data_ptr = BX_MEM_THIS flash_read(BIOS_MAP_LAST128K(a20addr));
           } else {
             *data_ptr = BX_MEM_THIS rom[(a20addr & EXROM_MASK) + BIOSROMSZ];
           }
@@ -403,12 +407,16 @@ inc_one:
 
     if (a20addr >= (bx_phy_address)~BIOS_MASK) {
       for (unsigned i = 0; i < len; i++) {
-        *data_ptr = BX_MEM_THIS rom[a20addr & BIOS_MASK];
-         a20addr++;
+        if (BX_MEM_THIS pci_enabled) {
+          *data_ptr = BX_MEM_THIS flash_read(a20addr & BIOS_MASK);
+        } else {
+          *data_ptr = BX_MEM_THIS rom[a20addr & BIOS_MASK];
+        }
+        a20addr++;
 #ifdef BX_LITTLE_ENDIAN
-         data_ptr++;
+        data_ptr++;
 #else // BX_BIG_ENDIAN
-         data_ptr--;
+        data_ptr--;
 #endif
       }
     }

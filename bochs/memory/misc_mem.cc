@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2018  The Bochs Project
+//  Copyright (C) 2001-2020  The Bochs Project
 //
 //  I/O memory handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -925,6 +925,18 @@ void BX_MEM_C::set_memory_type(memory_area_t area, bx_bool rw, bx_bool dram)
 void BX_MEM_C::set_bios_write(bx_bool enabled)
 {
   BX_MEM_THIS bios_write_enabled = enabled;
+}
+
+Bit8u BX_MEM_C::flash_read(Bit32u addr)
+{
+  // TODO
+  return BX_MEM_THIS rom[addr];
+}
+
+void BX_MEM_C::flash_write(Bit32u addr, Bit8u data)
+{
+  // TODO
+  BX_MEM_THIS rom[addr] = data;
 }
 
 #if BX_SUPPORT_MONITOR_MWAIT
