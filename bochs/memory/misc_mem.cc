@@ -148,6 +148,7 @@ void BX_MEM_C::init_memory(Bit64u guest, Bit64u host)
     BX_MEM_THIS memory_type[i][0] = 0;
     BX_MEM_THIS memory_type[i][1] = 0;
   }
+  BX_MEM_THIS bios_rom_addr = 0xffff0000;
 
   BX_MEM_THIS register_state();
 }
@@ -435,7 +436,9 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
     if ((romaddress & 0xf0000) < 0xf0000) {
       BX_MEM_THIS rom_present[64] = 1;
     }
-    is_bochs_bios = (strstr(path, "BIOS-bochs-latest") != NULL);
+    BX_MEM_THIS bios_rom_addr = romaddress;
+    is_bochs_bios = ((strstr(path, "BIOS-bochs-latest") != NULL) ||
+                     (strstr(path, "BIOS-bochs-legacy") != NULL));
   } else {
     if ((size % 512) != 0) {
       close(fd);
@@ -598,7 +601,7 @@ bx_bool BX_MEM_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len
       ret = 0; // error, beyond limits of memory
     }
 #endif
-    else if (addr >= (bx_phy_address)~BIOS_MASK)
+    else if (addr >= (bx_phy_address)BX_MEM_THIS bios_rom_addr)
     {
       *buf = BX_MEM_THIS rom[addr & BIOS_MASK];
     }
@@ -640,7 +643,7 @@ bx_bool BX_MEM_C::dbg_set_mem(bx_phy_address addr, unsigned len, Bit8u *buf)
       }
     }
 #endif  // #if BX_SUPPORT_PCI
-    else if ((addr < 0x000c0000 || addr >= 0x00100000) && (addr < (bx_phy_address)(~BIOS_MASK)))
+    else if ((addr < 0x000c0000 || addr >= 0x00100000) && (addr < (bx_phy_address)BX_MEM_THIS bios_rom_addr))
     {
       *(BX_MEM_THIS get_vector(addr)) = *buf;
     }
@@ -700,7 +703,7 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
 {
   bx_phy_address a20addr = A20ADDR(addr);
 
-  bx_bool is_bios = (a20addr >= (bx_phy_address)~BIOS_MASK);
+  bx_bool is_bios = (a20addr >= (bx_phy_address)BX_MEM_THIS bios_rom_addr);
 #if BX_PHY_ADDRESS_LONG
   if (a20addr > BX_CONST64(0xffffffff)) is_bios = 0;
 #endif
@@ -757,7 +760,7 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
       }
     }
 #endif
-    else if(a20addr < BX_MEM_THIS len && ! is_bios)
+    else if ((a20addr < BX_MEM_THIS len) && !is_bios)
     {
       if (a20addr < 0x000c0000 || a20addr >= 0x00100000) {
         return BX_MEM_THIS get_vector(a20addr);
@@ -777,7 +780,7 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
       return (Bit8u *) &BX_MEM_THIS bogus[a20addr & 0xfff];
     }
 #endif
-    else if (a20addr >= (bx_phy_address)~BIOS_MASK)
+    else if (is_bios)
     {
       return (Bit8u *) &BX_MEM_THIS rom[a20addr & BIOS_MASK];
     }
@@ -789,7 +792,7 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
   }
   else
   { // op == {BX_WRITE, BX_RW}
-    if (a20addr >= BX_MEM_THIS len || is_bios)
+    if ((a20addr >= BX_MEM_THIS len) || is_bios)
       return(NULL); // Error, requested addr is out of bounds.
     else if (a20addr >= 0x000a0000 && a20addr < 0x000c0000)
       return(NULL); // Vetoed!  Mem mapped IO (VGA)
@@ -925,6 +928,15 @@ void BX_MEM_C::set_memory_type(memory_area_t area, bx_bool rw, bx_bool dram)
 void BX_MEM_C::set_bios_write(bx_bool enabled)
 {
   BX_MEM_THIS bios_write_enabled = enabled;
+}
+
+void BX_MEM_C::set_bios_rom_access(Bit8u region, bx_bool enabled)
+{
+  if (enabled) {
+    BX_MEM_THIS bios_rom_access |= region;
+  } else {
+    BX_MEM_THIS bios_rom_access &= ~region;
+  }
 }
 
 Bit8u BX_MEM_C::flash_read(Bit32u addr)

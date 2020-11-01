@@ -51,7 +51,7 @@ void BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned le
   BX_MEM_THIS check_monitor(a20addr, len);
 #endif
 
-  bx_bool is_bios = (a20addr >= (bx_phy_address)~BIOS_MASK);
+  bx_bool is_bios = (a20addr >= (bx_phy_address)BX_MEM_THIS bios_rom_addr);
 #if BX_PHY_ADDRESS_LONG
   if (a20addr > BX_CONST64(0xffffffff)) is_bios = 0;
 #endif
@@ -85,7 +85,7 @@ void BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned le
 mem_write:
 
   // all memory access fits in single 4K page
-  if (a20addr < BX_MEM_THIS len && ! is_bios) {
+  if ((a20addr < BX_MEM_THIS len) && !is_bios) {
     // all of data is within limits of physical memory
     if (a20addr < 0x000a0000 || a20addr >= 0x00100000)
     {
@@ -210,7 +210,7 @@ inc_one:
 #endif
 
     }
-  } else if (BX_MEM_THIS bios_write_enabled && (a20addr >= (bx_phy_address)~BIOS_MASK)) {
+  } else if (BX_MEM_THIS bios_write_enabled && is_bios) {
     // volatile BIOS write support
 #ifdef BX_LITTLE_ENDIAN
     data_ptr = (Bit8u *) data;
@@ -247,7 +247,7 @@ void BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned len
     BX_PANIC(("readPhysicalPage: cross page access at address 0x" FMT_PHY_ADDRX ", len=%d", addr, len));
   }
 
-  bx_bool is_bios = (a20addr >= (bx_phy_address)~BIOS_MASK);
+  bx_bool is_bios = (a20addr >= (bx_phy_address)BX_MEM_THIS bios_rom_addr);
 #if BX_PHY_ADDRESS_LONG
   if (a20addr > BX_CONST64(0xffffffff)) is_bios = 0;
 #endif
@@ -278,7 +278,7 @@ void BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned len
 
 mem_read:
 
-  if (a20addr < BX_MEM_THIS len && ! is_bios) {
+  if ((a20addr < BX_MEM_THIS len) && !is_bios) {
     // all of data is within limits of physical memory
     if (a20addr < 0x000a0000 || a20addr >= 0x00100000)
     {
@@ -405,7 +405,7 @@ inc_one:
     data_ptr = (Bit8u *) data + (len - 1);
 #endif
 
-    if (a20addr >= (bx_phy_address)~BIOS_MASK) {
+    if (is_bios) {
       for (unsigned i = 0; i < len; i++) {
         if (BX_MEM_THIS pci_enabled) {
           *data_ptr = BX_MEM_THIS flash_read(a20addr & BIOS_MASK);
@@ -419,8 +419,8 @@ inc_one:
         data_ptr--;
 #endif
       }
-    }
-    else {
+    } else {
+      // bogus memory
       memset(data, 0xFF, len);
     }
   }

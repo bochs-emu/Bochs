@@ -385,6 +385,8 @@ void bx_piix3_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
         if ((value8 & 0xc0) != (oldval & 0xc0)) {
           BX_ERROR(("BIOS enable switches not supported (lower=%d / extended=%d)",
                     (value8 >> 6) & 1, (value8 >> 7) & 1));
+          DEV_mem_set_bios_rom_access(BIOS_ROM_LOWER, (value8 >> 6) & 1);
+          DEV_mem_set_bios_rom_access(BIOS_ROM_EXTENDED, (value8 >> 7) & 1);
         }
         BX_P2I_THIS pci_conf[address+i] = value8;
         break;
@@ -399,6 +401,7 @@ void bx_piix3_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
           if ((value8 & 0x02) != (oldval & 0x02)) {
             BX_ERROR(("1-meg extended BIOS enable switch not supported (value=%d)",
                       (value8 >> 1) & 1));
+            DEV_mem_set_bios_rom_access(BIOS_ROM_1MEG, (value8 >> 1) & 1);
           }
         }
         break;

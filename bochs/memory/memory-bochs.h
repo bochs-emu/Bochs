@@ -44,6 +44,10 @@ class BX_CPU_C;
 
 #define BIOS_MAP_LAST128K(addr) (((addr) | 0xfff00000) & BIOS_MASK)
 
+#define BIOS_ROM_LOWER    0x01
+#define BIOS_ROM_EXTENDED 0x02
+#define BIOS_ROM_1MEG     0x04
+
 enum memory_area_t {
   BX_MEM_AREA_C0000 = 0,
   BX_MEM_AREA_C4000,
@@ -96,6 +100,8 @@ private:
   Bit8u   *bogus;    // 4k for unexisting memory
   bx_bool rom_present[65];
   bx_bool memory_type[13][2];
+  Bit32u  bios_rom_addr;
+  Bit8u   bios_rom_access;
 
   Bit32u used_blocks;
 #if BX_LARGE_RAMFILE
@@ -121,6 +127,7 @@ public:
   BX_MEM_SMF bx_bool is_smram_accessible(void);
 
   BX_MEM_SMF void    set_bios_write(bx_bool enabled);
+  BX_MEM_SMF void    set_bios_rom_access(Bit8u region, bx_bool enabled);
   BX_MEM_SMF void    set_memory_type(memory_area_t area, bx_bool rw, bx_bool dram);
 
   BX_MEM_SMF Bit8u*  getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw);

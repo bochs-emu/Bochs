@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2018  The Bochs Project
+//  Copyright (C) 2002-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -266,6 +266,7 @@ extern "C" {
 #define DEV_mem_set_memory_type(a,b,c) \
     bx_devices.mem->set_memory_type((memory_area_t)a,b,c)
 #define DEV_mem_set_bios_write(a) bx_devices.mem->set_bios_write(a)
+#define DEV_mem_set_bios_rom_access(a,b) bx_devices.mem->set_bios_rom_access(a,b)
 
 ///////// USB device macro
 #define DEV_usb_init_device(a,b,c,d) (usbdev_type)bx_usbdev_ctl.init_device(a,b,(void**)c,d)
