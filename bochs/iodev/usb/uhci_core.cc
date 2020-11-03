@@ -57,7 +57,7 @@
 //#define UHCI_FULL_DEBUG
 
 const Bit8u uhci_iomask[32] = {2, 1, 2, 1, 2, 1, 2, 0, 4, 0, 0, 0, 1, 0, 0, 0,
-                              3, 1, 3, 1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+                               3, 1, 3, 1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 // the device object
 
@@ -78,7 +78,7 @@ void bx_uhci_core_c::init_uhci(Bit8u devfunc, Bit16u devid, Bit8u headt, Bit8u i
   // Call our timer routine every 1mS (1,000uS)
   // Continuous and active
   hub.timer_index =
-    DEV_register_timer(this, uhci_timer_handler, 1000, 1,1, "usb.timer");
+    DEV_register_timer(this, uhci_timer_handler, 1000, 1, 1, "usb.timer");
 
   hub.devfunc = devfunc;
   DEV_register_pci_handlers(this, &hub.devfunc, BX_PLUGIN_USB_UHCI,
@@ -831,6 +831,7 @@ bx_bool bx_uhci_core_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *
         ret = broadcast_packet(&p->packet);
         break;
       default:
+        remove_async_packet(&packets, p);
         hub.usb_status.host_error = 1;
         update_irq();
         return 0;
