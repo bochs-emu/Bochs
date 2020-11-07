@@ -102,6 +102,9 @@ private:
   bx_bool memory_type[13][2];
   Bit32u  bios_rom_addr;
   Bit8u   bios_rom_access;
+  bx_bool flash_read_rom;
+  bx_bool flash_write_rom;
+  bx_bool flash_cmd_idx;
 
   Bit32u used_blocks;
 #if BX_LARGE_RAMFILE

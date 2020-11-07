@@ -138,6 +138,11 @@ void BX_MEM_C::init_memory(Bit64u guest, Bit64u host)
 
   BX_MEM_THIS pci_enabled = SIM->get_param_bool(BXPN_PCI_ENABLED)->get();
   BX_MEM_THIS bios_write_enabled = 0;
+  BX_MEM_THIS bios_rom_addr = 0xffff0000;
+  BX_MEM_THIS flash_read_rom = 1;
+  BX_MEM_THIS flash_write_rom = 0;
+  BX_MEM_THIS flash_cmd_idx = 0;
+
   BX_MEM_THIS smram_available = 0;
   BX_MEM_THIS smram_enable = 0;
   BX_MEM_THIS smram_restricted = 0;
@@ -148,7 +153,6 @@ void BX_MEM_C::init_memory(Bit64u guest, Bit64u host)
     BX_MEM_THIS memory_type[i][0] = 0;
     BX_MEM_THIS memory_type[i][1] = 0;
   }
-  BX_MEM_THIS bios_rom_addr = 0xffff0000;
 
   BX_MEM_THIS register_state();
 }
@@ -939,16 +943,52 @@ void BX_MEM_C::set_bios_rom_access(Bit8u region, bx_bool enabled)
   }
 }
 
+const Bit16u flash_cmd_addr[3] = {0x5555, 0x2aaa, 0x5555};
+const Bit8u  flash_cmd_code[3] = {0xaa,   0x55,   0x00};
+
 Bit8u BX_MEM_C::flash_read(Bit32u addr)
 {
-  // TODO
-  return BX_MEM_THIS rom[addr];
+  BX_MEM_THIS flash_write_rom = 0;
+  BX_MEM_THIS flash_cmd_idx = 0;
+  if (BX_MEM_THIS flash_read_rom) {
+    BX_DEBUG(("flash read from ROM (address = 0x%08x)", addr));
+    return BX_MEM_THIS rom[addr];
+  } else {
+    BX_INFO(("flash read ID (address = 0x%08x)", addr));
+    return (addr & 1) ? 0x95 : 0x89;
+  }
 }
 
 void BX_MEM_C::flash_write(Bit32u addr, Bit8u data)
 {
-  // TODO
-  BX_MEM_THIS rom[addr] = data;
+  if (BX_MEM_THIS flash_write_rom) {
+    BX_DEBUG(("flash write to ROM (address = 0x%08x, data = 0x%02x)", addr, data));
+    BX_MEM_THIS rom[addr] = data;
+  } else {
+    Bit16u cmd_addr = (Bit16u)addr;
+    BX_INFO(("flash write command (address = 0x%04x, code = 0x%02x)", cmd_addr, data));
+    if (cmd_addr == flash_cmd_addr[BX_MEM_THIS flash_cmd_idx]) {
+      if ((BX_MEM_THIS flash_cmd_idx < 2) && (data == flash_cmd_code[BX_MEM_THIS flash_cmd_idx])) {
+        BX_MEM_THIS flash_cmd_idx++;
+      } else {
+        if (data == 0xa0) {
+          BX_MEM_THIS flash_write_rom = 1;
+        } else if (data == 0xf0) {
+          BX_MEM_THIS flash_read_rom = 1;
+          BX_MEM_THIS flash_write_rom = 0;
+        } else {
+          BX_ERROR(("flash_write(): unsupported code 0x%02x", data));
+        }
+        BX_MEM_THIS flash_cmd_idx = 0;
+      }
+    } else if (data == 0x90) {
+      BX_MEM_THIS flash_read_rom = 0;
+    } else if (data == 0xff) {
+      BX_MEM_THIS flash_read_rom = 1;
+    } else {
+      BX_MEM_THIS flash_cmd_idx = 0;
+    }
+  }
 }
 
 #if BX_SUPPORT_MONITOR_MWAIT
