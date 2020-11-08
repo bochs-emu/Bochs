@@ -200,10 +200,10 @@ int CDECL libes1370_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
 
 void CDECL libes1370_LTX_plugin_fini(void)
 {
+  delete theES1370Device;
   SIM->unregister_addon_option("es1370");
   bx_list_c *menu = (bx_list_c*)SIM->get_param("sound");
   menu->remove("es1370");
-  delete theES1370Device;
 }
 
 // the device object

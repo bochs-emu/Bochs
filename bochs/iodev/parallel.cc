@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2017  The Bochs Project
+//  Copyright (C) 2001-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -118,6 +118,7 @@ void CDECL libparallel_LTX_plugin_fini(void)
 {
   char port[10];
 
+  delete theParallelDevice;
   bx_list_c *menu = (bx_list_c*)SIM->get_param("ports.parallel");
   for (int i=0; i<BX_N_PARALLEL_PORTS; i++) {
     sprintf(port, "parport%d", i+1);
@@ -125,7 +126,6 @@ void CDECL libparallel_LTX_plugin_fini(void)
     sprintf(port, "%d", i+1);
     menu->remove(port);
   }
-  delete theParallelDevice;
 }
 
 // the device object
