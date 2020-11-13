@@ -1193,6 +1193,7 @@ void bx_wx_gui_c::statusbar_setitem_specific(int element, bx_bool active, bx_boo
 
 void bx_wx_gui_c::flush(void)
 {
+  thePanel->MyRefresh();
 }
 
 void bx_wx_gui_c::clear_screen(void)
@@ -1201,7 +1202,7 @@ void bx_wx_gui_c::clear_screen(void)
   wxCriticalSectionLocker lock(wxScreen_lock);
   IFDBG_VGA(wxLogDebug (wxT ("MyPanel::clear_screen got lock. wxScreen=%p", wxScreen)));
   memset(wxScreen, 0, wxScreenX * wxScreenY * 3);
-  thePanel->MyRefresh ();
+  thePanel->MyRefresh();
 }
 
 static void UpdateScreen(unsigned char *newBits, int x, int y, int width, int height)
@@ -1446,8 +1447,6 @@ void bx_wx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   h_panning = tm_info->h_panning;
   wxCursorX = cursor_x;
   wxCursorY = cursor_y;
-
-  thePanel->MyRefresh();
 }
 
 bx_bool bx_wx_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green, Bit8u blue)
@@ -1464,7 +1463,6 @@ void bx_wx_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 {
   IFDBG_VGA (wxLogDebug (wxT ("graphics_tile_update")));
   UpdateScreen(tile, x0, y0, wxTileX, wxTileY);
-  thePanel->MyRefresh();
 }
 
 bx_svga_tileinfo_t *bx_wx_gui_c::graphics_tile_info(bx_svga_tileinfo_t *info)
@@ -1508,9 +1506,9 @@ Bit8u *bx_wx_gui_c::graphics_tile_get(unsigned x0, unsigned y0,
 }
 
 void bx_wx_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
-                                        unsigned w, unsigned h)
+                                                unsigned w, unsigned h)
 {
-  thePanel->MyRefresh();
+  // Nothing to do here
 }
 
 void bx_wx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth, unsigned bpp)
