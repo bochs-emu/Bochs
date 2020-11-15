@@ -54,6 +54,9 @@ public:
   bx_rfb_gui_c (void) {}
   DECLARE_GUI_VIRTUAL_METHODS()
   DECLARE_GUI_NEW_VIRTUAL_METHODS()
+  virtual void draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
+                         Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
+                         bx_bool gfxcharw9, Bit8u cs, Bit8u ce, bx_bool curs);
   virtual void set_display_mode(disp_mode_t newmode);
   void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
   void statusbar_setitem_specific(int element, bx_bool active, bx_bool w);
@@ -160,8 +163,6 @@ static unsigned rfbDimensionX, rfbDimensionY;
 static long rfbHeaderbarY;
 static unsigned rfbTileX = 0;
 static unsigned rfbTileY = 0;
-static unsigned long rfbCursorX = 0;
-static unsigned long rfbCursorY = 0;
 static unsigned long rfbOriginLeft = 0;
 static unsigned long rfbOriginRight = 0;
 static bx_bool rfbMouseModeAbsXY = 0;
@@ -188,8 +189,8 @@ int ReadExact(int sock, char *buf, int len);
 int WriteExact(int sock, char *buf, int len);
 void DrawBitmap(int x, int y, int width, int height, char *bmap, char fg,
         char bg, bx_bool update_client);
-void DrawChar(int x, int y, int width, int height, int fonty, char *bmap,
-        char fg, char bg, bx_bool gfxchar);
+void DrawChar(int x, int y, int width, int height, int fontx, int fonty,
+              char *bmap, char fg, char bg, bx_bool gfxchar);
 void UpdateScreen(unsigned char *newBits, int x, int y, int width, int height,
         bx_bool update_client);
 void SendUpdate(int x, int y, int width, int height, Bit32u encoding);
@@ -310,6 +311,7 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 #endif
 
   new_gfx_api = 1;
+  new_text_api = 1;
   console.present = 1;
 }
 
@@ -353,90 +355,27 @@ void bx_rfb_gui_c::clear_screen(void)
   rfbAddUpdateRegion(0, rfbHeaderbarY, rfbWindowX, rfbDimensionY);
 }
 
+void bx_rfb_gui_c::draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
+                             Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
+                             bx_bool gfxcharw9, Bit8u cs, Bit8u ce,
+                             bx_bool curs)
+{
+  Bit8u fgcol = rfbPalette[fc];
+  Bit8u bgcol = rfbPalette[bc];
+
+  yc += rfbHeaderbarY;
+  DrawChar(xc, yc, fw, fh, fx, fy, (char *)&vga_charmap[ch << 5], fgcol, bgcol,
+           gfxcharw9);
+  rfbAddUpdateRegion(xc, yc, fw, fh);
+  if (curs) {
+    DrawChar(xc, yc + cs, fw, ce - cs + 1, fx, cs, (char *)&vga_charmap[ch << 5],
+             bgcol, fgcol, gfxcharw9);
+  }
+}
+
 void bx_rfb_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long cursor_x, unsigned long cursor_y, bx_vga_tminfo_t *tm_info)
 {
-  Bit8u *old_line, *new_line;
-  Bit8u cAttr, cChar;
-  unsigned int curs, hchars, offset, rows, x, y, xc, yc, i;
-  bx_bool force_update = 0, gfxchar, blink_state, blink_mode;
-  char text_palette[16];
-  char fgcolor, bgcolor;
-
-  for (i = 0; i < 16; i++) {
-    text_palette[i] = rfbPalette[tm_info->actl_palette[i]];
-  }
-
-  blink_mode = (tm_info->blink_flags & BX_TEXT_BLINK_MODE) > 0;
-  blink_state = (tm_info->blink_flags & BX_TEXT_BLINK_STATE) > 0;
-  if (blink_mode) {
-    if (tm_info->blink_flags & BX_TEXT_BLINK_TOGGLE)
-      force_update = 1;
-  }
-  if (charmap_updated) {
-    force_update = 1;
-    charmap_updated = 0;
-  }
-
-  // first invalidate character at previous and new cursor location
-  if ((rfbCursorY < text_rows) && (rfbCursorX < text_cols)) {
-    curs = rfbCursorY * tm_info->line_offset + rfbCursorX * 2;
-    old_text[curs] = ~new_text[curs];
-  }
-  if ((tm_info->cs_start <= tm_info->cs_end) && (tm_info->cs_start < font_height)
-      && (cursor_y < text_rows) && (cursor_x < text_cols)) {
-    curs = cursor_y * tm_info->line_offset + cursor_x * 2;
-    old_text[curs] = ~new_text[curs];
-  } else {
-    curs = 0xffff;
-  }
-
-  rows = text_rows;
-  y = 0;
-  do {
-    hchars = text_cols;
-    new_line = new_text;
-    old_line = old_text;
-    offset = y * tm_info->line_offset;
-    yc = y * font_height + rfbHeaderbarY;
-    x = 0;
-    do {
-      if (force_update || (old_text[0] != new_text[0])
-          || (old_text[1] != new_text[1])) {
-        cChar = new_text[0];
-
-        if (blink_mode) {
-          cAttr = new_text[1] & 0x7F;
-          if (!blink_state && (new_text[1] & 0x80))
-            cAttr = (cAttr & 0x70) | (cAttr >> 4);
-        } else {
-          cAttr = new_text[1];
-        }
-        fgcolor = text_palette[cAttr & 0x0F];
-        bgcolor = text_palette[cAttr >> 4];
-
-        gfxchar = tm_info->line_graphics && ((cChar & 0xE0) == 0xC0);
-        xc = x * font_width;
-        DrawChar(xc, yc, font_width, font_height, 0, (char *)&vga_charmap[cChar<<5],
-                 fgcolor, bgcolor, gfxchar);
-        rfbAddUpdateRegion(xc, yc, font_width, font_height);
-        if (offset == curs) {
-          cAttr = ((cAttr >> 4) & 0xF) + ((cAttr & 0xF) << 4);
-          DrawChar(xc, yc + tm_info->cs_start, font_width, tm_info->cs_end - tm_info->cs_start + 1,
-                   tm_info->cs_start, (char *)&vga_charmap[cChar<<5], bgcolor, fgcolor, gfxchar);
-        }
-      }
-      x++;
-      new_text += 2;
-      old_text += 2;
-      offset += 2;
-    } while (--hchars);
-    y++;
-    new_text = new_line + tm_info->line_offset;
-    old_text = old_line + tm_info->line_offset;
-  } while (--rows);
-
-  rfbCursorX = cursor_x;
-  rfbCursorY = cursor_y;
+  // present for compatibilty
 }
 
 int bx_rfb_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
@@ -1572,15 +1511,15 @@ void DrawBitmap(int x, int y, int width, int height, char *bmap,
   delete [] newBits;
 }
 
-void DrawChar(int x, int y, int width, int height, int fonty, char *bmap,
-        char fgcolor, char bgcolor, bx_bool gfxchar)
+void DrawChar(int x, int y, int width, int height, int fontx, int fonty,
+              char *bmap, char fgcolor, char bgcolor, bx_bool gfxchar)
 {
   static unsigned char newBits[18 * 32];
   unsigned char mask;
   int bytes = width * height;
   bx_bool dwidth = (width > 9);
-  for (int i = 0; i < bytes; i+=width) {
-    mask = 0x80;
+  for (int i = 0; i < bytes; i += width) {
+    mask = 0x80 >> fontx;
     for (int j = 0; j < width; j++) {
       if (mask > 0) {
         newBits[i + j] = (bmap[fonty] & mask) ? fgcolor : bgcolor;
@@ -1737,7 +1676,7 @@ void rfbSetStatusText(int element, const char *text, bx_bool active, bx_bool w)
   delete [] newBits;
   len = ((element > 0) && (strlen(text) > 4)) ? 4 : strlen(text);
   for (i = 0; i < len; i++) {
-    DrawChar(xleft + i * 8 + 2, rfbWindowY - rfbStatusbarY + 5, 8, 8, 0,
+    DrawChar(xleft + i * 8 + 2, rfbWindowY - rfbStatusbarY + 5, 8, 8, 0, 0,
              (char *) &sdl_font8x8[(unsigned) text[i]][0], fgcolor, bgcolor, 0);
   }
 

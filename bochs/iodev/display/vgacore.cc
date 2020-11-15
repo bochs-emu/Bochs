@@ -1723,9 +1723,8 @@ void bx_vgacore_c::update(void)
                                cursor_address, &tm_info);
     if (BX_VGA_THIS s.vga_mem_updated) {
       // screen updated, copy new VGA memory contents into text snapshot
-      memcpy(BX_VGA_THIS s.text_snapshot,
-             &BX_VGA_THIS s.memory[tm_info.start_address],
-             tm_info.line_offset*rows);
+      memcpy(BX_VGA_THIS s.text_snapshot, BX_VGA_THIS s.memory,
+             tm_info.line_offset * rows + tm_info.start_address);
       BX_VGA_THIS s.vga_mem_updated = 0;
     }
   }

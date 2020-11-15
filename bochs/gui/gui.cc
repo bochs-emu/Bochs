@@ -170,6 +170,9 @@ void bx_gui_c::init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
   BX_GUI_THIS host_xres = 640;
   BX_GUI_THIS host_yres = 480;
   BX_GUI_THIS host_bpp = 8;
+  BX_GUI_THIS new_text_api = 0;
+  memset(&BX_GUI_THIS tm_info, 0, sizeof(bx_vga_tminfo_t));
+  BX_GUI_THIS cursor_address = 0;
   BX_GUI_THIS max_xres = max_xres;
   BX_GUI_THIS max_yres = max_yres;
   BX_GUI_THIS x_tilesize = tilewidth;
@@ -1133,135 +1136,199 @@ void bx_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
   delete [] tile;
 }
 
+void bx_gui_c::draw_char_common(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc,
+                                Bit16u yc, Bit8u fw, Bit8u fh, Bit8u fx,
+                                Bit8u fy, bx_bool gfxcharw9, Bit8u cs, Bit8u ce,
+                                bx_bool curs)
+{
+  Bit8u *buf, *font_ptr, fwidth, fontpixels;
+  Bit16u font_row, mask;
+  bx_bool dwidth;
+
+  buf = BX_GUI_THIS snapshot_buffer + yc * BX_GUI_THIS guest_xres + xc;
+  fwidth = BX_GUI_THIS guest_fsize & 0x0f;
+  dwidth = (fwidth > 9);
+  font_ptr = &vga_charmap[(ch << 5) + fy];
+  do {
+    font_row = *font_ptr++;
+    if (gfxcharw9) {
+      font_row = (font_row << 1) | (font_row & 0x01);
+    } else {
+      font_row <<= 1;
+    }
+    if (fx > 0) {
+      font_row <<= fx;
+    }
+    fontpixels = fw;
+    if (curs && (fy >= cs) && (fy <= ce))
+      mask = 0x100;
+    else
+      mask = 0x00;
+    do {
+      if ((font_row & 0x100) == mask)
+        *buf = bc;
+      else
+        *buf = fc;
+      buf++;
+      if (!dwidth || (fontpixels & 1)) font_row <<= 1;
+    } while (--fontpixels);
+    buf += (BX_GUI_THIS guest_xres - fw);
+    fy++;
+  } while (--fh);
+}
+
 void bx_gui_c::text_update_common(Bit8u *old_text, Bit8u *new_text,
                                   Bit16u cursor_address,
                                   bx_vga_tminfo_t *tm_info)
 {
-  Bit16u cursor_x, cursor_y;
-  Bit16u curs, rows, hchars, text_cols, font_row, mask, offset, loffset;
-  Bit8u fheight, fwidth, fontline, fontrows, fontpixels, fgcolor, bgcolor;
-  Bit8u cfheight, cfwidth, cfstart, split_textrow, split_fontrows, x, y;
-  Bit8u *new_line, *font_ptr, *buf, *buf_row, *buf_char, *text_base;
-  bx_bool cursor_visible, dwidth, gfxcharw9, invert, split_screen;
+  Bit16u curs, cursor_x, cursor_y, xc, yc, rows, hchars, text_cols;
+  Bit16u offset, loffset;
+  Bit8u fheight, fwidth, cfheight, cfwidth, cfrow, cfcol, fgcolor, bgcolor;
+  Bit8u split_textrow, split_fontrows, x, y;
+  Bit8u *new_line, *old_line, *text_base;
+  bx_bool cursor_visible, gfxcharw9, split_screen;
+  bx_bool forceUpdate = 0, blink_mode = 0, blink_state = 0;
 
-  if (BX_GUI_THIS snapshot_mode) {
-    if (BX_GUI_THIS snapshot_buffer != NULL) {
-      fheight = BX_GUI_THIS guest_fsize >> 4;
-      fwidth = BX_GUI_THIS guest_fsize & 0x0f;
-      dwidth = (fwidth > 9);
-      rows = BX_GUI_THIS guest_yres / fheight;
-      if (tm_info->v_panning > 0) rows++;
-      text_cols = BX_GUI_THIS guest_xres / fwidth;
-      cursor_visible = ((tm_info->cs_start <= tm_info->cs_end) && (tm_info->cs_start < fheight));
+  if (BX_GUI_THIS snapshot_mode || BX_GUI_THIS new_text_api) {
+    fheight = BX_GUI_THIS guest_fsize >> 4;
+    fwidth = BX_GUI_THIS guest_fsize & 0x0f;
+    cursor_visible = ((tm_info->cs_start <= tm_info->cs_end) && (tm_info->cs_start < fheight));
+    if (BX_GUI_THIS snapshot_mode && (BX_GUI_THIS snapshot_buffer != NULL)) {
+      forceUpdate = 1;
+    } else if (BX_GUI_THIS new_text_api) {
+      blink_mode = (tm_info->blink_flags & BX_TEXT_BLINK_MODE) > 0;
+      blink_state = (tm_info->blink_flags & BX_TEXT_BLINK_STATE) > 0;
+      if (blink_mode) {
+        if (tm_info->blink_flags & BX_TEXT_BLINK_TOGGLE)
+          forceUpdate = 1;
+        if (!blink_state) cursor_visible = 0;
+      }
+      if (BX_GUI_THIS charmap_updated) {
+        BX_GUI_THIS set_font();
+        BX_GUI_THIS charmap_updated = 0;
+        forceUpdate = 1;
+      }
+      if ((tm_info->h_panning != BX_GUI_THIS tm_info.h_panning) ||
+          (tm_info->v_panning != BX_GUI_THIS tm_info.v_panning) ||
+          (tm_info->line_compare != BX_GUI_THIS tm_info.line_compare)) {
+        BX_GUI_THIS tm_info.h_panning = tm_info->h_panning;
+        BX_GUI_THIS tm_info.v_panning = tm_info->v_panning;
+        BX_GUI_THIS tm_info.line_compare = tm_info->line_compare;
+        forceUpdate = 1;
+      }
+      // invalidate character at previous and new cursor location
+      if (cursor_address != BX_GUI_THIS cursor_address) {
+        old_text[BX_GUI_THIS cursor_address] = ~new_text[BX_GUI_THIS cursor_address];
+        BX_GUI_THIS cursor_address = cursor_address;
+      }
       if (cursor_visible) {
-        curs = cursor_address;
-      } else {
-        curs = 0xffff;
+        old_text[cursor_address] = ~new_text[cursor_address];
       }
-      if (tm_info->line_compare < 0x3ff) {
-        split_textrow = (tm_info->line_compare + tm_info->v_panning) / fheight;
-        split_fontrows = ((tm_info->line_compare + tm_info->v_panning) % fheight) + 1;
-      } else {
-        split_textrow = 0xff;
-        split_fontrows = 0;
-      }
-      y = 0;
-      split_screen = 0;
-      loffset = tm_info->start_address;
-      text_base = new_text;
-      new_text += tm_info->start_address;
-      buf_row = BX_GUI_THIS snapshot_buffer;
-      do {
-        buf = buf_row;
-        hchars = text_cols;
-        if (tm_info->h_panning > 0) hchars++;
-        cfheight = fheight;
-        cfstart = 0;
-        if (split_screen) {
-          if (rows == 1) {
-            cfheight = (guest_yres - tm_info->line_compare - 1) % fheight;
-            if (cfheight == 0) cfheight = 16;
-          }
-        } else if (tm_info->v_panning > 0) {
-          if (y == 0) {
-            cfheight -= tm_info->v_panning;
-            cfstart = tm_info->v_panning;
-          } else if (rows == 1) {
-            cfheight = tm_info->v_panning;
-          }
-        }
-        if (y == split_textrow) {
-          cfheight = split_fontrows - cfstart;
-        }
-        new_line = new_text;
-        offset = loffset;
-        x = 0;
-        do {
-          cfwidth = fwidth;
-          if (tm_info->h_panning > 0) {
-            if (x == 0) {
-              cfwidth -= tm_info->h_panning;
-            } else if (hchars == 1) {
-              cfwidth = tm_info->h_panning;
-            }
-          }
-          fgcolor = tm_info->actl_palette[new_text[1] & 0x0f];
-          bgcolor = tm_info->actl_palette[(new_text[1] >> 4) & 0x07];
-          gfxcharw9 = ((tm_info->line_graphics) && ((new_text[0] & 0xE0) == 0xC0));
-          invert = (offset == curs);
-          fontrows = cfheight;
-          fontline = cfstart;
-          if (y > 0) {
-            font_ptr = &vga_charmap[new_text[0] << 5];
-          } else {
-            font_ptr = &vga_charmap[(new_text[0] << 5) + cfstart];
-          }
-          buf_char = buf;
-          do {
-            font_row = *font_ptr++;
-            if (gfxcharw9) {
-              font_row = (font_row << 1) | (font_row & 0x01);
-            } else {
-              font_row <<= 1;
-            }
-            if (hchars > text_cols) {
-              font_row <<= tm_info->h_panning;
-            }
-            fontpixels = cfwidth;
-            if ((invert) && (fontline >= tm_info->cs_start) && (fontline <= tm_info->cs_end))
-              mask = 0x100;
-            else
-              mask = 0x00;
-            do {
-              if ((font_row & 0x100) == mask)
-                *buf = bgcolor;
-              else
-                *buf = fgcolor;
-              buf++;
-              if (!dwidth || (fontpixels & 1)) font_row <<= 1;
-            } while (--fontpixels);
-            buf += (BX_GUI_THIS guest_xres - cfwidth);
-            fontline++;
-          } while (--fontrows);
-          buf = buf_char + cfwidth;
-          new_text += 2;
-          offset += 2;
-          x++;
-        } while (--hchars);
-        buf_row += (BX_GUI_THIS guest_xres * cfheight);
-        if (y == split_textrow) {
-          new_text = text_base;
-          loffset = 0;
-          rows = ((guest_yres - tm_info->line_compare + fheight - 2) / fheight) + 1;
-          if (tm_info->split_hpanning) tm_info->h_panning = 0;
-          split_screen = 1;
-        } else {
-          new_text = new_line + tm_info->line_offset;
-          loffset += tm_info->line_offset;
-        }
-        y++;
-      } while (--rows);
     }
+    rows = BX_GUI_THIS guest_yres / fheight;
+    if (tm_info->v_panning > 0) rows++;
+    text_cols = BX_GUI_THIS guest_xres / fwidth;
+    if (cursor_visible) {
+      curs = cursor_address;
+    } else {
+      curs = 0xffff;
+    }
+    if (tm_info->line_compare < 0x3ff) {
+      split_textrow = (tm_info->line_compare + tm_info->v_panning) / fheight;
+      split_fontrows = ((tm_info->line_compare + tm_info->v_panning) % fheight) + 1;
+    } else {
+      split_textrow = 0xff;
+      split_fontrows = 0;
+    }
+    y = 0;
+    yc = 0;
+    split_screen = 0;
+    loffset = tm_info->start_address;
+    text_base = new_text;
+    new_text += tm_info->start_address;
+    old_text += tm_info->start_address;
+    do {
+      hchars = text_cols;
+      if (tm_info->h_panning > 0) hchars++;
+      cfheight = fheight;
+      cfrow = 0;
+      if (split_screen) {
+        if (rows == 1) {
+          cfheight = (guest_yres - tm_info->line_compare - 1) % fheight;
+          if (cfheight == 0) cfheight = fheight;
+        }
+      } else if (tm_info->v_panning > 0) {
+        if (y == 0) {
+          cfheight -= tm_info->v_panning;
+          cfrow = tm_info->v_panning;
+        } else if (rows == 1) {
+          cfheight = tm_info->v_panning;
+        }
+      }
+      if (y == split_textrow) {
+        cfheight = split_fontrows - cfrow;
+      }
+      new_line = new_text;
+      old_line = old_text;
+      offset = loffset;
+      x = 0;
+      xc = 0;
+      do {
+        cfwidth = fwidth;
+        cfcol = 0;
+        if (tm_info->h_panning > 0) {
+          if (x == 0) {
+            cfcol = tm_info->h_panning;
+            cfwidth -= tm_info->h_panning;
+          } else if (hchars == 1) {
+            cfwidth = tm_info->h_panning;
+          }
+        }
+        // check if char needs to be updated
+        if (forceUpdate || (new_text[0] != old_text[0]) ||
+            (new_text[1] != old_text[1])) {
+          fgcolor = tm_info->actl_palette[new_text[1] & 0x0f];
+          if (blink_mode) {
+            bgcolor = tm_info->actl_palette[(new_text[1] >> 4) & 0x07];
+            if (!blink_state && (new_text[1] & 0x80))
+              fgcolor = bgcolor;
+          } else {
+            bgcolor = tm_info->actl_palette[(new_text[1] >> 4) & 0x0F];
+          }
+          gfxcharw9 = ((tm_info->line_graphics) && ((new_text[0] & 0xE0) == 0xC0));
+          if (BX_GUI_THIS snapshot_mode) {
+            BX_GUI_THIS draw_char_common(new_text[0], fgcolor, bgcolor, xc, yc,
+                                         cfwidth, cfheight, cfcol, cfrow,
+                                         gfxcharw9, tm_info->cs_start,
+                                         tm_info->cs_end, (offset == curs));
+          } else {
+            BX_GUI_THIS draw_char(new_text[0], fgcolor, bgcolor, xc, yc,
+                                  cfwidth, cfheight, cfcol, cfrow,
+                                  gfxcharw9, tm_info->cs_start,
+                                  tm_info->cs_end, (offset == curs));
+          }
+        }
+        new_text += 2;
+        old_text += 2;
+        offset += 2;
+        x++;
+        xc += cfwidth;
+      } while (--hchars);
+      if (y == split_textrow) {
+        new_text = text_base;
+        forceUpdate = 1;
+        loffset = 0;
+        rows = ((guest_yres - tm_info->line_compare + fheight - 2) / fheight) + 1;
+        if (tm_info->split_hpanning) tm_info->h_panning = 0;
+        split_screen = 1;
+      } else {
+        new_text = new_line + tm_info->line_offset;
+        old_text = old_line + tm_info->line_offset;
+        loffset += tm_info->line_offset;
+      }
+      y++;
+      yc += cfheight;
+    } while (--rows);
   } else {
     // workarounds for existing text_update() API
     if (cursor_address >= tm_info->start_address) {
@@ -1275,6 +1342,7 @@ void bx_gui_c::text_update_common(Bit8u *old_text, Bit8u *new_text,
       tm_info->cs_start |= 0x20;
     }
     new_text += tm_info->start_address;
+    old_text += tm_info->start_address;
     text_update(old_text, new_text, cursor_x, cursor_y, tm_info);
   }
 }
@@ -1352,6 +1420,7 @@ void bx_gui_c::console_init(void)
   BX_GUI_THIS charmap_updated = 1;
   console.cursor_x = 0;
   console.cursor_y = 0;
+  console.cursor_addr = 0;
   memset(&console.tminfo, 0, sizeof(bx_vga_tminfo_t));
   console.tminfo.line_offset = 160;
   console.tminfo.line_compare = 1023;
@@ -1384,8 +1453,13 @@ void bx_gui_c::console_cleanup(void)
 void bx_gui_c::console_refresh(bx_bool force)
 {
   if (force) memset(console.oldscreen, 0xff, BX_CONSOLE_BUFSIZE);
-  text_update(console.oldscreen, console.screen, console.cursor_x,
-              console.cursor_y, &console.tminfo);
+  if (BX_GUI_THIS new_text_api) {
+    text_update_common(console.oldscreen, console.screen, console.cursor_addr,
+                       &console.tminfo);
+  } else {
+    text_update(console.oldscreen, console.screen, console.cursor_x,
+                console.cursor_y, &console.tminfo);
+  }
   flush();
   memcpy(console.oldscreen, console.screen, BX_CONSOLE_BUFSIZE);
 }
@@ -1437,6 +1511,7 @@ int bx_gui_c::bx_printf(const char *s)
       }
     }
   }
+  console.cursor_addr = console.cursor_y * 160 + console.cursor_x * 2;
   console_refresh(0);
   return strlen(s);
 }

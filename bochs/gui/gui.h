@@ -128,6 +128,11 @@ public:
   virtual bx_svga_tileinfo_t *graphics_tile_info(bx_svga_tileinfo_t *info);
   virtual Bit8u *graphics_tile_get(unsigned x, unsigned y, unsigned *w, unsigned *h);
   virtual void graphics_tile_update_in_place(unsigned x, unsigned y, unsigned w, unsigned h);
+  // new text update API
+  virtual void set_font(void) {}
+  virtual void draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
+                         Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
+                         bx_bool gfxcharw9, Bit8u cs, Bit8u ce, bx_bool curs) {}
   // optional gui methods (stubs or default code in gui.cc)
   virtual void statusbar_setitem_specific(int element, bx_bool active, bx_bool w) {}
   virtual void set_tooltip(unsigned hbar_id, const char *tip) {}
@@ -168,6 +173,9 @@ public:
   void init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
             unsigned x_tilesize, unsigned y_tilesize);
   void cleanup(void);
+  void draw_char_common(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
+                        Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
+                        bx_bool gfxcharw9, Bit8u cs, Bit8u ce, bx_bool curs);
   void text_update_common(Bit8u *old_text, Bit8u *new_text,
                           Bit16u cursor_address, bx_vga_tminfo_t *tm_info);
   void graphics_tile_update_common(Bit8u *tile, unsigned x, unsigned y);
@@ -289,6 +297,10 @@ protected:
   Bit16u host_pitch;
   Bit8u host_bpp;
   Bit8u *framebuffer;
+  // new text update API
+  bx_bool new_text_api;
+  Bit16u cursor_address;
+  bx_vga_tminfo_t tm_info;
   // maximum guest display size and tile size
   unsigned max_xres;
   unsigned max_yres;
@@ -334,6 +346,7 @@ protected:
     Bit8u saved_palette[32];
     unsigned cursor_x;
     unsigned cursor_y;
+    Bit16u cursor_addr;
     bx_vga_tminfo_t tminfo;
     Bit8u keys[16];
     Bit8u n_keys;
