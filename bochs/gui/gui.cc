@@ -1221,7 +1221,7 @@ void bx_gui_c::text_update_common(Bit8u *old_text, Bit8u *new_text,
         old_text[BX_GUI_THIS cursor_address] = ~new_text[BX_GUI_THIS cursor_address];
         BX_GUI_THIS cursor_address = cursor_address;
       }
-      if (cursor_visible) {
+      if (cursor_address < 0xffff) {
         old_text[cursor_address] = ~new_text[cursor_address];
       }
     }

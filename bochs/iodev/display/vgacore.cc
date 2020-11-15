@@ -1715,7 +1715,8 @@ void bx_vgacore_c::update(void)
     // pass old text snapshot & new VGA memory contents
     cursor_address = 2*((BX_VGA_THIS s.CRTC.reg[0x0e] << 8) +
                      BX_VGA_THIS s.CRTC.reg[0x0f]);
-    if (cursor_address < tm_info.start_address) {
+    if ((cursor_address < tm_info.start_address) ||
+        (cursor_address > (tm_info.start_address + tm_info.line_offset * rows))) {
       cursor_address = 0xffff;
     }
     bx_gui->text_update_common(BX_VGA_THIS s.text_snapshot,
