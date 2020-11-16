@@ -139,7 +139,7 @@ bx_gui_c::bx_gui_c(void): disp_mode(DISP_MODE_SIM)
   led_timer_index = BX_NULL_TIMER_HANDLE;
   framebuffer = NULL;
   guest_textmode = 1;
-  guest_fsize = (16 << 4) | 8;
+  guest_fsize = (16 << 8) | 8;
   guest_xres = 640;
   guest_yres = 480;
   guest_bpp = 8;
@@ -1146,7 +1146,7 @@ void bx_gui_c::draw_char_common(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc,
   bx_bool dwidth;
 
   buf = BX_GUI_THIS snapshot_buffer + yc * BX_GUI_THIS guest_xres + xc;
-  fwidth = BX_GUI_THIS guest_fsize & 0x0f;
+  fwidth = BX_GUI_THIS guest_fsize & 0x1f;
   dwidth = (fwidth > 9);
   font_ptr = &vga_charmap[(ch << 5) + fy];
   do {
@@ -1190,8 +1190,8 @@ void bx_gui_c::text_update_common(Bit8u *old_text, Bit8u *new_text,
   bx_bool forceUpdate = 0, blink_mode = 0, blink_state = 0;
 
   if (BX_GUI_THIS snapshot_mode || BX_GUI_THIS new_text_api) {
-    fheight = BX_GUI_THIS guest_fsize >> 4;
-    fwidth = BX_GUI_THIS guest_fsize & 0x0f;
+    fheight = BX_GUI_THIS guest_fsize >> 8;
+    fwidth = BX_GUI_THIS guest_fsize & 0x1f;
     cursor_visible = ((tm_info->cs_start <= tm_info->cs_end) && (tm_info->cs_start < fheight));
     if (BX_GUI_THIS snapshot_mode && (BX_GUI_THIS snapshot_buffer != NULL)) {
       forceUpdate = 1;
@@ -1204,7 +1204,7 @@ void bx_gui_c::text_update_common(Bit8u *old_text, Bit8u *new_text,
         if (!blink_state) cursor_visible = 0;
       }
       if (BX_GUI_THIS charmap_updated) {
-        BX_GUI_THIS set_font();
+        BX_GUI_THIS set_font(tm_info->line_graphics);
         BX_GUI_THIS charmap_updated = 0;
         forceUpdate = 1;
       }
@@ -1413,6 +1413,7 @@ void bx_gui_c::console_init(void)
   console.saved_yres = guest_yres;
   console.saved_bpp = guest_bpp;
   console.saved_fsize = guest_fsize;
+  memcpy(console.saved_charmap, BX_GUI_THIS vga_charmap, 0x2000);
   for (i = 0; i < 256; i++) {
     memcpy(&BX_GUI_THIS vga_charmap[0]+i*32, &sdl_font8x16[i], 16);
     BX_GUI_THIS char_changed[i] = 1;
@@ -1443,8 +1444,9 @@ void bx_gui_c::console_cleanup(void)
                         console.saved_palette[0]);
   palette_change_common(0x07, console.saved_palette[30], console.saved_palette[29],
                         console.saved_palette[28]);
-  unsigned fheight = (console.saved_fsize >> 4);
-  unsigned fwidth = (console.saved_fsize & 0x0f);
+  unsigned fheight = (console.saved_fsize >> 8);
+  unsigned fwidth = (console.saved_fsize & 0x1f);
+  set_text_charmap(console.saved_charmap);
   dimension_update(console.saved_xres, console.saved_yres, fheight, fwidth,
                    console.saved_bpp);
   console.running = 0;

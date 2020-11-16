@@ -129,7 +129,7 @@ public:
   virtual Bit8u *graphics_tile_get(unsigned x, unsigned y, unsigned *w, unsigned *h);
   virtual void graphics_tile_update_in_place(unsigned x, unsigned y, unsigned w, unsigned h);
   // new text update API
-  virtual void set_font(void) {}
+  virtual void set_font(bx_bool lg) {}
   virtual void draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
                          Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
                          bx_bool gfxcharw9, Bit8u cs, Bit8u ce, bx_bool curs) {}
@@ -274,7 +274,7 @@ protected:
     void (*f)(void);
   } bx_headerbar_entry[BX_MAX_HEADERBAR_ENTRIES];
   // text charmap
-  unsigned char vga_charmap[0x2000];
+  Bit8u vga_charmap[0x2000];
   bx_bool charmap_updated;
   bx_bool char_changed[256];
   // status bar items
@@ -308,10 +308,10 @@ protected:
   unsigned y_tilesize;
   // current guest display settings
   bx_bool guest_textmode;
-  unsigned guest_fsize;
-  unsigned guest_xres;
-  unsigned guest_yres;
-  unsigned guest_bpp;
+  Bit16u  guest_fsize;
+  Bit16u  guest_xres;
+  Bit16u  guest_yres;
+  Bit8u   guest_bpp;
   // graphics snapshot
   bx_bool snapshot_mode;
   Bit8u *snapshot_buffer;
@@ -339,11 +339,12 @@ protected:
     bx_bool running;
     Bit8u *screen;
     Bit8u *oldscreen;
-    unsigned saved_fsize;
-    unsigned saved_xres;
-    unsigned saved_yres;
-    unsigned saved_bpp;
+    Bit16u saved_fsize;
+    Bit16u saved_xres;
+    Bit16u saved_yres;
+    Bit8u  saved_bpp;
     Bit8u saved_palette[32];
+    Bit8u saved_charmap[0x2000];
     unsigned cursor_x;
     unsigned cursor_y;
     Bit16u cursor_addr;

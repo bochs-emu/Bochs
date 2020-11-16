@@ -376,9 +376,16 @@ void bx_vncsrv_gui_c::draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc,
   DrawChar(xc, yc, fw, fh, fx, fy, (char *)&vga_charmap[ch << 5], fgcol, bgcol,
            gfxcharw9);
   SendUpdate(xc, yc, fw, fh);
-  if (curs) {
-    DrawChar(xc, yc + cs, fw, ce - cs + 1, fx, cs, (char *)&vga_charmap[ch << 5],
-             bgcol, fgcol, gfxcharw9);
+  if (curs && (ce >= fy) && (cs < (fh + fy))) {
+    if (cs > fy) {
+      yc += (cs - fy);
+      fh -= (cs - fy);
+    }
+    if ((ce - cs + 1) < fh) {
+      fh = ce - cs + 1;
+    }
+    DrawChar(xc, yc, fw, fh, fx, cs, (char *)&vga_charmap[ch << 5], bgcol,
+             fgcol, gfxcharw9);
   }
 }
 
@@ -450,7 +457,7 @@ void bx_vncsrv_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight,
     BX_PANIC(("%d bpp graphics mode not supported", bpp));
   }
   guest_textmode = (fheight > 0);
-  guest_fsize = (fheight << 4) | fwidth;
+  guest_fsize = (fheight << 8) | fwidth;
   guest_xres = x;
   guest_yres = y;
   if (guest_textmode) {

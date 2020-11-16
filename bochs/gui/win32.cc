@@ -2009,7 +2009,7 @@ void bx_win32_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth, unsigned bpp)
 {
   guest_textmode = (fheight > 0);
-  guest_fsize = (fheight << 4) | fwidth;
+  guest_fsize = (fheight << 8) | fwidth;
   guest_xres = x;
   guest_yres = y;
   if (guest_textmode) {

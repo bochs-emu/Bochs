@@ -1118,7 +1118,7 @@ void bx_sdl2_gui_c::dimension_update(unsigned x, unsigned y,
     BX_PANIC(("%d bpp graphics mode not supported", bpp));
   }
   guest_textmode = (fheight > 0);
-  guest_fsize = (fheight << 4) | fwidth;
+  guest_fsize = (fheight << 8) | fwidth;
   guest_xres = x;
   guest_yres = y;
   if (guest_textmode) {

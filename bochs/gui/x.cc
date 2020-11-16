@@ -62,6 +62,10 @@ public:
   bx_x_gui_c(void);
   DECLARE_GUI_VIRTUAL_METHODS()
   DECLARE_GUI_NEW_VIRTUAL_METHODS()
+  virtual void set_font(bx_bool lg);
+  virtual void draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
+                         Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
+                         bx_bool gfxcharw9, Bit8u cs, Bit8u ce, bx_bool curs);
   virtual void beep_on(float frequency);
   virtual void beep_off();
 #if BX_HAVE_XRANDR_H
@@ -105,10 +109,6 @@ static char *progname; /* name this program was invoked by */
 // text display
 static unsigned int text_rows=25, text_cols=80;
 static unsigned font_width, font_height;
-static Bit8u h_panning = 0, v_panning = 0;
-static Bit16u line_compare = 1023;
-static unsigned prev_cursor_x=0;
-static unsigned prev_cursor_y=0;
 
 // graphics display
 static Window win;
@@ -915,6 +915,7 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 #endif
 
   new_gfx_api = 1;
+  new_text_api = 1;
   dialog_caps |= (BX_GUI_DLG_USER | BX_GUI_DLG_SNAPSHOT | BX_GUI_DLG_CDROM);
   console.present = 1;
 }
@@ -1137,251 +1138,95 @@ void bx_x_gui_c::handle_events(void)
 #endif
 }
 
+void bx_x_gui_c::set_font(bx_bool lg)
+{
+  unsigned i, j, k;
+  Bit8u fbits, fmask, frow;
+  unsigned char cell[96];
+  bx_bool gfxchar, dwidth;
+
+  BX_INFO(("charmap update. Font is %d x %d", font_width, font_height));
+  for (unsigned c = 0; c<256; c++) {
+    if (char_changed[c]) {
+      XFreePixmap(bx_x_display, vgafont[c]);
+      gfxchar = lg && ((c & 0xE0) == 0xC0);
+      dwidth = font_width > 9;
+      i = 0;
+      j = 0;
+      memset(cell, 0, sizeof(cell));
+      if (dwidth) {
+        do {
+          frow = vga_charmap[(c<<5)+j];
+          fmask = 0x80;
+          fbits = 0x03;
+          for (k=0; k<8; k++) {
+            if (frow & fmask) cell[i] |= fbits;
+            fmask >>= 1;
+            fbits <<= 2;
+            if (k == 3) {
+              i++;
+              fbits = 0x03;
+            }
+          }
+          if (gfxchar) {
+            if (frow & 0x01) cell[i+1] = 0x03;
+          }
+          i += 2;
+        } while (++j < font_height);
+        vgafont[c] = XCreateBitmapFromData(bx_x_display, win,
+                         (const char*)cell, 18, font_height);
+      } else {
+        do {
+          frow = vga_charmap[(c<<5)+j];
+          fmask = 0x80;
+          fbits = 0x01;
+          for (k=0; k<8; k++) {
+            if (frow & fmask) cell[i] |= fbits;
+            fmask >>= 1;
+            fbits <<= 1;
+          }
+          if (gfxchar) {
+            if (frow & 0x01) cell[i+1] = 0x01;
+          }
+          i += 2;
+        } while (++j < font_height);
+        vgafont[c] = XCreateBitmapFromData(bx_x_display, win,
+                         (const char*)cell, 9, font_height);
+      }
+      if(vgafont[c] == None)
+        BX_PANIC(("Can't create vga font [%d]", c));
+      char_changed[c] = 0;
+    }
+  }
+}
+
+void bx_x_gui_c::draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
+                           Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
+                           bx_bool gfxcharw9, Bit8u cs, Bit8u ce, bx_bool curs)
+{
+  yc += bx_headerbar_y;
+  XSetForeground(bx_x_display, gc, col_vals[fc]);
+  XSetBackground(bx_x_display, gc, col_vals[bc]);
+  XCopyPlane(bx_x_display, vgafont[ch], win, gc, fx, fy, fw, fh, xc, yc, 1);
+  if (curs && (ce >= fy) && (cs < (fh + fy))) {
+    if (cs > fy) {
+      yc += (cs - fy);
+      fh -= (cs - fy);
+    }
+    if ((ce - cs + 1) < fh) {
+      fh = ce - cs + 1;
+    }
+    XSetForeground(bx_x_display, gc, col_vals[bc]);
+    XSetBackground(bx_x_display, gc, col_vals[fc]);
+    XCopyPlane(bx_x_display, vgafont[ch], win, gc, fx, cs, fw, fh, xc, yc, 1);
+  }
+}
+
 void bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                       unsigned long cursor_x, unsigned long cursor_y,
                       bx_vga_tminfo_t *tm_info)
 {
-  Bit8u *old_line, *new_line, *text_base;
-  Bit8u cChar, fbits, fmask, frow;
-  unsigned int curs, hchars, i, j, k, offset, rows, x, y, xc, yc, yc2, cs_y;
-  unsigned new_foreground, new_background;
-  Bit8u cfwidth, cfheight, cfheight2, font_col, font_row, font_row2;
-  Bit8u split_textrow, split_fontrows;
-  bx_bool forceUpdate = 0, split_screen;
-  bx_bool blink_state, blink_mode;
-  unsigned char cell[96];
-  unsigned long text_palette[16];
-
-  blink_mode = (tm_info->blink_flags & BX_TEXT_BLINK_MODE) > 0;
-  blink_state = (tm_info->blink_flags & BX_TEXT_BLINK_STATE) > 0;
-  if (blink_mode) {
-    if (tm_info->blink_flags & BX_TEXT_BLINK_TOGGLE)
-      forceUpdate = 1;
-  }
-  if (charmap_updated) {
-    BX_INFO(("charmap update. Font is %d x %d", font_width, font_height));
-    for (unsigned c = 0; c<256; c++) {
-      if (char_changed[c]) {
-        XFreePixmap(bx_x_display, vgafont[c]);
-        bx_bool gfxchar = tm_info->line_graphics && ((c & 0xE0) == 0xC0);
-        bx_bool dwidth = font_width > 9;
-        i = 0;
-        j = 0;
-        memset(cell, 0, sizeof(cell));
-        if (dwidth) {
-          do {
-            frow = vga_charmap[(c<<5)+j];
-            fmask = 0x80;
-            fbits = 0x03;
-            for (k=0; k<8; k++) {
-              if (frow & fmask) cell[i] |= fbits;
-              fmask >>= 1;
-              fbits <<= 2;
-              if (k == 3) {
-                i++;
-                fbits = 0x03;
-              }
-            }
-            if (gfxchar) {
-              if (frow & 0x01) cell[i+1] = 0x03;
-            }
-            i += 2;
-          } while (++j < font_height);
-          vgafont[c] = XCreateBitmapFromData(bx_x_display, win,
-                         (const char*)cell, 18, font_height);
-        } else {
-          do {
-            frow = vga_charmap[(c<<5)+j];
-            fmask = 0x80;
-            fbits = 0x01;
-            for (k=0; k<8; k++) {
-              if (frow & fmask) cell[i] |= fbits;
-              fmask >>= 1;
-              fbits <<= 1;
-            }
-            if (gfxchar) {
-              if (frow & 0x01) cell[i+1] = 0x01;
-            }
-            i += 2;
-          } while (++j < font_height);
-          vgafont[c] = XCreateBitmapFromData(bx_x_display, win,
-                         (const char*)cell, 9, font_height);
-        }
-        if(vgafont[c] == None)
-          BX_PANIC(("Can't create vga font [%d]", c));
-        char_changed[c] = 0;
-      }
-    }
-    forceUpdate = 1;
-    charmap_updated = 0;
-  }
-  for (i=0; i<16; i++) {
-    text_palette[i] = col_vals[tm_info->actl_palette[i]];
-  }
-
-  if((tm_info->h_panning != h_panning) || (tm_info->v_panning != v_panning)) {
-    forceUpdate = 1;
-    h_panning = tm_info->h_panning;
-    v_panning = tm_info->v_panning;
-  }
-  if(tm_info->line_compare != line_compare) {
-    forceUpdate = 1;
-    line_compare = tm_info->line_compare;
-  }
-
-  // first invalidate character at previous and new cursor location
-  if ((prev_cursor_y < text_rows) && (prev_cursor_x < text_cols)) {
-    curs = prev_cursor_y * tm_info->line_offset + prev_cursor_x * 2;
-    old_text[curs] = ~new_text[curs];
-  }
-  if((tm_info->cs_start <= tm_info->cs_end) && (tm_info->cs_start < font_height) &&
-     (cursor_y < text_rows) && (cursor_x < text_cols)) {
-    curs = cursor_y * tm_info->line_offset + cursor_x * 2;
-    old_text[curs] = ~new_text[curs];
-  } else {
-    curs = 0xffff;
-  }
-
-  rows = text_rows;
-  if (v_panning) rows++;
-  y = 0;
-  cs_y = 0;
-  offset = 0;
-  text_base = new_text - tm_info->start_address;
-  if (line_compare < dimension_y) {
-    split_textrow = (line_compare + v_panning) / font_height;
-    split_fontrows = ((line_compare + v_panning) % font_height) + 1;
-  } else {
-    split_textrow = rows + 1;
-    split_fontrows = 0;
-  }
-  split_screen = 0;
-  do {
-    hchars = text_cols;
-    if (h_panning) hchars++;
-    if (split_screen) {
-      yc = bx_headerbar_y + line_compare + cs_y * font_height + 1;
-      font_row = 0;
-      if (rows == 1) {
-        cfheight = (dimension_y - line_compare - 1) % font_height;
-        if (cfheight == 0) cfheight = font_height;
-      } else {
-        cfheight = font_height;
-      }
-    } else if (v_panning) {
-      if (y == 0) {
-        yc = bx_headerbar_y;
-        font_row = v_panning;
-        cfheight = font_height - v_panning;
-      } else {
-        yc = y * font_height + bx_headerbar_y - v_panning;
-        font_row = 0;
-        if (rows == 1) {
-          cfheight = v_panning;
-        } else {
-          cfheight = font_height;
-        }
-      }
-    } else {
-      yc = y * font_height + bx_headerbar_y;
-      font_row = 0;
-      cfheight = font_height;
-    }
-    if (y == split_textrow) {
-      cfheight = split_fontrows - font_row;
-    }
-    new_line = new_text;
-    old_line = old_text;
-    x = 0;
-    do {
-      if (h_panning) {
-        if (hchars > text_cols) {
-          xc = 0;
-          font_col = h_panning;
-          cfwidth = font_width - h_panning;
-        } else {
-          xc = x * font_width - h_panning;
-          font_col = 0;
-          if (hchars == 1) {
-            cfwidth = h_panning;
-          } else {
-            cfwidth = font_width;
-          }
-        }
-      } else {
-        xc = x * font_width;
-        font_col = 0;
-        cfwidth = font_width;
-      }
-      if (forceUpdate || (old_text[0] != new_text[0])
-          || (old_text[1] != new_text[1])) {
-
-        cChar = new_text[0];
-        new_foreground = new_text[1] & 0x0f;
-        if (blink_mode) {
-          new_background = (new_text[1] & 0x70) >> 4;
-          if (!blink_state && (new_text[1] & 0x80))
-            new_foreground = new_background;
-        } else {
-          new_background = (new_text[1] & 0xf0) >> 4;
-        }
-        XSetForeground(bx_x_display, gc, text_palette[new_foreground]);
-        XSetBackground(bx_x_display, gc, text_palette[new_background]);
-
-        XCopyPlane(bx_x_display, vgafont[cChar], win, gc, font_col, font_row, cfwidth, cfheight,
-                   xc, yc, 1);
-        if (offset == curs) {
-          XSetForeground(bx_x_display, gc, text_palette[new_background]);
-          XSetBackground(bx_x_display, gc, text_palette[new_foreground]);
-          if (font_row == 0) {
-            yc2 = yc + tm_info->cs_start;
-            font_row2 = tm_info->cs_start;
-            cfheight2 = tm_info->cs_end - tm_info->cs_start + 1;
-            if ((yc2 + cfheight2) > (dimension_y + bx_headerbar_y)) {
-              cfheight2 = dimension_y + bx_headerbar_y - yc2;
-            }
-          } else {
-            if (v_panning > tm_info->cs_start) {
-              yc2 = yc;
-              font_row2 = font_row;
-              cfheight2 = tm_info->cs_end - v_panning + 1;
-            } else {
-              yc2 = yc + tm_info->cs_start - v_panning;
-              font_row2 = tm_info->cs_start;
-              cfheight2 = tm_info->cs_end - tm_info->cs_start + 1;
-            }
-          }
-          if (yc2 < (dimension_y + bx_headerbar_y)) {
-            XCopyPlane(bx_x_display, vgafont[cChar], win, gc, font_col, font_row2, cfwidth,
-                       cfheight2, xc, yc2, 1);
-          }
-        }
-      }
-      x++;
-      new_text+=2;
-      old_text+=2;
-      offset+=2;
-    } while (--hchars);
-    if (y == split_textrow) {
-      new_text = text_base;
-      forceUpdate = 1;
-      cs_y = 0;
-      curs += tm_info->start_address;
-      if (tm_info->split_hpanning) h_panning = 0;
-      rows = ((dimension_y - line_compare + font_height - 2) / font_height) + 1;
-      split_screen = 1;
-    } else {
-      cs_y++;
-      new_text = new_line + tm_info->line_offset;
-      old_text = old_line + tm_info->line_offset;
-    }
-    y++;
-    offset = cs_y * tm_info->line_offset;
-  } while (--rows);
-
-  h_panning = tm_info->h_panning;
-  prev_cursor_x = cursor_x;
-  prev_cursor_y = cursor_y;
+  // present for compatibility
 }
 
 void bx_x_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
@@ -1512,7 +1357,7 @@ void bx_x_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsi
     BX_PANIC(("%d bpp graphics mode not supported", bpp));
   }
   guest_textmode = (fheight > 0);
-  guest_fsize = (fheight << 4) | fwidth;
+  guest_fsize = (fheight << 8) | fwidth;
   guest_xres = x;
   guest_yres = y;
   if (guest_textmode) {
