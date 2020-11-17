@@ -48,6 +48,9 @@ public:
   bx_sdl2_gui_c();
   DECLARE_GUI_VIRTUAL_METHODS()
   DECLARE_GUI_NEW_VIRTUAL_METHODS()
+  virtual void draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
+                         Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
+                         bx_bool gfxcharw9, Bit8u cs, Bit8u ce, bx_bool curs);
   virtual void set_display_mode(disp_mode_t newmode);
   virtual void statusbar_setitem_specific(int element, bx_bool active, bx_bool w);
   virtual void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
@@ -75,8 +78,6 @@ const Uint32 status_gray_text = 0x00808080;
 const Uint32 status_led_red = 0x00ff4000;
 #endif
 
-static unsigned prev_cursor_x=0;
-static unsigned prev_cursor_y=0;
 static Bit32u convertStringToSDLKey(const char *string);
 
 #define MAX_SDL_BITMAPS 32
@@ -97,8 +98,6 @@ int headerbar_height;
 static unsigned bx_bitmap_left_xorigin = 0;  // pixels from left
 static unsigned bx_bitmap_right_xorigin = 0; // pixels from right
 static unsigned int text_rows = 25, text_cols = 80;
-Bit8u h_panning = 0, v_panning = 0;
-Bit16u line_compare = 1023;
 int fontwidth = 8, fontheight = 16;
 static unsigned disp_bpp=8;
 unsigned char menufont[256][8];
@@ -506,6 +505,7 @@ void bx_sdl2_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   }
 
   new_gfx_api = 1;
+  new_text_api = 1;
 #if defined(WIN32) && BX_SHOW_IPS
   timer_id = SDL_AddTimer(1000, sdlTimer, NULL);
 #endif
@@ -518,208 +518,63 @@ void bx_sdl2_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 }
 
 
+void bx_sdl2_gui_c::draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
+                              Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
+                              bx_bool gfxcharw9, Bit8u cs, Bit8u ce,
+                              bx_bool curs)
+{
+  Uint32 *buf, pitch, fgcolor, bgcolor;
+  Bit16u font_row, mask;
+  Bit8u *font_ptr, fwidth, fontpixels;
+  bx_bool dwidth;
+
+  if (sdl_screen) {
+    pitch = sdl_screen->pitch/4;
+    buf = (Uint32 *)sdl_screen->pixels + (headerbar_height + yc) * pitch + xc;
+  } else {
+    pitch = sdl_fullscreen->pitch/4;
+    buf = (Uint32 *)sdl_fullscreen->pixels + yc * pitch + xc;
+  }
+  fgcolor = sdl_palette[fc];
+  bgcolor = sdl_palette[bc];
+  fwidth = guest_fsize & 0x1f;
+  dwidth = (fwidth > 9);
+  font_ptr = &vga_charmap[(ch << 5) + fy];
+  do {
+    font_row = *font_ptr++;
+    if (gfxcharw9) {
+      font_row = (font_row << 1) | (font_row & 0x01);
+    } else {
+      font_row <<= 1;
+    }
+    if (fx > 0) {
+      font_row <<= fx;
+    }
+    fontpixels = fw;
+    if (curs && (fy >= cs) && (fy <= ce))
+      mask = 0x100;
+    else
+      mask = 0x00;
+    do {
+      if ((font_row & 0x100) == mask)
+        *buf = bgcolor;
+      else
+        *buf = fgcolor;
+      buf++;
+      if (!dwidth || (fontpixels & 1)) font_row <<= 1;
+    } while (--fontpixels);
+    buf += (pitch - fw);
+    fy++;
+  } while (--fh);
+}
+
 void bx_sdl2_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     unsigned long cursor_x,
     unsigned long cursor_y,
     bx_vga_tminfo_t *tm_info)
 {
-  Bit8u *pfont_row, *old_line, *new_line, *text_base;
-  unsigned int cs_y, i, x, y;
-  unsigned int curs, hchars, offset;
-  Bit8u fontline, fontpixels, fontrows;
-  int rows;
-  Uint32 fgcolor, bgcolor;
-  Uint32 *buf, *buf_row, *buf_char;
-  Uint32 disp;
-  Bit16u font_row, mask;
-  Bit8u cfstart, cfwidth, cfheight, split_fontrows, split_textrow;
-  bx_bool cursor_visible, gfxcharw9, invert, forceUpdate, split_screen;
-  bx_bool blink_mode, blink_state, dwidth;
-  Uint32 text_palette[16];
-
-  forceUpdate = 0;
-  blink_mode = (tm_info->blink_flags & BX_TEXT_BLINK_MODE) > 0;
-  blink_state = (tm_info->blink_flags & BX_TEXT_BLINK_STATE) > 0;
-  if (blink_mode) {
-    if (tm_info->blink_flags & BX_TEXT_BLINK_TOGGLE)
-      forceUpdate = 1;
-  }
-  dwidth = (fontwidth > 9);
-  if (charmap_updated) {
-    forceUpdate = 1;
-    charmap_updated = 0;
-  }
-  for (i=0; i<16; i++) {
-    text_palette[i] = sdl_palette[tm_info->actl_palette[i]];
-  }
-  if ((tm_info->h_panning != h_panning) || (tm_info->v_panning != v_panning)) {
-    forceUpdate = 1;
-    h_panning = tm_info->h_panning;
-    v_panning = tm_info->v_panning;
-  }
-  if (tm_info->line_compare != line_compare) {
-    forceUpdate = 1;
-    line_compare = tm_info->line_compare;
-  }
-  if (sdl_screen) {
-    disp = sdl_screen->pitch/4;
-    buf_row = (Uint32 *)sdl_screen->pixels + headerbar_height * disp;
-  } else {
-    disp = sdl_fullscreen->pitch/4;
-    buf_row = (Uint32 *)sdl_fullscreen->pixels;
-  }
-  // first invalidate character at previous and new cursor location
-  if ((prev_cursor_y < text_rows) && (prev_cursor_x < text_cols)) {
-    curs = prev_cursor_y * tm_info->line_offset + prev_cursor_x * 2;
-    old_text[curs] = ~new_text[curs];
-  }
-  cursor_visible = ((tm_info->cs_start <= tm_info->cs_end) && (tm_info->cs_start < fontheight));
-  if((cursor_visible) && (cursor_y < text_rows) && (cursor_x < text_cols)) {
-    curs = cursor_y * tm_info->line_offset + cursor_x * 2;
-    old_text[curs] = ~new_text[curs];
-  } else {
-    curs = 0xffff;
-  }
-
-  rows = text_rows;
-  if (v_panning) rows++;
-  y = 0;
-  cs_y = 0;
-  offset = 0;
-  text_base = new_text - tm_info->start_address;
-  if (line_compare < res_y) {
-    split_textrow = (line_compare + v_panning) / fontheight;
-    split_fontrows = ((line_compare + v_panning) % fontheight) + 1;
-  } else {
-    split_textrow = rows + 1;
-    split_fontrows = 0;
-  }
-  split_screen = 0;
-
-  do {
-    buf = buf_row;
-    hchars = text_cols;
-    if (h_panning) hchars++;
-    cfheight = fontheight;
-    cfstart = 0;
-    if (split_screen) {
-      if (rows == 1) {
-        cfheight = (res_y - line_compare - 1) % fontheight;
-        if (cfheight == 0) cfheight = fontheight;
-      }
-    } else if (v_panning) {
-      if (y == 0) {
-        cfheight -= v_panning;
-        cfstart = v_panning;
-      } else if (rows == 1) {
-        cfheight = v_panning;
-      }
-    }
-    if (y == split_textrow) {
-      cfheight = split_fontrows - cfstart;
-    }
-    new_line = new_text;
-    old_line = old_text;
-    x = 0;
-    do {
-      cfwidth = fontwidth;
-      if (h_panning) {
-        if (hchars > text_cols) {
-          cfwidth -= h_panning;
-        } else if (hchars == 1) {
-          cfwidth = h_panning;
-        }
-      }
-      // check if char needs to be updated
-      if(forceUpdate || (old_text[0] != new_text[0])
-         || (old_text[1] != new_text[1])) {
-        // Get Foreground/Background pixel colors
-        fgcolor = text_palette[new_text[1] & 0x0F];
-        if (blink_mode) {
-          bgcolor = text_palette[(new_text[1] >> 4) & 0x07];
-          if (!blink_state && (new_text[1] & 0x80))
-            fgcolor = bgcolor;
-        } else {
-          bgcolor = text_palette[(new_text[1] >> 4) & 0x0F];
-        }
-        invert = ((offset == curs) && (cursor_visible));
-        gfxcharw9 = ((tm_info->line_graphics) && ((new_text[0] & 0xE0) == 0xC0));
-
-        // Display this one char
-        fontrows = cfheight;
-        fontline = cfstart;
-        if (y > 0) {
-          pfont_row = &vga_charmap[(new_text[0] << 5)];
-        } else {
-          pfont_row = &vga_charmap[(new_text[0] << 5) + cfstart];
-        }
-        buf_char = buf;
-        do {
-          font_row = *pfont_row++;
-          if (gfxcharw9) {
-            font_row = (font_row << 1) | (font_row & 0x01);
-          } else {
-            font_row <<= 1;
-          }
-          if (hchars > text_cols) {
-            font_row <<= h_panning;
-          }
-          fontpixels = cfwidth;
-          if ((invert) && (fontline >= tm_info->cs_start) && (fontline <= tm_info->cs_end))
-            mask = 0x100;
-          else
-            mask = 0x00;
-          do {
-            if ((font_row & 0x100) == mask)
-              *buf = bgcolor;
-            else
-              *buf = fgcolor;
-            buf++;
-            if (!dwidth || (fontpixels & 1)) font_row <<= 1;
-          } while (--fontpixels);
-          buf -= cfwidth;
-          buf += disp;
-          fontline++;
-        } while (--fontrows);
-
-        // restore output buffer ptr to start of this char
-        buf = buf_char;
-      }
-      // move to next char location on screen
-      buf += cfwidth;
-
-      // select next char in old/new text
-      new_text+=2;
-      old_text+=2;
-      offset+=2;
-      x++;
-
-    // process one entire horizontal row
-    } while (--hchars);
-
-    // go to next character row location
-    buf_row += disp * cfheight;
-    if (y == split_textrow) {
-      new_text = text_base;
-      forceUpdate = 1;
-      cs_y = 0;
-      curs += tm_info->start_address;
-      if (tm_info->split_hpanning) h_panning = 0;
-      rows = ((res_y - line_compare + fontheight - 2) / fontheight) + 1;
-      split_screen = 1;
-    } else {
-      new_text = new_line + tm_info->line_offset;
-      old_text = old_line + tm_info->line_offset;
-      cs_y++;
-    }
-    y++;
-    offset = cs_y * tm_info->line_offset;
-  } while (--rows);
-  h_panning = tm_info->h_panning;
-  prev_cursor_x = cursor_x;
-  prev_cursor_y = cursor_y;
+  // present for compatibility
 }
-
 
 void bx_sdl2_gui_c::graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y)
 {
