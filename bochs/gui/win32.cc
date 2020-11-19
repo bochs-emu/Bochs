@@ -48,6 +48,10 @@ class bx_win32_gui_c : public bx_gui_c {
 public:
   bx_win32_gui_c(void);
   DECLARE_GUI_VIRTUAL_METHODS();
+  virtual void set_font(bx_bool lg);
+  virtual void draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
+                         Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
+                         bx_bool gfxcharw9, Bit8u cs, Bit8u ce, bx_bool curs);
   virtual void statusbar_setitem_specific(int element, bx_bool active, bx_bool w);
   virtual void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
   virtual void set_tooltip(unsigned hbar_id, const char *tip);
@@ -127,14 +131,9 @@ static BOOL toolbarVisible, statusVisible;
 static BOOL fullscreenMode, inFullscreenToggle;
 
 // Text mode screen stuff
-static unsigned prev_cursor_x = 0;
-static unsigned prev_cursor_y = 0;
 static HBITMAP vgafont[256];
 static int xChar = 8, yChar = 16;
 static unsigned int text_rows=25, text_cols=80;
-static Bit8u text_pal_idx[16];
-static Bit8u h_panning = 0, v_panning = 0;
-static Bit16u line_compare = 1023;
 
 // Headerbar stuff
 HWND hwndTB, hwndSB;
@@ -209,7 +208,7 @@ DWORD WINAPI UIThread(PVOID);
 void SetStatusText(unsigned Num, const char *Text, bx_bool active, bx_bool w=0);
 void terminateEmul(int);
 void create_vga_font(void);
-void DrawBitmap(HDC, HBITMAP, int, int, int, int, int, int, DWORD, unsigned char);
+void DrawBitmap(HDC, HBITMAP, int, int, int, int, int, int, Bit8u, Bit8u);
 void updateUpdated(int,int,int,int);
 static void win32_toolbar_click(int x);
 
@@ -761,6 +760,7 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   if (gui_ci) {
     dialog_caps = BX_GUI_DLG_ALL;
   }
+  new_text_api = 1;
 }
 
 void set_fullscreen_mode(BOOL enable)
@@ -1720,213 +1720,56 @@ void bx_win32_gui_c::clear_screen(void)
 }
 
 
-void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
-                                 unsigned long cursor_x, unsigned long cursor_y,
-                                 bx_vga_tminfo_t *tm_info)
+void bx_win32_gui_c::set_font(bx_bool lg)
+{
+  Bit8u data[64], i;
+
+  for (unsigned c = 0; c<256; c++) {
+    if (char_changed[c]) {
+      memset(data, 0, sizeof(data));
+      BOOL gfxchar = lg && ((c & 0xE0) == 0xC0);
+      for (i=0; i<(unsigned)yChar; i++) {
+        data[i*2] = vga_charmap[c*32+i];
+        if (gfxchar) {
+          data[i*2+1] = (data[i*2] << 7);
+        }
+      }
+      SetBitmapBits(vgafont[c], 64, data);
+      char_changed[c] = 0;
+    }
+  }
+}
+
+void bx_win32_gui_c::draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
+                               Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
+                               bx_bool gfxcharw9, Bit8u cs, Bit8u ce, bx_bool curs)
 {
   HDC hdc;
-  unsigned char data[64];
-  Bit8u *old_line, *new_line;
-  Bit8u cAttr, cChar;
-  unsigned int curs, hchars, i, offset, rows, x, y, xc, yc;
-  BOOL forceUpdate = FALSE, blink_state, blink_mode;
-  Bit8u *text_base;
-  Bit8u cfwidth, cfheight, cfheight2, font_col, font_row, font_row2;
-  Bit8u split_textrow, split_fontrows;
-  unsigned int yc2, cs_y;
-  BOOL split_screen;
 
   if (!stInfo.UIinited) return;
 
   EnterCriticalSection(&stInfo.drawCS);
-
-  blink_mode = (tm_info->blink_flags & BX_TEXT_BLINK_MODE) > 0;
-  blink_state = (tm_info->blink_flags & BX_TEXT_BLINK_STATE) > 0;
-  if (blink_mode) {
-    if (tm_info->blink_flags & BX_TEXT_BLINK_TOGGLE)
-      forceUpdate = 1;
-  }
-  if (charmap_updated) {
-    for (unsigned c = 0; c<256; c++) {
-      if (char_changed[c]) {
-        memset(data, 0, sizeof(data));
-        BOOL gfxchar = tm_info->line_graphics && ((c & 0xE0) == 0xC0);
-        for (i=0; i<(unsigned)yChar; i++) {
-          data[i*2] = vga_charmap[c*32+i];
-          if (gfxchar) {
-            data[i*2+1] = (data[i*2] << 7);
-          }
-        }
-        SetBitmapBits(vgafont[c], 64, data);
-        char_changed[c] = 0;
-      }
-    }
-    forceUpdate = TRUE;
-    charmap_updated = 0;
-  }
-  for (i=0; i<16; i++) {
-    text_pal_idx[i] = tm_info->actl_palette[i];
-  }
-
   hdc = GetDC(stInfo.simWnd);
-
-  if((tm_info->h_panning != h_panning) || (tm_info->v_panning != v_panning)) {
-    forceUpdate = 1;
-    h_panning = tm_info->h_panning;
-    v_panning = tm_info->v_panning;
-  }
-  if(tm_info->line_compare != line_compare) {
-    forceUpdate = 1;
-    line_compare = tm_info->line_compare;
-  }
-
-  // first invalidate character at previous and new cursor location
-  if((prev_cursor_y < text_rows) && (prev_cursor_x < text_cols)) {
-    curs = prev_cursor_y * tm_info->line_offset + prev_cursor_x * 2;
-    old_text[curs] = ~new_text[curs];
-  }
-  if((tm_info->cs_start <= tm_info->cs_end) && (tm_info->cs_start < yChar) &&
-     (cursor_y < text_rows) && (cursor_x < text_cols)) {
-    curs = cursor_y * tm_info->line_offset + cursor_x * 2;
-    old_text[curs] = ~new_text[curs];
-  } else {
-    curs = 0xffff;
-  }
-
-  rows = text_rows;
-  if (v_panning) rows++;
-  y = 0;
-  cs_y = 0;
-  offset = 0;
-  text_base = new_text - tm_info->start_address;
-  if (line_compare < dimension_y) {
-    split_textrow = (line_compare + v_panning) / yChar;
-    split_fontrows = ((line_compare + v_panning) % yChar) + 1;
-  } else {
-    split_textrow = rows + 1;
-    split_fontrows = 0;
-  }
-  split_screen = 0;
-  do {
-    hchars = text_cols;
-    if (h_panning) hchars++;
-    if (split_screen) {
-      yc = line_compare + cs_y * yChar + 1;
-      font_row = 0;
-      if (rows == 1) {
-        cfheight = (dimension_y - line_compare - 1) % yChar;
-        if (cfheight == 0) cfheight = yChar;
-      } else {
-        cfheight = yChar;
-      }
-    } else if (v_panning) {
-      if (y == 0) {
-        yc = 0;
-        font_row = v_panning;
-        cfheight = yChar - v_panning;
-      } else {
-        yc = y * yChar - v_panning;
-        font_row = 0;
-        if (rows == 1) {
-          cfheight = v_panning;
-        } else {
-          cfheight = yChar;
-        }
-      }
-    } else {
-      yc = y * yChar;
-      font_row = 0;
-      cfheight = yChar;
+  DrawBitmap(hdc, vgafont[ch], xc, yc, fw, fh, fx, fy, fc, bc);
+  if (curs && (ce >= fy) && (cs < (fh + fy))) {
+    if (cs > fy) {
+      yc += (cs - fy);
+      fh -= (cs - fy);
     }
-    if (y == split_textrow) {
-      cfheight = split_fontrows - font_row;
+    if ((ce - cs + 1) < fh) {
+      fh = ce - cs + 1;
     }
-    new_line = new_text;
-    old_line = old_text;
-    x = 0;
-    do {
-      if (h_panning) {
-        if (hchars > text_cols) {
-          xc = 0;
-          font_col = h_panning;
-          cfwidth = xChar - h_panning;
-        } else {
-          xc = x * xChar - h_panning;
-          font_col = 0;
-          if (hchars == 1) {
-            cfwidth = h_panning;
-          } else {
-            cfwidth = xChar;
-          }
-        }
-      } else {
-        xc = x * xChar;
-        font_col = 0;
-        cfwidth = xChar;
-      }
-      if (forceUpdate || (old_text[0] != new_text[0])
-          || (old_text[1] != new_text[1])) {
-        cChar = new_text[0];
-        if (blink_mode) {
-          cAttr = new_text[1] & 0x7F;
-          if (!blink_state && (new_text[1] & 0x80))
-            cAttr = (cAttr & 0x70) | (cAttr >> 4);
-        } else {
-          cAttr = new_text[1];
-        }
-        DrawBitmap(hdc, vgafont[cChar], xc, yc, cfwidth, cfheight, font_col,
-                   font_row, SRCCOPY, cAttr);
-        if (offset == curs) {
-          if (font_row == 0) {
-            yc2 = yc + tm_info->cs_start;
-            font_row2 = tm_info->cs_start;
-            cfheight2 = tm_info->cs_end - tm_info->cs_start + 1;
-          } else {
-            if (v_panning > tm_info->cs_start) {
-              yc2 = yc;
-              font_row2 = font_row;
-              cfheight2 = tm_info->cs_end - v_panning + 1;
-            } else {
-              yc2 = yc + tm_info->cs_start - v_panning;
-              font_row2 = tm_info->cs_start;
-              cfheight2 = tm_info->cs_end - tm_info->cs_start + 1;
-            }
-          }
-          cAttr = ((cAttr >> 4) & 0xF) + ((cAttr & 0xF) << 4);
-          DrawBitmap(hdc, vgafont[cChar], xc, yc2, cfwidth, cfheight2, font_col,
-                     font_row2, SRCCOPY, cAttr);
-        }
-      }
-      x++;
-      new_text+=2;
-      old_text+=2;
-      offset+=2;
-    } while (--hchars);
-    if (y == split_textrow) {
-      new_text = text_base;
-      forceUpdate = 1;
-      cs_y = 0;
-      curs += tm_info->start_address;
-      if (tm_info->split_hpanning) h_panning = 0;
-      rows = ((dimension_y - line_compare + yChar - 2) / yChar) + 1;
-      split_screen = 1;
-    } else {
-      cs_y++;
-      new_text = new_line + tm_info->line_offset;
-      old_text = old_line + tm_info->line_offset;
-    }
-    y++;
-    offset = cs_y * tm_info->line_offset;
-  } while (--rows);
-
-  h_panning = tm_info->h_panning;
-
-  prev_cursor_x = cursor_x;
-  prev_cursor_y = cursor_y;
-
+    DrawBitmap(hdc, vgafont[ch], xc, yc, fw, fh, fx, fy, bc, fc);
+  }
   ReleaseDC(stInfo.simWnd, hdc);
-
   LeaveCriticalSection(&stInfo.drawCS);
+}
+
+void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
+                                 unsigned long cursor_x, unsigned long cursor_y,
+                                 bx_vga_tminfo_t *tm_info)
+{
+  // present for compatibility
 }
 
 int bx_win32_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
@@ -2201,16 +2044,15 @@ void create_vga_font(void)
 }
 
 
-COLORREF GetColorRef(unsigned char attr)
+COLORREF GetColorRef(Bit8u pal_idx)
 {
-  Bit8u pal_idx = text_pal_idx[attr];
   return RGB(cmap_index[pal_idx].rgbRed, cmap_index[pal_idx].rgbGreen,
              cmap_index[pal_idx].rgbBlue);
 }
 
 
 void DrawBitmap(HDC hdc, HBITMAP hBitmap, int xStart, int yStart, int width,
-                int height, int fcol, int frow, DWORD dwRop, unsigned char cColor)
+                int height, int fcol, int frow, Bit8u fgcolor, Bit8u bgcolor)
 {
   BITMAP bm;
   HDC hdcMem;
@@ -2234,14 +2076,14 @@ void DrawBitmap(HDC hdc, HBITMAP hBitmap, int xStart, int yStart, int width,
 
   oldObj = SelectObject(MemoryDC, MemoryBitmap);
 
-  COLORREF crFore = SetTextColor(MemoryDC, GetColorRef((cColor>>4)&0xf));
-  COLORREF crBack = SetBkColor(MemoryDC, GetColorRef(cColor&0xf));
+  COLORREF crFore = SetTextColor(MemoryDC, GetColorRef(bgcolor));
+  COLORREF crBack = SetBkColor(MemoryDC, GetColorRef(fgcolor));
   if (xChar > 9) {
     StretchBlt(MemoryDC, xStart, yStart, ptSize.x, ptSize.y, hdcMem, ptOrg.x,
-              ptOrg.y, ptSize.x / 2, ptSize.y, dwRop);
+              ptOrg.y, ptSize.x / 2, ptSize.y, SRCCOPY);
   } else {
     BitBlt(MemoryDC, xStart, yStart, ptSize.x, ptSize.y, hdcMem, ptOrg.x,
-           ptOrg.y, dwRop);
+           ptOrg.y, SRCCOPY);
   }
   SetBkColor(MemoryDC, crBack);
   SetTextColor(MemoryDC, crFore);
