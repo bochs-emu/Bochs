@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2015  The Bochs Project
+//  Copyright (C) 2002-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -79,6 +79,7 @@ private:
     Bit8u   result[10];
     Bit8u   result_index;
     Bit8u   result_size;
+    Bit8u   last_result;
 
     Bit8u   DOR; // Digital Ouput Register
     Bit8u   TDR; // Tape Drive Register
