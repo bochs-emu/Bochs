@@ -308,7 +308,8 @@ protected:
   unsigned y_tilesize;
   // current guest display settings
   bx_bool guest_textmode;
-  Bit16u  guest_fsize;
+  Bit8u   guest_fwidth;
+  Bit8u   guest_fheight;
   Bit16u  guest_xres;
   Bit16u  guest_yres;
   Bit8u   guest_bpp;
@@ -339,7 +340,8 @@ protected:
     bx_bool running;
     Bit8u *screen;
     Bit8u *oldscreen;
-    Bit16u saved_fsize;
+    Bit8u saved_fwidth;
+    Bit8u saved_fheight;
     Bit16u saved_xres;
     Bit16u saved_yres;
     Bit8u  saved_bpp;

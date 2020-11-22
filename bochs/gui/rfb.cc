@@ -172,9 +172,6 @@ static unsigned rfbStatusitemPos[12] = {
 };
 static bx_bool rfbStatusitemActive[12];
 
-static unsigned int text_rows = 25, text_cols = 80;
-static unsigned int font_height = 16, font_width = 8;
-
 static SOCKET sGlobal;
 
 static Bit32u clientEncodingsCount = 0;
@@ -440,15 +437,10 @@ void bx_rfb_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, un
     BX_PANIC(("%d bpp graphics mode not supported yet", bpp));
   }
   guest_textmode = (fheight > 0);
-  guest_fsize = (fheight << 8) | fwidth;
+  guest_fwidth = fwidth;
+  guest_fheight = fheight;
   guest_xres = x;
   guest_yres = y;
-  if (guest_textmode) {
-    font_height = fheight;
-    font_width = fwidth;
-    text_cols = x / fwidth;
-    text_rows = y / fheight;
-  }
   if ((x != rfbDimensionX) || (y != rfbDimensionY)) {
     if (desktop_resizable) {
       if ((x > BX_RFB_MAX_XDIM) || (y > BX_RFB_MAX_YDIM)) {

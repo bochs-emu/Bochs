@@ -112,9 +112,6 @@ static bx_bool wxScreenCheckSize = 0;
 static unsigned wxTileX = 0;
 static unsigned wxTileY = 0;
 static bx_bool wxMouseModeAbsXY = 0;
-static unsigned long wxFontX = 0;
-static unsigned long wxFontY = 0;
-static unsigned int text_rows=25, text_cols=80;
 static unsigned disp_bpp = 8;
 static struct {
   unsigned char red;
@@ -1364,15 +1361,10 @@ void bx_wx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, uns
     BX_PANIC(("%d bpp graphics mode not supported", bpp));
   }
   guest_textmode = (fheight > 0);
-  guest_fsize = (fheight << 8) | fwidth;
+  guest_fwidth = fwidth;
+  guest_fheight = fheight;
   guest_xres = x;
   guest_yres = y;
-  if (guest_textmode) {
-    wxFontX = fwidth;
-    wxFontY = fheight;
-    text_cols = x / wxFontX;
-    text_rows = y / wxFontY;
-  }
   if (((int)x > wx_maxres.GetWidth()) || ((int)y > wx_maxres.GetHeight())) {
     BX_PANIC(("dimension_update(): resolution of out of display bounds"));
     return;

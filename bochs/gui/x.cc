@@ -107,7 +107,6 @@ static unsigned long white_pixel=0, black_pixel=0;
 static char *progname; /* name this program was invoked by */
 
 // text display
-static unsigned int text_rows=25, text_cols=80;
 static unsigned font_width, font_height;
 
 // graphics display
@@ -659,8 +658,8 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   font_width = 8;
   font_height = 16;
 
-  dimension_x = text_cols * font_width;
-  dimension_y = text_rows * font_height;
+  dimension_x = guest_xres;
+  dimension_y = guest_yres;
 
   /* create opaque window */
   win = XCreateSimpleWindow(bx_x_display, RootWindow(bx_x_display,bx_x_screen_num),
@@ -1357,7 +1356,8 @@ void bx_x_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsi
     BX_PANIC(("%d bpp graphics mode not supported", bpp));
   }
   guest_textmode = (fheight > 0);
-  guest_fsize = (fheight << 8) | fwidth;
+  guest_fwidth = fwidth;
+  guest_fheight = fheight;
   guest_xres = x;
   guest_yres = y;
   if (guest_textmode) {
@@ -1367,8 +1367,6 @@ void bx_x_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsi
       charmap_updated = 1;
       for (int i = 0; i < 256; i++) char_changed[i] = 1;
     }
-    text_cols = x / font_width;
-    text_rows = y / font_height;
   }
   if ((x != dimension_x) || (y != dimension_y)) {
     XSizeHints hints;

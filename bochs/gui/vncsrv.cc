@@ -178,9 +178,6 @@ static unsigned rfbStatusitemPos[12] = {
 };
 static bx_bool rfbStatusitemActive[12];
 
-static unsigned int text_rows = 25, text_cols = 80;
-static unsigned int font_height = 16, font_width = 8;
-
 inline rfbPixel rfbMapRGB(U32 red, U32 green, U32 blue) {
     U16 redMax = theGui->screen->serverFormat.redMax;
     U16 greenMax = theGui->screen->serverFormat.greenMax;
@@ -457,15 +454,10 @@ void bx_vncsrv_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight,
     BX_PANIC(("%d bpp graphics mode not supported", bpp));
   }
   guest_textmode = (fheight > 0);
-  guest_fsize = (fheight << 8) | fwidth;
+  guest_fwidth = fwidth;
+  guest_fheight = fheight;
   guest_xres = x;
   guest_yres = y;
-  if (guest_textmode) {
-    font_height = fheight;
-    font_width = fwidth;
-    text_cols = x / fwidth;
-    text_rows = y / fheight;
-  }
   if ((x != rfbDimensionX) || (y != rfbDimensionY)) {
     if (clientPtr->useNewFBSize) {
       if ((x > BX_RFB_MAX_XDIM) || (y > BX_RFB_MAX_YDIM)) {

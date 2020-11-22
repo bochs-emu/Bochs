@@ -95,8 +95,6 @@ unsigned half_res_x, half_res_y;
 int headerbar_height;
 static unsigned bx_bitmap_left_xorigin = 0;  // pixels from left
 static unsigned bx_bitmap_right_xorigin = 0; // pixels from right
-static unsigned int text_rows = 25, text_cols = 80;
-int fontwidth = 8, fontheight = 16;
 static unsigned disp_bpp=8;
 unsigned char menufont[256][8];
 Uint32 sdl_palette[256];
@@ -592,7 +590,7 @@ void bx_sdl_gui_c::draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
 {
   Uint32 *buf, pitch, fgcolor, bgcolor;
   Bit16u font_row, mask;
-  Bit8u *font_ptr, fwidth, fontpixels;
+  Bit8u *font_ptr, fontpixels;
   bx_bool dwidth;
 
   if (sdl_screen) {
@@ -604,8 +602,7 @@ void bx_sdl_gui_c::draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
   }
   fgcolor = sdl_palette[fc];
   bgcolor = sdl_palette[bc];
-  fwidth = guest_fsize & 0x1f;
-  dwidth = (fwidth > 9);
+  dwidth = (guest_fwidth > 9);
   font_ptr = &vga_charmap[(ch << 5) + fy];
   do {
     font_row = *font_ptr++;
@@ -1058,15 +1055,10 @@ void bx_sdl_gui_c::dimension_update(unsigned x, unsigned y,
     BX_PANIC(("%d bpp graphics mode not supported", bpp));
   }
   guest_textmode = (fheight > 0);
-  guest_fsize = (fheight << 8) | fwidth;
+  guest_fwidth = fwidth;
+  guest_fheight = fheight;
   guest_xres = x;
   guest_yres = y;
-  if (guest_textmode) {
-    fontheight = fheight;
-    fontwidth = fwidth;
-    text_cols = x / fontwidth;
-    text_rows = y / fontheight;
-  }
 
   if ((x == res_x) && (y == res_y)) return;
 #ifndef ANDROID

@@ -133,7 +133,6 @@ static BOOL fullscreenMode, inFullscreenToggle;
 // Text mode screen stuff
 static HBITMAP vgafont[256];
 static int xChar = 8, yChar = 16;
-static unsigned int text_rows=25, text_cols=80;
 
 // Headerbar stuff
 HWND hwndTB, hwndSB;
@@ -1852,14 +1851,13 @@ void bx_win32_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth, unsigned bpp)
 {
   guest_textmode = (fheight > 0);
-  guest_fsize = (fheight << 8) | fwidth;
+  guest_fwidth = fwidth;
+  guest_fheight = fheight;
   guest_xres = x;
   guest_yres = y;
   if (guest_textmode) {
     yChar = fheight;
     xChar = fwidth;
-    text_cols = x / fwidth;
-    text_rows = y / fheight;
   }
 
   if ((x == dimension_x) && (y == dimension_y) && (bpp == current_bpp))
