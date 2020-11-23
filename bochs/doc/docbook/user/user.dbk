@@ -3367,7 +3367,7 @@ behaviour. These options are supported by more than one display library:
   "cmdmode"     - call a headerbar button handler after pressing F7 (sdl, sdl2, win32, x)
   "fullscreen"  - startup in fullscreen mode (sdl, sdl2)
   "gui_debug"   - use GTK debugger gui (sdl, x) / Win32 debugger gui (sdl, sdl2, win32)
-  "hideIPS"     - disable IPS output in status bar (rfb, sdl, sdl2, vncsrv, win32, wx, x)
+  "hideIPS"     - disable IPS output in status bar (rfb, sdl, sdl2, term, vncsrv, win32, wx, x)
   "nokeyrepeat" - turn off host keyboard repeat (sdl, sdl2, win32, x)
   "timeout"     - time (in seconds) to wait for client (rfb, vncsrv)
 </screen>

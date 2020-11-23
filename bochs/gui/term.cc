@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2000-2017  The Bochs Project
+//  Copyright (C) 2000-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -47,6 +47,10 @@ public:
 
   // called when registered signal arrives
   virtual void sighandler(int sig);
+
+#if BX_SHOW_IPS
+  void show_ips(Bit32u ips_count);
+#endif
 };
 
 // declare one instance of the gui object and call macro to insert the
@@ -60,7 +64,9 @@ IMPLEMENT_GUI_PLUGIN_CODE(term)
 #define LOG_THIS theGui->
 
 bx_bool initialized = 0;
+bx_bool termHideIPS = 0;
 static unsigned int text_rows = 25, text_cols = 80;
+static unsigned long last_cursor_x, last_cursor_y;
 
 static short curses_color[8] = {
   /* 0 */ COLOR_BLACK,
@@ -170,8 +176,9 @@ void bx_term_gui_c::sighandler(int signo)
 
 void bx_term_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 {
-  put("TERM");
+  int i;
 
+  put("TERM");
   // the ask menu causes trouble
   io->set_log_action(LOGLEV_PANIC, ACT_FATAL);
 #if !BX_DEBUGGER_TERM
@@ -197,20 +204,36 @@ void bx_term_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 #endif
   start_color();
   cbreak();
-  curs_set(2);
+  curs_set(1);
   keypad(stdscr,TRUE);
   nodelay(stdscr, TRUE);
   noecho();
 
 #if BX_HAVE_COLOR_SET
   if (has_colors()) {
-    for (int i=0; i<8; i++) {
+    for (i = 0; i < 8; i++) {
       for (int j=0; j<8; j++) {
         if ((i!=0)||(j!=0)) init_pair(i * 8 + j, j, i);
       }
     }
   }
 #endif
+
+  // parse term specific options
+  if (argc > 1) {
+    for (i = 1; i < argc; i++) {
+      if (!strcmp(argv[i], "hideIPS")) {
+#if BX_SHOW_IPS
+        BX_INFO(("hide IPS display in status bar"));
+        termHideIPS = 1;
+#else
+        BX_ERROR(("Show IPS not available"));
+#endif
+      } else {
+        BX_PANIC(("Unknown rfb option '%s'", argv[i]));
+      }
+    }
+  }
 
   if (SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get())
     BX_ERROR(("WARNING: private_colormap option ignored."));
@@ -529,8 +552,7 @@ void bx_term_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
         unsigned long cursor_x, unsigned long cursor_y,
         bx_vga_tminfo_t *tm_info)
 {
-  unsigned char *old_line, *new_line, *new_start;
-  unsigned char cAttr;
+  unsigned char *old_line, *new_line;
   unsigned int hchars, rows, x, y;
   chtype ch;
   bx_bool force_update = 0;
@@ -540,7 +562,6 @@ void bx_term_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     charmap_updated = 0;
   }
 
-  new_start = new_text;
   rows = text_rows;
   y = 0;
   do {
@@ -570,27 +591,19 @@ void bx_term_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     old_text = old_line + tm_info->line_offset;
   } while (--rows);
 
-  if ((cursor_x<text_cols) && (cursor_y<text_rows)
+  if ((cursor_x < text_cols) && (cursor_y < text_rows)
       && (tm_info->cs_start <= tm_info->cs_end)) {
-    if(cursor_x>0)
-      cursor_x--;
-    else {
-      cursor_x=COLS-1;
-      cursor_y--;
+    move(cursor_y, cursor_x);
+    if ((tm_info->cs_end - tm_info->cs_start) <= 2) {
+      curs_set(1);
+    } else {
+      curs_set(2);
     }
-    cAttr = new_start[cursor_y*tm_info->line_offset+cursor_x*2+1];
-#if BX_HAVE_COLOR_SET
-    if (has_colors()) {
-      color_set(get_color_pair(cAttr), NULL);
-    }
-#endif
-    ch = get_term_char(&new_start[cursor_y*tm_info->line_offset+cursor_x*2]);
-    if ((cAttr & 0x08) > 0) ch |= A_BOLD;
-    if ((cAttr & 0x80) > 0) ch |= A_REVERSE;
-    mvaddch(cursor_y, cursor_x, ch);
-    curs_set(2);
+    last_cursor_x = cursor_x;
+    last_cursor_y = cursor_y;
   } else {
     curs_set(0);
+    last_cursor_y = -1;
   }
 }
 
@@ -630,19 +643,30 @@ void bx_term_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, u
 #if BX_HAVE_COLOR_SET
     color_set(7, NULL);
 #endif
-#if BX_HAVE_MVHLINE
-    if (LINES > (int)text_rows) {
-      mvhline(text_rows, 0, ACS_HLINE, text_cols);
-    }
-#endif
 #if BX_HAVE_MVVLINE
     if (COLS > (int)text_cols) {
       mvvline(0, text_cols, ACS_VLINE, text_rows);
     }
 #endif
-    if ((LINES > (int)text_rows) && (COLS > (int)text_cols)) {
-      mvaddch(text_rows, text_cols, ACS_LRCORNER);
+#if BX_HAVE_MVHLINE
+    if (LINES > (int)text_rows) {
+      mvhline(text_rows, 0, ACS_HLINE, text_cols);
+      if (COLS > (int)text_cols) {
+        mvaddch(text_rows, text_cols, ACS_LRCORNER);
+      }
     }
+    if (LINES > (int)(text_rows + 2)) {
+      mvhline(text_rows + 2, 0, ACS_HLINE, text_cols);
+      if (COLS > (int)text_cols) {
+        mvaddch(text_rows + 1, text_cols, ACS_VLINE);
+        mvaddch(text_rows + 2, text_cols, ACS_LRCORNER);
+      }
+#if BX_HAVE_COLOR_SET
+      color_set(7 << 3, NULL);
+#endif
+      mvhline(text_rows + 1, 0, ' ', text_cols);
+    }
+#endif
   }
 }
 
@@ -709,6 +733,26 @@ void bx_term_gui_c::sim_is_idle()
   }
   //handle_events();
 }
+#endif
+
+#if BX_SHOW_IPS
+void bx_term_gui_c::show_ips(Bit32u ips_count)
+{
+  char ips_text[20];
+
+  if (!termHideIPS && (LINES > (int)(text_rows + 1))) {
+    ips_count /= 1000;
+    sprintf(ips_text, "IPS: %u.%3.3uM ", ips_count / 1000, ips_count % 1000);
+#if BX_HAVE_COLOR_SET
+    color_set(7 << 3, NULL);
+#endif
+    mvaddstr(text_rows + 1, 0, ips_text);
+    if (last_cursor_y >= 0) {
+      move(last_cursor_y, last_cursor_x);
+    }
+  }
+}
+
 #endif
 
 #endif /* if BX_WITH_TERM */
