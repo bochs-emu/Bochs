@@ -56,7 +56,6 @@
 #   amigaos        use native AmigaOS libraries
 #   sdl            use SDL 1.2.x library, cross platform
 #   sdl2           use SDL 2.x library, cross platform
-#   svga           use SVGALIB library for Linux, allows graphics without X11
 #   term           text only, uses curses/ncurses library, cross platform
 #   rfb            provides an interface to AT&T's VNC viewer, cross platform
 #   vncsrv         use LibVNCServer for extended RFB(VNC) support

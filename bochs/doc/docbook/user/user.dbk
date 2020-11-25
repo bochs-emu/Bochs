@@ -2092,14 +2092,6 @@ In Bochs 1.3 and before, the X11 GUI was always the default.
       </entry>
     </row>
     <row>
-      <entry>--with-svga</entry>
-      <entry>Use SVGALIB library for Linux.  This allows a full-screen
-        text and graphics display without X windows.  The SVGALIB port
-        was written by Igor Popik.
-        WARNING: This Bochs feature is not maintained yet and may fail.
-      </entry>
-    </row>
-    <row>
       <entry>--with-nogui</entry>
       <entry>No native GUI; just use blank stubs.  This is if you don't
           care about having video output, but are just running tests.
@@ -3421,10 +3413,6 @@ See the examples below for other currently supported options.
   <entry>sdl2</entry>
   <entry>use SDL 2.x library, cross platform,
     details in <xref linkend="compile-sdl2"></entry>
-</row>
-<row>
-  <entry>svga</entry>
-  <entry>use SVGALIB library for Linux, allows graphics without X windows</entry>
 </row>
 <row>
   <entry>term</entry>
@@ -7143,11 +7131,6 @@ simulation is starting.
       <entry>speaker</entry>
       <entry>PCSPK</entry>
       <entry>Lowlevel support for the PC speaker</entry>
-    </row>
-    <row>
-      <entry>VGAGUI</entry>
-      <entry>VGAGUI</entry>
-      <entry>SVGA gui</entry>
     </row>
     <row>
       <entry>TERM</entry>

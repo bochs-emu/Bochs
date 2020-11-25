@@ -54,7 +54,6 @@ BX_INCDIRS = -I.. -I$(srcdir)/.. -I../iodev -I$(srcdir)/../iodev -I../@INSTRUMEN
 GUI_OBJS_X11  = x.o
 GUI_OBJS_SDL = sdl.o
 GUI_OBJS_SDL2 = sdl2.o
-GUI_OBJS_SVGA = svga.o
 GUI_OBJS_WIN32 = win32.o
 GUI_OBJS_MACOS = macintosh.o
 GUI_OBJS_CARBON = carbon.o
@@ -75,7 +74,6 @@ X_PRE_LIBS = @X_PRE_LIBS@
 GUI_LINK_OPTS_X = $(X_LIBS) $(X_PRE_LIBS)
 GUI_LINK_OPTS_SDL = @GUI_LINK_OPTS_SDL@
 GUI_LINK_OPTS_SDL2 = @GUI_LINK_OPTS_SDL2@
-GUI_LINK_OPTS_SVGA =  -lvga -lvgagl
 GUI_LINK_OPTS_RFB = @RFB_LIBS@
 GUI_LINK_OPTS_RFB_VCPP = user32.lib @RFB_LIBS@
 GUI_LINK_OPTS_VNCSRV = @GUI_LINK_OPTS_VNCSRV@
@@ -127,9 +125,6 @@ libbx_sdl.la: sdl.lo
 
 libbx_sdl2.la: sdl2.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_SDL2)
-
-libbx_svga.la: svga.lo
-	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_SVGA)
 
 libbx_rfb.la: rfb.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_RFB)
@@ -272,11 +267,6 @@ siminterface.o: siminterface.@CPP_SUFFIX@ ../param_names.h ../iodev/iodev.h \
  ../memory/memory-bochs.h ../pc_system.h ../gui/gui.h \
  ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
  ../iodev/virt_timer.h
-svga.o: svga.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
- ../config.h ../osdep.h ../gui/siminterface.h ../cpudb.h \
- ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h ../gui/gui.h \
- ../instrument/stubs/instrument.h ../param_names.h ../iodev/iodev.h \
- ../plugin.h ../extplugin.h
 term.o: term.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../gui/siminterface.h ../cpudb.h \
  ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h ../gui/gui.h \
@@ -399,11 +389,6 @@ siminterface.lo: siminterface.@CPP_SUFFIX@ ../param_names.h ../iodev/iodev.h \
  ../memory/memory-bochs.h ../pc_system.h ../gui/gui.h \
  ../instrument/stubs/instrument.h ../plugin.h ../extplugin.h \
  ../iodev/virt_timer.h
-svga.lo: svga.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
- ../config.h ../osdep.h ../gui/siminterface.h ../cpudb.h \
- ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h ../gui/gui.h \
- ../instrument/stubs/instrument.h ../param_names.h ../iodev/iodev.h \
- ../plugin.h ../extplugin.h
 term.lo: term.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../gui/siminterface.h ../cpudb.h \
  ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h ../gui/gui.h \

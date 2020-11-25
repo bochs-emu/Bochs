@@ -100,7 +100,6 @@ AC_MSG_RESULT($ADD_FLAGS)
 dnl // make sure the default gui is enabled if no other chosen
 if (test "$with_sdl" != yes) && \
    (test "$with_sdl2" != yes) && \
-   (test "$with_svga" != yes) && \
    (test "$with_x11" != yes) && \
    (test "$with_win32" != yes) && \
    (test "$with_nogui" != yes) && \
@@ -2240,10 +2239,6 @@ AC_ARG_WITH(sdl2,
   [  --with-sdl2                       use SDL2 libraries],
   )
 
-AC_ARG_WITH(svga,
-  [  --with-svga                       use SVGALib libraries],
-  )
-
 AC_ARG_WITH(wx,
   [  --with-wx                         use wxWidgets libraries],
   )
@@ -2487,18 +2482,6 @@ if test "$with_sdl2" = yes; then
     esac
   fi
   use_gui_console=1
-fi
-
-if test "$with_svga" = yes; then
-  display_libs="$display_libs svga"
-  AC_DEFINE(BX_WITH_SVGA, 1)
-  SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_SVGA)"
-  # GUI_*FLAGS are added to the compilation of every bochs file, not just
-  # the files in gui/*.cc.
-  GUI_CFLAGS="$GUI_CFLAGS"
-  GUI_CXXFLAGS="$GUI_CXXFLAGS"
-  GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_SVGA)"
-  AC_MSG_WARN([This Bochs feature is not maintained yet and may fail])
 fi
 
 if test "$with_rfb" = yes; then

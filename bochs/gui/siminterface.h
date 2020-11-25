@@ -675,8 +675,8 @@ typedef Bit32s (*addon_option_save_t)(FILE *fp);
 
 // bx_gui->set_display_mode() changes the mode between the configuration
 // interface and the simulation.  This is primarily intended for display
-// libraries which have a full-screen mode such as SDL, term, and svgalib.  The
-// display mode is set to DISP_MODE_CONFIG before displaying any configuration
+// libraries which have a full-screen mode such as SDL or term.  The display
+// mode is set to DISP_MODE_CONFIG before displaying any configuration
 // menus, for panics that requires user input, when entering the debugger, etc.
 // It is set to DISP_MODE_SIM when the Bochs simulation resumes.  The constants
 // are defined here so that configuration interfaces can use them with the

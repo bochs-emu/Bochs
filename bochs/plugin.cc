@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2017  The Bochs Project
+//  Copyright (C) 2002-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -821,9 +821,6 @@ static builtin_plugin_t builtin_plugins[] = {
 #endif
 #if BX_WITH_SDL2
   BUILTIN_GUI_PLUGIN_ENTRY(sdl2),
-#endif
-#if BX_WITH_SVGA
-  BUILTIN_GUI_PLUGIN_ENTRY(svga),
 #endif
 #if BX_WITH_TERM
   BUILTIN_GUI_PLUGIN_ENTRY(term),

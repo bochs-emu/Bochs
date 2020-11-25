@@ -138,8 +138,8 @@ public:
   virtual void set_tooltip(unsigned hbar_id, const char *tip) {}
   // set_display_mode() changes the mode between the configuration interface
   // and the simulation.  This is primarily intended for display libraries
-  // which have a full-screen mode such as SDL, term, and svgalib.  The display
-  // mode is set to DISP_MODE_CONFIG before displaying any configuration menus,
+  // which have a full-screen mode such as SDL or term.  The display mode is
+  // set to DISP_MODE_CONFIG before displaying any configuration menus,
   // for panics that requires user input, when entering the debugger, etc.  It
   // is set to DISP_MODE_SIM when the Bochs simulation resumes.  The
   // enum is defined in gui/siminterface.h.
