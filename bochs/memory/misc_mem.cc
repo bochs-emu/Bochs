@@ -36,6 +36,15 @@
 Bit8u* const BX_MEM_C::swapped_out = ((Bit8u*)NULL - sizeof(Bit8u));
 #endif
 
+#define FLASH_READ_ARRAY  0xff
+#define FLASH_INT_ID      0x90
+#define FLASH_READ_STATUS 0x70
+#define FLASH_CLR_STATUS  0x50
+#define FLASH_ERASE_SETUP 0x20
+#define FLASH_ERASE_SUSP  0xb0
+#define FLASH_PROG_SETUP  0x40
+#define FLASH_ERASE       0xd0
+
 BX_MEM_C::BX_MEM_C()
 {
   put("memory", "MEM0");
@@ -139,9 +148,9 @@ void BX_MEM_C::init_memory(Bit64u guest, Bit64u host)
   BX_MEM_THIS pci_enabled = SIM->get_param_bool(BXPN_PCI_ENABLED)->get();
   BX_MEM_THIS bios_write_enabled = 0;
   BX_MEM_THIS bios_rom_addr = 0xffff0000;
-  BX_MEM_THIS flash_read_rom = 1;
-  BX_MEM_THIS flash_write_rom = 0;
-  BX_MEM_THIS flash_cmd_idx = 0;
+  BX_MEM_THIS flash_type = 0;
+  BX_MEM_THIS flash_status = 0x80;
+  BX_MEM_THIS flash_wsm_state = FLASH_READ_ARRAY;
 
   BX_MEM_THIS smram_available = 0;
   BX_MEM_THIS smram_enable = 0;
@@ -330,6 +339,8 @@ void BX_MEM_C::register_state()
     sprintf(param_name, "%d_w", i);
     new bx_shadow_bool_c(memtype, param_name, &BX_MEM_THIS memory_type[i][1]);
   }
+  BXRS_HEX_PARAM_FIELD(list, flash_status, BX_MEM_THIS flash_status);
+  BXRS_DEC_PARAM_FIELD(list, flash_wsm_state, BX_MEM_THIS flash_wsm_state);
 }
 
 void BX_MEM_C::cleanup_memory()
@@ -443,6 +454,11 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
     BX_MEM_THIS bios_rom_addr = romaddress;
     is_bochs_bios = ((strstr(path, "BIOS-bochs-latest") != NULL) ||
                      (strstr(path, "BIOS-bochs-legacy") != NULL));
+    if (size == 0x40000) {
+      BX_MEM_THIS flash_type = 2; // 28F002BC-T
+    } else if (size == 0x20000) {
+      BX_MEM_THIS flash_type = 1; // 28F001BX-T
+    }
   } else {
     if ((size % 512) != 0) {
       close(fd);
@@ -943,50 +959,90 @@ void BX_MEM_C::set_bios_rom_access(Bit8u region, bx_bool enabled)
   }
 }
 
-const Bit16u flash_cmd_addr[3] = {0x5555, 0x2aaa, 0x5555};
-const Bit8u  flash_cmd_code[3] = {0xaa,   0x55,   0x00};
-
 Bit8u BX_MEM_C::flash_read(Bit32u addr)
 {
-  BX_MEM_THIS flash_write_rom = 0;
-  BX_MEM_THIS flash_cmd_idx = 0;
-  if (BX_MEM_THIS flash_read_rom) {
-    BX_DEBUG(("flash read from ROM (address = 0x%08x)", addr));
-    return BX_MEM_THIS rom[addr];
-  } else {
-    BX_INFO(("flash read ID (address = 0x%08x)", addr));
-    return (addr & 1) ? 0x95 : 0x89;
+  Bit8u ret = 0;
+
+  switch (BX_MEM_THIS flash_wsm_state) {
+    case FLASH_INT_ID:
+      if (addr & 1) {
+        ret = (BX_MEM_THIS flash_type == 2) ? 0x7c : 0x94;
+      } else {
+        ret = 0x89;
+      }
+      BX_DEBUG(("flash read ID (address = 0x%08x value = 0x%02x)", addr, ret));
+      break;
+    case FLASH_READ_ARRAY:
+      BX_DEBUG(("flash read from ROM (address = 0x%08x)", addr));
+      ret = BX_MEM_THIS rom[addr];
+      break;
+    default:
+      ret = BX_MEM_THIS flash_status;
+      if (BX_MEM_THIS flash_wsm_state == FLASH_ERASE) {
+        BX_MEM_THIS flash_status |= 0x80;
+      }
+      BX_DEBUG(("flash read status (address = 0x%08x value = 0x%02x)", addr, ret));
   }
+  return ret;
 }
 
 void BX_MEM_C::flash_write(Bit32u addr, Bit8u data)
 {
-  if (BX_MEM_THIS flash_write_rom) {
-    BX_DEBUG(("flash write to ROM (address = 0x%08x, data = 0x%02x)", addr, data));
-    BX_MEM_THIS rom[addr] = data;
+  Bit32u flash_addr;
+  int i;
+
+  if (BX_MEM_THIS flash_type == 2) {
+    flash_addr = addr & 0x3ffff;
   } else {
-    Bit16u cmd_addr = (Bit16u)addr;
-    BX_INFO(("flash write command (address = 0x%04x, code = 0x%02x)", cmd_addr, data));
-    if (cmd_addr == flash_cmd_addr[BX_MEM_THIS flash_cmd_idx]) {
-      if ((BX_MEM_THIS flash_cmd_idx < 2) && (data == flash_cmd_code[BX_MEM_THIS flash_cmd_idx])) {
-        BX_MEM_THIS flash_cmd_idx++;
-      } else {
-        if (data == 0xa0) {
-          BX_MEM_THIS flash_write_rom = 1;
-        } else if (data == 0xf0) {
-          BX_MEM_THIS flash_read_rom = 1;
-          BX_MEM_THIS flash_write_rom = 0;
-        } else {
-          BX_ERROR(("flash_write(): unsupported code 0x%02x", data));
+    flash_addr = addr & 0x1ffff;
+  }
+  if (BX_MEM_THIS flash_wsm_state == FLASH_PROG_SETUP) {
+    BX_DEBUG(("flash write to ROM (address = 0x%08x, data = 0x%02x)", flash_addr, data));
+    BX_MEM_THIS rom[addr] &= data;
+    BX_MEM_THIS flash_wsm_state = FLASH_READ_STATUS;
+  } else {
+    BX_DEBUG(("flash write command (address = 0x%08x, code = 0x%02x)", flash_addr, data));
+    switch (data) {
+      case FLASH_INT_ID:
+      case FLASH_READ_ARRAY:
+      case FLASH_ERASE_SETUP:
+      case FLASH_ERASE_SUSP:
+      case FLASH_PROG_SETUP:
+        BX_MEM_THIS flash_wsm_state = data;
+        break;
+      case FLASH_READ_STATUS:
+        if (BX_MEM_THIS flash_wsm_state != FLASH_ERASE) {
+          BX_MEM_THIS flash_wsm_state = data;
         }
-        BX_MEM_THIS flash_cmd_idx = 0;
-      }
-    } else if (data == 0x90) {
-      BX_MEM_THIS flash_read_rom = 0;
-    } else if (data == 0xff) {
-      BX_MEM_THIS flash_read_rom = 1;
-    } else {
-      BX_MEM_THIS flash_cmd_idx = 0;
+        break;
+      case FLASH_CLR_STATUS:
+        BX_MEM_THIS flash_status &= ~0x38;
+        BX_MEM_THIS flash_wsm_state = FLASH_READ_ARRAY;
+        break;
+      case FLASH_ERASE:
+        if (BX_MEM_THIS flash_wsm_state == FLASH_ERASE_SETUP) {
+          BX_MEM_THIS flash_status &= ~0xc0;
+          BX_MEM_THIS flash_wsm_state = FLASH_ERASE;
+          if ((BX_MEM_THIS flash_type == 1) &&
+              ((flash_addr = 0x1c000) || (flash_addr = 0x1d000))) {
+            for (i = 0; i < 0x1000; i++) {
+              BX_MEM_THIS rom[addr + i] = 0xff;
+            }
+          } else if ((BX_MEM_THIS flash_type == 2) &&
+                     ((flash_addr = 0x38000) || (flash_addr = 0x3a000))) {
+            for (i = 0; i < 0x2000; i++) {
+              BX_MEM_THIS rom[addr + i] = 0xff;
+            }
+          }
+        } else if (BX_MEM_THIS flash_wsm_state == FLASH_ERASE_SUSP) {
+          BX_MEM_THIS flash_status &= ~0x40;
+          BX_MEM_THIS flash_wsm_state = FLASH_ERASE;
+        } else {
+          BX_DEBUG(("flash_write(): unexpected ERASE CONFIRM / ERASE RESUME"));
+        }
+        break;
+      default:
+        BX_DEBUG(("flash_write(): unsupported code 0x%02x", data));
     }
   }
 }

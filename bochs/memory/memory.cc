@@ -186,7 +186,11 @@ mem_write:
           data_ptr = (Bit8u *) data + (len - 1);
 #endif
           for (unsigned i = 0; i < len; i++) {
-            BX_MEM_THIS flash_write(BIOS_MAP_LAST128K(a20addr), *data_ptr);
+            if (BX_MEM_THIS flash_type > 0) {
+              BX_MEM_THIS flash_write(BIOS_MAP_LAST128K(a20addr), *data_ptr);
+            } else {
+              BX_MEM_THIS rom[BIOS_MAP_LAST128K(a20addr)] = *data_ptr;
+            }
             a20addr++;
 #ifdef BX_LITTLE_ENDIAN
             data_ptr++;
@@ -218,7 +222,7 @@ inc_one:
     data_ptr = (Bit8u *) data + (len - 1);
 #endif
     for (unsigned i = 0; i < len; i++) {
-      if (BX_MEM_THIS pci_enabled) {
+      if (BX_MEM_THIS flash_type > 0) {
         BX_MEM_THIS flash_write(a20addr & BIOS_MASK, *data_ptr);
       } else {
         BX_MEM_THIS rom[a20addr & BIOS_MASK] = *data_ptr;
@@ -356,7 +360,11 @@ mem_read:
           // Read from ROM
           if ((a20addr & 0xfffe0000) == 0x000e0000) {
             // last 128K of BIOS ROM mapped to 0xE0000-0xFFFFF
-            *data_ptr = BX_MEM_THIS flash_read(BIOS_MAP_LAST128K(a20addr));
+            if (BX_MEM_THIS flash_type > 0) {
+              *data_ptr = BX_MEM_THIS flash_read(BIOS_MAP_LAST128K(a20addr));
+            } else {
+              *data_ptr = BX_MEM_THIS rom[BIOS_MAP_LAST128K(a20addr)];
+            }
           } else {
             *data_ptr = BX_MEM_THIS rom[(a20addr & EXROM_MASK) + BIOSROMSZ];
           }
@@ -407,7 +415,7 @@ inc_one:
 
     if (is_bios) {
       for (unsigned i = 0; i < len; i++) {
-        if (BX_MEM_THIS pci_enabled) {
+        if (BX_MEM_THIS flash_type > 0) {
           *data_ptr = BX_MEM_THIS flash_read(a20addr & BIOS_MASK);
         } else {
           *data_ptr = BX_MEM_THIS rom[a20addr & BIOS_MASK];
