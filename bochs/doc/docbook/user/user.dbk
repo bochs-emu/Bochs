@@ -3351,7 +3351,8 @@ the "wx" configuration interface, see
 Examples:
 <screen>
   display_library: x
-  display_library: sdl
+  display_library: sdl2, options=fullscreen
+  display_library: options=cmdmode
 </screen>
 Some display libraries now support specific options to control their
 behaviour. These options are supported by more than one display library:
@@ -3372,6 +3373,7 @@ See the examples below for other currently supported options.
   #                 on desktop window size
   display_library: win32, options="traphotkeys autoscale"
 </screen>
+Setting up options without specifying display library is also supported.
 </para>
 
 <table>

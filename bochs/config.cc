@@ -2326,11 +2326,16 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     if ((num_params < 2) || (num_params > 3)) {
       PARSE_ERR(("%s: display_library directive: wrong # args.", context));
     }
-    if (!SIM->get_param_enum(BXPN_SEL_DISPLAY_LIBRARY)->set_by_name(params[1]))
-      PARSE_ERR(("%s: display library '%s' not available", context, params[1]));
-    if (num_params == 3) {
-      if (!strncmp(params[2], "options=", 8)) {
-        SIM->get_param_string(BXPN_DISPLAYLIB_OPTIONS)->set(&params[2][8]);
+    if (SIM->get_param_enum(BXPN_SEL_DISPLAY_LIBRARY)->set_by_name(params[1])) {
+      i = 2;
+    } else {
+      i = 1;
+    }
+    if ((num_params == 3) || (i == 1)) {
+      if (!strncmp(params[i], "options=", 8)) {
+        SIM->get_param_string(BXPN_DISPLAYLIB_OPTIONS)->set(&params[i][8]);
+      } else if (i == 1) {
+        PARSE_ERR(("%s: display library '%s' not available", context, params[1]));
       } else {
         PARSE_ERR(("%s: display_library directive malformed", context));
       }

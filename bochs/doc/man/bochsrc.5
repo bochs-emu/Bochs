@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "23 Nov 2020" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "29 Nov 2020" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -102,7 +102,7 @@ The choices are:
   nogui       no display at all
 
 .B NOTE:
-if you use the "wx" configuration interface, you must also use
+If you use the "wx" configuration interface, you must also use
 the "wx" display library.
 
 .B Specific options:
@@ -115,6 +115,14 @@ behaviour. These options are supported by more than one display library:
   "hideIPS"     - disable IPS output in status bar (rfb, sdl, sdl2, term, vncsrv, wx, x)
   "nokeyrepeat" - turn off host keyboard repeat (sdl, sdl2, x)
   "timeout"     - time (in seconds) to wait for client (rfb, vncsrv)
+
+.B NOTE:
+Setting up options without specifying display library is also supported.
+
+Examples:
+  display_library: x
+  display_library: sdl2, options=fullscreen,hideIPS
+  display_library: options=cmdmode
 
 .TP
 .I "cpu:"

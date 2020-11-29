@@ -80,6 +80,7 @@
 # "timeout"     - time (in seconds) to wait for client (rfb, vncsrv)
 #
 # See the examples below for other currently supported options.
+# Setting up options without specifying display library is also supported.
 #=======================================================================
 #display_library: amigaos
 #display_library: carbon
