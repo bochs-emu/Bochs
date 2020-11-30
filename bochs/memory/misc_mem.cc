@@ -505,10 +505,15 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
   }
   close(fd);
   offset -= (unsigned long)stat_buf.st_size;
-  if (((romaddress & 0xfffff) != 0xe0000) ||
+  size = (unsigned long)stat_buf.st_size;
+  if (is_bochs_bios ||
       ((BX_MEM_THIS rom[offset] == 0x55) && (BX_MEM_THIS rom[offset+1] == 0xaa))) {
+    if ((type == 0) && ((romaddress & 0xfffff) == 0xe0000)) {
+      offset += 0x10000;
+      size = 0x10000;
+    }
     Bit8u checksum = 0;
-    for (i = 0; i < stat_buf.st_size; i++) {
+    for (i = 0; i < (int)size; i++) {
       checksum += BX_MEM_THIS rom[offset + i];
     }
     if (checksum != 0) {
