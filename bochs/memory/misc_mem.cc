@@ -451,7 +451,7 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
     if ((romaddress & 0xf0000) < 0xf0000) {
       BX_MEM_THIS rom_present[64] = 1;
     }
-    BX_MEM_THIS bios_rom_addr = romaddress;
+    BX_MEM_THIS bios_rom_addr = (Bit32u)romaddress;
     is_bochs_bios = ((strstr(path, "BIOS-bochs-latest") != NULL) ||
                      (strstr(path, "BIOS-bochs-legacy") != NULL));
     if (size == 0x40000) {

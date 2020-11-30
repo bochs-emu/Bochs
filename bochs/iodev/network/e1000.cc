@@ -1504,7 +1504,7 @@ void bx_e1000_c::rx_frame(const void *buf, unsigned buf_size)
                                    (Bit8u *)buf + desc_offset + vlan_offset);
       }
       desc_offset += desc_size;
-      desc.length = cpu_to_le16(desc_size);
+      desc.length = cpu_to_le16((Bit16u)desc_size);
       if (desc_offset >= total_size) {
           desc.status |= E1000_RXD_STAT_EOP | E1000_RXD_STAT_IXSM;
       } else {

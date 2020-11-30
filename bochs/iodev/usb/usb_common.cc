@@ -6,7 +6,7 @@
 //
 // Copyright (c) 2005       Fabrice Bellard
 // Copyright (C) 2009-2015  Benjamin D Lunt (fys at fysnet net)
-//               2009-2017  The Bochs Project
+//               2009-2020  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -615,7 +615,7 @@ int usb_device_c::set_usb_string(Bit8u *buf, const char *str)
     *q = 0;
     return 0;
   }
-  *q++ = 2 * len + 2;
+  *q++ = (Bit8u)(2 * len + 2);
   *q++ = 3;
   for(i = 0; i < len; i++) {
     *q++ = str[i];

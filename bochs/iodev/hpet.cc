@@ -9,7 +9,7 @@
 //
 //  Authors: Beth Kon <bkon@us.ibm.com>
 //
-//  Copyright (C) 2017-2019  The Bochs Project
+//  Copyright (C) 2017-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -74,7 +74,7 @@ static Bit32u hpet_time_between(Bit64u start, Bit64u end, Bit64u value)
  */
 static Bit64u hpet_cmp32_to_cmp64(Bit64u reference, Bit32u value)
 {
-  if ((Bit32u)reference <= (Bit32u)value) {
+  if ((Bit32u)reference <= value) {
     return (reference & 0xFFFFFFFF00000000ull) | (Bit64u)value;
   } else {
     return ((reference + 0x100000000ull) & 0xFFFFFFFF00000000ull) | (Bit64u)value;
@@ -309,7 +309,7 @@ void bx_hpet_c::hpet_timer()
 
   if (timer_is_periodic(t)) {
     if (t->config & HPET_TN_32BIT) {
-      Bit64u cmp64 = hpet_cmp32_to_cmp64(t->last_checked, t->cmp);
+      Bit64u cmp64 = hpet_cmp32_to_cmp64(t->last_checked, (Bit32u)t->cmp);
       if (hpet_time_between(t->last_checked, cur_tick, cmp64)) {
         update_irq(t, 1);
         if ((Bit32u)t->period != 0) {
@@ -331,7 +331,7 @@ void bx_hpet_c::hpet_timer()
     }
   } else { // One-shot timer
     if (t->config & HPET_TN_32BIT) {
-      Bit64u cmp64 = hpet_cmp32_to_cmp64(t->last_checked, t->cmp);
+      Bit64u cmp64 = hpet_cmp32_to_cmp64(t->last_checked, (Bit32u)t->cmp);
       Bit64u wrap = hpet_cmp32_to_cmp64(t->last_checked, 0);
       if (hpet_time_between(t->last_checked, cur_tick, cmp64) || hpet_time_between(t->last_checked, cur_tick, wrap)) {
         update_irq(t, 1);

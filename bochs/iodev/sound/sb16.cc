@@ -1654,8 +1654,8 @@ Bit16u bx_sb16_c::calc_output_volume(Bit8u reg1, Bit8u reg2, bx_bool shift)
 
   vol1 = (MIXER.reg[reg1] >> 3);
   vol2 = (MIXER.reg[reg2] >> 3);
-  fvol1 = pow(10.0f, (float)(31-vol1)*-0.065f);
-  fvol2 = pow(10.0f, (float)(31-vol2)*-0.065f);
+  fvol1 = (float)pow(10.0f, (float)(31-vol1)*-0.065f);
+  fvol2 = (float)pow(10.0f, (float)(31-vol2)*-0.065f);
   result = (Bit8u)(255 * fvol1 * fvol2);
   if (shift) result <<= 8;
   return result;

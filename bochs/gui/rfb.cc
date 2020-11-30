@@ -160,7 +160,7 @@ static bx_bool rfbBGR233Format;
 
 static unsigned rfbWindowX, rfbWindowY;
 static unsigned rfbDimensionX, rfbDimensionY;
-static long rfbHeaderbarY;
+static Bit16u rfbHeaderbarY;
 static unsigned rfbTileX = 0;
 static unsigned rfbTileY = 0;
 static unsigned long rfbOriginLeft = 0;
@@ -219,7 +219,7 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   put("RFB");
   UNUSED(bochs_icon_bits);
 
-  rfbHeaderbarY = headerbar_y;
+  rfbHeaderbarY = (Bit16u)headerbar_y;
   rfbDimensionX = BX_RFB_DEF_XDIM;
   rfbDimensionY = BX_RFB_DEF_YDIM;
   rfbWindowX = rfbDimensionX;
