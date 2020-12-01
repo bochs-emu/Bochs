@@ -261,13 +261,19 @@ void bx_devices_c::init(BX_MEM_C *newmem)
       pci.slot_used[i] = 0;  // no device connected
     }
 
+    if (chipset == BX_PCI_CHIPSET_I440BX) {
+      pci.map_slot_to_dev = 8;
+    } else {
+      pci.map_slot_to_dev = 2;
+    }
+
     // confAddr accepts dword i/o only
-    DEV_register_ioread_handler(this, read_handler, 0x0CF8, "i440FX", 4);
-    DEV_register_iowrite_handler(this, write_handler, 0x0CF8, "i440FX", 4);
+    DEV_register_ioread_handler(this, read_handler, 0x0CF8, "PCI confAddr", 4);
+    DEV_register_iowrite_handler(this, write_handler, 0x0CF8, "PCI confAddr", 4);
 
     for (i=0x0CFC; i<=0x0CFF; i++) {
-      DEV_register_ioread_handler(this, read_handler, i, "i440FX", 7);
-      DEV_register_iowrite_handler(this, write_handler, i, "i440FX", 7);
+      DEV_register_ioread_handler(this, read_handler, i, "PCI confData", 7);
+      DEV_register_iowrite_handler(this, write_handler, i, "PCI confData", 7);
     }
   }
 #endif
@@ -1200,7 +1206,7 @@ bx_bool bx_devices_c::register_pci_handlers(bx_pci_device_c *dev,
                                             Bit8u *devfunc, const char *name,
                                             const char *descr, Bit8u bus)
 {
-  unsigned i, offset, handle, max_pci_slots = BX_N_PCI_SLOTS;
+  unsigned i, handle, max_pci_slots = BX_N_PCI_SLOTS;
   int first_free_slot = -1;
   Bit16u bus_devfunc = *devfunc;
   char devname[80];
@@ -1209,10 +1215,7 @@ bx_bool bx_devices_c::register_pci_handlers(bx_pci_device_c *dev,
   if (strcmp(name, "pci") && strcmp(name, "pci2isa") && strcmp(name, "pci_ide")
       && ((*devfunc & 0xf8) == 0x00)) {
     if (SIM->get_param_enum(BXPN_PCI_CHIPSET)->get() == BX_PCI_CHIPSET_I440BX) {
-      offset = 8;
       max_pci_slots = 4;
-    } else {
-      offset = 2;
     }
     if (bus == 0) {
       for (i = 0; i < max_pci_slots; i++) {
@@ -1220,7 +1223,7 @@ bx_bool bx_devices_c::register_pci_handlers(bx_pci_device_c *dev,
         device = SIM->get_param_string(devname)->getptr();
         if (strlen(device) > 0) {
           if (!strcmp(name, device) && !pci.slot_used[i]) {
-            *devfunc = ((i + offset) << 3) | (*devfunc & 0x07);
+            *devfunc = ((i + pci.map_slot_to_dev) << 3) | (*devfunc & 0x07);
             pci.slot_used[i] = 1;
             BX_INFO(("PCI slot #%d used by plugin '%s'", i+1, name));
             break;
@@ -1235,7 +1238,7 @@ bx_bool bx_devices_c::register_pci_handlers(bx_pci_device_c *dev,
           i = (unsigned)first_free_slot;
           sprintf(devname, "pci.slot.%d", i+1);
           SIM->get_param_string(devname)->set(name);
-          *devfunc = ((i + offset) << 3) | (*devfunc & 0x07);
+          *devfunc = ((i + pci.map_slot_to_dev) << 3) | (*devfunc & 0x07);
           pci.slot_used[i] = 1;
           BX_INFO(("PCI slot #%d used by plugin '%s'", i+1, name));
         } else {

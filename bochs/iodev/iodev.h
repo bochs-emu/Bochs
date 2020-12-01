@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2018  The Bochs Project
+//  Copyright (C) 2001-2020  The Bochs Project
 //
 //  I/O port handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -443,6 +443,7 @@ public:
 
 #if BX_SUPPORT_PCI
   Bit32u pci_get_confAddr(void) {return pci.confAddr;}
+  Bit32u pci_get_slot_mapping(void) {return pci.map_slot_to_dev;}
   bx_bool register_pci_handlers(bx_pci_device_c *device, Bit8u *devfunc,
                                 const char *name, const char *descr, Bit8u bus = 0);
   bx_bool pci_set_base_mem(void *this_ptr, memory_handler_t f1, memory_handler_t f2,
@@ -568,6 +569,7 @@ private:
     } pci_handler[BX_MAX_PCI_DEVICES];
     unsigned num_pci_handlers;
 
+    Bit8u map_slot_to_dev;
     bx_bool slot_used[BX_N_PCI_SLOTS];
 
     Bit32u confAddr;

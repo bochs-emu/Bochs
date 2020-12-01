@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2018  The Bochs Project
+//  Copyright (C) 2002-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -50,6 +50,7 @@ private:
   struct {
     unsigned chipset;
     Bit8u devfunc;
+    Bit8u map_slot_to_dev;
     Bit8u elcr1;
     Bit8u elcr2;
     Bit8u apmc;
