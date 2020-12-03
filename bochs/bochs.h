@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2019  The Bochs Project
+//  Copyright (C) 2001-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -128,6 +128,7 @@ int  bx_parse_param_from_list(const char *context, const char *input, bx_list_c 
 int  bx_parse_nic_params(const char *context, const char *param, bx_list_c *base);
 int  bx_parse_usb_port_params(const char *context, bx_bool devopt,
                               const char *param, int maxports, bx_list_c *base);
+int  bx_split_option_list(const char *msg, const char *rawopt, char **argv, int max_argv);
 int  bx_write_param_list(FILE *fp, bx_list_c *base, const char *optname, bx_bool multiline);
 int  bx_write_usb_options(FILE *fp, int maxports, bx_list_c *base);
 

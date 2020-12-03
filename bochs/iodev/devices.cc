@@ -100,9 +100,10 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   unsigned chipset = SIM->get_param_enum(BXPN_PCI_CHIPSET)->get();
   unsigned max_pci_slots = BX_N_PCI_SLOTS;
 #endif
-  unsigned i;
+  unsigned i, argc;
   const char def_name[] = "Default";
-  const char *vga_ext;
+  const char *vga_ext, *options;
+  char *argv[16];
 
   BX_DEBUG(("Init $Id$"));
   mem = newmem;
@@ -174,6 +175,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   }
 #endif
   // PCI logic (i440FX)
+  memset(argv, 0, sizeof(argv));
   pci.enabled = SIM->get_param_bool(BXPN_PCI_ENABLED)->get();
   if (pci.enabled) {
 #if BX_SUPPORT_PCI
@@ -305,9 +307,16 @@ void bx_devices_c::init(BX_MEM_C *newmem)
     DEV_cmos_set_reg(0x5d, memory_above_4gb >> 32);
   }
 
-  // TODO: add support for a comma-separated list of BIOS options
-  if (!strcmp(SIM->get_param_string(BXPN_ROM_OPTIONS)->getptr(), "fastboot")) {
-    DEV_cmos_set_reg(0x3f, 0x01);
+  options = SIM->get_param_string(BXPN_ROM_OPTIONS)->getptr();
+  argc = bx_split_option_list("ROM image options", options, argv, 16);
+  for (i = 0; i < argc; i++) {
+    if (!strcmp(argv[i], "fastboot")) {
+      DEV_cmos_set_reg(0x3f, 0x01);
+    } else {
+      BX_ERROR(("Unknown ROM image option '%s'", argv[i]));
+    }
+    free(argv[i]);
+    argv[i] = NULL;
   }
 
   if (timer_handle != BX_NULL_TIMER_HANDLE) {

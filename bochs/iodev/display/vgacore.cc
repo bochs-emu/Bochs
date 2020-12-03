@@ -162,44 +162,19 @@ void bx_vgacore_c::init_standard_vga(void)
 
 void bx_vgacore_c::init_gui(void)
 {
-  unsigned i,string_i;
-  int argc;
+  int argc, i;
   char *argv[16];
-  char *ptr;
-  char string[512];
-  size_t len;
+  const char *options;
 
   // set up display library options and start gui
   memset(argv, 0, sizeof(argv));
   argc = 1;
   argv[0] = (char *)"bochs";
-  len = strlen(SIM->get_param_string(BXPN_DISPLAYLIB_OPTIONS)->getptr());
-  if (len > 0) {
-    char *options = new char[len + 1];
-    SIM->get_param_string(BXPN_DISPLAYLIB_OPTIONS)->get(options, len + 1);
-    ptr = strtok(options, ",");
-    while (ptr && strcmp(ptr, "none")) {
-      string_i = 0;
-      for (i=0; i<strlen(ptr); i++) {
-        if (!isspace(ptr[i])) string[string_i++] = ptr[i];
-      }
-      string[string_i] = '\0';
-      if (argv[argc] != NULL) {
-        free(argv[argc]);
-        argv[argc] = NULL;
-      }
-      if (argc < 16) {
-        argv[argc++] = strdup(string);
-      } else {
-        BX_PANIC (("too many parameters, max is 16\n"));
-      }
-      ptr = strtok(NULL, ",");
-    }
-    delete [] options;
-  }
+  options = SIM->get_param_string(BXPN_DISPLAYLIB_OPTIONS)->getptr();
+  argc = bx_split_option_list("Display library options", options, &argv[1], 15) + 1;
   bx_gui->init(argc, argv, BX_VGA_THIS s.max_xres, BX_VGA_THIS s.max_yres,
                X_TILESIZE, Y_TILESIZE);
-  for (i = 1; i < (unsigned)argc; i++) {
+  for (i = 1; i < argc; i++) {
     if (argv[i] != NULL) {
         free(argv[i]);
         argv[i] = NULL;

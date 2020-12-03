@@ -156,44 +156,13 @@ int bx_usbdev_ctl_c::init_device(bx_list_c *portconf, logfunctions *hub, void **
 void bx_usbdev_ctl_c::parse_port_options(usb_device_c *device, bx_list_c *portconf)
 {
   const char *raw_options;
-  char *options;
-  unsigned i, string_i;
-  int optc, speed = USB_SPEED_LOW;  // assume LOW speed device if parameter not given.
+  int i, optc, speed = USB_SPEED_LOW;  // assume LOW speed device if parameter not given.
   char *opts[16];
-  char *ptr;
-  char string[512];
-  size_t len;
 
   memset(opts, 0, sizeof(opts));
-  optc = 0;
   raw_options = ((bx_param_string_c*)portconf->get_by_name("options"))->getptr();
-  len = strlen(raw_options);
-  if ((len > 0) && (strcmp(raw_options, "none"))) {
-    options = new char[len + 1];
-    strcpy(options, raw_options);
-    ptr = strtok(options, ",");
-    while (ptr) {
-      string_i = 0;
-      for (i=0; i<strlen(ptr); i++) {
-        if (!isspace(ptr[i])) string[string_i++] = ptr[i];
-      }
-      string[string_i] = '\0';
-      if (opts[optc] != NULL) {
-        free(opts[optc]);
-        opts[optc] = NULL;
-      }
-      if (optc < 16) {
-        opts[optc++] = strdup(string);
-      } else {
-        BX_ERROR(("too many parameters, max is 16"));
-        break;
-      }
-      ptr = strtok(NULL, ",");
-    }
-    delete [] options;
-  }
-
-  for (i = 0; i < (unsigned)optc; i++) {
+  optc = bx_split_option_list("USB port options", raw_options, opts, 16);
+  for (i = 0; i < optc; i++) {
     if (!strncmp(opts[i], "speed:", 6)) {
       if (!strcmp(opts[i]+6, "low")) {
         speed = USB_SPEED_LOW;
@@ -216,7 +185,7 @@ void bx_usbdev_ctl_c::parse_port_options(usb_device_c *device, bx_list_c *portco
       BX_ERROR(("ignoring unknown USB device option: '%s'", opts[i]));
     }
   }
-  for (i = 1; i < (unsigned)optc; i++) {
+  for (i = 0; i < optc; i++) {
     if (opts[i] != NULL) {
       free(opts[i]);
       opts[i] = NULL;

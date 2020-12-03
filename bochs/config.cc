@@ -2251,6 +2251,38 @@ int bx_parse_nic_params(const char *context, const char *param, bx_list_c *base)
   return valid;
 }
 
+int bx_split_option_list(const char *msg, const char *rawopt, char **argv, int max_argv)
+{
+  char *ptr, *ptr2, *tmpstr;
+  int argc = 0, i;
+
+  char *options = new char[strlen(rawopt)+1];
+  strcpy(options, rawopt);
+  ptr = strtok(options, ",");
+  while (ptr && strcmp(ptr, "none")) {
+    if (argc < max_argv) {
+      tmpstr = new char[strlen(ptr)+1];
+      strcpy(tmpstr, ptr);
+      ptr2 = tmpstr;
+      while (isspace(*ptr2)) ptr2++;
+      i = strlen(ptr2) - 1;
+      while ((i >= 0) && isspace(ptr2[i])) {
+        ptr2[i] = 0;
+        i--;
+      }
+      if (strlen(ptr2) > 0) {
+        argv[argc++] = strdup(ptr2);
+      }
+      delete [] tmpstr;
+    } else {
+      BX_ERROR(("%s: too many parameters, max is %d", msg, max_argv));
+    }
+    ptr = strtok(NULL, ",");
+  }
+  delete [] options;
+  return argc;
+}
+
 bx_bool is_deprecated_option(const char *oldparam, const char **newparam)
 {
   if ((!strcmp(oldparam, "keyboard_serial_delay")) ||
