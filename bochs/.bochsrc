@@ -538,19 +538,35 @@ mouse: enabled=0
 
 #=======================================================================
 # PCI:
-# This option controls the presence of a PCI chipset in Bochs. Currently it
-# supports the i430FX, i440FX and i440BX chipsets. You can also specify the
-# devices connected to PCI slots. Up to 5 slots are available. For these
-# combined PCI/ISA devices assigning to slot is mandatory if you want to emulate
-# the PCI model: cirrus, ne2k and pcivga. These PCI-only devices are also
-# supported, but they are auto-assigned if you don't use the slot configuration:
-# e1000, es1370, pcidev, pcipnic, usb_ehci, usb_ohci, usb_xhci and voodoo.
-# All device models except the network devices ne2k and e1000 can be used only
-# once in the slot configuration. In case of the i440BX chipset, slot #5 is the
-# AGP slot. Currently only the 'voodoo' device can be assigned to AGP.
+# This defines the parameters to set up the Bochs PCI emulation:
+#
+#  ENABLED:
+#  If Bochs is compiled with PCI support, it is enabled by default.
+#
+#  CHIPSET:
+#  Currently the chipsets i430FX, i440FX and i440BX (limited) are supported and
+#  the default is i440FX.
+#
+#  SLOTx:
+#  It is possible to specify the devices connected to PCI slots. Up to 5 slots
+#  are available. For combined PCI/ISA devices assigning to slot is mandatory
+#  if the PCI model should be emulated (cirrus, ne2k and pcivga). Setting up
+#  slot for PCI-only devices is also supported, but they are auto-assigned if
+#  not specified (e1000, es1370, pcidev, pcipnic, usb_ehci, usb_ohci, usb_xhci,
+#  voodoo). All device models except the network devices ne2k and e1000 can be
+#  used only once in the slot configuration. In case of the i440BX chipset, the
+#  slot #5 is the AGP slot. Currently only the 'voodoo' device can be assigned
+#  to AGP.
+#
+#  ADVOPTS:
+#  With the advanced PCI options it is possible to control the behaviour of the 
+#  PCI chipset. These options can be specified as comma-separated values.
+#  By default the "Bochs i440FX" chipset enables the ACPI and HPET devices, but
+#  original i440FX doesn't support them. The options 'noacpi' and 'nohpet' make
+#  it possible to disable them.
 #
 # Example:
-#   pci: enabled=1, chipset=i440fx, slot1=pcivga, slot2=ne2k
+#   pci: enabled=1, chipset=i440fx, slot1=pcivga, slot2=ne2k, advopts=noacpi
 #=======================================================================
 pci: enabled=1, chipset=i440fx
 

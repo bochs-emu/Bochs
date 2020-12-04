@@ -108,6 +108,9 @@ class cdrom_base_c;
 #define BX_PCI_BAR_TYPE_MEM  1
 #define BX_PCI_BAR_TYPE_IO   2
 
+#define BX_PCI_ADVOPT_NOACPI 0x01
+#define BX_PCI_ADVOPT_NOHPET 0x02
+
 typedef struct {
   Bit8u  type;
   Bit32u size;
@@ -563,6 +566,7 @@ private:
   struct {
     bx_bool enabled;
 #if BX_SUPPORT_PCI
+    Bit32u advopts;
     Bit8u handler_id[0x101];  // 256 PCI devices/functions + 1 AGP device
     struct {
       bx_pci_device_c *handler;

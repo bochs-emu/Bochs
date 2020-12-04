@@ -3985,22 +3985,44 @@ or 'f12'.
 
 <section><title>pci</title>
 <para>
+This defines the parameters to set up the Bochs PCI emulation:
+</para>
+<para>
 Examples:
 <screen>
   pci: enabled=1, chipset=i440fx # default if compiled with PCI support
-  pci: enabled=1, chipset=i440fx, slot1=pcivga, slot2=ne2k
+  pci: enabled=1, chipset=i440fx, slot1=pcivga, slot2=ne2k, advopts=noacpi
   pci: enabled=1, chipset=i440bx, slot5=voodoo, slot1=e1000
 </screen>
-This option controls the presence of a PCI chipset in Bochs. Currently it
-supports the i430FX, i440FX and i440BX chipsets. You can also specify the
-devices connected to PCI slots. Up to 5 slots are available. For these
-combined PCI/ISA devices assigning to slot is mandatory if you want to emulate
-the PCI model: cirrus, ne2k and pcivga. These PCI-only devices are also
-supported, but they are auto-assigned if you don't use the slot configuration:
-e1000, es1370, pcidev, pcipnic, usb_ehci, usb_ohci, usb_xhci and voodoo.
-All device models except the network devices ne2k and e1000 can be used only
-once in the slot configuration. In case of the i440BX chipset, slot #5 is the
-AGP slot. Currently only the 'voodoo' device can be assigned to AGP.
+</para>
+<para><command>enabled</command></para>
+<para>
+If Bochs is compiled with PCI support, it is enabled by default.
+</para>
+<para><command>chipset</command></para>
+<para>
+Currently the chipsets i430FX, i440FX and i440BX (limited) are supported and
+the default is i440FX.
+</para>
+<para><command>slot<replaceable>X</replaceable></command></para>
+<para>
+It is possible to specify the devices connected to PCI slots. Up to 5 slots
+are available. For combined PCI/ISA devices assigning to slot is mandatory
+if the PCI model should be emulated (cirrus, ne2k and pcivga). Setting up
+slot for PCI-only devices is also supported, but they are auto-assigned if
+not specified (e1000, es1370, pcidev, pcipnic, usb_ehci, usb_ohci, usb_xhci,
+voodoo). All device models except the network devices ne2k and e1000 can be
+used only once in the slot configuration. In case of the i440BX chipset, the
+slot #5 is the AGP slot. Currently only the 'voodoo' device can be assigned
+to AGP.
+</para>
+<para><command>advopts</command></para>
+<para>
+With the advanced PCI options it is possible to control the behaviour of the 
+PCI chipset. These options can be specified as comma-separated values.
+By default the "Bochs i440FX" chipset enables the ACPI and HPET devices, but
+original i440FX doesn't support them. The options 'noacpi' and 'nohpet' make
+it possible to disable them.
 </para>
 </section>
 
@@ -4968,7 +4990,7 @@ Example:
   usb_ohci: enabled=1, port1=printer:printdata.bin
 </screen>
 This option controls the presence of the USB OHCI host controller with a
-2-port hub. The portX parameter accepts the same device types with the same
+2-port hub. The port<replaceable>X</replaceable> parameter accepts the same device types with the same
 syntax as the UHCI controller (see the <link linkend="bochsopt-usb-uhci">usb_uhci option</link>).
 The optionsX parameter is also available on OHCI.</para>
 </section>
@@ -4980,7 +5002,7 @@ Example:
   usb_ehci: enabled=1, port1=tablet, options1="speed:high"
 </screen>
 This option controls the presence of the USB EHCI host controller with a
-6-port hub. The portX parameter accepts the same device types with the same
+6-port hub. The port<replaceable>X</replaceable> parameter accepts the same device types with the same
 syntax as the UHCI controller (see the <link linkend="bochsopt-usb-uhci">usb_uhci option</link>).
 The optionsX parameter is also available on EHCI.</para>
 </section>
@@ -4992,7 +5014,7 @@ Example:
   usb_xhci: enabled=1, port1="disk:usbdisk.img"
 </screen>
 This option controls the presence of the USB xHCI host controller with a 4-port
-hub. The portX parameter accepts the same device types with the same syntax as
+hub. The port<replaceable>X</replaceable> parameter accepts the same device types with the same syntax as
 the UHCI controller (see the <link linkend="bochsopt-usb-uhci">usb_uhci option</link>).
 The optionsX parameter is also available on xHCI. NOTE: port 1 and 2 are USB3 and
 only support super-speed devices, but port 3 and 4 are USB2 and support speed

@@ -889,6 +889,10 @@ void bx_init_options()
         "", BX_PATHNAME_LEN);
     deplist->add(devname);
   }
+  bx_param_string_c *advopts = new bx_param_string_c(pci, "advopts", "Advanced PCI Options",
+                                                     "Set advanced PCI options",
+                                                     "", BX_PATHNAME_LEN);
+  deplist->add(advopts);
   enabled->set_dependent_list(deplist);
   pci->set_options(pci->SHOW_PARENT);
   slot->set_options(slot->SHOW_PARENT);
@@ -2853,6 +2857,8 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         } else {
           BX_ERROR(("%s: unknown pci slot number ignored.", context));
         }
+      } else if (!strncmp(params[i], "advopts=", 8)) {
+        SIM->get_param_string(BXPN_PCI_ADV_OPTS)->set(&params[i][8]);
       } else {
         PARSE_ERR(("%s: pci: unknown parameter '%s'.", context, params[i]));
       }

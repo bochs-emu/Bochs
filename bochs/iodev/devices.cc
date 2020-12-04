@@ -179,6 +179,28 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   pci.enabled = SIM->get_param_bool(BXPN_PCI_ENABLED)->get();
   if (pci.enabled) {
 #if BX_SUPPORT_PCI
+    if (chipset == BX_PCI_CHIPSET_I430FX) {
+      pci.advopts = (BX_PCI_ADVOPT_NOHPET | BX_PCI_ADVOPT_NOACPI);
+    } else {
+      pci.advopts = 0;
+    }
+    options = SIM->get_param_string(BXPN_PCI_ADV_OPTS)->getptr();
+    argc = bx_split_option_list("PCI advanced options", options, argv, 16);
+    for (i = 0; i < argc; i++) {
+      if (!strcmp(argv[i], "noacpi")) {
+        if (chipset == BX_PCI_CHIPSET_I440FX) {
+          pci.advopts = BX_PCI_ADVOPT_NOACPI;
+        } else {
+          BX_ERROR(("Disabling ACPI not supported by PCI chipset"));
+        }
+      } else if (!strcmp(argv[i], "nohpet")) {
+        pci.advopts = BX_PCI_ADVOPT_NOHPET;
+      } else {
+        BX_ERROR(("Unknown advanced PCI option '%s'", argv[i]));
+      }
+      free(argv[i]);
+      argv[i] = NULL;
+    }
     PLUG_load_plugin(pci, PLUGTYPE_CORE);
     PLUG_load_plugin(pci2isa, PLUGTYPE_CORE);
 #if BX_SUPPORT_PCIUSB
@@ -194,10 +216,10 @@ void bx_devices_c::init(BX_MEM_C *newmem)
       SIM->get_param_bool(BXPN_UHCI_ENABLED)->set(1);
     }
 #endif
-    if (chipset != BX_PCI_CHIPSET_I430FX) {
+    if ((pci.advopts & BX_PCI_ADVOPT_NOACPI) == 0) {
       PLUG_load_plugin(acpi, PLUGTYPE_STANDARD);
     }
-    if (chipset == BX_PCI_CHIPSET_I440FX) {
+    if ((pci.advopts & BX_PCI_ADVOPT_NOHPET) == 0) {
       PLUG_load_plugin(hpet, PLUGTYPE_STANDARD);
     }
 #else

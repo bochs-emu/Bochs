@@ -118,6 +118,7 @@ pci
     3
     4
     5
+  advopts
   pcidev
     vendor
     device

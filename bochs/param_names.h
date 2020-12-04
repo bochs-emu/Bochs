@@ -97,6 +97,7 @@
 #define BXPN_CMOSIMAGE_RTC_INIT          "clock_cmos.cmosimage.rtc_init"
 #define BXPN_PCI_ENABLED                 "pci.enabled"
 #define BXPN_PCI_CHIPSET                 "pci.chipset"
+#define BXPN_PCI_ADV_OPTS                "pci.advopts"
 #define BXPN_PCIDEV_VENDOR               "pci.pcidev.vendor"
 #define BXPN_PCIDEV_DEVICE               "pci.pcidev.device"
 #define BXPN_SEL_DISPLAY_LIBRARY         "display.display_library"
