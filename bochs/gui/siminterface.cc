@@ -219,6 +219,7 @@ public:
   virtual int  parse_nic_params(const char *context, const char *param, bx_list_c *base);
   virtual int  parse_usb_port_params(const char *context, bx_bool devopt,
                                      const char *param, int maxports, bx_list_c *base);
+  virtual int  split_option_list(const char *msg, const char *rawopt, char **argv, int max_argv);
   virtual int  write_param_list(FILE *fp, bx_list_c *base, const char *optname, bx_bool multiline);
   virtual int  write_usb_options(FILE *fp, int maxports, bx_list_c *base);
 #if BX_USE_GUI_CONSOLE
@@ -1530,6 +1531,12 @@ int bx_real_sim_c::parse_usb_port_params(const char *context, bx_bool devopt,
                                      const char *param, int maxports, bx_list_c *base)
 {
   return bx_parse_usb_port_params(context, devopt, param, maxports, base);
+}
+
+int bx_real_sim_c::split_option_list(const char *msg, const char *rawopt,
+                                     char **argv, int max_argv)
+{
+  return bx_split_option_list(msg, rawopt, argv, max_argv);
 }
 
 int bx_real_sim_c::write_param_list(FILE *fp, bx_list_c *base, const char *optname, bx_bool multiline)

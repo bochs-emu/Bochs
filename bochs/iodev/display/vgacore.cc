@@ -171,7 +171,7 @@ void bx_vgacore_c::init_gui(void)
   argc = 1;
   argv[0] = (char *)"bochs";
   options = SIM->get_param_string(BXPN_DISPLAYLIB_OPTIONS)->getptr();
-  argc = bx_split_option_list("Display library options", options, &argv[1], 15) + 1;
+  argc = SIM->split_option_list("Display library options", options, &argv[1], 15) + 1;
   bx_gui->init(argc, argv, BX_VGA_THIS s.max_xres, BX_VGA_THIS s.max_yres,
                X_TILESIZE, Y_TILESIZE);
   for (i = 1; i < argc; i++) {
