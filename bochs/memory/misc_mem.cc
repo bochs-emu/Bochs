@@ -578,57 +578,86 @@ void BX_MEM_C::load_RAM(const char *path, bx_phy_address ramaddress)
 #if (BX_DEBUGGER || BX_DISASM || BX_GDBSTUB)
 bx_bool BX_MEM_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit8u *buf)
 {
-  bx_bool ret = 1;
+  bx_phy_address a20addr = A20ADDR(addr);
+  struct memory_handler_struct *memory_handler = NULL;
+  bx_bool ret = 1, use_memory_handler = 0, use_smram = 0;
+
+  bx_bool is_bios = (a20addr >= (bx_phy_address)BX_MEM_THIS bios_rom_addr);
+#if BX_PHY_ADDRESS_LONG
+  if (a20addr > BX_CONST64(0xffffffff)) is_bios = 0;
+#endif
+
+  if ((a20addr >= 0x000a0000 && a20addr < 0x000c0000) && BX_MEM_THIS smram_available)
+  {
+    // SMRAM memory space
+    if (BX_MEM_THIS smram_enable || (cpu->smm_mode() && !BX_MEM_THIS smram_restricted))
+      use_smram = 1;
+  }
+
+  memory_handler = BX_MEM_THIS memory_handlers[a20addr >> 20];
+  while (memory_handler) {
+    if (memory_handler->begin <= a20addr && memory_handler->end >= a20addr)
+    {
+      if (!use_smram) {
+        use_memory_handler = 1;
+        break;
+      }
+    }
+    memory_handler = memory_handler->next;
+  }
 
   for (; len>0; len--) {
-    // Reading standard PCI/ISA Video Mem / SMMRAM
-    if (addr >= 0x000a0000 && addr < 0x000c0000) {
-      if (BX_MEM_THIS smram_enable || cpu->smm_mode())
-        *buf = *(BX_MEM_THIS get_vector(addr));
-      else
-        *buf = DEV_vga_mem_read(addr);
+    if (use_memory_handler) {
+      memory_handler->read_handler(a20addr, 1, buf, memory_handler->param);
     }
 #if BX_SUPPORT_PCI
-    else if (BX_MEM_THIS pci_enabled && (addr >= 0x000c0000 && addr < 0x00100000)) {
-      unsigned area = (unsigned)(addr >> 14) & 0x0f;
+    else if (BX_MEM_THIS pci_enabled && (a20addr >= 0x000c0000 && a20addr < 0x00100000)) {
+      unsigned area = (unsigned)(a20addr >> 14) & 0x0f;
       if (area > BX_MEM_AREA_F0000) area = BX_MEM_AREA_F0000;
       if (BX_MEM_THIS memory_type[area][0] == 0) {
         // Read from ROM
-        if ((addr & 0xfffe0000) == 0x000e0000) {
+        if ((a20addr & 0xfffe0000) == 0x000e0000) {
           // last 128K of BIOS ROM mapped to 0xE0000-0xFFFFF
-          *buf = BX_MEM_THIS rom[BIOS_MAP_LAST128K(addr)];
+          if (BX_MEM_THIS flash_type > 0) {
+            *buf = BX_MEM_THIS flash_read(BIOS_MAP_LAST128K(a20addr));
+          } else {
+            *buf = BX_MEM_THIS rom[BIOS_MAP_LAST128K(a20addr)];
+          }
         } else {
-          *buf = BX_MEM_THIS rom[(addr & EXROM_MASK) + BIOSROMSZ];
+          *buf = BX_MEM_THIS rom[(a20addr & EXROM_MASK) + BIOSROMSZ];
         }
       } else {
         // Read from ShadowRAM
-        *buf = *(BX_MEM_THIS get_vector(addr));
+        *buf = *(BX_MEM_THIS get_vector(a20addr));
       }
     }
 #endif  // #if BX_SUPPORT_PCI
-    else if (addr < BX_MEM_THIS len)
+    else if ((a20addr < BX_MEM_THIS len) && !is_bios)
     {
-      if (addr < 0x000c0000 || addr >= 0x00100000) {
-        *buf = *(BX_MEM_THIS get_vector(addr));
+      if (a20addr < 0x000c0000 || a20addr >= 0x00100000) {
+        *buf = *(BX_MEM_THIS get_vector(a20addr));
       }
       // must be in C0000 - FFFFF range
-      else if ((addr & 0xfffe0000) == 0x000e0000) {
+      else if ((a20addr & 0xfffe0000) == 0x000e0000) {
         // last 128K of BIOS ROM mapped to 0xE0000-0xFFFFF
-        *buf = BX_MEM_THIS rom[BIOS_MAP_LAST128K(addr)];
-      }
-      else {
-        *buf = BX_MEM_THIS rom[(addr & EXROM_MASK) + BIOSROMSZ];
+        *buf = BX_MEM_THIS rom[BIOS_MAP_LAST128K(a20addr)];
+      } else {
+        *buf = BX_MEM_THIS rom[(a20addr & EXROM_MASK) + BIOSROMSZ];
       }
     }
 #if BX_PHY_ADDRESS_LONG
-    else if (addr > BX_CONST64(0xffffffff)) {
+    else if (a20addr > BX_CONST64(0xffffffff)) {
       *buf = 0xff;
       ret = 0; // error, beyond limits of memory
     }
 #endif
-    else if (addr >= (bx_phy_address)BX_MEM_THIS bios_rom_addr)
+    else if (is_bios)
     {
-      *buf = BX_MEM_THIS rom[addr & BIOS_MASK];
+      if (BX_MEM_THIS flash_type > 0) {
+        *buf = BX_MEM_THIS flash_read(a20addr & BIOS_MASK);
+      } else {
+        *buf = BX_MEM_THIS rom[a20addr & BIOS_MASK];
+      }
     }
     else
     {
@@ -636,44 +665,69 @@ bx_bool BX_MEM_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len
       ret = 0; // error, beyond limits of memory
     }
     buf++;
-    addr++;
+    a20addr++;
   }
   return ret;
 }
 #endif
 
 #if BX_DEBUGGER || BX_GDBSTUB
-bx_bool BX_MEM_C::dbg_set_mem(bx_phy_address addr, unsigned len, Bit8u *buf)
+bx_bool BX_MEM_C::dbg_set_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit8u *buf)
 {
-  if ((addr + len - 1) > BX_MEM_THIS len) {
+  bx_phy_address a20addr = A20ADDR(addr);
+  struct memory_handler_struct *memory_handler = NULL;
+  bx_bool use_memory_handler = 0, use_smram = 0;
+
+  if ((a20addr + len - 1) > BX_MEM_THIS len) {
     return(0); // error, beyond limits of memory
   }
+
+  bx_bool is_bios = (a20addr >= (bx_phy_address)BX_MEM_THIS bios_rom_addr);
+#if BX_PHY_ADDRESS_LONG
+  if (a20addr > BX_CONST64(0xffffffff)) is_bios = 0;
+#endif
+
+  if ((a20addr >= 0x000a0000 && a20addr < 0x000c0000) && BX_MEM_THIS smram_available)
+  {
+    // SMRAM memory space
+    if (BX_MEM_THIS smram_enable || (cpu->smm_mode() && !BX_MEM_THIS smram_restricted))
+      use_smram = 1;
+  }
+
+  memory_handler = BX_MEM_THIS memory_handlers[a20addr >> 20];
+  while (memory_handler) {
+    if (memory_handler->begin <= a20addr && memory_handler->end >= a20addr)
+    {
+      if (!use_smram) {
+        use_memory_handler = 1;
+        break;
+      }
+    }
+    memory_handler = memory_handler->next;
+  }
+
   for (; len>0; len--) {
-    // Write to standard PCI/ISA Video Mem / SMMRAM
-    if (addr >= 0x000a0000 && addr < 0x000c0000) {
-      if (BX_MEM_THIS smram_enable)
-        *(BX_MEM_THIS get_vector(addr)) = *buf;
-      else
-        DEV_vga_mem_write(addr, *buf);
+    if (use_memory_handler) {
+      memory_handler->write_handler(a20addr, 1, buf, memory_handler->param);
     }
 #if BX_SUPPORT_PCI
-    else if (BX_MEM_THIS pci_enabled && (addr >= 0x000c0000 && addr < 0x00100000)) {
-      unsigned area = (unsigned)(addr >> 14) & 0x0f;
+    else if (BX_MEM_THIS pci_enabled && (a20addr >= 0x000c0000 && a20addr < 0x00100000)) {
+      unsigned area = (unsigned)(a20addr >> 14) & 0x0f;
       if (area > BX_MEM_AREA_F0000) area = BX_MEM_AREA_F0000;
       if (BX_MEM_THIS memory_type[area][1] == 1) {
         // Write to ShadowRAM
-        *(BX_MEM_THIS get_vector(addr)) = *buf;
+        *(BX_MEM_THIS get_vector(a20addr)) = *buf;
       } else {
         // Ignore write to ROM
       }
     }
 #endif  // #if BX_SUPPORT_PCI
-    else if ((addr < 0x000c0000 || addr >= 0x00100000) && (addr < (bx_phy_address)BX_MEM_THIS bios_rom_addr))
+    else if ((a20addr < 0x000c0000 || a20addr >= 0x00100000) && !is_bios)
     {
-      *(BX_MEM_THIS get_vector(addr)) = *buf;
+      *(BX_MEM_THIS get_vector(a20addr)) = *buf;
     }
     buf++;
-    addr++;
+    a20addr++;
   }
   return(1);
 }

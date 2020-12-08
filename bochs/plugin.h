@@ -226,8 +226,6 @@ extern "C" {
 #define DEV_pic_iac()         (bx_devices.pluginPicDevice->IAC())
 
 ///////// VGA macros
-#define DEV_vga_mem_read(addr) (bx_devices.pluginVgaDevice->mem_read(addr))
-#define DEV_vga_mem_write(addr, val) (bx_devices.pluginVgaDevice->mem_write(addr, val))
 #define DEV_vga_redraw_area(left, top, right, bottom) \
   (bx_devices.pluginVgaDevice->vga_redraw_area(left, top, right, bottom))
 #define DEV_vga_get_text_snapshot(rawsnap, height, width) \

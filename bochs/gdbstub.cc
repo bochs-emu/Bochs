@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2017  The Bochs Project Team
+//  Copyright (C) 2002-2020  The Bochs Project Team
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -420,7 +420,7 @@ static int access_linear(Bit64u laddress,
   if (!valid) return(0);
 
   if (rw & 1) {
-    valid = BX_MEM(0)->dbg_set_mem(phys, len, data);
+    valid = BX_MEM(0)->dbg_set_mem(BX_CPU(0), phys, len, data);
   } else {
     valid = BX_MEM(0)->dbg_fetch_mem(BX_CPU(0), phys, len, data);
   }

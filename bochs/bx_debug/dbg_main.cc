@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2019  The Bochs Project
+//  Copyright (C) 2001-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -2716,7 +2716,7 @@ void bx_dbg_setpmem_command(bx_phy_address paddr, unsigned len, Bit32u val)
       return;
     }
 
-  if (! BX_MEM(0)->dbg_set_mem(paddr, len, buf)) {
+  if (! BX_MEM(0)->dbg_set_mem(BX_CPU(dbg_cpu), paddr, len, buf)) {
     dbg_printf("Error: setpmem: could not set memory, out of physical bounds?\n");
   }
 }

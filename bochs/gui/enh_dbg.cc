@@ -8,7 +8,7 @@
 //
 //  Modified by Bruce Ewing
 //
-//  Copyright (C) 2008-2019  The Bochs Project
+//  Copyright (C) 2008-2020  The Bochs Project
 
 #include "config.h"
 
@@ -2786,7 +2786,7 @@ void SetMemLine(int L)
             {
                 // convert the hex to a byte, and try to store the byte in bochs physmem
                 sscanf (s,"%2X", (unsigned int*)&newval);
-                if (bx_mem.dbg_set_mem( (bx_phy_address) h, 1, &newval) == FALSE)
+                if (bx_mem.dbg_set_mem(BX_CPU(CurrentCPU), (bx_phy_address) h, 1, &newval) == FALSE)
                     err = 2;
                 else
                     *u++ = newval;      // update DataDump array so it will refresh on the screen
