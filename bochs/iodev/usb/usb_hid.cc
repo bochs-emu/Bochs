@@ -693,7 +693,7 @@ usb_hid_device_c::usb_hid_device_c(usbdev_type type)
       d.device_desc_size = sizeof(bx_keypad_dev_descriptor);
       d.config_desc_size = sizeof(bx_keypad_config_descriptor);
     }
-    DEV_register_removable_keyboard((void*)this, gen_scancode_static);
+    DEV_register_removable_keyboard((void*)this, gen_scancode_static, NULL);
 //    DEV_register_removable_mouse((void*)this, mouse_enq_static, mouse_enabled_changed);
   }
   d.vendor_desc = "BOCHS";

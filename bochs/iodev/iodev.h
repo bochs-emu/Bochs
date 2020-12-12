@@ -46,6 +46,7 @@ typedef Bit32u (*bx_read_handler_t)(void *, Bit32u, unsigned);
 typedef void   (*bx_write_handler_t)(void *, Bit32u, Bit32u, unsigned);
 
 typedef bx_bool (*bx_kbd_gen_scancode_t)(void *, Bit32u);
+typedef void (*bx_kbd_paste_bytes_t)(void *, Bit8u *data, Bit32s length);
 typedef void (*bx_mouse_enq_t)(void *, int, int, int, unsigned, bx_bool);
 typedef void (*bx_mouse_enabled_changed_t)(void *, bx_bool);
 
@@ -174,17 +175,6 @@ protected:
 #define STUBFUNC(dev,method) \
    pluginlog->panic("%s called in %s stub. you must not have loaded the %s plugin", #dev, #method, #dev)
 //////////////////////////////////////////////////////////////////////
-
-class BOCHSAPI bx_keyb_stub_c : public bx_devmodel_c {
-public:
-  // stubs for bx_keyb_c methods
-  virtual void gen_scancode(Bit32u key) {
-    STUBFUNC(keyboard, gen_scancode);
-  }
-  virtual void paste_bytes(Bit8u *data, Bit32s length) {
-    STUBFUNC(keyboard, paste_bytes);
-  }
-};
 
 class BOCHSAPI bx_hard_drive_stub_c : public bx_devmodel_c {
 public:
@@ -418,13 +408,15 @@ public:
   Bit32u inp(Bit16u addr, unsigned io_len) BX_CPP_AttrRegparmN(2);
   void   outp(Bit16u addr, Bit32u value, unsigned io_len) BX_CPP_AttrRegparmN(3);
 
-  void register_removable_keyboard(void *dev, bx_kbd_gen_scancode_t kbd_gen_scancode);
+  void register_default_keyboard(void *dev, bx_kbd_gen_scancode_t kbd_gen_scancode, bx_kbd_paste_bytes_t kbd_paste_bytes);
+  void register_removable_keyboard(void *dev, bx_kbd_gen_scancode_t kbd_gen_scancode, bx_kbd_paste_bytes_t kbd_paste_bytes);
   void unregister_removable_keyboard(void *dev);
   void register_default_mouse(void *dev, bx_mouse_enq_t mouse_enq, bx_mouse_enabled_changed_t mouse_enabled_changed);
   void register_removable_mouse(void *dev, bx_mouse_enq_t mouse_enq, bx_mouse_enabled_changed_t mouse_enabled_changed);
   void unregister_removable_mouse(void *dev);
   void gen_scancode(Bit32u key);
   void release_keys(void);
+  void paste_bytes(Bit8u *data, Bit32s length);
   void mouse_enabled_changed(bx_bool enabled);
   void mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy);
 
@@ -447,7 +439,6 @@ public:
   bx_dma_stub_c     *pluginDmaDevice;
   bx_hard_drive_stub_c *pluginHardDrive;
   bx_hdimage_ctl_stub_c *pluginHDImageCtl;
-  bx_keyb_stub_c    *pluginKeyboard;
   bx_pic_stub_c     *pluginPicDevice;
   bx_pit_stub_c     *pluginPitDevice;
   bx_speaker_stub_c *pluginSpeaker;
@@ -473,7 +464,6 @@ public:
   bx_dma_stub_c  stubDma;
   bx_hard_drive_stub_c stubHardDrive;
   bx_hdimage_ctl_stub_c stubHDImage;
-  bx_keyb_stub_c stubKeyboard;
   bx_pic_stub_c  stubPic;
   bx_pit_stub_c  stubPit;
   bx_speaker_stub_c stubSpeaker;
@@ -542,8 +532,9 @@ private:
   struct {
     void *dev;
     bx_kbd_gen_scancode_t gen_scancode;
+    bx_kbd_paste_bytes_t paste_bytes;
     bx_bool bxkey_state[BX_KEY_NBKEYS];
-  } bx_keyboard;
+  } bx_keyboard[2];
 
   struct {
     bx_bool enabled;

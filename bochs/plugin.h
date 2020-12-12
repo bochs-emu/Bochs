@@ -149,8 +149,8 @@ extern "C" {
 #define DEV_register_timer(a,b,c,d,e,f) bx_pc_system.register_timer(a,b,c,d,e,f)
 
 ///////// Removable devices macros
-#define DEV_optional_key_enq(a) (bx_devices.optional_key_enq(a))
-#define DEV_register_removable_keyboard(a,b) (bx_devices.register_removable_keyboard(a,b))
+#define DEV_register_default_keyboard(a,b,c) (bx_devices.register_default_keyboard(a,b,c))
+#define DEV_register_removable_keyboard(a,b,c) (bx_devices.register_removable_keyboard(a,b,c))
 #define DEV_unregister_removable_keyboard(a) (bx_devices.unregister_removable_keyboard(a))
 #define DEV_register_default_mouse(a,b,c) (bx_devices.register_default_mouse(a,b,c))
 #define DEV_register_removable_mouse(a,b,c) (bx_devices.register_removable_mouse(a,b,c))
@@ -173,8 +173,7 @@ extern "C" {
 
 ///////// keyboard macros
 #define DEV_kbd_gen_scancode(key) (bx_devices.gen_scancode(key))
-#define DEV_kbd_paste_bytes(bytes, count) \
-    (bx_devices.pluginKeyboard->paste_bytes(bytes,count))
+#define DEV_kbd_paste_bytes(bytes, count) (bx_devices.paste_bytes(bytes,count))
 #define DEV_kbd_release_keys() (bx_devices.release_keys())
 
 ///////// mouse macros

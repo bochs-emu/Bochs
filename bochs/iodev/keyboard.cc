@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2017  The Bochs Project
+//  Copyright (C) 2002-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -60,9 +60,6 @@ int CDECL libkeyboard_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
 {
   // Create one instance of the keyboard device object.
   theKeyboard = new bx_keyb_c();
-  // Before this plugin was loaded, pluginKeyboard pointed to a stub.
-  // Now make it point to the real thing.
-  bx_devices.pluginKeyboard = theKeyboard;
   // Register this device.
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theKeyboard, BX_PLUGIN_KEYBOARD);
   return 0; // Success
@@ -152,6 +149,7 @@ void bx_keyb_c::init(void)
   BX_KEY_THIS s.kbd_controller.inpb = 0;
   BX_KEY_THIS s.kbd_controller.outb = 0;
 
+  BX_KEY_THIS s.kbd_controller.kbd_type = SIM->get_param_enum(BXPN_KBD_TYPE)->get();
   BX_KEY_THIS s.kbd_controller.kbd_clock_enabled = 1;
   BX_KEY_THIS s.kbd_controller.aux_clock_enabled = 0;
   BX_KEY_THIS s.kbd_controller.allow_irq1 = 1;
@@ -202,6 +200,7 @@ void bx_keyb_c::init(void)
   BX_KEY_THIS statusbar_id[1] = bx_gui->register_statusitem("CAPS");
   BX_KEY_THIS statusbar_id[2] = bx_gui->register_statusitem("SCRL");
 
+  DEV_register_default_keyboard(this, gen_scancode_static, paste_bytes_static);
   if ((BX_KEY_THIS s.mouse.type == BX_MOUSE_TYPE_PS2) ||
       (BX_KEY_THIS s.mouse.type == BX_MOUSE_TYPE_IMPS2)) {
     DEV_register_default_mouse(this, mouse_enq_static, mouse_enabled_changed_static);
@@ -740,6 +739,11 @@ void bx_keyb_c::service_paste_buf()
   BX_KEY_THIS paste_service = 0;
 }
 
+void bx_keyb_c::paste_bytes_static(void *dev, Bit8u *bytes, Bit32s length)
+{
+  ((bx_keyb_c*)dev)->paste_bytes(bytes, length);
+}
+
 // paste_bytes schedules an arbitrary number of ASCII characters to be
 // inserted into the hardware queue as it become available.  Any previous
 // paste which is still in progress will be thrown out.  BYTES is a pointer
@@ -757,6 +761,12 @@ void bx_keyb_c::paste_bytes(Bit8u *bytes, Bit32s length)
   BX_KEY_THIS pastebuf_ptr = 0;
   BX_KEY_THIS pastebuf_len = length;
   BX_KEY_THIS service_paste_buf();
+}
+
+bx_bool bx_keyb_c::gen_scancode_static(void *dev, Bit32u key)
+{
+  ((bx_keyb_c*)dev)->gen_scancode(key);
+  return 1;
 }
 
 void bx_keyb_c::gen_scancode(Bit32u key)
@@ -1060,9 +1070,9 @@ void bx_keyb_c::kbd_ctrl_to_kbd(Bit8u value)
       // XT sends nothing, AT sends ACK
       // MFII with translation sends ACK+ABh+41h
       // MFII without translation sends ACK+ABh+83h
-      if (SIM->get_param_enum(BXPN_KBD_TYPE)->get() != BX_KBD_XT_TYPE) {
+      if (BX_KEY_THIS s.kbd_controller.kbd_type != BX_KBD_XT_TYPE) {
         kbd_enQ(0xFA);
-        if (SIM->get_param_enum(BXPN_KBD_TYPE)->get() == BX_KBD_MF_TYPE) {
+        if (BX_KEY_THIS s.kbd_controller.kbd_type == BX_KBD_MF_TYPE) {
           kbd_enQ(0xAB);
 
           if(BX_KEY_THIS s.kbd_controller.scancodes_translate)

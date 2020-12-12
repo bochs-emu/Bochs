@@ -72,7 +72,6 @@ void bx_devices_c::init_stubs()
   pluginCmosDevice = &stubCmos;
   pluginDmaDevice = &stubDma;
   pluginHardDrive = &stubHardDrive;
-  pluginKeyboard = &stubKeyboard;
   pluginPicDevice = &stubPic;
   pluginPitDevice = &stubPit;
   pluginSpeaker = &stubSpeaker;
@@ -137,10 +136,13 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   }
 
   // removable devices init
-  bx_keyboard.dev = NULL;
-  bx_keyboard.gen_scancode = NULL;
+  for (i=0; i < 2; i++) {
+    bx_keyboard[i].dev = NULL;
+    bx_keyboard[i].gen_scancode = NULL;
+    bx_keyboard[i].paste_bytes = NULL;
+  }
   for (i = 0; i < BX_KEY_NBKEYS; i++) {
-    bx_keyboard.bxkey_state[i] = 0;
+    bx_keyboard[0].bxkey_state[i] = 0;
   }
   for (i=0; i < 2; i++) {
     bx_mouse[i].dev = NULL;
@@ -1127,19 +1129,32 @@ bx_bool bx_devices_c::is_usb_enabled(void)
 }
 
 // removable keyboard/mouse registration
-void bx_devices_c::register_removable_keyboard(void *dev, bx_kbd_gen_scancode_t kbd_gen_scancode)
+void bx_devices_c::register_default_keyboard(void *dev, bx_kbd_gen_scancode_t kbd_gen_scancode,
+                                             bx_kbd_paste_bytes_t kbd_paste_bytes)
 {
-  if (bx_keyboard.dev == NULL) {
-    bx_keyboard.dev = dev;
-    bx_keyboard.gen_scancode = kbd_gen_scancode;
+  if (bx_keyboard[0].dev == NULL) {
+    bx_keyboard[0].dev = dev;
+    bx_keyboard[0].gen_scancode = kbd_gen_scancode;
+    bx_keyboard[0].paste_bytes = kbd_paste_bytes;
+  }
+}
+
+void bx_devices_c::register_removable_keyboard(void *dev, bx_kbd_gen_scancode_t kbd_gen_scancode,
+                                               bx_kbd_paste_bytes_t kbd_paste_bytes)
+{
+  if (bx_keyboard[1].dev == NULL) {
+    bx_keyboard[1].dev = dev;
+    bx_keyboard[1].gen_scancode = kbd_gen_scancode;
+    bx_keyboard[1].paste_bytes = kbd_paste_bytes;
   }
 }
 
 void bx_devices_c::unregister_removable_keyboard(void *dev)
 {
-  if (dev == bx_keyboard.dev) {
-    bx_keyboard.dev = NULL;
-    bx_keyboard.gen_scancode = NULL;
+  if (dev == bx_keyboard[1].dev) {
+    bx_keyboard[1].dev = NULL;
+    bx_keyboard[1].gen_scancode = NULL;
+    bx_keyboard[1].paste_bytes = NULL;
   }
 }
 
@@ -1177,22 +1192,33 @@ void bx_devices_c::gen_scancode(Bit32u key)
 {
   bx_bool ret = 0;
 
-  bx_keyboard.bxkey_state[key & 0xff] = ((key & BX_KEY_RELEASED) == 0);
-  if (bx_keyboard.dev != NULL) {
-    ret = bx_keyboard.gen_scancode(bx_keyboard.dev, key);
+  bx_keyboard[0].bxkey_state[key & 0xff] = ((key & BX_KEY_RELEASED) == 0);
+  if (bx_keyboard[1].dev != NULL) {
+    ret = bx_keyboard[1].gen_scancode(bx_keyboard[1].dev, key);
   }
-  if (ret == 0) {
-    pluginKeyboard->gen_scancode(key);
+  if ((ret == 0) && (bx_keyboard[0].dev != NULL)) {
+    bx_keyboard[0].gen_scancode(bx_keyboard[1].dev, key);
   }
 }
 
 void bx_devices_c::release_keys()
 {
   for (int i = 0; i < BX_KEY_NBKEYS; i++) {
-    if (bx_keyboard.bxkey_state[i]) {
+    if (bx_keyboard[0].bxkey_state[i]) {
       gen_scancode(i | BX_KEY_RELEASED);
-      bx_keyboard.bxkey_state[i] = 0;
+      bx_keyboard[0].bxkey_state[i] = 0;
     }
+  }
+}
+
+void bx_devices_c::paste_bytes(Bit8u *data, Bit32s length)
+{
+  if ((bx_keyboard[1].dev != NULL) && (bx_keyboard[1].paste_bytes != NULL)) {
+    bx_keyboard[1].paste_bytes(bx_keyboard[1].dev, data, length);
+    return;
+  }
+  if ((bx_keyboard[0].dev != NULL) && (bx_keyboard[0].paste_bytes != NULL)) {
+    bx_keyboard[0].paste_bytes(bx_keyboard[0].dev, data, length);
   }
 }
 

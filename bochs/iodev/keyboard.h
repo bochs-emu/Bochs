@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2017  The Bochs Project
+//  Copyright (C) 2002-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -37,16 +37,13 @@
 #define MOUSE_MODE_REMOTE 12
 #define MOUSE_MODE_WRAP   13
 
-class bx_keyb_c : public bx_keyb_stub_c {
+class bx_keyb_c : public bx_devmodel_c {
 public:
   bx_keyb_c();
   virtual ~bx_keyb_c();
   // implement bx_devmodel_c interface
   virtual void init(void);
   virtual void reset(unsigned type);
-  // override stubs from bx_keyb_stub_c
-  virtual void gen_scancode(Bit32u key);
-  virtual void paste_bytes(Bit8u *data, Bit32s length);
   virtual void register_state(void);
   virtual void after_restore_state(void);
 
@@ -55,8 +52,13 @@ public:
   BX_KEY_SMF void     paste_delay_changed(Bit32u value);
 
 private:
+  static bx_bool      gen_scancode_static(void *dev, Bit32u key);
+  BX_KEY_SMF void     gen_scancode(Bit32u key);
+  static void         paste_bytes_static(void *dev, Bit8u *data, Bit32s length);
+  BX_KEY_SMF void     paste_bytes(Bit8u *data, Bit32s length);
+
   BX_KEY_SMF Bit8u    get_kbd_enable(void);
-  BX_KEY_SMF void     service_paste_buf ();
+  BX_KEY_SMF void     service_paste_buf();
   BX_KEY_SMF void     create_mouse_packet(bx_bool force_enq);
   BX_KEY_SMF unsigned periodic(Bit32u usec_delta);
 
@@ -100,6 +102,7 @@ private:
       bx_bool expecting_scancodes_set;
       Bit8u   current_scancodes_set;
       bx_bool bat_in_progress;
+      Bit8u   kbd_type;
     } kbd_controller;
 
     struct mouseStruct {
