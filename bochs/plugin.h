@@ -186,12 +186,6 @@ extern "C" {
     (bx_devices.pluginHardDrive->virt_read_handler(b, c))
 #define DEV_hd_write_handler(a, b, c, d) \
     (bx_devices.pluginHardDrive->virt_write_handler(b, c, d))
-#define DEV_hd_get_first_cd_handle() \
-    (bx_devices.pluginHardDrive->get_first_cd_handle())
-#define DEV_hd_get_cd_media_status(handle) \
-    (bx_devices.pluginHardDrive->get_cd_media_status(handle))
-#define DEV_hd_set_cd_media_status(handle, status) \
-    (bx_devices.pluginHardDrive->set_cd_media_status(handle, status))
 #define DEV_hd_bmdma_read_sector(a,b,c) bx_devices.pluginHardDrive->bmdma_read_sector(a,b,c)
 #define DEV_hd_bmdma_write_sector(a,b) bx_devices.pluginHardDrive->bmdma_write_sector(a,b)
 #define DEV_hd_bmdma_complete(a) bx_devices.pluginHardDrive->bmdma_complete(a)
@@ -201,9 +195,6 @@ extern "C" {
 #define DEV_bulk_io_quantum_requested() (bx_devices.bulkIOQuantumsRequested)
 #define DEV_bulk_io_quantum_transferred() (bx_devices.bulkIOQuantumsTransferred)
 #define DEV_bulk_io_host_addr() (bx_devices.bulkIOHostAddr)
-
-///////// FLOPPY macro
-#define DEV_floppy_set_media_status(drive, status)  bx_devices.pluginFloppyDevice->set_media_status(drive, status)
 
 ///////// DMA macros
 #define DEV_dma_register_8bit_channel(channel, dmaRead, dmaWrite, name) \

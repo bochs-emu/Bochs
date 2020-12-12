@@ -188,15 +188,6 @@ public:
 
 class BOCHSAPI bx_hard_drive_stub_c : public bx_devmodel_c {
 public:
-  virtual Bit32u get_first_cd_handle(void) {
-    return BX_MAX_ATA_CHANNEL*2;
-  }
-
-  virtual bx_bool  get_cd_media_status(Bit32u handle) { return 0; }
-  virtual bx_bool  set_cd_media_status(Bit32u handle, bx_bool status) {
-    STUBFUNC(HD, set_cd_media_status); return 0;
-  }
-
   virtual Bit32u virt_read_handler(Bit32u address, unsigned io_len) { return 0; }
   virtual void virt_write_handler(Bit32u address, Bit32u value, unsigned io_len) {}
 
@@ -208,13 +199,6 @@ public:
   }
   virtual void bmdma_complete(Bit8u channel) {
     STUBFUNC(HD, bmdma_complete);
-  }
-};
-
-class BOCHSAPI bx_floppy_stub_c : public bx_devmodel_c {
-public:
-  virtual unsigned set_media_status(unsigned drive, unsigned status) {
-    STUBFUNC(floppy, set_media_status); return 0;
   }
 };
 
@@ -461,7 +445,6 @@ public:
 
   bx_cmos_stub_c    *pluginCmosDevice;
   bx_dma_stub_c     *pluginDmaDevice;
-  bx_floppy_stub_c  *pluginFloppyDevice;
   bx_hard_drive_stub_c *pluginHardDrive;
   bx_hdimage_ctl_stub_c *pluginHDImageCtl;
   bx_keyb_stub_c    *pluginKeyboard;
@@ -488,7 +471,6 @@ public:
   // loaded
   bx_cmos_stub_c stubCmos;
   bx_dma_stub_c  stubDma;
-  bx_floppy_stub_c  stubFloppy;
   bx_hard_drive_stub_c stubHardDrive;
   bx_hdimage_ctl_stub_c stubHDImage;
   bx_keyb_stub_c stubKeyboard;

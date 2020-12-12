@@ -322,8 +322,12 @@ void bx_gui_c::update_drive_status_buttons(void)
 {
   BX_GUI_THIS floppyA_status = (SIM->get_param_enum(BXPN_FLOPPYA_STATUS)->get() == BX_INSERTED);
   BX_GUI_THIS floppyB_status = (SIM->get_param_enum(BXPN_FLOPPYB_STATUS)->get() == BX_INSERTED);
-  Bit32u handle = DEV_hd_get_first_cd_handle();
-  BX_GUI_THIS cdrom1_status = DEV_hd_get_cd_media_status(handle);
+  bx_param_c *cdrom = SIM->get_first_cdrom();
+  if (cdrom != NULL) {
+    BX_GUI_THIS cdrom1_status = SIM->get_param_enum("status", cdrom)->get();
+  } else {
+    BX_GUI_THIS cdrom1_status = BX_EJECTED;
+  }
   if (BX_GUI_THIS floppyA_status)
     replace_bitmap(BX_GUI_THIS floppyA_hbar_id, BX_GUI_THIS floppyA_bmap_id);
   else {
@@ -355,62 +359,61 @@ void bx_gui_c::update_drive_status_buttons(void)
 
 void bx_gui_c::floppyA_handler(void)
 {
+  int ret = 1;
+
   if (SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->get() == BX_FDD_NONE)
     return; // no primary floppy device present
   if (!BX_GUI_THIS fullscreen_mode &&
       (BX_GUI_THIS dialog_caps & BX_GUI_DLG_FLOPPY)) {
     // instead of just toggling the status, bring up a dialog asking what disk
     // image you want to switch to.
-    int ret = SIM->ask_param(BXPN_FLOPPYA);
-    if (ret > 0) {
-      SIM->update_runtime_options();
-    }
-    return;
+    ret = SIM->ask_param(BXPN_FLOPPYA);
+  } else {
+    SIM->get_param_enum(BXPN_FLOPPYA_STATUS)->set(!BX_GUI_THIS floppyA_status);
   }
-  BX_GUI_THIS floppyA_status = !BX_GUI_THIS floppyA_status;
-  DEV_floppy_set_media_status(0, BX_GUI_THIS floppyA_status);
-  BX_GUI_THIS update_drive_status_buttons();
+  if (ret > 0) {
+    SIM->update_runtime_options();
+  }
 }
 
 void bx_gui_c::floppyB_handler(void)
 {
+  int ret = 1;
+
   if (SIM->get_param_enum(BXPN_FLOPPYB_DEVTYPE)->get() == BX_FDD_NONE)
     return; // no secondary floppy device present
   if (!BX_GUI_THIS fullscreen_mode &&
       (BX_GUI_THIS dialog_caps & BX_GUI_DLG_FLOPPY)) {
     // instead of just toggling the status, bring up a dialog asking what disk
     // image you want to switch to.
-    int ret = SIM->ask_param(BXPN_FLOPPYB);
-    if (ret > 0) {
-      SIM->update_runtime_options();
-    }
-    return;
+    ret = SIM->ask_param(BXPN_FLOPPYB);
+  } else {
+    SIM->get_param_enum(BXPN_FLOPPYB_STATUS)->set(!BX_GUI_THIS floppyB_status);
   }
-  BX_GUI_THIS floppyB_status = !BX_GUI_THIS floppyB_status;
-  DEV_floppy_set_media_status(1, BX_GUI_THIS floppyB_status);
-  BX_GUI_THIS update_drive_status_buttons();
+  if (ret > 0) {
+    SIM->update_runtime_options();
+  }
 }
 
 void bx_gui_c::cdrom1_handler(void)
 {
-  Bit32u handle = DEV_hd_get_first_cd_handle();
+  int ret = 1;
+  bx_param_c *cdrom = SIM->get_first_cdrom();
+
+  if (cdrom == NULL)
+    return;  // no cdrom found
   if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_CDROM) {
     // instead of just toggling the status, bring up a dialog asking what disk
     // image you want to switch to.
     // This code handles the first cdrom only. The cdrom drives #2, #3 and
     // #4 are handled in the runtime configuaration.
-    bx_param_c *cdrom = SIM->get_first_cdrom();
-    if (cdrom == NULL)
-      return;  // no cdrom found
-    int ret = SIM->ask_param(cdrom);
-    if (ret > 0) {
-      SIM->update_runtime_options();
-    }
-    return;
+    ret = SIM->ask_param(cdrom);
+  } else {
+    SIM->get_param_enum("status", cdrom)->set(!BX_GUI_THIS cdrom1_status);
   }
-  BX_GUI_THIS cdrom1_status =
-    DEV_hd_set_cd_media_status(handle, !BX_GUI_THIS cdrom1_status);
-  BX_GUI_THIS update_drive_status_buttons();
+  if (ret > 0) {
+    SIM->update_runtime_options();
+  }
 }
 
 void bx_gui_c::reset_handler(void)

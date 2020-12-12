@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2019  The Bochs Project
+//  Copyright (C) 2001-2020  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -3301,24 +3301,6 @@ void bx_hard_drive_c::command_aborted(Bit8u channel, unsigned value)
   controller->status.corrected_data = 0;
   controller->buffer_index = 0;
   raise_interrupt(channel);
-}
-
-Bit32u bx_hard_drive_c::get_first_cd_handle(void)
-{
-  for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
-    if (BX_DRIVE_IS_CD(channel,0)) return  (channel*2);
-    if (BX_DRIVE_IS_CD(channel,1)) return ((channel*2) + 1);
-  }
-  return BX_MAX_ATA_CHANNEL*2;
-}
-
-bx_bool bx_hard_drive_c::get_cd_media_status(Bit32u handle)
-{
-  if (handle >= BX_MAX_ATA_CHANNEL*2) return 0;
-
-  Bit8u channel = handle / 2;
-  Bit8u device  = handle % 2;
-  return BX_HD_THIS channels[channel].drives[device].cdrom.ready;
 }
 
 bx_bool bx_hard_drive_c::set_cd_media_status(Bit32u handle, bx_bool status)

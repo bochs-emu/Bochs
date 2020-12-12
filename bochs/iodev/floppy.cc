@@ -108,7 +108,6 @@ int CDECL libfloppy_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
 {
   if (type == PLUGTYPE_CORE) {
     theFloppyController = new bx_floppy_ctrl_c();
-    bx_devices.pluginFloppyDevice = theFloppyController;
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theFloppyController, BX_PLUGIN_FLOPPY);
     return 0; // Success
   } else {
@@ -1493,7 +1492,7 @@ void bx_floppy_ctrl_c::increment_sector(void)
   }
 }
 
-unsigned bx_floppy_ctrl_c::set_media_status(unsigned drive, bx_bool status)
+bx_bool bx_floppy_ctrl_c::set_media_status(unsigned drive, bx_bool status)
 {
   char *path;
   unsigned type;

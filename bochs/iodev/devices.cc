@@ -71,7 +71,6 @@ void bx_devices_c::init_stubs()
 {
   pluginCmosDevice = &stubCmos;
   pluginDmaDevice = &stubDma;
-  pluginFloppyDevice = &stubFloppy;
   pluginHardDrive = &stubHardDrive;
   pluginKeyboard = &stubKeyboard;
   pluginPicDevice = &stubPic;

@@ -46,13 +46,12 @@ typedef struct {
   device_image_t *vvfat;
 } floppy_t;
 
-class bx_floppy_ctrl_c : public bx_floppy_stub_c {
+class bx_floppy_ctrl_c : public bx_devmodel_c {
 public:
   bx_floppy_ctrl_c();
   virtual ~bx_floppy_ctrl_c();
   virtual void init(void);
   virtual void reset(unsigned type);
-  virtual unsigned set_media_status(unsigned drive, bx_bool status);
   virtual void register_state(void);
   virtual void after_restore_state(void);
 #if BX_DEBUGGER
@@ -137,6 +136,7 @@ private:
   Bit32u read(Bit32u address, unsigned io_len);
   void   write(Bit32u address, Bit32u value, unsigned io_len);
 #endif
+  BX_FD_SMF bx_bool set_media_status(unsigned drive, bx_bool status);
   BX_FD_SMF Bit16u dma_write(Bit8u *buffer, Bit16u maxlen);
   BX_FD_SMF Bit16u dma_read(Bit8u *buffer, Bit16u maxlen);
   BX_FD_SMF void   floppy_command(void);
