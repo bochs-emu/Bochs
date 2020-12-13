@@ -1197,7 +1197,7 @@ void bx_devices_c::gen_scancode(Bit32u key)
     ret = bx_keyboard[1].gen_scancode(bx_keyboard[1].dev, key);
   }
   if ((ret == 0) && (bx_keyboard[0].dev != NULL)) {
-    bx_keyboard[0].gen_scancode(bx_keyboard[1].dev, key);
+    bx_keyboard[0].gen_scancode(bx_keyboard[0].dev, key);
   }
 }
 
