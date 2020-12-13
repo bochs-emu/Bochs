@@ -7,7 +7,7 @@
 //
 // Copyright (c) 2005       Fabrice Bellard
 // Copyright (c) 2007       OpenMoko, Inc.  (andrew@openedhand.com)
-// Copyright (C) 2009-2017  The Bochs Project
+// Copyright (C) 2009-2020  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -92,7 +92,7 @@ protected:
 #define SET_IDLE     0x210a
 #define SET_PROTOCOL 0x210b
 
-#define KEYPAD_LEN   16
+#define KEYPAD_LEN   17
 struct KEYPAD {
   Bit32u bxkey;
   Bit8u  keypad_packet[8];
@@ -625,8 +625,9 @@ static const Bit8u bx_keypad_hid_report_descriptor2[] = {
   0x01, 0xC0
 };
 
-// this interface has a key conversion table of len = 16
+// this interface has a key conversion table of len = 17
 struct KEYPAD keypad_lookup[KEYPAD_LEN] = {
+  { BX_KEY_NUM_LOCK,     { 0x00, 0x00, 0x53, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 7
   { BX_KEY_KP_HOME,      { 0x00, 0x00, 0x5F, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 7
   { BX_KEY_KP_LEFT,      { 0x00, 0x00, 0x5C, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 4
   { BX_KEY_KP_END,       { 0x00, 0x00, 0x59, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 1
@@ -702,6 +703,7 @@ usb_hid_device_c::usb_hid_device_c(usbdev_type type)
   d.connected = 1;
   memset((void*)&s, 0, sizeof(s));
   if (d.type == USB_DEV_TYPE_KEYPAD) {
+    statusbar_id = bx_gui->register_statusitem("NUM");
     s.saved_key = BX_KEY_UNHANDLED;
   }
 
@@ -716,6 +718,7 @@ usb_hid_device_c::~usb_hid_device_c(void)
     bx_gui->set_mouse_mode_absxy(0);
     DEV_unregister_removable_mouse((void*)this);
   } else if (d.type == USB_DEV_TYPE_KEYPAD) {
+    bx_gui->unregister_statusitem(statusbar_id);
     DEV_unregister_removable_keyboard((void*)this);
 //    DEV_unregister_removable_mouse((void*)this);
   }
@@ -732,6 +735,7 @@ void usb_hid_device_c::register_state_specific(bx_list_c *parent)
   BXRS_DEC_PARAM_FIELD(list, mouse_z, s.mouse_z);
   BXRS_HEX_PARAM_FIELD(list, b_state, s.b_state);
   BXRS_HEX_PARAM_FIELD(list, idle, s.idle);
+  BXRS_HEX_PARAM_FIELD(list, indicators, s.indicators);
   BXRS_PARAM_BOOL(list, has_events, s.has_events);
   if (d.type == USB_DEV_TYPE_KEYPAD) {
     BXRS_DEC_PARAM_FIELD(list, saved_key, s.saved_key);
@@ -854,7 +858,14 @@ int usb_hid_device_c::handle_control(int request, int value, int index, int leng
       break;
     case SET_REPORT:
       if ((d.type == USB_DEV_TYPE_KEYPAD) && (value = 0x200)) {
-        BX_INFO(("keypad NUMLOCK %s", (data[0] & 0x01) ? "on" : "off"));
+        if (data[0] != s.indicators) {
+          if (statusbar_id >= 0) {
+            bx_gui->statusbar_setitem(statusbar_id, data[0] & 0x01);
+          } else {
+            BX_INFO(("keypad NUMLOCK %s", (data[0] & 0x01) ? "on" : "off"));
+          }
+          s.indicators = data[0];
+        }
         ret = 0;
       } else {
         goto fail;

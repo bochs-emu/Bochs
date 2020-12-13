@@ -7,7 +7,7 @@
 //
 // Copyright (c) 2005       Fabrice Bellard
 // Copyright (c) 2007       OpenMoko, Inc.  (andrew@openedhand.com)
-// Copyright (C) 2009-2017  The Bochs Project
+// Copyright (C) 2009-2020  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -54,8 +54,11 @@ private:
     Bit32u saved_key;
     Bit8u key_pad_packet[8];
     Bit8u idle;
+    Bit8u indicators;
     bx_bool has_events;
   } s;
+
+  int statusbar_id;
 
   static bx_bool gen_scancode_static(void *dev, Bit32u key);
   bx_bool gen_scancode(Bit32u key);
