@@ -68,6 +68,7 @@ const char *usbdev_names[] =
   "mouse",
   "tablet",
   "keypad",
+  "keyboard",
   "disk",
   "cdrom",
   "hub",
@@ -105,6 +106,9 @@ int bx_usbdev_ctl_c::init_device(bx_list_c *portconf, logfunctions *hub, void **
   } else if (!strcmp(devname, "keypad")) {
     modtype = USB_MOD_TYPE_HID;
     devtype = USB_DEV_TYPE_KEYPAD;
+  } else if (!strcmp(devname, "keyboard")) {
+    modtype = USB_MOD_TYPE_HID;
+    devtype = USB_DEV_TYPE_KEYBOARD;
   } else if (!strcmp(devname, "disk")) {
     if (ptr != NULL) {
       modtype = USB_MOD_TYPE_MSD;

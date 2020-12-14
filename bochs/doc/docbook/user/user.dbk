@@ -546,9 +546,9 @@ currently work with.
     <entry>USB</entry>
     <entry>Yes</entry>
     <entry>Four types of host controllers (UHCI, OHCI, EHCI and xHCI) and the
-    devices 'mouse', 'tablet', 'keypad', 'disk', 'cdrom', 'floppy, ''hub' and
-    'printer' are available. Plugging in and removing devices at runtime is
-    possible. Access to real hardware is not implemented yet.
+    devices 'mouse', 'tablet', 'keypad', 'keyboard', 'disk', 'cdrom', 'floppy',
+    'hub' and 'printer' are available. Plugging in and removing devices at runtime
+    is possible. Access to real hardware is not implemented yet.
     </entry>
   </row>
   <row>
@@ -4925,14 +4925,15 @@ i440FX PCI chipset.
 </para>
 <para>
 With the port<replaceable>X</replaceable> option you can connect devices
-to the hub (currently supported: 'mouse', 'tablet', 'keypad', 'disk', 'cdrom',
-'floppy, ''hub' and 'printer').
+to the hub (currently supported: 'mouse', 'tablet', 'keypad', 'keyboard',
+'disk', 'cdrom', 'floppy, ''hub' and 'printer').
 </para>
 <para>
 If you connect the mouse or tablet to one of the ports, Bochs forwards the
 mouse movement data to the USB device instead of the selected mouse type.
 When connecting the keypad to one of the ports, Bochs forwards the input of
-the numeric keypad to the USB device instead of the PS/2 keyboard.
+the numeric keypad to the USB device instead of the PS/2 keyboard. If the
+keyboard is selected, all key events are sent to the USB device.
 </para>
 <para>
 To connect a 'flat' mode image as a USB hardisk you can use the 'disk' device

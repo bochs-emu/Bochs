@@ -36,6 +36,8 @@ Changes after 2.6.11:
   - PCI (general)
     - Added config parameter to set up advanced PCI options. Now it is possible
       to disable ACPI or HPET in case the i440FX chipset is selected.
+  - USB
+    - Added keyboard emulation with most of the keys supported.
   - Sound
     - Added PC speaker volume control for the lowlevel sound support.
 

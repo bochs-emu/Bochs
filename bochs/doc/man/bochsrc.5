@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "4 Dec 2020" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "14 Dec 2020" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -1242,13 +1242,14 @@ Example:
 .I "usb_uhci:"
 This option controls the presence of the USB root hub which is a part
 of the i440FX PCI chipset. With the portX parameter you can connect devices
-to the hub (currently supported: 'mouse', 'tablet', 'keypad', 'disk', 'cdrom',
-\&'floppy', 'hub' and 'printer').
+to the hub (currently supported: 'mouse', 'tablet', 'keypad', 'keyboard',
+\&'disk', 'cdrom', 'floppy', 'hub' and 'printer').
 
 If you connect the mouse or tablet to one of the ports, Bochs forwards the
 mouse movement data to the USB device instead of the selected mouse type.
 When connecting the keypad to one of the ports, Bochs forwards the input of
-the numeric keypad to the USB device instead of the PS/2 keyboard.
+the numeric keypad to the USB device instead of the PS/2 keyboard. If the
+keyboard is selected, all key events are sent to the USB device.
 
 To connect a 'flat' mode image as a USB hardisk you can use the 'disk' device
 with the path to the image separated with a colon. To use other disk image modes

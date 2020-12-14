@@ -6,7 +6,7 @@
 //
 // Copyright (c) 2005       Fabrice Bellard
 // Copyright (C) 2009-2016  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//               2009-2017  The Bochs Project
+//               2009-2020  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -160,6 +160,7 @@ enum usbdev_type {
   USB_DEV_TYPE_MOUSE,
   USB_DEV_TYPE_TABLET,
   USB_DEV_TYPE_KEYPAD,
+  USB_DEV_TYPE_KEYBOARD,
   USB_DEV_TYPE_DISK,
   USB_DEV_TYPE_CDROM,
   USB_DEV_TYPE_HUB,

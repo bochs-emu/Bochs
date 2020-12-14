@@ -4,6 +4,7 @@
 //
 // USB HID emulation support (mouse and tablet) ported from QEMU
 // USB keypad emulation based on code by Benjamin D Lunt (fys [at] fysnet [dot] net)
+// USB keyboard emulation is an extension to the keypad based on the specs
 //
 // Copyright (c) 2005       Fabrice Bellard
 // Copyright (c) 2007       OpenMoko, Inc.  (andrew@openedhand.com)
@@ -66,7 +67,7 @@ private:
   static void mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy);
   void mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy);
   int mouse_poll(Bit8u *buf, int len, bx_bool force);
-  int keypad_poll(Bit8u *buf, int len, bx_bool force);
+  int keyboard_poll(Bit8u *buf, int len, bx_bool force);
 };
 
 #endif

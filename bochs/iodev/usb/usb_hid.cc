@@ -4,6 +4,7 @@
 //
 // USB HID emulation support (mouse and tablet) ported from QEMU
 // USB keypad emulation based on code by Benjamin D Lunt (fys [at] fysnet [dot] net)
+// USB keyboard emulation is an extension to the keypad based on specs
 //
 // Copyright (c) 2005       Fabrice Bellard
 // Copyright (c) 2007       OpenMoko, Inc.  (andrew@openedhand.com)
@@ -96,6 +97,11 @@ protected:
 struct KEYPAD {
   Bit32u bxkey;
   Bit8u  keypad_packet[8];
+};
+
+struct USBKBD {
+  Bit8u code;
+  bx_bool modkey;
 };
 
 static const Bit8u bx_mouse_dev_descriptor[] = {
@@ -646,6 +652,128 @@ struct KEYPAD keypad_lookup[KEYPAD_LEN] = {
   { BX_KEY_KP_ENTER,     { 0x00, 0x00, 0x58, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // Enter
 };
 
+struct USBKBD usbkbd_conv[BX_KEY_NBKEYS] = {
+  0x01, 1,
+  0x02, 1,
+  0x3a, 0,
+  0x3b, 0,
+  0x3c, 0,
+  0x3d, 0,
+  0x3e, 0,
+  0x3f, 0,
+  0x40, 0,
+  0x41, 0,
+  0x42, 0,
+  0x43, 0,
+  0x44, 0,
+  0x45, 0,
+  0x10, 1,
+  0x20, 1,
+  0x39, 0,
+  0x53, 0,
+  0x04, 1,
+  0x40, 1,
+  0x04, 0,
+  0x05, 0,
+  0x06, 0,
+  0x07, 0,
+  0x08, 0,
+  0x09, 0,
+  0x0a, 0,
+  0x0b, 0,
+  0x0c, 0,
+  0x0d, 0,
+  0x0e, 0,
+  0x0f, 0,
+  0x10, 0,
+  0x11, 0,
+  0x12, 0,
+  0x13, 0,
+  0x14, 0,
+  0x15, 0,
+  0x16, 0,
+  0x17, 0,
+  0x18, 0,
+  0x19, 0,
+  0x1a, 0,
+  0x1b, 0,
+  0x1c, 0,
+  0x1d, 0,
+  0x27, 0,
+  0x1e, 0,
+  0x1f, 0,
+  0x20, 0,
+  0x21, 0,
+  0x22, 0,
+  0x23, 0,
+  0x24, 0,
+  0x25, 0,
+  0x26, 0,
+  0x29, 0,
+  0x2c, 0,
+  0x34, 0,
+  0x36, 0,
+  0x37, 0,
+  0x38, 0,
+  0x33, 0,
+  0x2e, 0,
+  0x2f, 0,
+  0x31, 0,
+  0x30, 0,
+  0x2d, 0,
+  0x35, 0,
+  0x2a, 0,
+  0x28, 0,
+  0x2b, 0,
+  0x64, 0,
+  0x46, 0,
+  0x47, 0,
+  0x48, 0,
+  0x49, 0,
+  0x4c, 0,
+  0x4a, 0,
+  0x4d, 0,
+  0x4b, 0,
+  0x4e, 0,
+  0x57, 0,
+  0x56, 0,
+  0x59, 0,
+  0x5a, 0,
+  0x5b, 0,
+  0x5c, 0,
+  0x5e, 0,
+  0x5f, 0,
+  0x60, 0,
+  0x61, 0,
+  0x62, 0,
+  0x63, 0,
+  0x5d, 0,
+  0x52, 0,
+  0x51, 0,
+  0x50, 0,
+  0x4f, 0,
+  0x58, 0,
+  0x55, 0,
+  0x54, 0,
+  0xe3, 0,
+  0xe7, 0,
+  0x00, 0, /* BX_KEY_MENU */
+  0x00, 0, /* BX_KEY_ALT_SYSREQ */
+  0x00, 0, /* BX_KEY_CTRL_BREAK */
+  0x00, 0, /* BX_KEY_INT_BACK */
+  0x00, 0, /* BX_KEY_INT_FORWARD */
+  0x00, 0, /* BX_KEY_INT_STOP */
+  0x00, 0, /* BX_KEY_INT_MAIL */
+  0x00, 0, /* BX_KEY_INT_SEARCH */
+  0x00, 0, /* BX_KEY_INT_FAV */
+  0x00, 0, /* BX_KEY_INT_HOME */
+  0x00, 0, /* BX_KEY_MYCOMP */
+  0x00, 0, /* BX_KEY_CALC */
+  0x00, 0, /* BX_KEY_SLEEP */
+  0x66, 0,
+  0x00, 0  /* BX_KEY_WAKE */
+};
+
 usb_hid_device_c::usb_hid_device_c(usbdev_type type)
 {
   d.type = type;
@@ -681,8 +809,12 @@ usb_hid_device_c::usb_hid_device_c(usbdev_type type)
     }
     DEV_register_removable_mouse((void*)this, mouse_enq_static, mouse_enabled_changed);
     bx_gui->set_mouse_mode_absxy(1);
-  } else if (d.type == USB_DEV_TYPE_KEYPAD) {
-    strcpy(d.devname, "USB/PS2 Keypad");
+  } else if ((d.type == USB_DEV_TYPE_KEYPAD) || (d.type == USB_DEV_TYPE_KEYBOARD)) {
+    if (d.type == USB_DEV_TYPE_KEYPAD) {
+      strcpy(d.devname, "USB/PS2 Keypad");
+    } else {
+      strcpy(d.devname, "USB/PS2 Keyboard");
+    }
     if (d.speed == USB_SPEED_HIGH) {
       d.dev_descriptor = bx_keypad_dev_descriptor2;
       d.config_descriptor = bx_keypad_config_descriptor2;
@@ -702,7 +834,7 @@ usb_hid_device_c::usb_hid_device_c(usbdev_type type)
   d.serial_num = "1";
   d.connected = 1;
   memset((void*)&s, 0, sizeof(s));
-  if (d.type == USB_DEV_TYPE_KEYPAD) {
+  if ((d.type == USB_DEV_TYPE_KEYPAD) || (d.type == USB_DEV_TYPE_KEYBOARD)) {
     statusbar_id = bx_gui->register_statusitem("NUM");
     s.saved_key = BX_KEY_UNHANDLED;
   }
@@ -717,7 +849,8 @@ usb_hid_device_c::~usb_hid_device_c(void)
       (d.type == USB_DEV_TYPE_TABLET)) {
     bx_gui->set_mouse_mode_absxy(0);
     DEV_unregister_removable_mouse((void*)this);
-  } else if (d.type == USB_DEV_TYPE_KEYPAD) {
+  } else if ((d.type == USB_DEV_TYPE_KEYPAD) ||
+             (d.type == USB_DEV_TYPE_KEYBOARD)) {
     bx_gui->unregister_statusitem(statusbar_id);
     DEV_unregister_removable_keyboard((void*)this);
 //    DEV_unregister_removable_mouse((void*)this);
@@ -737,7 +870,7 @@ void usb_hid_device_c::register_state_specific(bx_list_c *parent)
   BXRS_HEX_PARAM_FIELD(list, idle, s.idle);
   BXRS_HEX_PARAM_FIELD(list, indicators, s.indicators);
   BXRS_PARAM_BOOL(list, has_events, s.has_events);
-  if (d.type == USB_DEV_TYPE_KEYPAD) {
+  if ((d.type == USB_DEV_TYPE_KEYPAD) || (d.type == USB_DEV_TYPE_KEYBOARD)) {
     BXRS_DEC_PARAM_FIELD(list, saved_key, s.saved_key);
     new bx_shadow_data_c(list, "key_pad_packet", s.key_pad_packet, 8, 1);
   }
@@ -752,6 +885,7 @@ void usb_hid_device_c::handle_reset()
 int usb_hid_device_c::handle_control(int request, int value, int index, int length, Bit8u *data)
 {
   int ret;
+  Bit8u modchange;
 
   ret = handle_control_common(request, value, index, length, data);
   if (ret >= 0) {
@@ -798,7 +932,8 @@ int usb_hid_device_c::handle_control(int request, int value, int index, int leng
             memcpy(data, bx_tablet_hid_descriptor,
                    sizeof(bx_tablet_hid_descriptor));
             ret = sizeof(bx_tablet_hid_descriptor);
-          } else if (d.type == USB_DEV_TYPE_KEYPAD) {
+          } else if ((d.type == USB_DEV_TYPE_KEYPAD) ||
+                     (d.type == USB_DEV_TYPE_KEYBOARD)) {
             memcpy(data, bx_keypad_hid_descriptor,
                    sizeof(bx_keypad_hid_descriptor));
             ret = sizeof(bx_keypad_hid_descriptor);
@@ -815,7 +950,8 @@ int usb_hid_device_c::handle_control(int request, int value, int index, int leng
             memcpy(data, bx_tablet_hid_report_descriptor,
                    sizeof(bx_tablet_hid_report_descriptor));
             ret = sizeof(bx_tablet_hid_report_descriptor);
-          } else if (d.type == USB_DEV_TYPE_KEYPAD) {
+          } else if ((d.type == USB_DEV_TYPE_KEYPAD) ||
+                     (d.type == USB_DEV_TYPE_KEYBOARD)) {
             if (index == 0) {
               memcpy(data, bx_keypad_hid_report_descriptor1,
                      sizeof(bx_keypad_hid_report_descriptor1));
@@ -846,9 +982,10 @@ int usb_hid_device_c::handle_control(int request, int value, int index, int leng
       if ((d.type == USB_DEV_TYPE_MOUSE) ||
           (d.type == USB_DEV_TYPE_TABLET)) {
         ret = mouse_poll(data, length, 1);
-      } else if (d.type == USB_DEV_TYPE_KEYPAD) {
+      } else if ((d.type == USB_DEV_TYPE_KEYPAD) ||
+                 (d.type == USB_DEV_TYPE_KEYBOARD)) {
         if (index == 0) {
-          ret = keypad_poll(data, length, 1);
+          ret = keyboard_poll(data, length, 1);
         } else {
           ret = mouse_poll(data, length, 1);
         }
@@ -857,12 +994,20 @@ int usb_hid_device_c::handle_control(int request, int value, int index, int leng
       }
       break;
     case SET_REPORT:
-      if ((d.type == USB_DEV_TYPE_KEYPAD) && (value = 0x200)) {
-        if (data[0] != s.indicators) {
-          if (statusbar_id >= 0) {
-            bx_gui->statusbar_setitem(statusbar_id, data[0] & 0x01);
-          } else {
-            BX_INFO(("keypad NUMLOCK %s", (data[0] & 0x01) ? "on" : "off"));
+      if (((d.type == USB_DEV_TYPE_KEYPAD) ||
+           (d.type == USB_DEV_TYPE_KEYBOARD)) && (value = 0x200)) {
+        modchange = (data[0] ^ s.indicators);
+        if (modchange != 0) {
+          if (modchange & 0x01) {
+            if (statusbar_id >= 0) {
+              bx_gui->statusbar_setitem(statusbar_id, data[0] & 0x01);
+            } else {
+              BX_INFO(("NUMLOCK %s", (data[0] & 0x01) ? "on" : "off"));
+            }
+          } else if (modchange & 0x02) {
+            BX_INFO(("CAPSLOCK %s", (data[0] & 0x02) ? "on" : "off"));
+          } else if (modchange & 0x04) {
+            BX_INFO(("SCRLLOCK %s", (data[0] & 0x04) ? "on" : "off"));
           }
           s.indicators = data[0];
         }
@@ -902,13 +1047,15 @@ int usb_hid_device_c::handle_data(USBPacket *p)
         if ((d.type == USB_DEV_TYPE_MOUSE) ||
             (d.type == USB_DEV_TYPE_TABLET)) {
           ret = mouse_poll(p->data, p->len, 0);
-        } else if (d.type == USB_DEV_TYPE_KEYPAD) {
-          ret = keypad_poll(p->data, p->len, 0);
+        } else if ((d.type == USB_DEV_TYPE_KEYPAD) ||
+                   (d.type == USB_DEV_TYPE_KEYBOARD)) {
+          ret = keyboard_poll(p->data, p->len, 0);
         } else {
           goto fail;
         }
       } else if (p->devep == 2) {
-        if (d.type == USB_DEV_TYPE_KEYPAD) {
+        if ((d.type == USB_DEV_TYPE_KEYPAD) ||
+            (d.type == USB_DEV_TYPE_KEYBOARD)) {
           ret = mouse_poll(p->data, p->len, 0);
         } else {
           goto fail;
@@ -933,7 +1080,8 @@ int usb_hid_device_c::mouse_poll(Bit8u *buf, int len, bx_bool force)
   int l = USB_RET_NAK;
 
   if ((d.type == USB_DEV_TYPE_MOUSE) ||
-      (d.type == USB_DEV_TYPE_KEYPAD)) {
+      (d.type == USB_DEV_TYPE_KEYPAD) ||
+      (d.type == USB_DEV_TYPE_KEYBOARD)) {
     if (!s.has_events) {
       // if there's no new movement, handle delayed one
       mouse_enq(0, 0, s.mouse_z, s.b_state, 0);
@@ -1045,11 +1193,12 @@ void usb_hid_device_c::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned
   s.b_state = (Bit8u) button_state;
 }
 
-int usb_hid_device_c::keypad_poll(Bit8u *buf, int len, bx_bool force)
+int usb_hid_device_c::keyboard_poll(Bit8u *buf, int len, bx_bool force)
 {
   int l = USB_RET_NAK;
 
-  if (d.type == USB_DEV_TYPE_KEYPAD) {
+  if ((d.type == USB_DEV_TYPE_KEYPAD) ||
+      (d.type == USB_DEV_TYPE_KEYBOARD)) {
     if (s.has_events || (s.idle != 0) || force) {
       memcpy(buf, s.key_pad_packet, len);
       l = 8;
@@ -1066,36 +1215,64 @@ bx_bool usb_hid_device_c::gen_scancode_static(void *dev, Bit32u key)
 
 bx_bool usb_hid_device_c::gen_scancode(Bit32u key)
 {
-  // if it is the break code of the saved key, then clear our packet key.
-  if (key & BX_KEY_RELEASED) {
-    key &= ~BX_KEY_RELEASED;
-    if (key == s.saved_key) {
-      s.saved_key = BX_KEY_UNHANDLED;
-      memset(s.key_pad_packet, 0, 8);
+  bx_bool released = (key & BX_KEY_RELEASED) != 0;
+  Bit8u code;
+
+  key &= ~BX_KEY_RELEASED;
+  if (d.type == USB_DEV_TYPE_KEYBOARD) {
+    code = usbkbd_conv[key].code;
+    if (usbkbd_conv[key].modkey) {
+      if (released) {
+        s.key_pad_packet[0] &= ~code;
+      } else {
+        s.key_pad_packet[0] |= code;
+      }
+    } else {
+      // FIXME
+      if (released) {
+        if (code == s.key_pad_packet[2]) {
+          s.key_pad_packet[2] = 0;
+          s.has_events = 1;
+        }
+      } else {
+        if (code != 0) {
+          s.key_pad_packet[2] = code;
+          s.has_events = 1;
+        }
+      }
+    }
+    return 1;
+  } else {
+    // if it is the break code of the saved key, then clear our packet key.
+    if (released) {
+      if (key == s.saved_key) {
+        s.saved_key = BX_KEY_UNHANDLED;
+        memset(s.key_pad_packet, 0, 8);
+        s.has_events = 1;
+        BX_DEBUG(("Routing Bochs key release (%d) to USB keypad", key));
+        return 1; // tell the keyboard handler that we used it, and to return with out processing key
+      }
+      return 0;
+    }
+
+    bx_bool fnd = 0;
+    for (int m = 0; m < KEYPAD_LEN; m++) {
+      if (key == keypad_lookup[m].bxkey) {
+        memcpy(s.key_pad_packet, keypad_lookup[m].keypad_packet, 8);
+        fnd = 1;
+        break;
+      }
+    }
+
+    if (fnd) {
+      s.saved_key = key;
       s.has_events = 1;
-      BX_DEBUG(("Routing Bochs key release (%d) to USB keypad", key));
-      return 1; // tell the keyboard handler that we used it, and to return with out processing key
+      BX_DEBUG(("Routing Bochs key press (%d) to USB keypad", key));
     }
-    return 0;
-  }
 
-  bx_bool fnd = 0;
-  for (int m = 0; m < KEYPAD_LEN; m++) {
-    if (key == keypad_lookup[m].bxkey) {
-      memcpy(s.key_pad_packet, keypad_lookup[m].keypad_packet, 8);
-      fnd = 1;
-      break;
-    }
+    // tell the keyboard handler whether we used it or not.  (0 = no, 1 = yes and keyboard.cc ignores keystoke)
+    return fnd;
   }
-
-  if (fnd) {
-    s.saved_key = key;
-    s.has_events = 1;
-    BX_DEBUG(("Routing Bochs key press (%d) to USB keypad", key));
-  }
-
-  // tell the keyboard handler whether we used it or not.  (0 = no, 1 = yes and keyboard.cc ignores keystoke)
-  return fnd;
 }
 
 #endif // BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB
