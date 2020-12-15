@@ -1736,23 +1736,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAW_PqQq(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
-  if(!MMXUQ(op2)) {
-    BX_NEXT_INSTR(i);
-  }
+  if(MMXUQ(op2)) {
+    if(MMXUQ(op2) > 15) {
+      MMXUW0(op1) = (MMXSW0(op1) < 0) ? 0xffff : 0;
+      MMXUW1(op1) = (MMXSW1(op1) < 0) ? 0xffff : 0;
+      MMXUW2(op1) = (MMXSW2(op1) < 0) ? 0xffff : 0;
+      MMXUW3(op1) = (MMXSW3(op1) < 0) ? 0xffff : 0;
+    }
+    else {
+      Bit8u shift = MMXUB0(op2);
 
-  if(MMXUQ(op2) > 15) {
-    MMXUW0(op1) = (MMXSW0(op1) < 0) ? 0xffff : 0;
-    MMXUW1(op1) = (MMXSW1(op1) < 0) ? 0xffff : 0;
-    MMXUW2(op1) = (MMXSW2(op1) < 0) ? 0xffff : 0;
-    MMXUW3(op1) = (MMXSW3(op1) < 0) ? 0xffff : 0;
-  }
-  else {
-    Bit8u shift = MMXUB0(op2);
-
-    MMXUW0(op1) = (Bit16u)(MMXSW0(op1) >> shift);
-    MMXUW1(op1) = (Bit16u)(MMXSW1(op1) >> shift);
-    MMXUW2(op1) = (Bit16u)(MMXSW2(op1) >> shift);
-    MMXUW3(op1) = (Bit16u)(MMXSW3(op1) >> shift);
+      MMXUW0(op1) = (Bit16u)(MMXSW0(op1) >> shift);
+      MMXUW1(op1) = (Bit16u)(MMXSW1(op1) >> shift);
+      MMXUW2(op1) = (Bit16u)(MMXSW2(op1) >> shift);
+      MMXUW3(op1) = (Bit16u)(MMXSW3(op1) >> shift);
+    }
   }
 
   BX_WRITE_MMX_REG(i->dst(), op1);
@@ -1781,21 +1779,19 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAD_PqQq(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
-  if(!MMXUQ(op2)) {
-    BX_NEXT_INSTR(i);
-  }
+  if(MMXUQ(op2)) {
+    if(MMXUQ(op2) > 31) {
+      MMXUD0(op1) = (MMXSD0(op1) < 0) ? 0xffffffff : 0;
+      MMXUD1(op1) = (MMXSD1(op1) < 0) ? 0xffffffff : 0;
+    }
+    else {
+      Bit8u shift = MMXUB0(op2);
 
-  if(MMXUQ(op2) > 31) {
-    MMXUD0(op1) = (MMXSD0(op1) < 0) ? 0xffffffff : 0;
-    MMXUD1(op1) = (MMXSD1(op1) < 0) ? 0xffffffff : 0;
+      MMXUD0(op1) = (Bit32u)(MMXSD0(op1) >> shift);
+      MMXUD1(op1) = (Bit32u)(MMXSD1(op1) >> shift);
+    }
   }
-  else {
-    Bit8u shift = MMXUB0(op2);
-
-    MMXUD0(op1) = (Bit32u)(MMXSD0(op1) >> shift);
-    MMXUD1(op1) = (Bit32u)(MMXSD1(op1) >> shift);
-  }
-
+  
   BX_WRITE_MMX_REG(i->dst(), op1);
 #endif
 
