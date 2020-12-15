@@ -34,6 +34,11 @@
    should be 16 IRQ's total */
 #define BX_MAX_IRQS 16
 
+/* keyboard indicators */
+#define BX_KBD_LED_NUM  0
+#define BX_KBD_LED_CAPS 1
+#define BX_KBD_LED_SCRL 2
+
 /* size of internal buffer for mouse devices */
 #define BX_MOUSE_BUFF_SIZE 48
 
@@ -417,6 +422,7 @@ public:
   void gen_scancode(Bit32u key);
   void release_keys(void);
   void paste_bytes(Bit8u *data, Bit32s length);
+  void kbd_set_indicator(Bit8u devid, Bit8u ledid, bx_bool state);
   void mouse_enabled_changed(bx_bool enabled);
   void mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy);
 
@@ -554,6 +560,7 @@ private:
   } pci;
 
   int timer_handle;
+  int statusbar_id[3];
 
   bx_bool network_enabled;
   bx_bool sound_enabled;

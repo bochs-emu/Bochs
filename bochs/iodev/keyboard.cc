@@ -195,11 +195,6 @@ void bx_keyb_c::init(void)
   // mouse port installed on system board
   DEV_cmos_set_reg(0x14, DEV_cmos_get_reg(0x14) | 0x04);
 
-  // add keyboard LEDs to the statusbar
-  BX_KEY_THIS statusbar_id[0] = bx_gui->register_statusitem("NUM");
-  BX_KEY_THIS statusbar_id[1] = bx_gui->register_statusitem("CAPS");
-  BX_KEY_THIS statusbar_id[2] = bx_gui->register_statusitem("SCRL");
-
   DEV_register_default_keyboard(this, gen_scancode_static, paste_bytes_static);
   if ((BX_KEY_THIS s.mouse.type == BX_MOUSE_TYPE_PS2) ||
       (BX_KEY_THIS s.mouse.type == BX_MOUSE_TYPE_IMPS2)) {
@@ -284,9 +279,9 @@ void bx_keyb_c::after_restore_state(void)
 {
   Bit8u value = BX_KEY_THIS s.kbd_internal_buffer.led_status;
   if (value != 0) {
-    bx_gui->statusbar_setitem(BX_KEY_THIS statusbar_id[0], value & 0x02);
-    bx_gui->statusbar_setitem(BX_KEY_THIS statusbar_id[1], value & 0x04);
-    bx_gui->statusbar_setitem(BX_KEY_THIS statusbar_id[2], value & 0x01);
+    DEV_kbd_set_indicator(0, BX_KBD_LED_NUM, value & 0x02);
+    DEV_kbd_set_indicator(0, BX_KBD_LED_CAPS, value & 0x04);
+    DEV_kbd_set_indicator(0, BX_KBD_LED_SCRL, value & 0x01);
   }
 }
 
@@ -1010,9 +1005,9 @@ void bx_keyb_c::kbd_ctrl_to_kbd(Bit8u value)
     BX_KEY_THIS s.kbd_internal_buffer.led_status = value;
     BX_DEBUG(("LED status set to %02x",
       (unsigned) BX_KEY_THIS s.kbd_internal_buffer.led_status));
-    bx_gui->statusbar_setitem(BX_KEY_THIS statusbar_id[0], value & 0x02);
-    bx_gui->statusbar_setitem(BX_KEY_THIS statusbar_id[1], value & 0x04);
-    bx_gui->statusbar_setitem(BX_KEY_THIS statusbar_id[2], value & 0x01);
+    DEV_kbd_set_indicator(0, BX_KBD_LED_NUM, value & 0x02);
+    DEV_kbd_set_indicator(0, BX_KBD_LED_CAPS, value & 0x04);
+    DEV_kbd_set_indicator(0, BX_KBD_LED_SCRL, value & 0x01);
     kbd_enQ(0xFA); // send ACK %%%
     return;
   }

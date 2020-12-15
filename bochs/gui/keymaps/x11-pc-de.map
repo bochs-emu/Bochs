@@ -183,6 +183,7 @@ BX_KEY_KP_5                                   none       XK_KP_Begin
 BX_KEY_KP_ADD                                 none       XK_KP_Add
 BX_KEY_KP_DELETE                              none       XK_KP_Decimal
 BX_KEY_KP_DELETE                              none       XK_KP_Delete
+BX_KEY_KP_DELETE                              none       XK_KP_Separator
 BX_KEY_KP_DIVIDE                              none       XK_KP_Divide
 BX_KEY_KP_DOWN                                none       XK_KP_2
 BX_KEY_KP_DOWN                                none       XK_KP_Down

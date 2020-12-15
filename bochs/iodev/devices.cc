@@ -1136,6 +1136,10 @@ void bx_devices_c::register_default_keyboard(void *dev, bx_kbd_gen_scancode_t kb
     bx_keyboard[0].dev = dev;
     bx_keyboard[0].gen_scancode = kbd_gen_scancode;
     bx_keyboard[0].paste_bytes = kbd_paste_bytes;
+    // add keyboard LEDs to the statusbar
+    statusbar_id[BX_KBD_LED_NUM] = bx_gui->register_statusitem("NUM");
+    statusbar_id[BX_KBD_LED_CAPS] = bx_gui->register_statusitem("CAPS");
+    statusbar_id[BX_KBD_LED_SCRL] = bx_gui->register_statusitem("SCRL");
   }
 }
 
@@ -1220,6 +1224,11 @@ void bx_devices_c::paste_bytes(Bit8u *data, Bit32s length)
   if ((bx_keyboard[0].dev != NULL) && (bx_keyboard[0].paste_bytes != NULL)) {
     bx_keyboard[0].paste_bytes(bx_keyboard[0].dev, data, length);
   }
+}
+
+void bx_devices_c::kbd_set_indicator(Bit8u devid, Bit8u ledid, bx_bool state)
+{
+  bx_gui->statusbar_setitem(statusbar_id[ledid], state, devid);
 }
 
 // common mouse device handlers

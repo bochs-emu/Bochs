@@ -70,12 +70,14 @@ IMPLEMENT_GUI_PLUGIN_CODE(sdl)
 
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
 const Uint32 status_led_green = 0x00ff0000;
-const Uint32 status_gray_text = 0x80808000;
 const Uint32 status_led_red = 0x0040ff00;
+const Uint32 status_led_yellow = 0x00ffff00;
+const Uint32 status_gray_text = 0x80808000;
 #else
 const Uint32 status_led_green = 0x0000ff00;
-const Uint32 status_gray_text = 0x00808080;
 const Uint32 status_led_red = 0x00ff4000;
+const Uint32 status_led_yellow = 0x00ffff00;
+const Uint32 status_gray_text = 0x00808080;
 #endif
 
 static Bit32u convertStringToSDLKey(const char *string);
@@ -119,7 +121,7 @@ static bx_bool sdl_show_info_msg = 0;
 #endif
 
 
-static void sdl_set_status_text(int element, const char *text, bx_bool active, bx_bool w = 0)
+static void sdl_set_status_text(int element, const char *text, bx_bool active, bx_bool color = 0)
 {
   Uint32 *buf, *buf_row;
   Uint32 disp, fgcolor, bgcolor;
@@ -136,8 +138,8 @@ static void sdl_set_status_text(int element, const char *text, bx_bool active, b
   buf = (Uint32 *)sdl_screen->pixels + (res_y + headerbar_height + 1) * disp + xleft;
   rowsleft = statusbar_height - 2;
   fgcolor = active?headerbar_fg:status_gray_text;
-  if (element > 0) {
-    bgcolor = active?(w?status_led_red:status_led_green):headerbar_bg;
+  if ((element > 0) && active) {
+    bgcolor = (color==0)?status_led_green:(color==1)?status_led_red:status_led_yellow;
   } else {
     bgcolor = headerbar_bg;
   }
@@ -1461,7 +1463,11 @@ void bx_sdl_gui_c::set_display_mode(disp_mode_t newmode)
 
 void bx_sdl_gui_c::statusbar_setitem_specific(int element, bx_bool active, bx_bool w)
 {
-  sdl_set_status_text(element+1, statusitem[element].text, active, w);
+  Bit8u color = 0;
+  if (w) {
+    color = (statusitem[element].auto_off) ? 1 : 2;
+  }
+  sdl_set_status_text(element+1, statusitem[element].text, active, color);
 }
 
 

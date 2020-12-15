@@ -52,14 +52,11 @@ private:
     Bit16s mouse_y;
     Bit8s mouse_z;
     Bit8u b_state;
-    Bit32u saved_key;
     Bit8u key_pad_packet[8];
     Bit8u idle;
     Bit8u indicators;
     bx_bool has_events;
   } s;
-
-  int statusbar_id;
 
   static bx_bool gen_scancode_static(void *dev, Bit32u key);
   bx_bool gen_scancode(Bit32u key);

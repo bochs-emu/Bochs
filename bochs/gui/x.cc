@@ -162,7 +162,8 @@ static unsigned bx_statusitem_pos[12] = {
   0, 200, 240, 280, 320, 360, 400, 440, 480, 520, 560, 600
 };
 static bx_bool bx_statusitem_active[12];
-static long bx_status_led_green, bx_status_led_red, bx_status_graytext;
+static long bx_status_led_green, bx_status_led_red, bx_status_led_yellow;
+static long bx_status_graytext;
 static char bx_status_info_text[34];
 #if BX_SHOW_IPS
 static bx_bool x11_ips_update = 0, x11_hide_ips = 0;
@@ -382,7 +383,8 @@ static int X11_KeyRepeat(Display *display, XEvent *event)
   return repeated;
 }
 
-void x11_set_status_text(int element, const char *text, bx_bool active, bx_bool w=0)
+void x11_set_status_text(int element, const char *text, bx_bool active,
+                         Bit8u color=0)
 {
   int xleft, xsize, sb_ypos;
 
@@ -401,7 +403,7 @@ void x11_set_status_text(int element, const char *text, bx_bool active, bx_bool 
     }
 #if BX_SHOW_IPS
     if (!active) {
-      if (!w) { // volatile info text for 3 seconds
+      if (color == 0) { // volatile info text for 3 seconds
         x11_info_msg_counter = 3;
       } else {
         x11_show_info_msg = (strlen(text) > 0);
@@ -411,8 +413,10 @@ void x11_set_status_text(int element, const char *text, bx_bool active, bx_bool 
   } else if (element <= BX_MAX_STATUSITEMS) {
     bx_statusitem_active[element] = active;
     if (active) {
-      if (w)
+      if (color == 1)
         XSetForeground(bx_x_display, gc_headerbar, bx_status_led_red);
+      else if (color == 2)
+        XSetForeground(bx_x_display, gc_headerbar, bx_status_led_yellow);
       else
         XSetForeground(bx_x_display, gc_headerbar, bx_status_led_green);
       XFillRectangle(bx_x_display, win, gc_headerbar, xleft, sb_ypos+2, xsize-1, bx_statusbar_y-2);
@@ -868,16 +872,20 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
     case 16:
       bx_status_led_green = 0x07e0;
       bx_status_led_red = 0xf900;
+      bx_status_led_yellow = 0xffe0;
       bx_status_graytext = 0x8410;
       break;
     case 24:
     case 32:
       bx_status_led_green = 0x00ff00;
       bx_status_led_red = 0xff4000;
+      bx_status_led_yellow = 0xffff00;
       bx_status_graytext = 0x808080;
       break;
     default:
       bx_status_led_green = 0;
+      bx_status_led_red = 0;
+      bx_status_led_yellow = 0;
       bx_status_graytext = 0;
   }
   sprintf(bx_status_info_text, "%s enables mouse", get_toggle_info());
@@ -1737,7 +1745,11 @@ void bx_x_gui_c::sim_is_idle()
 
 void bx_x_gui_c::statusbar_setitem_specific(int element, bx_bool active, bx_bool w)
 {
-  x11_set_status_text(element+1, statusitem[element].text, active, w);
+  Bit8u color = 0;
+  if (w) {
+    color = (statusitem[element].auto_off) ? 1 : 2;
+  }
+  x11_set_status_text(element+1, statusitem[element].text, active, color);
 }
 
 // X11 gui: private methods

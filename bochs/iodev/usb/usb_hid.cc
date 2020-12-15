@@ -93,12 +93,6 @@ protected:
 #define SET_IDLE     0x210a
 #define SET_PROTOCOL 0x210b
 
-#define KEYPAD_LEN   17
-struct KEYPAD {
-  Bit32u bxkey;
-  Bit8u  keypad_packet[8];
-};
-
 struct USBKBD {
   Bit8u code;
   bx_bool modkey;
@@ -631,31 +625,10 @@ static const Bit8u bx_keypad_hid_report_descriptor2[] = {
   0x01, 0xC0
 };
 
-// this interface has a key conversion table of len = 17
-struct KEYPAD keypad_lookup[KEYPAD_LEN] = {
-  { BX_KEY_NUM_LOCK,     { 0x00, 0x00, 0x53, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 7
-  { BX_KEY_KP_HOME,      { 0x00, 0x00, 0x5F, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 7
-  { BX_KEY_KP_LEFT,      { 0x00, 0x00, 0x5C, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 4
-  { BX_KEY_KP_END,       { 0x00, 0x00, 0x59, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 1
-  { BX_KEY_KP_INSERT,    { 0x00, 0x00, 0x62, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 0
-  { BX_KEY_KP_DIVIDE,    { 0x00, 0x00, 0x54, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // /
-  { BX_KEY_KP_UP,        { 0x00, 0x00, 0x60, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 8
-  { BX_KEY_KP_5,         { 0x00, 0x00, 0x5D, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 5
-  { BX_KEY_KP_DOWN,      { 0x00, 0x00, 0x5A, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 2
-  { BX_KEY_KP_MULTIPLY,  { 0x00, 0x00, 0x55, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // *
-  { BX_KEY_KP_PAGE_UP,   { 0x00, 0x00, 0x61, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 9
-  { BX_KEY_KP_RIGHT,     { 0x00, 0x00, 0x5E, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 6
-  { BX_KEY_KP_PAGE_DOWN, { 0x00, 0x00, 0x5B, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 3
-  { BX_KEY_KP_SUBTRACT,  { 0x00, 0x00, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // -
-  { BX_KEY_KP_ADD,       { 0x00, 0x00, 0x57, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // +
-  { BX_KEY_KP_DELETE,    { 0x00, 0x00, 0x63, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // .
-  { BX_KEY_KP_ENTER,     { 0x00, 0x00, 0x58, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // Enter
-};
-
 struct USBKBD usbkbd_conv[BX_KEY_NBKEYS] = {
   0x01, 1,
   0x02, 1,
-  0x3a, 0,
+  0x3a, 0, /* F1 ... F12 */
   0x3b, 0,
   0x3c, 0,
   0x3d, 0,
@@ -673,7 +646,7 @@ struct USBKBD usbkbd_conv[BX_KEY_NBKEYS] = {
   0x53, 0,
   0x04, 1,
   0x40, 1,
-  0x04, 0,
+  0x04, 0, /* a ... z */
   0x05, 0,
   0x06, 0,
   0x07, 0,
@@ -699,7 +672,7 @@ struct USBKBD usbkbd_conv[BX_KEY_NBKEYS] = {
   0x1b, 0,
   0x1c, 0,
   0x1d, 0,
-  0x27, 0,
+  0x27, 0, /* 0 ... 9 */
   0x1e, 0,
   0x1f, 0,
   0x20, 0,
@@ -834,10 +807,6 @@ usb_hid_device_c::usb_hid_device_c(usbdev_type type)
   d.serial_num = "1";
   d.connected = 1;
   memset((void*)&s, 0, sizeof(s));
-  if ((d.type == USB_DEV_TYPE_KEYPAD) || (d.type == USB_DEV_TYPE_KEYBOARD)) {
-    statusbar_id = bx_gui->register_statusitem("NUM");
-    s.saved_key = BX_KEY_UNHANDLED;
-  }
 
   put("usb_hid", "USBHID");
 }
@@ -851,7 +820,6 @@ usb_hid_device_c::~usb_hid_device_c(void)
     DEV_unregister_removable_mouse((void*)this);
   } else if ((d.type == USB_DEV_TYPE_KEYPAD) ||
              (d.type == USB_DEV_TYPE_KEYBOARD)) {
-    bx_gui->unregister_statusitem(statusbar_id);
     DEV_unregister_removable_keyboard((void*)this);
 //    DEV_unregister_removable_mouse((void*)this);
   }
@@ -871,7 +839,6 @@ void usb_hid_device_c::register_state_specific(bx_list_c *parent)
   BXRS_HEX_PARAM_FIELD(list, indicators, s.indicators);
   BXRS_PARAM_BOOL(list, has_events, s.has_events);
   if ((d.type == USB_DEV_TYPE_KEYPAD) || (d.type == USB_DEV_TYPE_KEYBOARD)) {
-    BXRS_DEC_PARAM_FIELD(list, saved_key, s.saved_key);
     new bx_shadow_data_c(list, "key_pad_packet", s.key_pad_packet, 8, 1);
   }
 }
@@ -999,15 +966,16 @@ int usb_hid_device_c::handle_control(int request, int value, int index, int leng
         modchange = (data[0] ^ s.indicators);
         if (modchange != 0) {
           if (modchange & 0x01) {
-            if (statusbar_id >= 0) {
-              bx_gui->statusbar_setitem(statusbar_id, data[0] & 0x01);
-            } else {
-              BX_INFO(("NUMLOCK %s", (data[0] & 0x01) ? "on" : "off"));
+            DEV_kbd_set_indicator(1, BX_KBD_LED_NUM, data[0] & 0x01);
+            BX_DEBUG(("NUM_LOCK %s", (data[0] & 0x01) ? "on" : "off"));
+          } else if (d.type == USB_DEV_TYPE_KEYBOARD) {
+            if (modchange & 0x02) {
+              DEV_kbd_set_indicator(1, BX_KBD_LED_CAPS, data[0] & 0x02);
+              BX_DEBUG(("CAPS_LOCK %s", (data[0] & 0x02) ? "on" : "off"));
+            } else if (modchange & 0x04) {
+              DEV_kbd_set_indicator(1, BX_KBD_LED_SCRL, data[0] & 0x04);
+              BX_DEBUG(("SCRL_LOCK %s", (data[0] & 0x04) ? "on" : "off"));
             }
-          } else if (modchange & 0x02) {
-            BX_INFO(("CAPSLOCK %s", (data[0] & 0x02) ? "on" : "off"));
-          } else if (modchange & 0x04) {
-            BX_INFO(("SCRLLOCK %s", (data[0] & 0x04) ? "on" : "off"));
           }
           s.indicators = data[0];
         }
@@ -1219,60 +1187,33 @@ bx_bool usb_hid_device_c::gen_scancode(Bit32u key)
   Bit8u code;
 
   key &= ~BX_KEY_RELEASED;
-  if (d.type == USB_DEV_TYPE_KEYBOARD) {
-    code = usbkbd_conv[key].code;
-    if (usbkbd_conv[key].modkey) {
-      if (released) {
-        s.key_pad_packet[0] &= ~code;
-      } else {
-        s.key_pad_packet[0] |= code;
-      }
-    } else {
-      // FIXME
-      if (released) {
-        if (code == s.key_pad_packet[2]) {
-          s.key_pad_packet[2] = 0;
-          s.has_events = 1;
-        }
-      } else {
-        if (code != 0) {
-          s.key_pad_packet[2] = code;
-          s.has_events = 1;
-        }
-      }
-    }
-    return 1;
-  } else {
-    // if it is the break code of the saved key, then clear our packet key.
-    if (released) {
-      if (key == s.saved_key) {
-        s.saved_key = BX_KEY_UNHANDLED;
-        memset(s.key_pad_packet, 0, 8);
-        s.has_events = 1;
-        BX_DEBUG(("Routing Bochs key release (%d) to USB keypad", key));
-        return 1; // tell the keyboard handler that we used it, and to return with out processing key
-      }
+  code = usbkbd_conv[key].code;
+  if (d.type == USB_DEV_TYPE_KEYPAD) {
+    if ((code < 0x53) || (code > 0x63)) {
       return 0;
     }
-
-    bx_bool fnd = 0;
-    for (int m = 0; m < KEYPAD_LEN; m++) {
-      if (key == keypad_lookup[m].bxkey) {
-        memcpy(s.key_pad_packet, keypad_lookup[m].keypad_packet, 8);
-        fnd = 1;
-        break;
+  }
+  if (usbkbd_conv[key].modkey) {
+    if (released) {
+      s.key_pad_packet[0] &= ~code;
+    } else {
+      s.key_pad_packet[0] |= code;
+    }
+  } else {
+    // FIXME
+    if (released) {
+      if (code == s.key_pad_packet[2]) {
+        s.key_pad_packet[2] = 0;
+        s.has_events = 1;
+      }
+    } else {
+      if (code != 0) {
+        s.key_pad_packet[2] = code;
+        s.has_events = 1;
       }
     }
-
-    if (fnd) {
-      s.saved_key = key;
-      s.has_events = 1;
-      BX_DEBUG(("Routing Bochs key press (%d) to USB keypad", key));
-    }
-
-    // tell the keyboard handler whether we used it or not.  (0 = no, 1 = yes and keyboard.cc ignores keystoke)
-    return fnd;
   }
+  return 1;
 }
 
 #endif // BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB

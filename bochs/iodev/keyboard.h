@@ -230,7 +230,6 @@ private:
 
   static void   timer_handler(void *);
   int    timer_handle;
-  int    statusbar_id[3];
 };
 
 #endif  // #ifndef _PCKEY_H
