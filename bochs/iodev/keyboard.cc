@@ -981,7 +981,6 @@ void bx_keyb_c::mouse_enQ(Bit8u mouse_data)
 
 void bx_keyb_c::kbd_ctrl_to_kbd(Bit8u value)
 {
-
   BX_DEBUG(("controller passed byte %02xh to keyboard", value));
 
   if (BX_KEY_THIS s.kbd_internal_buffer.expecting_typematic) {
@@ -1001,13 +1000,19 @@ void bx_keyb_c::kbd_ctrl_to_kbd(Bit8u value)
   }
 
   if (BX_KEY_THIS s.kbd_internal_buffer.expecting_led_write) {
-    BX_KEY_THIS s.kbd_internal_buffer.expecting_led_write = 0;
+    Bit8u change = value ^ BX_KEY_THIS s.kbd_internal_buffer.led_status;
+    BX_DEBUG(("LED status set to 0x%02x", value));
+    if (change & 0x02) {
+      DEV_kbd_set_indicator(0, BX_KBD_LED_NUM, value & 0x02);
+    }
+    if (change & 0x04) {
+      DEV_kbd_set_indicator(0, BX_KBD_LED_CAPS, value & 0x04);
+    }
+    if (change & 0x01) {
+      DEV_kbd_set_indicator(0, BX_KBD_LED_SCRL, value & 0x01);
+    }
     BX_KEY_THIS s.kbd_internal_buffer.led_status = value;
-    BX_DEBUG(("LED status set to %02x",
-      (unsigned) BX_KEY_THIS s.kbd_internal_buffer.led_status));
-    DEV_kbd_set_indicator(0, BX_KBD_LED_NUM, value & 0x02);
-    DEV_kbd_set_indicator(0, BX_KBD_LED_CAPS, value & 0x04);
-    DEV_kbd_set_indicator(0, BX_KBD_LED_SCRL, value & 0x01);
+    BX_KEY_THIS s.kbd_internal_buffer.expecting_led_write = 0;
     kbd_enQ(0xFA); // send ACK %%%
     return;
   }

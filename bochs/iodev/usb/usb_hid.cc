@@ -840,6 +840,13 @@ void usb_hid_device_c::register_state_specific(bx_list_c *parent)
   BXRS_PARAM_BOOL(list, has_events, s.has_events);
   if ((d.type == USB_DEV_TYPE_KEYPAD) || (d.type == USB_DEV_TYPE_KEYBOARD)) {
     new bx_shadow_data_c(list, "key_pad_packet", s.key_pad_packet, 8, 1);
+    BXRS_PARAM_BOOL(list, kbd_count, s.kbd_count);
+    bx_list_c *buffer = new bx_list_c(list, "kbd_buffer", "");
+    char pname[16];
+    for (Bit8u i = 0; i < 16; i++) {
+      sprintf(pname, "%u", i);
+      new bx_shadow_num_c(buffer, pname, &s.kbd_buffer[i], BASE_HEX);
+    }
   }
 }
 
@@ -1171,6 +1178,13 @@ int usb_hid_device_c::keyboard_poll(Bit8u *buf, int len, bx_bool force)
       memcpy(buf, s.key_pad_packet, len);
       l = 8;
       s.has_events = 0;
+      if (s.kbd_count > 0) {
+        gen_scancode(s.kbd_buffer[0]);
+        s.kbd_count--;
+        for (Bit8u i = 0; i < s.kbd_count; i++) {
+          s.kbd_buffer[i] = s.kbd_buffer[i + 1];
+        }
+      }
     }
   }
   return l;
@@ -1192,6 +1206,14 @@ bx_bool usb_hid_device_c::gen_scancode(Bit32u key)
     if ((code < 0x53) || (code > 0x63)) {
       return 0;
     }
+  } else if (code == 0) {
+    return 1;
+  }
+  if (s.has_events) {
+    if (s.kbd_count < 16) {
+      s.kbd_buffer[s.kbd_count++] = key;
+    }
+    return 1;
   }
   if (usbkbd_conv[key].modkey) {
     if (released) {
@@ -1200,17 +1222,14 @@ bx_bool usb_hid_device_c::gen_scancode(Bit32u key)
       s.key_pad_packet[0] |= code;
     }
   } else {
-    // FIXME
     if (released) {
       if (code == s.key_pad_packet[2]) {
         s.key_pad_packet[2] = 0;
         s.has_events = 1;
       }
     } else {
-      if (code != 0) {
-        s.key_pad_packet[2] = code;
-        s.has_events = 1;
-      }
+      s.key_pad_packet[2] = code;
+      s.has_events = 1;
     }
   }
   return 1;

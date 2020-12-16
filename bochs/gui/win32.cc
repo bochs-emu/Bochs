@@ -162,11 +162,12 @@ static char ipsText[20];
 #define SIZE_OF_SB_ELEMENT        40
 #define SIZE_OF_SB_MOUSE_MESSAGE 170
 #define SIZE_OF_SB_IPS_MESSAGE    90
+Bit32u SB_Led_Colors[3] = {0x0000FF00, 0x000040FF, 0x0000FFFF};
 Bit32s SB_Edges[BX_MAX_STATUSITEMS+BX_SB_MAX_TEXT_ELEMENTS+1];
 char SB_Text[BX_MAX_STATUSITEMS][10];
 unsigned SB_Text_Elements;
 bx_bool SB_Active[BX_MAX_STATUSITEMS];
-bx_bool SB_ActiveW[BX_MAX_STATUSITEMS];
+Bit8u SB_ActiveColor[BX_MAX_STATUSITEMS];
 
 // Misc stuff
 static unsigned dimension_x, dimension_y, current_bpp;
@@ -204,7 +205,7 @@ sharedThreadInfo stInfo;
 LRESULT CALLBACK mainWndProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK simWndProc(HWND, UINT, WPARAM, LPARAM);
 DWORD WINAPI UIThread(PVOID);
-void SetStatusText(unsigned Num, const char *Text, bx_bool active, bx_bool w=0);
+void SetStatusText(unsigned Num, const char *Text, bx_bool active, Bit8u color=0);
 void terminateEmul(int);
 void create_vga_font(void);
 void DrawBitmap(HDC, HBITMAP, int, int, int, int, int, int, Bit8u, Bit8u);
@@ -1046,7 +1047,7 @@ DWORD WINAPI UIThread(LPVOID)
   return 0;
 }
 
-void SetStatusText(unsigned Num, const char *Text, bx_bool active, bx_bool w)
+void SetStatusText(unsigned Num, const char *Text, bx_bool active, Bit8u color)
 {
   char StatText[MAX_PATH];
 
@@ -1059,7 +1060,7 @@ void SetStatusText(unsigned Num, const char *Text, bx_bool active, bx_bool w)
     lstrcpy(StatText+1, Text);
     lstrcpy(SB_Text[Num-SB_Text_Elements], StatText);
     SB_Active[Num-SB_Text_Elements] = active;
-    SB_ActiveW[Num-SB_Text_Elements] = w;
+    SB_ActiveColor[Num-SB_Text_Elements] = color;
     SendMessage(hwndSB, SB_SETTEXT, Num | SBT_OWNERDRAW, (LPARAM)SB_Text[Num-SB_Text_Elements]);
   }
   UpdateWindow(hwndSB);
@@ -1067,7 +1068,11 @@ void SetStatusText(unsigned Num, const char *Text, bx_bool active, bx_bool w)
 
 void bx_win32_gui_c::statusbar_setitem_specific(int element, bx_bool active, bx_bool w)
 {
-  SetStatusText(element+SB_Text_Elements, statusitem[element].text, active, w);
+  Bit8u color = 0;
+  if (w) {
+    color = statusitem[element].auto_off ? 1 : 2;
+  }
+  SetStatusText(element+SB_Text_Elements, statusitem[element].text, active, color);
 }
 
 LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
@@ -1139,10 +1144,7 @@ LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
     if (lpdis->hwndItem == hwndSB) {
       sbtext = (char *)lpdis->itemData;
       if (SB_Active[lpdis->itemID-SB_Text_Elements]) {
-        if (SB_ActiveW[lpdis->itemID-SB_Text_Elements])
-          SetBkColor(lpdis->hDC, 0x000040FF);
-        else
-          SetBkColor(lpdis->hDC, 0x0000FF00);
+        SetBkColor(lpdis->hDC, SB_Led_Colors[SB_ActiveColor[lpdis->itemID-SB_Text_Elements]]);
       } else {
         SetBkMode(lpdis->hDC, TRANSPARENT);
         SetTextColor(lpdis->hDC, 0x00808080);

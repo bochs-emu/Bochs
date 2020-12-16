@@ -56,6 +56,8 @@ private:
     Bit8u idle;
     Bit8u indicators;
     bx_bool has_events;
+    Bit8u kbd_count;
+    Bit32u kbd_buffer[16];
   } s;
 
   static bx_bool gen_scancode_static(void *dev, Bit32u key);
