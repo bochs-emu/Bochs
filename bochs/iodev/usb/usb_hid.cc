@@ -730,7 +730,7 @@ struct USBKBD usbkbd_conv[BX_KEY_NBKEYS] = {
   0x54, 0,
   0xe3, 0,
   0xe7, 0,
-  0x00, 0, /* BX_KEY_MENU */
+  0x65, 0,
   0x00, 0, /* BX_KEY_ALT_SYSREQ */
   0x00, 0, /* BX_KEY_CTRL_BREAK */
   0x00, 0, /* BX_KEY_INT_BACK */

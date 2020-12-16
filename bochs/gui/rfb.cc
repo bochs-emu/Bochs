@@ -148,9 +148,8 @@ static struct _rfbUpdateRegion {
 #define BX_RFB_DEF_XDIM 720
 #define BX_RFB_DEF_YDIM 480
 
-static unsigned char status_led_green = 0x38;
+static Bit8u status_leds[3] = {0x38, 0x07, 0x3f};
 static unsigned char status_gray_text = 0xa4;
-static unsigned char status_led_red = 0x07;
 const unsigned char headerbar_bg = 0xff;
 const unsigned char headerbar_fg = 0x00;
 
@@ -193,7 +192,7 @@ void UpdateScreen(unsigned char *newBits, int x, int y, int width, int height,
 void SendUpdate(int x, int y, int width, int height, Bit32u encoding);
 void rfbSetUpdateRegion(unsigned x0, unsigned y0, unsigned w, unsigned h);
 void rfbAddUpdateRegion(unsigned x0, unsigned y0, unsigned w, unsigned h);
-void rfbSetStatusText(int element, const char *text, bx_bool active, bx_bool w = 0);
+void rfbSetStatusText(int element, const char *text, bx_bool active, Bit8u color = 0);
 static Bit32u convertStringToRfbKey(const char *string);
 #if BX_SHOW_IPS && defined(WIN32)
 DWORD WINAPI rfbShowIPSthread(LPVOID);
@@ -642,7 +641,11 @@ void bx_rfb_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
 
 void bx_rfb_gui_c::statusbar_setitem_specific(int element, bx_bool active, bx_bool w)
 {
-  rfbSetStatusText(element+1, statusitem[element].text, active, w);
+  Bit8u color = 0;
+  if (w) {
+    color = statusitem[element].auto_off ? 1 : 2;
+  }
+  rfbSetStatusText(element+1, statusitem[element].text, active, color);
 }
 
 void bx_rfb_gui_c::set_mouse_mode_absxy(bx_bool mode)
@@ -1293,9 +1296,10 @@ void HandleRfbClient(SOCKET sClient)
           rfbBGR233Format = 1;
           if (PF_EQ(spf.pixelFormat, RGB332Format)) {
             rfbBGR233Format = 0;
-            status_led_green = 0x1c;
+            status_leds[0] = 0x1c;
+            status_leds[1] = 0xe0;
+            status_leds[2] = 0xfc;
             status_gray_text = 0x92;
-            status_led_red = 0xe0;
           } else if (!PF_EQ(spf.pixelFormat, BGR233Format)) {
             BX_ERROR(("client has wrong pixel format (%d %d %d %d %d %d %d %d %d %d)",
                       spf.pixelFormat.bitsPerPixel,spf.pixelFormat.depth,spf.pixelFormat.bigEndianFlag,
@@ -1648,7 +1652,7 @@ void rfbAddUpdateRegion(unsigned x0, unsigned y0, unsigned w, unsigned h)
   }
 }
 
-void rfbSetStatusText(int element, const char *text, bx_bool active, bx_bool w)
+void rfbSetStatusText(int element, const char *text, bx_bool active, Bit8u color)
 {
   char *newBits;
   unsigned xleft, xsize, i, len;
@@ -1662,10 +1666,10 @@ void rfbSetStatusText(int element, const char *text, bx_bool active, bx_bool w)
     newBits[((xsize / 8) + 1) * i] = 0;
   }
 
-  unsigned char fgcolor = active ? headerbar_fg : status_gray_text;
-  unsigned char bgcolor = 0;
-  if (element > 0) {
-    bgcolor = active ? (w ? status_led_red : status_led_green) : headerbar_bg;
+  Bit8u fgcolor = active ? headerbar_fg : status_gray_text;
+  Bit8u bgcolor = 0;
+  if ((element > 0) && active) {
+    bgcolor = status_leds[color];
   } else {
     bgcolor = headerbar_bg;
   }

@@ -146,15 +146,13 @@ static BX_MUTEX(bKeyboardInUse);
 #define BX_RFB_DEF_YDIM 480
 
 #ifdef BX_LITTLE_ENDIAN
-const rfbPixel status_led_green = 0x0000ff00;
+const rfbPixel status_leds[3] = {0x0000ff00, 0x000040ff, 0x0000ffff};
 const rfbPixel status_gray_text = 0x00808080;
-const rfbPixel status_led_red = 0x000040ff;
 const rfbPixel headerbar_bg = 0x00d0d0d0;
 const rfbPixel headerbar_fg = 0x00101010;
 #else
-const rfbPixel status_led_green = 0x00ff0000;
+const rfbPixel status_leds[3] = {0x00ff0000, 0xff400000, 0xffff0000};
 const rfbPixel status_gray_text = 0x80808000;
-const rfbPixel status_led_red = 0x00ff4000;
 const rfbPixel headerbar_bg = 0xd0d0d000;
 const rfbPixel headerbar_fg = 0x10101000;
 #endif
@@ -198,7 +196,7 @@ void DrawChar(int x, int y, int width, int height, int fontx, int fonty,
               char *bmap, rfbPixel fg, rfbPixel bg, bx_bool gfxchar);
 void UpdateScreen(rfbPixel *newBits, int x, int y, int width, int height);
 void SendUpdate(int x, int y, int width, int height);
-void vncSetStatusText(int element, const char *text, bx_bool active, bx_bool w = 0);
+void vncSetStatusText(int element, const char *text, bx_bool active, Bit8u color = 0);
 static Bit32u convertStringToRfbKey(const char *string);
 
 void clientgone(rfbClientPtr cl);
@@ -658,7 +656,11 @@ void bx_vncsrv_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
 void bx_vncsrv_gui_c::statusbar_setitem_specific(int element, bx_bool active,
         bx_bool w)
 {
-  vncSetStatusText(element + 1, statusitem[element].text, active, w);
+  Bit8u color = 0;
+  if (w) {
+    color = statusitem[element].auto_off ? 1 : 2;
+  }
+  vncSetStatusText(element + 1, statusitem[element].text, active, color);
 }
 
 void bx_vncsrv_gui_c::set_mouse_mode_absxy(bx_bool mode)
@@ -1144,7 +1146,7 @@ void SendUpdate(int x, int y, int width, int height)
   rfbMarkRectAsModified(theGui->screen, x, y, x + width, y + height);
 }
 
-void vncSetStatusText(int element, const char *text, bx_bool active, bx_bool w)
+void vncSetStatusText(int element, const char *text, bx_bool active, Bit8u color)
 {
   char *newBits;
   unsigned xleft, xsize, i, len;
@@ -1160,8 +1162,8 @@ void vncSetStatusText(int element, const char *text, bx_bool active, bx_bool w)
 
   rfbPixel fgcolor = active ? headerbar_fg : status_gray_text;
   rfbPixel bgcolor = 0;
-  if (element > 0) {
-    bgcolor = active ? (w ? status_led_red : status_led_green) : headerbar_bg;
+  if ((element > 0) && active) {
+    bgcolor = status_leds[color];
   } else {
     bgcolor = headerbar_bg;
   }

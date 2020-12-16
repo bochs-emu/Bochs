@@ -162,7 +162,7 @@ static unsigned bx_statusitem_pos[12] = {
   0, 200, 240, 280, 320, 360, 400, 440, 480, 520, 560, 600
 };
 static bx_bool bx_statusitem_active[12];
-static long bx_status_led_green, bx_status_led_red, bx_status_led_yellow;
+static long bx_status_leds[3];
 static long bx_status_graytext;
 static char bx_status_info_text[34];
 #if BX_SHOW_IPS
@@ -413,12 +413,7 @@ void x11_set_status_text(int element, const char *text, bx_bool active,
   } else if (element <= BX_MAX_STATUSITEMS) {
     bx_statusitem_active[element] = active;
     if (active) {
-      if (color == 1)
-        XSetForeground(bx_x_display, gc_headerbar, bx_status_led_red);
-      else if (color == 2)
-        XSetForeground(bx_x_display, gc_headerbar, bx_status_led_yellow);
-      else
-        XSetForeground(bx_x_display, gc_headerbar, bx_status_led_green);
+      XSetForeground(bx_x_display, gc_headerbar, bx_status_leds[color]);
       XFillRectangle(bx_x_display, win, gc_headerbar, xleft, sb_ypos+2, xsize-1, bx_statusbar_y-2);
       XSetForeground(bx_x_display, gc_headerbar, black_pixel);
     } else {
@@ -870,22 +865,22 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   for (i=0; i<12; i++) bx_statusitem_active[i] = 0;
   switch (imBPP) {
     case 16:
-      bx_status_led_green = 0x07e0;
-      bx_status_led_red = 0xf900;
-      bx_status_led_yellow = 0xffe0;
+      bx_status_leds[0] = 0x07e0;
+      bx_status_leds[1] = 0xf900;
+      bx_status_leds[2] = 0xffe0;
       bx_status_graytext = 0x8410;
       break;
     case 24:
     case 32:
-      bx_status_led_green = 0x00ff00;
-      bx_status_led_red = 0xff4000;
-      bx_status_led_yellow = 0xffff00;
+      bx_status_leds[0] = 0x00ff00;
+      bx_status_leds[1] = 0xff4000;
+      bx_status_leds[2] = 0xffff00;
       bx_status_graytext = 0x808080;
       break;
     default:
-      bx_status_led_green = 0;
-      bx_status_led_red = 0;
-      bx_status_led_yellow = 0;
+      bx_status_leds[0] = 0;
+      bx_status_leds[1] = 0;
+      bx_status_leds[2] = 0;
       bx_status_graytext = 0;
   }
   sprintf(bx_status_info_text, "%s enables mouse", get_toggle_info());
