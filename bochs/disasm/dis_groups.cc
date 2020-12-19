@@ -719,7 +719,8 @@ void disassembler::Jb(const x86_insn *insn)
 
   if (insn->os_32) {
     Bit32u imm32 = (Bit8s) imm8;
-    Bit32u target = (Bit32u)(db_cs_base + db_eip + (Bit32s) imm32);
+    Bit32u target = (Bit32u)(db_eip + (Bit32s) imm32);
+    target = (db_cs_base != BX_JUMP_TARGET_NOT_REQ) ? (db_cs_base + target) : target;
     sym = GET_SYMBOL(target);
     sym = sym ? sym : "";
 
@@ -803,9 +804,11 @@ void disassembler::Jd(const x86_insn *insn)
     return;
   }
 
-  Bit32u target = (Bit32u)(db_cs_base + db_eip + (Bit32s) imm32);
+  Bit32u target = (Bit32u)(db_eip + (Bit32s) imm32);
+  target = (db_cs_base != BX_JUMP_TARGET_NOT_REQ) ? (db_cs_base + target) : target;
   sym = GET_SYMBOL(target);
   sym = sym ? sym : "";
+
   if (offset_mode_hex) {
     dis_sprintf(SYMBOLIC_JUMP(".+0x%08x"), (unsigned) imm32, sym);
   }
