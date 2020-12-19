@@ -783,6 +783,7 @@ usb_hid_device_c::usb_hid_device_c(usbdev_type type)
     DEV_register_removable_mouse((void*)this, mouse_enq_static, mouse_enabled_changed);
     bx_gui->set_mouse_mode_absxy(1);
   } else if ((d.type == USB_DEV_TYPE_KEYPAD) || (d.type == USB_DEV_TYPE_KEYBOARD)) {
+    Bit8u led_mask;
     if (d.type == USB_DEV_TYPE_KEYPAD) {
       strcpy(d.devname, "USB/PS2 Keypad");
     } else {
@@ -799,7 +800,13 @@ usb_hid_device_c::usb_hid_device_c(usbdev_type type)
       d.device_desc_size = sizeof(bx_keypad_dev_descriptor);
       d.config_desc_size = sizeof(bx_keypad_config_descriptor);
     }
-    DEV_register_removable_keyboard((void*)this, gen_scancode_static, NULL);
+    if (d.type == USB_DEV_TYPE_KEYPAD) {
+      led_mask = BX_KBD_LED_NUM;
+    } else {
+      led_mask = BX_KBD_LED_NUM | BX_KBD_LED_CAPS | BX_KBD_LED_SCRL;
+    }
+    DEV_register_removable_keyboard((void*)this, gen_scancode_static,
+                                    get_elements_static, led_mask);
 //    DEV_register_removable_mouse((void*)this, mouse_enq_static, mouse_enabled_changed);
   }
   d.vendor_desc = "BOCHS";
@@ -843,7 +850,7 @@ void usb_hid_device_c::register_state_specific(bx_list_c *parent)
     BXRS_PARAM_BOOL(list, kbd_count, s.kbd_count);
     bx_list_c *buffer = new bx_list_c(list, "kbd_buffer", "");
     char pname[16];
-    for (Bit8u i = 0; i < 16; i++) {
+    for (Bit8u i = 0; i < BX_KBD_ELEMENTS; i++) {
       sprintf(pname, "%u", i);
       new bx_shadow_num_c(buffer, pname, &s.kbd_buffer[i], BASE_HEX);
     }
@@ -1197,11 +1204,11 @@ bx_bool usb_hid_device_c::gen_scancode_static(void *dev, Bit32u key)
 
 bx_bool usb_hid_device_c::gen_scancode(Bit32u key)
 {
-  bx_bool released = (key & BX_KEY_RELEASED) != 0;
+  bx_bool modkey, released = (key & BX_KEY_RELEASED) != 0;
   Bit8u code;
 
-  key &= ~BX_KEY_RELEASED;
-  code = usbkbd_conv[key].code;
+  code = usbkbd_conv[key & ~BX_KEY_RELEASED].code;
+  modkey = usbkbd_conv[key & ~BX_KEY_RELEASED].modkey;
   if (d.type == USB_DEV_TYPE_KEYPAD) {
     if ((code < 0x53) || (code > 0x63)) {
       return 0;
@@ -1210,12 +1217,12 @@ bx_bool usb_hid_device_c::gen_scancode(Bit32u key)
     return 1;
   }
   if (s.has_events) {
-    if (s.kbd_count < 16) {
+    if (s.kbd_count < BX_KBD_ELEMENTS) {
       s.kbd_buffer[s.kbd_count++] = key;
     }
     return 1;
   }
-  if (usbkbd_conv[key].modkey) {
+  if (modkey) {
     if (released) {
       s.key_pad_packet[0] &= ~code;
     } else {
@@ -1233,6 +1240,16 @@ bx_bool usb_hid_device_c::gen_scancode(Bit32u key)
     }
   }
   return 1;
+}
+
+Bit8u usb_hid_device_c::get_elements_static(void *dev)
+{
+  return ((usb_hid_device_c*)dev)->get_elements();
+}
+
+Bit8u usb_hid_device_c::get_elements()
+{
+  return s.kbd_count;
 }
 
 #endif // BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB

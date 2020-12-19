@@ -39,6 +39,9 @@
 #define BX_KBD_LED_CAPS 1
 #define BX_KBD_LED_SCRL 2
 
+/* size of internal buffer for keyboard devices */
+#define BX_KBD_ELEMENTS 16
+
 /* size of internal buffer for mouse devices */
 #define BX_MOUSE_BUFF_SIZE 48
 
@@ -51,7 +54,7 @@ typedef Bit32u (*bx_read_handler_t)(void *, Bit32u, unsigned);
 typedef void   (*bx_write_handler_t)(void *, Bit32u, Bit32u, unsigned);
 
 typedef bx_bool (*bx_kbd_gen_scancode_t)(void *, Bit32u);
-typedef void (*bx_kbd_paste_bytes_t)(void *, Bit8u *data, Bit32s length);
+typedef Bit8u (*bx_kbd_get_elements_t)(void *);
 typedef void (*bx_mouse_enq_t)(void *, int, int, int, unsigned, bx_bool);
 typedef void (*bx_mouse_enabled_changed_t)(void *, bx_bool);
 
@@ -413,13 +416,17 @@ public:
   Bit32u inp(Bit16u addr, unsigned io_len) BX_CPP_AttrRegparmN(2);
   void   outp(Bit16u addr, Bit32u value, unsigned io_len) BX_CPP_AttrRegparmN(3);
 
-  void register_default_keyboard(void *dev, bx_kbd_gen_scancode_t kbd_gen_scancode, bx_kbd_paste_bytes_t kbd_paste_bytes);
-  void register_removable_keyboard(void *dev, bx_kbd_gen_scancode_t kbd_gen_scancode, bx_kbd_paste_bytes_t kbd_paste_bytes);
+  void register_default_keyboard(void *dev, bx_kbd_gen_scancode_t kbd_gen_scancode,
+                                 bx_kbd_get_elements_t kbd_get_elements);
+  void register_removable_keyboard(void *dev, bx_kbd_gen_scancode_t kbd_gen_scancode,
+                                   bx_kbd_get_elements_t kbd_get_elements,
+                                   Bit8u led_mask);
   void unregister_removable_keyboard(void *dev);
   void register_default_mouse(void *dev, bx_mouse_enq_t mouse_enq, bx_mouse_enabled_changed_t mouse_enabled_changed);
   void register_removable_mouse(void *dev, bx_mouse_enq_t mouse_enq, bx_mouse_enabled_changed_t mouse_enabled_changed);
   void unregister_removable_mouse(void *dev);
   void gen_scancode(Bit32u key);
+  Bit8u kbd_get_elements(void);
   void release_keys(void);
   void paste_bytes(Bit8u *data, Bit32s length);
   void kbd_set_indicator(Bit8u devid, Bit8u ledid, bx_bool state);
@@ -528,6 +535,11 @@ private:
   static Bit32u default_read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   default_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
 
+  // runtime options / paste feature
+  static Bit64s param_handler(bx_param_c *param, int set, Bit64s val);
+  void paste_delay_changed(Bit32u value);
+  void service_paste_buf();
+
   bx_bool mouse_captured; // host mouse capture enabled
   Bit8u mouse_type;
   struct {
@@ -535,12 +547,45 @@ private:
     bx_mouse_enq_t enq_event;
     bx_mouse_enabled_changed_t enabled_changed;
   } bx_mouse[2];
+
   struct {
     void *dev;
     bx_kbd_gen_scancode_t gen_scancode;
-    bx_kbd_paste_bytes_t paste_bytes;
+    bx_kbd_get_elements_t get_elements;
+    Bit8u led_mask;
     bx_bool bxkey_state[BX_KEY_NBKEYS];
   } bx_keyboard[2];
+
+  // The paste buffer does NOT exist in the hardware.  It is a bochs
+  // construction that allows the user to "paste" arbitrary length sequences of
+  // keystrokes into the emulated machine.  Since the hardware buffer is only
+  // 16 bytes, a very small amount of data can be added to the hardware buffer
+  // at a time.  The paste buffer keeps track of the bytes that have not yet
+  // been pasted.
+  //
+  // Lifetime of a paste buffer: The paste data comes from the system
+  // clipboard, which must be accessed using platform independent code in the
+  // gui.  Because every gui has its own way of managing the clipboard memory
+  // (in X windows, you're supposed to call Xfree for example), in the platform
+  // specific code we make a copy of the clipboard buffer with
+  // "new Bit8u[length]".  Then the pointer is passed into
+  // bx_device_c::paste_bytes, along with the length.  The gui code never touches
+  // the pastebuf again, and does not free it.  The devices code is
+  // responsible for deallocating the paste buffer using delete [] buf.  The
+  // paste buffer is binary data, and it is probably NOT null terminated.
+  //
+  // Summary: A paste buffer is allocated (new) in the platform-specific gui
+  // code, passed to the devices code, and is freed (delete[]) when it is no
+  // longer needed.
+  struct {
+    Bit8u *buf;   // ptr to bytes to be pasted, or NULL if none in progress
+    Bit32u buf_len; // length of pastebuf
+    Bit32u buf_ptr; // ptr to next byte to be added to hw buffer
+    Bit32u delay;   // number of timer events before paste
+    Bit32u counter; // count before paste
+    bx_bool service;  // set to 1 when gen_scancode() is called from paste service
+    bx_bool stop;  // stop the current paste operation on keypress or hardware reset
+  } paste;
 
   struct {
     bx_bool enabled;

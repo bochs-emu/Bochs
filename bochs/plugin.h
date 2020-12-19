@@ -150,7 +150,7 @@ extern "C" {
 
 ///////// Removable devices macros
 #define DEV_register_default_keyboard(a,b,c) (bx_devices.register_default_keyboard(a,b,c))
-#define DEV_register_removable_keyboard(a,b,c) (bx_devices.register_removable_keyboard(a,b,c))
+#define DEV_register_removable_keyboard(a,b,c,d) (bx_devices.register_removable_keyboard(a,b,c,d))
 #define DEV_unregister_removable_keyboard(a) (bx_devices.unregister_removable_keyboard(a))
 #define DEV_register_default_mouse(a,b,c) (bx_devices.register_default_mouse(a,b,c))
 #define DEV_register_removable_mouse(a,b,c) (bx_devices.register_removable_mouse(a,b,c))
@@ -177,8 +177,7 @@ extern "C" {
 #define DEV_kbd_release_keys() (bx_devices.release_keys())
 #define DEV_kbd_set_indicator(a,b,c) (bx_devices.kbd_set_indicator(a,b,c))
 
-///////// mouse macros
-#define DEV_mouse_enabled_changed(en) (bx_devices.mouse_enabled_changed(en))
+///////// mouse macro
 #define DEV_mouse_motion(dx, dy, dz, bs, absxy) (bx_devices.mouse_motion(dx, dy, dz, bs, absxy))
 
 ///////// hard drive macros

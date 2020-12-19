@@ -24,6 +24,7 @@
 
 
 #include "iodev.h"
+#include "gui/keymap.h"
 
 #include "iodev/virt_timer.h"
 #include "iodev/slowdown_timer.h"
@@ -63,8 +64,13 @@ bx_devices_c::bx_devices_c()
 
 bx_devices_c::~bx_devices_c()
 {
-  // nothing needed for now
   timer_handle = BX_NULL_TIMER_HANDLE;
+  // remove runtime parameter handlers
+  SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->set_handler(NULL);
+  SIM->get_param_num(BXPN_MOUSE_ENABLED)->set_handler(NULL);
+  if (paste.buf != NULL) {
+    delete [] paste.buf;
+  }
 }
 
 void bx_devices_c::init_stubs()
@@ -139,7 +145,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   for (i=0; i < 2; i++) {
     bx_keyboard[i].dev = NULL;
     bx_keyboard[i].gen_scancode = NULL;
-    bx_keyboard[i].paste_bytes = NULL;
+    bx_keyboard[i].led_mask = 0;
   }
   for (i = 0; i < BX_KEY_NBKEYS; i++) {
     bx_keyboard[0].bxkey_state[i] = 0;
@@ -152,6 +158,18 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   // common mouse settings
   mouse_captured = SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get();
   mouse_type = SIM->get_param_enum(BXPN_MOUSE_TYPE)->get();
+
+  // initialize paste feature
+  paste.buf = NULL;
+  paste.buf_len = 0;
+  paste.buf_ptr = 0;
+  paste.service = 0;
+  paste.stop = 0;
+  paste_delay_changed(SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->get());
+
+  // init runtime parameters
+  SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->set_handler(param_handler);
+  SIM->get_param_num(BXPN_MOUSE_ENABLED)->set_handler(param_handler);
 
   // register as soon as possible - the devices want to have their timers !
   bx_virt_timer.init();
@@ -391,6 +409,9 @@ void bx_devices_c::reset(unsigned type)
   mem->disable_smram();
   bx_reset_plugins(type);
   release_keys();
+  if (paste.buf != NULL) {
+    paste.stop = 1;
+  }
 }
 
 void bx_devices_c::register_state()
@@ -607,6 +628,12 @@ void bx_devices_c::timer_handler(void *this_ptr)
 
 void bx_devices_c::timer()
 {
+  if (++paste.counter >= paste.delay) {
+    // after the paste delay, consider adding moving more chars
+    // from the paste buffer to the keyboard buffer.
+    service_paste_buf();
+    paste.counter = 0;
+  }
   SIM->periodic();
   if (!bx_pc_system.kill_bochs_request)
     bx_gui->handle_events();
@@ -1130,12 +1157,13 @@ bx_bool bx_devices_c::is_usb_enabled(void)
 
 // removable keyboard/mouse registration
 void bx_devices_c::register_default_keyboard(void *dev, bx_kbd_gen_scancode_t kbd_gen_scancode,
-                                             bx_kbd_paste_bytes_t kbd_paste_bytes)
+                                             bx_kbd_get_elements_t kbd_get_elements)
 {
   if (bx_keyboard[0].dev == NULL) {
     bx_keyboard[0].dev = dev;
     bx_keyboard[0].gen_scancode = kbd_gen_scancode;
-    bx_keyboard[0].paste_bytes = kbd_paste_bytes;
+    bx_keyboard[0].get_elements = kbd_get_elements;
+    bx_keyboard[0].led_mask = BX_KBD_LED_NUM | BX_KBD_LED_CAPS | BX_KBD_LED_SCRL;
     // add keyboard LEDs to the statusbar
     statusbar_id[BX_KBD_LED_NUM] = bx_gui->register_statusitem("NUM");
     statusbar_id[BX_KBD_LED_CAPS] = bx_gui->register_statusitem("CAPS");
@@ -1144,12 +1172,14 @@ void bx_devices_c::register_default_keyboard(void *dev, bx_kbd_gen_scancode_t kb
 }
 
 void bx_devices_c::register_removable_keyboard(void *dev, bx_kbd_gen_scancode_t kbd_gen_scancode,
-                                               bx_kbd_paste_bytes_t kbd_paste_bytes)
+                                               bx_kbd_get_elements_t kbd_get_elements,
+                                               Bit8u led_mask)
 {
   if (bx_keyboard[1].dev == NULL) {
     bx_keyboard[1].dev = dev;
     bx_keyboard[1].gen_scancode = kbd_gen_scancode;
-    bx_keyboard[1].paste_bytes = kbd_paste_bytes;
+    bx_keyboard[1].get_elements = kbd_get_elements;
+    bx_keyboard[1].led_mask = led_mask;
   }
 }
 
@@ -1158,7 +1188,7 @@ void bx_devices_c::unregister_removable_keyboard(void *dev)
   if (dev == bx_keyboard[1].dev) {
     bx_keyboard[1].dev = NULL;
     bx_keyboard[1].gen_scancode = NULL;
-    bx_keyboard[1].paste_bytes = NULL;
+    bx_keyboard[1].led_mask = 0;
   }
 }
 
@@ -1197,12 +1227,27 @@ void bx_devices_c::gen_scancode(Bit32u key)
   bx_bool ret = 0;
 
   bx_keyboard[0].bxkey_state[key & 0xff] = ((key & BX_KEY_RELEASED) == 0);
+  if ((paste.buf != NULL) && (!paste.service)) {
+    paste.stop = 1;
+    return;
+  }
   if (bx_keyboard[1].dev != NULL) {
     ret = bx_keyboard[1].gen_scancode(bx_keyboard[1].dev, key);
   }
   if ((ret == 0) && (bx_keyboard[0].dev != NULL)) {
     bx_keyboard[0].gen_scancode(bx_keyboard[0].dev, key);
   }
+}
+
+Bit8u bx_devices_c::kbd_get_elements(void)
+{
+  if (bx_keyboard[1].dev != NULL) {
+    return bx_keyboard[1].get_elements(bx_keyboard[1].dev);
+  }
+  if (bx_keyboard[0].dev != NULL) {
+    return bx_keyboard[0].get_elements(bx_keyboard[0].dev);
+  }
+  return BX_KBD_ELEMENTS;
 }
 
 void bx_devices_c::release_keys()
@@ -1215,15 +1260,90 @@ void bx_devices_c::release_keys()
   }
 }
 
+// service_paste_buf() transfers data from the paste buffer to the hardware
+// keyboard buffer.  It tries to transfer as many chars as possible at a
+// time, but because different chars require different numbers of scancodes
+// we have to be conservative.  Note that this process depends on the
+// keymap tables to know what chars correspond to what keys, and which
+// chars require a shift or other modifier.
+void bx_devices_c::service_paste_buf()
+{
+  if (!paste.buf) return;
+  BX_DEBUG(("service_paste_buf: ptr at %d out of %d", paste.buf_ptr, paste.buf_len));
+  int fill_threshold = 8;
+  paste.service = 1;
+  while ((paste.buf_ptr < paste.buf_len) && !paste.stop) {
+    if (kbd_get_elements() >= fill_threshold) {
+      paste.service = 0;
+      return;
+    }
+    // there room in the buffer for a keypress and a key release.
+    // send one keypress and a key release.
+    Bit8u byte = paste.buf[paste.buf_ptr];
+    BXKeyEntry *entry = bx_keymap.findAsciiChar(byte);
+    if (!entry) {
+      BX_ERROR(("paste character 0x%02x ignored", byte));
+    } else {
+      BX_DEBUG(("pasting character 0x%02x. baseKey is %04x", byte, entry->baseKey));
+      if (entry->modKey != BX_KEYMAP_UNKNOWN)
+        gen_scancode(entry->modKey);
+      gen_scancode(entry->baseKey);
+      gen_scancode(entry->baseKey | BX_KEY_RELEASED);
+      if (entry->modKey != BX_KEYMAP_UNKNOWN)
+        gen_scancode(entry->modKey | BX_KEY_RELEASED);
+    }
+    paste.buf_ptr++;
+  }
+  // reached end of pastebuf.  free the memory it was using.
+  delete [] paste.buf;
+  paste.buf = NULL;
+  paste.stop = 0;
+  paste.service = 0;
+}
+
+// paste_bytes schedules an arbitrary number of ASCII characters to be
+// inserted into the hardware queue as it become available.  Any previous
+// paste which is still in progress will be thrown out.  BYTES is a pointer
+// to a region of memory containing the chars to be pasted. When the paste
+// is complete, the keyboard code will call delete [] bytes;
 void bx_devices_c::paste_bytes(Bit8u *data, Bit32s length)
 {
-  if ((bx_keyboard[1].dev != NULL) && (bx_keyboard[1].paste_bytes != NULL)) {
-    bx_keyboard[1].paste_bytes(bx_keyboard[1].dev, data, length);
-    return;
+  BX_DEBUG(("paste_bytes: %d bytes", length));
+  if (paste.buf) {
+    BX_ERROR(("previous paste was not completed!  %d chars lost",
+      paste.buf_len - paste.buf_ptr));
+    delete [] paste.buf;  // free the old paste buffer
   }
-  if ((bx_keyboard[0].dev != NULL) && (bx_keyboard[0].paste_bytes != NULL)) {
-    bx_keyboard[0].paste_bytes(bx_keyboard[0].dev, data, length);
+  paste.buf = data;
+  paste.buf_ptr = 0;
+  paste.buf_len = length;
+  service_paste_buf();
+}
+
+Bit64s bx_devices_c::param_handler(bx_param_c *param, int set, Bit64s val)
+{
+  if (set) {
+    char pname[BX_PATHNAME_LEN];
+    param->get_param_path(pname, BX_PATHNAME_LEN);
+    if (set) {
+      if (!strcmp(pname, BXPN_KBD_PASTE_DELAY)) {
+        bx_devices.paste_delay_changed((Bit32u)val);
+      } else if (!strcmp(pname, BXPN_MOUSE_ENABLED)) {
+        bx_gui->mouse_enabled_changed(val!=0);
+        bx_devices.mouse_enabled_changed(val!=0);
+      } else {
+        BX_PANIC(("param_handler called with unexpected parameter '%s'", pname));
+      }
+    }
   }
+  return val;
+}
+
+void bx_devices_c::paste_delay_changed(Bit32u value)
+{
+  paste.delay = value / BX_IODEV_HANDLER_PERIOD;
+  paste.counter = 0;
+  BX_INFO(("will paste characters every %d iodev timer ticks", paste.delay));
 }
 
 void bx_devices_c::kbd_set_indicator(Bit8u devid, Bit8u ledid, bx_bool state)

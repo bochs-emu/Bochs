@@ -21,8 +21,6 @@
 #ifndef _PCKEY_H
 #define _PCKEY_H
 
-#define BX_KBD_ELEMENTS 16
-
 // these keywords should only be used in keyboard.cc
 #if BX_USE_KEY_SMF
 #  define BX_KEY_SMF  static
@@ -47,18 +45,13 @@ public:
   virtual void register_state(void);
   virtual void after_restore_state(void);
 
-  // runtime options
-  static     Bit64s   kbd_param_handler(bx_param_c *param, int set, Bit64s val);
-  BX_KEY_SMF void     paste_delay_changed(Bit32u value);
-
 private:
   static bx_bool      gen_scancode_static(void *dev, Bit32u key);
   BX_KEY_SMF void     gen_scancode(Bit32u key);
-  static void         paste_bytes_static(void *dev, Bit8u *data, Bit32s length);
-  BX_KEY_SMF void     paste_bytes(Bit8u *data, Bit32s length);
+  static Bit8u        get_elements_static(void *dev);
+  BX_KEY_SMF Bit8u    get_elements(void);
 
   BX_KEY_SMF Bit8u    get_kbd_enable(void);
-  BX_KEY_SMF void     service_paste_buf();
   BX_KEY_SMF void     create_mouse_packet(bx_bool force_enq);
   BX_KEY_SMF unsigned periodic(Bit32u usec_delta);
 
@@ -182,34 +175,6 @@ private:
     unsigned controller_Qsize;
     unsigned controller_Qsource; // 0=keyboard, 1=mouse
   } s; // State information for saving/loading
-
-  // The paste buffer does NOT exist in the hardware.  It is a bochs
-  // construction that allows the user to "paste" arbitrary length sequences of
-  // keystrokes into the emulated machine.  Since the hardware buffer is only
-  // 16 bytes, a very small amount of data can be added to the hardware buffer
-  // at a time.  The paste buffer keeps track of the bytes that have not yet
-  // been pasted.
-  //
-  // Lifetime of a paste buffer: The paste data comes from the system
-  // clipboard, which must be accessed using platform independent code in the
-  // gui.  Because every gui has its own way of managing the clipboard memory
-  // (in X windows, you're supposed to call Xfree for example), in the platform
-  // specific code we make a copy of the clipboard buffer with
-  // "new Bit8u[length]".  Then the pointer is passed into
-  // bx_keyb_c::paste_bytes, along with the length.  The gui code never touches
-  // the pastebuf again, and does not free it.  The keyboard code is
-  // responsible for deallocating the paste buffer using delete [] buf.  The
-  // paste buffer is binary data, and it is probably NOT null terminated.
-  //
-  // Summary: A paste buffer is allocated (new) in the platform-specific gui
-  // code, passed to the keyboard model, and is freed (delete[]) when it is no
-  // longer needed.
-  Bit8u *pastebuf;   // ptr to bytes to be pasted, or NULL if none in progress
-  Bit32u pastebuf_len; // length of pastebuf
-  Bit32u pastebuf_ptr; // ptr to next byte to be added to hw buffer
-  Bit32u pastedelay;   // count before paste
-  bx_bool paste_service;  // set to 1 when gen_scancode() is called from paste service
-  bx_bool stop_paste;  // stop the current paste operation on keypress or hardware reset
 
   BX_KEY_SMF void     resetinternals(bx_bool powerup);
   BX_KEY_SMF void     set_kbd_clock_enable(Bit8u value) BX_CPP_AttrRegparmN(1);
