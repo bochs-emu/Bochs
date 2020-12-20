@@ -45,6 +45,8 @@ public:
 
 private:
   struct {
+    bx_bool has_events;
+    Bit8u idle;
     int mouse_delayed_dx;
     int mouse_delayed_dy;
     int mouse_delayed_dz;
@@ -52,13 +54,13 @@ private:
     Bit16s mouse_y;
     Bit8s mouse_z;
     Bit8u b_state;
-    Bit8u key_pad_packet[8];
-    Bit8u idle;
+    Bit8u kbd_packet[8];
     Bit8u indicators;
-    bx_bool has_events;
     Bit8u kbd_count;
     Bit32u kbd_buffer[BX_KBD_ELEMENTS];
   } s;
+
+  int timer_index;
 
   static bx_bool gen_scancode_static(void *dev, Bit32u key);
   bx_bool gen_scancode(Bit32u key);
@@ -69,6 +71,10 @@ private:
   void mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy);
   int mouse_poll(Bit8u *buf, int len, bx_bool force);
   int keyboard_poll(Bit8u *buf, int len, bx_bool force);
+
+  static void hid_timer_handler(void *);
+  void start_idle_timer(void);
+  void hid_idle_timer(void);
 };
 
 #endif

@@ -1163,7 +1163,7 @@ void bx_devices_c::register_default_keyboard(void *dev, bx_kbd_gen_scancode_t kb
     bx_keyboard[0].dev = dev;
     bx_keyboard[0].gen_scancode = kbd_gen_scancode;
     bx_keyboard[0].get_elements = kbd_get_elements;
-    bx_keyboard[0].led_mask = BX_KBD_LED_NUM | BX_KBD_LED_CAPS | BX_KBD_LED_SCRL;
+    bx_keyboard[0].led_mask = BX_KBD_LED_MASK_ALL;
     // add keyboard LEDs to the statusbar
     statusbar_id[BX_KBD_LED_NUM] = bx_gui->register_statusitem("NUM");
     statusbar_id[BX_KBD_LED_CAPS] = bx_gui->register_statusitem("CAPS");
@@ -1179,6 +1179,7 @@ void bx_devices_c::register_removable_keyboard(void *dev, bx_kbd_gen_scancode_t 
     bx_keyboard[1].dev = dev;
     bx_keyboard[1].gen_scancode = kbd_gen_scancode;
     bx_keyboard[1].get_elements = kbd_get_elements;
+    bx_keyboard[0].led_mask &= ~led_mask;
     bx_keyboard[1].led_mask = led_mask;
   }
 }
@@ -1188,6 +1189,7 @@ void bx_devices_c::unregister_removable_keyboard(void *dev)
   if (dev == bx_keyboard[1].dev) {
     bx_keyboard[1].dev = NULL;
     bx_keyboard[1].gen_scancode = NULL;
+    bx_keyboard[0].led_mask |= bx_keyboard[1].led_mask;
     bx_keyboard[1].led_mask = 0;
   }
 }
@@ -1348,7 +1350,9 @@ void bx_devices_c::paste_delay_changed(Bit32u value)
 
 void bx_devices_c::kbd_set_indicator(Bit8u devid, Bit8u ledid, bx_bool state)
 {
-  bx_gui->statusbar_setitem(statusbar_id[ledid], state, devid);
+  if (bx_keyboard[devid].led_mask & (1 << ledid)) {
+    bx_gui->statusbar_setitem(statusbar_id[ledid], state, devid);
+  }
 }
 
 // common mouse device handlers

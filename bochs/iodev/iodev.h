@@ -38,6 +38,8 @@
 #define BX_KBD_LED_NUM  0
 #define BX_KBD_LED_CAPS 1
 #define BX_KBD_LED_SCRL 2
+#define BX_KBD_LED_MASK_NUM 1
+#define BX_KBD_LED_MASK_ALL 7
 
 /* size of internal buffer for keyboard devices */
 #define BX_KBD_ELEMENTS 16
