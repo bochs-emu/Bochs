@@ -54,22 +54,26 @@ private:
     Bit16s mouse_y;
     Bit8s mouse_z;
     Bit8u b_state;
+    Bit8u mouse_event_count;
+    Bit8u mouse_event_buf[BX_KBD_ELEMENTS][6];
     Bit8u kbd_packet[8];
     Bit8u indicators;
-    Bit8u kbd_count;
-    Bit32u kbd_buffer[BX_KBD_ELEMENTS];
+    Bit8u kbd_event_count;
+    Bit32u kbd_event_buf[BX_KBD_ELEMENTS];
   } s;
 
   int timer_index;
 
   static bx_bool gen_scancode_static(void *dev, Bit32u key);
   bx_bool gen_scancode(Bit32u key);
-  static Bit8u get_elements_static(void *dev);
-  Bit8u get_elements(void);
+  static Bit8u kbd_get_elements_static(void *dev);
+  Bit8u kbd_get_elements(void);
   static void mouse_enabled_changed(void *dev, bx_bool enabled);
   static void mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy);
   void mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy);
   int mouse_poll(Bit8u *buf, int len, bx_bool force);
+  int create_mouse_packet(Bit8u *buf, int len);
+  int get_mouse_packet(Bit8u *buf, int len);
   int keyboard_poll(Bit8u *buf, int len, bx_bool force);
 
   static void hid_timer_handler(void *);

@@ -809,7 +809,7 @@ usb_hid_device_c::usb_hid_device_c(usbdev_type type)
       led_mask = BX_KBD_LED_MASK_ALL;
     }
     DEV_register_removable_keyboard((void*)this, gen_scancode_static,
-                                    get_elements_static, led_mask);
+                                    kbd_get_elements_static, led_mask);
 //    DEV_register_removable_mouse((void*)this, mouse_enq_static, mouse_enabled_changed);
   }
   timer_index = DEV_register_timer(this, hid_timer_handler, HID_IDLE_TIME, 0, 0,
@@ -850,15 +850,17 @@ void usb_hid_device_c::register_state_specific(bx_list_c *parent)
   BXRS_DEC_PARAM_FIELD(list, mouse_y, s.mouse_y);
   BXRS_DEC_PARAM_FIELD(list, mouse_z, s.mouse_z);
   BXRS_HEX_PARAM_FIELD(list, b_state, s.b_state);
+  BXRS_PARAM_BOOL(list, mouse_event_count, s.mouse_event_count);
+  new bx_shadow_data_c(list, "mouse_event_buf", (Bit8u*)s.mouse_event_buf, 6 * BX_KBD_ELEMENTS, 1);
   if ((d.type == USB_DEV_TYPE_KEYPAD) || (d.type == USB_DEV_TYPE_KEYBOARD)) {
     new bx_shadow_data_c(list, "kbd_packet", s.kbd_packet, 8, 1);
     BXRS_HEX_PARAM_FIELD(list, indicators, s.indicators);
-    BXRS_PARAM_BOOL(list, kbd_count, s.kbd_count);
-    bx_list_c *buffer = new bx_list_c(list, "kbd_buffer", "");
+    BXRS_PARAM_BOOL(list, kbd_event_count, s.kbd_event_count);
+    bx_list_c *evbuf = new bx_list_c(list, "kbd_event_buf", "");
     char pname[16];
     for (Bit8u i = 0; i < BX_KBD_ELEMENTS; i++) {
       sprintf(pname, "%u", i);
-      new bx_shadow_num_c(buffer, pname, &s.kbd_buffer[i], BASE_HEX);
+      new bx_shadow_num_c(evbuf, pname, &s.kbd_event_buf[i], BASE_HEX);
     }
   }
 }
@@ -1076,32 +1078,71 @@ int usb_hid_device_c::mouse_poll(Bit8u *buf, int len, bx_bool force)
       mouse_enq(0, 0, s.mouse_z, s.b_state, 0);
     }
     if (s.has_events || force) {
-      buf[0] = (Bit8u) s.b_state;
-      buf[1] = (Bit8s) s.mouse_x;
-      buf[2] = (Bit8s) s.mouse_y;
-      s.mouse_x = 0;
-      s.mouse_y = 0;
-      l = 3;
-      if (len >= 4) {
-        buf[3] = (Bit8s) s.mouse_z; // if wheel mouse
-        s.mouse_z = 0;
-        l = 4;
+      if (s.mouse_event_count > 0) {
+        l = get_mouse_packet(buf, len);
+      } else {
+        l = create_mouse_packet(buf, len);
       }
-      s.has_events = 0;
+      s.has_events = (s.mouse_event_count > 0);
       start_idle_timer();
     }
   } else if (d.type == USB_DEV_TYPE_TABLET) {
     if (s.has_events || force) {
-      buf[0] = (Bit8u) s.b_state;
-      buf[1] = (Bit8u)(s.mouse_x & 0xff);
-      buf[2] = (Bit8u)(s.mouse_x >> 8);
-      buf[3] = (Bit8u)(s.mouse_y & 0xff);
-      buf[4] = (Bit8u)(s.mouse_y >> 8);
-      buf[5] = (Bit8s) s.mouse_z;
-      s.mouse_z = 0;
-      l = 6;
-      s.has_events = 0;
+      if (s.mouse_event_count > 0) {
+        l = get_mouse_packet(buf, len);
+      } else {
+        l = create_mouse_packet(buf, len);
+      }
+      s.has_events = (s.mouse_event_count > 0);
       start_idle_timer();
+    }
+  }
+  return l;
+}
+
+int usb_hid_device_c::create_mouse_packet(Bit8u *buf, int len)
+{
+  int l = USB_RET_NAK;
+
+  if (d.type == USB_DEV_TYPE_MOUSE) {
+    buf[0] = (Bit8u) s.b_state;
+    buf[1] = (Bit8s) s.mouse_x;
+    buf[2] = (Bit8s) s.mouse_y;
+    s.mouse_x = 0;
+    s.mouse_y = 0;
+    l = 3;
+    if (len >= 4) {
+      buf[3] = (Bit8s) s.mouse_z; // if wheel mouse
+      s.mouse_z = 0;
+      l = 4;
+    }
+  } else if (d.type == USB_DEV_TYPE_TABLET) {
+    buf[0] = (Bit8u) s.b_state;
+    buf[1] = (Bit8u)(s.mouse_x & 0xff);
+    buf[2] = (Bit8u)(s.mouse_x >> 8);
+    buf[3] = (Bit8u)(s.mouse_y & 0xff);
+    buf[4] = (Bit8u)(s.mouse_y >> 8);
+    buf[5] = (Bit8s) s.mouse_z;
+    s.mouse_z = 0;
+    l = 6;
+  }
+  return l;
+}
+
+int usb_hid_device_c::get_mouse_packet(Bit8u *buf, int len)
+{
+  int l = USB_RET_NAK;
+
+  if (s.mouse_event_count > 0) {
+    if (d.type == USB_DEV_TYPE_MOUSE) {
+      if (len >= 4) l = 4; else l = 3;
+    } else if (d.type == USB_DEV_TYPE_TABLET) {
+      l = 6;
+    }
+    memcpy(buf, s.mouse_event_buf[0], l);
+    if (--s.mouse_event_count > 0) {
+      memmove(s.mouse_event_buf[0], s.mouse_event_buf[1],
+              s.mouse_event_count * 6);
     }
   }
   return l;
@@ -1159,7 +1200,14 @@ void usb_hid_device_c::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned
 
     s.mouse_x = (Bit8s) delta_x;
     s.mouse_y = (Bit8s) delta_y;
+    s.mouse_z = (Bit8s) delta_z;
     if ((s.mouse_x != 0) || (s.mouse_y != 0) || (button_state != s.b_state)) {
+      if ((button_state ^ s.b_state) != 0) {
+        s.b_state = (Bit8u) button_state;
+        if (s.mouse_event_count < BX_KBD_ELEMENTS) {
+          create_mouse_packet(s.mouse_event_buf[s.mouse_event_count++], 4);
+        }
+      }
       s.has_events = 1;
     }
   } else if (d.type == USB_DEV_TYPE_TABLET) {
@@ -1176,12 +1224,17 @@ void usb_hid_device_c::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned
       s.mouse_x = 0;
     if (s.mouse_y < 0)
       s.mouse_y = 0;
+    s.mouse_z = (Bit8s) delta_z;
     if ((s.mouse_x != prev_x) || (s.mouse_y != prev_y) || (button_state != s.b_state)) {
+      if ((button_state ^ s.b_state) != 0) {
+        s.b_state = (Bit8u) button_state;
+        if (s.mouse_event_count < BX_KBD_ELEMENTS) {
+          create_mouse_packet(s.mouse_event_buf[s.mouse_event_count++], 6);
+        }
+      }
       s.has_events = 1;
     }
   }
-  s.mouse_z = (Bit8s) delta_z;
-  s.b_state = (Bit8u) button_state;
 }
 
 int usb_hid_device_c::keyboard_poll(Bit8u *buf, int len, bx_bool force)
@@ -1194,11 +1247,11 @@ int usb_hid_device_c::keyboard_poll(Bit8u *buf, int len, bx_bool force)
       memcpy(buf, s.kbd_packet, len);
       l = 8;
       s.has_events = 0;
-      if (s.kbd_count > 0) {
-        gen_scancode(s.kbd_buffer[0]);
-        s.kbd_count--;
-        for (Bit8u i = 0; i < s.kbd_count; i++) {
-          s.kbd_buffer[i] = s.kbd_buffer[i + 1];
+      if (s.kbd_event_count > 0) {
+        gen_scancode(s.kbd_event_buf[0]);
+        s.kbd_event_count--;
+        for (Bit8u i = 0; i < s.kbd_event_count; i++) {
+          s.kbd_event_buf[i] = s.kbd_event_buf[i + 1];
         }
       }
       start_idle_timer();
@@ -1227,8 +1280,8 @@ bx_bool usb_hid_device_c::gen_scancode(Bit32u key)
     return 1;
   }
   if (s.has_events) {
-    if (s.kbd_count < BX_KBD_ELEMENTS) {
-      s.kbd_buffer[s.kbd_count++] = key;
+    if (s.kbd_event_count < BX_KBD_ELEMENTS) {
+      s.kbd_event_buf[s.kbd_event_count++] = key;
     }
     return 1;
   }
@@ -1252,14 +1305,14 @@ bx_bool usb_hid_device_c::gen_scancode(Bit32u key)
   return 1;
 }
 
-Bit8u usb_hid_device_c::get_elements_static(void *dev)
+Bit8u usb_hid_device_c::kbd_get_elements_static(void *dev)
 {
-  return ((usb_hid_device_c*)dev)->get_elements();
+  return ((usb_hid_device_c*)dev)->kbd_get_elements();
 }
 
-Bit8u usb_hid_device_c::get_elements()
+Bit8u usb_hid_device_c::kbd_get_elements()
 {
-  return s.kbd_count;
+  return s.kbd_event_count;
 }
 
 void usb_hid_device_c::start_idle_timer()
