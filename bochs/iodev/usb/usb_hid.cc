@@ -1138,6 +1138,8 @@ int usb_hid_device_c::get_mouse_packet(Bit8u *buf, int len)
       if (len >= 4) l = 4; else l = 3;
     } else if (d.type == USB_DEV_TYPE_TABLET) {
       l = 6;
+    } else {
+      return l;
     }
     memcpy(buf, s.mouse_event_buf[0], l);
     if (--s.mouse_event_count > 0) {
@@ -1202,11 +1204,9 @@ void usb_hid_device_c::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned
     s.mouse_y = (Bit8s) delta_y;
     s.mouse_z = (Bit8s) delta_z;
     if ((s.mouse_x != 0) || (s.mouse_y != 0) || (button_state != s.b_state)) {
-      if ((button_state ^ s.b_state) != 0) {
-        s.b_state = (Bit8u) button_state;
-        if (s.mouse_event_count < BX_KBD_ELEMENTS) {
-          create_mouse_packet(s.mouse_event_buf[s.mouse_event_count++], 4);
-        }
+      s.b_state = (Bit8u) button_state;
+      if (s.mouse_event_count < BX_KBD_ELEMENTS) {
+        create_mouse_packet(s.mouse_event_buf[s.mouse_event_count++], 4);
       }
       s.has_events = 1;
     }
