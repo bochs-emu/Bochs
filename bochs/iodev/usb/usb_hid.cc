@@ -845,7 +845,6 @@ void usb_hid_device_c::register_state_specific(bx_list_c *parent)
   BXRS_HEX_PARAM_FIELD(list, idle, s.idle);
   BXRS_DEC_PARAM_FIELD(list, mouse_delayed_dx, s.mouse_delayed_dx);
   BXRS_DEC_PARAM_FIELD(list, mouse_delayed_dy, s.mouse_delayed_dy);
-  BXRS_DEC_PARAM_FIELD(list, mouse_delayed_dz, s.mouse_delayed_dz);
   BXRS_DEC_PARAM_FIELD(list, mouse_x, s.mouse_x);
   BXRS_DEC_PARAM_FIELD(list, mouse_y, s.mouse_y);
   BXRS_DEC_PARAM_FIELD(list, mouse_z, s.mouse_z);

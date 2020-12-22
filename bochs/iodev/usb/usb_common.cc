@@ -267,6 +267,9 @@ usbdev_locator_c::create(const char *type, usbdev_type devtype, const char *args
   return NULL;
 }
 
+#undef LOG_THIS
+#define LOG_THIS
+
 // Base class for USB devices
 
 usb_device_c::usb_device_c(void)

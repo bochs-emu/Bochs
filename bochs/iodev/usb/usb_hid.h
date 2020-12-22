@@ -49,7 +49,6 @@ private:
     Bit8u idle;
     int mouse_delayed_dx;
     int mouse_delayed_dy;
-    int mouse_delayed_dz;
     Bit16s mouse_x;
     Bit16s mouse_y;
     Bit8s mouse_z;
