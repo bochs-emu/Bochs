@@ -138,6 +138,7 @@ Section "Bochs Program (required)" SecCore
   File "${SRCDIR}\*.exe"
   File "${SRCDIR}\*.txt"
   File "${SRCDIR}\slirp.conf"
+  File "${SRCDIR}\vnet.conf"
   File "*.ico"
 
   ; Install keymaps
@@ -320,6 +321,7 @@ Section "Uninstall"
   Delete "$INSTDIR\*.exe"
   Delete "$INSTDIR\*.txt"
   Delete "$INSTDIR\slirp.conf"
+  Delete "$INSTDIR\vnet.conf"
   Delete "$INSTDIR\*.ico"
   Delete "$INSTDIR\keymaps\*"
   Delete "$INSTDIR\BIOS-bochs-*"
