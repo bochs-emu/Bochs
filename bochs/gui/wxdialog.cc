@@ -45,7 +45,6 @@
 
 #include "osdep.h"               // workarounds for missing stuff
 #include "gui/siminterface.h"    // interface to the simulator
-#include "bxversion.h"           // get version string
 #include "wxdialog.h"            // custom dialog boxes
 #include "wxmain.h"              // wxwidgets shared stuff
 
