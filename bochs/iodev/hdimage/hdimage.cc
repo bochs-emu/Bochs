@@ -19,11 +19,6 @@
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 /////////////////////////////////////////////////////////////////////////
 
-// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE
-// is used to know when we are exporting symbols and when we are importing.
-#define BX_PLUGGABLE
-
 #ifdef BXIMAGE
 #include "config.h"
 #include "misc/bxcompat.h"
@@ -38,11 +33,13 @@
 #include "cdrom_win32.h"
 #endif
 #include "hdimage.h"
+#if !BX_PLUGINS || defined(BXIMAGE)
+#include "vbox.h"
 #include "vmware3.h"
 #include "vmware4.h"
-#include "vvfat.h"
 #include "vpc-img.h"
-#include "vbox.h"
+#include "vvfat.h"
+#endif
 
 #if BX_HAVE_SYS_MMAN_H
 #include <sys/mman.h>
@@ -57,31 +54,36 @@
 #define O_ACCMODE (O_WRONLY | O_RDWR)
 #endif
 
-#define LOG_THIS theHDImageCtl->
+#define LOG_THIS bx_hdimage_ctl.
 
 #ifndef BXIMAGE
 
-bx_hdimage_ctl_c* theHDImageCtl = NULL;
-
-int CDECL libhdimage_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
-{
-  if (type == PLUGTYPE_CORE) {
-    theHDImageCtl = new bx_hdimage_ctl_c;
-    bx_devices.pluginHDImageCtl = theHDImageCtl;
-    return 0; // Success
-  } else {
-    return -1;
-  }
-}
-
-void CDECL libhdimage_LTX_plugin_fini(void)
-{
-  delete theHDImageCtl;
-}
+bx_hdimage_ctl_c bx_hdimage_ctl;
 
 bx_hdimage_ctl_c::bx_hdimage_ctl_c()
 {
   put("hdimage", "IMG");
+}
+
+void bx_hdimage_ctl_c::init(void)
+{
+#if !BX_PLUGINS
+  BX_INFO(("Disk image modules:"));
+  BX_INFO(("  flat"));
+  BX_INFO(("  concat"));
+  BX_INFO(("  sparse"));
+  BX_INFO(("  growing"));
+  BX_INFO(("  undoable"));
+  BX_INFO(("  volatile"));
+  hdimage_locator_c::print_modules();
+#else
+  // TODO
+#endif
+}
+
+void bx_hdimage_ctl_c::exit(void)
+{
+  hdimage_locator_c::cleanup();
 }
 
 device_image_t* bx_hdimage_ctl_c::init_image(Bit8u image_mode, Bit64u disk_size, const char *journal)
@@ -115,14 +117,6 @@ device_image_t* bx_hdimage_ctl_c::init_image(Bit8u image_mode, Bit64u disk_size,
       hdimage = new sparse_image_t();
       break;
 
-    case BX_HDIMAGE_MODE_VMWARE3:
-      hdimage = new vmware3_image_t();
-      break;
-
-    case BX_HDIMAGE_MODE_VMWARE4:
-      hdimage = new vmware4_image_t();
-      break;
-
     case BX_HDIMAGE_MODE_UNDOABLE:
       hdimage = new undoable_image_t(journal);
       break;
@@ -135,21 +129,15 @@ device_image_t* bx_hdimage_ctl_c::init_image(Bit8u image_mode, Bit64u disk_size,
       hdimage = new volatile_image_t(journal);
       break;
 
-    case BX_HDIMAGE_MODE_VVFAT:
-      hdimage = new vvfat_image_t(disk_size, journal);
-      break;
-
-    case BX_HDIMAGE_MODE_VPC:
-      hdimage = new vpc_image_t();
-      break;
-
-    case BX_HDIMAGE_MODE_VBOX:
-      hdimage = new vbox_image_t();
-      break;
-
     default:
+     if (!hdimage_locator_c::module_present(hdimage_mode_names[image_mode])) {
+#if BX_PLUGINS
+       PLUG_load_img_plugin(hdimage_mode_names[image_mode]);
+#else
       BX_PANIC(("Disk image mode '%s' not available", hdimage_mode_names[image_mode]));
-      break;
+#endif
+    }
+    hdimage = hdimage_locator_c::create(hdimage_mode_names[image_mode], disk_size, journal);
   }
   return hdimage;
 }
@@ -161,6 +149,85 @@ cdrom_base_c* bx_hdimage_ctl_c::init_cdrom(const char *dev)
 #else
   return new cdrom_base_c(dev);
 #endif
+}
+
+hdimage_locator_c *hdimage_locator_c::all;
+
+//
+// Each disk image module has a static locator class that registers
+// here
+//
+hdimage_locator_c::hdimage_locator_c(const char *mode)
+{
+  next = all;
+  all  = this;
+  this->mode = mode;
+}
+
+hdimage_locator_c::~hdimage_locator_c()
+{
+  hdimage_locator_c *ptr = 0;
+
+  if (this == all) {
+    all = all->next;
+  } else {
+    ptr = all;
+    while (ptr != NULL) {
+      if (ptr->next != this) {
+        ptr = ptr->next;
+      } else {
+        break;
+      }
+    }
+  }
+  if (ptr) {
+    ptr->next = this->next;
+  }
+}
+
+void hdimage_locator_c::print_modules()
+{
+  hdimage_locator_c *ptr = 0;
+
+  for (ptr = all; ptr != NULL; ptr = ptr->next) {
+    BX_INFO(("  %s", ptr->mode);)
+  }
+}
+
+bx_bool hdimage_locator_c::module_present(const char *mode)
+{
+  hdimage_locator_c *ptr = 0;
+
+  for (ptr = all; ptr != NULL; ptr = ptr->next) {
+    if (strcmp(mode, ptr->mode) == 0)
+      return 1;
+  }
+  return 0;
+}
+
+void hdimage_locator_c::cleanup()
+{
+#if BX_PLUGINS
+  while (all != NULL) {
+    PLUG_unload_img_plugin(all->mode);
+  }
+#endif
+}
+
+//
+// Called by common hdimage code to locate and create a device_image_t
+// object
+//
+device_image_t*
+hdimage_locator_c::create(const char *mode, Bit64u disk_size, const char *journal)
+{
+  hdimage_locator_c *ptr = 0;
+
+  for (ptr = all; ptr != NULL; ptr = ptr->next) {
+    if (strcmp(mode, ptr->mode) == 0)
+      return (ptr->allocate(disk_size, journal));
+  }
+  return NULL;
 }
 
 #endif // ifndef BXIMAGE
@@ -304,16 +371,18 @@ int hdimage_detect_image_mode(const char *pathname)
 
   if (sparse_image_t::check_format(fd, image_size) == HDIMAGE_FORMAT_OK) {
     result = BX_HDIMAGE_MODE_SPARSE;
+  } else if (growing_image_t::check_format(fd, image_size) == HDIMAGE_FORMAT_OK) {
+    result = BX_HDIMAGE_MODE_GROWING;
+#if !BX_PLUGINS || defined(BXIMAGE)
+  } else if (vbox_image_t::check_format(fd, image_size) >= HDIMAGE_FORMAT_OK) {
+    result = BX_HDIMAGE_MODE_VBOX;
   } else if (vmware3_image_t::check_format(fd, image_size) == HDIMAGE_FORMAT_OK) {
     result = BX_HDIMAGE_MODE_VMWARE3;
   } else if (vmware4_image_t::check_format(fd, image_size) == HDIMAGE_FORMAT_OK) {
     result = BX_HDIMAGE_MODE_VMWARE4;
-  } else if (growing_image_t::check_format(fd, image_size) == HDIMAGE_FORMAT_OK) {
-    result = BX_HDIMAGE_MODE_GROWING;
   } else if (vpc_image_t::check_format(fd, image_size) >= HDIMAGE_FORMAT_OK) {
     result = BX_HDIMAGE_MODE_VPC;
-  } else if (vbox_image_t::check_format(fd, image_size) >= HDIMAGE_FORMAT_OK) {
-    result = BX_HDIMAGE_MODE_VBOX;
+#endif
   } else if (flat_image_t::check_format(fd, image_size) == HDIMAGE_FORMAT_OK) {
     result = BX_HDIMAGE_MODE_FLAT;
   }

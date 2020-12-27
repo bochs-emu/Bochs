@@ -45,10 +45,39 @@
 
 const off_t vmware3_image_t::INVALID_OFFSET=(off_t)-1;
 
-#define LOG_THIS bx_devices.pluginHDImageCtl->
+#define LOG_THIS bx_hdimage_ctl.
 
 #define DTOH32_HEADER(field) (header.field = (dtoh32(header.field)))
 #define HTOD32_HEADER(field) (header.field = (htod32(header.field)))
+
+#ifndef BXIMAGE
+
+// disk image plugin entry points
+
+int CDECL libvmware3_img_plugin_init(plugin_t *plugin, plugintype_t type)
+{
+  return 0; // Success
+}
+
+void CDECL libvmware3_img_plugin_fini(void)
+{
+  // Nothing here yet
+}
+
+//
+// Define the static class that registers the derived device image class,
+// and allocates one on request.
+//
+class bx_vmware3_locator_c : public hdimage_locator_c {
+public:
+  bx_vmware3_locator_c(void) : hdimage_locator_c("vmware3") {}
+protected:
+  device_image_t *allocate(Bit64u disk_size, const char *journal) {
+    return (new vmware3_image_t());
+  }
+} bx_vmware3_match;
+
+#endif
 
 int vmware3_image_t::check_format(int fd, Bit64u imgsize)
 {

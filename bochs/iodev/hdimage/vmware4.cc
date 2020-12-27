@@ -10,7 +10,7 @@
  * Contact: snrrrub@gmail.com
  *
  * Copyright (C) 2006       Sharvil Nanavati.
- * Copyright (C) 2006-2018  The Bochs Project
+ * Copyright (C) 2006-2020  The Bochs Project
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -43,10 +43,39 @@
 #include "hdimage.h"
 #include "vmware4.h"
 
-#define LOG_THIS bx_devices.pluginHDImageCtl->
+#define LOG_THIS bx_hdimage_ctl.
 
 const off_t vmware4_image_t::INVALID_OFFSET = (off_t)-1;
 const int vmware4_image_t::SECTOR_SIZE = 512;
+
+#ifndef BXIMAGE
+
+// disk image plugin entry points
+
+int CDECL libvmware4_img_plugin_init(plugin_t *plugin, plugintype_t type)
+{
+  return 0; // Success
+}
+
+void CDECL libvmware4_img_plugin_fini(void)
+{
+  // Nothing here yet
+}
+
+//
+// Define the static class that registers the derived device image class,
+// and allocates one on request.
+//
+class bx_vmware4_locator_c : public hdimage_locator_c {
+public:
+  bx_vmware4_locator_c(void) : hdimage_locator_c("vmware4") {}
+protected:
+  device_image_t *allocate(Bit64u disk_size, const char *journal) {
+    return (new vmware4_image_t());
+  }
+} bx_vmware4_match;
+
+#endif
 
 vmware4_image_t::vmware4_image_t()
   : file_descriptor(-1),

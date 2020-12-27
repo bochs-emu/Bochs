@@ -6,7 +6,7 @@
 //
 // Copyright (c) 2005  Alex Beregszaszi
 // Copyright (c) 2009  Kevin Wolf <kwolf@suse.de>
-// Copyright (C) 2012-2018  The Bochs Project
+// Copyright (C) 2012-2020  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -44,7 +44,36 @@
 #include "hdimage.h"
 #include "vpc-img.h"
 
-#define LOG_THIS bx_devices.pluginHDImageCtl->
+#define LOG_THIS bx_hdimage_ctl.
+
+#ifndef BXIMAGE
+
+// disk image plugin entry points
+
+int CDECL libvpc_img_plugin_init(plugin_t *plugin, plugintype_t type)
+{
+  return 0; // Success
+}
+
+void CDECL libvpc_img_plugin_fini(void)
+{
+  // Nothing here yet
+}
+
+//
+// Define the static class that registers the derived device image class,
+// and allocates one on request.
+//
+class bx_vpc_locator_c : public hdimage_locator_c {
+public:
+  bx_vpc_locator_c(void) : hdimage_locator_c("vpc") {}
+protected:
+  device_image_t *allocate(Bit64u disk_size, const char *journal) {
+    return (new vpc_image_t());
+  }
+} bx_vpc_match;
+
+#endif
 
 Bit32u vpc_checksum(Bit8u *buf, size_t size)
 {

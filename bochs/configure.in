@@ -2179,11 +2179,11 @@ PRIMARY_TARGET='bochs'
 PLUGIN_LIBNAME_TRANSFORMATION='%.o=libbx_%.la'
 
 if test "$bx_plugins" = 0; then
-  HDIMAGE_LIB_VAR='iodev/hdimage/libhdimage.a'
-  AC_SUBST(HDIMAGE_LIB_VAR)
   DISPLAY_LIB_VAR='iodev/display/libdisplay.a'
   AC_SUBST(DISPLAY_LIB_VAR)
 fi
+HDIMAGE_LIB_VAR='iodev/hdimage/libhdimage.a'
+AC_SUBST(HDIMAGE_LIB_VAR)
 IODEV_LIB_VAR='iodev/libiodev.a'
 NONINLINE_VAR='$(NONINLINE_OBJS)'
 

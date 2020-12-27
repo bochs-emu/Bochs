@@ -53,11 +53,37 @@
 #include "hdimage.h"
 #include "vvfat.h"
 
-#define LOG_THIS bx_devices.pluginHDImageCtl->
+#define LOG_THIS bx_hdimage_ctl.
 
 #define VVFAT_MBR  "vvfat_mbr.bin"
 #define VVFAT_BOOT "vvfat_boot.bin"
 #define VVFAT_ATTR "vvfat_attr.cfg"
+
+// disk image plugin entry points
+
+int CDECL libvvfat_img_plugin_init(plugin_t *plugin, plugintype_t type)
+{
+  return 0; // Success
+}
+
+void CDECL libvvfat_img_plugin_fini(void)
+{
+  // Nothing here yet
+}
+
+//
+// Define the static class that registers the derived device image class,
+// and allocates one on request.
+//
+class bx_vvfat_locator_c : public hdimage_locator_c {
+public:
+  bx_vvfat_locator_c(void) : hdimage_locator_c("vvfat") {}
+protected:
+  device_image_t *allocate(Bit64u disk_size, const char *journal) {
+    return (new vvfat_image_t(disk_size, journal));
+  }
+} bx_vvfat_match;
+
 
 static int vvfat_count = 0;
 

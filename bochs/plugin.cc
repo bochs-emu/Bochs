@@ -46,18 +46,18 @@
 #define NET_PLUGIN_FINI_FMT_STRING   "lib%s_net_plugin_fini"
 #define USB_PLUGIN_INIT_FMT_STRING   "lib%s_dev_plugin_init"
 #define USB_PLUGIN_FINI_FMT_STRING   "lib%s_dev_plugin_fini"
+#define IMG_PLUGIN_INIT_FMT_STRING   "lib%s_img_plugin_init"
+#define IMG_PLUGIN_FINI_FMT_STRING   "lib%s_img_plugin_fini"
 #define PLUGIN_PATH                  ""
 
 #ifndef WIN32
 #define PLUGIN_FILENAME_FORMAT       "libbx_%s.so"
 #define SOUND_PLUGIN_FILENAME_FORMAT "libbx_sound%s.so"
 #define NET_PLUGIN_FILENAME_FORMAT   "libbx_eth_%s.so"
-#define USB_PLUGIN_FILENAME_FORMAT   "libbx_%s.so"
 #else
 #define PLUGIN_FILENAME_FORMAT       "bx_%s.dll"
 #define SOUND_PLUGIN_FILENAME_FORMAT "bx_sound%s.dll"
 #define NET_PLUGIN_FILENAME_FORMAT   "bx_eth_%s.dll"
-#define USB_PLUGIN_FILENAME_FORMAT   "bx_%s.dll"
 #endif
 
 logfunctions *pluginlog;
@@ -325,8 +325,9 @@ void plugin_load(char *name, plugintype_t type)
     sprintf(tmpname, SOUND_PLUGIN_FILENAME_FORMAT, name);
   } else if (type == PLUGTYPE_NETWORK) {
     sprintf(tmpname, NET_PLUGIN_FILENAME_FORMAT, name);
-  } else if (type == PLUGTYPE_USBDEV) {
-    sprintf(tmpname, USB_PLUGIN_FILENAME_FORMAT, name);
+  } else if ((type == PLUGTYPE_HDIMAGE) && !strcmp(name, "vpc")) {
+    // FIXME: HACK!!!
+    sprintf(tmpname, PLUGIN_FILENAME_FORMAT, "vpc-img");
   } else {
     sprintf(tmpname, PLUGIN_FILENAME_FORMAT, name);
   }
@@ -378,6 +379,8 @@ void plugin_load(char *name, plugintype_t type)
     sprintf(tmpname, NET_PLUGIN_INIT_FMT_STRING, name);
   } else if (type == PLUGTYPE_USBDEV) {
     sprintf(tmpname, USB_PLUGIN_INIT_FMT_STRING, name);
+  } else if (type == PLUGTYPE_HDIMAGE) {
+    sprintf(tmpname, IMG_PLUGIN_INIT_FMT_STRING, name);
   } else if (type != PLUGTYPE_USER) {
     sprintf(tmpname, PLUGIN_INIT_FMT_STRING, name);
   } else {
@@ -405,6 +408,8 @@ void plugin_load(char *name, plugintype_t type)
     sprintf(tmpname, NET_PLUGIN_FINI_FMT_STRING, name);
   } else if (type == PLUGTYPE_USBDEV) {
     sprintf(tmpname, USB_PLUGIN_FINI_FMT_STRING, name);
+  } else if (type == PLUGTYPE_HDIMAGE) {
+    sprintf(tmpname, IMG_PLUGIN_FINI_FMT_STRING, name);
   } else if (type != PLUGTYPE_USER) {
     sprintf(tmpname, PLUGIN_FINI_FMT_STRING, name);
   } else {
@@ -799,6 +804,7 @@ typedef struct {
 #define BUILTIN_NET_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_NETWORK, lib##mod##_net_plugin_init, lib##mod##_net_plugin_fini, 0}
 #define BUILTIN_USB_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_USBDEV, lib##mod##_dev_plugin_init, lib##mod##_dev_plugin_fini, 0}
 #define BUILTIN_VGA_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_VGA, lib##mod##_LTX_plugin_init, lib##mod##_LTX_plugin_fini, 0}
+#define BUILTIN_IMG_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_HDIMAGE, lib##mod##_img_plugin_init, lib##mod##_img_plugin_fini, 0}
 
 static builtin_plugin_t builtin_plugins[] = {
 #if BX_WITH_AMIGAOS
@@ -940,6 +946,11 @@ static builtin_plugin_t builtin_plugins[] = {
   BUILTIN_USB_PLUGIN_ENTRY(usb_msd),
   BUILTIN_USB_PLUGIN_ENTRY(usb_printer),
 #endif
+  BUILTIN_IMG_PLUGIN_ENTRY(vmware3),
+  BUILTIN_IMG_PLUGIN_ENTRY(vmware4),
+  BUILTIN_IMG_PLUGIN_ENTRY(vbox),
+  BUILTIN_IMG_PLUGIN_ENTRY(vpc),
+  BUILTIN_IMG_PLUGIN_ENTRY(vvfat),
   {"NULL", PLUGTYPE_GUI, NULL, NULL, 0}
 };
 

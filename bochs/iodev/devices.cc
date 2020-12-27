@@ -31,6 +31,7 @@
 #include "iodev/sound/soundmod.h"
 #include "iodev/network/netmod.h"
 #include "iodev/usb/usb_common.h"
+#include "iodev/hdimage/hdimage.h"
 
 #define LOG_THIS bx_devices.
 
@@ -181,7 +182,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   // "by hand" in this file.  Basically, we're using core plugins when we
   // want to control the init order.
   //
-  PLUG_load_plugin(hdimage, PLUGTYPE_CORE);
+  bx_hdimage_ctl.init();
 #if BX_NETWORKING
   network_enabled = is_network_enabled();
   if (network_enabled)
@@ -462,7 +463,7 @@ void bx_devices_c::exit()
   // unload optional and user plugins first
   bx_unload_plugins();
   bx_unload_core_plugins();
-  PLUG_unload_plugin(hdimage);
+  bx_hdimage_ctl.exit();
 #if BX_NETWORKING
   if (network_enabled)
     bx_netmod_ctl.exit();

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-// Copyright (C) 2002-2017  The Bochs Project
+// Copyright (C) 2002-2020  The Bochs Project
 //
 // extplugin.h
 //
@@ -36,6 +36,7 @@ enum plugintype_t {
   PLUGTYPE_NETWORK,
   PLUGTYPE_USBDEV,
   PLUGTYPE_VGA,
+  PLUGTYPE_HDIMAGE,
   PLUGTYPE_USER
 };
 

@@ -50,7 +50,6 @@ extern "C" {
 #define BX_PLUGIN_KEYBOARD  "keyboard"
 #define BX_PLUGIN_BUSMOUSE  "busmouse"
 #define BX_PLUGIN_HARDDRV   "harddrv"
-#define BX_PLUGIN_HDIMAGE   "hdimage"
 #define BX_PLUGIN_DMA       "dma"
 #define BX_PLUGIN_PIC       "pic"
 #define BX_PLUGIN_PIT       "pit"
@@ -90,12 +89,14 @@ extern "C" {
 #define PLUG_load_net_plugin(name) bx_load_plugin(name,PLUGTYPE_NETWORK)
 #define PLUG_load_usb_plugin(name) bx_load_plugin(name,PLUGTYPE_USBDEV)
 #define PLUG_load_vga_plugin(name) bx_load_plugin(name,PLUGTYPE_VGA)
+#define PLUG_load_img_plugin(name) bx_load_plugin(name,PLUGTYPE_HDIMAGE)
 #define PLUG_load_user_plugin(name) {bx_load_plugin(name,PLUGTYPE_USER);}
 #define PLUG_unload_plugin(name) {bx_unload_plugin(#name,1);}
 #define PLUG_unload_opt_plugin(name) bx_unload_plugin(name,1)
 #define PLUG_unload_snd_plugin(name) bx_unload_plugin(name,0)
 #define PLUG_unload_net_plugin(name) bx_unload_plugin(name,0)
 #define PLUG_unload_usb_plugin(name) bx_unload_plugin(name,0)
+#define PLUG_unload_img_plugin(name) bx_unload_plugin(name,0)
 #define PLUG_unload_user_plugin(name) {bx_unload_plugin(name,1);}
 
 #define DEV_register_ioread_handler(b,c,d,e,f)  pluginRegisterIOReadHandler(b,c,d,e,f)
@@ -123,6 +124,7 @@ extern "C" {
 #define PLUG_load_net_plugin(name) bx_load_plugin2(name,PLUGTYPE_NETWORK)
 #define PLUG_load_usb_plugin(name) bx_load_plugin2(name,PLUGTYPE_USBDEV)
 #define PLUG_load_vga_plugin(name) bx_load_plugin2(name,PLUGTYPE_VGA)
+#define PLUG_load_img_plugin(name) bx_load_plugin2(name,PLUGTYPE_HDIMAGE)
 #define PLUG_unload_plugin(name) {lib##name##_LTX_plugin_fini();}
 #define PLUG_unload_opt_plugin(name) bx_unload_opt_plugin(name,1);
 
@@ -188,8 +190,6 @@ extern "C" {
 #define DEV_hd_bmdma_read_sector(a,b,c) bx_devices.pluginHardDrive->bmdma_read_sector(a,b,c)
 #define DEV_hd_bmdma_write_sector(a,b) bx_devices.pluginHardDrive->bmdma_write_sector(a,b)
 #define DEV_hd_bmdma_complete(a) bx_devices.pluginHardDrive->bmdma_complete(a)
-#define DEV_hdimage_init_image(a,b,c) bx_devices.pluginHDImageCtl->init_image(a,b,c)
-#define DEV_hdimage_init_cdrom(a) bx_devices.pluginHDImageCtl->init_cdrom(a)
 
 #define DEV_bulk_io_quantum_requested() (bx_devices.bulkIOQuantumsRequested)
 #define DEV_bulk_io_quantum_transferred() (bx_devices.bulkIOQuantumsTransferred)
@@ -379,6 +379,9 @@ int plugin_init(plugin_t *plugin, plugintype_t type);
 #define DECLARE_PLUGIN_INIT_FINI_FOR_USB_MODULE(mod) \
   extern "C" __declspec(dllexport) int __cdecl lib##mod##_dev_plugin_init(plugin_t *plugin, plugintype_t type); \
   extern "C" __declspec(dllexport) void __cdecl lib##mod##_dev_plugin_fini(void);
+#define DECLARE_PLUGIN_INIT_FINI_FOR_IMG_MODULE(mod) \
+  extern "C" __declspec(dllexport) int __cdecl lib##mod##_img_plugin_init(plugin_t *plugin, plugintype_t type); \
+  extern "C" __declspec(dllexport) void __cdecl lib##mod##_img_plugin_fini(void);
 #else
 #define DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(mod) \
   int CDECL lib##mod##_LTX_plugin_init(plugin_t *plugin, plugintype_t type); \
@@ -395,11 +398,13 @@ int plugin_init(plugin_t *plugin, plugintype_t type);
 #define DECLARE_PLUGIN_INIT_FINI_FOR_USB_MODULE(mod) \
   int CDECL lib##mod##_dev_plugin_init(plugin_t *plugin, plugintype_t type); \
   void CDECL lib##mod##_dev_plugin_fini(void);
+#define DECLARE_PLUGIN_INIT_FINI_FOR_IMG_MODULE(mod) \
+  int CDECL lib##mod##_img_plugin_init(plugin_t *plugin, plugintype_t type); \
+  void CDECL lib##mod##_img_plugin_fini(void);
 #endif
 
 // device plugins
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(harddrv)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(hdimage)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(keyboard)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(busmouse)
 DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(serial)
@@ -474,6 +479,12 @@ DECLARE_PLUGIN_INIT_FINI_FOR_USB_MODULE(usb_hid)
 DECLARE_PLUGIN_INIT_FINI_FOR_USB_MODULE(usb_hub)
 DECLARE_PLUGIN_INIT_FINI_FOR_USB_MODULE(usb_msd)
 DECLARE_PLUGIN_INIT_FINI_FOR_USB_MODULE(usb_printer)
+// disk image plugins
+DECLARE_PLUGIN_INIT_FINI_FOR_IMG_MODULE(vmware3)
+DECLARE_PLUGIN_INIT_FINI_FOR_IMG_MODULE(vmware4)
+DECLARE_PLUGIN_INIT_FINI_FOR_IMG_MODULE(vbox)
+DECLARE_PLUGIN_INIT_FINI_FOR_IMG_MODULE(vpc)
+DECLARE_PLUGIN_INIT_FINI_FOR_IMG_MODULE(vvfat)
 
 
 #ifdef __cplusplus

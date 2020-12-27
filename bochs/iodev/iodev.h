@@ -363,16 +363,6 @@ public:
 };
 #endif
 
-class BOCHSAPI bx_hdimage_ctl_stub_c : public bx_devmodel_c {
-public:
-  virtual device_image_t* init_image(Bit8u image_mode, Bit64u disk_size, const char *journal) {
-    STUBFUNC(hdimage_ctl, init_image); return NULL;
-  }
-  virtual cdrom_base_c* init_cdrom(const char *dev) {
-    STUBFUNC(hdimage_ctl, init_cdrom); return NULL;
-  }
-};
-
 class BOCHSAPI bx_devices_c : public logfunctions {
 public:
   bx_devices_c();
@@ -453,7 +443,6 @@ public:
   bx_cmos_stub_c    *pluginCmosDevice;
   bx_dma_stub_c     *pluginDmaDevice;
   bx_hard_drive_stub_c *pluginHardDrive;
-  bx_hdimage_ctl_stub_c *pluginHDImageCtl;
   bx_pic_stub_c     *pluginPicDevice;
   bx_pit_stub_c     *pluginPitDevice;
   bx_speaker_stub_c *pluginSpeaker;
@@ -478,7 +467,6 @@ public:
   bx_cmos_stub_c stubCmos;
   bx_dma_stub_c  stubDma;
   bx_hard_drive_stub_c stubHardDrive;
-  bx_hdimage_ctl_stub_c stubHDImage;
   bx_pic_stub_c  stubPic;
   bx_pit_stub_c  stubPit;
   bx_speaker_stub_c stubSpeaker;
