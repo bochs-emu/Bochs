@@ -42,15 +42,24 @@ void BX_CPU_C::debug_disasm_instruction(bx_address offset)
   static char letters[] = "0123456789ABCDEF";
   unsigned remainsInPage = 0x1000 - PAGE_OFFSET(offset);
   extern unsigned bx_dbg_disasm_wrapper(bx_bool is_32, bx_bool is_64, bx_address cs_base, bx_address ip, const Bit8u *instr, char *disbuf);
+  static disassembler bx_disassemble;
 
   bx_bool valid = dbg_xlate_linear2phy(get_laddr(BX_SEG_REG_CS, offset), &phy_addr);
   if (valid) {
     BX_MEM(0)->dbg_fetch_mem(BX_CPU_THIS, phy_addr, 16, instr_buf);
+#if BX_DEBUGGER
     unsigned isize = bx_dbg_disasm_wrapper(
         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b,
         BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64,
         BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS), offset,
         instr_buf, char_buf+i);
+#else
+    unsigned isize = bx_disassemble.disasm(
+        BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b,
+        BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64,
+        BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS), offset,
+        instr_buf, char_buf+i);
+#endif
     if (isize <= remainsInPage) {
       i=strlen(char_buf);
       char_buf[i++] = ' ';
