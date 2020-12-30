@@ -36,6 +36,7 @@ extern char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr
 // Note; any instance has access to all the member functions -- that is enough!
 // -- i.e. No further initialization necessary.
 static disassembler bx_disassemble;
+unsigned bx_dbg_disasm_wrapper(bx_bool is_32, bx_bool is_64, bx_address cs_base, bx_address ip, const Bit8u *instr, char *disbuf);
 
 const char* DC0txt[2] = {"P.Address","L.Address"};    // DumpMode definitions in text
 
@@ -961,21 +962,8 @@ void FillAsm(Bit64u LAddr, int MaxLines)
         while (AsmLineCount < MaxLines && BufEmpty == FALSE)
         {
             // disassemble 1 line with a direct call, into asmtxt
-/*
-            if (1) {
-              extern char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr, bxInstruction_c *i, bx_address cs_base, bx_address rip);
-              bxInstruction_c i;
-              disasm((const Bit8u *) p, In32Mode, In64Mode,
-                  cols[2], &i, (bx_address) 0, (bx_address) LAddr);
-
-              len = i.ilen();
-            }
-            else 
-*/
-            {
-              len = bx_disassemble.disasm(In32Mode, In64Mode, (bx_address) 0,
+            len = bx_dbg_disasm_wrapper(In32Mode, In64Mode, (bx_address) 0,
                   (bx_address) LAddr, (Bit8u *) p, cols[2]);
-            }
 
             if (len <= BufLen)      // disassembly was successful?
             {

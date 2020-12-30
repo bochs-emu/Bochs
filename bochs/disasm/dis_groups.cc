@@ -765,6 +765,7 @@ void disassembler::Jw(const x86_insn *insn)
   Bit16u target = (db_eip + imm16) & 0xffff;
   sym = GET_SYMBOL(target);
   sym = sym ? sym : "";
+
   if (offset_mode_hex) {
     dis_sprintf(SYMBOLIC_JUMP(".+0x%04x"),
         (unsigned) (Bit16u) imm16, sym);

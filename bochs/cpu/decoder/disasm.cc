@@ -491,38 +491,39 @@ char *disasm_immediate(char *disbufptr, const bxInstruction_c *i, unsigned src_t
 char *disasm_branch_target(char *disbufptr, const bxInstruction_c *i, unsigned src_type, bx_address cs_base, bx_address rip)
 {
   bx_address target;
+  Bit16s imm16;
   Bit32s imm32;
   const char *sym = "";
 
   switch(src_type) {
   case BX_IMMW:
   case BX_IMMBW_SE: // 8-bit signed value sign extended to 16-bit size
-    imm32 = (Bit32s) (Bit16s) i->Iw();
-    disbufptr = dis_sprintf(disbufptr, ".%+d", imm32);
-    target = (rip + i->ilen() + (Bit16s) i->Iw()) & 0xffff;
-    target = (cs_base != BX_JUMP_TARGET_NOT_REQ) ? Bit32u(cs_base + target) : target;
+    imm16 = (Bit16s) i->Iw();
+    target = (rip + i->ilen() + imm16) & 0xffff; // do not add CS_BASE in 16-bit
     sym = GET_SYMBOL(target);
     sym = sym ? sym : "";
-    dis_sprintf(disbufptr, SYMBOLIC_JUMP(".+0x%8x"), (unsigned) imm32, sym);
+//  disbufptr = dis_sprintf(disbufptr, SYMBOLIC_JUMP(".+0x%04x"), (unsigned) imm16, sym);   // hex offset
+    disbufptr = dis_sprintf(disbufptr, SYMBOLIC_JUMP(".%+d"), (unsigned) imm16, sym);
 
     if (cs_base != BX_JUMP_TARGET_NOT_REQ) {
-      dis_sprintf(disbufptr, " (0x%08x)", target);
+      disbufptr = dis_sprintf(disbufptr, " (0x%08x)", Bit32u(cs_base + target));
     }
     break;
 
   case BX_IMMD:
   case BX_IMMBD_SE: // 8-bit signed value sign extended to 32-bit size
     imm32 = (Bit32s) i->Id();
-    disbufptr = dis_sprintf(disbufptr, ".%+d", imm32);
     target = rip + i->ilen() + (Bit32s) i->Id();
     target = (cs_base != BX_JUMP_TARGET_NOT_REQ) ? bx_address(cs_base + target) : target;
     sym = GET_SYMBOL(target);
     sym = sym ? sym : "";
-    dis_sprintf(disbufptr, SYMBOLIC_JUMP(".+0x" FMT_ADDRX64), (unsigned) imm32, sym);
+//  disbufptr = dis_sprintf(disbufptr, SYMBOLIC_JUMP(".+0x" FMT_ADDRX64), (unsigned) imm32, sym);   // hex offset
+    disbufptr = dis_sprintf(disbufptr, SYMBOLIC_JUMP(".%+d"), (unsigned) imm32, sym);
 
     if (cs_base != BX_JUMP_TARGET_NOT_REQ) {
       disbufptr = dis_sprintf(disbufptr, " (0x" FMT_ADDRX ")", target);
     }
+
     break;
 
   default:

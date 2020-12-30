@@ -123,6 +123,7 @@ static struct {
 static disassembler bx_disassemble;
 static Bit8u bx_disasm_ibuf[32];
 static char  bx_disasm_tbuf[512];
+unsigned bx_dbg_disasm_wrapper(bx_bool is_32, bx_bool is_64, bx_address cs_base, bx_address ip, const Bit8u *instr, char *disbuf);
 
 static bx_bool watchpoint_continue = 0;
 unsigned num_write_watchpoints = 0;
@@ -2107,22 +2108,10 @@ void bx_dbg_disassemble_current(int which_cpu, int print_time)
 
   if (bx_dbg_read_linear(which_cpu, BX_CPU(which_cpu)->guard_found.laddr, 16, bx_disasm_ibuf))
   {
-#if 1
-    unsigned ilen = bx_disassemble.disasm(IS_CODE_32(BX_CPU(which_cpu)->guard_found.code_32_64),
+    unsigned ilen = bx_dbg_disasm_wrapper(IS_CODE_32(BX_CPU(which_cpu)->guard_found.code_32_64),
       IS_CODE_64(BX_CPU(which_cpu)->guard_found.code_32_64),
       BX_CPU(which_cpu)->get_segment_base(BX_SEG_REG_CS),
       BX_CPU(which_cpu)->guard_found.eip, bx_disasm_ibuf, bx_disasm_tbuf);
-#else
-    extern char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr, bxInstruction_c *i, bx_address cs_base = 0, bx_address rip = 0);
-
-    bxInstruction_c i;
-    disasm(bx_disasm_ibuf, IS_CODE_32(BX_CPU(which_cpu)->guard_found.code_32_64),
-        IS_CODE_64(BX_CPU(which_cpu)->guard_found.code_32_64), 
-        bx_disasm_tbuf, &i,
-        BX_CPU(which_cpu)->get_segment_base(BX_SEG_REG_CS), BX_CPU(which_cpu)->guard_found.eip);
-
-    unsigned ilen = i.ilen();
-#endif
 
     // Note: it would be nice to display only the modified registers here, the easy
     // way out I have thought of would be to keep a prev_eax, prev_ebx, etc copies
@@ -2847,7 +2836,7 @@ void bx_dbg_disassemble_command(const char *format, Bit64u from, Bit64u to)
 
     if (! bx_dbg_read_linear(dbg_cpu, from, 16, bx_disasm_ibuf)) break;
 
-    unsigned ilen = bx_disassemble.disasm(dis_size==32, dis_size==64,
+    unsigned ilen = bx_dbg_disasm_wrapper(dis_size==32, dis_size==64,
        0/*(bx_address)(-1)*/, from/*(bx_address)(-1)*/, bx_disasm_ibuf, bx_disasm_tbuf);
 
     const char *Sym=bx_dbg_disasm_symbolic_address(from, 0);
@@ -4026,6 +4015,19 @@ void bx_dbg_step_over_command()
 
   if (bx_dbg_del_lbreak(BpId))
     bx_dbg_breakpoint_changed();
+}
+
+unsigned bx_dbg_disasm_wrapper(bx_bool is_32, bx_bool is_64, bx_address cs_base, bx_address ip, const Bit8u *instr, char *disbuf)
+{
+#if 1
+    unsigned ilen = bx_disassemble.disasm(is_32, is_64, cs_base, ip, instr, disbuf);
+#else
+    bxInstruction_c i;
+    extern char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr, bxInstruction_c *i, bx_address cs_base = 0, bx_address rip = 0);
+    disasm(instr, is_32, is_64, disbuf, &i, cs_base, ip);
+    unsigned ilen = i.ilen();
+#endif
+    return ilen;
 }
 
 #endif /* if BX_DEBUGGER */
