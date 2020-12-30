@@ -42,7 +42,7 @@
 #include "iodev.h"
 #endif
 #include "hdimage.h"
-#include "vpc-img.h"
+#include "vpc.h"
 
 #define LOG_THIS bx_hdimage_ctl.
 

@@ -6,7 +6,7 @@
 //
 // Copyright (c) 2005  Alex Beregszaszi
 // Copyright (c) 2009  Kevin Wolf <kwolf@suse.de>
-// Copyright (C) 2012-2013  The Bochs Project
+// Copyright (C) 2012-2020  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
