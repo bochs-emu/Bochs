@@ -41,6 +41,7 @@ void BX_CPU_C::debug_disasm_instruction(bx_address offset)
 
   static char letters[] = "0123456789ABCDEF";
   unsigned remainsInPage = 0x1000 - PAGE_OFFSET(offset);
+  extern unsigned bx_dbg_disasm_wrapper(bx_bool is_32, bx_bool is_64, bx_address cs_base, bx_address ip, const Bit8u *instr, char *disbuf);
 
   bx_bool valid = dbg_xlate_linear2phy(get_laddr(BX_SEG_REG_CS, offset), &phy_addr);
   if (valid) {
