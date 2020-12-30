@@ -4019,14 +4019,14 @@ void bx_dbg_step_over_command()
 unsigned bx_dbg_disasm_wrapper(bx_bool is_32, bx_bool is_64, bx_address cs_base, bx_address ip, const Bit8u *instr, char *disbuf)
 {
 #if 1
-    unsigned ilen = bx_disassemble.disasm(is_32, is_64, cs_base, ip, instr, disbuf);
+  unsigned ilen = bx_disassemble.disasm(is_32, is_64, cs_base, ip, instr, disbuf);
 #else
-    bxInstruction_c i;
-    extern char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr, bxInstruction_c *i, bx_address cs_base = 0, bx_address rip = 0);
-    disasm(instr, is_32, is_64, disbuf, &i, cs_base, ip);
-    unsigned ilen = i.ilen();
+  bxInstruction_c i;
+  extern char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr, bxInstruction_c *i, bx_address cs_base = 0, bx_address rip = 0);
+  disasm(instr, is_32, is_64, disbuf, &i, cs_base, ip);
+  unsigned ilen = i.ilen();
 #endif
-    return ilen;
+  return ilen;
 }
 
 #endif /* if BX_DEBUGGER */
