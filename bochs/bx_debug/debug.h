@@ -368,6 +368,7 @@ void bx_dbg_iac_report(unsigned vector, unsigned irq);
 void bx_dbg_a20_report(unsigned val);
 void bx_dbg_io_report(Bit32u port, unsigned size, unsigned op, Bit32u val);
 void bx_dbg_disassemble_current(int which_cpu, int print_time);
+unsigned bx_dbg_disasm_wrapper(bx_bool is_32, bx_bool is_64, bx_address cs_base, bx_address ip, const Bit8u *instr, char *disbuf);
 
 #endif // #ifdef __cplusplus
 

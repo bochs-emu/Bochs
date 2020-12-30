@@ -123,7 +123,6 @@ static struct {
 static disassembler bx_disassemble;
 static Bit8u bx_disasm_ibuf[32];
 static char  bx_disasm_tbuf[512];
-unsigned bx_dbg_disasm_wrapper(bx_bool is_32, bx_bool is_64, bx_address cs_base, bx_address ip, const Bit8u *instr, char *disbuf);
 
 static bx_bool watchpoint_continue = 0;
 unsigned num_write_watchpoints = 0;

@@ -36,7 +36,6 @@ extern char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr
 // Note; any instance has access to all the member functions -- that is enough!
 // -- i.e. No further initialization necessary.
 static disassembler bx_disassemble;
-unsigned bx_dbg_disasm_wrapper(bx_bool is_32, bx_bool is_64, bx_address cs_base, bx_address ip, const Bit8u *instr, char *disbuf);
 
 const char* DC0txt[2] = {"P.Address","L.Address"};    // DumpMode definitions in text
 
