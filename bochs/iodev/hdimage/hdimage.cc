@@ -37,7 +37,7 @@
 #include "vbox.h"
 #include "vmware3.h"
 #include "vmware4.h"
-#include "vpc-img.h"
+#include "vpc.h"
 #include "vvfat.h"
 #endif
 

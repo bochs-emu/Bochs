@@ -50,7 +50,7 @@ LIBTOOL=@LIBTOOL@
 WIN32_DLL_IMPORT_LIBRARY=../../@WIN32_DLL_IMPORT_LIB@
 
 CDROM_OBJS = @CDROM_OBJS@
-HDIMAGE_EXTRA_OBJS = vbox.o vmware3.o vmware4.o vpc-img.o vvfat.o
+HDIMAGE_EXTRA_OBJS = vbox.o vmware3.o vmware4.o vpc.o vvfat.o
 
 HDIMAGE_LINK_OPTS =
 HDIMAGE_LINK_OPTS_VCPP = user32.lib
@@ -67,13 +67,13 @@ OBJS_THAT_CAN_BE_PLUGINS = \
 
 NONPLUGIN_OBJS = @IODEV_EXT_NON_PLUGIN_OBJS@
 PLUGIN_OBJS = @IODEV_EXT_PLUGIN_OBJS@
-HDIMAGE_DLL_TARGETS = bx_vbox.dll bx_vmware3.dll bx_vmware4.dll bx_vpc-img.dll bx_vvfat.dll
+HDIMAGE_DLL_TARGETS = bx_vbox_img.dll bx_vmware3_img.dll bx_vmware4_img.dll bx_vpc_img.dll bx_vvfat_img.dll
 
 all: libhdimage.a
 
 plugins: @PLUGIN_TARGET_2@
 
-plugins_gcc: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
+plugins_gcc: $(PLUGIN_OBJS:@IMG_PLUGIN_NAME_TRANSFORMATION@)
 
 plugins_msvc: $(HDIMAGE_DLL_TARGETS)
 
@@ -90,26 +90,26 @@ libhdimage.a: $(NONPLUGIN_OBJS)
 %.lo: %.@CPP_SUFFIX@
 	$(LIBTOOL) --mode=compile --tag CXX $(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
 
-libbx_%.la: %.lo
+libbx_%_img.la: %.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH)
 
 #### building DLLs for win32 (Cygwin and MinGW/MSYS)
-bx_%.dll: %.o
+bx_%_img.dll: %.o
 	$(CXX) $(CXXFLAGS) -shared -o $@ $< $(WIN32_DLL_IMPORT_LIBRARY)
 
-bx_vbox.dll: vbox.o
+bx_vbox_img.dll: vbox.o
 	@LINK_DLL@ vbox.o $(WIN32_DLL_IMPORT_LIBRARY)
 
-bx_vmware3.dll: vmware3.o
+bx_vmware3_img.dll: vmware3.o
 	@LINK_DLL@ vmware3.o $(WIN32_DLL_IMPORT_LIBRARY)
 
-bx_vmware4.dll: vmware4.o
+bx_vmware4_img.dll: vmware4.o
 	@LINK_DLL@ vmware4.o $(WIN32_DLL_IMPORT_LIBRARY)
 
-bx_vpc-img.dll: vpc-img.o
+bx_vpc_img.dll: vpc-img.o
 	@LINK_DLL@ vpc-img.o $(WIN32_DLL_IMPORT_LIBRARY)
 
-bx_vvfat.dll: vvfat.o
+bx_vvfat_img.dll: vvfat.o
 	@LINK_DLL@ vvfat.o $(WIN32_DLL_IMPORT_LIBRARY) $(HDIMAGE_LINK_OPTS@LINK_VAR@)
 
 ##### end DLL section
@@ -162,7 +162,7 @@ hdimage.o: hdimage.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h cdrom.h cdrom_amigaos.h cdrom_misc.h cdrom_osx.h \
- cdrom_win32.h hdimage.h vmware3.h vmware4.h vvfat.h vpc-img.h vbox.h
+ cdrom_win32.h hdimage.h vmware3.h vmware4.h vvfat.h vpc.h vbox.h
 vbox.o: vbox.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
@@ -181,12 +181,12 @@ vmware4.o: vmware4.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h hdimage.h vmware4.h
-vpc-img.o: vpc-img.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
+vpc.o: vpc.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
  ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
- ../../param_names.h hdimage.h vpc-img.h
+ ../../param_names.h hdimage.h vpc.h
 vvfat.o: vvfat.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
@@ -225,7 +225,7 @@ hdimage.lo: hdimage.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h cdrom.h cdrom_amigaos.h cdrom_misc.h cdrom_osx.h \
- cdrom_win32.h hdimage.h vmware3.h vmware4.h vvfat.h vpc-img.h vbox.h
+ cdrom_win32.h hdimage.h vmware3.h vmware4.h vvfat.h vpc.h vbox.h
 vbox.lo: vbox.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
@@ -244,12 +244,12 @@ vmware4.lo: vmware4.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
  ../../param_names.h hdimage.h vmware4.h
-vpc-img.lo: vpc-img.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
+vpc.lo: vpc.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
  ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
  ../../instrument/stubs/instrument.h ../../plugin.h ../../extplugin.h \
- ../../param_names.h hdimage.h vpc-img.h
+ ../../param_names.h hdimage.h vpc.h
 vvfat.lo: vvfat.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \

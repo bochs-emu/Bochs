@@ -2177,6 +2177,7 @@ AC_SUBST(DOCBOOK2HTML)
 
 PRIMARY_TARGET='bochs'
 PLUGIN_LIBNAME_TRANSFORMATION='%.o=libbx_%.la'
+IMG_PLUGIN_NAME_TRANSFORMATION='%.o=libbx_%_img.la'
 
 if test "$bx_plugins" = 0; then
   DISPLAY_LIB_VAR='iodev/display/libdisplay.a'
@@ -2872,6 +2873,7 @@ case $target in
       # set variables for building DLL plugins
       PLUGIN_VAR=""
       PLUGIN_LIBNAME_TRANSFORMATION='%.o=bx_%.dll'
+      IMG_PLUGIN_NAME_TRANSFORMATION='%.o=bx_%_img.dll'
       INSTALL_PLUGINS_VAR=install_dll_plugins
       WIN32_DLL_IMPORT_LIB="bochs.lib"
       LINK_DLL="link /dll /nologo /subsystem:console /incremental:no /out:\$@"
@@ -2910,6 +2912,7 @@ case $target in
       # set variables for building DLL plugins
       PRIMARY_TARGET=".win32_dll_plugin_target"
       PLUGIN_LIBNAME_TRANSFORMATION='%.o=bx_%.dll'
+      IMG_PLUGIN_NAME_TRANSFORMATION='%.o=bx_%_img.dll'
       INSTALL_PLUGINS_VAR=install_dll_plugins
       WIN32_DLL_IMPORT_LIB="dllexports.a"
       LINK_DLL="\$(CXX) \$(CXXFLAGS) -shared -o \$@"
@@ -3264,6 +3267,7 @@ AC_SUBST(EXE)
 AC_SUBST(PRIMARY_TARGET)
 AC_SUBST(OPTIONAL_TARGET)
 AC_SUBST(PLUGIN_LIBNAME_TRANSFORMATION)
+AC_SUBST(IMG_PLUGIN_NAME_TRANSFORMATION)
 AC_SUBST(COMMAND_SEPARATOR)
 AC_SUBST(CD_UP_ONE)
 AC_SUBST(CD_UP_TWO)

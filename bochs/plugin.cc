@@ -54,10 +54,12 @@
 #define PLUGIN_FILENAME_FORMAT       "libbx_%s.so"
 #define SOUND_PLUGIN_FILENAME_FORMAT "libbx_sound%s.so"
 #define NET_PLUGIN_FILENAME_FORMAT   "libbx_eth_%s.so"
+#define IMG_PLUGIN_FILENAME_FORMAT   "libbx_%s_img.so"
 #else
 #define PLUGIN_FILENAME_FORMAT       "bx_%s.dll"
 #define SOUND_PLUGIN_FILENAME_FORMAT "bx_sound%s.dll"
 #define NET_PLUGIN_FILENAME_FORMAT   "bx_eth_%s.dll"
+#define IMG_PLUGIN_FILENAME_FORMAT   "bx_%s_img.dll"
 #endif
 
 logfunctions *pluginlog;
@@ -325,9 +327,8 @@ void plugin_load(char *name, plugintype_t type)
     sprintf(tmpname, SOUND_PLUGIN_FILENAME_FORMAT, name);
   } else if (type == PLUGTYPE_NETWORK) {
     sprintf(tmpname, NET_PLUGIN_FILENAME_FORMAT, name);
-  } else if ((type == PLUGTYPE_HDIMAGE) && !strcmp(name, "vpc")) {
-    // FIXME: HACK!!!
-    sprintf(tmpname, PLUGIN_FILENAME_FORMAT, "vpc-img");
+  } else if (type == PLUGTYPE_HDIMAGE) {
+    sprintf(tmpname, IMG_PLUGIN_FILENAME_FORMAT, name);
   } else {
     sprintf(tmpname, PLUGIN_FILENAME_FORMAT, name);
   }

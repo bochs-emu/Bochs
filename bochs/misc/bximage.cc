@@ -74,7 +74,7 @@
 #include "iodev/hdimage/hdimage.h"
 #include "iodev/hdimage/vmware3.h"
 #include "iodev/hdimage/vmware4.h"
-#include "iodev/hdimage/vpc-img.h"
+#include "iodev/hdimage/vpc.h"
 
 #define BXIMAGE_MODE_NULL            0
 #define BXIMAGE_MODE_CREATE_IMAGE    1
