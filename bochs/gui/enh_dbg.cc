@@ -20,6 +20,8 @@
 #include "cpu/cpu.h"
 #include "disasm/disasm.h"
 
+extern char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr, bxInstruction_c *i, bx_address cs_base, bx_address rip);
+
 #include "enh_dbg.h"
 
 // Match stuff
@@ -959,8 +961,22 @@ void FillAsm(Bit64u LAddr, int MaxLines)
         while (AsmLineCount < MaxLines && BufEmpty == FALSE)
         {
             // disassemble 1 line with a direct call, into asmtxt
-            len = bx_disassemble.disasm(In32Mode, In64Mode, (bx_address) 0,
-                (bx_address) LAddr, (Bit8u *) p, cols[2]);
+/*
+            if (1) {
+              extern char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr, bxInstruction_c *i, bx_address cs_base, bx_address rip);
+              bxInstruction_c i;
+              disasm((const Bit8u *) p, In32Mode, In64Mode,
+                  cols[2], &i, (bx_address) 0, (bx_address) LAddr);
+
+              len = i.ilen();
+            }
+            else 
+*/
+            {
+              len = bx_disassemble.disasm(In32Mode, In64Mode, (bx_address) 0,
+                  (bx_address) LAddr, (Bit8u *) p, cols[2]);
+            }
+
             if (len <= BufLen)      // disassembly was successful?
             {
                 AsmLA[AsmLineCount] = LAddr;        // save, and

@@ -30,6 +30,15 @@
 #include "decoder.h"
 #include "fetchdecode.h"
 
+#if BX_DEBUGGER
+#include "../../bx_debug/debug.h"
+#define SYMBOLIC_JUMP(fmt)  fmt " %s"
+#define GET_SYMBOL(addr) bx_dbg_disasm_symbolic_address((addr), 0)
+#else
+#define SYMBOLIC_JUMP(fmt)  fmt "%s"
+#define GET_SYMBOL(addr) ""
+#endif
+
 extern int fetchDecode32(const Bit8u *fetchPtr, bx_bool is_32, bxInstruction_c *i, unsigned remainingInPage);
 #if BX_SUPPORT_X86_64
 extern int fetchDecode64(const Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage);
@@ -430,10 +439,30 @@ char *disasm_immediate(char *disbufptr, const bxInstruction_c *i, unsigned src_t
     break;
 
   case BX_DIRECT_PTR:
-    if (i->os32L())
-      disbufptr = dis_sprintf(disbufptr, "0x%04x:%08x", i->Iw2(), i->Id());
-    else
-      disbufptr = dis_sprintf(disbufptr, "0x%04x:%04x", i->Iw2(), i->Iw());
+    if (i->os32L()) {
+      Bit32u imm32 = i->Id();
+      Bit16u cs_selector = i->Iw2();
+      disbufptr = dis_sprintf(disbufptr, "0x%04x:%08x", cs_selector, imm32);
+#if BX_DEBUGGER
+      bx_address laddr = bx_dbg_get_laddr(cs_selector, imm32);
+      // get the symbol
+      const char *ptStrSymbol = bx_dbg_disasm_symbolic_address(laddr, 0);
+      if (ptStrSymbol)
+        disbufptr = dis_sprintf(disbufptr, " <%s>", ptStrSymbol);
+#endif
+    }
+    else {
+      Bit16u imm16 = i->Iw();
+      Bit16u cs_selector = i->Iw2();
+      disbufptr = dis_sprintf(disbufptr, "0x%04x:%04x", cs_selector, imm16);
+#if BX_DEBUGGER
+      bx_address laddr = bx_dbg_get_laddr(cs_selector, imm16);
+      // get the symbol
+      const char *ptStrSymbol = bx_dbg_disasm_symbolic_address(laddr, 0);
+      if (ptStrSymbol)
+        disbufptr = dis_sprintf(disbufptr, " <%s>", ptStrSymbol);
+#endif
+    }
     break;
 
   case BX_DIRECT_MEMREF_B:
@@ -461,22 +490,38 @@ char *disasm_immediate(char *disbufptr, const bxInstruction_c *i, unsigned src_t
 
 char *disasm_branch_target(char *disbufptr, const bxInstruction_c *i, unsigned src_type, bx_address cs_base, bx_address rip)
 {
+  bx_address target;
+  Bit32s imm32;
+  const char *sym = "";
+
   switch(src_type) {
   case BX_IMMW:
   case BX_IMMBW_SE: // 8-bit signed value sign extended to 16-bit size
-    disbufptr = dis_sprintf(disbufptr, ".%+d", (Bit32s) (Bit16s) i->Iw());
+    imm32 = (Bit32s) (Bit16s) i->Iw();
+    disbufptr = dis_sprintf(disbufptr, ".%+d", imm32);
+    target = (rip + i->ilen() + (Bit16s) i->Iw()) & 0xffff;
+    target = (cs_base != BX_JUMP_TARGET_NOT_REQ) ? Bit32u(cs_base + target) : target;
+    sym = GET_SYMBOL(target);
+    sym = sym ? sym : "";
+    dis_sprintf(disbufptr, SYMBOLIC_JUMP(".+0x%8x"), (unsigned) imm32, sym);
+
     if (cs_base != BX_JUMP_TARGET_NOT_REQ) {
-      Bit16u target = (rip + i->ilen() + (Bit16s) i->Iw()) & 0xffff;
-      disbufptr = dis_sprintf(disbufptr, " (0x%08x)", (Bit32u)(cs_base + target));
+      dis_sprintf(disbufptr, " (0x%08x)", target);
     }
     break;
 
   case BX_IMMD:
   case BX_IMMBD_SE: // 8-bit signed value sign extended to 32-bit size
-    disbufptr = dis_sprintf(disbufptr, ".%+d", (Bit32s) i->Id());
+    imm32 = (Bit32s) i->Id();
+    disbufptr = dis_sprintf(disbufptr, ".%+d", imm32);
+    target = rip + i->ilen() + (Bit32s) i->Id();
+    target = (cs_base != BX_JUMP_TARGET_NOT_REQ) ? bx_address(cs_base + target) : target;
+    sym = GET_SYMBOL(target);
+    sym = sym ? sym : "";
+    dis_sprintf(disbufptr, SYMBOLIC_JUMP(".+0x" FMT_ADDRX64), (unsigned) imm32, sym);
+
     if (cs_base != BX_JUMP_TARGET_NOT_REQ) {
-      bx_address target = rip + i->ilen() + (Bit32s) i->Id();
-      disbufptr = dis_sprintf(disbufptr, " (0x" FMT_ADDRX ")", (Bit64u) (cs_base + target));
+      disbufptr = dis_sprintf(disbufptr, " (0x" FMT_ADDRX ")", target);
     }
     break;
 
