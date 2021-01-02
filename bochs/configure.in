@@ -2154,6 +2154,7 @@ AC_SUBST(DOCBOOK2HTML)
 
 PRIMARY_TARGET='bochs'
 PLUGIN_LIBNAME_TRANSFORMATION='%.o=libbx_%.la'
+GUI_PLUGIN_NAME_TRANSFORMATION='%.o=libbx_%_gui.la'
 IMG_PLUGIN_NAME_TRANSFORMATION='%.o=libbx_%_img.la'
 
 if test "$bx_plugins" = 0; then
@@ -2394,7 +2395,7 @@ AC_SUBST(X_LIBS)
 
 if test "$with_sdl" = yes; then
   display_libs="$display_libs sdl"
-  GUI_DLL_TARGETS="$GUI_DLL_TARGETS bx_sdl.dll"
+  GUI_DLL_TARGETS="$GUI_DLL_TARGETS bx_sdl_gui.dll"
   AC_DEFINE(BX_WITH_SDL, 1)
   SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_SDL)"
   # GUI_*FLAGS are added to the compilation of every bochs file, not just
@@ -2429,7 +2430,7 @@ fi
 
 if test "$with_sdl2" = yes; then
   display_libs="$display_libs sdl2"
-  GUI_DLL_TARGETS="$GUI_DLL_TARGETS bx_sdl2.dll"
+  GUI_DLL_TARGETS="$GUI_DLL_TARGETS bx_sdl2_gui.dll"
   AC_DEFINE(BX_WITH_SDL2, 1)
   SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_SDL2)"
   # GUI_*FLAGS are added to the compilation of every bochs file, not just
@@ -2464,7 +2465,7 @@ fi
 
 if test "$with_rfb" = yes; then
   display_libs="$display_libs rfb"
-  GUI_DLL_TARGETS="$GUI_DLL_TARGETS bx_rfb.dll"
+  GUI_DLL_TARGETS="$GUI_DLL_TARGETS bx_rfb_gui.dll"
   AC_DEFINE(BX_WITH_RFB, 1)
   SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_RFB)"
   GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_RFB)"
@@ -2509,7 +2510,7 @@ fi
 
 if test "$with_win32" = yes; then
   display_libs="$display_libs win32"
-  GUI_DLL_TARGETS="$GUI_DLL_TARGETS bx_win32.dll"
+  GUI_DLL_TARGETS="$GUI_DLL_TARGETS bx_win32_gui.dll"
   AC_DEFINE(BX_WITH_WIN32, 1)
   SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_WIN32)"
   case $target in
@@ -2623,7 +2624,7 @@ fi
 
 if test "$with_nogui" = yes; then
   display_libs="$display_libs nogui"
-  GUI_DLL_TARGETS="$GUI_DLL_TARGETS bx_nogui.dll"
+  GUI_DLL_TARGETS="$GUI_DLL_TARGETS bx_nogui_gui.dll"
   AC_DEFINE(BX_WITH_NOGUI, 1)
   SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_NOGUI)"
 fi
@@ -2850,6 +2851,7 @@ case $target in
       # set variables for building DLL plugins
       PLUGIN_VAR=""
       PLUGIN_LIBNAME_TRANSFORMATION='%.o=bx_%.dll'
+      GUI_PLUGIN_NAME_TRANSFORMATION='%.o=bx_%_gui.dll'
       IMG_PLUGIN_NAME_TRANSFORMATION='%.o=bx_%_img.dll'
       INSTALL_PLUGINS_VAR=install_dll_plugins
       WIN32_DLL_IMPORT_LIB="bochs.lib"
@@ -2889,6 +2891,7 @@ case $target in
       # set variables for building DLL plugins
       PRIMARY_TARGET=".win32_dll_plugin_target"
       PLUGIN_LIBNAME_TRANSFORMATION='%.o=bx_%.dll'
+      GUI_PLUGIN_NAME_TRANSFORMATION='%.o=bx_%_gui.dll'
       IMG_PLUGIN_NAME_TRANSFORMATION='%.o=bx_%_img.dll'
       INSTALL_PLUGINS_VAR=install_dll_plugins
       WIN32_DLL_IMPORT_LIB="dllexports.a"
@@ -3244,6 +3247,7 @@ AC_SUBST(EXE)
 AC_SUBST(PRIMARY_TARGET)
 AC_SUBST(OPTIONAL_TARGET)
 AC_SUBST(PLUGIN_LIBNAME_TRANSFORMATION)
+AC_SUBST(GUI_PLUGIN_NAME_TRANSFORMATION)
 AC_SUBST(IMG_PLUGIN_NAME_TRANSFORMATION)
 AC_SUBST(COMMAND_SEPARATOR)
 AC_SUBST(CD_UP_ONE)

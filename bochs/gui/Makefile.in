@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2020  The Bochs Project
+# Copyright (C) 2001-2021  The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -97,7 +97,7 @@ all: libgui.a
 
 plugins: @PLUGIN_TARGET_2@
 
-plugins_gcc: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
+plugins_gcc: $(PLUGIN_OBJS:@GUI_PLUGIN_NAME_TRANSFORMATION@)
 
 plugins_msvc: $(GUI_DLL_TARGETS)
 
@@ -114,70 +114,70 @@ libgui.a: $(NONPLUGIN_OBJS)
 %.lo: %.@CPP_SUFFIX@
 	$(LIBTOOL) --mode=compile --tag CXX $(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
 
-libbx_%.la: %.lo
+libbx_%_gui.la: %.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH)
 
-libbx_x.la: x.lo
+libbx_x_gui.la: x.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_X)
 
-libbx_sdl.la: sdl.lo
+libbx_sdl_gui.la: sdl.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_SDL)
 
-libbx_sdl2.la: sdl2.lo
+libbx_sdl2_gui.la: sdl2.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_SDL2)
 
-libbx_rfb.la: rfb.lo
+libbx_rfb_gui.la: rfb.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_RFB)
 
-libbx_vncsrv.la: vncsrv.lo
+libbx_vncsrv_gui.la: vncsrv.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_VNCSRV)
 
-libbx_amigaos.la: amigaos.lo
+libbx_amigaos_gui.la: amigaos.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_AMIGAOS)
 
-libbx_win32.la: win32.lo
+libbx_win32_gui.la: win32.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_WIN32)
 
-libbx_macos.la: macos.lo
+libbx_macos_gui.la: macos.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_MACOS)
 
-libbx_carbon.la: carbon.lo
+libbx_carbon_gui.la: carbon.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_CARBON)
 
-libbx_nogui.la: nogui.lo
+libbx_nogui_gui.la: nogui.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_NOGUI)
 
-libbx_term.la: term.lo
+libbx_term_gui.la: term.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_TERM)
 
 # special link rules for plugins that require more than one object file
-libbx_wx.la: $(GUI_OBJS_WX:.o=.lo) $(GUI_OBJS_WX_SUPPORT:.o=.lo)
-	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $(GUI_OBJS_WX:.o=.lo) $(GUI_OBJS_WX_SUPPORT:.o=.lo) -o libbx_wx.la -rpath $(PLUGIN_PATH)  $(GUI_LINK_OPTS_WX)
+libbx_wx_gui.la: $(GUI_OBJS_WX:.o=.lo) $(GUI_OBJS_WX_SUPPORT:.o=.lo)
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $(GUI_OBJS_WX:.o=.lo) $(GUI_OBJS_WX_SUPPORT:.o=.lo) -o $@ -rpath $(PLUGIN_PATH)  $(GUI_LINK_OPTS_WX)
 
 #### building DLLs for win32 (Cygwin and MinGW/MSYS)
-bx_%.dll: %.o
+bx_%_gui.dll: %.o
 	$(CXX) $(CXXFLAGS) -shared -o $@ $< $(WIN32_DLL_IMPORT_LIBRARY)  $(GUI_LINK_OPTS_WIN32)
 
-bx_wx.dll: $(GUI_OBJS_WX) $(GUI_OBJS_WX_SUPPORT)
-	$(CXX) $(CXXFLAGS) -shared -o bx_wx.dll $(GUI_OBJS_WX) $(GUI_OBJS_WX_SUPPORT) $(WIN32_DLL_IMPORT_LIBRARY) `wx-config --libs` -luser32 -lgdi32 -lcomdlg32 -lcomctl32
+bx_wx_gui.dll: $(GUI_OBJS_WX) $(GUI_OBJS_WX_SUPPORT)
+	$(CXX) $(CXXFLAGS) -shared -o bx_wx_gui.dll $(GUI_OBJS_WX) $(GUI_OBJS_WX_SUPPORT) $(WIN32_DLL_IMPORT_LIBRARY) `wx-config --libs` -luser32 -lgdi32 -lcomdlg32 -lcomctl32
 
-bx_sdl.dll: $(GUI_OBJS_SDL)
-	$(CXX) $(CXXFLAGS) -shared -o bx_sdl.dll $(GUI_OBJS_SDL) $(WIN32_DLL_IMPORT_LIBRARY) $(GUI_LINK_OPTS_SDL)
+bx_sdl_gui.dll: $(GUI_OBJS_SDL)
+	$(CXX) $(CXXFLAGS) -shared -o bx_sdl_gui.dll $(GUI_OBJS_SDL) $(WIN32_DLL_IMPORT_LIBRARY) $(GUI_LINK_OPTS_SDL)
 
-bx_sdl2.dll: $(GUI_OBJS_SDL2)
-	$(CXX) $(CXXFLAGS) -shared -o bx_sdl2.dll $(GUI_OBJS_SDL2) $(WIN32_DLL_IMPORT_LIBRARY) $(GUI_LINK_OPTS_SDL2)
+bx_sdl2_gui.dll: $(GUI_OBJS_SDL2)
+	$(CXX) $(CXXFLAGS) -shared -o bx_sdl2_gui.dll $(GUI_OBJS_SDL2) $(WIN32_DLL_IMPORT_LIBRARY) $(GUI_LINK_OPTS_SDL2)
 
-bx_vncsrv.dll: $(GUI_OBJS_VNCSRV)
+bx_vncsrv_gui.dll: $(GUI_OBJS_VNCSRV)
 	$(CXX) $(CXXFLAGS) -shared -o bx_vncsrv.dll $(GUI_OBJS_VNCSRV) $(WIN32_DLL_IMPORT_LIBRARY) $(GUI_LINK_OPTS_VNCSRV)
 
 # special link rules for plugins with Cygwin, MinGW/MSYS and MSVC nmake
-bx_nogui.dll: $(GUI_OBJS_NOGUI)
+bx_nogui_gui.dll: $(GUI_OBJS_NOGUI)
 	@LINK_DLL@ $(GUI_OBJS_NOGUI) $(WIN32_DLL_IMPORT_LIBRARY)
 
-bx_rfb.dll: $(GUI_OBJS_RFB)
+bx_rfb_gui.dll: $(GUI_OBJS_RFB)
 	@LINK_DLL@ $(GUI_OBJS_RFB) $(WIN32_DLL_IMPORT_LIBRARY) $(GUI_LINK_OPTS_RFB@LINK_VAR@)
 
-bx_win32.dll: $(GUI_OBJS_WIN32)
+bx_win32_gui.dll: $(GUI_OBJS_WIN32)
 	@LINK_DLL@ $(GUI_OBJS_WIN32) $(WIN32_DLL_IMPORT_LIBRARY) $(GUI_LINK_OPTS_WIN32@LINK_VAR@)
 
 ##### end DLL section

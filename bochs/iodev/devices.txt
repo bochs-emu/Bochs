@@ -55,7 +55,7 @@ Attached devices
   |        |                         +---- VirtualBox (VDI 1.1) vbox.cc
   |        |                         +---- VMware version 3     vmware3.cc
   |        |                         +---- VMware 4 (VMDK)      vmware4.cc
-  |        |                         +---- VirtualPC            vpc-img.cc
+  |        |                         +---- VirtualPC            vpc.cc
   |        |                         +---- Virtual VFAT         vvfat.cc
   |        |
   |        +---- CD/DVD-ROM image / device access (*)           hdimage/cdrom.cc

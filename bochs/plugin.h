@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2020  The Bochs Project
+//  Copyright (C) 2002-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -85,11 +85,11 @@ extern "C" {
 #define PLUG_load_plugin(name,type) {bx_load_plugin(#name,type);}
 #define PLUG_load_gui_plugin(name) bx_load_plugin(name,PLUGTYPE_GUI)
 #define PLUG_load_opt_plugin(name) bx_load_plugin(name,PLUGTYPE_OPTIONAL)
-#define PLUG_load_snd_plugin(name) bx_load_plugin(name,PLUGTYPE_SOUND)
-#define PLUG_load_net_plugin(name) bx_load_plugin(name,PLUGTYPE_NETWORK)
-#define PLUG_load_usb_plugin(name) bx_load_plugin(name,PLUGTYPE_USBDEV)
+#define PLUG_load_snd_plugin(name) bx_load_plugin(name,PLUGTYPE_SND)
+#define PLUG_load_net_plugin(name) bx_load_plugin(name,PLUGTYPE_NET)
+#define PLUG_load_usb_plugin(name) bx_load_plugin(name,PLUGTYPE_USB)
 #define PLUG_load_vga_plugin(name) bx_load_plugin(name,PLUGTYPE_VGA)
-#define PLUG_load_img_plugin(name) bx_load_plugin(name,PLUGTYPE_HDIMAGE)
+#define PLUG_load_img_plugin(name) bx_load_plugin(name,PLUGTYPE_IMG)
 #define PLUG_load_user_plugin(name) {bx_load_plugin(name,PLUGTYPE_USER);}
 #define PLUG_unload_plugin(name) {bx_unload_plugin(#name,1);}
 #define PLUG_unload_opt_plugin(name) bx_unload_plugin(name,1)
@@ -120,11 +120,11 @@ extern "C" {
 #define PLUG_load_plugin(name,type) {lib##name##_LTX_plugin_init(NULL,type);}
 #define PLUG_load_gui_plugin(name) bx_load_plugin2(name,PLUGTYPE_GUI)
 #define PLUG_load_opt_plugin(name) bx_load_plugin2(name,PLUGTYPE_OPTIONAL)
-#define PLUG_load_snd_plugin(name) bx_load_plugin2(name,PLUGTYPE_SOUND)
-#define PLUG_load_net_plugin(name) bx_load_plugin2(name,PLUGTYPE_NETWORK)
-#define PLUG_load_usb_plugin(name) bx_load_plugin2(name,PLUGTYPE_USBDEV)
+#define PLUG_load_snd_plugin(name) bx_load_plugin2(name,PLUGTYPE_SND)
+#define PLUG_load_net_plugin(name) bx_load_plugin2(name,PLUGTYPE_NET)
+#define PLUG_load_usb_plugin(name) bx_load_plugin2(name,PLUGTYPE_USB)
 #define PLUG_load_vga_plugin(name) bx_load_plugin2(name,PLUGTYPE_VGA)
-#define PLUG_load_img_plugin(name) bx_load_plugin2(name,PLUGTYPE_HDIMAGE)
+#define PLUG_load_img_plugin(name) bx_load_plugin2(name,PLUGTYPE_IMG)
 #define PLUG_unload_plugin(name) {lib##name##_LTX_plugin_fini();}
 #define PLUG_unload_opt_plugin(name) bx_unload_opt_plugin(name,1);
 
@@ -283,8 +283,6 @@ extern "C" {
 
 typedef Bit32u (*ioReadHandler_t)(void *, Bit32u, unsigned);
 typedef void   (*ioWriteHandler_t)(void *, Bit32u, Bit32u, unsigned);
-
-extern plugin_t *plugins;
 
 typedef struct _device_t
 {

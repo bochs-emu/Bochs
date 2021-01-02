@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2020  The Bochs Project
+//  Copyright (C) 2002-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -34,6 +34,11 @@
 #include "iodev/iodev.h"
 #include "plugin.h"
 
+#ifndef WIN32
+#include <dirent.h> /* opendir, readdir */
+#include <locale.h> /* setlocale */
+#endif
+
 #define LOG_THIS genlog->
 
 #define PLUGIN_INIT_FMT_STRING       "lib%s_LTX_plugin_init"
@@ -52,14 +57,16 @@
 
 #ifndef WIN32
 #define PLUGIN_FILENAME_FORMAT       "libbx_%s.so"
-#define SOUND_PLUGIN_FILENAME_FORMAT "libbx_sound%s.so"
-#define NET_PLUGIN_FILENAME_FORMAT   "libbx_eth_%s.so"
+#define GUI_PLUGIN_FILENAME_FORMAT   "libbx_%s_gui.so"
 #define IMG_PLUGIN_FILENAME_FORMAT   "libbx_%s_img.so"
+#define NET_PLUGIN_FILENAME_FORMAT   "libbx_eth_%s.so"
+#define SND_PLUGIN_FILENAME_FORMAT   "libbx_sound%s.so"
 #else
 #define PLUGIN_FILENAME_FORMAT       "bx_%s.dll"
-#define SOUND_PLUGIN_FILENAME_FORMAT "bx_sound%s.dll"
-#define NET_PLUGIN_FILENAME_FORMAT   "bx_eth_%s.dll"
+#define GUI_PLUGIN_FILENAME_FORMAT   "bx_%s_gui.dll"
 #define IMG_PLUGIN_FILENAME_FORMAT   "bx_%s_img.dll"
+#define NET_PLUGIN_FILENAME_FORMAT   "bx_eth_%s.dll"
+#define SND_PLUGIN_FILENAME_FORMAT "bx_sound%s.dll"
 #endif
 
 logfunctions *pluginlog;
@@ -113,41 +120,25 @@ plugin_t *current_plugin_context = NULL;
   static void
 builtinRegisterIRQ(unsigned irq, const char* name)
 {
-#if 0
-  pluginlog->panic("builtinRegisterIRQ called, no pic plugin loaded?");
-#else
   bx_devices.register_irq(irq, name);
-#endif
 }
 
   static void
 builtinUnregisterIRQ(unsigned irq, const char* name)
 {
-#if 0
-  pluginlog->panic("builtinUnregisterIRQ called, no pic plugin loaded?");
-#else
   bx_devices.unregister_irq(irq, name);
-#endif
 }
 
   static void
 builtinSetHRQ(unsigned val)
 {
-#if 0
-  pluginlog->panic("builtinSetHRQ called, no plugin loaded?");
-#else
   pluginHRQ = val;
-#endif
 }
 
   static void
 builtinSetHRQHackCallback(void (*callback)(void))
 {
-#if 0
-  pluginlog->panic("builtinSetHRQHackCallback called, no plugin loaded?");
-#else
   pluginHRQHackCallback = callback;
-#endif
 }
 
   static int
@@ -260,6 +251,124 @@ builtinRegisterDefaultIOWriteHandler(void *thisPtr, ioWriteHandler_t callback,
 
 #if BX_PLUGINS
 /************************************************************************/
+/* Search for all available plugins                                           */
+/************************************************************************/
+
+void plugin_add_entry(char *pgn_name)
+{
+  plugin_t *plugin, *temp;
+  plugintype_t type;
+
+  if (!strncmp(pgn_name, "eth_", 4)) {
+    memmove(pgn_name, pgn_name + 4, strlen(pgn_name) - 3);
+    type = PLUGTYPE_NET;
+  } else if (!strncmp(pgn_name, "sound", 5)) {
+    memmove(pgn_name, pgn_name + 5, strlen(pgn_name) - 4);
+    type = PLUGTYPE_SND;
+  } else if (!strncmp(pgn_name + strlen(pgn_name) - 4, "_gui", 4)) {
+    pgn_name[strlen(pgn_name) - 4] = 0;
+    type = PLUGTYPE_GUI;
+  } else if (!strncmp(pgn_name + strlen(pgn_name) - 4, "_img", 4)) {
+    pgn_name[strlen(pgn_name) - 4] = 0;
+    type = PLUGTYPE_IMG;
+  } else if (!strncmp(pgn_name, "usb_", 4) &&
+             strncmp(pgn_name + strlen(pgn_name) - 3, "hci", 3)) {
+    type = PLUGTYPE_USB;
+  } else {
+    type = PLUGTYPE_DEV;
+  }
+  plugin = new plugin_t;
+  plugin->type = type;
+  plugin->name = pgn_name;
+  plugin->loaded = 0;
+  plugin->initialized = 0;
+  /* Insert plugin at the _end_ of the plugin linked list. */
+  plugin->next = NULL;
+  if (plugins == NULL) {
+    /* Empty list, this become the first entry. */
+    plugins = plugin;
+  } else {
+    /* Non-empty list.  Add to end. */
+    temp = plugins;
+
+    while (temp->next)
+      temp = temp->next;
+
+    temp->next = plugin;
+  }
+}
+
+void plugins_search(void)
+{
+  int nlen, flen1, flen2;
+  char *fmtptr, *ltdl_path_var, *pgn_name, *pgn_path, *ptr;
+  char fmtstr[32];
+#ifndef WIN32
+  const char *path_sep = ":";
+  DIR *dir;
+  struct dirent *dent;
+#else
+  const char *path_sep = ";";
+  WIN32_FIND_DATA finddata;
+  HANDLE hFind;
+  char filter[MAX_PATH];
+#endif
+
+#ifndef WIN32
+  setlocale(LC_ALL, "en_US");
+#endif
+  ltdl_path_var = getenv("LTDL_LIBRARY_PATH");
+  sprintf(fmtstr, PLUGIN_FILENAME_FORMAT, "*");
+  fmtptr = strchr(fmtstr, '*');
+  flen1 = fmtptr - fmtstr;
+  flen2 = strlen(fmtstr) - flen1 - 1;
+  if (ltdl_path_var != NULL) {
+    pgn_path = new char[strlen(ltdl_path_var) + 1];
+    strcpy(pgn_path, ltdl_path_var);
+  } else {
+  pgn_path = new char[2];
+    strcpy(pgn_path, ".");
+  }
+  ptr = strtok(pgn_path, path_sep);
+  while (ptr != NULL) {
+#ifndef WIN32
+    dir = opendir(ptr);
+    if (dir != NULL) {
+      while ((dent=readdir(dir)) != NULL) {
+        nlen = strlen(dent->d_name);
+        if ((!strncmp(dent->d_name, fmtstr, flen1)) &&
+            (!strcmp(dent->d_name + nlen - flen2, fmtptr + 1))) {
+          pgn_name = new char[nlen - flen1 - flen2 + 1];
+          strncpy(pgn_name, dent->d_name + flen1, nlen - flen1 - flen2);
+          pgn_name[nlen - flen1 - flen2] = 0;
+          plugin_add_entry(pgn_name);
+        }
+      }
+      closedir(dir);
+    }
+#else
+    sprintf(filter, "%s\\*.dll", ptr);
+    hFind = FindFirstFile(filter, &finddata);
+    if (hFind != INVALID_HANDLE_VALUE) {
+      do {
+        nlen = lstrlen(finddata.cFileName);
+        if ((!strncmp(finddata.cFileName, fmtstr, flen1)) &&
+            (!strcmp(finddata.cFileName + nlen - flen2, fmtptr + 1))) {
+          pgn_name = new char[nlen - flen1 - flen2 + 1];
+          strncpy(pgn_name, finddata.cFileName + flen1, nlen - flen1 - flen2);
+          pgn_name[nlen - flen1 - flen2] = 0;
+          plugin_add_entry(pgn_name);
+        }
+      } while (FindNextFile(hFind, &finddata));
+      FindClose(hFind);
+    }
+#endif
+    ptr = strtok(NULL, ":");
+  }
+  delete [] pgn_path;
+}
+
+/************************************************************************/
 /* Plugin initialization / deinitialization                             */
 /************************************************************************/
 
@@ -299,36 +408,46 @@ plugin_t *plugin_unload(plugin_t *plugin)
 
 void plugin_load(char *name, plugintype_t type)
 {
-  plugin_t *plugin, *temp;
+  plugin_t *plugin = NULL, *temp;
+  plugintype_t basetype;
 #if defined(WIN32)
   char dll_path_list[MAX_PATH];
 #endif
 
+  basetype = (type < PLUGTYPE_GUI) ? PLUGTYPE_DEV : type;
   if (plugins != NULL) {
     temp = plugins;
 
     while (temp != NULL) {
-      if (!strcmp(name, temp->name)) {
-        BX_PANIC(("plugin '%s' already loaded", name));
-        return;
+      if (!strcmp(name, temp->name) && (basetype == temp->type)) {
+        if (temp->loaded) {
+          BX_PANIC(("plugin '%s' already loaded", name));
+          return;
+        } else {
+          plugin = temp;
+          break;
+        }
       }
       temp = temp->next;
     }
   }
-
-  plugin = new plugin_t;
-
-  plugin->type = type;
-  plugin->name = name;
-  plugin->initialized = 0;
+  if (plugin == NULL) {
+    BX_PANIC(("plugin '%s' not found", name));
+    return;
+  }
+  if (plugin->type == PLUGTYPE_DEV) {
+    plugin->type = type;
+  }
 
   char plugin_filename[BX_PATHNAME_LEN], tmpname[BX_PATHNAME_LEN];
-  if (type == PLUGTYPE_SOUND) {
-    sprintf(tmpname, SOUND_PLUGIN_FILENAME_FORMAT, name);
-  } else if (type == PLUGTYPE_NETWORK) {
-    sprintf(tmpname, NET_PLUGIN_FILENAME_FORMAT, name);
-  } else if (type == PLUGTYPE_HDIMAGE) {
+  if (type == PLUGTYPE_GUI) {
+    sprintf(tmpname, GUI_PLUGIN_FILENAME_FORMAT, name);
+  } else if (type == PLUGTYPE_IMG) {
     sprintf(tmpname, IMG_PLUGIN_FILENAME_FORMAT, name);
+  } else if (type == PLUGTYPE_NET) {
+    sprintf(tmpname, NET_PLUGIN_FILENAME_FORMAT, name);
+  } else if (type == PLUGTYPE_SND) {
+    sprintf(tmpname, SND_PLUGIN_FILENAME_FORMAT, name);
   } else {
     sprintf(tmpname, PLUGIN_FILENAME_FORMAT, name);
   }
@@ -357,7 +476,6 @@ void plugin_load(char *name, plugintype_t type)
     current_plugin_context = NULL;
     BX_PANIC(("LoadLibrary failed for module '%s' (%s): error=%d", name,
               plugin_filename, GetLastError()));
-    delete plugin;
     return;
   }
 #else
@@ -367,20 +485,19 @@ void plugin_load(char *name, plugintype_t type)
     current_plugin_context = NULL;
     BX_PANIC(("dlopen failed for module '%s' (%s): %s", name, plugin_filename,
               lt_dlerror()));
-    delete plugin;
     return;
   }
 #endif
 
   if (type == PLUGTYPE_GUI) {
     sprintf(tmpname, GUI_PLUGIN_INIT_FMT_STRING, name);
-  } else if (type == PLUGTYPE_SOUND) {
+  } else if (type == PLUGTYPE_SND) {
     sprintf(tmpname, SOUND_PLUGIN_INIT_FMT_STRING, name);
-  } else if (type == PLUGTYPE_NETWORK) {
+  } else if (type == PLUGTYPE_NET) {
     sprintf(tmpname, NET_PLUGIN_INIT_FMT_STRING, name);
-  } else if (type == PLUGTYPE_USBDEV) {
+  } else if (type == PLUGTYPE_USB) {
     sprintf(tmpname, USB_PLUGIN_INIT_FMT_STRING, name);
-  } else if (type == PLUGTYPE_HDIMAGE) {
+  } else if (type == PLUGTYPE_IMG) {
     sprintf(tmpname, IMG_PLUGIN_INIT_FMT_STRING, name);
   } else if (type != PLUGTYPE_USER) {
     sprintf(tmpname, PLUGIN_INIT_FMT_STRING, name);
@@ -403,13 +520,13 @@ void plugin_load(char *name, plugintype_t type)
 
   if (type == PLUGTYPE_GUI) {
     sprintf(tmpname, GUI_PLUGIN_FINI_FMT_STRING, name);
-  } else if (type == PLUGTYPE_SOUND) {
+  } else if (type == PLUGTYPE_SND) {
     sprintf(tmpname, SOUND_PLUGIN_FINI_FMT_STRING, name);
-  } else if (type == PLUGTYPE_NETWORK) {
+  } else if (type == PLUGTYPE_NET) {
     sprintf(tmpname, NET_PLUGIN_FINI_FMT_STRING, name);
-  } else if (type == PLUGTYPE_USBDEV) {
+  } else if (type == PLUGTYPE_USB) {
     sprintf(tmpname, USB_PLUGIN_FINI_FMT_STRING, name);
-  } else if (type == PLUGTYPE_HDIMAGE) {
+  } else if (type == PLUGTYPE_IMG) {
     sprintf(tmpname, IMG_PLUGIN_FINI_FMT_STRING, name);
   } else if (type != PLUGTYPE_USER) {
     sprintf(tmpname, PLUGIN_FINI_FMT_STRING, name);
@@ -430,22 +547,7 @@ void plugin_load(char *name, plugintype_t type)
   }
 #endif
   pluginlog->info("loaded plugin %s",plugin_filename);
-
-  /* Insert plugin at the _end_ of the plugin linked list. */
-  plugin->next = NULL;
-
-  if (!plugins) {
-    /* Empty list, this become the first entry. */
-    plugins = plugin;
-  } else {
-   /* Non-empty list.  Add to end. */
-   temp = plugins;
-
-   while (temp->next)
-      temp = temp->next;
-
-    temp->next = plugin;
-  }
+  plugin->loaded = 1;
 
   plugin_init_one(plugin);
 
@@ -492,12 +594,15 @@ plugin_startup(void)
 
   pluginlog = new logfunctions();
   pluginlog->put("PLUGIN");
-#if BX_PLUGINS && !defined(WIN32)
+#if BX_PLUGINS
+#if !defined(WIN32)
   int status = lt_dlinit();
   if (status != 0) {
     BX_ERROR(("initialization error in ltdl library (for loading plugins)"));
     BX_PANIC(("error message was: %s", lt_dlerror()));
   }
+#endif
+  plugins_search();
 #endif
 }
 

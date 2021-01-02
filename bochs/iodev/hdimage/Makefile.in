@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2020  The Bochs Project
+# Copyright (C) 2012-2021  The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -106,8 +106,8 @@ bx_vmware3_img.dll: vmware3.o
 bx_vmware4_img.dll: vmware4.o
 	@LINK_DLL@ vmware4.o $(WIN32_DLL_IMPORT_LIBRARY)
 
-bx_vpc_img.dll: vpc-img.o
-	@LINK_DLL@ vpc-img.o $(WIN32_DLL_IMPORT_LIBRARY)
+bx_vpc_img.dll: vpc.o
+	@LINK_DLL@ vpc.o $(WIN32_DLL_IMPORT_LIBRARY)
 
 bx_vvfat_img.dll: vvfat.o
 	@LINK_DLL@ vvfat.o $(WIN32_DLL_IMPORT_LIBRARY) $(HDIMAGE_LINK_OPTS@LINK_VAR@)
