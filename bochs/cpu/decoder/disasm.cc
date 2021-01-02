@@ -682,7 +682,6 @@ char *disasm_implicit_src(char *disbufptr, const bxInstruction_c *i, unsigned sr
   case BX_RSIREF_D:
   case BX_RSIREF_Q:
     seg = i->seg();
-    disbufptr = dis_sprintf(disbufptr, "%s:", segment_name[i->seg()]);
 #if BX_SUPPORT_X86_64
     if (i->as64L()) {
       regname = general_64bit_regname[BX_64BIT_REG_RSI];
