@@ -409,7 +409,7 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address cs_base, 
   if (intel_mode)
     print_disassembly_intel(&insn, opcode);
   else
-    print_disassembly_att  (&insn, opcode);
+    print_disassembly_gas  (&insn, opcode);
 
   if (branch_hint == BRANCH_NOT_TAKEN)
   {

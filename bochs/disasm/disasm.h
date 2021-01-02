@@ -186,7 +186,7 @@ public:
     { return decode(1, 1, cs_base, ip, instr, disbuf); }
 
   void set_syntax_intel();
-  void set_syntax_att();
+  void set_syntax_gas();
 
   void set_offset_mode_hex(bx_bool mode) { offset_mode_hex = mode; }
   void set_mem_datasize_print(bx_bool mode) { print_mem_datasize = mode; }
@@ -289,7 +289,7 @@ private:
           const char *seg, const char *base, const char *index, int scale, Bit32s disp);
 
   void print_disassembly_intel(const x86_insn *insn, const BxDisasmOpcodeInfo_t *entry);
-  void print_disassembly_att  (const x86_insn *insn, const BxDisasmOpcodeInfo_t *entry);
+  void print_disassembly_gas  (const x86_insn *insn, const BxDisasmOpcodeInfo_t *entry);
 
 public:
 

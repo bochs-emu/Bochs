@@ -222,7 +222,7 @@ void disassembler::print_disassembly_intel(const x86_insn *insn, const BxDisasmO
 // AT&T STYLE
 //////////////////
 
-void disassembler::set_syntax_att()
+void disassembler::set_syntax_gas()
 {
   intel_mode = 0;
 
@@ -241,11 +241,11 @@ void disassembler::set_syntax_att()
 
 void disassembler::toggle_syntax_mode()
 {
-  if (intel_mode) set_syntax_att();
+  if (intel_mode) set_syntax_gas();
   else set_syntax_intel();
 }
 
-void disassembler::print_disassembly_att(const x86_insn *insn, const BxDisasmOpcodeInfo_t *entry)
+void disassembler::print_disassembly_gas(const x86_insn *insn, const BxDisasmOpcodeInfo_t *entry)
 {
   // print opcode
   dis_sprintf("%s ", entry->AttOpcode);
