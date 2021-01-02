@@ -621,7 +621,10 @@ char *disasm_branch_target(char *disbufptr, const bxInstruction_c *i, unsigned s
     disbufptr = dis_sprintf(disbufptr, SYMBOLIC_JUMP(".%+d"), (unsigned) imm32, sym);
 
     if (cs_base != BX_JUMP_TARGET_NOT_REQ) {
-      disbufptr = dis_sprintf(disbufptr, " (0x" FMT_ADDRX ")", target);
+      if (GET32H(target))
+        disbufptr = dis_sprintf(disbufptr, " (0x" FMT_ADDRX ")", target);
+      else
+        disbufptr = dis_sprintf(disbufptr, " (0x%08x)", target);
     }
 
     break;
