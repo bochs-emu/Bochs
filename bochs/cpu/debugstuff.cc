@@ -42,12 +42,12 @@ void BX_CPU_C::debug_disasm_instruction(bx_address offset)
   if (valid) {
     BX_MEM(0)->dbg_fetch_mem(BX_CPU_THIS, phy_addr, 16, instr_buf);
 
-    bxInstruction_c i;
+    bxInstruction_c instr;
     disasm(instr_buf,
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b,
-      BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64, char_buf+i, &i, 
+      BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64, char_buf+i, &instr,
       BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS), offset, BX_DISASM_INTEL);
-    unsigned isize = i.ilen();
+    unsigned isize = instr.ilen();
 
     if (isize <= remainsInPage) {
       i=strlen(char_buf);
