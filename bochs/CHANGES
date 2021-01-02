@@ -15,7 +15,7 @@ Changes after 2.6.11:
 - Bochs Debugger and Instrumentation
   - Switching to new internal instruction disassembler implementation based on Bochs internal instruction decoder.
     New disassembler supporting natively all instruction extensions that Bochs is able to emulate, including AVX512*.
-    Old disassembler module is outdate and will be removed from the source tree.
+    Old disassembler module is outdate and was removed from the source tree.
   - Add more symbol lookups to disasm methods
 
 - I/O Devices
