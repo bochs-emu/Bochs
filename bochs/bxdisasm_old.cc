@@ -97,7 +97,7 @@ int main(int argn, const char **argv)
 
   printf("instruction bytes:");
   for (int i=0;i<16;i++)
-    printf("%02x ", ibuf[i]);
+    printf("%02x", ibuf[i]);
   printf("\n");
 
   bx_disassemble.set_syntax_intel();

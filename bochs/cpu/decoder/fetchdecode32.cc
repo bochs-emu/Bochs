@@ -2679,3 +2679,28 @@ const char *get_bx_opcode_name(Bit16u ia_opcode)
 
   return (ia_opcode < BX_IA_LAST) ? BxOpcodeNamesTable[ia_opcode] : 0;
 }
+
+const char *get_intel_disasm_opcode_name(Bit16u ia_opcode)
+{
+  static const char* BxOpcodeNamesTable[BX_IA_LAST] =
+  {
+#define bx_define_opcode(a, b, c, d, e, f, s1, s2, s3, s4, g) b,
+#include "ia_opcodes.def"
+  };
+#undef  bx_define_opcode
+
+  return (ia_opcode < BX_IA_LAST) ? BxOpcodeNamesTable[ia_opcode] : 0;
+}
+
+const char *get_gas_disasm_opcode_name(Bit16u ia_opcode)
+{
+  static const char* BxOpcodeNamesTable[BX_IA_LAST] =
+  {
+#define bx_define_opcode(a, b, c, d, e, f, s1, s2, s3, s4, g) c,
+#include "ia_opcodes.def"
+  };
+#undef  bx_define_opcode
+
+  return (ia_opcode < BX_IA_LAST) ? BxOpcodeNamesTable[ia_opcode] : 0;
+}
+

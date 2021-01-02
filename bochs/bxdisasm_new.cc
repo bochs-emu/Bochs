@@ -55,8 +55,6 @@ void hex2bin(Bit8u* target, const char* src, unsigned len)
   }
 }
 
-extern char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr, bxInstruction_c *i, bx_address cs_base = 0, bx_address rip = 0);
-
 int main(int argn, const char **argv)
 {
   char disbuf[256];
@@ -98,10 +96,13 @@ int main(int argn, const char **argv)
 
   printf("instruction bytes:");
   for (int i=0;i<16;i++)
-    printf("%02x ", ibuf[i]);
+    printf("%02x", ibuf[i]);
   printf("\n");
 
   bxInstruction_c i;
-  disasm(ibuf, is_32, is_64, disbuf, &i, 0, 0);
+  disasm(ibuf, is_32, is_64, disbuf, &i, 0, 0, BX_DISASM_INTEL);
+  printf("disasm: %s (opcode handler=%s)\n", disbuf, i.getIaOpcodeName());
+
+  disasm(ibuf, is_32, is_64, disbuf, &i, 0, 0, BX_DISASM_GAS);
   printf("disasm: %s (opcode handler=%s)\n", disbuf, i.getIaOpcodeName());
 }

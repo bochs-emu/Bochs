@@ -69,38 +69,38 @@ char* dis_putc(char *disbufptr, char symbol)
   return disbufptr;
 }
 
-static const char *intel_general_16bit_regname[16] = {
+static const char *general_16bit_regname[16] = {
     "ax",  "cx",  "dx",   "bx",   "sp",   "bp",   "si",   "di",
     "r8w", "r9w", "r10w", "r11w", "r12w", "r13w", "r14w", "r15w"
 };
 
-static const char *intel_general_32bit_regname[17] = {
+static const char *general_32bit_regname[17] = {
     "eax", "ecx", "edx",  "ebx",  "esp",  "ebp",  "esi",  "edi",
     "r8d", "r9d", "r10d", "r11d", "r12d", "r13d", "r14d", "r15d", "eip"
 };
 
-static const char *intel_general_64bit_regname[17] = {
+static const char *general_64bit_regname[17] = {
     "rax", "rcx", "rdx", "rbx", "rsp", "rbp", "rsi", "rdi",
     "r8",  "r9",  "r10", "r11", "r12", "r13", "r14", "r15", "rip"
 };
 
 #if BX_SUPPORT_X86_64
-static const char *intel_general_8bit_regname_rex[16] = {
+static const char *general_8bit_regname_rex[16] = {
     "al",  "cl",  "dl",   "bl",   "spl",  "bpl",  "sil",  "dil",
     "r8b", "r9b", "r10b", "r11b", "r12b", "r13b", "r14b", "r15b"
 };
 #endif
 
-static const char *intel_general_8bit_regname[8] = {
+static const char *general_8bit_regname[8] = {
     "al",  "cl",  "dl",  "bl",  "ah",  "ch",  "dh",  "bh"
 };
 
-static const char *intel_segment_name[8] = {
+static const char *segment_name[8] = {
     "es",  "cs",  "ss",  "ds",  "fs",  "gs",  "??",  "??"
 };
 
 #if BX_SUPPORT_AVX
-static const char *intel_vector_reg_name[4] = {
+static const char *vector_reg_name[4] = {
      "xmm", "ymm", "???", "zmm"
 };
 #endif
@@ -113,13 +113,13 @@ static const char *rounding_mode[4] = {
 
 #define BX_JUMP_TARGET_NOT_REQ ((bx_address)(-1))
 
-char *resolve_sib_scale(char *disbufptr, const bxInstruction_c *i, const char *regname[], unsigned src_index)
+char *resolve_sib_scale_intel(char *disbufptr, const bxInstruction_c *i, const char *regname[], unsigned src_index)
 {
   unsigned sib_index = i->sibIndex(), sib_scale = i->sibScale();
 
 #if BX_SUPPORT_AVX
   if (src_index == BX_SRC_VSIB)
-    disbufptr = dis_sprintf(disbufptr, "%s%d", intel_vector_reg_name[i->getVL() - 1], sib_index);
+    disbufptr = dis_sprintf(disbufptr, "%s%d", vector_reg_name[i->getVL() - 1], sib_index);
   else
 #endif
     disbufptr = dis_sprintf(disbufptr, "%s", regname[sib_index]);
@@ -130,7 +130,24 @@ char *resolve_sib_scale(char *disbufptr, const bxInstruction_c *i, const char *r
   return disbufptr;
 }
 
-char *resolve_memref(char *disbufptr, const bxInstruction_c *i, const char *regname[], unsigned src_index)
+char *resolve_sib_scale_gas(char *disbufptr, const bxInstruction_c *i, const char *regname[], unsigned src_index)
+{
+  unsigned sib_index = i->sibIndex(), sib_scale = i->sibScale();
+
+#if BX_SUPPORT_AVX
+  if (src_index == BX_SRC_VSIB)
+    disbufptr = dis_sprintf(disbufptr, "%%%s%d", vector_reg_name[i->getVL() - 1], sib_index);
+  else
+#endif
+    disbufptr = dis_sprintf(disbufptr, "%%%s", regname[sib_index]);
+
+  if (sib_scale)
+    disbufptr = dis_sprintf(disbufptr, ",%d", 1 << sib_scale);
+
+  return disbufptr;
+}
+
+char *resolve_memref_intel(char *disbufptr, const bxInstruction_c *i, const char *regname[], unsigned src_index)
 {
   unsigned sib_base = i->sibBase(), sib_index = i->sibIndex();
 
@@ -157,14 +174,14 @@ char *resolve_memref(char *disbufptr, const bxInstruction_c *i, const char *regn
     }
 
     disbufptr = dis_putc(disbufptr, '[');
-    disbufptr = resolve_sib_scale(disbufptr, i, regname, src_index);
+    disbufptr = resolve_sib_scale_intel(disbufptr, i, regname, src_index);
   }
   else {
     disbufptr = dis_sprintf(disbufptr, "[%s", regname[i->sibBase()]);
 
     if (sib_index != BX_NIL_REGISTER) {
       disbufptr = dis_putc(disbufptr, '+');
-      disbufptr = resolve_sib_scale(disbufptr, i, regname, src_index);
+      disbufptr = resolve_sib_scale_intel(disbufptr, i, regname, src_index);
     }
   }
 
@@ -180,6 +197,59 @@ char *resolve_memref(char *disbufptr, const bxInstruction_c *i, const char *regn
   }
 
   disbufptr = dis_putc(disbufptr, ']');
+  return disbufptr;
+}
+
+char *resolve_memref_gas(char *disbufptr, const bxInstruction_c *i, const char *regname[], unsigned src_index)
+{
+  unsigned sib_base = i->sibBase(), sib_index = i->sibIndex();
+
+  if (sib_index == 4 && src_index != BX_SRC_VSIB)
+    sib_index = BX_NIL_REGISTER;
+
+  if (sib_base != BX_NIL_REGISTER || sib_index != BX_NIL_REGISTER) {
+    if (i->displ32s() != 0) {
+      if (i->as32L()) {
+        disbufptr = dis_sprintf(disbufptr, "0x%x", (Bit32u) i->displ32s());
+      }
+      else {
+        disbufptr = dis_sprintf(disbufptr, "0x%x", (Bit32u) (Bit16u) i->displ16s());
+      }
+    }
+  }
+
+  if (sib_base == BX_NIL_REGISTER)
+  {
+    if (sib_index == BX_NIL_REGISTER)
+    {
+#if BX_SUPPORT_X86_64
+      if (i->as64L()) {
+        disbufptr = dis_sprintf(disbufptr, "0x" FMT_ADDRX, (Bit64u) i->displ32s());
+        return disbufptr;
+      }
+#endif
+      if (i->as32L()) {
+        disbufptr = dis_sprintf(disbufptr, "0x%x", (Bit32u) i->displ32s());
+      }
+      else {
+        disbufptr = dis_sprintf(disbufptr, "0x%x", (Bit32u) (Bit16u) i->displ16s());
+      }
+      return disbufptr;
+    }
+
+    disbufptr = dis_sprintf(disbufptr, "(,");
+    disbufptr = resolve_sib_scale_gas(disbufptr, i, regname, src_index);
+  }
+  else {
+    disbufptr = dis_sprintf(disbufptr, "(%%%s", regname[i->sibBase()]);
+
+    if (sib_index != BX_NIL_REGISTER) {
+      disbufptr = dis_putc(disbufptr, ',');
+      disbufptr = resolve_sib_scale_gas(disbufptr, i, regname, src_index);
+    }
+  }
+
+  disbufptr = dis_putc(disbufptr, ')');
   return disbufptr;
 }
 
@@ -253,7 +323,7 @@ char *resolve_memsize(char *disbufptr, const bxInstruction_c *i, unsigned src_in
     case BX_VMM_REG:
 #if BX_SUPPORT_AVX
       if (i->getVL() > BX_NO_VL)
-        disbufptr = dis_sprintf(disbufptr, "%sword ptr ", intel_vector_reg_name[i->getVL() - 1]);
+        disbufptr = dis_sprintf(disbufptr, "%sword ptr ", vector_reg_name[i->getVL() - 1]);
       else
 #endif
         disbufptr = dis_sprintf(disbufptr, "xmmword ptr ");
@@ -265,7 +335,7 @@ char *resolve_memsize(char *disbufptr, const bxInstruction_c *i, unsigned src_in
   }
 #if BX_SUPPORT_AVX
   else if (src_index == BX_SRC_VSIB) {
-    disbufptr = dis_sprintf(disbufptr, "%sword ptr ", intel_vector_reg_name[i->getVL() - 1]);
+    disbufptr = dis_sprintf(disbufptr, "%sword ptr ", vector_reg_name[i->getVL() - 1]);
   }
 #endif
 
@@ -273,52 +343,72 @@ char *resolve_memsize(char *disbufptr, const bxInstruction_c *i, unsigned src_in
 }
 
 // disasembly of memory reference
-char *resolve_memref(char *disbufptr, const bxInstruction_c *i, unsigned src_index, unsigned src_type)
+char *resolve_memref_intel(char *disbufptr, const bxInstruction_c *i, unsigned src_index, unsigned src_type)
 {
   disbufptr = resolve_memsize(disbufptr, i, src_index, src_type);
 
   // seg:[base + index*scale + disp]
-  disbufptr = dis_sprintf(disbufptr, "%s:", intel_segment_name[i->seg()]);
+  disbufptr = dis_sprintf(disbufptr, "%s:", segment_name[i->seg()]);
   if (i->as64L()) {
-    disbufptr = resolve_memref(disbufptr, i, intel_general_64bit_regname, src_index);
+    disbufptr = resolve_memref_intel(disbufptr, i, general_64bit_regname, src_index);
   }
   else if (i->as32L()) {
-    disbufptr = resolve_memref(disbufptr, i, intel_general_32bit_regname, src_index);
+    disbufptr = resolve_memref_intel(disbufptr, i, general_32bit_regname, src_index);
   }
   else {
-    disbufptr = resolve_memref(disbufptr, i, intel_general_16bit_regname, src_index);
+    disbufptr = resolve_memref_intel(disbufptr, i, general_16bit_regname, src_index);
+  }
+  return disbufptr;
+}
+
+char *resolve_memref_gas(char *disbufptr, const bxInstruction_c *i, unsigned src_index, unsigned src_type)
+{
+  // %%seg: $disp[base, index, scale)
+  disbufptr = dis_sprintf(disbufptr, "%%%s:", segment_name[i->seg()]);
+  if (i->as64L()) {
+    disbufptr = resolve_memref_gas(disbufptr, i, general_64bit_regname, src_index);
+  }
+  else if (i->as32L()) {
+    disbufptr = resolve_memref_gas(disbufptr, i, general_32bit_regname, src_index);
+  }
+  else {
+    disbufptr = resolve_memref_gas(disbufptr, i, general_16bit_regname, src_index);
   }
   return disbufptr;
 }
 
 // disasembly of register reference
-char *disasm_regref(char *disbufptr, const bxInstruction_c *i, unsigned src_num, unsigned src_type)
+char *disasm_regref(char *disbufptr, const bxInstruction_c *i, unsigned src_num, unsigned src_type, BxDisasmStyle style)
 {
   unsigned srcreg = i->getSrcReg(src_num);
+
+  if (style == BX_DISASM_GAS)
+    if (src_type != BX_KMASK_REG_PAIR && src_type != BX_NO_REGISTER)
+      disbufptr = dis_sprintf(disbufptr, "%%");
 
   switch(src_type) {
   case BX_GPR8:
 #if BX_SUPPORT_X86_64
     if (i->extend8bitL())
-      disbufptr = dis_sprintf(disbufptr, "%s", intel_general_8bit_regname_rex[srcreg]);
+      disbufptr = dis_sprintf(disbufptr, "%s", general_8bit_regname_rex[srcreg]);
     else
 #endif
-      disbufptr = dis_sprintf(disbufptr, "%s", intel_general_8bit_regname[srcreg]);
+      disbufptr = dis_sprintf(disbufptr, "%s", general_8bit_regname[srcreg]);
     break;
 
   case BX_GPR16:
-    disbufptr = dis_sprintf(disbufptr, "%s", intel_general_16bit_regname[srcreg]);
+    disbufptr = dis_sprintf(disbufptr, "%s", general_16bit_regname[srcreg]);
     break;
 
   case BX_GPR32:
   case BX_GPR32_MEM8:      // 8-bit  memory ref but 32-bit GPR
   case BX_GPR32_MEM16:     // 16-bit memory ref but 32-bit GPR
-    disbufptr = dis_sprintf(disbufptr, "%s", intel_general_32bit_regname[srcreg]);
+    disbufptr = dis_sprintf(disbufptr, "%s", general_32bit_regname[srcreg]);
     break;
 
 #if BX_SUPPORT_X86_64
   case BX_GPR64:
-    disbufptr = dis_sprintf(disbufptr, "%s", intel_general_64bit_regname[srcreg]);
+    disbufptr = dis_sprintf(disbufptr, "%s", general_64bit_regname[srcreg]);
     break;
 #endif
 
@@ -334,7 +424,7 @@ char *disasm_regref(char *disbufptr, const bxInstruction_c *i, unsigned src_num,
   case BX_VMM_REG:
 #if BX_SUPPORT_AVX
     if (i->getVL() > BX_NO_VL) {
-      disbufptr = dis_sprintf(disbufptr, "%s%d", intel_vector_reg_name[i->getVL() - 1], srcreg);
+      disbufptr = dis_sprintf(disbufptr, "%s%d", vector_reg_name[i->getVL() - 1], srcreg);
 #if BX_SUPPORT_EVEX
       if (src_num == 0 && i->opmask()) {
         disbufptr = dis_sprintf(disbufptr, "{k%d}%s", i->opmask(),
@@ -354,19 +444,24 @@ char *disasm_regref(char *disbufptr, const bxInstruction_c *i, unsigned src_num,
     disbufptr = dis_sprintf(disbufptr, "k%d", srcreg);
     assert(srcreg < 8);
     if (src_num == 0 && i->opmask()) {
-      disbufptr = dis_sprintf(disbufptr, "{k%d}%s", i->opmask(),
+      disbufptr = dis_sprintf(disbufptr, "{%sk%d}%s", (style == BX_DISASM_GAS) ? "%" : "",
+        i->opmask(),
         i->isZeroMasking() ? "{z}" : "");
     }
     break;
 
   case BX_KMASK_REG_PAIR:
-    disbufptr = dis_sprintf(disbufptr, "[k%d, k%d]", srcreg & ~1, 1 + (srcreg & ~1));
+    disbufptr = dis_sprintf(disbufptr, "[%sk%d, %sk%d]", 
+     (style == BX_DISASM_GAS) ? "%" : "",
+      srcreg & ~1,
+     (style == BX_DISASM_GAS) ? "%" : "",
+      1 + (srcreg & ~1));
     assert(srcreg < 8);
     break;
 #endif
 
   case BX_SEGREG:
-    disbufptr = dis_sprintf(disbufptr, "%s", intel_segment_name[srcreg]);
+    disbufptr = dis_sprintf(disbufptr, "%s", segment_name[srcreg]);
     break;
 
   case BX_CREG:
@@ -386,7 +481,7 @@ char *disasm_regref(char *disbufptr, const bxInstruction_c *i, unsigned src_num,
   return disbufptr;
 }
 
-char *disasm_immediate(char *disbufptr, const bxInstruction_c *i, unsigned src_type)
+char *disasm_immediate(char *disbufptr, const bxInstruction_c *i, unsigned src_type, BxDisasmStyle style)
 {
   switch(src_type) {
   case BX_DIRECT_MEMREF_B:
@@ -403,6 +498,10 @@ char *disasm_immediate(char *disbufptr, const bxInstruction_c *i, unsigned src_t
     break;
   default: break;
   };
+
+  if (style == BX_DISASM_GAS)
+    if(src_type != BX_DIRECT_MEMREF_B && src_type != BX_DIRECT_MEMREF_W && src_type != BX_DIRECT_MEMREF_D && src_type != BX_DIRECT_MEMREF_Q)
+      disbufptr = dis_sprintf(disbufptr, "$");
 
   switch(src_type) {
   case BX_IMM1:
@@ -469,7 +568,8 @@ char *disasm_immediate(char *disbufptr, const bxInstruction_c *i, unsigned src_t
   case BX_DIRECT_MEMREF_W:
   case BX_DIRECT_MEMREF_D:
   case BX_DIRECT_MEMREF_Q:
-    disbufptr = dis_sprintf(disbufptr, "%s:", intel_segment_name[i->seg()]);
+    disbufptr = dis_sprintf(disbufptr, "%s%s:", 
+     (style == BX_DISASM_GAS) ? "%" : "", segment_name[i->seg()]);
 #if BX_SUPPORT_X86_64
     if (i->as64L())
       disbufptr = dis_sprintf(disbufptr, "0x" FMT_ADDRX, i->Iq());
@@ -488,7 +588,7 @@ char *disasm_immediate(char *disbufptr, const bxInstruction_c *i, unsigned src_t
   return disbufptr;
 }
 
-char *disasm_branch_target(char *disbufptr, const bxInstruction_c *i, unsigned src_type, bx_address cs_base, bx_address rip)
+char *disasm_branch_target(char *disbufptr, const bxInstruction_c *i, unsigned src_type, bx_address cs_base, bx_address rip, BxDisasmStyle style)
 {
   bx_address target;
   Bit16s imm16;
@@ -533,104 +633,163 @@ char *disasm_branch_target(char *disbufptr, const bxInstruction_c *i, unsigned s
   return disbufptr;
 }
 
-char *disasm_implicit_src(char *disbufptr, const bxInstruction_c *i, unsigned src_type)
+char *disasm_implicit_src(char *disbufptr, const bxInstruction_c *i, unsigned src_type, BxDisasmStyle style)
 {
-  switch(src_type) {
-  case BX_RSIREF_B:
-  case BX_RDIREF_B:
-    disbufptr = resolve_memsize(disbufptr, i, BX_SRC_RM, BX_GPR8);
-    break;
-  case BX_RSIREF_W:
-  case BX_RDIREF_W:
-    disbufptr = resolve_memsize(disbufptr, i, BX_SRC_RM, BX_GPR16);
-    break;
-  case BX_RSIREF_D:
-  case BX_RDIREF_D:
-    disbufptr = resolve_memsize(disbufptr, i, BX_SRC_RM, BX_GPR32);
-    break;
-  case BX_RSIREF_Q:
-  case BX_RDIREF_Q:
-  case BX_MMX_RDIREF:
-    disbufptr = resolve_memsize(disbufptr, i, BX_SRC_RM, BX_GPR64);
-    break;
-  case BX_VEC_RDIREF:
-    disbufptr = resolve_memsize(disbufptr, i, BX_SRC_RM, BX_VMM_REG);
-    break;
-  default: break;
-  };
+  if (style == BX_DISASM_INTEL) {
+    switch(src_type) {
+    case BX_RSIREF_B:
+    case BX_RDIREF_B:
+      disbufptr = resolve_memsize(disbufptr, i, BX_SRC_RM, BX_GPR8);
+      break;
+    case BX_RSIREF_W:
+     case BX_RDIREF_W:
+      disbufptr = resolve_memsize(disbufptr, i, BX_SRC_RM, BX_GPR16);
+      break;
+    case BX_RSIREF_D:
+    case BX_RDIREF_D:
+      disbufptr = resolve_memsize(disbufptr, i, BX_SRC_RM, BX_GPR32);
+      break;
+    case BX_RSIREF_Q:
+    case BX_RDIREF_Q:
+    case BX_MMX_RDIREF:
+      disbufptr = resolve_memsize(disbufptr, i, BX_SRC_RM, BX_GPR64);
+      break;
+    case BX_VEC_RDIREF:
+      disbufptr = resolve_memsize(disbufptr, i, BX_SRC_RM, BX_VMM_REG);
+      break;
+    default: break;
+    };
+  }
 
-  switch(src_type) {
-  case BX_RSIREF_B:
-  case BX_RSIREF_W:
-  case BX_RSIREF_D:
-  case BX_RSIREF_Q:
-    disbufptr = dis_sprintf(disbufptr, "%s:", intel_segment_name[i->seg()]);
-#if BX_SUPPORT_X86_64
-    if (i->as64L()) {
-      disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_64bit_regname[BX_64BIT_REG_RSI]);
-    }
-    else
-#endif
-    {
-      if (i->as32L())
-        disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_32bit_regname[BX_32BIT_REG_ESI]);
-      else
-        disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_16bit_regname[BX_16BIT_REG_SI]);
-    }
-    break;
-
-  case BX_RDIREF_B:
-  case BX_RDIREF_W:
-  case BX_RDIREF_D:
-  case BX_RDIREF_Q:
-    disbufptr = dis_sprintf(disbufptr, "%s:", intel_segment_name[BX_SEG_REG_ES]);
-#if BX_SUPPORT_X86_64
-    if (i->as64L()) {
-      disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_64bit_regname[BX_64BIT_REG_RDI]);
-    }
-    else
-#endif
-    {
-      if (i->as32L())
-        disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_32bit_regname[BX_32BIT_REG_EDI]);
-      else
-        disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_16bit_regname[BX_16BIT_REG_DI]);
-    }
-    break;
-
-  case BX_MMX_RDIREF:
-  case BX_VEC_RDIREF:
-    disbufptr = dis_sprintf(disbufptr, "%s:", intel_segment_name[i->seg()]);
-#if BX_SUPPORT_X86_64
-    if (i->as64L()) {
-      disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_64bit_regname[BX_64BIT_REG_RDI]);
-    }
-    else
-#endif
-    {
-      if (i->as32L())
-        disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_32bit_regname[BX_32BIT_REG_EDI]);
-      else
-        disbufptr = dis_sprintf(disbufptr, "[%s]", intel_general_16bit_regname[BX_16BIT_REG_DI]);
-    }
-    break;
-
-  case BX_USECL:
+  if (src_type == BX_USECL) {
+    if (style == BX_DISASM_GAS) disbufptr = dis_putc(disbufptr, '%');
     disbufptr = dis_sprintf(disbufptr, "cl");
+    return disbufptr;
+  }
+
+  if (src_type ==BX_USEDX) {
+    if (style == BX_DISASM_GAS) disbufptr = dis_putc(disbufptr, '%');
+    disbufptr = dis_sprintf(disbufptr, "dx");
+    return disbufptr;
+  }
+
+  const char *regname = NULL;
+  unsigned seg = BX_SEG_REG_NULL;
+
+  switch(src_type) {
+  case BX_RSIREF_B:
+  case BX_RSIREF_W:
+  case BX_RSIREF_D:
+  case BX_RSIREF_Q:
+    seg = i->seg();
+    disbufptr = dis_sprintf(disbufptr, "%s:", segment_name[i->seg()]);
+#if BX_SUPPORT_X86_64
+    if (i->as64L()) {
+      regname = general_64bit_regname[BX_64BIT_REG_RSI];
+    }
+    else
+#endif
+    {
+      if (i->as32L())
+        regname = general_32bit_regname[BX_32BIT_REG_ESI];
+      else
+        regname = general_16bit_regname[BX_16BIT_REG_SI];
+    }
     break;
 
-  case BX_USEDX:
-    disbufptr = dis_sprintf(disbufptr, "dx");
+  case BX_RDIREF_B:
+  case BX_RDIREF_W:
+  case BX_RDIREF_D:
+  case BX_RDIREF_Q:
+    seg = BX_SEG_REG_ES;
+#if BX_SUPPORT_X86_64
+    if (i->as64L()) {
+      regname = general_64bit_regname[BX_64BIT_REG_RDI];
+    }
+    else
+#endif
+    {
+      if (i->as32L())
+        regname = general_32bit_regname[BX_32BIT_REG_EDI];
+      else
+        regname = general_16bit_regname[BX_16BIT_REG_DI];
+    }
+    break;
+
+  case BX_MMX_RDIREF:
+  case BX_VEC_RDIREF:
+    seg = i->seg();
+#if BX_SUPPORT_X86_64
+    if (i->as64L()) {
+      regname = general_64bit_regname[BX_64BIT_REG_RDI];
+    }
+    else
+#endif
+    {
+      if (i->as32L())
+        regname = general_32bit_regname[BX_32BIT_REG_EDI];
+      else
+        regname = general_16bit_regname[BX_16BIT_REG_DI];
+    }
     break;
 
   default:
     disbufptr = dis_sprintf(disbufptr, "(unknown implicit source for disasm %d)", src_type);
   }
- 
+
+  if (style == BX_DISASM_INTEL) {
+    disbufptr = dis_sprintf(disbufptr, "%s:[%s]", segment_name[seg], regname);
+  }
+  else {
+    disbufptr = dis_sprintf(disbufptr, "%%%s:(%%%s)", segment_name[seg], regname);
+  }
+
   return disbufptr;
 }
 
-char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_address rip)
+char* disasm_source(char *disbufptr, unsigned n, bool srcs_used, const bxInstruction_c *i, bx_address cs_base, bx_address rip, BxDisasmStyle style)
+{
+  Bit16u ia_opcode = i->getIaOpcode();
+  unsigned src = (unsigned) BxOpcodesTable[ia_opcode].src[n];
+  unsigned src_type = BX_DISASM_SRC_TYPE(src);
+  unsigned src_index = BX_DISASM_SRC_ORIGIN(src);
+
+  if (! src_type && src_index != BX_SRC_RM && src_index != BX_SRC_VECTOR_RM) return disbufptr;
+
+  if (srcs_used) disbufptr = dis_sprintf(disbufptr, ", ");
+
+  if (! i->modC0() && (src_index == BX_SRC_RM || src_index == BX_SRC_VECTOR_RM || src_index == BX_SRC_VSIB)) {
+    disbufptr = (style == BX_DISASM_INTEL) ? resolve_memref_intel(disbufptr, i, src_index, src_type) : resolve_memref_gas(disbufptr, i, src_index, src_type);
+#if BX_SUPPORT_EVEX
+    if (n == 0 && (src_index == BX_SRC_VECTOR_RM || src_index == BX_SRC_VSIB || src_type == BX_VMM_REG) && i->opmask()) {
+      disbufptr = dis_sprintf(disbufptr, "{k%d}", i->opmask());
+    }
+#endif
+  }
+  else {
+    if (src_index == BX_SRC_VECTOR_RM) src_type = BX_VMM_REG;
+
+    if (src_index == BX_SRC_IMM) {
+      // this is immediate value
+      disbufptr = disasm_immediate(disbufptr, i, src_type, style);
+    }
+    else if (src_index == BX_SRC_BRANCH_OFFSET) {
+      // this is immediate value used as branch target
+      disbufptr = disasm_branch_target(disbufptr, i, src_type, cs_base, rip, style);
+    }
+    else if (src_index == BX_SRC_IMPLICIT) {
+      // this is implicit register or memory reference
+      disbufptr = disasm_implicit_src(disbufptr, i, src_type, style);
+    }
+    else {
+      // this is register reference
+      disbufptr = disasm_regref(disbufptr, i, n, src_type, style);
+    }
+  }
+  return disbufptr;
+}
+
+char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_address rip, BxDisasmStyle style)
 {
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
   if (i->getIaOpcode() == BX_INSERTED_OPCODE) {
@@ -652,7 +811,7 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
 #endif
 
   const char *opname = i->getIaOpcodeNameShort(); // skip the "BX_IA_"
-  unsigned n;
+  int n;
 #if BX_SUPPORT_EVEX
   bx_bool is_vector = false;
 #endif
@@ -680,51 +839,29 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
   }
 
   // Step 2: print opcode name
-  unsigned opname_len = strlen(opname);
-  for (n=0;n < opname_len; n++) {
-    if (opname[n] == '_') break;
-    disbufptr = dis_putc(disbufptr, tolower(opname[n]));
+  Bit16u ia_opcode = i->getIaOpcode();
+  if (style == BX_DISASM_GAS) {
+    disbufptr = dis_sprintf(disbufptr, "%s", get_gas_disasm_opcode_name(ia_opcode));
+  }
+  else {
+    disbufptr = dis_sprintf(disbufptr, "%s", get_intel_disasm_opcode_name(ia_opcode));
   }
   disbufptr = dis_putc(disbufptr, ' ');
 
   // Step 3: print sources
-  Bit16u ia_opcode = i->getIaOpcode();
-  unsigned srcs_used = 0;
-  for (n = 0; n <= 3; n++) {
-    unsigned src = (unsigned) BxOpcodesTable[ia_opcode].src[n];
-    unsigned src_type = BX_DISASM_SRC_TYPE(src);
-    unsigned src_index = BX_DISASM_SRC_ORIGIN(src);
-    if (! src_type && src_index != BX_SRC_RM && src_index != BX_SRC_VECTOR_RM) continue;
-    if (srcs_used++ > 0)
-      disbufptr = dis_sprintf(disbufptr, ", ");
-
-    if (! i->modC0() && (src_index == BX_SRC_RM || src_index == BX_SRC_VECTOR_RM || src_index == BX_SRC_VSIB)) {
-      disbufptr = resolve_memref(disbufptr, i, src_index, src_type);
-#if BX_SUPPORT_EVEX
-      if (n == 0 && (src_index == BX_SRC_VECTOR_RM || src_index == BX_SRC_VSIB || src_type == BX_VMM_REG) && i->opmask()) {
-        disbufptr = dis_sprintf(disbufptr, "{k%d}", i->opmask());
-      }
-#endif
+  bool srcs_used = 0;
+  if (style == BX_DISASM_INTEL) {
+    for (n = 0; n <= 3; n++) {
+      char *disbufptrtmp = disasm_source(disbufptr, n, srcs_used, i, cs_base, rip, style);
+      if (disbufptrtmp != disbufptr) srcs_used=1;
+      disbufptr = disbufptrtmp;
     }
-    else {
-      if (src_index == BX_SRC_VECTOR_RM) src_type = BX_VMM_REG;
-
-      if (src_index == BX_SRC_IMM) {
-        // this is immediate value
-        disbufptr = disasm_immediate(disbufptr, i, src_type);
-      }
-      else if (src_index == BX_SRC_BRANCH_OFFSET) {
-        // this is immediate value used as branch target
-        disbufptr = disasm_branch_target(disbufptr, i, src_type, cs_base, rip);
-      }
-      else if (src_index == BX_SRC_IMPLICIT) {
-        // this is implicit register or memory reference
-        disbufptr = disasm_implicit_src(disbufptr, i, src_type);
-      }
-      else {
-        // this is register reference
-        disbufptr = disasm_regref(disbufptr, i, n, src_type);
-      }
+  }
+  else {
+    for (n = 3; n >= 0; n--) {
+      char *disbufptrtmp = disasm_source(disbufptr, n, srcs_used, i, cs_base, rip, style);
+      if (disbufptrtmp != disbufptr) srcs_used=1;
+      disbufptr = disbufptrtmp;
     }
   }
 
@@ -740,7 +877,7 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
   return disbufptr;
 }
 
-char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr, bxInstruction_c *i, bx_address cs_base, bx_address rip)
+char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr, bxInstruction_c *i, bx_address cs_base, bx_address rip, BxDisasmStyle style)
 {
   int ret;
 
@@ -754,7 +891,7 @@ char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr, bxIns
   if (ret < 0)
     sprintf(disbufptr, "decode failed");
   else
-    ::disasm(disbufptr, i, cs_base, rip);
+    ::disasm(disbufptr, i, cs_base, rip, style);
 
   return disbufptr;
 }

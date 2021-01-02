@@ -27,6 +27,8 @@
 extern bx_address bx_asize_mask[];
 
 const char *get_bx_opcode_name(Bit16u ia_opcode);
+const char *get_intel_disasm_opcode_name(Bit16u ia_opcode);
+const char *get_gas_disasm_opcode_name(Bit16u ia_opcode);
 
 class BX_CPU_C;
 class bxInstruction_c;
@@ -407,5 +409,12 @@ public:
 
 };
 // <TAG-CLASS-INSTRUCTION-END>
+
+enum BxDisasmStyle {
+  BX_DISASM_INTEL,
+  BX_DISASM_GAS
+};
+
+extern char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr, bxInstruction_c *i, bx_address cs_base, bx_address rip, BxDisasmStyle style = BX_DISASM_INTEL);
 
 #endif
