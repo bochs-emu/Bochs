@@ -385,7 +385,7 @@ debugstuff.o: debugstuff.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../gui/gui.h ../instrument/stubs/instrument.h cpu.h decoder/decoder.h \
  i387.h fpu/softfloat.h fpu/tag_w.h fpu/status_w.h fpu/control_w.h \
  crregs.h descriptor.h decoder/instr.h lazy_flags.h tlb.h icache.h apic.h \
- xmm.h vmx.h svm.h cpuid.h stack.h access.h ../disasm/disasm.h \
+ xmm.h vmx.h svm.h cpuid.h stack.h access.h \
  ../cpu/decoder/decoder.h
 event.o: event.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../gui/siminterface.h ../cpudb.h \

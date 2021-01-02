@@ -26,6 +26,7 @@ extern "C" {
 #include "bochs.h"
 #include "param_names.h"
 #include "cpu/cpu.h"
+#include "cpu/decoder/ia_opcodes.h"
 #include "iodev/iodev.h"
 
 #if BX_DEBUGGER
@@ -118,9 +119,7 @@ static struct {
 } bx_dbg_batch_dma;
 
 // some buffers for disassembly
-#include "disasm/disasm.h"
-static disassembler bx_disassemble;
-static bx_bool bx_disassemble_syntax_intel = 1;
+static bx_bool disasm_syntax_intel = 1;
 static Bit8u bx_disasm_ibuf[32];
 static char  bx_disasm_tbuf[512];
 
@@ -2253,7 +2252,7 @@ void bx_dbg_set_disassemble_size(unsigned size)
 
 void bx_dbg_disassemble_switch_mode()
 {
-  bx_disassemble_syntax_intel = !bx_disassemble_syntax_intel;
+  disasm_syntax_intel = !disasm_syntax_intel;
 }
 
 void bx_dbg_take_command(const char *what, unsigned n)
@@ -3911,95 +3910,270 @@ bx_address bx_dbg_get_laddr(Bit16u sel, bx_address ofs)
   return laddr;
 }
 
+extern int fetchDecode32(const Bit8u *fetchPtr, bx_bool is_32, bxInstruction_c *i, unsigned remainingInPage);
+#if BX_SUPPORT_X86_64
+extern int fetchDecode64(const Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage);
+#endif
+
 void bx_dbg_step_over_command()
 {
   bx_address laddr = BX_CPU(dbg_cpu)->guard_found.laddr;
+  Bit8u opcode_bytes[32];
 
-  if (! bx_dbg_read_linear(dbg_cpu, laddr, 16, bx_disasm_ibuf))
+  if (! bx_dbg_read_linear(dbg_cpu, laddr, 16, opcode_bytes))
   {
     return;
   }
 
-  x86_insn insn = bx_disassemble.decode(IS_CODE_32(BX_CPU(dbg_cpu)->guard_found.code_32_64),
-      IS_CODE_64(BX_CPU(dbg_cpu)->guard_found.code_32_64),
-      BX_CPU(dbg_cpu)->get_segment_base(BX_SEG_REG_CS),
-      BX_CPU(dbg_cpu)->guard_found.eip, bx_disasm_ibuf, bx_disasm_tbuf);
+  bxInstruction_c i;
+  int ret = -1;
+#if BX_SUPPORT_X86_64
+  if (IS_CODE_64(BX_CPU(dbg_cpu)->guard_found.code_32_64))
+    ret = fetchDecode64(opcode_bytes, &i, 16);
+  else
+#endif
+    ret = fetchDecode32(opcode_bytes, IS_CODE_32(BX_CPU(dbg_cpu)->guard_found.code_32_64), &i, 16);
 
-  unsigned b1 = insn.b1;
+  if (ret < 0) {
+    dbg_printf("bx_dbg_step_over_command:: Failed to fetch instructions !\n");
+    return;
+  }    
 
-  switch(b1) {
+  switch(i.getIaOpcode()) {
     // Jcc short
-    case 0x70:
-    case 0x71:
-    case 0x72:
-    case 0x73:
-    case 0x74:
-    case 0x75:
-    case 0x76:
-    case 0x77:
-    case 0x78:
-    case 0x79:
-    case 0x7A:
-    case 0x7B:
-    case 0x7C:
-    case 0x7D:
-    case 0x7E:
-    case 0x7F:
+    case BX_IA_JO_Jbw:      // opcode 0x70
+    case BX_IA_JO_Jbd:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JO_Jbq:
+#endif
+    case BX_IA_JNO_Jbw:     // opcode 0x71
+    case BX_IA_JNO_Jbd:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JNO_Jbq:
+#endif
+    case BX_IA_JB_Jbw:      // opcode 0x72
+    case BX_IA_JB_Jbd:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JB_Jbq:
+#endif
+    case BX_IA_JNB_Jbw:     // opcode 0x73
+    case BX_IA_JNB_Jbd:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JNB_Jbq:
+#endif
+    case BX_IA_JZ_Jbw:      // opcode 0x74
+    case BX_IA_JZ_Jbd:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JZ_Jbq:
+#endif
+    case BX_IA_JNZ_Jbw:     // opcode 0x75
+    case BX_IA_JNZ_Jbd:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JNZ_Jbq:
+#endif
+    case BX_IA_JBE_Jbw:     // opcode 0x76
+    case BX_IA_JBE_Jbd:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JBE_Jbq:
+#endif
+    case BX_IA_JNBE_Jbw:    // opcode 0x77
+    case BX_IA_JNBE_Jbd:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JNBE_Jbq:
+#endif
+    case BX_IA_JS_Jbw:      // opcode 0x78
+    case BX_IA_JS_Jbd:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JS_Jbq:
+#endif
+    case BX_IA_JNS_Jbw:     // opcode 0x79
+    case BX_IA_JNS_Jbd:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JNS_Jbq:
+#endif
+    case BX_IA_JP_Jbw:      // opcode 0x7A
+    case BX_IA_JP_Jbd:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JP_Jbq:
+#endif
+    case BX_IA_JNP_Jbw:     // opcode 0x7B
+    case BX_IA_JNP_Jbd:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JNP_Jbq:
+#endif
+    case BX_IA_JL_Jbw:      // opcode 0x7C
+    case BX_IA_JL_Jbd:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JL_Jbq:
+#endif
+    case BX_IA_JNL_Jbw:     // opcode 0x7D
+    case BX_IA_JNL_Jbd:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JNL_Jbq:
+#endif
+    case BX_IA_JLE_Jbw:     // opcode 0x7E
+    case BX_IA_JLE_Jbd:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JLE_Jbq:
+#endif
+    case BX_IA_JNLE_Jbw:    // opcode 0x7F
+    case BX_IA_JNLE_Jbd:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JNLE_Jbq:
+#endif
 
     // Jcc near
-    case 0x180:
-    case 0x181:
-    case 0x182:
-    case 0x183:
-    case 0x184:
-    case 0x185:
-    case 0x186:
-    case 0x187:
-    case 0x188:
-    case 0x189:
-    case 0x18A:
-    case 0x18B:
-    case 0x18C:
-    case 0x18D:
-    case 0x18E:
-    case 0x18F:
+    case BX_IA_JO_Jw:      // opcode 0x0F 0x80
+    case BX_IA_JO_Jd:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JO_Jq:
+#endif
+    case BX_IA_JNO_Jw:     // opcode 0x0F 0x81
+    case BX_IA_JNO_Jd:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JNO_Jq:
+#endif
+    case BX_IA_JB_Jw:      // opcode 0x0F 0x82
+    case BX_IA_JB_Jd:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JB_Jq:
+#endif
+    case BX_IA_JNB_Jw:     // opcode 0x0F 0x83
+    case BX_IA_JNB_Jd:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JNB_Jq:
+#endif
+    case BX_IA_JZ_Jw:      // opcode 0x0F 0x84
+    case BX_IA_JZ_Jd:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JZ_Jq:
+#endif
+    case BX_IA_JNZ_Jw:     // opcode 0x0F 0x85
+    case BX_IA_JNZ_Jd:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JNZ_Jq:
+#endif
+    case BX_IA_JBE_Jw:     // opcode 0x0F 0x86
+    case BX_IA_JBE_Jd:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JBE_Jq:
+#endif
+    case BX_IA_JNBE_Jw:    // opcode 0x0F 0x87
+    case BX_IA_JNBE_Jd:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JNBE_Jq:
+#endif
+    case BX_IA_JS_Jw:      // opcode 0x0F 0x88
+    case BX_IA_JS_Jd:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JS_Jq:
+#endif
+    case BX_IA_JNS_Jw:     // opcode 0x0F 0x89
+    case BX_IA_JNS_Jd:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JNS_Jq:
+#endif
+    case BX_IA_JP_Jw:      // opcode 0x0F 0x8A
+    case BX_IA_JP_Jd:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JP_Jq:
+#endif
+    case BX_IA_JNP_Jw:     // opcode 0x0F 0x8B
+    case BX_IA_JNP_Jd:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JNP_Jq:
+#endif
+    case BX_IA_JL_Jw:      // opcode 0x0F 0x8C
+    case BX_IA_JL_Jd:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JL_Jq:
+#endif
+    case BX_IA_JNL_Jw:     // opcode 0x0F 0x8D
+    case BX_IA_JNL_Jd:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JNL_Jq:
+#endif
+    case BX_IA_JLE_Jw:     // opcode 0x0F 0x8E
+    case BX_IA_JLE_Jd:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JLE_Jq:
+#endif
+    case BX_IA_JNLE_Jw:    // opcode 0x0F 0x8F
+    case BX_IA_JNLE_Jd:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JNLE_Jq:
+#endif
 
     // jcxz
-    case 0xE3:
+    case BX_IA_JCXZ_Jbw:   // opcode 0xE3
+    case BX_IA_JECXZ_Jbd:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JRCXZ_Jbq:
+#endif
 
-    // retn n
-    case 0xC2:
-    // retn
-    case 0xC3:
-    // retf n
-    case 0xCA:
-    // retf
-    case 0xCB:
-    // iret
-    case 0xCF:
+    // retn n 0xC2
+    case BX_IA_RET_Op16_Iw:
+    case BX_IA_RET_Op32_Iw:
+#if BX_SUPPORT_X86_64
+    case BX_IA_RET_Op64_Iw:
+#endif
+    // retn   0xC3
+    case BX_IA_RET_Op16:
+    case BX_IA_RET_Op32:
+#if BX_SUPPORT_X86_64
+    case BX_IA_RET_Op64:
+#endif
+    // retf n 0xCA
+    case BX_IA_RETF_Op16_Iw:
+    case BX_IA_RETF_Op32_Iw:
+#if BX_SUPPORT_X86_64
+    case BX_IA_RETF_Op64_Iw:
+#endif
+    // retf  0xCB
+    case BX_IA_RETF_Op16:
+    case BX_IA_RETF_Op32:
+#if BX_SUPPORT_X86_64
+    case BX_IA_RETF_Op64:
+#endif
+    // iret  0xCF
+    case BX_IA_IRET_Op16:
+    case BX_IA_IRET_Op32:
+#if BX_SUPPORT_X86_64
+    case BX_IA_IRET_Op64:
+#endif
 
-    // jmp near
-    case 0xE9:
-    // jmp far
-    case 0xEA:
-    // jmp short
-    case 0xEB:
+    // jmp near  0xE9
+    case BX_IA_JMP_Jw:
+    case BX_IA_JMP_Jd:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JMP_Jq:
+#endif
+    // jmp far   0xEA
+    case BX_IA_JMPF_Ap:
+    // jmp short 0xEB
+    case BX_IA_JMP_Jbw:
+    case BX_IA_JMP_Jbd:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JMP_Jbq:
+#endif
+    // jmp absolute indirect
+    case BX_IA_JMP_Ew:        // opcode 0xFF /4
+    case BX_IA_JMP_Ed:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JMP_Eq:
+#endif
+
+    case BX_IA_JMPF_Op16_Ep:  // opcode 0xFF /5
+    case BX_IA_JMPF_Op32_Ep:
+#if BX_SUPPORT_X86_64
+    case BX_IA_JMPF_Op64_Ep:
+#endif
       bx_dbg_stepN_command(dbg_cpu, 1);
       return;
-    // jmp absolute indirect
-    case 0xFF:
-      switch (insn.nnn) {
-        // near
-        case 4:
-        // far
-        case 5:
-         bx_dbg_stepN_command(dbg_cpu, 1);
-         return;
-      }
   }
 
   // calls, ints, loops and so on
-  int BpId = bx_dbg_lbreakpoint_command(bkStepOver, laddr + insn.ilen, NULL);
+  int BpId = bx_dbg_lbreakpoint_command(bkStepOver, laddr + i.ilen(), NULL);
   if (BpId == -1) {
     dbg_printf("bx_dbg_step_over_command:: Failed to set lbreakpoint !\n");
     return;
@@ -4017,22 +4191,14 @@ unsigned bx_dbg_disasm_wrapper(bx_bool is_32, bx_bool is_64, bx_address cs_base,
 
  if (disasm_style == BX_DISASM_INTEL || disasm_style == BX_DISASM_GAS)
    new_disasm_style = BxDisasmStyle(disasm_style);
- else if (bx_disassemble_syntax_intel == BX_DISASM_INTEL)
+ else if (disasm_syntax_intel == BX_DISASM_INTEL)
    new_disasm_style = BxDisasmStyle(BX_DISASM_INTEL);
  else
    new_disasm_style = BxDisasmStyle(BX_DISASM_GAS);
 
-#if 0
- if (new_disasm_style == BX_DISASM_INTEL)
-   bx_disassemble.set_syntax_intel();
- else
-   bx_disassemble.set_syntax_gas();
-  unsigned ilen = bx_disassemble.disasm(is_32, is_64, cs_base, ip, instr, disbuf);
-#else
   bxInstruction_c i;
   disasm(instr, is_32, is_64, disbuf, &i, cs_base, ip, new_disasm_style ? BX_DISASM_INTEL : BX_DISASM_GAS);
   unsigned ilen = i.ilen();
-#endif
 
   return ilen;
 }

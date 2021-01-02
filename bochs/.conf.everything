@@ -9,7 +9,6 @@
   --enable-long-phy-address \
   --enable-configurable-msrs \
   --enable-debugger \
-  --enable-disasm \
   --enable-debugger-gui \
   --enable-fpu \
   --enable-alignment-check \

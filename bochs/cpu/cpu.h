@@ -4283,7 +4283,7 @@ public: // for now...
 #if BX_DEBUGGER || BX_GDBSTUB
   BX_SMF bx_bool  dbg_instruction_epilog(void);
 #endif
-#if BX_DEBUGGER || BX_DISASM || BX_INSTRUMENTATION || BX_GDBSTUB
+#if BX_DEBUGGER || BX_INSTRUMENTATION || BX_GDBSTUB
   BX_SMF bx_bool  dbg_xlate_linear2phy(bx_address linear, bx_phy_address *phy, bx_address *lpf_mask = 0, bx_bool verbose = 0);
 #if BX_SUPPORT_VMX >= 2
   BX_SMF bx_bool dbg_translate_guest_physical(bx_phy_address guest_paddr, bx_phy_address *phy, bx_bool verbose = 0);
@@ -4741,9 +4741,7 @@ public: // for now...
   BX_SMF void    deliver_SMI(void);
   BX_SMF void    deliver_SIPI(unsigned vector);
   BX_SMF void    debug(bx_address offset);
-#if BX_DISASM
   BX_SMF void    debug_disasm_instruction(bx_address offset);
-#endif
 
 #if BX_X86_DEBUGGER
   // x86 hardware debug support

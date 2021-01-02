@@ -819,29 +819,6 @@ AC_ARG_ENABLE(debugger,
   )
 AC_SUBST(DEBUGGER_VAR)
 
-AC_MSG_CHECKING(for disassembler support)
-AC_ARG_ENABLE(disasm,
-  AS_HELP_STRING([--enable-disasm], [compile in support for disassembler (no)]),
-  [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_DISASM, 1)
-    DISASM_VAR='$(DISASM_LIB)'
-   else
-    AC_MSG_RESULT(no)
-    if test "$bx_debugger" = 1; then
-      echo "ERROR: debugger is enabled, so --enable-disasm is required"
-      exit 1
-    fi
-    AC_DEFINE(BX_DISASM, 0)
-    DISASM_VAR=''
-   fi],
-  [
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_DISASM, 1)
-    DISASM_VAR='$(DISASM_LIB)'
-  ])
-AC_SUBST(DISASM_VAR)
-
 AC_MSG_CHECKING(enable Bochs internal debugger GUI)
 AC_ARG_ENABLE(debugger-gui,
   AS_HELP_STRING([--enable-debugger-gui], [compile in support for Bochs internal debugger GUI (yes, if debugger is on)]),
@@ -3305,7 +3282,7 @@ AC_OUTPUT(Makefile iodev/Makefile iodev/display/Makefile iodev/hdimage/Makefile 
 	 iodev/usb/Makefile iodev/network/Makefile iodev/sound/Makefile \
 	 bx_debug/Makefile bios/Makefile cpu/Makefile cpu/avx/Makefile \
 	 cpu/cpudb/Makefile cpu/fpu/Makefile memory/Makefile gui/Makefile \
-	 disasm/Makefile ${INSTRUMENT_DIR}/Makefile misc/Makefile \
+	 ${INSTRUMENT_DIR}/Makefile misc/Makefile \
 	 doc/docbook/Makefile build/linux/bochs-dlx bxversion.h bxversion.rc \
 	 build/macosx/Info.plist build/win32/nsis/Makefile \
 	 build/win32/nsis/bochs.nsi host/linux/pcidev/Makefile ${USER_PLUGINS_MAKEFILE})

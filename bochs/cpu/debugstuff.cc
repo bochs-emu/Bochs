@@ -25,10 +25,6 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-#if BX_DISASM
-
-#include "disasm/disasm.h"
-
 void BX_CPU_C::debug_disasm_instruction(bx_address offset)
 {
 #if BX_DEBUGGER
@@ -41,25 +37,18 @@ void BX_CPU_C::debug_disasm_instruction(bx_address offset)
 
   static char letters[] = "0123456789ABCDEF";
   unsigned remainsInPage = 0x1000 - PAGE_OFFSET(offset);
-  extern unsigned bx_dbg_disasm_wrapper(bx_bool is_32, bx_bool is_64, bx_address cs_base, bx_address ip, const Bit8u *instr, char *disbuf, int disasm_style);
-  static disassembler bx_disassemble;
 
   bx_bool valid = dbg_xlate_linear2phy(get_laddr(BX_SEG_REG_CS, offset), &phy_addr);
   if (valid) {
     BX_MEM(0)->dbg_fetch_mem(BX_CPU_THIS, phy_addr, 16, instr_buf);
-#if BX_DEBUGGER
-    unsigned isize = bx_dbg_disasm_wrapper(
-        BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b,
-        BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64,
-        BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS), offset,
-        instr_buf, char_buf+i, BX_DISASM_INTEL);
-#else
-    unsigned isize = bx_disassemble.disasm(
-        BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b,
-        BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64,
-        BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS), offset,
-        instr_buf, char_buf+i);
-#endif
+
+    bxInstruction_c i;
+    disasm(instr_buf,
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b,
+      BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64, char_buf+i, &i, 
+      BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS), offset, BX_DISASM_INTEL);
+    unsigned isize = i.ilen();
+
     if (isize <= remainsInPage) {
       i=strlen(char_buf);
       char_buf[i++] = ' ';
@@ -81,8 +70,6 @@ void BX_CPU_C::debug_disasm_instruction(bx_address offset)
   }
 #endif  // #if BX_DEBUGGER
 }
-
-#endif  // #if BX_DISASM
 
 const char* cpu_mode_string(unsigned cpu_mode)
 {
@@ -258,9 +245,7 @@ void BX_CPU_C::debug(bx_address offset)
 #endif
   }
 
-#if BX_DISASM
   debug_disasm_instruction(offset);
-#endif  // #if BX_DISASM
 }
 
 
