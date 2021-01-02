@@ -4283,11 +4283,9 @@ public: // for now...
 #if BX_DEBUGGER || BX_GDBSTUB
   BX_SMF bx_bool  dbg_instruction_epilog(void);
 #endif
-#if BX_DEBUGGER || BX_INSTRUMENTATION || BX_GDBSTUB
   BX_SMF bx_bool  dbg_xlate_linear2phy(bx_address linear, bx_phy_address *phy, bx_address *lpf_mask = 0, bx_bool verbose = 0);
 #if BX_SUPPORT_VMX >= 2
   BX_SMF bx_bool dbg_translate_guest_physical(bx_phy_address guest_paddr, bx_phy_address *phy, bx_bool verbose = 0);
-#endif
 #endif
 #if BX_LARGE_RAMFILE
   BX_SMF bx_bool check_addr_in_tlb_buffers(const Bit8u *addr, const Bit8u *end);

@@ -2148,8 +2148,6 @@ bx_bool BX_CPU_C::spp_walk(bx_phy_address guest_paddr, bx_address guest_laddr, B
 
 #endif
 
-#if BX_DEBUGGER || BX_INSTRUMENTATION || BX_GDBSTUB
-
 #if BX_DEBUGGER
 
 void dbg_print_paging_pte(int level, Bit64u entry)
@@ -2383,8 +2381,6 @@ page_fault:
   *phy = 0;
   return 0;
 }
-
-#endif // BX_DEBUGGER || BX_INSTRUMENTATION || BX_GDBSTUB
 
 int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_pl, unsigned xlate_rw, Bit32u ac_mask, void *data)
 {
