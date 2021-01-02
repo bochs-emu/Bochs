@@ -906,11 +906,11 @@ typedef struct {
 
 #define BUILTIN_GUI_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_GUI, lib##mod##_gui_plugin_init, lib##mod##_gui_plugin_fini, 0}
 #define BUILTIN_OPT_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_OPTIONAL, lib##mod##_LTX_plugin_init, lib##mod##_LTX_plugin_fini, 0}
-#define BUILTIN_SND_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_SOUND, lib##mod##_sound_plugin_init, lib##mod##_sound_plugin_fini, 0}
-#define BUILTIN_NET_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_NETWORK, lib##mod##_net_plugin_init, lib##mod##_net_plugin_fini, 0}
-#define BUILTIN_USB_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_USBDEV, lib##mod##_dev_plugin_init, lib##mod##_dev_plugin_fini, 0}
+#define BUILTIN_SND_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_SND, lib##mod##_sound_plugin_init, lib##mod##_sound_plugin_fini, 0}
+#define BUILTIN_NET_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_NET, lib##mod##_net_plugin_init, lib##mod##_net_plugin_fini, 0}
+#define BUILTIN_USB_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_USB, lib##mod##_dev_plugin_init, lib##mod##_dev_plugin_fini, 0}
 #define BUILTIN_VGA_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_VGA, lib##mod##_LTX_plugin_init, lib##mod##_LTX_plugin_fini, 0}
-#define BUILTIN_IMG_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_HDIMAGE, lib##mod##_img_plugin_init, lib##mod##_img_plugin_fini, 0}
+#define BUILTIN_IMG_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_IMG, lib##mod##_img_plugin_init, lib##mod##_img_plugin_fini, 0}
 
 static builtin_plugin_t builtin_plugins[] = {
 #if BX_WITH_AMIGAOS
