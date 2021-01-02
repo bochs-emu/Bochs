@@ -123,7 +123,6 @@ nmi             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_NMI); }
 tlb             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_TLB); }
 u               |
 disasm          { BEGIN(DISASM); bxlval.sval = strdup(bxtext); return(BX_TOKEN_DISASM); }
-hex             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_HEX); }
 instrument      { bxlval.sval = strdup(bxtext); return(BX_TOKEN_INSTRUMENT); }
 stop            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_STOP); }
 doit            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DOIT); }

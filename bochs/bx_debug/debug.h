@@ -121,7 +121,6 @@ void bx_dbg_continue_command(bx_bool expression);
 void bx_dbg_stepN_command(int cpu, Bit32u count);
 void bx_dbg_set_auto_disassemble(bx_bool enable);
 void bx_dbg_disassemble_switch_mode(void);
-void bx_dbg_disassemble_hex_mode_switch(int mode);
 void bx_dbg_set_disassemble_size(unsigned size);
 void bx_dbg_del_breakpoint_command(unsigned handle);
 void bx_dbg_en_dis_breakpoint_command(unsigned handle, bx_bool enable);

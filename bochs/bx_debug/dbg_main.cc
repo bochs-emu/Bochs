@@ -30,8 +30,6 @@ extern "C" {
 
 #if BX_DEBUGGER
 
-#include "disasm/disasm.h"
-
 #define LOG_THIS genlog->
 
 #if HAVE_LIBREADLINE
@@ -120,6 +118,7 @@ static struct {
 } bx_dbg_batch_dma;
 
 // some buffers for disassembly
+#include "disasm/disasm.h"
 static disassembler bx_disassemble;
 static bx_bool bx_disassemble_syntax_intel = 1;
 static Bit8u bx_disasm_ibuf[32];
@@ -2255,11 +2254,6 @@ void bx_dbg_set_disassemble_size(unsigned size)
 void bx_dbg_disassemble_switch_mode()
 {
   bx_disassemble_syntax_intel = !bx_disassemble_syntax_intel;
-}
-
-void bx_dbg_disassemble_hex_mode_switch(int mode)
-{
-  bx_disassemble.set_offset_mode_hex(mode);
 }
 
 void bx_dbg_take_command(const char *what, unsigned n)
