@@ -168,16 +168,16 @@ enum {
 
 // immediate forms
 enum {
-  BX_IMM1 = 0x0,
-  BX_IMMB = 0x1,
-  BX_IMMBW_SE = 0x2,
-  BX_IMMBD_SE = 0x3,
-  BX_IMMW = 0x4,
-  BX_IMMD = 0x5,
-  BX_IMMQ = 0x6,
-  BX_IMMB2 = 0x7,
-  BX_DIRECT_PTR = 0x8,
-  // encodings 0x9 to 0xB are still free
+  BX_IMM1 = 0x1,
+  BX_IMMB = 0x2,
+  BX_IMMBW_SE = 0x3,
+  BX_IMMBD_SE = 0x4,
+  BX_IMMW = 0x5,
+  BX_IMMD = 0x6,
+  BX_IMMQ = 0x7,
+  BX_IMMB2 = 0x8,
+  BX_DIRECT_PTR = 0x9,
+  // encodings 0xA to 0xB are still free
   BX_DIRECT_MEMREF_B = 0xC,
   BX_DIRECT_MEMREF_W = 0xD,
   BX_DIRECT_MEMREF_D = 0xE,
