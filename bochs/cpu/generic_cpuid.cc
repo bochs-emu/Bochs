@@ -55,19 +55,16 @@ bx_generic_cpuid_t::bx_generic_cpuid_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 
   // do not report CPUID functions above 0x3 if cpuid_limit_winnt is set
   // to workaround WinNT issue.
-  static bx_bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
-  if (! cpuid_limit_winnt) {
-    if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_MONITOR_MWAIT))
-      max_std_leaf = 0x5;
-    if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_X2APIC))
-      max_std_leaf = 0xB;
-    if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_XSAVE))
-      max_std_leaf = 0xD;
-  }
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_MONITOR_MWAIT))
+    max_std_leaf = 0x5;
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_X2APIC))
+    max_std_leaf = 0xB;
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_XSAVE))
+    max_std_leaf = 0xD;
 #endif
 
 #if BX_CPU_LEVEL <= 5
-  max_ext_leaf = 0;
+  max_ext_leaf = 0x0;
 #else
   max_ext_leaf = 0x80000008;
 
@@ -177,12 +174,7 @@ void bx_generic_cpuid_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
   // EBX: vendor ID string
   // EDX: vendor ID string
   // ECX: vendor ID string
-  unsigned max_leaf = max_std_leaf;
-  static bx_bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
-  if (cpuid_limit_winnt)
-    max_leaf = 0x2;
-
-  get_leaf_0(max_leaf, (const char *) vendor_string, leaf);
+  get_leaf_0(max_std_leaf, (const char *) vendor_string, leaf);
 }
 
 // leaf 0x00000001 //

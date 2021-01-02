@@ -434,12 +434,18 @@ void bx_cpuid_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *
 }
 #endif
 
-void bx_cpuid_t::get_leaf_0(unsigned max_leaf, const char *vendor_string, cpuid_function_t *leaf) const
+void bx_cpuid_t::get_leaf_0(unsigned max_leaf, const char *vendor_string, cpuid_function_t *leaf, unsigned limited_max_leaf) const
 {
   // EAX: highest function understood by CPUID
   // EBX: vendor ID string
   // EDX: vendor ID string
   // ECX: vendor ID string
+  if (max_leaf < 0x80000000 && max_leaf > 0x2) {
+    // do not limit extended CPUID leafs
+    static bx_bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
+    if (cpuid_limit_winnt)
+      max_leaf = (limited_max_leaf < 0x02) ? limited_max_leaf : 0x02;
+  }
   leaf->eax = max_leaf;
 
   if (vendor_string == NULL) {

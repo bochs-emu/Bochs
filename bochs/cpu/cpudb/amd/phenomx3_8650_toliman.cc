@@ -161,11 +161,7 @@ void phenom_8650_toliman_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
   // EDX: vendor ID string
   // ECX: vendor ID string
   unsigned max_leaf = BX_SUPPORT_MONITOR_MWAIT ? 0x5 : 0x1;
-  static bx_bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
-  if (cpuid_limit_winnt)
-    max_leaf = 0x1;
-
-  get_leaf_0(max_leaf, vendor_string, leaf);
+  get_leaf_0(max_leaf, vendor_string, leaf, 0x1 /* max_leaf when limit_winnt is activated */);
 }
 
 // leaf 0x00000001 //

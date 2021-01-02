@@ -131,18 +131,11 @@ void atom_n270_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_func
 // leaf 0x00000000 //
 void atom_n270_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
 {
-  static const char* vendor_string = "GenuineIntel";
-
   // EAX: highest std function understood by CPUID
   // EBX: vendor ID string
   // EDX: vendor ID string
   // ECX: vendor ID string
-  unsigned max_leaf = 0xA;
-  static bx_bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
-  if (cpuid_limit_winnt)
-    max_leaf = 0x2;
-
-  get_leaf_0(max_leaf, vendor_string, leaf);
+  get_leaf_0(0xA, "GenuineIntel", leaf);
 }
 
 // leaf 0x00000001 //

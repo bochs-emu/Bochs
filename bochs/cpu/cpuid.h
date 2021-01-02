@@ -99,7 +99,7 @@ protected:
     ia_extensions_bitmask[extension / 32] &= ~(1 << (extension % 32));
   }
 
-  void get_leaf_0(unsigned max_leaf, const char *vendor_string, cpuid_function_t *leaf) const;
+  void get_leaf_0(unsigned max_leaf, const char *vendor_string, cpuid_function_t *leaf, unsigned limited_max_leaf = 0x02) const;
   void get_ext_cpuid_brand_string_leaf(const char *brand_string, Bit32u function, cpuid_function_t *leaf) const;
   void get_cpuid_hidden_level(cpuid_function_t *leaf, const char *magic_string) const;
 
