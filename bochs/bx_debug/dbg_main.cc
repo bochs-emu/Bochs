@@ -4187,14 +4187,14 @@ void bx_dbg_step_over_command()
 
 unsigned bx_dbg_disasm_wrapper(bx_bool is_32, bx_bool is_64, bx_address cs_base, bx_address ip, const Bit8u *instr, char *disbuf, int disasm_style)
 {
- BxDisasmStyle new_disasm_style;
+  BxDisasmStyle new_disasm_style;
 
- if (disasm_style == BX_DISASM_INTEL || disasm_style == BX_DISASM_GAS)
-   new_disasm_style = BxDisasmStyle(disasm_style);
- else if (disasm_syntax_intel == BX_DISASM_INTEL)
-   new_disasm_style = BxDisasmStyle(BX_DISASM_INTEL);
- else
-   new_disasm_style = BxDisasmStyle(BX_DISASM_GAS);
+  if (disasm_style == BX_DISASM_INTEL || disasm_style == BX_DISASM_GAS)
+    new_disasm_style = BxDisasmStyle(disasm_style);
+  else if (disasm_syntax_intel == BX_DISASM_INTEL)
+    new_disasm_style = BxDisasmStyle(BX_DISASM_INTEL);
+  else
+    new_disasm_style = BxDisasmStyle(BX_DISASM_GAS);
 
   bxInstruction_c i;
   disasm(instr, is_32, is_64, disbuf, &i, cs_base, ip, new_disasm_style ? BX_DISASM_INTEL : BX_DISASM_GAS);

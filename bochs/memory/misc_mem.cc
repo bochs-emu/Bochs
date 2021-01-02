@@ -575,7 +575,6 @@ void BX_MEM_C::load_RAM(const char *path, bx_phy_address ramaddress)
                          path));
 }
 
-#if (BX_DEBUGGER || BX_DISASM || BX_GDBSTUB)
 bx_bool BX_MEM_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit8u *buf)
 {
   bx_phy_address a20addr = A20ADDR(addr);
@@ -669,7 +668,6 @@ bx_bool BX_MEM_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len
   }
   return ret;
 }
-#endif
 
 #if BX_DEBUGGER || BX_GDBSTUB
 bx_bool BX_MEM_C::dbg_set_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit8u *buf)
