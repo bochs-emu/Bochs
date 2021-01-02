@@ -210,10 +210,10 @@ char *resolve_memref_gas(char *disbufptr, const bxInstruction_c *i, const char *
   if (sib_base != BX_NIL_REGISTER || sib_index != BX_NIL_REGISTER) {
     if (i->displ32s() != 0) {
       if (i->as32L()) {
-        disbufptr = dis_sprintf(disbufptr, "0x%x", (Bit32u) i->displ32s());
+        disbufptr = dis_sprintf(disbufptr, "%d", (Bit32u) i->displ32s());
       }
       else {
-        disbufptr = dis_sprintf(disbufptr, "0x%x", (Bit32u) (Bit16u) i->displ16s());
+        disbufptr = dis_sprintf(disbufptr, "%d", (Bit32u) (Bit16u) i->displ16s());
       }
     }
   }
@@ -229,10 +229,10 @@ char *resolve_memref_gas(char *disbufptr, const bxInstruction_c *i, const char *
       }
 #endif
       if (i->as32L()) {
-        disbufptr = dis_sprintf(disbufptr, "0x%x", (Bit32u) i->displ32s());
+        disbufptr = dis_sprintf(disbufptr, "0x%08x", (Bit32u) i->displ32s());
       }
       else {
-        disbufptr = dis_sprintf(disbufptr, "0x%x", (Bit32u) (Bit16u) i->displ16s());
+        disbufptr = dis_sprintf(disbufptr, "0x%04x", (Bit32u) (Bit16u) i->displ16s());
       }
       return disbufptr;
     }

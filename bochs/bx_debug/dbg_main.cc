@@ -121,6 +121,7 @@ static struct {
 
 // some buffers for disassembly
 static disassembler bx_disassemble;
+static bx_bool bx_disassemble_syntax_intel = 1;
 static Bit8u bx_disasm_ibuf[32];
 static char  bx_disasm_tbuf[512];
 
@@ -2253,7 +2254,7 @@ void bx_dbg_set_disassemble_size(unsigned size)
 
 void bx_dbg_disassemble_switch_mode()
 {
-  bx_disassemble.toggle_syntax_mode();
+  bx_disassemble_syntax_intel = !bx_disassemble_syntax_intel;
 }
 
 void bx_dbg_disassemble_hex_mode_switch(int mode)
@@ -4016,16 +4017,29 @@ void bx_dbg_step_over_command()
     bx_dbg_breakpoint_changed();
 }
 
-unsigned bx_dbg_disasm_wrapper(bx_bool is_32, bx_bool is_64, bx_address cs_base, bx_address ip, const Bit8u *instr, char *disbuf)
+unsigned bx_dbg_disasm_wrapper(bx_bool is_32, bx_bool is_64, bx_address cs_base, bx_address ip, const Bit8u *instr, char *disbuf, int disasm_style)
 {
-#if 1
+ BxDisasmStyle new_disasm_style;
+
+ if (disasm_style == BX_DISASM_INTEL || disasm_style == BX_DISASM_GAS)
+   new_disasm_style = BxDisasmStyle(disasm_style);
+ else if (bx_disassemble_syntax_intel == BX_DISASM_INTEL)
+   new_disasm_style = BxDisasmStyle(BX_DISASM_INTEL);
+ else
+   new_disasm_style = BxDisasmStyle(BX_DISASM_GAS);
+
+#if 0
+ if (new_disasm_style == BX_DISASM_INTEL)
+   bx_disassemble.set_syntax_intel();
+ else
+   bx_disassemble.set_syntax_gas();
   unsigned ilen = bx_disassemble.disasm(is_32, is_64, cs_base, ip, instr, disbuf);
 #else
   bxInstruction_c i;
-  extern char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr, bxInstruction_c *i, bx_address cs_base = 0, bx_address rip = 0);
-  disasm(instr, is_32, is_64, disbuf, &i, cs_base, ip);
+  disasm(instr, is_32, is_64, disbuf, &i, cs_base, ip, new_disasm_style ? BX_DISASM_INTEL : BX_DISASM_GAS);
   unsigned ilen = i.ilen();
 #endif
+
   return ilen;
 }
 

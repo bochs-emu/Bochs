@@ -18,7 +18,6 @@
 
 #include "bochs.h"
 #include "cpu/cpu.h"
-#include "disasm/disasm.h"
 
 extern char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr, bxInstruction_c *i, bx_address cs_base, bx_address rip);
 
@@ -31,11 +30,6 @@ extern char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr
 
 #define NEGATE_CLASS
 #define OPTIMIZE_JUST_STAR
-
-// get a "class" to access the disassebler
-// Note; any instance has access to all the member functions -- that is enough!
-// -- i.e. No further initialization necessary.
-static disassembler bx_disassemble;
 
 const char* DC0txt[2] = {"P.Address","L.Address"};    // DumpMode definitions in text
 
@@ -2901,7 +2895,7 @@ int HotKey (int ww, int Alt, int Shift, int Control)
                 TogglePTree();
             else
             {
-                bx_disassemble.toggle_syntax_mode();
+                bx_dbg_disassemble_switch_mode();
                 if (AtBreak != FALSE)
                 {
                     // do the standard ASM window fill sequence
@@ -3233,7 +3227,7 @@ void ActivateMenuItem (int cmd)
             break;
 
         case CMD_ATTI:      // Toggle ASM Syntax
-            bx_disassemble.toggle_syntax_mode();
+            bx_dbg_disassemble_switch_mode();
             if (AtBreak != FALSE)
             {
                 // do the standard ASM window fill sequence
