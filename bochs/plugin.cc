@@ -368,6 +368,43 @@ void plugins_search(void)
   delete [] pgn_path;
 }
 
+Bit8u bx_get_plugins_count(plugintype_t type)
+{
+  plugin_t *temp;
+  Bit8u count = 0;
+
+  if (plugins != NULL) {
+    temp = plugins;
+
+    while (temp != NULL) {
+      if (type == temp->type)
+        count++;
+      temp = temp->next;
+    }
+  }
+  return count;
+}
+
+const char* bx_get_plugin_name(plugintype_t type, Bit8u index)
+{
+  plugin_t *temp;
+  int count = 0;
+
+  if (plugins != NULL) {
+    temp = plugins;
+
+    while (temp != NULL) {
+      if (type == temp->type) {
+        if (count == index)
+          return temp->name;
+        count++;
+      }
+      temp = temp->next;
+    }
+  }
+  return NULL;
+}
+
 /************************************************************************/
 /* Plugin initialization / deinitialization                             */
 /************************************************************************/

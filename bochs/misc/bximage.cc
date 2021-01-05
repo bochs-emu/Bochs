@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2020  The Bochs Project
+//  Copyright (C) 2001-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -87,6 +87,22 @@
 
 const int bx_max_hd_megs = (int)(((1 << BX_MAX_CYL_BITS) - 1) * 16.0 * 63.0 / 2048.0);
 
+enum {
+  BX_HDIMAGE_MODE_FLAT,
+  BX_HDIMAGE_MODE_CONCAT,
+  BX_HDIMAGE_MODE_EXTDISKSIM,
+  BX_HDIMAGE_MODE_DLL_HD,
+  BX_HDIMAGE_MODE_SPARSE,
+  BX_HDIMAGE_MODE_VMWARE3,
+  BX_HDIMAGE_MODE_VMWARE4,
+  BX_HDIMAGE_MODE_UNDOABLE,
+  BX_HDIMAGE_MODE_GROWING,
+  BX_HDIMAGE_MODE_VOLATILE,
+  BX_HDIMAGE_MODE_VVFAT,
+  BX_HDIMAGE_MODE_VPC,
+  BX_HDIMAGE_MODE_VBOX
+};
+
 const char *hdimage_mode_names[] = {
   "flat",
   "concat",
@@ -154,6 +170,17 @@ int hdmode_n_choices = 5;
 const char *sectsize_menu = "\nChoose the size of hard disk sectors.\nPlease type 512, 1024 or 4096. ";
 const char *sectsize_choices[] = { "512","1024","4096" };
 int sectsize_n_choices = 3;
+
+int hdimage_get_mode_id(const char *mode)
+{
+  int i = 0;
+
+  while (hdimage_mode_names[i] != NULL) {
+    if (!strcmp(mode, hdimage_mode_names[i])) return i;
+    i++;
+  }
+  return -1;
+}
 
 #if !BX_HAVE_SNPRINTF
 #include <stdarg.h>
@@ -355,7 +382,7 @@ int ask_string(const char *prompt, char *the_default, char *out)
   return 0;
 }
 
-device_image_t* init_image(Bit8u image_mode)
+device_image_t* init_image(int image_mode)
 {
   device_image_t *hdimage = NULL;
 
@@ -401,6 +428,11 @@ device_image_t* init_image(Bit8u image_mode)
       break;
   }
   return hdimage;
+}
+
+device_image_t* init_image_2(const char *image_mode)
+{
+  return init_image(hdimage_get_mode_id(image_mode));
 }
 
 int create_image_file(const char *filename)
@@ -765,17 +797,18 @@ void convert_image(int newimgmode, Bit64u newsize)
   int mode = -1;
   Bit64u i, sc, s;
   char buffer[512], null_sector[512];
+  const char *image_mode = NULL;
   bx_bool error = 0;
 
   printf("\n");
   memset(null_sector, 0, 512);
   if (newsize == 0) {
     if (!strncmp(bx_filename_1, "concat:", 7)) {
-      mode = BX_HDIMAGE_MODE_CONCAT;
+      image_mode = "concat";
       strcpy(bx_filename_1, &bx_filename_1[7]);
 #ifdef WIN32
     } else if (!strncmp(bx_filename_1, "dll:", 4)) {
-      mode = BX_HDIMAGE_MODE_DLL_HD;
+      image_mode = "dll";
       strcpy(bx_filename_1, &bx_filename_1[4]);
 #endif
     }
@@ -783,10 +816,12 @@ void convert_image(int newimgmode, Bit64u newsize)
   if (access(bx_filename_1, F_OK) < 0) {
     fatal("source disk image doesn't exist");
   }
-  if (mode == -1) {
-    mode = hdimage_detect_image_mode(bx_filename_1);
+  if (image_mode == NULL) {
+    if (hdimage_detect_image_mode(bx_filename_1, &image_mode)) {
+      mode = hdimage_get_mode_id(image_mode);
+    }
   }
-  if (mode == BX_HDIMAGE_MODE_UNKNOWN) {
+  if (mode == -1) {
     fatal("source disk image mode not detected");
   } else {
     printf("source image mode = '%s'\n", hdimage_mode_names[mode]);
@@ -846,14 +881,17 @@ void commit_redolog()
 {
   device_image_t *base_image;
   redolog_t *redolog;
-  int ret;
+  int mode = -1, ret;
+  const char *image_mode = NULL;
 
   printf("\n");
   if (access(bx_filename_1, F_OK) < 0) {
     fatal("base disk image doesn't exist");
   }
-  int mode = hdimage_detect_image_mode(bx_filename_1);
-  if (mode == BX_HDIMAGE_MODE_UNKNOWN)
+  if (hdimage_detect_image_mode(bx_filename_1, &image_mode)) {
+    mode = hdimage_get_mode_id(image_mode);
+  }
+  if (mode == -1)
     fatal("base disk image mode not detected");
 
   base_image = init_image(mode);
@@ -1093,18 +1131,22 @@ void check_image_names()
 int get_image_mode_and_hdsize(const char *filename, int *hdsize_megs)
 {
   device_image_t *source_image;
+  int mode = -1;
+  const char *image_mode = NULL;
 
-  int imgmode = hdimage_detect_image_mode(filename);
-  if (imgmode == BX_HDIMAGE_MODE_UNKNOWN)
+  if (hdimage_detect_image_mode(bx_filename_1, &image_mode)) {
+    mode = hdimage_get_mode_id(image_mode);
+  }
+  if (mode == -1)
     fatal("source disk image mode not detected");
-  source_image = init_image(imgmode);
+  source_image = init_image(mode);
   if (source_image->open(bx_filename_1, O_RDONLY) < 0) {
     fatal("cannot open source disk image");
   } else {
     *hdsize_megs = (int)(source_image->hd_size >> 20);
     source_image->close();
   }
-  return imgmode;
+  return mode;
 }
 
 int CDECL main(int argc, char *argv[])
@@ -1113,6 +1155,7 @@ int CDECL main(int argc, char *argv[])
   int imgmode = 0;
   Bit64u hdsize = 0;
   device_image_t *hdimage;
+  const char *image_mode = NULL;
 
   if (!parse_cmdline(argc, argv))
     myexit(1);
@@ -1321,8 +1364,11 @@ int CDECL main(int argc, char *argv[])
         break;
 
       case BXIMAGE_MODE_IMAGE_INFO:
-        imgmode = hdimage_detect_image_mode(bx_filename_1);
-        if (imgmode == BX_HDIMAGE_MODE_UNKNOWN) {
+        imgmode = -1;
+        if (hdimage_detect_image_mode(bx_filename_1, &image_mode)) {
+          imgmode = hdimage_get_mode_id(image_mode);
+        }
+        if (imgmode == -1) {
           fatal("disk image mode not detected");
         } else {
           printf("\ndisk image mode = '%s'\n", hdimage_mode_names[imgmode]);

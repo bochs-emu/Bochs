@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2020  The Bochs Project
+//  Copyright (C) 2002-2021  The Bochs Project
 //
 //  I/O port handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -72,6 +72,7 @@ bx_devices_c::~bx_devices_c()
   if (paste.buf != NULL) {
     delete [] paste.buf;
   }
+  bx_hdimage_ctl.exit();
 }
 
 void bx_devices_c::init_stubs()
@@ -182,7 +183,6 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   // "by hand" in this file.  Basically, we're using core plugins when we
   // want to control the init order.
   //
-  bx_hdimage_ctl.init();
 #if BX_NETWORKING
   network_enabled = is_network_enabled();
   if (network_enabled)
@@ -463,7 +463,6 @@ void bx_devices_c::exit()
   // unload optional and user plugins first
   bx_unload_plugins();
   bx_unload_core_plugins();
-  bx_hdimage_ctl.exit();
 #if BX_NETWORKING
   if (network_enabled)
     bx_netmod_ctl.exit();

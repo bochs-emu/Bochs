@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2020  The Bochs Project
+//  Copyright (C) 2001-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -27,6 +27,7 @@
 #endif
 #include "cpu/cpu.h"
 #include "iodev/iodev.h"
+#include "iodev/hdimage/hdimage.h"
 
 #ifdef HAVE_LOCALE_H
 #include <locale.h>
@@ -608,6 +609,21 @@ int bx_init_main(int argc, char *argv[])
   // initalization must be done early because some destructors expect
   // the bochs config options to exist by the time they are called.
   bx_init_bx_dbg();
+
+#if BX_PLUGINS && BX_HAVE_GETENV && BX_HAVE_SETENV
+  // set a default plugin path, in case the user did not specify one
+  if (getenv("LTDL_LIBRARY_PATH") != NULL) {
+    BX_INFO(("LTDL_LIBRARY_PATH is set to '%s'", getenv("LTDL_LIBRARY_PATH")));
+  } else {
+    BX_INFO(("LTDL_LIBRARY_PATH not set. using compile time default '%s'",
+        BX_PLUGIN_PATH));
+    setenv("LTDL_LIBRARY_PATH", BX_PLUGIN_PATH, 1);
+  }
+#endif
+  // initialize plugin system. This must happen before we attempt to
+  // load any modules.
+  plugin_startup();
+
   bx_init_options();
 
   bx_print_header();
@@ -806,9 +822,7 @@ int bx_init_main(int argc, char *argv[])
     CFRelease(bxshareDir);
   }
 #endif
-#if BX_PLUGINS
-  // set a default plugin path, in case the user did not specify one
-#if BX_WITH_CARBON
+#if BX_PLUGINS && BX_WITH_CARBON
   // if there is no stdin, then we must create our own LTDL_LIBRARY_PATH.
   // also if there is no LTDL_LIBRARY_PATH, but we have a bundle since we're here
   // This is here so that it is available whenever --with-carbon is defined but
@@ -842,16 +856,7 @@ int bx_init_main(int argc, char *argv[])
     BX_INFO(("now my LTDL_LIBRARY_PATH is %s", getenv("LTDL_LIBRARY_PATH")));
     CFRelease(libDir);
   }
-#elif BX_HAVE_GETENV && BX_HAVE_SETENV
-  if (getenv("LTDL_LIBRARY_PATH") != NULL) {
-    BX_INFO(("LTDL_LIBRARY_PATH is set to '%s'", getenv("LTDL_LIBRARY_PATH")));
-  } else {
-    BX_INFO(("LTDL_LIBRARY_PATH not set. using compile time default '%s'",
-        BX_PLUGIN_PATH));
-    setenv("LTDL_LIBRARY_PATH", BX_PLUGIN_PATH, 1);
-  }
-#endif
-#endif  /* if BX_PLUGINS */
+#endif  /* if BX_PLUGINS && BX_WITH_CARBON */
 #if BX_HAVE_GETENV && BX_HAVE_SETENV
   if (getenv("BXSHARE") != NULL) {
     BX_INFO(("BXSHARE is set to '%s'", getenv("BXSHARE")));
@@ -869,10 +874,6 @@ int bx_init_main(int argc, char *argv[])
 #else
   // we don't have getenv or setenv.  Do nothing.
 #endif
-
-  // initialize plugin system. This must happen before we attempt to
-  // load any modules.
-  plugin_startup();
 
   int norcfile = 1;
 
@@ -1291,6 +1292,7 @@ void bx_init_hardware()
 #endif
   BX_INFO(("  VGA extension support: vbe%s%s",
            BX_SUPPORT_CLGD54XX?" cirrus":"", BX_SUPPORT_VOODOO?" voodoo":""));
+  bx_hdimage_ctl.list_modules();
 
   // Check if there is a romimage
   if (SIM->get_param_string(BXPN_ROM_PATH)->isempty()) {

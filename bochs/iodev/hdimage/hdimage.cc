@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2020  The Bochs Project
+//  Copyright (C) 2002-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -60,6 +60,21 @@
 
 bx_hdimage_ctl_c bx_hdimage_ctl;
 
+const Bit8u n_hdimage_builtin_modes = 8;
+
+const char *builtin_mode_names[n_hdimage_builtin_modes] = {
+  "flat",
+  "concat",
+  "external",
+  "sparse",
+  "dll",
+  "growing",
+  "undoable",
+  "volatile"
+};
+
+const char **hdimage_mode_names;
+
 bx_hdimage_ctl_c::bx_hdimage_ctl_c()
 {
   put("hdimage", "IMG");
@@ -67,77 +82,110 @@ bx_hdimage_ctl_c::bx_hdimage_ctl_c()
 
 void bx_hdimage_ctl_c::init(void)
 {
+  Bit8u count = n_hdimage_builtin_modes;
+
 #if !BX_PLUGINS
-  BX_INFO(("Disk image modules:"));
-  BX_INFO(("  flat"));
-  BX_INFO(("  concat"));
-  BX_INFO(("  sparse"));
-  BX_INFO(("  growing"));
-  BX_INFO(("  undoable"));
-  BX_INFO(("  volatile"));
-  hdimage_locator_c::print_modules();
+  count += hdimage_locator_c::get_modules_count();
 #else
-  // TODO
+  count += PLUG_get_plugins_count(PLUGTYPE_IMG);
 #endif
+  hdimage_mode_names = (const char**) malloc((count + 1) * sizeof(char*));
+  for (Bit8u i = 0; i < n_hdimage_builtin_modes; i++) {
+    hdimage_mode_names[i] = builtin_mode_names[i];
+  }
+  Bit8u n = 0;
+  for (Bit8u i = n_hdimage_builtin_modes; i < count; i++) {
+#if !BX_PLUGINS
+    hdimage_mode_names[i] = hdimage_locator_c::get_module_name(n);
+#else
+    hdimage_mode_names[i] = PLUG_get_plugin_name(PLUGTYPE_IMG, n);
+#endif
+    n++;
+  }
+  hdimage_mode_names[count] = NULL;
+}
+
+const char **bx_hdimage_ctl_c::get_mode_names(void)
+{
+  return hdimage_mode_names;
+}
+
+int bx_hdimage_ctl_c::get_mode_id(const char *mode)
+{
+  int i = 0;
+
+  while (hdimage_mode_names[i] != NULL) {
+    if (!strcmp(mode, hdimage_mode_names[i])) return i;
+    i++;
+  }
+  return -1;
+}
+
+void bx_hdimage_ctl_c::list_modules(void)
+{
+  char list[60];
+  Bit8u i = 0;
+  size_t len = 0, len1;
+
+  BX_INFO(("Disk image modules"));
+  list[0] = 0;
+  while (hdimage_mode_names[i] != NULL) {
+    len1 = strlen(hdimage_mode_names[i]);
+    if ((len + len1 + 1) > 60) {
+      BX_INFO((" %s", list));
+      list[0] = 0;
+      len = 0;
+    }
+    strcat(list, " ");
+    strcat(list, hdimage_mode_names[i]);
+    len = strlen(list);
+    i++;
+  }
+  if (len > 0) {
+    BX_INFO((" %s", list));
+  }
 }
 
 void bx_hdimage_ctl_c::exit(void)
 {
+  free(hdimage_mode_names);
   hdimage_locator_c::cleanup();
 }
 
-device_image_t* bx_hdimage_ctl_c::init_image(Bit8u image_mode, Bit64u disk_size, const char *journal)
+device_image_t* bx_hdimage_ctl_c::init_image(const char *image_mode, Bit64u disk_size, const char *journal)
 {
   device_image_t *hdimage = NULL;
 
   // instantiate the right class
-  switch (image_mode) {
-
-    case BX_HDIMAGE_MODE_FLAT:
-      hdimage = new flat_image_t();
-      break;
-
-    case BX_HDIMAGE_MODE_CONCAT:
-      hdimage = new concat_image_t();
-      break;
-
+  if (!strcmp(image_mode, "flat")) {
+    hdimage = new flat_image_t();
+  } else if (!strcmp(image_mode, "concat")) {
+    hdimage = new concat_image_t();
 #if EXTERNAL_DISK_SIMULATOR
-    case BX_HDIMAGE_MODE_EXTDISKSIM:
-      hdimage = new EXTERNAL_DISK_SIMULATOR_CLASS();
-      break;
+  } else if (!strcmp(image_mode, "external")) {
+    hdimage = new EXTERNAL_DISK_SIMULATOR_CLASS();
 #endif //EXTERNAL_DISK_SIMULATOR
-
 #ifdef WIN32
-    case BX_HDIMAGE_MODE_DLL_HD:
-      hdimage = new dll_image_t();
-      break;
+  } else if (!strcmp(image_mode, "dll")) {
+    hdimage = new dll_image_t();
 #endif //DLL_HD_SUPPORT
-
-    case BX_HDIMAGE_MODE_SPARSE:
-      hdimage = new sparse_image_t();
-      break;
-
-    case BX_HDIMAGE_MODE_UNDOABLE:
-      hdimage = new undoable_image_t(journal);
-      break;
-
-    case BX_HDIMAGE_MODE_GROWING:
-      hdimage = new growing_image_t();
-      break;
-
-    case BX_HDIMAGE_MODE_VOLATILE:
-      hdimage = new volatile_image_t(journal);
-      break;
-
-    default:
-     if (!hdimage_locator_c::module_present(hdimage_mode_names[image_mode])) {
+  } else if (!strcmp(image_mode, "sparse")) {
+    hdimage = new sparse_image_t();
+  } else if (!strcmp(image_mode, "undoable")) {
+    hdimage = new undoable_image_t(journal);
+  } else if (!strcmp(image_mode, "growing")) {
+    hdimage = new growing_image_t();
+  } else if (!strcmp(image_mode, "volatile")) {
+    hdimage = new volatile_image_t(journal);
+  } else {
+    if (!hdimage_locator_c::module_present(image_mode)) {
 #if BX_PLUGINS
-       PLUG_load_img_plugin(hdimage_mode_names[image_mode]);
+      PLUG_load_img_plugin(image_mode);
 #else
-      BX_PANIC(("Disk image mode '%s' not available", hdimage_mode_names[image_mode]));
+      BX_PANIC(("Disk image mode '%s' not available", image_mode));
 #endif
     }
-    hdimage = hdimage_locator_c::create(hdimage_mode_names[image_mode], disk_size, journal);
+    hdimage = hdimage_locator_c::create(image_mode, disk_size, journal);
   }
   return hdimage;
 }
@@ -151,7 +199,8 @@ cdrom_base_c* bx_hdimage_ctl_c::init_cdrom(const char *dev)
 #endif
 }
 
-hdimage_locator_c *hdimage_locator_c::all;
+hdimage_locator_c *hdimage_locator_c::all = NULL;
+Bit8u hdimage_locator_c::count = 0;
 
 //
 // Each disk image module has a static locator class that registers
@@ -159,9 +208,18 @@ hdimage_locator_c *hdimage_locator_c::all;
 //
 hdimage_locator_c::hdimage_locator_c(const char *mode)
 {
-  next = all;
-  all  = this;
+  hdimage_locator_c *ptr;
+
   this->mode = mode;
+  this->next = NULL;
+  if (all == NULL) {
+    all = this;
+  } else {
+    ptr = all;
+    while (ptr->next) ptr = ptr->next;
+    ptr->next = this;
+  }
+  count++;
 }
 
 hdimage_locator_c::~hdimage_locator_c()
@@ -185,18 +243,27 @@ hdimage_locator_c::~hdimage_locator_c()
   }
 }
 
-void hdimage_locator_c::print_modules()
+Bit8u hdimage_locator_c::get_modules_count()
 {
-  hdimage_locator_c *ptr = 0;
-
-  for (ptr = all; ptr != NULL; ptr = ptr->next) {
-    BX_INFO(("  %s", ptr->mode);)
-  }
+  return count;
 }
 
-bx_bool hdimage_locator_c::module_present(const char *mode)
+const char* hdimage_locator_c::get_module_name(Bit8u index)
 {
-  hdimage_locator_c *ptr = 0;
+  hdimage_locator_c *ptr;
+  Bit8u n = 0;
+
+  for (ptr = all; ptr != NULL; ptr = ptr->next) {
+    if (n == index)
+      return ptr->mode;
+    n++;
+  }
+  return NULL;
+}
+
+bool hdimage_locator_c::module_present(const char *mode)
+{
+  hdimage_locator_c *ptr;
 
   for (ptr = all; ptr != NULL; ptr = ptr->next) {
     if (strcmp(mode, ptr->mode) == 0)
@@ -359,9 +426,9 @@ int hdimage_open_file(const char *pathname, int flags, Bit64u *fsize, FILETIME *
   return fd;
 }
 
-int hdimage_detect_image_mode(const char *pathname)
+bool hdimage_detect_image_mode(const char *pathname, const char **image_mode)
 {
-  int result = BX_HDIMAGE_MODE_UNKNOWN;
+  bool result = false;
   Bit64u image_size = 0;
 
   int fd = hdimage_open_file(pathname, O_RDONLY, &image_size, NULL);
@@ -370,21 +437,28 @@ int hdimage_detect_image_mode(const char *pathname)
   }
 
   if (sparse_image_t::check_format(fd, image_size) == HDIMAGE_FORMAT_OK) {
-    result = BX_HDIMAGE_MODE_SPARSE;
+    *image_mode = "sparse";
+    result = true;
   } else if (growing_image_t::check_format(fd, image_size) == HDIMAGE_FORMAT_OK) {
-    result = BX_HDIMAGE_MODE_GROWING;
+    *image_mode = "growing";
+    result = true;
 #if !BX_PLUGINS || defined(BXIMAGE)
   } else if (vbox_image_t::check_format(fd, image_size) >= HDIMAGE_FORMAT_OK) {
-    result = BX_HDIMAGE_MODE_VBOX;
+    *image_mode = "vbox";
+    result = true;
   } else if (vmware3_image_t::check_format(fd, image_size) == HDIMAGE_FORMAT_OK) {
-    result = BX_HDIMAGE_MODE_VMWARE3;
+    *image_mode = "vmware3";
+    result = true;
   } else if (vmware4_image_t::check_format(fd, image_size) == HDIMAGE_FORMAT_OK) {
-    result = BX_HDIMAGE_MODE_VMWARE4;
+    *image_mode = "vmware4";
+    result = true;
   } else if (vpc_image_t::check_format(fd, image_size) >= HDIMAGE_FORMAT_OK) {
-    result = BX_HDIMAGE_MODE_VPC;
+    *image_mode = "vpc";
+    result = true;
 #endif
   } else if (flat_image_t::check_format(fd, image_size) == HDIMAGE_FORMAT_OK) {
-    result = BX_HDIMAGE_MODE_FLAT;
+    *image_mode = "flat";
+    result = true;
   }
   ::close(fd);
 
@@ -2210,18 +2284,19 @@ undoable_image_t::~undoable_image_t()
 
 int undoable_image_t::open(const char* pathname, int flags)
 {
+  const char* image_mode = NULL;
+
   UNUSED(flags);
   if (access(pathname, F_OK) < 0) {
     BX_PANIC(("r/o disk image doesn't exist"));
   }
-  int mode = hdimage_detect_image_mode(pathname);
-  if (mode == BX_HDIMAGE_MODE_UNKNOWN) {
+  if (!hdimage_detect_image_mode(pathname, &image_mode)) {
     BX_PANIC(("r/o disk image mode not detected"));
     return -1;
   } else {
-    BX_INFO(("base image mode = '%s'", hdimage_mode_names[mode]));
+    BX_INFO(("base image mode = '%s'", image_mode));
   }
-  ro_disk = DEV_hdimage_init_image(mode, 0, NULL);
+  ro_disk = DEV_hdimage_init_image(image_mode, 0, NULL);
   if (ro_disk == NULL) {
     return -1;
   }
@@ -2364,19 +2439,19 @@ int volatile_image_t::open(const char* pathname, int flags)
 {
   int filedes;
   Bit32u timestamp;
+  const char* image_mode = NULL;
 
   UNUSED(flags);
   if (access(pathname, F_OK) < 0) {
     BX_PANIC(("r/o disk image doesn't exist"));
   }
-  int mode = hdimage_detect_image_mode(pathname);
-  if (mode == BX_HDIMAGE_MODE_UNKNOWN) {
+  if (!hdimage_detect_image_mode(pathname, &image_mode)) {
     BX_PANIC(("r/o disk image mode not detected"));
     return -1;
   } else {
-    BX_INFO(("base image mode = '%s'", hdimage_mode_names[mode]));
+    BX_INFO(("base image mode = '%s'", image_mode));
   }
-  ro_disk = DEV_hdimage_init_image(mode, 0, NULL);
+  ro_disk = DEV_hdimage_init_image(image_mode, 0, NULL);
   if (ro_disk == NULL) {
     return -1;
   }

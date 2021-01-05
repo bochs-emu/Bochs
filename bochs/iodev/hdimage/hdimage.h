@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2005-2020  The Bochs Project
+//  Copyright (C) 2005-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -149,7 +149,7 @@ int hdimage_open_file(const char *pathname, int flags, Bit64u *fsize, time_t *mt
 #else
 BOCHSAPI_MSVCONLY int hdimage_open_file(const char *pathname, int flags, Bit64u *fsize, FILETIME *mtime);
 #endif
-int hdimage_detect_image_mode(const char *pathname);
+bool hdimage_detect_image_mode(const char *pathname, const char **image_mode);
 BOCHSAPI_MSVCONLY bx_bool hdimage_backup_file(int fd, const char *backup_fname);
 BOCHSAPI_MSVCONLY bx_bool hdimage_copy_file(const char *src, const char *dst);
 bx_bool coherency_check(device_image_t *ro_disk, redolog_t *redolog);
@@ -610,8 +610,11 @@ public:
   bx_hdimage_ctl_c();
   virtual ~bx_hdimage_ctl_c() {}
   void init(void);
+  const char **get_mode_names();
+  int get_mode_id(const char *mode);
+  void list_modules(void);
   void exit(void);
-  device_image_t *init_image(Bit8u image_mode, Bit64u disk_size, const char *journal);
+  device_image_t *init_image(const char *image_mode, Bit64u disk_size, const char *journal);
   cdrom_base_c *init_cdrom(const char *dev);
 };
 
@@ -624,15 +627,17 @@ BOCHSAPI extern bx_hdimage_ctl_c bx_hdimage_ctl;
 //
 class BOCHSAPI_MSVCONLY hdimage_locator_c {
 public:
-  static bx_bool module_present(const char *mode);
-  static void print_modules();
-  static void cleanup();
+  static bool module_present(const char *mode);
+  static Bit8u get_modules_count(void);
+  static const char* get_module_name(Bit8u index);
+  static void cleanup(void);
   static device_image_t *create(const char *mode, Bit64u disk_size, const char *journal);
 protected:
   hdimage_locator_c(const char *mode);
   virtual ~hdimage_locator_c();
   virtual device_image_t *allocate(Bit64u disk_size, const char *journal) = 0;
 private:
+  static Bit8u count;
   static hdimage_locator_c *all;
   hdimage_locator_c *next;
   const char *mode;

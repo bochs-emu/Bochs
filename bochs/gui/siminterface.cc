@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2020  The Bochs Project
+//  Copyright (C) 2002-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -120,7 +120,6 @@ public:
   virtual int set_log_prefix(const char *prefix);
   virtual int get_debugger_log_file(char *path, int len);
   virtual int set_debugger_log_file(const char *path);
-  virtual int hdimage_get_mode(const char *mode);
   virtual void set_notify_callback(bxevent_handler func, void *arg);
   virtual void get_notify_callback(bxevent_handler *func, void **arg);
   virtual BxEvent* sim_to_ci_event(BxEvent *event);
@@ -541,31 +540,6 @@ const char *sound_driver_names[] = {
   "file",
   NULL
 };
-
-const char *hdimage_mode_names[] = {
-  "flat",
-  "concat",
-  "external",
-  "dll",
-  "sparse",
-  "vmware3",
-  "vmware4",
-  "undoable",
-  "growing",
-  "volatile",
-  "vvfat",
-  "vpc",
-  "vbox",
-  NULL
-};
-
-int bx_real_sim_c::hdimage_get_mode(const char *mode)
-{
-  for (int i = 0; i <= BX_HDIMAGE_MODE_LAST; i++) {
-    if (!strcmp(mode, hdimage_mode_names[i])) return i;
-  }
-  return -1;
-}
 
 void bx_real_sim_c::set_notify_callback(bxevent_handler func, void *arg)
 {

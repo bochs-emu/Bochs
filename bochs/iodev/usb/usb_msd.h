@@ -6,7 +6,7 @@
 //
 //  Copyright (c) 2006 CodeSourcery.
 //  Written by Paul Brook
-//  Copyright (C) 2009-2020  The Bochs Project
+//  Copyright (C) 2009-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -59,7 +59,7 @@ protected:
 private:
   struct {
     // members set in constructor / init
-    Bit8u image_mode;
+    char *image_mode;
     device_image_t *hdimage;
     cdrom_base_c *cdrom;
     scsi_device_t *scsi_dev;

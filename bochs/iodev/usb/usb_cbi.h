@@ -4,8 +4,8 @@
 //
 //  UFI/CBI floppy disk storage device support
 //
-//  Copyright (c) 2015  Benjamin David Lunt
-//  Copyright (C) 2015  The Bochs Project
+//  Copyright (c) 2015       Benjamin David Lunt
+//  Copyright (C) 2015-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -77,7 +77,7 @@ private:
     // members handled by runtime config
     device_image_t *hdimage;
     const char *fname;
-    Bit8u image_mode;
+    char *image_mode;
     bx_bool inserted; // 0 = media not present
     bx_bool wp;     // 0 = not write_protected, 1 = write_protected
     bx_bool status_changed;

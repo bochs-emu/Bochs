@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2020  The Bochs Project
+//  Copyright (C) 2001-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -567,24 +567,6 @@ enum {
 #define BX_ATA_TRANSLATION_LAST  BX_ATA_TRANSLATION_AUTO
 
 enum {
-  BX_HDIMAGE_MODE_FLAT,
-  BX_HDIMAGE_MODE_CONCAT,
-  BX_HDIMAGE_MODE_EXTDISKSIM,
-  BX_HDIMAGE_MODE_DLL_HD,
-  BX_HDIMAGE_MODE_SPARSE,
-  BX_HDIMAGE_MODE_VMWARE3,
-  BX_HDIMAGE_MODE_VMWARE4,
-  BX_HDIMAGE_MODE_UNDOABLE,
-  BX_HDIMAGE_MODE_GROWING,
-  BX_HDIMAGE_MODE_VOLATILE,
-  BX_HDIMAGE_MODE_VVFAT,
-  BX_HDIMAGE_MODE_VPC,
-  BX_HDIMAGE_MODE_VBOX
-};
-#define BX_HDIMAGE_MODE_LAST     BX_HDIMAGE_MODE_VBOX
-#define BX_HDIMAGE_MODE_UNKNOWN  -1
-
-enum {
   BX_CLOCK_SYNC_NONE,
   BX_CLOCK_SYNC_REALTIME,
   BX_CLOCK_SYNC_SLOWDOWN,
@@ -652,7 +634,6 @@ BOCHSAPI extern const char *floppy_type_names[];
 BOCHSAPI extern int floppy_type_n_sectors[];
 BOCHSAPI extern const char *media_status_names[];
 BOCHSAPI extern const char *bochs_bootdisk_names[];
-BOCHSAPI extern const char *hdimage_mode_names[];
 BOCHSAPI extern const char *sound_driver_names[];
 
 ////////////////////////////////////////////////////////////////////
@@ -730,7 +711,6 @@ public:
   virtual int set_log_prefix(const char *prefix) {return -1;}
   virtual int get_debugger_log_file(char *path, int len) {return -1;}
   virtual int set_debugger_log_file(const char *path) {return -1;}
-  virtual int hdimage_get_mode(const char *mode)  {return -1;}
 
   // The CI calls set_notify_callback to register its event handler function.
   // This event handler function is called whenever the simulator needs to

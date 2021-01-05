@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2020  The Bochs Project
+//  Copyright (C) 2001-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -172,11 +172,12 @@ bx_hard_drive_c::~bx_hard_drive_c()
 
 void bx_hard_drive_c::init(void)
 {
-  Bit8u channel, image_mode;
+  Bit8u channel;
   char  string[5];
   char  sbtext[8];
   char  ata_name[20];
   char  pname[10];
+  const char *image_mode;
   bx_list_c *base;
 
   BX_DEBUG(("Init $Id$"));
@@ -303,14 +304,13 @@ void bx_hard_drive_c::init(void)
         int sect_size = atoi(SIM->get_param_enum("sect_size", base)->get_selected());
         Bit64u disk_size = (Bit64u)cyl * heads * spt * sect_size;
 
-        image_mode = SIM->get_param_enum("mode", base)->get();
+        image_mode = SIM->get_param_enum("mode", base)->get_selected();
         channels[channel].drives[device].hdimage = DEV_hdimage_init_image(image_mode,
             disk_size, SIM->get_param_string("journal", base)->getptr());
 
         if (channels[channel].drives[device].hdimage != NULL) {
           BX_INFO(("HD on ata%d-%d: '%s', '%s' mode", channel, device,
-                   SIM->get_param_string("path", base)->getptr(),
-                   hdimage_mode_names[image_mode]));
+                   SIM->get_param_string("path", base)->getptr(), image_mode));
         } else {
           // it's safe to return here on failure
           return;

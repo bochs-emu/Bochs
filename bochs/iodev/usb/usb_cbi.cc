@@ -5,7 +5,7 @@
 //  UFI/CBI floppy disk storage device support
 //
 //  Copyright (c) 2015       Benjamin David Lunt
-//  Copyright (C) 2015-2020  The Bochs Project
+//  Copyright (C) 2015-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -352,13 +352,12 @@ usb_cbi_device_c::usb_cbi_device_c(const char *filename)
   ptr1 = strtok(tmpfname, ":");
   ptr2 = strtok(NULL, ":");
   if ((ptr2 == NULL) || (strlen(ptr1) < 2)) {
-    s.image_mode = BX_HDIMAGE_MODE_FLAT;
+    s.image_mode = strdup("flat");
     s.fname = filename;
   } else {
-    s.image_mode = SIM->hdimage_get_mode(ptr1);
+    s.image_mode = strdup(ptr1);
     s.fname = filename+strlen(ptr1)+1;
-    if ((s.image_mode != BX_HDIMAGE_MODE_FLAT) &&
-        (s.image_mode != BX_HDIMAGE_MODE_VVFAT)) {
+    if (strcmp(s.image_mode, "flat") && strcmp(s.image_mode, "vvfat")) {
       BX_PANIC(("USB floppy only supports image modes 'flat' and 'vvfat'"));
     }
   }
@@ -381,7 +380,7 @@ usb_cbi_device_c::usb_cbi_device_c(const char *filename)
     "Image mode",
     "Mode of the floppy image",
     fdimage_mode_names, 0, 0);
-  if (s.image_mode == BX_HDIMAGE_MODE_VVFAT) {
+  if (!strcmp(s.image_mode, "vvfat")) {
     mode->set(1);
   }
   mode->set_handler(floppy_param_handler);
@@ -417,6 +416,7 @@ usb_cbi_device_c::~usb_cbi_device_c(void)
   set_inserted(0);
   if (s.dev_buffer != NULL)
     delete [] s.dev_buffer;
+  free(s.image_mode);
   if (SIM->is_wx_selected()) {
     bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
     usb->remove(s.config->get_name());
@@ -446,7 +446,7 @@ bx_bool usb_cbi_device_c::set_option(const char *option)
 bx_bool usb_cbi_device_c::init()
 {
   if (set_inserted(1)) {
-    sprintf(s.info_txt, "USB CBI: path='%s', mode='%s'", s.fname, hdimage_mode_names[s.image_mode]);
+    sprintf(s.info_txt, "USB CBI: path='%s', mode='%s'", s.fname, s.image_mode);
   } else {
     sprintf(s.info_txt, "USB CBI: media not present");
   }
@@ -1210,14 +1210,11 @@ void usb_cbi_device_c::cancel_packet(USBPacket *p)
 
 bx_bool usb_cbi_device_c::set_inserted(bx_bool value)
 {
-  Bit8u mode;
-
   s.inserted = value;
   if (value) {
     s.fname = SIM->get_param_string("path", s.config)->getptr();
     if ((strlen(s.fname) > 0) && (strcmp(s.fname, "none"))) {
-      mode = SIM->get_param_enum("mode", s.config)->get();
-      s.image_mode = (mode == 1) ? BX_HDIMAGE_MODE_VVFAT : BX_HDIMAGE_MODE_FLAT;
+      s.image_mode = strdup(SIM->get_param_enum("mode", s.config)->get_selected());
       s.hdimage = DEV_hdimage_init_image(s.image_mode, 1474560, "");
       if ((s.hdimage->open(s.fname)) < 0) {
         BX_ERROR(("could not open floppy image file '%s'", s.fname));

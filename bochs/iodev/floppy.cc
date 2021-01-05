@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2020  The Bochs Project
+//  Copyright (C) 2002-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1598,7 +1598,7 @@ bx_bool bx_floppy_ctrl_c::evaluate_media(Bit8u devtype, Bit8u type, char *path, 
 
   // use virtual VFAT support if requested
   if (!strncmp(path, "vvfat:", 6) && (devtype == FDRIVE_350HD)) {
-    media->vvfat = DEV_hdimage_init_image(BX_HDIMAGE_MODE_VVFAT, 1474560, "");
+    media->vvfat = DEV_hdimage_init_image("vvfat", 1474560, "");
     if (media->vvfat != NULL) {
       if (media->vvfat->open(path + 6) == 0) {
         media->type              = BX_FLOPPY_1_44;

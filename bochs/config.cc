@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2020  The Bochs Project
+//  Copyright (C) 2002-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -21,6 +21,7 @@
 #include "bochs.h"
 #include "bxversion.h"
 #include "iodev/iodev.h"
+#include "iodev/hdimage/hdimage.h"
 #include "param_names.h"
 #include <assert.h>
 
@@ -1217,6 +1218,7 @@ void bx_init_options()
   floppy->set_options(floppy->SHOW_PARENT);
 
   // ATA/ATAPI subtree
+  bx_hdimage_ctl.init(); // initialize available disk image modes
   bx_list_c *ata = new bx_list_c(root_param, "ata", "ATA/ATAPI Options");
   ata->set_options(ata->USE_TAB_WINDOW);
 
@@ -1333,9 +1335,8 @@ void bx_init_options()
         "mode",
         "Type of disk image",
         "Mode of the ATA harddisk",
-        hdimage_mode_names,
-        BX_HDIMAGE_MODE_FLAT,
-        BX_HDIMAGE_MODE_FLAT);
+        bx_hdimage_ctl.get_mode_names(),
+        0, 0);
       mode->set_ask_format("Enter mode of ATA device, (flat, concat, etc.): [%s] ");
 
       status = new bx_param_enum_c(menu,
@@ -1356,9 +1357,9 @@ void bx_init_options()
       deplist = new bx_list_c(NULL);
       deplist->add(journal);
       mode->set_dependent_list(deplist, 0);
-      mode->set_dependent_bitmap(BX_HDIMAGE_MODE_UNDOABLE, 1);
-      mode->set_dependent_bitmap(BX_HDIMAGE_MODE_VOLATILE, 1);
-      mode->set_dependent_bitmap(BX_HDIMAGE_MODE_VVFAT, 1);
+      mode->set_dependent_bitmap(bx_hdimage_ctl.get_mode_id("undoable"), 1);
+      mode->set_dependent_bitmap(bx_hdimage_ctl.get_mode_id("volatile"), 1);
+      mode->set_dependent_bitmap(bx_hdimage_ctl.get_mode_id("vvfat"), 1);
 
       bx_param_num_c *cylinders = new bx_param_num_c(menu,
         "cylinders",
