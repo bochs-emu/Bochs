@@ -817,7 +817,7 @@ void ShowDListCols (int totcols)
     while (++i < firsthide)
         gtk_tree_view_column_set_visible(AllCols[i], TRUE);
     while (i < 23)
-        gtk_tree_view_column_set_visible(AllCols[i], FALSE);
+        gtk_tree_view_column_set_visible(AllCols[i++], FALSE);
 }
 
 // OS-dependent code that runs before each ListFill routine of each type
