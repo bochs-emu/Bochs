@@ -4198,7 +4198,7 @@ This defines the type and characteristics of all attached ata devices:
 <row>
   <entry> mode  </entry>
   <entry> image type, only valid for disks </entry>
-  <entry> [flat | concat | external | dll | sparse | vmware3 | vmware4 | undoable | growing | volatile | vpc | vbox | vvfat ]</entry>
+  <entry> [flat | concat | dll | sparse | vmware3 | vmware4 | undoable | growing | volatile | vpc | vbox | vvfat ]</entry>
 </row>
 <row> <entry> cylinders </entry> <entry> only valid for disks </entry> </row>
 <row> <entry> heads </entry> <entry> only valid for disks </entry> </row>
@@ -4273,9 +4273,6 @@ flat : one file flat layout
 </para></listitem>
 <listitem><para>
 concat : multiple files layout
-</para></listitem>
-<listitem><para>
-external : developer's specific, through a C++ class
 </para></listitem>
 <listitem><para>
 dll : developer's specific, through a DLL

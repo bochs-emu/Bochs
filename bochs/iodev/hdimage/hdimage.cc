@@ -60,12 +60,11 @@
 
 bx_hdimage_ctl_c bx_hdimage_ctl;
 
-const Bit8u n_hdimage_builtin_modes = 8;
+const Bit8u n_hdimage_builtin_modes = 7;
 
 const char *builtin_mode_names[n_hdimage_builtin_modes] = {
   "flat",
   "concat",
-  "external",
   "sparse",
   "dll",
   "growing",
@@ -161,10 +160,6 @@ device_image_t* bx_hdimage_ctl_c::init_image(const char *image_mode, Bit64u disk
     hdimage = new flat_image_t();
   } else if (!strcmp(image_mode, "concat")) {
     hdimage = new concat_image_t();
-#if EXTERNAL_DISK_SIMULATOR
-  } else if (!strcmp(image_mode, "external")) {
-    hdimage = new EXTERNAL_DISK_SIMULATOR_CLASS();
-#endif //EXTERNAL_DISK_SIMULATOR
 #ifdef WIN32
   } else if (!strcmp(image_mode, "dll")) {
     hdimage = new dll_image_t();

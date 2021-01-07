@@ -90,7 +90,6 @@ const int bx_max_hd_megs = (int)(((1 << BX_MAX_CYL_BITS) - 1) * 16.0 * 63.0 / 20
 enum {
   BX_HDIMAGE_MODE_FLAT,
   BX_HDIMAGE_MODE_CONCAT,
-  BX_HDIMAGE_MODE_EXTDISKSIM,
   BX_HDIMAGE_MODE_DLL_HD,
   BX_HDIMAGE_MODE_SPARSE,
   BX_HDIMAGE_MODE_VMWARE3,
@@ -106,7 +105,6 @@ enum {
 const char *hdimage_mode_names[] = {
   "flat",
   "concat",
-  "external",
   "dll",
   "sparse",
   "vmware3",

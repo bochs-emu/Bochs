@@ -391,10 +391,6 @@ class sparse_image_t : public device_image_t
     sparse_image_t *parent_image;
 };
 
-#if EXTERNAL_DISK_SIMULATOR
-#include "external-disk-simulator.h"
-#endif
-
 #ifdef WIN32
 class dll_image_t : public device_image_t
 {
