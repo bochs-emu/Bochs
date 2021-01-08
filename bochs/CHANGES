@@ -56,7 +56,11 @@ Changes after 2.6.11:
       simulation window by factor 2, 4 or 8 depending in desktop window size.
     - wx: fixed status bar handling to avoid segfaults and deadlocks.
 
-- LGPL'd VGABIOS updated from SVN (fixed text output in VGA graphics modes).
+- VGABIOS
+  - LGPL'd VGABIOS updated from SVN (fixed text output in VGA graphics modes).
+
+- Misc
+  - Added support for converting VDI images to another format with bximage.
 
 -------------------------------------------------------------------------
 Changes in 2.6.11 (January 5, 2020):

@@ -75,6 +75,7 @@
 #include "iodev/hdimage/vmware3.h"
 #include "iodev/hdimage/vmware4.h"
 #include "iodev/hdimage/vpc.h"
+#include "iodev/hdimage/vbox.h"
 
 #define BXIMAGE_MODE_NULL            0
 #define BXIMAGE_MODE_CREATE_IMAGE    1
@@ -114,6 +115,7 @@ const char *hdimage_mode_names[] = {
   "volatile",
   "vvfat",
   "vpc",
+  "vbox",
   NULL
 };
 
@@ -419,6 +421,10 @@ device_image_t* init_image(int image_mode)
 
     case BX_HDIMAGE_MODE_VPC:
       hdimage = new vpc_image_t();
+      break;
+
+    case BX_HDIMAGE_MODE_VBOX:
+      hdimage = new vbox_image_t();
       break;
 
     default:
