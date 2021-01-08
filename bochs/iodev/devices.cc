@@ -66,12 +66,6 @@ bx_devices_c::bx_devices_c()
 bx_devices_c::~bx_devices_c()
 {
   timer_handle = BX_NULL_TIMER_HANDLE;
-  // remove runtime parameter handlers
-  SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->set_handler(NULL);
-  SIM->get_param_num(BXPN_MOUSE_ENABLED)->set_handler(NULL);
-  if (paste.buf != NULL) {
-    delete [] paste.buf;
-  }
   bx_hdimage_ctl.exit();
 }
 
@@ -475,6 +469,15 @@ void bx_devices_c::exit()
   if (usb_enabled)
     bx_usbdev_ctl.exit();
 #endif
+  // remove runtime parameter handlers
+  SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->set_handler(NULL);
+  SIM->get_param_num(BXPN_MOUSE_ENABLED)->set_handler(NULL);
+  if (paste.buf != NULL) {
+    delete [] paste.buf;
+    paste.buf = NULL;
+  }
+  bx_keyboard[0].dev = NULL;
+  bx_mouse[0].dev = NULL;
   init_stubs();
 }
 

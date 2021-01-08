@@ -165,6 +165,7 @@ bx_hard_drive_c::~bx_hard_drive_c()
       SIM->get_param_enum("status", base)->set_handler(NULL);
     }
   }
+  ((bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_CDROM))->clear();
   SIM->get_bochs_root()->remove("hard_drive");
   delete atapilog;
   BX_DEBUG(("Exit"));
