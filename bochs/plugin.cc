@@ -751,9 +751,8 @@ int bx_load_plugin(const char *name, plugintype_t type)
 
   if (!strcmp(name, "*")) {
     for (plugin = plugins; plugin; plugin = plugin->next) {
-      if (!strcmp(plugin->name, name) && (type == plugin->type) &&
-          !plugin->loaded) {
-        plugin_load(name, type);
+      if ((type == plugin->type) && !plugin->loaded) {
+        plugin_load(plugin->name, type);
       }
     }
   } else {

@@ -80,6 +80,9 @@ protected:
   device_image_t *allocate(Bit64u disk_size, const char *journal) {
     return (new vbox_image_t());
   }
+  int check_format(int fd, Bit64u disk_size) {
+    return (vbox_image_t::check_format(fd, disk_size));
+  }
 } bx_vbox_match;
 
 #endif

@@ -73,6 +73,9 @@ protected:
   device_image_t *allocate(Bit64u disk_size, const char *journal) {
     return (new vmware4_image_t());
   }
+  int check_format(int fd, Bit64u disk_size) {
+    return (vmware4_image_t::check_format(fd, disk_size));
+  }
 } bx_vmware4_match;
 
 #endif
