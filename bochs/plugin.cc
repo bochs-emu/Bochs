@@ -422,28 +422,24 @@ void plugin_init_one(plugin_t *plugin)
 }
 
 
-plugin_t *plugin_unload(plugin_t *plugin)
+void plugin_unload(plugin_t *plugin)
 {
-  plugin_t *dead_plug;
-
-  if (plugin->initialized)
+  if (plugin->loaded) {
+    if (plugin->initialized)
       plugin->plugin_fini();
-
 #if defined(WIN32)
-  FreeLibrary(plugin->handle);
+    FreeLibrary(plugin->handle);
 #else
-  lt_dlclose(plugin->handle);
+    lt_dlclose(plugin->handle);
 #endif
-  delete [] plugin->name;
-
-  dead_plug = plugin;
-  plugin = plugin->next;
-  delete dead_plug;
-
-  return plugin;
+    if (plugin->type < PLUGTYPE_GUI) {
+      plugin->type = PLUGTYPE_DEV;
+    }
+    plugin->loaded = 0;
+  }
 }
 
-void plugin_load(char *name, plugintype_t type)
+void plugin_load(const char *name, plugintype_t type)
 {
   plugin_t *plugin = NULL, *temp;
   plugintype_t basetype;
@@ -605,8 +601,7 @@ void plugin_abort(void)
 /* Plugin system: initialisation of plugins entry points                */
 /************************************************************************/
 
-  void
-plugin_startup(void)
+void plugin_startup(void)
 {
   pluginRegisterIRQ = builtinRegisterIRQ;
   pluginUnregisterIRQ = builtinUnregisterIRQ;
@@ -640,6 +635,24 @@ plugin_startup(void)
   }
 #endif
   plugins_search();
+#endif
+}
+
+void plugin_cleanup(void)
+{
+#if BX_PLUGINS
+  plugin_t *dead_plug;
+
+  while (plugins != NULL) {
+    if (plugins->loaded) {
+      plugin_unload(plugins);
+    }
+    delete [] plugins->name;
+
+    dead_plug = plugins;
+    plugins = plugins->next;
+    delete dead_plug;
+  }
 #endif
 }
 
@@ -734,30 +747,44 @@ bx_bool pluginDevicePresent(const char *name)
 
 int bx_load_plugin(const char *name, plugintype_t type)
 {
-  char *namecopy = new char[1+strlen(name)];
-  strcpy(namecopy, name);
-  plugin_load(namecopy, type);
+  plugin_t *plugin;
+
+  if (!strcmp(name, "*")) {
+    for (plugin = plugins; plugin; plugin = plugin->next) {
+      if (!strcmp(plugin->name, name) && (type == plugin->type) &&
+          !plugin->loaded) {
+        plugin_load(name, type);
+      }
+    }
+  } else {
+    plugin_load(name, type);
+  }
   return 1;
 }
 
 void bx_unload_plugin(const char *name, bx_bool devflag)
 {
-  plugin_t *plugin, *prev = NULL;
+  plugin_t *plugin;
 
   for (plugin = plugins; plugin; plugin = plugin->next) {
     if (!strcmp(plugin->name, name)) {
       if (devflag) {
         pluginUnregisterDeviceDevmodel(plugin->name);
       }
-      plugin = plugin_unload(plugin);
-      if (prev == NULL) {
-        plugins = plugin;
-      } else {
-        prev->next = plugin;
-      }
+      plugin_unload(plugin);
       break;
-    } else {
-      prev = plugin;
+    }
+  }
+}
+
+void bx_unload_plugin_type(const char *name, plugintype_t type)
+{
+  plugin_t *plugin;
+
+  for (plugin = plugins; plugin; plugin = plugin->next) {
+    if (!strcmp(plugin->name, name) && (plugin->type == type)) {
+      plugin_unload(plugin);
+      break;
     }
   }
 }

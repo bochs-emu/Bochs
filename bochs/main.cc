@@ -358,6 +358,7 @@ int bxmain(void)
     fgets(buf, sizeof(buf), stdin);
   }
 #endif
+  plugin_cleanup();
   BX_INSTR_EXIT_ENV();
   return SIM->get_exit_code();
 }

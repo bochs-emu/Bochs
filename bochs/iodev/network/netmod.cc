@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2020  The Bochs Project
+//  Copyright (C) 2001-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -57,7 +57,7 @@ void* bx_netmod_ctl_c::init_module(bx_list_c *base, void *rxh, void *rxstat, bx_
   const char *modname = SIM->get_param_enum("ethmod", base)->get_selected();
   if (!eth_locator_c::module_present(modname)) {
 #if BX_PLUGINS
-    PLUG_load_net_plugin(modname);
+    PLUG_load_plugin_var(modname, PLUGTYPE_NET);
 #else
     BX_PANIC(("could not find networking module '%s'", modname));
 #endif
@@ -131,7 +131,7 @@ void eth_locator_c::cleanup()
 {
 #if BX_PLUGINS
   while (all != NULL) {
-    PLUG_unload_net_plugin(all->type);
+    PLUG_unload_plugin_type(all->type, PLUGTYPE_NET);
   }
 #endif
 }

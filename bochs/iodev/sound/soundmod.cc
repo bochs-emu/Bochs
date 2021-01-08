@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2011-2017  The Bochs Project
+//  Copyright (C) 2011-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -71,7 +71,7 @@ bx_sound_lowlevel_c* bx_soundmod_ctl_c::get_driver(int driver_id)
   const char *modname = sound_driver_names[driver_id];
   if (!bx_sound_lowlevel_c::module_present(modname)) {
 #if BX_PLUGINS
-    PLUG_load_snd_plugin(modname);
+    PLUG_load_plugin_var(modname, PLUGTYPE_SND);
 #else
     BX_PANIC(("could not find sound driver '%s'", modname));
 #endif

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2011-2017  The Bochs Project
+//  Copyright (C) 2011-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -668,7 +668,7 @@ void bx_sound_lowlevel_c::cleanup()
 {
 #if BX_PLUGINS
   while (all != NULL) {
-    PLUG_unload_snd_plugin(all->type);
+    PLUG_unload_plugin_type(all->type, PLUGTYPE_SND);
   }
 #endif
 }

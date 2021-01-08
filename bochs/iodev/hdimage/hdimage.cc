@@ -175,7 +175,7 @@ device_image_t* bx_hdimage_ctl_c::init_image(const char *image_mode, Bit64u disk
   } else {
     if (!hdimage_locator_c::module_present(image_mode)) {
 #if BX_PLUGINS
-      PLUG_load_img_plugin(image_mode);
+      PLUG_load_plugin_var(image_mode, PLUGTYPE_IMG);
 #else
       BX_PANIC(("Disk image mode '%s' not available", image_mode));
 #endif
@@ -271,7 +271,7 @@ void hdimage_locator_c::cleanup()
 {
 #if BX_PLUGINS
   while (all != NULL) {
-    PLUG_unload_img_plugin(all->mode);
+    PLUG_unload_plugin_type(all->mode, PLUGTYPE_IMG);
   }
 #endif
 }
@@ -426,6 +426,9 @@ bool hdimage_detect_image_mode(const char *pathname, const char **image_mode)
   bool result = false;
   Bit64u image_size = 0;
 
+#if BX_PLUGINS && !defined(BXIMAGE)
+  PLUG_load_plugin_var("*", PLUGTYPE_IMG);
+#endif
   int fd = hdimage_open_file(pathname, O_RDONLY, &image_size, NULL);
   if (fd < 0) {
     return result;

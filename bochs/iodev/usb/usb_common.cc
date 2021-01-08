@@ -6,7 +6,7 @@
 //
 // Copyright (c) 2005       Fabrice Bellard
 // Copyright (C) 2009-2015  Benjamin D Lunt (fys at fysnet net)
-//               2009-2020  The Bochs Project
+//               2009-2021  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -143,7 +143,7 @@ int bx_usbdev_ctl_c::init_device(bx_list_c *portconf, logfunctions *hub, void **
   }
   if (!usbdev_locator_c::module_present(usbmod_names[modtype])) {
 #if BX_PLUGINS
-    PLUG_load_usb_plugin(usbmod_names[modtype]);
+    PLUG_load_plugin_var(usbmod_names[modtype], PLUGTYPE_USB);
 #else
     BX_PANIC(("could not find USB device '%s'", usbmod_names[modtype]));
 #endif
@@ -246,7 +246,7 @@ void usbdev_locator_c::cleanup()
 {
 #if BX_PLUGINS
   while (all != NULL) {
-    PLUG_unload_usb_plugin(all->type);
+    PLUG_unload_plugin_type(all->type, PLUGTYPE_USB);
   }
 #endif
 }

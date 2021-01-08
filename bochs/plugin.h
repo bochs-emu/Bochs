@@ -85,21 +85,15 @@ extern "C" {
 #define PLUG_get_plugins_count(a) bx_get_plugins_count(a)
 #define PLUG_get_plugin_name(a,b) bx_get_plugin_name(a,b)
 #define PLUG_load_plugin(name,type) {bx_load_plugin(#name,type);}
+#define PLUG_load_plugin_var(name,type) {bx_load_plugin(name,type);}
 #define PLUG_load_gui_plugin(name) bx_load_plugin(name,PLUGTYPE_GUI)
 #define PLUG_load_opt_plugin(name) bx_load_plugin(name,PLUGTYPE_OPTIONAL)
-#define PLUG_load_snd_plugin(name) bx_load_plugin(name,PLUGTYPE_SND)
-#define PLUG_load_net_plugin(name) bx_load_plugin(name,PLUGTYPE_NET)
-#define PLUG_load_usb_plugin(name) bx_load_plugin(name,PLUGTYPE_USB)
 #define PLUG_load_vga_plugin(name) bx_load_plugin(name,PLUGTYPE_VGA)
-#define PLUG_load_img_plugin(name) bx_load_plugin(name,PLUGTYPE_IMG)
 #define PLUG_load_user_plugin(name) {bx_load_plugin(name,PLUGTYPE_USER);}
 #define PLUG_unload_plugin(name) {bx_unload_plugin(#name,1);}
 #define PLUG_unload_opt_plugin(name) bx_unload_plugin(name,1)
-#define PLUG_unload_snd_plugin(name) bx_unload_plugin(name,0)
-#define PLUG_unload_net_plugin(name) bx_unload_plugin(name,0)
-#define PLUG_unload_usb_plugin(name) bx_unload_plugin(name,0)
-#define PLUG_unload_img_plugin(name) bx_unload_plugin(name,0)
 #define PLUG_unload_user_plugin(name) {bx_unload_plugin(name,1);}
+#define PLUG_unload_plugin_type(name,type) {bx_unload_plugin_type(name,type);}
 
 #define DEV_register_ioread_handler(b,c,d,e,f)  pluginRegisterIOReadHandler(b,c,d,e,f)
 #define DEV_register_iowrite_handler(b,c,d,e,f) pluginRegisterIOWriteHandler(b,c,d,e,f)
@@ -122,11 +116,7 @@ extern "C" {
 #define PLUG_load_plugin(name,type) {lib##name##_LTX_plugin_init(NULL,type);}
 #define PLUG_load_gui_plugin(name) bx_load_plugin2(name,PLUGTYPE_GUI)
 #define PLUG_load_opt_plugin(name) bx_load_plugin2(name,PLUGTYPE_OPTIONAL)
-#define PLUG_load_snd_plugin(name) bx_load_plugin2(name,PLUGTYPE_SND)
-#define PLUG_load_net_plugin(name) bx_load_plugin2(name,PLUGTYPE_NET)
-#define PLUG_load_usb_plugin(name) bx_load_plugin2(name,PLUGTYPE_USB)
 #define PLUG_load_vga_plugin(name) bx_load_plugin2(name,PLUGTYPE_VGA)
-#define PLUG_load_img_plugin(name) bx_load_plugin2(name,PLUGTYPE_IMG)
 #define PLUG_unload_plugin(name) {lib##name##_LTX_plugin_fini();}
 #define PLUG_unload_opt_plugin(name) bx_unload_opt_plugin(name,1);
 
@@ -301,6 +291,7 @@ typedef struct _device_t
 extern device_t *devices;
 
 void plugin_startup(void);
+void plugin_cleanup(void);
 
 /* === Device Stuff === */
 typedef void (*deviceInitMem_t)(BX_MEM_C *);
@@ -349,6 +340,7 @@ const char* bx_get_plugin_name(plugintype_t type, Bit8u index);
 #endif
 int bx_load_plugin(const char *name, plugintype_t type);
 extern void bx_unload_plugin(const char *name, bx_bool devflag);
+extern void bx_unload_plugin_type(const char *name, plugintype_t type);
 extern void bx_init_plugins(void);
 extern void bx_reset_plugins(unsigned);
 extern void bx_unload_plugins(void);
