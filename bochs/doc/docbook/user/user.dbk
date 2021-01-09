@@ -9051,14 +9051,9 @@ If unspecified, the default "mode" is flat.
        mappable to contained partitions
        </entry>
  </row>
- <row> <entry> external </entry> <entry> accessed through an external C++ class </entry>
-       <entry>
-       developer specific, needs a C++ class at compile time
-       </entry>
- </row>
  <row> <entry> dll </entry> <entry> accessed through a DLL </entry>
        <entry>
-       developer specific, windows only
+       developer specific, win32 / win64 only
        </entry>
  </row>
  <row> <entry> sparse </entry> <entry> up to 10 layers stackable files </entry>
@@ -9201,13 +9196,13 @@ On some host OSes, there is a limit of 2GiB per file.
 </section>
 </section>
 
-<section><title>external/dll</title>
+<section><title>dll</title>
 <para>
 </para>
 <section><title>description</title>
 <para>
-This mode is only useful for developers and needs an additional C++ class
-compiled in, or an additional DLL linked to Bochs.
+This mode is only useful for developers and needs an additional win32 / win64
+DLL loaded by Bochs at runtime.
 </para>
 </section>
 </section>
@@ -9253,7 +9248,8 @@ substracting 1 from the last character (must be a digit)
 </section>
 <section><title>external tools</title>
 <para>
-No external tool support Sparse disk images yet.
+The bximage utility (see <xref linkend="using-bximage"> provides convert and
+resize support for "sparse" mode images.
 </para>
 </section>
 <section><title>typical use</title>
@@ -9445,9 +9441,9 @@ Only vmware versions 3 and 4 disk image files are supported.
 </section>
 <section><title>image creation</title>
 <para>
-The flat / sparse / growing disk images must be created with the bximage utility
-(see <xref linkend="using-bximage"> for more information).
-The growing redolog is created automatically if needed.
+    The base disk images must be created with the bximage utility
+    (see <xref linkend="using-bximage"> for more information).
+    The redolog file is created automatically if it doesn't exist.
 </para>
 </section>
 <section><title>path</title>
@@ -9460,7 +9456,7 @@ The growing redolog is created automatically if needed.
 </section>
 <section><title>external tools</title>
 <para>
-    To access the flat disk image content,
+    To access the 'flat' mode base disk image content,
     see <xref linkend="harddisk-mode-flat-tools"> for available tools.
 </para>
 <note>
@@ -9538,14 +9534,16 @@ Be sure to enter "growing" when selecting the image type.
 </section>
 <section><title>external tools</title>
 <para>
-No external tool support Growing disk images yet.
+    The bximage utility (see <xref linkend="using-bximage"> provides convert
+    and resize support for "growing" mode images.
 </para>
 </section>
 <section><title>typical use</title>
 <para>
-Growing disk images can be used whenever you want to maximize disk space.
-However, please note that Bochs will not check if enough disk space is available
-before writing new data. If no disk space is available, a panic will occur.
+    Growing disk images can be used whenever you want to maximize disk space.
+    However, please note that Bochs will not check if enough disk space is
+    available before writing new data. If no disk space is available, a panic
+    will occur.
 </para>
 </section>
 <section><title>limitations</title>
@@ -9565,8 +9563,8 @@ before writing new data. If no disk space is available, a panic will occur.
     An volatile disk is based on a read-only image, associated with
     a growing redolog, that contains all changes (writes)
     made to the base image content. Currently, base images of
-    types 'flat', 'sparse', 'growing', 'vmware3', 'vmware4' and
-    'vpc' are supported.
+    types 'flat', 'sparse', 'growing', 'vmware3', 'vmware4', 'vpc' and
+    'vbox' are supported.
 </para>
 <para>
     The redolog is dynamically created at runtime, when
@@ -9596,9 +9594,9 @@ before writing new data. If no disk space is available, a panic will occur.
 </section>
 <section><title>image creation</title>
 <para>
-The flat / sparse / growing disk images must be created with the bximage utility
-(see <xref linkend="using-bximage"> for more information).
-The growing redolog is created automatically.
+    The base disk images must be created with the bximage utility
+    (see <xref linkend="using-bximage"> for more information).
+    The temporary redolog file is created automatically.
 </para>
 </section>
 <section><title>path</title>
@@ -9613,8 +9611,8 @@ The growing redolog is created automatically.
 </section>
 <section><title>external tools</title>
 <para>
-    See <xref linkend="harddisk-mode-flat-tools"> for tools
-    to access the flat disk image content.
+    To access 'flat' mode base disk image content,
+    see <xref linkend="harddisk-mode-flat-tools"> for available tools.
 </para>
 </section>
 <section><title>typical use</title>
@@ -9654,7 +9652,9 @@ The growing redolog is created automatically.
 </section>
 <section><title>image creation</title>
 <para>
-    Create such disk image with Microsoft VirtualPC (tm) or Qemu's disk image utility (qemu-img).
+    Create such disk image with Microsoft VirtualPC (tm), Qemu's disk image
+    utility (qemu-img) or bximage utility
+    (see <xref linkend="using-bximage"> for more information).
 </para>
 </section>
 <section><title>path</title>
@@ -9676,6 +9676,43 @@ The growing redolog is created automatically.
 <section><title>limitations</title>
 <para>
     The based on the Qemu code the disk size is limited to 127 GB.
+</para>
+</section>
+</section>
+
+<section><title>vbox</title>
+<para>
+</para>
+<section><title>description</title>
+<para>
+    The "vbox" disk image mode for VirtualBox disk images (VDI version 1.1)
+    has been written by Benjamin D. Lunt.
+</para>
+</section>
+<section><title>image creation</title>
+<para>
+    Create such disk image with Qemu's disk image utility (qemu-img).
+</para>
+</section>
+<section><title>path</title>
+<para>
+    The "path" option of the ataX-xxx directive in the configuration file
+    must point to the VirtualBox disk image.
+</para>
+</section>
+<section><title>external tools</title>
+<para>
+    Use VirtualBox tools to manipulate these disk images.
+</para>
+</section>
+<section><title>typical use</title>
+<para>
+    Share disk images with VirtualBox.
+</para>
+</section>
+<section><title>limitations</title>
+<para>
+    &FIXME; to be completed
 </para>
 </section>
 </section>
@@ -9810,7 +9847,7 @@ interactive  mode and ask for all required parameters to manipulate an image.
 Usage: bximage [options] [filename1] [filename2]
 
 Supported options:
-  -mode=...     operation mode (create, convert, resize, commit, info)
+  -func=...     operation to perform (create, convert, resize, commit, info)
   -fd=...       create: floppy image with size code
   -hd=...       create/resize: hard disk image with size in megabytes (M)
                 or gigabytes (G)
@@ -9877,6 +9914,11 @@ Other arguments:
     <entry>Yes</entry>
     <entry>Yes</entry>
   </row>
+  <row>
+    <entry>vbox</entry>
+    <entry>No</entry>
+    <entry>Yes</entry>
+  </row>
 </tbody>
 </tgroup>
 </table>
@@ -9927,7 +9969,7 @@ suffix ".orig".
 <para>
 This function can be used to determine the disk image format, geometry
 and size. Note that Bochs can only detect the formats growing, sparse,
-vmware3, vmware4 and vpc correctly. Other images with a file size
+vmware3, vmware4, vpc and vbox correctly. Other images with a file size
 multiple of 512 are treated as flat ones. If the image doesn't support
 returning the geometry, the cylinders are calculated based on 16 heads
 and 63 sectors per track.

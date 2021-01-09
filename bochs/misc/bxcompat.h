@@ -65,9 +65,9 @@ extern int bx_interactive;
 class device_image_t;
 
 void myexit(int code);
-device_image_t* init_image_2(const char *image_mode);
+device_image_t* init_image(const char *image_mode);
 
-#define DEV_hdimage_init_image(a,b,c) init_image_2(a)
+#define DEV_hdimage_init_image(a,b,c) init_image(a)
 
 #else
 
