@@ -616,6 +616,8 @@ public:
 
 BOCHSAPI extern bx_hdimage_ctl_c bx_hdimage_ctl;
 
+#endif // ifndef BXIMAGE
+
 //
 // The hdimage_locator class is used by device_image_t classes to register
 // their name. The common hdimage code uses the static 'create' method
@@ -640,7 +642,5 @@ private:
   hdimage_locator_c *next;
   const char *mode;
 };
-
-#endif // BXIMAGE
 
 #endif

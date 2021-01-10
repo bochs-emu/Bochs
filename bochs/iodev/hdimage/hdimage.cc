@@ -33,13 +33,6 @@
 #include "cdrom_win32.h"
 #endif
 #include "hdimage.h"
-#ifdef BXIMAGE
-#include "vbox.h"
-#include "vmware3.h"
-#include "vmware4.h"
-#include "vpc.h"
-#include "vvfat.h"
-#endif
 
 #if BX_HAVE_SYS_MMAN_H
 #include <sys/mman.h>
@@ -194,6 +187,8 @@ cdrom_base_c* bx_hdimage_ctl_c::init_cdrom(const char *dev)
 #endif
 }
 
+#endif // ifndef BXIMAGE
+
 hdimage_locator_c *hdimage_locator_c::all = NULL;
 Bit8u hdimage_locator_c::count = 0;
 
@@ -269,7 +264,7 @@ bool hdimage_locator_c::module_present(const char *mode)
 
 void hdimage_locator_c::cleanup()
 {
-#if BX_PLUGINS
+#if BX_PLUGINS && !defined(BXIMAGE)
   while (all != NULL) {
     PLUG_unload_plugin_type(all->mode, PLUGTYPE_IMG);
   }
@@ -305,8 +300,6 @@ bool hdimage_locator_c::detect_image_mode(int fd, Bit64u disk_size,
   }
   return 0;
 }
-
-#endif // ifndef BXIMAGE
 
 // helper functions
 int bx_read_image(int fd, Bit64s offset, void *buf, int count)
@@ -454,23 +447,8 @@ bool hdimage_detect_image_mode(const char *pathname, const char **image_mode)
   } else if (growing_image_t::check_format(fd, image_size) == HDIMAGE_FORMAT_OK) {
     *image_mode = "growing";
     result = true;
-#ifdef BXIMAGE
-  } else if (vbox_image_t::check_format(fd, image_size) >= HDIMAGE_FORMAT_OK) {
-    *image_mode = "vbox";
-    result = true;
-  } else if (vmware3_image_t::check_format(fd, image_size) == HDIMAGE_FORMAT_OK) {
-    *image_mode = "vmware3";
-    result = true;
-  } else if (vmware4_image_t::check_format(fd, image_size) == HDIMAGE_FORMAT_OK) {
-    *image_mode = "vmware4";
-    result = true;
-  } else if (vpc_image_t::check_format(fd, image_size) >= HDIMAGE_FORMAT_OK) {
-    *image_mode = "vpc";
-    result = true;
-#else
   } else if (hdimage_locator_c::detect_image_mode(fd, image_size, image_mode)) {
     result = true;
-#endif
   } else if (flat_image_t::check_format(fd, image_size) == HDIMAGE_FORMAT_OK) {
     *image_mode = "flat";
     result = true;

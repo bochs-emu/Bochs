@@ -10,7 +10,7 @@
  * Contact: snrrrub@yahoo.com
  *
  * Copyright (C) 2003       Net Integration Technologies, Inc.
- * Copyright (C) 2003-2020  The Bochs Project
+ * Copyright (C) 2003-2021  The Bochs Project
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -64,6 +64,8 @@ void CDECL libvmware3_img_plugin_fini(void)
   // Nothing here yet
 }
 
+#endif
+
 //
 // Define the static class that registers the derived device image class,
 // and allocates one on request.
@@ -79,8 +81,6 @@ protected:
     return (vmware3_image_t::check_format(fd, disk_size));
   }
 } bx_vmware3_match;
-
-#endif
 
 int vmware3_image_t::check_format(int fd, Bit64u imgsize)
 {

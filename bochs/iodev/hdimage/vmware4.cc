@@ -10,7 +10,7 @@
  * Contact: snrrrub@gmail.com
  *
  * Copyright (C) 2006       Sharvil Nanavati.
- * Copyright (C) 2006-2020  The Bochs Project
+ * Copyright (C) 2006-2021  The Bochs Project
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -62,6 +62,8 @@ void CDECL libvmware4_img_plugin_fini(void)
   // Nothing here yet
 }
 
+#endif
+
 //
 // Define the static class that registers the derived device image class,
 // and allocates one on request.
@@ -77,8 +79,6 @@ protected:
     return (vmware4_image_t::check_format(fd, disk_size));
   }
 } bx_vmware4_match;
-
-#endif
 
 vmware4_image_t::vmware4_image_t()
   : file_descriptor(-1),

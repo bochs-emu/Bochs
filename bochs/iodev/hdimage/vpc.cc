@@ -6,7 +6,7 @@
 //
 // Copyright (c) 2005  Alex Beregszaszi
 // Copyright (c) 2009  Kevin Wolf <kwolf@suse.de>
-// Copyright (C) 2012-2020  The Bochs Project
+// Copyright (C) 2012-2021  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -60,6 +60,8 @@ void CDECL libvpc_img_plugin_fini(void)
   // Nothing here yet
 }
 
+#endif
+
 //
 // Define the static class that registers the derived device image class,
 // and allocates one on request.
@@ -72,11 +74,9 @@ protected:
     return (new vpc_image_t());
   }
   int check_format(int fd, Bit64u disk_size) {
-    return (vpc_image_t::check_format(fd, disk_size));
+    return ((vpc_image_t::check_format(fd, disk_size) > 0) ? HDIMAGE_FORMAT_OK : -1);
   }
 } bx_vpc_match;
-
-#endif
 
 Bit32u vpc_checksum(Bit8u *buf, size_t size)
 {
