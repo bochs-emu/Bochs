@@ -302,6 +302,20 @@ bool hdimage_locator_c::detect_image_mode(int fd, Bit64u disk_size,
 }
 
 // helper functions
+
+#ifdef BXIMAGE
+int bx_create_image_file(const char *filename)
+{
+  int fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC
+#ifdef O_BINARY
+                | O_BINARY
+#endif
+                , S_IWUSR | S_IRUSR | S_IWGRP | S_IRGRP
+                );
+  return fd;
+}
+#endif
+
 int bx_read_image(int fd, Bit64s offset, void *buf, int count)
 {
   if (lseek(fd, offset, SEEK_SET) == -1) {
@@ -1466,7 +1480,65 @@ int sparse_image_t::check_format(int fd, Bit64u imgsize)
   return HDIMAGE_FORMAT_OK;
 }
 
-#ifndef BXIMAGE
+#ifdef BXIMAGE
+int sparse_image_t::create_image(const char *pathname, Bit64u size)
+{
+  Bit64u numpages;
+  sparse_header_t header;
+  size_t sizesofar;
+  int padtopagesize;
+
+  memset(&header, 0, sizeof(header));
+  header.magic = htod32(SPARSE_HEADER_MAGIC);
+  header.version = htod32(SPARSE_HEADER_VERSION);
+
+  header.pagesize = htod32((1 << 10) * 32); // Use 32 KB Pages - could be configurable
+  numpages = (size / dtoh32(header.pagesize)) + 1;
+
+  header.numpages = htod32((Bit32u)numpages);
+  header.disk = htod64(size);
+
+  if (numpages != dtoh32(header.numpages)) {
+    BX_FATAL(("ERROR: The disk image is too large for a sparse image!"));
+    // Could increase page size here.
+    // But note this only happens at 128 Terabytes!
+  }
+
+  int fd = bx_create_image_file(pathname);
+  if (fd < 0)
+    BX_FATAL(("ERROR: failed to create sparse image file"));
+  if (bx_write_image(fd, 0, &header, sizeof(header)) != sizeof(header)) {
+    ::close(fd);
+    BX_FATAL(("ERROR: The disk image is not complete - could not write header!"));
+  }
+
+  Bit32u *pagetable = new Bit32u[dtoh32(header.numpages)];
+  if (pagetable == NULL)
+    BX_FATAL(("ERROR: The disk image is not complete - could not create pagetable!"));
+  for (Bit32u i=0; i<dtoh32(header.numpages); i++)
+    pagetable[i] = htod32(SPARSE_PAGE_NOT_ALLOCATED);
+
+  if (bx_write_image(fd, sizeof(header), pagetable, 4 * dtoh32(header.numpages)) != (int)(4 * dtoh32(header.numpages))) {
+    ::close(fd);
+    BX_FATAL(("ERROR: The disk image is not complete - could not write pagetable!"));
+  }
+  delete [] pagetable;
+
+  sizesofar = SPARSE_HEADER_SIZE + (4 * dtoh32(header.numpages));
+  padtopagesize = dtoh32(header.pagesize) - (sizesofar & (dtoh32(header.pagesize) - 1));
+
+  Bit8u *padding = new Bit8u[padtopagesize];
+  memset(padding, 0, padtopagesize);
+
+  if (bx_write_image(fd, sizesofar, padding, padtopagesize) != padtopagesize) {
+    ::close(fd);
+    BX_FATAL(("ERROR: The disk image is not complete - could not write padding!"));
+  }
+  delete [] padding;
+  ::close(fd);
+  return 0;
+}
+#else
 bx_bool sparse_image_t::save_state(const char *backup_fname)
 {
   return hdimage_backup_file(fd, backup_fname);
@@ -2194,7 +2266,16 @@ int growing_image_t::check_format(int fd, Bit64u imgsize)
   return redolog_t::check_format(fd, REDOLOG_SUBTYPE_GROWING);
 }
 
-#ifndef BXIMAGE
+#ifdef BXIMAGE
+int growing_image_t::create_image(const char *pathname, Bit64u size)
+{
+  redolog = new redolog_t;
+  if (redolog->create(pathname, REDOLOG_SUBTYPE_GROWING, size) < 0)
+    BX_FATAL(("Can't create growing mode image"));
+  redolog->close();
+  return 0;
+}
+#else
 bx_bool growing_image_t::save_state(const char *backup_fname)
 {
   return redolog->save_state(backup_fname);

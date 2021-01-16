@@ -18,37 +18,6 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 /////////////////////////////////////////////////////////////////////////
-//
-// Portions of this file contain code released under the following license.
-//
-// Connectix / Microsoft Virtual PC image creation code
-//
-// Copyright (c) 2005 Alex Beregszaszi
-// Copyright (c) 2009 Kevin Wolf <kwolf@suse.de>
-//
-// VMDK version 4 image creation code
-//
-// Copyright (c) 2004 Fabrice Bellard
-// Copyright (c) 2005 Filip Navara
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
-/////////////////////////////////////////////////////////////////////////
 
 // Create empty hard disk or floppy disk images for bochs.
 // Convert a hard disk image from one format (mode) to another.
@@ -368,25 +337,13 @@ device_image_t* init_image(const char *imgmode)
   return hdimage;
 }
 
-int create_image_file(const char *filename)
-{
-  int fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC
-#ifdef O_BINARY
-                | O_BINARY
-#endif
-                , S_IWUSR | S_IRUSR | S_IWGRP | S_IRGRP
-                );
-  if (fd < 0) {
-    fatal("ERROR: flat file is not writable");
-  }
-  return fd;
-}
-
 void create_flat_image(const char *filename, Bit64u size)
 {
   char buffer[512];
 
-  int fd = create_image_file(filename);
+  int fd = bx_create_image_file(filename);
+  if (fd < 0)
+    fatal("ERROR: failed to create flat image file");
   memset(buffer, 0, 512);
   if (bx_write_image(fd, size - 512, buffer, 512) != 512)
     fatal("ERROR: while writing block in flat file !");
@@ -439,261 +396,9 @@ void create_flat_image_win32(const char *filename, Bit64u size)
 }
 #endif
 
-void create_sparse_image(const char *filename, Bit64u size)
+device_image_t* create_hard_disk_image(const char *filename, const char *imgmode, Bit64u size)
 {
-  Bit64u numpages;
-  sparse_header_t header;
-  size_t sizesofar;
-  int padtopagesize;
-
-  memset(&header, 0, sizeof(header));
-  header.magic = htod32(SPARSE_HEADER_MAGIC);
-  header.version = htod32(SPARSE_HEADER_VERSION);
-
-  header.pagesize = htod32((1 << 10) * 32); // Use 32 KB Pages - could be configurable
-  numpages = (size / dtoh32(header.pagesize)) + 1;
-
-  header.numpages = htod32((Bit32u)numpages);
-  header.disk = htod64(size);
-
-  if (numpages != dtoh32(header.numpages)) {
-    fatal("ERROR: The disk image is too large for a sparse image!");
-    // Could increase page size here.
-    // But note this only happens at 128 Terabytes!
-  }
-
-  int fd = create_image_file(filename);
-  if (bx_write_image(fd, 0, &header, sizeof(header)) != sizeof(header)) {
-    close(fd);
-    fatal("ERROR: The disk image is not complete - could not write header!");
-  }
-
-  Bit32u *pagetable = new Bit32u[dtoh32(header.numpages)];
-  if (pagetable == NULL)
-    fatal("ERROR: The disk image is not complete - could not create pagetable!");
-  for (Bit32u i=0; i<dtoh32(header.numpages); i++)
-    pagetable[i] = htod32(SPARSE_PAGE_NOT_ALLOCATED);
-
-  if (bx_write_image(fd, sizeof(header), pagetable, 4 * dtoh32(header.numpages)) != (int)(4 * dtoh32(header.numpages))) {
-    close(fd);
-    fatal("ERROR: The disk image is not complete - could not write pagetable!");
-  }
-  delete [] pagetable;
-
-  sizesofar = SPARSE_HEADER_SIZE + (4 * dtoh32(header.numpages));
-  padtopagesize = dtoh32(header.pagesize) - (sizesofar & (dtoh32(header.pagesize) - 1));
-
-  Bit8u *padding = new Bit8u[padtopagesize];
-  memset(padding, 0, padtopagesize);
-
-  if (bx_write_image(fd, sizesofar, padding, padtopagesize) != padtopagesize) {
-    close(fd);
-    fatal("ERROR: The disk image is not complete - could not write padding!");
-  }
-  delete [] padding;
-  close(fd);
-}
-
-void create_growing_image(const char *filename, Bit64u size)
-{
-  redolog_t *redolog = new redolog_t;
-  if (redolog->create(filename, REDOLOG_SUBTYPE_GROWING, size) < 0)
-    fatal("Can't create growing mode image");
-  redolog->close();
-  delete redolog;
-}
-
-void create_vpc_image(const char *filename, Bit64u size)
-{
-  Bit8u buf[1024];
-  Bit16u cyls = 0;
-  Bit8u heads = 16, secs_per_cyl = 63;
-  Bit64u total_sectors;
-  Bit64s offset;
-  size_t block_size, num_bat_entries;
-  int fd, i;
-
-  total_sectors = size >> 9;
-  cyls = (Bit16u)(size/heads/secs_per_cyl/512.0);
-
-  vhd_footer_t *footer = (vhd_footer_t*)buf;
-  memset(footer, 0, HEADER_SIZE);
-  memcpy(footer->creator, "conectix", 8);
-  // TODO Check if "bxic" creator_app is ok for VPC
-  memcpy(footer->creator_app, "bxic", 4);
-  memcpy(footer->creator_os, "Wi2k", 4);
-
-  footer->features = be32_to_cpu(0x02);
-  footer->version = be32_to_cpu(0x00010000);
-  footer->data_offset = be64_to_cpu(HEADER_SIZE);
-  footer->timestamp = be32_to_cpu((Bit32u)time(NULL) - VHD_TIMESTAMP_BASE);
-
-  // Version of Virtual PC 2007
-  footer->major = be16_to_cpu(0x0005);
-  footer->minor = be16_to_cpu(0x0003);
-  footer->orig_size = be64_to_cpu(total_sectors * 512);
-  footer->size = be64_to_cpu(total_sectors * 512);
-  footer->cyls = be16_to_cpu(cyls);
-  footer->heads = heads;
-  footer->secs_per_cyl = secs_per_cyl;
-  footer->type = be32_to_cpu(VHD_DYNAMIC);
-  footer->checksum = be32_to_cpu(vpc_checksum(buf, HEADER_SIZE));
-
-  fd = create_image_file(filename);
-  // Write the footer (twice: at the beginning and at the end)
-  block_size = 0x200000;
-  num_bat_entries = (size_t)(total_sectors + block_size / 512) / (block_size / 512);
-  if (bx_write_image(fd, 0, footer, HEADER_SIZE) != HEADER_SIZE) {
-    close(fd);
-    fatal("ERROR: The disk image is not complete - could not write footer!");
-  }
-  offset = 1536 + ((num_bat_entries * 4 + 511) & ~511);
-  if (bx_write_image(fd, offset, footer, HEADER_SIZE) != HEADER_SIZE) {
-    close(fd);
-    fatal("ERROR: The disk image is not complete - could not write footer!");
-  }
-
-  // Write the initial BAT
-  memset(buf, 0xFF, 512);
-  offset = 3 * 512;
-  for (i = 0; i < (int)(num_bat_entries * 4 + 511) / 512; i++) {
-    if (bx_write_image(fd, offset, buf, 512) != 512) {
-      close(fd);
-      fatal("ERROR: The disk image is not complete - could not write BAT!");
-    }
-    offset += 512;
-  }
-
-  vhd_dyndisk_header_t *header = (vhd_dyndisk_header_t*)buf;
-  memset(header, 0, 1024);
-  memcpy(header->magic, "cxsparse", 8);
-  /*
-   * Note: The spec is actually wrong here for data_offset, it says
-   * 0xFFFFFFFF, but MS tools expect all 64 bits to be set.
-   */
-  header->data_offset = be64_to_cpu(0xFFFFFFFFFFFFFFFFULL);
-  header->table_offset = be64_to_cpu(3 * 512);
-  header->version = be32_to_cpu(0x00010000);
-  header->block_size = be32_to_cpu(block_size);
-  header->max_table_entries = be32_to_cpu(num_bat_entries);
-  header->checksum = be32_to_cpu(vpc_checksum(buf, 1024));
-  if (bx_write_image(fd, 512, header, 1024) != 1024) {
-    close(fd);
-    fatal("ERROR: The disk image is not complete - could not write header!");
-  }
-
-  close(fd);
-}
-
-void create_vmware4_image(const char *filename, Bit64u size)
-{
-  const int SECTOR_SIZE = 512;
-  const char desc_template[] =
-    "# Disk DescriptorFile\n"
-    "version=1\n"
-    "CID=%x\n"
-    "parentCID=ffffffff\n"
-    "createType=\"monolithicSparse\"\n"
-    "\n"
-    "# Extent description\n"
-    "%s"
-    "\n"
-    "# The Disk Data Base\n"
-    "#DDB\n"
-    "\n"
-    "ddb.virtualHWVersion = \"4\"\n"
-    "ddb.geometry.cylinders = \"" FMT_LL "d\"\n"
-    "ddb.geometry.heads = \"16\"\n"
-    "ddb.geometry.sectors = \"63\"\n"
-    "ddb.adapterType = \"ide\"\n";
-  int fd, i;
-  Bit64s offset, cyl;
-  Bit32u tmp, grains, gt_size, gt_count, gd_size;
-  Bit8u buffer[SECTOR_SIZE];
-  char desc_line[256];
-  _VM4_Header header;
-
-  header.id[0] = 'K';
-  header.id[1] = 'D';
-  header.id[2] = 'M';
-  header.id[3] = 'V';
-  header.version = htod32(1);
-  header.flags = htod32(3);
-  header.total_sectors = htod64(size / SECTOR_SIZE);
-  header.tlb_size_sectors = 128;
-  header.description_offset_sectors = 1;
-  header.description_size_sectors = 20;
-  header.slb_count = 512;
-  header.flb_offset_sectors = header.description_offset_sectors +
-                              header.description_size_sectors;
-
-  grains = (Bit32u)((size / 512 + header.tlb_size_sectors - 1) / header.tlb_size_sectors);
-  gt_size = ((header.slb_count * sizeof(Bit32u)) + 511) >> 9;
-  gt_count = (grains + header.slb_count - 1) / header.slb_count;
-  gd_size = (gt_count * sizeof(Bit32u) + 511) >> 9;
-
-  header.flb_copy_offset_sectors = header.flb_offset_sectors + gd_size + (gt_size * gt_count);
-  header.tlb_offset_sectors =
-    ((header.flb_copy_offset_sectors + gd_size + (gt_size * gt_count) +
-    header.tlb_size_sectors - 1) / header.tlb_size_sectors) *
-    header.tlb_size_sectors;
-
-  header.tlb_size_sectors = htod64(header.tlb_size_sectors);
-  header.description_offset_sectors = htod64(header.description_offset_sectors);
-  header.description_size_sectors = htod64(header.description_size_sectors);
-  header.slb_count = htod32(header.slb_count);
-  header.flb_offset_sectors = htod64(header.flb_offset_sectors);
-  header.flb_copy_offset_sectors = htod64(header.flb_copy_offset_sectors);
-  header.tlb_offset_sectors = htod64(header.tlb_offset_sectors);
-  header.check_bytes[0] = 0x0a;
-  header.check_bytes[1] = 0x20;
-  header.check_bytes[2] = 0x0d;
-  header.check_bytes[3] = 0x0a;
-
-  memset(buffer, 0, SECTOR_SIZE);
-  memcpy(buffer, &header, sizeof(_VM4_Header));
-
-  fd = create_image_file(filename);
-  if (bx_write_image(fd, 0, buffer, SECTOR_SIZE) != SECTOR_SIZE) {
-    close(fd);
-    fatal("ERROR: The disk image is not complete - could not write header!");
-  }
-  memset(buffer, 0, SECTOR_SIZE);
-  offset = dtoh64(header.tlb_offset_sectors * SECTOR_SIZE) - SECTOR_SIZE;
-  if (bx_write_image(fd, offset, buffer, SECTOR_SIZE) != SECTOR_SIZE) {
-    close(fd);
-    fatal("ERROR: The disk image is not complete - could not write empty table!");
-  }
-  offset = dtoh64(header.flb_offset_sectors) * SECTOR_SIZE;
-  for (i = 0, tmp = (Bit32u)dtoh64(header.flb_offset_sectors) + gd_size; i < (int)gt_count; i++, tmp += gt_size) {
-    if (bx_write_image(fd, offset, &tmp, sizeof(tmp)) != sizeof(tmp)) {
-      close(fd);
-      fatal("ERROR: The disk image is not complete - could not write table!");
-    }
-    offset += sizeof(tmp);
-  }
-  offset = dtoh64(header.flb_copy_offset_sectors) * SECTOR_SIZE;
-  for (i = 0, tmp = (Bit32u)dtoh64(header.flb_copy_offset_sectors) + gd_size; i < (int)gt_count; i++, tmp += gt_size) {
-    if (bx_write_image(fd, offset, &tmp, sizeof(tmp)) != sizeof(tmp)) {
-      close(fd);
-      fatal("ERROR: The disk image is not complete - could not write backup table!");
-    }
-    offset += sizeof(tmp);
-  }
-  memset(buffer, 0, SECTOR_SIZE);
-  cyl = (Bit64u)(size / 16 / 63 / 512.0);
-  snprintf(desc_line, 256, "RW " FMT_LL "d SPARSE \"%s\"", size / SECTOR_SIZE, filename);
-  sprintf((char*)buffer, desc_template, (Bit32u)time(NULL), desc_line, cyl);
-  offset = dtoh64(header.description_offset_sectors) * SECTOR_SIZE;
-  if (bx_write_image(fd, offset, buffer, SECTOR_SIZE) != SECTOR_SIZE) {
-    close(fd);
-    fatal("ERROR: The disk image is not complete - could not write description!");
-  }
-  close(fd);
-}
-
-void create_hard_disk_image(const char *filename, const char *imgmode, Bit64u size)
-{
+  device_image_t *hdimage = init_image(imgmode);
   if(!strcmp(imgmode, "flat")) {
 #ifndef WIN32
     create_flat_image(filename, size);
@@ -701,16 +406,17 @@ void create_hard_disk_image(const char *filename, const char *imgmode, Bit64u si
     create_flat_image_win32(filename, size);
 #endif
   } else if(!strcmp(imgmode, "growing")) {
-    create_growing_image(filename, size);
+    hdimage->create_image(filename, size);
   } else if(!strcmp(imgmode, "sparse")) {
-    create_sparse_image(filename, size);
+    hdimage->create_image(filename, size);
   } else if(!strcmp(imgmode, "vpc")) {
-    create_vpc_image(filename, size);
+    hdimage->create_image(filename, size);
   } else if(!strcmp(imgmode, "vmware4")) {
-    create_vmware4_image(filename, size);
+    hdimage->create_image(filename, size);
   } else {
     fatal("image mode not implemented yet");
   }
+  return hdimage;
 }
 
 void convert_image(const char *newimgmode, Bit64u newsize)
@@ -751,11 +457,10 @@ void convert_image(const char *newimgmode, Bit64u newsize)
     fatal("cannot open source disk image");
 
   if (newsize > 0) {
-    create_hard_disk_image(bx_filename_2, newimgmode, newsize);
+    dest_image = create_hard_disk_image(bx_filename_2, newimgmode, newsize);
   } else {
-    create_hard_disk_image(bx_filename_2, newimgmode, source_image->hd_size);
+    dest_image = create_hard_disk_image(bx_filename_2, newimgmode, source_image->hd_size);
   }
-  dest_image = init_image(newimgmode);
   if (dest_image->open(bx_filename_2) < 0)
     fatal("cannot open destination disk image");
 
@@ -1224,7 +929,8 @@ int CDECL main(int argc, char *argv[])
           printf("\nCreating hard disk image '%s' with CHS=" FMT_LL "d/%d/%d (sector size = %d)\n",
                  bx_filename_1, cyl, heads, spt, bx_sectsize_val);
           hdsize = cyl * heads * spt * bx_sectsize_val;
-          create_hard_disk_image(bx_filename_1, image_mode, hdsize);
+          hdimage = create_hard_disk_image(bx_filename_1, image_mode, hdsize);
+          delete hdimage;
         }
         printf("\nThe following line should appear in your bochsrc:\n");
         printf("  %s\n", bochsrc_line);

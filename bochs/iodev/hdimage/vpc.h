@@ -6,7 +6,7 @@
 //
 // Copyright (c) 2005  Alex Beregszaszi
 // Copyright (c) 2009  Kevin Wolf <kwolf@suse.de>
-// Copyright (C) 2012-2020  The Bochs Project
+// Copyright (C) 2012-2021  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -165,7 +165,9 @@ class vpc_image_t : public device_image_t
     Bit32u get_capabilities();
     static int check_format(int fd, Bit64u imgsize);
 
-#ifndef BXIMAGE
+#ifdef BXIMAGE
+    int create_image(const char *pathname, Bit64u size);
+#else
     bx_bool save_state(const char *backup_fname);
     void restore_state(const char *backup_fname);
 #endif

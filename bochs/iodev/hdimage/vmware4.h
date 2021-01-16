@@ -10,7 +10,7 @@
  * Contact: snrrrub@gmail.com
  *
  * Copyright (C) 2006 Sharvil Nanavati.
- * Copyright (C) 2006-2013  The Bochs Project
+ * Copyright (C) 2006-2021  The Bochs Project
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -77,7 +77,9 @@ class vmware4_image_t : public device_image_t
         Bit32u get_capabilities();
         static int check_format(int fd, Bit64u imgsize);
 
-#ifndef BXIMAGE
+#ifdef BXIMAGE
+        int create_image(const char *pathname, Bit64u size);
+#else
         bx_bool save_state(const char *backup_fname);
         void restore_state(const char *backup_fname);
 #endif

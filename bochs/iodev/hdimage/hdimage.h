@@ -141,6 +141,9 @@
 class device_image_t;
 class redolog_t;
 
+#ifdef BXIMAGE
+int bx_create_image_file(const char *filename);
+#endif
 BOCHSAPI_MSVCONLY int bx_read_image(int fd, Bit64s offset, void *buf, int count);
 BOCHSAPI_MSVCONLY int bx_write_image(int fd, Bit64s offset, void *buf, int count);
 BOCHSAPI_MSVCONLY int bx_close_image(int fd, const char *pathname);
@@ -197,7 +200,10 @@ class BOCHSAPI_MSVCONLY device_image_t
       // Check image format
       static int check_format(int fd, Bit64u imgsize) {return HDIMAGE_NO_SIGNATURE;}
 
-#ifndef BXIMAGE
+#ifdef BXIMAGE
+      // Create new image file
+      virtual int create_image(const char *pathname, Bit64u size) {return 0;}
+#else
       // Save/restore support
       virtual void register_state(bx_list_c *parent);
       virtual bx_bool save_state(const char *backup_fname) {return 0;}
@@ -341,7 +347,10 @@ class sparse_image_t : public device_image_t
     // Check image format
     static int check_format(int fd, Bit64u imgsize);
 
-#ifndef BXIMAGE
+#ifdef BXIMAGE
+    // Create new image file
+    int create_image(const char *pathname, Bit64u size);
+#else
     // Save/restore support
     bx_bool save_state(const char *backup_fname);
     void restore_state(const char *backup_fname);
@@ -498,7 +507,10 @@ class growing_image_t : public device_image_t
       // Check image format
       static int check_format(int fd, Bit64u imgsize);
 
-#ifndef BXIMAGE
+#ifdef BXIMAGE
+      // Create new image file
+      int create_image(const char *pathname, Bit64u size);
+#else
       // Save/restore support
       bx_bool save_state(const char *backup_fname);
       void restore_state(const char *backup_fname);
