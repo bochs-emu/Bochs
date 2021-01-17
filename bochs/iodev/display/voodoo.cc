@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2012-2020  The Bochs Project
+//  Copyright (C) 2012-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -169,7 +169,7 @@ void CDECL libvoodoo_LTX_plugin_fini(void)
 
 // FIFO thread
 
-static bx_bool voodoo_keep_alive = 1;
+static bool voodoo_keep_alive = 0;
 
 BX_THREAD_FUNC(fifo_thread, indata)
 {
@@ -249,20 +249,21 @@ bx_voodoo_base_c::bx_voodoo_base_c()
 
 bx_voodoo_base_c::~bx_voodoo_base_c()
 {
-  voodoo_keep_alive = 0;
-  bx_set_sem(&fifo_wakeup);
-  bx_set_sem(&fifo_not_full);
-  BX_THREAD_JOIN(fifo_thread_var);
-  BX_FINI_MUTEX(fifo_mutex);
-  BX_FINI_MUTEX(render_mutex);
-  if (s.model >= VOODOO_2) {
-    BX_FINI_MUTEX(cmdfifo_mutex);
+  if (voodoo_keep_alive) {
+    voodoo_keep_alive = 0;
+    bx_set_sem(&fifo_wakeup);
+    bx_set_sem(&fifo_not_full);
+    BX_THREAD_JOIN(fifo_thread_var);
+    BX_FINI_MUTEX(fifo_mutex);
+    BX_FINI_MUTEX(render_mutex);
+    if (s.model >= VOODOO_2) {
+      BX_FINI_MUTEX(cmdfifo_mutex);
+    }
+    bx_destroy_sem(&fifo_wakeup);
+    bx_destroy_sem(&fifo_not_full);
+    bx_set_sem(&vertical_sem);
+    bx_destroy_sem(&vertical_sem);
   }
-  bx_destroy_sem(&fifo_wakeup);
-  bx_destroy_sem(&fifo_not_full);
-  bx_set_sem(&vertical_sem);
-  bx_destroy_sem(&vertical_sem);
-
   if (v != NULL) {
     free(v->fbi.ram);
     if (s.model < VOODOO_BANSHEE) {
@@ -507,6 +508,7 @@ void bx_voodoo_base_c::voodoo_register_state(bx_list_c *parent)
 
 void bx_voodoo_base_c::start_fifo_thread(void)
 {
+  voodoo_keep_alive = 1;
   bx_create_sem(&fifo_wakeup);
   bx_create_sem(&fifo_not_full);
   bx_set_sem(&fifo_not_full);
