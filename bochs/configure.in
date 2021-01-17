@@ -2523,7 +2523,11 @@ if test "$with_win32" = yes; then
        ;;
     *-cygwin* | *-mingw32* | *-msys)
        if test "$with_wx" != yes; then
-         RC_CMD="windres -I. -o "
+         if test "$cross_compiling" = no; then
+           RC_CMD="windres -I. -o "
+         else
+           RC_CMD="$WINDRES -I. -o "
+         fi
          EXTRA_BX_OBJS="$EXTRA_BX_OBJS win32res.o"
        fi
        GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_WIN32)"
