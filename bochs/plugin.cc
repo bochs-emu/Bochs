@@ -105,7 +105,7 @@ unsigned pluginHRQ = 0;
 
 plugin_t *plugins = NULL;      /* Head of the linked list of plugins  */
 #if BX_PLUGINS
-static void plugin_init_one(plugin_t *plugin);
+static bool plugin_init_one(plugin_t *plugin);
 #endif
 
 device_t *devices = NULL;      /* Head of the linked list of registered devices  */
@@ -326,7 +326,7 @@ void plugins_search(void)
     pgn_path = new char[strlen(ltdl_path_var) + 1];
     strcpy(pgn_path, ltdl_path_var);
   } else {
-  pgn_path = new char[2];
+    pgn_path = new char[2];
     strcpy(pgn_path, ".");
   }
   ptr = strtok(pgn_path, path_sep);
@@ -409,16 +409,17 @@ const char* bx_get_plugin_name(plugintype_t type, Bit8u index)
 /* Plugin initialization / deinitialization                             */
 /************************************************************************/
 
-void plugin_init_one(plugin_t *plugin)
+bool plugin_init_one(plugin_t *plugin)
 {
   /* initialize the plugin */
   if (plugin->plugin_init(plugin, plugin->type))
   {
     pluginlog->info("Plugin initialization failed for %s", plugin->name);
-    plugin_abort();
+    plugin_abort(plugin);
+    return 0;
   }
-
   plugin->initialized = 1;
+  return 1;
 }
 
 
@@ -439,7 +440,7 @@ void plugin_unload(plugin_t *plugin)
   }
 }
 
-void plugin_load(const char *name, plugintype_t type)
+bool plugin_load(const char *name, plugintype_t type)
 {
   plugin_t *plugin = NULL, *temp;
   plugintype_t basetype;
@@ -455,7 +456,7 @@ void plugin_load(const char *name, plugintype_t type)
       if (!strcmp(name, temp->name) && (basetype == temp->type)) {
         if (temp->loaded) {
           BX_PANIC(("plugin '%s' already loaded", name));
-          return;
+          return 0;
         } else {
           plugin = temp;
           break;
@@ -466,7 +467,7 @@ void plugin_load(const char *name, plugintype_t type)
   }
   if (plugin == NULL) {
     BX_PANIC(("plugin '%s' not found", name));
-    return;
+    return 0;
   }
   if (plugin->type == PLUGTYPE_DEV) {
     plugin->type = type;
@@ -509,7 +510,7 @@ void plugin_load(const char *name, plugintype_t type)
     current_plugin_context = NULL;
     BX_PANIC(("LoadLibrary failed for module '%s' (%s): error=%d", name,
               plugin_filename, GetLastError()));
-    return;
+    return 0;
   }
 #else
   plugin->handle = lt_dlopen(plugin_filename);
@@ -518,9 +519,10 @@ void plugin_load(const char *name, plugintype_t type)
     current_plugin_context = NULL;
     BX_PANIC(("dlopen failed for module '%s' (%s): %s", name, plugin_filename,
               lt_dlerror()));
-    return;
+    return 0;
   }
 #endif
+  plugin->loaded = 1;
 
   if (type == PLUGTYPE_GUI) {
     sprintf(tmpname, GUI_PLUGIN_INIT_FMT_STRING, name);
@@ -541,13 +543,15 @@ void plugin_load(const char *name, plugintype_t type)
   plugin->plugin_init = (plugin_init_t) GetProcAddress(plugin->handle, tmpname);
   if (plugin->plugin_init == NULL) {
     pluginlog->panic("could not find plugin_init: error=%d", GetLastError());
-    plugin_abort();
+    plugin_abort(plugin);
+    return 0;
   }
 #else
   plugin->plugin_init = (plugin_init_t) lt_dlsym(plugin->handle, tmpname);
   if (plugin->plugin_init == NULL) {
     pluginlog->panic("could not find plugin_init: %s", lt_dlerror());
-    plugin_abort();
+    plugin_abort(plugin);
+    return 0;
   }
 #endif
 
@@ -570,29 +574,34 @@ void plugin_load(const char *name, plugintype_t type)
   plugin->plugin_fini = (plugin_fini_t) GetProcAddress(plugin->handle, tmpname);
   if (plugin->plugin_fini == NULL) {
     pluginlog->panic("could not find plugin_fini: error=%d", GetLastError());
-    plugin_abort();
+    plugin_abort(plugin);
+    return 0;
   }
 #else
   plugin->plugin_fini = (plugin_fini_t) lt_dlsym(plugin->handle, tmpname);
   if (plugin->plugin_fini == NULL) {
     pluginlog->panic("could not find plugin_fini: %s", lt_dlerror());
-    plugin_abort();
+    plugin_abort(plugin);
+    return 0;
   }
 #endif
   pluginlog->info("loaded plugin %s",plugin_filename);
-  plugin->loaded = 1;
 
-  plugin_init_one(plugin);
+  if (!plugin_init_one(plugin)) {
+    return 0;
+  }
 
   // check that context didn't change.  This should only happen if we
   // need a reentrant plugin_load.
   BX_ASSERT(current_plugin_context == plugin);
   current_plugin_context = NULL;
+  return 1;
 }
 
-void plugin_abort(void)
+void plugin_abort(plugin_t *plugin)
 {
-  pluginlog->panic("plugin load aborted");
+  plugin_unload(plugin);
+  pluginlog->panic("loading plugin '%s' aborted", plugin->name);
 }
 
 #endif   /* end of #if BX_PLUGINS */
@@ -745,7 +754,7 @@ bx_bool pluginDevicePresent(const char *name)
 /* Plugin system: Load one plugin                                       */
 /************************************************************************/
 
-int bx_load_plugin(const char *name, plugintype_t type)
+bool bx_load_plugin(const char *name, plugintype_t type)
 {
   plugin_t *plugin;
 
@@ -755,10 +764,10 @@ int bx_load_plugin(const char *name, plugintype_t type)
         plugin_load(plugin->name, type);
       }
     }
+    return 1;
   } else {
-    plugin_load(name, type);
+    return plugin_load(name, type);
   }
-  return 1;
 }
 
 void bx_unload_plugin(const char *name, bx_bool devflag)

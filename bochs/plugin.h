@@ -332,13 +332,13 @@ BOCHSAPI extern void  (*pluginUnregisterIRQ)(unsigned irq, const char *name);
 BOCHSAPI extern void    (*pluginSetHRQ)(unsigned val);
 BOCHSAPI extern void    (*pluginSetHRQHackCallback)(void (*callback)(void));
 
-void plugin_abort(void);
+void plugin_abort(plugin_t *plugin);
 
 #if BX_PLUGINS
 Bit8u bx_get_plugins_count(plugintype_t type);
 const char* bx_get_plugin_name(plugintype_t type, Bit8u index);
 #endif
-int bx_load_plugin(const char *name, plugintype_t type);
+bool bx_load_plugin(const char *name, plugintype_t type);
 extern void bx_unload_plugin(const char *name, bx_bool devflag);
 extern void bx_unload_plugin_type(const char *name, plugintype_t type);
 extern void bx_init_plugins(void);
