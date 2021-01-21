@@ -46,21 +46,25 @@ typedef void (CDECL *plugin_fini_t)(void);
 
 typedef struct _plugin_t
 {
-    plugintype_t type;
-    bx_bool loaded;
-    bx_bool initialized;
 #if BX_PLUGINS
+    char *name;
 #if defined(WIN32)
     HINSTANCE handle;
 #else
     lt_dlhandle handle;
 #endif
+#else
+    const char *name;
 #endif
-    char *name;
+    plugintype_t type;
     plugin_init_t plugin_init;
     plugin_fini_t plugin_fini;
+    bool initialized;
+#if BX_PLUGINS
+    bool loaded;
 
     struct _plugin_t *next;
+#endif
 } plugin_t;
 
 

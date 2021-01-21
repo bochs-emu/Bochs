@@ -250,6 +250,27 @@ void bx_init_usb_options(const char *usb_name, const char *pname, int maxports)
   enabled->set_dependent_list(deplist);
 }
 
+void bx_plugin_ctrl_init()
+{
+  bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_PLUGIN_CTRL);
+#if !BX_PLUGINS
+  int i = 0;
+  while (strcmp(bx_builtin_plugins[i].name, "NULL")) {
+    if (bx_builtin_plugins[i].type == PLUGTYPE_OPTIONAL) {
+      new bx_param_bool_c(base, bx_builtin_plugins[i].name, "", "", 0);
+    }
+    i++;
+  }
+#else
+  const char *name;
+  int count = bx_get_plugins_count(PLUGTYPE_OPTIONAL);
+  for (int i = 0; i < count; i++) {
+    name = bx_get_plugin_name(PLUGTYPE_OPTIONAL, i);
+    new bx_param_bool_c(base, name, "", "", 0);
+  }
+#endif
+}
+
 void bx_plugin_ctrl_reset(bx_bool init_done)
 {
   bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_PLUGIN_CTRL);
@@ -259,18 +280,18 @@ void bx_plugin_ctrl_reset(bx_bool init_done)
     }
     SIM->opt_plugin_ctrl("*", 0);
   }
-  // add the default set of plugins to the list
-  new bx_param_bool_c(base, "unmapped", "", "", 1);
-  new bx_param_bool_c(base, "biosdev", "", "", 1);
-  new bx_param_bool_c(base, "speaker", "", "", 1);
-  new bx_param_bool_c(base, "extfpuirq", "", "", 1);
-  new bx_param_bool_c(base, "parallel", "", "", 1);
-  new bx_param_bool_c(base, "serial", "", "", 1);
+  // enable the default set of plugins to be loaded
+  SIM->get_param_bool("unmapped", base)->set(1);
+  SIM->get_param_bool("biosdev", base)->set(1);
+  SIM->get_param_bool("speaker", base)->set(1);
+  SIM->get_param_bool("extfpuirq", base)->set(1);
+  SIM->get_param_bool("parallel", base)->set(1);
+  SIM->get_param_bool("serial", base)->set(1);
 #if BX_SUPPORT_GAMEPORT
-  new bx_param_bool_c(base, "gameport", "", "", 1);
+  SIM->get_param_bool("gameport", base)->set(1);
 #endif
 #if BX_SUPPORT_IODEBUG && BX_DEBUGGER
-  new bx_param_bool_c(base, "iodebug", "", "", 1);
+  SIM->get_param_bool("iodebug", base)->set(1);
 #endif
   SIM->opt_plugin_ctrl("*", 1);
 }
@@ -364,6 +385,7 @@ void bx_init_options()
 
   // optional plugin control
   new bx_list_c(menu, "plugin_ctrl", "Optional Plugin Control");
+  bx_plugin_ctrl_init();
 
   // subtree for special menus
   bx_list_c *special_menus = new bx_list_c(root_param, "menu", "");

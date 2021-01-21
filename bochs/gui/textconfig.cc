@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2020  The Bochs Project
+//  Copyright (C) 2002-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -665,7 +665,8 @@ void bx_plugin_ctrl()
 {
   Bit32u choice;
   bx_list_c *plugin_ctrl;
-  int count;
+  bx_param_bool_c *plugin;
+  int i, count;
   char plugname[512];
 
   while (1) {
@@ -679,24 +680,38 @@ void bx_plugin_ctrl()
         bx_printf("\nNo optional plugins loaded\n");
       } else {
         bx_printf("\nCurrently loaded plugins:");
-        for (int i = 0; i < count; i++) {
-          if (i > 0) bx_printf(",");
-          bx_printf(" %s", plugin_ctrl->get(i)->get_name());
+        for (i = 0; i < count; i++) {
+          plugin = (bx_param_bool_c*)plugin_ctrl->get(i);
+          if (plugin->get()) {
+            if (i > 0) bx_printf(",");
+            bx_printf(" %s", plugin->get_name());
+          }
         }
         bx_printf("\n");
+        if (choice == 1) {
+          bx_printf("\nAdditionally available plugins:");
+          for (i = 0; i < count; i++) {
+            plugin = (bx_param_bool_c*)plugin_ctrl->get(i);
+            if (!plugin->get()) {
+              if (i > 0) bx_printf(",");
+              bx_printf(" %s", plugin->get_name());
+            }
+          }
+          bx_printf("\n");
+        }
       }
       if (choice == 1) {
         ask_string("\nEnter the name of the plugin to load.\nTo cancel, type 'none'. [%s] ", "none", plugname);
         if (strcmp(plugname, "none")) {
-          if (!SIM->opt_plugin_ctrl(plugname, 1)) {
-            bx_printf("\nPlugin already loaded.\n");
+          if (SIM->opt_plugin_ctrl(plugname, 1)) {
+            bx_printf("\nLoaded plugin '%s'.\n", plugname);
           }
         }
       } else {
         ask_string("\nEnter the name of the plugin to unload.\nTo cancel, type 'none'. [%s] ", "none", plugname);
         if (strcmp(plugname, "none")) {
-          if (!SIM->opt_plugin_ctrl(plugname, 0)) {
-            bx_printf("\nNo plugin unloaded.\n");
+          if (SIM->opt_plugin_ctrl(plugname, 0)) {
+            bx_printf("\nUnloaded plugin '%s'.\n", plugname);
           }
         }
       }

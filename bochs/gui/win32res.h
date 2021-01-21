@@ -27,8 +27,10 @@
 #define IDADVLOGOPT  1240
 #define IDAPPLY      1250
 #define PLUGIN_CTRL_DLG 1300
-#define IDPLUGLIST   1310
-#define IDEDIT       1320
+#define IDPLUGTXT1   1305
+#define IDPLUGLIST1  1310
+#define IDPLUGTXT2   1315
+#define IDPLUGLIST2  1320
 #define IDLOAD       1330
 #define IDUNLOAD     1340
 #define ASK_DLG     2000

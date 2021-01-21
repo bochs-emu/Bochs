@@ -368,6 +368,25 @@ void plugins_search(void)
   delete [] pgn_path;
 }
 
+bool plugin_is_optional_device(plugin_t *plugin)
+{
+  const char *core_plugins[] = {"cmos", "dma", "floppy", "pci", "pci2isa",
+                                "pic",  "pit", "svga_cirrus", "vga", NULL};
+  const char *std_plugins[] = {"acpi", "harddrv", "hpet", "ioapic", "keyboard",
+                               "pci_ide", NULL};
+  int i = 0;
+  while (core_plugins[i] != NULL) {
+    if (!strcmp(plugin->name, core_plugins[i])) return 0;
+    i++;
+  }
+  i = 0;
+  while (std_plugins[i] != NULL) {
+    if (!strcmp(plugin->name, std_plugins[i])) return 0;
+    i++;
+  }
+  return 1;
+}
+
 Bit8u bx_get_plugins_count(plugintype_t type)
 {
   plugin_t *temp;
@@ -377,7 +396,9 @@ Bit8u bx_get_plugins_count(plugintype_t type)
     temp = plugins;
 
     while (temp != NULL) {
-      if (type == temp->type)
+      if ((type == temp->type) ||
+          ((type == PLUGTYPE_OPTIONAL) && (temp->type == PLUGTYPE_DEV) &&
+           plugin_is_optional_device(temp)))
         count++;
       temp = temp->next;
     }
@@ -394,7 +415,9 @@ const char* bx_get_plugin_name(plugintype_t type, Bit8u index)
     temp = plugins;
 
     while (temp != NULL) {
-      if (type == temp->type) {
+      if ((type == temp->type) ||
+          ((type == PLUGTYPE_OPTIONAL) && (temp->type == PLUGTYPE_DEV) && 
+           plugin_is_optional_device(temp))) {
         if (count == index)
           return temp->name;
         count++;
@@ -423,7 +446,7 @@ bool plugin_init_one(plugin_t *plugin)
 }
 
 
-void plugin_unload(plugin_t *plugin)
+bool plugin_unload(plugin_t *plugin)
 {
   if (plugin->loaded) {
     if (plugin->initialized)
@@ -437,6 +460,9 @@ void plugin_unload(plugin_t *plugin)
       plugin->type = PLUGTYPE_DEV;
     }
     plugin->loaded = 0;
+    return 1;
+  } else {
+    return 0;
   }
 }
 
@@ -770,19 +796,22 @@ bool bx_load_plugin(const char *name, plugintype_t type)
   }
 }
 
-void bx_unload_plugin(const char *name, bx_bool devflag)
+bool bx_unload_plugin(const char *name, bx_bool devflag)
 {
   plugin_t *plugin;
+  bool ret = 0;
 
   for (plugin = plugins; plugin; plugin = plugin->next) {
     if (!strcmp(plugin->name, name)) {
+      BX_INFO(("bx_unload_plugin(): name = %s", plugin->name));
       if (devflag) {
         pluginUnregisterDeviceDevmodel(plugin->name);
       }
-      plugin_unload(plugin);
+      ret = plugin_unload(plugin);
       break;
     }
   }
+  return ret;
 }
 
 void bx_unload_plugin_type(const char *name, plugintype_t type)
@@ -968,14 +997,6 @@ void bx_plugins_after_restore_state()
 // Special code for loading gui, optional and sound plugins when plugin support
 // is turned off.
 
-typedef struct {
-  const char*   name;
-  plugintype_t  type;
-  plugin_init_t plugin_init;
-  plugin_fini_t plugin_fini;
-  bx_bool       status;
-} builtin_plugin_t;
-
 #define BUILTIN_GUI_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_GUI, lib##mod##_gui_plugin_init, lib##mod##_gui_plugin_fini, 0}
 #define BUILTIN_OPT_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_OPTIONAL, lib##mod##_LTX_plugin_init, lib##mod##_LTX_plugin_fini, 0}
 #define BUILTIN_SND_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_SND, lib##mod##_sound_plugin_init, lib##mod##_sound_plugin_fini, 0}
@@ -984,7 +1005,7 @@ typedef struct {
 #define BUILTIN_VGA_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_VGA, lib##mod##_LTX_plugin_init, lib##mod##_LTX_plugin_fini, 0}
 #define BUILTIN_IMG_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_IMG, lib##mod##_img_plugin_init, lib##mod##_img_plugin_fini, 0}
 
-static builtin_plugin_t builtin_plugins[] = {
+plugin_t bx_builtin_plugins[] = {
 #if BX_WITH_AMIGAOS
   BUILTIN_GUI_PLUGIN_ENTRY(amigaos),
 #endif
@@ -1132,40 +1153,40 @@ static builtin_plugin_t builtin_plugins[] = {
   {"NULL", PLUGTYPE_GUI, NULL, NULL, 0}
 };
 
-int bx_load_plugin2(const char *name, plugintype_t type)
+int bx_load_plugin_np(const char *name, plugintype_t type)
 {
   int i = 0;
-  while (strcmp(builtin_plugins[i].name, "NULL")) {
-    if ((!strcmp(name, builtin_plugins[i].name)) &&
-        (type == builtin_plugins[i].type)) {
-      if (builtin_plugins[i].status == 0) {
-        builtin_plugins[i].plugin_init(NULL, type);
-        builtin_plugins[i].status = 1;
+  while (strcmp(bx_builtin_plugins[i].name, "NULL")) {
+    if ((!strcmp(name, bx_builtin_plugins[i].name)) &&
+        (type == bx_builtin_plugins[i].type)) {
+      if (bx_builtin_plugins[i].initialized == 0) {
+        bx_builtin_plugins[i].plugin_init(NULL, type);
+        bx_builtin_plugins[i].initialized = 1;
       }
       return 1;
     }
     i++;
-  };
+  }
   return 0;
 }
 
 int bx_unload_opt_plugin(const char *name, bx_bool devflag)
 {
   int i = 0;
-  while (strcmp(builtin_plugins[i].name, "NULL")) {
-    if ((!strcmp(name, builtin_plugins[i].name)) &&
-        (builtin_plugins[i].type == PLUGTYPE_OPTIONAL)) {
-      if (builtin_plugins[i].status == 1) {
+  while (strcmp(bx_builtin_plugins[i].name, "NULL")) {
+    if ((!strcmp(name, bx_builtin_plugins[i].name)) &&
+        (bx_builtin_plugins[i].type == PLUGTYPE_OPTIONAL)) {
+      if (bx_builtin_plugins[i].initialized == 1) {
         if (devflag) {
-          pluginUnregisterDeviceDevmodel(builtin_plugins[i].name);
+          pluginUnregisterDeviceDevmodel(bx_builtin_plugins[i].name);
         }
-        builtin_plugins[i].plugin_fini();
-        builtin_plugins[i].status = 0;
+        bx_builtin_plugins[i].plugin_fini();
+        bx_builtin_plugins[i].initialized = 0;
       }
       return 1;
     }
     i++;
-  };
+  }
   return 0;
 }
 

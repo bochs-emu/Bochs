@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2003-2020  The Bochs Project
+//  Copyright (C) 2003-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -358,6 +358,7 @@ static BOOL CALLBACK PluginCtrlDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARA
   int count, i;
   long code;
   bx_list_c *plugin_ctrl;
+  bx_param_bool_c *plugin;
   char plugname[20], message[80];
 
   switch (msg) {
@@ -365,7 +366,12 @@ static BOOL CALLBACK PluginCtrlDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARA
       plugin_ctrl = (bx_list_c*) SIM->get_param(BXPN_PLUGIN_CTRL);
       count = plugin_ctrl->get_size();
       for (i = 0; i < count; i++) {
-        SendMessage(GetDlgItem(hDlg, IDPLUGLIST), LB_ADDSTRING, 0, (LPARAM)plugin_ctrl->get(i)->get_name());
+        plugin = (bx_param_bool_c*)plugin_ctrl->get(i);
+        if (plugin->get()) {
+          SendMessage(GetDlgItem(hDlg, IDPLUGLIST2), LB_ADDSTRING, 0, (LPARAM)plugin->get_name());
+        } else {
+          SendMessage(GetDlgItem(hDlg, IDPLUGLIST1), LB_ADDSTRING, 0, (LPARAM)plugin->get_name());
+        }
       }
       EnableWindow(GetDlgItem(hDlg, IDLOAD), FALSE);
       EnableWindow(GetDlgItem(hDlg, IDUNLOAD), FALSE);
@@ -376,32 +382,39 @@ static BOOL CALLBACK PluginCtrlDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARA
     case WM_COMMAND:
       code = HIWORD(wParam);
       switch (LOWORD(wParam)) {
-        case IDPLUGLIST:
+        case IDPLUGLIST1:
           if (code == LBN_SELCHANGE) {
+            SendMessage(GetDlgItem(hDlg, IDPLUGLIST2), LB_SETCURSEL, -1, 0);
+            EnableWindow(GetDlgItem(hDlg, IDLOAD), TRUE);
+            EnableWindow(GetDlgItem(hDlg, IDUNLOAD), FALSE);
+          }
+          break;
+        case IDPLUGLIST2:
+          if (code == LBN_SELCHANGE) {
+            SendMessage(GetDlgItem(hDlg, IDPLUGLIST1), LB_SETCURSEL, -1, 0);
+            EnableWindow(GetDlgItem(hDlg, IDLOAD), FALSE);
             EnableWindow(GetDlgItem(hDlg, IDUNLOAD), TRUE);
           }
           break;
-        case IDEDIT:
-          if (code == EN_CHANGE) {
-            i = GetWindowTextLength(GetDlgItem(hDlg, IDEDIT));
-            EnableWindow(GetDlgItem(hDlg, IDLOAD), i > 0);
-          }
-          break;
         case IDLOAD:
-          GetDlgItemText(hDlg, IDEDIT, plugname, 18);
+          i = SendMessage(GetDlgItem(hDlg, IDPLUGLIST1), LB_GETCURSEL, 0, 0);
+          SendMessage(GetDlgItem(hDlg, IDPLUGLIST1), LB_GETTEXT, i, (LPARAM)plugname);
           if (SIM->opt_plugin_ctrl(plugname, 1)) {
             wsprintf(message, "Plugin '%s' loaded", plugname);
             MessageBox(hDlg, message, "Plugin Control", MB_ICONINFORMATION);
-            SendMessage(GetDlgItem(hDlg, IDPLUGLIST), LB_ADDSTRING, 0, (LPARAM)plugname);
+            SendMessage(GetDlgItem(hDlg, IDPLUGLIST1), LB_DELETESTRING, i, 0);
+            SendMessage(GetDlgItem(hDlg, IDPLUGLIST2), LB_ADDSTRING, 0, (LPARAM)plugname);
+            EnableWindow(GetDlgItem(hDlg, IDLOAD), FALSE);
           }
           break;
         case IDUNLOAD:
-          i = SendMessage(GetDlgItem(hDlg, IDPLUGLIST), LB_GETCURSEL, 0, 0);
-          SendMessage(GetDlgItem(hDlg, IDPLUGLIST), LB_GETTEXT, i, (LPARAM)plugname);
+          i = SendMessage(GetDlgItem(hDlg, IDPLUGLIST2), LB_GETCURSEL, 0, 0);
+          SendMessage(GetDlgItem(hDlg, IDPLUGLIST2), LB_GETTEXT, i, (LPARAM)plugname);
           if (SIM->opt_plugin_ctrl(plugname, 0)) {
             wsprintf(message, "Plugin '%s' unloaded", plugname);
             MessageBox(hDlg, message, "Plugin Control", MB_ICONINFORMATION);
-            SendMessage(GetDlgItem(hDlg, IDPLUGLIST), LB_DELETESTRING, i, 0);
+            SendMessage(GetDlgItem(hDlg, IDPLUGLIST1), LB_ADDSTRING, 0, (LPARAM)plugname);
+            SendMessage(GetDlgItem(hDlg, IDPLUGLIST2), LB_DELETESTRING, i, 0);
             EnableWindow(GetDlgItem(hDlg, IDUNLOAD), FALSE);
           }
           break;

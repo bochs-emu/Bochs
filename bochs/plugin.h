@@ -114,11 +114,11 @@ extern "C" {
 // When plugins are off, PLUG_load_plugin will call the plugin_init function
 // directly.
 #define PLUG_load_plugin(name,type) {lib##name##_LTX_plugin_init(NULL,type);}
-#define PLUG_load_gui_plugin(name) bx_load_plugin2(name,PLUGTYPE_GUI)
-#define PLUG_load_opt_plugin(name) bx_load_plugin2(name,PLUGTYPE_OPTIONAL)
-#define PLUG_load_vga_plugin(name) bx_load_plugin2(name,PLUGTYPE_VGA)
+#define PLUG_load_gui_plugin(name) bx_load_plugin_np(name,PLUGTYPE_GUI)
+#define PLUG_load_opt_plugin(name) bx_load_plugin_np(name,PLUGTYPE_OPTIONAL)
+#define PLUG_load_vga_plugin(name) bx_load_plugin_np(name,PLUGTYPE_VGA)
 #define PLUG_unload_plugin(name) {lib##name##_LTX_plugin_fini();}
-#define PLUG_unload_opt_plugin(name) bx_unload_opt_plugin(name,1);
+#define PLUG_unload_opt_plugin(name) bx_unload_opt_plugin(name,1)
 
 #define DEV_register_ioread_handler(b,c,d,e,f) bx_devices.register_io_read_handler(b,c,d,e,f)
 #define DEV_register_iowrite_handler(b,c,d,e,f) bx_devices.register_io_write_handler(b,c,d,e,f)
@@ -339,7 +339,7 @@ Bit8u bx_get_plugins_count(plugintype_t type);
 const char* bx_get_plugin_name(plugintype_t type, Bit8u index);
 #endif
 bool bx_load_plugin(const char *name, plugintype_t type);
-extern void bx_unload_plugin(const char *name, bx_bool devflag);
+bool bx_unload_plugin(const char *name, bx_bool devflag);
 extern void bx_unload_plugin_type(const char *name, plugintype_t type);
 extern void bx_init_plugins(void);
 extern void bx_reset_plugins(unsigned);
@@ -349,7 +349,9 @@ extern void bx_plugins_register_state(void);
 extern void bx_plugins_after_restore_state(void);
 
 #if !BX_PLUGINS
-int bx_load_plugin2(const char *name, plugintype_t type);
+extern plugin_t bx_builtin_plugins[];
+
+int bx_load_plugin_np(const char *name, plugintype_t type);
 int bx_unload_opt_plugin(const char *name, bx_bool devflag);
 #endif
 

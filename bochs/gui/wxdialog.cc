@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2020  The Bochs Project
+//  Copyright (C) 2002-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -450,23 +450,30 @@ PluginControlDialog::PluginControlDialog(
   SetTitle(wxT("Optional Plugin Control"));
   vertSizer = new wxBoxSizer(wxVERTICAL);
   horzSizer = new wxBoxSizer(wxHORIZONTAL);
-  listSizer = new wxBoxSizer(wxVERTICAL);
-  editSizer = new wxBoxSizer(wxVERTICAL);
+  leftSizer = new wxBoxSizer(wxVERTICAL);
+  centerSizer = new wxBoxSizer(wxVERTICAL);
+  rightSizer = new wxBoxSizer(wxVERTICAL);
   buttonSizer = new wxBoxSizer(wxHORIZONTAL);
-  horzSizer->Add(listSizer, 0, wxALIGN_LEFT);
-  horzSizer->Add(editSizer, 0, wxALIGN_RIGHT);
-  vertSizer->Add(horzSizer, 0, wxALIGN_LEFT);
+  horzSizer->Add(leftSizer, 0, wxALIGN_LEFT);
+  horzSizer->Add(centerSizer, 0, wxALIGN_CENTER);
+  horzSizer->Add(rightSizer, 0, wxALIGN_RIGHT);
+  vertSizer->Add(horzSizer, 0, wxALIGN_CENTER);
   vertSizer->Add(buttonSizer, 0, wxALIGN_CENTER);
-  // listSizer contents
-  pluglist = new wxListBox(this, ID_PluginList);
-  listSizer->Add(pluglist, 0, wxALL, 10);
-  // editSizer contents
-  plugname = new wxTextCtrl(this, ID_PluginName, wxT(""), wxDefaultPosition, wxSize(120, -1));
-  editSizer->Add(plugname, 0, wxALL, 10);
-  btn_load = new wxButton(this, ID_Load, wxT("Load"));
-  editSizer->Add(btn_load, 0, wxALL | wxALIGN_RIGHT, 5);
-  btn_unload = new wxButton(this, ID_Unload, wxT("Unload"));
-  editSizer->Add(btn_unload, 0, wxALL | wxALIGN_RIGHT, 5);
+  // leftSizer contents
+  plugtxt1 = new wxStaticText(this, -1, wxT("Available"));
+  pluglist1 = new wxListBox(this, ID_PluginList1, wxDefaultPosition, wxSize(120, 200));
+  leftSizer->Add(plugtxt1, 0, wxALL | wxALIGN_CENTER, 10);
+  leftSizer->Add(pluglist1, 0, wxALL, 10);
+  // rightSizer contents
+  plugtxt2 = new wxStaticText(this, -1, wxT("Loaded"));
+  pluglist2 = new wxListBox(this, ID_PluginList2, wxDefaultPosition, wxSize(120, 200));
+  rightSizer->Add(plugtxt2, 0, wxALL | wxALIGN_CENTER, 10);
+  rightSizer->Add(pluglist2, 0, wxALL, 10);
+  // centerSizer contents
+  btn_load = new wxButton(this, ID_Load, wxT(">> Load >>"));
+  centerSizer->Add(btn_load, 0, wxALL | wxALIGN_RIGHT, 5);
+  btn_unload = new wxButton(this, ID_Unload, wxT("<< Unload <<"));
+  centerSizer->Add(btn_unload, 0, wxALL | wxALIGN_RIGHT, 5);
   // buttonSizer contents
   wxButton *btn = new wxButton(this, wxID_HELP, BTNLABEL_HELP);
   buttonSizer->Add(btn, 0, wxALL, 5);
@@ -475,9 +482,14 @@ PluginControlDialog::PluginControlDialog(
   // make sure all plugins are loaded and add them to the listbox
   SIM->opt_plugin_ctrl("*", 1);
   bx_list_c *plugin_ctrl = (bx_list_c*) SIM->get_param(BXPN_PLUGIN_CTRL);
+  int a = 0, b = 0;
   for (int i = 0; i < plugin_ctrl->get_size(); i++) {
     bx_param_bool_c *plugin = (bx_param_bool_c*)plugin_ctrl->get(i);
-    pluglist->Insert(wxString(plugin->get_name(), wxConvUTF8), i);
+    if (plugin->get()) {
+      pluglist2->Insert(wxString(plugin->get_name(), wxConvUTF8), a++);
+    } else {
+      pluglist1->Insert(wxString(plugin->get_name(), wxConvUTF8), b++);
+    }
   }
   btn_load->Enable(0);
   btn_unload->Enable(0);
@@ -496,41 +508,52 @@ void PluginControlDialog::Init()
 void PluginControlDialog::OnEvent(wxCommandEvent& event)
 {
   char buf[1024];
+  int i;
 
   int id = event.GetId();
   switch (id) {
-    case ID_PluginList:
+    case ID_PluginList1:
       if (event.GetEventType() == wxEVT_COMMAND_LISTBOX_SELECTED) {
-        btn_unload->Enable(1);
+        pluglist2->SetSelection(-1);
+        btn_load->Enable(1);
+        btn_unload->Enable(0);
       }
       break;
-    case ID_PluginName:
-      if (event.GetEventType() == wxEVT_COMMAND_TEXT_UPDATED) {
-        btn_load->Enable(!plugname->IsEmpty());
+    case ID_PluginList2:
+      if (event.GetEventType() == wxEVT_COMMAND_LISTBOX_SELECTED) {
+        pluglist1->SetSelection(-1);
+        btn_load->Enable(0);
+        btn_unload->Enable(1);
       }
       break;
     case ID_Load:
       {
-        wxString tmpname(plugname->GetValue());
+        i = pluglist1->GetSelection();
+        wxString tmpname = pluglist1->GetString(i);
         strncpy(buf, tmpname.mb_str(wxConvUTF8), sizeof(buf) - 1);
         buf[sizeof(buf) - 1] = '\0';
         if (SIM->opt_plugin_ctrl(buf, 1)) {
           tmpname.Printf(wxT("Plugin '%s' loaded"), buf);
           wxMessageBox(tmpname, wxT("Plugin Control"), wxOK | wxICON_INFORMATION, this);
-          pluglist->Insert(wxString(buf, wxConvUTF8), pluglist->GetCount());
+          pluglist1->Delete(i);
+          pluglist2->Insert(wxString(buf, wxConvUTF8), pluglist2->GetCount());
+          pluglist1->SetSelection(-1);
+          btn_load->Enable(0);
         }
       }
       break;
     case ID_Unload:
       {
-        int i = pluglist->GetSelection();
-        wxString tmpname = pluglist->GetString(i);
+        i = pluglist2->GetSelection();
+        wxString tmpname = pluglist2->GetString(i);
         strncpy(buf, tmpname.mb_str(wxConvUTF8), sizeof(buf) - 1);
         buf[sizeof(buf) - 1] = '\0';
         if (SIM->opt_plugin_ctrl(buf, 0)) {
           tmpname.Printf(wxT("Plugin '%s' unloaded"), buf);
           wxMessageBox(tmpname, wxT("Plugin Control"), wxOK | wxICON_INFORMATION, this);
-          pluglist->Delete(i);
+          pluglist1->Insert(wxString(buf, wxConvUTF8), pluglist1->GetCount());
+          pluglist2->Delete(i);
+          pluglist2->SetSelection(-1);
           btn_unload->Enable(0);
         }
       }

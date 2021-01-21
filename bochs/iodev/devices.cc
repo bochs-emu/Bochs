@@ -225,7 +225,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
         (chipset == BX_PCI_CHIPSET_I440BX)) {
       // UHCI is a part of the PIIX3/PIIX4, so load / enable it
       if (!PLUG_device_present("usb_uhci")) {
-        PLUG_load_plugin(usb_uhci, PLUGTYPE_OPTIONAL);
+        SIM->opt_plugin_ctrl("usb_uhci", 1);
       }
       SIM->get_param_bool(BXPN_UHCI_ENABLED)->set(1);
     }
@@ -265,7 +265,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 #if BX_SUPPORT_BUSMOUSE
   if ((mouse_type == BX_MOUSE_TYPE_INPORT) ||
       (mouse_type == BX_MOUSE_TYPE_BUS)) {
-    PLUG_load_plugin(busmouse, PLUGTYPE_OPTIONAL);
+    SIM->opt_plugin_ctrl("busmouse", 1);
   }
 #endif
   if (is_harddrv_enabled()) {

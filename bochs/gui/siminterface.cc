@@ -1452,31 +1452,33 @@ bool bx_real_sim_c::opt_plugin_ctrl(const char *plugname, bx_bool load)
       bx_param_bool_c *plugin = (bx_param_bool_c*)plugin_ctrl->get(i);
       if (load == (bx_bool)plugin->get()) {
         opt_plugin_ctrl(plugin->get_name(), load);
-        if (load) i++;
-      } else {
-        i++;
       }
+      i++;
     }
     return 1;
+  }
+  if (plugin_ctrl->get_by_name(plugname) == NULL) {
+    BX_PANIC(("Plugin '%s' not found", plugname));
+    return 0;
   }
   if (load != PLUG_device_present(plugname)) {
     if (load) {
       if (PLUG_load_opt_plugin(plugname)) {
-        if (plugin_ctrl->get_by_name(plugname) == NULL) {
-          new bx_param_bool_c(plugin_ctrl, plugname, "", "", 1);
-        }
+        SIM->get_param_bool(plugname, plugin_ctrl)->set(1);
         return 1;
       } else {
         // plugin load code panics in this case
         return 0;
       }
     } else {
-      PLUG_unload_opt_plugin(plugname);
-      plugin_ctrl->remove(plugname);
-      return 1;
+      if (PLUG_unload_opt_plugin(plugname)) {
+        SIM->get_param_bool(plugname, plugin_ctrl)->set(0);
+        return 1;
+      } else {
+        // plugin load code panics in this case
+        return 0;
+      }
     }
-  } else if (!load && !PLUG_device_present(plugname)) {
-    plugin_ctrl->remove(plugname);
   }
   return 0;
 }

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2020  The Bochs Project
+//  Copyright (C) 2002-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -108,8 +108,8 @@ enum
   // advanced log options
   ID_ApplyDefault,
   // dialog box: PluginControlDialog
-  ID_PluginList,
-  ID_PluginName,
+  ID_PluginList1,
+  ID_PluginList2,
   ID_Load,
   ID_Unload,
   // that's all
