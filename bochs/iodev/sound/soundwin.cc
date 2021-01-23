@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2017  The Bochs Project
+//  Copyright (C) 2001-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -51,17 +51,12 @@
 HANDLE DataHandle;     // returned by GlobalAlloc()
 Bit8u *DataPointer;    // returned by GlobalLock()
 
-// sound driver plugin entry points
+// sound driver plugin entry point
 
-int CDECL libwin_sound_plugin_init(plugin_t *plugin, plugintype_t type)
+PLUGIN_ENTRY_FOR_SOUND_MODULE(win)
 {
   // Nothing here yet
   return 0; // Success
-}
-
-void CDECL libwin_sound_plugin_fini(void)
-{
-  // Nothing here yet
 }
 
 // helper function

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2006-2020  The Bochs Project
+//  Copyright (C) 2006-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -66,18 +66,17 @@ const Bit8u acpi_sm_iomask[16] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 0, 2, 0, 0, 0
 
 extern void apic_bus_deliver_smi(void);
 
-int CDECL libacpi_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
+PLUGIN_ENTRY_FOR_MODULE(acpi)
 {
-  theACPIController = new bx_acpi_ctrl_c();
-  bx_devices.pluginACPIController = theACPIController;
-  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theACPIController, BX_PLUGIN_ACPI);
+  if (init) {
+    theACPIController = new bx_acpi_ctrl_c();
+    bx_devices.pluginACPIController = theACPIController;
+    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theACPIController, BX_PLUGIN_ACPI);
+  } else {
+    bx_devices.pluginACPIController = &bx_devices.stubACPIController;
+    delete theACPIController;
+  }
   return 0; // Success
-}
-
-void CDECL libacpi_LTX_plugin_fini(void)
-{
-  bx_devices.pluginACPIController = &bx_devices.stubACPIController;
-  delete theACPIController;
 }
 
 /* ported from QEMU: compute with 96 bit intermediate result: (a*b)/c */

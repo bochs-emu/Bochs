@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2017  The Bochs Project
+//  Copyright (C) 2001-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -35,18 +35,17 @@
 
 bx_iodebug_c *theIODebugDevice = NULL;
 
-int CDECL libiodebug_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
+PLUGIN_ENTRY_FOR_MODULE(iodebug)
 {
-  theIODebugDevice = new bx_iodebug_c();
-  bx_devices.pluginIODebug = theIODebugDevice;
-  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theIODebugDevice, BX_PLUGIN_IODEBUG);
+  if (init) {
+    theIODebugDevice = new bx_iodebug_c();
+    bx_devices.pluginIODebug = theIODebugDevice;
+    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theIODebugDevice, BX_PLUGIN_IODEBUG);
+  } else {
+    bx_devices.pluginIODebug = &bx_devices.stubIODebug;
+    delete theIODebugDevice;
+  }
   return(0); // Success
-}
-
-void CDECL libiodebug_LTX_plugin_fini(void)
-{
-  bx_devices.pluginIODebug = &bx_devices.stubIODebug;
-  delete theIODebugDevice;
 }
 
 struct bx_iodebug_s_type {

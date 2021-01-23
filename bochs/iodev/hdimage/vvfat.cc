@@ -6,7 +6,7 @@
 // ported from QEMU block driver with some additions (see below)
 //
 // Copyright (c) 2004,2005  Johannes E. Schindelin
-// Copyright (C) 2010-2020  The Bochs Project
+// Copyright (C) 2010-2021  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -59,16 +59,11 @@
 #define VVFAT_BOOT "vvfat_boot.bin"
 #define VVFAT_ATTR "vvfat_attr.cfg"
 
-// disk image plugin entry points
+// disk image plugin entry point
 
-int CDECL libvvfat_img_plugin_init(plugin_t *plugin, plugintype_t type)
+PLUGIN_ENTRY_FOR_IMG_MODULE(vvfat)
 {
   return 0; // Success
-}
-
-void CDECL libvvfat_img_plugin_fini(void)
-{
-  // Nothing here yet
 }
 
 //

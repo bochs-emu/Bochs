@@ -5,7 +5,7 @@
 //  Copyright (c) 2004 Makoto Suzuki (suzu)
 //                     Volker Ruppert (vruppert)
 //                     Robin Kay (komadori)
-//  Copyright (C) 2004-2020  The Bochs Project
+//  Copyright (C) 2004-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -212,21 +212,20 @@
 
 static bx_svga_cirrus_c *theSvga = NULL;
 
-int CDECL libsvga_cirrus_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
+PLUGIN_ENTRY_FOR_MODULE(svga_cirrus)
 {
-  if (type == PLUGTYPE_CORE) {
-    theSvga = new bx_svga_cirrus_c();
-    bx_devices.pluginVgaDevice = theSvga;
-    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theSvga, BX_PLUGIN_CIRRUS);
-    return 0; // Success
+  if (init) {
+    if (type == PLUGTYPE_CORE) {
+      theSvga = new bx_svga_cirrus_c();
+      bx_devices.pluginVgaDevice = theSvga;
+      BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theSvga, BX_PLUGIN_CIRRUS);
+    } else {
+      return -1;
+    }
   } else {
-    return -1;
+    delete theSvga;
   }
-}
-
-void CDECL libsvga_cirrus_LTX_plugin_fini(void)
-{
-  delete theSvga;
+  return 0; // Success
 }
 
 bx_svga_cirrus_c::bx_svga_cirrus_c() : bx_vgacore_c()

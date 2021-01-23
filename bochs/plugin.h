@@ -111,13 +111,13 @@ extern "C" {
 
 #else
 
-// When plugins are off, PLUG_load_plugin will call the plugin_init function
+// When plugins are off, PLUG_load_plugin will call the plugin_entry function
 // directly.
-#define PLUG_load_plugin(name,type) {lib##name##_LTX_plugin_init(NULL,type);}
+#define PLUG_load_plugin(name,type) {lib##name##_LTX_plugin_entry(NULL,type,1);}
 #define PLUG_load_gui_plugin(name) bx_load_plugin_np(name,PLUGTYPE_GUI)
 #define PLUG_load_opt_plugin(name) bx_load_plugin_np(name,PLUGTYPE_OPTIONAL)
 #define PLUG_load_vga_plugin(name) bx_load_plugin_np(name,PLUGTYPE_VGA)
-#define PLUG_unload_plugin(name) {lib##name##_LTX_plugin_fini();}
+#define PLUG_unload_plugin(name) {lib##name##_LTX_plugin_entry(NULL,type,0);}
 #define PLUG_unload_opt_plugin(name) bx_unload_opt_plugin(name,1)
 
 #define DEV_register_ioread_handler(b,c,d,e,f) bx_devices.register_io_read_handler(b,c,d,e,f)
@@ -355,134 +355,121 @@ int bx_load_plugin_np(const char *name, plugintype_t type);
 int bx_unload_opt_plugin(const char *name, bx_bool devflag);
 #endif
 
-// every plugin must define these, within the extern"C" block, so that
+// every plugin must define this, within the extern"C" block, so that
 // a non-mangled function symbol is available in the shared library.
-void plugin_fini(void);
-int plugin_init(plugin_t *plugin, plugintype_t type);
+int plugin_entry(plugin_t *plugin, plugintype_t type, bool init);
 
 // still in extern "C"
 #if BX_PLUGINS && defined(_MSC_VER)
-#define DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(mod) \
-  extern "C" __declspec(dllexport) int __cdecl lib##mod##_LTX_plugin_init(plugin_t *plugin, plugintype_t type); \
-  extern "C" __declspec(dllexport) void __cdecl lib##mod##_LTX_plugin_fini(void);
-#define DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(mod) \
-  extern "C" __declspec(dllexport) int __cdecl lib##mod##_gui_plugin_init(plugin_t *plugin, plugintype_t type); \
-  extern "C" __declspec(dllexport) void __cdecl lib##mod##_gui_plugin_fini(void);
-#define DECLARE_PLUGIN_INIT_FINI_FOR_SOUND_MODULE(mod) \
-  extern "C" __declspec(dllexport) int __cdecl lib##mod##_sound_plugin_init(plugin_t *plugin, plugintype_t type); \
-  extern "C" __declspec(dllexport) void __cdecl lib##mod##_sound_plugin_fini(void);
-#define DECLARE_PLUGIN_INIT_FINI_FOR_NET_MODULE(mod) \
-  extern "C" __declspec(dllexport) int __cdecl lib##mod##_net_plugin_init(plugin_t *plugin, plugintype_t type); \
-  extern "C" __declspec(dllexport) void __cdecl lib##mod##_net_plugin_fini(void);
-#define DECLARE_PLUGIN_INIT_FINI_FOR_USB_MODULE(mod) \
-  extern "C" __declspec(dllexport) int __cdecl lib##mod##_dev_plugin_init(plugin_t *plugin, plugintype_t type); \
-  extern "C" __declspec(dllexport) void __cdecl lib##mod##_dev_plugin_fini(void);
-#define DECLARE_PLUGIN_INIT_FINI_FOR_IMG_MODULE(mod) \
-  extern "C" __declspec(dllexport) int __cdecl lib##mod##_img_plugin_init(plugin_t *plugin, plugintype_t type); \
-  extern "C" __declspec(dllexport) void __cdecl lib##mod##_img_plugin_fini(void);
+#define PLUGIN_ENTRY_FOR_MODULE(mod) \
+  extern "C" __declspec(dllexport) int __cdecl lib##mod##_LTX_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+#define PLUGIN_ENTRY_FOR_GUI_MODULE(mod) \
+  extern "C" __declspec(dllexport) int __cdecl lib##mod##_gui_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+#define PLUGIN_ENTRY_FOR_SOUND_MODULE(mod) \
+  extern "C" __declspec(dllexport) int __cdecl lib##mod##_sound_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+#define PLUGIN_ENTRY_FOR_NET_MODULE(mod) \
+  extern "C" __declspec(dllexport) int __cdecl lib##mod##_net_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+#define PLUGIN_ENTRY_FOR_USB_MODULE(mod) \
+  extern "C" __declspec(dllexport) int __cdecl lib##mod##_dev_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+#define PLUGIN_ENTRY_FOR_IMG_MODULE(mod) \
+  extern "C" __declspec(dllexport) int __cdecl lib##mod##_img_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
 #else
-#define DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(mod) \
-  int CDECL lib##mod##_LTX_plugin_init(plugin_t *plugin, plugintype_t type); \
-  void CDECL lib##mod##_LTX_plugin_fini(void);
-#define DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(mod) \
-  int CDECL lib##mod##_gui_plugin_init(plugin_t *plugin, plugintype_t type); \
-  void CDECL lib##mod##_gui_plugin_fini(void);
-#define DECLARE_PLUGIN_INIT_FINI_FOR_SOUND_MODULE(mod) \
-  int CDECL lib##mod##_sound_plugin_init(plugin_t *plugin, plugintype_t type); \
-  void CDECL lib##mod##_sound_plugin_fini(void);
-#define DECLARE_PLUGIN_INIT_FINI_FOR_NET_MODULE(mod) \
-  int CDECL lib##mod##_net_plugin_init(plugin_t *plugin, plugintype_t type); \
-  void CDECL lib##mod##_net_plugin_fini(void);
-#define DECLARE_PLUGIN_INIT_FINI_FOR_USB_MODULE(mod) \
-  int CDECL lib##mod##_dev_plugin_init(plugin_t *plugin, plugintype_t type); \
-  void CDECL lib##mod##_dev_plugin_fini(void);
-#define DECLARE_PLUGIN_INIT_FINI_FOR_IMG_MODULE(mod) \
-  int CDECL lib##mod##_img_plugin_init(plugin_t *plugin, plugintype_t type); \
-  void CDECL lib##mod##_img_plugin_fini(void);
+#define PLUGIN_ENTRY_FOR_MODULE(mod) \
+  int CDECL lib##mod##_LTX_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+#define PLUGIN_ENTRY_FOR_GUI_MODULE(mod) \
+  int CDECL lib##mod##_gui_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+#define PLUGIN_ENTRY_FOR_SOUND_MODULE(mod) \
+  int CDECL lib##mod##_sound_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+#define PLUGIN_ENTRY_FOR_NET_MODULE(mod) \
+  int CDECL lib##mod##_net_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+#define PLUGIN_ENTRY_FOR_USB_MODULE(mod) \
+  int CDECL lib##mod##_dev_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+#define PLUGIN_ENTRY_FOR_IMG_MODULE(mod) \
+  int CDECL lib##mod##_img_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
 #endif
 
 // device plugins
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(harddrv)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(keyboard)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(busmouse)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(serial)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(unmapped)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(biosdev)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(cmos)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(dma)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pic)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pit)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(vga)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(svga_cirrus)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(floppy)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(parallel)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pci)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pci2isa)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pci_ide)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pcidev)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(usb_uhci)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(usb_ohci)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(usb_ehci)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(usb_xhci)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(sb16)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(es1370)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(netmod)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(ne2k)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(pcipnic)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(e1000)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(extfpuirq)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(gameport)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(speaker)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(acpi)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(iodebug)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(ioapic)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(hpet)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(voodoo)
-DECLARE_PLUGIN_INIT_FINI_FOR_MODULE(user)
+PLUGIN_ENTRY_FOR_MODULE(harddrv);
+PLUGIN_ENTRY_FOR_MODULE(keyboard);
+PLUGIN_ENTRY_FOR_MODULE(busmouse);
+PLUGIN_ENTRY_FOR_MODULE(serial);
+PLUGIN_ENTRY_FOR_MODULE(unmapped);
+PLUGIN_ENTRY_FOR_MODULE(biosdev);
+PLUGIN_ENTRY_FOR_MODULE(cmos);
+PLUGIN_ENTRY_FOR_MODULE(dma);
+PLUGIN_ENTRY_FOR_MODULE(pic);
+PLUGIN_ENTRY_FOR_MODULE(pit);
+PLUGIN_ENTRY_FOR_MODULE(vga);
+PLUGIN_ENTRY_FOR_MODULE(svga_cirrus);
+PLUGIN_ENTRY_FOR_MODULE(floppy);
+PLUGIN_ENTRY_FOR_MODULE(parallel);
+PLUGIN_ENTRY_FOR_MODULE(pci);
+PLUGIN_ENTRY_FOR_MODULE(pci2isa);
+PLUGIN_ENTRY_FOR_MODULE(pci_ide);
+PLUGIN_ENTRY_FOR_MODULE(pcidev);
+PLUGIN_ENTRY_FOR_MODULE(usb_uhci);
+PLUGIN_ENTRY_FOR_MODULE(usb_ohci);
+PLUGIN_ENTRY_FOR_MODULE(usb_ehci);
+PLUGIN_ENTRY_FOR_MODULE(usb_xhci);
+PLUGIN_ENTRY_FOR_MODULE(sb16);
+PLUGIN_ENTRY_FOR_MODULE(es1370);
+PLUGIN_ENTRY_FOR_MODULE(netmod);
+PLUGIN_ENTRY_FOR_MODULE(ne2k);
+PLUGIN_ENTRY_FOR_MODULE(pcipnic);
+PLUGIN_ENTRY_FOR_MODULE(e1000);
+PLUGIN_ENTRY_FOR_MODULE(extfpuirq);
+PLUGIN_ENTRY_FOR_MODULE(gameport);
+PLUGIN_ENTRY_FOR_MODULE(speaker);
+PLUGIN_ENTRY_FOR_MODULE(acpi);
+PLUGIN_ENTRY_FOR_MODULE(iodebug);
+PLUGIN_ENTRY_FOR_MODULE(ioapic);
+PLUGIN_ENTRY_FOR_MODULE(hpet);
+PLUGIN_ENTRY_FOR_MODULE(voodoo);
+PLUGIN_ENTRY_FOR_MODULE(user);
 // gui plugins
-DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(amigaos)
-DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(carbon)
-DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(macintosh)
-DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(nogui)
-DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(rfb)
-DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(sdl)
-DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(sdl2)
-DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(term)
-DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(vncsrv)
-DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(win32)
-DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(wx)
-DECLARE_PLUGIN_INIT_FINI_FOR_GUI_MODULE(x)
+PLUGIN_ENTRY_FOR_GUI_MODULE(amigaos);
+PLUGIN_ENTRY_FOR_GUI_MODULE(carbon);
+PLUGIN_ENTRY_FOR_GUI_MODULE(macintosh);
+PLUGIN_ENTRY_FOR_GUI_MODULE(nogui);
+PLUGIN_ENTRY_FOR_GUI_MODULE(rfb);
+PLUGIN_ENTRY_FOR_GUI_MODULE(sdl);
+PLUGIN_ENTRY_FOR_GUI_MODULE(sdl2);
+PLUGIN_ENTRY_FOR_GUI_MODULE(term);
+PLUGIN_ENTRY_FOR_GUI_MODULE(vncsrv);
+PLUGIN_ENTRY_FOR_GUI_MODULE(win32);
+PLUGIN_ENTRY_FOR_GUI_MODULE(wx);
+PLUGIN_ENTRY_FOR_GUI_MODULE(x);
 // sound driver plugins
-DECLARE_PLUGIN_INIT_FINI_FOR_SOUND_MODULE(alsa)
-DECLARE_PLUGIN_INIT_FINI_FOR_SOUND_MODULE(dummy)
-DECLARE_PLUGIN_INIT_FINI_FOR_SOUND_MODULE(file)
-DECLARE_PLUGIN_INIT_FINI_FOR_SOUND_MODULE(oss)
-DECLARE_PLUGIN_INIT_FINI_FOR_SOUND_MODULE(osx)
-DECLARE_PLUGIN_INIT_FINI_FOR_SOUND_MODULE(sdl)
-DECLARE_PLUGIN_INIT_FINI_FOR_SOUND_MODULE(win)
+PLUGIN_ENTRY_FOR_SOUND_MODULE(alsa);
+PLUGIN_ENTRY_FOR_SOUND_MODULE(dummy);
+PLUGIN_ENTRY_FOR_SOUND_MODULE(file);
+PLUGIN_ENTRY_FOR_SOUND_MODULE(oss);
+PLUGIN_ENTRY_FOR_SOUND_MODULE(osx);
+PLUGIN_ENTRY_FOR_SOUND_MODULE(sdl);
+PLUGIN_ENTRY_FOR_SOUND_MODULE(win);
 // network driver plugins
-DECLARE_PLUGIN_INIT_FINI_FOR_NET_MODULE(fbsd)
-DECLARE_PLUGIN_INIT_FINI_FOR_NET_MODULE(linux)
-DECLARE_PLUGIN_INIT_FINI_FOR_NET_MODULE(null)
-DECLARE_PLUGIN_INIT_FINI_FOR_NET_MODULE(slirp)
-DECLARE_PLUGIN_INIT_FINI_FOR_NET_MODULE(socket)
-DECLARE_PLUGIN_INIT_FINI_FOR_NET_MODULE(tap)
-DECLARE_PLUGIN_INIT_FINI_FOR_NET_MODULE(tuntap)
-DECLARE_PLUGIN_INIT_FINI_FOR_NET_MODULE(vde)
-DECLARE_PLUGIN_INIT_FINI_FOR_NET_MODULE(vnet)
-DECLARE_PLUGIN_INIT_FINI_FOR_NET_MODULE(win32)
+PLUGIN_ENTRY_FOR_NET_MODULE(fbsd);
+PLUGIN_ENTRY_FOR_NET_MODULE(linux);
+PLUGIN_ENTRY_FOR_NET_MODULE(null);
+PLUGIN_ENTRY_FOR_NET_MODULE(slirp);
+PLUGIN_ENTRY_FOR_NET_MODULE(socket);
+PLUGIN_ENTRY_FOR_NET_MODULE(tap);
+PLUGIN_ENTRY_FOR_NET_MODULE(tuntap);
+PLUGIN_ENTRY_FOR_NET_MODULE(vde);
+PLUGIN_ENTRY_FOR_NET_MODULE(vnet);
+PLUGIN_ENTRY_FOR_NET_MODULE(win32);
 // USB device plugins
-DECLARE_PLUGIN_INIT_FINI_FOR_USB_MODULE(usb_cbi)
-DECLARE_PLUGIN_INIT_FINI_FOR_USB_MODULE(usb_hid)
-DECLARE_PLUGIN_INIT_FINI_FOR_USB_MODULE(usb_hub)
-DECLARE_PLUGIN_INIT_FINI_FOR_USB_MODULE(usb_msd)
-DECLARE_PLUGIN_INIT_FINI_FOR_USB_MODULE(usb_printer)
+PLUGIN_ENTRY_FOR_USB_MODULE(usb_cbi);
+PLUGIN_ENTRY_FOR_USB_MODULE(usb_hid);
+PLUGIN_ENTRY_FOR_USB_MODULE(usb_hub);
+PLUGIN_ENTRY_FOR_USB_MODULE(usb_msd);
+PLUGIN_ENTRY_FOR_USB_MODULE(usb_printer);
 // disk image plugins
-DECLARE_PLUGIN_INIT_FINI_FOR_IMG_MODULE(vmware3)
-DECLARE_PLUGIN_INIT_FINI_FOR_IMG_MODULE(vmware4)
-DECLARE_PLUGIN_INIT_FINI_FOR_IMG_MODULE(vbox)
-DECLARE_PLUGIN_INIT_FINI_FOR_IMG_MODULE(vpc)
-DECLARE_PLUGIN_INIT_FINI_FOR_IMG_MODULE(vvfat)
+PLUGIN_ENTRY_FOR_IMG_MODULE(vmware3);
+PLUGIN_ENTRY_FOR_IMG_MODULE(vmware4);
+PLUGIN_ENTRY_FOR_IMG_MODULE(vbox);
+PLUGIN_ENTRY_FOR_IMG_MODULE(vpc);
+PLUGIN_ENTRY_FOR_IMG_MODULE(vvfat);
 
 
 #ifdef __cplusplus

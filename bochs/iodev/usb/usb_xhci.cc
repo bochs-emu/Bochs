@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010-2017  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2011-2018  The Bochs Project
+//                2011-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -184,25 +184,24 @@ Bit32s usb_xhci_options_save(FILE *fp)
   return 0;
 }
 
-// device plugin entry points
+// device plugin entry point
 
-int CDECL libusb_xhci_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
+PLUGIN_ENTRY_FOR_MODULE(usb_xhci)
 {
-  theUSB_XHCI = new bx_usb_xhci_c();
-  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theUSB_XHCI, BX_PLUGIN_USB_XHCI);
-  // add new configuration parameter for the config interface
-  SIM->init_usb_options("xHCI", "xhci", BX_N_USB_XHCI_PORTS);
-  // register add-on option for bochsrc and command line
-  SIM->register_addon_option("usb_xhci", usb_xhci_options_parser, usb_xhci_options_save);
+  if (init) {
+    theUSB_XHCI = new bx_usb_xhci_c();
+    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theUSB_XHCI, BX_PLUGIN_USB_XHCI);
+    // add new configuration parameter for the config interface
+    SIM->init_usb_options("xHCI", "xhci", BX_N_USB_XHCI_PORTS);
+    // register add-on option for bochsrc and command line
+    SIM->register_addon_option("usb_xhci", usb_xhci_options_parser, usb_xhci_options_save);
+  } else {
+    SIM->unregister_addon_option("usb_xhci");
+    bx_list_c *menu = (bx_list_c*)SIM->get_param("ports.usb");
+    delete theUSB_XHCI;
+    menu->remove("xhci");
+  }
   return 0; // Success
-}
-
-void CDECL libusb_xhci_LTX_plugin_fini(void)
-{
-  SIM->unregister_addon_option("usb_xhci");
-  bx_list_c *menu = (bx_list_c*)SIM->get_param("ports.usb");
-  delete theUSB_XHCI;
-  menu->remove("xhci");
 }
 
 // the device object

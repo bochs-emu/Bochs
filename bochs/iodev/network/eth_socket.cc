@@ -4,7 +4,7 @@
 //
 //  Copyright (C) 2003       by Mariusz Matuszek
 //                              [NOmrmmSPAM @ users.sourceforge.net]
-//  Copyright (C) 2017-2020  The Bochs Project
+//  Copyright (C) 2017-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -62,17 +62,12 @@
 
 #if BX_NETWORKING && BX_NETMOD_SOCKET
 
-// network driver plugin entry points
+// network driver plugin entry point
 
-int CDECL libsocket_net_plugin_init(plugin_t *plugin, plugintype_t type)
+PLUGIN_ENTRY_FOR_NET_MODULE(socket)
 {
   // Nothing here yet
   return 0; // Success
-}
-
-void CDECL libsocket_net_plugin_fini(void)
-{
-  // Nothing here yet
 }
 
 // network driver implementation

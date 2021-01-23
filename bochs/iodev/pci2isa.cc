@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2020  The Bochs Project
+//  Copyright (C) 2002-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -39,21 +39,20 @@
 
 bx_piix3_c *thePci2IsaBridge = NULL;
 
-int CDECL libpci2isa_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
+PLUGIN_ENTRY_FOR_MODULE(pci2isa)
 {
-  if (type == PLUGTYPE_CORE) {
-    thePci2IsaBridge = new bx_piix3_c();
-    bx_devices.pluginPci2IsaBridge = thePci2IsaBridge;
-    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, thePci2IsaBridge, BX_PLUGIN_PCI2ISA);
-    return 0; // Success
+  if (init) {
+    if (type == PLUGTYPE_CORE) {
+      thePci2IsaBridge = new bx_piix3_c();
+      bx_devices.pluginPci2IsaBridge = thePci2IsaBridge;
+      BX_REGISTER_DEVICE_DEVMODEL(plugin, type, thePci2IsaBridge, BX_PLUGIN_PCI2ISA);
+    } else {
+      return -1;
+    }
   } else {
-    return -1;
+    delete thePci2IsaBridge;
   }
-}
-
-void CDECL libpci2isa_LTX_plugin_fini(void)
-{
-  delete thePci2IsaBridge;
+  return 0; // Success
 }
 
 bx_piix3_c::bx_piix3_c()

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2018  The Bochs Project
+//  Copyright (C) 2001-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -33,21 +33,20 @@
 
 bx_pit_c *thePit = NULL;
 
-int CDECL libpit_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
+PLUGIN_ENTRY_FOR_MODULE(pit)
 {
-  if (type == PLUGTYPE_CORE) {
-    thePit = new bx_pit_c();
-    bx_devices.pluginPitDevice = thePit;
-    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, thePit, BX_PLUGIN_PIT);
-    return 0; // Success
+  if (init) {
+    if (type == PLUGTYPE_CORE) {
+      thePit = new bx_pit_c();
+      bx_devices.pluginPitDevice = thePit;
+      BX_REGISTER_DEVICE_DEVMODEL(plugin, type, thePit, BX_PLUGIN_PIT);
+    } else {
+      return -1;
+    }
   } else {
-    return -1;
+    delete thePit;
   }
-}
-
-void CDECL libpit_LTX_plugin_fini(void)
-{
-  delete thePit;
+  return 0; // Success
 }
 
 //Important constant #defines:

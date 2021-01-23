@@ -4,7 +4,7 @@
 //
 //  Experimental USB EHCI adapter (partly ported from Qemu)
 //
-//  Copyright (C) 2015-2019  The Bochs Project
+//  Copyright (C) 2015-2021  The Bochs Project
 //
 //  Copyright(c) 2008  Emutex Ltd. (address@hidden)
 //  Copyright(c) 2011-2012 Red Hat, Inc.
@@ -159,25 +159,24 @@ Bit32s usb_ehci_options_save(FILE *fp)
   return 0;
 }
 
-// device plugin entry points
+// device plugin entry point
 
-int CDECL libusb_ehci_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
+PLUGIN_ENTRY_FOR_MODULE(usb_ehci)
 {
-  theUSB_EHCI = new bx_usb_ehci_c();
-  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theUSB_EHCI, BX_PLUGIN_USB_EHCI);
-  // add new configuration parameter for the config interface
-  SIM->init_usb_options("EHCI", "ehci", USB_EHCI_PORTS);
-  // register add-on option for bochsrc and command line
-  SIM->register_addon_option("usb_ehci", usb_ehci_options_parser, usb_ehci_options_save);
+  if (init) {
+    theUSB_EHCI = new bx_usb_ehci_c();
+    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theUSB_EHCI, BX_PLUGIN_USB_EHCI);
+    // add new configuration parameter for the config interface
+    SIM->init_usb_options("EHCI", "ehci", USB_EHCI_PORTS);
+    // register add-on option for bochsrc and command line
+    SIM->register_addon_option("usb_ehci", usb_ehci_options_parser, usb_ehci_options_save);
+  } else {
+    SIM->unregister_addon_option("usb_ehci");
+    bx_list_c *menu = (bx_list_c*)SIM->get_param("ports.usb");
+    delete theUSB_EHCI;
+    menu->remove("ehci");
+  }
   return 0; // Success
-}
-
-void CDECL libusb_ehci_LTX_plugin_fini(void)
-{
-  SIM->unregister_addon_option("usb_ehci");
-  bx_list_c *menu = (bx_list_c*)SIM->get_param("ports.usb");
-  delete theUSB_EHCI;
-  menu->remove("ehci");
 }
 
 // the device object

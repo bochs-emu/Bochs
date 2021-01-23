@@ -135,36 +135,35 @@ Bit32s voodoo_options_save(FILE *fp)
   return SIM->write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_VOODOO), NULL, 0);
 }
 
-// device plugin entry points
+// device plugin entry point
 
-int CDECL libvoodoo_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
+PLUGIN_ENTRY_FOR_MODULE(voodoo)
 {
-  if (type == PLUGTYPE_VGA) {
-    theVoodooVga = new bx_voodoo_vga_c();
-    bx_devices.pluginVgaDevice = theVoodooVga;
-    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theVoodooVga, BX_PLUGIN_VOODOO);
+  if (init) {
+    if (type == PLUGTYPE_VGA) {
+      theVoodooVga = new bx_voodoo_vga_c();
+      bx_devices.pluginVgaDevice = theVoodooVga;
+      BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theVoodooVga, BX_PLUGIN_VOODOO);
+    } else {
+      theVoodooDevice = new bx_voodoo_1_2_c();
+      BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theVoodooDevice, BX_PLUGIN_VOODOO);
+    }
+    // add new configuration parameter for the config interface
+    voodoo_init_options();
+    // register add-on option for bochsrc and command line
+    SIM->register_addon_option("voodoo", voodoo_options_parser, voodoo_options_save);
   } else {
-    theVoodooDevice = new bx_voodoo_1_2_c();
-    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theVoodooDevice, BX_PLUGIN_VOODOO);
+    SIM->unregister_addon_option("voodoo");
+    bx_list_c *menu = (bx_list_c*)SIM->get_param("display");
+    menu->remove("voodoo");
+    if (theVoodooVga != NULL) {
+      delete theVoodooVga;
+    }
+    if (theVoodooDevice != NULL) {
+      delete theVoodooDevice;
+    }
   }
-  // add new configuration parameter for the config interface
-  voodoo_init_options();
-  // register add-on option for bochsrc and command line
-  SIM->register_addon_option("voodoo", voodoo_options_parser, voodoo_options_save);
   return 0; // Success
-}
-
-void CDECL libvoodoo_LTX_plugin_fini(void)
-{
-  SIM->unregister_addon_option("voodoo");
-  bx_list_c *menu = (bx_list_c*)SIM->get_param("display");
-  menu->remove("voodoo");
-  if (theVoodooVga != NULL) {
-    delete theVoodooVga;
-  }
-  if (theVoodooDevice != NULL) {
-    delete theVoodooDevice;
-  }
 }
 
 // FIFO thread

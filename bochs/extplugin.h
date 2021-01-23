@@ -41,8 +41,7 @@ enum plugintype_t {
   PLUGTYPE_USB=0x500
 };
 
-typedef int (CDECL *plugin_init_t)(struct _plugin_t *plugin, plugintype_t type);
-typedef void (CDECL *plugin_fini_t)(void);
+typedef int (CDECL *plugin_entry_t)(struct _plugin_t *plugin, plugintype_t type, bool init);
 
 typedef struct _plugin_t
 {
@@ -57,8 +56,7 @@ typedef struct _plugin_t
     const char *name;
 #endif
     plugintype_t type;
-    plugin_init_t plugin_init;
-    plugin_fini_t plugin_fini;
+    plugin_entry_t plugin_entry;
     bool initialized;
 #if BX_PLUGINS
     bool loaded;

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2020  The Bochs Project
+//  Copyright (C) 2002-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -100,24 +100,23 @@ Bit8u bin_to_bcd(Bit8u value, bx_bool is_binary)
     return ((value  / 10) << 4) | (value % 10);
 }
 
-int CDECL libcmos_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
+PLUGIN_ENTRY_FOR_MODULE(cmos)
 {
-  if (type == PLUGTYPE_CORE) {
-    theCmosDevice = new bx_cmos_c();
-    bx_devices.pluginCmosDevice = theCmosDevice;
-    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theCmosDevice, BX_PLUGIN_CMOS);
-    return 0; // Success
+  if (init) {
+    if (type == PLUGTYPE_CORE) {
+      theCmosDevice = new bx_cmos_c();
+      bx_devices.pluginCmosDevice = theCmosDevice;
+      BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theCmosDevice, BX_PLUGIN_CMOS);
+    } else {
+      return -1;
+    }
   } else {
-    return -1;
+    if (theCmosDevice != NULL) {
+      delete theCmosDevice;
+      theCmosDevice = NULL;
+    }
   }
-}
-
-void CDECL libcmos_LTX_plugin_fini(void)
-{ 
-  if (theCmosDevice != NULL) {
-    delete theCmosDevice;
-    theCmosDevice = NULL;
-  }
+  return 0; // Success
 }
 
 bx_cmos_c::bx_cmos_c(void)

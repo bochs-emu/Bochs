@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009-2016  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2009-2020  The Bochs Project
+//                2009-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -34,16 +34,11 @@
 
 #define LOG_THIS
 
-// USB device plugin entry points
+// USB device plugin entry point
 
-int CDECL libusb_printer_dev_plugin_init(plugin_t *plugin, plugintype_t type)
+PLUGIN_ENTRY_FOR_USB_MODULE(usb_printer)
 {
   return 0; // Success
-}
-
-void CDECL libusb_printer_dev_plugin_fini(void)
-{
-  // Nothing here yet
 }
 
 //

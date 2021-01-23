@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Fen Systems Ltd. (http://www.fensystems.co.uk/)
-//  Copyright (C) 2003-2018  The Bochs Project
+//  Copyright (C) 2003-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -95,25 +95,24 @@ Bit32s pnic_options_save(FILE *fp)
   return SIM->write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_PNIC), NULL, 0);
 }
 
-// device plugin entry points
+// device plugin entry point
 
-int CDECL libpcipnic_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
+PLUGIN_ENTRY_FOR_MODULE(pcipnic)
 {
-  thePNICDevice = new bx_pcipnic_c();
-  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, thePNICDevice, BX_PLUGIN_PCIPNIC);
-  // add new configuration parameter for the config interface
-  pnic_init_options();
-  // register add-on option for bochsrc and command line
-  SIM->register_addon_option("pcipnic", pnic_options_parser, pnic_options_save);
+  if (done) {
+    thePNICDevice = new bx_pcipnic_c();
+    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, thePNICDevice, BX_PLUGIN_PCIPNIC);
+    // add new configuration parameter for the config interface
+    pnic_init_options();
+    // register add-on option for bochsrc and command line
+    SIM->register_addon_option("pcipnic", pnic_options_parser, pnic_options_save);
+  } else {
+    SIM->unregister_addon_option("pcipnic");
+    bx_list_c *menu = (bx_list_c*)SIM->get_param("network");
+    menu->remove("pnic");
+    delete thePNICDevice;
+  }
   return 0; // Success
-}
-
-void CDECL libpcipnic_LTX_plugin_fini(void)
-{
-  SIM->unregister_addon_option("pcipnic");
-  bx_list_c *menu = (bx_list_c*)SIM->get_param("network");
-  menu->remove("pnic");
-  delete thePNICDevice;
 }
 
 // the device object

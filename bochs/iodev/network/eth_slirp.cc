@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2014-2020  The Bochs Project
+//  Copyright (C) 2014-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -38,16 +38,11 @@
 
 static unsigned int bx_slirp_instances = 0;
 
-// network driver plugin entry points
+// network driver plugin entry point
 
-int CDECL libslirp_net_plugin_init(plugin_t *plugin, plugintype_t type)
+PLUGIN_ENTRY_FOR_NET_MODULE(slirp)
 {
   return 0; // Success
-}
-
-void CDECL libslirp_net_plugin_fini(void)
-{
-  // Nothing here yet
 }
 
 // network driver implementation

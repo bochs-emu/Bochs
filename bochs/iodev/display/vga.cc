@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2020  The Bochs Project
+//  Copyright (C) 2002-2021  The Bochs Project
 //  PCI VGA dummy adapter Copyright (C) 2002,2003  Mike Nordell
 //
 //  This library is free software; you can redistribute it and/or
@@ -44,21 +44,20 @@
 
 bx_vga_c *theVga = NULL;
 
-int CDECL libvga_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
+PLUGIN_ENTRY_FOR_MODULE(vga)
 {
-  if (type == PLUGTYPE_CORE) {
-    theVga = new bx_vga_c();
-    bx_devices.pluginVgaDevice = theVga;
-    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theVga, BX_PLUGIN_VGA);
-    return 0; // Success
+  if (init) {
+    if (type == PLUGTYPE_CORE) {
+      theVga = new bx_vga_c();
+      bx_devices.pluginVgaDevice = theVga;
+      BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theVga, BX_PLUGIN_VGA);
+    } else {
+      return -1;
+    }
   } else {
-    return -1;
+    delete theVga;
   }
-}
-
-void CDECL libvga_LTX_plugin_fini(void)
-{
-  delete theVga;
+  return 0; // Success
 }
 
 bx_vga_c::bx_vga_c() : bx_vgacore_c()

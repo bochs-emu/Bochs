@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2017  The Bochs Project
+//  Copyright (C) 2002-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -31,21 +31,20 @@
 
 bx_pic_c *thePic = NULL;
 
-int CDECL libpic_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
+PLUGIN_ENTRY_FOR_MODULE(pic)
 {
-  if (type == PLUGTYPE_CORE) {
-    thePic = new bx_pic_c();
-    bx_devices.pluginPicDevice = thePic;
-    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, thePic, BX_PLUGIN_PIC);
-    return 0; // Success
+  if (init) {
+    if (type == PLUGTYPE_CORE) {
+      thePic = new bx_pic_c();
+      bx_devices.pluginPicDevice = thePic;
+      BX_REGISTER_DEVICE_DEVMODEL(plugin, type, thePic, BX_PLUGIN_PIC);
+    } else {
+      return -1;
+    }
   } else {
-    return -1;
+    delete thePic;
   }
-}
-
-void CDECL libpic_LTX_plugin_fini(void)
-{
-  delete thePic;
+  return 0; // Success
 }
 
 bx_pic_c::bx_pic_c(void)

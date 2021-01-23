@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003       David N. Welton <davidw@dedasys.com>.
-//  Copyright (C) 2003-2020  The Bochs Project
+//  Copyright (C) 2003-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -127,26 +127,25 @@ Bit32s speaker_options_save(FILE *fp)
   return SIM->write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_SOUND_SPEAKER), NULL, 0);
 }
 
-// device plugin entry points
+// device plugin entry point
 
-int CDECL libspeaker_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
+PLUGIN_ENTRY_FOR_MODULE(speaker)
 {
-  theSpeaker = new bx_speaker_c();
-  bx_devices.pluginSpeaker = theSpeaker;
-  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theSpeaker, BX_PLUGIN_SPEAKER);
-  // add new configuration parameters for the config interface
-  speaker_init_options();
-  // register add-on options for bochsrc and command line
-  SIM->register_addon_option("speaker", speaker_options_parser, speaker_options_save);
+  if (init) {
+    theSpeaker = new bx_speaker_c();
+    bx_devices.pluginSpeaker = theSpeaker;
+    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theSpeaker, BX_PLUGIN_SPEAKER);
+    // add new configuration parameters for the config interface
+    speaker_init_options();
+    // register add-on options for bochsrc and command line
+    SIM->register_addon_option("speaker", speaker_options_parser, speaker_options_save);
+  } else {
+    bx_devices.pluginSpeaker = &bx_devices.stubSpeaker;
+    delete theSpeaker;
+    SIM->unregister_addon_option("speaker");
+    ((bx_list_c*)SIM->get_param("sound"))->remove("speaker");
+  }
   return(0); // Success
-}
-
-void CDECL libspeaker_LTX_plugin_fini(void)
-{
-  bx_devices.pluginSpeaker = &bx_devices.stubSpeaker;
-  delete theSpeaker;
-  SIM->unregister_addon_option("speaker");
-  ((bx_list_c*)SIM->get_param("sound"))->remove("speaker");
 }
 
 // the device object

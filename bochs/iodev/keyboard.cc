@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2020  The Bochs Project
+//  Copyright (C) 2002-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -56,18 +56,17 @@
 
 bx_keyb_c *theKeyboard = NULL;
 
-int CDECL libkeyboard_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
+PLUGIN_ENTRY_FOR_MODULE(keyboard)
 {
-  // Create one instance of the keyboard device object.
-  theKeyboard = new bx_keyb_c();
-  // Register this device.
-  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theKeyboard, BX_PLUGIN_KEYBOARD);
+  if (init) {
+    // Create one instance of the keyboard device object.
+    theKeyboard = new bx_keyb_c();
+    // Register this device.
+    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theKeyboard, BX_PLUGIN_KEYBOARD);
+  } else {
+    delete theKeyboard;
+  }
   return 0; // Success
-}
-
-void CDECL libkeyboard_LTX_plugin_fini(void)
-{
-  delete theKeyboard;
 }
 
 bx_keyb_c::bx_keyb_c()

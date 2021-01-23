@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2020  The Bochs Project
+//  Copyright (C) 2001-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -161,24 +161,23 @@ Bit32s sb16_options_save(FILE *fp)
   return SIM->write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_SOUND_SB16), NULL, 0);
 }
 
-// device plugin entry points
+// device plugin entry point
 
-int CDECL libsb16_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
+PLUGIN_ENTRY_FOR_MODULE(sb16)
 {
-  theSB16Device = new bx_sb16_c();
-  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theSB16Device, BX_PLUGIN_SB16);
-  // add new configuration parameter for the config interface
-  sb16_init_options();
-  // register add-on option for bochsrc and command line
-  SIM->register_addon_option("sb16", sb16_options_parser, sb16_options_save);
+  if (init) {
+    theSB16Device = new bx_sb16_c();
+    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theSB16Device, BX_PLUGIN_SB16);
+    // add new configuration parameter for the config interface
+    sb16_init_options();
+    // register add-on option for bochsrc and command line
+    SIM->register_addon_option("sb16", sb16_options_parser, sb16_options_save);
+  } else {
+    delete theSB16Device;
+    SIM->unregister_addon_option("sb16");
+    ((bx_list_c*)SIM->get_param("sound"))->remove("sb16");
+  }
   return(0); // Success
-}
-
-void CDECL libsb16_LTX_plugin_fini(void)
-{
-  delete theSB16Device;
-  SIM->unregister_addon_option("sb16");
-  ((bx_list_c*)SIM->get_param("sound"))->remove("sb16");
 }
 
 // some shortcuts to save typing

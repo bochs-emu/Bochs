@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2020  The Bochs Project
+//  Copyright (C) 2002-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -209,20 +209,17 @@ static int ci_callback(void *userdata, ci_command_t command)
   return 0;
 }
 
-extern "C" int libwx_gui_plugin_init(plugin_t *plugin, plugintype_t type)
+extern "C" int libwx_gui_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
 {
-  wxLogDebug(wxT("plugin_init for wxmain.cc"));
-  wxLogDebug(wxT("installing wxWidgets as the configuration interface"));
-  SIM->register_configuration_interface("wx", ci_callback, NULL);
-  wxLogDebug(wxT("installing %s as the Bochs GUI"), wxT("wxWidgets"));
-  SIM->get_param_enum(BXPN_SEL_DISPLAY_LIBRARY)->set_enabled(0);
-  MyPanel::OnPluginInit();
+  if (init) {
+    wxLogDebug(wxT("plugin_entry() for wxmain.cc"));
+    wxLogDebug(wxT("installing wxWidgets as the configuration interface"));
+    SIM->register_configuration_interface("wx", ci_callback, NULL);
+    wxLogDebug(wxT("installing %s as the Bochs GUI"), wxT("wxWidgets"));
+    SIM->get_param_enum(BXPN_SEL_DISPLAY_LIBRARY)->set_enabled(0);
+    MyPanel::OnPluginInit();
+  }
   return 0; // success
-}
-
-extern "C" void libwx_gui_plugin_fini()
-{
-  // Nothing here yet
 }
 
 
@@ -234,7 +231,7 @@ IMPLEMENT_APP_NO_MAIN(MyApp)
 
 // this is the entry point of the wxWidgets code.  It is called as follows:
 // 1. main() loads the wxWidgets plugin (if necessary) and calls
-// libwx_LTX_plugin_init, which installs a function pointer to the
+// libwx_LTX_plugin_entry(), which installs a function pointer to the
 // ci_callback() function.
 // 2. main() calls SIM->configuration_interface.
 // 3. bx_real_sim_c::configuration_interface calls the function pointer that

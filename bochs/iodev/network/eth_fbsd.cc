@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2020  The Bochs Project
+//  Copyright (C) 2001-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -53,17 +53,12 @@
 
 #if BX_NETWORKING && BX_NETMOD_FBSD
 
-// network driver plugin entry points
+// network driver plugin entry point
 
-int CDECL libfbsd_net_plugin_init(plugin_t *plugin, plugintype_t type)
+PLUGIN_ENTRY_FOR_NET_MODULE(fbsd)
 {
   // Nothing here yet
   return 0; // Success
-}
-
-void CDECL libfbsd_net_plugin_fini(void)
-{
-  // Nothing here yet
 }
 
 // network driver implementation

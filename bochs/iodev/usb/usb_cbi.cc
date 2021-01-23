@@ -45,16 +45,11 @@
 
 #define LOG_THIS
 
-// USB device plugin entry points
+// USB device plugin entry point
 
-int CDECL libusb_cbi_dev_plugin_init(plugin_t *plugin, plugintype_t type)
+PLUGIN_ENTRY_FOR_USB_MODULE(usb_cbi)
 {
   return 0; // Success
-}
-
-void CDECL libusb_cbi_dev_plugin_fini(void)
-{
-  // Nothing here yet
 }
 
 //

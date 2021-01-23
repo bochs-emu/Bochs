@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2017  The Bochs Project
+//  Copyright (C) 2001-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -149,34 +149,33 @@ Bit32s serial_options_save(FILE *fp)
   return 0;
 }
 
-// device plugin entry points
+// device plugin entry point
 
-int CDECL libserial_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
+PLUGIN_ENTRY_FOR_MODULE(serial)
 {
-  theSerialDevice = new bx_serial_c();
-  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theSerialDevice, BX_PLUGIN_SERIAL);
-  // add new configuration parameters for the config interface
-  serial_init_options();
-  // register add-on options for bochsrc and command line
-  SIM->register_addon_option("com1", serial_options_parser, serial_options_save);
-  SIM->register_addon_option("com2", serial_options_parser, NULL);
-  SIM->register_addon_option("com3", serial_options_parser, NULL);
-  SIM->register_addon_option("com4", serial_options_parser, NULL);
-  return 0; // Success
-}
+  if (init) {
+    theSerialDevice = new bx_serial_c();
+    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theSerialDevice, BX_PLUGIN_SERIAL);
+    // add new configuration parameters for the config interface
+    serial_init_options();
+    // register add-on options for bochsrc and command line
+    SIM->register_addon_option("com1", serial_options_parser, serial_options_save);
+    SIM->register_addon_option("com2", serial_options_parser, NULL);
+    SIM->register_addon_option("com3", serial_options_parser, NULL);
+    SIM->register_addon_option("com4", serial_options_parser, NULL);
+  } else {
+    char port[6];
 
-void CDECL libserial_LTX_plugin_fini(void)
-{
-  char port[6];
-
-  delete theSerialDevice;
-  bx_list_c *menu = (bx_list_c*)SIM->get_param("ports.serial");
-  for (int i=0; i<BX_N_SERIAL_PORTS; i++) {
-    sprintf(port, "com%d", i+1);
-    SIM->unregister_addon_option(port);
-    sprintf(port, "%d", i+1);
-    menu->remove(port);
+    delete theSerialDevice;
+    bx_list_c *menu = (bx_list_c*)SIM->get_param("ports.serial");
+    for (int i=0; i<BX_N_SERIAL_PORTS; i++) {
+      sprintf(port, "com%d", i+1);
+      SIM->unregister_addon_option(port);
+      sprintf(port, "%d", i+1);
+      menu->remove(port);
+    }
   }
+  return 0; // Success
 }
 
 // the device object

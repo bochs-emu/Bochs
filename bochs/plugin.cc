@@ -41,18 +41,12 @@
 
 #define LOG_THIS genlog->
 
-#define PLUGIN_INIT_FMT_STRING       "lib%s_LTX_plugin_init"
-#define PLUGIN_FINI_FMT_STRING       "lib%s_LTX_plugin_fini"
-#define GUI_PLUGIN_INIT_FMT_STRING   "lib%s_gui_plugin_init"
-#define GUI_PLUGIN_FINI_FMT_STRING   "lib%s_gui_plugin_fini"
-#define SOUND_PLUGIN_INIT_FMT_STRING "lib%s_sound_plugin_init"
-#define SOUND_PLUGIN_FINI_FMT_STRING "lib%s_sound_plugin_fini"
-#define NET_PLUGIN_INIT_FMT_STRING   "lib%s_net_plugin_init"
-#define NET_PLUGIN_FINI_FMT_STRING   "lib%s_net_plugin_fini"
-#define USB_PLUGIN_INIT_FMT_STRING   "lib%s_dev_plugin_init"
-#define USB_PLUGIN_FINI_FMT_STRING   "lib%s_dev_plugin_fini"
-#define IMG_PLUGIN_INIT_FMT_STRING   "lib%s_img_plugin_init"
-#define IMG_PLUGIN_FINI_FMT_STRING   "lib%s_img_plugin_fini"
+#define PLUGIN_ENTRY_FMT_STRING       "lib%s_LTX_plugin_entry"
+#define GUI_PLUGIN_ENTRY_FMT_STRING   "lib%s_gui_plugin_entry"
+#define SOUND_PLUGIN_ENTRY_FMT_STRING "lib%s_sound_plugin_entry"
+#define NET_PLUGIN_ENTRY_FMT_STRING   "lib%s_net_plugin_entry"
+#define USB_PLUGIN_ENTRY_FMT_STRING   "lib%s_dev_plugin_entry"
+#define IMG_PLUGIN_ENTRY_FMT_STRING   "lib%s_img_plugin_entry"
 #define PLUGIN_PATH                  ""
 
 #ifndef WIN32
@@ -104,10 +98,6 @@ void (*pluginHRQHackCallback)(void);
 unsigned pluginHRQ = 0;
 
 plugin_t *plugins = NULL;      /* Head of the linked list of plugins  */
-#if BX_PLUGINS
-static bool plugin_init_one(plugin_t *plugin);
-#endif
-
 device_t *devices = NULL;      /* Head of the linked list of registered devices  */
 device_t *core_devices = NULL; /* Head of the linked list of registered core devices  */
 
@@ -435,7 +425,7 @@ const char* bx_get_plugin_name(plugintype_t type, Bit8u index)
 bool plugin_init_one(plugin_t *plugin)
 {
   /* initialize the plugin */
-  if (plugin->plugin_init(plugin, plugin->type))
+  if (plugin->plugin_entry(plugin, plugin->type, 1))
   {
     pluginlog->info("Plugin initialization failed for %s", plugin->name);
     plugin_abort(plugin);
@@ -450,7 +440,7 @@ bool plugin_unload(plugin_t *plugin)
 {
   if (plugin->loaded) {
     if (plugin->initialized)
-      plugin->plugin_fini();
+      plugin->plugin_entry(plugin, plugin->type, 0);
 #if defined(WIN32)
     FreeLibrary(plugin->handle);
 #else
@@ -515,7 +505,7 @@ bool plugin_load(const char *name, plugintype_t type)
 
   // Set context so that any devices that the plugin registers will
   // be able to see which plugin created them.  The registration will
-  // be called from either dlopen (global constructors) or plugin_init.
+  // be called from either dlopen (global constructors) or plugin_entry.
   BX_ASSERT(current_plugin_context == NULL);
   current_plugin_context = plugin;
 #if defined(WIN32)
@@ -551,62 +541,31 @@ bool plugin_load(const char *name, plugintype_t type)
   plugin->loaded = 1;
 
   if (type == PLUGTYPE_GUI) {
-    sprintf(tmpname, GUI_PLUGIN_INIT_FMT_STRING, name);
+    sprintf(tmpname, GUI_PLUGIN_ENTRY_FMT_STRING, name);
   } else if (type == PLUGTYPE_SND) {
-    sprintf(tmpname, SOUND_PLUGIN_INIT_FMT_STRING, name);
+    sprintf(tmpname, SOUND_PLUGIN_ENTRY_FMT_STRING, name);
   } else if (type == PLUGTYPE_NET) {
-    sprintf(tmpname, NET_PLUGIN_INIT_FMT_STRING, name);
+    sprintf(tmpname, NET_PLUGIN_ENTRY_FMT_STRING, name);
   } else if (type == PLUGTYPE_USB) {
-    sprintf(tmpname, USB_PLUGIN_INIT_FMT_STRING, name);
+    sprintf(tmpname, USB_PLUGIN_ENTRY_FMT_STRING, name);
   } else if (type == PLUGTYPE_IMG) {
-    sprintf(tmpname, IMG_PLUGIN_INIT_FMT_STRING, name);
+    sprintf(tmpname, IMG_PLUGIN_ENTRY_FMT_STRING, name);
   } else if (type != PLUGTYPE_USER) {
-    sprintf(tmpname, PLUGIN_INIT_FMT_STRING, name);
+    sprintf(tmpname, PLUGIN_ENTRY_FMT_STRING, name);
   } else {
-    sprintf(tmpname, PLUGIN_INIT_FMT_STRING, "user");
+    sprintf(tmpname, PLUGIN_ENTRY_FMT_STRING, "user");
   }
 #if defined(WIN32)
-  plugin->plugin_init = (plugin_init_t) GetProcAddress(plugin->handle, tmpname);
-  if (plugin->plugin_init == NULL) {
-    pluginlog->panic("could not find plugin_init: error=%d", GetLastError());
+  plugin->plugin_entry = (plugin_entry_t) GetProcAddress(plugin->handle, tmpname);
+  if (plugin->plugin_entry == NULL) {
+    pluginlog->panic("could not find plugin_entry: error=%d", GetLastError());
     plugin_abort(plugin);
     return 0;
   }
 #else
-  plugin->plugin_init = (plugin_init_t) lt_dlsym(plugin->handle, tmpname);
-  if (plugin->plugin_init == NULL) {
-    pluginlog->panic("could not find plugin_init: %s", lt_dlerror());
-    plugin_abort(plugin);
-    return 0;
-  }
-#endif
-
-  if (type == PLUGTYPE_GUI) {
-    sprintf(tmpname, GUI_PLUGIN_FINI_FMT_STRING, name);
-  } else if (type == PLUGTYPE_SND) {
-    sprintf(tmpname, SOUND_PLUGIN_FINI_FMT_STRING, name);
-  } else if (type == PLUGTYPE_NET) {
-    sprintf(tmpname, NET_PLUGIN_FINI_FMT_STRING, name);
-  } else if (type == PLUGTYPE_USB) {
-    sprintf(tmpname, USB_PLUGIN_FINI_FMT_STRING, name);
-  } else if (type == PLUGTYPE_IMG) {
-    sprintf(tmpname, IMG_PLUGIN_FINI_FMT_STRING, name);
-  } else if (type != PLUGTYPE_USER) {
-    sprintf(tmpname, PLUGIN_FINI_FMT_STRING, name);
-  } else {
-    sprintf(tmpname, PLUGIN_FINI_FMT_STRING, "user");
-  }
-#if defined(WIN32)
-  plugin->plugin_fini = (plugin_fini_t) GetProcAddress(plugin->handle, tmpname);
-  if (plugin->plugin_fini == NULL) {
-    pluginlog->panic("could not find plugin_fini: error=%d", GetLastError());
-    plugin_abort(plugin);
-    return 0;
-  }
-#else
-  plugin->plugin_fini = (plugin_fini_t) lt_dlsym(plugin->handle, tmpname);
-  if (plugin->plugin_fini == NULL) {
-    pluginlog->panic("could not find plugin_fini: %s", lt_dlerror());
+  plugin->plugin_entry = (plugin_entry_t) lt_dlsym(plugin->handle, tmpname);
+  if (plugin->plugin_entry == NULL) {
+    pluginlog->panic("could not find plugin_entry: %s", lt_dlerror());
     plugin_abort(plugin);
     return 0;
   }
@@ -803,7 +762,6 @@ bool bx_unload_plugin(const char *name, bx_bool devflag)
 
   for (plugin = plugins; plugin; plugin = plugin->next) {
     if (!strcmp(plugin->name, name)) {
-      BX_INFO(("bx_unload_plugin(): name = %s", plugin->name));
       if (devflag) {
         pluginUnregisterDeviceDevmodel(plugin->name);
       }
@@ -997,13 +955,13 @@ void bx_plugins_after_restore_state()
 // Special code for loading gui, optional and sound plugins when plugin support
 // is turned off.
 
-#define BUILTIN_GUI_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_GUI, lib##mod##_gui_plugin_init, lib##mod##_gui_plugin_fini, 0}
-#define BUILTIN_OPT_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_OPTIONAL, lib##mod##_LTX_plugin_init, lib##mod##_LTX_plugin_fini, 0}
-#define BUILTIN_SND_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_SND, lib##mod##_sound_plugin_init, lib##mod##_sound_plugin_fini, 0}
-#define BUILTIN_NET_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_NET, lib##mod##_net_plugin_init, lib##mod##_net_plugin_fini, 0}
-#define BUILTIN_USB_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_USB, lib##mod##_dev_plugin_init, lib##mod##_dev_plugin_fini, 0}
-#define BUILTIN_VGA_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_VGA, lib##mod##_LTX_plugin_init, lib##mod##_LTX_plugin_fini, 0}
-#define BUILTIN_IMG_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_IMG, lib##mod##_img_plugin_init, lib##mod##_img_plugin_fini, 0}
+#define BUILTIN_GUI_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_GUI, lib##mod##_gui_plugin_entry, 0}
+#define BUILTIN_OPT_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_OPTIONAL, lib##mod##_LTX_plugin_entry, 0}
+#define BUILTIN_SND_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_SND, lib##mod##_sound_plugin_entry, 0}
+#define BUILTIN_NET_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_NET, lib##mod##_net_plugin_entry, 0}
+#define BUILTIN_USB_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_USB, lib##mod##_dev_plugin_entry, 0}
+#define BUILTIN_VGA_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_VGA, lib##mod##_LTX_plugin_entry, 0}
+#define BUILTIN_IMG_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_IMG, lib##mod##_img_plugin_entry, 0}
 
 plugin_t bx_builtin_plugins[] = {
 #if BX_WITH_AMIGAOS
@@ -1150,7 +1108,7 @@ plugin_t bx_builtin_plugins[] = {
   BUILTIN_IMG_PLUGIN_ENTRY(vbox),
   BUILTIN_IMG_PLUGIN_ENTRY(vpc),
   BUILTIN_IMG_PLUGIN_ENTRY(vvfat),
-  {"NULL", PLUGTYPE_GUI, NULL, NULL, 0}
+  {"NULL", PLUGTYPE_GUI, NULL, 0}
 };
 
 int bx_load_plugin_np(const char *name, plugintype_t type)
@@ -1160,7 +1118,7 @@ int bx_load_plugin_np(const char *name, plugintype_t type)
     if ((!strcmp(name, bx_builtin_plugins[i].name)) &&
         (type == bx_builtin_plugins[i].type)) {
       if (bx_builtin_plugins[i].initialized == 0) {
-        bx_builtin_plugins[i].plugin_init(NULL, type);
+        bx_builtin_plugins[i].plugin_entry(NULL, type, 1);
         bx_builtin_plugins[i].initialized = 1;
       }
       return 1;
@@ -1180,7 +1138,7 @@ int bx_unload_opt_plugin(const char *name, bx_bool devflag)
         if (devflag) {
           pluginUnregisterDeviceDevmodel(bx_builtin_plugins[i].name);
         }
-        bx_builtin_plugins[i].plugin_fini();
+        bx_builtin_plugins[i].plugin_entry(NULL, PLUGTYPE_OPTIONAL, 0);
         bx_builtin_plugins[i].initialized = 0;
       }
       return 1;

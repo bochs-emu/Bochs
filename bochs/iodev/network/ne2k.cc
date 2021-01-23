@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2020  The Bochs Project
+//  Copyright (C) 2001-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -187,30 +187,29 @@ Bit32s ne2k_options_save(FILE *fp)
   return 0;
 }
 
-// device plugin entry points
+// device plugin entry point
 
-int CDECL libne2k_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
+PLUGIN_ENTRY_FOR_MODULE(ne2k)
 {
-  NE2kDevMain = new bx_ne2k_main_c();
-  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, NE2kDevMain, BX_PLUGIN_NE2K);
-  // add new configuration parameter for the config interface
-  ne2k_init_options();
-  // register add-on option for bochsrc and command line
-  SIM->register_addon_option("ne2k", ne2k_options_parser, ne2k_options_save);
-  return(0); // Success
-}
+  if (init) {
+    NE2kDevMain = new bx_ne2k_main_c();
+    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, NE2kDevMain, BX_PLUGIN_NE2K);
+    // add new configuration parameter for the config interface
+    ne2k_init_options();
+    // register add-on option for bochsrc and command line
+    SIM->register_addon_option("ne2k", ne2k_options_parser, ne2k_options_save);
+  } else {
+    char name[12];
 
-void CDECL libne2k_LTX_plugin_fini(void)
-{
-  char name[12];
-
-  SIM->unregister_addon_option("ne2k");
-  bx_list_c *network = (bx_list_c*)SIM->get_param("network");
-  for (Bit8u card = 0; card < BX_NE2K_MAX_DEVS; card++) {
-    sprintf(name, "ne2k%d", card);
-    network->remove(name);
+    SIM->unregister_addon_option("ne2k");
+    bx_list_c *network = (bx_list_c*)SIM->get_param("network");
+    for (Bit8u card = 0; card < BX_NE2K_MAX_DEVS; card++) {
+      sprintf(name, "ne2k%d", card);
+      network->remove(name);
+    }
+    delete NE2kDevMain;
   }
-  delete NE2kDevMain;
+  return(0); // Success
 }
 
 // the main object creates up to 4 device objects

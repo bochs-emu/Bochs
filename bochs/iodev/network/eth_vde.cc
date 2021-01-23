@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003       Renzo Davoli
-//  Copyright (C) 2003-2020  The Bochs Project
+//  Copyright (C) 2003-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -34,17 +34,12 @@
 
 #if BX_NETWORKING && BX_NETMOD_VDE
 
-// network driver plugin entry points
+// network driver plugin entry point
 
-int CDECL libvde_net_plugin_init(plugin_t *plugin, plugintype_t type)
+PLUGIN_ENTRY_FOR_NET_MODULE(vde)
 {
   // Nothing here yet
   return 0; // Success
-}
-
-void CDECL libvde_net_plugin_fini(void)
-{
-  // Nothing here yet
 }
 
 // network driver implementation

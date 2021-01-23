@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2020  The Bochs Project
+//  Copyright (C) 2001-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -100,32 +100,31 @@ Bit32s parport_options_save(FILE *fp)
   return 0;
 }
 
-// device plugin entry points
+// device plugin entry point
 
-int CDECL libparallel_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
+PLUGIN_ENTRY_FOR_MODULE(parallel)
 {
-  theParallelDevice = new bx_parallel_c();
-  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theParallelDevice, BX_PLUGIN_PARALLEL);
-  // add new configuration parameters for the config interface
-  parport_init_options();
-  // register add-on options for bochsrc and command line
-  SIM->register_addon_option("parport1", parport_options_parser, parport_options_save);
-  SIM->register_addon_option("parport2", parport_options_parser, NULL);
-  return 0; // Success
-}
+  if (init) {
+    theParallelDevice = new bx_parallel_c();
+    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theParallelDevice, BX_PLUGIN_PARALLEL);
+    // add new configuration parameters for the config interface
+    parport_init_options();
+    // register add-on options for bochsrc and command line
+    SIM->register_addon_option("parport1", parport_options_parser, parport_options_save);
+    SIM->register_addon_option("parport2", parport_options_parser, NULL);
+  } else {
+    char port[10];
 
-void CDECL libparallel_LTX_plugin_fini(void)
-{
-  char port[10];
-
-  delete theParallelDevice;
-  bx_list_c *menu = (bx_list_c*)SIM->get_param("ports.parallel");
-  for (int i=0; i<BX_N_PARALLEL_PORTS; i++) {
-    sprintf(port, "parport%d", i+1);
-    SIM->unregister_addon_option(port);
-    sprintf(port, "%d", i+1);
-    menu->remove(port);
+    delete theParallelDevice;
+    bx_list_c *menu = (bx_list_c*)SIM->get_param("ports.parallel");
+    for (int i=0; i<BX_N_PARALLEL_PORTS; i++) {
+      sprintf(port, "parport%d", i+1);
+      SIM->unregister_addon_option(port);
+      sprintf(port, "%d", i+1);
+      menu->remove(port);
+    }
   }
+  return 0; // Success
 }
 
 // the device object

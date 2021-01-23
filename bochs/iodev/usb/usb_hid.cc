@@ -8,7 +8,7 @@
 //
 // Copyright (c) 2005       Fabrice Bellard
 // Copyright (c) 2007       OpenMoko, Inc.  (andrew@openedhand.com)
-// Copyright (C) 2009-2020  The Bochs Project
+// Copyright (C) 2009-2021  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -60,16 +60,11 @@
 
 #define LOG_THIS
 
-// USB device plugin entry points
+// USB device plugin entry point
 
-int CDECL libusb_hid_dev_plugin_init(plugin_t *plugin, plugintype_t type)
+PLUGIN_ENTRY_FOR_USB_MODULE(usb_hid)
 {
   return 0; // Success
-}
-
-void CDECL libusb_hid_dev_plugin_fini(void)
-{
-  // Nothing here yet
 }
 
 //

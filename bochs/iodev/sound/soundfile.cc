@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2017  The Bochs Project
+//  Copyright (C) 2001-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -40,17 +40,12 @@
 
 #define LOG_THIS
 
-// sound driver plugin entry points
+// sound driver plugin entry point
 
-int CDECL libfile_sound_plugin_init(plugin_t *plugin, plugintype_t type)
+PLUGIN_ENTRY_FOR_SOUND_MODULE(file)
 {
   // Nothing here yet
   return 0; // Success
-}
-
-void CDECL libfile_sound_plugin_fini(void)
-{
-  // Nothing here yet
 }
 
 // bx_soundlow_waveout_file_c class implementation

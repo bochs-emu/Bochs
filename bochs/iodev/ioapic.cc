@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2017  The Bochs Project
+//  Copyright (C) 2002-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -34,18 +34,17 @@
 
 bx_ioapic_c *theIOAPIC = NULL;
 
-int CDECL libioapic_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
+PLUGIN_ENTRY_FOR_MODULE(ioapic)
 {
-  theIOAPIC = new bx_ioapic_c();
-  bx_devices.pluginIOAPIC = theIOAPIC;
-  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theIOAPIC, BX_PLUGIN_IOAPIC);
+  if (init) {
+    theIOAPIC = new bx_ioapic_c();
+    bx_devices.pluginIOAPIC = theIOAPIC;
+    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theIOAPIC, BX_PLUGIN_IOAPIC);
+  } else {
+    bx_devices.pluginIOAPIC = &bx_devices.stubIOAPIC;
+    delete theIOAPIC;
+  }
   return(0); // Success
-}
-
-void CDECL libioapic_LTX_plugin_fini(void)
-{
-  bx_devices.pluginIOAPIC = &bx_devices.stubIOAPIC;
-  delete theIOAPIC;
 }
 
 static bx_bool ioapic_read(bx_phy_address a20addr, unsigned len, void *data, void *param)

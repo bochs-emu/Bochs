@@ -12,7 +12,7 @@
 //  Copyright (c) 2007 Dan Aloni
 //  Copyright (c) 2004 Antony T Curtis
 //
-//  Copyright (C) 2011-2020  The Bochs Project
+//  Copyright (C) 2011-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -363,30 +363,29 @@ Bit32s e1000_options_save(FILE *fp)
   return 0;
 }
 
-// device plugin entry points
+// device plugin entry point
 
-int CDECL libe1000_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
+PLUGIN_ENTRY_FOR_MODULE(e1000)
 {
-  E1000DevMain = new bx_e1000_main_c();
-  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, E1000DevMain, BX_PLUGIN_E1000);
-  // add new configuration parameter for the config interface
-  e1000_init_options();
-  // register add-on option for bochsrc and command line
-  SIM->register_addon_option("e1000", e1000_options_parser, e1000_options_save);
-  return 0; // Success
-}
+  if (init) {
+    E1000DevMain = new bx_e1000_main_c();
+    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, E1000DevMain, BX_PLUGIN_E1000);
+    // add new configuration parameter for the config interface
+    e1000_init_options();
+    // register add-on option for bochsrc and command line
+    SIM->register_addon_option("e1000", e1000_options_parser, e1000_options_save);
+  } else {
+    char name[12];
 
-void CDECL libe1000_LTX_plugin_fini(void)
-{
-  char name[12];
-
-  SIM->unregister_addon_option("e1000");
-  bx_list_c *network = (bx_list_c*)SIM->get_param("network");
-  for (Bit8u card = 0; card < BX_E1000_MAX_DEVS; card++) {
-    sprintf(name, "e1000_%d", card);
-    network->remove(name);
+    SIM->unregister_addon_option("e1000");
+    bx_list_c *network = (bx_list_c*)SIM->get_param("network");
+    for (Bit8u card = 0; card < BX_E1000_MAX_DEVS; card++) {
+      sprintf(name, "e1000_%d", card);
+      network->remove(name);
+    }
+    delete E1000DevMain;
   }
-  delete E1000DevMain;
+  return 0; // Success
 }
 
 // macros and helper functions

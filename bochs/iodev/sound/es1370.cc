@@ -5,7 +5,7 @@
 // ES1370 soundcard support (ported from QEMU)
 //
 // Copyright (c) 2005  Vassili Karpov (malc)
-// Copyright (C) 2011-2020  The Bochs Project
+// Copyright (C) 2011-2021  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -185,25 +185,24 @@ Bit32s es1370_options_save(FILE *fp)
   return SIM->write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_SOUND_ES1370), NULL, 0);
 }
 
-// device plugin entry points
+// device plugin entry point
 
-int CDECL libes1370_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
+PLUGIN_ENTRY_FOR_MODULE(es1370)
 {
-  theES1370Device = new bx_es1370_c();
-  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theES1370Device, BX_PLUGIN_ES1370);
-  // add new configuration parameter for the config interface
-  es1370_init_options();
-  // register add-on option for bochsrc and command line
-  SIM->register_addon_option("es1370", es1370_options_parser, es1370_options_save);
+  if (init) {
+    theES1370Device = new bx_es1370_c();
+    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theES1370Device, BX_PLUGIN_ES1370);
+    // add new configuration parameter for the config interface
+    es1370_init_options();
+    // register add-on option for bochsrc and command line
+    SIM->register_addon_option("es1370", es1370_options_parser, es1370_options_save);
+  } else {
+    delete theES1370Device;
+    SIM->unregister_addon_option("es1370");
+    bx_list_c *menu = (bx_list_c*)SIM->get_param("sound");
+    menu->remove("es1370");
+  }
   return 0; // Success
-}
-
-void CDECL libes1370_LTX_plugin_fini(void)
-{
-  delete theES1370Device;
-  SIM->unregister_addon_option("es1370");
-  bx_list_c *menu = (bx_list_c*)SIM->get_param("sound");
-  menu->remove("es1370");
 }
 
 // the device object

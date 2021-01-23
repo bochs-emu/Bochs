@@ -9,7 +9,7 @@
 //
 //  Authors: Beth Kon <bkon@us.ibm.com>
 //
-//  Copyright (C) 2017-2020  The Bochs Project
+//  Copyright (C) 2017-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -41,18 +41,17 @@
 
 bx_hpet_c *theHPET = NULL;
 
-// device plugin entry points
+// device plugin entry point
 
-int CDECL libhpet_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
+PLUGIN_ENTRY_FOR_MODULE(hpet)
 {
-  theHPET = new bx_hpet_c();
-  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theHPET, BX_PLUGIN_HPET);
+  if (init) {
+    theHPET = new bx_hpet_c();
+    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theHPET, BX_PLUGIN_HPET);
+  } else {
+    delete theHPET;
+  }
   return(0); // Success
-}
-
-void CDECL libhpet_LTX_plugin_fini(void)
-{
-  delete theHPET;
 }
 
 // helper functions

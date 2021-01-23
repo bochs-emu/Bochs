@@ -52,16 +52,11 @@ const off_t vmware3_image_t::INVALID_OFFSET=(off_t)-1;
 
 #ifndef BXIMAGE
 
-// disk image plugin entry points
+// disk image plugin entry point
 
-int CDECL libvmware3_img_plugin_init(plugin_t *plugin, plugintype_t type)
+PLUGIN_ENTRY_FOR_IMG_MODULE(vmware3)
 {
   return 0; // Success
-}
-
-void CDECL libvmware3_img_plugin_fini(void)
-{
-  // Nothing here yet
 }
 
 #endif

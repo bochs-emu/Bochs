@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2004-2017  The Bochs Project
+//  Copyright (C) 2004-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -79,18 +79,17 @@ bx_busm_c *theBusMouse = NULL;
 #define READ_Y_HIGH   (READ_Y | READ_HIGH)
 
 
-int CDECL libbusmouse_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
+PLUGIN_ENTRY_FOR_MODULE(busmouse)
 {
-  // Create one instance of the busmouse device object.
-  theBusMouse = new bx_busm_c();
-  // Register this device.
-  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theBusMouse, BX_PLUGIN_BUSMOUSE);
+  if (init) {
+    // Create one instance of the busmouse device object.
+    theBusMouse = new bx_busm_c();
+    // Register this device.
+    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theBusMouse, BX_PLUGIN_BUSMOUSE);
+  } else {
+    delete theBusMouse;
+  }
   return 0; // Success
-}
-
-void CDECL libbusmouse_LTX_plugin_fini(void)
-{
-  delete theBusMouse;
 }
 
 bx_busm_c::bx_busm_c()

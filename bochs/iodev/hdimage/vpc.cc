@@ -49,16 +49,11 @@
 
 #ifndef BXIMAGE
 
-// disk image plugin entry points
+// disk image plugin entry point
 
-int CDECL libvpc_img_plugin_init(plugin_t *plugin, plugintype_t type)
+PLUGIN_ENTRY_FOR_IMG_MODULE(vpc)
 {
   return 0; // Success
-}
-
-void CDECL libvpc_img_plugin_fini(void)
-{
-  // Nothing here yet
 }
 
 #endif

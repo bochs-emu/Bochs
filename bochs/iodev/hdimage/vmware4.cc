@@ -56,16 +56,11 @@ const int vmware4_image_t::SECTOR_SIZE = 512;
 
 #ifndef BXIMAGE
 
-// disk image plugin entry points
+// disk image plugin entry point
 
-int CDECL libvmware4_img_plugin_init(plugin_t *plugin, plugintype_t type)
+PLUGIN_ENTRY_FOR_IMG_MODULE(vmware4)
 {
   return 0; // Success
-}
-
-void CDECL libvmware4_img_plugin_fini(void)
-{
-  // Nothing here yet
 }
 
 #endif

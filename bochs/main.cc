@@ -941,7 +941,7 @@ bx_bool load_and_init_display_lib(void)
     // bx_gui has already been filled in.  This happens when you start
     // the simulation for the second time.
     // Also, if you load wxWidgets as the configuration interface.  Its
-    // plugin_init will install wxWidgets as the bx_gui.
+    // plugin_entry() will install wxWidgets as the bx_gui.
     return 1;
   }
   BX_ASSERT(bx_gui == NULL);
