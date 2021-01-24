@@ -1275,14 +1275,6 @@ speaker: enabled=1, mode=sound, volume=15
 #screenmode: name="sample"
 
 #=======================================================================
-# USER_PLUGIN:
-# Load user-defined plugin. This option is available only if Bochs is
-# compiled with plugin support. Maximum 8 different plugins are supported.
-# See the example in the Bochs sources how to write a plugin device.
-#=======================================================================
-#user_plugin: name=testdev
-
-#=======================================================================
 # for Macintosh, use the style of pathnames in the following
 # examples.
 #

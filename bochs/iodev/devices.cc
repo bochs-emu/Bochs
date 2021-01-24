@@ -454,7 +454,7 @@ void bx_devices_c::exit()
   bx_virt_timer.setup();
   bx_slowdown_timer.exit();
 
-  // unload optional and user plugins first
+  // unload optional plugins first
   bx_unload_plugins();
   bx_unload_core_plugins();
 #if BX_NETWORKING

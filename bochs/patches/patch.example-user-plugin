@@ -1,27 +1,30 @@
 ----------------------------------------------------------------------
 Patch name: patch.example-user-plugin
 Author:     Volker Ruppert
-Updated:    28 Jan 2017
+Updated:    24 Jan 2021
 Status:     Demo
 
 Detailed description:
-  This sample code can be used as a framework for writing user plugins.
-  It contains enough code for testing the existing user plugin support
-  in Bochs and creates a device that installs a 32-bit r/w register at
-  i/o address 0x1000.
+  This sample code can be used as a framework for writing own optional
+  device plugins (AKA "user plugins). It contains enough code for testing
+  the existing plugin device support in Bochs and creates a device that
+  installs a 32-bit r/w register at i/o address 0x1000.
   This example also shows how to install and handle user-defined config
   options for bochsrc, command line and the config interface. In this
   demo it is used to specify the reset value.
   For user plugin support Bochs must be configured with plugins enabled.
   Compiling with plugin support is known to work on Linux and Windows
-  (Cygwin, MinGW/MSYS and MSVC nmake). Bochs supports loading of up to
-  16 different user plugins when starting up. Loading / removing plugins
-  at runtime is not yet supported.
+  (Cygwin, MinGW/MSYS and MSVC nmake / gui). This sample plugin can be
+  loaded in bochsrc either with "plugin_ctrl" or with it's own name:
+
+  plugin_ctrl: testdev=1
+
+  testdev: testval=1
 
 Patch was created with:
   diff -u
 Apply patch to what version:
-  svn revision 13051 (Jan 28, 2017)
+  svn revision 14082 (Jan 24, 2021)
 Instructions:
   To patch, go to main bochs directory.
   Type "patch -p0 < THIS_PATCH_FILE".
@@ -32,9 +35,9 @@ Instructions:
 ----------------------------------------------------------------------
 diff -urN ../bochs/user_plugins/Makefile.in ./user_plugins/Makefile.in
 --- ../bochs/user_plugins/Makefile.in	1970-01-01 01:00:00.000000000 +0100
-+++ ./user_plugins/Makefile.in	2017-01-28 21:20:39.386980650 +0100
++++ ./user_plugins/Makefile.in	2021-01-23 18:54:27.577913784 +0100
 @@ -0,0 +1,112 @@
-+# Copyright (C) 2009-2017  Volker Ruppert
++# Copyright (C) 2009-2021  Volker Ruppert
 +#
 +# This library is free software; you can redistribute it and/or
 +# modify it under the terms of the GNU Lesser General Public
@@ -148,9 +151,9 @@ diff -urN ../bochs/user_plugins/Makefile.in ./user_plugins/Makefile.in
 + ../param_names.h testdev.h
 diff -urN ../bochs/user_plugins/testdev.cc ./user_plugins/testdev.cc
 --- ../bochs/user_plugins/testdev.cc	1970-01-01 01:00:00.000000000 +0100
-+++ ./user_plugins/testdev.cc	2017-01-28 21:15:30.176913002 +0100
-@@ -0,0 +1,123 @@
-+// Copyright (C) 2009-2017  Volker Ruppert
++++ ./user_plugins/testdev.cc	2021-01-24 08:42:26.479565272 +0100
+@@ -0,0 +1,122 @@
++// Copyright (C) 2009-2021  Volker Ruppert
 +//
 +// This library is free software; you can redistribute it and/or
 +// modify it under the terms of the GNU Lesser General Public
@@ -187,7 +190,7 @@ diff -urN ../bochs/user_plugins/testdev.cc ./user_plugins/testdev.cc
 +  bx_param_c *root_param = SIM->get_param("user");
 +  bx_list_c *menu = new bx_list_c(root_param, "testdev", "Test Device");
 +  menu->set_options(bx_list_c::SHOW_PARENT);
-+  new bx_param_num_c(menu, "test", "Test Parameter", "", 0, BX_MAX_BIT32U, 0);
++  new bx_param_num_c(menu, "testval", "Test Parameter", "", 0, BX_MAX_BIT32U, 0);
 +}
 +
 +Bit32s testdev_options_parser(const char *context, int num_params, char *params[])
@@ -210,25 +213,24 @@ diff -urN ../bochs/user_plugins/testdev.cc ./user_plugins/testdev.cc
 +  return SIM->write_param_list(fp, (bx_list_c*) SIM->get_param("user.testdev"), NULL, 0);
 +}
 +
-+// device plugin entry points
++// device plugin entry point
 +
-+int libuser_LTX_plugin_init(plugin_t *plugin, plugintype_t type)
++extern "C" PLUGIN_ENTRY_FOR_MODULE(testdev)
 +{
-+  theTestDevice = new bx_testdev_c();
-+  BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theTestDevice, "testdev");
-+  // add new configuration parameter for the config interface
-+  testdev_init_options();
-+  // register user-defined option for bochsrc and command line
-+  SIM->register_addon_option("testdev", testdev_options_parser, testdev_options_save);
++  if (init) {
++    theTestDevice = new bx_testdev_c();
++    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theTestDevice, "testdev");
++    // add new configuration parameter for the config interface
++    testdev_init_options();
++    // register user-defined option for bochsrc and command line
++    SIM->register_addon_option("testdev", testdev_options_parser, testdev_options_save);
++  } else {
++    SIM->unregister_addon_option("testdev");
++    bx_list_c *menu = (bx_list_c*)SIM->get_param("user");
++    menu->remove("testdev");
++    delete theTestDevice;
++  }
 +  return(0); // Success
-+}
-+
-+void libuser_LTX_plugin_fini(void)
-+{
-+  SIM->unregister_addon_option("testdev");
-+  bx_list_c *menu = (bx_list_c*)SIM->get_param("user");
-+  menu->remove("testdev");
-+  delete theTestDevice;
 +}
 +
 +// the device object
@@ -251,7 +253,7 @@ diff -urN ../bochs/user_plugins/testdev.cc ./user_plugins/testdev.cc
 +
 +void bx_testdev_c::reset(unsigned type)
 +{
-+  BX_USER_THIS s.reg0 = SIM->get_param_num("user.testdev.test")->get();
++  BX_USER_THIS s.reg0 = SIM->get_param_num("user.testdev.testval")->get();
 +}
 +
 +void bx_testdev_c::register_state(void)
@@ -275,9 +277,9 @@ diff -urN ../bochs/user_plugins/testdev.cc ./user_plugins/testdev.cc
 +}
 diff -urN ../bochs/user_plugins/testdev.h ./user_plugins/testdev.h
 --- ../bochs/user_plugins/testdev.h	1970-01-01 01:00:00.000000000 +0100
-+++ ./user_plugins/testdev.h	2017-01-28 21:15:30.176913002 +0100
++++ ./user_plugins/testdev.h	2021-01-23 18:54:27.577913784 +0100
 @@ -0,0 +1,40 @@
-+// Copyright (C) 2009-2017  Volker Ruppert
++// Copyright (C) 2009-2021  Volker Ruppert
 +//
 +// This library is free software; you can redistribute it and/or
 +// modify it under the terms of the GNU Lesser General Public

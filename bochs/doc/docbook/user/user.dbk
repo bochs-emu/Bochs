@@ -3266,13 +3266,11 @@ Put this on top of your config file if the global configuration is stored in /et
 </para>
 
 <para>
-Bochs now treats unknown options as device plugin names. It tries to load this
-plugin and if successful it tries to call the parser function for this configuration
-line which is located in the plugin. This mechanism is implemented for the Bochs
-network, sound and USB devices. If there is a typo in an option name or an obsolete
-option is used, Bochs will panic and exit with a plugin load failure error
-message. In that case the failing line in your bochsrc file must be reviewed
-and fixed.
+Bochs now treats an unknown option as optional device plugin if it exists. It
+loads this plugin and then it tries to call the parser function for this
+configuration line which is located in the plugin. This mechanism is implemented
+for the Bochs network, sound and USB host controller devices. Externally
+developed device plugins (AKA "user plugins") now can also be loaded this way.
 </para>
 
 <para>
@@ -3298,6 +3296,10 @@ These plugins will be loaded by default (if present): 'biosdev', 'extfpuirq',
 These plugins are also supported, but they are usually loaded directly with
 their bochsrc option: 'e1000', 'es1370', 'ne2k', 'pcidev', 'pcipnic', 'sb16',
 'usb_ehci', 'usb_ohci', 'usb_uhci', 'usb_xhci' and 'voodoo'.
+</para>
+<para>
+Externally developed device plugins (AKA "user plugins") now can also be loaded
+this way.
 </para>
 </section>
 
@@ -5099,18 +5101,6 @@ very early when writing BIOS or OS code for example, without having to
 bother with setting up a serial port or etc. Reading from port 0xE9 will
 will return 0xe9 to let you know if the feature is available. Leave  
 this 0 unless you have a reason to use it.
-</para>
-</section>
-
-<section><title>user_plugin</title>
-<para>
-Example:
-<screen>
-  user_plugin: name=testdev
-</screen>
-Load user-defined plugin. This option is available only if Bochs is
-compiled with plugin support. Maximum 8 different plugins are supported.
-See the example in the Bochs sources how to write a plugin device.
 </para>
 </section>
 

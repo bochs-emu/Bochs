@@ -550,10 +550,8 @@ bool plugin_load(const char *name, plugintype_t type)
     sprintf(tmpname, USB_PLUGIN_ENTRY_FMT_STRING, name);
   } else if (type == PLUGTYPE_IMG) {
     sprintf(tmpname, IMG_PLUGIN_ENTRY_FMT_STRING, name);
-  } else if (type != PLUGTYPE_USER) {
-    sprintf(tmpname, PLUGIN_ENTRY_FMT_STRING, name);
   } else {
-    sprintf(tmpname, PLUGIN_ENTRY_FMT_STRING, "user");
+    sprintf(tmpname, PLUGIN_ENTRY_FMT_STRING, name);
   }
 #if defined(WIN32)
   plugin->plugin_entry = (plugin_entry_t) GetProcAddress(plugin->handle, tmpname);
@@ -675,7 +673,6 @@ void pluginRegisterDeviceDevmodel(plugin_t *plugin, plugintype_t type, bx_devmod
       break;
     case PLUGTYPE_STANDARD:
     case PLUGTYPE_OPTIONAL:
-    case PLUGTYPE_USER:
     default:
       devlist = &devices;
       break;
@@ -810,14 +807,6 @@ void bx_init_plugins()
       device->devmodel->init();
     }
   }
-#if BX_PLUGINS
-  for (device = devices; device; device = device->next) {
-    if (device->plugtype == PLUGTYPE_USER) {
-      pluginlog->info("init_dev of '%s' plugin device by virtual method",device->name);
-      device->devmodel->init();
-    }
-  }
-#endif
 }
 
 /**************************************************************************/
@@ -844,14 +833,6 @@ void bx_reset_plugins(unsigned signal)
       device->devmodel->reset(signal);
     }
   }
-#if BX_PLUGINS
-  for (device = devices; device; device = device->next) {
-    if (device->plugtype == PLUGTYPE_USER) {
-      pluginlog->info("reset of '%s' plugin device by virtual method",device->name);
-      device->devmodel->reset(signal);
-    }
-  }
-#endif
 }
 
 /*******************************************************/
@@ -941,13 +922,6 @@ void bx_plugins_after_restore_state()
       device->devmodel->after_restore_state();
     }
   }
-#if BX_PLUGINS
-  for (device = devices; device; device = device->next) {
-    if (device->plugtype == PLUGTYPE_USER) {
-      device->devmodel->after_restore_state();
-    }
-  }
-#endif
 }
 
 #if !BX_PLUGINS

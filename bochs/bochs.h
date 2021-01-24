@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2020  The Bochs Project
+//  Copyright (C) 2001-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -493,7 +493,6 @@ extern bx_bool bx_gui_sighandler;
 #define BX_N_SERIAL_PORTS 4
 #define BX_N_PARALLEL_PORTS 2
 #define BX_N_PCI_SLOTS 5
-#define BX_N_USER_PLUGINS 8
 
 void bx_center_print(FILE *file, const char *line, unsigned maxwidth);
 

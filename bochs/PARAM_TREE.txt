@@ -290,8 +290,6 @@ misc
     text_base
     data_base
     bss_base
-  user_plugin
-    1 ... 8
 
 log
   filename

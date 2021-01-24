@@ -89,10 +89,8 @@ extern "C" {
 #define PLUG_load_gui_plugin(name) bx_load_plugin(name,PLUGTYPE_GUI)
 #define PLUG_load_opt_plugin(name) bx_load_plugin(name,PLUGTYPE_OPTIONAL)
 #define PLUG_load_vga_plugin(name) bx_load_plugin(name,PLUGTYPE_VGA)
-#define PLUG_load_user_plugin(name) {bx_load_plugin(name,PLUGTYPE_USER);}
 #define PLUG_unload_plugin(name) {bx_unload_plugin(#name,1);}
 #define PLUG_unload_opt_plugin(name) bx_unload_plugin(name,1)
-#define PLUG_unload_user_plugin(name) {bx_unload_plugin(name,1);}
 #define PLUG_unload_plugin_type(name,type) {bx_unload_plugin_type(name,type);}
 
 #define DEV_register_ioread_handler(b,c,d,e,f)  pluginRegisterIOReadHandler(b,c,d,e,f)
@@ -425,7 +423,6 @@ PLUGIN_ENTRY_FOR_MODULE(iodebug);
 PLUGIN_ENTRY_FOR_MODULE(ioapic);
 PLUGIN_ENTRY_FOR_MODULE(hpet);
 PLUGIN_ENTRY_FOR_MODULE(voodoo);
-PLUGIN_ENTRY_FOR_MODULE(user);
 // gui plugins
 PLUGIN_ENTRY_FOR_GUI_MODULE(amigaos);
 PLUGIN_ENTRY_FOR_GUI_MODULE(carbon);
