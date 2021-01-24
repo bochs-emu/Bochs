@@ -556,14 +556,16 @@ bool plugin_load(const char *name, plugintype_t type)
 #if defined(WIN32)
   plugin->plugin_entry = (plugin_entry_t) GetProcAddress(plugin->handle, tmpname);
   if (plugin->plugin_entry == NULL) {
-    pluginlog->panic("could not find plugin_entry: error=%d", GetLastError());
+    pluginlog->panic("could not find plugin_entry for module '%s' (%s): error=%d",
+	                 name, plugin_filename, GetLastError());
     plugin_abort(plugin);
     return 0;
   }
 #else
   plugin->plugin_entry = (plugin_entry_t) lt_dlsym(plugin->handle, tmpname);
   if (plugin->plugin_entry == NULL) {
-    pluginlog->panic("could not find plugin_entry: %s", lt_dlerror());
+    pluginlog->panic("could not find plugin_entry for module '%s' (%s): %s",
+	                 name, plugin_filename, lt_dlerror());
     plugin_abort(plugin);
     return 0;
   }

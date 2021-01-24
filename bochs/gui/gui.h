@@ -573,8 +573,8 @@ enum {
 //   static bx_sdl_gui_c *theGui;
 
 #define IMPLEMENT_GUI_PLUGIN_CODE(gui_name)                             \
-  int CDECL lib##gui_name##_gui_plugin_entry(plugin_t *plugin,          \
-          plugintype_t type, bool init) {                               \
+  PLUGIN_ENTRY_FOR_GUI_MODULE(gui_name)                                 \
+  {                                                                     \
     if (init) {                                                         \
       genlog->info("installing %s module as the Bochs GUI", #gui_name); \
       theGui = new bx_##gui_name##_gui_c ();                            \

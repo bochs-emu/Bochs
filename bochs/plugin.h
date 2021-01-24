@@ -358,7 +358,8 @@ int bx_unload_opt_plugin(const char *name, bx_bool devflag);
 int plugin_entry(plugin_t *plugin, plugintype_t type, bool init);
 
 // still in extern "C"
-#if BX_PLUGINS && defined(_MSC_VER)
+#if BX_PLUGINS && defined(WIN32)
+
 #define PLUGIN_ENTRY_FOR_MODULE(mod) \
   extern "C" __declspec(dllexport) int __cdecl lib##mod##_LTX_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
 #define PLUGIN_ENTRY_FOR_GUI_MODULE(mod) \
@@ -371,7 +372,24 @@ int plugin_entry(plugin_t *plugin, plugintype_t type, bool init);
   extern "C" __declspec(dllexport) int __cdecl lib##mod##_dev_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
 #define PLUGIN_ENTRY_FOR_IMG_MODULE(mod) \
   extern "C" __declspec(dllexport) int __cdecl lib##mod##_img_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+
+#elif BX_PLUGINS
+
+#define PLUGIN_ENTRY_FOR_MODULE(mod) \
+  extern "C" int CDECL lib##mod##_LTX_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+#define PLUGIN_ENTRY_FOR_GUI_MODULE(mod) \
+  extern "C" int CDECL lib##mod##_gui_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+#define PLUGIN_ENTRY_FOR_SOUND_MODULE(mod) \
+  extern "C" int CDECL lib##mod##_sound_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+#define PLUGIN_ENTRY_FOR_NET_MODULE(mod) \
+  extern "C" int CDECL lib##mod##_net_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+#define PLUGIN_ENTRY_FOR_USB_MODULE(mod) \
+  extern "C" int CDECL lib##mod##_dev_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+#define PLUGIN_ENTRY_FOR_IMG_MODULE(mod) \
+  extern "C" int CDECL lib##mod##_img_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+
 #else
+
 #define PLUGIN_ENTRY_FOR_MODULE(mod) \
   int CDECL lib##mod##_LTX_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
 #define PLUGIN_ENTRY_FOR_GUI_MODULE(mod) \
@@ -384,7 +402,6 @@ int plugin_entry(plugin_t *plugin, plugintype_t type, bool init);
   int CDECL lib##mod##_dev_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
 #define PLUGIN_ENTRY_FOR_IMG_MODULE(mod) \
   int CDECL lib##mod##_img_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
-#endif
 
 // device plugins
 PLUGIN_ENTRY_FOR_MODULE(harddrv);
@@ -468,6 +485,7 @@ PLUGIN_ENTRY_FOR_IMG_MODULE(vbox);
 PLUGIN_ENTRY_FOR_IMG_MODULE(vpc);
 PLUGIN_ENTRY_FOR_IMG_MODULE(vvfat);
 
+#endif
 
 #ifdef __cplusplus
 }
