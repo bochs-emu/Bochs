@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2020  The Bochs Project
+//  Copyright (C) 2002-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -69,6 +69,19 @@
 //////////////////////////////////////////////////////////////
 // plugin support
 //////////////////////////////////////////////////////////////
+PLUGIN_ENTRY_FOR_GUI_MODULE(wx)
+{
+  if (init) {
+    wxLogDebug(wxT("plugin_entry() for wxmain.cc"));
+    wxLogDebug(wxT("installing wxWidgets as the configuration interface"));
+    SIM->register_configuration_interface("wx", wx_ci_callback, NULL);
+    wxLogDebug(wxT("installing %s as the Bochs GUI"), wxT("wxWidgets"));
+    SIM->get_param_enum(BXPN_SEL_DISPLAY_LIBRARY)->set_enabled(0);
+    MyPanel::OnPluginInit();
+  }
+  return 0; // success
+}
+
 class bx_wx_gui_c : public bx_gui_c {
 public:
   bx_wx_gui_c(void) {}

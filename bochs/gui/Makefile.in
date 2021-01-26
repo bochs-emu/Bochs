@@ -307,8 +307,7 @@ wx.o: wx.@CPP_SUFFIX@ ../config.h ../bochs.h ../config.h ../osdep.h \
  ../instrument/stubs/instrument.h ../param_names.h keymap.h \
  ../iodev/iodev.h ../plugin.h ../extplugin.h font/vga.bitmap.h wxmain.h
 wxdialog.o: wxdialog.@CPP_SUFFIX@ ../config.h ../param_names.h ../osdep.h \
- ../gui/siminterface.h ../cpudb.h ../gui/paramtree.h ../bxversion.h \
- wxdialog.h wxmain.h
+ ../gui/siminterface.h ../cpudb.h ../gui/paramtree.h wxdialog.h wxmain.h
 wxmain.o: wxmain.@CPP_SUFFIX@ ../config.h ../param_names.h ../osdep.h \
  ../gui/siminterface.h ../cpudb.h ../gui/paramtree.h ../bxversion.h \
  wxdialog.h wxmain.h ../extplugin.h bitmaps/cdromd.xpm bitmaps/copy.xpm \
@@ -429,8 +428,7 @@ wx.lo: wx.@CPP_SUFFIX@ ../config.h ../bochs.h ../config.h ../osdep.h \
  ../instrument/stubs/instrument.h ../param_names.h keymap.h \
  ../iodev/iodev.h ../plugin.h ../extplugin.h font/vga.bitmap.h wxmain.h
 wxdialog.lo: wxdialog.@CPP_SUFFIX@ ../config.h ../param_names.h ../osdep.h \
- ../gui/siminterface.h ../cpudb.h ../gui/paramtree.h ../bxversion.h \
- wxdialog.h wxmain.h
+ ../gui/siminterface.h ../cpudb.h ../gui/paramtree.h wxdialog.h wxmain.h
 wxmain.lo: wxmain.@CPP_SUFFIX@ ../config.h ../param_names.h ../osdep.h \
  ../gui/siminterface.h ../cpudb.h ../gui/paramtree.h ../bxversion.h \
  wxdialog.h wxmain.h ../extplugin.h bitmaps/cdromd.xpm bitmaps/copy.xpm \

@@ -136,6 +136,7 @@ enum
 
 
 // defined in wxmain.cc
+int wx_ci_callback(void *userdata, ci_command_t command);
 void safeWxStrcpy(char *dest, wxString src, int destlen);
 
 /// the MyPanel methods are defined in wx.cc
