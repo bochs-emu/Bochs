@@ -84,7 +84,7 @@ AudioConverterRef WaveConverter = NULL;
 
 // sound driver plugin entry point
 
-PLUGIN_ENTRY_FOR_SOUND_MODULE(osx)
+PLUGIN_ENTRY_FOR_SND_MODULE(osx)
 {
   // Nothing here yet
   return 0; // Success

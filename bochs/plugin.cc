@@ -43,11 +43,12 @@
 
 #define PLUGIN_ENTRY_FMT_STRING       "lib%s_LTX_plugin_entry"
 #define GUI_PLUGIN_ENTRY_FMT_STRING   "lib%s_gui_plugin_entry"
-#define SOUND_PLUGIN_ENTRY_FMT_STRING "lib%s_sound_plugin_entry"
-#define NET_PLUGIN_ENTRY_FMT_STRING   "lib%s_net_plugin_entry"
-#define USB_PLUGIN_ENTRY_FMT_STRING   "lib%s_dev_plugin_entry"
 #define IMG_PLUGIN_ENTRY_FMT_STRING   "lib%s_img_plugin_entry"
-#define PLUGIN_PATH                  ""
+#define NET_PLUGIN_ENTRY_FMT_STRING   "lib%s_net_plugin_entry"
+#define SND_PLUGIN_ENTRY_FMT_STRING   "lib%s_snd_plugin_entry"
+#define USB_PLUGIN_ENTRY_FMT_STRING   "lib%s_usb_plugin_entry"
+
+#define PLUGIN_PATH                   ""
 
 #ifndef WIN32
 #define PLUGIN_FILENAME_FORMAT       "libbx_%s.so"
@@ -542,14 +543,14 @@ bool plugin_load(const char *name, plugintype_t type)
 
   if (type == PLUGTYPE_GUI) {
     sprintf(tmpname, GUI_PLUGIN_ENTRY_FMT_STRING, name);
-  } else if (type == PLUGTYPE_SND) {
-    sprintf(tmpname, SOUND_PLUGIN_ENTRY_FMT_STRING, name);
-  } else if (type == PLUGTYPE_NET) {
-    sprintf(tmpname, NET_PLUGIN_ENTRY_FMT_STRING, name);
-  } else if (type == PLUGTYPE_USB) {
-    sprintf(tmpname, USB_PLUGIN_ENTRY_FMT_STRING, name);
   } else if (type == PLUGTYPE_IMG) {
     sprintf(tmpname, IMG_PLUGIN_ENTRY_FMT_STRING, name);
+  } else if (type == PLUGTYPE_NET) {
+    sprintf(tmpname, NET_PLUGIN_ENTRY_FMT_STRING, name);
+  } else if (type == PLUGTYPE_SND) {
+    sprintf(tmpname, SND_PLUGIN_ENTRY_FMT_STRING, name);
+  } else if (type == PLUGTYPE_USB) {
+    sprintf(tmpname, USB_PLUGIN_ENTRY_FMT_STRING, name);
   } else {
     sprintf(tmpname, PLUGIN_ENTRY_FMT_STRING, name);
   }
@@ -557,7 +558,7 @@ bool plugin_load(const char *name, plugintype_t type)
   plugin->plugin_entry = (plugin_entry_t) GetProcAddress(plugin->handle, tmpname);
   if (plugin->plugin_entry == NULL) {
     pluginlog->panic("could not find plugin_entry for module '%s' (%s): error=%d",
-	                 name, plugin_filename, GetLastError());
+                     name, plugin_filename, GetLastError());
     plugin_abort(plugin);
     return 0;
   }
@@ -565,7 +566,7 @@ bool plugin_load(const char *name, plugintype_t type)
   plugin->plugin_entry = (plugin_entry_t) lt_dlsym(plugin->handle, tmpname);
   if (plugin->plugin_entry == NULL) {
     pluginlog->panic("could not find plugin_entry for module '%s' (%s): %s",
-	                 name, plugin_filename, lt_dlerror());
+                     name, plugin_filename, lt_dlerror());
     plugin_abort(plugin);
     return 0;
   }
@@ -698,14 +699,27 @@ void pluginRegisterDeviceDevmodel(plugin_t *plugin, plugintype_t type, bx_devmod
 /* Plugin system: Remove registered plugin device                       */
 /************************************************************************/
 
-void pluginUnregisterDeviceDevmodel(const char *name)
+void pluginUnregisterDeviceDevmodel(const char *name, plugintype_t type)
 {
+  device_t **devlist;
   device_t *device, *prev = NULL;
 
-  for (device = devices; device; device = device->next) {
+  switch (type) {
+    case PLUGTYPE_CORE:
+    case PLUGTYPE_VGA:
+      devlist = &core_devices;
+      break;
+    case PLUGTYPE_STANDARD:
+    case PLUGTYPE_OPTIONAL:
+    default:
+      devlist = &devices;
+      break;
+  }
+
+  for (device = *devlist; device; device = device->next) {
     if (!strcmp(name, device->name)) {
       if (prev == NULL) {
-        devices = device->next;
+        *devlist = device->next;
       } else {
         prev->next = device->next;
       }
@@ -762,7 +776,7 @@ bool bx_unload_plugin(const char *name, bx_bool devflag)
   for (plugin = plugins; plugin; plugin = plugin->next) {
     if (!strcmp(plugin->name, name)) {
       if (devflag) {
-        pluginUnregisterDeviceDevmodel(plugin->name);
+        pluginUnregisterDeviceDevmodel(plugin->name, plugin->type);
       }
       ret = plugin_unload(plugin);
       break;
@@ -928,16 +942,15 @@ void bx_plugins_after_restore_state()
 
 #if !BX_PLUGINS
 
-// Special code for loading gui, optional and sound plugins when plugin support
-// is turned off.
+// Special code for handling modules when plugin support is turned off.
 
-#define BUILTIN_GUI_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_GUI, lib##mod##_gui_plugin_entry, 0}
 #define BUILTIN_OPT_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_OPTIONAL, lib##mod##_LTX_plugin_entry, 0}
-#define BUILTIN_SND_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_SND, lib##mod##_sound_plugin_entry, 0}
-#define BUILTIN_NET_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_NET, lib##mod##_net_plugin_entry, 0}
-#define BUILTIN_USB_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_USB, lib##mod##_dev_plugin_entry, 0}
 #define BUILTIN_VGA_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_VGA, lib##mod##_LTX_plugin_entry, 0}
+#define BUILTIN_GUI_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_GUI, lib##mod##_gui_plugin_entry, 0}
 #define BUILTIN_IMG_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_IMG, lib##mod##_img_plugin_entry, 0}
+#define BUILTIN_NET_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_NET, lib##mod##_net_plugin_entry, 0}
+#define BUILTIN_SND_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_SND, lib##mod##_snd_plugin_entry, 0}
+#define BUILTIN_USB_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_USB, lib##mod##_dev_plugin_entry, 0}
 
 plugin_t bx_builtin_plugins[] = {
 #if BX_WITH_AMIGAOS
@@ -1109,12 +1122,14 @@ int bx_unload_opt_plugin(const char *name, bx_bool devflag)
   int i = 0;
   while (strcmp(bx_builtin_plugins[i].name, "NULL")) {
     if ((!strcmp(name, bx_builtin_plugins[i].name)) &&
-        (bx_builtin_plugins[i].type == PLUGTYPE_OPTIONAL)) {
+        ((bx_builtin_plugins[i].type == PLUGTYPE_OPTIONAL) ||
+         (bx_builtin_plugins[i].type == PLUGTYPE_VGA))) {
       if (bx_builtin_plugins[i].initialized == 1) {
         if (devflag) {
-          pluginUnregisterDeviceDevmodel(bx_builtin_plugins[i].name);
+          pluginUnregisterDeviceDevmodel(bx_builtin_plugins[i].name,
+                                         bx_builtin_plugins[i].type);
         }
-        bx_builtin_plugins[i].plugin_entry(NULL, PLUGTYPE_OPTIONAL, 0);
+        bx_builtin_plugins[i].plugin_entry(NULL, bx_builtin_plugins[i].type, 0);
         bx_builtin_plugins[i].initialized = 0;
       }
       return 1;

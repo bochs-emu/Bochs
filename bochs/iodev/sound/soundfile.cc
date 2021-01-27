@@ -42,7 +42,7 @@
 
 // sound driver plugin entry point
 
-PLUGIN_ENTRY_FOR_SOUND_MODULE(file)
+PLUGIN_ENTRY_FOR_SND_MODULE(file)
 {
   // Nothing here yet
   return 0; // Success

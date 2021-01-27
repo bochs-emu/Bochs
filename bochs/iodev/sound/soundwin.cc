@@ -53,7 +53,7 @@ Bit8u *DataPointer;    // returned by GlobalLock()
 
 // sound driver plugin entry point
 
-PLUGIN_ENTRY_FOR_SOUND_MODULE(win)
+PLUGIN_ENTRY_FOR_SND_MODULE(win)
 {
   // Nothing here yet
   return 0; // Success

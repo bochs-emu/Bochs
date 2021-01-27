@@ -77,7 +77,7 @@ extern "C" {
 
 
 #define BX_REGISTER_DEVICE_DEVMODEL(a,b,c,d) pluginRegisterDeviceDevmodel(a,b,c,d)
-#define BX_UNREGISTER_DEVICE_DEVMODEL(a) pluginUnregisterDeviceDevmodel(a)
+#define BX_UNREGISTER_DEVICE_DEVMODEL(a,b) pluginUnregisterDeviceDevmodel(a,b)
 #define PLUG_device_present(a) pluginDevicePresent(a)
 
 #if BX_PLUGINS
@@ -297,7 +297,7 @@ typedef void (*deviceInitDev_t)(void);
 typedef void (*deviceReset_t)(unsigned);
 
 BOCHSAPI void pluginRegisterDeviceDevmodel(plugin_t *plugin, plugintype_t type, bx_devmodel_c *dev, const char *name);
-BOCHSAPI void pluginUnregisterDeviceDevmodel(const char *name);
+BOCHSAPI void pluginUnregisterDeviceDevmodel(const char *name, plugintype_t type);
 BOCHSAPI bx_bool pluginDevicePresent(const char *name);
 
 /* === IO port stuff === */
@@ -364,14 +364,14 @@ int plugin_entry(plugin_t *plugin, plugintype_t type, bool init);
   extern "C" __declspec(dllexport) int __cdecl lib##mod##_LTX_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
 #define PLUGIN_ENTRY_FOR_GUI_MODULE(mod) \
   extern "C" __declspec(dllexport) int __cdecl lib##mod##_gui_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
-#define PLUGIN_ENTRY_FOR_SOUND_MODULE(mod) \
-  extern "C" __declspec(dllexport) int __cdecl lib##mod##_sound_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
-#define PLUGIN_ENTRY_FOR_NET_MODULE(mod) \
-  extern "C" __declspec(dllexport) int __cdecl lib##mod##_net_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
-#define PLUGIN_ENTRY_FOR_USB_MODULE(mod) \
-  extern "C" __declspec(dllexport) int __cdecl lib##mod##_dev_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
 #define PLUGIN_ENTRY_FOR_IMG_MODULE(mod) \
   extern "C" __declspec(dllexport) int __cdecl lib##mod##_img_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+#define PLUGIN_ENTRY_FOR_NET_MODULE(mod) \
+  extern "C" __declspec(dllexport) int __cdecl lib##mod##_net_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+#define PLUGIN_ENTRY_FOR_SND_MODULE(mod) \
+  extern "C" __declspec(dllexport) int __cdecl lib##mod##_snd_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+#define PLUGIN_ENTRY_FOR_USB_MODULE(mod) \
+  extern "C" __declspec(dllexport) int __cdecl lib##mod##_usb_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
 
 #elif BX_PLUGINS
 
@@ -379,14 +379,14 @@ int plugin_entry(plugin_t *plugin, plugintype_t type, bool init);
   extern "C" int CDECL lib##mod##_LTX_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
 #define PLUGIN_ENTRY_FOR_GUI_MODULE(mod) \
   extern "C" int CDECL lib##mod##_gui_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
-#define PLUGIN_ENTRY_FOR_SOUND_MODULE(mod) \
-  extern "C" int CDECL lib##mod##_sound_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
-#define PLUGIN_ENTRY_FOR_NET_MODULE(mod) \
-  extern "C" int CDECL lib##mod##_net_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
-#define PLUGIN_ENTRY_FOR_USB_MODULE(mod) \
-  extern "C" int CDECL lib##mod##_dev_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
 #define PLUGIN_ENTRY_FOR_IMG_MODULE(mod) \
   extern "C" int CDECL lib##mod##_img_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+#define PLUGIN_ENTRY_FOR_NET_MODULE(mod) \
+  extern "C" int CDECL lib##mod##_net_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+#define PLUGIN_ENTRY_FOR_SND_MODULE(mod) \
+  extern "C" int CDECL lib##mod##_snd_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+#define PLUGIN_ENTRY_FOR_USB_MODULE(mod) \
+  extern "C" int CDECL lib##mod##_usb_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
 
 #else
 
@@ -394,14 +394,14 @@ int plugin_entry(plugin_t *plugin, plugintype_t type, bool init);
   int CDECL lib##mod##_LTX_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
 #define PLUGIN_ENTRY_FOR_GUI_MODULE(mod) \
   int CDECL lib##mod##_gui_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
-#define PLUGIN_ENTRY_FOR_SOUND_MODULE(mod) \
-  int CDECL lib##mod##_sound_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
-#define PLUGIN_ENTRY_FOR_NET_MODULE(mod) \
-  int CDECL lib##mod##_net_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
-#define PLUGIN_ENTRY_FOR_USB_MODULE(mod) \
-  int CDECL lib##mod##_dev_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
 #define PLUGIN_ENTRY_FOR_IMG_MODULE(mod) \
   int CDECL lib##mod##_img_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+#define PLUGIN_ENTRY_FOR_NET_MODULE(mod) \
+  int CDECL lib##mod##_net_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+#define PLUGIN_ENTRY_FOR_SND_MODULE(mod) \
+  int CDECL lib##mod##_snd_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+#define PLUGIN_ENTRY_FOR_USB_MODULE(mod) \
+  int CDECL lib##mod##_dev_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
 
 // device plugins
 PLUGIN_ENTRY_FOR_MODULE(harddrv);
@@ -454,13 +454,13 @@ PLUGIN_ENTRY_FOR_GUI_MODULE(win32);
 PLUGIN_ENTRY_FOR_GUI_MODULE(wx);
 PLUGIN_ENTRY_FOR_GUI_MODULE(x);
 // sound driver plugins
-PLUGIN_ENTRY_FOR_SOUND_MODULE(alsa);
-PLUGIN_ENTRY_FOR_SOUND_MODULE(dummy);
-PLUGIN_ENTRY_FOR_SOUND_MODULE(file);
-PLUGIN_ENTRY_FOR_SOUND_MODULE(oss);
-PLUGIN_ENTRY_FOR_SOUND_MODULE(osx);
-PLUGIN_ENTRY_FOR_SOUND_MODULE(sdl);
-PLUGIN_ENTRY_FOR_SOUND_MODULE(win);
+PLUGIN_ENTRY_FOR_SND_MODULE(alsa);
+PLUGIN_ENTRY_FOR_SND_MODULE(dummy);
+PLUGIN_ENTRY_FOR_SND_MODULE(file);
+PLUGIN_ENTRY_FOR_SND_MODULE(oss);
+PLUGIN_ENTRY_FOR_SND_MODULE(osx);
+PLUGIN_ENTRY_FOR_SND_MODULE(sdl);
+PLUGIN_ENTRY_FOR_SND_MODULE(win);
 // network driver plugins
 PLUGIN_ENTRY_FOR_NET_MODULE(fbsd);
 PLUGIN_ENTRY_FOR_NET_MODULE(linux);

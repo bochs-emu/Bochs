@@ -125,6 +125,17 @@ const char *bx_param_string_handler(bx_param_string_c *param, int set,
         val = oldval;
       }
     }
+  } else if (!strcmp(pname, BXPN_VGA_EXTENSION)) {
+    if (set == 1) {
+      if ((strlen(oldval) > 0) && (strcmp(oldval, "none") && strcmp(oldval, "vbe") &&
+          strcmp(oldval, "cirrus"))) {
+        PLUG_unload_opt_plugin(oldval);
+      }
+      if ((strlen(val) > 0) && (strcmp(val, "none") && strcmp(val, "vbe") &&
+          strcmp(val, "cirrus"))) {
+        PLUG_load_vga_plugin(val);
+      }
+    }
   } else {
     BX_PANIC(("bx_param_string_handler called with unknown parameter '%s'", pname));
   }
@@ -284,7 +295,7 @@ void bx_plugin_ctrl_reset(bx_bool init_done)
   SIM->opt_plugin_ctrl("*", 1);
 }
 
-bool bx_plugin_ctrl_test(const char *plugname)
+bool bx_opt_plugin_available(const char *plugname)
 {
   return (((bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL))->get_by_name(plugname) != NULL);
 }
@@ -1011,6 +1022,7 @@ void bx_init_options()
                 "VGA Extension",
                 "Name of the VGA extension",
                 "none", BX_PATHNAME_LEN);
+  vga_extension->set_handler(bx_param_string_handler);
   vga_extension->set_initial_val("vbe");
   display->set_options(display->SHOW_PARENT);
 
@@ -2770,12 +2782,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     }
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "extension=", 10)) {
-        const char *vgaext = &params[i][10];
-        SIM->get_param_string(BXPN_VGA_EXTENSION)->set(vgaext);
-        if ((strlen(vgaext) > 0) &&
-            (strcmp(vgaext, "none") && strcmp(vgaext, "vbe") && strcmp(vgaext, "cirrus"))) {
-          PLUG_load_vga_plugin(vgaext);
-        }
+        SIM->get_param_string(BXPN_VGA_EXTENSION)->set(&params[i][10]);
       } else if (!strncmp(params[i], "update_freq=", 12)) {
         SIM->get_param_num(BXPN_VGA_UPDATE_FREQUENCY)->set(atol(&params[i][12]));
       } else if (!strncmp(params[i], "realtime=", 9)) {
@@ -3053,7 +3060,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     return SIM->parse_addon_option(context, num_params, &params[0]);
   } else if (is_deprecated_option(params[0], &newparam)) {
     PARSE_ERR(("%s: '%s' is deprecated - use '%s' option instead.", context, params[0], newparam));
-  } else if (bx_plugin_ctrl_test(params[0])) {
+  } else if (bx_opt_plugin_available(params[0])) {
     // treat unknown option as plugin name and try to load it
     if (SIM->opt_plugin_ctrl(params[0], 1)) {
       if (SIM->is_addon_option(params[0])) {

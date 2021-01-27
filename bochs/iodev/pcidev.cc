@@ -115,7 +115,7 @@ Bit32s pcidev_options_save(FILE *fp)
 
 // device plugin entry point
 
-PLUGIN_ENTRY_FOR_SOUND_MODULE(pcidev)
+PLUGIN_ENTRY_FOR_MODULE(pcidev)
 {
   if (init) {
     thePciDevAdapter = new bx_pcidev_c();

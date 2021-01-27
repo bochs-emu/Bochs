@@ -158,9 +158,12 @@ PLUGIN_ENTRY_FOR_MODULE(voodoo)
     menu->remove("voodoo");
     if (theVoodooVga != NULL) {
       delete theVoodooVga;
+      theVoodooVga = NULL;
+      bx_devices.pluginVgaDevice = &bx_devices.stubVga;
     }
     if (theVoodooDevice != NULL) {
       delete theVoodooDevice;
+      theVoodooDevice = NULL;
     }
   }
   return 0; // Success

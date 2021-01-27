@@ -31,7 +31,7 @@
 
 #include "soundlow.h"
 
-PLUGIN_ENTRY_FOR_SOUND_MODULE(dummy)
+PLUGIN_ENTRY_FOR_SND_MODULE(dummy)
 {
   // Nothing here yet
   return 0; // Success
