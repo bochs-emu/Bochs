@@ -8,7 +8,7 @@
 //
 //  Modified by Bruce Ewing
 //
-//  Copyright (C) 2008-2020  The Bochs Project
+//  Copyright (C) 2008-2021  The Bochs Project
 
 #include "bochs.h"
 #include "win32dialog.h"
@@ -146,7 +146,7 @@ Bit32u SelectedBID;
 #define BTN_BASE            1024
 #define MULTICPU_BTN_BASE   1030
 
-bx_bool UpdInProgress[3];       // flag -- list update incomplete (not OK to paint)
+bool UpdInProgress[3];       // flag -- list update incomplete (not OK to paint)
 
 INT_PTR CALLBACK A_DP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
 {
@@ -174,9 +174,9 @@ INT_PTR CALLBACK A_DP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
     return 0;
 }
 
-bx_bool ShowAskDialog()
+bool ShowAskDialog()
 {
-    bx_bool ret = FALSE;
+    bool ret = FALSE;
     // The dialog box needs a caret, and will destroy the one in hE_I.
     // So destroy it myself, cleanly, and let it be recreated cleanly.
     CallWindowProc(*wEdit, hE_I,WM_KILLFOCUS,(WPARAM) 0,0);
@@ -564,7 +564,7 @@ LRESULT CALLBACK LVProc(HWND hh, UINT mm, WPARAM ww, LPARAM ll)
 }
 
 
-bx_bool SpListView()        // Superclasses a ListView control
+bool SpListView()        // Superclasses a ListView control
 {
     WNDCLASS wClass;
     GetClassInfo(GetModuleHandle(0), WC_LISTVIEW, &wClass);
@@ -577,7 +577,7 @@ bx_bool SpListView()        // Superclasses a ListView control
     return TRUE;
 }
 
-bx_bool SpBtn()             // Superclasses a button control
+bool SpBtn()             // Superclasses a button control
 {
     WNDCLASS wClass;
     GetClassInfo(GetModuleHandle(0), "button", &wClass);
@@ -824,7 +824,7 @@ void VSizeChange()
 // kludgy function to remove column header/autosizing from Fill routines
 void RedrawColumns(int listnum)
 {
-    static bx_bool DumpCResize = FALSE; // flag to force column resize/autosize
+    static bool DumpCResize = FALSE; // flag to force column resize/autosize
     static int PrevDV = -1;             // type of previous Dump window that was displayed
     // ResizeColmns says whether font or 64bit mode has changed,
     // but the Dump windows need to "remember" seeing the flag
@@ -997,7 +997,7 @@ void GetInputEntry(char *buf)
     GetWindowText(hE_I,buf,200);
 }
 
-void SetLIState(int listnum, int itemnum, bx_bool Select)
+void SetLIState(int listnum, int itemnum, bool Select)
 {
     // assume selected
     LV_ITEM lvi = {LVIF_STATE,itemnum,2,LVIS_SELECTED,LVIS_SELECTED,(LPSTR) 0,0,0,0};
@@ -1133,7 +1133,7 @@ void DispMessage(const char *msg, const char *title)
 }
 
 // exit GDT/IDT/Paging/Stack/Tree -- back to the MemDump window
-void ShowMemData(bx_bool initting)
+void ShowMemData(bool initting)
 {
     int i = 1;
     if (LinearDump == FALSE)
@@ -1211,7 +1211,7 @@ void MakeTreeChild (HTREEITEM *h_P, int ChildCount, HTREEITEM *h_TC)
     *h_TC = (HTREEITEM) CallWindowProc(wTreeView,hT,TVM_INSERTITEM,(WPARAM) 0,(LPARAM) &tvis);
 }
 
-bx_bool NewFont()
+bool NewFont()
 {
     if (AtBreak == FALSE)
         return FALSE;
@@ -1257,7 +1257,7 @@ bx_bool NewFont()
 LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
 {
     unsigned i;
-    extern bx_bool vgaw_refresh;
+    extern bool vgaw_refresh;
 
     switch(mm)
     {
@@ -1283,7 +1283,7 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
             // the group stuff may COMPILE correctly, but still may fail at runtime
             Bit8u MajWinVer, MinWinVer;
             Bit32u PackedVer = GetVersion();
-            bx_bool Group_OK = TRUE;
+            bool Group_OK = TRUE;
             MajWinVer = (Bit8u)(PackedVer & 0xff);      // Major version # is in the LOW byte
             MinWinVer = (Bit8u)((PackedVer>>8) & 0xff);
             if (MajWinVer > 5 || (MajWinVer == 5 && MinWinVer >= 1))     // is it XP or higher?
@@ -1419,7 +1419,7 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
         {
             RECT rc;
             int i, j, k;
-            bx_bool unchanged = FALSE;
+            bool unchanged = FALSE;
 
             if (hY == NULL)     // sometimes WM_SIZE is called before OSInit completes!
                 hY = hh;
@@ -1777,7 +1777,7 @@ void HitBreak()
 }
 
 // This function must be called immediately after bochs starts
-bx_bool OSInit()
+bool OSInit()
 {
     TEXTMETRIC tm;
 
@@ -1889,7 +1889,7 @@ void MakeBL(HTREEITEM *h_P, bx_param_c *p)
     }
 }
 
-bx_bool ParseOSSettings(const char *param, const char *value)
+bool ParseOSSettings(const char *param, const char *value)
 {
   char *val2, *ptr;
 

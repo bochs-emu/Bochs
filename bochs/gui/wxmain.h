@@ -142,9 +142,9 @@ void safeWxStrcpy(char *dest, wxString src, int destlen);
 /// the MyPanel methods are defined in wx.cc
 class MyPanel: public wxPanel
 {
-  bx_bool fillBxKeyEvent(wxKeyEvent& event, BxKeyEvent& bxev, bx_bool release);  // for all platforms
-  bx_bool fillBxKeyEvent_MSW(wxKeyEvent& event, BxKeyEvent& bxev, bx_bool release);
-  bx_bool fillBxKeyEvent_GTK(wxKeyEvent& event, BxKeyEvent& bxev, bx_bool release);
+  bool fillBxKeyEvent(wxKeyEvent& event, BxKeyEvent& bxev, bool release);  // for all platforms
+  bool fillBxKeyEvent_MSW(wxKeyEvent& event, BxKeyEvent& bxev, bool release);
+  bool fillBxKeyEvent_GTK(wxKeyEvent& event, BxKeyEvent& bxev, bool release);
 public:
   MyPanel(wxWindow* parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxTAB_TRAVERSAL, const wxString& name = wxT("panel"));
   ~MyPanel();
@@ -173,7 +173,7 @@ public:
   MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, const long style);
   ~MyFrame();
   enum StatusChange { Start, Stop, Pause, Resume };
-  void simStatusChanged(StatusChange change, bx_bool popupNotify=false);
+  void simStatusChanged(StatusChange change, bool popupNotify=false);
   void OnConfigNew(wxCommandEvent& event);
   void OnConfigRead(wxCommandEvent& event);
   void OnConfigSave(wxCommandEvent& event);
@@ -182,7 +182,7 @@ public:
   void OnAbout(wxCommandEvent& event);
   void OnStartSim(wxCommandEvent& event);
   void OnPauseResumeSim(wxCommandEvent& event);
-  bx_bool SimThreadControl(bx_bool resume);
+  bool SimThreadControl(bool resume);
   void OnKillSim(wxCommandEvent& event);
   void OnSim2CIEvent(wxCommandEvent& event);
   void OnLogDlg(BxEvent *be);

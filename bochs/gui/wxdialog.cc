@@ -1041,7 +1041,7 @@ void ParamDialog::AddParam(
 
 bool ParamDialog::CopyGuiToParam()
 {
-  bx_bool sim_running = 0;
+  bool sim_running = 0;
 
   if (runtime) {
     sim_running = theFrame->SimThreadControl(0);

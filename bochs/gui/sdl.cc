@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2020  The Bochs Project
+//  Copyright (C) 2002-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -51,11 +51,11 @@ public:
   DECLARE_GUI_NEW_VIRTUAL_METHODS()
   virtual void draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
                          Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
-                         bx_bool gfxcharw9, Bit8u cs, Bit8u ce, bx_bool curs);
+                         bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs);
   virtual void set_display_mode(disp_mode_t newmode);
-  virtual void statusbar_setitem_specific(int element, bx_bool active, bx_bool w);
+  virtual void statusbar_setitem_specific(int element, bool active, bool w);
   virtual void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
-  virtual void set_mouse_mode_absxy(bx_bool mode);
+  virtual void set_mouse_mode_absxy(bool mode);
 #if BX_SHOW_IPS
   virtual void show_ips(Bit32u ips_count);
 #endif
@@ -86,7 +86,7 @@ struct bitmaps {
 
 SDL_Surface *sdl_screen, *sdl_fullscreen;
 SDL_Rect sdl_maxres;
-bx_bool sdl_fullscreen_toggle;
+bool sdl_fullscreen_toggle;
 int sdl_grab;
 unsigned res_x, res_y;
 unsigned half_res_x, half_res_y;
@@ -100,24 +100,24 @@ Uint32 headerbar_fg, headerbar_bg;
 Bit8u old_mousebuttons=0, new_mousebuttons=0;
 int old_mousex=0, new_mousex=0;
 int old_mousey=0, new_mousey=0;
-bx_bool just_warped = 0;
-bx_bool sdl_mouse_mode_absxy = 0;
+bool just_warped = 0;
+bool sdl_mouse_mode_absxy = 0;
 bitmaps *sdl_bitmaps[MAX_SDL_BITMAPS];
 int n_sdl_bitmaps = 0;
 int statusbar_height = 18;
 static unsigned statusitem_pos[12] = {
   0, 170, 220, 270, 320, 370, 420, 470, 520, 570, 620, 670
 };
-static bx_bool statusitem_active[12];
+static bool statusitem_active[12];
 #if BX_SHOW_IPS
-static bx_bool sdl_hide_ips = 0;
-static bx_bool sdl_ips_update = 0;
+static bool sdl_hide_ips = 0;
+static bool sdl_ips_update = 0;
 static char sdl_ips_text[20];
-static bx_bool sdl_show_info_msg = 0;
+static bool sdl_show_info_msg = 0;
 #endif
 
 
-static void sdl_set_status_text(int element, const char *text, bx_bool active, bx_bool color = 0)
+static void sdl_set_status_text(int element, const char *text, bool active, bool color = 0)
 {
   Uint32 *buf, *buf_row;
   Uint32 disp, fgcolor, bgcolor;
@@ -500,7 +500,7 @@ bx_sdl_gui_c::bx_sdl_gui_c()
 void bx_sdl_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 {
   int i, j;
-  bx_bool gui_ci = 0;
+  bool gui_ci = 0;
 
 #ifdef WIN32
   gui_ci = !strcmp(SIM->get_param_enum(BXPN_SEL_CONFIG_INTERFACE)->get_selected(), "win32config");
@@ -583,13 +583,12 @@ void bx_sdl_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
 void bx_sdl_gui_c::draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
                              Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
-                             bx_bool gfxcharw9, Bit8u cs, Bit8u ce,
-                             bx_bool curs)
+                             bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs)
 {
   Uint32 *buf, pitch, fgcolor, bgcolor;
   Bit16u font_row, mask;
   Bit8u *font_ptr, fontpixels;
-  bx_bool dwidth;
+  bool dwidth;
 
   if (sdl_screen) {
     pitch = sdl_screen->pitch/4;
@@ -683,7 +682,7 @@ void bx_sdl_gui_c::handle_events(void)
   Bit32u key_event;
   Bit8u mouse_state, kmodchange = 0;
   int dx, dy, wheel_status;
-  bx_bool mouse_toggle = 0;
+  bool mouse_toggle = 0;
 
   while (SDL_PollEvent(&sdl_event)) {
     wheel_status = 0;
@@ -1033,7 +1032,7 @@ void bx_sdl_gui_c::clear_screen(void)
 }
 
 
-bx_bool bx_sdl_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green, Bit8u blue)
+bool bx_sdl_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green, Bit8u blue)
 {
   if (sdl_screen)
     sdl_palette[index] = SDL_MapRGB(sdl_screen->format, red, green, blue);
@@ -1331,7 +1330,7 @@ int bx_sdl_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 }
 
 
-void bx_sdl_gui_c::mouse_enabled_changed_specific (bx_bool val)
+void bx_sdl_gui_c::mouse_enabled_changed_specific(bool val)
 {
   if (val == 1) {
     SDL_ShowCursor(0);
@@ -1457,7 +1456,7 @@ void bx_sdl_gui_c::set_display_mode(disp_mode_t newmode)
 }
 
 
-void bx_sdl_gui_c::statusbar_setitem_specific(int element, bx_bool active, bx_bool w)
+void bx_sdl_gui_c::statusbar_setitem_specific(int element, bool active, bool w)
 {
   Bit8u color = 0;
   if (w) {
@@ -1475,7 +1474,7 @@ void bx_sdl_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
 }
 
 
-void bx_sdl_gui_c::set_mouse_mode_absxy(bx_bool mode)
+void bx_sdl_gui_c::set_mouse_mode_absxy(bool mode)
 {
   sdl_mouse_mode_absxy = mode;
 }

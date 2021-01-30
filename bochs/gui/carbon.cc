@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2019  The Bochs Project
+//  Copyright (C) 2001-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -51,12 +51,12 @@
 #include <Carbon/Carbon.h>
 #include <ApplicationServices/ApplicationServices.h>
 
-// NOTE about use of Boolean versus bx_bool:
+// NOTE about use of Boolean versus bool:
 // Boolean is defined as unsigned char in the Carbon headers, so when
 // you are talking to the Carbon API, it expects to find Boolean variables
-// and pointers to Booleans.  The rest of Bochs uses bx_bool to represent
+// and pointers to Booleans.  The rest of Bochs uses bool to represent
 // booleans, which are defined to be 32 bit unsigned, so member function
-// definitions and booleans outside this file will be bx_bools.  "Boolean"
+// definitions and booleans outside this file will be bools.  "Boolean"
 // should only be used in Carbon specific code such as in this file.
 
 // CONSTANTS
@@ -1107,7 +1107,7 @@ void bx_carbon_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   OSErr         theError;
   Bit8u         *old_line, *new_line;
   unsigned int  curs, hchars, offset, rows, x, xc, y, yc, i;
-  bx_bool       forceUpdate = 0, blink_mode, blink_state;
+  bool          forceUpdate = 0, blink_mode, blink_state;
   static unsigned prev_cursor_x=0;
   static unsigned prev_cursor_y=0;
   char          text_palette[16];
@@ -1259,7 +1259,7 @@ int bx_carbon_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
   return 1;
 }
 
-bx_bool bx_carbon_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green, Bit8u blue)
+bool bx_carbon_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green, Bit8u blue)
 {
   PaletteHandle thePal, oldpal;
   GDHandle  saveDevice;
@@ -1956,7 +1956,7 @@ PixMapHandle CreatePixMap(unsigned left, unsigned top, unsigned width,
   return pm;
 }*/
 
-void bx_carbon_gui_c::mouse_enabled_changed_specific (bx_bool val)
+void bx_carbon_gui_c::mouse_enabled_changed_specific(bool val)
 {
 }
 

@@ -8,7 +8,7 @@
 //
 //  Modified by Bruce Ewing
 //
-//  Copyright (C) 2008-2019  The Bochs Project
+//  Copyright (C) 2008-2021  The Bochs Project
 
 
 #ifndef BX_ENH_DBG_DEF_H
@@ -39,10 +39,10 @@ void EndListUpdate(int listnum);
 void RedrawColumns(int listnum);
 void Invalidate(int i);
 void TakeInputFocus();
-bx_bool ShowAskDialog();
-bx_bool NewFont();
+bool ShowAskDialog();
+bool NewFont();
 void GrayMenuItem(int flag, int CmdIndex);
-void ShowMemData(bx_bool initting);
+void ShowMemData(bool initting);
 void SetMenuCheckmark (int flag, int CmdIndex);
 void ClearInputWindow();
 void VSizeChange();
@@ -61,19 +61,19 @@ int GetASMTopIdx();
 void ScrollASM(int pixels);
 
 void GetLIText(int listnum, int itemnum, int column, char *buf);
-void SetLIState(int listnum, int itemnum, bx_bool Select);
+void SetLIState(int listnum, int itemnum, bool Select);
 int GetNextSelectedLI(int listnum, int StartPt);
 
-bx_bool OSInit();
+bool OSInit();
 void SpecialInit();
 void CloseDialog();
-bx_bool ParseOSSettings(const char *param, const char *value);
+bool ParseOSSettings(const char *param, const char *value);
 void WriteOSSettings(FILE *fd);
 
 void HitBreak();
 void ParseIDText(const char *x);
 
-extern bx_bool vgaw_refresh;
+extern bool vgaw_refresh;
 
 #ifdef WIN32
 
@@ -160,20 +160,20 @@ extern bx_bool vgaw_refresh;
 
 // User Customizable initial settings:
 
-extern bx_bool SeeReg[8];
+extern bool SeeReg[8];
 
-extern bx_bool SingleCPU;       // Display all SMP CPUs
-extern bx_bool ShowIOWindows;   // Display the Input and Output Internal Debugger windows
-extern bx_bool ShowButtons;     // Display the top-row Step/Continue pushbuttons
-extern bx_bool SeeRegColors;    // Display registers with background color "groups"
-extern bx_bool ignoreNxtT;      // Do not show "Next at t=" output lines
-extern bx_bool ignSSDisasm;     // Do not show extra disassembly line at each break
-extern int UprCase;             // 1 = convert all Asm, Register names, Register values to uppercase
-extern int DumpInAsciiMode;     // bit 1 = show ASCII in dumps, bit 2 = show hex, value=0 is illegal
-extern int DumpWSIndex;         // word size index for memory dump
-extern bx_bool LogView;         // Send log to output window
+extern bool SingleCPU;       // Display all SMP CPUs
+extern bool ShowIOWindows;   // Display the Input and Output Internal Debugger windows
+extern bool ShowButtons;     // Display the top-row Step/Continue pushbuttons
+extern bool SeeRegColors;    // Display registers with background color "groups"
+extern bool ignoreNxtT;      // Do not show "Next at t=" output lines
+extern bool ignSSDisasm;     // Do not show extra disassembly line at each break
+extern int UprCase;          // 1 = convert all Asm, Register names, Register values to uppercase
+extern int DumpInAsciiMode;  // bit 1 = show ASCII in dumps, bit 2 = show hex, value=0 is illegal
+extern int DumpWSIndex;      // word size index for memory dump
+extern bool LogView;         // Send log to output window
 
-extern bx_bool isLittleEndian;
+extern bool isLittleEndian;
 
 // How to use DockOrder: the Register list is window 1, ASM is window 2, MemDump is window 3
 // Create the hex value with the digits in the order you want the windows to be.
@@ -197,7 +197,7 @@ extern short DockOrder;        // set the default List "docking" (Reg, ASM, Dump
 
 #define MAX_ASM         2048    // max entries in ASM window
 
-extern bx_bool SA_valid;
+extern bool SA_valid;
 extern Bit64u SelectedDataAddress;
 extern Bit64u CurrentAsmLA;    // = EIP/RIP -- for highlighting in ASM window
 extern Bit64u BottomAsmLA;     // beginning and end addrs on ASM window
@@ -225,22 +225,22 @@ extern int Resize_HiX;     // horizontal limits of the current resize operation 
 extern int Resize_LoX;
 extern unsigned ListWidthPix[3]; // set initial proportions of Reg, Asm, Dump windows
 extern int CurCenterList;
-extern bx_bool DumpHasFocus;
+extern bool DumpHasFocus;
 
 // BarClix holds the x-axis position (in pixels or logical units) of the two resizing bars,
 // in parent coordinates (ie. any window that contains the lists)
 extern unsigned short BarClix[2];
 
-extern bx_bool AtBreak;        // Status indicators
-extern bx_bool StatusChange;
+extern bool AtBreak;        // Status indicators
+extern bool StatusChange;
 
-extern bx_bool doOneTimeInit;  // Internal flag #1
-extern bx_bool doSimuInit;     // Internal flag #2
-extern bx_bool ResizeColmns;   // address/value column autosize flag
-extern bx_bool FWflag;         // friendly warning has been shown to user once already
+extern bool doOneTimeInit;  // Internal flag #1
+extern bool doSimuInit;     // Internal flag #2
+extern bool ResizeColmns;   // address/value column autosize flag
+extern bool FWflag;         // friendly warning has been shown to user once already
 
 extern Bit64u PStackLA;        // to calculate alignment between prev and current stack
-extern bx_bool StackEntChg[STACK_ENTRIES];     // flag for "change detected" on each stack line
+extern bool StackEntChg[STACK_ENTRIES];     // flag for "change detected" on each stack line
 
 // List Window indexes = DockOrder window numbers -1
 #define REG_WND     0
@@ -256,13 +256,13 @@ extern bx_bool StackEntChg[STACK_ENTRIES];     // flag for "change detected" on 
 #define VIEW_BREAK      5
 #define VIEW_PTREE      6
 
-extern bx_bool DumpInitted;    // has the MemDump window ever been filled with data?
+extern bool DumpInitted;       // has the MemDump window ever been filled with data?
 extern int DumpAlign;
 extern int PrevDAD;            // saves "previous DumpAlign value" (forces column autosize)
 extern Bit64u DumpStart;       // current emulated address (lin or phys) of DataDump
-extern bx_bool doDumpRefresh;
+extern bool doDumpRefresh;
 extern int DViewMode;
-extern bx_bool LinearDump;     // FALSE = memdump uses physical addressing
+extern bool LinearDump;        // FALSE = memdump uses physical addressing
 
 extern char *tmpcb;            // 512b is allocated in bigbuf
 extern char AsciiHex[512];     // Unsigned char to printable hex xlat table

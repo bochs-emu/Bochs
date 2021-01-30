@@ -8,7 +8,7 @@
 //
 //  Modified by Bruce Ewing
 //
-//  Copyright (C) 2008-2020  The Bochs Project
+//  Copyright (C) 2008-2021  The Bochs Project
 
 #include "bochs.h"
 #include "enh_dbg.h"
@@ -165,9 +165,9 @@ GtkWidget *LV[3];       // Register, ASM, MemDump / ListViews (TreeViews)
 
 // GTK-specific settings
 gint win_x = -1, win_y = -1, win_w, win_h;
-bx_bool window_init = 0;
+bool window_init = 0;
 char fontname[80];
-bx_bool font_init = 0;
+bool font_init = 0;
 
 // HIHI put all these colors in an array, and use #defines for them
 // need a "medium gray" color for inactive lists
@@ -197,26 +197,26 @@ unsigned int CurXSize;      // last known size of main client window
 
 int DumpSelRow;             // keeps track of "clicks" on MemDump entries
 int SelectedEntry;          // keeps track of "clicks" on ASM entries
-bx_bool UpdateOWflag = FALSE;
-bx_bool HitBrkflag = FALSE;
-bx_bool ForcingCheck = FALSE;   // using a hotkey to flip a menu item checkmark
+bool UpdateOWflag = FALSE;
+bool HitBrkflag = FALSE;
+bool ForcingCheck = FALSE;  // using a hotkey to flip a menu item checkmark
 int KeyStateShft;
 int KeyStateAlt;
 // guint PrevState = GDK_BUTTON1_MASK;  // turn on the "mouseup" bit, to detect the first mousedown
 int SizingDelay = 0;
-bx_bool EnterSizeMode = FALSE;
+bool EnterSizeMode = FALSE;
 unsigned int CurScrX;
 
-//bx_bool UpdInProgress[3];     // flag -- list update incomplete (not OK to paint)
+//bool UpdInProgress[3];     // flag -- list update incomplete (not OK to paint)
 
 char SelMem[260];       // flag array for which list rows are "selected"
 char SelAsm[MAX_ASM];
 char SelReg[TOT_REG_NUM + EXTRA_REGS];
 
 // "run" the standard dialog box -- get text from the user
-bx_bool ShowAskDialog()
+bool ShowAskDialog()
 {
-    bx_bool ret = FALSE;
+    bool ret = FALSE;
     static GtkWidget *dialog = NULL;
     static GtkWidget *AskEntry = NULL;
     static GtkWidget *AskPrompt = NULL;
@@ -526,7 +526,7 @@ void GetInputEntry(char *buf)
 }
 
 // highlights individual rows in ASM or Mem windows
-void SetLIState(int listnum, int itemnum, bx_bool Select)
+void SetLIState(int listnum, int itemnum, bool Select)
 {
     char *Sel = SelAsm;
     int max = MAX_ASM;
@@ -546,7 +546,7 @@ int GetNextSelectedLI(int listnum, int StartPt)
     int L = StartPt;
     char *Sel = SelAsm;
     int end = MAX_ASM;
-    bx_bool stop = FALSE;
+    bool stop = FALSE;
 
     if (listnum == REG_WND)
     {
@@ -603,12 +603,12 @@ void ScrollASM(int pixels)
 // Note: setting/clearing a checkmark sends an immediate "activate" signal to the associated menuitem
 void ToggleWSchecks(int newWS, int oldWS)
 {
-    if ((bx_bool) gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(ChkMIs[WSChkIdx + newWS])) == FALSE)
+    if ((bool) gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(ChkMIs[WSChkIdx + newWS])) == FALSE)
     {
         ForcingCheck = TRUE;        // prevent infinite checkmark loops
         gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(ChkMIs[WSChkIdx + newWS]), TRUE);
     }
-    if ((bx_bool) gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(ChkMIs[WSChkIdx + oldWS])) != FALSE)
+    if ((bool) gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(ChkMIs[WSChkIdx + oldWS])) != FALSE)
     {
         ForcingCheck = TRUE;        // prevent infinite checkmark loops
         gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(ChkMIs[WSChkIdx + oldWS]), FALSE);
@@ -746,10 +746,10 @@ void ClearInputWindow()
 // set == 0 to clear a check, 1 or 2 to set a check
 void SetMenuCheckmark (int set, int ChkIdx)
 {
-    bx_bool flag = TRUE;
+    bool flag = TRUE;
     if (set == 0)
         flag = FALSE;
-    if ((bx_bool) gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(ChkMIs[ChkIdx])) != flag)
+    if ((bool) gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(ChkMIs[ChkIdx])) != flag)
     {
         ForcingCheck = TRUE;
         gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(ChkMIs[ChkIdx]), flag);
@@ -1019,7 +1019,7 @@ void HideTree()
 }
 
 // exit GDT/IDT/Paging/Stack/Tree -- back to the MemDump window
-void ShowMemData(bx_bool initting)
+void ShowMemData(bool initting)
 {
     int i = 1;
     if (LinearDump == FALSE)
@@ -1099,7 +1099,7 @@ void update_font()
   if (OneCharWide > 12) OneCharWide = 12;
 }
 
-bx_bool NewFont()
+bool NewFont()
 {
     char *ofn;
     if (AtBreak == FALSE)
@@ -1183,7 +1183,7 @@ gboolean RegMouseDown_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
     int row;
     GtkTreePath *path;
     gint *pathdat;
-    bx_bool onrow;
+    bool onrow;
 
     Set_PreDock (0, event);
     GrayMenuItem (0, CMD_WPTWR);        // disable watchpoints for physdumps (not selected)
@@ -1192,7 +1192,7 @@ gboolean RegMouseDown_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
     row = TOT_REG_NUM + EXTRA_REGS;
     while (--row >= 0)
         SelReg[row] = 0;
-    onrow = (bx_bool) gtk_tree_view_get_path_at_pos (GTK_TREE_VIEW(LV[0]),
+    onrow = (bool) gtk_tree_view_get_path_at_pos (GTK_TREE_VIEW(LV[0]),
         (gint) (event->x + 0.5), (gint) (event->y + 0.5), &path, NULL, NULL, NULL);
     if (onrow == FALSE)
         return FALSE;
@@ -1212,7 +1212,7 @@ gboolean AsmMouseDown_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
 {
     GtkTreePath *path;
     gint *pathdat;
-    bx_bool onrow;
+    bool onrow;
 
     Set_PreDock (1, event);
     GrayMenuItem (0, CMD_WPTWR);        // disable watchpoints for physdumps (not selected)
@@ -1224,7 +1224,7 @@ gboolean AsmMouseDown_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
         while (--i >= 0)
             SelAsm[i] = 0;
     }
-    onrow = (bx_bool) gtk_tree_view_get_path_at_pos (GTK_TREE_VIEW(LV[1]),
+    onrow = (bool) gtk_tree_view_get_path_at_pos (GTK_TREE_VIEW(LV[1]),
         (gint) (event->x + 0.5), (gint) (event->y + 0.5), &path, NULL, NULL, NULL);
     if (onrow == FALSE)
         return FALSE;
@@ -1244,7 +1244,7 @@ gboolean MemMouseDown_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
     int column, cellx;
     GtkTreePath *path;
     gint *pathdat;
-    bx_bool onrow;
+    bool onrow;
 
     Set_PreDock (2, event);
     if (DViewMode != VIEW_MEMDUMP && DViewMode != VIEW_BREAK)
@@ -1255,7 +1255,7 @@ gboolean MemMouseDown_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
         while (--i >= 0)
             SelMem[i] = 0;
     }
-    onrow = (bx_bool) gtk_tree_view_get_path_at_pos (GTK_TREE_VIEW(LV[2]),
+    onrow = (bool) gtk_tree_view_get_path_at_pos (GTK_TREE_VIEW(LV[2]),
         (gint) (event->x + 0.5), (gint) (event->y + 0.5), &path, NULL, NULL, NULL);
     if (onrow == FALSE)
         return FALSE;
@@ -1437,7 +1437,7 @@ gboolean redirect_keydown(GtkWidget *widget, GdkEvent *event, gpointer data)
 gboolean TblSizeEvent(GtkWidget *widget, GdkEventConfigure *event, gpointer data)
 {
     int i, j, k;
-    bx_bool unchanged = FALSE;
+    bool unchanged = FALSE;
     gint WinSizeX;
     gint WinSizeY;
     GdkWindow *TblGdk = gtk_widget_get_parent_window(TreeTbl);
@@ -2144,7 +2144,7 @@ void MakeGTKthreads()
 }
 
 // This function must be called immediately after bochs starts
-bx_bool OSInit()
+bool OSInit()
 {
     int i, argc;
     char *argv[2], **argvp;
@@ -2432,7 +2432,7 @@ void MakeBL(TreeParent *h_P, bx_param_c *p)
     }
 }
 
-bx_bool ParseOSSettings(const char *param, const char *value)
+bool ParseOSSettings(const char *param, const char *value)
 {
   char *val2, *ptr;
 

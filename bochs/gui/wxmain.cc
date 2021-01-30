@@ -796,7 +796,7 @@ void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 }
 
 // update the menu items, status bar, etc.
-void MyFrame::simStatusChanged(StatusChange change, bx_bool popupNotify) {
+void MyFrame::simStatusChanged(StatusChange change, bool popupNotify) {
   char ata_name[20];
   bx_list_c *base;
 
@@ -948,9 +948,9 @@ void MyFrame::OnPauseResumeSim(wxCommandEvent& WXUNUSED(event))
   }
 }
 
-bx_bool MyFrame::SimThreadControl(bx_bool resume)
+bool MyFrame::SimThreadControl(bool resume)
 {
-  bx_bool sim_running = 0;
+  bool sim_running = 0;
 
   wxCriticalSectionLocker lock(sim_thread_lock);
   if (sim_thread) {

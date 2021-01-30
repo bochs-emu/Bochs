@@ -7,7 +7,7 @@
 //    Donald Becker
 //    http://www.psyon.org
 //
-//  Copyright (C) 2001-2020  The Bochs Project
+//  Copyright (C) 2001-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -56,11 +56,11 @@ public:
   DECLARE_GUI_NEW_VIRTUAL_METHODS()
   virtual void draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
                          Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
-                         bx_bool gfxcharw9, Bit8u cs, Bit8u ce, bx_bool curs);
+                         bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs);
   virtual void set_display_mode(disp_mode_t newmode);
   void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
-  void statusbar_setitem_specific(int element, bx_bool active, bx_bool w);
-  virtual void set_mouse_mode_absxy(bx_bool mode);
+  void statusbar_setitem_specific(int element, bool active, bool w);
+  virtual void set_mouse_mode_absxy(bool mode);
 #if BX_SHOW_IPS
   void show_ips(Bit32u ips_count);
 #endif
@@ -101,12 +101,12 @@ typedef int SOCKET;
 
 #endif
 
-static bx_bool keep_alive;
-static bx_bool client_connected;
-static bx_bool desktop_resizable;
+static bool keep_alive;
+static bool client_connected;
+static bool desktop_resizable;
 #if BX_SHOW_IPS
-static bx_bool rfbHideIPS = 0;
-static bx_bool rfbIPSupdate = 0;
+static bool rfbHideIPS = 0;
+static bool rfbIPSupdate = 0;
 static char rfbIPStext[40];
 #endif
 static unsigned short rfbPort;
@@ -124,7 +124,7 @@ static struct _rfbBitmaps {
 #define MOUSE    0
 #define MAX_KEY_EVENTS 512
 static struct _rfbKeyboardEvent {
-    bx_bool type;
+    bool type;
     int key;
     int down;
     int x;
@@ -132,7 +132,7 @@ static struct _rfbKeyboardEvent {
     int z;
 } rfbKeyboardEvent[MAX_KEY_EVENTS];
 static unsigned long rfbKeyboardEvents = 0;
-static bx_bool bKeyboardInUse = 0;
+static bool bKeyboardInUse = 0;
 
 // Misc Stuff
 static struct _rfbUpdateRegion {
@@ -140,7 +140,7 @@ static struct _rfbUpdateRegion {
     unsigned int y;
     unsigned int width;
     unsigned int height;
-    bx_bool updated;
+    bool updated;
 } rfbUpdateRegion;
 
 #define BX_RFB_MAX_XDIM 1280
@@ -155,7 +155,7 @@ const unsigned char headerbar_fg = 0x00;
 
 static char *rfbScreen;
 static char rfbPalette[256];
-static bx_bool rfbBGR233Format;
+static bool rfbBGR233Format;
 
 static unsigned rfbWindowX, rfbWindowY;
 static unsigned rfbDimensionX, rfbDimensionY;
@@ -164,12 +164,12 @@ static unsigned rfbTileX = 0;
 static unsigned rfbTileY = 0;
 static unsigned long rfbOriginLeft = 0;
 static unsigned long rfbOriginRight = 0;
-static bx_bool rfbMouseModeAbsXY = 0;
+static bool rfbMouseModeAbsXY = 0;
 static unsigned rfbStatusbarY = 18;
 static unsigned rfbStatusitemPos[12] = {
   0, 170, 210, 250, 290, 330, 370, 410, 450, 490, 530, 570
 };
-static bx_bool rfbStatusitemActive[12];
+static bool rfbStatusitemActive[12];
 
 static SOCKET sGlobal;
 
@@ -184,15 +184,15 @@ void HandleRfbClient(SOCKET sClient);
 int ReadExact(int sock, char *buf, int len);
 int WriteExact(int sock, char *buf, int len);
 void DrawBitmap(int x, int y, int width, int height, char *bmap, char fg,
-        char bg, bx_bool update_client);
+        char bg, bool update_client);
 void DrawChar(int x, int y, int width, int height, int fontx, int fonty,
-              char *bmap, char fg, char bg, bx_bool gfxchar);
+              char *bmap, char fg, char bg, bool gfxchar);
 void UpdateScreen(unsigned char *newBits, int x, int y, int width, int height,
-        bx_bool update_client);
+        bool update_client);
 void SendUpdate(int x, int y, int width, int height, Bit32u encoding);
 void rfbSetUpdateRegion(unsigned x0, unsigned y0, unsigned w, unsigned h);
 void rfbAddUpdateRegion(unsigned x0, unsigned y0, unsigned w, unsigned h);
-void rfbSetStatusText(int element, const char *text, bx_bool active, Bit8u color = 0);
+void rfbSetStatusText(int element, const char *text, bool active, Bit8u color = 0);
 static Bit32u convertStringToRfbKey(const char *string);
 #if BX_SHOW_IPS && defined(WIN32)
 DWORD WINAPI rfbShowIPSthread(LPVOID);
@@ -353,8 +353,7 @@ void bx_rfb_gui_c::clear_screen(void)
 
 void bx_rfb_gui_c::draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
                              Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
-                             bx_bool gfxcharw9, Bit8u cs, Bit8u ce,
-                             bx_bool curs)
+                             bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs)
 {
   Bit8u fgcol = rfbPalette[fc];
   Bit8u bgcol = rfbPalette[bc];
@@ -391,7 +390,7 @@ int bx_rfb_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
   return 0;
 }
 
-bx_bool bx_rfb_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green, Bit8u blue)
+bool bx_rfb_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green, Bit8u blue)
 {
   if (rfbBGR233Format) {
     rfbPalette[index] = (((red * 7 + 127) / 255) << 0) | (((green * 7 + 127) / 255) << 3) | (((blue * 3 + 127) / 255) << 6);
@@ -578,7 +577,7 @@ void bx_rfb_gui_c::exit(void)
   BX_DEBUG(("bx_rfb_gui_c::exit()"));
 }
 
-void bx_rfb_gui_c::mouse_enabled_changed_specific(bx_bool val)
+void bx_rfb_gui_c::mouse_enabled_changed_specific(bool val)
 {
 }
 
@@ -639,7 +638,7 @@ void bx_rfb_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
   *bpp = 8;
 }
 
-void bx_rfb_gui_c::statusbar_setitem_specific(int element, bx_bool active, bx_bool w)
+void bx_rfb_gui_c::statusbar_setitem_specific(int element, bool active, bool w)
 {
   Bit8u color = 0;
   if (w) {
@@ -648,7 +647,7 @@ void bx_rfb_gui_c::statusbar_setitem_specific(int element, bx_bool active, bx_bo
   rfbSetStatusText(element+1, statusitem[element].text, active, color);
 }
 
-void bx_rfb_gui_c::set_mouse_mode_absxy(bx_bool mode)
+void bx_rfb_gui_c::set_mouse_mode_absxy(bool mode)
 {
   rfbMouseModeAbsXY = mode;
 }
@@ -1212,7 +1211,7 @@ void HandleRfbClient(SOCKET sClient)
   U32 auth;
   rfbClientInitMessage cim;
   rfbServerInitMessage sim;
-  bx_bool mouse_toggle = 0;
+  bool mouse_toggle = 0;
   static Bit8u wheel_status = 0;
 
   setsockopt(sClient, IPPROTO_TCP, TCP_NODELAY, (const char *)&one, sizeof(one));
@@ -1351,7 +1350,7 @@ void HandleRfbClient(SOCKET sClient)
           BX_INFO(("rfbSetEncodings : client supported encodings:"));
           for (i = 0; i < clientEncodingsCount; i++) {
             Bit32u j;
-            bx_bool found = 0;
+            bool found = 0;
             for (j=0; j < rfbEncodingsCount; j ++) {
               if (clientEncodings[i] == rfbEncodings[j].id) {
                 BX_INFO(("%08x %s", rfbEncodings[j].id, rfbEncodings[j].name));
@@ -1495,7 +1494,7 @@ int WriteExact(int sock, char *buf, int len)
 }
 
 void DrawBitmap(int x, int y, int width, int height, char *bmap,
-        char fgcolor, char bgcolor, bx_bool update_client)
+        char fgcolor, char bgcolor, bool update_client)
 {
   unsigned char *newBits;
   newBits = new unsigned char[width * height];
@@ -1515,12 +1514,12 @@ void DrawBitmap(int x, int y, int width, int height, char *bmap,
 }
 
 void DrawChar(int x, int y, int width, int height, int fontx, int fonty,
-              char *bmap, char fgcolor, char bgcolor, bx_bool gfxchar)
+              char *bmap, char fgcolor, char bgcolor, bool gfxchar)
 {
   static unsigned char newBits[18 * 32];
   unsigned char mask;
   int bytes = width * height;
-  bx_bool dwidth = (width > 9);
+  bool dwidth = (width > 9);
   for (int i = 0; i < bytes; i += width) {
     mask = 0x80 >> fontx;
     for (int j = 0; j < width; j++) {
@@ -1541,7 +1540,7 @@ void DrawChar(int x, int y, int width, int height, int fontx, int fonty,
 }
 
 void UpdateScreen(unsigned char *newBits, int x, int y, int width, int height,
-        bx_bool update_client)
+                  bool update_client)
 {
   int i, x0, y0;
   x0 = x;
@@ -1652,7 +1651,7 @@ void rfbAddUpdateRegion(unsigned x0, unsigned y0, unsigned w, unsigned h)
   }
 }
 
-void rfbSetStatusText(int element, const char *text, bx_bool active, Bit8u color)
+void rfbSetStatusText(int element, const char *text, bool active, Bit8u color)
 {
   char *newBits;
   unsigned xleft, xsize, i, len;

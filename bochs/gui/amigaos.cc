@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2000-2019  The Bochs Project
+//  Copyright (C) 2000-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -148,7 +148,7 @@ void setup_inputhandler(void)
     printf(("Amiga: Could not create message port"));
 }
 
-bx_bool open_screen(void)
+bool open_screen(void)
 {
   ULONG id = INVALID_ID;
 
@@ -588,7 +588,7 @@ int bx_amigaos_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
   return 1;
 }
 
-bx_bool bx_amigaos_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green, Bit8u blue)
+bool bx_amigaos_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green, Bit8u blue)
 {
   Bit8u *ptr = (Bit8u *)(cmap+index);
 
@@ -835,7 +835,7 @@ void hide_pointer(void)
   SetPointer(window, emptypointer, 1, 16, 0, 0);
 }
 
-void bx_amigaos_gui_c::mouse_enabled_changed_specific (bx_bool val)
+void bx_amigaos_gui_c::mouse_enabled_changed_specific(bool val)
 {
   if (val) {
     BX_INFO(("[AmigaOS] Mouse on"));

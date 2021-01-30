@@ -348,7 +348,7 @@ static BOOL CALLBACK LogOptDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
   return FALSE;
 }
 
-void LogOptionsDialog(HWND hwnd, bx_bool runtime)
+void LogOptionsDialog(HWND hwnd, bool runtime)
 {
   DialogBoxParam(NULL, MAKEINTRESOURCE(LOGOPT_DLG), hwnd, (DLGPROC)LogOptDlgProc, (LPARAM)runtime);
 }
@@ -470,7 +470,7 @@ edit_opts_t runtime_options[] = {
 };
 static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-  static bx_bool runtime;
+  static bool runtime;
   int choice, code, i;
   bx_param_filename_c *rcfile;
   char path[BX_PATHNAME_LEN];
@@ -478,7 +478,7 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
 
   switch (msg) {
     case WM_INITDIALOG:
-      runtime = (bx_bool)lParam;
+      runtime = (bool)lParam;
       EnableWindow(GetDlgItem(hDlg, IDEDITCFG), FALSE);
       if (runtime) {
         SetWindowText(hDlg, "Bochs Runtime Menu");
@@ -614,7 +614,7 @@ int AskString(bx_param_string_c *param)
                         (DLGPROC)StringParamProc, (LPARAM)param);
 }
 
-int MainMenuDialog(HWND hwnd, bx_bool runtime)
+int MainMenuDialog(HWND hwnd, bool runtime)
 {
   return (int) DialogBoxParam(NULL, MAKEINTRESOURCE(MAINMENU_DLG), hwnd,
                         (DLGPROC)MainMenuDlgProc, (LPARAM)runtime);

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2017  The Bochs Project
+//  Copyright (C) 2001-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -177,7 +177,7 @@ int bx_nogui_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 // returns: 0=no screen update needed (color map change has direct effect)
 //          1=screen updated needed (redraw using current colormap)
 
-bx_bool bx_nogui_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green, Bit8u blue)
+bool bx_nogui_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green, Bit8u blue)
 {
   UNUSED(index);
   UNUSED(red);
@@ -323,7 +323,7 @@ void bx_nogui_gui_c::exit(void)
 // the header / tool bar, toggle the mouse capture using the configured
 // method with keyboard or mouse, or from the configuration interface.
 
-void bx_nogui_gui_c::mouse_enabled_changed_specific(bx_bool val)
+void bx_nogui_gui_c::mouse_enabled_changed_specific(bool val)
 {
 }
 

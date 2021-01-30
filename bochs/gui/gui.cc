@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2020  The Bochs Project
+//  Copyright (C) 2002-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -464,7 +464,7 @@ void bx_gui_c::make_text_snapshot(char **snapshot, Bit32u *length)
   *length = txt_addr;
 }
 
-Bit32u bx_gui_c::set_snapshot_mode(bx_bool mode)
+Bit32u bx_gui_c::set_snapshot_mode(bool mode)
 {
   unsigned pixel_bytes, bufsize;
 
@@ -686,10 +686,10 @@ void bx_gui_c::toggle_mouse_enable(void)
   SIM->get_param_bool(BXPN_MOUSE_ENABLED)->set(!old);
 }
 
-bx_bool bx_gui_c::mouse_toggle_check(Bit32u key, bx_bool pressed)
+bool bx_gui_c::mouse_toggle_check(Bit32u key, bool pressed)
 {
   Bit32u newstate;
-  bx_bool toggle = 0;
+  bool toggle = 0;
 
   if (console_running())
     return 0;
@@ -735,7 +735,7 @@ Bit8u bx_gui_c::get_modifier_keys(void)
   }
 }
 
-Bit8u bx_gui_c::set_modifier_keys(Bit8u modifier, bx_bool pressed)
+Bit8u bx_gui_c::set_modifier_keys(Bit8u modifier, bool pressed)
 {
   Bit8u newstate = keymodstate, changestate = 0;
 
@@ -755,7 +755,7 @@ Bit8u bx_gui_c::set_modifier_keys(Bit8u modifier, bx_bool pressed)
   return changestate;
 }
 
-bx_bool bx_gui_c::parse_user_shortcut(const char *val)
+bool bx_gui_c::parse_user_shortcut(const char *val)
 {
   char *ptr, shortcut_tmp[512];
   Bit32u symbol, new_shortcut[4];
@@ -867,7 +867,7 @@ void bx_gui_c::headerbar_click(int x)
   }
 }
 
-void bx_gui_c::mouse_enabled_changed(bx_bool val)
+void bx_gui_c::mouse_enabled_changed(bool val)
 {
   // This is only called when SIM->get_init_done is 1.  Note that VAL
   // is the new value of mouse_enabled, which may not match the old
@@ -922,7 +922,7 @@ void bx_gui_c::beep_off()
   BX_DEBUG(("GUI Beep OFF"));
 }
 
-int bx_gui_c::register_statusitem(const char *text, bx_bool auto_off)
+int bx_gui_c::register_statusitem(const char *text, bool auto_off)
 {
   unsigned id = statusitem_count;
 
@@ -961,7 +961,7 @@ void bx_gui_c::unregister_statusitem(int id)
   }
 }
 
-void bx_gui_c::statusbar_setitem(int element, bx_bool active, bx_bool w)
+void bx_gui_c::statusbar_setitem(int element, bool active, bool w)
 {
   if (element < 0) {
     for (unsigned i = 0; i < statusitem_count; i++) {
@@ -1006,7 +1006,7 @@ void bx_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
   *bpp = 32;
 }
 
-bx_bool bx_gui_c::palette_change_common(Bit8u index, Bit8u red, Bit8u green, Bit8u blue)
+bool bx_gui_c::palette_change_common(Bit8u index, Bit8u red, Bit8u green, Bit8u blue)
 {
   BX_GUI_THIS palette[index].red = red;
   BX_GUI_THIS palette[index].green = green;
@@ -1142,12 +1142,12 @@ void bx_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
 
 void bx_gui_c::draw_char_common(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc,
                                 Bit16u yc, Bit8u fw, Bit8u fh, Bit8u fx,
-                                Bit8u fy, bx_bool gfxcharw9, Bit8u cs, Bit8u ce,
-                                bx_bool curs)
+                                Bit8u fy, bool gfxcharw9, Bit8u cs, Bit8u ce,
+                                bool curs)
 {
   Bit8u *buf, *font_ptr, fontpixels;
   Bit16u font_row, mask;
-  bx_bool dwidth;
+  bool dwidth;
 
   buf = BX_GUI_THIS snapshot_buffer + yc * BX_GUI_THIS guest_xres + xc;
   dwidth = (BX_GUI_THIS guest_fwidth > 9);
@@ -1189,8 +1189,8 @@ void bx_gui_c::text_update_common(Bit8u *old_text, Bit8u *new_text,
   Bit8u cfheight, cfwidth, cfrow, cfcol, fgcolor, bgcolor;
   Bit8u split_textrow, split_fontrows, x, y;
   Bit8u *new_line, *old_line, *text_base;
-  bx_bool cursor_visible, gfxcharw9, split_screen;
-  bx_bool forceUpdate = 0, blink_mode = 0, blink_state = 0;
+  bool cursor_visible, gfxcharw9, split_screen;
+  bool forceUpdate = 0, blink_mode = 0, blink_state = 0;
 
   if (BX_GUI_THIS snapshot_mode || BX_GUI_THIS new_text_api) {
     cursor_visible = ((tm_info->cs_start <= tm_info->cs_end) &&
@@ -1455,7 +1455,7 @@ void bx_gui_c::console_cleanup(void)
   console.running = 0;
 }
 
-void bx_gui_c::console_refresh(bx_bool force)
+void bx_gui_c::console_refresh(bool force)
 {
   if (force) memset(console.oldscreen, 0xff, BX_CONSOLE_BUFSIZE);
   if (BX_GUI_THIS new_text_api) {
@@ -1571,7 +1571,7 @@ char* bx_gui_c::bx_gets(char *s, int size)
 }
 #endif
 
-void bx_gui_c::set_command_mode(bx_bool active)
+void bx_gui_c::set_command_mode(bool active)
 {
   if (command_mode.present) {
     command_mode.active = active;

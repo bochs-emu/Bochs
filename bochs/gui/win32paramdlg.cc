@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009-2020  Volker Ruppert
+//  Copyright (C) 2009-2021  Volker Ruppert
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -59,7 +59,7 @@ UINT  nextDlgID;
 dlg_list_t *dlg_lists = NULL;
 
 
-bx_bool registerDlgList(UINT lid, bx_list_c *list)
+UINT registerDlgList(UINT lid, bx_list_c *list)
 {
   dlg_list_t *dlg_list = new dlg_list_t;
   dlg_list->list = list;

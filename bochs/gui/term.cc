@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2000-2020  The Bochs Project
+//  Copyright (C) 2000-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -63,8 +63,8 @@ IMPLEMENT_GUI_PLUGIN_CODE(term)
 
 #define LOG_THIS theGui->
 
-bx_bool initialized = 0;
-bx_bool termHideIPS = 0;
+bool initialized = 0;
+bool termHideIPS = 0;
 static unsigned int text_rows = 25, text_cols = 80;
 static unsigned long last_cursor_x, last_cursor_y;
 
@@ -555,7 +555,7 @@ void bx_term_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   unsigned char *old_line, *new_line;
   unsigned int hchars, rows, x, y;
   chtype ch;
-  bx_bool force_update = 0;
+  bool force_update = 0;
 
   if(charmap_updated) {
     force_update = 1;
@@ -617,7 +617,7 @@ int bx_term_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
   return 0;
 }
 
-bx_bool bx_term_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green, Bit8u blue)
+bool bx_term_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green, Bit8u blue)
 {
   BX_DEBUG(("color palette request (%d,%d,%d,%d) ignored", index,red,green,blue));
   return(0);
@@ -701,7 +701,7 @@ void bx_term_gui_c::exit(void)
   BX_DEBUG(("exiting"));
 }
 
-void bx_term_gui_c::mouse_enabled_changed_specific(bx_bool val)
+void bx_term_gui_c::mouse_enabled_changed_specific(bool val)
 {
 }
 

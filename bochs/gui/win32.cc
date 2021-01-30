@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2020  The Bochs Project
+//  Copyright (C) 2002-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -48,14 +48,14 @@ class bx_win32_gui_c : public bx_gui_c {
 public:
   bx_win32_gui_c(void);
   DECLARE_GUI_VIRTUAL_METHODS();
-  virtual void set_font(bx_bool lg);
+  virtual void set_font(bool lg);
   virtual void draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
                          Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
-                         bx_bool gfxcharw9, Bit8u cs, Bit8u ce, bx_bool curs);
-  virtual void statusbar_setitem_specific(int element, bx_bool active, bx_bool w);
+                         bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs);
+  virtual void statusbar_setitem_specific(int element, bool active, bool w);
   virtual void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
   virtual void set_tooltip(unsigned hbar_id, const char *tip);
-  virtual void set_mouse_mode_absxy(bx_bool mode);
+  virtual void set_mouse_mode_absxy(bool mode);
 #if BX_SHOW_IPS
   virtual void show_ips(Bit32u ips_count);
 #endif
@@ -108,9 +108,9 @@ static BOOL win32MouseModeAbsXY = 0;
 static HANDLE workerThread = 0;
 static DWORD workerThreadID = 0;
 static int mouse_buttons = 3;
-static bx_bool win32_autoscale = 0;
-static bx_bool win32_nokeyrepeat = 0;
-static bx_bool win32_traphotkeys = 0;
+static bool win32_autoscale = 0;
+static bool win32_nokeyrepeat = 0;
+static bool win32_traphotkeys = 0;
 HHOOK hKeyboardHook;
 
 // Graphics screen stuff
@@ -166,7 +166,7 @@ Bit32u SB_Led_Colors[3] = {0x0000FF00, 0x000040FF, 0x0000FFFF};
 Bit32s SB_Edges[BX_MAX_STATUSITEMS+BX_SB_MAX_TEXT_ELEMENTS+1];
 char SB_Text[BX_MAX_STATUSITEMS][10];
 unsigned SB_Text_Elements;
-bx_bool SB_Active[BX_MAX_STATUSITEMS];
+bool SB_Active[BX_MAX_STATUSITEMS];
 Bit8u SB_ActiveColor[BX_MAX_STATUSITEMS];
 
 // Misc stuff
@@ -205,7 +205,7 @@ sharedThreadInfo stInfo;
 LRESULT CALLBACK mainWndProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK simWndProc(HWND, UINT, WPARAM, LPARAM);
 DWORD WINAPI UIThread(PVOID);
-void SetStatusText(unsigned Num, const char *Text, bx_bool active, Bit8u color=0);
+void SetStatusText(unsigned Num, const char *Text, bool active, Bit8u color=0);
 void terminateEmul(int);
 void create_vga_font(void);
 void DrawBitmap(HDC, HBITMAP, int, int, int, int, int, int, Bit8u, Bit8u);
@@ -627,7 +627,7 @@ bx_win32_gui_c::bx_win32_gui_c()
 void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 {
   int i;
-  bx_bool gui_ci;
+  bool gui_ci;
 
   gui_ci = !strcmp(SIM->get_param_enum(BXPN_SEL_CONFIG_INTERFACE)->get_selected(), "win32config");
   put("WINGUI");
@@ -1047,7 +1047,7 @@ DWORD WINAPI UIThread(LPVOID)
   return 0;
 }
 
-void SetStatusText(unsigned Num, const char *Text, bx_bool active, Bit8u color)
+void SetStatusText(unsigned Num, const char *Text, bool active, Bit8u color)
 {
   char StatText[MAX_PATH];
 
@@ -1066,7 +1066,7 @@ void SetStatusText(unsigned Num, const char *Text, bx_bool active, Bit8u color)
   UpdateWindow(hwndSB);
 }
 
-void bx_win32_gui_c::statusbar_setitem_specific(int element, bx_bool active, bx_bool w)
+void bx_win32_gui_c::statusbar_setitem_specific(int element, bool active, bool w)
 {
   Bit8u color = 0;
   if (w) {
@@ -1213,10 +1213,10 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 {
   HDC hdc, hdcMem;
   PAINTSTRUCT ps;
-  bx_bool mouse_toggle = 0;
+  bool mouse_toggle = 0;
   int toolbar_cmd = -1;
   Bit8u kmodchange = 0;
-  bx_bool keymod = 0;
+  bool keymod = 0;
   static BOOL mouseModeChange = FALSE;
 
   switch (iMsg) {
@@ -1721,7 +1721,7 @@ void bx_win32_gui_c::clear_screen(void)
 }
 
 
-void bx_win32_gui_c::set_font(bx_bool lg)
+void bx_win32_gui_c::set_font(bool lg)
 {
   Bit8u data[64], i;
 
@@ -1743,7 +1743,7 @@ void bx_win32_gui_c::set_font(bx_bool lg)
 
 void bx_win32_gui_c::draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
                                Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
-                               bx_bool gfxcharw9, Bit8u cs, Bit8u ce, bx_bool curs)
+                               bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs)
 {
   HDC hdc;
 
@@ -1811,7 +1811,7 @@ int bx_win32_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 }
 
 
-bx_bool bx_win32_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green,
+bool bx_win32_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green,
                                        Bit8u blue) {
   if ((current_bpp == 16) && (index < 3)) {
     cmap_index[256+index].rgbRed = red;
@@ -1996,7 +1996,7 @@ void bx_win32_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 {
   if (bmap_id != win32_toolbar_entry[hbar_id].bmap_id) {
     win32_toolbar_entry[hbar_id].bmap_id = bmap_id;
-    bx_bool is_visible = IsWindowVisible(hwndTB);
+    bool is_visible = IsWindowVisible(hwndTB);
     if (is_visible) {
       ShowWindow(hwndTB, SW_HIDE);
     }
@@ -2125,9 +2125,9 @@ void win32_toolbar_click(int x)
   }
 }
 
-void bx_win32_gui_c::mouse_enabled_changed_specific(bx_bool val)
+void bx_win32_gui_c::mouse_enabled_changed_specific(bool val)
 {
-  if ((val != (bx_bool)mouseCaptureMode) && !mouseToggleReq) {
+  if ((val != (bool)mouseCaptureMode) && !mouseToggleReq) {
     mouseToggleReq = TRUE;
     mouseCaptureNew = val;
   }
@@ -2151,7 +2151,7 @@ void bx_win32_gui_c::set_tooltip(unsigned hbar_id, const char *tip)
   win32_toolbar_entry[hbar_id].tooltip = tip;
 }
 
-void bx_win32_gui_c::set_mouse_mode_absxy(bx_bool mode)
+void bx_win32_gui_c::set_mouse_mode_absxy(bool mode)
 {
   win32MouseModeAbsXY = mode;
 }

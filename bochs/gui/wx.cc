@@ -89,10 +89,10 @@ public:
   DECLARE_GUI_NEW_VIRTUAL_METHODS()
   virtual void draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
                          Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
-                         bx_bool gfxcharw9, Bit8u cs, Bit8u ce, bx_bool curs);
-  virtual void statusbar_setitem_specific(int element, bx_bool active, bx_bool w);
+                         bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs);
+  virtual void statusbar_setitem_specific(int element, bool active, bool w);
   virtual void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
-  virtual void set_mouse_mode_absxy(bx_bool mode);
+  virtual void set_mouse_mode_absxy(bool mode);
 #if BX_SHOW_IPS
   void show_ips(Bit32u ips_count);
 #endif
@@ -121,10 +121,10 @@ static char *wxScreen = NULL;
 wxCriticalSection wxScreen_lock;
 static long wxScreenX = 0;
 static long wxScreenY = 0;
-static bx_bool wxScreenCheckSize = 0;
+static bool wxScreenCheckSize = 0;
 static unsigned wxTileX = 0;
 static unsigned wxTileY = 0;
-static bx_bool wxMouseModeAbsXY = 0;
+static bool wxMouseModeAbsXY = 0;
 static unsigned disp_bpp = 8;
 static struct {
   unsigned char red;
@@ -134,8 +134,8 @@ static struct {
 wxCriticalSection event_thread_lock;
 BxEvent event_queue[MAX_EVENTS];
 unsigned long num_events;
-static bx_bool mouse_captured = 0;
-static bx_bool wx_hide_ips = 0;
+static bool mouse_captured = 0;
+static bool wx_hide_ips = 0;
 #if defined (wxHAS_RAW_KEY_CODES) && defined(__WXGTK__)
 static Bit32u convertStringToGDKKey (const char *string);
 #endif
@@ -608,7 +608,7 @@ Bit32u wxMSW_to_bx_key[0x59] = {
 #endif
 
 // MS Windows specific key mapping, which uses wxKeyEvent::m_rawCode & 2.
-bx_bool MyPanel::fillBxKeyEvent_MSW (wxKeyEvent& wxev, BxKeyEvent& bxev, bx_bool release)
+bool MyPanel::fillBxKeyEvent_MSW(wxKeyEvent& wxev, BxKeyEvent& bxev, bool release)
 {
 #if defined(wxHAS_RAW_KEY_CODES) && defined(__WXMSW__)
   IFDBG_KEY(wxLogDebug (wxT ("fillBxKeyEvent_MSW. key code %d, raw codes %d %d", wxev.m_keyCode, wxev.m_rawCode, wxev.m_rawFlags)));
@@ -640,7 +640,7 @@ bx_bool MyPanel::fillBxKeyEvent_MSW (wxKeyEvent& wxev, BxKeyEvent& bxev, bx_bool
 #endif
 
 // GTK specific key mapping, which uses wxKeyEvent::m_rawCode.
-bx_bool MyPanel::fillBxKeyEvent_GTK (wxKeyEvent& wxev, BxKeyEvent& bxev, bx_bool release)
+bool MyPanel::fillBxKeyEvent_GTK(wxKeyEvent& wxev, BxKeyEvent& bxev, bool release)
 {
 #if defined (wxHAS_RAW_KEY_CODES) && defined(__WXGTK__)
   IFDBG_KEY(wxLogDebug (wxT ("fillBxKeyEvent_GTK. key code %ld, raw codes %d %d", wxev.m_keyCode, wxev.m_rawCode, wxev.m_rawFlags)));
@@ -816,10 +816,10 @@ bx_bool MyPanel::fillBxKeyEvent_GTK (wxKeyEvent& wxev, BxKeyEvent& bxev, bx_bool
 #endif
 }
 
-bx_bool MyPanel::fillBxKeyEvent(wxKeyEvent& wxev, BxKeyEvent& bxev, bx_bool release)
+bool MyPanel::fillBxKeyEvent(wxKeyEvent& wxev, BxKeyEvent& bxev, bool release)
 {
   Bit32u key = wxev.m_keyCode;
-  bx_bool mouse_toggle = 0;
+  bool mouse_toggle = 0;
 
   if (theFrame->GetSimThread() == NULL)
     return false;
@@ -1084,7 +1084,7 @@ void bx_wx_gui_c::handle_events(void)
           bx_key = event_queue[i].u.key.bx_key;
           if (event_queue[i].u.key.raw_scancode) {
             // event contains raw scancodes: convert to BX_KEY values first
-            bx_bool released = ((bx_key & 0x80) > 0);
+            bool released = ((bx_key & 0x80) > 0);
             if (bx_key & 0xFF00) { // for extended keys
               switch (bx_key & 0x7f) {
                 case 0x1C:
@@ -1188,7 +1188,7 @@ void bx_wx_gui_c::handle_events(void)
   }
 }
 
-void bx_wx_gui_c::statusbar_setitem_specific(int element, bx_bool active, bx_bool w)
+void bx_wx_gui_c::statusbar_setitem_specific(int element, bool active, bool w)
 {
   char *sbtext = new char[strlen(statusitem[element].text) + 1];
   strcpy(sbtext, statusitem[element].text);
@@ -1245,12 +1245,12 @@ static void UpdateScreen(unsigned char *newBits, int x, int y, int width, int he
   }
 }
 
-static void DrawBochsBitmap(int x, int y, int width, int height, char *bmap, char fgcolor, char bgcolor, int fontx, int fonty, bx_bool gfxchar)
+static void DrawBochsBitmap(int x, int y, int width, int height, char *bmap, char fgcolor, char bgcolor, int fontx, int fonty, bool gfxchar)
 {
   static unsigned char newBits[18 * 32];
   unsigned char mask;
   int bytes = width * height;
-  bx_bool dwidth = (width > 9);
+  bool dwidth = (width > 9);
 
   if (y > wxScreenY) return;
 
@@ -1275,7 +1275,7 @@ static void DrawBochsBitmap(int x, int y, int width, int height, char *bmap, cha
 
 void bx_wx_gui_c::draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
                             Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
-                            bx_bool gfxcharw9, Bit8u cs, Bit8u ce, bx_bool curs)
+                            bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs)
 {
   DrawBochsBitmap(xc, yc, fw, fh, (char *)&vga_charmap[ch << 5],
                   fc, bc, fx, fy, gfxcharw9);
@@ -1299,7 +1299,7 @@ void bx_wx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   // present for compatibility
 }
 
-bx_bool bx_wx_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green, Bit8u blue)
+bool bx_wx_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green, Bit8u blue)
 {
   IFDBG_VGA(wxLogDebug (wxT ("palette_change")));
   wxBochsPalette[index].red = red;
@@ -1450,7 +1450,7 @@ void bx_wx_gui_c::exit(void)
 #endif
 }
 
-void bx_wx_gui_c::mouse_enabled_changed_specific(bx_bool val)
+void bx_wx_gui_c::mouse_enabled_changed_specific(bool val)
 {
   mouse_captured = val;
 }
@@ -1505,7 +1505,7 @@ void bx_wx_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
   *bpp = 32;
 }
 
-void bx_wx_gui_c::set_mouse_mode_absxy(bx_bool mode)
+void bx_wx_gui_c::set_mouse_mode_absxy(bool mode)
 {
   wxMouseModeAbsXY = mode;
 }

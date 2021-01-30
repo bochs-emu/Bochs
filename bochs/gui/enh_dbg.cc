@@ -8,7 +8,7 @@
 //
 //  Modified by Bruce Ewing
 //
-//  Copyright (C) 2008-2020  The Bochs Project
+//  Copyright (C) 2008-2021  The Bochs Project
 
 #include "config.h"
 
@@ -47,13 +47,13 @@ int BtnLkup[6] = {
 
 #ifdef WIN32
 int useCR = 1;                    // Win32 needs CRLF pairs for an EOL
-bx_bool NeedSysRresize = TRUE;    // use Sys Reg to help autosize Reg "hex" column
+bool NeedSysRresize = TRUE;       // use Sys Reg to help autosize Reg "hex" column
 #else
 int useCR = 0;
-bx_bool NeedSysRresize = FALSE;   // use Sys Reg to help autosize Reg "hex" column
+bool NeedSysRresize = FALSE;      // use Sys Reg to help autosize Reg "hex" column
 #endif
 
-bx_bool SeeReg[8] = {
+bool SeeReg[8] = {
     TRUE,   // in 64bit mode, show 32bit versions of registers also (EAX, ...)
     TRUE,  // show segment registers (CS, ...)
     TRUE,  // show GDTR, IDTR, LDTR, Task Reg
@@ -64,18 +64,18 @@ bx_bool SeeReg[8] = {
     FALSE   // Test Registers not yet supported in bochs
 };
 
-bx_bool SingleCPU = FALSE;      // Display all SMP CPUs
-bx_bool ShowIOWindows = TRUE;   // Display the Input and Output Internal Debugger windows
-bx_bool ShowButtons = TRUE;     // Display the top-row Step/Continue pushbuttons
-bx_bool SeeRegColors = TRUE;    // Display registers with background color "groups"
-bx_bool ignoreNxtT = TRUE;      // Do not show "Next at t=" output lines
-bx_bool ignSSDisasm = TRUE;     // Do not show extra disassembly line at each break
-int UprCase = 0;                // 1 = convert all Asm, Register names, Register values to uppercase
-int DumpInAsciiMode = 3;        // bit 1 = show ASCII in dumps, bit 2 = show hex, value=0 is illegal
-int DumpWSIndex = 0;            // word size index for memory dump
-bx_bool LogView = 0;            // Send log to output window
+bool SingleCPU = FALSE;      // Display all SMP CPUs
+bool ShowIOWindows = TRUE;   // Display the Input and Output Internal Debugger windows
+bool ShowButtons = TRUE;     // Display the top-row Step/Continue pushbuttons
+bool SeeRegColors = TRUE;    // Display registers with background color "groups"
+bool ignoreNxtT = TRUE;      // Do not show "Next at t=" output lines
+bool ignSSDisasm = TRUE;     // Do not show extra disassembly line at each break
+int UprCase = 0;             // 1 = convert all Asm, Register names, Register values to uppercase
+int DumpInAsciiMode = 3;     // bit 1 = show ASCII in dumps, bit 2 = show hex, value=0 is illegal
+int DumpWSIndex = 0;         // word size index for memory dump
+bool LogView = 0;            // Send log to output window
 
-bx_bool isLittleEndian = TRUE;
+bool isLittleEndian = TRUE;
 int DefaultAsmLines = 512;      // default # of asm lines disassembled and "cached"
 int bottommargin = 6;           // ASM autoscroller tries to leave this many lines below
 int topmargin = 3;              // autoscroller tries to leave this many lines above
@@ -86,7 +86,7 @@ int topmargin = 3;              // autoscroller tries to leave this many lines a
 // 0x312 would have MemDump on the left, Register in the middle, ASM on the right
 short DockOrder = 0x123;        // set the default List "docking" (Reg, ASM, Dump)
 
-bx_bool SA_valid = FALSE;
+bool SA_valid = FALSE;
 Bit64u SelectedDataAddress = 0;
 Bit64u CurrentAsmLA = 0;    // = EIP/RIP -- for highlighting in ASM window
 Bit64u BottomAsmLA;         // beginning and end addrs on ASM window
@@ -106,28 +106,28 @@ int Resize_HiX;     // horizontal limits of the current resize operation (pixels
 int Resize_LoX;
 unsigned ListWidthPix[3] = {5,7,8}; // set initial proportions of Reg, Asm, Dump windows
 int CurCenterList = 0;
-bx_bool DumpHasFocus = FALSE;
+bool DumpHasFocus = FALSE;
 // BarClix holds the x-axis position (in pixels or logical units) of the two resizing bars,
 // in parent coordinates (ie. any window that contains the lists)
 unsigned short BarClix[2];
 
-bx_bool AtBreak = FALSE;    // Status indicators
-bx_bool CpuModeChange;
-bx_bool StatusChange = TRUE;
+bool AtBreak = FALSE;    // Status indicators
+bool CpuModeChange;
+bool StatusChange = TRUE;
 
-bx_bool In64Mode = FALSE;       // CPU modes
-bx_bool In32Mode = FALSE;
+bool In64Mode = FALSE;       // CPU modes
+bool In32Mode = FALSE;
 unsigned CpuMode = 0;
 Bit32u InPaging = 0;            // Storage for the top bit of CR0, unmodified
 
-bx_bool doOneTimeInit = TRUE;   // Internal flag #1
-bx_bool doSimuInit;             // Internal flag #2
-bx_bool ResizeColmns;           // address/value column autosize flag
-bx_bool FWflag = FALSE;         // friendly warning has been shown to user once already
+bool doOneTimeInit = TRUE;   // Internal flag #1
+bool doSimuInit;             // Internal flag #2
+bool ResizeColmns;           // address/value column autosize flag
+bool FWflag = FALSE;         // friendly warning has been shown to user once already
 
 static char *PrevStack;             // buffer for testing changes in stack values
 Bit64u PStackLA = 0;                // to calculate alignment between prev and current stack
-bx_bool StackEntChg[STACK_ENTRIES];     // flag for "change detected" on each stack line
+bool StackEntChg[STACK_ENTRIES];     // flag for "change detected" on each stack line
 
 // only pay special attention to registers up to EFER
 static const char* RegLCName[EFER_Rnum + 1] = {
@@ -151,14 +151,14 @@ Bit64u ladrmin = 0; // bochs linear addressing access variables
 Bit64u ladrmax = 0;
 Bit64u l_p_offset;
 
-bx_bool DumpInitted = FALSE;   // has the MemDump window ever been filled with data?
+bool DumpInitted = FALSE;      // has the MemDump window ever been filled with data?
 int DumpAlign = 1;
 int PrevDAD;                   // saves "previous DumpAlign value" (forces column autosize)
 char *DataDump;
 Bit64u DumpStart = 0;          // current emulated address (lin or phys) of DataDump
-bx_bool doDumpRefresh;
+bool doDumpRefresh;
 int DViewMode = VIEW_MEMDUMP;
-bx_bool LinearDump = TRUE;     // FALSE = memdump uses physical addressing
+bool LinearDump = TRUE;        // FALSE = memdump uses physical addressing
 
 char *tmpcb;                   // 512b is allocated in bigbuf
 char *CurStack;                // Stack workspace (400b usually)
@@ -234,8 +234,8 @@ bx_phy_address WWP_Snapshot[16];
 bx_phy_address RWP_Snapshot[16];
 
 char *debug_cmd;
-bx_bool debug_cmd_ready;
-bx_bool vgaw_refresh;
+bool debug_cmd_ready;
+bool vgaw_refresh;
 
 static bxevent_handler old_callback = NULL;
 static void *old_callback_arg = NULL;
@@ -273,7 +273,7 @@ void MakeXlatTables()
     }
 }
 
-int DoMatch(const char *text, const char *p, bx_bool IsCaseSensitive)
+int DoMatch(const char *text, const char *p, bool IsCaseSensitive)
 {
     // probably the MOST DIFFICULT FUNCTION in TurboIRC
     // Thanks to BitchX for copying this function
@@ -327,7 +327,7 @@ int DoMatch(const char *text, const char *p, bx_bool IsCaseSensitive)
 }
 
 // This will be called from the other funcs
-int VMatching(const char *text, const char *p, bx_bool IsCaseSensitive)
+int VMatching(const char *text, const char *p, bool IsCaseSensitive)
 {
 #ifdef OPTIMIZE_JUST_STAR
     if (p[0] == '*' && p[1] == '\0')
@@ -336,7 +336,7 @@ int VMatching(const char *text, const char *p, bx_bool IsCaseSensitive)
     return (DoMatch(text, p, IsCaseSensitive) == MATCH_TRUE);
 }
 
-int IsMatching(const char *text, const char *p, bx_bool IsCaseSensitive)
+int IsMatching(const char *text, const char *p, bool IsCaseSensitive)
 {
     return VMatching(text, p, IsCaseSensitive);
 }
@@ -457,7 +457,7 @@ void ShowEflags(char *buf)
 // change the display on the status line if anything has changed
 void UpdateStatus()
 {
-    static bx_bool PrevAtBreak = FALSE;
+    static bool PrevAtBreak = FALSE;
 
     if (StatusChange == FALSE) return;  // avoid sending unnecessary messages/invalidations
     StatusChange = FALSE;
@@ -515,7 +515,7 @@ void UpdateStatus()
 
 // Read a copy of some emulated linear bochs memory
 // Note: laddr + len must not cross a 4K boundary -- otherwise, there are no limits
-bx_bool ReadBxLMem(Bit64u laddr, unsigned len, Bit8u *buf)
+bool ReadBxLMem(Bit64u laddr, unsigned len, Bit8u *buf)
 {
     return bx_dbg_read_linear(CurrentCPU, laddr, len, buf);
 }
@@ -524,7 +524,7 @@ bx_bool ReadBxLMem(Bit64u laddr, unsigned len, Bit8u *buf)
 Bit64u cvthex(char *p, Bit64u errval)
 {
     Bit64u ret = 0;
-    bx_bool end = FALSE;
+    bool end = FALSE;
     while (end == FALSE)
     {
         if (*p >= '0' && *p <= '9')             // test for digits
@@ -539,11 +539,11 @@ Bit64u cvthex(char *p, Bit64u errval)
     return ret;
 }
 
-Bit64u cvt64(char *nstr, bx_bool negok)
+Bit64u cvt64(char *nstr, bool negok)
 {
     char *p, *s;
     Bit64u ret = 0;
-    bx_bool neg = FALSE;
+    bool neg = FALSE;
     p= nstr;
     while (*p==' ' || *p == '\t')
         ++p;
@@ -565,7 +565,7 @@ Bit64u cvt64(char *nstr, bx_bool negok)
 }
 
 // "singlestep" disassembly lines from the internal debugger are sometimes ignored
-bx_bool isSSDisasm(char *s)
+bool isSSDisasm(char *s)
 {
     if (ignSSDisasm == FALSE)   // ignoring those lines?
         return FALSE;
@@ -921,8 +921,8 @@ void FillAsm(Bit64u LAddr, int MaxLines)
     Bit64u ReadAddr = LAddr;
     int BufLen = 0;
     int i, len;
-    bx_bool BufEmpty;
-    bx_bool Go = TRUE;
+    bool BufEmpty;
+    bool Go = TRUE;
     char AsmData[BX_GUI_DB_ASM_DATA];  // 5K for binary disassembly data
     char *s, *p = AsmData;  // just to avoid a compiler warning
     char *cols[3];
@@ -1011,7 +1011,7 @@ void FillAsm(Bit64u LAddr, int MaxLines)
 void LoadRegList()
 {
     int i, itemnum;     // TODO: This routine needs a big rewrite to make it pretty
-    bx_bool showEreg = TRUE;
+    bool showEreg = TRUE;
     char *cols[3];
     char regtxt[100];
     StartListUpdate(REG_WND);
@@ -1675,12 +1675,12 @@ void FillPAGE()
 void FillStack()
 {
     // sometimes need to specially invalidate the stack window
-    static bx_bool StkInvOnce = FALSE;
+    static bool StkInvOnce = FALSE;
     Bit64u StackLA, EndLA;
     unsigned int len, i, wordsize, overlap;
     int j;
-    bx_bool LglAddy;
-    bx_bool UpdateDisp;
+    bool LglAddy;
+    bool UpdateDisp;
     char *cp, *cpp;
     char *cols[18];
     char stktxt[120];
@@ -1845,7 +1845,7 @@ void FillStack()
 }
 
 // utility function to print breakpoints in a unified way
-void prtbrk (Bit32u seg, Bit64u addy, unsigned int id, bx_bool enabled, char *cols[])
+void prtbrk (Bit32u seg, Bit64u addy, unsigned int id, bool enabled, char *cols[])
 {
     int i = 0;
     if (enabled == FALSE)
@@ -1990,7 +1990,7 @@ void FillBrkp()
 }
 
 // performs endian byteswapping the hard way, for a Data dump
-void FillDataX(char* t, char C, bx_bool doHex)
+void FillDataX(char* t, char C, bool doHex)
 {
     char tmpbuf[40];
     char *d = tmpbuf;
@@ -2228,7 +2228,7 @@ void OnBreak()
     }
     else
     {
-        bx_bool d_b = BX_CPU(CurrentCPU)->sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
+        bool d_b = BX_CPU(CurrentCPU)->sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
         if (In32Mode != d_b || In64Mode != FALSE || PrevCpuMode != CpuMode)
         {
             CpuModeChange = TRUE;
@@ -2264,12 +2264,12 @@ static int HexFromAsk(const char* ask, char* b)       // this routine converts a
     return y;
 }
 
-static bx_bool FindHex(const unsigned char* b1,int bs,const unsigned char* b2,int by)
+static bool FindHex(const unsigned char* b1,int bs,const unsigned char* b2,int by)
 {
     // search bs bytes of b1
     for(int i = 0; i < bs; i++)       // TODO: this loop could be a little more efficient.
     {                       // -- it just scans an input byte string against DataDump memory
-        bx_bool Match = TRUE;
+        bool Match = TRUE;
         for(int y = 0; y < by; y++)
         {
             if (b1[i + y] != b2[y])
@@ -2284,7 +2284,7 @@ static bx_bool FindHex(const unsigned char* b1,int bs,const unsigned char* b2,in
     return FALSE;
 }
 
-bx_bool AskText(const char *title, const char *prompt, char *DefaultText)
+bool AskText(const char *title, const char *prompt, char *DefaultText)
 {
     ask_str.title= title;
     ask_str.prompt= prompt;
@@ -2294,10 +2294,10 @@ bx_bool AskText(const char *title, const char *prompt, char *DefaultText)
 
 // load new memory for a MemDump
 // newDS = illegal (1) is a flag to ask the user for a DumpStart address
-bx_bool InitDataDump(bx_bool isLinear, Bit64u newDS)
+bool InitDataDump(bool isLinear, Bit64u newDS)
 {
-    bx_bool retval = TRUE;
-    bx_bool MsgOnErr = FALSE;
+    bool retval = TRUE;
+    bool MsgOnErr = FALSE;
     if (AtBreak == FALSE)
         return FALSE;
     if (((int) newDS & 0xf) != 0)       // legal addys must be on 16byte boundary
@@ -2327,7 +2327,7 @@ bx_bool InitDataDump(bx_bool isLinear, Bit64u newDS)
             retval = ReadBxLMem(h,len,(Bit8u *)DataDump + i);
     }
     else {
-        retval = (bx_bool) bx_mem.dbg_fetch_mem(BX_CPU(CurrentCPU),
+        retval = (bool) bx_mem.dbg_fetch_mem(BX_CPU(CurrentCPU),
             (bx_phy_address)newDS, 4096, (Bit8u *)DataDump);
     }
     if (retval == FALSE)
@@ -2493,7 +2493,7 @@ void TogglePTree()
 void doFind()
 {
     unsigned int i, L;
-    bx_bool Select;
+    bool Select;
     char srchstr[100];
     if (AtBreak == FALSE)
         return;
@@ -2719,7 +2719,7 @@ void ChangeReg()
             i -= EAX_Rnum - RAX_Rnum;
 #endif
         RegObject[CurrentCPU][i]->set(val); // the set function should be a bool, not a void
-//      bx_bool worked = RegObject[CurrentCPU][i]->set(val);
+//      bool worked = RegObject[CurrentCPU][i]->set(val);
 //      if (worked == FALSE)
 //          DispMessage ("Bochs does not allow you to set that register","Selection Error");
 //      else
@@ -2932,7 +2932,7 @@ int HotKey (int ww, int Alt, int Shift, int Control)
             if (Shift < 0)          // ShiftF5 = Modechange brk toggle
             {
                 // toggle mode_break on cpu0, use that value to reset all CPUs
-                bx_bool nmb = BX_CPU(0)->mode_break ^ TRUE;
+                bool nmb = BX_CPU(0)->mode_break ^ TRUE;
                 int j = TotCPUs;
                 while (--j >= 0)
                     BX_CPU(j)->mode_break = nmb;
@@ -3194,7 +3194,7 @@ void ActivateMenuItem (int cmd)
         case CMD_MODEB: // toggle the simulation's Mode-Change-Break flag
         {
             // toggle mode_break on cpu0, use that value to reset all CPUs
-            bx_bool nmb = BX_CPU(0)->mode_break ^ TRUE;
+            bool nmb = BX_CPU(0)->mode_break ^ TRUE;
             i = TotCPUs;
             while (--i >= 0)
                 BX_CPU(i)->mode_break = nmb;
@@ -3457,7 +3457,7 @@ void ReadSettings()
   FILE *fd = NULL;
   char line[512];
   char *ret, *param, *val;
-  bx_bool format_checked = 0;
+  bool format_checked = 0;
   size_t len1 = 0, len2;
   int i;
 

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2020  The Bochs Project
+//  Copyright (C) 2001-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -62,24 +62,24 @@ public:
   bx_x_gui_c(void);
   DECLARE_GUI_VIRTUAL_METHODS()
   DECLARE_GUI_NEW_VIRTUAL_METHODS()
-  virtual void set_font(bx_bool lg);
+  virtual void set_font(bool lg);
   virtual void draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
                          Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
-                         bx_bool gfxcharw9, Bit8u cs, Bit8u ce, bx_bool curs);
+                         bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs);
   virtual void beep_on(float frequency);
   virtual void beep_off();
 #if BX_HAVE_XRANDR_H
   virtual void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
 #endif
   virtual void set_display_mode(disp_mode_t newmode);
-  virtual void set_mouse_mode_absxy(bx_bool mode);
+  virtual void set_mouse_mode_absxy(bool mode);
 #if BX_SHOW_IPS
   virtual void show_ips(Bit32u ips_count);
 #endif
 #if BX_USE_IDLE_HACK
   virtual void sim_is_idle(void);
 #endif
-  virtual void statusbar_setitem_specific(int element, bx_bool active, bx_bool w);
+  virtual void statusbar_setitem_specific(int element, bool active, bool w);
 private:
   void send_mouse_status(void);
   void xkeypress(KeySym keysym, int press_release);
@@ -101,7 +101,7 @@ Display *bx_x_display;
 int bx_x_screen_num;
 static Visual *default_visual;
 static Colormap default_cmap;
-static bx_bool x11_private_colormap;
+static bool x11_private_colormap;
 static unsigned long white_pixel=0, black_pixel=0;
 
 static char *progname; /* name this program was invoked by */
@@ -118,11 +118,11 @@ static XImage *ximage = NULL;
 static unsigned imDepth, imWide, imBPP;
 
 // mouse cursor
-static bx_bool mouse_captured = 0;
+static bool mouse_captured = 0;
 static int prev_x=-1, prev_y=-1;
 static int current_x=-1, current_y=-1, current_z=0;
 static unsigned mouse_button_state = 0;
-static bx_bool x11_mouse_mode_absxy = 0;
+static bool x11_mouse_mode_absxy = 0;
 
 static int warp_home_x = 200;
 static int warp_home_y = 200;
@@ -136,11 +136,11 @@ static void disable_cursor();
 static void enable_cursor();
 
 // keyboard
-static bx_bool x11_nokeyrepeat = 0;
-static bx_bool x11_use_kbd_mapping = 0;
+static bool x11_nokeyrepeat = 0;
+static bool x11_use_kbd_mapping = 0;
 static Bit32u convertStringToXKeysym(const char *string);
 
-static bx_bool x_init_done = 0;
+static bool x_init_done = 0;
 
 static Pixmap vgafont[256];
 
@@ -161,12 +161,12 @@ static unsigned bx_statusbar_y = 18;
 static unsigned bx_statusitem_pos[12] = {
   0, 200, 240, 280, 320, 360, 400, 440, 480, 520, 560, 600
 };
-static bx_bool bx_statusitem_active[12];
+static bool bx_statusitem_active[12];
 static long bx_status_leds[3];
 static long bx_status_graytext;
 static char bx_status_info_text[34];
 #if BX_SHOW_IPS
-static bx_bool x11_ips_update = 0, x11_hide_ips = 0;
+static bool x11_ips_update = 0, x11_hide_ips = 0;
 static char x11_ips_text[20];
 static Bit8u x11_show_info_msg = 0;
 static Bit8u x11_info_msg_counter = 0;
@@ -319,11 +319,11 @@ static void *old_callback_arg = NULL;
 // up the color cells so that we don't add to the problem!)  This is used
 // to determine whether Bochs should use a private colormap even when the
 // user did not specify it.
-static bx_bool test_alloc_colors(Colormap cmap, Bit32u n_tries)
+static bool test_alloc_colors(Colormap cmap, Bit32u n_tries)
 {
   XColor color;
   unsigned long pixel[MAX_VGA_COLORS];
-  bx_bool pixel_valid[MAX_VGA_COLORS];
+  bool pixel_valid[MAX_VGA_COLORS];
   Bit32u n_allocated = 0;
   Bit32u i;
   color.flags = DoRed | DoGreen | DoBlue;
@@ -383,7 +383,7 @@ static int X11_KeyRepeat(Display *display, XEvent *event)
   return repeated;
 }
 
-void x11_set_status_text(int element, const char *text, bx_bool active,
+void x11_set_status_text(int element, const char *text, bool active,
                          Bit8u color=0)
 {
   int xleft, xsize, sb_ypos;
@@ -594,7 +594,7 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   unsigned long plane_masks_return[1];
   XColor color;
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
-  bx_bool x11_with_debug_gui = 0;
+  bool x11_with_debug_gui = 0;
 #endif
 
   put("XGUI");
@@ -929,7 +929,7 @@ void bx_x_gui_c::handle_events(void)
   KeySym keysym;
   char buffer[MAX_MAPPED_STRING_LENGTH];
   int bufsize = MAX_MAPPED_STRING_LENGTH;
-  bx_bool mouse_update;
+  bool mouse_update;
   int y, height;
 
   XPointerMovedEvent *pointer_event;
@@ -1140,12 +1140,12 @@ void bx_x_gui_c::handle_events(void)
 #endif
 }
 
-void bx_x_gui_c::set_font(bx_bool lg)
+void bx_x_gui_c::set_font(bool lg)
 {
   unsigned i, j, k;
   Bit8u fbits, fmask, frow;
   unsigned char cell[96];
-  bx_bool gfxchar, dwidth;
+  bool gfxchar, dwidth;
 
   BX_INFO(("charmap update. Font is %d x %d", font_width, font_height));
   for (unsigned c = 0; c<256; c++) {
@@ -1204,7 +1204,7 @@ void bx_x_gui_c::set_font(bx_bool lg)
 
 void bx_x_gui_c::draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
                            Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
-                           bx_bool gfxcharw9, Bit8u cs, Bit8u ce, bx_bool curs)
+                           bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs)
 {
   yc += bx_headerbar_y;
   XSetForeground(bx_x_display, gc, col_vals[fc]);
@@ -1327,7 +1327,7 @@ void bx_x_gui_c::clear_screen(void)
   XClearArea(bx_x_display, win, 0, bx_headerbar_y, dimension_x, dimension_y, 0);
 }
 
-bx_bool bx_x_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green, Bit8u blue)
+bool bx_x_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green, Bit8u blue)
 {
   // returns: 0=no screen update needed (color map change has direct effect)
   //          1=screen updated needed (redraw using current colormap)
@@ -1510,7 +1510,7 @@ int bx_x_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
   return 1;
 }
 
-void bx_x_gui_c::mouse_enabled_changed_specific(bx_bool val)
+void bx_x_gui_c::mouse_enabled_changed_specific(bool val)
 {
   if (val != mouse_captured) {
     BX_INFO(("Mouse capture %s", val ? "on":"off"));
@@ -1707,7 +1707,7 @@ void bx_x_gui_c::set_display_mode(disp_mode_t newmode)
   }
 }
 
-void bx_x_gui_c::set_mouse_mode_absxy(bx_bool mode)
+void bx_x_gui_c::set_mouse_mode_absxy(bool mode)
 {
   x11_mouse_mode_absxy = mode;
 }
@@ -1738,7 +1738,7 @@ void bx_x_gui_c::sim_is_idle()
 }
 #endif /* BX_USE_IDLE_HACK */
 
-void bx_x_gui_c::statusbar_setitem_specific(int element, bx_bool active, bx_bool w)
+void bx_x_gui_c::statusbar_setitem_specific(int element, bool active, bool w)
 {
   Bit8u color = 0;
   if (w) {
@@ -1794,7 +1794,7 @@ void bx_x_gui_c::xkeypress(KeySym keysym, int press_release)
 {
   Bit32u key_event;
   Bit8u kmodchange = 0;
-  bx_bool mouse_toggle = 0;
+  bool mouse_toggle = 0;
 
   if ((keysym == XK_Shift_L) || (keysym == XK_Shift_R)) {
     kmodchange = set_modifier_keys(BX_MOD_KEY_SHIFT, !press_release);
@@ -2068,7 +2068,7 @@ public:
   const char* get_text() {return text;}
   // checkbox
   int  get_status() {return status;}
-  void set_status(bx_bool new_stat) {status = new_stat;}
+  void set_status(bool new_stat) {status = new_stat;}
   // edit
   void set_maxlen(unsigned int max);
   int process_input(KeySym key, const char *str);
@@ -2078,7 +2078,7 @@ private:
   int type, param, xmin, xmax, ymin, ymax;
   const char *text;
   // checkbox
-  bx_bool status;
+  bool status;
   // edit
   char *value;
   char editstr[27];
@@ -2345,7 +2345,7 @@ int x11_dialog_c::run(int start_ctrl, int ok, int cancel)
 {
   XEvent xevent;
   KeySym key;
-  bx_bool done = 0, valid = 0, status;
+  bool done = 0, valid = 0, status;
   int i, init = 0;
   char text[10], editstr[27];
   x11_static_t *temp;
@@ -2575,7 +2575,7 @@ int x11_string_dialog(bx_param_string_c *param, bx_param_enum_c *param2)
 {
   x11_control_c *xctl_edit, *xbtn_status = NULL;
   int h, num_ctrls, ctrl_id, edit_id, status_id, ok_id, cancel_id, retcode = -1;
-  bx_bool status = 0;
+  bool status = 0;
   char name[80], text[10];
   const char *value;
 

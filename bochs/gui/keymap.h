@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2009  The Bochs Project
+//  Copyright (C) 2002-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -63,7 +63,7 @@ public:
 
   void   loadKeymap(Bit32u(*)(const char*));
   void   loadKeymap(Bit32u(*)(const char*),const char *filename);
-  bx_bool isKeymapLoaded();
+  bool   isKeymapLoaded();
 
   BXKeyEntry *findHostKey(Bit32u hostkeynum);
   BXKeyEntry *findAsciiChar(Bit8u ascii);
