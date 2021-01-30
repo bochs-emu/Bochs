@@ -116,11 +116,11 @@ parser.o: parser.c debug.h ../config.h ../osdep.h \
  ../cpu/decoder/decoder.h
 dbg_breakpoints.o: dbg_breakpoints.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../cpu/decoder/decoder.h \
- ../gui/paramtree.h ../logio.h ../cpudb.h ../memory/memory-bochs.h \
+ ../gui/paramtree.h ../logio.h ../cpudb.h \
  ../instrument/stubs/instrument.h
 dbg_main.o: dbg_main.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../cpu/decoder/decoder.h \
- ../gui/paramtree.h ../logio.h ../cpudb.h ../memory/memory-bochs.h \
+ ../gui/paramtree.h ../logio.h ../cpudb.h \
  ../instrument/stubs/instrument.h ../param_names.h ../cpu/cpu.h \
  ../cpu/decoder/decoder.h ../cpu/i387.h ../cpu/fpu/softfloat.h \
  ../cpu/fpu/tag_w.h ../cpu/fpu/status_w.h ../cpu/fpu/control_w.h \
@@ -129,19 +129,20 @@ dbg_main.o: dbg_main.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../cpu/xmm.h ../cpu/vmx.h ../cpu/svm.h ../cpu/cpuid.h ../cpu/access.h \
  ../cpu/decoder/ia_opcodes.h ../cpu/decoder/ia_opcodes.def \
  ../iodev/iodev.h ../plugin.h ../extplugin.h ../pc_system.h \
- ../gui/siminterface.h ../gui/paramtree.h ../gui/gui.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h
 linux.o: linux.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../cpu/decoder/decoder.h ../gui/paramtree.h \
- ../logio.h ../cpudb.h ../memory/memory-bochs.h \
- ../instrument/stubs/instrument.h ../cpu/cpu.h ../cpu/decoder/decoder.h \
- ../cpu/i387.h ../cpu/fpu/softfloat.h ../cpu/fpu/tag_w.h \
- ../cpu/fpu/status_w.h ../cpu/fpu/control_w.h ../cpu/crregs.h \
- ../cpu/descriptor.h ../cpu/decoder/instr.h ../cpu/lazy_flags.h \
- ../cpu/tlb.h ../cpu/icache.h ../cpu/apic.h ../cpu/xmm.h ../cpu/vmx.h \
- ../cpu/svm.h ../cpu/cpuid.h ../cpu/access.h syscalls-linux.h
+ ../logio.h ../cpudb.h ../instrument/stubs/instrument.h ../cpu/cpu.h \
+ ../cpu/decoder/decoder.h ../cpu/i387.h ../cpu/fpu/softfloat.h \
+ ../cpu/fpu/tag_w.h ../cpu/fpu/status_w.h ../cpu/fpu/control_w.h \
+ ../cpu/crregs.h ../cpu/descriptor.h ../cpu/decoder/instr.h \
+ ../cpu/lazy_flags.h ../cpu/tlb.h ../cpu/icache.h ../cpu/apic.h \
+ ../cpu/xmm.h ../cpu/vmx.h ../cpu/svm.h ../cpu/cpuid.h ../cpu/access.h \
+ syscalls-linux.h
 symbols.o: symbols.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../cpu/decoder/decoder.h \
- ../gui/paramtree.h ../logio.h ../cpudb.h ../memory/memory-bochs.h \
+ ../gui/paramtree.h ../logio.h ../cpudb.h \
  ../instrument/stubs/instrument.h ../cpu/cpu.h ../cpu/decoder/decoder.h \
  ../cpu/i387.h ../cpu/fpu/softfloat.h ../cpu/fpu/tag_w.h \
  ../cpu/fpu/status_w.h ../cpu/fpu/control_w.h ../cpu/crregs.h \

@@ -79,8 +79,7 @@ f2xm1.o: f2xm1.@CPP_SUFFIX@ softfloatx80.h softfloat.h ../../config.h \
 ferr.o: ferr.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../gui/paramtree.h ../../logio.h \
- ../../cpudb.h ../../memory/memory-bochs.h \
- ../../instrument/stubs/instrument.h ../../cpu/cpu.h \
+ ../../cpudb.h ../../instrument/stubs/instrument.h ../../cpu/cpu.h \
  ../../cpu/decoder/decoder.h ../../cpu/i387.h ../../cpu/fpu/softfloat.h \
  ../../cpu/fpu/tag_w.h ../../cpu/fpu/status_w.h ../../cpu/fpu/control_w.h \
  ../../cpu/crregs.h ../../cpu/descriptor.h ../../cpu/decoder/instr.h \
@@ -96,8 +95,7 @@ fprem.o: fprem.@CPP_SUFFIX@ softfloatx80.h softfloat.h ../../config.h \
 fpu.o: fpu.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../gui/paramtree.h ../../logio.h \
- ../../cpudb.h ../../memory/memory-bochs.h \
- ../../instrument/stubs/instrument.h ../../cpu/cpu.h \
+ ../../cpudb.h ../../instrument/stubs/instrument.h ../../cpu/cpu.h \
  ../../cpu/decoder/decoder.h ../../cpu/i387.h ../../cpu/fpu/softfloat.h \
  ../../cpu/fpu/tag_w.h ../../cpu/fpu/status_w.h ../../cpu/fpu/control_w.h \
  ../../cpu/crregs.h ../../cpu/descriptor.h ../../cpu/decoder/instr.h \
@@ -105,13 +103,13 @@ fpu.o: fpu.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../cpu/apic.h ../../cpu/xmm.h ../../cpu/vmx.h ../../cpu/svm.h \
  ../../cpu/cpuid.h ../../cpu/stack.h ../../cpu/access.h \
  ../../iodev/iodev.h ../../plugin.h ../../extplugin.h ../../param_names.h \
- ../../pc_system.h ../../gui/siminterface.h ../../gui/paramtree.h \
- ../../gui/gui.h softfloatx80.h softfloat.h softfloat-specialize.h
+ ../../pc_system.h ../../memory/memory-bochs.h ../../gui/siminterface.h \
+ ../../gui/paramtree.h ../../gui/gui.h softfloatx80.h softfloat.h \
+ softfloat-specialize.h
 fpu_arith.o: fpu_arith.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../gui/paramtree.h ../../logio.h \
- ../../cpudb.h ../../memory/memory-bochs.h \
- ../../instrument/stubs/instrument.h ../../cpu/cpu.h \
+ ../../cpudb.h ../../instrument/stubs/instrument.h ../../cpu/cpu.h \
  ../../cpu/decoder/decoder.h ../../cpu/i387.h ../../cpu/fpu/softfloat.h \
  ../../cpu/fpu/tag_w.h ../../cpu/fpu/status_w.h ../../cpu/fpu/control_w.h \
  ../../cpu/crregs.h ../../cpu/descriptor.h ../../cpu/decoder/instr.h \
@@ -122,8 +120,7 @@ fpu_arith.o: fpu_arith.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
 fpu_cmov.o: fpu_cmov.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../gui/paramtree.h ../../logio.h \
- ../../cpudb.h ../../memory/memory-bochs.h \
- ../../instrument/stubs/instrument.h ../../cpu/cpu.h \
+ ../../cpudb.h ../../instrument/stubs/instrument.h ../../cpu/cpu.h \
  ../../cpu/decoder/decoder.h ../../cpu/i387.h ../../cpu/fpu/softfloat.h \
  ../../cpu/fpu/tag_w.h ../../cpu/fpu/status_w.h ../../cpu/fpu/control_w.h \
  ../../cpu/crregs.h ../../cpu/descriptor.h ../../cpu/decoder/instr.h \
@@ -133,8 +130,7 @@ fpu_cmov.o: fpu_cmov.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
 fpu_compare.o: fpu_compare.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../gui/paramtree.h ../../logio.h \
- ../../cpudb.h ../../memory/memory-bochs.h \
- ../../instrument/stubs/instrument.h ../../cpu/cpu.h \
+ ../../cpudb.h ../../instrument/stubs/instrument.h ../../cpu/cpu.h \
  ../../cpu/decoder/decoder.h ../../cpu/i387.h ../../cpu/fpu/softfloat.h \
  ../../cpu/fpu/tag_w.h ../../cpu/fpu/status_w.h ../../cpu/fpu/control_w.h \
  ../../cpu/crregs.h ../../cpu/descriptor.h ../../cpu/decoder/instr.h \
@@ -146,8 +142,7 @@ fpu_compare.o: fpu_compare.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep
 fpu_const.o: fpu_const.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../gui/paramtree.h ../../logio.h \
- ../../cpudb.h ../../memory/memory-bochs.h \
- ../../instrument/stubs/instrument.h ../../cpu/cpu.h \
+ ../../cpudb.h ../../instrument/stubs/instrument.h ../../cpu/cpu.h \
  ../../cpu/decoder/decoder.h ../../cpu/i387.h ../../cpu/fpu/softfloat.h \
  ../../cpu/fpu/tag_w.h ../../cpu/fpu/status_w.h ../../cpu/fpu/control_w.h \
  ../../cpu/crregs.h ../../cpu/descriptor.h ../../cpu/decoder/instr.h \
@@ -158,8 +153,7 @@ fpu_const.o: fpu_const.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
 fpu_load_store.o: fpu_load_store.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../gui/paramtree.h ../../logio.h \
- ../../cpudb.h ../../memory/memory-bochs.h \
- ../../instrument/stubs/instrument.h ../../cpu/cpu.h \
+ ../../cpudb.h ../../instrument/stubs/instrument.h ../../cpu/cpu.h \
  ../../cpu/decoder/decoder.h ../../cpu/i387.h ../../cpu/fpu/softfloat.h \
  ../../cpu/fpu/tag_w.h ../../cpu/fpu/status_w.h ../../cpu/fpu/control_w.h \
  ../../cpu/crregs.h ../../cpu/descriptor.h ../../cpu/decoder/instr.h \
@@ -171,8 +165,7 @@ fpu_load_store.o: fpu_load_store.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
 fpu_misc.o: fpu_misc.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../gui/paramtree.h ../../logio.h \
- ../../cpudb.h ../../memory/memory-bochs.h \
- ../../instrument/stubs/instrument.h ../../cpu/cpu.h \
+ ../../cpudb.h ../../instrument/stubs/instrument.h ../../cpu/cpu.h \
  ../../cpu/decoder/decoder.h ../../cpu/i387.h ../../cpu/fpu/softfloat.h \
  ../../cpu/fpu/tag_w.h ../../cpu/fpu/status_w.h ../../cpu/fpu/control_w.h \
  ../../cpu/crregs.h ../../cpu/descriptor.h ../../cpu/decoder/instr.h \
@@ -183,8 +176,7 @@ fpu_misc.o: fpu_misc.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
 fpu_trans.o: fpu_trans.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../gui/paramtree.h ../../logio.h \
- ../../cpudb.h ../../memory/memory-bochs.h \
- ../../instrument/stubs/instrument.h ../../cpu/cpu.h \
+ ../../cpudb.h ../../instrument/stubs/instrument.h ../../cpu/cpu.h \
  ../../cpu/decoder/decoder.h ../../cpu/i387.h ../../cpu/fpu/softfloat.h \
  ../../cpu/fpu/tag_w.h ../../cpu/fpu/status_w.h ../../cpu/fpu/control_w.h \
  ../../cpu/crregs.h ../../cpu/descriptor.h ../../cpu/decoder/instr.h \
