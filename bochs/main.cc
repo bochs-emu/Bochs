@@ -56,23 +56,23 @@ extern "C" {
 }
 
 #if BX_GUI_SIGHANDLER
-bx_bool bx_gui_sighandler = 0;
+bool bx_gui_sighandler = 0;
 #endif
 
 int  bx_init_main(int argc, char *argv[]);
 void bx_init_hardware(void);
-void bx_plugin_ctrl_reset(bx_bool init_done);
+void bx_plugin_ctrl_reset(bool init_done);
 void bx_init_options(void);
 void bx_init_bx_dbg(void);
 
 static const char *divider = "========================================================================";
 
 bx_startup_flags_t bx_startup_flags;
-bx_bool bx_user_quit;
+bool bx_user_quit;
 Bit8u bx_cpu_count;
 #if BX_SUPPORT_APIC
 Bit32u apic_id_mask; // determinted by XAPIC option
-bx_bool simulate_xapic;
+bool simulate_xapic;
 #endif
 
 /* typedefs */
@@ -201,7 +201,7 @@ static void carbonFatalDialog(const char *error, const char *exposition)
 #endif
 
 #if BX_DEBUGGER
-void print_tree(bx_param_c *node, int level, bx_bool xml)
+void print_tree(bx_param_c *node, int level, bool xml)
 {
   int i;
   char tmpstr[BX_PATHNAME_LEN];
@@ -397,7 +397,7 @@ int split_string_into_argv(char *string, int *argc_out, char **argv, int max_arg
   }
   if (last_nonspace != buf) *(last_nonspace+1) = 0;
   p = buf;
-  bx_bool done = false;
+  bool done = false;
   while (!done) {
     //fprintf (stderr, "parsing '%c' with singlequote=%d, dblquote=%d\n", *p, in_single_quote, in_double_quote);
     switch (*p) {
@@ -507,7 +507,7 @@ int WINAPI WinMain(
   bx_startup_flags.argv = (char**) malloc (max_argv * sizeof (char*));
   split_string_into_argv(m_lpCmdLine, &bx_startup_flags.argc, bx_startup_flags.argv, max_argv);
   int arg = 1;
-  bx_bool bx_noconsole = 0;
+  bool bx_noconsole = 0;
   while (arg < bx_startup_flags.argc) {
     if (!strcmp("-noconsole", bx_startup_flags.argv[arg])) {
       bx_noconsole = 1;
@@ -535,7 +535,7 @@ int CDECL main(int argc, char *argv[])
   bx_startup_flags.argv = argv;
 #ifdef WIN32
   int arg = 1;
-  bx_bool bx_noconsole = 0;
+  bool bx_noconsole = 0;
   while (arg < argc) {
     if (!strcmp("-noconsole", argv[arg])) {
       bx_noconsole = 1;
@@ -935,7 +935,7 @@ int bx_init_main(int argc, char *argv[])
   return 0;
 }
 
-bx_bool load_and_init_display_lib(void)
+bool load_and_init_display_lib(void)
 {
   if (bx_gui != NULL) {
     // bx_gui has already been filled in.  This happens when you start
@@ -1134,7 +1134,7 @@ void bx_sr_after_restore_state(void)
   DEV_after_restore_state();
 }
 
-void bx_set_log_actions_by_device(bx_bool panic_flag)
+void bx_set_log_actions_by_device(bool panic_flag)
 {
   int id, l, m, val;
   bx_list_c *loglev, *level;
@@ -1214,36 +1214,36 @@ void bx_init_hardware()
 #endif
     BX_INFO(("  FPU support: %s", BX_SUPPORT_FPU?"yes":"no"));
 #if BX_CPU_LEVEL >= 5
-    bx_bool mmx_enabled = SIM->get_param_bool(BXPN_CPUID_MMX)->get();
+    bool mmx_enabled = SIM->get_param_bool(BXPN_CPUID_MMX)->get();
     BX_INFO(("  MMX support: %s", mmx_enabled?"yes":"no"));
     BX_INFO(("  3dnow! support: %s", BX_SUPPORT_3DNOW?"yes":"no"));
 #endif
 #if BX_CPU_LEVEL >= 6
-    bx_bool sep_enabled = SIM->get_param_bool(BXPN_CPUID_SEP)->get();
+    bool sep_enabled = SIM->get_param_bool(BXPN_CPUID_SEP)->get();
     BX_INFO(("  SEP support: %s", sep_enabled?"yes":"no"));
     BX_INFO(("  SIMD support: %s", SIM->get_param_enum(BXPN_CPUID_SIMD)->get_selected()));
-    bx_bool xsave_enabled = SIM->get_param_bool(BXPN_CPUID_XSAVE)->get();
-    bx_bool xsaveopt_enabled = SIM->get_param_bool(BXPN_CPUID_XSAVEOPT)->get();
+    bool xsave_enabled = SIM->get_param_bool(BXPN_CPUID_XSAVE)->get();
+    bool xsaveopt_enabled = SIM->get_param_bool(BXPN_CPUID_XSAVEOPT)->get();
     BX_INFO(("  XSAVE support: %s %s",
       xsave_enabled?"xsave":"no", xsaveopt_enabled?"xsaveopt":""));
-    bx_bool aes_enabled = SIM->get_param_bool(BXPN_CPUID_AES)->get();
+    bool aes_enabled = SIM->get_param_bool(BXPN_CPUID_AES)->get();
     BX_INFO(("  AES support: %s", aes_enabled?"yes":"no"));
-    bx_bool sha_enabled = SIM->get_param_bool(BXPN_CPUID_SHA)->get();
+    bool sha_enabled = SIM->get_param_bool(BXPN_CPUID_SHA)->get();
     BX_INFO(("  SHA support: %s", sha_enabled?"yes":"no"));
-    bx_bool movbe_enabled = SIM->get_param_bool(BXPN_CPUID_MOVBE)->get();
+    bool movbe_enabled = SIM->get_param_bool(BXPN_CPUID_MOVBE)->get();
     BX_INFO(("  MOVBE support: %s", movbe_enabled?"yes":"no"));
-    bx_bool adx_enabled = SIM->get_param_bool(BXPN_CPUID_ADX)->get();
+    bool adx_enabled = SIM->get_param_bool(BXPN_CPUID_ADX)->get();
     BX_INFO(("  ADX support: %s", adx_enabled?"yes":"no"));
 #if BX_SUPPORT_X86_64
-    bx_bool x86_64_enabled = SIM->get_param_bool(BXPN_CPUID_X86_64)->get();
+    bool x86_64_enabled = SIM->get_param_bool(BXPN_CPUID_X86_64)->get();
     BX_INFO(("  x86-64 support: %s", x86_64_enabled?"yes":"no"));
-    bx_bool xlarge_enabled = SIM->get_param_bool(BXPN_CPUID_1G_PAGES)->get();
+    bool xlarge_enabled = SIM->get_param_bool(BXPN_CPUID_1G_PAGES)->get();
     BX_INFO(("  1G paging support: %s", xlarge_enabled?"yes":"no"));
 #else
     BX_INFO(("  x86-64 support: no"));
 #endif
 #if BX_SUPPORT_MONITOR_MWAIT
-    bx_bool mwait_enabled = SIM->get_param_bool(BXPN_CPUID_MWAIT)->get();
+    bool mwait_enabled = SIM->get_param_bool(BXPN_CPUID_MWAIT)->get();
     BX_INFO(("  MWAIT support: %s", mwait_enabled?"yes":"no"));
 #endif
 #if BX_SUPPORT_VMX
@@ -1256,7 +1256,7 @@ void bx_init_hardware()
     }
 #endif
 #if BX_SUPPORT_SVM
-    bx_bool svm_enabled = SIM->get_param_bool(BXPN_CPUID_SVM)->get();
+    bool svm_enabled = SIM->get_param_bool(BXPN_CPUID_SVM)->get();
     BX_INFO(("  SVM support: %s", svm_enabled?"yes":"no"));
 #endif
 #endif // BX_CPU_LEVEL >= 6

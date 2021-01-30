@@ -317,7 +317,7 @@ typedef struct {
   // what was pressed?  This is a BX_KEY_* value.  For key releases,
   // BX_KEY_RELEASED is ORed with the base BX_KEY_*.
   Bit32u bx_key;
-  bx_bool raw_scancode;
+  bool raw_scancode;
 } BxKeyEvent;
 
 // Event type: BX_ASYNC_EVT_MOUSE
@@ -449,7 +449,7 @@ typedef struct {
 // the toolbar events.
 typedef struct {
   bx_toolbar_buttons button;
-  bx_bool on; // for toggling buttons, on=true means the toolbar button is
+  bool on; // for toggling buttons, on=true means the toolbar button is
               // pressed. on=false means it is not pressed.
 } BxToolbarEvent;
 
@@ -457,8 +457,8 @@ typedef struct {
 typedef struct {
   int element;
   char *text;
-  bx_bool active;
-  bx_bool w;
+  bool active;
+  bool w;
 } BxStatusbarEvent;
 
 // The BxEvent structure should be used for all events.  Every event has
@@ -736,8 +736,8 @@ public:
   // called from simulator when writing a message to log file
   virtual void log_msg(const char *prefix, int level, const char *msg) {}
   // set this to 1 if the gui has a log viewer
-  virtual void set_log_viewer(bx_bool val) {}
-  virtual bx_bool has_log_viewer() const {return 0;}
+  virtual void set_log_viewer(bool val) {}
+  virtual bool has_log_viewer() const {return 0;}
 
   // tell the CI to ask the user for the value of a parameter.
   virtual int ask_param(bx_param_c *param) {return -1;}
@@ -746,12 +746,12 @@ public:
   // ask the user for a pathname
   virtual int ask_filename(const char *filename, int maxlen, const char *prompt, const char *the_default, int flags) {return -1;}
   // yes/no dialog
-  virtual int ask_yes_no(const char *title, const char *prompt, bx_bool the_default) {return -1;}
+  virtual int ask_yes_no(const char *title, const char *prompt, bool the_default) {return -1;}
   // simple message box
   virtual void message_box(const char *title, const char *message) {}
   // called at a regular interval, currently by the bx_devices_c::timer()
   virtual void periodic() {}
-  virtual int create_disk_image(const char *filename, int sectors, bx_bool overwrite) {return -3;}
+  virtual int create_disk_image(const char *filename, int sectors, bool overwrite) {return -3;}
   // Tell the configuration interface (CI) that some parameter values have
   // changed.  The CI will reread the parameters and change its display if it's
   // appropriate.  Maybe later: mention which params have changed to save time.
@@ -769,9 +769,9 @@ public:
   // return first cdrom in ATA interface
   virtual bx_param_c *get_first_hd() {return NULL;}
   // return 1 if device is connected to a PCI slot
-  virtual bx_bool is_pci_device(const char *name) {return 0;}
+  virtual bool is_pci_device(const char *name) {return 0;}
   // return 1 if device is connected to the AGP slot
-  virtual bx_bool is_agp_device(const char *name) {return 0;}
+  virtual bool is_agp_device(const char *name) {return 0;}
 #if BX_DEBUGGER
   // for debugger: same behavior as pressing control-C
   virtual void debug_break() {}
@@ -788,24 +788,24 @@ public:
   virtual int register_runtime_config_handler(void *dev, rt_conf_handler_t handler) {return 0;}
   virtual void unregister_runtime_config_handler(int id) {}
   virtual void update_runtime_options() {}
-  typedef bx_bool (*is_sim_thread_func_t)();
+  typedef bool (*is_sim_thread_func_t)();
   is_sim_thread_func_t is_sim_thread_func;
   virtual void set_sim_thread_func(is_sim_thread_func_t func) {
     is_sim_thread_func = func;
   }
-  virtual bx_bool is_sim_thread() {return 1;}
-  virtual bx_bool is_wx_selected() const {return 0;}
-  virtual void set_debug_gui(bx_bool val) {}
-  virtual bx_bool has_debug_gui() const {return 0;}
+  virtual bool is_sim_thread() {return 1;}
+  virtual bool is_wx_selected() const {return 0;}
+  virtual void set_debug_gui(bool val) {}
+  virtual bool has_debug_gui() const {return 0;}
   // provide interface to bx_gui->set_display_mode() method for config
   // interfaces to use.
   virtual void set_display_mode(disp_mode_t newmode) {}
-  virtual bx_bool test_for_text_console() {return 1;}
+  virtual bool test_for_text_console() {return 1;}
 
   // add-on config option support
-  virtual bx_bool register_addon_option(const char *keyword, addon_option_parser_t parser, addon_option_save_t save_func) {return 0;}
-  virtual bx_bool unregister_addon_option(const char *keyword) {return 0;}
-  virtual bx_bool is_addon_option(const char *keyword) {return 0;}
+  virtual bool register_addon_option(const char *keyword, addon_option_parser_t parser, addon_option_save_t save_func) {return 0;}
+  virtual bool unregister_addon_option(const char *keyword) {return 0;}
+  virtual bool is_addon_option(const char *keyword) {return 0;}
   virtual Bit32s parse_addon_option(const char *context, int num_params, char *params []) {return -1;}
   virtual Bit32s save_addon_options(FILE *fp) {return -1;}
 
@@ -817,23 +817,23 @@ public:
   // save/restore support
   virtual void init_save_restore() {}
   virtual void cleanup_save_restore() {}
-  virtual bx_bool save_state(const char *checkpoint_path) {return 0;}
-  virtual bx_bool restore_config() {return 0;}
-  virtual bx_bool restore_logopts() {return 0;}
-  virtual bx_bool restore_hardware() {return 0;}
+  virtual bool save_state(const char *checkpoint_path) {return 0;}
+  virtual bool restore_config() {return 0;}
+  virtual bool restore_logopts() {return 0;}
+  virtual bool restore_hardware() {return 0;}
   virtual bx_list_c *get_bochs_root() {return NULL;}
-  virtual bx_bool restore_bochs_param(bx_list_c *root, const char *sr_path, const char *restore_name) { return 0; }
+  virtual bool restore_bochs_param(bx_list_c *root, const char *sr_path, const char *restore_name) { return 0; }
 
   // special config parameter and options functions for plugins
-  virtual bool opt_plugin_ctrl(const char *plugname, bx_bool load) {return 0;}
+  virtual bool opt_plugin_ctrl(const char *plugname, bool load) {return 0;}
   virtual void init_std_nic_options(const char *name, bx_list_c *menu) {}
   virtual void init_usb_options(const char *usb_name, const char *pname, int maxports) {}
   virtual int  parse_param_from_list(const char *context, const char *param, bx_list_c *base) {return 0;}
   virtual int  parse_nic_params(const char *context, const char *param, bx_list_c *base) {return 0;}
-  virtual int  parse_usb_port_params(const char *context, bx_bool devopt,
+  virtual int  parse_usb_port_params(const char *context, bool devopt,
                                      const char *param, int maxports, bx_list_c *base) {return 0;}
   virtual int  split_option_list(const char *msg, const char *rawopt, char **argv, int max_argv) {return 0;}
-  virtual int  write_param_list(FILE *fp, bx_list_c *base, const char *optname, bx_bool multiline) {return 0;}
+  virtual int  write_param_list(FILE *fp, bx_list_c *base, const char *optname, bool multiline) {return 0;}
   virtual int  write_usb_options(FILE *fp, int maxports, bx_list_c *base) {return 0;}
 
 #if BX_USE_GUI_CONSOLE
@@ -871,5 +871,5 @@ typedef struct BOCHSAPI {
 } bx_startup_flags_t;
 
 BOCHSAPI extern bx_startup_flags_t bx_startup_flags;
-BOCHSAPI extern bx_bool bx_user_quit;
+BOCHSAPI extern bool bx_user_quit;
 BOCHSAPI extern Bit8u bx_cpu_count;

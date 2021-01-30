@@ -120,22 +120,22 @@ int  bx_parse_cmdline(int arg, int argc, char *argv[]);
 int  bx_read_configuration(const char *rcfile);
 int  bx_write_configuration(const char *rcfile, int overwrite);
 void bx_reset_options(void);
-void bx_set_log_actions_by_device(bx_bool panic_flag);
+void bx_set_log_actions_by_device(bool panic_flag);
 // special config parameter and options functions for plugins
 void bx_init_std_nic_options(const char *name, bx_list_c *menu);
 void bx_init_usb_options(const char *usb_name, const char *pname, int maxports);
 int  bx_parse_param_from_list(const char *context, const char *input, bx_list_c *list);
 int  bx_parse_nic_params(const char *context, const char *param, bx_list_c *base);
-int  bx_parse_usb_port_params(const char *context, bx_bool devopt,
+int  bx_parse_usb_port_params(const char *context, bool devopt,
                               const char *param, int maxports, bx_list_c *base);
 int  bx_split_option_list(const char *msg, const char *rawopt, char **argv, int max_argv);
-int  bx_write_param_list(FILE *fp, bx_list_c *base, const char *optname, bx_bool multiline);
+int  bx_write_param_list(FILE *fp, bx_list_c *base, const char *optname, bool multiline);
 int  bx_write_usb_options(FILE *fp, int maxports, bx_list_c *base);
 
 Bit32u crc32(const Bit8u *buf, int len);
 
 // used to print param tree from debugger
-void print_tree(bx_param_c *node, int level = 0, bx_bool xml = false);
+void print_tree(bx_param_c *node, int level = 0, bool xml = false);
 
 #if BX_ENABLE_STATISTICS
 // print statistics
@@ -421,20 +421,20 @@ int bx_gdbstub_check(unsigned int eip);
 #endif
 
 typedef struct {
-  bx_bool interrupts;
-  bx_bool exceptions;
-  bx_bool print_timestamps;
+  bool interrupts;
+  bool exceptions;
+  bool print_timestamps;
 #if BX_DEBUGGER
-  bx_bool magic_break_enabled;
+  bool magic_break_enabled;
 #endif
 #if BX_GDBSTUB
-  bx_bool gdbstub_enabled;
+  bool gdbstub_enabled;
 #endif
 #if BX_SUPPORT_APIC
-  bx_bool apic;
+  bool apic;
 #endif
 #if BX_DEBUG_LINUX
-  bx_bool linux_syscall;
+  bool linux_syscall;
 #endif
 } bx_debug_t;
 
@@ -475,7 +475,7 @@ enum {
 /* --- EXTERNS --- */
 
 #if BX_GUI_SIGHANDLER
-extern bx_bool bx_gui_sighandler;
+extern bool bx_gui_sighandler;
 #endif
 
 // This value controls how often each I/O device's timer handler

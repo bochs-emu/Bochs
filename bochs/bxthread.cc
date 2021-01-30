@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2017-2020  The Bochs Project
+//  Copyright (C) 2017-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -55,7 +55,7 @@ void bx_set_event(bx_thread_event_t *thread_ev)
 #endif
 }
 
-bx_bool bx_wait_for_event(bx_thread_event_t *thread_ev)
+bool bx_wait_for_event(bx_thread_event_t *thread_ev)
 {
 #if defined(WIN32)
   if (WaitForSingleObject(thread_ev->event, 1) == WAIT_OBJECT_0) {

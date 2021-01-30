@@ -270,7 +270,7 @@ void bx_plugin_ctrl_init()
 #endif
 }
 
-void bx_plugin_ctrl_reset(bx_bool init_done)
+void bx_plugin_ctrl_reset(bool init_done)
 {
   bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_PLUGIN_CTRL);
   if (init_done) {
@@ -1912,8 +1912,8 @@ static int parse_line_unformatted(const char *context, char *line)
   char string[512];
   char *params[MAX_PARAMS_LEN];
   int num_params;
-  bx_bool inquotes = 0;
-  bx_bool comment = 0;
+  bool inquotes = 0;
+  bool comment = 0;
 
   memset(params, 0, sizeof(params));
   if (line == NULL) return 0;
@@ -2074,7 +2074,7 @@ int get_floppy_type_from_image(const char *filename)
 static Bit32s parse_log_options(const char *context, int num_params, char *params[])
 {
   int level, action, i;
-  bx_bool def_action = 0;
+  bool def_action = 0;
   char *param, *module, *actstr;
   char pname[20];
   bx_list_c *base;
@@ -2217,7 +2217,7 @@ int bx_parse_param_from_list(const char *context, const char *input, bx_list_c *
   return ret;
 }
 
-int bx_parse_usb_port_params(const char *context, bx_bool devopt, const char *param, int maxports, bx_list_c *base)
+int bx_parse_usb_port_params(const char *context, bool devopt, const char *param, int maxports, bx_list_c *base)
 {
   int idx, plen;
   char tmpname[20];
@@ -2303,7 +2303,7 @@ int bx_split_option_list(const char *msg, const char *rawopt, char **argv, int m
   return argc;
 }
 
-bx_bool is_deprecated_option(const char *oldparam, const char **newparam)
+bool is_deprecated_option(const char *oldparam, const char **newparam)
 {
   if ((!strcmp(oldparam, "keyboard_serial_delay")) ||
              (!strcmp(oldparam, "keyboard_paste_delay")) ||
@@ -2856,7 +2856,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
   } else if (!strcmp(params[0], "pci")) {
     char tmpdev[80];
     int enabled = -1;
-    bx_bool chipset = 0;
+    bool chipset = 0;
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
         enabled = atol(&params[i][8]);
@@ -3077,10 +3077,10 @@ static int parse_line_formatted(const char *context, int num_params, char *param
 }
 
 
-int bx_write_param_list(FILE *fp, bx_list_c *base, const char *optname, bx_bool multiline)
+int bx_write_param_list(FILE *fp, bx_list_c *base, const char *optname, bool multiline)
 {
   char bxrcline[BX_PATHNAME_LEN], tmpstr[BX_PATHNAME_LEN];
-  bx_bool newline = 1;
+  bool newline = 1;
   int p = 0;
 
   if (base == NULL) return -1;
@@ -3268,7 +3268,7 @@ int bx_write_debugger_options(FILE *fp)
 #endif
 #if BX_GDBSTUB
   bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_GDBSTUB);
-  bx_bool enabled = SIM->get_param_bool("enabled", base)->get();
+  bool enabled = SIM->get_param_bool("enabled", base)->get();
   if (enabled) {
     fprintf(fp, "gdbstub: enabled=%d, port=%d, text_base=%d, data_base=%d, bss_base=%d\n",
             enabled, SIM->get_param_num("port", base)->get(), SIM->get_param_num("text_base", base)->get(),

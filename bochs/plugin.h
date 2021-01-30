@@ -298,7 +298,7 @@ typedef void (*deviceReset_t)(unsigned);
 
 BOCHSAPI void pluginRegisterDeviceDevmodel(plugin_t *plugin, plugintype_t type, bx_devmodel_c *dev, const char *name);
 BOCHSAPI void pluginUnregisterDeviceDevmodel(const char *name, plugintype_t type);
-BOCHSAPI bx_bool pluginDevicePresent(const char *name);
+BOCHSAPI bool pluginDevicePresent(const char *name);
 
 /* === IO port stuff === */
 BOCHSAPI extern int (*pluginRegisterIOReadHandler)(void *thisPtr, ioReadHandler_t callback,
@@ -337,7 +337,7 @@ Bit8u bx_get_plugins_count(plugintype_t type);
 const char* bx_get_plugin_name(plugintype_t type, Bit8u index);
 #endif
 bool bx_load_plugin(const char *name, plugintype_t type);
-bool bx_unload_plugin(const char *name, bx_bool devflag);
+bool bx_unload_plugin(const char *name, bool devflag);
 extern void bx_unload_plugin_type(const char *name, plugintype_t type);
 extern void bx_init_plugins(void);
 extern void bx_reset_plugins(unsigned);
@@ -350,7 +350,7 @@ extern void bx_plugins_after_restore_state(void);
 extern plugin_t bx_builtin_plugins[];
 
 int bx_load_plugin_np(const char *name, plugintype_t type);
-int bx_unload_opt_plugin(const char *name, bx_bool devflag);
+int bx_unload_opt_plugin(const char *name, bool devflag);
 #endif
 
 // every plugin must define this, within the extern"C" block, so that

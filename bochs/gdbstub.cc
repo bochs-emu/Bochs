@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2020  The Bochs Project Team
+//  Copyright (C) 2002-2021  The Bochs Project Team
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -399,7 +399,7 @@ static int access_linear(Bit64u laddress,
                         Bit8u* data)
 {
   bx_phy_address phys;
-  bx_bool valid;
+  bool valid;
 
   if (((laddress & 0xfff) + len) > 4096)
   {

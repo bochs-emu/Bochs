@@ -76,9 +76,9 @@ class bx_real_sim_c : public bx_simulator_interface_c {
   jmp_buf *quit_context;
   int exit_code;
   unsigned param_id;
-  bx_bool bx_debug_gui;
-  bx_bool bx_log_viewer;
-  bx_bool wxsel;
+  bool bx_debug_gui;
+  bool bx_log_viewer;
+  bool wxsel;
 public:
   bx_real_sim_c();
   virtual ~bx_real_sim_c() {}
@@ -125,19 +125,19 @@ public:
   virtual BxEvent* sim_to_ci_event(BxEvent *event);
   virtual int log_dlg(const char *prefix, int level, const char *msg, int mode);
   virtual void log_msg(const char *prefix, int level, const char *msg);
-  virtual void set_log_viewer(bx_bool val) { bx_log_viewer = val; }
-  virtual bx_bool has_log_viewer() const { return bx_log_viewer; }
+  virtual void set_log_viewer(bool val) { bx_log_viewer = val; }
+  virtual bool has_log_viewer() const { return bx_log_viewer; }
   virtual int ask_param(bx_param_c *param);
   virtual int ask_param(const char *pname);
   // ask the user for a pathname
   virtual int ask_filename(const char *filename, int maxlen, const char *prompt, const char *the_default, int flags);
   // yes/no dialog
-  virtual int ask_yes_no(const char *title, const char *prompt, bx_bool the_default);
+  virtual int ask_yes_no(const char *title, const char *prompt, bool the_default);
   // simple message box
   virtual void message_box(const char *title, const char *message);
   // called at a regular interval, currently by the keyboard handler.
   virtual void periodic();
-  virtual int create_disk_image(const char *filename, int sectors, bx_bool overwrite);
+  virtual int create_disk_image(const char *filename, int sectors, bool overwrite);
   virtual void refresh_ci();
   virtual void refresh_vga() {
     if (init_done) {
@@ -156,8 +156,8 @@ public:
   bx_param_c *get_first_hd() {
     return get_first_atadevice(BX_ATA_DEVICE_DISK);
   }
-  virtual bx_bool is_pci_device(const char *name);
-  virtual bx_bool is_agp_device(const char *name);
+  virtual bool is_pci_device(const char *name);
+  virtual bool is_agp_device(const char *name);
 #if BX_DEBUGGER
   virtual void debug_break();
   virtual void debug_interpret_cmd(char *cmd);
@@ -174,21 +174,21 @@ public:
   virtual void unregister_runtime_config_handler(int id);
   virtual void update_runtime_options();
   virtual void set_sim_thread_func(is_sim_thread_func_t func) {}
-  virtual bx_bool is_sim_thread();
-  virtual void set_debug_gui(bx_bool val) { bx_debug_gui = val; }
-  virtual bx_bool has_debug_gui() const { return bx_debug_gui; }
-  virtual bx_bool is_wx_selected() const { return wxsel; }
+  virtual bool is_sim_thread();
+  virtual void set_debug_gui(bool val) { bx_debug_gui = val; }
+  virtual bool has_debug_gui() const { return bx_debug_gui; }
+  virtual bool is_wx_selected() const { return wxsel; }
   // provide interface to bx_gui->set_display_mode() method for config
   // interfaces to use.
   virtual void set_display_mode(disp_mode_t newmode) {
     if (bx_gui != NULL)
       bx_gui->set_display_mode(newmode);
   }
-  virtual bx_bool test_for_text_console();
+  virtual bool test_for_text_console();
   // add-on config option support
-  virtual bx_bool register_addon_option(const char *keyword, addon_option_parser_t parser, addon_option_save_t save_func);
-  virtual bx_bool unregister_addon_option(const char *keyword);
-  virtual bx_bool is_addon_option(const char *keyword);
+  virtual bool register_addon_option(const char *keyword, addon_option_parser_t parser, addon_option_save_t save_func);
+  virtual bool unregister_addon_option(const char *keyword);
+  virtual bool is_addon_option(const char *keyword);
   virtual Bit32s  parse_addon_option(const char *context, int num_params, char *params []);
   virtual Bit32s  save_addon_options(FILE *fp);
 
@@ -202,24 +202,24 @@ public:
   // save/restore support
   virtual void init_save_restore();
   virtual void cleanup_save_restore();
-  virtual bx_bool save_state(const char *checkpoint_path);
-  virtual bx_bool restore_config();
-  virtual bx_bool restore_logopts();
-  virtual bx_bool restore_hardware();
+  virtual bool save_state(const char *checkpoint_path);
+  virtual bool restore_config();
+  virtual bool restore_logopts();
+  virtual bool restore_hardware();
   virtual bx_list_c *get_bochs_root() {
     return (bx_list_c*)get_param("bochs", NULL);
   }
-  virtual bx_bool restore_bochs_param(bx_list_c *root, const char *sr_path, const char *restore_name);
+  virtual bool restore_bochs_param(bx_list_c *root, const char *sr_path, const char *restore_name);
   // special config parameter and options functions for plugins
-  virtual bool opt_plugin_ctrl(const char *plugname, bx_bool load);
+  virtual bool opt_plugin_ctrl(const char *plugname, bool load);
   virtual void init_std_nic_options(const char *name, bx_list_c *menu);
   virtual void init_usb_options(const char *usb_name, const char *pname, int maxports);
   virtual int  parse_param_from_list(const char *context, const char *param, bx_list_c *base);
   virtual int  parse_nic_params(const char *context, const char *param, bx_list_c *base);
-  virtual int  parse_usb_port_params(const char *context, bx_bool devopt,
+  virtual int  parse_usb_port_params(const char *context, bool devopt,
                                      const char *param, int maxports, bx_list_c *base);
   virtual int  split_option_list(const char *msg, const char *rawopt, char **argv, int max_argv);
-  virtual int  write_param_list(FILE *fp, bx_list_c *base, const char *optname, bx_bool multiline);
+  virtual int  write_param_list(FILE *fp, bx_list_c *base, const char *optname, bool multiline);
   virtual int  write_usb_options(FILE *fp, int maxports, bx_list_c *base);
 #if BX_USE_GUI_CONSOLE
   virtual int  bx_printf(const char *fmt, ...);
@@ -227,7 +227,7 @@ public:
 #endif
 
 private:
-  bx_bool save_sr_param(FILE *fp, bx_param_c *node, const char *sr_path, int level);
+  bool save_sr_param(FILE *fp, bx_param_c *node, const char *sr_path, int level);
 };
 
 // recursive function to find parameters from the path
@@ -633,7 +633,7 @@ int bx_real_sim_c::ask_filename(const char *filename, int maxlen, const char *pr
   return event.retcode;
 }
 
-int bx_real_sim_c::ask_yes_no(const char *title, const char *prompt, bx_bool the_default)
+int bx_real_sim_c::ask_yes_no(const char *title, const char *prompt, bool the_default)
 {
   BxEvent event;
   char format[512];
@@ -694,7 +694,7 @@ void bx_real_sim_c::periodic()
 // write, e.g. disk full.
 //
 // wxWidgets: This may be called from the gui thread.
-int bx_real_sim_c::create_disk_image(const char *filename, int sectors, bx_bool overwrite)
+int bx_real_sim_c::create_disk_image(const char *filename, int sectors, bool overwrite)
 {
   FILE *fp;
   if (!overwrite) {
@@ -772,7 +772,7 @@ bx_param_c *bx_real_sim_c::get_first_atadevice(Bit32u search_type)
   return NULL;
 }
 
-bx_bool bx_real_sim_c::is_pci_device(const char *name)
+bool bx_real_sim_c::is_pci_device(const char *name)
 {
 #if BX_SUPPORT_PCI
   unsigned i, max_pci_slots = BX_N_PCI_SLOTS;
@@ -795,7 +795,7 @@ bx_bool bx_real_sim_c::is_pci_device(const char *name)
   return 0;
 }
 
-bx_bool bx_real_sim_c::is_agp_device(const char *name)
+bool bx_real_sim_c::is_agp_device(const char *name)
 {
 #if BX_SUPPORT_PCI
   if (get_param_bool(BXPN_PCI_ENABLED)->get() &&
@@ -946,7 +946,7 @@ void bx_real_sim_c::update_runtime_options()
   bx_virt_timer.set_realtime_delay();
 }
 
-bx_bool bx_real_sim_c::is_sim_thread()
+bool bx_real_sim_c::is_sim_thread()
 {
   if (is_sim_thread_func == NULL) return 1;
   return (*is_sim_thread_func)();
@@ -956,7 +956,7 @@ bx_bool bx_real_sim_c::is_sim_thread()
 // started from the "Start Menu" or by double clicking on it on a Mac,
 // there may be nothing attached to stdin/stdout/stderr.  This function
 // tests if stdin/stdout/stderr are usable and returns 0 if not.
-bx_bool bx_real_sim_c::test_for_text_console()
+bool bx_real_sim_c::test_for_text_console()
 {
 #if BX_WITH_CARBON
   // In a Carbon application, you have a text console if you run the app from
@@ -967,7 +967,7 @@ bx_bool bx_real_sim_c::test_for_text_console()
   return 1;
 }
 
-bx_bool bx_real_sim_c::is_addon_option(const char *keyword)
+bool bx_real_sim_c::is_addon_option(const char *keyword)
 {
   addon_option_t *addon_option;
 
@@ -977,7 +977,7 @@ bx_bool bx_real_sim_c::is_addon_option(const char *keyword)
   return 0;
 }
 
-bx_bool bx_real_sim_c::register_addon_option(const char *keyword, addon_option_parser_t parser,
+bool bx_real_sim_c::register_addon_option(const char *keyword, addon_option_parser_t parser,
                                              addon_option_save_t save_func)
 {
   addon_option_t *addon_option = new addon_option_t;
@@ -1003,7 +1003,7 @@ bx_bool bx_real_sim_c::register_addon_option(const char *keyword, addon_option_p
   return 1;
 }
 
-bx_bool bx_real_sim_c::unregister_addon_option(const char *keyword)
+bool bx_real_sim_c::unregister_addon_option(const char *keyword)
 {
   addon_option_t *addon_option, *prev = NULL;
 
@@ -1077,7 +1077,7 @@ void bx_real_sim_c::cleanup_save_restore()
   }
 }
 
-bx_bool bx_real_sim_c::save_state(const char *checkpoint_path)
+bool bx_real_sim_c::save_state(const char *checkpoint_path)
 {
   char sr_file[BX_PATHNAME_LEN];
   char devname[20];
@@ -1122,7 +1122,7 @@ bx_bool bx_real_sim_c::save_state(const char *checkpoint_path)
   return 1;
 }
 
-bx_bool bx_real_sim_c::restore_config()
+bool bx_real_sim_c::restore_config()
 {
   char config[BX_PATHNAME_LEN];
   sprintf(config, "%s/config", get_param_string(BXPN_RESTORE_PATH)->getptr());
@@ -1130,7 +1130,7 @@ bx_bool bx_real_sim_c::restore_config()
   return (read_rc(config) >= 0);
 }
 
-bx_bool bx_real_sim_c::restore_logopts()
+bool bx_real_sim_c::restore_logopts()
 {
   char logopts[BX_PATHNAME_LEN];
   char line[512], string[512], devname[20];
@@ -1202,7 +1202,7 @@ static int bx_restore_getline(FILE *fp, char *line, int maxlen)
   return (ret != NULL) ? len : 0;
 }
 
-bx_bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path, const char *restore_name)
+bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path, const char *restore_name)
 {
   char devstate[BX_PATHNAME_LEN], devdata[BX_PATHNAME_LEN];
   char line[512], buf[512];
@@ -1327,7 +1327,7 @@ bx_bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path,
   return 1;
 }
 
-bx_bool bx_real_sim_c::restore_hardware()
+bool bx_real_sim_c::restore_hardware()
 {
   bx_list_c *sr_list = get_bochs_root();
   int ndev = sr_list->get_size();
@@ -1338,7 +1338,7 @@ bx_bool bx_real_sim_c::restore_hardware()
   return 1;
 }
 
-bx_bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_path, int level)
+bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_path, int level)
 {
   int i, j;
   char pname[BX_PATHNAME_LEN], tmpstr[BX_PATHNAME_LEN+1];
@@ -1442,7 +1442,7 @@ bx_bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_
   return 1;
 }
 
-bool bx_real_sim_c::opt_plugin_ctrl(const char *plugname, bx_bool load)
+bool bx_real_sim_c::opt_plugin_ctrl(const char *plugname, bool load)
 {
   bx_list_c *plugin_ctrl = (bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL);
   if (!strcmp(plugname, "*")) {
@@ -1450,7 +1450,7 @@ bool bx_real_sim_c::opt_plugin_ctrl(const char *plugname, bx_bool load)
     int i = 0;
     while (i < plugin_ctrl->get_size()) {
       bx_param_bool_c *plugin = (bx_param_bool_c*)plugin_ctrl->get(i);
-      if (load == (bx_bool)plugin->get()) {
+      if (load == (bool)plugin->get()) {
         opt_plugin_ctrl(plugin->get_name(), load);
       }
       i++;
@@ -1503,7 +1503,7 @@ int bx_real_sim_c::parse_nic_params(const char *context, const char *param, bx_l
   return bx_parse_nic_params(context, param, base);
 }
 
-int bx_real_sim_c::parse_usb_port_params(const char *context, bx_bool devopt,
+int bx_real_sim_c::parse_usb_port_params(const char *context, bool devopt,
                                      const char *param, int maxports, bx_list_c *base)
 {
   return bx_parse_usb_port_params(context, devopt, param, maxports, base);
@@ -1515,7 +1515,7 @@ int bx_real_sim_c::split_option_list(const char *msg, const char *rawopt,
   return bx_split_option_list(msg, rawopt, argv, max_argv);
 }
 
-int bx_real_sim_c::write_param_list(FILE *fp, bx_list_c *base, const char *optname, bx_bool multiline)
+int bx_real_sim_c::write_param_list(FILE *fp, bx_list_c *base, const char *optname, bool multiline)
 {
   return bx_write_param_list(fp, base, optname, multiline);
 }

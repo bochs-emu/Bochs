@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2017-2020  The Bochs Project
+//  Copyright (C) 2017-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -82,7 +82,7 @@ typedef struct
 void BOCHSAPI_MSVCONLY bx_create_event(bx_thread_event_t *thread_ev);
 void BOCHSAPI_MSVCONLY bx_destroy_event(bx_thread_event_t *thread_ev);
 void BOCHSAPI_MSVCONLY bx_set_event(bx_thread_event_t *thread_ev);
-bx_bool BOCHSAPI_MSVCONLY bx_wait_for_event(bx_thread_event_t *thread_ev);
+bool BOCHSAPI_MSVCONLY bx_wait_for_event(bx_thread_event_t *thread_ev);
 bool BOCHSAPI_MSVCONLY bx_create_sem(bx_thread_sem_t *thread_sem);
 void BOCHSAPI_MSVCONLY bx_destroy_sem(bx_thread_sem_t *thread_sem);
 void BOCHSAPI_MSVCONLY bx_wait_sem(bx_thread_sem_t *thread_sem);

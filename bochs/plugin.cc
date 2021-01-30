@@ -735,7 +735,7 @@ void pluginUnregisterDeviceDevmodel(const char *name, plugintype_t type)
 /* Plugin system: Check if a plugin is loaded                           */
 /************************************************************************/
 
-bx_bool pluginDevicePresent(const char *name)
+bool pluginDevicePresent(const char *name)
 {
   device_t *device;
 
@@ -768,7 +768,7 @@ bool bx_load_plugin(const char *name, plugintype_t type)
   }
 }
 
-bool bx_unload_plugin(const char *name, bx_bool devflag)
+bool bx_unload_plugin(const char *name, bool devflag)
 {
   plugin_t *plugin;
   bool ret = 0;
@@ -1117,7 +1117,7 @@ int bx_load_plugin_np(const char *name, plugintype_t type)
   return 0;
 }
 
-int bx_unload_opt_plugin(const char *name, bx_bool devflag)
+int bx_unload_opt_plugin(const char *name, bool devflag)
 {
   int i = 0;
   while (strcmp(bx_builtin_plugins[i].name, "NULL")) {
