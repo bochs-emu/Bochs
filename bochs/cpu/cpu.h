@@ -5624,16 +5624,6 @@ class bxInstruction_c;
 
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
 
-#define BX_SYNC_TIME_IF_SINGLE_PROCESSOR(allowed_delta) {                     \
-  if (BX_SMP_PROCESSORS == 1) {                                               \
-    Bit32u delta = (Bit32u)(BX_CPU_THIS_PTR icount - BX_CPU_THIS_PTR icount_last_sync); \
-    if (delta >= allowed_delta) {                                             \
-      BX_CPU_THIS_PTR sync_icount();                                          \
-      BX_TICKN(delta);                                                        \
-    }                                                                         \
-  }                                                                           \
-}
-
 #define BX_COMMIT_INSTRUCTION(i) {                     \
   BX_CPU_THIS_PTR prev_rip = RIP; /* commit new RIP */ \
   BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, (i));            \
@@ -5673,9 +5663,6 @@ class bxInstruction_c;
 #define BX_NEXT_TRACE(i) { return; }
 #define BX_NEXT_INSTR(i) { return; }
 #define BX_LINK_TRACE(i) { return; }
-
-#define BX_SYNC_TIME_IF_SINGLE_PROCESSOR(allowed_delta) \
-  if (BX_SMP_PROCESSORS == 1) BX_TICK1()
 
 #endif
 

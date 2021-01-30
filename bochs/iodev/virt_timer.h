@@ -22,6 +22,8 @@
 #ifndef _BX_VIRT_TIMER_H
 #define _BX_VIRT_TIMER_H
 
+#include "pc_system.h"
+
 // should be adjusted if want to support more SMP processors
 #define BX_MAX_VIRTUAL_TIMERS (32)
 

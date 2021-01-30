@@ -21,6 +21,7 @@
 /////////////////////////////////////////////////////////////////////////
 
 #include "bochs.h"
+#include "pc_system.h"
 #include "bxthread.h"
 #include "cpu/cpu.h"
 #include <assert.h>

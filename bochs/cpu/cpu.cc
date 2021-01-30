@@ -24,7 +24,27 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#include "pc_system.h"
 #include "cpustats.h"
+
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+
+#define BX_SYNC_TIME_IF_SINGLE_PROCESSOR(allowed_delta) {                               \
+  if (BX_SMP_PROCESSORS == 1) {                                                         \
+    Bit32u delta = (Bit32u)(BX_CPU_THIS_PTR icount - BX_CPU_THIS_PTR icount_last_sync); \
+    if (delta >= allowed_delta) {                                                       \
+      BX_CPU_THIS_PTR sync_icount();                                                    \
+      BX_TICKN(delta);                                                                  \
+    }                                                                                   \
+  }                                                                                     \
+}
+
+#else
+
+#define BX_SYNC_TIME_IF_SINGLE_PROCESSOR(allowed_delta) \
+  if (BX_SMP_PROCESSORS == 1) BX_TICK1()
+
+#endif
 
 jmp_buf BX_CPU_C::jmp_buf_env;
 

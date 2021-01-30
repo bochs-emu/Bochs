@@ -24,6 +24,8 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#include "pc_system.h"
+
 //
 // REP MOVS methods
 //

@@ -25,6 +25,8 @@
 #include "msr.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#include "pc_system.h"
+
 // X86 Registers Which Affect Paging:
 // ==================================
 //

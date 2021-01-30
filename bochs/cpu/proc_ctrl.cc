@@ -25,6 +25,7 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#include "pc_system.h"
 #include "wide_int.h"
 #include "decoder/ia_opcodes.h"
 

@@ -22,6 +22,7 @@
 
 #include "bochs.h"
 #include "param_names.h"
+#include "pc_system.h"
 #include "slowdown_timer.h"
 
 #include <errno.h>
