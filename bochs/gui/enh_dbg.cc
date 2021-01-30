@@ -17,6 +17,7 @@
 #include <math.h>
 
 #include "bochs.h"
+#include "pc_system.h"
 #include "cpu/cpu.h"
 
 extern char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr, bxInstruction_c *i, bx_address cs_base, bx_address rip);
