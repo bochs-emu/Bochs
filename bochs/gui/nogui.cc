@@ -25,6 +25,7 @@
 #define BX_PLUGGABLE
 
 #include "bochs.h"
+#include "gui.h"
 #include "plugin.h"
 #include "param_names.h"
 
