@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2020  The Bochs Project
+//  Copyright (C) 2001-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -82,8 +82,8 @@ public:
   virtual ~bx_vgacore_c();
   virtual void   init(void);
   virtual void   reset(unsigned type) {}
-  static bx_bool mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
-  static bx_bool mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  static bool    mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  static bool    mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
   virtual Bit8u  mem_read(bx_phy_address addr);
   virtual void   mem_write(bx_phy_address addr, Bit8u value);
   virtual void   set_override(bx_bool enabled, void *dev);

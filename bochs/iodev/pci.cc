@@ -422,8 +422,8 @@ void bx_pci_bridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io
   }
 }
 
-bx_bool bx_pci_bridge_c::agp_ap_read_handler(bx_phy_address addr, unsigned len,
-                                             void *data, void *param)
+bool bx_pci_bridge_c::agp_ap_read_handler(bx_phy_address addr, unsigned len,
+                                          void *data, void *param)
 {
   bx_pci_bridge_c *class_ptr = (bx_pci_bridge_c*)param;
   Bit32u value = class_ptr->agp_aperture_read(addr, len, 0);
@@ -460,8 +460,8 @@ Bit32u bx_pci_bridge_c::agp_aperture_read(bx_phy_address addr, unsigned len,
   return 0;
 }
 
-bx_bool bx_pci_bridge_c::agp_ap_write_handler(bx_phy_address addr, unsigned len,
-                                              void *data, void *param)
+bool bx_pci_bridge_c::agp_ap_write_handler(bx_phy_address addr, unsigned len,
+                                           void *data, void *param)
 {
   bx_pci_bridge_c *class_ptr = (bx_pci_bridge_c*)param;
   Bit32u value = *(Bit32u*)data;

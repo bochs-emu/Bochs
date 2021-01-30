@@ -1706,7 +1706,7 @@ void bx_vgacore_c::update(void)
   }
 }
 
-bx_bool bx_vgacore_c::mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param)
+bool bx_vgacore_c::mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param)
 {
   bx_vgacore_c *class_ptr = (bx_vgacore_c *) param;
   Bit8u *data_ptr;
@@ -1799,7 +1799,7 @@ Bit8u bx_vgacore_c::mem_read(bx_phy_address addr)
   }
 }
 
-bx_bool bx_vgacore_c::mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param)
+bool bx_vgacore_c::mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param)
 {
   bx_vgacore_c *class_ptr = (bx_vgacore_c *) param;
   Bit8u *data_ptr;

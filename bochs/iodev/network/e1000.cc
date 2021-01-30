@@ -695,15 +695,15 @@ void bx_e1000_c::after_restore_state(void)
   bx_pci_device_c::after_restore_pci_state(mem_read_handler);
 }
 
-bx_bool bx_e1000_c::mem_read_handler(bx_phy_address addr, unsigned len,
-                                     void *data, void *param)
+bool bx_e1000_c::mem_read_handler(bx_phy_address addr, unsigned len,
+                                  void *data, void *param)
 {
   bx_e1000_c *class_ptr = (bx_e1000_c *) param;
 
   return class_ptr->mem_read(addr, len, data);
 }
 
-bx_bool bx_e1000_c::mem_read(bx_phy_address addr, unsigned len, void *data)
+bool bx_e1000_c::mem_read(bx_phy_address addr, unsigned len, void *data)
 {
   Bit32u *data_ptr = (Bit32u*) data;
   Bit8u  *data8_ptr = (Bit8u*) data;
@@ -815,15 +815,15 @@ bx_bool bx_e1000_c::mem_read(bx_phy_address addr, unsigned len, void *data)
   return 1;
 }
 
-bx_bool bx_e1000_c::mem_write_handler(bx_phy_address addr, unsigned len,
-                                      void *data, void *param)
+bool bx_e1000_c::mem_write_handler(bx_phy_address addr, unsigned len,
+                                   void *data, void *param)
 {
   bx_e1000_c *class_ptr = (bx_e1000_c *) param;
 
   return class_ptr->mem_write(addr, len, data);
 }
 
-bx_bool bx_e1000_c::mem_write(bx_phy_address addr, unsigned len, void *data)
+bool bx_e1000_c::mem_write(bx_phy_address addr, unsigned len, void *data)
 {
   Bit32u value = *(Bit32u*) data;
   Bit32u offset;

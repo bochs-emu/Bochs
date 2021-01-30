@@ -241,7 +241,7 @@ Bit32u bx_pit_c::read(Bit32u address, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif  // !BX_USE_PIT_SMF
-  bx_bool refresh_clock_div2;
+  bool refresh_clock_div2;
   Bit8u value = 0;
 
   handle_timer();
@@ -263,7 +263,7 @@ Bit32u bx_pit_c::read(Bit32u address, unsigned io_len)
 
     case 0x61:
       /* AT, port 61h */
-      refresh_clock_div2 = (bx_bool)((bx_virt_timer.time_usec(BX_PIT_THIS is_realtime) / 15) & 1);
+      refresh_clock_div2 = (bool)((bx_virt_timer.time_usec(BX_PIT_THIS is_realtime) / 15) & 1);
       value = (BX_PIT_THIS s.timer.read_OUT(2)  << 5) |
               (refresh_clock_div2               << 4) |
               (BX_PIT_THIS s.speaker_data_on    << 1) |
@@ -297,7 +297,7 @@ void bx_pit_c::write(Bit32u address, Bit32u dvalue, unsigned io_len)
   Bit64u my_time_usec = bx_virt_timer.time_usec(BX_PIT_THIS is_realtime);
   Bit64u time_passed = my_time_usec-BX_PIT_THIS s.last_usec;
   Bit32u value32, time_passed32 = (Bit32u)time_passed;
-  bx_bool new_speaker_active, new_speaker_level;
+  bool new_speaker_active, new_speaker_level;
 
   if (time_passed32) {
     periodic(time_passed32);
@@ -378,7 +378,7 @@ void bx_pit_c::write(Bit32u address, Bit32u dvalue, unsigned io_len)
 
 }
 
-bx_bool bx_pit_c::periodic(Bit32u usec_delta)
+bool bx_pit_c::periodic(Bit32u usec_delta)
 {
   Bit32u ticks_delta = 0;
 
@@ -404,7 +404,7 @@ bx_bool bx_pit_c::periodic(Bit32u usec_delta)
   return 0;
 }
 
-void bx_pit_c::irq_handler(bx_bool value)
+void bx_pit_c::irq_handler(bool value)
 {
   if (BX_PIT_THIS s.irq_enabled) {
     if (value == 1) {
@@ -415,7 +415,7 @@ void bx_pit_c::irq_handler(bx_bool value)
   }
 }
 
-void bx_pit_c::speaker_handler(bx_bool value)
+void bx_pit_c::speaker_handler(bool value)
 {
   if (BX_PIT_THIS s.timer.get_mode(2) != 3) {
     DEV_speaker_set_line(value & BX_PIT_THIS s.speaker_data_on);

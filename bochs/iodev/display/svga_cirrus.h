@@ -5,7 +5,7 @@
 //  Copyright (c) 2004 Makoto Suzuki (suzu)
 //                     Volker Ruppert (vruppert)
 //                     Robin Kay (komadori)
-//  Copyright (C) 2004-2020  The Bochs Project
+//  Copyright (C) 2004-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -254,8 +254,8 @@ private:
 #if BX_SUPPORT_PCI
   BX_CIRRUS_SMF void svga_init_pcihandlers(void);
 
-  BX_CIRRUS_SMF bx_bool cirrus_mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
-  BX_CIRRUS_SMF bx_bool cirrus_mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  BX_CIRRUS_SMF bool cirrus_mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  BX_CIRRUS_SMF bool cirrus_mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
 #endif
 };
 

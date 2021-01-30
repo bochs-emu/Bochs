@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2018  The Bochs Project
+//  Copyright (C) 2002-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -47,8 +47,8 @@ public:
   virtual void register_state(void);
   virtual void after_restore_state(void);
 
-  static bx_bool agp_ap_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
-  static bx_bool agp_ap_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  static bool agp_ap_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  static bool agp_ap_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
 
   Bit32u agp_aperture_read(bx_phy_address addr, unsigned len, bx_bool agp);
   void   agp_aperture_write(bx_phy_address addr, Bit32u value, unsigned len, bx_bool agp);

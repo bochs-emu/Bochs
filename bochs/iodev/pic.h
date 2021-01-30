@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2009  The Bochs Project
+//  Copyright (C) 2002-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -47,16 +47,16 @@ typedef struct {
   Bit8u read_reg_select;   /* 0=IRR, 1=ISR */
   Bit8u irq;               /* current IRQ number */
   Bit8u lowest_priority;   /* current lowest priority irq */
-  bx_bool INT;             /* INT request pin of PIC */
+  bool INT;                /* INT request pin of PIC */
   Bit8u IRQ_in;            /* IRQ pins of PIC */
   struct {
-    bx_bool in_init;
-    bx_bool requires_4;
+    bool in_init;
+    bool requires_4;
     Bit8u   byte_expected;
   } init;
-  bx_bool special_mask;
-  bx_bool polled;            /* Set when poll command is issued. */
-  bx_bool rotate_on_autoeoi; /* Set when should rotate in auto-eoi mode. */
+  bool special_mask;
+  bool polled;             /* Set when poll command is issued. */
+  bool rotate_on_autoeoi;  /* Set when should rotate in auto-eoi mode. */
   Bit8u edge_level; /* bitmap for irq mode (0=edge, 1=level) */
 } bx_pic_t;
 
@@ -69,7 +69,7 @@ public:
   virtual void reset(unsigned type);
   virtual void lower_irq(unsigned irq_no);
   virtual void raise_irq(unsigned irq_no);
-  virtual void set_mode(bx_bool ma_sl, Bit8u mode);
+  virtual void set_mode(bool ma_sl, Bit8u mode);
   virtual Bit8u IAC(void);
 #if BX_DEBUGGER
   virtual void debug_dump(int argc, char **argv);

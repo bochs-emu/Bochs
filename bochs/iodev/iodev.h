@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2020  The Bochs Project
+//  Copyright (C) 2001-2021  The Bochs Project
 //
 //  I/O port handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -224,7 +224,7 @@ public:
 
 class BOCHSAPI bx_pit_stub_c : public bx_devmodel_c {
 public:
-  virtual void enable_irq(bx_bool enabled) {
+  virtual void enable_irq(bool enabled) {
     STUBFUNC(pit, enable_irq);
   }
 };
@@ -269,7 +269,7 @@ public:
   virtual void lower_irq(unsigned irq_no) {
     STUBFUNC(pic, lower_irq);
   }
-  virtual void set_mode(bx_bool ma_sl, Bit8u mode) {
+  virtual void set_mode(bool ma_sl, Bit8u mode) {
     STUBFUNC(pic, set_mode);
   }
   virtual Bit8u IAC(void) {

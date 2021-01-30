@@ -4,7 +4,7 @@
 //
 //  Experimental USB EHCI adapter (partly ported from Qemu)
 //
-//  Copyright (C) 2015-2017  The Bochs Project
+//  Copyright (C) 2015-2021  The Bochs Project
 //
 //  Copyright(c) 2008  Emutex Ltd. (address@hidden)
 //  Copyright(c) 2011-2012 Red Hat, Inc.
@@ -411,11 +411,11 @@ private:
   void ehci_frame_timer(void);
 
 #if BX_USE_USB_EHCI_SMF
-  static bx_bool read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
-  static bx_bool write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  static bool read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  static bool write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
 #else
-  bx_bool read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
-  bx_bool write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  bool read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  bool write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
 #endif
 
   static void runtime_config_handler(void *);

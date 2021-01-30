@@ -12,7 +12,7 @@
 //  Copyright (c) 2007 Dan Aloni
 //  Copyright (c) 2004 Antony T Curtis
 //
-//  Copyright (C) 2011-2020  The Bochs Project
+//  Copyright (C) 2011-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -159,10 +159,10 @@ private:
   static void rx_handler(void *arg, const void *buf, unsigned len);
   void rx_frame(const void *buf, unsigned io_len);
 
-  static bx_bool mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
-  static bx_bool mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
-  bx_bool mem_read(bx_phy_address addr, unsigned len, void *data);
-  bx_bool mem_write(bx_phy_address addr, unsigned len, void *data);
+  static bool mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  static bool mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  bool mem_read(bx_phy_address addr, unsigned len, void *data);
+  bool mem_write(bx_phy_address addr, unsigned len, void *data);
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);

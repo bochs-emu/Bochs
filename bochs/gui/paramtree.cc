@@ -632,45 +632,37 @@ int bx_param_bool_c::dump_param(char *buf, int len, bool dquotes)
 bx_shadow_bool_c::bx_shadow_bool_c(bx_param_c *parent,
       const char *name,
       const char *label,
-      bx_bool *ptr_to_real_val,
-      Bit8u bitnum)
+      bool *ptr_to_real_val)
   : bx_param_bool_c(parent, name, label, NULL, (Bit64s) *ptr_to_real_val, 1)
 {
   val.pbool = ptr_to_real_val;
-  this->bitnum = bitnum;
 }
 
 bx_shadow_bool_c::bx_shadow_bool_c(bx_param_c *parent,
       const char *name,
-      bx_bool *ptr_to_real_val,
-      Bit8u bitnum)
+      bool *ptr_to_real_val)
   : bx_param_bool_c(parent, name, NULL, NULL, (Bit64s) *ptr_to_real_val, 1)
 {
   val.pbool = ptr_to_real_val;
-  this->bitnum = bitnum;
 }
 
 Bit64s bx_shadow_bool_c::get64()
 {
   if (handler) {
     // the handler can decide what value to return and/or do some side effect
-    Bit64s ret = (*handler)(this, 0, (Bit64s) *(val.pbool));
-    return (ret>>bitnum) & 1;
+    return (*handler)(this, 0, (Bit64s) *(val.pbool));
   } else {
     // just return the value
-    return (*(val.pbool)) & 1;
+    return (Bit64s)*(val.pbool);
   }
 }
 
-void bx_shadow_bool_c::set(Bit64s newval)
+void bx_shadow_bool_c::set(bool newval)
 {
-  // only change the bitnum bit
-  Bit64s mask = BX_CONST64(1) << bitnum;
-  *(val.pbool) &= ~mask;
-  *(val.pbool) |= ((newval & 1) << bitnum);
+  *(val.pbool) = newval;
   if (handler) {
     // the handler can override the new value and/or perform some side effect
-    (*handler)(this, 1, newval&1);
+    (*handler)(this, 1, (Bit64s)newval);
   }
 }
 

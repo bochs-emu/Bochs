@@ -530,7 +530,7 @@ void bx_usb_ohci_c::set_interrupt(Bit32u value)
   update_irq();
 }
 
-bx_bool bx_usb_ohci_c::read_handler(bx_phy_address addr, unsigned len, void *data, void *param)
+bool bx_usb_ohci_c::read_handler(bx_phy_address addr, unsigned len, void *data, void *param)
 {
   Bit32u val = 0x0;
   int p = 0;
@@ -711,7 +711,7 @@ bx_bool bx_usb_ohci_c::read_handler(bx_phy_address addr, unsigned len, void *dat
   return 1;
 }
 
-bx_bool bx_usb_ohci_c::write_handler(bx_phy_address addr, unsigned len, void *data, void *param)
+bool bx_usb_ohci_c::write_handler(bx_phy_address addr, unsigned len, void *data, void *param)
 {
   Bit32u value = *((Bit32u *) data);
   Bit32u  offset = (Bit32u)addr - BX_OHCI_THIS pci_bar[0].addr;

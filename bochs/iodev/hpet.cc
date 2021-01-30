@@ -109,7 +109,7 @@ static int deactivating_bit(Bit64u old, Bit64u _new, Bit64u mask)
 
 // static memory read/write functions
 
-static bx_bool hpet_read(bx_phy_address a20addr, unsigned len, void *data, void *param)
+static bool hpet_read(bx_phy_address a20addr, unsigned len, void *data, void *param)
 {
   Bit32u value1;
   Bit64u value2;
@@ -137,7 +137,7 @@ static bx_bool hpet_read(bx_phy_address a20addr, unsigned len, void *data, void 
   return 1;
 }
 
-static bx_bool hpet_write(bx_phy_address a20addr, unsigned len, void *data, void *param)
+static bool hpet_write(bx_phy_address a20addr, unsigned len, void *data, void *param)
 {
   if (len == 4) { // must be 32-bit aligned
     if ((a20addr & 0x3) != 0) {

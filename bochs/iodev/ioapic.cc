@@ -47,7 +47,7 @@ PLUGIN_ENTRY_FOR_MODULE(ioapic)
   return(0); // Success
 }
 
-static bx_bool ioapic_read(bx_phy_address a20addr, unsigned len, void *data, void *param)
+static bool ioapic_read(bx_phy_address a20addr, unsigned len, void *data, void *param)
 {
   if((a20addr & ~0x3) != ((a20addr+len-1) & ~0x3)) {
     BX_PANIC(("I/O APIC read at address 0x" FMT_PHY_ADDRX " spans 32-bit boundary !", a20addr));
@@ -70,7 +70,7 @@ static bx_bool ioapic_read(bx_phy_address a20addr, unsigned len, void *data, voi
   return 1;
 }
 
-static bx_bool ioapic_write(bx_phy_address a20addr, unsigned len, void *data, void *param)
+static bool ioapic_write(bx_phy_address a20addr, unsigned len, void *data, void *param)
 {
   if(a20addr & 0xf) {
     BX_PANIC(("I/O apic write at unaligned address 0x" FMT_PHY_ADDRX, a20addr));

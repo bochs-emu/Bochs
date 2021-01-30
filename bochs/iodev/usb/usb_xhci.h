@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010-2017  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2011-2017  The Bochs Project
+//                2011-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -596,11 +596,11 @@ private:
   static void dump_xhci_core(const int slots, const int eps);
 
 #if BX_USE_USB_XHCI_SMF
-  static bx_bool read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
-  static bx_bool write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  static bool read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  static bool write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
 #else
-  bx_bool read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
-  bx_bool write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  bool read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  bool write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
 #endif
 
   static void runtime_config_handler(void *);

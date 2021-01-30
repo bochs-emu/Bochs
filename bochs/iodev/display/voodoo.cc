@@ -957,8 +957,8 @@ void bx_voodoo_1_2_c::after_restore_state(void)
   start_fifo_thread();
 }
 
-bx_bool bx_voodoo_1_2_c::mem_read_handler(bx_phy_address addr, unsigned len,
-                                          void *data, void *param)
+bool bx_voodoo_1_2_c::mem_read_handler(bx_phy_address addr, unsigned len,
+                                       void *data, void *param)
 {
   Bit32u *data_ptr = (Bit32u*)data;
 
@@ -966,8 +966,8 @@ bx_bool bx_voodoo_1_2_c::mem_read_handler(bx_phy_address addr, unsigned len,
   return 1;
 }
 
-bx_bool bx_voodoo_1_2_c::mem_write_handler(bx_phy_address addr, unsigned len,
-                                           void *data, void *param)
+bool bx_voodoo_1_2_c::mem_write_handler(bx_phy_address addr, unsigned len,
+                                        void *data, void *param)
 {
   Bit32u val = *(Bit32u*)data;
 

@@ -1475,15 +1475,15 @@ void bx_ne2k_c::tx_timer(void)
 
 
 #if BX_SUPPORT_PCI
-bx_bool bx_ne2k_c::mem_read_handler(bx_phy_address addr, unsigned len,
-                                    void *data, void *param)
+bool bx_ne2k_c::mem_read_handler(bx_phy_address addr, unsigned len,
+                                 void *data, void *param)
 {
   bx_ne2k_c *class_ptr = (bx_ne2k_c *) param;
 
   return class_ptr->mem_read(addr, len, data);
 }
 
-bx_bool bx_ne2k_c::mem_read(bx_phy_address addr, unsigned len, void *data)
+bool bx_ne2k_c::mem_read(bx_phy_address addr, unsigned len, void *data)
 {
   Bit8u  *data_ptr;
 

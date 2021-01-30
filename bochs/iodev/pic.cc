@@ -661,7 +661,7 @@ void bx_pic_c::raise_irq(unsigned irq_no)
   }
 }
 
-void bx_pic_c::set_mode(bx_bool ma_sl, Bit8u mode)
+void bx_pic_c::set_mode(bool ma_sl, Bit8u mode)
 {
   if (ma_sl) {
     BX_PIC_THIS s.master_pic.edge_level = mode;

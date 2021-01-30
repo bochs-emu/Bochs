@@ -183,7 +183,7 @@ void print_statistics_tree(bx_param_c *node, int level = 0);
   new bx_shadow_num_c(parent, #name, &(field), BASE_DEC)
 
 #define BXRS_PARAM_BOOL(parent, name, field) \
-  new bx_shadow_bool_c(parent, #name, (bx_bool*)(&(field)))
+  new bx_shadow_bool_c(parent, #name, (bool*)&(field))
 
 // =-=-=-=-=-=-=- Normal optimized use -=-=-=-=-=-=-=-=-=-=-=-=-=-=
 #define BX_INP(addr, len)           bx_devices.inp(addr, len)

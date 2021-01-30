@@ -195,7 +195,7 @@ protected:
     Bit8s  *p8bit;   // used by bx_shadow_num_c
     float  *pfloat;  // used by bx_shadow_num_c
     double *pdouble; // used by bx_shadow_num_c
-    bx_bool *pbool;  // used by bx_shadow_bool_c
+    bool   *pbool;   // used by bx_shadow_bool_c
   } val;
   param_event_handler handler;
   void *sr_devptr;
@@ -333,21 +333,16 @@ public:
 
 // a bx_shadow_bool_c is a shadow param based on bx_param_bool_c.
 class BOCHSAPI bx_shadow_bool_c : public bx_param_bool_c {
-  // each bit of a bitfield can be a separate value.  bitnum tells which
-  // bit is used.  get/set will only modify that bit.
-  Bit8u bitnum;
 public:
   bx_shadow_bool_c(bx_param_c *parent,
       const char *name,
       const char *label,
-      bx_bool *ptr_to_real_val,
-      Bit8u bitnum = 0);
+      bool *ptr_to_real_val);
   bx_shadow_bool_c(bx_param_c *parent,
       const char *name,
-      bx_bool *ptr_to_real_val,
-      Bit8u bitnum = 0);
+      bool *ptr_to_real_val);
   virtual Bit64s get64();
-  virtual void set(Bit64s val);
+  virtual void set(bool val);
 };
 
 

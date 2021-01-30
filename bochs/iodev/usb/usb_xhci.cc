@@ -1017,7 +1017,7 @@ void bx_usb_xhci_c::update_irq(unsigned interrupter)
   DEV_pci_set_irq(BX_XHCI_THIS devfunc, BX_XHCI_THIS pci_conf[0x3d], level);
 }
 
-bx_bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *data, void *param)
+bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *data, void *param)
 {
   Bit32u val = 0, val_hi = 0;
   int i, speed = 0;
@@ -1375,7 +1375,7 @@ bx_bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *dat
   return 1;
 }
 
-bx_bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data, void *param)
+bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data, void *param)
 {
   Bit32u value = *((Bit32u *) data);
   Bit32u value_hi = *((Bit32u *) ((Bit8u *) data + 4));

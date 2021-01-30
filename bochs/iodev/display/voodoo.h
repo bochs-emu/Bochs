@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2012-2020  The Bochs Project
+//  Copyright (C) 2012-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -107,8 +107,8 @@ public:
   virtual void pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 
 private:
-  static bx_bool mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
-  static bx_bool mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  static bool mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  static bool mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
 
   static void mode_change_timer_handler(void *);
   void mode_change_timer(void);
@@ -140,8 +140,8 @@ public:
 #endif
 
 private:
-  static bx_bool mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
-  static bx_bool mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  static bool mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  static bool mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
 
   void mem_read(bx_phy_address addr, unsigned len, void *data);
   void mem_write(bx_phy_address addr, unsigned len, void *data);

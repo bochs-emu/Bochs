@@ -488,7 +488,7 @@ void bx_svga_cirrus_c::mem_write_mode4and5_16bpp(Bit8u mode, Bit32u offset, Bit8
 }
 
 #if BX_SUPPORT_PCI
-bx_bool bx_svga_cirrus_c::cirrus_mem_read_handler(bx_phy_address addr, unsigned len,
+bool bx_svga_cirrus_c::cirrus_mem_read_handler(bx_phy_address addr, unsigned len,
                                         void *data, void *param)
 {
   Bit8u *data_ptr;
@@ -627,7 +627,7 @@ Bit8u bx_svga_cirrus_c::mem_read(bx_phy_address addr)
 }
 
 #if BX_SUPPORT_PCI
-bx_bool bx_svga_cirrus_c::cirrus_mem_write_handler(bx_phy_address addr, unsigned len,
+bool bx_svga_cirrus_c::cirrus_mem_write_handler(bx_phy_address addr, unsigned len,
                                          void *data, void *param)
 {
   Bit8u *data_ptr;

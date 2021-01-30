@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009-2016  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2009-2017  The Bochs Project
+//                2009-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -290,11 +290,11 @@ private:
   bx_bool process_td(struct OHCI_TD *, struct OHCI_ED *);
 
 #if BX_USE_USB_OHCI_SMF
-  static bx_bool read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
-  static bx_bool write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  static bool read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  static bool write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
 #else
-  bx_bool read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
-  bx_bool write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  bool read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  bool write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
 #endif
 
   static void runtime_config_handler(void *);

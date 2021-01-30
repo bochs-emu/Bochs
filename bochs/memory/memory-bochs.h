@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2020  The Bochs Project
+//  Copyright (C) 2001-2021  The Bochs Project
 //
 //  I/O memory handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -64,7 +64,7 @@ enum memory_area_t {
   BX_MEM_AREA_F0000
 };
 
-typedef bx_bool (*memory_handler_t)(bx_phy_address addr, unsigned len, void *data, void *param);
+typedef bool (*memory_handler_t)(bx_phy_address addr, unsigned len, void *data, void *param);
 // return a pointer to 4K region containing <addr> or NULL if direct access is not allowed
 // same format as getHostMemAddr method
 typedef Bit8u* (*memory_direct_access_handler_t)(bx_phy_address addr, unsigned rw, void *param);
@@ -98,8 +98,8 @@ private:
   Bit8u  **blocks;
   Bit8u   *rom;      // 512k BIOS rom space + 128k expansion rom space
   Bit8u   *bogus;    // 4k for unexisting memory
-  bool rom_present[65];
-  bx_bool memory_type[13][2];
+  bool    rom_present[65];
+  bool    memory_type[13][2];
   Bit32u  bios_rom_addr;
   Bit8u   bios_rom_access;
   Bit8u   flash_type;

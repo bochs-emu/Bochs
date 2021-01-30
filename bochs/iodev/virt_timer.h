@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2014  The Bochs Project
+//  Copyright (C) 2002-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -33,12 +33,12 @@ class BOCHSAPI bx_virt_timer_c : public logfunctions {
 private:
 
   struct {
-    bx_bool inUse;      // Timer slot is in-use (currently registered).
+    bool inUse;         // Timer slot is in-use (currently registered).
     Bit64u  period;     // Timer periodocity in virtual useconds.
     Bit64u  timeToFire; // Time to fire next (in virtual useconds).
-    bx_bool active;     // 0=inactive, 1=active.
-    bx_bool continuous; // 0=one-shot timer, 1=continuous periodicity.
-    bx_bool realtime;   // 0=standard timer, 1=use realtime mode
+    bool active;        // 0=inactive, 1=active.
+    bool continuous;    // 0=one-shot timer, 1=continuous periodicity.
+    bool realtime;      // 0=standard timer, 1=use realtime mode
     bx_timer_handler_t funct;  // A callback function for when the
                                //   timer fires.
                                //   This function MUST return.
@@ -62,12 +62,12 @@ private:
     int system_timer_id;
   } s[2];
 
-  bx_bool in_timer_handler;
+  bool in_timer_handler;
 
   // Local copy of IPS value
   Bit64u ips;
 
-  bx_bool init_done;
+  bool init_done;
 
   //Real time variables:
   Bit64u last_real_time;
@@ -93,14 +93,14 @@ private:
   static void nullTimer(void* this_ptr);
 
   //Step the given number of cycles, optionally calling any timer handlers.
-  void periodic(Bit64u time_passed, bx_bool mode);
+  void periodic(Bit64u time_passed, bool mode);
 
   //Called when next_event_time changes.
-  void next_event_time_update(bx_bool mode);
+  void next_event_time_update(bool mode);
 
   //Called to advance the virtual time.
   // calls periodic as needed.
-  void advance_virtual_time(Bit64u time_passed, bx_bool mode);
+  void advance_virtual_time(Bit64u time_passed, bool mode);
 
 public:
 
@@ -109,27 +109,27 @@ public:
 
   //Get the current virtual time.
   //  This may return the same value on subsequent calls.
-  Bit64u time_usec(bx_bool mode);
+  Bit64u time_usec(bool mode);
 
   //Get the current virtual time.
   //  This will return a monotonically increasing value.
   // MUST NOT be called from within a timer handler.
-  Bit64u time_usec_sequential(bx_bool mode);
+  Bit64u time_usec_sequential(bool mode);
 
   //Register a timer handler to go off after a given interval.
   //Register a timer handler to go off with a periodic interval.
   int  register_timer(void *this_ptr, bx_timer_handler_t handler,
-                         Bit32u useconds, bx_bool continuous,
-                         bx_bool active, bx_bool realtime, const char *id);
+                         Bit32u useconds, bool continuous,
+                         bool active, bool realtime, const char *id);
 
   //unregister a previously registered timer.
-  bx_bool unregisterTimer(unsigned timerID);
+  bool unregisterTimer(unsigned timerID);
 
   void start_timers(void);
 
   //activate a deactivated but registered timer.
   void activate_timer(unsigned timer_index, Bit32u useconds,
-                         bx_bool continuous);
+                      bool continuous);
 
   //deactivate (but don't unregister) a currently registered timer.
   void deactivate_timer(unsigned timer_index);
@@ -140,7 +140,7 @@ public:
   static void pc_system_timer_handler_1(void* this_ptr);
 
   //The real timer handler.
-  void timer_handler(bx_bool mode);
+  void timer_handler(bool mode);
 
   //Initialization step #1 in constructor and for cleanup
   void setup(void);

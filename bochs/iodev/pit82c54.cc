@@ -111,7 +111,7 @@ void pit_82C54::latch_counter(counter_type &thisctr)
     }
 }
 
-void pit_82C54::set_OUT(counter_type &thisctr, bx_bool data)
+void pit_82C54::set_OUT(counter_type &thisctr, bool data)
 {
   if (thisctr.OUTpin != data) {
     thisctr.OUTpin = data;
@@ -815,7 +815,7 @@ void pit_82C54::write(Bit8u address, Bit8u data)
     }
 }
 
-void pit_82C54::set_GATE(Bit8u cnum, bx_bool data)
+void pit_82C54::set_GATE(Bit8u cnum, bool data)
 {
   if (cnum>MAX_COUNTER) {
     BX_ERROR(("Counter number incorrect in 82C54 set_GATE"));
@@ -914,7 +914,7 @@ void pit_82C54::set_GATE(Bit8u cnum, bx_bool data)
   }
 }
 
-bx_bool pit_82C54::read_OUT(Bit8u cnum)
+bool pit_82C54::read_OUT(Bit8u cnum)
 {
   if (cnum>MAX_COUNTER) {
     BX_ERROR(("Counter number incorrect in 82C54 read_OUT"));
@@ -924,7 +924,7 @@ bx_bool pit_82C54::read_OUT(Bit8u cnum)
   return counter[cnum].OUTpin;
 }
 
-bx_bool pit_82C54::read_GATE(Bit8u cnum)
+bool pit_82C54::read_GATE(Bit8u cnum)
 {
   if (cnum>MAX_COUNTER) {
     BX_ERROR(("Counter number incorrect in 82C54 read_GATE"));
@@ -963,7 +963,7 @@ Bit16u pit_82C54::get_inlatch(int counternum)
   return counter[counternum].inlatch;
 }
 
-bx_bool pit_82C54::new_count_ready(int countnum)
+bool pit_82C54::new_count_ready(int countnum)
 {
   return (counter[countnum].write_state != MSByte_multiple);
 }

@@ -639,7 +639,7 @@ void bx_usb_ehci_c::change_port_owner(int port)
   }
 }
 
-bx_bool bx_usb_ehci_c::read_handler(bx_phy_address addr, unsigned len, void *data, void *param)
+bool bx_usb_ehci_c::read_handler(bx_phy_address addr, unsigned len, void *data, void *param)
 {
   Bit32u val = 0, val_hi = 0;
   int port;
@@ -752,7 +752,7 @@ bx_bool bx_usb_ehci_c::read_handler(bx_phy_address addr, unsigned len, void *dat
   return 1;
 }
 
-bx_bool bx_usb_ehci_c::write_handler(bx_phy_address addr, unsigned len, void *data, void *param)
+bool bx_usb_ehci_c::write_handler(bx_phy_address addr, unsigned len, void *data, void *param)
 {
   Bit32u value = *((Bit32u *) data);
   Bit32u value_hi = *((Bit32u *) ((Bit8u *) data + 4));

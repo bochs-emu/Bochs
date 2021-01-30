@@ -752,16 +752,16 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
   }
 }
 
-bx_bool bx_banshee_c::mem_read_handler(bx_phy_address addr, unsigned len,
-                                       void *data, void *param)
+bool bx_banshee_c::mem_read_handler(bx_phy_address addr, unsigned len,
+                                    void *data, void *param)
 {
   bx_banshee_c *class_ptr = (bx_banshee_c*)param;
   class_ptr->mem_read(addr, len, data);
   return 1;
 }
 
-bx_bool bx_banshee_c::mem_write_handler(bx_phy_address addr, unsigned len,
-                                        void *data, void *param)
+bool bx_banshee_c::mem_write_handler(bx_phy_address addr, unsigned len,
+                                     void *data, void *param)
 {
   bx_banshee_c *class_ptr = (bx_banshee_c*)param;
   class_ptr->mem_write(addr, len, data);
