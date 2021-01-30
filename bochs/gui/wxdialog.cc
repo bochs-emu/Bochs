@@ -45,6 +45,7 @@
 
 #include "osdep.h"               // workarounds for missing stuff
 #include "gui/siminterface.h"    // interface to the simulator
+#include "logio.h"               // log level definitions
 #include "wxdialog.h"            // custom dialog boxes
 #include "wxmain.h"              // wxwidgets shared stuff
 
