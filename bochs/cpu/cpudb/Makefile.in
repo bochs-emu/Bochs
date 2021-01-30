@@ -94,7 +94,7 @@ dist-clean: clean
 amd/amd_k6_2_chomper.o: amd/amd_k6_2_chomper.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h  \
  ../../instrument/stubs/instrument.h ../cpu.h ../decoder/decoder.h \
  ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
  ../fpu/control_w.h ../crregs.h ../descriptor.h ../decoder/instr.h \
@@ -113,7 +113,7 @@ amd/athlon64_clawhammer.o: amd/athlon64_clawhammer.@CPP_SUFFIX@ ../../bochs.h \
 amd/athlon64_venice.o: amd/athlon64_venice.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h  \
  ../../instrument/stubs/instrument.h ../cpu.h ../decoder/decoder.h \
  ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
  ../fpu/control_w.h ../crregs.h ../descriptor.h ../decoder/instr.h \
@@ -132,7 +132,7 @@ amd/phenomx3_8650_toliman.o: amd/phenomx3_8650_toliman.@CPP_SUFFIX@ ../../bochs.
 amd/ryzen.o: amd/ryzen.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h  \
  ../../instrument/stubs/instrument.h ../cpu.h ../decoder/decoder.h \
  ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
  ../fpu/control_w.h ../crregs.h ../descriptor.h ../decoder/instr.h \
@@ -142,7 +142,7 @@ amd/ryzen.o: amd/ryzen.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
 amd/trinity_apu.o: amd/trinity_apu.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h  \
  ../../instrument/stubs/instrument.h ../cpu.h ../decoder/decoder.h \
  ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
  ../fpu/control_w.h ../crregs.h ../descriptor.h ../decoder/instr.h \
@@ -152,7 +152,7 @@ amd/trinity_apu.o: amd/trinity_apu.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
 amd/turion64_tyler.o: amd/turion64_tyler.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h  \
  ../../instrument/stubs/instrument.h ../cpu.h ../decoder/decoder.h \
  ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
  ../fpu/control_w.h ../crregs.h ../descriptor.h ../decoder/instr.h \
@@ -161,7 +161,7 @@ amd/turion64_tyler.o: amd/turion64_tyler.@CPP_SUFFIX@ ../../bochs.h ../../config
 amd/zambezi.o: amd/zambezi.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h  \
  ../../instrument/stubs/instrument.h ../cpu.h ../decoder/decoder.h \
  ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
  ../fpu/control_w.h ../crregs.h ../descriptor.h ../decoder/instr.h \
@@ -171,7 +171,7 @@ amd/zambezi.o: amd/zambezi.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep
 intel/atom_n270.o: intel/atom_n270.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h  \
  ../../instrument/stubs/instrument.h ../cpu.h ../decoder/decoder.h \
  ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
  ../fpu/control_w.h ../crregs.h ../descriptor.h ../decoder/instr.h \
@@ -181,7 +181,7 @@ intel/atom_n270.o: intel/atom_n270.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
 intel/broadwell_ult.o: intel/broadwell_ult.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h  \
  ../../instrument/stubs/instrument.h ../cpu.h ../decoder/decoder.h \
  ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
  ../fpu/control_w.h ../crregs.h ../descriptor.h ../decoder/instr.h \
@@ -301,7 +301,7 @@ intel/tigerlake.o: intel/tigerlake.@CPP_SUFFIX@ ../../bochs.h \
 intel/p2_klamath.o: intel/p2_klamath.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h  \
  ../../instrument/stubs/instrument.h ../cpu.h ../decoder/decoder.h \
  ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
  ../fpu/control_w.h ../crregs.h ../descriptor.h ../decoder/instr.h \
@@ -310,7 +310,7 @@ intel/p2_klamath.o: intel/p2_klamath.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
 intel/p3_katmai.o: intel/p3_katmai.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h  \
  ../../instrument/stubs/instrument.h ../cpu.h ../decoder/decoder.h \
  ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
  ../fpu/control_w.h ../crregs.h ../descriptor.h ../decoder/instr.h \
@@ -329,7 +329,7 @@ intel/p4_prescott_celeron_336.o: intel/p4_prescott_celeron_336.@CPP_SUFFIX@ ../.
 intel/p4_willamette.o: intel/p4_willamette.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h  \
  ../../instrument/stubs/instrument.h ../cpu.h ../decoder/decoder.h \
  ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
  ../fpu/control_w.h ../crregs.h ../descriptor.h ../decoder/instr.h \
@@ -338,7 +338,7 @@ intel/p4_willamette.o: intel/p4_willamette.@CPP_SUFFIX@ ../../bochs.h ../../conf
 intel/pentium.o: intel/pentium.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h  \
  ../../instrument/stubs/instrument.h ../cpu.h ../decoder/decoder.h \
  ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
  ../fpu/control_w.h ../crregs.h ../descriptor.h ../decoder/instr.h \
@@ -347,7 +347,7 @@ intel/pentium.o: intel/pentium.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../o
 intel/pentium_mmx.o: intel/pentium_mmx.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../gui/siminterface.h ../../cpudb.h ../../gui/paramtree.h \
- ../../memory/memory-bochs.h ../../pc_system.h ../../gui/gui.h \
+ ../../memory/memory-bochs.h  \
  ../../instrument/stubs/instrument.h ../cpu.h ../decoder/decoder.h \
  ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
  ../fpu/control_w.h ../crregs.h ../descriptor.h ../decoder/instr.h \
