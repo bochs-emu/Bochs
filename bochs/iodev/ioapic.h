@@ -34,7 +34,7 @@ extern int apic_bus_broadcast_interrupt(Bit8u vector, Bit8u delivery_mode, bx_bo
 #define BX_IOAPIC_NUM_PINS   (0x18)
 
 // use the same version as 82093 IOAPIC (0x00170011)
-#define BX_IOAPIC_VERSION_ID (((BX_IOAPIC_NUM_PINS - 1) << 16) | 0x11)
+const Bit32u BX_IOAPIC_VERSION_ID = (((BX_IOAPIC_NUM_PINS - 1) << 16) | 0x11);
 
 class bx_io_redirect_entry_t {
   Bit32u hi, lo;
