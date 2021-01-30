@@ -59,7 +59,7 @@ int main(int argn, const char **argv)
 {
   char disbuf[256];
   Bit8u ibuf[16] = {0};
-  bx_bool is_32 = 1, is_64 = 0;
+  bool is_32 = 1, is_64 = 0;
 
   if (argn < 2)
   {

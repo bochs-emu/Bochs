@@ -51,7 +51,7 @@ void BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned le
   BX_MEM_THIS check_monitor(a20addr, len);
 #endif
 
-  bx_bool is_bios = (a20addr >= (bx_phy_address)BX_MEM_THIS bios_rom_addr);
+  bool is_bios = (a20addr >= (bx_phy_address)BX_MEM_THIS bios_rom_addr);
 #if BX_PHY_ADDRESS_LONG
   if (a20addr > BX_CONST64(0xffffffff)) is_bios = 0;
 #endif
@@ -251,7 +251,7 @@ void BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned len
     BX_PANIC(("readPhysicalPage: cross page access at address 0x" FMT_PHY_ADDRX ", len=%d", addr, len));
   }
 
-  bx_bool is_bios = (a20addr >= (bx_phy_address)BX_MEM_THIS bios_rom_addr);
+  bool is_bios = (a20addr >= (bx_phy_address)BX_MEM_THIS bios_rom_addr);
 #if BX_PHY_ADDRESS_LONG
   if (a20addr > BX_CONST64(0xffffffff)) is_bios = 0;
 #endif

@@ -425,7 +425,7 @@ void convert_image(const char *newimgmode, Bit64u newsize)
   Bit64u i, sc, s;
   char buffer[512], null_sector[512];
   const char *imgmode = NULL;
-  bx_bool error = 0;
+  bool error = false;
 
   printf("\n");
   memset(null_sector, 0, 512);
@@ -472,17 +472,17 @@ void convert_image(const char *newimgmode, Bit64u newsize)
     printf("\x8\x8\x8\x8\x8%3d%%]", (int)((s+1)*100/sc));
     fflush(stdout);
     if (source_image->lseek(i, SEEK_SET) < 0) {
-      error = 1;
+      error = true;
       break;
     }
     if ((source_image->read(buffer, 512) == 512) &&
         (memcmp(buffer, null_sector, 512) != 0)) {
       if (dest_image->lseek(i, SEEK_SET) < 0) {
-        error = 1;
+        error = true;
         break;
       }
       if (dest_image->write(buffer, 512) < 0) {
-        error = 1;
+        error = true;
         break;
       }
     }

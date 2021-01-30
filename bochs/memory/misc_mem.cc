@@ -193,7 +193,7 @@ void BX_MEM_C::allocate_block(Bit32u block)
   if (BX_MEM_THIS used_blocks >= max_blocks) {
     Bit32u original_replacement_block = BX_MEM_THIS next_swapout_idx;
     // Find a block to replace
-    bx_bool used_for_tlb;
+    bool used_for_tlb;
     Bit8u *buffer;
     do {
       do {
@@ -383,7 +383,7 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
   struct stat stat_buf;
   int fd, ret, i, start_idx, end_idx;
   unsigned long size, max_size, offset;
-  bx_bool is_bochs_bios = 0;
+  bool is_bochs_bios = 0;
 
   if (*path == '\0') {
     if (type == 2) {
@@ -575,13 +575,13 @@ void BX_MEM_C::load_RAM(const char *path, bx_phy_address ramaddress)
                          path));
 }
 
-bx_bool BX_MEM_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit8u *buf)
+bool BX_MEM_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit8u *buf)
 {
   bx_phy_address a20addr = A20ADDR(addr);
   struct memory_handler_struct *memory_handler = NULL;
-  bx_bool ret = 1, use_memory_handler = 0, use_smram = 0;
+  bool ret = 1, use_memory_handler = 0, use_smram = 0;
 
-  bx_bool is_bios = (a20addr >= (bx_phy_address)BX_MEM_THIS bios_rom_addr);
+  bool is_bios = (a20addr >= (bx_phy_address)BX_MEM_THIS bios_rom_addr);
 #if BX_PHY_ADDRESS_LONG
   if (a20addr > BX_CONST64(0xffffffff)) is_bios = 0;
 #endif
@@ -670,17 +670,17 @@ bx_bool BX_MEM_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len
 }
 
 #if BX_DEBUGGER || BX_GDBSTUB
-bx_bool BX_MEM_C::dbg_set_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit8u *buf)
+bool BX_MEM_C::dbg_set_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit8u *buf)
 {
   bx_phy_address a20addr = A20ADDR(addr);
   struct memory_handler_struct *memory_handler = NULL;
-  bx_bool use_memory_handler = 0, use_smram = 0;
+  bool use_memory_handler = 0, use_smram = 0;
 
   if ((a20addr + len - 1) > BX_MEM_THIS len) {
     return(0); // error, beyond limits of memory
   }
 
-  bx_bool is_bios = (a20addr >= (bx_phy_address)BX_MEM_THIS bios_rom_addr);
+  bool is_bios = (a20addr >= (bx_phy_address)BX_MEM_THIS bios_rom_addr);
 #if BX_PHY_ADDRESS_LONG
   if (a20addr > BX_CONST64(0xffffffff)) is_bios = 0;
 #endif
@@ -730,7 +730,7 @@ bx_bool BX_MEM_C::dbg_set_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, 
   return(1);
 }
 
-bx_bool BX_MEM_C::dbg_crc32(bx_phy_address addr1, bx_phy_address addr2, Bit32u *crc)
+bool BX_MEM_C::dbg_crc32(bx_phy_address addr1, bx_phy_address addr2, Bit32u *crc)
 {
   *crc = 0;
   if (addr1 > addr2)
@@ -780,12 +780,12 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
 {
   bx_phy_address a20addr = A20ADDR(addr);
 
-  bx_bool is_bios = (a20addr >= (bx_phy_address)BX_MEM_THIS bios_rom_addr);
+  bool is_bios = (a20addr >= (bx_phy_address)BX_MEM_THIS bios_rom_addr);
 #if BX_PHY_ADDRESS_LONG
   if (a20addr > BX_CONST64(0xffffffff)) is_bios = 0;
 #endif
 
-  bx_bool write = rw & 1;
+  bool write = rw & 1;
 
   // allow direct access to SMRAM memory space for code and veto data
   if ((cpu != NULL) && (rw == BX_EXECUTE)) {
@@ -897,7 +897,7 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
 /*
  * One needs to provide both a read_handler and a write_handler.
  */
-  bx_bool
+  bool
 BX_MEM_C::registerMemoryHandlers(void *param, memory_handler_t read_handler,
                 memory_handler_t write_handler, memory_direct_access_handler_t da_handler,
                 bx_phy_address begin_addr, bx_phy_address end_addr)
@@ -937,10 +937,10 @@ BX_MEM_C::registerMemoryHandlers(void *param, memory_handler_t read_handler,
   return 1;
 }
 
-  bx_bool
+  bool
 BX_MEM_C::unregisterMemoryHandlers(void *param, bx_phy_address begin_addr, bx_phy_address end_addr)
 {
-  bx_bool ret = 1;
+  bool ret = 1;
   BX_INFO(("Memory access handlers unregistered: 0x" FMT_PHY_ADDRX " - 0x" FMT_PHY_ADDRX, begin_addr, end_addr));
   for (Bit32u page_idx = (Bit32u)(begin_addr >> 20); page_idx <= (Bit32u)(end_addr >> 20); page_idx++) {
     Bit16u bitmap = 0xffff;
@@ -974,7 +974,7 @@ BX_MEM_C::unregisterMemoryHandlers(void *param, bx_phy_address begin_addr, bx_ph
   return ret;
 }
 
-void BX_MEM_C::enable_smram(bx_bool enable, bx_bool restricted)
+void BX_MEM_C::enable_smram(bool enable, bool restricted)
 {
   BX_MEM_THIS smram_available = 1;
   BX_MEM_THIS smram_enable = (enable > 0);
@@ -989,25 +989,25 @@ void BX_MEM_C::disable_smram(void)
 }
 
 // check if SMRAM is aavailable for CPU data accesses
-bx_bool BX_MEM_C::is_smram_accessible(void)
+bool BX_MEM_C::is_smram_accessible(void)
 {
   return(BX_MEM_THIS smram_available) &&
         (BX_MEM_THIS smram_enable || !BX_MEM_THIS smram_restricted);
 }
 
-void BX_MEM_C::set_memory_type(memory_area_t area, bx_bool rw, bx_bool dram)
+void BX_MEM_C::set_memory_type(memory_area_t area, bool rw, bool dram)
 {
   if (area <= BX_MEM_AREA_F0000) {
     BX_MEM_THIS memory_type[area][rw] = dram;
   }
 }
 
-void BX_MEM_C::set_bios_write(bx_bool enabled)
+void BX_MEM_C::set_bios_write(bool enabled)
 {
   BX_MEM_THIS bios_write_enabled = enabled;
 }
 
-void BX_MEM_C::set_bios_rom_access(Bit8u region, bx_bool enabled)
+void BX_MEM_C::set_bios_rom_access(Bit8u region, bool enabled)
 {
   if (enabled) {
     BX_MEM_THIS bios_rom_access |= region;
@@ -1110,7 +1110,7 @@ void BX_MEM_C::flash_write(Bit32u addr, Bit8u data)
 // MONITOR/MWAIT - x86arch way to optimize idle loops in CPU
 //
 
-bx_bool BX_MEM_C::is_monitor(bx_phy_address begin_addr, unsigned len)
+bool BX_MEM_C::is_monitor(bx_phy_address begin_addr, unsigned len)
 {
   for (int i=0; i<BX_SMP_PROCESSORS;i++) {
     if (BX_CPU(i)->is_monitor(begin_addr, len))

@@ -86,11 +86,11 @@ struct memory_handler_struct {
 class BOCHSAPI BX_MEM_C : public logfunctions {
 private:
   struct memory_handler_struct **memory_handlers;
-  bx_bool pci_enabled;
-  bx_bool bios_write_enabled;
-  bx_bool smram_available;
-  bx_bool smram_enable;
-  bx_bool smram_restricted;
+  bool pci_enabled;
+  bool bios_write_enabled;
+  bool smram_available;
+  bool smram_enable;
+  bool smram_restricted;
 
   Bit64u  len, allocated;  // could be > 4G
   Bit8u   *actual_vector;
@@ -98,7 +98,7 @@ private:
   Bit8u  **blocks;
   Bit8u   *rom;      // 512k BIOS rom space + 128k expansion rom space
   Bit8u   *bogus;    // 4k for unexisting memory
-  bx_bool rom_present[65];
+  bool rom_present[65];
   bx_bool memory_type[13][2];
   Bit32u  bios_rom_addr;
   Bit8u   bios_rom_access;
@@ -125,13 +125,13 @@ public:
   BX_MEM_SMF void    init_memory(Bit64u guest, Bit64u host);
   BX_MEM_SMF void    cleanup_memory(void);
 
-  BX_MEM_SMF void    enable_smram(bx_bool enable, bx_bool restricted);
+  BX_MEM_SMF void    enable_smram(bool enable, bool restricted);
   BX_MEM_SMF void    disable_smram(void);
-  BX_MEM_SMF bx_bool is_smram_accessible(void);
+  BX_MEM_SMF bool is_smram_accessible(void);
 
-  BX_MEM_SMF void    set_bios_write(bx_bool enabled);
-  BX_MEM_SMF void    set_bios_rom_access(Bit8u region, bx_bool enabled);
-  BX_MEM_SMF void    set_memory_type(memory_area_t area, bx_bool rw, bx_bool dram);
+  BX_MEM_SMF void    set_bios_write(bool enabled);
+  BX_MEM_SMF void    set_bios_rom_access(Bit8u region, bool enabled);
+  BX_MEM_SMF void    set_memory_type(memory_area_t area, bool rw, bool dram);
 
   BX_MEM_SMF Bit8u*  getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw);
 
@@ -147,29 +147,29 @@ public:
   BX_MEM_SMF void    load_ROM(const char *path, bx_phy_address romaddress, Bit8u type);
   BX_MEM_SMF void    load_RAM(const char *path, bx_phy_address romaddress);
 
-  BX_MEM_SMF bx_bool dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit8u *buf);
+  BX_MEM_SMF bool dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit8u *buf);
 #if (BX_DEBUGGER || BX_GDBSTUB)
-  BX_MEM_SMF bx_bool dbg_set_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit8u *buf);
-  BX_MEM_SMF bx_bool dbg_crc32(bx_phy_address addr1, bx_phy_address addr2, Bit32u *crc);
+  BX_MEM_SMF bool dbg_set_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit8u *buf);
+  BX_MEM_SMF bool dbg_crc32(bx_phy_address addr1, bx_phy_address addr2, Bit32u *crc);
 #endif
 
-  BX_MEM_SMF bx_bool registerMemoryHandlers(void *param, memory_handler_t read_handler,
+  BX_MEM_SMF bool registerMemoryHandlers(void *param, memory_handler_t read_handler,
                   memory_handler_t write_handler, memory_direct_access_handler_t da_handler,
                   bx_phy_address begin_addr, bx_phy_address end_addr);
-  BX_MEM_SMF BX_CPP_INLINE bx_bool registerMemoryHandlers(void *param, memory_handler_t read_handler,
+  BX_MEM_SMF BX_CPP_INLINE bool registerMemoryHandlers(void *param, memory_handler_t read_handler,
                   memory_handler_t write_handler,
                   bx_phy_address begin_addr, bx_phy_address end_addr)
   {
      return registerMemoryHandlers(param, read_handler, write_handler, NULL, begin_addr, end_addr);
   }
-  BX_MEM_SMF bx_bool unregisterMemoryHandlers(void *param, bx_phy_address begin_addr, bx_phy_address end_addr);
+  BX_MEM_SMF bool unregisterMemoryHandlers(void *param, bx_phy_address begin_addr, bx_phy_address end_addr);
 
   BX_MEM_SMF Bit64u  get_memory_len(void);
   BX_MEM_SMF void allocate_block(Bit32u index);
   BX_MEM_SMF Bit8u* alloc_vector_aligned(Bit64u bytes, Bit64u alignment);
 
 #if BX_SUPPORT_MONITOR_MWAIT
-  BX_MEM_SMF bx_bool is_monitor(bx_phy_address begin_addr, unsigned len);
+  BX_MEM_SMF bool is_monitor(bx_phy_address begin_addr, unsigned len);
   BX_MEM_SMF void    check_monitor(bx_phy_address addr, unsigned len);
 #endif
 

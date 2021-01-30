@@ -76,7 +76,7 @@ typedef struct {
   Bit8u      id;
   SOCKET     so;
   struct     sockaddr_in sin, sout;
-  bx_bool    init;
+  int        init;
   Bit8u      macaddr[6];
   Bit8u      default_ipv4addr[4];
   Bit8u      *reply_buffer;
@@ -104,7 +104,7 @@ int bx_loglev;
 static char bx_logfname[BX_PATHNAME_LEN];
 
 
-bx_bool handle_packet(hub_client_t *client, Bit8u *buf, unsigned len)
+bool handle_packet(hub_client_t *client, Bit8u *buf, unsigned len)
 {
   ethernet_header_t *ethhdr = (ethernet_header_t *)buf;
 
@@ -144,7 +144,7 @@ void broadcast_packet(int clientid, Bit8u *buf, unsigned len)
   }
 }
 
-bx_bool find_client(Bit8u *dst_mac_addr, int *clientid)
+bool find_client(Bit8u *dst_mac_addr, int *clientid)
 {
   *clientid = -1;
   for (int i = 0; i < client_max; i++) {
