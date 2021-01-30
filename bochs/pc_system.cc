@@ -75,7 +75,7 @@ void bx_pc_system_c::initialize(Bit32u ips)
   BX_DEBUG(("ips = %u", (unsigned) ips));
 }
 
-void bx_pc_system_c::set_HRQ(bx_bool val)
+void bx_pc_system_c::set_HRQ(bool val)
 {
   HRQ = val;
   if (val)
@@ -119,10 +119,10 @@ bx_pc_system_c::outp(Bit16u addr, Bit32u value, unsigned io_len)
   bx_devices.outp(addr, value, io_len);
 }
 
-void bx_pc_system_c::set_enable_a20(bx_bool value)
+void bx_pc_system_c::set_enable_a20(bool value)
 {
 #if BX_SUPPORT_A20
-  bx_bool old_enable_a20 = enable_a20;
+  bool old_enable_a20 = enable_a20;
 
   if (value) {
     enable_a20 = 1;
@@ -159,7 +159,7 @@ void bx_pc_system_c::set_enable_a20(bx_bool value)
 #endif
 }
 
-bx_bool bx_pc_system_c::get_enable_a20(void)
+bool bx_pc_system_c::get_enable_a20(void)
 {
 #if BX_SUPPORT_A20
   BX_DEBUG(("A20: get() = %u", (unsigned) enable_a20));
@@ -250,7 +250,7 @@ void bx_pc_system_c::register_state(void)
 // ================================================
 
 int bx_pc_system_c::register_timer(void *this_ptr, void (*funct)(void *),
-  Bit32u useconds, bx_bool continuous, bx_bool active, const char *id)
+  Bit32u useconds, bool continuous, bool active, const char *id)
 {
   // Convert useconds to number of ticks.
   Bit64u ticks = (Bit64u) (double(useconds) * m_ips);
@@ -259,7 +259,7 @@ int bx_pc_system_c::register_timer(void *this_ptr, void (*funct)(void *),
 }
 
 int bx_pc_system_c::register_timer_ticks(void* this_ptr, bx_timer_handler_t funct,
-    Bit64u ticks, bx_bool continuous, bx_bool active, const char *id)
+    Bit64u ticks, bool continuous, bool active, const char *id)
 {
   unsigned i;
 
@@ -322,7 +322,7 @@ void bx_pc_system_c::countdownEvent(void)
 {
   unsigned i, first = numTimers, last = 0;
   Bit64u   minTimeToFire;
-  bx_bool  triggered[BX_MAX_TIMERS];
+  bool  triggered[BX_MAX_TIMERS];
 
   // The countdown decremented to 0.  We need to service all the active
   // timers, and invoke callbacks from those timers which have fired.
@@ -470,7 +470,7 @@ Bit64u bx_pc_system_c::time_nsec()
 
 void bx_pc_system_c::start_timers(void) { }
 
-void bx_pc_system_c::activate_timer_ticks(unsigned i, Bit64u ticks, bx_bool continuous)
+void bx_pc_system_c::activate_timer_ticks(unsigned i, Bit64u ticks, bool continuous)
 {
 #if BX_TIMER_DEBUG
   if (i >= numTimers)
@@ -504,7 +504,7 @@ void bx_pc_system_c::activate_timer_ticks(unsigned i, Bit64u ticks, bx_bool cont
   }
 }
 
-void bx_pc_system_c::activate_timer(unsigned i, Bit32u useconds, bx_bool continuous)
+void bx_pc_system_c::activate_timer(unsigned i, Bit32u useconds, bool continuous)
 {
   Bit64u ticks;
 
@@ -535,7 +535,7 @@ void bx_pc_system_c::activate_timer(unsigned i, Bit32u useconds, bx_bool continu
   activate_timer_ticks(i, ticks, continuous);
 }
 
-void bx_pc_system_c::activate_timer_nsec(unsigned i, Bit64u nseconds, bx_bool continuous)
+void bx_pc_system_c::activate_timer_nsec(unsigned i, Bit64u nseconds, bool continuous)
 {
   Bit64u ticks;
 
@@ -571,7 +571,7 @@ void bx_pc_system_c::deactivate_timer(unsigned i)
   timer[i].active = 0;
 }
 
-bx_bool bx_pc_system_c::unregisterTimer(unsigned timerIndex)
+bool bx_pc_system_c::unregisterTimer(unsigned timerIndex)
 {
 #if BX_TIMER_DEBUG
   if (timerIndex >= numTimers)

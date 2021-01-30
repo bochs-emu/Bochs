@@ -42,11 +42,11 @@ private:
   // ===============================
 
   struct {
-    bx_bool inUse;      // Timer slot is in-use (currently registered).
+    bool inUse;      // Timer slot is in-use (currently registered).
     Bit64u  period;     // Timer periodocity in cpu ticks.
     Bit64u  timeToFire; // Time to fire next (in absolute ticks).
-    bx_bool active;     // 0=inactive, 1=active.
-    bx_bool continuous; // 0=one-shot timer, 1=continuous periodicity.
+    bool active;     // 0=inactive, 1=active.
+    bool continuous; // 0=one-shot timer, 1=continuous periodicity.
     bx_timer_handler_t funct;  // A callback function for when the
                                //   timer fires.
     void *this_ptr;            // The this-> pointer for C++ callbacks
@@ -90,12 +90,12 @@ public:
 
   void   initialize(Bit32u ips);
   int    register_timer(void *this_ptr, bx_timer_handler_t, Bit32u useconds,
-                         bx_bool continuous, bx_bool active, const char *id);
-  bx_bool unregisterTimer(unsigned timerID);
+                         bool continuous, bool active, const char *id);
+  bool unregisterTimer(unsigned timerID);
   void   setTimerParam(unsigned timerID, Bit32u param);
   void   start_timers(void);
-  void   activate_timer(unsigned timer_index, Bit32u useconds, bx_bool continuous);
-  void   activate_timer_nsec(unsigned timer_index, Bit64u nseconds, bx_bool continuous);
+  void   activate_timer(unsigned timer_index, Bit32u useconds, bool continuous);
+  void   activate_timer_nsec(unsigned timer_index, Bit64u nseconds, bool continuous);
   void   deactivate_timer(unsigned timer_index);
   unsigned triggeredTimerID(void) {
     return triggeredTimer;
@@ -121,9 +121,9 @@ public:
   }
 
   int register_timer_ticks(void* this_ptr, bx_timer_handler_t, Bit64u ticks,
-                           bx_bool continuous, bx_bool active, const char *id);
+                           bool continuous, bool active, const char *id);
   void activate_timer_ticks(unsigned index, Bit64u instructions,
-                            bx_bool continuous);
+                            bool continuous);
   Bit64u time_usec();
   Bit64u time_nsec();
   Bit64u time_usec_sequential();
@@ -148,13 +148,13 @@ public:
   // Non-timer oriented features
   // ===========================
 
-  bx_bool HRQ;     // Hold Request
+  bool HRQ;     // Hold Request
 
   // Address line 20 control:
   //   1 = enabled: extended memory is accessible
   //   0 = disabled: A20 address line is forced low to simulate
   //       an 8088 address map
-  bx_bool enable_a20;
+  bool enable_a20;
 
   // start out masking physical memory addresses to:
   //   8086:      20 bits
@@ -165,9 +165,9 @@ public:
   //    386:      20 bits
   bx_phy_address a20_mask;
 
-  volatile bx_bool kill_bochs_request;
+  volatile bool kill_bochs_request;
 
-  void set_HRQ(bx_bool val);  // set the Hold ReQuest line
+  void set_HRQ(bool val);  // set the Hold ReQuest line
 
   void raise_INTR(void);
   void clear_INTR(void);
@@ -180,8 +180,8 @@ public:
 
   Bit32u  inp(Bit16u addr, unsigned io_len) BX_CPP_AttrRegparmN(2);
   void    outp(Bit16u addr, Bit32u value, unsigned io_len) BX_CPP_AttrRegparmN(3);
-  void    set_enable_a20(bx_bool value);
-  bx_bool get_enable_a20(void);
+  void    set_enable_a20(bool value);
+  bool    get_enable_a20(void);
   void    MemoryMappingChanged(void); // flush TLB in all CPUs
   void    invlpg(bx_address addr);    // flush TLB page in all CPUs
   void    exit(void);

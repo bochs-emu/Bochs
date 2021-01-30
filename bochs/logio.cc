@@ -29,6 +29,8 @@
 #include <Carbon/Carbon.h>
 #endif
 
+const int MAGIC_LOGNUM = 0x12345678;
+
 // Just for the iofunctions
 
 static int Allocio=0;
