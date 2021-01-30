@@ -3910,7 +3910,7 @@ bx_address bx_dbg_get_laddr(Bit16u sel, bx_address ofs)
   return laddr;
 }
 
-extern int fetchDecode32(const Bit8u *fetchPtr, bx_bool is_32, bxInstruction_c *i, unsigned remainingInPage);
+extern int fetchDecode32(const Bit8u *fetchPtr, bool is_32, bxInstruction_c *i, unsigned remainingInPage);
 #if BX_SUPPORT_X86_64
 extern int fetchDecode64(const Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage);
 #endif
