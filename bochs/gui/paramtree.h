@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2010-2018  The Bochs Project
+//  Copyright (C) 2010-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -174,7 +174,7 @@ public:
   virtual int parse_param(const char *value) { return -1; }
 
   virtual void dump_param(FILE *fp) {}
-  virtual int dump_param(char *buf, int buflen, bx_bool dquotes = false) { return 0; }
+  virtual int dump_param(char *buf, int buflen, bool dquotes = false) { return 0; }
 };
 
 typedef Bit64s (*param_event_handler)(class bx_param_c *, int set, Bit64s val);
@@ -203,7 +203,7 @@ protected:
   param_restore_handler restore_handler;
   param_enable_handler enable_handler;
   int base;
-  bx_bool is_shadow;
+  bool is_shadow;
 public:
   enum {
     // When a bx_param_num_c is displayed in dialog, USE_SPIN_CONTROL controls
@@ -215,7 +215,7 @@ public:
       const char *label,
       const char *description,
       Bit64s min, Bit64s max, Bit64s initial_val,
-      bx_bool is_shadow = 0);
+      bool is_shadow = 0);
   virtual void reset() { val.number = initial_val; }
   void set_handler(param_event_handler handler);
   void set_sr_handlers(void *devptr, param_save_handler save, param_restore_handler restore);
@@ -239,7 +239,7 @@ public:
 #endif
   virtual int parse_param(const char *value);
   virtual void dump_param(FILE *fp);
-  virtual int dump_param(char *buf, int buflen, bx_bool dquotes = false);
+  virtual int dump_param(char *buf, int buflen, bool dquotes = false);
 };
 
 // a bx_shadow_num_c is like a bx_param_num_c except that it doesn't
@@ -321,14 +321,14 @@ public:
       const char *label,
       const char *description,
       Bit64s initial_val,
-      bx_bool is_shadow = 0);
+      bool is_shadow = 0);
 #if BX_USE_TEXTCONFIG
   virtual void text_print();
   virtual int text_ask();
 #endif
   virtual int parse_param(const char *value);
   virtual void dump_param(FILE *fp);
-  virtual int dump_param(char *buf, int buflen, bx_bool dquotes = false);
+  virtual int dump_param(char *buf, int buflen, bool dquotes = false);
 };
 
 // a bx_shadow_bool_c is a shadow param based on bx_param_bool_c.
@@ -368,8 +368,8 @@ public:
   const char *get_selected() { return choices[val.number - min]; }
   int find_by_name(const char *s);
   virtual void set(Bit64s val);
-  bx_bool set_by_name(const char *s);
-  void set_dependent_list(bx_list_c *l, bx_bool enable_all);
+  bool set_by_name(const char *s);
+  void set_dependent_list(bx_list_c *l, bool enable_all);
   void set_dependent_bitmap(Bit64s value, Bit64u bitmap);
   Bit64u get_dependent_bitmap(Bit64s value);
   virtual void set_enabled(int enabled);
@@ -379,7 +379,7 @@ public:
 #endif
   virtual int parse_param(const char *value);
   virtual void dump_param(FILE *fp);
-  virtual int dump_param(char *buf, int buflen, bx_bool dquotes = false);
+  virtual int dump_param(char *buf, int buflen, bool dquotes = false);
 };
 
 typedef const char* (*param_string_event_handler)(class bx_param_string_c *,
@@ -416,17 +416,17 @@ public:
   char *getptr() {return val; }
   const char *getptr() const {return val; }
   void set(const char *buf);
-  bx_bool equals(const char *buf) const;
+  bool equals(const char *buf) const;
   int get_maxsize() const {return maxsize; }
   void set_initial_val(const char *buf);
-  bx_bool isempty() const;
+  bool isempty() const;
 #if BX_USE_TEXTCONFIG
   virtual void text_print();
   virtual int text_ask();
 #endif
   virtual int parse_param(const char *value);
   virtual void dump_param(FILE *fp);
-  virtual int dump_param(char *buf, int buflen, bx_bool dquotes = false);
+  virtual int dump_param(char *buf, int buflen, bool dquotes = false);
 };
 
 class BOCHSAPI bx_param_bytestring_c : public bx_param_string_c {
@@ -447,16 +447,16 @@ public:
 
   Bit32s get(char *buf, int len);
   void set(const char *buf);
-  bx_bool equals(const char *buf) const;
+  bool equals(const char *buf) const;
   void set_initial_val(const char *buf);
-  bx_bool isempty() const;
+  bool isempty() const;
 
 #if BX_USE_TEXTCONFIG
   virtual int text_ask();
 #endif
 
   virtual int parse_param(const char *value);
-  virtual int dump_param(char *buf, int buflen, bx_bool dquotes = false);
+  virtual int dump_param(char *buf, int buflen, bool dquotes = false);
 };
 
 // Declare a filename class.  It is identical to a string, except that
@@ -478,16 +478,16 @@ public:
 class BOCHSAPI bx_shadow_data_c : public bx_param_c {
   Bit32u data_size;
   Bit8u *data_ptr;
-  bx_bool is_text;
+  bool is_text;
 public:
   bx_shadow_data_c(bx_param_c *parent,
       const char *name,
       Bit8u *ptr_to_data,
-      Bit32u data_size, bx_bool is_text=0);
+      Bit32u data_size, bool is_text=0);
   Bit8u *getptr() {return data_ptr;}
   const Bit8u *getptr() const {return data_ptr;}
   Bit32u get_size() const {return data_size;}
-  bx_bool is_text_format() const {return is_text;}
+  bool is_text_format() const {return is_text;}
   Bit8u get(Bit32u index);
   void set(Bit32u index, Bit8u value);
 };

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2010-2018  The Bochs Project
+//  Copyright (C) 2010-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -162,7 +162,7 @@ bx_param_num_c::bx_param_num_c(bx_param_c *parent,
     const char *label,
     const char *description,
     Bit64s min, Bit64s max, Bit64s initial_val,
-    bx_bool is_shadow)
+    bool is_shadow)
   : bx_param_c(SIM->gen_param_id(), name, label, description)
 {
   set_type(BXT_PARAM_NUM);
@@ -318,7 +318,7 @@ void bx_param_num_c::dump_param(FILE *fp)
   fputs(tmpstr, fp);
 }
 
-int bx_param_num_c::dump_param(char *buf, int len, bx_bool dquotes)
+int bx_param_num_c::dump_param(char *buf, int len, bool dquotes)
 {
   Bit64s value = get64();
   if (get_base() == BASE_DOUBLE) {
@@ -598,7 +598,7 @@ bx_param_bool_c::bx_param_bool_c(bx_param_c *parent,
     const char *label,
     const char *description,
     Bit64s initial_val,
-    bx_bool is_shadow)
+    bool is_shadow)
   : bx_param_num_c(parent, name, label, description, 0, 1, initial_val, is_shadow)
 {
   set_type(BXT_PARAM_BOOL);
@@ -623,7 +623,7 @@ void bx_param_bool_c::dump_param(FILE *fp)
   fprintf(fp, "%s", get()?"true":"false");
 }
 
-int bx_param_bool_c::dump_param(char *buf, int len, bx_bool dquotes)
+int bx_param_bool_c::dump_param(char *buf, int len, bool dquotes)
 {
   snprintf(buf, len, "%s", get()?"true":"false");
   return strlen(buf);
@@ -718,7 +718,7 @@ int bx_param_enum_c::find_by_name(const char *s)
   return -1;
 }
 
-bx_bool bx_param_enum_c::set_by_name(const char *s)
+bool bx_param_enum_c::set_by_name(const char *s)
 {
   int n = find_by_name(s);
   if (n<0) return 0;
@@ -726,7 +726,7 @@ bx_bool bx_param_enum_c::set_by_name(const char *s)
   return 1;
 }
 
-void bx_param_enum_c::set_dependent_list(bx_list_c *l, bx_bool enable_all)
+void bx_param_enum_c::set_dependent_list(bx_list_c *l, bool enable_all)
 {
   dependent_list = l;
   deps_bitmap = new Bit64u[max - min + 1];
@@ -795,7 +795,7 @@ void bx_param_enum_c::dump_param(FILE *fp)
   fprintf(fp, "%s", get_selected());
 }
 
-int bx_param_enum_c::dump_param(char *buf, int len, bx_bool dquotes)
+int bx_param_enum_c::dump_param(char *buf, int len, bool dquotes)
 {
   snprintf(buf, len, "%s", get_selected());
   return strlen(buf);
@@ -910,7 +910,7 @@ void bx_param_string_c::set(const char *buf)
   if (dependent_list != NULL) update_dependents();
 }
 
-bx_bool bx_param_string_c::equals(const char *buf) const
+bool bx_param_string_c::equals(const char *buf) const
 {
   return (strncmp(val, buf, maxsize) == 0);
 }
@@ -921,7 +921,7 @@ void bx_param_string_c::set_initial_val(const char *buf)
   set(initial_val);
 }
 
-bx_bool bx_param_string_c::isempty() const
+bool bx_param_string_c::isempty() const
 {
   return (strlen(val) == 0) || !strcmp(val, "none");
 }
@@ -944,7 +944,7 @@ void bx_param_string_c::dump_param(FILE *fp)
   fputs(tmpstr, fp);
 }
 
-int bx_param_string_c::dump_param(char *buf, int len, bx_bool dquotes)
+int bx_param_string_c::dump_param(char *buf, int len, bool dquotes)
 {
   if (!isempty()) {
     if (dquotes) {
@@ -983,7 +983,7 @@ void bx_param_bytestring_c::set(const char *buf)
   if (dependent_list != NULL) update_dependents();
 }
 
-bx_bool bx_param_bytestring_c::equals(const char *buf) const
+bool bx_param_bytestring_c::equals(const char *buf) const
 {
   return (memcmp(val, buf, maxsize) == 0);
 }
@@ -994,7 +994,7 @@ void bx_param_bytestring_c::set_initial_val(const char *buf)
   set(initial_val);
 }
 
-bx_bool bx_param_bytestring_c::isempty() const
+bool bx_param_bytestring_c::isempty() const
 {
   return (memcmp(val, initial_val, maxsize) == 0);
 }
@@ -1022,7 +1022,7 @@ int bx_param_bytestring_c::parse_param(const char *ptr)
   return ret;
 }
 
-int bx_param_bytestring_c::dump_param(char *buf, int len, bx_bool dquotes)
+int bx_param_bytestring_c::dump_param(char *buf, int len, bool dquotes)
 {
   buf[0] = 0;
   for (int j = 0; j < maxsize; j++) {
@@ -1059,7 +1059,7 @@ bx_shadow_data_c::bx_shadow_data_c(bx_param_c *parent,
     const char *name,
     Bit8u *ptr_to_data,
     Bit32u data_size,
-    bx_bool is_text)
+    bool is_text)
   : bx_param_c(SIM->gen_param_id(), name, "")
 {
   set_type(BXT_PARAM_DATA);
