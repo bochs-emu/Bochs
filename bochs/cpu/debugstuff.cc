@@ -25,6 +25,7 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#include "memory/memory-bochs.h"
 #include "pc_system.h"
 
 void BX_CPU_C::debug_disasm_instruction(bx_address offset)
