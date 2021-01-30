@@ -188,4 +188,20 @@ public:
   void    register_state(void);
 };
 
+#define BX_TICK1()                  bx_pc_system.tick1()
+#define BX_TICKN(n)                 bx_pc_system.tickn(n)
+#define BX_INTR                     bx_pc_system.INTR
+#define BX_RAISE_INTR()             bx_pc_system.raise_INTR()
+#define BX_CLEAR_INTR()             bx_pc_system.clear_INTR()
+#define BX_HRQ                      bx_pc_system.HRQ
+
+#define BX_SET_ENABLE_A20(enabled)  bx_pc_system.set_enable_a20(enabled)
+#define BX_GET_ENABLE_A20()         bx_pc_system.get_enable_a20()
+
+#if BX_SUPPORT_A20
+#  define A20ADDR(x)                ((bx_phy_address)(x) & bx_pc_system.a20_mask)
+#else
+#  define A20ADDR(x)                ((bx_phy_address)(x))
+#endif
+
 #endif

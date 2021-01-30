@@ -186,19 +186,8 @@ void print_statistics_tree(bx_param_c *node, int level = 0);
   new bx_shadow_bool_c(parent, #name, (bx_bool*)(&(field)))
 
 // =-=-=-=-=-=-=- Normal optimized use -=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// some pc_systems functions just redirect to the IO devices so optimize
-// by eliminating call here
-//
-// #define BX_INP(addr, len)        bx_pc_system.inp(addr, len)
-// #define BX_OUTP(addr, val, len)  bx_pc_system.outp(addr, val, len)
 #define BX_INP(addr, len)           bx_devices.inp(addr, len)
 #define BX_OUTP(addr, val, len)     bx_devices.outp(addr, val, len)
-#define BX_TICK1()                  bx_pc_system.tick1()
-#define BX_TICKN(n)                 bx_pc_system.tickn(n)
-#define BX_INTR                     bx_pc_system.INTR
-#define BX_RAISE_INTR()             bx_pc_system.raise_INTR()
-#define BX_CLEAR_INTR()             bx_pc_system.clear_INTR()
-#define BX_HRQ                      bx_pc_system.HRQ
 
 #if BX_SUPPORT_SMP
 #define BX_CPU(x)                   (bx_cpu_array[x])
@@ -207,15 +196,6 @@ void print_statistics_tree(bx_param_c *node, int level = 0);
 #endif
 
 #define BX_MEM(x)                   (&bx_mem)
-
-#define BX_SET_ENABLE_A20(enabled)  bx_pc_system.set_enable_a20(enabled)
-#define BX_GET_ENABLE_A20()         bx_pc_system.get_enable_a20()
-
-#if BX_SUPPORT_A20
-#  define A20ADDR(x)                ((bx_phy_address)(x) & bx_pc_system.a20_mask)
-#else
-#  define A20ADDR(x)                ((bx_phy_address)(x))
-#endif
 
 // you can't use static member functions on the CPU, if there are going
 // to be 2 cpus.  Check this early on.
