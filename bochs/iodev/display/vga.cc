@@ -188,7 +188,7 @@ void bx_vga_c::register_state(void)
     new bx_shadow_num_c(vbe, "yres", &BX_VGA_THIS vbe.yres);
     new bx_shadow_num_c(vbe, "bpp", &BX_VGA_THIS vbe.bpp);
     new bx_shadow_num_c(vbe, "bank", &BX_VGA_THIS vbe.bank);
-    new bx_shadow_bool_c(vbe, "enabled", &BX_VGA_THIS vbe.enabled);
+    BXRS_PARAM_BOOL(vbe, enabled, BX_VGA_THIS vbe.enabled);
     new bx_shadow_num_c(vbe, "curindex", &BX_VGA_THIS vbe.curindex);
     new bx_shadow_num_c(vbe, "visible_screen_size", &BX_VGA_THIS vbe.visible_screen_size);
     new bx_shadow_num_c(vbe, "offset_x", &BX_VGA_THIS vbe.offset_x);
@@ -197,9 +197,9 @@ void bx_vga_c::register_state(void)
     new bx_shadow_num_c(vbe, "virtual_yres", &BX_VGA_THIS vbe.virtual_yres);
     new bx_shadow_num_c(vbe, "virtual_start", &BX_VGA_THIS vbe.virtual_start);
     new bx_shadow_num_c(vbe, "bpp_multiplier", &BX_VGA_THIS vbe.bpp_multiplier);
-    new bx_shadow_bool_c(vbe, "get_capabilities", &BX_VGA_THIS vbe.get_capabilities);
-    new bx_shadow_bool_c(vbe, "dac_8bit", &BX_VGA_THIS vbe.dac_8bit);
-    new bx_shadow_bool_c(vbe, "ddc_enabled", &BX_VGA_THIS vbe.ddc_enabled);
+    BXRS_PARAM_BOOL(vbe, get_capabilities, BX_VGA_THIS vbe.get_capabilities);
+    BXRS_PARAM_BOOL(vbe, dac_8bit, BX_VGA_THIS vbe.dac_8bit);
+    BXRS_PARAM_BOOL(vbe, ddc_enabled, BX_VGA_THIS vbe.ddc_enabled);
   }
 }
 

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2018  The Bochs Project
+//  Copyright (C) 2001-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -213,27 +213,27 @@ void pit_82C54::register_state(bx_param_c *parent)
   for (unsigned i=0; i<3; i++) {
     sprintf(name, "%u", i);
     bx_list_c *tim = new bx_list_c(parent, name);
-    new bx_shadow_bool_c(tim, "GATE", &counter[i].GATE);
-    new bx_shadow_bool_c(tim, "OUTpin", &counter[i].OUTpin);
+    BXRS_PARAM_BOOL(tim, GATE, counter[i].GATE);
+    BXRS_PARAM_BOOL(tim, OUTpin, counter[i].OUTpin);
     new bx_shadow_num_c(tim, "count", &counter[i].count);
     new bx_shadow_num_c(tim, "outlatch", &counter[i].outlatch);
     new bx_shadow_num_c(tim, "inlatch", &counter[i].inlatch);
     new bx_shadow_num_c(tim, "status_latch", &counter[i].status_latch);
     new bx_shadow_num_c(tim, "rw_mode", &counter[i].rw_mode);
     new bx_shadow_num_c(tim, "mode", &counter[i].mode);
-    new bx_shadow_bool_c(tim, "bcd_mode", &counter[i].bcd_mode);
-    new bx_shadow_bool_c(tim, "null_count", &counter[i].null_count);
-    new bx_shadow_bool_c(tim, "count_LSB_latched", &counter[i].count_LSB_latched);
-    new bx_shadow_bool_c(tim, "count_MSB_latched", &counter[i].count_MSB_latched);
-    new bx_shadow_bool_c(tim, "status_latched", &counter[i].status_latched);
+    BXRS_PARAM_BOOL(tim, bcd_mode, counter[i].bcd_mode);
+    BXRS_PARAM_BOOL(tim, null_count, counter[i].null_count);
+    BXRS_PARAM_BOOL(tim, count_LSB_latched, counter[i].count_LSB_latched);
+    BXRS_PARAM_BOOL(tim, count_MSB_latched, counter[i].count_MSB_latched);
+    BXRS_PARAM_BOOL(tim, status_latched, counter[i].status_latched);
     new bx_shadow_num_c(tim, "count_binary", &counter[i].count_binary);
-    new bx_shadow_bool_c(tim, "triggerGATE", &counter[i].triggerGATE);
+    BXRS_PARAM_BOOL(tim, triggerGATE, counter[i].triggerGATE);
     new bx_shadow_num_c(tim, "write_state", (Bit8u*)&counter[i].write_state);
     new bx_shadow_num_c(tim, "read_state", (Bit8u*)&counter[i].read_state);
-    new bx_shadow_bool_c(tim, "count_written", &counter[i].count_written);
-    new bx_shadow_bool_c(tim, "first_pass", &counter[i].first_pass);
-    new bx_shadow_bool_c(tim, "state_bit_1", &counter[i].state_bit_1);
-    new bx_shadow_bool_c(tim, "state_bit_2", &counter[i].state_bit_2);
+    BXRS_PARAM_BOOL(tim, count_written, counter[i].count_written);
+    BXRS_PARAM_BOOL(tim, first_pass, counter[i].first_pass);
+    BXRS_PARAM_BOOL(tim, state_bit_1, counter[i].state_bit_1);
+    BXRS_PARAM_BOOL(tim, state_bit_2, counter[i].state_bit_2);
     new bx_shadow_num_c(tim, "next_change_time", &counter[i].next_change_time);
   }
 }

@@ -458,10 +458,10 @@ void bx_sb16_c::register_state(void)
 
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "sb16", "SB16 State");
   bx_list_c *mpu = new bx_list_c(list, "mpu");
-  new bx_shadow_bool_c(mpu, "uartmode", &MPU.uartmode);
-  new bx_shadow_bool_c(mpu, "irqpending", &MPU.irqpending);
-  new bx_shadow_bool_c(mpu, "forceuartmode", &MPU.forceuartmode);
-  new bx_shadow_bool_c(mpu, "singlecommand", &MPU.singlecommand);
+  BXRS_PARAM_BOOL(mpu, uartmode, MPU.uartmode);
+  BXRS_PARAM_BOOL(mpu, irqpending, MPU.irqpending);
+  BXRS_PARAM_BOOL(mpu, forceuartmode, MPU.forceuartmode);
+  BXRS_PARAM_BOOL(mpu, singlecommand, MPU.singlecommand);
   new bx_shadow_num_c(mpu, "current_timer", &MPU.current_timer);
   new bx_shadow_num_c(mpu, "last_delta_time", &MPU.last_delta_time);
   bx_list_c *patchtbl = new bx_list_c(mpu, "patchtable");
@@ -476,9 +476,9 @@ void bx_sb16_c::register_state(void)
   new bx_shadow_num_c(dsp, "resetport", &DSP.resetport, BASE_HEX);
   new bx_shadow_num_c(dsp, "speaker", &DSP.speaker, BASE_HEX);
   new bx_shadow_num_c(dsp, "prostereo", &DSP.prostereo, BASE_HEX);
-  new bx_shadow_bool_c(dsp, "irqpending", &DSP.irqpending);
-  new bx_shadow_bool_c(dsp, "midiuartmode", &DSP.midiuartmode);
-  new bx_shadow_bool_c(dsp, "nondma_mode", &DSP.nondma_mode);
+  BXRS_PARAM_BOOL(dsp, irqpending, DSP.irqpending);
+  BXRS_PARAM_BOOL(dsp, midiuartmode, DSP.midiuartmode);
+  BXRS_PARAM_BOOL(dsp, nondma_mode, DSP.nondma_mode);
   new bx_shadow_num_c(dsp, "nondma_count", &DSP.nondma_count);
   new bx_shadow_num_c(dsp, "samplebyte", &DSP.samplebyte, BASE_HEX);
   new bx_shadow_num_c(dsp, "testreg", &DSP.testreg, BASE_HEX);
@@ -486,9 +486,9 @@ void bx_sb16_c::register_state(void)
   new bx_shadow_num_c(dma, "mode", &DSP.dma.mode);
   new bx_shadow_num_c(dma, "bps", &DSP.dma.bps);
   new bx_shadow_num_c(dma, "timer", &DSP.dma.timer);
-  new bx_shadow_bool_c(dma, "fifo", &DSP.dma.fifo);
-  new bx_shadow_bool_c(dma, "output", &DSP.dma.output);
-  new bx_shadow_bool_c(dma, "highspeed", &DSP.dma.highspeed);
+  BXRS_PARAM_BOOL(dma, fifo, DSP.dma.fifo);
+  BXRS_PARAM_BOOL(dma, output, DSP.dma.output);
+  BXRS_PARAM_BOOL(dma, highspeed, DSP.dma.highspeed);
   new bx_shadow_num_c(dma, "count", &DSP.dma.count);
   new bx_shadow_num_c(dma, "chunkindex", &DSP.dma.chunkindex);
   new bx_shadow_num_c(dma, "chunkcount", &DSP.dma.chunkcount);

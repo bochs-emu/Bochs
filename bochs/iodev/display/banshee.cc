@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2017-2020  The Bochs Project
+//  Copyright (C) 2017-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -244,11 +244,11 @@ void bx_banshee_c::register_state(void)
   new bx_shadow_data_c(banshee, "agp", (Bit8u*)v->banshee.agp, 0x80, 1);
   new bx_shadow_data_c(banshee, "crtc", (Bit8u*)v->banshee.crtc, 0x27, 1);
   new bx_shadow_num_c(banshee, "disp_bpp", &v->banshee.disp_bpp);
-  new bx_shadow_bool_c(banshee, "half_mode", &v->banshee.half_mode);
-  new bx_shadow_bool_c(banshee, "dac_8bit", &v->banshee.dac_8bit);
-  new bx_shadow_bool_c(banshee, "desktop_tiled", &v->banshee.desktop_tiled);
-  new bx_shadow_bool_c(banshee, "hwcursor_enabled", &v->banshee.hwcursor.enabled);
-  new bx_shadow_bool_c(banshee, "hwcursor_mode", &v->banshee.hwcursor.mode);
+  BXRS_PARAM_BOOL(banshee, half_mode, v->banshee.half_mode);
+  BXRS_PARAM_BOOL(banshee, dac_8bit, v->banshee.dac_8bit);
+  BXRS_PARAM_BOOL(banshee, desktop_tiled, v->banshee.desktop_tiled);
+  BXRS_PARAM_BOOL(banshee, hwcursor_enabled, v->banshee.hwcursor.enabled);
+  BXRS_PARAM_BOOL(banshee, hwcursor_mode, v->banshee.hwcursor.mode);
   new bx_shadow_num_c(banshee, "hwcursor_addr", &v->banshee.hwcursor.addr, BASE_HEX);
   new bx_shadow_num_c(banshee, "hwcursor_x", &v->banshee.hwcursor.x, BASE_HEX);
   new bx_shadow_num_c(banshee, "hwcursor_y", &v->banshee.hwcursor.y, BASE_HEX);
@@ -256,21 +256,21 @@ void bx_banshee_c::register_state(void)
   new bx_shadow_num_c(banshee, "hwcursor_color1", &v->banshee.hwcursor.color[1], BASE_HEX);
   new bx_shadow_data_c(banshee, "blt_reg", (Bit8u*)v->banshee.blt.reg, 0x80, 1);
   new bx_shadow_data_c(banshee, "blt_cpat", (Bit8u*)v->banshee.blt.cpat, 0x100, 1);
-  new bx_shadow_bool_c(banshee, "blt_busy", &v->banshee.blt.busy);
+  BXRS_PARAM_BOOL(banshee, blt_busy, v->banshee.blt.busy);
   new bx_shadow_num_c(banshee, "blt_cmd", &v->banshee.blt.cmd);
-  new bx_shadow_bool_c(banshee, "blt_immed", &v->banshee.blt.immed);
-  new bx_shadow_bool_c(banshee, "blt_x_dir", &v->banshee.blt.x_dir);
-  new bx_shadow_bool_c(banshee, "blt_y_dir", &v->banshee.blt.y_dir);
-  new bx_shadow_bool_c(banshee, "blt_transp", &v->banshee.blt.transp);
+  BXRS_PARAM_BOOL(banshee, blt_immed, v->banshee.blt.immed);
+  BXRS_PARAM_BOOL(banshee, blt_x_dir, v->banshee.blt.x_dir);
+  BXRS_PARAM_BOOL(banshee, blt_y_dir, v->banshee.blt.y_dir);
+  BXRS_PARAM_BOOL(banshee, blt_transp, v->banshee.blt.transp);
   new bx_shadow_num_c(banshee, "blt_patsx", &v->banshee.blt.patsx);
   new bx_shadow_num_c(banshee, "blt_patsy", &v->banshee.blt.patsy);
-  new bx_shadow_bool_c(banshee, "blt_clip_sel", &v->banshee.blt.clip_sel);
+  BXRS_PARAM_BOOL(banshee, blt_clip_sel, v->banshee.blt.clip_sel);
   new bx_shadow_num_c(banshee, "blt_rop0", &v->banshee.blt.rop[0]);
   new bx_shadow_num_c(banshee, "blt_rop1", &v->banshee.blt.rop[1]);
   new bx_shadow_num_c(banshee, "blt_rop2", &v->banshee.blt.rop[2]);
   new bx_shadow_num_c(banshee, "blt_rop3", &v->banshee.blt.rop[3]);
   new bx_shadow_num_c(banshee, "blt_src_base", &v->banshee.blt.src_base, BASE_HEX);
-  new bx_shadow_bool_c(banshee, "blt_src_tiled", &v->banshee.blt.src_tiled);
+  BXRS_PARAM_BOOL(banshee, blt_src_tiled, v->banshee.blt.src_tiled);
   new bx_shadow_num_c(banshee, "blt_src_fmt", &v->banshee.blt.src_fmt);
   new bx_shadow_num_c(banshee, "blt_src_pitch", &v->banshee.blt.src_pitch);
   new bx_shadow_num_c(banshee, "blt_src_swizzle", &v->banshee.blt.src_swizzle);
@@ -279,7 +279,7 @@ void bx_banshee_c::register_state(void)
   new bx_shadow_num_c(banshee, "blt_src_w", &v->banshee.blt.src_w);
   new bx_shadow_num_c(banshee, "blt_src_h", &v->banshee.blt.src_h);
   new bx_shadow_num_c(banshee, "blt_dst_base", &v->banshee.blt.dst_base, BASE_HEX);
-  new bx_shadow_bool_c(banshee, "blt_dst_tiled", &v->banshee.blt.dst_tiled);
+  BXRS_PARAM_BOOL(banshee, blt_dst_tiled, v->banshee.blt.dst_tiled);
   new bx_shadow_num_c(banshee, "blt_dst_fmt", &v->banshee.blt.dst_fmt);
   new bx_shadow_num_c(banshee, "blt_dst_pitch", &v->banshee.blt.dst_pitch);
   new bx_shadow_num_c(banshee, "blt_dst_x", &v->banshee.blt.dst_x);
@@ -298,7 +298,7 @@ void bx_banshee_c::register_state(void)
   new bx_shadow_num_c(banshee, "blt_clipy1_1", &v->banshee.blt.clipy1[1]);
   new bx_shadow_num_c(banshee, "blt_h2s_pitch", &v->banshee.blt.h2s_pitch);
   new bx_shadow_num_c(banshee, "blt_h2s_pxstart", &v->banshee.blt.h2s_pxstart);
-  new bx_shadow_bool_c(banshee, "blt_h2s_alt_align", &v->banshee.blt.h2s_alt_align);
+  BXRS_PARAM_BOOL(banshee, blt_h2s_alt_align, v->banshee.blt.h2s_alt_align);
 }
 
 void bx_banshee_c::after_restore_state(void)

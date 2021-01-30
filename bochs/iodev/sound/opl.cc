@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 /*
  *  Copyright (C) 2002-2013  The DOSBox Team
- *  Copyright (C) 2015       The Bochs Project
+ *  Copyright (C) 2015-2021  The Bochs Project
  *  OPL2/OPL3 emulation library
  *
  *  This library is free software; you can redistribute it and/or
@@ -1555,9 +1555,9 @@ void adlib_register_state(bx_list_c *parent)
     new bx_shadow_num_c(opX, "freq_high", &op[i].freq_high);
     new bx_shadow_num_c(opX, "cur_wvsel", &op[i].cur_wvsel);
     new bx_shadow_num_c(opX, "act_state", &op[i].act_state);
-    new bx_shadow_bool_c(opX, "sys_keep", &op[i].sus_keep);
-    new bx_shadow_bool_c(opX, "vibrato", &op[i].vibrato);
-    new bx_shadow_bool_c(opX, "tremolo", &op[i].tremolo);
+    BXRS_PARAM_BOOL(opX, sys_keep, op[i].sus_keep);
+    BXRS_PARAM_BOOL(opX, vibrato, op[i].vibrato);
+    BXRS_PARAM_BOOL(opX, tremolo, op[i].tremolo);
     new bx_shadow_num_c(opX, "generator_pos", &op[i].generator_pos);
     new bx_shadow_num_c(opX, "cur_env_step", &op[i].cur_env_step);
     new bx_shadow_num_c(opX, "env_step_a", &op[i].env_step_a);
@@ -1566,8 +1566,8 @@ void adlib_register_state(bx_list_c *parent)
     new bx_shadow_num_c(opX, "step_skip_pos_a", &op[i].step_skip_pos_a);
     new bx_shadow_num_c(opX, "env_step_skip_a", &op[i].env_step_skip_a);
 #if defined(OPLTYPE_IS_OPL3)
-    new bx_shadow_bool_c(opX, "is_4op", &op[i].is_4op);
-    new bx_shadow_bool_c(opX, "is_4op_attached", &op[i].is_4op_attached);
+    BXRS_PARAM_BOOL(opX, is_4op, op[i].is_4op);
+    BXRS_PARAM_BOOL(opX, is_4op_attached, op[i].is_4op_attached);
     new bx_shadow_num_c(opX, "left_pan", &op[i].left_pan);
     new bx_shadow_num_c(opX, "right_pan", &op[i].right_pan);
 #endif

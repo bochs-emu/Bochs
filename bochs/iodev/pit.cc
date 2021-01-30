@@ -169,9 +169,9 @@ void bx_pit_c::reset(unsigned type)
 void bx_pit_c::register_state(void)
 {
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "pit", "8254 PIT State");
-  new bx_shadow_bool_c(list, "speaker_data_on", &BX_PIT_THIS s.speaker_data_on);
-  new bx_shadow_bool_c(list, "speaker_active", &BX_PIT_THIS s.speaker_active);
-  new bx_shadow_bool_c(list, "speaker_level", &BX_PIT_THIS s.speaker_level);
+  BXRS_PARAM_BOOL(list, speaker_data_on, BX_PIT_THIS s.speaker_data_on);
+  BXRS_PARAM_BOOL(list, speaker_active, BX_PIT_THIS s.speaker_active);
+  BXRS_PARAM_BOOL(list, speaker_level, BX_PIT_THIS s.speaker_level);
   new bx_shadow_num_c(list, "last_usec", &BX_PIT_THIS s.last_usec);
   new bx_shadow_num_c(list, "last_next_event_time", &BX_PIT_THIS s.last_next_event_time);
   new bx_shadow_num_c(list, "total_ticks", &BX_PIT_THIS s.total_ticks);

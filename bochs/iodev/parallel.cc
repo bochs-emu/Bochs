@@ -228,16 +228,16 @@ void bx_parallel_c::register_state(void)
       sprintf(name, "%u", i);
       port = new bx_list_c(list, name);
       new bx_shadow_num_c(port, "data", &BX_PAR_THIS s[i].data, BASE_HEX);
-      new bx_shadow_bool_c(port, "slct", &BX_PAR_THIS s[i].STATUS.slct);
-      new bx_shadow_bool_c(port, "ack", &BX_PAR_THIS s[i].STATUS.ack);
-      new bx_shadow_bool_c(port, "busy", &BX_PAR_THIS s[i].STATUS.busy);
-      new bx_shadow_bool_c(port, "strobe", &BX_PAR_THIS s[i].CONTROL.strobe);
-      new bx_shadow_bool_c(port, "autofeed", &BX_PAR_THIS s[i].CONTROL.autofeed);
-      new bx_shadow_bool_c(port, "init", &BX_PAR_THIS s[i].CONTROL.init);
-      new bx_shadow_bool_c(port, "slct_in", &BX_PAR_THIS s[i].CONTROL.slct_in);
-      new bx_shadow_bool_c(port, "irq", &BX_PAR_THIS s[i].CONTROL.irq);
-      new bx_shadow_bool_c(port, "input", &BX_PAR_THIS s[i].CONTROL.input);
-      new bx_shadow_bool_c(port, "initmode", &BX_PAR_THIS s[i].initmode);
+      BXRS_PARAM_BOOL(port, slct, BX_PAR_THIS s[i].STATUS.slct);
+      BXRS_PARAM_BOOL(port, ack, BX_PAR_THIS s[i].STATUS.ack);
+      BXRS_PARAM_BOOL(port, busy, BX_PAR_THIS s[i].STATUS.busy);
+      BXRS_PARAM_BOOL(port, strobe, BX_PAR_THIS s[i].CONTROL.strobe);
+      BXRS_PARAM_BOOL(port, autofeed, BX_PAR_THIS s[i].CONTROL.autofeed);
+      BXRS_PARAM_BOOL(port, init, BX_PAR_THIS s[i].CONTROL.init);
+      BXRS_PARAM_BOOL(port, slct_in, BX_PAR_THIS s[i].CONTROL.slct_in);
+      BXRS_PARAM_BOOL(port, irq, BX_PAR_THIS s[i].CONTROL.irq);
+      BXRS_PARAM_BOOL(port, input, BX_PAR_THIS s[i].CONTROL.input);
+      BXRS_PARAM_BOOL(port, initmode, BX_PAR_THIS s[i].initmode);
     }
   }
 }

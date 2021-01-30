@@ -371,10 +371,10 @@ void bx_floppy_ctrl_c::register_state(void)
   new bx_shadow_data_c(list, "command", BX_FD_THIS s.command, 10, 1);
   new bx_shadow_num_c(list, "command_index", &BX_FD_THIS s.command_index);
   new bx_shadow_num_c(list, "command_size", &BX_FD_THIS s.command_size);
-  new bx_shadow_bool_c(list, "command_complete", &BX_FD_THIS s.command_complete);
+  BXRS_PARAM_BOOL(list, command_complete, BX_FD_THIS s.command_complete);
   new bx_shadow_num_c(list, "pending_command", &BX_FD_THIS s.pending_command, BASE_HEX);
-  new bx_shadow_bool_c(list, "multi_track", &BX_FD_THIS s.multi_track);
-  new bx_shadow_bool_c(list, "pending_irq", &BX_FD_THIS s.pending_irq);
+  BXRS_PARAM_BOOL(list, multi_track, BX_FD_THIS s.multi_track);
+  BXRS_PARAM_BOOL(list, pending_irq, BX_FD_THIS s.pending_irq);
   new bx_shadow_num_c(list, "reset_sensei", &BX_FD_THIS s.reset_sensei);
   new bx_shadow_num_c(list, "format_count", &BX_FD_THIS s.format_count);
   new bx_shadow_num_c(list, "format_fillbyte", &BX_FD_THIS s.format_fillbyte, BASE_HEX);
@@ -384,14 +384,14 @@ void bx_floppy_ctrl_c::register_state(void)
   new bx_shadow_num_c(list, "last_result", &BX_FD_THIS s.last_result);
   new bx_shadow_num_c(list, "DOR", &BX_FD_THIS s.DOR, BASE_HEX);
   new bx_shadow_num_c(list, "TDR", &BX_FD_THIS s.TDR, BASE_HEX);
-  new bx_shadow_bool_c(list, "TC", &BX_FD_THIS s.TC);
+  BXRS_PARAM_BOOL(list, TC, BX_FD_THIS s.TC);
   new bx_shadow_num_c(list, "main_status_reg", &BX_FD_THIS s.main_status_reg, BASE_HEX);
   new bx_shadow_num_c(list, "status_reg0", &BX_FD_THIS s.status_reg0, BASE_HEX);
   new bx_shadow_num_c(list, "status_reg1", &BX_FD_THIS s.status_reg1, BASE_HEX);
   new bx_shadow_num_c(list, "status_reg2", &BX_FD_THIS s.status_reg2, BASE_HEX);
   new bx_shadow_num_c(list, "status_reg3", &BX_FD_THIS s.status_reg3, BASE_HEX);
   new bx_shadow_num_c(list, "floppy_buffer_index", &BX_FD_THIS s.floppy_buffer_index);
-  new bx_shadow_bool_c(list, "lock", &BX_FD_THIS s.lock);
+  BXRS_PARAM_BOOL(list, lock, BX_FD_THIS s.lock);
   new bx_shadow_num_c(list, "SRT", &BX_FD_THIS s.SRT, BASE_HEX);
   new bx_shadow_num_c(list, "HUT", &BX_FD_THIS s.HUT, BASE_HEX);
   new bx_shadow_num_c(list, "HLT", &BX_FD_THIS s.HLT, BASE_HEX);
@@ -406,7 +406,7 @@ void bx_floppy_ctrl_c::register_state(void)
     new bx_shadow_num_c(drive, "head", &BX_FD_THIS s.head[i]);
     new bx_shadow_num_c(drive, "sector", &BX_FD_THIS s.sector[i]);
     new bx_shadow_num_c(drive, "eot", &BX_FD_THIS s.eot[i]);
-    new bx_shadow_bool_c(drive, "media_present", &BX_FD_THIS s.media_present[i]);
+    BXRS_PARAM_BOOL(drive, media_present, BX_FD_THIS s.media_present[i]);
     new bx_shadow_num_c(drive, "DIR", &BX_FD_THIS s.DIR[i], BASE_HEX);
   }
 }

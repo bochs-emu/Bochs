@@ -367,10 +367,10 @@ void bx_voodoo_base_c::voodoo_register_state(bx_list_c *parent)
   new bx_shadow_num_c(fbi, "rowpixels", &v->fbi.rowpixels);
   new bx_shadow_num_c(fbi, "vblank", &v->fbi.vblank);
   new bx_shadow_num_c(fbi, "vblank_count", &v->fbi.vblank_count);
-  new bx_shadow_bool_c(fbi, "vblank_swap_pending", &v->fbi.vblank_swap_pending);
+  BXRS_PARAM_BOOL(fbi, vblank_swap_pending, v->fbi.vblank_swap_pending);
   new bx_shadow_num_c(fbi, "vblank_swap", &v->fbi.vblank_swap);
   new bx_shadow_num_c(fbi, "vblank_dont_swap", &v->fbi.vblank_dont_swap);
-  new bx_shadow_bool_c(fbi, "cheating_allowed", &v->fbi.cheating_allowed);
+  BXRS_PARAM_BOOL(fbi, cheating_allowed, v->fbi.cheating_allowed);
   new bx_shadow_num_c(fbi, "sign", &v->fbi.sign);
   new bx_shadow_num_c(fbi, "ax", &v->fbi.ax);
   new bx_shadow_num_c(fbi, "ay", &v->fbi.ay);
@@ -420,8 +420,8 @@ void bx_voodoo_base_c::voodoo_register_state(bx_list_c *parent)
   for (i = 0; i < 2; i++) {
     sprintf(name, "%d", i);
     bx_list_c *num = new bx_list_c(cmdfifo, name, "");
-    new bx_shadow_bool_c(num, "enabled", &v->fbi.cmdfifo[i].enabled);
-    new bx_shadow_bool_c(num, "count_holes", &v->fbi.cmdfifo[i].count_holes);
+    BXRS_PARAM_BOOL(num, enabled, v->fbi.cmdfifo[i].enabled);
+    BXRS_PARAM_BOOL(num, count_holes, v->fbi.cmdfifo[i].count_holes);
     new bx_shadow_num_c(num, "base", &v->fbi.cmdfifo[i].base, BASE_HEX);
     new bx_shadow_num_c(num, "end", &v->fbi.cmdfifo[i].end, BASE_HEX);
     new bx_shadow_num_c(num, "rdptr", &v->fbi.cmdfifo[i].rdptr, BASE_HEX);
@@ -430,7 +430,7 @@ void bx_voodoo_base_c::voodoo_register_state(bx_list_c *parent)
     new bx_shadow_num_c(num, "depth", &v->fbi.cmdfifo[i].depth);
     new bx_shadow_num_c(num, "depth_needed", &v->fbi.cmdfifo[i].depth_needed);
     new bx_shadow_num_c(num, "holes", &v->fbi.cmdfifo[i].holes);
-    new bx_shadow_bool_c(num, "cmd_ready", &v->fbi.cmdfifo[i].cmd_ready);
+    BXRS_PARAM_BOOL(num, cmd_ready, v->fbi.cmdfifo[i].cmd_ready);
   }
   bx_list_c *fogblend = new bx_list_c(fbi, "fogblend", "");
   for (i = 0; i < 64; i++) {
@@ -450,7 +450,7 @@ void bx_voodoo_base_c::voodoo_register_state(bx_list_c *parent)
     if (s.model < VOODOO_BANSHEE) {
       new bx_shadow_data_c(num, "ram", v->tmu[i].ram, (4 << 20));
     }
-    new bx_shadow_bool_c(num, "regdirty", &v->tmu[i].regdirty);
+    BXRS_PARAM_BOOL(num, regdirty, v->tmu[i].regdirty);
     new bx_shadow_num_c(num, "starts", &v->tmu[i].starts);
     new bx_shadow_num_c(num, "startt", &v->tmu[i].startt);
     new bx_shadow_num_c(num, "startw", &v->tmu[i].startw);
@@ -477,7 +477,7 @@ void bx_voodoo_base_c::voodoo_register_state(bx_list_c *parent)
     for (j = 0; j < 2; j++) {
       sprintf(name, "%d", j);
       bx_list_c *ncct = new bx_list_c(ncc, name, "");
-      new bx_shadow_bool_c(ncct, "dirty", &v->tmu[i].ncc[j].dirty);
+      BXRS_PARAM_BOOL(ncct, dirty, v->tmu[i].ncc[j].dirty);
       bx_list_c *ir = new bx_list_c(ncct, "ir", "");
       bx_list_c *ig = new bx_list_c(ncct, "ig", "");
       bx_list_c *ib = new bx_list_c(ncct, "ib", "");
@@ -938,9 +938,9 @@ void bx_voodoo_1_2_c::register_state(void)
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "voodoo", "Voodoo 1/2 State");
   voodoo_register_state(list);
   bx_list_c *vdraw = new bx_list_c(list, "vdraw", "Voodoo Draw State");
-  new bx_shadow_bool_c(vdraw, "clock_enabled", &s.vdraw.clock_enabled);
-  new bx_shadow_bool_c(vdraw, "output_on", &s.vdraw.output_on);
-  new bx_shadow_bool_c(vdraw, "override_on", &s.vdraw.override_on);
+  BXRS_PARAM_BOOL(vdraw, clock_enabled, s.vdraw.clock_enabled);
+  BXRS_PARAM_BOOL(vdraw, output_on, s.vdraw.output_on);
+  BXRS_PARAM_BOOL(vdraw, override_on, s.vdraw.override_on);
 }
 
 void bx_voodoo_1_2_c::after_restore_state(void)

@@ -596,7 +596,7 @@ void bx_hard_drive_c::register_state(void)
         }
         if (BX_DRIVE_IS_CD(i, j)) {
           cdrom = new bx_list_c(drive, "cdrom");
-          new bx_shadow_bool_c(cdrom, "locked", &BX_HD_THIS channels[i].drives[j].cdrom.locked);
+          BXRS_PARAM_BOOL(cdrom, locked, BX_HD_THIS channels[i].drives[j].cdrom.locked);
           new bx_shadow_num_c(cdrom, "curr_lba", &BX_HD_THIS channels[i].drives[j].cdrom.curr_lba);
           new bx_shadow_num_c(cdrom, "next_lba", &BX_HD_THIS channels[i].drives[j].cdrom.next_lba);
           new bx_shadow_num_c(cdrom, "remaining_blocks", &BX_HD_THIS channels[i].drives[j].cdrom.remaining_blocks);
@@ -610,15 +610,15 @@ void bx_hard_drive_c::register_state(void)
         }
         new bx_shadow_data_c(drive, "buffer", BX_CONTROLLER(i, j).buffer, BX_CONTROLLER(i, j).buffer_total_size);
         status = new bx_list_c(drive, "status");
-        new bx_shadow_bool_c(status, "busy", &BX_CONTROLLER(i, j).status.busy);
-        new bx_shadow_bool_c(status, "drive_ready", &BX_CONTROLLER(i, j).status.drive_ready);
-        new bx_shadow_bool_c(status, "write_fault", &BX_CONTROLLER(i, j).status.write_fault);
-        new bx_shadow_bool_c(status, "seek_complete", &BX_CONTROLLER(i, j).status.seek_complete);
-        new bx_shadow_bool_c(status, "drq", &BX_CONTROLLER(i, j).status.drq);
-        new bx_shadow_bool_c(status, "corrected_data", &BX_CONTROLLER(i, j).status.corrected_data);
-        new bx_shadow_bool_c(status, "index_pulse", &BX_CONTROLLER(i, j).status.index_pulse);
+        BXRS_PARAM_BOOL(status, busy, BX_CONTROLLER(i, j).status.busy);
+        BXRS_PARAM_BOOL(status, drive_ready, BX_CONTROLLER(i, j).status.drive_ready);
+        BXRS_PARAM_BOOL(status, write_fault, BX_CONTROLLER(i, j).status.write_fault);
+        BXRS_PARAM_BOOL(status, seek_complete, BX_CONTROLLER(i, j).status.seek_complete);
+        BXRS_PARAM_BOOL(status, drq, BX_CONTROLLER(i, j).status.drq);
+        BXRS_PARAM_BOOL(status, corrected_data, BX_CONTROLLER(i, j).status.corrected_data);
+        BXRS_PARAM_BOOL(status, index_pulse, BX_CONTROLLER(i, j).status.index_pulse);
         new bx_shadow_num_c(status, "index_pulse_count", &BX_CONTROLLER(i, j).status.index_pulse_count);
-        new bx_shadow_bool_c(status, "err", &BX_CONTROLLER(i, j).status.err);
+        BXRS_PARAM_BOOL(status, err, BX_CONTROLLER(i, j).status.err);
         new bx_shadow_num_c(drive, "error_register", &BX_CONTROLLER(i, j).error_register, BASE_HEX);
         new bx_shadow_num_c(drive, "head_no", &BX_CONTROLLER(i, j).head_no, BASE_HEX);
         new bx_shadow_num_c(drive, "sector_count", &BX_CONTROLLER(i, j).sector_count, BASE_HEX);
@@ -629,10 +629,10 @@ void bx_hard_drive_c::register_state(void)
         new bx_shadow_num_c(drive, "drq_index", &BX_CONTROLLER(i, j).drq_index, BASE_HEX);
         new bx_shadow_num_c(drive, "current_command", &BX_CONTROLLER(i, j).current_command, BASE_HEX);
         new bx_shadow_num_c(drive, "multiple_sectors", &BX_CONTROLLER(i, j).multiple_sectors, BASE_HEX);
-        new bx_shadow_bool_c(drive, "lba_mode", &BX_CONTROLLER(i, j).lba_mode);
-        new bx_shadow_bool_c(drive, "packet_dma", &BX_CONTROLLER(i, j).packet_dma);
-        new bx_shadow_bool_c(drive, "control_reset", &BX_CONTROLLER(i, j).control.reset);
-        new bx_shadow_bool_c(drive, "control_disable_irq", &BX_CONTROLLER(i, j).control.disable_irq);
+        BXRS_PARAM_BOOL(drive, lba_mode, BX_CONTROLLER(i, j).lba_mode);
+        BXRS_PARAM_BOOL(drive, packet_dma, BX_CONTROLLER(i, j).packet_dma);
+        BXRS_PARAM_BOOL(drive, control_reset, BX_CONTROLLER(i, j).control.reset);
+        BXRS_PARAM_BOOL(drive, control_disable_irq, BX_CONTROLLER(i, j).control.disable_irq);
         new bx_shadow_num_c(drive, "reset_in_progress", &BX_CONTROLLER(i, j).reset_in_progress, BASE_HEX);
         new bx_shadow_num_c(drive, "features", &BX_CONTROLLER(i, j).features, BASE_HEX);
         new bx_shadow_num_c(drive, "mdma_mode", &BX_CONTROLLER(i, j).mdma_mode, BASE_HEX);
