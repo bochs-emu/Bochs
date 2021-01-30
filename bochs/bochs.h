@@ -346,7 +346,6 @@ enum {
 #define BX_RESET_HARDWARE 11
 
 #include "memory/memory-bochs.h"
-#include "gui/gui.h"
 
 /* --- EXTERNS --- */
 

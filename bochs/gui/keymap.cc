@@ -27,6 +27,7 @@
 
 #include "param_names.h"
 #include "bochs.h"
+#include "gui.h"
 #include "keymap.h"
 
 // Table of bochs "BX_KEY_*" symbols
