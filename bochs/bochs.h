@@ -339,8 +339,6 @@ enum {
 #define BX_RESET_SOFTWARE 10
 #define BX_RESET_HARDWARE 11
 
-#include "memory/memory-bochs.h"
-
 /* --- EXTERNS --- */
 
 #if BX_GUI_SIGHANDLER

@@ -26,6 +26,8 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#include "memory/memory-bochs.h"
+
 #if BX_SUPPORT_VMX && BX_SUPPORT_X86_64
 
 bool BX_CPP_AttrRegparmN(1) BX_CPU_C::is_virtual_apic_page(bx_phy_address paddr)

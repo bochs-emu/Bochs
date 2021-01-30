@@ -32,6 +32,7 @@
 
 #include "extplugin.h"
 
+class BX_MEM_C;
 class bx_devices_c;
 BOCHSAPI extern logfunctions  *pluginlog;
 

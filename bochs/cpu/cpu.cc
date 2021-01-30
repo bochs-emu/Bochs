@@ -24,6 +24,7 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#include "memory/memory-bochs.h"
 #include "pc_system.h"
 #include "cpustats.h"
 
