@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2019 Stanislav Shwartsman
+//   Copyright (c) 2021 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -24,7 +24,7 @@
 #include "bochs.h"
 #include "cpu/cpu.h"
 #include "param_names.h"
-#include "corei7_icelake-u.h"
+#include "tigerlake.h"
 
 #define LOG_THIS cpu->
 
@@ -32,7 +32,7 @@
 
 #define VMCS_REVISION_ID 0x04
 
-corei7_icelake_t::corei7_icelake_t(BX_CPU_C *cpu):
+tigerlake_t::tigerlake_t(BX_CPU_C *cpu):
 #if BX_SUPPORT_VMX
     bx_cpuid_t(cpu, VMCS_REVISION_ID)
 #else
@@ -120,19 +120,23 @@ corei7_icelake_t::corei7_icelake_t(BX_CPU_C *cpu):
   enable_cpu_extension(BX_ISA_AVX512_VP2INTERSECT);
 #endif
   enable_cpu_extension(BX_ISA_CLFLUSHOPT);
+  enable_cpu_extension(BX_ISA_CLWB);
   enable_cpu_extension(BX_ISA_XSAVEC);
   enable_cpu_extension(BX_ISA_XSAVES);
 #if BX_SUPPORT_PKEYS
   enable_cpu_extension(BX_ISA_PKU);
+#endif
+#if BX_SUPPORT_CET
+  enable_cpu_extension(BX_ISA_CET);
 #endif
   enable_cpu_extension(BX_ISA_UMIP);
   enable_cpu_extension(BX_ISA_RDPID);
   enable_cpu_extension(BX_ISA_SCA_MITIGATIONS);
 }
 
-void corei7_icelake_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+void tigerlake_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
-  static const char* brand_string = "QuadCore Intel Core i7-1065G7, 1300 MHz\0\0\0\0\0\0\0";
+  static const char* brand_string = "11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz";
 
   static bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
   if (cpuid_limit_winnt)
@@ -233,7 +237,7 @@ void corei7_icelake_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid
 }
 
 #if BX_SUPPORT_VMX >= 2
-Bit32u corei7_icelake_t::get_vmx_extensions_bitmask(void) const
+Bit32u tigerlake_t::get_vmx_extensions_bitmask(void) const
 {
   return BX_VMX_TPR_SHADOW |
          BX_VMX_VIRTUAL_NMI |
@@ -266,7 +270,7 @@ Bit32u corei7_icelake_t::get_vmx_extensions_bitmask(void) const
 #endif
 
 // leaf 0x00000000 //
-void corei7_icelake_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
+void tigerlake_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
 {
   // EAX: highest std function understood by CPUID
   // EBX: vendor ID string
@@ -276,7 +280,7 @@ void corei7_icelake_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
 }
 
 // leaf 0x00000001 //
-void corei7_icelake_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
+void tigerlake_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 {
   // EAX:       CPU Version Information
   //   [3:0]   Stepping ID
@@ -285,7 +289,7 @@ void corei7_icelake_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [13:12] Type: 0=OEM, 1=overdrive, 2=dual cpu, 3=reserved
   //   [19:16] Extended Model
   //   [27:20] Extended Family
-  leaf->eax = 0x000706e5;
+  leaf->eax = 0x000806c1;
 
   // EBX:
   //   [7:0]   Brand ID
@@ -436,7 +440,7 @@ void corei7_icelake_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 }
 
 // leaf 0x00000002 //
-void corei7_icelake_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf) const
+void tigerlake_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000002 - Cache and TLB Descriptors
   leaf->eax = 0x00feff01;
@@ -448,33 +452,33 @@ void corei7_icelake_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf) const
 // leaf 0x00000003 - Processor Serial Number (not supported) //
 
 // leaf 0x00000004 //
-void corei7_icelake_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_t *leaf) const
+void tigerlake_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000004 - Deterministic Cache Parameters
   switch(subfunction) {
   case 0:
     leaf->eax = 0x1c004121;
     leaf->ebx = 0x02c0003f;
-    leaf->ecx = 0x0000003F;
+    leaf->ecx = 0x0000003f;
     leaf->edx = 0x00000000;
     return;
   case 1:
     leaf->eax = 0x1c004122;
     leaf->ebx = 0x01c0003f;
-    leaf->ecx = 0x0000003F;
+    leaf->ecx = 0x0000003f;
     leaf->edx = 0x00000000;
     return;
   case 2:
     leaf->eax = 0x1c004143;
-    leaf->ebx = 0x01c0003f;
+    leaf->ebx = 0x04c0003f;
     leaf->ecx = 0x000003ff;
     leaf->edx = 0x00000000;
     return;
   case 3:
     leaf->eax = 0x1c03c163;
-    leaf->ebx = 0x03c0003f;
-    leaf->ecx = 0x00001fff;
-    leaf->edx = 0x00000006;
+    leaf->ebx = 0x01c0003f;
+    leaf->ecx = 0x00003fff;
+    leaf->edx = 0x00000004;
     return;
   default:
     leaf->eax = 0;
@@ -485,7 +489,7 @@ void corei7_icelake_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_t
 }
 
 // leaf 0x00000005 //
-void corei7_icelake_t::get_std_cpuid_leaf_5(cpuid_function_t *leaf) const
+void tigerlake_t::get_std_cpuid_leaf_5(cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000005 - MONITOR/MWAIT Leaf
 
@@ -516,17 +520,17 @@ void corei7_icelake_t::get_std_cpuid_leaf_5(cpuid_function_t *leaf) const
 }
 
 // leaf 0x00000006 //
-void corei7_icelake_t::get_std_cpuid_leaf_6(cpuid_function_t *leaf) const
+void tigerlake_t::get_std_cpuid_leaf_6(cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000006 - Thermal and Power Management Leaf
-  leaf->eax = 0x0007aff5;
+  leaf->eax = 0x0017eff7;
   leaf->ebx = 0x00000002;
   leaf->ecx = 0x00000009;
   leaf->edx = 0x00000000;
 }
 
 // leaf 0x00000007 //
-void corei7_icelake_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *leaf) const
+void tigerlake_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *leaf) const
 {
   switch(subfunction) {
   case 0:
@@ -534,7 +538,7 @@ void corei7_icelake_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t
 
     // * [0:0]    FS/GS BASE access instructions
     // * [1:1]    Support for IA32_TSC_ADJUST MSR
-    // ! [2:2]    SGX: Intel Software Guard Extensions
+    //   [2:2]    SGX: Intel Software Guard Extensions
     // * [3:3]    BMI1: Advanced Bit Manipulation Extensions
     //   [4:4]    HLE: Hardware Lock Elision
     // * [5:5]    AVX2
@@ -556,8 +560,8 @@ void corei7_icelake_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t
     // * [22:21]  AVX512IFMA52 instructions support
     //   [22:22]  reserved
     // * [23:23]  CLFLUSHOPT instruction
-    //   [24:24]  CLWB instruction
-    //   [25:25]  Intel Processor Trace
+    // * [24:24]  CLWB instruction
+    // ! [25:25]  Intel Processor Trace
     //   [26:26]  AVX512PF instructions support
     //   [27:27]  AVX512ER instructions support
     // * [28:28]  AVX512CD instructions support
@@ -586,6 +590,7 @@ void corei7_icelake_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t
                 BX_CPUID_EXT3_AVX512IFMA52 |
 #endif
                 BX_CPUID_EXT3_CLFLUSHOPT |
+                BX_CPUID_EXT3_CLWB |
 #if BX_SUPPORT_EVEX
                 BX_CPUID_EXT3_AVX512CD |
                 BX_CPUID_EXT3_AVX512BW |
@@ -593,33 +598,38 @@ void corei7_icelake_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t
 #endif
                 BX_CPUID_EXT3_SHA;
 
-    //     [0:0]    PREFETCHWT1 instruction support
-    // *   [1:1]    AVX512 VBMI instructions support
-    // *   [2:2]    UMIP: Supports user-mode instruction prevention
-    // *   [3:3]    PKU: Protection keys for user-mode pages.
-    // *   [4:4]    OSPKE: OS has set CR4.PKE to enable protection keys
-    //     [5:5]    WAITPKG (TPAUSE/UMONITOR/UMWAIT) support
-    // *   [6:6]    AVX512 VBMI2 instructions support
-    //     [7:7]    reserved
-    // *   [8:8]    GFNI instructions support
-    // *   [9:9]    VAES instructions support
-    // * [10:10]    VPCLMULQDQ instruction support
-    // * [11:11]    AVX512 VNNI instructions support
-    // * [12:12]    AVX512 BITALG instructions support
-    //   [13:13]    reserved
-    // * [14:14]    AVX512 VPOPCNTDQ: AVX512 VPOPCNTD/VPOPCNTQ instructions
-    //   [15:15]    reserved
-    //   [16:16]    LA57: LA57 and 5-level paging
-    //   [21:17]    reserved
-    // * [22:22]    RDPID: Read Processor ID support
-    //   [24:23]    reserved
-    //   [25:25]    CLDEMOTE: CLDEMOTE instruction support
-    //   [26:26]    reserved
-    //   [27:27]    MOVDIRI: MOVDIRI instruction support
-    //   [28:28]    MOVDIR64: MOVDIR64 instruction support
-    //   [29:29]    reserved
-    // ! [30:30]    SGX_LC: SGX Launch Configuration
-    //   [31:31]    reserved
+    //   [0:0]   PREFETCHW1 instruction
+    // * [1:1]   AVX512 VBMI instructions
+    // * [2:2]   UMIP: Supports user-mode instruction prevention
+    // * [3:3]   PKU: Protection keys for user-mode pages
+    //   [4:4]   OSPKE: OS has set CR4.PKE to enable protection keys
+    //   [5:5]   WAITPKG (TPAUSE/UMONITOR/UMWAIT) support
+    // * [6:6]   AVX512 VBMI2 instructions support
+    // * [7:7]   CET_SS: Support CET Shadow Stack
+    // * [8:8]   GFNI instructions support
+    // * [9:9]   VAES instructions support
+    // * [10:10] VPCLMULQDQ instruction support
+    // * [11:11] AVX512 VNNI instructions support
+    // * [12:12] AVX512 BITALG instructions support
+    //   [13:13] reserved
+    // * [14:14] AVX512 VPOPCNTDQ: AVX512 VPOPCNTD/VPOPCNTQ instructions
+    //   [15:15] reserved
+    //   [16:16] LA57: LA57 and 5-level paging
+    //   [17:17] reserved
+    //   [18:18] reserved
+    //   [19:19] reserved
+    //   [20:20] reserved
+    //   [21:21] reserved
+    // * [22:22] RDPID: Read Processor ID support
+    // ! [23:23] Keylocker support
+    //   [24:24] reserved
+    //   [25:25] CLDEMOTE: CLDEMOTE instruction support
+    //   [26:26] reserved
+    // ! [27:27] MOVDIRI: MOVDIRI instruction support
+    // ! [28:28] MOVDIRI64: MOVDIRI64 instruction support
+    //   [29:29] ENQCMD: Enqueue Stores support
+    //   [30:30] SGX_LC: SGX Launch Configuration
+    //   [31:31] PKS: Protection keys for supervisor-mode pages
 
     leaf->ecx = 
 #if BX_SUPPORT_EVEX
@@ -628,6 +638,9 @@ void corei7_icelake_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t
                 BX_CPUID_EXT4_UMIP |
 #if BX_SUPPORT_PKEYS
                 BX_CPUID_EXT4_PKU |
+#endif
+#if BX_SUPPORT_CET
+                BX_CPUID_EXT4_CET_SS |
 #endif
 #if BX_SUPPORT_EVEX
                 BX_CPUID_EXT4_AVX512_VBMI2 |
@@ -643,30 +656,53 @@ void corei7_icelake_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t
       leaf->ecx |= BX_CPUID_EXT4_OSPKE;
 #endif
 
-    //     [1:0]    reserved
-    //     [2:2]    AVX512_4VNNIW support
-    //     [3:3]    AVX512_4FMAPS support
-    // *   [4:4]    Fast Short REP MOV support
-    //     [7:5]    reserved
-    // *   [8:8]    AVX512_VP2INTERSECT support
-    //   [17:09]    reserved
-    //   [18:18]    PCONFIG support
-    //   [25:19]    reserved
-    // * [26:26]    IBRS: indirect branch restricted speculation
-    // * [27:27]    STIBP: single thread indirect branch predictors
-    // * [28:28]    L1D_FLUSH support
-    // * [29:29]    Support for the IA32_ARCH_CAPABILITIES MSR.
-    //   [30:30]    Support for the IA32_CORE_CAPABILITIES MSR.
-    // * [31:31]    SSBD: Speculative Store Bypass Disable
+    //   [0:0]   reserved
+    //   [1:1]   reserved
+    //   [2:2]   AVX512_4VNNIW support
+    //   [3:3]   AVX512_4FMAPS support
+    // * [4:4]   Fast Short REP MOV support
+    //   [5:5]   UINTR: User interrupts support
+    //   [6:6]   reserved
+    //   [7:7]   reserved
+    // * [8:8]   AVX512_VP2INTERSECT support
+    //   [9:9]   reserved
+    // * [10:10] MD clear support
+    //   [11:11] reserved
+    //   [12:12] reserved
+    //   [13:13] reserved
+    //   [14:14] SERIALIZE instruction support
+    //   [15:15] Hybrid processor
+    //   [16:16] TSXLDTRK: TSX suspent load tracking support
+    //   [17:17] reserved
+    //   [18:18] PCONFIG support
+    //   [19:19] reserved
+    // * [20:20] CET IBT: Support CET indirect branch tracking
+    //   [21:21] reserved
+    //   [22:22] AMX BF16 support
+    //   [23:23] AVX512_FP16 instructions support
+    //   [24:24] AMX TILE architecture support
+    //   [25:25] AMX INT8 support
+    // * [26:26] IBRS: indirect branch restricted speculation
+    // * [27:27] STIBP: single thread indirect branch predictors
+    // * [28:28] L1D_FLUSH support
+    // * [29:29] Support for the IA32_ARCH_CAPABILITIES MSR
+    // * [30:30] Support for the IA32_CORE_CAPABILITIES MSR
+    // * [31:31] SSBD: Speculative Store Bypass Disable
 
     leaf->edx = BX_CPUID_EXT5_FAST_SHORT_REP_MOV |
                 BX_CPUID_EXT5_AVX512_VPINTERSECT;
 
+#if BX_SUPPORT_CET
+    leaf->edx |= BX_CPUID_EXT5_CET_IBT;
+#endif
+
     if (is_cpu_extension_supported(BX_ISA_SCA_MITIGATIONS))
-      leaf->edx |= BX_CPUID_EXT5_SCA_IBRS_IBPB |
+      leaf->edx |= BX_CPUID_EXT5_MD_CLEAR |
+                   BX_CPUID_EXT5_SCA_IBRS_IBPB |
                    BX_CPUID_EXT5_SCA_STIBP |
                    BX_CPUID_EXT5_L1D_FLUSH |
                    BX_CPUID_EXT5_ARCH_CAPABILITIES_MSR |
+                   BX_CPUID_EXT5_CORE_CAPABILITIES_MSR |
                    BX_CPUID_EXT5_SCA_SSBD;
     break;
 
@@ -682,7 +718,7 @@ void corei7_icelake_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t
 // leaf 0x00000009 direct cache access not supported //
 
 // leaf 0x0000000A //
-void corei7_icelake_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
+void tigerlake_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
 {
   // CPUID function 0x0000000A - Architectural Performance Monitoring Leaf
   leaf->eax = 0x08300805;
@@ -704,19 +740,19 @@ void corei7_icelake_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
 // leaf 0x00000014 - Intel Processor Trace Enumeration //
 
 // leaf 0x00000015 - Time Stamp Counter and Core Crystal Clock Information Leaf //
-void corei7_icelake_t::get_std_cpuid_leaf_15(cpuid_function_t *leaf) const
+void tigerlake_t::get_std_cpuid_leaf_15(cpuid_function_t *leaf) const
 {
   leaf->eax = 0x00000002;
-  leaf->ebx = 0x0000004e;
+  leaf->ebx = 0x0000007e;
   leaf->ecx = 0x0249f000;
   leaf->edx = 0x00000000;
 }
 
 // leaf 0x00000016 - Processor Frequency Information Leaf
-void corei7_icelake_t::get_std_cpuid_leaf_16(cpuid_function_t *leaf) const
+void tigerlake_t::get_std_cpuid_leaf_16(cpuid_function_t *leaf) const
 {
-  leaf->eax = 0x000005dc;
-  leaf->ebx = 0x00000f3c;
+  leaf->eax = 0x00000960;
+  leaf->ebx = 0x00001068;
   leaf->ecx = 0x00000064;
   leaf->edx = 0x00000000;
 }
@@ -724,49 +760,49 @@ void corei7_icelake_t::get_std_cpuid_leaf_16(cpuid_function_t *leaf) const
 // leaf 0x00000017 - System-On-Chip Vendor Attribute Enumeration //
 
 // leaf 0x00000018
-void corei7_icelake_t::get_std_cpuid_leaf_18(Bit32u subfunction, cpuid_function_t *leaf) const
+void tigerlake_t::get_std_cpuid_leaf_18(Bit32u subfunction, cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000018 - Deterministic Address Translation Parameters
   switch(subfunction) {
   case 0:
-    leaf->eax = 0x00000007;
+    leaf->eax = 0x00000008;
     leaf->ebx = 0x00000000;
     leaf->ecx = 0x00000000;
     leaf->edx = 0x00000000;
     return;
   case 1:
     leaf->eax = 0x00000000;
-    leaf->ebx = 0x00080007;
-    leaf->ecx = 0x00000001;
-    leaf->edx = 0x00004122;
+    leaf->ebx = 0x00080001;
+    leaf->ecx = 0x00000010;
+    leaf->edx = 0x00004022;
     return;
   case 2:
+    leaf->eax = 0x00000000;
+    leaf->ebx = 0x00080006;
+    leaf->ecx = 0x00000002;
+    leaf->edx = 0x00004022;
+    return;
+  case 3:
     leaf->eax = 0x00000000;
     leaf->ebx = 0x0010000f;
     leaf->ecx = 0x00000001;
     leaf->edx = 0x00004125;
     return;
-  case 3:
+  case 4:
     leaf->eax = 0x00000000;
     leaf->ebx = 0x00040001;
     leaf->ecx = 0x00000010;
     leaf->edx = 0x00004024;
     return;
-  case 4:
+  case 5:
     leaf->eax = 0x00000000;
     leaf->ebx = 0x00040006;
     leaf->ecx = 0x00000008;
     leaf->edx = 0x00004024;
     return;
-  case 5:
-    leaf->eax = 0x00000000;
-    leaf->ebx = 0x00080008;
-    leaf->ecx = 0x00000001;
-    leaf->edx = 0x00004124;
-    return;
   case 6:
     leaf->eax = 0x00000000;
-    leaf->ebx = 0x00080007;
+    leaf->ebx = 0x00080008;
     leaf->ecx = 0x00000080;
     leaf->edx = 0x00004043;
     return;
@@ -785,7 +821,7 @@ void corei7_icelake_t::get_std_cpuid_leaf_18(Bit32u subfunction, cpuid_function_
 }
 
 // leaf 0x80000000 //
-void corei7_icelake_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
+void tigerlake_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
 {
   // EAX: highest extended function understood by CPUID
   // EBX: reserved
@@ -795,7 +831,7 @@ void corei7_icelake_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
 }
 
 // leaf 0x80000001 //
-void corei7_icelake_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
+void tigerlake_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 {
   // EAX:       CPU Version Information (reserved for Intel)
   leaf->eax = 0;
@@ -852,17 +888,17 @@ void corei7_icelake_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000005 - L1 Cache and TLB Identifiers (reserved for Intel) //
 
 // leaf 0x80000006 //
-void corei7_icelake_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
+void tigerlake_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
 {
   // CPUID function 0x800000006 - L2 Cache and TLB Identifiers
   leaf->eax = 0x00000000;
   leaf->ebx = 0x00000000;
-  leaf->ecx = 0x01006040;
+  leaf->ecx = 0x01007040;
   leaf->edx = 0x00000000;
 }
 
 // leaf 0x80000007 //
-void corei7_icelake_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
+void tigerlake_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
 {
   // CPUID function 0x800000007 - Advanced Power Management
   leaf->eax = 0;
@@ -873,11 +909,11 @@ void corei7_icelake_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
 
 // leaf 0x80000008 //
 
-void corei7_icelake_t::dump_cpuid(void) const
+void tigerlake_t::dump_cpuid(void) const
 {
   bx_cpuid_t::dump_cpuid(0x18, 0x8);
 }
 
-bx_cpuid_t *create_corei7_icelake_u_cpuid(BX_CPU_C *cpu) { return new corei7_icelake_t(cpu); }
+bx_cpuid_t *create_tigerlake_cpuid(BX_CPU_C *cpu) { return new tigerlake_t(cpu); }
 
 #endif

@@ -90,7 +90,7 @@ void corei7_sandy_bridge_2600k_t::get_cpuid_leaf(Bit32u function, Bit32u subfunc
 {
   static const char* brand_string = "       Intel(R) Core(TM) i7-2600K CPU @ 3.40GHz";
 
-  static bx_bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
+  static bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
   if (cpuid_limit_winnt)
     if (function > 2 && function < 0x80000000) function = 2;
 

@@ -198,7 +198,7 @@ public:
     return e;
   }
 
-  BX_CPP_INLINE bx_bool breakLinks()
+  BX_CPP_INLINE bool breakLinks()
   {
     // break all links bewteen traces
     if (++traceLinkTimeStamp == 0xffffffff) {

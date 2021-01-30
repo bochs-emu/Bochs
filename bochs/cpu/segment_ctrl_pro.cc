@@ -372,7 +372,7 @@ BX_CPU_C::get_descriptor_h(const bx_descriptor_t *d)
   }
 }
 
-bx_bool BX_CPU_C::set_segment_ar_data(bx_segment_reg_t *seg, bx_bool valid,
+bool BX_CPU_C::set_segment_ar_data(bx_segment_reg_t *seg, bool valid,
             Bit16u raw_selector, bx_address base, Bit32u limit_scaled, Bit16u ar_data)
 {
   parse_selector(raw_selector, &seg->selector);
@@ -571,7 +571,7 @@ void BX_CPU_C::fetch_raw_descriptor(const bx_selector_t *selector,
   *dword2 = GET32H(raw_descriptor);
 }
 
-  bx_bool BX_CPP_AttrRegparmN(3)
+  bool BX_CPP_AttrRegparmN(3)
 BX_CPU_C::fetch_raw_descriptor2(const bx_selector_t *selector, Bit32u *dword1, Bit32u *dword2)
 {
   Bit32u index = selector->index;
@@ -643,8 +643,7 @@ void BX_CPU_C::fetch_raw_descriptor_64(const bx_selector_t *selector,
   *dword3 = GET32L(raw_descriptor2);
 }
 
-bx_bool BX_CPU_C::fetch_raw_descriptor2_64(const bx_selector_t *selector,
-           Bit32u *dword1, Bit32u *dword2, Bit32u *dword3)
+bool BX_CPU_C::fetch_raw_descriptor2_64(const bx_selector_t *selector, Bit32u *dword1, Bit32u *dword2, Bit32u *dword3)
 {
   Bit32u index = selector->index;
   bx_address offset;

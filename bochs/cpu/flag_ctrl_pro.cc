@@ -80,7 +80,7 @@ BX_CPU_C::writeEFlags(Bit32u flags, Bit32u changeMask)
 }
 
   void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::write_flags(Bit16u flags, bx_bool change_IOPL, bx_bool change_IF)
+BX_CPU_C::write_flags(Bit16u flags, bool change_IOPL, bool change_IF)
 {
   // Build a mask of the following bits:
   // x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF

@@ -8,6 +8,7 @@ Changes after 2.6.11:
 
 - CPU/CPUDB
   - Bugfixes for CPU emulation correctness (CPUID/VMX initialization fixes to support Windows Hyper-V as guest in Bochs)
+  ! CPUID: Added TigerLake CPU definition (features CET and CLWB support)
 
 - Memory
   - Improved BIOS write support by implementing Intel(tm) flash chip emulation.

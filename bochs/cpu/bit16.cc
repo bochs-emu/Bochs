@@ -107,7 +107,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTS_EwGwM(bxInstruction_c *i)
   bx_address op1_addr;
   Bit16u op1_16, op2_16, index;
   Bit32s displacement32;
-  bx_bool bit_i;
+  bool bit_i;
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
 
@@ -158,7 +158,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTR_EwGwM(bxInstruction_c *i)
 
   /* pointer, segment address pair */
   op1_16 = read_RMW_virtual_word(i->seg(), op1_addr & i->asize_mask());
-  bx_bool temp_cf = (op1_16 >> index) & 0x01;
+  bool temp_cf = (op1_16 >> index) & 0x01;
   op1_16 &= ~(1 << index);
 
   /* now write back to destination */
@@ -199,7 +199,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTC_EwGwM(bxInstruction_c *i)
   op1_addr = eaddr + 2 * displacement16;
 
   op1_16 = read_RMW_virtual_word(i->seg(), op1_addr & i->asize_mask());
-  bx_bool temp_CF = (op1_16 >> index_16) & 0x01;
+  bool temp_CF = (op1_16 >> index_16) & 0x01;
   op1_16 ^= (1 << index_16);  /* toggle bit */
   write_RMW_linear_word(op1_16);
 
@@ -216,7 +216,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTC_EwGwR(bxInstruction_c *i)
   op2_16 = BX_READ_16BIT_REG(i->src());
   op2_16 &= 0xf;
 
-  bx_bool temp_CF = (op1_16 >> op2_16) & 0x01;
+  bool temp_CF = (op1_16 >> op2_16) & 0x01;
   op1_16 ^= (1 << op2_16);  /* toggle bit */
   BX_WRITE_16BIT_REG(i->dst(), op1_16);
 
@@ -254,7 +254,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTS_EwIbM(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
 
   Bit16u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
-  bx_bool temp_CF = (op1_16 >> op2_8) & 0x01;
+  bool temp_CF = (op1_16 >> op2_8) & 0x01;
   op1_16 |= (1 << op2_8);
   write_RMW_linear_word(op1_16);
 
@@ -268,7 +268,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTS_EwIbR(bxInstruction_c *i)
   Bit8u op2_8 = i->Ib() & 0xf;
 
   Bit16u op1_16 = BX_READ_16BIT_REG(i->dst());
-  bx_bool temp_CF = (op1_16 >> op2_8) & 0x01;
+  bool temp_CF = (op1_16 >> op2_8) & 0x01;
   op1_16 |= (1 << op2_8);
   BX_WRITE_16BIT_REG(i->dst(), op1_16);
 
@@ -284,7 +284,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTC_EwIbM(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
 
   Bit16u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
-  bx_bool temp_CF = (op1_16 >> op2_8) & 0x01;
+  bool temp_CF = (op1_16 >> op2_8) & 0x01;
   op1_16 ^= (1 << op2_8);  /* toggle bit */
   write_RMW_linear_word(op1_16);
 
@@ -298,7 +298,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTC_EwIbR(bxInstruction_c *i)
   Bit8u op2_8 = i->Ib() & 0xf;
 
   Bit16u op1_16 = BX_READ_16BIT_REG(i->dst());
-  bx_bool temp_CF = (op1_16 >> op2_8) & 0x01;
+  bool temp_CF = (op1_16 >> op2_8) & 0x01;
   op1_16 ^= (1 << op2_8);  /* toggle bit */
   BX_WRITE_16BIT_REG(i->dst(), op1_16);
 
@@ -314,7 +314,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTR_EwIbM(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
 
   Bit16u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
-  bx_bool temp_CF = (op1_16 >> op2_8) & 0x01;
+  bool temp_CF = (op1_16 >> op2_8) & 0x01;
   op1_16 &= ~(1 << op2_8);
   write_RMW_linear_word(op1_16);
 
@@ -328,7 +328,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTR_EwIbR(bxInstruction_c *i)
   Bit8u op2_8 = i->Ib() & 0xf;
 
   Bit16u op1_16 = BX_READ_16BIT_REG(i->dst());
-  bx_bool temp_CF = (op1_16 >> op2_8) & 0x01;
+  bool temp_CF = (op1_16 >> op2_8) & 0x01;
   op1_16 &= ~(1 << op2_8);
   BX_WRITE_16BIT_REG(i->dst(), op1_16);
 

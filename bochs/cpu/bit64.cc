@@ -110,7 +110,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTS_EqGqM(bxInstruction_c *i)
   bx_address op1_addr;
   Bit64u op1_64, op2_64, index;
   Bit64s displacement64;
-  bx_bool bit_i;
+  bool bit_i;
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
 
@@ -165,7 +165,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTR_EqGqM(bxInstruction_c *i)
 
   /* pointer, segment address pair */
   op1_64 = read_RMW_linear_qword(i->seg(), get_laddr64(i->seg(), op1_addr));
-  bx_bool temp_cf = (op1_64 >> index) & 0x01;
+  bool temp_cf = (op1_64 >> index) & 0x01;
   op1_64 &= ~(((Bit64u) 1) << index);
   /* now write back to destination */
   write_RMW_linear_qword(op1_64);
@@ -208,7 +208,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTC_EqGqM(bxInstruction_c *i)
     op1_addr = (Bit32u) op1_addr;
 
   op1_64 = read_RMW_linear_qword(i->seg(), get_laddr64(i->seg(), op1_addr));
-  bx_bool temp_CF = (op1_64 >> index) & 0x01;
+  bool temp_CF = (op1_64 >> index) & 0x01;
   op1_64 ^= (((Bit64u) 1) << index);  /* toggle bit */
   set_CF(temp_CF);
 
@@ -225,7 +225,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTC_EqGqR(bxInstruction_c *i)
   op2_64 = BX_READ_64BIT_REG(i->src());
   op2_64 &= 0x3f;
 
-  bx_bool temp_CF = (op1_64 >> op2_64) & 0x01;
+  bool temp_CF = (op1_64 >> op2_64) & 0x01;
   op1_64 ^= (((Bit64u) 1) << op2_64);  /* toggle bit */
   set_CF(temp_CF);
 
@@ -263,7 +263,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTS_EqIbM(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
 
   Bit64u op1_64 = read_RMW_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
-  bx_bool temp_CF = (op1_64 >> op2_8) & 0x01;
+  bool temp_CF = (op1_64 >> op2_8) & 0x01;
   op1_64 |= (((Bit64u) 1) << op2_8);
   write_RMW_linear_qword(op1_64);
 
@@ -277,7 +277,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTS_EqIbR(bxInstruction_c *i)
   Bit8u op2_8 = i->Ib() & 0x3f;
 
   Bit64u op1_64 = BX_READ_64BIT_REG(i->dst());
-  bx_bool temp_CF = (op1_64 >> op2_8) & 0x01;
+  bool temp_CF = (op1_64 >> op2_8) & 0x01;
   op1_64 |= (((Bit64u) 1) << op2_8);
   BX_WRITE_64BIT_REG(i->dst(), op1_64);
 
@@ -293,7 +293,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTC_EqIbM(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
 
   Bit64u op1_64 = read_RMW_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
-  bx_bool temp_CF = (op1_64 >> op2_8) & 0x01;
+  bool temp_CF = (op1_64 >> op2_8) & 0x01;
   op1_64 ^= (((Bit64u) 1) << op2_8);  /* toggle bit */
   write_RMW_linear_qword(op1_64);
 
@@ -307,7 +307,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTC_EqIbR(bxInstruction_c *i)
   Bit8u op2_8 = i->Ib() & 0x3f;
 
   Bit64u op1_64 = BX_READ_64BIT_REG(i->dst());
-  bx_bool temp_CF = (op1_64 >> op2_8) & 0x01;
+  bool temp_CF = (op1_64 >> op2_8) & 0x01;
   op1_64 ^= (((Bit64u) 1) << op2_8);  /* toggle bit */
   BX_WRITE_64BIT_REG(i->dst(), op1_64);
 
@@ -323,7 +323,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTR_EqIbM(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
 
   Bit64u op1_64 = read_RMW_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
-  bx_bool temp_CF = (op1_64 >> op2_8) & 0x01;
+  bool temp_CF = (op1_64 >> op2_8) & 0x01;
   op1_64 &= ~(((Bit64u) 1) << op2_8);
   write_RMW_linear_qword(op1_64);
 
@@ -337,7 +337,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BTR_EqIbR(bxInstruction_c *i)
   Bit8u op2_8 = i->Ib() & 0x3f;
 
   Bit64u op1_64 = BX_READ_64BIT_REG(i->dst());
-  bx_bool temp_CF = (op1_64 >> op2_8) & 0x01;
+  bool temp_CF = (op1_64 >> op2_8) & 0x01;
   op1_64 &= ~(((Bit64u) 1) << op2_8);
   BX_WRITE_64BIT_REG(i->dst(), op1_64);
 

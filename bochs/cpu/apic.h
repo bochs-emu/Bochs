@@ -137,7 +137,7 @@ class BOCHSAPI bx_local_apic_c : public logfunctions
 {
   bx_phy_address base_addr;
   unsigned mode;
-  bx_bool xapic;
+  bool xapic;
 #if BX_CPU_LEVEL >= 6
   Bit32u xapic_ext;             // enabled extended XAPIC features
 #endif
@@ -145,9 +145,9 @@ class BOCHSAPI bx_local_apic_c : public logfunctions
                                 // 32 bit in X2APIC mode
   Bit32u apic_version_id;
 
-  bx_bool software_enabled;
+  bool software_enabled;
   Bit8u  spurious_vector;
-  bx_bool focus_disable;
+  bool focus_disable;
 
   Bit32u task_priority;         // Task priority (TPR)
   Bit32u ldr;                   // Logical destination (LDR)
@@ -195,7 +195,7 @@ class BOCHSAPI bx_local_apic_c : public logfunctions
   Bit32u timer_divide_factor;
 
   // Internal timer state, not accessible from bus
-  bx_bool timer_active;
+  bool timer_active;
   int timer_handle;
 
 #if BX_SUPPORT_VMX >= 2
@@ -204,42 +204,42 @@ class BOCHSAPI bx_local_apic_c : public logfunctions
   Bit64u vmx_preemption_timer_initial;    //The value of system tick when set the timer (absolute value)
   Bit64u vmx_preemption_timer_fire;       //The value of system tick when fire the exception (absolute value)
   Bit32u vmx_preemption_timer_rate;       //rate stated in MSR_VMX_MISC
-  bx_bool vmx_timer_active;
+  bool vmx_timer_active;
 #endif 
 
 #if BX_SUPPORT_MONITOR_MWAIT
   int mwaitx_timer_handle;
-  bx_bool mwaitx_timer_active;
+  bool mwaitx_timer_active;
 #endif
 
   BX_CPU_C *cpu;
 
-  bx_bool get_vector(Bit32u *reg, unsigned vector);
+  bool get_vector(Bit32u *reg, unsigned vector);
   void set_vector(Bit32u *reg, unsigned vector);
   void clear_vector(Bit32u *reg, unsigned vector);
 
 public:
-  bx_bool INTR;
+  bool INTR;
   bx_local_apic_c(BX_CPU_C *cpu, unsigned id);
  ~bx_local_apic_c() { }
   void reset(unsigned type);
   bx_phy_address get_base(void) const { return base_addr; }
   void set_base(bx_phy_address newbase);
   Bit32u get_id() const { return apic_id; }
-  bx_bool is_xapic() const { return xapic; }
-  bx_bool is_selected(bx_phy_address addr);
+  bool is_xapic() const { return xapic; }
+  bool is_selected(bx_phy_address addr);
   void read(bx_phy_address addr, void *data, unsigned len);
   void write(bx_phy_address addr, void *data, unsigned len);
   void write_aligned(bx_phy_address addr, Bit32u data);
   Bit32u read_aligned(bx_phy_address address);
 #if BX_CPU_LEVEL >= 6
-  bx_bool read_x2apic(unsigned index, Bit64u *msr);
-  bx_bool write_x2apic(unsigned index, Bit32u msr_hi, Bit32u msr_lo);
+  bool read_x2apic(unsigned index, Bit64u *msr);
+  bool write_x2apic(unsigned index, Bit32u msr_hi, Bit32u msr_lo);
 #endif
   // on local APIC, trigger means raise the CPU's INTR line. For now
   // I also have to raise pc_system.INTR but that should be replaced
   // with the cpu-specific INTR signals.
-  void trigger_irq(Bit8u vector, unsigned trigger_mode, bx_bool bypass_irr_isr = 0);
+  void trigger_irq(Bit8u vector, unsigned trigger_mode, bool bypass_irr_isr = 0);
   void untrigger_irq(Bit8u vector, unsigned trigger_mode);
   Bit8u acknowledge_int(void);  // only the local CPU should call this
   int highest_priority_int(Bit32u *array);
@@ -248,13 +248,13 @@ public:
   void write_spurious_interrupt_register(Bit32u value);
   void service_local_apic(void);
   void print_status(void);
-  bx_bool match_logical_addr(apic_dest_t address);
-  bx_bool deliver(Bit8u vector, Bit8u delivery_mode, Bit8u trig_mode);
+  bool match_logical_addr(apic_dest_t address);
+  bool deliver(Bit8u vector, Bit8u delivery_mode, Bit8u trig_mode);
   Bit8u get_tpr(void) { return task_priority; }
   void  set_tpr(Bit8u tpr);
   Bit8u get_ppr(void);
   Bit8u get_apr(void);
-  bx_bool is_focus(Bit8u vector);
+  bool is_focus(Bit8u vector);
   void set_lvt_entry(unsigned apic_reg, Bit32u val);
 
   static void periodic_smf(void *);
@@ -286,11 +286,11 @@ public:
 #endif
 };
 
-int apic_bus_deliver_lowest_priority(Bit8u vector, apic_dest_t dest, bx_bool trig_mode, bx_bool broadcast);
-BOCHSAPI_MSVCONLY int apic_bus_deliver_interrupt(Bit8u vector, apic_dest_t dest, Bit8u delivery_mode, bx_bool logical_dest, bx_bool level, bx_bool trig_mode);
-int apic_bus_broadcast_interrupt(Bit8u vector, Bit8u delivery_mode, bx_bool trig_mode, int exclude_cpu);
+int apic_bus_deliver_lowest_priority(Bit8u vector, apic_dest_t dest, bool trig_mode, bool broadcast);
+BOCHSAPI_MSVCONLY int apic_bus_deliver_interrupt(Bit8u vector, apic_dest_t dest, Bit8u delivery_mode, bool logical_dest, bool level, bool trig_mode);
+int apic_bus_broadcast_interrupt(Bit8u vector, Bit8u delivery_mode, bool trig_mode, int exclude_cpu);
 
-BX_CPP_INLINE bx_bool is_x2apic_msr_range(Bit32u index) { return index >= 0x800 && index <= 0x8FF; }
+BX_CPP_INLINE bool is_x2apic_msr_range(Bit32u index) { return index >= 0x800 && index <= 0x8FF; }
 
 #endif // if BX_SUPPORT_APIC
 

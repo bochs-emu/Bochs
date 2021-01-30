@@ -39,7 +39,7 @@
 #define GET_SYMBOL(addr) ""
 #endif
 
-extern int fetchDecode32(const Bit8u *fetchPtr, bx_bool is_32, bxInstruction_c *i, unsigned remainingInPage);
+extern int fetchDecode32(const Bit8u *fetchPtr, bool is_32, bxInstruction_c *i, unsigned remainingInPage);
 #if BX_SUPPORT_X86_64
 extern int fetchDecode64(const Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage);
 #endif
@@ -815,7 +815,7 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
   const char *opname = i->getIaOpcodeNameShort(); // skip the "BX_IA_"
   int n;
 #if BX_SUPPORT_EVEX
-  bx_bool is_vector = false;
+  bool is_vector = false;
 #endif
 
   if (! strncmp(opname, "V128_", 5) || ! strncmp(opname, "V256_", 5) || ! strncmp(opname, "V512_", 5)) {

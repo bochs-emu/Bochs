@@ -165,7 +165,7 @@ struct bx_TLB_entry
 
   bx_TLB_entry() { invalidate(); }
 
-  BX_CPP_INLINE bx_bool valid() const { return lpf != BX_INVALID_TLB_ENTRY; }
+  BX_CPP_INLINE bool valid() const { return lpf != BX_INVALID_TLB_ENTRY; }
 
   BX_CPP_INLINE void invalidate() {
     lpf = BX_INVALID_TLB_ENTRY;
@@ -179,7 +179,7 @@ template <unsigned size>
 struct TLB {
   bx_TLB_entry entry[size];
 #if BX_CPU_LEVEL >= 5
-  bx_bool split_large;
+  bool split_large;
 #endif
 
 public:

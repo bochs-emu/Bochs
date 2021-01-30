@@ -27,7 +27,7 @@
 
 #include "iodev/iodev.h"
 
-bx_bool BX_CPU_C::handleWaitForEvent(void)
+bool BX_CPU_C::handleWaitForEvent(void)
 {
   if (BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_WAIT_FOR_SIPI) {
     // HALT condition remains, return so other CPUs have a chance
@@ -169,7 +169,7 @@ void BX_CPU_C::VirtualInterruptAcknowledge(void)
 }
 #endif
 
-bx_bool BX_CPU_C::handleAsyncEvent(void)
+bool BX_CPU_C::handleAsyncEvent(void)
 {
   //
   // This area is where we process special conditions and events.
@@ -386,7 +386,7 @@ void BX_CPU_C::inhibit_interrupts(unsigned mask)
   }
 }
 
-bx_bool BX_CPU_C::interrupts_inhibited(unsigned mask)
+bool BX_CPU_C::interrupts_inhibited(unsigned mask)
 {
   return (get_icount() <= BX_CPU_THIS_PTR inhibit_icount) && (BX_CPU_THIS_PTR inhibit_mask & mask) == mask;
 }

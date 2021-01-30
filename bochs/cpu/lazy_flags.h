@@ -177,7 +177,7 @@ const Bit32u LF_MASK_PO  = (0x01 << LF_BIT_PO);
 
 /* size, carries, result */
 #define SET_FLAGS_OSZAxC_LOGIC_SIZE(size, lf_result) { \
-  bx_bool saved_PF = getB_PF(); \
+  bool saved_PF = getB_PF(); \
   SET_FLAGS_OSZAPC_SIZE(size, (Bit##size##u)(0), lf_result); \
   set_PF(saved_PF); \
 }
@@ -196,37 +196,37 @@ struct bx_lazyflags_entry {
 
   BX_CPP_INLINE unsigned getB_OF(void) const;
   BX_CPP_INLINE unsigned get_OF(void) const;
-  BX_CPP_INLINE void set_OF(bx_bool val);
+  BX_CPP_INLINE void set_OF(bool val);
   BX_CPP_INLINE void clear_OF(void);
   BX_CPP_INLINE void assert_OF(void);
 
   BX_CPP_INLINE unsigned getB_SF(void) const;
   BX_CPP_INLINE unsigned get_SF(void) const;
-  BX_CPP_INLINE void set_SF(bx_bool val);
+  BX_CPP_INLINE void set_SF(bool val);
   BX_CPP_INLINE void clear_SF(void);
   BX_CPP_INLINE void assert_SF(void);
 
   BX_CPP_INLINE unsigned getB_ZF(void) const;
   BX_CPP_INLINE unsigned get_ZF(void) const;
-  BX_CPP_INLINE void set_ZF(bx_bool val);
+  BX_CPP_INLINE void set_ZF(bool val);
   BX_CPP_INLINE void clear_ZF(void);
   BX_CPP_INLINE void assert_ZF(void);
 
   BX_CPP_INLINE unsigned getB_AF(void) const;
   BX_CPP_INLINE unsigned get_AF(void) const;
-  BX_CPP_INLINE void set_AF(bx_bool val);
+  BX_CPP_INLINE void set_AF(bool val);
   BX_CPP_INLINE void clear_AF(void);
   BX_CPP_INLINE void assert_AF(void);
 
   BX_CPP_INLINE unsigned getB_PF(void) const;
   BX_CPP_INLINE unsigned get_PF(void) const;
-  BX_CPP_INLINE void set_PF(bx_bool val);
+  BX_CPP_INLINE void set_PF(bool val);
   BX_CPP_INLINE void clear_PF(void);
   BX_CPP_INLINE void assert_PF(void);
 
   BX_CPP_INLINE unsigned getB_CF(void) const;
   BX_CPP_INLINE unsigned get_CF(void) const;
-  BX_CPP_INLINE void set_CF(bx_bool val);
+  BX_CPP_INLINE void set_CF(bool val);
   BX_CPP_INLINE void clear_CF(void);
   BX_CPP_INLINE void assert_CF(void);
 
@@ -251,15 +251,15 @@ BX_CPP_INLINE unsigned bx_lazyflags_entry::get_OF(void) const
   return (auxbits + (1U << LF_BIT_PO)) & (1U << LF_BIT_CF);
 }
 
-BX_CPP_INLINE void bx_lazyflags_entry::set_OF(bx_bool val)
+BX_CPP_INLINE void bx_lazyflags_entry::set_OF(bool val)
 {
-  bx_bool temp_cf = getB_CF();
+  bool temp_cf = getB_CF();
   set_flags_OxxxxC(val, temp_cf);
 }
  
 BX_CPP_INLINE void bx_lazyflags_entry::clear_OF(void)
 {
-  bx_bool temp_cf = getB_CF();
+  bool temp_cf = getB_CF();
   set_flags_OxxxxC(0, temp_cf);
 }
  
@@ -277,9 +277,9 @@ BX_CPP_INLINE unsigned bx_lazyflags_entry::getB_SF(void) const
 
 BX_CPP_INLINE unsigned bx_lazyflags_entry::get_SF(void) const { return getB_SF(); }
 
-BX_CPP_INLINE void bx_lazyflags_entry::set_SF(bx_bool val)
+BX_CPP_INLINE void bx_lazyflags_entry::set_SF(bool val)
 {
-  bx_bool temp_sf = getB_SF();
+  bool temp_sf = getB_SF();
   auxbits ^= (temp_sf ^ val) << LF_BIT_SD;
 }
 
@@ -294,7 +294,7 @@ BX_CPP_INLINE unsigned bx_lazyflags_entry::getB_ZF(void) const
 
 BX_CPP_INLINE unsigned bx_lazyflags_entry::get_ZF(void) const { return getB_ZF(); }
 
-BX_CPP_INLINE void bx_lazyflags_entry::set_ZF(bx_bool val)
+BX_CPP_INLINE void bx_lazyflags_entry::set_ZF(bool val)
 {
   if (val) assert_ZF();
   else clear_ZF();
@@ -331,7 +331,7 @@ BX_CPP_INLINE unsigned bx_lazyflags_entry::get_AF(void) const
   return (auxbits & LF_MASK_AF);
 }
 
-BX_CPP_INLINE void bx_lazyflags_entry::set_AF(bx_bool val)
+BX_CPP_INLINE void bx_lazyflags_entry::set_AF(bool val)
 {
   auxbits &= ~(LF_MASK_AF);
   auxbits |= (val) << LF_BIT_AF;
@@ -360,7 +360,7 @@ BX_CPP_INLINE unsigned bx_lazyflags_entry::getB_PF(void) const
 
 BX_CPP_INLINE unsigned bx_lazyflags_entry::get_PF(void) const { return getB_PF(); }
 
-BX_CPP_INLINE void bx_lazyflags_entry::set_PF(bx_bool val)
+BX_CPP_INLINE void bx_lazyflags_entry::set_PF(bool val)
 {
     Bit32u temp_pdb = (255 & result) ^ (!val);
     auxbits &= ~(LF_MASK_PDB);
@@ -382,21 +382,21 @@ BX_CPP_INLINE unsigned bx_lazyflags_entry::get_CF(void) const
   return (auxbits & LF_MASK_CF);
 }
 
-BX_CPP_INLINE void bx_lazyflags_entry::set_CF(bx_bool val)
+BX_CPP_INLINE void bx_lazyflags_entry::set_CF(bool val)
 {
-  bx_bool temp_of = getB_OF();
+  bool temp_of = getB_OF();
   set_flags_OxxxxC(temp_of, val);
 }
 
 BX_CPP_INLINE void bx_lazyflags_entry::clear_CF(void)
 {
-  bx_bool temp_of = getB_OF();
+  bool temp_of = getB_OF();
   set_flags_OxxxxC(temp_of, 0);
 }
 
 BX_CPP_INLINE void bx_lazyflags_entry::assert_CF(void)
 {
-  bx_bool temp_of = getB_OF();
+  bool temp_of = getB_OF();
   set_flags_OxxxxC(temp_of, 1);
 }
 

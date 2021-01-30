@@ -278,7 +278,7 @@ typedef struct bx_SVM_GUEST_STATE
 
   unsigned cpl;
 
-  bx_bool inhibit_interrupts;
+  bool inhibit_interrupts;
 
 } SVM_GUEST_STATE;
 
@@ -302,11 +302,11 @@ typedef struct bx_SVM_CONTROLS
 
   Bit8u v_tpr;
   Bit8u v_intr_prio;
-  bx_bool v_ignore_tpr;
-  bx_bool v_intr_masking;
+  bool v_ignore_tpr;
+  bool v_intr_masking;
   Bit8u v_intr_vector;
 
-  bx_bool nested_paging;
+  bool nested_paging;
   Bit64u ncr3;
 
   Bit16u pause_filter_count;

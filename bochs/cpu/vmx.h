@@ -519,8 +519,8 @@ public:
 
    void clear();
 
-   bx_bool clear_mapping(Bit32u encoding);
-   bx_bool set_mapping(Bit32u encoding, Bit32u offset);
+   bool clear_mapping(Bit32u encoding);
+   bool set_mapping(Bit32u encoding, Bit32u offset);
 
    void set_vmcs_revision_id(Bit32u revision) { revision_id = revision; }
    Bit32u get_vmcs_revision_id() const { return revision_id; }
@@ -534,11 +534,11 @@ public:
    
    unsigned vmcs_field_offset(Bit32u encoding) const;
 
-   bx_bool is_reserved(Bit32u encoding) const {
+   bool is_reserved(Bit32u encoding) const {
      return (encoding & VMCS_ENCODING_RESERVED_BITS) != 0;
    }
 
-   bx_bool is_valid(Bit32u encoding) const {
+   bool is_valid(Bit32u encoding) const {
      return ! is_reserved(encoding) && (vmcs_field_offset(encoding) != 0xffffffff);
    }
 };

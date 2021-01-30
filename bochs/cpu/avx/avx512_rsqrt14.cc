@@ -8239,7 +8239,7 @@ static const Bit16u rsqrt14_table1[32768] = {
 #include "simd_int.h"
 
 // approximate 14-bit sqrt reciprocal of scalar single precision FP
-float32 approximate_rsqrt14(float32 op, bx_bool daz)
+float32 approximate_rsqrt14(float32 op, bool daz)
 {
   float_class_t op_class = float32_class(op);
 
@@ -8296,7 +8296,7 @@ float32 approximate_rsqrt14(float32 op, bx_bool daz)
 }
 
 // approximate 14-bit sqrt reciprocal of scalar double precision FP
-float64 approximate_rsqrt14(float64 op, bx_bool daz)
+float64 approximate_rsqrt14(float64 op, bool daz)
 {
   float_class_t op_class = float64_class(op);
 

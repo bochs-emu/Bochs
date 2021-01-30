@@ -52,7 +52,7 @@ public:
        extensions[n] = ia_extensions_bitmask[n];
   }
 
-  BX_CPP_INLINE bx_bool is_cpu_extension_supported(unsigned extension) const {
+  BX_CPP_INLINE bool is_cpu_extension_supported(unsigned extension) const {
     assert(extension < BX_ISA_EXTENSION_LAST);
     return ia_extensions_bitmask[extension / 32] & (1 << (extension % 32));
   }

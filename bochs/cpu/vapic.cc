@@ -28,7 +28,7 @@
 
 #if BX_SUPPORT_VMX && BX_SUPPORT_X86_64
 
-bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::is_virtual_apic_page(bx_phy_address paddr)
+bool BX_CPP_AttrRegparmN(1) BX_CPU_C::is_virtual_apic_page(bx_phy_address paddr)
 {
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
@@ -39,7 +39,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::is_virtual_apic_page(bx_phy_address pad
   return false;
 }
 
-bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::virtual_apic_access_vmexit(unsigned offset, unsigned len)
+bool BX_CPP_AttrRegparmN(2) BX_CPU_C::virtual_apic_access_vmexit(unsigned offset, unsigned len)
 {
   if((offset & ~0x3) != ((offset+len-1) & ~0x3)) {
     BX_ERROR(("Virtual APIC access at offset 0x%08x spans 32-bit boundary !", offset));
@@ -87,7 +87,7 @@ bx_phy_address BX_CPU_C::VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned le
 
   Bit32u offset = PAGE_OFFSET(paddr);
 
-  bx_bool vmexit = virtual_apic_access_vmexit(offset, len);
+  bool vmexit = virtual_apic_access_vmexit(offset, len);
 
   // access is not instruction fetch because cpu::prefetch will crash them
   if (! vmexit) {
@@ -170,7 +170,7 @@ void BX_CPU_C::VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *
 
   Bit32u offset = PAGE_OFFSET(paddr);
 
-  bx_bool vmexit = virtual_apic_access_vmexit(offset, len);
+  bool vmexit = virtual_apic_access_vmexit(offset, len);
 
   if (! vmexit) {
 
@@ -236,7 +236,7 @@ void BX_CPU_C::VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *
 
 #if BX_SUPPORT_VMX >= 2
 
-BX_CPP_INLINE bx_bool vapic_read_vector(Bit32u *arr, Bit8u vector)
+BX_CPP_INLINE bool vapic_read_vector(Bit32u *arr, Bit8u vector)
 {
   unsigned apic_reg = vector / 32;
 
@@ -457,7 +457,7 @@ void BX_CPU_C::VMX_Virtual_Apic_Access_Trap(void)
   longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
 }
 
-bx_bool BX_CPU_C::Virtualize_X2APIC_Write(unsigned msr, Bit64u val_64)
+bool BX_CPU_C::Virtualize_X2APIC_Write(unsigned msr, Bit64u val_64)
 {
   if (msr == 0x808) {
     if ((val_64 >> 8) != 0)

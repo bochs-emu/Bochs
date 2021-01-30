@@ -1221,7 +1221,7 @@ static unsigned sreg_mod1or2_base32[8] = {
 
 extern const Bit8u *decodeModrm32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned mod, unsigned nnn, unsigned rm);
 extern const Bit8u *parseModrm32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, struct bx_modrm *modrm);
-extern int fetchImmediate(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, Bit16u ia_opcode, bx_bool is_64);
+extern int fetchImmediate(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, Bit16u ia_opcode, bool is_64);
 extern Bit16u findOpcode(const Bit64u *opMap, Bit32u opMsk);
 
 const Bit8u *parseModrm32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, struct bx_modrm *modrm)
@@ -1395,7 +1395,7 @@ modrm_done:
   return iptr;
 }
 
-int fetchImmediate(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, Bit16u ia_opcode, bx_bool is_64)
+int fetchImmediate(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, Bit16u ia_opcode, bool is_64)
 {
   for (unsigned n = 0; n <= 3; n++) {
     unsigned src = (unsigned) BxOpcodesTable[ia_opcode].src[n];
@@ -1712,9 +1712,9 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, unsigned nnn, 
 }
 
 #if BX_SUPPORT_AVX
-BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bx_bool is_64, unsigned nnn, unsigned rm, unsigned vvv, unsigned vex_w, bx_bool had_evex = false, bx_bool displ8 = false)
+BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bool is_64, unsigned nnn, unsigned rm, unsigned vvv, unsigned vex_w, bool had_evex = false, bool displ8 = false)
 {
-  bx_bool use_vvv = false;
+  bool use_vvv = false;
 #if BX_SUPPORT_EVEX
   unsigned displ8_scale = 1;
 #endif
@@ -1725,7 +1725,7 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bx_bool is_64,
     unsigned type = BX_DISASM_SRC_TYPE(src);
     src = BX_DISASM_SRC_ORIGIN(src);
 #if BX_SUPPORT_EVEX
-    bx_bool mem_src = false;
+    bool mem_src = false;
 #endif
 
     switch(src) {
@@ -1866,7 +1866,7 @@ int decoder_vex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
   if (sse_prefix)
     return(BX_IA_ERROR);
 
-  bx_bool vex_w = 0;
+  bool vex_w = 0;
   unsigned vex_opcext = 1;
   unsigned vex = *iptr++;
   remain--;
@@ -1895,7 +1895,7 @@ int decoder_vex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
   opcode_byte += 256 * vex_opcext;
   if (opcode_byte < 256 || opcode_byte >= 1024)
     return(ia_opcode);
-  bx_bool has_modrm = (opcode_byte != 0x177); // if not VZEROUPPER/VZEROALL opcode
+  bool has_modrm = (opcode_byte != 0x177); // if not VZEROUPPER/VZEROALL opcode
   opcode_byte -= 256;
 
   if (has_modrm) {
@@ -1943,7 +1943,7 @@ int decoder_vex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
 
   ia_opcode = findOpcode(BxOpcodeTableVEX[opcode_byte], decmask);
 
-  bx_bool has_immediate = (opcode_byte >= 0x70 && opcode_byte <= 0x73) || (opcode_byte >= 0xC2 && opcode_byte <= 0xC6) || (opcode_byte >= 0x200);
+  bool has_immediate = (opcode_byte >= 0x70 && opcode_byte <= 0x73) || (opcode_byte >= 0xC2 && opcode_byte <= 0xC6) || (opcode_byte >= 0x200);
   if (has_immediate) {
     if (remain != 0) {
       i->modRMForm.Ib[0] = *iptr;
@@ -1977,7 +1977,7 @@ int decoder_evex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
   }
 
 #if BX_SUPPORT_EVEX
-  bx_bool displ8 = false;
+  bool displ8 = false;
 
   if (sse_prefix)
     return(BX_IA_ERROR);
@@ -2079,7 +2079,7 @@ int decoder_evex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
 
   ia_opcode = findOpcode(BxOpcodeTableEVEX[opcode_byte], decmask);
 
-  bx_bool has_immediate = (opcode_byte >= 0x70 && opcode_byte <= 0x73) || (opcode_byte >= 0xC2 && opcode_byte <= 0xC6) || (opcode_byte >= 0x200);
+  bool has_immediate = (opcode_byte >= 0x70 && opcode_byte <= 0x73) || (opcode_byte >= 0xC2 && opcode_byte <= 0xC6) || (opcode_byte >= 0x200);
   if (has_immediate) {
     if (remain != 0) {
       i->modRMForm.Ib[0] = *iptr;
@@ -2137,7 +2137,7 @@ int decoder_xop32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
 
   vex = *iptr++; // fetch XOP3
 
-  bx_bool vex_w = (vex >> 7) & 0x1;
+  bool vex_w = (vex >> 7) & 0x1;
   int vvv = 15 - ((vex >> 3) & 0xf);
   unsigned vex_l = (vex >> 2) & 0x1;
   i->setVL(BX_VL128 + vex_l);
@@ -2371,7 +2371,7 @@ Bit16u findOpcode(const Bit64u *opMap, Bit32u decmask)
   return ia_opcode;
 }
 
-int fetchDecode32(const Bit8u *iptr, bx_bool is_32, bxInstruction_c *i, unsigned remainingInPage)
+int fetchDecode32(const Bit8u *iptr, bool is_32, bxInstruction_c *i, unsigned remainingInPage)
 {
   if (remainingInPage > 15) remainingInPage = 15;
   i->setILen(remainingInPage);
@@ -2383,7 +2383,7 @@ int fetchDecode32(const Bit8u *iptr, bx_bool is_32, bxInstruction_c *i, unsigned
 #if BX_SUPPORT_CET
   unsigned seg_override_cet = BX_SEG_REG_NULL;
 #endif
-  bx_bool os_32 = is_32, lock = 0;
+  bool os_32 = is_32, lock = 0;
   unsigned sse_prefix = SSE_PREFIX_NONE;
 
   i->init(/*os32*/ is_32,  /*as32*/ is_32,

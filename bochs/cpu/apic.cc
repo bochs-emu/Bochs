@@ -28,7 +28,7 @@
 
 #if BX_SUPPORT_APIC
 
-extern bx_bool simulate_xapic;
+extern bool simulate_xapic;
 
 #define LOG_THIS this->
 
@@ -39,7 +39,7 @@ const unsigned BX_LAPIC_LAST_VECTOR  = 0xff;
 
 ///////////// APIC BUS /////////////
 
-int apic_bus_deliver_interrupt(Bit8u vector, apic_dest_t dest, Bit8u delivery_mode, bx_bool logical_dest, bx_bool level, bx_bool trig_mode)
+int apic_bus_deliver_interrupt(Bit8u vector, apic_dest_t dest, Bit8u delivery_mode, bool logical_dest, bool level, bool trig_mode)
 {
   if(delivery_mode == APIC_DM_LOWPRI)
   {
@@ -76,7 +76,7 @@ int apic_bus_deliver_interrupt(Bit8u vector, apic_dest_t dest, Bit8u delivery_mo
     // logical destination mode
     if(dest == 0) return 0;
 
-    bx_bool interrupt_delivered = 0;
+    bool interrupt_delivered = 0;
 
     for (int i=0; i<BX_NUM_LOCAL_APICS; i++) {
       if(BX_CPU_APIC(i)->match_logical_addr(dest)) {
@@ -89,7 +89,7 @@ int apic_bus_deliver_interrupt(Bit8u vector, apic_dest_t dest, Bit8u delivery_mo
   }
 }
 
-int apic_bus_deliver_lowest_priority(Bit8u vector, apic_dest_t dest, bx_bool trig_mode, bx_bool broadcast)
+int apic_bus_deliver_lowest_priority(Bit8u vector, apic_dest_t dest, bool trig_mode, bool broadcast)
 {
   int i;
 
@@ -128,7 +128,7 @@ int apic_bus_deliver_lowest_priority(Bit8u vector, apic_dest_t dest, bx_bool tri
   return 0;
 }
 
-int apic_bus_broadcast_interrupt(Bit8u vector, Bit8u delivery_mode, bx_bool trig_mode, int exclude_cpu)
+int apic_bus_broadcast_interrupt(Bit8u vector, Bit8u delivery_mode, bool trig_mode, int exclude_cpu)
 {
   if(delivery_mode == APIC_DM_LOWPRI)
   {
@@ -302,7 +302,7 @@ void bx_local_apic_c::set_base(bx_phy_address newbase)
   }
 }
 
-bx_bool bx_local_apic_c::is_selected(bx_phy_address addr)
+bool bx_local_apic_c::is_selected(bx_phy_address addr)
 {
   if (mode != BX_APIC_XAPIC_MODE) return 0;
 
@@ -762,7 +762,7 @@ void bx_local_apic_c::startup_msg(Bit8u vector)
   cpu->deliver_SIPI(vector);
 }
 
-bx_bool bx_local_apic_c::get_vector(Bit32u *reg, unsigned vector)
+bool bx_local_apic_c::get_vector(Bit32u *reg, unsigned vector)
 {
   return (reg[vector / 32] >> (vector % 32)) & 0x1;
 }
@@ -823,7 +823,7 @@ void bx_local_apic_c::service_local_apic(void)
   cpu->signal_event(BX_EVENT_PENDING_LAPIC_INTR);
 }
 
-bx_bool bx_local_apic_c::deliver(Bit8u vector, Bit8u delivery_mode, Bit8u trig_mode)
+bool bx_local_apic_c::deliver(Bit8u vector, Bit8u delivery_mode, Bit8u trig_mode)
 {
   switch(delivery_mode) {
   case APIC_DM_FIXED:
@@ -858,7 +858,7 @@ bx_bool bx_local_apic_c::deliver(Bit8u vector, Bit8u delivery_mode, Bit8u trig_m
   return 1;
 }
 
-void bx_local_apic_c::trigger_irq(Bit8u vector, unsigned trigger_mode, bx_bool bypass_irr_isr)
+void bx_local_apic_c::trigger_irq(Bit8u vector, unsigned trigger_mode, bool bypass_irr_isr)
 {
   BX_DEBUG(("trigger interrupt vector=0x%02x", vector));
 
@@ -933,9 +933,9 @@ void bx_local_apic_c::print_status(void)
   BX_INFO(("}"));
 }
 
-bx_bool bx_local_apic_c::match_logical_addr(apic_dest_t address)
+bool bx_local_apic_c::match_logical_addr(apic_dest_t address)
 {
-  bx_bool match = 0;
+  bool match = 0;
 
 #if BX_CPU_LEVEL >= 6
   if (mode == BX_APIC_X2APIC_MODE) {
@@ -1015,7 +1015,7 @@ Bit8u bx_local_apic_c::get_apr(void)
   return(Bit8u) apr;
 }
 
-bx_bool bx_local_apic_c::is_focus(Bit8u vector)
+bool bx_local_apic_c::is_focus(Bit8u vector)
 {
   if(focus_disable) return 0;
   return get_vector(irr, vector) || get_vector(isr, vector);
@@ -1225,7 +1225,7 @@ void bx_local_apic_c::mwaitx_timer_expired(void *this_ptr)
   
 #if BX_CPU_LEVEL >= 6
 // return false when x2apic is not supported/not readable
-bx_bool bx_local_apic_c::read_x2apic(unsigned index, Bit64u *val_64)
+bool bx_local_apic_c::read_x2apic(unsigned index, Bit64u *val_64)
 {
   index = (index - 0x800) << 4;
 
@@ -1299,7 +1299,7 @@ bx_bool bx_local_apic_c::read_x2apic(unsigned index, Bit64u *val_64)
 }
 
 // return false when x2apic is not supported/not writeable
-bx_bool bx_local_apic_c::write_x2apic(unsigned index, Bit32u val32_hi, Bit32u val32_lo)
+bool bx_local_apic_c::write_x2apic(unsigned index, Bit32u val32_hi, Bit32u val32_lo)
 {
   index = (index - 0x800) << 4;
 

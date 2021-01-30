@@ -29,7 +29,7 @@
 #include "decoder/ia_opcodes.h"
 
 #if BX_SUPPORT_MONITOR_MWAIT
-bx_bool BX_CPU_C::is_monitor(bx_phy_address begin_addr, unsigned len)
+bool BX_CPU_C::is_monitor(bx_phy_address begin_addr, unsigned len)
 {
   if (! BX_CPU_THIS_PTR monitor.armed) return 0;
 
@@ -166,7 +166,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
     BX_NEXT_TRACE(i);
   }
 
-  static bx_bool mwait_is_nop = SIM->get_param_bool(BXPN_MWAIT_IS_NOP)->get();
+  static bool mwait_is_nop = SIM->get_param_bool(BXPN_MWAIT_IS_NOP)->get();
   if (mwait_is_nop) {
     BX_NEXT_TRACE(i);
   }

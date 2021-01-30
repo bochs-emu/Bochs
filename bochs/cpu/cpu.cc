@@ -636,7 +636,7 @@ void BX_CPU_C::prefetch(void)
 }
 
 #if BX_DEBUGGER || BX_GDBSTUB
-bx_bool BX_CPU_C::dbg_instruction_epilog(void)
+bool BX_CPU_C::dbg_instruction_epilog(void)
 {
 #if BX_DEBUGGER
   bx_address debug_eip = RIP;
@@ -734,7 +734,7 @@ bx_bool BX_CPU_C::dbg_instruction_epilog(void)
 #if (BX_DBG_MAX_PHY_BPOINTS > 0)
     if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_PHY) {
       bx_phy_address phy;
-      bx_bool valid = dbg_xlate_linear2phy(BX_CPU_THIS_PTR guard_found.laddr, &phy);
+      bool valid = dbg_xlate_linear2phy(BX_CPU_THIS_PTR guard_found.laddr, &phy);
       if (valid) {
         for (unsigned n=0; n<bx_guard.iaddr.num_physical; n++) {
           if (bx_guard.iaddr.phy[n].enabled && (bx_guard.iaddr.phy[n].addr == phy))

@@ -500,7 +500,7 @@ void BX_CPU_C::page_fault(unsigned fault, bx_address laddr, unsigned user, unsig
   }
 #endif
 #if BX_SUPPORT_CET
-  bx_bool is_shadow_stack = rw & 4;
+  bool is_shadow_stack = (rw & 4) != 0;
   if (is_shadow_stack)
     error_code |= ERROR_SHADOW_STACK;
 #endif
@@ -637,7 +637,7 @@ const Bit64u PAGING_PAE_PDE2M_RESERVED_BITS = BX_PAGING_PHY_ADDRESS_RESERVED_BIT
 // 63    | Execute-Disable (XD) (if EFER.NXE=1, reserved otherwise)
 // -----------------------------------------------------------
 
-int BX_CPU_C::check_entry_PAE(const char *s, Bit64u entry, Bit64u reserved, unsigned rw, bx_bool *nx_fault)
+int BX_CPU_C::check_entry_PAE(const char *s, Bit64u entry, Bit64u reserved, unsigned rw, bool *nx_fault)
 {
   if (!(entry & 0x1)) {
     BX_DEBUG(("PAE %s: entry not present", s));
@@ -687,7 +687,7 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
   Bit64u entry[4];
   BxMemtype entry_memtype[4] = { 0 };
 
-  bx_bool nx_fault = 0;
+  bool nx_fault = 0;
   int leaf;
 
   Bit64u offset_mask = BX_CONST64(0x0000ffffffffffff);
@@ -749,7 +749,7 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
     combined_access &= curr_entry; // U/S and R/W
   }
 
-  bx_bool isWrite = (rw & 1); // write or r-m-w
+  bool isWrite = (rw & 1); // write or r-m-w
 
 #if BX_SUPPORT_PKEYS
   if (rw != BX_EXECUTE) {
@@ -794,12 +794,12 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
 #endif
 
 #if BX_SUPPORT_CET
-  bx_bool shadow_stack = rw & 4;
+  bool shadow_stack = (rw & 4) != 0;
   if (shadow_stack) {
     // shadow stack pages:
     //  - R/W bit=1 in every paging structure entry except the leaf
     //  - R/W bit=0 and Dirty=1 for leaf entry
-    bx_bool shadow_stack_page = ((combined_access & BX_COMBINED_ACCESS_WRITE) != 0) && ((entry[leaf] & 0x40) != 0) && ((entry[leaf] & 0x02) == 0);
+    bool shadow_stack_page = ((combined_access & BX_COMBINED_ACCESS_WRITE) != 0) && ((entry[leaf] & 0x40) != 0) && ((entry[leaf] & 0x02) == 0);
     if (!shadow_stack_page) {
       BX_DEBUG(("shadow stack access to not shadow stack page CA=%x entry=%lx\n", combined_access, Bit32u(entry[leaf] & 0xfff)));
       page_fault(ERROR_PROTECTION, laddr, user, rw);
@@ -888,7 +888,7 @@ void BX_CPU_C::update_access_dirty_PAE(bx_phy_address *entry_addr, Bit64u *entry
 
 const Bit64u PAGING_PAE_PDPTE_RESERVED_BITS = BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0xFFF00000000001E6);
 
-bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckPDPTR(bx_phy_address cr3_val)
+bool BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckPDPTR(bx_phy_address cr3_val)
 {
   // with Nested Paging PDPTRs are not loaded for guest page tables but
   // accessed on demand as part of the guest page walk
@@ -927,7 +927,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckPDPTR(bx_phy_address cr3_val)
 }
 
 #if BX_SUPPORT_VMX >= 2
-bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckPDPTR(Bit64u *pdptr)
+bool BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckPDPTR(Bit64u *pdptr)
 {
   for (unsigned n=0; n<4; n++) {
      if (pdptr[n] & 0x1) {
@@ -981,7 +981,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
   bx_phy_address entry_addr[2];
   Bit64u entry[2];
   BxMemtype entry_memtype[2] = { 0 };
-  bx_bool nx_fault = 0;
+  bool nx_fault = 0;
   int leaf;
 
   lpf_mask = 0xfff;
@@ -1040,15 +1040,15 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
     combined_access &= curr_entry; // U/S and R/W
   }
 
-  bx_bool isWrite = (rw & 1); // write or r-m-w
+  bool isWrite = (rw & 1); // write or r-m-w
 
 #if BX_SUPPORT_CET
-  bx_bool shadow_stack = rw & 4;
+  bool shadow_stack = (rw & 4) != 0;
   if (shadow_stack) {
     // shadow stack pages:
     //  - R/W bit=1 in every paging structure entry except the leaf
     //  - R/W bit=0 and Dirty=1 for leaf entry
-    bx_bool shadow_stack_page = ((combined_access & BX_COMBINED_ACCESS_WRITE) != 0) && ((entry[leaf] & 0x40) != 0) && ((entry[leaf] & 0x02) == 0);
+    bool shadow_stack_page = ((combined_access & BX_COMBINED_ACCESS_WRITE) != 0) && ((entry[leaf] & 0x40) != 0) && ((entry[leaf] & 0x02) == 0);
     if (!shadow_stack_page)
       page_fault(ERROR_PROTECTION, laddr, user, rw);
 
@@ -1187,15 +1187,15 @@ bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_m
     combined_access &= curr_entry; // U/S and R/W
   }
 
-  bx_bool isWrite = (rw & 1); // write or r-m-w
+  bool isWrite = (rw & 1); // write or r-m-w
 
 #if BX_SUPPORT_CET
-  bx_bool shadow_stack = rw & 4;
+  bool shadow_stack = (rw & 4) != 0;
   if (shadow_stack) {
     // shadow stack pages:
     //  - R/W bit=1 in every paging structure entry except the leaf
     //  - R/W bit=0 and Dirty=1 for leaf entry
-    bx_bool shadow_stack_page = ((combined_access & BX_COMBINED_ACCESS_WRITE) != 0) && ((entry[leaf] & 0x40) != 0) && ((entry[leaf] & 0x02) == 0);
+    bool shadow_stack_page = ((combined_access & BX_COMBINED_ACCESS_WRITE) != 0) && ((entry[leaf] & 0x40) != 0) && ((entry[leaf] & 0x02) == 0);
     if (!shadow_stack_page)
       page_fault(ERROR_PROTECTION, laddr, user, rw);
 
@@ -1630,12 +1630,12 @@ void BX_CPU_C::nested_page_fault(unsigned fault, bx_phy_address guest_paddr, uns
   Svm_Vmexit(SVM_VMEXIT_NPF, error_code, guest_paddr);
 }
 
-bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsigned rw, bx_bool is_page_walk)
+bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsigned rw, bool is_page_walk)
 {
   bx_phy_address entry_addr[4];
   Bit64u entry[4];
   BxMemtype entry_memtype[4] = { BX_MEMTYPE_INVALID };
-  bx_bool nx_fault = 0;
+  bool nx_fault = 0;
   int leaf;
 
   SVM_CONTROLS *ctrls = &BX_CPU_THIS_PTR vmcb.ctrls;
@@ -1680,7 +1680,7 @@ bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsig
     }
   }
 
-  bx_bool isWrite = (rw & 1); // write or r-m-w
+  bool isWrite = (rw & 1); // write or r-m-w
 
   unsigned priv_index = (1<<3) /* user */ | (combined_access | isWrite);
 
@@ -1694,12 +1694,12 @@ bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsig
   return ppf | (bx_phy_address)(guest_paddr & offset_mask);	
 }
 
-bx_phy_address BX_CPU_C::nested_walk_PAE(bx_phy_address guest_paddr, unsigned rw, bx_bool is_page_walk)
+bx_phy_address BX_CPU_C::nested_walk_PAE(bx_phy_address guest_paddr, unsigned rw, bool is_page_walk)
 {
   bx_phy_address entry_addr[2];
   Bit64u entry[2];
   BxMemtype entry_memtype[2] = { BX_MEMTYPE_INVALID };
-  bx_bool nx_fault = 0;
+  bool nx_fault = 0;
   int leaf;
 
   unsigned combined_access = BX_COMBINED_ACCESS_WRITE | BX_COMBINED_ACCESS_USER;
@@ -1758,7 +1758,7 @@ bx_phy_address BX_CPU_C::nested_walk_PAE(bx_phy_address guest_paddr, unsigned rw
     }
   }
 
-  bx_bool isWrite = (rw & 1); // write or r-m-w
+  bool isWrite = (rw & 1); // write or r-m-w
 
   unsigned priv_index = (1<<3) /* user */ | (combined_access | isWrite);
 
@@ -1772,7 +1772,7 @@ bx_phy_address BX_CPU_C::nested_walk_PAE(bx_phy_address guest_paddr, unsigned rw
   return ppf | page_offset;
 }
 
-bx_phy_address BX_CPU_C::nested_walk_legacy(bx_phy_address guest_paddr, unsigned rw, bx_bool is_page_walk)
+bx_phy_address BX_CPU_C::nested_walk_legacy(bx_phy_address guest_paddr, unsigned rw, bool is_page_walk)
 {
   bx_phy_address entry_addr[2];
   Bit32u entry[2];
@@ -1816,7 +1816,7 @@ bx_phy_address BX_CPU_C::nested_walk_legacy(bx_phy_address guest_paddr, unsigned
     }
   }
 
-  bx_bool isWrite = (rw & 1); // write or r-m-w
+  bool isWrite = (rw & 1); // write or r-m-w
 
   unsigned priv_index = (1<<3) /* user */ | (combined_access | isWrite);
 
@@ -1829,7 +1829,7 @@ bx_phy_address BX_CPU_C::nested_walk_legacy(bx_phy_address guest_paddr, unsigned
   return ppf | page_offset;
 }
 
-bx_phy_address BX_CPU_C::nested_walk(bx_phy_address guest_paddr, unsigned rw, bx_bool is_page_walk)
+bx_phy_address BX_CPU_C::nested_walk(bx_phy_address guest_paddr, unsigned rw, bool is_page_walk)
 {
   SVM_HOST_STATE *host_state = &BX_CPU_THIS_PTR vmcb.host_state;
 
@@ -1894,7 +1894,7 @@ const Bit64u BX_SUPERVISOR_SHADOW_STACK_PAGE     = (BX_CONST64(1) << 60);
 
 const Bit64u PAGING_EPT_RESERVED_BITS = BX_PAGING_PHY_ADDRESS_RESERVED_BITS;
 
-bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx_address guest_laddr, bx_bool guest_laddr_valid, bx_bool is_page_walk, unsigned rw, bx_bool supervisor_shadow_stack)
+bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx_address guest_laddr, bool guest_laddr_valid, bool is_page_walk, unsigned rw, bool supervisor_shadow_stack)
 {
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
   bx_phy_address entry_addr[4], ppf = LPFOf(vm->eptptr);
@@ -1942,7 +1942,7 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
       break;
     }
 
-    extern bx_bool isMemTypeValidMTRR(unsigned memtype);
+    extern bool isMemTypeValidMTRR(unsigned memtype);
     if (! isMemTypeValidMTRR((curr_entry >> 3) & 7)) {
       BX_DEBUG(("EPT %s: EPT misconfiguration memtype=%d",
         bx_paging_level[leaf], (unsigned)((curr_entry >> 3) & 7)));
@@ -1997,7 +1997,7 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
       // The EPT.R bit is set in all EPT paging-structure entry controlling the translation
       // The EPT.W bit is set in all EPT paging-structure entry controlling the translation except the leaf entry (allowed for shadow stack write access)
       // The SSS bit (bit 60) is 1 in the EPT paging-structure entry maps the page
-      bx_bool supervisor_shadow_stack_page = ((combined_access & BX_EPT_ENTRY_READ_WRITE) == BX_EPT_ENTRY_READ_WRITE) && 
+      bool supervisor_shadow_stack_page = ((combined_access & BX_EPT_ENTRY_READ_WRITE) == BX_EPT_ENTRY_READ_WRITE) && 
                                              ((entry[leaf] & BX_EPT_READ) != 0) &&
                                              (((entry[leaf] & BX_EPT_WRITE) == 0) || !(access_mask & BX_EPT_WRITE)) &&
                                              ((entry[leaf] & BX_SUPERVISOR_SHADOW_STACK_PAGE) != 0);
@@ -2093,7 +2093,7 @@ const Bit64u PAGING_SPP_RESERVED_BITS = BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX
 
 const Bit32u VMX_SPP_NOT_PRESENT_QUALIFICATION = (1<<11);
 
-bx_bool BX_CPU_C::spp_walk(bx_phy_address guest_paddr, bx_address guest_laddr, BxMemtype memtype)
+bool BX_CPU_C::spp_walk(bx_phy_address guest_paddr, bx_address guest_laddr, BxMemtype memtype)
 {
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
   bx_phy_address entry_addr[4], ppf = LPFOf(vm->spptp);
@@ -2215,7 +2215,7 @@ void dbg_print_ept_paging_pte(int level, Bit64u entry)
 #endif // BX_DEBUGGER
 
 #if BX_SUPPORT_VMX >= 2
-bx_bool BX_CPU_C::dbg_translate_guest_physical(bx_phy_address guest_paddr, bx_phy_address *phy, bx_bool verbose)
+bool BX_CPU_C::dbg_translate_guest_physical(bx_phy_address guest_paddr, bx_phy_address *phy, bool verbose)
 {
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
   bx_phy_address pt_address = LPFOf(vm->eptptr);
@@ -2258,7 +2258,7 @@ bx_bool BX_CPU_C::dbg_translate_guest_physical(bx_phy_address guest_paddr, bx_ph
 }
 #endif
 
-bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx_address *lpf_mask, bx_bool verbose)
+bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx_address *lpf_mask, bool verbose)
 {
   bx_phy_address paddress;
   bx_address offset_mask = 0xfff;
@@ -2392,7 +2392,7 @@ int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_
 
   Bit32u pageOffset = PAGE_OFFSET(laddr);
 
-  bx_bool user = (curr_pl == 3);
+  bool user = (curr_pl == 3);
 
   bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(laddr, 0);
 
@@ -2500,7 +2500,7 @@ int BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_p
 
   Bit32u pageOffset = PAGE_OFFSET(laddr);
 
-  bx_bool user = (curr_pl == 3);
+  bool user = (curr_pl == 3);
 
 #if BX_SUPPORT_X86_64
   if (! IsCanonical(laddr)) {
@@ -2648,7 +2648,7 @@ bx_hostpageaddr_t BX_CPU_C::getHostMemAddr(bx_phy_address paddr, unsigned rw)
 }
 
 #if BX_LARGE_RAMFILE
-bx_bool BX_CPU_C::check_addr_in_tlb_buffers(const Bit8u *addr, const Bit8u *end)
+bool BX_CPU_C::check_addr_in_tlb_buffers(const Bit8u *addr, const Bit8u *end)
 {
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR vmcshostptr) {

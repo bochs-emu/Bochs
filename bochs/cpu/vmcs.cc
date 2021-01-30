@@ -89,12 +89,12 @@ void VMCS_Mapping::clear()
   }
 }
 
-bx_bool VMCS_Mapping::clear_mapping(Bit32u encoding)
+bool VMCS_Mapping::clear_mapping(Bit32u encoding)
 {
   return set_mapping(encoding, 0xffffffff);
 }
 
-bx_bool VMCS_Mapping::set_mapping(Bit32u encoding, Bit32u offset)
+bool VMCS_Mapping::set_mapping(Bit32u encoding, Bit32u offset)
 {
   if (is_reserved(encoding))
     return false;
@@ -131,7 +131,7 @@ void BX_CPU_C::init_VMCS(void)
 
   init_vmx_capabilities();
 
-  static bx_bool vmcs_map_ready = 0;
+  static bool vmcs_map_ready = 0;
   if (vmcs_map_ready) return;
   vmcs_map_ready = 1;
 
@@ -150,7 +150,7 @@ void BX_CPU_C::init_VMCS(void)
 #undef LOG_THIS
 #define LOG_THIS BX_CPU_THIS_PTR
 
-bx_bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
+bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
 {
   switch(encoding)
   {

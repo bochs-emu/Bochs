@@ -41,7 +41,7 @@ struct bx_cr0_t {
 
   // Accessors for all cr0 bitfields.
 #define IMPLEMENT_CRREG_ACCESSORS(name, bitnum)            \
-  BX_CPP_INLINE bx_bool get_##name() const {               \
+  BX_CPP_INLINE bool get_##name() const {               \
     return 1 & (val32 >> bitnum);                          \
   }                                                        \
   BX_CPP_INLINE void set_##name(Bit8u val) {               \
@@ -319,12 +319,12 @@ struct xcr0_t {
 };
 
 #if BX_USE_CPU_SMF
-typedef bx_bool (*XSaveStateInUsePtr_tR)(void);
+typedef bool (*XSaveStateInUsePtr_tR)(void);
 typedef void (*XSavePtr_tR)(bxInstruction_c *i, bx_address offset);
 typedef void (*XRestorPtr_tR)(bxInstruction_c *i, bx_address offset);
 typedef void (*XRestorInitPtr_tR)(void);
 #else
-typedef bx_bool (BX_CPU_C::*XSaveStateInUsePtr_tR)(void);
+typedef bool (BX_CPU_C::*XSaveStateInUsePtr_tR)(void);
 typedef void (BX_CPU_C::*XSavePtr_tR)(bxInstruction_c *i, bx_address offset);
 typedef void (BX_CPU_C::*XRestorPtr_tR)(bxInstruction_c *i, bx_address offset);
 typedef void (BX_CPU_C::*XRestorInitPtr_tR)(void);
@@ -367,7 +367,7 @@ typedef struct msr {
   BX_CPP_INLINE void reset() { val64 = reset_value; }
   BX_CPP_INLINE Bit64u get64() const { return val64; }
 
-  BX_CPP_INLINE bx_bool set64(Bit64u new_val) {
+  BX_CPP_INLINE bool set64(Bit64u new_val) {
      new_val = (new_val & ~ignored) | (val64 & ignored);
      switch(type) {
 #if BX_SUPPORT_X86_64

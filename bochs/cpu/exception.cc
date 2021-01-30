@@ -35,7 +35,7 @@
 #endif
 
 #if BX_SUPPORT_X86_64
-void BX_CPU_C::long_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_error, Bit16u error_code)
+void BX_CPU_C::long_mode_int(Bit8u vector, unsigned soft_int, bool push_error, Bit16u error_code)
 {
   bx_descriptor_t gate_descriptor, cs_descriptor;
   bx_selector_t cs_selector;
@@ -139,7 +139,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_error
   unsigned old_SS_DPL = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl;
   unsigned old_CPL = CPL;
   bx_address return_LIP = get_laddr(BX_SEG_REG_CS, RIP);
-  bx_bool check_ss_token = true;
+  bool check_ss_token = true;
 #endif
 
   Bit64u old_CS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
@@ -275,7 +275,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_error
 }
 #endif
 
-void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_error, Bit16u error_code)
+void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned soft_int, bool push_error, Bit16u error_code)
 {
   bx_descriptor_t gate_descriptor, cs_descriptor;
   bx_selector_t cs_selector;
@@ -722,7 +722,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned soft_int, bx_bool push_
   }
 }
 
-void BX_CPU_C::real_mode_int(Bit8u vector, bx_bool push_error, Bit16u error_code)
+void BX_CPU_C::real_mode_int(Bit8u vector, bool push_error, Bit16u error_code)
 {
   if ((vector*4+3) > BX_CPU_THIS_PTR idtr.limit) {
     BX_ERROR(("interrupt(real mode) vector > idtr.limit"));
@@ -753,7 +753,7 @@ void BX_CPU_C::real_mode_int(Bit8u vector, bx_bool push_error, Bit16u error_code
   BX_CPU_THIS_PTR clear_RF();
 }
 
-void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bx_bool push_error, Bit16u error_code)
+void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bool push_error, Bit16u error_code)
 {
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_intsig;
@@ -769,7 +769,7 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bx_bool push_error, Bit16u
 
   invalidate_prefetch_q();
 
-  bx_bool soft_int = 0;
+  bool soft_int = 0;
   switch(type) {
     case BX_SOFTWARE_INTERRUPT:
     case BX_SOFTWARE_EXCEPTION:
@@ -841,7 +841,7 @@ enum {
   BX_ET_DOUBLE_FAULT = 10
 };
 
-static const bx_bool is_exception_OK[3][3] = {
+static const bool is_exception_OK[3][3] = {
     { 1, 1, 1 }, /* 1st exception is BENIGN */
     { 1, 0, 1 }, /* 1st exception is CONTRIBUTORY */
     { 1, 0, 0 }  /* 1st exception is PAGE_FAULT */
@@ -895,7 +895,7 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
 {
   unsigned exception_type = 0;
   unsigned exception_class = BX_EXCEPTION_CLASS_FAULT;
-  bx_bool push_error = 0;
+  bool push_error = 0;
 
   if (vector < BX_CPU_HANDLED_EXCEPTIONS) {
      push_error = exceptions_info[vector].push_error;

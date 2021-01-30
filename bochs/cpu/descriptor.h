@@ -61,9 +61,9 @@ typedef struct
   unsigned valid;        // Holds above values, Or'd together. Used to
                          // hold only 0 or 1 once.
 
-  bx_bool p;             /* present */
+  bool p;                /* present */
   Bit8u   dpl;           /* descriptor privilege level 0..3 */
-  bx_bool segment;       /* 0 = system/gate, 1 = data/code segment */
+  bool segment;          /* 0 = system/gate, 1 = data/code segment */
   Bit8u   type;          /* For system & gate descriptors:
                           *  0 = invalid descriptor (reserved)
                           *  1 = 286 available Task State Segment (TSS)
@@ -127,12 +127,12 @@ union {
                             * limit for byte granular, and
                             * (limit << 12) | 0xfff for page granular seg's
                             */
-    bx_bool g;             /* granularity: 0=byte, 1=4K (page) */
-    bx_bool d_b;           /* default size: 0=16bit, 1=32bit */
+    bool g;                 /* granularity: 0=byte, 1=4K (page) */
+    bool d_b;               /* default size: 0=16bit, 1=32bit */
 #if BX_SUPPORT_X86_64
-    bx_bool l;             /* long mode: 0=compat, 1=64 bit */
+    bool l;                 /* long mode: 0=compat, 1=64 bit */
 #endif
-    bx_bool avl;           /* available for use by system */
+    bool avl;               /* available for use by system */
   } segment;
   struct {
     Bit8u   param_count;   /* 5bits (0..31) #words/dword to copy from caller's

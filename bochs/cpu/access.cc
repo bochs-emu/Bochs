@@ -44,8 +44,8 @@ bx_address bx_asize_mask[] = {
   #endif
 #endif
 
-  bx_bool BX_CPP_AttrRegparmN(4)
-BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned length, bx_bool align)
+  bool BX_CPP_AttrRegparmN(4)
+BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned length, bool align)
 {
   Bit32u upper_limit;
 
@@ -123,8 +123,8 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned le
   return 1;
 }
 
-  bx_bool BX_CPP_AttrRegparmN(4)
-BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned length, bx_bool align)
+  bool BX_CPP_AttrRegparmN(4)
+BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned length, bool align)
 {
   Bit32u upper_limit;
 
@@ -198,7 +198,7 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len
   return 1;
 }
 
-  bx_bool BX_CPP_AttrRegparmN(3)
+  bool BX_CPP_AttrRegparmN(3)
 BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned length)
 {
   Bit32u upper_limit;
@@ -468,7 +468,7 @@ BX_CPU_C::system_write_dword(bx_address laddr, Bit32u data)
 }
 
   Bit8u* BX_CPP_AttrRegparmN(2)
-BX_CPU_C::v2h_read_byte(bx_address laddr, bx_bool user)
+BX_CPU_C::v2h_read_byte(bx_address laddr, bool user)
 {
   bx_address lpf = LPFOf(laddr);
   bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(laddr, 0);
@@ -487,7 +487,7 @@ BX_CPU_C::v2h_read_byte(bx_address laddr, bx_bool user)
 }
 
   Bit8u* BX_CPP_AttrRegparmN(2)
-BX_CPU_C::v2h_write_byte(bx_address laddr, bx_bool user)
+BX_CPU_C::v2h_write_byte(bx_address laddr, bool user)
 {
   bx_address lpf = LPFOf(laddr);
   bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(laddr, 0);

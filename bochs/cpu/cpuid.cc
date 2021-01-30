@@ -442,7 +442,7 @@ void bx_cpuid_t::get_leaf_0(unsigned max_leaf, const char *vendor_string, cpuid_
   // ECX: vendor ID string
   if (max_leaf < 0x80000000 && max_leaf > 0x2) {
     // do not limit extended CPUID leafs
-    static bx_bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
+    static bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
     if (cpuid_limit_winnt)
       max_leaf = (limited_max_leaf < 0x02) ? limited_max_leaf : 0x02;
   }

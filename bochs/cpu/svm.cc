@@ -183,7 +183,7 @@ BX_CPP_INLINE void BX_CPU_C::svm_segment_read(bx_segment_reg_t *seg, unsigned of
   Bit16u attr = vmcb_read16(offset + 2);
   Bit32u limit = vmcb_read32(offset + 4);
   bx_address base = CanonicalizeAddress(vmcb_read64(offset + 8));
-  bx_bool valid = (attr >> 7) & 1;
+  bool valid = (attr >> 7) & 1;
 
   set_segment_ar_data(seg, valid, selector, base, limit,
        (attr & 0xff) | ((attr & 0xf00) << 4));
@@ -302,9 +302,9 @@ void BX_CPU_C::SvmExitSaveGuestState(void)
   clear_event(BX_EVENT_SVM_VIRQ_PENDING);
 }
 
-extern bx_bool isValidMSR_PAT(Bit64u pat_msr);
+extern bool isValidMSR_PAT(Bit64u pat_msr);
 
-bx_bool BX_CPU_C::SvmEnterLoadCheckControls(SVM_CONTROLS *ctrls)
+bool BX_CPU_C::SvmEnterLoadCheckControls(SVM_CONTROLS *ctrls)
 {
   ctrls->cr_rd_ctrl = vmcb_read16(SVM_CONTROL16_INTERCEPT_CR_READ);
   ctrls->cr_wr_ctrl = vmcb_read16(SVM_CONTROL16_INTERCEPT_CR_WRITE);
@@ -389,12 +389,12 @@ bx_bool BX_CPU_C::SvmEnterLoadCheckControls(SVM_CONTROLS *ctrls)
   return 1;
 }
 
-bx_bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
+bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
 {
   SVM_GUEST_STATE guest;
   Bit32u tmp;
   unsigned n;
-  bx_bool paged_real_mode = 0;
+  bool paged_real_mode = 0;
 
   guest.eflags = vmcb_read32(SVM_GUEST_RFLAGS);
   guest.rip = vmcb_read64(SVM_GUEST_RIP);
@@ -673,7 +673,7 @@ void BX_CPU_C::Svm_Vmexit(int reason, Bit64u exitinfo1, Bit64u exitinfo2)
 
 extern struct BxExceptionInfo exceptions_info[];
 
-bx_bool BX_CPU_C::SvmInjectEvents(void)
+bool BX_CPU_C::SvmInjectEvents(void)
 {
   SVM_CONTROLS *ctrls = &BX_CPU_THIS_PTR vmcb.ctrls;
 
@@ -734,7 +734,7 @@ bx_bool BX_CPU_C::SvmInjectEvents(void)
   return 1;
 }
 
-void BX_CPU_C::SvmInterceptException(unsigned type, unsigned vector, Bit16u errcode, bx_bool errcode_valid, Bit64u qualification)
+void BX_CPU_C::SvmInterceptException(unsigned type, unsigned vector, Bit16u errcode, bool errcode_valid, Bit64u qualification)
 {
   if (! BX_CPU_THIS_PTR in_svm_guest) return;
 
@@ -880,7 +880,7 @@ void BX_CPU_C::SvmInterceptMSR(unsigned op, Bit32u msr)
 
   BX_ASSERT(op == BX_READ || op == BX_WRITE);
 
-  bx_bool vmexit = 1;
+  bool vmexit = 1;
 
   int msr_map_offset = -1;
   if (msr <= 0x1fff) msr_map_offset = 0;
@@ -904,7 +904,7 @@ void BX_CPU_C::SvmInterceptMSR(unsigned op, Bit32u msr)
   }
 }
 
-void BX_CPU_C::SvmInterceptTaskSwitch(Bit16u tss_selector, unsigned source, bx_bool push_error, Bit32u error_code)
+void BX_CPU_C::SvmInterceptTaskSwitch(Bit16u tss_selector, unsigned source, bool push_error, Bit32u error_code)
 {
   BX_ASSERT(BX_CPU_THIS_PTR in_svm_guest);
 

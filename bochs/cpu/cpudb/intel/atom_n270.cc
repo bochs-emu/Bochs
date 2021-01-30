@@ -67,7 +67,7 @@ void atom_n270_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_func
 {
   static const char* brand_string = "         Intel(R) Atom(TM) CPU N270   @ 1.60GHz";
 
-  static bx_bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
+  static bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
   if (cpuid_limit_winnt)
     if (function > 2 && function < 0x80000000) function = 2;
 

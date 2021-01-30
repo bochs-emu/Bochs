@@ -978,7 +978,7 @@ bx_address BX_CPU_C::read_CR4(void)
 }
 #endif
 
-bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::check_CR0(bx_address cr0_val)
+bool BX_CPP_AttrRegparmN(1) BX_CPU_C::check_CR0(bx_address cr0_val)
 {
   bx_cr0_t temp_cr0;
 
@@ -1026,7 +1026,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::check_CR0(bx_address cr0_val)
   return 1;
 }
 
-bx_bool BX_CPU_C::SetCR0(bxInstruction_c *i, bx_address val)
+bool BX_CPU_C::SetCR0(bxInstruction_c *i, bx_address val)
 {
   if (! check_CR0(val)) return 0;
 
@@ -1040,7 +1040,7 @@ bx_bool BX_CPU_C::SetCR0(bxInstruction_c *i, bx_address val)
 #endif
 
 #if BX_CPU_LEVEL >= 6
-  bx_bool pg = (val_32 >> 31) & 0x1;
+  bool pg = (val_32 >> 31) & 0x1;
 #endif
 
 #if BX_SUPPORT_X86_64
@@ -1266,7 +1266,7 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
   return allowMask;
 }
 
-bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::check_CR4(bx_address cr4_val)
+bool BX_CPP_AttrRegparmN(1) BX_CPU_C::check_CR4(bx_address cr4_val)
 {
   // check if trying to set undefined bits
   if (cr4_val & ~((bx_address) BX_CPU_THIS_PTR cr4_suppmask)) {
@@ -1310,7 +1310,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::check_CR4(bx_address cr4_val)
   return 1;
 }
 
-bx_bool BX_CPU_C::SetCR4(bxInstruction_c *i, bx_address val)
+bool BX_CPU_C::SetCR4(bxInstruction_c *i, bx_address val)
 {
   if (! check_CR4(val)) return 0;
 
@@ -1375,7 +1375,7 @@ bx_bool BX_CPU_C::SetCR4(bxInstruction_c *i, bx_address val)
 }
 #endif // BX_CPU_LEVEL >= 5
 
-bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR3(bx_address val)
+bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR3(bx_address val)
 {
 #if BX_SUPPORT_X86_64
   if (long_mode()) {
@@ -1400,7 +1400,7 @@ bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR3(bx_address val)
 }
 
 #if BX_CPU_LEVEL >= 5
-bx_bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetEFER(bx_address val_64)
+bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetEFER(bx_address val_64)
 {
   Bit32u val32 = (Bit32u) val_64;
 
@@ -1542,7 +1542,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLTS(bxInstruction_c *i)
 
 #if BX_X86_DEBUGGER
 
-bx_bool BX_CPU_C::hwbreakpoint_check(bx_address laddr, unsigned opa, unsigned opb)
+bool BX_CPU_C::hwbreakpoint_check(bx_address laddr, unsigned opa, unsigned opb)
 {
   laddr = LPFOf(laddr);
 

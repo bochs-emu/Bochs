@@ -956,7 +956,7 @@ void BX_CPU_C::write_RMW_linear_dqword(Bit64u hi, Bit64u lo)
 
 void BX_CPU_C::write_new_stack_word(bx_address laddr, unsigned curr_pl, Bit16u data)
 {
-  bx_bool user = (curr_pl == 3);
+  bool user = (curr_pl == 3);
   bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(laddr, 1);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
   bx_address lpf = AlignedAccessLPFOf(laddr, (1 & BX_CPU_THIS_PTR alignment_check_mask));
@@ -983,7 +983,7 @@ void BX_CPU_C::write_new_stack_word(bx_address laddr, unsigned curr_pl, Bit16u d
 
 void BX_CPU_C::write_new_stack_dword(bx_address laddr, unsigned curr_pl, Bit32u data)
 {
-  bx_bool user = (curr_pl == 3);
+  bool user = (curr_pl == 3);
   bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(laddr, 3);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
   bx_address lpf = AlignedAccessLPFOf(laddr, (3 & BX_CPU_THIS_PTR alignment_check_mask));
@@ -1010,7 +1010,7 @@ void BX_CPU_C::write_new_stack_dword(bx_address laddr, unsigned curr_pl, Bit32u 
 
 void BX_CPU_C::write_new_stack_qword(bx_address laddr, unsigned curr_pl, Bit64u data)
 {
-  bx_bool user = (curr_pl == 3);
+  bool user = (curr_pl == 3);
   bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(laddr, 7);
 #if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
   bx_address lpf = AlignedAccessLPFOf(laddr, (7 & BX_CPU_THIS_PTR alignment_check_mask));
@@ -1121,7 +1121,7 @@ Bit32u BX_CPP_AttrRegparmN(2) BX_CPU_C::shadow_stack_read_dword(bx_address offse
 {
   Bit32u data;
 
-  bx_bool user = (curr_pl == 3);
+  bool user = (curr_pl == 3);
   bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(offset, 3);
   bx_address lpf = AlignedAccessLPFOf(offset, 3);
   if (tlbEntry->lpf == lpf) {
@@ -1146,7 +1146,7 @@ Bit64u BX_CPP_AttrRegparmN(2) BX_CPU_C::shadow_stack_read_qword(bx_address offse
 {
   Bit64u data;
 
-  bx_bool user = (curr_pl == 3);
+  bool user = (curr_pl == 3);
   bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(offset, 7);
   bx_address lpf = AlignedAccessLPFOf(offset, 7);
   if (tlbEntry->lpf == lpf) {
@@ -1169,7 +1169,7 @@ Bit64u BX_CPP_AttrRegparmN(2) BX_CPU_C::shadow_stack_read_qword(bx_address offse
 
 void BX_CPP_AttrRegparmN(3) BX_CPU_C::shadow_stack_write_dword(bx_address offset, unsigned curr_pl, Bit32u data)
 {
-  bx_bool user = (curr_pl == 3);
+  bool user = (curr_pl == 3);
   bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(offset, 3);
   bx_address lpf = AlignedAccessLPFOf(offset, 3);
   if (tlbEntry->lpf == lpf) {
@@ -1192,7 +1192,7 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::shadow_stack_write_dword(bx_address offset
 
 void BX_CPP_AttrRegparmN(3) BX_CPU_C::shadow_stack_write_qword(bx_address offset, unsigned curr_pl, Bit64u data)
 {
-  bx_bool user = (curr_pl == 3);
+  bool user = (curr_pl == 3);
   bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(offset, 7);
   bx_address lpf = AlignedAccessLPFOf(offset, 7);
   if (tlbEntry->lpf == lpf) {
@@ -1213,7 +1213,7 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::shadow_stack_write_qword(bx_address offset
     exception(BX_GP_EXCEPTION, 0);
 }
 
-bx_bool BX_CPP_AttrRegparmN(4) BX_CPU_C::shadow_stack_lock_cmpxchg8b(bx_address offset, unsigned curr_pl, Bit64u data, Bit64u expected_data)
+bool BX_CPP_AttrRegparmN(4) BX_CPU_C::shadow_stack_lock_cmpxchg8b(bx_address offset, unsigned curr_pl, Bit64u data, Bit64u expected_data)
 {
   Bit64u val64 = shadow_stack_read_qword(offset, curr_pl);
   if (val64 == expected_data) {
@@ -1226,12 +1226,12 @@ bx_bool BX_CPP_AttrRegparmN(4) BX_CPU_C::shadow_stack_lock_cmpxchg8b(bx_address 
   }
 }
 
-bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::shadow_stack_atomic_set_busy(bx_address offset, unsigned curr_pl)
+bool BX_CPP_AttrRegparmN(2) BX_CPU_C::shadow_stack_atomic_set_busy(bx_address offset, unsigned curr_pl)
 {
   return shadow_stack_lock_cmpxchg8b(offset, curr_pl, offset | 0x1, offset);
 }
 
-bx_bool BX_CPP_AttrRegparmN(2) BX_CPU_C::shadow_stack_atomic_clear_busy(bx_address offset, unsigned curr_pl)
+bool BX_CPP_AttrRegparmN(2) BX_CPU_C::shadow_stack_atomic_clear_busy(bx_address offset, unsigned curr_pl)
 {
   return shadow_stack_lock_cmpxchg8b(offset, curr_pl, offset, offset | 0x1);
 }

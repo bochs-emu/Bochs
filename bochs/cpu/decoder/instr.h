@@ -207,7 +207,7 @@ public:
   // Info in the metaInfo field.
   // Note: the 'L' at the end of certain flags, means the value returned
   // is for Logical comparisons, eg if (i->os32L() && i->as32L()).  If you
-  // want a bx_bool value, use os32B() etc.  This makes for smaller
+  // want a bool value, use os32B() etc.  This makes for smaller
   // code, when a strict 0 or 1 is not necessary.
   BX_CPP_INLINE void init(unsigned os32, unsigned as32, unsigned os64, unsigned as64)
   {
@@ -305,7 +305,7 @@ public:
   BX_CPP_INLINE void setLock(void) {
     setLockRepUsed(BX_LOCK_PREFIX_USED);
   }
-  BX_CPP_INLINE bx_bool getLock(void) const {
+  BX_CPP_INLINE bool getLock(void) const {
     return lockRepUsedValue() == BX_LOCK_PREFIX_USED;
   }
 
