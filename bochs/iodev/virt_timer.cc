@@ -58,6 +58,7 @@
 /////////////////////////////////////////////////////////////////////////
 
 #include "bochs.h"
+#include "gui/siminterface.h"
 #include "param_names.h"
 #include "virt_timer.h"
 

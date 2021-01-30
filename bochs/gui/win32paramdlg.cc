@@ -20,6 +20,7 @@
 
 #include "win32dialog.h"
 #include "bochs.h"
+#include "siminterface.h"
 #include "win32res.h"
 
 #if BX_USE_WIN32CONFIG

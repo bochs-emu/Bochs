@@ -23,6 +23,7 @@
 
 #include "bochs.h"
 #include "cpu.h"
+#include "gui/siminterface.h"
 #include "param_names.h"
 #include "phenomx3_8650_toliman.h"
 

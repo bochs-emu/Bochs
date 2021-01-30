@@ -22,6 +22,7 @@
 /////////////////////////////////////////////////////////////////////////
 
 #include "bochs.h"
+#include "gui/siminterface.h"
 #include "cpu.h"
 #include "param_names.h"
 #include "generic_cpuid.h"

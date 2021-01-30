@@ -23,6 +23,7 @@
 
 #include "bochs.h"
 #include "cpu.h"
+#include "gui/siminterface.h"
 #include "param_names.h"
 #include "atom_n270.h"
 

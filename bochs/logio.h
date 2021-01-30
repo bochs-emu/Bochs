@@ -23,6 +23,25 @@
 #ifndef BX_LOGIO_H
 #define BX_LOGIO_H
 
+// Log level defines
+typedef enum {
+  LOGLEV_DEBUG = 0,
+  LOGLEV_INFO,
+  LOGLEV_ERROR,
+  LOGLEV_PANIC,
+  N_LOGLEV
+} bx_log_levels;
+
+// Log action defines
+typedef enum {
+  ACT_IGNORE = 0,
+  ACT_REPORT,
+  ACT_WARN,
+  ACT_ASK,
+  ACT_FATAL,
+  N_ACT
+} bx_log_actions;
+
 typedef class BOCHSAPI logfunctions
 {
   char *name;
@@ -145,5 +164,7 @@ typedef class iofunctions iofunc_t;
 
 BOCHSAPI extern iofunc_t *io;
 BOCHSAPI extern logfunc_t *genlog;
+
+#define BX_NULL_PREFIX  "[      ]"
 
 #endif

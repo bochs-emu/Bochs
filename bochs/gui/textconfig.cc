@@ -51,6 +51,7 @@ extern "C" {
 #include "osdep.h"
 #include "param_names.h"
 #include "textconfig.h"
+#include "logio.h"
 #include "siminterface.h"
 
 #define CI_PATH_LENGTH 512

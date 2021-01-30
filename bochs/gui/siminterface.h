@@ -19,6 +19,10 @@
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 //
 /////////////////////////////////////////////////////////////////////////
+
+#ifndef BX_SIM_INTERFACE_H
+#define BX_SIM_INTERFACE_H
+
 //
 // Intro to siminterface by Bryce Denney:
 //
@@ -126,19 +130,6 @@
 // base value for generated new parameter id
 #define BXP_NEW_PARAM_ID 1001
 
-enum {
-#define bx_define_cpudb(model) bx_cpudb_##model,
-#include "cpudb.h"
-  bx_cpudb_model_last
-};
-#undef bx_define_cpudb
-
-#if BX_SUPPORT_SMP
-  #define BX_SMP_PROCESSORS (bx_cpu_count)
-#else
-  #define BX_SMP_PROCESSORS 1
-#endif
-
 typedef enum {
   BX_TOOLBAR_UNDEFINED,
   BX_TOOLBAR_FLOPPYA,
@@ -155,27 +146,6 @@ typedef enum {
   BX_TOOLBAR_USER
 } bx_toolbar_buttons;
 
-// Log level defines
-typedef enum {
-  LOGLEV_DEBUG = 0,
-  LOGLEV_INFO,
-  LOGLEV_ERROR,
-  LOGLEV_PANIC,
-  N_LOGLEV
-} bx_log_levels;
-
-// Log action defines
-typedef enum {
-  ACT_IGNORE = 0,
-  ACT_REPORT,
-  ACT_WARN,
-  ACT_ASK,
-  ACT_FATAL,
-  N_ACT
-} bx_log_actions;
-
-#define BX_NULL_PREFIX  "[      ]"
-
 // normally all action choices are available for all event types. The exclude
 // expression allows some choices to be eliminated if they don't make any
 // sense.  For example, it would be stupid to ignore a panic.
@@ -187,8 +157,7 @@ typedef enum {
    )
 
 // floppy / cdrom media status
-#define BX_EJECTED  0
-#define BX_INSERTED 1
+enum { BX_EJECTED = 0, BX_INSERTED = 1 };
 
 // boot devices (using the same values as the rombios)
 enum {
@@ -866,4 +835,5 @@ typedef struct BOCHSAPI {
 
 BOCHSAPI extern bx_startup_flags_t bx_startup_flags;
 BOCHSAPI extern bool bx_user_quit;
-BOCHSAPI extern Bit8u bx_cpu_count;
+
+#endif

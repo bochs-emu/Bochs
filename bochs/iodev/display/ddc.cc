@@ -26,6 +26,7 @@
 #define BX_PLUGGABLE
 
 #include "bochs.h"
+#include "gui/siminterface.h"
 #include "ddc.h"
 #include "param_names.h"
 

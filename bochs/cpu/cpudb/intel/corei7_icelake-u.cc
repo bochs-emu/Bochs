@@ -23,6 +23,7 @@
 
 #include "bochs.h"
 #include "cpu/cpu.h"
+#include "gui/siminterface.h"
 #include "param_names.h"
 #include "corei7_icelake-u.h"
 

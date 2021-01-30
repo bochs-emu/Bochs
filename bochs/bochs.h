@@ -103,7 +103,7 @@ extern "C" {
 
 #include "osdep.h"       /* platform dependent includes and defines */
 #include "bx_debug/debug.h"
-#include "gui/siminterface.h"
+#include "gui/paramtree.h"
 
 // BX_SHARE_PATH should be defined by the makefile.  If not, give it
 // a value of NULL to avoid compile problems.
@@ -302,6 +302,20 @@ void CDECL bx_signal_handler(int signum);
 int bx_atexit(void);
 BOCHSAPI extern bx_debug_t bx_dbg;
 
+enum {
+#define bx_define_cpudb(model) bx_cpudb_##model,
+#include "cpudb.h"
+  bx_cpudb_model_last
+};
+#undef bx_define_cpudb
+
+#if BX_SUPPORT_SMP
+  #define BX_SMP_PROCESSORS (bx_cpu_count)
+#else
+  #define BX_SMP_PROCESSORS 1
+#endif
+
+BOCHSAPI extern Bit8u bx_cpu_count;
 #if BX_SUPPORT_APIC
 // determinted by XAPIC option
 BOCHSAPI extern Bit32u apic_id_mask;

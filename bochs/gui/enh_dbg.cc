@@ -17,6 +17,7 @@
 #include <math.h>
 
 #include "bochs.h"
+#include "siminterface.h"
 #include "pc_system.h"
 #include "cpu/cpu.h"
 

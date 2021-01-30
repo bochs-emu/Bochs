@@ -11,6 +11,7 @@
 //  Copyright (C) 2008-2021  The Bochs Project
 
 #include "bochs.h"
+#include "siminterface.h"
 #include "win32dialog.h"
 #include "enh_dbg.h"
 

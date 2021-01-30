@@ -22,6 +22,7 @@
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
+#include "gui/siminterface.h"
 #include "param_names.h"
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR

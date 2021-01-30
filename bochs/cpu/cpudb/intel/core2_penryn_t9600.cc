@@ -23,6 +23,7 @@
 
 #include "bochs.h"
 #include "cpu.h"
+#include "gui/siminterface.h"
 #include "param_names.h"
 #include "core2_penryn_t9600.h"
 

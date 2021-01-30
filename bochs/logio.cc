@@ -21,6 +21,7 @@
 /////////////////////////////////////////////////////////////////////////
 
 #include "bochs.h"
+#include "gui/siminterface.h"
 #include "pc_system.h"
 #include "bxthread.h"
 #include "cpu/cpu.h"
