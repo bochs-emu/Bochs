@@ -63,7 +63,7 @@ public:
   virtual void register_state(void) {}
 
   virtual void start_fifo_thread(void);
-  virtual void refresh_display(void *this_ptr, bx_bool redraw);
+  virtual void refresh_display(void *this_ptr, bool redraw);
   virtual void redraw_area(unsigned x0, unsigned y0,
                            unsigned width, unsigned height);
   virtual void update(void);

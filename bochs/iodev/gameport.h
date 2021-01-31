@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2003-2009  The Bochs Project
+//  Copyright (C) 2003-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -38,10 +38,10 @@ public:
   virtual void init(void);
   virtual void reset(unsigned type);
   virtual void register_state(void);
-  virtual void set_enabled(bx_bool val) {enabled = val;}
+  virtual void set_enabled(bool val) {enabled = val;}
 
 private:
-  bx_bool enabled;
+  bool    enabled;
   int     joyfd;
   Bit8u   port;
   Bit16u  delay_x;

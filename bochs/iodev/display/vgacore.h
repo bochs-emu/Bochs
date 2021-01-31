@@ -71,7 +71,7 @@ class bx_nonvga_device_c : public bx_pci_device_c {
 public:
   virtual void redraw_area(unsigned x0, unsigned y0,
                            unsigned width, unsigned height) {}
-  virtual void refresh_display(void *this_ptr, bx_bool redraw) {}
+  virtual void refresh_display(void *this_ptr, bool redraw) {}
   virtual void update(void) {}
 };
 #endif
@@ -86,7 +86,7 @@ public:
   static bool    mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
   virtual Bit8u  mem_read(bx_phy_address addr);
   virtual void   mem_write(bx_phy_address addr, Bit8u value);
-  virtual void   set_override(bx_bool enabled, void *dev);
+  virtual void   set_override(bool enabled, void *dev);
   void           vgacore_register_state(bx_list_c *parent);
   virtual void   after_restore_state(void);
 #if BX_DEBUGGER
@@ -97,7 +97,7 @@ public:
                                  unsigned height);
   virtual void   redraw_area(unsigned x0, unsigned y0, unsigned width,
                              unsigned height);
-  virtual void   refresh_display(void *this_ptr, bx_bool redraw);
+  virtual void   refresh_display(void *this_ptr, bool redraw);
   virtual void   get_text_snapshot(Bit8u **text_snapshot, unsigned *txHeight,
                                    unsigned *txWidth);
   virtual bx_bool init_vga_extension(void) {return 0;}

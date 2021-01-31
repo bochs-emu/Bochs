@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2020  The Bochs Project
+//  Copyright (C) 2002-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -36,7 +36,7 @@ public:
   virtual ~bx_piix3_c();
   virtual void init(void);
   virtual void reset(unsigned type);
-  virtual void pci_set_irq(Bit8u devfunc, unsigned line, bx_bool level);
+  virtual void pci_set_irq(Bit8u devfunc, unsigned line, bool level);
   virtual void register_state(void);
   virtual void after_restore_state(void);
 

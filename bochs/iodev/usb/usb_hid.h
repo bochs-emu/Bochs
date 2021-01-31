@@ -8,7 +8,7 @@
 //
 // Copyright (c) 2005       Fabrice Bellard
 // Copyright (c) 2007       OpenMoko, Inc.  (andrew@openedhand.com)
-// Copyright (C) 2009-2020  The Bochs Project
+// Copyright (C) 2009-2021  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -63,13 +63,13 @@ private:
 
   int timer_index;
 
-  static bx_bool gen_scancode_static(void *dev, Bit32u key);
-  bx_bool gen_scancode(Bit32u key);
+  static bool gen_scancode_static(void *dev, Bit32u key);
+  bool gen_scancode(Bit32u key);
   static Bit8u kbd_get_elements_static(void *dev);
   Bit8u kbd_get_elements(void);
-  static void mouse_enabled_changed(void *dev, bx_bool enabled);
-  static void mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy);
-  void mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy);
+  static void mouse_enabled_changed(void *dev, bool enabled);
+  static void mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state, bool absxy);
+  void mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state, bool absxy);
   int mouse_poll(Bit8u *buf, int len, bx_bool force);
   int create_mouse_packet(Bit8u *buf, int len);
   int get_mouse_packet(Bit8u *buf, int len);

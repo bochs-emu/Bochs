@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2012  The Bochs Project
+//  Copyright (C) 2002-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -82,9 +82,9 @@ public:
   virtual void debug_dump(int argc, char **argv);
 #endif
 
-  virtual void set_enabled(bx_bool enabled, Bit16u base_offset);
+  virtual void set_enabled(bool enabled, Bit16u base_offset);
   virtual void receive_eoi(Bit8u vector);
-  virtual void set_irq_level(Bit8u int_in, bx_bool level);
+  virtual void set_irq_level(Bit8u int_in, bool level);
 
   Bit32u read_aligned(bx_phy_address address);
   void write_aligned(bx_phy_address address, Bit32u data);
@@ -95,7 +95,7 @@ private:
 
   void service_ioapic(void);
 
-  bx_bool enabled;
+  bool enabled;
   bx_phy_address base_addr;
   Bit32u id;
 

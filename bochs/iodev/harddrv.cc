@@ -3354,7 +3354,7 @@ bx_bool bx_hard_drive_c::set_cd_media_status(Bit32u handle, bx_bool status)
   return (BX_HD_THIS channels[channel].drives[device].cdrom.ready);
 }
 
-bx_bool bx_hard_drive_c::bmdma_present(void)
+bool bx_hard_drive_c::bmdma_present(void)
 {
   #if BX_SUPPORT_PCI
     if (BX_HD_THIS pci_enabled) {
@@ -3368,7 +3368,7 @@ bx_bool bx_hard_drive_c::bmdma_present(void)
 }
 
 #if BX_SUPPORT_PCI
-bx_bool bx_hard_drive_c::bmdma_read_sector(Bit8u channel, Bit8u *buffer, Bit32u *sector_size)
+bool bx_hard_drive_c::bmdma_read_sector(Bit8u channel, Bit8u *buffer, Bit32u *sector_size)
 {
   controller_t *controller = &BX_SELECTED_CONTROLLER(channel);
 
@@ -3428,7 +3428,7 @@ bx_bool bx_hard_drive_c::bmdma_read_sector(Bit8u channel, Bit8u *buffer, Bit32u 
   return 1;
 }
 
-bx_bool bx_hard_drive_c::bmdma_write_sector(Bit8u channel, Bit8u *buffer)
+bool bx_hard_drive_c::bmdma_write_sector(Bit8u channel, Bit8u *buffer)
 {
   controller_t *controller = &BX_SELECTED_CONTROLLER(channel);
 

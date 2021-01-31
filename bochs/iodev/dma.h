@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2009  The Bochs Project
+//  Copyright (C) 2002-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -38,7 +38,7 @@ public:
   virtual void     init(void);
   virtual void     reset(unsigned type);
   virtual void     raise_HLDA(void);
-  virtual void     set_DRQ(unsigned channel, bx_bool val);
+  virtual void     set_DRQ(unsigned channel, bool val);
   virtual unsigned get_TC(void);
   virtual void     register_state(void);
 #if BX_DEBUGGER

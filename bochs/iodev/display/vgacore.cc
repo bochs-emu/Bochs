@@ -1276,7 +1276,7 @@ void bx_vgacore_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool 
   }
 }
 
-void bx_vgacore_c::set_override(bx_bool enabled, void *dev)
+void bx_vgacore_c::set_override(bool enabled, void *dev)
 {
   BX_VGA_THIS s.vga_override = enabled;
 #if BX_SUPPORT_PCI
@@ -2369,7 +2369,7 @@ void bx_vgacore_c::redraw_area(unsigned x0, unsigned y0, unsigned width, unsigne
   }
 }
 
-void bx_vgacore_c::refresh_display(void *this_ptr, bx_bool redraw)
+void bx_vgacore_c::refresh_display(void *this_ptr, bool redraw)
 {
   bx_vgacore_c *vgadev = (bx_vgacore_c *) this_ptr;
 #if BX_SUPPORT_PCI

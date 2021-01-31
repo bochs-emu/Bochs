@@ -642,7 +642,7 @@ void bx_devices_c::timer()
     bx_gui->handle_events();
 }
 
-bx_bool bx_devices_c::register_irq(unsigned irq, const char *name)
+bool bx_devices_c::register_irq(unsigned irq, const char *name)
 {
   if (irq >= BX_MAX_IRQS) {
     BX_PANIC(("IO device %s registered with IRQ=%d above %u",
@@ -658,7 +658,7 @@ bx_bool bx_devices_c::register_irq(unsigned irq, const char *name)
   return 1;
 }
 
-bx_bool bx_devices_c::unregister_irq(unsigned irq, const char *name)
+bool bx_devices_c::unregister_irq(unsigned irq, const char *name)
 {
   if (irq >= BX_MAX_IRQS) {
     BX_PANIC(("IO device %s tried to unregister IRQ %d above %u",
@@ -681,7 +681,7 @@ bx_bool bx_devices_c::unregister_irq(unsigned irq, const char *name)
   return 1;
 }
 
-bx_bool bx_devices_c::register_io_read_handler(void *this_ptr, bx_read_handler_t f,
+bool bx_devices_c::register_io_read_handler(void *this_ptr, bx_read_handler_t f,
                                                Bit32u addr, const char *name, Bit8u mask)
 {
   addr &= 0xffff;
@@ -733,7 +733,7 @@ bx_bool bx_devices_c::register_io_read_handler(void *this_ptr, bx_read_handler_t
   return 1; // address mapped successfully
 }
 
-bx_bool bx_devices_c::register_io_write_handler(void *this_ptr, bx_write_handler_t f,
+bool bx_devices_c::register_io_write_handler(void *this_ptr, bx_write_handler_t f,
                                                 Bit32u addr, const char *name, Bit8u mask)
 {
   addr &= 0xffff;
@@ -785,7 +785,7 @@ bx_bool bx_devices_c::register_io_write_handler(void *this_ptr, bx_write_handler
   return 1; // address mapped successfully
 }
 
-bx_bool bx_devices_c::register_io_read_handler_range(void *this_ptr, bx_read_handler_t f,
+bool bx_devices_c::register_io_read_handler_range(void *this_ptr, bx_read_handler_t f,
                                              Bit32u begin_addr, Bit32u end_addr,
                                              const char *name, Bit8u mask)
 {
@@ -849,7 +849,7 @@ bx_bool bx_devices_c::register_io_read_handler_range(void *this_ptr, bx_read_han
   return 1; // address mapped successfully
 }
 
-bx_bool bx_devices_c::register_io_write_handler_range(void *this_ptr, bx_write_handler_t f,
+bool bx_devices_c::register_io_write_handler_range(void *this_ptr, bx_write_handler_t f,
                                               Bit32u begin_addr, Bit32u end_addr,
                                               const char *name, Bit8u mask)
 {
@@ -915,7 +915,7 @@ bx_bool bx_devices_c::register_io_write_handler_range(void *this_ptr, bx_write_h
 
 
 // Registration of default handlers (mainly be the unmapped device)
-bx_bool bx_devices_c::register_default_io_read_handler(void *this_ptr, bx_read_handler_t f,
+bool bx_devices_c::register_default_io_read_handler(void *this_ptr, bx_read_handler_t f,
                                                const char *name, Bit8u mask)
 {
   io_read_handlers.funct = (void *)f;
@@ -930,7 +930,7 @@ bx_bool bx_devices_c::register_default_io_read_handler(void *this_ptr, bx_read_h
   return 1;
 }
 
-bx_bool bx_devices_c::register_default_io_write_handler(void *this_ptr, bx_write_handler_t f,
+bool bx_devices_c::register_default_io_write_handler(void *this_ptr, bx_write_handler_t f,
                                                 const char *name, Bit8u mask)
 {
   io_write_handlers.funct = (void *)f;
@@ -945,7 +945,7 @@ bx_bool bx_devices_c::register_default_io_write_handler(void *this_ptr, bx_write
   return 1;
 }
 
-bx_bool bx_devices_c::unregister_io_read_handler(void *this_ptr, bx_read_handler_t f,
+bool bx_devices_c::unregister_io_read_handler(void *this_ptr, bx_read_handler_t f,
                                          Bit32u addr, Bit8u mask)
 {
   addr &= 0xffff;
@@ -991,7 +991,7 @@ bx_bool bx_devices_c::unregister_io_read_handler(void *this_ptr, bx_read_handler
   return 1;
 }
 
-bx_bool bx_devices_c::unregister_io_write_handler(void *this_ptr, bx_write_handler_t f,
+bool bx_devices_c::unregister_io_write_handler(void *this_ptr, bx_write_handler_t f,
                                           Bit32u addr, Bit8u mask)
 {
   addr &= 0xffff;
@@ -1025,13 +1025,13 @@ bx_bool bx_devices_c::unregister_io_write_handler(void *this_ptr, bx_write_handl
   return 1;
 }
 
-bx_bool bx_devices_c::unregister_io_read_handler_range(void *this_ptr, bx_read_handler_t f,
+bool bx_devices_c::unregister_io_read_handler_range(void *this_ptr, bx_read_handler_t f,
                                                Bit32u begin, Bit32u end, Bit8u mask)
 {
   begin &= 0xffff;
   end &= 0xffff;
   Bit32u addr;
-  bx_bool ret = 1;
+  bool ret = 1;
 
   /*
    * the easy way this time
@@ -1043,13 +1043,13 @@ bx_bool bx_devices_c::unregister_io_read_handler_range(void *this_ptr, bx_read_h
   return ret;
 }
 
-bx_bool bx_devices_c::unregister_io_write_handler_range(void *this_ptr, bx_write_handler_t f,
+bool bx_devices_c::unregister_io_write_handler_range(void *this_ptr, bx_write_handler_t f,
                                                 Bit32u begin, Bit32u end, Bit8u mask)
 {
   begin &= 0xffff;
   end &= 0xffff;
   Bit32u addr;
-  bx_bool ret = 1;
+  bool ret = 1;
 
   /*
    * the easy way this time
@@ -1115,7 +1115,7 @@ bx_devices_c::outp(Bit16u addr, Bit32u value, unsigned io_len)
   }
 }
 
-bx_bool bx_devices_c::is_harddrv_enabled(void)
+bool bx_devices_c::is_harddrv_enabled(void)
 {
   char pname[24];
 
@@ -1127,7 +1127,7 @@ bx_bool bx_devices_c::is_harddrv_enabled(void)
   return 0;
 }
 
-bx_bool bx_devices_c::is_network_enabled(void)
+bool bx_devices_c::is_network_enabled(void)
 {
   if (PLUG_device_present("e1000") ||
       PLUG_device_present("ne2k") ||
@@ -1137,7 +1137,7 @@ bx_bool bx_devices_c::is_network_enabled(void)
   return 0;
 }
 
-bx_bool bx_devices_c::is_sound_enabled(void)
+bool bx_devices_c::is_sound_enabled(void)
 {
   if (PLUG_device_present("es1370") ||
       PLUG_device_present("sb16") ||
@@ -1147,7 +1147,7 @@ bx_bool bx_devices_c::is_sound_enabled(void)
   return 0;
 }
 
-bx_bool bx_devices_c::is_usb_enabled(void)
+bool bx_devices_c::is_usb_enabled(void)
 {
   if (PLUG_device_present("usb_ohci") ||
       PLUG_device_present("usb_uhci") ||
@@ -1229,7 +1229,7 @@ void bx_devices_c::unregister_removable_mouse(void *dev)
 // common keyboard device handlers
 void bx_devices_c::gen_scancode(Bit32u key)
 {
-  bx_bool ret = 0;
+  bool ret = 0;
 
   bx_keyboard[0].bxkey_state[key & 0xff] = ((key & BX_KEY_RELEASED) == 0);
   if ((paste.buf != NULL) && (!paste.service)) {
@@ -1351,7 +1351,7 @@ void bx_devices_c::paste_delay_changed(Bit32u value)
   BX_INFO(("will paste characters every %d iodev timer ticks", paste.delay));
 }
 
-void bx_devices_c::kbd_set_indicator(Bit8u devid, Bit8u ledid, bx_bool state)
+void bx_devices_c::kbd_set_indicator(Bit8u devid, Bit8u ledid, bool state)
 {
   if (bx_keyboard[devid].led_mask & (1 << ledid)) {
     bx_gui->statusbar_setitem(statusbar_id[ledid], state, devid);
@@ -1359,7 +1359,7 @@ void bx_devices_c::kbd_set_indicator(Bit8u devid, Bit8u ledid, bx_bool state)
 }
 
 // common mouse device handlers
-void bx_devices_c::mouse_enabled_changed(bx_bool enabled)
+void bx_devices_c::mouse_enabled_changed(bool enabled)
 {
   mouse_captured = enabled;
 
@@ -1373,7 +1373,7 @@ void bx_devices_c::mouse_enabled_changed(bx_bool enabled)
   }
 }
 
-void bx_devices_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy)
+void bx_devices_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state, bool absxy)
 {
   // If mouse events are disabled on the GUI headerbar, don't
   // generate any mouse data
@@ -1394,7 +1394,7 @@ void bx_devices_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned 
 
 #if BX_SUPPORT_PCI
 // generic PCI support
-bx_bool bx_devices_c::register_pci_handlers(bx_pci_device_c *dev,
+bool bx_devices_c::register_pci_handlers(bx_pci_device_c *dev,
                                             Bit8u *devfunc, const char *name,
                                             const char *descr, Bit8u bus)
 {
@@ -1470,7 +1470,7 @@ bx_bool bx_devices_c::register_pci_handlers(bx_pci_device_c *dev,
   }
 }
 
-bx_bool bx_devices_c::pci_set_base_mem(void *this_ptr, memory_handler_t f1, memory_handler_t f2,
+bool bx_devices_c::pci_set_base_mem(void *this_ptr, memory_handler_t f1, memory_handler_t f2,
                                        Bit32u *addr, Bit8u *pci_conf, unsigned size)
 {
   Bit32u oldbase = *addr, newbase;
@@ -1498,7 +1498,7 @@ bx_bool bx_devices_c::pci_set_base_mem(void *this_ptr, memory_handler_t f1, memo
   return 0;
 }
 
-bx_bool bx_devices_c::pci_set_base_io(void *this_ptr, bx_read_handler_t f1, bx_write_handler_t f2,
+bool bx_devices_c::pci_set_base_io(void *this_ptr, bx_read_handler_t f1, bx_write_handler_t f2,
                                       Bit32u *addr, Bit8u *pci_conf, unsigned size,
                                       const Bit8u *iomask, const char *name)
 {
@@ -1670,7 +1670,7 @@ void bx_pci_device_c::load_pci_rom(const char *path)
 void bx_pci_device_c::pci_write_handler_common(Bit8u address, Bit32u value, unsigned io_len)
 {
   Bit8u bnum, value8, oldval;
-  bx_bool bar_change = 0, rom_change = 0;
+  bool bar_change = 0, rom_change = 0;
 
   // ignore readonly registers
   if ((address < 4) || ((address > 7) && (address < 12)) || (address == 14) ||

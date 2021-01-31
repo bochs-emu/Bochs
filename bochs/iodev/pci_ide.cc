@@ -213,7 +213,7 @@ void bx_pci_ide_c::param_restore(bx_param_c *param, Bit64s val)
 }
 // save/restore code end
 
-bx_bool bx_pci_ide_c::bmdma_present(void)
+bool bx_pci_ide_c::bmdma_present(void)
 {
   return (BX_PIDE_THIS pci_bar[4].addr > 0);
 }

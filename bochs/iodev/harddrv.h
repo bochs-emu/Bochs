@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2020  The Bochs Project
+//  Copyright (C) 2001-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -170,8 +170,8 @@ public:
   virtual void     init();
   virtual void     reset(unsigned type);
 #if BX_SUPPORT_PCI
-  virtual bx_bool  bmdma_read_sector(Bit8u channel, Bit8u *buffer, Bit32u *sector_size);
-  virtual bx_bool  bmdma_write_sector(Bit8u channel, Bit8u *buffer);
+  virtual bool     bmdma_read_sector(Bit8u channel, Bit8u *buffer, Bit32u *sector_size);
+  virtual bool     bmdma_write_sector(Bit8u channel, Bit8u *buffer);
   virtual void     bmdma_complete(Bit8u channel);
 #endif
   virtual void     register_state(void);
@@ -213,7 +213,7 @@ private:
   BX_HD_SMF void atapi_cmd_error(Bit8u channel, sense_t sense_key, asc_t asc, bx_bool show);
   BX_HD_SMF void init_mode_sense_single(Bit8u channel, const void* src, int size);
   BX_HD_SMF void atapi_cmd_nop(controller_t *controller) BX_CPP_AttrRegparmN(1);
-  BX_HD_SMF bx_bool bmdma_present(void);
+  BX_HD_SMF bool bmdma_present(void);
   BX_HD_SMF void set_signature(Bit8u channel, Bit8u id);
   BX_HD_SMF bx_bool ide_read_sector(Bit8u channel, Bit8u *buffer, Bit32u buffer_size);
   BX_HD_SMF bx_bool ide_write_sector(Bit8u channel, Bit8u *buffer, Bit32u buffer_size);

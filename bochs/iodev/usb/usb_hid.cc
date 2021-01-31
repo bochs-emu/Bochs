@@ -1056,17 +1056,17 @@ int usb_hid_device_c::get_mouse_packet(Bit8u *buf, int len)
   return l;
 }
 
-void usb_hid_device_c::mouse_enabled_changed(void *dev, bx_bool enabled)
+void usb_hid_device_c::mouse_enabled_changed(void *dev, bool enabled)
 {
   if (enabled) ((usb_hid_device_c*)dev)->handle_reset();
 }
 
-void usb_hid_device_c::mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy)
+void usb_hid_device_c::mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state, bool absxy)
 {
   ((usb_hid_device_c*)dev)->mouse_enq(delta_x, delta_y, delta_z, button_state, absxy);
 }
 
-void usb_hid_device_c::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy)
+void usb_hid_device_c::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state, bool absxy)
 {
   Bit16s prev_x, prev_y;
 
@@ -1167,12 +1167,12 @@ int usb_hid_device_c::keyboard_poll(Bit8u *buf, int len, bx_bool force)
   return l;
 }
 
-bx_bool usb_hid_device_c::gen_scancode_static(void *dev, Bit32u key)
+bool usb_hid_device_c::gen_scancode_static(void *dev, Bit32u key)
 {
   return ((usb_hid_device_c*)dev)->gen_scancode(key);
 }
 
-bx_bool usb_hid_device_c::gen_scancode(Bit32u key)
+bool usb_hid_device_c::gen_scancode(Bit32u key)
 {
   bx_bool modkey, released = (key & BX_KEY_RELEASED) != 0;
   Bit8u code;

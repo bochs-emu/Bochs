@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2017  The Bochs Project
+//  Copyright (C) 2001-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -240,8 +240,8 @@ private:
   static void fifo_timer_handler(void *);
   BX_SER_SMF void fifo_timer(void);
 
-  static void mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy);
-  void mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy);
+  static void mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state, bool absxy);
+  void mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state, bool absxy);
   void update_mouse_data(void);
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);

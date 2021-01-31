@@ -232,7 +232,7 @@ void bx_ioapic_c::write_aligned(bx_phy_address address, Bit32u value)
   }
 }
 
-void bx_ioapic_c::set_enabled(bx_bool _enabled, Bit16u base_offset)
+void bx_ioapic_c::set_enabled(bool _enabled, Bit16u base_offset)
 {
   if (_enabled != enabled) {
     if (_enabled) {
@@ -252,14 +252,14 @@ void bx_ioapic_c::set_enabled(bx_bool _enabled, Bit16u base_offset)
   BX_INFO(("IOAPIC %sabled (base address = 0x%08x)", enabled?"en":"dis", (Bit32u)base_addr));
 }
 
-void bx_ioapic_c::set_irq_level(Bit8u int_in, bx_bool level)
+void bx_ioapic_c::set_irq_level(Bit8u int_in, bool level)
 {
   if (int_in == 0) { // timer connected to pin #2
     int_in = 2;
   }
   if (int_in < BX_IOAPIC_NUM_PINS) {
     Bit32u bit = 1<<int_in;
-    if ((level<<int_in) != (intin & bit)) {
+    if (((Bit32u)level<<int_in) != (intin & bit)) {
       BX_DEBUG(("set_irq_level(): INTIN%d: level=%d", int_in, level));
       bx_io_redirect_entry_t *entry = ioredtbl + int_in;
       if (entry->trigger_mode()) {

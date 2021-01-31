@@ -423,7 +423,7 @@ void bx_speaker_c::beep_off()
   beep_frequency = 0.0;
 }
 
-void bx_speaker_c::set_line(bx_bool level)
+void bx_speaker_c::set_line(bool level)
 {
 #if BX_SUPPORT_SOUNDLOW && BX_HAVE_REALTIME_USEC
   if (output_mode == BX_SPK_MODE_SOUND) {

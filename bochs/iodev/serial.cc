@@ -1672,12 +1672,12 @@ void bx_serial_c::fifo_timer(void)
   raise_interrupt(port, BX_SER_INT_FIFO);
 }
 
-void bx_serial_c::mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy)
+void bx_serial_c::mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state, bool absxy)
 {
   ((bx_serial_c*)dev)->mouse_enq(delta_x, delta_y, delta_z, button_state, absxy);
 }
 
-void bx_serial_c::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy)
+void bx_serial_c::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state, bool absxy)
 {
   if (BX_SER_THIS mouse_port == -1) {
     BX_ERROR(("mouse not connected to a serial port"));

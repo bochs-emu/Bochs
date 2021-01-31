@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2020  The Bochs Project
+//  Copyright (C) 2002-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -46,7 +46,7 @@ public:
   virtual void after_restore_state(void);
 
 private:
-  static bx_bool      gen_scancode_static(void *dev, Bit32u key);
+  static bool         gen_scancode_static(void *dev, Bit32u key);
   BX_KEY_SMF void     gen_scancode(Bit32u key);
   static Bit8u        get_elements_static(void *dev);
   BX_KEY_SMF Bit8u    get_elements(void);
@@ -188,10 +188,10 @@ private:
   BX_KEY_SMF bx_bool  mouse_enQ_packet(Bit8u b1, Bit8u b2, Bit8u b3, Bit8u b4);
   BX_KEY_SMF void     mouse_enQ(Bit8u mouse_data);
 
-  static void mouse_enabled_changed_static(void *dev, bx_bool enabled);
-  void mouse_enabled_changed(bx_bool enabled);
-  static void mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy);
-  void mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy);
+  static void mouse_enabled_changed_static(void *dev, bool enabled);
+  void mouse_enabled_changed(bool enabled);
+  static void mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state, bool absxy);
+  void mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state, bool absxy);
 
   static void   timer_handler(void *);
   int    timer_handle;

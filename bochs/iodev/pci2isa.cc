@@ -222,7 +222,7 @@ void bx_piix3_c::pci_unregister_irq(unsigned pirq, Bit8u irq)
   }
 }
 
-void bx_piix3_c::pci_set_irq(Bit8u devfunc, unsigned line, bx_bool level)
+void bx_piix3_c::pci_set_irq(Bit8u devfunc, unsigned line, bool level)
 {
   Bit8u pirq = ((devfunc >> 3) + line - BX_P2I_THIS s.map_slot_to_dev) & 0x03;
 #if BX_SUPPORT_APIC

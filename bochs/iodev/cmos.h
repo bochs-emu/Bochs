@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2020  The Bochs Project
+//  Copyright (C) 2002-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -55,7 +55,7 @@ public:
   virtual time_t get_timeval() {
     return s.timeval;
   }
-  virtual void enable_irq(bx_bool enabled) {
+  virtual void enable_irq(bool enabled) {
     s.irq_enabled = enabled;
   }
 

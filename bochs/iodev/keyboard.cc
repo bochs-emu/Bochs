@@ -646,7 +646,7 @@ void bx_keyb_c::write(Bit32u address, Bit32u value, unsigned io_len)
   }
 }
 
-bx_bool bx_keyb_c::gen_scancode_static(void *dev, Bit32u key)
+bool bx_keyb_c::gen_scancode_static(void *dev, Bit32u key)
 {
   ((bx_keyb_c*)dev)->gen_scancode(key);
   return 1;
@@ -1403,12 +1403,12 @@ void bx_keyb_c::create_mouse_packet(bx_bool force_enq)
 }
 
 
-void bx_keyb_c::mouse_enabled_changed_static(void *dev, bx_bool enabled)
+void bx_keyb_c::mouse_enabled_changed_static(void *dev, bool enabled)
 {
   ((bx_keyb_c*)dev)->mouse_enabled_changed(enabled);
 }
 
-void bx_keyb_c::mouse_enabled_changed(bx_bool enabled)
+void bx_keyb_c::mouse_enabled_changed(bool enabled)
 {
   if (BX_KEY_THIS s.mouse.delayed_dx || BX_KEY_THIS s.mouse.delayed_dy ||
       BX_KEY_THIS s.mouse.delayed_dz) {
@@ -1420,12 +1420,12 @@ void bx_keyb_c::mouse_enabled_changed(bx_bool enabled)
   BX_DEBUG(("PS/2 mouse %s", enabled?"enabled":"disabled"));
 }
 
-void bx_keyb_c::mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy)
+void bx_keyb_c::mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state, bool absxy)
 {
   ((bx_keyb_c*)dev)->mouse_motion(delta_x, delta_y, delta_z, button_state, absxy);
 }
 
-void bx_keyb_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy)
+void bx_keyb_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state, bool absxy)
 {
   bx_bool force_enq=0;
 

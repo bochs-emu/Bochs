@@ -351,7 +351,7 @@ void bx_busm_c::write(Bit32u address, Bit32u value, unsigned io_len)
   }
 }
 
-void bx_busm_c::mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state, bx_bool absxy)
+void bx_busm_c::mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state, bool absxy)
 {
   ((bx_busm_c*)dev)->mouse_enq(delta_x, delta_y, delta_z, button_state);
 }

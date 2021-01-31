@@ -569,7 +569,7 @@ bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
   }
 }
 
-void bx_dma_c::set_DRQ(unsigned channel, bx_bool val)
+void bx_dma_c::set_DRQ(unsigned channel, bool val)
 {
   Bit32u dma_base, dma_roof;
   bx_bool ma_sl;
