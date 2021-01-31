@@ -996,12 +996,12 @@ static void OPL_INLINE clipit16(Bit32s ival, Bit16s* outval, Bit8u vol)
   opl_active = 1;
 #endif
 
-bx_bool adlib_getsample(Bit16u rate, Bit16s* sndptr, Bits numsamples, Bit16u volume)
+bool adlib_getsample(Bit16u rate, Bit16s* sndptr, Bits numsamples, Bit16u volume)
 {
   Bit8u lvol, rvol;
   Bits i, endsamples;
   op_type* cptr;
-  bx_bool opl_active = 0;
+  bool opl_active = 0;
 
   Bit32s outbufl[BLOCKBUF_SIZE];
 #if defined(OPLTYPE_IS_OPL3)

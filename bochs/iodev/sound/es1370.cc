@@ -595,7 +595,7 @@ void bx_es1370_c::write(Bit32u address, Bit32u value, unsigned io_len)
   Bit16u  offset;
   Bit32u shift, mask;
   Bit8u index;
-  bx_bool set_wave_vol = 0;
+  bool set_wave_vol = 0;
   chan_t *d = &BX_ES1370_THIS s.chan[0];
   unsigned i;
 
@@ -722,7 +722,7 @@ void bx_es1370_c::write(Bit32u address, Bit32u value, unsigned io_len)
   }
 }
 
-Bit16u bx_es1370_c::calc_output_volume(Bit8u reg1, Bit8u reg2, bx_bool shift)
+Bit16u bx_es1370_c::calc_output_volume(Bit8u reg1, Bit8u reg2, bool shift)
 {
   Bit8u vol1, vol2;
   float fvol1, fvol2;
@@ -764,7 +764,7 @@ Bit32u bx_es1370_c::run_channel(unsigned chan, int timer_id, Bit32u buflen)
   Bit32u new_status = BX_ES1370_THIS s.status;
   Bit32u addr, sc, csc_bytes, cnt, size, left, transfered, temp;
   Bit8u tmpbuf[BX_SOUNDLOW_WAVEPACKETSIZE];
-  bx_bool irq = 0;
+  bool irq = 0;
 
   chan_t *d = &BX_ES1370_THIS s.chan[chan];
 
@@ -839,7 +839,7 @@ Bit32u bx_es1370_c::es1370_adc_handler(void *this_ptr, Bit32u buflen)
   return 0;
 }
 
-void bx_es1370_c::set_irq_level(bx_bool level)
+void bx_es1370_c::set_irq_level(bool level)
 {
   DEV_pci_set_irq(BX_ES1370_THIS s.devfunc, BX_ES1370_THIS pci_conf[0x3d], level);
 }
@@ -874,7 +874,7 @@ void bx_es1370_c::check_lower_irq(Bit32u sctl)
   }
 }
 
-void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl, bx_bool force)
+void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl, bool force)
 {
   unsigned i;
   Bit32u old_freq, new_freq, old_fmt, new_fmt;
@@ -913,7 +913,7 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl, bx_bool force)
     }
     if (((ctl ^ BX_ES1370_THIS s.ctl) & ctl_ch_en[i]) ||
         ((sctl ^ BX_ES1370_THIS s.sctl) & sctl_ch_pause[i]) || force) {
-      bx_bool on = ((ctl & ctl_ch_en[i]) && !(sctl & sctl_ch_pause[i]));
+      bool on = ((ctl & ctl_ch_en[i]) && !(sctl & sctl_ch_pause[i]));
 
       if (i == DAC1_CHANNEL) {
         timer_id = BX_ES1370_THIS s.dac1_timer_index;

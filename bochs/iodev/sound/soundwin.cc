@@ -118,7 +118,7 @@ int bx_soundlow_waveout_win_c::set_pcm_params(bx_pcm_param_t *param)
   // try three times to find a suitable format
   for (int tries = 0; tries < 3; tries++) {
     int frequency = real_pcm_param.samplerate;
-    bx_bool stereo = real_pcm_param.channels == 2;
+    bool stereo = real_pcm_param.channels == 2;
     int bits = real_pcm_param.bits;
     int bps = (bits / 8) * (stereo + 1);
 

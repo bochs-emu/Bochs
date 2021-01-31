@@ -288,12 +288,12 @@ int vbox_image_t::check_format(int fd, Bit64u imgsize)
   return HDIMAGE_FORMAT_OK;
 }
 
-bx_bool vbox_image_t::is_open() const
+bool vbox_image_t::is_open() const
 {
   return (file_descriptor != -1);
 }
 
-bx_bool vbox_image_t::read_header()
+bool vbox_image_t::read_header()
 {
   int ret;
 
@@ -422,7 +422,7 @@ Bit32u vbox_image_t::get_capabilities(void)
 }
 
 #ifndef BXIMAGE
-bx_bool vbox_image_t::save_state(const char *backup_fname)
+bool vbox_image_t::save_state(const char *backup_fname)
 {
   return hdimage_backup_file(file_descriptor, backup_fname);
 }

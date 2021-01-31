@@ -730,7 +730,7 @@ void bx_hard_drive_c::runtime_config(void)
 {
   char pname[16];
   int handle;
-  bx_bool status;
+  bool status;
 
   for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     for (Bit8u device=0; device<2; device++) {
@@ -1055,7 +1055,7 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
       // b4: DRV
       // b3..0 HD3..HD0
       value8 = (1 << 7) |
-               (controller->lba_mode << 6) |
+               ((Bit8u)controller->lba_mode << 6) |
                (1 << 5) | // 01b = 512 sector size
                (BX_HD_THIS channels[channel].drive_select << 4) |
                (controller->head_no << 0);
@@ -1068,14 +1068,14 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
         value8 = 0;
       } else {
         value8 = (
-          (controller->status.busy << 7) |
-          (controller->status.drive_ready << 6) |
-          (controller->status.write_fault << 5) |
-          (controller->status.seek_complete << 4) |
-          (controller->status.drq << 3) |
-          (controller->status.corrected_data << 2) |
-          (controller->status.index_pulse << 1) |
-          (controller->status.err));
+          ((Bit8u)controller->status.busy << 7) |
+          ((Bit8u)controller->status.drive_ready << 6) |
+          ((Bit8u)controller->status.write_fault << 5) |
+          ((Bit8u)controller->status.seek_complete << 4) |
+          ((Bit8u)controller->status.drq << 3) |
+          ((Bit8u)controller->status.corrected_data << 2) |
+          ((Bit8u)controller->status.index_pulse << 1) |
+          ((Bit8u)controller->status.err));
         controller->status.index_pulse_count++;
         controller->status.index_pulse = 0;
         if (controller->status.index_pulse_count >= INDEX_PULSE_CYCLE) {
@@ -1137,8 +1137,8 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
   UNUSED(this_ptr);
 #endif  // !BX_USE_HD_SMF
   Bit64s logical_sector;
-  bx_bool prev_control_reset;
-  bx_bool lba48 = 0;
+  bool prev_control_reset;
+  bool lba48 = 0;
 
   Bit8u  channel = BX_MAX_ATA_CHANNEL;
   Bit32u port = 0xff; // undefined
@@ -1335,9 +1335,9 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
               case 0x1b: // start stop unit
                 {
                   char ata_name[20];
-                  //bx_bool Immed = (controller->buffer[1] >> 0) & 1;
-                  bx_bool LoEj = (controller->buffer[4] >> 1) & 1;
-                  bx_bool Start = (controller->buffer[4] >> 0) & 1;
+                  //bool Immed = (controller->buffer[1] >> 0) & 1;
+                  bool LoEj = (controller->buffer[4] >> 1) & 1;
+                  bool Start = (controller->buffer[4] >> 0) & 1;
 
                   if (!LoEj && !Start) { // stop the disc
                     BX_ERROR(("FIXME: Stop disc not implemented"));
@@ -1428,7 +1428,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                           controller->buffer[12] = 0x71;
                           controller->buffer[13] = (3 << 5);
                           controller->buffer[14] = (unsigned char) (1 |
-                            (BX_SELECTED_DRIVE(channel).cdrom.locked ? (1 << 1) : 0) |
+                            ((Bit8u)BX_SELECTED_DRIVE(channel).cdrom.locked ? (1 << 1) : 0) |
                             (1 << 3) |
                             (1 << 5));
                           controller->buffer[15] = 0x00;
@@ -1505,7 +1505,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                           controller->buffer[12] = 0x71;
                           controller->buffer[13] = (3 << 5);
                           controller->buffer[14] = (unsigned char) (1 |
-                            (BX_SELECTED_DRIVE(channel).cdrom.locked ? (1 << 1) : 0) |
+                            ((Bit8u)BX_SELECTED_DRIVE(channel).cdrom.locked ? (1 << 1) : 0) |
                             (1 << 3) |
                             (1 << 5));
                           controller->buffer[15] = 0x00;
@@ -1658,7 +1658,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
               case 0x43: // read toc
                 if (BX_SELECTED_DRIVE(channel).cdrom.ready) {
-                  bx_bool msf = (controller->buffer[1] >> 1) & 1;
+                  bool msf = (controller->buffer[1] >> 1) & 1;
                   Bit8u starting_track = controller->buffer[6];
                   int toc_length = 0;
                   Bit16u alloc_length = read_16bit(controller->buffer + 7);
@@ -1800,8 +1800,8 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
               case 0x42: // read sub-channel
                 {
-                  bx_bool msf = get_packet_field(controller,1, 1, 1);
-                  bx_bool sub_q = get_packet_field(controller,2, 6, 1);
+                  bool msf = get_packet_field(controller,1, 1, 1);
+                  bool sub_q = get_packet_field(controller,2, 6, 1);
                   Bit8u data_format = get_packet_byte(controller, 3);
                   Bit8u track_number = get_packet_byte(controller, 6);
                   Bit16u alloc_length = get_packet_word(controller, 7);
@@ -1848,10 +1848,10 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
               case 0x4a: // get event status notification
                 {
-                  bx_bool polled = (controller->buffer[1] & (1<<0)) > 0;
+                  bool polled = (controller->buffer[1] & (1<<0)) > 0;
                   int event_length, request = controller->buffer[4];
                   Bit16u alloc_length = read_16bit(controller->buffer + 7);
-                  bx_bool inserted = BX_SELECTED_DRIVE(channel).cdrom.ready;
+                  bool inserted = BX_SELECTED_DRIVE(channel).cdrom.ready;
                   if (polled) {
                     // we currently only support the MEDIA event (bit 4)
                     if (request == (1<<4)) {
@@ -2643,7 +2643,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
     }
 }
 
-  bx_bool BX_CPP_AttrRegparmN(2)
+  bool BX_CPP_AttrRegparmN(2)
 bx_hard_drive_c::calculate_logical_address(Bit8u channel, Bit64s *sector)
 {
   Bit64s logical_sector;
@@ -3143,7 +3143,7 @@ void bx_hard_drive_c::identify_drive(Bit8u channel)
   BX_SELECTED_DRIVE(channel).identify_set = 1;
 }
 
-void bx_hard_drive_c::init_send_atapi_command(Bit8u channel, Bit8u command, int req_length, int alloc_length, bx_bool lazy)
+void bx_hard_drive_c::init_send_atapi_command(Bit8u channel, Bit8u command, int req_length, int alloc_length, bool lazy)
 {
   controller_t *controller = &BX_SELECTED_CONTROLLER(channel);
 
@@ -3194,7 +3194,7 @@ void bx_hard_drive_c::init_send_atapi_command(Bit8u channel, Bit8u command, int 
   BX_SELECTED_DRIVE(channel).atapi.total_bytes_remaining = (req_length < alloc_length) ? req_length : alloc_length;
 }
 
-void bx_hard_drive_c::atapi_cmd_error(Bit8u channel, sense_t sense_key, asc_t asc, bx_bool show)
+void bx_hard_drive_c::atapi_cmd_error(Bit8u channel, sense_t sense_key, asc_t asc, bool show)
 {
   if (show) {
     BX_ERROR(("ata%d-%d: atapi_cmd_error: key=%02x asc=%02x", channel, BX_SLAVE_SELECTED(channel), sense_key, asc));
@@ -3303,7 +3303,7 @@ void bx_hard_drive_c::command_aborted(Bit8u channel, unsigned value)
   raise_interrupt(channel);
 }
 
-bx_bool bx_hard_drive_c::set_cd_media_status(Bit32u handle, bx_bool status)
+bool bx_hard_drive_c::set_cd_media_status(Bit32u handle, bool status)
 {
   char ata_name[22];
 
@@ -3484,7 +3484,7 @@ void bx_hard_drive_c::set_signature(Bit8u channel, Bit8u id)
   }
 }
 
-bx_bool bx_hard_drive_c::ide_read_sector(Bit8u channel, Bit8u *buffer, Bit32u buffer_size)
+bool bx_hard_drive_c::ide_read_sector(Bit8u channel, Bit8u *buffer, Bit32u buffer_size)
 {
   controller_t *controller = &BX_SELECTED_CONTROLLER(channel);
 
@@ -3521,7 +3521,7 @@ bx_bool bx_hard_drive_c::ide_read_sector(Bit8u channel, Bit8u *buffer, Bit32u bu
   return 1;
 }
 
-bx_bool bx_hard_drive_c::ide_write_sector(Bit8u channel, Bit8u *buffer, Bit32u buffer_size)
+bool bx_hard_drive_c::ide_write_sector(Bit8u channel, Bit8u *buffer, Bit32u buffer_size)
 {
   controller_t *controller = &BX_SELECTED_CONTROLLER(channel);
 
@@ -3558,7 +3558,7 @@ bx_bool bx_hard_drive_c::ide_write_sector(Bit8u channel, Bit8u *buffer, Bit32u b
   return 1;
 }
 
-void bx_hard_drive_c::lba48_transform(controller_t *controller, bx_bool lba48)
+void bx_hard_drive_c::lba48_transform(controller_t *controller, bool lba48)
 {
   controller->lba48 = lba48;
 
@@ -3641,7 +3641,7 @@ Bit64s bx_hard_drive_c::cdrom_status_handler(bx_param_c *param, int set, Bit64s 
     int handle = get_device_handle_from_param(param);
     if (handle >= 0) {
       if (!strcmp(param->get_name(), "status")) {
-        bx_bool locked = BX_HD_THIS channels[handle/2].drives[handle%2].cdrom.locked;
+        bool locked = BX_HD_THIS channels[handle/2].drives[handle%2].cdrom.locked;
         if ((val == 1) || !locked) {
           BX_HD_THIS channels[handle/2].drives[handle%2].status_changed = 1;
         } else if (locked) {

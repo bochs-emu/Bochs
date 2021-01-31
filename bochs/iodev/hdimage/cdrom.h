@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2013  The Bochs Project
+//  Copyright (C) 2002-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -31,28 +31,28 @@ public:
   virtual ~cdrom_base_c(void);
 
   // Load CD-ROM. Returns 0 if CD is not ready.
-  virtual bx_bool insert_cdrom(const char *dev = NULL);
+  virtual bool insert_cdrom(const char *dev = NULL);
 
   // Logically eject the CD.
   virtual void eject_cdrom();
 
   // Read CD TOC. Returns 0 if start track is out of bounds.
-  virtual bx_bool read_toc(Bit8u* buf, int* length, bx_bool msf, int start_track, int format);
+  virtual bool read_toc(Bit8u* buf, int* length, bool msf, int start_track, int format);
 
   // Return CD-ROM capacity (in 2048 byte frames)
   virtual Bit32u capacity();
 
   // Read a single block from the CD. Returns 0 on failure.
-  virtual bx_bool read_block(Bit8u* buf, Bit32u lba, int blocksize) BX_CPP_AttrRegparmN(3);
+  virtual bool read_block(Bit8u* buf, Bit32u lba, int blocksize) BX_CPP_AttrRegparmN(3);
 
   // Start (spin up) the CD.
-  virtual bx_bool start_cdrom();
+  virtual bool start_cdrom();
 
   // Seek for new block address.
-  virtual bx_bool seek(Bit32u lba);
+  virtual bool seek(Bit32u lba);
 
 protected:
   int fd;
   char *path;
-  bx_bool using_file;
+  bool using_file;
 };

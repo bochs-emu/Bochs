@@ -10,7 +10,7 @@
  * Contact: fys [at] fysnet [dot] net
  *
  * Copyright (C) 2015 Benjamin D Lunt.
- * Copyright (C) 2006-2015  The Bochs Project
+ * Copyright (C) 2006-2021  The Bochs Project
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -90,7 +90,7 @@ class vbox_image_t : public device_image_t
         static int check_format(int fd, Bit64u imgsize);
 
 #ifndef BXIMAGE
-        bx_bool save_state(const char *backup_fname);
+        bool save_state(const char *backup_fname);
         void restore_state(const char *backup_fname);
 #endif
 
@@ -98,9 +98,9 @@ class vbox_image_t : public device_image_t
         static const off_t INVALID_OFFSET;
         static const int SECTOR_SIZE;
 
-        bx_bool is_open() const;
+        bool is_open() const;
 
-        bx_bool read_header();
+        bool read_header();
         off_t perform_seek();
         void flush();
         void read_block(const Bit32u index);
@@ -112,9 +112,9 @@ class vbox_image_t : public device_image_t
         Bit8u  *block_data;
         off_t current_offset;
         Bit32u mtlb_sector;
-        bx_bool is_dirty;
-        bx_bool mtlb_dirty;
-        bx_bool header_dirty;
+        bool is_dirty;
+        bool mtlb_dirty;
+        bool header_dirty;
         const char *pathname;
 };
 

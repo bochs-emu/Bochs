@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 /*
  *  Copyright (C) 2002-2013  The DOSBox Team
- *  Copyright (C) 2015       The Bochs Project
+ *  Copyright (C) 2015-2021  The Bochs Project
  *  OPL2/OPL3 emulation library
  *
  *  This library is free software; you can redistribute it and/or
@@ -136,8 +136,8 @@ typedef struct operator_struct {
   Bit16s* cur_wform;       // start of selected waveform
   Bit32u cur_wmask;        // mask for selected waveform
   Bit32u act_state;        // activity state (regular, percussion)
-  bx_bool sus_keep;        // keep sustain level when decay finished
-  bx_bool vibrato,tremolo; // vibrato/tremolo enable bits
+  bool sus_keep;           // keep sustain level when decay finished
+  bool vibrato,tremolo;    // vibrato/tremolo enable bits
 
   // variables used to provide non-continuous envelopes
   Bit32u generator_pos;    // for non-standard sample rates we need to determine how many samples have passed
@@ -147,7 +147,7 @@ typedef struct operator_struct {
   Bits env_step_skip_a;    // bitmask that determines if a step is skipped (respective bit is zero then)
 
 #if defined(OPLTYPE_IS_OPL3)
-  bx_bool is_4op,is_4op_attached; // base of a 4op channel/part of a 4op channel
+  bool is_4op,is_4op_attached;    // base of a 4op channel/part of a 4op channel
   Bit32s left_pan,right_pan;      // opl3 stereo panning amount
 #endif
 } op_type;
@@ -196,7 +196,7 @@ static Bit32u generator_add; // should be a chip parameter
 // general functions
 void adlib_init(Bit32u samplerate);
 void adlib_write(Bitu idx, Bit8u val);
-bx_bool adlib_getsample(Bit16u rate, Bit16s* sndptr, Bits numsamples, Bit16u volume);
+bool adlib_getsample(Bit16u rate, Bit16s* sndptr, Bits numsamples, Bit16u volume);
 
 Bitu adlib_reg_read(Bitu port);
 void adlib_write_index(Bitu port, Bit8u val);

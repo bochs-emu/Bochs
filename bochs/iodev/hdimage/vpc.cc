@@ -407,7 +407,7 @@ int vpc_image_t::create_image(const char *pathname, Bit64u size)
   return 0;
 }
 #else
-bx_bool vpc_image_t::save_state(const char *backup_fname)
+bool vpc_image_t::save_state(const char *backup_fname)
 {
   return hdimage_backup_file(fd, backup_fname);
 }

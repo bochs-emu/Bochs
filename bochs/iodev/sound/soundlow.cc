@@ -95,8 +95,8 @@ static void convert_to_float(Bit8u *src, unsigned srcsize, audio_buffer_t *audio
 {
   unsigned i, j;
   bx_pcm_param_t *param = &audiobuf->param;
-  bx_bool issigned = (param->format & 1);
-  bx_bool setvol = (param->volume != BX_MAX_BIT16U);
+  bool issigned = (param->format & 1);
+  bool setvol = (param->volume != BX_MAX_BIT16U);
   Bit16s val16s;
   Bit16u val16u;
   float volume[2];
@@ -355,7 +355,7 @@ void bx_soundlow_waveout_c::unregister_wave_callback(int callback_id)
   BX_UNLOCK(mixer_mutex);
 }
 
-bx_bool bx_soundlow_waveout_c::mixer_common(Bit8u *buffer, int len)
+bool bx_soundlow_waveout_c::mixer_common(Bit8u *buffer, int len)
 {
   Bit32u count, len2 = 0, len3 = 0;
   Bit16s src1, src2, dst_val;
@@ -642,7 +642,7 @@ bx_sound_lowlevel_c::~bx_sound_lowlevel_c()
   }
 }
 
-bx_bool bx_sound_lowlevel_c::module_present(const char *type)
+bool bx_sound_lowlevel_c::module_present(const char *type)
 {
   bx_sound_lowlevel_c *ptr = 0;
 

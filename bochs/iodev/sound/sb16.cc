@@ -1251,7 +1251,7 @@ void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
 {
   int ret;
   bx_list_c *base;
-  bx_bool issigned;
+  bool issigned;
 
   // command: 8bit, 16bit, in/out, single/auto, fifo
   // mode: mono/stereo, signed/unsigned
@@ -1645,7 +1645,7 @@ Bit16u bx_sb16_c::dma_write16(Bit16u *buffer, Bit16u maxlen)
   return len;
 }
 
-Bit16u bx_sb16_c::calc_output_volume(Bit8u reg1, Bit8u reg2, bx_bool shift)
+Bit16u bx_sb16_c::calc_output_volume(Bit8u reg1, Bit8u reg2, bool shift)
 {
   Bit8u vol1, vol2;
   float fvol1, fvol2;
@@ -1842,7 +1842,7 @@ void bx_sb16_c::mixer_writeregister(Bit32u value)
 
 void bx_sb16_c::set_irq_dma()
 {
-  static bx_bool isInitialized=0;
+  static bool isInitialized=0;
   int newirq;
   int oldDMA8, oldDMA16;
 
@@ -2110,7 +2110,7 @@ void bx_sb16_c::mpu_datawrite(Bit32u value)
 void bx_sb16_c::mpu_mididata(Bit32u value)
 {
   // first, find out if it is a midi command or midi data
-  bx_bool ismidicommand = 0;
+  bool ismidicommand = 0;
   if (value >= 0x80)
   {  // bit 8 usually denotes a midi command...
       ismidicommand = 1;
@@ -2427,7 +2427,7 @@ void bx_sb16_c::opl_settimermask(int value, int chipid)
 
 Bit32u bx_sb16_c::fmopl_generator(Bit16u rate, Bit8u *buffer, Bit32u len)
 {
-  bx_bool ret = adlib_getsample(rate, (Bit16s*)buffer, len / 4, BX_SB16_THIS fm_volume);
+  bool ret = adlib_getsample(rate, (Bit16s*)buffer, len / 4, BX_SB16_THIS fm_volume);
   return ret ? len : 0;
 }
 
@@ -2500,11 +2500,11 @@ int bx_sb16_c::currentdeltatime()
 
 // process the midi command stored in MPU_B.midicmd.to the midi driver
 
-void bx_sb16_c::processmidicommand(bx_bool force)
+void bx_sb16_c::processmidicommand(bool force)
 {
   int i, channel;
   Bit8u value;
-  bx_bool needremap = 0;
+  bool needremap = 0;
 
   channel = MPU_B.midicmd.currentcommand() & 0xf;
 
@@ -2964,7 +2964,7 @@ int bx_sb16_buffer::bytes(void)
 }
 
 // This puts one byte into the buffer
-bx_bool bx_sb16_buffer::put(Bit8u data)
+bool bx_sb16_buffer::put(Bit8u data)
 {
   if (full() != 0)
     return 0;       // buffer full
@@ -2976,7 +2976,7 @@ bx_bool bx_sb16_buffer::put(Bit8u data)
 }
 
 // This writes a formatted string to the buffer
-bx_bool bx_sb16_buffer::puts(const char *data, ...)
+bool bx_sb16_buffer::puts(const char *data, ...)
 {
   if (data == NULL)
     return 0;  // invalid string
@@ -3009,7 +3009,7 @@ bx_bool bx_sb16_buffer::puts(const char *data, ...)
 }
 
 // This returns if the buffer is full, i.e. if a put will fail
-bx_bool bx_sb16_buffer::full(void)
+bool bx_sb16_buffer::full(void)
 {
   if (length == 0)
     return 1;   // not initialized
@@ -3021,7 +3021,7 @@ bx_bool bx_sb16_buffer::full(void)
 }
 
 // This reads the next available byte from the buffer
-bx_bool bx_sb16_buffer::get(Bit8u *data)
+bool bx_sb16_buffer::get(Bit8u *data)
 {
   if (empty() != 0)
   {
@@ -3039,7 +3039,7 @@ bx_bool bx_sb16_buffer::get(Bit8u *data)
 }
 
 // Read a word in lo/hi order
-bx_bool bx_sb16_buffer::getw(Bit16u *data)
+bool bx_sb16_buffer::getw(Bit16u *data)
 {
   Bit8u dummy;
   if (bytes() < 2)
@@ -3061,7 +3061,7 @@ bx_bool bx_sb16_buffer::getw(Bit16u *data)
 }
 
 // Read a word in hi/lo order
-bx_bool bx_sb16_buffer::getw1(Bit16u *data)
+bool bx_sb16_buffer::getw1(Bit16u *data)
 {
   Bit8u dummy;
   if (bytes() < 2)
@@ -3083,7 +3083,7 @@ bx_bool bx_sb16_buffer::getw1(Bit16u *data)
 }
 
 // This returns if the buffer is empty, i.e. if a get will fail
-bx_bool bx_sb16_buffer::empty(void)
+bool bx_sb16_buffer::empty(void)
 {
   if (length == 0)
     return 1;   // not inialized
@@ -3131,7 +3131,7 @@ void bx_sb16_buffer::clearcommand(void)
 }
 
 // return if the command has received all necessary bytes
-bx_bool bx_sb16_buffer::commanddone(void)
+bool bx_sb16_buffer::commanddone(void)
 {
   if (hascommand() == 0)
     return 0;  // no command pending - not done then
@@ -3143,7 +3143,7 @@ bx_bool bx_sb16_buffer::commanddone(void)
 }
 
 // return if there is a command pending
-bx_bool bx_sb16_buffer::hascommand(void)
+bool bx_sb16_buffer::hascommand(void)
 {
   return havecommand;
 }

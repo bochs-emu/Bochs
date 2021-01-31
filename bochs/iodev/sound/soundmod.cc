@@ -79,7 +79,7 @@ bx_sound_lowlevel_c* bx_soundmod_ctl_c::get_driver(int driver_id)
   return bx_sound_lowlevel_c::get_module(modname);
 }
 
-bx_soundlow_waveout_c* bx_soundmod_ctl_c::get_waveout(bx_bool using_file)
+bx_soundlow_waveout_c* bx_soundmod_ctl_c::get_waveout(bool using_file)
 {
   bx_sound_lowlevel_c *module = NULL;
 
@@ -116,7 +116,7 @@ bx_soundlow_wavein_c* bx_soundmod_ctl_c::get_wavein()
   return wavein;
 }
 
-bx_soundlow_midiout_c* bx_soundmod_ctl_c::get_midiout(bx_bool using_file)
+bx_soundlow_midiout_c* bx_soundmod_ctl_c::get_midiout(bool using_file)
 {
   bx_sound_lowlevel_c *module = NULL;
   bx_soundlow_midiout_c *midiout = NULL;

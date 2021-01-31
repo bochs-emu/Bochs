@@ -99,7 +99,7 @@ int vmware3_image_t::check_format(int fd, Bit64u imgsize)
   return HDIMAGE_FORMAT_OK;
 }
 
-bx_bool vmware3_image_t::read_header(int fd, COW_Header & header)
+bool vmware3_image_t::read_header(int fd, COW_Header & header)
 {
   int ret;
 
@@ -558,9 +558,9 @@ Bit32u vmware3_image_t::get_capabilities(void)
 }
 
 #ifndef BXIMAGE
-bx_bool vmware3_image_t::save_state(const char *backup_fname)
+bool vmware3_image_t::save_state(const char *backup_fname)
 {
-  bx_bool ret = 1;
+  bool ret = 1;
   char tempfn[BX_PATHNAME_LEN];
 
   unsigned count = current->header.number_of_chains;
@@ -577,7 +577,7 @@ void vmware3_image_t::restore_state(const char *backup_fname)
 {
   int temp_fd;
   Bit64u imgsize;
-  bx_bool ret = 1;
+  bool ret = 1;
   char tempfn[BX_PATHNAME_LEN];
 
   if ((temp_fd = hdimage_open_file(backup_fname, O_RDONLY, &imgsize, NULL)) < 0) {

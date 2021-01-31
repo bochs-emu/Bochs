@@ -6,7 +6,7 @@
 // ported from QEMU block driver with some additions (see vvfat.cc)
 //
 // Copyright (c) 2004,2005  Johannes E. Schindelin
-// Copyright (C) 2010-2020  The Bochs Project
+// Copyright (C) 2010-2021  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -127,7 +127,7 @@ class vvfat_image_t : public device_image_t
     Bit32u get_capabilities();
 
   private:
-    bx_bool sector2CHS(Bit32u spos, mbr_chs_t *chs);
+    bool sector2CHS(Bit32u spos, mbr_chs_t *chs);
     void init_mbr();
     direntry_t* create_long_filename(const char* filename);
     void fat_set(unsigned int cluster, Bit32u value);
@@ -138,10 +138,10 @@ class vvfat_image_t : public device_image_t
     Bit32u sector2cluster(off_t sector_num);
     off_t cluster2sector(Bit32u cluster_num);
     int init_directories(const char* dirname);
-    bx_bool read_sector_from_file(const char *path, Bit8u *buffer, Bit32u sector);
+    bool read_sector_from_file(const char *path, Bit8u *buffer, Bit32u sector);
     void set_file_attributes(void);
     Bit32u fat_get_next(Bit32u current);
-    bx_bool write_file(const char *path, direntry_t *entry, bx_bool create);
+    bool write_file(const char *path, direntry_t *entry, bool create);
     direntry_t* read_direntry(Bit8u *buffer, char *filename);
     void parse_directory(const char *path, Bit32u start_cluster);
     void commit_changes(void);
@@ -180,11 +180,11 @@ class vvfat_image_t : public device_image_t
     const char *vvfat_path;
     Bit32u sector_num;
 
-    bx_bool use_mbr_file;
-    bx_bool use_boot_file;
+    bool    use_mbr_file;
+    bool    use_boot_file;
     FILE    *vvfat_attr_fd;
 
-    bx_bool   vvfat_modified;
+    bool      vvfat_modified;
     void      *fat2;
     redolog_t *redolog;       // Redolog instance
     char      *redolog_name;  // Redolog name

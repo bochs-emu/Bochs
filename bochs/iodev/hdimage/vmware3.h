@@ -44,7 +44,7 @@ class vmware3_image_t : public device_image_t
       static int check_format(int fd, Bit64u imgsize);
 
 #ifndef BXIMAGE
-      bx_bool save_state(const char *backup_fname);
+      bool save_state(const char *backup_fname);
       void restore_state(const char *backup_fname);
 #endif
 
@@ -112,7 +112,7 @@ class vmware3_image_t : public device_image_t
           bool synced;
       } * images, * current;
 
-      bx_bool read_header(int fd, COW_Header & header);
+      bool read_header(int fd, COW_Header & header);
       int write_header(int fd, COW_Header & header);
 
       int read_ints(int fd, Bit32u *buffer, size_t count);

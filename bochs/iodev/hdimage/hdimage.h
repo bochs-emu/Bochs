@@ -153,9 +153,9 @@ int hdimage_open_file(const char *pathname, int flags, Bit64u *fsize, time_t *mt
 BOCHSAPI_MSVCONLY int hdimage_open_file(const char *pathname, int flags, Bit64u *fsize, FILETIME *mtime);
 #endif
 bool hdimage_detect_image_mode(const char *pathname, const char **image_mode);
-BOCHSAPI_MSVCONLY bx_bool hdimage_backup_file(int fd, const char *backup_fname);
-BOCHSAPI_MSVCONLY bx_bool hdimage_copy_file(const char *src, const char *dst);
-bx_bool coherency_check(device_image_t *ro_disk, redolog_t *redolog);
+BOCHSAPI_MSVCONLY bool hdimage_backup_file(int fd, const char *backup_fname);
+BOCHSAPI_MSVCONLY bool hdimage_copy_file(const char *src, const char *dst);
+bool coherency_check(device_image_t *ro_disk, redolog_t *redolog);
 #ifndef WIN32
 Bit16u fat_datetime(time_t time, int return_time);
 #else
@@ -206,7 +206,7 @@ class BOCHSAPI_MSVCONLY device_image_t
 #else
       // Save/restore support
       virtual void register_state(bx_list_c *parent);
-      virtual bx_bool save_state(const char *backup_fname) {return 0;}
+      virtual bool save_state(const char *backup_fname) {return 0;}
       virtual void restore_state(const char *backup_fname) {}
 #endif
 
@@ -250,7 +250,7 @@ class flat_image_t : public device_image_t
 
 #ifndef BXIMAGE
       // Save/restore support
-      bx_bool save_state(const char *backup_fname);
+      bool save_state(const char *backup_fname);
       void restore_state(const char *backup_fname);
 #endif
 
@@ -286,7 +286,7 @@ class concat_image_t : public device_image_t
 
 #ifndef BXIMAGE
       // Save/restore support
-      bx_bool save_state(const char *backup_fname);
+      bool save_state(const char *backup_fname);
       void restore_state(const char *backup_fname);
 #endif
 
@@ -352,7 +352,7 @@ class sparse_image_t : public device_image_t
     int create_image(const char *pathname, Bit64u size);
 #else
     // Save/restore support
-    bx_bool save_state(const char *backup_fname);
+    bool save_state(const char *backup_fname);
     void restore_state(const char *backup_fname);
 #endif
 
@@ -443,7 +443,7 @@ class BOCHSAPI_MSVCONLY redolog_t
       void close();
       Bit64u get_size();
       Bit32u get_timestamp();
-      bx_bool set_timestamp(Bit32u timestamp);
+      bool set_timestamp(Bit32u timestamp);
 
       Bit64s lseek(Bit64s offset, int whence);
       ssize_t read(void* buf, size_t count);
@@ -454,7 +454,7 @@ class BOCHSAPI_MSVCONLY redolog_t
 #ifdef BXIMAGE
       int commit(device_image_t *base_image);
 #else
-      bx_bool save_state(const char *backup_fname);
+      bool save_state(const char *backup_fname);
 #endif
 
   private:
@@ -464,7 +464,7 @@ class BOCHSAPI_MSVCONLY redolog_t
       redolog_header_t header;     // Header is kept in x86 (little) endianness
       Bit32u          *catalog;
       Bit8u           *bitmap;
-      bx_bool          bitmap_update;
+      bool             bitmap_update;
       Bit32u           extent_index;
       Bit32u           extent_offset;
       Bit32u           extent_next;
@@ -512,7 +512,7 @@ class growing_image_t : public device_image_t
       int create_image(const char *pathname, Bit64u size);
 #else
       // Save/restore support
-      bx_bool save_state(const char *backup_fname);
+      bool save_state(const char *backup_fname);
       void restore_state(const char *backup_fname);
 #endif
 
@@ -552,7 +552,7 @@ class undoable_image_t : public device_image_t
 
 #ifndef BXIMAGE
       // Save/restore support
-      bx_bool save_state(const char *backup_fname);
+      bool save_state(const char *backup_fname);
       void restore_state(const char *backup_fname);
 #endif
 
@@ -595,7 +595,7 @@ class volatile_image_t : public device_image_t
 
 #ifndef BXIMAGE
       // Save/restore support
-      bx_bool save_state(const char *backup_fname);
+      bool save_state(const char *backup_fname);
       void restore_state(const char *backup_fname);
 #endif
 

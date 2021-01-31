@@ -80,7 +80,7 @@ class vmware4_image_t : public device_image_t
 #ifdef BXIMAGE
         int create_image(const char *pathname, Bit64u size);
 #else
-        bx_bool save_state(const char *backup_fname);
+        bool save_state(const char *backup_fname);
         void restore_state(const char *backup_fname);
 #endif
 
@@ -88,9 +88,9 @@ class vmware4_image_t : public device_image_t
         static const off_t INVALID_OFFSET;
         static const int SECTOR_SIZE;
 
-        bx_bool is_open() const;
+        bool is_open() const;
 
-        bx_bool read_header();
+        bool read_header();
         off_t perform_seek();
         void flush();
         Bit32u read_block_index(Bit64u sector, Bit32u index);
@@ -101,7 +101,7 @@ class vmware4_image_t : public device_image_t
         Bit8u* tlb;
         off_t tlb_offset;
         off_t current_offset;
-        bx_bool is_dirty;
+        bool is_dirty;
         const char *pathname;
 };
 

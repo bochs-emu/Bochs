@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2012-2017  The Bochs Project
+//  Copyright (C) 2012-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -39,10 +39,10 @@ public:
   virtual void unregister_wave_callback(int callback_id);
 
   virtual void resampler(audio_buffer_t *inbuffer, audio_buffer_t *outbuffer);
-  virtual bx_bool mixer_common(Bit8u *buffer, int len);
+  virtual bool mixer_common(Bit8u *buffer, int len);
 
 private:
-  bx_bool WaveOutOpen;
+  bool WaveOutOpen;
   SDL_AudioSpec fmt;
 };
 
@@ -60,7 +60,7 @@ public:
   static void record_timer_handler(void *);
   void record_timer(void);
 private:
-  bx_bool WaveInOpen;
+  bool WaveInOpen;
   SDL_AudioSpec fmt;
   SDL_AudioDeviceID devID;
 };

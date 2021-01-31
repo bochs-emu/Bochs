@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2000-2013  The Bochs Project
+//  Copyright (C) 2000-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -147,7 +147,7 @@ cdrom_amigaos_c::~cdrom_amigaos_c(void)
   }
 }
 
-bx_bool cdrom_amigaos_c::insert_cdrom(const char *dev)
+bool cdrom_amigaos_c::insert_cdrom(const char *dev)
 {
   Bit8u cdb[6];
   Bit8u buf[2*BX_CD_FRAMESIZE];
@@ -218,7 +218,7 @@ void cdrom_amigaos_c::eject_cdrom()
 }
 
 
-bx_bool cdrom_amigaos_c::read_toc(Bit8u* buf, int* length, bx_bool msf, int start_track, int format)
+bool cdrom_amigaos_c::read_toc(Bit8u* buf, int* length, bool msf, int start_track, int format)
 {
   Bit8u cdb[10];
   TOC *toc;
@@ -288,7 +288,7 @@ Bit32u cdrom_amigaos_c::capacity()
   }
 }
 
-bx_bool cdrom_amigaos_c::read_block(Bit8u* buf, Bit32u lba, int blocksize)
+bool cdrom_amigaos_c::read_block(Bit8u* buf, Bit32u lba, int blocksize)
 {
   int n;
   Bit8u try_count = 3;

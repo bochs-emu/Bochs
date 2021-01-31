@@ -232,12 +232,12 @@ int vmware4_image_t::check_format(int fd, Bit64u imgsize)
   return HDIMAGE_FORMAT_OK;
 }
 
-bx_bool vmware4_image_t::is_open() const
+bool vmware4_image_t::is_open() const
 {
   return (file_descriptor != -1);
 }
 
-bx_bool vmware4_image_t::read_header()
+bool vmware4_image_t::read_header()
 {
   int ret;
 
@@ -497,7 +497,7 @@ int vmware4_image_t::create_image(const char *pathname, Bit64u size)
   return 0;
 }
 #else
-bx_bool vmware4_image_t::save_state(const char *backup_fname)
+bool vmware4_image_t::save_state(const char *backup_fname)
 {
   return hdimage_backup_file(file_descriptor, backup_fname);
 }

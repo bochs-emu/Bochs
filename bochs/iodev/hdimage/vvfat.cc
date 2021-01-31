@@ -386,7 +386,7 @@ vvfat_image_t::~vvfat_image_t()
   delete redolog;
 }
 
-bx_bool vvfat_image_t::sector2CHS(Bit32u spos, mbr_chs_t *chs)
+bool vvfat_image_t::sector2CHS(Bit32u spos, mbr_chs_t *chs)
 {
   Bit32u head, sector;
 
@@ -413,7 +413,7 @@ void vvfat_image_t::init_mbr(void)
 {
   mbr_t* real_mbr = (mbr_t*)first_sectors;
   partition_t* partition = &(real_mbr->partition[0]);
-  bx_bool lba;
+  bool lba;
 
   // Win NT Disk Signature
   real_mbr->nt_id = htod32(0xbe1afdfa);
@@ -690,8 +690,8 @@ int vvfat_image_t::read_directory(int mapping_index)
     char* buffer;
     direntry_t* direntry;
     struct stat st;
-    bx_bool is_dot = !strcmp(entry->d_name, ".");
-    bx_bool is_dotdot = !strcmp(entry->d_name, "..");
+    bool is_dot = !strcmp(entry->d_name, ".");
+    bool is_dotdot = !strcmp(entry->d_name, "..");
     if ((first_cluster == first_cluster_of_root_dir) && (is_dotdot || is_dot))
       continue;
 
@@ -703,9 +703,9 @@ int vvfat_image_t::read_directory(int mapping_index)
       continue;
     }
 
-    bx_bool is_mbr_file = !strcmp(entry->d_name, VVFAT_MBR);
-    bx_bool is_boot_file = !strcmp(entry->d_name, VVFAT_BOOT);
-    bx_bool is_attr_file = !strcmp(entry->d_name, VVFAT_ATTR);
+    bool is_mbr_file = !strcmp(entry->d_name, VVFAT_MBR);
+    bool is_boot_file = !strcmp(entry->d_name, VVFAT_BOOT);
+    bool is_attr_file = !strcmp(entry->d_name, VVFAT_ATTR);
     if (first_cluster == first_cluster_of_root_dir) {
       if (is_attr_file || ((is_mbr_file || is_boot_file) && (st.st_size == 512))) {
         free(buffer);
@@ -802,13 +802,13 @@ int vvfat_image_t::read_directory(int mapping_index)
     unsigned int length = lstrlen(dirname) + 2 + lstrlen(finddata.cFileName);
     char* buffer;
     direntry_t* direntry;
-    bx_bool is_dot = !lstrcmp(finddata.cFileName, ".");
-    bx_bool is_dotdot = !lstrcmp(finddata.cFileName, "..");
+    bool is_dot = !lstrcmp(finddata.cFileName, ".");
+    bool is_dotdot = !lstrcmp(finddata.cFileName, "..");
     if ((first_cluster == first_cluster_of_root_dir) && (is_dotdot || is_dot))
       continue;
-    bx_bool is_mbr_file = !lstrcmp(finddata.cFileName, VVFAT_MBR);
-    bx_bool is_boot_file = !lstrcmp(finddata.cFileName, VVFAT_BOOT);
-    bx_bool is_attr_file = !lstrcmp(finddata.cFileName, VVFAT_ATTR);
+    bool is_mbr_file = !lstrcmp(finddata.cFileName, VVFAT_MBR);
+    bool is_boot_file = !lstrcmp(finddata.cFileName, VVFAT_BOOT);
+    bool is_attr_file = !lstrcmp(finddata.cFileName, VVFAT_ATTR);
     if (first_cluster == first_cluster_of_root_dir) {
       if (is_attr_file || ((is_mbr_file || is_boot_file) && (finddata.nFileSizeLow == 512)))
         continue;
@@ -1102,7 +1102,7 @@ int vvfat_image_t::init_directories(const char* dirname)
   return 0;
 }
 
-bx_bool vvfat_image_t::read_sector_from_file(const char *path, Bit8u *buffer, Bit32u sector)
+bool vvfat_image_t::read_sector_from_file(const char *path, Bit8u *buffer, Bit32u sector)
 {
   int fd = ::open(path, O_RDONLY
 #ifdef O_BINARY
@@ -1121,7 +1121,7 @@ bx_bool vvfat_image_t::read_sector_from_file(const char *path, Bit8u *buffer, Bi
   }
   int result = ::read(fd, buffer, 0x200);
   ::close(fd);
-  bx_bool bootsig = ((buffer[0x1fe] == 0x55) && (buffer[0x1ff] == 0xaa));
+  bool bootsig = ((buffer[0x1fe] == 0x55) && (buffer[0x1ff] == 0xaa));
 
   return (result == 0x200) && bootsig;
 }
@@ -1195,7 +1195,7 @@ int vvfat_image_t::open(const char* dirname, int flags)
   int filedes;
   const char *logname = NULL;
   char ftype[10];
-  bx_bool ftype_ok;
+  bool ftype_ok;
 
   UNUSED(flags);
   use_mbr_file = 0;
@@ -1396,7 +1396,7 @@ direntry_t* vvfat_image_t::read_direntry(Bit8u *buffer, char *filename)
 {
   const Bit8u lfn_map[13] = {1, 3, 5, 7, 9, 14, 16, 18, 20, 22, 24, 28, 30};
   direntry_t *entry;
-  bx_bool entry_ok = 0, has_lfn = 0;
+  bool entry_ok = 0, has_lfn = 0;
   char lfn_tmp[BX_PATHNAME_LEN];
   int i;
 
@@ -1465,7 +1465,7 @@ Bit32u vvfat_image_t::fat_get_next(Bit32u current)
   }
 }
 
-bx_bool vvfat_image_t::write_file(const char *path, direntry_t *entry, bx_bool create)
+bool vvfat_image_t::write_file(const char *path, direntry_t *entry, bool create)
 {
   int fd;
   Bit32u csize, fsize, fstart, cur, next, rsvd_clusters, bad_cluster;
@@ -1967,7 +1967,7 @@ ssize_t vvfat_image_t::write(const void* buf, size_t count)
   ssize_t ret = 0;
   char *cbuf = (char*)buf;
   Bit32u scount = (Bit32u)(count / 512);
-  bx_bool update_imagepos;
+  bool update_imagepos;
 
   while (scount-- > 0) {
     update_imagepos = 1;

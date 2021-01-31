@@ -168,7 +168,7 @@ class vpc_image_t : public device_image_t
 #ifdef BXIMAGE
     int create_image(const char *pathname, Bit64u size);
 #else
-    bx_bool save_state(const char *backup_fname);
+    bool save_state(const char *backup_fname);
     void restore_state(const char *backup_fname);
 #endif
 

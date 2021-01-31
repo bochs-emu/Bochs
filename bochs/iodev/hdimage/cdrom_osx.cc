@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2020  The Bochs Project
+//  Copyright (C) 2002-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -274,7 +274,7 @@ Exit:
 }
 
 
-bx_bool cdrom_osx_c::insert_cdrom(const char *dev)
+bool cdrom_osx_c::insert_cdrom(const char *dev)
 {
   unsigned char buffer[BX_CD_FRAMESIZE];
   ssize_t ret;
@@ -332,7 +332,7 @@ bx_bool cdrom_osx_c::insert_cdrom(const char *dev)
   return read_block(buffer, 0, 2048);
 }
 
-bx_bool cdrom_osx_c::read_toc(Bit8u* buf, int* length, bx_bool msf, int start_track, int format)
+bool cdrom_osx_c::read_toc(Bit8u* buf, int* length, bool msf, int start_track, int format)
 {
   // Read CD TOC. Returns 0 if start track is out of bounds.
 
@@ -483,7 +483,7 @@ Bit32u cdrom_osx_c::capacity()
   }
 }
 
-bx_bool BX_CPP_AttrRegparmN(3) cdrom_osx_c::read_block(Bit8u* buf, Bit32u lba, int blocksize)
+bool BX_CPP_AttrRegparmN(3) cdrom_osx_c::read_block(Bit8u* buf, Bit32u lba, int blocksize)
 {
   // Read a single block from the CD
 

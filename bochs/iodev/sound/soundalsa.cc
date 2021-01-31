@@ -45,7 +45,7 @@ PLUGIN_ENTRY_FOR_SND_MODULE(alsa)
 
 // helper function for wavein / waveout
 
-int alsa_pcm_open(bx_bool mode, alsa_pcm_t *alsa_pcm, bx_pcm_param_t *param, logfunctions *log)
+int alsa_pcm_open(bool mode, alsa_pcm_t *alsa_pcm, bx_pcm_param_t *param, logfunctions *log)
 {
   snd_pcm_format_t fmt;
   snd_pcm_hw_params_t *hwparams;

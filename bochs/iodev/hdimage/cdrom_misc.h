@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2013  The Bochs Project
+//  Copyright (C) 2002-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -24,8 +24,8 @@
 class cdrom_misc_c : public cdrom_base_c {
 public:
   cdrom_misc_c(const char *dev) : cdrom_base_c(dev) {}
-  bx_bool start_cdrom();
+  bool start_cdrom();
   void eject_cdrom();
-  bx_bool read_toc(Bit8u* buf, int* length, bx_bool msf, int start_track, int format);
+  bool read_toc(Bit8u* buf, int* length, bool msf, int start_track, int format);
   Bit32u capacity();
 };

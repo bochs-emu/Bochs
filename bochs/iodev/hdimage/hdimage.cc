@@ -533,12 +533,12 @@ void hdimage_restore_handler(void *class_ptr, bx_param_c *param, Bit64s value)
   }
 }
 
-bx_bool hdimage_backup_file(int fd, const char *backup_fname)
+bool hdimage_backup_file(int fd, const char *backup_fname)
 {
   char *buf;
   off_t offset;
   int nread, size;
-  bx_bool ret = 1;
+  bool ret = 1;
 
   int backup_fd = ::open(backup_fname, O_RDWR | O_CREAT | O_TRUNC
 #ifdef O_BINARY
@@ -574,10 +574,10 @@ bx_bool hdimage_backup_file(int fd, const char *backup_fname)
 }
 #endif
 
-bx_bool hdimage_copy_file(const char *src, const char *dst)
+bool hdimage_copy_file(const char *src, const char *dst)
 {
 #ifdef WIN32
-  return (bx_bool)CopyFile(src, dst, FALSE);
+  return (bool)CopyFile(src, dst, FALSE);
 #elif defined(linux)
   pid_t pid, ws;
 
@@ -599,7 +599,7 @@ bx_bool hdimage_copy_file(const char *src, const char *dst)
   char *buf;
   off_t offset;
   int nread, size;
-  bx_bool ret = 1;
+  bool ret = 1;
 
   fd1 = ::open(src, O_RDONLY
 #ifdef O_BINARY
@@ -727,7 +727,7 @@ int flat_image_t::check_format(int fd, Bit64u imgsize)
 }
 
 #ifndef BXIMAGE
-bx_bool flat_image_t::save_state(const char *backup_fname)
+bool flat_image_t::save_state(const char *backup_fname)
 {
   return hdimage_backup_file(fd, backup_fname);
 }
@@ -942,9 +942,9 @@ ssize_t concat_image_t::write(const void* buf, size_t count)
 }
 
 #ifndef BXIMAGE
-bx_bool concat_image_t::save_state(const char *backup_fname)
+bool concat_image_t::save_state(const char *backup_fname)
 {
-  bx_bool ret = 1;
+  bool ret = 1;
   char tempfn[BX_PATHNAME_LEN];
 
   for (int index = 0; index < maxfd; index++) {
@@ -1033,7 +1033,7 @@ int sparse_image_t::read_header()
   data_start = 0;
   while ((size_t)data_start < preamble_size) data_start += pagesize;
 
-  bx_bool did_mmap = 0;
+  bool did_mmap = 0;
 
 #ifdef _POSIX_MAPPED_FILES
   // Try to memory map from the beginning of the file (0 is trivially a page multiple)
@@ -1419,7 +1419,7 @@ ssize_t sparse_image_t::write(const void* buf, size_t count)
 
   if (update_pagetable_count != 0)
   {
-    bx_bool done = 0;
+    bool done = 0;
     off_t pagetable_write_from = sizeof(header) + (sizeof(Bit32u) * update_pagetable_start);
     size_t write_bytecount = update_pagetable_count * sizeof(Bit32u);
 
@@ -1539,7 +1539,7 @@ int sparse_image_t::create_image(const char *pathname, Bit64u size)
   return 0;
 }
 #else
-bx_bool sparse_image_t::save_state(const char *backup_fname)
+bool sparse_image_t::save_state(const char *backup_fname)
 {
   return hdimage_backup_file(fd, backup_fname);
 }
@@ -1928,7 +1928,7 @@ Bit32u redolog_t::get_timestamp()
   return dtoh32(header.specific.timestamp);
 }
 
-bx_bool redolog_t::set_timestamp(Bit32u timestamp)
+bool redolog_t::set_timestamp(Bit32u timestamp)
 {
   header.specific.timestamp = htod32(timestamp);
   // Update header
@@ -2017,7 +2017,7 @@ ssize_t redolog_t::write(const void* buf, size_t count)
   Bit32u i;
   Bit64s block_offset, bitmap_offset, catalog_offset;
   ssize_t written;
-  bx_bool update_catalog = 0;
+  bool update_catalog = 0;
 
   if (count != 512) {
     BX_PANIC(("redolog : write() with count not 512"));
@@ -2188,7 +2188,7 @@ int redolog_t::commit(device_image_t *base_image)
 #endif
 
 #ifndef BXIMAGE
-bx_bool redolog_t::save_state(const char *backup_fname)
+bool redolog_t::save_state(const char *backup_fname)
 {
   return hdimage_backup_file(fd, backup_fname);
 }
@@ -2276,7 +2276,7 @@ int growing_image_t::create_image(const char *pathname, Bit64u size)
   return 0;
 }
 #else
-bx_bool growing_image_t::save_state(const char *backup_fname)
+bool growing_image_t::save_state(const char *backup_fname)
 {
   return redolog->save_state(backup_fname);
 }
@@ -2289,7 +2289,7 @@ void growing_image_t::restore_state(const char *backup_fname)
     BX_PANIC(("Can't open growing image backup '%s'", backup_fname));
     return;
   } else {
-    bx_bool okay = (temp_redolog->get_size() == redolog->get_size());
+    bool okay = (temp_redolog->get_size() == redolog->get_size());
     temp_redolog->close();
     delete temp_redolog;
     if (!okay) {
@@ -2310,7 +2310,7 @@ void growing_image_t::restore_state(const char *backup_fname)
 
 // compare hd_size and modification time of r/o disk and journal
 
-bx_bool coherency_check(device_image_t *ro_disk, redolog_t *redolog)
+bool coherency_check(device_image_t *ro_disk, redolog_t *redolog)
 {
   Bit32u timestamp1, timestamp2;
   char buffer[24];
@@ -2458,7 +2458,7 @@ ssize_t undoable_image_t::write(const void* buf, size_t count)
 }
 
 #ifndef BXIMAGE
-bx_bool undoable_image_t::save_state(const char *backup_fname)
+bool undoable_image_t::save_state(const char *backup_fname)
 {
   return redolog->save_state(backup_fname);
 }
@@ -2471,7 +2471,7 @@ void undoable_image_t::restore_state(const char *backup_fname)
     BX_PANIC(("Can't open undoable redolog backup '%s'", backup_fname));
     return;
   } else {
-    bx_bool okay = coherency_check(ro_disk, temp_redolog);
+    bool okay = coherency_check(ro_disk, temp_redolog);
     temp_redolog->close();
     delete temp_redolog;
     if (!okay) return;
@@ -2632,7 +2632,7 @@ ssize_t volatile_image_t::write(const void* buf, size_t count)
 }
 
 #ifndef BXIMAGE
-bx_bool volatile_image_t::save_state(const char *backup_fname)
+bool volatile_image_t::save_state(const char *backup_fname)
 {
   return redolog->save_state(backup_fname);
 }
@@ -2645,7 +2645,7 @@ void volatile_image_t::restore_state(const char *backup_fname)
     BX_PANIC(("Can't open volatile redolog backup '%s'", backup_fname));
     return;
   } else {
-    bx_bool okay = coherency_check(ro_disk, temp_redolog);
+    bool okay = coherency_check(ro_disk, temp_redolog);
     temp_redolog->close();
     delete temp_redolog;
     if (!okay) return;

@@ -148,7 +148,7 @@ void bx_soundlow_waveout_sdl_c::resampler(audio_buffer_t *inbuffer, audio_buffer
   }
 }
 
-bx_bool bx_soundlow_waveout_sdl_c::mixer_common(Bit8u *buffer, int len)
+bool bx_soundlow_waveout_sdl_c::mixer_common(Bit8u *buffer, int len)
 {
   Bit32u len2 = 0;
 

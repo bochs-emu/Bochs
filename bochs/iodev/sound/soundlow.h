@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2011-2017  The Bochs Project
+//  Copyright (C) 2011-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -108,10 +108,10 @@ public:
 
   virtual void resampler(audio_buffer_t *inbuffer, audio_buffer_t *outbuffer);
 
-  virtual bx_bool mixer_common(Bit8u *buffer, int len);
+  virtual bool mixer_common(Bit8u *buffer, int len);
 
-  bx_bool resampler_running() {return res_thread_start;}
-  bx_bool mixer_running() {return mix_thread_start;}
+  bool resampler_running() {return res_thread_start;}
+  bool mixer_running() {return mix_thread_start;}
 
 protected:
   void start_resampler_thread(void);
@@ -119,8 +119,8 @@ protected:
   Bit32u resampler_common(audio_buffer_t *inbuffer, float **fbuffer);
 
   bx_pcm_param_t real_pcm_param;
-  bx_bool res_thread_start;
-  bx_bool mix_thread_start;
+  bool res_thread_start;
+  bool mix_thread_start;
   BX_THREAD_VAR(res_thread_var);
   BX_THREAD_VAR(mix_thread_var);
 #if BX_HAVE_LIBSAMPLERATE || BX_HAVE_SOXR_LSR
@@ -173,7 +173,7 @@ public:
 
 class BOCHSAPI_MSVCONLY bx_sound_lowlevel_c : public logfunctions {
 public:
-  static bx_bool module_present(const char *type);
+  static bool module_present(const char *type);
   static bx_sound_lowlevel_c* get_module(const char *type);
   static void cleanup();
 

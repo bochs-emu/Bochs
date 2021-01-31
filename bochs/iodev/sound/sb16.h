@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2020  The Bochs Project
+//  Copyright (C) 2001-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -91,24 +91,24 @@ public:
   BX_SB16_BUFINL void reset();
 
       /* These functions return 1 on success and 0 on error */
-  BX_SB16_BUFINL bx_bool put(Bit8u data);    // write one byte in the buffer
-  BX_SB16_BUFINL bx_bool puts(const char *data, ...);  // write a formatted string to the buffer
-  BX_SB16_BUFINL bx_bool get(Bit8u *data);   // read the next available byte
-  BX_SB16_BUFINL bx_bool getw(Bit16u *data); // get word, in order lo/hi
-  BX_SB16_BUFINL bx_bool getw1(Bit16u *data);// get word, in order hi/lo
-  BX_SB16_BUFINL bx_bool full(void);         // is the buffer full?
-  BX_SB16_BUFINL bx_bool empty(void);        // is it empty?
+  BX_SB16_BUFINL bool put(Bit8u data);    // write one byte in the buffer
+  BX_SB16_BUFINL bool puts(const char *data, ...);  // write a formatted string to the buffer
+  BX_SB16_BUFINL bool get(Bit8u *data);   // read the next available byte
+  BX_SB16_BUFINL bool getw(Bit16u *data); // get word, in order lo/hi
+  BX_SB16_BUFINL bool getw1(Bit16u *data);// get word, in order hi/lo
+  BX_SB16_BUFINL bool full(void);         // is the buffer full?
+  BX_SB16_BUFINL bool empty(void);        // is it empty?
 
-  BX_SB16_BUFINL void flush(void);           // empty the buffer
-  BX_SB16_BUFINL int bytes(void);            // return number of bytes in the buffer
-  BX_SB16_BUFINL Bit8u peek(int ahead);      // peek ahead number of bytes
+  BX_SB16_BUFINL void flush(void);        // empty the buffer
+  BX_SB16_BUFINL int bytes(void);         // return number of bytes in the buffer
+  BX_SB16_BUFINL Bit8u peek(int ahead);   // peek ahead number of bytes
 
       /* These are for caching the command number */
   BX_SB16_BUFINL void newcommand(Bit8u newcmd, int bytes);   // start a new command with length bytes
   BX_SB16_BUFINL Bit8u currentcommand(void); // return the current command
   BX_SB16_BUFINL void clearcommand(void);    // clear the command
-  BX_SB16_BUFINL bx_bool commanddone(void);  // return if all bytes have arrived
-  BX_SB16_BUFINL bx_bool hascommand(void);   // return if there is a pending command
+  BX_SB16_BUFINL bool commanddone(void);  // return if all bytes have arrived
+  BX_SB16_BUFINL bool hascommand(void);   // return if there is a pending command
   BX_SB16_BUFINL int commandbytes(void);     // return the length of the command
 
 
@@ -116,7 +116,7 @@ private:
   Bit8u *buffer;
   int head,tail,length;
   Bit8u command;
-  bx_bool havecommand;
+  bool havecommand;
   int bytesneeded;
 };
 
@@ -168,7 +168,7 @@ private:
       bx_sb16_buffer datain, dataout, cmd, midicmd;
     } b;
     struct {
-      bx_bool uartmode, irqpending, forceuartmode, singlecommand;
+      bool uartmode, irqpending, forceuartmode, singlecommand;
 
       int banklsb[16];
       int bankmsb[16];   // current patch lists
@@ -188,9 +188,9 @@ private:
     struct {
       Bit8u resetport;                    // last value written to the reset port
       Bit8u speaker,prostereo;            // properties of the sound input/output
-      bx_bool irqpending;                 // Is an IRQ pending (not ack'd)
-      bx_bool midiuartmode;               // Is the DSP in MIDI UART mode
-      bx_bool nondma_mode;                // Set if DSP command 0x10 active
+      bool irqpending;                    // Is an IRQ pending (not ack'd)
+      bool midiuartmode;                  // Is the DSP in MIDI UART mode
+      bool nondma_mode;                   // Set if DSP command 0x10 active
       Bit32u nondma_count;                // Number of samples sent in non-DMA mode
       Bit8u samplebyte;                   // Current data byte in non-DMA mode
       Bit8u testreg;
@@ -206,7 +206,7 @@ private:
         // highspeed= 0: normal mode, 1: highspeed mode (only SBPro)
         // timer= so many us between data bytes
         int mode, bps, timer;
-        bx_bool fifo, output, highspeed;
+        bool fifo, output, highspeed;
         bx_pcm_param_t param;
         Bit16u count;     // bytes remaining in this transfer
         Bit8u *chunk;     // buffers up to BX_SOUNDLOW_WAVEPACKETSIZE bytes
@@ -217,7 +217,7 @@ private:
       } dma;
       int timer_handle;   // handle for the DMA timer
       Bit8u outputinit; // have the lowlevel output been initialized
-      bx_bool inputinit;  // have the lowlevel input been initialized
+      bool inputinit;  // have the lowlevel input been initialized
     } d;
   } dsp;
 
@@ -287,7 +287,7 @@ private:
   BX_SB16_SMF Bit32u mixer_readdata(void);
   BX_SB16_SMF void   mixer_writedata(Bit32u value);
   BX_SB16_SMF void   mixer_writeregister(Bit32u value);
-  BX_SB16_SMF Bit16u calc_output_volume(Bit8u reg1, Bit8u reg2, bx_bool shift);
+  BX_SB16_SMF Bit16u calc_output_volume(Bit8u reg1, Bit8u reg2, bool shift);
   BX_SB16_SMF void   set_irq_dma();
 
       /* The emulator ports to change emulator properties */
@@ -303,7 +303,7 @@ private:
 
       /* several high level sound handlers */
   BX_SB16_SMF int    currentdeltatime();
-  BX_SB16_SMF void   processmidicommand(bx_bool force);
+  BX_SB16_SMF void   processmidicommand(bool force);
   BX_SB16_SMF void   midiremapprogram(int channel);  // remap program change
   BX_SB16_SMF void   writemidicommand(int command, int length, Bit8u data[]);
 

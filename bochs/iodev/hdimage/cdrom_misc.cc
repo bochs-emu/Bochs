@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2020  The Bochs Project
+//  Copyright (C) 2002-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -107,7 +107,7 @@ extern "C" {
 #include <stdio.h>
 
 
-bx_bool cdrom_misc_c::start_cdrom()
+bool cdrom_misc_c::start_cdrom()
 {
   // Spin up the cdrom drive.
 
@@ -146,7 +146,7 @@ void cdrom_misc_c::eject_cdrom()
   }
 }
 
-bx_bool cdrom_misc_c::read_toc(Bit8u* buf, int* length, bx_bool msf, int start_track, int format)
+bool cdrom_misc_c::read_toc(Bit8u* buf, int* length, bool msf, int start_track, int format)
 {
   // Read CD TOC. Returns 0 if start track is out of bounds.
 

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2011-2017  The Bochs Project
+//  Copyright (C) 2011-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -32,10 +32,10 @@ public:
   ~bx_soundmod_ctl_c() {}
   void init(void);
   void exit(void);
-  bx_bool register_driver(bx_sound_lowlevel_c *module, int driver_id);
-  bx_soundlow_waveout_c* get_waveout(bx_bool using_file);
+  bool register_driver(bx_sound_lowlevel_c *module, int driver_id);
+  bx_soundlow_waveout_c* get_waveout(bool using_file);
   bx_soundlow_wavein_c* get_wavein();
-  bx_soundlow_midiout_c* get_midiout(bx_bool using_file);
+  bx_soundlow_midiout_c* get_midiout(bool using_file);
 
 private:
   bx_sound_lowlevel_c* get_driver(int driver_id);
