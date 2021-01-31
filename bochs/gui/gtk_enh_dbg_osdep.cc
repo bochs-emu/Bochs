@@ -11,6 +11,7 @@
 //  Copyright (C) 2008-2021  The Bochs Project
 
 #include "bochs.h"
+#include "bx_debug/debug.h"
 #include "siminterface.h"
 #include "enh_dbg.h"
 

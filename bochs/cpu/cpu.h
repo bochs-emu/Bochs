@@ -24,6 +24,8 @@
 
 #include <setjmp.h>
 
+#include "bx_debug/debug.h"
+
 #include "decoder/decoder.h"
 
 #if defined(NEED_CPU_REG_SHORTCUTS)

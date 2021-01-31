@@ -18,6 +18,7 @@
 
 #include "bochs.h"
 #include "siminterface.h"
+#include "bx_debug/debug.h"
 #include "memory/memory-bochs.h"
 #include "pc_system.h"
 #include "cpu/cpu.h"

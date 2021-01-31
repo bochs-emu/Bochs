@@ -49,6 +49,7 @@ extern "C" {
 #endif
 
 #include "osdep.h"
+#include "bx_debug/debug.h"
 #include "param_names.h"
 #include "textconfig.h"
 #include "logio.h"
