@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2009  The Bochs Project
+//  Copyright (C) 2002-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -50,11 +50,11 @@ private:
   struct {
     Bit8u bios_message[BX_BIOS_MESSAGE_SIZE];
     unsigned int bios_message_i;
-    bx_bool bios_panic_flag;
+    bool bios_panic_flag;
 
     Bit8u vgabios_message[BX_BIOS_MESSAGE_SIZE];
     unsigned int vgabios_message_i;
-    bx_bool vgabios_panic_flag;
+    bool vgabios_panic_flag;
   } s;  // state information
 };
 

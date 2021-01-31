@@ -82,7 +82,7 @@ bx_keyb_c::~bx_keyb_c()
 }
 
 // flush internal buffer and reset keyboard settings to power-up condition
-void bx_keyb_c::resetinternals(bx_bool powerup)
+void bx_keyb_c::resetinternals(bool powerup)
 {
   BX_KEY_THIS s.kbd_internal_buffer.num_elements = 0;
   for (int i=0; i<BX_KBD_ELEMENTS; i++)
@@ -346,14 +346,14 @@ Bit32u bx_keyb_c::read(Bit32u address, unsigned io_len)
       return BX_KEY_THIS s.kbd_controller.kbd_output_buffer;
     }
   } else if (address == 0x64) { /* status register */
-    val = (BX_KEY_THIS s.kbd_controller.pare << 7)  |
-          (BX_KEY_THIS s.kbd_controller.tim  << 6)  |
-          (BX_KEY_THIS s.kbd_controller.auxb << 5)  |
-          (BX_KEY_THIS s.kbd_controller.keyl << 4)  |
-          (BX_KEY_THIS s.kbd_controller.c_d  << 3)  |
-          (BX_KEY_THIS s.kbd_controller.sysf << 2)  |
-          (BX_KEY_THIS s.kbd_controller.inpb << 1)  |
-          BX_KEY_THIS s.kbd_controller.outb;
+    val = ((Bit8u)BX_KEY_THIS s.kbd_controller.pare << 7)  |
+          ((Bit8u)BX_KEY_THIS s.kbd_controller.tim  << 6)  |
+          ((Bit8u)BX_KEY_THIS s.kbd_controller.auxb << 5)  |
+          ((Bit8u)BX_KEY_THIS s.kbd_controller.keyl << 4)  |
+          ((Bit8u)BX_KEY_THIS s.kbd_controller.c_d  << 3)  |
+          ((Bit8u)BX_KEY_THIS s.kbd_controller.sysf << 2)  |
+          ((Bit8u)BX_KEY_THIS s.kbd_controller.inpb << 1)  |
+          (Bit8u)BX_KEY_THIS s.kbd_controller.outb;
     BX_KEY_THIS s.kbd_controller.tim = 0;
     return val;
   }
@@ -396,8 +396,8 @@ void bx_keyb_c::write(Bit32u address, Bit32u value, unsigned io_len)
         switch (BX_KEY_THIS s.kbd_controller.last_comm) {
           case 0x60: // write command byte
             {
-            bx_bool scan_convert, disable_keyboard,
-                    disable_aux;
+            bool scan_convert, disable_keyboard,
+                 disable_aux;
 
             scan_convert = (value >> 6) & 0x01;
             disable_aux      = (value >> 5) & 0x01;
@@ -483,13 +483,13 @@ void bx_keyb_c::write(Bit32u address, Bit32u value, unsigned io_len)
             break;
           }
           command_byte =
-            (BX_KEY_THIS s.kbd_controller.scancodes_translate << 6) |
-            ((!BX_KEY_THIS s.kbd_controller.aux_clock_enabled) << 5) |
-            ((!BX_KEY_THIS s.kbd_controller.kbd_clock_enabled) << 4) |
+            ((Bit8u)BX_KEY_THIS s.kbd_controller.scancodes_translate << 6) |
+            ((Bit8u)(!BX_KEY_THIS s.kbd_controller.aux_clock_enabled) << 5) |
+            ((Bit8u)(!BX_KEY_THIS s.kbd_controller.kbd_clock_enabled) << 4) |
             (0 << 3) |
-            (BX_KEY_THIS s.kbd_controller.sysf << 2) |
-            (BX_KEY_THIS s.kbd_controller.allow_irq12 << 1) |
-            (BX_KEY_THIS s.kbd_controller.allow_irq1  << 0);
+            ((Bit8u)BX_KEY_THIS s.kbd_controller.sysf << 2) |
+            ((Bit8u)BX_KEY_THIS s.kbd_controller.allow_irq12 << 1) |
+            ((Bit8u)BX_KEY_THIS s.kbd_controller.allow_irq1  << 0);
           controller_enQ(command_byte, 0);
           break;
         case 0x60: // write command byte
@@ -582,8 +582,8 @@ void bx_keyb_c::write(Bit32u address, Bit32u value, unsigned io_len)
             break;
           }
           controller_enQ(
-              (BX_KEY_THIS s.kbd_controller.irq12_requested << 5) |
-              (BX_KEY_THIS s.kbd_controller.irq1_requested << 4) |
+              ((Bit8u)BX_KEY_THIS s.kbd_controller.irq12_requested << 5) |
+              ((Bit8u)BX_KEY_THIS s.kbd_controller.irq1_requested << 4) |
               (BX_GET_ENABLE_A20() << 1) |
               0x01, 0);
           break;
@@ -712,7 +712,7 @@ Bit8u bx_keyb_c::get_elements()
   void BX_CPP_AttrRegparmN(1)
 bx_keyb_c::set_kbd_clock_enable(Bit8u   value)
 {
-  bx_bool prev_kbd_clock_enabled;
+  bool prev_kbd_clock_enabled;
 
   if (value==0) {
     BX_KEY_THIS s.kbd_controller.kbd_clock_enabled = 0;
@@ -729,7 +729,7 @@ bx_keyb_c::set_kbd_clock_enable(Bit8u   value)
 
 void bx_keyb_c::set_aux_clock_enable(Bit8u value)
 {
-  bx_bool prev_aux_clock_enabled;
+  bool prev_aux_clock_enabled;
 
   BX_DEBUG(("set_aux_clock_enable(%u)", (unsigned) value));
   if (value==0) {
@@ -831,7 +831,7 @@ void bx_keyb_c::kbd_enQ(Bit8u scancode)
   }
 }
 
-bx_bool bx_keyb_c::mouse_enQ_packet(Bit8u b1, Bit8u b2, Bit8u b3, Bit8u b4)
+bool bx_keyb_c::mouse_enQ_packet(Bit8u b1, Bit8u b2, Bit8u b3, Bit8u b4)
 {
   int bytes = 3;
   if (BX_KEY_THIS s.mouse.im_mode) bytes = 4;
@@ -1050,7 +1050,8 @@ unsigned bx_keyb_c::periodic(Bit32u usec_delta)
 
   UNUSED(usec_delta);
 
-  retval = BX_KEY_THIS s.kbd_controller.irq1_requested | (BX_KEY_THIS s.kbd_controller.irq12_requested << 1);
+  retval = (Bit8u)BX_KEY_THIS s.kbd_controller.irq1_requested |
+           ((Bit8u)BX_KEY_THIS s.kbd_controller.irq12_requested << 1);
   BX_KEY_THIS s.kbd_controller.irq1_requested = 0;
   BX_KEY_THIS s.kbd_controller.irq12_requested = 0;
 
@@ -1115,7 +1116,7 @@ void bx_keyb_c::activate_timer(void)
 void bx_keyb_c::kbd_ctrl_to_mouse(Bit8u value)
 {
   // if we are not using a ps2 mouse, some of the following commands need to return different values
-  bx_bool is_ps2 = 0;
+  bool is_ps2 = 0;
   if ((BX_KEY_THIS s.mouse.type == BX_MOUSE_TYPE_PS2) ||
       (BX_KEY_THIS s.mouse.type == BX_MOUSE_TYPE_IMPS2)) is_ps2 = 1;
 
@@ -1343,7 +1344,7 @@ void bx_keyb_c::kbd_ctrl_to_mouse(Bit8u value)
   }
 }
 
-void bx_keyb_c::create_mouse_packet(bx_bool force_enq)
+void bx_keyb_c::create_mouse_packet(bool force_enq)
 {
   Bit8u b1, b2, b3, b4;
 
@@ -1427,7 +1428,7 @@ void bx_keyb_c::mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_
 
 void bx_keyb_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state, bool absxy)
 {
-  bx_bool force_enq=0;
+  bool force_enq=0;
 
   // don't generate interrupts if we are in remote mode.
   if (BX_KEY_THIS s.mouse.mode == MOUSE_MODE_REMOTE)

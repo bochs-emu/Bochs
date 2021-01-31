@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2004-2014  The Bochs Project
+//  Copyright (C) 2004-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -61,10 +61,10 @@ public:
     void set_parity_mode(int mode);
     void set_break(int mode);
     void set_modem_control(int ctrl);
-    int get_modem_status();
+    int  get_modem_status();
     void transmit(Bit8u byte);
-    bx_bool ready_transmit();
-    bx_bool ready_receive();
+    bool ready_transmit();
+    bool ready_receive();
     int receive();
 #ifdef WIN32_RECEIVE_RAW
     void serial_thread();
@@ -75,7 +75,7 @@ public:
 #ifdef WIN32_RECEIVE_RAW
     void enq_event(Bit16s event);
 #endif
-    bx_bool present;
+    bool present;
     unsigned rxdata_count;
 #ifdef WIN32
     HANDLE hCOM;

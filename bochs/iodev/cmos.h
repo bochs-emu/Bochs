@@ -67,16 +67,16 @@ public:
     time_t  timeval;
     Bit8u   cmos_mem_address;
     Bit8u   cmos_ext_mem_addr;
-    bx_bool timeval_change;
-    bx_bool rtc_mode_12hour;
-    bx_bool rtc_mode_binary;
-    bx_bool rtc_sync;
-    bx_bool irq_enabled;
+    bool    timeval_change;
+    bool    rtc_mode_12hour;
+    bool    rtc_mode_binary;
+    bool    rtc_sync;
+    bool    irq_enabled;
 
     Bit8u   reg[256];
     Bit8u   max_reg;
 
-    bx_bool use_image;
+    bool    use_image;
   } s;  // state information
 
 private:

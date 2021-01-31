@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2020  The Bochs Project
+//  Copyright (C) 2002-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -42,7 +42,7 @@ typedef struct {
   unsigned type;
   unsigned write_protected;
   unsigned status_changed;
-  bx_bool  vvfat_floppy;
+  bool     vvfat_floppy;
   device_image_t *vvfat;
 } floppy_t;
 
@@ -66,11 +66,11 @@ private:
     Bit8u   command[10]; /* largest command size ??? */
     Bit8u   command_index;
     Bit8u   command_size;
-    bx_bool command_complete;
+    bool    command_complete;
     Bit8u   pending_command;
 
-    bx_bool multi_track;
-    bx_bool pending_irq;
+    bool    multi_track;
+    bool    pending_irq;
     Bit8u   reset_sensei;
     Bit8u   format_count;
     Bit8u   format_fillbyte;
@@ -86,7 +86,7 @@ private:
     Bit8u   head[4];     // really only using 2 drives
     Bit8u   sector[4];   // really only using 2 drives
     Bit8u   eot[4];      // really only using 2 drives
-    bx_bool TC;          // Terminal Count status from DMA controller
+    bool    TC;          // Terminal Count status from DMA controller
 
     /* MAIN STATUS REGISTER
      * b7: MRQ: main request 1=data register ready     0=data register not ready
@@ -113,12 +113,12 @@ private:
     Bit8u    floppy_buffer[512+2]; // 2 extra for good measure
     unsigned floppy_buffer_index;
     int      floppy_timer_index;
-    bx_bool  media_present[4];
+    bool     media_present[4];
     Bit8u    device_type[4];
     Bit8u    DIR[4]; // Digital Input Register:
                   // b7: 0=diskette is present and has not been changed
                   //     1=diskette missing or changed
-    bx_bool  lock;      // FDC lock status
+    bool     lock;      // FDC lock status
     Bit8u    SRT;       // step rate time
     Bit8u    HUT;       // head unload time
     Bit8u    HLT;       // head load time
@@ -136,7 +136,7 @@ private:
   Bit32u read(Bit32u address, unsigned io_len);
   void   write(Bit32u address, Bit32u value, unsigned io_len);
 #endif
-  BX_FD_SMF bx_bool set_media_status(unsigned drive, bx_bool status);
+  BX_FD_SMF bool    set_media_status(unsigned drive, bool    status);
   BX_FD_SMF Bit16u dma_write(Bit8u *buffer, Bit16u maxlen);
   BX_FD_SMF Bit16u dma_read(Bit8u *buffer, Bit16u maxlen);
   BX_FD_SMF void   floppy_command(void);
@@ -147,11 +147,11 @@ private:
   BX_FD_SMF void   enter_result_phase(void);
   BX_FD_SMF Bit32u calculate_step_delay(Bit8u drive, Bit8u new_cylinder);
   BX_FD_SMF void   reset_changeline(void);
-  BX_FD_SMF bx_bool get_tc(void);
+  BX_FD_SMF bool    get_tc(void);
   static void      timer_handler(void *);
   BX_FD_SMF void   timer(void);
   BX_FD_SMF void   increment_sector(void);
-  BX_FD_SMF bx_bool evaluate_media(Bit8u devtype, Bit8u type, char *path, floppy_t *media);
+  BX_FD_SMF bool    evaluate_media(Bit8u devtype, Bit8u type, char *path, floppy_t *media);
   BX_FD_SMF void    close_media(floppy_t *media);
   // runtime options
   static Bit64s    floppy_param_handler(bx_param_c *param, int set, Bit64s val);

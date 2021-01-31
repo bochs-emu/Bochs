@@ -59,8 +59,8 @@ private:
   struct {
     unsigned chipset;
     struct {
-      bx_bool cmd_ssbm;
-      bx_bool cmd_rwcon;
+      bool cmd_ssbm;
+      bool cmd_rwcon;
       Bit8u  status;
       Bit32u dtpr;
       Bit32u prd_current;
@@ -68,7 +68,7 @@ private:
       Bit8u *buffer;
       Bit8u *buffer_top;
       Bit8u *buffer_idx;
-      bx_bool data_ready;
+      bool data_ready;
     } bmdma[2];
   } s;
 

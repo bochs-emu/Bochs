@@ -237,7 +237,7 @@ void bx_acpi_ctrl_c::after_restore_state(void)
   }
 }
 
-void bx_acpi_ctrl_c::set_irq_level(bx_bool level)
+void bx_acpi_ctrl_c::set_irq_level(bool level)
 {
   DEV_pci_set_irq(BX_ACPI_THIS s.devfunc, BX_ACPI_THIS pci_conf[0x3d], level);
 }
@@ -260,8 +260,8 @@ Bit16u bx_acpi_ctrl_c::get_pmsts(void)
 void bx_acpi_ctrl_c::pm_update_sci(void)
 {
   Bit16u pmsts = get_pmsts();
-  bx_bool sci_level = (((pmsts & BX_ACPI_THIS s.pmen) &
-                      (RTC_EN | PWRBTN_EN | GBL_EN | TMROF_EN)) != 0);
+  bool sci_level = (((pmsts & BX_ACPI_THIS s.pmen) &
+                    (RTC_EN | PWRBTN_EN | GBL_EN | TMROF_EN)) != 0);
   BX_ACPI_THIS set_irq_level(sci_level);
   // schedule a timer interruption if needed
   if ((BX_ACPI_THIS s.pmen & TMROF_EN) && !(pmsts & TMROF_EN)) {
@@ -515,7 +515,7 @@ void bx_acpi_ctrl_c::timer()
 void bx_acpi_ctrl_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {
   Bit8u value8, oldval;
-  bx_bool pm_base_change = 0, sm_base_change = 0;
+  bool pm_base_change = 0, sm_base_change = 0;
 
   if ((address >= 0x10) && (address < 0x34))
     return;

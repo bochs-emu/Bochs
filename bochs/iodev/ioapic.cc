@@ -310,7 +310,7 @@ void bx_ioapic_c::service_ioapic()
         } else {
           vector = entry->vector();
         }
-        bx_bool done = apic_bus_deliver_interrupt(vector, entry->destination(), entry->delivery_mode(), entry->destination_mode(), entry->pin_polarity(), entry->trigger_mode());
+        bool done = apic_bus_deliver_interrupt(vector, entry->destination(), entry->delivery_mode(), entry->destination_mode(), entry->pin_polarity(), entry->trigger_mode());
         if (done) {
           if (! entry->trigger_mode())
             irr &= ~mask;

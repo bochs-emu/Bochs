@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -49,7 +49,7 @@ private:
     Bit8u port80;
     Bit8u port8e;
     Bit8u shutdown;
-    bx_bool port_e9_hack;
+    bool port_e9_hack;
   } s;  // state information
 };
 

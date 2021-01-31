@@ -157,7 +157,7 @@ static void pcidev_sighandler(int param)
   DEV_pci_set_irq(pcidev->devfunc, pcidev->intpin, 1);
 }
 
-static bx_bool pcidev_mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param)
+static bool pcidev_mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param)
 {
     struct region_struct *region = (struct region_struct *)param;
     bx_pcidev_c *pcidev = region->pcidev;
@@ -194,7 +194,7 @@ static bx_bool pcidev_mem_read_handler(bx_phy_address addr, unsigned len, void *
 }
 
 
-static bx_bool pcidev_mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param)
+static bool pcidev_mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param)
 {
     struct region_struct *region = (struct region_struct *)param;
     bx_pcidev_c *pcidev = region->pcidev;

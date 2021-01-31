@@ -9,7 +9,7 @@
 //
 //  Authors: Beth Kon <bkon@us.ibm.com>
 //
-//  Copyright (C) 2017-2019  The Bochs Project
+//  Copyright (C) 2017-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -111,7 +111,7 @@ private:
   Bit32u timer_enabled(HPETTimer *t) {return t->config & HPET_TN_ENABLE;}
   Bit64u hpet_get_ticks(void);
   Bit64u hpet_calculate_diff(HPETTimer *t, Bit64u current);
-  void   update_irq(HPETTimer *timer, bx_bool set);
+  void   update_irq(HPETTimer *timer, bool set);
   void   hpet_set_timer(HPETTimer *t);
   void   hpet_del_timer(HPETTimer *t);
 

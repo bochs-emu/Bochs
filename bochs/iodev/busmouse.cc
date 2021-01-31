@@ -401,7 +401,7 @@ void bx_busm_c::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button
 void bx_busm_c::update_mouse_data()
 {
   int delta_x, delta_y;
-  bx_bool hold;
+  bool hold;
 
   if (BX_BUSM_THIS mouse_delayed_dx > 127) {
     delta_x = 127;

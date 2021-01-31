@@ -71,7 +71,7 @@ private:
   Bit8u config_val;
   Bit8u sig_val;
   Bit16u toggle_counter;
-  bx_bool interrupts;    // 0 or 1.  interrupts off or on.
+  bool interrupts;       // 0 or 1.  interrupts off or on.
 };
 
 #endif  // BX_SUPPORT_BUSMOUSE

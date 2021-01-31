@@ -63,23 +63,23 @@ private:
   Bit32u   read (Bit32u address, unsigned io_len) BX_CPP_AttrRegparmN(2);
   void     write(Bit32u address, Bit32u   value, unsigned io_len) BX_CPP_AttrRegparmN(3);
 #endif
-  BX_DMA_SMF void control_HRQ(bx_bool ma_sl);
+  BX_DMA_SMF void control_HRQ(Bit8u ma_sl);
   BX_DMA_SMF void reset_controller(unsigned num);
 
   struct {
-    bx_bool DRQ[4];  // DMA Request
-    bx_bool DACK[4]; // DMA Acknowlege
+    bool DRQ[4];  // DMA Request
+    bool DACK[4]; // DMA Acknowlege
 
-    bx_bool mask[4];
-    bx_bool flip_flop;
+    bool mask[4];
+    bool flip_flop;
     Bit8u   status_reg;
     Bit8u   command_reg;
-    bx_bool ctrl_disabled;
+    bool ctrl_disabled;
     struct {
       struct {
         Bit8u mode_type;
-        bx_bool address_decrement;
-        bx_bool autoinit_enable;
+        bool address_decrement;
+        bool autoinit_enable;
         Bit8u transfer_type;
       } mode;
       Bit16u  base_address;
@@ -87,12 +87,12 @@ private:
       Bit16u  base_count;
       Bit16u  current_count;
       Bit8u   page_reg;
-      bx_bool used;
+      bool used;
     } chan[4]; /* DMA channels 0..3 */
   } s[2];  // state information DMA-1 / DMA-2
 
-  bx_bool HLDA;    // Hold Acknowlege
-  bx_bool TC;      // Terminal Count
+  bool HLDA;    // Hold Acknowlege
+  bool TC;      // Terminal Count
 
   Bit8u   ext_page_reg[16]; // Extra page registers (unused)
 

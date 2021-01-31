@@ -349,8 +349,8 @@ Bit32u bx_pci_ide_c::read(Bit32u address, unsigned io_len)
   offset &= 0x07;
   switch (offset) {
     case 0x00:
-      value = BX_PIDE_THIS s.bmdma[channel].cmd_ssbm |
-              (BX_PIDE_THIS s.bmdma[channel].cmd_rwcon << 3);
+      value = (Bit32u)BX_PIDE_THIS s.bmdma[channel].cmd_ssbm |
+              (Bit32u)(BX_PIDE_THIS s.bmdma[channel].cmd_rwcon << 3);
       BX_DEBUG(("BM-DMA read command register, channel %d, value = 0x%02x", channel, value));
       break;
     case 0x02:

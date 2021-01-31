@@ -249,8 +249,8 @@ void bx_pci_bridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io
   Bit8u value8, oldval;
   unsigned area;
   Bit8u drba_reg, old_dram_detect;
-  bx_bool drba_changed;
-  bx_bool attbase_changed = 0;
+  bool drba_changed;
+  bool attbase_changed = 0;
   Bit32u apsize;
 
   old_dram_detect = BX_PCI_THIS dram_detect;
@@ -444,7 +444,7 @@ bool bx_pci_bridge_c::agp_ap_read_handler(bx_phy_address addr, unsigned len,
 }
 
 Bit32u bx_pci_bridge_c::agp_aperture_read(bx_phy_address addr, unsigned len,
-                                          bx_bool agp)
+                                          bool agp)
 {
   if (BX_PCI_THIS pci_conf[0x51] & 0x02) {
     Bit32u offset = (Bit32u)(addr - pci_bar[0].addr);
@@ -470,7 +470,7 @@ bool bx_pci_bridge_c::agp_ap_write_handler(bx_phy_address addr, unsigned len,
 }
 
 void bx_pci_bridge_c::agp_aperture_write(bx_phy_address addr, Bit32u value,
-                                         unsigned len, bx_bool agp)
+                                         unsigned len, bool agp)
 {
   if (BX_PCI_THIS pci_conf[0x51] & 0x02) {
     Bit32u offset = (Bit32u)(addr - pci_bar[0].addr);
@@ -532,7 +532,7 @@ void bx_pci_bridge_c::smram_control(Bit8u value8)
     bx_devices.mem->disable_smram();
   }
   else {
-    bx_bool DOPEN = (value8 & 0x40) > 0, DCLS = (value8 & 0x20) > 0;
+    bool DOPEN = (value8 & 0x40) > 0, DCLS = (value8 & 0x20) > 0;
     if(DOPEN && DCLS) BX_PANIC(("SMRAM control: DOPEN not mutually exclusive with DCLS !"));
     bx_devices.mem->enable_smram(DOPEN, DCLS);
   }

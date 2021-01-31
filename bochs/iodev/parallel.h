@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2017  The Bochs Project
+//  Copyright (C) 2001-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -38,25 +38,25 @@
 typedef struct {
   Bit8u data;
   struct {
-    bx_bool error;
-    bx_bool slct;
-    bx_bool pe;
-    bx_bool ack;
-    bx_bool busy;
+    bool error;
+    bool slct;
+    bool pe;
+    bool ack;
+    bool busy;
   } STATUS;
   struct {
-    bx_bool strobe;
-    bx_bool autofeed;
-    bx_bool init;
-    bx_bool slct_in;
-    bx_bool irq;
-    bx_bool input;
+    bool strobe;
+    bool autofeed;
+    bool init;
+    bool slct_in;
+    bool irq;
+    bool input;
   } CONTROL;
   Bit8u IRQ;
   bx_param_string_c *file;
   FILE *output;
-  bx_bool file_changed;
-  bx_bool initmode;
+  bool file_changed;
+  bool initmode;
 } bx_par_t;
 
 class bx_parallel_c : public bx_devmodel_c {

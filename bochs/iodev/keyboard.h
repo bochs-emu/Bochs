@@ -52,7 +52,7 @@ private:
   BX_KEY_SMF Bit8u    get_elements(void);
 
   BX_KEY_SMF Bit8u    get_kbd_enable(void);
-  BX_KEY_SMF void     create_mouse_packet(bx_bool force_enq);
+  BX_KEY_SMF void     create_mouse_packet(bool force_enq);
   BX_KEY_SMF unsigned periodic(Bit32u usec_delta);
 
 
@@ -66,22 +66,22 @@ private:
   struct {
     struct {
       /* status bits matching the status port*/
-      bx_bool pare; // Bit7, 1= parity error from keyboard/mouse - ignored.
-      bx_bool tim;  // Bit6, 1= timeout from keyboard - ignored.
-      bx_bool auxb; // Bit5, 1= mouse data waiting for CPU to read.
-      bx_bool keyl; // Bit4, 1= keyswitch in lock position - ignored.
-      bx_bool c_d; /*  Bit3, 1=command to port 64h, 0=data to port 60h */
-      bx_bool sysf; // Bit2,
-      bx_bool inpb; // Bit1,
-      bx_bool outb; // Bit0, 1= keyboard data or mouse data ready for CPU
-                    //       check aux to see which. Or just keyboard
-                    //       data before AT style machines
+      bool pare; // Bit7, 1= parity error from keyboard/mouse - ignored.
+      bool tim;  // Bit6, 1= timeout from keyboard - ignored.
+      bool auxb; // Bit5, 1= mouse data waiting for CPU to read.
+      bool keyl; // Bit4, 1= keyswitch in lock position - ignored.
+      bool c_d;  //  Bit3, 1=command to port 64h, 0=data to port 60h
+      bool sysf; // Bit2,
+      bool inpb; // Bit1,
+      bool outb; // Bit0, 1= keyboard data or mouse data ready for CPU
+                 //       check aux to see which. Or just keyboard
+                 //       data before AT style machines
 
       /* internal to our version of the keyboard controller */
-      bx_bool kbd_clock_enabled;
-      bx_bool aux_clock_enabled;
-      bx_bool allow_irq1;
-      bx_bool allow_irq12;
+      bool    kbd_clock_enabled;
+      bool    aux_clock_enabled;
+      bool    allow_irq1;
+      bool    allow_irq12;
       Bit8u   kbd_output_buffer;
       Bit8u   aux_output_buffer;
       Bit8u   last_comm;
@@ -89,12 +89,12 @@ private:
       Bit8u   expecting_mouse_parameter;
       Bit8u   last_mouse_command;
       Bit32u   timer_pending;
-      bx_bool irq1_requested;
-      bx_bool irq12_requested;
-      bx_bool scancodes_translate;
-      bx_bool expecting_scancodes_set;
+      bool    irq1_requested;
+      bool    irq12_requested;
+      bool    scancodes_translate;
+      bool    expecting_scancodes_set;
       Bit8u   current_scancodes_set;
-      bx_bool bat_in_progress;
+      bool    bat_in_progress;
       Bit8u   kbd_type;
     } kbd_controller;
 
@@ -105,7 +105,7 @@ private:
       Bit8u   scaling;
       Bit8u   mode;
       Bit8u   saved_mode;  // the mode prior to entering wrap mode
-      bx_bool enable;
+      bool    enable;
 
       Bit8u get_status_byte ()
 	{
@@ -145,24 +145,24 @@ private:
 	  return ret;
 	}
 
-      Bit8u button_status;
+      Bit8u  button_status;
       Bit16s delayed_dx;
       Bit16s delayed_dy;
       Bit16s delayed_dz;
-      Bit8u im_request;
-      bx_bool im_mode;
+      Bit8u  im_request;
+      bool   im_mode;
     } mouse;
 
     struct {
       int     num_elements;
       Bit8u   buffer[BX_KBD_ELEMENTS];
       int     head;
-      bx_bool expecting_typematic;
-      bx_bool expecting_led_write;
+      bool    expecting_typematic;
+      bool    expecting_led_write;
       Bit8u   delay;
       Bit8u   repeat_rate;
       Bit8u   led_status;
-      bx_bool scanning_enabled;
+      bool scanning_enabled;
     } kbd_internal_buffer;
 
     struct {
@@ -176,7 +176,7 @@ private:
     unsigned controller_Qsource; // 0=keyboard, 1=mouse
   } s; // State information for saving/loading
 
-  BX_KEY_SMF void     resetinternals(bx_bool powerup);
+  BX_KEY_SMF void     resetinternals(bool powerup);
   BX_KEY_SMF void     set_kbd_clock_enable(Bit8u value) BX_CPP_AttrRegparmN(1);
   BX_KEY_SMF void     set_aux_clock_enable(Bit8u value);
   BX_KEY_SMF void     kbd_ctrl_to_kbd(Bit8u value);
@@ -185,7 +185,7 @@ private:
   BX_KEY_SMF void     kbd_enQ_imm(Bit8u val);
   BX_KEY_SMF void     activate_timer(void);
   BX_KEY_SMF void     controller_enQ(Bit8u data, unsigned source);
-  BX_KEY_SMF bx_bool  mouse_enQ_packet(Bit8u b1, Bit8u b2, Bit8u b3, Bit8u b4);
+  BX_KEY_SMF bool     mouse_enQ_packet(Bit8u b1, Bit8u b2, Bit8u b3, Bit8u b4);
   BX_KEY_SMF void     mouse_enQ(Bit8u mouse_data);
 
   static void mouse_enabled_changed_static(void *dev, bool enabled);

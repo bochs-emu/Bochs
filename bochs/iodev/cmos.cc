@@ -84,7 +84,7 @@ bx_cmos_c *theCmosDevice = NULL;
 // 0x5f   1   number of processors
 
 
-Bit8u bcd_to_bin(Bit8u value, bx_bool is_binary)
+Bit8u bcd_to_bin(Bit8u value, bool is_binary)
 {
   if (is_binary)
     return value;
@@ -92,7 +92,7 @@ Bit8u bcd_to_bin(Bit8u value, bx_bool is_binary)
     return ((value >> 4) * 10) + (value & 0x0f);
 }
 
-Bit8u bin_to_bcd(Bit8u value, bx_bool is_binary)
+Bit8u bin_to_bcd(Bit8u value, bool is_binary)
 {
   if (is_binary)
     return value;
@@ -180,7 +180,7 @@ void bx_cmos_c::init(void)
     BX_INFO(("Using local time for initial clock"));
     BX_CMOS_THIS s.timeval = time(NULL);
   } else if (SIM->get_param_num(BXPN_CLOCK_TIME0)->get() == BX_CLOCK_TIME0_UTC) {
-    bx_bool utc_ok = 0;
+    bool utc_ok = 0;
 
     BX_INFO(("Using utc time for initial clock"));
 
@@ -744,7 +744,7 @@ void bx_cmos_c::uip_timer()
   // compare CMOS user copy of time/date to alarm time/date here
   if (BX_CMOS_THIS s.reg[REG_STAT_B] & 0x20) {
     // Alarm interrupts enabled
-    bx_bool alarm_match = 1;
+    bool alarm_match = 1;
     if ((BX_CMOS_THIS s.reg[REG_SEC_ALARM] & 0xc0) != 0xc0) {
       // seconds alarm not in dont care mode
       if (BX_CMOS_THIS s.reg[REG_SEC] != BX_CMOS_THIS s.reg[REG_SEC_ALARM])

@@ -49,7 +49,7 @@ PLUGIN_ENTRY_FOR_MODULE(iodebug)
 }
 
 struct bx_iodebug_s_type {
-  bx_bool enabled;
+  bool enabled;
   unsigned register_select;
   Bit32u registers[2];
   bx_phy_address monitored_mem_areas_start[BX_IODEBUG_MAX_AREAS];

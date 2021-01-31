@@ -432,7 +432,7 @@ void bx_floppy_ctrl_c::runtime_config_handler(void *this_ptr)
 void bx_floppy_ctrl_c::runtime_config(void)
 {
   unsigned drive;
-  bx_bool status;
+  bool status;
   char pname[16];
 
   for (drive=0; drive<2; drive++) {
@@ -578,8 +578,8 @@ void bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif  // !BX_USE_FD_SMF
-  bx_bool dma_and_interrupt_enable;
-  bx_bool normal_operation, prev_normal_operation;
+  bool dma_and_interrupt_enable;
+  bool normal_operation, prev_normal_operation;
   Bit8u drive_select;
   Bit8u motor_on_drive0, motor_on_drive1;
 
@@ -1491,7 +1491,7 @@ void bx_floppy_ctrl_c::increment_sector(void)
   }
 }
 
-bx_bool bx_floppy_ctrl_c::set_media_status(unsigned drive, bx_bool status)
+bool bx_floppy_ctrl_c::set_media_status(unsigned drive, bool status)
 {
   char *path;
   unsigned type;
@@ -1559,7 +1559,7 @@ bx_bool bx_floppy_ctrl_c::set_media_status(unsigned drive, bx_bool status)
 #define BX_RDWR O_RDWR
 #endif
 
-bx_bool bx_floppy_ctrl_c::evaluate_media(Bit8u devtype, Bit8u type, char *path, floppy_t *media)
+bool bx_floppy_ctrl_c::evaluate_media(Bit8u devtype, Bit8u type, char *path, floppy_t *media)
 {
   struct stat stat_buf;
   int i, ret;
@@ -1569,7 +1569,7 @@ bx_bool bx_floppy_ctrl_c::evaluate_media(Bit8u devtype, Bit8u type, char *path, 
 #endif
 #ifdef WIN32
   char sTemp[1024];
-  bx_bool raw_floppy = 0;
+  bool raw_floppy = 0;
   HANDLE hFile;
   DWORD bytes;
   DISK_GEOMETRY dg;
@@ -1928,10 +1928,10 @@ void bx_floppy_ctrl_c::reset_changeline(void)
     BX_FD_THIS s.DIR[drive] &= ~0x80;
 }
 
-bx_bool bx_floppy_ctrl_c::get_tc(void)
+bool bx_floppy_ctrl_c::get_tc(void)
 {
   Bit8u drive;
-  bx_bool terminal_count;
+  bool terminal_count;
   if (BX_FD_THIS s.main_status_reg & FD_MS_NDMA) {
     drive = BX_FD_THIS s.DOR & 0x03;
     /* figure out if we've sent all the data, in non-DMA mode...
@@ -1964,7 +1964,7 @@ Bit64s bx_floppy_ctrl_c::floppy_param_handler(bx_param_c *param, int set, Bit64s
     if (!strcmp(param->get_name(), "status")) {
       BX_FD_THIS s.media[drive].status_changed = 1;
     } else if (!strcmp(param->get_name(), "readonly")) {
-      BX_FD_THIS s.media[drive].write_protected = (bx_bool)val;
+      BX_FD_THIS s.media[drive].write_protected = (bool)val;
       BX_FD_THIS s.media[drive].status_changed = 1;
     }
   }

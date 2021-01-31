@@ -61,11 +61,11 @@ private:
 #if BX_SUPPORT_SOUNDLOW
   bx_soundlow_waveout_c *waveout;
   int beep_callback_id;
-  bx_bool beep_active;
+  bool beep_active;
   Bit16s beep_level;
   Bit8u beep_volume;
 #if BX_HAVE_REALTIME_USEC
-  bx_bool dsp_active;
+  bool dsp_active;
   Bit64u dsp_start_usec;
   Bit64u dsp_cb_usec;
   Bit32u dsp_count;

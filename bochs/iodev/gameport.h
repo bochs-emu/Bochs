@@ -46,8 +46,8 @@ private:
   Bit8u   port;
   Bit16u  delay_x;
   Bit16u  delay_y;
-  bx_bool timer_x;
-  bx_bool timer_y;
+  bool    timer_x;
+  bool    timer_y;
   Bit64u  write_usec;
 
   BX_GAMEPORT_SMF void poll_joydev(void);

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2006-2020  The Bochs Project
+//  Copyright (C) 2006-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -53,7 +53,7 @@ public:
   BX_ACPI_SMF void timer(void);
 
 private:
-  BX_ACPI_SMF void set_irq_level(bx_bool level);
+  BX_ACPI_SMF void set_irq_level(bool level);
   BX_ACPI_SMF Bit32u get_pmtmr(void);
   BX_ACPI_SMF Bit16u get_pmsts(void);
   BX_ACPI_SMF void pm_update_sci(void);

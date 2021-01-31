@@ -255,7 +255,7 @@ Bit64u bx_hpet_c::hpet_calculate_diff(HPETTimer *t, Bit64u current)
   }
 }
 
-void bx_hpet_c::update_irq(HPETTimer *timer, bx_bool set)
+void bx_hpet_c::update_irq(HPETTimer *timer, bool set)
 {
   Bit64u mask;
   int route;
