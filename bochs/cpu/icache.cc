@@ -26,6 +26,7 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#include "gui/siminterface.h"
 #include "param_names.h"
 #include "cpustats.h"
 
