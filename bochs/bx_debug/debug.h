@@ -255,7 +255,7 @@ struct bx_guard_t {
       Bit32u cs;  // only use 16 bits
       bx_address eip;
       unsigned bpoint_id;
-      bx_bool enabled;
+      bool enabled;
       char *condition;
     } vir[BX_DBG_MAX_VIR_BPOINTS];
 #endif
@@ -265,7 +265,7 @@ struct bx_guard_t {
     struct lbreak {
       bx_address addr;
       unsigned bpoint_id;
-      bx_bool enabled;
+      bool enabled;
       char *condition;
     } lin[BX_DBG_MAX_LIN_BPOINTS];
 #endif
@@ -275,27 +275,27 @@ struct bx_guard_t {
     struct pbreak {
       bx_phy_address addr;
       unsigned bpoint_id;
-      bx_bool enabled;
+      bool enabled;
       char *condition;
     } phy[BX_DBG_MAX_PHY_BPOINTS];
 #endif
   } iaddr;
 
   // user typed Ctrl-C, requesting simulator stop at next convinient spot
-  volatile bx_bool interrupt_requested;
+  volatile bool interrupt_requested;
 
   // booleans to control whether simulator should report events
   // to debug controller
   struct {
-    bx_bool irq;
-    bx_bool a20;
-    bx_bool io;
-    bx_bool dma;
+    bool irq;
+    bool a20;
+    bool io;
+    bool dma;
   } report;
 
   struct {
-    bx_bool irq;  // should process IRQs asynchronously
-    bx_bool dma;  // should process DMAs asynchronously
+    bool irq;  // should process IRQs asynchronously
+    bool dma;  // should process DMAs asynchronously
   } async;
 
 #define BX_DBG_ASYNC_PENDING_A20   0x01
@@ -310,9 +310,9 @@ struct bx_guard_t {
   // be checked, and ack'd.
   struct {
     unsigned which; // logical OR of above constants
-    bx_bool a20;
-    bx_bool reset;
-    bx_bool nmi;
+    bool a20;
+    bool reset;
+    bool nmi;
   } async_changes_pending;
 };
 
@@ -367,7 +367,7 @@ void bx_dbg_iac_report(unsigned vector, unsigned irq);
 void bx_dbg_a20_report(unsigned val);
 void bx_dbg_io_report(Bit32u port, unsigned size, unsigned op, Bit32u val);
 void bx_dbg_disassemble_current(int which_cpu, int print_time);
-unsigned bx_dbg_disasm_wrapper(bx_bool is_32, bx_bool is_64, bx_address cs_base, bx_address ip, const Bit8u *instr, char *disbuf, int intel_disasm_style = -1);
+unsigned bx_dbg_disasm_wrapper(bool is_32, bool is_64, bx_address cs_base, bx_address ip, const Bit8u *instr, char *disbuf, int intel_disasm_style = -1);
 
 #endif // #ifdef __cplusplus
 

@@ -4185,7 +4185,7 @@ void bx_dbg_step_over_command()
     bx_dbg_breakpoint_changed();
 }
 
-unsigned bx_dbg_disasm_wrapper(bx_bool is_32, bx_bool is_64, bx_address cs_base, bx_address ip, const Bit8u *instr, char *disbuf, int disasm_style)
+unsigned bx_dbg_disasm_wrapper(bool is_32, bool is_64, bx_address cs_base, bx_address ip, const Bit8u *instr, char *disbuf, int disasm_style)
 {
   BxDisasmStyle new_disasm_style;
 
