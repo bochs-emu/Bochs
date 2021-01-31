@@ -28,7 +28,7 @@
 #define BX_IA_STATS_ENTRIES (BX_IA_LAST*2) /* /r and /m form */
 
 static struct bx_instr_ia_stats {
-   bx_bool active;
+   bool active;
    Bit32u ia_cnt[BX_IA_STATS_ENTRIES];
    Bit32u total_cnt;
    Bit32u interrupts;

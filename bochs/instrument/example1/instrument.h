@@ -39,15 +39,15 @@ void bx_instr_initialize(unsigned cpu);
 class bxInstrumentation {
 public:
 
-  bx_bool ready;          // is current instruction ready to be printed
-  bx_bool active;
+  bool ready;          // is current instruction ready to be printed
+  bool active;
 
   unsigned cpu_id;
 
   /* decoding */
   unsigned opcode_length;
   Bit8u    opcode[MAX_OPCODE_LENGTH];
-  bx_bool  is32, is64;
+  bool  is32, is64;
 
   /* memory accesses */
   unsigned num_data_accesses;
@@ -60,8 +60,8 @@ public:
   } data_access[MAX_DATA_ACCESSES];
 
   /* branch resolution and target */
-  bx_bool is_branch;
-  bx_bool is_taken;
+  bool is_branch;
+  bool is_taken;
   bx_address target_linear;
 
 public:
@@ -72,7 +72,7 @@ public:
   void activate() { active = 1; }
   void deactivate() { active = 0; }
   void toggle_active() { active = !active; }
-  bx_bool is_active() const { return active; }
+  bool is_active() const { return active; }
 
   void bx_instr_reset(unsigned type);
 
