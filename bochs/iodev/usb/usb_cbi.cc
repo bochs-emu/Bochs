@@ -327,21 +327,6 @@ usb_cbi_device_c::usb_cbi_device_c(const char *filename)
   d.config_descriptor = bx_cbi_config_descriptor;
   d.device_desc_size = sizeof(bx_cbi_dev_descriptor);
   d.config_desc_size = sizeof(bx_cbi_config_descriptor);
-  // set the model information
-  //  s.model == 1 if use teac model, else use bochs model
-  if (s.model) {
-    bx_cbi_dev_descriptor[8] = 0x44;
-    bx_cbi_dev_descriptor[9] = 0x06;
-    d.vendor_desc = "TEAC    ";
-    d.product_desc = "TEAC FD-05PUW   ";
-    d.serial_num = "3000";
-  } else {
-    bx_cbi_dev_descriptor[8] = 0x00;
-    bx_cbi_dev_descriptor[9] = 0x00;
-    d.vendor_desc = "BOCHS   ";
-    d.product_desc = d.devname;
-    d.serial_num = "00.10";
-  }
   s.inserted = 0;
   strcpy(tmpfname, filename);
   ptr1 = strtok(tmpfname, ":");
@@ -440,6 +425,21 @@ bool usb_cbi_device_c::set_option(const char *option)
 
 bool usb_cbi_device_c::init()
 {
+  // set the model information
+  //  s.model == 1 if use teac model, else use bochs model
+  if (s.model) {
+    bx_cbi_dev_descriptor[8] = 0x44;
+    bx_cbi_dev_descriptor[9] = 0x06;
+    d.vendor_desc = "TEAC    ";
+    d.product_desc = "TEAC FD-05PUW   ";
+    d.serial_num = "3000";
+  } else {
+    bx_cbi_dev_descriptor[8] = 0x00;
+    bx_cbi_dev_descriptor[9] = 0x00;
+    d.vendor_desc = "BOCHS   ";
+    d.product_desc = d.devname;
+    d.serial_num = "00.10";
+  }
   if (set_inserted(1)) {
     sprintf(s.info_txt, "USB CBI: path='%s', mode='%s'", s.fname, s.image_mode);
   } else {
