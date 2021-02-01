@@ -2753,7 +2753,7 @@ one. This is used for the image mode autodetection feature.
 
 <para>
 <emphasis>
-bx_bool save_state(const char *backup_fname);
+bool save_state(const char *backup_fname);
 </emphasis>
 calls the related redolog_t method to save the image state.
 </para>

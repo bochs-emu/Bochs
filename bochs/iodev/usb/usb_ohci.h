@@ -278,7 +278,7 @@ private:
   static void init_device(Bit8u port, bx_list_c *portconf);
   static void remove_device(Bit8u port);
   static int  broadcast_packet(USBPacket *p);
-  static void usb_set_connect_status(Bit8u port, int type, bx_bool connected);
+  static void usb_set_connect_status(Bit8u port, int type, bool connected);
 
   static void usb_frame_handler(void *);
   void usb_frame_timer(void);
@@ -286,8 +286,8 @@ private:
   static Bit32u get_frame_remaining(void);
 
   void process_lists();
-  bx_bool process_ed(struct OHCI_ED *, const Bit32u);
-  bx_bool process_td(struct OHCI_TD *, struct OHCI_ED *);
+  bool process_ed(struct OHCI_ED *, const Bit32u);
+  bool process_td(struct OHCI_TD *, struct OHCI_ED *);
 
 #if BX_USE_USB_OHCI_SMF
   static bool read_handler(bx_phy_address addr, unsigned len, void *data, void *param);

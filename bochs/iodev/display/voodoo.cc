@@ -319,7 +319,7 @@ void bx_voodoo_base_c::init(void)
   }
   s.num_x_tiles = (s.max_xres + X_TILESIZE - 1) / X_TILESIZE;
   s.num_y_tiles = (s.max_yres + Y_TILESIZE - 1) / Y_TILESIZE;
-  s.vga_tile_updated = new bx_bool[s.num_x_tiles * s.num_y_tiles];
+  s.vga_tile_updated = new bool[s.num_x_tiles * s.num_y_tiles];
   for (unsigned y = 0; y < s.num_y_tiles; y++)
     for (unsigned x = 0; x < s.num_x_tiles; x++)
       SET_TILE_UPDATED(BX_VOODOO_THIS, x, y, 0);
@@ -854,7 +854,7 @@ void bx_voodoo_base_c::vertical_timer(void)
   }
 }
 
-void bx_voodoo_base_c::set_irq_level(bx_bool level)
+void bx_voodoo_base_c::set_irq_level(bool level)
 {
   DEV_pci_set_irq(s.devfunc, pci_conf[0x3d], level);
 }
@@ -1021,7 +1021,7 @@ void bx_voodoo_1_2_c::mode_change_timer()
   }
 }
 
-bx_bool bx_voodoo_1_2_c::update_timing(void)
+bool bx_voodoo_1_2_c::update_timing(void)
 {
   int htotal, vtotal, hsync, vsync;
   float hfreq;
@@ -1064,7 +1064,7 @@ bx_bool bx_voodoo_1_2_c::update_timing(void)
   return 1;
 }
 
-Bit32u bx_voodoo_1_2_c::get_retrace(bx_bool hv)
+Bit32u bx_voodoo_1_2_c::get_retrace(bool hv)
 {
   Bit64u time_in_frame = bx_virt_timer.time_usec(0) - s.vdraw.frame_start;
   if (time_in_frame >= s.vdraw.vsync_usec) {
@@ -1082,7 +1082,7 @@ Bit32u bx_voodoo_1_2_c::get_retrace(bx_bool hv)
   }
 }
 
-void bx_voodoo_1_2_c::output_enable(bx_bool enabled)
+void bx_voodoo_1_2_c::output_enable(bool enabled)
 {
   if (s.vdraw.output_on != enabled) {
     s.vdraw.output_on = enabled;

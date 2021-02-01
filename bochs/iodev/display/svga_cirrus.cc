@@ -239,7 +239,7 @@ bx_svga_cirrus_c::~bx_svga_cirrus_c()
   BX_DEBUG(("Exit"));
 }
 
-bx_bool bx_svga_cirrus_c::init_vga_extension(void)
+bool bx_svga_cirrus_c::init_vga_extension(void)
 {
   BX_CIRRUS_THIS put("CIRRUS");
   // initialize SVGA stuffs.
@@ -1552,7 +1552,7 @@ void bx_svga_cirrus_c::svga_write_crtc(Bit32u address, unsigned index, Bit8u val
 {
   BX_DEBUG(("crtc: index 0x%02x write 0x%02x", index, (unsigned)value));
 
-  bx_bool update_pitch = 0;
+  bool update_pitch = 0;
 
   switch (index) {
     case 0x00: // VGA
@@ -1676,7 +1676,7 @@ void bx_svga_cirrus_c::svga_write_sequencer(Bit32u address, unsigned index, Bit8
 {
   BX_DEBUG(("sequencer: index 0x%02x write 0x%02x", index, (unsigned)value));
 
-  bx_bool update_cursor = 0;
+  bool update_cursor = 0;
   Bit16u x, y, size;
   Bit8u i, n, d, p;
 
@@ -3088,7 +3088,7 @@ void bx_svga_cirrus_c::svga_colorexpand_transp_memsrc()
   }
 }
 
-  bx_bool // 1 if finished, 0 otherwise
+  bool // 1 if finished, 0 otherwise
 bx_svga_cirrus_c::svga_asyncbitblt_next()
 {
   int count;

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2018-2020  The Bochs Project
+//  Copyright (C) 2018-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -204,15 +204,15 @@ bx_ddc_c::~bx_ddc_c(void)
 
 Bit8u bx_ddc_c::read()
 {
-  Bit8u retval = (((s.DDAmon & s.DDAhost) << 3) | (s.DCKhost << 2) |
-                  (s.DDAhost << 1) | s.DCKhost);
+  Bit8u retval = (((Bit8u)(s.DDAmon & s.DDAhost) << 3) | ((Bit8u)s.DCKhost << 2) |
+                  ((Bit8u)s.DDAhost << 1) | (Bit8u)s.DCKhost);
   return retval;
 }
 
-void bx_ddc_c::write(bx_bool dck, bx_bool dda)
+void bx_ddc_c::write(bool dck, bool dda)
 {
-  bx_bool dck_change = 0;
-  bx_bool dda_change = 0;
+  bool dck_change = 0;
+  bool dda_change = 0;
 
   if (s.ddc_mode == BX_DDC_MODE_DISABLED)
     return;
@@ -293,7 +293,7 @@ void bx_ddc_c::write(bx_bool dck, bx_bool dda)
         switch (s.ddc_stage) {
           case DDC_STAGE_ADDRESS:
           case DDC_STAGE_DATA_IN:
-            s.ddc_byte |= (s.DDAhost << s.ddc_bitshift);
+            s.ddc_byte |= ((Bit8u)s.DDAhost << s.ddc_bitshift);
             break;
           case DDC_STAGE_RW:
             s.ddc_rw = s.DDAhost;

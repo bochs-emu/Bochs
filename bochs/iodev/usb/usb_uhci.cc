@@ -264,13 +264,13 @@ void bx_usb_uhci_c::runtime_config(void)
 
 // USB runtime parameter handler
 const char *bx_usb_uhci_c::usb_param_handler(bx_param_string_c *param, int set,
-                                           const char *oldval, const char *val, int maxlen)
+                                             const char *oldval, const char *val, int maxlen)
 {
   int portnum;
 
   if (set) {
     portnum = atoi((param->get_parent())->get_name()+4) - 1;
-    bx_bool empty = ((strlen(val) == 0) || (!strcmp(val, "none")));
+    bool empty = ((strlen(val) == 0) || (!strcmp(val, "none")));
     if ((portnum >= 0) && (portnum < USB_UHCI_PORTS)) {
       if (empty && BX_UHCI_THIS hub.usb_port[portnum].status) {
         BX_UHCI_THIS device_change |= (1 << portnum);

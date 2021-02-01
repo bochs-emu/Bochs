@@ -109,7 +109,7 @@ Possible operation types, passed through bx_instr_ucnear_branch and bx_instr_far
 This callback is called right before Bochs executes a VMEXIT.
 
 
-	void bx_instr_opcode(unsigned cpu, bxInstruction_c *i, const Bit8u *opcode, unsigned len, bx_bool is32, bx_bool is64);
+	void bx_instr_opcode(unsigned cpu, bxInstruction_c *i, const Bit8u *opcode, unsigned len, bool is32, bool is64);
 
 The  callback  is  called  each  time, when Bochs completes  to  decode  a new
 instruction.  Through  this callback function Bochs could provide an opcode of

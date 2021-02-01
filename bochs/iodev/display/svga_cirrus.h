@@ -63,7 +63,7 @@ public:
   bx_svga_cirrus_c();
   virtual ~bx_svga_cirrus_c();
 
-  virtual bx_bool init_vga_extension(void);
+  virtual bool init_vga_extension(void);
   virtual void reset(unsigned type);
   virtual void redraw_area(unsigned x0, unsigned y0,
                            unsigned width, unsigned height);
@@ -166,7 +166,7 @@ private:
   BX_CIRRUS_SMF void svga_simplebitblt_memsrc();
   BX_CIRRUS_SMF void svga_colorexpand_transp_memsrc();
 
-  BX_CIRRUS_SMF bx_bool svga_asyncbitblt_next();
+  BX_CIRRUS_SMF bool svga_asyncbitblt_next();
   BX_CIRRUS_SMF bx_bitblt_rop_t svga_get_fwd_rop_handler(Bit8u rop);
   BX_CIRRUS_SMF bx_bitblt_rop_t svga_get_bkwd_rop_handler(Bit8u rop);
 
@@ -190,10 +190,10 @@ private:
     Bit8u palette[48];
   } hidden_dac; // 0x3c6
 
-  bx_bool svga_unlock_special;
-  bx_bool svga_needs_update_tile;
-  bx_bool svga_needs_update_dispentire;
-  bx_bool svga_needs_update_mode;
+  bool svga_unlock_special;
+  bool svga_needs_update_tile;
+  bool svga_needs_update_dispentire;
+  bool svga_needs_update_mode;
 
   unsigned svga_xres;
   unsigned svga_yres;
@@ -246,10 +246,10 @@ private:
 
   bx_ddc_c ddc;
 
-  bx_bool is_unlocked() { return svga_unlock_special; }
+  bool is_unlocked() { return svga_unlock_special; }
 
-  bx_bool banking_granularity_is_16k() { return !!(control.reg[0x0B] & 0x20); }
-  bx_bool banking_is_dual() { return !!(control.reg[0x0B] & 0x01); }
+  bool banking_granularity_is_16k() { return !!(control.reg[0x0B] & 0x20); }
+  bool banking_is_dual() { return !!(control.reg[0x0B] & 0x01); }
 
 #if BX_SUPPORT_PCI
   BX_CIRRUS_SMF void svga_init_pcihandlers(void);

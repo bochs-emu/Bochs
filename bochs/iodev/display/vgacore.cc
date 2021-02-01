@@ -102,7 +102,7 @@ void bx_vgacore_c::init(void)
                               ((BX_VGA_THIS s.max_xres % X_TILESIZE) > 0);
   BX_VGA_THIS s.num_y_tiles = BX_VGA_THIS s.max_yres / Y_TILESIZE +
                               ((BX_VGA_THIS s.max_yres % Y_TILESIZE) > 0);
-  BX_VGA_THIS s.vga_tile_updated = new bx_bool[BX_VGA_THIS s.num_x_tiles * BX_VGA_THIS s.num_y_tiles];
+  BX_VGA_THIS s.vga_tile_updated = new bool[BX_VGA_THIS s.num_x_tiles * BX_VGA_THIS s.num_y_tiles];
   for (y = 0; y < BX_VGA_THIS s.num_y_tiles; y++)
     for (x = 0; x < BX_VGA_THIS s.num_x_tiles; x++)
       SET_TILE_UPDATED(BX_VGA_THIS, x, y, 0);
@@ -760,7 +760,7 @@ void bx_vgacore_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, u
   class_ptr->write(address, value, io_len, 0);
 }
 
-void bx_vgacore_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
+void bx_vgacore_c::write(Bit32u address, Bit32u value, unsigned io_len, bool no_log)
 {
   Bit8u charmap1, charmap2, prev_memory_mapping;
   bx_bool prev_video_enabled, prev_line_graphics, prev_int_pal_size, prev_graphics_alpha;
@@ -1289,7 +1289,7 @@ void bx_vgacore_c::set_override(bool enabled, void *dev)
   }
 }
 
-Bit8u bx_vgacore_c::get_vga_pixel(Bit16u x, Bit16u y, Bit16u saddr, Bit16u lc, bx_bool bs, Bit8u **plane)
+Bit8u bx_vgacore_c::get_vga_pixel(Bit16u x, Bit16u y, Bit16u saddr, Bit16u lc, bool bs, Bit8u **plane)
 {
   Bit8u attribute, bit_no, palette_reg_val, DAC_regno;
   Bit32u byte_offset;
@@ -1336,7 +1336,7 @@ Bit8u bx_vgacore_c::get_vga_pixel(Bit16u x, Bit16u y, Bit16u saddr, Bit16u lc, b
   return DAC_regno;
 }
 
-bx_bool bx_vgacore_c::skip_update(void)
+bool bx_vgacore_c::skip_update(void)
 {
   Bit64u display_usec;
 
@@ -1365,8 +1365,8 @@ void bx_vgacore_c::update(void)
 {
   unsigned iHeight, iWidth;
   static unsigned cs_counter = 1;
-  static bx_bool cs_visible = 0;
-  bx_bool cs_toggle = 0;
+  static bool cs_visible = 0;
+  bool cs_toggle = 0;
 
   cs_counter--;
   /* no screen update necessary */

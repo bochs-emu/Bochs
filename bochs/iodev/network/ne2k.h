@@ -50,82 +50,82 @@ typedef struct {
     //
     //  Command Register - 00h read/write
     struct {
-        bx_bool  stop;		// STP - Software Reset command
-        bx_bool  start;		// START - start the NIC
-        bx_bool  tx_packet;	// TXP - initiate packet transmission
-        Bit8u    rdma_cmd;      // RD0,RD1,RD2 - Remote DMA command
-	Bit8u	 pgsel;		// PS0,PS1 - Page select
+        bool  stop;       // STP - Software Reset command
+        bool  start;      // START - start the NIC
+        bool  tx_packet;  // TXP - initiate packet transmission
+        Bit8u rdma_cmd;   // RD0,RD1,RD2 - Remote DMA command
+        Bit8u pgsel;      // PS0,PS1 - Page select
     } CR;
     // Interrupt Status Register - 07h read/write
     struct {
-	bx_bool  pkt_rx;       	// PRX - packet received with no errors
-	bx_bool  pkt_tx;       	// PTX - packet transmitted with no errors
-	bx_bool  rx_err;	// RXE - packet received with 1 or more errors
-	bx_bool  tx_err;	// TXE - packet tx'd       "  " "    "    "
-	bx_bool  overwrite;	// OVW - rx buffer resources exhausted
-	bx_bool  cnt_oflow;     // CNT - network tally counter MSB's set
-	bx_bool  rdma_done;     // RDC - remote DMA complete
-	bx_bool  reset;		// RST - reset status
+        bool  pkt_rx;     // PRX - packet received with no errors
+        bool  pkt_tx;     // PTX - packet transmitted with no errors
+        bool  rx_err;     // RXE - packet received with 1 or more errors
+        bool  tx_err;     // TXE - packet tx'd       "  " "    "    "
+        bool  overwrite;  // OVW - rx buffer resources exhausted
+        bool  cnt_oflow;  // CNT - network tally counter MSB's set
+        bool  rdma_done;  // RDC - remote DMA complete
+        bool  reset;      // RST - reset status
     } ISR;
     // Interrupt Mask Register - 0fh write
     struct {
-	bx_bool  rx_inte;	// PRXE - packet rx interrupt enable
-	bx_bool  tx_inte;	// PTXE - packet tx interrput enable
-	bx_bool  rxerr_inte;	// RXEE - rx error interrupt enable
-	bx_bool  txerr_inte;	// TXEE - tx error interrupt enable
-	bx_bool  overw_inte;	// OVWE - overwrite warn int enable
-	bx_bool  cofl_inte;	// CNTE - counter o'flow int enable
-	bx_bool  rdma_inte;	// RDCE - remote DMA complete int enable
-	bx_bool  reserved;	//  D7 - reserved
+        bool  rx_inte;    // PRXE - packet rx interrupt enable
+        bool  tx_inte;    // PTXE - packet tx interrput enable
+        bool  rxerr_inte; // RXEE - rx error interrupt enable
+        bool  txerr_inte; // TXEE - tx error interrupt enable
+        bool  overw_inte; // OVWE - overwrite warn int enable
+        bool  cofl_inte;  // CNTE - counter o'flow int enable
+        bool  rdma_inte;  // RDCE - remote DMA complete int enable
+        bool  reserved;   // D7   - reserved
     } IMR;
     // Data Configuration Register - 0eh write
     struct {
-	bx_bool  wdsize;	// WTS - 8/16-bit select
-	bx_bool  endian;	// BOS - byte-order select
-	bx_bool  longaddr;	// LAS - long-address select
-	bx_bool  loop;		// LS  - loopback select
-	bx_bool  auto_rx;	// AR  - auto-remove rx packets with remote DMA
-        Bit8u    fifo_size;	// FT0,FT1 - fifo threshold
+        bool  wdsize;     // WTS - 8/16-bit select
+        bool  endian;     // BOS - byte-order select
+        bool  longaddr;   // LAS - long-address select
+        bool  loop;       // LS  - loopback select
+        bool  auto_rx;    // AR  - auto-remove rx packets with remote DMA
+        Bit8u fifo_size;  // FT0,FT1 - fifo threshold
     } DCR;
     // Transmit Configuration Register - 0dh write
     struct {
-	bx_bool  crc_disable;	// CRC - inhibit tx CRC
-	Bit8u    loop_cntl;	// LB0,LB1 - loopback control
-	bx_bool  ext_stoptx;    // ATD - allow tx disable by external mcast
-	bx_bool  coll_prio;	// OFST - backoff algorithm select
-	Bit8u    reserved;      //  D5,D6,D7 - reserved
+        bool  crc_disable; // CRC - inhibit tx CRC
+        Bit8u loop_cntl;   // LB0,LB1 - loopback control
+        bool  ext_stoptx;  // ATD - allow tx disable by external mcast
+        bool  coll_prio;   // OFST - backoff algorithm select
+        Bit8u reserved;    //  D5,D6,D7 - reserved
     } TCR;
     // Transmit Status Register - 04h read
     struct {
-	bx_bool  tx_ok;		// PTX - tx complete without error
-	bx_bool  reserved;	//  D1 - reserved
-	bx_bool  collided;	// COL - tx collided >= 1 times
-	bx_bool  aborted;	// ABT - aborted due to excessive collisions
-	bx_bool  no_carrier;	// CRS - carrier-sense lost
-	bx_bool  fifo_ur;	// FU  - FIFO underrun
-	bx_bool  cd_hbeat;	// CDH - no tx cd-heartbeat from transceiver
-	bx_bool  ow_coll;	// OWC - out-of-window collision
+        bool  tx_ok;      // PTX - tx complete without error
+        bool  reserved;   //  D1 - reserved
+        bool  collided;   // COL - tx collided >= 1 times
+        bool  aborted;    // ABT - aborted due to excessive collisions
+        bool  no_carrier; // CRS - carrier-sense lost
+        bool  fifo_ur;    // FU  - FIFO underrun
+        bool  cd_hbeat;   // CDH - no tx cd-heartbeat from transceiver
+        bool  ow_coll;    // OWC - out-of-window collision
     } TSR;
     // Receive Configuration Register - 0ch write
     struct {
-	bx_bool  errors_ok;	// SEP - accept pkts with rx errors
-	bx_bool  runts_ok;	// AR  - accept < 64-byte runts
-	bx_bool  broadcast;	// AB  - accept eth broadcast address
-	bx_bool  multicast;	// AM  - check mcast hash array
-	bx_bool  promisc;	// PRO - accept all packets
-	bx_bool  monitor;	// MON - check pkts, but don't rx
-	Bit8u    reserved;	//  D6,D7 - reserved
+        bool  errors_ok;  // SEP - accept pkts with rx errors
+        bool  runts_ok;   // AR  - accept < 64-byte runts
+        bool  broadcast;  // AB  - accept eth broadcast address
+        bool  multicast;  // AM  - check mcast hash array
+        bool  promisc;    // PRO - accept all packets
+        bool  monitor;    // MON - check pkts, but don't rx
+        Bit8u reserved;   //  D6,D7 - reserved
     } RCR;
     // Receive Status Register - 0ch read
     struct {
-	bx_bool  rx_ok;		// PRX - rx complete without error
-	bx_bool  bad_crc;	// CRC - Bad CRC detected
-	bx_bool  bad_falign;	// FAE - frame alignment error
-	bx_bool  fifo_or;	// FO  - FIFO overrun
-	bx_bool  rx_missed;	// MPA - missed packet error
-	bx_bool  rx_mbit;	// PHY - unicast or mcast/bcast address match
-	bx_bool  rx_disabled;   // DIS - set when in monitor mode
-	bx_bool  deferred;	// DFR - collision active
+        bool  rx_ok;       // PRX - rx complete without error
+        bool  bad_crc;     // CRC - Bad CRC detected
+        bool  bad_falign;  // FAE - frame alignment error
+        bool  fifo_or;     // FO  - FIFO overrun
+        bool  rx_missed;   // MPA - missed packet error
+        bool  rx_mbit;     // PHY - unicast or mcast/bcast address match
+        bool  rx_disabled; // DIS - set when in monitor mode
+        bool  deferred;    // DFR - collision active
     } RSR;
 
     Bit16u local_dma;	// 01,02h read ; current local DMA addr
@@ -179,19 +179,19 @@ typedef struct {
     Bit8u  mem[BX_NE2K_MEMSIZ];  // on-chip packet memory
 
     // ne2k internal state
-    Bit32u  base_address;
-    int     base_irq;
-    int     tx_timer_index;
-    bx_bool tx_timer_active;
-    int     statusbar_id;
+    Bit32u base_address;
+    int    base_irq;
+    int    tx_timer_index;
+    bool   tx_timer_active;
+    int    statusbar_id;
 
     // pci stuff
-    bx_bool pci_enabled;
+    bool   pci_enabled;
 #if BX_SUPPORT_PCI
-    Bit8u devfunc;
+    Bit8u  devfunc;
 #endif
-    char devname[16];
-    char ldevname[20];
+    char   devname[16];
+    char   ldevname[20];
 } bx_ne2k_t;
 
 
@@ -227,7 +227,7 @@ private:
 
   Bit32u read_cr(void);
   void   write_cr(Bit32u value);
-  void   set_irq_level(bx_bool level);
+  void   set_irq_level(bool level);
 
   Bit32u chipmem_read(Bit32u address, unsigned io_len) BX_CPP_AttrRegparmN(2);
   Bit32u asic_read(Bit32u offset, unsigned io_len) BX_CPP_AttrRegparmN(2);

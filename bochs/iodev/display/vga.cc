@@ -71,10 +71,10 @@ bx_vga_c::~bx_vga_c()
   BX_DEBUG(("Exit"));
 }
 
-bx_bool bx_vga_c::init_vga_extension(void)
+bool bx_vga_c::init_vga_extension(void)
 {
   unsigned addr;
-  bx_bool ret = 0;
+  bool ret = 0;
 
   BX_VGA_THIS init_iohandlers(read_handler, write_handler);
   BX_VGA_THIS pci_enabled = SIM->is_pci_device("pcivga");
@@ -239,7 +239,7 @@ void bx_vga_c::write_handler_no_log(void *this_ptr, Bit32u address, Bit32u value
 }
 #endif
 
-void bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
+void bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bool no_log)
 {
   if (io_len == 2) {
 #if BX_USE_VGA_SMF
@@ -895,8 +895,8 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
   UNUSED(this_ptr);
 #endif
   Bit16u max_xres, max_yres, max_bpp;
-  bx_bool new_vbe_8bit_dac;
-  bx_bool needs_update = 0;
+  bool new_vbe_8bit_dac;
+  bool needs_update = 0;
   unsigned i;
 
 //  BX_INFO(("VBE_write %x = %x (len %x)", address, value, io_len));
@@ -1097,8 +1097,8 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
             BX_VGA_THIS s.plane_shift = 16;
             BX_VGA_THIS s.plane_offset = 0;
           }
-          BX_VGA_THIS vbe.enabled = (bx_bool)((value & VBE_DISPI_ENABLED) != 0);
-          BX_VGA_THIS vbe.get_capabilities = (bx_bool)((value & VBE_DISPI_GETCAPS) != 0);
+          BX_VGA_THIS vbe.enabled = ((value & VBE_DISPI_ENABLED) != 0);
+          BX_VGA_THIS vbe.get_capabilities = ((value & VBE_DISPI_GETCAPS) != 0);
           if (BX_VGA_THIS vbe.get_capabilities) {
             bx_gui->get_capabilities(&max_xres, &max_yres, &max_bpp);
             if (max_xres < BX_VGA_THIS vbe.max_xres) {
@@ -1111,7 +1111,7 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
               BX_VGA_THIS vbe.max_bpp = max_bpp;
             }
           }
-          new_vbe_8bit_dac = (bx_bool)((value & VBE_DISPI_8BIT_DAC) != 0);
+          new_vbe_8bit_dac = ((value & VBE_DISPI_8BIT_DAC) != 0);
           if (new_vbe_8bit_dac != BX_VGA_THIS vbe.dac_8bit) {
             if (new_vbe_8bit_dac) {
               for (i=0; i<256; i++) {

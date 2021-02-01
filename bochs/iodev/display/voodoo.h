@@ -37,11 +37,11 @@ typedef struct {
     Bit64u vsync_usec;
     double htime_to_pixel;
     Bit64u frame_start;
-    bx_bool clock_enabled;
-    bx_bool output_on;
-    bx_bool override_on;
-    bx_bool screen_update_pending;
-    bx_bool gui_update_pending;
+    bool clock_enabled;
+    bool output_on;
+    bool override_on;
+    bool screen_update_pending;
+    bool gui_update_pending;
   } vdraw;
   int mode_change_timer_id;
   int vertical_timer_id;
@@ -50,7 +50,7 @@ typedef struct {
   Bit16u max_yres;
   Bit16u num_x_tiles;
   Bit16u num_y_tiles;
-  bx_bool  *vga_tile_updated;
+  bool  *vga_tile_updated;
 } bx_voodoo_t;
 
 
@@ -67,17 +67,17 @@ public:
   virtual void redraw_area(unsigned x0, unsigned y0,
                            unsigned width, unsigned height);
   virtual void update(void);
-  virtual bx_bool update_timing(void) {return 0;}
-  virtual Bit32u get_retrace(bx_bool hv) {return 0;}
+  virtual bool update_timing(void) {return 0;}
+  virtual Bit32u get_retrace(bool hv) {return 0;}
 
-  virtual void output_enable(bx_bool enabled) {}
+  virtual void output_enable(bool enabled) {}
   virtual void update_screen_start(void) {}
 
   virtual void reg_write(Bit32u reg, Bit32u value);
   virtual void blt_reg_write(Bit8u reg, Bit32u value) {}
   virtual void mem_write_linear(Bit32u offset, Bit32u value, unsigned len) {}
   virtual void draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *info) {}
-  virtual void set_tile_updated(unsigned xti, unsigned yti, bx_bool flag) {}
+  virtual void set_tile_updated(unsigned xti, unsigned yti, bool flag) {}
 
   static void vertical_timer_handler(void *);
 
@@ -85,7 +85,7 @@ protected:
   bx_voodoo_t s;
 
   void voodoo_register_state(bx_list_c *parent);
-  void set_irq_level(bx_bool level);
+  void set_irq_level(bool level);
   void vertical_timer(void);
 };
 
@@ -98,10 +98,10 @@ public:
   virtual void register_state(void);
   virtual void after_restore_state(void);
 
-  virtual bx_bool update_timing(void);
-  virtual Bit32u get_retrace(bx_bool hv);
+  virtual bool update_timing(void);
+  virtual Bit32u get_retrace(bool hv);
 
-  virtual void output_enable(bx_bool enabled);
+  virtual void output_enable(bool enabled);
   virtual void update_screen_start(void);
 
   virtual void pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
@@ -123,14 +123,14 @@ public:
   virtual void register_state(void);
   virtual void after_restore_state(void);
 
-  virtual bx_bool update_timing(void);
-  virtual Bit32u get_retrace(bx_bool hv);
+  virtual bool   update_timing(void);
+  virtual Bit32u get_retrace(bool hv);
 
   virtual void reg_write(Bit32u reg, Bit32u value);
   virtual void blt_reg_write(Bit8u reg, Bit32u value);
   virtual void mem_write_linear(Bit32u offset, Bit32u value, unsigned len);
   virtual void draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *info);
-  virtual void set_tile_updated(unsigned xti, unsigned yti, bx_bool flag);
+  virtual void set_tile_updated(unsigned xti, unsigned yti, bool flag);
 
   virtual void pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 
@@ -159,8 +159,8 @@ private:
   void   blt_launch_area_write(Bit32u value);
   void   blt_execute(void);
   void   blt_complete(void);
-  bx_bool blt_apply_clipwindow(int *x0, int *y0, int *x1, int *y1, int *w, int *h);
-  Bit8u  colorkey_check(Bit8u *ptr, Bit8u pxsize, bx_bool dst);
+  bool   blt_apply_clipwindow(int *x0, int *y0, int *x1, int *y1, int *w, int *h);
+  Bit8u  colorkey_check(Bit8u *ptr, Bit8u pxsize, bool dst);
 
   void   blt_rectangle_fill(void);
   void   blt_pattern_fill_mono(void);
@@ -170,11 +170,11 @@ private:
   void   blt_screen_to_screen_stretch(void);
   void   blt_host_to_screen(void);
   void   blt_host_to_screen_pattern(void);
-  void   blt_line(bx_bool pline);
-  void   blt_polygon_fill(bx_bool force);
+  void   blt_line(bool pline);
+  void   blt_polygon_fill(bool force);
 
   bx_ddc_c ddc;
-  bx_bool  is_agp;
+  bool     is_agp;
 };
 
 class bx_voodoo_vga_c : public bx_vgacore_c {
@@ -192,12 +192,12 @@ public:
   virtual void   redraw_area(unsigned x0, unsigned y0,
                              unsigned width, unsigned height);
 
-  virtual bx_bool init_vga_extension(void);
+  virtual bool   init_vga_extension(void);
   virtual void   get_crtc_params(bx_crtc_params_t *crtcp);
   Bit32u get_retrace(void);
 
   void banshee_update_mode(void);
-  void banshee_set_dac_mode(bx_bool mode);
+  void banshee_set_dac_mode(bool mode);
   void banshee_set_vclk3(Bit32u value);
 
   static Bit32u banshee_vga_read_handler(void *this_ptr, Bit32u address, unsigned io_len);

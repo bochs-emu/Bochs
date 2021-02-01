@@ -536,7 +536,7 @@ void bx_usb_ehci_c::remove_device(Bit8u port)
   }
 }
 
-void bx_usb_ehci_c::set_connect_status(Bit8u port, int type, bx_bool connected)
+void bx_usb_ehci_c::set_connect_status(Bit8u port, int type, bool connected)
 {
   const bx_bool ccs_org = BX_EHCI_THIS hub.usb_port[port].portsc.ccs;
   const bx_bool ped_org = BX_EHCI_THIS hub.usb_port[port].portsc.ped;
@@ -886,7 +886,7 @@ bool bx_usb_ehci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
 
 void bx_usb_ehci_c::update_irq(void)
 {
-  bx_bool level = 0;
+  bool level = 0;
 
   if ((BX_EHCI_THIS hub.op_regs.UsbSts.inti & BX_EHCI_THIS hub.op_regs.UsbIntr) > 0) {
     level = 1;
@@ -974,12 +974,12 @@ Bit32u bx_usb_ehci_c::get_fetch_addr(int async)
   return async ? BX_EHCI_THIS hub.a_fetch_addr : BX_EHCI_THIS hub.p_fetch_addr;
 }
 
-bx_bool bx_usb_ehci_c::async_enabled(void)
+bool bx_usb_ehci_c::async_enabled(void)
 {
   return (BX_EHCI_THIS hub.op_regs.UsbCmd.rs && BX_EHCI_THIS hub.op_regs.UsbCmd.ase);
 }
 
-bx_bool bx_usb_ehci_c::periodic_enabled(void)
+bool bx_usb_ehci_c::periodic_enabled(void)
 {
   return (BX_EHCI_THIS hub.op_regs.UsbCmd.rs && BX_EHCI_THIS hub.op_regs.UsbCmd.pse);
 }
@@ -2293,7 +2293,7 @@ const char *bx_usb_ehci_c::usb_param_handler(bx_param_string_c *param, int set,
 
   if (set) {
     portnum = atoi((param->get_parent())->get_name()+4) - 1;
-    bx_bool empty = ((strlen(val) == 0) || (!strcmp(val, "none")));
+    bool empty = ((strlen(val) == 0) || (!strcmp(val, "none")));
     if ((portnum >= 0) && (portnum < USB_EHCI_PORTS)) {
       if (empty && (BX_EHCI_THIS hub.usb_port[portnum].device != NULL)) {
         BX_EHCI_THIS device_change |= (1 << portnum);

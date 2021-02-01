@@ -117,7 +117,7 @@ extern voodoo_state *v;
 extern BX_MUTEX(cmdfifo_mutex);
 extern BX_MUTEX(render_mutex);
 Bit32u register_r(Bit32u offset);
-void register_w(Bit32u offset, Bit32u data, bx_bool log);
+void register_w(Bit32u offset, Bit32u data, bool log);
 void register_w_common(Bit32u offset, Bit32u data);
 Bit32u lfb_r(Bit32u offset);
 Bit32u lfb_w(Bit32u offset, Bit32u data, Bit32u mem_mask);
@@ -312,7 +312,7 @@ void bx_banshee_c::after_restore_state(void)
   start_fifo_thread();
 }
 
-bx_bool bx_banshee_c::update_timing(void)
+bool bx_banshee_c::update_timing(void)
 {
   float hfreq;
   bx_crtc_params_t crtcp;
@@ -328,7 +328,7 @@ bx_bool bx_banshee_c::update_timing(void)
   return 1;
 }
 
-void bx_banshee_c::set_tile_updated(unsigned xti, unsigned yti, bx_bool flag)
+void bx_banshee_c::set_tile_updated(unsigned xti, unsigned yti, bool flag)
 {
   SET_TILE_UPDATED(, xti, yti, flag);
 }
@@ -453,7 +453,7 @@ void bx_banshee_c::draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *i
   }
 }
 
-Bit32u bx_banshee_c::get_retrace(bx_bool hv)
+Bit32u bx_banshee_c::get_retrace(bool hv)
 {
   return theVoodooVga->get_retrace();
 }
@@ -1527,7 +1527,7 @@ void bx_banshee_c::blt_complete()
   BLT.busy = 0;
 }
 
-bx_bool bx_banshee_c::blt_apply_clipwindow(int *x0, int *y0, int *x1, int *y1, int *w, int *h)
+bool bx_banshee_c::blt_apply_clipwindow(int *x0, int *y0, int *x1, int *y1, int *w, int *h)
 {
   int cx0, cx1, cy0, cy1, xd, yd;
 
@@ -1584,7 +1584,7 @@ bx_bool bx_banshee_c::blt_apply_clipwindow(int *x0, int *y0, int *x1, int *y1, i
   return ((*w > 0) && (*h > 0));
 }
 
-Bit8u bx_banshee_c::colorkey_check(Bit8u *ptr, Bit8u pxsize, bx_bool dst)
+Bit8u bx_banshee_c::colorkey_check(Bit8u *ptr, Bit8u pxsize, bool dst)
 {
   Bit8u pass = 0;
   Bit32u color, cmin, cmax;
@@ -2401,7 +2401,7 @@ void bx_banshee_c::blt_host_to_screen_pattern()
   BX_UNLOCK(render_mutex);
 }
 
-void bx_banshee_c::blt_line(bx_bool pline)
+void bx_banshee_c::blt_line(bool pline)
 {
   Bit32u dpitch = BLT.dst_pitch;
   Bit8u dpxsize = (BLT.dst_fmt > 1) ? (BLT.dst_fmt - 1) : 1;
@@ -2515,7 +2515,7 @@ void bx_banshee_c::blt_line(bx_bool pline)
   BX_UNLOCK(render_mutex);
 }
 
-int calc_line_xpos(int x1, int y1, int x2, int y2, int yc, bx_bool r)
+int calc_line_xpos(int x1, int y1, int x2, int y2, int yc, bool r)
 {
   int i, deltax, deltay, numpixels,
       d, dinc1, dinc2,
@@ -2582,7 +2582,7 @@ int calc_line_xpos(int x1, int y1, int x2, int y2, int yc, bx_bool r)
   return (r ? xr : xl);
 }
 
-void bx_banshee_c::blt_polygon_fill(bx_bool force)
+void bx_banshee_c::blt_polygon_fill(bool force)
 {
   Bit32u dpitch = BLT.dst_pitch;
   Bit8u dpxsize = (BLT.dst_fmt > 1) ? (BLT.dst_fmt - 1) : 1;
@@ -2705,9 +2705,9 @@ bx_voodoo_vga_c::~bx_voodoo_vga_c()
   s.memory = NULL;
 }
 
-bx_bool bx_voodoo_vga_c::init_vga_extension(void)
+bool bx_voodoo_vga_c::init_vga_extension(void)
 {
-  bx_bool ret = 0;
+  bool ret = 0;
 
   Bit8u model = (Bit8u)SIM->get_param_enum("model", (bx_list_c*)SIM->get_param(BXPN_VOODOO))->get();
   if (model < VOODOO_BANSHEE) {
@@ -2788,7 +2788,7 @@ void bx_voodoo_vga_c::banshee_update_mode(void)
   BX_VVGA_THIS s.last_fh = 0;
 }
 
-void bx_voodoo_vga_c::banshee_set_dac_mode(bx_bool mode)
+void bx_voodoo_vga_c::banshee_set_dac_mode(bool mode)
 {
   unsigned i;
 

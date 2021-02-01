@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009-2016  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2009-2020  The Bochs Project
+//                2009-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -193,13 +193,13 @@ protected:
   void update_irq(void);
 
   int  broadcast_packet(USBPacket *p);
-  void set_connect_status(Bit8u port, int type, bx_bool connected);
+  void set_connect_status(Bit8u port, int type, bool connected);
 
   static void uhci_timer_handler(void *);
   void uhci_timer(void);
-  bx_bool DoTransfer(Bit32u address, Bit32u queue_num, struct TD *);
-  void set_status(struct TD *td, bx_bool stalled, bx_bool data_buffer_error, bx_bool babble,
-    bx_bool nak, bx_bool crc_time_out, bx_bool bitstuff_error, Bit16u act_len);
+  bool DoTransfer(Bit32u address, Bit32u queue_num, struct TD *);
+  void set_status(struct TD *td, bool stalled, bool data_buffer_error, bool babble,
+    bool nak, bool crc_time_out, bool bitstuff_error, Bit16u act_len);
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);

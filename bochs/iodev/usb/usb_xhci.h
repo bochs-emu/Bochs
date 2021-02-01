@@ -559,14 +559,14 @@ private:
   static void reset_hc();
   static void reset_port(int);
   static void reset_port_usb3(int, const int);
-  static bx_bool save_hc_state(void);
-  static bx_bool restore_hc_state(void);
+  static bool save_hc_state(void);
+  static bool restore_hc_state(void);
 
   static void update_irq(unsigned interrupter);
 
   static void init_device(Bit8u port, bx_list_c *portconf);
   static void remove_device(Bit8u port);
-  static void usb_set_connect_status(Bit8u port, int type, bx_bool connected);
+  static void usb_set_connect_status(Bit8u port, int type, bool connected);
 
   static int  broadcast_packet(USBPacket *p, const int port);
   static void xhci_timer_handler(void *);
@@ -575,7 +575,7 @@ private:
   static void process_transfer_ring(const int slot, const int ep);
   static void process_command_ring(void);
   static void write_event_TRB(const unsigned interrupter, const Bit64u parameter, const Bit32u status, 
-                              const Bit32u command, const bx_bool fire_int);
+                              const Bit32u command, const bool fire_int);
   static Bit32u NEC_verification(const Bit64u parameter);
   static void init_event_ring(const unsigned interrupter);
   static void read_TRB(bx_phy_address addr, struct TRB *trb);
@@ -588,8 +588,8 @@ private:
   static void copy_ep_from_buffer(struct EP_CONTEXT *ep_context, const Bit8u *buffer);
   static void copy_slot_to_buffer(Bit32u *buffer, const int slot);
   static void copy_ep_to_buffer(Bit32u *buffer, const int slot, const int ep);
-  static bx_bool validate_slot_context(const struct SLOT_CONTEXT *slot_context);
-  static bx_bool validate_ep_context(const struct EP_CONTEXT *ep_context, int speed, int ep_num);
+  static bool validate_slot_context(const struct SLOT_CONTEXT *slot_context);
+  static bool validate_ep_context(const struct EP_CONTEXT *ep_context, int speed, int ep_num);
   static int  create_unique_address(const int slot);
   static int  send_set_address(const int addr, const int port_num);
 

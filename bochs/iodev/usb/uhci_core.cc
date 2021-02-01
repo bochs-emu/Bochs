@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009-2017  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2009-2020  The Bochs Project
+//                2009-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -236,7 +236,7 @@ void bx_uhci_core_c::after_restore_state(void)
 
 void bx_uhci_core_c::update_irq()
 {
-  bx_bool level;
+  bool level;
 
   if (((hub.usb_status.status2 & 1) && (hub.usb_enable.on_complete)) ||
       ((hub.usb_status.status2 & 2) && (hub.usb_enable.short_packet)) ||
@@ -771,7 +771,7 @@ void bx_uhci_core_c::event_handler(int event, USBPacket *packet, int port)
   }
 }
 
-bx_bool bx_uhci_core_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td) {
+bool bx_uhci_core_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td) {
 
   int len = 0, ret = 0;
   USBAsync *p;
@@ -881,8 +881,8 @@ int bx_uhci_core_c::broadcast_packet(USBPacket *p)
 }
 
 // If the request fails, set the stall bit ????
-void bx_uhci_core_c::set_status(struct TD *td, bx_bool stalled, bx_bool data_buffer_error, bx_bool babble,
-                             bx_bool nak, bx_bool crc_time_out, bx_bool bitstuff_error, Bit16u act_len)
+void bx_uhci_core_c::set_status(struct TD *td, bool stalled, bool data_buffer_error, bool babble,
+                             bool nak, bool crc_time_out, bool bitstuff_error, Bit16u act_len)
 {
   // clear out the bits we can modify and/or want zero
   td->dword1 &= 0xDF00F800;
@@ -935,7 +935,7 @@ const char *usb_speed[4] = {
   "super"
 };
 
-void bx_uhci_core_c::set_connect_status(Bit8u port, int type, bx_bool connected)
+void bx_uhci_core_c::set_connect_status(Bit8u port, int type, bool connected)
 {
   usb_device_c *device = hub.usb_port[port].device;
   if (device != NULL) {

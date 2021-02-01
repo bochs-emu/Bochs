@@ -1345,7 +1345,7 @@ void voodoo2_bitblt_mux(Bit8u rop, Bit8u *dst_ptr, Bit8u *src_ptr, int dpxsize)
 
 #define BLT v->blt
 
-bx_bool clip_check(Bit16u x, Bit16u y)
+bool clip_check(Bit16u x, Bit16u y)
 {
   if (!BLT.clip_en)
     return 1;
@@ -1357,7 +1357,7 @@ bx_bool clip_check(Bit16u x, Bit16u y)
 }
 
 
-Bit8u chroma_check(Bit8u *ptr, Bit16u min, Bit16u max, bx_bool dst)
+Bit8u chroma_check(Bit8u *ptr, Bit16u min, Bit16u max, bool dst)
 {
   Bit8u pass = 0;
   Bit32u color;
@@ -1779,7 +1779,7 @@ void dacdata_r(dac_state *d, Bit8u regnum)
   d->read_result = result;
 }
 
-void register_w(Bit32u offset, Bit32u data, bx_bool log)
+void register_w(Bit32u offset, Bit32u data, bool log)
 {
   Bit32u regnum  = (offset) & 0xff;
   Bit32u chips   = (offset>>8) & 0xf;
@@ -3204,7 +3204,7 @@ void cmdfifo_process(cmdfifo_info *f)
 
 #define FBI_TRICK 1
 #if FBI_TRICK
-bx_bool fifo_add_fbi(Bit32u type_offset, Bit32u data)
+bool fifo_add_fbi(Bit32u type_offset, Bit32u data)
 {
   bx_bool ret = 0;
 
@@ -3219,7 +3219,7 @@ bx_bool fifo_add_fbi(Bit32u type_offset, Bit32u data)
   return ret;
 }
 
-bx_bool fifo_add_common(Bit32u type_offset, Bit32u data)
+bool fifo_add_common(Bit32u type_offset, Bit32u data)
 {
   bx_bool ret = 0;
 
@@ -3240,7 +3240,7 @@ bx_bool fifo_add_common(Bit32u type_offset, Bit32u data)
   return ret;
 }
 #else
-bx_bool fifo_add_common(Bit32u type_offset, Bit32u data)
+bool fifo_add_common(Bit32u type_offset, Bit32u data)
 {
   bx_bool ret = 0;
 

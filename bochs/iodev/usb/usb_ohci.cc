@@ -514,7 +514,7 @@ void bx_usb_ohci_c::remove_device(Bit8u port)
 
 void bx_usb_ohci_c::update_irq()
 {
-  bx_bool level = 0;
+  bool level = 0;
 
   if ((BX_OHCI_THIS hub.op_regs.HcInterruptEnable & OHCI_INTR_MIE) &&
       (BX_OHCI_THIS hub.op_regs.HcInterruptStatus & BX_OHCI_THIS hub.op_regs.HcInterruptEnable)) {
@@ -1139,10 +1139,10 @@ void bx_usb_ohci_c::process_lists(void)
   }
 }
 
-bx_bool bx_usb_ohci_c::process_ed(struct OHCI_ED *ed, const Bit32u ed_address)
+bool bx_usb_ohci_c::process_ed(struct OHCI_ED *ed, const Bit32u ed_address)
 {
   struct OHCI_TD cur_td;
-  bx_bool ret = 0;
+  bool ret = 0;
 
   if (!ED_GET_H(ed) && !ED_GET_K(ed) && (ED_GET_HEADP(ed) != ED_GET_TAILP(ed))) {
     // if the isochronous is enabled and ed is a isochronous, do TD
@@ -1212,7 +1212,7 @@ void bx_usb_ohci_c::event_handler(int event, USBPacket *packet, int port)
   }
 }
 
-bx_bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
+bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
 {
   unsigned pid = 0, len = 0, len1, len2;
   int ilen, ret = 0, ret2 = 1;
@@ -1459,7 +1459,7 @@ void bx_usb_ohci_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_l
   }
 }
 
-void bx_usb_ohci_c::usb_set_connect_status(Bit8u port, int type, bx_bool connected)
+void bx_usb_ohci_c::usb_set_connect_status(Bit8u port, int type, bool connected)
 {
   const bx_bool ccs_org = BX_OHCI_THIS hub.usb_port[port].HcRhPortStatus.ccs;
   const bx_bool pes_org = BX_OHCI_THIS hub.usb_port[port].HcRhPortStatus.pes;
@@ -1516,7 +1516,7 @@ const char *bx_usb_ohci_c::usb_param_handler(bx_param_string_c *param, int set, 
 {
   if (set) {
     int portnum = atoi((param->get_parent())->get_name()+4) - 1;
-    bx_bool empty = ((strlen(val) == 0) || (!strcmp(val, "none")));
+    bool empty = ((strlen(val) == 0) || (!strcmp(val, "none")));
     if ((portnum >= 0) && (portnum < USB_OHCI_PORTS)) {
       if (empty && BX_OHCI_THIS hub.usb_port[portnum].HcRhPortStatus.ccs) {
         BX_OHCI_THIS hub.device_change |= (1 << portnum);

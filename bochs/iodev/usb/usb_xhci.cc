@@ -676,7 +676,7 @@ void bx_usb_xhci_c::reset_port_usb3(int port, const int reset_type)
  * Callee checks to be sure the Halted bit is set first.
  * We return 0 == no error, 1 = error
  */
-bx_bool bx_usb_xhci_c::save_hc_state(void)
+bool bx_usb_xhci_c::save_hc_state(void)
 {
   int i, j;
   Bit64u addr;
@@ -717,7 +717,7 @@ bx_bool bx_usb_xhci_c::save_hc_state(void)
 /*
  * See comments at save_hc_state above
  */
-bx_bool bx_usb_xhci_c::restore_hc_state(void)
+bool bx_usb_xhci_c::restore_hc_state(void)
 {
   int i, j;
   Bit64u addr;
@@ -1007,7 +1007,7 @@ void bx_usb_xhci_c::remove_device(Bit8u port)
 
 void bx_usb_xhci_c::update_irq(unsigned interrupter)
 {
-  bx_bool level = 0;
+  bool level = 0;
 
   if ((BX_XHCI_THIS hub.op_regs.HcCommand.inte) &&
       (BX_XHCI_THIS hub.runtime_regs.interrupter[interrupter].iman.ie)) {
@@ -2716,7 +2716,7 @@ void bx_usb_xhci_c::init_event_ring(const unsigned interrupter)
 }
 
 void bx_usb_xhci_c::write_event_TRB(const unsigned interrupter, const Bit64u parameter, const Bit32u status, 
-                                    const Bit32u command, const bx_bool fire_int)
+                                    const Bit32u command, const bool fire_int)
 {
   // write the TRB
   write_TRB((bx_phy_address) BX_XHCI_THIS hub.ring_members.event_rings[interrupter].cur_trb, parameter, status, 
@@ -2934,7 +2934,7 @@ void bx_usb_xhci_c::copy_ep_to_buffer(Bit32u *buffer32, const int slot, const in
                  BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.average_trb_len;
 }
 
-bx_bool bx_usb_xhci_c::validate_slot_context(const struct SLOT_CONTEXT *slot_context)
+bool bx_usb_xhci_c::validate_slot_context(const struct SLOT_CONTEXT *slot_context)
 {
   // specs:6.2.2.3:   Only checks the Interrupter Target and Max Latency fields for validity
   //  See also 4.6.7
@@ -2950,7 +2950,7 @@ bx_bool bx_usb_xhci_c::validate_slot_context(const struct SLOT_CONTEXT *slot_con
 //  the specified amount.  Win7 uses this to detect the actual EP0's max packet size...
 //  For example, the descriptor might return 64, but the device really only handles
 //   8-byte control transfers.
-bx_bool bx_usb_xhci_c::validate_ep_context(const struct EP_CONTEXT *ep_context, int speed, int ep_num)
+bool bx_usb_xhci_c::validate_ep_context(const struct EP_CONTEXT *ep_context, int speed, int ep_num)
 {
   // Only the Max_packet Size is evaluated (for an evaluate ep command) ???
 
@@ -3140,7 +3140,7 @@ void bx_usb_xhci_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_l
   }
 }
 
-void bx_usb_xhci_c::usb_set_connect_status(Bit8u port, int type, bx_bool connected)
+void bx_usb_xhci_c::usb_set_connect_status(Bit8u port, int type, bool connected)
 {
   const bx_bool ccs_org = BX_XHCI_THIS hub.usb_port[port].portsc.ccs;
   const bx_bool ped_org = BX_XHCI_THIS hub.usb_port[port].portsc.ped;
@@ -3219,7 +3219,7 @@ const char *bx_usb_xhci_c::usb_param_handler(bx_param_string_c *param, int set,
 
   if (set) {
     portnum = atoi((param->get_parent())->get_name()+4) - 1;
-    bx_bool empty = ((strlen(val) == 0) || (!strcmp(val, "none")));
+    bool empty = ((strlen(val) == 0) || (!strcmp(val, "none")));
     if ((portnum >= 0) && (portnum < USB_XHCI_PORTS)) {
       if (empty && BX_XHCI_THIS hub.usb_port[portnum].portsc.ccs) {
         BX_XHCI_THIS device_change |= (1 << portnum);

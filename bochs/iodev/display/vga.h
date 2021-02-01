@@ -105,7 +105,7 @@ public:
   virtual void   redraw_area(unsigned x0, unsigned y0,
                              unsigned width, unsigned height);
 
-  virtual bx_bool init_vga_extension(void);
+  virtual bool init_vga_extension(void);
 
 #if BX_SUPPORT_PCI
   virtual void pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
@@ -120,7 +120,7 @@ protected:
 #if BX_USE_VGA_SMF
   static void   write_handler_no_log(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
 #endif
-  void  write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log);
+  void  write(Bit32u address, Bit32u value, unsigned io_len, bool no_log);
 
   virtual void update(void);
 
@@ -133,11 +133,11 @@ protected:
 
 #if BX_USE_VGA_SMF == 0
   Bit32u vbe_read(Bit32u address, unsigned io_len);
-  void  vbe_write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log);
+  void  vbe_write(Bit32u address, Bit32u value, unsigned io_len, bool no_log);
 #endif
 
 private:
-  bx_bool vbe_present;
+  bool vbe_present;
   struct {
     Bit16u  cur_dispi;
     Bit32u  base_address;
@@ -148,7 +148,7 @@ private:
     Bit16u  max_yres;
     Bit16u  max_bpp;
     Bit16u  bank;
-    bx_bool enabled;
+    bool    enabled;
     Bit16u  curindex;
     Bit32u  visible_screen_size; /**< in bytes */
     Bit16u  offset_x;            /**< Virtual screen x start (in pixels) */
@@ -157,9 +157,9 @@ private:
     Bit16u  virtual_yres;
     Bit32u  virtual_start;   /**< For dealing with bpp>8, this is where the virtual screen starts. */
     Bit8u   bpp_multiplier;  /**< We have to save this b/c sometimes we need to recalculate stuff with it. */
-    bx_bool get_capabilities;
-    bx_bool dac_8bit;
-    bx_bool ddc_enabled;
+    bool    get_capabilities;
+    bool    dac_8bit;
+    bool    ddc_enabled;
   } vbe;  // VBE state information
 
   bx_ddc_c ddc;

@@ -100,7 +100,7 @@ public:
   virtual void   refresh_display(void *this_ptr, bool redraw);
   virtual void   get_text_snapshot(Bit8u **text_snapshot, unsigned *txHeight,
                                    unsigned *txWidth);
-  virtual bx_bool init_vga_extension(void) {return 0;}
+  virtual bool   init_vga_extension(void) {return 0;}
   virtual void   get_crtc_params(bx_crtc_params_t *crtcp);
 
   static void    vga_timer_handler(void *);
@@ -116,13 +116,13 @@ protected:
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
 
   Bit32u read(Bit32u address, unsigned io_len);
-  void   write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log);
+  void   write(Bit32u address, Bit32u value, unsigned io_len, bool no_log);
 
-  Bit8u get_vga_pixel(Bit16u x, Bit16u y, Bit16u saddr, Bit16u lc, bx_bool bs, Bit8u **plane);
+  Bit8u get_vga_pixel(Bit16u x, Bit16u y, Bit16u saddr, Bit16u lc, bool bs, Bit8u **plane);
   virtual void update(void);
   void determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth);
   void calculate_retrace_timing(void);
-  bx_bool skip_update(void);
+  bool skip_update(void);
 
   struct {
     struct {
@@ -224,7 +224,7 @@ protected:
     unsigned line_compare;
     unsigned vertical_display_end;
     unsigned blink_counter;
-    bx_bool  *vga_tile_updated;
+    bool  *vga_tile_updated;
     Bit8u *memory;
     Bit32u memsize;
     Bit8u text_snapshot[128 * 1024]; // current text snapshot
@@ -257,17 +257,17 @@ protected:
     Bit16u num_x_tiles;
     Bit16u num_y_tiles;
     // vga override mode
-    bx_bool vga_override;
+    bool vga_override;
 #if BX_SUPPORT_PCI
     bx_nonvga_device_c *nvgadev;
 #endif
   } s;  // state information
 
   int timer_id;
-  bx_bool update_realtime;
-  bx_bool vsync_realtime;
+  bool update_realtime;
+  bool vsync_realtime;
   bx_param_string_c *vgaext;
-  bx_bool pci_enabled;
+  bool pci_enabled;
 };
 
 #endif
