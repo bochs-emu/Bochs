@@ -52,8 +52,8 @@ public:
   usb_cbi_device_c(const char *filename);
   virtual ~usb_cbi_device_c(void);
 
-  virtual bx_bool init();
-  virtual bx_bool set_option(const char *option);
+  virtual bool init();
+  virtual bool set_option(const char *option);
   virtual const char* get_info();
   virtual void runtime_config(void);
   void restore_handler(bx_list_c *conf);
@@ -71,16 +71,16 @@ private:
     // members set in constructor / init
     bx_list_c *config;
     char info_txt[BX_PATHNAME_LEN];
-    bx_bool model;  // 0 = bochs, 1 = teac
+    bool model;  // 0 = bochs, 1 = teac
     int statusbar_id;
     int floppy_timer_index;
     // members handled by runtime config
     device_image_t *hdimage;
     const char *fname;
     char *image_mode;
-    bx_bool inserted; // 0 = media not present
-    bx_bool wp;     // 0 = not write_protected, 1 = write_protected
-    bx_bool status_changed;
+    bool inserted; // 0 = media not present
+    bool wp;     // 0 = not write_protected, 1 = write_protected
+    bool status_changed;
     // members handled by save/restore
     Bit32u usb_len;
     Bit32u data_len;
@@ -91,21 +91,21 @@ private:
     int sense;
     int asc;
     int fail_count;
-    bx_bool did_inquiry_fail;
-    bx_bool seek_pending;
+    bool did_inquiry_fail;
+    bool seek_pending;
     Bit8u *usb_buf;
     Bit8u *dev_buffer;
     // members not handled by save/restore
     USBPacket *packet;
   } s;
 
-  bx_bool handle_command(Bit8u *command);
+  bool handle_command(Bit8u *command);
   void start_timer(Bit8u mode);
   void floppy_timer(void);
   int floppy_read_sector(void);
   int floppy_write_sector(void);
   void copy_data(USBPacket *p);
-  bx_bool set_inserted(bx_bool value);
+  bool set_inserted(bool value);
 
   static const char *floppy_path_handler(bx_param_string_c *param, int set,
                                          const char *oldval, const char *val, int maxlen);

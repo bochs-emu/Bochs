@@ -64,7 +64,7 @@ typedef struct {
   Bit8u   *data;
   Bit16u  size;
   Bit8u   sum_needed;
-  bx_bool vlan_needed;
+  bool    vlan_needed;
   Bit8u   ipcss;
   Bit8u   ipcso;
   Bit16u  ipcse;
@@ -75,10 +75,10 @@ typedef struct {
   Bit16u  mss;
   Bit32u  paylen;
   Bit16u  tso_frames;
-  bx_bool tse;
-  bx_bool ip;
-  bx_bool tcp;
-  bx_bool cptse; // current packet tse bit
+  bool    tse;
+  bool    ip;
+  bool    tcp;
+  bool    cptse; // current packet tse bit
   Bit32u  int_cause;
 } e1000_tx;
 
@@ -89,7 +89,7 @@ typedef struct {
 
   Bit32u  rxbuf_size;
   Bit32u  rxbuf_min_shift;
-  bx_bool check_rxov;
+  bool check_rxov;
 
   e1000_tx tx;
 
@@ -97,7 +97,7 @@ typedef struct {
     Bit32u  val_in; // shifted in from guest driver
     Bit16u  bitnum_in;
     Bit16u  bitnum_out;
-    bx_bool reading;
+    bool    reading;
     Bit32u  old_eecd;
   } eecd_state;
 
@@ -126,7 +126,7 @@ private:
 
   eth_pktmover_c *ethdev;
 
-  void    set_irq_level(bx_bool level);
+  void    set_irq_level(bool level);
   void    set_interrupt_cause(Bit32u val);
   void    set_ics(Bit32u value);
   int     rxbufsize(Bit32u v);
@@ -136,10 +136,10 @@ private:
   void    set_eecd(Bit32u value);
   Bit32u  flash_eerd_read(void);
   void    putsum(Bit8u *data, Bit32u n, Bit32u sloc, Bit32u css, Bit32u cse);
-  bx_bool vlan_enabled(void);
-  bx_bool vlan_rx_filter_enabled(void);
-  bx_bool is_vlan_packet(const Bit8u *buf);
-  bx_bool is_vlan_txd(Bit32u txd_lower);
+  bool    vlan_enabled(void);
+  bool    vlan_rx_filter_enabled(void);
+  bool    is_vlan_packet(const Bit8u *buf);
+  bool    is_vlan_txd(Bit32u txd_lower);
   int     fcs_len(void);
   void    xmit_seg(void);
   void    process_tx_desc(struct e1000_tx_desc *dp);
@@ -151,7 +151,7 @@ private:
   void tx_timer(void);
 
   int     receive_filter(const Bit8u *buf, int size);
-  bx_bool e1000_has_rxbufs(size_t total_size);
+  bool    e1000_has_rxbufs(size_t total_size);
   Bit64u  rx_desc_base(void);
 
   static Bit32u rx_status_handler(void *arg);

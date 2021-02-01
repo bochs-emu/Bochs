@@ -93,7 +93,7 @@ protected:
 
 struct USBKBD {
   Bit8u code;
-  bx_bool modkey;
+  bool modkey;
 };
 
 static const Bit8u bx_mouse_dev_descriptor[] = {
@@ -975,7 +975,7 @@ int usb_hid_device_c::handle_data(USBPacket *p)
   return ret;
 }
 
-int usb_hid_device_c::mouse_poll(Bit8u *buf, int len, bx_bool force)
+int usb_hid_device_c::mouse_poll(Bit8u *buf, int len, bool force)
 {
   int l = USB_RET_NAK;
 
@@ -1144,7 +1144,7 @@ void usb_hid_device_c::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned
   }
 }
 
-int usb_hid_device_c::keyboard_poll(Bit8u *buf, int len, bx_bool force)
+int usb_hid_device_c::keyboard_poll(Bit8u *buf, int len, bool force)
 {
   int l = USB_RET_NAK;
 
@@ -1174,7 +1174,7 @@ bool usb_hid_device_c::gen_scancode_static(void *dev, Bit32u key)
 
 bool usb_hid_device_c::gen_scancode(Bit32u key)
 {
-  bx_bool modkey, released = (key & BX_KEY_RELEASED) != 0;
+  bool modkey, released = (key & BX_KEY_RELEASED) != 0;
   Bit8u code;
 
   code = usbkbd_conv[key & ~BX_KEY_RELEASED].code;

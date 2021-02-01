@@ -9,7 +9,7 @@
 //
 //  Written by Paul Brook
 //
-//  Copyright (C) 2007-2018  The Bochs Project
+//  Copyright (C) 2007-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -61,8 +61,8 @@ typedef struct SCSIRequest {
   int buf_len;
   Bit8u *dma_buf;
   Bit32u status;
-  bx_bool write_cmd;
-  bx_bool async_mode;
+  bool write_cmd;
+  bool async_mode;
   Bit8u seek_pending;
   struct SCSIRequest *next;
 } SCSIRequest;
@@ -77,7 +77,7 @@ public:
   virtual ~scsi_device_t(void);
 
   void register_state(bx_list_c *parent, const char *name);
-  Bit32s scsi_send_command(Bit32u tag, Bit8u *buf, int lun, bx_bool async);
+  Bit32s scsi_send_command(Bit32u tag, Bit8u *buf, int lun, bool async);
   void scsi_command_complete(SCSIRequest *r, int status, int sense);
   void scsi_cancel_io(Bit32u tag);
   void scsi_read_complete(void *req, int ret);
@@ -86,11 +86,11 @@ public:
   void scsi_write_data(Bit32u tag);
   Bit8u* scsi_get_buf(Bit32u tag);
   const char *get_serial_number() {return drive_serial_str;}
-  void set_inserted(bx_bool value);
-  bx_bool get_inserted() {return inserted;}
-  bx_bool get_locked() {return locked;}
+  void set_inserted(bool value);
+  bool get_inserted() {return inserted;}
+  bool get_locked() {return locked;}
   static void seek_timer_handler(void *);
-  bx_bool save_requests(const char *path);
+  bool save_requests(const char *path);
   void restore_requests(const char *path);
   void set_debug_mode();
 
@@ -117,11 +117,11 @@ private:
   int statusbar_id;
   // members set in constructor / runtime config
   Bit64u max_lba;
-  bx_bool inserted;
+  bool inserted;
   // members handled by save/restore
   Bit64u curr_lba;
   int sense;
-  bx_bool locked;
+  bool locked;
   SCSIRequest *requests;
 };
 

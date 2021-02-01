@@ -236,12 +236,12 @@ void bx_pcipnic_c::after_restore_state(void)
   bx_pci_device_c::after_restore_pci_state(mem_read_handler);
 }
 
-void bx_pcipnic_c::set_irq_level(bx_bool level)
+void bx_pcipnic_c::set_irq_level(bool level)
 {
   DEV_pci_set_irq(BX_PNIC_THIS s.devfunc, BX_PNIC_THIS pci_conf[0x3d], level);
 }
 
-bx_bool bx_pcipnic_c::mem_read_handler(bx_phy_address addr, unsigned len,
+bool bx_pcipnic_c::mem_read_handler(bx_phy_address addr, unsigned len,
                                        void *data, void *param)
 {
   Bit8u  *data_ptr;

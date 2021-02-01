@@ -36,7 +36,7 @@
 
 typedef struct {
     int msg_type;
-    bx_bool found_srv_id;
+    bool found_srv_id;
     struct in_addr req_addr;
     uint8_t *params;
     uint8_t params_len;

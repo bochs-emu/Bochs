@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2004-2020  The Bochs Project
+//  Copyright (C) 2004-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -45,13 +45,13 @@
 #endif
 
 typedef struct ftp_session {
-  Bit8u state;
-  bx_bool anonymous;
+  Bit8u  state;
+  bool   anonymous;
   Bit16u pasv_port;
   Bit16u client_cmd_port;
   Bit16u client_data_port;
-  bx_bool ascii_mode;
-  int data_xfer_fd;
+  bool   ascii_mode;
+  int    data_xfer_fd;
   unsigned data_xfer_size;
   unsigned data_xfer_pos;
   unsigned cmdcode;
@@ -270,7 +270,7 @@ void vnet_server_c::bx_printf(const char *fmt, ...)
 }
 #endif
 
-bx_bool vnet_server_c::find_client(const Bit8u *mac_addr, Bit8u *clientid)
+bool vnet_server_c::find_client(const Bit8u *mac_addr, Bit8u *clientid)
 {
   for (Bit8u c = 0; c < VNET_MAX_CLIENTS; c++) {
     if (client[c].init) {
@@ -585,7 +585,7 @@ tcp_handler_t vnet_server_c::get_tcp_handler(unsigned port)
   return (tcp_handler_t)NULL;
 }
 
-bx_bool vnet_server_c::register_tcp_handler(unsigned port, tcp_handler_t func)
+bool vnet_server_c::register_tcp_handler(unsigned port, tcp_handler_t func)
 {
   if (get_tcp_handler(port) != (tcp_handler_t)NULL) {
     BX_ERROR(("TCP port %u is already in use", port));
@@ -614,7 +614,7 @@ bx_bool vnet_server_c::register_tcp_handler(unsigned port, tcp_handler_t func)
   return 1;
 }
 
-bx_bool vnet_server_c::unregister_tcp_handler(unsigned port)
+bool vnet_server_c::unregister_tcp_handler(unsigned port)
 {
   unsigned n;
 
@@ -689,7 +689,7 @@ void vnet_server_c::process_tcpipv4(Bit8u clientid, Bit8u srv_id,
   const Bit8u *tcp_data;
   tcp_handler_t func;
   tcp_conn_t *tcp_conn;
-  bx_bool tcp_error = 1;
+  bool tcp_error = 1;
   Bit8u option, optlen;
   Bit16u value16;
 
@@ -854,7 +854,7 @@ void vnet_server_c::host_to_guest_tcpipv4(Bit8u clientid, Bit8u srv_id,
 }
 
 unsigned vnet_server_c::tcpipv4_send_data(tcp_conn_t *tcp_conn, const Bit8u *data,
-                                          unsigned data_len, bx_bool push)
+                                          unsigned data_len, bool push)
 {
   Bit8u sendbuf[BX_PACKET_BUFSIZE];
   tcp_header_t *tcphdr = (tcp_header_t *)&sendbuf[34];
@@ -911,7 +911,7 @@ void vnet_server_c::tcpipv4_send_ack(tcp_conn_t *tcp_conn, unsigned data_len)
                         tcp_conn->src_port, replybuf, 0, tcphdr_len);
 }
 
-void vnet_server_c::tcpipv4_send_fin(tcp_conn_t *tcp_conn, bx_bool host_fin)
+void vnet_server_c::tcpipv4_send_fin(tcp_conn_t *tcp_conn, bool host_fin)
 {
   Bit8u replybuf[MIN_RX_PACKET_LEN];
   tcp_header_t *tcphdr = (tcp_header_t *)&replybuf[34];
@@ -995,7 +995,7 @@ void ftp_remove_session(ftp_session_t *fs)
 
 // FTP directory helper functions
 
-bx_bool ftp_mkdir(const char *path)
+bool ftp_mkdir(const char *path)
 {
 #ifndef WIN32
   return (mkdir(path, 0755) == 0);
@@ -1004,7 +1004,7 @@ bx_bool ftp_mkdir(const char *path)
 #endif
 }
 
-bx_bool ftp_rmdir(const char *path)
+bool ftp_rmdir(const char *path)
 {
 #ifndef WIN32
   return (rmdir(path) == 0);
@@ -1051,7 +1051,7 @@ enum {
 typedef struct {
   char name[8];
   unsigned code;
-  bx_bool rw;
+  bool rw;
 } ftp_cmd_t;
 
 #define FTP_N_CMDS 28
@@ -1069,7 +1069,7 @@ const ftp_cmd_t ftpCmd[FTP_N_CMDS] = {
   {"USER", FTPCMD_USER, 0}
   };
 
-unsigned ftp_get_command(const char *cmdstr, bx_bool anonuser)
+unsigned ftp_get_command(const char *cmdstr, bool anonuser)
 {
   unsigned n, cmdcode = FTPCMD_UNKNOWN;
 
@@ -1099,7 +1099,7 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
   char reply[256];
   ftp_session_t *fs;
   const Bit8u *hostip;
-  bx_bool pasv_port_ok, path_ok;
+  bool pasv_port_ok, path_ok;
   tcp_conn_t *tcpc_cmd = NULL, *tcpc_data =NULL;
   char tmp_path[BX_PATHNAME_LEN];
   unsigned len;
@@ -1402,11 +1402,11 @@ void vnet_server_c::tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *da
   }
 }
 
-bx_bool vnet_server_c::ftp_file_exists(tcp_conn_t *tcpc_cmd, const char *arg,
+bool vnet_server_c::ftp_file_exists(tcp_conn_t *tcpc_cmd, const char *arg,
                                        char *path, unsigned *size)
 {
   ftp_session_t *fs = (ftp_session_t*)tcpc_cmd->data;
-  bx_bool exists = 0, notfile = 1;
+  bool exists = 0, notfile = 1;
 #ifndef WIN32
   struct stat stat_buf;
 #endif
@@ -1469,13 +1469,13 @@ bx_bool vnet_server_c::ftp_file_exists(tcp_conn_t *tcpc_cmd, const char *arg,
   return (exists && !notfile);
 }
 
-bx_bool vnet_server_c::ftp_subdir_exists(tcp_conn_t *tcpc_cmd, const char *arg,
+bool vnet_server_c::ftp_subdir_exists(tcp_conn_t *tcpc_cmd, const char *arg,
                                          char *path)
 {
   ftp_session_t *fs = (ftp_session_t*)tcpc_cmd->data;
   char abspath[BX_PATHNAME_LEN];
   char relpath[BX_PATHNAME_LEN];
-  bx_bool exists = 0, notdir = 1;
+  bool exists = 0, notdir = 1;
 #ifndef WIN32
   DIR *dir;
 #endif
@@ -1617,7 +1617,7 @@ void vnet_server_c::ftp_list_directory(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_da
   char linebuf[BX_PATHNAME_LEN], tmptime[20];
   unsigned size = 0;
   int fd = -1;
-  bx_bool nlst, hidden = 0;
+  bool nlst, hidden = 0;
 #ifndef WIN32
   DIR *dir;
   struct dirent *dent;
@@ -1747,7 +1747,7 @@ void vnet_server_c::ftp_recv_file(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data,
   char path[BX_PATHNAME_LEN], tmp_path[BX_PATHNAME_LEN+4], *cptr, reply[80];
   ftp_session_t *fs = (ftp_session_t*)tcpc_cmd->data;
   int fd = -1;
-  bx_bool exists;
+  bool exists;
   Bit8u n = 1;
 
   exists = ftp_file_exists(tcpc_cmd, fname, path, NULL);
@@ -1820,7 +1820,7 @@ layer4_handler_t vnet_server_c::get_layer4_handler(
   return (layer4_handler_t)NULL;
 }
 
-bx_bool vnet_server_c::register_layer4_handler(
+bool vnet_server_c::register_layer4_handler(
   unsigned ipprotocol, unsigned port,layer4_handler_t func)
 {
   if (get_layer4_handler(ipprotocol,port) != (layer4_handler_t)NULL) {
@@ -1852,7 +1852,7 @@ bx_bool vnet_server_c::register_layer4_handler(
   return true;
 }
 
-bx_bool vnet_server_c::unregister_layer4_handler(
+bool vnet_server_c::unregister_layer4_handler(
   unsigned ipprotocol, unsigned port)
 {
   unsigned n;
@@ -1950,8 +1950,8 @@ int vnet_server_c::udpipv4_dhcp_handler_ns(const Bit8u *ipheader,
   unsigned extlen;
   const Bit8u *extdata;
   unsigned dhcpmsgtype = 0;
-  bx_bool found_serverid = 0;
-  bx_bool found_guest_ipaddr = 0;
+  bool found_serverid = 0;
+  bool found_guest_ipaddr = 0;
   Bit32u leasetime = BX_MAX_BIT32U;
   const Bit8u *dhcpreqparams = NULL;
   unsigned dhcpreqparams_len = 0;
@@ -2230,7 +2230,7 @@ int vnet_server_c::udpipv4_dhcp_handler_ns(const Bit8u *ipheader,
 
 tftp_session_t *tftp_sessions = NULL;
 
-tftp_session_t *tftp_new_session(Bit16u req_tid, bx_bool mode, const char *tpath, const char *tname)
+tftp_session_t *tftp_new_session(Bit16u req_tid, bool mode, const char *tpath, const char *tname)
 {
   tftp_session_t *s = new tftp_session_t;
   s->tid = req_tid;
@@ -2606,7 +2606,7 @@ int vnet_server_c::udpipv4_dns_handler_ns(const Bit8u *ipheader,
   Bit8u len1, p1, p2;
   Bit8u ipaddr[4];
   Bit16u val16[6], qtype, qclass;
-  bx_bool host_found = 0;
+  bool host_found = 0;
   int i, n, rlen = 0, tmpval[4];
 
   for (i = 0; i < 6; i++) {

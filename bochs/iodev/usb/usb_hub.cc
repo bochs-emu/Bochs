@@ -591,7 +591,7 @@ void usb_hub_device_c::event_handler(int event, USBPacket *packet, int port)
   }
 }
 
-void usb_hub_device_c::usb_set_connect_status(Bit8u port, int type, bx_bool connected)
+void usb_hub_device_c::usb_set_connect_status(Bit8u port, int type, bool connected)
 {
   usb_device_c *device = hub.usb_port[port].device;
   if (device != NULL) {
@@ -687,7 +687,7 @@ const char *usb_hub_device_c::hub_param_handler(bx_param_string_c *param, int se
     if (hub != NULL) {
       hubnum = atoi(port->get_parent()->get_name()+6);
       portnum = atoi(port->get_name()+4) - 1;
-      bx_bool empty = ((strlen(val) == 0) || (!strcmp(val, "none")));
+      bool empty = ((strlen(val) == 0) || (!strcmp(val, "none")));
       if ((portnum >= 0) && (portnum < hub->hub.n_ports)) {
         if (empty && (hub->hub.usb_port[portnum].PortStatus & PORT_STAT_CONNECTION)) {
           BX_INFO(("USB hub #%d, port #%d: device disconnect", hubnum, portnum+1));

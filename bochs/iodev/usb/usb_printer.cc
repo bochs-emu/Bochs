@@ -182,7 +182,7 @@ usb_printer_device_c::~usb_printer_device_c(void)
   usb_rt->remove(s.config->get_name());
 }
 
-bx_bool usb_printer_device_c::init()
+bool usb_printer_device_c::init()
 {
   s.fp = fopen(s.fname, "w+b");
   if (s.fp == NULL) {

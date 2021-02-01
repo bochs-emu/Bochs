@@ -116,7 +116,7 @@ eth_locator_c::~eth_locator_c()
   }
 }
 
-bx_bool eth_locator_c::module_present(const char *type)
+bool eth_locator_c::module_present(const char *type)
 {
   eth_locator_c *ptr = 0;
 
@@ -194,7 +194,7 @@ int execute_script(bx_devmodel_c *netdev, const char* scriptname, char* arg1)
 
 #endif
 
-void write_pktlog_txt(FILE *pktlog_txt, const Bit8u *buf, unsigned len, bx_bool host_to_guest)
+void write_pktlog_txt(FILE *pktlog_txt, const Bit8u *buf, unsigned len, bool host_to_guest)
 {
   Bit8u *charbuf = (Bit8u *)buf;
   Bit8u rawbuf[18];

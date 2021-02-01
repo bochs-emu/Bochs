@@ -5,7 +5,7 @@
 // USB hub emulation support (ported from QEMU)
 //
 // Copyright (C) 2005       Fabrice Bellard
-// Copyright (C) 2009-2016  The Bochs Project
+// Copyright (C) 2009-2021  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -67,7 +67,7 @@ private:
   int broadcast_packet(USBPacket *p);
   void init_device(Bit8u port, bx_list_c *portconf);
   void remove_device(Bit8u port);
-  void usb_set_connect_status(Bit8u port, int type, bx_bool connected);
+  void usb_set_connect_status(Bit8u port, int type, bool connected);
 
   static const char *hub_param_handler(bx_param_string_c *param, int set,
                                        const char *oldval, const char *val, int maxlen);

@@ -9,7 +9,7 @@
 //
 //  Written by Paul Brook
 //
-//  Copyright (C) 2007-2020  The Bochs Project
+//  Copyright (C) 2007-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -224,7 +224,7 @@ SCSIRequest* scsi_device_t::scsi_find_request(Bit32u tag)
   return r;
 }
 
-bx_bool scsi_device_t::save_requests(const char *path)
+bool scsi_device_t::save_requests(const char *path)
 {
   char tmppath[BX_PATHNAME_LEN];
   FILE *fp, *fp2;
@@ -275,7 +275,7 @@ void scsi_device_t::restore_requests(const char *path)
   Bit64s value;
   Bit32u tag = 0;
   SCSIRequest *r = NULL;
-  bx_bool rrq_error = 0;
+  bool rrq_error = 0;
 
   fp = fopen(path, "r");
   if (fp != NULL) {
@@ -336,9 +336,9 @@ void scsi_device_t::restore_requests(const char *path)
                 } else if (!strcmp(pname, "status")) {
                   r->status = (Bit32u)value;
                 } else if (!strcmp(pname, "write_cmd")) {
-                  r->write_cmd = (bx_bool)value;
+                  r->write_cmd = (bool)value;
                 } else if (!strcmp(pname, "async_mode")) {
-                  r->async_mode = (bx_bool)value;
+                  r->async_mode = (bool)value;
                 } else if (!strcmp(pname, "seek_pending")) {
                   r->seek_pending = (Bit8u)value;
                 } else {
@@ -485,7 +485,7 @@ Bit8u* scsi_device_t::scsi_get_buf(Bit32u tag)
   return r->dma_buf;
 }
 
-Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun, bx_bool async)
+Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun, bool async)
 {
   Bit64u nb_sectors;
   Bit64u lba;
@@ -964,7 +964,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun, bx_bool
   }
 }
 
-void scsi_device_t::set_inserted(bx_bool value)
+void scsi_device_t::set_inserted(bool value)
 {
   inserted = value;
   if (inserted) {

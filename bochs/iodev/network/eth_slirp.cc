@@ -86,9 +86,9 @@ private:
 #endif
   char *pktlog_fn;
   FILE *pktlog_txt;
-  bx_bool slirp_logging;
+  bool slirp_logging;
 
-  bx_bool parse_slirp_conf(const char *conf);
+  bool parse_slirp_conf(const char *conf);
   static void rx_timer_handler(void *);
 };
 
@@ -139,12 +139,12 @@ bx_slirp_pktmover_c::~bx_slirp_pktmover_c()
   }
 }
 
-bx_bool bx_slirp_pktmover_c::parse_slirp_conf(const char *conf)
+bool bx_slirp_pktmover_c::parse_slirp_conf(const char *conf)
 {
   FILE *fd = NULL;
   char line[512];
   char *ret, *param, *val, *tmp;
-  bx_bool format_checked = 0;
+  bool format_checked = 0;
   size_t len1 = 0, len2;
   unsigned i, count;
 

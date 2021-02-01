@@ -37,7 +37,7 @@ struct tftp_session {
     struct in_addr client_ip;
     uint16_t client_port;
     uint32_t block_nr;
-    bx_bool  write;
+    bool     write;
     unsigned options;
     size_t   tsize_val;
     unsigned blksize_val;

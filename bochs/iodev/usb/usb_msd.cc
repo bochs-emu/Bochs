@@ -412,7 +412,7 @@ usb_msd_device_c::~usb_msd_device_c(void)
   }
 }
 
-bx_bool usb_msd_device_c::set_option(const char *option)
+bool usb_msd_device_c::set_option(const char *option)
 {
   char *suffix;
 
@@ -460,7 +460,7 @@ bx_bool usb_msd_device_c::set_option(const char *option)
   return 0;
 }
 
-bx_bool usb_msd_device_c::init()
+bool usb_msd_device_c::init()
 {
   if (d.type == USB_DEV_TYPE_DISK) {
     s.hdimage = DEV_hdimage_init_image(s.image_mode, 0, s.journal);
@@ -906,7 +906,7 @@ void usb_msd_device_c::cancel_packet(USBPacket *p)
   s.scsi_len = 0;
 }
 
-bx_bool usb_msd_device_c::set_inserted(bx_bool value)
+bool usb_msd_device_c::set_inserted(bool value)
 {
   const char *path;
 
@@ -930,12 +930,12 @@ bx_bool usb_msd_device_c::set_inserted(bx_bool value)
   return value;
 }
 
-bx_bool usb_msd_device_c::get_inserted()
+bool usb_msd_device_c::get_inserted()
 {
   return s.scsi_dev->get_inserted();
 }
 
-bx_bool usb_msd_device_c::get_locked()
+bool usb_msd_device_c::get_locked()
 {
   return s.scsi_dev->get_locked();
 }

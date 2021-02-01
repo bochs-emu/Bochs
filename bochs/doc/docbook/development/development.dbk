@@ -751,11 +751,11 @@ Here are the timer-related definitions and members in <filename>pc_system.h</fil
 typedef void (*bx_timer_handler_t)(void *);
 
   struct {
-    bx_bool inUse;      // Timer slot is in-use (currently registered).
+    bool inUse;         // Timer slot is in-use (currently registered).
     Bit64u  period;     // Timer periodocity in cpu ticks.
     Bit64u  timeToFire; // Time to fire next (in absolute ticks).
-    bx_bool active;     // 0=inactive, 1=active.
-    bx_bool continuous; // 0=one-shot timer, 1=continuous periodicity.
+    bool active;        // 0=inactive, 1=active.
+    bool continuous;    // 0=one-shot timer, 1=continuous periodicity.
     bx_timer_handler_t funct;  // A callback function for when the
                                //   timer fires.
     void *this_ptr;            // The this-> pointer for C++ callbacks
@@ -788,11 +788,11 @@ class:
 <screen>
   void   initialize(Bit32u ips);
   int    register_timer(void *this_ptr, bx_timer_handler_t, Bit32u useconds,
-                         bx_bool continuous, bx_bool active, const char *id);
-  bx_bool unregisterTimer(unsigned timerID);
+                        bool continuous, bool active, const char *id);
+  bool   unregisterTimer(unsigned timerID);
   void   setTimerParam(unsigned timerID, Bit32u param);
   void   start_timers(void);
-  void   activate_timer(unsigned timer_index, Bit32u useconds, bx_bool continuous);
+  void   activate_timer(unsigned timer_index, Bit32u useconds, bool continuous);
   void   deactivate_timer(unsigned timer_index);
   unsigned triggeredTimerID(void) {
     return triggeredTimer;
@@ -818,9 +818,9 @@ class:
   }
 
   int register_timer_ticks(void* this_ptr, bx_timer_handler_t, Bit64u ticks,
-                           bx_bool continuous, bx_bool active, const char *id);
+                           bool continuous, bool active, const char *id);
   void activate_timer_ticks(unsigned index, Bit64u instructions,
-                            bx_bool continuous);
+                            bool continuous);
   Bit64u time_usec();
   Bit64u time_usec_sequential();
   static BX_CPP_INLINE Bit64u time_ticks() {
@@ -1315,7 +1315,7 @@ public:
   virtual int register_wave_callback(void *, get_wave_cb_t wd_cb);
   virtual void unregister_wave_callback(int callback_id);
 
-  virtual bx_bool mixer_common(Bit8u *buffer, int len);
+  virtual bool mixer_common(Bit8u *buffer, int len);
 protected:
   void convert_pcm_data(Bit8u *src, int srcsize, Bit8u *dst, int dstsize, bx_pcm_param_t *param);
   void start_mixer_thread(void);
@@ -1683,7 +1683,7 @@ Parameter:
 </itemizedlist>
 </section>
 
-<section><title>bx_bool mixer_common(Bit8u *buffer, int len)</title>
+<section><title>bool mixer_common(Bit8u *buffer, int len)</title>
 <para>
 This is the main wave output mixing function. It is called from the mixer
 thread, it polls the wave data from all registered sources and it mixes the
@@ -2456,7 +2456,7 @@ returns the value of the "timestamp" field in the header (only used by the
 "undoable" mode).
 </para>
 <para>
-<emphasis>bx_bool set_timestamp(Bit32u timestamp);</emphasis>
+<emphasis>bool set_timestamp(Bit32u timestamp);</emphasis>
 writes the <emphasis>timestamp</emphasis> to the header. This is done
 by the "undoable" mode init code if <emphasis>get_timestamp()</emphasis> returns
 0 or the redolog is newly created.
@@ -2469,7 +2469,7 @@ matches the requested one. This is used for for the image mode autodetection
 feature.
 </para>
 <para>
-<emphasis>bx_bool save_state(const char *backup_fname);</emphasis>
+<emphasis>bool save_state(const char *backup_fname);</emphasis>
 copies the redolog file to a new file <emphasis>backup_fname</emphasis>. This is
 used by the hdimage save/restore feature.
 </para>
@@ -2583,7 +2583,7 @@ Data will always be written to the redolog.
 
 <para>
 <emphasis>
-bx_bool save_state(const char *backup_fname);
+bool save_state(const char *backup_fname);
 </emphasis>
 calls the related redolog_t method to save the image state.
 </para>
@@ -2667,7 +2667,7 @@ Data will always be written to the redolog.
 
 <para>
 <emphasis>
-bx_bool save_state(const char *backup_fname);
+bool save_state(const char *backup_fname);
 </emphasis>
 calls the related redolog_t method to save the image state.
 </para>

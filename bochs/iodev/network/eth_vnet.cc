@@ -85,7 +85,7 @@ public:
   virtual ~bx_vnet_pktmover_c();
   void sendpkt(void *buf, unsigned io_len);
 private:
-  bx_bool parse_vnet_conf(const char *conf);
+  bool parse_vnet_conf(const char *conf);
   void guest_to_host(const Bit8u *buf, unsigned io_len);
   void host_to_guest(void);
 
@@ -98,11 +98,11 @@ private:
   void rx_timer(void);
 
   int rx_timer_index;
-  bx_bool rx_timer_pending;
+  bool rx_timer_pending;
   unsigned netdev_speed;
   unsigned tx_time;
 
-  bx_bool vnet_logging;
+  bool vnet_logging;
   char *pktlog_fn;
   FILE *pktlog_txt;
 #if BX_ETH_VNET_PCAP_LOGGING
@@ -124,7 +124,7 @@ protected:
 } bx_vnet_match;
 
 
-bx_bool get_ipv4_address(char *value, Bit8u *addr)
+bool get_ipv4_address(char *value, Bit8u *addr)
 {
   unsigned tmp[4];
 
@@ -140,12 +140,12 @@ bx_bool get_ipv4_address(char *value, Bit8u *addr)
   return 0;
 }
 
-bx_bool bx_vnet_pktmover_c::parse_vnet_conf(const char *conf)
+bool bx_vnet_pktmover_c::parse_vnet_conf(const char *conf)
 {
   FILE *fd = NULL;
   char line[512];
   char *ret, *param, *val;
-  bx_bool format_checked = 0;
+  bool format_checked = 0;
   size_t len1 = 0, len2;
   Bit8u tmp_ipv4addr[4];
 

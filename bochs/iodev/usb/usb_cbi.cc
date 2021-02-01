@@ -422,7 +422,7 @@ usb_cbi_device_c::~usb_cbi_device_c(void)
   bx_pc_system.unregisterTimer(s.floppy_timer_index);
 }
 
-bx_bool usb_cbi_device_c::set_option(const char *option)
+bool usb_cbi_device_c::set_option(const char *option)
 {
   if (!strncmp(option, "write_protected:", 16)) {
     SIM->get_param_bool("readonly", s.config)->set(atol(&option[16]));
@@ -438,7 +438,7 @@ bx_bool usb_cbi_device_c::set_option(const char *option)
   return 0;
 }
 
-bx_bool usb_cbi_device_c::init()
+bool usb_cbi_device_c::init()
 {
   if (set_inserted(1)) {
     sprintf(s.info_txt, "USB CBI: path='%s', mode='%s'", s.fname, s.image_mode);
@@ -588,11 +588,11 @@ int usb_cbi_device_c::handle_control(int request, int value, int index, int leng
   return ret;
 }
 
-bx_bool usb_cbi_device_c::handle_command(Bit8u *command)
+bool usb_cbi_device_c::handle_command(Bit8u *command)
 {
   Bit32u lba, count;
   int pc, pagecode;
-  bx_bool ret = 1; // assume valid return
+  bool ret = 1; // assume valid return
 
   s.cur_command = command[0];
   s.usb_buf = s.dev_buffer;
@@ -1203,7 +1203,7 @@ void usb_cbi_device_c::cancel_packet(USBPacket *p)
   s.packet = NULL;
 }
 
-bx_bool usb_cbi_device_c::set_inserted(bx_bool value)
+bool usb_cbi_device_c::set_inserted(bool value)
 {
   s.inserted = value;
   if (value) {

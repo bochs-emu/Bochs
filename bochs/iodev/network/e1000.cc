@@ -947,7 +947,7 @@ void bx_e1000_c::write(Bit32u address, Bit32u value, unsigned io_len)
   BX_ERROR(("register write to offset 0x%02x ignored - value = 0x%08x", offset, value));
 }
 
-void bx_e1000_c::set_irq_level(bx_bool level)
+void bx_e1000_c::set_irq_level(bool level)
 {
   DEV_pci_set_irq(BX_E1000_THIS s.devfunc, BX_E1000_THIS pci_conf[0x3d], level);
 }
@@ -1099,22 +1099,22 @@ void bx_e1000_c::putsum(Bit8u *data, Bit32u n, Bit32u sloc, Bit32u css, Bit32u c
   }
 }
 
-bx_bool bx_e1000_c::vlan_enabled()
+bool bx_e1000_c::vlan_enabled()
 {
   return ((BX_E1000_THIS s.mac_reg[CTRL] & E1000_CTRL_VME) != 0);
 }
 
-bx_bool bx_e1000_c::vlan_rx_filter_enabled()
+bool bx_e1000_c::vlan_rx_filter_enabled()
 {
   return ((BX_E1000_THIS s.mac_reg[RCTL] & E1000_RCTL_VFE) != 0);
 }
 
-bx_bool bx_e1000_c::is_vlan_packet(const Bit8u *buf)
+bool bx_e1000_c::is_vlan_packet(const Bit8u *buf)
 {
   return (get_net2(buf + 12) == (Bit16u)BX_E1000_THIS s.mac_reg[VET]);
 }
 
-bx_bool bx_e1000_c::is_vlan_txd(Bit32u txd_lower)
+bool bx_e1000_c::is_vlan_txd(Bit32u txd_lower)
 {
     return ((txd_lower & E1000_TXD_CMD_VLE) != 0);
 }
@@ -1387,7 +1387,7 @@ int bx_e1000_c::receive_filter(const Bit8u *buf, int size)
   return 0;
 }
 
-bx_bool bx_e1000_c::e1000_has_rxbufs(size_t total_size)
+bool bx_e1000_c::e1000_has_rxbufs(size_t total_size)
 {
   int bufs;
   // Fast-path short packets

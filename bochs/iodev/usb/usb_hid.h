@@ -45,7 +45,7 @@ public:
 
 private:
   struct {
-    bx_bool has_events;
+    bool has_events;
     Bit8u idle;
     int mouse_delayed_dx;
     int mouse_delayed_dy;
@@ -70,10 +70,10 @@ private:
   static void mouse_enabled_changed(void *dev, bool enabled);
   static void mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state, bool absxy);
   void mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state, bool absxy);
-  int mouse_poll(Bit8u *buf, int len, bx_bool force);
+  int mouse_poll(Bit8u *buf, int len, bool force);
   int create_mouse_packet(Bit8u *buf, int len);
   int get_mouse_packet(Bit8u *buf, int len);
-  int keyboard_poll(Bit8u *buf, int len, bx_bool force);
+  int keyboard_poll(Bit8u *buf, int len, bool force);
 
   static void hid_timer_handler(void *);
   void start_idle_timer(void);

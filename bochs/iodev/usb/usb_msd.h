@@ -35,8 +35,8 @@ public:
   usb_msd_device_c(usbdev_type type, const char *filename);
   virtual ~usb_msd_device_c(void);
 
-  virtual bx_bool init();
-  virtual bx_bool set_option(const char *option);
+  virtual bool init();
+  virtual bool set_option(const char *option);
   virtual const char* get_info();
   virtual void runtime_config(void);
   void restore_handler(bx_list_c *conf);
@@ -46,9 +46,9 @@ public:
   virtual int handle_data(USBPacket *p);
   virtual void register_state_specific(bx_list_c *parent);
   virtual void cancel_packet(USBPacket *p);
-  bx_bool set_inserted(bx_bool value);
-  bx_bool get_inserted();
-  bx_bool get_locked();
+  bool set_inserted(bool value);
+  bool get_inserted();
+  bool get_locked();
 
 protected:
   void copy_data();
@@ -71,7 +71,7 @@ private:
     int size; // VVFAT disk only
     unsigned sect_size; // sector size for disks only (default = 512 bytes)
     // members handled by runtime config
-    bx_bool status_changed;
+    bool status_changed;
     // members handled by save/restore
     Bit8u mode;
     Bit32u scsi_len;

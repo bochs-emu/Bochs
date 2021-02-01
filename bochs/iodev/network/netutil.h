@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2004-2020  The Bochs Project
+//  Copyright (C) 2004-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -178,7 +178,7 @@ Bit16u ip_checksum(const Bit8u *buf, unsigned buf_len);
 typedef struct tftp_session {
   char     filename[BX_PATHNAME_LEN];
   Bit16u   tid;
-  bx_bool  iswrite;
+  bool     iswrite;
   unsigned options;
   size_t   tsize_val;
   unsigned blksize_val;
@@ -221,7 +221,7 @@ typedef struct tcp_conn {
   Bit32u guest_seq_num;
   Bit16u window;
   Bit8u  state;
-  bx_bool host_port_fin;
+  bool   host_port_fin;
   void   *data;
   struct tcp_conn *next;
 } tcp_conn_t;
@@ -248,19 +248,19 @@ public:
 #endif
 
   layer4_handler_t get_layer4_handler(unsigned ipprotocol, unsigned port);
-  bx_bool register_layer4_handler(unsigned ipprotocol, unsigned port,
-                                  layer4_handler_t func);
-  bx_bool unregister_layer4_handler(unsigned ipprotocol, unsigned port);
+  bool register_layer4_handler(unsigned ipprotocol, unsigned port,
+                               layer4_handler_t func);
+  bool unregister_layer4_handler(unsigned ipprotocol, unsigned port);
 
   tcp_handler_t get_tcp_handler(unsigned port);
-  bx_bool register_tcp_handler(unsigned port, tcp_handler_t func);
-  bx_bool unregister_tcp_handler(unsigned port);
+  bool register_tcp_handler(unsigned port, tcp_handler_t func);
+  bool unregister_tcp_handler(unsigned port);
 
 private:
 #ifdef BXHUB
   void bx_printf(const char *fmt, ...);
 #endif
-  bx_bool find_client(const Bit8u *mac_addr, Bit8u *clientid);
+  bool find_client(const Bit8u *mac_addr, Bit8u *clientid);
 
   void host_to_guest(Bit8u clientid, Bit8u *buf, unsigned len, unsigned l3type);
 
@@ -280,17 +280,17 @@ private:
                              Bit16u dst_port, Bit8u *data, unsigned data_len,
                              unsigned hdr_len);
   unsigned tcpipv4_send_data(tcp_conn_t *tcp_conn, const Bit8u *data,
-                             unsigned data_len, bx_bool push);
+                             unsigned data_len, bool push);
   void tcpipv4_send_ack(tcp_conn_t *tcp_conn, unsigned data_len);
-  void tcpipv4_send_fin(tcp_conn_t *tcp_conn, bx_bool host_fin);
+  void tcpipv4_send_fin(tcp_conn_t *tcp_conn, bool host_fin);
 
   static void tcpipv4_ftp_handler(void *this_ptr, tcp_conn_t *tcp_conn,
                                   const Bit8u *data, unsigned data_len);
   void tcpipv4_ftp_handler_ns(tcp_conn_t *tcp_conn, const Bit8u *data,
                               unsigned data_len);
-  bx_bool ftp_file_exists(tcp_conn_t *tcpc_cmd, const char *arg, char *path,
-                          unsigned *size);
-  bx_bool ftp_subdir_exists(tcp_conn_t *tcpc_cmd, const char *arg, char *path);
+  bool ftp_file_exists(tcp_conn_t *tcpc_cmd, const char *arg, char *path,
+                       unsigned *size);
+  bool ftp_subdir_exists(tcp_conn_t *tcpc_cmd, const char *arg, char *path);
   void ftp_send_reply(tcp_conn_t *tcp_conn, const char *msg);
   void ftp_send_status(tcp_conn_t *tcp_conn);
   void ftp_send_data_prep(tcp_conn_t *tcpc_cmd, tcp_conn_t *tcpc_data,
@@ -335,7 +335,7 @@ private:
   const char *tftp_root;
 
   struct {
-    bx_bool init;
+    bool init;
     const Bit8u *macaddr;
     Bit8u default_ipv4addr[4];
     Bit8u ipv4addr[4];

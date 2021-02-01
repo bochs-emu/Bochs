@@ -6,7 +6,7 @@
 //
 // Copyright (c) 2005       Fabrice Bellard
 // Copyright (C) 2009-2016  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//               2009-2020  The Bochs Project
+//               2009-2021  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -141,7 +141,7 @@ struct USBPacket {
 typedef struct USBAsync {
   USBPacket packet;
   Bit64u    td_addr;
-  bx_bool done;
+  bool done;
   Bit16u  slot_ep;
   struct USBAsync *next;
 } USBAsync;
@@ -186,7 +186,7 @@ public:
   usb_device_c(void);
   virtual ~usb_device_c() {}
 
-  virtual bx_bool init() {return d.connected;}
+  virtual bool init() {return d.connected;}
   virtual const char* get_info() {return NULL;}
   virtual usb_device_c* find_device(Bit8u addr);
 
@@ -198,13 +198,13 @@ public:
   virtual void register_state_specific(bx_list_c *parent) {}
   virtual void after_restore_state() {}
   virtual void cancel_packet(USBPacket *p) {}
-  virtual bx_bool set_option(const char *option) {return 0;}
+  virtual bool set_option(const char *option) {return 0;}
   virtual void runtime_config() {}
 
-  bx_bool get_connected() {return d.connected;}
+  bool get_connected() {return d.connected;}
   usbdev_type get_type() {return d.type;}
   int get_speed() {return d.speed;}
-  bx_bool set_speed(int speed)
+  bool set_speed(int speed)
   {
     if ((speed >= d.minspeed) && (speed <= d.maxspeed)) {
       d.speed = speed;
@@ -215,7 +215,7 @@ public:
   }
 
   Bit8u get_address() {return d.addr;}
-  void set_async_mode(bx_bool async) {d.async_mode = async;}
+  void set_async_mode(bool async) {d.async_mode = async;}
   void set_event_handler(void *dev, USBCallback *cb, int port)
   {
     d.event.dev = dev;
@@ -229,7 +229,7 @@ public:
 protected:
   struct {
     enum usbdev_type type;
-    bx_bool connected;
+    bool connected;
     int minspeed;
     int maxspeed;
     int speed;
@@ -253,8 +253,8 @@ protected:
     int setup_state;
     int setup_len;
     int setup_index;
-    bx_bool stall;
-    bx_bool async_mode;
+    bool stall;
+    bool async_mode;
     struct {
       USBCallback *cb;
       void *dev;
@@ -384,7 +384,7 @@ static BX_CPP_INLINE void put_dwords(bx_phy_address addr, Bit32u *buf, int num)
 //
 class BOCHSAPI_MSVCONLY usbdev_locator_c {
 public:
-  static bx_bool module_present(const char *type);
+  static bool module_present(const char *type);
   static void cleanup();
   static usb_device_c *create(const char *type, usbdev_type devtype, const char *args);
 protected:

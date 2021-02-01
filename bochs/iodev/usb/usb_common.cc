@@ -231,7 +231,7 @@ usbdev_locator_c::~usbdev_locator_c()
   }
 }
 
-bx_bool usbdev_locator_c::module_present(const char *type)
+bool usbdev_locator_c::module_present(const char *type)
 {
   usbdev_locator_c *ptr = 0;
 
