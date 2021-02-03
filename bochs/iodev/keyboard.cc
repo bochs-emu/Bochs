@@ -346,14 +346,14 @@ Bit32u bx_keyb_c::read(Bit32u address, unsigned io_len)
       return BX_KEY_THIS s.kbd_controller.kbd_output_buffer;
     }
   } else if (address == 0x64) { /* status register */
-    val = ((Bit8u)BX_KEY_THIS s.kbd_controller.pare << 7)  |
-          ((Bit8u)BX_KEY_THIS s.kbd_controller.tim  << 6)  |
-          ((Bit8u)BX_KEY_THIS s.kbd_controller.auxb << 5)  |
-          ((Bit8u)BX_KEY_THIS s.kbd_controller.keyl << 4)  |
-          ((Bit8u)BX_KEY_THIS s.kbd_controller.c_d  << 3)  |
-          ((Bit8u)BX_KEY_THIS s.kbd_controller.sysf << 2)  |
-          ((Bit8u)BX_KEY_THIS s.kbd_controller.inpb << 1)  |
-          (Bit8u)BX_KEY_THIS s.kbd_controller.outb;
+    val = (BX_KEY_THIS s.kbd_controller.pare << 7)  |
+          (BX_KEY_THIS s.kbd_controller.tim  << 6)  |
+          (BX_KEY_THIS s.kbd_controller.auxb << 5)  |
+          (BX_KEY_THIS s.kbd_controller.keyl << 4)  |
+          (BX_KEY_THIS s.kbd_controller.c_d  << 3)  |
+          (BX_KEY_THIS s.kbd_controller.sysf << 2)  |
+          (BX_KEY_THIS s.kbd_controller.inpb << 1)  |
+          (BX_KEY_THIS s.kbd_controller.outb);
     BX_KEY_THIS s.kbd_controller.tim = 0;
     return val;
   }
@@ -483,13 +483,13 @@ void bx_keyb_c::write(Bit32u address, Bit32u value, unsigned io_len)
             break;
           }
           command_byte =
-            ((Bit8u)BX_KEY_THIS s.kbd_controller.scancodes_translate << 6) |
-            ((Bit8u)(!BX_KEY_THIS s.kbd_controller.aux_clock_enabled) << 5) |
-            ((Bit8u)(!BX_KEY_THIS s.kbd_controller.kbd_clock_enabled) << 4) |
+            (BX_KEY_THIS s.kbd_controller.scancodes_translate << 6) |
+            ((!BX_KEY_THIS s.kbd_controller.aux_clock_enabled) << 5) |
+            ((!BX_KEY_THIS s.kbd_controller.kbd_clock_enabled) << 4) |
             (0 << 3) |
-            ((Bit8u)BX_KEY_THIS s.kbd_controller.sysf << 2) |
-            ((Bit8u)BX_KEY_THIS s.kbd_controller.allow_irq12 << 1) |
-            ((Bit8u)BX_KEY_THIS s.kbd_controller.allow_irq1  << 0);
+            (BX_KEY_THIS s.kbd_controller.sysf << 2) |
+            (BX_KEY_THIS s.kbd_controller.allow_irq12 << 1) |
+            (BX_KEY_THIS s.kbd_controller.allow_irq1  << 0);
           controller_enQ(command_byte, 0);
           break;
         case 0x60: // write command byte
@@ -582,8 +582,8 @@ void bx_keyb_c::write(Bit32u address, Bit32u value, unsigned io_len)
             break;
           }
           controller_enQ(
-              ((Bit8u)BX_KEY_THIS s.kbd_controller.irq12_requested << 5) |
-              ((Bit8u)BX_KEY_THIS s.kbd_controller.irq1_requested << 4) |
+              (BX_KEY_THIS s.kbd_controller.irq12_requested << 5) |
+              (BX_KEY_THIS s.kbd_controller.irq1_requested << 4) |
               (BX_GET_ENABLE_A20() << 1) |
               0x01, 0);
           break;
@@ -1050,8 +1050,8 @@ unsigned bx_keyb_c::periodic(Bit32u usec_delta)
 
   UNUSED(usec_delta);
 
-  retval = (Bit8u)BX_KEY_THIS s.kbd_controller.irq1_requested |
-           ((Bit8u)BX_KEY_THIS s.kbd_controller.irq12_requested << 1);
+  retval = BX_KEY_THIS s.kbd_controller.irq1_requested |
+           (BX_KEY_THIS s.kbd_controller.irq12_requested << 1);
   BX_KEY_THIS s.kbd_controller.irq1_requested = 0;
   BX_KEY_THIS s.kbd_controller.irq12_requested = 0;
 

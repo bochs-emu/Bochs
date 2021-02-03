@@ -1488,7 +1488,7 @@ struct _stats_block
 typedef struct _fifo_state fifo_state;
 struct _fifo_state
 {
-  bx_bool enabled; /* enabled? */
+  bool enabled; /* enabled? */
   Bit32u* base; /* base of the FIFO */
   Bit32s  size; /* size of the FIFO */
   Bit32s  in;   /* input pointer */
@@ -1499,8 +1499,8 @@ struct _fifo_state
 typedef struct _cmdfifo_info cmdfifo_info;
 struct _cmdfifo_info
 {
-  bx_bool enabled;      /* enabled? */
-  bx_bool count_holes;  /* count holes? */
+  bool    enabled;      /* enabled? */
+  bool    count_holes;  /* count holes? */
   Bit32u  base;         /* base address in framebuffer RAM */
   Bit32u  end;          /* end address in framebuffer RAM */
   Bit32u  rdptr;        /* current read pointer */
@@ -1509,7 +1509,7 @@ struct _cmdfifo_info
   Bit32u  depth;        /* current depth */
   Bit32u  depth_needed; /* depth needed for command */
   Bit32u  holes;        /* number of holes */
-  bx_bool cmd_ready;
+  bool    cmd_ready;
 };
 
 
@@ -1527,7 +1527,7 @@ struct _pci_state
 typedef struct _ncc_table ncc_table;
 struct _ncc_table
 {
-  bx_bool     dirty;        /* is the texel lookup dirty? */
+  bool        dirty;        /* is the texel lookup dirty? */
   voodoo_reg* reg;          /* pointer to our registers */
   Bit32s      ir[4], ig[4], ib[4];  /* I values for R,G,B */
   Bit32s      qr[4], qg[4], qb[4];  /* Q values for R,G,B */
@@ -1544,7 +1544,7 @@ struct _tmu_state
   Bit8u*      ram;            /* pointer to our RAM */
   Bit32u      mask;           /* mask to apply to pointers */
   voodoo_reg* reg;            /* pointer to our register base */
-  bx_bool     regdirty;       /* true if the LOD/mode/base registers have changed */
+  bool        regdirty;       /* true if the LOD/mode/base registers have changed */
 
   Bit32u      texaddr_mask;   /* mask for texture address */
   Bit8u       texaddr_shift;  /* shift for texture address */
@@ -1615,7 +1615,7 @@ struct _fbi_state
   Bit8u         frontbuf;       /* front buffer index */
   Bit8u         backbuf;        /* back buffer index */
   Bit8u         swaps_pending;  /* number of pending swaps */
-  bx_bool       video_changed;  /* did the frontbuffer video change? */
+  bool          video_changed;  /* did the frontbuffer video change? */
 
   Bit32u        yorigin;        /* Y origin subtract value */
   Bit32u        lfb_base;       /* base of LFB in memory */
@@ -1633,12 +1633,12 @@ struct _fbi_state
 
   Bit8u         vblank;         /* VBLANK state */
   Bit8u         vblank_count;   /* number of VBLANKs since last swap */
-  bx_bool       vblank_swap_pending; /* a swap is pending, waiting for a vblank */
+  bool          vblank_swap_pending; /* a swap is pending, waiting for a vblank */
   Bit8u         vblank_swap;    /* swap when we hit this count */
   Bit8u         vblank_dont_swap; /* don't actually swap when we hit this point */
 
   /* triangle setup info */
-  bx_bool       cheating_allowed; /* allow cheating? */
+  bool          cheating_allowed; /* allow cheating? */
   Bit32s        sign;           /* triangle sign */
   Bit16s        ax, ay;         /* vertex A x,y (12.4) */
   Bit16s        bx, by;         /* vertex B x,y (12.4) */
@@ -1667,7 +1667,7 @@ struct _fbi_state
 
   rgb_t         pen[65536];     /* mapping from pixels to pens */
   rgb_t         clut[512];      /* clut gamma data */
-  bx_bool       clut_dirty;     /* do we need to recompute? */
+  bool          clut_dirty;     /* do we need to recompute? */
 };
 
 
@@ -1727,12 +1727,12 @@ struct _banshee_info
   Bit32u agp[0x80];  /* AGP registers */
   Bit8u  crtc[0x27]; /* VGA CRTC registers */
   Bit8u  disp_bpp;
-  bx_bool half_mode;
-  bx_bool dac_8bit;
-  bx_bool desktop_tiled;
+  bool half_mode;
+  bool dac_8bit;
+  bool desktop_tiled;
   struct {
-    bx_bool enabled;
-    bx_bool mode;
+    bool enabled;
+    bool mode;
     Bit32u addr;
     Bit16u x;
     Bit16u y;
@@ -1740,48 +1740,48 @@ struct _banshee_info
   } hwcursor;
   struct {
     Bit32u reg[0x20];  /* 2D registers */
-    Bit8u cpat[0x40][4];
-    bx_bool busy;
-    Bit8u   cmd;
-    bx_bool immed;
-    bx_bool x_dir;
-    bx_bool y_dir;
-    bx_bool transp;
-    Bit8u   patsx;
-    Bit8u   patsy;
-    bx_bool clip_sel;
-    Bit8u   rop[4];
+    Bit8u  cpat[0x40][4];
+    bool   busy;
+    Bit8u  cmd;
+    bool   immed;
+    bool   x_dir;
+    bool   y_dir;
+    bool   transp;
+    Bit8u  patsx;
+    Bit8u  patsy;
+    bool   clip_sel;
+    Bit8u  rop[4];
     bx_bitblt_rop_t rop_fn[4];
     bx_bitblt_rop_t rop_handler[2][0x100];
-    Bit8u rop_flags[0x100];
-    bx_bool pattern_blt;
+    Bit8u  rop_flags[0x100];
+    bool   pattern_blt;
     Bit32u src_base;
-    bx_bool src_tiled;
-    Bit8u src_fmt;
+    bool   src_tiled;
+    Bit8u  src_fmt;
     Bit16u src_pitch;
-    Bit8u src_swizzle;
+    Bit8u  src_swizzle;
     Bit16u src_x;
     Bit16u src_y;
     Bit16u src_w;
     Bit16u src_h;
     Bit32u dst_base;
-    bx_bool dst_tiled;
-    Bit8u dst_fmt;
+    bool   dst_tiled;
+    Bit8u  dst_fmt;
     Bit16u dst_pitch;
     Bit16u dst_x;
     Bit16u dst_y;
     Bit16u dst_w;
     Bit16u dst_h;
-    Bit8u fgcolor[4];
-    Bit8u bgcolor[4];
+    Bit8u  fgcolor[4];
+    Bit8u  bgcolor[4];
     Bit16u clipx0[2];
     Bit16u clipy0[2];
     Bit16u clipx1[2];
     Bit16u clipy1[2];
     Bit16u h2s_pitch;
-    Bit8u h2s_pxstart;
-    bx_bool h2s_alt_align;
-    bx_bool pgn_init;
+    Bit8u  h2s_pxstart;
+    bool   h2s_alt_align;
+    bool   pgn_init;
     Bit32u pgn_val;
     Bit16u pgn_l0x;
     Bit16u pgn_l0y;
@@ -1817,7 +1817,7 @@ struct _voodoo_state
   dac_state   dac;           /* DAC state */
   float       vidclk;        /* video clock */
   float       vertfreq;      /* vertical frequency */
-  bx_bool     vtimer_running; /* vertical timer running */
+  bool        vtimer_running; /* vertical timer running */
 
   fbi_state   fbi;           /* FBI states */
   tmu_state   tmu[MAX_TMU];  /* TMU states */
@@ -1827,7 +1827,7 @@ struct _voodoo_state
   struct {
     Bit8u   bgcolor[2];
     Bit8u   chroma_en;
-    bx_bool clip_en;
+    bool    clip_en;
     Bit16u  clipx0;
     Bit16u  clipx1;
     Bit16u  clipy0;
@@ -1842,13 +1842,13 @@ struct _voodoo_state
     Bit16u  dst_col_min;
     Bit16u  dst_col_max;
     Bit8u   fgcolor[2];
-    bx_bool h2s_mode;
+    bool    h2s_mode;
     Bit8u   rop[4];
     Bit16u  src_col_min;
     Bit16u  src_col_max;
     Bit8u   src_fmt;
     Bit8u   src_swizzle;
-    bx_bool transp;
+    bool    transp;
   } blt;
 
   Bit32u      send_config;
@@ -1892,7 +1892,7 @@ BX_CPP_INLINE void fifo_reset(fifo_state *f)
 }
 
 
-BX_CPP_INLINE bx_bool fifo_full(fifo_state *f)
+BX_CPP_INLINE bool fifo_full(fifo_state *f)
 {
   return (f->in + 2 == f->out || (f->in == f->size - 2 && f->out == 0));
 }
@@ -1970,16 +1970,16 @@ BX_CPP_INLINE Bit32u fifo_remove(fifo_state *f, Bit32u *offset, Bit32u *data)
 }
 
 
-BX_CPP_INLINE bx_bool fifo_empty(fifo_state *f)
+BX_CPP_INLINE bool fifo_empty(fifo_state *f)
 {
   return (f->in == f->out);
 }
 
 
-BX_CPP_INLINE bx_bool fifo_empty_locked(fifo_state *f)
+BX_CPP_INLINE bool fifo_empty_locked(fifo_state *f)
 {
   BX_LOCK(fifo_mutex);
-  bx_bool ret = (f->in == f->out);
+  bool ret = (f->in == f->out);
   BX_UNLOCK(fifo_mutex);
   return ret;
 }

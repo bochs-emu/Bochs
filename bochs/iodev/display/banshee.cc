@@ -578,10 +578,10 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
   Bit8u offset = (Bit8u)(address & 0xff);
   Bit8u reg = (offset>>2), dac_idx, k, m, n;
   Bit32u old = v->banshee.io[reg];
-  bx_bool prev_hwce = v->banshee.hwcursor.enabled;
+  bool prev_hwce = v->banshee.hwcursor.enabled;
   Bit16u prev_hwcx = v->banshee.hwcursor.x;
   Bit16u prev_hwcy = v->banshee.hwcursor.y;
-  bx_bool mode_change = 0;
+  bool mode_change = 0;
 
   BX_DEBUG(("banshee write to offset 0x%02x: value = 0x%08x len=%d (%s)", offset, value,
             io_len, banshee_io_reg_name[reg]));
@@ -1475,8 +1475,8 @@ void bx_banshee_c::blt_complete()
   Bit16u dpitch = BLT.dst_pitch;
   Bit8u dpxsize = (BLT.dst_fmt > 1) ? (BLT.dst_fmt - 1) : 1;
   Bit32u cmd = BLT.reg[blt_command];
-  bx_bool xinc = (cmd >> 10) & 1;
-  bx_bool yinc = (cmd >> 11) & 1;
+  bool xinc = (cmd >> 10) & 1;
+  bool yinc = (cmd >> 11) & 1;
   int x, y, w, h;
 
   if (v->banshee.desktop_tiled) {
@@ -1678,13 +1678,13 @@ void bx_banshee_c::blt_pattern_fill_mono()
   Bit8u *dst_ptr = &v->fbi.ram[BLT.dst_base];
   Bit8u *pat_ptr = &BLT.cpat[0][0];
   Bit8u *dst_ptr1, *pat_ptr1;
-  bx_bool patrow0 = (BLT.reg[blt_commandExtra] & 0x08) > 0;
+  bool patrow0 = (BLT.reg[blt_commandExtra] & 0x08) > 0;
   Bit8u colorkey_en = BLT.reg[blt_commandExtra] & 3;
   Bit8u rop = 0;
   Bit8u *color;
   int ncols, nrows, x0, y0, x1, y1, w, h;
   Bit8u mask, patcol, patline;
-  bx_bool set;
+  bool set;
 
   x1 = BLT.dst_x;
   y1 = BLT.dst_y;
@@ -1747,7 +1747,7 @@ void bx_banshee_c::blt_pattern_fill_color()
   Bit8u *dst_ptr = &v->fbi.ram[BLT.dst_base];
   Bit8u *pat_ptr = &BLT.cpat[0][0];
   Bit8u *dst_ptr1, *pat_ptr1, *pat_ptr2;
-  bx_bool patrow0 = (BLT.reg[blt_commandExtra] & 0x08) > 0;
+  bool patrow0 = (BLT.reg[blt_commandExtra] & 0x08) > 0;
   Bit8u colorkey_en = BLT.reg[blt_commandExtra] & 3;
   Bit8u rop = 0;
   int ncols, nrows, x0, y0, x1, y1, w, h;
@@ -1813,7 +1813,7 @@ void bx_banshee_c::blt_screen_to_screen()
   int dpitch = BLT.dst_pitch;
   int ncols, nrows, x0, x1, y0, y1, w, h;
   Bit8u smask, rop = 0;
-  bx_bool set;
+  bool set;
 
   x0 = BLT.src_x;
   y0 = BLT.src_y;
@@ -1913,13 +1913,13 @@ void bx_banshee_c::blt_screen_to_screen_pattern()
   int dpxsize = (BLT.dst_fmt > 1) ? (BLT.dst_fmt - 1) : 1;
   int spitch;
   int dpitch = BLT.dst_pitch;
-  bx_bool patmono = (BLT.reg[blt_command] >> 13) & 1;
-  bx_bool patrow0 = (BLT.reg[blt_commandExtra] & 0x08) > 0;
+  bool patmono = (BLT.reg[blt_command] >> 13) & 1;
+  bool patrow0 = (BLT.reg[blt_commandExtra] & 0x08) > 0;
   Bit8u colorkey_en = BLT.reg[blt_commandExtra] & 3;
   Bit8u *patcolor;
   int ncols, nrows, x0, x1, y0, y1, w, h;
   Bit8u pmask = 0, rop = 0, patcol, patline;
-  bx_bool set;
+  bool set;
 
   x0 = BLT.src_x;
   y0 = BLT.src_y;
@@ -2133,7 +2133,7 @@ void bx_banshee_c::blt_host_to_screen()
   Bit8u *color;
   int ncols, nrows, x0, y0, x1, y1, w, h;
   Bit8u smask;
-  bx_bool set;
+  bool set;
 
   x1 = BLT.dst_x;
   y1 = BLT.dst_y;
@@ -2258,14 +2258,14 @@ void bx_banshee_c::blt_host_to_screen_pattern()
   Bit8u *pat_ptr = &BLT.cpat[0][0];
   Bit16u spitch = BLT.h2s_pitch;
   Bit8u srcfmt = BLT.src_fmt;
-  bx_bool patmono = (BLT.reg[blt_command] >> 13) & 1;
-  bx_bool patrow0 = (BLT.reg[blt_commandExtra] & 0x08) > 0;
+  bool patmono = (BLT.reg[blt_command] >> 13) & 1;
+  bool patrow0 = (BLT.reg[blt_commandExtra] & 0x08) > 0;
   Bit8u colorkey_en = BLT.reg[blt_commandExtra] & 3;
   Bit8u spxsize = 0;
   Bit8u *srccolor, *patcolor;
   int ncols, nrows, x0, y0, x1, y1, w, h;
   Bit8u smask, pmask = 0, rop = 0, patcol, patline;
-  bx_bool set;
+  bool set;
 
   x1 = BLT.dst_x;
   y1 = BLT.dst_y;
@@ -2412,7 +2412,7 @@ void bx_banshee_c::blt_line(bool pline)
   int i, deltax, deltay, numpixels, d, dinc1, dinc2;
   int x, xinc1, xinc2, y, yinc1, yinc2;
   int x0, y0, x1, y1, cx0, cx1, cy0, cy1;
-  bx_bool lstipple = ((BLT.reg[blt_command] >> 12) & 1);
+  bool lstipple = ((BLT.reg[blt_command] >> 12) & 1);
   Bit8u lpattern = BLT.reg[blt_lineStipple];
   Bit8u lrepeat = (BLT.reg[blt_lineStyle] & 0xff);
   Bit8u lpat_max = ((BLT.reg[blt_lineStyle] >> 8) & 0x1f);
@@ -2665,7 +2665,7 @@ void bx_banshee_c::blt_polygon_fill(bool force)
 #if BX_DEBUGGER
 void bx_banshee_c::debug_dump(int argc, char **argv)
 {
-  bx_bool is_agp = SIM->is_agp_device(BX_PLUGIN_VOODOO);
+  bool is_agp = SIM->is_agp_device(BX_PLUGIN_VOODOO);
   if (v->banshee.io[io_vidProcCfg] & 0x01) {
     if (s.model == VOODOO_BANSHEE) {
       dbg_printf("Voodoo Banshee %s adapter\n\n", is_agp ? "AGP":"PCI");
@@ -2955,7 +2955,7 @@ void bx_voodoo_vga_c::banshee_vga_write_handler(void *this_ptr, Bit32u address, 
 Bit8u bx_voodoo_vga_c::mem_read(bx_phy_address addr)
 {
   Bit32u offset = ((v->banshee.io[io_vgaInit1] & 0xffc00) << 5) + (addr & 0x1ffff);
-  bx_bool chain4 = ((v->banshee.io[io_vgaInit1] >> 20) & 1);
+  bool chain4 = ((v->banshee.io[io_vgaInit1] >> 20) & 1);
 
   if (chain4) {
     return v->fbi.ram[offset & v->fbi.mask];
@@ -2966,7 +2966,7 @@ Bit8u bx_voodoo_vga_c::mem_read(bx_phy_address addr)
 
 void bx_voodoo_vga_c::mem_write(bx_phy_address addr, Bit8u value)
 {
-  bx_bool chain4 = ((v->banshee.io[io_vgaInit1] >> 20) & 1);
+  bool chain4 = ((v->banshee.io[io_vgaInit1] >> 20) & 1);
   Bit32u offset, start, end, pitch;
   unsigned xti, yti;
 

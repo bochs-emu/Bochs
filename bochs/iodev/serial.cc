@@ -824,10 +824,10 @@ Bit32u bx_serial_c::read(Bit32u address, unsigned io_len)
       if (BX_SER_THIS s[port].line_cntl.dlab) {
         val = BX_SER_THIS s[port].divisor_msb;
       } else {
-        val = (Bit8u)BX_SER_THIS s[port].int_enable.rxdata_enable |
-              ((Bit8u)BX_SER_THIS s[port].int_enable.txhold_enable  << 1) |
-              ((Bit8u)BX_SER_THIS s[port].int_enable.rxlstat_enable << 2) |
-              ((Bit8u)BX_SER_THIS s[port].int_enable.modstat_enable << 3);
+        val = BX_SER_THIS s[port].int_enable.rxdata_enable |
+              (BX_SER_THIS s[port].int_enable.txhold_enable  << 1) |
+              (BX_SER_THIS s[port].int_enable.rxlstat_enable << 2) |
+              (BX_SER_THIS s[port].int_enable.modstat_enable << 3);
       }
       break;
 
@@ -864,31 +864,31 @@ Bit32u bx_serial_c::read(Bit32u address, unsigned io_len)
 
     case BX_SER_LCR: /* Line control register */
       val = BX_SER_THIS s[port].line_cntl.wordlen_sel |
-            ((Bit8u)BX_SER_THIS s[port].line_cntl.stopbits       << 2) |
-            ((Bit8u)BX_SER_THIS s[port].line_cntl.parity_enable  << 3) |
-            ((Bit8u)BX_SER_THIS s[port].line_cntl.evenparity_sel << 4) |
-            ((Bit8u)BX_SER_THIS s[port].line_cntl.stick_parity   << 5) |
-            ((Bit8u)BX_SER_THIS s[port].line_cntl.break_cntl     << 6) |
-            ((Bit8u)BX_SER_THIS s[port].line_cntl.dlab           << 7);
+            (BX_SER_THIS s[port].line_cntl.stopbits       << 2) |
+            (BX_SER_THIS s[port].line_cntl.parity_enable  << 3) |
+            (BX_SER_THIS s[port].line_cntl.evenparity_sel << 4) |
+            (BX_SER_THIS s[port].line_cntl.stick_parity   << 5) |
+            (BX_SER_THIS s[port].line_cntl.break_cntl     << 6) |
+            (BX_SER_THIS s[port].line_cntl.dlab           << 7);
       break;
 
     case BX_SER_MCR: /* MODEM control register */
-      val = (Bit8u)BX_SER_THIS s[port].modem_cntl.dtr |
-            ((Bit8u)BX_SER_THIS s[port].modem_cntl.rts << 1) |
-            ((Bit8u)BX_SER_THIS s[port].modem_cntl.out1 << 2) |
-            ((Bit8u)BX_SER_THIS s[port].modem_cntl.out2 << 3) |
-            ((Bit8u)BX_SER_THIS s[port].modem_cntl.local_loopback << 4);
+      val = BX_SER_THIS s[port].modem_cntl.dtr |
+            (BX_SER_THIS s[port].modem_cntl.rts << 1) |
+            (BX_SER_THIS s[port].modem_cntl.out1 << 2) |
+            (BX_SER_THIS s[port].modem_cntl.out2 << 3) |
+            (BX_SER_THIS s[port].modem_cntl.local_loopback << 4);
       break;
 
     case BX_SER_LSR: /* Line status register */
-      val = (Bit8u)BX_SER_THIS s[port].line_status.rxdata_ready |
-            ((Bit8u)BX_SER_THIS s[port].line_status.overrun_error  << 1) |
-            ((Bit8u)BX_SER_THIS s[port].line_status.parity_error   << 2) |
-            ((Bit8u)BX_SER_THIS s[port].line_status.framing_error  << 3) |
-            ((Bit8u)BX_SER_THIS s[port].line_status.break_int      << 4) |
-            ((Bit8u)BX_SER_THIS s[port].line_status.thr_empty      << 5) |
-            ((Bit8u)BX_SER_THIS s[port].line_status.tsr_empty      << 6) |
-            ((Bit8u)BX_SER_THIS s[port].line_status.fifo_error     << 7);
+      val = BX_SER_THIS s[port].line_status.rxdata_ready |
+            (BX_SER_THIS s[port].line_status.overrun_error  << 1) |
+            (BX_SER_THIS s[port].line_status.parity_error   << 2) |
+            (BX_SER_THIS s[port].line_status.framing_error  << 3) |
+            (BX_SER_THIS s[port].line_status.break_int      << 4) |
+            (BX_SER_THIS s[port].line_status.thr_empty      << 5) |
+            (BX_SER_THIS s[port].line_status.tsr_empty      << 6) |
+            (BX_SER_THIS s[port].line_status.fifo_error     << 7);
       BX_SER_THIS s[port].line_status.overrun_error = 0;
       BX_SER_THIS s[port].line_status.framing_error = 0;
       BX_SER_THIS s[port].line_status.break_int = 0;
@@ -923,14 +923,14 @@ Bit32u bx_serial_c::read(Bit32u address, unsigned io_len)
         }
       }
 #endif
-      val = (Bit8u)BX_SER_THIS s[port].modem_status.delta_cts |
-            ((Bit8u)BX_SER_THIS s[port].modem_status.delta_dsr    << 1) |
-            ((Bit8u)BX_SER_THIS s[port].modem_status.ri_trailedge << 2) |
-            ((Bit8u)BX_SER_THIS s[port].modem_status.delta_dcd    << 3) |
-            ((Bit8u)BX_SER_THIS s[port].modem_status.cts          << 4) |
-            ((Bit8u)BX_SER_THIS s[port].modem_status.dsr          << 5) |
-            ((Bit8u)BX_SER_THIS s[port].modem_status.ri           << 6) |
-            ((Bit8u)BX_SER_THIS s[port].modem_status.dcd          << 7);
+      val = BX_SER_THIS s[port].modem_status.delta_cts |
+            (BX_SER_THIS s[port].modem_status.delta_dsr    << 1) |
+            (BX_SER_THIS s[port].modem_status.ri_trailedge << 2) |
+            (BX_SER_THIS s[port].modem_status.delta_dcd    << 3) |
+            (BX_SER_THIS s[port].modem_status.cts          << 4) |
+            (BX_SER_THIS s[port].modem_status.dsr          << 5) |
+            (BX_SER_THIS s[port].modem_status.ri           << 6) |
+            (BX_SER_THIS s[port].modem_status.dcd          << 7);
       BX_SER_THIS s[port].modem_status.delta_cts = 0;
       BX_SER_THIS s[port].modem_status.delta_dsr = 0;
       BX_SER_THIS s[port].modem_status.ri_trailedge = 0;

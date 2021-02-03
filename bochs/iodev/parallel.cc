@@ -304,11 +304,11 @@ Bit32u bx_parallel_c::read(Bit32u address, unsigned io_len)
       break;
     case BX_PAR_STAT:
       {
-        retval = ((Bit8u)(BX_PAR_THIS s[port].STATUS.busy  << 7) |
-                  (Bit8u)(BX_PAR_THIS s[port].STATUS.ack   << 6) |
-                  (Bit8u)(BX_PAR_THIS s[port].STATUS.pe    << 5) |
-                  (Bit8u)(BX_PAR_THIS s[port].STATUS.slct  << 4) |
-                  (Bit8u)(BX_PAR_THIS s[port].STATUS.error << 3));
+        retval = ((BX_PAR_THIS s[port].STATUS.busy  << 7) |
+                  (BX_PAR_THIS s[port].STATUS.ack   << 6) |
+                  (BX_PAR_THIS s[port].STATUS.pe    << 5) |
+                  (BX_PAR_THIS s[port].STATUS.slct  << 4) |
+                  (BX_PAR_THIS s[port].STATUS.error << 3));
         if (BX_PAR_THIS s[port].STATUS.ack == 0) {
           BX_PAR_THIS s[port].STATUS.ack = 1;
           if (BX_PAR_THIS s[port].CONTROL.irq == 1) {
@@ -330,12 +330,12 @@ Bit32u bx_parallel_c::read(Bit32u address, unsigned io_len)
       break;
     case BX_PAR_CTRL:
       {
-        retval = ((Bit8u)(BX_PAR_THIS s[port].CONTROL.input    << 5) |
-                  (Bit8u)(BX_PAR_THIS s[port].CONTROL.irq      << 4) |
-                  (Bit8u)(BX_PAR_THIS s[port].CONTROL.slct_in  << 3) |
-                  (Bit8u)(BX_PAR_THIS s[port].CONTROL.init     << 2) |
-                  (Bit8u)(BX_PAR_THIS s[port].CONTROL.autofeed << 1) |
-                  (Bit8u)(BX_PAR_THIS s[port].CONTROL.strobe));
+        retval = ((BX_PAR_THIS s[port].CONTROL.input    << 5) |
+                  (BX_PAR_THIS s[port].CONTROL.irq      << 4) |
+                  (BX_PAR_THIS s[port].CONTROL.slct_in  << 3) |
+                  (BX_PAR_THIS s[port].CONTROL.init     << 2) |
+                  (BX_PAR_THIS s[port].CONTROL.autofeed << 1) |
+                  (BX_PAR_THIS s[port].CONTROL.strobe));
         BX_DEBUG(("read: parport%d control register returns 0x%02x", port+1, retval));
         return retval;
       }

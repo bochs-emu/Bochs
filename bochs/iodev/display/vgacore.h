@@ -126,14 +126,14 @@ protected:
 
   struct {
     struct {
-      bx_bool color_emulation;  // 1=color emulation, base address = 3Dx
+      bool color_emulation;     // 1=color emulation, base address = 3Dx
                                 // 0=mono emulation,  base address = 3Bx
-      bx_bool enable_ram;       // enable CPU access to video memory if set
+      bool enable_ram;          // enable CPU access to video memory if set
       Bit8u   clock_select;     // 0=25Mhz 1=28Mhz
-      bx_bool select_high_bank; // when in odd/even modes, select
+      bool select_high_bank;    // when in odd/even modes, select
                                 // high 64k bank if set
-      bx_bool horiz_sync_pol;   // bit6: negative if set
-      bx_bool vert_sync_pol;    // bit7: negative if set
+      bool horiz_sync_pol;      // bit6: negative if set
+      bool vert_sync_pol;       // bit7: negative if set
                                 //   bit7,bit6 represent number of lines on display:
                                 //   0 = reserved
                                 //   1 = 400 lines
@@ -144,26 +144,26 @@ protected:
     struct {
       Bit8u   address;
       Bit8u   reg[0x19];
-      bx_bool write_protect;
+      bool write_protect;
     } CRTC;
 
     struct {
-      bx_bool  flip_flop; /* 0 = address, 1 = data-write */
-      unsigned address;  /* register number */
-      bx_bool  video_enabled;
+      bool  flip_flop;  /* 0 = address, 1 = data-write */
+      unsigned address; /* register number */
+      bool  video_enabled;
       Bit8u    palette_reg[16];
       Bit8u    overscan_color;
       Bit8u    color_plane_enable;
       Bit8u    horiz_pel_panning;
       Bit8u    color_select;
       struct {
-        bx_bool graphics_alpha;
-        bx_bool display_type;
-        bx_bool enable_line_graphics;
-        bx_bool blink_intensity;
-        bx_bool pixel_panning_compat;
-        bx_bool pixel_clock_select;
-        bx_bool internal_palette_size;
+        bool graphics_alpha;
+        bool display_type;
+        bool enable_line_graphics;
+        bool blink_intensity;
+        bool pixel_panning_compat;
+        bool pixel_clock_select;
+        bool internal_palette_size;
       } mode_ctrl;
     } attribute_ctrl;
 
@@ -191,10 +191,10 @@ protected:
       Bit8u   read_map_select;
       Bit8u   write_mode;
       Bit32u  read_mode;
-      bx_bool odd_even;
-      bx_bool chain_odd_even;
+      bool odd_even;
+      bool chain_odd_even;
       Bit8u   shift_reg;
-      bx_bool graphics_alpha;
+      bool graphics_alpha;
       Bit8u   memory_mapping; /* 0 = use A0000-BFFFF
                                * 1 = use A0000-AFFFF EGA/VGA graphics modes
                                * 2 = use B0000-B7FFF Monochrome modes
@@ -208,18 +208,18 @@ protected:
     struct {
       Bit8u   index;
       Bit8u   map_mask;
-      bx_bool reset1;
-      bx_bool reset2;
+      bool reset1;
+      bool reset2;
       Bit8u   reg1;
       Bit8u   char_map_select;
-      bx_bool extended_mem;
-      bx_bool odd_even;
-      bx_bool chain_four;
-      bx_bool clear_screen;
+      bool extended_mem;
+      bool odd_even;
+      bool chain_four;
+      bool clear_screen;
     } sequencer;
 
-    bx_bool  vga_enabled;
-    bx_bool  vga_mem_updated;
+    bool  vga_enabled;
+    bool  vga_mem_updated;
     unsigned line_offset;
     unsigned line_compare;
     unsigned vertical_display_end;
@@ -230,8 +230,8 @@ protected:
     Bit8u text_snapshot[128 * 1024]; // current text snapshot
     Bit8u tile[X_TILESIZE * Y_TILESIZE * 4]; /**< Currently allocates the tile as large as needed. */
     Bit16u charmap_address;
-    bx_bool x_dotclockdiv2;
-    bx_bool y_doublescan;
+    bool x_dotclockdiv2;
+    bool y_doublescan;
     // h/v retrace timing
     Bit32u vclk[4];
     Bit32u htotal_usec;

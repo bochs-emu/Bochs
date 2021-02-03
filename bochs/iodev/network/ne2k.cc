@@ -587,10 +587,10 @@ Bit32u bx_ne2k_c::read_cr(void)
 {
   Bit32u val =
          (((BX_NE2K_THIS s.CR.pgsel    & 0x03) << 6) |
-	  ((BX_NE2K_THIS s.CR.rdma_cmd & 0x07) << 3) |
-	  ((Bit8u)BX_NE2K_THIS s.CR.tx_packet  << 2) |
-	  ((Bit8u)BX_NE2K_THIS s.CR.start      << 1) |
-	  (Bit8u)BX_NE2K_THIS s.CR.stop);
+          ((BX_NE2K_THIS s.CR.rdma_cmd & 0x07) << 3) |
+          (BX_NE2K_THIS s.CR.tx_packet         << 2) |
+          (BX_NE2K_THIS s.CR.start             << 1) |
+          (BX_NE2K_THIS s.CR.stop));
   BX_DEBUG(("read CR returns 0x%02x", val));
   return val;
 }
@@ -913,13 +913,13 @@ Bit32u bx_ne2k_c::page0_read(Bit32u offset, unsigned int io_len)
     break;
 
   case 0x4:  // TSR
-    value = (((Bit8u)BX_NE2K_THIS s.TSR.ow_coll    << 7) |
-             ((Bit8u)BX_NE2K_THIS s.TSR.cd_hbeat   << 6) |
-             ((Bit8u)BX_NE2K_THIS s.TSR.fifo_ur    << 5) |
-             ((Bit8u)BX_NE2K_THIS s.TSR.no_carrier << 4) |
-             ((Bit8u)BX_NE2K_THIS s.TSR.aborted    << 3) |
-             ((Bit8u)BX_NE2K_THIS s.TSR.collided   << 2) |
-             (Bit8u)BX_NE2K_THIS s.TSR.tx_ok);
+    value = ((BX_NE2K_THIS s.TSR.ow_coll    << 7) |
+             (BX_NE2K_THIS s.TSR.cd_hbeat   << 6) |
+             (BX_NE2K_THIS s.TSR.fifo_ur    << 5) |
+             (BX_NE2K_THIS s.TSR.no_carrier << 4) |
+             (BX_NE2K_THIS s.TSR.aborted    << 3) |
+             (BX_NE2K_THIS s.TSR.collided   << 2) |
+             (BX_NE2K_THIS s.TSR.tx_ok));
     break;
 
   case 0x5:  // NCR
@@ -933,14 +933,14 @@ Bit32u bx_ne2k_c::page0_read(Bit32u offset, unsigned int io_len)
     break;
 
   case 0x7:  // ISR
-    value = (((Bit8u)BX_NE2K_THIS s.ISR.reset     << 7) |
-             ((Bit8u)BX_NE2K_THIS s.ISR.rdma_done << 6) |
-             ((Bit8u)BX_NE2K_THIS s.ISR.cnt_oflow << 5) |
-             ((Bit8u)BX_NE2K_THIS s.ISR.overwrite << 4) |
-             ((Bit8u)BX_NE2K_THIS s.ISR.tx_err    << 3) |
-             ((Bit8u)BX_NE2K_THIS s.ISR.rx_err    << 2) |
-             ((Bit8u)BX_NE2K_THIS s.ISR.pkt_tx    << 1) |
-             ((Bit8u)BX_NE2K_THIS s.ISR.pkt_rx));
+    value = ((BX_NE2K_THIS s.ISR.reset     << 7) |
+             (BX_NE2K_THIS s.ISR.rdma_done << 6) |
+             (BX_NE2K_THIS s.ISR.cnt_oflow << 5) |
+             (BX_NE2K_THIS s.ISR.overwrite << 4) |
+             (BX_NE2K_THIS s.ISR.tx_err    << 3) |
+             (BX_NE2K_THIS s.ISR.rx_err    << 2) |
+             (BX_NE2K_THIS s.ISR.pkt_tx    << 1) |
+             (BX_NE2K_THIS s.ISR.pkt_rx));
     break;
 
   case 0x8:  // CRDA0
@@ -970,14 +970,14 @@ Bit32u bx_ne2k_c::page0_read(Bit32u offset, unsigned int io_len)
     break;
 
   case 0xc:  // RSR
-    value = (((Bit8u)BX_NE2K_THIS s.RSR.deferred    << 7) |
-             ((Bit8u)BX_NE2K_THIS s.RSR.rx_disabled << 6) |
-             ((Bit8u)BX_NE2K_THIS s.RSR.rx_mbit     << 5) |
-             ((Bit8u)BX_NE2K_THIS s.RSR.rx_missed   << 4) |
-             ((Bit8u)BX_NE2K_THIS s.RSR.fifo_or     << 3) |
-             ((Bit8u)BX_NE2K_THIS s.RSR.bad_falign  << 2) |
-             ((Bit8u)BX_NE2K_THIS s.RSR.bad_crc     << 1) |
-             ((Bit8u)BX_NE2K_THIS s.RSR.rx_ok));
+    value = ((BX_NE2K_THIS s.RSR.deferred    << 7) |
+             (BX_NE2K_THIS s.RSR.rx_disabled << 6) |
+             (BX_NE2K_THIS s.RSR.rx_mbit     << 5) |
+             (BX_NE2K_THIS s.RSR.rx_missed   << 4) |
+             (BX_NE2K_THIS s.RSR.fifo_or     << 3) |
+             (BX_NE2K_THIS s.RSR.bad_falign  << 2) |
+             (BX_NE2K_THIS s.RSR.bad_crc     << 1) |
+             (BX_NE2K_THIS s.RSR.rx_ok));
     break;
 
   case 0xd:  // CNTR0
@@ -1056,20 +1056,20 @@ void bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
     BX_NE2K_THIS s.ISR.overwrite &= !((value & 0x10) > 0);
     BX_NE2K_THIS s.ISR.cnt_oflow &= !((value & 0x20) > 0);
     BX_NE2K_THIS s.ISR.rdma_done &= !((value & 0x40) > 0);
-    value = (((Bit8u)BX_NE2K_THIS s.ISR.rdma_done << 6) |
-             ((Bit8u)BX_NE2K_THIS s.ISR.cnt_oflow << 5) |
-             ((Bit8u)BX_NE2K_THIS s.ISR.overwrite << 4) |
-             ((Bit8u)BX_NE2K_THIS s.ISR.tx_err    << 3) |
-             ((Bit8u)BX_NE2K_THIS s.ISR.rx_err    << 2) |
-             ((Bit8u)BX_NE2K_THIS s.ISR.pkt_tx    << 1) |
-             ((Bit8u)BX_NE2K_THIS s.ISR.pkt_rx));
-    value &= (((Bit8u)BX_NE2K_THIS s.IMR.rdma_inte << 6) |
-              ((Bit8u)BX_NE2K_THIS s.IMR.cofl_inte << 5) |
-              ((Bit8u)BX_NE2K_THIS s.IMR.overw_inte << 4) |
-              ((Bit8u)BX_NE2K_THIS s.IMR.txerr_inte << 3) |
-              ((Bit8u)BX_NE2K_THIS s.IMR.rxerr_inte << 2) |
-              ((Bit8u)BX_NE2K_THIS s.IMR.tx_inte << 1) |
-              ((Bit8u)BX_NE2K_THIS s.IMR.rx_inte));
+    value = ((BX_NE2K_THIS s.ISR.rdma_done << 6) |
+             (BX_NE2K_THIS s.ISR.cnt_oflow << 5) |
+             (BX_NE2K_THIS s.ISR.overwrite << 4) |
+             (BX_NE2K_THIS s.ISR.tx_err    << 3) |
+             (BX_NE2K_THIS s.ISR.rx_err    << 2) |
+             (BX_NE2K_THIS s.ISR.pkt_tx    << 1) |
+             (BX_NE2K_THIS s.ISR.pkt_rx));
+    value &= ((BX_NE2K_THIS s.IMR.rdma_inte << 6) |
+              (BX_NE2K_THIS s.IMR.cofl_inte << 5) |
+              (BX_NE2K_THIS s.IMR.overw_inte << 4) |
+              (BX_NE2K_THIS s.IMR.txerr_inte << 3) |
+              (BX_NE2K_THIS s.IMR.rxerr_inte << 2) |
+              (BX_NE2K_THIS s.IMR.tx_inte << 1) |
+              (BX_NE2K_THIS s.IMR.rx_inte));
     if (value == 0)
       set_irq_level(0);
     break;
@@ -1177,13 +1177,13 @@ void bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
     BX_NE2K_THIS s.IMR.overw_inte = ((value & 0x10) == 0x10) > 0;
     BX_NE2K_THIS s.IMR.cofl_inte  = ((value & 0x20) == 0x20) > 0;
     BX_NE2K_THIS s.IMR.rdma_inte  = ((value & 0x40) == 0x40) > 0;
-    value2 = (((Bit8u)BX_NE2K_THIS s.ISR.rdma_done << 6) |
-              ((Bit8u)BX_NE2K_THIS s.ISR.cnt_oflow << 5) |
-              ((Bit8u)BX_NE2K_THIS s.ISR.overwrite << 4) |
-              ((Bit8u)BX_NE2K_THIS s.ISR.tx_err    << 3) |
-              ((Bit8u)BX_NE2K_THIS s.ISR.rx_err    << 2) |
-              ((Bit8u)BX_NE2K_THIS s.ISR.pkt_tx    << 1) |
-              ((Bit8u)BX_NE2K_THIS s.ISR.pkt_rx));
+    value2 = ((BX_NE2K_THIS s.ISR.rdma_done << 6) |
+              (BX_NE2K_THIS s.ISR.cnt_oflow << 5) |
+              (BX_NE2K_THIS s.ISR.overwrite << 4) |
+              (BX_NE2K_THIS s.ISR.tx_err    << 3) |
+              (BX_NE2K_THIS s.ISR.rx_err    << 2) |
+              (BX_NE2K_THIS s.ISR.pkt_tx    << 1) |
+              (BX_NE2K_THIS s.ISR.pkt_rx));
     if (((value & value2) & 0x7f) == 0) {
       set_irq_level(0);
     } else {
@@ -1324,35 +1324,35 @@ Bit32u bx_ne2k_c::page2_read(Bit32u offset, unsigned int io_len)
     return (0xff);
 
   case 0xc:  // RCR
-    return (((Bit8u)BX_NE2K_THIS s.RCR.monitor   << 5) |
-	    ((Bit8u)BX_NE2K_THIS s.RCR.promisc   << 4) |
-	    ((Bit8u)BX_NE2K_THIS s.RCR.multicast << 3) |
-	    ((Bit8u)BX_NE2K_THIS s.RCR.broadcast << 2) |
-	    ((Bit8u)BX_NE2K_THIS s.RCR.runts_ok  << 1) |
-	    (Bit8u)BX_NE2K_THIS s.RCR.errors_ok);
+    return ((BX_NE2K_THIS s.RCR.monitor   << 5) |
+            (BX_NE2K_THIS s.RCR.promisc   << 4) |
+            (BX_NE2K_THIS s.RCR.multicast << 3) |
+            (BX_NE2K_THIS s.RCR.broadcast << 2) |
+            (BX_NE2K_THIS s.RCR.runts_ok  << 1) |
+            (BX_NE2K_THIS s.RCR.errors_ok));
 
   case 0xd:  // TCR
-    return (((Bit8u)BX_NE2K_THIS s.TCR.coll_prio  << 4) |
-	    ((Bit8u)BX_NE2K_THIS s.TCR.ext_stoptx << 3) |
-	    ((BX_NE2K_THIS s.TCR.loop_cntl & 0x3) << 1) |
-	    (Bit8u)BX_NE2K_THIS s.TCR.crc_disable);
+    return ((BX_NE2K_THIS s.TCR.coll_prio  << 4) |
+            (BX_NE2K_THIS s.TCR.ext_stoptx << 3) |
+            ((BX_NE2K_THIS s.TCR.loop_cntl & 0x3) << 1) |
+            (BX_NE2K_THIS s.TCR.crc_disable));
 
   case 0xe:  // DCR
     return (((BX_NE2K_THIS s.DCR.fifo_size & 0x3) << 5) |
-	    ((Bit8u)BX_NE2K_THIS s.DCR.auto_rx  << 4) |
-	    ((Bit8u)BX_NE2K_THIS s.DCR.loop     << 3) |
-	    ((Bit8u)BX_NE2K_THIS s.DCR.longaddr << 2) |
-	    ((Bit8u)BX_NE2K_THIS s.DCR.endian   << 1) |
-	    (Bit8u)BX_NE2K_THIS s.DCR.wdsize);
+             (BX_NE2K_THIS s.DCR.auto_rx  << 4) |
+             (BX_NE2K_THIS s.DCR.loop     << 3) |
+             (BX_NE2K_THIS s.DCR.longaddr << 2) |
+             (BX_NE2K_THIS s.DCR.endian   << 1) |
+             (BX_NE2K_THIS s.DCR.wdsize));
 
   case 0xf:  // IMR
-    return (((Bit8u)BX_NE2K_THIS s.IMR.rdma_inte  << 6) |
-	    ((Bit8u)BX_NE2K_THIS s.IMR.cofl_inte  << 5) |
-	    ((Bit8u)BX_NE2K_THIS s.IMR.overw_inte << 4) |
-	    ((Bit8u)BX_NE2K_THIS s.IMR.txerr_inte << 3) |
-	    ((Bit8u)BX_NE2K_THIS s.IMR.rxerr_inte << 2) |
-	    ((Bit8u)BX_NE2K_THIS s.IMR.tx_inte    << 1) |
-	    ((Bit8u)BX_NE2K_THIS s.IMR.rx_inte));
+    return ((BX_NE2K_THIS s.IMR.rdma_inte  << 6) |
+            (BX_NE2K_THIS s.IMR.cofl_inte  << 5) |
+            (BX_NE2K_THIS s.IMR.overw_inte << 4) |
+            (BX_NE2K_THIS s.IMR.txerr_inte << 3) |
+            (BX_NE2K_THIS s.IMR.rxerr_inte << 2) |
+            (BX_NE2K_THIS s.IMR.tx_inte    << 1) |
+            (BX_NE2K_THIS s.IMR.rx_inte));
 
   default:
     BX_PANIC(("page 2 register 0x%02x out of range", offset));

@@ -1385,7 +1385,7 @@ void voodoo2_bitblt(void)
   Bit8u cmd, rop = 0, *dst_ptr, *src_ptr;
   Bit16u c, cols, src_x, src_y, r, rows, size, x;
   Bit32u src_base, doffset, soffset, dstride, sstride;
-  bx_bool src_tiled, dst_tiled, x_dir, y_dir;
+  bool src_tiled, dst_tiled, x_dir, y_dir;
   int tmpval;
 
   cmd = (Bit8u)(v->reg[bltCommand].u & 0x07);
@@ -1553,7 +1553,7 @@ void voodoo2_bitblt_cpu_to_screen(Bit32u data)
 {
   Bit8u rop = 0, *dst_ptr, *dst_ptr1, *src_ptr, color[2];
   Bit8u b, c, g, i, j, r;
-  bx_bool set;
+  bool set;
   Bit8u colfmt = BLT.src_fmt & 7, rgbfmt = BLT.src_fmt >> 3;
   Bit16u count = BLT.dst_x + BLT.dst_w - BLT.cur_x;
   Bit32u doffset = BLT.dst_base + BLT.dst_y * BLT.dst_pitch + BLT.cur_x * 2;
@@ -2943,7 +2943,7 @@ void cmdfifo_process(cmdfifo_info *f)
 {
   Bit32u command, data, mask, nwords, regaddr;
   Bit8u type, code, nvertex, smode, disbytes;
-  bx_bool inc, pcolor;
+  bool inc, pcolor;
   voodoo_reg reg;
   int i, w0, wn;
   setup_vertex svert = {0};
@@ -3206,7 +3206,7 @@ void cmdfifo_process(cmdfifo_info *f)
 #if FBI_TRICK
 bool fifo_add_fbi(Bit32u type_offset, Bit32u data)
 {
-  bx_bool ret = 0;
+  bool ret = 0;
 
   BX_LOCK(fifo_mutex);
   if (v->fbi.fifo.enabled) {
@@ -3221,7 +3221,7 @@ bool fifo_add_fbi(Bit32u type_offset, Bit32u data)
 
 bool fifo_add_common(Bit32u type_offset, Bit32u data)
 {
-  bx_bool ret = 0;
+  bool ret = 0;
 
   BX_LOCK(fifo_mutex);
   if (v->fbi.fifo.enabled) {
@@ -3242,7 +3242,7 @@ bool fifo_add_common(Bit32u type_offset, Bit32u data)
 #else
 bool fifo_add_common(Bit32u type_offset, Bit32u data)
 {
-  bx_bool ret = 0;
+  bool ret = 0;
 
   BX_LOCK(fifo_mutex);
   if (v->pci.fifo.enabled) {

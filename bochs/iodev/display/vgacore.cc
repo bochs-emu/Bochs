@@ -763,8 +763,8 @@ void bx_vgacore_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, u
 void bx_vgacore_c::write(Bit32u address, Bit32u value, unsigned io_len, bool no_log)
 {
   Bit8u charmap1, charmap2, prev_memory_mapping;
-  bx_bool prev_video_enabled, prev_line_graphics, prev_int_pal_size, prev_graphics_alpha;
-  bx_bool needs_update = 0, charmap_update = 0;
+  bool prev_video_enabled, prev_line_graphics, prev_int_pal_size, prev_graphics_alpha;
+  bool needs_update = 0, charmap_update = 0;
 
 #if defined(VGA_TRACE_FEATURE)
   if (!no_log)

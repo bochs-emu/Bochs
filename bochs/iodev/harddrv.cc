@@ -1055,7 +1055,7 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
       // b4: DRV
       // b3..0 HD3..HD0
       value8 = (1 << 7) |
-               ((Bit8u)controller->lba_mode << 6) |
+               (controller->lba_mode << 6) |
                (1 << 5) | // 01b = 512 sector size
                (BX_HD_THIS channels[channel].drive_select << 4) |
                (controller->head_no << 0);
@@ -1068,14 +1068,14 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
         value8 = 0;
       } else {
         value8 = (
-          ((Bit8u)controller->status.busy << 7) |
-          ((Bit8u)controller->status.drive_ready << 6) |
-          ((Bit8u)controller->status.write_fault << 5) |
-          ((Bit8u)controller->status.seek_complete << 4) |
-          ((Bit8u)controller->status.drq << 3) |
-          ((Bit8u)controller->status.corrected_data << 2) |
-          ((Bit8u)controller->status.index_pulse << 1) |
-          ((Bit8u)controller->status.err));
+          (controller->status.busy << 7) |
+          (controller->status.drive_ready << 6) |
+          (controller->status.write_fault << 5) |
+          (controller->status.seek_complete << 4) |
+          (controller->status.drq << 3) |
+          (controller->status.corrected_data << 2) |
+          (controller->status.index_pulse << 1) |
+          (controller->status.err));
         controller->status.index_pulse_count++;
         controller->status.index_pulse = 0;
         if (controller->status.index_pulse_count >= INDEX_PULSE_CYCLE) {
@@ -1428,7 +1428,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                           controller->buffer[12] = 0x71;
                           controller->buffer[13] = (3 << 5);
                           controller->buffer[14] = (unsigned char) (1 |
-                            ((Bit8u)BX_SELECTED_DRIVE(channel).cdrom.locked ? (1 << 1) : 0) |
+                            (BX_SELECTED_DRIVE(channel).cdrom.locked ? (1 << 1) : 0) |
                             (1 << 3) |
                             (1 << 5));
                           controller->buffer[15] = 0x00;
@@ -1505,7 +1505,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                           controller->buffer[12] = 0x71;
                           controller->buffer[13] = (3 << 5);
                           controller->buffer[14] = (unsigned char) (1 |
-                            ((Bit8u)BX_SELECTED_DRIVE(channel).cdrom.locked ? (1 << 1) : 0) |
+                            (BX_SELECTED_DRIVE(channel).cdrom.locked ? (1 << 1) : 0) |
                             (1 << 3) |
                             (1 << 5));
                           controller->buffer[15] = 0x00;

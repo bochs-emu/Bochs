@@ -204,8 +204,8 @@ bx_ddc_c::~bx_ddc_c(void)
 
 Bit8u bx_ddc_c::read()
 {
-  Bit8u retval = (((Bit8u)(s.DDAmon & s.DDAhost) << 3) | ((Bit8u)s.DCKhost << 2) |
-                  ((Bit8u)s.DDAhost << 1) | (Bit8u)s.DCKhost);
+  Bit8u retval = (Bit8u)(((s.DDAmon & s.DDAhost) << 3) | (s.DCKhost << 2) |
+                         (s.DDAhost << 1) | s.DCKhost);
   return retval;
 }
 
@@ -293,7 +293,7 @@ void bx_ddc_c::write(bool dck, bool dda)
         switch (s.ddc_stage) {
           case DDC_STAGE_ADDRESS:
           case DDC_STAGE_DATA_IN:
-            s.ddc_byte |= ((Bit8u)s.DDAhost << s.ddc_bitshift);
+            s.ddc_byte |= (Bit8u)(s.DDAhost << s.ddc_bitshift);
             break;
           case DDC_STAGE_RW:
             s.ddc_rw = s.DDAhost;
