@@ -37,7 +37,7 @@ accesses in this range.  For <I>bx_dbg_ucmem_read()</I>, pass the physical addre
 <I>addr</I>, and the value of the read is returned.  For <I>bx_dbg_ucmem_write()</I>,
 pass the physical address <I>addr</I> and value <I>value</I> of the write.
 
-<P><B>void bx_dbg_async_pin_ack(unsigned what, bx_bool val)</B>
+<P><B>void bx_dbg_async_pin_ack(unsigned what, bool val)</B>
 <P>In order for the master and slave simulators to accept changes in pins
 such as the A20 line, at the same point, the debugger provides a mechanism
 for pending the pin change, until it is acknowledged by the master simulator.
@@ -134,21 +134,21 @@ typedef struct {
   bx_dbg_icount_t icount; // stop after completing this many instructions
 
   // user typed Ctrl-C, requesting simulator stop at next convient spot
-  volatile bx_bool interrupt_requested;
+  volatile bool interrupt_requested;
 
   // booleans to control whether simulator should report events
   // to debug controller
   struct {
-   bx_bool irq;
-   bx_bool a20;
-   bx_bool io;
-   bx_bool ucmem;
-   bx_bool dma;
+   bool irq;
+   bool a20;
+   bool io;
+   bool ucmem;
+   bool dma;
    } report;
 
   struct {
-    bx_bool irq;  // should process IRQs asynchronously
-    bx_bool dma;  // should process DMAs asynchronously
+    bool irq;  // should process IRQs asynchronously
+    bool dma;  // should process DMAs asynchronously
     } async;
 
 #define BX_DBG_ASYNC_PENDING_A20   0x01
@@ -163,9 +163,9 @@ typedef struct {
   // be checked, and ack'd.
   struct {
     unsigned which; // logical OR of above constants
-    bx_bool a20;
-    bx_bool reset;
-    bx_bool nmi;
+    bool a20;
+    bool reset;
+    bool nmi;
     } async_changes_pending;
   } bx_guard_t;
 
@@ -176,8 +176,8 @@ typedef struct {
   Bit32u   cs;     // cs:eip and linear addr of instruction at guard point
   Bit32u   eip;
   Bit32u   laddr;
-  bx_bool  is_32bit_code; // CS seg size at guard point
-  bx_bool  ctrl_c; // simulator stopped due to Ctrl-C request
+  bool  is_32bit_code; // CS seg size at guard point
+  bool  ctrl_c; // simulator stopped due to Ctrl-C request
   } bx_guard_found_t;
 
 extern bx_guard_t        bx_guard;
@@ -211,7 +211,7 @@ executed, when the guard was encountered.
 <P><B>Bit32u   cs;</B>
 <BR><B>Bit32u   eip;</B>
 <BR><B>Bit32u   laddr;</B>
-<BR><B>bx_bool  is_32bit_code;</B>
+<BR><B>bool  is_32bit_code;</B>
 These all relate to the same instruction address.  From the debugger's
 point of view, instruction addresses can be only at the beginning of
 the instruction.  Once an instruction is completed, use the address
@@ -221,7 +221,7 @@ Set <I>laddr</I> to the instruction's corresponding linear address.
 Set <I>is_32bit_code</I> to the size (0=16bit, 1=32bit) of the code
 segment when the guard is encountered.  This is used for disassembly.
 
-<P><B>bx_bool  ctrl_c;</B>
+<P><B>bool  ctrl_c;</B>
 To allow the user to interrupt a simulator from the debug prompt, the
 debugger traps Ctrl-C interrupts, and sets <I>bx_guard.interrupt_requested</I>.
 Your simulator can optionally look for this, provided that the
@@ -316,7 +316,7 @@ bx_guard_found[ID].is_32bit_code = .. // 0=16bit code, 1=32bit code
 </PRE>
 
 
-<P><B>volatile bx_bool interrupt_requested;</B>
+<P><B>volatile bool interrupt_requested;</B>
 <P>If the debugger has turned on the guard for a user interrupt, and
 the user has indeed requested one (Ctrl-C), the debugger will set
 this field to 1.  The simulator should record this in the guard found
