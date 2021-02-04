@@ -29,7 +29,7 @@ static const char BX_HAVE_MAP_ERR[] = "context not implemented because BX_HAVE_M
 
 const char* bx_dbg_symbolic_address(bx_address context, bx_address eip, bx_address base)
 {
-  static bx_bool first = true;
+  static bool first = true;
   if (first) {
     dbg_printf(BX_HAVE_MAP_ERR);
     first = false;
@@ -37,7 +37,7 @@ const char* bx_dbg_symbolic_address(bx_address context, bx_address eip, bx_addre
   return "unk. ctxt";
 }
 
-int bx_dbg_symbol_command(const char* filename, bx_bool global, bx_address offset)
+int bx_dbg_symbol_command(const char* filename, bool global, bx_address offset)
 {
   dbg_printf(BX_HAVE_MAP_ERR);
   return -1;
@@ -273,7 +273,7 @@ const char* bx_dbg_disasm_symbolic_address(bx_address xip, bx_address base)
   return buf;
 }
 
-int bx_dbg_symbol_command(const char* filename, bx_bool global, bx_address offset)
+int bx_dbg_symbol_command(const char* filename, bool global, bx_address offset)
 {
   symbol_entry_t file(0, filename);
   file.trim_quotes();

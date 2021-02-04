@@ -89,19 +89,19 @@ dist-clean: clean
 
 parse-clean:
 	@RMCOMMAND@ -f  lexer.c
-	@RMCOMMAND@ -f  parser.c
+	@RMCOMMAND@ -f  parser.cc
 	@RMCOMMAND@ -f  parser.h
 
 dbg_main.o: debug.h
 
-@NO_FLEX_YACC@parser.c: parser.y
-@NO_FLEX_YACC@	@/bin/rm -f y.tab.c parser.c
+@NO_FLEX_YACC@parser.cc: parser.y
+@NO_FLEX_YACC@	@/bin/rm -f y.tab.c parser.cc
 @NO_FLEX_YACC@	@/bin/rm -f y.tab.h parser.h
 @NO_FLEX_YACC@	$(YACC) -p bx -d $<
-@NO_FLEX_YACC@	@/bin/mv -f y.tab.c parser.c
+@NO_FLEX_YACC@	@/bin/mv -f y.tab.c parser.cc
 @NO_FLEX_YACC@	@/bin/mv -f y.tab.h parser.h
-@NO_FLEX_YACC@	@echo '#endif  /* if BX_DEBUGGER */' >> parser.c
-@NO_FLEX_YACC@	@echo '/* The #endif is appended by the makefile after running yacc. */' >> parser.c
+@NO_FLEX_YACC@	@echo '#endif  /* if BX_DEBUGGER */' >> parser.cc
+@NO_FLEX_YACC@	@echo '/* The #endif is appended by the makefile after running yacc. */' >> parser.cc
 
 @NO_FLEX_YACC@lexer.c: lexer.l
 @NO_FLEX_YACC@	$(LEX) -Pbx -t $< > lexer.c
@@ -112,7 +112,7 @@ dbg_main.o: debug.h
 ###########################################
 lexer.o: lexer.c debug.h ../config.h ../osdep.h ../cpu/decoder/decoder.h \
  parser.h
-parser.o: parser.c debug.h ../config.h ../osdep.h \
+parser.o: parser.cc debug.h ../config.h ../osdep.h \
  ../cpu/decoder/decoder.h
 dbg_breakpoints.o: dbg_breakpoints.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../cpu/decoder/decoder.h \

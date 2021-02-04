@@ -55,7 +55,7 @@ void bx_dbg_print_descriptor(Bit32u lo, Bit32u hi);
 void bx_dbg_print_descriptor64(Bit32u lo1, Bit32u hi1, Bit32u lo2, Bit32u hi2);
 
 static bx_param_bool_c *sim_running = NULL;
-static bx_bool bx_dbg_exit_called;
+static bool bx_dbg_exit_called;
 
 static char tmp_buf[512];
 static char tmp_buf_prev[512];
@@ -66,7 +66,7 @@ static FILE *debugger_log = NULL;
 
 static struct bx_debugger_state {
   // some fields used for single CPU debugger
-  bx_bool  auto_disassemble;
+  bool  auto_disassemble;
   unsigned disassemble_size;
   char     default_display_format;
   char     default_unit_size;
@@ -119,11 +119,11 @@ static struct {
 } bx_dbg_batch_dma;
 
 // some buffers for disassembly
-static bx_bool disasm_syntax_intel = 1;
+static bool disasm_syntax_intel = 1;
 static Bit8u bx_disasm_ibuf[32];
 static char  bx_disasm_tbuf[512];
 
-static bx_bool watchpoint_continue = 0;
+static bool watchpoint_continue = 0;
 unsigned num_write_watchpoints = 0;
 unsigned num_read_watchpoints = 0;
 bx_watchpoint write_watchpoint[BX_DBG_MAX_WATCHPONTS];
@@ -160,7 +160,7 @@ int bx_dbg_set_rcfile(const char *rcfile)
   return bx_nest_infile((char*)rcfile);
 }
 
-bx_bool bx_dbg_register_debug_info(const char *devname, void *dev)
+bool bx_dbg_register_debug_info(const char *devname, void *dev)
 {
   debug_info_t *debug_info = new debug_info_t;
   debug_info->name = devname;
@@ -195,7 +195,7 @@ void bx_dbg_info_cleanup(void)
   bx_debug_info_list = NULL;
 }
 
-bx_bool bx_dbg_info_find_device(const char *devname, debug_info_t **found_debug_info)
+bool bx_dbg_info_find_device(const char *devname, debug_info_t **found_debug_info)
 {
   debug_info_t *debug_info;
 
@@ -589,7 +589,7 @@ void bx_dbg_halt(unsigned cpu)
   }
 }
 
-void bx_dbg_watchpoint_continue(bx_bool watch_continue)
+void bx_dbg_watchpoint_continue(bool watch_continue)
 {
   watchpoint_continue = watch_continue;
   if (watchpoint_continue) {
@@ -1231,21 +1231,21 @@ void bx_dbg_quit_command(void)
   bx_dbg_exit(0);
 }
 
-void bx_dbg_trace_command(bx_bool enable)
+void bx_dbg_trace_command(bool enable)
 {
   BX_CPU(dbg_cpu)->trace = enable;
   dbg_printf("Tracing %s for CPU%d\n", enable ? "enabled" : "disabled",
      BX_CPU(dbg_cpu)->which_cpu());
 }
 
-void bx_dbg_trace_reg_command(bx_bool enable)
+void bx_dbg_trace_reg_command(bool enable)
 {
   BX_CPU(dbg_cpu)->trace_reg = enable;
   dbg_printf("Register-Tracing %s for CPU%d\n", enable ? "enabled" : "disabled",
      BX_CPU(dbg_cpu)->which_cpu());
 }
 
-void bx_dbg_trace_mem_command(bx_bool enable)
+void bx_dbg_trace_mem_command(bool enable)
 {
   BX_CPU(dbg_cpu)->trace_mem = enable;
   dbg_printf("Memory-Tracing %s for CPU%d\n", enable ? "enabled" : "disabled",
@@ -1261,7 +1261,7 @@ int timebp_timer = -1;
 Bit64u timebp_queue[MAX_CONCURRENT_BPS];
 int timebp_queue_size = 0;
 
-void bx_dbg_timebp_command(bx_bool absolute, Bit64u time)
+void bx_dbg_timebp_command(bool absolute, Bit64u time)
 {
   Bit64u abs_time = (absolute) ? time : time + bx_pc_system.time_ticks();
 
@@ -1359,12 +1359,12 @@ void bx_dbg_vmexitbp_command()
 #endif
 }
 
-bx_bool bx_dbg_read_linear(unsigned which_cpu, bx_address laddr, unsigned len, Bit8u *buf)
+bool bx_dbg_read_linear(unsigned which_cpu, bx_address laddr, unsigned len, Bit8u *buf)
 {
   unsigned remainsInPage;
   bx_phy_address paddr;
   unsigned read_len;
-  bx_bool paddr_valid;
+  bool paddr_valid;
 
 next_page:
   remainsInPage = 0x1000 - PAGE_OFFSET(laddr);
@@ -1416,7 +1416,7 @@ void bx_dbg_where_command()
     Bit8u buf[4];
 
     // bp = [bp];
-    bx_bool paddr_valid = BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(bp, &paddr);
+    bool paddr_valid = BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(bp, &paddr);
     if (paddr_valid) {
       if (BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), paddr, 4, buf)) {
         bp = conv_4xBit8u_to_Bit32u(buf);
@@ -1485,7 +1485,7 @@ void bx_dbg_xlate_address(bx_lin_address laddr)
 
   laddr &= BX_CONST64(0xfffffffffffff000);
 
-  bx_bool paddr_valid = BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(laddr, &paddr, &lpf_mask, 1);
+  bool paddr_valid = BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(laddr, &paddr, &lpf_mask, 1);
   if (paddr_valid) {
     dbg_printf("linear page 0x" FMT_ADDRX " maps to physical page 0x" FMT_PHY_ADDRX "\n", laddr, paddr);
   }
@@ -1611,7 +1611,7 @@ void bx_dbg_show_command(const char* arg)
   }
 }
 
-void bx_dbg_show_param_command(const char *param, bx_bool xml)
+void bx_dbg_show_param_command(const char *param, bool xml)
 {
   dbg_printf("show param name: <%s>\n", param);
   bx_param_c *node = SIM->get_param(param, SIM->get_bochs_root());
@@ -1683,7 +1683,7 @@ int bx_dbg_show_symbolic(void)
   {
     if(BX_CPU(dbg_cpu)->show_flag & Flag_call) {
       bx_phy_address phy = 0;
-      bx_bool valid = BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(BX_CPU(dbg_cpu)->guard_found.laddr, &phy);
+      bool valid = BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(BX_CPU(dbg_cpu)->guard_found.laddr, &phy);
       dbg_printf(FMT_TICK ": call ", bx_pc_system.time_ticks());
       dbg_print_guard_found(BX_CPU(dbg_cpu)->get_cpu_mode(),
         BX_CPU(dbg_cpu)->guard_found.cs, BX_CPU(dbg_cpu)->guard_found.eip,
@@ -1947,7 +1947,7 @@ void bx_dbg_unwatch(bx_phy_address address)
   }
 }
 
-void bx_dbg_continue_command(bx_bool expression)
+void bx_dbg_continue_command(bool expression)
 {
   if (! expression) {
     dbg_printf("continue condition is FALSE\n");
@@ -2098,7 +2098,7 @@ void bx_dbg_disassemble_current(int which_cpu, int print_time)
     return;
   }
 
-  bx_bool phy_valid = BX_CPU(which_cpu)->dbg_xlate_linear2phy(BX_CPU(which_cpu)->guard_found.laddr, &phy);
+  bool phy_valid = BX_CPU(which_cpu)->dbg_xlate_linear2phy(BX_CPU(which_cpu)->guard_found.laddr, &phy);
   if (! phy_valid) {
     dbg_printf("(%u).[" FMT_LL "d] ??? (physical address not available)\n", which_cpu, bx_pc_system.time_ticks());
     return;
@@ -2235,7 +2235,7 @@ void bx_dbg_set_icount_guard(int which_cpu, Bit32u n)
   BX_CPU(which_cpu)->guard_found.guard_found = 0;
 }
 
-void bx_dbg_set_auto_disassemble(bx_bool enable)
+void bx_dbg_set_auto_disassemble(bool enable)
 {
   bx_debugger.auto_disassemble = enable;
 }
@@ -2308,19 +2308,19 @@ void dbg_printf_binary(const char *format, Bit32u data, int bits)
   dbg_printf(format, num);
 }
 
-void bx_dbg_examine_command(const char *command, const char *format, bx_bool format_passed,
-               bx_address addr, bx_bool addr_passed)
+void bx_dbg_examine_command(const char *command, const char *format, bool format_passed,
+               bx_address addr, bool addr_passed)
 {
   unsigned repeat_count, i;
   char ch, display_format, unit_size;
-  bx_bool iteration, memory_dump = false;
+  bool iteration, memory_dump = false;
   unsigned data_size;
   Bit8u   data8;
   Bit16u  data16;
   Bit32u  data32;
   Bit64u  data64;
   unsigned columns, per_line, offset;
-  bx_bool is_linear;
+  bool is_linear;
   Bit8u databuf[8];
 
   dbg_printf("[bochs]:\n");
@@ -2705,7 +2705,7 @@ void bx_dbg_setpmem_command(bx_phy_address paddr, unsigned len, Bit32u val)
 
 void bx_dbg_set_symbol_command(const char *symbol, bx_address val)
 {
-  bx_bool is_OK = false;
+  bool is_OK = false;
   symbol++; // get past '$'
 
   if (!strcmp(symbol, "eip") || !strcmp(symbol, "rip")) {
@@ -3046,7 +3046,7 @@ void bx_dbg_info_idt_command(unsigned from, unsigned to)
 {
   bx_dbg_global_sreg_t idtr;
   BX_CPU(dbg_cpu)->dbg_get_idtr(&idtr);
-  bx_bool all = 0;
+  bool all = 0;
 
   if (to == (unsigned) EMPTY_ARG) {
     to = from;
@@ -3112,7 +3112,7 @@ void bx_dbg_info_gdt_command(unsigned from, unsigned to)
 {
   bx_dbg_global_sreg_t gdtr;
   BX_CPU(dbg_cpu)->dbg_get_gdtr(&gdtr);
-  bx_bool all = 0;
+  bool all = 0;
 
   if (to == (unsigned) EMPTY_ARG) {
     to = from;
@@ -3154,7 +3154,7 @@ void bx_dbg_info_ldt_command(unsigned from, unsigned to)
   bx_address ldtr_base = SIM->get_param_num("LDTR.base", dbg_cpu_list)->get64();
   Bit32u ldtr_limit = SIM->get_param_num("LDTR.limit_scaled", dbg_cpu_list)->get();
 
-  bx_bool all = 0;
+  bool all = 0;
 
   if (to == (unsigned) EMPTY_ARG) {
     to = from;
@@ -3245,7 +3245,7 @@ void bx_dbg_info_ivt_command(unsigned from, unsigned to)
 {
   unsigned char buff[4];
   unsigned seg, off;
-  bx_bool all = 0;
+  bool all = 0;
   bx_dbg_global_sreg_t idtr;
 
   BX_CPU(dbg_cpu)->dbg_get_idtr(&idtr);
@@ -3536,7 +3536,7 @@ void bx_dbg_dump_table(void)
   Bit64u lin, start_lin; // show only low 32 bit
   bx_phy_address phy, start_phy; // start of a valid translation interval
   bx_address lpf_mask = 0;
-  bx_bool valid;
+  bool valid;
 
   if (! BX_CPU(dbg_cpu)->cr0.get_PG()) {
     dbg_printf("paging off\n");
@@ -3611,7 +3611,7 @@ void bx_dbg_calc_command(Bit64u value)
   dbg_printf("0x" FMT_LL "x " FMT_LL "d\n", eval_value, eval_value);
 }
 
-bx_bool bx_dbg_eval_condition(char *condition)
+bool bx_dbg_eval_condition(char *condition)
 {
   extern Bit64u eval_value;
   bx_dbg_interpret_line(condition);
@@ -3769,7 +3769,7 @@ bx_address bx_dbg_get_rip(void)
   return BX_CPU(dbg_cpu)->get_instruction_pointer();
 }
 
-bx_bool bx_dbg_read_pmode_descriptor(Bit16u sel, bx_descriptor_t *descriptor)
+bool bx_dbg_read_pmode_descriptor(Bit16u sel, bx_descriptor_t *descriptor)
 {
   bx_selector_t selector;
   Bit32u dword1, dword2;

@@ -286,7 +286,7 @@ union YYSTYPE
 
   char    *sval;
   Bit64u   uval;
-  bx_bool  bval;
+  unsigned bval;
 
 #line 292 "y.tab.h" /* yacc.c:1909  */
 };

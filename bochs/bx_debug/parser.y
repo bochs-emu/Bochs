@@ -14,7 +14,7 @@ Bit64u eval_value;
 %union {
   char    *sval;
   Bit64u   uval;
-  bx_bool  bval;
+  unsigned bval;
 }
 
 // Common registers
