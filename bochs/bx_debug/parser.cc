@@ -355,7 +355,7 @@ union YYSTYPE
 
   char    *sval;
   Bit64u   uval;
-  bx_bool  bval;
+  unsigned bval;
 
 #line 361 "y.tab.c" /* yacc.c:355  */
 };
