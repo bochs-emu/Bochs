@@ -596,7 +596,7 @@ void bx_uhci_core_c::uhci_timer(void)
   }
   if (hub.usb_command.schedule) {
     busy = 1;
-    bx_bool interrupt = 0, shortpacket = 0, stalled = 0, was_inactive = 0;
+    bool interrupt = 0, shortpacket = 0, stalled = 0, was_inactive = 0;
     struct TD td;
     struct HCSTACK stack[USB_STACK_SIZE+1];  // queue stack for this item only
     Bit32s stk = 0;
@@ -647,9 +647,9 @@ void bx_uhci_core_c::uhci_timer(void)
           DEV_MEM_READ_PHYSICAL(address+4,  4, (Bit8u*) &td.dword1);
           DEV_MEM_READ_PHYSICAL(address+8,  4, (Bit8u*) &td.dword2);
           DEV_MEM_READ_PHYSICAL(address+12, 4, (Bit8u*) &td.dword3);
-          bx_bool spd = (td.dword1 & (1<<29)) ? 1 : 0;
+          bool spd = (td.dword1 & (1<<29)) ? 1 : 0;
           stack[stk].next = td.dword0 & ~0xF;
-          bx_bool depthbreadth = (td.dword0 & 0x0004) ? 1 : 0;     // 1 = depth first, 0 = breadth first
+          bool depthbreadth = (td.dword0 & 0x0004) ? 1 : 0;     // 1 = depth first, 0 = breadth first
           stack[stk].q = (td.dword0 & 0x0002) ? 1 : 0;
           stack[stk].t = (td.dword0 & 0x0001) ? 1 : 0;
           if (td.dword1 & (1<<23)) {  // is it an active TD
@@ -775,7 +775,7 @@ bool bx_uhci_core_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
 
   int len = 0, ret = 0;
   USBAsync *p;
-  bx_bool completion;
+  bool completion;
 
   Bit16u maxlen = (td->dword2 >> 21);
   Bit8u  addr   = (td->dword2 >> 8) & 0x7F;

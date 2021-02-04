@@ -538,8 +538,8 @@ void bx_usb_ehci_c::remove_device(Bit8u port)
 
 void bx_usb_ehci_c::set_connect_status(Bit8u port, int type, bool connected)
 {
-  const bx_bool ccs_org = BX_EHCI_THIS hub.usb_port[port].portsc.ccs;
-  const bx_bool ped_org = BX_EHCI_THIS hub.usb_port[port].portsc.ped;
+  const bool ccs_org = BX_EHCI_THIS hub.usb_port[port].portsc.ccs;
+  const bool ped_org = BX_EHCI_THIS hub.usb_port[port].portsc.ped;
 
   usb_device_c *device = BX_EHCI_THIS hub.usb_port[port].device;
   if (device != NULL) {
@@ -756,7 +756,7 @@ bool bx_usb_ehci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
 {
   Bit32u value = *((Bit32u *) data);
   Bit32u value_hi = *((Bit32u *) ((Bit8u *) data + 4));
-  bx_bool oldcfg, oldpo, oldpr, oldfpr;
+  bool oldcfg, oldpo, oldpr, oldfpr;
   int i, port;
   const Bit32u offset = (Bit32u) (addr - BX_EHCI_THIS pci_bar[0].addr);
 

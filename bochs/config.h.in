@@ -1,5 +1,5 @@
 //
-//  Copyright (C) 2001-2020  The Bochs Project
+//  Copyright (C) 2001-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -526,10 +526,6 @@ typedef Bit32u bx_phy_address;
 #else
 #  error "could not define bx_ptr_equiv_t to size of int*"
 #endif
-
-// Use a boolean type that will not conflict with the builtin type
-// on any system.
-typedef Bit32u bx_bool;
 
 #if BX_WITH_MACOS
 #  define bx_ptr_t char *

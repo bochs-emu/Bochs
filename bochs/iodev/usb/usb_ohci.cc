@@ -1219,7 +1219,7 @@ bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
   Bit32u addr;
   Bit16u maxlen = 0;
   USBAsync *p;
-  bx_bool completion;
+  bool completion;
 
   addr = ED_GET_HEADP(ed);
   p = find_async_packet(&packets, addr);
@@ -1461,8 +1461,8 @@ void bx_usb_ohci_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_l
 
 void bx_usb_ohci_c::usb_set_connect_status(Bit8u port, int type, bool connected)
 {
-  const bx_bool ccs_org = BX_OHCI_THIS hub.usb_port[port].HcRhPortStatus.ccs;
-  const bx_bool pes_org = BX_OHCI_THIS hub.usb_port[port].HcRhPortStatus.pes;
+  const bool ccs_org = BX_OHCI_THIS hub.usb_port[port].HcRhPortStatus.ccs;
+  const bool pes_org = BX_OHCI_THIS hub.usb_port[port].HcRhPortStatus.pes;
 
   usb_device_c *device = BX_OHCI_THIS hub.usb_port[port].device;
   if (device != NULL) {

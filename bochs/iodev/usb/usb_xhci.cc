@@ -1934,8 +1934,8 @@ void bx_usb_xhci_c::process_transfer_ring(const int slot, const int ep)
   int port_num = BX_XHCI_THIS hub.slots[slot].slot_context.rh_port_num;
   USBAsync *p;
   Bit8u cur_direction = (ep & 1) ? USB_TOKEN_IN : USB_TOKEN_OUT; // for NORMAL without SETUP
-  bx_bool is_transfer_trb, is_immed_data, ioc, spd_occurred = 0;
-  bx_bool first_event_trb_encountered = 0;
+  bool is_transfer_trb, is_immed_data, ioc, spd_occurred = 0;
+  bool first_event_trb_encountered = 0;
   Bit32u bytes_not_transferred = 0;
   int comp_code = 0;
   Bit8u immed_data[8];
@@ -2099,7 +2099,7 @@ void bx_usb_xhci_c::process_transfer_ring(const int slot, const int ep)
       // is there a transfer to be done?
       if (is_transfer_trb) {
         p = find_async_packet(&BX_XHCI_THIS packets, org_addr);
-        bx_bool completion = (p != NULL);
+        bool completion = (p != NULL);
         if (completion && !p->done) {
           return;
         }
@@ -2483,7 +2483,7 @@ void bx_usb_xhci_c::process_command_ring(void)
 
       case CONFIG_EP: {
         slot = TRB_GET_SLOT(trb.command);  // slots are 1 based
-        bx_bool dc = TRB_DC(trb.command);
+        bool dc = TRB_DC(trb.command);
         if (BX_XHCI_THIS hub.slots[slot].enabled) {
           get_dwords((bx_phy_address) trb.parameter, (Bit32u*)buffer, (CONTEXT_SIZE + (CONTEXT_SIZE * 32)) >> 2);
           DEV_MEM_READ_PHYSICAL((bx_phy_address) trb.parameter,     4, (Bit8u*)&d_flags);
@@ -2572,7 +2572,7 @@ void bx_usb_xhci_c::process_command_ring(void)
             BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.tr_dequeue_pointer = 
               BX_XHCI_THIS hub.slots[slot].ep_context[ep].enqueue_pointer = (trb.parameter & (Bit64u) ~0xF);
             BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.dcs =
-              BX_XHCI_THIS hub.slots[slot].ep_context[ep].rcs = (bx_bool) (trb.parameter & 1);
+              BX_XHCI_THIS hub.slots[slot].ep_context[ep].rcs = (bool) (trb.parameter & 1);
             BX_XHCI_THIS hub.slots[slot].ep_context[ep].edtla = 0;
             update_ep_context(slot, ep);
             comp_code = TRB_SUCCESS;
@@ -3142,8 +3142,8 @@ void bx_usb_xhci_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_l
 
 void bx_usb_xhci_c::usb_set_connect_status(Bit8u port, int type, bool connected)
 {
-  const bx_bool ccs_org = BX_XHCI_THIS hub.usb_port[port].portsc.ccs;
-  const bx_bool ped_org = BX_XHCI_THIS hub.usb_port[port].portsc.ped;
+  const bool ccs_org = BX_XHCI_THIS hub.usb_port[port].portsc.ccs;
+  const bool ped_org = BX_XHCI_THIS hub.usb_port[port].portsc.ped;
 
   usb_device_c *device = BX_XHCI_THIS hub.usb_port[port].device;
   if (device != NULL) {

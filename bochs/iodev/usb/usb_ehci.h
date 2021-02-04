@@ -235,19 +235,19 @@ typedef struct {
 
   struct {
     struct {
-      Bit8u   itc;
-      bx_bool iaad;
-      bx_bool ase;
-      bx_bool pse;
-      bx_bool hcreset;
-      bx_bool rs;
+      Bit8u itc;
+      bool  iaad;
+      bool  ase;
+      bool  pse;
+      bool  hcreset;
+      bool  rs;
     } UsbCmd;
     struct {
-      bx_bool ass;
-      bx_bool pss;
-      bx_bool recl;
-      bx_bool hchalted;
-      Bit8u   inti;
+      bool  ass;
+      bool  pss;
+      bool  recl;
+      bool  hchalted;
+      Bit8u inti;
     } UsbSts;
     Bit8u  UsbIntr;
     Bit32u FrIndex;
@@ -260,25 +260,25 @@ typedef struct {
   struct {
     // our data
     usb_device_c *device;   // device connected to this port
-    bx_bool owner_change;
+    bool owner_change;
     struct {
-      bx_bool woe;
-      bx_bool wde;
-      bx_bool wce;
-      Bit8u   ptc;
-      Bit8u   pic;
-      bx_bool po;
-      bx_bool pp;
-      Bit8u   ls;
-      bx_bool pr;
-      bx_bool sus;
-      bx_bool fpr;
-      bx_bool occ;
-      bx_bool oca;
-      bx_bool pec;
-      bx_bool ped;
-      bx_bool csc;
-      bx_bool ccs;
+      bool  woe;
+      bool  wde;
+      bool  wce;
+      Bit8u ptc;
+      Bit8u pic;
+      bool  po;
+      bool  pp;
+      Bit8u ls;
+      bool  pr;
+      bool  sus;
+      bool  fpr;
+      bool  occ;
+      bool  oca;
+      bool  pec;
+      bool  ped;
+      bool  csc;
+      bool  ccs;
     } portsc;
   } usb_port[USB_EHCI_PORTS];
 

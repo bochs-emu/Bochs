@@ -51,14 +51,14 @@ typedef struct {
   //  Bit 1 = host controller reset
   //  Bit 0 = run/stop schedule
   struct {
-    bx_bool max_packet_size; //(bit 7) 0 = 32 bytes, 1 = 64 bytes
-    bx_bool configured;      //(bit 6)
-    bx_bool debug;           //(bit 5)
-    bx_bool resume;          //(bit 4)
-    bx_bool suspend;         //(bit 3)
-    bx_bool reset;           //(bit 2)
-    bx_bool host_reset;      //(bit 1)
-    bx_bool schedule;        //(bit 0) 0 = Stop, 1 = Run
+    bool  max_packet_size; //(bit 7) 0 = 32 bytes, 1 = 64 bytes
+    bool  configured;      //(bit 6)
+    bool  debug;           //(bit 5)
+    bool  resume;          //(bit 4)
+    bool  suspend;         //(bit 3)
+    bool  reset;           //(bit 2)
+    bool  host_reset;      //(bit 1)
+    bool  schedule;        //(bit 0) 0 = Stop, 1 = Run
   } usb_command;
 
   // Status Register
@@ -70,13 +70,13 @@ typedef struct {
   //  Bit 1 = USB error interrupt
   //  Bit 0 = USB interrupt
   struct {
-    bx_bool host_halted;     //(bit 5)
-    bx_bool host_error;      //(bit 4)
-    bx_bool pci_error;       //(bit 3)
-    bx_bool resume;          //(bit 2)
-    bx_bool error_interrupt; //(bit 1)
-    bx_bool interrupt;       //(bit 0)
-    Bit8u   status2; // bit 0 and 1 are used to generate the interrupt
+    bool  host_halted;     //(bit 5)
+    bool  host_error;      //(bit 4)
+    bool  pci_error;       //(bit 3)
+    bool  resume;          //(bit 2)
+    bool  error_interrupt; //(bit 1)
+    bool  interrupt;       //(bit 0)
+    Bit8u status2; // bit 0 and 1 are used to generate the interrupt
   } usb_status;
 
   // Interrupt Enable Register
@@ -86,10 +86,10 @@ typedef struct {
   //  Bit 1 = enable resume
   //  Bit 0 = enable timeout/crc
   struct {
-    bx_bool short_packet; //(bit 3)
-    bx_bool on_complete;  //(bit 2)
-    bx_bool resume;       //(bit 1)
-    bx_bool timeout_crc;  //(bit 0)
+    bool  short_packet; //(bit 3)
+    bool  on_complete;  //(bit 2)
+    bool  resume;       //(bit 1)
+    bool  timeout_crc;  //(bit 0)
   } usb_enable;
 
   // Frame Number Register
@@ -136,19 +136,19 @@ typedef struct {
     usb_device_c *device;   // device connected to this port
 
     // bit reps of actual port
-    bx_bool suspend;
-    bx_bool reset;
-    bx_bool low_speed;
-    bx_bool resume;
-    bx_bool line_dminus;
-    bx_bool line_dplus;
-    bx_bool able_changed;
-    bx_bool enabled;
-    bx_bool connect_changed;
-    bx_bool status;
+    bool suspend;
+    bool reset;
+    bool low_speed;
+    bool resume;
+    bool line_dminus;
+    bool line_dplus;
+    bool able_changed;
+    bool enabled;
+    bool connect_changed;
+    bool status;
   } usb_port[USB_UHCI_PORTS];
 
-  Bit8u   devfunc;
+  Bit8u  devfunc;
 } bx_uhci_core_t;
 
 #pragma pack (push, 1)
@@ -166,8 +166,8 @@ struct TD {
 struct HCSTACK {
   Bit32u  next;
   Bit8u   d;   // if queue, denotes VERT or HORZ
-  bx_bool q;
-  bx_bool t;
+  bool    q;
+  bool    t;
 };
 
 class bx_uhci_core_c : public bx_pci_device_c {
@@ -186,7 +186,7 @@ public:
 protected:
   bx_uhci_core_t hub;
   Bit8u          global_reset;
-  bx_bool        busy;
+  bool           busy;
 
   USBAsync *packets;
 

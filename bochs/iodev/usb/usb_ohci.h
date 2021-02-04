@@ -148,26 +148,26 @@ typedef struct {
   struct OHCI_OP_REGS {
     Bit16u HcRevision;
     struct {
-      Bit32u reserved;           // 21 bit reserved                    = 0x000000       R   R
-      bx_bool rwe;               //  1 bit RemoteWakeupEnable          = 0b             RW  R
-      bx_bool rwc;               //  1 bit RemoteWakeupConnected       = 0b             RW  RW
-      bx_bool ir;                //  1 bit InterruptRouting            = 0b             RW  R
-      Bit8u   hcfs;              //  2 bit HostControllerFuncState     = 00b            RW  RW
-      bx_bool ble;               //  1 bit BulkListEnable              = 0b             RW  R
-      bx_bool cle;               //  1 bit ControlListEnable           = 0b             RW  R
-      bx_bool ie;                //  1 bit IsochronousEnable           = 0b             RW  R
-      bx_bool ple;               //  1 bit PeriodicListEnable          = 0b             RW  R
-      Bit8u   cbsr;              //  2 bit ControlBulkService Ratio    = 00b            RW  R
-    } HcControl;                 //                                    = 0x00000000
+      Bit32u reserved;          // 21 bit reserved                    = 0x000000       R   R
+      bool   rwe;               //  1 bit RemoteWakeupEnable          = 0b             RW  R
+      bool   rwc;               //  1 bit RemoteWakeupConnected       = 0b             RW  RW
+      bool   ir;                //  1 bit InterruptRouting            = 0b             RW  R
+      Bit8u  hcfs;              //  2 bit HostControllerFuncState     = 00b            RW  RW
+      bool   ble;               //  1 bit BulkListEnable              = 0b             RW  R
+      bool   cle;               //  1 bit ControlListEnable           = 0b             RW  R
+      bool   ie;                //  1 bit IsochronousEnable           = 0b             RW  R
+      bool   ple;               //  1 bit PeriodicListEnable          = 0b             RW  R
+      Bit8u  cbsr;              //  2 bit ControlBulkService Ratio    = 00b            RW  R
+    } HcControl;                //                                    = 0x00000000
     struct {
-      Bit16u reserved0;          // 14 bit reserved                    = 0x000000       R   R
-      Bit8u  soc;                //  2 bit SchedulingOverrunCount      = 00b            R   RW
-      Bit16u reserved1;          // 12 bit reserved                    = 0x000000       R   R
-      bx_bool ocr;               //  1 bit OwnershipChangeRequest      = 0b             RW  RW
-      bx_bool blf;               //  1 bit BulkListFilled              = 0b             RW  RW
-      bx_bool clf;               //  1 bit ControlListFilled           = 0b             RW  RW
-      bx_bool hcr;               //  1 bit HostControllerReset         = 0b             RW  RW
-    } HcCommandStatus;           //                                    = 0x00000000
+      Bit16u reserved0;         // 14 bit reserved                    = 0x000000       R   R
+      Bit8u  soc;               //  2 bit SchedulingOverrunCount      = 00b            R   RW
+      Bit16u reserved1;         // 12 bit reserved                    = 0x000000       R   R
+      bool   ocr;               //  1 bit OwnershipChangeRequest      = 0b             RW  RW
+      bool   blf;               //  1 bit BulkListFilled              = 0b             RW  RW
+      bool   clf;               //  1 bit ControlListFilled           = 0b             RW  RW
+      bool   hcr;               //  1 bit HostControllerReset         = 0b             RW  RW
+    } HcCommandStatus;          //                                    = 0x00000000
     Bit32u HcInterruptStatus;
     Bit32u HcInterruptEnable;
     Bit32u HcHCCA;
@@ -178,39 +178,39 @@ typedef struct {
     Bit32u HcBulkCurrentED;
     Bit32u HcDoneHead;
     struct {
-      bx_bool fit;               //  1 bit FrameIntervalToggle         = 0b             RW  R
-      Bit16u  fsmps;             // 15 bit FSLargestDataPacket         = TBD (0)        RW  R
-      Bit8u   reserved;          //  2 bit reserved                    = 00b            R   R
-      Bit16u  fi;                // 14 bit FrameInterval               = 0x2EDF         RW  R
-    } HcFmInterval;              //                                    = 0x00002EDF
-    bx_bool HcFmRemainingToggle; //  1 bit FrameRemainingToggle        = 0b             R   RW
+      bool   fit;               //  1 bit FrameIntervalToggle         = 0b             RW  R
+      Bit16u fsmps;             // 15 bit FSLargestDataPacket         = TBD (0)        RW  R
+      Bit8u  reserved;          //  2 bit reserved                    = 00b            R   R
+      Bit16u fi;                // 14 bit FrameInterval               = 0x2EDF         RW  R
+    } HcFmInterval;             //                                    = 0x00002EDF
+    bool   HcFmRemainingToggle; //  1 bit FrameRemainingToggle        = 0b             R   RW
     Bit32u HcFmNumber;
     Bit32u HcPeriodicStart;
     Bit16u HcLSThreshold;
     struct {
-      Bit8u   potpgt;            //  8 bit PowerOnToPowerGoodTime      = 0x10           RW  R
-      Bit16u  reserved;          // 11 bit reserved                    = 0x000          R   R
-      bx_bool nocp;              //  1 bit NoOverCurrentProtection     = 0b             RW  R
-      bx_bool ocpm;              //  1 bit OverCurrentProtectionMode   = 1b             RW  R
-      bx_bool dt;                //  1 bit DeviceType                  = 0b             R   R
-      bx_bool nps;               //  1 bit NoPowerSwitching            = 0b             RW  R
-      bx_bool psm;               //  1 bit PowerSwitchingMode          = 1b             RW  R
-      Bit8u   ndp;               //  8 bit NumberDownstreamPorts       = NUMPORTS       RW  R
-    } HcRhDescriptorA;           //                                    = 0x100009xx
+      Bit8u  potpgt;            //  8 bit PowerOnToPowerGoodTime      = 0x10           RW  R
+      Bit16u reserved;          // 11 bit reserved                    = 0x000          R   R
+      bool   nocp;              //  1 bit NoOverCurrentProtection     = 0b             RW  R
+      bool   ocpm;              //  1 bit OverCurrentProtectionMode   = 1b             RW  R
+      bool   dt;                //  1 bit DeviceType                  = 0b             R   R
+      bool   nps;               //  1 bit NoPowerSwitching            = 0b             RW  R
+      bool   psm;               //  1 bit PowerSwitchingMode          = 1b             RW  R
+      Bit8u  ndp;               //  8 bit NumberDownstreamPorts       = NUMPORTS       RW  R
+    } HcRhDescriptorA;          //                                    = 0x100009xx
     struct {
-      Bit16u  ppcm;              // 16 bit PortPowerControlMask        = 0x0002         RW  R
-      Bit16u  dr;                // 16 bit DeviceRemovable             = 0x0000         RW  R
-    } HcRhDescriptorB;           //                                    = 0x00020000
+      Bit16u ppcm;              // 16 bit PortPowerControlMask        = 0x0002         RW  R
+      Bit16u dr;                // 16 bit DeviceRemovable             = 0x0000         RW  R
+    } HcRhDescriptorB;          //                                    = 0x00020000
     struct {
-      bx_bool crwe;              //  1 bit ClearRemoteWakeupEnable     = 0b             WC  R
-      Bit16u  reserved0;         // 13 bit reserved                    = 0x000000       R   R
-      bx_bool ocic;              //  1 bit OverCurrentIndicatorChange  = 0b             RW  RW
-      bx_bool lpsc;              //  1 bit LocalPowerStatusChange(r)   = 0b             RW  R
-      bx_bool drwe;              //  1 bit DeviceRemoteWakeupEnable(r) = 0b             RW  R
-      Bit16u  reserved1;         // 13 bit reserved                    = 0x000000       R   R
-      bx_bool oci;               //  1 bit OverCurrentIndicator        = 0b             R   RW
-      bx_bool lps;               //  1 bit LocalPowerStatus(r)         = 0b             RW  R
-    } HcRhStatus;                //                                    = 0x00000000
+      bool   crwe;              //  1 bit ClearRemoteWakeupEnable     = 0b             WC  R
+      Bit16u reserved0;         // 13 bit reserved                    = 0x000000       R   R
+      bool   ocic;              //  1 bit OverCurrentIndicatorChange  = 0b             RW  RW
+      bool   lpsc;              //  1 bit LocalPowerStatusChange(r)   = 0b             RW  R
+      bool   drwe;              //  1 bit DeviceRemoteWakeupEnable(r) = 0b             RW  R
+      Bit16u reserved1;         // 13 bit reserved                    = 0x000000       R   R
+      bool   oci;               //  1 bit OverCurrentIndicator        = 0b             R   RW
+      bool   lps;               //  1 bit LocalPowerStatus(r)         = 0b             RW  R
+    } HcRhStatus;               //                                    = 0x00000000
   } op_regs;
 
   struct {
@@ -218,28 +218,28 @@ typedef struct {
     usb_device_c *device;   // device connected to this port
 
     struct {
-      Bit16u  reserved0;         // 11 bit reserved                    = 0x000000       R   R
-      bx_bool prsc;              //  1 bit PortResetStatusChange       = 0b             RW  RW
-      bx_bool ocic;              //  1 bit OverCurrentIndicatorChange  = 0b             RW  RW
-      bx_bool pssc;              //  1 bit PortSuspendStatusChange     = 0b             RW  RW
-      bx_bool pesc;              //  1 bit PortEnableStatusChange      = 0b             RW  RW
-      bx_bool csc;               //  1 bit ConnectStatusChange         = 0b             RW  RW
-      Bit8u   reserved1;         //  6 bit reserved                    = 0x00           R   R
-      bx_bool lsda;              //  1 bit LowSpeedDeviceAttached      = 0b             RW  RW
-      bx_bool pps;               //  1 bit PortPowerStatus             = 0b             RW  RW
-      Bit8u   reserved2;         //  3 bit reserved                    = 0x0            R   R
-      bx_bool prs;               //  1 bit PortResetStatus             = 0b             RW  RW
-      bx_bool poci;              //  1 bit PortOverCurrentIndicator    = 0b             RW  RW
-      bx_bool pss;               //  1 bit PortSuspendStatus           = 0b             RW  RW
-      bx_bool pes;               //  1 bit PortEnableStatus            = 0b             RW  RW
-      bx_bool ccs;               //  1 bit CurrentConnectStatus        = 0b             RW  RW
+      Bit16u reserved0;         // 11 bit reserved                    = 0x000000       R   R
+      bool   prsc;              //  1 bit PortResetStatusChange       = 0b             RW  RW
+      bool   ocic;              //  1 bit OverCurrentIndicatorChange  = 0b             RW  RW
+      bool   pssc;              //  1 bit PortSuspendStatusChange     = 0b             RW  RW
+      bool   pesc;              //  1 bit PortEnableStatusChange      = 0b             RW  RW
+      bool   csc;               //  1 bit ConnectStatusChange         = 0b             RW  RW
+      Bit8u  reserved1;         //  6 bit reserved                    = 0x00           R   R
+      bool   lsda;              //  1 bit LowSpeedDeviceAttached      = 0b             RW  RW
+      bool   pps;               //  1 bit PortPowerStatus             = 0b             RW  RW
+      Bit8u  reserved2;         //  3 bit reserved                    = 0x0            R   R
+      bool   prs;               //  1 bit PortResetStatus             = 0b             RW  RW
+      bool   poci;              //  1 bit PortOverCurrentIndicator    = 0b             RW  RW
+      bool   pss;               //  1 bit PortSuspendStatus           = 0b             RW  RW
+      bool   pes;               //  1 bit PortEnableStatus            = 0b             RW  RW
+      bool   ccs;               //  1 bit CurrentConnectStatus        = 0b             RW  RW
     } HcRhPortStatus;
   } usb_port[USB_OHCI_PORTS];
 
   Bit8u devfunc;
   unsigned ohci_done_count;
-  bx_bool  use_control_head;
-  bx_bool  use_bulk_head;
+  bool     use_control_head;
+  bool     use_bulk_head;
   Bit64u   sof_time;
 
   Bit8u device_change;
