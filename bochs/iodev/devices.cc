@@ -67,6 +67,9 @@ bx_devices_c::~bx_devices_c()
 {
   timer_handle = BX_NULL_TIMER_HANDLE;
   bx_hdimage_ctl.exit();
+#if BX_NETWORKING
+  bx_netmod_ctl.exit();
+#endif
 }
 
 void bx_devices_c::init_stubs()
@@ -171,17 +174,6 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   bx_virt_timer.init();
   bx_slowdown_timer.init();
 
-  // BBD: At present, the only difference between "core" and "optional"
-  // plugins is that initialization and reset of optional plugins is handled
-  // by the plugin device list ().  Init and reset of core plugins is done
-  // "by hand" in this file.  Basically, we're using core plugins when we
-  // want to control the init order.
-  //
-#if BX_NETWORKING
-  network_enabled = is_network_enabled();
-  if (network_enabled)
-    bx_netmod_ctl.init();
-#endif
 #if BX_SUPPORT_SOUNDLOW
   sound_enabled = is_sound_enabled();
   if (sound_enabled) {
@@ -457,10 +449,6 @@ void bx_devices_c::exit()
   // unload optional plugins first
   bx_unload_plugins();
   bx_unload_core_plugins();
-#if BX_NETWORKING
-  if (network_enabled)
-    bx_netmod_ctl.exit();
-#endif
 #if BX_SUPPORT_SOUNDLOW
   if (sound_enabled)
     bx_soundmod_ctl.exit();

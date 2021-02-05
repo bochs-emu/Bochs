@@ -28,6 +28,9 @@
 #include "cpu/cpu.h"
 #include "iodev/iodev.h"
 #include "iodev/hdimage/hdimage.h"
+#if BX_NETWORKING
+#include "iodev/network/netmod.h"
+#endif
 
 #ifdef HAVE_LOCALE_H
 #include <locale.h>
@@ -1272,8 +1275,8 @@ void bx_init_hardware()
   BX_INFO(("  Handlers Chaining speedups: %s", BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS?"yes":"no"));
   BX_INFO(("Devices configuration"));
   BX_INFO(("  PCI support: %s", BX_SUPPORT_PCI?"i440FX i430FX i440BX":"no"));
-#if BX_SUPPORT_NE2K || BX_SUPPORT_E1000
-  BX_INFO(("  Networking support:%s%s",
+#if BX_NETWORKING
+  BX_INFO(("  Network devices support:%s%s",
            BX_SUPPORT_NE2K?" NE2000":"", BX_SUPPORT_E1000?" E1000":""));
 #else
   BX_INFO(("  Networking: no"));
@@ -1294,7 +1297,9 @@ void bx_init_hardware()
   BX_INFO(("  VGA extension support: vbe%s%s",
            BX_SUPPORT_CLGD54XX?" cirrus":"", BX_SUPPORT_VOODOO?" voodoo":""));
   bx_hdimage_ctl.list_modules();
-
+#if BX_NETWORKING
+  bx_netmod_ctl.list_modules();
+#endif
   // Check if there is a romimage
   if (SIM->get_param_string(BXPN_ROM_PATH)->isempty()) {
     BX_ERROR(("No romimage to load. Is your bochsrc file loaded/valid ?"));

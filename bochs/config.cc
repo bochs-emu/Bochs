@@ -22,6 +22,9 @@
 #include "bxversion.h"
 #include "iodev/iodev.h"
 #include "iodev/hdimage/hdimage.h"
+#if BX_NETWORKING
+#include "iodev/network/netmod.h"
+#endif
 #include "param_names.h"
 #include <assert.h>
 
@@ -144,37 +147,6 @@ const char *bx_param_string_handler(bx_param_string_c *param, int set,
 
 void bx_init_std_nic_options(const char *name, bx_list_c *menu)
 {
-  // networking module choices
-  static const char *eth_module_list[] = {
-    "null",
-#if BX_NETMOD_LINUX
-    "linux",
-#endif
-#if BX_NETMOD_TAP
-    "tap",
-#endif
-#if BX_NETMOD_TUNTAP
-    "tuntap",
-#endif
-#if BX_NETMOD_WIN32
-    "win32",
-#endif
-#if BX_NETMOD_FBSD
-    "fbsd",
-#endif
-#if BX_NETMOD_VDE
-    "vde",
-#endif
-#if BX_NETMOD_SLIRP
-    "slirp",
-#endif
-#if BX_NETMOD_SOCKET
-    "socket",
-#endif
-    "vnet",
-    NULL
-  };
-
   bx_param_enum_c *ethmod;
   bx_param_bytestring_c *macaddr;
   bx_param_filename_c *path, *bootrom;
@@ -192,7 +164,7 @@ void bx_init_std_nic_options(const char *name, bx_list_c *menu)
     "ethmod",
     "Ethernet module",
     "Module used for the connection to the real net.",
-    eth_module_list,
+    bx_netmod_ctl.get_module_names(),
     0,
     0);
   ethmod->set_by_name("null");
@@ -1538,10 +1510,13 @@ void bx_init_options()
   usb->set_options(usb->USE_TAB_WINDOW | usb->SHOW_PARENT);
   // USB host controller options initialized in the devive plugin code
 
+#if BX_NETWORKING
   // network subtree
   bx_list_c *network = new bx_list_c(root_param, "network", "Network Configuration");
   network->set_options(network->USE_TAB_WINDOW | network->SHOW_PARENT);
+  bx_netmod_ctl.init();
   // network device options initialized in the devive plugin code
+#endif
 
   // sound subtree
   bx_list_c *sound = new bx_list_c(root_param, "sound", "Sound Configuration");

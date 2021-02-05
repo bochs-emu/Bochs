@@ -34,6 +34,8 @@
 
 bx_netmod_ctl_c bx_netmod_ctl;
 
+const char **net_module_names;
+
 bx_netmod_ctl_c::bx_netmod_ctl_c()
 {
   put("netmodctl", "NETCTL");
@@ -41,11 +43,57 @@ bx_netmod_ctl_c::bx_netmod_ctl_c()
 
 void bx_netmod_ctl_c::init(void)
 {
-  // Nothing here yet
+  Bit8u count = 0;
+
+#if !BX_PLUGINS
+  count = eth_locator_c::get_modules_count();
+#else
+  count = PLUG_get_plugins_count(PLUGTYPE_NET);
+#endif
+  net_module_names = (const char**) malloc((count + 1) * sizeof(char*));
+  for (Bit8u i = 0; i < count; i++) {
+#if !BX_PLUGINS
+    net_module_names[i] = eth_locator_c::get_module_name(i);
+#else
+    net_module_names[i] = PLUG_get_plugin_name(PLUGTYPE_NET, i);
+#endif
+  }
+  net_module_names[count] = NULL;
+}
+
+const char **bx_netmod_ctl_c::get_module_names(void)
+{
+  return net_module_names;
+}
+
+void bx_netmod_ctl_c::list_modules(void)
+{
+  char list[60];
+  Bit8u i = 0;
+  size_t len = 0, len1;
+
+  BX_INFO(("Networking modules"));
+  list[0] = 0;
+  while (net_module_names[i] != NULL) {
+    len1 = strlen(net_module_names[i]);
+    if ((len + len1 + 1) > 60) {
+      BX_INFO((" %s", list));
+      list[0] = 0;
+      len = 0;
+    }
+    strcat(list, " ");
+    strcat(list, net_module_names[i]);
+    len = strlen(list);
+    i++;
+  }
+  if (len > 0) {
+    BX_INFO((" %s", list));
+  }
 }
 
 void bx_netmod_ctl_c::exit(void)
 {
+  free(net_module_names);
   eth_locator_c::cleanup();
 }
 
@@ -83,6 +131,7 @@ void* bx_netmod_ctl_c::init_module(bx_list_c *base, void *rxh, void *rxstat, bx_
 }
 
 eth_locator_c *eth_locator_c::all;
+Bit8u eth_locator_c::count = 0;
 
 //
 // Each pktmover module has a static locator class that registers
@@ -90,9 +139,18 @@ eth_locator_c *eth_locator_c::all;
 //
 eth_locator_c::eth_locator_c(const char *type)
 {
-  next = all;
-  all  = this;
+  eth_locator_c *ptr;
+
   this->type = type;
+  this->next = NULL;
+  if (all == NULL) {
+    all  = this;
+  } else {
+    ptr = all;
+    while (ptr->next) ptr = ptr->next;
+    ptr->next = this;
+  }
+  count++;
 }
 
 eth_locator_c::~eth_locator_c()
@@ -114,6 +172,24 @@ eth_locator_c::~eth_locator_c()
   if (ptr) {
     ptr->next = this->next;
   }
+}
+
+Bit8u eth_locator_c::get_modules_count()
+{
+  return count;
+}
+
+const char* eth_locator_c::get_module_name(Bit8u index)
+{
+  eth_locator_c *ptr;
+  Bit8u n = 0;
+
+  for (ptr = all; ptr != NULL; ptr = ptr->next) {
+    if (n == index)
+      return ptr->type;
+    n++;
+  }
+  return NULL;
 }
 
 bool eth_locator_c::module_present(const char *type)

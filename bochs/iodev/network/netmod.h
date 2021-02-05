@@ -70,6 +70,8 @@ public:
   bx_netmod_ctl_c();
   virtual ~bx_netmod_ctl_c() {}
   void init(void);
+  const char **get_module_names();
+  void list_modules(void);
   void exit(void);
   virtual void* init_module(bx_list_c *base, void* rxh, void* rxstat, bx_devmodel_c *dev);
 };
@@ -117,6 +119,8 @@ protected:
 class BOCHSAPI_MSVCONLY eth_locator_c {
 public:
   static bool module_present(const char *type);
+  static Bit8u get_modules_count(void);
+  static const char* get_module_name(Bit8u index);
   static void cleanup();
   static eth_pktmover_c *create(const char *type, const char *netif,
                                 const char *macaddr,
@@ -134,6 +138,7 @@ protected:
                                    bx_devmodel_c *dev,
                                    const char *script) = 0;
 private:
+  static Bit8u count;
   static eth_locator_c *all;
   eth_locator_c *next;
   const char *type;
