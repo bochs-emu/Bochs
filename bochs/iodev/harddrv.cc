@@ -1075,7 +1075,7 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
           (controller->status.drq << 3) |
           (controller->status.corrected_data << 2) |
           (controller->status.index_pulse << 1) |
-          (controller->status.err));
+          (Bit8u)controller->status.err);
         controller->status.index_pulse_count++;
         controller->status.index_pulse = 0;
         if (controller->status.index_pulse_count >= INDEX_PULSE_CYCLE) {

@@ -1313,11 +1313,11 @@ void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
            DSP.dma.param.bits, DSP.dma.param.samplerate,
            (DSP.dma.param.channels == 2)?"stereo":"mono",
            (DSP.dma.output == 1)?"output":"input", DSP.dma.mode,
-           (issigned == 1)?"signed":"unsigned",
+           issigned ? "signed":"unsigned",
            (DSP.dma.highspeed == 1)?"highspeed":"normal speed",
            sampledatarate, DSP.dma.timer);
 
-  DSP.dma.param.format = issigned | ((comp & 7) << 1) | ((comp & 8) << 4);
+  DSP.dma.param.format = (int)issigned | ((comp & 7) << 1) | ((comp & 8) << 4);
 
   // write the output to the device/file
   if (DSP.dma.output == 1) {

@@ -335,7 +335,7 @@ Bit32u bx_parallel_c::read(Bit32u address, unsigned io_len)
                   (BX_PAR_THIS s[port].CONTROL.slct_in  << 3) |
                   (BX_PAR_THIS s[port].CONTROL.init     << 2) |
                   (BX_PAR_THIS s[port].CONTROL.autofeed << 1) |
-                  (BX_PAR_THIS s[port].CONTROL.strobe));
+                  (Bit8u)BX_PAR_THIS s[port].CONTROL.strobe);
         BX_DEBUG(("read: parport%d control register returns 0x%02x", port+1, retval));
         return retval;
       }

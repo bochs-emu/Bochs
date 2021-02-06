@@ -353,7 +353,7 @@ Bit32u bx_keyb_c::read(Bit32u address, unsigned io_len)
           (BX_KEY_THIS s.kbd_controller.c_d  << 3)  |
           (BX_KEY_THIS s.kbd_controller.sysf << 2)  |
           (BX_KEY_THIS s.kbd_controller.inpb << 1)  |
-          (BX_KEY_THIS s.kbd_controller.outb);
+          (Bit8u)BX_KEY_THIS s.kbd_controller.outb;
     BX_KEY_THIS s.kbd_controller.tim = 0;
     return val;
   }
@@ -1050,7 +1050,7 @@ unsigned bx_keyb_c::periodic(Bit32u usec_delta)
 
   UNUSED(usec_delta);
 
-  retval = BX_KEY_THIS s.kbd_controller.irq1_requested |
+  retval = (Bit8u)BX_KEY_THIS s.kbd_controller.irq1_requested |
            (BX_KEY_THIS s.kbd_controller.irq12_requested << 1);
   BX_KEY_THIS s.kbd_controller.irq1_requested = 0;
   BX_KEY_THIS s.kbd_controller.irq12_requested = 0;

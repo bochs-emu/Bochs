@@ -458,7 +458,7 @@ const char* usb_cbi_device_c::get_info()
 {
   // set the write protected bit given by parameter in bochsrc.txt file
   bx_cbi_dev_mode_sense_cur[3] &= ~0x80;
-  bx_cbi_dev_mode_sense_cur[3] |= ((s.wp > 0) << 7);
+  bx_cbi_dev_mode_sense_cur[3] |= s.wp ? (1 << 7) : 0;
 
   return s.info_txt;
 }

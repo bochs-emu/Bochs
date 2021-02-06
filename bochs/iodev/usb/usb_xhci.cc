@@ -2720,7 +2720,7 @@ void bx_usb_xhci_c::write_event_TRB(const unsigned interrupter, const Bit64u par
 {
   // write the TRB
   write_TRB((bx_phy_address) BX_XHCI_THIS hub.ring_members.event_rings[interrupter].cur_trb, parameter, status, 
-    command | BX_XHCI_THIS hub.ring_members.event_rings[interrupter].rcs); // set the cycle bit
+    command | (Bit32u)BX_XHCI_THIS hub.ring_members.event_rings[interrupter].rcs); // set the cycle bit
 
   // calculate position for next event TRB
   BX_XHCI_THIS hub.ring_members.event_rings[interrupter].cur_trb += 16;
@@ -2928,7 +2928,7 @@ void bx_usb_xhci_c::copy_ep_to_buffer(Bit32u *buffer32, const int slot, const in
                 (BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.ep_type << 3) |
                 (BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.cerr << 1);
   buffer32[2] = ((Bit32u)BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.tr_dequeue_pointer) |
-                 BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.dcs;
+                 (Bit32u)BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.dcs;
   buffer32[3] =  (Bit32u)(BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.tr_dequeue_pointer >> 32);
   buffer32[4] = (BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.max_esit_payload << 16) |
                  BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.average_trb_len;

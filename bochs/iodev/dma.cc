@@ -341,7 +341,7 @@ bx_dma_c::read(Bit32u address, unsigned io_len)
 
     case 0x0f: // DMA-1: undocumented: read all mask bits
     case 0xde: // DMA-2: undocumented: read all mask bits
-      retval = BX_DMA_THIS s[ma_sl].mask[0] |
+      retval = (Bit8u)BX_DMA_THIS s[ma_sl].mask[0] |
                (BX_DMA_THIS s[ma_sl].mask[1] << 1) |
                (BX_DMA_THIS s[ma_sl].mask[2] << 2) |
                (BX_DMA_THIS s[ma_sl].mask[3] << 3);

@@ -573,7 +573,7 @@ Bit32u bx_vgacore_c::read(Bit32u address, unsigned io_len)
       switch (BX_VGA_THIS s.sequencer.index) {
         case 0: /* sequencer: reset */
           BX_DEBUG(("io read 0x3c5: sequencer reset"));
-          RETURN(BX_VGA_THIS s.sequencer.reset1 | (BX_VGA_THIS s.sequencer.reset2<<1));
+          RETURN((Bit8u)BX_VGA_THIS s.sequencer.reset1 | (BX_VGA_THIS s.sequencer.reset2<<1));
           break;
         case 1: /* sequencer: clocking mode */
           BX_DEBUG(("io read 0x3c5: sequencer clocking mode"));

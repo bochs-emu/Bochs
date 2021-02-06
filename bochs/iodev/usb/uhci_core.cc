@@ -281,7 +281,7 @@ Bit32u bx_uhci_core_c::read(Bit32u address, unsigned io_len)
             | hub.usb_command.suspend << 3
             | hub.usb_command.reset << 2
             | hub.usb_command.host_reset << 1
-            | hub.usb_command.schedule;
+            | (Bit16u)hub.usb_command.schedule;
       break;
 
     case 0x02: // status register (16-bit)
@@ -290,14 +290,14 @@ Bit32u bx_uhci_core_c::read(Bit32u address, unsigned io_len)
             | hub.usb_status.pci_error << 3
             | hub.usb_status.resume << 2
             | hub.usb_status.error_interrupt << 1
-            | hub.usb_status.interrupt;
+            | (Bit16u)hub.usb_status.interrupt;
       break;
 
     case 0x04: // interrupt enable register (16-bit)
       val = hub.usb_enable.short_packet << 3
             | hub.usb_enable.on_complete << 2
             | hub.usb_enable.resume << 1
-            | hub.usb_enable.timeout_crc;
+            | (Bit16u)hub.usb_enable.timeout_crc;
       break;
 
     case 0x06: // frame number register (16-bit)
@@ -334,7 +334,7 @@ Bit32u bx_uhci_core_c::read(Bit32u address, unsigned io_len)
               | hub.usb_port[port].able_changed << 3
               | hub.usb_port[port].enabled << 2
               | hub.usb_port[port].connect_changed << 1
-              | hub.usb_port[port].status;
+              | (Bit16u)hub.usb_port[port].status;
         if (offset & 1) val >>= 8;
         break;
       } // else fall through to default
@@ -507,7 +507,7 @@ void bx_uhci_core_c::write(Bit32u address, Bit32u value, unsigned io_len)
       port = (offset & 0x0F) >> 1;
       if ((port < USB_UHCI_PORTS) && (io_len == 2)) {
         // If the ports reset bit is set, don't allow any writes unless the new write will clear the reset bit
-        if (hub.usb_port[port].reset & (value & (1<<9)))
+        if (hub.usb_port[port].reset && ((value & (1 << 9)) != 0))
           break;
         if (value & ((1<<5) | (1<<4) | (1<<0)))
           BX_DEBUG(("write to one or more read-only bits in port #%d register: 0x%04x", port+1, value));
@@ -705,7 +705,7 @@ void bx_uhci_core_c::uhci_timer(void)
       // if one of the TD's in this frame had the ioc bit set, we need to
       //   raise an interrupt, if interrupts are not masked via interrupt register.
       //   always set the status register if IOC.
-      hub.usb_status.status2 |= interrupt;
+      hub.usb_status.status2 |= interrupt ? 1 : 0;
       if (interrupt && hub.usb_enable.on_complete) {
         BX_DEBUG((" [IOC] We want it to fire here (Frame: %04i)", hub.usb_frame_num.frame_num));
       }

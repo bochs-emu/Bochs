@@ -205,7 +205,7 @@ bx_ddc_c::~bx_ddc_c(void)
 Bit8u bx_ddc_c::read()
 {
   Bit8u retval = (Bit8u)(((s.DDAmon & s.DDAhost) << 3) | (s.DCKhost << 2) |
-                         (s.DDAhost << 1) | s.DCKhost);
+                         (s.DDAhost << 1) | (Bit8u)s.DCKhost);
   return retval;
 }
 

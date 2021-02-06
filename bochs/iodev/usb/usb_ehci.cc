@@ -671,7 +671,7 @@ bool bx_usb_ehci_c::read_handler(bx_phy_address addr, unsigned len, void *data, 
                | (BX_EHCI_THIS hub.op_regs.UsbCmd.ase     << 5)
                | (BX_EHCI_THIS hub.op_regs.UsbCmd.pse     << 4)
                | (BX_EHCI_THIS hub.op_regs.UsbCmd.hcreset << 1)
-               |  BX_EHCI_THIS hub.op_regs.UsbCmd.rs);
+               | (Bit8u)BX_EHCI_THIS hub.op_regs.UsbCmd.rs);
           break;
         case 0x04:
           val = ((BX_EHCI_THIS hub.op_regs.UsbSts.ass      << 15)
@@ -717,7 +717,7 @@ bool bx_usb_ehci_c::read_handler(bx_phy_address addr, unsigned len, void *data, 
                  | (BX_EHCI_THIS hub.usb_port[port].portsc.pec << 3)
                  | (BX_EHCI_THIS hub.usb_port[port].portsc.ped << 2)
                  | (BX_EHCI_THIS hub.usb_port[port].portsc.csc << 1)
-                 | BX_EHCI_THIS hub.usb_port[port].portsc.ccs);
+                 | (Bit8u)BX_EHCI_THIS hub.usb_port[port].portsc.ccs);
           }
       }
     } else {
