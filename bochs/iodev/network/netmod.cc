@@ -43,7 +43,7 @@ bx_netmod_ctl_c::bx_netmod_ctl_c()
 
 void bx_netmod_ctl_c::init(void)
 {
-  Bit8u count = 0;
+  Bit8u i, count = 0;
 
 #if !BX_PLUGINS
   count = eth_locator_c::get_modules_count();
@@ -51,7 +51,7 @@ void bx_netmod_ctl_c::init(void)
   count = PLUG_get_plugins_count(PLUGTYPE_NET);
 #endif
   net_module_names = (const char**) malloc((count + 1) * sizeof(char*));
-  for (Bit8u i = 0; i < count; i++) {
+  for (i = 0; i < count; i++) {
 #if !BX_PLUGINS
     net_module_names[i] = eth_locator_c::get_module_name(i);
 #else
@@ -59,6 +59,16 @@ void bx_netmod_ctl_c::init(void)
 #endif
   }
   net_module_names[count] = NULL;
+  // move 'null' module to the top of the list
+  if (strcmp(net_module_names[0], "null")) {
+    for (i = 1; i < count; i++) {
+      if (!strcmp(net_module_names[i], "null")) {
+        net_module_names[i] = net_module_names[0];
+        net_module_names[0] = "null";
+        break;
+      }
+    }
+  }
 }
 
 const char **bx_netmod_ctl_c::get_module_names(void)

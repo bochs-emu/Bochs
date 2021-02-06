@@ -1115,16 +1115,6 @@ bool bx_devices_c::is_harddrv_enabled(void)
   return 0;
 }
 
-bool bx_devices_c::is_network_enabled(void)
-{
-  if (PLUG_device_present("e1000") ||
-      PLUG_device_present("ne2k") ||
-      PLUG_device_present("pcipnic")) {
-    return 1;
-  }
-  return 0;
-}
-
 bool bx_devices_c::is_sound_enabled(void)
 {
   if (PLUG_device_present("es1370") ||

@@ -602,12 +602,10 @@ private:
   int timer_handle;
   int statusbar_id[3];
 
-  bool network_enabled;
   bool sound_enabled;
   bool usb_enabled;
 
   bool is_harddrv_enabled();
-  bool is_network_enabled();
   bool is_sound_enabled();
   bool is_usb_enabled();
 };
