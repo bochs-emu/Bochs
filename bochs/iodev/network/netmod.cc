@@ -154,7 +154,7 @@ eth_locator_c::eth_locator_c(const char *type)
   this->type = type;
   this->next = NULL;
   if (all == NULL) {
-    all  = this;
+    all = this;
   } else {
     ptr = all;
     while (ptr->next) ptr = ptr->next;

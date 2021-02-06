@@ -25,6 +25,9 @@
 #if BX_NETWORKING
 #include "iodev/network/netmod.h"
 #endif
+#if BX_SUPPORT_SOUNDLOW
+#include "iodev/sound/soundmod.h"
+#endif
 #include "param_names.h"
 #include <assert.h>
 
@@ -1526,13 +1529,13 @@ void bx_init_options()
   soundlow->set_enabled(BX_SUPPORT_SOUNDLOW);
 
 #if BX_SUPPORT_SOUNDLOW
+  bx_soundmod_ctl.init();
   bx_param_enum_c *driver = new bx_param_enum_c(soundlow,
     "waveoutdrv",
     "Waveout driver",
     "This is the waveout driver to use for emulated sound devices",
-    sound_driver_names,
-    BX_SOUNDDRV_DUMMY,
-    BX_SOUNDDRV_DUMMY);
+    bx_soundmod_ctl.get_driver_names(),
+    0, 0);
   driver->set_by_name(BX_SOUND_LOWLEVEL_NAME);
   new bx_param_filename_c(soundlow,
     "waveout",
@@ -1543,9 +1546,8 @@ void bx_init_options()
     "waveindrv",
     "Wavein driver",
     "This is the wavein driver to use for emulated sound devices",
-    sound_driver_names,
-    BX_SOUNDDRV_DUMMY,
-    BX_SOUNDDRV_DUMMY);
+    bx_soundmod_ctl.get_driver_names(),
+    0, 0);
   driver->set_by_name(BX_SOUND_LOWLEVEL_NAME);
   new bx_param_filename_c(soundlow,
     "wavein",
@@ -1556,9 +1558,8 @@ void bx_init_options()
     "midioutdrv",
     "Midiout driver",
     "This is the midiout driver to use for emulated sound devices",
-    sound_driver_names,
-    BX_SOUNDDRV_DUMMY,
-    BX_SOUNDDRV_DUMMY);
+    bx_soundmod_ctl.get_driver_names(),
+    0, 0);
   driver->set_by_name(BX_SOUND_LOWLEVEL_NAME);
   new bx_param_filename_c(soundlow,
     "midiout",

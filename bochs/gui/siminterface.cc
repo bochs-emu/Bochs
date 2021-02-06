@@ -521,27 +521,6 @@ int floppy_type_n_sectors[] = { -1, 80*2*15, 80*2*18, 80*2*36, 80*2*9, 40*2*9, 4
 const char *media_status_names[] = { "ejected", "inserted", NULL };
 const char *bochs_bootdisk_names[] = { "none", "floppy", "disk","cdrom", "network", NULL };
 
-const char *sound_driver_names[] = {
-  "dummy",
-#if BX_HAVE_SOUND_ALSA
-  "alsa",
-#endif
-#if BX_HAVE_SOUND_OSS
-  "oss",
-#endif
-#if BX_HAVE_SOUND_OSX
-  "osx",
-#endif
-#if BX_HAVE_SOUND_SDL
-  "sdl",
-#endif
-#if BX_HAVE_SOUND_WIN
-  "win",
-#endif
-  "file",
-  NULL
-};
-
 void bx_real_sim_c::set_notify_callback(bxevent_handler func, void *arg)
 {
   bxevent_callback = func;

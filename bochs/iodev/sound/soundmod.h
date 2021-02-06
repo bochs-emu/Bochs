@@ -32,13 +32,15 @@ public:
   ~bx_soundmod_ctl_c() {}
   void init(void);
   void exit(void);
-  bool register_driver(bx_sound_lowlevel_c *module, int driver_id);
+  const char **get_driver_names();
+  void list_modules(void);
+  void open_output(void);
   bx_soundlow_waveout_c* get_waveout(bool using_file);
   bx_soundlow_wavein_c* get_wavein();
   bx_soundlow_midiout_c* get_midiout(bool using_file);
 
 private:
-  bx_sound_lowlevel_c* get_driver(int driver_id);
+  bx_sound_lowlevel_c* get_driver(const char *modname);
 };
 
 BOCHSAPI extern bx_soundmod_ctl_c bx_soundmod_ctl;

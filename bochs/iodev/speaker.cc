@@ -139,11 +139,13 @@ PLUGIN_ENTRY_FOR_MODULE(speaker)
     speaker_init_options();
     // register add-on options for bochsrc and command line
     SIM->register_addon_option("speaker", speaker_options_parser, speaker_options_save);
+    bx_devices.add_sound_device();
   } else {
     bx_devices.pluginSpeaker = &bx_devices.stubSpeaker;
     delete theSpeaker;
     SIM->unregister_addon_option("speaker");
     ((bx_list_c*)SIM->get_param("sound"))->remove("speaker");
+    bx_devices.remove_sound_device();
   }
   return(0); // Success
 }

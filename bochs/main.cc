@@ -31,6 +31,9 @@
 #if BX_NETWORKING
 #include "iodev/network/netmod.h"
 #endif
+#if BX_SUPPORT_SOUNDLOW
+#include "iodev/sound/soundmod.h"
+#endif
 
 #ifdef HAVE_LOCALE_H
 #include <locale.h>
@@ -1299,6 +1302,9 @@ void bx_init_hardware()
   bx_hdimage_ctl.list_modules();
 #if BX_NETWORKING
   bx_netmod_ctl.list_modules();
+#endif
+#if BX_SUPPORT_SOUNDLOW
+  bx_soundmod_ctl.list_modules();
 #endif
   // Check if there is a romimage
   if (SIM->get_param_string(BXPN_ROM_PATH)->isempty()) {

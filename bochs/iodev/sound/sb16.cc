@@ -172,10 +172,12 @@ PLUGIN_ENTRY_FOR_MODULE(sb16)
     sb16_init_options();
     // register add-on option for bochsrc and command line
     SIM->register_addon_option("sb16", sb16_options_parser, sb16_options_save);
+    bx_devices.add_sound_device();
   } else {
     delete theSB16Device;
     SIM->unregister_addon_option("sb16");
     ((bx_list_c*)SIM->get_param("sound"))->remove("sb16");
+    bx_devices.remove_sound_device();
   }
   return(0); // Success
 }

@@ -174,6 +174,8 @@ public:
 class BOCHSAPI_MSVCONLY bx_sound_lowlevel_c : public logfunctions {
 public:
   static bool module_present(const char *type);
+  static Bit8u get_modules_count(void);
+  static const char* get_module_name(Bit8u index);
   static bx_sound_lowlevel_c* get_module(const char *type);
   static void cleanup();
 
@@ -189,6 +191,7 @@ protected:
   bx_soundlow_wavein_c *wavein;
   bx_soundlow_midiout_c *midiout;
 private:
+  static Bit8u count;
   static bx_sound_lowlevel_c *all;
   bx_sound_lowlevel_c *next;
   const char *type;

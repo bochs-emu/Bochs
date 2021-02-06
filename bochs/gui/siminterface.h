@@ -572,32 +572,11 @@ enum {
 #define BX_CLOCK_TIME0_LOCAL     1
 #define BX_CLOCK_TIME0_UTC       2
 
-enum {
-  BX_SOUNDDRV_DUMMY,
-#if BX_HAVE_SOUND_ALSA
-  BX_SOUNDDRV_ALSA,
-#endif
-#if BX_HAVE_SOUND_OSS
-  BX_SOUNDDRV_OSS,
-#endif
-#if BX_HAVE_SOUND_OSX
-  BX_SOUNDDRV_OSX,
-#endif
-#if BX_HAVE_SOUND_SDL
-  BX_SOUNDDRV_SDL,
-#endif
-#if BX_HAVE_SOUND_WIN
-  BX_SOUNDDRV_WIN,
-#endif
-  BX_SOUNDDRV_FILE
-};
-
 BOCHSAPI extern const char *floppy_devtype_names[];
 BOCHSAPI extern const char *floppy_type_names[];
 BOCHSAPI extern int floppy_type_n_sectors[];
 BOCHSAPI extern const char *media_status_names[];
 BOCHSAPI extern const char *bochs_bootdisk_names[];
-BOCHSAPI extern const char *sound_driver_names[];
 
 ////////////////////////////////////////////////////////////////////
 // base class simulator interface, contains just virtual functions.

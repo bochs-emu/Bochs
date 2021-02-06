@@ -429,6 +429,8 @@ public:
   void kbd_set_indicator(Bit8u devid, Bit8u ledid, bool state);
   void mouse_enabled_changed(bool enabled);
   void mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state, bool absxy);
+  void add_sound_device(void);
+  void remove_sound_device(void);
 
 #if BX_SUPPORT_PCI
   Bit32u pci_get_confAddr(void) {return pci.confAddr;}
@@ -602,11 +604,10 @@ private:
   int timer_handle;
   int statusbar_id[3];
 
-  bool sound_enabled;
-  bool usb_enabled;
+  Bit8u sound_device_count;
+  bool  usb_enabled;
 
   bool is_harddrv_enabled();
-  bool is_sound_enabled();
   bool is_usb_enabled();
 };
 

@@ -61,6 +61,7 @@ bx_devices_c::bx_devices_c()
   for (unsigned i=0; i < BX_MAX_IRQS; i++) {
     irq_handler_name[i] = NULL;
   }
+  sound_device_count = 0;
 }
 
 bx_devices_c::~bx_devices_c()
@@ -69,6 +70,9 @@ bx_devices_c::~bx_devices_c()
   bx_hdimage_ctl.exit();
 #if BX_NETWORKING
   bx_netmod_ctl.exit();
+#endif
+#if BX_SUPPORT_SOUNDLOW
+  bx_soundmod_ctl.exit();
 #endif
 }
 
@@ -175,9 +179,8 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   bx_slowdown_timer.init();
 
 #if BX_SUPPORT_SOUNDLOW
-  sound_enabled = is_sound_enabled();
-  if (sound_enabled) {
-    bx_soundmod_ctl.init();
+  if (sound_device_count > 0) {
+    bx_soundmod_ctl.open_output();
   }
 #endif
   // PCI logic (i440FX)
@@ -449,10 +452,6 @@ void bx_devices_c::exit()
   // unload optional plugins first
   bx_unload_plugins();
   bx_unload_core_plugins();
-#if BX_SUPPORT_SOUNDLOW
-  if (sound_enabled)
-    bx_soundmod_ctl.exit();
-#endif
 #if BX_SUPPORT_PCIUSB
   if (usb_enabled)
     bx_usbdev_ctl.exit();
@@ -1115,14 +1114,14 @@ bool bx_devices_c::is_harddrv_enabled(void)
   return 0;
 }
 
-bool bx_devices_c::is_sound_enabled(void)
+void bx_devices_c::add_sound_device(void)
 {
-  if (PLUG_device_present("es1370") ||
-      PLUG_device_present("sb16") ||
-      PLUG_device_present("speaker")) {
-    return 1;
-  }
-  return 0;
+  sound_device_count++;
+}
+
+void bx_devices_c::remove_sound_device(void)
+{
+  sound_device_count--;
 }
 
 bool bx_devices_c::is_usb_enabled(void)
