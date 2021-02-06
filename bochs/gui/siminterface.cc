@@ -24,9 +24,9 @@
 // Basically, the siminterface is visible from both the simulator and
 // the configuration user interface, and allows them to talk to each other.
 
-#include "bx_debug/debug.h"
 #include "param_names.h"
 #include "iodev.h"
+#include "bx_debug/debug.h"
 #include "virt_timer.h"
 
 bx_simulator_interface_c *SIM = NULL;
