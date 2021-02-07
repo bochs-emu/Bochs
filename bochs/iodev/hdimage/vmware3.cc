@@ -56,6 +56,9 @@ const off_t vmware3_image_t::INVALID_OFFSET=(off_t)-1;
 
 PLUGIN_ENTRY_FOR_IMG_MODULE(vmware3)
 {
+  if (mode == PLUGIN_PROBE) {
+    return (int)PLUGTYPE_IMG;
+  }
   return 0; // Success
 }
 

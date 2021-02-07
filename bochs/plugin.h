@@ -112,11 +112,11 @@ extern "C" {
 
 // When plugins are off, PLUG_load_plugin will call the plugin_entry function
 // directly.
-#define PLUG_load_plugin(name,type) {lib##name##_LTX_plugin_entry(NULL,type,1);}
+#define PLUG_load_plugin(name,type) {lib##name##_plugin_entry(NULL,type,1);}
 #define PLUG_load_gui_plugin(name) bx_load_plugin_np(name,PLUGTYPE_GUI)
 #define PLUG_load_opt_plugin(name) bx_load_plugin_np(name,PLUGTYPE_OPTIONAL)
 #define PLUG_load_vga_plugin(name) bx_load_plugin_np(name,PLUGTYPE_VGA)
-#define PLUG_unload_plugin(name) {lib##name##_LTX_plugin_entry(NULL,type,0);}
+#define PLUG_unload_plugin(name) {lib##name##_plugin_entry(NULL,type,0);}
 #define PLUG_unload_opt_plugin(name) bx_unload_opt_plugin(name,1)
 
 #define DEV_register_ioread_handler(b,c,d,e,f) bx_devices.register_io_read_handler(b,c,d,e,f)
@@ -356,53 +356,47 @@ int bx_unload_opt_plugin(const char *name, bool devflag);
 
 // every plugin must define this, within the extern"C" block, so that
 // a non-mangled function symbol is available in the shared library.
-int plugin_entry(plugin_t *plugin, plugintype_t type, bool init);
+int plugin_entry(plugin_t *plugin, plugintype_t type, Bit8u mode);
 
 // still in extern "C"
 #if BX_PLUGINS && defined(WIN32)
 
 #define PLUGIN_ENTRY_FOR_MODULE(mod) \
-  extern "C" __declspec(dllexport) int __cdecl lib##mod##_LTX_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+  extern "C" __declspec(dllexport) int __cdecl lib##mod##_plugin_entry(plugin_t *plugin, plugintype_t type, Bit8u mode)
 #define PLUGIN_ENTRY_FOR_GUI_MODULE(mod) \
-  extern "C" __declspec(dllexport) int __cdecl lib##mod##_gui_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+  extern "C" __declspec(dllexport) int __cdecl lib##mod##_gui_plugin_entry(plugin_t *plugin, plugintype_t type, Bit8u mode)
 #define PLUGIN_ENTRY_FOR_IMG_MODULE(mod) \
-  extern "C" __declspec(dllexport) int __cdecl lib##mod##_img_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+  extern "C" __declspec(dllexport) int __cdecl lib##mod##_img_plugin_entry(plugin_t *plugin, plugintype_t type, Bit8u mode)
 #define PLUGIN_ENTRY_FOR_NET_MODULE(mod) \
-  extern "C" __declspec(dllexport) int __cdecl lib##mod##_net_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+  extern "C" __declspec(dllexport) int __cdecl libeth_##mod##_plugin_entry(plugin_t *plugin, plugintype_t type, Bit8u mode)
 #define PLUGIN_ENTRY_FOR_SND_MODULE(mod) \
-  extern "C" __declspec(dllexport) int __cdecl lib##mod##_snd_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
-#define PLUGIN_ENTRY_FOR_USB_MODULE(mod) \
-  extern "C" __declspec(dllexport) int __cdecl lib##mod##_usb_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+  extern "C" __declspec(dllexport) int __cdecl libsound##mod##_plugin_entry(plugin_t *plugin, plugintype_t type, Bit8u mode)
 
 #elif BX_PLUGINS
 
 #define PLUGIN_ENTRY_FOR_MODULE(mod) \
-  extern "C" int CDECL lib##mod##_LTX_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+  extern "C" int CDECL lib##mod##_plugin_entry(plugin_t *plugin, plugintype_t type, Bit8u mode)
 #define PLUGIN_ENTRY_FOR_GUI_MODULE(mod) \
-  extern "C" int CDECL lib##mod##_gui_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+  extern "C" int CDECL lib##mod##_gui_plugin_entry(plugin_t *plugin, plugintype_t type, Bit8u mode)
 #define PLUGIN_ENTRY_FOR_IMG_MODULE(mod) \
-  extern "C" int CDECL lib##mod##_img_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+  extern "C" int CDECL lib##mod##_img_plugin_entry(plugin_t *plugin, plugintype_t type, Bit8u mode)
 #define PLUGIN_ENTRY_FOR_NET_MODULE(mod) \
-  extern "C" int CDECL lib##mod##_net_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+  extern "C" int CDECL libeth_##mod##_plugin_entry(plugin_t *plugin, plugintype_t type, Bit8u mode)
 #define PLUGIN_ENTRY_FOR_SND_MODULE(mod) \
-  extern "C" int CDECL lib##mod##_snd_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
-#define PLUGIN_ENTRY_FOR_USB_MODULE(mod) \
-  extern "C" int CDECL lib##mod##_usb_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+  extern "C" int CDECL libsound##mod##_plugin_entry(plugin_t *plugin, plugintype_t type, Bit8u mode)
 
 #else
 
 #define PLUGIN_ENTRY_FOR_MODULE(mod) \
-  int CDECL lib##mod##_LTX_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+  int CDECL lib##mod##_plugin_entry(plugin_t *plugin, plugintype_t type, Bit8u mode)
 #define PLUGIN_ENTRY_FOR_GUI_MODULE(mod) \
-  int CDECL lib##mod##_gui_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+  int CDECL lib##mod##_gui_plugin_entry(plugin_t *plugin, plugintype_t type, Bit8u mode)
 #define PLUGIN_ENTRY_FOR_IMG_MODULE(mod) \
-  int CDECL lib##mod##_img_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+  int CDECL lib##mod##_img_plugin_entry(plugin_t *plugin, plugintype_t type, Bit8u mode)
 #define PLUGIN_ENTRY_FOR_NET_MODULE(mod) \
-  int CDECL lib##mod##_net_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+  int CDECL libeth_##mod##_plugin_entry(plugin_t *plugin, plugintype_t type, Bit8u mode)
 #define PLUGIN_ENTRY_FOR_SND_MODULE(mod) \
-  int CDECL lib##mod##_snd_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
-#define PLUGIN_ENTRY_FOR_USB_MODULE(mod) \
-  int CDECL lib##mod##_dev_plugin_entry(plugin_t *plugin, plugintype_t type, bool init)
+  int CDECL libsound##mod##_plugin_entry(plugin_t *plugin, plugintype_t type, Bit8u mode)
 
 // device plugins
 PLUGIN_ENTRY_FOR_MODULE(harddrv);
@@ -474,11 +468,11 @@ PLUGIN_ENTRY_FOR_NET_MODULE(vde);
 PLUGIN_ENTRY_FOR_NET_MODULE(vnet);
 PLUGIN_ENTRY_FOR_NET_MODULE(win32);
 // USB device plugins
-PLUGIN_ENTRY_FOR_USB_MODULE(usb_cbi);
-PLUGIN_ENTRY_FOR_USB_MODULE(usb_hid);
-PLUGIN_ENTRY_FOR_USB_MODULE(usb_hub);
-PLUGIN_ENTRY_FOR_USB_MODULE(usb_msd);
-PLUGIN_ENTRY_FOR_USB_MODULE(usb_printer);
+PLUGIN_ENTRY_FOR_MODULE(usb_cbi);
+PLUGIN_ENTRY_FOR_MODULE(usb_hid);
+PLUGIN_ENTRY_FOR_MODULE(usb_hub);
+PLUGIN_ENTRY_FOR_MODULE(usb_msd);
+PLUGIN_ENTRY_FOR_MODULE(usb_printer);
 // disk image plugins
 PLUGIN_ENTRY_FOR_IMG_MODULE(vmware3);
 PLUGIN_ENTRY_FOR_IMG_MODULE(vmware4);

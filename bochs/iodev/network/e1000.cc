@@ -367,14 +367,14 @@ Bit32s e1000_options_save(FILE *fp)
 
 PLUGIN_ENTRY_FOR_MODULE(e1000)
 {
-  if (init) {
+  if (mode == PLUGIN_INIT) {
     E1000DevMain = new bx_e1000_main_c();
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, E1000DevMain, BX_PLUGIN_E1000);
     // add new configuration parameter for the config interface
     e1000_init_options();
     // register add-on option for bochsrc and command line
     SIM->register_addon_option("e1000", e1000_options_parser, e1000_options_save);
-  } else {
+  } else if (mode == PLUGIN_FINI) {
     char name[12];
 
     SIM->unregister_addon_option("e1000");
@@ -384,6 +384,8 @@ PLUGIN_ENTRY_FOR_MODULE(e1000)
       network->remove(name);
     }
     delete E1000DevMain;
+  } else {
+    return (int)PLUGTYPE_OPTIONAL;
   }
   return 0; // Success
 }

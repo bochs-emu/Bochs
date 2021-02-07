@@ -36,8 +36,11 @@
 
 // USB device plugin entry point
 
-PLUGIN_ENTRY_FOR_USB_MODULE(usb_printer)
+PLUGIN_ENTRY_FOR_MODULE(usb_printer)
 {
+  if (mode == PLUGIN_PROBE) {
+    return (int)PLUGTYPE_USB;
+  }
   return 0; // Success
 }
 

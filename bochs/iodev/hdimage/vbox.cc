@@ -61,6 +61,9 @@ const int vbox_image_t::SECTOR_SIZE = 512;
 
 PLUGIN_ENTRY_FOR_IMG_MODULE(vbox)
 {
+  if (mode == PLUGIN_PROBE) {
+    return (int)PLUGTYPE_IMG;
+  }
   return 0; // Success
 }
 

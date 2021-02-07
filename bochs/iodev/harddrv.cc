@@ -111,12 +111,14 @@ logfunctions *atapilog = NULL;
 
 PLUGIN_ENTRY_FOR_MODULE(harddrv)
 {
-  if (init) {
+  if (mode == PLUGIN_INIT) {
     theHardDrive = new bx_hard_drive_c();
     bx_devices.pluginHardDrive = theHardDrive;
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theHardDrive, BX_PLUGIN_HARDDRV);
-  } else {
+  } else if (mode == PLUGIN_FINI) {
     delete theHardDrive;
+  } else {
+    return (int)PLUGTYPE_STANDARD;
   }
   return(0); // Success
 }

@@ -36,13 +36,15 @@ bx_ioapic_c *theIOAPIC = NULL;
 
 PLUGIN_ENTRY_FOR_MODULE(ioapic)
 {
-  if (init) {
+  if (mode == PLUGIN_INIT) {
     theIOAPIC = new bx_ioapic_c();
     bx_devices.pluginIOAPIC = theIOAPIC;
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theIOAPIC, BX_PLUGIN_IOAPIC);
-  } else {
+  } else if (mode == PLUGIN_FINI) {
     bx_devices.pluginIOAPIC = &bx_devices.stubIOAPIC;
     delete theIOAPIC;
+  } else {
+    return (int)PLUGTYPE_STANDARD;
   }
   return(0); // Success
 }

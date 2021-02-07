@@ -35,7 +35,7 @@ bx_pit_c *thePit = NULL;
 
 PLUGIN_ENTRY_FOR_MODULE(pit)
 {
-  if (init) {
+  if (mode == PLUGIN_INIT) {
     if (type == PLUGTYPE_CORE) {
       thePit = new bx_pit_c();
       bx_devices.pluginPitDevice = thePit;
@@ -43,8 +43,10 @@ PLUGIN_ENTRY_FOR_MODULE(pit)
     } else {
       return -1;
     }
-  } else {
+  } else if (mode == PLUGIN_FINI) {
     delete thePit;
+  } else {
+    return (int)PLUGTYPE_CORE;
   }
   return 0; // Success
 }

@@ -117,18 +117,20 @@ Bit32s pcidev_options_save(FILE *fp)
 
 PLUGIN_ENTRY_FOR_MODULE(pcidev)
 {
-  if (init) {
+  if (mode == PLUGIN_INIT) {
     thePciDevAdapter = new bx_pcidev_c();
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, thePciDevAdapter, BX_PLUGIN_PCIDEV);
     // add new configuration parameter for the config interface
     pcidev_init_options();
     // register add-on option for bochsrc and command line
     SIM->register_addon_option("pcidev", pcidev_options_parser, pcidev_options_save);
-  } else {
+  } else if (mode == PLUGIN_FINI) {
     SIM->unregister_addon_option("pcidev");
     bx_list_c *menu = (bx_list_c*)SIM->get_param("network");
     menu->remove("pcidev");
     delete thePciDevAdapter;
+  } else {
+    return (int)PLUGTYPE_OPTIONAL;
   }
   return 0; // Success
 }

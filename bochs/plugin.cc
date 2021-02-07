@@ -41,12 +41,11 @@
 
 #define LOG_THIS genlog->
 
-#define PLUGIN_ENTRY_FMT_STRING       "lib%s_LTX_plugin_entry"
+#define PLUGIN_ENTRY_FMT_STRING       "lib%s_plugin_entry"
 #define GUI_PLUGIN_ENTRY_FMT_STRING   "lib%s_gui_plugin_entry"
 #define IMG_PLUGIN_ENTRY_FMT_STRING   "lib%s_img_plugin_entry"
-#define NET_PLUGIN_ENTRY_FMT_STRING   "lib%s_net_plugin_entry"
-#define SND_PLUGIN_ENTRY_FMT_STRING   "lib%s_snd_plugin_entry"
-#define USB_PLUGIN_ENTRY_FMT_STRING   "lib%s_usb_plugin_entry"
+#define NET_PLUGIN_ENTRY_FMT_STRING   "libeth_%s_plugin_entry"
+#define SND_PLUGIN_ENTRY_FMT_STRING   "libsound%s_plugin_entry"
 
 #define PLUGIN_PATH                   ""
 
@@ -245,33 +244,31 @@ builtinRegisterDefaultIOWriteHandler(void *thisPtr, ioWriteHandler_t callback,
 /* Search for all available plugins                                           */
 /************************************************************************/
 
-void plugin_add_entry(char *pgn_name)
+void plugin_add_entry(char *pgn_name, plugintype_t type)
 {
   plugin_t *plugin, *temp;
-  plugintype_t type;
 
-  if (!strncmp(pgn_name, "eth_", 4)) {
-    memmove(pgn_name, pgn_name + 4, strlen(pgn_name) - 3);
-    type = PLUGTYPE_NET;
-  } else if (!strncmp(pgn_name, "sound", 5)) {
-    memmove(pgn_name, pgn_name + 5, strlen(pgn_name) - 4);
-    type = PLUGTYPE_SND;
-  } else if (!strncmp(pgn_name + strlen(pgn_name) - 4, "_gui", 4)) {
-    pgn_name[strlen(pgn_name) - 4] = 0;
-    type = PLUGTYPE_GUI;
-  } else if (!strncmp(pgn_name + strlen(pgn_name) - 4, "_img", 4)) {
-    pgn_name[strlen(pgn_name) - 4] = 0;
-    type = PLUGTYPE_IMG;
-  } else if (!strncmp(pgn_name, "usb_", 4) &&
-             strncmp(pgn_name + strlen(pgn_name) - 3, "hci", 3)) {
-    type = PLUGTYPE_USB;
-  } else {
-    type = PLUGTYPE_DEV;
+  if (type == PLUGTYPE_GUI) {
+    if (!strncmp(pgn_name + strlen(pgn_name) - 4, "_gui", 4)) {
+      pgn_name[strlen(pgn_name) - 4] = 0;
+    }
+  } else if (type == PLUGTYPE_IMG) {
+    if (!strncmp(pgn_name + strlen(pgn_name) - 4, "_img", 4)) {
+      pgn_name[strlen(pgn_name) - 4] = 0;
+    }
+  } else if (type == PLUGTYPE_NET) {
+    if (!strncmp(pgn_name, "eth_", 4)) {
+      memmove(pgn_name, pgn_name + 4, strlen(pgn_name) - 3);
+    }
+  } else if (type == PLUGTYPE_SND) {
+    if (!strncmp(pgn_name, "sound", 5)) {
+      memmove(pgn_name, pgn_name + 5, strlen(pgn_name) - 4);
+    }
   }
   plugin = new plugin_t;
   plugin->type = type;
   plugin->name = pgn_name;
-  plugin->loaded = 0;
+  plugin->loadtype = PLUGTYPE_NULL;
   plugin->initialized = 0;
   /* Insert plugin at the _end_ of the plugin linked list. */
   plugin->next = NULL;
@@ -298,12 +295,18 @@ void plugins_search(void)
   const char *path_sep = ":";
   DIR *dir;
   struct dirent *dent;
+  lt_dlhandle handle;
 #else
   const char *path_sep = ";";
   WIN32_FIND_DATA finddata;
   HANDLE hFind;
   char filter[MAX_PATH];
+  char path[MAX_PATH];
+  HINSTANCE handle;
 #endif
+  char tmpname[BX_PATHNAME_LEN];
+  plugin_entry_t plugin_entry;
+  plugintype_t type;
 
 #ifndef WIN32
   setlocale(LC_ALL, "en_US");
@@ -332,7 +335,18 @@ void plugins_search(void)
           pgn_name = new char[nlen - flen1 - flen2 + 1];
           strncpy(pgn_name, dent->d_name + flen1, nlen - flen1 - flen2);
           pgn_name[nlen - flen1 - flen2] = 0;
-          plugin_add_entry(pgn_name);
+          handle = lt_dlopen(dent->d_name);
+          if (handle) {
+            sprintf(tmpname, PLUGIN_ENTRY_FMT_STRING, pgn_name);
+            plugin_entry = (plugin_entry_t) lt_dlsym(handle, tmpname);
+            if (plugin_entry != NULL) {
+              type = (plugintype_t) plugin_entry(NULL, PLUGTYPE_NULL, PLUGIN_PROBE);
+              plugin_add_entry(pgn_name, type);
+            }
+            lt_dlclose(handle);
+          } else {
+            delete [] pgn_name;
+          }
         }
       }
       closedir(dir);
@@ -348,7 +362,17 @@ void plugins_search(void)
           pgn_name = new char[nlen - flen1 - flen2 + 1];
           strncpy(pgn_name, finddata.cFileName + flen1, nlen - flen1 - flen2);
           pgn_name[nlen - flen1 - flen2] = 0;
-          plugin_add_entry(pgn_name);
+          sprintf(path, "%s\\%s", ptr, finddata.cFileName);
+          handle = LoadLibrary(path);
+          if (handle) {
+            sprintf(tmpname, PLUGIN_ENTRY_FMT_STRING, pgn_name);
+            plugin_entry = (plugin_entry_t) GetProcAddress(handle, tmpname);
+            if (plugin_entry != NULL) {
+              type = (plugintype_t) plugin_entry(NULL, PLUGTYPE_NULL, PLUGIN_PROBE);
+              plugin_add_entry(pgn_name, type);
+            }
+            FreeLibrary(handle);
+          }
         }
       } while (FindNextFile(hFind, &finddata));
       FindClose(hFind);
@@ -357,25 +381,6 @@ void plugins_search(void)
     ptr = strtok(NULL, ":");
   }
   delete [] pgn_path;
-}
-
-bool plugin_is_optional_device(plugin_t *plugin)
-{
-  const char *core_plugins[] = {"cmos", "dma", "floppy", "pci", "pci2isa",
-                                "pic",  "pit", "svga_cirrus", "vga", NULL};
-  const char *std_plugins[] = {"acpi", "harddrv", "hpet", "ioapic", "keyboard",
-                               "pci_ide", NULL};
-  int i = 0;
-  while (core_plugins[i] != NULL) {
-    if (!strcmp(plugin->name, core_plugins[i])) return 0;
-    i++;
-  }
-  i = 0;
-  while (std_plugins[i] != NULL) {
-    if (!strcmp(plugin->name, std_plugins[i])) return 0;
-    i++;
-  }
-  return 1;
 }
 
 Bit8u bx_get_plugins_count(plugintype_t type)
@@ -387,9 +392,7 @@ Bit8u bx_get_plugins_count(plugintype_t type)
     temp = plugins;
 
     while (temp != NULL) {
-      if ((type == temp->type) ||
-          ((type == PLUGTYPE_OPTIONAL) && (temp->type == PLUGTYPE_DEV) &&
-           plugin_is_optional_device(temp)))
+      if ((type & temp->type) != 0)
         count++;
       temp = temp->next;
     }
@@ -406,9 +409,7 @@ const char* bx_get_plugin_name(plugintype_t type, Bit8u index)
     temp = plugins;
 
     while (temp != NULL) {
-      if ((type == temp->type) ||
-          ((type == PLUGTYPE_OPTIONAL) && (temp->type == PLUGTYPE_DEV) && 
-           plugin_is_optional_device(temp))) {
+      if ((type & temp->type) != 0) {
         if (count == index)
           return temp->name;
         count++;
@@ -426,7 +427,7 @@ const char* bx_get_plugin_name(plugintype_t type, Bit8u index)
 bool plugin_init_one(plugin_t *plugin)
 {
   /* initialize the plugin */
-  if (plugin->plugin_entry(plugin, plugin->type, 1))
+  if (plugin->plugin_entry(plugin, plugin->loadtype, 1))
   {
     pluginlog->info("Plugin initialization failed for %s", plugin->name);
     plugin_abort(plugin);
@@ -439,7 +440,7 @@ bool plugin_init_one(plugin_t *plugin)
 
 bool plugin_unload(plugin_t *plugin)
 {
-  if (plugin->loaded) {
+  if (plugin->loadtype != PLUGTYPE_NULL) {
     if (plugin->initialized)
       plugin->plugin_entry(plugin, plugin->type, 0);
 #if defined(WIN32)
@@ -447,10 +448,7 @@ bool plugin_unload(plugin_t *plugin)
 #else
     lt_dlclose(plugin->handle);
 #endif
-    if (plugin->type < PLUGTYPE_GUI) {
-      plugin->type = PLUGTYPE_DEV;
-    }
-    plugin->loaded = 0;
+    plugin->loadtype = PLUGTYPE_NULL;
     return 1;
   } else {
     return 0;
@@ -460,18 +458,16 @@ bool plugin_unload(plugin_t *plugin)
 bool plugin_load(const char *name, plugintype_t type)
 {
   plugin_t *plugin = NULL, *temp;
-  plugintype_t basetype;
 #if defined(WIN32)
   char dll_path_list[MAX_PATH];
 #endif
 
-  basetype = (type < PLUGTYPE_GUI) ? PLUGTYPE_DEV : type;
   if (plugins != NULL) {
     temp = plugins;
 
     while (temp != NULL) {
-      if (!strcmp(name, temp->name) && (basetype == temp->type)) {
-        if (temp->loaded) {
+      if (!strcmp(name, temp->name) && ((type & temp->type) != 0)) {
+        if (temp->loadtype != PLUGTYPE_NULL) {
           BX_PANIC(("plugin '%s' already loaded", name));
           return 0;
         } else {
@@ -485,9 +481,6 @@ bool plugin_load(const char *name, plugintype_t type)
   if (plugin == NULL) {
     BX_PANIC(("plugin '%s' not found", name));
     return 0;
-  }
-  if (plugin->type == PLUGTYPE_DEV) {
-    plugin->type = type;
   }
 
   char plugin_filename[BX_PATHNAME_LEN], tmpname[BX_PATHNAME_LEN];
@@ -539,7 +532,7 @@ bool plugin_load(const char *name, plugintype_t type)
     return 0;
   }
 #endif
-  plugin->loaded = 1;
+  plugin->loadtype = type;
 
   if (type == PLUGTYPE_GUI) {
     sprintf(tmpname, GUI_PLUGIN_ENTRY_FMT_STRING, name);
@@ -549,8 +542,6 @@ bool plugin_load(const char *name, plugintype_t type)
     sprintf(tmpname, NET_PLUGIN_ENTRY_FMT_STRING, name);
   } else if (type == PLUGTYPE_SND) {
     sprintf(tmpname, SND_PLUGIN_ENTRY_FMT_STRING, name);
-  } else if (type == PLUGTYPE_USB) {
-    sprintf(tmpname, USB_PLUGIN_ENTRY_FMT_STRING, name);
   } else {
     sprintf(tmpname, PLUGIN_ENTRY_FMT_STRING, name);
   }
@@ -639,7 +630,7 @@ void plugin_cleanup(void)
   plugin_t *dead_plug;
 
   while (plugins != NULL) {
-    if (plugins->loaded) {
+    if (plugins->loadtype != PLUGTYPE_NULL) {
       plugin_unload(plugins);
     }
     delete [] plugins->name;
@@ -758,7 +749,7 @@ bool bx_load_plugin(const char *name, plugintype_t type)
 
   if (!strcmp(name, "*")) {
     for (plugin = plugins; plugin; plugin = plugin->next) {
-      if ((type == plugin->type) && !plugin->loaded) {
+      if (((type & plugin->type) != 0) && (plugin->loadtype != PLUGTYPE_NULL)) {
         plugin_load(plugin->name, type);
       }
     }
@@ -790,7 +781,7 @@ void bx_unload_plugin_type(const char *name, plugintype_t type)
   plugin_t *plugin;
 
   for (plugin = plugins; plugin; plugin = plugin->next) {
-    if (!strcmp(plugin->name, name) && (plugin->type == type)) {
+    if (!strcmp(plugin->name, name) && ((plugin->type & type) != 0)) {
       plugin_unload(plugin);
       break;
     }
@@ -944,13 +935,13 @@ void bx_plugins_after_restore_state()
 
 // Special code for handling modules when plugin support is turned off.
 
-#define BUILTIN_OPT_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_OPTIONAL, lib##mod##_LTX_plugin_entry, 0}
-#define BUILTIN_VGA_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_VGA, lib##mod##_LTX_plugin_entry, 0}
+#define BUILTIN_OPT_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_OPTIONAL, lib##mod##_plugin_entry, 0}
+#define BUILTIN_VGA_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_VGA, lib##mod##_plugin_entry, 0}
 #define BUILTIN_GUI_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_GUI, lib##mod##_gui_plugin_entry, 0}
 #define BUILTIN_IMG_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_IMG, lib##mod##_img_plugin_entry, 0}
-#define BUILTIN_NET_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_NET, lib##mod##_net_plugin_entry, 0}
-#define BUILTIN_SND_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_SND, lib##mod##_snd_plugin_entry, 0}
-#define BUILTIN_USB_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_USB, lib##mod##_dev_plugin_entry, 0}
+#define BUILTIN_NET_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_NET, libeth_##mod##_plugin_entry, 0}
+#define BUILTIN_SND_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_SND, libsound##mod##_plugin_entry, 0}
+#define BUILTIN_USB_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_USB, lib##mod##_plugin_entry, 0}
 
 plugin_t bx_builtin_plugins[] = {
 #if BX_WITH_AMIGAOS

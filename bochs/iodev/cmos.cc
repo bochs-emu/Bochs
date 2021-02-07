@@ -102,7 +102,7 @@ Bit8u bin_to_bcd(Bit8u value, bool is_binary)
 
 PLUGIN_ENTRY_FOR_MODULE(cmos)
 {
-  if (init) {
+  if (mode == PLUGIN_INIT) {
     if (type == PLUGTYPE_CORE) {
       theCmosDevice = new bx_cmos_c();
       bx_devices.pluginCmosDevice = theCmosDevice;
@@ -110,11 +110,13 @@ PLUGIN_ENTRY_FOR_MODULE(cmos)
     } else {
       return -1;
     }
-  } else {
+  } else if (mode == PLUGIN_FINI) {
     if (theCmosDevice != NULL) {
       delete theCmosDevice;
       theCmosDevice = NULL;
     }
+  } else {
+    return (int)PLUGTYPE_CORE;
   }
   return 0; // Success
 }

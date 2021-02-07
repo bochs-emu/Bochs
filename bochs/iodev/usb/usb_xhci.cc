@@ -188,18 +188,20 @@ Bit32s usb_xhci_options_save(FILE *fp)
 
 PLUGIN_ENTRY_FOR_MODULE(usb_xhci)
 {
-  if (init) {
+  if (mode == PLUGIN_INIT) {
     theUSB_XHCI = new bx_usb_xhci_c();
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theUSB_XHCI, BX_PLUGIN_USB_XHCI);
     // add new configuration parameter for the config interface
     SIM->init_usb_options("xHCI", "xhci", BX_N_USB_XHCI_PORTS);
     // register add-on option for bochsrc and command line
     SIM->register_addon_option("usb_xhci", usb_xhci_options_parser, usb_xhci_options_save);
-  } else {
+  } else if (mode == PLUGIN_FINI) {
     SIM->unregister_addon_option("usb_xhci");
     bx_list_c *menu = (bx_list_c*)SIM->get_param("ports.usb");
     delete theUSB_XHCI;
     menu->remove("xhci");
+  } else {
+    return (int)PLUGTYPE_OPTIONAL;
   }
   return 0; // Success
 }

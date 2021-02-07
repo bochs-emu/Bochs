@@ -1,7 +1,7 @@
 ----------------------------------------------------------------------
 Patch name: patch.example-user-plugin
 Author:     Volker Ruppert
-Updated:    24 Jan 2021
+Updated:    7 Feb 2021
 Status:     Demo
 
 Detailed description:
@@ -24,7 +24,7 @@ Detailed description:
 Patch was created with:
   diff -u
 Apply patch to what version:
-  svn revision 14083 (Jan 24, 2021)
+  svn revision 14131 (Feb 7, 2021)
 Instructions:
   To patch, go to main bochs directory.
   Type "patch -p0 < THIS_PATCH_FILE".
@@ -217,14 +217,14 @@ diff -urN ../bochs/user_plugins/testdev.cc ./user_plugins/testdev.cc
 +
 +PLUGIN_ENTRY_FOR_MODULE(testdev)
 +{
-+  if (init) {
++  if (mode == PLUGIN_INIT) {
 +    theTestDevice = new bx_testdev_c();
 +    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theTestDevice, "testdev");
 +    // add new configuration parameter for the config interface
 +    testdev_init_options();
 +    // register user-defined option for bochsrc and command line
 +    SIM->register_addon_option("testdev", testdev_options_parser, testdev_options_save);
-+  } else {
++  } else if (mode == PLUGIN_FINI) {
 +    SIM->unregister_addon_option("testdev");
 +    bx_list_c *menu = (bx_list_c*)SIM->get_param("user");
 +    menu->remove("testdev");

@@ -41,7 +41,7 @@ bx_piix3_c *thePci2IsaBridge = NULL;
 
 PLUGIN_ENTRY_FOR_MODULE(pci2isa)
 {
-  if (init) {
+  if (mode == PLUGIN_INIT) {
     if (type == PLUGTYPE_CORE) {
       thePci2IsaBridge = new bx_piix3_c();
       bx_devices.pluginPci2IsaBridge = thePci2IsaBridge;
@@ -49,8 +49,10 @@ PLUGIN_ENTRY_FOR_MODULE(pci2isa)
     } else {
       return -1;
     }
-  } else {
+  } else if (mode == PLUGIN_FINI) {
     delete thePci2IsaBridge;
+  } else {
+    return (int)PLUGTYPE_CORE;
   }
   return 0; // Success
 }

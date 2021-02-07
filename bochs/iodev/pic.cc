@@ -33,7 +33,7 @@ bx_pic_c *thePic = NULL;
 
 PLUGIN_ENTRY_FOR_MODULE(pic)
 {
-  if (init) {
+  if (mode == PLUGIN_INIT) {
     if (type == PLUGTYPE_CORE) {
       thePic = new bx_pic_c();
       bx_devices.pluginPicDevice = thePic;
@@ -41,8 +41,10 @@ PLUGIN_ENTRY_FOR_MODULE(pic)
     } else {
       return -1;
     }
-  } else {
+  } else if (mode == PLUGIN_FINI) {
     delete thePic;
+  } else {
+    return (int)PLUGTYPE_CORE;
   }
   return 0; // Success
 }

@@ -33,11 +33,13 @@ bx_unmapped_c *theUnmappedDevice = NULL;
 
 PLUGIN_ENTRY_FOR_MODULE(unmapped)
 {
-  if (init) {
+  if (mode == PLUGIN_INIT) {
     theUnmappedDevice = new bx_unmapped_c();
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theUnmappedDevice, BX_PLUGIN_UNMAPPED);
-  } else {
+  } else if (mode == PLUGIN_FINI) {
     delete theUnmappedDevice;
+  } else {
+    return (int)PLUGTYPE_OPTIONAL;
   }
   return(0); // Success
 }

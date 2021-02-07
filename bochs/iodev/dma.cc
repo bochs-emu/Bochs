@@ -39,7 +39,7 @@ bx_dma_c *theDmaDevice = NULL;
 
 PLUGIN_ENTRY_FOR_MODULE(dma)
 {
-  if (init) {
+  if (mode == PLUGIN_INIT) {
     if (type == PLUGTYPE_CORE) {
       theDmaDevice = new bx_dma_c ();
       bx_devices.pluginDmaDevice = theDmaDevice;
@@ -47,8 +47,10 @@ PLUGIN_ENTRY_FOR_MODULE(dma)
     } else {
       return -1;
     }
-  } else {
+  } else if (mode == PLUGIN_FINI) {
     delete theDmaDevice;
+  } else {
+    return (int)PLUGTYPE_CORE;
   }
   return 0; // Success
 }

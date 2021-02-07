@@ -214,7 +214,7 @@ static bx_svga_cirrus_c *theSvga = NULL;
 
 PLUGIN_ENTRY_FOR_MODULE(svga_cirrus)
 {
-  if (init) {
+  if (mode == PLUGIN_INIT) {
     if (type == PLUGTYPE_CORE) {
       theSvga = new bx_svga_cirrus_c();
       bx_devices.pluginVgaDevice = theSvga;
@@ -222,8 +222,10 @@ PLUGIN_ENTRY_FOR_MODULE(svga_cirrus)
     } else {
       return -1;
     }
-  } else {
+  } else if (mode == PLUGIN_FINI) {
     delete theSvga;
+  } else {
+    return (int)PLUGTYPE_CORE;
   }
   return 0; // Success
 }

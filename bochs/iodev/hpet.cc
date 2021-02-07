@@ -45,11 +45,13 @@ bx_hpet_c *theHPET = NULL;
 
 PLUGIN_ENTRY_FOR_MODULE(hpet)
 {
-  if (init) {
+  if (mode == PLUGIN_INIT) {
     theHPET = new bx_hpet_c();
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theHPET, BX_PLUGIN_HPET);
-  } else {
+  } else if (mode == PLUGIN_FINI) {
     delete theHPET;
+  } else {
+    return (int)PLUGTYPE_STANDARD;
   }
   return(0); // Success
 }

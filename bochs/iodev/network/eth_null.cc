@@ -40,7 +40,9 @@
 
 PLUGIN_ENTRY_FOR_NET_MODULE(null)
 {
-  // Nothing here yet
+  if (mode == PLUGIN_PROBE) {
+    return (int)PLUGTYPE_NET;
+  }
   return 0; // Success
 }
 

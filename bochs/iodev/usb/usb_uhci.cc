@@ -81,18 +81,20 @@ Bit32s usb_uhci_options_save(FILE *fp)
 
 PLUGIN_ENTRY_FOR_MODULE(usb_uhci)
 {
-  if (init) {
+  if (mode == PLUGIN_INIT) {
     theUSB_UHCI = new bx_usb_uhci_c();
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theUSB_UHCI, BX_PLUGIN_USB_UHCI);
     // add new configuration parameter for the config interface
     SIM->init_usb_options("UHCI", "uhci", USB_UHCI_PORTS);
     // register add-on option for bochsrc and command line
     SIM->register_addon_option("usb_uhci", usb_uhci_options_parser, usb_uhci_options_save);
-  } else {
+  } else if (mode == PLUGIN_FINI) {
     SIM->unregister_addon_option("usb_uhci");
     bx_list_c *menu = (bx_list_c*)SIM->get_param("ports.usb");
     delete theUSB_UHCI;
     menu->remove("uhci");
+  } else {
+    return (int)PLUGTYPE_OPTIONAL;
   }
   return 0; // Success
 }

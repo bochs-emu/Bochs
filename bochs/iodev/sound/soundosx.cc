@@ -86,7 +86,9 @@ AudioConverterRef WaveConverter = NULL;
 
 PLUGIN_ENTRY_FOR_SND_MODULE(osx)
 {
-  // Nothing here yet
+  if (mode == PLUGIN_PROBE) {
+    return (int)PLUGTYPE_SND;
+  }
   return 0; // Success
 }
 

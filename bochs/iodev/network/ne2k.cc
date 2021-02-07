@@ -191,14 +191,14 @@ Bit32s ne2k_options_save(FILE *fp)
 
 PLUGIN_ENTRY_FOR_MODULE(ne2k)
 {
-  if (init) {
+  if (mode == PLUGIN_INIT) {
     NE2kDevMain = new bx_ne2k_main_c();
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, NE2kDevMain, BX_PLUGIN_NE2K);
     // add new configuration parameter for the config interface
     ne2k_init_options();
     // register add-on option for bochsrc and command line
     SIM->register_addon_option("ne2k", ne2k_options_parser, ne2k_options_save);
-  } else {
+  } else if (mode == PLUGIN_FINI) {
     char name[12];
 
     SIM->unregister_addon_option("ne2k");
@@ -208,6 +208,8 @@ PLUGIN_ENTRY_FOR_MODULE(ne2k)
       network->remove(name);
     }
     delete NE2kDevMain;
+  } else {
+    return (int)PLUGTYPE_OPTIONAL;
   }
   return(0); // Success
 }

@@ -28,19 +28,23 @@
 #endif
 
 enum plugintype_t {
-  PLUGTYPE_DEV=0,
-  PLUGTYPE_CORE,
-  PLUGTYPE_VGA,
-  PLUGTYPE_STANDARD,
-  PLUGTYPE_OPTIONAL,
-  PLUGTYPE_GUI=0x100,
-  PLUGTYPE_IMG=0x200,
-  PLUGTYPE_NET=0x300,
-  PLUGTYPE_SND=0x400,
-  PLUGTYPE_USB=0x500
+  PLUGTYPE_NULL     = 0x00,
+  PLUGTYPE_CORE     = 0x01,
+  PLUGTYPE_STANDARD = 0x02,
+  PLUGTYPE_OPTIONAL = 0x04,
+  PLUGTYPE_VGA      = 0x08,
+  PLUGTYPE_USB      = 0x80,
+  PLUGTYPE_GUI      = 0x100,
+  PLUGTYPE_IMG      = 0x200,
+  PLUGTYPE_NET      = 0x400,
+  PLUGTYPE_SND      = 0x800,
 };
 
-typedef int (CDECL *plugin_entry_t)(struct _plugin_t *plugin, plugintype_t type, bool init);
+#define PLUGIN_FINI  0
+#define PLUGIN_INIT  1
+#define PLUGIN_PROBE 2
+
+typedef int (CDECL *plugin_entry_t)(struct _plugin_t *plugin, plugintype_t type, Bit8u mode);
 
 typedef struct _plugin_t
 {
@@ -58,12 +62,10 @@ typedef struct _plugin_t
     plugin_entry_t plugin_entry;
     bool initialized;
 #if BX_PLUGINS
-    bool loaded;
+    plugintype_t loadtype;
 
     struct _plugin_t *next;
 #endif
 } plugin_t;
-
-
 
 #endif /* __EXTPLUGIN_H */

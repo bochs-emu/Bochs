@@ -104,7 +104,7 @@ Bit32s parport_options_save(FILE *fp)
 
 PLUGIN_ENTRY_FOR_MODULE(parallel)
 {
-  if (init) {
+  if (mode == PLUGIN_INIT) {
     theParallelDevice = new bx_parallel_c();
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theParallelDevice, BX_PLUGIN_PARALLEL);
     // add new configuration parameters for the config interface
@@ -112,7 +112,7 @@ PLUGIN_ENTRY_FOR_MODULE(parallel)
     // register add-on options for bochsrc and command line
     SIM->register_addon_option("parport1", parport_options_parser, parport_options_save);
     SIM->register_addon_option("parport2", parport_options_parser, NULL);
-  } else {
+  } else if (mode == PLUGIN_FINI) {
     char port[10];
 
     delete theParallelDevice;
@@ -123,6 +123,8 @@ PLUGIN_ENTRY_FOR_MODULE(parallel)
       sprintf(port, "%d", i+1);
       menu->remove(port);
     }
+  } else {
+    return (int)PLUGTYPE_OPTIONAL;
   }
   return 0; // Success
 }

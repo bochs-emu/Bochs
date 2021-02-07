@@ -60,6 +60,9 @@ const int vmware4_image_t::SECTOR_SIZE = 512;
 
 PLUGIN_ENTRY_FOR_IMG_MODULE(vmware4)
 {
+  if (mode == PLUGIN_PROBE) {
+    return (int)PLUGTYPE_IMG;
+  }
   return 0; // Success
 }
 

@@ -47,11 +47,13 @@ logfunctions  *vgabioslog;
 
 PLUGIN_ENTRY_FOR_MODULE(biosdev)
 {
-  if (init) {
+  if (mode == PLUGIN_INIT) {
     theBiosDevice = new bx_biosdev_c();
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theBiosDevice, BX_PLUGIN_BIOSDEV);
-  } else {
+  } else if (mode == PLUGIN_FINI) {
     delete theBiosDevice;
+  } else {
+    return (int)PLUGTYPE_OPTIONAL;
   }
   return(0); // Success
 }

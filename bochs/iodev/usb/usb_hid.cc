@@ -62,8 +62,11 @@
 
 // USB device plugin entry point
 
-PLUGIN_ENTRY_FOR_USB_MODULE(usb_hid)
+PLUGIN_ENTRY_FOR_MODULE(usb_hid)
 {
+  if (mode == PLUGIN_PROBE) {
+    return (int)PLUGTYPE_USB;
+  }
   return 0; // Success
 }
 

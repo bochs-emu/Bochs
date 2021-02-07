@@ -189,7 +189,7 @@ Bit32s es1370_options_save(FILE *fp)
 
 PLUGIN_ENTRY_FOR_MODULE(es1370)
 {
-  if (init) {
+  if (mode == PLUGIN_INIT) {
     theES1370Device = new bx_es1370_c();
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theES1370Device, BX_PLUGIN_ES1370);
     // add new configuration parameter for the config interface
@@ -197,12 +197,14 @@ PLUGIN_ENTRY_FOR_MODULE(es1370)
     // register add-on option for bochsrc and command line
     SIM->register_addon_option("es1370", es1370_options_parser, es1370_options_save);
     bx_devices.add_sound_device();
-  } else {
+  } else if (mode == PLUGIN_FINI) {
     delete theES1370Device;
     SIM->unregister_addon_option("es1370");
     bx_list_c *menu = (bx_list_c*)SIM->get_param("sound");
     menu->remove("es1370");
     bx_devices.remove_sound_device();
+  } else {
+    return (int)PLUGTYPE_OPTIONAL;
   }
   return 0; // Success
 }

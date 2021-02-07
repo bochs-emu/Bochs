@@ -55,7 +55,9 @@ Bit8u *DataPointer;    // returned by GlobalLock()
 
 PLUGIN_ENTRY_FOR_SND_MODULE(win)
 {
-  // Nothing here yet
+  if (mode == PLUGIN_PROBE) {
+    return (int)PLUGTYPE_SND;
+  }
   return 0; // Success
 }
 

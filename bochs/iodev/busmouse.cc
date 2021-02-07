@@ -81,13 +81,15 @@ bx_busm_c *theBusMouse = NULL;
 
 PLUGIN_ENTRY_FOR_MODULE(busmouse)
 {
-  if (init) {
+  if (mode == PLUGIN_INIT) {
     // Create one instance of the busmouse device object.
     theBusMouse = new bx_busm_c();
     // Register this device.
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theBusMouse, BX_PLUGIN_BUSMOUSE);
-  } else {
+  } else if (mode == PLUGIN_FINI) {
     delete theBusMouse;
+  } else {
+    return (int)PLUGTYPE_OPTIONAL;
   }
   return 0; // Success
 }

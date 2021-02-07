@@ -42,15 +42,17 @@ bx_pci_bridge_c *thePciBridge = NULL;
 
 PLUGIN_ENTRY_FOR_MODULE(pci)
 {
-  if (init) {
+  if (mode == PLUGIN_INIT) {
     if (type == PLUGTYPE_CORE) {
       thePciBridge = new bx_pci_bridge_c();
       BX_REGISTER_DEVICE_DEVMODEL(plugin, type, thePciBridge, BX_PLUGIN_PCI);
     } else {
       return -1;
     }
-  } else {
+  } else if (mode == PLUGIN_FINI) {
     delete thePciBridge;
+  } else {
+    return (int)PLUGTYPE_CORE;
   }
   return 0; // Success
 }

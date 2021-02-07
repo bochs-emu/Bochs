@@ -165,7 +165,7 @@ Bit32s sb16_options_save(FILE *fp)
 
 PLUGIN_ENTRY_FOR_MODULE(sb16)
 {
-  if (init) {
+  if (mode == PLUGIN_INIT) {
     theSB16Device = new bx_sb16_c();
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theSB16Device, BX_PLUGIN_SB16);
     // add new configuration parameter for the config interface
@@ -173,11 +173,13 @@ PLUGIN_ENTRY_FOR_MODULE(sb16)
     // register add-on option for bochsrc and command line
     SIM->register_addon_option("sb16", sb16_options_parser, sb16_options_save);
     bx_devices.add_sound_device();
-  } else {
+  } else if (mode == PLUGIN_FINI) {
     delete theSB16Device;
     SIM->unregister_addon_option("sb16");
     ((bx_list_c*)SIM->get_param("sound"))->remove("sb16");
     bx_devices.remove_sound_device();
+  } else {
+    return (int)PLUGTYPE_OPTIONAL;
   }
   return(0); // Success
 }

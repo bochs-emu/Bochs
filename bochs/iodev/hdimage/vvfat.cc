@@ -63,6 +63,9 @@
 
 PLUGIN_ENTRY_FOR_IMG_MODULE(vvfat)
 {
+  if (mode == PLUGIN_PROBE) {
+    return (int)PLUGTYPE_IMG;
+  }
   return 0; // Success
 }
 

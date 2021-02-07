@@ -43,12 +43,14 @@ const Bit8u bmdma_iomask[16] = {1, 0, 1, 0, 4, 0, 0, 0, 1, 0, 1, 0, 4, 0, 0, 0};
 
 PLUGIN_ENTRY_FOR_MODULE(pci_ide)
 {
-  if (init) {
+  if (mode == PLUGIN_INIT) {
     thePciIdeController = new bx_pci_ide_c();
     bx_devices.pluginPciIdeController = thePciIdeController;
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, thePciIdeController, BX_PLUGIN_PCI_IDE);
-  } else {
+  } else if (mode == PLUGIN_FINI) {
     delete thePciIdeController;
+  } else {
+    return (int)PLUGTYPE_STANDARD;
   }
   return(0); // Success
 }

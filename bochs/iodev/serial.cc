@@ -153,7 +153,7 @@ Bit32s serial_options_save(FILE *fp)
 
 PLUGIN_ENTRY_FOR_MODULE(serial)
 {
-  if (init) {
+  if (mode == PLUGIN_INIT) {
     theSerialDevice = new bx_serial_c();
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theSerialDevice, BX_PLUGIN_SERIAL);
     // add new configuration parameters for the config interface
@@ -163,7 +163,7 @@ PLUGIN_ENTRY_FOR_MODULE(serial)
     SIM->register_addon_option("com2", serial_options_parser, NULL);
     SIM->register_addon_option("com3", serial_options_parser, NULL);
     SIM->register_addon_option("com4", serial_options_parser, NULL);
-  } else {
+  } else if (mode == PLUGIN_FINI) {
     char port[6];
 
     delete theSerialDevice;
@@ -174,6 +174,8 @@ PLUGIN_ENTRY_FOR_MODULE(serial)
       sprintf(port, "%d", i+1);
       menu->remove(port);
     }
+  } else {
+    return (int)PLUGTYPE_OPTIONAL;
   }
   return 0; // Success
 }

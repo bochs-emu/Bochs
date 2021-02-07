@@ -106,15 +106,17 @@ static Bit16u drate_in_k[4] = {
 
 PLUGIN_ENTRY_FOR_MODULE(floppy)
 {
-  if (init) {
+  if (mode == PLUGIN_INIT) {
     if (type == PLUGTYPE_CORE) {
       theFloppyController = new bx_floppy_ctrl_c();
       BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theFloppyController, BX_PLUGIN_FLOPPY);
     } else {
       return -1;
     }
-  } else {
+  } else if (mode == PLUGIN_FINI) {
     delete theFloppyController;
+  } else {
+    return (int)PLUGTYPE_CORE;
   }
   return 0; // Success
 }

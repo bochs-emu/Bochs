@@ -68,13 +68,15 @@ extern void apic_bus_deliver_smi(void);
 
 PLUGIN_ENTRY_FOR_MODULE(acpi)
 {
-  if (init) {
+  if (mode == PLUGIN_INIT) {
     theACPIController = new bx_acpi_ctrl_c();
     bx_devices.pluginACPIController = theACPIController;
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theACPIController, BX_PLUGIN_ACPI);
-  } else {
+  } else if (mode == PLUGIN_FINI) {
     bx_devices.pluginACPIController = &bx_devices.stubACPIController;
     delete theACPIController;
+  } else {
+    return (int)PLUGTYPE_STANDARD;
   }
   return 0; // Success
 }

@@ -579,10 +579,12 @@ enum {
 #define IMPLEMENT_GUI_PLUGIN_CODE(gui_name)                             \
   PLUGIN_ENTRY_FOR_GUI_MODULE(gui_name)                                 \
   {                                                                     \
-    if (init) {                                                         \
+    if (mode == PLUGIN_INIT) {                                          \
       genlog->info("installing %s module as the Bochs GUI", #gui_name); \
       theGui = new bx_##gui_name##_gui_c ();                            \
       bx_gui = theGui;                                                  \
+    } else if (mode == PLUGIN_PROBE) {                                  \
+      return (int)PLUGTYPE_GUI;                                         \
     }                                                                   \
     return(0); /* Success */                                            \
   }

@@ -139,7 +139,7 @@ Bit32s voodoo_options_save(FILE *fp)
 
 PLUGIN_ENTRY_FOR_MODULE(voodoo)
 {
-  if (init) {
+  if (mode == PLUGIN_INIT) {
     if (type == PLUGTYPE_VGA) {
       theVoodooVga = new bx_voodoo_vga_c();
       bx_devices.pluginVgaDevice = theVoodooVga;
@@ -152,7 +152,7 @@ PLUGIN_ENTRY_FOR_MODULE(voodoo)
     voodoo_init_options();
     // register add-on option for bochsrc and command line
     SIM->register_addon_option("voodoo", voodoo_options_parser, voodoo_options_save);
-  } else {
+  } else if (mode == PLUGIN_FINI) {
     SIM->unregister_addon_option("voodoo");
     bx_list_c *menu = (bx_list_c*)SIM->get_param("display");
     menu->remove("voodoo");
@@ -165,6 +165,8 @@ PLUGIN_ENTRY_FOR_MODULE(voodoo)
       delete theVoodooDevice;
       theVoodooDevice = NULL;
     }
+  } else {
+    return (int)(PLUGTYPE_VGA | PLUGTYPE_OPTIONAL);
   }
   return 0; // Success
 }

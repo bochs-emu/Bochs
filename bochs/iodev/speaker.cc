@@ -131,7 +131,7 @@ Bit32s speaker_options_save(FILE *fp)
 
 PLUGIN_ENTRY_FOR_MODULE(speaker)
 {
-  if (init) {
+  if (mode == PLUGIN_INIT) {
     theSpeaker = new bx_speaker_c();
     bx_devices.pluginSpeaker = theSpeaker;
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theSpeaker, BX_PLUGIN_SPEAKER);
@@ -140,12 +140,14 @@ PLUGIN_ENTRY_FOR_MODULE(speaker)
     // register add-on options for bochsrc and command line
     SIM->register_addon_option("speaker", speaker_options_parser, speaker_options_save);
     bx_devices.add_sound_device();
-  } else {
+  } else if (mode == PLUGIN_FINI) {
     bx_devices.pluginSpeaker = &bx_devices.stubSpeaker;
     delete theSpeaker;
     SIM->unregister_addon_option("speaker");
     ((bx_list_c*)SIM->get_param("sound"))->remove("speaker");
     bx_devices.remove_sound_device();
+  } else {
+    return (int)PLUGTYPE_OPTIONAL;
   }
   return(0); // Success
 }

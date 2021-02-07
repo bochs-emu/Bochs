@@ -33,7 +33,9 @@
 
 PLUGIN_ENTRY_FOR_SND_MODULE(dummy)
 {
-  // Nothing here yet
+  if (mode == PLUGIN_PROBE) {
+    return (int)PLUGTYPE_SND;
+  }
   return 0; // Success
 }
 

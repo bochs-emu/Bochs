@@ -71,13 +71,15 @@
 //////////////////////////////////////////////////////////////
 PLUGIN_ENTRY_FOR_GUI_MODULE(wx)
 {
-  if (init) {
+  if (mode == PLUGIN_INIT) {
     wxLogDebug(wxT("plugin_entry() for wxmain.cc"));
     wxLogDebug(wxT("installing wxWidgets as the configuration interface"));
     SIM->register_configuration_interface("wx", wx_ci_callback, NULL);
     wxLogDebug(wxT("installing %s as the Bochs GUI"), wxT("wxWidgets"));
     SIM->get_param_enum(BXPN_SEL_DISPLAY_LIBRARY)->set_enabled(0);
     MyPanel::OnPluginInit();
+  } else if (mode == PLUGIN_PROBE) {
+    return (int)PLUGTYPE_GUI;
   }
   return 0; // success
 }

@@ -50,6 +50,9 @@ static unsigned int bx_vnet_instances = 0;
 
 PLUGIN_ENTRY_FOR_NET_MODULE(vnet)
 {
+  if (mode == PLUGIN_PROBE) {
+    return (int)PLUGTYPE_NET;
+  }
   return 0; // Success
 }
 

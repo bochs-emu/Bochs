@@ -53,6 +53,9 @@
 
 PLUGIN_ENTRY_FOR_IMG_MODULE(vpc)
 {
+  if (mode == PLUGIN_PROBE) {
+    return (int)PLUGTYPE_IMG;
+  }
   return 0; // Success
 }
 

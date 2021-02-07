@@ -58,13 +58,15 @@ bx_keyb_c *theKeyboard = NULL;
 
 PLUGIN_ENTRY_FOR_MODULE(keyboard)
 {
-  if (init) {
+  if (mode == PLUGIN_INIT) {
     // Create one instance of the keyboard device object.
     theKeyboard = new bx_keyb_c();
     // Register this device.
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theKeyboard, BX_PLUGIN_KEYBOARD);
-  } else {
+  } else if (mode == PLUGIN_FINI) {
     delete theKeyboard;
+  } else {
+    return (int)PLUGTYPE_STANDARD;
   }
   return 0; // Success
 }

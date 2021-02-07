@@ -59,13 +59,15 @@ bx_gameport_c *theGameport = NULL;
 
 PLUGIN_ENTRY_FOR_MODULE(gameport)
 {
-  if (init) {
+  if (mode == PLUGIN_INIT) {
     theGameport = new bx_gameport_c();
     bx_devices.pluginGameport = theGameport;
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theGameport, BX_PLUGIN_GAMEPORT);
-  } else {
+  } else if (mode == PLUGIN_FINI) {
     bx_devices.pluginGameport = &bx_devices.stubGameport;
     delete theGameport;
+  } else {
+    return (int)PLUGTYPE_OPTIONAL;
   }
   return(0); // Success
 }

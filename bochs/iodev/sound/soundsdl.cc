@@ -40,7 +40,9 @@
 
 PLUGIN_ENTRY_FOR_SND_MODULE(sdl)
 {
-  // Nothing here yet
+  if (mode == PLUGIN_PROBE) {
+    return (int)PLUGTYPE_SND;
+  }
   return 0; // Success
 }
 

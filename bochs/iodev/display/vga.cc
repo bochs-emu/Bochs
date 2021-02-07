@@ -46,7 +46,7 @@ bx_vga_c *theVga = NULL;
 
 PLUGIN_ENTRY_FOR_MODULE(vga)
 {
-  if (init) {
+  if (mode == PLUGIN_INIT) {
     if (type == PLUGTYPE_CORE) {
       theVga = new bx_vga_c();
       bx_devices.pluginVgaDevice = theVga;
@@ -54,8 +54,10 @@ PLUGIN_ENTRY_FOR_MODULE(vga)
     } else {
       return -1;
     }
-  } else {
+  } else if (mode == PLUGIN_FINI) {
     delete theVga;
+  } else {
+    return (int)PLUGTYPE_CORE;
   }
   return 0; // Success
 }

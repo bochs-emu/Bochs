@@ -37,13 +37,15 @@ bx_iodebug_c *theIODebugDevice = NULL;
 
 PLUGIN_ENTRY_FOR_MODULE(iodebug)
 {
-  if (init) {
+  if (mode == PLUGIN_INIT) {
     theIODebugDevice = new bx_iodebug_c();
     bx_devices.pluginIODebug = theIODebugDevice;
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theIODebugDevice, BX_PLUGIN_IODEBUG);
-  } else {
+  } else if (mode == PLUGIN_FINI) {
     bx_devices.pluginIODebug = &bx_devices.stubIODebug;
     delete theIODebugDevice;
+  } else {
+    return (int)PLUGTYPE_OPTIONAL;
   }
   return(0); // Success
 }

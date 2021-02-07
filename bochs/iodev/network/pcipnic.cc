@@ -99,18 +99,20 @@ Bit32s pnic_options_save(FILE *fp)
 
 PLUGIN_ENTRY_FOR_MODULE(pcipnic)
 {
-  if (done) {
+  if (mode == PLUGIN_INIT) {
     thePNICDevice = new bx_pcipnic_c();
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, thePNICDevice, BX_PLUGIN_PCIPNIC);
     // add new configuration parameter for the config interface
     pnic_init_options();
     // register add-on option for bochsrc and command line
     SIM->register_addon_option("pcipnic", pnic_options_parser, pnic_options_save);
-  } else {
+  } else if (mode == PLUGIN_FINI) {
     SIM->unregister_addon_option("pcipnic");
     bx_list_c *menu = (bx_list_c*)SIM->get_param("network");
     menu->remove("pnic");
     delete thePNICDevice;
+  } else {
+    return (int)PLUGTYPE_OPTIONAL;
   }
   return 0; // Success
 }

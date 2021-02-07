@@ -42,6 +42,9 @@ static unsigned int bx_slirp_instances = 0;
 
 PLUGIN_ENTRY_FOR_NET_MODULE(slirp)
 {
+  if (mode == PLUGIN_PROBE) {
+    return (int)PLUGTYPE_NET;
+  }
   return 0; // Success
 }
 

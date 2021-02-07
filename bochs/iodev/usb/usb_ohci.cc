@@ -109,18 +109,20 @@ Bit32s usb_ohci_options_save(FILE *fp)
 
 PLUGIN_ENTRY_FOR_MODULE(usb_ohci)
 {
-  if (init) {
+  if (mode == PLUGIN_INIT) {
     theUSB_OHCI = new bx_usb_ohci_c();
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theUSB_OHCI, BX_PLUGIN_USB_OHCI);
     // add new configuration parameter for the config interface
     SIM->init_usb_options("OHCI", "ohci", USB_OHCI_PORTS);
     // register add-on option for bochsrc and command line
     SIM->register_addon_option("usb_ohci", usb_ohci_options_parser, usb_ohci_options_save);
-  } else {
+  } else if (mode == PLUGIN_FINI) {
     SIM->unregister_addon_option("usb_ohci");
     bx_list_c *menu = (bx_list_c*)SIM->get_param("ports.usb");
     delete theUSB_OHCI;
     menu->remove("ohci");
+  } else {
+    return (int)PLUGTYPE_OPTIONAL;
   }
   return 0; // Success
 }
