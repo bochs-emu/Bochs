@@ -24,7 +24,7 @@ Detailed description:
 Patch was created with:
   diff -u
 Apply patch to what version:
-  svn revision 14131 (Feb 7, 2021)
+  svn revision 14132 (Feb 7, 2021)
 Instructions:
   To patch, go to main bochs directory.
   Type "patch -p0 < THIS_PATCH_FILE".
@@ -35,7 +35,7 @@ Instructions:
 ----------------------------------------------------------------------
 diff -urN ../bochs/user_plugins/Makefile.in ./user_plugins/Makefile.in
 --- ../bochs/user_plugins/Makefile.in	1970-01-01 01:00:00.000000000 +0100
-+++ ./user_plugins/Makefile.in	2021-01-23 18:54:27.577913784 +0100
++++ ./user_plugins/Makefile.in	2021-02-07 19:08:10.591961411 +0100
 @@ -0,0 +1,112 @@
 +# Copyright (C) 2009-2021  Volker Ruppert
 +#
@@ -151,8 +151,8 @@ diff -urN ../bochs/user_plugins/Makefile.in ./user_plugins/Makefile.in
 + ../param_names.h testdev.h
 diff -urN ../bochs/user_plugins/testdev.cc ./user_plugins/testdev.cc
 --- ../bochs/user_plugins/testdev.cc	1970-01-01 01:00:00.000000000 +0100
-+++ ./user_plugins/testdev.cc	2021-01-24 08:42:26.479565272 +0100
-@@ -0,0 +1,122 @@
++++ ./user_plugins/testdev.cc	2021-02-07 19:26:36.000020446 +0100
+@@ -0,0 +1,127 @@
 +// Copyright (C) 2009-2021  Volker Ruppert
 +//
 +// This library is free software; you can redistribute it and/or
@@ -190,6 +190,7 @@ diff -urN ../bochs/user_plugins/testdev.cc ./user_plugins/testdev.cc
 +  bx_param_c *root_param = SIM->get_param("user");
 +  bx_list_c *menu = new bx_list_c(root_param, "testdev", "Test Device");
 +  menu->set_options(bx_list_c::SHOW_PARENT);
++  new bx_param_bool_c(menu, "enabled", "Enable Test device", "", 1);
 +  new bx_param_num_c(menu, "testval", "Test Parameter", "", 0, BX_MAX_BIT32U, 0);
 +}
 +
@@ -229,6 +230,8 @@ diff -urN ../bochs/user_plugins/testdev.cc ./user_plugins/testdev.cc
 +    bx_list_c *menu = (bx_list_c*)SIM->get_param("user");
 +    menu->remove("testdev");
 +    delete theTestDevice;
++  } else {
++    return (int)PLUGTYPE_OPTIONAL;
 +  }
 +  return(0); // Success
 +}
@@ -247,6 +250,8 @@ diff -urN ../bochs/user_plugins/testdev.cc ./user_plugins/testdev.cc
 +
 +void bx_testdev_c::init(void)
 +{
++  if (!SIM->get_param_num("user.testdev.enabled")->get())
++    return;
 +  DEV_register_ioread_handler(this, read_handler, 0x1000, "Test Device", 4);
 +  DEV_register_iowrite_handler(this, write_handler, 0x1000, "Test Device", 4);
 +}
@@ -277,7 +282,7 @@ diff -urN ../bochs/user_plugins/testdev.cc ./user_plugins/testdev.cc
 +}
 diff -urN ../bochs/user_plugins/testdev.h ./user_plugins/testdev.h
 --- ../bochs/user_plugins/testdev.h	1970-01-01 01:00:00.000000000 +0100
-+++ ./user_plugins/testdev.h	2021-01-23 18:54:27.577913784 +0100
++++ ./user_plugins/testdev.h	2021-02-07 19:08:10.591961411 +0100
 @@ -0,0 +1,40 @@
 +// Copyright (C) 2009-2021  Volker Ruppert
 +//
