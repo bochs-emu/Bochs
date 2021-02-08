@@ -3603,7 +3603,7 @@ void bx_dbg_print_help(void)
   dbg_printf("    show \"param\", restore\n");
 }
 
-extern "C" Bit64u eval_value;
+extern Bit64u eval_value;
 
 void bx_dbg_calc_command(Bit64u value)
 {
