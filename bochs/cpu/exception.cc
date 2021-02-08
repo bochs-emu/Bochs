@@ -912,7 +912,7 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
    */
   if (vector != BX_PF_EXCEPTION && vector != BX_DF_EXCEPTION && vector != BX_CP_EXCEPTION) {
     // Page faults have different format
-    error_code = (error_code & 0xfffe) | BX_CPU_THIS_PTR EXT;
+    error_code = (error_code & 0xfffe) | (Bit16u)(BX_CPU_THIS_PTR EXT);
   }
 
   BX_INSTR_EXCEPTION(BX_CPU_ID, vector, error_code);

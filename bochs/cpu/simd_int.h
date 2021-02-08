@@ -517,21 +517,21 @@ BX_CPP_INLINE Bit32u xmm_pmovmskq(const BxPackedXmmRegister *op)
 BX_CPP_INLINE void xmm_pmovm2b(BxPackedXmmRegister *dst, Bit32u mask)
 {
   for (unsigned n=0; n < 16; n++, mask >>= 1) {
-    dst->xmmsbyte(n) = - (mask & 0x1);
+    dst->xmmsbyte(n) = - Bit8s(mask & 0x1);
   }
 }
 
 BX_CPP_INLINE void xmm_pmovm2w(BxPackedXmmRegister *dst, Bit32u mask)
 {
   for (unsigned n=0; n < 8; n++, mask >>= 1) {
-    dst->xmm16s(n) = - (mask & 0x1);
+    dst->xmm16s(n) = - Bit16s(mask & 0x1);
   }
 }
 
 BX_CPP_INLINE void xmm_pmovm2d(BxPackedXmmRegister *dst, Bit32u mask)
 {
   for (unsigned n=0; n < 4; n++, mask >>= 1) {
-    dst->xmm32s(n) = - (mask & 0x1);
+    dst->xmm32s(n) = - Bit32s(mask & 0x1);
   }
 }
 

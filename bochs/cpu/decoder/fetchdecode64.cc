@@ -1747,7 +1747,7 @@ int decoder_simple64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, un
 
   // no immediate expected, no sources expected, take first opcode
   // check attributes ?
-  Bit64u ia_opcode = Bit16u(*op >> 48) & 0x7FFF; // upper bit indicates that parsing is done and doesn't belong to opcode
+  Bit16u ia_opcode = Bit16u(*op >> 48) & 0x7FFF; // upper bit indicates that parsing is done and doesn't belong to opcode
   return ia_opcode;
 }
 

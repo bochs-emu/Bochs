@@ -5226,7 +5226,7 @@ BX_CPP_INLINE void BX_CPU_C::updateFetchModeMask(void)
 #if BX_SUPPORT_X86_64
     ((BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)<<1) |
 #endif
-     (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b);
+     unsigned(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b);    // typecast to keep MSVC warnings silent
 
   BX_CPU_THIS_PTR user_pl = // CPL == 3
      (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl == 3);

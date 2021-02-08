@@ -90,40 +90,40 @@ const Bit32u TLB_GlobalPage    = 0x80000000;
 
 // check if page from a TLB entry can be written
 #define isWriteOK(tlbEntry, user) \
-  (tlbEntry->accessBits & (0x04 << (user)) & BX_CPU_THIS_PTR wr_pkey[tlbEntry->pkey])
+  (tlbEntry->accessBits & (0x04 << unsigned(user)) & BX_CPU_THIS_PTR wr_pkey[tlbEntry->pkey])
 
 // check if page from a TLB entry can be read
 #define isReadOK(tlbEntry, user) \
-  (tlbEntry->accessBits & (0x01 << (user)) & BX_CPU_THIS_PTR rd_pkey[tlbEntry->pkey])
+  (tlbEntry->accessBits & (0x01 << unsigned(user)) & BX_CPU_THIS_PTR rd_pkey[tlbEntry->pkey])
 
 #if BX_SUPPORT_CET
 // check if page from a TLB entry can be written for shadow stack access
 #define isShadowStackWriteOK(tlbEntry, user) \
-  (tlbEntry->accessBits & (0x40 << (user)) & BX_CPU_THIS_PTR wr_pkey[tlbEntry->pkey])
+  (tlbEntry->accessBits & (0x40 << unsigned(user)) & BX_CPU_THIS_PTR wr_pkey[tlbEntry->pkey])
 
 // check if page from a TLB entry can be read
 #define isShadowStackReadOK(tlbEntry, user) \
-  (tlbEntry->accessBits & (0x10 << (user)) & BX_CPU_THIS_PTR rd_pkey[tlbEntry->pkey])
+  (tlbEntry->accessBits & (0x10 << unsigned(user)) & BX_CPU_THIS_PTR rd_pkey[tlbEntry->pkey])
 #endif
 
 #else // ! BX_SUPPORT_PKEYS
 
 // check if page from a TLB entry can be written
 #define isWriteOK(tlbEntry, user) \
-  (tlbEntry->accessBits & (0x04 << (user)))
+  (tlbEntry->accessBits & (0x04 << unsigned(user)))
 
 // check if page from a TLB entry can be read
 #define isReadOK(tlbEntry, user) \
-  (tlbEntry->accessBits & (0x01 << (user)))
+  (tlbEntry->accessBits & (0x01 << unsigned(user)))
 
 #if BX_SUPPORT_CET
 // check if page from a TLB entry can be written for shadow stack access
 #define isShadowStackWriteOK(tlbEntry, user) \
-  (tlbEntry->accessBits & (0x40 << (user)))
+  (tlbEntry->accessBits & (0x40 << unsigned(user)))
 
 // check if page from a TLB entry can be read
 #define isShadowStackReadOK(tlbEntry, user) \
-  (tlbEntry->accessBits & (0x10 << (user)))
+  (tlbEntry->accessBits & (0x10 << unsigned(user)))
 #endif
 
 #endif

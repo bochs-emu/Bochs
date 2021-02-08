@@ -1164,7 +1164,7 @@ Bit64u bx_local_apic_c::get_tsc_deadline(void)
 #if BX_SUPPORT_VMX >= 2
 Bit32u bx_local_apic_c::read_vmx_preemption_timer(void)
 {
-  Bit32u diff = (bx_pc_system.time_ticks() >> vmx_preemption_timer_rate) - (vmx_preemption_timer_initial >> vmx_preemption_timer_rate);
+  Bit64u diff = (bx_pc_system.time_ticks() >> vmx_preemption_timer_rate) - (vmx_preemption_timer_initial >> vmx_preemption_timer_rate);
   if (vmx_preemption_timer_value < diff)
     return 0;
   else
