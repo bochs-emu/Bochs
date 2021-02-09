@@ -43,6 +43,7 @@
 #endif
 
 
+const char **display_library_list;
 int bochsrc_include_level = 0;
 
 #define LOG_THIS genlog->
@@ -227,22 +228,12 @@ void bx_init_usb_options(const char *usb_name, const char *pname, int maxports)
 void bx_plugin_ctrl_init()
 {
   bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_PLUGIN_CTRL);
-#if !BX_PLUGINS
-  int i = 0;
-  while (strcmp(bx_builtin_plugins[i].name, "NULL")) {
-    if (bx_builtin_plugins[i].type == PLUGTYPE_OPTIONAL) {
-      new bx_param_bool_c(base, bx_builtin_plugins[i].name, "", "", 0);
-    }
-    i++;
-  }
-#else
   const char *name;
-  int count = bx_get_plugins_count(PLUGTYPE_OPTIONAL);
+  int count = PLUG_get_plugins_count(PLUGTYPE_OPTIONAL);
   for (int i = 0; i < count; i++) {
-    name = bx_get_plugin_name(PLUGTYPE_OPTIONAL, i);
+    name = PLUG_get_plugin_name(PLUGTYPE_OPTIONAL, i);
     new bx_param_bool_c(base, name, "", "", 0);
   }
-#endif
 }
 
 void bx_plugin_ctrl_reset(bool init_done)
@@ -273,6 +264,28 @@ void bx_plugin_ctrl_reset(bool init_done)
 bool bx_opt_plugin_available(const char *plugname)
 {
   return (((bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL))->get_by_name(plugname) != NULL);
+}
+
+void bx_init_displaylib_list()
+{
+  Bit8u i, count = 0;
+
+  count = PLUG_get_plugins_count(PLUGTYPE_GUI);
+  display_library_list = (const char**) malloc((count + 1) * sizeof(char*));
+  for (i = 0; i < count; i++) {
+    display_library_list[i] = PLUG_get_plugin_name(PLUGTYPE_GUI, i);
+  }
+  display_library_list[count] = NULL;
+  // move default display library to the top of the list
+  if (strcmp(display_library_list[0], BX_DEFAULT_DISPLAY_LIBRARY)) {
+    for (i = 1; i < count; i++) {
+      if (!strcmp(display_library_list[i], BX_DEFAULT_DISPLAY_LIBRARY)) {
+        display_library_list[i] = display_library_list[0];
+        display_library_list[0] = BX_DEFAULT_DISPLAY_LIBRARY;
+        break;
+      }
+    }
+  }
 }
 
 void bx_init_options()
@@ -902,49 +915,7 @@ void bx_init_options()
   // display subtree
   bx_list_c *display = new bx_list_c(root_param, "display", "Bochs Display & Interface Options");
 
-  // this is a list of gui libraries that are known to be available at
-  // compile time.  The one that is listed first will be the default,
-  // which is used unless the user overrides it on the command line or
-  // in a configuration file.
-  static const char *display_library_list[] = {
-#if BX_WITH_X11
-    "x",
-#endif
-#if BX_WITH_WIN32
-    "win32",
-#endif
-#if BX_WITH_CARBON
-    "carbon",
-#endif
-#if BX_WITH_MACOS
-    "macos",
-#endif
-#if BX_WITH_AMIGAOS
-    "amigaos",
-#endif
-#if BX_WITH_SDL
-    "sdl",
-#endif
-#if BX_WITH_SDL2
-    "sdl2",
-#endif
-#if BX_WITH_TERM
-    "term",
-#endif
-#if BX_WITH_RFB
-    "rfb",
-#endif
-#if BX_WITH_VNCSRV
-    "vncsrv",
-#endif
-#if BX_WITH_WX
-    "wx",
-#endif
-#if BX_WITH_NOGUI
-    "nogui",
-#endif
-    NULL
-  };
+  bx_init_displaylib_list();
   bx_param_enum_c *sel_displaylib = new bx_param_enum_c(display,
     "display_library", "VGA Display Library",
     "Select VGA Display Library",

@@ -113,10 +113,13 @@ extern "C" {
 // When plugins are off, PLUG_load_plugin will call the plugin_entry function
 // directly.
 #define PLUG_load_plugin(name,type) {lib##name##_plugin_entry(NULL,type,1);}
+#define PLUG_unload_plugin(name) {lib##name##_plugin_entry(NULL,type,0);}
+// Builtin plugins macros
+#define PLUG_get_plugins_count(a) bx_get_plugins_count_np(a)
+#define PLUG_get_plugin_name(a,b) bx_get_plugin_name_np(a,b)
 #define PLUG_load_gui_plugin(name) bx_load_plugin_np(name,PLUGTYPE_GUI)
 #define PLUG_load_opt_plugin(name) bx_load_plugin_np(name,PLUGTYPE_OPTIONAL)
 #define PLUG_load_vga_plugin(name) bx_load_plugin_np(name,PLUGTYPE_VGA)
-#define PLUG_unload_plugin(name) {lib##name##_plugin_entry(NULL,type,0);}
 #define PLUG_unload_opt_plugin(name) bx_unload_opt_plugin(name,1)
 
 #define DEV_register_ioread_handler(b,c,d,e,f) bx_devices.register_io_read_handler(b,c,d,e,f)
@@ -350,6 +353,8 @@ extern void bx_plugins_after_restore_state(void);
 #if !BX_PLUGINS
 extern plugin_t bx_builtin_plugins[];
 
+Bit8u bx_get_plugins_count_np(plugintype_t type);
+const char* bx_get_plugin_name_np(plugintype_t type, Bit8u index);
 int bx_load_plugin_np(const char *name, plugintype_t type);
 int bx_unload_opt_plugin(const char *name, bool devflag);
 #endif
