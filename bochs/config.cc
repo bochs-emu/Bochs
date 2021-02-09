@@ -3335,6 +3335,10 @@ int bx_write_configuration(const char *rc, int overwrite)
         fprintf(fp, ", slot%d=%s", i+1, sparam->getptr());
       }
     }
+    sparam = SIM->get_param_string(BXPN_PCI_ADV_OPTS);
+    if (strlen(sparam->getptr()) > 0) {
+      fprintf(fp, ", advopts=%s", sparam->getptr());
+    }
   }
   fprintf(fp, "\n");
   fprintf(fp, "vga: extension=%s, update_freq=%u, realtime=%u, ddc=%s",

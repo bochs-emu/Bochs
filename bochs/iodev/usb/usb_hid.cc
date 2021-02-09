@@ -779,12 +779,12 @@ void usb_hid_device_c::register_state_specific(bx_list_c *parent)
   BXRS_DEC_PARAM_FIELD(list, mouse_y, s.mouse_y);
   BXRS_DEC_PARAM_FIELD(list, mouse_z, s.mouse_z);
   BXRS_HEX_PARAM_FIELD(list, b_state, s.b_state);
-  BXRS_PARAM_BOOL(list, mouse_event_count, s.mouse_event_count);
+  BXRS_DEC_PARAM_FIELD(list, mouse_event_count, s.mouse_event_count);
   new bx_shadow_data_c(list, "mouse_event_buf", (Bit8u*)s.mouse_event_buf, 6 * BX_KBD_ELEMENTS, 1);
   if ((d.type == USB_DEV_TYPE_KEYPAD) || (d.type == USB_DEV_TYPE_KEYBOARD)) {
     new bx_shadow_data_c(list, "kbd_packet", s.kbd_packet, 8, 1);
     BXRS_HEX_PARAM_FIELD(list, indicators, s.indicators);
-    BXRS_PARAM_BOOL(list, kbd_event_count, s.kbd_event_count);
+    BXRS_DEC_PARAM_FIELD(list, kbd_event_count, s.kbd_event_count);
     bx_list_c *evbuf = new bx_list_c(list, "kbd_event_buf", "");
     char pname[16];
     for (Bit8u i = 0; i < BX_KBD_ELEMENTS; i++) {
