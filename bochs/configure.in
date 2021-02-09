@@ -2685,6 +2685,16 @@ if test "$display_libs" = " wxWidgets"; then
   AC_DEFINE(BX_DEFAULT_DISPLAY_LIBRARY, "wx")
   AC_DEFINE(BX_USE_TEXTCONFIG, 0)
 else
+  if test "$DEFAULT_GUI" = win32; then
+    AC_DEFINE(BX_DEFAULT_CONFIG_INTERFACE, "win32config")
+  else
+    AC_DEFINE(BX_DEFAULT_CONFIG_INTERFACE, "textconfig")
+  fi
+  if test "$DEFAULT_GUI" = x11; then
+    AC_DEFINE(BX_DEFAULT_DISPLAY_LIBRARY, "x")
+  else
+    AC_DEFINE_UNQUOTED(BX_DEFAULT_DISPLAY_LIBRARY, "$DEFAULT_GUI")
+  fi
   AC_DEFINE(BX_USE_TEXTCONFIG, 1)
 fi
 
