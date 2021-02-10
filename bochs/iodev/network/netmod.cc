@@ -45,18 +45,10 @@ void bx_netmod_ctl_c::init(void)
 {
   Bit8u i, count = 0;
 
-#if !BX_PLUGINS
-  count = eth_locator_c::get_modules_count();
-#else
   count = PLUG_get_plugins_count(PLUGTYPE_NET);
-#endif
   net_module_names = (const char**) malloc((count + 1) * sizeof(char*));
   for (i = 0; i < count; i++) {
-#if !BX_PLUGINS
-    net_module_names[i] = eth_locator_c::get_module_name(i);
-#else
     net_module_names[i] = PLUG_get_plugin_name(PLUGTYPE_NET, i);
-#endif
   }
   net_module_names[count] = NULL;
   // move 'null' module to the top of the list
@@ -141,7 +133,6 @@ void* bx_netmod_ctl_c::init_module(bx_list_c *base, void *rxh, void *rxstat, bx_
 }
 
 eth_locator_c *eth_locator_c::all;
-Bit8u eth_locator_c::count = 0;
 
 //
 // Each pktmover module has a static locator class that registers
@@ -160,7 +151,6 @@ eth_locator_c::eth_locator_c(const char *type)
     while (ptr->next) ptr = ptr->next;
     ptr->next = this;
   }
-  count++;
 }
 
 eth_locator_c::~eth_locator_c()
@@ -182,24 +172,6 @@ eth_locator_c::~eth_locator_c()
   if (ptr) {
     ptr->next = this->next;
   }
-}
-
-Bit8u eth_locator_c::get_modules_count()
-{
-  return count;
-}
-
-const char* eth_locator_c::get_module_name(Bit8u index)
-{
-  eth_locator_c *ptr;
-  Bit8u n = 0;
-
-  for (ptr = all; ptr != NULL; ptr = ptr->next) {
-    if (n == index)
-      return ptr->type;
-    n++;
-  }
-  return NULL;
 }
 
 bool eth_locator_c::module_present(const char *type)

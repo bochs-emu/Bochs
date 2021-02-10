@@ -595,7 +595,6 @@ int bx_soundlow_midiout_c::closemidioutput()
   return BX_SOUNDLOW_OK;
 }
 
-Bit8u bx_sound_lowlevel_c::count = 0;
 bx_sound_lowlevel_c *bx_sound_lowlevel_c::all;
 
 // bx_sound_lowlevel_c class implementation
@@ -618,7 +617,6 @@ bx_sound_lowlevel_c::bx_sound_lowlevel_c(const char *type)
     while (ptr->next) ptr = ptr->next;
     ptr->next = this;
   }
-  count++;
 }
 
 bx_sound_lowlevel_c::~bx_sound_lowlevel_c()
@@ -650,24 +648,6 @@ bx_sound_lowlevel_c::~bx_sound_lowlevel_c()
   if (ptr) {
     ptr->next = this->next;
   }
-}
-
-Bit8u bx_sound_lowlevel_c::get_modules_count()
-{
-  return count;
-}
-
-const char* bx_sound_lowlevel_c::get_module_name(Bit8u index)
-{
-  bx_sound_lowlevel_c *ptr;
-  Bit8u n = 0;
-
-  for (ptr = all; ptr != NULL; ptr = ptr->next) {
-    if (n == index)
-      return ptr->type;
-    n++;
-  }
-  return NULL;
 }
 
 bool bx_sound_lowlevel_c::module_present(const char *type)

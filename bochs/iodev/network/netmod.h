@@ -119,8 +119,6 @@ protected:
 class BOCHSAPI_MSVCONLY eth_locator_c {
 public:
   static bool module_present(const char *type);
-  static Bit8u get_modules_count(void);
-  static const char* get_module_name(Bit8u index);
   static void cleanup();
   static eth_pktmover_c *create(const char *type, const char *netif,
                                 const char *macaddr,
@@ -138,7 +136,6 @@ protected:
                                    bx_devmodel_c *dev,
                                    const char *script) = 0;
 private:
-  static Bit8u count;
   static eth_locator_c *all;
   eth_locator_c *next;
   const char *type;

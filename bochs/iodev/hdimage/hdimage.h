@@ -638,8 +638,6 @@ BOCHSAPI extern bx_hdimage_ctl_c bx_hdimage_ctl;
 class BOCHSAPI_MSVCONLY hdimage_locator_c {
 public:
   static bool module_present(const char *mode);
-  static Bit8u get_modules_count(void);
-  static const char* get_module_name(Bit8u index);
   static void cleanup(void);
   static device_image_t *create(const char *mode, Bit64u disk_size, const char *journal);
   static bool detect_image_mode(int fd, Bit64u disk_size, const char **image_mode);
@@ -649,7 +647,6 @@ protected:
   virtual device_image_t *allocate(Bit64u disk_size, const char *journal) = 0;
   virtual int check_format(int fd, Bit64u disk_size) {return -1;}
 private:
-  static Bit8u count;
   static hdimage_locator_c *all;
   hdimage_locator_c *next;
   const char *mode;

@@ -1049,13 +1049,14 @@ plugin_t bx_builtin_plugins[] = {
 #endif
 #endif
 #if BX_NETWORKING
+  BUILTIN_NET_PLUGIN_ENTRY(null),
+  BUILTIN_NET_PLUGIN_ENTRY(vnet),
 #if BX_NETMOD_FBSD
   BUILTIN_NET_PLUGIN_ENTRY(fbsd),
 #endif
 #if BX_NETMOD_LINUX
   BUILTIN_NET_PLUGIN_ENTRY(linux),
 #endif
-  BUILTIN_NET_PLUGIN_ENTRY(null),
 #if BX_NETMOD_SLIRP
   BUILTIN_NET_PLUGIN_ENTRY(slirp),
 #endif
@@ -1071,16 +1072,15 @@ plugin_t bx_builtin_plugins[] = {
 #if BX_NETMOD_VDE
   BUILTIN_NET_PLUGIN_ENTRY(vde),
 #endif
-  BUILTIN_NET_PLUGIN_ENTRY(vnet),
 #if BX_NETMOD_WIN32
   BUILTIN_NET_PLUGIN_ENTRY(win32),
 #endif
 #endif
 #if BX_SUPPORT_PCIUSB
-  BUILTIN_USB_PLUGIN_ENTRY(usb_cbi),
   BUILTIN_USB_PLUGIN_ENTRY(usb_hid),
-  BUILTIN_USB_PLUGIN_ENTRY(usb_hub),
   BUILTIN_USB_PLUGIN_ENTRY(usb_msd),
+  BUILTIN_USB_PLUGIN_ENTRY(usb_cbi),
+  BUILTIN_USB_PLUGIN_ENTRY(usb_hub),
   BUILTIN_USB_PLUGIN_ENTRY(usb_printer),
 #endif
   BUILTIN_IMG_PLUGIN_ENTRY(vmware3),

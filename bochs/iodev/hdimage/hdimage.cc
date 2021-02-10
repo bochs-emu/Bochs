@@ -76,22 +76,14 @@ void bx_hdimage_ctl_c::init(void)
 {
   Bit8u count = n_hdimage_builtin_modes;
 
-#if !BX_PLUGINS
-  count += hdimage_locator_c::get_modules_count();
-#else
   count += PLUG_get_plugins_count(PLUGTYPE_IMG);
-#endif
   hdimage_mode_names = (const char**) malloc((count + 1) * sizeof(char*));
   for (Bit8u i = 0; i < n_hdimage_builtin_modes; i++) {
     hdimage_mode_names[i] = builtin_mode_names[i];
   }
   Bit8u n = 0;
   for (Bit8u i = n_hdimage_builtin_modes; i < count; i++) {
-#if !BX_PLUGINS
-    hdimage_mode_names[i] = hdimage_locator_c::get_module_name(n);
-#else
     hdimage_mode_names[i] = PLUG_get_plugin_name(PLUGTYPE_IMG, n);
-#endif
     n++;
   }
   hdimage_mode_names[count] = NULL;
@@ -190,7 +182,6 @@ cdrom_base_c* bx_hdimage_ctl_c::init_cdrom(const char *dev)
 #endif // ifndef BXIMAGE
 
 hdimage_locator_c *hdimage_locator_c::all = NULL;
-Bit8u hdimage_locator_c::count = 0;
 
 //
 // Each disk image module has a static locator class that registers
@@ -209,7 +200,6 @@ hdimage_locator_c::hdimage_locator_c(const char *mode)
     while (ptr->next) ptr = ptr->next;
     ptr->next = this;
   }
-  count++;
 }
 
 hdimage_locator_c::~hdimage_locator_c()
@@ -231,24 +221,6 @@ hdimage_locator_c::~hdimage_locator_c()
   if (ptr) {
     ptr->next = this->next;
   }
-}
-
-Bit8u hdimage_locator_c::get_modules_count()
-{
-  return count;
-}
-
-const char* hdimage_locator_c::get_module_name(Bit8u index)
-{
-  hdimage_locator_c *ptr;
-  Bit8u n = 0;
-
-  for (ptr = all; ptr != NULL; ptr = ptr->next) {
-    if (n == index)
-      return ptr->mode;
-    n++;
-  }
-  return NULL;
 }
 
 bool hdimage_locator_c::module_present(const char *mode)

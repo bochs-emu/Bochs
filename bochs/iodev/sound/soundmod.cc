@@ -46,18 +46,10 @@ void bx_soundmod_ctl_c::init()
 {
   Bit8u i, count = 0;
 
-#if !BX_PLUGINS
-  count = bx_sound_lowlevel_c::get_modules_count();
-#else
   count = PLUG_get_plugins_count(PLUGTYPE_SND);
-#endif
   sound_driver_names = (const char**) malloc((count + 1) * sizeof(char*));
   for (i = 0; i < count; i++) {
-#if !BX_PLUGINS
-    sound_driver_names[i] = bx_sound_lowlevel_c::get_module_name(i);
-#else
     sound_driver_names[i] = PLUG_get_plugin_name(PLUGTYPE_SND, i);
-#endif
   }
   sound_driver_names[count] = NULL;
   // move 'dummy' module to the top of the list
