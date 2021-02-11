@@ -628,7 +628,7 @@ void BX_CPU_C::prefetch(void)
   bx_TLB_entry *tlbEntry = BX_ITLB_ENTRY_OF(laddr);
   Bit8u *fetchPtr = 0;
 
-  if ((tlbEntry->lpf == lpf) && (tlbEntry->accessBits & (1<<USER_PL)) != 0) {
+  if ((tlbEntry->lpf == lpf) && (tlbEntry->accessBits & (1 << unsigned(USER_PL))) != 0) {
     BX_CPU_THIS_PTR pAddrFetchPage = tlbEntry->ppf;
     fetchPtr = (Bit8u*) tlbEntry->hostPageAddr;
   }  

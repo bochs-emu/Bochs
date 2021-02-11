@@ -977,8 +977,8 @@ BX_MEM_C::unregisterMemoryHandlers(void *param, bx_phy_address begin_addr, bx_ph
 void BX_MEM_C::enable_smram(bool enable, bool restricted)
 {
   BX_MEM_THIS smram_available = 1;
-  BX_MEM_THIS smram_enable = (enable > 0);
-  BX_MEM_THIS smram_restricted = (restricted > 0);
+  BX_MEM_THIS smram_enable = enable;
+  BX_MEM_THIS smram_restricted = restricted;
 }
 
 void BX_MEM_C::disable_smram(void)

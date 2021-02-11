@@ -121,7 +121,7 @@ BX_CPP_INLINE unsigned popcntb(Bit8u val_8)
   val_8 = ((val_8>>2) & 0x33) + (val_8 & 0x33);
   val_8 = ((val_8>>4) & 0x0F) + (val_8 & 0x0F);
 
-  return val_8;
+  return (unsigned) val_8;
 }
 
 BX_CPP_INLINE unsigned popcntw(Bit16u val_16)
@@ -131,7 +131,7 @@ BX_CPP_INLINE unsigned popcntw(Bit16u val_16)
   val_16 = ((val_16>>4) & 0x0F0F) + (val_16 & 0x0F0F);
   val_16 = ((val_16>>8) & 0x00FF) + (val_16 & 0x00FF);
 
-  return val_16;
+  return (unsigned) val_16;
 }
 
 BX_CPP_INLINE unsigned popcntd(Bit32u val_32)
@@ -142,7 +142,7 @@ BX_CPP_INLINE unsigned popcntd(Bit32u val_32)
   val_32 = ((val_32 >>  8) & 0x00FF00FF) + (val_32 & 0x00FF00FF);
   val_32 = ((val_32 >> 16) & 0x0000FFFF) + (val_32 & 0x0000FFFF);
 
-  return val_32;
+  return (unsigned) val_32;
 }
 
 BX_CPP_INLINE unsigned popcntq(Bit64u val_64)
@@ -154,7 +154,7 @@ BX_CPP_INLINE unsigned popcntq(Bit64u val_64)
   val_64 = ((val_64 >> 16) & BX_CONST64(0x0000FFFF0000FFFF)) + (val_64 & BX_CONST64(0x0000FFFF0000FFFF));
   val_64 = ((val_64 >> 32) & BX_CONST64(0x00000000FFFFFFFF)) + (val_64 & BX_CONST64(0x00000000FFFFFFFF));
 
-  return val_64;
+  return (unsigned) val_64;
 }
 
 // bit extract
