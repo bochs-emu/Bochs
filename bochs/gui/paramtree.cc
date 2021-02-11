@@ -657,9 +657,9 @@ Bit64s bx_shadow_bool_c::get64()
   }
 }
 
-void bx_shadow_bool_c::set(bool newval)
+void bx_shadow_bool_c::set(Bit64s newval)
 {
-  *(val.pbool) = newval;
+  *(val.pbool) = (newval != 0);
   if (handler) {
     // the handler can override the new value and/or perform some side effect
     (*handler)(this, 1, (Bit64s)newval);

@@ -342,7 +342,7 @@ public:
       const char *name,
       bool *ptr_to_real_val);
   virtual Bit64s get64();
-  virtual void set(bool val);
+  virtual void set(Bit64s val);
 };
 
 
