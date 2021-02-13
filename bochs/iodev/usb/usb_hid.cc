@@ -690,31 +690,9 @@ usb_hid_device_c::usb_hid_device_c(usbdev_type type)
   d.speed = d.minspeed;
   if (d.type == USB_DEV_TYPE_MOUSE) {
     strcpy(d.devname, "USB Mouse");
-    if (d.speed == USB_SPEED_HIGH) {
-      d.dev_descriptor = bx_mouse_dev_descriptor2;
-      d.config_descriptor = bx_mouse_config_descriptor2;
-      d.device_desc_size = sizeof(bx_mouse_dev_descriptor2);
-      d.config_desc_size = sizeof(bx_mouse_config_descriptor2);
-    } else {
-      d.dev_descriptor = bx_mouse_dev_descriptor;
-      d.config_descriptor = bx_mouse_config_descriptor;
-      d.device_desc_size = sizeof(bx_mouse_dev_descriptor);
-      d.config_desc_size = sizeof(bx_mouse_config_descriptor);
-    }
     DEV_register_removable_mouse((void*)this, mouse_enq_static, mouse_enabled_changed);
   } else if (d.type == USB_DEV_TYPE_TABLET) {
     strcpy(d.devname, "USB Tablet");
-    if (d.speed == USB_SPEED_HIGH) {
-      d.dev_descriptor = bx_mouse_dev_descriptor2;
-      d.config_descriptor = bx_tablet_config_descriptor2;
-      d.device_desc_size = sizeof(bx_mouse_dev_descriptor2);
-      d.config_desc_size = sizeof(bx_tablet_config_descriptor2);
-    } else {
-      d.dev_descriptor = bx_mouse_dev_descriptor;
-      d.config_descriptor = bx_tablet_config_descriptor;
-      d.device_desc_size = sizeof(bx_mouse_dev_descriptor);
-      d.config_desc_size = sizeof(bx_tablet_config_descriptor);
-    }
     DEV_register_removable_mouse((void*)this, mouse_enq_static, mouse_enabled_changed);
     bx_gui->set_mouse_mode_absxy(1);
   } else if ((d.type == USB_DEV_TYPE_KEYPAD) || (d.type == USB_DEV_TYPE_KEYBOARD)) {
@@ -723,17 +701,6 @@ usb_hid_device_c::usb_hid_device_c(usbdev_type type)
       strcpy(d.devname, "USB/PS2 Keypad");
     } else {
       strcpy(d.devname, "USB/PS2 Keyboard");
-    }
-    if (d.speed == USB_SPEED_HIGH) {
-      d.dev_descriptor = bx_keypad_dev_descriptor2;
-      d.config_descriptor = bx_keypad_config_descriptor2;
-      d.device_desc_size = sizeof(bx_keypad_dev_descriptor2);
-      d.config_desc_size = sizeof(bx_keypad_config_descriptor2);
-    } else {
-      d.dev_descriptor = bx_keypad_dev_descriptor;
-      d.config_descriptor = bx_keypad_config_descriptor;
-      d.device_desc_size = sizeof(bx_keypad_dev_descriptor);
-      d.config_desc_size = sizeof(bx_keypad_config_descriptor);
     }
     if (d.type == USB_DEV_TYPE_KEYPAD) {
       led_mask = BX_KBD_LED_MASK_NUM;
@@ -748,7 +715,6 @@ usb_hid_device_c::usb_hid_device_c(usbdev_type type)
   d.vendor_desc = "BOCHS";
   d.product_desc = d.devname;
   d.serial_num = "1";
-  d.connected = 1;
   memset((void*)&s, 0, sizeof(s));
 
   put("usb_hid", "USBHID");
@@ -766,6 +732,51 @@ usb_hid_device_c::~usb_hid_device_c(void)
     DEV_unregister_removable_keyboard((void*)this);
   }
   bx_pc_system.unregisterTimer(timer_index);
+}
+
+bool usb_hid_device_c::init()
+{
+  if ((d.type == USB_DEV_TYPE_MOUSE) ||
+      (d.type == USB_DEV_TYPE_TABLET)) {
+    if (d.speed == USB_SPEED_HIGH) {
+      d.dev_descriptor = bx_mouse_dev_descriptor2;
+      d.device_desc_size = sizeof(bx_mouse_dev_descriptor2);
+    } else {
+      d.dev_descriptor = bx_mouse_dev_descriptor;
+      d.device_desc_size = sizeof(bx_mouse_dev_descriptor);
+    }
+    if (d.type == USB_DEV_TYPE_MOUSE) {
+      if (d.speed == USB_SPEED_HIGH) {
+        d.config_descriptor = bx_mouse_config_descriptor2;
+        d.config_desc_size = sizeof(bx_mouse_config_descriptor2);
+      } else {
+        d.config_descriptor = bx_mouse_config_descriptor;
+        d.config_desc_size = sizeof(bx_mouse_config_descriptor);
+      }
+    } else {
+      if (d.speed == USB_SPEED_HIGH) {
+        d.config_descriptor = bx_tablet_config_descriptor2;
+        d.config_desc_size = sizeof(bx_tablet_config_descriptor2);
+      } else {
+        d.config_descriptor = bx_tablet_config_descriptor;
+        d.config_desc_size = sizeof(bx_tablet_config_descriptor);
+      }
+    }
+  } else {
+    if (d.speed == USB_SPEED_HIGH) {
+      d.dev_descriptor = bx_keypad_dev_descriptor2;
+      d.device_desc_size = sizeof(bx_keypad_dev_descriptor2);
+      d.config_descriptor = bx_keypad_config_descriptor2;
+      d.config_desc_size = sizeof(bx_keypad_config_descriptor2);
+    } else {
+      d.dev_descriptor = bx_keypad_dev_descriptor;
+      d.device_desc_size = sizeof(bx_keypad_dev_descriptor);
+      d.config_descriptor = bx_keypad_config_descriptor;
+      d.config_desc_size = sizeof(bx_keypad_config_descriptor);
+    }
+  }
+  d.connected = 1;
+  return 1;
 }
 
 void usb_hid_device_c::register_state_specific(bx_list_c *parent)
