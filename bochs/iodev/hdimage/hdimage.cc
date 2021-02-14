@@ -115,7 +115,7 @@ void bx_hdimage_ctl_c::list_modules(void)
   list[0] = 0;
   while (hdimage_mode_names[i] != NULL) {
     len1 = strlen(hdimage_mode_names[i]);
-    if ((len + len1 + 1) > 60) {
+    if ((len + len1 + 1) > 58) {
       BX_INFO((" %s", list));
       list[0] = 0;
       len = 0;

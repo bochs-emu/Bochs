@@ -749,7 +749,7 @@ bool bx_load_plugin(const char *name, plugintype_t type)
 
   if (!strcmp(name, "*")) {
     for (plugin = plugins; plugin; plugin = plugin->next) {
-      if (((type & plugin->type) != 0) && (plugin->loadtype != PLUGTYPE_NULL)) {
+      if (((type & plugin->type) != 0) && (plugin->loadtype == PLUGTYPE_NULL)) {
         plugin_load(plugin->name, type);
       }
     }
