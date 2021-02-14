@@ -979,7 +979,7 @@ void bx_usb_xhci_c::after_restore_state(void)
 
 void bx_usb_xhci_c::init_device(Bit8u port, bx_list_c *portconf)
 {
-  usbdev_type type;
+  int type;
   char pname[BX_PATHNAME_LEN];
   const char *devname = NULL;
 
@@ -993,9 +993,10 @@ void bx_usb_xhci_c::init_device(Bit8u port, bx_list_c *portconf)
   }
   sprintf(pname, "usb_xhci.hub.port%d.device", port+1);
   bx_list_c *sr_list = (bx_list_c*)SIM->get_param(pname, SIM->get_bochs_root());
-  type = DEV_usb_init_device(portconf, BX_XHCI_THIS_PTR, &BX_XHCI_THIS hub.usb_port[port].device, sr_list);
+  type = DEV_usb_init_device(portconf, BX_XHCI_THIS_PTR, &BX_XHCI_THIS hub.usb_port[port].device);
   if (BX_XHCI_THIS hub.usb_port[port].device != NULL) {
     usb_set_connect_status(port, type, 1);
+    BX_XHCI_THIS hub.usb_port[port].device->register_state(sr_list);
   }
 }
 
@@ -3079,7 +3080,7 @@ void bx_usb_xhci_c::runtime_config(void)
 {
   int i;
   char pname[6];
-  usbdev_type type = USB_DEV_TYPE_NONE;
+  int type = -1;
 
   for (i = 0; i < BX_N_USB_XHCI_PORTS; i++) {
     // device change support

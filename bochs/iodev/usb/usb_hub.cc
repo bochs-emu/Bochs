@@ -57,14 +57,8 @@ class bx_usb_hub_locator_c : public usbdev_locator_c {
 public:
   bx_usb_hub_locator_c(void) : usbdev_locator_c("usb_hub") {}
 protected:
-  usb_device_c *allocate(usbdev_type devtype, const char *args) {
-    int ports;
-    if (args != NULL) {
-      ports = atoi(args);
-    } else {
-      ports = 4;
-    }
-    return (new usb_hub_device_c(ports));
+  usb_device_c *allocate(usbdev_type devtype) {
+    return (new usb_hub_device_c());
   }
 } bx_usb_hub_match;
 
@@ -175,7 +169,7 @@ static Bit8u bx_hub_config_descriptor[] = {
   0x05,       /*  u8  ep_bDescriptorType; Endpoint */
   0x81,       /*  u8  ep_bEndpointAddress; IN Endpoint 1 */
   0x03,       /*  u8  ep_bmAttributes; Interrupt */
-  0x02, 0x00, /*  u16 ep_wMaxPacketSize; 1 + (MAX_ROOT_PORTS / 8) */
+  0x02, 0x00, /*  u16 ep_wMaxPacketSize; 1 + (USB_HUB_MAX_PORTS / 8) */
   0xff        /*  u8  ep_bInterval; (255ms -- usb 2.0 spec) */
 };
 
@@ -197,7 +191,65 @@ static Bit8u hub_count = 0;
 
 void usb_hub_restore_handler(void *dev, bx_list_c *conf);
 
-usb_hub_device_c::usb_hub_device_c(Bit8u ports)
+usb_hub_device_c::usb_hub_device_c()
+{
+  char pname[10];
+  char label[32];
+
+  d.type = USB_DEV_TYPE_HUB;
+  d.speed = d.minspeed = d.maxspeed = USB_SPEED_FULL;
+  strcpy(d.devname, "Bochs USB HUB");
+  d.dev_descriptor = bx_hub_dev_descriptor;
+  d.device_desc_size = sizeof(bx_hub_dev_descriptor);
+  d.config_descriptor = bx_hub_config_descriptor;
+  d.config_desc_size = sizeof(bx_hub_config_descriptor);
+  d.vendor_desc = "BOCHS";
+  d.product_desc = "BOCHS USB HUB";
+  memset((void*)&hub, 0, sizeof(hub));
+  sprintf(hub.serial_number, "%d", serial_number++);
+  d.serial_num = hub.serial_number;
+  hub.device_change = 0;
+  hub.n_ports = USB_HUB_DEF_PORTS;
+
+  // prepare runtime config options
+  bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
+  sprintf(pname, "exthub%u", ++hub_count);
+  sprintf(label, "External Hub #%u Configuration", hub_count);
+  hub.config = new bx_list_c(usb_rt, pname, label);
+  hub.config->set_options(bx_list_c::SHOW_PARENT);
+  hub.config->set_device_param(this);
+
+  put("usb_hub", "USBHUB");
+}
+
+usb_hub_device_c::~usb_hub_device_c(void)
+{
+  for (int i = 0; i < hub.n_ports; i++) {
+    remove_device(i);
+  }
+  d.sr->clear();
+  if (SIM->is_wx_selected()) {
+    bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
+    usb->remove(hub.config->get_name());
+  }
+  bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
+  usb_rt->remove(hub.config->get_name());
+}
+
+bool usb_hub_device_c::set_option(const char *option)
+{
+  if (!strncmp(option, "ports:", 6)) {
+    hub.n_ports = atoi(&option[6]);
+    if ((hub.n_ports < 2) || (hub.n_ports > USB_HUB_MAX_PORTS)) {
+      BX_ERROR(("ignoring invalid number of ports (%d)", hub.n_ports));
+      hub.n_ports = USB_HUB_DEF_PORTS;
+    }
+    return 1;
+  }
+  return 0;
+}
+
+bool usb_hub_device_c::init()
 {
   int i;
   char pname[10];
@@ -205,38 +257,12 @@ usb_hub_device_c::usb_hub_device_c(Bit8u ports)
   bx_list_c *port;
   bx_param_string_c *device;
 
-  d.type = USB_DEV_TYPE_HUB;
-  d.speed = d.minspeed = d.maxspeed = USB_SPEED_FULL;
-  strcpy(d.devname, "Bochs USB HUB");
-  d.dev_descriptor = bx_hub_dev_descriptor;
-  d.config_descriptor = bx_hub_config_descriptor;
-  d.device_desc_size = sizeof(bx_hub_dev_descriptor);
-  d.config_desc_size = sizeof(bx_hub_config_descriptor);
-  d.vendor_desc = "BOCHS";
-  d.product_desc = "BOCHS USB HUB";
-  if ((ports < 2) || (ports > USB_HUB_PORTS)) {
-    BX_ERROR(("ignoring invalid number of ports (%d)", ports));
-    ports = 4;
-  }
-  d.connected = 1;
-  memset((void*)&hub, 0, sizeof(hub));
-  hub.n_ports = ports;
+  // set up config descriptor, status and runtime config for hub.n_ports
   bx_hub_config_descriptor[22] = (hub.n_ports + 1 + 7) / 8;
-  sprintf(hub.serial_number, "%d", serial_number++);
-  d.serial_num = hub.serial_number;
   for(i = 0; i < hub.n_ports; i++) {
     hub.usb_port[i].PortStatus = PORT_STAT_POWER;
     hub.usb_port[i].PortChange = 0;
   }
-  hub.device_change = 0;
-
-  // config options
-  bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
-  sprintf(pname, "exthub%u", ++hub_count);
-  sprintf(label, "External Hub #%u Configuration", hub_count);
-  hub.config = new bx_list_c(usb_rt, pname, label);
-  hub.config->set_options(bx_list_c::SHOW_PARENT);
-  hub.config->set_device_param(this);
   for(i = 0; i < hub.n_ports; i++) {
     sprintf(pname, "port%d", i+1);
     sprintf(label, "Port #%d Configuration", i+1);
@@ -250,22 +276,14 @@ usb_hub_device_c::usb_hub_device_c(Bit8u ports)
     bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
     usb->add(hub.config);
   }
-
-  put("usb_hub", "USBHUB");
+  sprintf(hub.info_txt, "ports = %d", hub.n_ports);
+  d.connected = 1;
+  return 1;
 }
 
-usb_hub_device_c::~usb_hub_device_c(void)
+const char* usb_hub_device_c::get_info()
 {
-  for (int i=0; i<hub.n_ports; i++) {
-    remove_device(i);
-  }
-  d.sr->clear();
-  if (SIM->is_wx_selected()) {
-    bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
-    usb->remove(hub.config->get_name());
-  }
-  bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
-  usb_rt->remove(hub.config->get_name());
+  return hub.info_txt;
 }
 
 void usb_hub_device_c::register_state_specific(bx_list_c *parent)
@@ -547,7 +565,7 @@ int usb_hub_device_c::handle_packet(USBPacket *p)
 
 void usb_hub_device_c::init_device(Bit8u port, bx_list_c *portconf)
 {
-  usbdev_type type;
+  int type;
   char pname[BX_PATHNAME_LEN];
   const char *devname = NULL;
 
@@ -561,9 +579,10 @@ void usb_hub_device_c::init_device(Bit8u port, bx_list_c *portconf)
   }
   sprintf(pname, "port%d.device", port+1);
   bx_list_c *sr_list = (bx_list_c*)SIM->get_param(pname, hub.state);
-  type = DEV_usb_init_device(portconf, this, &hub.usb_port[port].device, sr_list);
+  type = DEV_usb_init_device(portconf, this, &hub.usb_port[port].device);
   if (hub.usb_port[port].device != NULL) {
     usb_set_connect_status(port, type, 1);
+    hub.usb_port[port].device->register_state(sr_list);
   }
 }
 
@@ -679,7 +698,7 @@ void usb_hub_device_c::runtime_config()
 const char *usb_hub_device_c::hub_param_handler(bx_param_string_c *param, int set,
                                                 const char *oldval, const char *val, int maxlen)
 {
-  usbdev_type type = USB_DEV_TYPE_NONE;
+  int type = -1;
   int hubnum, portnum;
   usb_hub_device_c *hub;
   bx_list_c *port;

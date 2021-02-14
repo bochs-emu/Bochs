@@ -39,6 +39,7 @@ public:
   virtual ~usb_hid_device_c(void);
 
   virtual bool init();
+  virtual const char* get_info();
   virtual void handle_reset();
   virtual int handle_control(int request, int value, int index, int length, Bit8u *data);
   virtual int handle_data(USBPacket *p);

@@ -32,7 +32,7 @@ class scsi_device_t;
 
 class usb_msd_device_c : public usb_device_c {
 public:
-  usb_msd_device_c(usbdev_type type, const char *filename);
+  usb_msd_device_c(usbdev_type type);
   virtual ~usb_msd_device_c(void);
 
   virtual bool init();

@@ -34,6 +34,9 @@
 #if BX_SUPPORT_SOUNDLOW
 #include "iodev/sound/soundmod.h"
 #endif
+#if BX_SUPPORT_PCIUSB
+#include "iodev/usb/usb_common.h"
+#endif
 
 #ifdef HAVE_LOCALE_H
 #include <locale.h>
@@ -1305,6 +1308,9 @@ void bx_init_hardware()
 #endif
 #if BX_SUPPORT_SOUNDLOW
   bx_soundmod_ctl.list_modules();
+#endif
+#if BX_SUPPORT_PCIUSB
+  bx_usbdev_ctl.list_devices();
 #endif
   // Check if there is a romimage
   if (SIM->get_param_string(BXPN_ROM_PATH)->isempty()) {

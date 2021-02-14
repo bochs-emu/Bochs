@@ -63,8 +63,8 @@ class bx_usb_cbi_locator_c : public usbdev_locator_c {
 public:
   bx_usb_cbi_locator_c(void) : usbdev_locator_c("usb_cbi") {}
 protected:
-  usb_device_c *allocate(usbdev_type devtype, const char *args) {
-    return (new usb_cbi_device_c(args));
+  usb_device_c *allocate(usbdev_type devtype) {
+    return (new usb_cbi_device_c());
   }
 } bx_usb_cbi_match;
 
@@ -312,12 +312,10 @@ const char *fdimage_mode_names[] = {
 
 static Bit8u usb_floppy_count = 0;
 
-usb_cbi_device_c::usb_cbi_device_c(const char *filename)
+usb_cbi_device_c::usb_cbi_device_c()
 {
   char pname[10];
   char label[32];
-  char tmpfname[BX_PATHNAME_LEN];
-  char *ptr1, *ptr2;
   bx_param_string_c *path;
   bx_param_bool_c *readonly;
   bx_param_enum_c *status, *mode;
@@ -331,19 +329,6 @@ usb_cbi_device_c::usb_cbi_device_c(const char *filename)
   d.device_desc_size = sizeof(bx_cbi_dev_descriptor);
   d.config_desc_size = sizeof(bx_cbi_config_descriptor);
   s.inserted = 0;
-  strcpy(tmpfname, filename);
-  ptr1 = strtok(tmpfname, ":");
-  ptr2 = strtok(NULL, ":");
-  if ((ptr2 == NULL) || (strlen(ptr1) < 2)) {
-    s.image_mode = strdup("flat");
-    s.fname = filename;
-  } else {
-    s.image_mode = strdup(ptr1);
-    s.fname = filename+strlen(ptr1)+1;
-    if (strcmp(s.image_mode, "flat") && strcmp(s.image_mode, "vvfat")) {
-      BX_PANIC(("USB floppy only supports image modes 'flat' and 'vvfat'"));
-    }
-  }
   s.dev_buffer = new Bit8u[CBI_MAX_SECTORS * 512];
   s.statusbar_id = bx_gui->register_statusitem("USB-FD", 1);
   s.floppy_timer_index =
@@ -356,16 +341,12 @@ usb_cbi_device_c::usb_cbi_device_c(const char *filename)
   s.config->set_options(bx_list_c::SERIES_ASK | bx_list_c::USE_BOX_TITLE);
   s.config->set_device_param(this);
   path = new bx_param_string_c(s.config, "path", "Path", "", "", BX_PATHNAME_LEN);
-  path->set(s.fname);
   path->set_handler(floppy_path_handler);
   mode = new bx_param_enum_c(s.config,
     "mode",
     "Image mode",
     "Mode of the floppy image",
     fdimage_mode_names, 0, 0);
-  if (!strcmp(s.image_mode, "vvfat")) {
-    mode->set(1);
-  }
   mode->set_handler(floppy_param_handler);
   mode->set_ask_format("Enter mode of floppy image, (flat or vvfat): [%s] ");
   readonly = new bx_param_bool_c(s.config,
@@ -412,7 +393,29 @@ usb_cbi_device_c::~usb_cbi_device_c(void)
 
 bool usb_cbi_device_c::set_option(const char *option)
 {
-  if (!strncmp(option, "write_protected:", 16)) {
+  char filename[BX_PATHNAME_LEN];
+  char *ptr1, *ptr2;
+
+  if (!strncmp(option, "path:", 5)) {
+    strcpy(filename, option+5);
+    ptr1 = strtok(filename, ":");
+    ptr2 = strtok(NULL, ":");
+    if ((ptr2 == NULL) || (strlen(ptr1) < 2)) {
+      s.image_mode = strdup("flat");
+      s.fname = option+5;
+    } else {
+      s.image_mode = strdup(ptr1);
+      s.fname = option+strlen(ptr1)+6;
+      if (strcmp(s.image_mode, "flat") && strcmp(s.image_mode, "vvfat")) {
+        BX_PANIC(("USB floppy only supports image modes 'flat' and 'vvfat'"));
+      }
+    }
+    SIM->get_param_string("path", s.config)->set(s.fname);
+    if (!strcmp(s.image_mode, "vvfat")) {
+      SIM->get_param_enum("mode", s.config)->set(1);
+    }
+    return 1;
+  } else if (!strncmp(option, "write_protected:", 16)) {
     SIM->get_param_bool("readonly", s.config)->set(atol(&option[16]));
     return 1;
   } else if (!strncmp(option, "model:", 6)) {
@@ -444,9 +447,9 @@ bool usb_cbi_device_c::init()
     d.serial_num = "00.10";
   }
   if (set_inserted(1)) {
-    sprintf(s.info_txt, "USB CBI: path='%s', mode='%s'", s.fname, s.image_mode);
+    sprintf(s.info_txt, "USB CBI floppy: path='%s', mode='%s'", s.fname, s.image_mode);
   } else {
-    sprintf(s.info_txt, "USB CBI: media not present");
+    sprintf(s.info_txt, "USB CBI floppy: media not present");
   }
   d.connected = 1;
 

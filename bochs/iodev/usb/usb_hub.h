@@ -30,12 +30,17 @@
 #define BX_IODEV_USB_HUB_H
 
 
-#define USB_HUB_PORTS 8
+#define USB_HUB_MAX_PORTS 8
+#define USB_HUB_DEF_PORTS 4
 
 class usb_hub_device_c : public usb_device_c {
 public:
-  usb_hub_device_c(Bit8u ports);
+  usb_hub_device_c(void);
   virtual ~usb_hub_device_c(void);
+
+  virtual bool init();
+  virtual bool set_option(const char *option);
+  virtual const char* get_info();
 
   virtual usb_device_c* find_device(Bit8u addr);
   virtual int handle_packet(USBPacket *p);
@@ -54,13 +59,14 @@ private:
     bx_list_c *config;
     bx_list_c *state;
     char serial_number[16];
+    char info_txt[16];
     struct {
       // our data
       usb_device_c *device;  // device connected to this port
 
       Bit16u PortStatus;
       Bit16u PortChange;
-    } usb_port[USB_HUB_PORTS];
+    } usb_port[USB_HUB_MAX_PORTS];
     Bit16u device_change;
   } hub;
 

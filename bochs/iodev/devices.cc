@@ -74,6 +74,9 @@ bx_devices_c::~bx_devices_c()
 #if BX_SUPPORT_SOUNDLOW
   bx_soundmod_ctl.exit();
 #endif
+#if BX_SUPPORT_PCIUSB
+  bx_usbdev_ctl.exit();
+#endif
 }
 
 void bx_devices_c::init_stubs()
@@ -213,9 +216,6 @@ void bx_devices_c::init(BX_MEM_C *newmem)
     PLUG_load_plugin(pci, PLUGTYPE_CORE);
     PLUG_load_plugin(pci2isa, PLUGTYPE_CORE);
 #if BX_SUPPORT_PCIUSB
-    usb_enabled = is_usb_enabled();
-    if (usb_enabled)
-      bx_usbdev_ctl.init();
     if ((chipset == BX_PCI_CHIPSET_I440FX) ||
         (chipset == BX_PCI_CHIPSET_I440BX)) {
       // UHCI is a part of the PIIX3/PIIX4, so load / enable it
@@ -452,10 +452,6 @@ void bx_devices_c::exit()
   // unload optional plugins first
   bx_unload_plugins();
   bx_unload_core_plugins();
-#if BX_SUPPORT_PCIUSB
-  if (usb_enabled)
-    bx_usbdev_ctl.exit();
-#endif
   // remove runtime parameter handlers
   SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->set_handler(NULL);
   SIM->get_param_num(BXPN_MOUSE_ENABLED)->set_handler(NULL);
@@ -1122,17 +1118,6 @@ void bx_devices_c::add_sound_device(void)
 void bx_devices_c::remove_sound_device(void)
 {
   sound_device_count--;
-}
-
-bool bx_devices_c::is_usb_enabled(void)
-{
-  if (PLUG_device_present("usb_ohci") ||
-      PLUG_device_present("usb_uhci") ||
-      PLUG_device_present("usb_ehci") ||
-      PLUG_device_present("usb_xhci")) {
-    return 1;
-  }
-  return 0;
 }
 
 // removable keyboard/mouse registration

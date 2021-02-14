@@ -28,6 +28,9 @@
 #if BX_SUPPORT_SOUNDLOW
 #include "iodev/sound/soundmod.h"
 #endif
+#if BX_SUPPORT_PCIUSB
+#include "iodev/usb/usb_common.h"
+#endif
 #include "param_names.h"
 #include <assert.h>
 
@@ -1479,10 +1482,13 @@ void bx_init_options()
   serial->set_options(serial->SHOW_PARENT);
   // serial port options initialized in the devive plugin code
 
+#if BX_SUPPORT_PCIUSB
   // usb subtree
   bx_list_c *usb = new bx_list_c(ports, "usb", "USB Configuration");
   usb->set_options(usb->USE_TAB_WINDOW | usb->SHOW_PARENT);
+  bx_usbdev_ctl.init();
   // USB host controller options initialized in the devive plugin code
+#endif
 
 #if BX_NETWORKING
   // network subtree

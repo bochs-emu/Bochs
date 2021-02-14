@@ -44,11 +44,12 @@ bx_usbdev_ctl_c::bx_usbdev_ctl_c()
 
 void bx_usbdev_ctl_c::init(void)
 {
-  // Nothing here yet
+  // TODO
 }
 
 void bx_usbdev_ctl_c::exit(void)
 {
+  // TODO
   usbdev_locator_c::cleanup();
 }
 
@@ -62,7 +63,7 @@ const char *usbmod_names[] =
   "usb_printer"
 };
 
-const char *usbdev_names[] =
+const char *usb_device_names[] =
 {
   "none",
   "mouse",
@@ -76,17 +77,43 @@ const char *usbdev_names[] =
   "floppy"
 };
 
-int bx_usbdev_ctl_c::init_device(bx_list_c *portconf, logfunctions *hub, void **dev, bx_list_c *sr_list)
+void bx_usbdev_ctl_c::list_devices(void)
+{
+  char list[60];
+  Bit8u i = 1; // skip "none"
+  size_t len = 0, len1;
+
+  BX_INFO(("Pluggable USB devices"));
+  list[0] = 0;
+  while (usb_device_names[i] != NULL) {
+    len1 = strlen(usb_device_names[i]);
+    if ((len + len1 + 1) > 58) {
+      BX_INFO((" %s", list));
+      list[0] = 0;
+      len = 0;
+    }
+    strcat(list, " ");
+    strcat(list, usb_device_names[i]);
+    len = strlen(list);
+    i++;
+  }
+  if (len > 0) {
+    BX_INFO((" %s", list));
+  }
+}
+
+int bx_usbdev_ctl_c::init_device(bx_list_c *portconf, logfunctions *hub, void **dev)
 {
   usbmod_type modtype = USB_MOD_TYPE_NONE;
   usbdev_type devtype = USB_DEV_TYPE_NONE;
   usb_device_c **device = (usb_device_c**)dev;
-  const char *raw_devname = NULL;
-  const char *args;
-  char *devname, *ptr;
+  const char *raw_devname, *options;
+  const char *args, *new_opt1 = NULL;
+  char *devname, *ptr, new_options[BX_PATHNAME_LEN];
   size_t len;
 
   raw_devname = ((bx_param_string_c*)portconf->get_by_name("device"))->getptr();
+  options = ((bx_param_string_c*)portconf->get_by_name("options"))->getptr();
   len = strlen(raw_devname);
   devname = new char[len + 1];
   strcpy(devname, raw_devname);
@@ -97,6 +124,7 @@ int bx_usbdev_ctl_c::init_device(bx_list_c *portconf, logfunctions *hub, void **
   } else {
     args = raw_devname+(ptr-devname);
   }
+  new_options[0] = 0;
   if (!strcmp(devname, "mouse")) {
     modtype = USB_MOD_TYPE_HID;
     devtype = USB_DEV_TYPE_MOUSE;
@@ -110,36 +138,38 @@ int bx_usbdev_ctl_c::init_device(bx_list_c *portconf, logfunctions *hub, void **
     modtype = USB_MOD_TYPE_HID;
     devtype = USB_DEV_TYPE_KEYBOARD;
   } else if (!strcmp(devname, "disk")) {
-    if (ptr != NULL) {
-      modtype = USB_MOD_TYPE_MSD;
-      devtype = USB_DEV_TYPE_DISK;
-    } else {
-      delete [] devname;
-      hub->panic("USB device 'disk' needs a filename separated with a colon");
-      return devtype;
-    }
+    modtype = USB_MOD_TYPE_MSD;
+    devtype = USB_DEV_TYPE_DISK;
+    new_opt1 = "path";
   } else if (!strcmp(devname, "cdrom")) {
     modtype = USB_MOD_TYPE_MSD;
     devtype = USB_DEV_TYPE_CDROM;
+    new_opt1 = "path";
   } else if (!strcmp(devname, "hub")) {
     modtype = USB_MOD_TYPE_HUB;
     devtype = USB_DEV_TYPE_HUB;
+    new_opt1 = "ports";
   } else if (!strcmp(devname, "printer")) {
-    if (ptr != NULL) {
-      modtype = USB_MOD_TYPE_PRINTER;
-      devtype = USB_DEV_TYPE_PRINTER;
-    } else {
-      hub->panic("USB device 'printer' needs a filename separated with a colon");
-      delete [] devname;
-      return devtype;
-    }
+    modtype = USB_MOD_TYPE_PRINTER;
+    devtype = USB_DEV_TYPE_PRINTER;
+    new_opt1 = "file";
   } else if (!strncmp(devname, "floppy", 6)) {
     modtype = USB_MOD_TYPE_CBI;
     devtype = USB_DEV_TYPE_FLOPPY;
+    new_opt1 = "path";
   } else {
     hub->panic("unknown USB device: %s", devname);
     delete [] devname;
     return devtype;
+  }
+  if ((strlen(args) > 0) && (new_opt1 != NULL)) {
+    if (strlen(options) > 0) {
+      sprintf(new_options, "%s:%s, %s", new_opt1, args, options);
+    } else {
+      sprintf(new_options, "%s:%s", new_opt1, args);
+    }
+    ((bx_param_string_c*)portconf->get_by_name("device"))->set(devname);
+    ((bx_param_string_c*)portconf->get_by_name("options"))->set(new_options);
   }
   if (!usbdev_locator_c::module_present(usbmod_names[modtype])) {
 #if BX_PLUGINS
@@ -148,9 +178,8 @@ int bx_usbdev_ctl_c::init_device(bx_list_c *portconf, logfunctions *hub, void **
     BX_PANIC(("could not find USB device '%s'", usbmod_names[modtype]));
 #endif
   }
-  *device = usbdev_locator_c::create(usbmod_names[modtype], devtype, args);
+  *device = usbdev_locator_c::create(usbmod_names[modtype], devtype);
   if (*device != NULL) {
-    (*device)->register_state(sr_list);
     parse_port_options(*device, portconf);
   }
   delete [] devname;
@@ -181,7 +210,7 @@ void bx_usbdev_ctl_c::parse_port_options(usb_device_c *device, bx_list_c *portco
       }
       if (!device->set_speed(speed)) {
         BX_PANIC(("USB device '%s' doesn't support '%s' speed",
-                  usbdev_names[device->get_type()], opts[i]+6));
+                  usb_device_names[device->get_type()], opts[i]+6));
       }
     } else if (!strcmp(opts[i], "debug")) {
       device->set_debug_mode();
@@ -255,14 +284,13 @@ void usbdev_locator_c::cleanup()
 // Called by USB HC emulations to locate and create a usb_device_c
 // object
 //
-usb_device_c*
-usbdev_locator_c::create(const char *type, usbdev_type devtype, const char *args)
+usb_device_c* usbdev_locator_c::create(const char *type, usbdev_type devtype)
 {
   usbdev_locator_c *ptr = 0;
 
   for (ptr = all; ptr != NULL; ptr = ptr->next) {
     if (strcmp(type, ptr->type) == 0)
-      return (ptr->allocate(devtype, args));
+      return (ptr->allocate(devtype));
   }
   return NULL;
 }

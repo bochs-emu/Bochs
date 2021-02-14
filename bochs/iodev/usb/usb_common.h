@@ -174,7 +174,8 @@ public:
   virtual ~bx_usbdev_ctl_c() {}
   void init(void);
   void exit(void);
-  virtual int init_device(bx_list_c *portconf, logfunctions *hub, void **dev, bx_list_c *sr_list);
+  void list_devices(void);
+  virtual int init_device(bx_list_c *portconf, logfunctions *hub, void **dev);
 private:
   void parse_port_options(usb_device_c *dev, bx_list_c *portconf);
 };
@@ -202,7 +203,7 @@ public:
   virtual void runtime_config() {}
 
   bool get_connected() {return d.connected;}
-  usbdev_type get_type() {return d.type;}
+  int get_type() {return (int)d.type;}
   int get_speed() {return d.speed;}
   bool set_speed(int speed)
   {
@@ -386,11 +387,11 @@ class BOCHSAPI_MSVCONLY usbdev_locator_c {
 public:
   static bool module_present(const char *type);
   static void cleanup();
-  static usb_device_c *create(const char *type, usbdev_type devtype, const char *args);
+  static usb_device_c *create(const char *type, usbdev_type devtype);
 protected:
   usbdev_locator_c(const char *type);
   virtual ~usbdev_locator_c();
-  virtual usb_device_c *allocate(usbdev_type devtype, const char *args) = 0;
+  virtual usb_device_c *allocate(usbdev_type devtype) = 0;
 private:
   static usbdev_locator_c *all;
   usbdev_locator_c *next;

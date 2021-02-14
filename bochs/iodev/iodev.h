@@ -605,10 +605,8 @@ private:
   int statusbar_id[3];
 
   Bit8u sound_device_count;
-  bool  usb_enabled;
 
   bool is_harddrv_enabled();
-  bool is_usb_enabled();
 };
 
 // memory stub has an assumption that there are no memory accesses splitting 4K page

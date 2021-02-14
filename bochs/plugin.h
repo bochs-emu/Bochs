@@ -252,7 +252,7 @@ extern "C" {
 #define DEV_mem_set_bios_rom_access(a,b) bx_devices.mem->set_bios_rom_access(a,b)
 
 ///////// USB device macro
-#define DEV_usb_init_device(a,b,c,d) (usbdev_type)bx_usbdev_ctl.init_device(a,b,(void**)c,d)
+#define DEV_usb_init_device(a,b,c) bx_usbdev_ctl.init_device(a,b,(void**)c)
 
 ///////// Sound module macros
 #define DEV_sound_get_waveout(a) (bx_soundmod_ctl.get_waveout(a))

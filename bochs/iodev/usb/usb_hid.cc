@@ -78,7 +78,7 @@ class bx_usb_hid_locator_c : public usbdev_locator_c {
 public:
   bx_usb_hid_locator_c(void) : usbdev_locator_c("usb_hid") {}
 protected:
-  usb_device_c *allocate(usbdev_type devtype, const char *args) {
+  usb_device_c *allocate(usbdev_type devtype) {
     return (new usb_hid_device_c(devtype));
   }
 } bx_usb_hid_match;
@@ -777,6 +777,11 @@ bool usb_hid_device_c::init()
   }
   d.connected = 1;
   return 1;
+}
+
+const char* usb_hid_device_c::get_info()
+{
+  return d.devname;
 }
 
 void usb_hid_device_c::register_state_specific(bx_list_c *parent)
