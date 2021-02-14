@@ -236,7 +236,7 @@ protected:
     int speed;
     Bit8u addr;
     Bit8u config;
-    Bit8u interface;
+    Bit8u iface;
     char devname[32];
 
     const Bit8u *dev_descriptor;
