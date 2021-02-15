@@ -125,8 +125,8 @@ void bx_init_std_nic_options(const char *name, bx_list_c *menu);
 void bx_init_usb_options(const char *usb_name, const char *pname, int maxports);
 int  bx_parse_param_from_list(const char *context, const char *input, bx_list_c *list);
 int  bx_parse_nic_params(const char *context, const char *param, bx_list_c *base);
-int  bx_parse_usb_port_params(const char *context, bool devopt,
-                              const char *param, int maxports, bx_list_c *base);
+int  bx_parse_usb_port_params(const char *context, const char *param,
+                              int maxports, bx_list_c *base);
 int  bx_split_option_list(const char *msg, const char *rawopt, char **argv, int max_argv);
 int  bx_write_param_list(FILE *fp, bx_list_c *base, const char *optname, bool multiline);
 int  bx_write_usb_options(FILE *fp, int maxports, bx_list_c *base);

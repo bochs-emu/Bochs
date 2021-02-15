@@ -77,6 +77,11 @@ const char *usb_device_names[] =
   "floppy"
 };
 
+const char **bx_usbdev_ctl_c::get_device_names(void)
+{
+  return usb_device_names;
+}
+
 void bx_usbdev_ctl_c::list_devices(void)
 {
   char list[60];
@@ -107,24 +112,13 @@ int bx_usbdev_ctl_c::init_device(bx_list_c *portconf, logfunctions *hub, void **
   usbmod_type modtype = USB_MOD_TYPE_NONE;
   usbdev_type devtype = USB_DEV_TYPE_NONE;
   usb_device_c **device = (usb_device_c**)dev;
-  const char *raw_devname, *options;
-  const char *args, *new_opt1 = NULL;
-  char *devname, *ptr, new_options[BX_PATHNAME_LEN];
-  size_t len;
+  const char *devname, *options, *options2;
+  char new_options[BX_PATHNAME_LEN];
+  bx_param_string_c *opts2;
 
-  raw_devname = ((bx_param_string_c*)portconf->get_by_name("device"))->getptr();
+  devname = ((bx_param_enum_c*)portconf->get_by_name("device"))->get_selected();
   options = ((bx_param_string_c*)portconf->get_by_name("options"))->getptr();
-  len = strlen(raw_devname);
-  devname = new char[len + 1];
-  strcpy(devname, raw_devname);
-  ptr = strtok(devname, ":");
-  ptr = strtok(NULL, "\n");
-  if (ptr == NULL) {
-    args = raw_devname+strlen(devname);
-  } else {
-    args = raw_devname+(ptr-devname);
-  }
-  new_options[0] = 0;
+  opts2 = (bx_param_string_c*)portconf->get_by_name("options2");
   if (!strcmp(devname, "mouse")) {
     modtype = USB_MOD_TYPE_HID;
     devtype = USB_DEV_TYPE_MOUSE;
@@ -140,36 +134,33 @@ int bx_usbdev_ctl_c::init_device(bx_list_c *portconf, logfunctions *hub, void **
   } else if (!strcmp(devname, "disk")) {
     modtype = USB_MOD_TYPE_MSD;
     devtype = USB_DEV_TYPE_DISK;
-    new_opt1 = "path";
   } else if (!strcmp(devname, "cdrom")) {
     modtype = USB_MOD_TYPE_MSD;
     devtype = USB_DEV_TYPE_CDROM;
-    new_opt1 = "path";
   } else if (!strcmp(devname, "hub")) {
     modtype = USB_MOD_TYPE_HUB;
     devtype = USB_DEV_TYPE_HUB;
-    new_opt1 = "ports";
   } else if (!strcmp(devname, "printer")) {
     modtype = USB_MOD_TYPE_PRINTER;
     devtype = USB_DEV_TYPE_PRINTER;
-    new_opt1 = "file";
   } else if (!strncmp(devname, "floppy", 6)) {
     modtype = USB_MOD_TYPE_CBI;
     devtype = USB_DEV_TYPE_FLOPPY;
-    new_opt1 = "path";
   } else {
     hub->panic("unknown USB device: %s", devname);
     delete [] devname;
     return devtype;
   }
-  if ((strlen(args) > 0) && (new_opt1 != NULL)) {
+  if (opts2 != NULL) {
+    // backward compatibility code
+    options2 = opts2->getptr();
     if (strlen(options) > 0) {
-      sprintf(new_options, "%s:%s, %s", new_opt1, args, options);
+      sprintf(new_options, "%s, %s", options2, options);
     } else {
-      sprintf(new_options, "%s:%s", new_opt1, args);
+      sprintf(new_options, "%s", options2);
     }
-    ((bx_param_string_c*)portconf->get_by_name("device"))->set(devname);
     ((bx_param_string_c*)portconf->get_by_name("options"))->set(new_options);
+    portconf->remove("options2");
   }
   if (!usbdev_locator_c::module_present(usbmod_names[modtype])) {
 #if BX_PLUGINS
@@ -182,7 +173,6 @@ int bx_usbdev_ctl_c::init_device(bx_list_c *portconf, logfunctions *hub, void **
   if (*device != NULL) {
     parse_port_options(*device, portconf);
   }
-  delete [] devname;
   return devtype;
 }
 

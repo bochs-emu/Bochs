@@ -174,6 +174,7 @@ public:
   virtual ~bx_usbdev_ctl_c() {}
   void init(void);
   void exit(void);
+  const char **get_device_names(void);
   void list_devices(void);
   virtual int init_device(bx_list_c *portconf, logfunctions *hub, void **dev);
 private:
@@ -181,6 +182,7 @@ private:
 };
 
 BOCHSAPI extern bx_usbdev_ctl_c bx_usbdev_ctl;
+BOCHSAPI extern const char *usb_device_names[];
 
 class BOCHSAPI usb_device_c : public logfunctions {
 public:

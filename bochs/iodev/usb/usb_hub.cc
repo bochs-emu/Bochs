@@ -255,7 +255,7 @@ bool usb_hub_device_c::init()
   char pname[10];
   char label[32];
   bx_list_c *port;
-  bx_param_string_c *device;
+  bx_param_enum_c *device;
 
   // set up config descriptor, status and runtime config for hub.n_ports
   bx_hub_config_descriptor[22] = (hub.n_ports + 1 + 7) / 8;
@@ -268,7 +268,7 @@ bool usb_hub_device_c::init()
     sprintf(label, "Port #%d Configuration", i+1);
     port = new bx_list_c(hub.config, pname, label);
     port->set_options(port->SERIES_ASK | port->USE_BOX_TITLE);
-    device = new bx_param_string_c(port, "device", "Device", "", "", BX_PATHNAME_LEN);
+    device = new bx_param_enum_c(port, "device", "Device", "", usb_device_names, 0, 0);
     device->set_handler(hub_param_handler);
     new bx_param_string_c(port, "options", "Options", "", "", BX_PATHNAME_LEN);
   }
@@ -569,7 +569,7 @@ void usb_hub_device_c::init_device(Bit8u port, bx_list_c *portconf)
   char pname[BX_PATHNAME_LEN];
   const char *devname = NULL;
 
-  devname = ((bx_param_string_c*)portconf->get_by_name("device"))->getptr();
+  devname = ((bx_param_enum_c*)portconf->get_by_name("device"))->get_selected();
   if (devname == NULL) return;
   if (!strlen(devname) || !strcmp(devname, "none")) return;
 
@@ -695,8 +695,7 @@ void usb_hub_device_c::runtime_config()
 #define LOG_THIS hub->
 
 // USB hub runtime parameter handler
-const char *usb_hub_device_c::hub_param_handler(bx_param_string_c *param, int set,
-                                                const char *oldval, const char *val, int maxlen)
+Bit64s usb_hub_device_c::hub_param_handler(bx_param_c *param, int set, Bit64s val)
 {
   int type = -1;
   int hubnum, portnum;
@@ -709,7 +708,7 @@ const char *usb_hub_device_c::hub_param_handler(bx_param_string_c *param, int se
     if (hub != NULL) {
       hubnum = atoi(port->get_parent()->get_name()+6);
       portnum = atoi(port->get_name()+4) - 1;
-      bool empty = ((strlen(val) == 0) || (!strcmp(val, "none")));
+      bool empty = (val == 0);
       if ((portnum >= 0) && (portnum < hub->hub.n_ports)) {
         if (empty && (hub->hub.usb_port[portnum].PortStatus & PORT_STAT_CONNECTION)) {
           BX_INFO(("USB hub #%d, port #%d: device disconnect", hubnum, portnum+1));
@@ -719,6 +718,8 @@ const char *usb_hub_device_c::hub_param_handler(bx_param_string_c *param, int se
           hub->usb_set_connect_status(portnum, type, 0);
         } else if (!empty && !(hub->hub.usb_port[portnum].PortStatus & PORT_STAT_CONNECTION)) {
           hub->hub.device_change |= (1 << portnum);
+        } else {
+          val = ((bx_param_enum_c*)param)->get();
         }
       } else {
         BX_PANIC(("usb_param_handler called with unexpected parameter '%s'", param->get_name()));

@@ -217,8 +217,8 @@ public:
   virtual void init_usb_options(const char *usb_name, const char *pname, int maxports);
   virtual int  parse_param_from_list(const char *context, const char *param, bx_list_c *base);
   virtual int  parse_nic_params(const char *context, const char *param, bx_list_c *base);
-  virtual int  parse_usb_port_params(const char *context, bool devopt,
-                                     const char *param, int maxports, bx_list_c *base);
+  virtual int  parse_usb_port_params(const char *context, const char *param,
+                                     int maxports, bx_list_c *base);
   virtual int  split_option_list(const char *msg, const char *rawopt, char **argv, int max_argv);
   virtual int  write_param_list(FILE *fp, bx_list_c *base, const char *optname, bool multiline);
   virtual int  write_usb_options(FILE *fp, int maxports, bx_list_c *base);
@@ -1483,10 +1483,10 @@ int bx_real_sim_c::parse_nic_params(const char *context, const char *param, bx_l
   return bx_parse_nic_params(context, param, base);
 }
 
-int bx_real_sim_c::parse_usb_port_params(const char *context, bool devopt,
-                                     const char *param, int maxports, bx_list_c *base)
+int bx_real_sim_c::parse_usb_port_params(const char *context, const char *param,
+                                         int maxports, bx_list_c *base)
 {
-  return bx_parse_usb_port_params(context, devopt, param, maxports, base);
+  return bx_parse_usb_port_params(context, param, maxports, base);
 }
 
 int bx_real_sim_c::split_option_list(const char *msg, const char *rawopt,

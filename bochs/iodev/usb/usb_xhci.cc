@@ -159,12 +159,8 @@ Bit32s usb_xhci_options_parser(const char *context, int num_params, char *params
     for (int i = 1; i < num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
         SIM->get_param_bool(BXPN_XHCI_ENABLED)->set(atol(&params[i][8]));
-      } else if (!strncmp(params[i], "port", 4)) {
-        if (SIM->parse_usb_port_params(context, 0, params[i], BX_N_USB_XHCI_PORTS, base) < 0) {
-          return -1;
-        }
-      } else if (!strncmp(params[i], "options", 7)) {
-        if (SIM->parse_usb_port_params(context, 1, params[i], BX_N_USB_XHCI_PORTS, base) < 0) {
+      } else if (!strncmp(params[i], "port", 4) || !strncmp(params[i], "options", 7)) {
+        if (SIM->parse_usb_port_params(context, params[i], BX_N_USB_XHCI_PORTS, base) < 0) {
           return -1;
         }
       } else {
@@ -224,7 +220,7 @@ bx_usb_xhci_c::~bx_usb_xhci_c()
 
   for (int i=0; i<USB_XHCI_PORTS; i++) {
     sprintf(pname, "port%d.device", i+1);
-    SIM->get_param_string(pname, SIM->get_param(BXPN_USB_XHCI))->set_handler(NULL);
+    SIM->get_param_enum(pname, SIM->get_param(BXPN_USB_XHCI))->set_handler(NULL);
     remove_device(i);
   }
 
@@ -239,7 +235,7 @@ void bx_usb_xhci_c::init(void)
   unsigned i;
   char pname[6];
   bx_list_c *xhci, *port;
-  bx_param_string_c *device;
+  bx_param_enum_c *device;
 
   /*  If you wish to set DEBUG=report in the code, instead of
    *  in the configuration, simply uncomment this line.  I use
@@ -300,7 +296,7 @@ void bx_usb_xhci_c::init(void)
     sprintf(pname, "port%d", i+1);
     port = (bx_list_c*)SIM->get_param(pname, xhci);
     xhci_rt->add(port);
-    device = (bx_param_string_c*)port->get_by_name("device");
+    device = (bx_param_enum_c*)port->get_by_name("device");
     device->set_handler(usb_param_handler);
     BX_XHCI_THIS hub.usb_port[i].device = NULL;
     BX_XHCI_THIS hub.usb_port[i].portsc.ccs = 0;
@@ -983,7 +979,7 @@ void bx_usb_xhci_c::init_device(Bit8u port, bx_list_c *portconf)
   char pname[BX_PATHNAME_LEN];
   const char *devname = NULL;
 
-  devname = ((bx_param_string_c*)portconf->get_by_name("device"))->getptr(); 
+  devname = ((bx_param_enum_c*)portconf->get_by_name("device"))->get_selected(); 
   if (devname == NULL) return; 
   if (!strlen(devname) || !strcmp(devname, "none")) return;
 
@@ -3215,19 +3211,20 @@ void bx_usb_xhci_c::usb_set_connect_status(Bit8u port, int type, bool connected)
 }
 
 // USB runtime parameter handler
-const char *bx_usb_xhci_c::usb_param_handler(bx_param_string_c *param, int set,
-                                           const char *oldval, const char *val, int maxlen)
+Bit64s bx_usb_xhci_c::usb_param_handler(bx_param_c *param, int set, Bit64s val)
 {
   int portnum;
 
   if (set) {
     portnum = atoi((param->get_parent())->get_name()+4) - 1;
-    bool empty = ((strlen(val) == 0) || (!strcmp(val, "none")));
+    bool empty = (val == 0);
     if ((portnum >= 0) && (portnum < USB_XHCI_PORTS)) {
       if (empty && BX_XHCI_THIS hub.usb_port[portnum].portsc.ccs) {
         BX_XHCI_THIS device_change |= (1 << portnum);
       } else if (!empty && !BX_XHCI_THIS hub.usb_port[portnum].portsc.ccs) {
         BX_XHCI_THIS device_change |= (1 << portnum);
+      } else {
+        val = ((bx_param_enum_c*)param)->get();
       }
     } else {
       BX_PANIC(("usb_param_handler called with unexpected parameter '%s'", param->get_name()));

@@ -261,8 +261,7 @@ public:
 
   void event_handler(int event, USBPacket *packet, int port);
 
-  static const char *usb_param_handler(bx_param_string_c *param, int set,
-                                       const char *oldval, const char *val, int maxlen);
+  static Bit64s usb_param_handler(bx_param_c *param, int set, Bit64s val);
 
 private:
 

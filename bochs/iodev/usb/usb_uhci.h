@@ -39,8 +39,7 @@ public:
   virtual void register_state(void);
   virtual void after_restore_state(void);
 
-  static const char *usb_param_handler(bx_param_string_c *param, int set,
-                                       const char *oldval, const char *val, int maxlen);
+  static Bit64s usb_param_handler(bx_param_c *param, int set, Bit64s val);
 
 private:
   Bit8u device_change;

@@ -215,11 +215,18 @@ void bx_init_usb_options(const char *usb_name, const char *pname, int maxports)
     bx_list_c *port = new bx_list_c(menu, name, label);
     port->set_options(port->SERIES_ASK | port->USE_BOX_TITLE);
     sprintf(descr, "Device connected to %s port #%d", usb_name, i+1);
-    bx_param_string_c *device = new bx_param_string_c(port, "device", "Device",
-                                                      descr, "", BX_PATHNAME_LEN);
+    bx_param_enum_c *device = new bx_param_enum_c(port,
+      "device",
+      "Device",
+      descr,
+      bx_usbdev_ctl.get_device_names(),
+      0, 0);
     sprintf(descr, "Options for device connected to %s port #%u", usb_name, i+1);
-    bx_param_string_c *options = new bx_param_string_c(port, "options", "Options",
-                                                       descr, "", BX_PATHNAME_LEN);
+    bx_param_string_c *options = new bx_param_string_c(port,
+      "options",
+      "Options",
+      descr,
+      "", BX_PATHNAME_LEN);
     port->set_group(group);
     deplist->add(port);
     deplist->add(device);
@@ -2170,14 +2177,20 @@ int bx_parse_param_from_list(const char *context, const char *input, bx_list_c *
   return ret;
 }
 
-int bx_parse_usb_port_params(const char *context, bool devopt, const char *param, int maxports, bx_list_c *base)
+int bx_parse_usb_port_params(const char *context, const char *param,
+                             int maxports, bx_list_c *base)
 {
+  bool devopt = 0;
   int idx, plen;
-  char tmpname[20];
+  char tmpname[20], optstr[BX_PATHNAME_LEN];
+  char *devstr, *arg;
+  const char *opt = NULL;
 
-  if (!devopt) {
+  if (!strncmp(param, "port", 4)) {
+    devopt = 1;
     plen = 4;
   } else {
+    devopt = 0;
     plen = 7;
   }
   idx = param[plen];
@@ -2190,8 +2203,36 @@ int bx_parse_usb_port_params(const char *context, bool devopt, const char *param
     PARSE_ERR(("%s: usb_%s: port number out of range.", context, base->get_name()));
     return -1;
   }
-  sprintf(tmpname, "port%d.%s", idx, devopt ? "options" : "device");
-  SIM->get_param_string(tmpname, base)->set(&param[plen + 2]);
+  sprintf(tmpname, "port%d.%s", idx, devopt ? "device" : "options");
+  if (devopt) {
+    if (!SIM->get_param_enum(tmpname, base)->set_by_name(&param[plen + 2])) {
+      // backward compatibility code
+      devstr = strdup(&param[plen + 2]);
+      arg = strtok(devstr, ":");
+      arg = strtok(NULL, "\n");
+      SIM->get_param_enum(tmpname, base)->set_by_name(devstr);
+      if (arg != NULL) {
+        if (!strcmp(devstr, "disk") || !strcmp(devstr, "cdrom") ||
+            !strcmp(devstr, "floppy")) {
+          opt = "path";
+        } else if (!strcmp(devstr, "hub")) {
+          opt = "ports";
+        } else if (!strcmp(devstr, "printer")) {
+          opt = "file";
+        }
+        if (opt != NULL) {
+          sprintf(optstr, "%s:%s", opt, arg);
+          sprintf(tmpname, "port%d", idx);
+          base = (bx_list_c*)SIM->get_param(tmpname, base);
+          new bx_param_string_c(base,
+            "options2", "Options 2", "", optstr, BX_PATHNAME_LEN);
+        }
+      }
+      free(devstr);
+    }
+  } else {
+    SIM->get_param_string(tmpname, base)->set(&param[plen + 2]);
+  }
   return 0;
 }
 
@@ -3138,7 +3179,7 @@ int bx_write_usb_options(FILE *fp, int maxports, bx_list_c *base)
   if (SIM->get_param_bool("enabled", base)->get()) {
     for (i = 1; i <= maxports; i++) {
       sprintf(tmpname, "port%d.device", i);
-      SIM->get_param_string(tmpname, base)->dump_param(tmpstr, BX_PATHNAME_LEN, 1);
+      SIM->get_param_enum(tmpname, base)->dump_param(tmpstr, BX_PATHNAME_LEN, 1);
       fprintf(fp, ", port%d=%s", i, tmpstr);
       sprintf(tmpname, "port%d.options", i);
       SIM->get_param_string(tmpname, base)->dump_param(tmpstr, BX_PATHNAME_LEN, 1);
