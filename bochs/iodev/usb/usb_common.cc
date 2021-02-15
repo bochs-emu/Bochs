@@ -74,7 +74,8 @@ const char *usb_device_names[] =
   "cdrom",
   "hub",
   "printer",
-  "floppy"
+  "floppy",
+  NULL
 };
 
 const char **bx_usbdev_ctl_c::get_device_names(void)

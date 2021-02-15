@@ -2,6 +2,10 @@
 Changes after 2.6.11:
 
 - General
+  - Improved plugins handling: all available plugins in path are detected at
+    startup (including externally developed ones). These types are supported in
+    Bochs configuration: display libraries, VGA compatile adapters, optional
+    PCI/ISA devices, disk image, networking and sound driver modules.
   - Save/Restore bugfixes
   - Removed legacy "load32bitOShack" feature.
   - Removed "svga" display library designed for the obsolete Linux SVGALib.
@@ -42,6 +46,8 @@ Changes after 2.6.11:
       to disable ACPI or HPET in case the i440FX chipset is selected.
   - USB
     - Added keyboard emulation with most of the keys supported.
+    - Changed handling of device options in the USB port configuration
+      (see bochsrc sample).
   - Sound
     - Added PC speaker volume control for the lowlevel sound support.
 

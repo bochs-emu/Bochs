@@ -198,6 +198,7 @@ void bx_init_std_nic_options(const char *name, bx_list_c *menu)
 void bx_init_usb_options(const char *usb_name, const char *pname, int maxports)
 {
   char group[16], name[8], descr[512], label[512];
+  bx_list_c *deplist, *deplist2;
 
   bx_param_c *usb = SIM->get_param("ports.usb");
   sprintf(group, "USB %s", usb_name);
@@ -207,7 +208,7 @@ void bx_init_usb_options(const char *usb_name, const char *pname, int maxports)
   sprintf(label, "Enable %s emulation", usb_name);
   sprintf(descr, "Enables the %s emulation", usb_name);
   bx_param_bool_c *enabled = new bx_param_bool_c(menu, "enabled", label, descr, 1);
-  bx_list_c *deplist = new bx_list_c(NULL);
+  deplist = new bx_list_c(NULL);
   for (Bit8u i = 0; i < maxports; i++) {
     sprintf(name, "port%u", i+1);
     sprintf(label, "Port #%u Configuration", i+1);
@@ -230,7 +231,10 @@ void bx_init_usb_options(const char *usb_name, const char *pname, int maxports)
     port->set_group(group);
     deplist->add(port);
     deplist->add(device);
-    deplist->add(options);
+    deplist2 = new bx_list_c(NULL);
+    deplist2->add(options);
+    device->set_dependent_list(deplist2, 1);
+    device->set_dependent_bitmap(0, 0);
   }
   enabled->set_dependent_list(deplist);
 }

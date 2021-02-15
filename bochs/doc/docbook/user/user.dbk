@@ -4913,13 +4913,14 @@ as the NE2000 adapter.
 <para>
 Examples:
 <screen>
-  usb_uhci: enabled=1, port1=mouse, port2=disk:usbstick.img
-  usb_uhci: enabled=1, port1=hub:7, port2=disk:growing:usbdisk.img
-  usb_uhci: enabled=1, port2=disk:undoable:usbdisk.img, options2=journal:redo.log
-  usb_uhci: enabled=1, port2=disk:usbdisk2.img, options2=sect_size:1024
-  usb_uhci: enabled=1, port2=disk:vvfat:vvfat, options2="debug,speed:full"
-  usb_uhci: enabled=1, port1=printer:printdata.bin, port2=cdrom:image.iso
-  usb_uhci: enabled=1, port2=floppy:vvfat:diskette, options2="model:teac"
+  usb_uhci: port1=mouse, port2=disk, options2="path:usbstick.img"
+  usb_uhci: port1=hub, options1="ports:6"
+  usb_uhci: port2=disk, options2="path:undoable:usbdisk.img, journal:u.redolog"
+  usb_uhci: port2=disk, options2=""path:usbdisk2.img, sect_size:1024"
+  usb_uhci: port2=disk, options2="path:vvfat:vvfat, debug, speed:full"
+  usb_uhci: port2=cdrom, options2="path:image.iso"
+  usb_uhci: port1=printer, options1="file:printdata.bin"
+  usb_uhci: port2=floppy, options2="path:vvfat:diskette, model:teac"
 </screen>
 This option controls the presence of the USB root hub which is a part of the
 i440FX PCI chipset.
@@ -4937,41 +4938,47 @@ the numeric keypad to the USB device instead of the PS/2 keyboard. If the
 keyboard is selected, all key events are sent to the USB device.
 </para>
 <para>
-To connect a 'flat' mode image as a USB hardisk you can use the 'disk' device
-with the path to the image separated with a colon. To use other disk image modes
-similar to ATA disks the syntax 'disk:mode:filename' must be used (see above).
+To connect a disk image as a USB hardisk you can use the 'disk' device. Use
+the 'path' option in the options<replaceable>X</replaceable> parameter to
+specify the path to the image separated with a colon. To use other disk image
+modes similar to ATA disks the syntax 'path:mode:filename' must be used (see
+below).
 </para>
 <para>
-To emulate a USB cdrom you can use the 'cdrom' device name and the path to
-an ISO image or raw device name also separated with a colon. An option to
-insert/eject media is available in the runtime configuration.
+To emulate a USB cdrom you can use the 'cdrom' device and the path to an
+ISO image or raw device name can be set with the 'path' option in the
+options<replaceable>X</replaceable> parameter also separated with a colon. An
+option to insert/eject media is available in the runtime configuration.
 </para>
 <para>
-To emulate a USB floppy you can use the 'floppy' device with the path to the
-image separated with a colon. To use the VVFAT image mode similar to the
-legacy floppy the syntax 'floppy:vvfat:directory' must be used (see above).
+To emulate a USB floppy you can use the 'floppy' device and the path to a
+floppy image can be set with the 'path' option in the options<replaceable>X</replaceable>
+parameter separated with a colon. To use the VVFAT image mode similar to the
+legacy floppy the syntax 'path:vvfat:directory' must be used (see below).
 An option to insert/eject media is available in the runtime configuration.
 </para>
 <para>
 The device name 'hub' connects an external hub with max. 8 ports (default: 4)
-to the root hub. To specify the number of ports you have to add the value
+to the root hub. To specify the number of ports you have to use the 'ports'
+option in the options<replaceable>X</replaceable> parameter with the value
 separated with a colon. Connecting devices to the external hub ports is only
 available in the runtime configuration.
 </para>
 <para>
 The device 'printer' emulates the HP Deskjet 920C printer. The PCL data is
-sent to a file specified in bochsrc.txt. The current code appends the PCL
-code to the file if the file already existed. The output file can be changed
-at runtime.
+sent to a file specified in the 'file' option with the options<replaceable>X</replaceable>
+parameter. The current code appends the PCL code to the file if the file already
+existed. The output file can be changed at runtime.
 </para>
 <para>
-The options<replaceable>X</replaceable> parameter can be used to assign specific
-options to the device connected to the corresponding USB port. Currently this
-feature is used to set the speed reported by device ('low', 'full', 'high' or
-'super'). The available speed choices depend on both HC and device. The option
-'debug' turns on debug output for the device at connection time. For the USB
-'disk' device the optionsX parameter can be used to specify an alternative
-redolog file (journal) of some image modes. For 'vvfat' mode USB disks the optionsX
+The options<replaceable>X</replaceable> parameter can also be used to assign
+specific options to the device connected to the corresponding USB port.
+Currently this feature is used to set the speed reported by device ('low',
+'full', 'high' or 'super'). The available speed choices depend on both HC and
+device. The option 'debug' turns on debug output for the device at connection
+time. For the USB 'disk' device the options<replaceable>X</replaceable>
+parameter can be used to specify an alternative redolog file (journal) of some
+image modes. For 'vvfat' mode USB disks the options<replaceable>X</replaceable>
 parameter can be used to specify the disk size (range 128M ... 128G). If the
 size is not specified, it defaults to 504M.
 For the USB 'floppy' device the optionsX parameter can be used to specify an
