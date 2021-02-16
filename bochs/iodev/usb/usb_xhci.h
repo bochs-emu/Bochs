@@ -565,7 +565,7 @@ private:
 
   static void init_device(Bit8u port, bx_list_c *portconf);
   static void remove_device(Bit8u port);
-  static void usb_set_connect_status(Bit8u port, int type, bool connected);
+  static bool usb_set_connect_status(Bit8u port, bool connected);
 
   static int  broadcast_packet(USBPacket *p, const int port);
   static void xhci_timer_handler(void *);

@@ -159,7 +159,7 @@ void bx_uhci_core_c::reset_uhci(unsigned type)
     hub.usb_port[j].able_changed = 0;
     hub.usb_port[j].status = 0;
     if (hub.usb_port[j].device != NULL) {
-      set_connect_status(j, hub.usb_port[j].device->get_type(), 1);
+      set_connect_status(j, 1);
     }
   }
   while (packets != NULL) {
@@ -541,7 +541,7 @@ void bx_uhci_core_c::write(Bit32u address, Bit32u value, unsigned io_len)
             if (hub.usb_port[port].device != NULL) {
               hub.usb_port[port].low_speed =
                 (hub.usb_port[port].device->get_speed() == USB_SPEED_LOW);
-              set_connect_status(port, hub.usb_port[port].device->get_type(), 1);
+              set_connect_status(port, 1);
               hub.usb_port[port].device->usb_send_msg(USB_MSG_RESET);
             }
           }
@@ -935,72 +935,71 @@ const char *usb_speed[4] = {
   "super"
 };
 
-void bx_uhci_core_c::set_connect_status(Bit8u port, int type, bool connected)
+bool bx_uhci_core_c::set_connect_status(Bit8u port, bool connected)
 {
   usb_device_c *device = hub.usb_port[port].device;
   if (device != NULL) {
-    if (device->get_type() == type) {
-      if (connected) {
-        BX_DEBUG(("port #%d: speed = %s", port+1, usb_speed[device->get_speed()]));
-        switch (device->get_speed()) {
-          case USB_SPEED_LOW:
-            hub.usb_port[port].low_speed = 1;
-            break;
-          case USB_SPEED_FULL:
-            hub.usb_port[port].low_speed = 0;
-            break;
-          case USB_SPEED_HIGH:
-          case USB_SPEED_SUPER:
-            BX_ERROR(("HC ignores device with unsupported speed"));
-            return;
-          default:
-            BX_PANIC(("USB device returned invalid speed value"));
-            set_connect_status(port, type, 0);
-            return;
-        }
-        if (hub.usb_port[port].low_speed) {
-          hub.usb_port[port].line_dminus = 1;  //  dminus=1 & dplus=0 = low speed  (at idle time)
-          hub.usb_port[port].line_dplus = 0;   //  dminus=0 & dplus=1 = high speed (at idle time)
-        } else {
-          hub.usb_port[port].line_dminus = 0;
-          hub.usb_port[port].line_dplus = 1;
-        }
-        hub.usb_port[port].status = 1;
-        hub.usb_port[port].connect_changed = 1;
-
-        // if in suspend state, signal resume
-        if (hub.usb_command.suspend) {
-          hub.usb_port[port].resume = 1;
-          hub.usb_status.resume = 1;
-          if (hub.usb_enable.resume) {
-            hub.usb_status.interrupt = 1;
-          }
-          update_irq();
-        }
-
-        if (!device->get_connected()) {
-          if (!device->init()) {
-            set_connect_status(port, type, 0);
-            BX_ERROR(("port #%d: connect failed", port+1));
-            return;
-          } else {
-            BX_INFO(("port #%d: connect: %s", port+1, device->get_info()));
-          }
-        }
-        device->set_event_handler(this, uhci_event_handler, port);
-      } else {
-        hub.usb_port[port].status = 0;
-        hub.usb_port[port].connect_changed = 1;
-        if (hub.usb_port[port].enabled) {
-          hub.usb_port[port].able_changed = 1;
-          hub.usb_port[port].enabled = 0;
-        }
-        hub.usb_port[port].low_speed = 0;
-        hub.usb_port[port].line_dminus = 0;
-        hub.usb_port[port].line_dplus = 0;
+    if (connected) {
+      BX_DEBUG(("port #%d: speed = %s", port+1, usb_speed[device->get_speed()]));
+      switch (device->get_speed()) {
+        case USB_SPEED_LOW:
+          hub.usb_port[port].low_speed = 1;
+          break;
+        case USB_SPEED_FULL:
+          hub.usb_port[port].low_speed = 0;
+          break;
+        case USB_SPEED_HIGH:
+        case USB_SPEED_SUPER:
+          BX_ERROR(("HC ignores device with unsupported speed"));
+          return 0;
+        default:
+          BX_PANIC(("USB device returned invalid speed value"));
+          set_connect_status(port, 0);
+          return 0;
       }
+      if (hub.usb_port[port].low_speed) {
+        hub.usb_port[port].line_dminus = 1;  //  dminus=1 & dplus=0 = low speed  (at idle time)
+        hub.usb_port[port].line_dplus = 0;   //  dminus=0 & dplus=1 = high speed (at idle time)
+      } else {
+        hub.usb_port[port].line_dminus = 0;
+        hub.usb_port[port].line_dplus = 1;
+      }
+      hub.usb_port[port].status = 1;
+      hub.usb_port[port].connect_changed = 1;
+
+      // if in suspend state, signal resume
+      if (hub.usb_command.suspend) {
+        hub.usb_port[port].resume = 1;
+        hub.usb_status.resume = 1;
+        if (hub.usb_enable.resume) {
+          hub.usb_status.interrupt = 1;
+        }
+        update_irq();
+      }
+
+      if (!device->get_connected()) {
+        if (!device->init()) {
+          set_connect_status(port, 0);
+          BX_ERROR(("port #%d: connect failed", port+1));
+          return 0;
+        } else {
+          BX_INFO(("port #%d: connect: %s", port+1, device->get_info()));
+        }
+      }
+      device->set_event_handler(this, uhci_event_handler, port);
+    } else {
+      hub.usb_port[port].status = 0;
+      hub.usb_port[port].connect_changed = 1;
+      if (hub.usb_port[port].enabled) {
+        hub.usb_port[port].able_changed = 1;
+        hub.usb_port[port].enabled = 0;
+      }
+      hub.usb_port[port].low_speed = 0;
+      hub.usb_port[port].line_dminus = 0;
+      hub.usb_port[port].line_dplus = 0;
     }
   }
+  return connected;
 }
 
 void bx_uhci_core_c::set_port_device(int port, usb_device_c *dev)
@@ -1008,9 +1007,9 @@ void bx_uhci_core_c::set_port_device(int port, usb_device_c *dev)
   usb_device_c *olddev = hub.usb_port[port].device;
   if ((dev != NULL) && (olddev == NULL)) {
     hub.usb_port[port].device = dev;
-    set_connect_status(port, dev->get_type(), 1);
+    set_connect_status(port, 1);
   } else if ((dev == NULL) && (olddev != NULL)) {
-    set_connect_status(port, olddev->get_type(), 0);
+    set_connect_status(port, 0);
     hub.usb_port[port].device = dev;
   }
 }

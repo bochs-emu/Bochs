@@ -349,7 +349,7 @@ private:
 
   static void init_device(Bit8u port, bx_list_c *portconf);
   static void remove_device(Bit8u port);
-  static void set_connect_status(Bit8u port, int type, bool connected);
+  static bool set_connect_status(Bit8u port, bool connected);
   static void change_port_owner(int port);
 
   // EHCI core methods ported from QEMU 1.2.2

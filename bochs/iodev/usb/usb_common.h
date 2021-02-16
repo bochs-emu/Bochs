@@ -176,7 +176,7 @@ public:
   void exit(void);
   const char **get_device_names(void);
   void list_devices(void);
-  virtual int init_device(bx_list_c *portconf, logfunctions *hub, void **dev);
+  virtual bool init_device(bx_list_c *portconf, logfunctions *hub, void **dev);
 private:
   void parse_port_options(usb_device_c *dev, bx_list_c *portconf);
 };

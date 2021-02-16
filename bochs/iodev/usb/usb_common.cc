@@ -108,7 +108,7 @@ void bx_usbdev_ctl_c::list_devices(void)
   }
 }
 
-int bx_usbdev_ctl_c::init_device(bx_list_c *portconf, logfunctions *hub, void **dev)
+bool bx_usbdev_ctl_c::init_device(bx_list_c *portconf, logfunctions *hub, void **dev)
 {
   usbmod_type modtype = USB_MOD_TYPE_NONE;
   usbdev_type devtype = USB_DEV_TYPE_NONE;
@@ -174,7 +174,7 @@ int bx_usbdev_ctl_c::init_device(bx_list_c *portconf, logfunctions *hub, void **
   if (*device != NULL) {
     parse_port_options(*device, portconf);
   }
-  return devtype;
+  return (*device != NULL);
 }
 
 void bx_usbdev_ctl_c::parse_port_options(usb_device_c *device, bx_list_c *portconf)

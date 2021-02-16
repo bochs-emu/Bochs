@@ -193,7 +193,7 @@ protected:
   void update_irq(void);
 
   int  broadcast_packet(USBPacket *p);
-  void set_connect_status(Bit8u port, int type, bool connected);
+  bool set_connect_status(Bit8u port, bool connected);
 
   static void uhci_timer_handler(void *);
   void uhci_timer(void);

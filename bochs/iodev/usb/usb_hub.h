@@ -73,7 +73,7 @@ private:
   int broadcast_packet(USBPacket *p);
   void init_device(Bit8u port, bx_list_c *portconf);
   void remove_device(Bit8u port);
-  void usb_set_connect_status(Bit8u port, int type, bool connected);
+  bool usb_set_connect_status(Bit8u port, bool connected);
 
   static Bit64s hub_param_handler(bx_param_c *param, int set, Bit64s val);
 };

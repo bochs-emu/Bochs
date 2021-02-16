@@ -468,7 +468,7 @@ void bx_usb_ehci_c::reset_hc()
       sprintf(pname, "port%d", i+1);
       init_device(i, (bx_list_c*)SIM->get_param(pname, SIM->get_param(BXPN_USB_EHCI)));
     } else {
-      set_connect_status(i, BX_EHCI_THIS hub.usb_port[i].device->get_type(), 1);
+      set_connect_status(i, 1);
     }
   }
 
@@ -506,7 +506,6 @@ void bx_usb_ehci_c::reset_port(int p)
 
 void bx_usb_ehci_c::init_device(Bit8u port, bx_list_c *portconf)
 {
-  int type;
   char pname[BX_PATHNAME_LEN];
   const char *devname = NULL;
 
@@ -518,12 +517,12 @@ void bx_usb_ehci_c::init_device(Bit8u port, bx_list_c *portconf)
     BX_ERROR(("init_device(): port%d already in use", port+1));
     return;
   }
-  sprintf(pname, "usb_ehci.hub.port%d.device", port+1);
-  bx_list_c *sr_list = (bx_list_c*)SIM->get_param(pname, SIM->get_bochs_root());
-  type = DEV_usb_init_device(portconf, BX_EHCI_THIS_PTR, &BX_EHCI_THIS hub.usb_port[port].device);
-  if (BX_EHCI_THIS hub.usb_port[port].device != NULL) {
-    set_connect_status(port, type, 1);
-    BX_EHCI_THIS hub.usb_port[port].device->register_state(sr_list);
+  if (DEV_usb_init_device(portconf, BX_EHCI_THIS_PTR, &BX_EHCI_THIS hub.usb_port[port].device)) {
+    if (set_connect_status(port, 1)) {
+      sprintf(pname, "usb_ehci.hub.port%d.device", port+1);
+      bx_list_c *sr_list = (bx_list_c*)SIM->get_param(pname, SIM->get_bochs_root());
+      BX_EHCI_THIS hub.usb_port[port].device->register_state(sr_list);
+    }
   }
 }
 
@@ -535,75 +534,73 @@ void bx_usb_ehci_c::remove_device(Bit8u port)
   }
 }
 
-void bx_usb_ehci_c::set_connect_status(Bit8u port, int type, bool connected)
+bool bx_usb_ehci_c::set_connect_status(Bit8u port, bool connected)
 {
   const bool ccs_org = BX_EHCI_THIS hub.usb_port[port].portsc.ccs;
   const bool ped_org = BX_EHCI_THIS hub.usb_port[port].portsc.ped;
 
   usb_device_c *device = BX_EHCI_THIS hub.usb_port[port].device;
   if (device != NULL) {
-    if (device->get_type() == type) {
-      if (connected) {
-        if (BX_EHCI_THIS hub.usb_port[port].portsc.po) {
-          BX_EHCI_THIS uhci[port >> 1]->set_port_device(port & 1, device);
-          return;
+    if (connected) {
+      if (BX_EHCI_THIS hub.usb_port[port].portsc.po) {
+        BX_EHCI_THIS uhci[port >> 1]->set_port_device(port & 1, device);
+        return 1;
+      }
+      if (device->get_speed() == USB_SPEED_SUPER) {
+        BX_PANIC(("Super-speed device not supported on USB2 port."));
+        set_connect_status(port, 0);
+        return 0;
+      }
+      switch (device->get_speed()) {
+        case USB_SPEED_LOW:
+          BX_INFO(("Low speed device connected to port #%d", port+1));
+          BX_EHCI_THIS hub.usb_port[port].portsc.ls = 0x1;
+          BX_EHCI_THIS hub.usb_port[port].portsc.ped = 0;
+          break;
+        case USB_SPEED_FULL:
+          BX_INFO(("Full speed device connected to port #%d", port+1));
+          BX_EHCI_THIS hub.usb_port[port].portsc.ls = 0x2;
+          BX_EHCI_THIS hub.usb_port[port].portsc.ped = 0;
+          break;
+        case USB_SPEED_HIGH:
+          BX_INFO(("High speed device connected to port #%d", port+1));
+          BX_EHCI_THIS hub.usb_port[port].portsc.ls = 0x0;
+          BX_EHCI_THIS hub.usb_port[port].portsc.ped = 1;
+          break;
+        default:
+          BX_ERROR(("device->get_speed() returned invalid speed value"));
+      }
+      BX_EHCI_THIS hub.usb_port[port].portsc.ccs = 1;
+      if (!device->get_connected()) {
+        if (!device->init()) {
+          set_connect_status(port, 0);
+          BX_ERROR(("port #%d: connect failed", port+1));
+          return 0;
+        } else {
+          BX_INFO(("port #%d: connect: %s", port+1, device->get_info()));
         }
-        if (device->get_speed() == USB_SPEED_SUPER) {
-          BX_PANIC(("Super-speed device not supported on USB2 port."));
-          set_connect_status(port, type, 0);
-          return;
-        }
-        switch (device->get_speed()) {
-          case USB_SPEED_LOW:
-            BX_INFO(("Low speed device connected to port #%d", port+1));
-            BX_EHCI_THIS hub.usb_port[port].portsc.ls = 0x1;
-            BX_EHCI_THIS hub.usb_port[port].portsc.ped = 0;
-            break;
-          case USB_SPEED_FULL:
-            BX_INFO(("Full speed device connected to port #%d", port+1));
-            BX_EHCI_THIS hub.usb_port[port].portsc.ls = 0x2;
-            BX_EHCI_THIS hub.usb_port[port].portsc.ped = 0;
-            break;
-          case USB_SPEED_HIGH:
-            BX_INFO(("High speed device connected to port #%d", port+1));
-            BX_EHCI_THIS hub.usb_port[port].portsc.ls = 0x0;
-            BX_EHCI_THIS hub.usb_port[port].portsc.ped = 1;
-            break;
-          default:
-            BX_ERROR(("device->get_speed() returned invalid speed value"));
-        }
-        BX_EHCI_THIS hub.usb_port[port].portsc.ccs = 1;
-        if (!device->get_connected()) {
-          if (!device->init()) {
-            set_connect_status(port, type, 0);
-            BX_ERROR(("port #%d: connect failed", port+1));
-            return;
-          } else {
-            BX_INFO(("port #%d: connect: %s", port+1, device->get_info()));
-          }
-        }
-        device->set_event_handler(BX_EHCI_THIS_PTR, ehci_event_handler, port);
-      } else { // not connected
-        if (BX_EHCI_THIS hub.usb_port[port].portsc.po) {
+      }
+      device->set_event_handler(BX_EHCI_THIS_PTR, ehci_event_handler, port);
+    } else { // not connected
+      if (BX_EHCI_THIS hub.usb_port[port].portsc.po) {
           BX_EHCI_THIS uhci[port >> 1]->set_port_device(port & 1, NULL);
           if ((!BX_EHCI_THIS hub.usb_port[port].owner_change) &&
               (BX_EHCI_THIS hub.op_regs.ConfigFlag & 1)) {
             BX_EHCI_THIS hub.usb_port[port].portsc.po = 0;
             BX_EHCI_THIS hub.usb_port[port].portsc.csc = 1;
           }
-        } else {
+      } else {
           BX_EHCI_THIS hub.usb_port[port].portsc.ccs = 0;
           BX_EHCI_THIS hub.usb_port[port].portsc.ped = 0;
           BX_EHCI_THIS queues_rip_device(device, 0);
           BX_EHCI_THIS queues_rip_device(device, 1);
           device->set_async_mode(0);
-        }
-        if (!BX_EHCI_THIS hub.usb_port[port].owner_change) {
-          remove_device(port);
-        }
-        if (BX_EHCI_THIS hub.usb_port[port].portsc.po)
-          return;
       }
+      if (!BX_EHCI_THIS hub.usb_port[port].owner_change) {
+        remove_device(port);
+      }
+      if (BX_EHCI_THIS hub.usb_port[port].portsc.po)
+        return 0;
     }
     if (ccs_org != BX_EHCI_THIS hub.usb_port[port].portsc.ccs)
       BX_EHCI_THIS hub.usb_port[port].portsc.csc = 1;
@@ -613,6 +610,7 @@ void bx_usb_ehci_c::set_connect_status(Bit8u port, int type, bool connected)
     BX_EHCI_THIS hub.op_regs.UsbSts.inti |= USBSTS_PCD;
     BX_EHCI_THIS update_irq();
   }
+  return connected;
 }
 
 void bx_usb_ehci_c::change_port_owner(int port)
@@ -627,11 +625,11 @@ void bx_usb_ehci_c::change_port_owner(int port)
       BX_INFO(("port #%d: owner change to %s", port+1,
                BX_EHCI_THIS hub.usb_port[port].portsc.po ? "EHCI":"UHCI"));
       if (device != NULL) {
-        set_connect_status(port, device->get_type(), 0);
+        set_connect_status(port, 0);
       }
       BX_EHCI_THIS hub.usb_port[port].portsc.po ^= 1;
       if (device != NULL) {
-        set_connect_status(port, device->get_type(), 1);
+        set_connect_status(port, 1);
       }
     }
     BX_EHCI_THIS hub.usb_port[port].owner_change = 0;
@@ -2220,7 +2218,6 @@ void bx_usb_ehci_c::runtime_config(void)
 {
   int i;
   char pname[6];
-  int type = -1;
 
   for (i = 0; i < USB_EHCI_PORTS; i++) {
     // device change support
@@ -2231,10 +2228,7 @@ void bx_usb_ehci_c::runtime_config(void)
         init_device(i, (bx_list_c*)SIM->get_param(pname, SIM->get_param(BXPN_USB_EHCI)));
       } else {
         BX_INFO(("USB port #%d: device disconnect", i+1));
-        if (BX_EHCI_THIS hub.usb_port[i].device != NULL) {
-          type = BX_EHCI_THIS hub.usb_port[i].device->get_type();
-        }
-        set_connect_status(i, type, 0);
+        set_connect_status(i, 0);
       }
       BX_EHCI_THIS device_change &= ~(1 << i);
     }
