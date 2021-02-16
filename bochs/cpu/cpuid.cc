@@ -500,6 +500,227 @@ void bx_cpuid_t::get_ext_cpuid_brand_string_leaf(const char *brand_string, Bit32
 #endif
 }
 
+// leaf 0x00000007 - EBX
+Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_ebx(Bit32u extra) const
+{
+  Bit32u ebx = extra;
+
+  // [0:0]    FS/GS BASE access instructions
+  if (is_cpu_extension_supported(BX_ISA_FSGSBASE))
+    ebx |= BX_CPUID_EXT3_FSGSBASE;
+
+  // [1:1]    Support for IA32_TSC_ADJUST MSR
+  if (is_cpu_extension_supported(BX_ISA_TSC_ADJUST))
+    ebx |= BX_CPUID_EXT3_TSC_ADJUST;
+
+  // [2:2]    SGX: Intel Software Guard Extensions - not supported
+
+  // [3:3]    BMI1: Advanced Bit Manipulation Extensions
+  if (is_cpu_extension_supported(BX_ISA_BMI1))
+    ebx |= BX_CPUID_EXT3_BMI1;
+
+  // [4:4]    HLE: Hardware Lock Elision - not supported
+
+  // [5:5]    AVX2
+  if (is_cpu_extension_supported(BX_ISA_AVX2))
+    ebx |= BX_CPUID_EXT3_AVX2;
+
+  // [6:6]    FDP Deprecation
+  if (is_cpu_extension_supported(BX_ISA_FDP_DEPRECATION))
+    ebx |= BX_CPUID_EXT3_FDP_DEPRECATION;
+
+  // [7:7]    SMEP: Supervisor Mode Execution Protection
+  if (is_cpu_extension_supported(BX_ISA_SMEP))
+    ebx |= BX_CPUID_EXT3_SMEP;
+
+  // [8:8]    BMI2: Advanced Bit Manipulation Extensions
+  if (is_cpu_extension_supported(BX_ISA_BMI2))
+    ebx |= BX_CPUID_EXT3_BMI2;
+
+  // [9:9]    Support for Enhanced REP MOVSB/STOSB - no special emulation required, could be enabled through extra
+
+  // [10:10]  Support for INVPCID instruction
+  if (is_cpu_extension_supported(BX_ISA_INVPCID))
+    ebx |= BX_CPUID_EXT3_INVPCID;
+
+  // [11:11]  RTM: Restricted Transactional Memory - not supported
+  // [12:12]  Supports Platform Quality of Service Monitoring (PQM) capability - not supported
+
+  // [13:13]  Deprecates FPU CS and FPU DS values
+  if (is_cpu_extension_supported(BX_ISA_FCS_FDS_DEPRECATION))
+    ebx |= BX_CPUID_EXT3_DEPRECATE_FCS_FDS;
+
+  // [14:14]  Intel Memory Protection Extensions - not supported
+  // [15:15]  Supports Platform Quality of Service Enforcement (PQE) capability - not supported
+
+  // [16:16]  AVX512F instructions support
+  // [17:17]  AVX512DQ instructions support
+#if BX_SUPPORT_EVEX
+  if (is_cpu_extension_supported(BX_ISA_AVX512)) {
+    ebx |= BX_CPUID_EXT3_AVX512F;
+    if (is_cpu_extension_supported(BX_ISA_AVX512_DQ))
+      ebx |= BX_CPUID_EXT3_AVX512DQ;
+  }
+#endif
+
+  // [18:18]  RDSEED instruction support
+  if (is_cpu_extension_supported(BX_ISA_RDSEED))
+    ebx |= BX_CPUID_EXT3_RDSEED;
+
+  // [19:19]  ADCX/ADOX instructions support
+  if (is_cpu_extension_supported(BX_ISA_ADX))
+    ebx |= BX_CPUID_EXT3_ADX;
+
+  // [20:20]  SMAP: Supervisor Mode Access Prevention
+  if (is_cpu_extension_supported(BX_ISA_SMAP))
+    ebx |= BX_CPUID_EXT3_SMAP;
+
+  // [22:21]  AVX512IFMA52 instructions support
+#if BX_SUPPORT_EVEX
+  if (is_cpu_extension_supported(BX_ISA_AVX512)) {
+    if (is_cpu_extension_supported(BX_ISA_AVX512_IFMA52))
+      ebx |= BX_CPUID_EXT3_AVX512IFMA52;
+  }
+#endif
+
+  // [22:22]  reserved
+
+  // [23:23]  CLFLUSHOPT instruction
+  // [24:24]  CLWB instruction
+  if (is_cpu_extension_supported(BX_ISA_CLFLUSHOPT))
+    ebx |= BX_CPUID_EXT3_CLFLUSHOPT;
+  if (is_cpu_extension_supported(BX_ISA_CLWB))
+    ebx |= BX_CPUID_EXT3_CLWB;
+
+  // [25:25]  Intel Processor Trace - not supported
+  // [26:26]  AVX512PF instructions support - not supported
+  // [27:27]  AVX512ER instructions support - not supported
+  // [28:28]  AVX512CD instructions support
+#if BX_SUPPORT_EVEX
+  if (is_cpu_extension_supported(BX_ISA_AVX512)) {
+    if (is_cpu_extension_supported(BX_ISA_AVX512_CD))
+      ebx |= BX_CPUID_EXT3_AVX512CD;
+  }
+#endif
+
+  // [29:29]  SHA instructions support
+  if (is_cpu_extension_supported(BX_ISA_SHA))
+    ebx |= BX_CPUID_EXT3_SHA;
+
+  // [30:30]  AVX512BW instructions support
+  // [31:31]  AVX512VL variable vector length support
+  if (is_cpu_extension_supported(BX_ISA_AVX512)) {
+    if (is_cpu_extension_supported(BX_ISA_AVX512_BW))
+      ebx |= BX_CPUID_EXT3_AVX512BW;
+    ebx |= BX_CPUID_EXT3_AVX512VL;
+  }
+
+  return ebx;
+}
+
+// leaf 0x00000007 - ECX
+Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_ecx(Bit32u extra) const
+{
+  Bit32u ecx = extra;
+
+  // [0:0]   PREFETCHW1 instruction - not supported
+
+  // [1:1]   AVX512 VBMI instructions
+#if BX_SUPPORT_EVEX
+  if (is_cpu_extension_supported(BX_ISA_AVX512)) {
+    if (is_cpu_extension_supported(BX_ISA_AVX512_VBMI))
+      ecx |= BX_CPUID_EXT4_AVX512_VBMI;
+  }
+#endif
+  
+  // [2:2]   UMIP: Supports user-mode instruction prevention
+  if (is_cpu_extension_supported(BX_ISA_UMIP))
+    ecx |= BX_CPUID_EXT4_UMIP;
+
+  // [3:3]   PKU: Protection keys for user-mode pages
+  // [4:4]   OSPKE: OS has set CR4.PKE to enable protection keys
+#if BX_SUPPORT_PKEYS
+  if (is_cpu_extension_supported(BX_ISA_PKU)) {
+    ecx |= BX_CPUID_EXT4_PKU;
+    if (cpu->cr4.get_PKE())
+      ecx |= BX_CPUID_EXT4_OSPKE;
+ }
+#endif
+
+  // [5:5]   WAITPKG (TPAUSE/UMONITOR/UMWAIT) support - not supported
+
+  // [6:6]   AVX512 VBMI2 instructions support
+#if BX_SUPPORT_EVEX
+  if (is_cpu_extension_supported(BX_ISA_AVX512)) {
+    if (is_cpu_extension_supported(BX_ISA_AVX512_VBMI2))
+      ecx |= BX_CPUID_EXT4_AVX512_VBMI2;
+  }
+#endif
+
+  // [7:7]   CET_SS: Support CET Shadow Stack
+#if BX_SUPPORT_CET
+  if (is_cpu_extension_supported(BX_ISA_CET))
+    ecx |= BX_CPUID_EXT4_CET_SS;
+#endif
+
+  // [8:8]   GFNI instructions support
+#if BX_SUPPORT_EVEX
+  if (is_cpu_extension_supported(BX_ISA_GFNI))
+    ecx |= BX_CPUID_EXT4_GFNI;
+#endif
+
+  // [9:9]   VAES instructions support
+  // [10:10] VPCLMULQDQ instruction support
+#if BX_SUPPORT_EVEX
+  if (is_cpu_extension_supported(BX_ISA_VAES_VPCLMULQDQ))
+    ecx |= BX_CPUID_EXT4_VAES | BX_CPUID_EXT4_VPCLMULQDQ;
+#endif
+  
+  // [11:11] AVX512 VNNI instructions support
+  // [12:12] AVX512 BITALG instructions support
+  // [13:13] reserved
+  // [14:14] AVX512 VPOPCNTDQ: AVX512 VPOPCNTD/VPOPCNTQ instructions
+#if BX_SUPPORT_EVEX
+  if (is_cpu_extension_supported(BX_ISA_AVX512)) {
+    if (is_cpu_extension_supported(BX_ISA_AVX512_VNNI))
+      ecx |= BX_CPUID_EXT4_AVX512_VNNI;
+    if (is_cpu_extension_supported(BX_ISA_AVX512_BITALG))
+      ecx |= BX_CPUID_EXT4_AVX512_BITALG;
+    if (is_cpu_extension_supported(BX_ISA_AVX512_VPOPCNTDQ))
+      ecx |= BX_CPUID_EXT4_AVX512_VPOPCNTDQ;
+  }
+#endif
+
+  // [15:15] reserved
+  // [16:16] LA57: LA57 and 5-level paging - not supported
+  // [17:17] reserved
+  // [18:18] reserved
+  // [19:19] reserved
+  // [20:20] reserved
+  // [21:21] reserved
+
+  // [22:22] RDPID: Read Processor ID support
+  if (is_cpu_extension_supported(BX_ISA_RDPID))
+    ecx |= BX_CPUID_EXT4_RDPID;
+
+  // [23:23] Keylocker support - not supported
+  // [24:24] reserved
+  // [25:25] CLDEMOTE: CLDEMOTE instruction support - not supported
+  // [26:26] reserved
+  // [27:27] MOVDIRI: MOVDIRI instruction support - not supported
+  // [28:28] MOVDIRI64: MOVDIRI64 instruction support - not supported
+  // [29:29] ENQCMD: Enqueue Stores support - not supported
+  // [30:30] SGX_LC: SGX Launch Configuration - not supported
+
+  // [31:31] PKS: Protection keys for supervisor-mode pages
+#if BX_SUPPORT_PKEYS
+  if (is_cpu_extension_supported(BX_ISA_PKS))
+    ecx |= BX_CPUID_EXT4_PKS;
+#endif
+
+  return ecx;
+}
+
 // leaf 0x80000008 - return Intel defaults //
 void bx_cpuid_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
 {
@@ -518,7 +739,7 @@ void bx_cpuid_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
   // [5:5] reserved
   // [6:6] Memory Bandwidth Enforcement (MBE) support
   // [8:7] reserved
-  // [9:9] WBNOINVD support
+  // [9:9] WBNOINVD support - not supported yet
   leaf->ebx = 0;
   if (is_cpu_extension_supported(BX_ISA_CLZERO))
     leaf->ebx |= 0x1;

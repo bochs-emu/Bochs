@@ -579,32 +579,7 @@ void corei7_skylake_x_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function
     //   [29:29] SHA instructions support
     // * [30:30] AVX512BW instructions support
     // * [31:31] AVX512VL variable vector length support
-    leaf->ebx = BX_CPUID_EXT3_FSGSBASE | 
-                BX_CPUID_EXT3_TSC_ADJUST |
-                BX_CPUID_EXT3_BMI1 | 
-                BX_CPUID_EXT3_AVX2 |
-                BX_CPUID_EXT3_FDP_DEPRECATION |
-                BX_CPUID_EXT3_SMEP | 
-                BX_CPUID_EXT3_BMI2 | 
-                BX_CPUID_EXT3_ENCHANCED_REP_STRINGS |
-                BX_CPUID_EXT3_INVPCID |
-                BX_CPUID_EXT3_DEPRECATE_FCS_FDS |
-#if BX_SUPPORT_EVEX
-                BX_CPUID_EXT3_AVX512F |
-                BX_CPUID_EXT3_AVX512DQ |
-#endif
-                BX_CPUID_EXT3_RDSEED |
-                BX_CPUID_EXT3_ADX |
-                BX_CPUID_EXT3_SMAP |
-                BX_CPUID_EXT3_CLFLUSHOPT |
-                BX_CPUID_EXT3_CLWB |
-#if BX_SUPPORT_EVEX
-                BX_CPUID_EXT3_AVX512CD |
-                BX_CPUID_EXT3_AVX512BW |
-                BX_CPUID_EXT3_AVX512VL |
-#endif
-                0;
-
+    leaf->ebx = get_std_cpuid_leaf_7_ebx(BX_CPUID_EXT3_ENCHANCED_REP_STRINGS);
     leaf->ecx = 0;
     leaf->edx = 0;
     break;

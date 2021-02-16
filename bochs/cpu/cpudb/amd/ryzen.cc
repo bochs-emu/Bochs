@@ -440,16 +440,8 @@ void ryzen_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *leaf) c
     // * [29:29] SHA instructions support
     //   [30:30] reserved
     //   [31:31] reserved
-    leaf->ebx = BX_CPUID_EXT3_FSGSBASE | 
-                BX_CPUID_EXT3_BMI1 | 
-                BX_CPUID_EXT3_AVX2 |
-                BX_CPUID_EXT3_SMEP | 
-                BX_CPUID_EXT3_BMI2 | 
-                BX_CPUID_EXT3_RDSEED |
-                BX_CPUID_EXT3_ADX |
-                BX_CPUID_EXT3_SMAP |
-                BX_CPUID_EXT3_CLFLUSHOPT |
-                BX_CPUID_EXT3_SHA;
+    leaf->ebx = get_std_cpuid_leaf_7_ebx();
+
     leaf->ecx = 0;
     leaf->edx = 0;
     break;

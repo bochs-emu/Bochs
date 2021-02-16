@@ -102,6 +102,7 @@ corei7_icelake_t::corei7_icelake_t(BX_CPU_C *cpu):
   enable_cpu_extension(BX_ISA_SMAP);
   enable_cpu_extension(BX_ISA_RDRAND);
   enable_cpu_extension(BX_ISA_RDSEED);
+  enable_cpu_extension(BX_ISA_FDP_DEPRECATION);
   enable_cpu_extension(BX_ISA_FCS_FDS_DEPRECATION);
   enable_cpu_extension(BX_ISA_SHA);
 #if BX_SUPPORT_EVEX
@@ -565,34 +566,7 @@ void corei7_icelake_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t
     // * [29:29]  SHA instructions support
     // * [30:30]  AVX512BW instructions support
     // * [31:31]  AVX512VL variable vector length support
-
-    leaf->ebx = BX_CPUID_EXT3_FSGSBASE | 
-                BX_CPUID_EXT3_TSC_ADJUST |
-                BX_CPUID_EXT3_BMI1 | 
-                BX_CPUID_EXT3_AVX2 | 
-                BX_CPUID_EXT3_FDP_DEPRECATION | 
-                BX_CPUID_EXT3_SMEP | 
-                BX_CPUID_EXT3_BMI2 | 
-                BX_CPUID_EXT3_ENCHANCED_REP_STRINGS |
-                BX_CPUID_EXT3_INVPCID |
-                BX_CPUID_EXT3_DEPRECATE_FCS_FDS |
-#if BX_SUPPORT_EVEX
-                BX_CPUID_EXT3_AVX512F |
-                BX_CPUID_EXT3_AVX512DQ |
-#endif
-                BX_CPUID_EXT3_RDSEED |
-                BX_CPUID_EXT3_ADX |
-                BX_CPUID_EXT3_SMAP |
-#if BX_SUPPORT_EVEX
-                BX_CPUID_EXT3_AVX512IFMA52 |
-#endif
-                BX_CPUID_EXT3_CLFLUSHOPT |
-#if BX_SUPPORT_EVEX
-                BX_CPUID_EXT3_AVX512CD |
-                BX_CPUID_EXT3_AVX512BW |
-                BX_CPUID_EXT3_AVX512VL |
-#endif
-                BX_CPUID_EXT3_SHA;
+    leaf->ebx = get_std_cpuid_leaf_7_ebx(BX_CPUID_EXT3_ENCHANCED_REP_STRINGS);
 
     //     [0:0]    PREFETCHWT1 instruction support
     // *   [1:1]    AVX512 VBMI instructions support
@@ -621,28 +595,7 @@ void corei7_icelake_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t
     //   [29:29]    reserved
     // ! [30:30]    SGX_LC: SGX Launch Configuration
     //   [31:31]    reserved
-
-    leaf->ecx = 
-#if BX_SUPPORT_EVEX
-                BX_CPUID_EXT4_AVX512_VBMI |
-#endif
-                BX_CPUID_EXT4_UMIP |
-#if BX_SUPPORT_PKEYS
-                BX_CPUID_EXT4_PKU |
-#endif
-#if BX_SUPPORT_EVEX
-                BX_CPUID_EXT4_AVX512_VBMI2 |
-                BX_CPUID_EXT4_GFNI |
-                BX_CPUID_EXT4_VAES | BX_CPUID_EXT4_VPCLMULQDQ |
-                BX_CPUID_EXT4_AVX512_VNNI |
-                BX_CPUID_EXT4_AVX512_BITALG |
-                BX_CPUID_EXT4_AVX512_VPOPCNTDQ |
-#endif
-                BX_CPUID_EXT4_RDPID;
-#if BX_SUPPORT_PKEYS
-    if (cpu->cr4.get_PKE())
-      leaf->ecx |= BX_CPUID_EXT4_OSPKE;
-#endif
+    leaf->ecx = get_std_cpuid_leaf_7_ecx();
 
     //     [1:0]    reserved
     //     [2:2]    AVX512_4VNNIW support

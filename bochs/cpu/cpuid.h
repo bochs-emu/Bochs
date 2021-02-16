@@ -111,6 +111,9 @@ protected:
   void get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
 #endif
 
+  Bit32u get_std_cpuid_leaf_7_ebx(Bit32u extra = 0) const;
+  Bit32u get_std_cpuid_leaf_7_ecx(Bit32u extra = 0) const;
+
   void get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const;
 
   BX_CPP_INLINE void get_leaf(cpuid_function_t *leaf, Bit32u eax, Bit32u ebx, Bit32u ecx, Bit32u edx)

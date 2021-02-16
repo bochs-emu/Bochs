@@ -516,15 +516,8 @@ void corei7_haswell_4770_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_funct
     //   [19:19] ADCX/ADOX instructions support
     //   [20:20] SMAP: Supervisor Mode Access Prevention
     //   [31:21] reserved
-    leaf->ebx = BX_CPUID_EXT3_FSGSBASE | 
-                BX_CPUID_EXT3_TSC_ADJUST |
-                BX_CPUID_EXT3_BMI1 | 
-                BX_CPUID_EXT3_AVX2 |
-                BX_CPUID_EXT3_SMEP | 
-                BX_CPUID_EXT3_BMI2 | 
-                BX_CPUID_EXT3_ENCHANCED_REP_STRINGS |
-                BX_CPUID_EXT3_INVPCID |
-                BX_CPUID_EXT3_DEPRECATE_FCS_FDS;
+    leaf->ebx = get_std_cpuid_leaf_7_ebx(BX_CPUID_EXT3_ENCHANCED_REP_STRINGS);
+
     leaf->ecx = 0;
     leaf->edx = 0;
     break;

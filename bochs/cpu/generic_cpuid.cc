@@ -295,10 +295,18 @@ void bx_generic_cpuid_t::get_std_cpuid_leaf_6(cpuid_function_t *leaf) const
 // leaf 0x00000007 //
 void bx_generic_cpuid_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *leaf) const
 {
-  leaf->eax = 0; /* report max sub-leaf that supported in leaf 7 */
-  leaf->ebx = get_ext3_cpuid_features();
-  leaf->ecx = get_ext4_cpuid_features();
-  leaf->edx = 0;
+  switch(subfunction) {
+  case 0:
+    leaf->eax = 0; /* report max sub-leaf that supported in leaf 7 */
+    leaf->ebx = get_std_cpuid_leaf_7_ebx(BX_CPU_VENDOR_INTEL ? BX_CPUID_EXT3_ENCHANCED_REP_STRINGS : 0);
+    leaf->ecx = get_std_cpuid_leaf_7_ecx();
+    leaf->edx = 0;
+  default:
+    leaf->eax = 0;
+    leaf->ebx = 0;
+    leaf->ecx = 0;
+    leaf->edx = 0;
+  }
 }
 
 // leaf 0x00000008 reserved                          //
@@ -1329,141 +1337,6 @@ Bit32u bx_generic_cpuid_t::get_ext2_cpuid_features(void) const
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_TBM))
     features |= BX_CPUID_EXT2_TBM;
-
-  return features;
-}
-
-Bit32u bx_generic_cpuid_t::get_ext3_cpuid_features(void) const
-{
-  Bit32u features = 0;
-
-  //   [0:0]    FS/GS BASE access instructions
-  //   [1:1]    Support for IA32_TSC_ADJUST MSR
-  //   [2:2]    reserved
-  //   [3:3]    BMI1: Advanced Bit Manipulation Extensions
-  //   [4:4]    HLE: Hardware Lock Elision
-  //   [5:5]    AVX2
-  //   [6:6]    reserved
-  //   [7:7]    SMEP: Supervisor Mode Execution Protection
-  //   [8:8]    BMI2: Advanced Bit Manipulation Extensions
-  //   [9:9]    Support for Enhanced REP MOVSB/STOSB
-  //   [10:10]  Support for INVPCID instruction
-  //   [11:11]  RTM: Restricted Transactional Memory
-  //   [12:12]  Supports Quality of Service (QoS) capability
-  //   [13:13]  Deprecates FPU CS and FPU DS values
-  //   [14:14]  Intel Memory Protection Extensions
-  //   [15:15]  reserved
-  //   [16:16]  AVX512F instructions support
-  //   [17:17]  reserved
-  //   [18:18]  RDSEED instruction support
-  //   [19:19]  ADCX/ADOX instructions support
-  //   [20:20]  SMAP: Supervisor Mode Access Prevention
-  //   [24:21]  reserved
-  //   [25:25]  Intel Processor Trace
-  //   [26:26]  AVX512PF instructions support
-  //   [27:27]  AVX512ER instructions support
-  //   [28:28]  AVX512CD instructions support
-  //   [29:29]  SHA instructions support
-  //   [31:30]  reserved
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_FSGSBASE))
-    features |= BX_CPUID_EXT3_FSGSBASE;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_BMI1))
-    features |= BX_CPUID_EXT3_BMI1;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX2))
-    features |= BX_CPUID_EXT3_AVX2;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SMEP))
-    features |= BX_CPUID_EXT3_SMEP;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_BMI2))
-    features |= BX_CPUID_EXT3_BMI2;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_INVPCID))
-    features |= BX_CPUID_EXT3_INVPCID;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_FCS_FDS_DEPRECATION))
-    features |= BX_CPUID_EXT3_DEPRECATE_FCS_FDS;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX512))
-    features |= BX_CPUID_EXT3_AVX512F;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_RDSEED))
-    features |= BX_CPUID_EXT3_RDSEED;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_ADX))
-    features |= BX_CPUID_EXT3_ADX;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SMAP))
-    features |= BX_CPUID_EXT3_SMAP;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SHA))
-    features |= BX_CPUID_EXT3_SHA;
-
-  return features;
-}
-
-Bit32u bx_generic_cpuid_t::get_ext4_cpuid_features(void) const
-{
-  Bit32u features = 0;
-
-  //   [0:0] PREFETCHWT1 instruction support
-  //   [1:1] AVX512 VBMI instructions support
-  //   [2:2] UMIP: Supports user-mode instruction prevention
-  //   [3:3] PKU: Protection keys for user-mode pages.
-  //   [4:4] OSPKE: OS has set CR4.PKE to enable protection keys
-  //   [5:5] reserved
-  //   [6:6] AVX512 VBMI2 instructions support
-  //   [7:7] reserved
-  //   [8:8] GFNI instructions support
-  //   [9:9] VAES instructions support
-  // [10:10] VPCLMULQDQ instruction support
-  // [11:11] AVX512 VNNI instructions support
-  // [12:12] AVX512 BITALG instructions support
-  // [13:13] reserved
-  // [14:14] AVX512 VPOPCNTDQ: AVX512 VPOPCNTD/VPOPCNTQ instructions
-  // [15:15] reserved
-  // [16:16] LA57: LA57 and 5-level paging
-  // [21:17] reserved
-  // [22:22] RDPID: Read Processor ID support
-  // [29:23] reserved
-  // [30:30] SGX_LC: SGX Launch Configuration
-  // [31:31] reserved
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX512_VBMI))
-    features |= BX_CPUID_EXT4_AVX512_VBMI;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_UMIP))
-    features |= BX_CPUID_EXT4_UMIP;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX512_VBMI2))
-    features |= BX_CPUID_EXT4_AVX512_VBMI2;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_GFNI))
-    features |= BX_CPUID_EXT4_GFNI;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_VAES_VPCLMULQDQ))
-    features |= BX_CPUID_EXT4_VAES | BX_CPUID_EXT4_VPCLMULQDQ;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX512_VNNI))
-    features |= BX_CPUID_EXT4_AVX512_VNNI;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX512_BITALG))
-    features |= BX_CPUID_EXT4_AVX512_BITALG;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX512_VPOPCNTDQ))
-    features |= BX_CPUID_EXT4_AVX512_VPOPCNTDQ;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_RDPID))
-    features |= BX_CPUID_EXT4_RDPID;
-
-#if BX_SUPPORT_PKEYS
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PKU)) {
-    features |= BX_CPUID_EXT4_PKU;
-    if (cpu->cr4.get_PKE())
-      features |= BX_CPUID_EXT4_OSPKE;
-  }
-#endif
 
   return features;
 }

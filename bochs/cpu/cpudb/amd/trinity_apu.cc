@@ -409,7 +409,7 @@ void trinity_apu_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *l
     //   [19:19] ADCX/ADOX instructions support
     //   [20:20] SMAP: Supervisor Mode Access Prevention
     //   [31:21] reserved
-    leaf->ebx = BX_CPUID_EXT3_BMI1;
+    leaf->ebx = get_std_cpuid_leaf_7_ebx();
     leaf->ecx = 0;
     leaf->edx = 0;
     break;
