@@ -57,7 +57,7 @@ class bx_usb_hub_locator_c : public usbdev_locator_c {
 public:
   bx_usb_hub_locator_c(void) : usbdev_locator_c("usb_hub") {}
 protected:
-  usb_device_c *allocate(usbdev_type devtype) {
+  usb_device_c *allocate(const char *devname) {
     return (new usb_hub_device_c());
   }
 } bx_usb_hub_match;
@@ -196,7 +196,6 @@ usb_hub_device_c::usb_hub_device_c()
   char pname[10];
   char label[32];
 
-  d.type = USB_DEV_TYPE_HUB;
   d.speed = d.minspeed = d.maxspeed = USB_SPEED_FULL;
   strcpy(d.devname, "Bochs USB HUB");
   d.dev_descriptor = bx_hub_dev_descriptor;
@@ -269,9 +268,11 @@ bool usb_hub_device_c::init()
     sprintf(label, "Port #%d Configuration", i+1);
     port = new bx_list_c(hub.config, pname, label);
     port->set_options(port->SERIES_ASK | port->USE_BOX_TITLE);
-    device = new bx_param_enum_c(port, "device", "Device", "", usb_device_names, 0, 0);
+    device = new bx_param_enum_c(port, "device", "Device", "",
+      bx_usbdev_ctl.get_device_names(), 0, 0);
     device->set_handler(hub_param_handler);
-    options = new bx_param_string_c(port, "options", "Options", "", "", BX_PATHNAME_LEN);
+    options = new bx_param_string_c(port, "options", "Options", "", "",
+      BX_PATHNAME_LEN);
     deplist = new bx_list_c(NULL);
     deplist->add(options);
     device->set_dependent_list(deplist, 1);
@@ -281,7 +282,7 @@ bool usb_hub_device_c::init()
     bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
     usb->add(hub.config);
   }
-  sprintf(hub.info_txt, "ports = %d", hub.n_ports);
+  sprintf(hub.info_txt, "%d-port USB hub", hub.n_ports);
   d.connected = 1;
   return 1;
 }

@@ -37,6 +37,10 @@
 
 bx_usbdev_ctl_c bx_usbdev_ctl;
 
+const char **usb_module_names;
+const char **usb_device_names;
+Bit8u *usb_module_id;
+
 bx_usbdev_ctl_c::bx_usbdev_ctl_c()
 {
   put("usbdevctl", "USBCTL");
@@ -44,39 +48,54 @@ bx_usbdev_ctl_c::bx_usbdev_ctl_c()
 
 void bx_usbdev_ctl_c::init(void)
 {
-  // TODO
+  Bit8u i, j, count;
+
+  count = PLUG_get_plugins_count(PLUGTYPE_USB);
+  usb_module_names = (const char**) malloc(count * sizeof(char*));
+  usb_device_names = (const char**) malloc((count + 5) * sizeof(char*));
+  usb_module_id = (Bit8u*) malloc((count + 5) * sizeof(Bit8u));
+  usb_device_names[0] = "none";
+  usb_module_id[0] = 0xff;
+  j = 1;
+  for (i = 0; i < count; i++) {
+    usb_module_names[i] = PLUG_get_plugin_name(PLUGTYPE_USB, i);
+    if (!strcmp(usb_module_names[i], "usb_hid")) {
+      usb_device_names[j] = "mouse";
+      usb_module_id[j++] = i;
+      usb_device_names[j] = "tablet";
+      usb_module_id[j++] = i;
+      usb_device_names[j] = "keypad";
+      usb_module_id[j++] = i;
+      usb_device_names[j] = "keyboard";
+      usb_module_id[j] = i;
+    } else if (!strcmp(usb_module_names[i], "usb_msd")) {
+      usb_device_names[j] = "disk";
+      usb_module_id[j++] = i;
+      usb_device_names[j] = "cdrom";
+      usb_module_id[j] = i;
+    } else if (!strcmp(usb_module_names[i], "usb_cbi")) {
+      usb_device_names[j] = "floppy";
+      usb_module_id[j] = i;
+    } else {
+      if (!strncmp(usb_module_names[i], "usb_", 4)) {
+        usb_device_names[j] = &usb_module_names[i][4];
+      } else {
+        usb_device_names[j] = usb_module_names[i];
+      }
+      usb_module_id[j] = i;
+    }
+    j++;
+  }
+  usb_device_names[j] = NULL;
 }
 
 void bx_usbdev_ctl_c::exit(void)
 {
-  // TODO
+  free(usb_module_names);
+  free(usb_device_names);
+  free(usb_module_id);
   usbdev_locator_c::cleanup();
 }
-
-const char *usbmod_names[] =
-{
-  "none",
-  "usb_cbi",
-  "usb_hid",
-  "usb_hub",
-  "usb_msd",
-  "usb_printer"
-};
-
-const char *usb_device_names[] =
-{
-  "none",
-  "mouse",
-  "tablet",
-  "keypad",
-  "keyboard",
-  "disk",
-  "cdrom",
-  "hub",
-  "printer",
-  "floppy",
-  NULL
-};
 
 const char **bx_usbdev_ctl_c::get_device_names(void)
 {
@@ -110,48 +129,16 @@ void bx_usbdev_ctl_c::list_devices(void)
 
 bool bx_usbdev_ctl_c::init_device(bx_list_c *portconf, logfunctions *hub, void **dev)
 {
-  usbmod_type modtype = USB_MOD_TYPE_NONE;
-  usbdev_type devtype = USB_DEV_TYPE_NONE;
+  Bit8u devtype, modtype;
   usb_device_c **device = (usb_device_c**)dev;
-  const char *devname, *options, *options2;
+  const char *options, *options2;
   char new_options[BX_PATHNAME_LEN];
   bx_param_string_c *opts2;
 
-  devname = ((bx_param_enum_c*)portconf->get_by_name("device"))->get_selected();
+  devtype = (Bit8u)((bx_param_enum_c*)portconf->get_by_name("device"))->get();
+  modtype = usb_module_id[devtype];
   options = ((bx_param_string_c*)portconf->get_by_name("options"))->getptr();
   opts2 = (bx_param_string_c*)portconf->get_by_name("options2");
-  if (!strcmp(devname, "mouse")) {
-    modtype = USB_MOD_TYPE_HID;
-    devtype = USB_DEV_TYPE_MOUSE;
-  } else if (!strcmp(devname, "tablet")) {
-    modtype = USB_MOD_TYPE_HID;
-    devtype = USB_DEV_TYPE_TABLET;
-  } else if (!strcmp(devname, "keypad")) {
-    modtype = USB_MOD_TYPE_HID;
-    devtype = USB_DEV_TYPE_KEYPAD;
-  } else if (!strcmp(devname, "keyboard")) {
-    modtype = USB_MOD_TYPE_HID;
-    devtype = USB_DEV_TYPE_KEYBOARD;
-  } else if (!strcmp(devname, "disk")) {
-    modtype = USB_MOD_TYPE_MSD;
-    devtype = USB_DEV_TYPE_DISK;
-  } else if (!strcmp(devname, "cdrom")) {
-    modtype = USB_MOD_TYPE_MSD;
-    devtype = USB_DEV_TYPE_CDROM;
-  } else if (!strcmp(devname, "hub")) {
-    modtype = USB_MOD_TYPE_HUB;
-    devtype = USB_DEV_TYPE_HUB;
-  } else if (!strcmp(devname, "printer")) {
-    modtype = USB_MOD_TYPE_PRINTER;
-    devtype = USB_DEV_TYPE_PRINTER;
-  } else if (!strncmp(devname, "floppy", 6)) {
-    modtype = USB_MOD_TYPE_CBI;
-    devtype = USB_DEV_TYPE_FLOPPY;
-  } else {
-    hub->panic("unknown USB device: %s", devname);
-    delete [] devname;
-    return devtype;
-  }
   if (opts2 != NULL) {
     // backward compatibility code
     options2 = opts2->getptr();
@@ -163,14 +150,15 @@ bool bx_usbdev_ctl_c::init_device(bx_list_c *portconf, logfunctions *hub, void *
     ((bx_param_string_c*)portconf->get_by_name("options"))->set(new_options);
     portconf->remove("options2");
   }
-  if (!usbdev_locator_c::module_present(usbmod_names[modtype])) {
+  if (!usbdev_locator_c::module_present(usb_module_names[modtype])) {
 #if BX_PLUGINS
-    PLUG_load_plugin_var(usbmod_names[modtype], PLUGTYPE_USB);
+    PLUG_load_plugin_var(usb_module_names[modtype], PLUGTYPE_USB);
 #else
-    BX_PANIC(("could not find USB device '%s'", usbmod_names[modtype]));
+    BX_PANIC(("could not find USB module '%s'", usb_module_names[modtype]));
 #endif
   }
-  *device = usbdev_locator_c::create(usbmod_names[modtype], devtype);
+  *device = usbdev_locator_c::create(usb_module_names[modtype],
+                                     usb_device_names[devtype]);
   if (*device != NULL) {
     parse_port_options(*device, portconf);
   }
@@ -181,9 +169,11 @@ void bx_usbdev_ctl_c::parse_port_options(usb_device_c *device, bx_list_c *portco
 {
   const char *raw_options;
   int i, optc, speed = USB_SPEED_LOW;  // assume LOW speed device if parameter not given.
+  Bit8u devtype;
   char *opts[16];
 
   memset(opts, 0, sizeof(opts));
+  devtype = ((bx_param_enum_c*)portconf->get_by_name("device"))->get();
   raw_options = ((bx_param_string_c*)portconf->get_by_name("options"))->getptr();
   optc = bx_split_option_list("USB port options", raw_options, opts, 16);
   for (i = 0; i < optc; i++) {
@@ -201,7 +191,7 @@ void bx_usbdev_ctl_c::parse_port_options(usb_device_c *device, bx_list_c *portco
       }
       if (!device->set_speed(speed)) {
         BX_PANIC(("USB device '%s' doesn't support '%s' speed",
-                  usb_device_names[device->get_type()], opts[i]+6));
+                  usb_device_names[devtype], opts[i]+6));
       }
     } else if (!strcmp(opts[i], "debug")) {
       device->set_debug_mode();
@@ -275,13 +265,13 @@ void usbdev_locator_c::cleanup()
 // Called by USB HC emulations to locate and create a usb_device_c
 // object
 //
-usb_device_c* usbdev_locator_c::create(const char *type, usbdev_type devtype)
+usb_device_c* usbdev_locator_c::create(const char *type, const char *devname)
 {
   usbdev_locator_c *ptr = 0;
 
   for (ptr = all; ptr != NULL; ptr = ptr->next) {
     if (strcmp(type, ptr->type) == 0)
-      return (ptr->allocate(devtype));
+      return (ptr->allocate(devname));
   }
   return NULL;
 }

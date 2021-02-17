@@ -78,10 +78,16 @@ class bx_usb_hid_locator_c : public usbdev_locator_c {
 public:
   bx_usb_hid_locator_c(void) : usbdev_locator_c("usb_hid") {}
 protected:
-  usb_device_c *allocate(usbdev_type devtype) {
+  usb_device_c *allocate(const char *devtype) {
     return (new usb_hid_device_c(devtype));
   }
 } bx_usb_hid_match;
+
+/* supported HID device types */
+#define USB_HID_TYPE_MOUSE    0
+#define USB_HID_TYPE_TABLET   1
+#define USB_HID_TYPE_KEYPAD   2
+#define USB_HID_TYPE_KEYBOARD 3
 
 /* HID IDLE time constant */
 #define HID_IDLE_TIME 4000
@@ -682,27 +688,35 @@ struct USBKBD usbkbd_conv[BX_KEY_NBKEYS] = {
   0x00, 0  /* BX_KEY_WAKE */
 };
 
-usb_hid_device_c::usb_hid_device_c(usbdev_type type)
+usb_hid_device_c::usb_hid_device_c(const char *devname)
 {
-  d.type = type;
+  if (!strcmp(devname, "mouse")) {
+    d.type = USB_HID_TYPE_MOUSE;
+  } else if (!strcmp(devname, "tablet")) {
+    d.type = USB_HID_TYPE_TABLET;
+  } else if (!strcmp(devname, "keypad")) {
+    d.type = USB_HID_TYPE_KEYPAD;
+  } else {
+    d.type = USB_HID_TYPE_KEYBOARD;
+  }
   d.minspeed = USB_SPEED_LOW;
   d.maxspeed = USB_SPEED_HIGH;
   d.speed = d.minspeed;
-  if (d.type == USB_DEV_TYPE_MOUSE) {
+  if (d.type == USB_HID_TYPE_MOUSE) {
     strcpy(d.devname, "USB Mouse");
     DEV_register_removable_mouse((void*)this, mouse_enq_static, mouse_enabled_changed);
-  } else if (d.type == USB_DEV_TYPE_TABLET) {
+  } else if (d.type == USB_HID_TYPE_TABLET) {
     strcpy(d.devname, "USB Tablet");
     DEV_register_removable_mouse((void*)this, mouse_enq_static, mouse_enabled_changed);
     bx_gui->set_mouse_mode_absxy(1);
-  } else if ((d.type == USB_DEV_TYPE_KEYPAD) || (d.type == USB_DEV_TYPE_KEYBOARD)) {
+  } else if ((d.type == USB_HID_TYPE_KEYPAD) || (d.type == USB_HID_TYPE_KEYBOARD)) {
     Bit8u led_mask;
-    if (d.type == USB_DEV_TYPE_KEYPAD) {
+    if (d.type == USB_HID_TYPE_KEYPAD) {
       strcpy(d.devname, "USB/PS2 Keypad");
     } else {
       strcpy(d.devname, "USB/PS2 Keyboard");
     }
-    if (d.type == USB_DEV_TYPE_KEYPAD) {
+    if (d.type == USB_HID_TYPE_KEYPAD) {
       led_mask = BX_KBD_LED_MASK_NUM;
     } else {
       led_mask = BX_KBD_LED_MASK_ALL;
@@ -723,12 +737,12 @@ usb_hid_device_c::usb_hid_device_c(usbdev_type type)
 usb_hid_device_c::~usb_hid_device_c(void)
 {
   d.sr->clear();
-  if ((d.type == USB_DEV_TYPE_MOUSE) ||
-      (d.type == USB_DEV_TYPE_TABLET)) {
+  if ((d.type == USB_HID_TYPE_MOUSE) ||
+      (d.type == USB_HID_TYPE_TABLET)) {
     bx_gui->set_mouse_mode_absxy(0);
     DEV_unregister_removable_mouse((void*)this);
-  } else if ((d.type == USB_DEV_TYPE_KEYPAD) ||
-             (d.type == USB_DEV_TYPE_KEYBOARD)) {
+  } else if ((d.type == USB_HID_TYPE_KEYPAD) ||
+             (d.type == USB_HID_TYPE_KEYBOARD)) {
     DEV_unregister_removable_keyboard((void*)this);
   }
   bx_pc_system.unregisterTimer(timer_index);
@@ -736,8 +750,8 @@ usb_hid_device_c::~usb_hid_device_c(void)
 
 bool usb_hid_device_c::init()
 {
-  if ((d.type == USB_DEV_TYPE_MOUSE) ||
-      (d.type == USB_DEV_TYPE_TABLET)) {
+  if ((d.type == USB_HID_TYPE_MOUSE) ||
+      (d.type == USB_HID_TYPE_TABLET)) {
     if (d.speed == USB_SPEED_HIGH) {
       d.dev_descriptor = bx_mouse_dev_descriptor2;
       d.device_desc_size = sizeof(bx_mouse_dev_descriptor2);
@@ -745,7 +759,7 @@ bool usb_hid_device_c::init()
       d.dev_descriptor = bx_mouse_dev_descriptor;
       d.device_desc_size = sizeof(bx_mouse_dev_descriptor);
     }
-    if (d.type == USB_DEV_TYPE_MOUSE) {
+    if (d.type == USB_HID_TYPE_MOUSE) {
       if (d.speed == USB_SPEED_HIGH) {
         d.config_descriptor = bx_mouse_config_descriptor2;
         d.config_desc_size = sizeof(bx_mouse_config_descriptor2);
@@ -797,7 +811,7 @@ void usb_hid_device_c::register_state_specific(bx_list_c *parent)
   BXRS_HEX_PARAM_FIELD(list, b_state, s.b_state);
   BXRS_DEC_PARAM_FIELD(list, mouse_event_count, s.mouse_event_count);
   new bx_shadow_data_c(list, "mouse_event_buf", (Bit8u*)s.mouse_event_buf, 6 * BX_KBD_ELEMENTS, 1);
-  if ((d.type == USB_DEV_TYPE_KEYPAD) || (d.type == USB_DEV_TYPE_KEYBOARD)) {
+  if ((d.type == USB_HID_TYPE_KEYPAD) || (d.type == USB_HID_TYPE_KEYBOARD)) {
     new bx_shadow_data_c(list, "kbd_packet", s.kbd_packet, 8, 1);
     BXRS_HEX_PARAM_FIELD(list, indicators, s.indicators);
     BXRS_DEC_PARAM_FIELD(list, kbd_event_count, s.kbd_event_count);
@@ -858,16 +872,16 @@ int usb_hid_device_c::handle_control(int request, int value, int index, int leng
     case InterfaceRequest | USB_REQ_GET_DESCRIPTOR:
       switch(value >> 8) {
         case 0x21:
-          if (d.type == USB_DEV_TYPE_MOUSE) {
+          if (d.type == USB_HID_TYPE_MOUSE) {
             memcpy(data, bx_mouse_hid_descriptor,
                    sizeof(bx_mouse_hid_descriptor));
             ret = sizeof(bx_mouse_hid_descriptor);
-          } else if (d.type == USB_DEV_TYPE_TABLET) {
+          } else if (d.type == USB_HID_TYPE_TABLET) {
             memcpy(data, bx_tablet_hid_descriptor,
                    sizeof(bx_tablet_hid_descriptor));
             ret = sizeof(bx_tablet_hid_descriptor);
-          } else if ((d.type == USB_DEV_TYPE_KEYPAD) ||
-                     (d.type == USB_DEV_TYPE_KEYBOARD)) {
+          } else if ((d.type == USB_HID_TYPE_KEYPAD) ||
+                     (d.type == USB_HID_TYPE_KEYBOARD)) {
             memcpy(data, bx_keypad_hid_descriptor,
                    sizeof(bx_keypad_hid_descriptor));
             ret = sizeof(bx_keypad_hid_descriptor);
@@ -876,16 +890,16 @@ int usb_hid_device_c::handle_control(int request, int value, int index, int leng
           }
           break;
         case 0x22:
-          if (d.type == USB_DEV_TYPE_MOUSE) {
+          if (d.type == USB_HID_TYPE_MOUSE) {
             memcpy(data, bx_mouse_hid_report_descriptor,
                    sizeof(bx_mouse_hid_report_descriptor));
             ret = sizeof(bx_mouse_hid_report_descriptor);
-          } else if (d.type == USB_DEV_TYPE_TABLET) {
+          } else if (d.type == USB_HID_TYPE_TABLET) {
             memcpy(data, bx_tablet_hid_report_descriptor,
                    sizeof(bx_tablet_hid_report_descriptor));
             ret = sizeof(bx_tablet_hid_report_descriptor);
-          } else if ((d.type == USB_DEV_TYPE_KEYPAD) ||
-                     (d.type == USB_DEV_TYPE_KEYBOARD)) {
+          } else if ((d.type == USB_HID_TYPE_KEYPAD) ||
+                     (d.type == USB_HID_TYPE_KEYBOARD)) {
             memcpy(data, bx_keypad_hid_report_descriptor,
                    sizeof(bx_keypad_hid_report_descriptor));
             ret = sizeof(bx_keypad_hid_report_descriptor);
@@ -907,25 +921,25 @@ int usb_hid_device_c::handle_control(int request, int value, int index, int leng
       }
       break;
     case GET_REPORT:
-      if ((d.type == USB_DEV_TYPE_MOUSE) ||
-          (d.type == USB_DEV_TYPE_TABLET)) {
+      if ((d.type == USB_HID_TYPE_MOUSE) ||
+          (d.type == USB_HID_TYPE_TABLET)) {
         ret = mouse_poll(data, length, 1);
-      } else if ((d.type == USB_DEV_TYPE_KEYPAD) ||
-                 (d.type == USB_DEV_TYPE_KEYBOARD)) {
+      } else if ((d.type == USB_HID_TYPE_KEYPAD) ||
+                 (d.type == USB_HID_TYPE_KEYBOARD)) {
         ret = keyboard_poll(data, length, 1);
       } else {
         goto fail;
       }
       break;
     case SET_REPORT:
-      if (((d.type == USB_DEV_TYPE_KEYPAD) ||
-           (d.type == USB_DEV_TYPE_KEYBOARD)) && (value = 0x200)) {
+      if (((d.type == USB_HID_TYPE_KEYPAD) ||
+           (d.type == USB_HID_TYPE_KEYBOARD)) && (value = 0x200)) {
         modchange = (data[0] ^ s.indicators);
         if (modchange != 0) {
           if (modchange & 0x01) {
             DEV_kbd_set_indicator(1, BX_KBD_LED_NUM, data[0] & 0x01);
             BX_DEBUG(("NUM_LOCK %s", (data[0] & 0x01) ? "on" : "off"));
-          } else if (d.type == USB_DEV_TYPE_KEYBOARD) {
+          } else if (d.type == USB_HID_TYPE_KEYBOARD) {
             if (modchange & 0x02) {
               DEV_kbd_set_indicator(1, BX_KBD_LED_CAPS, data[0] & 0x02);
               BX_DEBUG(("CAPS_LOCK %s", (data[0] & 0x02) ? "on" : "off"));
@@ -970,11 +984,11 @@ int usb_hid_device_c::handle_data(USBPacket *p)
   switch(p->pid) {
     case USB_TOKEN_IN:
       if (p->devep == 1) {
-        if ((d.type == USB_DEV_TYPE_MOUSE) ||
-            (d.type == USB_DEV_TYPE_TABLET)) {
+        if ((d.type == USB_HID_TYPE_MOUSE) ||
+            (d.type == USB_HID_TYPE_TABLET)) {
           ret = mouse_poll(p->data, p->len, 0);
-        } else if ((d.type == USB_DEV_TYPE_KEYPAD) ||
-                   (d.type == USB_DEV_TYPE_KEYBOARD)) {
+        } else if ((d.type == USB_HID_TYPE_KEYPAD) ||
+                   (d.type == USB_HID_TYPE_KEYBOARD)) {
           ret = keyboard_poll(p->data, p->len, 0);
         } else {
           goto fail;
@@ -998,7 +1012,7 @@ int usb_hid_device_c::mouse_poll(Bit8u *buf, int len, bool force)
 {
   int l = USB_RET_NAK;
 
-  if (d.type == USB_DEV_TYPE_MOUSE) {
+  if (d.type == USB_HID_TYPE_MOUSE) {
     if (!s.has_events) {
       // if there's no new movement, handle delayed one
       mouse_enq(0, 0, s.mouse_z, s.b_state, 0);
@@ -1012,7 +1026,7 @@ int usb_hid_device_c::mouse_poll(Bit8u *buf, int len, bool force)
       s.has_events = (s.mouse_event_count > 0);
       start_idle_timer();
     }
-  } else if (d.type == USB_DEV_TYPE_TABLET) {
+  } else if (d.type == USB_HID_TYPE_TABLET) {
     if (s.has_events || force) {
       if (s.mouse_event_count > 0) {
         l = get_mouse_packet(buf, len);
@@ -1030,7 +1044,7 @@ int usb_hid_device_c::create_mouse_packet(Bit8u *buf, int len)
 {
   int l;
 
-  if (d.type == USB_DEV_TYPE_TABLET) {
+  if (d.type == USB_HID_TYPE_TABLET) {
     buf[0] = (Bit8u) s.b_state;
     buf[1] = (Bit8u)(s.mouse_x & 0xff);
     buf[2] = (Bit8u)(s.mouse_x >> 8);
@@ -1059,7 +1073,7 @@ int usb_hid_device_c::get_mouse_packet(Bit8u *buf, int len)
   int l = USB_RET_NAK;
 
   if (s.mouse_event_count > 0) {
-    if (d.type == USB_DEV_TYPE_TABLET) {
+    if (d.type == USB_HID_TYPE_TABLET) {
       l = 6;
     } else if (len >= 4) {
       l = 4;
@@ -1089,7 +1103,7 @@ void usb_hid_device_c::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned
 {
   Bit16s prev_x, prev_y;
 
-  if (d.type == USB_DEV_TYPE_MOUSE) {
+  if (d.type == USB_HID_TYPE_MOUSE) {
     // scale down the motion
     if ((delta_x < -1) || (delta_x > 1))
       delta_x /= 2;
@@ -1135,7 +1149,7 @@ void usb_hid_device_c::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned
       }
       s.has_events = 1;
     }
-  } else if (d.type == USB_DEV_TYPE_TABLET) {
+  } else if (d.type == USB_HID_TYPE_TABLET) {
     prev_x = s.mouse_x;
     prev_y = s.mouse_y;
     if (absxy) {
@@ -1167,8 +1181,8 @@ int usb_hid_device_c::keyboard_poll(Bit8u *buf, int len, bool force)
 {
   int l = USB_RET_NAK;
 
-  if ((d.type == USB_DEV_TYPE_KEYPAD) ||
-      (d.type == USB_DEV_TYPE_KEYBOARD)) {
+  if ((d.type == USB_HID_TYPE_KEYPAD) ||
+      (d.type == USB_HID_TYPE_KEYBOARD)) {
     if (s.has_events || force) {
       memcpy(buf, s.kbd_packet, len);
       l = 8;
@@ -1198,7 +1212,7 @@ bool usb_hid_device_c::gen_scancode(Bit32u key)
 
   code = usbkbd_conv[key & ~BX_KEY_RELEASED].code;
   modkey = usbkbd_conv[key & ~BX_KEY_RELEASED].modkey;
-  if (d.type == USB_DEV_TYPE_KEYPAD) {
+  if (d.type == USB_HID_TYPE_KEYPAD) {
     if ((code < 0x53) || (code > 0x63)) {
       return 0;
     }

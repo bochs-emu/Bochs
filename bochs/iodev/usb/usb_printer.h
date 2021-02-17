@@ -25,7 +25,7 @@
 
 class usb_printer_device_c : public usb_device_c {
 public:
-  usb_printer_device_c(usbdev_type type);
+  usb_printer_device_c(void);
   virtual ~usb_printer_device_c(void);
 
   virtual bool init();

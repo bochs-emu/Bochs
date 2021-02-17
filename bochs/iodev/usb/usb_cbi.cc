@@ -63,7 +63,7 @@ class bx_usb_cbi_locator_c : public usbdev_locator_c {
 public:
   bx_usb_cbi_locator_c(void) : usbdev_locator_c("usb_cbi") {}
 protected:
-  usb_device_c *allocate(usbdev_type devtype) {
+  usb_device_c *allocate(const char *devname) {
     return (new usb_cbi_device_c());
   }
 } bx_usb_cbi_match;
@@ -320,7 +320,6 @@ usb_cbi_device_c::usb_cbi_device_c()
   bx_param_bool_c *readonly;
   bx_param_enum_c *status, *mode;
 
-  d.type = USB_DEV_TYPE_FLOPPY;
   d.speed = d.minspeed = d.maxspeed = USB_SPEED_FULL;
   memset((void*)&s, 0, sizeof(s));
   strcpy(d.devname, "BOCHS USB CBI FLOPPY");

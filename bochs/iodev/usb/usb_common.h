@@ -146,28 +146,6 @@ typedef struct USBAsync {
   struct USBAsync *next;
 } USBAsync;
 
-enum usbmod_type {
-  USB_MOD_TYPE_NONE=0,
-  USB_MOD_TYPE_CBI,
-  USB_MOD_TYPE_HID,
-  USB_MOD_TYPE_HUB,
-  USB_MOD_TYPE_MSD,
-  USB_MOD_TYPE_PRINTER
-};
-
-enum usbdev_type {
-  USB_DEV_TYPE_NONE=0,
-  USB_DEV_TYPE_MOUSE,
-  USB_DEV_TYPE_TABLET,
-  USB_DEV_TYPE_KEYPAD,
-  USB_DEV_TYPE_KEYBOARD,
-  USB_DEV_TYPE_DISK,
-  USB_DEV_TYPE_CDROM,
-  USB_DEV_TYPE_HUB,
-  USB_DEV_TYPE_PRINTER,
-  USB_DEV_TYPE_FLOPPY
-};
-
 class BOCHSAPI bx_usbdev_ctl_c : public logfunctions {
 public:
   bx_usbdev_ctl_c();
@@ -182,7 +160,6 @@ private:
 };
 
 BOCHSAPI extern bx_usbdev_ctl_c bx_usbdev_ctl;
-BOCHSAPI extern const char *usb_device_names[];
 
 class BOCHSAPI usb_device_c : public logfunctions {
 public:
@@ -205,7 +182,6 @@ public:
   virtual void runtime_config() {}
 
   bool get_connected() {return d.connected;}
-  int get_type() {return (int)d.type;}
   int get_speed() {return d.speed;}
   bool set_speed(int speed)
   {
@@ -231,7 +207,7 @@ public:
 
 protected:
   struct {
-    enum usbdev_type type;
+    Bit8u type;
     bool connected;
     int minspeed;
     int maxspeed;
@@ -389,11 +365,11 @@ class BOCHSAPI_MSVCONLY usbdev_locator_c {
 public:
   static bool module_present(const char *type);
   static void cleanup();
-  static usb_device_c *create(const char *type, usbdev_type devtype);
+  static usb_device_c *create(const char *type, const char *devname);
 protected:
   usbdev_locator_c(const char *type);
   virtual ~usbdev_locator_c();
-  virtual usb_device_c *allocate(usbdev_type devtype) = 0;
+  virtual usb_device_c *allocate(const char *devname) = 0;
 private:
   static usbdev_locator_c *all;
   usbdev_locator_c *next;

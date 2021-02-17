@@ -52,8 +52,8 @@ class bx_usb_printer_locator_c : public usbdev_locator_c {
 public:
   bx_usb_printer_locator_c(void) : usbdev_locator_c("usb_printer") {}
 protected:
-  usb_device_c *allocate(usbdev_type devtype) {
-    return (new usb_printer_device_c(devtype));
+  usb_device_c *allocate(const char *devname) {
+    return (new usb_printer_device_c());
   }
 } bx_usb_printer_match;
 
@@ -135,13 +135,12 @@ static const Bit8u bx_device_id_string[] =
 
 static Bit8u usb_printer_count = 0;
 
-usb_printer_device_c::usb_printer_device_c(usbdev_type type)
+usb_printer_device_c::usb_printer_device_c()
 {
   char pname[12];
   char label[32];
   bx_param_string_c *fname;
 
-  d.type = type;
   d.speed = d.minspeed = d.maxspeed = USB_SPEED_FULL;
   memset((void*)&s, 0, sizeof(s));
   strcpy(d.devname, "USB Printer");

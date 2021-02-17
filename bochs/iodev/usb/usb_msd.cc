@@ -57,10 +57,13 @@ class bx_usb_msd_locator_c : public usbdev_locator_c {
 public:
   bx_usb_msd_locator_c(void) : usbdev_locator_c("usb_msd") {}
 protected:
-  usb_device_c *allocate(usbdev_type devtype) {
-    return (new usb_msd_device_c(devtype));
+  usb_device_c *allocate(const char *devname) {
+    return (new usb_msd_device_c(devname));
   }
 } bx_usb_msd_match;
+
+#define USB_MSD_TYPE_DISK  0
+#define USB_MSD_TYPE_CDROM 1
 
 enum USBMSDMode {
   USB_MSDM_CBW,
@@ -333,26 +336,30 @@ void usb_msd_restore_handler(void *dev, bx_list_c *conf);
 
 static Bit8u usb_cdrom_count = 0;
 
-usb_msd_device_c::usb_msd_device_c(usbdev_type type)
+usb_msd_device_c::usb_msd_device_c(const char *devname)
 {
   char pname[10];
   char label[32];
   bx_param_string_c *path;
   bx_param_enum_c *status;
 
-  d.type = type;
+  if (!strcmp(devname, "disk")) {
+    d.type = USB_MSD_TYPE_DISK;
+  } else {
+    d.type = USB_MSD_TYPE_CDROM;
+  }
   d.minspeed = USB_SPEED_FULL;
   d.maxspeed = USB_SPEED_SUPER;
   d.speed = d.minspeed;
   memset((void*)&s, 0, sizeof(s));
-  if (d.type == USB_DEV_TYPE_DISK) {
+  if (d.type == USB_MSD_TYPE_DISK) {
     strcpy(d.devname, "BOCHS USB HARDDRIVE");
     s.fname[0] = 0;
     s.image_mode = strdup("flat");
     s.journal[0] = 0;
     s.size = 0;
     s.sect_size = 512;
-  } else if (d.type == USB_DEV_TYPE_CDROM) {
+  } else if (d.type == USB_MSD_TYPE_CDROM) {
     strcpy(d.devname, "BOCHS USB CDROM");
     // config options
     bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
@@ -412,7 +419,7 @@ bool usb_msd_device_c::set_option(const char *option)
 
   if (!strncmp(option, "path:", 5)) {
     strcpy(filename, option+5);
-    if (d.type == USB_DEV_TYPE_DISK) {
+    if (d.type == USB_MSD_TYPE_DISK) {
       ptr1 = strtok(filename, ":");
       ptr2 = strtok(NULL, ":");
       if ((ptr2 == NULL) || (strlen(ptr1) < 2)) {
@@ -430,14 +437,14 @@ bool usb_msd_device_c::set_option(const char *option)
     }
     return 1;
   } else if (!strncmp(option, "journal:", 8)) {
-    if (d.type == USB_DEV_TYPE_DISK) {
+    if (d.type == USB_MSD_TYPE_DISK) {
       strcpy(s.journal, option+8);
       return 1;
     } else {
       BX_ERROR(("Option 'journal' is only valid for USB disks"));
     }
   } else if (!strncmp(option, "size:", 5)) {
-    if ((d.type == USB_DEV_TYPE_DISK) && (!strcmp(s.image_mode, "vvfat"))) {
+    if ((d.type == USB_MSD_TYPE_DISK) && (!strcmp(s.image_mode, "vvfat"))) {
       s.size = (int)strtol(option+5, &suffix, 10);
       if (!strcmp(suffix, "G")) {
         s.size <<= 10;
@@ -456,7 +463,7 @@ bool usb_msd_device_c::set_option(const char *option)
       BX_ERROR(("Option 'size' is only valid for USB VVFAT disks"));
     }
   } else if (!strncmp(option, "sect_size:", 10)) {
-    if (d.type == USB_DEV_TYPE_DISK) {
+    if (d.type == USB_MSD_TYPE_DISK) {
       s.sect_size = (unsigned)strtol(option+10, &suffix, 10);
       if (strlen(suffix) > 0) {
         BX_ERROR(("Option 'sect_size': ignoring extra data"));
@@ -475,7 +482,7 @@ bool usb_msd_device_c::set_option(const char *option)
 
 bool usb_msd_device_c::init()
 {
-  if (d.type == USB_DEV_TYPE_DISK) {
+  if (d.type == USB_MSD_TYPE_DISK) {
     if (strlen(s.fname) > 0) {
       s.hdimage = DEV_hdimage_init_image(s.image_mode, 0, s.journal);
       if (!strcmp(s.image_mode, "vvfat")) {
@@ -499,7 +506,7 @@ bool usb_msd_device_c::init()
       BX_ERROR(("USB HD: disk image not specified"));
       return 0;
     }
-  } else if (d.type == USB_DEV_TYPE_CDROM) {
+  } else if (d.type == USB_MSD_TYPE_CDROM) {
     s.cdrom = DEV_hdimage_init_cdrom(s.fname);
     s.scsi_dev = new scsi_device_t(s.cdrom, 0, usb_msd_command_complete, (void*)this);
     if (set_inserted(1)) {
@@ -543,12 +550,12 @@ const char* usb_msd_device_c::get_info()
 void usb_msd_device_c::register_state_specific(bx_list_c *parent)
 {
   s.sr_list = new bx_list_c(parent, "s", "USB MSD Device State");
-  if (d.type == USB_DEV_TYPE_CDROM) {
+  if (d.type == USB_MSD_TYPE_CDROM) {
     bx_list_c *rt_config = new bx_list_c(s.sr_list, "rt_config");
     rt_config->add(s.config->get_by_name("path"));
     rt_config->add(s.config->get_by_name("status"));
     rt_config->set_restore_handler(this, usb_msd_restore_handler);
-  } else if ((d.type == USB_DEV_TYPE_DISK) && (s.hdimage != NULL)) {
+  } else if ((d.type == USB_MSD_TYPE_DISK) && (s.hdimage != NULL)) {
     s.hdimage->register_state(s.sr_list);
   }
   BXRS_DEC_PARAM_FIELD(s.sr_list, mode, s.mode);
@@ -964,7 +971,7 @@ bool usb_msd_device_c::get_locked()
 
 void usb_msd_device_c::runtime_config(void)
 {
-  if (d.type == USB_DEV_TYPE_CDROM) {
+  if (d.type == USB_MSD_TYPE_CDROM) {
     if (s.status_changed) {
       set_inserted(0);
       if (SIM->get_param_enum("status", s.config)->get() == BX_INSERTED) {

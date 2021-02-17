@@ -35,7 +35,7 @@
 
 class usb_hid_device_c : public usb_device_c {
 public:
-  usb_hid_device_c(usbdev_type type);
+  usb_hid_device_c(const char *devname);
   virtual ~usb_hid_device_c(void);
 
   virtual bool init();
