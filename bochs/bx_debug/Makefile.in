@@ -1,5 +1,5 @@
 #########################################################################
-# Copyright (C) 2001-2016  The Bochs Project
+# Copyright (C) 2001-2021  The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -100,6 +100,7 @@ dbg_main.o: debug.h
 @NO_FLEX_YACC@	$(YACC) -p bx -d $<
 @NO_FLEX_YACC@	@/bin/mv -f y.tab.c parser.cc
 @NO_FLEX_YACC@	@/bin/mv -f y.tab.h parser.h
+@NO_FLEX_YACC@	@sed -i s/extern\ YYSTYPE/extern\ \"C\"\ YYSTYPE/ parser.cc
 @NO_FLEX_YACC@	@echo '#endif  /* if BX_DEBUGGER */' >> parser.cc
 @NO_FLEX_YACC@	@echo '/* The #endif is appended by the makefile after running yacc. */' >> parser.cc
 

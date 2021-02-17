@@ -366,7 +366,7 @@ typedef union YYSTYPE YYSTYPE;
 #endif
 
 
-extern YYSTYPE bxlval;
+extern "C" YYSTYPE bxlval;
 
 int bxparse (void);
 
