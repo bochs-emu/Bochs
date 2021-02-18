@@ -49,7 +49,7 @@ top_builddir    = ../..
 LIBTOOL=@LIBTOOL@
 WIN32_DLL_IMPORT_LIBRARY=../../@WIN32_DLL_IMPORT_LIB@
 
-USBDEV_OBJS = usb_hid.o usb_hub.o usb_msd.o usb_printer.o usb_cbi.o
+USBDEV_OBJS = usb_hid.o usb_hub.o usb_msd.o usb_printer.o usb_floppy.o
 UHCICORE_OBJ = uhci_core.o
 SCSI_OBJS = scsi_device.o
 
@@ -70,7 +70,7 @@ OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
 NONPLUGIN_OBJS = @IODEV_EXT_NON_PLUGIN_OBJS@
 PLUGIN_OBJS = @IODEV_EXT_PLUGIN_OBJS@
 USBHC_DLL_TARGETS = @USBHC_DLL_TARGETS@
-USBDEV_DLL_TARGETS = bx_usb_hid.dll bx_usb_hub.dll bx_usb_msd.dll bx_usb_printer.dll bx_usb_cbi.dll
+USBDEV_DLL_TARGETS = bx_usb_hid.dll bx_usb_hub.dll bx_usb_msd.dll bx_usb_printer.dll bx_usb_floppy.dll
 
 all: libusb.a
 
@@ -123,8 +123,8 @@ bx_usb_ehci.dll: usb_ehci.o uhci_core.o
 bx_usb_xhci.dll: usb_xhci.o
 	@LINK_DLL@ usb_xhci.o $(WIN32_DLL_IMPORT_LIBRARY)
 
-bx_usb_cbi.dll: usb_cbi.o
-	@LINK_DLL@ usb_cbi.o $(WIN32_DLL_IMPORT_LIBRARY)
+bx_usb_floppy.dll: usb_floppy.o
+	@LINK_DLL@ usb_floppy.o $(WIN32_DLL_IMPORT_LIBRARY)
 
 bx_usb_hid.dll: usb_hid.o
 	@LINK_DLL@ usb_hid.o $(WIN32_DLL_IMPORT_LIBRARY)
@@ -171,14 +171,14 @@ uhci_core.o: uhci_core.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../memory/memory-bochs.h ../../gui/siminterface.h \
  ../../gui/paramtree.h ../../gui/gui.h ../pci.h usb_common.h uhci_core.h
-usb_cbi.o: usb_cbi.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
+usb_floppy.o: usb_floppy.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../gui/paramtree.h ../../logio.h ../../cpudb.h \
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
  ../../extplugin.h ../../param_names.h ../../pc_system.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../memory/memory-bochs.h ../../gui/siminterface.h \
  ../../gui/paramtree.h ../../gui/gui.h usb_common.h ../hdimage/hdimage.h \
- usb_cbi.h
+ usb_floppy.h
 usb_common.o: usb_common.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../gui/paramtree.h ../../logio.h ../../cpudb.h \
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
@@ -260,14 +260,14 @@ uhci_core.lo: uhci_core.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../memory/memory-bochs.h ../../gui/siminterface.h \
  ../../gui/paramtree.h ../../gui/gui.h ../pci.h usb_common.h uhci_core.h
-usb_cbi.lo: usb_cbi.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
+usb_floppy.lo: usb_floppy.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../gui/paramtree.h ../../logio.h ../../cpudb.h \
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
  ../../extplugin.h ../../param_names.h ../../pc_system.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../memory/memory-bochs.h ../../gui/siminterface.h \
  ../../gui/paramtree.h ../../gui/gui.h usb_common.h ../hdimage/hdimage.h \
- usb_cbi.h
+ usb_floppy.h
 usb_common.lo: usb_common.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../gui/paramtree.h ../../logio.h ../../cpudb.h \
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \

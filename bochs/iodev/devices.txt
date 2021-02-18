@@ -133,14 +133,14 @@ Attached devices
                          | |
                          | +-- Control Module                   usb_common.cc
                          |
-                         +---- USB floppy emulation (*)         usb_cbi.cc
+                         +---- USB floppy emulation (*)         usb_floppy.cc
                          +---- USB HID emulation                usb_hid.cc
                          +---- USB external HUB                 usb_hub.cc
                          +---- USB mass storage device (*)      usb_msd.cc, scsi_device.cc
                          +---- USB HP DeskJet 920C printer      usb_printer.cc
 
 (*) USB MSD uses hdimage / cdrom code for image / device access
-    Floppy uses hdimage code for VVFAT support
+    Both legacy and USB floppy use hdimage code for VVFAT support
 
 BOCHS timer sycronisation modules
   |

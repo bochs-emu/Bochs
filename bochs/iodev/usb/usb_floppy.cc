@@ -41,13 +41,13 @@
 #if BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB
 #include "usb_common.h"
 #include "hdimage/hdimage.h"
-#include "usb_cbi.h"
+#include "usb_floppy.h"
 
 #define LOG_THIS
 
 // USB device plugin entry point
 
-PLUGIN_ENTRY_FOR_MODULE(usb_cbi)
+PLUGIN_ENTRY_FOR_MODULE(usb_floppy)
 {
   if (mode == PLUGIN_PROBE) {
     return (int)PLUGTYPE_USB;
@@ -59,23 +59,23 @@ PLUGIN_ENTRY_FOR_MODULE(usb_cbi)
 // Define the static class that registers the derived USB device class,
 // and allocates one on request.
 //
-class bx_usb_cbi_locator_c : public usbdev_locator_c {
+class bx_usb_floppy_locator_c : public usbdev_locator_c {
 public:
-  bx_usb_cbi_locator_c(void) : usbdev_locator_c("usb_cbi") {}
+  bx_usb_floppy_locator_c(void) : usbdev_locator_c("usb_floppy") {}
 protected:
   usb_device_c *allocate(const char *devname) {
-    return (new usb_cbi_device_c());
+    return (new usb_floppy_device_c());
   }
-} bx_usb_cbi_match;
+} bx_usb_floppy_match;
 
 // maximum size of the read buffer in sectors
-#define CBI_MAX_SECTORS   18
+#define USB_FLOPPY_MAX_SECTORS   18
 
 // useconds per sector at 300 RPM
-#define CBI_SECTOR_TIME  11111
+#define USB_FLOPPY_SECTOR_TIME  11111
 
 // Set this to zero if you only support CB interface.  Set to 1 if you support CBI.
-#define USB_CBI_USE_INTERRUPT  1
+#define USB_FLOPPY_USE_INTERRUPT  1
 
 /* A well known, somewhat older, but still widely used Operating System
  *  must have the Vendor ID as the TEAC external drive emulated below.  If
@@ -89,7 +89,7 @@ protected:
 #define GetMaxLun         0xfe
 
 // Full-speed only
-static Bit8u bx_cbi_dev_descriptor[] = {
+static Bit8u bx_floppy_dev_descriptor[] = {
   0x12,       /*  u8 bLength; */
   0x01,       /*  u8 bDescriptorType; Device */
   0x00, 0x02, /*  u16 bcdUSB; v2.0 */
@@ -111,7 +111,7 @@ static Bit8u bx_cbi_dev_descriptor[] = {
 };
 
 // Full-speed only
-static const Bit8u bx_cbi_config_descriptor[] = {
+static const Bit8u bx_floppy_config_descriptor[] = {
 
   /* one configuration */
   0x09,       /*  u8  bLength; */
@@ -132,14 +132,14 @@ static const Bit8u bx_cbi_config_descriptor[] = {
   0x04,       /*  u8  if_bDescriptorType; Interface */
   0x00,       /*  u8  if_bInterfaceNumber; */
   0x00,       /*  u8  if_bAlternateSetting; */
-#if USB_CBI_USE_INTERRUPT
+#if USB_FLOPPY_USE_INTERRUPT
   0x03,       /*  u8  if_bNumEndpoints; (CBI has 3)*/
 #else
   0x02,       /*  u8  if_bNumEndpoints; (CB has 2) */
 #endif
   0x08,       /*  u8  if_bInterfaceClass; MASS STORAGE */
   0x04,       /*  u8  if_bInterfaceSubClass; CB(I) */
-#if USB_CBI_USE_INTERRUPT
+#if USB_FLOPPY_USE_INTERRUPT
   0x00,       /*  u8  if_bInterfaceProtocol; CB with Interrupt */
 #else
   0x01,       /*  u8  if_bInterfaceProtocol; CB with out Interrupt */
@@ -162,7 +162,7 @@ static const Bit8u bx_cbi_config_descriptor[] = {
   0x40, 0x00, /*  u16 ep_wMaxPacketSize; */
   0x00,       /*  u8  ep_bInterval; */
 
-#if USB_CBI_USE_INTERRUPT
+#if USB_FLOPPY_USE_INTERRUPT
   /* Interrupt endpoint */
   0x07,       /*  u8  ep_bLength; */
   0x05,       /*  u8  ep_bDescriptorType; Endpoint */
@@ -173,7 +173,7 @@ static const Bit8u bx_cbi_config_descriptor[] = {
 #endif
 };
 
-static const Bit8u bx_cbi_dev_inquiry_teac[] = {
+static const Bit8u bx_floppy_dev_inquiry_teac[] = {
   0x00,       /*  perifpheral device type */
   0x80,       /*  RMB = 1, reserved = 0 */
   0x00,       /*  ISO version, ecma version , ansi version */
@@ -186,7 +186,7 @@ static const Bit8u bx_cbi_dev_inquiry_teac[] = {
   0x33, 0x30, 0x30, 0x30                           /* revision level      */
 };
 
-static const Bit8u bx_cbi_dev_inquiry_bochs[] = {
+static const Bit8u bx_floppy_dev_inquiry_bochs[] = {
   0x00,       /*  perifpheral device type */
   0x80,       /*  RMB = 1, reserved = 0 */
   0x00,       /*  ISO version, ecma version , ansi version */
@@ -199,7 +199,7 @@ static const Bit8u bx_cbi_dev_inquiry_bochs[] = {
   0x30, 0x30, 0x31, 0x30                           /* revision level      */
 };
 
-static Bit8u bx_cbi_dev_frmt_capacity[] = {
+static Bit8u bx_floppy_dev_frmt_capacity[] = {
   0x00, 0x00, 0x00,    // reserved
   32,                  // remaining list in bytes
   // current: 1.44meg
@@ -220,12 +220,12 @@ static Bit8u bx_cbi_dev_frmt_capacity[] = {
     0x00, 0x02, 0x00         // 512-byte sectors
 };
 
-static const Bit8u bx_cbi_dev_capacity[] = {
+static const Bit8u bx_floppy_dev_capacity[] = {
   0x00, 0x00, 0x0B, 0x3f,  // lba's
   0x00, 0x00, 0x02, 0x00   // 512-byte sectors
 };
 
-static Bit8u bx_cbi_dev_req_sense[] = {
+static Bit8u bx_floppy_dev_req_sense[] = {
   0x70,        // valid and error code
   0x00,        // reserved
   0x00,        // sense key
@@ -241,7 +241,7 @@ static Bit8u bx_cbi_dev_req_sense[] = {
 #define PAGE_CODE_05_OFF  20
 #define PAGE_CODE_1B_OFF  52
 #define PAGE_CODE_1C_OFF  64
-static Bit8u bx_cbi_dev_mode_sense_cur[] = {
+static Bit8u bx_floppy_dev_mode_sense_cur[] = {
   /////////////////////////////////////////
   // header  (8 bytes)
   0x00, 0x46,   // length of remaining data (72 - 2)
@@ -302,7 +302,7 @@ static Bit8u bx_cbi_dev_mode_sense_cur[] = {
   0x00, 0x00, 0x00  // reserved
 };
 
-void usb_cbi_restore_handler(void *dev, bx_list_c *conf);
+void usb_floppy_restore_handler(void *dev, bx_list_c *conf);
 
 const char *fdimage_mode_names[] = {
   "flat",
@@ -312,7 +312,7 @@ const char *fdimage_mode_names[] = {
 
 static Bit8u usb_floppy_count = 0;
 
-usb_cbi_device_c::usb_cbi_device_c()
+usb_floppy_device_c::usb_floppy_device_c()
 {
   char pname[10];
   char label[32];
@@ -322,16 +322,16 @@ usb_cbi_device_c::usb_cbi_device_c()
 
   d.speed = d.minspeed = d.maxspeed = USB_SPEED_FULL;
   memset((void*)&s, 0, sizeof(s));
-  strcpy(d.devname, "BOCHS USB CBI FLOPPY");
-  d.dev_descriptor = bx_cbi_dev_descriptor;
-  d.config_descriptor = bx_cbi_config_descriptor;
-  d.device_desc_size = sizeof(bx_cbi_dev_descriptor);
-  d.config_desc_size = sizeof(bx_cbi_config_descriptor);
+  strcpy(d.devname, "BOCHS UFI/CBI FLOPPY");
+  d.dev_descriptor = bx_floppy_dev_descriptor;
+  d.config_descriptor = bx_floppy_config_descriptor;
+  d.device_desc_size = sizeof(bx_floppy_dev_descriptor);
+  d.config_desc_size = sizeof(bx_floppy_config_descriptor);
   s.inserted = 0;
-  s.dev_buffer = new Bit8u[CBI_MAX_SECTORS * 512];
+  s.dev_buffer = new Bit8u[USB_FLOPPY_MAX_SECTORS * 512];
   s.statusbar_id = bx_gui->register_statusitem("USB-FD", 1);
   s.floppy_timer_index =
-    DEV_register_timer(this, floppy_timer_handler, CBI_SECTOR_TIME, 0, 0, "USB FD timer");
+    DEV_register_timer(this, floppy_timer_handler, USB_FLOPPY_SECTOR_TIME, 0, 0, "USB FD timer");
   // config options
   bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
   sprintf(pname, "floppy%u", ++usb_floppy_count);
@@ -369,10 +369,10 @@ usb_cbi_device_c::usb_cbi_device_c()
     usb->add(s.config);
   }
 
-  put("usb_cbi", "USBCBI");
+  put("usb_floppy", "USBFDD");
 }
 
-usb_cbi_device_c::~usb_cbi_device_c(void)
+usb_floppy_device_c::~usb_floppy_device_c(void)
 {
   d.sr->clear();
   bx_gui->unregister_statusitem(s.statusbar_id);
@@ -390,7 +390,7 @@ usb_cbi_device_c::~usb_cbi_device_c(void)
   bx_pc_system.unregisterTimer(s.floppy_timer_index);
 }
 
-bool usb_cbi_device_c::set_option(const char *option)
+bool usb_floppy_device_c::set_option(const char *option)
 {
   char filename[BX_PATHNAME_LEN];
   char *ptr1, *ptr2;
@@ -428,27 +428,27 @@ bool usb_cbi_device_c::set_option(const char *option)
   return 0;
 }
 
-bool usb_cbi_device_c::init()
+bool usb_floppy_device_c::init()
 {
   // set the model information
   //  s.model == 1 if use teac model, else use bochs model
   if (s.model) {
-    bx_cbi_dev_descriptor[8] = 0x44;
-    bx_cbi_dev_descriptor[9] = 0x06;
+    bx_floppy_dev_descriptor[8] = 0x44;
+    bx_floppy_dev_descriptor[9] = 0x06;
     d.vendor_desc = "TEAC    ";
     d.product_desc = "TEAC FD-05PUW   ";
     d.serial_num = "3000";
   } else {
-    bx_cbi_dev_descriptor[8] = 0x00;
-    bx_cbi_dev_descriptor[9] = 0x00;
+    bx_floppy_dev_descriptor[8] = 0x00;
+    bx_floppy_dev_descriptor[9] = 0x00;
     d.vendor_desc = "BOCHS   ";
     d.product_desc = d.devname;
     d.serial_num = "00.10";
   }
   if (set_inserted(1)) {
-    sprintf(s.info_txt, "USB CBI floppy: path='%s', mode='%s'", s.fname, s.image_mode);
+    sprintf(s.info_txt, "USB floppy: path='%s', mode='%s'", s.fname, s.image_mode);
   } else {
-    sprintf(s.info_txt, "USB CBI floppy: media not present");
+    sprintf(s.info_txt, "USB floppy: media not present");
   }
   d.connected = 1;
 
@@ -459,23 +459,23 @@ bool usb_cbi_device_c::init()
   return 1;
 }
 
-const char* usb_cbi_device_c::get_info()
+const char* usb_floppy_device_c::get_info()
 {
   // set the write protected bit given by parameter in bochsrc.txt file
-  bx_cbi_dev_mode_sense_cur[3] &= ~0x80;
-  bx_cbi_dev_mode_sense_cur[3] |= s.wp ? (1 << 7) : 0;
+  bx_floppy_dev_mode_sense_cur[3] &= ~0x80;
+  bx_floppy_dev_mode_sense_cur[3] |= s.wp ? (1 << 7) : 0;
 
   return s.info_txt;
 }
 
-void usb_cbi_device_c::register_state_specific(bx_list_c *parent)
+void usb_floppy_device_c::register_state_specific(bx_list_c *parent)
 {
   bx_list_c *list = new bx_list_c(parent, "s", "UFI/CBI Floppy Disk State");
   bx_list_c *rt_config = new bx_list_c(list, "rt_config");
   rt_config->add(s.config->get_by_name("path"));
   rt_config->add(s.config->get_by_name("readonly"));
   rt_config->add(s.config->get_by_name("status"));
-  rt_config->set_restore_handler(this, usb_cbi_restore_handler);
+  rt_config->set_restore_handler(this, usb_floppy_restore_handler);
   BXRS_DEC_PARAM_FIELD(list, usb_len, s.usb_len);
   BXRS_DEC_PARAM_FIELD(list, data_len, s.data_len);
   BXRS_DEC_PARAM_FIELD(list, sector, s.sector);
@@ -488,16 +488,16 @@ void usb_cbi_device_c::register_state_specific(bx_list_c *parent)
   BXRS_PARAM_BOOL(list, did_inquiry_fail, s.did_inquiry_fail);
   BXRS_PARAM_BOOL(list, seek_pending, s.seek_pending);
   BXRS_PARAM_SPECIAL32(list, usb_buf, param_save_handler, param_restore_handler);
-  new bx_shadow_data_c(list, "dev_buffer", s.dev_buffer, CBI_MAX_SECTORS * 512);
+  new bx_shadow_data_c(list, "dev_buffer", s.dev_buffer, USB_FLOPPY_MAX_SECTORS * 512);
   // TODO: async usb packet
 }
 
-void usb_cbi_device_c::handle_reset()
+void usb_floppy_device_c::handle_reset()
 {
   BX_DEBUG(("Reset"));
 }
 
-int usb_cbi_device_c::handle_control(int request, int value, int index, int length, Bit8u *data)
+int usb_floppy_device_c::handle_control(int request, int value, int index, int length, Bit8u *data)
 {
   int ret;
 
@@ -538,7 +538,7 @@ int usb_cbi_device_c::handle_control(int request, int value, int index, int leng
               // We don't support this check, so fail
               goto fail;
             default:
-              BX_ERROR(("USB CBI handle_control: unknown string descriptor 0x%02x", value & 0xff));
+              BX_ERROR(("USB floppy handle_control: unknown string descriptor 0x%02x", value & 0xff));
               goto fail;
           }
           break;
@@ -547,10 +547,10 @@ int usb_cbi_device_c::handle_control(int request, int value, int index, int leng
           // device qualifier
           // a low- or full-speed only device (i.e.: a non high-speed device) must return
           //  request error on this function
-          BX_ERROR(("USB CBI handle_control: full-speed only device returning stall on Device Qualifier."));
+          BX_ERROR(("USB floppy handle_control: full-speed only device returning stall on Device Qualifier."));
           goto fail;
         default:
-          BX_ERROR(("USB CBI handle_control: unknown descriptor type 0x%02x", value >> 8));
+          BX_ERROR(("USB floppy handle_control: unknown descriptor type 0x%02x", value >> 8));
           goto fail;
       }
       break;
@@ -584,16 +584,16 @@ int usb_cbi_device_c::handle_control(int request, int value, int index, int leng
       break;
 
     default:
-      BX_ERROR(("USB CBI handle_control: unknown request 0x%04X", request));
+      BX_ERROR(("USB floppy handle_control: unknown request 0x%04X", request));
     fail:
-      BX_ERROR(("USB CBI handle_control: stalled on request: 0x%04X", request));
+      BX_ERROR(("USB floppy handle_control: stalled on request: 0x%04X", request));
       d.stall = 1;
       ret = USB_RET_STALL;
   }
   return ret;
 }
 
-bool usb_cbi_device_c::handle_command(Bit8u *command)
+bool usb_floppy_device_c::handle_command(Bit8u *command)
 {
   Bit32u lba, count;
   int pc, pagecode;
@@ -638,11 +638,11 @@ bool usb_cbi_device_c::handle_command(Bit8u *command)
     case UFI_INQUIRY:
       BX_DEBUG(("UFI INQUIRY COMMAND"));
       if (s.model) {
-        memcpy(s.usb_buf, bx_cbi_dev_inquiry_teac, sizeof(bx_cbi_dev_inquiry_teac));
-        s.usb_len = sizeof(bx_cbi_dev_inquiry_teac);
+        memcpy(s.usb_buf, bx_floppy_dev_inquiry_teac, sizeof(bx_floppy_dev_inquiry_teac));
+        s.usb_len = sizeof(bx_floppy_dev_inquiry_teac);
       } else {
-        memcpy(s.usb_buf, bx_cbi_dev_inquiry_bochs, sizeof(bx_cbi_dev_inquiry_bochs));
-        s.usb_len = sizeof(bx_cbi_dev_inquiry_bochs);
+        memcpy(s.usb_buf, bx_floppy_dev_inquiry_bochs, sizeof(bx_floppy_dev_inquiry_bochs));
+        s.usb_len = sizeof(bx_floppy_dev_inquiry_bochs);
       }
       s.data_len = command[4];
       if (s.data_len > s.usb_len)
@@ -656,14 +656,14 @@ bool usb_cbi_device_c::handle_command(Bit8u *command)
     case UFI_READ_FORMAT_CAPACITIES:
       BX_DEBUG(("UFI_READ_FORMAT_CAPACITIES COMMAND"));
       if (s.inserted) {
-        bx_cbi_dev_frmt_capacity[3] = 32;
-        bx_cbi_dev_frmt_capacity[8] = 0x02;
-        memcpy(s.usb_buf, bx_cbi_dev_frmt_capacity, sizeof(bx_cbi_dev_frmt_capacity));
-        s.usb_len = sizeof(bx_cbi_dev_frmt_capacity);
+        bx_floppy_dev_frmt_capacity[3] = 32;
+        bx_floppy_dev_frmt_capacity[8] = 0x02;
+        memcpy(s.usb_buf, bx_floppy_dev_frmt_capacity, sizeof(bx_floppy_dev_frmt_capacity));
+        s.usb_len = sizeof(bx_floppy_dev_frmt_capacity);
       } else {
-        bx_cbi_dev_frmt_capacity[3] = 8;
-        bx_cbi_dev_frmt_capacity[8] = 0x03;
-        memcpy(s.usb_buf, bx_cbi_dev_frmt_capacity, 12);
+        bx_floppy_dev_frmt_capacity[3] = 8;
+        bx_floppy_dev_frmt_capacity[8] = 0x03;
+        memcpy(s.usb_buf, bx_floppy_dev_frmt_capacity, 12);
         s.usb_len = 12;
       }
       s.data_len = (unsigned) ((command[7] << 8) | command[8]);
@@ -673,13 +673,13 @@ bool usb_cbi_device_c::handle_command(Bit8u *command)
 
     case UFI_REQUEST_SENSE:
       BX_DEBUG(("UFI_REQUEST_SENSE COMMAND"));
-      bx_cbi_dev_req_sense[2] = s.sense;
-      bx_cbi_dev_req_sense[12] = s.asc;
+      bx_floppy_dev_req_sense[2] = s.sense;
+      bx_floppy_dev_req_sense[12] = s.asc;
       if (s.sense == 6) {
         s.sense = 0;
       }
-      memcpy(s.usb_buf, bx_cbi_dev_req_sense, sizeof(bx_cbi_dev_req_sense));
-      s.usb_len = sizeof(bx_cbi_dev_req_sense);
+      memcpy(s.usb_buf, bx_floppy_dev_req_sense, sizeof(bx_floppy_dev_req_sense));
+      s.usb_len = sizeof(bx_floppy_dev_req_sense);
       s.data_len = command[4];
       if (s.data_len > s.usb_len)
         s.data_len = s.usb_len;
@@ -744,14 +744,14 @@ bool usb_cbi_device_c::handle_command(Bit8u *command)
         s.asc = 0x3a;
         break;
       }
-      memcpy(s.usb_buf, bx_cbi_dev_capacity, sizeof(bx_cbi_dev_capacity));
-      s.usb_len = sizeof(bx_cbi_dev_capacity);
-      s.data_len = sizeof(bx_cbi_dev_capacity);
+      memcpy(s.usb_buf, bx_floppy_dev_capacity, sizeof(bx_floppy_dev_capacity));
+      s.usb_len = sizeof(bx_floppy_dev_capacity);
+      s.data_len = sizeof(bx_floppy_dev_capacity);
       break;
 
     case UFI_TEST_UNIT_READY:
       // This is a zero data command. It simply sets the status bytes for
-      //  the interrupt in part of the CBI
+      //  the interrupt in part of the floppy.
       BX_DEBUG(("UFI_TEST_UNIT_READY COMMAND"));
       if (!s.inserted) {
         s.sense = 2;
@@ -777,28 +777,28 @@ bool usb_cbi_device_c::handle_command(Bit8u *command)
         case 0:  // current values
           switch (pagecode) {
             case 0x01:
-              memcpy(s.usb_buf, bx_cbi_dev_mode_sense_cur, 8);  // header first
-              memcpy(s.usb_buf + 8, bx_cbi_dev_mode_sense_cur + PAGE_CODE_01_OFF, 12);
+              memcpy(s.usb_buf, bx_floppy_dev_mode_sense_cur, 8);  // header first
+              memcpy(s.usb_buf + 8, bx_floppy_dev_mode_sense_cur + PAGE_CODE_01_OFF, 12);
               s.usb_len = 8 + 12;
               break;
             case 0x05:
-              memcpy(s.usb_buf, bx_cbi_dev_mode_sense_cur, 8);  // header first
-              memcpy(s.usb_buf + 8, bx_cbi_dev_mode_sense_cur + PAGE_CODE_05_OFF, 32);
+              memcpy(s.usb_buf, bx_floppy_dev_mode_sense_cur, 8);  // header first
+              memcpy(s.usb_buf + 8, bx_floppy_dev_mode_sense_cur + PAGE_CODE_05_OFF, 32);
               s.usb_len = 8 + 32;
               break;
             case 0x1B:
-              memcpy(s.usb_buf, bx_cbi_dev_mode_sense_cur, 8);  // header first
-              memcpy(s.usb_buf + 8, bx_cbi_dev_mode_sense_cur + PAGE_CODE_1B_OFF, 12);
+              memcpy(s.usb_buf, bx_floppy_dev_mode_sense_cur, 8);  // header first
+              memcpy(s.usb_buf + 8, bx_floppy_dev_mode_sense_cur + PAGE_CODE_1B_OFF, 12);
               s.usb_len = 8 + 12;
               break;
             case 0x1C:
-              memcpy(s.usb_buf, bx_cbi_dev_mode_sense_cur, 8);  // header first
-              memcpy(s.usb_buf + 8, bx_cbi_dev_mode_sense_cur + PAGE_CODE_1C_OFF, 8);
+              memcpy(s.usb_buf, bx_floppy_dev_mode_sense_cur, 8);  // header first
+              memcpy(s.usb_buf + 8, bx_floppy_dev_mode_sense_cur + PAGE_CODE_1C_OFF, 8);
               s.usb_len = 8 + 8;
               break;
             case 0x3F:
-              memcpy(s.usb_buf, bx_cbi_dev_mode_sense_cur, 8);  // header first
-              memcpy(s.usb_buf + 8, bx_cbi_dev_mode_sense_cur + PAGE_CODE_01_OFF, 64);
+              memcpy(s.usb_buf, bx_floppy_dev_mode_sense_cur, 8);  // header first
+              memcpy(s.usb_buf + 8, bx_floppy_dev_mode_sense_cur + PAGE_CODE_01_OFF, 64);
               s.usb_len = 8 + 64;
               break;
             default:
@@ -860,7 +860,7 @@ bool usb_cbi_device_c::handle_command(Bit8u *command)
   return ret;
 }
 
-int usb_cbi_device_c::handle_data(USBPacket *p)
+int usb_floppy_device_c::handle_data(USBPacket *p)
 {
   int ret = 0;
   Bit8u devep = p->devep;
@@ -974,7 +974,7 @@ int usb_cbi_device_c::handle_data(USBPacket *p)
               while (len1 > 0) {
                 if ((int)s.usb_len < len1) {
                   count = s.sector_count;
-                  max_sectors = CBI_MAX_SECTORS - (s.usb_len + 511) / 512;
+                  max_sectors = USB_FLOPPY_MAX_SECTORS - (s.usb_len + 511) / 512;
                   if (count > max_sectors) {
                     count = max_sectors;
                   }
@@ -1039,7 +1039,7 @@ int usb_cbi_device_c::handle_data(USBPacket *p)
           default:
             goto fail;
         }
-#if USB_CBI_USE_INTERRUPT
+#if USB_FLOPPY_USE_INTERRUPT
       } else if (devep == 3) { // Interrupt In EP
         BX_DEBUG(("Interrupt IN: 2 bytes"));
         // We currently do not support error reporting.
@@ -1053,20 +1053,20 @@ int usb_cbi_device_c::handle_data(USBPacket *p)
       break;
 
     default:
-      BX_ERROR(("USB CBI handle_data: bad token"));
+      BX_ERROR(("USB floppy handle_data: bad token"));
 fail:
       d.stall = 1;
       ret = USB_RET_STALL;
-      BX_ERROR(("USB CBI handle_data: stalled"));
+      BX_ERROR(("USB floppy handle_data: stalled"));
       break;
   }
 
   return ret;
 }
 
-void usb_cbi_device_c::start_timer(Bit8u mode)
+void usb_floppy_device_c::start_timer(Bit8u mode)
 {
-  Bit32u delay = CBI_SECTOR_TIME;
+  Bit32u delay = USB_FLOPPY_SECTOR_TIME;
   Bit8u new_track, steps;
 
   if (mode == 2) {
@@ -1085,13 +1085,13 @@ void usb_cbi_device_c::start_timer(Bit8u mode)
   bx_pc_system.activate_timer(s.floppy_timer_index, delay, 0);
 }
 
-void usb_cbi_device_c::floppy_timer_handler(void *this_ptr)
+void usb_floppy_device_c::floppy_timer_handler(void *this_ptr)
 {
-  usb_cbi_device_c *class_ptr = (usb_cbi_device_c *) this_ptr;
+  usb_floppy_device_c *class_ptr = (usb_floppy_device_c *) this_ptr;
   class_ptr->floppy_timer();
 }
 
-void usb_cbi_device_c::floppy_timer()
+void usb_floppy_device_c::floppy_timer()
 {
   USBPacket *p = s.packet;
   int ret = 1;
@@ -1127,13 +1127,13 @@ void usb_cbi_device_c::floppy_timer()
   }
 }
 
-int usb_cbi_device_c::floppy_read_sector()
+int usb_floppy_device_c::floppy_read_sector()
 {
   ssize_t ret;
   USBPacket *p = s.packet;
 
   BX_DEBUG(("floppy_read_sector(): sector = %i", s.sector));
-  if (((CBI_MAX_SECTORS * 512) - s.usb_len) >= 512) {
+  if (((USB_FLOPPY_MAX_SECTORS * 512) - s.usb_len) >= 512) {
     ret = s.hdimage->read((bx_ptr_t) s.usb_buf, 512);
     if (ret > 0) {
       s.usb_len += (Bit32u)ret;
@@ -1165,7 +1165,7 @@ int usb_cbi_device_c::floppy_read_sector()
   }
 }
 
-int usb_cbi_device_c::floppy_write_sector()
+int usb_floppy_device_c::floppy_write_sector()
 {
   BX_DEBUG(("floppy_write_sector(): sector = %i", s.sector));
   if (s.hdimage->write((bx_ptr_t) s.usb_buf, 512) < 0) {
@@ -1184,7 +1184,7 @@ int usb_cbi_device_c::floppy_write_sector()
   }
 }
 
-void usb_cbi_device_c::copy_data(USBPacket *p)
+void usb_floppy_device_c::copy_data(USBPacket *p)
 {
   int len = p->len;
 
@@ -1202,13 +1202,13 @@ void usb_cbi_device_c::copy_data(USBPacket *p)
   }
 }
 
-void usb_cbi_device_c::cancel_packet(USBPacket *p)
+void usb_floppy_device_c::cancel_packet(USBPacket *p)
 {
   bx_pc_system.deactivate_timer(s.floppy_timer_index);
   s.packet = NULL;
 }
 
-bool usb_cbi_device_c::set_inserted(bool value)
+bool usb_floppy_device_c::set_inserted(bool value)
 {
   s.inserted = value;
   if (value) {
@@ -1239,7 +1239,7 @@ bool usb_cbi_device_c::set_inserted(bool value)
   return s.inserted;
 }
 
-void usb_cbi_device_c::runtime_config(void)
+void usb_floppy_device_c::runtime_config(void)
 {
   if (s.status_changed) {
     set_inserted(0);
@@ -1254,16 +1254,16 @@ void usb_cbi_device_c::runtime_config(void)
 #define LOG_THIS floppy->
 
 // USB floppy runtime parameter handlers
-const char *usb_cbi_device_c::floppy_path_handler(bx_param_string_c *param, int set,
+const char *usb_floppy_device_c::floppy_path_handler(bx_param_string_c *param, int set,
                                                   const char *oldval, const char *val, int maxlen)
 {
-  usb_cbi_device_c *floppy;
+  usb_floppy_device_c *floppy;
 
   if (set) {
     if (strlen(val) < 1) {
       val = "none";
     }
-    floppy = (usb_cbi_device_c*) param->get_parent()->get_device_param();
+    floppy = (usb_floppy_device_c*) param->get_parent()->get_device_param();
     if (floppy != NULL) {
       floppy->s.status_changed = 1;
     } else {
@@ -1273,12 +1273,12 @@ const char *usb_cbi_device_c::floppy_path_handler(bx_param_string_c *param, int 
   return val;
 }
 
-Bit64s usb_cbi_device_c::floppy_param_handler(bx_param_c *param, int set, Bit64s val)
+Bit64s usb_floppy_device_c::floppy_param_handler(bx_param_c *param, int set, Bit64s val)
 {
-  usb_cbi_device_c *floppy;
+  usb_floppy_device_c *floppy;
 
   if (set) {
-    floppy = (usb_cbi_device_c*) param->get_parent()->get_device_param();
+    floppy = (usb_floppy_device_c*) param->get_parent()->get_device_param();
     if (floppy != NULL) {
       floppy->s.status_changed = 1;
     } else {
@@ -1288,10 +1288,10 @@ Bit64s usb_cbi_device_c::floppy_param_handler(bx_param_c *param, int set, Bit64s
   return val;
 }
 
-Bit64s usb_cbi_device_c::param_save_handler(void *devptr, bx_param_c *param)
+Bit64s usb_floppy_device_c::param_save_handler(void *devptr, bx_param_c *param)
 {
   Bit64s val = 0;
-  usb_cbi_device_c *floppy = (usb_cbi_device_c*) devptr;
+  usb_floppy_device_c *floppy = (usb_floppy_device_c*) devptr;
 
   if (!strcmp(param->get_name(), "usb_buf")) {
     if (floppy->s.usb_buf != NULL) {
@@ -1305,21 +1305,21 @@ Bit64s usb_cbi_device_c::param_save_handler(void *devptr, bx_param_c *param)
   return val;
 }
 
-void usb_cbi_device_c::param_restore_handler(void *devptr, bx_param_c *param, Bit64s val)
+void usb_floppy_device_c::param_restore_handler(void *devptr, bx_param_c *param, Bit64s val)
 {
-  usb_cbi_device_c *floppy = (usb_cbi_device_c*) devptr;
+  usb_floppy_device_c *floppy = (usb_floppy_device_c*) devptr;
 
   if (!strcmp(param->get_name(), "usb_buf")) {
     floppy->s.usb_buf = floppy->s.dev_buffer + val;
   }
 }
 
-void usb_cbi_restore_handler(void *dev, bx_list_c *conf)
+void usb_floppy_restore_handler(void *dev, bx_list_c *conf)
 {
-  ((usb_cbi_device_c*)dev)->restore_handler(conf);
+  ((usb_floppy_device_c*)dev)->restore_handler(conf);
 }
 
-void usb_cbi_device_c::restore_handler(bx_list_c *conf)
+void usb_floppy_device_c::restore_handler(bx_list_c *conf)
 {
   runtime_config();
 }

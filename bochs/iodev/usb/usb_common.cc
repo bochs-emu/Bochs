@@ -73,9 +73,6 @@ void bx_usbdev_ctl_c::init(void)
       usb_module_id[j++] = i;
       usb_device_names[j] = "cdrom";
       usb_module_id[j] = i;
-    } else if (!strcmp(usb_module_names[i], "usb_cbi")) {
-      usb_device_names[j] = "floppy";
-      usb_module_id[j] = i;
     } else {
       if (!strncmp(usb_module_names[i], "usb_", 4)) {
         usb_device_names[j] = &usb_module_names[i][4];

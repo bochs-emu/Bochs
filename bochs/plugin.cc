@@ -1077,10 +1077,10 @@ plugin_t bx_builtin_plugins[] = {
 #endif
 #endif
 #if BX_SUPPORT_PCIUSB
+  BUILTIN_USB_PLUGIN_ENTRY(usb_floppy),
   BUILTIN_USB_PLUGIN_ENTRY(usb_hid),
-  BUILTIN_USB_PLUGIN_ENTRY(usb_msd),
-  BUILTIN_USB_PLUGIN_ENTRY(usb_cbi),
   BUILTIN_USB_PLUGIN_ENTRY(usb_hub),
+  BUILTIN_USB_PLUGIN_ENTRY(usb_msd),
   BUILTIN_USB_PLUGIN_ENTRY(usb_printer),
 #endif
   BUILTIN_IMG_PLUGIN_ENTRY(vmware3),

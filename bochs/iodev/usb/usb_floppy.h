@@ -22,8 +22,8 @@
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef BX_IODEV_USB_CBI_H
-#define BX_IODEV_USB_CBI_H
+#ifndef BX_IODEV_USB_FLOPPY_H
+#define BX_IODEV_USB_FLOPPY_H
 
 #define UFI_TEST_UNIT_READY             0x00
 #define UFI_REZERO                      0x01
@@ -47,10 +47,10 @@
 
 class device_image_t;
 
-class usb_cbi_device_c : public usb_device_c {
+class usb_floppy_device_c : public usb_device_c {
 public:
-  usb_cbi_device_c(void);
-  virtual ~usb_cbi_device_c(void);
+  usb_floppy_device_c(void);
+  virtual ~usb_floppy_device_c(void);
 
   virtual bool init();
   virtual bool set_option(const char *option);

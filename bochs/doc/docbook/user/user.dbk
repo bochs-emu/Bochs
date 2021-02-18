@@ -7164,8 +7164,8 @@ simulation is starting.
       <entry>Unmapped I/O handler</entry>
     </row>
     <row>
-      <entry>usb_cbi</entry>
-      <entry>USBCBI</entry>
+      <entry>usb_floppy</entry>
+      <entry>USBFDD</entry>
       <entry>USB (UFI/CBI) floppy emulation</entry>
     </row>
     <row>
