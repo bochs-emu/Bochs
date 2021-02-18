@@ -976,16 +976,7 @@ void bx_usb_xhci_c::after_restore_state(void)
 void bx_usb_xhci_c::init_device(Bit8u port, bx_list_c *portconf)
 {
   char pname[BX_PATHNAME_LEN];
-  const char *devname = NULL;
 
-  devname = ((bx_param_enum_c*)portconf->get_by_name("device"))->get_selected(); 
-  if (devname == NULL) return; 
-  if (!strlen(devname) || !strcmp(devname, "none")) return;
-
-  if (BX_XHCI_THIS hub.usb_port[port].device != NULL) {
-    BX_ERROR(("init_device(): port%d already in use", port+1));
-    return;
-  }
   if (DEV_usb_init_device(portconf, BX_XHCI_THIS_PTR, &BX_XHCI_THIS hub.usb_port[port].device)) {
     if (usb_set_connect_status(port, 1)) {
       sprintf(pname, "usb_xhci.hub.port%d.device", port+1);
@@ -3217,7 +3208,8 @@ Bit64s bx_usb_xhci_c::usb_param_handler(bx_param_c *param, int set, Bit64s val)
         BX_XHCI_THIS device_change |= (1 << portnum);
       } else if (!empty && !BX_XHCI_THIS hub.usb_port[portnum].portsc.ccs) {
         BX_XHCI_THIS device_change |= (1 << portnum);
-      } else {
+      } else if (val != ((bx_param_enum_c*)param)->get()) {
+        BX_ERROR(("usb_param_handler(): port #%d already in use", portnum+1));
         val = ((bx_param_enum_c*)param)->get();
       }
     } else {

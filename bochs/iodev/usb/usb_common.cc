@@ -133,6 +133,7 @@ bool bx_usbdev_ctl_c::init_device(bx_list_c *portconf, logfunctions *hub, void *
   bx_param_string_c *opts2;
 
   devtype = (Bit8u)((bx_param_enum_c*)portconf->get_by_name("device"))->get();
+  if (devtype == 0) return 0;
   modtype = usb_module_id[devtype];
   options = ((bx_param_string_c*)portconf->get_by_name("options"))->getptr();
   opts2 = (bx_param_string_c*)portconf->get_by_name("options2");

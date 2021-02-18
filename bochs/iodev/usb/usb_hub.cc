@@ -572,16 +572,7 @@ int usb_hub_device_c::handle_packet(USBPacket *p)
 void usb_hub_device_c::init_device(Bit8u port, bx_list_c *portconf)
 {
   char pname[BX_PATHNAME_LEN];
-  const char *devname = NULL;
 
-  devname = ((bx_param_enum_c*)portconf->get_by_name("device"))->get_selected();
-  if (devname == NULL) return;
-  if (!strlen(devname) || !strcmp(devname, "none")) return;
-
-  if (hub.usb_port[port].device != NULL) {
-    BX_ERROR(("init_device(): port%d already in use", port+1));
-    return;
-  }
   if (DEV_usb_init_device(portconf, this, &hub.usb_port[port].device)) {
     if (usb_set_connect_status(port, 1)) {
       sprintf(pname, "port%d.device", port+1);
@@ -721,7 +712,8 @@ Bit64s usb_hub_device_c::hub_param_handler(bx_param_c *param, int set, Bit64s va
           hub->hub.device_change |= (1 << portnum);
         } else if (!empty && !(hub->hub.usb_port[portnum].PortStatus & PORT_STAT_CONNECTION)) {
           hub->hub.device_change |= (1 << portnum);
-        } else {
+        } else if (val != ((bx_param_enum_c*)param)->get()) {
+          BX_ERROR(("hub_param_handler(): port #%d already in use", portnum+1));
           val = ((bx_param_enum_c*)param)->get();
         }
       } else {
