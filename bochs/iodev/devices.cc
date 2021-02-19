@@ -111,8 +111,9 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   unsigned max_pci_slots = BX_N_PCI_SLOTS;
 #endif
   unsigned i, argc;
+  Bit8u vga_ext_id;
   const char def_name[] = "Default";
-  const char *vga_ext, *options;
+  const char *options;
   char *argv[16];
 
   BX_DEBUG(("Init $Id$"));
@@ -239,14 +240,14 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   PLUG_load_plugin(dma, PLUGTYPE_CORE);
   PLUG_load_plugin(pic, PLUGTYPE_CORE);
   PLUG_load_plugin(pit, PLUGTYPE_CORE);
-  vga_ext = SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr();
-  if (!strcmp(vga_ext, "cirrus")) {
+  vga_ext_id = (Bit8u)SIM->get_param_enum(BXPN_VGA_EXTENSION)->get();
+  if (vga_ext_id == BX_VGA_EXTENSION_CIRRUS) {
 #if BX_SUPPORT_CLGD54XX
     PLUG_load_plugin(svga_cirrus, PLUGTYPE_CORE);
 #else
     BX_PANIC(("Bochs is not compiled with Cirrus support"));
 #endif
-  } else if (!strcmp(vga_ext, "vbe") || !strcmp(vga_ext, "none")) {
+  } else if (vga_ext_id <= BX_VGA_EXTENSION_VBE) {
     PLUG_load_plugin(vga, PLUGTYPE_CORE);
   } else if (pluginVgaDevice == &stubVga) {
     BX_PANIC(("No VGA compatible display adapter present"));

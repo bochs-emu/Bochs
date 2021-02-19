@@ -47,6 +47,7 @@
 
 
 const char **display_library_list;
+const char **vga_extension_list;
 int bochsrc_include_level = 0;
 
 #define LOG_THIS genlog->
@@ -62,12 +63,11 @@ static Bit64s bx_param_handler(bx_param_c *param, bool set, Bit64s val)
 {
   char pname[BX_PATHNAME_LEN];
   Bit8u device;
-//Bit8u channel;
+  Bit64s oldval;
 
   bx_list_c *base = (bx_list_c*) param->get_parent();
   base->get_param_path(pname, BX_PATHNAME_LEN);
   if (!strncmp(pname, "ata.", 4)) {
-//  channel = pname[4] - '0';
     if (!strcmp(base->get_name(), "master")) {
       device = 0;
     } else {
@@ -90,7 +90,19 @@ static Bit64s bx_param_handler(bx_param_c *param, bool set, Bit64s val)
     }
   } else {
     param->get_param_path(pname, BX_PATHNAME_LEN);
-    if ((!strcmp(pname, BXPN_FLOPPYA_TYPE)) ||
+    if (!strcmp(pname, BXPN_VGA_EXTENSION)) {
+      if (set) {
+        oldval = ((bx_param_enum_c*)param)->get();
+        if (val != oldval) {
+          if (oldval >= BX_VGA_EXTENSION_OTHER) {
+            PLUG_unload_opt_plugin(((bx_param_enum_c*)param)->get_selected());
+          }
+          if (val >= BX_VGA_EXTENSION_OTHER) {
+            PLUG_load_vga_plugin(((bx_param_enum_c*)param)->get_choice(val));
+          }
+        }
+      }
+    } else if ((!strcmp(pname, BXPN_FLOPPYA_TYPE)) ||
         (!strcmp(pname, BXPN_FLOPPYB_TYPE))) {
       if (set) {
         if (val == BX_FLOPPY_AUTO) {
@@ -133,17 +145,6 @@ const char *bx_param_string_handler(bx_param_string_c *param, bool set,
     if (set && (SIM->get_init_done())) {
       if (!bx_gui->parse_user_shortcut(val)) {
         val = oldval;
-      }
-    }
-  } else if (!strcmp(pname, BXPN_VGA_EXTENSION)) {
-    if (set) {
-      if ((strlen(oldval) > 0) && (strcmp(oldval, "none") && strcmp(oldval, "vbe") &&
-          strcmp(oldval, "cirrus"))) {
-        PLUG_unload_opt_plugin(oldval);
-      }
-      if ((strlen(val) > 0) && (strcmp(val, "none") && strcmp(val, "vbe") &&
-          strcmp(val, "cirrus"))) {
-        PLUG_load_vga_plugin(val);
       }
     }
   } else {
@@ -300,6 +301,21 @@ void bx_init_displaylib_list()
       }
     }
   }
+}
+
+void bx_init_vgaext_list()
+{
+  Bit8u i, count = 0;
+
+  count = PLUG_get_plugins_count(PLUGTYPE_VGA);
+  vga_extension_list = (const char**) malloc((count + 4) * sizeof(char*));
+  vga_extension_list[0] = "none";
+  vga_extension_list[1] = "vbe";
+  vga_extension_list[2] = "cirrus";
+  for (i = 0; i < count; i++) {
+    vga_extension_list[i + 3] = PLUG_get_plugin_name(PLUGTYPE_VGA, i);
+  }
+  vga_extension_list[count + 3] = NULL;
 }
 
 void bx_init_options()
@@ -977,13 +993,15 @@ void bx_init_options()
       5);
   vga_update_freq->set_ask_format ("Type a new value for VGA update frequency: [%d] ");
 
-  bx_param_string_c *vga_extension = new bx_param_string_c(display,
-                "vga_extension",
-                "VGA Extension",
-                "Name of the VGA extension",
-                "none", BX_PATHNAME_LEN);
-  vga_extension->set_handler(bx_param_string_handler);
-  vga_extension->set_initial_val("vbe");
+  bx_init_vgaext_list();
+  bx_param_enum_c *vga_extension = new bx_param_enum_c(display,
+      "vga_extension",
+      "VGA Extension",
+      "Name of the VGA extension",
+      vga_extension_list,
+      BX_VGA_EXTENSION_VBE,
+      BX_VGA_EXTENSION_NONE);
+  vga_extension->set_handler(bx_param_handler);
   display->set_options(display->SHOW_PARENT);
 
   static const char *ddc_mode_list[] = {
@@ -2780,7 +2798,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     }
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "extension=", 10)) {
-        SIM->get_param_string(BXPN_VGA_EXTENSION)->set(&params[i][10]);
+        SIM->get_param_enum(BXPN_VGA_EXTENSION)->set_by_name(&params[i][10]);
       } else if (!strncmp(params[i], "update_freq=", 12)) {
         SIM->get_param_num(BXPN_VGA_UPDATE_FREQUENCY)->set(atol(&params[i][12]));
       } else if (!strncmp(params[i], "realtime=", 9)) {
@@ -3364,7 +3382,7 @@ int bx_write_configuration(const char *rc, int overwrite)
   }
   fprintf(fp, "\n");
   fprintf(fp, "vga: extension=%s, update_freq=%u, realtime=%u, ddc=%s",
-    SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr(),
+    SIM->get_param_enum(BXPN_VGA_EXTENSION)->get_selected(),
     SIM->get_param_num(BXPN_VGA_UPDATE_FREQUENCY)->get(),
     SIM->get_param_bool(BXPN_VGA_REALTIME)->get(),
     SIM->get_param_enum(BXPN_DDC_MODE)->get_selected());

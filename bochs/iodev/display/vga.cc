@@ -87,7 +87,7 @@ bool bx_vga_c::init_vga_extension(void)
   BX_VGA_THIS vbe.dac_8bit = 0;
   BX_VGA_THIS vbe.ddc_enabled = 0;
   BX_VGA_THIS vbe.base_address = 0x0000;
-  if (!strcmp(BX_VGA_THIS vgaext->getptr(), "vbe")) {
+  if (BX_VGA_THIS vga_ext_id == BX_VGA_EXTENSION_VBE) {
     BX_VGA_THIS put("BXVGA");
     for (addr=VBE_DISPI_IOPORT_INDEX; addr<=VBE_DISPI_IOPORT_DATA; addr++) {
       DEV_register_ioread_handler(this, vbe_read_handler, addr, "vga video", 7);
