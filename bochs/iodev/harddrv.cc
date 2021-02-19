@@ -3637,7 +3637,7 @@ int get_device_handle_from_param(bx_param_c *param)
   }
 }
 
-Bit64s bx_hard_drive_c::cdrom_status_handler(bx_param_c *param, int set, Bit64s val)
+Bit64s bx_hard_drive_c::cdrom_status_handler(bx_param_c *param, bool set, Bit64s val)
 {
   if (set) {
     int handle = get_device_handle_from_param(param);
@@ -3658,7 +3658,7 @@ Bit64s bx_hard_drive_c::cdrom_status_handler(bx_param_c *param, int set, Bit64s 
   return val;
 }
 
-const char *bx_hard_drive_c::cdrom_path_handler(bx_param_string_c *param, int set,
+const char *bx_hard_drive_c::cdrom_path_handler(bx_param_string_c *param, bool set,
                                                 const char *oldval, const char *val, int maxlen)
 {
   if (set) {

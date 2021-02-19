@@ -2402,7 +2402,7 @@ void bx_vgacore_c::vga_timer_handler(void *this_ptr)
 #undef LOG_THIS
 #define LOG_THIS vgadev->
 
-Bit64s bx_vgacore_c::vga_param_handler(bx_param_c *param, int set, Bit64s val)
+Bit64s bx_vgacore_c::vga_param_handler(bx_param_c *param, bool set, Bit64s val)
 {
   // handler for runtime parameter 'vga: update_freq'
   if (set) {

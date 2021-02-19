@@ -1254,7 +1254,7 @@ void usb_floppy_device_c::runtime_config(void)
 #define LOG_THIS floppy->
 
 // USB floppy runtime parameter handlers
-const char *usb_floppy_device_c::floppy_path_handler(bx_param_string_c *param, int set,
+const char *usb_floppy_device_c::floppy_path_handler(bx_param_string_c *param, bool set,
                                                   const char *oldval, const char *val, int maxlen)
 {
   usb_floppy_device_c *floppy;
@@ -1273,7 +1273,7 @@ const char *usb_floppy_device_c::floppy_path_handler(bx_param_string_c *param, i
   return val;
 }
 
-Bit64s usb_floppy_device_c::floppy_param_handler(bx_param_c *param, int set, Bit64s val)
+Bit64s usb_floppy_device_c::floppy_param_handler(bx_param_c *param, bool set, Bit64s val)
 {
   usb_floppy_device_c *floppy;
 

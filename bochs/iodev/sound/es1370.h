@@ -94,8 +94,8 @@ public:
   virtual void pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 
   // runtime options
-  static Bit64s es1370_param_handler(bx_param_c *param, int set, Bit64s val);
-  static const char* es1370_param_string_handler(bx_param_string_c *param, int set,
+  static Bit64s es1370_param_handler(bx_param_c *param, bool set, Bit64s val);
+  static const char* es1370_param_string_handler(bx_param_string_c *param, bool set,
                                                  const char *oldval, const char *val,
                                                  int maxlen);
   static void runtime_config_handler(void *);

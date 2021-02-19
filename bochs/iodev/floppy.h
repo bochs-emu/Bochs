@@ -136,7 +136,7 @@ private:
   Bit32u read(Bit32u address, unsigned io_len);
   void   write(Bit32u address, Bit32u value, unsigned io_len);
 #endif
-  BX_FD_SMF bool    set_media_status(unsigned drive, bool    status);
+  BX_FD_SMF bool   set_media_status(unsigned drive, bool    status);
   BX_FD_SMF Bit16u dma_write(Bit8u *buffer, Bit16u maxlen);
   BX_FD_SMF Bit16u dma_read(Bit8u *buffer, Bit16u maxlen);
   BX_FD_SMF void   floppy_command(void);
@@ -147,15 +147,16 @@ private:
   BX_FD_SMF void   enter_result_phase(void);
   BX_FD_SMF Bit32u calculate_step_delay(Bit8u drive, Bit8u new_cylinder);
   BX_FD_SMF void   reset_changeline(void);
-  BX_FD_SMF bool    get_tc(void);
+  BX_FD_SMF bool   get_tc(void);
   static void      timer_handler(void *);
   BX_FD_SMF void   timer(void);
   BX_FD_SMF void   increment_sector(void);
-  BX_FD_SMF bool    evaluate_media(Bit8u devtype, Bit8u type, char *path, floppy_t *media);
-  BX_FD_SMF void    close_media(floppy_t *media);
+  BX_FD_SMF bool   evaluate_media(Bit8u devtype, Bit8u type, char *path, floppy_t *media);
+  BX_FD_SMF void   close_media(floppy_t *media);
   // runtime options
-  static Bit64s    floppy_param_handler(bx_param_c *param, int set, Bit64s val);
-  static const char* floppy_param_string_handler(bx_param_string_c *param, int set, const char *oldval, const char *val, int maxlen);
+  static Bit64s    floppy_param_handler(bx_param_c *param, bool set, Bit64s val);
+  static const char* floppy_param_string_handler(bx_param_string_c *param, 
+                       bool set, const char *oldval, const char *val, int maxlen);
   static void runtime_config_handler(void *);
   void runtime_config(void);
 };

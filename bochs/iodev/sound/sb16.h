@@ -137,8 +137,8 @@ public:
   /* Make writelog available to output functions */
   BX_SB16_SMF void writelog(int loglev, const char *str, ...);
   // runtime options
-  static Bit64s sb16_param_handler(bx_param_c *param, int set, Bit64s val);
-  static const char* sb16_param_string_handler(bx_param_string_c *param, int set,
+  static Bit64s sb16_param_handler(bx_param_c *param, bool set, Bit64s val);
+  static const char* sb16_param_string_handler(bx_param_string_c *param, bool set,
                                                const char *oldval, const char *val,
                                                int maxlen);
   static void runtime_config_handler(void *);

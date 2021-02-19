@@ -1496,7 +1496,7 @@ bool bx_usb_ohci_c::usb_set_connect_status(Bit8u port, bool connected)
 }
 
 // USB runtime parameter handler
-Bit64s bx_usb_ohci_c::usb_param_handler(bx_param_c *param, int set, Bit64s val)
+Bit64s bx_usb_ohci_c::usb_param_handler(bx_param_c *param, bool set, Bit64s val)
 {
   if (set) {
     int portnum = atoi((param->get_parent())->get_name()+4) - 1;

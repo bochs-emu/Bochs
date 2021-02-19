@@ -177,7 +177,7 @@ public:
   virtual int dump_param(char *buf, int buflen, bool dquotes = false) { return 0; }
 };
 
-typedef Bit64s (*param_event_handler)(class bx_param_c *, int set, Bit64s val);
+typedef Bit64s (*param_event_handler)(class bx_param_c *, bool set, Bit64s val);
 typedef Bit64s (*param_save_handler)(void *devptr, class bx_param_c *);
 typedef void (*param_restore_handler)(void *devptr, class bx_param_c *, Bit64s val);
 typedef int (*param_enable_handler)(class bx_param_c *, int en);
@@ -378,7 +378,7 @@ public:
 };
 
 typedef const char* (*param_string_event_handler)(class bx_param_string_c *,
-                     int set, const char *oldval, const char *newval, int maxlen);
+                     bool set, const char *oldval, const char *newval, int maxlen);
 
 class BOCHSAPI bx_param_string_c : public bx_param_c {
 protected:

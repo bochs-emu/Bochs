@@ -107,9 +107,9 @@ private:
   void copy_data(USBPacket *p);
   bool set_inserted(bool value);
 
-  static const char *floppy_path_handler(bx_param_string_c *param, int set,
+  static const char *floppy_path_handler(bx_param_string_c *param, bool set,
                                          const char *oldval, const char *val, int maxlen);
-  static Bit64s floppy_param_handler(bx_param_c *param, int set, Bit64s val);
+  static Bit64s floppy_param_handler(bx_param_c *param, bool set, Bit64s val);
 
   static Bit64s param_save_handler(void *devptr, bx_param_c *param);
   static void param_restore_handler(void *devptr, bx_param_c *param, Bit64s val);

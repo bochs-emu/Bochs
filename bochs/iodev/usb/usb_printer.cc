@@ -322,7 +322,7 @@ fail:
 #define LOG_THIS printer->
 
 // USB printer runtime parameter handlers
-const char *usb_printer_device_c::printfile_handler(bx_param_string_c *param, int set,
+const char *usb_printer_device_c::printfile_handler(bx_param_string_c *param, bool set,
                                                     const char *oldval, const char *val,
                                                     int maxlen)
 {

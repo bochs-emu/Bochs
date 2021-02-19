@@ -222,9 +222,9 @@ private:
 
   BX_HD_SMF bool set_cd_media_status(Bit32u handle, bool status);
 
-  static Bit64s cdrom_status_handler(bx_param_c *param, int set, Bit64s val);
-  static const char* cdrom_path_handler(bx_param_string_c *param, int set,
-                                        const char *oldval, const char *val, int maxlen);
+  static Bit64s cdrom_status_handler(bx_param_c *param, bool set, Bit64s val);
+  static const char* cdrom_path_handler(bx_param_string_c *param, bool set,
+                       const char *oldval, const char *val, int maxlen);
 
   // FIXME:
   // For each ATA channel we should have one controller struct

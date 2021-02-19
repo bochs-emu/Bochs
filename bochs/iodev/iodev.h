@@ -533,7 +533,7 @@ private:
   static void   default_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
 
   // runtime options / paste feature
-  static Bit64s param_handler(bx_param_c *param, int set, Bit64s val);
+  static Bit64s param_handler(bx_param_c *param, bool set, Bit64s val);
   void paste_delay_changed(Bit32u value);
   void service_paste_buf();
 

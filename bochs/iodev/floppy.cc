@@ -1956,7 +1956,7 @@ bool bx_floppy_ctrl_c::get_tc(void)
 
 // floppy runtime parameter handling
 
-Bit64s bx_floppy_ctrl_c::floppy_param_handler(bx_param_c *param, int set, Bit64s val)
+Bit64s bx_floppy_ctrl_c::floppy_param_handler(bx_param_c *param, bool set, Bit64s val)
 {
   bx_list_c *base = (bx_list_c*) param->get_parent();
   Bit8u drive;
@@ -1974,7 +1974,7 @@ Bit64s bx_floppy_ctrl_c::floppy_param_handler(bx_param_c *param, int set, Bit64s
 }
 
 const char* bx_floppy_ctrl_c::floppy_param_string_handler(bx_param_string_c *param,
-                                int set, const char *oldval, const char *val, int maxlen)
+                                bool set, const char *oldval, const char *val, int maxlen)
 {
   char pname[BX_PATHNAME_LEN];
   Bit8u drive;
@@ -1985,7 +1985,7 @@ const char* bx_floppy_ctrl_c::floppy_param_string_handler(bx_param_string_c *par
   }
   param->get_param_path(pname, BX_PATHNAME_LEN);
   if ((!strncmp(pname, "floppy", 6)) && (!strcmp(param->get_name(), "path"))) {
-    if (set==1) {
+    if (set) {
       drive = atoi(base->get_name());
       if (SIM->get_param_enum("devtype", base)->get() == BX_FDD_NONE) {
         BX_ERROR(("Cannot add a floppy drive at runtime"));

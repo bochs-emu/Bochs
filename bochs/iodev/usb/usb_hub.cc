@@ -695,7 +695,7 @@ void usb_hub_device_c::runtime_config()
 #define LOG_THIS hub->
 
 // USB hub runtime parameter handler
-Bit64s usb_hub_device_c::hub_param_handler(bx_param_c *param, int set, Bit64s val)
+Bit64s usb_hub_device_c::hub_param_handler(bx_param_c *param, bool set, Bit64s val)
 {
   int portnum;
   usb_hub_device_c *hub;

@@ -1771,7 +1771,7 @@ void bx_serial_c::update_mouse_data()
   BX_SER_THIS mouse_update = 0;
 }
 
-const char* bx_serial_c::serial_file_param_handler(bx_param_string_c *param, int set,
+const char* bx_serial_c::serial_file_param_handler(bx_param_string_c *param, bool set,
                                                    const char *oldval, const char *val,
                                                    int maxlen)
 {

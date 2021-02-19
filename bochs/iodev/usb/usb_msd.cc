@@ -986,7 +986,7 @@ void usb_msd_device_c::runtime_config(void)
 #define LOG_THIS cdrom->
 
 // USB cdrom runtime parameter handlers
-const char *usb_msd_device_c::cdrom_path_handler(bx_param_string_c *param, int set,
+const char *usb_msd_device_c::cdrom_path_handler(bx_param_string_c *param, bool set,
                                                  const char *oldval, const char *val, int maxlen)
 {
   usb_msd_device_c *cdrom;
@@ -1010,7 +1010,7 @@ const char *usb_msd_device_c::cdrom_path_handler(bx_param_string_c *param, int s
   return val;
 }
 
-Bit64s usb_msd_device_c::cdrom_status_handler(bx_param_c *param, int set, Bit64s val)
+Bit64s usb_msd_device_c::cdrom_status_handler(bx_param_c *param, bool set, Bit64s val)
 {
   usb_msd_device_c *cdrom;
 

@@ -1287,7 +1287,7 @@ void bx_devices_c::paste_bytes(Bit8u *data, Bit32s length)
   service_paste_buf();
 }
 
-Bit64s bx_devices_c::param_handler(bx_param_c *param, int set, Bit64s val)
+Bit64s bx_devices_c::param_handler(bx_param_c *param, bool set, Bit64s val)
 {
   if (set) {
     char pname[BX_PATHNAME_LEN];

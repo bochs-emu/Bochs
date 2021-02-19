@@ -58,7 +58,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
 static int parse_bochsrc(const char *rcfile);
 static int get_floppy_type_from_image(const char *filename);
 
-static Bit64s bx_param_handler(bx_param_c *param, int set, Bit64s val)
+static Bit64s bx_param_handler(bx_param_c *param, bool set, Bit64s val)
 {
   char pname[BX_PATHNAME_LEN];
   Bit8u device;
@@ -119,24 +119,24 @@ static Bit64s bx_param_handler(bx_param_c *param, int set, Bit64s val)
   return val;
 }
 
-const char *bx_param_string_handler(bx_param_string_c *param, int set,
+const char *bx_param_string_handler(bx_param_string_c *param, bool set,
                                     const char *oldval, const char *val, int maxlen)
 {
   char pname[BX_PATHNAME_LEN];
 
   param->get_param_path(pname, BX_PATHNAME_LEN);
   if (!strcmp(pname, BXPN_SCREENMODE)) {
-    if (set == 1) {
+    if (set) {
       BX_INFO(("Screen mode changed to %s", val));
     }
   } else if (!strcmp(pname, BXPN_USER_SHORTCUT)) {
-    if ((set == 1) && (SIM->get_init_done())) {
+    if (set && (SIM->get_init_done())) {
       if (!bx_gui->parse_user_shortcut(val)) {
         val = oldval;
       }
     }
   } else if (!strcmp(pname, BXPN_VGA_EXTENSION)) {
-    if (set == 1) {
+    if (set) {
       if ((strlen(oldval) > 0) && (strcmp(oldval, "none") && strcmp(oldval, "vbe") &&
           strcmp(oldval, "cirrus"))) {
         PLUG_unload_opt_plugin(oldval);

@@ -46,7 +46,7 @@ private:
     char info_txt[BX_PATHNAME_LEN + 20];
   } s;
 
-  static const char* printfile_handler(bx_param_string_c *param, int set,
+  static const char* printfile_handler(bx_param_string_c *param, bool set,
                                        const char *oldval, const char *val, int maxlen);
 };
 

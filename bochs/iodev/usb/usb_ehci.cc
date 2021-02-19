@@ -2273,7 +2273,7 @@ void bx_usb_ehci_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_l
 }
 
 // USB runtime parameter handler
-Bit64s bx_usb_ehci_c::usb_param_handler(bx_param_c *param, int set, Bit64s val)
+Bit64s bx_usb_ehci_c::usb_param_handler(bx_param_c *param, bool set, Bit64s val)
 {
   int portnum;
 

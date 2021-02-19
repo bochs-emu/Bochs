@@ -1117,7 +1117,7 @@ void bx_es1370_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len
 }
 
 // runtime parameter handlers
-Bit64s bx_es1370_c::es1370_param_handler(bx_param_c *param, int set, Bit64s val)
+Bit64s bx_es1370_c::es1370_param_handler(bx_param_c *param, bool set, Bit64s val)
 {
   if (set) {
     const char *pname = param->get_name();
@@ -1136,7 +1136,7 @@ Bit64s bx_es1370_c::es1370_param_handler(bx_param_c *param, int set, Bit64s val)
   return val;
 }
 
-const char* bx_es1370_c::es1370_param_string_handler(bx_param_string_c *param, int set,
+const char* bx_es1370_c::es1370_param_string_handler(bx_param_string_c *param, bool set,
                                                  const char *oldval, const char *val,
                                                  int maxlen)
 {

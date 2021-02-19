@@ -86,9 +86,9 @@ private:
     USBPacket *packet;
   } s;
 
-  static const char *cdrom_path_handler(bx_param_string_c *param, int set,
-                                             const char *oldval, const char *val, int maxlen);
-  static Bit64s cdrom_status_handler(bx_param_c *param, int set, Bit64s val);
+  static const char *cdrom_path_handler(bx_param_string_c *param, bool set,
+                                        const char *oldval, const char *val, int maxlen);
+  static Bit64s cdrom_status_handler(bx_param_c *param, bool set, Bit64s val);
 };
 
 #endif

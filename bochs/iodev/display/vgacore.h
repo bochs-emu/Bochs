@@ -104,7 +104,7 @@ public:
   virtual void   get_crtc_params(bx_crtc_params_t *crtcp);
 
   static void    vga_timer_handler(void *);
-  static Bit64s  vga_param_handler(bx_param_c *param, int set, Bit64s val);
+  static Bit64s  vga_param_handler(bx_param_c *param, bool set, Bit64s val);
 
 protected:
   void init_standard_vga(void);

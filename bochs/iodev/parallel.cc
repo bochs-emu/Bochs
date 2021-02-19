@@ -449,7 +449,7 @@ void bx_parallel_c::write(Bit32u address, Bit32u value, unsigned io_len)
   }
 }
 
-const char* bx_parallel_c::parport_file_param_handler(bx_param_string_c *param, int set,
+const char* bx_parallel_c::parport_file_param_handler(bx_param_string_c *param, bool set,
                                                       const char *oldval, const char *val,
                                                       int maxlen)
 {
