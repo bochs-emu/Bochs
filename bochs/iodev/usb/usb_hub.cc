@@ -273,6 +273,7 @@ bool usb_hub_device_c::init()
     device->set_handler(hub_param_handler);
     options = new bx_param_string_c(port, "options", "Options", "", "",
       BX_PATHNAME_LEN);
+    options->set_enable_handler(hub_param_enable_handler);
     deplist = new bx_list_c(NULL);
     deplist->add(options);
     device->set_dependent_list(deplist, 1);
@@ -575,6 +576,7 @@ void usb_hub_device_c::init_device(Bit8u port, bx_list_c *portconf)
 
   if (DEV_usb_init_device(portconf, this, &hub.usb_port[port].device)) {
     if (usb_set_connect_status(port, 1)) {
+      portconf->get_by_name("options")->set_enabled(0);
       sprintf(pname, "port%d.device", port+1);
       bx_list_c *sr_list = (bx_list_c*)SIM->get_param(pname, hub.state);
       hub.usb_port[port].device->register_state(sr_list);
@@ -612,6 +614,7 @@ void usb_hub_device_c::event_handler(int event, USBPacket *packet, int port)
 bool usb_hub_device_c::usb_set_connect_status(Bit8u port, bool connected)
 {
   usb_device_c *device = hub.usb_port[port].device;
+  int hubnum = atoi(hub.config->get_name()+6);
   if (device != NULL) {
     if (connected) {
       switch (device->get_speed()) {
@@ -642,14 +645,15 @@ bool usb_hub_device_c::usb_set_connect_status(Bit8u port, bool connected)
       if (!device->get_connected()) {
         if (!device->init()) {
           usb_set_connect_status(port, 0);
-          BX_ERROR(("port #%d: connect failed", port+1));
+          BX_ERROR(("hub #%d, port #%d: connect failed", hubnum, port+1));
           return 0;
         } else {
-          BX_INFO(("port #%d: connect: %s", port+1, device->get_info()));
+          BX_INFO(("hub #%d, port #%d: connect: %s", hubnum, port+1, device->get_info()));
         }
       }
       device->set_event_handler(this, hub_event_handler, port);
     } else {
+      BX_INFO(("hub #%d, port #%d: device disconnect", hubnum, port+1));
       if (d.event.dev != NULL) {
         d.event.cb(USB_EVENT_WAKEUP, NULL, d.event.dev, d.event.port);
       }
@@ -667,19 +671,16 @@ bool usb_hub_device_c::usb_set_connect_status(Bit8u port, bool connected)
 
 void usb_hub_device_c::runtime_config()
 {
-  int i, hubnum;
+  int i;
   char pname[6];
 
   for (i = 0; i < hub.n_ports; i++) {
     // device change support
     if ((hub.device_change & (1 << i)) != 0) {
-      hubnum = atoi(hub.config->get_name()+6);
       if ((hub.usb_port[i].PortStatus & PORT_STAT_CONNECTION) == 0) {
-        BX_INFO(("USB hub #%d, port #%d: device connect", hubnum, i+1));
         sprintf(pname, "port%d", i + 1);
         init_device(i, (bx_list_c*)SIM->get_param(pname, hub.config));
       } else {
-        BX_INFO(("USB hub #%d, port #%d: device disconnect", hubnum, i+1));
         usb_set_connect_status(i, 0);
       }
       hub.device_change &= ~(1 << i);
@@ -724,6 +725,20 @@ Bit64s usb_hub_device_c::hub_param_handler(bx_param_c *param, bool set, Bit64s v
     }
   }
   return val;
+}
+
+// USB runtime parameter enable handler
+bool usb_hub_device_c::hub_param_enable_handler(bx_param_c *param, bool en)
+{
+  bx_list_c *port = (bx_list_c*)param->get_parent();
+  int portnum = atoi(port->get_name()+4) - 1;
+  usb_hub_device_c *hub = (usb_hub_device_c*)(port->get_parent()->get_device_param());
+  if (hub != NULL) {
+    if (en && (hub->hub.usb_port[portnum].device != NULL)) {
+      en = 0;
+    }
+  }
+  return en;
 }
 
 void usb_hub_restore_handler(void *dev, bx_list_c *conf)

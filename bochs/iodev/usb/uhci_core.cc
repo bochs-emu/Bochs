@@ -979,8 +979,8 @@ bool bx_uhci_core_c::set_connect_status(Bit8u port, bool connected)
 
       if (!device->get_connected()) {
         if (!device->init()) {
-          set_connect_status(port, 0);
           BX_ERROR(("port #%d: connect failed", port+1));
+          set_connect_status(port, 0);
           return 0;
         } else {
           BX_INFO(("port #%d: connect: %s", port+1, device->get_info()));
@@ -988,6 +988,7 @@ bool bx_uhci_core_c::set_connect_status(Bit8u port, bool connected)
       }
       device->set_event_handler(this, uhci_event_handler, port);
     } else {
+      BX_INFO(("port #%d: device disconnect", port+1));
       hub.usb_port[port].status = 0;
       hub.usb_port[port].connect_changed = 1;
       if (hub.usb_port[port].enabled) {

@@ -39,8 +39,6 @@ public:
   virtual void register_state(void);
   virtual void after_restore_state(void);
 
-  static Bit64s usb_param_handler(bx_param_c *param, bool set, Bit64s val);
-
 private:
   Bit8u device_change;
   int rt_conf_id;
@@ -50,6 +48,9 @@ private:
 
   static void runtime_config_handler(void *);
   void runtime_config(void);
+
+  static Bit64s usb_param_handler(bx_param_c *param, bool set, Bit64s val);
+  static bool usb_param_enable_handler(bx_param_c *param, bool en);
 };
 
 #endif

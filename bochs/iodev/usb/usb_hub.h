@@ -76,6 +76,7 @@ private:
   bool usb_set_connect_status(Bit8u port, bool connected);
 
   static Bit64s hub_param_handler(bx_param_c *param, bool set, Bit64s val);
+  static bool hub_param_enable_handler(bx_param_c *param, bool en);
 };
 
 #endif

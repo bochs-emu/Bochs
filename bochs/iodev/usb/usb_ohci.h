@@ -261,8 +261,6 @@ public:
 
   void event_handler(int event, USBPacket *packet, int port);
 
-  static Bit64s usb_param_handler(bx_param_c *param, bool set, Bit64s val);
-
 private:
 
   bx_usb_ohci_t hub;
@@ -298,6 +296,9 @@ private:
 
   static void runtime_config_handler(void *);
   void runtime_config(void);
+
+  static Bit64s usb_param_handler(bx_param_c *param, bool set, Bit64s val);
+  static bool usb_param_enable_handler(bx_param_c *param, bool en);
 };
 
 #endif  // BX_IODEV_USB_OHCI_H
