@@ -1169,6 +1169,8 @@ void ParamDialog::EnableParam(int param_id, bool enabled)
 void ParamDialog::ProcessDependentList(ParamStruct *pstrChanged, bool enabled)
 {
   bx_param_c *dparam;
+  bx_param_string_c *sparam;
+  param_enable_handler enable_handler;
   ParamStruct *pstr;
   Bit64s value;
   bool en;
@@ -1185,6 +1187,13 @@ void ParamDialog::ProcessDependentList(ParamStruct *pstrChanged, bool enabled)
         dparam = list->get(i);
         if (dparam != enump) {
           en = (enable_bitmap & mask) && enabled;
+          if (dparam->get_type() == BXT_PARAM_STRING) {
+            sparam = (bx_param_string_c*)dparam;
+            enable_handler = sparam->get_enable_handler();
+            if (enable_handler) {
+              en = enable_handler(sparam, en);
+            }
+          }
           pstr = (ParamStruct*) paramHash->Get(dparam->get_id());
           if (pstr) {
             if (en != pstr->u.window->IsEnabled()) {

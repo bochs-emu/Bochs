@@ -895,6 +895,8 @@ void ProcessDependentList(HWND hDlg, bx_param_c *param, BOOL enabled)
   UINT cid;
   bx_list_c *deplist;
   bx_param_c *dparam;
+  bx_param_string_c *sparam;
+  param_enable_handler enable_handler;
   bx_param_enum_c *eparam;
   Bit64s value;
   Bit64u enable_bitmap, mask;
@@ -914,6 +916,13 @@ void ProcessDependentList(HWND hDlg, bx_param_c *param, BOOL enabled)
         dparam = deplist->get(i);
         if (dparam != param) {
           en = (enable_bitmap & mask) && enabled;
+          if (dparam->get_type() == BXT_PARAM_STRING) {
+            sparam = (bx_param_string_c*)dparam;
+            enable_handler = sparam->get_enable_handler();
+            if (enable_handler) {
+              en = enable_handler(sparam, en);
+            }
+          }
           cid = findDlgIDFromParam(dparam);
           if (cid != 0) {
             if (en != IsWindowEnabled(GetDlgItem(hDlg, ID_PARAM + cid))) {

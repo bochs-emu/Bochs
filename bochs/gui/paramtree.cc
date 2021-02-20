@@ -270,7 +270,7 @@ void bx_param_num_c::update_dependents()
   }
 }
 
-void bx_param_num_c::set_enabled(int en)
+void bx_param_num_c::set_enabled(bool en)
 {
   // The enable handler may wish to allow/disallow the action
   if (enable_handler) {
@@ -763,7 +763,7 @@ void bx_param_enum_c::update_dependents()
   }
 }
 
-void bx_param_enum_c::set_enabled(int en)
+void bx_param_enum_c::set_enabled(bool en)
 {
   // The enable handler may wish to allow/disallow the action
   if (enable_handler) {
@@ -859,7 +859,7 @@ void bx_param_string_c::update_dependents()
   }
 }
 
-void bx_param_string_c::set_enabled(int en)
+void bx_param_string_c::set_enabled(bool en)
 {
   // The enable handler may wish to allow/disallow the action
   if (enable_handler) {
@@ -1326,7 +1326,7 @@ void bx_list_c::remove(const char *name)
   }
 }
 
-void bx_list_c::set_runtime_param(int val)
+void bx_list_c::set_runtime_param(bool val)
 {
   runtime_param = val;
   if (runtime_param) {

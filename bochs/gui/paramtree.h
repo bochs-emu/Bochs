@@ -104,8 +104,8 @@ protected:
   const char *long_text_format;  // printf format string. %d for ints, %s for strings, etc.
   char *ask_format;  // format string for asking for a new value
   char *group_name;  // name of the group the param belongs to
-  int runtime_param;
-  int enabled;
+  bool runtime_param;
+  bool enabled;
   Bit32u options;
   // The dependent_list is initialized to NULL.  If dependent_list is modified
   // to point to a bx_list_c of other parameters, the set() method of the
@@ -146,14 +146,14 @@ public:
   void set_description(const char *text);
   const char *get_description() const { return description; }
 
-  virtual void set_runtime_param(int val) { runtime_param = val; }
-  int get_runtime_param() const { return runtime_param; }
+  virtual void set_runtime_param(bool val) { runtime_param = val; }
+  bool get_runtime_param() const { return runtime_param; }
 
   void set_group(const char *group);
   const char *get_group() const {return group_name;}
 
-  int get_enabled() const { return enabled; }
-  virtual void set_enabled(int _enabled) { enabled = _enabled; }
+  bool get_enabled() const { return enabled; }
+  virtual void set_enabled(bool _enabled) { enabled = _enabled; }
 
   static const char* set_default_format(const char *f);
   static const char *get_default_format() { return default_text_format; }
@@ -180,7 +180,7 @@ public:
 typedef Bit64s (*param_event_handler)(class bx_param_c *, bool set, Bit64s val);
 typedef Bit64s (*param_save_handler)(void *devptr, class bx_param_c *);
 typedef void (*param_restore_handler)(void *devptr, class bx_param_c *, Bit64s val);
-typedef int (*param_enable_handler)(class bx_param_c *, int en);
+typedef bool (*param_enable_handler)(class bx_param_c *, bool en);
 
 class BOCHSAPI bx_param_num_c : public bx_param_c {
   BOCHSAPI_CYGONLY static Bit32u default_base;
@@ -221,7 +221,7 @@ public:
   void set_sr_handlers(void *devptr, param_save_handler save, param_restore_handler restore);
   void set_enable_handler(param_enable_handler handler) { enable_handler = handler; }
   void set_dependent_list(bx_list_c *l);
-  virtual void set_enabled(int enabled);
+  virtual void set_enabled(bool enabled);
   virtual Bit32s get() { return (Bit32s) get64(); }
   virtual Bit64s get64();
   virtual void set(Bit64s val);
@@ -367,7 +367,7 @@ public:
   void set_dependent_list(bx_list_c *l, bool enable_all);
   void set_dependent_bitmap(Bit64s value, Bit64u bitmap);
   Bit64u get_dependent_bitmap(Bit64s value);
-  virtual void set_enabled(int enabled);
+  virtual void set_enabled(bool enabled);
 #if BX_USE_TEXTCONFIG
   virtual void text_print();
   virtual int text_ask();
@@ -405,7 +405,8 @@ public:
   virtual void reset();
   void set_handler(param_string_event_handler handler);
   void set_enable_handler(param_enable_handler handler);
-  virtual void set_enabled(int enabled);
+  param_enable_handler get_enable_handler() { return enable_handler; }
+  virtual void set_enabled(bool enabled);
   void set_dependent_list(bx_list_c *l);
   Bit32s get(char *buf, int len);
   char *getptr() {return val; }
@@ -574,7 +575,7 @@ public:
   virtual void reset();
   virtual void clear();
   virtual void remove(const char *name);
-  virtual void set_runtime_param(int val);
+  virtual void set_runtime_param(bool val);
   void set_restore_handler(void *devptr, list_restore_handler restore);
   void restore();
 #if BX_USE_TEXTCONFIG
