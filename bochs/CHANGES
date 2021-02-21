@@ -11,6 +11,10 @@ Changes after 2.6.11:
   - Removed legacy "load32bitOShack" feature.
   - Removed "svga" display library designed for the obsolete Linux SVGALib.
 
+- Configure and compile
+  - Added example shortcut script for cross compiling on Linux for Windows.
+  - Visual Studio workspace files upgraded to VS2019 format.
+
 - CPU/CPUDB
   - Bugfixes for CPU emulation correctness (CPUID/VMX initialization fixes to support Windows Hyper-V as guest in Bochs)
   ! CPUID: Added TigerLake CPU definition (features CET and CLWB support)
