@@ -98,7 +98,7 @@ static Bit64s bx_param_handler(bx_param_c *param, bool set, Bit64s val)
             PLUG_unload_opt_plugin(((bx_param_enum_c*)param)->get_selected());
           }
           if (val >= BX_VGA_EXTENSION_OTHER) {
-            PLUG_load_vga_plugin(((bx_param_enum_c*)param)->get_choice(val));
+            PLUG_load_vga_plugin(((bx_param_enum_c*)param)->get_choice((int)val));
           }
         }
       }

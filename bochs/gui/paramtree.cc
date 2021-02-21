@@ -721,7 +721,7 @@ bool bx_param_enum_c::set_by_name(const char *s)
 void bx_param_enum_c::set_dependent_list(bx_list_c *l, bool enable_all)
 {
   dependent_list = l;
-  deps_bitmap = new Bit64u[max - min + 1];
+  deps_bitmap = new Bit64u[(unsigned)(max - min + 1)];
   for (int i=0; i<(max-min+1); i++) {
     if (enable_all) {
       deps_bitmap[i] = (1 << (l->get_size())) - 1;

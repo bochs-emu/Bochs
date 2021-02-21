@@ -496,11 +496,11 @@ uninstall::
 	for i in $(MAN_PAGE_1_LIST); do $(RM) -f $(man1dir)/$$i.1.gz; done
 	for i in $(MAN_PAGE_5_LIST); do $(RM) -f $(man5dir)/$$i.5.gz; done
 
-VS2013_WORKSPACE_ZIP=build/win32/vs2013ex-workspace.zip
-VS2013_WORKSPACE_FILES=vs2013/bochs.sln vs2013/*.vcxproj
+VS2019_WORKSPACE_ZIP=build/win32/vs2019-workspace.zip
+VS2019_WORKSPACE_FILES=vs2019/bochs.sln vs2019/*.vcxproj
 
-vs2013workspace:
-	zip $(VS2013_WORKSPACE_ZIP) $(VS2013_WORKSPACE_FILES)
+vs2019workspace:
+	zip $(VS2019_WORKSPACE_ZIP) $(VS2019_WORKSPACE_FILES)
 
 ########
 # the win32_snap target is used to create a ZIP of bochs sources configured
@@ -510,7 +510,7 @@ vs2013workspace:
 # "make win32_snap" to unzip the workspace files and create the ZIP.
 ########
 win32_snap:
-	unzip $(VS2013_WORKSPACE_ZIP)
+	unzip $(VS2019_WORKSPACE_ZIP)
 	$(MAKE) zip
 
 tar:
