@@ -85,7 +85,7 @@ void bx_vgacore_c::init(void)
 {
   unsigned x,y;
 
-  BX_VGA_THIS vga_ext_id = (Bit8u)SIM->get_param_enum(BXPN_VGA_EXTENSION)->get();
+  BX_VGA_THIS vga_ext = SIM->get_param_enum(BXPN_VGA_EXTENSION);
   BX_VGA_THIS pci_enabled = 0;
 
   BX_VGA_THIS init_standard_vga();

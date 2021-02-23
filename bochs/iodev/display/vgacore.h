@@ -266,7 +266,7 @@ protected:
   int timer_id;
   bool update_realtime;
   bool vsync_realtime;
-  Bit8u vga_ext_id;
+  bx_param_enum_c *vga_ext;
   bool pci_enabled;
 };
 

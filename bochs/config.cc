@@ -47,7 +47,8 @@
 
 
 const char **display_library_list;
-const char **vga_extension_list;
+const char **vga_extension_names;
+const char **vga_extension_plugins;
 int bochsrc_include_level = 0;
 
 #define LOG_THIS genlog->
@@ -62,7 +63,7 @@ static int get_floppy_type_from_image(const char *filename);
 static Bit64s bx_param_handler(bx_param_c *param, bool set, Bit64s val)
 {
   char pname[BX_PATHNAME_LEN];
-  Bit8u device;
+  Bit8u device, vga_ext_id;
   Bit64s oldval;
 
   bx_list_c *base = (bx_list_c*) param->get_parent();
@@ -94,12 +95,9 @@ static Bit64s bx_param_handler(bx_param_c *param, bool set, Bit64s val)
       if (set) {
         oldval = ((bx_param_enum_c*)param)->get();
         if (val != oldval) {
-          if (oldval >= BX_VGA_EXTENSION_OTHER) {
-            PLUG_unload_opt_plugin(((bx_param_enum_c*)param)->get_selected());
-          }
-          if (val >= BX_VGA_EXTENSION_OTHER) {
-            PLUG_load_vga_plugin(((bx_param_enum_c*)param)->get_choice((int)val));
-          }
+          vga_ext_id = (Bit8u)((bx_param_enum_c*)param)->get();
+          PLUG_unload_opt_plugin(vga_extension_plugins[vga_ext_id]);
+          PLUG_load_vga_plugin(vga_extension_plugins[(Bit8u)val]);
         }
       }
     } else if ((!strcmp(pname, BXPN_FLOPPYA_TYPE)) ||
@@ -306,16 +304,25 @@ void bx_init_displaylib_list()
 void bx_init_vgaext_list()
 {
   Bit8u i, count = 0;
+  const char *plugname;
 
   count = PLUG_get_plugins_count(PLUGTYPE_VGA);
-  vga_extension_list = (const char**) malloc((count + 4) * sizeof(char*));
-  vga_extension_list[0] = "none";
-  vga_extension_list[1] = "vbe";
-  vga_extension_list[2] = "cirrus";
+  vga_extension_names = (const char**) malloc((count + 2) * sizeof(char*));
+  vga_extension_plugins = (const char**) malloc((count + 1) * sizeof(char*));
+  vga_extension_names[0] = "none";
+  vga_extension_plugins[0] = "vga";
   for (i = 0; i < count; i++) {
-    vga_extension_list[i + 3] = PLUG_get_plugin_name(PLUGTYPE_VGA, i);
+    plugname = PLUG_get_plugin_name(PLUGTYPE_VGA, i);
+    vga_extension_plugins[i + 1] = plugname;
+    if (!strcmp(plugname, "vga")) {
+      vga_extension_names[i + 1] = "vbe";
+    } else if (!strcmp(plugname, "svga_cirrus")) {
+      vga_extension_names[i + 1] = plugname + 5;
+    } else {
+      vga_extension_names[i + 1] = plugname;
+    }
   }
-  vga_extension_list[count + 3] = NULL;
+  vga_extension_names[count + 2] = NULL;
 }
 
 void bx_init_options()
@@ -998,9 +1005,9 @@ void bx_init_options()
       "vga_extension",
       "VGA Extension",
       "Name of the VGA extension",
-      vga_extension_list,
-      BX_VGA_EXTENSION_VBE,
-      BX_VGA_EXTENSION_NONE);
+      vga_extension_names,
+      0, 0);
+  vga_extension->set_by_name("vbe");
   vga_extension->set_handler(bx_param_handler);
   display->set_options(display->SHOW_PARENT);
 

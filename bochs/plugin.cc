@@ -1025,6 +1025,10 @@ plugin_t bx_builtin_plugins[] = {
 #if BX_SUPPORT_USB_XHCI
   BUILTIN_OPT_PLUGIN_ENTRY(usb_xhci),
 #endif
+  BUILTIN_VGA_PLUGIN_ENTRY(vga),
+#if BX_SUPPORT_CLGD54XX
+  BUILTIN_VGA_PLUGIN_ENTRY(svga_cirrus),
+#endif
 #if BX_SUPPORT_VOODOO
   BUILTIN_VGA_PLUGIN_ENTRY(voodoo),
   BUILTIN_OPT_PLUGIN_ENTRY(voodoo),

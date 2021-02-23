@@ -47,17 +47,13 @@ bx_vga_c *theVga = NULL;
 PLUGIN_ENTRY_FOR_MODULE(vga)
 {
   if (mode == PLUGIN_INIT) {
-    if (type == PLUGTYPE_CORE) {
-      theVga = new bx_vga_c();
-      bx_devices.pluginVgaDevice = theVga;
-      BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theVga, BX_PLUGIN_VGA);
-    } else {
-      return -1;
-    }
+    theVga = new bx_vga_c();
+    bx_devices.pluginVgaDevice = theVga;
+    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theVga, BX_PLUGIN_VGA);
   } else if (mode == PLUGIN_FINI) {
     delete theVga;
   } else {
-    return (int)PLUGTYPE_CORE;
+    return (int)PLUGTYPE_VGA;
   }
   return 0; // Success
 }
@@ -87,7 +83,7 @@ bool bx_vga_c::init_vga_extension(void)
   BX_VGA_THIS vbe.dac_8bit = 0;
   BX_VGA_THIS vbe.ddc_enabled = 0;
   BX_VGA_THIS vbe.base_address = 0x0000;
-  if (BX_VGA_THIS vga_ext_id == BX_VGA_EXTENSION_VBE) {
+  if (!strcmp(BX_VGA_THIS vga_ext->get_selected(), "vbe")) {
     BX_VGA_THIS put("BXVGA");
     for (addr=VBE_DISPI_IOPORT_INDEX; addr<=VBE_DISPI_IOPORT_DATA; addr++) {
       DEV_register_ioread_handler(this, vbe_read_handler, addr, "vga video", 7);
