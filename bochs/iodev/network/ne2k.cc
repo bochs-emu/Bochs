@@ -208,8 +208,10 @@ PLUGIN_ENTRY_FOR_MODULE(ne2k)
       network->remove(name);
     }
     delete NE2kDevMain;
-  } else {
+  } else if (mode == PLUGIN_PROBE) {
     return (int)PLUGTYPE_OPTIONAL;
+  } else if (mode == PLUGIN_FLAGS) {
+    return PLUGFLAG_PCI;
   }
   return(0); // Success
 }

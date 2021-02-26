@@ -88,7 +88,7 @@ PLUGIN_ENTRY_FOR_MODULE(busmouse)
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theBusMouse, BX_PLUGIN_BUSMOUSE);
   } else if (mode == PLUGIN_FINI) {
     delete theBusMouse;
-  } else {
+  } else if (mode == PLUGIN_PROBE) {
     return (int)PLUGTYPE_OPTIONAL;
   }
   return 0; // Success

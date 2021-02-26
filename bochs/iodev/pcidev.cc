@@ -129,8 +129,10 @@ PLUGIN_ENTRY_FOR_MODULE(pcidev)
     bx_list_c *menu = (bx_list_c*)SIM->get_param("network");
     menu->remove("pcidev");
     delete thePciDevAdapter;
-  } else {
+  } else if (mode == PLUGIN_PROBE) {
     return (int)PLUGTYPE_OPTIONAL;
+  } else if (mode == PLUGIN_FLAGS) {
+    return PLUGFLAG_PCI;
   }
   return 0; // Success
 }

@@ -27,24 +27,25 @@
 #endif
 #endif
 
-enum plugintype_t {
-  PLUGTYPE_NULL     = 0x00,
-  PLUGTYPE_CORE     = 0x01,
-  PLUGTYPE_STANDARD = 0x02,
-  PLUGTYPE_OPTIONAL = 0x04,
-  PLUGTYPE_VGA      = 0x08,
-  PLUGTYPE_USB      = 0x80,
-  PLUGTYPE_GUI      = 0x100,
-  PLUGTYPE_IMG      = 0x200,
-  PLUGTYPE_NET      = 0x400,
-  PLUGTYPE_SND      = 0x800,
-};
+#define PLUGTYPE_NULL      0x00
+#define PLUGTYPE_CORE      0x01
+#define PLUGTYPE_STANDARD  0x02
+#define PLUGTYPE_OPTIONAL  0x04
+#define PLUGTYPE_VGA       0x08
+#define PLUGTYPE_USB       0x80
+#define PLUGTYPE_GUI      0x100
+#define PLUGTYPE_IMG      0x200
+#define PLUGTYPE_NET      0x400
+#define PLUGTYPE_SND      0x800
+
+#define PLUGFLAG_PCI 0x01
 
 #define PLUGIN_FINI  0
 #define PLUGIN_INIT  1
 #define PLUGIN_PROBE 2
+#define PLUGIN_FLAGS 3
 
-typedef int (CDECL *plugin_entry_t)(struct _plugin_t *plugin, plugintype_t type, Bit8u mode);
+typedef int (CDECL *plugin_entry_t)(struct _plugin_t *plugin, Bit16u type, Bit8u mode);
 
 typedef struct _plugin_t
 {
@@ -58,12 +59,13 @@ typedef struct _plugin_t
 #else
     const char *name;
 #endif
-    plugintype_t type;
+    Bit16u type;
+    Bit8u flags;
     plugin_entry_t plugin_entry;
     bool initialized;
-#if BX_PLUGINS
-    plugintype_t loadtype;
+    Bit16u loadtype;
 
+#if BX_PLUGINS
     struct _plugin_t *next;
 #endif
 } plugin_t;

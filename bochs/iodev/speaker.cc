@@ -146,7 +146,7 @@ PLUGIN_ENTRY_FOR_MODULE(speaker)
     SIM->unregister_addon_option("speaker");
     ((bx_list_c*)SIM->get_param("sound"))->remove("speaker");
     bx_devices.remove_sound_device();
-  } else {
+  } else if (mode == PLUGIN_PROBE) {
     return (int)PLUGTYPE_OPTIONAL;
   }
   return(0); // Success

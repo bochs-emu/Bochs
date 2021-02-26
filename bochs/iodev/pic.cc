@@ -34,16 +34,12 @@ bx_pic_c *thePic = NULL;
 PLUGIN_ENTRY_FOR_MODULE(pic)
 {
   if (mode == PLUGIN_INIT) {
-    if (type == PLUGTYPE_CORE) {
-      thePic = new bx_pic_c();
-      bx_devices.pluginPicDevice = thePic;
-      BX_REGISTER_DEVICE_DEVMODEL(plugin, type, thePic, BX_PLUGIN_PIC);
-    } else {
-      return -1;
-    }
+    thePic = new bx_pic_c();
+    bx_devices.pluginPicDevice = thePic;
+    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, thePic, BX_PLUGIN_PIC);
   } else if (mode == PLUGIN_FINI) {
     delete thePic;
-  } else {
+  } else if (mode == PLUGIN_PROBE) {
     return (int)PLUGTYPE_CORE;
   }
   return 0; // Success

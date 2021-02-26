@@ -36,16 +36,12 @@ bx_pit_c *thePit = NULL;
 PLUGIN_ENTRY_FOR_MODULE(pit)
 {
   if (mode == PLUGIN_INIT) {
-    if (type == PLUGTYPE_CORE) {
-      thePit = new bx_pit_c();
-      bx_devices.pluginPitDevice = thePit;
-      BX_REGISTER_DEVICE_DEVMODEL(plugin, type, thePit, BX_PLUGIN_PIT);
-    } else {
-      return -1;
-    }
+    thePit = new bx_pit_c();
+    bx_devices.pluginPitDevice = thePit;
+    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, thePit, BX_PLUGIN_PIT);
   } else if (mode == PLUGIN_FINI) {
     delete thePit;
-  } else {
+  } else if (mode == PLUGIN_PROBE) {
     return (int)PLUGTYPE_CORE;
   }
   return 0; // Success

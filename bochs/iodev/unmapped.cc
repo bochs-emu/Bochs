@@ -38,7 +38,7 @@ PLUGIN_ENTRY_FOR_MODULE(unmapped)
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theUnmappedDevice, BX_PLUGIN_UNMAPPED);
   } else if (mode == PLUGIN_FINI) {
     delete theUnmappedDevice;
-  } else {
+  } else if (mode == PLUGIN_PROBE) {
     return (int)PLUGTYPE_OPTIONAL;
   }
   return(0); // Success

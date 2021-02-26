@@ -178,7 +178,7 @@ PLUGIN_ENTRY_FOR_MODULE(sb16)
     SIM->unregister_addon_option("sb16");
     ((bx_list_c*)SIM->get_param("sound"))->remove("sb16");
     bx_devices.remove_sound_device();
-  } else {
+  } else if (mode == PLUGIN_PROBE) {
     return (int)PLUGTYPE_OPTIONAL;
   }
   return(0); // Success

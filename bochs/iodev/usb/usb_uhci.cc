@@ -89,8 +89,10 @@ PLUGIN_ENTRY_FOR_MODULE(usb_uhci)
     bx_list_c *menu = (bx_list_c*)SIM->get_param("ports.usb");
     delete theUSB_UHCI;
     menu->remove("uhci");
-  } else {
+  } else if (mode == PLUGIN_PROBE) {
     return (int)PLUGTYPE_OPTIONAL;
+  } else if (mode == PLUGIN_FLAGS) {
+    return PLUGFLAG_PCI;
   }
   return 0; // Success
 }

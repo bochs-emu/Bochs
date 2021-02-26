@@ -174,7 +174,7 @@ PLUGIN_ENTRY_FOR_MODULE(serial)
       sprintf(port, "%d", i+1);
       menu->remove(port);
     }
-  } else {
+  } else if (mode == PLUGIN_PROBE) {
     return (int)PLUGTYPE_OPTIONAL;
   }
   return 0; // Success

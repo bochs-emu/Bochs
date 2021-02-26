@@ -244,7 +244,7 @@ builtinRegisterDefaultIOWriteHandler(void *thisPtr, ioWriteHandler_t callback,
 /* Search for all available plugins                                           */
 /************************************************************************/
 
-void plugin_add_entry(char *pgn_name, plugintype_t type)
+void plugin_add_entry(char *pgn_name, Bit16u type, Bit8u flags)
 {
   plugin_t *plugin, *temp;
 
@@ -267,6 +267,7 @@ void plugin_add_entry(char *pgn_name, plugintype_t type)
   }
   plugin = new plugin_t;
   plugin->type = type;
+  plugin->flags = flags;
   plugin->name = pgn_name;
   plugin->loadtype = PLUGTYPE_NULL;
   plugin->initialized = 0;
@@ -306,7 +307,8 @@ void plugins_search(void)
 #endif
   char tmpname[BX_PATHNAME_LEN];
   plugin_entry_t plugin_entry;
-  plugintype_t type;
+  Bit16u type;
+  Bit8u flags;
 
 #ifndef WIN32
   setlocale(LC_ALL, "en_US");
@@ -340,8 +342,9 @@ void plugins_search(void)
             sprintf(tmpname, PLUGIN_ENTRY_FMT_STRING, pgn_name);
             plugin_entry = (plugin_entry_t) lt_dlsym(handle, tmpname);
             if (plugin_entry != NULL) {
-              type = (plugintype_t) plugin_entry(NULL, PLUGTYPE_NULL, PLUGIN_PROBE);
-              plugin_add_entry(pgn_name, type);
+              type = (Bit16u) plugin_entry(NULL, PLUGTYPE_NULL, PLUGIN_PROBE);
+              flags = (Bit8u) plugin_entry(NULL, PLUGTYPE_NULL, PLUGIN_FLAGS);
+              plugin_add_entry(pgn_name, type, flags);
             }
             lt_dlclose(handle);
           } else {
@@ -368,7 +371,7 @@ void plugins_search(void)
             sprintf(tmpname, PLUGIN_ENTRY_FMT_STRING, pgn_name);
             plugin_entry = (plugin_entry_t) GetProcAddress(handle, tmpname);
             if (plugin_entry != NULL) {
-              type = (plugintype_t) plugin_entry(NULL, PLUGTYPE_NULL, PLUGIN_PROBE);
+              type = (Bit16u) plugin_entry(NULL, PLUGTYPE_NULL, PLUGIN_PROBE);
               plugin_add_entry(pgn_name, type);
             }
             FreeLibrary(handle);
@@ -383,7 +386,7 @@ void plugins_search(void)
   delete [] pgn_path;
 }
 
-Bit8u bx_get_plugins_count(plugintype_t type)
+Bit8u bx_get_plugins_count(Bit16u type)
 {
   plugin_t *temp;
   Bit8u count = 0;
@@ -400,7 +403,7 @@ Bit8u bx_get_plugins_count(plugintype_t type)
   return count;
 }
 
-const char* bx_get_plugin_name(plugintype_t type, Bit8u index)
+const char* bx_get_plugin_name(Bit16u type, Bit8u index)
 {
   plugin_t *temp;
   int count = 0;
@@ -418,6 +421,26 @@ const char* bx_get_plugin_name(plugintype_t type, Bit8u index)
     }
   }
   return NULL;
+}
+
+Bit8u bx_get_plugin_flags(Bit16u type, Bit8u index)
+{
+  plugin_t *temp;
+  int count = 0;
+
+  if (plugins != NULL) {
+    temp = plugins;
+
+    while (temp != NULL) {
+      if ((type & temp->type) != 0) {
+        if (count == index)
+          return temp->flags;
+        count++;
+      }
+      temp = temp->next;
+    }
+  }
+  return 0;
 }
 
 /************************************************************************/
@@ -455,7 +478,7 @@ bool plugin_unload(plugin_t *plugin)
   }
 }
 
-bool plugin_load(const char *name, plugintype_t type)
+bool plugin_load(const char *name, Bit16u type)
 {
   plugin_t *plugin = NULL, *temp;
 #if defined(WIN32)
@@ -647,7 +670,7 @@ void plugin_cleanup(void)
 /* Plugin system: Device registration                                   */
 /************************************************************************/
 
-void pluginRegisterDeviceDevmodel(plugin_t *plugin, plugintype_t type, bx_devmodel_c *devmodel, const char *name)
+void pluginRegisterDeviceDevmodel(plugin_t *plugin, Bit16u type, bx_devmodel_c *devmodel, const char *name)
 {
   device_t **devlist;
 
@@ -690,7 +713,7 @@ void pluginRegisterDeviceDevmodel(plugin_t *plugin, plugintype_t type, bx_devmod
 /* Plugin system: Remove registered plugin device                       */
 /************************************************************************/
 
-void pluginUnregisterDeviceDevmodel(const char *name, plugintype_t type)
+void pluginUnregisterDeviceDevmodel(const char *name, Bit16u type)
 {
   device_t **devlist;
   device_t *device, *prev = NULL;
@@ -743,7 +766,7 @@ bool pluginDevicePresent(const char *name)
 /* Plugin system: Load one plugin                                       */
 /************************************************************************/
 
-bool bx_load_plugin(const char *name, plugintype_t type)
+bool bx_load_plugin(const char *name, Bit16u type)
 {
   plugin_t *plugin;
 
@@ -776,7 +799,7 @@ bool bx_unload_plugin(const char *name, bool devflag)
   return ret;
 }
 
-void bx_unload_plugin_type(const char *name, plugintype_t type)
+void bx_unload_plugin_type(const char *name, Bit16u type)
 {
   plugin_t *plugin;
 
@@ -935,13 +958,14 @@ void bx_plugins_after_restore_state()
 
 // Special code for handling modules when plugin support is turned off.
 
-#define BUILTIN_OPT_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_OPTIONAL, lib##mod##_plugin_entry, 0}
-#define BUILTIN_VGA_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_VGA, lib##mod##_plugin_entry, 0}
-#define BUILTIN_GUI_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_GUI, lib##mod##_gui_plugin_entry, 0}
-#define BUILTIN_IMG_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_IMG, lib##mod##_img_plugin_entry, 0}
-#define BUILTIN_NET_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_NET, libeth_##mod##_plugin_entry, 0}
-#define BUILTIN_SND_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_SND, libsound##mod##_plugin_entry, 0}
-#define BUILTIN_USB_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_USB, lib##mod##_plugin_entry, 0}
+#define BUILTIN_OPT_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_OPTIONAL, 0, lib##mod##_plugin_entry, 0}
+#define BUILTIN_OPTPCI_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_OPTIONAL, PLUGFLAG_PCI, lib##mod##_plugin_entry, 0}
+#define BUILTIN_VGA_PLUGIN_ENTRY(mod, t, f) {#mod, PLUGTYPE_VGA | t, f, lib##mod##_plugin_entry, 0}
+#define BUILTIN_GUI_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_GUI, 0, lib##mod##_gui_plugin_entry, 0}
+#define BUILTIN_IMG_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_IMG, 0, lib##mod##_img_plugin_entry, 0}
+#define BUILTIN_NET_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_NET, 0, libeth_##mod##_plugin_entry, 0}
+#define BUILTIN_SND_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_SND, 0, libsound##mod##_plugin_entry, 0}
+#define BUILTIN_USB_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_USB, 0, lib##mod##_plugin_entry, 0}
 
 plugin_t bx_builtin_plugins[] = {
 #if BX_WITH_AMIGAOS
@@ -990,10 +1014,10 @@ plugin_t bx_builtin_plugins[] = {
   BUILTIN_OPT_PLUGIN_ENTRY(busmouse),
 #endif
 #if BX_SUPPORT_E1000
-  BUILTIN_OPT_PLUGIN_ENTRY(e1000),
+  BUILTIN_OPTPCI_PLUGIN_ENTRY(e1000),
 #endif
 #if BX_SUPPORT_ES1370
-  BUILTIN_OPT_PLUGIN_ENTRY(es1370),
+  BUILTIN_OPTPCI_PLUGIN_ENTRY(es1370),
 #endif
 #if BX_SUPPORT_GAMEPORT
   BUILTIN_OPT_PLUGIN_ENTRY(gameport),
@@ -1002,36 +1026,35 @@ plugin_t bx_builtin_plugins[] = {
   BUILTIN_OPT_PLUGIN_ENTRY(iodebug),
 #endif
 #if BX_SUPPORT_NE2K
-  BUILTIN_OPT_PLUGIN_ENTRY(ne2k),
+  BUILTIN_OPTPCI_PLUGIN_ENTRY(ne2k),
 #endif
 #if BX_SUPPORT_PCIDEV
-  BUILTIN_OPT_PLUGIN_ENTRY(pcidev),
+  BUILTIN_OPTPCI_PLUGIN_ENTRY(pcidev),
 #endif
 #if BX_SUPPORT_PCIPNIC
-  BUILTIN_OPT_PLUGIN_ENTRY(pcipnic),
+  BUILTIN_OPTPCI_PLUGIN_ENTRY(pcipnic),
 #endif
 #if BX_SUPPORT_SB16
   BUILTIN_OPT_PLUGIN_ENTRY(sb16),
 #endif
 #if BX_SUPPORT_USB_UHCI
-  BUILTIN_OPT_PLUGIN_ENTRY(usb_uhci),
+  BUILTIN_OPTPCI_PLUGIN_ENTRY(usb_uhci),
 #endif
 #if BX_SUPPORT_USB_OHCI
-  BUILTIN_OPT_PLUGIN_ENTRY(usb_ohci),
+  BUILTIN_OPTPCI_PLUGIN_ENTRY(usb_ohci),
 #endif
 #if BX_SUPPORT_USB_EHCI
-  BUILTIN_OPT_PLUGIN_ENTRY(usb_ehci),
+  BUILTIN_OPTPCI_PLUGIN_ENTRY(usb_ehci),
 #endif
 #if BX_SUPPORT_USB_XHCI
-  BUILTIN_OPT_PLUGIN_ENTRY(usb_xhci),
+  BUILTIN_OPTPCI_PLUGIN_ENTRY(usb_xhci),
 #endif
-  BUILTIN_VGA_PLUGIN_ENTRY(vga),
+  BUILTIN_VGA_PLUGIN_ENTRY(vga, 0, PLUGFLAG_PCI),
 #if BX_SUPPORT_CLGD54XX
-  BUILTIN_VGA_PLUGIN_ENTRY(svga_cirrus),
+  BUILTIN_VGA_PLUGIN_ENTRY(svga_cirrus, 0, PLUGFLAG_PCI),
 #endif
 #if BX_SUPPORT_VOODOO
-  BUILTIN_VGA_PLUGIN_ENTRY(voodoo),
-  BUILTIN_OPT_PLUGIN_ENTRY(voodoo),
+  BUILTIN_VGA_PLUGIN_ENTRY(voodoo, PLUGTYPE_OPTIONAL, PLUGFLAG_PCI),
 #endif
 #if BX_SUPPORT_SOUNDLOW
   BUILTIN_SND_PLUGIN_ENTRY(dummy),
@@ -1095,26 +1118,26 @@ plugin_t bx_builtin_plugins[] = {
   {"NULL", PLUGTYPE_GUI, NULL, 0}
 };
 
-Bit8u bx_get_plugins_count_np(plugintype_t type)
+Bit8u bx_get_plugins_count_np(Bit16u type)
 {
   int i = 0;
   Bit8u count = 0;
 
   while (strcmp(bx_builtin_plugins[i].name, "NULL")) {
-    if (type == bx_builtin_plugins[i].type)
+    if ((type & bx_builtin_plugins[i].type) != 0)
       count++;
     i++;
   }
   return count;
 }
 
-const char* bx_get_plugin_name_np(plugintype_t type, Bit8u index)
+const char* bx_get_plugin_name_np(Bit16u type, Bit8u index)
 {
   int i = 0;
   Bit8u count = 0;
 
   while (strcmp(bx_builtin_plugins[i].name, "NULL")) {
-    if (type == bx_builtin_plugins[i].type) {
+    if ((type & bx_builtin_plugins[i].type) != 0) {
       if (count == index)
         return bx_builtin_plugins[i].name;
       count++;
@@ -1124,13 +1147,30 @@ const char* bx_get_plugin_name_np(plugintype_t type, Bit8u index)
   return NULL;
 }
 
-int bx_load_plugin_np(const char *name, plugintype_t type)
+Bit8u bx_get_plugin_flags_np(Bit16u type, Bit8u index)
+{
+  int i = 0;
+  Bit8u count = 0;
+
+  while (strcmp(bx_builtin_plugins[i].name, "NULL")) {
+    if ((type & bx_builtin_plugins[i].type) != 0) {
+      if (count == index)
+        return bx_builtin_plugins[i].flags;
+      count++;
+    }
+    i++;
+  }
+  return 0;
+}
+
+int bx_load_plugin_np(const char *name, Bit16u type)
 {
   int i = 0;
   while (strcmp(bx_builtin_plugins[i].name, "NULL")) {
     if ((!strcmp(name, bx_builtin_plugins[i].name)) &&
-        (type == bx_builtin_plugins[i].type)) {
+        ((type & bx_builtin_plugins[i].type) != 0)) {
       if (bx_builtin_plugins[i].initialized == 0) {
+        bx_builtin_plugins[i].loadtype = type;
         bx_builtin_plugins[i].plugin_entry(NULL, type, 1);
         bx_builtin_plugins[i].initialized = 1;
       }
@@ -1153,7 +1193,8 @@ int bx_unload_opt_plugin(const char *name, bool devflag)
           pluginUnregisterDeviceDevmodel(bx_builtin_plugins[i].name,
                                          bx_builtin_plugins[i].type);
         }
-        bx_builtin_plugins[i].plugin_entry(NULL, bx_builtin_plugins[i].type, 0);
+        bx_builtin_plugins[i].plugin_entry(NULL, bx_builtin_plugins[i].loadtype, 0);
+        bx_builtin_plugins[i].loadtype = PLUGTYPE_NULL;
         bx_builtin_plugins[i].initialized = 0;
       }
       return 1;

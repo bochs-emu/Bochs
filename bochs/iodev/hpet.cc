@@ -50,7 +50,7 @@ PLUGIN_ENTRY_FOR_MODULE(hpet)
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theHPET, BX_PLUGIN_HPET);
   } else if (mode == PLUGIN_FINI) {
     delete theHPET;
-  } else {
+  } else if (mode == PLUGIN_PROBE) {
     return (int)PLUGTYPE_STANDARD;
   }
   return(0); // Success

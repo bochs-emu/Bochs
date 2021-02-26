@@ -75,7 +75,7 @@ PLUGIN_ENTRY_FOR_MODULE(acpi)
   } else if (mode == PLUGIN_FINI) {
     bx_devices.pluginACPIController = &bx_devices.stubACPIController;
     delete theACPIController;
-  } else {
+  } else if (mode == PLUGIN_PROBE) {
     return (int)PLUGTYPE_STANDARD;
   }
   return 0; // Success

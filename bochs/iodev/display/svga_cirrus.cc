@@ -220,8 +220,10 @@ PLUGIN_ENTRY_FOR_MODULE(svga_cirrus)
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theSvga, BX_PLUGIN_CIRRUS);
   } else if (mode == PLUGIN_FINI) {
     delete theSvga;
-  } else {
+  } else if (mode == PLUGIN_PROBE) {
     return (int)PLUGTYPE_VGA;
+  } else if (mode == PLUGIN_FLAGS) {
+    return PLUGFLAG_PCI;
   }
   return 0; // Success
 }

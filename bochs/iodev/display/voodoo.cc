@@ -165,8 +165,10 @@ PLUGIN_ENTRY_FOR_MODULE(voodoo)
       delete theVoodooDevice;
       theVoodooDevice = NULL;
     }
-  } else {
+  } else if (mode == PLUGIN_PROBE) {
     return (int)(PLUGTYPE_VGA | PLUGTYPE_OPTIONAL);
+  } else if (mode == PLUGIN_FLAGS) {
+    return PLUGFLAG_PCI;
   }
   return 0; // Success
 }

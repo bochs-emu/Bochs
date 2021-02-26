@@ -384,8 +384,10 @@ PLUGIN_ENTRY_FOR_MODULE(e1000)
       network->remove(name);
     }
     delete E1000DevMain;
-  } else {
+  } else if (mode == PLUGIN_PROBE) {
     return (int)PLUGTYPE_OPTIONAL;
+  } else if (mode == PLUGIN_FLAGS) {
+    return PLUGFLAG_PCI;
   }
   return 0; // Success
 }

@@ -66,7 +66,7 @@ PLUGIN_ENTRY_FOR_MODULE(gameport)
   } else if (mode == PLUGIN_FINI) {
     bx_devices.pluginGameport = &bx_devices.stubGameport;
     delete theGameport;
-  } else {
+  } else if (mode == PLUGIN_PROBE) {
     return (int)PLUGTYPE_OPTIONAL;
   }
   return(0); // Success

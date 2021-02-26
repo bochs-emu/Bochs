@@ -85,6 +85,7 @@ extern "C" {
 
 #define PLUG_get_plugins_count(a) bx_get_plugins_count(a)
 #define PLUG_get_plugin_name(a,b) bx_get_plugin_name(a,b)
+#define PLUG_get_plugin_flags(a,b) bx_get_plugin_flags(a,b)
 #define PLUG_load_plugin(name,type) {bx_load_plugin(#name,type);}
 #define PLUG_load_plugin_var(name,type) {bx_load_plugin(name,type);}
 #define PLUG_load_gui_plugin(name) bx_load_plugin(name,PLUGTYPE_GUI)
@@ -117,6 +118,7 @@ extern "C" {
 // Builtin plugins macros
 #define PLUG_get_plugins_count(a) bx_get_plugins_count_np(a)
 #define PLUG_get_plugin_name(a,b) bx_get_plugin_name_np(a,b)
+#define PLUG_get_plugin_flags(a,b) bx_get_plugin_flags_np(a,b)
 #define PLUG_load_gui_plugin(name) bx_load_plugin_np(name,PLUGTYPE_GUI)
 #define PLUG_load_opt_plugin(name) bx_load_plugin_np(name,PLUGTYPE_OPTIONAL)
 #define PLUG_load_vga_plugin(name) bx_load_plugin_np(name,PLUGTYPE_VGA)
@@ -282,7 +284,7 @@ typedef struct _device_t
 {
     const char   *name;
     plugin_t     *plugin;
-    plugintype_t plugtype;
+    Bit16u       plugtype;
 
     class bx_devmodel_c *devmodel;  // BBD hack
 
@@ -300,8 +302,8 @@ typedef void (*deviceInitMem_t)(BX_MEM_C *);
 typedef void (*deviceInitDev_t)(void);
 typedef void (*deviceReset_t)(unsigned);
 
-BOCHSAPI void pluginRegisterDeviceDevmodel(plugin_t *plugin, plugintype_t type, bx_devmodel_c *dev, const char *name);
-BOCHSAPI void pluginUnregisterDeviceDevmodel(const char *name, plugintype_t type);
+BOCHSAPI void pluginRegisterDeviceDevmodel(plugin_t *plugin, Bit16u type, bx_devmodel_c *dev, const char *name);
+BOCHSAPI void pluginUnregisterDeviceDevmodel(const char *name, Bit16u type);
 BOCHSAPI bool pluginDevicePresent(const char *name);
 
 /* === IO port stuff === */
@@ -337,12 +339,13 @@ BOCHSAPI extern void    (*pluginSetHRQHackCallback)(void (*callback)(void));
 void plugin_abort(plugin_t *plugin);
 
 #if BX_PLUGINS
-Bit8u bx_get_plugins_count(plugintype_t type);
-const char* bx_get_plugin_name(plugintype_t type, Bit8u index);
+Bit8u bx_get_plugins_count(Bit16u type);
+const char* bx_get_plugin_name(Bit16u type, Bit8u index);
+Bit8u bx_get_plugin_flags(Bit16u type, Bit8u index);
 #endif
-bool bx_load_plugin(const char *name, plugintype_t type);
+bool bx_load_plugin(const char *name, Bit16u type);
 bool bx_unload_plugin(const char *name, bool devflag);
-extern void bx_unload_plugin_type(const char *name, plugintype_t type);
+extern void bx_unload_plugin_type(const char *name, Bit16u type);
 extern void bx_init_plugins(void);
 extern void bx_reset_plugins(unsigned);
 extern void bx_unload_plugins(void);
@@ -353,55 +356,56 @@ extern void bx_plugins_after_restore_state(void);
 #if !BX_PLUGINS
 extern plugin_t bx_builtin_plugins[];
 
-Bit8u bx_get_plugins_count_np(plugintype_t type);
-const char* bx_get_plugin_name_np(plugintype_t type, Bit8u index);
-int bx_load_plugin_np(const char *name, plugintype_t type);
+Bit8u bx_get_plugins_count_np(Bit16u type);
+const char* bx_get_plugin_name_np(Bit16u type, Bit8u index);
+Bit8u bx_get_plugin_flags_np(Bit16u type, Bit8u index);
+int bx_load_plugin_np(const char *name, Bit16u type);
 int bx_unload_opt_plugin(const char *name, bool devflag);
 #endif
 
 // every plugin must define this, within the extern"C" block, so that
 // a non-mangled function symbol is available in the shared library.
-int plugin_entry(plugin_t *plugin, plugintype_t type, Bit8u mode);
+int plugin_entry(plugin_t *plugin, Bit16u type, Bit8u mode);
 
 // still in extern "C"
 #if BX_PLUGINS && defined(WIN32)
 
 #define PLUGIN_ENTRY_FOR_MODULE(mod) \
-  extern "C" __declspec(dllexport) int __cdecl lib##mod##_plugin_entry(plugin_t *plugin, plugintype_t type, Bit8u mode)
+  extern "C" __declspec(dllexport) int __cdecl lib##mod##_plugin_entry(plugin_t *plugin, Bit16u type, Bit8u mode)
 #define PLUGIN_ENTRY_FOR_GUI_MODULE(mod) \
-  extern "C" __declspec(dllexport) int __cdecl lib##mod##_gui_plugin_entry(plugin_t *plugin, plugintype_t type, Bit8u mode)
+  extern "C" __declspec(dllexport) int __cdecl lib##mod##_gui_plugin_entry(plugin_t *plugin, Bit16u type, Bit8u mode)
 #define PLUGIN_ENTRY_FOR_IMG_MODULE(mod) \
-  extern "C" __declspec(dllexport) int __cdecl lib##mod##_img_plugin_entry(plugin_t *plugin, plugintype_t type, Bit8u mode)
+  extern "C" __declspec(dllexport) int __cdecl lib##mod##_img_plugin_entry(plugin_t *plugin, Bit16u type, Bit8u mode)
 #define PLUGIN_ENTRY_FOR_NET_MODULE(mod) \
-  extern "C" __declspec(dllexport) int __cdecl libeth_##mod##_plugin_entry(plugin_t *plugin, plugintype_t type, Bit8u mode)
+  extern "C" __declspec(dllexport) int __cdecl libeth_##mod##_plugin_entry(plugin_t *plugin, Bit16u type, Bit8u mode)
 #define PLUGIN_ENTRY_FOR_SND_MODULE(mod) \
-  extern "C" __declspec(dllexport) int __cdecl libsound##mod##_plugin_entry(plugin_t *plugin, plugintype_t type, Bit8u mode)
+  extern "C" __declspec(dllexport) int __cdecl libsound##mod##_plugin_entry(plugin_t *plugin, Bit16u type, Bit8u mode)
 
 #elif BX_PLUGINS
 
 #define PLUGIN_ENTRY_FOR_MODULE(mod) \
-  extern "C" int CDECL lib##mod##_plugin_entry(plugin_t *plugin, plugintype_t type, Bit8u mode)
+  extern "C" int CDECL lib##mod##_plugin_entry(plugin_t *plugin, Bit16u type, Bit8u mode)
 #define PLUGIN_ENTRY_FOR_GUI_MODULE(mod) \
-  extern "C" int CDECL lib##mod##_gui_plugin_entry(plugin_t *plugin, plugintype_t type, Bit8u mode)
+  extern "C" int CDECL lib##mod##_gui_plugin_entry(plugin_t *plugin, Bit16u type, Bit8u mode)
 #define PLUGIN_ENTRY_FOR_IMG_MODULE(mod) \
-  extern "C" int CDECL lib##mod##_img_plugin_entry(plugin_t *plugin, plugintype_t type, Bit8u mode)
+  extern "C" int CDECL lib##mod##_img_plugin_entry(plugin_t *plugin, Bit16u type, Bit8u mode)
 #define PLUGIN_ENTRY_FOR_NET_MODULE(mod) \
-  extern "C" int CDECL libeth_##mod##_plugin_entry(plugin_t *plugin, plugintype_t type, Bit8u mode)
+  extern "C" int CDECL libeth_##mod##_plugin_entry(plugin_t *plugin, Bit16u type, Bit8u mode)
 #define PLUGIN_ENTRY_FOR_SND_MODULE(mod) \
-  extern "C" int CDECL libsound##mod##_plugin_entry(plugin_t *plugin, plugintype_t type, Bit8u mode)
+  extern "C" int CDECL libsound##mod##_plugin_entry(plugin_t *plugin, Bit16u type, Bit8u mode)
 
 #else
 
 #define PLUGIN_ENTRY_FOR_MODULE(mod) \
-  int CDECL lib##mod##_plugin_entry(plugin_t *plugin, plugintype_t type, Bit8u mode)
+  int CDECL lib##mod##_plugin_entry(plugin_t *plugin, Bit16u type, Bit8u mode)
 #define PLUGIN_ENTRY_FOR_GUI_MODULE(mod) \
-  int CDECL lib##mod##_gui_plugin_entry(plugin_t *plugin, plugintype_t type, Bit8u mode)
+  int CDECL lib##mod##_gui_plugin_entry(plugin_t *plugin, Bit16u type, Bit8u mode)
 #define PLUGIN_ENTRY_FOR_IMG_MODULE(mod) \
-  int CDECL lib##mod##_img_plugin_entry(plugin_t *plugin, plugintype_t type, Bit8u mode)
+  int CDECL lib##mod##_img_plugin_entry(plugin_t *plugin, Bit16u type, Bit8u mode)
 #define PLUGIN_ENTRY_FOR_NET_MODULE(mod) \
-  int CDECL libeth_##mod##_plugin_entry(plugin_t *plugin, plugintype_t type, Bit8u mode)
+  int CDECL libeth_##mod##_plugin_entry(plugin_t *plugin, Bit16u type, Bit8u mode)
 #define PLUGIN_ENTRY_FOR_SND_MODULE(mod) \
-  int CDECL libsound##mod##_plugin_entry(plugin_t *plugin, plugintype_t type, Bit8u mode)
+  int CDECL libsound##mod##_plugin_entry(plugin_t *plugin, Bit16u type, Bit8u mode)
 
 // device plugins
 PLUGIN_ENTRY_FOR_MODULE(harddrv);

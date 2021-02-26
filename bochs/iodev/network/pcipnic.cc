@@ -111,8 +111,10 @@ PLUGIN_ENTRY_FOR_MODULE(pcipnic)
     bx_list_c *menu = (bx_list_c*)SIM->get_param("network");
     menu->remove("pnic");
     delete thePNICDevice;
-  } else {
+  } else if (mode == PLUGIN_PROBE) {
     return (int)PLUGTYPE_OPTIONAL;
+  } else if (mode == PLUGIN_FLAGS) {
+    return PLUGFLAG_PCI;
   }
   return 0; // Success
 }

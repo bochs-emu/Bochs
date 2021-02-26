@@ -65,7 +65,7 @@ PLUGIN_ENTRY_FOR_MODULE(keyboard)
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theKeyboard, BX_PLUGIN_KEYBOARD);
   } else if (mode == PLUGIN_FINI) {
     delete theKeyboard;
-  } else {
+  } else if (mode == PLUGIN_PROBE) {
     return (int)PLUGTYPE_STANDARD;
   }
   return 0; // Success

@@ -52,8 +52,10 @@ PLUGIN_ENTRY_FOR_MODULE(vga)
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theVga, BX_PLUGIN_VGA);
   } else if (mode == PLUGIN_FINI) {
     delete theVga;
-  } else {
+  } else if (mode == PLUGIN_PROBE) {
     return (int)PLUGTYPE_VGA;
+  } else if (mode == PLUGIN_FLAGS) {
+    return PLUGFLAG_PCI;
   }
   return 0; // Success
 }

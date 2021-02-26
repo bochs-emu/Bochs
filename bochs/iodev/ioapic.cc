@@ -43,7 +43,7 @@ PLUGIN_ENTRY_FOR_MODULE(ioapic)
   } else if (mode == PLUGIN_FINI) {
     bx_devices.pluginIOAPIC = &bx_devices.stubIOAPIC;
     delete theIOAPIC;
-  } else {
+  } else if (mode == PLUGIN_PROBE) {
     return (int)PLUGTYPE_STANDARD;
   }
   return(0); // Success

@@ -49,7 +49,7 @@ PLUGIN_ENTRY_FOR_MODULE(pci_ide)
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, thePciIdeController, BX_PLUGIN_PCI_IDE);
   } else if (mode == PLUGIN_FINI) {
     delete thePciIdeController;
-  } else {
+  } else if (mode == PLUGIN_PROBE) {
     return (int)PLUGTYPE_STANDARD;
   }
   return(0); // Success

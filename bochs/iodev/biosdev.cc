@@ -52,7 +52,7 @@ PLUGIN_ENTRY_FOR_MODULE(biosdev)
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theBiosDevice, BX_PLUGIN_BIOSDEV);
   } else if (mode == PLUGIN_FINI) {
     delete theBiosDevice;
-  } else {
+  } else if (mode == PLUGIN_PROBE) {
     return (int)PLUGTYPE_OPTIONAL;
   }
   return(0); // Success

@@ -44,7 +44,7 @@ PLUGIN_ENTRY_FOR_MODULE(iodebug)
   } else if (mode == PLUGIN_FINI) {
     bx_devices.pluginIODebug = &bx_devices.stubIODebug;
     delete theIODebugDevice;
-  } else {
+  } else if (mode == PLUGIN_PROBE) {
     return (int)PLUGTYPE_OPTIONAL;
   }
   return(0); // Success

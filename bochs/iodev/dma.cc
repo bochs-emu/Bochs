@@ -40,16 +40,12 @@ bx_dma_c *theDmaDevice = NULL;
 PLUGIN_ENTRY_FOR_MODULE(dma)
 {
   if (mode == PLUGIN_INIT) {
-    if (type == PLUGTYPE_CORE) {
-      theDmaDevice = new bx_dma_c ();
-      bx_devices.pluginDmaDevice = theDmaDevice;
-      BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theDmaDevice, BX_PLUGIN_DMA);
-    } else {
-      return -1;
-    }
+    theDmaDevice = new bx_dma_c ();
+    bx_devices.pluginDmaDevice = theDmaDevice;
+    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theDmaDevice, BX_PLUGIN_DMA);
   } else if (mode == PLUGIN_FINI) {
     delete theDmaDevice;
-  } else {
+  } else if (mode == PLUGIN_PROBE) {
     return (int)PLUGTYPE_CORE;
   }
   return 0; // Success
