@@ -49,6 +49,7 @@
 const char **display_library_list;
 const char **vga_extension_names;
 const char **vga_extension_plugins;
+const char **pcislot_dev_list;
 int bochsrc_include_level = 0;
 
 #define LOG_THIS genlog->
@@ -323,6 +324,31 @@ void bx_init_vgaext_list()
     }
   }
   vga_extension_names[count + 2] = NULL;
+}
+
+void bx_init_pcidev_list()
+{
+  Bit8u i, j, count, flags;
+  const Bit16u mask = PLUGTYPE_VGA | PLUGTYPE_OPTIONAL;
+  const char *plugname;
+
+  count = PLUG_get_plugins_count(mask);
+  pcislot_dev_list = (const char**) malloc((count + 2) * sizeof(char*));
+  pcislot_dev_list[0] = "none";
+  j = 1;
+  for (i = 0; i < count; i++) {
+    plugname = PLUG_get_plugin_name(mask, i);
+    flags = PLUG_get_plugin_flags(mask, i);
+    if ((flags & PLUGFLAG_PCI) != 0) {
+      if (!strcmp(plugname, "vga")) {
+        plugname = "pcivga";
+      } else if (!strcmp(plugname, "svga_cirrus")) {
+        plugname = "cirrus";
+      }
+      pcislot_dev_list[j++] = plugname;
+    }
+  }
+  pcislot_dev_list[j] = NULL;
 }
 
 void bx_init_options()
@@ -928,17 +954,19 @@ void bx_init_options()
       BX_PCI_CHIPSET_I430FX);
   deplist->add(pci_chipset);
   // pci slots
+  bx_init_pcidev_list();
   bx_list_c *slot = new bx_list_c(pci, "slot", "PCI Slots");
   deplist->add(slot);
   for (i=0; i<BX_N_PCI_SLOTS; i++) {
     sprintf(name, "%d", i+1);
     sprintf (descr, "Name of the device connected to PCI slot #%d", i+1);
     sprintf (label, "PCI slot #%d device", i+1);
-    bx_param_string_c *devname = new bx_param_string_c(slot,
+    bx_param_enum_c *devname = new bx_param_enum_c(slot,
         name,
         label,
         descr,
-        "", BX_PATHNAME_LEN);
+        pcislot_dev_list,
+        0, 0);
     deplist->add(devname);
   }
   bx_param_string_c *advopts = new bx_param_string_c(pci, "advopts", "Advanced PCI Options",
@@ -2893,7 +2921,11 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         slot = atol(&params[i][4]);
         if ((slot > 0) && (slot < 6)) {
           sprintf(tmpdev, "pci.slot.%d", slot);
-          SIM->get_param_string(tmpdev)->set(&params[i][6]);
+          if (strlen(&params[i][6]) > 0) {
+            SIM->get_param_enum(tmpdev)->set_by_name(&params[i][6]);
+          } else {
+            SIM->get_param_enum(tmpdev)->set_by_name("none");
+          }
         } else {
           BX_ERROR(("%s: unknown pci slot number ignored.", context));
         }
@@ -3377,14 +3409,11 @@ int bx_write_configuration(const char *rc, int overwrite)
     fprintf(fp, ", chipset=%s", SIM->get_param_enum(BXPN_PCI_CHIPSET)->get_selected());
     for (i=0; i<BX_N_PCI_SLOTS; i++) {
       sprintf(tmpdev, "pci.slot.%d", i+1);
-      sparam = SIM->get_param_string(tmpdev);
-      if (!sparam->isempty()) {
-        fprintf(fp, ", slot%d=%s", i+1, sparam->getptr());
-      }
+      fprintf(fp, ", slot%d=%s", i+1, SIM->get_param_enum(tmpdev)->get_selected());
     }
     sparam = SIM->get_param_string(BXPN_PCI_ADV_OPTS);
     if (strlen(sparam->getptr()) > 0) {
-      fprintf(fp, ", advopts=%s", sparam->getptr());
+      fprintf(fp, ", advopts=\"%s\"", sparam->getptr());
     }
   }
   fprintf(fp, "\n");

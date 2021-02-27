@@ -359,20 +359,20 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 #if BX_SUPPORT_PCI
   // verify PCI slot configuration
   char devname[80];
-  char *device;
+  const char *device;
 
   if (pci.enabled) {
     if (chipset == BX_PCI_CHIPSET_I440BX) {
-      device = SIM->get_param_string("pci.slot.5")->getptr();
-      if ((strlen(device) > 0) && !pci.slot_used[4]) {
+      device = SIM->get_param_enum("pci.slot.5")->get_selected();
+      if (strcmp(device, "none") && !pci.slot_used[4]) {
         BX_PANIC(("Unknown plugin '%s' at AGP slot", device));
       }
       max_pci_slots = 4;
     }
     for (i = 0; i < max_pci_slots; i++) {
       sprintf(devname, "pci.slot.%d", i+1);
-      device = SIM->get_param_string(devname)->getptr();
-      if ((strlen(device) > 0) && !pci.slot_used[i]) {
+      device = SIM->get_param_enum(devname)->get_selected();
+      if (strcmp(device, "none") && !pci.slot_used[i]) {
         BX_PANIC(("Unknown plugin '%s' at PCI slot #%d", device, i+1));
       }
     }
@@ -1355,7 +1355,7 @@ bool bx_devices_c::register_pci_handlers(bx_pci_device_c *dev,
   int first_free_slot = -1;
   Bit16u bus_devfunc = *devfunc;
   char devname[80];
-  char *device;
+  const char *device;
 
   if (strcmp(name, "pci") && strcmp(name, "pci2isa") && strcmp(name, "pci_ide")
       && ((*devfunc & 0xf8) == 0x00)) {
@@ -1365,8 +1365,8 @@ bool bx_devices_c::register_pci_handlers(bx_pci_device_c *dev,
     if (bus == 0) {
       for (i = 0; i < max_pci_slots; i++) {
         sprintf(devname, "pci.slot.%d", i+1);
-        device = SIM->get_param_string(devname)->getptr();
-        if (strlen(device) > 0) {
+        device = SIM->get_param_enum(devname)->get_selected();
+        if (strcmp(device, "none")) {
           if (!strcmp(name, device) && !pci.slot_used[i]) {
             *devfunc = ((i + pci.map_slot_to_dev) << 3) | (*devfunc & 0x07);
             pci.slot_used[i] = 1;
@@ -1382,7 +1382,7 @@ bool bx_devices_c::register_pci_handlers(bx_pci_device_c *dev,
         if (first_free_slot != -1) {
           i = (unsigned)first_free_slot;
           sprintf(devname, "pci.slot.%d", i+1);
-          SIM->get_param_string(devname)->set(name);
+          SIM->get_param_enum(devname)->set_by_name(name);
           *devfunc = ((i + pci.map_slot_to_dev) << 3) | (*devfunc & 0x07);
           pci.slot_used[i] = 1;
           BX_INFO(("PCI slot #%d used by plugin '%s'", i+1, name));
