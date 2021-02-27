@@ -1116,7 +1116,7 @@ plugin_t bx_builtin_plugins[] = {
   BUILTIN_IMG_PLUGIN_ENTRY(vbox),
   BUILTIN_IMG_PLUGIN_ENTRY(vpc),
   BUILTIN_IMG_PLUGIN_ENTRY(vvfat),
-  {"NULL", PLUGTYPE_GUI, NULL, 0}
+  {"NULL", PLUGTYPE_GUI, 0, NULL, 0}
 };
 
 Bit8u bx_get_plugins_count_np(Bit16u type)

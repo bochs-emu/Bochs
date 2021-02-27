@@ -5,7 +5,7 @@
  * QEMU compatibility functions
  *
  * Copyright (c) 2003-2008  Fabrice Bellard
- * Copyright (C) 2014-2020  The Bochs Project
+ * Copyright (C) 2014-2021  The Bochs Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -69,7 +69,15 @@ void qemu_set_nonblock(int fd)
 #ifndef HAVE_INET_ATON
 int inet_aton(const char *cp, struct in_addr *ia)
 {
-  uint32_t addr = inet_addr(cp);
+  uint32_t addr;
+
+#if defined(_MSC_VER)
+  if (!inet_pton(AF_INET, cp, &addr)) {
+    return 0;
+  }
+#else
+  addr = inet_addr(cp);
+#endif
   if (addr == 0xffffffff) {
     return 0;
   }
