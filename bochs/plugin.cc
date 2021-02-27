@@ -372,7 +372,8 @@ void plugins_search(void)
             plugin_entry = (plugin_entry_t) GetProcAddress(handle, tmpname);
             if (plugin_entry != NULL) {
               type = (Bit16u) plugin_entry(NULL, PLUGTYPE_NULL, PLUGIN_PROBE);
-              plugin_add_entry(pgn_name, type);
+              flags = (Bit8u) plugin_entry(NULL, PLUGTYPE_NULL, PLUGIN_FLAGS);
+              plugin_add_entry(pgn_name, type, flags);
             }
             FreeLibrary(handle);
           }
