@@ -2867,7 +2867,7 @@ Running upon the current BIOS-bochs-legacy <command>biossums</command> displays:
 <screen>
 PCI-Bios header at: 0x9610
 Current checksum:     0x17
-Calculated checksum:  0x17  
+Calculated checksum:  0x17
 
 
 $PIR header at:     0x99C0
@@ -2929,6 +2929,166 @@ signatures. For now this seems not to be necessary; in practice no double
 signatures have been observed yet.
 </para>
 </section>
+</section>
+</section>
+<section id="bochsplugins"><title>The Bochs plugin interface</title>
+<section><title>Introduction</title>
+<para>
+By default Bochs is compiled as one single executable file providing all
+features enabled at compile time. To add a new feature (device, gui, driver)
+several files need to be modified (configure script, makefile, some headers)
+and the complete build process must be performed. As an alternative, Bochs
+can be compiled as an executable file containing the core funtionality and a
+number of loadable modules providing device emulation, display library (gui)
+features or drivers for some features. On Windows platforms such a module is
+called DLL, others platforms like Linux call it shared library. Bochs uses the
+environment variable LTDL_LIBARY_PATH to search for plugins. To build Bochs in
+this mode, the configure option <option>--enable-plugins</option> must be used.
+In this mode it is possible to add externally developed extensions
+(AKA "user plugins"). Rebuilding the whole project is not necessary in that
+case. Basically these plugin types are currently supported by the plugin
+interface:
+<itemizedlist>
+<listitem><para>i/o device</para></listitem>
+<listitem><para>pluggable USB device</para></listitem>
+<listitem><para>display library (gui)</para></listitem>
+<listitem><para>disk image format (mode)</para></listitem>
+<listitem><para>networking module</para></listitem>
+<listitem><para>lowlevel sound module</para></listitem>
+</itemizedlist>
+</para>
+</section>
+<section><title>Plugin types</title>
+<para>
+Device plugins are categorized into some types depending on their purpose. Some
+devices are mandatory for the x86 PC emulation or need to be initialized early
+to make other device work correctly. A plugin can be loaded only one single
+time, but some types may create multiple objects. This is the full list of
+plugin types defined in <filename>extplugin.h</filename> with some description:
+<table>
+<title>Plugin types</title>
+<tgroup cols="3">
+<thead>
+<row>
+<entry>Type</entry>
+<entry>Description</entry>
+<entry>Remarks</entry>
+</row>
+</thead>
+<tbody>
+<row>
+<entry>PLUGTYPE_CORE</entry>
+<entry>Core device plugin, always required or depending on core option, highest priority in init order</entry>
+<entry>Single device only</entry>
+</row>
+<row>
+<entry>PLUGTYPE_STANDARD</entry>
+<entry>Device plugin, mostly required or depending on core plugins, lower priority in init order</entry>
+<entry>Single device only</entry>
+</row>
+<row>
+<entry>PLUGTYPE_OPTIONAL</entry>
+<entry>Device plugin depending on normal config option</entry>
+<entry>Network plugins can create up to 4 devices</entry>
+</row>
+<row>
+<entry>PLUGTYPE_VGA</entry>
+<entry>VGA-compatible device plugin selected with vga extension option</entry>
+<entry>Only one plugin of this type loaded</entry>
+</row>
+<row>
+<entry>PLUGTYPE_USB</entry>
+<entry>USB device plugin selected with the port<replaceable>X</replaceable> parameter of the host controller option</entry>
+<entry>Number of devices per plugin not limited</entry>
+</row>
+<row>
+<entry>PLUGTYPE_GUI</entry>
+<entry>Display library (gui) plugin selected with the display library option</entry>
+<entry>Only one plugin of this type loaded</entry>
+</row>
+<row>
+<entry>PLUGTYPE_IMG</entry>
+<entry>Additional disk image format selected with the "mode" parameter when setting up a disk image</entry>
+<entry>Number of drivers per plugin not limited</entry>
+</row>
+<row>
+<entry>PLUGTYPE_NET</entry>
+<entry>Networking driver / emulation module selected with the "ethmod" parameter of the NIC options</entry>
+<entry>Some of the plugins can create multiple modules</entry>
+</row>
+<row>
+<entry>PLUGTYPE_SND</entry>
+<entry>Sound driver selected with the sound option</entry>
+<entry>Only one plugin of this type loaded</entry>
+</row>
+</tbody>
+</tgroup>
+</table>
+</para>
+</section>
+<section><title>The plugin entry function</title>
+<para>
+Each plugin has an entry function that is called during plugin detection, after
+loading and before unloading the modules. For compatiblity with the "monolithic"
+Bochs compilation each plugin must have a unique name. When plugins are disabled,
+the macros for loading / unloading the plugin directly call the plugin entry
+function. The entry function can be called with these mode arguments:
+<itemizedlist>
+<listitem><para>PLUGIN_PROBE returns the plugin type as defined above</para></listitem>
+<listitem><para>PLUGIN_FLAGS returns flags associated with the plugin</para></listitem>
+<listitem><para>PLUGIN_INIT is called after loading the plugin</para></listitem>
+<listitem><para>PLUGIN_FINI is called before unloading the plugin</para></listitem>
+</itemizedlist>
+At Bochs startup, but before initializing the config options, it searches the
+plugin paths for modules with the correct file name format and the expected
+entry function name. Each valid plugin is temporarily loaded and then the plugin
+type and flags are read. The plugin interface builds up a database with all
+information for loading detected modules later on demand. A plugin can return
+multiple types, but it can only be loaded with one of it (currently on used by
+the "voodoo" plugin). The flags can be used to indicate specific capabilities
+of the plugin (currently on used for device plugins that can be connected to a
+PCI slot).
+</para>
+<para>
+To simplify the naming of the plugin entry function some macros have been
+defined. This example shows how the entry function is defined for normal device
+plugins on platforms other than Windows:
+<screen>
+#define PLUGIN_ENTRY_FOR_MODULE(mod) \
+  extern "C" int CDECL lib##mod##_plugin_entry(plugin_t *plugin, Bit16u type, Bit8u mode)
+</screen>
+Please see <filename>plugin.h</filename> for all supported definitions of the
+entry function. The example below shows the plugin-related section
+of the "unmapped" device.
+<screen>
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
+#include "iodev.h"
+#include "unmapped.h"
+
+#define LOG_THIS theUnmappedDevice->
+
+bx_unmapped_c *theUnmappedDevice = NULL;
+
+PLUGIN_ENTRY_FOR_MODULE(unmapped)
+{
+  if (mode == PLUGIN_INIT) {
+    theUnmappedDevice = new bx_unmapped_c();
+    BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theUnmappedDevice, BX_PLUGIN_UNMAPPED);
+  } else if (mode == PLUGIN_FINI) {
+    delete theUnmappedDevice;
+  } else if (mode == PLUGIN_PROBE) {
+    return (int)PLUGTYPE_OPTIONAL;
+  }
+  return(0); // Success
+}
+</screen>
+</para>
+<para>
+&FIXME; To be continued
+</para>
 </section>
 </section>
 
