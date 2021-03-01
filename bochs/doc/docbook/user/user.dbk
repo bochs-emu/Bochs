@@ -2182,15 +2182,6 @@ SMP, x86_64 support) and the devices options (e.g. PCI, USB, Cirrus graphics).
       </entry>
     </row>
     <row>
-      <entry>--enable-disasm</entry>
-      <entry>yes</entry>
-      <entry>Compile in support for built-in disassembler.  Bochs has
-          a built-in disassembler, which is useful if you either
-          run the built-in debugger (<option>--enable-debugger</option>), or want
-          disassembly of the current instruction when there is a
-          panic in bochs.</entry>
-    </row>
-    <row>
       <entry>--enable-docbook</entry>
       <entry>detected</entry>
       <entry>
@@ -6472,10 +6463,10 @@ section how to enable it.
 
 <para>
 To use the debugger, you must configure Bochs with the
-<option>--enable-debugger</option> and <option>--enable-disasm</option> flags.
+<option>--enable-debugger</option> flag.
 For example:
 <screen>
-  ./configure --enable-debugger --enable-disasm
+  ./configure --enable-debugger
 </screen>
 </para>
 
@@ -6827,10 +6818,10 @@ is available for Windows and GTK2/GTK3 hosts.
 </para>
 <para>
 To use the gui debugger, you must configure Bochs with the
-default debugger switches and the <option>--enable-debugger-gui</option> flag.
+default debugger switch and the <option>--enable-debugger-gui</option> flag.
 For example:
 <screen>
-  ./configure --enable-debugger --enable-disasm --enable-debugger-gui
+  ./configure --enable-debugger --enable-debugger-gui
 </screen>
 </para>
 <para>

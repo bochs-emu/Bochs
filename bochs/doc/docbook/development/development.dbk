@@ -211,7 +211,6 @@ These componnents of Bochs are optional:
 <itemizedlist>
 <listitem><para>the plugin interface</para></listitem>
 <listitem><para>the builtin debugger</para></listitem>
-<listitem><para>the disassembler</para></listitem>
 <listitem><para>the instrumentation feature</para></listitem>
 </itemizedlist>
 </para>
@@ -872,6 +871,44 @@ the <ulink url="../user/bochsrc.html#BOCHSOPT-CPU-IPS">IPS</ulink> value.
 &FIXME; To be continued
 </para>
 </section>
+</section>
+
+<section id="devmodel"><title>The Bochs devices base class <emphasis>bx_devmodel_c</emphasis></title>
+<para>
+All devices models located on or connected to the Bochs "mainboard" are based on
+the <emphasis>bx_devmodel_c</emphasis> class. It is defined in <filename>iodev.h</filename>
+and it has been introduced along with the plugin interface. That's why the
+device registration code is still located in <filename>plugin.cc</filename>, but
+it is present independent from the <emphasis>--enable-plugins</emphasis> switch.
+Some code in <filename>devices.cc</filename> uses the device registration to
+initialize or reset all devices. It also calls required methods of the save/restore
+feature. If the debugger is present, a device can resister a method to dump it's
+status. This is the definition of this class:
+<screen>
+class BOCHSAPI bx_devmodel_c : public logfunctions {
+  public:
+  virtual ~bx_devmodel_c() {}
+  virtual void init(void) {}
+  virtual void reset(unsigned type) {}
+  virtual void register_state(void) {}
+  virtual void after_restore_state(void) {}
+#if BX_DEBUGGER
+  virtual void debug_dump(int argc, char **argv) {}
+#endif
+};
+</screen>
+</para>
+<para>
+A device registers it registers itself in the module / plugin init code. In the
+plugins case the unregister function is called before unloading the plugin.
+These are the macro definitions that point to functions for registering /
+unregistering a device and for checking whether or not a device is registered:
+<screen>
+#define BX_REGISTER_DEVICE_DEVMODEL(a,b,c,d) pluginRegisterDeviceDevmodel(a,b,c,d)
+#define BX_UNREGISTER_DEVICE_DEVMODEL(a,b) pluginUnregisterDeviceDevmodel(a,b)
+#define PLUG_device_present(a) pluginDevicePresent(a)
+</screen>
+</para>
 </section>
 
 <section id="cmos-map"><title>Bochs's CMOS map</title>
@@ -2946,7 +2983,7 @@ environment variable LTDL_LIBARY_PATH to search for plugins. To build Bochs in
 this mode, the configure option <option>--enable-plugins</option> must be used.
 In this mode it is possible to add externally developed extensions
 (AKA "user plugins"). Rebuilding the whole project is not necessary in that
-case. Basically these plugin types are currently supported by the plugin
+case. Basically these Bochs facilities are currently supported by the plugin
 interface:
 <itemizedlist>
 <listitem><para>i/o device</para></listitem>
@@ -2972,6 +3009,8 @@ plugin types defined in <filename>extplugin.h</filename> with some description:
 <row>
 <entry>Type</entry>
 <entry>Description</entry>
+<entry>Entry function name</entry>
+<entry>Base C++ class used</entry>
 <entry>Remarks</entry>
 </row>
 </thead>
@@ -2979,47 +3018,65 @@ plugin types defined in <filename>extplugin.h</filename> with some description:
 <row>
 <entry>PLUGTYPE_CORE</entry>
 <entry>Core device plugin, always required or depending on core option, highest priority in init order</entry>
+<entry>lib<emphasis>module</emphasis>_plugin_entry</entry>
+<entry>bx_devmodel_c</entry>
 <entry>Single device only</entry>
 </row>
 <row>
 <entry>PLUGTYPE_STANDARD</entry>
 <entry>Device plugin, mostly required or depending on core plugins, lower priority in init order</entry>
+<entry>lib<emphasis>module</emphasis>_plugin_entry</entry>
+<entry>bx_devmodel_c</entry>
 <entry>Single device only</entry>
 </row>
 <row>
 <entry>PLUGTYPE_OPTIONAL</entry>
 <entry>Device plugin depending on normal config option</entry>
+<entry>lib<emphasis>module</emphasis>_plugin_entry</entry>
+<entry>bx_devmodel_c</entry>
 <entry>Network plugins can create up to 4 devices</entry>
 </row>
 <row>
 <entry>PLUGTYPE_VGA</entry>
 <entry>VGA-compatible device plugin selected with vga extension option</entry>
-<entry>Only one plugin of this type loaded</entry>
+<entry>lib<emphasis>module</emphasis>_plugin_entry</entry>
+<entry>bx_vgacore_c</entry>
+<entry>One plugin per type only</entry>
 </row>
 <row>
 <entry>PLUGTYPE_USB</entry>
 <entry>USB device plugin selected with the port<replaceable>X</replaceable> parameter of the host controller option</entry>
+<entry>lib<emphasis>module</emphasis>_plugin_entry</entry>
+<entry>usb_device_c</entry>
 <entry>Number of devices per plugin not limited</entry>
 </row>
 <row>
 <entry>PLUGTYPE_GUI</entry>
 <entry>Display library (gui) plugin selected with the display library option</entry>
-<entry>Only one plugin of this type loaded</entry>
+<entry>lib<emphasis>module</emphasis>_gui_plugin_entry</entry>
+<entry>bx_gui_c</entry>
+<entry>One plugin per type only</entry>
 </row>
 <row>
 <entry>PLUGTYPE_IMG</entry>
 <entry>Additional disk image format selected with the "mode" parameter when setting up a disk image</entry>
-<entry>Number of drivers per plugin not limited</entry>
+<entry>lib<emphasis>module</emphasis>_img_plugin_entry</entry>
+<entry>device_image_t</entry>
+<entry>Usage of all modules not limited</entry>
 </row>
 <row>
 <entry>PLUGTYPE_NET</entry>
 <entry>Networking driver / emulation module selected with the "ethmod" parameter of the NIC options</entry>
-<entry>Some of the plugins can create multiple modules</entry>
+<entry>libeth_<emphasis>module</emphasis>_plugin_entry</entry>
+<entry>eth_pktmover_c</entry>
+<entry>Some modules can create multiple instances</entry>
 </row>
 <row>
 <entry>PLUGTYPE_SND</entry>
 <entry>Sound driver selected with the sound option</entry>
-<entry>Only one plugin of this type loaded</entry>
+<entry>libsound<emphasis>module</emphasis>_plugin_entry</entry>
+<entry>bx_sound_lowlevel_c</entry>
+<entry>One plugin per type only</entry>
 </row>
 </tbody>
 </tgroup>
@@ -3034,7 +3091,7 @@ Bochs compilation each plugin must have a unique name. When plugins are disabled
 the macros for loading / unloading the plugin directly call the plugin entry
 function. The entry function can be called with these mode arguments:
 <itemizedlist>
-<listitem><para>PLUGIN_PROBE returns the plugin type as defined above</para></listitem>
+<listitem><para>PLUGIN_PROBE returns the plugin type as defined above (mandatory for all plugins)</para></listitem>
 <listitem><para>PLUGIN_FLAGS returns flags associated with the plugin</para></listitem>
 <listitem><para>PLUGIN_INIT is called after loading the plugin</para></listitem>
 <listitem><para>PLUGIN_FINI is called before unloading the plugin</para></listitem>
@@ -3047,7 +3104,7 @@ information for loading detected modules later on demand. A plugin can return
 multiple types, but it can only be loaded with one of it (currently on used by
 the "voodoo" plugin). The flags can be used to indicate specific capabilities
 of the plugin (currently on used for device plugins that can be connected to a
-PCI slot).
+PCI slot). For unimplemented modes the entry function needs to return 0.
 </para>
 <para>
 To simplify the naming of the plugin entry function some macros have been
