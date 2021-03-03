@@ -152,6 +152,7 @@ const char *bx_param_string_handler(bx_param_string_c *param, bool set,
   return val;
 }
 
+#if BX_NETWORKING
 void bx_init_std_nic_options(const char *name, bx_list_c *menu)
 {
   bx_param_enum_c *ethmod;
@@ -194,7 +195,9 @@ void bx_init_std_nic_options(const char *name, bx_list_c *menu)
     "", BX_PATHNAME_LEN);
   bootrom->set_format("Name of boot ROM image: %s");
 }
+#endif
 
+#if BX_SUPPORT_PCIUSB
 void bx_init_usb_options(const char *usb_name, const char *pname, int maxports)
 {
   char group[16], name[8], descr[512], label[512];
@@ -238,6 +241,7 @@ void bx_init_usb_options(const char *usb_name, const char *pname, int maxports)
   }
   enabled->set_dependent_list(deplist);
 }
+#endif
 
 void bx_plugin_ctrl_init()
 {
@@ -1697,9 +1701,11 @@ void bx_init_options()
   bx_list_c *cdrom = new bx_list_c(menu, "cdrom", "CD-ROM options");
   cdrom->set_runtime_param(1);
   cdrom->set_options(cdrom->SHOW_PARENT);
+#if BX_SUPPORT_PCIUSB
   usb = new bx_list_c(menu, "usb", "USB options");
   usb->set_runtime_param(1);
   usb->set_options(usb->SHOW_PARENT | usb->USE_TAB_WINDOW);
+#endif
   // misc runtime options
   misc = new bx_list_c(menu, "misc", "Misc options");
   misc->set_runtime_param(1);
@@ -3231,6 +3237,7 @@ int bx_write_floppy_options(FILE *fp, int drive)
   return 0;
 }
 
+#if BX_SUPPORT_PCIUSB
 int bx_write_usb_options(FILE *fp, int maxports, bx_list_c *base)
 {
   int i;
@@ -3250,6 +3257,7 @@ int bx_write_usb_options(FILE *fp, int maxports, bx_list_c *base)
   fprintf(fp, "\n");
   return 0;
 }
+#endif
 
 int bx_write_clock_cmos_options(FILE *fp)
 {

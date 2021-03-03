@@ -213,15 +213,21 @@ public:
   virtual bool restore_bochs_param(bx_list_c *root, const char *sr_path, const char *restore_name);
   // special config parameter and options functions for plugins
   virtual bool opt_plugin_ctrl(const char *plugname, bool load);
+#if BX_NETWORKING
   virtual void init_std_nic_options(const char *name, bx_list_c *menu);
+#endif
+#if BX_SUPPORT_PCIUSB
   virtual void init_usb_options(const char *usb_name, const char *pname, int maxports);
+#endif
   virtual int  parse_param_from_list(const char *context, const char *param, bx_list_c *base);
   virtual int  parse_nic_params(const char *context, const char *param, bx_list_c *base);
   virtual int  parse_usb_port_params(const char *context, const char *param,
                                      int maxports, bx_list_c *base);
   virtual int  split_option_list(const char *msg, const char *rawopt, char **argv, int max_argv);
   virtual int  write_param_list(FILE *fp, bx_list_c *base, const char *optname, bool multiline);
+#if BX_SUPPORT_PCIUSB
   virtual int  write_usb_options(FILE *fp, int maxports, bx_list_c *base);
+#endif
 #if BX_USE_GUI_CONSOLE
   virtual int  bx_printf(const char *fmt, ...);
   virtual char* bx_gets(char *s, int size, FILE *stream);
@@ -1463,15 +1469,20 @@ bool bx_real_sim_c::opt_plugin_ctrl(const char *plugname, bool load)
   return 0;
 }
 
+#if BX_NETWORKING
 void bx_real_sim_c::init_std_nic_options(const char *name, bx_list_c *menu)
 {
   bx_init_std_nic_options(name, menu);
 }
+#endif
 
+#if BX_SUPPORT_PCIUSB
 void bx_real_sim_c::init_usb_options(const char *usb_name, const char *pname, int maxports)
 {
   bx_init_usb_options(usb_name, pname, maxports);
 }
+#endif
+
 
 int bx_real_sim_c::parse_param_from_list(const char *context, const char *param, bx_list_c *base)
 {
@@ -1500,10 +1511,12 @@ int bx_real_sim_c::write_param_list(FILE *fp, bx_list_c *base, const char *optna
   return bx_write_param_list(fp, base, optname, multiline);
 }
 
+#if BX_SUPPORT_PCIUSB
 int bx_real_sim_c::write_usb_options(FILE *fp, int maxports, bx_list_c *base)
 {
   return bx_write_usb_options(fp, maxports, base);
 }
+#endif
 
 #if BX_USE_GUI_CONSOLE
 int bx_real_sim_c::bx_printf(const char *fmt, ...)
