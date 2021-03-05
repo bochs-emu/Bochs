@@ -587,11 +587,16 @@ void MyFrame::OnEditCPU(wxCommandEvent& WXUNUSED(event))
 
 void MyFrame::OnEditCPUID(wxCommandEvent& WXUNUSED(event))
 {
-  ParamDialog dlg(this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param("cpuid");
-  dlg.SetTitle(wxString(list->get_title(), wxConvUTF8));
-  dlg.AddParam(list);
-  dlg.ShowModal();
+  if (list != NULL) {
+    ParamDialog dlg(this, -1);
+    dlg.SetTitle(wxString(list->get_title(), wxConvUTF8));
+    dlg.AddParam(list);
+    dlg.ShowModal();
+  } else {
+    wxMessageBox(wxT("Nothing to configure in this section!"),
+                 wxT("Not enabled"), wxOK | wxICON_ERROR, this);
+  }
 }
 
 void MyFrame::OnEditMemory(wxCommandEvent& WXUNUSED(event))

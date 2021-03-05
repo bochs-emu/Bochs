@@ -978,6 +978,7 @@ void bx_init_options()
                                                      "", BX_PATHNAME_LEN);
   deplist->add(advopts);
   enabled->set_dependent_list(deplist);
+  enabled->set_enabled(BX_SUPPORT_PCI);
   pci->set_options(pci->SHOW_PARENT);
   slot->set_options(slot->SHOW_PARENT);
 
