@@ -250,7 +250,7 @@ For the configuration interface there are also some different implementations: t
 <row><entry>doc/docbook</entry><entry>the Bochs documentation in DocBook format</entry></row>
 <row><entry>doc/man</entry><entry>Bochs manual pages</entry></row>
 <row><entry>docs-html</entry><entry>old Bochs documentation in HTML (will be replaced by DocBook)</entry></row>
-<row><entry>gui</entry><entry>display libraries (guis), the simulator interface and text mode config interface</entry></row>
+<row><entry>gui</entry><entry>display libraries (guis), the simulator interface, the parameter tree and text mode config interface</entry></row>
 <row><entry>gui/bitmaps</entry><entry>bitmaps for the headerbar</entry></row>
 <row><entry>gui/font</entry><entry>the default VGA font used by most of the display libraries</entry></row>
 <row><entry>gui/keymaps</entry><entry>keymaps for the keyboard mapping feature</entry></row>
@@ -389,6 +389,44 @@ ignores the parameter and evaluates to &amp;bx_cpu, or evaluates to bx_cpu_array
 [n], so the result will always be a pointer. The same goes for BX_MEM(x).
 If static methods are used then BX_CPU_THIS_PTR evaluates to BX_CPU(0)->. Ugly,
 isn't it?
+</para>
+</section>
+<section id="siminterface"><title>The simulator interface</title>
+<para>
+The central object for the communication between several Bochs componnents is
+the simulator interface (AKA "siminterface"). It especially makes the separation
+between the configuration interface and the simulator possible. These jobs are
+done using the <command>SIM</command> object:
+<itemizedlist>
+<listitem><para>event handling</para></listitem>
+<listitem><para>parsing / writing config file</para></listitem>
+<listitem><para>accessing the parameter tree</para></listitem>
+<listitem><para>begin and quit simulation</para></listitem>
+<listitem><para>execute save and restore code</para></listitem>
+<listitem><para>adjust log options</para></listitem>
+<listitem><para>access to the debugger core</para></listitem>
+</itemizedlist>
+The event handling supports both synchronous and asynchronous types. In case of
+a synchronous event, the sender waits until the receiver has processed the
+event (finally setting return code). Asynchronous events are simply added to the
+event queue and fetched from it later when the receiver processes event. The
+event handling is important if a multithreaded implementation of gui and config
+interface like wxWidgets is used. An example for the event handling is the
+procedure after pressing the "snapshot" tool bar button:
+<orderedlist>
+<listitem><para>wxmain.cc: MyFrame::OnToolbarClick() adds BX_ASYNC_EVT_TOOBAR to the queue</para></listitem>
+<listitem><para>wx.cc: bx_wx_gui_c::handle_events() fetches event and calls gui button handler</para></listitem>
+<listitem><para>gui.cc: bx_gui_c::snapshot_handler() calls siminterface to ask for a file name</para></listitem>
+<listitem><para>siminterface.cc: bx_real_sim_c::ask_filename() creates event BX_SYNC_EVT_ASK_PARAM and waits for completion</para></listitem>
+<listitem><para>siminterface.cc: bx_real_sim_c::sim_to_ci_event() calls registered config interface function</para></listitem>
+<listitem><para>wxmain.cc: SimThread::SiminterfaceCallback2() creates a wxCommandEvent</para></listitem>
+<listitem><para>wxmain.cc: MyFrame::OnSim2CIEvent() calls handler for this event</para></listitem>
+<listitem><para>wxmain.cc: MyFrame::HandleAskParamString() calls wxFileDialog()</para></listitem>
+<listitem><para>wxmain.cc: MyFrame::OnSim2CIEvent() calls SimThread::SendSyncResponse to set return code()</para></listitem>
+<listitem><para>wxmain.cc: SimThread::SiminterfaceCallback2() returns event result</para></listitem>
+<listitem><para>siminterface.cc: bx_real_sim_c::ask_filename() returns file name if successful</para></listitem>
+<listitem><para>gui.cc: bx_gui_c::snapshot_handler() saves simulation screenshot to file</para></listitem>
+</orderedlist>
 </para>
 </section>
 <section id="config-parameter-tree"><title>The configuration parameter tree</title>
@@ -2995,13 +3033,33 @@ interface:
 </itemizedlist>
 </para>
 </section>
+<section><title>Plugin file names</title>
+<para>
+The plugin interface expects a special file name format that depends on the
+plugin type and platform. On Linux and other platforms using "libtool" the
+plugin file for the CMOS device has this name:
+<screen>
+libbx_cmos.so
+</screen>
+On Windows platforms the output file is a DLL and the name is slightly different:
+<screen>
+bx_cmos.dll
+</screen>
+The names of device plugins are created from the base name of source files like
+the example above. Networking module names traditionally start with <emphasis>"eth_"</emphasis>
+and sound driver names start with <emphasis>"sound"</emphasis>. For gui and disk
+image format modules an extension has been added to the base name (<emphasis>"_gui"</emphasis>
+/ <emphasis>"_img"</emphasis>).
+</para>
+</section>
 <section><title>Plugin types</title>
 <para>
 Device plugins are categorized into some types depending on their purpose. Some
 devices are mandatory for the x86 PC emulation or need to be initialized early
-to make other device work correctly. A plugin can be loaded only one single
-time, but some types may create multiple objects. This is the full list of
-plugin types defined in <filename>extplugin.h</filename> with some description:
+to make other devices work correctly. A plugin can be loaded only one single
+time, but some types may be capable to create multiple objects. This is the full
+list of plugin types defined in <filename>extplugin.h</filename> with some
+description:
 <table>
 <title>Plugin types</title>
 <tgroup cols="3">
@@ -3076,7 +3134,7 @@ plugin types defined in <filename>extplugin.h</filename> with some description:
 <entry>Sound driver selected with the sound option</entry>
 <entry>libsound<emphasis>module</emphasis>_plugin_entry</entry>
 <entry>bx_sound_lowlevel_c</entry>
-<entry>One plugin per type only</entry>
+<entry>Up to 4 plugins supported</entry>
 </row>
 </tbody>
 </tgroup>
