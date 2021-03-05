@@ -1569,11 +1569,11 @@ void bx_init_options()
   // sound subtree
   bx_list_c *sound = new bx_list_c(root_param, "sound", "Sound Configuration");
   sound->set_options(sound->USE_TAB_WINDOW | sound->SHOW_PARENT);
+#if BX_SUPPORT_SOUNDLOW
   bx_list_c *soundlow = new bx_list_c(sound, "lowlevel", "Lowlevel Sound Configuration");
   soundlow->set_options(soundlow->SHOW_PARENT | soundlow->SERIES_ASK);
   soundlow->set_enabled(BX_SUPPORT_SOUNDLOW);
 
-#if BX_SUPPORT_SOUNDLOW
   bx_soundmod_ctl.init();
   bx_param_enum_c *driver = new bx_param_enum_c(soundlow,
     "waveoutdrv",

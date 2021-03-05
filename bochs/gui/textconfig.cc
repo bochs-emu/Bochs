@@ -380,28 +380,36 @@ void build_runtime_options_prompt(const char *format, char *buf, int size)
 int do_menu(const char *pname)
 {
   bx_list_c *menu = (bx_list_c *)SIM->get_param(pname, NULL);
-  while (1) {
-    menu->set_choice(0);
-    int status = menu->text_ask();
-    if (status < 0) return status;
-    if (menu->get_choice() < 1)
-      return menu->get_choice();
-    else {
-      int index = menu->get_choice() - 1;  // choosing 1 means list[0]
-      bx_param_c *chosen = menu->get(index);
-      assert(chosen != NULL);
-      if (chosen->get_enabled()) {
-        if (SIM->get_init_done() && !chosen->get_runtime_param()) {
-          bx_printf("\nWARNING: parameter not available at runtime!\n");
-        } else if (chosen->get_type() == BXT_LIST) {
-          char chosen_pname[80];
-          chosen->get_param_path(chosen_pname, 80);
-          do_menu(chosen_pname);
-        } else {
-          chosen->text_ask();
+  if (menu != NULL) {
+    if (menu->get_size() > 0) {
+      while (1) {
+        menu->set_choice(0);
+        int status = menu->text_ask();
+        if (status < 0) return status;
+        if (menu->get_choice() < 1)
+          return menu->get_choice();
+        else {
+          int index = menu->get_choice() - 1;  // choosing 1 means list[0]
+          bx_param_c *chosen = menu->get(index);
+          assert(chosen != NULL);
+          if (chosen->get_enabled()) {
+            if (SIM->get_init_done() && !chosen->get_runtime_param()) {
+              bx_printf("\nWARNING: parameter not available at runtime!\n");
+            } else if (chosen->get_type() == BXT_LIST) {
+              char chosen_pname[80];
+              chosen->get_param_path(chosen_pname, 80);
+              do_menu(chosen_pname);
+            } else {
+              chosen->text_ask();
+            }
+          }
         }
       }
+    } else {
+      bx_printf("\nERROR: nothing to configure in this section!\n");
     }
+  } else {
+     bx_printf("\nERROR: nothing to configure in this section!\n");
   }
 }
 

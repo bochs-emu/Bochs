@@ -656,16 +656,16 @@ void MyFrame::OnEditBoot(wxCommandEvent& WXUNUSED(event))
   if (firstcd != NULL) {
     bootDevices++;
   }
-  if (bootDevices == 0) {
+  if (bootDevices > 0) {
+    ParamDialog dlg(this, -1);
+    bx_list_c *list = (bx_list_c*) SIM->get_param("boot_params");
+    dlg.SetTitle(wxString(list->get_title(), wxConvUTF8));
+    dlg.AddParam(list);
+    dlg.ShowModal();
+  } else {
     wxMessageBox(wxT("All the possible boot devices are disabled right now!\nYou must enable the first floppy drive, a hard drive, or a CD-ROM."),
                  wxT("None enabled"), wxOK | wxICON_ERROR, this);
-    return;
   }
-  ParamDialog dlg(this, -1);
-  bx_list_c *list = (bx_list_c*) SIM->get_param("boot_params");
-  dlg.SetTitle(wxString(list->get_title(), wxConvUTF8));
-  dlg.AddParam(list);
-  dlg.ShowModal();
 }
 
 void MyFrame::OnEditSerialParallel(wxCommandEvent& WXUNUSED(event))
@@ -680,21 +680,31 @@ void MyFrame::OnEditSerialParallel(wxCommandEvent& WXUNUSED(event))
 
 void MyFrame::OnEditNet(wxCommandEvent& WXUNUSED(event))
 {
-  ParamDialog dlg(this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param("network");
-  dlg.SetTitle(wxString(list->get_title(), wxConvUTF8));
-  dlg.AddParam(list);
-  dlg.ShowModal();
+  if (list != NULL) {
+    ParamDialog dlg(this, -1);
+    dlg.SetTitle(wxString(list->get_title(), wxConvUTF8));
+    dlg.AddParam(list);
+    dlg.ShowModal();
+  } else {
+    wxMessageBox(wxT("Nothing to configure in this section!"),
+                 wxT("Not enabled"), wxOK | wxICON_ERROR, this);
+  }
 }
 
 void MyFrame::OnEditSound(wxCommandEvent& WXUNUSED(event))
 {
-  ParamDialog dlg(this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param("sound");
-  dlg.SetTitle(wxString(list->get_title(), wxConvUTF8));
-  dlg.AddParam(list);
-  dlg.SetRuntimeFlag(sim_thread != NULL);
-  dlg.ShowModal();
+  if (list->get_size() > 0) {
+    ParamDialog dlg(this, -1);
+    dlg.SetTitle(wxString(list->get_title(), wxConvUTF8));
+    dlg.AddParam(list);
+    dlg.SetRuntimeFlag(sim_thread != NULL);
+    dlg.ShowModal();
+  } else {
+    wxMessageBox(wxT("Nothing to configure in this section!"),
+                 wxT("Not enabled"), wxOK | wxICON_ERROR, this);
+  }
 }
 
 void MyFrame::OnEditOther(wxCommandEvent& WXUNUSED(event))

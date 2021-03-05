@@ -555,8 +555,13 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
             pname = start_options[i].param;
           }
           if (pname[0] != '#') {
-            if (((bx_list_c*)SIM->get_param(pname))->get_size() > 0) {
-              win32ParamDialog(hDlg, pname);
+            bx_list_c *list = (bx_list_c*)SIM->get_param(pname);
+            if (list != NULL) {
+              if (list->get_size() > 0) {
+                win32ParamDialog(hDlg, pname);
+              } else {
+                MessageBox(hDlg, "Nothing to configure in this section", "Warning", MB_ICONEXCLAMATION);
+              }
             } else {
               MessageBox(hDlg, "Nothing to configure in this section", "Warning", MB_ICONEXCLAMATION);
             }
