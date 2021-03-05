@@ -411,6 +411,7 @@ int do_menu(const char *pname)
   } else {
      bx_printf("\nERROR: nothing to configure in this section!\n");
   }
+  return -1;
 }
 
 int bx_text_config_interface(int menu)
