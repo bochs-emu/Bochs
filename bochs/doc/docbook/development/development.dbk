@@ -288,12 +288,12 @@ behind the programmer's back. More explicitness would be a big win.
 C++ methods have an invisible parameter called the this pointer - otherwise the
 method wouldn't know which object to operate on. In many cases in Bochs, there
 will only ever be one object - so this flexibility is unnecessary. There is a
-hack that can be enabled by #defining BX_USE_CPU_SMF to 1 in <filename>config.h
-</filename> that makes most methods static, which means they have a "special
-relationship" with the class they are declared in but apart from that are
-normal C functions with no hidden parameters. Of course they still need access
-to the internals of an object, so the single object of their class has a globally
-visible name that these functions use. It is all hidden with macros.
+hack that can be enabled by defining e.g. <option>BX_USE_PIC_SMF</option> to 1
+in <filename>config.h</filename> that makes most methods static, which means
+they have a "special relationship" with the class they are declared in but apart
+from that are normal C functions with no hidden parameters. Of course they still
+need access t/o the internals of an object, so the single object of their class has
+a globally visible name that these functions use. It is all hidden with macros.
 </para>
 <para>
 Declaration of a class, from iodev/pic.h:
@@ -366,29 +366,20 @@ of bugs just waiting to happen. Some classes use BX_SMF, others have their own
 version of the macro, like BX_PIC_SMF above.
 </para>
 </section>
-<section id="cpu-mem-objects"><title>CPU und memory objects in UP/SMP configurations</title>
+<section id="cpu-objects"><title>CPU objects in UP/SMP configurations</title>
 <para>
 The CPU class is a special case of the above: if Bochs is simulating a uni-
 processor machine then there is obviously only one bx_cpu_c object and the
 static methods trick can be used. If, on the other hand, Bochs is simulating an
-smp machine then we can't use the trick. The same seems to be true for memory:
-for some reason, we have a memory object for each CPU object. This might become
-relevant for NUMA machines, but they are not all that common -- and even the
-existing IA-32 NUMA machines bend over backwards to hide that fact: it should
-only be visible in slightly worse timing for non-local memory and non-local
-peripherals. Other than that, the memory map and device map presented to each
-CPU will be identical.
+SMP machine then we can't use the trick.
 </para>
 <para>
 In a UP configuration, the CPU object is declared as bx_cpu. In an SMP
 configuration it will be an array of pointers to CPU objects (bx_cpu_array[]).
-For memory that would be bx_mem and bx_mem_array[], respectively.
-Each CPU object contains a pointer to its associated memory object.
 Access of a CPU object often goes through the BX_CPU(x) macro, which either
 ignores the parameter and evaluates to &amp;bx_cpu, or evaluates to bx_cpu_array
-[n], so the result will always be a pointer. The same goes for BX_MEM(x).
-If static methods are used then BX_CPU_THIS_PTR evaluates to BX_CPU(0)->. Ugly,
-isn't it?
+[n], so the result will always be a pointer. If static methods are used then
+BX_CPU_THIS_PTR evaluates to BX_CPU(0)->. Ugly, isn't it?
 </para>
 </section>
 <section id="siminterface"><title>The simulator interface</title>
@@ -409,7 +400,7 @@ done using the <command>SIM</command> object:
 The event handling supports both synchronous and asynchronous types. In case of
 a synchronous event, the sender waits until the receiver has processed the
 event (finally setting return code). Asynchronous events are simply added to the
-event queue and fetched from it later when the receiver processes event. The
+event queue and fetched from it later when the receiver processes events. The
 event handling is important if a multithreaded implementation of gui and config
 interface like wxWidgets is used. An example for the event handling is the
 procedure after pressing the "snapshot" tool bar button:
@@ -917,7 +908,7 @@ All devices models located on or connected to the Bochs "mainboard" are based on
 the <emphasis>bx_devmodel_c</emphasis> class. It is defined in <filename>iodev.h</filename>
 and it has been introduced along with the plugin interface. That's why the
 device registration code is still located in <filename>plugin.cc</filename>, but
-it is present independent from the <emphasis>--enable-plugins</emphasis> switch.
+it is present independent from the <option>--enable-plugins</option> switch.
 Some code in <filename>devices.cc</filename> uses the device registration to
 initialize or reset all devices. It also calls required methods of the save/restore
 feature. If the debugger is present, a device can resister a method to dump it's
@@ -3015,14 +3006,15 @@ several files need to be modified (configure script, makefile, some headers)
 and the complete build process must be performed. As an alternative, Bochs
 can be compiled as an executable file containing the core funtionality and a
 number of loadable modules providing device emulation, display library (gui)
-features or drivers for some features. On Windows platforms such a module is
-called DLL, others platforms like Linux call it shared library. Bochs uses the
-environment variable LTDL_LIBARY_PATH to search for plugins. To build Bochs in
-this mode, the configure option <option>--enable-plugins</option> must be used.
-In this mode it is possible to add externally developed extensions
-(AKA "user plugins"). Rebuilding the whole project is not necessary in that
-case. Basically these Bochs facilities are currently supported by the plugin
-interface:
+capabilities or drivers for some other features. On Windows platforms such a
+module is called DLL, other platforms like Linux call it shared library and use
+<command>libtool</command> to create it. Bochs uses the environment variable
+LTDL_LIBARY_PATH to search for plugins. To build Bochs in this mode, the
+configure option <option>--enable-plugins</option> must be used. In this mode
+it is possible to add externally developed extensions (AKA "user plugins") that
+can be detected at startup. Rebuilding the whole project is not necessary in
+that case. Basically these Bochs facilities are currently supported by the
+plugin interface:
 <itemizedlist>
 <listitem><para>i/o device</para></listitem>
 <listitem><para>pluggable USB device</para></listitem>
@@ -3036,20 +3028,64 @@ interface:
 <section><title>Plugin file names</title>
 <para>
 The plugin interface expects a special file name format that depends on the
-plugin type and platform. On Linux and other platforms using "libtool" the
-plugin file for the CMOS device has this name:
+plugin type and platform. On Linux and other platforms using
+<command>libtool</command>-based compilation the plugin file for the CMOS
+device gets this name:
 <screen>
 libbx_cmos.so
 </screen>
-On Windows platforms the output file is a DLL and the name is slightly different:
+On Windows platforms (Cygwin, MinGW/MSYS, MSVC) the output file is a DLL and
+the name is slightly different:
 <screen>
 bx_cmos.dll
 </screen>
 The names of device plugins are created from the base name of source files like
-the example above. Networking module names traditionally start with <emphasis>"eth_"</emphasis>
-and sound driver names start with <emphasis>"sound"</emphasis>. For gui and disk
-image format modules an extension has been added to the base name (<emphasis>"_gui"</emphasis>
-/ <emphasis>"_img"</emphasis>).
+the example above. For other module types the naming is similar, but with some
+extensions. This table shows how the names of some existing modules are created:
+<table>
+<title>Plugin file naming</title>
+<tgroup cols="5">
+<thead>
+<row>
+<entry>Type</entry>
+<entry>Module name</entry>
+<entry>Source file name</entry>
+<entry>Libtool file name</entry>
+<entry>DLL file name</entry>
+</row>
+</thead>
+<tbody>
+<row>
+<entry>Display library</entry>
+<entry>sdl2</entry>
+<entry>sdl2.cc</entry>
+<entry>libbx_sdl2_gui.so</entry>
+<entry>bx_sdl2_gui.dll</entry>
+</row>
+<row>
+<entry>Disk image module</entry>
+<entry>vbox</entry>
+<entry>vbox.cc</entry>
+<entry>libbx_vbox_img.so</entry>
+<entry>bx_vbox_img.dll</entry>
+</row>
+<row>
+<entry>Networking module</entry>
+<entry>slirp</entry>
+<entry>eth_slirp.cc</entry>
+<entry>libbx_eth_slirp.so</entry>
+<entry>bx_eth_slirp.dll</entry>
+</row>
+<row>
+<entry>Lowlevel sound driver</entry>
+<entry>file</entry>
+<entry>soundfile.cc</entry>
+<entry>libbx_soundfile.so</entry>
+<entry>bx_soundfile.dll</entry>
+</row>
+</tbody>
+</tgroup>
+</table>
 </para>
 </section>
 <section><title>Plugin types</title>
@@ -3062,7 +3098,7 @@ list of plugin types defined in <filename>extplugin.h</filename> with some
 description:
 <table>
 <title>Plugin types</title>
-<tgroup cols="3">
+<tgroup cols="5">
 <thead>
 <row>
 <entry>Type</entry>
@@ -3146,8 +3182,9 @@ description:
 Each plugin has an entry function that is called during plugin detection, after
 loading and before unloading the modules. For compatiblity with the "monolithic"
 Bochs compilation each plugin must have a unique name. When plugins are disabled,
-the macros for loading / unloading the plugin directly call the plugin entry
-function. The entry function can be called with these mode arguments:
+the macros / functions for loading / unloading the plugin directly call the
+plugin entry function. The entry function can be called with these mode
+arguments:
 <itemizedlist>
 <listitem><para>PLUGIN_PROBE returns the plugin type as defined above (mandatory for all plugins)</para></listitem>
 <listitem><para>PLUGIN_FLAGS returns flags associated with the plugin</para></listitem>
@@ -3156,13 +3193,14 @@ function. The entry function can be called with these mode arguments:
 </itemizedlist>
 At Bochs startup, but before initializing the config options, it searches the
 plugin paths for modules with the correct file name format and the expected
-entry function name. Each valid plugin is temporarily loaded and then the plugin
-type and flags are read. The plugin interface builds up a database with all
-information for loading detected modules later on demand. A plugin can return
-multiple types, but it can only be loaded with one of it (currently on used by
-the "voodoo" plugin). The flags can be used to indicate specific capabilities
-of the plugin (currently on used for device plugins that can be connected to a
-PCI slot). For unimplemented modes the entry function needs to return 0.
+entry function name. Each valid plugin is temporarily loaded to read the plugin
+type and flags by calling the entry function with the corresponding mode. The
+plugin interface builds up a database with all information for loading detected
+modules later on demand. A plugin can return multiple types, but it can only be
+loaded with one of it (currently on used by the "voodoo" plugin). The flags can
+be used to indicate specific capabilities of the plugin (currently on used for
+device plugins that can be connected to a PCI slot). For unimplemented calling
+modes the entry function must return 0.
 </para>
 <para>
 To simplify the naming of the plugin entry function some macros have been
@@ -3174,7 +3212,7 @@ plugins on platforms other than Windows:
 </screen>
 Please see <filename>plugin.h</filename> for all supported definitions of the
 entry function. The example below shows the plugin-related section
-of the "unmapped" device.
+of the "unmapped" device source file.
 <screen>
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE
