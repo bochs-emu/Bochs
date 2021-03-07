@@ -201,9 +201,19 @@ void bx_init_std_nic_options(const char *name, bx_list_c *menu)
 void bx_init_usb_options(const char *usb_name, const char *pname, int maxports)
 {
   char group[16], name[8], descr[512], label[512];
-  bx_list_c *deplist, *deplist2;
+  bx_list_c *usb, *usbrt, *deplist, *deplist2;
 
-  bx_param_c *usb = SIM->get_param("ports.usb");
+  bx_list_c *ports = (bx_list_c*)SIM->get_param("ports");
+  usb = (bx_list_c*)ports->get_by_name("usb");
+  if (usb == NULL) {
+    usb = new bx_list_c(ports, "usb", "USB Configuration");
+    usb->set_options(usb->USE_TAB_WINDOW | usb->SHOW_PARENT);
+    // prepare runtime options
+    bx_list_c *rtmenu = (bx_list_c*)SIM->get_param("menu.runtime");
+    usbrt = new bx_list_c(rtmenu, "usb", "USB options");
+    usbrt->set_runtime_param(1);
+    usbrt->set_options(usbrt->SHOW_PARENT | usbrt->USE_TAB_WINDOW);
+  }
   sprintf(group, "USB %s", usb_name);
   sprintf(label, "%s Configuration", usb_name);
   bx_list_c *menu = new bx_list_c(usb, pname, label);
@@ -1538,33 +1548,19 @@ void bx_init_options()
 #endif
 
   // ports subtree
-  bx_list_c *ports = new bx_list_c(root_param, "ports", "Serial and Parallel Port Options");
+  bx_list_c *ports = new bx_list_c(root_param, "ports", "Serial / Parallel / USB Options");
   ports->set_options(ports->USE_TAB_WINDOW | ports->SHOW_PARENT);
-
-  // parallel ports
-  bx_list_c *parallel = new bx_list_c(ports, "parallel", "Parallel Port Options");
-  parallel->set_options(parallel->SHOW_PARENT);
-  // parport options initialized in the devive plugin code
-
-  // serial ports
-  bx_list_c *serial = new bx_list_c(ports, "serial", "Serial Port Options");
-  serial->set_options(serial->SHOW_PARENT);
-  // serial port options initialized in the devive plugin code
-
 #if BX_SUPPORT_PCIUSB
-  // usb subtree
-  bx_list_c *usb = new bx_list_c(ports, "usb", "USB Configuration");
-  usb->set_options(usb->USE_TAB_WINDOW | usb->SHOW_PARENT);
   bx_usbdev_ctl.init();
-  // USB host controller options initialized in the devive plugin code
 #endif
+  // parallel / serial / USB options initialized in the device plugin code
 
 #if BX_NETWORKING
   // network subtree
   bx_list_c *network = new bx_list_c(root_param, "network", "Network Configuration");
   network->set_options(network->USE_TAB_WINDOW | network->SHOW_PARENT);
   bx_netmod_ctl.init();
-  // network device options initialized in the devive plugin code
+  // network device options initialized in the device plugin code
 #endif
 
   // sound subtree
@@ -1613,7 +1609,7 @@ void bx_init_options()
     "This is the device where the MIDI output is sent to",
     "", BX_PATHNAME_LEN);
 #endif
-  // sound device options initialized in the devive plugin code
+  // sound device options initialized in the device plugin code
 
   // misc options subtree
   bx_list_c *misc = new bx_list_c(root_param, "misc", "Configure Everything Else");
@@ -1702,11 +1698,6 @@ void bx_init_options()
   bx_list_c *cdrom = new bx_list_c(menu, "cdrom", "CD-ROM options");
   cdrom->set_runtime_param(1);
   cdrom->set_options(cdrom->SHOW_PARENT);
-#if BX_SUPPORT_PCIUSB
-  usb = new bx_list_c(menu, "usb", "USB options");
-  usb->set_runtime_param(1);
-  usb->set_options(usb->SHOW_PARENT | usb->USE_TAB_WINDOW);
-#endif
   // misc runtime options
   misc = new bx_list_c(menu, "misc", "Misc options");
   misc->set_runtime_param(1);

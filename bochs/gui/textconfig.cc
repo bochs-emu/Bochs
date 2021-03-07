@@ -677,7 +677,7 @@ void bx_plugin_ctrl()
   Bit32u choice;
   bx_list_c *plugin_ctrl;
   bx_param_bool_c *plugin;
-  int i, count;
+  int i, j, count;
   char plugname[512];
 
   while (1) {
@@ -688,24 +688,28 @@ void bx_plugin_ctrl()
       plugin_ctrl = (bx_list_c*) SIM->get_param(BXPN_PLUGIN_CTRL);
       count = plugin_ctrl->get_size();
       if (count == 0) {
-        bx_printf("\nNo optional plugins loaded\n");
+        bx_printf("\nNo optional plugins available\n");
       } else {
         bx_printf("\nCurrently loaded plugins:");
+        j = 0;
         for (i = 0; i < count; i++) {
           plugin = (bx_param_bool_c*)plugin_ctrl->get(i);
           if (plugin->get()) {
-            if (i > 0) bx_printf(",");
+            if (j > 0) bx_printf(",");
             bx_printf(" %s", plugin->get_name());
+            j++;
           }
         }
         bx_printf("\n");
         if (choice == 1) {
           bx_printf("\nAdditionally available plugins:");
+          j = 0;
           for (i = 0; i < count; i++) {
             plugin = (bx_param_bool_c*)plugin_ctrl->get(i);
             if (!plugin->get()) {
-              if (i > 0) bx_printf(",");
+              if (j > 0) bx_printf(",");
               bx_printf(" %s", plugin->get_name());
+              j++;
             }
           }
           bx_printf("\n");
