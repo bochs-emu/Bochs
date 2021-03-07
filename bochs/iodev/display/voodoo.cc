@@ -159,7 +159,6 @@ PLUGIN_ENTRY_FOR_MODULE(voodoo)
     if (theVoodooVga != NULL) {
       delete theVoodooVga;
       theVoodooVga = NULL;
-      bx_devices.pluginVgaDevice = &bx_devices.stubVga;
     }
     if (theVoodooDevice != NULL) {
       delete theVoodooDevice;

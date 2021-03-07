@@ -91,7 +91,6 @@ extern "C" {
 #define PLUG_load_gui_plugin(name) bx_load_plugin(name,PLUGTYPE_GUI)
 #define PLUG_load_opt_plugin(name) bx_load_plugin(name,PLUGTYPE_OPTIONAL)
 #define PLUG_load_vga_plugin(name) bx_load_plugin(name,PLUGTYPE_VGA)
-#define PLUG_unload_plugin(name) {bx_unload_plugin(#name,1);}
 #define PLUG_unload_opt_plugin(name) bx_unload_plugin(name,1)
 #define PLUG_unload_plugin_type(name,type) {bx_unload_plugin_type(name,type);}
 
@@ -112,9 +111,8 @@ extern "C" {
 #else
 
 // When plugins are off, PLUG_load_plugin will call the plugin_entry function
-// directly.
+// directly (PLUGTYPE_CORE and PLUGTYPE_STANDARD only).
 #define PLUG_load_plugin(name,type) {lib##name##_plugin_entry(NULL,type,1);}
-#define PLUG_unload_plugin(name) {lib##name##_plugin_entry(NULL,type,0);}
 // Builtin plugins macros
 #define PLUG_get_plugins_count(a) bx_get_plugins_count_np(a)
 #define PLUG_get_plugin_name(a,b) bx_get_plugin_name_np(a,b)

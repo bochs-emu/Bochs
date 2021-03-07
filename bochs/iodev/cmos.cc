@@ -107,10 +107,7 @@ PLUGIN_ENTRY_FOR_MODULE(cmos)
     bx_devices.pluginCmosDevice = theCmosDevice;
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theCmosDevice, BX_PLUGIN_CMOS);
   } else if (mode == PLUGIN_FINI) {
-    if (theCmosDevice != NULL) {
-      delete theCmosDevice;
-      theCmosDevice = NULL;
-    }
+    delete theCmosDevice;
   } else if (mode == PLUGIN_PROBE) {
     return (int)PLUGTYPE_CORE;
   }

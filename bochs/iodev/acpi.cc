@@ -73,7 +73,6 @@ PLUGIN_ENTRY_FOR_MODULE(acpi)
     bx_devices.pluginACPIController = theACPIController;
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theACPIController, BX_PLUGIN_ACPI);
   } else if (mode == PLUGIN_FINI) {
-    bx_devices.pluginACPIController = &bx_devices.stubACPIController;
     delete theACPIController;
   } else if (mode == PLUGIN_PROBE) {
     return (int)PLUGTYPE_STANDARD;

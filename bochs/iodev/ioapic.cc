@@ -41,7 +41,6 @@ PLUGIN_ENTRY_FOR_MODULE(ioapic)
     bx_devices.pluginIOAPIC = theIOAPIC;
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theIOAPIC, BX_PLUGIN_IOAPIC);
   } else if (mode == PLUGIN_FINI) {
-    bx_devices.pluginIOAPIC = &bx_devices.stubIOAPIC;
     delete theIOAPIC;
   } else if (mode == PLUGIN_PROBE) {
     return (int)PLUGTYPE_STANDARD;
