@@ -96,10 +96,9 @@
 #include "icon_bochs.xpm"
 #endif
 
-// FIXME: ugly global variables that the bx_gui_c object in wx.cc can use
-// to access the MyFrame and the MyPanel.
+// FIXME: ugly global variable that the bx_gui_c object in wx.cc can use
+// to access the MyFrame.
 MyFrame *theFrame = NULL;
-MyPanel *thePanel = NULL;
 
 // The wxBochsClosing flag is used to keep track of when the wxWidgets GUI is
 // shutting down.  Shutting down can be somewhat complicated because the
@@ -1294,7 +1293,7 @@ void MyFrame::OnToolbarClick(wxCommandEvent& event)
     case ID_Toolbar_Copy: which = BX_TOOLBAR_COPY; break;
     case ID_Toolbar_Paste: which = BX_TOOLBAR_PASTE; break;
     case ID_Toolbar_Snapshot: which = BX_TOOLBAR_SNAPSHOT; break;
-    case ID_Toolbar_Mouse_en: thePanel->ToggleMouse(true); break;
+    case ID_Toolbar_Mouse_en: panel->ToggleMouse(true); break;
     case ID_Toolbar_User: which = BX_TOOLBAR_USER; break;
     default:
       wxLogError(wxT("unknown toolbar id %d"), id);

@@ -33,7 +33,6 @@ class LogViewDialog;
 
 //hack alert; yuck; FIXME
 extern MyFrame *theFrame;
-extern MyPanel *thePanel;
 
 // wxBochsClosing flag, see comments in wxmain.h
 extern bool wxBochsClosing;

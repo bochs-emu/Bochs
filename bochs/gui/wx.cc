@@ -100,6 +100,9 @@ public:
 #endif
 };
 
+// this variable uses the bx_wx_gui_c object to access MyPanel
+static MyPanel *thePanel = NULL;
+
 // declare one instance of the gui object and call macro to insert the
 // plugin code
 static bx_wx_gui_c *theGui = NULL;
