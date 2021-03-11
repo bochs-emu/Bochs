@@ -1459,7 +1459,7 @@ void BX_CPU_C::WriteCR8(bxInstruction_c *i, bx_address val)
 
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
-    SVM_V_TPR = tpr;
+    SVM_V_TPR = tpr >> 4;   // V_TPR just matching CR8[3:0]
     handleInterruptMaskChange();
     if (SVM_V_INTR_MASKING) return;
   }
