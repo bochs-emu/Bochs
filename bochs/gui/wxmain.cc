@@ -217,7 +217,7 @@ IMPLEMENT_APP_NO_MAIN(MyApp)
 
 // this is the entry point of the wxWidgets code.  It is called as follows:
 // 1. main() loads the wxWidgets plugin (if necessary) and calls
-// libwx_LTX_plugin_entry(), which installs a function pointer to the
+// libwx_gui_plugin_entry(), which installs a function pointer to the
 // wx_ci_callback() function.
 // 2. main() calls SIM->configuration_interface.
 // 3. bx_real_sim_c::configuration_interface calls the function pointer that
@@ -345,52 +345,6 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_TOOL(ID_Toolbar_User, MyFrame::OnToolbarClick)
 END_EVENT_TABLE()
 
-//////////////////////////////////////////////////////////////////
-// Menu layout (approximate)
-//
-// The actual menus will be changing so this probably isn't up
-// to date, but having it in text form was useful in planning.
-//////////////////////////////////////////////////////////////////
-// - File
-//   +----------------------+
-//   | New Configuration    |
-//   | Read Configuration   |
-//   | Save Configuration   |
-//   +----------------------+
-//   | Quit                 |
-//   +----------------------+
-// - Edit
-//   +----------------------+
-//   | Floppy Disk 0...     |
-//   | Floppy Disk 1...     |
-//   | Hard Disk 0...       |
-//   | Hard Disk 1...       |
-//   | Cdrom...             |
-//   | Boot...              |
-//   | VGA...               |
-//   | Memory...            |
-//   | Sound...             |
-//   | Networking...        |
-//   | Keyboard...          |
-//   | Other...             |
-//   +----------------------+
-// - Simulate
-//   +----------------------+
-//   | Start                |
-//   | Pause/Resume         |
-//   | Stop                 |
-//   +----------------------|
-// - Event Log
-//   +----------------------+
-//   | View                 |
-//   | Preferences...       |
-//   | By Device...         |
-//   +----------------------+
-// - Help
-//   +----------------------+
-//   | About Bochs...       |
-//   +----------------------+
-//////////////////////////////////////////////////////////////////
 
 MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, const long style)
 : wxFrame((wxFrame *)NULL, -1, title, pos, size, style)
