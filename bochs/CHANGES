@@ -16,7 +16,7 @@ Changes after 2.6.11:
   - Visual Studio workspace files upgraded to VS2019 format.
 
 - CPU/CPUDB
-  - Bugfixes for CPU emulation correctness (CPUID/VMX initialization fixes to support Windows Hyper-V as guest in Bochs)
+  - Bugfixes for CPU emulation correctness (CPUID/VMX/SVM fixes to support Windows Hyper-V as guest in Bochs)
   ! CPUID: Added TigerLake CPU definition (features CET and CLWB support)
 
 - Memory
