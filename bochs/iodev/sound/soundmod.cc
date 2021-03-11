@@ -20,7 +20,10 @@
 
 // Sound driver loader code
 
-#include "iodev.h"
+#include "bochs.h"
+#include "plugin.h"
+#include "gui/siminterface.h"
+#include "param_names.h"
 
 #if BX_SUPPORT_SOUNDLOW
 

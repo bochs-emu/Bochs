@@ -25,7 +25,8 @@
 
 // The dummy sound driver contains stubs for all features
 
-#include "iodev.h"
+#include "bochs.h"
+#include "plugin.h"
 
 #if BX_SUPPORT_SOUNDLOW
 

@@ -140,6 +140,7 @@
 
 class device_image_t;
 class redolog_t;
+class cdrom_base_c;
 
 #ifdef BXIMAGE
 int bx_create_image_file(const char *filename);

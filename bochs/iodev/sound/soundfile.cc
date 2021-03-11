@@ -26,7 +26,8 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
-#include "iodev.h"
+#include "bochs.h"
+#include "plugin.h"
 #include "soundlow.h"
 #include "soundmod.h"
 #include "soundfile.h"

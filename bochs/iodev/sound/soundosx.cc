@@ -29,7 +29,8 @@
 #include <MacTypes.h>
 #endif
 
-#include "iodev.h"
+#include "bochs.h"
+#include "plugin.h"
 #include "soundlow.h"
 #include "soundmod.h"
 #include "soundosx.h"

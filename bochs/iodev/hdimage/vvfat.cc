@@ -49,7 +49,9 @@
 #include <utime.h>
 #endif
 
-#include "iodev.h"
+#include "bochs.h"
+#include "plugin.h"
+#include "gui/siminterface.h"
 #include "hdimage.h"
 #include "vvfat.h"
 

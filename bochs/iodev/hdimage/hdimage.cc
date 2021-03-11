@@ -25,7 +25,10 @@
 #include "osdep.h"
 #include "misc/bswap.h"
 #else
-#include "iodev.h"
+#include "bochs.h"
+#include "gui/siminterface.h"
+#include "param_names.h"
+#include "plugin.h"
 #include "cdrom.h"
 #include "cdrom_amigaos.h"
 #include "cdrom_misc.h"

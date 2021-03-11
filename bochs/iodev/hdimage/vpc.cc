@@ -40,7 +40,8 @@
 #include "osdep.h"
 #include "misc/bswap.h"
 #else
-#include "iodev.h"
+#include "bochs.h"
+#include "plugin.h"
 #endif
 #include "hdimage.h"
 #include "vpc.h"
