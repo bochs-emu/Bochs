@@ -28,7 +28,9 @@
 #define _WIN32
 #endif
 
-#include "iodev.h"
+#include "bochs.h"
+#include "plugin.h"
+#include "pc_system.h"
 #include "netmod.h"
 
 #if BX_NETWORKING && BX_NETMOD_SLIRP
@@ -69,7 +71,7 @@ class bx_slirp_pktmover_c : public eth_pktmover_c {
 public:
   bx_slirp_pktmover_c(const char *netif, const char *macaddr,
                       eth_rx_handler_t rxh, eth_rx_status_t rxstat,
-                      bx_devmodel_c *dev, const char *script);
+                      logfunctions *netdev, const char *script);
   virtual ~bx_slirp_pktmover_c();
   void sendpkt(void *buf, unsigned io_len);
   void receive(void *pkt, unsigned pkt_len);
@@ -101,8 +103,8 @@ public:
 protected:
   eth_pktmover_c *allocate(const char *netif, const char *macaddr,
                            eth_rx_handler_t rxh, eth_rx_status_t rxstat,
-                           bx_devmodel_c *dev, const char *script) {
-    return (new bx_slirp_pktmover_c(netif, macaddr, rxh, rxstat, dev, script));
+                           logfunctions *netdev, const char *script) {
+    return (new bx_slirp_pktmover_c(netif, macaddr, rxh, rxstat, netdev, script));
   }
 } bx_slirp_match;
 
@@ -286,7 +288,7 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
                                          const char *macaddr,
                                          eth_rx_handler_t rxh,
                                          eth_rx_status_t rxstat,
-                                         bx_devmodel_c *dev,
+                                         logfunctions *netdev,
                                          const char *script)
 {
   logfunctions *slirplog;
@@ -311,7 +313,7 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
   smb_srv.s_addr = 0;
 #endif
 
-  this->netdev = dev;
+  this->netdev = netdev;
   if (sizeof(struct arphdr) != 28) {
     BX_FATAL(("system error: invalid ARP header structure size"));
   }

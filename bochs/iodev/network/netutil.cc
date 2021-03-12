@@ -28,7 +28,8 @@
 #define WIN32_LEAN_AND_MEAN
 #include "misc/bxcompat.h"
 #else
-#include "iodev.h"
+#include "bochs.h"
+#include "pc_system.h"
 #endif
 
 #if BX_NETWORKING
@@ -219,7 +220,7 @@ vnet_server_c::~vnet_server_c()
 #endif
 }
 
-void vnet_server_c::init(bx_devmodel_c *_netdev, dhcp_cfg_t *dhcpc, const char *tftp_rootdir)
+void vnet_server_c::init(logfunctions *_netdev, dhcp_cfg_t *dhcpc, const char *tftp_rootdir)
 {
   netdev = _netdev;
   dhcp = dhcpc;

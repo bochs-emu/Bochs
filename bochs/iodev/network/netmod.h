@@ -73,7 +73,7 @@ public:
   const char **get_module_names();
   void list_modules(void);
   void exit(void);
-  virtual void* init_module(bx_list_c *base, void* rxh, void* rxstat, bx_devmodel_c *dev);
+  virtual void* init_module(bx_list_c *base, void *rxh, void *rxstat, logfunctions *netdev);
 };
 
 BOCHSAPI extern bx_netmod_ctl_c bx_netmod_ctl;
@@ -88,7 +88,7 @@ BOCHSAPI extern bx_netmod_ctl_c bx_netmod_ctl;
 typedef void (*eth_rx_handler_t)(void *arg, const void *buf, unsigned len);
 typedef Bit32u (*eth_rx_status_t)(void *arg);
 
-int execute_script(bx_devmodel_c *netdev, const char *name, char* arg1);
+int execute_script(logfunctions *netdev, const char *name, char* arg1);
 void BOCHSAPI_MSVCONLY write_pktlog_txt(FILE *pktlog_txt, const Bit8u *buf, unsigned len, bool host_to_guest);
 size_t BOCHSAPI_MSVCONLY strip_whitespace(char *s);
 
@@ -105,7 +105,7 @@ public:
   virtual void sendpkt(void *buf, unsigned io_len) = 0;
   virtual ~eth_pktmover_c () {}
 protected:
-  bx_devmodel_c *netdev;
+  logfunctions *netdev;
   eth_rx_handler_t  rxh;   // receive callback
   eth_rx_status_t  rxstat; // receive status callback
 };
@@ -124,7 +124,7 @@ public:
                                 const char *macaddr,
                                 eth_rx_handler_t rxh,
                                 eth_rx_status_t rxstat,
-                                bx_devmodel_c *dev,
+                                logfunctions *netdev,
                                 const char *script);
 protected:
   eth_locator_c(const char *type);
@@ -133,7 +133,7 @@ protected:
                                    const char *macaddr,
                                    eth_rx_handler_t rxh,
                                    eth_rx_status_t rxstat,
-                                   bx_devmodel_c *dev,
+                                   logfunctions *netdev,
                                    const char *script) = 0;
 private:
   static eth_locator_c *all;

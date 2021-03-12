@@ -40,7 +40,9 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
-#include "iodev.h"
+#include "bochs.h"
+#include "plugin.h"
+#include "pc_system.h"
 #include "netmod.h"
 
 #if BX_NETWORKING && BX_NETMOD_LINUX
@@ -105,7 +107,7 @@ public:
                       const char *macaddr,
                       eth_rx_handler_t rxh,
                       eth_rx_status_t rxstat,
-                      bx_devmodel_c *dev,
+                      logfunctions *netdev,
                       const char *script);
   void sendpkt(void *buf, unsigned io_len);
 
@@ -132,8 +134,8 @@ protected:
                            const char *macaddr,
                            eth_rx_handler_t rxh,
                            eth_rx_status_t rxstat,
-                           bx_devmodel_c *dev, const char *script) {
-    return (new bx_linux_pktmover_c(netif, macaddr, rxh, rxstat, dev, script));
+                           logfunctions *netdev, const char *script) {
+    return (new bx_linux_pktmover_c(netif, macaddr, rxh, rxstat, netdev, script));
   }
 } bx_linux_match;
 
@@ -148,7 +150,7 @@ bx_linux_pktmover_c::bx_linux_pktmover_c(const char *netif,
                                          const char *macaddr,
                                          eth_rx_handler_t rxh,
                                          eth_rx_status_t rxstat,
-                                         bx_devmodel_c *dev,
+                                         logfunctions *netdev,
                                          const char *script)
 {
   struct sockaddr_ll sll;
@@ -156,7 +158,7 @@ bx_linux_pktmover_c::bx_linux_pktmover_c(const char *netif,
   struct ifreq ifr;
   struct sock_fprog fp;
 
-  this->netdev = dev;
+  this->netdev = netdev;
   memcpy(linux_macaddr, macaddr, 6);
 
   // Open packet socket

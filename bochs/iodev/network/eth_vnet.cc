@@ -38,7 +38,9 @@
 
 #define BX_PLUGGABLE
 
-#include "iodev.h"
+#include "bochs.h"
+#include "plugin.h"
+#include "pc_system.h"
 #include "netmod.h"
 #include "netutil.h"
 
@@ -84,7 +86,7 @@ class bx_vnet_pktmover_c : public eth_pktmover_c {
 public:
   bx_vnet_pktmover_c(const char *netif, const char *macaddr,
                      eth_rx_handler_t rxh, eth_rx_status_t rxstat,
-                     bx_devmodel_c *dev, const char *script);
+                     logfunctions *netdev, const char *script);
   virtual ~bx_vnet_pktmover_c();
   void sendpkt(void *buf, unsigned io_len);
 private:
@@ -121,8 +123,8 @@ public:
 protected:
   eth_pktmover_c *allocate(const char *netif, const char *macaddr,
                            eth_rx_handler_t rxh, eth_rx_status_t rxstat,
-                           bx_devmodel_c *dev, const char *script) {
-    return (new bx_vnet_pktmover_c(netif, macaddr, rxh, rxstat, dev, script));
+                           logfunctions *netdev, const char *script) {
+    return (new bx_vnet_pktmover_c(netif, macaddr, rxh, rxstat, netdev, script));
   }
 } bx_vnet_match;
 
@@ -263,13 +265,13 @@ bx_vnet_pktmover_c::bx_vnet_pktmover_c(const char *netif,
                                        const char *macaddr,
                                        eth_rx_handler_t rxh,
                                        eth_rx_status_t rxstat,
-                                       bx_devmodel_c *dev,
+                                       logfunctions *netdev,
                                        const char *script)
 {
   if (bx_vnet_instances > 0) {
     BX_PANIC(("only one 'vnet' instance supported yet"));
   }
-  this->netdev = dev;
+  this->netdev = netdev;
   this->rxh    = rxh;
   this->rxstat = rxstat;
 
@@ -289,7 +291,7 @@ bx_vnet_pktmover_c::bx_vnet_pktmover_c(const char *netif,
       BX_ERROR(("reading vnet config failed"));
     }
   }
-  vnet_server.init(dev, &dhcp, netif);
+  vnet_server.init(netdev, &dhcp, netif);
   vnet_server.init_client(0, (Bit8u*)macaddr, hostname);
 
   Bit32u status = this->rxstat(this->netdev) & BX_NETDEV_SPEED;
