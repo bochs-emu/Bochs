@@ -440,8 +440,6 @@ typedef struct {
   } u;
 } BxEvent;
 
-#include "paramtree.h"
-
 // These are the different start modes.
 enum {
   // Just start the simulation without running the configuration interface

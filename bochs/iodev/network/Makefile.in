@@ -178,8 +178,8 @@ e1000.o: e1000.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
  ../../extplugin.h ../../param_names.h ../../pc_system.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../memory/memory-bochs.h ../../gui/siminterface.h \
- ../../gui/paramtree.h ../../gui/gui.h ../pci.h netmod.h e1000.h
+ ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
+ ../pci.h netmod.h e1000.h
 eth_fbsd.o: eth_fbsd.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../gui/paramtree.h ../../logio.h ../../cpudb.h \
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
@@ -230,13 +230,12 @@ ne2k.o: ne2k.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h 
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
  ../../extplugin.h ../../param_names.h ../../pc_system.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../memory/memory-bochs.h ../../gui/siminterface.h \
- ../../gui/paramtree.h ../../gui/gui.h ../pci.h ne2k.h netmod.h
+ ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
+ ../pci.h ne2k.h netmod.h
 netmod.o: netmod.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../gui/paramtree.h ../../logio.h ../../cpudb.h \
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../gui/siminterface.h ../../gui/paramtree.h \
- netmod.h
+ ../../extplugin.h ../../gui/siminterface.h netmod.h
 netutil.o: netutil.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../gui/paramtree.h ../../logio.h ../../cpudb.h \
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../pc_system.h \
@@ -246,8 +245,7 @@ pcipnic.o: pcipnic.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
  ../../extplugin.h ../../param_names.h ../../pc_system.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../memory/memory-bochs.h ../../gui/siminterface.h \
- ../../gui/paramtree.h ../../gui/gui.h
+ ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h
 slirp/arp_table.o: slirp/arp_table.@CPP_SUFFIX@ slirp/slirp.h ../../config.h \
  slirp/slirp_config.h slirp/debug.h slirp/libslirp.h slirp/compat.h \
  ../../qemu-queue.h slirp/ip.h slirp/tcp.h slirp/tcp_var.h slirp/tcpip.h \
@@ -286,7 +284,7 @@ slirp/if.o: slirp/if.@CPP_SUFFIX@ slirp/slirp.h ../../config.h slirp/slirp_confi
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
  ../../extplugin.h ../../param_names.h ../../pc_system.h \
  ../../bx_debug/debug.h ../../osdep.h ../../memory/memory-bochs.h \
- ../../gui/siminterface.h ../../gui/paramtree.h ../../gui/gui.h
+ ../../gui/siminterface.h ../../gui/gui.h
 slirp/ip_icmp.o: slirp/ip_icmp.@CPP_SUFFIX@ slirp/slirp.h ../../config.h \
  slirp/slirp_config.h slirp/debug.h slirp/libslirp.h slirp/compat.h \
  ../../qemu-queue.h slirp/ip.h slirp/tcp.h slirp/tcp_var.h slirp/tcpip.h \
@@ -330,7 +328,7 @@ slirp/slirp.o: slirp/slirp.@CPP_SUFFIX@ slirp/slirp.h ../../config.h slirp/slirp
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
  ../../extplugin.h ../../param_names.h ../../pc_system.h \
  ../../bx_debug/debug.h ../../osdep.h ../../memory/memory-bochs.h \
- ../../gui/siminterface.h ../../gui/paramtree.h ../../gui/gui.h
+ ../../gui/siminterface.h ../../gui/gui.h
 slirp/socket.o: slirp/socket.@CPP_SUFFIX@ slirp/slirp.h ../../config.h \
  slirp/slirp_config.h slirp/debug.h slirp/libslirp.h slirp/compat.h \
  ../../qemu-queue.h slirp/ip.h slirp/tcp.h slirp/tcp_var.h slirp/tcpip.h \
@@ -376,8 +374,8 @@ e1000.lo: e1000.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
  ../../extplugin.h ../../param_names.h ../../pc_system.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../memory/memory-bochs.h ../../gui/siminterface.h \
- ../../gui/paramtree.h ../../gui/gui.h ../pci.h netmod.h e1000.h
+ ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
+ ../pci.h netmod.h e1000.h
 eth_fbsd.lo: eth_fbsd.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../gui/paramtree.h ../../logio.h ../../cpudb.h \
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
@@ -428,13 +426,12 @@ ne2k.lo: ne2k.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
  ../../extplugin.h ../../param_names.h ../../pc_system.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../memory/memory-bochs.h ../../gui/siminterface.h \
- ../../gui/paramtree.h ../../gui/gui.h ../pci.h ne2k.h netmod.h
+ ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
+ ../pci.h ne2k.h netmod.h
 netmod.lo: netmod.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../gui/paramtree.h ../../logio.h ../../cpudb.h \
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../gui/siminterface.h ../../gui/paramtree.h \
- netmod.h
+ ../../extplugin.h ../../gui/siminterface.h netmod.h
 netutil.lo: netutil.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../gui/paramtree.h ../../logio.h ../../cpudb.h \
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../pc_system.h \
@@ -444,8 +441,7 @@ pcipnic.lo: pcipnic.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
  ../../extplugin.h ../../param_names.h ../../pc_system.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../memory/memory-bochs.h ../../gui/siminterface.h \
- ../../gui/paramtree.h ../../gui/gui.h
+ ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h
 slirp/arp_table.lo: slirp/arp_table.@CPP_SUFFIX@ slirp/slirp.h ../../config.h \
  slirp/slirp_config.h slirp/debug.h slirp/libslirp.h slirp/compat.h \
  ../../qemu-queue.h slirp/ip.h slirp/tcp.h slirp/tcp_var.h slirp/tcpip.h \
@@ -484,7 +480,7 @@ slirp/if.lo: slirp/if.@CPP_SUFFIX@ slirp/slirp.h ../../config.h slirp/slirp_conf
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
  ../../extplugin.h ../../param_names.h ../../pc_system.h \
  ../../bx_debug/debug.h ../../osdep.h ../../memory/memory-bochs.h \
- ../../gui/siminterface.h ../../gui/paramtree.h ../../gui/gui.h
+ ../../gui/siminterface.h ../../gui/gui.h
 slirp/ip_icmp.lo: slirp/ip_icmp.@CPP_SUFFIX@ slirp/slirp.h ../../config.h \
  slirp/slirp_config.h slirp/debug.h slirp/libslirp.h slirp/compat.h \
  ../../qemu-queue.h slirp/ip.h slirp/tcp.h slirp/tcp_var.h slirp/tcpip.h \
@@ -528,7 +524,7 @@ slirp/slirp.lo: slirp/slirp.@CPP_SUFFIX@ slirp/slirp.h ../../config.h slirp/slir
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
  ../../extplugin.h ../../param_names.h ../../pc_system.h \
  ../../bx_debug/debug.h ../../osdep.h ../../memory/memory-bochs.h \
- ../../gui/siminterface.h ../../gui/paramtree.h ../../gui/gui.h
+ ../../gui/siminterface.h ../../gui/gui.h
 slirp/socket.lo: slirp/socket.@CPP_SUFFIX@ slirp/slirp.h ../../config.h \
  slirp/slirp_config.h slirp/debug.h slirp/libslirp.h slirp/compat.h \
  ../../qemu-queue.h slirp/ip.h slirp/tcp.h slirp/tcp_var.h slirp/tcpip.h \

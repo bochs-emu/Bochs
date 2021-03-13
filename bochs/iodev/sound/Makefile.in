@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2019  The Bochs Project
+# Copyright (C) 2012-2021  The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -150,24 +150,22 @@ es1370.o: es1370.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osde
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
  ../../extplugin.h ../../param_names.h ../../pc_system.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../memory/memory-bochs.h ../../gui/siminterface.h \
- ../../gui/paramtree.h ../../gui/gui.h soundlow.h ../../bxthread.h \
- soundmod.h ../pci.h es1370.h
+ ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
+ soundlow.h ../../bxthread.h soundmod.h ../pci.h es1370.h
 opl.o: opl.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
  ../../gui/paramtree.h ../../logio.h ../../cpudb.h \
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
  ../../extplugin.h ../../param_names.h ../../pc_system.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../memory/memory-bochs.h ../../gui/siminterface.h \
- ../../gui/paramtree.h ../../gui/gui.h opl.h
+ ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
+ opl.h
 sb16.o: sb16.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
  ../../gui/paramtree.h ../../logio.h ../../cpudb.h \
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
  ../../extplugin.h ../../param_names.h ../../pc_system.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../memory/memory-bochs.h ../../gui/siminterface.h \
- ../../gui/paramtree.h ../../gui/gui.h soundlow.h ../../bxthread.h \
- soundmod.h sb16.h opl.h
+ ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
+ soundlow.h ../../bxthread.h soundmod.h sb16.h opl.h
 soundalsa.o: soundalsa.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../gui/paramtree.h ../../logio.h ../../cpudb.h \
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
@@ -188,8 +186,8 @@ soundlow.o: soundlow.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
 soundmod.o: soundmod.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../gui/paramtree.h ../../logio.h ../../cpudb.h \
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../gui/siminterface.h ../../gui/paramtree.h \
- ../../param_names.h soundmod.h soundlow.h ../../bxthread.h
+ ../../extplugin.h ../../gui/siminterface.h ../../param_names.h \
+ soundmod.h soundlow.h ../../bxthread.h
 soundoss.o: soundoss.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../gui/paramtree.h ../../logio.h ../../cpudb.h \
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
@@ -214,24 +212,22 @@ es1370.lo: es1370.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osd
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
  ../../extplugin.h ../../param_names.h ../../pc_system.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../memory/memory-bochs.h ../../gui/siminterface.h \
- ../../gui/paramtree.h ../../gui/gui.h soundlow.h ../../bxthread.h \
- soundmod.h ../pci.h es1370.h
+ ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
+ soundlow.h ../../bxthread.h soundmod.h ../pci.h es1370.h
 opl.lo: opl.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
  ../../gui/paramtree.h ../../logio.h ../../cpudb.h \
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
  ../../extplugin.h ../../param_names.h ../../pc_system.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../memory/memory-bochs.h ../../gui/siminterface.h \
- ../../gui/paramtree.h ../../gui/gui.h opl.h
+ ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
+ opl.h
 sb16.lo: sb16.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
  ../../gui/paramtree.h ../../logio.h ../../cpudb.h \
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
  ../../extplugin.h ../../param_names.h ../../pc_system.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../memory/memory-bochs.h ../../gui/siminterface.h \
- ../../gui/paramtree.h ../../gui/gui.h soundlow.h ../../bxthread.h \
- soundmod.h sb16.h opl.h
+ ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
+ soundlow.h ../../bxthread.h soundmod.h sb16.h opl.h
 soundalsa.lo: soundalsa.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../gui/paramtree.h ../../logio.h ../../cpudb.h \
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
@@ -252,8 +248,8 @@ soundlow.lo: soundlow.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
 soundmod.lo: soundmod.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../gui/paramtree.h ../../logio.h ../../cpudb.h \
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../gui/siminterface.h ../../gui/paramtree.h \
- ../../param_names.h soundmod.h soundlow.h ../../bxthread.h
+ ../../extplugin.h ../../gui/siminterface.h ../../param_names.h \
+ soundmod.h soundlow.h ../../bxthread.h
 soundoss.lo: soundoss.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../gui/paramtree.h ../../logio.h ../../cpudb.h \
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \

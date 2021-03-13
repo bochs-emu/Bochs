@@ -53,6 +53,7 @@ extern "C" {
 #include "param_names.h"
 #include "textconfig.h"
 #include "logio.h"
+#include "paramtree.h"
 #include "siminterface.h"
 
 #define CI_PATH_LENGTH 512

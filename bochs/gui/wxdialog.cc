@@ -44,6 +44,7 @@
 #include <wx/notebook.h>
 
 #include "osdep.h"               // workarounds for missing stuff
+#include "gui/paramtree.h"       // config parameter tree
 #include "gui/siminterface.h"    // interface to the simulator
 #include "logio.h"               // log level definitions
 #include "wxdialog.h"            // custom dialog boxes
