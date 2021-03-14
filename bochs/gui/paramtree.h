@@ -579,7 +579,6 @@ public:
   void set_restore_handler(void *devptr, list_restore_handler restore);
   void restore();
 #if BX_USE_TEXTCONFIG
-  virtual void text_print();
   virtual int text_ask();
 #endif
 };

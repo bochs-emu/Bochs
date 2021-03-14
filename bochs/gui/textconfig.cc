@@ -870,24 +870,6 @@ void bx_param_string_c::text_print()
   }
 }
 
-void bx_list_c::text_print()
-{
-  bx_listitem_t *item;
-  int i = 0;
-
-  bx_printf("%s: ", get_name());
-  for (item = list; item; item = item->next) {
-    if (item->param->get_enabled()) {
-      if ((i > 0) && (options & SERIES_ASK))
-        bx_printf(", ");
-      item->param->text_print();
-      if (!(options & SERIES_ASK))
-        bx_printf("\n");
-    }
-    i++;
-  }
-}
-
 int bx_param_num_c::text_ask()
 {
   bx_printf("\n");
@@ -940,7 +922,6 @@ int bx_param_enum_c::text_ask()
   const char *help = get_description();
   if (prompt == NULL) {
     // default prompt, if they didn't set an ask format string
-    bx_printf("%s = ", get_name());
     text_print();
     bx_printf("\n");
     prompt = "Enter new value or '?' for help: [%s] ";
