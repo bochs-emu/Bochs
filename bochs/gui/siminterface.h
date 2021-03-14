@@ -103,30 +103,6 @@
 // between the siminterface and the CI.  Search for "event structures" below.
 
 
-//////////////////////////////////////////////////////
-// BX_USE_TEXTCONFIG should be set to 1 when the text mode configuration interface
-// is compiled in.  This gives each type of parameter a text_print and text_ask
-// method (defined in gui/textconfig.cc) so that you can call text_ask() on any
-// kind of parameter to ask the user to edit the value.
-//
-// I have been considering whether to use the same strategy for the
-// wxWidgets interface, but I'm not sure if I like it.  One problem is
-// that in order to declare member functions that are useful for
-// wxWidgets, the wxWidgets header files would have to be included
-// before the param object definitions.  That means that all the
-// wxWidgets headers would have be included when compiling every
-// single bochs file.  One of the things I like about the separation
-// between the simulator and CI is that the two parts can be
-// compiled without any knowledge of the other.  Bochs doesn't include
-// <wx.h>, and the wxWidgets CI (wxmain.cc) doesn't need to include <bochs.h>.
-// Aside from making compiles faster, this enforces the use of the siminterface
-// so it keeps the interface clean (important when we may have multiple UI
-// implementations for example).  This argues for keeping UI-specific
-// structures out of the simulator interface.  It certainly works ok for the
-// text interface, but that's because FILE* is standard and portable.
-
-//////////////////////////////////////////////////////
-
 // base value for generated new parameter id
 #define BXP_NEW_PARAM_ID 1001
 

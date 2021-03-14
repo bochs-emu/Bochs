@@ -76,6 +76,7 @@ int bx_atexit();
 #if BX_DEBUGGER
 void bx_dbg_exit(int code);
 #endif
+int text_ask(bx_param_c *param);
 
 /******************************************************************/
 /* lots of code stolen from bximage.c */
@@ -385,7 +386,7 @@ int do_menu(const char *pname)
     if (menu->get_size() > 0) {
       while (1) {
         menu->set_choice(0);
-        int status = menu->text_ask();
+        int status = text_ask(menu);
         if (status < 0) return status;
         if (menu->get_choice() < 1)
           return menu->get_choice();
@@ -401,7 +402,7 @@ int do_menu(const char *pname)
               chosen->get_param_path(chosen_pname, 80);
               do_menu(chosen_pname);
             } else {
-              chosen->text_ask();
+              text_ask(chosen);
             }
           }
         }
@@ -748,7 +749,7 @@ config_interface_notify_callback(void *unused, BxEvent *event)
       event->retcode = 0;
       return event;
     case BX_SYNC_EVT_ASK_PARAM:
-      event->retcode = event->u.param.param->text_ask();
+      event->retcode = text_ask(event->u.param.param);
       return event;
     case BX_SYNC_EVT_LOG_DLG:
       if (event->u.logmsg.mode == BX_LOG_DLG_ASK) {
@@ -807,243 +808,266 @@ void bx_text_config_interface_init()
 /////////////////////////////////////////////////////////////////////
 // implement the text_* methods for bx_param types.
 
-void bx_param_num_c::text_print()
+void text_print(bx_param_c *param)
 {
-  if (get_long_format()) {
-    bx_printf(get_long_format(), get());
-  } else {
-    const char *format = "%s: %d";
-    assert(base==10 || base==16);
-    if (base==16) format = "%s: 0x%x";
-    if (get_label()) {
-      bx_printf(format, get_label(), get());
-    } else {
-      bx_printf(format, get_name(), get());
-    }
-  }
-}
-
-void bx_param_bool_c::text_print()
-{
-  if (get_format()) {
-    bx_printf(get_format(), get() ? "yes" : "no");
-  } else {
-    const char *format = "%s: %s";
-    if (get_label()) {
-      bx_printf(format, get_label(), get() ? "yes" : "no");
-    } else {
-      bx_printf(format, get_name(), get() ? "yes" : "no");
-    }
-  }
-}
-
-void bx_param_enum_c::text_print()
-{
-  int n = get();
-  assert(n >= min && n <= max);
-  const char *choice = choices[n - min];
-  if (get_format()) {
-    bx_printf(get_format(), choice);
-  } else {
-    const char *format = "%s: %s";
-    if (get_label()) {
-      bx_printf(format, get_label(), choice);
-    } else {
-      bx_printf(format, get_name(), choice);
-    }
-  }
-}
-
-void bx_param_string_c::text_print()
-{
-  char value[1024];
-
-  this->dump_param(value, 1024);
-  if (get_format()) {
-    bx_printf(get_format(), value);
-  } else {
-    if (get_label()) {
-      bx_printf("%s: %s", get_label(), value);
-    } else {
-      bx_printf("%s: %s", get_name(), value);
-    }
-  }
-}
-
-int bx_param_num_c::text_ask()
-{
-  bx_printf("\n");
-  int status;
-  const char *prompt = get_ask_format();
-  const char *help = get_description();
-  if (prompt == NULL) {
-    // default prompt, if they didn't set an ask format string
-    text_print();
-    bx_printf("\n");
-    prompt = "Enter new value or '?' for help: [%d] ";
-    if (base==16)
-      prompt = "Enter new value in hex or '?' for help: [%x] ";
-  }
-  Bit32u n = get();
-  status = ask_uint(prompt, help, (Bit32u)min, (Bit32u)max, n, &n, base);
-  if (status < 0) return status;
-  set(n);
-  return 0;
-}
-
-int bx_param_bool_c::text_ask()
-{
-  bx_printf("\n");
-  int status;
-  const char *prompt = get_ask_format();
-  const char *help = get_description();
-  char buffer[512];
-  if (prompt == NULL) {
-    if (get_label() != NULL) {
-      sprintf(buffer, "%s? [%%s] ", get_label());
-      prompt = buffer;
-    } else {
-      // default prompt, if they didn't set an ask format or label string
-      sprintf(buffer, "%s? [%%s] ", get_name());
-      prompt = buffer;
-    }
-  }
-  Bit32u n = get();
-  status = ask_yn(prompt, help, n, &n);
-  if (status < 0) return status;
-  set(n);
-  return 0;
-}
-
-int bx_param_enum_c::text_ask()
-{
-  bx_printf("\n");
-  const char *prompt = get_ask_format();
-  const char *help = get_description();
-  if (prompt == NULL) {
-    // default prompt, if they didn't set an ask format string
-    text_print();
-    bx_printf("\n");
-    prompt = "Enter new value or '?' for help: [%s] ";
-  }
-  Bit32s n = (Bit32s)(get() - min);
-  int status = ask_menu(prompt, help, (Bit32u)(max-min+1), choices, n, &n);
-  if (status < 0) return status;
-  n += (Bit32s)min;
-  set(n);
-  return 0;
-}
-
-int bx_param_string_c::text_ask()
-{
-  bx_printf("\n");
-  const char *prompt = get_ask_format();
-  if (prompt == NULL) {
-    if (options & SELECT_FOLDER_DLG) {
-      bx_printf("%s\n\n", get_label());
-      prompt = "Enter a path to an existing folder or press enter to cancel\n";
-    } else {
-      // default prompt, if they didn't set an ask format string
-      text_print();
-      bx_printf("\n");
-      prompt = "Enter a new value, '?' for help, or press return for no change.\n";
-    }
-  }
-  while (1) {
-    char buffer[1024];
-    int status = ask_string(prompt, getptr(), buffer);
-    if (status == -2) {
-      bx_printf("\n%s\n", get_description());
-      continue;
-    }
-    if (status < 0) return status;
-    if (!equals(buffer))
-      set(buffer);
-    return 0;
-  }
-}
-
-int bx_param_bytestring_c::text_ask()
-{
-  bx_printf("\n");
-  const char *prompt = get_ask_format();
-  if (prompt == NULL) {
-    // default prompt, if they didn't set an ask format string
-    text_print();
-    bx_printf("\n");
-    prompt = "Enter a new value, '?' for help, or press return for no change.\n";
-  }
-  while (1) {
-    char buffer[1024];
-    int status = ask_string(prompt, getptr(), buffer);
-    if (status == -2) {
-      bx_printf("\n%s\n", get_description());
-      continue;
-    }
-    if (status < 0) return status;
-    if (status == 0) return 0;
-    // copy raw hex into buffer
-    status = parse_param(buffer);
-    if (status == 0) {
-      bx_printf("Illegal raw byte format.  I expected something like 3A%c03%c12%c...\n", separator, separator, separator);
-      continue;
-    }
-    return 0;
-  }
-}
-
-int bx_list_c::text_ask()
-{
-  bx_listitem_t *item;
-  bx_list_c *child;
-
-  const char *my_title = title;
-  bx_printf("\n");
-  int i, imax = strlen(my_title);
-  for (i=0; i<imax; i++) bx_printf("-");
-  bx_printf("\n%s\n", my_title);
-  for (i=0; i<imax; i++) bx_printf("-");
-  bx_printf("\n");
-  if (options & SERIES_ASK) {
-    for (item = list; item; item = item->next) {
-      if (item->param->get_enabled()) {
-        if (!SIM->get_init_done() || item->param->get_runtime_param()) {
-          item->param->text_ask();
+  switch (param->get_type()) {
+    case BXT_PARAM_NUM:
+      {
+        bx_param_num_c *nparam = (bx_param_num_c*)param;
+        Bit64s nval = nparam->get64();
+        if (nparam->get_long_format()) {
+          bx_printf(nparam->get_long_format(), nval);
+        } else {
+          const char *format;
+          int base = nparam->get_base();
+          if (base == 16)
+            format = "%s: 0x%x";
+          else
+            format = "%s: %d";
+          if (nparam->get_label()) {
+            bx_printf(format, nparam->get_label(), (Bit32s)nval);
+          } else {
+            bx_printf(format, nparam->get_name(), (Bit32s)nval);
+          }
         }
       }
-    }
-  } else {
-    if (options & SHOW_PARENT)
-      bx_printf("0. Return to previous menu\n");
-    int i = 0;
-    for (item = list; item; item = item->next) {
-      bx_printf("%d. ", i+1);
-      if ((item->param->get_enabled()) &&
-          (!SIM->get_init_done() || item->param->get_runtime_param())) {
-        if (item->param->get_type() == BXT_LIST) {
-          child = (bx_list_c*)item->param;
-          bx_printf("%s\n", child->get_title());
+      break;
+    case BXT_PARAM_BOOL:
+      {
+        bx_param_bool_c *bparam = (bx_param_bool_c*)param;
+        bool bval = (bool)bparam->get();
+        if (bparam->get_format()) {
+          bx_printf(bparam->get_format(), bval ? "yes" : "no");
         } else {
-          if ((options & SHOW_GROUP_NAME) && (item->param->get_group() != NULL))
-            bx_printf("%s ", item->param->get_group());
-          item->param->text_print();
+          const char *format = "%s: %s";
+          if (bparam->get_label()) {
+            bx_printf(format, bparam->get_label(), bval ? "yes" : "no");
+          } else {
+            bx_printf(format, bparam->get_name(), bval ? "yes" : "no");
+          }
+        }
+      }
+      break;
+    case BXT_PARAM_ENUM:
+      {
+        bx_param_enum_c *eparam = (bx_param_enum_c*)param;
+        const char *choice = eparam->get_selected();
+        if (eparam->get_format()) {
+          bx_printf(eparam->get_format(), choice);
+        } else {
+          const char *format = "%s: %s";
+          if (eparam->get_label()) {
+            bx_printf(format, eparam->get_label(), choice);
+          } else {
+            bx_printf(format, eparam->get_name(), choice);
+          }
+        }
+      }
+      break;
+    case BXT_PARAM_STRING:
+    case BXT_PARAM_BYTESTRING:
+      {
+        bx_param_string_c *sparam = (bx_param_string_c*)param;
+        char value[1024];
+
+        sparam->dump_param(value, 1024);
+        if (sparam->get_format()) {
+          bx_printf(sparam->get_format(), value);
+        } else {
+          if (sparam->get_label()) {
+            bx_printf("%s: %s", sparam->get_label(), value);
+          } else {
+            bx_printf("%s: %s", sparam->get_name(), value);
+          }
+        }
+      }
+      break;
+    default:
+      bx_printf("ERROR: unsupported parameter type\n");
+  }
+}
+
+int text_ask(bx_param_c *param)
+{
+  const char *prompt = param->get_ask_format();
+  const char *help = param->get_description();
+  Bit32u options = param->get_options();
+
+  bx_printf("\n");
+  switch (param->get_type()) {
+    case BXT_PARAM_NUM:
+      {
+        bx_param_num_c *nparam = (bx_param_num_c*)param;
+        int status;
+        if (prompt == NULL) {
+          // default prompt, if they didn't set an ask format string
+          text_print(param);
           bx_printf("\n");
+          if (nparam->get_base() == 16)
+            prompt = "Enter new value in hex or '?' for help: [%x] ";
+          else
+            prompt = "Enter new value or '?' for help: [%d] ";
         }
-      } else {
-        if (item->param->get_type() == BXT_LIST) {
-          child = (bx_list_c*)item->param;
-          bx_printf("%s (disabled)\n", child->get_title());
-        } else {
-          bx_printf("(disabled)\n");
+        Bit32u n = nparam->get();
+        status = ask_uint(prompt, help, (Bit32u)nparam->get_min(),
+                          (Bit32u)nparam->get_max(), n, &n, nparam->get_base());
+        if (status < 0) return status;
+        nparam->set(n);
+      }
+      break;
+    case BXT_PARAM_BOOL:
+      {
+        bx_param_bool_c *bparam = (bx_param_bool_c*)param;
+        int status;
+        char buffer[512];
+        if (prompt == NULL) {
+          if (bparam->get_label() != NULL) {
+            sprintf(buffer, "%s? [%%s] ", bparam->get_label());
+            prompt = buffer;
+          } else {
+            // default prompt, if they didn't set an ask format or label string
+            sprintf(buffer, "%s? [%%s] ", bparam->get_name());
+            prompt = buffer;
+          }
+        }
+        Bit32u n = bparam->get();
+        status = ask_yn(prompt, help, n, &n);
+        if (status < 0) return status;
+        bparam->set(n);
+      }
+      break;
+    case BXT_PARAM_ENUM:
+      {
+        bx_param_enum_c *eparam = (bx_param_enum_c*)param;
+        if (prompt == NULL) {
+          // default prompt, if they didn't set an ask format string
+          text_print(param);
+          bx_printf("\n");
+          prompt = "Enter new value or '?' for help: [%s] ";
+        }
+        Bit32s min = (Bit32s)eparam->get_min();
+        Bit32s max = (Bit32s)eparam->get_max();
+        Bit32s n = eparam->get() - min;
+        int status = ask_menu(prompt, help, (Bit32u)(max-min+1),
+                              eparam->get_choices(), n, &n);
+        if (status < 0) return status;
+        n += min;
+        eparam->set(n);
+      }
+      break;
+    case BXT_PARAM_STRING:
+      {
+        bx_param_string_c *sparam = (bx_param_string_c*)param;
+        if (prompt == NULL) {
+          if (options & sparam->SELECT_FOLDER_DLG) {
+            bx_printf("%s\n\n", sparam->get_label());
+            prompt = "Enter a path to an existing folder or press enter to cancel\n";
+          } else {
+            // default prompt, if they didn't set an ask format string
+            text_print(param);
+            bx_printf("\n");
+            prompt = "Enter a new value, '?' for help, or press return for no change.\n";
+          }
+        }
+        while (1) {
+          char buffer[1024];
+          int status = ask_string(prompt, sparam->getptr(), buffer);
+          if (status == -2) {
+            bx_printf("\n%s\n", help);
+            continue;
+          }
+          if (status < 0) return status;
+          if (!sparam->equals(buffer))
+            sparam->set(buffer);
+          return 0;
         }
       }
-      i++;
-    }
-    bx_printf("\n");
-    int min = (options & SHOW_PARENT) ? 0 : 1;
-    int max = size;
-    int status = ask_uint("Please choose one: [%d] ", "", min, max, choice, &choice, 10);
-    if (status < 0) return status;
+      break;
+    case BXT_PARAM_BYTESTRING:
+      {
+        bx_param_bytestring_c *hparam = (bx_param_bytestring_c*)param;
+        if (prompt == NULL) {
+          // default prompt, if they didn't set an ask format string
+          text_print(param);
+          bx_printf("\n");
+          prompt = "Enter a new value, '?' for help, or press return for no change.\n";
+        }
+        while (1) {
+          char buffer[1024];
+          int status = ask_string(prompt, hparam->getptr(), buffer);
+          if (status == -2) {
+            bx_printf("\n%s\n", help);
+            continue;
+          }
+          if (status < 0) return status;
+          if (status == 0) return 0;
+          // copy raw hex into buffer
+          status = hparam->parse_param(buffer);
+          if (status == 0) {
+            char separator = hparam->get_separator();
+            bx_printf("Illegal raw byte format.  I expected something like 3A%c03%c12%c...\n", separator, separator, separator);
+            continue;
+          }
+          return 0;
+        }
+      }
+      break;
+    case BXT_LIST:
+      {
+        bx_list_c *list = (bx_list_c*)param;
+        bx_param_c *child;
+        const char *my_title = list->get_title();
+        int i, imax = strlen(my_title);
+        for (i=0; i<imax; i++) bx_printf("-");
+        bx_printf("\n%s\n", my_title);
+        for (i=0; i<imax; i++) bx_printf("-");
+        bx_printf("\n");
+        if (options & list->SERIES_ASK) {
+          for (i = 0; i < list->get_size(); i++) {
+            child = list->get(i);
+            if (child->get_enabled()) {
+              if (!SIM->get_init_done() || child->get_runtime_param()) {
+                text_ask(child);
+              }
+            }
+          }
+        } else {
+          if (options & list->SHOW_PARENT)
+            bx_printf("0. Return to previous menu\n");
+          for (i = 0; i < list->get_size(); i++) {
+            bx_printf("%d. ", i+1);
+            child = list->get(i);
+            if ((child->get_enabled()) &&
+                (!SIM->get_init_done() || child->get_runtime_param())) {
+              if (child->get_type() == BXT_LIST) {
+                bx_printf("%s\n", ((bx_list_c*)child)->get_title());
+              } else {
+                if ((options & list->SHOW_GROUP_NAME) &&
+                    (child->get_group() != NULL))
+                  bx_printf("%s ", child->get_group());
+                text_print(child);
+                bx_printf("\n");
+              }
+            } else {
+              if (child->get_type() == BXT_LIST) {
+                bx_printf("%s (disabled)\n", ((bx_list_c*)child)->get_title());
+              } else {
+                bx_printf("(disabled)\n");
+              }
+            }
+          }
+          bx_printf("\n");
+          int min = (options & list->SHOW_PARENT) ? 0 : 1;
+          int max = list->get_size();
+          Bit32u choice = list->get_choice();
+          int status = ask_uint("Please choose one: [%d] ", "", min, max, choice, &choice, 10);
+          if (status < 0) return status;
+          list->set_choice(choice);
+        }
+      }
+      break;
+    default:
+      bx_printf("ERROR: unsupported parameter type\n");
   }
   return 0;
 }

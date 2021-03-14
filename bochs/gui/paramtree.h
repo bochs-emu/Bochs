@@ -166,11 +166,6 @@ public:
   void set_device_param(void *dev) { device = dev; }
   void *get_device_param() { return device; }
 
-#if BX_USE_TEXTCONFIG
-  virtual void text_print() {}
-  virtual int text_ask() { return -1; }
-#endif
-
   virtual int parse_param(const char *value) { return -1; }
 
   virtual void dump_param(FILE *fp) {}
@@ -233,10 +228,6 @@ public:
   Bit64s get_max() const { return max; }
   static Bit32u set_default_base(Bit32u val);
   static Bit32u get_default_base() { return default_base; }
-#if BX_USE_TEXTCONFIG
-  virtual void text_print();
-  virtual int text_ask();
-#endif
   virtual int parse_param(const char *value);
   virtual void dump_param(FILE *fp);
   virtual int dump_param(char *buf, int buflen, bool dquotes = false);
@@ -322,10 +313,6 @@ public:
       const char *description,
       Bit64s initial_val,
       bool is_shadow = 0);
-#if BX_USE_TEXTCONFIG
-  virtual void text_print();
-  virtual int text_ask();
-#endif
   virtual int parse_param(const char *value);
   virtual void dump_param(FILE *fp);
   virtual int dump_param(char *buf, int buflen, bool dquotes = false);
@@ -360,6 +347,7 @@ public:
       Bit64s value_base = 0);
   virtual ~bx_param_enum_c();
   const char *get_choice(int n) { return choices[n]; }
+  const char **get_choices() { return choices; }
   const char *get_selected() { return choices[val.number - min]; }
   int find_by_name(const char *s);
   virtual void set(Bit64s val);
@@ -368,10 +356,6 @@ public:
   void set_dependent_bitmap(Bit64s value, Bit64u bitmap);
   Bit64u get_dependent_bitmap(Bit64s value);
   virtual void set_enabled(bool enabled);
-#if BX_USE_TEXTCONFIG
-  virtual void text_print();
-  virtual int text_ask();
-#endif
   virtual int parse_param(const char *value);
   virtual void dump_param(FILE *fp);
   virtual int dump_param(char *buf, int buflen, bool dquotes = false);
@@ -416,10 +400,6 @@ public:
   int get_maxsize() const {return maxsize; }
   void set_initial_val(const char *buf);
   bool isempty() const;
-#if BX_USE_TEXTCONFIG
-  virtual void text_print();
-  virtual int text_ask();
-#endif
   virtual int parse_param(const char *value);
   virtual void dump_param(FILE *fp);
   virtual int dump_param(char *buf, int buflen, bool dquotes = false);
@@ -446,10 +426,6 @@ public:
   bool equals(const char *buf) const;
   void set_initial_val(const char *buf);
   bool isempty() const;
-
-#if BX_USE_TEXTCONFIG
-  virtual int text_ask();
-#endif
 
   virtual int parse_param(const char *value);
   virtual int dump_param(char *buf, int buflen, bool dquotes = false);
@@ -567,8 +543,8 @@ public:
   bx_param_c *get(int index);
   bx_param_c *get_by_name(const char *name);
   int get_size() const { return size; }
-  int get_choice() const { return choice; }
-  void set_choice(int new_choice) { choice = new_choice; }
+  Bit32u get_choice() const { return choice; }
+  void set_choice(Bit32u new_choice) { choice = new_choice; }
   char *get_title() { return title; }
   void set_parent(bx_param_c *newparent);
   bx_param_c *get_parent() { return parent; }
@@ -578,9 +554,6 @@ public:
   virtual void set_runtime_param(bool val);
   void set_restore_handler(void *devptr, list_restore_handler restore);
   void restore();
-#if BX_USE_TEXTCONFIG
-  virtual int text_ask();
-#endif
 };
 
 #endif
