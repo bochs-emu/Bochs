@@ -51,7 +51,6 @@ extern "C" {
 #include "osdep.h"
 #include "bx_debug/debug.h"
 #include "param_names.h"
-#include "textconfig.h"
 #include "logio.h"
 #include "paramtree.h"
 #include "siminterface.h"
@@ -66,8 +65,28 @@ extern "C" {
 #define bx_fgets  fgets
 #endif
 
+enum {
+  BX_CI_START_MENU,
+  BX_CI_START_OPTS,
+  BX_CI_START_SIMULATION,
+  BX_CI_RUNTIME,
+  BX_CI_N_MENUS
+};
+
+enum {
+  BX_CI_RT_FLOPPYA = 1,
+  BX_CI_RT_FLOPPYB,
+  BX_CI_RT_CDROM,
+  BX_CI_RT_LOGOPTS1,
+  BX_CI_RT_LOGOPTS2,
+  BX_CI_RT_USB,
+  BX_CI_RT_MISC,
+  BX_CI_RT_SAVE_CFG,
+  BX_CI_RT_CONT,
+  BX_CI_RT_QUIT
+};
+
 /* functions for changing particular options */
-void bx_text_config_interface_init();
 int bx_read_rc(char *rc);
 int bx_write_rc(char *rc);
 void bx_plugin_ctrl();
@@ -422,9 +441,6 @@ int bx_text_config_interface(int menu)
   char sr_path[CI_PATH_LENGTH];
   while (1) {
     switch (menu) {
-      case BX_CI_INIT:
-        bx_text_config_interface_init();
-        return 0;
       case BX_CI_START_SIMULATION:
         SIM->begin_simulation(bx_startup_flags.argc, bx_startup_flags.argv);
         // we don't expect it to return, but if it does, quit
@@ -740,7 +756,7 @@ const char *log_action_ask_choices[] = { "cont", "alwayscont", "die", "abort", "
 int log_action_n_choices = 4 + (BX_DEBUGGER||BX_GDBSTUB?1:0);
 
 BxEvent *
-config_interface_notify_callback(void *unused, BxEvent *event)
+textconfig_notify_callback(void *unused, BxEvent *event)
 {
   event->retcode = -1;
   switch (event->type)
@@ -798,11 +814,6 @@ ask:
       return event;
   }
   assert(0); // switch statement should return
-}
-
-void bx_text_config_interface_init()
-{
-  SIM->set_notify_callback(config_interface_notify_callback, NULL);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1077,7 +1088,6 @@ static int ci_callback(void *userdata, ci_command_t command)
   switch (command)
   {
     case CI_START:
-      bx_text_config_interface_init();
       if (SIM->get_param_enum(BXPN_BOCHS_START)->get() == BX_QUICK_START)
         bx_text_config_interface(BX_CI_START_SIMULATION);
       else {
@@ -1100,6 +1110,7 @@ static int ci_callback(void *userdata, ci_command_t command)
 int init_text_config_interface()
 {
   SIM->register_configuration_interface("textconfig", ci_callback, NULL);
+  SIM->set_notify_callback(textconfig_notify_callback, NULL);
   return 0;  // success
 }
 

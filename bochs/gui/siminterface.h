@@ -585,8 +585,8 @@ public:
   bx_simulator_interface_c() {}
   virtual ~bx_simulator_interface_c() {}
   virtual void set_quit_context(jmp_buf *context) {}
-  virtual int get_init_done() { return 0; }
-  virtual int set_init_done(int n) {return 0;}
+  virtual bool get_init_done() { return 0; }
+  virtual int set_init_done(bool n) {return 0;}
   virtual void reset_all_param() {}
   // new param methods
   virtual bx_param_c *get_param(const char *pname, bx_param_c *base=NULL) {return NULL;}

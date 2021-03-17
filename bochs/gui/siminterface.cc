@@ -28,6 +28,7 @@
 #include "iodev.h"
 #include "bx_debug/debug.h"
 #include "virt_timer.h"
+#include "textconfig.h"
 
 bx_simulator_interface_c *SIM = NULL;
 logfunctions *siminterface_log = NULL;
@@ -71,8 +72,8 @@ class bx_real_sim_c : public bx_simulator_interface_c {
   void *ci_callback_data;
   rt_conf_entry_t *rt_conf_entries;
   addon_option_t *addon_options;
-  int init_done;
-  int enabled;
+  bool init_done;
+  bool enabled;
   // save context to jump to if we must quit unexpectedly
   jmp_buf *quit_context;
   int exit_code;
@@ -84,8 +85,8 @@ public:
   bx_real_sim_c();
   virtual ~bx_real_sim_c() {}
   virtual void set_quit_context(jmp_buf *context) { quit_context = context; }
-  virtual int get_init_done() { return init_done; }
-  virtual int set_init_done(int n) { init_done = n; return 0;}
+  virtual bool get_init_done() { return init_done; }
+  virtual int set_init_done(bool n);
   virtual void reset_all_param();
   // new param methods
   virtual bx_param_c *get_param(const char *pname, bx_param_c *base=NULL);
@@ -371,6 +372,19 @@ bx_real_sim_c::bx_real_sim_c()
   param_id = BXP_NEW_PARAM_ID;
   rt_conf_entries = NULL;
   addon_options = NULL;
+}
+
+int bx_real_sim_c::set_init_done(bool n)
+{
+  if (n) {
+    if (bx_gui->has_gui_console()) {
+      if (strcmp(registered_ci_name, "textconfig") != 0) {
+        init_text_config_interface();
+      }
+    }
+  }
+  init_done = n;
+  return 0;
 }
 
 void bx_real_sim_c::reset_all_param()
@@ -852,17 +866,11 @@ void bx_real_sim_c::register_configuration_interface(
 
 int bx_real_sim_c::configuration_interface(const char *ignore, ci_command_t command)
 {
-  bx_param_enum_c *ci_param = SIM->get_param_enum(BXPN_SEL_CONFIG_INTERFACE);
-  const char *name = ci_param->get_selected();
   if (!ci_callback) {
     BX_PANIC(("no configuration interface was loaded"));
     return -1;
   }
-  if (strcmp(name, registered_ci_name) != 0) {
-    BX_PANIC(("siminterface does not support loading one configuration interface and then calling another"));
-    return -1;
-  }
-  if (!strcmp(name, "wx"))
+  if (!strcmp(registered_ci_name, "wx"))
     wxsel = 1;
   else
     wxsel = 0;

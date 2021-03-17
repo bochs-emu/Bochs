@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009-2017  The Bochs Project
+//  Copyright (C) 2009-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -22,29 +22,6 @@
 
 #if BX_USE_TEXTCONFIG
 
-enum {
-  BX_CI_INIT,
-  BX_CI_START_MENU,
-  BX_CI_START_OPTS,
-  BX_CI_START_SIMULATION,
-  BX_CI_RUNTIME,
-  BX_CI_N_MENUS
-};
-
-enum {
-  BX_CI_RT_FLOPPYA = 1,
-  BX_CI_RT_FLOPPYB,
-  BX_CI_RT_CDROM,
-  BX_CI_RT_LOGOPTS1,
-  BX_CI_RT_LOGOPTS2,
-  BX_CI_RT_USB,
-  BX_CI_RT_MISC,
-  BX_CI_RT_SAVE_CFG,
-  BX_CI_RT_CONT,
-  BX_CI_RT_QUIT
-};
-
 int init_text_config_interface();
-int bx_text_config_interface(int menu);
 
 #endif
