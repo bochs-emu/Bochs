@@ -376,6 +376,7 @@ bx_real_sim_c::bx_real_sim_c()
 
 int bx_real_sim_c::set_init_done(bool n)
 {
+#if BX_USE_TEXTCONFIG
   if (n) {
     if (bx_gui->has_gui_console()) {
       if (strcmp(registered_ci_name, "textconfig") != 0) {
@@ -383,6 +384,7 @@ int bx_real_sim_c::set_init_done(bool n)
       }
     }
   }
+#endif
   init_done = n;
   return 0;
 }
