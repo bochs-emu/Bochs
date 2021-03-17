@@ -822,7 +822,7 @@ Bit8u bx_pic_c::IAC(void)
   BX_CLEAR_INTR();
   BX_PIC_THIS s.master_pic.INT = 0;
   // Check for spurious interrupt
-  if (BX_PIC_THIS s.master_pic.irr == 0) {
+  if ((BX_PIC_THIS s.master_pic.irr & ~BX_PIC_THIS s.master_pic.imr) == 0) {
     return (BX_PIC_THIS s.master_pic.interrupt_offset + 7);
   }
   // In level sensitive mode don't clear the irr bit.
@@ -841,7 +841,7 @@ Bit8u bx_pic_c::IAC(void)
     BX_PIC_THIS s.slave_pic.INT = 0;
     BX_PIC_THIS s.master_pic.IRQ_in &= ~(1 << 2);
     // Check for spurious interrupt
-    if (BX_PIC_THIS s.slave_pic.irr == 0) {
+    if ((BX_PIC_THIS s.slave_pic.irr & ~BX_PIC_THIS s.slave_pic.imr) == 0) {
       return (BX_PIC_THIS s.slave_pic.interrupt_offset + 7);
     }
     irq    = BX_PIC_THIS s.slave_pic.irq;
