@@ -28,7 +28,6 @@
 #include "iodev.h"
 #include "bx_debug/debug.h"
 #include "virt_timer.h"
-#include "textconfig.h"
 
 bx_simulator_interface_c *SIM = NULL;
 logfunctions *siminterface_log = NULL;
@@ -380,7 +379,7 @@ int bx_real_sim_c::set_init_done(bool n)
   if (n) {
     if (bx_gui->has_gui_console()) {
       if (strcmp(registered_ci_name, "textconfig") != 0) {
-        init_text_config_interface();
+        PLUG_load_plugin(textconfig, PLUGTYPE_CORE);
       }
     }
   }

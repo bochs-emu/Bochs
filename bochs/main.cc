@@ -21,7 +21,6 @@
 #include "bochs.h"
 #include "bxversion.h"
 #include "param_names.h"
-#include "gui/textconfig.h"
 #if BX_USE_WIN32CONFIG
 #include "gui/win32dialog.h"
 #endif
@@ -328,7 +327,7 @@ int bxmain(void)
     const char *ci_name = ci_param->get_selected();
     if (!strcmp(ci_name, "textconfig")) {
 #if BX_USE_TEXTCONFIG
-      init_text_config_interface();   // in textconfig.h
+      PLUG_load_plugin(textconfig, PLUGTYPE_CORE);
 #else
       BX_PANIC(("configuration interface 'textconfig' not present"));
 #endif

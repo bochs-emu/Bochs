@@ -66,8 +66,8 @@ GUI_OBJS_WX = wx.o
 GUI_OBJS_WX_SUPPORT = wxmain.o wxdialog.o
 
 GUI_DLL_TARGETS = @GUI_DLL_TARGETS@
-OBJS_THAT_CANNOT_BE_PLUGINS = keymap.o gui.o siminterface.o paramtree.o textconfig.o @ENH_DBG_OBJS@ @DIALOG_OBJS@
-OBJS_THAT_CAN_BE_PLUGINS = @GUI_OBJS@
+OBJS_THAT_CANNOT_BE_PLUGINS = keymap.o gui.o siminterface.o paramtree.o @ENH_DBG_OBJS@ @DIALOG_OBJS@
+OBJS_THAT_CAN_BE_PLUGINS = textconfig.o
 
 X_LIBS = @X_LIBS@
 X_PRE_LIBS = @X_PRE_LIBS@
@@ -87,7 +87,8 @@ GUI_LINK_OPTS_TERM = @GUI_LINK_OPTS_TERM@
 GUI_LINK_OPTS_WX = @GUI_LINK_OPTS_WX@
 
 NONPLUGIN_OBJS = @GUI_NON_PLUGIN_OBJS@
-PLUGIN_OBJS = @GUI_PLUGIN_OBJS@
+GUI_PLUGIN_OBJS = @GUI_PLUGIN_OBJS@
+CI_PLUGIN_OBJS = $(OBJS_THAT_CAN_BE_PLUGINS)
 
 #
 # -------- end configurable options --------------------------
@@ -97,9 +98,9 @@ all: libgui.a
 
 plugins: @PLUGIN_TARGET_2@
 
-plugins_gcc: $(PLUGIN_OBJS:@GUI_PLUGIN_NAME_TRANSFORMATION@)
+plugins_gcc: $(GUI_PLUGIN_OBJS:@GUI_PLUGIN_NAME_TRANSFORMATION@) $(CI_PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 
-plugins_msvc: $(GUI_DLL_TARGETS)
+plugins_msvc: $(GUI_DLL_TARGETS) bx_textconfig.dll
 
 libgui.a: $(NONPLUGIN_OBJS)
 	@RMCOMMAND@ libgui.a
@@ -150,6 +151,9 @@ libbx_nogui_gui.la: nogui.lo
 libbx_term_gui.la: term.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_TERM)
 
+libbx_textconfig.la: textconfig.lo
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH)
+
 # special link rules for plugins that require more than one object file
 libbx_wx_gui.la: $(GUI_OBJS_WX:.o=.lo) $(GUI_OBJS_WX_SUPPORT:.o=.lo)
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $(GUI_OBJS_WX:.o=.lo) $(GUI_OBJS_WX_SUPPORT:.o=.lo) -o $@ -rpath $(PLUGIN_PATH)  $(GUI_LINK_OPTS_WX)
@@ -179,6 +183,9 @@ bx_rfb_gui.dll: $(GUI_OBJS_RFB)
 
 bx_win32_gui.dll: $(GUI_OBJS_WIN32)
 	@LINK_DLL@ $(GUI_OBJS_WIN32) $(WIN32_DLL_IMPORT_LIBRARY) $(GUI_LINK_OPTS_WIN32@LINK_VAR@)
+
+bx_textconfig.dll: textconfig.o
+	@LINK_DLL@ textconfig.o $(WIN32_DLL_IMPORT_LIBRARY)
 
 ##### end DLL section
 
@@ -273,7 +280,7 @@ term.o: term.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h 
  ../instrument/stubs/instrument.h ../param_names.h ../iodev/iodev.h \
  ../plugin.h ../extplugin.h
 textconfig.o: textconfig.@CPP_SUFFIX@ ../config.h ../osdep.h ../param_names.h \
- textconfig.h siminterface.h ../cpudb.h paramtree.h
+ siminterface.h ../cpudb.h paramtree.h
 vncsrv.o: vncsrv.@CPP_SUFFIX@ ../param_names.h ../iodev/iodev.h ../bochs.h \
  ../config.h ../osdep.h ../bx_debug/debug.h ../config.h ../osdep.h \
  ../gui/siminterface.h ../cpudb.h ../gui/paramtree.h \
@@ -290,7 +297,7 @@ win32dialog.o: win32dialog.@CPP_SUFFIX@ win32dialog.h ../config.h ../bochs.h \
  ../gui/siminterface.h ../cpudb.h ../gui/paramtree.h \
  ../memory/memory-bochs.h ../pc_system.h ../gui/gui.h \
  ../instrument/stubs/instrument.h ../param_names.h win32res.h \
- win32paramdlg.h textconfig.h
+ win32paramdlg.h
 win32_enh_dbg_osdep.o: win32_enh_dbg_osdep.@CPP_SUFFIX@ ../bochs.h ../config.h \
  ../osdep.h ../bx_debug/debug.h ../config.h ../osdep.h \
  ../gui/siminterface.h ../cpudb.h ../gui/paramtree.h \
@@ -394,7 +401,7 @@ term.lo: term.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h
  ../instrument/stubs/instrument.h ../param_names.h ../iodev/iodev.h \
  ../plugin.h ../extplugin.h
 textconfig.lo: textconfig.@CPP_SUFFIX@ ../config.h ../osdep.h ../param_names.h \
- textconfig.h siminterface.h ../cpudb.h paramtree.h
+ siminterface.h ../cpudb.h paramtree.h
 vncsrv.lo: vncsrv.@CPP_SUFFIX@ ../param_names.h ../iodev/iodev.h ../bochs.h \
  ../config.h ../osdep.h ../bx_debug/debug.h ../config.h ../osdep.h \
  ../gui/siminterface.h ../cpudb.h ../gui/paramtree.h \
@@ -411,7 +418,7 @@ win32dialog.lo: win32dialog.@CPP_SUFFIX@ win32dialog.h ../config.h ../bochs.h \
  ../gui/siminterface.h ../cpudb.h ../gui/paramtree.h \
  ../memory/memory-bochs.h ../pc_system.h ../gui/gui.h \
  ../instrument/stubs/instrument.h ../param_names.h win32res.h \
- win32paramdlg.h textconfig.h
+ win32paramdlg.h
 win32_enh_dbg_osdep.lo: win32_enh_dbg_osdep.@CPP_SUFFIX@ ../bochs.h ../config.h \
  ../osdep.h ../bx_debug/debug.h ../config.h ../osdep.h \
  ../gui/siminterface.h ../cpudb.h ../gui/paramtree.h \

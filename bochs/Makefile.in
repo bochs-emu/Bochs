@@ -797,7 +797,7 @@ logio.o: logio.@CPP_SUFFIX@ bochs.h config.h osdep.h gui/paramtree.h logio.h \
  cpu/icache.h cpu/apic.h cpu/xmm.h cpu/vmx.h cpu/cpuid.h cpu/access.h
 main.o: main.@CPP_SUFFIX@ bochs.h config.h osdep.h gui/paramtree.h logio.h cpudb.h \
  instrument/stubs/instrument.h misc/bswap.h bxversion.h param_names.h \
- gui/textconfig.h config.h cpu/cpu.h bx_debug/debug.h osdep.h \
+ config.h cpu/cpu.h bx_debug/debug.h osdep.h \
  cpu/decoder/decoder.h cpu/i387.h cpu/fpu/softfloat.h cpu/fpu/tag_w.h \
  cpu/fpu/status_w.h cpu/fpu/control_w.h cpu/crregs.h cpu/descriptor.h \
  cpu/decoder/instr.h cpu/lazy_flags.h cpu/tlb.h cpu/icache.h cpu/apic.h \

@@ -20,6 +20,11 @@
 //
 /////////////////////////////////////////////////////////////////////////
 
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
+
 //
 // This is code for a text-mode configuration interface.  Note that this file
 // does NOT include bochs.h.  Instead, it does all of its contact with
@@ -54,6 +59,7 @@ extern "C" {
 #include "logio.h"
 #include "paramtree.h"
 #include "siminterface.h"
+#include "plugin.h"
 
 #define CI_PATH_LENGTH 512
 
@@ -85,6 +91,20 @@ enum {
   BX_CI_RT_CONT,
   BX_CI_RT_QUIT
 };
+
+static int text_ci_callback(void *userdata, ci_command_t command);
+static BxEvent* textconfig_notify_callback(void *unused, BxEvent *event);
+
+PLUGIN_ENTRY_FOR_MODULE(textconfig)
+{
+  if (mode == PLUGIN_INIT) {
+    SIM->register_configuration_interface("textconfig", text_ci_callback, NULL);
+    SIM->set_notify_callback(textconfig_notify_callback, NULL);
+  } else if (mode == PLUGIN_PROBE) {
+    return (int)PLUGTYPE_CORE;
+  }
+  return 0; // Success
+}
 
 /* functions for changing particular options */
 int bx_read_rc(char *rc);
@@ -1083,7 +1103,7 @@ int text_ask(bx_param_c *param)
   return 0;
 }
 
-static int ci_callback(void *userdata, ci_command_t command)
+static int text_ci_callback(void *userdata, ci_command_t command)
 {
   switch (command)
   {
@@ -1103,15 +1123,6 @@ static int ci_callback(void *userdata, ci_command_t command)
       break;
   }
   return 0;
-}
-
-// if I can make things compile without this module linked in, then
-// this file can become a plugin too.
-int init_text_config_interface()
-{
-  SIM->register_configuration_interface("textconfig", ci_callback, NULL);
-  SIM->set_notify_callback(textconfig_notify_callback, NULL);
-  return 0;  // success
 }
 
 #endif

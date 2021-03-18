@@ -2707,7 +2707,7 @@ fi
 if test "$bx_plugins" = 1; then
   # every item in this list will be compiled as a plugin. Do not include
   # support objs; they will be mentioned in plugin-specific makefile rules.
-  GUI_PLUGIN_OBJS="$GUI_PLUGIN_OBJS $SPECIFIC_GUI_OBJS"
+  GUI_PLUGIN_OBJS="$SPECIFIC_GUI_OBJS"
 else
   # include support objs
   GUI_NON_PLUGIN_OBJS="$GUI_NON_PLUGIN_OBJS $SPECIFIC_GUI_OBJS $SPECIFIC_GUI_SUPPORT_OBJS"
@@ -3240,7 +3240,6 @@ AC_SUBST(RFB_LIBS)
 AC_SUBST(GUI_LINK_OPTS_VNCSRV)
 AC_SUBST(GUI_LINK_OPTS_SDL)
 AC_SUBST(GUI_LINK_OPTS_SDL2)
-AC_SUBST(GUI_OBJS)
 AC_SUBST(DEVICE_LINK_OPTS)
 AC_SUBST(GUI_LINK_OPTS)
 AC_SUBST(GUI_LINK_OPTS_TERM)

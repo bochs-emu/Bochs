@@ -442,6 +442,8 @@ PLUGIN_ENTRY_FOR_MODULE(iodebug);
 PLUGIN_ENTRY_FOR_MODULE(ioapic);
 PLUGIN_ENTRY_FOR_MODULE(hpet);
 PLUGIN_ENTRY_FOR_MODULE(voodoo);
+// config interface plugin
+PLUGIN_ENTRY_FOR_MODULE(textconfig);
 // gui plugins
 PLUGIN_ENTRY_FOR_GUI_MODULE(amigaos);
 PLUGIN_ENTRY_FOR_GUI_MODULE(carbon);

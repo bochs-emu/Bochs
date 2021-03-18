@@ -304,7 +304,7 @@ typedef struct {
 BOCHSAPI_MSVCONLY void bx_show_ips_handler(void);
 #endif
 void CDECL bx_signal_handler(int signum);
-int bx_atexit(void);
+BOCHSAPI_MSVCONLY int bx_atexit(void);
 BOCHSAPI extern bx_debug_t bx_dbg;
 
 enum {

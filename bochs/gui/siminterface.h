@@ -70,7 +70,7 @@
 // bx_floppy.s.media[2].heads = 17.  If such access is needed, then a
 // siminterface method should be written to make the change on the CI's behalf.
 // This separation is enforced by the fact that the CI does not even include
-// bochs.h.  You'll notice that textconfig.cc includes osdep.h, textconfig.h,
+// bochs.h.  You'll notice that textconfig.cc includes osdep.h, paramtree.h
 // and siminterface.h, so it doesn't know what bx_floppy or bx_cpu_c are.
 // I'm sure some people will say is overly restrictive and/or annoying.  When I
 // set it up this way, we were still talking about making the CI in a seperate
