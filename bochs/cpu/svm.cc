@@ -297,6 +297,10 @@ void BX_CPU_C::SvmExitSaveGuestState(void)
 
   SVM_CONTROLS *ctrls = &BX_CPU_THIS_PTR vmcb.ctrls;
 
+  if (ctrls->nested_paging) {
+    vmcb_write64(SVM_GUEST_PAT, BX_CPU_THIS_PTR msr.pat.u64);
+  }
+
   vmcb_write8(SVM_CONTROL_VTPR, ctrls->v_tpr);
   vmcb_write8(SVM_CONTROL_VIRQ, is_pending(BX_EVENT_SVM_VIRQ_PENDING));
   clear_event(BX_EVENT_SVM_VIRQ_PENDING);
