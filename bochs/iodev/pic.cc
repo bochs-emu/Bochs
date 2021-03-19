@@ -702,10 +702,6 @@ void bx_pic_c::service_master_pic(void)
   if(highest_priority > 7)
     highest_priority = 0;
 
-  if (BX_PIC_THIS s.master_pic.INT) { /* last interrupt still not acknowleged */
-    return;
-  }
-
   isr = BX_PIC_THIS s.master_pic.isr;
   if (BX_PIC_THIS s.master_pic.special_mask) {
     /* all priorities may be enabled.  check all IRR bits except ones
@@ -736,7 +732,7 @@ void bx_pic_c::service_master_pic(void)
        * current IRQ is already in-service
        */
       if (! (BX_PIC_THIS s.master_pic.special_mask && ((isr >> irq) & 0x01))) {
-        if (unmasked_requests & (1 << irq)) {
+        if (!BX_PIC_THIS s.master_pic.INT && (unmasked_requests & (1 << irq))) {
           BX_DEBUG(("signalling IRQ(%u)", (unsigned) irq));
           BX_PIC_THIS s.master_pic.INT = 1;
           BX_PIC_THIS s.master_pic.irq = irq;
@@ -749,7 +745,11 @@ void bx_pic_c::service_master_pic(void)
       if(irq > 7)
         irq = 0;
     } while(irq != max_irq); /* do ... */
-  } /* if (unmasked_requests = ... */
+  } else if (BX_PIC_THIS s.master_pic.INT) {
+    /* deassert INT if request is masked now */
+    BX_CLEAR_INTR();
+    BX_PIC_THIS s.master_pic.INT = 0;
+  }
 }
 
 void bx_pic_c::service_slave_pic(void)
@@ -760,10 +760,6 @@ void bx_pic_c::service_slave_pic(void)
   Bit8u highest_priority = BX_PIC_THIS s.slave_pic.lowest_priority + 1;
   if(highest_priority > 7)
     highest_priority = 0;
-
-  if (BX_PIC_THIS s.slave_pic.INT) { /* last interrupt still not acknowleged */
-    return;
-  }
 
   isr = BX_PIC_THIS s.slave_pic.isr;
   if (BX_PIC_THIS s.slave_pic.special_mask) {
@@ -795,7 +791,7 @@ void bx_pic_c::service_slave_pic(void)
        * current IRQ is already in-service
        */
       if (! (BX_PIC_THIS s.slave_pic.special_mask && ((isr >> irq) & 0x01))) {
-        if (unmasked_requests & (1 << irq)) {
+        if (!BX_PIC_THIS s.slave_pic.INT && (unmasked_requests & (1 << irq))) {
           BX_DEBUG(("slave: signalling IRQ(%u)", (unsigned) 8 + irq));
 
           BX_PIC_THIS s.slave_pic.INT = 1;
@@ -810,7 +806,11 @@ void bx_pic_c::service_slave_pic(void)
         irq = 0;
 
     } while(irq != max_irq); /* do ... */
-  } /* if (unmasked_requests = ... */
+  } else if (BX_PIC_THIS s.slave_pic.INT) {
+    /* deassert INT if request is masked now */
+    BX_PIC_THIS lower_irq(2);
+    BX_PIC_THIS s.slave_pic.INT = 0;
+  }
 }
 
 /* CPU handshakes with PIC after acknowledging interrupt */
