@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009-2014  The Bochs Project
+//  Copyright (C) 2009-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -43,11 +43,6 @@ extern "C" {
 
 #if BX_USE_WIN32CONFIG
 
-#if BX_DEBUGGER && BX_DEBUGGER_GUI
-void InitDebugDialog();
-void ParseIDText(const char *p);
-void HitBreak();
-#endif
 int init_win32_config_interface();
 
 #endif
