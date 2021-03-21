@@ -1,6 +1,6 @@
 </td></tr></table>
 </td></tr>
-<tr><td colspan="3" bgcolor="#4079d6" height="1"><img src="images/sm.gif" width="1" height="1"></td></tr>
+<tr><td colspan="3" bgcolor="#4079d6" height="1"><img src="images/sm.png" width="1" height="1"></td></tr>
 <tr><td width="140" bgcolor="#aacbff">&nbsp;</td><td bgcolor="#6d95d7" width="400">&nbsp;</td><td width="100%"><table border="0" cellspacing="0" cellpadding="0" width="100%"><tr><td bgcolor="#4079d6" width="50%">&nbsp;</td><td bgcolor="#1e029a" width="50%">&nbsp;</td></tr></table></td></tr>
 <tr><td>
 <center>
