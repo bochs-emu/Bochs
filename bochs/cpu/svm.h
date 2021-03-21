@@ -255,6 +255,8 @@ typedef struct bx_SVM_HOST_STATE
   Bit64u rsp;
   Bit64u rax;
 
+  BxPackedRegister pat_msr;
+
 } SVM_HOST_STATE;
 
 typedef struct bx_SVM_GUEST_STATE
@@ -271,6 +273,7 @@ typedef struct bx_SVM_GUEST_STATE
   Bit32u dr6;
   Bit32u dr7;
   bx_phy_address cr3;
+  BxPackedRegister pat_msr;
   Bit32u eflags;
   Bit64u rip;
   Bit64u rsp;

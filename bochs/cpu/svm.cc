@@ -219,6 +219,8 @@ void BX_CPU_C::SvmEnterSaveHostState(SVM_HOST_STATE *host)
   host->rip = RIP;
   host->rsp = RSP;
   host->rax = RAX;
+
+  host->pat_msr = BX_CPU_THIS_PTR msr.pat;
 }
 
 void BX_CPU_C::SvmExitLoadHostState(SVM_HOST_STATE *host)
@@ -245,6 +247,8 @@ void BX_CPU_C::SvmExitLoadHostState(SVM_HOST_STATE *host)
       shutdown();
     }
   }
+
+  BX_CPU_THIS_PTR msr.pat = host->pat_msr;
 
   BX_CPU_THIS_PTR dr7.set32(0x00000400);
 
@@ -373,7 +377,7 @@ bool BX_CPU_C::SvmEnterLoadCheckControls(SVM_CONTROLS *ctrls)
       return 0;
     }
 
-    Bit64u guest_pat = vmcb_read32(SVM_GUEST_PAT);
+    Bit64u guest_pat = vmcb_read64(SVM_GUEST_PAT);
     if (! isValidMSR_PAT(guest_pat)) {
       BX_ERROR(("VMRUN: invalid memory type in guest PAT_MSR !"));
       return 0;
@@ -461,6 +465,8 @@ bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
     return 0;
   }
 
+  guest.pat_msr = vmcb_read64(SVM_GUEST_PAT);
+
   for (n=0;n < 4; n++) {
     svm_segment_read(&guest.sregs[n], SVM_GUEST_ES_SELECTOR + n * 0x10);
   }
@@ -538,6 +544,10 @@ bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
         return 0;
       }
     }
+  }
+  else {
+    // load guest PAT when nested paging is enabled
+    BX_CPU_THIS_PTR msr.pat = guest.pat_msr;
   }
 
   BX_CPU_THIS_PTR dr6.set32(guest.dr6);
