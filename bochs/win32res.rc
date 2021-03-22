@@ -1,12 +1,13 @@
 #define ISOLATION_AWARE_ENABLED
 #include <windows.h>
+#include "config.h"
 #include "gui/win32res.h"
 
 ICON_BOCHS ICON build/win32/nsis/bochs.ico
 ICON_BOCHS2 ICON build/win32/nsis/logo.ico
 
 // Manifest for both 32-bit and 64-bit Windows
-#ifndef VSIDE
+#if !defined(VSIDE) && !BX_WITH_WX
 1 24 build/win32/bochs.manifest
 #endif
 
@@ -100,4 +101,6 @@ BEGIN
 END
 
 #include "bxversion.rc"
+#if BX_DEBUGGER_GUI
 #include "win32_enh_dbg.rc"
+#endif

@@ -369,7 +369,7 @@ libbochs.a:
 	$(RANLIB) libbochs.a
 
 # for wxWidgets port, on win32 platform
-wxbochs_resources.o: wxbochs.rc
+wxbochs_resources.o: wxbochs.rc win32res.rc bxversion.rc
 	windres $(srcdir)/wxbochs.rc -o $@ --include-dir=`@WX_CONFIG@ --prefix`/include
 
 # for win32 gui
