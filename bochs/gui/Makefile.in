@@ -292,7 +292,7 @@ win32.o: win32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.
  ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h ../gui/gui.h \
  ../instrument/stubs/instrument.h ../param_names.h keymap.h \
  ../iodev/iodev.h ../plugin.h ../extplugin.h
-win32dialog.o: win32dialog.@CPP_SUFFIX@ win32dialog.h ../config.h ../bochs.h \
+win32config.o: win32config.@CPP_SUFFIX@ win32dialog.h ../config.h ../bochs.h \
  ../config.h ../osdep.h ../bx_debug/debug.h ../osdep.h \
  ../gui/siminterface.h ../cpudb.h ../gui/paramtree.h \
  ../memory/memory-bochs.h ../pc_system.h ../gui/gui.h \
@@ -413,7 +413,7 @@ win32.lo: win32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug
  ../gui/paramtree.h ../memory/memory-bochs.h ../pc_system.h ../gui/gui.h \
  ../instrument/stubs/instrument.h ../param_names.h keymap.h \
  ../iodev/iodev.h ../plugin.h ../extplugin.h
-win32dialog.lo: win32dialog.@CPP_SUFFIX@ win32dialog.h ../config.h ../bochs.h \
+win32config.lo: win32config.@CPP_SUFFIX@ win32dialog.h ../config.h ../bochs.h \
  ../config.h ../osdep.h ../bx_debug/debug.h ../osdep.h \
  ../gui/siminterface.h ../cpudb.h ../gui/paramtree.h \
  ../memory/memory-bochs.h ../pc_system.h ../gui/gui.h \

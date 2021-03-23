@@ -2897,7 +2897,7 @@ case $target in
         LIBS="$LIBS comctl32.lib"
       fi
     fi
-    DIALOG_OBJS="win32dialog.o win32paramdlg.o scrollwin.o"
+    DIALOG_OBJS="win32config.o win32paramdlg.o scrollwin.o"
     EXPORT_DYNAMIC=""
     ;;
   *-cygwin* | *-mingw* | *-msys)
@@ -2915,7 +2915,7 @@ case $target in
         LIBS="$LIBS -lcomctl32"
       fi
     fi
-    DIALOG_OBJS="win32dialog.o win32paramdlg.o scrollwin.o"
+    DIALOG_OBJS="win32config.o win32paramdlg.o scrollwin.o"
     EXPORT_DYNAMIC=""
     ;;
 esac
