@@ -41,10 +41,4 @@ extern "C" {
 #include <ctype.h>
 }
 
-#if BX_USE_WIN32CONFIG
-
-int init_win32_config_interface();
-
-#endif
-
 #endif // BX_WIN32_DIALOGS_H

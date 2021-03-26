@@ -2704,15 +2704,8 @@ else
   AC_DEFINE(BX_USE_GUI_CONSOLE, 0)
 fi
 
-if test "$bx_plugins" = 1; then
-  # every item in this list will be compiled as a plugin. Do not include
-  # support objs; they will be mentioned in plugin-specific makefile rules.
-  GUI_PLUGIN_OBJS="$SPECIFIC_GUI_OBJS"
-else
-  # include support objs
-  GUI_NON_PLUGIN_OBJS="$GUI_NON_PLUGIN_OBJS $SPECIFIC_GUI_OBJS $SPECIFIC_GUI_SUPPORT_OBJS"
-fi
-
+AC_SUBST(SPECIFIC_GUI_OBJS)
+AC_SUBST(SPECIFIC_GUI_SUPPORT_OBJS)
 AC_SUBST(GUI_CFLAGS)
 AC_SUBST(GUI_CXXFLAGS)
 AC_SUBST(WX_CONFIG)
@@ -2857,7 +2850,7 @@ if test "$gui_debugger" = 1; then
 fi
 AC_SUBST(ENH_DBG_OBJS)
 
-DIALOG_OBJS=""
+CI_PLUGIN_OBJS="textconfig.o"
 EXPORT_DYNAMIC="-export-dynamic"
 case $target in
   *-pc-windows* | *-pc-winnt*)
@@ -2897,7 +2890,8 @@ case $target in
         LIBS="$LIBS comctl32.lib"
       fi
     fi
-    DIALOG_OBJS="win32config.o win32paramdlg.o scrollwin.o"
+    CI_PLUGIN_OBJS="$CI_PLUGIN_OBJS \$(CI_OBJS_WIN32)"
+    CI_SUPPORT_OBJS="\$(CI_OBJS_WIN32_SUPPORT)"
     EXPORT_DYNAMIC=""
     ;;
   *-cygwin* | *-mingw* | *-msys)
@@ -2915,11 +2909,13 @@ case $target in
         LIBS="$LIBS -lcomctl32"
       fi
     fi
-    DIALOG_OBJS="win32config.o win32paramdlg.o scrollwin.o"
+    CI_PLUGIN_OBJS="$CI_PLUGIN_OBJS \$(CI_OBJS_WIN32)"
+    CI_SUPPORT_OBJS="\$(CI_OBJS_WIN32_SUPPORT)"
     EXPORT_DYNAMIC=""
     ;;
 esac
-AC_SUBST(DIALOG_OBJS)
+AC_SUBST(CI_PLUGIN_OBJS)
+AC_SUBST(CI_SUPPORT_OBJS)
 AC_SUBST(EXPORT_DYNAMIC)
 
 if test "$use_curses" = yes; then

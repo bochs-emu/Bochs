@@ -21,9 +21,6 @@
 #include "bochs.h"
 #include "bxversion.h"
 #include "param_names.h"
-#if BX_USE_WIN32CONFIG
-#include "gui/win32dialog.h"
-#endif
 #include "cpu/cpu.h"
 #include "iodev/iodev.h"
 #include "iodev/hdimage/hdimage.h"
@@ -334,7 +331,7 @@ int bxmain(void)
     }
     else if (!strcmp(ci_name, "win32config")) {
 #if BX_USE_WIN32CONFIG
-      init_win32_config_interface();
+      PLUG_load_plugin(win32config, PLUGTYPE_CORE);
 #else
       BX_PANIC(("configuration interface 'win32config' not present"));
 #endif

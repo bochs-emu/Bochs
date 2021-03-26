@@ -18,6 +18,11 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
+
 #include "win32dialog.h"
 #include "bochs.h"
 #include "bx_debug/debug.h"
@@ -25,8 +30,23 @@
 #include "gui.h"
 #include "win32res.h"
 #include "win32paramdlg.h"
+#include "plugin.h"
 
 #if BX_USE_WIN32CONFIG
+
+static int win32_ci_callback(void *userdata, ci_command_t command);
+static BxEvent* win32_notify_callback(void *unused, BxEvent *event);
+
+PLUGIN_ENTRY_FOR_MODULE(win32config)
+{
+  if (mode == PLUGIN_INIT) {
+    SIM->register_configuration_interface("win32config", win32_ci_callback, NULL);
+    SIM->set_notify_callback(win32_notify_callback, NULL);
+  } else if (mode == PLUGIN_PROBE) {
+    return (int)PLUGTYPE_CORE;
+  }
+  return 0; // Success
+}
 
 const char log_choices[N_ACT+1][16] = {"ignore", "log", "warn user", "ask user", "end simulation", "no change"};
 
@@ -688,7 +708,6 @@ static int win32_ci_callback(void *userdata, ci_command_t command)
   switch (command)
   {
     case CI_START:
-      SIM->set_notify_callback(win32_notify_callback, NULL);
       if (SIM->get_param_enum(BXPN_BOCHS_START)->get() == BX_QUICK_START) {
         SIM->begin_simulation(bx_startup_flags.argc, bx_startup_flags.argv);
         // we don't expect it to return, but if it does, quit
@@ -718,12 +737,6 @@ static int win32_ci_callback(void *userdata, ci_command_t command)
       break;
   }
   return 0;
-}
-
-int init_win32_config_interface()
-{
-  SIM->register_configuration_interface("win32config", win32_ci_callback, NULL);
-  return 0;  // success
 }
 
 #endif // BX_USE_WIN32CONFIG

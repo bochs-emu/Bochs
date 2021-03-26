@@ -65,9 +65,11 @@ GUI_OBJS_AMIGAOS = amigaos.o
 GUI_OBJS_WX = wx.o
 GUI_OBJS_WX_SUPPORT = wxmain.o wxdialog.o
 
+CI_OBJS_WIN32 = win32config.o
+CI_OBJS_WIN32_SUPPORT = win32paramdlg.o scrollwin.o
+
 GUI_DLL_TARGETS = @GUI_DLL_TARGETS@
-OBJS_THAT_CANNOT_BE_PLUGINS = keymap.o gui.o siminterface.o paramtree.o @ENH_DBG_OBJS@ @DIALOG_OBJS@
-OBJS_THAT_CAN_BE_PLUGINS = textconfig.o
+OBJS_THAT_CANNOT_BE_PLUGINS = keymap.o gui.o siminterface.o paramtree.o @ENH_DBG_OBJS@
 
 X_LIBS = @X_LIBS@
 X_PRE_LIBS = @X_PRE_LIBS@
@@ -78,17 +80,22 @@ GUI_LINK_OPTS_RFB = @RFB_LIBS@
 GUI_LINK_OPTS_RFB_VCPP = user32.lib @RFB_LIBS@
 GUI_LINK_OPTS_VNCSRV = @GUI_LINK_OPTS_VNCSRV@
 GUI_LINK_OPTS_AMIGAOS =
-GUI_LINK_OPTS_WIN32 = -luser32 -lgdi32 -lcomdlg32 -lcomctl32
-GUI_LINK_OPTS_WIN32_VCPP = user32.lib gdi32.lib winmm.lib comdlg32.lib comctl32.lib
+GUI_LINK_OPTS_WIN32 = -luser32 -lgdi32 -lcomctl32
+GUI_LINK_OPTS_WIN32_VCPP = user32.lib gdi32.lib comctl32.lib
 GUI_LINK_OPTS_MACOS =
 GUI_LINK_OPTS_CARBON = -framework Carbon
 GUI_LINK_OPTS_NOGUI =
 GUI_LINK_OPTS_TERM = @GUI_LINK_OPTS_TERM@
 GUI_LINK_OPTS_WX = @GUI_LINK_OPTS_WX@
 
+CI_LINK_OPTS_WIN32 = -luser32 -lgdi32 -lcomctl32 -lcomdlg32 -lshell32
+CI_LINK_OPTS_WIN32_VCPP = user32.lib gdi32.lib comctl32.lib comdlg32.lib shell32.lib
+
+GUI_PLUGIN_OBJS = @SPECIFIC_GUI_OBJS@
+CI_PLUGIN_OBJS = @CI_PLUGIN_OBJS@
+OBJS_THAT_CAN_BE_PLUGINS = $(GUI_PLUGIN_OBJS) $(CI_PLUGIN_OBJS)
+OBJS_THAT_SUPPORT_OTHER_PLUGINS = @SPECIFIC_GUI_SUPPORT_OBJS@ @CI_SUPPORT_OBJS@
 NONPLUGIN_OBJS = @GUI_NON_PLUGIN_OBJS@
-GUI_PLUGIN_OBJS = @GUI_PLUGIN_OBJS@
-CI_PLUGIN_OBJS = $(OBJS_THAT_CAN_BE_PLUGINS)
 
 #
 # -------- end configurable options --------------------------
@@ -100,7 +107,7 @@ plugins: @PLUGIN_TARGET_2@
 
 plugins_gcc: $(GUI_PLUGIN_OBJS:@GUI_PLUGIN_NAME_TRANSFORMATION@) $(CI_PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 
-plugins_msvc: $(GUI_DLL_TARGETS) bx_textconfig.dll
+plugins_msvc: $(GUI_DLL_TARGETS) bx_textconfig.dll bx_win32config.dll
 
 libgui.a: $(NONPLUGIN_OBJS)
 	@RMCOMMAND@ libgui.a
@@ -186,6 +193,9 @@ bx_win32_gui.dll: $(GUI_OBJS_WIN32)
 
 bx_textconfig.dll: textconfig.o
 	@LINK_DLL@ textconfig.o $(WIN32_DLL_IMPORT_LIBRARY)
+
+bx_win32config.dll: $(CI_OBJS_WIN32) $(CI_OBJS_WIN32_SUPPORT)
+	@LINK_DLL@ $(CI_OBJS_WIN32) $(CI_OBJS_WIN32_SUPPORT) $(WIN32_DLL_IMPORT_LIBRARY) $(CI_LINK_OPTS_WIN32@LINK_VAR@)
 
 ##### end DLL section
 
