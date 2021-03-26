@@ -242,7 +242,8 @@ void bx_pcidev_c::init(void)
   // Check if the device is disabled or not configured
   if (SIM->get_param_num(BXPN_PCIDEV_VENDOR)->get() == 0xffff) {
     BX_INFO(("Host PCI device mapping disabled"));
-    BX_UNREGISTER_DEVICE_DEVMODEL("pcidev");
+    // mark unused plugin for removal
+    ((bx_param_bool_c*)((bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL))->get_by_name("pcidev"))->set(0);
     return;
   }
 
