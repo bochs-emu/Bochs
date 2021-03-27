@@ -79,7 +79,7 @@ PLUGIN_ENTRY_FOR_GUI_MODULE(wx)
     SIM->get_param_enum(BXPN_SEL_DISPLAY_LIBRARY)->set_enabled(0);
     MyPanel::OnPluginInit();
   } else if (mode == PLUGIN_PROBE) {
-    return (int)PLUGTYPE_GUI;
+    return (int)(PLUGTYPE_CI | PLUGTYPE_GUI);
   }
   return 0; // success
 }

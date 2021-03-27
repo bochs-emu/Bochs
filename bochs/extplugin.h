@@ -32,7 +32,8 @@
 #define PLUGTYPE_STANDARD  0x02
 #define PLUGTYPE_OPTIONAL  0x04
 #define PLUGTYPE_VGA       0x08
-#define PLUGTYPE_USB       0x80
+#define PLUGTYPE_USB       0x40
+#define PLUGTYPE_CI        0x80
 #define PLUGTYPE_GUI      0x100
 #define PLUGTYPE_IMG      0x200
 #define PLUGTYPE_NET      0x400

@@ -88,7 +88,6 @@ extern "C" {
 #define PLUG_get_plugin_flags(a,b) bx_get_plugin_flags(a,b)
 #define PLUG_load_plugin(name,type) {bx_load_plugin(#name,type);}
 #define PLUG_load_plugin_var(name,type) {bx_load_plugin(name,type);}
-#define PLUG_load_gui_plugin(name) bx_load_plugin(name,PLUGTYPE_GUI)
 #define PLUG_load_opt_plugin(name) bx_load_plugin(name,PLUGTYPE_OPTIONAL)
 #define PLUG_load_vga_plugin(name) bx_load_plugin(name,PLUGTYPE_VGA)
 #define PLUG_unload_opt_plugin(name) bx_unload_plugin(name,1)
@@ -117,7 +116,7 @@ extern "C" {
 #define PLUG_get_plugins_count(a) bx_get_plugins_count_np(a)
 #define PLUG_get_plugin_name(a,b) bx_get_plugin_name_np(a,b)
 #define PLUG_get_plugin_flags(a,b) bx_get_plugin_flags_np(a,b)
-#define PLUG_load_gui_plugin(name) bx_load_plugin_np(name,PLUGTYPE_GUI)
+#define PLUG_load_plugin_var(name,type) bx_load_plugin_np(name,type)
 #define PLUG_load_opt_plugin(name) bx_load_plugin_np(name,PLUGTYPE_OPTIONAL)
 #define PLUG_load_vga_plugin(name) bx_load_plugin_np(name,PLUGTYPE_VGA)
 #define PLUG_unload_opt_plugin(name) bx_unload_opt_plugin(name,1)

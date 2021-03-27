@@ -3005,17 +3005,18 @@ features enabled at compile time. To add a new feature (device, gui, driver)
 several files need to be modified (configure script, makefile, some headers)
 and the complete build process must be performed. As an alternative, Bochs
 can be compiled as an executable file containing the core funtionality and a
-number of loadable modules providing device emulation, display library (gui)
-capabilities or drivers for some other features. On Windows platforms such a
-module is called DLL, other platforms like Linux call it shared library and use
-<command>libtool</command> to create it. Bochs uses the environment variable
-LTDL_LIBARY_PATH to search for plugins. To build Bochs in this mode, the
-configure option <option>--enable-plugins</option> must be used. In this mode
-it is possible to add externally developed extensions (AKA "user plugins") that
-can be detected at startup. Rebuilding the whole project is not necessary in
-that case. Basically these Bochs facilities are currently supported by the
-plugin interface:
+number of loadable modules providing config interface, device emulation,
+display library (gui) capabilities or drivers for some other features. On
+Windows platforms such a module is called DLL, other platforms like Linux call
+it shared library and use <command>libtool</command> to create it. Bochs uses
+the environment variable LTDL_LIBARY_PATH to search for plugins. To build Bochs
+in this mode, the configure option <option>--enable-plugins</option> must be
+used. In this mode it is possible to add externally developed extensions (AKA
+"user plugins") that can be detected at startup. Rebuilding the whole project
+is not necessary in that case. Basically these Bochs facilities are currently
+supported by the plugin interface:
 <itemizedlist>
+<listitem><para>config interface</para></listitem>
 <listitem><para>i/o device</para></listitem>
 <listitem><para>pluggable USB device</para></listitem>
 <listitem><para>display library (gui)</para></listitem>
@@ -3145,11 +3146,18 @@ description:
 <entry>Number of devices per plugin not limited</entry>
 </row>
 <row>
+<entry>PLUGTYPE_CI</entry>
+<entry>Config interface plugin selected with the <option>config_interface</option> option</entry>
+<entry>lib<emphasis>module</emphasis>_gui_plugin_entry</entry>
+<entry>-</entry>
+<entry>One plugin of type required / supported</entry>
+</row>
+<row>
 <entry>PLUGTYPE_GUI</entry>
-<entry>Display library (gui) plugin selected with the display library option</entry>
+<entry>Display library (gui) plugin selected with the <option>display_library</option> option</entry>
 <entry>lib<emphasis>module</emphasis>_gui_plugin_entry</entry>
 <entry>bx_gui_c</entry>
-<entry>One plugin per type only</entry>
+<entry>One plugin of type required / supported</entry>
 </row>
 <row>
 <entry>PLUGTYPE_IMG</entry>
@@ -3197,10 +3205,10 @@ entry function name. Each valid plugin is temporarily loaded to read the plugin
 type and flags by calling the entry function with the corresponding mode. The
 plugin interface builds up a database with all information for loading detected
 modules later on demand. A plugin can return multiple types, but it can only be
-loaded with one of it (currently on used by the "voodoo" plugin). The flags can
-be used to indicate specific capabilities of the plugin (currently on used for
-device plugins that can be connected to a PCI slot). For unimplemented calling
-modes the entry function must return 0.
+loaded with one of it (currently used by the "wx" gui and "voodoo" device
+plugin). The flags can be used to indicate specific capabilities of the plugin
+(currently on used for device plugins that can be connected to a PCI slot). For
+unimplemented calling modes the entry function must return 0.
 </para>
 <para>
 To simplify the naming of the plugin entry function some macros have been

@@ -101,7 +101,7 @@ PLUGIN_ENTRY_FOR_MODULE(textconfig)
     SIM->register_configuration_interface("textconfig", text_ci_callback, NULL);
     SIM->set_notify_callback(textconfig_notify_callback, NULL);
   } else if (mode == PLUGIN_PROBE) {
-    return (int)PLUGTYPE_CORE;
+    return (int)PLUGTYPE_CI;
   }
   return 0; // Success
 }

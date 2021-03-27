@@ -4,9 +4,9 @@ Changes after 2.6.11:
 - General
   - Improved plugins handling: all available plugins in path are detected at
     startup (including externally developed ones). These types are supported in
-    Bochs configuration: display libraries, VGA compatile adapters, optional
-    PCI/ISA devices, pluggable USB devices, disk image, networking and sound
-    driver modules.
+    Bochs configuration: config interfaces, display libraries, VGA compatile
+    adapters, optional PCI/ISA devices, pluggable USB devices, disk image,
+    networking and sound driver modules.
   - Save/Restore bugfixes
   - Removed legacy "load32bitOShack" feature.
   - Removed "svga" display library designed for the obsolete Linux SVGALib.
@@ -14,6 +14,11 @@ Changes after 2.6.11:
 - Configure and compile
   - Added example shortcut script for cross compiling on Linux for Windows.
   - Visual Studio workspace files upgraded to VS2019 format.
+
+- Config interface
+  - The config interfaces 'textconfig' and 'win32config' are now plugins.
+  - Switch config interface to 'textconfig' at runtime in case the gui doesn't
+    support dialogs (rfb and vncsrv on Windows).
 
 - CPU/CPUDB
   - Bugfixes for CPU emulation correctness (CPUID/VMX/SVM fixes to support Windows Hyper-V as guest in Bochs)

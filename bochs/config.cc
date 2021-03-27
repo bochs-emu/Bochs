@@ -46,6 +46,7 @@
 #endif
 
 
+const char **config_interface_list;
 const char **display_library_list;
 const char **vga_extension_names;
 const char **vga_extension_plugins;
@@ -294,6 +295,28 @@ bool bx_opt_plugin_available(const char *plugname)
   return (((bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL))->get_by_name(plugname) != NULL);
 }
 
+void bx_init_config_interface_list()
+{
+  Bit8u i, count = 0;
+
+  count = PLUG_get_plugins_count(PLUGTYPE_CI);
+  config_interface_list = (const char**) malloc((count + 1) * sizeof(char*));
+  for (i = 0; i < count; i++) {
+    config_interface_list[i] = PLUG_get_plugin_name(PLUGTYPE_CI, i);
+  }
+  config_interface_list[count] = NULL;
+  // move default config_intergface to the top of the list
+  if (strcmp(config_interface_list[0], BX_DEFAULT_CONFIG_INTERFACE)) {
+    for (i = 1; i < count; i++) {
+      if (!strcmp(config_interface_list[i], BX_DEFAULT_CONFIG_INTERFACE)) {
+        config_interface_list[i] = config_interface_list[0];
+        config_interface_list[0] = BX_DEFAULT_CONFIG_INTERFACE;
+        break;
+      }
+    }
+  }
+}
+
 void bx_init_displaylib_list()
 {
   Bit8u i, count = 0;
@@ -382,18 +405,7 @@ void bx_init_options()
   menu = new bx_list_c(root_param, "general", "");
 
  // config interface option, set in bochsrc or command line
-  static const char *config_interface_list[] = {
-#if BX_USE_WIN32CONFIG
-    "win32config",
-#endif
-#if BX_USE_TEXTCONFIG
-    "textconfig",
-#endif
-#if BX_WITH_WX
-    "wx",
-#endif
-    NULL
-  };
+  bx_init_config_interface_list();
   bx_param_enum_c *sel_config = new bx_param_enum_c(menu,
     "config_interface", "Configuration interface",
     "Select configuration interface",

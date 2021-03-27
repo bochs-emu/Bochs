@@ -248,7 +248,7 @@ void plugin_add_entry(char *pgn_name, Bit16u type, Bit8u flags)
 {
   plugin_t *plugin, *temp;
 
-  if (type == PLUGTYPE_GUI) {
+  if ((type & PLUGTYPE_GUI) > 0) {
     if (!strncmp(pgn_name + strlen(pgn_name) - 4, "_gui", 4)) {
       pgn_name[strlen(pgn_name) - 4] = 0;
     }
@@ -962,13 +962,21 @@ void bx_plugins_after_restore_state()
 #define BUILTIN_OPT_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_OPTIONAL, 0, lib##mod##_plugin_entry, 0}
 #define BUILTIN_OPTPCI_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_OPTIONAL, PLUGFLAG_PCI, lib##mod##_plugin_entry, 0}
 #define BUILTIN_VGA_PLUGIN_ENTRY(mod, t, f) {#mod, PLUGTYPE_VGA | t, f, lib##mod##_plugin_entry, 0}
+#define BUILTIN_CI_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_CI, 0, lib##mod##_plugin_entry, 0}
 #define BUILTIN_GUI_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_GUI, 0, lib##mod##_gui_plugin_entry, 0}
+#define BUILTIN_GUICI_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_GUI | PLUGTYPE_CI, 0, lib##mod##_gui_plugin_entry, 0}
 #define BUILTIN_IMG_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_IMG, 0, lib##mod##_img_plugin_entry, 0}
 #define BUILTIN_NET_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_NET, 0, libeth_##mod##_plugin_entry, 0}
 #define BUILTIN_SND_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_SND, 0, libsound##mod##_plugin_entry, 0}
 #define BUILTIN_USB_PLUGIN_ENTRY(mod) {#mod, PLUGTYPE_USB, 0, lib##mod##_plugin_entry, 0}
 
 plugin_t bx_builtin_plugins[] = {
+#if BX_USE_TEXTCONFIG
+  BUILTIN_CI_PLUGIN_ENTRY(textconfig),
+#endif
+#if BX_USE_WIN32CONFIG
+  BUILTIN_CI_PLUGIN_ENTRY(win32config),
+#endif
 #if BX_WITH_AMIGAOS
   BUILTIN_GUI_PLUGIN_ENTRY(amigaos),
 #endif
@@ -1000,7 +1008,7 @@ plugin_t bx_builtin_plugins[] = {
   BUILTIN_GUI_PLUGIN_ENTRY(win32),
 #endif
 #if BX_WITH_WX
-  BUILTIN_GUI_PLUGIN_ENTRY(wx),
+  BUILTIN_GUICI_PLUGIN_ENTRY(wx),
 #endif
 #if BX_WITH_X11
   BUILTIN_GUI_PLUGIN_ENTRY(x),

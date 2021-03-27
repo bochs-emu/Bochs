@@ -322,27 +322,14 @@ int bxmain(void)
     // If one exists, start it.  If not, just begin.
     bx_param_enum_c *ci_param = SIM->get_param_enum(BXPN_SEL_CONFIG_INTERFACE);
     const char *ci_name = ci_param->get_selected();
-    if (!strcmp(ci_name, "textconfig")) {
-#if BX_USE_TEXTCONFIG
-      PLUG_load_plugin(textconfig, PLUGTYPE_CORE);
-#else
-      BX_PANIC(("configuration interface 'textconfig' not present"));
-#endif
-    }
-    else if (!strcmp(ci_name, "win32config")) {
-#if BX_USE_WIN32CONFIG
-      PLUG_load_plugin(win32config, PLUGTYPE_CORE);
-#else
-      BX_PANIC(("configuration interface 'win32config' not present"));
-#endif
-    }
 #if BX_WITH_WX
-    else if (!strcmp(ci_name, "wx")) {
-      PLUG_load_gui_plugin("wx");
+    if (!strcmp(ci_name, "wx")) {
+      PLUG_load_plugin_var("wx", PLUGTYPE_GUI);
     }
+    else
 #endif
-    else {
-      BX_PANIC(("unsupported configuration interface '%s'", ci_name));
+    {
+      PLUG_load_plugin_var(ci_name, PLUGTYPE_CI);
     }
     ci_param->set_enabled(0);
     int status = SIM->configuration_interface(ci_name, CI_START);
@@ -970,7 +957,7 @@ bool load_and_init_display_lib(void)
     }
     BX_ERROR(("changing display library to '%s' instead", gui_name));
   }
-  PLUG_load_gui_plugin(gui_name);
+  PLUG_load_plugin_var(gui_name, PLUGTYPE_GUI);
 
 #if BX_GUI_SIGHANDLER
   // set the flag for guis requiring a GUI sighandler.
