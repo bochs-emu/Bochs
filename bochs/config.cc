@@ -60,7 +60,7 @@ extern bx_debug_t bx_dbg;
 static int parse_line_unformatted(const char *context, char *line);
 static int parse_line_formatted(const char *context, int num_params, char *params[]);
 static int parse_bochsrc(const char *rcfile);
-static int get_floppy_type_from_image(const char *filename);
+static int get_floppy_type_from_image(const char *filename, int *devtype);
 
 static Bit64s bx_param_handler(bx_param_c *param, bool set, Bit64s val)
 {
@@ -106,7 +106,7 @@ static Bit64s bx_param_handler(bx_param_c *param, bool set, Bit64s val)
         (!strcmp(pname, BXPN_FLOPPYB_TYPE))) {
       if (set) {
         if (val == BX_FLOPPY_AUTO) {
-          val = get_floppy_type_from_image(SIM->get_param_string("path", base)->getptr());
+          val = get_floppy_type_from_image(SIM->get_param_string("path", base)->getptr(), NULL);
           SIM->get_param_enum("type", base)->set(val);
         } else if (!SIM->get_init_done() && (val != BX_FLOPPY_NONE)) {
           switch (val) {
@@ -1225,7 +1225,7 @@ void bx_init_options()
       "Type of floppy drive",
       "Type of floppy drive",
       floppy_devtype_names,
-      BX_FDD_NONE,
+      (i==0)?BX_FDD_350HD:BX_FDD_NONE,
       BX_FDD_NONE);
     devtype->set_ask_format("What type of floppy drive? [%s] ");
 
@@ -2054,48 +2054,62 @@ static int parse_line_unformatted(const char *context, char *line)
  * the functions returns the type of the floppy
  * image (1.44, 360, etc.), based on the image file size.
  */
-int get_floppy_type_from_image(const char *filename)
+int get_floppy_type_from_image(const char *filename, int *devtype)
 {
   struct stat stat_buf;
+  int type;
 
   if (!strncmp(filename, "vvfat:", 6)) {
-    return BX_FLOPPY_1_44;
-  }
-  if (stat(filename, &stat_buf)) {
+    type = BX_FLOPPY_1_44;
+  } else if (stat(filename, &stat_buf)) {
     return BX_FLOPPY_NONE;
+  } else {
+    switch (stat_buf.st_size) {
+      case 163840:
+        type = BX_FLOPPY_160K;
+        break;
+      case 184320:
+        type = BX_FLOPPY_180K;
+        break;
+      case 327680:
+        type = BX_FLOPPY_320K;
+        break;
+      case 368640:
+        type = BX_FLOPPY_360K;
+        break;
+      case 737280:
+        type = BX_FLOPPY_720K;
+        break;
+      case 1228800:
+        type = BX_FLOPPY_1_2;
+        break;
+      case 1474560:
+      case 1720320:
+      case 1763328:
+      case 1884160:
+        type = BX_FLOPPY_1_44;
+        break;
+      case 2949120:
+        type = BX_FLOPPY_2_88;
+        break;
+      default:
+        type = BX_FLOPPY_UNKNOWN;
+    }
   }
-
-  switch (stat_buf.st_size) {
-    case 163840:
-      return BX_FLOPPY_160K;
-
-    case 184320:
-      return BX_FLOPPY_180K;
-
-    case 327680:
-      return BX_FLOPPY_320K;
-
-    case 368640:
-      return BX_FLOPPY_360K;
-
-    case 737280:
-      return BX_FLOPPY_720K;
-
-    case 1228800:
-      return BX_FLOPPY_1_2;
-
-    case 1474560:
-    case 1720320:
-    case 1763328:
-    case 1884160:
-      return BX_FLOPPY_1_44;
-
-    case 2949120:
-      return BX_FLOPPY_2_88;
-
-    default:
-      return BX_FLOPPY_UNKNOWN;
+  if ((devtype != NULL) && (type != BX_FLOPPY_UNKNOWN)) {
+    switch (type) {
+      case BX_FLOPPY_2_88:
+        *devtype = BX_FDD_350ED;
+        break;
+      case BX_FLOPPY_720K:
+      case BX_FLOPPY_1_44:
+        *devtype = BX_FDD_350HD;
+        break;
+      default:
+        *devtype = BX_FDD_525HD;
+    }
   }
+  return type;
 }
 
 static Bit32s parse_log_options(const char *context, int num_params, char *params[])
@@ -2396,7 +2410,7 @@ bool is_deprecated_option(const char *oldparam, const char **newparam)
 
 static int parse_line_formatted(const char *context, int num_params, char *params[])
 {
-  int i, slot, t;
+  int i, slot, t, dt;
   bx_list_c *base;
   const char *newparam;
 
@@ -2468,24 +2482,28 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     }
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "type=", 5)) {
+        dt = -1;
         if (!strcmp(params[i]+5, "2_88")) {
-          SIM->get_param_enum("devtype", base)->set(BX_FDD_350ED);
+          dt = BX_FDD_350ED;
         }
         else if (!strcmp(params[i]+5, "1_44")) {
-          SIM->get_param_enum("devtype", base)->set(BX_FDD_350HD);
+          dt = BX_FDD_350HD;
         }
         else if (!strcmp(params[i]+5, "1_2")) {
-          SIM->get_param_enum("devtype", base)->set(BX_FDD_525HD);
+          dt = BX_FDD_525HD;
         }
         else if (!strcmp(params[i]+5, "720k")) {
-          SIM->get_param_enum("devtype", base)->set(BX_FDD_350DD);
+          dt = BX_FDD_350DD;
         }
         else if (!strcmp(params[i]+5, "360k")) {
-          SIM->get_param_enum("devtype", base)->set(BX_FDD_525DD);
+          dt = BX_FDD_525DD;
         }
         else {
           PARSE_ERR(("%s: %s: unknown type '%s'.", context, params[0],
             params[i]+5));
+        }
+        if (dt > 0) {
+          SIM->get_param_enum("devtype", base)->set(dt);
         }
       }
       else if (!strncmp(params[i], "2_88=", 5)) {
@@ -2524,10 +2542,11 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       else if (!strncmp(params[i], "image=", 6)) {
         /* "image=" means we should get floppy type from image */
         SIM->get_param_string("path", base)->set(&params[i][6]);
-        t = get_floppy_type_from_image(&params[i][6]);
-        if (t != BX_FLOPPY_UNKNOWN)
+        t = get_floppy_type_from_image(&params[i][6], &dt);
+        if (t != BX_FLOPPY_UNKNOWN) {
+          SIM->get_param_enum("devtype", base)->set(dt);
           SIM->get_param_enum("type", base)->set(t);
-        else
+        } else
           PARSE_ERR(("%s: %s image size doesn't match one of the supported types.",
             context, params[0]));
       }
