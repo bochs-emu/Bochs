@@ -231,6 +231,8 @@ Bit64s bx_param_num_c::get64()
 
 void bx_param_num_c::set(Bit64s newval)
 {
+  if (!enabled) return;
+
   if (handler) {
     // the handler can override the new value and/or perform some side effect
     val.number = (*handler)(this, 1, newval);

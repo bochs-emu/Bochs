@@ -211,7 +211,7 @@ public:
       const char *description,
       Bit64s min, Bit64s max, Bit64s initial_val,
       bool is_shadow = 0);
-  virtual void reset() { val.number = initial_val; }
+  virtual void reset() { set(initial_val); }
   void set_handler(param_event_handler handler);
   void set_sr_handlers(void *devptr, param_save_handler save, param_restore_handler restore);
   void set_enable_handler(param_enable_handler handler) { enable_handler = handler; }
