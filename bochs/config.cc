@@ -60,7 +60,20 @@ extern bx_debug_t bx_dbg;
 static int parse_line_unformatted(const char *context, char *line);
 static int parse_line_formatted(const char *context, int num_params, char *params[]);
 static int parse_bochsrc(const char *rcfile);
-static int get_floppy_type_from_image(const char *filename, int *devtype);
+static int get_floppy_type_from_image(const char *filename);
+
+int get_floppy_devtype_from_type(int type)
+{
+  switch (type) {
+    case BX_FLOPPY_2_88:
+      return BX_FDD_350ED;
+    case BX_FLOPPY_720K:
+    case BX_FLOPPY_1_44:
+      return BX_FDD_350HD;
+    default:
+      return BX_FDD_525HD;
+  }
+}
 
 static Bit64s bx_param_handler(bx_param_c *param, bool set, Bit64s val)
 {
@@ -102,24 +115,20 @@ static Bit64s bx_param_handler(bx_param_c *param, bool set, Bit64s val)
           PLUG_load_vga_plugin(vga_extension_plugins[(Bit8u)val]);
         }
       }
+    } else if ((!strcmp(pname, BXPN_FLOPPYA_DEVTYPE)) ||
+        (!strcmp(pname, BXPN_FLOPPYB_DEVTYPE))) {
+      if ((set) && (val == BX_FDD_NONE)) {
+        SIM->get_param_enum("type", base)->set(BX_FLOPPY_NONE);
+        SIM->get_param_enum("status", base)->set(BX_EJECTED);
+      }
     } else if ((!strcmp(pname, BXPN_FLOPPYA_TYPE)) ||
         (!strcmp(pname, BXPN_FLOPPYB_TYPE))) {
       if (set) {
         if (val == BX_FLOPPY_AUTO) {
-          val = get_floppy_type_from_image(SIM->get_param_string("path", base)->getptr(), NULL);
+          val = get_floppy_type_from_image(SIM->get_param_string("path", base)->getptr());
           SIM->get_param_enum("type", base)->set(val);
         } else if (!SIM->get_init_done() && (val != BX_FLOPPY_NONE)) {
-          switch (val) {
-            case BX_FLOPPY_2_88:
-              device = BX_FDD_350ED;
-              break;
-            case BX_FLOPPY_720K:
-            case BX_FLOPPY_1_44:
-              device = BX_FDD_350HD;
-              break;
-            default:
-              device = BX_FDD_525HD;
-          }
+          device = get_floppy_devtype_from_type(val);
           SIM->get_param_enum("devtype", base)->set(device);
         }
       }
@@ -1228,6 +1237,7 @@ void bx_init_options()
       (i==0)?BX_FDD_350HD:BX_FDD_NONE,
       BX_FDD_NONE);
     devtype->set_ask_format("What type of floppy drive? [%s] ");
+    devtype->set_handler(bx_param_handler);
 
     if (i == 0) {
       strcpy(label, "First floppy image/device");
@@ -2054,62 +2064,39 @@ static int parse_line_unformatted(const char *context, char *line)
  * the functions returns the type of the floppy
  * image (1.44, 360, etc.), based on the image file size.
  */
-int get_floppy_type_from_image(const char *filename, int *devtype)
+int get_floppy_type_from_image(const char *filename)
 {
   struct stat stat_buf;
-  int type;
 
   if (!strncmp(filename, "vvfat:", 6)) {
-    type = BX_FLOPPY_1_44;
+    return BX_FLOPPY_1_44;
   } else if (stat(filename, &stat_buf)) {
     return BX_FLOPPY_NONE;
   } else {
     switch (stat_buf.st_size) {
       case 163840:
-        type = BX_FLOPPY_160K;
-        break;
+        return BX_FLOPPY_160K;
       case 184320:
-        type = BX_FLOPPY_180K;
-        break;
+        return BX_FLOPPY_180K;
       case 327680:
-        type = BX_FLOPPY_320K;
-        break;
+        return BX_FLOPPY_320K;
       case 368640:
-        type = BX_FLOPPY_360K;
-        break;
+        return BX_FLOPPY_360K;
       case 737280:
-        type = BX_FLOPPY_720K;
-        break;
+        return BX_FLOPPY_720K;
       case 1228800:
-        type = BX_FLOPPY_1_2;
-        break;
+        return BX_FLOPPY_1_2;
       case 1474560:
       case 1720320:
       case 1763328:
       case 1884160:
-        type = BX_FLOPPY_1_44;
-        break;
+        return BX_FLOPPY_1_44;
       case 2949120:
-        type = BX_FLOPPY_2_88;
-        break;
+        return BX_FLOPPY_2_88;
       default:
-        type = BX_FLOPPY_UNKNOWN;
+        return BX_FLOPPY_UNKNOWN;
     }
   }
-  if ((devtype != NULL) && (type != BX_FLOPPY_UNKNOWN)) {
-    switch (type) {
-      case BX_FLOPPY_2_88:
-        *devtype = BX_FDD_350ED;
-        break;
-      case BX_FLOPPY_720K:
-      case BX_FLOPPY_1_44:
-        *devtype = BX_FDD_350HD;
-        break;
-      default:
-        *devtype = BX_FDD_525HD;
-    }
-  }
-  return type;
 }
 
 static Bit32s parse_log_options(const char *context, int num_params, char *params[])
@@ -2413,6 +2400,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
   int i, slot, t, dt;
   bx_list_c *base;
   const char *newparam;
+  char *value;
 
   if (num_params < 1) return 0;
   if (num_params < 2) {
@@ -2482,73 +2470,32 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     }
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "type=", 5)) {
+        value = params[i] + 5;
         dt = -1;
-        if (!strcmp(params[i]+5, "2_88")) {
+        if (!strcmp(value, "2_88")) {
           dt = BX_FDD_350ED;
         }
-        else if (!strcmp(params[i]+5, "1_44")) {
+        else if (!strcmp(value, "1_44")) {
           dt = BX_FDD_350HD;
         }
-        else if (!strcmp(params[i]+5, "1_2")) {
+        else if (!strcmp(value, "1_2")) {
           dt = BX_FDD_525HD;
         }
-        else if (!strcmp(params[i]+5, "720k")) {
+        else if (!strcmp(value, "720k")) {
           dt = BX_FDD_350DD;
         }
-        else if (!strcmp(params[i]+5, "360k")) {
+        else if (!strcmp(value, "360k")) {
           dt = BX_FDD_525DD;
         }
+        else if (!strcmp(value, "none")) {
+          dt = BX_FDD_NONE;
+        }
         else {
-          PARSE_ERR(("%s: %s: unknown type '%s'.", context, params[0],
-            params[i]+5));
+          PARSE_ERR(("%s: %s: unknown type '%s'.", context, params[0], value));
         }
-        if (dt > 0) {
+        if (dt >= 0) {
           SIM->get_param_enum("devtype", base)->set(dt);
         }
-      }
-      else if (!strncmp(params[i], "2_88=", 5)) {
-        SIM->get_param_string("path", base)->set(&params[i][5]);
-        SIM->get_param_enum("type", base)->set(BX_FLOPPY_2_88);
-      }
-      else if (!strncmp(params[i], "1_44=", 5)) {
-        SIM->get_param_string("path", base)->set(&params[i][5]);
-        SIM->get_param_enum("type", base)->set(BX_FLOPPY_1_44);
-      }
-      else if (!strncmp(params[i], "1_2=", 4)) {
-        SIM->get_param_string("path", base)->set(&params[i][4]);
-        SIM->get_param_enum("type", base)->set(BX_FLOPPY_1_2);
-      }
-      else if (!strncmp(params[i], "720k=", 5)) {
-        SIM->get_param_string("path", base)->set(&params[i][5]);
-        SIM->get_param_enum("type", base)->set(BX_FLOPPY_720K);
-      }
-      else if (!strncmp(params[i], "360k=", 5)) {
-        SIM->get_param_string("path", base)->set(&params[i][5]);
-        SIM->get_param_enum("type", base)->set(BX_FLOPPY_360K);
-      }
-      // use CMOS reserved types?
-      else if (!strncmp(params[i], "160k=", 5)) {
-        SIM->get_param_string("path", base)->set(&params[i][5]);
-        SIM->get_param_enum("type", base)->set(BX_FLOPPY_160K);
-      }
-      else if (!strncmp(params[i], "180k=", 5)) {
-        SIM->get_param_string("path", base)->set(&params[i][5]);
-        SIM->get_param_enum("type", base)->set(BX_FLOPPY_180K);
-      }
-      else if (!strncmp(params[i], "320k=", 5)) {
-        SIM->get_param_string("path", base)->set(&params[i][5]);
-        SIM->get_param_enum("type", base)->set(BX_FLOPPY_320K);
-      }
-      else if (!strncmp(params[i], "image=", 6)) {
-        /* "image=" means we should get floppy type from image */
-        SIM->get_param_string("path", base)->set(&params[i][6]);
-        t = get_floppy_type_from_image(&params[i][6], &dt);
-        if (t != BX_FLOPPY_UNKNOWN) {
-          SIM->get_param_enum("devtype", base)->set(dt);
-          SIM->get_param_enum("type", base)->set(t);
-        } else
-          PARSE_ERR(("%s: %s image size doesn't match one of the supported types.",
-            context, params[0]));
       }
       else if (!strcmp(params[i], "status=inserted")) {
         SIM->get_param_enum("status", base)->set(BX_INSERTED);
@@ -2559,9 +2506,64 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       else if (!strncmp(params[i], "write_protected=", 16)) {
         SIM->get_param_bool("readonly", base)->set(atol(&params[i][16]));
       }
+      else if (!strncmp(params[i], "image=", 6)) {
+        /* "image=" means we should get floppy type from image */
+        value = params[i] + 6;
+        t = get_floppy_type_from_image(value);
+        dt = get_floppy_devtype_from_type(t);
+        if (t != BX_FLOPPY_UNKNOWN) {
+          SIM->get_param_enum("devtype", base)->set(dt);
+          SIM->get_param_string("path", base)->set(value);
+          SIM->get_param_enum("type", base)->set(t);
+        } else
+          PARSE_ERR(("%s: %s image size doesn't match one of the supported types.",
+            context, params[0]));
+      }
       else {
-        PARSE_ERR(("%s: %s attribute '%s' not understood.", context, params[0],
-          params[i]));
+        if (!strncmp(params[i], "2_88=", 5)) {
+          t = BX_FLOPPY_2_88;
+          value = params[i] + 5;
+        }
+        else if (!strncmp(params[i], "1_44=", 5)) {
+          t = BX_FLOPPY_1_44;
+          value = params[i] + 5;
+        }
+        else if (!strncmp(params[i], "1_2=", 4)) {
+          t = BX_FLOPPY_1_2;
+          value = params[i] + 4;
+        }
+        else if (!strncmp(params[i], "720k=", 5)) {
+          t = BX_FLOPPY_720K;
+          value = params[i] + 5;
+        }
+        else if (!strncmp(params[i], "360k=", 5)) {
+          t = BX_FLOPPY_360K;
+          value = params[i] + 5;
+        }
+        // use CMOS reserved types?
+        else if (!strncmp(params[i], "160k=", 5)) {
+          t = BX_FLOPPY_160K;
+          value = params[i] + 5;
+        }
+        else if (!strncmp(params[i], "180k=", 5)) {
+          t = BX_FLOPPY_180K;
+          value = params[i] + 5;
+        }
+        else if (!strncmp(params[i], "320k=", 5)) {
+          t = BX_FLOPPY_320K;
+          value = params[i] + 5;
+        }
+        else {
+          t = -1;
+          PARSE_ERR(("%s: %s attribute '%s' not understood.", context, params[0],
+            params[i]));
+        }
+        if (t > 0) {
+          dt = get_floppy_devtype_from_type(t);
+          SIM->get_param_enum("devtype", base)->set(dt);
+          SIM->get_param_string("path", base)->set(value);
+          SIM->get_param_enum("type", base)->set(t);
+        }
       }
     }
   } else if ((!strncmp(params[0], "ata", 3)) && (strlen(params[0]) == 4)) {
