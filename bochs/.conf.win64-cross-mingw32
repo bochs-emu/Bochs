@@ -33,4 +33,6 @@ export WINDRES
             --enable-es1370 \
             --enable-e1000 \
             --enable-show-ips \
-            --with-win32 --with-rfb --with-nogui
+            --disable-readline \
+            --with-win32 --with-rfb --with-nogui \
+            ${CONFIGURE_ARGS}
