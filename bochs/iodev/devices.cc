@@ -240,7 +240,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   PLUG_load_plugin(pic, PLUGTYPE_CORE);
   PLUG_load_plugin(pit, PLUGTYPE_CORE);
   if (pluginVgaDevice == &stubVga) {
-    PLUG_load_vga_plugin(BX_PLUGIN_VGA);
+    PLUG_load_plugin_var(BX_PLUGIN_VGA, PLUGTYPE_VGA);
   }
   PLUG_load_plugin(floppy, PLUGTYPE_CORE);
 

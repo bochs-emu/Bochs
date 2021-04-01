@@ -3129,21 +3129,21 @@ description:
 <entry>Device plugin depending on normal config option</entry>
 <entry>lib<emphasis>module</emphasis>_plugin_entry</entry>
 <entry>bx_devmodel_c</entry>
-<entry>Network plugins can create up to 4 devices</entry>
+<entry>Network device plugins can create up to 4 instances</entry>
 </row>
 <row>
 <entry>PLUGTYPE_VGA</entry>
-<entry>VGA-compatible device plugin selected with vga extension option</entry>
+<entry>VGA-compatible device plugin selected with <option>vga: extension=X</option> option</entry>
 <entry>lib<emphasis>module</emphasis>_plugin_entry</entry>
 <entry>bx_vgacore_c</entry>
-<entry>One plugin per type only</entry>
+<entry>One plugin of type required / supported</entry>
 </row>
 <row>
 <entry>PLUGTYPE_USB</entry>
 <entry>USB device plugin selected with the port<replaceable>X</replaceable> parameter of the host controller option</entry>
 <entry>lib<emphasis>module</emphasis>_plugin_entry</entry>
 <entry>usb_device_c</entry>
-<entry>Number of devices per plugin not limited</entry>
+<entry>Number of instances not limited</entry>
 </row>
 <row>
 <entry>PLUGTYPE_CI</entry>
@@ -3164,7 +3164,7 @@ description:
 <entry>Additional disk image format selected with the "mode" parameter when setting up a disk image</entry>
 <entry>lib<emphasis>module</emphasis>_img_plugin_entry</entry>
 <entry>device_image_t</entry>
-<entry>Usage of all modules not limited</entry>
+<entry>Number of instances not limited</entry>
 </row>
 <row>
 <entry>PLUGTYPE_NET</entry>
@@ -3178,7 +3178,7 @@ description:
 <entry>Sound driver selected with the sound option</entry>
 <entry>libsound<emphasis>module</emphasis>_plugin_entry</entry>
 <entry>bx_sound_lowlevel_c</entry>
-<entry>Up to 4 plugins supported</entry>
+<entry>One plugin of type required / max. 4 different plugins supported</entry>
 </row>
 </tbody>
 </tgroup>
@@ -3247,8 +3247,30 @@ PLUGIN_ENTRY_FOR_MODULE(unmapped)
 }
 </screen>
 </para>
+</section>
+<section><title>Compatibility with "monolithic" Bochs compilation</title>
 <para>
-&FIXME; To be continued
+To ensure compatibility between both compilation modes a bunch of macros have
+been defined in <filename>plugin.h</filename>. If required the specific functions
+are implemented in <filename>plugin.cc</filename>. That's why the code for the
+modules that can be plugins doesn't need special cases for "plugin" and
+"non-plugin" mode. For the plugin types PLUGTYPE_CORE and PLUGTYPE_STANDARD the
+macros for loading / unloading plugin directly call the entry function. For the
+other types a static list is created at compile time using a modified version
+of the <emphasis>plugin_t</emphasis> structure. This is the counterpart to the
+dynamic list in plugin mode created at startup. The load / unload functions are
+similar in both modes, except that the "non-plugin" version of these functions
+finally just call the entry function. These macros are defined for both modes,
+but calling mode specific code:
+<screen>
+PLUG_load_plugin(name,type)
+PLUG_get_plugins_count(type)
+PLUG_get_plugin_name(type,index)
+PLUG_get_plugin_flags(type,index)
+PLUG_load_plugin_var(name,type)
+PLUG_load_opt_plugin(name)
+PLUG_unload_opt_plugin(name)
+</screen>
 </para>
 </section>
 </section>

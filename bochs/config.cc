@@ -112,7 +112,7 @@ static Bit64s bx_param_handler(bx_param_c *param, bool set, Bit64s val)
         if (val != oldval) {
           vga_ext_id = (Bit8u)((bx_param_enum_c*)param)->get();
           PLUG_unload_opt_plugin(vga_extension_plugins[vga_ext_id]);
-          PLUG_load_vga_plugin(vga_extension_plugins[(Bit8u)val]);
+          PLUG_load_plugin_var(vga_extension_plugins[(Bit8u)val], PLUGTYPE_VGA);
         }
       }
     } else if ((!strcmp(pname, BXPN_FLOPPYA_DEVTYPE)) ||

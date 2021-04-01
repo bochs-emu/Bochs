@@ -83,13 +83,14 @@ extern "C" {
 
 #if BX_PLUGINS
 
-#define PLUG_get_plugins_count(a) bx_get_plugins_count(a)
-#define PLUG_get_plugin_name(a,b) bx_get_plugin_name(a,b)
-#define PLUG_get_plugin_flags(a,b) bx_get_plugin_flags(a,b)
+// hardcoded load plugin macro for PLUGTYPE_CORE and PLUGTYPE_STANDARD
 #define PLUG_load_plugin(name,type) {bx_load_plugin(#name,type);}
+// newer plugin macros for variable plugin handling
+#define PLUG_get_plugins_count(type) bx_get_plugins_count(type)
+#define PLUG_get_plugin_name(type,index) bx_get_plugin_name(type,index)
+#define PLUG_get_plugin_flags(type,index) bx_get_plugin_flags(type,index)
 #define PLUG_load_plugin_var(name,type) {bx_load_plugin(name,type);}
 #define PLUG_load_opt_plugin(name) bx_load_plugin(name,PLUGTYPE_OPTIONAL)
-#define PLUG_load_vga_plugin(name) bx_load_plugin(name,PLUGTYPE_VGA)
 #define PLUG_unload_opt_plugin(name) bx_unload_plugin(name,1)
 #define PLUG_unload_plugin_type(name,type) {bx_unload_plugin_type(name,type);}
 
@@ -111,14 +112,13 @@ extern "C" {
 
 // When plugins are off, PLUG_load_plugin will call the plugin_entry function
 // directly (PLUGTYPE_CORE and PLUGTYPE_STANDARD only).
-#define PLUG_load_plugin(name,type) {lib##name##_plugin_entry(NULL,type,1);}
+#define PLUG_load_plugin(name,type) {lib##name##_plugin_entry(NULL,type,PLUGIN_INIT);}
 // Builtin plugins macros
-#define PLUG_get_plugins_count(a) bx_get_plugins_count_np(a)
-#define PLUG_get_plugin_name(a,b) bx_get_plugin_name_np(a,b)
-#define PLUG_get_plugin_flags(a,b) bx_get_plugin_flags_np(a,b)
+#define PLUG_get_plugins_count(type) bx_get_plugins_count_np(type)
+#define PLUG_get_plugin_name(type,index) bx_get_plugin_name_np(type,index)
+#define PLUG_get_plugin_flags(type,index) bx_get_plugin_flags_np(type,index)
 #define PLUG_load_plugin_var(name,type) bx_load_plugin_np(name,type)
 #define PLUG_load_opt_plugin(name) bx_load_plugin_np(name,PLUGTYPE_OPTIONAL)
-#define PLUG_load_vga_plugin(name) bx_load_plugin_np(name,PLUGTYPE_VGA)
 #define PLUG_unload_opt_plugin(name) bx_unload_opt_plugin(name,1)
 
 #define DEV_register_ioread_handler(b,c,d,e,f) bx_devices.register_io_read_handler(b,c,d,e,f)

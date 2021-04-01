@@ -451,7 +451,7 @@ Bit8u bx_get_plugin_flags(Bit16u type, Bit8u index)
 bool plugin_init_one(plugin_t *plugin)
 {
   /* initialize the plugin */
-  if (plugin->plugin_entry(plugin, plugin->loadtype, 1))
+  if (plugin->plugin_entry(plugin, plugin->loadtype, PLUGIN_INIT))
   {
     pluginlog->info("Plugin initialization failed for %s", plugin->name);
     plugin_abort(plugin);
@@ -466,7 +466,7 @@ bool plugin_unload(plugin_t *plugin)
 {
   if (plugin->loadtype != PLUGTYPE_NULL) {
     if (plugin->initialized)
-      plugin->plugin_entry(plugin, plugin->type, 0);
+      plugin->plugin_entry(plugin, plugin->type, PLUGIN_FINI);
 #if defined(WIN32)
     FreeLibrary(plugin->handle);
 #else
@@ -1124,7 +1124,7 @@ plugin_t bx_builtin_plugins[] = {
   BUILTIN_IMG_PLUGIN_ENTRY(vbox),
   BUILTIN_IMG_PLUGIN_ENTRY(vpc),
   BUILTIN_IMG_PLUGIN_ENTRY(vvfat),
-  {"NULL", PLUGTYPE_GUI, 0, NULL, 0}
+  {"NULL", PLUGTYPE_NULL, 0, NULL, 0}
 };
 
 Bit8u bx_get_plugins_count_np(Bit16u type)
@@ -1180,7 +1180,7 @@ int bx_load_plugin_np(const char *name, Bit16u type)
         ((type & bx_builtin_plugins[i].type) != 0)) {
       if (bx_builtin_plugins[i].initialized == 0) {
         bx_builtin_plugins[i].loadtype = type;
-        bx_builtin_plugins[i].plugin_entry(NULL, type, 1);
+        bx_builtin_plugins[i].plugin_entry(NULL, type, PLUGIN_INIT);
         bx_builtin_plugins[i].initialized = 1;
       }
       return 1;
@@ -1202,7 +1202,7 @@ int bx_unload_opt_plugin(const char *name, bool devflag)
           pluginUnregisterDeviceDevmodel(bx_builtin_plugins[i].name,
                                          bx_builtin_plugins[i].type);
         }
-        bx_builtin_plugins[i].plugin_entry(NULL, bx_builtin_plugins[i].loadtype, 0);
+        bx_builtin_plugins[i].plugin_entry(NULL, bx_builtin_plugins[i].loadtype, PLUGIN_FINI);
         bx_builtin_plugins[i].loadtype = PLUGTYPE_NULL;
         bx_builtin_plugins[i].initialized = 0;
       }
