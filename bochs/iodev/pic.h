@@ -30,13 +30,8 @@
 #endif
 
 typedef struct {
-  Bit8u single_PIC;        /* 0=cascaded PIC, 1=master only */
+  bool master;
   Bit8u interrupt_offset;  /* programmable interrupt vector offset */
-  union {
-    Bit8u   slave_connect_mask; /* for master, a bit for each interrupt line
-                                   0=not connect to a slave, 1=connected */
-    Bit8u   slave_id;           /* for slave, id number of slave PIC */
-  } u;
   Bit8u sfnm;              /* specially fully nested mode: 0=no, 1=yes*/
   Bit8u buffered_mode;     /* 0=no buffered mode, 1=buffered mode */
   Bit8u master_slave;      /* master/slave: 0=slave PIC, 1=master PIC */
@@ -50,9 +45,9 @@ typedef struct {
   bool INT;                /* INT request pin of PIC */
   Bit8u IRQ_in;            /* IRQ pins of PIC */
   struct {
-    bool in_init;
-    bool requires_4;
-    Bit8u   byte_expected;
+    bool  in_init;
+    bool  requires_4;
+    Bit8u byte_expected;
   } init;
   bool special_mask;
   bool polled;             /* Set when poll command is issued. */
@@ -89,8 +84,7 @@ private:
   void   write(Bit32u address, Bit32u value, unsigned io_len);
 #endif
 
-  BX_PIC_SMF void   service_master_pic(void);
-  BX_PIC_SMF void   service_slave_pic(void);
+  BX_PIC_SMF void   pic_service(bx_pic_t *pic);
   BX_PIC_SMF void   clear_highest_interrupt(bx_pic_t *pic);
 };
 
