@@ -440,9 +440,8 @@ void bx_devices_c::exit()
   bx_virt_timer.setup();
   bx_slowdown_timer.exit();
 
-  // unload optional plugins first
+  // unload device plugins
   bx_unload_plugins();
-  bx_unload_core_plugins();
   // remove runtime parameter handlers
   SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->set_handler(NULL);
   SIM->get_param_num(BXPN_MOUSE_ENABLED)->set_handler(NULL);

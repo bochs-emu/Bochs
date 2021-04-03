@@ -346,7 +346,6 @@ extern void bx_unload_plugin_type(const char *name, Bit16u type);
 extern void bx_init_plugins(void);
 extern void bx_reset_plugins(unsigned);
 extern void bx_unload_plugins(void);
-extern void bx_unload_core_plugins(void);
 extern void bx_plugins_register_state(void);
 extern void bx_plugins_after_restore_state(void);
 

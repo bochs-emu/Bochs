@@ -874,6 +874,7 @@ void bx_unload_plugins()
 {
   device_t *device, *next;
 
+  // unload non-core plugins first
   device = devices;
   while (device != NULL) {
     if (device->plugin != NULL) {
@@ -892,12 +893,8 @@ void bx_unload_plugins()
     device = next;
   }
   devices = NULL;
-}
 
-void bx_unload_core_plugins()
-{
-  device_t *device, *next;
-
+  // now it's safe to unload core plugins
   device = core_devices;
   while (device != NULL) {
     if (device->plugin != NULL) {
