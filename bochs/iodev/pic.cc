@@ -255,356 +255,191 @@ void bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
   /*
    8259A PIC
    */
+   bx_pic_t *pic = ((address & 0xA0) == 0x20) ?
+                   &BX_PIC_THIS s.master_pic : &BX_PIC_THIS s.slave_pic;
 
-  switch (address) {
-    case 0x20:
-      if (value & 0x10) { /* initialization command 1 */
-        BX_DEBUG(("master: ICW1 found"));
-        BX_DEBUG(("        requires 4 = %u", (value & 0x01)));
-        if (value & 0x02) {
-          BX_PANIC(("        single mode not supported"));
-        } else {
-          BX_DEBUG(("        cascade mode selected"));
-        }
-        if (value & 0x08) {
-          BX_PANIC(("        level sensitive mode not supported"));
-        } else {
-          BX_DEBUG(("        edge triggered mode selected"));
-        }
-        BX_PIC_THIS s.master_pic.init.in_init = 1;
-        BX_PIC_THIS s.master_pic.init.requires_4 = (value & 0x01);
-        BX_PIC_THIS s.master_pic.init.byte_expected = 2; /* operation command 2 */
-        BX_PIC_THIS s.master_pic.imr           = 0x00; /* clear the irq mask register */
-        BX_PIC_THIS s.master_pic.isr           = 0x00; /* no IRQ's in service */
-        BX_PIC_THIS s.master_pic.irr           = 0x00; /* no IRQ's requested */
-        BX_PIC_THIS s.master_pic.lowest_priority = 7;
-        BX_PIC_THIS s.master_pic.INT = 0; /* reprogramming clears previous INTR request */
-        BX_PIC_THIS s.master_pic.auto_eoi = 0;
-        BX_PIC_THIS s.master_pic.rotate_on_autoeoi = 0;
+  if ((address & 1) == 0) {
+    if (value & 0x10) { /* initialization command 1 */
+      BX_DEBUG(("%s ICW1 found", pic->master ? "master:":"slave: "));
+      BX_DEBUG(("        requires 4 = %u", (value & 0x01)));
+      if (value & 0x02) {
+        BX_PANIC(("%s single mode not supported", pic->master ? "master:":"slave: "));
+      } else {
+        BX_DEBUG(("        cascade mode selected"));
+      }
+      if (value & 0x08) {
+        BX_PANIC(("%s level sensitive mode not supported", pic->master ? "master:":"slave: "));
+      } else {
+        BX_DEBUG(("        edge triggered mode selected"));
+      }
+      pic->init.in_init = 1;
+      pic->init.requires_4 = (value & 0x01);
+      pic->init.byte_expected = 2; /* operation command 2 */
+      pic->imr           = 0x00; /* clear the irq mask register */
+      pic->isr           = 0x00; /* no IRQ's in service */
+      pic->irr           = 0x00; /* no IRQ's requested */
+      pic->lowest_priority = 7;
+      pic->auto_eoi = 0;
+      pic->rotate_on_autoeoi = 0;
+      pic->INT = 0; /* reprogramming clears previous INTR request */
+      if (pic->master) {
         BX_CLEAR_INTR();
+      } else {
+        BX_PIC_THIS s.master_pic.IRQ_in &= ~(1 << 2);
+      }
+      return;
+    }
+
+    if ((value & 0x18) == 0x08) { /* OCW3 */
+      Bit8u special_mask, poll, read_op;
+
+      special_mask = (value & 0x60) >> 5;
+      poll         = (value & 0x04) >> 2;
+      read_op      = (value & 0x03);
+      if (poll) {
+        pic->polled = 1;
         return;
       }
-
-      if ((value & 0x18) == 0x08) { /* OCW3 */
-        Bit8u special_mask, poll, read_op;
-
-        special_mask = (value & 0x60) >> 5;
-        poll         = (value & 0x04) >> 2;
-        read_op      = (value & 0x03);
-        if (poll) {
-          BX_PIC_THIS s.master_pic.polled = 1;
-          return;
-        }
-        if (read_op == 0x02) /* read IRR */
-         BX_PIC_THIS s.master_pic.read_reg_select = 0;
-        else if (read_op == 0x03) /* read ISR */
-         BX_PIC_THIS s.master_pic.read_reg_select = 1;
-        if (special_mask == 0x02) { /* cancel special mask */
-          BX_PIC_THIS s.master_pic.special_mask = 0;
-        }
-        else if (special_mask == 0x03) { /* set specific mask */
-          BX_PIC_THIS s.master_pic.special_mask = 1;
-          pic_service(& BX_PIC_THIS s.master_pic);
-        }
-        return;
+      if (read_op == 0x02) /* read IRR */
+        pic->read_reg_select = 0;
+      else if (read_op == 0x03) /* read ISR */
+        pic->read_reg_select = 1;
+      if (special_mask == 0x02) { /* cancel special mask */
+        pic->special_mask = 0;
+      } else if (special_mask == 0x03) { /* set specific mask */
+        pic->special_mask = 1;
+        pic_service(pic);
       }
+      return;
+    }
 
-      /* OCW2 */
-      switch (value) {
-        case 0x00: // Rotate in auto eoi mode clear
-        case 0x80: // Rotate in auto eoi mode set
-          BX_PIC_THIS s.master_pic.rotate_on_autoeoi = (value != 0);
+    /* OCW2 */
+    switch (value) {
+      case 0x00: // Rotate in auto eoi mode clear
+      case 0x80: // Rotate in auto eoi mode set
+        pic->rotate_on_autoeoi = (value != 0);
+        break;
+
+      case 0xA0: // Rotate on non-specific end of interrupt
+      case 0x20: /* end of interrupt command */
+        clear_highest_interrupt(pic);
+
+        if (value == 0xA0) {// Rotate in Auto-EOI mode
+          pic->lowest_priority ++;
+          if (pic->lowest_priority > 7)
+            pic->lowest_priority = 0;
+        }
+
+        pic_service(pic);
+        break;
+
+      case 0x40: // Intel PIC spec-sheet seems to indicate this should be ignored
+        BX_INFO(("IRQ no-op"));
+        break;
+
+      case 0x60: /* specific EOI 0 */
+      case 0x61: /* specific EOI 1 */
+      case 0x62: /* specific EOI 2 */
+      case 0x63: /* specific EOI 3 */
+      case 0x64: /* specific EOI 4 */
+      case 0x65: /* specific EOI 5 */
+      case 0x66: /* specific EOI 6 */
+      case 0x67: /* specific EOI 7 */
+        pic->isr &= ~(1 << (value-0x60));
+        pic_service(pic);
+        break;
+
+      // IRQ lowest priority commands
+      case 0xC0: // 0 7 6 5 4 3 2 1
+      case 0xC1: // 1 0 7 6 5 4 3 2
+      case 0xC2: // 2 1 0 7 6 5 4 3
+      case 0xC3: // 3 2 1 0 7 6 5 4
+      case 0xC4: // 4 3 2 1 0 7 6 5
+      case 0xC5: // 5 4 3 2 1 0 7 6
+      case 0xC6: // 6 5 4 3 2 1 0 7
+      case 0xC7: // 7 6 5 4 3 2 1 0
+        BX_INFO(("IRQ lowest command 0x%x", value));
+        pic->lowest_priority = value - 0xC0;
+        break;
+
+      case 0xE0: // specific EOI and rotate 0
+      case 0xE1: // specific EOI and rotate 1
+      case 0xE2: // specific EOI and rotate 2
+      case 0xE3: // specific EOI and rotate 3
+      case 0xE4: // specific EOI and rotate 4
+      case 0xE5: // specific EOI and rotate 5
+      case 0xE6: // specific EOI and rotate 6
+      case 0xE7: // specific EOI and rotate 7
+        pic->isr &= ~(1 << (value-0xE0));
+        pic->lowest_priority = (value - 0xE0);
+        pic_service(pic);
+        break;
+
+      case 0x02: // single mode bit: 1 = single, 0 = cascade
+        // ignore. 386BSD writes this value but works with it ignored.
+        break;
+
+      default:
+        BX_PANIC(("write to port 0x%02x = 0x%02x", (Bit8u)address, (Bit8u)value));
+    } /* switch (value) */
+  } else {
+    /* initialization mode operation */
+    if (pic->init.in_init) {
+      switch (pic->init.byte_expected) {
+        case 2:
+          pic->interrupt_offset = value & 0xf8;
+          pic->init.byte_expected = 3;
+          BX_DEBUG(("%s ICW2 received", pic->master ? "master:":"slave: "));
+          BX_DEBUG(("        offset = INT %02x", pic->interrupt_offset));
           break;
-
-        case 0xA0: // Rotate on non-specific end of interrupt
-        case 0x20: /* end of interrupt command */
-          clear_highest_interrupt(& BX_PIC_THIS s.master_pic);
-
-          if(value == 0xA0) {// Rotate in Auto-EOI mode
-            BX_PIC_THIS s.master_pic.lowest_priority ++;
-            if(BX_PIC_THIS s.master_pic.lowest_priority > 7)
-              BX_PIC_THIS s.master_pic.lowest_priority = 0;
-          }
-
-          pic_service(& BX_PIC_THIS s.master_pic);
-          break;
-
-        case 0x40: // Intel PIC spec-sheet seems to indicate this should be ignored
-          BX_INFO(("IRQ no-op"));
-          break;
-
-        case 0x60: /* specific EOI 0 */
-        case 0x61: /* specific EOI 1 */
-        case 0x62: /* specific EOI 2 */
-        case 0x63: /* specific EOI 3 */
-        case 0x64: /* specific EOI 4 */
-        case 0x65: /* specific EOI 5 */
-        case 0x66: /* specific EOI 6 */
-        case 0x67: /* specific EOI 7 */
-          BX_PIC_THIS s.master_pic.isr &= ~(1 << (value-0x60));
-          pic_service(& BX_PIC_THIS s.master_pic);
-          break;
-
-        // IRQ lowest priority commands
-        case 0xC0: // 0 7 6 5 4 3 2 1
-        case 0xC1: // 1 0 7 6 5 4 3 2
-        case 0xC2: // 2 1 0 7 6 5 4 3
-        case 0xC3: // 3 2 1 0 7 6 5 4
-        case 0xC4: // 4 3 2 1 0 7 6 5
-        case 0xC5: // 5 4 3 2 1 0 7 6
-        case 0xC6: // 6 5 4 3 2 1 0 7
-        case 0xC7: // 7 6 5 4 3 2 1 0
-          BX_INFO(("IRQ lowest command 0x%x", value));
-          BX_PIC_THIS s.master_pic.lowest_priority = value - 0xC0;
-          break;
-
-        case 0xE0: // specific EOI and rotate 0
-        case 0xE1: // specific EOI and rotate 1
-        case 0xE2: // specific EOI and rotate 2
-        case 0xE3: // specific EOI and rotate 3
-        case 0xE4: // specific EOI and rotate 4
-        case 0xE5: // specific EOI and rotate 5
-        case 0xE6: // specific EOI and rotate 6
-        case 0xE7: // specific EOI and rotate 7
-          BX_PIC_THIS s.master_pic.isr &= ~(1 << (value-0xE0));
-          BX_PIC_THIS s.master_pic.lowest_priority = (value - 0xE0);
-          pic_service(& BX_PIC_THIS s.master_pic);
-          break;
-
-        case 0x02: // single mode bit: 1 = single, 0 = cascade
-          // ignore. 386BSD writes this value but works with it ignored.
-          break;
-
-        default:
-          BX_PANIC(("write to port 20h = %02x", value));
-      } /* switch (value) */
-      break;
-
-    case 0x21:
-      /* initialization mode operation */
-      if (BX_PIC_THIS s.master_pic.init.in_init) {
-        switch (BX_PIC_THIS s.master_pic.init.byte_expected) {
-          case 2:
-            BX_PIC_THIS s.master_pic.interrupt_offset = value & 0xf8;
-            BX_PIC_THIS s.master_pic.init.byte_expected = 3;
-            BX_DEBUG(("master: ICW2 received"));
-            BX_DEBUG(("        offset = INT %02x",
-                      BX_PIC_THIS s.master_pic.interrupt_offset));
-            break;
-          case 3:
-            BX_DEBUG(("master: ICW3 received"));
+        case 3:
+          BX_DEBUG(("%s ICW3 received", pic->master ? "master:":"slave: "));
+          if (pic->master) {
             if (value == 0x04) {
               BX_DEBUG(("        slave PIC on IRQ line #2"));
             } else {
-              BX_PANIC(("        slave PIC IRQ line not supported"));
+              BX_PANIC(("master: slave PIC IRQ line not supported"));
             }
-            if (BX_PIC_THIS s.master_pic.init.requires_4) {
-              BX_PIC_THIS s.master_pic.init.byte_expected = 4;
-            } else {
-              BX_PIC_THIS s.master_pic.init.in_init = 0;
-            }
-            break;
-          case 4:
-            BX_DEBUG(("master: ICW4 received"));
-            if (value & 0x02) {
-              BX_DEBUG(("        auto EOI"));
-              BX_PIC_THIS s.master_pic.auto_eoi = 1;
-            } else {
-              BX_DEBUG(("        normal EOI interrupt"));
-              BX_PIC_THIS s.master_pic.auto_eoi = 0;
-            }
-            if (value & 0x01) {
-              BX_DEBUG(("        80x86 mode"));
-            } else {
-              BX_PANIC(("        not 80x86 mode"));
-            }
-            BX_PIC_THIS s.master_pic.init.in_init = 0;
-            break;
-          default:
-            BX_PANIC(("master expecting bad init command"));
-        }
-        return;
-      }
-
-      /* normal operation */
-      BX_DEBUG(("setting master pic IMR to %02x", value));
-      BX_PIC_THIS s.master_pic.imr = value;
-      pic_service(& BX_PIC_THIS s.master_pic);
-      return;
-
-    case 0xA0:
-      if (value & 0x10) { /* initialization command 1 */
-        BX_DEBUG(("slave:  ICW1 found"));
-        BX_DEBUG(("        requires 4 = %u", (value & 0x01)));
-        if (value & 0x02) {
-          BX_PANIC(("        single mode not supported"));
-        } else {
-          BX_DEBUG(("        cascade mode selected"));
-        }
-        if (value & 0x08) {
-          BX_PANIC(("        level sensitive mode not supported"));
-        } else {
-          BX_DEBUG(("        edge triggered mode selected"));
-        }
-        BX_PIC_THIS s.slave_pic.init.in_init = 1;
-        BX_PIC_THIS s.slave_pic.init.requires_4 = (value & 0x01);
-        BX_PIC_THIS s.slave_pic.init.byte_expected = 2; /* operation command 2 */
-        BX_PIC_THIS s.slave_pic.imr           = 0x00; /* clear irq mask */
-        BX_PIC_THIS s.slave_pic.isr           = 0x00; /* no IRQ's in service */
-        BX_PIC_THIS s.slave_pic.irr           = 0x00; /* no IRQ's requested */
-        BX_PIC_THIS s.slave_pic.lowest_priority = 7;
-        BX_PIC_THIS s.slave_pic.INT = 0; /* reprogramming clears previous INTR request */
-        BX_PIC_THIS s.master_pic.IRQ_in &= ~(1 << 2);
-        BX_PIC_THIS s.slave_pic.auto_eoi = 0;
-        BX_PIC_THIS s.slave_pic.rotate_on_autoeoi = 0;
-        return;
-      }
-
-      if ((value & 0x18) == 0x08) { /* OCW3 */
-        Bit8u special_mask, poll, read_op;
-
-        special_mask = (value & 0x60) >> 5;
-        poll         = (value & 0x04) >> 2;
-        read_op      = (value & 0x03);
-        if (poll) {
-          BX_PIC_THIS s.slave_pic.polled = 1;
-          return;
-        }
-        if (read_op == 0x02) /* read IRR */
-         BX_PIC_THIS s.slave_pic.read_reg_select = 0;
-        else if (read_op == 0x03) /* read ISR */
-         BX_PIC_THIS s.slave_pic.read_reg_select = 1;
-        if (special_mask == 0x02) { /* cancel special mask */
-          BX_PIC_THIS s.slave_pic.special_mask = 0;
-        }
-        else if (special_mask == 0x03) { /* set specific mask */
-          BX_PIC_THIS s.slave_pic.special_mask = 1;
-          pic_service(& BX_PIC_THIS s.slave_pic);
-        }
-        return;
-      }
-
-      switch (value) {
-        case 0x00: // Rotate in auto eoi mode clear
-        case 0x80: // Rotate in auto eoi mode set
-          BX_PIC_THIS s.slave_pic.rotate_on_autoeoi = (value != 0);
-          break;
-
-        case 0xA0: // Rotate on non-specific end of interrupt
-        case 0x20: /* end of interrupt command */
-          clear_highest_interrupt(& BX_PIC_THIS s.slave_pic);
-
-          if(value == 0xA0) {// Rotate in Auto-EOI mode
-            BX_PIC_THIS s.slave_pic.lowest_priority ++;
-            if(BX_PIC_THIS s.slave_pic.lowest_priority > 7)
-              BX_PIC_THIS s.slave_pic.lowest_priority = 0;
-          }
-
-          pic_service(& BX_PIC_THIS s.slave_pic);
-          break;
-
-        case 0x40: // Intel PIC spec-sheet seems to indicate this should be ignored
-          BX_INFO(("IRQ no-op"));
-          break;
-
-        case 0x60: /* specific EOI 0 */
-        case 0x61: /* specific EOI 1 */
-        case 0x62: /* specific EOI 2 */
-        case 0x63: /* specific EOI 3 */
-        case 0x64: /* specific EOI 4 */
-        case 0x65: /* specific EOI 5 */
-        case 0x66: /* specific EOI 6 */
-        case 0x67: /* specific EOI 7 */
-          BX_PIC_THIS s.slave_pic.isr &= ~(1 << (value-0x60));
-          pic_service(& BX_PIC_THIS s.slave_pic);
-          break;
-
-        // IRQ lowest priority commands
-        case 0xC0: // 0 7 6 5 4 3 2 1
-        case 0xC1: // 1 0 7 6 5 4 3 2
-        case 0xC2: // 2 1 0 7 6 5 4 3
-        case 0xC3: // 3 2 1 0 7 6 5 4
-        case 0xC4: // 4 3 2 1 0 7 6 5
-        case 0xC5: // 5 4 3 2 1 0 7 6
-        case 0xC6: // 6 5 4 3 2 1 0 7
-        case 0xC7: // 7 6 5 4 3 2 1 0
-          BX_INFO(("IRQ lowest command 0x%x", value));
-          BX_PIC_THIS s.slave_pic.lowest_priority = value - 0xC0;
-          break;
-
-        case 0xE0: // specific EOI and rotate 0
-        case 0xE1: // specific EOI and rotate 1
-        case 0xE2: // specific EOI and rotate 2
-        case 0xE3: // specific EOI and rotate 3
-        case 0xE4: // specific EOI and rotate 4
-        case 0xE5: // specific EOI and rotate 5
-        case 0xE6: // specific EOI and rotate 6
-        case 0xE7: // specific EOI and rotate 7
-          BX_PIC_THIS s.slave_pic.isr &= ~(1 << (value-0xE0));
-          BX_PIC_THIS s.slave_pic.lowest_priority = (value - 0xE0);
-          pic_service(& BX_PIC_THIS s.slave_pic);
-          break;
-
-        case 0x02: // single mode bit: 1 = single, 0 = cascade
-          // ignore. 386BSD writes this value but works with it ignored.
-          break;
-
-        default:
-          BX_PANIC(("write to port A0h = %02x", value));
-      } /* switch (value) */
-      break;
-
-    case 0xA1:
-      /* initialization mode operation */
-      if (BX_PIC_THIS s.slave_pic.init.in_init) {
-        switch (BX_PIC_THIS s.slave_pic.init.byte_expected) {
-          case 2:
-            BX_PIC_THIS s.slave_pic.interrupt_offset = value & 0xf8;
-            BX_PIC_THIS s.slave_pic.init.byte_expected = 3;
-            BX_DEBUG(("slave:  ICW2 received"));
-            BX_DEBUG(("        offset = INT %02x",
-                      BX_PIC_THIS s.slave_pic.interrupt_offset));
-            break;
-          case 3:
-            BX_DEBUG(("slave:  ICW3 received"));
+          } else {
             if ((value & 0x07) == 0x02) {
-              BX_DEBUG(("        slave PIC ID = 2"));
+              BX_DEBUG(("        PIC ID = 2"));
             } else {
-              BX_PANIC(("        slave PIC ID = %d not supported", value & 0x07));
+              BX_PANIC(("slave:  PIC ID = %d not supported", value & 0x07));
             }
-            if (BX_PIC_THIS s.slave_pic.init.requires_4) {
-              BX_PIC_THIS s.slave_pic.init.byte_expected = 4;
-            } else {
-              BX_PIC_THIS s.slave_pic.init.in_init = 0;
-            }
-            break;
-          case 4:
-            BX_DEBUG(("slave:  ICW4 received"));
-            if (value & 0x02) {
-              BX_DEBUG(("        auto EOI"));
-              BX_PIC_THIS s.slave_pic.auto_eoi = 1;
-            } else {
-              BX_DEBUG(("        normal EOI interrupt"));
-              BX_PIC_THIS s.slave_pic.auto_eoi = 0;
-            }
-            if (value & 0x01) {
-              BX_DEBUG(("        80x86 mode"));
-            } else {
-              BX_PANIC(("        not 80x86 mode"));
-            }
-            BX_PIC_THIS s.slave_pic.init.in_init = 0;
-            break;
-          default:
-            BX_PANIC(("slave:  expecting bad init command"));
-        }
-        return;
+          }
+          if (pic->init.requires_4) {
+            pic->init.byte_expected = 4;
+          } else {
+            pic->init.in_init = 0;
+          }
+          break;
+        case 4:
+          BX_DEBUG(("%s ICW4 received", pic->master ? "master:":"slave: "));
+          if (value & 0x02) {
+            BX_DEBUG(("        auto EOI"));
+            pic->auto_eoi = 1;
+          } else {
+            BX_DEBUG(("        normal EOI interrupt"));
+            pic->auto_eoi = 0;
+          }
+          if (value & 0x01) {
+            BX_DEBUG(("        80x86 mode"));
+          } else {
+            BX_PANIC(("%s not 80x86 mode", pic->master ? "master:":"slave: "));
+          }
+          pic->init.in_init = 0;
+          break;
+        default:
+          BX_PANIC(("%s expecting bad init command", pic->master ? "master":"slave"));
       }
+      return;
+    }
 
-      /* normal operation */
-      BX_DEBUG(("setting slave pic IMR to %02x", value));
-      BX_PIC_THIS s.slave_pic.imr = value;
-      pic_service(& BX_PIC_THIS s.slave_pic);
-  } /* switch (address) */
+    /* normal operation */
+    BX_DEBUG(("setting %s PIC IMR to 0x%02x", pic->master ? "master":"slave", value));
+    pic->imr = value;
+    pic_service(pic);
+  }
 }
 
 // new IRQ signal handling routines
