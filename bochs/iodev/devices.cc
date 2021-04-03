@@ -201,12 +201,12 @@ void bx_devices_c::init(BX_MEM_C *newmem)
     for (i = 0; i < argc; i++) {
       if (!strcmp(argv[i], "noacpi")) {
         if (chipset == BX_PCI_CHIPSET_I440FX) {
-          pci.advopts = BX_PCI_ADVOPT_NOACPI;
+          pci.advopts |= BX_PCI_ADVOPT_NOACPI;
         } else {
           BX_ERROR(("Disabling ACPI not supported by PCI chipset"));
         }
       } else if (!strcmp(argv[i], "nohpet")) {
-        pci.advopts = BX_PCI_ADVOPT_NOHPET;
+        pci.advopts |= BX_PCI_ADVOPT_NOHPET;
       } else {
         BX_ERROR(("Unknown advanced PCI option '%s'", argv[i]));
       }
