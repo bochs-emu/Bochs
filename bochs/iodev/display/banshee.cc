@@ -169,6 +169,30 @@ void bx_banshee_c::init_model(void)
   pci_rom_address = 0;
   pci_rom_read_handler = mem_read_handler;
   load_pci_rom(SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr());
+  // Zero out Banshee i/o registers and init strapInfo
+  memset(v->banshee.io, 0, sizeof(v->banshee.io));
+  v->banshee.io[io_strapInfo] = 0x00000060;
+  if (is_agp) {
+    v->banshee.io[io_strapInfo] |= 0x0000000c;
+  }
+  // Workaround for VGABIOS size > 32k
+  if (pci_rom_size > 0x8000) {
+    v->banshee.io[io_strapInfo] |= 0x00000002;
+    pci_rom[0x0002] = 0x80;
+    pci_rom[0xfff8] = 0x1a;
+    pci_rom[0xfff9] = 0x12;
+    if (s.model == VOODOO_BANSHEE) {
+      pci_rom[0xfffa] = is_agp ? 0x03:0x04;
+    } else {
+      pci_rom[0xfffa] = is_agp ? 0x52:0x36;
+    }
+    pci_rom[0xfffb] = 0x00;
+    Bit8u checksum = 0;
+    for (int i = 0; i < 0xffff; i++) {
+      checksum += pci_rom[i];
+    }
+    pci_rom[0xffff] = -checksum;
+  }
 }
 
 void bx_banshee_c::reset(unsigned type)
@@ -181,9 +205,6 @@ void bx_banshee_c::reset(unsigned type)
   } reset_vals2[] = {
     { 0x04, 0x00 }, { 0x05, 0x00 }, // command io / memory
     { 0x06, 0x10 }, { 0x07, 0x00 }, // status
-    // subsystem ID 0x2c - 0x2f
-    { 0x2c, 0x1a }, { 0x2d, 0x12 }, // subsystem ID
-    { 0x2e, 0x04 }, { 0x2f, 0x00 }, // for Banshee PCI
     // capabilities pointer 0x34 - 0x37
     { 0x34, 0x60 }, { 0x35, 0x00 },
     { 0x36, 0x00 }, { 0x37, 0x00 },
@@ -213,19 +234,17 @@ void bx_banshee_c::reset(unsigned type)
     }
     pci_conf[0x59] = 0x02;
     pci_conf[0x5b] = 0x07;
-    v->banshee.io[io_strapInfo] |= 0x0000000c;
-    v->banshee.io[io_miscInit1] |= 0x0c000000;
   }
-  // Special subsystem IDs
-  if (s.model == VOODOO_3) {
-    if (!is_agp) {
-      pci_conf[0x2e] = 0x36; // Voodoo 3 PCI model
-    } else {
-      pci_conf[0x2e] = 0x52; // Voodoo 3 AGP model
-    }
-  } else if ((s.model == VOODOO_BANSHEE) && is_agp) {
-    pci_conf[0x2e] = 0x03; // Banshee AGP model
+  for (i = 0; i < 4; i++) {
+    pci_conf[0x2c + i] = pci_rom[(pci_rom_size - 8) + i];
   }
+  v->banshee.io[io_pciInit0] = 0x01800040;
+  v->banshee.io[io_sipMonitor] = 0x40000000;
+  v->banshee.io[io_lfbMemoryConfig] = 0x000a2200;
+  v->banshee.io[io_miscInit1] = ((v->banshee.io[io_strapInfo] & 0x1f) << 24);
+  v->banshee.io[io_dramInit0] = 0x00579d29 | ((v->banshee.io[io_strapInfo] & 0x60) << 21);
+  v->banshee.io[io_dramInit1] = 0x00f02200;
+  v->banshee.io[io_tmuGbeInit] = 0x00000bfb;
   v->vidclk = 14318180;
   if (theVoodooVga != NULL) {
     theVoodooVga->banshee_set_vclk3((Bit32u)v->vidclk);
@@ -598,6 +617,11 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case io_miscInit0:
       v->banshee.io[reg] = value;
       v->fbi.yorigin = (value >> 18) & 0xfff;
+      break;
+
+    case io_miscInit1:
+      v->banshee.io[reg] = value & 0xffffff;
+      v->banshee.io[reg] |= ((v->banshee.io[io_strapInfo] & 0x1f) << 24);
       break;
 
     case io_vgaInit0:

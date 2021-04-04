@@ -3966,18 +3966,6 @@ void voodoo_init(Bit8u _type)
   v->dac.clk0_n = 0x02;
   v->dac.clk0_p = 0x03;
 
-  if (v->type >= VOODOO_BANSHEE) {
-    /* initialize banshee registers */
-    memset(v->banshee.io, 0, sizeof(v->banshee.io));
-    v->banshee.io[io_pciInit0] = 0x01800040;
-    v->banshee.io[io_sipMonitor] = 0x40000000;
-    v->banshee.io[io_lfbMemoryConfig] = 0x000a2200;
-    v->banshee.io[io_dramInit0] = 0x0c579d29;
-    v->banshee.io[io_dramInit1] = 0x00f02200;
-    v->banshee.io[io_tmuGbeInit] = 0x00000bfb;
-    v->banshee.io[io_strapInfo] = 0x00000060;
-  }
-
   /* set up the PCI FIFO */
   v->pci.fifo.base = v->pci.fifo_mem;
   v->pci.fifo.size = 64*2;

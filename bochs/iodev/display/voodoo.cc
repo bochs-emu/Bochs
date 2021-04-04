@@ -294,6 +294,8 @@ void bx_voodoo_base_c::init(void)
   }
   s.model = (Bit8u)SIM->get_param_enum("model", base)->get();
   s.devfunc = 0x00;
+  v = new voodoo_state;
+  memset(v, 0, sizeof(voodoo_state));
   init_model();
   if (s.vertical_timer_id == BX_NULL_TIMER_HANDLE) {
     s.vertical_timer_id = bx_virt_timer.register_timer(this, vertical_timer_handler,
@@ -301,8 +303,6 @@ void bx_voodoo_base_c::init(void)
   }
   s.vdraw.gui_update_pending = 0;
 
-  v = new voodoo_state;
-  memset(v, 0, sizeof(voodoo_state));
   BX_INIT_MUTEX(fifo_mutex);
   BX_INIT_MUTEX(render_mutex);
   if (s.model >= VOODOO_2) {
