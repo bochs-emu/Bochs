@@ -52,7 +52,7 @@ void bx_usbdev_ctl_c::init(void)
 
   count = PLUG_get_plugins_count(PLUGTYPE_USB);
   usb_module_names = (const char**) malloc(count * sizeof(char*));
-  usb_device_names = (const char**) malloc((count + 5) * sizeof(char*));
+  usb_device_names = (const char**) malloc((count + 6) * sizeof(char*));
   usb_module_id = (Bit8u*) malloc((count + 5) * sizeof(Bit8u));
   usb_device_names[0] = "none";
   usb_module_id[0] = 0xff;
