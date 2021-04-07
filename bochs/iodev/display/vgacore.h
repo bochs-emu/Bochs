@@ -101,7 +101,7 @@ public:
   virtual void   get_text_snapshot(Bit8u **text_snapshot, unsigned *txHeight,
                                    unsigned *txWidth);
   virtual bool   init_vga_extension(void) {return 0;}
-  virtual void   get_crtc_params(bx_crtc_params_t *crtcp);
+  virtual void   get_crtc_params(bx_crtc_params_t *crtcp, Bit32u *vclock);
 
   static void    vga_timer_handler(void *);
   static Bit64s  vga_param_handler(bx_param_c *param, bool set, Bit64s val);

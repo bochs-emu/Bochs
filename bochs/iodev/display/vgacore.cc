@@ -386,8 +386,10 @@ void bx_vgacore_c::determine_screen_dimensions(unsigned *piHeight, unsigned *piW
   }
 }
 
-void bx_vgacore_c::get_crtc_params(bx_crtc_params_t *crtcp)
+void bx_vgacore_c::get_crtc_params(bx_crtc_params_t *crtcp, Bit32u *vclock)
 {
+  *vclock = BX_VGA_THIS s.vclk[BX_VGA_THIS s.misc_output.clock_select];
+  if (BX_VGA_THIS s.x_dotclockdiv2) *vclock >>= 1;
   crtcp->htotal = BX_VGA_THIS s.CRTC.reg[0] + 5;
   crtcp->vtotal = BX_VGA_THIS s.CRTC.reg[6] +
                   ((BX_VGA_THIS s.CRTC.reg[7] & 0x01) << 8) +
@@ -399,26 +401,24 @@ void bx_vgacore_c::get_crtc_params(bx_crtc_params_t *crtcp)
 
 void bx_vgacore_c::calculate_retrace_timing()
 {
-  Bit32u hbstart, hbend, clock, cwidth, hfreq, vfreq, vrend;
+  Bit32u hbstart, hbend, vclock = 0, cwidth, hfreq, vfreq, vrend;
   bx_crtc_params_t crtcp;
 
-  BX_VGA_THIS get_crtc_params(&crtcp);
-  cwidth = ((BX_VGA_THIS s.sequencer.reg1 & 0x01) == 1) ? 8 : 9;
-  clock = BX_VGA_THIS s.vclk[BX_VGA_THIS s.misc_output.clock_select];
-  if (BX_VGA_THIS s.x_dotclockdiv2) clock >>= 1;
-  if (clock == 0) {
+  BX_VGA_THIS get_crtc_params(&crtcp, &vclock);
+  if (vclock == 0) {
     BX_ERROR(("Ignoring invalid video clock setting"));
     return;
   } else {
-    BX_DEBUG(("Using video clock %.3f MHz", (double)clock / 1000000.0f));
+    BX_DEBUG(("Using video clock %.3f MHz", (double)vclock / 1000000.0f));
   }
-  hfreq = clock / (crtcp.htotal * cwidth);
+  cwidth = ((BX_VGA_THIS s.sequencer.reg1 & 0x01) == 1) ? 8 : 9;
+  hfreq = vclock / (crtcp.htotal * cwidth);
   BX_VGA_THIS s.htotal_usec = 1000000 / hfreq;
   hbstart = BX_VGA_THIS s.CRTC.reg[2];
-  BX_VGA_THIS s.hbstart_usec = (1000000 * hbstart * cwidth) / clock;
+  BX_VGA_THIS s.hbstart_usec = (1000000 * hbstart * cwidth) / vclock;
   hbend = (BX_VGA_THIS s.CRTC.reg[3] & 0x1f) + ((BX_VGA_THIS s.CRTC.reg[5] & 0x80) >> 2);
   hbend = hbstart + ((hbend - hbstart) & 0x3f);
-  BX_VGA_THIS s.hbend_usec = (1000000 * hbend * cwidth) / clock;
+  BX_VGA_THIS s.hbend_usec = (1000000 * hbend * cwidth) / vclock;
   vrend = ((BX_VGA_THIS s.CRTC.reg[17] & 0x0f) - crtcp.vrstart) & 0x0f;
   vrend += crtcp.vrstart;
   vfreq = hfreq / crtcp.vtotal;

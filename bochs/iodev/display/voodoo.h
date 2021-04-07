@@ -193,7 +193,7 @@ public:
                              unsigned width, unsigned height);
 
   virtual bool   init_vga_extension(void);
-  virtual void   get_crtc_params(bx_crtc_params_t *crtcp);
+  virtual void   get_crtc_params(bx_crtc_params_t *crtcp, Bit32u *vclock);
   Bit32u get_retrace(void);
 
   void banshee_update_mode(void);

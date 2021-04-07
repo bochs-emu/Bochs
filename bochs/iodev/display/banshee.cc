@@ -335,9 +335,10 @@ bool bx_banshee_c::update_timing(void)
 {
   float hfreq;
   bx_crtc_params_t crtcp;
+  Bit32u vclock = 0;
 
-  BX_VVGA_THIS get_crtc_params(&crtcp);
-  hfreq = v->vidclk / (float)(crtcp.htotal * 8);
+  BX_VVGA_THIS get_crtc_params(&crtcp, &vclock);
+  hfreq = vclock / (float)(crtcp.htotal * 8);
   v->vertfreq = hfreq / (float)crtcp.vtotal;
   s.vdraw.vtotal_usec = (unsigned)(1000000.0 / v->vertfreq);
   s.vdraw.width = v->fbi.width;
@@ -2857,8 +2858,9 @@ Bit32u bx_voodoo_vga_c::get_retrace()
   return retval;
 }
 
-void bx_voodoo_vga_c::get_crtc_params(bx_crtc_params_t *crtcp)
+void bx_voodoo_vga_c::get_crtc_params(bx_crtc_params_t *crtcp, Bit32u *vclock)
 {
+  *vclock = BX_VVGA_THIS s.vclk[BX_VVGA_THIS s.misc_output.clock_select];
   crtcp->htotal = BX_VVGA_THIS s.CRTC.reg[0] + ((v->banshee.crtc[0x1a] & 0x01) << 8) + 5;
   crtcp->vtotal = BX_VVGA_THIS s.CRTC.reg[6] + ((BX_VVGA_THIS s.CRTC.reg[7] & 0x01) << 8) +
                   ((BX_VVGA_THIS s.CRTC.reg[7] & 0x20) << 4) +

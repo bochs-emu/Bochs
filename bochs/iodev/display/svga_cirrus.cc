@@ -950,8 +950,10 @@ void bx_svga_cirrus_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
 
 void bx_svga_cirrus_c::svga_modeupdate(void)
 {
-  Bit32u iTopOffset, iWidth, iHeight;
+  Bit32u iTopOffset, iWidth, iHeight, vclock = 0;
   Bit8u iBpp, iDispBpp;
+  bx_crtc_params_t crtcp;
+  float hfreq, vfreq;
 
   iTopOffset = (BX_CIRRUS_THIS crtc.reg[0x0c] << 8)
        + BX_CIRRUS_THIS crtc.reg[0x0d]
@@ -993,9 +995,13 @@ void bx_svga_cirrus_c::svga_modeupdate(void)
       break;
     }
   }
+  BX_CIRRUS_THIS get_crtc_params(&crtcp, &vclock);
+  hfreq = vclock / (float)(crtcp.htotal * 8);
+  vfreq = hfreq / (float)crtcp.vtotal;
   if ((iWidth != BX_CIRRUS_THIS svga_xres) || (iHeight != BX_CIRRUS_THIS svga_yres)
       || (iDispBpp != BX_CIRRUS_THIS svga_dispbpp)) {
-    BX_INFO(("switched to %u x %u x %u", iWidth, iHeight, iDispBpp));
+    BX_INFO(("switched to %u x %u x %u @ %.1f Hz", iWidth, iHeight, iDispBpp,
+             vfreq));
   }
   BX_CIRRUS_THIS svga_xres = iWidth;
   BX_CIRRUS_THIS svga_yres = iHeight;
