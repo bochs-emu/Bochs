@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2020  The Bochs Project
+//  Copyright (C) 2001-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -930,7 +930,7 @@ Bit16u cdrom_boot();
 
 static char bios_svn_version_string[] = "$Revision$ $Date$";
 
-#define BIOS_COPYRIGHT_STRING "(c) 2001-2020  The Bochs Project"
+#define BIOS_COPYRIGHT_STRING "(c) 2001-2021  The Bochs Project"
 
 #if DEBUG_ATA
 #  define BX_DEBUG_ATA(a...) BX_DEBUG(a)
@@ -1456,6 +1456,22 @@ ASM_START
   mov  ds, 4[bp] ;; seg
   pop  ax
   pop  bp
+ASM_END
+}
+
+  Bit16u
+get_ebda_seg()
+{
+ASM_START
+  push bx
+  push ds
+  mov  ax, #0x0040
+  mov  ds, ax
+  mov  bx, #0x000e
+  mov  ax, [bx]
+  ;; ax = return value (word)
+  pop  ds
+  pop  bx
 ASM_END
 }
 
@@ -2456,7 +2472,7 @@ void ata_init( )
 {
   Bit8u  channel, device;
   // Set DS to EBDA segment.
-  Bit16u old_ds = set_DS(read_word(0x0040,0x000E));
+  Bit16u old_ds = set_DS(get_ebda_seg());
 
   // Channels info init.
   for (channel=0; channel<BX_MAX_ATA_INTERFACES; channel++) {
@@ -2559,7 +2575,7 @@ void ata_detect( )
   Bit8u  hdcount, cdcount, device, type;
   Bit8u  buffer[0x0200];
   // Set DS to EBDA segment.
-  Bit16u old_ds = set_DS(read_word(0x0040,0x000E));
+  Bit16u old_ds = set_DS(get_ebda_seg());
 
 #if BX_MAX_ATA_INTERFACES > 0
   write_byte_DS(&EbdaData->ata.channels[0].iface,ATA_IFACE_ISA);
@@ -3183,7 +3199,7 @@ Bit16u device,cmdseg, cmdoff, bufseg, bufoff;
 Bit16u header;
 Bit32u length;
 {
-  Bit16u ebda_seg=read_word(0x0040,0x000E), old_ds;
+  Bit16u ebda_seg=get_ebda_seg(), old_ds;
   Bit16u iobase1, iobase2;
   Bit16u lcount, lbefore, lafter, count;
   Bit8u  channel, slave;
@@ -3494,7 +3510,7 @@ atapi_is_ready(device)
   Bit32u time;
   Bit8u asc, ascq;
   Bit8u in_progress;
-  Bit16u ebda_seg = read_word(0x0040,0x000E);
+  Bit16u ebda_seg = get_ebda_seg();
   if (read_byte(ebda_seg,&EbdaData->ata.devices[device].type) != ATA_TYPE_ATAPI) {
     printf("not implemented for non-ATAPI device\n");
     return -1;
@@ -3565,7 +3581,7 @@ ok:
 atapi_is_cdrom(device)
   Bit8u device;
 {
-  Bit16u ebda_seg=read_word(0x0040,0x000E);
+  Bit16u ebda_seg=get_ebda_seg();
 
   if (device >= BX_MAX_ATA_DEVICES)
     return 0;
@@ -3594,7 +3610,7 @@ atapi_is_cdrom(device)
   void
 cdemu_init()
 {
-  Bit16u ebda_seg=read_word(0x0040,0x000E);
+  Bit16u ebda_seg=get_ebda_seg();
 
   // the only important data is this one for now
   write_byte(ebda_seg,&EbdaData->cdemu.active,0x00);
@@ -3603,7 +3619,7 @@ cdemu_init()
   Bit8u
 cdemu_isactive()
 {
-  Bit16u ebda_seg=read_word(0x0040,0x000E);
+  Bit16u ebda_seg=get_ebda_seg();
 
   return(read_byte(ebda_seg,&EbdaData->cdemu.active));
 }
@@ -3611,7 +3627,7 @@ cdemu_isactive()
   Bit8u
 cdemu_emulated_drive()
 {
-  Bit16u ebda_seg=read_word(0x0040,0x000E);
+  Bit16u ebda_seg=get_ebda_seg();
 
   return(read_byte(ebda_seg,&EbdaData->cdemu.emulated_drive));
 }
@@ -3624,7 +3640,7 @@ static char eltorito[24]="EL TORITO SPECIFICATION";
   Bit16u
 cdrom_boot()
 {
-  Bit16u ebda_seg=read_word(0x0040,0x000E), old_ds;
+  Bit16u ebda_seg=get_ebda_seg(), old_ds;
   Bit8u  atacmd[12], buffer[2048];
   Bit32u lba;
   Bit16u boot_segment, nbsectors, i, error;
@@ -3863,7 +3879,7 @@ int15_function(regs, ES, DS, FLAGS)
   pusha_regs_t regs; // REGS pushed via pusha
   Bit16u ES, DS, FLAGS;
 {
-  Bit16u ebda_seg=read_word(0x0040,0x000E);
+  Bit16u ebda_seg=get_ebda_seg();
   bx_bool prev_a20_enable;
   Bit16u  base15_00;
   Bit8u   base23_16;
@@ -4263,7 +4279,7 @@ int15_function_mouse(regs, ES, DS, FLAGS)
   pusha_regs_t regs; // REGS pushed via pusha
   Bit16u ES, DS, FLAGS;
 {
-  Bit16u ebda_seg=read_word(0x0040,0x000E);
+  Bit16u ebda_seg=get_ebda_seg();
   Bit8u  mouse_flags_1, mouse_flags_2;
   Bit16u mouse_driver_seg;
   Bit16u mouse_driver_offset;
@@ -5403,7 +5419,7 @@ int13_edd(DS, SI, device)
 {
   Bit32u lba_low, lba_high;
   Bit16u npc, nph, npspt, size, t13;
-  Bit16u ebda_seg=read_word(0x0040,0x000E);
+  Bit16u ebda_seg=get_ebda_seg();
 
   //
   // DS has been set to EBDA segment before call
@@ -6137,7 +6153,7 @@ int13_success_noah:
 int13_eltorito(DS, ES, DI, SI, BP, SP, BX, DX, CX, AX, IP, CS, FLAGS)
   Bit16u DS, ES, DI, SI, BP, SP, BX, DX, CX, AX, IP, CS, FLAGS;
 {
-  Bit16u ebda_seg=read_word(0x0040,0x000E);
+  Bit16u ebda_seg=get_ebda_seg();
 
   BX_DEBUG_INT13_ET("int13_eltorito: AX=%04x BX=%04x CX=%04x DX=%04x ES=%04x\n", AX, BX, CX, DX, ES);
   // BX_DEBUG_INT13_ET("int13_eltorito: SS=%04x DS=%04x ES=%04x DI=%04x SI=%04x\n",get_SS(), DS, ES, DI, SI);
