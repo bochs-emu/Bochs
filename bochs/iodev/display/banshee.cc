@@ -138,6 +138,7 @@ bx_banshee_c::~bx_banshee_c()
 void bx_banshee_c::init_model(void)
 {
   static char model[40];
+  const char *vgabios_signature;
 
   if (theVoodooVga == NULL) {
     BX_PANIC(("Voodoo Banshee with VGA disabled not supported yet"));
@@ -175,23 +176,27 @@ void bx_banshee_c::init_model(void)
   if (is_agp) {
     v->banshee.io[io_strapInfo] |= 0x0000000c;
   }
-  // Workaround for VGABIOS size > 32k
   if (pci_rom_size > 0x8000) {
     v->banshee.io[io_strapInfo] |= 0x00000002;
-    pci_rom[0x0002] = 0x80;
-    pci_rom[0xfff8] = 0x1a;
-    pci_rom[0xfff9] = 0x12;
-    if (s.model == VOODOO_BANSHEE) {
-      pci_rom[0xfffa] = is_agp ? 0x03:0x04;
-    } else {
-      pci_rom[0xfffa] = is_agp ? 0x52:0x36;
+  }
+  // Modify device IDs in LGPL'd VGABIOS if required
+  vgabios_signature = (const char*)(pci_rom + 0x22);
+  if (!strncmp(vgabios_signature, "Bochs VGABios (PCI)", 19)) {
+    Bit16u pcir = pci_rom[0x18] | (pci_rom[0x19] << 8); // offset to PCIR data
+    Bit16u pci_vid = pci_rom[pcir + 4] | (pci_rom[pcir + 5] << 8);
+    if (pci_vid == 0x121a) {
+      if (s.model == VOODOO_BANSHEE) {
+        pci_rom[0x7ffa] = is_agp ? 0x03:0x04;
+      } else {
+        pci_rom[pcir + 6] = 0x05;
+        pci_rom[0x7ffa] = is_agp ? 0x52:0x36;
+      }
+      Bit8u checksum = 0;
+      for (int i = 0; i < 0x7fff; i++) {
+        checksum += pci_rom[i];
+      }
+      pci_rom[0x7fff] = -checksum;
     }
-    pci_rom[0xfffb] = 0x00;
-    Bit8u checksum = 0;
-    for (int i = 0; i < 0xffff; i++) {
-      checksum += pci_rom[i];
-    }
-    pci_rom[0xffff] = -checksum;
   }
 }
 
