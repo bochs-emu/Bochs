@@ -1,8 +1,7 @@
-Plex86/Bochs VGABios
---------------------
+Bochs VGABios
+-------------
 
-The goal of this project is to have a LGPL'd Video Bios in plex86,
-Bochs and qemu.
+The goal of this project is to have a LGPL'd Video Bios in Bochs and qemu.
 This VGA Bios is very specific to the emulated VGA card.
 It is NOT meant to drive a physical vga card.
 
@@ -93,11 +92,12 @@ For any information on Qemu, visit the website http://wiki.qemu.org/
 
 History
 -------
-vgabios-SVN : Jun 23 2020
+vgabios-SVN : Apr 12 2021
   - Volker
+    - added initial version of the VGABIOS for Voodoo Banshee PCI
     - fixes in Bochs VBE functions set/get VBE mode and save/restore VBE state
     - fixed text output in VGA graphics modes (using INT 0x43 vector as expected)
-    - get/set cursor position rewritten in assembler
+    - some functions rewritten in assembler and some other code optimizations
 vgabios-0.7b : Jan 03 2020
   - Volker
     - added VESA BIOS function 0x4f09 (set/get palette data) to the Bochs VBE

@@ -74,7 +74,10 @@ Changes after 2.6.11:
     - wx: fixed status bar handling to avoid segfaults and deadlocks.
 
 - VGABIOS
-  - LGPL'd VGABIOS updated from SVN (fixed text output in VGA graphics modes).
+  - LGPL'd VGABIOS updated from SVN.
+    - Added initial version of the VGABIOS for Voodoo Banshee adapters.
+    - Fixed text output in VGA graphics modes.
+    - Some small fixes in the VBE code and several code optimizations.
 
 - Misc
   - Added support for converting VDI images to another format with bximage.
