@@ -285,6 +285,12 @@ usb_device_c::usb_device_c(void)
   d.async_mode = 1;
 }
 
+usb_device_c::~usb_device_c()
+{
+  if (d.sr != NULL)
+    d.sr->clear();
+}
+
 // Find device with given address
 usb_device_c* usb_device_c::find_device(Bit8u addr)
 {

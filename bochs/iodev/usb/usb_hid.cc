@@ -736,7 +736,6 @@ usb_hid_device_c::usb_hid_device_c(const char *devname)
 
 usb_hid_device_c::~usb_hid_device_c(void)
 {
-  d.sr->clear();
   if ((d.type == USB_HID_TYPE_MOUSE) ||
       (d.type == USB_HID_TYPE_TABLET)) {
     bx_gui->set_mouse_mode_absxy(0);

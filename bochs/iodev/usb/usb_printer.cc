@@ -171,7 +171,6 @@ usb_printer_device_c::usb_printer_device_c()
 
 usb_printer_device_c::~usb_printer_device_c(void)
 {
-  d.sr->clear();
   if (s.fp != NULL) {
     fclose(s.fp);
   }

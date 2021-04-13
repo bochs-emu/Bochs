@@ -226,7 +226,6 @@ usb_hub_device_c::~usb_hub_device_c(void)
   for (int i = 0; i < hub.n_ports; i++) {
     remove_device(i);
   }
-  d.sr->clear();
   if (SIM->is_wx_selected()) {
     bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
     usb->remove(hub.config->get_name());

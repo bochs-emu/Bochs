@@ -164,7 +164,7 @@ BOCHSAPI extern bx_usbdev_ctl_c bx_usbdev_ctl;
 class BOCHSAPI usb_device_c : public logfunctions {
 public:
   usb_device_c(void);
-  virtual ~usb_device_c() {}
+  virtual ~usb_device_c();
 
   virtual bool init() {return d.connected;}
   virtual const char* get_info() {return NULL;}

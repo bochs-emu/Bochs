@@ -393,7 +393,6 @@ usb_msd_device_c::usb_msd_device_c(const char *devname)
 
 usb_msd_device_c::~usb_msd_device_c(void)
 {
-  d.sr->clear();
   if (s.scsi_dev != NULL)
     delete s.scsi_dev;
   if (s.hdimage != NULL) {

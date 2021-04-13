@@ -374,7 +374,6 @@ usb_floppy_device_c::usb_floppy_device_c()
 
 usb_floppy_device_c::~usb_floppy_device_c(void)
 {
-  d.sr->clear();
   bx_gui->unregister_statusitem(s.statusbar_id);
   set_inserted(0);
   if (s.dev_buffer != NULL)
