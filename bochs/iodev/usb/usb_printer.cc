@@ -299,7 +299,7 @@ int usb_printer_device_c::handle_data(USBPacket *p)
     case USB_TOKEN_OUT:
       if (p->devep == 2) {
         BX_DEBUG(("Sent %i bytes to the 'usb printer': %s", p->len, s.fname));
-        usb_dump_packet(p->data, p->len);
+        usb_dump_packet(p->data, p->len, 0, p->devaddr, USB_DIR_OUT | p->devep, USB_TRANS_TYPE_CONTROL, false, true);
         if (s.fp != NULL) {
           fwrite(p->data, 1, p->len, s.fp);
         }

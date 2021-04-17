@@ -852,7 +852,7 @@ bool usb_floppy_device_c::handle_command(Bit8u *command)
     case UFI_MODE_SELECT:
     default:
       BX_ERROR(("Unknown UFI/CBI Command: 0x%02X", s.cur_command));
-      usb_dump_packet(command, 12);
+      usb_dump_packet(command, 12, 0, d.addr, USB_DIR_OUT | 0, USB_TRANS_TYPE_BULK, false, false);
       ret = 0;
   }
 
@@ -904,7 +904,7 @@ int usb_floppy_device_c::handle_data(USBPacket *p)
               }
             }
           }
-          if (ret > 0) usb_dump_packet(data, len);
+          if (ret > 0) usb_dump_packet(data, len, 0, p->devaddr, USB_DIR_OUT | p->devep, USB_TRANS_TYPE_BULK, false, true);
           break;
 
         case UFI_FORMAT_UNIT:
@@ -940,7 +940,7 @@ int usb_floppy_device_c::handle_data(USBPacket *p)
           } else {
             BX_ERROR(("FORMAT UNIT with no SINGLE TRACK bit set not yet supported"));
           }
-          if (ret > 0) usb_dump_packet(data, len);
+          if (ret > 0) usb_dump_packet(data, len, 0, p->devaddr, p->devep, USB_TRANS_TYPE_BULK, false, true);
           break;
 
         default:
@@ -1009,7 +1009,7 @@ int usb_floppy_device_c::handle_data(USBPacket *p)
               }
               ret = len;
             }
-            if (ret > 0) usb_dump_packet(data, ret);
+            if (ret > 0) usb_dump_packet(data, ret, 0, p->devaddr, USB_DIR_IN | p->devep, USB_TRANS_TYPE_BULK, false, true);
             break;
 
           case UFI_READ_CAPACITY:
@@ -1022,7 +1022,7 @@ int usb_floppy_device_c::handle_data(USBPacket *p)
             memcpy(data, s.usb_buf, len);
             s.usb_buf += len;
             s.data_len -= len;
-            usb_dump_packet(data, len);
+            usb_dump_packet(data, len, 0, p->devaddr, USB_DIR_IN | p->devep, USB_TRANS_TYPE_BULK, false, true);
             ret = len;
             break;
 
@@ -1120,7 +1120,7 @@ void usb_floppy_device_c::floppy_timer()
   }
   // ret: 0 = not complete / 1 = complete / -1 = error
   if ((s.packet != NULL) && (ret != 0)) {
-    usb_dump_packet(p->data, p->len);
+    usb_dump_packet(p->data, p->len, 0, p->devaddr, USB_DIR_OUT | p->devep, USB_TRANS_TYPE_BULK, false, true);
     s.packet = NULL;
     usb_packet_complete(p);
   }

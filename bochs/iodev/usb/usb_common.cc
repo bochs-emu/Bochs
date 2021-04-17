@@ -31,6 +31,7 @@
 
 #if BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB
 
+//#include "usb_pcap.h"
 #include "usb_common.h"
 
 #define LOG_THIS bx_usbdev_ctl.
@@ -193,6 +194,8 @@ void bx_usbdev_ctl_c::parse_port_options(usb_device_c *device, bx_list_c *portco
       }
     } else if (!strcmp(opts[i], "debug")) {
       device->set_debug_mode();
+    } else if (!strncmp(opts[i], "pcap:", 5)) {
+      device->set_pcap_mode(opts[i]+5);
     } else if (!device->set_option(opts[i])) {
       BX_ERROR(("ignoring unknown USB device option: '%s'", opts[i]));
     }
@@ -332,6 +335,7 @@ int usb_device_c::handle_packet(USBPacket *p)
       if (len != 8)
         goto fail;
       d.stall = 0;
+      usb_dump_packet(data, 8, 0, p->devaddr, USB_DIR_OUT | p->devep, USB_TRANS_TYPE_CONTROL, true, false);
       memcpy(d.setup_buf, data, 8);
       d.setup_len = (d.setup_buf[7] << 8) | d.setup_buf[6];
       d.setup_index = 0;
@@ -366,6 +370,7 @@ int usb_device_c::handle_packet(USBPacket *p)
                                      (d.setup_buf[3] << 8) | d.setup_buf[2],
                                      (d.setup_buf[5] << 8) | d.setup_buf[4],
                                      d.setup_len, d.data_buf);
+                usb_dump_packet(d.data_buf, ret, 0, p->devaddr, USB_DIR_IN | p->devep, USB_TRANS_TYPE_CONTROL, false, true);
                 if (ret > 0)
                   ret = 0;
               } else {
@@ -382,6 +387,7 @@ int usb_device_c::handle_packet(USBPacket *p)
                 if (d.setup_index >= d.setup_len)
                   d.setup_state = SETUP_STATE_ACK;
                 ret = l;
+                usb_dump_packet(data, ret, 0, p->devaddr, USB_DIR_IN | p->devep, USB_TRANS_TYPE_CONTROL, false, true);
               } else {
                 d.setup_state = SETUP_STATE_IDLE;
                 goto fail;
@@ -404,6 +410,7 @@ int usb_device_c::handle_packet(USBPacket *p)
         case 0:
           switch(d.setup_state) {
             case SETUP_STATE_ACK:
+              usb_dump_packet(p->data, p->len, 0, p->devaddr, USB_DIR_OUT | p->devep, USB_TRANS_TYPE_CONTROL, false, true);
               if (d.setup_buf[0] & USB_DIR_IN) {
                 d.setup_state = SETUP_STATE_IDLE;
                 // transfer OK
@@ -421,6 +428,7 @@ int usb_device_c::handle_packet(USBPacket *p)
                 if (d.setup_index >= d.setup_len)
                   d.setup_state = SETUP_STATE_ACK;
                 ret = l;
+                usb_dump_packet(data, ret, 0, p->devaddr, USB_DIR_OUT | p->devep, USB_TRANS_TYPE_CONTROL, false, true);
               } else {
                 // it is okay for a host to send an OUT before it reads
                 //  all of the expected IN.  It is telling the controller
@@ -564,6 +572,11 @@ void usb_device_c::set_debug_mode()
   setonoff(LOGLEV_DEBUG, ACT_REPORT);
 }
 
+void usb_device_c::set_pcap_mode(const char *pcap_name)
+{
+  d.pcap_mode = 0; //(d.pcapture.create_pcap(pcap_name) >= 0);
+}
+
 // Send an internal message to a USB device
 void usb_device_c::usb_send_msg(int msg)
 {
@@ -574,7 +587,7 @@ void usb_device_c::usb_send_msg(int msg)
 }
 
 // Dumps the contents of a buffer to the log file
-void usb_device_c::usb_dump_packet(Bit8u *data, unsigned size)
+void usb_device_c::usb_dump_packet(Bit8u *data, unsigned size, int bus, int dev_addr, int ep, int type, bool is_setup, bool can_append)
 {
   char buf_str[1025], temp_str[17];
 
@@ -590,6 +603,10 @@ void usb_device_c::usb_dump_packet(Bit8u *data, unsigned size)
       }
     }
     if (strlen(buf_str) > 0) BX_DEBUG(("%s", buf_str));
+  }
+
+  if (d.pcap_mode) {
+//    d.pcapture.write_packet(data, size, bus, dev_addr, ep, type, is_setup, can_append);
   }
 }
 

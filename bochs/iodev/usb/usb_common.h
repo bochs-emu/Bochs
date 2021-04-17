@@ -30,6 +30,12 @@
 #ifndef BX_IODEV_USB_COMMON_H
 #define BX_IODEV_USB_COMMON_H
 
+// for the Packet Capture code to work, these four must remain as is
+#define USB_TRANS_TYPE_ISO      0
+#define USB_TRANS_TYPE_INT      1
+#define USB_TRANS_TYPE_CONTROL  2
+#define USB_TRANS_TYPE_BULK     3
+
 #define USB_TOKEN_IN    0x69
 #define USB_TOKEN_OUT   0xE1
 #define USB_TOKEN_SETUP 0x2D
@@ -127,6 +133,8 @@ typedef void USBCallback(int event, USBPacket *packet, void *dev, int port);
 
 class usb_device_c;
 
+//#include "usb_pcap.h"
+
 struct USBPacket {
   int pid;
   Bit8u devaddr;
@@ -202,6 +210,7 @@ public:
     d.event.port = port;
   }
   void set_debug_mode();
+  void set_pcap_mode(const char *pcap_name);
 
   void usb_send_msg(int msg);
 
@@ -240,10 +249,13 @@ protected:
       int port;
     } event;
     bx_list_c *sr;
+
+    bool pcap_mode;
+//    pcap_image_t pcapture;
   } d;
 
   int handle_control_common(int request, int value, int index, int length, Bit8u *data);
-  void usb_dump_packet(Bit8u *data, unsigned size);
+  void usb_dump_packet(Bit8u *data, unsigned size, int bus, int dev_addr, int ep, int type, bool is_setup, bool can_append);
   int set_usb_string(Bit8u *buf, const char *str);
 };
 

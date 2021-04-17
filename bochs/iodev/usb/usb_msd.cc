@@ -689,7 +689,7 @@ int usb_msd_device_c::handle_data(USBPacket *p)
 
   switch (p->pid) {
     case USB_TOKEN_OUT:
-      usb_dump_packet(data, len);
+      usb_dump_packet(data, len, 0, p->devaddr, USB_DIR_OUT | p->devep, USB_TRANS_TYPE_BULK, false, true);
       if (devep != 2)
         goto fail;
 
@@ -815,7 +815,7 @@ int usb_msd_device_c::handle_data(USBPacket *p)
           BX_ERROR(("USB MSD handle_data: unexpected mode at USB_TOKEN_IN: (0x%02X)", s.mode));
           goto fail;
       }
-      if (ret > 0) usb_dump_packet(data, ret);
+      if (ret > 0) usb_dump_packet(data, ret, 0, p->devaddr, USB_DIR_IN | p->devep, USB_TRANS_TYPE_BULK, false, true);
       break;
 
     default:
@@ -862,6 +862,8 @@ void usb_msd_device_c::send_status(USBPacket *p)
   csw.residue = htod32(s.residue);
   csw.status = s.result;
   memcpy(p->data, &csw, BX_MIN(p->len, 13));
+
+  usb_dump_packet(p->data, BX_MIN(p->len, 13), 0, p->devaddr, USB_DIR_IN | p->devep, USB_TRANS_TYPE_BULK, false, false);
 }
 
 void usb_msd_device_c::usb_msd_command_complete(void *this_ptr, int reason, Bit32u tag, Bit32u arg)
@@ -885,7 +887,6 @@ void usb_msd_device_c::command_complete(int reason, Bit32u tag, Bit32u arg)
       if ((s.data_len == 0) && (s.mode == USB_MSDM_DATAOUT)) {
         send_status(p);
         s.mode = USB_MSDM_CBW;
-        usb_dump_packet(p->data, p->len);
       } else if (s.mode == USB_MSDM_CSW) {
         send_status(p);
         s.mode = USB_MSDM_CBW;
@@ -910,7 +911,7 @@ void usb_msd_device_c::command_complete(int reason, Bit32u tag, Bit32u arg)
   s.scsi_buf = s.scsi_dev->scsi_get_buf(tag);
   if (p) {
     if ((s.scsi_len > 0) && (s.mode == USB_MSDM_DATAIN)) {
-      usb_dump_packet(s.scsi_buf, p->len);
+      usb_dump_packet(s.scsi_buf, p->len, 0, p->devaddr, USB_DIR_OUT | p->devep, USB_TRANS_TYPE_BULK, false, true);
     }
     copy_data();
     if (s.usb_len == 0) {
