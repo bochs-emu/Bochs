@@ -211,6 +211,10 @@ void bx_usb_uhci_c::init_device(Bit8u port, bx_list_c *portconf)
       sprintf(pname, "usb_uhci.hub.port%d.device", port+1);
       bx_list_c *sr_list = (bx_list_c*)SIM->get_param(pname, SIM->get_bochs_root());
       BX_UHCI_THIS hub.usb_port[port].device->register_state(sr_list);
+    } else {
+      ((bx_param_enum_c*)portconf->get_by_name("device"))->set_by_name("none");
+      ((bx_param_string_c*)portconf->get_by_name("options"))->set("none");
+      set_connect_status(port, 0);
     }
   }
 }

@@ -497,6 +497,10 @@ void bx_usb_ohci_c::init_device(Bit8u port, bx_list_c *portconf)
       sprintf(pname, "usb_ohci.hub.port%d.device", port+1);
       bx_list_c *sr_list = (bx_list_c*)SIM->get_param(pname, SIM->get_bochs_root());
       BX_OHCI_THIS hub.usb_port[port].device->register_state(sr_list);
+    } else {
+      ((bx_param_enum_c*)portconf->get_by_name("device"))->set_by_name("none");
+      ((bx_param_string_c*)portconf->get_by_name("options"))->set("none");
+      usb_set_connect_status(port, 0);
     }
   }
 }
@@ -1468,18 +1472,15 @@ bool bx_usb_ohci_c::usb_set_connect_status(Bit8u port, bool connected)
         case USB_SPEED_HIGH:
         case USB_SPEED_SUPER:
           BX_PANIC(("HC supports 'low' or 'full' speed devices only."));
-          usb_set_connect_status(port, 0);
           return 0;
         default:
           BX_PANIC(("USB device returned invalid speed value"));
-          usb_set_connect_status(port, 0);
           return 0;
       }
       BX_OHCI_THIS hub.usb_port[port].HcRhPortStatus.ccs = 1;
       if (!device->get_connected()) {
         if (!device->init()) {
           BX_ERROR(("port #%d: connect failed", port+1));
-          usb_set_connect_status(port, 0);
           return 0;
         } else {
           BX_INFO(("port #%d: connect: %s", port+1, device->get_info()));

@@ -954,7 +954,6 @@ bool bx_uhci_core_c::set_connect_status(Bit8u port, bool connected)
           return 0;
         default:
           BX_PANIC(("USB device returned invalid speed value"));
-          set_connect_status(port, 0);
           return 0;
       }
       if (hub.usb_port[port].low_speed) {
@@ -980,7 +979,6 @@ bool bx_uhci_core_c::set_connect_status(Bit8u port, bool connected)
       if (!device->get_connected()) {
         if (!device->init()) {
           BX_ERROR(("port #%d: connect failed", port+1));
-          set_connect_status(port, 0);
           return 0;
         } else {
           BX_INFO(("port #%d: connect: %s", port+1, device->get_info()));

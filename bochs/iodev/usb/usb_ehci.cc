@@ -524,6 +524,10 @@ void bx_usb_ehci_c::init_device(Bit8u port, bx_list_c *portconf)
       sprintf(pname, "usb_ehci.hub.port%d.device", port+1);
       bx_list_c *sr_list = (bx_list_c*)SIM->get_param(pname, SIM->get_bochs_root());
       BX_EHCI_THIS hub.usb_port[port].device->register_state(sr_list);
+    } else {
+      ((bx_param_enum_c*)portconf->get_by_name("device"))->set_by_name("none");
+      ((bx_param_string_c*)portconf->get_by_name("options"))->set("none");
+      set_connect_status(port, 0);
     }
   }
 }
@@ -550,7 +554,6 @@ bool bx_usb_ehci_c::set_connect_status(Bit8u port, bool connected)
       }
       if (device->get_speed() == USB_SPEED_SUPER) {
         BX_PANIC(("Super-speed device not supported on USB2 port."));
-        set_connect_status(port, 0);
         return 0;
       }
       switch (device->get_speed()) {
@@ -571,12 +574,12 @@ bool bx_usb_ehci_c::set_connect_status(Bit8u port, bool connected)
           break;
         default:
           BX_ERROR(("device->get_speed() returned invalid speed value"));
+          return 0;
       }
       BX_EHCI_THIS hub.usb_port[port].portsc.ccs = 1;
       if (!device->get_connected()) {
         if (!device->init()) {
           BX_ERROR(("port #%d: connect failed", port+1));
-          set_connect_status(port, 0);
           return 0;
         } else {
           BX_INFO(("port #%d: connect: %s", port+1, device->get_info()));
