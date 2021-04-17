@@ -1015,11 +1015,10 @@ void bx_vgacore_c::write(Bit32u address, Bit32u value, unsigned io_len, bool no_
       break;
 
     case 0x03c6: /* PEL mask */
-      BX_VGA_THIS s.pel.mask = value;
-      if (BX_VGA_THIS s.pel.mask != 0xff)
-        BX_DEBUG(("io write 0x3c6: PEL mask=0x%02x != 0xFF", value));
-      // BX_VGA_THIS s.pel.mask should be and'd with final value before
-      // indexing into color register BX_VGA_THIS s.pel.data[]
+      if (value != BX_VGA_THIS s.pel.mask) {
+        BX_VGA_THIS s.pel.mask = value;
+        needs_update = 1;
+      }
       break;
 
     case 0x03c7: // PEL address, read mode
@@ -1332,7 +1331,7 @@ Bit8u bx_vgacore_c::get_vga_pixel(Bit16u x, Bit16u y, Bit16u saddr, Bit16u lc, b
     DAC_regno = (palette_reg_val & 0x3f) |
                 ((BX_VGA_THIS s.attribute_ctrl.color_select & 0x0c) << 4);
   }
-  // DAC_regno &= video DAC mask register ???
+  DAC_regno &= BX_VGA_THIS s.pel.mask;
   return DAC_regno;
 }
 
@@ -1648,10 +1647,11 @@ void bx_vgacore_c::update(void)
       tm_info.h_panning &= 0x07;
     }
     for (int index = 0; index < 16; index++) {
-      tm_info.actl_palette[index] = BX_VGA_THIS s.attribute_ctrl.palette_reg[index];
+      tm_info.actl_palette[index] =
+        BX_VGA_THIS s.attribute_ctrl.palette_reg[index] & BX_VGA_THIS s.pel.mask;
     }
 
-    // Verticle Display End: find out how many lines are displayed
+    // Vertical Display End: find out how many lines are displayed
     VDE = BX_VGA_THIS s.vertical_display_end;
     // Maximum Scan Line: height of character cell
     MSL = BX_VGA_THIS s.CRTC.reg[0x09] & 0x1f;
