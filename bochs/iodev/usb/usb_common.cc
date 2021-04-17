@@ -31,7 +31,7 @@
 
 #if BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB
 
-//#include "usb_pcap.h"
+#include "usb_pcap.h"
 #include "usb_common.h"
 
 #define LOG_THIS bx_usbdev_ctl.
@@ -574,7 +574,7 @@ void usb_device_c::set_debug_mode()
 
 void usb_device_c::set_pcap_mode(const char *pcap_name)
 {
-  d.pcap_mode = 0; //(d.pcapture.create_pcap(pcap_name) >= 0);
+  d.pcap_mode = (d.pcapture.create_pcap(pcap_name) >= 0);
 }
 
 // Send an internal message to a USB device
@@ -606,7 +606,7 @@ void usb_device_c::usb_dump_packet(Bit8u *data, unsigned size, int bus, int dev_
   }
 
   if (d.pcap_mode) {
-//    d.pcapture.write_packet(data, size, bus, dev_addr, ep, type, is_setup, can_append);
+    d.pcapture.write_packet(data, size, bus, dev_addr, ep, type, is_setup, can_append);
   }
 }
 

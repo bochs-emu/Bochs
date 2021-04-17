@@ -133,7 +133,7 @@ typedef void USBCallback(int event, USBPacket *packet, void *dev, int port);
 
 class usb_device_c;
 
-//#include "usb_pcap.h"
+#include "usb_pcap.h"
 
 struct USBPacket {
   int pid;
@@ -251,7 +251,7 @@ protected:
     bx_list_c *sr;
 
     bool pcap_mode;
-//    pcap_image_t pcapture;
+    pcap_image_t pcapture;
   } d;
 
   int handle_control_common(int request, int value, int index, int length, Bit8u *data);
