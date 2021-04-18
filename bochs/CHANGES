@@ -56,6 +56,7 @@ Changes after 2.6.11:
       to disable ACPI or HPET in case the i440FX chipset is selected.
   - USB
     - Added keyboard emulation with most of the keys supported.
+    - Added support for USB packet logging in PCAP format.
     - Changed handling of device options in the USB port configuration
       (see bochsrc sample).
   - Sound

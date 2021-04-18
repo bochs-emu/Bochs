@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "15 Feb 2021" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "18 Apr 2021" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -1277,10 +1277,11 @@ The current code appends the PCL code to the file if the file already existed.
 The output file can be changed at runtime.
 
 The optionsX parameter can be used to assign specific options to the device
-connected to the corresponding USB port. Currently this feature is used to
+connected to the corresponding USB port. The option 'speed' can be used to
 set the speed reported by device ('low', 'full', 'high' or 'super'). The
 available speed choices depend on both HC and device. The option 'debug' turns
-on debug output for the device at connection time.
+on debug output for the device at connection time. The option 'pcap' turns on
+packet logging in PCAP format.
 For the USB 'disk' device the optionsX parameter can be used to specify an
 alternative redolog file (journal) of some image modes. For 'vvfat' mode USB
 disks the optionsX parameter can be used to specify the disk size (range

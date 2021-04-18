@@ -4906,7 +4906,7 @@ as the NE2000 adapter.
 Examples:
 <screen>
   usb_uhci: port1=mouse, port2=disk, options2="path:usbstick.img"
-  usb_uhci: port1=hub, options1="ports:6"
+  usb_uhci: port1=hub, options1="ports:6, pcap:outfile.pcap"
   usb_uhci: port2=disk, options2="path:undoable:usbdisk.img, journal:u.redolog"
   usb_uhci: port2=disk, options2=""path:usbdisk2.img, sect_size:1024"
   usb_uhci: port2=disk, options2="path:vvfat:vvfat, debug, speed:full"
@@ -4965,17 +4965,17 @@ existed. The output file can be changed at runtime.
 <para>
 The options<replaceable>X</replaceable> parameter can also be used to assign
 specific options to the device connected to the corresponding USB port.
-Currently this feature is used to set the speed reported by device ('low',
+The option 'speed' can be used to set the speed reported by device ('low',
 'full', 'high' or 'super'). The available speed choices depend on both HC and
 device. The option 'debug' turns on debug output for the device at connection
-time. For the USB 'disk' device the options<replaceable>X</replaceable>
-parameter can be used to specify an alternative redolog file (journal) of some
-image modes. For 'vvfat' mode USB disks the options<replaceable>X</replaceable>
-parameter can be used to specify the disk size (range 128M ... 128G). If the
-size is not specified, it defaults to 504M.
-For the USB 'floppy' device the optionsX parameter can be used to specify an
-alternative device ID to be reported. Currently only the model "teac" is
-supported (can fix hw detection in some guest OS). The USB floppy also
+time. The option 'pcap' turns on packet logging in PCAP format. For the USB
+'disk' device the options<replaceable>X</replaceable> parameter can be used to
+specify an alternative redolog file (journal) of some image modes. For 'vvfat'
+mode USB disks the options<replaceable>X</replaceable> parameter can be used to
+specify the disk size (range 128M ... 128G). If the size is not specified, it
+defaults to 504M. For the USB 'floppy' device the optionsX parameter can be used
+to specify an alternative device ID to be reported. Currently only the model
+"teac" is supported (can fix hw detection in some guest OS). The USB floppy also
 accepts the parameter "write_protected" with valid values 0 and 1 to select
 the access mode (default is 0).
 </para>
