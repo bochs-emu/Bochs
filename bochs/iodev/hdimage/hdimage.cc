@@ -623,6 +623,7 @@ bool hdimage_copy_file(const char *src, const char *dst)
 
 device_image_t::device_image_t()
 {
+  cylinders = 0;
   hd_size = 0;
   sect_size = 512;
 }

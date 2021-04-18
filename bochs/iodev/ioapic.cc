@@ -119,7 +119,7 @@ void bx_io_redirect_entry_t::register_state(bx_param_c *parent)
 #define BX_IOAPIC_BASE_ADDR  (0xfec00000)
 #define BX_IOAPIC_DEFAULT_ID (BX_SMP_PROCESSORS)
 
-bx_ioapic_c::bx_ioapic_c(): enabled(0), base_addr(BX_IOAPIC_BASE_ADDR)
+bx_ioapic_c::bx_ioapic_c(): enabled(0), base_addr(BX_IOAPIC_BASE_ADDR), intin(0)
 {
   set_id(BX_IOAPIC_DEFAULT_ID);
   put("IOAPIC");

@@ -369,7 +369,7 @@ void bx_init_vgaext_list()
       vga_extension_names[i + 1] = plugname;
     }
   }
-  vga_extension_names[count + 2] = NULL;
+  vga_extension_names[count + 1] = NULL;
 }
 
 void bx_init_pcidev_list()

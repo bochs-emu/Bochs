@@ -167,6 +167,7 @@ static bool hpet_write(bx_phy_address a20addr, unsigned len, void *data, void *p
 bx_hpet_c::bx_hpet_c()
 {
   put("HPET");
+  memset(&s, 0, sizeof(s));
 }
 
 bx_hpet_c::~bx_hpet_c()

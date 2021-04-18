@@ -150,6 +150,7 @@ bx_gui_c::bx_gui_c(void): disp_mode(DISP_MODE_SIM)
   command_mode.active = 0;
   marker_count = 0;
   memset(palette, 0, sizeof(palette));
+  memset(vga_charmap, 0, 0x2000);
 }
 
 bx_gui_c::~bx_gui_c()
