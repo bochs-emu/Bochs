@@ -1626,9 +1626,9 @@ void BX_CPU_C::nested_page_fault(unsigned fault, bx_phy_address guest_paddr, uns
     error_code |= ERROR_CODE_ACCESS; // I/D = 1
 
   if (is_page_walk)
-    error_code |= BX_CONST64(1) << 32;
-  else
     error_code |= BX_CONST64(1) << 33;
+  else
+    error_code |= BX_CONST64(1) << 32;
 
   Svm_Vmexit(SVM_VMEXIT_NPF, error_code, guest_paddr);
 }
