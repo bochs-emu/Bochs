@@ -934,8 +934,10 @@ int bx_gui_c::register_statusitem(const char *text, bool auto_off)
     }
   }
   if (id == statusitem_count) {
-    if (++statusitem_count > BX_MAX_STATUSITEMS) {
+    if (statusitem_count == BX_MAX_STATUSITEMS) {
       return -1;
+    } else {
+      statusitem_count++;
     }
   }
   statusitem[id].in_use = 1;
