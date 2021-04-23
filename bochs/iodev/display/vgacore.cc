@@ -718,9 +718,11 @@ Bit32u bx_vgacore_c::read(Bit32u address, unsigned io_len)
 
     case 0x03b5: /* CRTC Registers (monochrome emulation modes) */
     case 0x03d5: /* CRTC Registers (color emulation modes) */
+      if (BX_VGA_THIS s.CRTC.address == 0x22) {
+        return BX_VGA_THIS s.graphics_ctrl.latch[BX_VGA_THIS s.graphics_ctrl.read_map_select];
+      }
       if (BX_VGA_THIS s.CRTC.address > 0x18) {
-        BX_DEBUG(("io read: invalid CRTC register 0x%02x",
-          (unsigned) BX_VGA_THIS s.CRTC.address));
+        BX_DEBUG(("io read: invalid CRTC register 0x%02x", BX_VGA_THIS s.CRTC.address));
         RETURN(0);
       }
       RETURN(BX_VGA_THIS s.CRTC.reg[BX_VGA_THIS s.CRTC.address]);

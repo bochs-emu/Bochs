@@ -1531,10 +1531,12 @@ Bit8u bx_svga_cirrus_c::svga_read_crtc(Bit32u address, unsigned index)
     case 0x1B:
     case 0x1C:
     case 0x1D:
-    case 0x22:
     case 0x24:
     case 0x25:
     case 0x27:
+      break;
+    case 0x22:
+      return VGA_READ(address,1);
       break;
     case 0x26:
       return (BX_CIRRUS_THIS s.attribute_ctrl.address & 0x3f);

@@ -2905,7 +2905,9 @@ Bit32u bx_voodoo_vga_c::banshee_vga_read_handler(void *this_ptr, Bit32u address,
     case 0x03b5:
     case 0x03d5:
       if (BX_VVGA_THIS s.CRTC.address > 0x18) {
-        if (BX_VVGA_THIS s.CRTC.address <= 0x26) {
+        if (BX_VVGA_THIS s.CRTC.address == 0x22) {
+          value = bx_vgacore_c::read_handler(BX_VVGA_THIS_PTR, address, io_len);
+        } else if (BX_VVGA_THIS s.CRTC.address <= 0x26) {
           if ((v->banshee.io[io_vgaInit0] & 0x440) == 0x040) {
             value = v->banshee.crtc[BX_VVGA_THIS s.CRTC.address];
             BX_DEBUG(("read from banshee CRTC address 0x%02x value 0x%02x",
