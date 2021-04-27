@@ -1381,6 +1381,9 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
 #endif
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest && SVM_NESTED_PAGING_ENABLED) {
+    // hack: ignore isExecute attribute in SMM mode under SVM virtualization
+    if (BX_CPU_THIS_PTR in_smm && rw == BX_EXECUTE) rw = BX_READ;
+
     paddress = nested_walk(paddress, rw, 0);
   }
 #endif
