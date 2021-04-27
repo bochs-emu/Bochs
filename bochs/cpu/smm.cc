@@ -151,7 +151,10 @@ void BX_CPU_C::enter_system_management_mode(void)
 #endif
 
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR efer.set32(0);
+  if (BX_CPU_THIS_PTR efer.get_SVME)
+    BX_CPU_THIS_PTR efer.set32(BX_EFER_SVME_MASK);
+  else
+    BX_CPU_THIS_PTR efer.set32(0);
 #endif
 
   parse_selector(BX_CPU_THIS_PTR smbase >> 4,
