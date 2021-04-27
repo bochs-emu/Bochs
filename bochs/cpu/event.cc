@@ -221,6 +221,11 @@ bool BX_CPU_C::handleAsyncEvent(void)
   //   INIT
   if (is_unmasked_event_pending(BX_EVENT_SMI) && SVM_GIF)
   {
+#if BX_SUPPORT_SVM
+    if (BX_CPU_THIS_PTR in_svm_guest) {
+      if (SVM_INTERCEPT(SVM_INTERCEPT0_SMI)) Svm_Vmexit(SVM_VMEXIT_SMI);
+    }
+#endif
     clear_event(BX_EVENT_SMI); // clear SMI pending flag
     enter_system_management_mode(); // would disable NMI when SMM was accepted
   }
