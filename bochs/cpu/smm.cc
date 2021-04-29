@@ -151,9 +151,11 @@ void BX_CPU_C::enter_system_management_mode(void)
 #endif
 
 #if BX_CPU_LEVEL >= 5
+#if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR efer.get_SVME())
     BX_CPU_THIS_PTR efer.set32(BX_EFER_SVME_MASK);
   else
+#endif
     BX_CPU_THIS_PTR efer.set32(0);
 #endif
 
