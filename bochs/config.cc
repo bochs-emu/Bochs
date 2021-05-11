@@ -1727,6 +1727,7 @@ void bx_init_options()
   misc->add(SIM->get_param(BXPN_MOUSE_ENABLED));
   misc->add(SIM->get_param(BXPN_KBD_PASTE_DELAY));
   misc->add(SIM->get_param(BXPN_USER_SHORTCUT));
+  misc->add(SIM->get_param(BXPN_PORT_E9_HACK));
   misc->set_options(misc->SHOW_PARENT | misc->SHOW_GROUP_NAME);
 }
 

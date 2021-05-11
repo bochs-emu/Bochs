@@ -44,6 +44,7 @@ private:
   Bit32u read(Bit32u address, unsigned io_len);
   void   write(Bit32u address, Bit32u value, unsigned io_len);
 #endif
+  static Bit64s param_handler(bx_param_c *param, bool set, Bit64s val);
 
   struct {
     Bit8u port80;
