@@ -1349,6 +1349,7 @@ bool bx_vgacore_c::skip_update(void)
 
   /* skip screen update when vga/video is disabled or the sequencer is in reset mode */
   if (!BX_VGA_THIS s.vga_enabled || !BX_VGA_THIS s.attribute_ctrl.video_enabled
+      || (BX_VGA_THIS s.attribute_ctrl.mode_ctrl.graphics_alpha != BX_VGA_THIS s.graphics_ctrl.graphics_alpha)
       || !BX_VGA_THIS s.sequencer.reset2 || !BX_VGA_THIS s.sequencer.reset1
       || (BX_VGA_THIS s.sequencer.reg1 & 0x20))
     return 1;
