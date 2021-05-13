@@ -149,7 +149,7 @@ const Bit8u vesa_EDID[128] = {
   0x0A,
 
   0x00,                            /* 0x007E Extension block count (none)  */
-  0x94,                            /* 0x007F Checksum */
+  0x00,                            /* 0x007F Checksum (set by constructor) */
 };
 
 bx_ddc_c::bx_ddc_c(void)
@@ -157,6 +157,7 @@ bx_ddc_c::bx_ddc_c(void)
   int fd, ret;
   struct stat stat_buf;
   const char *path;
+  Bit8u checksum = 0;
 
   put("DDC");
   s.DCKhost = 1;
@@ -195,6 +196,13 @@ bx_ddc_c::bx_ddc_c(void)
     }
     close(fd);
     BX_INFO(("Monitor EDID read from image file '%s'.", path));
+  }
+  s.edid_data[127] = 0;
+  for (int i = 0; i < 128; i++) {
+    checksum += s.edid_data[i];
+  }
+  if (checksum != 0) {
+    s.edid_data[127] = (Bit8u)-checksum;
   }
 }
 
