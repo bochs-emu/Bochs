@@ -341,10 +341,18 @@ void bx_svga_cirrus_c::svga_init_members()
   BX_CIRRUS_THIS disp_ptr = BX_CIRRUS_THIS s.memory;
   BX_CIRRUS_THIS memsize_mask = BX_CIRRUS_THIS s.memsize - 1;
 
-  // VCLK defaults - should be set up by the VGABIOS
-  BX_CIRRUS_THIS s.vclk[0] = 25227000;
+  // VCLK defaults after reset
+  BX_CIRRUS_THIS sequencer.reg[0x0b] = 0x66;
+  BX_CIRRUS_THIS sequencer.reg[0x0c] = 0x5b;
+  BX_CIRRUS_THIS sequencer.reg[0x0d] = 0x45;
+  BX_CIRRUS_THIS sequencer.reg[0x0e] = 0x7e;
+  BX_CIRRUS_THIS sequencer.reg[0x1b] = 0x3b;
+  BX_CIRRUS_THIS sequencer.reg[0x1c] = 0x2f;
+  BX_CIRRUS_THIS sequencer.reg[0x1d] = 0x30;
+  BX_CIRRUS_THIS sequencer.reg[0x1e] = 0x33;
+  BX_CIRRUS_THIS s.vclk[0] = 25180000;
   BX_CIRRUS_THIS s.vclk[1] = 28325000;
-  BX_CIRRUS_THIS s.vclk[2] = 31500000;
+  BX_CIRRUS_THIS s.vclk[2] = 41165000;
   BX_CIRRUS_THIS s.vclk[3] = 36082000;
 }
 
@@ -1752,6 +1760,11 @@ void bx_svga_cirrus_c::svga_write_sequencer(Bit32u address, unsigned index, Bit8
           }
           BX_DEBUG(("VCLK%d = %.3f MHz", i, (double)BX_CIRRUS_THIS s.vclk[i] / 1000000.0f));
         }
+      }
+      break;
+    case 0x1f:
+      if ((value & 0x40) != 0) {
+        BX_ERROR(("SR1F: Using MCLK as VCLK not implemented yet"));
       }
       break;
     case 0x0f:
