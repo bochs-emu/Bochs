@@ -30,7 +30,6 @@
 #define VBE_DISPI_4BPP_PLANE_SHIFT       22
 
 #define VBE_DISPI_BANK_ADDRESS           0xA0000
-#define VBE_DISPI_BANK_SIZE_KB           64
 
 #define VBE_DISPI_MAX_XRES               2560
 #define VBE_DISPI_MAX_YRES               1600
@@ -58,6 +57,7 @@
 #define VBE_DISPI_ID3                    0xB0C3
 #define VBE_DISPI_ID4                    0xB0C4
 #define VBE_DISPI_ID5                    0xB0C5
+#define VBE_DISPI_ID6                    0xB0C6
 
 #define VBE_DISPI_BPP_4                  0x04
 #define VBE_DISPI_BPP_8                  0x08
@@ -69,6 +69,7 @@
 #define VBE_DISPI_DISABLED               0x00
 #define VBE_DISPI_ENABLED                0x01
 #define VBE_DISPI_GETCAPS                0x02
+#define VBE_DISPI_BANK_GRANULARITY_32K   0x10
 #define VBE_DISPI_8BIT_DAC               0x20
 #define VBE_DISPI_LFB_ENABLED            0x40
 #define VBE_DISPI_NOCLEARMEM             0x80
@@ -148,6 +149,7 @@ private:
     Bit16u  max_yres;
     Bit16u  max_bpp;
     Bit16u  bank;
+    Bit16u  bank_granularity_kb;
     bool    enabled;
     Bit16u  curindex;
     Bit32u  visible_screen_size; /**< in bytes */
