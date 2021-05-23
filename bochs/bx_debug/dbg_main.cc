@@ -1316,7 +1316,7 @@ Bit64u conv_8xBit8u_to_Bit64u(const Bit8u* buf)
 {
   Bit64u ret = 0;
   for (int i = 0; i < 8; i++) {
-    ret |= (buf[i] << (8 * i));
+    ret |= ((Bit64u)(buf[i]) << (8 * i));
   }
   return ret;
 }
@@ -1325,7 +1325,7 @@ Bit32u conv_4xBit8u_to_Bit32u(const Bit8u* buf)
 {
   Bit32u ret = 0;
   for (int i = 0; i < 4; i++) {
-    ret |= (buf[i] << (8 * i));
+    ret |= ((Bit32u)(buf[i]) << (8 * i));
   }
   return ret;
 }
@@ -1334,7 +1334,7 @@ Bit16u conv_2xBit8u_to_Bit16u(const Bit8u* buf)
 {
   Bit16u ret = 0;
   for (int i = 0; i < 2; i++) {
-    ret |= (buf[i] << (8 * i));
+    ret |= ((Bit16u)(buf[i]) << (8 * i));
   }
   return ret;
 }
