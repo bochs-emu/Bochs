@@ -856,10 +856,16 @@ Bit32u bx_vga_c::vbe_read(Bit32u address, unsigned io_len)
           retval |= VBE_DISPI_GETCAPS;
         if (BX_VGA_THIS vbe.dac_8bit)
           retval |= VBE_DISPI_8BIT_DAC;
+        if (BX_VGA_THIS vbe.bank_granularity_kb == 32)
+          retval |= VBE_DISPI_BANK_GRANULARITY_32K;
         return retval;
 
       case VBE_DISPI_INDEX_BANK: // current bank
-        return BX_VGA_THIS vbe.bank;
+        if (BX_VGA_THIS vbe.get_capabilities) {
+          return (VBE_DISPI_BANK_GRANULARITY_32K << 8);
+        } else {
+          return BX_VGA_THIS vbe.bank;
+        }
 
       case VBE_DISPI_INDEX_X_OFFSET:
         return BX_VGA_THIS vbe.offset_x;
@@ -931,8 +937,7 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
               (value == VBE_DISPI_ID2) ||
               (value == VBE_DISPI_ID3) ||
               (value == VBE_DISPI_ID4) ||
-              (value == VBE_DISPI_ID5) ||
-              (value == VBE_DISPI_ID6))
+              (value == VBE_DISPI_ID5))
           {
             // allow backwards compatible with previous dispi bioses
             BX_VGA_THIS vbe.cur_dispi=value;

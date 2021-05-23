@@ -57,7 +57,6 @@
 #define VBE_DISPI_ID3                    0xB0C3
 #define VBE_DISPI_ID4                    0xB0C4
 #define VBE_DISPI_ID5                    0xB0C5
-#define VBE_DISPI_ID6                    0xB0C6
 
 #define VBE_DISPI_BPP_4                  0x04
 #define VBE_DISPI_BPP_8                  0x08
