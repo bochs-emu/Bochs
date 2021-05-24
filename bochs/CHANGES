@@ -77,8 +77,9 @@ Changes after 2.6.11:
 - VGABIOS
   - LGPL'd VGABIOS updated from SVN.
     - Added initial version of the VGABIOS for Voodoo Banshee adapters.
-    - Added 'write character' support for Cirrus 8-bpp modes using bitblt engine.
-    - Fixed text output in VGA graphics modes.
+    - Added 'write character' support for Cirrus 8-bpp modes using bitblt engine
+      and for Banshee 8-bpp modes.
+    - Fixed text output and scrolling in VGA graphics modes.
     - Some small fixes in the VBE code and several code optimizations.
 
 - Misc
