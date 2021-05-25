@@ -416,8 +416,9 @@ currently work with.
     <entry>3D video card</entry>
     <entry>Yes</entry>
     <entry>Some of the 3dfx Voodoo graphics adapter models are supported now.
-      The code is still experimental, but at least the Voodoo1 is known to work.
-      For more information see <xref linkend="voodoo-notes">.</entry>
+      The code is still experimental, but at least the Voodoo1 and the Voodoo
+      Banshee PCI are known to work. For more information see
+      <xref linkend="voodoo-notes">.</entry>
   </row>
   <row>
     <entry>Plug&amp;play monitor</entry>
@@ -1461,6 +1462,7 @@ DLX Linux screenshot.
 <row><entry>VGABIOS-lgpl-latest-debug </entry> <entry> LGPL'd VGA BIOS image for Bochs with debug output to the logfile </entry> </row>
 <row><entry>VGABIOS-lgpl-latest-cirrus </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Cirrus extension enabled </entry> </row>
 <row><entry>VGABIOS-lgpl-latest-cirrus-debug </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Cirrus extension enabled and debug output to the logfile </entry> </row>
+<row><entry>VGABIOS-lgpl-latest-banshee </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Voodoo Banshee extension enabled </entry> </row>
 <row><entry>VGABIOS-lgpl-README.txt </entry> <entry> readme for the LGPL'd VGA BIOS </entry> </row>
 <row><entry>dlxlinux\ </entry> <entry> directory containing DLX linux sample disk image and configuration files</entry> </row>
 <row><entry>dlxlinux\bochsrc.bxrc </entry> <entry> Bochs configuration file for DLX</entry> </row>
@@ -1646,6 +1648,7 @@ description of each one.
 <row><entry>/usr/share/bochs/VGABIOS-lgpl-latest-debug </entry> <entry> LGPL'd VGA BIOS image for Bochs with debug output to the logfile </entry> </row>
 <row><entry>/usr/share/bochs/VGABIOS-lgpl-latest-cirrus </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Cirrus extension enabled </entry> </row>
 <row><entry>/usr/share/bochs/VGABIOS-lgpl-latest-cirrus-debug </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Cirrus extension enabled and debug output to the logfile </entry> </row>
+<row><entry>/usr/share/bochs/VGABIOS-lgpl-latest-banshee </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Voodoo Banshee extension enabled </entry> </row>
 <row><entry>/usr/share/bochs/VGABIOS-lgpl-README </entry> <entry> readme for the LGPL'd VGA BIOS </entry> </row>
 <row><entry>/usr/share/bochs/bios.bin-1.13.0 </entry> <entry> SeaBIOS ROM image </entry> </row>
 <row><entry>/usr/share/bochs/dlxlinux/ </entry> <entry> directory containing DLX linux sample disk image and configuration files</entry> </row>
@@ -3165,6 +3168,7 @@ system BIOS and VGA BIOS images.
 <row><entry>VGABIOS-lgpl-latest-debug </entry> <entry> LGPL'd VGA BIOS image for Bochs with debug output to the logfile </entry> </row>
 <row><entry>VGABIOS-lgpl-latest-cirrus </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Cirrus extension enabled </entry> </row>
 <row><entry>VGABIOS-lgpl-latest-cirrus-debug </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Cirrus extension enabled and debug output to the logfile </entry> </row>
+<row><entry>VGABIOS-lgpl-latest-banshee </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Voodoo Banshee extension enabled </entry> </row>
 <row><entry>vgabios-cirrus.bin-1.13.0 </entry> <entry> SeaVGABIOS ROM image (for Cirrus adapter)</entry> </row>
 </tbody>
 </tgroup>
@@ -3833,9 +3837,9 @@ The 'extension' option can be used to specify the VGA display extension.
 With the value 'none' you can use standard VGA with no extension. Other supported
 values are 'vbe' for Bochs VBE (needs <filename>VGABIOS-lgpl-latest</filename> as
 VGA BIOS, see <link linkend="bochsopt-vgaromimage">vgaromimage option</link>),
-'cirrus' for Cirrus SVGA support (needs
-<filename>VGABIOS-lgpl-latest-cirrus</filename> as VGA BIOS) and
-'voodoo' for Voodoo Graphics support (needs external VGA BIOS / see
+'cirrus' for Cirrus SVGA support (needs <filename>VGABIOS-lgpl-latest-cirrus</filename>
+as VGA BIOS) and 'voodoo' for Voodoo Graphics support (needs
+<filename>VGABIOS-lgpl-latest-banshee</filename> as VGA BIOS / see
 <xref linkend="voodoo-notes"> for more information).
 </para>
 <para>
@@ -3869,9 +3873,9 @@ This defines the Voodoo Graphics emulation (experimental). Currently
 supported models are 'voodoo1', 'voodoo2', 'banshee' and 'voodoo3'.
 The Voodoo2 support is not yet complete, but almost usable. The Banshee /
 Voodoo3 support is under construction, but basically usable. The 2D/3D cards
-require an external VGA BIOS the vga extension option to be set to 'voodoo'.
-If the i440BX PCI chipset is selected, they can be assigned to AGP (slot #5).
-The gui screen update timing for all models is controlled by the related
+require the vga extension option to be set to 'voodoo'. If the i440BX PCI
+chipset is selected, they can be assigned to AGP (slot #5). The gui screen
+update timing for all models is controlled by the related
 'vga' options. See <xref linkend="voodoo-notes"> for more information.
 </para>
 </section>
@@ -8960,40 +8964,29 @@ Bochs VBE Display Drivers for Windows NT/2000
   For emulating the Voodoo Banshee or Voodoo3 adapter, the vga extension option
   must be set to "voodoo". Using a different primary display adapter and a
   Banshee compatible device with it's VGA interface disabled is not
-  implemented yet. Both Banshee and Voodoo3 currently need a specific external
-  VGA BIOS, since a Voodoo extension for the LGPL'd VGABIOS is not written yet.
+  implemented yet. For both Banshee and Voodoo3 there is now a specific version
+  of the LGPL'd VGABIOS with Voodoo Banshee specific code called
+  <filename>VGABIOS-lgpl-latest-banshee</filename>. The binary file is compiled
+  for the Banshee PCI model, but Bochs modifies the VGABIOS data after loading
+  to support the Voodoo3 and AGP models properly.
   </para>
   <para>
   These bochsrc settings should be used for Voodoo Banshee PCI:
   <screen>
   vga: extension=voodoo
-  vgaromimage: file=Pci_sg.rom
+  vgaromimage: file=VGABIOS-lgpl-latest-banshee
   voodoo: model=banshee
   </screen>
   </para>
   <para>
-  These settings are required for the Voodoo3 PCI:
+  This additional setting is required for Voodoo Banshee AGP:
   <screen>
-  vga: extension=voodoo
-  vgaromimage: file=V3_2000_PCI_SG_2.15.06_LC.rom
-  voodoo: model=voodoo3
+  pci: chipset=i440bx, slot5=voodoo
   </screen>
   </para>
   <para>
-  These settings are required for Voodoo Banshee AGP:
+  To support the Voodoo3 just change the model:
   <screen>
-  pci: chipset=i440bx, slot5=voodoo
-  vga: extension=voodoo
-  vgaromimage: file=Agp_sg.rom
-  voodoo: model=banshee
-  </screen>
-  </para>
-  <para>
-  These settings are required for the Voodoo3 AGP:
-  <screen>
-  pci: chipset=i440bx, slot5=voodoo
-  vga: extension=voodoo
-  vgaromimage: file=1k11sg.rom
   voodoo: model=voodoo3
   </screen>
   </para>
