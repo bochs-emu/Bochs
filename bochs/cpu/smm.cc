@@ -220,10 +220,10 @@ static unsigned smram_map[SMRAM_FIELD_LAST];
 
 void BX_CPU_C::init_SMRAM(void)
 {
-  static bool smram_map_ready = 0;
+  static bool smram_map_ready = false;
 
   if (smram_map_ready) return;
-  smram_map_ready = 1;
+  smram_map_ready = true;
 
   smram_map[SMRAM_FIELD_SMBASE_OFFSET] = SMRAM_TRANSLATE(0x7f00);
   smram_map[SMRAM_FIELD_SMM_REVISION_ID] = SMRAM_TRANSLATE(0x7efc);

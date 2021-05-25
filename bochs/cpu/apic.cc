@@ -76,16 +76,16 @@ int apic_bus_deliver_interrupt(Bit8u vector, apic_dest_t dest, Bit8u delivery_mo
     // logical destination mode
     if(dest == 0) return 0;
 
-    bool interrupt_delivered = 0;
+    bool interrupt_delivered = false;
 
     for (int i=0; i<BX_NUM_LOCAL_APICS; i++) {
       if(BX_CPU_APIC(i)->match_logical_addr(dest)) {
         BX_CPU_APIC(i)->deliver(vector, delivery_mode, trig_mode);
-        interrupt_delivered = 1;
+        interrupt_delivered = true;
       }
     }
 
-    return interrupt_delivered;
+    return (int) interrupt_delivered;
   }
 }
 
@@ -935,13 +935,13 @@ void bx_local_apic_c::print_status(void)
 
 bool bx_local_apic_c::match_logical_addr(apic_dest_t address)
 {
-  bool match = 0;
+  bool match = false;
 
 #if BX_CPU_LEVEL >= 6
   if (mode == BX_APIC_X2APIC_MODE) {
     // only cluster model supported in x2apic mode
     if (address == 0xffffffff) // // broadcast all
-      return 1;
+      return true;
     if ((address & 0xffff0000) == (ldr & 0xffff0000))
       match = ((address & ldr & 0x0000ffff) != 0);
     return match;
@@ -957,7 +957,7 @@ bool bx_local_apic_c::match_logical_addr(apic_dest_t address)
   else if (dest_format == 0) {
     // cluster model
     if (address == 0xff) // broadcast all
-      return 1;
+      return true;
 
     if ((unsigned)(address & 0xf0) == (unsigned)(ldr & 0xf0))
       match = ((address & ldr & 0x0f) != 0);

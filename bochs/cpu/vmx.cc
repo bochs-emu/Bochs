@@ -1053,7 +1053,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
 {
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
   VMCS_HOST_STATE *host_state = &vm->host_state;
-  bool x86_64_host = 0, x86_64_guest = 0;
+  bool x86_64_host = false, x86_64_guest = false;
 
   //
   // VM Host State Checks Related to Address-Space Size
@@ -1061,11 +1061,11 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
 
   Bit32u vmexit_ctrls = vm->vmexit_ctrls;
   if (vmexit_ctrls & VMX_VMEXIT_CTRL1_HOST_ADDR_SPACE_SIZE) {
-     x86_64_host = 1;
+     x86_64_host = true;
   }
   Bit32u vmentry_ctrls = vm->vmentry_ctrls;
   if (vmentry_ctrls & VMX_VMENTRY_CTRL1_X86_64_GUEST) {
-     x86_64_guest = 1;
+     x86_64_guest = true;
   }
 
 #if BX_SUPPORT_X86_64
@@ -1339,16 +1339,16 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
      return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
   }
 
-  bool v8086_guest = 0;
+  bool v8086_guest = false;
   if (guest.rflags & EFlagsVMMask)
-     v8086_guest = 1;
+     v8086_guest = true;
 
-  bool x86_64_guest = 0; // can't be 1 if X86_64 is not supported (checked before)
+  bool x86_64_guest = false; // can't be 1 if X86_64 is not supported (checked before)
   Bit32u vmentry_ctrls = vm->vmentry_ctrls;
 #if BX_SUPPORT_X86_64
   if (vmentry_ctrls & VMX_VMENTRY_CTRL1_X86_64_GUEST) {
      BX_DEBUG(("VMENTER to x86-64 guest"));
-     x86_64_guest = 1;
+     x86_64_guest = true;
   }
 #endif
 
@@ -1388,9 +1388,9 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   }
 
 #if BX_SUPPORT_VMX >= 2
-  bool real_mode_guest = 0;
+  bool real_mode_guest = false;
   if (! (guest.cr0 & BX_CR0_PE_MASK))
-     real_mode_guest = 1;
+     real_mode_guest = true;
 #endif
 
   guest.cr3 = VMread_natural(VMCS_GUEST_CR3);
@@ -2188,7 +2188,7 @@ void BX_CPU_C::VMenterInjectEvents(void)
     }
   }
 
-  bool is_INT = 0;
+  bool is_INT = false;
   switch(type) {
     case BX_EXTERNAL_INTERRUPT:
     case BX_HARDWARE_EXCEPTION:
@@ -2206,12 +2206,12 @@ void BX_CPU_C::VMenterInjectEvents(void)
 
     case BX_PRIVILEGED_SOFTWARE_INTERRUPT:
       BX_CPU_THIS_PTR EXT = 1;
-      is_INT = 1;
+      is_INT = true;
       break;
 
     case BX_SOFTWARE_INTERRUPT:
     case BX_SOFTWARE_EXCEPTION:
-      is_INT = 1;
+      is_INT = true;
       break;
 
     default:
@@ -2484,14 +2484,14 @@ void BX_CPU_C::VMexitSaveGuestState(void)
 void BX_CPU_C::VMexitLoadHostState(void)
 {
   VMCS_HOST_STATE *host_state = &BX_CPU_THIS_PTR vmcs.host_state;
-  bool x86_64_host = 0;
+  bool x86_64_host = false;
   BX_CPU_THIS_PTR tsc_offset = 0;
 
 #if BX_SUPPORT_X86_64
   Bit32u vmexit_ctrls = BX_CPU_THIS_PTR vmcs.vmexit_ctrls;
   if (vmexit_ctrls & VMX_VMEXIT_CTRL1_HOST_ADDR_SPACE_SIZE) {
      BX_DEBUG(("VMEXIT to x86-64 host"));
-     x86_64_host = 1;
+     x86_64_host = true;
   }
 
 #if BX_SUPPORT_VMX >= 2

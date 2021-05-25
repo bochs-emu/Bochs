@@ -402,7 +402,7 @@ bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
   SVM_GUEST_STATE guest;
   Bit32u tmp;
   unsigned n;
-  bool paged_real_mode = 0;
+  bool paged_real_mode = false;
 
   guest.eflags = vmcb_read32(SVM_GUEST_RFLAGS);
   guest.rip = vmcb_read64(SVM_GUEST_RIP);
@@ -486,7 +486,7 @@ bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
     if (! guest.cr0.get_PE() && guest.cr0.get_PG()) {
       // special case : entering paged real mode
       BX_DEBUG(("VMRUN: entering paged real mode"));
-      paged_real_mode = 1;
+      paged_real_mode = true;
       guest.cr0.val32 &= ~BX_CR0_PG_MASK;
     }
   }
@@ -894,7 +894,7 @@ void BX_CPU_C::SvmInterceptMSR(unsigned op, Bit32u msr)
 
   BX_ASSERT(op == BX_READ || op == BX_WRITE);
 
-  bool vmexit = 1;
+  bool vmexit = true;
 
   int msr_map_offset = -1;
   if (msr <= 0x1fff) msr_map_offset = 0;

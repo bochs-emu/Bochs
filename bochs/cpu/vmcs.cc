@@ -131,9 +131,9 @@ void BX_CPU_C::init_VMCS(void)
 
   init_vmx_capabilities();
 
-  static bool vmcs_map_ready = 0;
+  static bool vmcs_map_ready = false;
   if (vmcs_map_ready) return;
-  vmcs_map_ready = 1;
+  vmcs_map_ready = true;
 
   // disable not supported encodings
   for (unsigned type=0; type<16; type++) {

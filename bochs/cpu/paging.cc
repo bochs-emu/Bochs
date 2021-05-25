@@ -655,7 +655,7 @@ int BX_CPU_C::check_entry_PAE(const char *s, Bit64u entry, Bit64u reserved, unsi
   if (entry & PAGE_DIRECTORY_NX_BIT) {
     if (rw == BX_EXECUTE) {
       BX_DEBUG(("PAE %s: non-executable page fault occurred", s));
-      *nx_fault = 1;
+      *nx_fault = true;
     }
   }
 
@@ -690,7 +690,7 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
   Bit64u entry[4];
   BxMemtype entry_memtype[4] = { 0 };
 
-  bool nx_fault = 0;
+  bool nx_fault = false;
   int leaf;
 
   Bit64u offset_mask = BX_CONST64(0x0000ffffffffffff);
@@ -984,7 +984,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
   bx_phy_address entry_addr[2];
   Bit64u entry[2];
   BxMemtype entry_memtype[2] = { 0 };
-  bool nx_fault = 0;
+  bool nx_fault = false;
   int leaf;
 
   lpf_mask = 0xfff;
@@ -1641,7 +1641,7 @@ bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsig
   bx_phy_address entry_addr[4];
   Bit64u entry[4];
   BxMemtype entry_memtype[4] = { BX_MEMTYPE_INVALID };
-  bool nx_fault = 0;
+  bool nx_fault = false;
   int leaf;
 
   SVM_CONTROLS *ctrls = &BX_CPU_THIS_PTR vmcb.ctrls;
@@ -1705,7 +1705,7 @@ bx_phy_address BX_CPU_C::nested_walk_PAE(bx_phy_address guest_paddr, unsigned rw
   bx_phy_address entry_addr[2];
   Bit64u entry[2];
   BxMemtype entry_memtype[2] = { BX_MEMTYPE_INVALID };
-  bool nx_fault = 0;
+  bool nx_fault = false;
   int leaf;
 
   unsigned combined_access = BX_COMBINED_ACCESS_WRITE | BX_COMBINED_ACCESS_USER;
