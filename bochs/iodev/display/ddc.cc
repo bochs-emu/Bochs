@@ -58,7 +58,7 @@ const Bit8u vesa_EDID[128] = {
                                              is supported) */
   0x21,0x19,                       /* 0x0015 Scren size (330 mm * 250 mm) */
   0x78,                            /* 0x0017 Display gamma (2.2) */
-  0x0D,                            /* 0x0018 Feature flags (no DMPS states, RGB, display is continuous frequency) */
+  0x0F,                            /* 0x0018 Feature flags (no DMPS states, RGB, preferred timing mode, display is continuous frequency) */
   0x78,0xF5,                       /* 0x0019 Least significant bits for chromaticity and default white point */
   0xA6,0x55,0x48,0x9B,0x26,0x12,0x50,0x54,
                                    /* 0x001B Most significant bits for chromaticity and default white point */
