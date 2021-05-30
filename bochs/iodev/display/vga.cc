@@ -105,7 +105,8 @@ bool bx_vga_c::init_vga_extension(void)
     BX_VGA_THIS vbe.xres=640;
     BX_VGA_THIS vbe.yres=480;
     BX_VGA_THIS vbe.bpp=8;
-    BX_VGA_THIS vbe.bank=0;
+    BX_VGA_THIS vbe.bank[0] = 0;
+    BX_VGA_THIS vbe.bank[1] = 0;
     BX_VGA_THIS vbe.bank_granularity_kb=64;
     BX_VGA_THIS vbe.curindex=0;
     BX_VGA_THIS vbe.offset_x=0;
@@ -188,7 +189,8 @@ void bx_vga_c::register_state(void)
     new bx_shadow_num_c(vbe, "xres", &BX_VGA_THIS vbe.xres);
     new bx_shadow_num_c(vbe, "yres", &BX_VGA_THIS vbe.yres);
     new bx_shadow_num_c(vbe, "bpp", &BX_VGA_THIS vbe.bpp);
-    new bx_shadow_num_c(vbe, "bank", &BX_VGA_THIS vbe.bank);
+    new bx_shadow_num_c(vbe, "bank0", &BX_VGA_THIS vbe.bank[0]);
+    new bx_shadow_num_c(vbe, "bank1", &BX_VGA_THIS vbe.bank[1]);
     new bx_shadow_num_c(vbe, "bank_granularity_kb", &BX_VGA_THIS vbe.bank_granularity_kb);
     BXRS_PARAM_BOOL(vbe, enabled, BX_VGA_THIS vbe.enabled);
     new bx_shadow_num_c(vbe, "curindex", &BX_VGA_THIS vbe.curindex);
@@ -740,7 +742,7 @@ bx_vga_c::vbe_mem_read(bx_phy_address addr)
     offset = (Bit32u)(addr - BX_VGA_THIS vbe.base_address);
   } else if (addr < 0xB0000) {
     // banked mode read
-    offset = (Bit32u)(BX_VGA_THIS vbe.bank * (BX_VGA_THIS vbe.bank_granularity_kb << 10) +
+    offset = (Bit32u)(BX_VGA_THIS vbe.bank[1] * (BX_VGA_THIS vbe.bank_granularity_kb << 10) +
              (addr & 0xffff));
   } else {
     // out of bounds read
@@ -765,7 +767,7 @@ bx_vga_c::vbe_mem_write(bx_phy_address addr, Bit8u value)
     offset = (Bit32u)(addr - BX_VGA_THIS vbe.base_address);
   } else if (addr < 0xB0000) {
     // banked mode write
-    offset = (Bit32u)(BX_VGA_THIS vbe.bank * (BX_VGA_THIS vbe.bank_granularity_kb << 10) +
+    offset = (Bit32u)(BX_VGA_THIS vbe.bank[0] * (BX_VGA_THIS vbe.bank_granularity_kb << 10) +
              (addr & 0xffff));
   } else {
     // ignore out of bounds write
@@ -864,7 +866,7 @@ Bit32u bx_vga_c::vbe_read(Bit32u address, unsigned io_len)
         if (BX_VGA_THIS vbe.get_capabilities) {
           return (VBE_DISPI_BANK_GRANULARITY_32K << 8);
         } else {
-          return BX_VGA_THIS vbe.bank;
+          return BX_VGA_THIS vbe.bank[0];
         }
 
       case VBE_DISPI_INDEX_X_OFFSET:
@@ -1028,16 +1030,25 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
         case VBE_DISPI_INDEX_BANK: // set bank
         {
           Bit16u num_banks = (Bit16u)(VBE_DISPI_TOTAL_VIDEO_MEMORY_KB / BX_VGA_THIS vbe.bank_granularity_kb);
+          Bit16u rw_mode = VBE_DISPI_BANK_RW; // compatibility mode
           if (BX_VGA_THIS vbe.bpp == VBE_DISPI_BPP_4) num_banks >>= 2;
+          if ((value & VBE_DISPI_BANK_RW) != 0) {
+            rw_mode = (value & VBE_DISPI_BANK_RW);
+          }
           value &= 0x1ff;
           // check for max bank nr
           if (value < num_banks) {
             BX_DEBUG(("VBE set bank to %d", value));
-            BX_VGA_THIS vbe.bank = value;
+            if ((rw_mode & VBE_DISPI_BANK_WR) != 0) {
+              BX_VGA_THIS vbe.bank[0] = value;
+            }
+            if ((rw_mode & VBE_DISPI_BANK_RD) != 0) {
+              BX_VGA_THIS vbe.bank[1] = value;
+            }
             if (BX_VGA_THIS vbe.bank_granularity_kb == 64) {
-              BX_VGA_THIS s.plane_offset = (BX_VGA_THIS vbe.bank << 16);
+              BX_VGA_THIS s.plane_offset = (BX_VGA_THIS vbe.bank[0] << 16);
             } else {
-              BX_VGA_THIS s.plane_offset = (BX_VGA_THIS vbe.bank << 15);
+              BX_VGA_THIS s.plane_offset = (BX_VGA_THIS vbe.bank[0] << 15);
             }
           } else {
             BX_ERROR(("VBE set invalid bank (%d)", value));
@@ -1111,7 +1122,7 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
               BX_VGA_THIS s.last_fh = 0;
             } else {
               BX_VGA_THIS s.plane_shift = VBE_DISPI_4BPP_PLANE_SHIFT;
-              BX_VGA_THIS s.plane_offset = (BX_VGA_THIS vbe.bank << 16);
+              BX_VGA_THIS s.plane_offset = (BX_VGA_THIS vbe.bank[0] << 16);
             }
           } else if (((value & VBE_DISPI_ENABLED) == 0) && BX_VGA_THIS vbe.enabled) {
             BX_INFO(("VBE disabling"));
@@ -1139,7 +1150,8 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           }
           if (new_bank_gran != BX_VGA_THIS vbe.bank_granularity_kb) {
             BX_VGA_THIS vbe.bank_granularity_kb = new_bank_gran;
-            BX_VGA_THIS vbe.bank = 0;
+            BX_VGA_THIS vbe.bank[0] = 0;
+            BX_VGA_THIS vbe.bank[1] = 0;
             BX_VGA_THIS s.plane_offset = 0;
           }
           new_vbe_8bit_dac = ((value & VBE_DISPI_8BIT_DAC) != 0);
