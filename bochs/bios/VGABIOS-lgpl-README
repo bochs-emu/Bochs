@@ -92,11 +92,11 @@ For any information on Qemu, visit the website http://wiki.qemu.org/
 
 History
 -------
-vgabios-SVN : May 24 2021
+vgabios-SVN : May 30 2021
   - Volker
     - added initial version of the VGABIOS for Voodoo Banshee PCI
-    - added 'write character' support for Cirrus 8-bpp modes using bitblt engine
-      and for Banshee 8-bpp modes
+    - added 'write character' support for non-VGA 8-bpp modes (Bochs VBE /
+      Cirrus / Banshee) - Cirrus code uses bitblt engine
     - fixes in Bochs VBE functions set/get VBE mode and save/restore VBE state
     - fixed text output in VGA graphics modes (using INT 0x43 vector as expected)
     - fixed general 'scroll down' bug in graphics modes
