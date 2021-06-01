@@ -34,7 +34,7 @@ A.sidebar:hover {color: blue; text-decoration: underline}
 <font face="arial, helvetica" size="-1">
 <img src="https://bochs.sourceforge.io/images/smblue.png" width="140" height="1">
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="https://bochs.sourceforge.io" class="sidebar">Home Page</a>
-<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="https://sourceforge.io/projects/bochs" class="sidebar">SF Project Page</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="https://sourceforge.net/projects/bochs" class="sidebar">SF Project Page</a>
 
 <br><br><center><b>Search</b></center>
 <center><form method=GET action="https://bochs.sourceforge.io/cgi-bin/eglimpse.pl/search">
@@ -53,7 +53,7 @@ A.sidebar:hover {color: blue; text-decoration: underline}
 <br><center><b>Get Bochs</b></center>
 
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="<!--#include virtual="release.txt" -->" class="sidebar">Download Current</a>
-<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="https://sourceforge.io/projects/bochs/files/bochs" class="sidebar">See All Releases</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="https://sourceforge.net/projects/bochs/files/bochs" class="sidebar">See All Releases</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="https://bochs.sourceforge.io/diskimages.html" class="sidebar">Disk Images</a>
 <br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="https://sourceforge.net/p/forge/documentation/svn/" class="sidebar">Anonymous SVN</a>
 
