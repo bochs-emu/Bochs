@@ -92,7 +92,7 @@ For any information on Qemu, visit the website http://wiki.qemu.org/
 
 History
 -------
-vgabios-SVN : May 30 2021
+vgabios-SVN : Jun 03 2021
   - Volker
     - added initial version of the VGABIOS for Voodoo Banshee PCI
     - added 'write character' support for non-VGA 8-bpp modes (Bochs VBE /
