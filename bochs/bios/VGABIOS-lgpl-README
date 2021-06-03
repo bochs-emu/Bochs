@@ -14,6 +14,13 @@ qemu. The initial patch for the Cirrus extension has been written by Makoto
 Suzuki (suzu).
 
 
+Voodoo Banshee PCI extension
+----------------------------
+
+The Voodoo Banshee PCI extension is designed for the Banshee emulation in Bochs.
+Some parts of the initial version are based on the Cirrus extension code.
+
+
 Install
 -------
 To compile the VGA Bios you will need the following packages:
@@ -23,7 +30,8 @@ To compile the VGA Bios you will need the following packages:
 
 Untar the archive, and type 'make'. You should get this set of binary files:
 "VGABIOS-lgpl-latest.bin", "VGABIOS-lgpl-latest.debug.bin",
-"VGABIOS-lgpl-latest.cirrus.bin" and "VGABIOS-lgpl-latest.cirrus.debug.bin".
+"VGABIOS-lgpl-latest.cirrus.bin", "VGABIOS-lgpl-latest.cirrus.debug.bin" and
+"VGABIOS-lgpl-latest.banshee.bin".
 Alternatively, you can use one of the precompiled binary files present in
 the archive.
 
@@ -92,7 +100,7 @@ For any information on Qemu, visit the website http://wiki.qemu.org/
 
 History
 -------
-vgabios-SVN : Jun 03 2021
+vgabios-0.8a : Jun 03 2021
   - Volker
     - added initial version of the VGABIOS for Voodoo Banshee PCI
     - added 'write character' support for non-VGA 8-bpp modes (Bochs VBE /

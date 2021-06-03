@@ -75,7 +75,7 @@ Changes after 2.6.11:
     - wx: fixed status bar handling to avoid segfaults and deadlocks.
 
 - VGABIOS
-  - LGPL'd VGABIOS updated from SVN.
+  - LGPL'd VGABIOS updated to version 0.8a.
     - Added initial version of the VGABIOS for Voodoo Banshee adapters.
     - Added 'write character' support for non-VGA 8-bpp modes (Bochs VBE /
       Cirrus / Banshee). Cirrus code uses bitblt engine.
