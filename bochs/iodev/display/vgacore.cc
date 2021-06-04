@@ -321,8 +321,9 @@ void bx_vgacore_c::vgacore_register_state(bx_list_c *parent)
     new bx_shadow_num_c(vclk, name, &BX_VGA_THIS s.vclk[i]);
   }
   new bx_shadow_num_c(list, "plane_shift", &BX_VGA_THIS s.plane_shift);
-  new bx_shadow_num_c(list, "plane_offset", &BX_VGA_THIS s.plane_offset);
   new bx_shadow_num_c(list, "dac_shift", &BX_VGA_THIS s.dac_shift);
+  new bx_shadow_num_c(list, "ext_offset", &BX_VGA_THIS s.ext_offset);
+  BXRS_PARAM_BOOL(list, ext_y_dblsize, BX_VGA_THIS s.ext_y_dblsize);
   new bx_shadow_num_c(list, "last_xres", &BX_VGA_THIS s.last_xres);
   new bx_shadow_num_c(list, "last_yres", &BX_VGA_THIS s.last_yres);
   new bx_shadow_num_c(list, "last_bpp", &BX_VGA_THIS s.last_bpp);
@@ -373,6 +374,7 @@ void bx_vgacore_c::determine_screen_dimensions(unsigned *piHeight, unsigned *piW
         *piHeight = v;
       }
     } else if ((h >= 640) && (v >= 400)) {
+      if (BX_VGA_THIS s.ext_y_dblsize) v <<= 1;
       *piWidth = h;
       *piHeight = v;
     }
@@ -1757,10 +1759,10 @@ Bit8u bx_vgacore_c::mem_read(bx_phy_address addr)
     return BX_VGA_THIS s.memory[(offset & ~0x03) + (offset % 4)*65536];
   }
 
-  plane0 = &BX_VGA_THIS s.memory[(0 << BX_VGA_THIS s.plane_shift) + BX_VGA_THIS s.plane_offset];
-  plane1 = &BX_VGA_THIS s.memory[(1 << BX_VGA_THIS s.plane_shift) + BX_VGA_THIS s.plane_offset];
-  plane2 = &BX_VGA_THIS s.memory[(2 << BX_VGA_THIS s.plane_shift) + BX_VGA_THIS s.plane_offset];
-  plane3 = &BX_VGA_THIS s.memory[(3 << BX_VGA_THIS s.plane_shift) + BX_VGA_THIS s.plane_offset];
+  plane0 = &BX_VGA_THIS s.memory[(0 << BX_VGA_THIS s.plane_shift) + BX_VGA_THIS s.ext_offset];
+  plane1 = &BX_VGA_THIS s.memory[(1 << BX_VGA_THIS s.plane_shift) + BX_VGA_THIS s.ext_offset];
+  plane2 = &BX_VGA_THIS s.memory[(2 << BX_VGA_THIS s.plane_shift) + BX_VGA_THIS s.ext_offset];
+  plane3 = &BX_VGA_THIS s.memory[(3 << BX_VGA_THIS s.plane_shift) + BX_VGA_THIS s.ext_offset];
 
   /* addr between 0xA0000 and 0xAFFFF */
   switch (BX_VGA_THIS s.graphics_ctrl.read_mode) {
@@ -1926,10 +1928,10 @@ void bx_vgacore_c::mem_write(bx_phy_address addr, Bit8u value)
 
   /* addr between 0xA0000 and 0xAFFFF */
 
-  plane0 = &BX_VGA_THIS s.memory[(0 << BX_VGA_THIS s.plane_shift) + BX_VGA_THIS s.plane_offset];
-  plane1 = &BX_VGA_THIS s.memory[(1 << BX_VGA_THIS s.plane_shift) + BX_VGA_THIS s.plane_offset];
-  plane2 = &BX_VGA_THIS s.memory[(2 << BX_VGA_THIS s.plane_shift) + BX_VGA_THIS s.plane_offset];
-  plane3 = &BX_VGA_THIS s.memory[(3 << BX_VGA_THIS s.plane_shift) + BX_VGA_THIS s.plane_offset];
+  plane0 = &BX_VGA_THIS s.memory[(0 << BX_VGA_THIS s.plane_shift) + BX_VGA_THIS s.ext_offset];
+  plane1 = &BX_VGA_THIS s.memory[(1 << BX_VGA_THIS s.plane_shift) + BX_VGA_THIS s.ext_offset];
+  plane2 = &BX_VGA_THIS s.memory[(2 << BX_VGA_THIS s.plane_shift) + BX_VGA_THIS s.ext_offset];
+  plane3 = &BX_VGA_THIS s.memory[(3 << BX_VGA_THIS s.plane_shift) + BX_VGA_THIS s.ext_offset];
 
   switch (BX_VGA_THIS s.graphics_ctrl.write_mode) {
     unsigned i;

@@ -962,7 +962,6 @@ void bx_svga_cirrus_c::svga_modeupdate(void)
   Bit8u iBpp, iDispBpp;
   bx_crtc_params_t crtcp;
   float hfreq, vfreq;
-  bool interlaced = 0;
 
   iTopOffset = (BX_CIRRUS_THIS crtc.reg[0x0c] << 8)
        + BX_CIRRUS_THIS crtc.reg[0x0d]
@@ -974,9 +973,8 @@ void bx_svga_cirrus_c::svga_modeupdate(void)
   iHeight = 1 + BX_CIRRUS_THIS crtc.reg[0x12]
        + ((BX_CIRRUS_THIS crtc.reg[0x07] & 0x02) << 7)
        + ((BX_CIRRUS_THIS crtc.reg[0x07] & 0x40) << 3);
-  if ((BX_CIRRUS_THIS crtc.reg[0x1a] & 0x01) > 0) {
-    iHeight <<= 1;
-    interlaced = 1;
+  if (BX_CIRRUS_THIS s.ext_y_dblsize) {
+    iHeight <<= 1; // interlaced mode
   }
   iWidth = (BX_CIRRUS_THIS crtc.reg[0x01] + 1) * 8;
   iBpp = 8;
@@ -1010,7 +1008,7 @@ void bx_svga_cirrus_c::svga_modeupdate(void)
   vfreq = hfreq / (float)crtcp.vtotal;
   if ((iWidth != BX_CIRRUS_THIS svga_xres) || (iHeight != BX_CIRRUS_THIS svga_yres)
       || (iDispBpp != BX_CIRRUS_THIS svga_dispbpp)) {
-    if (!interlaced) {
+    if (!BX_CIRRUS_THIS s.ext_y_dblsize) {
       BX_INFO(("switched to %u x %u x %u @ %.1f Hz", iWidth, iHeight, iDispBpp,
                vfreq));
     } else {
@@ -1162,6 +1160,9 @@ void bx_svga_cirrus_c::update(void)
     return;
   }
 
+  if (BX_CIRRUS_THIS svga_needs_update_mode) {
+    BX_CIRRUS_THIS s.ext_y_dblsize = (BX_CIRRUS_THIS crtc.reg[0x1a] & 0x01) > 0;
+  }
   if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x01) == CIRRUS_SR7_BPP_VGA) {
     if (BX_CIRRUS_THIS svga_needs_update_mode) {
       BX_CIRRUS_THIS s.vga_mem_updated = 1;
@@ -1169,8 +1170,7 @@ void bx_svga_cirrus_c::update(void)
     }
     BX_CIRRUS_THIS bx_vgacore_c::update();
     return;
-  }
-  else {
+  } else {
     if (BX_CIRRUS_THIS svga_needs_update_mode) {
       svga_modeupdate();
     }
@@ -1506,6 +1506,9 @@ void bx_svga_cirrus_c::update_bank_ptr(Bit8u bank_index)
   if (limit > 0) {
     BX_CIRRUS_THIS bank_base[bank_index] = offset;
     BX_CIRRUS_THIS bank_limit[bank_index] = limit;
+    if ((BX_CIRRUS_THIS crtc.reg[0x1b] & 0x02) != 0) {
+      BX_CIRRUS_THIS s.ext_offset = BX_CIRRUS_THIS bank_base[0];
+    }
   } else {
     BX_CIRRUS_THIS bank_base[bank_index] = 0;
     BX_CIRRUS_THIS bank_limit[bank_index] = 0;
@@ -1631,6 +1634,13 @@ void bx_svga_cirrus_c::svga_write_crtc(Bit32u address, unsigned index, Bit8u val
   }
 
   if (update_pitch) {
+    if ((BX_CIRRUS_THIS crtc.reg[0x1b] & 0x02) != 0) {
+      BX_CIRRUS_THIS s.plane_shift = 19;
+      BX_CIRRUS_THIS s.ext_offset = BX_CIRRUS_THIS bank_base[0];
+    } else {
+      BX_CIRRUS_THIS s.plane_shift = 16;
+      BX_CIRRUS_THIS s.ext_offset = 0;
+    }
     BX_CIRRUS_THIS svga_pitch = (BX_CIRRUS_THIS crtc.reg[0x13] << 3) | ((BX_CIRRUS_THIS crtc.reg[0x1b] & 0x10) << 7);
     BX_CIRRUS_THIS svga_needs_update_mode = 1;
   }

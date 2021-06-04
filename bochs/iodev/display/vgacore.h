@@ -243,8 +243,9 @@ protected:
     Bit32u vrend_usec;
     // shift values for extensions
     Bit8u  plane_shift;
-    Bit32u plane_offset;
     Bit8u  dac_shift;
+    Bit32u ext_offset;
+    bool   ext_y_dblsize;
     // last active resolution and bpp
     Bit16u last_xres;
     Bit16u last_yres;

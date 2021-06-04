@@ -1046,9 +1046,9 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
               BX_VGA_THIS vbe.bank[1] = value;
             }
             if (BX_VGA_THIS vbe.bank_granularity_kb == 64) {
-              BX_VGA_THIS s.plane_offset = (BX_VGA_THIS vbe.bank[0] << 16);
+              BX_VGA_THIS s.ext_offset = (BX_VGA_THIS vbe.bank[0] << 16);
             } else {
-              BX_VGA_THIS s.plane_offset = (BX_VGA_THIS vbe.bank[0] << 15);
+              BX_VGA_THIS s.ext_offset = (BX_VGA_THIS vbe.bank[0] << 15);
             }
           } else {
             BX_ERROR(("VBE set invalid bank (%d)", value));
@@ -1122,12 +1122,12 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
               BX_VGA_THIS s.last_fh = 0;
             } else {
               BX_VGA_THIS s.plane_shift = VBE_DISPI_4BPP_PLANE_SHIFT;
-              BX_VGA_THIS s.plane_offset = (BX_VGA_THIS vbe.bank[0] << 16);
+              BX_VGA_THIS s.ext_offset = (BX_VGA_THIS vbe.bank[0] << 16);
             }
           } else if (((value & VBE_DISPI_ENABLED) == 0) && BX_VGA_THIS vbe.enabled) {
             BX_INFO(("VBE disabling"));
             BX_VGA_THIS s.plane_shift = 16;
-            BX_VGA_THIS s.plane_offset = 0;
+            BX_VGA_THIS s.ext_offset = 0;
           }
           BX_VGA_THIS vbe.enabled = ((value & VBE_DISPI_ENABLED) != 0);
           BX_VGA_THIS vbe.get_capabilities = ((value & VBE_DISPI_GETCAPS) != 0);
@@ -1152,7 +1152,7 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
             BX_VGA_THIS vbe.bank_granularity_kb = new_bank_gran;
             BX_VGA_THIS vbe.bank[0] = 0;
             BX_VGA_THIS vbe.bank[1] = 0;
-            BX_VGA_THIS s.plane_offset = 0;
+            BX_VGA_THIS s.ext_offset = 0;
           }
           new_vbe_8bit_dac = ((value & VBE_DISPI_8BIT_DAC) != 0);
           if (new_vbe_8bit_dac != BX_VGA_THIS vbe.dac_8bit) {
