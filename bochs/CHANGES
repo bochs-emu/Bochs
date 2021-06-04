@@ -1,5 +1,14 @@
 -------------------------------------------------------------------------
-Changes after 2.6.11:
+Changes in 2.7 (Not yet released):
+
+Brief summary :
+
+Detailed change log :
+  - Improvements for the plugin handling to simplify Bochs extensions
+  - Added "multiple NICs" support to the NE2000 and E1000 devices
+  - Added experimental FTP service for networking modules 'vnet' and 'socket'
+  - Fixes and improvements for all supported Voodoo graphics adapters
+  - LGPL'd VGABIOS updated to version 0.8a (new VGABIOS for Voodoo Banshee)
 
 - General
   - Improved plugins handling: all available plugins in path are detected at
