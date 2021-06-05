@@ -2863,7 +2863,7 @@ or <option>--with-sdl2</option> for SDL2.
   <listitem><para>port range 5900 to 5949 (using the first one available)</para></listitem>
   <listitem><para>no authentification</para></listitem>
   <listitem><para>by default 30 seconds waiting for client</para></listitem>
-  <listitem><para>8 bpp (BGR233) supported only</para></listitem>
+  <listitem><para>8 bpp (BGR233 / RGB332) supported only</para></listitem>
   <listitem><para>if client doesn't support resize: desktop size 720x480 (for text mode and standard VGA)</para></listitem>
   <listitem><para>if resize supported: maximum resolution 1280x1024</para></listitem>
 </itemizedlist>
