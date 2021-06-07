@@ -1455,6 +1455,7 @@ void bx_gui_c::console_cleanup(void)
   set_text_charmap(console.saved_charmap);
   dimension_update(console.saved_xres, console.saved_yres, fheight, fwidth,
                    console.saved_bpp);
+  DEV_vga_refresh(1);
   console.running = 0;
 }
 
