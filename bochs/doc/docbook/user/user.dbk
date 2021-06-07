@@ -3299,13 +3299,12 @@ The configuration interface is a series of menus or dialog boxes that
 allows you to edit all the settings that control Bochs' behavior.
 Depending on the platform there are up to 3 choices of configuration
 interface: a text mode version called "textconfig" and two graphical versions
-called "win32config" and "wx".  The text mode version uses stdin/stdout and
-is always compiled in, unless Bochs is compiled for wx only. The choice
-"win32config" is only available on win32 and it is the default there.
-The choice "wx" is only available when Bochs is compiled with wxWidgets support,
-see <xref linkend="compile-wx">. If you do not write a config_interface line,
-Bochs will choose a default for you (win32config on win32/win64 otherwise
-textconfig).
+called "win32config" and "wx".  The text mode version uses stdin/stdout or
+gui console (if available / runtime config) and is always compiled in, unless
+Bochs is compiled for wx only. The choice "win32config" is only available on
+win32/win64 and it is the default on these platforms. The choice "wx" is only
+available when Bochs is compiled with wxWidgets support, see <xref linkend="compile-wx">.
+If you do not write a config_interface line, Bochs will choose a default for you.
 </para>
 
 <note><para>
@@ -5490,7 +5489,9 @@ The configuration interface 'textconfig' is the text mode version of the Bochs
 configuration system. It is a series of menus (using stdin/stdout) that allows
 you to edit all the settings that control Bochs' behavior. If you do not write
 a config_interface line, Bochs will choose it as the default for you (unless Bochs
-is compiled for Win32 or wxWidgets only).
+is compiled for Win32 or wxWidgets only). If the gui console is available at
+runtime, textconfig switches the display to text mode 80 x 25 and restores the
+simulation screen afterwards.
 </para>
 <para>
 It consists of these three parts:
@@ -5719,7 +5720,8 @@ hardcoded file name and the user button sends the configured shortcut.
 <section><title>The runtime configuration</title>
 <para>
 If you want to change certain settings at runtime, you have to press the "config" button in
-the headerbar. The simulation stops and the runtime menu appears on the console window / xterm.
+the headerbar. The simulation stops and the runtime menu appears on the console window / xterm
+or the Bochs gui console (if available).
 <screen>
 ---------------------
 Bochs Runtime Options

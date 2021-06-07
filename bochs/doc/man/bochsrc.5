@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "18 Apr 2021" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "7 Jun 2021" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -64,12 +64,12 @@ The configuration interface is a series of menus or dialog boxes that
 allows you to change all the settings that control Bochs's behavior.
 Depending on the platform there are up to 3 choices of configuration
 interface: a text mode version called "textconfig" and two graphical versions
-called "win32config" and "wx".  The text mode version uses stdin/stdout and
-is always compiled in, unless Bochs is compiled for wx only. The choice
-"win32config" is only available on win32 and it is the default there.
-The choice "wx" is only available when you use "--with-wx" on the configure
-command.  If you do not write a config_interface line, Bochs will
-choose a default for you.
+called "win32config" and "wx".  The text mode version uses stdin/stdout or
+gui console (if available / runtime config) and is always compiled in, unless
+Bochs is compiled for wx only. The choice "win32config" is only available on
+win32/win64 and it is the default on these platforms. The choice "wx" is only
+available when Bochs is compiled with wxWidgets support. If you do not write a
+config_interface line, Bochs will choose a default for you.
 
 .B NOTE:
 if you use the "wx" configuration interface, you must also use
