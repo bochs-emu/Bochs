@@ -358,34 +358,10 @@ void bx_vgacore_c::determine_screen_dimensions(unsigned *piHeight, unsigned *piW
   v = (AI[18] | ((AI[7] & 0x02) << 7) | ((AI[7] & 0x40) << 3)) + 1;
 #undef AI
 
-  if (BX_VGA_THIS s.graphics_ctrl.shift_reg == 0) {
-    *piWidth = 640;
-    *piHeight = 480;
-
-    if (BX_VGA_THIS s.CRTC.reg[6] == 0xBF) {
-      if (BX_VGA_THIS s.CRTC.reg[23] == 0xA3 &&
-         BX_VGA_THIS s.CRTC.reg[20] == 0x40 &&
-         BX_VGA_THIS s.CRTC.reg[9] == 0x41) {
-        *piWidth = 320;
-        *piHeight = 240;
-      } else {
-        if (BX_VGA_THIS s.x_dotclockdiv2) h <<= 1;
-        *piWidth = h;
-        *piHeight = v;
-      }
-    } else if ((h >= 640) && (v >= 400)) {
-      if (BX_VGA_THIS s.ext_y_dblsize) v <<= 1;
-      *piWidth = h;
-      *piHeight = v;
-    }
-  } else if (BX_VGA_THIS s.graphics_ctrl.shift_reg == 2) {
-    *piWidth = h;
-    *piHeight = v;
-  } else {
-    if (BX_VGA_THIS s.x_dotclockdiv2) h <<= 1;
-    *piWidth = h;
-    *piHeight = v;
-  }
+  if (BX_VGA_THIS s.x_dotclockdiv2) h <<= 1;
+  if (BX_VGA_THIS s.ext_y_dblsize) v <<= 1;
+  *piWidth = h;
+  *piHeight = v;
 }
 
 void bx_vgacore_c::get_crtc_params(bx_crtc_params_t *crtcp, Bit32u *vclock)
