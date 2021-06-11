@@ -77,6 +77,8 @@
 # "hideIPS"     - disable IPS output in status bar (rfb, sdl, sdl2, term, vncsrv,
 #                 win32, wx, x)
 # "nokeyrepeat" - turn off host keyboard repeat (sdl, sdl2, win32, x)
+# "no_gui_console" - use system console instead of builtin gui console
+#                    (rfb, sdl, sdl2, vncsrv, x)
 # "timeout"     - time (in seconds) to wait for client (rfb, vncsrv)
 #
 # See the examples below for other currently supported options.

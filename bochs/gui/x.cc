@@ -600,10 +600,9 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   int event_base, error_base;
 
   put("XGUI");
-
   bx_headerbar_y = headerbar_y;
-
   progname = argv[0];
+  console.present = 1;
 
   // parse x11 specific options
   if (argc > 1) {
@@ -622,6 +621,8 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 #endif
       } else if (!strcmp(argv[i], "cmdmode")) {
         command_mode.present = 1;
+      } else if (!strcmp(argv[i], "no_gui_console")) {
+        console.present = 0;
       } else {
         BX_PANIC(("Unknown x11 option '%s'", argv[i]));
       }
@@ -945,7 +946,6 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   new_gfx_api = 1;
   new_text_api = 1;
   dialog_caps |= (BX_GUI_DLG_USER | BX_GUI_DLG_SNAPSHOT | BX_GUI_DLG_CDROM);
-  console.present = 1;
 }
 
 void bx_x_gui_c::handle_events(void)

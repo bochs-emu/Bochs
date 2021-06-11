@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "7 Jun 2021" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "11 Jun 2021" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -114,6 +114,7 @@ behaviour. These options are supported by more than one display library:
   "gui_debug"   - use GTK debugger gui (sdl, sdl2, x)
   "hideIPS"     - disable IPS output in status bar (rfb, sdl, sdl2, term, vncsrv, wx, x)
   "nokeyrepeat" - turn off host keyboard repeat (sdl, sdl2, x)
+  "no_gui_console" - use system console instead of builtin gui console (rfb, sdl, sdl2, vncsrv, x)
   "timeout"     - time (in seconds) to wait for client (rfb, vncsrv)
 
 .B NOTE:

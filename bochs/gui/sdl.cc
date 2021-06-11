@@ -532,6 +532,10 @@ void bx_sdl_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
     bx_keymap.loadKeymap(convertStringToSDLKey);
   }
 
+  if (!gui_ci) {
+    console.present = 1;
+  }
+
   // parse sdl specific options
   if (argc > 1) {
     for (i = 1; i < argc; i++) {
@@ -563,6 +567,8 @@ void bx_sdl_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 #endif
       } else if (!strcmp(argv[i], "cmdmode")) {
         command_mode.present = 1;
+      } else if (!strcmp(argv[i], "no_gui_console")) {
+        console.present = 0;
       } else {
         BX_PANIC(("Unknown sdl option '%s'", argv[i]));
       }
@@ -576,8 +582,6 @@ void bx_sdl_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 #endif
   if (gui_ci) {
     dialog_caps = BX_GUI_DLG_ALL;
-  } else {
-    console.present = 1;
   }
 }
 
