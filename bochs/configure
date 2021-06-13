@@ -3187,12 +3187,12 @@ ac_config_headers="$ac_config_headers config.h"
 ac_config_headers="$ac_config_headers ltdlconf.h"
 
 
-VERSION="2.7.pre1"
+VERSION="2.7.pre1.svn"
 VER_MAJOR=2
 VER_MINOR=6
 VER_REVISION=91
-VER_SVN=0
-REL_STRING="Built from SVN snapshot on June 13, 2021"
+VER_SVN=1
+REL_STRING="Built from SVN snapshot after release 2.7.pre1"
 REL_TIMESTAMP=`grep "Updated:" $srcdir/README | sed 's/Updated: //'`
 
 

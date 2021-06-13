@@ -13,7 +13,7 @@ abs_srcdir      = @abs_srcdir@
 docdir          = $(prefix)/share/doc/bochs
 WGET = @WGET@
 TARGZ = bochsdoc.tar.gz
-RENDERED_DOC_URL = http://bochs.sf.net/doc/docbook/$(TARGZ)
+RENDERED_DOC_URL = https://bochs.sourceforge.io/doc/docbook/$(TARGZ)
 
 # docbook-utils build if found
 DOCBOOK2HTML = @DOCBOOK2HTML@

@@ -107,7 +107,7 @@ VIAddVersionKey "LegalCopyright" "Copyright 2001-2019 The Bochs Project"
   !define MUI_FINISHPAGE_TEXT "Thank you for installing Bochs, think inside the bochs."
 
   !define MUI_FINISHPAGE_LINK "Visit the Bochs website for the latest news, FAQs and support"
-  !define MUI_FINISHPAGE_LINK_LOCATION "http://bochs.sourceforge.net/"
+  !define MUI_FINISHPAGE_LINK_LOCATION "https://bochs.sourceforge.io/"
 
   !define MUI_FINISHPAGE_RUN "$INSTDIR\Bochs.exe"
   !define MUI_FINISHPAGE_RUN_NOTCHECKED
@@ -217,7 +217,7 @@ Section "Add Bochs to the Start Menu" SecStartMenu
 	      "InternetShortcut" "URL" "file://$INSTDIR/docs/index.html"
 
   WriteINIStr "${PGDIR}\Home Page.url" \
-	      "InternetShortcut" "URL" "http://bochs.sourceforge.net/"
+	      "InternetShortcut" "URL" "https://bochs.sourceforge.io/"
 
   CreateShortCut "${PGDIR}\${NAME} Folder.lnk" \
                  "$INSTDIR"
@@ -278,7 +278,7 @@ Section -post
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs" "DisplayIcon" "$INSTDIR\bochs.ico,0"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs" "DisplayVersion" "${VERSION}"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs" "Publisher" "The Bochs Project"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs" "URLInfoAbout" "http://bochs.sourceforge.net"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs" "URLInfoAbout" "https://bochs.sourceforge.io"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs" "Readme" '$INSTDIR\Readme.txt'
   WriteRegDWord HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs" "NoModify" "1"
   WriteRegDWord HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs" "NoRepair" "1"

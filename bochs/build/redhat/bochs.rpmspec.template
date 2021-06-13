@@ -4,8 +4,8 @@ Version: @SEDVERSION@
 Release: 1
 License: LGPL
 Group: Applications/Emulators
-URL:http://bochs.sourceforge.net
-Packager:Volker Ruppert <info@vruppert.de>
+URL:https://bochs.sourceforge.io
+Packager:Volker Ruppert <vruppert@users.sourceforge.net>
 Source:bochs-@SEDVERSION@.tar.gz
 BuildRoot: /var/tmp/%{name}-buildroot
 

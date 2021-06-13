@@ -12,7 +12,7 @@ from early 386 to the most recent x86-64 Intel and AMD processors
 which may even not reached the market yet. Bochs is capable of running
 most Operating Systems inside the emulation, for example DOS,
 Linux or Windows. Bochs was written by Kevin Lawton and is currently
-maintained by the Bochs project at "http://bochs.sourceforge.net".
+maintained by the Bochs project at "https://bochs.sourceforge.io".
 
 Bochs can be compiled and used in a variety of modes, some which are
 still in development.  The 'typical' use of bochs is to provide
@@ -27,7 +27,7 @@ Bochs is distributed under the GNU LGPL. See LICENSE and COPYING for details.
 GETTING CURRENT SOURCE CODE
 
 Source code for Bochs is available from the Bochs home page at
-http://bochs.sourceforge.net.  You can download the most recent
+https://bochs.sourceforge.io.  You can download the most recent
 release, use SVN to get the latest sources, or grab a SVN
 snapshot which is updated frequently. The releases contain the most
 stable code, but if you want the very newest features try the
@@ -40,7 +40,7 @@ format that can be rendered to many popular browser formats such
 as HTML, PDF, and Postscript.  Each binary release contains the
 HTML rendering of the documentation.  Also, you can view the
 latest documentation on the web at
-  http://bochs.sf.net/doc/docbook/index.html
+  https://bochs.sourceforge.io/doc/docbook/index.html
 
 WHERE CAN I GET MORE INFORMATION?  HOW DO I REPORT PROBLEMS?
 
