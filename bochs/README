@@ -1,6 +1,6 @@
 Bochs - The cross platform IA-32 (x86) emulator
-Updated: Sun Jan  5 08:36:00 CET 2020
-Version: 2.6.11
+Updated: Sun Jun 13 07:15:00 CEST 2021
+Version: 2.7.pre1
 
 WHAT IS BOCHS?
 
@@ -81,23 +81,13 @@ many ways you could help out.  For example:
 
 CHANGES
 
-Summary of changes in 2.6.11:
-  - General
-    - Added 64-bit support to the NSIS installer script
-    - Several fixes in the build system based on Debian patches
-  - CPU / CPUDB
-    - Bugfixes for CPU emulation correctness
-      - Many critical bugfixes for Protection Keys, AVX512*, VMX/SVM, SHA, GFNI emulation
-    ! Implemented CET (Control Flow Enforcement Technology) emulation according to Intel SDM rev071
-  - I/O Devices
-    - Added missing Cirrus SVGA bitblt feature "transparent color compare"
-    - Some fixes in HPET emulation (patch by Oleg)
-    - Fixed disk image lock mechanism in the USB MSD case
-  - BIOS / VGABIOS
-    - LGPL'd VGABIOS updated to version 0.7b (Fixed VESA extension 'read EDID'
-      for Bochs VBE and Cirrus)
-    - Updated SeaBIOS ROM image to current version 1.13.0
-    - Added SeaVGABIOS ROM image for the Cirrus adapter
-    - Bochs BIOS built to work with CPU level 5 again
+Brief summary of changes in 2.7.pre1:
+  - Improvements for the plugin handling to simplify Bochs extensions
+  - Added "multiple NICs" support to the NE2000 and E1000 devices
+  - Added experimental FTP service for networking modules 'vnet' and 'socket'
+  - Fixes and improvements for all supported Voodoo graphics adapters
+  - Added USB keyboard emulation with most of the keys supported
+  - GUI "cmdmode": create a headerbar event with key combo starting with F7
+  - LGPL'd VGABIOS updated to version 0.8a (new VGABIOS for Voodoo Banshee)
 
 See CHANGES file for more information!
