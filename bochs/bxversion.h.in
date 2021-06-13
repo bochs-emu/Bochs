@@ -1,0 +1,9 @@
+/////////////////////////////////////////////////////////////////////////
+// This file is checked in as bxversion.h.in.  The configure script
+// substitutes variables and creates bxversion.h.
+/////////////////////////////////////////////////////////////////////////
+
+#define VERSION       "@VERSION@"
+#define VER_SVNFLAG   @VER_SVN@
+#define REL_STRING    "@REL_STRING@"
+#define REL_TIMESTAMP "@REL_TIMESTAMP@"

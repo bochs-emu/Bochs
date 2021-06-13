@@ -1,0 +1,246 @@
+$Id: misc.txt,v 1.33 2008-02-05 22:33:34 sshwarts Exp $
+
+This is a temporary place to paste in stuff that should go into the docs one
+day.  When it is transferred into docbook, let's remove it from misc.txt.
+
+--------------------------------------------------------------------------
+-------------macintosh.txt-----------------
+BBD Mon Nov 25 08:23:28 EST 2002
+This file has been in our main directory for years and years, and has not
+been updated since nobody has tried to compile for MacOS pre-10 in a long
+time.  I didn't want to leave it sitting there since it is so incredibly
+obsolete.  I think it would be good to put it into the documentation
+with proper warnings about the fact that it hasn't been updated in 4 years
+and may need significant hacking to make it work again.
+------------------
+
+Changes by Bryce Denney 4/5/2001:
+I moved the contents of macutils.h into osdep.h, and macutils.c
+into osdep.cc.  There are functions missing on other platforms too,
+so I wanted to bring them all into the same place.
+
+The original macintosh.txt follows.
+
+STATUS OF THE MAC PORT:
+-----------------------
+
+23 Dec 1998
+
+Contents:
+
+	Status
+	How to Set up MacBochs
+	Problems
+	Other Issues
+	New Files
+	Changed Files
+
+
+Status
+------
+
+This is an experimental Macintosh port of Bochs. The Mac port compiles fine
+under CodeWarrior Pro R1 (CW12) and is capable of booting Win95 in command-
+line mode and running DOS programs. A CodeWarrior project ("Bochs.proj") is
+included (you may need to edit the type and creator information with ResEdit
+in order for CodeWarrior to recognise it as a project file).
+
+NOTE: MacBochs is very much a "work in progress", and much of the code is
+incomplete. This preliminary version is being made available mainly to
+interested developers who may want to contribute to the development of
+MacBochs by contributing some code or testing it on their own Macs.
+
+If anyone can test with some "clean" Windows installer disks, it would be
+useful. I've been testing MacBochs with my SoftWindows HD image and disk
+images derived from it, and I'm not sure if the various SoftWindows-specific
+drivers are interfering.
+
+23 Dec 98 - updated MacBochs to bochs-981222. The new version seems
+noticeably faster. Finished implementing the Bochs headerbar. Added support
+for ejecting floppy disks from within Bochs (click the Drive A: icon on the
+headerbar or press Cmd-E).
+
+17 Dec 98 - added real floppy disk support. Also optimized the graphics
+screen drawing a bit more. Keyboard support still broken and in need of a
+major overhaul. Does anyone have experience with KCHR resources and
+KeyTranslate()?
+
+
+How to Set up MacBochs
+----------------------
+
+This is a very brief, step-by-step guide on setting up MacBochs. More
+detailed documentation will be available later.
+
+- Step 1. Compile the version of Bochs you want to use (PPC, 68k or FAT) or
+obtain a pre-compiled binary. There is a CodeWarrior project included with
+the source distribution.
+
+- Step 2. Create a hard disk image.
+Bochs ALWAYS needs a hard disk image available to it, otherwise it won't
+boot. To create a hard disk image on the Mac, you need to use a recent
+version of DiskCopy.
+
+First, create an untitled, empty folder anywhere on your Mac hard disk. Then,
+launch DiskCopy and choose to create a folder image of that folder.
+
+DO NOT ENTER THE DISK SIZE IN MEGABYTES. In the file "install.html" in the
+"docs-html" folder you will find a table of disk sizes and geometries. Make a
+note of the number of total SECTORS required for your desired hard disk size,
+as well as the cylinders, heads and sectors per track (spt).
+
+In DiskCopy, you need to choose "Custom..." from the menu of image sizes, and
+choose to enter the size in "blocks" (on the Mac, a block is pretty much the
+same as a sector). Then enter the number of total sectors you need.
+
+Make sure the image is "Read/Write", not "Read Only", and make sure you have
+entered the correct cyl=, heads= and spt= settings in your bochsrc file. Your
+image file should now be accessible to Bochs.
+
+You'll eventually need to use a utility like "fdisk" to make the image
+readable.
+
+- Step 3. Obtain a bootable PC floppy or floppy image.
+You'll need to install an operating system in order to do anything useful
+with Bochs. If you have installer floppies for a PC operating system (eg.
+Windows or MS-DOS) you can use those. Otherwise you can download disk images
+for FreeDOS or one of the many variants of Linux.
+
+MacBochs now supports real PC floppy disks. To use the Mac floppy drive
+instead of a disk image, use the special filename "[fd:]" in the appropriate
+line of your bochsrc.
+
+- Step 4. Set up your bochsrc file.
+You set up your Bochs preferences by editing the "bochsrc" file. You'll need
+to set up your bochsrc to work with your floppy and hard disk images, as well
+as telling Bochs how many megs of PC RAM you want.
+
+Problems
+--------
+
+There are some so far unresolved problems in the "macintosh.cc" GUI file:
+
+- Keyboard support is VERY rudimentary; ie. it only supports alphanumerics
+and a couple of special keys like Enter. The keyboard-related code is full of
+holes and I'm going to completely rehash it.
+
+- Mouse support hasn't been tested, but probably isn't fully working either.
+
+
+Other Issues
+------------
+
+- The Mac port uses a ready-made config file (configmac.h), like the Win32
+port used to. Macs are pretty homogeneous, so the settings should be
+appropriate for most machines.
+
+- The Mac port has an extra source file: "macutils.c" (with header file
+"macutils.h"), which is used for Mac floppy drive support, among other
+things.
+
+- Like the Win32 port, the Mac port expects the "bochsrc" file to be in the
+same directory as the Bochs application.
+
+- Be sure to use Mac pathname conventions when editing the bochsrc file (ie
+':' instead of '/' or '\').
+
+
+New files
+---------
+
+The following are new, Mac-specific files:
+
+gui/macintosh.cc
+configmac.h
+macutils.h
+macutils.c
+Bochs.proj
+
+
+Changed Files
+-------------
+
+The following files from the main bochs distribution have been modified to
+compile properly on the Mac:
+
+bochs.h
+main.cc
+memory/memory.cc
+memory/misc_mem.cc
+iodev/floppy.cc
+iodev/harddrv.cc
+
+The changes are just conditional compilations which won't affect other
+platforms (search for "#ifdef macintosh" and "#ifndef macintosh" if you want
+to see what the changes are). These changes will need to be integrated into
+the main distribution if the MacOS port is going to go ahead seriously.
+
+-- David Batterham <drbatter@socs.uts.edu.au> or <drbatter@yahoo.com>
+--------------------------------------------------------------------------
+WinNT4 guest network problems
+
+From: Jeremy Wilkins <jeb at jeremywilkins.freeserve.co.uk>
+To: bochs-developers@lists.sourceforge.net
+Subject: [Bochs-developers] Odd network errors with NT4 Guest OS
+
+I'm having trouble transferring files over the network to the guest OS
+(NT4 SP1). If I'm using SMB then the it errors out early on with a
+session cancelled. The file is 36Mb (SP6). I've tried with various file
+sizes, 3Meg files work, 5 meg files do not.
+
+I've also tried shuffling the files over http with similar problems,
+small files are fine (can browse websites) but large files just error out.
+
+The system is a 1Ghz Windows XP SP1 box with bochs 2.02, guest OS is
+allocated 64Mb of RAM and running Windows NT4 SP1.
+
+Any clues, anyone experiencing similar problems?
+
+--
+
+From: didier <dgautheron at magic.fr>
+To: Jeremy Wilkins <jeb at jeremywilkins.freeserve.co.uk>
+Cc: bochs-developers@lists.sourceforge.net
+Subject: Re: [Bochs-developers] Odd network errors with NT4 Guest OS
+
+Did you try with a big IPS? start the guest clock applet and try to get
+a more or less accurate time, with 1 Ghz should be in the 50 000 000 range.
+IIRC NT timeout and abort before it send the whole packet.
+
+--
+
+From: Jeremy Wilkins <jeb at jeremywilkins.freeserve.co.uk>
+To: didier <dgautheron at magic.fr>, bochs-developers@lists.sourceforge.net
+Subject: Re: [Bochs-developers] Odd network errors with NT4 Guest OS
+
+Thanks, 60 000 000 seems to have done the trick (I can copy sp6 across
+anyway). My original guess of 4000000 IPS was probably a bit low :)
+
+thanks again
+
+------------------------------------------
+TAP under FreeBSD
+
+Date: Fri, 14 Feb 2003 02:12:38 +0100
+From: Ronald Klop <ronald at echteman.nl>
+To: bochs-developers at lists.sourceforge.net
+
+I've made eth_tap.cc working under FreeBSD 4.7, because the fbsd network driver
+didn't work for me.
+It's not a very clean patch, but the changes are minimal.
+
+Some notes:
+- I found that some of the includes aren't used at all (on FreeBSD).
+- The socket which is created before /dev/tap0 is opened doesn't work, because
+tap0 is created after opening the device.
+- Maybe the eth_tap device can use a configure script like the eth_tuntap
+device, because the device must be configured after opening.
+- The padding of the ethernet frame with 2 bytes isn't needed in FreeBSD.
+- I didn't do any work to check for this in configure, because I don't know how
+configure works and don't have the time work it out now.
+- the guest os must set (maybe this can be documented somewhere):
+kldload if_tap (if tap is not compiled in the kernel)
+ifconfig tap0 inet 10.0.1.1 netmask 255.255.255.0
+sysctl net.inet.ip.forwarding=1
+sysctl net.link.ether.inet.proxyall=1
+--------------------------------------------------------------------------

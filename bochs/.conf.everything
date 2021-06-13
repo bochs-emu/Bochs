@@ -1,0 +1,44 @@
+# This script tries to turn on nearly every configure option.
+# It is useful for finding compile problems, but it may turn on
+# more things than you actually want.
+
+./configure \
+  --enable-smp \
+  --enable-x86-64 \
+  --enable-all-optimizations \
+  --enable-long-phy-address \
+  --enable-configurable-msrs \
+  --enable-debugger \
+  --enable-debugger-gui \
+  --enable-fpu \
+  --enable-alignment-check \
+  --enable-3dnow \
+  --enable-monitor-mwait \
+  --enable-protection-keys \
+  --enable-svm \
+  --enable-vmx=2 \
+  --enable-avx \
+  --enable-evex \
+  --enable-perfmon \
+  --enable-memtype \
+  --enable-x86-debugger \
+  --enable-a20-pin \
+  --enable-instrumentation=instrument/example1 \
+  --enable-ne2000 \
+  --enable-e1000 \
+  --enable-pci \
+  --enable-clgd54xx \
+  --enable-voodoo \
+  --enable-usb \
+  --enable-usb-ohci \
+  --enable-usb-ehci \
+  --enable-usb-xhci \
+  --enable-cdrom \
+  --enable-sb16 \
+  --enable-es1370 \
+  --enable-gameport \
+  --enable-busmouse \
+  --enable-iodebug \
+  --enable-large-ramfile \
+  --enable-show-ips \
+  --with-all-libs

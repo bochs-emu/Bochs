@@ -1,0 +1,38 @@
+#!/bin/sh
+#
+# Example script for configuring and compiling Bochs on Linux for Windows.
+#
+
+CC="x86_64-w64-mingw32-gcc"
+CXX="x86_64-w64-mingw32-g++"
+CFLAGS="-O3 -Wall -Wno-format -mno-ms-bitfields"
+CXXFLAGS="$CFLAGS"
+WINDRES="x86_64-w64-mingw32-windres"
+
+export CC
+export CXX
+export CFLAGS
+export CXXFLAGS
+export WINDRES
+
+./configure --host=x86_64-linux --target=x86_64-mingw32 \
+            --enable-sb16 \
+            --enable-ne2000 \
+            --enable-all-optimizations \
+            --enable-cpu-level=6 \
+            --enable-x86-64 \
+            --enable-vmx=2 \
+            --enable-pci \
+            --enable-clgd54xx \
+            --enable-voodoo \
+            --enable-usb \
+            --enable-usb-ohci \
+            --enable-usb-ehci \
+            --enable-usb-xhci \
+            --enable-busmouse \
+            --enable-es1370 \
+            --enable-e1000 \
+            --enable-show-ips \
+            --disable-readline \
+            --with-win32 --with-rfb --with-nogui \
+            ${CONFIGURE_ARGS}

@@ -1,0 +1,117 @@
+.\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
+.TH bochs 1 "4 Apr 2020" "bochs @version@" "The Bochs Project"
+.\"SKIP_SECTION"
+.SH NAME
+bochs \- Portable x86 Emulator.
+.\"SKIP_SECTION"
+.SH SYNOPSIS
+.B bochs
+.RI \|[ bochs_options \|]
+.RI \|[ bochsrc_options \|]
+.\"SKIP_SECTION"
+.SH DESCRIPTION
+.LP
+Bochs is a portable Intel Architecture  32 (x86) emulator
+that runs on most popular  operating systems. Inside  the
+emulator,  it  can  run  many operating systems including
+Linux and Microsoft(R) Windows(R).
+.\".\"DONT_SPLIT"
+.SH OPTIONS
+.LP
+When you run Bochs without one of the following options, it
+will search for a configuration file called .bochsrc in
+the current directory and your home directory and display
+the start menu.
+.TP
+.BI \-q
+With this option the start menu will be skipped after loading
+the configuration file.
+.TP
+.BI \-f\ configfile
+This option specifies the name of the configuration file.
+.TP
+.BI \-qf\ configfile
+When you run Bochs with this option, it will skip the start
+menu and use the specified configuration file.
+.TP
+.BI \-n
+With this option Bochs doesn't load a configuration file.
+In that case the setup for the emulation must be done with
+bochsrc options on the command line or in the start menu.
+.TP
+.BI \-benchmark\ N
+Run Bochs in benchmark mode for N millions of emulated ticks
+.TP
+.BI \-dumpstats\ N
+Dump Bochs stats every N millions of emulated ticks
+.TP
+.BI \-r\ path
+Restore the Bochs state from path
+.TP
+.BI \-log\ filename
+Specify Bochs log file name
+.TP
+.BI \-unlock
+Unlock Bochs images leftover from previous session
+.TP
+.BI \-h,\ --help
+Print a summary of the command line options for Bochs and exit
+.TP
+.BI \-h,\ --help\ features
+Display available features / devices and exit
+.TP
+.BI \-h,\ --help\ cpu
+Display supported CPU models and exit
+.LP
+You can override the settings from the configuration file
+with command line arguments, using the  same  syntax  as the
+bochsrc file. If you have  any spaces in your command line
+arguments, they should be enclosed  in  single quotes.
+For information on Bochs command line and configuration
+file arguments, see the man page
+.B bochsrc(5).
+
+Example:
+  bochs -q 'boot:a' 'floppya: 1_44=a.img, status=inserted'
+
+.\"SKIP_SECTION"
+.SH LICENSE
+This program  is distributed  under the terms of the  GNU
+Lesser General Public License as published  by  the  Free
+Software  Foundation.  See the LICENSE and COPYING files located
+in /usr/share/doc/bochs/ for details on the license and
+the lack of warranty.
+.\"SKIP_SECTION"
+.SH AVAILABILITY
+The latest version of this program can be found at:
+	http://bochs.sourceforge.net/getcurrent.html
+.\"SKIP_SECTION"
+.SH SEE ALSO
+bochsrc(5), bochs-dlx(1), bximage(1)
+.PP
+.nf
+The Bochs IA-32 Emulator site on the World Wide Web:
+	http://bochs.sourceforge.net
+
+Online Bochs Documentation
+	http://bochs.sourceforge.net/doc/docbook
+.fi
+.\"SKIP_SECTION"
+.SH AUTHORS
+The   Bochs  emulator  was   created   by  Kevin   Lawton
+(kevin@mandrakesoft.com),  and  is  currently  maintained
+by the  members of  the  Bochs x86 Emulator Project.  You
+can see a current roster of members at:
+
+	http://bochs.sourceforge.net/getinvolved.html
+.\"SKIP_SECTION"
+.SH BUGS
+Please  report all  bugs to the bug tracker  on  our  web
+site. Just go to http://bochs.sourceforge.net, and click
+"Bug Reports" on the sidebar under "Feedback".
+.PP
+Provide a detailed description of the bug, the version of
+the program you are running, the operating system you are
+running the program on  and  the  operating   system  you
+are running in the emulator.
+
