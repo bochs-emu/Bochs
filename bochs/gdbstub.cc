@@ -41,6 +41,8 @@
 #include "bochs.h"
 #include "param_names.h"
 #include "cpu/cpu.h"
+#include "gui/siminterface.h"
+#include "memory/memory-bochs.h"
 
 #define LOG_THIS gdbstublog->
 #define IFDBG(x) x
