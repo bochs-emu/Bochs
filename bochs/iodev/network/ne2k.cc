@@ -130,6 +130,13 @@ Bit32s ne2k_options_parser(const char *context, int num_params, char *params[])
       // MAC address is already initialized
       valid |= 0x04;
     }
+    if (card == 0) {
+      if (SIM->is_pci_device("ne2k")) {
+        SIM->get_param_enum("type", base)->set(BX_NE2K_TYPE_PCI);
+      } else {
+        SIM->get_param_enum("type", base)->set(BX_NE2K_TYPE_ISA);
+      }
+    }
     for (int i = first; i < num_params; i++) {
       if (!strncmp(params[i], "type=", 5)) {
         SIM->get_param_enum("type", base)->set_by_name(&params[i][5]);
@@ -147,10 +154,7 @@ Bit32s ne2k_options_parser(const char *context, int num_params, char *params[])
         }
       }
     }
-    if (((valid & 0x08) == 0) && (card == 0) && SIM->is_pci_device("ne2k")) {
-      SIM->get_param_enum("type", base)->set(BX_NE2K_TYPE_PCI);
-      valid |= 0x10;
-    } else if (SIM->get_param_enum("type", base)->get() == BX_NE2K_TYPE_PCI) {
+    if (SIM->get_param_enum("type", base)->get() == BX_NE2K_TYPE_PCI) {
       valid |= 0x10;
     }
     if ((valid & 0xc0) == 0) {
