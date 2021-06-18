@@ -1635,7 +1635,9 @@ void bx_svga_cirrus_c::svga_write_crtc(Bit32u address, unsigned index, Bit8u val
 
   if (update_pitch) {
     if ((BX_CIRRUS_THIS crtc.reg[0x1b] & 0x02) != 0) {
-      BX_CIRRUS_THIS s.plane_shift = 19;
+      if (!BX_CIRRUS_THIS s.sequencer.chain_four) {
+        BX_CIRRUS_THIS s.plane_shift = 19;
+      }
       BX_CIRRUS_THIS s.ext_offset = BX_CIRRUS_THIS bank_base[0];
     } else {
       BX_CIRRUS_THIS s.plane_shift = 16;
