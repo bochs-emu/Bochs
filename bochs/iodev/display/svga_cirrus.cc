@@ -523,7 +523,7 @@ Bit8u bx_svga_cirrus_c::mem_read(bx_phy_address addr)
 #if BX_SUPPORT_PCI
   if ((BX_CIRRUS_THIS pci_enabled) && (BX_CIRRUS_THIS pci_rom_size > 0)) {
     Bit32u mask = (BX_CIRRUS_THIS pci_rom_size - 1);
-    if ((addr & ~mask) == BX_CIRRUS_THIS pci_rom_address) {
+    if (((Bit32u)addr & ~mask) == BX_CIRRUS_THIS pci_rom_address) {
       if (BX_CIRRUS_THIS pci_conf[0x30] & 0x01) {
         return BX_CIRRUS_THIS pci_rom[addr & mask];
       } else {
@@ -2461,7 +2461,7 @@ void bx_svga_cirrus_c::svga_bitblt()
   BX_CIRRUS_THIS bitblt.bltmode = BX_CIRRUS_THIS control.reg[0x30];
   BX_CIRRUS_THIS bitblt.bltmodeext = BX_CIRRUS_THIS control.reg[0x33];
   BX_CIRRUS_THIS bitblt.bltrop = BX_CIRRUS_THIS control.reg[0x32];
-  offset = dstaddr - (BX_CIRRUS_THIS disp_ptr - BX_CIRRUS_THIS s.memory);
+  offset = dstaddr - (Bit32u)(BX_CIRRUS_THIS disp_ptr - BX_CIRRUS_THIS s.memory);
   BX_CIRRUS_THIS redraw.x = (offset % BX_CIRRUS_THIS bitblt.dstpitch) / (BX_CIRRUS_THIS svga_bpp >> 3);
   BX_CIRRUS_THIS redraw.y = offset / BX_CIRRUS_THIS bitblt.dstpitch;
   BX_CIRRUS_THIS redraw.w = BX_CIRRUS_THIS bitblt.bltwidth / (BX_CIRRUS_THIS svga_bpp >> 3);
@@ -3145,7 +3145,7 @@ bx_svga_cirrus_c::svga_asyncbitblt_next()
   }
 
   if (BX_CIRRUS_THIS bitblt.memdst_needed > 0) {
-    BX_CIRRUS_THIS bitblt.memdst_needed -= BX_CIRRUS_THIS bitblt.memdst_ptr - &BX_CIRRUS_THIS bitblt.memdst[0];
+    BX_CIRRUS_THIS bitblt.memdst_needed -= (int)(BX_CIRRUS_THIS bitblt.memdst_ptr - &BX_CIRRUS_THIS bitblt.memdst[0]);
     avail = BX_MIN(CIRRUS_BLT_CACHESIZE, BX_CIRRUS_THIS bitblt.memdst_needed);
     BX_CIRRUS_THIS bitblt.memdst_ptr = &BX_CIRRUS_THIS bitblt.memdst[0];
     BX_CIRRUS_THIS bitblt.memdst_endptr = &BX_CIRRUS_THIS bitblt.memdst[avail];
@@ -3168,7 +3168,7 @@ bx_svga_cirrus_c::svga_asyncbitblt_next()
         goto cleanup;
       }
     } else {
-      count = BX_CIRRUS_THIS bitblt.memsrc_endptr - BX_CIRRUS_THIS bitblt.memsrc_ptr;
+      count = (int)(BX_CIRRUS_THIS bitblt.memsrc_endptr - BX_CIRRUS_THIS bitblt.memsrc_ptr);
       memmove(&BX_CIRRUS_THIS bitblt.memsrc[0], BX_CIRRUS_THIS bitblt.memsrc_ptr, count);
       BX_CIRRUS_THIS bitblt.memsrc_ptr = &BX_CIRRUS_THIS bitblt.memsrc[count];
     }

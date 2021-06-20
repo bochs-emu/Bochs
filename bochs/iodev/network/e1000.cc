@@ -716,7 +716,7 @@ bool bx_e1000_c::mem_read(bx_phy_address addr, unsigned len, void *data)
 
   if (BX_E1000_THIS pci_rom_size > 0) {
     Bit32u mask = (BX_E1000_THIS pci_rom_size - 1);
-    if ((addr & ~mask) == BX_E1000_THIS pci_rom_address) {
+    if (((Bit32u)addr & ~mask) == BX_E1000_THIS pci_rom_address) {
 #ifdef BX_LITTLE_ENDIAN
       data8_ptr = (Bit8u *) data;
 #else // BX_BIG_ENDIAN

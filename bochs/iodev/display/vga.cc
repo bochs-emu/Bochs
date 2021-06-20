@@ -641,7 +641,7 @@ Bit8u bx_vga_c::mem_read(bx_phy_address addr)
 #if BX_SUPPORT_PCI
   if ((BX_VGA_THIS pci_enabled) && (BX_VGA_THIS pci_rom_size > 0)) {
     Bit32u mask = (BX_VGA_THIS pci_rom_size - 1);
-    if ((addr & ~mask) == BX_VGA_THIS pci_rom_address) {
+    if (((Bit32u)addr & ~mask) == BX_VGA_THIS pci_rom_address) {
       if (BX_VGA_THIS pci_conf[0x30] & 0x01) {
         return BX_VGA_THIS pci_rom[addr & mask];
       } else {

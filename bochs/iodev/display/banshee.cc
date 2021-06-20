@@ -807,7 +807,7 @@ void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
 
   if (pci_rom_size > 0) {
     Bit32u mask = (pci_rom_size - 1);
-    if ((addr & ~mask) == pci_rom_address) {
+    if (((Bit32u)addr & ~mask) == pci_rom_address) {
       if (pci_conf[0x30] & 0x01) {
         value = 0;
         for (unsigned i = 0; i < len; i++) {
