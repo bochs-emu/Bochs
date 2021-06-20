@@ -92,7 +92,15 @@ if test "${ADD_FLAGS:+set}" = set; then
       CXXFLAGS="$CXXFLAGS $ADD_FLAGS"
       CPPFLAGS="$CPPFLAGS $ADD_FLAGS"
 fi
-BOCHS_BITS=$MSVC_TARGET
+
+case "$target" in
+  x86_64*)
+    BOCHS_BITS=64
+    ;;
+  *)
+    BOCHS_BITS=32
+    ;;
+esac
 
 AC_MSG_CHECKING(for standard CFLAGS on this platform)
 AC_MSG_RESULT($ADD_FLAGS)
