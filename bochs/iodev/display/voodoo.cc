@@ -351,6 +351,7 @@ void bx_voodoo_base_c::voodoo_register_state(bx_list_c *parent)
   }
   new bx_shadow_num_c(dac, "read_result", &v->dac.read_result, BASE_HEX);
   new bx_shadow_num_c(dac, "vidclk", &v->vidclk);
+  BXRS_PARAM_BOOL(vstate, vtimer_running, v->vtimer_running);
   bx_list_c *fbi = new bx_list_c(vstate, "fbi", "framebuffer");
   if ((s.model < VOODOO_BANSHEE) || (theVoodooVga == NULL)) {
     new bx_shadow_data_c(fbi, "ram", v->fbi.ram, v->fbi.mask + 1);
