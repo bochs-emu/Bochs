@@ -1287,7 +1287,7 @@ bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path, co
                     FILE **fpp = ((bx_shadow_filedata_c*)param)->get_fpp();
                     // If the temporary backing store file wasn't created, do it now.
                     if (*fpp == NULL)
-                      *fpp = tmpfile();
+                      *fpp = tmpfile64();
                     if (*fpp != NULL) {
                       while (!feof(fp2)) {
                         char buffer[64];

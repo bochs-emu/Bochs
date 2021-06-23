@@ -328,7 +328,7 @@ void BX_MEM_C::register_state()
   bx_list_c *mapping = new bx_list_c(list, "mapping");
   for (Bit32u blk=0; blk < num_blocks; blk++) {
     sprintf(param_name, "blk%d", blk);
-    bx_param_num_c *param = new bx_param_num_c(mapping, param_name, "", "", 0, BX_MAX_BIT32U, 0);
+    bx_param_num_c *param = new bx_param_num_c(mapping, param_name, "", "", -2, BX_MAX_BIT32U, 0);
     param->set_base(BASE_DEC);
     param->set_sr_handlers(this, memory_param_save_handler, memory_param_restore_handler);
   }
