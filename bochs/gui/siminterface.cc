@@ -1286,14 +1286,18 @@ bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path, co
                   if (fp2 != NULL) {
                     FILE **fpp = ((bx_shadow_filedata_c*)param)->get_fpp();
                     // If the temporary backing store file wasn't created, do it now.
-                    if (*fpp == NULL)
+                    if (*fpp == NULL) {
                       *fpp = tmpfile64();
+                    } else {
+                      fseeko64(*fpp, 0, SEEK_SET);
+                    }
                     if (*fpp != NULL) {
+                      char *buffer = new char[4096];
                       while (!feof(fp2)) {
-                        char buffer[64];
-                        size_t chars = fread(buffer, 1, sizeof(buffer), fp2);
+                        size_t chars = fread(buffer, 1, 4096, fp2);
                         fwrite(buffer, 1, chars, *fpp);
                       }
+                      delete [] buffer;
                       fflush(*fpp);
                     }
                     ((bx_shadow_filedata_c*)param)->restore(fp2);

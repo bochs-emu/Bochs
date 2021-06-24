@@ -318,11 +318,10 @@ void BX_MEM_C::register_state()
 #if BX_LARGE_RAMFILE
   bx_shadow_filedata_c *ramfile = new bx_shadow_filedata_c(list, "ram", &(BX_MEM_THIS overflow_file));
   ramfile->set_sr_handlers(this, ramfile_save_handler, (filedata_restore_handler)NULL);
+  BXRS_DEC_PARAM_FIELD(list, next_swapout_idx, BX_MEM_THIS next_swapout_idx);
 #else
   new bx_shadow_data_c(list, "ram", BX_MEM_THIS vector, BX_MEM_THIS allocated);
 #endif
-  BXRS_DEC_PARAM_FIELD(list, len, BX_MEM_THIS len);
-  BXRS_DEC_PARAM_FIELD(list, allocated, BX_MEM_THIS allocated);
   BXRS_DEC_PARAM_FIELD(list, used_blocks, BX_MEM_THIS used_blocks);
 
   bx_list_c *mapping = new bx_list_c(list, "mapping");
