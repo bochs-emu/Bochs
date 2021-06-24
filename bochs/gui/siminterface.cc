@@ -1410,12 +1410,13 @@ bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_pat
         FILE **fpp = ((bx_shadow_filedata_c*)node)->get_fpp();
         // If the backing store hasn't been created, just save an empty 0 byte placeholder file.
         if (*fpp != NULL) {
+          char *buffer = new char[4096];
+          fseeko64(*fpp, 0, SEEK_SET);
           while (!feof(*fpp)) {
-            char buffer[64];
-            size_t chars = fread (buffer, 1, sizeof(buffer), *fpp);
+            size_t chars = fread (buffer, 1, 4096, *fpp);
             fwrite(buffer, 1, chars, fp2);
           }
-          fflush(*fpp);
+          delete [] buffer;
         }
         ((bx_shadow_filedata_c*)node)->save(fp2);
         fclose(fp2);
