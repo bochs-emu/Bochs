@@ -129,26 +129,10 @@ bool bx_usbdev_ctl_c::init_device(bx_list_c *portconf, logfunctions *hub, void *
 {
   Bit8u devtype, modtype;
   usb_device_c **device = (usb_device_c**)dev;
-  const char *options, *options2;
-  char new_options[BX_PATHNAME_LEN];
-  bx_param_string_c *opts2;
 
   devtype = (Bit8u)((bx_param_enum_c*)portconf->get_by_name("device"))->get();
   if (devtype == 0) return 0;
   modtype = usb_module_id[devtype];
-  options = ((bx_param_string_c*)portconf->get_by_name("options"))->getptr();
-  opts2 = (bx_param_string_c*)portconf->get_by_name("options2");
-  if (opts2 != NULL) {
-    // backward compatibility code
-    options2 = opts2->getptr();
-    if (strlen(options) > 0) {
-      sprintf(new_options, "%s, %s", options2, options);
-    } else {
-      sprintf(new_options, "%s", options2);
-    }
-    ((bx_param_string_c*)portconf->get_by_name("options"))->set(new_options);
-    portconf->remove("options2");
-  }
   if (!usbdev_locator_c::module_present(usb_module_names[modtype])) {
 #if BX_PLUGINS
     PLUG_load_plugin_var(usb_module_names[modtype], PLUGTYPE_USB);

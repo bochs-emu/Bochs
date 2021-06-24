@@ -2251,9 +2251,9 @@ int bx_parse_usb_port_params(const char *context, const char *param,
 {
   bool devopt = 0;
   int idx, plen;
-  char tmpname[20], optstr[BX_PATHNAME_LEN];
+  char tmpname[20], newopts[BX_PATHNAME_LEN];
   char *devstr, *arg;
-  const char *opt = NULL;
+  const char *opt = NULL, *origopts;
 
   if (!strncmp(param, "port", 4)) {
     devopt = 1;
@@ -2290,11 +2290,15 @@ int bx_parse_usb_port_params(const char *context, const char *param,
           opt = "file";
         }
         if (opt != NULL) {
-          sprintf(optstr, "%s:%s", opt, arg);
           sprintf(tmpname, "port%d", idx);
           base = (bx_list_c*)SIM->get_param(tmpname, base);
-          new bx_param_string_c(base,
-            "options2", "Options 2", "", optstr, BX_PATHNAME_LEN);
+          origopts = SIM->get_param_string("options", base)->getptr();
+          if (strlen(origopts) > 0) {
+            sprintf(newopts, "%s:%s, %s", opt, arg, origopts);
+          } else {
+            sprintf(newopts, "%s:%s", opt, arg);
+          }
+          SIM->get_param_string("options", base)->set(newopts);
         }
       }
       free(devstr);
