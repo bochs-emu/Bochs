@@ -192,7 +192,9 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   if (pci.enabled) {
 #if BX_SUPPORT_PCI
     if (chipset == BX_PCI_CHIPSET_I430FX) {
-      pci.advopts = (BX_PCI_ADVOPT_NOHPET | BX_PCI_ADVOPT_NOACPI);
+      pci.advopts = (BX_PCI_ADVOPT_NOHPET | BX_PCI_ADVOPT_NOACPI | BX_PCI_ADVOPT_NOAGP);
+    } else if (chipset == BX_PCI_CHIPSET_I440FX) {
+      pci.advopts = BX_PCI_ADVOPT_NOAGP;
     } else {
       pci.advopts = 0;
     }
@@ -207,6 +209,12 @@ void bx_devices_c::init(BX_MEM_C *newmem)
         }
       } else if (!strcmp(argv[i], "nohpet")) {
         pci.advopts |= BX_PCI_ADVOPT_NOHPET;
+      } else if (!strcmp(argv[i], "noagp")) {
+        if (chipset == BX_PCI_CHIPSET_I440BX) {
+          pci.advopts |= BX_PCI_ADVOPT_NOAGP;
+        } else {
+          BX_ERROR(("Disabling AGP not supported by PCI chipset"));
+        }
       } else {
         BX_ERROR(("Unknown advanced PCI option '%s'", argv[i]));
       }
@@ -362,7 +370,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   const char *device;
 
   if (pci.enabled) {
-    if (chipset == BX_PCI_CHIPSET_I440BX) {
+    if ((chipset == BX_PCI_CHIPSET_I440BX) && is_agp_present()) {
       device = SIM->get_param_enum("pci.slot.5")->get_selected();
       if (strcmp(device, "none") && !pci.slot_used[4]) {
         BX_PANIC(("Unknown plugin '%s' at AGP slot", device));
@@ -1100,6 +1108,15 @@ bool bx_devices_c::is_harddrv_enabled(void)
   return 0;
 }
 
+bool bx_devices_c::is_agp_present(void)
+{
+#if BX_SUPPORT_PCI
+  return (pci.enabled && ((pci.advopts & BX_PCI_ADVOPT_NOAGP) == 0));
+#else
+  return 0;
+#endif
+}
+
 void bx_devices_c::add_sound_device(void)
 {
   sound_device_count++;
@@ -1358,7 +1375,8 @@ bool bx_devices_c::register_pci_handlers(bx_pci_device_c *dev,
 
   if (strcmp(name, "pci") && strcmp(name, "pci2isa") && strcmp(name, "pci_ide")
       && ((*devfunc & 0xf8) == 0x00)) {
-    if (SIM->get_param_enum(BXPN_PCI_CHIPSET)->get() == BX_PCI_CHIPSET_I440BX) {
+    if ((SIM->get_param_enum(BXPN_PCI_CHIPSET)->get() == BX_PCI_CHIPSET_I440BX) &&
+        (is_agp_present())) {
       max_pci_slots = 4;
     }
     if (bus == 0) {

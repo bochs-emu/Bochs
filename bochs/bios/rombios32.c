@@ -782,7 +782,8 @@ static void pci_bios_init_bridges(PCIDevice *d)
       } else if (device_id == PCI_DEVICE_ID_INTEL_82441 || device_id == PCI_DEVICE_ID_INTEL_82437) {
         /* i440FX / i430FX PCI bridge */
         bios_shadow_init(d);
-      } else if (device_id == PCI_DEVICE_ID_INTEL_82443) {
+      } else if ((device_id == PCI_DEVICE_ID_INTEL_82443) ||
+                 (device_id == PCI_DEVICE_ID_INTEL_82443_NOAGP)) {
         /* i440BX PCI bridge */
         bios_shadow_init(d);
         addr = find_pir_table();
@@ -795,9 +796,13 @@ static void pci_bios_init_bridges(PCIDevice *d)
         writeb(pir + 0x41, 0x48); // 3rd entry: 2nd slot
         writeb(pir + 0x51, 0x50); // 4th entry: 3rd slot
         writeb(pir + 0x61, 0x58); // 5th entry: 4th slot
-        writeb(pir + 0x70, 0x01); // 6th entry: AGP bus
-        writeb(pir + 0x71, 0x00); // 6th entry: AGP slot
-        pci_config_writeb(d, 0xb4, 0x30); /* AGP aperture size 64 MB */
+        if (device_id == PCI_DEVICE_ID_INTEL_82443) {
+          writeb(pir + 0x70, 0x01); // 6th entry: AGP bus
+          writeb(pir + 0x71, 0x00); // 6th entry: AGP slot
+          pci_config_writeb(d, 0xb4, 0x30); /* AGP aperture size 64 MB */
+        } else {
+          writeb(pir + 0x71, 0x60); // 6th entry: 5th slot
+        }
       } else if (device_id == PCI_DEVICE_ID_INTEL_82443_1) {
         /* i440BX PCI/AGP bridge */
         pci_config_writew(d, 0x04, 0x0107);

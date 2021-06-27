@@ -799,8 +799,7 @@ bool bx_real_sim_c::is_pci_device(const char *name)
 bool bx_real_sim_c::is_agp_device(const char *name)
 {
 #if BX_SUPPORT_PCI
-  if (get_param_bool(BXPN_PCI_ENABLED)->get() &&
-      (SIM->get_param_enum(BXPN_PCI_CHIPSET)->get() == BX_PCI_CHIPSET_I440BX)) {
+  if (get_param_bool(BXPN_PCI_ENABLED)->get() && DEV_agp_present()) {
     const char *device = SIM->get_param_enum("pci.slot.5")->get_selected();
     if (!strcmp(name, device)) {
       return 1;

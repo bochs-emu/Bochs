@@ -126,6 +126,7 @@ class cdrom_base_c;
 
 #define BX_PCI_ADVOPT_NOACPI 0x01
 #define BX_PCI_ADVOPT_NOHPET 0x02
+#define BX_PCI_ADVOPT_NOAGP  0x04
 
 typedef struct {
   Bit8u  type;
@@ -443,6 +444,7 @@ public:
                        Bit32u *addr, Bit8u *pci_conf, unsigned size,
                        const Bit8u *iomask, const char *name);
 #endif
+  bool is_agp_present();
 
   static void timer_handler(void *);
   void timer(void);

@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "11 Jun 2021" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "27 Jun 2021" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -625,7 +625,8 @@ With the advanced PCI options it is possible to control the behaviour of the
 PCI chipset. These options can be specified as comma-separated values.
 By default the "Bochs i440FX" chipset enables the ACPI and HPET devices, but
 original i440FX doesn't support them. The options 'noacpi' and 'nohpet' make
-it possible to disable them.
+it possible to disable them. The option 'noagp' disables the incomplete AGP
+subsystem of the i440BX chipset.
 
 Example:
   pci: enabled=1, chipset=i440fx, slot1=pcivga, slot2=ne2k, advopts=noacpi

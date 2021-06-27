@@ -82,21 +82,33 @@ void bx_pci_bridge_c::init(void)
   if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I430FX) {
     init_pci_conf(0x8086, 0x0122, 0x02, 0x060000, 0x00, 0);
   } else if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440BX) {
-    init_pci_conf(0x8086, 0x7190, 0x02, 0x060000, 0x00, 0);
-    BX_PCI_THIS pci_conf[0x10] = 0x08;
-    init_bar_mem(0, 0xf0000000, agp_ap_read_handler, agp_ap_write_handler);
-    BX_PCI_THIS pci_conf[0x06] = 0x10;
-    BX_PCI_THIS pci_conf[0x34] = 0xa0;
-    BX_PCI_THIS pci_conf[0xa0] = 0x02;
-    BX_PCI_THIS pci_conf[0xa2] = 0x10;
-    BX_PCI_THIS pci_conf[0xa4] = 0x03;
-    BX_PCI_THIS pci_conf[0xa5] = 0x02;
-    BX_PCI_THIS pci_conf[0xa7] = 0x1f;
+    if (DEV_agp_present()) {
+      init_pci_conf(0x8086, 0x7190, 0x02, 0x060000, 0x00, 0);
+      BX_PCI_THIS pci_conf[0x06] = 0x10;
+      BX_PCI_THIS pci_conf[0x10] = 0x08;
+      init_bar_mem(0, 0xf0000000, agp_ap_read_handler, agp_ap_write_handler);
+      BX_PCI_THIS pci_conf[0x34] = 0xa0;
+      BX_PCI_THIS pci_conf[0xa0] = 0x02;
+      BX_PCI_THIS pci_conf[0xa2] = 0x10;
+      BX_PCI_THIS pci_conf[0xa4] = 0x03;
+      BX_PCI_THIS pci_conf[0xa5] = 0x02;
+      BX_PCI_THIS pci_conf[0xa7] = 0x1f;
+      BX_PCI_THIS vbridge = new bx_pci_vbridge_c();
+      BX_PCI_THIS vbridge->init();
+    } else {
+      init_pci_conf(0x8086, 0x7192, 0x02, 0x060000, 0x00, 0);
+      BX_PCI_THIS pci_conf[0x7a] = 0x02;
+    }
+    // 'Intel reserved' values
+    BX_PCI_THIS pci_conf[0x71] = 0x1f;
+    BX_PCI_THIS pci_conf[0x94] = 0x04;
+    BX_PCI_THIS pci_conf[0x95] = 0x61;
+    BX_PCI_THIS pci_conf[0x99] = 0x05;
+    BX_PCI_THIS pci_conf[0xc8] = 0x18;
+    BX_PCI_THIS pci_conf[0xc9] = 0x0c;
     BX_PCI_THIS pci_conf[0xf3] = 0xf8;
     BX_PCI_THIS pci_conf[0xf8] = 0x20;
     BX_PCI_THIS pci_conf[0xf9] = 0x0f;
-    BX_PCI_THIS vbridge = new bx_pci_vbridge_c();
-    BX_PCI_THIS vbridge->init();
   } else { // i440FX
     init_pci_conf(0x8086, 0x1237, 0x00, 0x060000, 0x00, 0);
   }
@@ -204,7 +216,9 @@ bx_pci_bridge_c::reset(unsigned type)
     BX_PCI_THIS pci_conf[0x06] = 0x00;
     BX_PCI_THIS pci_conf[0x58] = 0x00;
   } else if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440BX) {
-    BX_PCI_THIS vbridge->reset(type);
+    if (BX_PCI_THIS vbridge != NULL) {
+      BX_PCI_THIS vbridge->reset(type);
+    }
   } else { // i440FX
     BX_PCI_THIS pci_conf[0x06] = 0x80;
     BX_PCI_THIS pci_conf[0x51] = 0x01;
@@ -228,7 +242,7 @@ void bx_pci_bridge_c::register_state(void)
 {
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "pci_bridge", "PCI Bridge State");
   register_pci_state(list);
-  if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440BX) {
+  if (BX_PCI_THIS vbridge != NULL) {
     BX_PCI_THIS vbridge->register_state();
   }
 }
@@ -236,7 +250,7 @@ void bx_pci_bridge_c::register_state(void)
 void bx_pci_bridge_c::after_restore_state(void)
 {
   BX_PCI_THIS smram_control(BX_PCI_THIS pci_conf[0x72]);
-  if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440BX) {
+  if (BX_PCI_THIS vbridge != NULL) {
     BX_PCI_THIS vbridge->after_restore_state();
   }
 }
@@ -349,6 +363,10 @@ void bx_pci_bridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io
         break;
       case 0x72:
         smram_control(value8); // SMRAM control register
+        break;
+      case 0x7a:
+        BX_PCI_THIS pci_conf[address+i] &= 0x0a;
+        BX_PCI_THIS pci_conf[address+i] |= (value8 & 0xf5);
         break;
       case 0xb4:
         if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440BX) {

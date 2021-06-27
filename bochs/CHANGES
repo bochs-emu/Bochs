@@ -64,7 +64,8 @@ Detailed change log :
       either to disable the DDC feature or to read the monitor EDID from file.
   - PCI (general)
     - Added config parameter to set up advanced PCI options. Now it is possible
-      to disable ACPI or HPET in case the i440FX chipset is selected.
+      to disable ACPI or HPET in case the i440FX chipset is selected. For the
+      i440BX chipset it is possible to disable the incomplete AGP subsystem.
   - USB
     - Added keyboard emulation with most of the keys supported.
     - Added support for USB packet logging in PCAP format.
