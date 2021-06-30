@@ -541,13 +541,10 @@ Bit32u bx_banshee_c::read(Bit32u address, unsigned io_len)
   Bit32u result;
 
   Bit8u offset = (Bit8u)(address & 0xff);
-  Bit8u reg = (offset>>2);
-  if ((offset & 3) && (reg > io_status) && (reg < io_vgab0)) {
-    BX_ERROR(("unaligned read from address 0x%04x", address));
-  }
+  Bit8u reg = (offset >> 2);
   switch (reg) {
     case io_status:
-      result = register_r(0) >> ((offset & 3) * 8);
+      result = register_r(0);
       break;
 
     case io_dacData:
@@ -584,6 +581,11 @@ Bit32u bx_banshee_c::read(Bit32u address, unsigned io_len)
       result = v->banshee.io[reg];
       break;
   }
+  if ((reg < io_vgab0) || (reg > io_vgadc)) {
+    if ((offset & 3) != 0) {
+      result >>= ((offset & 3) * 8);
+    }
+  }
   if ((reg != io_status) || (lastreg != io_status)) {
     BX_DEBUG(("banshee read from offset 0x%02x (%s) result = 0x%08x", offset,
               banshee_io_reg_name[reg], result));
@@ -601,8 +603,8 @@ void bx_banshee_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, u
 void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
 {
   Bit8u offset = (Bit8u)(address & 0xff);
-  Bit8u reg = (offset>>2), dac_idx, k, m, n;
-  Bit32u old = v->banshee.io[reg];
+  Bit8u reg = (offset>>2), dac_idx, k, m, n, shift;
+  Bit32u old = v->banshee.io[reg], mask;
   bool prev_hwce = v->banshee.hwcursor.enabled;
   Bit16u prev_hwcx = v->banshee.hwcursor.x;
   Bit16u prev_hwcy = v->banshee.hwcursor.y;
@@ -610,8 +612,16 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
   BX_DEBUG(("banshee write to offset 0x%02x: value = 0x%08x len=%d (%s)", offset, value,
             io_len, banshee_io_reg_name[reg]));
-  if ((offset & 3) && (reg < io_vgab0)) {
-    BX_ERROR(("unaligned write to address 0x%04x", address));
+  if ((reg < io_vgab0) || (reg > io_vgadc)) {
+    if (io_len == 1) {
+      shift = ((offset & 3) * 8);
+      mask = ~(0xff << shift);
+      value = (old & mask) | (value << shift);
+    } else if (io_len == 2) {
+      shift = ((offset & 2) * 8);
+      mask = ~(0xffff << shift);
+      value = (old & mask) | (value << shift);
+    }
   }
   switch (reg) {
     case io_lfbMemoryConfig:

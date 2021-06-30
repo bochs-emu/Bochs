@@ -2962,6 +2962,8 @@ void cmdfifo_process(cmdfifo_info *f)
             BX_DEBUG(("cmdfifo_process(): JMP 0x%08x", f->rdptr));
           }
           break;
+        case 4: // JMP AGP
+          data = cmdfifo_r(f);
         default:
           BX_ERROR(("CMDFIFO packet type 0: unsupported code %d", code));
       }
