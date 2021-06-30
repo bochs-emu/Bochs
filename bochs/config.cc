@@ -2254,6 +2254,7 @@ int bx_parse_usb_port_params(const char *context, const char *param,
   char tmpname[20], newopts[BX_PATHNAME_LEN];
   char *devstr, *arg;
   const char *opt = NULL, *origopts;
+  static bool compat_mode = false;
 
   if (!strncmp(param, "port", 4)) {
     devopt = 1;
@@ -2274,6 +2275,7 @@ int bx_parse_usb_port_params(const char *context, const char *param,
   }
   sprintf(tmpname, "port%d.%s", idx, devopt ? "device" : "options");
   if (devopt) {
+    compat_mode = false;
     if (!SIM->get_param_enum(tmpname, base)->set_by_name(&param[plen + 2])) {
       // backward compatibility code
       devstr = strdup(&param[plen + 2]);
@@ -2290,21 +2292,28 @@ int bx_parse_usb_port_params(const char *context, const char *param,
           opt = "file";
         }
         if (opt != NULL) {
-          sprintf(tmpname, "port%d", idx);
-          base = (bx_list_c*)SIM->get_param(tmpname, base);
-          origopts = SIM->get_param_string("options", base)->getptr();
+          sprintf(tmpname, "port%d.options", idx);
+          origopts = SIM->get_param_string(tmpname, base)->getptr();
           if (strlen(origopts) > 0) {
             sprintf(newopts, "%s:%s, %s", opt, arg, origopts);
           } else {
             sprintf(newopts, "%s:%s", opt, arg);
           }
-          SIM->get_param_string("options", base)->set(newopts);
+          SIM->get_param_string(tmpname, base)->set(newopts);
+          compat_mode = true;
         }
       }
       free(devstr);
     }
   } else {
-    SIM->get_param_string(tmpname, base)->set(&param[plen + 2]);
+    if (compat_mode) {
+      origopts = SIM->get_param_string(tmpname, base)->getptr();
+      sprintf(newopts, "%s, %s", origopts, &param[plen + 2]);
+      compat_mode = false;
+    } else {
+      strcpy(newopts, &param[plen + 2]);
+    }
+    SIM->get_param_string(tmpname, base)->set(newopts);
   }
   return 0;
 }
