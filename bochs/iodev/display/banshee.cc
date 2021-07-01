@@ -935,10 +935,20 @@ void bx_banshee_c::mem_write(bx_phy_address addr, unsigned len, void *data)
   } else if ((addr & ~0x1ffffff) == pci_bar[1].addr) {
     if (v->fbi.cmdfifo[0].enabled && (offset >= v->fbi.cmdfifo[0].base) &&
         (offset < v->fbi.cmdfifo[0].end)) {
-      cmdfifo_w(&v->fbi.cmdfifo[0], offset, value);
+      if (len == 4) {
+        cmdfifo_w(&v->fbi.cmdfifo[0], offset, value);
+      } else {
+        BX_ERROR(("CMDFIFO #0 write with len = %d redirected to LFB", len));
+        mem_write_linear(offset, value, len);
+      }
     } else if (v->fbi.cmdfifo[1].enabled && (offset >= v->fbi.cmdfifo[1].base) &&
                (offset < v->fbi.cmdfifo[1].end)) {
-      cmdfifo_w(&v->fbi.cmdfifo[1], offset, value);
+      if (len == 4) {
+        cmdfifo_w(&v->fbi.cmdfifo[1], offset, value);
+      } else  {
+        BX_ERROR(("CMDFIFO #1 write with len = %d redirected to LFB", len));
+        mem_write_linear(offset, value, len);
+      }
     } else {
       mem_write_linear(offset, value, len);
     }

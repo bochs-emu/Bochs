@@ -2962,7 +2962,7 @@ void cmdfifo_process(cmdfifo_info *f)
             BX_DEBUG(("cmdfifo_process(): JMP 0x%08x", f->rdptr));
           }
           break;
-        case 4: // JMP AGP
+        case 4: // TODO: JMP AGP
           data = cmdfifo_r(f);
         default:
           BX_ERROR(("CMDFIFO packet type 0: unsupported code %d", code));
@@ -3194,6 +3194,12 @@ void cmdfifo_process(cmdfifo_info *f)
           BX_ERROR(("CMDFIFO packet type 5: unsupported destination type %d", code));
       }
       break;
+    case 6:
+      // TODO: AGP to VRAM transfer
+      cmdfifo_r(f);
+      cmdfifo_r(f);
+      cmdfifo_r(f);
+      cmdfifo_r(f);
     default:
       BX_ERROR(("CMDFIFO: unsupported packet type %d", type));
   }
