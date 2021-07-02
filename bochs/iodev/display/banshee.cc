@@ -322,7 +322,6 @@ void bx_banshee_c::register_state(void)
   new bx_shadow_num_c(banshee, "blt_clipy1_1", &v->banshee.blt.clipy1[1]);
   new bx_shadow_num_c(banshee, "blt_h2s_pitch", &v->banshee.blt.h2s_pitch);
   new bx_shadow_num_c(banshee, "blt_h2s_pxstart", &v->banshee.blt.h2s_pxstart);
-  BXRS_PARAM_BOOL(banshee, blt_h2s_alt_align, v->banshee.blt.h2s_alt_align);
 }
 
 void bx_banshee_c::after_restore_state(void)
@@ -1299,8 +1298,9 @@ void bx_banshee_c::blt_reg_write(Bit8u reg, Bit32u value)
 
 void bx_banshee_c::blt_launch_area_setup()
 {
-  Bit16u pbytes, pbits = 0;
-  Bit8u pxpack;
+  Bit32u pbytes;
+  Bit8u pxpack, pxstart;
+  bool pxpack_special = false;
 
   BLT.lacnt = 0;
   BLT.laidx = 0;
@@ -1315,7 +1315,6 @@ void bx_banshee_c::blt_launch_area_setup()
       break;
     case 3:
     case 4:
-      BLT.h2s_alt_align = 0;
       pxpack = (BLT.reg[blt_srcFormat] >> 22) & 3;
       BLT.src_swizzle = (BLT.reg[blt_srcFormat] >> 20) & 0x03;
       if (BLT.src_fmt == 0) {
@@ -1324,8 +1323,7 @@ void bx_banshee_c::blt_launch_area_setup()
         BLT.h2s_pxstart = BLT.reg[blt_srcXY] & 0x03;
       }
       if (BLT.src_fmt == 0) {
-        pbits = BLT.dst_w + BLT.h2s_pxstart;
-        pbytes = (pbits + 7) >> 3;
+        pbytes = (BLT.dst_w + BLT.h2s_pxstart + 7) >> 3;
       } else if (BLT.src_fmt == 1) {
         pbytes = BLT.dst_w + BLT.h2s_pxstart;
       } else if ((BLT.src_fmt >= 3) && (BLT.src_fmt <= 5))  {
@@ -1345,23 +1343,22 @@ void bx_banshee_c::blt_launch_area_setup()
           BLT.h2s_pitch = (pbytes + 3) & ~3;
           break;
         default:
-          // FIXME: The specs say that BLT.src_pitch is used here, but that's wrong
-          // These hacks are fixing most of the issues, but may others remain
-          BLT.h2s_pitch = (pbytes + 3) & ~0x03;
+          BLT.h2s_pitch = (pbytes + 3) & ~3;
           if (BLT.src_fmt == 0) {
-            BLT.h2s_alt_align = (BLT.h2s_pitch > BLT.src_pitch);
-            if (BLT.src_pitch == 10) {
-              if (BLT.h2s_pitch == 4) BLT.h2s_pitch = 6;
-              if ((BLT.h2s_pitch == 8) && ((pbits == 40) || (pbits == 48))) {
-                BLT.h2s_pitch = 6;
-              }
-              if ((BLT.h2s_pitch == 8) && (pbits > 56)) {
-                BLT.h2s_pitch = 10;
-              }
+            pbytes = 0;
+            pxstart = BLT.h2s_pxstart;
+            for (int i = 0; i < BLT.dst_h; i++) {
+              pbytes += ((((BLT.dst_w + pxstart + 7) >> 3) + 3) & ~3);
+              pxstart += (Bit8u)(BLT.src_pitch << 3);
+              pxstart &= 0x1f;
             }
+            BLT.lacnt = pbytes >> 2;
+            pxpack_special = true;
           }
       }
-      BLT.lacnt = (BLT.h2s_pitch * BLT.dst_h + 3) >> 2;
+      if (!pxpack_special) {
+        BLT.lacnt = (BLT.h2s_pitch * BLT.dst_h + 3) >> 2;
+      }
       BLT.lamem = new Bit8u[BLT.lacnt * 4];
       break;
     default:
@@ -2178,6 +2175,7 @@ void bx_banshee_c::blt_host_to_screen()
   Bit8u *src_ptr1, *dst_ptr1;
   Bit16u spitch = BLT.h2s_pitch;
   Bit8u srcfmt = BLT.src_fmt;
+  Bit8u pxpack = (BLT.reg[blt_srcFormat] >> 22) & 3;
   Bit8u spxsize = 0, r = 0, g = 0, b = 0;
   Bit8u scolor[4];
   Bit8u *color;
@@ -2201,8 +2199,7 @@ void bx_banshee_c::blt_host_to_screen()
   }
   BX_LOCK(render_mutex);
   if (srcfmt == 0) {
-    x0 += BLT.h2s_pxstart;
-    src_ptr += (y0 * spitch + x0 / 8);
+    x0 = BLT.h2s_pxstart;
   } else {
     if (srcfmt == 1) {
       spxsize = 1;
@@ -2216,7 +2213,11 @@ void bx_banshee_c::blt_host_to_screen()
   dst_ptr += (y1 * dpitch + x1 * dpxsize);
   nrows = h;
   do {
-    src_ptr1 = src_ptr;
+    if (srcfmt == 0) {
+      src_ptr1 = src_ptr + (x0 >> 3);
+    } else {
+      src_ptr1 = src_ptr;
+    }
     dst_ptr1 = dst_ptr;
     smask = 0x80 >> (x0 & 7);
     ncols = w;
@@ -2283,14 +2284,11 @@ void bx_banshee_c::blt_host_to_screen()
       }
       dst_ptr1 += dpxsize;
     } while (--ncols);
-    if (BLT.h2s_alt_align) {
-      if ((h - nrows) & 1) {
-        src_ptr += BLT.src_pitch;
-      } else {
-        src_ptr += (spitch * 2 - BLT.src_pitch);
-      }
-    } else {
-      src_ptr += spitch;
+    src_ptr += spitch;
+    if ((srcfmt == 0) && (pxpack == 0)) {
+      x0 += (Bit8u)(BLT.src_pitch << 3);
+      x0 &= 0x1f;
+      spitch = ((((w + x0 + 7) >> 3) + 3) & ~3);
     }
     dst_ptr += dpitch;
   } while (--nrows);
@@ -2308,6 +2306,7 @@ void bx_banshee_c::blt_host_to_screen_pattern()
   Bit8u *pat_ptr = &BLT.cpat[0][0];
   Bit16u spitch = BLT.h2s_pitch;
   Bit8u srcfmt = BLT.src_fmt;
+  Bit8u pxpack = (BLT.reg[blt_srcFormat] >> 22) & 3;
   bool patmono = (BLT.reg[blt_command] >> 13) & 1;
   bool patrow0 = (BLT.reg[blt_commandExtra] & 0x08) > 0;
   Bit8u colorkey_en = BLT.reg[blt_commandExtra] & 3;
@@ -2325,9 +2324,6 @@ void bx_banshee_c::blt_host_to_screen_pattern()
   if ((srcfmt != 0) && (BLT.dst_fmt != srcfmt)) {
     BX_ERROR(("Pixel format conversion not supported yet"));
   }
-  if (BLT.h2s_alt_align) {
-    BX_ERROR(("Alternating alignment not handled yet"));
-  }
   x0 = 0;
   y0 = 0;
   if (!blt_apply_clipwindow(&x0, &y0, &x1, &y1, &w, &h)) {
@@ -2336,8 +2332,7 @@ void bx_banshee_c::blt_host_to_screen_pattern()
   }
   BX_LOCK(render_mutex);
   if (srcfmt == 0) {
-    x0 += BLT.h2s_pxstart;
-    src_ptr += (y0 * spitch + x0 / 8);
+    x0 = BLT.h2s_pxstart;
   } else {
     if (srcfmt == 1) {
       spxsize = 1;
@@ -2358,7 +2353,11 @@ void bx_banshee_c::blt_host_to_screen_pattern()
   }
   nrows = h;
   do {
-    src_ptr1 = src_ptr;
+    if (srcfmt == 0) {
+      src_ptr1 = src_ptr + (x0 >> 3);
+    } else {
+      src_ptr1 = src_ptr;
+    }
     dst_ptr1 = dst_ptr;
     smask = 0x80 >> (x0 & 7);
     if (!patmono) {
@@ -2428,6 +2427,11 @@ void bx_banshee_c::blt_host_to_screen_pattern()
       dst_ptr1 += dpxsize;
     } while (--ncols);
     src_ptr += spitch;
+    if ((srcfmt == 0) && (pxpack == 0)) {
+      x0 += (Bit8u)(BLT.src_pitch << 3);
+      x0 &= 0x1f;
+      spitch = ((((w + x0 + 7) >> 3) + 3) & ~3);
+    }
     dst_ptr += dpitch;
     if (!patrow0) {
       if (patmono) {
