@@ -99,6 +99,7 @@ void bx_pci_bridge_c::init(void)
       init_pci_conf(0x8086, 0x7192, 0x02, 0x060000, 0x00, 0);
       BX_PCI_THIS pci_conf[0x7a] = 0x02;
     }
+    BX_PCI_THIS pci_conf[0x51] = 0x20;
     // 'Intel reserved' values
     BX_PCI_THIS pci_conf[0x71] = 0x1f;
     BX_PCI_THIS pci_conf[0x94] = 0x04;
@@ -316,7 +317,7 @@ void bx_pci_bridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io
         if (BX_PCI_THIS chipset != BX_PCI_CHIPSET_I430FX) {
           BX_PCI_THIS pci_conf[address+i] = (value8 & 0x80) | 0x01;
         } else if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440BX) {
-          BX_PCI_THIS pci_conf[address+i] = (value8 & 0x8f);
+          BX_PCI_THIS pci_conf[address+i] = (value8 & 0x8f) | 0x20;
         }
         break;
       case 0x59:
