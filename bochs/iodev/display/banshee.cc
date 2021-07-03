@@ -66,7 +66,6 @@
 // - full AGP support
 
 // FIXME:
-// - Minor issues in all Banshee modes (e.g. forward/back buttons in explorer)
 // - Display errors in 16 bpp mode after leaving 3D mode
 // - Display errors in 16 bpp mode with debug messages turned on (timing issue)
 // - Bochs crashes on Windows host (MSVC in some cases, MSYS2 64-bit build also
@@ -1176,6 +1175,7 @@ void bx_banshee_c::blt_reg_write(Bit8u reg, Bit32u value)
     case blt_srcFormat:
       BLT.src_fmt = (BLT.reg[reg] >> 16) & 0x0f;
       BLT.src_pitch = BLT.reg[reg] & 0x3fff;
+      BLT.src_swizzle = (BLT.reg[reg] >> 20) & 0x03;
       break;
     case blt_pattern0Alias:
       BLT.cpat[0][0] = value & 0xff;
@@ -1299,8 +1299,7 @@ void bx_banshee_c::blt_reg_write(Bit8u reg, Bit32u value)
 void bx_banshee_c::blt_launch_area_setup()
 {
   Bit32u pbytes;
-  Bit8u pxpack, pxstart;
-  bool pxpack_special = false;
+  Bit8u pxpack, pxsize = 0, pxstart;
 
   BLT.lacnt = 0;
   BLT.laidx = 0;
@@ -1316,21 +1315,19 @@ void bx_banshee_c::blt_launch_area_setup()
     case 3:
     case 4:
       pxpack = (BLT.reg[blt_srcFormat] >> 22) & 3;
-      BLT.src_swizzle = (BLT.reg[blt_srcFormat] >> 20) & 0x03;
       if (BLT.src_fmt == 0) {
         BLT.h2s_pxstart = BLT.reg[blt_srcXY] & 0x1f;
+        pbytes = (BLT.dst_w + BLT.h2s_pxstart + 7) >> 3;
       } else {
         BLT.h2s_pxstart = BLT.reg[blt_srcXY] & 0x03;
-      }
-      if (BLT.src_fmt == 0) {
-        pbytes = (BLT.dst_w + BLT.h2s_pxstart + 7) >> 3;
-      } else if (BLT.src_fmt == 1) {
-        pbytes = BLT.dst_w + BLT.h2s_pxstart;
-      } else if ((BLT.src_fmt >= 3) && (BLT.src_fmt <= 5))  {
-        pbytes = BLT.dst_w * (BLT.src_fmt - 1) + BLT.h2s_pxstart;
-      } else {
-        pbytes = 0;
-        BX_INFO(("Source format %d not handled yet", BLT.src_fmt));
+        if (BLT.src_fmt == 1) {
+          pxsize = 1;
+        } else if ((BLT.src_fmt >= 3) && (BLT.src_fmt <= 5))  {
+          pxsize = BLT.src_fmt - 1;
+        } else {
+          BX_ERROR(("Source format %d not handled yet", BLT.src_fmt));
+        }
+        pbytes = BLT.dst_w * pxsize + BLT.h2s_pxstart;
       }
       switch (pxpack) {
         case 1:
@@ -1344,19 +1341,24 @@ void bx_banshee_c::blt_launch_area_setup()
           break;
         default:
           BLT.h2s_pitch = (pbytes + 3) & ~3;
+          pbytes = 0;
+          pxstart = BLT.h2s_pxstart;
           if (BLT.src_fmt == 0) {
-            pbytes = 0;
-            pxstart = BLT.h2s_pxstart;
             for (int i = 0; i < BLT.dst_h; i++) {
               pbytes += ((((BLT.dst_w + pxstart + 7) >> 3) + 3) & ~3);
               pxstart += (Bit8u)(BLT.src_pitch << 3);
               pxstart &= 0x1f;
             }
-            BLT.lacnt = pbytes >> 2;
-            pxpack_special = true;
+          } else {
+            for (int i = 0; i < BLT.dst_h; i++) {
+              pbytes += ((BLT.dst_w * pxsize + pxstart + 3) & ~3);
+              pxstart += (Bit8u)BLT.src_pitch;
+              pxstart &= 0x03;
+            }
           }
+          BLT.lacnt = pbytes >> 2;
       }
-      if (!pxpack_special) {
+      if (pxpack != 0) {
         BLT.lacnt = (BLT.h2s_pitch * BLT.dst_h + 3) >> 2;
       }
       BLT.lamem = new Bit8u[BLT.lacnt * 4];
@@ -2673,7 +2675,8 @@ void bx_banshee_c::blt_polygon_fill(bool force)
     }
     if (BLT.pattern_blt) {
       BX_ERROR(("Polygon fill with pattern not supported yet"));
-    } else {
+    }
+//    } else {
       for (y = y0; y < y1; y++) {
         x0 = calc_line_xpos(BLT.pgn_l0x, BLT.pgn_l0y, BLT.pgn_l1x, BLT.pgn_l1y, y, 0);
         if (y <= BLT.pgn_r0y) {
@@ -2702,7 +2705,7 @@ void bx_banshee_c::blt_polygon_fill(bool force)
       BX_DEBUG(("Polygon fill: L0=(%d,%d) L1=(%d,%d) R0=(%d,%d) R1=(%d,%d) ROP0 %02X",
                 BLT.pgn_l0x, BLT.pgn_l0y, BLT.pgn_l1x, BLT.pgn_l1y,
                 BLT.pgn_r0x, BLT.pgn_r0y, BLT.pgn_r1x, BLT.pgn_r1y, BLT.rop[0]));
-    }
+//    }
     if (y1 == BLT.pgn_l1y) {
       BLT.pgn_l0x = BLT.pgn_l1x;
       BLT.pgn_l0y = BLT.pgn_l1y;
