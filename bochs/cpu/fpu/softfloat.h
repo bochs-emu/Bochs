@@ -66,8 +66,8 @@ typedef enum {
 | Software IEC/IEEE floating-point NaN operands handling mode.
 *----------------------------------------------------------------------------*/
 enum float_nan_handling_mode_t {
-    float_larger_significand_nan = 0,	// this mode used by x87 FPU
-    float_first_operand_nan = 1		// this mode used by SSE
+    float_larger_significand_nan = 0,   // this mode used by x87 FPU
+    float_first_operand_nan = 1	        // this mode used by SSE
 };
 
 /*----------------------------------------------------------------------------
