@@ -2096,14 +2096,10 @@ void bx_banshee_c::blt_screen_to_screen_stretch()
   Bit8u dpxsize = (BLT.dst_fmt > 1) ? (BLT.dst_fmt - 1) : 1;
   Bit8u colorkey_en = BLT.reg[blt_commandExtra] & 3;
   Bit8u rop = 0;
-  int spitch;
-  int dpitch = BLT.dst_pitch;
-  int nrows, ncols, stepx, stepy;
-  int x0, x1, x2, x3, y0, y1, y2, y3, w0, h0, w1, h1;
+  int spitch, dpitch, nrows, stepy;
+  int dx, dy, x2, x3, y2, y3, w0, h0, w1, h1;
   double fx, fy;
 
-  x1 = BLT.dst_x;
-  y1 = BLT.dst_y;
   w0 = BLT.src_w;
   h0 = BLT.src_h;
   w1 = BLT.dst_w;
@@ -2113,63 +2109,53 @@ void bx_banshee_c::blt_screen_to_screen_stretch()
   if (BLT.dst_fmt != BLT.src_fmt) {
     BX_ERROR(("Pixel format conversion not supported yet"));
   }
-  if (!blt_apply_clipwindow(NULL, NULL, &x1, &y1, &w1, &h1)) {
-    BLT.busy = 0;
-    return;
-  }
   BX_LOCK(render_mutex);
   if (BLT.src_tiled) {
     spitch = BLT.src_pitch * 128;
   } else {
     spitch = BLT.src_pitch;
   }
-  if (BLT.x_dir) {
-    stepx = -1;
-    x0 = BLT.src_x - BLT.src_w + 1;
+  if (BLT.dst_tiled) {
+    dpitch = BLT.dst_pitch * 128;
   } else {
-    stepx = 1;
-    x0 = BLT.src_x;
+    dpitch = BLT.dst_pitch;
   }
   if (BLT.y_dir) {
     spitch *= -1;
     dpitch *= -1;
     stepy = -1;
-    y0 = BLT.src_y - BLT.src_h + 1;
-    y2 = y1 - (BLT.dst_y - BLT.dst_h + 1);
   } else {
     stepy = 1;
-    y0 = BLT.src_y;
-    y2 = y1 - BLT.dst_y;
   }
   fx = (double)w1 / (double)w0;
   fy = (double)h1 / (double)h0;
-  src_ptr += (y0 * abs(spitch) + x0 * dpxsize);
-  dst_ptr += (y1 * abs(dpitch) + x1 * dpxsize);
+  src_ptr += (BLT.src_y * abs(spitch) + BLT.src_x * dpxsize);
+  dst_ptr += (BLT.dst_y * abs(dpitch) + BLT.dst_x * dpxsize);
+  dy = BLT.dst_y;
+  y2 = 0;
   nrows = h1;
   do {
     dst_ptr1 = dst_ptr;
-    ncols = w1;
-    if (BLT.x_dir) {
-      x2 = x1 - (BLT.dst_x - BLT.dst_w + 1);
-    } else {
-      x2 = x1 - BLT.dst_x;
-    }
-    do {
-      x3 = (int)((double)x2 / fx + 0.49f);
-      y3 = (int)((double)y2 / fy + 0.49f);
-      src_ptr1 = src_ptr + (y3 * abs(spitch) + x3 * dpxsize);
-      if (colorkey_en & 1) {
-        rop = blt_colorkey_check(src_ptr1, dpxsize, 0);
+    x2 = 0;
+    for (dx = BLT.dst_x; dx < (BLT.dst_x + w1); dx++) {
+      if (blt_clip_check(dx, dy)) {
+        x3 = (int)((double)x2 / fx + 0.49f);
+        y3 = (int)((double)y2 / fy + 0.49f);
+        src_ptr1 = src_ptr + (y3 * spitch + x3 * dpxsize);
+        if (colorkey_en & 1) {
+          rop = blt_colorkey_check(src_ptr1, dpxsize, 0);
+        }
+        if (colorkey_en & 2) {
+          rop |= blt_colorkey_check(dst_ptr1, dpxsize, 1);
+        }
+        BLT.rop_fn[rop](dst_ptr1, src_ptr1, dpitch, dpxsize, dpxsize, 1);
       }
-      if (colorkey_en & 2) {
-        rop = blt_colorkey_check(dst_ptr1, dpxsize, 1);
-      }
-      BLT.rop_fn[rop](dst_ptr1, src_ptr1, dpitch, dpxsize, dpxsize, 1);
       dst_ptr1 += dpxsize;
-      x2 += stepx;
-    } while (--ncols);
+      x2++;
+    }
     dst_ptr += dpitch;
-    y2 += stepy;
+    dy += stepy;
+    y2++;
   } while (--nrows);
   blt_complete();
   BX_UNLOCK(render_mutex);
@@ -2472,7 +2458,7 @@ void bx_banshee_c::blt_line(bool pline)
   Bit8u *dst_ptr1;
   int i, deltax, deltay, numpixels, d, dinc1, dinc2;
   int x, xinc1, xinc2, y, yinc1, yinc2;
-  int x0, y0, x1, y1, cx0, cx1, cy0, cy1;
+  int x0, y0, x1, y1;
   bool lstipple = ((BLT.reg[blt_command] >> 12) & 1);
   Bit8u lpattern = BLT.reg[blt_lineStipple];
   Bit8u lrepeat = (BLT.reg[blt_lineStyle] & 0xff);
@@ -2490,10 +2476,6 @@ void bx_banshee_c::blt_line(bool pline)
   } else {
     BX_DEBUG(("Line: %d/%d  -> %d/%d  ROP0 %02X", x0, y0, x1, y1, BLT.rop[0]));
   }
-  cx0 = BLT.clipx0[BLT.clip_sel];
-  cy0 = BLT.clipy0[BLT.clip_sel];
-  cx1 = BLT.clipx1[BLT.clip_sel];
-  cy1 = BLT.clipy1[BLT.clip_sel];
   deltax = abs(x1 - x0);
   deltay = abs(y1 - y0);
   if (deltax >= deltay) {
@@ -2528,7 +2510,7 @@ void bx_banshee_c::blt_line(bool pline)
   y = y0;
 
   for (i = 0; i < (numpixels - 1); i++) {
-    if ((x >= cx0) && (x < cx1) && (y >= cy0) && (y < cy1)) {
+    if (blt_clip_check(x, y)) {
       dst_ptr1 = dst_ptr + y * dpitch + x * dpxsize;
       if (colorkey_en & 2) {
         rop = blt_colorkey_check(dst_ptr1, dpxsize, 1);
@@ -2541,15 +2523,15 @@ void bx_banshee_c::blt_line(bool pline)
         } else if (!BLT.transp) {
           BLT.rop_fn[rop](dst_ptr1, BLT.bgcolor, dpitch, dpxsize, dpxsize, 1);
         }
-        if (lrep_cnt == 0) {
-          if (++lpat_idx > lpat_max) {
-            lpat_idx = 0;
-          }
-          lrep_cnt = lrepeat;
-        } else {
-          lrep_cnt--;
-        }
       }
+    }
+    if (lrep_cnt == 0) {
+      if (++lpat_idx > lpat_max) {
+        lpat_idx = 0;
+      }
+      lrep_cnt = lrepeat;
+    } else {
+      lrep_cnt--;
     }
     if (d < 0) {
       d = d + dinc1;
@@ -2652,7 +2634,6 @@ void bx_banshee_c::blt_polygon_fill(bool force)
   Bit8u colorkey_en = BLT.reg[blt_commandExtra] & 3;
   Bit8u rop = 0;
   Bit16u x, y, x0, x1, y0, y1;
-  Bit16u cx0, cx1, cy0, cy1;
 
   if (force) {
     if (BLT.pgn_l1y == BLT.pgn_r1y) {
@@ -2668,10 +2649,6 @@ void bx_banshee_c::blt_polygon_fill(bool force)
   if ((BLT.pgn_l1y > BLT.pgn_l0y) && (BLT.pgn_r1y > BLT.pgn_r0y)) {
     BLT.busy = 1;
     BX_LOCK(render_mutex);
-    cx0 = BLT.clipx0[BLT.clip_sel];
-    cy0 = BLT.clipy0[BLT.clip_sel];
-    cx1 = BLT.clipx1[BLT.clip_sel];
-    cy1 = BLT.clipy1[BLT.clip_sel];
     y0 = BLT.pgn_l0y;
     if (BLT.pgn_l1y < BLT.pgn_r1y) {
       y1 = BLT.pgn_l1y;
@@ -2690,7 +2667,7 @@ void bx_banshee_c::blt_polygon_fill(bool force)
           x1 = calc_line_xpos(BLT.pgn_r0x, BLT.pgn_r0y, BLT.pgn_r1x, BLT.pgn_r1y, y, 1);
         }
         dst_ptr1 = dst_ptr + y * dpitch + x0 * dpxsize;
-        if ((x0 >= cx0) && (x0 < cx1) && (y >= cy0) && (y < cy1)) {
+        if (blt_clip_check(x0, y)) {
           if (colorkey_en & 2) {
             rop = blt_colorkey_check(dst_ptr1, dpxsize, 1);
           }
@@ -2698,7 +2675,7 @@ void bx_banshee_c::blt_polygon_fill(bool force)
         }
         dst_ptr1 += dpxsize;
         for (x = x0 + 1; x < x1; x++) {
-          if ((x >= cx0) && (x < cx1) && (y >= cy0) && (y < cy1)) {
+          if (blt_clip_check(x, y)) {
             if (colorkey_en & 2) {
               rop = blt_colorkey_check(dst_ptr1, dpxsize, 1);
             }
