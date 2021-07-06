@@ -62,6 +62,7 @@
 // - 2D host-to-screen stretching support
 // - 2D screen-to-screen pattern stretching support
 // - 2D chromaKey support
+// - 2D reversible line drawing
 // - pixel format conversion not supported in all cases
 // - full AGP support
 
@@ -2590,9 +2591,14 @@ void bx_banshee_c::blt_polygon_fill(bool force)
   Bit32u dpitch = BLT.dst_pitch;
   Bit8u dpxsize = (BLT.dst_fmt > 1) ? (BLT.dst_fmt - 1) : 1;
   Bit8u *dst_ptr = &v->fbi.ram[BLT.dst_base];
-  Bit8u *dst_ptr1;
+  Bit8u *pat_ptr = &BLT.cpat[0][0];
+  Bit8u *dst_ptr1, *pat_ptr1 = NULL;
+  bool patmono = (BLT.reg[blt_command] >> 13) & 1;
+  bool patrow0 = (BLT.reg[blt_commandExtra] & 0x08) > 0;
+  bool set;
   Bit8u colorkey_en = BLT.reg[blt_commandExtra] & 3;
-  Bit8u rop = 0;
+  Bit8u rop = 0, mask, patline;
+  Bit8u *color;
   Bit16u x, y, x0, x1, y0, y1;
 
   if (force) {
@@ -2615,39 +2621,82 @@ void bx_banshee_c::blt_polygon_fill(bool force)
     } else {
       y1 = BLT.pgn_r1y;
     }
-    if (BLT.pattern_blt) {
-      BX_ERROR(("Polygon fill with pattern not supported yet"));
-    }
-//    } else {
-      for (y = y0; y < y1; y++) {
-        x0 = calc_line_xpos(BLT.pgn_l0x, BLT.pgn_l0y, BLT.pgn_l1x, BLT.pgn_l1y, y, 0);
-        if (y <= BLT.pgn_r0y) {
-          x1 = calc_line_xpos(BLT.pgn_l0x, BLT.pgn_l0y, BLT.pgn_r0x, BLT.pgn_r0y, y, 1);
+    for (y = y0; y < y1; y++) {
+      x0 = calc_line_xpos(BLT.pgn_l0x, BLT.pgn_l0y, BLT.pgn_l1x, BLT.pgn_l1y, y, 0);
+      if (y <= BLT.pgn_r0y) {
+        x1 = calc_line_xpos(BLT.pgn_l0x, BLT.pgn_l0y, BLT.pgn_r0x, BLT.pgn_r0y, y, 1);
+      } else {
+        x1 = calc_line_xpos(BLT.pgn_r0x, BLT.pgn_r0y, BLT.pgn_r1x, BLT.pgn_r1y, y, 1);
+      }
+      if (BLT.pattern_blt) {
+        if (!patrow0) {
+          patline = (y + BLT.patsy) & 7;
+          if (patmono) {
+            pat_ptr1 = pat_ptr + patline;
+          } else {
+            pat_ptr1 = pat_ptr + patline * dpxsize * 8;
+          }
         } else {
-          x1 = calc_line_xpos(BLT.pgn_r0x, BLT.pgn_r0y, BLT.pgn_r1x, BLT.pgn_r1y, y, 1);
+          pat_ptr1 = pat_ptr;
         }
-        dst_ptr1 = dst_ptr + y * dpitch + x0 * dpxsize;
-        if (blt_clip_check(x0, y)) {
+      }
+      dst_ptr1 = dst_ptr + y * dpitch + x0 * dpxsize;
+      if (blt_clip_check(x0, y)) {
+        if (colorkey_en & 2) {
+          rop = blt_colorkey_check(dst_ptr1, dpxsize, 1);
+        }
+        if (BLT.pattern_blt) {
+          if (patmono) {
+            mask = 0x80 >> ((x0 + BLT.patsx) & 7);
+            set = (*pat_ptr1 & mask) > 0;
+            if (set) {
+              color = &BLT.fgcolor[0];
+            } else {
+              color = &BLT.bgcolor[0];
+            }
+            if ((set) || !BLT.transp) {
+              BLT.rop_fn[rop](dst_ptr1, color, dpitch, dpxsize, dpxsize, 1);
+            }
+          } else {
+            color = (pat_ptr1 + ((x0 + BLT.patsx) & 7) * dpxsize);
+            BLT.rop_fn[rop](dst_ptr1, color, dpitch, dpxsize, dpxsize, 1);
+          }
+        } else {
+          BLT.rop_fn[rop](dst_ptr1, BLT.fgcolor, dpitch, dpxsize, dpxsize, 1);
+        }
+      }
+      dst_ptr1 += dpxsize;
+      for (x = x0 + 1; x < x1; x++) {
+        if (blt_clip_check(x, y)) {
           if (colorkey_en & 2) {
             rop = blt_colorkey_check(dst_ptr1, dpxsize, 1);
           }
-          BLT.rop_fn[rop](dst_ptr1, BLT.fgcolor, dpitch, dpxsize, dpxsize, 1);
-        }
-        dst_ptr1 += dpxsize;
-        for (x = x0 + 1; x < x1; x++) {
-          if (blt_clip_check(x, y)) {
-            if (colorkey_en & 2) {
-              rop = blt_colorkey_check(dst_ptr1, dpxsize, 1);
+          if (BLT.pattern_blt) {
+            if (patmono) {
+              mask = 0x80 >> ((x + BLT.patsx) & 7);
+              set = (*pat_ptr1 & mask) > 0;
+              if (set) {
+                color = &BLT.fgcolor[0];
+              } else {
+                color = &BLT.bgcolor[0];
+              }
+              if ((set) || !BLT.transp) {
+                BLT.rop_fn[rop](dst_ptr1, color, dpitch, dpxsize, dpxsize, 1);
+              }
+            } else {
+              color = (pat_ptr1 + ((x + BLT.patsx) & 7) * dpxsize);
+              BLT.rop_fn[rop](dst_ptr1, color, dpitch, dpxsize, dpxsize, 1);
             }
+          } else {
             BLT.rop_fn[rop](dst_ptr1, BLT.fgcolor, dpitch, dpxsize, dpxsize, 1);
           }
-          dst_ptr1 += dpxsize;
         }
+        dst_ptr1 += dpxsize;
       }
-      BX_DEBUG(("Polygon fill: L0=(%d,%d) L1=(%d,%d) R0=(%d,%d) R1=(%d,%d) ROP0 %02X",
-                BLT.pgn_l0x, BLT.pgn_l0y, BLT.pgn_l1x, BLT.pgn_l1y,
-                BLT.pgn_r0x, BLT.pgn_r0y, BLT.pgn_r1x, BLT.pgn_r1y, BLT.rop[0]));
-//    }
+    }
+    BX_DEBUG(("Polygon fill: L0=(%d,%d) L1=(%d,%d) R0=(%d,%d) R1=(%d,%d) ROP0 %02X",
+              BLT.pgn_l0x, BLT.pgn_l0y, BLT.pgn_l1x, BLT.pgn_l1y,
+              BLT.pgn_r0x, BLT.pgn_r0y, BLT.pgn_r1x, BLT.pgn_r1y, BLT.rop[0]));
     if (y1 == BLT.pgn_l1y) {
       BLT.pgn_l0x = BLT.pgn_l1x;
       BLT.pgn_l0y = BLT.pgn_l1y;
