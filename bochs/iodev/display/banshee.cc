@@ -1752,8 +1752,8 @@ void bx_banshee_c::blt_pattern_fill_mono()
   Bit8u colorkey_en = BLT.reg[blt_commandExtra] & 3;
   Bit8u rop = 0;
   Bit8u *color;
-  int ncols, nrows, x1, y1, w, h;
-  Bit8u mask, patcol, patline;
+  int ncols, nrows, x, x1, y1, w, h;
+  Bit8u mask;
   bool set;
 
   x1 = BLT.dst_x;
@@ -1767,15 +1767,18 @@ void bx_banshee_c::blt_pattern_fill_mono()
   }
   BX_LOCK(render_mutex);
   dst_ptr += (y1 * dpitch + x1 * dpxsize);
-  patcol = (x1 + BLT.patsx) & 7;
-  patline = (y1 + BLT.patsy) & 7;
-  pat_ptr1 = pat_ptr + patline;
   nrows = h;
   do {
     dst_ptr1 = dst_ptr;
-    mask = 0x80 >> patcol;
+    if (!patrow0) {
+      pat_ptr1 = pat_ptr + ((y1 + BLT.patsy) & 7);
+    } else {
+      pat_ptr1 = pat_ptr;
+    }
     ncols = w;
+    x = x1;
     do {
+      mask = 0x80 >> ((x + BLT.patsx) & 7);
       set = (*pat_ptr1 & mask) > 0;
       if (set) {
         color = &BLT.fgcolor[0];
@@ -1789,20 +1792,10 @@ void bx_banshee_c::blt_pattern_fill_mono()
         BLT.rop_fn[rop](dst_ptr1, color, dpitch, dpxsize, dpxsize, 1);
       }
       dst_ptr1 += dpxsize;
-      mask >>= 1;
-      if (mask == 0) {
-        mask = 0x80;
-      }
+      x++;
     } while (--ncols);
     dst_ptr += dpitch;
-    if (!patrow0) {
-      patline = (patline + 1) & 7;
-      if (patline == 0) {
-        pat_ptr1 = pat_ptr;
-      } else {
-        pat_ptr1++;
-      }
-    }
+    y1++;
   } while (--nrows);
   blt_complete();
   BX_UNLOCK(render_mutex);
@@ -1818,8 +1811,7 @@ void bx_banshee_c::blt_pattern_fill_color()
   bool patrow0 = (BLT.reg[blt_commandExtra] & 0x08) > 0;
   Bit8u colorkey_en = BLT.reg[blt_commandExtra] & 3;
   Bit8u rop = 0;
-  int ncols, nrows, x1, y1, w, h;
-  Bit8u patcol, patline;
+  int ncols, nrows, x, x1, y1, w, h;
 
   x1 = BLT.dst_x;
   y1 = BLT.dst_y;
@@ -1832,35 +1824,27 @@ void bx_banshee_c::blt_pattern_fill_color()
   }
   BX_LOCK(render_mutex);
   dst_ptr += (y1 * dpitch + x1 * dpxsize);
-  patcol = (x1 + BLT.patsx) & 7;
-  patline = (y1 + BLT.patsy) & 7;
-  pat_ptr1 = pat_ptr + patline * dpxsize * 8 + patcol * dpxsize;
   nrows = h;
   do {
-    pat_ptr2 = pat_ptr1;
     dst_ptr1 = dst_ptr;
+    if (!patrow0) {
+      pat_ptr1 = pat_ptr + ((y1 + BLT.patsy) & 7) * dpxsize * 8;
+    } else {
+      pat_ptr1 = pat_ptr;
+    }
     ncols = w;
+    x = x1;
     do {
+      pat_ptr2 = pat_ptr1 + ((x + BLT.patsx) & 7) * dpxsize;
       if (colorkey_en & 2) {
         rop = blt_colorkey_check(dst_ptr1, dpxsize, 1);
       }
       BLT.rop_fn[rop](dst_ptr1, pat_ptr2, dpitch, dpxsize, dpxsize, 1);
       dst_ptr1 += dpxsize;
-      pat_ptr2 += dpxsize;
-      patcol = (patcol + 1) & 7;
-      if (patcol == 0) {
-        pat_ptr2 = pat_ptr1;
-      }
+      x++;
     } while (--ncols);
     dst_ptr += dpitch;
-    if (!patrow0) {
-      patline = (patline + 1) & 7;
-      if (patline == 0) {
-        pat_ptr1 = pat_ptr;
-      } else {
-        pat_ptr1 += (dpxsize * 8);
-      }
-    }
+    y1++;
   } while (--nrows);
   blt_complete();
   BX_UNLOCK(render_mutex);
