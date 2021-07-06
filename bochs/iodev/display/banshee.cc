@@ -1157,26 +1157,37 @@ void bx_banshee_c::blt_reg_write(Bit8u reg, Bit32u value)
     case blt_dstBaseAddr:
       BLT.dst_base = BLT.reg[reg] & v->fbi.mask;
       BLT.dst_tiled = BLT.reg[reg] >> 31;
-      BLT.dst_pitch = BLT.reg[blt_dstFormat] & 0x3fff;
       if (BLT.dst_tiled) {
-        BLT.dst_pitch *= 128;
+        BLT.dst_pitch = (BLT.reg[blt_dstFormat] & 0x7f) << 7;
+      } else {
+        BLT.dst_pitch = BLT.reg[blt_dstFormat] & 0x3fff;
       }
       break;
     case blt_dstFormat:
       BLT.dst_fmt = (BLT.reg[reg] >> 16) & 0x07;
-      BLT.dst_pitch = BLT.reg[reg] & 0x3fff;
       if (BLT.dst_tiled) {
-        BLT.dst_pitch *= 128;
+        BLT.dst_pitch = (BLT.reg[reg] & 0x7f) << 7;
+      } else {
+        BLT.dst_pitch = BLT.reg[reg] & 0x3fff;
       }
       break;
     case blt_srcBaseAddr:
       BLT.src_base = BLT.reg[reg] & v->fbi.mask;
       BLT.src_tiled = BLT.reg[reg] >> 31;
+      if (BLT.src_tiled) {
+        BLT.src_pitch = (BLT.reg[blt_srcFormat] & 0x7f) << 7;
+      } else {
+        BLT.src_pitch = BLT.reg[blt_srcFormat] & 0x3fff;
+      }
       break;
     case blt_srcFormat:
       BLT.src_fmt = (BLT.reg[reg] >> 16) & 0x0f;
-      BLT.src_pitch = BLT.reg[reg] & 0x3fff;
       BLT.src_swizzle = (BLT.reg[reg] >> 20) & 0x03;
+      if (BLT.src_tiled) {
+        BLT.src_pitch = (BLT.reg[reg] & 0x7f) << 7;
+      } else {
+        BLT.src_pitch = BLT.reg[reg] & 0x3fff;
+      }
       break;
     case blt_pattern0Alias:
       BLT.cpat[0][0] = value & 0xff;
@@ -1347,13 +1358,13 @@ void bx_banshee_c::blt_launch_area_setup()
           if (BLT.src_fmt == 0) {
             for (int i = 0; i < BLT.dst_h; i++) {
               pbytes += ((((BLT.dst_w + pxstart + 7) >> 3) + 3) & ~3);
-              pxstart += (Bit8u)(BLT.src_pitch << 3);
+              pxstart += (Bit8u)(BLT.reg[blt_srcFormat] << 3);
               pxstart &= 0x1f;
             }
           } else {
             for (int i = 0; i < BLT.dst_h; i++) {
               pbytes += ((BLT.dst_w * pxsize + pxstart + 3) & ~3);
-              pxstart += (Bit8u)BLT.src_pitch;
+              pxstart += (Bit8u)BLT.reg[blt_srcFormat];
               pxstart &= 0x03;
             }
           }
@@ -1885,9 +1896,7 @@ void bx_banshee_c::blt_screen_to_screen()
     return;
   }
   BX_LOCK(render_mutex);
-  if (BLT.src_tiled) {
-    spitch = BLT.src_pitch * 128;
-  } else if ((BLT.src_fmt == 0) && (pxpack == 1)) {
+  if ((BLT.src_fmt == 0) && (pxpack == 1)) {
     spitch = (BLT.dst_w + 7) / 8;
   } else {
     spitch = BLT.src_pitch;
@@ -1969,7 +1978,7 @@ void bx_banshee_c::blt_screen_to_screen_pattern()
   Bit8u *pat_ptr = &BLT.cpat[0][0];
   Bit8u *src_ptr1, *dst_ptr1, *pat_ptr1, *pat_ptr2 = NULL;
   int dpxsize = (BLT.dst_fmt > 1) ? (BLT.dst_fmt - 1) : 1;
-  int spitch;
+  int spitch = BLT.src_pitch;
   int dpitch = BLT.dst_pitch;
   bool patmono = (BLT.reg[blt_command] >> 13) & 1;
   bool patrow0 = (BLT.reg[blt_commandExtra] & 0x08) > 0;
@@ -1994,11 +2003,6 @@ void bx_banshee_c::blt_screen_to_screen_pattern()
     return;
   }
   BX_LOCK(render_mutex);
-  if (BLT.src_tiled) {
-    spitch = BLT.src_pitch * 128;
-  } else {
-    spitch = BLT.src_pitch;
-  }
   if (BLT.x_dir) {
     dpxsize *= -1;
   }
@@ -2072,9 +2076,11 @@ void bx_banshee_c::blt_screen_to_screen_stretch()
   Bit8u *dst_ptr = &v->fbi.ram[BLT.dst_base];
   Bit8u *src_ptr1, *dst_ptr1;
   Bit8u dpxsize = (BLT.dst_fmt > 1) ? (BLT.dst_fmt - 1) : 1;
+  int spitch = BLT.src_pitch;
+  int dpitch = BLT.dst_pitch;
   Bit8u colorkey_en = BLT.reg[blt_commandExtra] & 3;
   Bit8u rop = 0;
-  int spitch, dpitch, nrows, stepy;
+  int nrows, stepy;
   int dx, dy, x2, x3, y2, y3, w0, h0, w1, h1;
   double fx, fy;
 
@@ -2088,16 +2094,6 @@ void bx_banshee_c::blt_screen_to_screen_stretch()
     BX_ERROR(("Pixel format conversion not supported yet"));
   }
   BX_LOCK(render_mutex);
-  if (BLT.src_tiled) {
-    spitch = BLT.src_pitch * 128;
-  } else {
-    spitch = BLT.src_pitch;
-  }
-  if (BLT.dst_tiled) {
-    dpitch = BLT.dst_pitch * 128;
-  } else {
-    dpitch = BLT.dst_pitch;
-  }
   if (BLT.y_dir) {
     spitch *= -1;
     dpitch *= -1;
@@ -2254,11 +2250,11 @@ void bx_banshee_c::blt_host_to_screen()
     src_ptr += spitch;
     if (pxpack == 0) {
       if (srcfmt == 0) {
-        xs += (Bit8u)(BLT.src_pitch << 3);
+        xs += (Bit8u)(BLT.reg[blt_srcFormat] << 3);
         xs &= 0x1f;
         spitch = ((((w + xs + 7) >> 3) + 3) & ~3);
       } else {
-        xs += (Bit8u)BLT.src_pitch;
+        xs += (Bit8u)BLT.reg[blt_srcFormat];
         xs &= 0x03;
         spitch = ((w * spxsize + xs + 3) & ~3);
       }
@@ -2388,11 +2384,11 @@ void bx_banshee_c::blt_host_to_screen_pattern()
     src_ptr += spitch;
     if (pxpack == 0) {
       if (srcfmt == 0) {
-        xs += (Bit8u)(BLT.src_pitch << 3);
+        xs += (Bit8u)(BLT.reg[blt_srcFormat] << 3);
         xs &= 0x1f;
         spitch = ((((w + xs + 7) >> 3) + 3) & ~3);
       } else {
-        xs += (Bit8u)BLT.src_pitch;
+        xs += (Bit8u)BLT.reg[blt_srcFormat];
         xs &= 0x03;
         spitch = ((w * spxsize + xs + 3) & ~3);
       }
