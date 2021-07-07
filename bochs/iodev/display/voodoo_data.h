@@ -1768,8 +1768,8 @@ struct _banshee_info
     bool   dst_tiled;
     Bit8u  dst_fmt;
     Bit16u dst_pitch;
-    Bit16u dst_x;
-    Bit16u dst_y;
+    Bit16s dst_x;
+    Bit16s dst_y;
     Bit16u dst_w;
     Bit16u dst_h;
     Bit8u  fgcolor[4];
