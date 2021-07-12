@@ -282,7 +282,7 @@ void scsi_device_t::restore_requests(const char *path)
     do {
       ret = fgets(line, sizeof(line)-1, fp);
       line[sizeof(line) - 1] = '\0';
-      int len = strlen(line);
+      size_t len = strlen(line);
       if ((len > 0) && (line[len-1] < ' '))
         line[len-1] = '\0';
       i = 0;
@@ -628,8 +628,8 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun, bool as
           case 0x83:
             {
               // Device identification page, mandatory
-              int max_len = 255 - 8;
-              int id_len = strlen(DEVICE_NAME);
+              size_t max_len = 255 - 8;
+              size_t id_len = strlen(DEVICE_NAME);
               if (id_len > max_len)
                 id_len = max_len;
 
@@ -643,15 +643,15 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun, bool as
 
               outbuf[r->buf_len++] = 0x83; // this page
               outbuf[r->buf_len++] = 0x00;
-              outbuf[r->buf_len++] = 3 + id_len;
+              outbuf[r->buf_len++] = 3 + (Bit8u)id_len;
 
               outbuf[r->buf_len++] = 0x2; // ASCII
               outbuf[r->buf_len++] = 0;   // not officially assigned
               outbuf[r->buf_len++] = 0;   // reserved
-              outbuf[r->buf_len++] = id_len; // length of data following
+              outbuf[r->buf_len++] = (Bit8u)id_len; // length of data following
 
               memcpy(&outbuf[r->buf_len], DEVICE_NAME, id_len);
-              r->buf_len += id_len;
+              r->buf_len += (int)id_len;
             }
             break;
 
@@ -769,7 +769,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun, bool as
           p[21] = (16 * 176) & 0xff;
           p += 22;
         }
-        r->buf_len = p - outbuf;
+        r->buf_len = (int)(p - outbuf);
         outbuf[0] = r->buf_len - 4;
         if (r->buf_len > (int)len)
           r->buf_len = len;

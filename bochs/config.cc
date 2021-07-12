@@ -128,7 +128,7 @@ static Bit64s bx_param_handler(bx_param_c *param, bool set, Bit64s val)
           val = get_floppy_type_from_image(SIM->get_param_string("path", base)->getptr());
           SIM->get_param_enum("type", base)->set(val);
         } else if (!SIM->get_init_done() && (val != BX_FLOPPY_NONE)) {
-          device = get_floppy_devtype_from_type(val);
+          device = get_floppy_devtype_from_type((int)val);
           SIM->get_param_enum("devtype", base)->set(device);
         }
       }
@@ -2361,7 +2361,7 @@ int bx_split_option_list(const char *msg, const char *rawopt, char **argv, int m
       strcpy(tmpstr, ptr);
       ptr2 = tmpstr;
       while (isspace(*ptr2)) ptr2++;
-      i = strlen(ptr2) - 1;
+      i = (int)strlen(ptr2) - 1;
       while ((i >= 0) && isspace(ptr2[i])) {
         ptr2[i] = 0;
         i--;
@@ -3029,7 +3029,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
                      &tm_time.tm_hour, &tm_time.tm_min, &tm_time.tm_sec, &year);
           if ((n == 7) && (year >= 1980) && (strstr(months, mon) != NULL)) {
             tm_time.tm_year = year - 1900;
-            tm_time.tm_mon = 12 - (strlen(strstr(months, mon)) / 4);
+            tm_time.tm_mon = 12 - ((int)strlen(strstr(months, mon)) / 4);
             SIM->get_param_num(BXPN_CLOCK_TIME0)->set(mktime(&tm_time));
           } else {
             PARSE_ERR(("%s: time0 string format malformed.", context));

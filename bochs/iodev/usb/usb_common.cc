@@ -611,7 +611,7 @@ int usb_device_c::set_usb_string(Bit8u *buf, const char *str)
     *q++ = str[i];
     *q++ = 0;
   }
-  return q - buf;
+  return (int)(q - buf);
 }
 
 #endif // BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB

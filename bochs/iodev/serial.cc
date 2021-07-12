@@ -1551,7 +1551,7 @@ void bx_serial_c::rx_timer(void)
           SOCKET socketid = BX_SER_THIS s[port].socket_id;
           if (socketid >= 0) {
             FD_SET(socketid, &fds);
-            if (select(socketid+1, &fds, NULL, NULL, &tval) == 1) {
+            if (select((int)(socketid+1), &fds, NULL, NULL, &tval) == 1) {
               ssize_t bytes = (ssize_t)
               ::recv(socketid, (char*) &chbuf, 1, 0);
               if (bytes > 0) {

@@ -48,9 +48,11 @@ case "$target" in
     case "$target" in
       x86_64*)
         MSVC_TARGET=64
+        AC_DEFINE(MSVC_TARGET, 64)
         ;;
       *)
         MSVC_TARGET=32
+        AC_DEFINE(MSVC_TARGET, 32)
         ;;
     esac
     ;;

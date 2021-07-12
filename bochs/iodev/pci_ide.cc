@@ -267,7 +267,7 @@ void bx_pci_ide_c::timer()
   }
   if (BX_PIDE_THIS s.bmdma[channel].cmd_rwcon) {
     BX_DEBUG(("READ DMA to addr=0x%08x, size=0x%08x", prd.addr, size));
-    count = size - (BX_PIDE_THIS s.bmdma[channel].buffer_top - BX_PIDE_THIS s.bmdma[channel].buffer_idx);
+    count = (int)(size - (BX_PIDE_THIS s.bmdma[channel].buffer_top - BX_PIDE_THIS s.bmdma[channel].buffer_idx));
     while (count > 0) {
       sector_size = count;
       if (DEV_hd_bmdma_read_sector(channel, BX_PIDE_THIS s.bmdma[channel].buffer_top, &sector_size)) {
@@ -288,7 +288,7 @@ void bx_pci_ide_c::timer()
     BX_DEBUG(("WRITE DMA from addr=0x%08x, size=0x%08x", prd.addr, size));
     DEV_MEM_READ_PHYSICAL_DMA(prd.addr, size, BX_PIDE_THIS s.bmdma[channel].buffer_top);
     BX_PIDE_THIS s.bmdma[channel].buffer_top += size;
-    count = BX_PIDE_THIS s.bmdma[channel].buffer_top - BX_PIDE_THIS s.bmdma[channel].buffer_idx;
+    count = (int)(BX_PIDE_THIS s.bmdma[channel].buffer_top - BX_PIDE_THIS s.bmdma[channel].buffer_idx);
     while (count > 511) {
       if (DEV_hd_bmdma_write_sector(channel, BX_PIDE_THIS s.bmdma[channel].buffer_idx)) {
         BX_PIDE_THIS s.bmdma[channel].buffer_idx += 512;
@@ -309,7 +309,7 @@ void bx_pci_ide_c::timer()
     DEV_hd_bmdma_complete(channel);
   } else {
     // To avoid buffer overflow reset buffer pointers and copy data if necessary
-    count = BX_PIDE_THIS s.bmdma[channel].buffer_top - BX_PIDE_THIS s.bmdma[channel].buffer_idx;
+    count = (int)(BX_PIDE_THIS s.bmdma[channel].buffer_top - BX_PIDE_THIS s.bmdma[channel].buffer_idx);
     if (count > 0) {
       memmove(BX_PIDE_THIS s.bmdma[channel].buffer, BX_PIDE_THIS s.bmdma[channel].buffer_idx, count);
     }

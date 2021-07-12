@@ -85,6 +85,15 @@
 #define BX_SHOW_IPS         0
 
 
+#define MSVC_TARGET 0
+#if defined(_MSC_VER) && defined(MSVC_TARGET)
+#if defined(_M_X64) && (MSVC_TARGET != 64)
+#error Bochs not configured for MSVC WIN64
+#elif !defined(_M_X64) && (MSVC_TARGET != 32)
+#error Bochs not configured for MSVC WIN32
+#endif
+#endif
+
 #if (BX_SHOW_IPS) && (defined(__MINGW32__) || defined(_MSC_VER))
 #define        SIGALRM         14
 #endif

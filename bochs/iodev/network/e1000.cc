@@ -1503,7 +1503,7 @@ void bx_e1000_c::rx_frame(const void *buf, unsigned buf_size)
         if (copy_size > BX_E1000_THIS s.rxbuf_size) {
           copy_size = BX_E1000_THIS s.rxbuf_size;
         }
-        DEV_MEM_WRITE_PHYSICAL_DMA(le64_to_cpu(desc.buffer_addr), copy_size,
+        DEV_MEM_WRITE_PHYSICAL_DMA(le64_to_cpu(desc.buffer_addr), (unsigned)copy_size,
                                    (Bit8u *)buf + desc_offset + vlan_offset);
       }
       desc_offset += desc_size;
