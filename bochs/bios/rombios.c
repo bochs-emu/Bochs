@@ -1882,7 +1882,15 @@ keyboard_init()
 
     /* Enable Keyboard clock */
     outb(PORT_PS2_STATUS,0xae);
+    /* Wait until buffer is empty */
+    max=0xffff;
+    while ((inb(PORT_PS2_STATUS) & 0x02) && (--max>0)) outb(PORT_DIAG, 0x10);
+    if (max==0x0) keyboard_panic(10);
     outb(PORT_PS2_STATUS,0xa8);
+    /* Wait until buffer is empty */
+    max=0xffff;
+    while ((inb(PORT_PS2_STATUS) & 0x02) && (--max>0)) outb(PORT_DIAG, 0x10);
+    if (max==0x0) keyboard_panic(10);
 
     /* ------------------- keyboard side ------------------------*/
     /* reset keyboard and self test  (keyboard side) */
@@ -3931,20 +3939,6 @@ BX_DEBUG_INT15("int15 AX=%04x\n",regs.u.r16.ax);
     case 0x52:    // removable media eject
       CLEAR_CF();
       regs.u.r8.ah = 0;  // "ok ejection may proceed"
-      break;
-
-    case 0x80:
-      /* Device open */
-    case 0x81:
-      /* Device close */
-    case 0x82:
-      /* Program termination */
-    case 0x90:
-      /* Device busy interrupt. Called by Int 16h when no key available */
-    case 0x91:
-      /* Interrupt complete. Called by IRQ handlers */
-      CLEAR_CF();
-      regs.u.r8.ah = 0;  // "operation success"
       break;
 
     case 0x83: {
@@ -11573,6 +11567,16 @@ int11_handler:
 ;----------
 .org 0xf859 ; INT 15h System Services Entry Point
 int15_handler:
+  cmp ah, #0x80 ; Device open
+  je int15_stub
+  cmp ah, #0x81 ; Device close
+  je int15_stub
+  cmp ah, #0x82 ; Program termination
+  je int15_stub
+  cmp ah, #0x90 ; Device busy interrupt. Called by Int 16h when no key available
+  je int15_stub
+  cmp ah, #0x91 ; Interrupt complete. Called by IRQ handlers
+  je int15_stub
   pushf
 #if BX_APM
   cmp ah, #0x53
@@ -11601,6 +11605,10 @@ int15_handler32_ret:
 apm_call:
   jmp _apmreal_entry
 #endif
+int15_stub:
+  xor ah, ah ; "operation success"
+  clc
+  jmp iret_modify_cf
 
 #if BX_USE_PS2_MOUSE
 int15_handler_mouse:
