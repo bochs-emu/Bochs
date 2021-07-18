@@ -1063,6 +1063,7 @@ bool bx_voodoo_1_2_c::update_timing(void)
     vertical_timer_handler(this);
   }
   BX_INFO(("Voodoo output %dx%d@%uHz", v->fbi.width, v->fbi.height, (unsigned)v->vertfreq));
+  v->fbi.swaps_pending = 0;
   v->vtimer_running = 1;
   bx_virt_timer.activate_timer(s.vertical_timer_id, (Bit32u)s.vdraw.vtotal_usec, 1);
   return 1;
