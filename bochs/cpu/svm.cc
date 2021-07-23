@@ -1228,6 +1228,7 @@ void BX_CPU_C::register_svm_state(bx_param_c *parent)
   // register SVM state for save/restore param tree
   bx_list_c *svm = new bx_list_c(parent, "SVM");
 
+  BXRS_HEX_PARAM_FIELD(svm, vmcbptr, BX_CPU_THIS_PTR vmcbptr);
   BXRS_PARAM_BOOL(svm, in_svm_guest, BX_CPU_THIS_PTR in_svm_guest);
   BXRS_PARAM_BOOL(svm, gif, BX_CPU_THIS_PTR svm_gif);
 
