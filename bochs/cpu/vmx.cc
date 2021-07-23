@@ -3680,7 +3680,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVEPT(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    VMexit_Instruction(i, VMX_VMEXIT_INVEPT);
+    VMexit_Instruction(i, VMX_VMEXIT_INVEPT, BX_WRITE);
   }
 
   if (CPL != 0) {
@@ -3738,7 +3738,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVVPID(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    VMexit_Instruction(i, VMX_VMEXIT_INVVPID);
+    VMexit_Instruction(i, VMX_VMEXIT_INVVPID, BX_WRITE);
   }
 
   if (CPL != 0) {
@@ -3832,7 +3832,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVPCID(bxInstruction_c *i)
   // INVPCID will always #UD in legacy VMX mode
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (VMEXIT(VMX_VM_EXEC_CTRL2_INVLPG_VMEXIT)) {
-      VMexit_Instruction(i, VMX_VMEXIT_INVPCID);
+      VMexit_Instruction(i, VMX_VMEXIT_INVPCID, BX_WRITE);
     }
   }
 #endif
