@@ -32,6 +32,24 @@
 
 extern const char *segname[];
 
+void BX_CPU_C::set_VMCBPTR(Bit64u vmcbptr)
+{
+  BX_CPU_THIS_PTR vmcbptr = vmcbptr;
+
+  if (vmcbptr != 0) {
+    BX_CPU_THIS_PTR vmcbhostptr = BX_CPU_THIS_PTR getHostMemAddr(vmcbptr, BX_WRITE);
+#if BX_SUPPORT_MEMTYPE
+    BX_CPU_THIS_PTR vmcb_memtype = resolve_memtype(BX_CPU_THIS_PTR vmcbptr);
+#endif
+  }
+  else {
+    BX_CPU_THIS_PTR vmcbhostptr = 0;
+#if BX_SUPPORT_MEMTYPE
+    BX_CPU_THIS_PTR vmcb_memtype = BX_MEMTYPE_UC;
+#endif
+  }
+}
+
 // When loading segment bases from the VMCB or the host save area
 // (on VMRUN or #VMEXIT), segment bases are canonicalized (i.e.
 // sign-extended from the highest implemented address bit to bit 63)
@@ -986,11 +1004,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMRUN(bxInstruction_c *i)
     BX_ERROR(("VMRUN: invalid or not page aligned VMCB physical address !"));
     exception(BX_GP_EXCEPTION, 0);
   }
-  BX_CPU_THIS_PTR vmcbptr = pAddr;
-  BX_CPU_THIS_PTR vmcbhostptr = BX_CPU_THIS_PTR getHostMemAddr(pAddr, BX_WRITE);
-#if BX_SUPPORT_MEMTYPE
-  BX_CPU_THIS_PTR vmcb_memtype = resolve_memtype(BX_CPU_THIS_PTR vmcbptr);
-#endif
+  set_VMCBPTR(pAddr);
 
   BX_DEBUG(("VMRUN VMCB ptr: 0x" FMT_ADDRX64, BX_CPU_THIS_PTR vmcbptr));
 
@@ -1060,8 +1074,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLOAD(bxInstruction_c *i)
     BX_ERROR(("VMLOAD: invalid or not page aligned VMCB physical address !"));
     exception(BX_GP_EXCEPTION, 0);
   }
-  BX_CPU_THIS_PTR vmcbptr = pAddr;
-  BX_CPU_THIS_PTR vmcbhostptr = BX_CPU_THIS_PTR getHostMemAddr(pAddr, BX_WRITE);
+  set_VMCBPTR(pAddr);
 
   BX_DEBUG(("VMLOAD VMCB ptr: 0x" FMT_ADDRX64, BX_CPU_THIS_PTR vmcbptr));
 
@@ -1111,8 +1124,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMSAVE(bxInstruction_c *i)
     BX_ERROR(("VMSAVE: invalid or not page aligned VMCB physical address !"));
     exception(BX_GP_EXCEPTION, 0);
   }
-  BX_CPU_THIS_PTR vmcbptr = pAddr;
-  BX_CPU_THIS_PTR vmcbhostptr = BX_CPU_THIS_PTR getHostMemAddr(pAddr, BX_WRITE);
+  set_VMCBPTR(pAddr);
 
   BX_DEBUG(("VMSAVE VMCB ptr: 0x" FMT_ADDRX64, BX_CPU_THIS_PTR vmcbptr));
 

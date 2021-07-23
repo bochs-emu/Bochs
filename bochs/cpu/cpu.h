@@ -5084,6 +5084,7 @@ public: // for now...
 #endif
 
 #if BX_SUPPORT_SVM
+  BX_SMF void set_VMCBPTR(Bit64u vmcbptr);
   BX_SMF void SvmEnterSaveHostState(SVM_HOST_STATE *host);
   BX_SMF bool SvmEnterLoadCheckControls(SVM_CONTROLS *ctrls);
   BX_SMF bool SvmEnterLoadCheckGuestState(void);

@@ -657,6 +657,10 @@ void BX_CPU_C::after_restore_state(void)
   set_VMCSPTR(BX_CPU_THIS_PTR vmcsptr);
 #endif
 
+#if BX_SUPPORT_SVM
+  set_VMCBPTR(BX_CPU_THIS_PTR vmcbptr);
+#endif
+
 #if BX_SUPPORT_PKEYS
   set_PKeys(BX_CPU_THIS_PTR pkru, BX_CPU_THIS_PTR pkrs);
 #endif
@@ -1056,13 +1060,9 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 
 #if BX_SUPPORT_SVM
+  set_VMCBPTR(0);
   BX_CPU_THIS_PTR in_svm_guest = 0;
   BX_CPU_THIS_PTR svm_gif = 1;
-  BX_CPU_THIS_PTR vmcbptr = 0;
-  BX_CPU_THIS_PTR vmcbhostptr = 0;
-#if BX_SUPPORT_MEMTYPE
-  BX_CPU_THIS_PTR vmcb_memtype = BX_MEMTYPE_UC;
-#endif
 #endif
 
 #if BX_SUPPORT_VMX || BX_SUPPORT_SVM
