@@ -70,6 +70,13 @@ BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
 
 #include "generic_cpuid.h"
 
+enum {
+#define bx_define_cpudb(model) bx_cpudb_##model,
+#include "cpudb.h"
+  bx_cpudb_model_last
+};
+#undef bx_define_cpudb
+
 #define bx_define_cpudb(model) \
   extern bx_cpuid_t *create_ ##model##_cpuid(BX_CPU_C *cpu);
 

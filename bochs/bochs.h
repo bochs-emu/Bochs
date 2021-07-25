@@ -307,13 +307,6 @@ void CDECL bx_signal_handler(int signum);
 BOCHSAPI_MSVCONLY int bx_atexit(void);
 BOCHSAPI extern bx_debug_t bx_dbg;
 
-enum {
-#define bx_define_cpudb(model) bx_cpudb_##model,
-#include "cpudb.h"
-  bx_cpudb_model_last
-};
-#undef bx_define_cpudb
-
 #if BX_SUPPORT_SMP
   #define BX_SMP_PROCESSORS (bx_cpu_count)
 #else
