@@ -94,7 +94,7 @@ dist-clean: clean
 avx.o: avx.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../gui/paramtree.h ../../logio.h \
- ../../cpudb.h ../../instrument/stubs/instrument.h ../cpu.h \
+ ../../instrument/stubs/instrument.h ../cpu.h \
  ../decoder/decoder.h ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h \
  ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
  ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../apic.h \
@@ -103,7 +103,7 @@ avx.o: avx.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
 avx2.o: avx2.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../gui/paramtree.h ../../logio.h \
- ../../cpudb.h ../../instrument/stubs/instrument.h ../cpu.h \
+ ../../instrument/stubs/instrument.h ../cpu.h \
  ../decoder/decoder.h ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h \
  ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
  ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../apic.h \
@@ -112,7 +112,7 @@ avx2.o: avx2.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
 avx512.o: avx512.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../gui/paramtree.h ../../logio.h \
- ../../cpudb.h ../../instrument/stubs/instrument.h ../cpu.h \
+ ../../instrument/stubs/instrument.h ../cpu.h \
  ../decoder/decoder.h ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h \
  ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
  ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../apic.h \
@@ -121,7 +121,7 @@ avx512.o: avx512.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
 avx512_bitalg.o: avx512_bitalg.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../gui/paramtree.h ../../logio.h \
- ../../cpudb.h ../../instrument/stubs/instrument.h ../cpu.h \
+ ../../instrument/stubs/instrument.h ../cpu.h \
  ../decoder/decoder.h ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h \
  ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
  ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../apic.h \
@@ -130,7 +130,7 @@ avx512_bitalg.o: avx512_bitalg.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
 avx512_broadcast.o: avx512_broadcast.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../gui/paramtree.h ../../logio.h \
- ../../cpudb.h ../../instrument/stubs/instrument.h ../cpu.h \
+ ../../instrument/stubs/instrument.h ../cpu.h \
  ../decoder/decoder.h ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h \
  ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
  ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../apic.h \
@@ -139,7 +139,7 @@ avx512_broadcast.o: avx512_broadcast.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
 avx512_cvt.o: avx512_cvt.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../gui/paramtree.h ../../logio.h \
- ../../cpudb.h ../../instrument/stubs/instrument.h ../cpu.h \
+ ../../instrument/stubs/instrument.h ../cpu.h \
  ../decoder/decoder.h ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h \
  ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
  ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../apic.h \
@@ -148,7 +148,7 @@ avx512_cvt.o: avx512_cvt.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h
 avx512_fma.o: avx512_fma.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../gui/paramtree.h ../../logio.h \
- ../../cpudb.h ../../instrument/stubs/instrument.h ../cpu.h \
+ ../../instrument/stubs/instrument.h ../cpu.h \
  ../decoder/decoder.h ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h \
  ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
  ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../apic.h \
@@ -157,7 +157,7 @@ avx512_fma.o: avx512_fma.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h
 avx512_mask16.o: avx512_mask16.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../gui/paramtree.h ../../logio.h \
- ../../cpudb.h ../../instrument/stubs/instrument.h ../cpu.h \
+ ../../instrument/stubs/instrument.h ../cpu.h \
  ../decoder/decoder.h ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h \
  ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
  ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../apic.h \
@@ -165,7 +165,7 @@ avx512_mask16.o: avx512_mask16.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
 avx512_mask32.o: avx512_mask32.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../gui/paramtree.h ../../logio.h \
- ../../cpudb.h ../../instrument/stubs/instrument.h ../cpu.h \
+ ../../instrument/stubs/instrument.h ../cpu.h \
  ../decoder/decoder.h ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h \
  ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
  ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../apic.h \
@@ -173,7 +173,7 @@ avx512_mask32.o: avx512_mask32.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
 avx512_mask64.o: avx512_mask64.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../gui/paramtree.h ../../logio.h \
- ../../cpudb.h ../../instrument/stubs/instrument.h ../cpu.h \
+ ../../instrument/stubs/instrument.h ../cpu.h \
  ../decoder/decoder.h ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h \
  ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
  ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../apic.h \
@@ -181,7 +181,7 @@ avx512_mask64.o: avx512_mask64.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
 avx512_mask8.o: avx512_mask8.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../gui/paramtree.h ../../logio.h \
- ../../cpudb.h ../../instrument/stubs/instrument.h ../cpu.h \
+ ../../instrument/stubs/instrument.h ../cpu.h \
  ../decoder/decoder.h ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h \
  ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
  ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../apic.h \
@@ -189,7 +189,7 @@ avx512_mask8.o: avx512_mask8.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
 avx512_move.o: avx512_move.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../gui/paramtree.h ../../logio.h \
- ../../cpudb.h ../../instrument/stubs/instrument.h ../cpu.h \
+ ../../instrument/stubs/instrument.h ../cpu.h \
  ../decoder/decoder.h ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h \
  ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
  ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../apic.h \
@@ -198,7 +198,7 @@ avx512_move.o: avx512_move.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep
 avx512_pfp.o: avx512_pfp.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../gui/paramtree.h ../../logio.h \
- ../../cpudb.h ../../instrument/stubs/instrument.h ../cpu.h \
+ ../../instrument/stubs/instrument.h ../cpu.h \
  ../decoder/decoder.h ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h \
  ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
  ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../apic.h \
@@ -208,7 +208,7 @@ avx512_pfp.o: avx512_pfp.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h
 avx512_rcp14.o: avx512_rcp14.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../gui/paramtree.h ../../logio.h \
- ../../cpudb.h ../../instrument/stubs/instrument.h ../cpu.h \
+ ../../instrument/stubs/instrument.h ../cpu.h \
  ../decoder/decoder.h ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h \
  ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
  ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../apic.h \
@@ -218,7 +218,7 @@ avx512_rcp14.o: avx512_rcp14.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
 avx512_rsqrt14.o: avx512_rsqrt14.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../osdep.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../gui/paramtree.h ../../logio.h \
- ../../cpudb.h ../../instrument/stubs/instrument.h ../cpu.h \
+ ../../instrument/stubs/instrument.h ../cpu.h \
  ../decoder/decoder.h ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h \
  ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
  ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../apic.h \
@@ -228,7 +228,7 @@ avx512_rsqrt14.o: avx512_rsqrt14.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
 avx_cvt.o: avx_cvt.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../gui/paramtree.h ../../logio.h \
- ../../cpudb.h ../../instrument/stubs/instrument.h ../cpu.h \
+ ../../instrument/stubs/instrument.h ../cpu.h \
  ../decoder/decoder.h ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h \
  ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
  ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../apic.h \
@@ -236,7 +236,7 @@ avx_cvt.o: avx_cvt.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
 avx_fma.o: avx_fma.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../gui/paramtree.h ../../logio.h \
- ../../cpudb.h ../../instrument/stubs/instrument.h ../cpu.h \
+ ../../instrument/stubs/instrument.h ../cpu.h \
  ../decoder/decoder.h ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h \
  ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
  ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../apic.h \
@@ -245,7 +245,7 @@ avx_fma.o: avx_fma.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
 avx_pfp.o: avx_pfp.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../gui/paramtree.h ../../logio.h \
- ../../cpudb.h ../../instrument/stubs/instrument.h ../cpu.h \
+ ../../instrument/stubs/instrument.h ../cpu.h \
  ../decoder/decoder.h ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h \
  ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
  ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../apic.h \
@@ -255,7 +255,7 @@ avx_pfp.o: avx_pfp.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
 gather.o: gather.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../gui/paramtree.h ../../logio.h \
- ../../cpudb.h ../../instrument/stubs/instrument.h ../cpu.h \
+ ../../instrument/stubs/instrument.h ../cpu.h \
  ../decoder/decoder.h ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h \
  ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
  ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../apic.h \
@@ -263,7 +263,7 @@ gather.o: gather.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
 tbm32.o: tbm32.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../gui/paramtree.h ../../logio.h \
- ../../cpudb.h ../../instrument/stubs/instrument.h ../cpu.h \
+ ../../instrument/stubs/instrument.h ../cpu.h \
  ../decoder/decoder.h ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h \
  ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
  ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../apic.h \
@@ -272,7 +272,7 @@ tbm32.o: tbm32.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
 tbm64.o: tbm64.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../gui/paramtree.h ../../logio.h \
- ../../cpudb.h ../../instrument/stubs/instrument.h ../cpu.h \
+ ../../instrument/stubs/instrument.h ../cpu.h \
  ../decoder/decoder.h ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h \
  ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
  ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../apic.h \
@@ -281,7 +281,7 @@ tbm64.o: tbm64.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
 vnni.o: vnni.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../gui/paramtree.h ../../logio.h \
- ../../cpudb.h ../../instrument/stubs/instrument.h ../cpu.h \
+ ../../instrument/stubs/instrument.h ../cpu.h \
  ../decoder/decoder.h ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h \
  ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
  ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../apic.h \
@@ -290,7 +290,7 @@ vnni.o: vnni.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
 xop.o: xop.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../gui/paramtree.h ../../logio.h \
- ../../cpudb.h ../../instrument/stubs/instrument.h ../cpu.h \
+ ../../instrument/stubs/instrument.h ../cpu.h \
  ../decoder/decoder.h ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h \
  ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
  ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../apic.h \
