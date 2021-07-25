@@ -117,11 +117,11 @@ parser.o: parser.cc debug.h ../config.h ../osdep.h \
  ../cpu/decoder/decoder.h
 dbg_breakpoints.o: dbg_breakpoints.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../cpu/decoder/decoder.h \
- ../gui/paramtree.h ../logio.h ../cpudb.h \
+ ../gui/paramtree.h ../logio.h \
  ../instrument/stubs/instrument.h
 dbg_main.o: dbg_main.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../cpu/decoder/decoder.h \
- ../gui/paramtree.h ../logio.h ../cpudb.h \
+ ../gui/paramtree.h ../logio.h \
  ../instrument/stubs/instrument.h ../param_names.h ../cpu/cpu.h \
  ../cpu/decoder/decoder.h ../cpu/i387.h ../cpu/fpu/softfloat.h \
  ../cpu/fpu/tag_w.h ../cpu/fpu/status_w.h ../cpu/fpu/control_w.h \
@@ -134,7 +134,7 @@ dbg_main.o: dbg_main.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../gui/gui.h
 linux.o: linux.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../cpu/decoder/decoder.h ../gui/paramtree.h \
- ../logio.h ../cpudb.h ../instrument/stubs/instrument.h ../cpu/cpu.h \
+ ../logio.h ../instrument/stubs/instrument.h ../cpu/cpu.h \
  ../cpu/decoder/decoder.h ../cpu/i387.h ../cpu/fpu/softfloat.h \
  ../cpu/fpu/tag_w.h ../cpu/fpu/status_w.h ../cpu/fpu/control_w.h \
  ../cpu/crregs.h ../cpu/descriptor.h ../cpu/decoder/instr.h \
@@ -143,7 +143,7 @@ linux.o: linux.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.
  syscalls-linux.h
 symbols.o: symbols.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../cpu/decoder/decoder.h \
- ../gui/paramtree.h ../logio.h ../cpudb.h \
+ ../gui/paramtree.h ../logio.h \
  ../instrument/stubs/instrument.h ../cpu/cpu.h ../cpu/decoder/decoder.h \
  ../cpu/i387.h ../cpu/fpu/softfloat.h ../cpu/fpu/tag_w.h \
  ../cpu/fpu/status_w.h ../cpu/fpu/control_w.h ../cpu/crregs.h \

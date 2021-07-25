@@ -69,7 +69,7 @@ dist-clean: clean
 ###########################################
 memory.o: memory.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../cpu/decoder/decoder.h ../gui/paramtree.h \
- ../logio.h ../cpudb.h ../memory/memory-bochs.h \
+ ../logio.h ../memory/memory-bochs.h \
  ../instrument/stubs/instrument.h ../cpu/cpu.h ../cpu/decoder/decoder.h \
  ../cpu/i387.h ../cpu/fpu/softfloat.h ../cpu/fpu/tag_w.h \
  ../cpu/fpu/status_w.h ../cpu/fpu/control_w.h ../cpu/crregs.h \
@@ -80,7 +80,7 @@ memory.o: memory.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debu
  ../gui/paramtree.h ../gui/gui.h
 misc_mem.o: misc_mem.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../cpu/decoder/decoder.h \
- ../gui/paramtree.h ../logio.h ../cpudb.h ../memory/memory-bochs.h \
+ ../gui/paramtree.h ../logio.h ../memory/memory-bochs.h \
  ../instrument/stubs/instrument.h ../param_names.h ../cpu/cpu.h \
  ../cpu/decoder/decoder.h ../cpu/i387.h ../cpu/fpu/softfloat.h \
  ../cpu/fpu/tag_w.h ../cpu/fpu/status_w.h ../cpu/fpu/control_w.h \
