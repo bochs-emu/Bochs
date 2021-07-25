@@ -927,7 +927,7 @@ void bx_local_apic_c::print_status(void)
   BX_INFO(("lapic %d: status is {:", apic_id));
   for(unsigned vec=0; vec<=BX_LAPIC_LAST_VECTOR; vec++) {
     if(get_vector(irr, vec) || get_vector(isr, vec)) {
-      BX_INFO(("vec: %u, irr=%u, isr=%u", get_vector(irr, vec), get_vector(isr, vec)));
+      BX_INFO(("vec: %u, irr=%d, isr=%d", vec, get_vector(irr, vec), get_vector(isr, vec)));
     }
   }
   BX_INFO(("}"));
