@@ -772,7 +772,7 @@ install_macosx: all download_dlx install_man @INSTALL_DOCBOOK_VAR@
 ###########################################
 bxdisasm.o: bxdisasm.@CPP_SUFFIX@ config.h cpu/decoder/instr.h
 bxthread.o: bxthread.@CPP_SUFFIX@ bochs.h config.h osdep.h gui/paramtree.h logio.h \
- cpudb.h instrument/stubs/instrument.h misc/bswap.h bxthread.h
+ instrument/stubs/instrument.h misc/bswap.h bxthread.h
 config.o: config.@CPP_SUFFIX@ bochs.h config.h osdep.h gui/paramtree.h logio.h \
  cpudb.h instrument/stubs/instrument.h misc/bswap.h bxversion.h \
  iodev/iodev.h bochs.h plugin.h extplugin.h param_names.h pc_system.h \
@@ -782,20 +782,20 @@ config.o: config.@CPP_SUFFIX@ bochs.h config.h osdep.h gui/paramtree.h logio.h \
  param_names.h
 crc.o: crc.@CPP_SUFFIX@ config.h
 gdbstub.o: gdbstub.@CPP_SUFFIX@ bochs.h config.h osdep.h gui/paramtree.h logio.h \
- cpudb.h instrument/stubs/instrument.h misc/bswap.h param_names.h \
+ instrument/stubs/instrument.h misc/bswap.h param_names.h \
  cpu/cpu.h bx_debug/debug.h config.h osdep.h cpu/decoder/decoder.h \
  cpu/i387.h cpu/fpu/softfloat.h cpu/fpu/tag_w.h cpu/fpu/status_w.h \
  cpu/fpu/control_w.h cpu/crregs.h cpu/descriptor.h cpu/decoder/instr.h \
  cpu/lazy_flags.h cpu/tlb.h cpu/icache.h cpu/apic.h cpu/xmm.h cpu/vmx.h \
  cpu/cpuid.h cpu/stack.h cpu/access.h
 logio.o: logio.@CPP_SUFFIX@ bochs.h config.h osdep.h gui/paramtree.h logio.h \
- cpudb.h instrument/stubs/instrument.h misc/bswap.h gui/siminterface.h \
+ instrument/stubs/instrument.h misc/bswap.h gui/siminterface.h \
  gui/paramtree.h pc_system.h bxthread.h cpu/cpu.h bx_debug/debug.h \
  config.h osdep.h cpu/decoder/decoder.h cpu/i387.h cpu/fpu/softfloat.h \
  cpu/fpu/tag_w.h cpu/fpu/status_w.h cpu/fpu/control_w.h cpu/crregs.h \
  cpu/descriptor.h cpu/decoder/instr.h cpu/lazy_flags.h cpu/tlb.h \
  cpu/icache.h cpu/apic.h cpu/xmm.h cpu/vmx.h cpu/cpuid.h cpu/access.h
-main.o: main.@CPP_SUFFIX@ bochs.h config.h osdep.h gui/paramtree.h logio.h cpudb.h \
+main.o: main.@CPP_SUFFIX@ bochs.h config.h osdep.h gui/paramtree.h logio.h \
  instrument/stubs/instrument.h misc/bswap.h bxversion.h param_names.h \
  config.h cpu/cpu.h bx_debug/debug.h osdep.h \
  cpu/decoder/decoder.h cpu/i387.h cpu/fpu/softfloat.h cpu/fpu/tag_w.h \
@@ -806,9 +806,9 @@ main.o: main.@CPP_SUFFIX@ bochs.h config.h osdep.h gui/paramtree.h logio.h cpudb
  gui/siminterface.h gui/paramtree.h gui/gui.h iodev/hdimage/hdimage.h \
  iodev/network/netmod.h iodev/sound/soundmod.h iodev/usb/usb_common.h
 osdep.o: osdep.@CPP_SUFFIX@ bochs.h config.h osdep.h gui/paramtree.h logio.h \
- cpudb.h instrument/stubs/instrument.h misc/bswap.h bxthread.h
+ instrument/stubs/instrument.h misc/bswap.h bxthread.h
 pc_system.o: pc_system.@CPP_SUFFIX@ bochs.h config.h osdep.h gui/paramtree.h \
- logio.h cpudb.h instrument/stubs/instrument.h misc/bswap.h cpu/cpu.h \
+ logio.h instrument/stubs/instrument.h misc/bswap.h cpu/cpu.h \
  bx_debug/debug.h config.h osdep.h cpu/decoder/decoder.h cpu/i387.h \
  cpu/fpu/softfloat.h cpu/fpu/tag_w.h cpu/fpu/status_w.h \
  cpu/fpu/control_w.h cpu/crregs.h cpu/descriptor.h cpu/decoder/instr.h \
@@ -817,7 +817,7 @@ pc_system.o: pc_system.@CPP_SUFFIX@ bochs.h config.h osdep.h gui/paramtree.h \
  param_names.h pc_system.h memory/memory-bochs.h gui/siminterface.h \
  gui/paramtree.h gui/gui.h
 plugin.o: plugin.@CPP_SUFFIX@ bochs.h config.h osdep.h gui/paramtree.h logio.h \
- cpudb.h instrument/stubs/instrument.h misc/bswap.h iodev/iodev.h bochs.h \
+ instrument/stubs/instrument.h misc/bswap.h iodev/iodev.h bochs.h \
  plugin.h extplugin.h param_names.h pc_system.h bx_debug/debug.h config.h \
  osdep.h memory/memory-bochs.h gui/siminterface.h gui/paramtree.h \
  gui/gui.h plugin.h
