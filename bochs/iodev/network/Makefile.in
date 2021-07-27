@@ -174,74 +174,70 @@ dist-clean: clean
 # building plugins.
 ###########################################
 e1000.o: e1000.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../\
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../param_names.h ../../pc_system.h \
- ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
+ ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../param_names.h \
+ ../../pc_system.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
  ../pci.h netmod.h e1000.h
 eth_fbsd.o: eth_fbsd.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../\
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../pc_system.h netmod.h
+ ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
+ ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../pc_system.h \
+ netmod.h
 eth_linux.o: eth_linux.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../\
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../pc_system.h netmod.h
+ ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
+ ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../pc_system.h \
+ netmod.h
 eth_null.o: eth_null.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../\
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../pc_system.h netmod.h
+ ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
+ ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../pc_system.h \
+ netmod.h
 eth_slirp.o: eth_slirp.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../\
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../pc_system.h netmod.h slirp/slirp.h \
- ../../config.h slirp/slirp_config.h slirp/debug.h slirp/libslirp.h \
- slirp/compat.h ../../qemu-queue.h slirp/ip.h slirp/tcp.h slirp/tcp_var.h \
- slirp/tcpip.h slirp/tcp_timer.h slirp/udp.h slirp/ip_icmp.h slirp/mbuf.h \
- slirp/sbuf.h slirp/socket.h slirp/if.h slirp/main.h slirp/misc.h \
- slirp/bootp.h slirp/tftp.h slirp/libslirp.h
+ ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
+ ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../pc_system.h \
+ netmod.h slirp/slirp.h ../../config.h slirp/slirp_config.h slirp/debug.h \
+ slirp/libslirp.h slirp/compat.h ../../qemu-queue.h slirp/ip.h \
+ slirp/tcp.h slirp/tcp_var.h slirp/tcpip.h slirp/tcp_timer.h slirp/udp.h \
+ slirp/ip_icmp.h slirp/mbuf.h slirp/sbuf.h slirp/socket.h slirp/if.h \
+ slirp/main.h slirp/misc.h slirp/bootp.h slirp/tftp.h slirp/libslirp.h
 eth_socket.o: eth_socket.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../\
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../pc_system.h netmod.h
+ ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
+ ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../pc_system.h \
+ netmod.h
 eth_tap.o: eth_tap.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../\
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../pc_system.h netmod.h
+ ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
+ ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../pc_system.h \
+ netmod.h
 eth_tuntap.o: eth_tuntap.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../\
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../pc_system.h netmod.h
+ ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
+ ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../pc_system.h \
+ netmod.h
 eth_vde.o: eth_vde.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../\
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../pc_system.h netmod.h
+ ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
+ ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../pc_system.h \
+ netmod.h
 eth_vnet.o: eth_vnet.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../\
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../pc_system.h netmod.h netutil.h
+ ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
+ ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../pc_system.h \
+ netmod.h netutil.h
 eth_win32.o: eth_win32.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../\
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../pc_system.h netmod.h
+ ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
+ ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../pc_system.h \
+ netmod.h
 ne2k.o: ne2k.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../\
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../param_names.h ../../pc_system.h \
- ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
+ ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../param_names.h \
+ ../../pc_system.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
  ../pci.h ne2k.h netmod.h
 netmod.o: netmod.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../\
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../gui/siminterface.h netmod.h
+ ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
+ ../../misc/bswap.h ../../plugin.h ../../extplugin.h \
+ ../../gui/siminterface.h netmod.h
 netutil.o: netutil.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../\
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../pc_system.h \
- netmod.h netutil.h
+ ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
+ ../../misc/bswap.h ../../pc_system.h netmod.h netutil.h
 pcipnic.o: pcipnic.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
- ../../osdep.h ../../gui/paramtree.h ../../logio.h ../\
+ ../../osdep.h ../../gui/paramtree.h ../../logio.h \
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
  ../../extplugin.h ../../param_names.h ../../pc_system.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
@@ -280,11 +276,10 @@ slirp/if.o: slirp/if.@CPP_SUFFIX@ slirp/slirp.h ../../config.h slirp/slirp_confi
  slirp/udp.h slirp/ip_icmp.h slirp/mbuf.h slirp/sbuf.h slirp/socket.h \
  slirp/if.h slirp/main.h slirp/misc.h slirp/bootp.h slirp/tftp.h \
  ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../\
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../param_names.h ../../pc_system.h \
- ../../bx_debug/debug.h ../../osdep.h ../../memory/memory-bochs.h \
- ../../gui/siminterface.h ../../gui/gui.h
+ ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
+ ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../param_names.h \
+ ../../pc_system.h ../../bx_debug/debug.h ../../osdep.h \
+ ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h
 slirp/ip_icmp.o: slirp/ip_icmp.@CPP_SUFFIX@ slirp/slirp.h ../../config.h \
  slirp/slirp_config.h slirp/debug.h slirp/libslirp.h slirp/compat.h \
  ../../qemu-queue.h slirp/ip.h slirp/tcp.h slirp/tcp_var.h slirp/tcpip.h \
@@ -324,11 +319,10 @@ slirp/slirp.o: slirp/slirp.@CPP_SUFFIX@ slirp/slirp.h ../../config.h slirp/slirp
  slirp/udp.h slirp/ip_icmp.h slirp/mbuf.h slirp/sbuf.h slirp/socket.h \
  slirp/if.h slirp/main.h slirp/misc.h slirp/bootp.h slirp/tftp.h \
  ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../\
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../param_names.h ../../pc_system.h \
- ../../bx_debug/debug.h ../../osdep.h ../../memory/memory-bochs.h \
- ../../gui/siminterface.h ../../gui/gui.h
+ ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
+ ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../param_names.h \
+ ../../pc_system.h ../../bx_debug/debug.h ../../osdep.h \
+ ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h
 slirp/socket.o: slirp/socket.@CPP_SUFFIX@ slirp/slirp.h ../../config.h \
  slirp/slirp_config.h slirp/debug.h slirp/libslirp.h slirp/compat.h \
  ../../qemu-queue.h slirp/ip.h slirp/tcp.h slirp/tcp_var.h slirp/tcpip.h \
@@ -370,74 +364,70 @@ slirp/udp.o: slirp/udp.@CPP_SUFFIX@ slirp/slirp.h ../../config.h slirp/slirp_con
  slirp/udp.h slirp/ip_icmp.h slirp/mbuf.h slirp/sbuf.h slirp/socket.h \
  slirp/if.h slirp/main.h slirp/misc.h slirp/bootp.h slirp/tftp.h
 e1000.lo: e1000.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../\
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../param_names.h ../../pc_system.h \
- ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
+ ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../param_names.h \
+ ../../pc_system.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
  ../pci.h netmod.h e1000.h
 eth_fbsd.lo: eth_fbsd.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../\
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../pc_system.h netmod.h
+ ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
+ ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../pc_system.h \
+ netmod.h
 eth_linux.lo: eth_linux.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../\
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../pc_system.h netmod.h
+ ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
+ ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../pc_system.h \
+ netmod.h
 eth_null.lo: eth_null.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../\
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../pc_system.h netmod.h
+ ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
+ ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../pc_system.h \
+ netmod.h
 eth_slirp.lo: eth_slirp.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../\
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../pc_system.h netmod.h slirp/slirp.h \
- ../../config.h slirp/slirp_config.h slirp/debug.h slirp/libslirp.h \
- slirp/compat.h ../../qemu-queue.h slirp/ip.h slirp/tcp.h slirp/tcp_var.h \
- slirp/tcpip.h slirp/tcp_timer.h slirp/udp.h slirp/ip_icmp.h slirp/mbuf.h \
- slirp/sbuf.h slirp/socket.h slirp/if.h slirp/main.h slirp/misc.h \
- slirp/bootp.h slirp/tftp.h slirp/libslirp.h
+ ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
+ ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../pc_system.h \
+ netmod.h slirp/slirp.h ../../config.h slirp/slirp_config.h slirp/debug.h \
+ slirp/libslirp.h slirp/compat.h ../../qemu-queue.h slirp/ip.h \
+ slirp/tcp.h slirp/tcp_var.h slirp/tcpip.h slirp/tcp_timer.h slirp/udp.h \
+ slirp/ip_icmp.h slirp/mbuf.h slirp/sbuf.h slirp/socket.h slirp/if.h \
+ slirp/main.h slirp/misc.h slirp/bootp.h slirp/tftp.h slirp/libslirp.h
 eth_socket.lo: eth_socket.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../\
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../pc_system.h netmod.h
+ ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
+ ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../pc_system.h \
+ netmod.h
 eth_tap.lo: eth_tap.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../\
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../pc_system.h netmod.h
+ ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
+ ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../pc_system.h \
+ netmod.h
 eth_tuntap.lo: eth_tuntap.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../\
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../pc_system.h netmod.h
+ ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
+ ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../pc_system.h \
+ netmod.h
 eth_vde.lo: eth_vde.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../\
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../pc_system.h netmod.h
+ ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
+ ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../pc_system.h \
+ netmod.h
 eth_vnet.lo: eth_vnet.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../\
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../pc_system.h netmod.h netutil.h
+ ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
+ ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../pc_system.h \
+ netmod.h netutil.h
 eth_win32.lo: eth_win32.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../\
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../pc_system.h netmod.h
+ ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
+ ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../pc_system.h \
+ netmod.h
 ne2k.lo: ne2k.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../\
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../param_names.h ../../pc_system.h \
- ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
+ ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../param_names.h \
+ ../../pc_system.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
  ../pci.h ne2k.h netmod.h
 netmod.lo: netmod.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../\
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../gui/siminterface.h netmod.h
+ ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
+ ../../misc/bswap.h ../../plugin.h ../../extplugin.h \
+ ../../gui/siminterface.h netmod.h
 netutil.lo: netutil.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../\
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../pc_system.h \
- netmod.h netutil.h
+ ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
+ ../../misc/bswap.h ../../pc_system.h netmod.h netutil.h
 pcipnic.lo: pcipnic.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
- ../../osdep.h ../../gui/paramtree.h ../../logio.h ../\
+ ../../osdep.h ../../gui/paramtree.h ../../logio.h \
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
  ../../extplugin.h ../../param_names.h ../../pc_system.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
@@ -476,11 +466,10 @@ slirp/if.lo: slirp/if.@CPP_SUFFIX@ slirp/slirp.h ../../config.h slirp/slirp_conf
  slirp/udp.h slirp/ip_icmp.h slirp/mbuf.h slirp/sbuf.h slirp/socket.h \
  slirp/if.h slirp/main.h slirp/misc.h slirp/bootp.h slirp/tftp.h \
  ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../\
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../param_names.h ../../pc_system.h \
- ../../bx_debug/debug.h ../../osdep.h ../../memory/memory-bochs.h \
- ../../gui/siminterface.h ../../gui/gui.h
+ ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
+ ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../param_names.h \
+ ../../pc_system.h ../../bx_debug/debug.h ../../osdep.h \
+ ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h
 slirp/ip_icmp.lo: slirp/ip_icmp.@CPP_SUFFIX@ slirp/slirp.h ../../config.h \
  slirp/slirp_config.h slirp/debug.h slirp/libslirp.h slirp/compat.h \
  ../../qemu-queue.h slirp/ip.h slirp/tcp.h slirp/tcp_var.h slirp/tcpip.h \
@@ -520,11 +509,10 @@ slirp/slirp.lo: slirp/slirp.@CPP_SUFFIX@ slirp/slirp.h ../../config.h slirp/slir
  slirp/udp.h slirp/ip_icmp.h slirp/mbuf.h slirp/sbuf.h slirp/socket.h \
  slirp/if.h slirp/main.h slirp/misc.h slirp/bootp.h slirp/tftp.h \
  ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../\
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../param_names.h ../../pc_system.h \
- ../../bx_debug/debug.h ../../osdep.h ../../memory/memory-bochs.h \
- ../../gui/siminterface.h ../../gui/gui.h
+ ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
+ ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../param_names.h \
+ ../../pc_system.h ../../bx_debug/debug.h ../../osdep.h \
+ ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h
 slirp/socket.lo: slirp/socket.@CPP_SUFFIX@ slirp/slirp.h ../../config.h \
  slirp/slirp_config.h slirp/debug.h slirp/libslirp.h slirp/compat.h \
  ../../qemu-queue.h slirp/ip.h slirp/tcp.h slirp/tcp_var.h slirp/tcpip.h \
