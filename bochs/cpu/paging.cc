@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2019  The Bochs Project
+//  Copyright (C) 2001-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -824,7 +824,7 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
 
     unsigned priv_index = (BX_CPU_THIS_PTR cr0.get_WP() << 4) | // bit 4
                           (user<<3) |                           // bit 3
-                          (combined_access | isWrite);          // bit 2,1,0
+                          (combined_access | (unsigned)isWrite);// bit 2,1,0
 
     if (!priv_check[priv_index] || nx_fault)
       page_fault(ERROR_PROTECTION, laddr, user, rw);
@@ -1071,7 +1071,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
 
     unsigned priv_index = (BX_CPU_THIS_PTR cr0.get_WP() << 4) | // bit 4
                           (user<<3) |                           // bit 3
-                          (combined_access | isWrite);          // bit 2,1,0
+                          (combined_access | (unsigned)isWrite);// bit 2,1,0
 
     if (!priv_check[priv_index] || nx_fault)
       page_fault(ERROR_PROTECTION, laddr, user, rw);
@@ -1221,7 +1221,7 @@ bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_m
         (BX_CPU_THIS_PTR cr0.get_WP() << 4) |   // bit 4
 #endif
         (user<<3) |                             // bit 3
-        (combined_access | isWrite);            // bit 2,1,0
+        (combined_access | (unsigned)isWrite);  // bit 2,1,0
 
     if (!priv_check[priv_index])
       page_fault(ERROR_PROTECTION, laddr, user, rw);
