@@ -1,6 +1,6 @@
 Bochs - The cross platform IA-32 (x86) emulator
-Updated: Sun Jun 13 07:15:00 CEST 2021
-Version: 2.7.pre1
+Updated: Sun Aug  1 10:07:00 CEST 2021
+Version: 2.7
 
 WHAT IS BOCHS?
 
@@ -81,7 +81,9 @@ many ways you could help out.  For example:
 
 CHANGES
 
-Brief summary of changes in 2.7.pre1:
+Brief summary of changes in 2.7:
+  - Bugfixes for CPU emulation correctness (CPUID/VMX/SVM fixes to support
+    Windows Hyper-V as guest in Bochs)
   - Improvements for the plugin handling to simplify Bochs extensions
   - Added "multiple NICs" support to the NE2000 and E1000 devices
   - Added experimental FTP service for networking modules 'vnet' and 'socket'
