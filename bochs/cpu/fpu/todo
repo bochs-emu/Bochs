@@ -1,0 +1,7 @@
+TODO:
+----
+
+Elliminate floa128 use, Intel uses only 67-bit precision calculations
+when float128 has at least 112-bit. Replacement of float128 with for
+example 96-bit precision number could significantly speed up
+calculations.

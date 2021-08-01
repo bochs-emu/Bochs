@@ -1,0 +1,20 @@
+1 VERSIONINFO
+FILEVERSION @VER_MAJOR@, @VER_MINOR@, @VER_REVISION@, @VER_SVN@
+{
+ BLOCK "StringFileInfo"
+ {
+  BLOCK "040904B0"
+  {
+   VALUE "FileDescription", "The cross platform IA-32 emulator"
+   VALUE "FileVersion", "@VERSION@"
+   VALUE "LegalCopyright", "Copyright \251 2001-2019 The Bochs Project"
+   VALUE "ProductName", "Bochs"
+   VALUE "ProductVersion", "@REL_STRING@"
+   VALUE "OriginalFilename", "BOCHS.EXE"
+  }
+ }
+ BLOCK "VarFileInfo"
+ {
+   VALUE "Translation", 1033, 1300
+ }
+}

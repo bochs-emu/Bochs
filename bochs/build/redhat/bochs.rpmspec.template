@@ -1,0 +1,81 @@
+Summary: Bochs Project x86 PC Emulator
+Name: bochs
+Version: @SEDVERSION@
+Release: 1
+License: LGPL
+Group: Applications/Emulators
+URL:https://bochs.sourceforge.io
+Packager:Volker Ruppert <vruppert@users.sourceforge.net>
+Source:bochs-@SEDVERSION@.tar.gz
+BuildRoot: /var/tmp/%{name}-buildroot
+
+%description
+Bochs is a highly portable open source IA-32 (x86) PC emulator written
+in C++, that runs on most popular platforms. It includes emulation of
+the Intel x86 CPU, common I/O devices, and a custom BIOS. Currently,
+Bochs can be compiled to emulate a 386, 486, Pentium, Pentium Pro or
+AMD64 CPU, including optional MMX, SSEx and 3DNow! instructions.
+Bochs is capable of running most Operating Systems inside the emulation
+including Linux, DOS, Windows 9X/NT/2000/XP or Windows 7.
+
+%define pkg_name bochs
+
+%prep
+	rm -rf $RPM_BUILD_DIR/bochs-@SEDVERSION@
+	tar xzvf $RPM_SOURCE_DIR/bochs-@SEDVERSION@.tar.gz
+	if test "/" != $RPM_BUILD_ROOT; then
+	  rm -rf $RPM_BUILD_ROOT
+	fi
+%build
+	cd $RPM_BUILD_DIR/bochs-@SEDVERSION@
+	CONFIGURE_ARGS="--prefix=/usr --mandir=$RPM_BUILD_ROOT/%{_mandir}"
+	export CONFIGURE_ARGS
+	sh .conf.linux
+	make
+	make unpack_dlx   # must use prefix=/usr since this step sets up
+                          # the paths in dlx bochsrc file.
+%install
+	pwd
+	cd $RPM_BUILD_DIR/bochs-@SEDVERSION@
+	for i in "" usr usr/bin usr/lib usr/share usr/share/doc %{_mandir}; do 
+	  if ! test -d $RPM_BUILD_ROOT/$i; then mkdir $RPM_BUILD_ROOT/$i; fi
+	done
+	make install install_dlx prefix=$RPM_BUILD_ROOT/usr
+	# Build list of plugins on the fly (if any).  This allows the
+	# spec file to support RPM building with or without plugins.
+	cd $RPM_BUILD_ROOT
+	find .%{_libdir} -type d | sed '1,2d;s,^\.,\%attr(-\,root\,root) \%dir ,' > \
+	  $RPM_BUILD_DIR/file.list.%{pkg_name}
+	find .%{_libdir} -type f | sed -e 's,^\.,\%attr(-\,root\,root) ,' \
+	  -e '/\/etc\//s|^|%config|' >> \
+	  $RPM_BUILD_DIR/file.list.%{pkg_name}
+	find .%{_libdir} -type l | sed 's,^\.,\%attr(-\,root\,root) ,' >> \
+	  $RPM_BUILD_DIR/file.list.%{pkg_name}
+	# We could use the same technique to produce the complete file list,
+	# with only one very minor problem: it lists directories that are
+	# used by other programs, so when you remove the package you get
+	# errors like
+	#   error: cannot remove /usr/share/doc - directory not empty
+
+%files -f file.list.%{pkg_name}
+%defattr(-, root, root)
+	/usr/bin/bochs
+	/usr/bin/bochs-dlx
+	/usr/bin/bxhub
+	/usr/bin/bximage
+	/usr/share/bochs/*
+	/usr/share/doc/*
+	%{_mandir}/*
+
+%clean
+	rm -rf $RPM_BUILD_DIR/bochs-@SEDVERSION@
+	rm -rf $RPM_BUILD_DIR/file.list.%{pkg_name}
+	if test "/" != $RPM_BUILD_ROOT; then
+	  rm -rf $RPM_BUILD_ROOT
+	fi
+%preun
+	# clean up the bochsout.txt that is always produced if you 
+	# run bochs-dlx.
+	rm -rf /usr/share/bochs/dlxlinux/bochsout.txt
+%postun
+	rmdir /usr/share/bochs > /dev/null 2>&1

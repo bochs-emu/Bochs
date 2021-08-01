@@ -1,0 +1,108 @@
+.\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
+.TH bximage 1 "9 Jan 2021" "bximage" "The Bochs Project"
+.\"SKIP_SECTION"
+.SH NAME
+bximage \- Interactive Disk Image Creation, Conversion, Resize and
+Redolog Commit Tool for Bochs
+.\"SKIP_SECTION"
+.SH SYNOPSIS
+.B bximage
+.RI \|[ options \|]
+.RI \|[ filename1 \|]
+.RI \|[ filename2 \|]
+.\"SKIP_SECTION"
+.SH DESCRIPTION
+.LP
+Bximage is an easy to use console based tool for creating,
+converting and resizing disk images, particularly for  use
+with Bochs. It also  supports committing  redolog files to
+their  base images.  It is  completely  interactive  if no
+command line  arguments are used.  It can be switched to a
+non-interactive mode  if all required parameters are given
+in the command line.
+.\".\"DONT_SPLIT"
+.SH OPTIONS
+.LP
+When you run bximage without one of the following options,
+it will  appear  in  interactive  mode and  ask   for  all
+required parameters to manipulate an image.
+.TP
+.BI \-func=...
+Operation to perform (create, convert, resize, commit, info)
+.TP
+.BI \-fd=...
+Create: floppy image with size code (e.g. 360k, 720k, 1.44M)
+.TP
+.BI \-hd=...
+Create/resize: hard disk image with size in megabytes (M)
+or gigabytes (G)
+.TP
+.BI \-imgmode=...
+Create/convert: hard disk image mode - see the
+.I bochsrc
+sample for supported options.
+.TP
+.BI \-b
+Convert/resize: create a backup of the source image. Commit:
+create backups of base image and redolog file.
+.TP
+.BI \-q
+Quiet  mode (don't prompt for user input). Without this
+option bximage uses the  command  line parameters as
+defaults for the interactive mode. If this option is
+given and one of the required parameters is missing,
+bximage will fall back to interactive mode.
+.TP
+.BI \--help
+Print  a  summary  of  the command line options for
+bximage and exit.
+.LP
+The
+.I filename1
+parameter specifies the name of the new image (create),
+the source image (convert/resize) or the base image
+(commit).
+.LP
+The
+.I filename2
+parameter specifies the name of the destination image
+(convert/resize) or the redolog (journal) file (commit).
+.\"SKIP_SECTION"
+.SH LICENSE
+This program  is distributed  under the terms of the  GNU
+Lesser General Public License as published  by  the  Free
+Software  Foundation.  See the LICENSE and COPYING files located
+in /usr/share/doc/bochs/ for details on the license and
+the lack of warranty.
+.\"SKIP_SECTION"
+.SH AVAILABILITY
+The latest version of this program can be found at:
+  http://bochs.sourceforge.net/getcurrent.html
+.\"SKIP_SECTION"
+.SH SEE ALSO
+bochs(1), bochsrc(5), bochs-dlx(1)
+.PP
+.nf
+The Bochs IA-32 Emulator site on the World Wide Web:
+  http://bochs.sourceforge.net
+
+Online Bochs Documentation
+	http://bochs.sourceforge.net/doc/docbook
+.fi
+.\"SKIP_SECTION"
+.SH AUTHORS
+The original version of bximage  was written  by Bryce Denney,
+based on  several similar tools from the bochs-developers list.
+The support for converting and resizing images has been added
+by Volker Ruppert.
+.\"SKIP_SECTION"
+.SH BUGS
+Please  report all  bugs to the bug tracker  on  our  web
+site. Just go to http://bochs.sourceforge.net, and click
+"Bug Reports" on the sidebar under "Feedback."
+.PP
+Provide a detailed description of the bug, the version of
+the program you are running, the operating system you are
+running the program on  and  the  operating   system  you
+are running in the emulator.
+

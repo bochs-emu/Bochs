@@ -1,0 +1,460 @@
+# Copyright (C) 2001-2021  The Bochs Project
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2 of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+
+# Makefile for the gui component of bochs
+
+
+@SUFFIX_LINE@
+
+prefix          = @prefix@
+exec_prefix     = @exec_prefix@
+srcdir          = @srcdir@
+VPATH = @srcdir@
+bindir          = @bindir@
+libdir          = @libdir@
+datarootdir     = @datarootdir@
+mandir          = @mandir@
+man1dir         = $(mandir)/man1
+man5dir         = $(mandir)/man5
+docdir          = $(datarootdir)/doc/bochs
+sharedir        = $(datarootdir)/bochs
+top_builddir    = ..
+top_srcdir      = @top_srcdir@
+
+SHELL = @SHELL@
+
+@SET_MAKE@
+
+CXX = @CXX@
+CXXFLAGS = $(BX_INCDIRS) @CXXFLAGS@  @GUI_CXXFLAGS@
+LOCAL_CXXFLAGS = @TOOLKIT_CXXFLAGS@
+LDFLAGS = @LDFLAGS@
+LIBS = @LIBS@
+X_CFLAGS = @X_CFLAGS@
+RANLIB = @RANLIB@
+PLUGIN_PATH=@libdir@
+top_builddir    = ..
+LIBTOOL=@LIBTOOL@
+WIN32_DLL_IMPORT_LIBRARY=../@WIN32_DLL_IMPORT_LIB@
+BX_INCDIRS = -I.. -I$(srcdir)/.. -I../iodev -I$(srcdir)/../iodev -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMENT_DIR@
+
+GUI_OBJS_X11  = x.o
+GUI_OBJS_SDL = sdl.o
+GUI_OBJS_SDL2 = sdl2.o
+GUI_OBJS_WIN32 = win32.o
+GUI_OBJS_MACOS = macintosh.o
+GUI_OBJS_CARBON = carbon.o
+GUI_OBJS_NOGUI = nogui.o
+GUI_OBJS_TERM  = term.o
+GUI_OBJS_RFB = rfb.o
+GUI_OBJS_VNCSRV = vncsrv.o
+GUI_OBJS_AMIGAOS = amigaos.o
+GUI_OBJS_WX = wx.o
+GUI_OBJS_WX_SUPPORT = wxmain.o wxdialog.o
+
+CI_OBJS_WIN32 = win32config.o
+CI_OBJS_WIN32_SUPPORT = win32paramdlg.o scrollwin.o
+
+GUI_DLL_TARGETS = @GUI_DLL_TARGETS@
+OBJS_THAT_CANNOT_BE_PLUGINS = keymap.o gui.o siminterface.o paramtree.o @ENH_DBG_OBJS@
+
+X_LIBS = @X_LIBS@
+X_PRE_LIBS = @X_PRE_LIBS@
+GUI_LINK_OPTS_X = $(X_LIBS) $(X_PRE_LIBS)
+GUI_LINK_OPTS_SDL = @GUI_LINK_OPTS_SDL@
+GUI_LINK_OPTS_SDL2 = @GUI_LINK_OPTS_SDL2@
+GUI_LINK_OPTS_RFB = @RFB_LIBS@
+GUI_LINK_OPTS_RFB_VCPP = user32.lib @RFB_LIBS@
+GUI_LINK_OPTS_VNCSRV = @GUI_LINK_OPTS_VNCSRV@
+GUI_LINK_OPTS_AMIGAOS =
+GUI_LINK_OPTS_WIN32 = -luser32 -lgdi32 -lcomctl32
+GUI_LINK_OPTS_WIN32_VCPP = user32.lib gdi32.lib comctl32.lib
+GUI_LINK_OPTS_MACOS =
+GUI_LINK_OPTS_CARBON = -framework Carbon
+GUI_LINK_OPTS_NOGUI =
+GUI_LINK_OPTS_TERM = @GUI_LINK_OPTS_TERM@
+GUI_LINK_OPTS_WX = @GUI_LINK_OPTS_WX@
+
+CI_LINK_OPTS_WIN32 = -luser32 -lgdi32 -lcomctl32 -lcomdlg32 -lshell32
+CI_LINK_OPTS_WIN32_VCPP = user32.lib gdi32.lib comctl32.lib comdlg32.lib shell32.lib
+
+GUI_PLUGIN_OBJS = @SPECIFIC_GUI_OBJS@
+CI_PLUGIN_OBJS = @CI_PLUGIN_OBJS@
+OBJS_THAT_CAN_BE_PLUGINS = $(GUI_PLUGIN_OBJS) $(CI_PLUGIN_OBJS)
+OBJS_THAT_SUPPORT_OTHER_PLUGINS = @SPECIFIC_GUI_SUPPORT_OBJS@ @CI_SUPPORT_OBJS@
+NONPLUGIN_OBJS = @GUI_NON_PLUGIN_OBJS@
+
+#
+# -------- end configurable options --------------------------
+#
+
+all: libgui.a
+
+plugins: @PLUGIN_TARGET_2@
+
+plugins_gcc: $(GUI_PLUGIN_OBJS:@GUI_PLUGIN_NAME_TRANSFORMATION@) $(CI_PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
+
+plugins_msvc: $(GUI_DLL_TARGETS) bx_textconfig.dll bx_win32config.dll
+
+libgui.a: $(NONPLUGIN_OBJS)
+	@RMCOMMAND@ libgui.a
+	@MAKELIB@ $(NONPLUGIN_OBJS)
+	$(RANLIB) libgui.a
+
+# standard compile rule for C++ files
+.@CPP_SUFFIX@.o:
+	$(CXX) @DASH@c  $(CXXFLAGS) $(LOCAL_CXXFLAGS) @CXXFP@$< @OFP@$@
+
+##### building plugins with libtool
+%.lo: %.@CPP_SUFFIX@
+	$(LIBTOOL) --mode=compile --tag CXX $(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
+
+libbx_%_gui.la: %.lo
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH)
+
+libbx_x_gui.la: x.lo
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_X)
+
+libbx_sdl_gui.la: sdl.lo
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_SDL)
+
+libbx_sdl2_gui.la: sdl2.lo
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_SDL2)
+
+libbx_rfb_gui.la: rfb.lo
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_RFB)
+
+libbx_vncsrv_gui.la: vncsrv.lo
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_VNCSRV)
+
+libbx_amigaos_gui.la: amigaos.lo
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_AMIGAOS)
+
+libbx_win32_gui.la: win32.lo
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_WIN32)
+
+libbx_macos_gui.la: macos.lo
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_MACOS)
+
+libbx_carbon_gui.la: carbon.lo
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_CARBON)
+
+libbx_nogui_gui.la: nogui.lo
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_NOGUI)
+
+libbx_term_gui.la: term.lo
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH) $(GUI_LINK_OPTS_TERM)
+
+libbx_textconfig.la: textconfig.lo
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH)
+
+# special link rules for plugins that require more than one object file
+libbx_wx_gui.la: $(GUI_OBJS_WX:.o=.lo) $(GUI_OBJS_WX_SUPPORT:.o=.lo)
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $(GUI_OBJS_WX:.o=.lo) $(GUI_OBJS_WX_SUPPORT:.o=.lo) -o $@ -rpath $(PLUGIN_PATH)  $(GUI_LINK_OPTS_WX)
+
+#### building DLLs for win32 (Cygwin and MinGW/MSYS)
+bx_%_gui.dll: %.o
+	$(CXX) $(CXXFLAGS) -shared -o $@ $< $(WIN32_DLL_IMPORT_LIBRARY)  $(GUI_LINK_OPTS_WIN32)
+
+bx_wx_gui.dll: $(GUI_OBJS_WX) $(GUI_OBJS_WX_SUPPORT)
+	$(CXX) $(CXXFLAGS) -shared -o bx_wx_gui.dll $(GUI_OBJS_WX) $(GUI_OBJS_WX_SUPPORT) $(WIN32_DLL_IMPORT_LIBRARY) `wx-config --libs` -luser32 -lgdi32 -lcomdlg32 -lcomctl32
+
+bx_sdl_gui.dll: $(GUI_OBJS_SDL)
+	$(CXX) $(CXXFLAGS) -shared -o bx_sdl_gui.dll $(GUI_OBJS_SDL) $(WIN32_DLL_IMPORT_LIBRARY) $(GUI_LINK_OPTS_SDL)
+
+bx_sdl2_gui.dll: $(GUI_OBJS_SDL2)
+	$(CXX) $(CXXFLAGS) -shared -o bx_sdl2_gui.dll $(GUI_OBJS_SDL2) $(WIN32_DLL_IMPORT_LIBRARY) $(GUI_LINK_OPTS_SDL2)
+
+bx_vncsrv_gui.dll: $(GUI_OBJS_VNCSRV)
+	$(CXX) $(CXXFLAGS) -shared -o bx_vncsrv.dll $(GUI_OBJS_VNCSRV) $(WIN32_DLL_IMPORT_LIBRARY) $(GUI_LINK_OPTS_VNCSRV)
+
+# special link rules for plugins with Cygwin, MinGW/MSYS and MSVC nmake
+bx_nogui_gui.dll: $(GUI_OBJS_NOGUI)
+	@LINK_DLL@ $(GUI_OBJS_NOGUI) $(WIN32_DLL_IMPORT_LIBRARY)
+
+bx_rfb_gui.dll: $(GUI_OBJS_RFB)
+	@LINK_DLL@ $(GUI_OBJS_RFB) $(WIN32_DLL_IMPORT_LIBRARY) $(GUI_LINK_OPTS_RFB@LINK_VAR@)
+
+bx_win32_gui.dll: $(GUI_OBJS_WIN32)
+	@LINK_DLL@ $(GUI_OBJS_WIN32) $(WIN32_DLL_IMPORT_LIBRARY) $(GUI_LINK_OPTS_WIN32@LINK_VAR@)
+
+bx_textconfig.dll: textconfig.o
+	@LINK_DLL@ textconfig.o $(WIN32_DLL_IMPORT_LIBRARY)
+
+bx_win32config.dll: $(CI_OBJS_WIN32) $(CI_OBJS_WIN32_SUPPORT)
+	@LINK_DLL@ $(CI_OBJS_WIN32) $(CI_OBJS_WIN32_SUPPORT) $(WIN32_DLL_IMPORT_LIBRARY) $(CI_LINK_OPTS_WIN32@LINK_VAR@)
+
+##### end DLL section
+
+clean:
+	@RMCOMMAND@ -rf .libs *.la *.a *.lo *.o *.dll *.exp *.lib
+
+dist-clean: clean
+	@RMCOMMAND@ Makefile
+
+###########################################
+# all other dependencies generated by
+#  gcc -MM -I.. -I../iodev -I../instrument/stubs *.cc | \
+#     sed -e 's/\.cc/.@CPP_SUFFIX@/g'
+#  gcc -MM -I.. -I../iodev -I../instrument/stubs *.cc | \
+#     sed -e 's/\.cc/.@CPP_SUFFIX@/g' -e 's/\.o:/.lo:/g'
+#
+# This means that every source file is listed twice, once with a .o rule
+# and then again with an identical .lo rule.  The .lo rules are used when
+# building plugins.
+###########################################
+amigaos.o: amigaos.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+ ../gui/paramtree.h ../logio.h \
+ ../instrument/stubs/instrument.h ../misc/bswap.h ../bxversion.h \
+ ../param_names.h ../iodev/iodev.h ../plugin.h ../extplugin.h \
+ ../pc_system.h ../bx_debug/debug.h ../config.h ../osdep.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/gui.h
+carbon.o: carbon.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../gui/paramtree.h \
+ ../logio.h ../instrument/stubs/instrument.h ../misc/bswap.h \
+ keymap.h ../iodev/iodev.h ../plugin.h ../extplugin.h ../param_names.h \
+ ../pc_system.h ../bx_debug/debug.h ../config.h ../osdep.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/gui.h
+enh_dbg.o: enh_dbg.@CPP_SUFFIX@ ../config.h
+gtk_enh_dbg_osdep.o: gtk_enh_dbg_osdep.@CPP_SUFFIX@ ../bochs.h ../config.h \
+ ../osdep.h ../gui/paramtree.h ../logio.h \
+ ../instrument/stubs/instrument.h ../misc/bswap.h ../bx_debug/debug.h \
+ ../config.h ../osdep.h siminterface.h enh_dbg.h
+gui.o: gui.@CPP_SUFFIX@ ../iodev/iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../gui/paramtree.h ../logio.h \
+ ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
+ ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
+ ../gui/gui.h ../iodev/virt_timer.h keymap.h ../gui/bitmaps/floppya.h \
+ ../gui/bitmaps/floppyb.h ../gui/bitmaps/mouse.h ../gui/bitmaps/reset.h \
+ ../gui/bitmaps/power.h ../gui/bitmaps/snapshot.h ../gui/bitmaps/copy.h \
+ ../gui/bitmaps/paste.h ../gui/bitmaps/configbutton.h \
+ ../gui/bitmaps/cdromd.h ../gui/bitmaps/userbutton.h \
+ ../gui/bitmaps/saverestore.h sdl.h
+keymap.o: keymap.@CPP_SUFFIX@ ../param_names.h ../bochs.h ../config.h ../osdep.h \
+ ../gui/paramtree.h ../logio.h \
+ ../instrument/stubs/instrument.h ../misc/bswap.h gui.h \
+ ../gui/siminterface.h keymap.h
+macintosh.o: macintosh.@CPP_SUFFIX@ ../param_names.h ../bochs.h ../config.h \
+ ../osdep.h ../gui/paramtree.h ../logio.h \
+ ../instrument/stubs/instrument.h ../misc/bswap.h ../iodev/iodev.h \
+ ../plugin.h ../extplugin.h ../pc_system.h ../bx_debug/debug.h \
+ ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
+ ../gui/gui.h
+nogui.o: nogui.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../gui/paramtree.h \
+ ../logio.h ../instrument/stubs/instrument.h ../misc/bswap.h \
+ gui.h ../gui/siminterface.h ../plugin.h ../extplugin.h ../param_names.h \
+ icon_bochs.h
+paramtree.o: paramtree.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+ ../gui/paramtree.h ../logio.h \
+ ../instrument/stubs/instrument.h ../misc/bswap.h siminterface.h \
+ paramtree.h
+rfb.o: rfb.@CPP_SUFFIX@ ../param_names.h ../iodev/iodev.h ../bochs.h ../config.h \
+ ../osdep.h ../gui/paramtree.h ../logio.h \
+ ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../extplugin.h ../pc_system.h ../bx_debug/debug.h ../config.h ../osdep.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/gui.h keymap.h \
+ icon_bochs.h font/vga.bitmap.h sdl.h rfb.h rfbkeys.h ../bxthread.h
+scrollwin.o: scrollwin.@CPP_SUFFIX@ ../config.h
+sdl2.o: sdl2.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../gui/paramtree.h \
+ ../logio.h ../instrument/stubs/instrument.h ../misc/bswap.h \
+ ../param_names.h keymap.h ../iodev/iodev.h ../plugin.h ../extplugin.h \
+ ../pc_system.h ../bx_debug/debug.h ../config.h ../osdep.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/gui.h icon_bochs.h \
+ sdl.h sdlkeys.h
+sdl.o: sdl.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../gui/paramtree.h \
+ ../logio.h ../instrument/stubs/instrument.h ../misc/bswap.h \
+ ../param_names.h keymap.h ../iodev/iodev.h ../plugin.h ../extplugin.h \
+ ../pc_system.h ../bx_debug/debug.h ../config.h ../osdep.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/gui.h
+siminterface.o: siminterface.@CPP_SUFFIX@ ../param_names.h ../iodev/iodev.h \
+ ../bochs.h ../config.h ../osdep.h ../gui/paramtree.h ../logio.h \
+ ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../extplugin.h ../pc_system.h ../bx_debug/debug.h ../config.h ../osdep.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/gui.h \
+ ../iodev/virt_timer.h
+term.o: term.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../gui/paramtree.h \
+ ../logio.h ../instrument/stubs/instrument.h ../misc/bswap.h \
+ ../param_names.h ../iodev/iodev.h ../plugin.h ../extplugin.h \
+ ../pc_system.h ../bx_debug/debug.h ../config.h ../osdep.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/gui.h
+textconfig.o: textconfig.@CPP_SUFFIX@ ../config.h ../osdep.h ../bx_debug/debug.h \
+ ../param_names.h ../logio.h paramtree.h siminterface.h ../plugin.h \
+ ../extplugin.h
+vncsrv.o: vncsrv.@CPP_SUFFIX@ ../param_names.h ../iodev/iodev.h ../bochs.h \
+ ../config.h ../osdep.h ../gui/paramtree.h ../logio.h \
+ ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../extplugin.h ../pc_system.h ../bx_debug/debug.h ../config.h ../osdep.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/gui.h keymap.h \
+ icon_bochs.h font/vga.bitmap.h sdl.h rfb.h rfbkeys.h ../bxthread.h
+win32.o: win32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../gui/paramtree.h \
+ ../logio.h ../instrument/stubs/instrument.h ../misc/bswap.h \
+ ../param_names.h keymap.h ../iodev/iodev.h ../plugin.h ../extplugin.h \
+ ../pc_system.h ../bx_debug/debug.h ../config.h ../osdep.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/gui.h
+win32config.o: win32config.@CPP_SUFFIX@ win32dialog.h ../config.h ../bochs.h \
+ ../config.h ../osdep.h ../gui/paramtree.h ../logio.h \
+ ../instrument/stubs/instrument.h ../misc/bswap.h ../bx_debug/debug.h \
+ ../osdep.h ../param_names.h gui.h ../gui/siminterface.h win32res.h \
+ win32paramdlg.h ../plugin.h ../extplugin.h
+win32_enh_dbg_osdep.o: win32_enh_dbg_osdep.@CPP_SUFFIX@ ../bochs.h ../config.h \
+ ../osdep.h ../gui/paramtree.h ../logio.h \
+ ../instrument/stubs/instrument.h ../misc/bswap.h ../bx_debug/debug.h \
+ ../config.h ../osdep.h siminterface.h win32dialog.h enh_dbg.h
+win32paramdlg.o: win32paramdlg.@CPP_SUFFIX@ win32dialog.h ../config.h ../bochs.h \
+ ../config.h ../osdep.h ../gui/paramtree.h ../logio.h \
+ ../instrument/stubs/instrument.h ../misc/bswap.h siminterface.h \
+ win32res.h
+wx.o: wx.@CPP_SUFFIX@ ../config.h ../bochs.h ../config.h ../osdep.h \
+ ../gui/paramtree.h ../logio.h \
+ ../instrument/stubs/instrument.h ../misc/bswap.h ../param_names.h \
+ keymap.h ../iodev/iodev.h ../plugin.h ../extplugin.h ../pc_system.h \
+ ../bx_debug/debug.h ../osdep.h ../memory/memory-bochs.h \
+ ../gui/siminterface.h ../gui/gui.h font/vga.bitmap.h wxmain.h
+wxdialog.o: wxdialog.@CPP_SUFFIX@ ../config.h ../param_names.h ../osdep.h \
+ ../gui/paramtree.h ../gui/siminterface.h ../logio.h wxdialog.h wxmain.h
+wxmain.o: wxmain.@CPP_SUFFIX@ ../config.h ../param_names.h ../osdep.h \
+ ../gui/paramtree.h ../gui/siminterface.h ../bxversion.h wxdialog.h \
+ wxmain.h ../extplugin.h bitmaps/cdromd.xpm bitmaps/copy.xpm \
+ bitmaps/floppya.xpm bitmaps/floppyb.xpm bitmaps/paste.xpm \
+ bitmaps/power.xpm bitmaps/reset.xpm bitmaps/snapshot.xpm \
+ bitmaps/mouse.xpm bitmaps/userbutton.xpm bitmaps/saverestore.xpm
+x.o: x.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../gui/paramtree.h ../logio.h \
+ ../instrument/stubs/instrument.h ../misc/bswap.h \
+ ../param_names.h keymap.h ../iodev/iodev.h ../plugin.h ../extplugin.h \
+ ../pc_system.h ../bx_debug/debug.h ../config.h ../osdep.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/gui.h enh_dbg.h \
+ icon_bochs.h font/vga.bitmap.h
+amigaos.lo: amigaos.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+ ../gui/paramtree.h ../logio.h \
+ ../instrument/stubs/instrument.h ../misc/bswap.h ../bxversion.h \
+ ../param_names.h ../iodev/iodev.h ../plugin.h ../extplugin.h \
+ ../pc_system.h ../bx_debug/debug.h ../config.h ../osdep.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/gui.h
+carbon.lo: carbon.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../gui/paramtree.h \
+ ../logio.h ../instrument/stubs/instrument.h ../misc/bswap.h \
+ keymap.h ../iodev/iodev.h ../plugin.h ../extplugin.h ../param_names.h \
+ ../pc_system.h ../bx_debug/debug.h ../config.h ../osdep.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/gui.h
+enh_dbg.lo: enh_dbg.@CPP_SUFFIX@ ../config.h
+gtk_enh_dbg_osdep.lo: gtk_enh_dbg_osdep.@CPP_SUFFIX@ ../bochs.h ../config.h \
+ ../osdep.h ../gui/paramtree.h ../logio.h \
+ ../instrument/stubs/instrument.h ../misc/bswap.h ../bx_debug/debug.h \
+ ../config.h ../osdep.h siminterface.h enh_dbg.h
+gui.lo: gui.@CPP_SUFFIX@ ../iodev/iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../gui/paramtree.h ../logio.h \
+ ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
+ ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
+ ../gui/gui.h ../iodev/virt_timer.h keymap.h ../gui/bitmaps/floppya.h \
+ ../gui/bitmaps/floppyb.h ../gui/bitmaps/mouse.h ../gui/bitmaps/reset.h \
+ ../gui/bitmaps/power.h ../gui/bitmaps/snapshot.h ../gui/bitmaps/copy.h \
+ ../gui/bitmaps/paste.h ../gui/bitmaps/configbutton.h \
+ ../gui/bitmaps/cdromd.h ../gui/bitmaps/userbutton.h \
+ ../gui/bitmaps/saverestore.h sdl.h
+keymap.lo: keymap.@CPP_SUFFIX@ ../param_names.h ../bochs.h ../config.h ../osdep.h \
+ ../gui/paramtree.h ../logio.h \
+ ../instrument/stubs/instrument.h ../misc/bswap.h gui.h \
+ ../gui/siminterface.h keymap.h
+macintosh.lo: macintosh.@CPP_SUFFIX@ ../param_names.h ../bochs.h ../config.h \
+ ../osdep.h ../gui/paramtree.h ../logio.h \
+ ../instrument/stubs/instrument.h ../misc/bswap.h ../iodev/iodev.h \
+ ../plugin.h ../extplugin.h ../pc_system.h ../bx_debug/debug.h \
+ ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
+ ../gui/gui.h
+nogui.lo: nogui.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../gui/paramtree.h \
+ ../logio.h ../instrument/stubs/instrument.h ../misc/bswap.h \
+ gui.h ../gui/siminterface.h ../plugin.h ../extplugin.h ../param_names.h \
+ icon_bochs.h
+paramtree.lo: paramtree.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+ ../gui/paramtree.h ../logio.h \
+ ../instrument/stubs/instrument.h ../misc/bswap.h siminterface.h \
+ paramtree.h
+rfb.lo: rfb.@CPP_SUFFIX@ ../param_names.h ../iodev/iodev.h ../bochs.h ../config.h \
+ ../osdep.h ../gui/paramtree.h ../logio.h \
+ ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../extplugin.h ../pc_system.h ../bx_debug/debug.h ../config.h ../osdep.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/gui.h keymap.h \
+ icon_bochs.h font/vga.bitmap.h sdl.h rfb.h rfbkeys.h ../bxthread.h
+scrollwin.lo: scrollwin.@CPP_SUFFIX@ ../config.h
+sdl2.lo: sdl2.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../gui/paramtree.h \
+ ../logio.h ../instrument/stubs/instrument.h ../misc/bswap.h \
+ ../param_names.h keymap.h ../iodev/iodev.h ../plugin.h ../extplugin.h \
+ ../pc_system.h ../bx_debug/debug.h ../config.h ../osdep.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/gui.h icon_bochs.h \
+ sdl.h sdlkeys.h
+sdl.lo: sdl.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../gui/paramtree.h \
+ ../logio.h ../instrument/stubs/instrument.h ../misc/bswap.h \
+ ../param_names.h keymap.h ../iodev/iodev.h ../plugin.h ../extplugin.h \
+ ../pc_system.h ../bx_debug/debug.h ../config.h ../osdep.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/gui.h
+siminterface.lo: siminterface.@CPP_SUFFIX@ ../param_names.h ../iodev/iodev.h \
+ ../bochs.h ../config.h ../osdep.h ../gui/paramtree.h ../logio.h \
+ ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../extplugin.h ../pc_system.h ../bx_debug/debug.h ../config.h ../osdep.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/gui.h \
+ ../iodev/virt_timer.h
+term.lo: term.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../gui/paramtree.h \
+ ../logio.h ../instrument/stubs/instrument.h ../misc/bswap.h \
+ ../param_names.h ../iodev/iodev.h ../plugin.h ../extplugin.h \
+ ../pc_system.h ../bx_debug/debug.h ../config.h ../osdep.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/gui.h
+textconfig.lo: textconfig.@CPP_SUFFIX@ ../config.h ../osdep.h ../bx_debug/debug.h \
+ ../param_names.h ../logio.h paramtree.h siminterface.h ../plugin.h \
+ ../extplugin.h
+vncsrv.lo: vncsrv.@CPP_SUFFIX@ ../param_names.h ../iodev/iodev.h ../bochs.h \
+ ../config.h ../osdep.h ../gui/paramtree.h ../logio.h \
+ ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../extplugin.h ../pc_system.h ../bx_debug/debug.h ../config.h ../osdep.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/gui.h keymap.h \
+ icon_bochs.h font/vga.bitmap.h sdl.h rfb.h rfbkeys.h ../bxthread.h
+win32.lo: win32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../gui/paramtree.h \
+ ../logio.h ../instrument/stubs/instrument.h ../misc/bswap.h \
+ ../param_names.h keymap.h ../iodev/iodev.h ../plugin.h ../extplugin.h \
+ ../pc_system.h ../bx_debug/debug.h ../config.h ../osdep.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/gui.h
+win32config.lo: win32config.@CPP_SUFFIX@ win32dialog.h ../config.h ../bochs.h \
+ ../config.h ../osdep.h ../gui/paramtree.h ../logio.h \
+ ../instrument/stubs/instrument.h ../misc/bswap.h ../bx_debug/debug.h \
+ ../osdep.h ../param_names.h gui.h ../gui/siminterface.h win32res.h \
+ win32paramdlg.h ../plugin.h ../extplugin.h
+win32_enh_dbg_osdep.lo: win32_enh_dbg_osdep.@CPP_SUFFIX@ ../bochs.h ../config.h \
+ ../osdep.h ../gui/paramtree.h ../logio.h \
+ ../instrument/stubs/instrument.h ../misc/bswap.h ../bx_debug/debug.h \
+ ../config.h ../osdep.h siminterface.h win32dialog.h enh_dbg.h
+win32paramdlg.lo: win32paramdlg.@CPP_SUFFIX@ win32dialog.h ../config.h ../bochs.h \
+ ../config.h ../osdep.h ../gui/paramtree.h ../logio.h \
+ ../instrument/stubs/instrument.h ../misc/bswap.h siminterface.h \
+ win32res.h
+wx.lo: wx.@CPP_SUFFIX@ ../config.h ../bochs.h ../config.h ../osdep.h \
+ ../gui/paramtree.h ../logio.h \
+ ../instrument/stubs/instrument.h ../misc/bswap.h ../param_names.h \
+ keymap.h ../iodev/iodev.h ../plugin.h ../extplugin.h ../pc_system.h \
+ ../bx_debug/debug.h ../osdep.h ../memory/memory-bochs.h \
+ ../gui/siminterface.h ../gui/gui.h font/vga.bitmap.h wxmain.h
+wxdialog.lo: wxdialog.@CPP_SUFFIX@ ../config.h ../param_names.h ../osdep.h \
+ ../gui/paramtree.h ../gui/siminterface.h ../logio.h wxdialog.h wxmain.h
+wxmain.lo: wxmain.@CPP_SUFFIX@ ../config.h ../param_names.h ../osdep.h \
+ ../gui/paramtree.h ../gui/siminterface.h ../bxversion.h wxdialog.h \
+ wxmain.h ../extplugin.h bitmaps/cdromd.xpm bitmaps/copy.xpm \
+ bitmaps/floppya.xpm bitmaps/floppyb.xpm bitmaps/paste.xpm \
+ bitmaps/power.xpm bitmaps/reset.xpm bitmaps/snapshot.xpm \
+ bitmaps/mouse.xpm bitmaps/userbutton.xpm bitmaps/saverestore.xpm
+x.lo: x.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../gui/paramtree.h ../logio.h \
+ ../instrument/stubs/instrument.h ../misc/bswap.h \
+ ../param_names.h keymap.h ../iodev/iodev.h ../plugin.h ../extplugin.h \
+ ../pc_system.h ../bx_debug/debug.h ../config.h ../osdep.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/gui.h enh_dbg.h \
+ icon_bochs.h font/vga.bitmap.h

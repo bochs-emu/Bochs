@@ -1,0 +1,66 @@
+CPU-Z TXT Report
+-------------------------------------------------------------------------
+
+Binaries
+-------------------------------------------------------------------------
+
+CPU-Z version			1.53.1
+
+Processors
+-------------------------------------------------------------------------
+
+Number of processors		1
+Number of threads		1
+
+APICs
+-------------------------------------------------------------------------
+
+Processor 0	
+	-- Core 0	
+		-- Thread 0	0
+
+Processors Information
+-------------------------------------------------------------------------
+
+Processor 1			ID = 0
+	Number of cores		1 (max 1)
+	Number of threads	1 (max 1)
+	Name			Intel Pentium III
+	Codename		Katmai
+	Specification		
+	Package (platform ID)	Slot 1 SECC2 (0x0)
+	CPUID			6.7.3
+	Extended CPUID		6.7
+	Core Stepping		kC0
+	Technology		0.25 um
+	Core Speed		597.0 MHz
+	Multiplier x FSB	6.0 x 99.5 MHz
+	Stock frequency		600 MHz
+	Instructions sets	MMX, SSE
+	L1 Data cache		16 KBytes, 4-way set associative, 32-byte line size
+	L1 Instruction cache	16 KBytes, 4-way set associative, 32-byte line size
+	L2 cache		512 KBytes, 4-way set associative, 32-byte line size
+	FID/VID Control		no
+
+
+
+Thread dumps
+-------------------------------------------------------------------------
+
+CPU Thread 0	
+	APIC ID			0
+	Topology		Processor ID 0, Core ID 0, Thread ID 0
+	Type			01000806h
+	Max CPUID level		00000003h
+	Cache descriptor	Level 1, D, 16 KB, 1 thread(s)
+	Cache descriptor	Level 1, I, 16 KB, 1 thread(s)
+	Cache descriptor	Level 2, U, 512 KB, 1 thread(s)
+
+	CPUID		 
+	0x00000000		0x00000003	0x756E6547	0x6C65746E	0x49656E69
+	0x00000001		0x00000673	0x00000000	0x00000000	0x0387F9FF
+	0x00000002		0x03020101	0x00000000	0x00000000	0x0C040843
+	0x00000003		0x00000000	0x00000000	0x11814197	0x0001C236
+
+	MSR 0x00000017		0x40210000	0x00000000
+	MSR 0x0000002A		0x00000000	0xC6C80000
