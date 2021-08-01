@@ -8823,9 +8823,9 @@ differences between the ATA specification and BIOSes implementations, when disks
 critical sizes, it
 became necessary to translate the CHS geometry (cylinders, heads, sectors per track)
 between the BIOS (int 13h) and the ATA interface. Please refer to the
-<ulink url="http://burks.brighton.ac.uk/burks/pcinfo/hardware/atafaq/atafq.htm">ATA-FAQ</ulink>
+<ulink url="https://web.archive.org/web/20090428202027/http://burks.brighton.ac.uk/burks/pcinfo/hardware/atafaq/atafq.htm">ATA-FAQ</ulink>
 and
-<ulink url="http://www.ata-atapi.com/hiwchs.htm">Hale Landis' document</ulink>
+<ulink url="https://web.archive.org/web/20080412092242/http://www.ata-atapi.com/hiwchs.htm">Hale Landis' document</ulink>
 for a complete discussion of the problem.
         </para>
         <para>
