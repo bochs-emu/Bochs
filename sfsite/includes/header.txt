@@ -18,7 +18,7 @@ A.sidebar:hover {color: blue; text-decoration: underline}
 <META NAME="resource-type" CONTENT="document">
 <META NAME="distribution" CONTENT="GLOBAL">
 <META NAME="description" CONTENT="Bochs IA-32 Emulator provides a virtual PC that can run operating systems such as Windows, Linux, and BSD.">
-<META NAME="copyright" CONTENT="Copyright 2001-2020 The Bochs Project.">
+<META NAME="copyright" CONTENT="Copyright 2001-2021 The Bochs Project.">
 <META NAME="keywords" CONTENT="pc emulation, vmware, win4lin, netraverse, trelos, x86 emulation, emulator,insignia, softpc, connectix, virtualpc, fx!32, freemware, plex86, dynamic translation,open source, gnu, linux, windows, bsd">
 <META NAME="Author" CONTENT="Timothy R. Butler">
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html;CHARSET=iso-8859-1">
