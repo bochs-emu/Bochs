@@ -8,7 +8,7 @@ AC_CONFIG_HEADER(ltdlconf.h)
 
 dnl // Put Bochs version information right here so that it gets substituted
 dnl // into all the right places.
-VERSION="2.7"
+VERSION="2.7.svn"
 VER_MAJOR=2
 VER_MINOR=7
 dnl // this should be > 90 for pre-release of next version otherwise revision level
