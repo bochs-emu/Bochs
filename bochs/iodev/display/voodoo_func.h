@@ -1627,7 +1627,7 @@ void voodoo2_bitblt_cpu_to_screen(Bit32u data)
     if (rgbfmt & 1) {
       BX_ERROR(("Voodoo bitBLT: color order other than RGB not supported yet"));
     }
-#if BX_BIG_ENDIAN
+#ifdef BX_BIG_ENDIAN
     data = bx_bswap32(data);
 #endif
     src_ptr = (Bit8u*)&data;
