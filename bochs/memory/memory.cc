@@ -180,23 +180,10 @@ mem_write:
           *(BX_MEM_THIS get_vector(a20addr)) = *data_ptr;
         } else if ((area >= BX_MEM_AREA_E0000) && BX_MEM_THIS bios_write_enabled) {
           // volatile BIOS write support
-#ifdef BX_LITTLE_ENDIAN
-          data_ptr = (Bit8u *) data;
-#else // BX_BIG_ENDIAN
-          data_ptr = (Bit8u *) data + (len - 1);
-#endif
-          for (unsigned i = 0; i < len; i++) {
-            if (BX_MEM_THIS flash_type > 0) {
-              BX_MEM_THIS flash_write(BIOS_MAP_LAST128K(a20addr), *data_ptr);
-            } else {
-              BX_MEM_THIS rom[BIOS_MAP_LAST128K(a20addr)] = *data_ptr;
-            }
-            a20addr++;
-#ifdef BX_LITTLE_ENDIAN
-            data_ptr++;
-#else // BX_BIG_ENDIAN
-            data_ptr--;
-#endif
+          if (BX_MEM_THIS flash_type > 0) {
+            BX_MEM_THIS flash_write(BIOS_MAP_LAST128K(a20addr), *data_ptr);
+          } else {
+            BX_MEM_THIS rom[BIOS_MAP_LAST128K(a20addr)] = *data_ptr;
           }
         } else {
           // Writes to ROM, Inhibit
