@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2002-2019 Zwane Mwaikambo, Stanislav Shwartsman
+//  Copyright (c) 2002-2021 Zwane Mwaikambo, Stanislav Shwartsman
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1202,7 +1202,7 @@ void bx_local_apic_c::vmx_preemption_timer_expired(void *this_ptr)
 void bx_local_apic_c::set_mwaitx_timer(Bit32u value)
 {
   BX_DEBUG(("MWAITX timer: value = %u", value));
-  bx_pc_system.activate_timer_ticks(mwaitx_timer_active, value, 0);
+  bx_pc_system.activate_timer_ticks(mwaitx_timer_handle, value, 0);
   mwaitx_timer_active = 1;
 }
 
@@ -1453,7 +1453,6 @@ void bx_local_apic_c::register_state(bx_param_c *parent)
 #endif
 
 #if BX_SUPPORT_MONITOR_MWAIT
-  BXRS_DEC_PARAM_SIMPLE(lapic, mwaitx_timer_handle);
   BXRS_PARAM_BOOL(lapic, mwaitx_timer_active, mwaitx_timer_active);
 #endif
 }
