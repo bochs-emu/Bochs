@@ -28,6 +28,7 @@ SHELL = @SHELL@
 
 CXX = @CXX@
 CXXFLAGS = @CXXFLAGS@ @GUI_CXXFLAGS@
+CPPFLAGS = @CPPFLAGS@
 
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
@@ -69,7 +70,7 @@ BX_INCLUDES = ../../bochs.h ../../config.h
 all: libcpudb.a
 
 .@CPP_SUFFIX@.o:
-	$(CXX) @DASH@c $(BX_INCDIRS) $(CXXFLAGS) @CXXFP@$< @OFP@$@
+	$(CXX) @DASH@c $(BX_INCDIRS) $(CPPFLAGS) $(CXXFLAGS) @CXXFP@$< @OFP@$@
 
 
 libcpudb.a: $(CPUDB_OBJS)

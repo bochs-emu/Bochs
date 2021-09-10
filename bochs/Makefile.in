@@ -86,6 +86,7 @@ CC = @CC@
 CXX = @CXX@
 CFLAGS = @CFLAGS@ @GUI_CFLAGS@ $(MCH_CFLAGS) $(FLA_FLAGS) @DEFINE_PLUGIN_PATH@ -DBX_SHARE_PATH='"$(sharedir)"'
 CXXFLAGS = @CXXFLAGS@ @GUI_CXXFLAGS@ $(MCH_CFLAGS) $(FLA_FLAGS) @DEFINE_PLUGIN_PATH@ -DBX_SHARE_PATH='"$(sharedir)"'
+CPPFLAGS = @CPPFLAGS@
 
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
@@ -164,9 +165,9 @@ BX_INCLUDES = bochs.h config.h osdep.h
 
 
 .@CPP_SUFFIX@.o:
-	$(CXX) @DASH@c $(BX_INCDIRS) $(CXXFLAGS) @CXXFP@$< @OFP@$@
+	$(CXX) @DASH@c $(BX_INCDIRS) $(CPPFLAGS) $(CXXFLAGS) @CXXFP@$< @OFP@$@
 .c.o:
-	$(CC) @DASH@c $(BX_INCDIRS) $(CFLAGS) $(FPU_FLAGS) $< @OFP@$@
+	$(CC) @DASH@c $(BX_INCDIRS) $(CPPFLAGS) $(CFLAGS) $(FPU_FLAGS) $< @OFP@$@
 
 
 all: @PRIMARY_TARGET@ @PLUGIN_TARGET@ bximage@EXE@ @OPTIONAL_TARGET@ @BUILD_DOCBOOK_VAR@
@@ -256,39 +257,39 @@ bxhub@EXE@: misc/bxhub.o misc/netutil.o
 # compile with console CXXFLAGS, not gui CXXFLAGS
 misc/bximage.o: $(srcdir)/misc/bximage.cc $(srcdir)/misc/bswap.h \
   $(srcdir)/misc/bxcompat.h $(srcdir)/iodev/hdimage/hdimage.h
-	$(CXX) @DASH@c $(BX_INCDIRS) $(CXXFLAGS_CONSOLE) $(srcdir)/misc/bximage.cc @OFP@$@
+	$(CXX) @DASH@c $(BX_INCDIRS) $(CPPFLAGS) $(CXXFLAGS_CONSOLE) $(srcdir)/misc/bximage.cc @OFP@$@
 
 misc/hdimage.o: $(srcdir)/iodev/hdimage/hdimage.cc \
   $(srcdir)/iodev/hdimage/hdimage.h $(srcdir)/misc/bxcompat.h
-	$(CXX) @DASH@c $(BX_INCDIRS) @BXIMAGE_FLAG@ $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/hdimage.cc @OFP@$@
+	$(CXX) @DASH@c $(BX_INCDIRS) @BXIMAGE_FLAG@ $(CPPFLAGS) $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/hdimage.cc @OFP@$@
 
 misc/vmware3.o: $(srcdir)/iodev/hdimage/vmware3.cc $(srcdir)/iodev/hdimage/vmware3.h \
   $(srcdir)/iodev/hdimage/hdimage.h $(srcdir)/misc/bxcompat.h
-	$(CXX) @DASH@c $(BX_INCDIRS) @BXIMAGE_FLAG@ $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/vmware3.cc @OFP@$@
+	$(CXX) @DASH@c $(BX_INCDIRS) @BXIMAGE_FLAG@ $(CPPFLAGS) $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/vmware3.cc @OFP@$@
 
 misc/vmware4.o: $(srcdir)/iodev/hdimage/vmware4.cc $(srcdir)/iodev/hdimage/vmware4.h \
   $(srcdir)/iodev/hdimage/hdimage.h $(srcdir)/misc/bxcompat.h
-	$(CXX) @DASH@c $(BX_INCDIRS) @BXIMAGE_FLAG@ $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/vmware4.cc @OFP@$@
+	$(CXX) @DASH@c $(BX_INCDIRS) @BXIMAGE_FLAG@ $(CPPFLAGS) $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/vmware4.cc @OFP@$@
 
 misc/vpc.o: $(srcdir)/iodev/hdimage/vpc.cc $(srcdir)/iodev/hdimage/vpc.h \
   $(srcdir)/iodev/hdimage/hdimage.h $(srcdir)/misc/bxcompat.h
-	$(CXX) @DASH@c $(BX_INCDIRS) @BXIMAGE_FLAG@ $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/vpc.cc @OFP@$@
+	$(CXX) @DASH@c $(BX_INCDIRS) @BXIMAGE_FLAG@ $(CPPFLAGS) $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/vpc.cc @OFP@$@
 
 misc/vbox.o: $(srcdir)/iodev/hdimage/vbox.cc $(srcdir)/iodev/hdimage/vbox.h \
   $(srcdir)/iodev/hdimage/hdimage.h $(srcdir)/misc/bxcompat.h
-	$(CXX) @DASH@c $(BX_INCDIRS) @BXIMAGE_FLAG@ $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/vbox.cc @OFP@$@
+	$(CXX) @DASH@c $(BX_INCDIRS) @BXIMAGE_FLAG@ $(CPPFLAGS) $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/vbox.cc @OFP@$@
 
 misc/bxhub.o: $(srcdir)/misc/bxhub.cc $(srcdir)/iodev/network/netmod.h \
   $(srcdir)/iodev/network/netutil.h $(srcdir)/misc/bxcompat.h
-	$(CC) @DASH@c $(BX_INCDIRS) $(CXXFLAGS_CONSOLE) $(srcdir)/misc/bxhub.cc @OFP@$@
+	$(CC) @DASH@c $(BX_INCDIRS) $(CPPFLAGS) $(CXXFLAGS_CONSOLE) $(srcdir)/misc/bxhub.cc @OFP@$@
 
 misc/netutil.o: $(srcdir)/iodev/network/netutil.cc $(srcdir)/iodev/network/netutil.h \
   $(srcdir)/iodev/network/netmod.h $(srcdir)/misc/bxcompat.h
-	$(CXX) @DASH@c $(BX_INCDIRS) @BXHUB_FLAG@ $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/network/netutil.cc @OFP@$@
+	$(CXX) @DASH@c $(BX_INCDIRS) @BXHUB_FLAG@ $(CPPFLAGS) $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/network/netutil.cc @OFP@$@
 
 # compile with console CFLAGS, not gui CXXFLAGS
 misc/niclist.o: $(srcdir)/misc/niclist.c
-	$(CC) @DASH@c $(BX_INCDIRS) $(CFLAGS_CONSOLE) $(srcdir)/misc/niclist.c @OFP@$@
+	$(CC) @DASH@c $(BX_INCDIRS) $(CPPFLAGS) $(CFLAGS_CONSOLE) $(srcdir)/misc/niclist.c @OFP@$@
 
 $(BX_OBJS): $(BX_INCLUDES)
 

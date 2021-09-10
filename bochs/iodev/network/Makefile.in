@@ -39,7 +39,8 @@ SHELL = @SHELL@
 @SET_MAKE@
 
 CXX = @CXX@
-CXXFLAGS = $(BX_INCDIRS) @CXXFLAGS@ @GUI_CXXFLAGS@
+CXXFLAGS = @CXXFLAGS@ @GUI_CXXFLAGS@
+CPPFLAGS = $(BX_INCDIRS) @CPPFLAGS@
 
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
@@ -109,21 +110,21 @@ libnetwork.a: $(NONPLUGIN_OBJS)
 
 # standard compile rule for C++ files
 .@CPP_SUFFIX@.o:
-	$(CXX) @DASH@c  $(CXXFLAGS) $(LOCAL_CXXFLAGS) @CXXFP@$< @OFP@$@
+	$(CXX) @DASH@c  $(CPPFLAGS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) @CXXFP@$< @OFP@$@
 
 ##### building plugins with libtool
 %.lo: %.@CPP_SUFFIX@
-	$(LIBTOOL) --mode=compile --tag CXX $(CXX) -c $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
+	$(LIBTOOL) --mode=compile --tag CXX $(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) $< -o $@
 
 libbx_%.la: %.lo
-	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH)
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) $(LDFLAGS) -module $< -o $@ -rpath $(PLUGIN_PATH)
 
 # special link rules for plugins that require more than one object file
 libbx_eth_slirp.la: eth_slirp.lo $(SLIRP_OBJS:.o=.lo)
-	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module eth_slirp.lo $(SLIRP_OBJS:.o=.lo) -o libbx_eth_slirp.la -rpath $(PLUGIN_PATH)
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) $(LDFLAGS) -module eth_slirp.lo $(SLIRP_OBJS:.o=.lo) -o libbx_eth_slirp.la -rpath $(PLUGIN_PATH)
 
 libbx_eth_vnet.la: eth_vnet.lo netutil.lo
-	$(LIBTOOL) --mode=link --tag CXX $(CXX) -module eth_vnet.lo netutil.lo -o libbx_eth_vnet.la -rpath $(PLUGIN_PATH)
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) $(LDFLAGS) -module eth_vnet.lo netutil.lo -o libbx_eth_vnet.la -rpath $(PLUGIN_PATH)
 
 #### building DLLs for win32 (Cygwin and MinGW/MSYS)
 bx_%.dll: %.o

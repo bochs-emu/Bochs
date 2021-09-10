@@ -31,6 +31,7 @@ CC = @CC@
 CFLAGS = @CFLAGS@ @GUI_CFLAGS@
 CXX = @CXX@
 CXXFLAGS = @CXXFLAGS@ @GUI_CXXFLAGS@
+CPPFLAGS = @CPPFLAGS@
 
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
@@ -64,11 +65,11 @@ BX_INCDIRS = -I.. -I$(srcdir)/.. -I../@INSTRUMENT_DIR@ -I$(srcdir)/../@INSTRUMEN
 all: libdebug.a
 
 .@CPP_SUFFIX@.o:
-	$(CXX) @DASH@c $(BX_INCDIRS) $(CXXFLAGS) @CXXFP@$< @OFP@$@
+	$(CXX) @DASH@c $(BX_INCDIRS) $(CPPFLAGS) $(CXXFLAGS) @CXXFP@$< @OFP@$@
 
 
 .c.o:
-	$(CC) @DASH@c $(BX_INCDIRS) $(CFLAGS) @CFP@$< @OFP@$@
+	$(CC) @DASH@c $(BX_INCDIRS) $(CPPFLAGS) $(CFLAGS) @CFP@$< @OFP@$@
 
 
 

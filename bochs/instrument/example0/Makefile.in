@@ -28,6 +28,7 @@ CC = @CC@
 CFLAGS = @CFLAGS@
 CXX = @CXX@
 CXXFLAGS = @CXXFLAGS@
+CPPFLAGS = @CPPFLAGS@
 
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
@@ -47,11 +48,11 @@ BX_INCLUDES =
 BX_INCDIRS = -I../.. -I$(srcdir)/../.. -I. -I$(srcdir)/.
 
 .@CPP_SUFFIX@.o:
-	$(CXX) -c $(CXXFLAGS) $(BX_INCDIRS) @CXXFP@$< @OFP@$@
+	$(CXX) -c $(BX_INCDIRS) $(CPPFLAGS) $(CXXFLAGS) @CXXFP@$< @OFP@$@
 
 
 .c.o:
-	$(CC) -c $(CFLAGS) $(BX_INCDIRS) @CFP@$< @OFP@$@
+	$(CC) -c $(BX_INCDIRS) $(CPPFLAGS) $(CFLAGS) @CFP@$< @OFP@$@
 
 
 

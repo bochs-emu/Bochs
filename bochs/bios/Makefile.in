@@ -28,6 +28,7 @@ SHELL = @SHELL@
 
 CXX = @CXX@
 CXXFLAGS = @CXXFLAGS@
+CPPFLAGS = @CPPFLAGS@
 
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
@@ -36,6 +37,8 @@ RANLIB = @RANLIB@
 BCC = bcc
 GCC = gcc
 GCC32 = gcc -m32 -march=i386 -fno-stack-protector
+LD32 = ld
+OBJCOPY32 = objcopy
 AS86 = as86
 IASL = @IASL@
 
@@ -51,7 +54,7 @@ BIOS_BUILD_DATE = "-DBIOS_BUILD_DATE=\"$(BUILDDATE)\""
 
 
 .@CPP_SUFFIX@.o:
-	$(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) @CXXFP@$< @OFP@$@
+	$(CXX) -c $(BX_INCDIRS) $(CPPFLAGS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) @CXXFP@$< @OFP@$@
 
 
 bios: biossums BIOS-bochs-latest BIOS-bochs-legacy
@@ -90,11 +93,11 @@ rombios16.bin: rombios.c apmbios.S biossums rombios.h
 	@RMCOMMAND@ _rombios_.s
 
 rombios32.bin: rombios32.out rombios.h
-	objcopy -O binary $< $@
+	$(OBJCOPY32) -O binary $< $@
 	./biossums -pad $@
 
 rombios32.out: rombios32start.o rombios32.o rombios32.ld
-	ld -o $@ -T $(srcdir)/rombios32.ld rombios32start.o rombios32.o
+	$(LD32) -o $@ -T $(srcdir)/rombios32.ld rombios32start.o rombios32.o
 
 rombios32.o: rombios32.c acpi-dsdt.hex rombios.h
 	$(GCC32) -O2 -Wall -c -o $@ $<

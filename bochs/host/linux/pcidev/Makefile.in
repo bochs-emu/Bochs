@@ -17,7 +17,7 @@ MODULE_FILE = $(MODULE_NAME).$(KERNEL_MODULE_SUFFIX)
 
 PCIDEV_MODULE_MAKE_ALL = @PCIDEV_MODULE_MAKE_ALL@
 
-CFLAGS = -Wstrict-prototypes -Wno-trigraphs -g -fno-strict-aliasing -fno-common -D__KERNEL__ -DMODULE -I$(KERNELDIR)/include -O -Wall
+CFLAGS = @CFLAGS@ -Wstrict-prototypes -Wno-trigraphs -g -fno-strict-aliasing -fno-common -D__KERNEL__ -DMODULE -I$(KERNELDIR)/include -O -Wall
 
 
 .PHONY : all
