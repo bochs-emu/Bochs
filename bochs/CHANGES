@@ -1,3 +1,11 @@
+Changes after 2.7:
+
+- Fixed Voodoo device compilation for big endian architectures
+- Fixed memory handling in volatile BIOS write support
+- Fixed APIC MWAIT timer activation
+- APIC: Removed timer handles from save/restore list
+- Apply standard CPPFLAGS from environment in all makefiles
+
 -------------------------------------------------------------------------
 Changes in 2.7 (August 1, 2021):
 
