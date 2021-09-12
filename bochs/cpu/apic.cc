@@ -188,7 +188,7 @@ bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu, unsigned id)
   timer_handle = bx_pc_system.register_timer_ticks(this,
             bx_local_apic_c::periodic_smf, 0, 0, 0, "lapic");
   timer_active = 0;
-  
+
 #if BX_SUPPORT_VMX >= 2
   // Register a non-active timer for VMX preemption timer.
   vmx_timer_handle = bx_pc_system.register_timer_ticks(this,
@@ -500,7 +500,7 @@ void bx_local_apic_c::write_aligned(bx_phy_address addr, Bit32u value)
   if (apic_reg >= 0x400 && !cpu->is_cpu_extension_supported(BX_ISA_XAPIC_EXT))
     apic_reg = 0xffffffff; // choose some obviosly invalid register if extended xapic is not supported
 #endif
-  
+
   switch(apic_reg) {
     case BX_LAPIC_TPR: // task priority
       set_tpr(value & 0xff);
@@ -1222,7 +1222,7 @@ void bx_local_apic_c::mwaitx_timer_expired(void *this_ptr)
 }
 
 #endif
-  
+
 #if BX_CPU_LEVEL >= 6
 // return false when x2apic is not supported/not readable
 bool bx_local_apic_c::read_x2apic(unsigned index, Bit64u *val_64)
@@ -1439,12 +1439,10 @@ void bx_local_apic_c::register_state(bx_param_c *parent)
   BXRS_HEX_PARAM_SIMPLE(lapic, timer_current);
   BXRS_HEX_PARAM_SIMPLE(lapic, timer_divconf);
   BXRS_DEC_PARAM_SIMPLE(lapic, timer_divide_factor);
-  BXRS_DEC_PARAM_SIMPLE(lapic, timer_handle);
   BXRS_PARAM_BOOL(lapic, timer_active, timer_active);
   BXRS_HEX_PARAM_SIMPLE(lapic, ticksInitial);
 
 #if BX_SUPPORT_VMX >= 2
-  BXRS_DEC_PARAM_SIMPLE(lapic, vmx_timer_handle);
   BXRS_HEX_PARAM_SIMPLE(lapic, vmx_preemption_timer_initial);
   BXRS_HEX_PARAM_SIMPLE(lapic, vmx_preemption_timer_fire);
   BXRS_HEX_PARAM_SIMPLE(lapic, vmx_preemption_timer_value);
