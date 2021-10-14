@@ -2967,12 +2967,15 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         if ((slot > 0) && (slot < 6)) {
           sprintf(tmpdev, "pci.slot.%d", slot);
           if (strlen(&params[i][6]) > 0) {
-            SIM->get_param_enum(tmpdev)->set_by_name(&params[i][6]);
+            if (!SIM->get_param_enum(tmpdev)->set_by_name(&params[i][6])) {
+              PARSE_ERR(("%s: unknown plugin '%s' at PCI slot #%d.",
+                         context, &params[i][6], slot));
+            }
           } else {
             SIM->get_param_enum(tmpdev)->set_by_name("none");
           }
         } else {
-          BX_ERROR(("%s: unknown pci slot number ignored.", context));
+          PARSE_ERR(("%s: unknown PCI slot number #%d.", context, slot));
         }
       } else if (!strncmp(params[i], "advopts=", 8)) {
         SIM->get_param_string(BXPN_PCI_ADV_OPTS)->set(&params[i][8]);

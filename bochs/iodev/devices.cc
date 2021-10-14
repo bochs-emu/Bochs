@@ -373,7 +373,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
     if ((chipset == BX_PCI_CHIPSET_I440BX) && is_agp_present()) {
       device = SIM->get_param_enum("pci.slot.5")->get_selected();
       if (strcmp(device, "none") && !pci.slot_used[4]) {
-        BX_PANIC(("Unknown plugin '%s' at AGP slot", device));
+        BX_PANIC(("Plugin '%s' at AGP slot not loaded", device));
       }
       max_pci_slots = 4;
     }
@@ -381,7 +381,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
       sprintf(devname, "pci.slot.%d", i+1);
       device = SIM->get_param_enum(devname)->get_selected();
       if (strcmp(device, "none") && !pci.slot_used[i]) {
-        BX_PANIC(("Unknown plugin '%s' at PCI slot #%d", device, i+1));
+        BX_PANIC(("Plugin '%s' at PCI slot #%d not loaded", device, i+1));
       }
     }
   }
