@@ -5,6 +5,8 @@ Changes after 2.7:
 - Fixed APIC MWAIT timer activation
 - APIC: Removed timer handles from save/restore list
 - Apply standard CPPFLAGS from environment in all makefiles
+- Fixed and improved PCI slot config error handling
+- Documentation fixes
 
 -------------------------------------------------------------------------
 Changes in 2.7 (August 1, 2021):

@@ -3569,11 +3569,12 @@ This produces two rpm files in the current directory. Test and upload.
 
 <section><title>Building the release on win32</title>
 <para>
-These instructions require cygwin and MSVC++. Use the Bochs sources from
-the SVN checkout or unpack the TAR file.
+These instructions require cygwin or mingw32/mingw64 to prepare the sources and
+MSVC++ to build the binaries. Use the Bochs sources from the SVN checkout or
+unpack the TAR file.
 </para>
 <para>
-In Cygwin:
+In Cygwin or mingw32/mingw64:
 <screen>
   sh .conf.win32-vcpp         # runs configure
   make win32_snap             # unzip workspace, make a win32 source ZIP
