@@ -1828,16 +1828,44 @@ Run a shortcut script using Bourne shell, like this:
   sh .conf.win32-vcpp
 </screen>
 
-These <filename>.conf.<replaceable>platform</replaceable></filename> have
-been tested in recent Bochs versions:
-<screen>
-  .conf.linux
-  .conf.sparc
-  .conf.macos
-  .conf.macosx
-  .conf.win32-vcpp
-  .conf.win32-cygwin
-</screen>
+These <filename>.conf.<replaceable>platform</replaceable></filename> scripts
+have been tested in recent Bochs versions:
+<table><title>Shortcut scripts</title>
+  <tgroup cols="2" align="left" colsep="1" rowsep="1">
+  <thead>
+    <row>
+      <entry>Name</entry>
+      <entry>Build environment</entry>
+    </row>
+  </thead>
+  <tbody>
+    <row>
+      <entry>.conf.linux</entry>
+      <entry>Linux (32/64 bit)</entry>
+    </row>
+    <row>
+      <entry>.conf.macosx</entry>
+      <entry>MacOS X</entry>
+    </row>
+    <row>
+      <entry>.conf.win32-cygwin</entry>
+      <entry>Windows with Cygwin or MinGW/MSYS</entry>
+    </row>
+    <row>
+      <entry>.conf.win32-vcpp</entry>
+      <entry>Windows with MSVC (32 bit)</entry>
+    </row>
+    <row>
+      <entry>.conf.win64-vcpp</entry>
+      <entry>Windows with MSVC (64 bit)</entry>
+    </row>
+    <row>
+      <entry>.conf.win64-cross-mingw32</entry>
+      <entry>Cross compiling on Linux for Windows</entry>
+    </row>
+  </tbody>
+  </tgroup>
+</table>
 </para>
 
 </section> <!-- end of Configure Shortcut Scripts -->
