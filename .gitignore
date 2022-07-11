@@ -1,0 +1,122 @@
+# General
+*.o
+*.lo
+*.a
+*.la
+
+# /bochs/
+/bochs/Makefile
+/bochs/bochs
+/bochs/bochs.exe
+/bochs/bximage
+/bochs/bximage.exe
+/bochs/bxcommit
+/bochs/bxcommit.exe
+/bochs/bxhub
+/bochs/bxhub.exe
+/bochs/bxversion.h
+/bochs/bxversion.rc
+/bochs/config.h
+/bochs/config.log
+/bochs/config.status
+/bochs/bochsout.txt
+/bochs/config.cache
+/bochs/.conf.my
+/bochs/niclist.exe
+/bochs/parport.out
+/bochs/ltdlconf.h
+/bochs/libtool
+/bochs/.bochs.out
+
+# /bochs/bios/
+/bochs/bios/Makefile
+
+# /bochs/build/linux/
+/bochs/build/linux/DOC-linux.html
+/bochs/build/linux/bochs-dlx
+
+# /bochs/build/macosx/
+/bochs/build/macosx/Info.plist
+
+# /bochs/build/win32/nsis/
+/bochs/build/win32/nsis/Makefile
+/bochs/build/win32/nsis/bochs.nsi
+
+# /bochs/bx_debug/
+/bochs/bx_debug/Makefile
+
+# /bochs/cpu/
+/bochs/cpu/Makefile
+
+# /bochs/disasm/
+/bochs/disasm/Makefile
+
+# /bochs/doc/docbook/
+/bochs/doc/docbook/Makefile
+
+# /bochs/doc/docbook/development/
+/bochs/doc/docbook/development/*.html
+
+# /bochs/doc/docbook/documentation/
+/bochs/doc/docbook/documentation/*.html
+
+# /bochs/doc/docbook/user/
+/bochs/doc/docbook/user/*.html
+
+# /bochs/gui/
+/bochs/gui/Makefile
+/bochs/gui/.libs/
+
+# /bochs/host/linux/pcidev/
+/bochs/host/linux/pcidev/Makefile
+
+# /bochs/instrument/stubs/
+/bochs/instrument/stubs/Makefile
+
+# /bochs/iodev/
+/bochs/iodev/Makefile
+/bochs/iodev/.libs/
+
+# /bochs/memory/
+/bochs/memory/Makefile
+
+# /bochs/misc/
+/bochs/misc/Makefile
+
+# /bocks/cpu/avx/
+/bochs/cpu/avx/Makefile
+
+# /bochs/cpu/cpudb/
+/bochs/cpu/cpudb/Makefile
+
+# /bochs/cpu/fpu/
+/bochs/cpu/fpu/Makefile
+
+# /bochs/iodev/display/
+/bochs/iodev/display/Makefile
+/bochs/iodev/display/.libs/
+
+# /bochs/iodev/hdimage/
+/bochs/iodev/hdimage/Makefile
+/bochs/iodev/hdimage/.libs/
+
+# /bochs/iodev/network/
+/bochs/iodev/network/Makefile
+/bochs/iodev/network/.libs/
+
+# /bochs/iodev/sound/
+/bochs/iodev/sound/Makefile
+/bochs/iodev/sound/.libs/
+
+# /bochs/iodev/usb/
+/bochs/iodev/usb/Makefile
+/bochs/iodev/usb/.libs/
+
+# /sfsite/
+/sfsite/doc
+/sfsite/guestos
+/sfsite/screenshot
+/sfsite/techspec
+/sfsite/tmp
+/sfsite/xcf
+/sfsite/.glimpse*
