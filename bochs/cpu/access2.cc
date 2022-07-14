@@ -304,7 +304,14 @@ BX_CPU_C::tickle_read_linear(unsigned s, bx_address laddr)
   bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(laddr, 0);
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us read access from this CPL
-    if (isReadOK(tlbEntry, USER_PL)) return;
+    if (isReadOK(tlbEntry, USER_PL)) {
+      BX_CPU_THIS_PTR address_xlation.paddress1 = tlbEntry->ppf | PAGE_OFFSET(laddr);
+      BX_CPU_THIS_PTR address_xlation.pages     = 1;
+#if BX_SUPPORT_MEMTYPE
+      BX_CPU_THIS_PTR address_xlation.memtype1  = tlbEntry->get_memtype();
+#endif
+      return;
+    }
   }
 
 #if BX_SUPPORT_X86_64
