@@ -394,7 +394,7 @@ void BX_CPU_C::TLB_flush(void)
 #if BX_SUPPORT_MONITOR_MWAIT
   // invalidating of the TLB might change translation for monitored page
   // and cause subsequent MWAIT instruction to wait forever
-  BX_CPU_THIS_PTR monitor.reset_monitor();
+  BX_CPU_THIS_PTR wakeup_monitor();
 #endif
 
   // break all links bewteen traces
@@ -415,7 +415,7 @@ void BX_CPU_C::TLB_flushNonGlobal(void)
 #if BX_SUPPORT_MONITOR_MWAIT
   // invalidating of the TLB might change translation for monitored page
   // and cause subsequent MWAIT instruction to wait forever
-  BX_CPU_THIS_PTR monitor.reset_monitor();
+  BX_CPU_THIS_PTR wakeup_monitor();
 #endif
 
   // break all links bewteen traces
@@ -435,7 +435,7 @@ void BX_CPU_C::TLB_invlpg(bx_address laddr)
 #if BX_SUPPORT_MONITOR_MWAIT
   // invalidating of the TLB entry might change translation for monitored
   // page and cause subsequent MWAIT instruction to wait forever
-  BX_CPU_THIS_PTR monitor.reset_monitor();
+  BX_CPU_THIS_PTR wakeup_monitor();
 #endif
 
   // break all links bewteen traces
