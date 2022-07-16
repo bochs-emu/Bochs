@@ -24,7 +24,6 @@
 
 #include "bochs.h"
 #include "cpu/cpu.h"
-#include "disasm/disasm.h"
 
 // maximum size of an instruction
 #define MAX_OPCODE_LENGTH 16
@@ -36,8 +35,6 @@
 // If you are not using the debugger to turn this on/off, then possibly
 // start this at 1 instead of 0.
 static bool active = 1;
-
-static disassembler bx_disassembler;
 
 static struct instruction_t {
   bool  ready;         // is current instruction ready to be printed
@@ -84,7 +81,7 @@ void bx_print_instruction(unsigned cpu, const instruction_t *i)
 {
   char disasm_tbuf[512];	// buffer for instruction disassembly
   unsigned length = i->opcode_length, n;
-  bx_disassembler.disasm(i->is32, i->is64, 0, 0, i->opcode, disasm_tbuf);
+  bx_dbg_disasm_wrapper(i->is32, i->is64, 0, 0, i->opcode, disasm_tbuf);
 
   if(length != 0)
   {

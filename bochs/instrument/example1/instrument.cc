@@ -23,11 +23,9 @@
 
 #include "bochs.h"
 #include "cpu/cpu.h"
-#include "disasm/disasm.h"
 
 bxInstrumentation *icpu = NULL;
 
-static disassembler bx_disassembler;
 
 void bx_instr_init_env(void) {}
 void bx_instr_exit_env(void) {}
@@ -54,7 +52,7 @@ void bxInstrumentation::bx_instr_reset(unsigned type)
 void bxInstrumentation::bx_print_instruction(void)
 {
   char disasm_tbuf[512];	// buffer for instruction disassembly
-  bx_disassembler.disasm(is32, is64, 0, 0, opcode, disasm_tbuf);
+  bx_dbg_disasm_wrapper(is32, is64, 0, 0, opcode, disasm_tbuf);
 
   if(opcode_length != 0)
   {
