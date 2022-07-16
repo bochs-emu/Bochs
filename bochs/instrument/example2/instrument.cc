@@ -24,6 +24,7 @@
 
 #include "bochs.h"
 #include "cpu/cpu.h"
+#include "cpu/decoder/ia_opcodes.h"
 
 #define BX_IA_STATS_ENTRIES (BX_IA_LAST*2) /* /r and /m form */
 
