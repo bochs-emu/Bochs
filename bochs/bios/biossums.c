@@ -97,8 +97,8 @@ byte bios_data[LEN_BIOS_DATA];
 long bios_len;
 
 
-int main(int argc, char* argv[]) {
-
+int main(int argc, char* argv[])
+{
   FILE* stream;
   long  offset, tmp_offset;
   byte  cur_val = 0, new_val = 0;
@@ -270,8 +270,8 @@ write_bios:
 }
 
 
-void check(int okay, char* message) {
-
+void check(int okay, char* message)
+{
   if (!okay) {
     printf("\n\nError. %s.\n", message);
     exit(EXIT_FAILURE);
@@ -279,14 +279,14 @@ void check(int okay, char* message) {
 }
 
 
-long chksum_bios_get_offset( byte* data, long offset ) {
-
+long chksum_bios_get_offset( byte* data, long offset )
+{
   return( BIOS_OFFSET );
 }
 
 
-byte chksum_bios_calc_value( byte* data, long offset ) {
-
+byte chksum_bios_calc_value( byte* data, long offset )
+{
   int   i;
   byte  sum;
 
@@ -299,20 +299,20 @@ byte chksum_bios_calc_value( byte* data, long offset ) {
 }
 
 
-byte chksum_bios_get_value( byte* data, long offset ) {
-
+byte chksum_bios_get_value( byte* data, long offset )
+{
   return( *( data + BIOS_OFFSET ) );
 }
 
 
-void chksum_bios_set_value( byte* data, long offset, byte value ) {
-
+void chksum_bios_set_value( byte* data, long offset, byte value )
+{
   *( data + BIOS_OFFSET ) = value;
 }
 
 
-byte chksum__32__calc_value( byte* data, long offset ) {
-
+byte chksum__32__calc_value( byte* data, long offset )
+{
   int           i;
   int           len;
   byte sum;
@@ -331,8 +331,8 @@ byte chksum__32__calc_value( byte* data, long offset ) {
 }
 
 
-long chksum__32__get_offset( byte* data, long offset ) {
-
+long chksum__32__get_offset( byte* data, long offset )
+{
   long result = -1L;
 
   offset = offset + 0x0F;
@@ -351,22 +351,22 @@ long chksum__32__get_offset( byte* data, long offset ) {
 }
 
 
-byte chksum__32__get_value( byte* data, long offset ) {
-
+byte chksum__32__get_value( byte* data, long offset )
+{
   check( offset + _32__CHKSUM <= MAX_OFFSET, "PCI-Bios checksum out of bounds" );
   return(  *( data + offset + _32__CHKSUM ) );
 }
 
 
-void chksum__32__set_value( byte* data, long offset, byte value ) {
-
+void chksum__32__set_value( byte* data, long offset, byte value )
+{
   check( offset + _32__CHKSUM <= MAX_OFFSET, "PCI-Bios checksum out of bounds" );
   *( data + offset + _32__CHKSUM ) = value;
 }
 
 
-byte chksum__mp__calc_value( byte* data, long offset ) {
-
+byte chksum__mp__calc_value( byte* data, long offset )
+{
   int   i;
   int   len;
   byte  sum;
@@ -385,8 +385,8 @@ byte chksum__mp__calc_value( byte* data, long offset ) {
 }
 
 
-long chksum__mp__get_offset( byte* data, long offset ) {
-
+long chksum__mp__get_offset( byte* data, long offset )
+{
   long result = -1L;
 
   offset = offset + 0x0F;
@@ -405,22 +405,22 @@ long chksum__mp__get_offset( byte* data, long offset ) {
 }
 
 
-byte chksum__mp__get_value( byte* data, long offset ) {
-
+byte chksum__mp__get_value( byte* data, long offset )
+{
   check( offset + _MP__CHKSUM <= MAX_OFFSET, "MP checksum out of bounds" );
   return( *( data + offset + _MP__CHKSUM ) );
 }
 
 
-void chksum__mp__set_value( byte* data, long offset, byte value ) {
-
+void chksum__mp__set_value( byte* data, long offset, byte value )
+{
   check( offset + _MP__CHKSUM <= MAX_OFFSET, "MP checksum out of bounds" );
   *( data + offset + _MP__CHKSUM ) = value;
 }
 
 
-byte chksum_pcmp_calc_value( byte* data, long offset ) {
-
+byte chksum_pcmp_calc_value( byte* data, long offset )
+{
   int   i;
   int   len;
   byte  sum;
@@ -445,8 +445,8 @@ byte chksum_pcmp_calc_value( byte* data, long offset ) {
 }
 
 
-long chksum_pcmp_get_offset( byte* data, long offset ) {
-
+long chksum_pcmp_get_offset( byte* data, long offset )
+{
   long result = -1L;
 
   offset = offset + 0x0F;
@@ -465,22 +465,22 @@ long chksum_pcmp_get_offset( byte* data, long offset ) {
 }
 
 
-byte chksum_pcmp_get_value( byte* data, long offset ) {
-
+byte chksum_pcmp_get_value( byte* data, long offset )
+{
   check( offset + PCMP_CHKSUM <= MAX_OFFSET, "PCMP checksum out of bounds" );
   return( *( data + offset + PCMP_CHKSUM ) );
 }
 
 
-void chksum_pcmp_set_value( byte* data, long offset, byte value ) {
-
+void chksum_pcmp_set_value( byte* data, long offset, byte value )
+{
   check( offset + PCMP_CHKSUM <= MAX_OFFSET, "PCMP checksum out of bounds" );
   *( data + offset + PCMP_CHKSUM ) = value;
 }
 
 
-byte chksum__pir_calc_value( byte* data, long offset ) {
-
+byte chksum__pir_calc_value( byte* data, long offset )
+{
   int   i;
   int   len;
   byte  sum;
@@ -500,8 +500,8 @@ byte chksum__pir_calc_value( byte* data, long offset ) {
 }
 
 
-long chksum__pir_get_offset( byte* data, long offset ) {
-
+long chksum__pir_get_offset( byte* data, long offset )
+{
   long result = -1L;
 
   offset = offset + 0x0F;
@@ -520,22 +520,22 @@ long chksum__pir_get_offset( byte* data, long offset ) {
 }
 
 
-byte chksum__pir_get_value( byte* data, long offset ) {
-
+byte chksum__pir_get_value( byte* data, long offset )
+{
   check( offset + _PIR_CHKSUM <= MAX_OFFSET, "$PIR checksum out of bounds" );
   return(  *( data + offset + _PIR_CHKSUM ) );
 }
 
 
-void chksum__pir_set_value( byte* data, long offset, byte value ) {
-
+void chksum__pir_set_value( byte* data, long offset, byte value )
+{
   check( offset + _PIR_CHKSUM <= MAX_OFFSET, "$PIR checksum out of bounds" );
   *( data + offset + _PIR_CHKSUM ) = value;
 }
 
 
-byte chksum__pnp_calc_value( byte* data, long offset ) {
-
+byte chksum__pnp_calc_value( byte* data, long offset )
+{
   int   i;
   int   len;
   byte  sum;
@@ -554,8 +554,8 @@ byte chksum__pnp_calc_value( byte* data, long offset ) {
 }
 
 
-long chksum__pnp_get_offset( byte* data, long offset ) {
-
+long chksum__pnp_get_offset( byte* data, long offset )
+{
   long result = -1L;
 
   offset = offset + 0x0F;
@@ -574,16 +574,15 @@ long chksum__pnp_get_offset( byte* data, long offset ) {
 }
 
 
-byte chksum__pnp_get_value( byte* data, long offset ) {
-
+byte chksum__pnp_get_value( byte* data, long offset )
+{
   check( offset + _PNP_CHKSUM <= MAX_OFFSET, "$PnP checksum out of bounds" );
   return(  *( data + offset + _PNP_CHKSUM ) );
 }
 
 
-void chksum__pnp_set_value( byte* data, long offset, byte value ) {
-
+void chksum__pnp_set_value( byte* data, long offset, byte value )
+{
   check( offset + _PNP_CHKSUM <= MAX_OFFSET, "$PnP checksum out of bounds" );
   *( data + offset + _PNP_CHKSUM ) = value;
 }
-

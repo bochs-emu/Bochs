@@ -41,7 +41,7 @@ main(int argc, char *argv[])
   if (argc !=3 ) {
     fprintf(stderr, "Usage: usage bios-file org-file\n");
     exit(1);
-    }
+  }
 
   bios_file = open(argv[1], O_RDONLY);
   org_file = fopen(argv[2], "r");
@@ -49,7 +49,7 @@ main(int argc, char *argv[])
   if ( (bios_file<0) | (org_file==NULL) ) {
     fprintf(stderr, "problems opening files.\n");
     exit(1);
-    }
+  }
 
   printf("files opened OK\n");
 
@@ -60,10 +60,10 @@ main(int argc, char *argv[])
     if (retval <= 0) {
       fprintf(stderr, "problem reading bios file\n");
       exit(1);
-      }
+    }
     to_read -= retval;
     index   += retval;
-    }
+  }
   printf("bios file read in OK\n");
 
   last_org = 0;
@@ -74,20 +74,20 @@ main(int argc, char *argv[])
     printf("%04x .. %04x ", last_org, org-1);
     for (offset=org-1; offset>last_org; offset--) {
       if (bios[offset] != 0) break;
-      }
+    }
     if (offset > last_org) {
       elements = (1.0 + double(offset) - double(last_org));
-      }
+    }
     else {
       if (bios[last_org] == 0)
         elements = 0.0;
       else
         elements = 1.0;
-      }
+    }
 
     ratio = elements / (double(org) - double(last_org));
     ratio *= 100.0;
     printf("%6.2lf\n", ratio);
     last_org = org;
-    }
+  }
 }
