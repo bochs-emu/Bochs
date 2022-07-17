@@ -397,14 +397,14 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 // [10:10]    VPCLMULQDQ instruction support
 // [11:11]    AVX512 VNNI instructions support
 // [12:12]    AVX512 BITALG instructions support
-// [13:13]    reserved
+// [13:13]    TME_EN: indicates support for the following MSRs: IA32_TME_CAPABILITY, IA32_TME_ACTIVATE, IA32_TME_EXCLUDE_MASK, and IA32_TME_EXCLUDE_BASE
 // [14:14]    AVX512 VPOPCNTDQ: AVX512 VPOPCNTD/VPOPCNTQ instructions
 // [15:15]    reserved
 // [16:16]    LA57: LA57 and 5-level paging
 // [21:17]    reserved
 // [22:22]    RDPID: Read Processor ID support
 // [23:23]    Keylocker
-// [24:23]    reserved
+// [24:24]    BUS_LOCK_DETECT: Indicates support for bus lock debug exceptions
 // [25:25]    CLDEMOTE: CLDEMOTE instruction support
 // [26:26]    reserved
 // [27:27]    MOVDIRI: MOVDIRI instruction support
@@ -426,7 +426,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT4_VPCLMULQDQ             (1 << 10)
 #define BX_CPUID_EXT4_AVX512_VNNI            (1 << 11)
 #define BX_CPUID_EXT4_AVX512_BITALG          (1 << 12)
-#define BX_CPUID_EXT4_RESERVED13             (1 << 13)
+#define BX_CPUID_EXT4_TME                    (1 << 13)
 #define BX_CPUID_EXT4_AVX512_VPOPCNTDQ       (1 << 14)
 #define BX_CPUID_EXT4_RESERVED15             (1 << 15)
 #define BX_CPUID_EXT4_LA57                   (1 << 16)
@@ -437,7 +437,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT4_RESERVED21             (1 << 21)
 #define BX_CPUID_EXT4_RDPID                  (1 << 22)
 #define BX_CPUID_EXT4_KEYLOCKER              (1 << 23)
-#define BX_CPUID_EXT4_RESERVED24             (1 << 24)
+#define BX_CPUID_EXT4_BUS_LOCK_DETECT        (1 << 24)
 #define BX_CPUID_EXT4_CLDEMOTE               (1 << 25)
 #define BX_CPUID_EXT4_RESERVED26             (1 << 26)
 #define BX_CPUID_EXT4_MOVDIRI                (1 << 27)
@@ -461,7 +461,9 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [14:14]  SERIALIZE instruction support
 //   [15:15]  Hybrid
 //   [16:16]  TSXLDTRK: TSX suspent load tracking support
-//   [19:17]  reserved
+//   [17:17]  reserved
+//   [18:18]  PCONFIG 
+//   [19:19]  Architectural LBRs support
 //   [20:20]  CET IBT: Support CET indirect branch tracking
 //   [21:21]  reserved
 //   [22:22]  AMX BF16 support
@@ -493,8 +495,8 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT5_HYBRID                 (1 << 15)
 #define BX_CPUID_EXT5_TSXLDTRK               (1 << 16)
 #define BX_CPUID_EXT5_RESERVED17             (1 << 17)
-#define BX_CPUID_EXT5_RESERVED18             (1 << 18)
-#define BX_CPUID_EXT5_RESERVED19             (1 << 19)
+#define BX_CPUID_EXT5_PCONFIG                (1 << 18)
+#define BX_CPUID_EXT5_ARCH_LBR               (1 << 19)
 #define BX_CPUID_EXT5_CET_IBT                (1 << 20)
 #define BX_CPUID_EXT5_RESERVED21             (1 << 21)
 #define BX_CPUID_EXT5_AMX_BF16               (1 << 22)
