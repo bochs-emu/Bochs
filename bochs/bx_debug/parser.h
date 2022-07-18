@@ -1,8 +1,9 @@
-/* A Bison parser, made by GNU Bison 3.0.4.  */
+/* A Bison parser, made by GNU Bison 3.8.2.  */
 
 /* Bison interface for Yacc-like parsers in C
 
-   Copyright (C) 1984, 1989-1990, 2000-2015 Free Software Foundation, Inc.
+   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2021 Free Software Foundation,
+   Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -15,7 +16,7 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 /* As a special exception, you may create a larger work that contains
    part or all of the Bison parser skeleton and distribute that work
@@ -30,6 +31,10 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
+/* DO NOT RELY ON FEATURES THAT ARE NOT DOCUMENTED in the manual,
+   especially those whose name start with YY_ or yy_.  They are
+   private implementation details that can be changed or removed.  */
+
 #ifndef YY_BX_Y_TAB_H_INCLUDED
 # define YY_BX_Y_TAB_H_INCLUDED
 /* Debug traces.  */
@@ -40,128 +45,137 @@
 extern int bxdebug;
 #endif
 
-/* Token type.  */
+/* Token kinds.  */
 #ifndef YYTOKENTYPE
 # define YYTOKENTYPE
   enum yytokentype
   {
-    BX_TOKEN_8BH_REG = 258,
-    BX_TOKEN_8BL_REG = 259,
-    BX_TOKEN_16B_REG = 260,
-    BX_TOKEN_32B_REG = 261,
-    BX_TOKEN_64B_REG = 262,
-    BX_TOKEN_CS = 263,
-    BX_TOKEN_ES = 264,
-    BX_TOKEN_SS = 265,
-    BX_TOKEN_DS = 266,
-    BX_TOKEN_FS = 267,
-    BX_TOKEN_GS = 268,
-    BX_TOKEN_OPMASK_REG = 269,
-    BX_TOKEN_FLAGS = 270,
-    BX_TOKEN_ON = 271,
-    BX_TOKEN_OFF = 272,
-    BX_TOKEN_CONTINUE = 273,
-    BX_TOKEN_IF = 274,
-    BX_TOKEN_STEPN = 275,
-    BX_TOKEN_STEP_OVER = 276,
-    BX_TOKEN_SET = 277,
-    BX_TOKEN_DEBUGGER = 278,
-    BX_TOKEN_LIST_BREAK = 279,
-    BX_TOKEN_VBREAKPOINT = 280,
-    BX_TOKEN_LBREAKPOINT = 281,
-    BX_TOKEN_PBREAKPOINT = 282,
-    BX_TOKEN_DEL_BREAKPOINT = 283,
-    BX_TOKEN_ENABLE_BREAKPOINT = 284,
-    BX_TOKEN_DISABLE_BREAKPOINT = 285,
-    BX_TOKEN_INFO = 286,
-    BX_TOKEN_QUIT = 287,
-    BX_TOKEN_R = 288,
-    BX_TOKEN_REGS = 289,
-    BX_TOKEN_CPU = 290,
-    BX_TOKEN_FPU = 291,
-    BX_TOKEN_MMX = 292,
-    BX_TOKEN_XMM = 293,
-    BX_TOKEN_YMM = 294,
-    BX_TOKEN_ZMM = 295,
-    BX_TOKEN_AVX = 296,
-    BX_TOKEN_IDT = 297,
-    BX_TOKEN_IVT = 298,
-    BX_TOKEN_GDT = 299,
-    BX_TOKEN_LDT = 300,
-    BX_TOKEN_TSS = 301,
-    BX_TOKEN_TAB = 302,
-    BX_TOKEN_ALL = 303,
-    BX_TOKEN_LINUX = 304,
-    BX_TOKEN_DEBUG_REGS = 305,
-    BX_TOKEN_CONTROL_REGS = 306,
-    BX_TOKEN_SEGMENT_REGS = 307,
-    BX_TOKEN_EXAMINE = 308,
-    BX_TOKEN_XFORMAT = 309,
-    BX_TOKEN_DISFORMAT = 310,
-    BX_TOKEN_RESTORE = 311,
-    BX_TOKEN_WRITEMEM = 312,
-    BX_TOKEN_SETPMEM = 313,
-    BX_TOKEN_SYMBOLNAME = 314,
-    BX_TOKEN_QUERY = 315,
-    BX_TOKEN_PENDING = 316,
-    BX_TOKEN_TAKE = 317,
-    BX_TOKEN_DMA = 318,
-    BX_TOKEN_IRQ = 319,
-    BX_TOKEN_SMI = 320,
-    BX_TOKEN_NMI = 321,
-    BX_TOKEN_TLB = 322,
-    BX_TOKEN_DISASM = 323,
-    BX_TOKEN_INSTRUMENT = 324,
-    BX_TOKEN_STRING = 325,
-    BX_TOKEN_STOP = 326,
-    BX_TOKEN_DOIT = 327,
-    BX_TOKEN_CRC = 328,
-    BX_TOKEN_TRACE = 329,
-    BX_TOKEN_TRACEREG = 330,
-    BX_TOKEN_TRACEMEM = 331,
-    BX_TOKEN_SWITCH_MODE = 332,
-    BX_TOKEN_SIZE = 333,
-    BX_TOKEN_PTIME = 334,
-    BX_TOKEN_TIMEBP_ABSOLUTE = 335,
-    BX_TOKEN_TIMEBP = 336,
-    BX_TOKEN_MODEBP = 337,
-    BX_TOKEN_VMEXITBP = 338,
-    BX_TOKEN_PRINT_STACK = 339,
-    BX_TOKEN_BT = 340,
-    BX_TOKEN_WATCH = 341,
-    BX_TOKEN_UNWATCH = 342,
-    BX_TOKEN_READ = 343,
-    BX_TOKEN_WRITE = 344,
-    BX_TOKEN_SHOW = 345,
-    BX_TOKEN_LOAD_SYMBOLS = 346,
-    BX_TOKEN_SYMBOLS = 347,
-    BX_TOKEN_LIST_SYMBOLS = 348,
-    BX_TOKEN_GLOBAL = 349,
-    BX_TOKEN_WHERE = 350,
-    BX_TOKEN_PRINT_STRING = 351,
-    BX_TOKEN_NUMERIC = 352,
-    BX_TOKEN_PAGE = 353,
-    BX_TOKEN_HELP = 354,
-    BX_TOKEN_XML = 355,
-    BX_TOKEN_CALC = 356,
-    BX_TOKEN_DEVICE = 357,
-    BX_TOKEN_GENERIC = 358,
-    BX_TOKEN_RSHIFT = 359,
-    BX_TOKEN_LSHIFT = 360,
-    BX_TOKEN_EQ = 361,
-    BX_TOKEN_NE = 362,
-    BX_TOKEN_LE = 363,
-    BX_TOKEN_GE = 364,
-    BX_TOKEN_REG_IP = 365,
-    BX_TOKEN_REG_EIP = 366,
-    BX_TOKEN_REG_RIP = 367,
-    BX_TOKEN_REG_SSP = 368,
-    NOT = 369,
-    NEG = 370,
-    INDIRECT = 371
+    YYEMPTY = -2,
+    YYEOF = 0,                     /* "end of file"  */
+    YYerror = 256,                 /* error  */
+    YYUNDEF = 257,                 /* "invalid token"  */
+    BX_TOKEN_8BH_REG = 258,        /* BX_TOKEN_8BH_REG  */
+    BX_TOKEN_8BL_REG = 259,        /* BX_TOKEN_8BL_REG  */
+    BX_TOKEN_16B_REG = 260,        /* BX_TOKEN_16B_REG  */
+    BX_TOKEN_32B_REG = 261,        /* BX_TOKEN_32B_REG  */
+    BX_TOKEN_64B_REG = 262,        /* BX_TOKEN_64B_REG  */
+    BX_TOKEN_CS = 263,             /* BX_TOKEN_CS  */
+    BX_TOKEN_ES = 264,             /* BX_TOKEN_ES  */
+    BX_TOKEN_SS = 265,             /* BX_TOKEN_SS  */
+    BX_TOKEN_DS = 266,             /* BX_TOKEN_DS  */
+    BX_TOKEN_FS = 267,             /* BX_TOKEN_FS  */
+    BX_TOKEN_GS = 268,             /* BX_TOKEN_GS  */
+    BX_TOKEN_OPMASK_REG = 269,     /* BX_TOKEN_OPMASK_REG  */
+    BX_TOKEN_FLAGS = 270,          /* BX_TOKEN_FLAGS  */
+    BX_TOKEN_ON = 271,             /* BX_TOKEN_ON  */
+    BX_TOKEN_OFF = 272,            /* BX_TOKEN_OFF  */
+    BX_TOKEN_CONTINUE = 273,       /* BX_TOKEN_CONTINUE  */
+    BX_TOKEN_IF = 274,             /* BX_TOKEN_IF  */
+    BX_TOKEN_STEPN = 275,          /* BX_TOKEN_STEPN  */
+    BX_TOKEN_STEP_OVER = 276,      /* BX_TOKEN_STEP_OVER  */
+    BX_TOKEN_SET = 277,            /* BX_TOKEN_SET  */
+    BX_TOKEN_DEBUGGER = 278,       /* BX_TOKEN_DEBUGGER  */
+    BX_TOKEN_LIST_BREAK = 279,     /* BX_TOKEN_LIST_BREAK  */
+    BX_TOKEN_VBREAKPOINT = 280,    /* BX_TOKEN_VBREAKPOINT  */
+    BX_TOKEN_LBREAKPOINT = 281,    /* BX_TOKEN_LBREAKPOINT  */
+    BX_TOKEN_PBREAKPOINT = 282,    /* BX_TOKEN_PBREAKPOINT  */
+    BX_TOKEN_DEL_BREAKPOINT = 283, /* BX_TOKEN_DEL_BREAKPOINT  */
+    BX_TOKEN_ENABLE_BREAKPOINT = 284, /* BX_TOKEN_ENABLE_BREAKPOINT  */
+    BX_TOKEN_DISABLE_BREAKPOINT = 285, /* BX_TOKEN_DISABLE_BREAKPOINT  */
+    BX_TOKEN_INFO = 286,           /* BX_TOKEN_INFO  */
+    BX_TOKEN_QUIT = 287,           /* BX_TOKEN_QUIT  */
+    BX_TOKEN_R = 288,              /* BX_TOKEN_R  */
+    BX_TOKEN_REGS = 289,           /* BX_TOKEN_REGS  */
+    BX_TOKEN_CPU = 290,            /* BX_TOKEN_CPU  */
+    BX_TOKEN_FPU = 291,            /* BX_TOKEN_FPU  */
+    BX_TOKEN_MMX = 292,            /* BX_TOKEN_MMX  */
+    BX_TOKEN_XMM = 293,            /* BX_TOKEN_XMM  */
+    BX_TOKEN_YMM = 294,            /* BX_TOKEN_YMM  */
+    BX_TOKEN_ZMM = 295,            /* BX_TOKEN_ZMM  */
+    BX_TOKEN_AVX = 296,            /* BX_TOKEN_AVX  */
+    BX_TOKEN_IDT = 297,            /* BX_TOKEN_IDT  */
+    BX_TOKEN_IVT = 298,            /* BX_TOKEN_IVT  */
+    BX_TOKEN_GDT = 299,            /* BX_TOKEN_GDT  */
+    BX_TOKEN_LDT = 300,            /* BX_TOKEN_LDT  */
+    BX_TOKEN_TSS = 301,            /* BX_TOKEN_TSS  */
+    BX_TOKEN_TAB = 302,            /* BX_TOKEN_TAB  */
+    BX_TOKEN_ALL = 303,            /* BX_TOKEN_ALL  */
+    BX_TOKEN_LINUX = 304,          /* BX_TOKEN_LINUX  */
+    BX_TOKEN_DEBUG_REGS = 305,     /* BX_TOKEN_DEBUG_REGS  */
+    BX_TOKEN_CONTROL_REGS = 306,   /* BX_TOKEN_CONTROL_REGS  */
+    BX_TOKEN_SEGMENT_REGS = 307,   /* BX_TOKEN_SEGMENT_REGS  */
+    BX_TOKEN_EXAMINE = 308,        /* BX_TOKEN_EXAMINE  */
+    BX_TOKEN_XFORMAT = 309,        /* BX_TOKEN_XFORMAT  */
+    BX_TOKEN_DISFORMAT = 310,      /* BX_TOKEN_DISFORMAT  */
+    BX_TOKEN_RESTORE = 311,        /* BX_TOKEN_RESTORE  */
+    BX_TOKEN_WRITEMEM = 312,       /* BX_TOKEN_WRITEMEM  */
+    BX_TOKEN_SETPMEM = 313,        /* BX_TOKEN_SETPMEM  */
+    BX_TOKEN_SYMBOLNAME = 314,     /* BX_TOKEN_SYMBOLNAME  */
+    BX_TOKEN_QUERY = 315,          /* BX_TOKEN_QUERY  */
+    BX_TOKEN_PENDING = 316,        /* BX_TOKEN_PENDING  */
+    BX_TOKEN_TAKE = 317,           /* BX_TOKEN_TAKE  */
+    BX_TOKEN_DMA = 318,            /* BX_TOKEN_DMA  */
+    BX_TOKEN_IRQ = 319,            /* BX_TOKEN_IRQ  */
+    BX_TOKEN_SMI = 320,            /* BX_TOKEN_SMI  */
+    BX_TOKEN_NMI = 321,            /* BX_TOKEN_NMI  */
+    BX_TOKEN_TLB = 322,            /* BX_TOKEN_TLB  */
+    BX_TOKEN_DISASM = 323,         /* BX_TOKEN_DISASM  */
+    BX_TOKEN_INSTRUMENT = 324,     /* BX_TOKEN_INSTRUMENT  */
+    BX_TOKEN_STRING = 325,         /* BX_TOKEN_STRING  */
+    BX_TOKEN_STOP = 326,           /* BX_TOKEN_STOP  */
+    BX_TOKEN_DOIT = 327,           /* BX_TOKEN_DOIT  */
+    BX_TOKEN_CRC = 328,            /* BX_TOKEN_CRC  */
+    BX_TOKEN_TRACE = 329,          /* BX_TOKEN_TRACE  */
+    BX_TOKEN_TRACEREG = 330,       /* BX_TOKEN_TRACEREG  */
+    BX_TOKEN_TRACEMEM = 331,       /* BX_TOKEN_TRACEMEM  */
+    BX_TOKEN_SWITCH_MODE = 332,    /* BX_TOKEN_SWITCH_MODE  */
+    BX_TOKEN_SIZE = 333,           /* BX_TOKEN_SIZE  */
+    BX_TOKEN_PTIME = 334,          /* BX_TOKEN_PTIME  */
+    BX_TOKEN_TIMEBP_ABSOLUTE = 335, /* BX_TOKEN_TIMEBP_ABSOLUTE  */
+    BX_TOKEN_TIMEBP = 336,         /* BX_TOKEN_TIMEBP  */
+    BX_TOKEN_MODEBP = 337,         /* BX_TOKEN_MODEBP  */
+    BX_TOKEN_VMEXITBP = 338,       /* BX_TOKEN_VMEXITBP  */
+    BX_TOKEN_PRINT_STACK = 339,    /* BX_TOKEN_PRINT_STACK  */
+    BX_TOKEN_BT = 340,             /* BX_TOKEN_BT  */
+    BX_TOKEN_WATCH = 341,          /* BX_TOKEN_WATCH  */
+    BX_TOKEN_UNWATCH = 342,        /* BX_TOKEN_UNWATCH  */
+    BX_TOKEN_READ = 343,           /* BX_TOKEN_READ  */
+    BX_TOKEN_WRITE = 344,          /* BX_TOKEN_WRITE  */
+    BX_TOKEN_SHOW = 345,           /* BX_TOKEN_SHOW  */
+    BX_TOKEN_LOAD_SYMBOLS = 346,   /* BX_TOKEN_LOAD_SYMBOLS  */
+    BX_TOKEN_SYMBOLS = 347,        /* BX_TOKEN_SYMBOLS  */
+    BX_TOKEN_LIST_SYMBOLS = 348,   /* BX_TOKEN_LIST_SYMBOLS  */
+    BX_TOKEN_GLOBAL = 349,         /* BX_TOKEN_GLOBAL  */
+    BX_TOKEN_WHERE = 350,          /* BX_TOKEN_WHERE  */
+    BX_TOKEN_PRINT_STRING = 351,   /* BX_TOKEN_PRINT_STRING  */
+    BX_TOKEN_NUMERIC = 352,        /* BX_TOKEN_NUMERIC  */
+    BX_TOKEN_PAGE = 353,           /* BX_TOKEN_PAGE  */
+    BX_TOKEN_HELP = 354,           /* BX_TOKEN_HELP  */
+    BX_TOKEN_XML = 355,            /* BX_TOKEN_XML  */
+    BX_TOKEN_CALC = 356,           /* BX_TOKEN_CALC  */
+    BX_TOKEN_DEVICE = 357,         /* BX_TOKEN_DEVICE  */
+    BX_TOKEN_GENERIC = 358,        /* BX_TOKEN_GENERIC  */
+    BX_TOKEN_RSHIFT = 359,         /* BX_TOKEN_RSHIFT  */
+    BX_TOKEN_LSHIFT = 360,         /* BX_TOKEN_LSHIFT  */
+    BX_TOKEN_EQ = 361,             /* BX_TOKEN_EQ  */
+    BX_TOKEN_NE = 362,             /* BX_TOKEN_NE  */
+    BX_TOKEN_LE = 363,             /* BX_TOKEN_LE  */
+    BX_TOKEN_GE = 364,             /* BX_TOKEN_GE  */
+    BX_TOKEN_REG_IP = 365,         /* BX_TOKEN_REG_IP  */
+    BX_TOKEN_REG_EIP = 366,        /* BX_TOKEN_REG_EIP  */
+    BX_TOKEN_REG_RIP = 367,        /* BX_TOKEN_REG_RIP  */
+    BX_TOKEN_REG_SSP = 368,        /* BX_TOKEN_REG_SSP  */
+    NOT = 369,                     /* NOT  */
+    NEG = 370,                     /* NEG  */
+    INDIRECT = 371                 /* INDIRECT  */
   };
+  typedef enum yytokentype yytoken_kind_t;
 #endif
-/* Tokens.  */
+/* Token kinds.  */
+#define YYEMPTY -2
+#define YYEOF 0
+#define YYerror 256
+#define YYUNDEF 257
 #define BX_TOKEN_8BH_REG 258
 #define BX_TOKEN_8BL_REG 259
 #define BX_TOKEN_16B_REG 260
@@ -279,18 +293,17 @@ extern int bxdebug;
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
-
 union YYSTYPE
 {
-#line 14 "parser.y" /* yacc.c:1909  */
+#line 14 "parser.y"
 
   char    *sval;
   Bit64u   uval;
   unsigned bval;
 
-#line 292 "y.tab.h" /* yacc.c:1909  */
-};
+#line 305 "y.tab.h"
 
+};
 typedef union YYSTYPE YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
@@ -299,6 +312,8 @@ typedef union YYSTYPE YYSTYPE;
 
 extern YYSTYPE bxlval;
 
+
 int bxparse (void);
+
 
 #endif /* !YY_BX_Y_TAB_H_INCLUDED  */

@@ -968,6 +968,12 @@ instrument_command:
         bx_dbg_instrument_command($2);
         free($1); free($2);
       }
+    |
+      BX_TOKEN_INSTRUMENT BX_TOKEN_STRING '\n'
+      {
+        bx_dbg_instrument_command($2);
+        free($1); free($2);
+      }
     | BX_TOKEN_INSTRUMENT BX_TOKEN_GENERIC '\n'
       {
         bx_dbg_instrument_command($2);
@@ -1221,7 +1227,7 @@ help_command:
        }
      | BX_TOKEN_HELP BX_TOKEN_INSTRUMENT '\n'
        {
-         dbg_printf("instrument <command> - calls BX_INSTR_DEBUG_CMD instrumentation callback with <command>\n");
+         dbg_printf("instrument <command|\"string command\"> - calls BX_INSTR_DEBUG_CMD instrumentation callback with <command|\"string command\">\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_SET '\n'
