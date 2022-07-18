@@ -3598,7 +3598,7 @@ void bx_dbg_print_help(void)
   dbg_printf("-*- CPU and memory contents -*-\n");
   dbg_printf("    x, xp, setpmem, writemem, crc, info,\n");
   dbg_printf("    r|reg|regs|registers, fp|fpu, mmx, sse, sreg, dreg, creg,\n");
-  dbg_printf("    page, set, ptime, print-stack, ?|calc\n");
+  dbg_printf("    page, set, ptime, print-stack, bt, ?|calc\n");
   dbg_printf("-*- Working with bochs param tree -*-\n");
   dbg_printf("    show \"param\", restore\n");
 }
