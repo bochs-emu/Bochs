@@ -3,6 +3,8 @@
 *.lo
 *.a
 *.la
+obj-debug/
+obj-release/
 
 # /bochs/
 /bochs/Makefile
@@ -27,6 +29,7 @@
 /bochs/ltdlconf.h
 /bochs/libtool
 /bochs/.bochs.out
+/bochs/vs2019
 
 # /bochs/bios/
 /bochs/bios/Makefile
