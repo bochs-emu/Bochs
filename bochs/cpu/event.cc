@@ -161,7 +161,7 @@ void BX_CPU_C::VirtualInterruptAcknowledge(void)
 
   BX_CPU_THIS_PTR EXT = 1; /* external event */
 
-  BX_INSTR_HWINTERRUPT(BX_CPU_ID, vector, 
+  BX_INSTR_HWINTERRUPT(BX_CPU_ID, vector,
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
   interrupt(vector, BX_EXTERNAL_INTERRUPT, 0, 0);
 
@@ -231,6 +231,7 @@ bool BX_CPU_C::handleAsyncEvent(void)
   }
 
   if (is_unmasked_event_pending(BX_EVENT_INIT) && SVM_GIF) {
+    clear_event(BX_EVENT_INIT);
 #if BX_SUPPORT_SVM
     if (BX_CPU_THIS_PTR in_svm_guest) {
       if (SVM_INTERCEPT(SVM_INTERCEPT0_INIT)) Svm_Vmexit(SVM_VMEXIT_INIT);
@@ -241,7 +242,6 @@ bool BX_CPU_C::handleAsyncEvent(void)
       VMexit(VMX_VMEXIT_INIT, 0);
     }
 #endif
-    // reset will clear pending INIT
     reset(BX_RESET_SOFTWARE);
 
 #if BX_SUPPORT_SMP
@@ -305,7 +305,7 @@ bool BX_CPU_C::handleAsyncEvent(void)
     }
 #endif
     clear_event(BX_EVENT_NMI);
-     mask_event(BX_EVENT_NMI);
+    mask_event(BX_EVENT_NMI);
     BX_CPU_THIS_PTR EXT = 1; /* external event */
 #if BX_SUPPORT_VMX
     VMexit_Event(BX_NMI, 2, 0, 0);
