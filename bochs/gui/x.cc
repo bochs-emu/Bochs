@@ -925,6 +925,7 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   }
   Window root = RootWindow(dpy, 0);
 
+#if BX_HAVE_XRANDR_H
   if (XRRQueryExtension(dpy, &event_base, &error_base)) {
     int num_sizes;
     Rotation original_rotation;
@@ -935,7 +936,10 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
     x11_max_xres = xrrs[original_size_id].width;
     x11_max_yres = xrrs[original_size_id].height - bx_headerbar_y - bx_statusbar_y;
     free(conf);
-  } else {
+  } 
+  else
+#endif
+  {
     int screen = DefaultScreen(dpy);
     x11_max_xres = DisplayWidth(dpy, screen);
     x11_max_yres = DisplayHeight(dpy, screen) - bx_headerbar_y - bx_statusbar_y;

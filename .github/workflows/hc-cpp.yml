@@ -1,0 +1,31 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: configure for release
+      run: cd bochs && ./.conf.linux
+    - name: make
+      run: make -C bochs
+    - name: cleanup
+      run: make -C bochs all-clean
+    - name: configure minimalistic configuration
+      run: cd bochs && ./.conf.nothing
+    - name: make
+      run: make -C bochs
+    - name: cleanup
+      run: make -C bochs all-clean
+    - name: configure maximum possible configuration
+      run: cd bochs && ./.conf.everything
+    - name: make
+      run: make -C bochs
