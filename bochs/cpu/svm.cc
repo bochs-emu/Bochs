@@ -809,15 +809,17 @@ void BX_CPU_C::SvmInterceptException(unsigned type, unsigned vector, Bit16u errc
   Svm_Vmexit(SVM_VMEXIT_EXCEPTION + vector, (errcode_valid ? errcode : 0), qualification);
 }
 
-#define SVM_VMEXIT_IO_PORTIN        (1 << 0)
-#define SVM_VMEXIT_IO_INSTR_STRING  (1 << 2)
-#define SVM_VMEXIT_IO_INSTR_REP     (1 << 3)
-#define SVM_VMEXIT_IO_INSTR_LEN8    (1 << 4)
-#define SVM_VMEXIT_IO_INSTR_LEN16   (1 << 5)
-#define SVM_VMEXIT_IO_INSTR_LEN32   (1 << 6)
-#define SVM_VMEXIT_IO_INSTR_ASIZE16 (1 << 7)
-#define SVM_VMEXIT_IO_INSTR_ASIZE32 (1 << 8)
-#define SVM_VMEXIT_IO_INSTR_ASIZE64 (1 << 9)
+enum {
+  SVM_VMEXIT_IO_PORTIN        = (1 << 0),
+  SVM_VMEXIT_IO_INSTR_STRING  = (1 << 2),
+  SVM_VMEXIT_IO_INSTR_REP     = (1 << 3),
+  SVM_VMEXIT_IO_INSTR_LEN8    = (1 << 4),
+  SVM_VMEXIT_IO_INSTR_LEN16   = (1 << 5),
+  SVM_VMEXIT_IO_INSTR_LEN32   = (1 << 6),
+  SVM_VMEXIT_IO_INSTR_ASIZE16 = (1 << 7),
+  SVM_VMEXIT_IO_INSTR_ASIZE32 = (1 << 8),
+  SVM_VMEXIT_IO_INSTR_ASIZE64 = (1 << 9)
+};
 
 void BX_CPU_C::SvmInterceptIO(bxInstruction_c *i, unsigned port, unsigned len)
 {

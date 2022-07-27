@@ -29,9 +29,9 @@
 
 #if BX_SUPPORT_VMX
 
-#define VMCS_REVISION_ID_FIELD_ADDR              (0x0000)
-#define VMCS_VMX_ABORT_FIELD_ADDR                (0x0004)
-#define VMCS_LAUNCH_STATE_FIELD_ADDR             (0x0008)
+const Bit32u VMCS_REVISION_ID_FIELD_ADDR  = 0x0000;
+const Bit32u VMCS_VMX_ABORT_FIELD_ADDR    = 0x0004;
+const Bit32u VMCS_LAUNCH_STATE_FIELD_ADDR = 0x0008;
 
 VMCS_Mapping::VMCS_Mapping(Bit32u revision): revision_id(revision), ar_format(VMCS_AR_ROTATE)
 {

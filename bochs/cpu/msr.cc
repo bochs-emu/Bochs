@@ -1116,7 +1116,7 @@ bool BX_CPU_C::relocate_apic(Bit64u val_64)
    * [M:63]  Reserved
    */
 
-#define BX_MSR_APICBASE_RESERVED_BITS (0x2ff | (is_cpu_extension_supported(BX_ISA_X2APIC) ? 0 : 0x400))
+  const Bit32u BX_MSR_APICBASE_RESERVED_BITS = (0x2ff | (is_cpu_extension_supported(BX_ISA_X2APIC) ? 0 : 0x400));
 
   if (BX_CPU_THIS_PTR msr.apicbase & 0x800) {
     Bit32u val32_hi = GET32H(val_64), val32_lo = GET32L(val_64);

@@ -82,44 +82,6 @@ typedef struct
                           * 14 = 386 interrupt gate
                           * 15 = 386 trap gate */
 
-// For system & gate descriptors:
-
-#define BX_GATE_TYPE_NONE                       (0x0)
-#define BX_SYS_SEGMENT_AVAIL_286_TSS            (0x1)
-#define BX_SYS_SEGMENT_LDT                      (0x2)
-#define BX_SYS_SEGMENT_BUSY_286_TSS             (0x3)
-#define BX_286_CALL_GATE                        (0x4)
-#define BX_TASK_GATE                            (0x5)
-#define BX_286_INTERRUPT_GATE                   (0x6)
-#define BX_286_TRAP_GATE                        (0x7)
-                                              /* 0x8 reserved */
-#define BX_SYS_SEGMENT_AVAIL_386_TSS            (0x9)
-                                              /* 0xa reserved */
-#define BX_SYS_SEGMENT_BUSY_386_TSS             (0xb)
-#define BX_386_CALL_GATE                        (0xc)
-                                              /* 0xd reserved */
-#define BX_386_INTERRUPT_GATE                   (0xe)
-#define BX_386_TRAP_GATE                        (0xf)
-
-// For data/code descriptors:
-
-#define BX_DATA_READ_ONLY                       (0x0)
-#define BX_DATA_READ_ONLY_ACCESSED              (0x1)
-#define BX_DATA_READ_WRITE                      (0x2)
-#define BX_DATA_READ_WRITE_ACCESSED             (0x3)
-#define BX_DATA_READ_ONLY_EXPAND_DOWN           (0x4)
-#define BX_DATA_READ_ONLY_EXPAND_DOWN_ACCESSED  (0x5)
-#define BX_DATA_READ_WRITE_EXPAND_DOWN          (0x6)
-#define BX_DATA_READ_WRITE_EXPAND_DOWN_ACCESSED (0x7)
-#define BX_CODE_EXEC_ONLY                       (0x8)
-#define BX_CODE_EXEC_ONLY_ACCESSED              (0x9)
-#define BX_CODE_EXEC_READ                       (0xa)
-#define BX_CODE_EXEC_READ_ACCESSED              (0xb)
-#define BX_CODE_EXEC_ONLY_CONFORMING            (0xc)
-#define BX_CODE_EXEC_ONLY_CONFORMING_ACCESSED   (0xd)
-#define BX_CODE_EXEC_READ_CONFORMING            (0xe)
-#define BX_CODE_EXEC_READ_CONFORMING_ACCESSED   (0xf)
-
 union {
   struct {
     bx_address base;       /* base address: 286=24bits, 386=32bits, long=64 */
@@ -147,6 +109,46 @@ union {
 
 } bx_descriptor_t;
 
+// For system & gate descriptors:
+enum {
+  BX_GATE_TYPE_NONE            = 0x0,
+  BX_SYS_SEGMENT_AVAIL_286_TSS = 0x1,
+  BX_SYS_SEGMENT_LDT           = 0x2,
+  BX_SYS_SEGMENT_BUSY_286_TSS  = 0x3,
+  BX_286_CALL_GATE             = 0x4,
+  BX_TASK_GATE                 = 0x5,
+  BX_286_INTERRUPT_GATE        = 0x6,
+  BX_286_TRAP_GATE             = 0x7,
+                              /* 0x8 reserved */
+  BX_SYS_SEGMENT_AVAIL_386_TSS = 0x9,
+                              /* 0xa reserved */
+  BX_SYS_SEGMENT_BUSY_386_TSS  = 0xb,
+  BX_386_CALL_GATE             = 0xc,
+                              /* 0xd reserved */
+  BX_386_INTERRUPT_GATE        = 0xe,
+  BX_386_TRAP_GATE             = 0xf,
+};
+
+// For data/code descriptors:
+enum {
+  BX_DATA_READ_ONLY                       = 0x0,
+  BX_DATA_READ_ONLY_ACCESSED              = 0x1,
+  BX_DATA_READ_WRITE                      = 0x2,
+  BX_DATA_READ_WRITE_ACCESSED             = 0x3,
+  BX_DATA_READ_ONLY_EXPAND_DOWN           = 0x4,
+  BX_DATA_READ_ONLY_EXPAND_DOWN_ACCESSED  = 0x5,
+  BX_DATA_READ_WRITE_EXPAND_DOWN          = 0x6,
+  BX_DATA_READ_WRITE_EXPAND_DOWN_ACCESSED = 0x7,
+  BX_CODE_EXEC_ONLY                       = 0x8,
+  BX_CODE_EXEC_ONLY_ACCESSED              = 0x9,
+  BX_CODE_EXEC_READ                       = 0xa,
+  BX_CODE_EXEC_READ_ACCESSED              = 0xb,
+  BX_CODE_EXEC_ONLY_CONFORMING            = 0xc,
+  BX_CODE_EXEC_ONLY_CONFORMING_ACCESSED   = 0xd,
+  BX_CODE_EXEC_READ_CONFORMING            = 0xe,
+  BX_CODE_EXEC_READ_CONFORMING_ACCESSED   = 0xf
+};
+
 #define IS_PRESENT(descriptor) (descriptor.p)
 
 #if BX_SUPPORT_X86_64
@@ -155,12 +157,14 @@ union {
   #define IS_LONG64_SEGMENT(descriptor)   (0)
 #endif
 
-#define BX_SEGMENT_CODE                   (0x8)
-#define BX_SEGMENT_DATA_EXPAND_DOWN       (0x4)
-#define BX_SEGMENT_CODE_CONFORMING        (0x4)
-#define BX_SEGMENT_DATA_WRITE             (0x2)
-#define BX_SEGMENT_CODE_READ              (0x2)
-#define BX_SEGMENT_ACCESSED               (0x1)
+enum {
+  BX_SEGMENT_CODE             = 0x8,
+  BX_SEGMENT_DATA_EXPAND_DOWN = 0x4,
+  BX_SEGMENT_CODE_CONFORMING  = 0x4,
+  BX_SEGMENT_DATA_WRITE       = 0x2,
+  BX_SEGMENT_CODE_READ        = 0x2,
+  BX_SEGMENT_ACCESSED         = 0x1
+};
 
 #define IS_CODE_SEGMENT(type)             ((type) & BX_SEGMENT_CODE)
 #define IS_CODE_SEGMENT_CONFORMING(type)  ((type) & BX_SEGMENT_CODE_CONFORMING)

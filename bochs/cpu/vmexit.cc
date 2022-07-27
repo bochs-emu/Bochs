@@ -358,10 +358,12 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_MSR(unsigned op, Bit32u msr)
   }
 }
 
-#define VMX_VMEXIT_IO_PORTIN        (1 << 3)
-#define VMX_VMEXIT_IO_INSTR_STRING  (1 << 4)
-#define VMX_VMEXIT_IO_INSTR_REP     (1 << 5)
-#define VMX_VMEXIT_IO_INSTR_IMM     (1 << 6)
+enum {
+  VMX_VMEXIT_IO_PORTIN       = (1 << 3),
+  VMX_VMEXIT_IO_INSTR_STRING = (1 << 4),
+  VMX_VMEXIT_IO_INSTR_REP    = (1 << 5),
+  VMX_VMEXIT_IO_INSTR_IMM    = (1 << 6)
+};
 
 void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_IO(bxInstruction_c *i, unsigned port, unsigned len)
 {

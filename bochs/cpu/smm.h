@@ -24,8 +24,8 @@
 #define BX_SMM_H
 
 /* SMM feature masks */
-#define SMM_IO_INSTRUCTION_RESTART  (0x00010000)
-#define SMM_SMBASE_RELOCATION       (0x00020000)
+const Bit32u SMM_IO_INSTRUCTION_RESTART = 0x00010000;
+const Bit32u SMM_SMBASE_RELOCATION      = 0x00020000;
 
 #define SMM_SAVE_STATE_MAP_SIZE 128
 
@@ -36,8 +36,7 @@
 // - For x86-32 configuration using Intel P6 512-byte SMM save state map
 //
 
-#define SMM_REVISION_ID \
-    ((BX_SUPPORT_X86_64 ? 0x00000064 : 0) | SMM_SMBASE_RELOCATION)
+const Bit32u SMM_REVISION_ID = ((BX_SUPPORT_X86_64 ? 0x00000064 : 0) | SMM_SMBASE_RELOCATION);
 
 //
 // Some of the CPU field must be saved and restored in order to continue the

@@ -41,74 +41,76 @@ enum {
   BX_APIC_X2APIC_MODE       = 3
 };
 
-#define BX_XAPIC_EXT_SUPPORT_IER  (1 << 0)
-#define BX_XAPIC_EXT_SUPPORT_SEOI (1 << 1)
+const Bit32u BX_XAPIC_EXT_SUPPORT_IER  = (1 << 0);
+const Bit32u BX_XAPIC_EXT_SUPPORT_SEOI = (1 << 1);
 
 typedef Bit32u apic_dest_t; /* same definition in ioapic.h */
 
 // local apic registers
 
-#define BX_LAPIC_ID                   0x020
-#define BX_LAPIC_VERSION              0x030
-#define BX_LAPIC_TPR                  0x080
-#define BX_LAPIC_ARBITRATION_PRIORITY 0x090
-#define BX_LAPIC_PPR                  0x0A0
-#define BX_LAPIC_EOI                  0x0B0
-#define BX_LAPIC_RRD                  0x0C0
-#define BX_LAPIC_LDR                  0x0D0
-#define BX_LAPIC_DESTINATION_FORMAT   0x0E0
-#define BX_LAPIC_SPURIOUS_VECTOR      0x0F0
-#define BX_LAPIC_ISR1                 0x100
-#define BX_LAPIC_ISR2                 0x110
-#define BX_LAPIC_ISR3                 0x120
-#define BX_LAPIC_ISR4                 0x130
-#define BX_LAPIC_ISR5                 0x140
-#define BX_LAPIC_ISR6                 0x150
-#define BX_LAPIC_ISR7                 0x160
-#define BX_LAPIC_ISR8                 0x170
-#define BX_LAPIC_TMR1                 0x180
-#define BX_LAPIC_TMR2                 0x190
-#define BX_LAPIC_TMR3                 0x1A0
-#define BX_LAPIC_TMR4                 0x1B0
-#define BX_LAPIC_TMR5                 0x1C0
-#define BX_LAPIC_TMR6                 0x1D0
-#define BX_LAPIC_TMR7                 0x1E0
-#define BX_LAPIC_TMR8                 0x1F0
-#define BX_LAPIC_IRR1                 0x200
-#define BX_LAPIC_IRR2                 0x210
-#define BX_LAPIC_IRR3                 0x220
-#define BX_LAPIC_IRR4                 0x230
-#define BX_LAPIC_IRR5                 0x240
-#define BX_LAPIC_IRR6                 0x250
-#define BX_LAPIC_IRR7                 0x260
-#define BX_LAPIC_IRR8                 0x270
-#define BX_LAPIC_ESR                  0x280
-#define BX_LAPIC_LVT_CMCI             0x2F0
-#define BX_LAPIC_ICR_LO               0x300
-#define BX_LAPIC_ICR_HI               0x310
-#define BX_LAPIC_LVT_TIMER            0x320
-#define BX_LAPIC_LVT_THERMAL          0x330
-#define BX_LAPIC_LVT_PERFMON          0x340
-#define BX_LAPIC_LVT_LINT0            0x350
-#define BX_LAPIC_LVT_LINT1            0x360
-#define BX_LAPIC_LVT_ERROR            0x370
-#define BX_LAPIC_TIMER_INITIAL_COUNT  0x380
-#define BX_LAPIC_TIMER_CURRENT_COUNT  0x390
-#define BX_LAPIC_TIMER_DIVIDE_CFG     0x3E0
-#define BX_LAPIC_SELF_IPI             0x3F0
+enum {
+  BX_LAPIC_ID                   = 0x020,
+  BX_LAPIC_VERSION              = 0x030,
+  BX_LAPIC_TPR                  = 0x080,
+  BX_LAPIC_ARBITRATION_PRIORITY = 0x090,
+  BX_LAPIC_PPR                  = 0x0A0,
+  BX_LAPIC_EOI                  = 0x0B0,
+  BX_LAPIC_RRD                  = 0x0C0,
+  BX_LAPIC_LDR                  = 0x0D0,
+  BX_LAPIC_DESTINATION_FORMAT   = 0x0E0,
+  BX_LAPIC_SPURIOUS_VECTOR      = 0x0F0,
+  BX_LAPIC_ISR1                 = 0x100,
+  BX_LAPIC_ISR2                 = 0x110,
+  BX_LAPIC_ISR3                 = 0x120,
+  BX_LAPIC_ISR4                 = 0x130,
+  BX_LAPIC_ISR5                 = 0x140,
+  BX_LAPIC_ISR6                 = 0x150,
+  BX_LAPIC_ISR7                 = 0x160,
+  BX_LAPIC_ISR8                 = 0x170,
+  BX_LAPIC_TMR1                 = 0x180,
+  BX_LAPIC_TMR2                 = 0x190,
+  BX_LAPIC_TMR3                 = 0x1A0,
+  BX_LAPIC_TMR4                 = 0x1B0,
+  BX_LAPIC_TMR5                 = 0x1C0,
+  BX_LAPIC_TMR6                 = 0x1D0,
+  BX_LAPIC_TMR7                 = 0x1E0,
+  BX_LAPIC_TMR8                 = 0x1F0,
+  BX_LAPIC_IRR1                 = 0x200,
+  BX_LAPIC_IRR2                 = 0x210,
+  BX_LAPIC_IRR3                 = 0x220,
+  BX_LAPIC_IRR4                 = 0x230,
+  BX_LAPIC_IRR5                 = 0x240,
+  BX_LAPIC_IRR6                 = 0x250,
+  BX_LAPIC_IRR7                 = 0x260,
+  BX_LAPIC_IRR8                 = 0x270,
+  BX_LAPIC_ESR                  = 0x280,
+  BX_LAPIC_LVT_CMCI             = 0x2F0,
+  BX_LAPIC_ICR_LO               = 0x300,
+  BX_LAPIC_ICR_HI               = 0x310,
+  BX_LAPIC_LVT_TIMER            = 0x320,
+  BX_LAPIC_LVT_THERMAL          = 0x330,
+  BX_LAPIC_LVT_PERFMON          = 0x340,
+  BX_LAPIC_LVT_LINT0            = 0x350,
+  BX_LAPIC_LVT_LINT1            = 0x360,
+  BX_LAPIC_LVT_ERROR            = 0x370,
+  BX_LAPIC_TIMER_INITIAL_COUNT  = 0x380,
+  BX_LAPIC_TIMER_CURRENT_COUNT  = 0x390,
+  BX_LAPIC_TIMER_DIVIDE_CFG     = 0x3E0,
+  BX_LAPIC_SELF_IPI             = 0x3F0,
 
-// extended AMD 
-#define BX_LAPIC_EXT_APIC_FEATURE     0x400
-#define BX_LAPIC_EXT_APIC_CONTROL     0x410
-#define BX_LAPIC_SPECIFIC_EOI         0x420
-#define BX_LAPIC_IER1                 0x480
-#define BX_LAPIC_IER2                 0x490
-#define BX_LAPIC_IER3                 0x4A0
-#define BX_LAPIC_IER4                 0x4B0
-#define BX_LAPIC_IER5                 0x4C0
-#define BX_LAPIC_IER6                 0x4D0
-#define BX_LAPIC_IER7                 0x4E0
-#define BX_LAPIC_IER8                 0x4F0
+  // extended AMD
+  BX_LAPIC_EXT_APIC_FEATURE     = 0x400,
+  BX_LAPIC_EXT_APIC_CONTROL     = 0x410,
+  BX_LAPIC_SPECIFIC_EOI         = 0x420,
+  BX_LAPIC_IER1                 = 0x480,
+  BX_LAPIC_IER2                 = 0x490,
+  BX_LAPIC_IER3                 = 0x4A0,
+  BX_LAPIC_IER4                 = 0x4B0,
+  BX_LAPIC_IER5                 = 0x4C0,
+  BX_LAPIC_IER6                 = 0x4D0,
+  BX_LAPIC_IER7                 = 0x4E0,
+  BX_LAPIC_IER8                 = 0x4F0
+};
 
 /* APIC delivery modes */
 enum {
@@ -170,14 +172,16 @@ class BOCHSAPI bx_local_apic_c : public logfunctions
   Bit32u ier[8];
 #endif
 
-#define APIC_ERR_ILLEGAL_ADDR    0x80
-#define APIC_ERR_RX_ILLEGAL_VEC  0x40
-#define APIC_ERR_TX_ILLEGAL_VEC  0x20
-#define X2APIC_ERR_REDIRECTIBLE_IPI 0x08
-#define APIC_ERR_RX_ACCEPT_ERR   0x08
-#define APIC_ERR_TX_ACCEPT_ERR   0x04
-#define APIC_ERR_RX_CHECKSUM     0x02
-#define APIC_ERR_TX_CHECKSUM     0x01
+  enum {
+    APIC_ERR_ILLEGAL_ADDR       = 0x80,
+    APIC_ERR_RX_ILLEGAL_VEC     = 0x40,
+    APIC_ERR_TX_ILLEGAL_VEC     = 0x20,
+    X2APIC_ERR_REDIRECTIBLE_IPI = 0x08,
+    APIC_ERR_RX_ACCEPT_ERR      = 0x08,
+    APIC_ERR_TX_ACCEPT_ERR      = 0x04,
+    APIC_ERR_RX_CHECKSUM        = 0x02,
+    APIC_ERR_TX_CHECKSUM        = 0x01
+  };
 
   // Error status Register (ESR)
   Bit32u error_status, shadow_error_status;
