@@ -179,25 +179,25 @@ dist-clean: clean
 ###########################################
 acpi.o: acpi.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h pci.h acpi.h
 biosdev.o: biosdev.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h biosdev.h
 busmouse.o: busmouse.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h busmouse.h
 cmos.o: cmos.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h cmos.h virt_timer.h
@@ -212,169 +212,169 @@ devices.o: devices.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../iodev/hdimage/hdimage.h
 dma.o: dma.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h dma.h
 extfpuirq.o: extfpuirq.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h extfpuirq.h
 floppy.o: floppy.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h hdimage/hdimage.h floppy.h
 gameport.o: gameport.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h gameport.h
 harddrv.o: harddrv.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h harddrv.h hdimage/hdimage.h hdimage/cdrom.h
 hpet.o: hpet.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h hpet.h
 ioapic.o: ioapic.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h ioapic.h
 iodebug.o: iodebug.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h
 keyboard.o: keyboard.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h ../gui/keymap.h keyboard.h scancodes.h
 parallel.o: parallel.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h parallel.h
 pci2isa.o: pci2isa.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h pci.h pci2isa.h
 pci.o: pci.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h pci.h
 pcidev.o: pcidev.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h
 pci_ide.o: pci_ide.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h pci.h pci_ide.h
 pic.o: pic.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h pic.h
 pit82c54.o: pit82c54.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h pit82c54.h
 pit.o: pit.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h pit.h pit82c54.h virt_timer.h speaker.h
 scancodes.o: scancodes.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../gui/gui.h \
+ ../misc/bswap.h ../gui/gui.h \
  ../gui/siminterface.h scancodes.h
 serial.o: serial.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h serial.h
 serial_raw.o: serial_raw.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h
 slowdown_timer.o: slowdown_timer.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../param_names.h \
+ ../misc/bswap.h ../param_names.h \
  ../gui/siminterface.h ../pc_system.h slowdown_timer.h
 speaker.o: speaker.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h speaker.h sound/soundlow.h ../bxthread.h sound/soundmod.h
 unmapped.o: unmapped.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h unmapped.h
 virt_timer.o: virt_timer.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../gui/siminterface.h \
+ ../misc/bswap.h ../gui/siminterface.h \
  ../param_names.h virt_timer.h ../pc_system.h
 acpi.lo: acpi.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h pci.h acpi.h
 biosdev.lo: biosdev.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h biosdev.h
 busmouse.lo: busmouse.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h busmouse.h
 cmos.lo: cmos.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h cmos.h virt_timer.h
 devices.lo: devices.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h ../gui/keymap.h ../iodev/virt_timer.h \
@@ -383,139 +383,139 @@ devices.lo: devices.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../iodev/hdimage/hdimage.h
 dma.lo: dma.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h dma.h
 extfpuirq.lo: extfpuirq.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h extfpuirq.h
 floppy.lo: floppy.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h hdimage/hdimage.h floppy.h
 gameport.lo: gameport.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h gameport.h
 harddrv.lo: harddrv.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h harddrv.h hdimage/hdimage.h hdimage/cdrom.h
 hpet.lo: hpet.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h hpet.h
 ioapic.lo: ioapic.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h ioapic.h
 iodebug.lo: iodebug.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h
 keyboard.lo: keyboard.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h ../gui/keymap.h keyboard.h scancodes.h
 parallel.lo: parallel.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h parallel.h
 pci2isa.lo: pci2isa.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h pci.h pci2isa.h
 pci.lo: pci.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h pci.h
 pcidev.lo: pcidev.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h
 pci_ide.lo: pci_ide.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h pci.h pci_ide.h
 pic.lo: pic.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h pic.h
 pit82c54.lo: pit82c54.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h pit82c54.h
 pit.lo: pit.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h pit.h pit82c54.h virt_timer.h speaker.h
 scancodes.lo: scancodes.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../gui/gui.h \
+ ../misc/bswap.h ../gui/gui.h \
  ../gui/siminterface.h scancodes.h
 serial.lo: serial.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h serial.h
 serial_raw.lo: serial_raw.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h
 slowdown_timer.lo: slowdown_timer.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../param_names.h \
+ ../misc/bswap.h ../param_names.h \
  ../gui/siminterface.h ../pc_system.h slowdown_timer.h
 speaker.lo: speaker.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h speaker.h sound/soundlow.h ../bxthread.h sound/soundmod.h
 unmapped.lo: unmapped.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../plugin.h \
+ ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/gui.h unmapped.h
 virt_timer.lo: virt_timer.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
- ../instrument/stubs/instrument.h ../misc/bswap.h ../gui/siminterface.h \
+ ../misc/bswap.h ../gui/siminterface.h \
  ../param_names.h virt_timer.h ../pc_system.h

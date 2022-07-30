@@ -25,6 +25,7 @@
 
 #include "iodev.h"
 #include "gui/keymap.h"
+#include "instrument.h"
 
 #include "iodev/virt_timer.h"
 #include "iodev/slowdown_timer.h"

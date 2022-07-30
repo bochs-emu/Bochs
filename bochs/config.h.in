@@ -500,10 +500,6 @@ typedef Bit32u bx_phy_address;
   #endif
 #endif
 
-#define BX_PHY_ADDRESS_MASK ((((Bit64u)(1)) << BX_PHY_ADDRESS_WIDTH) - 1)
-
-#define BX_PHY_ADDRESS_RESERVED_BITS (~BX_PHY_ADDRESS_MASK)
-
 // technically, in an 8 bit signed the real minimum is -128, not -127.
 // But if you decide to negate -128 you tend to get -128 again, so it's
 // better not to use the absolute maximum in the signed range.

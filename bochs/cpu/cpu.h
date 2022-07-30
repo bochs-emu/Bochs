@@ -28,6 +28,12 @@
 
 #include "decoder/decoder.h"
 
+#include "instrument.h"
+
+const Bit64u BX_PHY_ADDRESS_MASK = ((((Bit64u)(1)) << BX_PHY_ADDRESS_WIDTH) - 1);
+
+const Bit64u BX_PHY_ADDRESS_RESERVED_BITS = (~BX_PHY_ADDRESS_MASK);
+
 #if defined(NEED_CPU_REG_SHORTCUTS)
 
 /* WARNING:
