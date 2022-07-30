@@ -290,9 +290,9 @@ public:
 #endif
 };
 
-int apic_bus_deliver_lowest_priority(Bit8u vector, apic_dest_t dest, bool trig_mode, bool broadcast);
-BOCHSAPI_MSVCONLY int apic_bus_deliver_interrupt(Bit8u vector, apic_dest_t dest, Bit8u delivery_mode, bool logical_dest, bool level, bool trig_mode);
-int apic_bus_broadcast_interrupt(Bit8u vector, Bit8u delivery_mode, bool trig_mode, int exclude_cpu);
+bool apic_bus_deliver_lowest_priority(Bit8u vector, apic_dest_t dest, bool trig_mode, bool broadcast);
+BOCHSAPI_MSVCONLY bool apic_bus_deliver_interrupt(Bit8u vector, apic_dest_t dest, Bit8u delivery_mode, bool logical_dest, bool level, bool trig_mode);
+bool apic_bus_broadcast_interrupt(Bit8u vector, Bit8u delivery_mode, bool trig_mode, int exclude_cpu);
 
 BX_CPP_INLINE bool is_x2apic_msr_range(Bit32u index) { return index >= 0x800 && index <= 0x8FF; }
 

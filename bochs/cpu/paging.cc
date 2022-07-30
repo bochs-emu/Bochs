@@ -1895,7 +1895,7 @@ enum {
 // 51-PA | Reserved (must be zero)
 // 61-52 | (ignored)
 // 60    | Supervisor Shadow Stack Page (CET)
-// 61    | Super Page Protected (SPP)
+// 61    | Sub Page Protected (SPP)
 // 63    | Suppress #VE
 // -----------------------------------------------------------
 

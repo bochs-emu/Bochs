@@ -550,7 +550,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET32(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest)
     if (is_masked_event(PIN_VMEXIT(VMX_VM_EXEC_CTRL1_VIRTUAL_NMI) ? BX_EVENT_VMX_VIRTUAL_NMI : BX_EVENT_NMI))
-      BX_CPU_THIS_PTR nmi_unblocking_iret = 1;
+      BX_CPU_THIS_PTR nmi_unblocking_iret = true;
 
   if (BX_CPU_THIS_PTR in_vmx_guest && PIN_VMEXIT(VMX_VM_EXEC_CTRL1_NMI_EXITING)) {
     if (PIN_VMEXIT(VMX_VM_EXEC_CTRL1_VIRTUAL_NMI)) unmask_event(BX_EVENT_VMX_VIRTUAL_NMI);
@@ -593,7 +593,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET32(bxInstruction_c *i)
   RSP_COMMIT;
 
 #if BX_SUPPORT_VMX
-  BX_CPU_THIS_PTR nmi_unblocking_iret = 0;
+  BX_CPU_THIS_PTR nmi_unblocking_iret = false;
 #endif
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_IRET,

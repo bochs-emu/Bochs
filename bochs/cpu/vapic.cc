@@ -96,7 +96,7 @@ bx_phy_address BX_CPU_C::VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned le
 
     if (!SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_REGISTERS)) {
       // if 'Virtualize Apic Registers' control is disabled allow only aligned access to VTPR
-      if (offset != BX_LAPIC_TPR) vmexit = 1;
+      if (offset != BX_LAPIC_TPR) vmexit = true;
     }
 
 #if BX_SUPPORT_VMX >= 2
@@ -146,7 +146,7 @@ bx_phy_address BX_CPU_C::VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned le
       break;
  
     default:
-      vmexit = 1;
+      vmexit = true;
       break;
     }
 #endif

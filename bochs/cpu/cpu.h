@@ -779,15 +779,15 @@ struct monitor_addr_t {
     bx_phy_address monitor_addr;
     bool armed;
 
-    monitor_addr_t(): monitor_addr(0xffffffff), armed(0) {}
+    monitor_addr_t(): monitor_addr(0xffffffff), armed(false) {}
 
     BX_CPP_INLINE void arm(bx_phy_address addr) {
       // align to cache line
       monitor_addr = addr & ~((bx_phy_address)(CACHE_LINE_SIZE - 1));
-      armed = 1;
+      armed = true;
     }
 
-    BX_CPP_INLINE void reset_monitor(void) { armed = 0; }
+    BX_CPP_INLINE void reset_monitor(void) { armed = false; }
 };
 #endif
 
@@ -1069,7 +1069,7 @@ public: // for now...
 #define BX_EVENT_VMX_VIRTUAL_APIC_WRITE       (1 << 14)
   Bit32u  pending_event;
   Bit32u  event_mask;
-  Bit32u  async_event;
+  Bit32u  async_event; // keep 32-bit because of BX_ASYNC_EVENT_STOP_TRACE
 
   BX_SMF BX_CPP_INLINE void signal_event(Bit32u event) {
     BX_CPU_THIS_PTR pending_event |= event;
@@ -4560,9 +4560,9 @@ public: // for now...
   BX_SMF const char *strseg(bx_segment_reg_t *seg);
   BX_SMF void interrupt(Bit8u vector, unsigned type, bool push_error, Bit16u error_code);
   BX_SMF void real_mode_int(Bit8u vector, bool push_error, Bit16u error_code);
-  BX_SMF void protected_mode_int(Bit8u vector, unsigned soft_int, bool push_error, Bit16u error_code);
+  BX_SMF void protected_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit16u error_code);
 #if BX_SUPPORT_X86_64
-  BX_SMF void long_mode_int(Bit8u vector, unsigned soft_int, bool push_error, Bit16u error_code);
+  BX_SMF void long_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit16u error_code);
 #endif
   BX_SMF void exception(unsigned vector, Bit16u error_code)
                   BX_CPP_AttrNoReturn();
@@ -5180,13 +5180,13 @@ BX_CPP_INLINE Bit32u BX_CPP_AttrRegparmN(1) BX_CPU_C::BxResolve32(bxInstruction_
 #define PRESERVE_SSP 
 #endif
 
-#define RSP_SPECULATIVE {              \
-  BX_CPU_THIS_PTR speculative_rsp = 1; \
-  PRESERVE_RSP;                        \
-  PRESERVE_SSP;                        \
+#define RSP_SPECULATIVE {                 \
+  BX_CPU_THIS_PTR speculative_rsp = true; \
+  PRESERVE_RSP;                           \
+  PRESERVE_SSP;                           \
 }
 
-#define RSP_COMMIT { BX_CPU_THIS_PTR speculative_rsp = 0; }
+#define RSP_COMMIT { BX_CPU_THIS_PTR speculative_rsp = false; }
 
 #endif // defined(NEED_CPU_REG_SHORTCUTS)
 

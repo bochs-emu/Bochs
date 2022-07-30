@@ -211,10 +211,10 @@ static Bit16u aggregate(Bit8u BoolRes[16][16], unsigned len1, unsigned len2, Bit
   switch(aggregation_operation) {
   case 0: // 'equal any'
     for(j=0; j<num_elements; j++) {
-      bool res = 0;
+      bool res = false;
       for(i=0; i<num_elements; i++) {
         if (override_if_data_invalid(BoolRes[j][i], (i < len1), (j < len2), imm)) {
-          res = 1;
+          res = true;
           break;
         }
       }
@@ -225,11 +225,11 @@ static Bit16u aggregate(Bit8u BoolRes[16][16], unsigned len1, unsigned len2, Bit
 
   case 1: // 'ranges'
     for(j=0; j<num_elements; j++) {
-      bool res = 0;
+      bool res = false;
       for(i=0; i<num_elements; i+=2) {
         if (override_if_data_invalid(BoolRes[j][i],     (i < len1), (j < len2), imm) &&
             override_if_data_invalid(BoolRes[j][i+1], (i+1 < len1), (j < len2), imm)) {
-          res = 1;
+          res = true;
           break;
         }
       }
@@ -247,10 +247,10 @@ static Bit16u aggregate(Bit8u BoolRes[16][16], unsigned len1, unsigned len2, Bit
 
   case 3: // 'equal ordered'
     for(j=0; j<num_elements; j++) {
-      bool res = 1;
+      bool res = true;
       for (i=0, k=j; (i < num_elements-j) && (k < num_elements); i++, k++) {
         if (! override_if_data_invalid(BoolRes[k][i], (i < len1), (k < len2), imm)) {
-          res = 0;
+          res = false;
           break;
         }
       }

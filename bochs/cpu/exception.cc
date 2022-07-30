@@ -35,7 +35,7 @@
 #endif
 
 #if BX_SUPPORT_X86_64
-void BX_CPU_C::long_mode_int(Bit8u vector, unsigned soft_int, bool push_error, Bit16u error_code)
+void BX_CPU_C::long_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit16u error_code)
 {
   bx_descriptor_t gate_descriptor, cs_descriptor;
   bx_selector_t cs_selector;
@@ -275,7 +275,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, unsigned soft_int, bool push_error, B
 }
 #endif
 
-void BX_CPU_C::protected_mode_int(Bit8u vector, unsigned soft_int, bool push_error, Bit16u error_code)
+void BX_CPU_C::protected_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit16u error_code)
 {
   bx_descriptor_t gate_descriptor, cs_descriptor;
   bx_selector_t cs_selector;
@@ -769,11 +769,11 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bool push_error, Bit16u er
 
   invalidate_prefetch_q();
 
-  bool soft_int = 0;
+  bool soft_int = false;
   switch(type) {
     case BX_SOFTWARE_INTERRUPT:
     case BX_SOFTWARE_EXCEPTION:
-      soft_int = 1;
+      soft_int = true;
       break;
     case BX_PRIVILEGED_SOFTWARE_INTERRUPT:
     case BX_EXTERNAL_INTERRUPT:
@@ -794,7 +794,7 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bool push_error, Bit16u er
   BX_CPU_THIS_PTR inhibit_mask = 0;
 
 #if BX_SUPPORT_VMX || BX_SUPPORT_SVM
-  BX_CPU_THIS_PTR in_event = 1;
+  BX_CPU_THIS_PTR in_event = true;
 #endif
 
   RSP_SPECULATIVE;
@@ -825,7 +825,7 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bool push_error, Bit16u er
 #endif
 
 #if BX_SUPPORT_VMX || BX_SUPPORT_SVM
-  BX_CPU_THIS_PTR in_event = 0;
+  BX_CPU_THIS_PTR in_event = false;
 #endif
 
   BX_CPU_THIS_PTR EXT = 0;
@@ -895,7 +895,7 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
 {
   unsigned exception_type = 0;
   unsigned exception_class = BX_EXCEPTION_CLASS_FAULT;
-  bool push_error = 0;
+  bool push_error = false;
 
   if (vector < BX_CPU_HANDLED_EXCEPTIONS) {
      push_error = exceptions_info[vector].push_error;
@@ -941,7 +941,7 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
       SSP = BX_CPU_THIS_PTR prev_ssp;
 #endif
     }
-    BX_CPU_THIS_PTR speculative_rsp = 0;
+    BX_CPU_THIS_PTR speculative_rsp = false;
 
     if (BX_CPU_THIS_PTR last_exception_type == BX_ET_DOUBLE_FAULT)
     {
@@ -992,7 +992,7 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
   BX_CPU_THIS_PTR last_exception_type = exception_type;
 
   if (real_mode()) {
-    push_error = 0; // not INT, no error code pushed
+    push_error = false; // not INT, no error code pushed
     error_code = 0;
   }
 

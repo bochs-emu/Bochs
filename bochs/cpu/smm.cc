@@ -69,7 +69,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSM(bxInstruction_c *i)
     access_read_physical(base, 4, &saved_state[n]);
     BX_NOTIFY_PHY_MEMORY_ACCESS(base, 4, BX_MEMTYPE_WB, BX_READ, BX_SMRAM_ACCESS, (Bit8u*)(&saved_state[n]));
   }
-  BX_CPU_THIS_PTR in_smm = 0;
+  BX_CPU_THIS_PTR in_smm = false;
 
   // restore the CPU state from SMRAM
   if (! smram_restore_state(saved_state)) {
@@ -108,8 +108,8 @@ void BX_CPU_C::enter_system_management_mode(void)
   BX_CPU_THIS_PTR cr4.set_VMXE(0);
   BX_CPU_THIS_PTR in_smm_vmx = BX_CPU_THIS_PTR in_vmx;
   BX_CPU_THIS_PTR in_smm_vmx_guest = BX_CPU_THIS_PTR in_vmx_guest;
-  BX_CPU_THIS_PTR in_vmx = 0;
-  BX_CPU_THIS_PTR in_vmx_guest = 0;
+  BX_CPU_THIS_PTR in_vmx = false;
+  BX_CPU_THIS_PTR in_vmx_guest = false;
 
   BX_INFO(("enter_system_management_mode: temporary disable VMX while in SMM mode"));
 
@@ -118,7 +118,7 @@ void BX_CPU_C::enter_system_management_mode(void)
   //   * set processor state to standard SMM values
 #endif
 
-  BX_CPU_THIS_PTR in_smm = 1;
+  BX_CPU_THIS_PTR in_smm = true;
 
   mask_event(BX_EVENT_SMI | BX_EVENT_NMI | BX_EVENT_VMX_VIRTUAL_NMI);
 
@@ -666,7 +666,7 @@ bool BX_CPU_C::resume_from_system_management_mode(BX_SMM_State *smm_state)
   //   FI;
 
   if (BX_CPU_THIS_PTR in_smm_vmx) {
-    BX_CPU_THIS_PTR in_vmx = 1;
+    BX_CPU_THIS_PTR in_vmx = true;
     BX_CPU_THIS_PTR in_vmx_guest = BX_CPU_THIS_PTR in_smm_vmx_guest;
     BX_INFO(("SMM Restore: enable VMX %s mode", BX_CPU_THIS_PTR in_vmx_guest ? "guest" : "host"));
 

@@ -261,7 +261,7 @@ void BX_CPU_C::VMexit_Event(unsigned type, unsigned vector, Bit16u errcode, bool
     if (errcode_valid)
       vm->idt_vector_info |= (1 << 11); // error code delivered
 
-    BX_CPU_THIS_PTR nmi_unblocking_iret = 0;
+    BX_CPU_THIS_PTR nmi_unblocking_iret = false;
     return;
   }
 
@@ -270,7 +270,7 @@ void BX_CPU_C::VMexit_Event(unsigned type, unsigned vector, Bit16u errcode, bool
   // VMEXIT is not considered to occur during event delivery if it results
   // in a double fault exception that causes VMEXIT directly
   if (vector == BX_DF_EXCEPTION)
-    BX_CPU_THIS_PTR in_event = 0; // clear in_event indication on #DF
+    BX_CPU_THIS_PTR in_event = false; // clear in_event indication on #DF
 
   if (vector == BX_DB_EXCEPTION)  {
     // qualifcation for debug exceptions similar to debug_trap field
@@ -301,7 +301,7 @@ void BX_CPU_C::VMexit_TripleFault(void)
 
   // VMEXIT is not considered to occur during event delivery if it results
   // in a triple fault exception (that causes VMEXIT directly)
-  BX_CPU_THIS_PTR in_event = 0;
+  BX_CPU_THIS_PTR in_event = false;
 
   VMexit(VMX_VMEXIT_TRIPLE_FAULT, 0);
 }

@@ -39,14 +39,14 @@ const unsigned BX_LAPIC_LAST_VECTOR  = 0xff;
 
 ///////////// APIC BUS /////////////
 
-int apic_bus_deliver_interrupt(Bit8u vector, apic_dest_t dest, Bit8u delivery_mode, bool logical_dest, bool level, bool trig_mode)
+bool apic_bus_deliver_interrupt(Bit8u vector, apic_dest_t dest, Bit8u delivery_mode, bool logical_dest, bool level, bool trig_mode)
 {
   if(delivery_mode == APIC_DM_LOWPRI)
   {
      if(! logical_dest) {
        // I/O subsytem initiated interrupt with lowest priority delivery
        // which is not supported in physical destination mode
-       return 0;
+       return false;
      }
      else {
        return apic_bus_deliver_lowest_priority(vector, dest, trig_mode, 0);
@@ -65,16 +65,16 @@ int apic_bus_deliver_interrupt(Bit8u vector, apic_dest_t dest, Bit8u delivery_mo
        {
          if(BX_CPU_APIC(i)->get_id() == dest) {
            BX_CPU_APIC(i)->deliver(vector, delivery_mode, trig_mode);
-           return 1;
+           return true;
          }
        }
 
-       return 0;
+       return false;
     }
   }
   else {
     // logical destination mode
-    if(dest == 0) return 0;
+    if(dest == 0) return false;
 
     bool interrupt_delivered = false;
 
@@ -85,11 +85,11 @@ int apic_bus_deliver_interrupt(Bit8u vector, apic_dest_t dest, Bit8u delivery_mo
       }
     }
 
-    return (int) interrupt_delivered;
+    return interrupt_delivered;
   }
 }
 
-int apic_bus_deliver_lowest_priority(Bit8u vector, apic_dest_t dest, bool trig_mode, bool broadcast)
+bool apic_bus_deliver_lowest_priority(Bit8u vector, apic_dest_t dest, bool trig_mode, bool broadcast)
 {
   int i;
 
@@ -98,7 +98,7 @@ int apic_bus_deliver_lowest_priority(Bit8u vector, apic_dest_t dest, bool trig_m
     for (i=0; i<BX_NUM_LOCAL_APICS; i++) {
       if(BX_CPU_APIC(i)->is_focus(vector)) {
         BX_CPU_APIC(i)->deliver(vector, APIC_DM_LOWPRI, trig_mode);
-        return 1;
+        return true;
       }
     }
   }
@@ -122,13 +122,13 @@ int apic_bus_deliver_lowest_priority(Bit8u vector, apic_dest_t dest, bool trig_m
   if(lowest_priority_agent >= 0)
   {
     BX_CPU_APIC(lowest_priority_agent)->deliver(vector, APIC_DM_LOWPRI, trig_mode);
-    return 1;
+    return true;
   }
 
-  return 0;
+  return false;
 }
 
-int apic_bus_broadcast_interrupt(Bit8u vector, Bit8u delivery_mode, bool trig_mode, int exclude_cpu)
+bool apic_bus_broadcast_interrupt(Bit8u vector, Bit8u delivery_mode, bool trig_mode, int exclude_cpu)
 {
   if(delivery_mode == APIC_DM_LOWPRI)
   {
@@ -141,7 +141,7 @@ int apic_bus_broadcast_interrupt(Bit8u vector, Bit8u delivery_mode, bool trig_mo
     BX_CPU_APIC(i)->deliver(vector, delivery_mode, trig_mode);
   }
 
-  return 1;
+  return true;
 }
 
 static void apic_bus_broadcast_eoi(Bit8u vector)
@@ -187,7 +187,7 @@ bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu, unsigned id)
   // Register a non-active timer for use when the timer is started.
   timer_handle = bx_pc_system.register_timer_ticks(this,
             bx_local_apic_c::periodic_smf, 0, 0, 0, "lapic");
-  timer_active = 0;
+  timer_active = false;
 
 #if BX_SUPPORT_VMX >= 2
   // Register a non-active timer for VMX preemption timer.
@@ -195,14 +195,14 @@ bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu, unsigned id)
             bx_local_apic_c::vmx_preemption_timer_expired, 0, 0, 0, "vmx_preemption");
   BX_DEBUG(("vmx_timer is = %d", vmx_timer_handle));
   vmx_preemption_timer_rate = VMX_MISC_PREEMPTION_TIMER_RATE;
-  vmx_timer_active = 0;
+  vmx_timer_active = false;
 #endif
 
 #if BX_SUPPORT_MONITOR_MWAIT
   mwaitx_timer_handle = bx_pc_system.register_timer_ticks(this,
             bx_local_apic_c::mwaitx_timer_expired, 0, 0, 0, "mwaitx_timer");
   BX_DEBUG(("mwaitx_timer is = %d", mwaitx_timer_handle));
-  mwaitx_timer_active = 0;
+  mwaitx_timer_active = false;
 #endif
 
   xapic = simulate_xapic; // xAPIC or legacy APIC
@@ -238,20 +238,20 @@ void bx_local_apic_c::reset(unsigned type)
 
   if(timer_active) {
     bx_pc_system.deactivate_timer(timer_handle);
-    timer_active = 0;
+    timer_active = false;
   }
 
 #if BX_SUPPORT_VMX >= 2
   if(vmx_timer_active) {
     bx_pc_system.deactivate_timer(vmx_timer_handle);
-    vmx_timer_active = 0;
+    vmx_timer_active = false;
   }
 #endif
 
 #if BX_SUPPORT_MONITOR_MWAIT
   if(mwaitx_timer_active) {
     bx_pc_system.deactivate_timer(mwaitx_timer_handle);
-    mwaitx_timer_active = 0;
+    mwaitx_timer_active = false;
   }
 #endif
 
@@ -634,7 +634,7 @@ void bx_local_apic_c::set_lvt_entry(unsigned apic_reg, Bit32u value)
          // Transition between TSC-Deadline and other timer modes disarm the timer
          if(timer_active) {
             bx_pc_system.deactivate_timer(timer_handle);
-            timer_active = 0;
+            timer_active = false;
          }
       }
     }
@@ -655,7 +655,7 @@ void bx_local_apic_c::send_ipi(apic_dest_t dest, Bit32u lo_cmd)
   int logical_dest = (lo_cmd >> 11) & 1;
   int delivery_mode = (lo_cmd >> 8) & 7;
   int vector = (lo_cmd & 0xff);
-  int accepted = 0;
+  bool accepted = false;
 
   if(delivery_mode == APIC_DM_INIT)
   {
@@ -675,7 +675,7 @@ void bx_local_apic_c::send_ipi(apic_dest_t dest, Bit32u lo_cmd)
     break;
   case 1:  // self
     trigger_irq(vector, trig_mode);
-    accepted = 1;
+    accepted = true;
     break;
   case 2:  // all including self
     accepted = apic_bus_broadcast_interrupt(vector, delivery_mode, trig_mode, apic_id_mask);
@@ -1048,7 +1048,7 @@ void bx_local_apic_c::periodic(void)
   if(timervec & 0x20000) {
     // Periodic mode - reload timer values
     timer_current = timer_initial;
-    timer_active = 1;
+    timer_active = true;
     ticksInitial = bx_pc_system.time_ticks(); // timer value when it started to count
     BX_DEBUG(("local apic timer(periodic) triggered int, reset counter to 0x%08x", timer_current));
     bx_pc_system.activate_timer_ticks(timer_handle,
@@ -1057,7 +1057,7 @@ void bx_local_apic_c::periodic(void)
   else {
     // one-shot mode
     timer_current = 0;
-    timer_active = 0;
+    timer_active = false;
     BX_DEBUG(("local apic timer(one-shot) triggered int"));
     bx_pc_system.deactivate_timer(timer_handle);
   }
@@ -1085,7 +1085,7 @@ void bx_local_apic_c::set_initial_timer_count(Bit32u value)
   // If active before, deactivate the current timer before changing it.
   if(timer_active) {
     bx_pc_system.deactivate_timer(timer_handle);
-    timer_active = 0;
+    timer_active = false;
   }
 
   timer_initial = value;
@@ -1097,7 +1097,7 @@ void bx_local_apic_c::set_initial_timer_count(Bit32u value)
     // restart from the new start value.
     BX_DEBUG(("APIC: Initial Timer Count Register = %u", value));
     timer_current = timer_initial;
-    timer_active = 1;
+    timer_active = true;
     ticksInitial = bx_pc_system.time_ticks(); // timer value when it started to count
     bx_pc_system.activate_timer_ticks(timer_handle,
             Bit64u(timer_initial) * Bit64u(timer_divide_factor), 0);
@@ -1113,7 +1113,7 @@ Bit32u bx_local_apic_c::get_current_timer_count(void)
   if (timervec & 0x40000) return 0;
 #endif
 
-  if(timer_active==0) {
+  if(! timer_active) {
     return timer_current;
   } else {
     Bit64u delta64 = (bx_pc_system.time_ticks() - ticksInitial) / timer_divide_factor;
@@ -1138,14 +1138,14 @@ void bx_local_apic_c::set_tsc_deadline(Bit64u deadline)
   // If active before, deactivate the current timer before changing it.
   if(timer_active) {
     bx_pc_system.deactivate_timer(timer_handle);
-    timer_active = 0;
+    timer_active = false;
   }
 
   ticksInitial = deadline;
   if (deadline != 0) {
     BX_DEBUG(("APIC: TSC-Deadline is set to " FMT_LL "d", deadline));
     Bit64u currtime = bx_pc_system.time_ticks();
-    timer_active = 1;
+    timer_active = true;
     bx_pc_system.activate_timer_ticks(timer_handle, (deadline > currtime) ? (deadline - currtime) : 1 , 0);
   }
 }
@@ -1178,14 +1178,14 @@ void bx_local_apic_c::set_vmx_preemption_timer(Bit32u value)
   vmx_preemption_timer_fire = ((vmx_preemption_timer_initial >> vmx_preemption_timer_rate) + value) << vmx_preemption_timer_rate;
   BX_DEBUG(("VMX Preemption timer: value = %u, rate = %u, init = " FMT_LL "u, fire = " FMT_LL "u", value, vmx_preemption_timer_rate, vmx_preemption_timer_initial, vmx_preemption_timer_fire));
   bx_pc_system.activate_timer_ticks(vmx_timer_handle, vmx_preemption_timer_fire - vmx_preemption_timer_initial, 0);
-  vmx_timer_active = 1;
+  vmx_timer_active = true;
 }
 
 void bx_local_apic_c::deactivate_vmx_preemption_timer(void)
 {
   if (! vmx_timer_active) return;
   bx_pc_system.deactivate_timer(vmx_timer_handle);
-  vmx_timer_active = 0;
+  vmx_timer_active = false;
 }
 
 // Invoked when VMX preemption timer expired
@@ -1203,14 +1203,14 @@ void bx_local_apic_c::set_mwaitx_timer(Bit32u value)
 {
   BX_DEBUG(("MWAITX timer: value = %u", value));
   bx_pc_system.activate_timer_ticks(mwaitx_timer_handle, value, 0);
-  mwaitx_timer_active = 1;
+  mwaitx_timer_active = true;
 }
 
 void bx_local_apic_c::deactivate_mwaitx_timer(void)
 {
   if (! mwaitx_timer_active) return;
   bx_pc_system.deactivate_timer(mwaitx_timer_handle);
-  mwaitx_timer_active = 0;
+  mwaitx_timer_active = false;
 }
 
 // Invoked when MWAITX timer expired

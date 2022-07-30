@@ -81,7 +81,7 @@ void BX_CPU_C::cpu_loop(void)
   // new EIP/ESP, and set up other environmental fields.  This code
   // mirrors similar code below, after the interrupt() call.
   BX_CPU_THIS_PTR prev_rip = RIP; // commit new EIP
-  BX_CPU_THIS_PTR speculative_rsp = 0;
+  BX_CPU_THIS_PTR speculative_rsp = false;
 
   while (1) {
 
@@ -309,7 +309,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat(bxInstruction_c *i, BxRepIterationP
   }
 
 #if BX_X86_DEBUGGER
-  BX_CPU_THIS_PTR in_repeat = 0;
+  BX_CPU_THIS_PTR in_repeat = false;
 #endif
 
 #if BX_SUPPORT_X86_64
@@ -375,7 +375,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat(bxInstruction_c *i, BxRepIterationP
   }
 
 #if BX_X86_DEBUGGER
-  BX_CPU_THIS_PTR in_repeat = 1;
+  BX_CPU_THIS_PTR in_repeat = true;
 #endif
 
   RIP = BX_CPU_THIS_PTR prev_rip; // repeat loop not done, restore RIP
@@ -395,7 +395,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxRepIterati
   }
 
 #if BX_X86_DEBUGGER
-  BX_CPU_THIS_PTR in_repeat = 0;
+  BX_CPU_THIS_PTR in_repeat = false;
 #endif
 
   if (rep == 3) { /* repeat prefix 0xF3 */
@@ -526,7 +526,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxRepIterati
   }
 
 #if BX_X86_DEBUGGER
-  BX_CPU_THIS_PTR in_repeat = 1;
+  BX_CPU_THIS_PTR in_repeat = true;
 #endif
 
   RIP = BX_CPU_THIS_PTR prev_rip; // repeat loop not done, restore RIP

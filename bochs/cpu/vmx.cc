@@ -2722,13 +2722,13 @@ void BX_CPU_C::VMexit(Bit32u reason, Bit64u qualification)
   if (BX_CPU_THIS_PTR in_event) {
     VMwrite32(VMCS_32BIT_IDT_VECTORING_INFO, vm->idt_vector_info | 0x80000000);
     VMwrite32(VMCS_32BIT_IDT_VECTORING_ERR_CODE, vm->idt_vector_error_code);
-    BX_CPU_THIS_PTR in_event = 0;
+    BX_CPU_THIS_PTR in_event = false;
   }
   else {
     VMwrite32(VMCS_32BIT_IDT_VECTORING_INFO, 0);
   }
 
-  BX_CPU_THIS_PTR nmi_unblocking_iret = 0;
+  BX_CPU_THIS_PTR nmi_unblocking_iret = false;
 
   // VMEXITs are FAULT-like: restore RIP/RSP to value before VMEXIT occurred
   if (! IS_TRAP_LIKE_VMEXIT(reason)) {
@@ -2740,7 +2740,7 @@ void BX_CPU_C::VMexit(Bit32u reason, Bit64u qualification)
 #endif
     }
   }
-  BX_CPU_THIS_PTR speculative_rsp = 0;
+  BX_CPU_THIS_PTR speculative_rsp = false;
 
   //
   // STEP 1: Saving Guest State to VMCS
@@ -2758,7 +2758,7 @@ void BX_CPU_C::VMexit(Bit32u reason, Bit64u qualification)
     }
   }
 
-  BX_CPU_THIS_PTR in_vmx_guest = 0;
+  BX_CPU_THIS_PTR in_vmx_guest = false;
 
   // entering VMX root mode: clear possibly pending guest VMX events
   clear_event(BX_EVENT_VMX_VTPR_UPDATE |
@@ -2847,7 +2847,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXON(bxInstruction_c *i)
     BX_CPU_THIS_PTR vmcsptr = BX_INVALID_VMCSPTR;
     BX_CPU_THIS_PTR vmcshostptr = 0;
     BX_CPU_THIS_PTR vmxonptr = pAddr;
-    BX_CPU_THIS_PTR in_vmx = 1;
+    BX_CPU_THIS_PTR in_vmx = true;
     mask_event(BX_EVENT_INIT); // INIT is disabled in VMX root mode
     // block and disable A20M;
 
@@ -2896,7 +2896,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXOFF(bxInstruction_c *i)
 */
   {
     BX_CPU_THIS_PTR vmxonptr = BX_INVALID_VMCSPTR;
-    BX_CPU_THIS_PTR in_vmx = 0;  // leave VMX operation mode
+    BX_CPU_THIS_PTR in_vmx = false;  // leave VMX operation mode
     unmask_event(BX_EVENT_INIT);
      // unblock and enable A20M;
 #if BX_SUPPORT_MONITOR_MWAIT
@@ -2987,10 +2987,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
   if (! BX_CPU_THIS_PTR in_vmx || ! protected_mode() || BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_COMPAT)
     exception(BX_UD_EXCEPTION, 0);
 
-  unsigned vmlaunch = 0;
+  bool vmlaunch = false;
   if ((i->getIaOpcode() == BX_IA_VMLAUNCH)) {
     BX_DEBUG(("VMLAUNCH VMCS ptr: 0x" FMT_ADDRX64, BX_CPU_THIS_PTR vmcsptr));
-    vmlaunch = 1;
+    vmlaunch = true;
   }
   else {
     BX_DEBUG(("VMRESUME VMCS ptr: 0x" FMT_ADDRX64, BX_CPU_THIS_PTR vmcsptr));
@@ -3117,7 +3117,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
    FI;
 */
 
-  BX_CPU_THIS_PTR in_vmx_guest = 1;
+  BX_CPU_THIS_PTR in_vmx_guest = true;
 
   unmask_event(BX_EVENT_INIT);
 

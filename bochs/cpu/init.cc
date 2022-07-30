@@ -852,7 +852,7 @@ void BX_CPU_C::reset(unsigned source)
 #if BX_X86_DEBUGGER
   BX_CPU_THIS_PTR in_repeat = 0;
 #endif
-  BX_CPU_THIS_PTR in_smm = 0;
+  BX_CPU_THIS_PTR in_smm = false;
 
   BX_CPU_THIS_PTR pending_event = 0;
   BX_CPU_THIS_PTR event_mask = 0;
@@ -1057,8 +1057,8 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 
 #if BX_SUPPORT_VMX
-  BX_CPU_THIS_PTR in_vmx = BX_CPU_THIS_PTR in_vmx_guest = 0;
-  BX_CPU_THIS_PTR in_smm_vmx = BX_CPU_THIS_PTR in_smm_vmx_guest = 0;
+  BX_CPU_THIS_PTR in_vmx = BX_CPU_THIS_PTR in_vmx_guest = false;
+  BX_CPU_THIS_PTR in_smm_vmx = BX_CPU_THIS_PTR in_smm_vmx_guest = false;
   BX_CPU_THIS_PTR vmcsptr = BX_CPU_THIS_PTR vmxonptr = BX_INVALID_VMCSPTR;
   set_VMCSPTR(BX_CPU_THIS_PTR vmcsptr);
   if (source == BX_RESET_HARDWARE) {
@@ -1068,16 +1068,16 @@ void BX_CPU_C::reset(unsigned source)
 
 #if BX_SUPPORT_SVM
   set_VMCBPTR(0);
-  BX_CPU_THIS_PTR in_svm_guest = 0;
-  BX_CPU_THIS_PTR svm_gif = 1;
+  BX_CPU_THIS_PTR in_svm_guest = false;
+  BX_CPU_THIS_PTR svm_gif = true;
 #endif
 
 #if BX_SUPPORT_VMX || BX_SUPPORT_SVM
-  BX_CPU_THIS_PTR in_event = 0;
+  BX_CPU_THIS_PTR in_event = false;
 #endif
 
 #if BX_SUPPORT_VMX
-  BX_CPU_THIS_PTR nmi_unblocking_iret = 0;
+  BX_CPU_THIS_PTR nmi_unblocking_iret = false;
 #endif
 
 #if BX_SUPPORT_SMP

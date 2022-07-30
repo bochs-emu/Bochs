@@ -625,7 +625,7 @@ void BX_CPU_C::Svm_Vmexit(int reason, Bit64u exitinfo1, Bit64u exitinfo2)
   RIP = BX_CPU_THIS_PTR prev_rip;
   if (BX_CPU_THIS_PTR speculative_rsp)
     RSP = BX_CPU_THIS_PTR prev_rsp;
-  BX_CPU_THIS_PTR speculative_rsp = 0;
+  BX_CPU_THIS_PTR speculative_rsp = false;
 
   if (BX_SUPPORT_SVM_EXTENSION(BX_CPUID_SVM_DECODE_ASSIST)) {
     //
@@ -651,8 +651,8 @@ void BX_CPU_C::Svm_Vmexit(int reason, Bit64u exitinfo1, Bit64u exitinfo2)
 
   mask_event(BX_EVENT_SVM_VIRQ_PENDING);
 
-  BX_CPU_THIS_PTR in_svm_guest = 0;
-  BX_CPU_THIS_PTR svm_gif = 0;
+  BX_CPU_THIS_PTR in_svm_guest = false;
+  BX_CPU_THIS_PTR svm_gif = false;
 
   //
   // STEP 0: Update exit reason
@@ -670,7 +670,7 @@ void BX_CPU_C::Svm_Vmexit(int reason, Bit64u exitinfo1, Bit64u exitinfo2)
   if (BX_CPU_THIS_PTR in_event) {
     vmcb_write32(SVM_CONTROL32_EXITINTINFO, ctrls->exitintinfo | 0x80000000);
     vmcb_write32(SVM_CONTROL32_EXITINTINFO_ERROR_CODE, ctrls->exitintinfo_error_code);
-    BX_CPU_THIS_PTR in_event = 0;
+    BX_CPU_THIS_PTR in_event = false;
   }
   else {
     vmcb_write32(SVM_CONTROL32_EXITINTINFO, 0);
@@ -801,7 +801,7 @@ void BX_CPU_C::SvmInterceptException(unsigned type, unsigned vector, Bit16u errc
   // VMEXIT is not considered to occur during event delivery if it results
   // in a double fault exception that causes VMEXIT directly
   if (vector == BX_DF_EXCEPTION)
-    BX_CPU_THIS_PTR in_event = 0; // clear in_event indication on #DF
+    BX_CPU_THIS_PTR in_event = false; // clear in_event indication on #DF
 
   BX_CPU_THIS_PTR debug_trap = 0; // clear debug_trap field
   BX_CPU_THIS_PTR inhibit_mask = 0;
@@ -1027,8 +1027,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMRUN(bxInstruction_c *i)
   if (!SvmEnterLoadCheckGuestState())
     Svm_Vmexit(SVM_VMEXIT_INVALID);
 
-  BX_CPU_THIS_PTR in_svm_guest = 1;
-  BX_CPU_THIS_PTR svm_gif = 1;
+  BX_CPU_THIS_PTR in_svm_guest = true;
+  BX_CPU_THIS_PTR svm_gif = true;
   BX_CPU_THIS_PTR async_event = 1;
 
   //
@@ -1185,7 +1185,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLGI(bxInstruction_c *i)
     if (SVM_INTERCEPT(SVM_INTERCEPT1_CLGI)) Svm_Vmexit(SVM_VMEXIT_CLGI);
   }
 
-  BX_CPU_THIS_PTR svm_gif = 0;
+  BX_CPU_THIS_PTR svm_gif = false;
 #endif
 
   BX_NEXT_TRACE(i);
@@ -1206,7 +1206,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STGI(bxInstruction_c *i)
     if (SVM_INTERCEPT(SVM_INTERCEPT1_STGI)) Svm_Vmexit(SVM_VMEXIT_STGI);
   }
 
-  BX_CPU_THIS_PTR svm_gif = 1;
+  BX_CPU_THIS_PTR svm_gif = true;
   BX_CPU_THIS_PTR async_event = 1;
 #endif
 
