@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2020  The Bochs Project
+//  Copyright (C) 2001-2022  The Bochs Project
 //
 //  I/O memory handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -27,6 +27,12 @@
 #include "cpu/cpu.h"
 #include "iodev/iodev.h"
 #define LOG_THIS BX_MEM(0)->
+
+// block size must be power of two
+BX_CPP_INLINE bool is_power_of_2(Bit64u x)
+{
+    return (x & (x - 1)) == 0;
+}
 
 // alignment of memory vector, must be a power of 2
 #define BX_MEM_VECTOR_ALIGN 4096
@@ -92,15 +98,17 @@ BX_MEM_C::~BX_MEM_C()
   cleanup_memory();
 }
 
-void BX_MEM_C::init_memory(Bit64u guest, Bit64u host)
+void BX_MEM_C::init_memory(Bit64u guest, Bit64u host, Bit32u block_size)
 {
   unsigned i, idx;
-
-  BX_DEBUG(("Init $Id$"));
 
   // accept only memory size which is multiply of 1M
   BX_ASSERT((host & 0xfffff) == 0);
   BX_ASSERT((guest & 0xfffff) == 0);
+
+  if (! is_power_of_2(block_size)) {
+    BX_PANIC(("Block size %d is not power of two !", block_size));
+  }
 
   if (BX_MEM_THIS actual_vector != NULL) {
     BX_INFO(("freeing existing memory vector"));
@@ -110,8 +118,8 @@ void BX_MEM_C::init_memory(Bit64u guest, Bit64u host)
     BX_MEM_THIS blocks = NULL;
   }
   BX_MEM_THIS vector = alloc_vector_aligned(host + BIOSROMSZ + EXROMSIZE + 4096, BX_MEM_VECTOR_ALIGN);
-  BX_INFO(("allocated memory at %p. after alignment, vector=%p",
-        BX_MEM_THIS actual_vector, BX_MEM_THIS vector));
+  BX_INFO(("allocated memory at %p. after alignment, vector=%p, block_size = %dK",
+        BX_MEM_THIS actual_vector, BX_MEM_THIS vector, block_size/1024));
 
   BX_MEM_THIS len = guest;
   BX_MEM_THIS allocated = host;
@@ -119,17 +127,18 @@ void BX_MEM_C::init_memory(Bit64u guest, Bit64u host)
   BX_MEM_THIS bogus = &BX_MEM_THIS vector[host + BIOSROMSZ + EXROMSIZE];
   memset(BX_MEM_THIS rom, 0xff, BIOSROMSZ + EXROMSIZE + 4096);
 
+  BX_MEM_THIS block_size = block_size;
   // block must be large enough to fit num_blocks in 32-bit
-  BX_ASSERT((BX_MEM_THIS len / BX_MEM_BLOCK_LEN) <= 0xffffffff);
+  BX_ASSERT((BX_MEM_THIS len / BX_MEM_THIS block_size) <= 0xffffffff);
 
-  Bit32u num_blocks = (Bit32u)(BX_MEM_THIS len / BX_MEM_BLOCK_LEN);
+  Bit32u num_blocks = (Bit32u)(BX_MEM_THIS len / BX_MEM_THIS block_size);
   BX_INFO(("%.2fMB", (float)(BX_MEM_THIS len / (1024.0*1024.0))));
-  BX_INFO(("mem block size = 0x%08x, blocks=%u", BX_MEM_BLOCK_LEN, num_blocks));
+  BX_INFO(("mem block size = 0x%08x, blocks=%u", BX_MEM_THIS block_size, num_blocks));
   BX_MEM_THIS blocks = new Bit8u* [num_blocks];
   if (0) {
     // all guest memory is allocated, just map it
     for (idx = 0; idx < num_blocks; idx++) {
-      BX_MEM_THIS blocks[idx] = BX_MEM_THIS vector + (idx * BX_MEM_BLOCK_LEN);
+      BX_MEM_THIS blocks[idx] = BX_MEM_THIS vector + (idx * BX_MEM_THIS block_size);
     }
     BX_MEM_THIS used_blocks = num_blocks;
   }
@@ -166,16 +175,29 @@ void BX_MEM_C::init_memory(Bit64u guest, Bit64u host)
   BX_MEM_THIS register_state();
 }
 
+Bit8u* BX_MEM_C::get_vector(bx_phy_address addr)
+{
+  Bit32u block = (Bit32u)(addr / BX_MEM_THIS block_size);
+#if (BX_LARGE_RAMFILE)
+  if (!BX_MEM_THIS blocks[block] || (BX_MEM_THIS blocks[block] == BX_MEM_THIS swapped_out))
+#else
+  if (!BX_MEM_THIS blocks[block])
+#endif
+    allocate_block(block);
+
+  return BX_MEM_THIS blocks[block] + (Bit32u)(addr & (BX_MEM_THIS block_size-1));
+}
+
 #if BX_LARGE_RAMFILE
 void BX_MEM_C::read_block(Bit32u block)
 {
-  const Bit64u block_address = ((Bit64u)block)*BX_MEM_BLOCK_LEN;
+  const Bit64u block_address = Bit64u(block) * BX_MEM_THIS block_size;
 
   if (fseeko64(BX_MEM_THIS overflow_file, block_address, SEEK_SET))
     BX_PANIC(("FATAL ERROR: Could not seek to 0x" FMT_LL "x in memory overflow file!", block_address));
 
   // We could legitimately get an EOF condition if we are reading the last bit of memory.ram
-  if ((fread(BX_MEM_THIS blocks[block], BX_MEM_BLOCK_LEN, 1, BX_MEM_THIS overflow_file) != 1) && 
+  if ((fread(BX_MEM_THIS blocks[block], BX_MEM_THIS block_size, 1, BX_MEM_THIS overflow_file) != 1) && 
       (!feof(BX_MEM_THIS overflow_file))) 
     BX_PANIC(("FATAL ERROR: Could not read from 0x" FMT_LL "x in memory overflow file!", block_address)); 
 }
@@ -183,7 +205,7 @@ void BX_MEM_C::read_block(Bit32u block)
 
 void BX_MEM_C::allocate_block(Bit32u block)
 {
-  const Bit32u max_blocks = (Bit32u)(BX_MEM_THIS allocated / BX_MEM_BLOCK_LEN);
+  const Bit32u max_blocks = (Bit32u)(BX_MEM_THIS allocated / BX_MEM_THIS block_size);
 
 #if BX_LARGE_RAMFILE
   /* 
@@ -198,7 +220,7 @@ void BX_MEM_C::allocate_block(Bit32u block)
     do {
       do {
         // Wrap if necessary
-        if (++(BX_MEM_THIS next_swapout_idx)==((BX_MEM_THIS len)/BX_MEM_BLOCK_LEN))
+        if (++(BX_MEM_THIS next_swapout_idx)==((BX_MEM_THIS len)/BX_MEM_THIS block_size))
           BX_MEM_THIS next_swapout_idx = 0;
         if (BX_MEM_THIS next_swapout_idx == original_replacement_block)
           BX_PANIC(("FATAL ERROR: Insufficient working RAM, all blocks are currently used for TLB entries!"));
@@ -207,13 +229,13 @@ void BX_MEM_C::allocate_block(Bit32u block)
 
       used_for_tlb = false;
       // tlb buffer check loop
-      const Bit8u* buffer_end = buffer+BX_MEM_BLOCK_LEN;
+      const Bit8u* buffer_end = buffer+BX_MEM_THIS block_size;
       // Don't replace it if any CPU is using it as a TLB entry
       for (int i=0; i<BX_SMP_PROCESSORS && !used_for_tlb;i++)
         used_for_tlb = BX_CPU(i)->check_addr_in_tlb_buffers(buffer, buffer_end);
     } while (used_for_tlb);
     // Flush the block to be replaced
-    bx_phy_address address = ((bx_phy_address)BX_MEM_THIS next_swapout_idx)*BX_MEM_BLOCK_LEN;
+    bx_phy_address address = bx_phy_address(BX_MEM_THIS next_swapout_idx) * BX_MEM_THIS block_size;
     // Create overflow file if it does not currently exist.
     if (!BX_MEM_THIS overflow_file) {
       BX_MEM_THIS overflow_file = tmpfile64();
@@ -223,7 +245,7 @@ void BX_MEM_C::allocate_block(Bit32u block)
     // Write swapped out block
     if (fseeko64(BX_MEM_THIS overflow_file, address, SEEK_SET))
       BX_PANIC(("FATAL ERROR: Could not seek to 0x" FMT_PHY_ADDRX " in overflow file!", address)); 
-    if (1 != fwrite (BX_MEM_THIS blocks[BX_MEM_THIS next_swapout_idx], BX_MEM_BLOCK_LEN, 1, BX_MEM_THIS overflow_file))
+    if (1 != fwrite (BX_MEM_THIS blocks[BX_MEM_THIS next_swapout_idx], BX_MEM_THIS block_size, 1, BX_MEM_THIS overflow_file))
       BX_PANIC(("FATAL ERROR: Could not write at 0x" FMT_PHY_ADDRX " in overflow file!", address));
     // Mark swapped out block
     BX_MEM_THIS blocks[BX_MEM_THIS next_swapout_idx] = BX_MEM_C::swapped_out;
@@ -232,7 +254,7 @@ void BX_MEM_C::allocate_block(Bit32u block)
     BX_DEBUG(("allocate_block: block=0x%x, replaced 0x%x", block, BX_MEM_THIS next_swapout_idx));
   }
   else {
-    BX_MEM_THIS blocks[block] = BX_MEM_THIS vector + (BX_MEM_THIS used_blocks++ * BX_MEM_BLOCK_LEN);
+    BX_MEM_THIS blocks[block] = BX_MEM_THIS vector + (BX_MEM_THIS used_blocks++ * BX_MEM_THIS block_size);
     BX_DEBUG(("allocate_block: block=0x%x used 0x%x of 0x%x",
           block, BX_MEM_THIS used_blocks, max_blocks));
   }
@@ -242,7 +264,7 @@ void BX_MEM_C::allocate_block(Bit32u block)
     BX_PANIC(("FATAL ERROR: all available memory is already allocated !"));
   }
   else {
-    BX_MEM_THIS blocks[block] = BX_MEM_THIS vector + (BX_MEM_THIS used_blocks * BX_MEM_BLOCK_LEN);
+    BX_MEM_THIS blocks[block] = BX_MEM_THIS vector + (BX_MEM_THIS used_blocks * BX_MEM_THIS block_size);
     BX_MEM_THIS used_blocks++;
   }
   BX_DEBUG(("allocate_block: used_blocks=0x%x of 0x%x", BX_MEM_THIS used_blocks, max_blocks));
@@ -253,13 +275,13 @@ void BX_MEM_C::allocate_block(Bit32u block)
 // The blocks in RAM must also be flushed to the save file.
 void ramfile_save_handler(void *devptr, FILE *fp)
 {
-  for (Bit32u idx = 0; idx < (BX_MEM(0)->len / BX_MEM_BLOCK_LEN); idx++) {
+  for (Bit32u idx = 0; idx < (BX_MEM(0)->len / BX_MEM_THIS block_size); idx++) {
     if ((BX_MEM(0)->blocks[idx]) && (BX_MEM(0)->blocks[idx] != BX_MEM(0)->swapped_out))
     {
-      bx_phy_address address = ((bx_phy_address)idx)*BX_MEM_BLOCK_LEN;
+      bx_phy_address address = bx_phy_address(idx) * BX_MEM_THIS block_size;
       if (fseeko64(fp, address, SEEK_SET))
         BX_PANIC(("FATAL ERROR: Could not seek to 0x" FMT_PHY_ADDRX " in overflow file!", address)); 
-      if (1 != fwrite (BX_MEM(0)->blocks[idx], BX_MEM_BLOCK_LEN, 1, fp))
+      if (1 != fwrite (BX_MEM(0)->blocks[idx], BX_MEM_THIS block_size, 1, fp))
         BX_PANIC(("FATAL ERROR: Could not write at 0x" FMT_PHY_ADDRX " in overflow file!", address));
     }
   }
@@ -281,8 +303,8 @@ Bit64s memory_param_save_handler(void *devptr, bx_param_c *param)
 #endif
     // Return the block offset into the array
     Bit32u val = (Bit32u) (BX_MEM(0)->blocks[blk_index] - BX_MEM(0)->vector);
-    if ((val & (BX_MEM_BLOCK_LEN-1)) == 0)
-       return val / BX_MEM_BLOCK_LEN;
+    if ((val & (BX_MEM_THIS block_size-1)) == 0)
+       return val / BX_MEM_THIS block_size;
   }
   return -1;
 }
@@ -302,7 +324,7 @@ void memory_param_restore_handler(void *devptr, bx_param_c *param, Bit64s val)
         BX_MEM(0)->blocks[blk_index] = NULL;
         return;
       }
-      BX_MEM(0)->blocks[blk_index] = BX_MEM(0)->vector + val * BX_MEM_BLOCK_LEN;
+      BX_MEM(0)->blocks[blk_index] = BX_MEM(0)->vector + val * BX_MEM_THIS block_size;
 #if BX_LARGE_RAMFILE
       BX_MEM(0)->read_block(blk_index);
 #endif
@@ -314,7 +336,7 @@ void BX_MEM_C::register_state()
   char param_name[15];
 
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "memory", "Memory State");
-  Bit32u num_blocks = (Bit32u)(BX_MEM_THIS len / BX_MEM_BLOCK_LEN);
+  Bit32u num_blocks = (Bit32u)(BX_MEM_THIS len / BX_MEM_THIS block_size);
 #if BX_LARGE_RAMFILE
   bx_shadow_filedata_c *ramfile = new bx_shadow_filedata_c(list, "ram", &(BX_MEM_THIS overflow_file));
   ramfile->set_sr_handlers(this, ramfile_save_handler, (filedata_restore_handler)NULL);

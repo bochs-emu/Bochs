@@ -816,6 +816,15 @@ void bx_init_options()
   host_ramsize->set_ask_format("Enter host memory size (MB): [%d] ");
   ram->set_options(ram->SERIES_ASK);
 
+  bx_param_num_c *mem_block_size = new bx_param_num_c(ram,
+      "block_size",
+      "Memory block granularity (kilobytes)",
+      "Granularity of host memory allocation",
+      4, 8192,
+      128);
+  mem_block_size->set_ask_format("Enter memory block size (KB): [%d] ");
+  ram->set_options(ram->SERIES_ASK);
+
   path = new bx_param_filename_c(rom,
       "file",
       "ROM BIOS image",
@@ -2793,6 +2802,8 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         SIM->get_param_num(BXPN_HOST_MEM_SIZE)->set(atol(&params[i][5]));
       } else if (!strncmp(params[i], "guest=", 6)) {
         SIM->get_param_num(BXPN_MEM_SIZE)->set(atol(&params[i][6]));
+      } else if (!strncmp(params[i], "block_size=", 11)) {
+        SIM->get_param_num(BXPN_MEM_BLOCK_SIZE)->set(atol(&params[i][11]));
       } else {
         PARSE_ERR(("%s: memory directive malformed.", context));
       }

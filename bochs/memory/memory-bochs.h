@@ -93,6 +93,7 @@ private:
   bool smram_restricted;
 
   Bit64u  len, allocated;  // could be > 4G
+  Bit32u  block_size;      // individual block size, must be power of 2
   Bit8u   *actual_vector;
   Bit8u   *vector;   // aligned correctly
   Bit8u  **blocks;
@@ -121,9 +122,9 @@ public:
   BX_MEM_C();
  ~BX_MEM_C();
 
-  BX_MEM_SMF Bit8u*  get_vector(bx_phy_address addr);
-  BX_MEM_SMF void    init_memory(Bit64u guest, Bit64u host);
+  BX_MEM_SMF void    init_memory(Bit64u guest, Bit64u host, Bit32u block_size);
   BX_MEM_SMF void    cleanup_memory(void);
+  BX_MEM_SMF Bit8u*  get_vector(bx_phy_address addr);
 
   BX_MEM_SMF void    enable_smram(bool enable, bool restricted);
   BX_MEM_SMF void    disable_smram(void);
@@ -182,28 +183,12 @@ public:
 
 BOCHSAPI extern BX_MEM_C bx_mem;
 
-// must be power of two
-#define BX_MEM_BLOCK_LEN (128*1024) /* 128K blocks */
-
 /*
 BX_CPP_INLINE Bit8u* BX_MEM_C::get_vector(bx_phy_address addr)
 {
   return (BX_MEM_THIS vector + addr);
 }
 */
-
-BX_CPP_INLINE Bit8u* BX_MEM_C::get_vector(bx_phy_address addr)
-{
-  Bit32u block = (Bit32u)(addr / BX_MEM_BLOCK_LEN);
-#if (BX_LARGE_RAMFILE)
-  if (!BX_MEM_THIS blocks[block] || (BX_MEM_THIS blocks[block] == BX_MEM_THIS swapped_out))
-#else
-  if (!BX_MEM_THIS blocks[block])
-#endif
-    allocate_block(block);
-
-  return BX_MEM_THIS blocks[block] + (Bit32u)(addr & (BX_MEM_BLOCK_LEN-1));
-}
 
 BX_CPP_INLINE Bit64u BX_MEM_C::get_memory_len(void)
 {

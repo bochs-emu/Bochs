@@ -358,8 +358,14 @@ cpu: cpuid_limit_winnt=0
 # memory pool. You will be warned (by FATAL PANIC) in case guest already
 # used all allocated host memory and wants more.
 #
+# BLOCK_SIZE:
+# Memory block size select granularity of host memory allocation. Very
+# large memory configurations might requre larger memory blocks which
+# configurations with small memory might want memory block smaller.
+# Default memory block size is 128K.
+#
 #=======================================================================
-memory: guest=512, host=256
+memory: guest=512, host=256, block_size=512
 
 #=======================================================================
 # ROMIMAGE:
