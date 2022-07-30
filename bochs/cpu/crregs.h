@@ -112,6 +112,7 @@ struct bx_cr0_t {
 #define BX_CR4_PKE_MASK        (1 << 22)
 #define BX_CR4_CET_MASK        (1 << 23)
 #define BX_CR4_PKS_MASK        (1 << 24)
+#define BX_CR4_UINTR_MASK      (1 << 25)
 
 struct bx_cr4_t {
   Bit32u  val32; // 32bit value of register
@@ -144,6 +145,7 @@ struct bx_cr4_t {
   IMPLEMENT_CRREG_ACCESSORS(PKE, 22);
   IMPLEMENT_CRREG_ACCESSORS(CET, 23);
   IMPLEMENT_CRREG_ACCESSORS(PKS, 24);
+  IMPLEMENT_CRREG_ACCESSORS(UINTR, 25);
 
   BX_CPP_INLINE Bit32u get32() const { return val32; }
   BX_CPP_INLINE void set32(Bit32u val) { val32 = val; }

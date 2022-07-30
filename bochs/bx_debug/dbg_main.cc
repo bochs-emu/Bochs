@@ -1022,7 +1022,8 @@ void bx_dbg_info_control_regs_command(void)
   dbg_printf("    PWT=page-level write-through=%d\n", (cr3>>3) & 1);
 #if BX_CPU_LEVEL >= 5
   Bit32u cr4 = SIM->get_param_num("CR4", dbg_cpu_list)->get();
-  dbg_printf("CR4=0x%08x: %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n", cr4,
+  dbg_printf("CR4=0x%08x: %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n", cr4,
+    (cr4 & (1<<25)) ? "UINTR" : "uintr",
     (cr4 & (1<<24)) ? "PKS" : "pks",
     (cr4 & (1<<23)) ? "CET" : "cet",
     (cr4 & (1<<22)) ? "PKE" : "pke",
@@ -1063,9 +1064,10 @@ void bx_dbg_info_control_regs_command(void)
 #if BX_CPU_LEVEL >= 6
   if (BX_CPU(dbg_cpu)->is_cpu_extension_supported(BX_ISA_XSAVE)) {
     Bit32u xcr0 = SIM->get_param_num("XCR0", dbg_cpu_list)->get();
-    dbg_printf("XCR0=0x%08x: %s %s %s %s %s %s %s %s %s %s %s\n", xcr0,
-      (xcr0 & (1<<11)) ? "CET_S" : "cet_s",
-      (xcr0 & (1<<10)) ? "CET_U" : "cet_u",
+    dbg_printf("XCR0=0x%08x: %s %s %s %s %s %s %s %s %s %s %s %s\n", xcr0,
+      (xcr0 & (1<<14)) ? "UINTR" : "uintr",
+      (xcr0 & (1<<12)) ? "CET_S" : "cet_s",
+      (xcr0 & (1<<11)) ? "CET_U" : "cet_u",
       (xcr0 & (1<<9))  ? "PKRU" : "pkru",
       (xcr0 & (1<<7))  ? "HI_ZMM" : "hi_zmm",
       (xcr0 & (1<<6))  ? "ZMM_HI256" : "zmm_hi256",
