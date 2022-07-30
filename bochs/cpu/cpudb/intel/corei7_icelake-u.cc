@@ -261,7 +261,7 @@ Bit32u corei7_icelake_t::get_vmx_extensions_bitmask(void) const
          BX_VMX_PML |
          BX_VMX_SW_INTERRUPT_INJECTION_ILEN_0 |
       /* BX_VMX_POSTED_INSTERRUPTS - not implemented yet */
-      /* BX_VMX_MBE_CONTROL - not implemeted yet */
+         BX_VMX_MBE_CONTROL |
          BX_VMX_SPP |
          BX_VMX_TSC_SCALING;
 }

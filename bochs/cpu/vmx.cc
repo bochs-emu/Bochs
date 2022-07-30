@@ -827,6 +827,13 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
     }
   }
 
+  if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_MBE_CTRL) {
+    if ((vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_EPT_ENABLE) == 0) {
+       BX_ERROR(("VMFAIL: VMCS EXEC CTRL: MBE is enabled without EPT"));
+       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+    }
+  }
+
   if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_XSAVES_XRSTORS)
      vm->xss_exiting_bitmap = VMread64(VMCS_64BIT_CONTROL_XSS_EXITING_BITMAP);
   else

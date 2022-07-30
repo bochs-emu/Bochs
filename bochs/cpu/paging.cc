@@ -554,6 +554,8 @@ enum {
   BX_COMBINED_GLOBAL_PAGE  = 0x100,
 };
 
+#define IS_USER_PAGE(combined_access) !!((combined_access) & BX_COMBINED_ACCESS_USER)
+
 #if BX_CPU_LEVEL >= 6
 
 //                Format of a Long Mode Non-Leaf Entry
@@ -648,7 +650,7 @@ int BX_CPU_C::check_entry_PAE(const char *s, Bit64u entry, Bit64u reserved, unsi
   }
 
   if (entry & reserved) {
-    BX_DEBUG(("PAE %s: reserved bit is set 0x" FMT_ADDRX64, s, entry));
+    BX_DEBUG(("PAE %s: reserved bit is set 0x" FMT_ADDRX64 "(reserved: " FMT_ADDRX64 ")", s, entry, entry & reserved));
     return ERROR_RESERVED | ERROR_PROTECTION;
   }
 
@@ -707,7 +709,7 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
 #if BX_SUPPORT_VMX >= 2
     if (BX_CPU_THIS_PTR in_vmx_guest) {
       if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_EPT_ENABLE))
-        entry_addr[leaf] = translate_guest_physical(entry_addr[leaf], laddr, 1, 1, BX_READ);
+        entry_addr[leaf] = translate_guest_physical(entry_addr[leaf], laddr, true /* laddr_valid */, true /* page walk */, IS_USER_PAGE(combined_access), BX_READ);
     }
 #endif
 #if BX_SUPPORT_SVM
@@ -904,7 +906,7 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckPDPTR(bx_phy_address cr3_val)
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_EPT_ENABLE))
-      cr3_val = translate_guest_physical(cr3_val, 0, 0, 1, BX_READ);
+      cr3_val = translate_guest_physical(cr3_val, 0, false /* laddr_valid */, true /* page walk */, 0, BX_READ);
   }
 #endif
 
@@ -1003,7 +1005,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
 #if BX_SUPPORT_VMX >= 2
     if (BX_CPU_THIS_PTR in_vmx_guest) {
       if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_EPT_ENABLE))
-        entry_addr[leaf] = translate_guest_physical(entry_addr[leaf], laddr, 1, 1, BX_READ);
+        entry_addr[leaf] = translate_guest_physical(entry_addr[leaf], laddr, true /* laddr_valid */, true /* page walk */, IS_USER_PAGE(combined_access), BX_READ);
     }
 #endif
 #if BX_SUPPORT_SVM
@@ -1144,7 +1146,7 @@ bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_m
 #if BX_SUPPORT_VMX >= 2
     if (BX_CPU_THIS_PTR in_vmx_guest) {
       if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_EPT_ENABLE))
-        entry_addr[leaf] = translate_guest_physical(entry_addr[leaf], laddr, 1, 1, BX_READ);
+        entry_addr[leaf] = translate_guest_physical(entry_addr[leaf], laddr, true /* laddr_valid */, true /* page walk */, IS_USER_PAGE(combined_access), BX_READ);
     }
 #endif
 #if BX_SUPPORT_SVM
@@ -1375,7 +1377,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_EPT_ENABLE)) {
-      paddress = translate_guest_physical(paddress, laddr, 1, 0, rw, isShadowStack & !user);
+      paddress = translate_guest_physical(paddress, laddr, true /* laddr_valid */, false /* page walk */, IS_USER_PAGE(combined_access), rw, isShadowStack & !user);
     }
   }
 #endif
@@ -1857,7 +1859,10 @@ bx_phy_address BX_CPU_C::nested_walk(bx_phy_address guest_paddr, unsigned rw, bo
 enum {
   BX_EPT_READ    = 0x01,
   BX_EPT_WRITE   = 0x02,
-  BX_EPT_EXECUTE = 0x04
+  BX_EPT_EXECUTE = 0x04,
+
+  BX_EPT_MBE_SUPERVISOR_EXECUTE = BX_EPT_EXECUTE,
+  BX_EPT_MBE_USER_EXECUTE = 0x400
 };
 
 /* EPT access mask */
@@ -1900,7 +1905,7 @@ const Bit64u BX_SUPERVISOR_SHADOW_STACK_PAGE     = (BX_CONST64(1) << 60);
 
 const Bit64u PAGING_EPT_RESERVED_BITS = BX_PAGING_PHY_ADDRESS_RESERVED_BITS;
 
-bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx_address guest_laddr, bool guest_laddr_valid, bool is_page_walk, unsigned rw, bool supervisor_shadow_stack)
+bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx_address guest_laddr, bool guest_laddr_valid, bool is_page_walk, unsigned user_page, unsigned rw, bool supervisor_shadow_stack)
 {
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
   bx_phy_address entry_addr[4], ppf = LPFOf(vm->eptptr);
@@ -1912,8 +1917,10 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
   BxMemtype eptptr_memtype = BX_CPU_THIS_PTR cr0.get_CD() ? (BX_MEMTYPE_UC) : BxMemtype(vm->eptptr & 0x7);
 #endif
 
-  Bit32u combined_access = 0x7, access_mask = 0;
   Bit64u offset_mask = BX_CONST64(0x0000ffffffffffff);
+  Bit32u combined_access = 0x7, access_mask = 0;
+  if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_MBE_CTRL))
+    combined_access |= BX_EPT_MBE_USER_EXECUTE;
 
   BX_DEBUG(("EPT walk for guest paddr 0x" FMT_PHY_ADDRX, guest_paddr));
 
@@ -1921,7 +1928,14 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
   if (BX_VMX_EPT_ACCESS_DIRTY_ENABLED && is_page_walk && guest_laddr_valid)
     rw = BX_WRITE;
 
-  if (rw == BX_EXECUTE) access_mask |= BX_EPT_EXECUTE;
+  if (rw == BX_EXECUTE) {
+    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_MBE_CTRL)) {
+      access_mask |= user_page ? BX_EPT_MBE_USER_EXECUTE : BX_EPT_MBE_SUPERVISOR_EXECUTE;
+    }
+    else {
+      access_mask |= BX_EPT_EXECUTE;
+    }
+  }
   if (rw & 1) access_mask |= BX_EPT_WRITE; // write or r-m-w
   if ((rw & 3) == BX_READ) access_mask |= BX_EPT_READ;  // handle correctly shadow stack reads
 
@@ -1935,6 +1949,9 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
     offset_mask >>= 9;
     Bit64u curr_entry = entry[leaf];
     Bit32u curr_access_mask = curr_entry & 0x7;
+    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_MBE_CTRL)) {
+      curr_access_mask |= (curr_entry & BX_EPT_MBE_USER_EXECUTE);
+    }
 
     if (curr_access_mask == BX_EPT_ENTRY_NOT_PRESENT) {
       BX_DEBUG(("EPT %s: not present", bx_paging_level[leaf]));
@@ -1942,8 +1959,8 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
       break;
     }
 
-    if (curr_access_mask == BX_EPT_ENTRY_WRITE_ONLY || curr_access_mask == BX_EPT_ENTRY_WRITE_EXECUTE) {
-      BX_DEBUG(("EPT %s: EPT misconfiguration mask=%d", bx_paging_level[leaf], curr_access_mask));
+    if ((curr_access_mask & (BX_EPT_READ | BX_EPT_WRITE)) == BX_EPT_ENTRY_WRITE_ONLY) {
+      BX_DEBUG(("EPT %s: EPT misconfiguration access_mask=%x", bx_paging_level[leaf], curr_access_mask));
       vmexit_reason = VMX_VMEXIT_EPT_MISCONFIGURATION;
       break;
     }
@@ -1957,7 +1974,7 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
     }
 
     if (curr_entry & PAGING_EPT_RESERVED_BITS) {
-      BX_DEBUG(("EPT %s: reserved bit is set 0x" FMT_ADDRX64, bx_paging_level[leaf], curr_entry));
+      BX_DEBUG(("EPT %s: reserved bit is set 0x" FMT_ADDRX64 "(reserved: " FMT_ADDRX64 ")", bx_paging_level[leaf], curr_entry, curr_entry & PAGING_EPT_RESERVED_BITS));
       vmexit_reason = VMX_VMEXIT_EPT_MISCONFIGURATION;
       break;
     }
@@ -2038,6 +2055,12 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
     if (vmexit_reason == VMX_VMEXIT_EPT_VIOLATION) {
       combined_access &= entry[leaf];
       vmexit_qualification = access_mask | (combined_access << 3);
+      if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_MBE_CTRL) && (rw == BX_EXECUTE)) {
+        vmexit_qualification &= (0x3f); // reset all bit bits beyond [5:0]
+        vmexit_qualification |= (1<<2); // bit2 indicate the operation was instruction fetch
+        if (combined_access & BX_EPT_MBE_USER_EXECUTE)
+          vmexit_qualification |= (1<<6);
+      }
       if (guest_laddr_valid) {
         vmexit_qualification |= (1<<7);
         if (! is_page_walk) vmexit_qualification |= (1<<8);
@@ -2193,7 +2216,7 @@ void dbg_print_paging_pte(int level, Bit64u entry)
 }
 
 #if BX_SUPPORT_VMX >= 2
-void dbg_print_ept_paging_pte(int level, Bit64u entry)
+void dbg_print_ept_paging_pte(int level, Bit64u entry, bool mbe)
 {
   dbg_printf("EPT %4s: 0x%08x%08x", bx_paging_level[level], GET32H(entry), GET32L(entry));
 
@@ -2202,8 +2225,11 @@ void dbg_print_ept_paging_pte(int level, Bit64u entry)
   else
     dbg_printf("   ");
 
+  if (mbe)
+    dbg_printf(" %s", (entry & 0x400) ? "XU" : "xu");
+
   dbg_printf(" %s %s %s",
-    (entry & 0x04) ? "E" : "e",
+    (entry & 0x04) ? "X" : "x",
     (entry & 0x02) ? "W" : "w",
     (entry & 0x01) ? "R" : "r");
 
@@ -2234,7 +2260,7 @@ bool BX_CPU_C::dbg_translate_guest_physical(bx_phy_address guest_paddr, bx_phy_a
     BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, pt_address, 8, &pte);
 #if BX_DEBUGGER
     if (verbose)
-      dbg_print_ept_paging_pte(level, pte);
+      dbg_print_ept_paging_pte(level, pte, SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_MBE_CTRL));
 #endif
     switch(pte & 7) {
     case BX_EPT_ENTRY_NOT_PRESENT:
