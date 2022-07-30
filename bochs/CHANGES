@@ -1,5 +1,10 @@
 Changes after 2.7:
 
+The Bochs source tree is transitioning from SVN to GIT hosted on github.
+We welcome every new contributor !
+
+- Bugfixes for CPU emulation correctness (MONITOR/MWAIT, VMX/SVM fixes)
+! Implemented VMX MBE (Mode Based Execution Control) emulation required for Windows 11 guest
 - Fixed Voodoo device compilation for big endian architectures
 - Fixed memory handling in volatile BIOS write support
 - Fixed APIC MWAIT timer activation

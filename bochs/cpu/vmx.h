@@ -746,7 +746,7 @@ typedef struct bx_VMCS
 #define VMX_VM_EXEC_CTRL3_EPT_VIOLATION_EXCEPTION   (1 << 18) /* #VE Exception */
 #define VMX_VM_EXEC_CTRL3_SUPPRESS_GUEST_VMX_TRACE  (1 << 19) /* Processor Trace (not implemented) */
 #define VMX_VM_EXEC_CTRL3_XSAVES_XRSTORS            (1 << 20) /* XSAVES */
-#define VMX_VM_EXEC_CTRL3_MBE_CTRL                  (1 << 22) /* Mode Based Execution Control (not implemented yet) */
+#define VMX_VM_EXEC_CTRL3_MBE_CTRL                  (1 << 22) /* Mode Based Execution Control */
 #define VMX_VM_EXEC_CTRL3_SUBPAGE_WR_PROTECT_CTRL   (1 << 23) /* Sub-Page Write Protection Control */
 #define VMX_VM_EXEC_CTRL3_PROCESSOR_TRACE_USE_GPA   (1 << 24) /* Processor Trace (not implemented) */
 #define VMX_VM_EXEC_CTRL3_TSC_SCALING               (1 << 25) /* TSC Scaling */

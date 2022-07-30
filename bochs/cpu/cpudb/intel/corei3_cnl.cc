@@ -252,7 +252,7 @@ Bit32u corei3_cnl_t::get_vmx_extensions_bitmask(void) const
          BX_VMX_VMCS_SHADOWING |
          BX_VMX_EPT_EXCEPTION |
          BX_VMX_SW_INTERRUPT_INJECTION_ILEN_0 |
-      /* BX_VMX_MBE_CONTROL - not implemeted yet */
+         BX_VMX_MBE_CONTROL |
          BX_VMX_TSC_SCALING;
 }
 
