@@ -2037,7 +2037,8 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
       if ((access_mask & combined_access) != access_mask) {
         vmexit_reason = VMX_VMEXIT_EPT_VIOLATION;
         if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_SUBPAGE_WR_PROTECT_CTRL) && (entry[leaf] & BX_SUB_PAGE_PROTECTED) != 0 && leaf == BX_LEVEL_PTE) {
-          if ((access_mask & BX_EPT_WRITE) != 0 && (combined_access & BX_EPT_WRITE) == 0 && guest_laddr_valid && ! is_page_walk)
+          // if cumulative read-access bit is 0, the write access is not eligible for SPP
+          if ((access_mask & BX_EPT_WRITE) != 0 && (combined_access & BX_EPT_ENTRY_READ_WRITE) == BX_EPT_ENTRY_READ_ONLY && guest_laddr_valid && ! is_page_walk)
             if (spp_walk(guest_paddr, guest_laddr, BX_MEMTYPE_WB)) // memory type indicated in IA32_VMX_BASIC MSR
               vmexit_reason = 0;
         }
