@@ -138,7 +138,9 @@ void BX_CPU_C::set_VMCSPTR(Bit64u vmxptr)
   if (vmxptr != BX_INVALID_VMCSPTR) {
     BX_CPU_THIS_PTR vmcshostptr = BX_CPU_THIS_PTR getHostMemAddr(vmxptr, BX_WRITE);
 #if BX_SUPPORT_MEMTYPE
-    BX_CPU_THIS_PTR vmcs_memtype = MEMTYPE(resolve_memtype(vmxptr));
+    // IA32_VMX_BASIC MSR report the memory type that should be used for the VMCS, for data structures referenced by 
+    // pointers in the VMCS (I/O bitmaps, virtual-APIC page, MSR areas for VMX transitions), and for the MSEG header
+    BX_CPU_THIS_PTR vmcs_memtype = BX_MEMTYPE_WB;
 #endif
   }
   else {

@@ -2038,7 +2038,7 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
         vmexit_reason = VMX_VMEXIT_EPT_VIOLATION;
         if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_SUBPAGE_WR_PROTECT_CTRL) && (entry[leaf] & BX_SUB_PAGE_PROTECTED) != 0 && leaf == BX_LEVEL_PTE) {
           if ((access_mask & BX_EPT_WRITE) != 0 && (combined_access & BX_EPT_WRITE) == 0 && guest_laddr_valid && ! is_page_walk)
-            if (spp_walk(guest_paddr, guest_laddr, MEMTYPE(eptptr_memtype)))
+            if (spp_walk(guest_paddr, guest_laddr, BX_MEMTYPE_WB)) // memory type indicated in IA32_VMX_BASIC MSR
               vmexit_reason = 0;
         }
       }
@@ -2159,9 +2159,17 @@ bool BX_CPU_C::spp_walk(bx_phy_address guest_paddr, bx_address guest_laddr, BxMe
     ppf = curr_entry & BX_CONST64(0x000ffffffffff000);
   }
 
+  if (! vmexit_reason) {
+    const Bit64u leaf_reserved_bits = BX_CONST64(0xAAAAAAAAAAAAAAAA);
+    if (entry[BX_LEVEL_PTE] & leaf_reserved_bits) {
+      BX_DEBUG(("SPP PTE: reserved (odd) bits are set"));
+      vmexit_reason = VMX_VMEXIT_SPP;
+    }
+  }
+
   if (vmexit_reason) {
     BX_ERROR(("VMEXIT: SPP %s for guest paddr 0x" FMT_PHY_ADDRX " laddr 0x" FMT_ADDRX,
-       (vmexit_qualification == VMX_SPP_NOT_PRESENT_QUALIFICATION) ? "violation" : "misconfig", guest_paddr, guest_laddr));
+       (vmexit_qualification == VMX_SPP_NOT_PRESENT_QUALIFICATION) ? "not present" : "misconfig", guest_paddr, guest_laddr));
 
     if (BX_CPU_THIS_PTR nmi_unblocking_iret)
       vmexit_qualification |= (1 << 12);
