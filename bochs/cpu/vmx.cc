@@ -114,15 +114,17 @@ static const char *VMX_vmexit_reason_name[] =
   /* 62 */  "PML Log Full",
   /* 63 */  "XSAVES",
   /* 64 */  "XRSTORS",
-  /* 65 */  "Reserved65",
+  /* 65 */  "PCONFIG",
   /* 66 */  "Sub-Page Protection",
   /* 67 */  "UMWAIT",
   /* 68 */  "TPAUSE",
-  /* 69 */  "Reserved69",
+  /* 69 */  "LOADIWKEY",
   /* 70 */  "Reserved70",
   /* 71 */  "Reserved71",
   /* 72 */  "ENQCMD PASID Translation",
   /* 73 */  "ENQCMDS PASID Translation",
+  /* 74 */  "Bus Lock",
+  /* 75 */  "Notify Window",
 };
 
 #include "decoder/ia_opcodes.h"
