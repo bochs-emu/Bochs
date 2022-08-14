@@ -1375,10 +1375,10 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
 
   // Calculate physical memory address and fill in TLB cache entry
 #if BX_SUPPORT_VMX >= 2
-  bool spp_walk = false;
+  bool spp_page = false;
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_EPT_ENABLE)) {
-      paddress = translate_guest_physical(paddress, laddr, true /* laddr_valid */, false /* page walk */, IS_USER_PAGE(combined_access), rw, isShadowStack & !user, &spp_walk);
+      paddress = translate_guest_physical(paddress, laddr, true /* laddr_valid */, false /* page walk */, IS_USER_PAGE(combined_access), rw, isShadowStack & !user, &spp_page);
     }
   }
 #endif
@@ -1477,7 +1477,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
   }
 
 #if BX_SUPPORT_VMX >= 2
-  if (spp_walk) {
+  if (spp_page) {
     // the page was write-allowed only due to SPP, such pages cannot be cached as WriteOK
     tlbEntry->accessBits &= ~(TLB_SysWriteShadowStackOK | TLB_UserWriteShadowStackOK | TLB_SysWriteOK | TLB_UserWriteOK);
   }
@@ -1914,7 +1914,7 @@ const Bit64u BX_SUPERVISOR_SHADOW_STACK_PAGE     = (BX_CONST64(1) << 60);
 const Bit64u PAGING_EPT_RESERVED_BITS = BX_PAGING_PHY_ADDRESS_RESERVED_BITS;
 
 // entries which were allowed to write only because of SPP cannot be cached in DTLB as writeable
-bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx_address guest_laddr, bool guest_laddr_valid, bool is_page_walk, unsigned user_page, unsigned rw, bool supervisor_shadow_stack, bool *spp_walk)
+bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx_address guest_laddr, bool guest_laddr_valid, bool is_page_walk, unsigned user_page, unsigned rw, bool supervisor_shadow_stack, bool *spp_page)
 {
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
   bx_phy_address entry_addr[4], ppf = LPFOf(vm->eptptr);
@@ -2049,7 +2049,7 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
           // if cumulative read-access bit is 0, the write access is not eligible for SPP
           if ((access_mask & BX_EPT_WRITE) != 0 && (combined_access & BX_EPT_ENTRY_READ_WRITE) == BX_EPT_ENTRY_READ_ONLY && guest_laddr_valid && ! is_page_walk) {
             if (spp_walk(guest_paddr, guest_laddr, BX_MEMTYPE_WB)) { // memory type indicated in IA32_VMX_BASIC MSR
-              if (spp_walk) *spp_walk = true;
+              if (spp_page) *spp_page = true;
               vmexit_reason = 0;
             }
           }
