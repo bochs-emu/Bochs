@@ -850,7 +850,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR dr7.val32 = 0x00000400;
 
 #if BX_X86_DEBUGGER
-  BX_CPU_THIS_PTR in_repeat = 0;
+  BX_CPU_THIS_PTR in_repeat = false;
 #endif
   BX_CPU_THIS_PTR in_smm = false;
 

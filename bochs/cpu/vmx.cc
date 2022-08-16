@@ -2160,6 +2160,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_MONITOR_TRAP_FLAG) {
     signal_event(BX_EVENT_VMX_MONITOR_TRAP_FLAG);
       mask_event(BX_EVENT_VMX_MONITOR_TRAP_FLAG);
+    BX_CPU_THIS_PTR async_event = 1;
   }
 
   if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_NMI_WINDOW_EXITING)
