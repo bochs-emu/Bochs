@@ -213,7 +213,7 @@ Bit32u broadwell_ult_t::get_vmx_extensions_bitmask(void) const
          BX_VMX_VIRTUAL_NMI |
          BX_VMX_APIC_VIRTUALIZATION |
          BX_VMX_WBINVD_VMEXIT |
-      /* BX_VMX_MONITOR_TRAP_FLAG | */ // not implemented yet
+         BX_VMX_MONITOR_TRAP_FLAG |
          BX_VMX_VPID |
          BX_VMX_EPT |
          BX_VMX_UNRESTRICTED_GUEST |

@@ -258,8 +258,13 @@ bool BX_CPU_C::handleAsyncEvent(void)
   }
 
 #if BX_SUPPORT_VMX
-  if (is_unmasked_event_pending(BX_EVENT_VMX_MONITOR_TRAP_FLAG)) {
-    VMexit(VMX_VMEXIT_MONITOR_TRAP_FLAG, 0);
+  if (is_pending(BX_EVENT_VMX_MONITOR_TRAP_FLAG)) {
+    if (is_unmasked_event_pending(BX_EVENT_VMX_MONITOR_TRAP_FLAG)) {
+      VMexit(VMX_VMEXIT_MONITOR_TRAP_FLAG, 0);
+    }
+    else {
+      unmask_event(BX_EVENT_VMX_MONITOR_TRAP_FLAG);
+    }
   }
 #endif
 
@@ -369,7 +374,7 @@ bool BX_CPU_C::handleAsyncEvent(void)
   //   Alignment check
   // (handled by rest of the code)
 
-  if (!((SVM_GIF && unmasked_events_pending()) || BX_CPU_THIS_PTR debug_trap ||
+  if (!((SVM_GIF && unmasked_events_pending()) || BX_CPU_THIS_PTR debug_trap || is_unmasked_event_pending(BX_EVENT_VMX_MONITOR_TRAP_FLAG) ||
 //      BX_CPU_THIS_PTR get_TF() || // implies debug_trap is set
         BX_HRQ))
   {

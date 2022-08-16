@@ -148,11 +148,11 @@ enum VMX_vmexit_reason {
    VMX_VMEXIT_LAST_REASON
 };
 
+// note, MONITOR_TRAP_FLAG should not be here because it taken between instructions
 #define IS_TRAP_LIKE_VMEXIT(reason) \
       (reason == VMX_VMEXIT_TPR_THRESHOLD || \
        reason == VMX_VMEXIT_VIRTUALIZED_EOI || \
        reason == VMX_VMEXIT_APIC_WRITE || \
-       reason == VMX_VMEXIT_MONITOR_TRAP_FLAG || \
        reason == VMX_VMEXIT_BUS_LOCK)
 
 // VMexit on CR register access
@@ -173,7 +173,7 @@ enum VMX_vmentry_error {
 
 // VMABORT error code
 enum VMX_vmabort_code {
-   VMABORT_SAVING_GUEST_MSRS_FAILURE,
+   VMABORT_SAVING_GUEST_MSRS_FAILURE = 0,
    VMABORT_HOST_PDPTR_CORRUPTED,
    VMABORT_VMEXIT_VMCS_CORRUPTED,
    VMABORT_LOADING_HOST_MSRS,
