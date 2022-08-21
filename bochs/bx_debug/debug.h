@@ -157,7 +157,7 @@ void bx_dbg_examine_command(const char *command, const char *format, bool format
 Bit32u bx_dbg_lin_indirect(bx_address addr);
 Bit32u bx_dbg_phy_indirect(bx_phy_address addr);
 void bx_dbg_writemem_command(const char *filename, bx_address laddr, unsigned len);
-void bx_dbg_setpmem_command(bx_phy_address addr, unsigned len, Bit32u val);
+void bx_dbg_setpmem_command(bx_phy_address addr, unsigned len, Bit64u val);
 void bx_dbg_query_command(const char *);
 void bx_dbg_take_command(const char *, unsigned n);
 void bx_dbg_disassemble_current(const char *);

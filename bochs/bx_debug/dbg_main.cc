@@ -2677,9 +2677,9 @@ void bx_dbg_writemem_command(const char *filename, bx_address laddr, unsigned le
   fclose(f);
 }
 
-void bx_dbg_setpmem_command(bx_phy_address paddr, unsigned len, Bit32u val)
+void bx_dbg_setpmem_command(bx_phy_address paddr, unsigned len, Bit64u val)
 {
-  Bit8u buf[4];
+  Bit8u buf[8];
 
   switch (len) {
     case 1:
@@ -2694,6 +2694,16 @@ void bx_dbg_setpmem_command(bx_phy_address paddr, unsigned len, Bit32u val)
       buf[1] = val & 0xff; val >>= 8;
       buf[2] = val & 0xff; val >>= 8;
       buf[3] = val & 0xff;
+      break;
+    case 8:
+      buf[0] = val & 0xff; val >>= 8;
+      buf[1] = val & 0xff; val >>= 8;
+      buf[2] = val & 0xff; val >>= 8;
+      buf[3] = val & 0xff; val >>= 8;
+      buf[4] = val & 0xff; val >>= 8;
+      buf[5] = val & 0xff; val >>= 8;
+      buf[6] = val & 0xff; val >>= 8;
+      buf[7] = val & 0xff;
       break;
     default:
       dbg_printf("Error: setpmem: bad length value = %u\n", len);
