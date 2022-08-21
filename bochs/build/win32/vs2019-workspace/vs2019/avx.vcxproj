@@ -1,0 +1,173 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{57A4215B-7E87-447A-A0F4-5BBC0866A3D8}</ProjectGuid>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v142</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v142</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>12.0.21005.1</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>.\..\obj-debug\avx\</OutDir>
+    <IntDir>.\..\obj-debug\avx\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>.\..\obj-release\avx\</OutDir>
+    <IntDir>.\..\obj-release\avx\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <BuildLog>
+      <Path>$(IntDir)BuildLog-$(TargetName).log</Path>
+    </BuildLog>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\;..\cpu;..\instrument\stubs\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PrecompiledHeaderOutputFile>.\..\obj-debug\avx\avx.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\..\obj-debug\avx\</AssemblerListingLocation>
+      <ObjectFileName>.\..\obj-debug\avx\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\obj-debug\avx\</ProgramDataBaseFileName>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>OldStyle</DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Lib>
+      <OutputFile>.\..\obj-debug\avx.lib</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Lib>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\..\obj-debug\avx\avx.bsc</OutputFile>
+    </Bscmake>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <BuildLog>
+      <Path>$(IntDir)BuildLog-$(TargetName).log</Path>
+    </BuildLog>
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <AdditionalIncludeDirectories>..;..\cpu;..\instrument\stubs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <ExceptionHandling />
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PrecompiledHeaderOutputFile>.\..\obj-release\avx\avx.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\..\obj-release\avx\</AssemblerListingLocation>
+      <ObjectFileName>.\..\obj-release\avx\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\obj-release\avx\</ProgramDataBaseFileName>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <CallingConvention>FastCall</CallingConvention>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Lib>
+      <OutputFile>.\..\obj-release\avx.lib</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Lib>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\..\obj-release\avx\avx.bsc</OutputFile>
+    </Bscmake>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\cpu\avx\avx.cc" />
+    <ClCompile Include="..\cpu\avx\avx2.cc" />
+    <ClCompile Include="..\cpu\avx\avx512.cc" />
+    <ClCompile Include="..\cpu\avx\avx512_bitalg.cc" />
+    <ClCompile Include="..\cpu\avx\avx512_cvt.cc" />
+    <ClCompile Include="..\cpu\avx\avx512_fma.cc" />
+    <ClCompile Include="..\cpu\avx\avx512_mask16.cc" />
+    <ClCompile Include="..\cpu\avx\avx512_mask32.cc" />
+    <ClCompile Include="..\cpu\avx\avx512_mask64.cc" />
+    <ClCompile Include="..\cpu\avx\avx512_mask8.cc" />
+    <ClCompile Include="..\cpu\avx\avx512_move.cc" />
+    <ClCompile Include="..\cpu\avx\avx512_pfp.cc" />
+    <ClCompile Include="..\cpu\avx\avx512_rcp14.cc" />
+    <ClCompile Include="..\cpu\avx\avx512_rsqrt14.cc" />
+    <ClCompile Include="..\cpu\avx\vnni.cc" />
+    <ClCompile Include="..\cpu\avx\avx_cvt.cc" />
+    <ClCompile Include="..\cpu\avx\avx_fma.cc" />
+    <ClCompile Include="..\cpu\avx\avx_pfp.cc" />
+    <ClCompile Include="..\cpu\avx\gather.cc" />
+    <ClCompile Include="..\cpu\avx\tbm32.cc" />
+    <ClCompile Include="..\cpu\avx\tbm64.cc" />
+    <ClCompile Include="..\cpu\avx\xop.cc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\cpu\apic.h" />
+    <ClInclude Include="..\bochs.h" />
+    <ClInclude Include="..\config.h" />
+    <ClInclude Include="..\cpu\cpu.h" />
+    <ClInclude Include="..\cpudb.h" />
+    <ClInclude Include="..\cpu\cpuid.h" />
+    <ClInclude Include="..\cpu\crregs.h" />
+    <ClInclude Include="..\cpu\descriptor.h" />
+    <ClInclude Include="..\cpu\decoder\fetchdecode.h" />
+    <ClInclude Include="..\cpu\decoder\fetchdecode_avx.h" />
+    <ClInclude Include="..\cpu\decoder\fetchdecode_evex.h" />
+    <ClInclude Include="..\cpu\decoder\fetchdecode_x87.h" />
+    <ClInclude Include="..\cpu\decoder\fetchdecode_xop.h" />
+    <ClInclude Include="..\cpu\generic_cpuid.h" />
+    <ClInclude Include="..\cpu\i387.h" />
+    <ClInclude Include="..\cpu\ia_opcodes.h" />
+    <ClInclude Include="..\cpu\icache.h" />
+    <ClInclude Include="..\cpu\instr.h" />
+    <ClInclude Include="..\cpu\lazy_flags.h" />
+    <ClInclude Include="..\cpu\scalar_arith.h" />
+    <ClInclude Include="..\cpu\simd_compare.h" />
+    <ClInclude Include="..\cpu\simd_int.h" />
+    <ClInclude Include="..\cpu\simd_pfp.h" />
+    <ClInclude Include="..\cpu\smm.h" />
+    <ClInclude Include="..\cpu\stack.h" />
+    <ClInclude Include="..\cpu\svm.h" />
+    <ClInclude Include="..\cpu\vmx.h" />
+    <ClInclude Include="..\cpu\xmm.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
