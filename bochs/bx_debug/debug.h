@@ -74,6 +74,7 @@ bool bx_dbg_register_debug_info(const char *devname, void *dev);
 #define EMPTY_ARG (-1)
 
 bool bx_dbg_read_linear(unsigned which_cpu, bx_address laddr, unsigned len, Bit8u *buf);
+bool bx_dbg_write_linear(unsigned which_cpu, bx_address laddr, unsigned len, Bit8u *buf);
 Bit16u bx_dbg_get_selector_value(unsigned int seg_no);
 Bit16u bx_dbg_get_ip (void);
 Bit32u bx_dbg_get_eip(void);
@@ -157,6 +158,7 @@ void bx_dbg_examine_command(const char *command, const char *format, bool format
 Bit32u bx_dbg_lin_indirect(bx_address addr);
 Bit32u bx_dbg_phy_indirect(bx_phy_address addr);
 void bx_dbg_writemem_command(const char *filename, bx_address laddr, unsigned len);
+void bx_dbg_loadmem_command(const char *filename, bx_address laddr);
 void bx_dbg_setpmem_command(bx_phy_address addr, unsigned len, Bit64u val);
 void bx_dbg_query_command(const char *);
 void bx_dbg_take_command(const char *, unsigned n);

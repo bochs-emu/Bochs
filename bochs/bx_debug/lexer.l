@@ -112,6 +112,7 @@ x               |
 xp              { BEGIN(EXAMINE); bxlval.sval = strdup(bxtext); return(BX_TOKEN_EXAMINE); }
 restore         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_RESTORE); }
 writemem        { bxlval.sval = strdup(bxtext); return(BX_TOKEN_WRITEMEM); }
+loadmem         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LOADMEM); }
 setpmem         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SETPMEM); }
 query           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_QUERY); }
 pending         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PENDING); }

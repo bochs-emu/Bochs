@@ -1396,6 +1396,41 @@ next_page:
   return 1;
 }
 
+bool bx_dbg_write_linear(unsigned which_cpu, bx_address laddr, unsigned len, Bit8u *buf)
+{
+  unsigned remainsInPage;
+  bx_phy_address paddr;
+  unsigned write_len;
+  bool paddr_valid;
+
+next_page:
+  remainsInPage = 0x1000 - PAGE_OFFSET(laddr);
+  write_len = (remainsInPage < len) ? remainsInPage : len;
+
+  paddr_valid = BX_CPU(which_cpu)->dbg_xlate_linear2phy(laddr, &paddr);
+  if (paddr_valid) {
+    if (! BX_MEM(0)->dbg_set_mem(BX_CPU(which_cpu), paddr, write_len, buf)) {
+      dbg_printf("bx_dbg_write_linear: physical memory write error (phy=0x" FMT_PHY_ADDRX ", lin=0x" FMT_ADDRX ")\n", paddr, laddr);
+      return 0;
+    }
+  }
+  else {
+    dbg_printf("bx_dbg_write_linear: physical address not available for linear 0x" FMT_ADDRX "\n", laddr);
+    return 0;
+  }
+
+  /* check for access across multiple pages */
+  if (remainsInPage < len)
+  {
+    laddr += write_len;
+    len -= write_len;
+    buf += write_len;
+    goto next_page;
+  }
+
+  return 1;
+}
+
 // where
 // stack trace: ebp -> old ebp
 // return eip at ebp + 4
@@ -2674,6 +2709,31 @@ void bx_dbg_writemem_command(const char *filename, bx_address laddr, unsigned le
     laddr += bytes;
   }
 
+  fclose(f);
+}
+
+void bx_dbg_loadmem_command(const char *filename, bx_address laddr)
+{
+  FILE *f = fopen(filename, "rb");
+  if (!f) {
+    dbg_printf("Can not open file '%s' for loadmem\n", filename);
+    return;
+  }
+
+  dbg_printf("Writing from %s to " FMT_ADDRX "\n", filename, laddr);
+
+  Bit8u databuf[4096];
+  size_t bytes_read = 0;
+
+  do {
+      bytes_read = fread(databuf, 1, sizeof(databuf), f);
+      if (0 != bytes_read) {
+        if (!bx_dbg_write_linear(dbg_cpu, laddr, bytes_read, databuf)) {
+          dbg_printf("Error: loadmem: could not set memory\n");
+        }
+      }
+  } while (0 != bytes_read);
+  
   fclose(f);
 }
 

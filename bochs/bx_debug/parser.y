@@ -77,6 +77,7 @@ Bit64u eval_value;
 %token <sval> BX_TOKEN_DISFORMAT
 %token <sval> BX_TOKEN_RESTORE
 %token <sval> BX_TOKEN_WRITEMEM
+%token <sval> BX_TOKEN_LOADMEM
 %token <sval> BX_TOKEN_SETPMEM
 %token <sval> BX_TOKEN_SYMBOLNAME
 %token <sval> BX_TOKEN_QUERY
@@ -175,6 +176,7 @@ command:
     | examine_command
     | restore_command
     | writemem_command
+    | loadmem_command
     | setpmem_command
     | query_command
     | take_command
@@ -874,6 +876,14 @@ writemem_command:
         free($1); free($2);
       }
     ;
+	
+loadmem_command:
+      BX_TOKEN_LOADMEM BX_TOKEN_STRING expression '\n'
+      {
+        bx_dbg_loadmem_command($2, $3);
+        free($1); free($2);
+      }
+    ;
 
 setpmem_command:
       BX_TOKEN_SETPMEM expression expression expression '\n'
@@ -1178,6 +1188,11 @@ help_command:
      | BX_TOKEN_HELP BX_TOKEN_WRITEMEM '\n'
        {
          dbg_printf("writemem <filename> <laddr> <len> - dump 'len' bytes of virtual memory starting from the linear address 'laddr' into the file\n");
+         free($1);free($2);
+       }
+     | BX_TOKEN_HELP BX_TOKEN_LOADMEM '\n'
+       {
+         dbg_printf("loadmem <filename> <laddr> - load file bytes to virtual memory starting from the linear address 'laddr'\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_SETPMEM '\n'
