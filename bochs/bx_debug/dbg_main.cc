@@ -3046,6 +3046,35 @@ void bx_dbg_print_descriptor(Bit32u lo, Bit32u hi)
 }
 
 #if BX_SUPPORT_X86_64
+const char* bx_dbx_get_descriptor64_type_name(unsigned type)
+{
+    static const char *type_names[16] = { 
+        NULL,
+        NULL,
+        "LDT",
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        "64-Bit TSS (Available)",
+        NULL,
+        "64-Bit TSS (Busy)",
+        "64-Bit Call Gate",
+        NULL,
+        "64-Bit Interrupt Gate",
+        "64-Bit Trap Gate"
+    };
+
+    if (type >= sizeof(type_names) / sizeof(*type_names))
+    {
+      return NULL;
+    }
+
+    return type_names[type];
+}
+
 void bx_dbg_print_descriptor64(Bit32u lo1, Bit32u hi1, Bit32u lo2, Bit32u hi2)
 {
   Bit32u segment = (lo1 >> 16) & 0xffff;
@@ -3058,28 +3087,10 @@ void bx_dbg_print_descriptor64(Bit32u lo1, Bit32u hi1, Bit32u lo2, Bit32u hi2)
     dbg_printf("bx_dbg_print_descriptor64: only system entries displayed in 64bit mode\n");
   }
   else {
-    static const char *undef = "???";
-    static const char *type_names[16] = { 
-        undef,
-        undef,
-        "LDT",
-        undef,
-        undef,
-        undef,
-        undef,
-        undef,
-        undef,
-        "64-Bit TSS (Available)",
-        undef,
-        "64-Bit TSS (Busy)",
-        "64-Bit Call Gate",
-        undef,
-        "64-Bit Interrupt Gate",
-        "64-Bit Trap Gate"
-    };
-    dbg_printf("%s ", type_names[type]);
+    const char *type_str = bx_dbx_get_descriptor64_type_name(type);
+    dbg_printf("%s ", type_str ? type_str : "???");
     // only print more if type is valid
-    if (type_names[type] == undef)  {
+    if (NULL == type_str)  {
       dbg_printf("\ndescriptor dword2 hi=0x%08x, lo=0x%08x", hi2, lo2);
       dbg_printf("\n           dword1 hi=0x%08x, lo=0x%08x", hi1, lo1);
     } else {
@@ -3233,9 +3244,9 @@ void bx_dbg_info_lgdt_command(unsigned from, unsigned to, bool gdt)
       }
 
 #if BX_SUPPORT_X86_64
-      if (BX_CPU(dbg_cpu)->long_mode()) {
-        const Bit32u sys_descriptor = (1 << 12);
-        if ((hi & sys_descriptor) == 0) {
+      const Bit32u sys_descriptor = (1 << 12);
+      const unsigned type = (hi >> 8) & 0xf;
+      if (BX_CPU(dbg_cpu)->long_mode() && (hi & sys_descriptor) == 0 && bx_dbx_get_descriptor64_type_name(type)) {
           n++;
           if (8*n + 7 > limit) break;
           if (bx_dbg_read_linear(dbg_cpu, base + 8*n, 8, entry + 8)) {
@@ -3247,13 +3258,7 @@ void bx_dbg_info_lgdt_command(unsigned from, unsigned to, bool gdt)
           else {
             dbg_printf("error: %sr+8*%d points to incomplete (size must be 16) descriptor, linear address 0x" FMT_ADDRX "\n", name, n, base);
           }
-          continue;
         }
-        else {
-          bx_dbg_print_descriptor(lo, hi);
-          continue;
-        }
-      }
       else
 #endif
       {
