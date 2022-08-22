@@ -2268,7 +2268,7 @@ void dbg_print_ept_paging_pte(int level, Bit64u entry, bool mbe)
 #endif // BX_DEBUGGER
 
 #if BX_SUPPORT_VMX >= 2
-bool BX_CPU_C::dbg_translate_guest_physical(bx_phy_address guest_paddr, bx_phy_address *phy, bool verbose)
+bool BX_CPU_C::dbg_translate_guest_physical_ept(bx_phy_address guest_paddr, bx_phy_address *phy, bool verbose)
 {
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
   bx_phy_address pt_address = LPFOf(vm->eptptr);
@@ -2311,7 +2311,15 @@ bool BX_CPU_C::dbg_translate_guest_physical(bx_phy_address guest_paddr, bx_phy_a
 }
 #endif
 
-bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx_address *lpf_mask, bool verbose)
+#if BX_SUPPORT_SVM
+bool BX_CPU_C::dbg_translate_guest_physical_npt(bx_phy_address guest_paddr, bx_phy_address *phy, bool verbose)
+{
+  // Nested page table walk works in the same manner as the standard page walk.
+  return dbg_xlate_linear2phy(guest_paddr, phy, NULL, verbose, true);
+}
+#endif
+
+bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx_address *lpf_mask, bool verbose, bool nested_walk)
 {
   bx_phy_address paddress;
   bx_address offset_mask = 0xfff;
@@ -2325,6 +2333,11 @@ bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx_ad
   }
   else {
     bx_phy_address pt_address = BX_CPU_THIS_PTR cr3 & BX_CR3_PAGING_MASK;
+#if BX_SUPPORT_SVM
+    if (nested_walk) {
+      pt_address = LPFOf(BX_CPU_THIS_PTR vmcb.ctrls.ncr3);
+    }
+#endif
 
 #if BX_CPU_LEVEL >= 6
     if (BX_CPU_THIS_PTR cr4.get_PAE()) {
@@ -2349,9 +2362,15 @@ bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx_ad
 #if BX_SUPPORT_VMX >= 2
         if (BX_CPU_THIS_PTR in_vmx_guest) {
           if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_EPT_ENABLE)) {
-            if (! dbg_translate_guest_physical(pt_address, &pt_address, verbose))
+            if (! dbg_translate_guest_physical_ept(pt_address, &pt_address, verbose))
               goto page_fault;
           }
+        }
+#endif
+#if BX_SUPPORT_SVM
+        if (! nested_walk && BX_CPU_THIS_PTR in_svm_guest && SVM_NESTED_PAGING_ENABLED) {
+          if (! dbg_translate_guest_physical_npt(pt_address, &pt_address, verbose))
+            goto page_fault;
         }
 #endif
         BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, pt_address, 8, &pte);
@@ -2387,9 +2406,15 @@ bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx_ad
 #if BX_SUPPORT_VMX >= 2
         if (BX_CPU_THIS_PTR in_vmx_guest) {
           if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_EPT_ENABLE)) {
-            if (! dbg_translate_guest_physical(pt_address, &pt_address, verbose))
+            if (! dbg_translate_guest_physical_ept(pt_address, &pt_address, verbose))
               goto page_fault;
           }
+        }
+#endif
+#if BX_SUPPORT_SVM
+        if (! nested_walk && BX_CPU_THIS_PTR in_svm_guest && SVM_NESTED_PAGING_ENABLED) {
+          if (! dbg_translate_guest_physical_npt(pt_address, &pt_address, verbose))
+            goto page_fault;
         }
 #endif
         BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, pt_address, 4, &pte);
@@ -2417,9 +2442,15 @@ bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx_ad
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_EPT_ENABLE)) {
-      if (! dbg_translate_guest_physical(paddress, &paddress, verbose))
+      if (! dbg_translate_guest_physical_ept(paddress, &paddress, verbose))
         goto page_fault;
     }
+  }
+#endif
+#if BX_SUPPORT_SVM
+  if (! nested_walk && BX_CPU_THIS_PTR in_svm_guest && SVM_NESTED_PAGING_ENABLED) {
+    if (! dbg_translate_guest_physical_npt(paddress, &paddress, verbose))
+      goto page_fault;
   }
 #endif
 
