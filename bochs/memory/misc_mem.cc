@@ -155,21 +155,21 @@ void BX_MEM_C::init_memory(Bit64u guest, Bit64u host, Bit32u block_size)
     BX_MEM_THIS memory_handlers[idx] = NULL;
 
   BX_MEM_THIS pci_enabled = SIM->get_param_bool(BXPN_PCI_ENABLED)->get();
-  BX_MEM_THIS bios_write_enabled = 0;
+  BX_MEM_THIS bios_write_enabled = false;
   BX_MEM_THIS bios_rom_addr = 0xffff0000;
   BX_MEM_THIS flash_type = 0;
   BX_MEM_THIS flash_status = 0x80;
   BX_MEM_THIS flash_wsm_state = FLASH_READ_ARRAY;
 
-  BX_MEM_THIS smram_available = 0;
-  BX_MEM_THIS smram_enable = 0;
-  BX_MEM_THIS smram_restricted = 0;
+  BX_MEM_THIS smram_available = false;
+  BX_MEM_THIS smram_enable = false;
+  BX_MEM_THIS smram_restricted = false;
 
   for (i = 0; i < 65; i++)
-    BX_MEM_THIS rom_present[i] = 0;
+    BX_MEM_THIS rom_present[i] = false;
   for (i = 0; i <= BX_MEM_AREA_F0000; i++) {
-    BX_MEM_THIS memory_type[i][0] = 0;
-    BX_MEM_THIS memory_type[i][1] = 0;
+    BX_MEM_THIS memory_type[i][0] = false;
+    BX_MEM_THIS memory_type[i][1] = false;
   }
 
   BX_MEM_THIS register_state();
@@ -404,7 +404,7 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
   struct stat stat_buf;
   int fd, ret, i, start_idx, end_idx;
   unsigned long size, max_size, offset;
-  bool is_bochs_bios = 0;
+  bool is_bochs_bios = false;
 
   if (*path == '\0') {
     if (type == 2) {
@@ -470,7 +470,7 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
     }
     offset = romaddress & BIOS_MASK;
     if ((romaddress & 0xf0000) < 0xf0000) {
-      BX_MEM_THIS rom_present[64] = 1;
+      BX_MEM_THIS rom_present[64] = true;
     }
     BX_MEM_THIS bios_rom_addr = (Bit32u)romaddress;
     is_bochs_bios = ((strstr(path, "BIOS-bochs-latest") != NULL) ||
@@ -512,7 +512,7 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
         BX_PANIC(("ROM: address space 0x%x already in use", (i * 2048) + 0xc0000));
         return;
       } else {
-        BX_MEM_THIS rom_present[i] = 1;
+        BX_MEM_THIS rom_present[i] = true;
       }
     }
   }
@@ -600,18 +600,18 @@ bool BX_MEM_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, B
 {
   bx_phy_address a20addr = A20ADDR(addr);
   struct memory_handler_struct *memory_handler = NULL;
-  bool ret = 1, use_memory_handler = 0, use_smram = 0;
+  bool ret = true, use_memory_handler = false, use_smram = false;
 
   bool is_bios = (a20addr >= (bx_phy_address)BX_MEM_THIS bios_rom_addr);
 #if BX_PHY_ADDRESS_LONG
-  if (a20addr > BX_CONST64(0xffffffff)) is_bios = 0;
+  if (a20addr > BX_CONST64(0xffffffff)) is_bios = false;
 #endif
 
   if ((a20addr >= 0x000a0000 && a20addr < 0x000c0000) && BX_MEM_THIS smram_available)
   {
     // SMRAM memory space
     if (BX_MEM_THIS smram_enable || (cpu->smm_mode() && !BX_MEM_THIS smram_restricted))
-      use_smram = 1;
+      use_smram = true;
   }
 
   memory_handler = BX_MEM_THIS memory_handlers[a20addr >> 20];
@@ -619,7 +619,7 @@ bool BX_MEM_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, B
     if (memory_handler->begin <= a20addr && memory_handler->end >= a20addr)
     {
       if (!use_smram) {
-        use_memory_handler = 1;
+        use_memory_handler = true;
         break;
       }
     }
@@ -634,7 +634,7 @@ bool BX_MEM_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, B
     else if (BX_MEM_THIS pci_enabled && (a20addr >= 0x000c0000 && a20addr < 0x00100000)) {
       unsigned area = (unsigned)(a20addr >> 14) & 0x0f;
       if (area > BX_MEM_AREA_F0000) area = BX_MEM_AREA_F0000;
-      if (BX_MEM_THIS memory_type[area][0] == 0) {
+      if (BX_MEM_THIS memory_type[area][0] == false) {
         // Read from ROM
         if ((a20addr & 0xfffe0000) == 0x000e0000) {
           // last 128K of BIOS ROM mapped to 0xE0000-0xFFFFF
@@ -668,7 +668,7 @@ bool BX_MEM_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, B
 #if BX_PHY_ADDRESS_LONG
     else if (a20addr > BX_CONST64(0xffffffff)) {
       *buf = 0xff;
-      ret = 0; // error, beyond limits of memory
+      ret = false; // error, beyond limits of memory
     }
 #endif
     else if (is_bios)
@@ -682,7 +682,7 @@ bool BX_MEM_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, B
     else
     {
       *buf = 0xff;
-      ret = 0; // error, beyond limits of memory
+      ret = false; // error, beyond limits of memory
     }
     buf++;
     a20addr++;
@@ -695,7 +695,7 @@ bool BX_MEM_C::dbg_set_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit
 {
   bx_phy_address a20addr = A20ADDR(addr);
   struct memory_handler_struct *memory_handler = NULL;
-  bool use_memory_handler = 0, use_smram = 0;
+  bool use_memory_handler = false, use_smram = false;
 
   if ((a20addr + len - 1) > BX_MEM_THIS len) {
     return(0); // error, beyond limits of memory
@@ -703,14 +703,14 @@ bool BX_MEM_C::dbg_set_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit
 
   bool is_bios = (a20addr >= (bx_phy_address)BX_MEM_THIS bios_rom_addr);
 #if BX_PHY_ADDRESS_LONG
-  if (a20addr > BX_CONST64(0xffffffff)) is_bios = 0;
+  if (a20addr > BX_CONST64(0xffffffff)) is_bios = false;
 #endif
 
   if ((a20addr >= 0x000a0000 && a20addr < 0x000c0000) && BX_MEM_THIS smram_available)
   {
     // SMRAM memory space
     if (BX_MEM_THIS smram_enable || (cpu->smm_mode() && !BX_MEM_THIS smram_restricted))
-      use_smram = 1;
+      use_smram = true;
   }
 
   memory_handler = BX_MEM_THIS memory_handlers[a20addr >> 20];
@@ -718,7 +718,7 @@ bool BX_MEM_C::dbg_set_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit
     if (memory_handler->begin <= a20addr && memory_handler->end >= a20addr)
     {
       if (!use_smram) {
-        use_memory_handler = 1;
+        use_memory_handler = true;
         break;
       }
     }
@@ -733,7 +733,7 @@ bool BX_MEM_C::dbg_set_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit
     else if (BX_MEM_THIS pci_enabled && (a20addr >= 0x000c0000 && a20addr < 0x00100000)) {
       unsigned area = (unsigned)(a20addr >> 14) & 0x0f;
       if (area > BX_MEM_AREA_F0000) area = BX_MEM_AREA_F0000;
-      if (BX_MEM_THIS memory_type[area][1] == 1) {
+      if (BX_MEM_THIS memory_type[area][1] == true) {
         // Write to ShadowRAM
         *(BX_MEM_THIS get_vector(a20addr)) = *buf;
       } else {
@@ -803,7 +803,7 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
 
   bool is_bios = (a20addr >= (bx_phy_address)BX_MEM_THIS bios_rom_addr);
 #if BX_PHY_ADDRESS_LONG
-  if (a20addr > BX_CONST64(0xffffffff)) is_bios = 0;
+  if (a20addr > BX_CONST64(0xffffffff)) is_bios = false;
 #endif
 
   bool write = rw & 1;
@@ -844,7 +844,7 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
     else if (BX_MEM_THIS pci_enabled && (a20addr >= 0x000c0000 && a20addr < 0x00100000)) {
       unsigned area = (unsigned)(a20addr >> 14) & 0x0f;
       if (area > BX_MEM_AREA_F0000) area = BX_MEM_AREA_F0000;
-      if (BX_MEM_THIS memory_type[area][0] == 0) {
+      if (BX_MEM_THIS memory_type[area][0] == false) {
         // Read from ROM
         if ((a20addr & 0xfffe0000) == 0x000e0000) {
           // last 128K of BIOS ROM mapped to 0xE0000-0xFFFFF
@@ -958,10 +958,9 @@ BX_MEM_C::registerMemoryHandlers(void *param, memory_handler_t read_handler,
   return 1;
 }
 
-  bool
-BX_MEM_C::unregisterMemoryHandlers(void *param, bx_phy_address begin_addr, bx_phy_address end_addr)
+bool BX_MEM_C::unregisterMemoryHandlers(void *param, bx_phy_address begin_addr, bx_phy_address end_addr)
 {
-  bool ret = 1;
+  bool ret = true;
   BX_INFO(("Memory access handlers unregistered: 0x" FMT_PHY_ADDRX " - 0x" FMT_PHY_ADDRX, begin_addr, end_addr));
   for (Bit32u page_idx = (Bit32u)(begin_addr >> 20); page_idx <= (Bit32u)(end_addr >> 20); page_idx++) {
     Bit16u bitmap = 0xffff;
@@ -983,7 +982,7 @@ BX_MEM_C::unregisterMemoryHandlers(void *param, bx_phy_address begin_addr, bx_ph
       memory_handler = memory_handler->next;
     }
     if (!memory_handler) {
-      ret = 0;  // we should have found it
+      ret = false;  // we should have found it
       continue; // anyway, try the other pages
     }
     if (prev)
@@ -997,16 +996,16 @@ BX_MEM_C::unregisterMemoryHandlers(void *param, bx_phy_address begin_addr, bx_ph
 
 void BX_MEM_C::enable_smram(bool enable, bool restricted)
 {
-  BX_MEM_THIS smram_available = 1;
+  BX_MEM_THIS smram_available = true;
   BX_MEM_THIS smram_enable = enable;
   BX_MEM_THIS smram_restricted = restricted;
 }
 
 void BX_MEM_C::disable_smram(void)
 {
-  BX_MEM_THIS smram_available  = 0;
-  BX_MEM_THIS smram_enable     = 0;
-  BX_MEM_THIS smram_restricted = 0;
+  BX_MEM_THIS smram_available  = false;
+  BX_MEM_THIS smram_enable     = false;
+  BX_MEM_THIS smram_restricted = false;
 }
 
 // check if SMRAM is aavailable for CPU data accesses
