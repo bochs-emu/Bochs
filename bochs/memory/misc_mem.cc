@@ -197,9 +197,9 @@ void BX_MEM_C::read_block(Bit32u block)
     BX_PANIC(("FATAL ERROR: Could not seek to 0x" FMT_LL "x in memory overflow file!", block_address));
 
   // We could legitimately get an EOF condition if we are reading the last bit of memory.ram
-  if ((fread(BX_MEM_THIS blocks[block], BX_MEM_THIS block_size, 1, BX_MEM_THIS overflow_file) != 1) && 
-      (!feof(BX_MEM_THIS overflow_file))) 
-    BX_PANIC(("FATAL ERROR: Could not read from 0x" FMT_LL "x in memory overflow file!", block_address)); 
+  if ((fread(BX_MEM_THIS blocks[block], BX_MEM_THIS block_size, 1, BX_MEM_THIS overflow_file) != 1) &&
+      (!feof(BX_MEM_THIS overflow_file)))
+    BX_PANIC(("FATAL ERROR: Could not read from 0x" FMT_LL "x in memory overflow file!", block_address));
 }
 #endif
 
@@ -208,7 +208,7 @@ void BX_MEM_C::allocate_block(Bit32u block)
   const Bit32u max_blocks = (Bit32u)(BX_MEM_THIS allocated / BX_MEM_THIS block_size);
 
 #if BX_LARGE_RAMFILE
-  /* 
+  /*
    * Match block to vector address
    * First, see if there is any spare host memory blocks we can still freely allocate
    */
@@ -244,7 +244,7 @@ void BX_MEM_C::allocate_block(Bit32u block)
     }
     // Write swapped out block
     if (fseeko64(BX_MEM_THIS overflow_file, address, SEEK_SET))
-      BX_PANIC(("FATAL ERROR: Could not seek to 0x" FMT_PHY_ADDRX " in overflow file!", address)); 
+      BX_PANIC(("FATAL ERROR: Could not seek to 0x" FMT_PHY_ADDRX " in overflow file!", address));
     if (1 != fwrite (BX_MEM_THIS blocks[BX_MEM_THIS next_swapout_idx], BX_MEM_THIS block_size, 1, BX_MEM_THIS overflow_file))
       BX_PANIC(("FATAL ERROR: Could not write at 0x" FMT_PHY_ADDRX " in overflow file!", address));
     // Mark swapped out block
@@ -280,7 +280,7 @@ void ramfile_save_handler(void *devptr, FILE *fp)
     {
       bx_phy_address address = bx_phy_address(idx) * BX_MEM_THIS block_size;
       if (fseeko64(fp, address, SEEK_SET))
-        BX_PANIC(("FATAL ERROR: Could not seek to 0x" FMT_PHY_ADDRX " in overflow file!", address)); 
+        BX_PANIC(("FATAL ERROR: Could not seek to 0x" FMT_PHY_ADDRX " in overflow file!", address));
       if (1 != fwrite (BX_MEM(0)->blocks[idx], BX_MEM_THIS block_size, 1, fp))
         BX_PANIC(("FATAL ERROR: Could not write at 0x" FMT_PHY_ADDRX " in overflow file!", address));
     }
@@ -763,7 +763,7 @@ bool BX_MEM_C::dbg_crc32(bx_phy_address addr1, bx_phy_address addr2, Bit32u *crc
   unsigned len = 1 + addr2 - addr1;
 
   // do not cross 4K boundary
-  while(1) { 
+  while(1) {
     unsigned remainsInPage = 0x1000 - (addr1 & 0xfff);
     unsigned access_length = (len < remainsInPage) ? len : remainsInPage;
     *crc = crc32(BX_MEM_THIS get_vector(addr1), access_length);

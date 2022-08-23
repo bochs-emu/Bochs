@@ -583,7 +583,7 @@ static const Bit16u BxOpcodeInfo_FloatingPointDE[64+8] = {
   /* DE FC */ BX_IA_FDIVP_STi_ST0,
   /* DE FD */ BX_IA_FDIVP_STi_ST0,
   /* DE FE */ BX_IA_FDIVP_STi_ST0,
-  /* DE FF */ BX_IA_FDIVP_STi_ST0 
+  /* DE FF */ BX_IA_FDIVP_STi_ST0
 };
 
 // DF (modrm is outside 00h - BFh)
@@ -858,7 +858,7 @@ static Bit16u Bx3DNowOpcode[256] = {
   /* B5 */ BX_IA_ERROR,
   /* B6 */ BX_IA_PFRCPIT2_PqQq,
   /* B7 */ BX_IA_PMULHRW_PqQq,
-  /* B8 */ BX_IA_ERROR,  	
+  /* B8 */ BX_IA_ERROR,
   /* B9 */ BX_IA_ERROR,
   /* BA */ BX_IA_ERROR,
   /* BB */ BX_IA_PSWAPD_PqQq,

@@ -229,7 +229,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XCHG_EwGwR(bxInstruction_c *i)
 
   op1_16 = BX_READ_16BIT_REG(i->dst());
   op2_16 = BX_READ_16BIT_REG(i->src());
-  
+
   BX_WRITE_16BIT_REG(i->src(), op1_16);
   BX_WRITE_16BIT_REG(i->dst(), op2_16);
 

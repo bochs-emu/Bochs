@@ -358,7 +358,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TZCNT_GwEwR(bxInstruction_c *i)
 
   set_CF(! op1_16);
   set_ZF(! result_16);
-  
+
   BX_WRITE_16BIT_REG(i->dst(), result_16);
 
   BX_NEXT_INSTR(i);
@@ -372,7 +372,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LZCNT_GwEwR(bxInstruction_c *i)
 
   set_CF(! op1_16);
   set_ZF(! result_16);
-  
+
   BX_WRITE_16BIT_REG(i->dst(), result_16);
 
   BX_NEXT_INSTR(i);

@@ -212,7 +212,7 @@ BX_CPP_INLINE void BX_CPU_C::svm_segment_write(bx_segment_reg_t *seg, unsigned o
   Bit32u selector = seg->selector.value;
   bx_address base = seg->cache.u.segment.base;
   Bit32u limit = seg->cache.u.segment.limit_scaled;
-  Bit32u attr = (seg->cache.valid) ? 
+  Bit32u attr = (seg->cache.valid) ?
      (get_descriptor_h(&seg->cache) & 0x00f0ff00) : 0;
 
   vmcb_write16(offset, selector);
@@ -577,7 +577,7 @@ bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
 
   BX_CPU_THIS_PTR gdtr = guest.gdtr;
   BX_CPU_THIS_PTR idtr = guest.idtr;
- 
+
   RIP = BX_CPU_THIS_PTR prev_rip = guest.rip;
   RSP = guest.rsp;
   RAX = guest.rax;
@@ -788,7 +788,7 @@ void BX_CPU_C::SvmInterceptException(unsigned type, unsigned vector, Bit16u errc
     // [31:31] | interruption info valid
     //
 
-    // record IDT vectoring information 
+    // record IDT vectoring information
     ctrls->exitintinfo_error_code = errcode;
     ctrls->exitintinfo = vector | (BX_HARDWARE_EXCEPTION << 8);
     if (errcode_valid)
@@ -899,7 +899,7 @@ void BX_CPU_C::SvmInterceptIO(bxInstruction_c *i, unsigned port, unsigned len)
       qualification |= SVM_VMEXIT_IO_INSTR_ASIZE64;
     else if (i->as32L())
       qualification |= SVM_VMEXIT_IO_INSTR_ASIZE32;
-    else 
+    else
       qualification |= SVM_VMEXIT_IO_INSTR_ASIZE16;
 
     Svm_Vmexit(SVM_VMEXIT_IO, qualification, RIP);

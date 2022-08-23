@@ -181,7 +181,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   if (BX_CPU_THIS_PTR in_svm_guest) {
     if (SVM_INTERCEPT(SVM_INTERCEPT0_TASK_SWITCH))
       SvmInterceptTaskSwitch(tss_selector->value, source, push_error, error_code);
-  } 
+  }
 #endif
 
 #if BX_SUPPORT_VMX

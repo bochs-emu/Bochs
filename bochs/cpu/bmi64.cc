@@ -25,7 +25,7 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-#if BX_SUPPORT_X86_64 
+#if BX_SUPPORT_X86_64
 
 #if BX_SUPPORT_AVX
 
@@ -183,7 +183,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BZHI_GqEqBqR(bxInstruction_c *i)
   unsigned control = BX_READ_8BIT_REGL(i->src2());
   bool tmpCF = 0;
   Bit64u op1_64 = BX_READ_64BIT_REG(i->src1());
-  
+
   if (control < 64) {
     Bit64u mask = (BX_CONST64(1) << control) - 1;
     op1_64 &= mask;
@@ -236,7 +236,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PDEP_GqBqEqR(bxInstruction_c *i)
     }
     wr_mask <<= 1;
   }
-  
+
   BX_WRITE_64BIT_REG(i->dst(), result_64);
 
   BX_NEXT_INSTR(i);

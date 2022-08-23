@@ -4,7 +4,7 @@
 //
 //   Copyright (c) 2013-2019 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
-//                     	
+//
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
 //  License as published by the Free Software Foundation; either
@@ -361,7 +361,7 @@ struct bx_modrm {
 
 #include "ia_opcodes.h"
 
-// New Opcode Tables 
+// New Opcode Tables
 
 /*
 2222 1111 1111 11
@@ -374,8 +374,8 @@ SSSS SSoo SEVO EEEA R
  / / PR 0      VVWK D
  1 1 EE        LL 0 S
  6 6 FF        50   T
-     II        1/ 
-	 XX        21 
+     II        1/
+	 XX        21
 */
 
 const unsigned OS64_OFFSET = 23;

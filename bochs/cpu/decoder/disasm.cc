@@ -269,7 +269,7 @@ char *resolve_memsize(char *disbufptr, const bxInstruction_c *i, unsigned src_in
     case 4:
       disbufptr = dis_sprintf(disbufptr, "dword ptr ");
       break;
-        
+
     case 8:
       disbufptr = dis_sprintf(disbufptr, "qword ptr ");
       break;
@@ -329,7 +329,7 @@ char *resolve_memsize(char *disbufptr, const bxInstruction_c *i, unsigned src_in
         disbufptr = dis_sprintf(disbufptr, "xmmword ptr ");
       break;
 
-    default: 
+    default:
       break;
     }
   }
@@ -451,7 +451,7 @@ char *disasm_regref(char *disbufptr, const bxInstruction_c *i, unsigned src_num,
     break;
 
   case BX_KMASK_REG_PAIR:
-    disbufptr = dis_sprintf(disbufptr, "[%sk%d, %sk%d]", 
+    disbufptr = dis_sprintf(disbufptr, "[%sk%d, %sk%d]",
      (style == BX_DISASM_GAS) ? "%" : "",
       srcreg & ~1,
      (style == BX_DISASM_GAS) ? "%" : "",
@@ -568,7 +568,7 @@ char *disasm_immediate(char *disbufptr, const bxInstruction_c *i, unsigned src_t
   case BX_DIRECT_MEMREF_W:
   case BX_DIRECT_MEMREF_D:
   case BX_DIRECT_MEMREF_Q:
-    disbufptr = dis_sprintf(disbufptr, "%s%s:", 
+    disbufptr = dis_sprintf(disbufptr, "%s%s:",
      (style == BX_DISASM_GAS) ? "%" : "", segment_name[i->seg()]);
 #if BX_SUPPORT_X86_64
     if (i->as64L())

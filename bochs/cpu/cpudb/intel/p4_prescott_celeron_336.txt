@@ -15,8 +15,8 @@ Number of threads		1
 APICs
 -------------------------------------------------------------------------
 
-Processor 0	
-	-- Core 0	
+Processor 0
+	-- Core 0
 		-- Thread 0	0
 
 Processors Information
@@ -48,7 +48,7 @@ Processor 1			ID = 0
 Thread dumps
 -------------------------------------------------------------------------
 
-CPU Thread 0	
+CPU Thread 0
 	APIC ID			0
 	Topology		Processor ID 0, Core ID 0, Thread ID 0
 	Type			01001006h
@@ -58,7 +58,7 @@ CPU Thread 0
 	Cache descriptor	Level 2, U, 256 KB, 1 thread(s)
 	Cache descriptor	Level 1, T, 12 KB, 1 thread(s)
 
-	CPUID		 
+	CPUID
 	0x00000000		0x00000003	0x756E6547	0x6C65746E	0x49656E69
 	0x00000001		0x00000F41	0x00010800	0x0000651D	0xBFEBFBFF
 	0x00000002		0x605B5101	0x00000000	0x00000000	0x003C7040

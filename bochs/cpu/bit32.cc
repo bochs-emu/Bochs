@@ -363,7 +363,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TZCNT_GdEdR(bxInstruction_c *i)
 
   set_CF(! op1_32);
   set_ZF(! result_32);
-  
+
   BX_WRITE_32BIT_REGZ(i->dst(), result_32);
 
   BX_NEXT_INSTR(i);
@@ -377,7 +377,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LZCNT_GdEdR(bxInstruction_c *i)
 
   set_CF(! op1_32);
   set_ZF(! result_32);
-  
+
   BX_WRITE_32BIT_REGZ(i->dst(), result_32);
 
   BX_NEXT_INSTR(i);

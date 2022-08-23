@@ -91,7 +91,7 @@ enum MSR_Register {
   BX_MSR_PERFEVTSEL2      = 0x188,
   BX_MSR_PERFEVTSEL3      = 0x189,
   BX_MSR_PERFEVTSEL4      = 0x18a,
-  BX_MSR_PERFEVTSEL5      = 0x18b, 
+  BX_MSR_PERFEVTSEL5      = 0x18b,
   BX_MSR_PERFEVTSEL6      = 0x18c,
   BX_MSR_PERFEVTSEL7      = 0x18d,
   BX_MSR_PERF_FIXED_CTR0  = 0x309,  /* Fixed Performance Counter 0 (R/W): Counts Instr_Retired.Any */

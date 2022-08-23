@@ -119,8 +119,8 @@ BOOL Is_WinXP_SP2_or_Later()
    // Perform the test.
 
    return VerifyVersionInfo(
-      &osvi, 
-      VER_MAJORVERSION | VER_MINORVERSION | 
+      &osvi,
+      VER_MAJORVERSION | VER_MINORVERSION |
       VER_SERVICEPACKMAJOR | VER_SERVICEPACKMINOR,
       dwlConditionMask);
 }

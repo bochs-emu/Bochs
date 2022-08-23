@@ -52,7 +52,7 @@
 // AES ShiftRows transformation
 //
 // | A E I M |    | A E I M |
-// | B F J N | => | F J N B | 
+// | B F J N | => | F J N B |
 // | C G K O |    | K O C G |
 // | D H L P |    | P D H L |
 //
@@ -83,7 +83,7 @@ BX_CPP_INLINE void AES_ShiftRows(BxPackedXmmRegister &state)
 // AES InverseShiftRows transformation
 //
 // | A E I M |    | A E I M |
-// | B F J N | => | N B F J | 
+// | B F J N | => | N B F J |
 // | C G K O |    | K O C G |
 // | D H L P |    | H L P D |
 //
@@ -222,7 +222,7 @@ BX_CPP_INLINE unsigned gf_mul(unsigned a, unsigned b)
 static void AES_MixColumns(BxPackedXmmRegister &state)
 {
   BxPackedXmmRegister tmp = state;
-  
+
   for(int j=0; j<4; j++) {
     AES_STATE(state, 0, j) = gf_mul(0x2, AES_STATE(tmp, 0, j)) ^
                              gf_mul(0x3, AES_STATE(tmp, 1, j)) ^
@@ -249,7 +249,7 @@ static void AES_MixColumns(BxPackedXmmRegister &state)
 static void AES_InverseMixColumns(BxPackedXmmRegister &state)
 {
   BxPackedXmmRegister tmp = state;
-  
+
   for(int j=0; j<4; j++) {
     AES_STATE(state, 0, j) = gf_mul(0xE, AES_STATE(tmp, 0, j)) ^
                              gf_mul(0xB, AES_STATE(tmp, 1, j)) ^
@@ -280,7 +280,7 @@ BX_CPP_INLINE Bit32u AES_SubWord(Bit32u x)
   Bit8u b2 = sbox_transformation[(x>>16) & 0xff];
   Bit8u b3 = sbox_transformation[(x>>24) & 0xff];
 
-  return b0 | ((Bit32u)(b1) <<  8) | 
+  return b0 | ((Bit32u)(b1) <<  8) |
               ((Bit32u)(b2) << 16) | ((Bit32u)(b3) << 24);
 }
 

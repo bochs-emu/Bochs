@@ -39,7 +39,7 @@ typedef struct ethernet_header {
   Bit8u  dst_mac_addr[ETHERNET_MAC_ADDR_LEN];
   Bit8u  src_mac_addr[ETHERNET_MAC_ADDR_LEN];
   Bit16u type;
-} 
+}
 #if !defined(_MSC_VER)
   GCC_ATTRIBUTE((packed))
 #endif
@@ -84,7 +84,7 @@ typedef struct ip_header {
   Bit16u checksum;
   Bit8u src_addr[4];
   Bit8u dst_addr[4];
-} 
+}
 #if !defined(_MSC_VER)
   GCC_ATTRIBUTE((packed))
 #endif
@@ -98,7 +98,7 @@ typedef struct udp_header {
   Bit16u dst_port;
   Bit16u length;
   Bit16u checksum;
-} 
+}
 #if !defined(_MSC_VER)
   GCC_ATTRIBUTE((packed))
 #endif
@@ -143,7 +143,7 @@ typedef struct tcp_header {
   Bit16u window;
   Bit16u checksum;
   Bit16u urgent_ptr;
-} 
+}
 #if !defined(_MSC_VER)
   GCC_ATTRIBUTE((packed))
 #endif

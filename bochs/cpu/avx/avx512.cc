@@ -1454,7 +1454,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VINSERTF32x4_MASK_VpsHpsWpsIbR(bxInstructi
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src1());
   unsigned len = i->getVL();
   unsigned offset = i->Ib() & (len-1);
-  
+
   op.vmm128(offset) = BX_READ_XMM_REG(i->src2());
   avx512_write_regd_masked(i, &op, len, BX_READ_16BIT_OPMASK(i->opmask()));
   BX_NEXT_INSTR(i);
@@ -1465,7 +1465,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VINSERTF64x2_MASK_VpdHpdWpdIbR(bxInstructi
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src1());
   unsigned len = i->getVL();
   unsigned offset = i->Ib() & (len-1);
-  
+
   op.vmm128(offset) = BX_READ_XMM_REG(i->src2());
   avx512_write_regq_masked(i, &op, len, BX_READ_8BIT_OPMASK(i->opmask()));
 
@@ -1697,7 +1697,7 @@ BX_CPP_INLINE Bit64u ternlogq_scalar(Bit64u op1, Bit64u op2, Bit64u op3, unsigne
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPTERNLOGD_VdqHdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->dst()), 
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->dst()),
                       op2 = BX_READ_AVX_REG(i->src1()),
                       op3 = BX_READ_AVX_REG(i->src2());
 
@@ -1714,7 +1714,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPTERNLOGD_VdqHdqWdqIbR(bxInstruction_c *i
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPTERNLOGD_MASK_VdqHdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->dst()), 
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->dst()),
                       op2 = BX_READ_AVX_REG(i->src1()),
                       op3 = BX_READ_AVX_REG(i->src2());
 
@@ -1736,7 +1736,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPTERNLOGD_MASK_VdqHdqWdqIbR(bxInstruction
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPTERNLOGQ_VdqHdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->dst()), 
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->dst()),
                       op2 = BX_READ_AVX_REG(i->src1()),
                       op3 = BX_READ_AVX_REG(i->src2());
 
@@ -1753,7 +1753,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPTERNLOGQ_VdqHdqWdqIbR(bxInstruction_c *i
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPTERNLOGQ_MASK_VdqHdqWdqIbR(bxInstruction_c *i)
 {
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->dst()), 
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->dst()),
                       op2 = BX_READ_AVX_REG(i->src1()),
                       op3 = BX_READ_AVX_REG(i->src2());
 
@@ -1980,7 +1980,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXPANDPD_MASK_VpdWpdR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCOMPRESSB_MASK_WdqVdq(bxInstruction_c *i)
 {
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src()), result;
-  
+
   Bit64u opmask = BX_READ_OPMASK(i->opmask());
   unsigned len = i->getVL(), n = 0, k = 0;
 
@@ -2008,7 +2008,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCOMPRESSB_MASK_WdqVdq(bxInstruction_c *i
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCOMPRESSW_MASK_WdqVdq(bxInstruction_c *i)
 {
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src()), result;
-  
+
   Bit32u opmask = BX_READ_32BIT_OPMASK(i->opmask());
   unsigned len = i->getVL(), n = 0, k = 0;
 
@@ -2036,7 +2036,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCOMPRESSW_MASK_WdqVdq(bxInstruction_c *i
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCOMPRESSPS_MASK_WpsVps(bxInstruction_c *i)
 {
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src()), result;
-  
+
   Bit32u opmask = BX_READ_16BIT_OPMASK(i->opmask());
   unsigned len = i->getVL(), n = 0, k = 0;
 
@@ -2064,7 +2064,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCOMPRESSPS_MASK_WpsVps(bxInstruction_c *i
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCOMPRESSPD_MASK_WpdVpd(bxInstruction_c *i)
 {
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src()), result;
-  
+
   Bit32u opmask = BX_READ_8BIT_OPMASK(i->opmask());
   unsigned len = i->getVL(), n = 0, k = 0;
 

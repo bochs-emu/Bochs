@@ -163,7 +163,7 @@ void corei7_sandy_bridge_2600k_t::get_cpuid_leaf(Bit32u function, Bit32u subfunc
 
 #if BX_SUPPORT_VMX >= 2
 
-// 
+//
 // MSR 00000480 : 00DA0400 00000010	BX_MSR_VMX_BASIC
 // MSR 00000481 : 0000007F 00000016	BX_MSR_VMX_PINBASED_CTRLS
 // MSR 00000482 : FFF9FFFE 0401E172	BX_MSR_VMX_PROCBASED_CTRLS
@@ -181,7 +181,7 @@ void corei7_sandy_bridge_2600k_t::get_cpuid_leaf(Bit32u function, Bit32u subfunc
 // MSR 0000048E : FFF9FFFE 04006172     BX_MSR_VMX_TRUE_PROCBASED_CTRLS
 // MSR 0000048F : 007FFFFF 00036DFB     BX_MSR_VMX_TRUE_VMEXIT_CTRLS
 // MSR 00000490 : 0000FFFF 000011FB     BX_MSR_VMX_TRUE_VMENTRY_CTRLS
-// 
+//
 
 Bit32u corei7_sandy_bridge_2600k_t::get_vmx_extensions_bitmask(void) const
 {
@@ -520,7 +520,7 @@ void corei7_sandy_bridge_2600k_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) c
   //   [4:0] Number of fixed performance counters (if Version ID > 1)
   //  [12:5] Bit width of fixed-function performance counters (if Version ID > 1)
   // [31:13] reserved
-  
+
   leaf->eax = 0x07300803;
   leaf->ebx = 0x00000000;
   leaf->ecx = 0x00000000;

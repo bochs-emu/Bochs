@@ -1245,7 +1245,7 @@ int decoder_vex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
     }
     else {
       iptr = decodeModrm64(iptr, remain, i, mod, nnn, rm, rex_r, rex_x, rex_b);
-      if (! iptr) 
+      if (! iptr)
         return(-1);
     }
   }
@@ -1382,7 +1382,7 @@ int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
 
   if (evex_z && ! opmask)
     return(ia_opcode);
-   
+
   unsigned opcode_byte = (evex >> 24);
   opcode_byte += 256 * (evex_opcext-1);
 
@@ -1402,7 +1402,7 @@ int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
   }
   else {
     iptr = decodeModrm64(iptr, remain, i, mod, nnn, rm, rex_r, rex_x, rex_b);
-    if (! iptr) 
+    if (! iptr)
       return(-1);
     if (mod == 0x40) { // mod==01b
       displ8 = true;
@@ -1530,7 +1530,7 @@ int decoder_xop64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
   }
   else {
     iptr = decodeModrm64(iptr, remain, i, mod, nnn, rm, rex_r, rex_x, rex_b);
-    if (! iptr) 
+    if (! iptr)
       return(-1);
   }
 
@@ -1571,7 +1571,7 @@ int decoder64_fp_escape(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i,
 
   struct bx_modrm modrm;
   iptr = parseModrm64(iptr, remain, i, rex_prefix, &modrm);
-  if (! iptr) 
+  if (! iptr)
     return(-1);
 
   i->setFoo((modrm.modrm | (b1 << 8)) & 0x7ff); /* for x87 */
@@ -1602,7 +1602,7 @@ int decoder64_modrm(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, uns
 {
   struct bx_modrm modrm;
   iptr = parseModrm64(iptr, remain, i, rex_prefix, &modrm);
-  if (! iptr) 
+  if (! iptr)
     return(-1);
 
   Bit32u decmask = (1 << IS64_OFFSET) |
@@ -1702,7 +1702,7 @@ int decoder64_3dnow(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, uns
 #if BX_SUPPORT_3DNOW
   struct bx_modrm modrm;
   iptr = parseModrm64(iptr, remain, i, rex_prefix, &modrm);
-  if (! iptr) 
+  if (! iptr)
     return(-1);
 
   if (remain != 0) {
@@ -1867,7 +1867,7 @@ get_32bit_displ:
 modrm_done:
 
   i->setSeg(seg);
-  return iptr;  
+  return iptr;
 }
 
 int fetchDecode64(const Bit8u *iptr, bxInstruction_c *i, unsigned remainingInPage)

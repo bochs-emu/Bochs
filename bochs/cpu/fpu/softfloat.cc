@@ -459,7 +459,7 @@ Bit64u float32_to_uint64(float32 a, float_status_t &status)
 | performed according to the IEC/IEEE Standard for Binary Floating-Point
 | Arithmetic---which means in particular that the conversion is rounded
 | according to the current rounding mode.  If `a' is a NaN or the conversion
-| overflows, the largest unsigned integer is returned. 
+| overflows, the largest unsigned integer is returned.
 *----------------------------------------------------------------------------*/
 
 Bit32u float32_to_uint32(float32 a, float_status_t &status)
@@ -1655,13 +1655,13 @@ Bit32u float64_to_uint32(float64 a, float_status_t &status)
 | according to the current rounding mode.  If `a' is a NaN or the conversion
 | overflows, the largest unsigned integer is returned.
 *----------------------------------------------------------------------------*/
- 
+
 Bit64u float64_to_uint64(float64 a, float_status_t &status)
 {
     int aSign;
     Bit16s aExp, shiftCount;
     Bit64u aSig, aSigExtra;
- 
+
     aSig = extractFloat64Frac(a);
     aExp = extractFloat64Exp(a);
     aSign = extractFloat64Sign(a);

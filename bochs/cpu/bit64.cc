@@ -367,7 +367,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TZCNT_GqEqR(bxInstruction_c *i)
 
   set_CF(! op1_64);
   set_ZF(! result_64);
-  
+
   BX_WRITE_64BIT_REG(i->dst(), result_64);
 
   BX_NEXT_INSTR(i);
@@ -381,7 +381,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LZCNT_GqEqR(bxInstruction_c *i)
 
   set_CF(! op1_64);
   set_ZF(! result_64);
-  
+
   BX_WRITE_64BIT_REG(i->dst(), result_64);
 
   BX_NEXT_INSTR(i);

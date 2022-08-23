@@ -296,13 +296,13 @@ void vnet_server_c::handle_packet(const Bit8u *buf, unsigned len)
         !memcmp(&ethhdr->dst_mac_addr, broadcast_macaddr, 6) ||
         !memcmp(&ethhdr->dst_mac_addr, mcast_ipv6_mac_prefix, 2)) {
       switch (ntohs(ethhdr->type)) {
-        case ETHERNET_TYPE_IPV4: 
+        case ETHERNET_TYPE_IPV4:
           process_ipv4(clientid, buf, len);
           break;
         case ETHERNET_TYPE_ARP:
           process_arp(clientid, buf, len);
           break;
-        case ETHERNET_TYPE_IPV6: 
+        case ETHERNET_TYPE_IPV6:
           BX_ERROR(("IPv6 packet not supported yet"));
           break;
         default: // unknown packet type.

@@ -187,7 +187,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPOPCNTQ_MASK_VdqWdqR(bxInstruction_c *i)
   else {
     BX_WRITE_AVX_REGZ(i->dst(), op, len);
   }
-  
+
   BX_NEXT_INSTR(i);
 }
 

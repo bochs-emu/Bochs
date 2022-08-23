@@ -82,7 +82,7 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(Bit32u eipBiased, bx_phy_address pAdd
 
   BX_CPU_THIS_PTR iCache.alloc_trace(entry);
 
-  // Cache miss. We weren't so lucky, but let's be optimistic - try to build 
+  // Cache miss. We weren't so lucky, but let's be optimistic - try to build
   // trace from incoming instruction bytes stream !
   entry->pAddr = pAddr;
   entry->traceMask = 0;
@@ -107,7 +107,7 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(Bit32u eipBiased, bx_phy_address pAdd
     (BX_SMP_PROCESSORS > 1) ? SIM->get_param_num(BXPN_SMP_QUANTUM)->get() :
 #endif
     BX_MAX_TRACE_LENGTH;
- 
+
   for (unsigned n=0;n < quantum;n++)
   {
 #if BX_SUPPORT_X86_64
@@ -125,7 +125,7 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(Bit32u eipBiased, bx_phy_address pAdd
          // tracing.
          break;
       }
-      // First instruction is boundary fetch, leave the trace cache entry 
+      // First instruction is boundary fetch, leave the trace cache entry
       // invalid for now because boundaryFetch() can fault
       entry->pAddr = ~entry->pAddr;
       entry->tlen = 1;

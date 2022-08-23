@@ -766,7 +766,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
         BX_ERROR(("WRMSR: attempt to write invalid Memory Type to MSR_PAT"));
         return 0;
       }
-      
+
       BX_CPU_THIS_PTR msr.pat = val_64;
       break;
 #endif

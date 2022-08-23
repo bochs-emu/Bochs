@@ -520,8 +520,8 @@ struct BOCHSAPI bx_mxcsr_t
 
 /*
  * SaturateWordSToByteS  converts  a  signed  16-bit  value  to a signed
- * 8-bit value.  If  the signed 16-bit value is less than -128, it is 
- * represented by the saturated value  -128  (0x80).  If it is  greater 
+ * 8-bit value.  If  the signed 16-bit value is less than -128, it is
+ * represented by the saturated value  -128  (0x80).  If it is  greater
  * than 127, it is represented by the saturated value 127 (0x7F).
 */
 BX_CPP_INLINE Bit8s BX_CPP_AttrRegparmN(1) SaturateWordSToByteS(Bit16s value)
@@ -534,7 +534,7 @@ BX_CPP_INLINE Bit8s BX_CPP_AttrRegparmN(1) SaturateWordSToByteS(Bit16s value)
 /*
  * SaturateQwordSToByteS converts a signed 32-bit value to a signed
  * 8-bit value. If the signed 32-bit value is less than -128, it is
- * represented by the saturated value -128 (0x80). If it is greater 
+ * represented by the saturated value -128 (0x80). If it is greater
  * than 127, it is represented by the saturated value 127 (0x7F).
 */
 BX_CPP_INLINE Bit8s BX_CPP_AttrRegparmN(1) SaturateDwordSToByteS(Bit32s value)
@@ -547,7 +547,7 @@ BX_CPP_INLINE Bit8s BX_CPP_AttrRegparmN(1) SaturateDwordSToByteS(Bit32s value)
 /*
  * SaturateQwordSToByteS converts a signed 64-bit value to a signed
  * 8-bit value. If the signed 64-bit value is less than -128, it is
- * represented by the saturated value -128 (0x80). If it is greater 
+ * represented by the saturated value -128 (0x80). If it is greater
  * than 127, it is represented by the saturated value 127 (0x7F).
 */
 BX_CPP_INLINE Bit8s BX_CPP_AttrRegparmN(1) SaturateQwordSToByteS(Bit64s value)

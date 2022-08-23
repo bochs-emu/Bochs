@@ -1023,7 +1023,7 @@ Bit32u bx_banshee_c::agp_reg_read(Bit8u reg)
     default:
       result = v->banshee.agp[reg];
   }
-  BX_DEBUG(("AGP read register 0x%03x (%s) result = 0x%08x", reg<<2, 
+  BX_DEBUG(("AGP read register 0x%03x (%s) result = 0x%08x", reg<<2,
             banshee_agp_reg_name[reg], result));
   return result;
 }

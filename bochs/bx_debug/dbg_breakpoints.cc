@@ -303,7 +303,7 @@ int bx_dbg_pbreakpoint_command(BreakpointKind bk, bx_phy_address paddress, const
 void bx_dbg_info_bpoints_command(void)
 {
   unsigned i;
-// Num Type           Disp Enb Address    
+// Num Type           Disp Enb Address
 // 1   breakpoint     keep y   0x00010664 condition
 
   dbg_printf("Num Type           Disp Enb Address\n");

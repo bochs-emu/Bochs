@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////////////
 // $Id$
 /////////////////////////////////////////////////////////////////////////
-  
+
 // This file is simply a list of SDL key symbols taken from <SDL/SDL_keysym.h>.
 // The order in this file is not important.  In sdl.cc, DEF_SDL_KEY() is
 // defined as a macro and then it includes this file to fill in all the data in

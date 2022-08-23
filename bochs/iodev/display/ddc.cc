@@ -53,7 +53,7 @@ const Bit8u vesa_EDID[128] = {
   0x01, 0x03,                      /* 0x0012 EDID version number (1.3) */
   0x0F,                            /* 0x0014 Video signal interface (analogue, 0.700 : 0.300 : 1.000 V p-p,
                                              Video Setup: Blank Level = Black Level, Separate Sync H & V Signals are
-                                             supported, Composite Sync Signal on Horizontal is supported, Composite 
+                                             supported, Composite Sync Signal on Horizontal is supported, Composite
                                              Sync Signal on Green Video is supported, Serration on the Vertical Sync
                                              is supported) */
   0x21,0x19,                       /* 0x0015 Scren size (330 mm * 250 mm) */

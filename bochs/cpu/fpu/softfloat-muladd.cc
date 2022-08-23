@@ -86,7 +86,7 @@ static float32 propagateFloat32MulAddNaN(float32 a, float32 b, float32 c, float_
         return (bIsSignalingNaN | bIsNaN) ? b : c;
     }
 }
- 
+
 /*----------------------------------------------------------------------------
 | Takes three double-precision floating-point values `a', `b' and `c', one of
 | which is a NaN, and returns the appropriate NaN result.  If any of  `a',
@@ -334,7 +334,7 @@ float32 float32_muladd(float32 a, float32 b, float32 c, int flags, float_status_
         return roundAndPackFloat32(zSign, zExp, zSig64, status);
     }
 }
- 
+
 /*----------------------------------------------------------------------------
 | Returns the result of multiplying the double-precision floating-point values
 | `a' and `b' then adding 'c', with no intermediate rounding step after the

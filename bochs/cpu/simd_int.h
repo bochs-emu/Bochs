@@ -261,7 +261,7 @@ BX_CPP_INLINE void xmm_punpckhwd(BxPackedXmmRegister *op1, const BxPackedXmmRegi
   op1->xmm16u(6) = op1->xmm16u(7);
   op1->xmm16u(7) = op2->xmm16u(7);
 }
- 
+
 // pack
 
 BX_CPP_INLINE void xmm_packuswb(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
@@ -1009,7 +1009,7 @@ BX_CPP_INLINE void xmm_pmaddwd(BxPackedXmmRegister *op1, const BxPackedXmmRegist
 {
   for(unsigned n=0; n<4; n++)
   {
-    op1->xmm32u(n) = Bit32s(op1->xmm16s(n*2))   * Bit32s(op2->xmm16s(n*2)) + 
+    op1->xmm32u(n) = Bit32s(op1->xmm16s(n*2))   * Bit32s(op2->xmm16s(n*2)) +
                      Bit32s(op1->xmm16s(n*2+1)) * Bit32s(op2->xmm16s(n*2+1));
   }
 }
@@ -1173,7 +1173,7 @@ BX_CPP_INLINE void xmm_psravw(BxPackedXmmRegister *op1, const BxPackedXmmRegiste
     unsigned shift = op2->xmm16u(n);
     if(shift > 15)
       op1->xmm16u(n) = (op1->xmm16s(n) < 0) ? 0xffff : 0;
-    else    
+    else
       op1->xmm16u(n) = (Bit16u)(op1->xmm16s(n) >> shift);
   }
 }
@@ -1184,7 +1184,7 @@ BX_CPP_INLINE void xmm_psravd(BxPackedXmmRegister *op1, const BxPackedXmmRegiste
     Bit32u shift = op2->xmm32u(n);
     if(shift > 31)
       op1->xmm32u(n) = (op1->xmm32s(n) < 0) ? 0xffffffff : 0;
-    else    
+    else
       op1->xmm32u(n) = (Bit32u)(op1->xmm32s(n) >> shift);
   }
 }
@@ -1195,7 +1195,7 @@ BX_CPP_INLINE void xmm_psravq(BxPackedXmmRegister *op1, const BxPackedXmmRegiste
     Bit64u shift = op2->xmm64u(n);
     if(shift > 64)
       op1->xmm64u(n) = (op1->xmm64s(n) < 0) ? BX_CONST64(0xffffffffffffffff) : 0;
-    else    
+    else
       op1->xmm64u(n) = (Bit64u)(op1->xmm64s(n) >> shift);
   }
 }
@@ -1206,7 +1206,7 @@ BX_CPP_INLINE void xmm_psllvw(BxPackedXmmRegister *op1, const BxPackedXmmRegiste
     unsigned shift = op2->xmm16u(n);
     if(shift > 15)
       op1->xmm16u(n) = 0;
-    else    
+    else
       op1->xmm16u(n) <<= shift;
   }
 }
@@ -1217,7 +1217,7 @@ BX_CPP_INLINE void xmm_psllvd(BxPackedXmmRegister *op1, const BxPackedXmmRegiste
     Bit32u shift = op2->xmm32u(n);
     if(shift > 31)
       op1->xmm32u(n) = 0;
-    else    
+    else
       op1->xmm32u(n) <<= shift;
   }
 }
@@ -1228,7 +1228,7 @@ BX_CPP_INLINE void xmm_psllvq(BxPackedXmmRegister *op1, const BxPackedXmmRegiste
     Bit64u shift = op2->xmm64u(n);
     if(shift > 63)
       op1->xmm64u(n) = 0;
-    else    
+    else
       op1->xmm64u(n) <<= shift;
   }
 }
@@ -1239,7 +1239,7 @@ BX_CPP_INLINE void xmm_psrlvw(BxPackedXmmRegister *op1, const BxPackedXmmRegiste
     unsigned shift = op2->xmm16u(n);
     if(shift > 15)
       op1->xmm16u(n) = 0;
-    else    
+    else
       op1->xmm16u(n) >>= shift;
   }
 }
@@ -1250,7 +1250,7 @@ BX_CPP_INLINE void xmm_psrlvd(BxPackedXmmRegister *op1, const BxPackedXmmRegiste
     Bit32u shift = op2->xmm32u(n);
     if(shift > 31)
       op1->xmm32u(n) = 0;
-    else    
+    else
       op1->xmm32u(n) >>= shift;
   }
 }
@@ -1261,7 +1261,7 @@ BX_CPP_INLINE void xmm_psrlvq(BxPackedXmmRegister *op1, const BxPackedXmmRegiste
     Bit64u shift = op2->xmm64u(n);
     if(shift > 63)
       op1->xmm64u(n) = 0;
-    else    
+    else
       op1->xmm64u(n) >>= shift;
   }
 }

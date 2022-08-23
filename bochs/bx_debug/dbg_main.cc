@@ -2733,7 +2733,7 @@ void bx_dbg_loadmem_command(const char *filename, bx_address laddr)
         }
       }
   } while (0 != bytes_read);
-  
+
   fclose(f);
 }
 
@@ -2997,7 +2997,7 @@ void bx_dbg_print_descriptor(Bit32u lo, Bit32u hi)
   } else {
     // types from IA32-devel-guide-3, page 3-15.
     static const char *undef = "???";
-    static const char *type_names[16] = { 
+    static const char *type_names[16] = {
         undef,
         "16-Bit TSS (available)",
         "LDT",
@@ -3048,7 +3048,7 @@ void bx_dbg_print_descriptor(Bit32u lo, Bit32u hi)
 #if BX_SUPPORT_X86_64
 const char* bx_dbx_get_descriptor64_type_name(unsigned type)
 {
-    static const char *type_names[16] = { 
+    static const char *type_names[16] = {
         NULL,
         NULL,
         "LDT",
@@ -4031,7 +4031,7 @@ void bx_dbg_step_over_command()
   if (ret < 0) {
     dbg_printf("bx_dbg_step_over_command:: Failed to fetch instructions !\n");
     return;
-  }    
+  }
 
   switch(i.getIaOpcode()) {
     // Jcc short

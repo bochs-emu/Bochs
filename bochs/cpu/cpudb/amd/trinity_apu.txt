@@ -15,14 +15,14 @@ Number of threads		4
 APICs
 -------------------------------------------------------------------------
 
-Processor 0	
-	-- Core 0	
+Processor 0
+	-- Core 0
 		-- Thread 0	0
-	-- Core 1	
+	-- Core 1
 		-- Thread 0	1
-	-- Core 2	
+	-- Core 2
 		-- Thread 0	2
-	-- Core 3	
+	-- Core 3
 		-- Thread 0	3
 
 Timers
@@ -43,7 +43,7 @@ Processor 1			ID = 0
 	Number of threads	4 (max 4)
 	Name			AMD A8-5600K
 	Codename		Trinity
-	Specification		AMD A8-5600K APU with Radeon(tm) HD Graphics   
+	Specification		AMD A8-5600K APU with Radeon(tm) HD Graphics
 	Package 		Socket FM2 (904)
 	CPUID			F.0.1
 	Extended CPUID		15.10
@@ -81,7 +81,7 @@ Processor 1			ID = 0
 Thread dumps
 -------------------------------------------------------------------------
 
-CPU Thread 0	
+CPU Thread 0
 	APIC ID			0
 	Topology		Processor ID 0, Core ID 0, Thread ID 0
 	Type			02040004h
@@ -91,7 +91,7 @@ CPU Thread 0
 	Cache descriptor	Level 1, I, 64 KB, 2 thread(s)
 	Cache descriptor	Level 2, U, 2 MB, 2 thread(s)
 
-	CPUID		 
+	CPUID
 	0x00000000		0x0000000D	0x68747541	0x444D4163	0x69746E65
 	0x00000001		0x00610F01	0x00040800	0x3698320B	0x178BFBFF
 	0x00000002		0x00000000	0x00000000	0x00000000	0x00000000
@@ -156,7 +156,7 @@ CPU Thread 0
 	MSR 0xC0010071		0x01000006	0x2C012816
 	MSR 0xC0010070		0x00000000	0x2C012816
 
-CPU Thread 1	
+CPU Thread 1
 	APIC ID			1
 	Topology		Processor ID 0, Core ID 1, Thread ID 0
 	Type			02040004h
@@ -166,7 +166,7 @@ CPU Thread 1
 	Cache descriptor	Level 1, I, 64 KB, 2 thread(s)
 	Cache descriptor	Level 2, U, 2 MB, 2 thread(s)
 
-	CPUID		 
+	CPUID
 	0x00000000		0x0000000D	0x68747541	0x444D4163	0x69746E65
 	0x00000001		0x00610F01	0x01040800	0x3698320B	0x178BFBFF
 	0x00000002		0x00000000	0x00000000	0x00000000	0x00000000
@@ -231,7 +231,7 @@ CPU Thread 1
 	MSR 0xC0010071		0x01000006	0x2C012816
 	MSR 0xC0010070		0x00000000	0x2C012816
 
-CPU Thread 2	
+CPU Thread 2
 	APIC ID			2
 	Topology		Processor ID 0, Core ID 2, Thread ID 0
 	Type			02040004h
@@ -241,7 +241,7 @@ CPU Thread 2
 	Cache descriptor	Level 1, I, 64 KB, 2 thread(s)
 	Cache descriptor	Level 2, U, 2 MB, 2 thread(s)
 
-	CPUID		 
+	CPUID
 	0x00000000		0x0000000D	0x68747541	0x444D4163	0x69746E65
 	0x00000001		0x00610F01	0x02040800	0x3698320B	0x178BFBFF
 	0x00000002		0x00000000	0x00000000	0x00000000	0x00000000
@@ -306,7 +306,7 @@ CPU Thread 2
 	MSR 0xC0010071		0x00000006	0x2C002017
 	MSR 0xC0010070		0x00000000	0x2C002017
 
-CPU Thread 3	
+CPU Thread 3
 	APIC ID			3
 	Topology		Processor ID 0, Core ID 3, Thread ID 0
 	Type			02040004h
@@ -316,7 +316,7 @@ CPU Thread 3
 	Cache descriptor	Level 1, I, 64 KB, 2 thread(s)
 	Cache descriptor	Level 2, U, 2 MB, 2 thread(s)
 
-	CPUID		 
+	CPUID
 	0x00000000		0x0000000D	0x68747541	0x444D4163	0x69746E65
 	0x00000001		0x00610F01	0x03040800	0x3698320B	0x178BFBFF
 	0x00000002		0x00000000	0x00000000	0x00000000	0x00000000

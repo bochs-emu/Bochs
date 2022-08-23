@@ -67,7 +67,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::stackPrefetch(bx_address offset, unsigned 
       BX_ERROR(("stackPrefetch: SS not valid"));
       exception(BX_SS_EXCEPTION, 0);
     }
-      
+
     BX_ASSERT(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.p);
     BX_ASSERT(IS_DATA_SEGMENT_WRITEABLE(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.type));
 
@@ -85,7 +85,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::stackPrefetch(bx_address offset, unsigned 
       }
 
       // check that the begining of the page is within stack segment limits
-      // handle correctly the wrap corner case for EXPAND DOWN 
+      // handle correctly the wrap corner case for EXPAND DOWN
       Bit32u pageEnd = pageStart + 0xfff;
       if (pageStart > limit && pageStart < pageEnd) {
         BX_CPU_THIS_PTR espPageWindowSize = 4096;

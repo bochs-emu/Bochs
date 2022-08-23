@@ -52,7 +52,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BLCFILL_BqEqR(bxInstruction_c *i)
   set_CF((op_64 + 1) == 0);
 
   BX_WRITE_64BIT_REG(i->dst(), result_64);
-  
+
   BX_NEXT_INSTR(i);
 }
 
@@ -122,7 +122,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BLSFILL_BqEqR(bxInstruction_c *i)
   set_CF(op_64 == 0);
 
   BX_WRITE_64BIT_REG(i->dst(), result_64);
-  
+
   BX_NEXT_INSTR(i);
 }
 
@@ -136,7 +136,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BLSIC_BqEqR(bxInstruction_c *i)
   set_CF(op_64 == 0);
 
   BX_WRITE_64BIT_REG(i->dst(), result_64);
-  
+
   BX_NEXT_INSTR(i);
 }
 
@@ -164,7 +164,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TZMSK_BqEqR(bxInstruction_c *i)
   set_CF(op_64 == 0);
 
   BX_WRITE_64BIT_REG(i->dst(), result_64);
-  
+
   BX_NEXT_INSTR(i);
 }
 

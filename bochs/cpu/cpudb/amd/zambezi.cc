@@ -176,7 +176,7 @@ Bit32u zambezi_t::get_svm_extensions_bitmask(void) const
   return BX_CPUID_SVM_NESTED_PAGING |
          BX_CPUID_SVM_LBR_VIRTUALIZATION |
          BX_CPUID_SVM_SVM_LOCK |
-         BX_CPUID_SVM_NRIP_SAVE | 
+         BX_CPUID_SVM_NRIP_SAVE |
 //       BX_CPUID_SVM_TSCRATE | // not implemented yet
 //       BX_CPUID_SVM_VMCB_CLEAN_BITS | // not implemented yet
          BX_CPUID_SVM_FLUSH_BY_ASID |

@@ -323,7 +323,7 @@ public:
 #if BX_SUPPORT_AVX
   BX_CPP_INLINE void setVexW(unsigned bit) {
     modRMForm.Ib[2] = (modRMForm.Ib[2] & ~(1<<4)) | (bit<<4);
-  } 
+  }
   BX_CPP_INLINE unsigned getVexW(void) const {
     return modRMForm.Ib[2] & (1 << 4);
   }
@@ -341,24 +341,24 @@ public:
 
   BX_CPP_INLINE void setEvexb(unsigned bit) {
     modRMForm.Ib[2] = (modRMForm.Ib[2] & ~(1<<3)) | (bit<<3);
-  } 
+  }
   BX_CPP_INLINE unsigned getEvexb(void) const {
     return modRMForm.Ib[2] & (1 << 3);
-  } 
+  }
 
   BX_CPP_INLINE void setZeroMasking(unsigned bit) {
     modRMForm.Ib[2] = (modRMForm.Ib[2] & ~(1<<2)) | (bit<<2);
-  } 
+  }
   BX_CPP_INLINE unsigned isZeroMasking(void) const {
     return modRMForm.Ib[2] & (1 << 2);
-  } 
+  }
 
   BX_CPP_INLINE void setRC(unsigned rc) {
     modRMForm.Ib[2] = (modRMForm.Ib[2] & ~0x3) | rc;
-  } 
+  }
   BX_CPP_INLINE unsigned getRC(void) const {
     return modRMForm.Ib[2] & 0x3;
-  } 
+  }
 #endif
 
   BX_CPP_INLINE void setSrcReg(unsigned src, unsigned reg) {
@@ -371,7 +371,7 @@ public:
   BX_CPP_INLINE unsigned dst() const {
     return metaData[BX_INSTR_METADATA_DST];
   }
- 
+
   BX_CPP_INLINE unsigned src1() const {
     return metaData[BX_INSTR_METADATA_SRC1];
   }

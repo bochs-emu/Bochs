@@ -247,7 +247,7 @@ BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned 
         return 0;
       }
       break;
- 
+
     case 4: case 5: /* read only, expand down */
     case 6: case 7: /* read/write, expand down */
       if (seg->cache.u.segment.d_b)

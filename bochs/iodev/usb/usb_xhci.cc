@@ -50,7 +50,7 @@
  *
  * This emulation is coded with the new registers of xHCI version 1.10.  However,
  *  nothing more has been done to emulate 1.10 features.  YET.
- * This emulation is set with VERSION_MAJOR and VERSION_MINOR, 0x01 and 0x10 
+ * This emulation is set with VERSION_MAJOR and VERSION_MINOR, 0x01 and 0x10
  *  respectively.
  *
  * This emulation is experimental.  It is not completly accorate, though it is
@@ -97,7 +97,7 @@ Bit8u ext_caps[EXT_CAPS_SIZE] = {
               0x55, 0x53, 0x42, 0x20,  // "USB "
               0x03,                    // 1-based starting index
               0x02,                    // count of 2 port registers starting at base above
-              0x00, 0x00,              // 
+              0x00, 0x00,              //
               0x00, 0x00, 0x00, 0x00,  //
               0x00, 0x00, 0x00, 0x00,  //
               0x00, 0x00, 0x00, 0x00,  //
@@ -106,9 +106,9 @@ Bit8u ext_caps[EXT_CAPS_SIZE] = {
   /* The following two items are not needed or used by this emulation, but they
    *  are present in the uPD720202 controller.  I leave them here to closely emulate
    *  the said controller, and with intentions of some day adding the debug support.
-   * If you wish to comment them out, please be sure to remember to change the 
+   * If you wish to comment them out, please be sure to remember to change the
    *    0x07,            // (next = 0x07 * 4 = 0x540)
-   *  above to a 
+   *  above to a
    *    0x00,            // no more items
    */
 
@@ -275,20 +275,20 @@ void bx_usb_xhci_c::init(void)
   // initialize capability registers
   BX_XHCI_THIS hub.cap_regs.HcCapLength  = (VERSION_MAJOR << 24) | (VERSION_MINOR << 16) | OPS_REGS_OFFSET;
   BX_XHCI_THIS hub.cap_regs.HcSParams1   = (USB_XHCI_PORTS << 24) | (INTERRUPTERS << 8) | MAX_SLOTS;
-  BX_XHCI_THIS hub.cap_regs.HcSParams2   = 
+  BX_XHCI_THIS hub.cap_regs.HcSParams2   =
     // MAX_SCRATCH_PADS 4:0 in bits 31:27 (v1.00) and bits 9:5 in bits 21:25 (v1.01+)
     ((MAX_SCRATCH_PADS >> 5) << 21) | ((MAX_SCRATCH_PADS & 0x1F) << 27) |
     ((SCATCH_PAD_RESTORE == 1) << 26) | (MAX_SEG_TBL_SZ_EXP << 4) | ISO_SECH_THRESHOLD;
   BX_XHCI_THIS hub.cap_regs.HcSParams3   = (U2_DEVICE_EXIT_LAT << 16) | U1_DEVICE_EXIT_LAT;
-  BX_XHCI_THIS hub.cap_regs.HcCParams1   = 
-    ((EXT_CAPS_OFFSET >> 2) << 16) | (MAX_PSA_SIZE << 12) | (SEC_DOMAIN_BAND << 9) | (PARSE_ALL_EVENT << 8) | 
-    (LIGHT_HC_RESET << 5) | 
-    (PORT_INDICATORS << 4) | (PORT_POWER_CTRL << 3) | ((CONTEXT_SIZE >> 6) << 2) | 
+  BX_XHCI_THIS hub.cap_regs.HcCParams1   =
+    ((EXT_CAPS_OFFSET >> 2) << 16) | (MAX_PSA_SIZE << 12) | (SEC_DOMAIN_BAND << 9) | (PARSE_ALL_EVENT << 8) |
+    (LIGHT_HC_RESET << 5) |
+    (PORT_INDICATORS << 4) | (PORT_POWER_CTRL << 3) | ((CONTEXT_SIZE >> 6) << 2) |
     (BW_NEGOTIATION << 1) | ADDR_CAP_64;
   BX_XHCI_THIS hub.cap_regs.DBOFF        = DOORBELL_OFFSET;  // at offset DOORBELL_OFFSET from base
   BX_XHCI_THIS hub.cap_regs.RTSOFF       = RUNTIME_OFFSET;   // at offset RUNTIME_OFFSET from base
 #if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
-  BX_XHCI_THIS hub.cap_regs.HcCParams2   = 
+  BX_XHCI_THIS hub.cap_regs.HcCParams2   =
     (CONFIG_INFO_CAP << 5) | (LARGE_ESIT_PAYLOAD_CAP << 4) | (COMPLNC_TRANS_CAP << 3) |
     (FORCE_SAVE_CONTEXT_CAP << 2) | (CONFIG_EP_CMND_CAP << 1) | U3_ENTRY_CAP;
 #endif
@@ -359,9 +359,9 @@ void bx_usb_xhci_c::reset(unsigned type)
 //      { 0x51, 0x70 },                 //  Pointer to next item (0x00 = no more)
       { 0x51, 0x00 },                 //  Pointer to next item (0x00 = no more)
 
-      { 0x52, 0xC3 }, { 0x53, 0xC9 }, //  Capabilities:  version = 1.2, Aux Current = 375mA, 
+      { 0x52, 0xC3 }, { 0x53, 0xC9 }, //  Capabilities:  version = 1.2, Aux Current = 375mA,
       { 0x54, 0x08 }, { 0x55, 0x00 }, //        Status:  Power State = D0, Bit 3 = no soft reset
-      { 0x56, 0x00 }, { 0x57, 0x00 }, // 
+      { 0x56, 0x00 }, { 0x57, 0x00 }, //
 
       { 0x60, 0x30 },                 // Supports USB Spec version 3.0
       { 0x61, 0x20 },                 // Frame List Adjustment
@@ -369,7 +369,7 @@ void bx_usb_xhci_c::reset(unsigned type)
       // Firmware version
       { 0x6C, 0x09 },                 // ????? This byte not documented in specification ??
       { 0x6D, 0x18 }, { 0x6E, 0x20 }, // low = 0x18, high = 0x20
-      { 0x6F, 0x00 },                 // 
+      { 0x6F, 0x00 },                 //
 
       /* The following items are used with PCIe and are not wanted or needed within
        * this emulation.  However, the controller contains them within its PCI(e)
@@ -652,7 +652,7 @@ void bx_usb_xhci_c::reset_port_usb3(int port, const int reset_type)
   }
 }
 
-/* This is the Save/Restore part of the controller.  The host will issue a save state 
+/* This is the Save/Restore part of the controller.  The host will issue a save state
  *  (via a bit in the command register) before it powers down the controller.  The controller
  *  will use the scratch pad buffers (or its own memory if HCSPARAMS2:ScratchPadRestore == 0)
  *  to save its internal state before power shutdown (hibernation).  If the SPR bit is set,
@@ -711,7 +711,7 @@ bool bx_usb_xhci_c::save_hc_state(void)
 #else
   // Use controller's internal memory to save the state
   // Since saving to the internal memory will have no effect on the host,
-  //  since we don't destroy BX_XHCI_THIS hub on hibernation, we don't need 
+  //  since we don't destroy BX_XHCI_THIS hub on hibernation, we don't need
   //  to do anything here.
 #endif
 
@@ -753,7 +753,7 @@ bool bx_usb_xhci_c::restore_hc_state(void)
 #else
   // Use controller's internal memory to save the state
   // Since saving to the internal memory will have no effect on the host,
-  //  since we don't destroy BX_XHCI_THIS hub on hibernation, we don't need 
+  //  since we don't destroy BX_XHCI_THIS hub on hibernation, we don't need
   //  to do anything here.
 #endif
 
@@ -1032,7 +1032,7 @@ bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *data, 
   if (offset < OPS_REGS_OFFSET) {
     switch (offset) {
       // Capability Registers
-      case 0x00: // CapLength / version 
+      case 0x00: // CapLength / version
         val = BX_XHCI_THIS hub.cap_regs.HcCapLength;
         break;
       case 0x01:
@@ -1410,7 +1410,7 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
   if (offset < OPS_REGS_OFFSET) {
     switch (offset) {
       // Capability Registers
-      case 0x00: // CapLength / version 
+      case 0x00: // CapLength / version
       case 0x04: // HCSPARAMS1
       case 0x08: // HCSPARAMS2
       case 0x0C: // HCSPARAMS3
@@ -1443,7 +1443,7 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
         BX_XHCI_THIS hub.op_regs.HcCommand.ewe    = (value & (1 << 10)) ? 1 : 0;
         if (value & (1 <<  9)) {
           if (BX_XHCI_THIS hub.op_regs.HcStatus.hch == 1) {
-            // show that we are restoring the state 
+            // show that we are restoring the state
             //  (redundant since emulated host can't see it set until we are done here)
             BX_XHCI_THIS hub.op_regs.HcStatus.rss = 1;
             BX_XHCI_THIS hub.op_regs.HcStatus.sre = BX_XHCI_THIS restore_hc_state();
@@ -1454,7 +1454,7 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
         }
         if (value & (1 <<  8)) {
           if (BX_XHCI_THIS hub.op_regs.HcStatus.hch == 1) {
-            // show that we are saving the state 
+            // show that we are saving the state
             //  (redundant since emulated host can't see it set until we are done here)
             BX_XHCI_THIS hub.op_regs.HcStatus.sss = 1;
             BX_XHCI_THIS hub.op_regs.HcStatus.sre = BX_XHCI_THIS save_hc_state();
@@ -1951,7 +1951,7 @@ void bx_usb_xhci_c::process_transfer_ring(const int slot, const int ep)
   if ((BX_XHCI_THIS hub.slots[slot].slot_context.slot_state == SLOT_STATE_DISABLED_ENABLED)
     || (BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.ep_state == EP_STATE_DISABLED)) {
     org_addr = BX_XHCI_THIS hub.slots[slot].ep_context[ep].enqueue_pointer;
-    write_event_TRB(0, org_addr, TRB_SET_COMP_CODE(EP_NOT_ENABLED), 
+    write_event_TRB(0, org_addr, TRB_SET_COMP_CODE(EP_NOT_ENABLED),
       TRB_SET_SLOT(slot) | TRB_SET_EP(ep) | TRB_SET_TYPE(TRANS_EVENT), 1);
     return;
   }
@@ -2028,7 +2028,7 @@ void bx_usb_xhci_c::process_transfer_ring(const int slot, const int ep)
         case SETUP_STAGE:
           cur_direction = USB_TOKEN_SETUP;
           is_transfer_trb = 1;
-          BX_DEBUG(("0x" FORMATADDRESS ": Transfer Ring (slot = %i) (ep = %i) (len = %i): Found SETUP TRB", 
+          BX_DEBUG(("0x" FORMATADDRESS ": Transfer Ring (slot = %i) (ep = %i) (len = %i): Found SETUP TRB",
             (bx_phy_address) org_addr, slot, ep, transfer_length));
           break;
 
@@ -2036,7 +2036,7 @@ void bx_usb_xhci_c::process_transfer_ring(const int slot, const int ep)
         case DATA_STAGE:
           cur_direction = TRB_GET_DIR(trb.command);
           is_transfer_trb = 1;
-          BX_DEBUG(("0x" FORMATADDRESS ": Transfer Ring (slot = %i) (ep = %i) (len = %i): Found DATA STAGE TRB", 
+          BX_DEBUG(("0x" FORMATADDRESS ": Transfer Ring (slot = %i) (ep = %i) (len = %i): Found DATA STAGE TRB",
             (bx_phy_address) org_addr, slot, ep, transfer_length));
           break;
 
@@ -2045,14 +2045,14 @@ void bx_usb_xhci_c::process_transfer_ring(const int slot, const int ep)
           cur_direction = TRB_GET_DIR(trb.command);
           is_transfer_trb = 1;
           transfer_length = 0;
-          BX_DEBUG(("0x" FORMATADDRESS ": Transfer Ring (slot = %i) (ep = %i): Found STATUS STAGE TRB", 
+          BX_DEBUG(("0x" FORMATADDRESS ": Transfer Ring (slot = %i) (ep = %i): Found STATUS STAGE TRB",
             (bx_phy_address) org_addr, slot, ep));
           break;
 
         // Normal TRB
         case NORMAL:
           is_transfer_trb = 1;
-          BX_DEBUG(("0x" FORMATADDRESS ": Transfer Ring (slot = %i) (ep = %i) (len = %i): Found NORMAL TRB", 
+          BX_DEBUG(("0x" FORMATADDRESS ": Transfer Ring (slot = %i) (ep = %i) (len = %i): Found NORMAL TRB",
             (bx_phy_address) org_addr, slot, ep, transfer_length));
           break;
 
@@ -2082,7 +2082,7 @@ void bx_usb_xhci_c::process_transfer_ring(const int slot, const int ep)
 
         // No Op (transfer ring) TRB (Sect: 6.4.1.4)
         case NO_OP:
-          BX_DEBUG(("0x" FORMATADDRESS ": Transfer Ring (slot = %i) (ep = %i): Found No Op TRB", 
+          BX_DEBUG(("0x" FORMATADDRESS ": Transfer Ring (slot = %i) (ep = %i): Found No Op TRB",
             (bx_phy_address) org_addr, slot, ep));
           cur_direction = 0;
           is_transfer_trb = 1;
@@ -2091,9 +2091,9 @@ void bx_usb_xhci_c::process_transfer_ring(const int slot, const int ep)
 
         // unknown TRB type
         default:
-          BX_ERROR(("0x" FORMATADDRESS ": Transfer Ring (slot = %i) (ep = %i): Unknown TRB found.", 
+          BX_ERROR(("0x" FORMATADDRESS ": Transfer Ring (slot = %i) (ep = %i): Unknown TRB found.",
             (bx_phy_address) org_addr, slot, ep));
-          BX_ERROR(("Unknown trb type found: %i(dec)  (0x" FMT_ADDRX64 " 0x%08X 0x%08X)", TRB_GET_TYPE(trb.command), 
+          BX_ERROR(("Unknown trb type found: %i(dec)  (0x" FMT_ADDRX64 " 0x%08X 0x%08X)", TRB_GET_TYPE(trb.command),
             trb.parameter, trb.status, trb.command));
       }
 
@@ -2174,9 +2174,9 @@ void bx_usb_xhci_c::process_transfer_ring(const int slot, const int ep)
         remove_async_packet(&BX_XHCI_THIS packets, p);
 
         if (ret == USB_RET_NAK) {
-          // If we are a high-speed device, and a SETUP packet, we need to 
+          // If we are a high-speed device, and a SETUP packet, we need to
           // return a comp_code of TRANSACTION_ERROR instead of breaking out.
-          if ((cur_direction == USB_TOKEN_SETUP) && 
+          if ((cur_direction == USB_TOKEN_SETUP) &&
               (BX_XHCI_THIS hub.slots[slot].slot_context.speed == SPEED_HI))
             comp_code = TRANSACTION_ERROR;
           else {
@@ -2200,7 +2200,7 @@ void bx_usb_xhci_c::process_transfer_ring(const int slot, const int ep)
             BX_DEBUG(("Sending Short Packet Detect Event TRB (%i)", bytes_not_transferred));
           }
           // create a Event TRB
-          write_event_TRB(int_target, org_addr, TRB_SET_COMP_CODE(comp_code) | bytes_not_transferred, 
+          write_event_TRB(int_target, org_addr, TRB_SET_COMP_CODE(comp_code) | bytes_not_transferred,
             TRB_SET_SLOT(slot) | TRB_SET_EP(ep) | TRB_SET_TYPE(TRANS_EVENT), 1);
         }
       }
@@ -2255,8 +2255,8 @@ void bx_usb_xhci_c::process_command_ring(void)
           write_event_TRB(0, org_addr, TRB_SET_COMP_CODE(TRB_SUCCESS), TRB_SET_SLOT(0) | TRB_SET_TYPE(LINK), 1);
         if (TRB_TOGGLE(trb.command))
           BX_XHCI_THIS hub.ring_members.command_ring.rcs ^= 1;
-        BX_DEBUG(("0x" FORMATADDRESS ": Command Ring: Found LINK TRB:  New dq_pointer = 0x" FORMATADDRESS " (%i)", 
-          (bx_phy_address) org_addr, (bx_phy_address) BX_XHCI_THIS hub.ring_members.command_ring.dq_pointer, 
+        BX_DEBUG(("0x" FORMATADDRESS ": Command Ring: Found LINK TRB:  New dq_pointer = 0x" FORMATADDRESS " (%i)",
+          (bx_phy_address) org_addr, (bx_phy_address) BX_XHCI_THIS hub.ring_members.command_ring.dq_pointer,
           BX_XHCI_THIS hub.ring_members.command_ring.rcs));
         read_TRB((bx_phy_address) BX_XHCI_THIS hub.ring_members.command_ring.dq_pointer, &trb);
         continue;
@@ -2295,7 +2295,7 @@ void bx_usb_xhci_c::process_command_ring(void)
           }
         }
         write_event_TRB(0, org_addr, TRB_SET_COMP_CODE(comp_code), TRB_SET_SLOT(slot) | TRB_SET_TYPE(COMMAND_COMPLETION), 1);
-        BX_DEBUG(("0x" FORMATADDRESS ": Command Ring: Found Enable Slot TRB (slot = %i) (returning %i)", 
+        BX_DEBUG(("0x" FORMATADDRESS ": Command Ring: Found Enable Slot TRB (slot = %i) (returning %i)",
           (bx_phy_address) org_addr, slot, comp_code));
         break;
 
@@ -2314,7 +2314,7 @@ void bx_usb_xhci_c::process_command_ring(void)
           comp_code = SLOT_NOT_ENABLED;
 
         write_event_TRB(0, org_addr, TRB_SET_COMP_CODE(comp_code), TRB_SET_SLOT(slot) | TRB_SET_TYPE(COMMAND_COMPLETION), 1);
-        BX_DEBUG(("0x" FORMATADDRESS ": Command Ring: Found Disable Slot TRB (slot = %i) (returning %i)", 
+        BX_DEBUG(("0x" FORMATADDRESS ": Command Ring: Found Disable Slot TRB (slot = %i) (returning %i)",
           (bx_phy_address) org_addr, slot, comp_code));
         break;
 
@@ -2330,7 +2330,7 @@ void bx_usb_xhci_c::process_command_ring(void)
             copy_slot_from_buffer(&slot_context, &buffer[CONTEXT_SIZE]);
             copy_ep_from_buffer(&ep_context, &buffer[CONTEXT_SIZE + CONTEXT_SIZE]);
             // Only check for valid context on the first issued ADDRESS_DEVICE command
-            if ((BX_XHCI_THIS hub.slots[slot].sent_address == 1) || 
+            if ((BX_XHCI_THIS hub.slots[slot].sent_address == 1) ||
                 ((validate_slot_context(&slot_context) && validate_ep_context(&ep_context, -1, 1)))) {
               if (bsr == 1) { // BSR flag set
                 if (BX_XHCI_THIS hub.slots[slot].slot_context.slot_state == SLOT_STATE_DISABLED_ENABLED) {
@@ -2376,7 +2376,7 @@ void bx_usb_xhci_c::process_command_ring(void)
 
         write_event_TRB(0, org_addr, TRB_SET_COMP_CODE(comp_code), TRB_SET_SLOT(slot) | TRB_SET_TYPE(COMMAND_COMPLETION), 1);
         //BX_INFO(("ADDRESS_DEVICE TRB: 0x" FMT_ADDRX64 "  0x%08X 0x%08X", trb.parameter, trb.status, trb.command));
-        BX_DEBUG(("0x" FORMATADDRESS ": Command Ring: SetAddress TRB (bsr = %i) (addr = %i) (slot = %i) (returning %i)", 
+        BX_DEBUG(("0x" FORMATADDRESS ": Command Ring: SetAddress TRB (bsr = %i) (addr = %i) (slot = %i) (returning %i)",
           (bx_phy_address) org_addr, bsr, new_addr, slot, comp_code));
         break;
 
@@ -2477,7 +2477,7 @@ void bx_usb_xhci_c::process_command_ring(void)
             comp_code = SLOT_NOT_ENABLED;
 
           write_event_TRB(0, org_addr, TRB_SET_COMP_CODE(comp_code), TRB_SET_SLOT(slot) | TRB_SET_TYPE(COMMAND_COMPLETION), 1);
-          BX_DEBUG(("0x" FORMATADDRESS ": Command Ring: Evaluate TRB (slot = %i) (a_flags = 0x%08X) (returning %i)", 
+          BX_DEBUG(("0x" FORMATADDRESS ": Command Ring: Evaluate TRB (slot = %i) (a_flags = 0x%08X) (returning %i)",
             (bx_phy_address) org_addr, slot, a_flags, comp_code));
         }
         break;
@@ -2531,7 +2531,7 @@ void bx_usb_xhci_c::process_command_ring(void)
                   copy_ep_from_buffer(&BX_XHCI_THIS hub.slots[slot].ep_context[i].ep_context, &buffer[CONTEXT_SIZE + (i * CONTEXT_SIZE)]);
                   BX_XHCI_THIS hub.slots[slot].ep_context[i].ep_context.ep_state = EP_STATE_RUNNING;
                   // initialize our internal enqueue pointer
-                  BX_XHCI_THIS hub.slots[slot].ep_context[i].enqueue_pointer = 
+                  BX_XHCI_THIS hub.slots[slot].ep_context[i].enqueue_pointer =
                     BX_XHCI_THIS hub.slots[slot].ep_context[i].ep_context.tr_dequeue_pointer;
                   BX_XHCI_THIS hub.slots[slot].ep_context[i].rcs = BX_XHCI_THIS hub.slots[slot].ep_context[i].ep_context.dcs;
                   BX_XHCI_THIS hub.slots[slot].ep_context[i].edtla = 0;
@@ -2559,7 +2559,7 @@ void bx_usb_xhci_c::process_command_ring(void)
         // TODO: Page 101 (change to context entries)
 
         write_event_TRB(0, org_addr, TRB_SET_COMP_CODE(comp_code), TRB_SET_SLOT(slot) | TRB_SET_TYPE(COMMAND_COMPLETION), 1);
-        BX_DEBUG(("0x" FORMATADDRESS ": Command Ring: Found Config_EP TRB (slot = %i) (returning %i)", 
+        BX_DEBUG(("0x" FORMATADDRESS ": Command Ring: Found Config_EP TRB (slot = %i) (returning %i)",
           (bx_phy_address) org_addr, slot, comp_code));
       }
       break;
@@ -2570,7 +2570,7 @@ void bx_usb_xhci_c::process_command_ring(void)
         if (BX_XHCI_THIS hub.slots[slot].enabled == 1) {
           if ((BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.ep_state == EP_STATE_STOPPED) ||
               (BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.ep_state == EP_STATE_ERROR)) {
-            BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.tr_dequeue_pointer = 
+            BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.tr_dequeue_pointer =
               BX_XHCI_THIS hub.slots[slot].ep_context[ep].enqueue_pointer = (trb.parameter & (Bit64u) ~0xF);
             BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.dcs =
               BX_XHCI_THIS hub.slots[slot].ep_context[ep].rcs = (bool) (trb.parameter & 1);
@@ -2587,10 +2587,10 @@ void bx_usb_xhci_c::process_command_ring(void)
           BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.ep_state = EP_STATE_STOPPED;
 
         write_event_TRB(0, org_addr, TRB_SET_COMP_CODE(comp_code), TRB_SET_SLOT(slot) | TRB_SET_TYPE(COMMAND_COMPLETION), 1);
-        BX_DEBUG(("0x" FORMATADDRESS ": Command Ring: Found Set_tr_Dequeue TRB (slot = %i) (ep = %i) (returning %i)", 
+        BX_DEBUG(("0x" FORMATADDRESS ": Command Ring: Found Set_tr_Dequeue TRB (slot = %i) (ep = %i) (returning %i)",
           (bx_phy_address) org_addr, slot, ep, comp_code));
         if (comp_code == TRB_SUCCESS)
-          BX_INFO(("  New address: 0x" FORMATADDRESS " state = %i", (bx_phy_address) BX_XHCI_THIS hub.slots[slot].ep_context[ep].enqueue_pointer, 
+          BX_INFO(("  New address: 0x" FORMATADDRESS " state = %i", (bx_phy_address) BX_XHCI_THIS hub.slots[slot].ep_context[ep].enqueue_pointer,
             BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.dcs));
         break;
 
@@ -2602,7 +2602,7 @@ void bx_usb_xhci_c::process_command_ring(void)
       case STOP_EP:
         slot = TRB_GET_SLOT(trb.command);  // slots are 1 based
         ep = TRB_GET_EP(trb.command);
-        // A Stop Endpoint Command received while an endpoint is in the Error state shall have no effect and shall 
+        // A Stop Endpoint Command received while an endpoint is in the Error state shall have no effect and shall
         // generate a Command Completion Event with the Completion Code set to Context State Error.
         if (BX_XHCI_THIS hub.slots[slot].ep_context[ep].ep_context.ep_state == EP_STATE_ERROR)
           comp_code = CONTEXT_STATE_ERROR;
@@ -2613,7 +2613,7 @@ void bx_usb_xhci_c::process_command_ring(void)
         }
 
         write_event_TRB(0, org_addr, TRB_SET_COMP_CODE(comp_code), TRB_SET_SLOT(slot) | TRB_SET_TYPE(COMMAND_COMPLETION), 1);
-        BX_DEBUG(("0x" FORMATADDRESS ": Command Ring: Found Stop EP TRB (slot = %i) (ep = %i) (sp = %i) (returning 1)", 
+        BX_DEBUG(("0x" FORMATADDRESS ": Command Ring: Found Stop EP TRB (slot = %i) (ep = %i) (sp = %i) (returning 1)",
           (bx_phy_address) org_addr, slot, ep, ((trb.command & (1<<23)) == (1<<23))));
         break;
 
@@ -2641,7 +2641,7 @@ void bx_usb_xhci_c::process_command_ring(void)
           }
 
           write_event_TRB(0, org_addr, TRB_SET_COMP_CODE(comp_code), TRB_SET_SLOT(0) | TRB_SET_TYPE(COMMAND_COMPLETION), 1);
-          BX_DEBUG(("0x" FORMATADDRESS ": Command Ring: GetPortBandwidth TRB (speed = %i) (hub_id = %i) (returning %i)", 
+          BX_DEBUG(("0x" FORMATADDRESS ": Command Ring: GetPortBandwidth TRB (speed = %i) (hub_id = %i) (returning %i)",
             (bx_phy_address) org_addr, band_speed, hub_id, comp_code));
         }
         break;
@@ -2663,7 +2663,7 @@ void bx_usb_xhci_c::process_command_ring(void)
           comp_code = CONTEXT_STATE_ERROR;
         }
         write_event_TRB(0, org_addr, TRB_SET_COMP_CODE(comp_code), TRB_SET_SLOT(slot) | TRB_SET_TYPE(COMMAND_COMPLETION), 1);
-        BX_DEBUG(("0x" FORMATADDRESS ": Command Ring: Found Reset Device TRB (slot = %i) (returning %i)", 
+        BX_DEBUG(("0x" FORMATADDRESS ": Command Ring: Found Reset Device TRB (slot = %i) (returning %i)",
           (bx_phy_address) org_addr, slot, comp_code));
         break;
 
@@ -2671,7 +2671,7 @@ void bx_usb_xhci_c::process_command_ring(void)
       case NO_OP_CMD:
         slot = TRB_GET_SLOT(trb.command);  // slots are 1 based
         ep = TRB_GET_EP(trb.command);
-        BX_DEBUG(("0x" FORMATADDRESS ": Command Ring (slot = %i) (ep = %i): Found No Op TRB", 
+        BX_DEBUG(("0x" FORMATADDRESS ": Command Ring (slot = %i) (ep = %i): Found No Op TRB",
           (bx_phy_address) org_addr, slot, ep));
         write_event_TRB(0, org_addr, TRB_SET_COMP_CODE(TRB_SUCCESS), TRB_SET_SLOT(0) | TRB_SET_TYPE(COMMAND_COMPLETION), 1);
         break;
@@ -2679,7 +2679,7 @@ void bx_usb_xhci_c::process_command_ring(void)
       // unknown TRB type
       default:
         BX_ERROR(("0x" FORMATADDRESS ": Command Ring: Unknown TRB found.", (bx_phy_address) org_addr));
-        BX_ERROR(("Unknown trb type found: %i(dec)  (0x" FMT_ADDRX64 " 0x%08X 0x%08X)", TRB_GET_TYPE(trb.command), 
+        BX_ERROR(("Unknown trb type found: %i(dec)  (0x" FMT_ADDRX64 " 0x%08X 0x%08X)", TRB_GET_TYPE(trb.command),
           trb.parameter, trb.status, trb.command));
         slot = TRB_GET_SLOT(trb.command);  // slots are 1 based
         write_event_TRB(0, 0x0, TRB_SET_COMP_CODE(TRB_ERROR), TRB_SET_SLOT(slot) | TRB_SET_TYPE(COMMAND_COMPLETION), 1);
@@ -2701,13 +2701,13 @@ void bx_usb_xhci_c::init_event_ring(const unsigned interrupter)
   BX_XHCI_THIS hub.ring_members.event_rings[interrupter].count = 0;
   DEV_MEM_READ_PHYSICAL_DMA((bx_phy_address) addr, sizeof(BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys),
     (Bit8u *) BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys);
-  BX_XHCI_THIS hub.ring_members.event_rings[interrupter].cur_trb = 
+  BX_XHCI_THIS hub.ring_members.event_rings[interrupter].cur_trb =
     BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys[0].addr;
-  BX_XHCI_THIS hub.ring_members.event_rings[interrupter].trb_count = 
+  BX_XHCI_THIS hub.ring_members.event_rings[interrupter].trb_count =
     BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys[0].size;
 
   // dump the event segment table
-  BX_DEBUG(("Interrupter %02i: Event Ring Table (at 0x" FMT_ADDRX64 ") has %i entries:", interrupter, 
+  BX_DEBUG(("Interrupter %02i: Event Ring Table (at 0x" FMT_ADDRX64 ") has %i entries:", interrupter,
     addr, BX_XHCI_THIS hub.runtime_regs.interrupter[interrupter].erstsz.erstabsize));
   for (int i=0; i<BX_XHCI_THIS hub.runtime_regs.interrupter[interrupter].erstsz.erstabsize; i++) {
     DEV_MEM_READ_PHYSICAL((bx_phy_address) addr + (i * 16),     8, (Bit8u*)&val64);
@@ -2716,11 +2716,11 @@ void bx_usb_xhci_c::init_event_ring(const unsigned interrupter)
   }
 }
 
-void bx_usb_xhci_c::write_event_TRB(const unsigned interrupter, const Bit64u parameter, const Bit32u status, 
+void bx_usb_xhci_c::write_event_TRB(const unsigned interrupter, const Bit64u parameter, const Bit32u status,
                                     const Bit32u command, const bool fire_int)
 {
   // write the TRB
-  write_TRB((bx_phy_address) BX_XHCI_THIS hub.ring_members.event_rings[interrupter].cur_trb, parameter, status, 
+  write_TRB((bx_phy_address) BX_XHCI_THIS hub.ring_members.event_rings[interrupter].cur_trb, parameter, status,
     command | (Bit32u)BX_XHCI_THIS hub.ring_members.event_rings[interrupter].rcs); // set the cycle bit
 
   // calculate position for next event TRB
@@ -2729,14 +2729,14 @@ void bx_usb_xhci_c::write_event_TRB(const unsigned interrupter, const Bit64u par
 
   if (BX_XHCI_THIS hub.ring_members.event_rings[interrupter].trb_count == 0) {
     BX_XHCI_THIS hub.ring_members.event_rings[interrupter].count++;
-    if (BX_XHCI_THIS hub.ring_members.event_rings[interrupter].count == 
+    if (BX_XHCI_THIS hub.ring_members.event_rings[interrupter].count ==
         BX_XHCI_THIS hub.runtime_regs.interrupter[interrupter].erstsz.erstabsize) {
       BX_XHCI_THIS hub.ring_members.event_rings[interrupter].rcs ^= 1;
       BX_XHCI_THIS hub.ring_members.event_rings[interrupter].count = 0;
     }
-    BX_XHCI_THIS hub.ring_members.event_rings[interrupter].cur_trb = 
+    BX_XHCI_THIS hub.ring_members.event_rings[interrupter].cur_trb =
       BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys[BX_XHCI_THIS hub.ring_members.event_rings[interrupter].count].addr;
-    BX_XHCI_THIS hub.ring_members.event_rings[interrupter].trb_count = 
+    BX_XHCI_THIS hub.ring_members.event_rings[interrupter].trb_count =
       BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys[BX_XHCI_THIS hub.ring_members.event_rings[interrupter].count].size;
   }
 
@@ -3246,7 +3246,7 @@ void bx_usb_xhci_c::dump_xhci_core(const int slots, const int eps)
 
   // dump the caps registers
   BX_INFO((" CAPLENGTH: 0x%02X", BX_XHCI_THIS hub.cap_regs.HcCapLength & 0xFF));
-  BX_INFO(("HC VERSION: %X.%02X", ((BX_XHCI_THIS hub.cap_regs.HcCapLength & 0xFF000000) >> 24), 
+  BX_INFO(("HC VERSION: %X.%02X", ((BX_XHCI_THIS hub.cap_regs.HcCapLength & 0xFF000000) >> 24),
     ((BX_XHCI_THIS hub.cap_regs.HcCapLength & 0x00FF0000) >> 16)));
   BX_INFO(("HCSPARAMS1: 0x%08X", BX_XHCI_THIS hub.cap_regs.HcSParams1));
   BX_INFO(("HCSPARAMS2: 0x%08X", BX_XHCI_THIS hub.cap_regs.HcSParams2));

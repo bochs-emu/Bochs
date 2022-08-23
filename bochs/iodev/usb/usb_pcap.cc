@@ -24,7 +24,7 @@
 // Notes by Ben Lunt:
 //
 // Experimental writing of packets to a Packet Capture (pcap) file for WireShark.
-//  This will create a pcap formatted file of all packets sent to a 
+//  This will create a pcap formatted file of all packets sent to a
 //  specific device.  The using a pcap viewer, such as WireShark, you can
 //  see what packets have been sent on the "wire" as well as let the viewer
 //  give you details.
@@ -119,7 +119,7 @@ void pcap_image_t::write_packet(void *data, int len, int bus, int dev_addr, int 
 
 #if BX_PCAP_APPEND_PACKETS
   // can we append it to the last packet?
-  // To make WireShark understand the packets, we need to 
+  // To make WireShark understand the packets, we need to
   //  append like packets.  i.e.: All IN packets of the GET_DESCRIPTOR request
   //  need to be one (1) packet here for WireShark.
   if (can_append) {

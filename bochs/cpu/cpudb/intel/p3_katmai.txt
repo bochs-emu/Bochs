@@ -15,8 +15,8 @@ Number of threads		1
 APICs
 -------------------------------------------------------------------------
 
-Processor 0	
-	-- Core 0	
+Processor 0
+	-- Core 0
 		-- Thread 0	0
 
 Processors Information
@@ -27,7 +27,7 @@ Processor 1			ID = 0
 	Number of threads	1 (max 1)
 	Name			Intel Pentium III
 	Codename		Katmai
-	Specification		
+	Specification
 	Package (platform ID)	Slot 1 SECC2 (0x0)
 	CPUID			6.7.3
 	Extended CPUID		6.7
@@ -47,7 +47,7 @@ Processor 1			ID = 0
 Thread dumps
 -------------------------------------------------------------------------
 
-CPU Thread 0	
+CPU Thread 0
 	APIC ID			0
 	Topology		Processor ID 0, Core ID 0, Thread ID 0
 	Type			01000806h
@@ -56,7 +56,7 @@ CPU Thread 0
 	Cache descriptor	Level 1, I, 16 KB, 1 thread(s)
 	Cache descriptor	Level 2, U, 512 KB, 1 thread(s)
 
-	CPUID		 
+	CPUID
 	0x00000000		0x00000003	0x756E6547	0x6C65746E	0x49656E69
 	0x00000001		0x00000673	0x00000000	0x00000000	0x0387F9FF
 	0x00000002		0x03020101	0x00000000	0x00000000	0x0C040843

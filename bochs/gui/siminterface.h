@@ -140,7 +140,7 @@ enum {
   BX_BOOT_NONE,
   BX_BOOT_FLOPPYA,
   BX_BOOT_DISKC,
-  BX_BOOT_CDROM, 
+  BX_BOOT_CDROM,
   BX_BOOT_NETWORK
 };
 
@@ -729,7 +729,7 @@ public:
   virtual void init_statistics() {}
   virtual void cleanup_statistics() {}
   virtual bx_list_c *get_statistics_root() {return NULL;}
- 
+
   // save/restore support
   virtual void init_save_restore() {}
   virtual void cleanup_save_restore() {}

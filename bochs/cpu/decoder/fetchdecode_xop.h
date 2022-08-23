@@ -27,7 +27,7 @@
 #if BX_SUPPORT_AVX
 
 // 256 entries for XOP-encoded map 0x8 opcodes
-static const Bit64u BxOpcodeGroup_XOP_0x8_01[] = { 
+static const Bit64u BxOpcodeGroup_XOP_0x8_01[] = {
   form_opcode(ATTR_NNN1 | ATTR_IS64 | ATTR_VEX_L0 | ATTR_VEX_W0, BX_IA_BLCFILL_BqEq),
   form_opcode(ATTR_NNN1 |             ATTR_VEX_L0 | ATTR_VEX_W1, BX_IA_BLCFILL_BdEd),
 
@@ -50,7 +50,7 @@ static const Bit64u BxOpcodeGroup_XOP_0x8_01[] = {
   last_opcode(ATTR_NNN7 |             ATTR_VEX_L0 | ATTR_VEX_W1, BX_IA_T1MSKC_BdEd)
 };
 
-static const Bit64u BxOpcodeGroup_XOP_0x8_02[] = { 
+static const Bit64u BxOpcodeGroup_XOP_0x8_02[] = {
   form_opcode(ATTR_NNN1 | ATTR_IS64 | ATTR_VEX_L0 | ATTR_VEX_W0, BX_IA_BLCMSK_BqEq),
   form_opcode(ATTR_NNN1 |             ATTR_VEX_L0 | ATTR_VEX_W1, BX_IA_BLCMSK_BdEd),
 
@@ -69,12 +69,12 @@ static const Bit64u BxOpcodeGroup_XOP_0x8_97[] = { last_opcode(ATTR_VEX_W0 | ATT
 static const Bit64u BxOpcodeGroup_XOP_0x8_9E[] = { last_opcode(ATTR_VEX_W0 | ATTR_VEX_L0, BX_IA_VPMACSDD_VdqHdqWdqVIb) };
 static const Bit64u BxOpcodeGroup_XOP_0x8_9F[] = { last_opcode(ATTR_VEX_W0 | ATTR_VEX_L0, BX_IA_VPMACSDQH_VdqHdqWdqVIb) };
 
-static const Bit64u BxOpcodeGroup_XOP_0x8_A2[] = { 
+static const Bit64u BxOpcodeGroup_XOP_0x8_A2[] = {
   form_opcode(ATTR_VEX_W0, BX_IA_VPCMOV_VdqHdqVIbWdq),
   last_opcode(ATTR_VEX_W1, BX_IA_VPCMOV_VdqHdqWdqVIb)
 };
 
-static const Bit64u BxOpcodeGroup_XOP_0x8_A3[] = { 
+static const Bit64u BxOpcodeGroup_XOP_0x8_A3[] = {
   form_opcode(ATTR_VEX_W0 | ATTR_VEX_L0, BX_IA_VPPERM_VdqHdqVIbWdq),
   last_opcode(ATTR_VEX_W1 | ATTR_VEX_L0, BX_IA_VPPERM_VdqHdqWdqVIb)
 };
@@ -100,62 +100,62 @@ static const Bit64u BxOpcodeGroup_XOP_0x9_81[] = { last_opcode(ATTR_VEX_W0, BX_I
 static const Bit64u BxOpcodeGroup_XOP_0x9_82[] = { last_opcode(ATTR_VEX_W0 | ATTR_VEX_L0, BX_IA_VFRCZSS_VssWss) };
 static const Bit64u BxOpcodeGroup_XOP_0x9_83[] = { last_opcode(ATTR_VEX_W0 | ATTR_VEX_L0, BX_IA_VFRCZSD_VsdWsd) };
 
-static const Bit64u BxOpcodeGroup_XOP_0x9_88[] = { 
+static const Bit64u BxOpcodeGroup_XOP_0x9_88[] = {
   form_opcode(ATTR_VEX_W0 | ATTR_VEX_L0, BX_IA_VPSHAB_VdqHdqWdq),
   last_opcode(ATTR_VEX_W1 | ATTR_VEX_L0, BX_IA_VPSHAB_VdqWdqHdq)
 };
 
-static const Bit64u BxOpcodeGroup_XOP_0x9_89[] = { 
+static const Bit64u BxOpcodeGroup_XOP_0x9_89[] = {
   form_opcode(ATTR_VEX_W0 | ATTR_VEX_L0, BX_IA_VPSHAW_VdqHdqWdq),
   last_opcode(ATTR_VEX_W1 | ATTR_VEX_L0, BX_IA_VPSHAW_VdqWdqHdq)
 };
 
-static const Bit64u BxOpcodeGroup_XOP_0x9_8A[] = { 
+static const Bit64u BxOpcodeGroup_XOP_0x9_8A[] = {
   form_opcode(ATTR_VEX_W0 | ATTR_VEX_L0, BX_IA_VPSHAD_VdqHdqWdq),
   last_opcode(ATTR_VEX_W1 | ATTR_VEX_L0, BX_IA_VPSHAD_VdqWdqHdq)
 };
 
-static const Bit64u BxOpcodeGroup_XOP_0x9_8B[] = { 
+static const Bit64u BxOpcodeGroup_XOP_0x9_8B[] = {
   form_opcode(ATTR_VEX_W0 | ATTR_VEX_L0, BX_IA_VPSHAQ_VdqHdqWdq),
   last_opcode(ATTR_VEX_W1 | ATTR_VEX_L0, BX_IA_VPSHAQ_VdqWdqHdq)
 };
 
-static const Bit64u BxOpcodeGroup_XOP_0x9_90[] = { 
+static const Bit64u BxOpcodeGroup_XOP_0x9_90[] = {
   form_opcode(ATTR_VEX_W0 | ATTR_VEX_L0, BX_IA_VPROTB_VdqHdqWdq),
   last_opcode(ATTR_VEX_W1 | ATTR_VEX_L0, BX_IA_VPROTB_VdqWdqHdq)
 };
 
-static const Bit64u BxOpcodeGroup_XOP_0x9_91[] = { 
+static const Bit64u BxOpcodeGroup_XOP_0x9_91[] = {
   form_opcode(ATTR_VEX_W0 | ATTR_VEX_L0, BX_IA_VPROTW_VdqHdqWdq),
   last_opcode(ATTR_VEX_W1 | ATTR_VEX_L0, BX_IA_VPROTW_VdqWdqHdq)
 };
 
-static const Bit64u BxOpcodeGroup_XOP_0x9_92[] = { 
+static const Bit64u BxOpcodeGroup_XOP_0x9_92[] = {
   form_opcode(ATTR_VEX_W0 | ATTR_VEX_L0, BX_IA_VPROTD_VdqHdqWdq),
   last_opcode(ATTR_VEX_W1 | ATTR_VEX_L0, BX_IA_VPROTD_VdqWdqHdq)
 };
 
-static const Bit64u BxOpcodeGroup_XOP_0x9_93[] = { 
+static const Bit64u BxOpcodeGroup_XOP_0x9_93[] = {
   form_opcode(ATTR_VEX_W0 | ATTR_VEX_L0, BX_IA_VPROTQ_VdqHdqWdq),
   last_opcode(ATTR_VEX_W1 | ATTR_VEX_L0, BX_IA_VPROTQ_VdqWdqHdq)
 };
 
-static const Bit64u BxOpcodeGroup_XOP_0x9_94[] = { 
+static const Bit64u BxOpcodeGroup_XOP_0x9_94[] = {
   form_opcode(ATTR_VEX_W0 | ATTR_VEX_L0, BX_IA_VPSHLB_VdqHdqWdq),
   last_opcode(ATTR_VEX_W1 | ATTR_VEX_L0, BX_IA_VPSHLB_VdqWdqHdq)
 };
 
-static const Bit64u BxOpcodeGroup_XOP_0x9_95[] = { 
+static const Bit64u BxOpcodeGroup_XOP_0x9_95[] = {
   form_opcode(ATTR_VEX_W0 | ATTR_VEX_L0, BX_IA_VPSHLW_VdqHdqWdq),
   last_opcode(ATTR_VEX_W1 | ATTR_VEX_L0, BX_IA_VPSHLW_VdqWdqHdq)
 };
 
-static const Bit64u BxOpcodeGroup_XOP_0x9_96[] = { 
+static const Bit64u BxOpcodeGroup_XOP_0x9_96[] = {
   form_opcode(ATTR_VEX_W0 | ATTR_VEX_L0, BX_IA_VPSHLD_VdqHdqWdq),
   last_opcode(ATTR_VEX_W1 | ATTR_VEX_L0, BX_IA_VPSHLD_VdqWdqHdq)
 };
 
-static const Bit64u BxOpcodeGroup_XOP_0x9_97[] = { 
+static const Bit64u BxOpcodeGroup_XOP_0x9_97[] = {
   form_opcode(ATTR_VEX_W0 | ATTR_VEX_L0, BX_IA_VPSHLQ_VdqHdqWdq),
   last_opcode(ATTR_VEX_W1 | ATTR_VEX_L0, BX_IA_VPSHLQ_VdqWdqHdq)
 };
@@ -177,7 +177,7 @@ static const Bit64u BxOpcodeGroup_XOP_0x9_E2[] = { last_opcode(ATTR_VEX_W0 | ATT
 static const Bit64u BxOpcodeGroup_XOP_0x9_E3[] = { last_opcode(ATTR_VEX_W0 | ATTR_VEX_L0, BX_IA_VPHSUBDQ_VdqWdq) };
 
 // 256 entries for XOP-encoded map 0xA opcodes
-static const Bit64u BxOpcodeGroup_XOP_0xA_10[] = { 
+static const Bit64u BxOpcodeGroup_XOP_0xA_10[] = {
   form_opcode(ATTR_VEX_W0 | ATTR_VEX_L0,             BX_IA_BEXTR_GdEdId),
   last_opcode(ATTR_VEX_W1 | ATTR_VEX_L0 | ATTR_IS64, BX_IA_BEXTR_GqEqId)
 };

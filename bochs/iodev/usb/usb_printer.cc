@@ -102,7 +102,7 @@ static const Bit8u bx_printer_config_descriptor[] = {
   0x01,       /*  u8  if_bInterfaceSubClass; */
   0x02,       /*  u8  if_bInterfaceProtocol; */
   0x00,       /*  u8  if_iInterface; string desc. */
-  
+
   /* first endpoint */
   0x07,       /*  u8  ep_bLength; */
   0x05,       /*  u8  ep_bDescriptorType; Endpoint */
@@ -261,7 +261,7 @@ int usb_printer_device_c::handle_control(int request, int value, int index, int 
       memcpy(data, bx_device_id_string, sizeof(bx_device_id_string));
       ret = sizeof(bx_device_id_string);
       data[0] = (Bit8u) (ret >> 8);   // len word is big endian
-      data[1] = (Bit8u) (ret & 0xFF); // 
+      data[1] = (Bit8u) (ret & 0xFF); //
       break;
     case InterfaceInClassRequest | 0x01:  // Get Port Status
       s.printer_status = (0<<5) | (1<<4) | (1<<3);

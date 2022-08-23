@@ -85,7 +85,7 @@ public:
           // one of the CPUs might be running trace from this page
           handleSMC(pAddr, mask);
           fineGranularityMapping[index] &= ~mask;
-       }       
+       }
     }
   }
 
@@ -140,7 +140,7 @@ public:
 
 #define BX_ICACHE_PAGE_SPLIT_ENTRIES 8 /* must be power of two */
   struct pageSplitEntryIndex {
-    bx_phy_address ppf; // Physical address of 2nd page of the trace 
+    bx_phy_address ppf; // Physical address of 2nd page of the trace
     bxICacheEntry_c *e; // Pointer to icache entry
   } pageSplitIndex[BX_ICACHE_PAGE_SPLIT_ENTRIES];
   int nextPageSplitIndex;

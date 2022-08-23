@@ -127,7 +127,7 @@ enum x86_feature_name {
   BX_ISA_SCA_MITIGATIONS,         /* SCA Mitigations */
   BX_ISA_CET,                     /* Control Flow Enforcement */
   BX_ISA_EXTENSION_LAST
-};                            
+};
 
 #define BX_ISA_EXTENSIONS_ARRAY_SIZE (4)
 

@@ -242,7 +242,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHA1RNDS4_VdqWdqIbR(bxInstruction_c *i)
 {
   // SHA1 Constants dependent on immediate i
   static const Bit32u sha_Ki[4] = { 0x5A827999, 0x6ED9EBA1, 0X8F1BBCDC, 0xCA62C1D6 };
-  
+
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
   unsigned imm = i->Ib() & 0x3;
   Bit32u K = sha_Ki[imm];

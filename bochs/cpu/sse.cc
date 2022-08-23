@@ -661,7 +661,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::EXTRQ_UdqIbIb(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 6
   BX_WRITE_XMM_REG_LO_QWORD(i->dst(), xmm_extrq(BX_READ_XMM_REG_LO_QWORD(i->dst()), i->Ib2(), i->Ib()));
 #endif
-  
+
   BX_NEXT_INSTR(i);
 }
 

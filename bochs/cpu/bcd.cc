@@ -44,7 +44,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AAA(bxInstruction_c *i)
    *        AF <- 0
    *    ENDIF
    *	AL <- AL and 0Fh
-   */	
+   */
 
   /* Validated against Intel Pentium family hardware. */
 

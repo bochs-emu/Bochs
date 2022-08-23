@@ -15,14 +15,14 @@ Number of threads		4
 APICs
 -------------------------------------------------------------------------
 
-Processor 0	
-	-- Core 0	
+Processor 0
+	-- Core 0
 		-- Thread 0	0
-	-- Core 1	
+	-- Core 1
 		-- Thread 0	2
-	-- Core 2	
+	-- Core 2
 		-- Thread 0	4
-	-- Core 3	
+	-- Core 3
 		-- Thread 0	6
 
 Processors Information
@@ -80,7 +80,7 @@ Processor 1			ID = 0
 Thread dumps
 -------------------------------------------------------------------------
 
-CPU Thread 0	
+CPU Thread 0
 	APIC ID			0
 	Topology		Processor ID 0, Core ID 0, Thread ID 0
 	Type			01020005h
@@ -91,7 +91,7 @@ CPU Thread 0
 	Cache descriptor	Level 2, U, 256 KB, 2 thread(s)
 	Cache descriptor	Level 3, U, 8 MB, 16 thread(s)
 
-	CPUID		 
+	CPUID
 	0x00000000		0x0000000B	0x756E6547	0x6C65746E	0x49656E69
 	0x00000001		0x000106E5	0x00100800	0x0098E3FD	0xBFEBFBFF
 	0x00000002		0x55035A01	0x00F0B0E4	0x00000000	0x09CA212C
@@ -142,7 +142,7 @@ CPU Thread 0
 	MSR 0x00000198		0x00000000	0x00000009
 	MSR 0x00000199		0x00000000	0x00000009
 
-CPU Thread 1	
+CPU Thread 1
 	APIC ID			2
 	Topology		Processor ID 0, Core ID 1, Thread ID 0
 	Type			01020005h
@@ -153,7 +153,7 @@ CPU Thread 1
 	Cache descriptor	Level 2, U, 256 KB, 2 thread(s)
 	Cache descriptor	Level 3, U, 8 MB, 16 thread(s)
 
-	CPUID		 
+	CPUID
 	0x00000000		0x0000000B	0x756E6547	0x6C65746E	0x49656E69
 	0x00000001		0x000106E5	0x02100800	0x0098E3FD	0xBFEBFBFF
 	0x00000002		0x55035A01	0x00F0B0E4	0x00000000	0x09CA212C
@@ -204,7 +204,7 @@ CPU Thread 1
 	MSR 0x00000198		0x00000000	0x00000009
 	MSR 0x00000199		0x00000000	0x00000009
 
-CPU Thread 2	
+CPU Thread 2
 	APIC ID			4
 	Topology		Processor ID 0, Core ID 2, Thread ID 0
 	Type			01020005h
@@ -215,7 +215,7 @@ CPU Thread 2
 	Cache descriptor	Level 2, U, 256 KB, 2 thread(s)
 	Cache descriptor	Level 3, U, 8 MB, 16 thread(s)
 
-	CPUID		 
+	CPUID
 	0x00000000		0x0000000B	0x756E6547	0x6C65746E	0x49656E69
 	0x00000001		0x000106E5	0x04100800	0x0098E3FD	0xBFEBFBFF
 	0x00000002		0x55035A01	0x00F0B0E4	0x00000000	0x09CA212C
@@ -266,7 +266,7 @@ CPU Thread 2
 	MSR 0x00000198		0x00000000	0x00000009
 	MSR 0x00000199		0x00000000	0x00000009
 
-CPU Thread 3	
+CPU Thread 3
 	APIC ID			6
 	Topology		Processor ID 0, Core ID 3, Thread ID 0
 	Type			01020005h
@@ -277,7 +277,7 @@ CPU Thread 3
 	Cache descriptor	Level 2, U, 256 KB, 2 thread(s)
 	Cache descriptor	Level 3, U, 8 MB, 16 thread(s)
 
-	CPUID		 
+	CPUID
 	0x00000000		0x0000000B	0x756E6547	0x6C65746E	0x49656E69
 	0x00000001		0x000106E5	0x06100800	0x0098E3FD	0xBFEBFBFF
 	0x00000002		0x55035A01	0x00F0B0E4	0x00000000	0x09CA212C

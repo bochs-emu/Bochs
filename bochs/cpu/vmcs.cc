@@ -268,7 +268,7 @@ bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
     case VMCS_32BIT_GUEST_IA32_SYSENTER_CS_MSR:
       return 1;
 
-#if BX_SUPPORT_VMX >= 2    
+#if BX_SUPPORT_VMX >= 2
     case VMCS_32BIT_GUEST_PREEMPTION_TIMER_VALUE:
        return BX_SUPPORT_VMX_EXTENSION(BX_VMX_PREEMPTION_TIMER);
 #endif
@@ -821,7 +821,7 @@ void BX_CPU_C::init_vmexit_ctrls(void)
   //      [29] Save host MSR_IA32_PKRS on VMEXIT
   //      [30] Save guest MSR_PERF_GLOBAL_CTRL on VMEXIT
 
-  cap->vmx_vmexit_ctrl_supported_bits = 
+  cap->vmx_vmexit_ctrl_supported_bits =
       VMX_VMEXIT_CTRL1_INTA_ON_VMEXIT | VMX_VMEXIT_CTRL1_SAVE_DBG_CTRLS;
 
 #if BX_SUPPORT_X86_64

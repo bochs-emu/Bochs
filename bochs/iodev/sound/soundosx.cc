@@ -168,7 +168,7 @@ int bx_soundlow_waveout_osx_c::openwaveoutput(const char *wavedev)
     if (err) {
       BX_ERROR(("Core Audio: Unable to open audio output (err=%X)\n", (unsigned int)err));
       return BX_SOUNDLOW_ERR;
-    } 
+    }
 
     AURenderCallbackStruct input;
     input.inputProc = MyRenderer;
@@ -185,7 +185,7 @@ int bx_soundlow_waveout_osx_c::openwaveoutput(const char *wavedev)
     if (err) {
       BX_ERROR(("Core Audio: AudioUnitInitialize error (err=%X)\n", (unsigned int)err));
       return BX_SOUNDLOW_ERR;
-    } 
+    }
 #endif
 
   set_pcm_params(&real_pcm_param);
@@ -204,7 +204,7 @@ OSStatus bx_soundlow_waveout_osx_c::core_audio_pause()
   if (WaveOutputUnit) {
     err = AudioOutputUnitStop (WaveOutputUnit);
     if (err) {
-      BX_ERROR(("Core Audio: nextbuffer(): AudioOutputUnitStop (err=%X)\n", (unsigned int)err)); 
+      BX_ERROR(("Core Audio: nextbuffer(): AudioOutputUnitStop (err=%X)\n", (unsigned int)err));
     }
     WavePlaying = 0;
   }
@@ -219,14 +219,14 @@ OSStatus bx_soundlow_waveout_osx_c::core_audio_resume()
   if (WaveConverter) {
     err = AudioConverterReset (WaveConverter);
     if (err) {
-      BX_ERROR(("Core Audio: core_audio_resume(): AudioConverterReset (err=%X)\n", (unsigned int)err)); 
+      BX_ERROR(("Core Audio: core_audio_resume(): AudioConverterReset (err=%X)\n", (unsigned int)err));
       return err;
     }
   }
   if (WaveOutputUnit) {
     err = AudioOutputUnitStart (WaveOutputUnit);
     if (err) {
-      BX_ERROR(("Core Audio: core_audio_resume(): AudioOutputUnitStart (err=%X)\n", (unsigned int)err)); 
+      BX_ERROR(("Core Audio: core_audio_resume(): AudioOutputUnitStart (err=%X)\n", (unsigned int)err));
       return err;
     }
     WavePlaying = 1;
@@ -281,18 +281,18 @@ int bx_soundlow_waveout_osx_c::set_pcm_params(bx_pcm_param_t *param)
     if (WavePlaying) {
       err = AudioOutputUnitStop (WaveOutputUnit);
       if (err)
-        BX_ERROR(("Core Audio: set_pcm_params(): AudioOutputUnitStop (err=%X)\n", (unsigned int)err)); 
+        BX_ERROR(("Core Audio: set_pcm_params(): AudioOutputUnitStop (err=%X)\n", (unsigned int)err));
     }
     if (WaveConverter) {
       err = AudioConverterDispose (WaveConverter);
       if (err)
-        BX_ERROR(("Core Audio: set_pcm_params(): AudioConverterDispose (err=%X)\n", (unsigned int)err)); 
+        BX_ERROR(("Core Audio: set_pcm_params(): AudioConverterDispose (err=%X)\n", (unsigned int)err));
     }
 
     err = AudioUnitGetProperty (WaveOutputUnit, kAudioUnitProperty_StreamFormat,
         kAudioUnitScope_Output, 0, &dstFormat, &formatSize);
     if (err) {
-      BX_ERROR(("Core Audio: set_pcm_params(): AudioUnitGetProperty (err=%X)\n", (unsigned int)err)); 
+      BX_ERROR(("Core Audio: set_pcm_params(): AudioUnitGetProperty (err=%X)\n", (unsigned int)err));
       return BX_SOUNDLOW_ERR;
     }
 
@@ -303,14 +303,14 @@ int bx_soundlow_waveout_osx_c::set_pcm_params(bx_pcm_param_t *param)
     err = AudioUnitSetProperty (WaveOutputUnit, kAudioUnitProperty_StreamFormat,
         kAudioUnitScope_Input, 0, &dstFormat, sizeof(dstFormat));
     if (err) {
-      BX_ERROR(("Core Audio: set_pcm_params(): AudioUnitSetProperty (err=%X)\n", (unsigned int)err)); 
+      BX_ERROR(("Core Audio: set_pcm_params(): AudioUnitSetProperty (err=%X)\n", (unsigned int)err));
       return BX_SOUNDLOW_ERR;
     }
 #endif
 
     err = AudioConverterNew (&srcFormat, &dstFormat, &WaveConverter);
     if (err) {
-      BX_ERROR(("Core Audio: set_pcm_params(): AudioConverterNew (err=%X)\n", (unsigned int)err)); 
+      BX_ERROR(("Core Audio: set_pcm_params(): AudioConverterNew (err=%X)\n", (unsigned int)err));
       return BX_SOUNDLOW_ERR;
     }
 
@@ -318,10 +318,10 @@ int bx_soundlow_waveout_osx_c::set_pcm_params(bx_pcm_param_t *param)
         // map single-channel input to both output channels
         SInt32 map[2] = {0,0};
         err = AudioConverterSetProperty (WaveConverter,
-                            kAudioConverterChannelMap, 
+                            kAudioConverterChannelMap,
                             sizeof(map), (void*) map);
         if (err) {
-          BX_ERROR(("Core Audio: set_pcm_params(): AudioConverterSetProperty (err=%X)\n", (unsigned int)err)); 
+          BX_ERROR(("Core Audio: set_pcm_params(): AudioConverterSetProperty (err=%X)\n", (unsigned int)err));
           return BX_SOUNDLOW_ERR;
         }
     }
@@ -417,7 +417,7 @@ OSStatus MyRenderer (void *inRefCon, AudioUnitRenderActionFlags *ioActionFlags, 
       return err;
     }
 
-    packets = inNumberFrames / dstFormat.mFramesPerPacket; 
+    packets = inNumberFrames / dstFormat.mFramesPerPacket;
     err = AudioConverterFillComplexBuffer(WaveConverter,
       MyACInputProc, inRefCon, &packets, ioData, NULL);
 
@@ -437,13 +437,13 @@ OSStatus MyACInputProc (AudioConverterRef inAudioConverter, UInt32 *ioNumberData
     if (err) {
       *ioNumberDataPackets = 0;
       return err;
-    }    
+    }
     int outDataSize = *ioNumberDataPackets * srcFormat.mBytesPerPacket;
-    void *outData = ioData->mBuffers[0].mData; 
+    void *outData = ioData->mBuffers[0].mData;
     self->nextbuffer ((int*) &outDataSize, &outData);
     *ioNumberDataPackets = outDataSize / srcFormat.mBytesPerPacket;
     ioData->mBuffers[0].mDataByteSize = outDataSize;
-    ioData->mBuffers[0].mData = outData; 
+    ioData->mBuffers[0].mData = outData;
 
     return noErr;
 }

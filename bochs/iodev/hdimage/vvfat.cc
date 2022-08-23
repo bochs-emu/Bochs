@@ -1729,7 +1729,7 @@ void vvfat_image_t::commit_changes(void)
   vvfat_attr_fd = fopen(path, "w");
   // parse new directory tree and create / modify directories and files
   parse_directory(vvfat_path, (fat_type == 32) ? first_cluster_of_root_dir : 0);
-  if (vvfat_attr_fd != NULL) 
+  if (vvfat_attr_fd != NULL)
     fclose(vvfat_attr_fd);
   // remove all directories and files still marked for delete
   for (i = this->mapping.next - 1; i > 0; i--) {

@@ -349,7 +349,7 @@ void change_attackrate(Bitu regbase, op_type* op_pt)
     op_pt->env_step_a = (1<<(steps<=12?12-steps:0))-1;
 
     Bits step_num = (step_skip<=48)?(4-(step_skip&3)):0;
-    static Bit8u step_skip_mask[5] = {0xff, 0xfe, 0xee, 0xba, 0xaa}; 
+    static Bit8u step_skip_mask[5] = {0xff, 0xfe, 0xee, 0xba, 0xaa};
     op_pt->env_step_skip_a = step_skip_mask[step_num];
 
 #if defined(OPLTYPE_IS_OPL3)
@@ -1411,7 +1411,7 @@ bool adlib_getsample(Bit16u rate, Bit16s* sndptr, Bits numsamples, Bit16u volume
 
           } else {
             // FM-FM-style synthesis (op1[fb] * op2 * op3 * op4)
-            if ((cptr[0].op_state != OF_TYPE_OFF) || (cptr[9].op_state != OF_TYPE_OFF) || 
+            if ((cptr[0].op_state != OF_TYPE_OFF) || (cptr[9].op_state != OF_TYPE_OFF) ||
               (cptr[3].op_state != OF_TYPE_OFF) || (cptr[3+9].op_state != OF_TYPE_OFF)) {
               if ((cptr[0].vibrato) && (cptr[0].op_state != OF_TYPE_OFF)) {
                 vibval1 = vibval_var1;

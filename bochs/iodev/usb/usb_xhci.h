@@ -232,7 +232,7 @@ enum { NORMAL=1, SETUP_STAGE, DATA_STAGE, STATUS_STAGE, ISOCH, LINK, EVENT_DATA,
        STOP_EP=15, SET_TR_DEQUEUE, RESET_DEVICE, FORCE_EVENT, DEG_BANDWIDTH, SET_LAT_TOLERANCE,
        GET_PORT_BAND=21, FORCE_HEADER, NO_OP_CMD,  // 24 - 31 = reserved
        TRANS_EVENT=32, COMMAND_COMPLETION, PORT_STATUS_CHANGE, BANDWIDTH_REQUEST, DOORBELL_EVENT,
-       HOST_CONTROLLER_EVENT=37, DEVICE_NOTIFICATION, MFINDEX_WRAP, 
+       HOST_CONTROLLER_EVENT=37, DEVICE_NOTIFICATION, MFINDEX_WRAP,
        // 40 - 47 = reserved
        // 48 - 63 = Vendor Defined
 };
@@ -571,7 +571,7 @@ private:
 
   static void process_transfer_ring(const int slot, const int ep);
   static void process_command_ring(void);
-  static void write_event_TRB(const unsigned interrupter, const Bit64u parameter, const Bit32u status, 
+  static void write_event_TRB(const unsigned interrupter, const Bit64u parameter, const Bit32u status,
                               const Bit32u command, const bool fire_int);
   static Bit32u NEC_verification(const Bit64u parameter);
   static void init_event_ring(const unsigned interrupter);

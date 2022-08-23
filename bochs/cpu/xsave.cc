@@ -316,7 +316,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
       BX_ERROR(("%s: Invalid xcomp_bv state", i->getIaOpcodeNameShort()));
       exception(BX_GP_EXCEPTION, 0);
     }
-    
+
     if (xstate_bv & ~xcomp_bv) {
       BX_ERROR(("%s: xstate_bv set a bit which is not in xcomp_bv state", i->getIaOpcodeNameShort()));
       exception(BX_GP_EXCEPTION, 0);
@@ -346,7 +346,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   }
 
   /////////////////////////////////////////////////////////////////////////////
-  if ((requested_feature_bitmap & BX_XCR0_SSE_MASK) != 0 || 
+  if ((requested_feature_bitmap & BX_XCR0_SSE_MASK) != 0 ||
      ((requested_feature_bitmap & BX_XCR0_YMM_MASK) != 0 && ! compaction))
   {
     // read cannot cause any boundary cross because XSAVE image is 64-byte aligned
@@ -372,7 +372,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
     for (unsigned feature = xcr0_t::BX_XCR0_YMM_BIT; feature < xcr0_t::BX_XCR0_LAST; feature++)
     {
       Bit32u feature_mask = (1 << feature);
-    
+
       if ((requested_feature_bitmap & feature_mask) != 0)
       {
         if (! xsave_restore[feature].len) {
@@ -399,7 +399,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
     for (unsigned feature = xcr0_t::BX_XCR0_YMM_BIT; feature < xcr0_t::BX_XCR0_LAST; feature++)
     {
       Bit32u feature_mask = (1 << feature);
-    
+
       if ((requested_feature_bitmap & feature_mask) != 0)
       {
         if (! xsave_restore[feature].len) {
@@ -974,7 +974,7 @@ Bit32u BX_CPU_C::get_xinuse_vector(Bit32u requested_feature_bitmap)
   for (unsigned feature = xcr0_t::BX_XCR0_FPU_BIT; feature < xcr0_t::BX_XCR0_LAST; feature++)
   {
     Bit32u feature_mask = (1 << feature);
-  
+
     if ((requested_feature_bitmap & feature_mask) != 0)
     {
       if (! xsave_restore[feature].len) {

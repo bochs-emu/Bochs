@@ -463,7 +463,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [15:15]  Hybrid
 //   [16:16]  TSXLDTRK: TSX suspent load tracking support
 //   [17:17]  reserved
-//   [18:18]  PCONFIG 
+//   [18:18]  PCONFIG
 //   [19:19]  Architectural LBRs support
 //   [20:20]  CET IBT: Support CET indirect branch tracking
 //   [21:21]  reserved

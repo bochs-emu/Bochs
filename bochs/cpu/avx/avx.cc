@@ -54,7 +54,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VZEROALL(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-/* VMOVSS: VEX.F3.0F 10 (VEX.W ignore) */ 
+/* VMOVSS: VEX.F3.0F 10 (VEX.W ignore) */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSS_VssHpsWssR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->src1());
@@ -66,7 +66,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSS_VssHpsWssR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-/* VMOVSS: VEX.F2.0F 10 (VEX.W ignore) */ 
+/* VMOVSS: VEX.F2.0F 10 (VEX.W ignore) */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSD_VsdHpdWsdR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op;
@@ -79,7 +79,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSD_VsdHpdWsdR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-/* VMOVAPS: VEX    0F 28 (VEX.W ignore, VEX.VVV #UD) */ 
+/* VMOVAPS: VEX    0F 28 (VEX.W ignore, VEX.VVV #UD) */
 /* VMOVAPD: VEX.66.0F 28 (VEX.W ignore, VEX.VVV #UD) */
 /* VMOVDQA: VEX.66.0F 6F (VEX.W ignore, VEX.VVV #UD) */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPS_VpsWpsR(bxInstruction_c *i)
@@ -113,7 +113,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPS_VpsWpsM(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-/* VMOVUPS: VEX    0F 10 (VEX.W ignore, VEX.VVV #UD) */ 
+/* VMOVUPS: VEX    0F 10 (VEX.W ignore, VEX.VVV #UD) */
 /* VMOVUPD: VEX.66.0F 10 (VEX.W ignore, VEX.VVV #UD) */
 /* VMOVDQU: VEX.F3.0F 6F (VEX.W ignore, VEX.VVV #UD) */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVUPS_VpsWpsM(bxInstruction_c *i)
@@ -140,7 +140,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVUPS_VpsWpsM(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-/* VMOVUPS: VEX    0F 11 (VEX.W ignore, VEX.VVV #UD) */ 
+/* VMOVUPS: VEX    0F 11 (VEX.W ignore, VEX.VVV #UD) */
 /* VMOVUPD: VEX.66.0F 11 (VEX.W ignore, VEX.VVV #UD) */
 /* VMOVDQU: VEX.66.0F 7F (VEX.W ignore, VEX.VVV #UD) */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVUPS_WpsVpsM(bxInstruction_c *i)
@@ -163,7 +163,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVUPS_WpsVpsM(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-/* VMOVAPS: VEX    0F 29 (VEX.W ignore, VEX.VVV #UD) */ 
+/* VMOVAPS: VEX    0F 29 (VEX.W ignore, VEX.VVV #UD) */
 /* VMOVAPD: VEX.66.0F 29 (VEX.W ignore, VEX.VVV #UD) */
 /* VMOVDQA: VEX.66.0F 7F (VEX.W ignore, VEX.VVV #UD) */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPS_WpsVpsM(bxInstruction_c *i)
@@ -396,7 +396,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VBROADCASTF128_VdqMdq(bxInstruction_c *i)
   unsigned len = i->getVL();
 
   dst.clear();
-  
+
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   read_virtual_xmmword(i->seg(), eaddr, &src);
 
@@ -480,7 +480,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBLENDVB_VdqHdqWdqIbR(bxInstruction_c *i)
 {
   BxPackedYmmRegister op1 = BX_READ_YMM_REG(i->src1()), op2 = BX_READ_YMM_REG(i->src2()),
            mask = BX_READ_YMM_REG(i->src3());
-           
+
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < len; n++)
@@ -497,7 +497,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VINSERTF128_VdqHdqWdqIbR(bxInstruction_c *
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src1());
   unsigned len = i->getVL();
   unsigned offset = i->Ib() & (len-1);
-  
+
   op.vmm128(offset) = BX_READ_XMM_REG(i->src2());
 
   BX_WRITE_AVX_REGZ(i->dst(), op, len);

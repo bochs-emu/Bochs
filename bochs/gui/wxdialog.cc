@@ -630,12 +630,12 @@ bool LogViewDialog::Show(bool val)
 
 void LogViewDialog::CheckLogLength()
 {
-  // truncate the text control periodically to avoid a 
+  // truncate the text control periodically to avoid a
   // serious memory leak.
   wxString str = log->GetValue();
   Bit32u len = str.Length();
   if (len > lengthMax + lengthTolerance) {
-    // Truncate the string.  Start from length - lengthMax, search 
+    // Truncate the string.  Start from length - lengthMax, search
     // forward until we find the first \n.
     for (Bit32u i = len - lengthMax; i<len-1; i++) {
       if (str.GetChar(i) == '\n') {

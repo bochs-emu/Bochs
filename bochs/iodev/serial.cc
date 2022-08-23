@@ -99,7 +99,7 @@ void serial_init_options(void)
       serial_mode_list, BX_SER_MODE_NULL, BX_SER_MODE_NULL);
     mode->set_ask_format("Choose I/O mode of the serial device [%s] ");
     sprintf(label, "Pathname of the serial device for COM%d", i+1);
-    bx_param_filename_c *path = new bx_param_filename_c(menu, "dev", label, 
+    bx_param_filename_c *path = new bx_param_filename_c(menu, "dev", label,
       "The path can be a real serial device or a pty (X/Unix only)",
       "", BX_PATHNAME_LEN);
     bx_list_c *deplist = new bx_list_c(NULL);
@@ -563,7 +563,7 @@ bx_serial_c::init(void)
           } else {
             // client mode
             pipe = CreateFile( dev,
-               GENERIC_READ | GENERIC_WRITE, 
+               GENERIC_READ | GENERIC_WRITE,
                0, NULL, OPEN_EXISTING, 0, NULL);
 
             if (pipe == INVALID_HANDLE_VALUE) {

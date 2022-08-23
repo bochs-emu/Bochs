@@ -1155,7 +1155,7 @@ Brief summary :
 Detailed change log :
 
 - Configure rework
-  - Deprecate --enable-popcnt configure option. POPCNT instruction will be 
+  - Deprecate --enable-popcnt configure option. POPCNT instruction will be
     enabled automatically iff SSE4_2 is supported (like in hardware).
 
   - Make --ignore-bad-msrs runtime option in .bochsrc. Old --ignore-bad-msrs
@@ -1534,13 +1534,13 @@ Detailed change log :
  [1977045] support 40 bit physical address
  [1506385] Intel Core Duo VT features
  [1429015] Support for user plugins
- [1488136] debugger access to floppy controller  
+ [1488136] debugger access to floppy controller
  [1363136] Full debugger SMP and 64 bit support
  [2068304] Support for ACPI
   [431032] debugger "x" command
   [423420] profiling ideas (SMF)
   [445342] Add FM support?
-  [928439] alsa  
+  [928439] alsa
 
 -------------------------------------------------------------------------
 Changes in 2.3.7 (June 3, 2008):

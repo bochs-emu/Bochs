@@ -147,7 +147,7 @@ void core2_penryn_t9600_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, c
 
 #if BX_SUPPORT_VMX
 
-// 
+//
 // MSR 00000480 : 005A0800 0000000D	BX_MSR_VMX_BASIC
 // MSR 00000481 : 0000003F 00000016	BX_MSR_VMX_PINBASED_CTRLS
 // MSR 00000482 : F7F9FFFE 0401E172	BX_MSR_VMX_PROCBASED_CTRLS
@@ -160,7 +160,7 @@ void core2_penryn_t9600_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, c
 // MSR 00000489 : 00000000 000467FF	BX_MSR_VMX_CR4_FIXED1
 // MSR 0000048A : 00000000 0000002C	BX_MSR_VMX_VMCS_ENUM
 // MSR 0000048B : 00000041 00000000	BX_MSR_VMX_PROCBASED_CTRLS2
-// 
+//
 
 Bit32u core2_penryn_t9600_t::get_vmx_extensions_bitmask(void) const
 {

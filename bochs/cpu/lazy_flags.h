@@ -256,13 +256,13 @@ BX_CPP_INLINE void bx_lazyflags_entry::set_OF(bool val)
   bool temp_cf = getB_CF();
   set_flags_OxxxxC(val, temp_cf);
 }
- 
+
 BX_CPP_INLINE void bx_lazyflags_entry::clear_OF(void)
 {
   bool temp_cf = getB_CF();
   set_flags_OxxxxC(0, temp_cf);
 }
- 
+
 BX_CPP_INLINE void bx_lazyflags_entry::assert_OF(void)
 {
   unsigned temp_cf = getB_CF();
@@ -336,7 +336,7 @@ BX_CPP_INLINE void bx_lazyflags_entry::set_AF(bool val)
   auxbits &= ~(LF_MASK_AF);
   auxbits |= (val) << LF_BIT_AF;
 }
-  
+
 BX_CPP_INLINE void bx_lazyflags_entry::clear_AF(void)
 {
   auxbits &= ~(LF_MASK_AF);

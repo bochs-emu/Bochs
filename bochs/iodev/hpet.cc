@@ -346,7 +346,7 @@ void bx_hpet_c::hpet_timer()
   }
   hpet_set_timer(t);
   t->last_checked = cur_tick;
-  
+
   Bit64u ticks_passed = ns_to_ticks(cur_time - s.hpet_reference_time);
   if (ticks_passed != 0) {
     s.hpet_reference_time += ticks_to_ns(ticks_passed);

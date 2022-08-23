@@ -142,13 +142,13 @@ bx_cpuid_t::bx_cpuid_t(BX_CPU_C *_cpu): cpu(_cpu)
 }
 
 #if BX_SUPPORT_VMX
-bx_cpuid_t::bx_cpuid_t(BX_CPU_C *_cpu, Bit32u vmcs_revision): 
+bx_cpuid_t::bx_cpuid_t(BX_CPU_C *_cpu, Bit32u vmcs_revision):
     cpu(_cpu), vmcs_map(vmcs_revision)
 {
   init();
 }
 
-bx_cpuid_t::bx_cpuid_t(BX_CPU_C *_cpu, Bit32u vmcs_revision, const char *filename): 
+bx_cpuid_t::bx_cpuid_t(BX_CPU_C *_cpu, Bit32u vmcs_revision, const char *filename):
     cpu(_cpu), vmcs_map(vmcs_revision, filename)
 {
   init();
@@ -632,7 +632,7 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_ecx(Bit32u extra) const
       ecx |= BX_CPUID_EXT4_AVX512_VBMI;
   }
 #endif
-  
+
   // [2:2]   UMIP: Supports user-mode instruction prevention
   if (is_cpu_extension_supported(BX_ISA_UMIP))
     ecx |= BX_CPUID_EXT4_UMIP;
@@ -675,7 +675,7 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_ecx(Bit32u extra) const
   if (is_cpu_extension_supported(BX_ISA_VAES_VPCLMULQDQ))
     ecx |= BX_CPUID_EXT4_VAES | BX_CPUID_EXT4_VPCLMULQDQ;
 #endif
-  
+
   // [11:11] AVX512 VNNI instructions support
   // [12:12] AVX512 BITALG instructions support
   // [13:13] reserved

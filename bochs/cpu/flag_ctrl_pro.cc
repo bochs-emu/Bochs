@@ -131,7 +131,7 @@ void BX_CPU_C::handleInterruptMaskChange(void)
 
     return;
   }
- 
+
   // EFLAGS.IF was cleared, some events like INTR would be masked
 
 #if BX_SUPPORT_VMX

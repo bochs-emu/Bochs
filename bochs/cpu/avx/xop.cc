@@ -627,7 +627,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VFRCZPD_VpdWpdR(bxInstruction_c *i)
 {
   BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());
   unsigned len = i->getVL();
-  
+
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
 
   for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {

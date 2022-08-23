@@ -1791,7 +1791,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAD_PqQq(bxInstruction_c *i)
       MMXUD1(op1) = (Bit32u)(MMXSD1(op1) >> shift);
     }
   }
-  
+
   BX_WRITE_MMX_REG(i->dst(), op1);
 #endif
 

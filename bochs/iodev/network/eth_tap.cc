@@ -75,7 +75,7 @@
 // host, you should be able to get Bochs talking to anyone on the internet.
 //
 
-// Pavel Dufek (PD), CZ, 2008 - quick & dirty hack for Solaris 10 sparc tap 
+// Pavel Dufek (PD), CZ, 2008 - quick & dirty hack for Solaris 10 sparc tap
 // ala Qemu.
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -235,7 +235,7 @@ bx_tap_pktmover_c::bx_tap_pktmover_c(const char *netif,
     return;
   }
 
-#if defined(__sun__) 
+#if defined(__sun__)
   char *ptr;       /* PD - ppa allocation ala qemu */
   char my_dev[10]; /* enough ... */
   int ppa=-1;

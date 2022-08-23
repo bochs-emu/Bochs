@@ -4014,10 +4014,10 @@ void voodoo_init(Bit8u _type)
       v->fbi.clut[pen] = MAKE_RGB(pen,pen,pen);
   }
   if (v->type < VOODOO_BANSHEE) {
-    v->fbi.ram = (Bit8u*)malloc(4<<20); 
+    v->fbi.ram = (Bit8u*)malloc(4<<20);
     v->fbi.mask = (4<<20)-1;
   } else {
-    v->fbi.ram = (Bit8u*)malloc(16<<20); 
+    v->fbi.ram = (Bit8u*)malloc(16<<20);
     v->fbi.mask = (16<<20)-1;
   }
   v->fbi.frontbuf = 0;

@@ -1091,8 +1091,8 @@ void update_font()
   // calculate a new value for OneCharWide
   PangoLayout * layout = gtk_widget_create_pango_layout(LV[0], "M");
   PangoFontDescription * fontdesc;
-  g_object_get(G_OBJECT(LV_Rend[0]), "font-desc", &fontdesc, NULL); 
-  pango_layout_set_font_description(layout, fontdesc); 
+  g_object_get(G_OBJECT(LV_Rend[0]), "font-desc", &fontdesc, NULL);
+  pango_layout_set_font_description(layout, fontdesc);
   pango_layout_get_pixel_size(layout, &width, &i);
   pango_font_description_free(fontdesc);
   g_object_unref(layout);
@@ -2360,8 +2360,8 @@ bool OSInit()
     int width;
     PangoLayout * layout = gtk_widget_create_pango_layout (LV[0], "M");
     PangoFontDescription * fontdesc;
-    g_object_get( G_OBJECT( LV_Rend[0] ), "font-desc", &fontdesc, NULL ); 
-    pango_layout_set_font_description (layout, fontdesc); 
+    g_object_get( G_OBJECT( LV_Rend[0] ), "font-desc", &fontdesc, NULL );
+    pango_layout_set_font_description (layout, fontdesc);
     pango_layout_get_pixel_size (layout, &width, &i);
     pango_font_description_free (fontdesc);
     g_object_unref(layout);

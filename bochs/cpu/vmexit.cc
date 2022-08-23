@@ -255,7 +255,7 @@ void BX_CPU_C::VMexit_Event(unsigned type, unsigned vector, Bit16u errcode, bool
   //
 
   if (! vmexit) {
-    // record IDT vectoring information 
+    // record IDT vectoring information
     vm->idt_vector_error_code = errcode;
     vm->idt_vector_info = vector | (type << 8);
     if (errcode_valid)
@@ -689,7 +689,7 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::Vmexit_Vmread(bxInstruction_c *i)
   bx_phy_address pAddr = vm->vmread_bitmap_addr | (encoding >> 3);
   access_read_physical(pAddr, 1, &bitmap);
   BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, MEMTYPE(resolve_memtype(pAddr)), BX_READ, BX_VMREAD_BITMAP_ACCESS, &bitmap);
-  
+
   if (bitmap & (1 << (encoding & 7)))
     return true;
 
@@ -716,7 +716,7 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::Vmexit_Vmwrite(bxInstruction_c *i)
   bx_phy_address pAddr = vm->vmwrite_bitmap_addr | (encoding >> 3);
   access_read_physical(pAddr, 1, &bitmap);
   BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, MEMTYPE(resolve_memtype(pAddr)), BX_READ, BX_VMWRITE_BITMAP_ACCESS, &bitmap);
-  
+
   if (bitmap & (1 << (encoding & 7)))
     return true;
 

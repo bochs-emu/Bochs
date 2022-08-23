@@ -611,7 +611,7 @@ int bx_param_bool_c::parse_param(const char *ptr)
   if (ptr != NULL) {
     if (!strcmp(ptr, "0") || !stricmp(ptr, "false")) {
       set(0); return 1;
-    } 
+    }
     if (!strcmp(ptr, "1") || !stricmp(ptr, "true")) {
       set(1); return 1;
     }

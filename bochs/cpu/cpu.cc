@@ -631,7 +631,7 @@ void BX_CPU_C::prefetch(void)
   if ((tlbEntry->lpf == lpf) && (tlbEntry->accessBits & (1 << unsigned(USER_PL))) != 0) {
     BX_CPU_THIS_PTR pAddrFetchPage = tlbEntry->ppf;
     fetchPtr = (Bit8u*) tlbEntry->hostPageAddr;
-  }  
+  }
   else {
     bx_phy_address pAddr = translate_linear(tlbEntry, laddr, USER_PL, BX_EXECUTE);
     BX_CPU_THIS_PTR pAddrFetchPage = PPFOf(pAddr);
@@ -699,7 +699,7 @@ bool BX_CPU_C::dbg_instruction_epilog(void)
     return(1); // on a breakpoint
   }
 
-  // see if debugger requesting icount guard 
+  // see if debugger requesting icount guard
   if (bx_guard.guard_for & BX_DBG_GUARD_ICOUNT) {
     if (get_icount() >= BX_CPU_THIS_PTR guard_found.icount_max) {
       return(1);

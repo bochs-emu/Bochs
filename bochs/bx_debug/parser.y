@@ -204,7 +204,7 @@ command:
     | calc_command
     | if_command
     | expression { eval_value = $1; }
-    | 
+    |
     | '\n'
       {
       }
@@ -252,7 +252,7 @@ modebp_command:
           free($1);
       }
     ;
-    
+
 vmexitbp_command:
       BX_TOKEN_VMEXITBP '\n'
       {
@@ -260,7 +260,7 @@ vmexitbp_command:
           free($1);
       }
     ;
-    
+
 show_command:
       BX_TOKEN_SHOW BX_TOKEN_GENERIC '\n'
       {
@@ -521,35 +521,35 @@ set_command:
         free($1); free($2);
       }
     | BX_TOKEN_SET BX_TOKEN_8BL_REG '=' expression '\n'
-      { 
+      {
         bx_dbg_set_reg8l_value($2, $4);
       }
     | BX_TOKEN_SET BX_TOKEN_8BH_REG '=' expression '\n'
-      { 
+      {
         bx_dbg_set_reg8h_value($2, $4);
       }
     | BX_TOKEN_SET BX_TOKEN_16B_REG '=' expression '\n'
-      { 
+      {
         bx_dbg_set_reg16_value($2, $4);
       }
     | BX_TOKEN_SET BX_TOKEN_32B_REG '=' expression '\n'
-      { 
+      {
         bx_dbg_set_reg32_value($2, $4);
       }
     | BX_TOKEN_SET BX_TOKEN_64B_REG '=' expression '\n'
-      { 
+      {
         bx_dbg_set_reg64_value($2, $4);
       }
     | BX_TOKEN_SET BX_TOKEN_REG_EIP '=' expression '\n'
-      { 
+      {
         bx_dbg_set_rip_value($4);
       }
     | BX_TOKEN_SET BX_TOKEN_REG_RIP '=' expression '\n'
-      { 
+      {
         bx_dbg_set_rip_value($4);
       }
     | BX_TOKEN_SET BX_TOKEN_SEGREG '=' expression '\n'
-      { 
+      {
         bx_dbg_load_segreg($2, $4);
       }
     ;
@@ -734,7 +734,7 @@ info_command:
 optional_numeric :
    /* empty */ { $$ = EMPTY_ARG; }
    | expression;
-   
+
 regs_command:
       BX_TOKEN_REGISTERS '\n'
       {
@@ -876,7 +876,7 @@ writemem_command:
         free($1); free($2);
       }
     ;
-	
+
 loadmem_command:
       BX_TOKEN_LOADMEM BX_TOKEN_STRING expression '\n'
       {

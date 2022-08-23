@@ -132,7 +132,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit16
     BX_ERROR(("interrupt(long mode): segment not present"));
     exception(BX_NP_EXCEPTION, cs_selector.value & 0xfffc);
   }
- 
+
   Bit64u RSP_for_cpl_x;
 #if BX_SUPPORT_CET
   bx_address new_SSP = 0; // keep warning silent
@@ -194,7 +194,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit16
     // set up null SS descriptor
     load_null_selector(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], cs_descriptor.dpl);
   }
-  else if(IS_CODE_SEGMENT_CONFORMING(cs_descriptor.type) || cs_descriptor.dpl==CPL) 
+  else if(IS_CODE_SEGMENT_CONFORMING(cs_descriptor.type) || cs_descriptor.dpl==CPL)
   {
     // if code segment is conforming OR code segment DPL = CPL then
     // INTERRUPT TO SAME PRIVILEGE LEVEL:

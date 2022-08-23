@@ -199,7 +199,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EqR(bxInstruction_c *i)
     count = i->Ib();
 
   count &= 0x3f;
-  
+
   if (count) {
     Bit64u op1_64 = BX_READ_64BIT_REG(i->dst());
     Bit64u result_64 = (op1_64 << count) | (op1_64 >> (64 - count));

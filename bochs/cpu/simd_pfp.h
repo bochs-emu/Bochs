@@ -466,22 +466,22 @@ BX_CPP_INLINE void xmm_fmaddsubps_mask(BxPackedXmmRegister *op1, const BxPackedX
 {
   if (mask & 0x1)
     op1->xmm32u(0) = float32_muladd(op1->xmm32u(0), op2->xmm32u(0), op3->xmm32u(0), float_muladd_negate_c, status);
-  else 
+  else
     op1->xmm32u(0) = 0;
 
   if (mask & 0x2)
     op1->xmm32u(1) = float32_muladd(op1->xmm32u(1), op2->xmm32u(1), op3->xmm32u(1), 0, status);
-  else 
+  else
     op1->xmm32u(1) = 0;
 
   if (mask & 0x4)
     op1->xmm32u(2) = float32_muladd(op1->xmm32u(2), op2->xmm32u(2), op3->xmm32u(2), float_muladd_negate_c, status);
-  else 
+  else
     op1->xmm32u(2) = 0;
 
   if (mask & 0x8)
     op1->xmm32u(3) = float32_muladd(op1->xmm32u(3), op2->xmm32u(3), op3->xmm32u(3), 0, status);
-  else 
+  else
     op1->xmm32u(3) = 0;
 }
 

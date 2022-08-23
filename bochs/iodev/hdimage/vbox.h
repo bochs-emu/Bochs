@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 
 /*
- * This file provides support for the following VBox virtual 
+ * This file provides support for the following VBox virtual
  * disk image formats: VDI.
  *
  * Author: Benjamin D Lunt

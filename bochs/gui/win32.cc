@@ -487,7 +487,7 @@ void gen_key_event(Bit32u key, Bit32u press_release)
 LRESULT CALLBACK LowLevelKeyboardProc( int nCode, WPARAM wParam, LPARAM lParam )
 {
   if (nCode < 0 || nCode != HC_ACTION || (!mouseCaptureMode && !fullscreenMode))
-    return CallNextHookEx(hKeyboardHook, nCode, wParam, lParam); 
+    return CallNextHookEx(hKeyboardHook, nCode, wParam, lParam);
 
   KBDLLHOOKSTRUCT* p = (KBDLLHOOKSTRUCT*)lParam;
   Bit32u press_release = (p->flags & LLKHF_UP) ? BX_KEY_RELEASED : BX_KEY_PRESSED;

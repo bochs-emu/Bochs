@@ -353,7 +353,7 @@ const Bit64u BX_CR3_PAGING_MASK = BX_CONST64(0x000ffffffffff000);
 //       where S:1=Shadow Stack (CET)
 //             W:1=Write, 0=Read;
 //             U:1=CPL3, 0=CPL0-2
-//       
+//
 //       Thus for reads, it is:
 //         OK = 0x01 << (          U )
 //       for writes:
@@ -371,7 +371,7 @@ const Bit64u BX_CR3_PAGING_MASK = BX_CONST64(0x000ffffffffff000);
 //       Note, that the TLB should have TLB_NoHostPtr bit set in the lpf when
 //       direct access through host pointer is NOT allowed for the page.
 //       A memory operation asking for a direct access through host pointer
-//       will not set TLB_NoHostPtr bit in its lpf and thus get TLB miss 
+//       will not set TLB_NoHostPtr bit in its lpf and thus get TLB miss
 //       result when the direct access is not allowed.
 //
 
@@ -950,7 +950,7 @@ bx_phy_address BX_CPU_C::translate_linear_load_PDPTR(bx_address laddr, unsigned 
   Bit64u pdptr;
 
 #if BX_SUPPORT_SVM
-  if (BX_CPU_THIS_PTR in_svm_guest && SVM_NESTED_PAGING_ENABLED) 
+  if (BX_CPU_THIS_PTR in_svm_guest && SVM_NESTED_PAGING_ENABLED)
   {
     bx_phy_address cr3_val = BX_CPU_THIS_PTR cr3 & 0xffffffe0;
     cr3_val = nested_walk(cr3_val, BX_RW, 1);
@@ -1347,7 +1347,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
       if (BX_CPU_THIS_PTR cr4.get_PAE())
         paddress = translate_linear_PAE(laddr, lpf_mask, user, rw);
       else
-#endif 
+#endif
         paddress = translate_linear_legacy(laddr, lpf_mask, user, rw);
 
     // translate_linear functions return combined U/S, R/W bits, Global Page bit
@@ -1707,7 +1707,7 @@ bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsig
   update_access_dirty_PAE(entry_addr, entry, entry_memtype, BX_LEVEL_PML4, leaf, isWrite);
 
   // Make up the physical page frame address
-  return ppf | (bx_phy_address)(guest_paddr & offset_mask);	
+  return ppf | (bx_phy_address)(guest_paddr & offset_mask);
 }
 
 bx_phy_address BX_CPU_C::nested_walk_PAE(bx_phy_address guest_paddr, unsigned rw, bool is_page_walk)
@@ -2029,7 +2029,7 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
       // The EPT.R bit is set in all EPT paging-structure entry controlling the translation
       // The EPT.W bit is set in all EPT paging-structure entry controlling the translation except the leaf entry (allowed for shadow stack write access)
       // The SSS bit (bit 60) is 1 in the EPT paging-structure entry maps the page
-      bool supervisor_shadow_stack_page = ((combined_access & BX_EPT_ENTRY_READ_WRITE) == BX_EPT_ENTRY_READ_WRITE) && 
+      bool supervisor_shadow_stack_page = ((combined_access & BX_EPT_ENTRY_READ_WRITE) == BX_EPT_ENTRY_READ_WRITE) &&
                                              ((entry[leaf] & BX_EPT_READ) != 0) &&
                                              (((entry[leaf] & BX_EPT_WRITE) == 0) || !(access_mask & BX_EPT_WRITE)) &&
                                              ((entry[leaf] & BX_SUPERVISOR_SHADOW_STACK_PAGE) != 0);
@@ -2422,7 +2422,7 @@ bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx_ad
         if (verbose)
           dbg_print_paging_pte(level, pte);
 #endif
-        if (!(pte & 1)) 
+        if (!(pte & 1))
           goto page_fault;
         pt_address = pte & 0xfffff000;
 #if BX_CPU_LEVEL >= 6

@@ -259,7 +259,7 @@ void atom_n270_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
               BX_CPUID_STD_CMOV |
               BX_CPUID_STD_PAT |
 #if BX_PHY_ADDRESS_LONG
-              BX_CPUID_STD_PSE36 | 
+              BX_CPUID_STD_PSE36 |
 #endif
               BX_CPUID_STD_CLFLUSH |
               BX_CPUID_STD_DEBUG_STORE |

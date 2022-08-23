@@ -471,7 +471,7 @@ int bx_amigaos_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
   struct IFFHandle *iff = NULL;
   long err = 0;
   struct ContextNode  *cn;
-  
+
   if (!(iff = AllocIFF ()))
   {
     BX_INFO(("Amiga: Failed to allocate iff handle"));

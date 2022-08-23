@@ -40,7 +40,7 @@ const Bit64u BX_CET_WAIT_FOR_ENBRANCH                      = (1 << 11);
 
 bool is_invalid_cet_control(bx_address val)
 {
-  if ((val & (BX_CET_SUPPRESS_INDIRECT_BRANCH_TRACKING | BX_CET_WAIT_FOR_ENBRANCH)) == 
+  if ((val & (BX_CET_SUPPRESS_INDIRECT_BRANCH_TRACKING | BX_CET_WAIT_FOR_ENBRANCH)) ==
              (BX_CET_SUPPRESS_INDIRECT_BRANCH_TRACKING | BX_CET_WAIT_FOR_ENBRANCH)) return true;
 
   if (val & 0x3c0) return true; // reserved bits check
@@ -371,8 +371,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SETSSBSY(bxInstruction_c *i)
     BX_ERROR(("%s: failed to set SSP busy bit", i->getIaOpcodeNameShort()));
     exception(BX_CP_EXCEPTION, BX_CP_SETSSBSY);
   }
-  
-  SSP = ssp_laddr;  
+
+  SSP = ssp_laddr;
 
   BX_NEXT_INSTR(i);
 }

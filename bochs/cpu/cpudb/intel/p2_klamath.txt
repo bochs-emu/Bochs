@@ -15,7 +15,7 @@ Package				Slot 1 SECC
 Core Stepping			C1
 Technology			0.35µ
 Instructions Sets		MMX
-Features			
+Features
 Clock Speed			299.1 MHz
 Clock multiplier		x4.5
 Front Side Bus Frequency	66.5 MHz

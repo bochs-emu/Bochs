@@ -209,7 +209,7 @@ class BOCHSAPI bx_local_apic_c : public logfunctions
   Bit64u vmx_preemption_timer_fire;       //The value of system tick when fire the exception (absolute value)
   Bit32u vmx_preemption_timer_rate;       //rate stated in MSR_VMX_MISC
   bool vmx_timer_active;
-#endif 
+#endif
 
 #if BX_SUPPORT_MONITOR_MWAIT
   int mwaitx_timer_handle;
@@ -281,7 +281,7 @@ public:
   void set_vmx_preemption_timer(Bit32u value);
   void deactivate_vmx_preemption_timer(void);
   static void vmx_preemption_timer_expired(void *);
-#endif  
+#endif
 
 #if BX_SUPPORT_MONITOR_MWAIT
   void set_mwaitx_timer(Bit32u value);

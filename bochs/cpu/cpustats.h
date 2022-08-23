@@ -64,7 +64,7 @@ struct bx_cpu_statistics
       tlbMisses(0), tlbExecuteMisses(0), tlbWriteMisses(0),
       tlbGlobalFlushes(0), tlbNonGlobalFlushes(0),
       stackPrefetch(0), smc(0) {}
-  
+
 };
 
 #define INC_CPU_STAT(stat) INC_STAT(BX_CPU_THIS_PTR stats -> stat)

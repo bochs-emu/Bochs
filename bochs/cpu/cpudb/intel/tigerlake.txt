@@ -37,12 +37,12 @@ Motherboard Chipset : Intel Tiger Point-LP, Intel Tiger Lake-UP3
 
 DMI MB Manufacturer : Intel Corporation
 DMI MB Product      : NUC11TN
-DMI MB Version      : 
-DMI MB Serial       : 
+DMI MB Version      :
+DMI MB Serial       :
 DMI SYS Manufacturer: Intel(R) Client Systems
-DMI SYS Product     : 
-DMI SYS Version     : 
-DMI SYS Serial      : 
+DMI SYS Product     :
+DMI SYS Version     :
+DMI SYS Serial      :
 DMI BIOS Version    : TNTGL357.0023.2020.0825.1713
 
 

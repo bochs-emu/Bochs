@@ -396,7 +396,7 @@ const Bit64u VMX_VMFUNC_EPTP_SWITCHING_MASK = (BX_CONST64(1) << VMX_VMFUNC_EPTP_
 #define VMCS_CR3_TARGET1                                   0x0000600A
 #define VMCS_CR3_TARGET2                                   0x0000600C
 #define VMCS_CR3_TARGET3                                   0x0000600E
-                                                           
+
 /* VMCS natural width read only data fields */
 /* binary 0110_01xx_xxxx_xxx0 */
 #define VMCS_VMEXIT_QUALIFICATION                          0x00006400
@@ -535,7 +535,7 @@ public:
    void set_vmcs_recision_id_offset(unsigned offset) { vmcs_revision_id_field_offset = offset; }
    void set_vmx_abort_field_offset(unsigned offset) { vmx_abort_field_offset = offset; }
    void set_vmcs_launch_state_field_offset(unsigned offset) { vmcs_launch_state_field_offset = offset; }
-   
+
    unsigned vmcs_field_offset(Bit32u encoding) const;
 
    bool is_reserved(Bit32u encoding) const {
@@ -566,7 +566,7 @@ enum VMX_state {
 //  VMCS structure
 // ================
 
-typedef struct bx_VMCS_GUEST_STATE 
+typedef struct bx_VMCS_GUEST_STATE
 {
    bx_address cr0;
    bx_address cr3;
@@ -874,7 +874,7 @@ typedef struct bx_VMCS
 
 #define VMX_VMENTRY_CTRL1_SUPPORTED_BITS \
     (BX_CPU_THIS_PTR vmx_cap.vmx_vmentry_ctrl_supported_bits)
-   
+
    Bit32u vmentry_ctrls;
 
    Bit32u vmentry_msr_load_cnt;
@@ -940,7 +940,7 @@ const Bit32u BX_VMCS_SHADOW_BIT_MASK = 0x80000000;
 // 48:48 use 32-bit physical address, set when x86_64 disabled
 // 49:49 support of dual-monitor treatment of SMI and SMM
 // 53:50 memory type used for VMCS access
-// 54:54 logical processor reports information in the VM-exit 
+// 54:54 logical processor reports information in the VM-exit
 //       instruction-information field on VM exits due to
 //       execution of INS/OUTS
 // 55:55 set if any VMX controls that default to `1 may be
@@ -979,7 +979,7 @@ const Bit32u BX_VMCS_SHADOW_BIT_MASK = 0x80000000;
 // IA32_MSR_VMX_PINBASED_CTRLS MSR (0x481)
 // ---------------------------
 
-// Bits 1, 2 and 4 must be '1 
+// Bits 1, 2 and 4 must be '1
 
 // Allowed 0-settings: VMentry fail if a bit is '0 in pin-based vmexec controls
 // but set to '1 in this MSR
@@ -1131,14 +1131,14 @@ const Bit32u VMX_MISC_PREEMPTION_TIMER_RATE = 0;
 const Bit32u VMX_MSR_CR0_FIXED0_LO = 0x80000021;
 const Bit32u VMX_MSR_CR0_FIXED0_HI = 0x00000000;
 
-const Bit64u VMX_MSR_CR0_FIXED0 = 
+const Bit64u VMX_MSR_CR0_FIXED0 =
    ((((Bit64u) VMX_MSR_CR0_FIXED0_HI) << 32) | VMX_MSR_CR0_FIXED0_LO);
 
 // allowed 1-setting in CR0 in VMX mode
 const Bit32u VMX_MSR_CR0_FIXED1_LO = 0xFFFFFFFF;
 const Bit32u VMX_MSR_CR0_FIXED1_HI = 0x00000000;
 
-const Bit64u VMX_MSR_CR0_FIXED1 = 
+const Bit64u VMX_MSR_CR0_FIXED1 =
    ((((Bit64u) VMX_MSR_CR0_FIXED1_HI) << 32) | VMX_MSR_CR0_FIXED1_LO);
 
 //
@@ -1150,7 +1150,7 @@ const Bit64u VMX_MSR_CR0_FIXED1 =
 const Bit32u VMX_MSR_CR4_FIXED0_LO = 0x00002000;
 const Bit32u VMX_MSR_CR4_FIXED0_HI = 0x00000000;
 
-const Bit64u VMX_MSR_CR4_FIXED0 = 
+const Bit64u VMX_MSR_CR4_FIXED0 =
    ((((Bit64u) VMX_MSR_CR4_FIXED0_HI) << 32) | VMX_MSR_CR4_FIXED0_LO);
 
 // allowed 1-setting in CR0 in VMX mode

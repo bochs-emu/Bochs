@@ -569,7 +569,7 @@ BOCHSAPI extern BX_CPU_C   bx_cpu;
 
 #define DECLARE_EFLAG_ACCESSOR_IOPL(bitnum)                     \
   BX_SMF BX_CPP_INLINE void set_IOPL(Bit32u val);               \
-  BX_SMF BX_CPP_INLINE Bit32u  get_IOPL(void);                  
+  BX_SMF BX_CPP_INLINE Bit32u  get_IOPL(void);
 
 #define IMPLEMENT_EFLAG_ACCESSOR_IOPL(bitnum)                   \
   BX_CPP_INLINE void BX_CPU_C::set_IOPL(Bit32u val) {           \
@@ -1008,7 +1008,7 @@ public: // for now...
   BxMemtype vmcs_memtype;
 #endif
   Bit64u  vmxonptr;
-  
+
   VMCS_CACHE vmcs;
   VMX_CAP vmx_cap;
   VMCS_Mapping *vmcs_map;
@@ -1285,7 +1285,7 @@ public: // for now...
   BX_SMF BX_CPP_INLINE void set_CF(bool val) { BX_CPU_THIS_PTR oszapc.set_CF(val); }
   BX_SMF BX_CPP_INLINE void clear_CF(void) { BX_CPU_THIS_PTR oszapc.clear_CF(); }
   BX_SMF BX_CPP_INLINE void assert_CF(void) { BX_CPU_THIS_PTR oszapc.assert_CF(); }
- 
+
   // constructors & destructors...
   BX_CPU_C(unsigned id = 0);
  ~BX_CPU_C();
@@ -4822,7 +4822,7 @@ public: // for now...
   // The linear address must be truncated to the 32-bit when CPU is not
   // executing in long64 mode.  The function  must  be used  to compute
   // linear address everywhere when a code is shared between long64 and
-  // legacy mode. For legacy mode only  just use Bit32u to store linear 
+  // legacy mode. For legacy mode only  just use Bit32u to store linear
   // address value.
   BX_SMF bx_address get_laddr(unsigned seg, bx_address offset);
 
@@ -5186,7 +5186,7 @@ BX_CPP_INLINE Bit32u BX_CPP_AttrRegparmN(1) BX_CPU_C::BxResolve32(bxInstruction_
 #if BX_SUPPORT_CET
 #define PRESERVE_SSP { BX_CPU_THIS_PTR prev_ssp = SSP; }
 #else
-#define PRESERVE_SSP 
+#define PRESERVE_SSP
 #endif
 
 #define RSP_SPECULATIVE {                 \
@@ -5218,7 +5218,7 @@ enum {
 };
 
 //
-// updateFetchModeMask - has to be called everytime 
+// updateFetchModeMask - has to be called everytime
 //   CS.L / CS.D_B / CR0.PE, CR0.TS or CR0.EM / CR4.OSFXSR / CR4.OSXSAVE changes
 //
 BX_CPP_INLINE void BX_CPU_C::updateFetchModeMask(void)
@@ -5604,7 +5604,7 @@ IMPLEMENT_EFLAG_SET_ACCESSOR   (NT,  14)
 IMPLEMENT_EFLAG_SET_ACCESSOR   (DF,  10)
 IMPLEMENT_EFLAG_SET_ACCESSOR_IF(      9)
 IMPLEMENT_EFLAG_SET_ACCESSOR_TF(      8)
-                               
+
 // hardware task switching
 enum {
   BX_TASK_FROM_CALL = 0,

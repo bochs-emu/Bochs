@@ -34,7 +34,7 @@
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxError(bxInstruction_c *i)
 {
   unsigned ia_opcode = i->getIaOpcode();
- 
+
   if (ia_opcode == BX_IA_ERROR) {
     BX_DEBUG(("BxError: Encountered an unknown instruction (signalling #UD)"));
 
@@ -159,7 +159,7 @@ void BX_CPU_C::enter_sleep_state(unsigned state)
   case BX_ACTIVITY_STATE_SHUTDOWN:
     BX_CPU_THIS_PTR clear_IF(); // masking interrupts
     break;
-   
+
   case BX_ACTIVITY_STATE_MWAIT:
   case BX_ACTIVITY_STATE_MWAIT_IF:
     break;
@@ -171,7 +171,7 @@ void BX_CPU_C::enter_sleep_state(unsigned state)
   // artificial trap bit, why use another variable.
   BX_CPU_THIS_PTR activity_state = state;
   BX_CPU_THIS_PTR async_event = 1; // so processor knows to check
-  // Execution completes.  The processor will remain in a sleep 
+  // Execution completes.  The processor will remain in a sleep
   // state until one of the wakeup conditions is met.
 
   BX_INSTR_HLT(BX_CPU_ID);
@@ -296,7 +296,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLFLUSH(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
     laddr = get_laddr64(i->seg(), eaddr);
-  else 
+  else
 #endif
     laddr = agen_read_execute32(i->seg(), (Bit32u)eaddr, 1);
 
@@ -424,7 +424,7 @@ void BX_CPU_C::handleSseModeChange(void)
   }
 
   updateFetchModeMask(); /* SSE_OK changed */
-}  
+}
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoSSE(bxInstruction_c *i)
 {
@@ -475,7 +475,7 @@ void BX_CPU_C::handleAvxModeChange(void)
 #endif
 
   updateFetchModeMask(); /* AVX_OK changed */
-}  
+}
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoAVX(bxInstruction_c *i)
 {
@@ -622,7 +622,7 @@ Bit64u BX_CPU_C::get_TSC_VMXAdjust(Bit64u tsc)
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (VMEXIT(VMX_VM_EXEC_CTRL2_TSC_OFFSET) && SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_TSC_SCALING)) {
       Bit128u product_128;
-      long_mul(&product_128,tsc,BX_CPU_THIS_PTR vmcs.tsc_multiplier);   
+      long_mul(&product_128,tsc,BX_CPU_THIS_PTR vmcs.tsc_multiplier);
       tsc = (product_128.lo >> 48) | (product_128.hi << 16);   // tsc = (uint64) (long128(tsc_value * tsc_multiplier) >> 48);
     }
   }
@@ -1381,7 +1381,7 @@ void BX_CPU_C::set_PKeys(Bit32u pkru_val, Bit32u pkrs_val)
           BX_CPU_THIS_PTR rd_pkey[i] &= ~(TLB_SysReadOK | TLB_SysWriteOK);
           BX_CPU_THIS_PTR wr_pkey[i] &= ~(TLB_SysReadOK | TLB_SysWriteOK);
         }
-    
+
         // writeDisable bit set
         if (pkrs_val & (1<<(i*2+1))) {
           if (BX_CPU_THIS_PTR cr0.get_WP())

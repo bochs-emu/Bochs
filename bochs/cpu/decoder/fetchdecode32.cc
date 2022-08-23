@@ -1915,7 +1915,7 @@ int decoder_vex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
     }
     else {
       iptr = decodeModrm32(iptr, remain, i, mod, nnn, rm);
-      if (! iptr) 
+      if (! iptr)
         return(-1);
     }
   }
@@ -2045,13 +2045,13 @@ int decoder_evex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
 
   if (evex_z && ! opmask)
     return(ia_opcode);
-    
+
   unsigned opcode_byte = (evex >> 24);
   opcode_byte += 256 * (evex_opcext-1);
 
   struct bx_modrm modrm;
   iptr = parseModrm32(iptr, remain, i, &modrm);
-  if (! iptr) 
+  if (! iptr)
     return(-1);
 
   if (modrm.mod == 0x40) { // mod==01b
@@ -2151,7 +2151,7 @@ int decoder_xop32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
 
   struct bx_modrm modrm;
   iptr = parseModrm32(iptr, remain, i, &modrm);
-  if (! iptr) 
+  if (! iptr)
     return(-1);
 
   Bit32u decmask = (i->osize() << OS32_OFFSET) |
@@ -2188,7 +2188,7 @@ int decoder32_fp_escape(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i,
 
   struct bx_modrm modrm;
   iptr = parseModrm32(iptr, remain, i, &modrm);
-  if (! iptr) 
+  if (! iptr)
     return(-1);
 
   i->setFoo((modrm.modrm | (b1 << 8)) & 0x7ff); /* for x87 */
@@ -2221,7 +2221,7 @@ int decoder32_modrm(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, uns
   // opcode requires modrm byte
   struct bx_modrm modrm;
   iptr = parseModrm32(iptr, remain, i, &modrm);
-  if (! iptr) 
+  if (! iptr)
     return(-1);
 
   Bit32u decmask = (i->osize() << OS32_OFFSET) |
@@ -2305,7 +2305,7 @@ int decoder32_3dnow(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, uns
   // opcode requires modrm byte
   struct bx_modrm modrm;
   iptr = parseModrm32(iptr, remain, i, &modrm);
-  if (! iptr) 
+  if (! iptr)
     return(-1);
 
   if (remain != 0) {
@@ -2471,7 +2471,7 @@ fetch_b1:
 #endif
 
   i->modRMForm.Id = 0;
- 
+
   BxOpcodeDecodeDescriptor32 *decode_descriptor = &decode32_descriptor[b1];
   ia_opcode = decode_descriptor->decode_method(iptr, remain, i, b1, sse_prefix, decode_descriptor->opcode_table);
   if (ia_opcode < 0)

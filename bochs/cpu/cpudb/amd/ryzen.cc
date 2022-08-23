@@ -199,7 +199,7 @@ Bit32u ryzen_t::get_svm_extensions_bitmask(void) const
   return BX_CPUID_SVM_NESTED_PAGING |
          BX_CPUID_SVM_LBR_VIRTUALIZATION |
          BX_CPUID_SVM_SVM_LOCK |
-         BX_CPUID_SVM_NRIP_SAVE | 
+         BX_CPUID_SVM_NRIP_SAVE |
 //       BX_CPUID_SVM_TSCRATE | // not implemented yet
 //       BX_CPUID_SVM_VMCB_CLEAN_BITS | // not implemented yet
          BX_CPUID_SVM_FLUSH_BY_ASID |
@@ -614,7 +614,7 @@ void ryzen_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
 // leaf 0x80000006 //
 void ryzen_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
 {
-  // CPUID function 0x800000006 - L2 Cache and TLB Identifiers      
+  // CPUID function 0x800000006 - L2 Cache and TLB Identifiers
   leaf->eax = 0x26006400;
   leaf->ebx = 0x66006400;
   leaf->ecx = 0x02006140;

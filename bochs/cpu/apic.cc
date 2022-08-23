@@ -268,7 +268,7 @@ void bx_local_apic_c::reset(unsigned type)
 
   if (xapic)
     apic_version_id = 0x00050014; // P4 has 6 LVT entries
-  else 
+  else
     apic_version_id = 0x00030010; // P6 has 4 LVT entries
 
 #if BX_CPU_LEVEL >= 6

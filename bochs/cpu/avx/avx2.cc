@@ -315,7 +315,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTB_VdqWbR(bxInstruction_c *i)
   op.clear();
 
   Bit8u val_8 = BX_READ_XMM_REG_LO_BYTE(i->src());
-  
+
   for (unsigned n=0; n < len; n++)
     xmm_pbroadcastb(&op.vmm128(n), val_8);
 
@@ -330,7 +330,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTW_VdqWwR(bxInstruction_c *i)
   op.clear();
 
   Bit16u val_16 = BX_READ_XMM_REG_LO_WORD(i->src());
-  
+
   for (unsigned n=0; n < len; n++)
     xmm_pbroadcastw(&op.vmm128(n), val_16);
 
@@ -345,7 +345,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTD_VdqWdR(bxInstruction_c *i)
   op.clear();
 
   Bit32u val_32 = BX_READ_XMM_REG_LO_DWORD(i->src());
-  
+
   for (unsigned n=0; n < len; n++)
     xmm_pbroadcastd(&op.vmm128(n), val_32);
 
@@ -360,7 +360,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTQ_VdqWqR(bxInstruction_c *i)
   op.clear();
 
   Bit64u val_64 = BX_READ_XMM_REG_LO_QWORD(i->src());
-  
+
   for (unsigned n=0; n < len; n++)
     xmm_pbroadcastq(&op.vmm128(n), val_64);
 

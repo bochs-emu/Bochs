@@ -8263,7 +8263,7 @@ float32 approximate_rsqrt14(float32 op, bool daz)
 
     case float_denormal:
       if (daz) return packFloat32(sign, 0xFF, 0);
-        
+
       normalizeFloat32Subnormal(fraction, &exp, &fraction);
 
       fraction &= 0x7fffff;
@@ -8273,7 +8273,7 @@ float32 approximate_rsqrt14(float32 op, bool daz)
       break;
   };
 
-  if (sign == 1) 
+  if (sign == 1)
     return float32_default_nan;
 
   /*
@@ -8320,7 +8320,7 @@ float64 approximate_rsqrt14(float64 op, bool daz)
 
     case float_denormal:
       if (daz) return packFloat64(sign, 0x7FF, 0);
-        
+
       normalizeFloat64Subnormal(fraction, &exp, &fraction);
 
       fraction &= BX_CONST64(0xfffffffffffff);
@@ -8330,7 +8330,7 @@ float64 approximate_rsqrt14(float64 op, bool daz)
       break;
   };
 
-  if (sign == 1) 
+  if (sign == 1)
     return float64_default_nan;
 
   // Compute the single precision 23-bit mantissa from the 52-bit double

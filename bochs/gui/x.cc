@@ -936,7 +936,7 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
     x11_max_xres = xrrs[original_size_id].width;
     x11_max_yres = xrrs[original_size_id].height - bx_headerbar_y - bx_statusbar_y;
     free(conf);
-  } 
+  }
   else
 #endif
   {

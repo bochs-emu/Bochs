@@ -57,7 +57,7 @@ BX_CPU_C::write_linear_word(unsigned s, bx_address laddr, Bit16u data)
   bx_address lpf = AlignedAccessLPFOf(laddr, (1 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
   bx_address lpf = LPFOf(laddr);
-#endif    
+#endif
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us write access from this CPL
     if (isWriteOK(tlbEntry, USER_PL)) {
@@ -84,7 +84,7 @@ BX_CPU_C::write_linear_dword(unsigned s, bx_address laddr, Bit32u data)
   bx_address lpf = AlignedAccessLPFOf(laddr, (3 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
   bx_address lpf = LPFOf(laddr);
-#endif    
+#endif
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us write access from this CPL
     if (isWriteOK(tlbEntry, USER_PL)) {
@@ -111,7 +111,7 @@ BX_CPU_C::write_linear_qword(unsigned s, bx_address laddr, Bit64u data)
   bx_address lpf = AlignedAccessLPFOf(laddr, (7 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
   bx_address lpf = LPFOf(laddr);
-#endif    
+#endif
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us write access from this CPL
     if (isWriteOK(tlbEntry, USER_PL)) {
@@ -368,7 +368,7 @@ BX_CPU_C::read_linear_word(unsigned s, bx_address laddr)
   bx_address lpf = AlignedAccessLPFOf(laddr, (1 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
   bx_address lpf = LPFOf(laddr);
-#endif    
+#endif
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us read access from this CPL
     if (isReadOK(tlbEntry, USER_PL)) {
@@ -397,7 +397,7 @@ BX_CPU_C::read_linear_dword(unsigned s, bx_address laddr)
   bx_address lpf = AlignedAccessLPFOf(laddr, (3 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
   bx_address lpf = LPFOf(laddr);
-#endif    
+#endif
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us read access from this CPL
     if (isReadOK(tlbEntry, USER_PL)) {
@@ -426,7 +426,7 @@ BX_CPU_C::read_linear_qword(unsigned s, bx_address laddr)
   bx_address lpf = AlignedAccessLPFOf(laddr, (7 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
   bx_address lpf = LPFOf(laddr);
-#endif    
+#endif
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us read access from this CPL
     if (isReadOK(tlbEntry, USER_PL)) {
@@ -645,7 +645,7 @@ BX_CPU_C::read_RMW_linear_word(unsigned s, bx_address laddr)
   bx_address lpf = AlignedAccessLPFOf(laddr, (1 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
   bx_address lpf = LPFOf(laddr);
-#endif    
+#endif
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us write access from this CPL
     if (isWriteOK(tlbEntry, USER_PL)) {
@@ -680,7 +680,7 @@ BX_CPU_C::read_RMW_linear_dword(unsigned s, bx_address laddr)
   bx_address lpf = AlignedAccessLPFOf(laddr, (3 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
   bx_address lpf = LPFOf(laddr);
-#endif    
+#endif
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us write access from this CPL
     if (isWriteOK(tlbEntry, USER_PL)) {
@@ -715,7 +715,7 @@ BX_CPU_C::read_RMW_linear_qword(unsigned s, bx_address laddr)
   bx_address lpf = AlignedAccessLPFOf(laddr, (7 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
   bx_address lpf = LPFOf(laddr);
-#endif    
+#endif
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us write access from this CPL
     if (isWriteOK(tlbEntry, USER_PL)) {
@@ -950,7 +950,7 @@ void BX_CPU_C::write_RMW_linear_dqword(Bit64u hi, Bit64u lo)
   else {
     BX_ASSERT(BX_CPU_THIS_PTR address_xlation.pages == 1);
   }
-  
+
   write_RMW_linear_qword(hi);
 }
 
@@ -969,7 +969,7 @@ void BX_CPU_C::write_new_stack_word(bx_address laddr, unsigned curr_pl, Bit16u d
   bx_address lpf = AlignedAccessLPFOf(laddr, (1 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
   bx_address lpf = LPFOf(laddr);
-#endif    
+#endif
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us write access from this CPL
     if (isWriteOK(tlbEntry, user)) {
@@ -996,7 +996,7 @@ void BX_CPU_C::write_new_stack_dword(bx_address laddr, unsigned curr_pl, Bit32u 
   bx_address lpf = AlignedAccessLPFOf(laddr, (3 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
   bx_address lpf = LPFOf(laddr);
-#endif    
+#endif
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us write access from this CPL
     if (isWriteOK(tlbEntry, user)) {
@@ -1023,7 +1023,7 @@ void BX_CPU_C::write_new_stack_qword(bx_address laddr, unsigned curr_pl, Bit64u 
   bx_address lpf = AlignedAccessLPFOf(laddr, (7 & BX_CPU_THIS_PTR alignment_check_mask));
 #else
   bx_address lpf = LPFOf(laddr);
-#endif    
+#endif
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us write access from this CPL
     if (isWriteOK(tlbEntry, user)) {
@@ -1063,7 +1063,7 @@ accessOK:
   // add error code when segment violation occurs when pushing into new stack
   if (!write_virtual_checks(seg, offset, 2)) {
     BX_ERROR(("write_new_stack_word(): segment limit violation"));
-    exception(BX_SS_EXCEPTION, 
+    exception(BX_SS_EXCEPTION,
          seg->selector.rpl != CPL ? (seg->selector.value & 0xfffc) : 0);
   }
   goto accessOK;
@@ -1090,7 +1090,7 @@ accessOK:
   // add error code when segment violation occurs when pushing into new stack
   if (!write_virtual_checks(seg, offset, 4)) {
     BX_ERROR(("write_new_stack_dword(): segment limit violation"));
-    exception(BX_SS_EXCEPTION, 
+    exception(BX_SS_EXCEPTION,
          seg->selector.rpl != CPL ? (seg->selector.value & 0xfffc) : 0);
   }
   goto accessOK;
@@ -1117,7 +1117,7 @@ accessOK:
   // add error code when segment violation occurs when pushing into new stack
   if (!write_virtual_checks(seg, offset, 8)) {
     BX_ERROR(("write_new_stack_qword(): segment limit violation"));
-    exception(BX_SS_EXCEPTION, 
+    exception(BX_SS_EXCEPTION,
         seg->selector.rpl != CPL ? (seg->selector.value & 0xfffc) : 0);
   }
   goto accessOK;

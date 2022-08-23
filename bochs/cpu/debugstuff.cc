@@ -243,7 +243,7 @@ void BX_CPU_C::debug(bx_address offset)
     BX_INFO(("| CR0=0x%08x CR2=0x%08x",
       BX_CPU_THIS_PTR cr0.get32(), (unsigned) BX_CPU_THIS_PTR cr2));
     BX_INFO(("| CR3=0x%08x CR4=0x%08x",
-      (unsigned) BX_CPU_THIS_PTR cr3, 
+      (unsigned) BX_CPU_THIS_PTR cr3,
       (unsigned) BX_CPU_THIS_PTR cr4.get32()));
 #endif
   }

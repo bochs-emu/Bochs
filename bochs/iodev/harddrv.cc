@@ -3127,7 +3127,7 @@ void bx_hard_drive_c::identify_drive(Bit8u channel)
     //           1 = has multiple logical sectors per physical sector
     //  bit 12 = 0 = logical sector is 256 words
     //           1 = logical sector is greater than 256 words
-    // However, Annex E of the ATA/ATAPI Command Set-2 specification states that 
+    // However, Annex E of the ATA/ATAPI Command Set-2 specification states that
     //  we should have a value of 0x6000 for fixed sized physical sectors with
     //  logical sectors the same size as the physical sector.
     // The ATAPI-7 specs say that if bit 12 is not set, words 117-118 are not valid.
@@ -3138,7 +3138,7 @@ void bx_hard_drive_c::identify_drive(Bit8u channel)
     BX_SELECTED_DRIVE(channel).id_drive[80] = 0xFE;  // we need to report at least ATAPI-7
   } else
     BX_PANIC(("Identify: Sector Size of %i is in error", BX_SELECTED_DRIVE(channel).sect_size));
-  
+
   // Word 128-159 Vendor unique
   // Word 160-255 Reserved
 

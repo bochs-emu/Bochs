@@ -55,7 +55,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_STi(bxInstruction_c *i)
   {
     FPU_exception(i, FPU_EX_Stack_Underflow);
 
-    if (! BX_CPU_THIS_PTR the_i387.is_IA_masked()) 
+    if (! BX_CPU_THIS_PTR the_i387.is_IA_masked())
       BX_NEXT_INSTR(i);
   }
   else {

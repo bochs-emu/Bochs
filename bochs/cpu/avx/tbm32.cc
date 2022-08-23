@@ -52,7 +52,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BLCFILL_BdEdR(bxInstruction_c *i)
   set_CF((op_32 + 1) == 0);
 
   BX_WRITE_32BIT_REGZ(i->dst(), result_32);
-  
+
   BX_NEXT_INSTR(i);
 }
 
@@ -66,7 +66,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BLCI_BdEdR(bxInstruction_c *i)
   set_CF((op_32 + 1) == 0);
 
   BX_WRITE_32BIT_REGZ(i->dst(), result_32);
-  
+
   BX_NEXT_INSTR(i);
 }
 
@@ -80,7 +80,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BLCIC_BdEdR(bxInstruction_c *i)
   set_CF((op_32 + 1) == 0);
 
   BX_WRITE_32BIT_REGZ(i->dst(), result_32);
-  
+
   BX_NEXT_INSTR(i);
 }
 
@@ -94,7 +94,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BLCMSK_BdEdR(bxInstruction_c *i)
   set_CF((op_32 + 1) == 0);
 
   BX_WRITE_32BIT_REGZ(i->dst(), result_32);
-  
+
   BX_NEXT_INSTR(i);
 }
 
@@ -108,7 +108,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BLCS_BdEdR(bxInstruction_c *i)
   set_CF((op_32 + 1) == 0);
 
   BX_WRITE_32BIT_REGZ(i->dst(), result_32);
-  
+
   BX_NEXT_INSTR(i);
 }
 
@@ -122,7 +122,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BLSFILL_BdEdR(bxInstruction_c *i)
   set_CF(op_32 == 0);
 
   BX_WRITE_32BIT_REGZ(i->dst(), result_32);
-  
+
   BX_NEXT_INSTR(i);
 }
 
@@ -136,7 +136,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BLSIC_BdEdR(bxInstruction_c *i)
   set_CF(op_32 == 0);
 
   BX_WRITE_32BIT_REGZ(i->dst(), result_32);
-  
+
   BX_NEXT_INSTR(i);
 }
 
@@ -150,7 +150,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::T1MSKC_BdEdR(bxInstruction_c *i)
   set_CF((op_32 + 1) == 0);
 
   BX_WRITE_32BIT_REGZ(i->dst(), result_32);
-  
+
   BX_NEXT_INSTR(i);
 }
 
@@ -164,7 +164,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TZMSK_BdEdR(bxInstruction_c *i)
   set_CF(op_32 == 0);
 
   BX_WRITE_32BIT_REGZ(i->dst(), result_32);
-  
+
   BX_NEXT_INSTR(i);
 }
 

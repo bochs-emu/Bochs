@@ -1327,7 +1327,7 @@ void bx_init_hardware()
   bx_param_num_c *bxp_host_memsize = SIM->get_param_num(BXPN_HOST_MEM_SIZE);
   Bit64u hostMemSize = bxp_host_memsize->get64() * BX_CONST64(1024*1024);
 
-  // do not allocate more host memory than needed for emulation of guest RAM 
+  // do not allocate more host memory than needed for emulation of guest RAM
   if (memSize < hostMemSize) hostMemSize = memSize;
 
   bx_param_num_c *bxp_memblock_size = SIM->get_param_num(BXPN_MEM_BLOCK_SIZE);

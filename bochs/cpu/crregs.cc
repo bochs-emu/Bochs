@@ -871,7 +871,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
     if(SVM_CR_WRITE_INTERCEPTED(0)) Svm_Vmexit(SVM_VMEXIT_CR0_WRITE);
-  }  
+  }
 #endif
 
   if (i->modC0()) {
@@ -1108,7 +1108,7 @@ bool BX_CPU_C::SetCR0(bxInstruction_c *i, bx_address val)
       if ((oldCR0 & 0xfffffff5) != (val_32 & 0xfffffff5)) {
         // any other bit except TS or MP had changed
         Svm_Vmexit(SVM_VMEXIT_CR0_SEL_WRITE);
-      } 
+      }
     }
   }
 #endif

@@ -181,7 +181,7 @@ Not done yet.
 
 15. Guest-To-Host Communication
 Try to adapt VirtualBox guest-to-host communication methods into Bochs.
-Having VirtualBox Shared Folders or VNAT support in Bochs could very 
+Having VirtualBox Shared Folders or VNAT support in Bochs could very
 simplify its usage.
 
 16. Patches / Bug reports

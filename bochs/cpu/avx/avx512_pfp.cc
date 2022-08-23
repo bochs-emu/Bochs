@@ -732,7 +732,7 @@ static int fpclass(float_class_t op_class, int sign, int selector)
 
 static BX_CPP_INLINE int float32_fpclass(float32 op, int selector, int daz)
 {
-  if (daz) 
+  if (daz)
     op = float32_denormal_to_zero(op);
 
   return fpclass(float32_class(op), float32_sign(op), selector);
@@ -740,7 +740,7 @@ static BX_CPP_INLINE int float32_fpclass(float32 op, int selector, int daz)
 
 static BX_CPP_INLINE int float64_fpclass(float64 op, int selector, int daz)
 {
-  if (daz) 
+  if (daz)
     op = float64_denormal_to_zero(op);
 
   return fpclass(float64_class(op), float64_sign(op), selector);
@@ -1201,7 +1201,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCALEFPD_VpdHpdWpdR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
   unsigned len = i->getVL();
-  
+
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   softfloat_status_word_rc_override(status, i);
 

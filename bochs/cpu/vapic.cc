@@ -144,7 +144,7 @@ bx_phy_address BX_CPU_C::VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned le
     case BX_LAPIC_TIMER_INITIAL_COUNT:
     case BX_LAPIC_TIMER_DIVIDE_CFG:
       break;
- 
+
     default:
       vmexit = true;
       break;
@@ -153,7 +153,7 @@ bx_phy_address BX_CPU_C::VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned le
   }
 
   if (vmexit) {
-    Bit32u qualification = offset | 
+    Bit32u qualification = offset |
       ((BX_CPU_THIS_PTR in_event) ? VMX_APIC_ACCESS_DURING_EVENT_DELIVERY : VMX_APIC_READ_INSTRUCTION_EXECUTION);
     VMexit(VMX_VMEXIT_APIC_ACCESS, qualification);
   }
@@ -231,7 +231,7 @@ void BX_CPU_C::VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *
 #endif
   }
 
-  Bit32u qualification = offset | 
+  Bit32u qualification = offset |
       ((BX_CPU_THIS_PTR in_event) ? VMX_APIC_ACCESS_DURING_EVENT_DELIVERY : VMX_APIC_WRITE_INSTRUCTION_EXECUTION);
   VMexit(VMX_VMEXIT_APIC_ACCESS, qualification);
 }
@@ -371,7 +371,7 @@ void BX_CPU_C::VMX_Self_IPI_Virtualization(Bit8u vector)
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
 
   vapic_set_vector(BX_LAPIC_IRR1, vector);
-  if (vector >= vm->rvi) vm->rvi = vector; 
+  if (vector >= vm->rvi) vm->rvi = vector;
 
   VMX_Evaluate_Pending_Virtual_Interrupts();
 }
