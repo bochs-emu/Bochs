@@ -3690,7 +3690,7 @@ void bx_dbg_print_help(void)
   dbg_printf("    vb|vbreak, lb|lbreak, pb|pbreak|b|break, sb, sba, blist,\n");
   dbg_printf("    bpe, bpd, d|del|delete, watch, unwatch\n");
   dbg_printf("-*- CPU and memory contents -*-\n");
-  dbg_printf("    x, xp, setpmem, writemem, crc, info,\n");
+  dbg_printf("    x, xp, setpmem, writemem, loadmem, crc, info,\n");
   dbg_printf("    r|reg|regs|registers, fp|fpu, mmx, sse, sreg, dreg, creg,\n");
   dbg_printf("    page, set, ptime, print-stack, bt, ?|calc\n");
   dbg_printf("-*- Working with bochs param tree -*-\n");

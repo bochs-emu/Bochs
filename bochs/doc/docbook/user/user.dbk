@@ -6611,8 +6611,6 @@ From here, you may use the following commands:
   unwatch addr                Remove watchpoint to specific physical address
   unwatch                     Remove all watch points
 
-  trace-mem on/off            Enable/Disable memory access tracing
-
 </screen>
 </para>
 </section>
@@ -6648,8 +6646,11 @@ From here, you may use the following commands:
   setpmem addr datasize val    Set physical memory location of size
                                datasize to value val.
 
-  writemem                     dump a number of bytes of virtual memory starting from
+  writemem filename addr len   dump a number of bytes of virtual memory starting from
                                the specified linear address into a file
+
+  loadmem filename addr        iniialize virtual memory starting from the specified linear
+                               address from a file
 
   crc  addr1  addr2            Show CRC32 for physical memory range addr1..addr2
 
@@ -6665,7 +6666,7 @@ From here, you may use the following commands:
   fp|fpu                       List of all FPU registers and their contents
   mmx                          List of all MMX registers and their contents
   sse|xmm                      List of all SSE registers and their contents
-  ymm                          List of all AVX registers and their contents
+  ymm|zmm                      List of all AVX registers and their contents
   sreg                         Show segment registers and their contents
   dreg                         Show debug registers and their contents
   creg                         Show control registers and their contents
@@ -6674,6 +6675,9 @@ From here, you may use the following commands:
   info eflags                  Show decoded EFLAGS register
   info break                   Information about current breakpoint status
   info tab                     Show paging address translation
+  info idt                     Show contents of the IDT
+  info gdt                     Show contents of the GDT
+  info ldt                     Show contents of the LDT
   info device                  Show state of the specified device
 </screen>
 </para>
@@ -6695,6 +6699,14 @@ From here, you may use the following commands:
   regs
   reg
   r
+
+  calc|? expr       Evaluate an expression and display the result.
+                    'expr' can reference any general-purpose, opmask and segment
+                    registers, use any arithmetic and logic operations, and also 
+                    special ':' operator which computes the linear address of a 
+                    segment:offset (in real and v86 mode) or of a selector:offset 
+                    (in protected mode) pair.
+
 </screen>
 </para>
 </section>
@@ -6710,14 +6722,14 @@ From here, you may use the following commands:
                               end of less than start (or zero) if you only
                               want the first instruction disassembled.
 
-  disassemble switch-mode     Switch between Intel and AT&amp;T disassebly styles
+  disassemble switch-mode     Switch between Intel and AT&amp;T disassembly styles
                               for debugger disassembler.
 
   disassemble size = n        Tell debugger what segment size to use when
                               the "disassemble" command is used.  Use values
                               of 0, 16 or 32 for n.  Value of 0 means
-			      "use segment size specified by current CS
-			      segment". Default is 0.
+                              "use segment size specified by current CS
+                              segment". Default is 0.
 
   set $auto_disassemble = n   Cause debugger to disassemble current instruction
                               every time execution stops if n=1.  Default is 0.
@@ -6740,6 +6752,8 @@ From here, you may use the following commands:
                               not really executed, and therefore not traced.
 
   trace off                   Disable instruction tracing.
+
+  trace-mem on/off            Enable/Disable memory access tracing.
 </screen>
 </para>
 </section>
