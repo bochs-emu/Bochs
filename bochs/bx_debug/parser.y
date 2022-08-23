@@ -79,6 +79,7 @@ Bit64u eval_value;
 %token <sval> BX_TOKEN_WRITEMEM
 %token <sval> BX_TOKEN_LOADMEM
 %token <sval> BX_TOKEN_SETPMEM
+%token <sval> BX_TOKEN_DEREF
 %token <sval> BX_TOKEN_SYMBOLNAME
 %token <sval> BX_TOKEN_QUERY
 %token <sval> BX_TOKEN_PENDING
@@ -124,6 +125,7 @@ Bit64u eval_value;
 %token <sval> BX_TOKEN_CALC
 %token <sval> BX_TOKEN_DEVICE
 %token <sval> BX_TOKEN_GENERIC
+%token BX_TOKEN_DEREF_CHR
 %token BX_TOKEN_RSHIFT
 %token BX_TOKEN_LSHIFT
 %token BX_TOKEN_EQ
@@ -139,7 +141,7 @@ Bit64u eval_value;
 %type <uval> expression
 
 %left '+' '-' '|' '^' '<' '>'
-%left '*' '/' '&' BX_TOKEN_LSHIFT BX_TOKEN_RSHIFT
+%left '*' '/' '&' BX_TOKEN_LSHIFT BX_TOKEN_RSHIFT BX_TOKEN_DEREF_CHR
 %left BX_TOKEN_EQ BX_TOKEN_NE BX_TOKEN_LE BX_TOKEN_GE
 %left NOT NEG INDIRECT
 
@@ -178,6 +180,7 @@ command:
     | writemem_command
     | loadmem_command
     | setpmem_command
+    | deref_command
     | query_command
     | take_command
     | disassemble_command
@@ -893,6 +896,14 @@ setpmem_command:
       }
     ;
 
+deref_command:
+      BX_TOKEN_DEREF expression expression '\n'
+      {
+        bx_dbg_deref_command($2, $3);
+        free($1);
+      }
+    ;
+
 query_command:
       BX_TOKEN_QUERY BX_TOKEN_PENDING '\n'
       {
@@ -1200,6 +1211,11 @@ help_command:
          dbg_printf("setpmem <addr> <datasize> <val> - set physical memory location of size 'datasize' to value 'val'\n");
          free($1);free($2);
        }
+     | BX_TOKEN_HELP BX_TOKEN_DEREF '\n'
+       {
+         dbg_printf("deref <addr> <deep> - pointer dereference. For example: get value of [[[rax]]] or ***rax: deref rax 3\n");
+         free($1);free($2);
+       }
      | BX_TOKEN_HELP BX_TOKEN_DISASM '\n'
        {
          dbg_printf("u|disasm [/count] <start> <end> - disassemble instructions for given linear address\n");
@@ -1300,7 +1316,9 @@ help_command:
          dbg_printf("    registers, use any arithmetic and logic operations, and\n");
          dbg_printf("    also the special ':' operator which computes the linear\n");
          dbg_printf("    address of a segment:offset (in real and v86 mode) or of\n");
-         dbg_printf("    a selector:offset (in protected mode) pair.\n");
+         dbg_printf("    a selector:offset (in protected mode) pair. Use $ operator\n");
+         dbg_printf("    for dereference, for example get value of [[[rax]]] or\n");
+         dbg_printf("    ***rax: rax$3\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_HELP '\n'
@@ -1352,6 +1370,7 @@ vexpression:
    | vexpression '-' vexpression     { $$ = $1 - $3; }
    | vexpression '*' vexpression     { $$ = $1 * $3; }
    | vexpression '/' vexpression     { $$ = $1 / $3; }
+   | vexpression BX_TOKEN_DEREF_CHR vexpression { $$ = bx_dbg_deref($1, $3, NULL, NULL); }
    | vexpression BX_TOKEN_RSHIFT vexpression { $$ = $1 >> $3; }
    | vexpression BX_TOKEN_LSHIFT vexpression { $$ = $1 << $3; }
    | vexpression '|' vexpression     { $$ = $1 | $3; }
@@ -1383,6 +1402,7 @@ expression:
    | expression '-' expression       { $$ = $1 - $3; }
    | expression '*' expression       { $$ = $1 * $3; }
    | expression '/' expression       { $$ = ($3 != 0) ? $1 / $3 : 0; }
+   | expression BX_TOKEN_DEREF_CHR expression { $$ = bx_dbg_deref($1, $3, NULL, NULL); }
    | expression BX_TOKEN_RSHIFT expression { $$ = $1 >> $3; }
    | expression BX_TOKEN_LSHIFT expression { $$ = $1 << $3; }
    | expression '|' expression       { $$ = $1 | $3; }

@@ -114,6 +114,7 @@ restore         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_RESTORE); }
 writemem        { bxlval.sval = strdup(bxtext); return(BX_TOKEN_WRITEMEM); }
 loadmem         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LOADMEM); }
 setpmem         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SETPMEM); }
+deref           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DEREF); }
 query           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_QUERY); }
 pending         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PENDING); }
 take            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_TAKE); }
@@ -242,6 +243,7 @@ calc            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CALC); }
 <DISASM>\/[0-9]+        { BEGIN(INITIAL); bxlval.sval = strdup(bxtext); return(BX_TOKEN_DISFORMAT); }
 "+"             { return ('+'); }
 "-"             { return ('-'); }
+"$"             { return (BX_TOKEN_DEREF_CHR); }
 "*"             { return ('*'); }
 "/"             { return ('/'); }
 ">>"            { return (BX_TOKEN_RSHIFT); }

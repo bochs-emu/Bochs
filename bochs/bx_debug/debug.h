@@ -112,6 +112,8 @@ void bx_dbg_xlate_address(bx_lin_address laddr);
 void bx_dbg_tlb_lookup(bx_lin_address laddr);
 void bx_dbg_show_command(const char*);
 void bx_dbg_print_stack_command(unsigned nwords);
+void bx_dbg_deref_command(bx_address addr, unsigned deep);
+bx_address bx_dbg_deref(bx_address addr, unsigned deep, unsigned* error_deep, bx_address* last_data_found);
 void bx_dbg_bt_command(unsigned dist);
 void bx_dbg_print_watchpoints(void);
 void bx_dbg_watchpoint_continue(bool watch_continue);

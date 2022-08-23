@@ -6652,6 +6652,8 @@ From here, you may use the following commands:
   loadmem filename addr        iniialize virtual memory starting from the specified linear
                                address from a file
 
+  deref addr deep              pointer dereference. For example: get value of [[[rax]]] or ***rax: deref rax 3
+
   crc  addr1  addr2            Show CRC32 for physical memory range addr1..addr2
 
 </screen>
@@ -6705,7 +6707,8 @@ From here, you may use the following commands:
                     registers, use any arithmetic and logic operations, and also 
                     special ':' operator which computes the linear address of a 
                     segment:offset (in real and v86 mode) or of a selector:offset 
-                    (in protected mode) pair.
+                    (in protected mode) pair. Use $ operator for dereference, 
+                    for example get value of [[[rax]]] or ***rax: rax$3.
 
 </screen>
 </para>

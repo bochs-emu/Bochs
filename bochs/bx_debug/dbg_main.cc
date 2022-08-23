@@ -1743,6 +1743,80 @@ int bx_dbg_show_symbolic(void)
   return 0;
 }
 
+bx_address bx_dbg_deref(bx_address addr, unsigned deep, unsigned* error_deep, bx_address* last_data_found)
+{
+  unsigned error_deep_st = 0;
+  bx_address deref_addr = addr;
+  bx_address last_addr_found_st = 0;
+
+  if (deep == 0) {
+    return addr;
+  }
+
+  if (NULL == error_deep) {
+    error_deep = &error_deep_st;
+  }
+  *error_deep = 0;
+
+  if (NULL == last_data_found) {
+    last_data_found = &last_addr_found_st;
+  }
+  *last_data_found = 0;
+
+unsigned len;
+
+#if BX_SUPPORT_X86_64
+  if (BX_CPU(dbg_cpu)->get_cpu_mode() == BX_MODE_LONG_64) {
+    len = 8;
+  }
+  else
+#endif
+  {
+    if (BX_CPU(dbg_cpu)->sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
+      len = 4;
+    }
+    else {
+      len = 2;
+    }
+  }
+
+  Bit8u buf[8];
+
+  for (int i = 0; i < deep; i++) {
+    if (!bx_dbg_read_linear(dbg_cpu, deref_addr, len, buf)) {
+      deref_addr = 0;
+      *error_deep = i + 1;
+      break;
+    }
+    deref_addr = 0;
+    deref_addr |= *((bx_address*)buf);
+    *last_data_found = deref_addr;
+  }
+
+  return deref_addr;
+}
+
+void bx_dbg_deref_command(bx_address addr, unsigned deep)
+{
+  unsigned deep_sc = 0;
+  bx_address deref_addr = 0;
+  bx_address last_data_found = 0;
+
+  deref_addr = bx_dbg_deref(addr, deep, &deep_sc, &last_data_found);
+  if (0 != deep_sc) {
+    if (1 == deep_sc) {
+      dbg_printf("error dereferencing 0x" FMT_ADDRX "\n", addr);
+    }
+    else {
+      dbg_printf("error dereferencing 0x" FMT_ADDRX " (deep: 0x%lx) - last data found: 0x" FMT_ADDRX "\n", 
+        addr, deep_sc, last_data_found);
+    }
+  }
+  else { 
+    dbg_printf("0x" FMT_ADDRX "\n", deref_addr);
+  }
+}
+
 void bx_dbg_print_stack_command(unsigned nwords)
 {
   bx_address linear_sp;
@@ -3690,7 +3764,7 @@ void bx_dbg_print_help(void)
   dbg_printf("    vb|vbreak, lb|lbreak, pb|pbreak|b|break, sb, sba, blist,\n");
   dbg_printf("    bpe, bpd, d|del|delete, watch, unwatch\n");
   dbg_printf("-*- CPU and memory contents -*-\n");
-  dbg_printf("    x, xp, setpmem, writemem, loadmem, crc, info,\n");
+  dbg_printf("    x, xp, setpmem, writemem, loadmem, crc, info, deref,\n");
   dbg_printf("    r|reg|regs|registers, fp|fpu, mmx, sse, sreg, dreg, creg,\n");
   dbg_printf("    page, set, ptime, print-stack, bt, ?|calc\n");
   dbg_printf("-*- Working with bochs param tree -*-\n");
