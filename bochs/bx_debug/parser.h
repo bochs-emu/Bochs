@@ -111,64 +111,66 @@ extern int bxdebug;
     BX_TOKEN_WRITEMEM = 312,       /* BX_TOKEN_WRITEMEM  */
     BX_TOKEN_LOADMEM = 313,        /* BX_TOKEN_LOADMEM  */
     BX_TOKEN_SETPMEM = 314,        /* BX_TOKEN_SETPMEM  */
-    BX_TOKEN_SYMBOLNAME = 315,     /* BX_TOKEN_SYMBOLNAME  */
-    BX_TOKEN_QUERY = 316,          /* BX_TOKEN_QUERY  */
-    BX_TOKEN_PENDING = 317,        /* BX_TOKEN_PENDING  */
-    BX_TOKEN_TAKE = 318,           /* BX_TOKEN_TAKE  */
-    BX_TOKEN_DMA = 319,            /* BX_TOKEN_DMA  */
-    BX_TOKEN_IRQ = 320,            /* BX_TOKEN_IRQ  */
-    BX_TOKEN_SMI = 321,            /* BX_TOKEN_SMI  */
-    BX_TOKEN_NMI = 322,            /* BX_TOKEN_NMI  */
-    BX_TOKEN_TLB = 323,            /* BX_TOKEN_TLB  */
-    BX_TOKEN_DISASM = 324,         /* BX_TOKEN_DISASM  */
-    BX_TOKEN_INSTRUMENT = 325,     /* BX_TOKEN_INSTRUMENT  */
-    BX_TOKEN_STRING = 326,         /* BX_TOKEN_STRING  */
-    BX_TOKEN_STOP = 327,           /* BX_TOKEN_STOP  */
-    BX_TOKEN_DOIT = 328,           /* BX_TOKEN_DOIT  */
-    BX_TOKEN_CRC = 329,            /* BX_TOKEN_CRC  */
-    BX_TOKEN_TRACE = 330,          /* BX_TOKEN_TRACE  */
-    BX_TOKEN_TRACEREG = 331,       /* BX_TOKEN_TRACEREG  */
-    BX_TOKEN_TRACEMEM = 332,       /* BX_TOKEN_TRACEMEM  */
-    BX_TOKEN_SWITCH_MODE = 333,    /* BX_TOKEN_SWITCH_MODE  */
-    BX_TOKEN_SIZE = 334,           /* BX_TOKEN_SIZE  */
-    BX_TOKEN_PTIME = 335,          /* BX_TOKEN_PTIME  */
-    BX_TOKEN_TIMEBP_ABSOLUTE = 336, /* BX_TOKEN_TIMEBP_ABSOLUTE  */
-    BX_TOKEN_TIMEBP = 337,         /* BX_TOKEN_TIMEBP  */
-    BX_TOKEN_MODEBP = 338,         /* BX_TOKEN_MODEBP  */
-    BX_TOKEN_VMEXITBP = 339,       /* BX_TOKEN_VMEXITBP  */
-    BX_TOKEN_PRINT_STACK = 340,    /* BX_TOKEN_PRINT_STACK  */
-    BX_TOKEN_BT = 341,             /* BX_TOKEN_BT  */
-    BX_TOKEN_WATCH = 342,          /* BX_TOKEN_WATCH  */
-    BX_TOKEN_UNWATCH = 343,        /* BX_TOKEN_UNWATCH  */
-    BX_TOKEN_READ = 344,           /* BX_TOKEN_READ  */
-    BX_TOKEN_WRITE = 345,          /* BX_TOKEN_WRITE  */
-    BX_TOKEN_SHOW = 346,           /* BX_TOKEN_SHOW  */
-    BX_TOKEN_LOAD_SYMBOLS = 347,   /* BX_TOKEN_LOAD_SYMBOLS  */
-    BX_TOKEN_SYMBOLS = 348,        /* BX_TOKEN_SYMBOLS  */
-    BX_TOKEN_LIST_SYMBOLS = 349,   /* BX_TOKEN_LIST_SYMBOLS  */
-    BX_TOKEN_GLOBAL = 350,         /* BX_TOKEN_GLOBAL  */
-    BX_TOKEN_WHERE = 351,          /* BX_TOKEN_WHERE  */
-    BX_TOKEN_PRINT_STRING = 352,   /* BX_TOKEN_PRINT_STRING  */
-    BX_TOKEN_NUMERIC = 353,        /* BX_TOKEN_NUMERIC  */
-    BX_TOKEN_PAGE = 354,           /* BX_TOKEN_PAGE  */
-    BX_TOKEN_HELP = 355,           /* BX_TOKEN_HELP  */
-    BX_TOKEN_XML = 356,            /* BX_TOKEN_XML  */
-    BX_TOKEN_CALC = 357,           /* BX_TOKEN_CALC  */
-    BX_TOKEN_DEVICE = 358,         /* BX_TOKEN_DEVICE  */
-    BX_TOKEN_GENERIC = 359,        /* BX_TOKEN_GENERIC  */
-    BX_TOKEN_RSHIFT = 360,         /* BX_TOKEN_RSHIFT  */
-    BX_TOKEN_LSHIFT = 361,         /* BX_TOKEN_LSHIFT  */
-    BX_TOKEN_EQ = 362,             /* BX_TOKEN_EQ  */
-    BX_TOKEN_NE = 363,             /* BX_TOKEN_NE  */
-    BX_TOKEN_LE = 364,             /* BX_TOKEN_LE  */
-    BX_TOKEN_GE = 365,             /* BX_TOKEN_GE  */
-    BX_TOKEN_REG_IP = 366,         /* BX_TOKEN_REG_IP  */
-    BX_TOKEN_REG_EIP = 367,        /* BX_TOKEN_REG_EIP  */
-    BX_TOKEN_REG_RIP = 368,        /* BX_TOKEN_REG_RIP  */
-    BX_TOKEN_REG_SSP = 369,        /* BX_TOKEN_REG_SSP  */
-    NOT = 370,                     /* NOT  */
-    NEG = 371,                     /* NEG  */
-    INDIRECT = 372                 /* INDIRECT  */
+    BX_TOKEN_DEREF = 315,          /* BX_TOKEN_DEREF  */
+    BX_TOKEN_SYMBOLNAME = 316,     /* BX_TOKEN_SYMBOLNAME  */
+    BX_TOKEN_QUERY = 317,          /* BX_TOKEN_QUERY  */
+    BX_TOKEN_PENDING = 318,        /* BX_TOKEN_PENDING  */
+    BX_TOKEN_TAKE = 319,           /* BX_TOKEN_TAKE  */
+    BX_TOKEN_DMA = 320,            /* BX_TOKEN_DMA  */
+    BX_TOKEN_IRQ = 321,            /* BX_TOKEN_IRQ  */
+    BX_TOKEN_SMI = 322,            /* BX_TOKEN_SMI  */
+    BX_TOKEN_NMI = 323,            /* BX_TOKEN_NMI  */
+    BX_TOKEN_TLB = 324,            /* BX_TOKEN_TLB  */
+    BX_TOKEN_DISASM = 325,         /* BX_TOKEN_DISASM  */
+    BX_TOKEN_INSTRUMENT = 326,     /* BX_TOKEN_INSTRUMENT  */
+    BX_TOKEN_STRING = 327,         /* BX_TOKEN_STRING  */
+    BX_TOKEN_STOP = 328,           /* BX_TOKEN_STOP  */
+    BX_TOKEN_DOIT = 329,           /* BX_TOKEN_DOIT  */
+    BX_TOKEN_CRC = 330,            /* BX_TOKEN_CRC  */
+    BX_TOKEN_TRACE = 331,          /* BX_TOKEN_TRACE  */
+    BX_TOKEN_TRACEREG = 332,       /* BX_TOKEN_TRACEREG  */
+    BX_TOKEN_TRACEMEM = 333,       /* BX_TOKEN_TRACEMEM  */
+    BX_TOKEN_SWITCH_MODE = 334,    /* BX_TOKEN_SWITCH_MODE  */
+    BX_TOKEN_SIZE = 335,           /* BX_TOKEN_SIZE  */
+    BX_TOKEN_PTIME = 336,          /* BX_TOKEN_PTIME  */
+    BX_TOKEN_TIMEBP_ABSOLUTE = 337, /* BX_TOKEN_TIMEBP_ABSOLUTE  */
+    BX_TOKEN_TIMEBP = 338,         /* BX_TOKEN_TIMEBP  */
+    BX_TOKEN_MODEBP = 339,         /* BX_TOKEN_MODEBP  */
+    BX_TOKEN_VMEXITBP = 340,       /* BX_TOKEN_VMEXITBP  */
+    BX_TOKEN_PRINT_STACK = 341,    /* BX_TOKEN_PRINT_STACK  */
+    BX_TOKEN_BT = 342,             /* BX_TOKEN_BT  */
+    BX_TOKEN_WATCH = 343,          /* BX_TOKEN_WATCH  */
+    BX_TOKEN_UNWATCH = 344,        /* BX_TOKEN_UNWATCH  */
+    BX_TOKEN_READ = 345,           /* BX_TOKEN_READ  */
+    BX_TOKEN_WRITE = 346,          /* BX_TOKEN_WRITE  */
+    BX_TOKEN_SHOW = 347,           /* BX_TOKEN_SHOW  */
+    BX_TOKEN_LOAD_SYMBOLS = 348,   /* BX_TOKEN_LOAD_SYMBOLS  */
+    BX_TOKEN_SYMBOLS = 349,        /* BX_TOKEN_SYMBOLS  */
+    BX_TOKEN_LIST_SYMBOLS = 350,   /* BX_TOKEN_LIST_SYMBOLS  */
+    BX_TOKEN_GLOBAL = 351,         /* BX_TOKEN_GLOBAL  */
+    BX_TOKEN_WHERE = 352,          /* BX_TOKEN_WHERE  */
+    BX_TOKEN_PRINT_STRING = 353,   /* BX_TOKEN_PRINT_STRING  */
+    BX_TOKEN_NUMERIC = 354,        /* BX_TOKEN_NUMERIC  */
+    BX_TOKEN_PAGE = 355,           /* BX_TOKEN_PAGE  */
+    BX_TOKEN_HELP = 356,           /* BX_TOKEN_HELP  */
+    BX_TOKEN_XML = 357,            /* BX_TOKEN_XML  */
+    BX_TOKEN_CALC = 358,           /* BX_TOKEN_CALC  */
+    BX_TOKEN_DEVICE = 359,         /* BX_TOKEN_DEVICE  */
+    BX_TOKEN_GENERIC = 360,        /* BX_TOKEN_GENERIC  */
+    BX_TOKEN_DEREF_CHR = 361,      /* BX_TOKEN_DEREF_CHR  */
+    BX_TOKEN_RSHIFT = 362,         /* BX_TOKEN_RSHIFT  */
+    BX_TOKEN_LSHIFT = 363,         /* BX_TOKEN_LSHIFT  */
+    BX_TOKEN_EQ = 364,             /* BX_TOKEN_EQ  */
+    BX_TOKEN_NE = 365,             /* BX_TOKEN_NE  */
+    BX_TOKEN_LE = 366,             /* BX_TOKEN_LE  */
+    BX_TOKEN_GE = 367,             /* BX_TOKEN_GE  */
+    BX_TOKEN_REG_IP = 368,         /* BX_TOKEN_REG_IP  */
+    BX_TOKEN_REG_EIP = 369,        /* BX_TOKEN_REG_EIP  */
+    BX_TOKEN_REG_RIP = 370,        /* BX_TOKEN_REG_RIP  */
+    BX_TOKEN_REG_SSP = 371,        /* BX_TOKEN_REG_SSP  */
+    NOT = 372,                     /* NOT  */
+    NEG = 373,                     /* NEG  */
+    INDIRECT = 374                 /* INDIRECT  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -234,64 +236,66 @@ extern int bxdebug;
 #define BX_TOKEN_WRITEMEM 312
 #define BX_TOKEN_LOADMEM 313
 #define BX_TOKEN_SETPMEM 314
-#define BX_TOKEN_SYMBOLNAME 315
-#define BX_TOKEN_QUERY 316
-#define BX_TOKEN_PENDING 317
-#define BX_TOKEN_TAKE 318
-#define BX_TOKEN_DMA 319
-#define BX_TOKEN_IRQ 320
-#define BX_TOKEN_SMI 321
-#define BX_TOKEN_NMI 322
-#define BX_TOKEN_TLB 323
-#define BX_TOKEN_DISASM 324
-#define BX_TOKEN_INSTRUMENT 325
-#define BX_TOKEN_STRING 326
-#define BX_TOKEN_STOP 327
-#define BX_TOKEN_DOIT 328
-#define BX_TOKEN_CRC 329
-#define BX_TOKEN_TRACE 330
-#define BX_TOKEN_TRACEREG 331
-#define BX_TOKEN_TRACEMEM 332
-#define BX_TOKEN_SWITCH_MODE 333
-#define BX_TOKEN_SIZE 334
-#define BX_TOKEN_PTIME 335
-#define BX_TOKEN_TIMEBP_ABSOLUTE 336
-#define BX_TOKEN_TIMEBP 337
-#define BX_TOKEN_MODEBP 338
-#define BX_TOKEN_VMEXITBP 339
-#define BX_TOKEN_PRINT_STACK 340
-#define BX_TOKEN_BT 341
-#define BX_TOKEN_WATCH 342
-#define BX_TOKEN_UNWATCH 343
-#define BX_TOKEN_READ 344
-#define BX_TOKEN_WRITE 345
-#define BX_TOKEN_SHOW 346
-#define BX_TOKEN_LOAD_SYMBOLS 347
-#define BX_TOKEN_SYMBOLS 348
-#define BX_TOKEN_LIST_SYMBOLS 349
-#define BX_TOKEN_GLOBAL 350
-#define BX_TOKEN_WHERE 351
-#define BX_TOKEN_PRINT_STRING 352
-#define BX_TOKEN_NUMERIC 353
-#define BX_TOKEN_PAGE 354
-#define BX_TOKEN_HELP 355
-#define BX_TOKEN_XML 356
-#define BX_TOKEN_CALC 357
-#define BX_TOKEN_DEVICE 358
-#define BX_TOKEN_GENERIC 359
-#define BX_TOKEN_RSHIFT 360
-#define BX_TOKEN_LSHIFT 361
-#define BX_TOKEN_EQ 362
-#define BX_TOKEN_NE 363
-#define BX_TOKEN_LE 364
-#define BX_TOKEN_GE 365
-#define BX_TOKEN_REG_IP 366
-#define BX_TOKEN_REG_EIP 367
-#define BX_TOKEN_REG_RIP 368
-#define BX_TOKEN_REG_SSP 369
-#define NOT 370
-#define NEG 371
-#define INDIRECT 372
+#define BX_TOKEN_DEREF 315
+#define BX_TOKEN_SYMBOLNAME 316
+#define BX_TOKEN_QUERY 317
+#define BX_TOKEN_PENDING 318
+#define BX_TOKEN_TAKE 319
+#define BX_TOKEN_DMA 320
+#define BX_TOKEN_IRQ 321
+#define BX_TOKEN_SMI 322
+#define BX_TOKEN_NMI 323
+#define BX_TOKEN_TLB 324
+#define BX_TOKEN_DISASM 325
+#define BX_TOKEN_INSTRUMENT 326
+#define BX_TOKEN_STRING 327
+#define BX_TOKEN_STOP 328
+#define BX_TOKEN_DOIT 329
+#define BX_TOKEN_CRC 330
+#define BX_TOKEN_TRACE 331
+#define BX_TOKEN_TRACEREG 332
+#define BX_TOKEN_TRACEMEM 333
+#define BX_TOKEN_SWITCH_MODE 334
+#define BX_TOKEN_SIZE 335
+#define BX_TOKEN_PTIME 336
+#define BX_TOKEN_TIMEBP_ABSOLUTE 337
+#define BX_TOKEN_TIMEBP 338
+#define BX_TOKEN_MODEBP 339
+#define BX_TOKEN_VMEXITBP 340
+#define BX_TOKEN_PRINT_STACK 341
+#define BX_TOKEN_BT 342
+#define BX_TOKEN_WATCH 343
+#define BX_TOKEN_UNWATCH 344
+#define BX_TOKEN_READ 345
+#define BX_TOKEN_WRITE 346
+#define BX_TOKEN_SHOW 347
+#define BX_TOKEN_LOAD_SYMBOLS 348
+#define BX_TOKEN_SYMBOLS 349
+#define BX_TOKEN_LIST_SYMBOLS 350
+#define BX_TOKEN_GLOBAL 351
+#define BX_TOKEN_WHERE 352
+#define BX_TOKEN_PRINT_STRING 353
+#define BX_TOKEN_NUMERIC 354
+#define BX_TOKEN_PAGE 355
+#define BX_TOKEN_HELP 356
+#define BX_TOKEN_XML 357
+#define BX_TOKEN_CALC 358
+#define BX_TOKEN_DEVICE 359
+#define BX_TOKEN_GENERIC 360
+#define BX_TOKEN_DEREF_CHR 361
+#define BX_TOKEN_RSHIFT 362
+#define BX_TOKEN_LSHIFT 363
+#define BX_TOKEN_EQ 364
+#define BX_TOKEN_NE 365
+#define BX_TOKEN_LE 366
+#define BX_TOKEN_GE 367
+#define BX_TOKEN_REG_IP 368
+#define BX_TOKEN_REG_EIP 369
+#define BX_TOKEN_REG_RIP 370
+#define BX_TOKEN_REG_SSP 371
+#define NOT 372
+#define NEG 373
+#define INDIRECT 374
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -303,7 +307,7 @@ union YYSTYPE
   Bit64u   uval;
   unsigned bval;
 
-#line 307 "y.tab.h"
+#line 311 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
