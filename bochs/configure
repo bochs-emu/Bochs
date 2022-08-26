@@ -22255,42 +22255,6 @@ then :
 fi
 
 
-  for ac_func in timelocal
-do :
-  ac_fn_c_check_func "$LINENO" "timelocal" "ac_cv_func_timelocal"
-if test "x$ac_cv_func_timelocal" = xyes
-then :
-  printf "%s\n" "#define HAVE_TIMELOCAL 1" >>confdefs.h
- printf "%s\n" "#define BX_HAVE_TIMELOCAL 1" >>confdefs.h
-
-fi
-
-done
-
-  for ac_func in gmtime
-do :
-  ac_fn_c_check_func "$LINENO" "gmtime" "ac_cv_func_gmtime"
-if test "x$ac_cv_func_gmtime" = xyes
-then :
-  printf "%s\n" "#define HAVE_GMTIME 1" >>confdefs.h
- printf "%s\n" "#define BX_HAVE_GMTIME 1" >>confdefs.h
-
-fi
-
-done
-
-  for ac_func in mktime
-do :
-  ac_fn_c_check_func "$LINENO" "mktime" "ac_cv_func_mktime"
-if test "x$ac_cv_func_mktime" = xyes
-then :
-  printf "%s\n" "#define HAVE_MKTIME 1" >>confdefs.h
- printf "%s\n" "#define BX_HAVE_MKTIME 1" >>confdefs.h
-
-fi
-
-done
-
 # Check whether --enable-largefile was given.
 if test ${enable_largefile+y}
 then :
