@@ -3,6 +3,8 @@
 *.lo
 *.a
 *.la
+*.orig
+*.rej
 obj-debug/
 obj-release/
 
