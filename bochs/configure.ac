@@ -1,10 +1,11 @@
 dnl // Process this file with autoconf to produce a configure script.
 
-AC_PREREQ(2.50)
-AC_INIT(bochs.h)
+AC_PREREQ([2.71])
+AC_INIT
+AC_CONFIG_SRCDIR([bochs.h])
 AC_REVISION([[$Id$]])
-AC_CONFIG_HEADER(config.h)
-AC_CONFIG_HEADER(ltdlconf.h)
+AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_HEADERS([ltdlconf.h])
 
 dnl // Put Bochs version information right here so that it gets substituted
 dnl // into all the right places.
@@ -181,18 +182,18 @@ if test "$MSVC_TARGET" = 0; then
   AC_CHECK_FUNCS(usleep, AC_DEFINE(BX_HAVE_USLEEP))
 
   AC_MSG_CHECKING(for __builtin_bswap32)
-  AC_TRY_LINK([],[
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[]], [[
     __builtin_bswap32(0x12345678);
-  ],[
+  ]])],[
     AC_DEFINE(BX_HAVE___BUILTIN_BSWAP32, 1, [Define to 1 if you have the '__builtin_bswap32' function.])
     AC_MSG_RESULT(yes)
   ],[
     AC_MSG_RESULT(no)
   ])
   AC_MSG_CHECKING(for __builtin_bswap64)
-  AC_TRY_LINK([],[
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[]], [[
     __builtin_bswap64(0x12345678);
-  ],[
+  ]])],[
     AC_DEFINE(BX_HAVE___BUILTIN_BSWAP64, 1, [Define to 1 if you have the '__builtin_bswap64' function.])
     AC_MSG_RESULT(yes)
   ],[
@@ -263,39 +264,33 @@ esac
 dnl ---end of largefile tests
 
 AC_MSG_CHECKING(if compiler allows __attribute__)
-AC_TRY_COMPILE([], [typedef struct { } __attribute__ ((packed)) junk;],
-    AC_MSG_RESULT(yes),
-    [
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[typedef struct { } __attribute__ ((packed)) junk;]])],[AC_MSG_RESULT(yes)],[
       AC_MSG_RESULT(no)
       AC_DEFINE(BX_NO_ATTRIBUTES)
     ])
 
 AC_LANG_SAVE
-AC_LANG_CPLUSPLUS
+AC_LANG([C++])
 AC_MSG_CHECKING(for set)
-AC_TRY_COMPILE([#include <set>], [],
-   [
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <set>]], [[]])],[
      AC_MSG_RESULT(yes)
      AC_DEFINE(BX_HAVE_SET)
-   ], AC_MSG_RESULT(no))
+   ],[AC_MSG_RESULT(no)])
 AC_MSG_CHECKING(for set.h)
-AC_TRY_COMPILE([#include <set.h>], [],
-   [
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <set.h>]], [[]])],[
      AC_MSG_RESULT(yes)
      AC_DEFINE(BX_HAVE_SET_H)
-   ], AC_MSG_RESULT(no))
+   ],[AC_MSG_RESULT(no)])
 AC_MSG_CHECKING(for map)
-AC_TRY_COMPILE([#include <map>], [],
-   [
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <map>]], [[]])],[
      AC_MSG_RESULT(yes)
      AC_DEFINE(BX_HAVE_MAP)
-   ], AC_MSG_RESULT(no))
+   ],[AC_MSG_RESULT(no)])
 AC_MSG_CHECKING(for map.h)
-AC_TRY_COMPILE([#include <map.h>], [],
-   [
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <map.h>]], [[]])],[
      AC_MSG_RESULT(yes)
      AC_DEFINE(BX_HAVE_MAP_H)
-   ], AC_MSG_RESULT(no))
+   ],[AC_MSG_RESULT(no)])
 AC_LANG_RESTORE
 
 dnl Implement a check for each gui library to see if has a chance of compiling.
@@ -506,9 +501,7 @@ if test "$bx_plugins" = 1 -a "$need_dlcompat_for_plugins" = 1; then
 fi
 
 AC_MSG_CHECKING(if compiler allows LL for 64-bit constants)
-AC_TRY_COMPILE([], [ { 42LL; } ],
-    AC_MSG_RESULT(yes),
-    [
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[ { 42LL; } ]])],[AC_MSG_RESULT(yes)],[
       AC_MSG_RESULT(no)
       AC_DEFINE(BX_64BIT_CONSTANTS_USE_LL, 0)
     ])
@@ -998,26 +991,22 @@ if test "$want_readline" = yes; then
     AC_MSG_CHECKING(if readline works without -lcurses)
     OLD_LIBS=$LIBS
     LIBS="$LIBS -lreadline"
-    AC_TRY_RUN([
+    AC_RUN_IFELSE([AC_LANG_SOURCE([[
       #include <stdio.h>
       #include <readline/readline.h>
       int main() { rl_initialize(); exit(0); }
-      ],
-      [ AC_MSG_RESULT(yes)
-        rl_without_curses_ok=yes ],
-      [ AC_MSG_RESULT(no) ]
-    )
+      ]])],[ AC_MSG_RESULT(yes)
+        rl_without_curses_ok=yes ],[ AC_MSG_RESULT(no) 
+    ],[])
     AC_MSG_CHECKING(if readline works with -lcurses)
     LIBS="$LIBS -lcurses"
-    AC_TRY_RUN([
+    AC_RUN_IFELSE([AC_LANG_SOURCE([[
       #include <stdio.h>
       #include <readline/readline.h>
       int main() { rl_initialize(); exit(0); }
-      ],
-      [AC_MSG_RESULT(yes)
-       rl_with_curses_ok=yes ],
-      [ AC_MSG_RESULT(no) ]
-    )
+      ]])],[AC_MSG_RESULT(yes)
+       rl_with_curses_ok=yes ],[ AC_MSG_RESULT(no) 
+    ],[])
     LIBS=$OLD_LIBS
 
     if test "$rl_without_curses_ok" = yes; then
@@ -3097,11 +3086,9 @@ for flag in $acx_pthread_flags; do
 	# pthread_cleanup_push because it is one of the few pthread
 	# functions on Solaris that doesn't have a non-functional libc stub.
 	# We try pthread_create on general principles.
-	AC_TRY_LINK([#include <pthread.h>],
-		    [pthread_t th; pthread_join(th, 0);
+	AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <pthread.h>]], [[pthread_t th; pthread_join(th, 0);
 		     pthread_attr_init(0); pthread_cleanup_push(0, 0);
-		     pthread_create(0,0,0,0); pthread_cleanup_pop(0); ],
-		    [acx_pthread_ok=yes])
+		     pthread_create(0,0,0,0); pthread_cleanup_pop(0); ]])],[acx_pthread_ok=yes],[])
 
 	LIBS="$save_LIBS"
 	CFLAGS="$save_CFLAGS"
@@ -3126,13 +3113,9 @@ if test "x$acx_pthread_ok" = xyes; then
 	# Detect AIX lossage: threads are created detached by default
 	# and the JOINABLE attribute has a nonstandard name (UNDETACHED).
 	AC_MSG_CHECKING([for joinable pthread attribute])
-	AC_TRY_LINK([#include <pthread.h>],
-		    [int attr=PTHREAD_CREATE_JOINABLE;],
-		    ok=PTHREAD_CREATE_JOINABLE, ok=unknown)
+	AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <pthread.h>]], [[int attr=PTHREAD_CREATE_JOINABLE;]])],[ok=PTHREAD_CREATE_JOINABLE],[ok=unknown])
 	if test x"$ok" = xunknown; then
-		AC_TRY_LINK([#include <pthread.h>],
-			    [int attr=PTHREAD_CREATE_UNDETACHED;],
-			    ok=PTHREAD_CREATE_UNDETACHED, ok=unknown)
+		AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <pthread.h>]], [[int attr=PTHREAD_CREATE_UNDETACHED;]])],[ok=PTHREAD_CREATE_UNDETACHED],[ok=unknown])
 	fi
 	if test x"$ok" != xPTHREAD_CREATE_JOINABLE; then
 		AC_DEFINE(PTHREAD_CREATE_JOINABLE, $ok,
@@ -3301,14 +3284,15 @@ AC_PATH_PROG(GZIP, gzip)
 AC_PATH_PROG(TAR, tar)
 AC_PATH_PROG(IASL, iasl, not_found)
 
-AC_OUTPUT(Makefile iodev/Makefile iodev/display/Makefile iodev/hdimage/Makefile \
+AC_CONFIG_FILES([Makefile iodev/Makefile iodev/display/Makefile iodev/hdimage/Makefile \
 	 iodev/usb/Makefile iodev/network/Makefile iodev/sound/Makefile \
 	 bx_debug/Makefile bios/Makefile cpu/Makefile cpu/avx/Makefile \
 	 cpu/cpudb/Makefile cpu/fpu/Makefile memory/Makefile gui/Makefile \
 	 ${INSTRUMENT_DIR}/Makefile misc/Makefile \
 	 doc/docbook/Makefile build/linux/bochs-dlx bxversion.h bxversion.rc \
 	 build/macosx/Info.plist build/win32/nsis/Makefile \
-	 build/win32/nsis/bochs.nsi host/linux/pcidev/Makefile ${USER_PLUGINS_MAKEFILE})
+	 build/win32/nsis/bochs.nsi host/linux/pcidev/Makefile ${USER_PLUGINS_MAKEFILE}])
+AC_OUTPUT
 
 # Create some subdirectories for when you run configure from some other
 # directory (part #2).
