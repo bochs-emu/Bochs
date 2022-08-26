@@ -18,6 +18,7 @@
   --enable-svm \
   --enable-vmx=2 \
   --enable-avx \
+  --enable-cet \
   --enable-evex \
   --enable-perfmon \
   --enable-memtype \
