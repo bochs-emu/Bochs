@@ -313,7 +313,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT_RDRAND                  (1 << 30)
 #define BX_CPUID_EXT_RESERVED31              (1 << 31)
 
-// CPUID defines - EXT3 features CPUID[0x00000007].EBX
+// CPUID defines - EXT3 features CPUID[0x00000007].EBX [subleaf 0]
 // -----------------------------
 
 //   [0:0]    FS/GS BASE access instructions
@@ -382,7 +382,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT3_AVX512BW               (1 << 30)
 #define BX_CPUID_EXT3_AVX512VL               (1 << 31)
 
-// CPUID defines - EXT4 features CPUID[0x00000007].ECX
+// CPUID defines - EXT4 features CPUID[0x00000007].ECX  [subleaf 0]
 // -----------------------------
 
 //   [0:0]    PREFETCHWT1 instruction support
@@ -447,7 +447,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT4_SGX_LAUNCH_CONFIG      (1 << 30)
 #define BX_CPUID_EXT4_PKS                    (1 << 31)
 
-// CPUID defines - EXT5 features CPUID[0x00000007].EDX
+// CPUID defines - EXT5 features CPUID[0x00000007].EDX  [subleaf 0]
 // -----------------------------
 //   [1:0]    reserved
 //   [2:2]    AVX512 4VNNIW instructions support
@@ -510,6 +510,30 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT5_ARCH_CAPABILITIES_MSR  (1 << 29)
 #define BX_CPUID_EXT5_CORE_CAPABILITIES_MSR  (1 << 30)
 #define BX_CPUID_EXT5_SCA_SSBD               (1 << 31)
+
+// CPUID defines - EXT6 features CPUID[0x00000007].EAX  [subleaf 1]
+// -----------------------------
+//   [3:0]    reserved
+//   [4:4]    AVX VNNI
+//   [5:5]    AVX512_BF16 conversion instructions support
+//   [9:6]    reserved
+//   [10:10]  Fast zero-length REP MOVSB
+//   [11:11]  Fast zero-length REP STOSB
+//   [12:12]  Fast zero-length REP CMPSB/SCASB
+//   [21:13]  reserved
+//   [22:22]  HRESET and CPUID leaf 0x20 support
+//   [31:23]  reserved
+
+// ...
+#define BX_CPUID_EXT6_AVX_VNNI               (1 <<  4)
+#define BX_CPUID_EXT6_AVX512_BF16            (1 <<  5)
+// ...
+#define BX_CPUID_EXT6_FAST_ZEROLEN_REP_MOVSB (1 << 10)
+#define BX_CPUID_EXT6_FAST_ZEROLEN_REP_STOSB (1 << 11)
+#define BX_CPUID_EXT6_FAST_ZEROLEN_REP_CMPSB (1 << 12)
+// ...
+#define BX_CPUID_EXT6_HRESET                 (1 << 22)
+// ...
 
 // CPUID defines - STD2 features CPUID[0x80000001].EDX
 // -----------------------------
