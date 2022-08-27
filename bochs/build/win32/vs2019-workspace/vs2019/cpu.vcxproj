@@ -131,6 +131,7 @@
     <ClCompile Include="..\cpu\bmi32.cc" />
     <ClCompile Include="..\cpu\bmi64.cc" />
     <ClCompile Include="..\cpu\call_far.cc" />
+    <ClCompile Include="..\cpu\cet.cc" />
     <ClCompile Include="..\cpu\cpu.cc" />
     <ClCompile Include="..\cpu\cpuid.cc" />
     <ClCompile Include="..\cpu\crc32.cc" />
@@ -232,6 +233,7 @@
     <ClInclude Include="..\cpu\ia_opcodes.def" />
     <ClInclude Include="..\cpu\icache.h" />
     <ClInclude Include="..\cpu\lazy_flags.h" />
+    <ClInclude Include="..\cpu\msr.h" />
     <ClInclude Include="..\cpu\scalar_arith.h" />
     <ClInclude Include="..\cpu\simd_compare.h" />
     <ClInclude Include="..\cpu\simd_int.h" />

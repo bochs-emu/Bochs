@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -125,6 +125,8 @@
     <ClCompile Include="..\cpu\cpudb\intel\atom_n270.cc" />
     <ClCompile Include="..\cpu\cpudb\intel\broadwell_ult.cc" />
     <ClCompile Include="..\cpu\cpudb\intel\core2_penryn_t9600.cc" />
+    <ClCompile Include="..\cpu\cpudb\intel\corei3_cnl.cc" />
+    <ClCompile Include="..\cpu\cpudb\intel\corei7_icelake-u.cc" />
     <ClCompile Include="..\cpu\cpudb\intel\core_duo_t2400_yonah.cc" />
     <ClCompile Include="..\cpu\cpudb\intel\corei5_arrandale_m520.cc" />
     <ClCompile Include="..\cpu\cpudb\intel\corei5_lynnfield_750.cc" />
@@ -138,11 +140,15 @@
     <ClCompile Include="..\cpu\cpudb\intel\p4_willamette.cc" />
     <ClCompile Include="..\cpu\cpudb\intel\pentium.cc" />
     <ClCompile Include="..\cpu\cpudb\intel\pentium_mmx.cc" />
+    <ClCompile Include="..\cpu\cpudb\intel\tigerlake.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\bochs.h" />
     <ClInclude Include="..\config.h" />
     <ClInclude Include="..\cpu\cpu.h" />
+    <ClInclude Include="..\cpu\cpudb\intel\corei3_cnl.h" />
+    <ClInclude Include="..\cpu\cpudb\intel\corei7_icelake-u.h" />
+    <ClInclude Include="..\cpu\cpudb\intel\tigerlake.h" />
     <ClInclude Include="..\cpu\cpuid.h" />
     <ClInclude Include="..\cpu\cpudb\amd\amd_k6_2_chomper.h" />
     <ClInclude Include="..\cpu\cpudb\amd\athlon64_clawhammer.h" />
