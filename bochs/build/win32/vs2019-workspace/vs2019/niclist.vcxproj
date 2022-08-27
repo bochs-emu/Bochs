@@ -42,12 +42,12 @@
     <_ProjectFileVersion>12.0.21005.1</_ProjectFileVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>.\..\obj-debug\niclist\</OutDir>
+    <OutDir>.\..\obj-debug\</OutDir>
     <IntDir>.\..\obj-debug\niclist\</IntDir>
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>.\..\obj-release\niclist\</OutDir>
+    <OutDir>.\..\obj-release\</OutDir>
     <IntDir>.\..\obj-release\niclist\</IntDir>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>

@@ -42,11 +42,11 @@
     <_ProjectFileVersion>12.0.21005.1</_ProjectFileVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>.\..\obj-debug\fpu\</OutDir>
+    <OutDir>.\..\obj-debug\</OutDir>
     <IntDir>.\..\obj-debug\fpu\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>.\..\obj-release\fpu\</OutDir>
+    <OutDir>.\..\obj-release\</OutDir>
     <IntDir>.\..\obj-release\fpu\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

@@ -42,12 +42,12 @@
     <_ProjectFileVersion>12.0.21005.1</_ProjectFileVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>.\..\obj-debug\bximage\</OutDir>
+    <OutDir>.\..\obj-debug\</OutDir>
     <IntDir>.\..\obj-debug\bximage\</IntDir>
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>.\..\obj-release\bximage\</OutDir>
+    <OutDir>.\..\obj-release\</OutDir>
     <IntDir>.\..\obj-release\bximage\</IntDir>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>

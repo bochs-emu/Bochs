@@ -42,11 +42,11 @@
     <_ProjectFileVersion>12.0.21005.1</_ProjectFileVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>.\..\obj-debug\bx_debug\</OutDir>
+    <OutDir>.\..\obj-debug\</OutDir>
     <IntDir>.\..\obj-debug\bx_debug\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>.\..\obj-release\bx_debug\</OutDir>
+    <OutDir>.\..\obj-release\</OutDir>
     <IntDir>.\..\obj-release\bx_debug\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
