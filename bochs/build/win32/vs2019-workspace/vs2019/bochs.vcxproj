@@ -177,10 +177,6 @@
       <Project>{5328580d-7383-4acc-95c1-9258500b6e56}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="disasm.vcxproj">
-      <Project>{66392e55-53bc-4743-8712-55d8dc7d61e0}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
     <ProjectReference Include="fpu.vcxproj">
       <Project>{5661cd4e-ba54-4e67-a586-bb014ac94614}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
