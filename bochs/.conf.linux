@@ -32,6 +32,7 @@ case $which_config in
                 --enable-cpu-level=6 \
                 --enable-x86-64 \
                 --enable-vmx=2 \
+                --enable-avx \
                 --enable-pci \
                 --enable-clgd54xx \
                 --enable-voodoo \
@@ -57,6 +58,7 @@ case $which_config in
                 --enable-cpu-level=6 \
                 --enable-x86-64 \
                 --enable-vmx=2 \
+                --enable-avx \
                 --enable-pci \
                 --enable-clgd54xx \
                 --enable-voodoo \
