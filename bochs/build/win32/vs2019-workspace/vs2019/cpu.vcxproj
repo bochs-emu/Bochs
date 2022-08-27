@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -245,6 +245,11 @@
     <ClInclude Include="..\cpu\vmx.h" />
     <ClInclude Include="..\cpu\wide_int.h" />
     <ClInclude Include="..\cpu\xmm.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="avx.vcxproj">
+      <Project>{57a4215b-7e87-447a-a0f4-5bbc0866a3d8}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
