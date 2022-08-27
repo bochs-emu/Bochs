@@ -1,0 +1,179 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{9EFB2055-35E8-42E9-A274-F4987CB2A655}</ProjectGuid>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v142</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v142</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>12.0.21005.1</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>.\..\obj-release\</OutDir>
+    <IntDir>.\..\obj-release\iodev_network\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>.\..\obj-debug\</OutDir>
+    <IntDir>.\..\obj-debug\iodev_network\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <BuildLog>
+      <Path>$(IntDir)BuildLog-$(TargetName).log</Path>
+    </BuildLog>
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <AdditionalIncludeDirectories>..;..\instrument\stubs;..\iodev;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <ExceptionHandling />
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PrecompiledHeaderOutputFile>.\..\obj-release\iodev_network\iodev_network.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\..\obj-release\iodev_network\</AssemblerListingLocation>
+      <ObjectFileName>.\..\obj-release\iodev_network\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\obj-release\iodev_network\</ProgramDataBaseFileName>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <CallingConvention>FastCall</CallingConvention>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Lib>
+      <OutputFile>.\..\obj-release\iodev_network.lib</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Lib>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\..\obj-release\iodev_network.bsc</OutputFile>
+    </Bscmake>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <BuildLog>
+      <Path>$(IntDir)BuildLog-$(TargetName).log</Path>
+    </BuildLog>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..;..\instrument\stubs;..\iodev;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PrecompiledHeaderOutputFile>.\..\obj-debug\iodev_network\iodev_network.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\..\obj-debug\iodev_network\</AssemblerListingLocation>
+      <ObjectFileName>.\..\obj-debug\iodev_network\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\obj-debug\iodev_network\</ProgramDataBaseFileName>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>OldStyle</DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Lib>
+      <OutputFile>.\..\obj-debug\iodev_network.lib</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Lib>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\..\obj-debug\iodev_network.bsc</OutputFile>
+    </Bscmake>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\iodev\network\e1000.cc" />
+    <ClCompile Include="..\iodev\network\eth_null.cc" />
+    <ClCompile Include="..\iodev\network\eth_slirp.cc" />
+    <ClCompile Include="..\iodev\network\eth_socket.cc" />
+    <ClCompile Include="..\iodev\network\eth_vnet.cc" />
+    <ClCompile Include="..\iodev\network\eth_win32.cc" />
+    <ClCompile Include="..\iodev\network\ne2k.cc" />
+    <ClCompile Include="..\iodev\network\netmod.cc" />
+    <ClCompile Include="..\iodev\network\netutil.cc" />
+    <ClCompile Include="..\iodev\network\pcipnic.cc" />
+    <ClCompile Include="..\iodev\network\slirp\arp_table.cc" />
+    <ClCompile Include="..\iodev\network\slirp\bootp.cc" />
+    <ClCompile Include="..\iodev\network\slirp\cksum.cc" />
+    <ClCompile Include="..\iodev\network\slirp\compat.cc" />
+    <ClCompile Include="..\iodev\network\slirp\dnssearch.cc" />
+    <ClCompile Include="..\iodev\network\slirp\if.cc" />
+    <ClCompile Include="..\iodev\network\slirp\ip_icmp.cc" />
+    <ClCompile Include="..\iodev\network\slirp\ip_input.cc" />
+    <ClCompile Include="..\iodev\network\slirp\ip_output.cc" />
+    <ClCompile Include="..\iodev\network\slirp\mbuf.cc" />
+    <ClCompile Include="..\iodev\network\slirp\misc.cc" />
+    <ClCompile Include="..\iodev\network\slirp\sbuf.cc" />
+    <ClCompile Include="..\iodev\network\slirp\slirp.cc" />
+    <ClCompile Include="..\iodev\network\slirp\socket.cc" />
+    <ClCompile Include="..\iodev\network\slirp\tcp_input.cc" />
+    <ClCompile Include="..\iodev\network\slirp\tcp_output.cc" />
+    <ClCompile Include="..\iodev\network\slirp\tcp_subr.cc" />
+    <ClCompile Include="..\iodev\network\slirp\tcp_timer.cc" />
+    <ClCompile Include="..\iodev\network\slirp\tftp.cc" />
+    <ClCompile Include="..\iodev\network\slirp\udp.cc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\iodev\network\e1000.h" />
+    <ClInclude Include="..\iodev\network\ne2k.h" />
+    <ClInclude Include="..\iodev\network\netmod.h" />
+    <ClInclude Include="..\iodev\network\netutil.h" />
+    <ClInclude Include="..\iodev\network\pcipnic.h" />
+    <ClInclude Include="..\iodev\network\pnic_api.h" />
+    <ClInclude Include="..\iodev\network\slirp\bootp.h" />
+    <ClInclude Include="..\iodev\network\slirp\compat.h" />
+    <ClInclude Include="..\iodev\network\slirp\debug.h" />
+    <ClInclude Include="..\iodev\network\slirp\if.h" />
+    <ClInclude Include="..\iodev\network\slirp\ip.h" />
+    <ClInclude Include="..\iodev\network\slirp\ip_icmp.h" />
+    <ClInclude Include="..\iodev\network\slirp\libslirp.h" />
+    <ClInclude Include="..\iodev\network\slirp\main.h" />
+    <ClInclude Include="..\iodev\network\slirp\mbuf.h" />
+    <ClInclude Include="..\iodev\network\slirp\misc.h" />
+    <ClInclude Include="..\iodev\network\slirp\sbuf.h" />
+    <ClInclude Include="..\iodev\network\slirp\slirp.h" />
+    <ClInclude Include="..\iodev\network\slirp\slirp_config.h" />
+    <ClInclude Include="..\iodev\network\slirp\socket.h" />
+    <ClInclude Include="..\iodev\network\slirp\tcp.h" />
+    <ClInclude Include="..\iodev\network\slirp\tcp_timer.h" />
+    <ClInclude Include="..\iodev\network\slirp\tcp_var.h" />
+    <ClInclude Include="..\iodev\network\slirp\tcpip.h" />
+    <ClInclude Include="..\iodev\network\slirp\tftp.h" />
+    <ClInclude Include="..\iodev\network\slirp\udp.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

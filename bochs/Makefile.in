@@ -497,21 +497,18 @@ uninstall::
 	for i in $(MAN_PAGE_1_LIST); do $(RM) -f $(man1dir)/$$i.1.gz; done
 	for i in $(MAN_PAGE_5_LIST); do $(RM) -f $(man5dir)/$$i.5.gz; done
 
-VS2019_WORKSPACE_ZIP=build/win32/vs2019-workspace.zip
-VS2019_WORKSPACE_FILES=vs2019/bochs.sln vs2019/*.vcxproj
-
-vs2019workspace:
-	zip $(VS2019_WORKSPACE_ZIP) $(VS2019_WORKSPACE_FILES)
+VS2019_WORKSPACE_SRC=build/win32/vs2019-workspace/vs2019
+VS2019_WORKSPACE_DST=vs2019
 
 ########
 # the win32_snap target is used to create a ZIP of bochs sources configured
 # for VC++.  This ZIP is stuck on the website every once in a while to make
 # it easier for VC++ users to compile bochs.  First, you should
 # run "sh .conf.win32-vcpp" to configure the source code, then do
-# "make win32_snap" to unzip the workspace files and create the ZIP.
+# "make win32_snap" to copy the workspace files and create the ZIP.
 ########
 win32_snap:
-	unzip $(VS2019_WORKSPACE_ZIP)
+	cp -r $(VS2019_WORKSPACE_SRC) $(VS2019_WORKSPACE_DST)
 	$(MAKE) zip
 
 tar:

@@ -1,0 +1,179 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{25A3CFB3-8943-4D9C-84BE-DA3E3C8A4115}</ProjectGuid>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v142</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v142</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>12.0.21005.1</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>.\..\obj-release\</OutDir>
+    <IntDir>.\..\obj-release\iodev\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>.\..\obj-debug\</OutDir>
+    <IntDir>.\..\obj-debug\iodev\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <BuildLog>
+      <Path>$(IntDir)BuildLog-$(TargetName).log</Path>
+    </BuildLog>
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <AdditionalIncludeDirectories>..;..\instrument\stubs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <ExceptionHandling />
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PrecompiledHeaderOutputFile>.\..\obj-release\iodev\iodev.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\..\obj-release\iodev\</AssemblerListingLocation>
+      <ObjectFileName>.\..\obj-release\iodev\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\obj-release\iodev\</ProgramDataBaseFileName>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <CallingConvention>FastCall</CallingConvention>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Lib>
+      <OutputFile>.\..\obj-release\iodev.lib</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Lib>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\..\obj-release\iodev\iodev.bsc</OutputFile>
+    </Bscmake>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <BuildLog>
+      <Path>$(IntDir)BuildLog-$(TargetName).log</Path>
+    </BuildLog>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..;..\instrument\stubs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PrecompiledHeaderOutputFile>.\..\obj-debug\iodev\iodev.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\..\obj-debug\iodev\</AssemblerListingLocation>
+      <ObjectFileName>.\..\obj-debug\iodev\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\obj-debug\iodev\</ProgramDataBaseFileName>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>OldStyle</DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Lib>
+      <OutputFile>.\..\obj-debug\iodev.lib</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Lib>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\..\obj-debug\iodev\iodev.bsc</OutputFile>
+    </Bscmake>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\iodev\acpi.cc" />
+    <ClCompile Include="..\iodev\biosdev.cc" />
+    <ClCompile Include="..\iodev\busmouse.cc" />
+    <ClCompile Include="..\iodev\cmos.cc" />
+    <ClCompile Include="..\iodev\devices.cc" />
+    <ClCompile Include="..\iodev\dma.cc" />
+    <ClCompile Include="..\iodev\extfpuirq.cc" />
+    <ClCompile Include="..\iodev\floppy.cc" />
+    <ClCompile Include="..\iodev\gameport.cc" />
+    <ClCompile Include="..\iodev\harddrv.cc" />
+    <ClCompile Include="..\iodev\hpet.cc" />
+    <ClCompile Include="..\iodev\ioapic.cc" />
+    <ClCompile Include="..\iodev\iodebug.cc" />
+    <ClCompile Include="..\iodev\keyboard.cc" />
+    <ClCompile Include="..\iodev\parallel.cc" />
+    <ClCompile Include="..\iodev\pci.cc" />
+    <ClCompile Include="..\iodev\pci2isa.cc" />
+    <ClCompile Include="..\iodev\pci_ide.cc" />
+    <ClCompile Include="..\iodev\pic.cc" />
+    <ClCompile Include="..\iodev\pit.cc" />
+    <ClCompile Include="..\iodev\pit82c54.cc" />
+    <ClCompile Include="..\iodev\scancodes.cc" />
+    <ClCompile Include="..\iodev\serial.cc" />
+    <ClCompile Include="..\iodev\serial_raw.cc" />
+    <ClCompile Include="..\iodev\slowdown_timer.cc" />
+    <ClCompile Include="..\iodev\speaker.cc" />
+    <ClCompile Include="..\iodev\unmapped.cc" />
+    <ClCompile Include="..\iodev\virt_timer.cc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\iodev\acpi.h" />
+    <ClInclude Include="..\iodev\biosdev.h" />
+    <ClInclude Include="..\iodev\busmouse.h" />
+    <ClInclude Include="..\iodev\cmos.h" />
+    <ClInclude Include="..\iodev\dma.h" />
+    <ClInclude Include="..\iodev\extfpuirq.h" />
+    <ClInclude Include="..\iodev\floppy.h" />
+    <ClInclude Include="..\iodev\gameport.h" />
+    <ClInclude Include="..\iodev\harddrv.h" />
+    <ClInclude Include="..\iodev\hpet.h" />
+    <ClInclude Include="..\iodev\ioapic.h" />
+    <ClInclude Include="..\iodev\iodebug.h" />
+    <ClInclude Include="..\iodev\iodev.h" />
+    <ClInclude Include="..\iodev\keyboard.h" />
+    <ClInclude Include="..\iodev\parallel.h" />
+    <ClInclude Include="..\iodev\pci.h" />
+    <ClInclude Include="..\iodev\pci2isa.h" />
+    <ClInclude Include="..\iodev\pci_ide.h" />
+    <ClInclude Include="..\iodev\pic.h" />
+    <ClInclude Include="..\iodev\pit.h" />
+    <ClInclude Include="..\iodev\pit82c54.h" />
+    <ClInclude Include="..\iodev\scancodes.h" />
+    <ClInclude Include="..\iodev\serial.h" />
+    <ClInclude Include="..\iodev\serial_raw.h" />
+    <ClInclude Include="..\iodev\slowdown_timer.h" />
+    <ClInclude Include="..\iodev\speaker.h" />
+    <ClInclude Include="..\iodev\unmapped.h" />
+    <ClInclude Include="..\iodev\virt_timer.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

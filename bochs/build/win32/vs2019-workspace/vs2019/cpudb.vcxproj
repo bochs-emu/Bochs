@@ -1,0 +1,181 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{5328580D-7383-4ACC-95C1-9258500B6E56}</ProjectGuid>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v142</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v142</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>12.0.21005.1</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>.\..\obj-debug\</OutDir>
+    <IntDir>.\..\obj-debug\cpudb\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>.\..\obj-release\</OutDir>
+    <IntDir>.\..\obj-release\cpudb\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <BuildLog>
+      <Path>$(IntDir)BuildLog-$(TargetName).log</Path>
+    </BuildLog>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\;..\cpu\;..\instrument\stubs\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PrecompiledHeaderOutputFile>.\..\obj-debug\cpudb\cpudb.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\..\obj-debug\cpudb\</AssemblerListingLocation>
+      <ObjectFileName>.\..\obj-debug\cpudb\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\obj-debug\cpudb\</ProgramDataBaseFileName>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>OldStyle</DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Lib>
+      <OutputFile>.\..\obj-debug\cpudb.lib</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Lib>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\..\obj-debug/cpudb.bsc</OutputFile>
+    </Bscmake>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <BuildLog>
+      <Path>$(IntDir)BuildLog-$(TargetName).log</Path>
+    </BuildLog>
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <AdditionalIncludeDirectories>..;..\cpu\;..\instrument\stubs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <ExceptionHandling />
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PrecompiledHeaderOutputFile>.\..\obj-release\cpudb\cpudb.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\..\obj-release\cpudb\</AssemblerListingLocation>
+      <ObjectFileName>.\..\obj-release\cpudb\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\obj-release\cpudb\</ProgramDataBaseFileName>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <CallingConvention>FastCall</CallingConvention>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Lib>
+      <OutputFile>.\..\obj-release\cpudb.lib</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Lib>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\..\obj-release\cpudb.bsc</OutputFile>
+    </Bscmake>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\cpu\cpudb\amd\amd_k6_2_chomper.cc" />
+    <ClCompile Include="..\cpu\cpudb\amd\athlon64_clawhammer.cc" />
+    <ClCompile Include="..\cpu\cpudb\amd\athlon64_venice.cc" />
+    <ClCompile Include="..\cpu\cpudb\amd\phenomx3_8650_toliman.cc" />
+    <ClCompile Include="..\cpu\cpudb\amd\ryzen.cc" />
+    <ClCompile Include="..\cpu\cpudb\amd\trinity_apu.cc" />
+    <ClCompile Include="..\cpu\cpudb\amd\turion64_tyler.cc" />
+    <ClCompile Include="..\cpu\cpudb\amd\zambezi.cc" />
+    <ClCompile Include="..\cpu\cpudb\intel\atom_n270.cc" />
+    <ClCompile Include="..\cpu\cpudb\intel\broadwell_ult.cc" />
+    <ClCompile Include="..\cpu\cpudb\intel\core2_penryn_t9600.cc" />
+    <ClCompile Include="..\cpu\cpudb\intel\corei3_cnl.cc" />
+    <ClCompile Include="..\cpu\cpudb\intel\corei7_icelake-u.cc" />
+    <ClCompile Include="..\cpu\cpudb\intel\core_duo_t2400_yonah.cc" />
+    <ClCompile Include="..\cpu\cpudb\intel\corei5_arrandale_m520.cc" />
+    <ClCompile Include="..\cpu\cpudb\intel\corei5_lynnfield_750.cc" />
+    <ClCompile Include="..\cpu\cpudb\intel\corei7_haswell_4770.cc" />
+    <ClCompile Include="..\cpu\cpudb\intel\corei7_ivy_bridge_3770K.cc" />
+    <ClCompile Include="..\cpu\cpudb\intel\corei7_sandy_bridge_2600K.cc" />
+    <ClCompile Include="..\cpu\cpudb\intel\corei7_skylake-x.cc" />
+    <ClCompile Include="..\cpu\cpudb\intel\p2_klamath.cc" />
+    <ClCompile Include="..\cpu\cpudb\intel\p3_katmai.cc" />
+    <ClCompile Include="..\cpu\cpudb\intel\p4_prescott_celeron_336.cc" />
+    <ClCompile Include="..\cpu\cpudb\intel\p4_willamette.cc" />
+    <ClCompile Include="..\cpu\cpudb\intel\pentium.cc" />
+    <ClCompile Include="..\cpu\cpudb\intel\pentium_mmx.cc" />
+    <ClCompile Include="..\cpu\cpudb\intel\tigerlake.cc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\bochs.h" />
+    <ClInclude Include="..\config.h" />
+    <ClInclude Include="..\cpu\cpu.h" />
+    <ClInclude Include="..\cpu\cpudb\intel\corei3_cnl.h" />
+    <ClInclude Include="..\cpu\cpudb\intel\corei7_icelake-u.h" />
+    <ClInclude Include="..\cpu\cpudb\intel\tigerlake.h" />
+    <ClInclude Include="..\cpu\cpuid.h" />
+    <ClInclude Include="..\cpu\cpudb\amd\amd_k6_2_chomper.h" />
+    <ClInclude Include="..\cpu\cpudb\amd\athlon64_clawhammer.h" />
+    <ClInclude Include="..\cpu\cpudb\amd\athlon64_venice.h" />
+    <ClInclude Include="..\cpu\cpudb\amd\phenomx3_8650_toliman.h" />
+    <ClInclude Include="..\cpu\cpudb\amd\ryzen.h" />
+    <ClInclude Include="..\cpu\cpudb\amd\trinity_apu.h" />
+    <ClInclude Include="..\cpu\cpudb\amd\turion64_tyler.h" />
+    <ClInclude Include="..\cpu\cpudb\amd\zambezi.h" />
+    <ClInclude Include="..\cpu\cpudb\intel\atom_n270.h" />
+    <ClInclude Include="..\cpu\cpudb\intel\broadwell_ult.h" />
+    <ClInclude Include="..\cpu\cpudb\intel\core2_penryn_t9600.h" />
+    <ClInclude Include="..\cpu\cpudb\intel\core_duo_t2400_yonah.h" />
+    <ClInclude Include="..\cpu\cpudb\intel\corei5_arrandale_m520.h" />
+    <ClInclude Include="..\cpu\cpudb\intel\corei5_lynnfield_750.h" />
+    <ClInclude Include="..\cpu\cpudb\intel\corei7_haswell_4770.h" />
+    <ClInclude Include="..\cpu\cpudb\intel\corei7_ivy_bridge_3770K.h" />
+    <ClInclude Include="..\cpu\cpudb\intel\corei7_sandy_bridge_2600K.h" />
+    <ClInclude Include="..\cpu\cpudb\intel\corei7_skylake-x.h" />
+    <ClInclude Include="..\cpu\cpudb\intel\p2_klamath.h" />
+    <ClInclude Include="..\cpu\cpudb\intel\p3_katmai.h" />
+    <ClInclude Include="..\cpu\cpudb\intel\p4_prescott_celeron_336.h" />
+    <ClInclude Include="..\cpu\cpudb\intel\p4_willamette.h" />
+    <ClInclude Include="..\cpu\cpudb\intel\pentium.h" />
+    <ClInclude Include="..\cpu\cpudb\intel\pentium_mmx.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
