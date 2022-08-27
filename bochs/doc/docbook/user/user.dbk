@@ -33,7 +33,7 @@ This is the top level file for the Bochs Users Manual.
 <chapter id="introduction"><title>Introduction to Bochs</title>
 <section id="whatisbochs"><title>What is Bochs?</title>
 <para>
-Bochs is a program that simulates a complete Intel x86 computer.  
+Bochs is a program that simulates a complete Intel x86 computer.
 It includes emulation of the Intel x86 CPU, common I/O devices,
 and a custom BIOS. Bochs can be compiled to emulate many different
 x86 CPUs, from early 386 to the most recent x86-64 Intel and AMD
@@ -2653,10 +2653,10 @@ This example shows the output of a compilation and installation on Linux.
   g++ -o bochs -g -O2 -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES -DBX_SHARE_PATH=\"/usr/local/share/bochs\" logio.o main.o config.o load32bitOShack.o pc_system.o osdep.o plugin.o crc.o -Wl,--export-dynamic  iodev/libiodev.a cpu/libcpu.a cpu/cpudb/libcpudb.a memory/libmemory.a gui/libgui.a disasm/libdisasm.a fpu/libfpu.a -lSM -lICE -lX11 -lXpm -lXrandr -lm
   gcc -c -I. -I./. -Iinstrument/stubs -I./instrument/stubs -g -O2 -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES   ./misc/bximage.c -o misc/bximage.o
   /bin/sh ./libtool --mode=link g++ -o bximage -g -O2 -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES     misc/bximage.o
-  g++ -o bximage -g -O2 -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES misc/bximage.o 
+  g++ -o bximage -g -O2 -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES misc/bximage.o
   gcc -c -I. -I./. -Iinstrument/stubs -I./instrument/stubs -g -O2 -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES   ./misc/bxcommit.c -o misc/bxcommit.o
   /bin/sh ./libtool --mode=link g++ -o bxcommit -g -O2 -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES    misc/bxcommit.o
-  g++ -o bxcommit -g -O2 -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES misc/bxcommit.o 
+  g++ -o bxcommit -g -O2 -D_FILE_OFFSET_BITS=64 -D_LARGE_FILES misc/bxcommit.o
   user$ <command>su</command>
   root# <command>make install</command>
   cd iodev && \
@@ -3525,7 +3525,7 @@ See example in msrs.def.
 <para><command>ignore_bad_msrs</command></para>
 <para>
 Ignore MSR references that Bochs does not understand; print a warning message
-instead of generating #GP exception. This option is enabled by default but 
+instead of generating #GP exception. This option is enabled by default but
 will not be available if configurable MSRs are enabled.
 </para>
 <para><anchor id="bochsopt-cpu-ips"><command>ips</command></para>
@@ -3936,7 +3936,7 @@ Approximate time in microseconds between attempts to paste
 characters to the keyboard controller. This leaves time for the
 guest os to deal with the flow of characters.  The ideal setting
 depends on how your operating system processes characters.  The
-default of 100000 usec (.1 seconds) was chosen because it works 
+default of 100000 usec (.1 seconds) was chosen because it works
 consistently in Windows.
 </para>
 <para>
@@ -4046,7 +4046,7 @@ to AGP.
 </para>
 <para><command>advopts</command></para>
 <para>
-With the advanced PCI options it is possible to control the behaviour of the 
+With the advanced PCI options it is possible to control the behaviour of the
 PCI chipset. These options can be specified as comma-separated values.
 By default the "Bochs i440FX" chipset enables the ACPI and HPET devices, but
 original i440FX doesn't support them. The options 'noacpi' and 'nohpet' make
@@ -5131,7 +5131,7 @@ define a convention here, to display on the console of the system running
 Bochs anything that is written to it. The idea is to provide debug output
 very early when writing BIOS or OS code for example, without having to
 bother with setting up a serial port or etc. Reading from port 0xE9 will
-will return 0xe9 to let you know if the feature is available. Leave  
+will return 0xe9 to let you know if the feature is available. Leave
 this 0 unless you have a reason to use it.
 </para>
 </section>
@@ -5676,7 +5676,7 @@ Some of these features may not be implemented or work different on your host pla
 
 <section id="command-mode"><title>Command mode</title>
 <para>
-When using 'sdl', 'sdl2', 'win32' or 'x' as the <command>display_library</command>, the 
+When using 'sdl', 'sdl2', 'win32' or 'x' as the <command>display_library</command>, the
 option 'cmdmode' enables the "command mode" support. If enabled, pressing the F7
 key will enter 'command mode' (shown in the info item of the statusbar);
 the next key that is pressed will exit command-mode. When in command-mode,
@@ -6704,10 +6704,10 @@ From here, you may use the following commands:
 
   calc|? expr       Evaluate an expression and display the result.
                     'expr' can reference any general-purpose, opmask and segment
-                    registers, use any arithmetic and logic operations, and also 
-                    special ':' operator which computes the linear address of a 
-                    segment:offset (in real and v86 mode) or of a selector:offset 
-                    (in protected mode) pair. Use $ operator for dereference, 
+                    registers, use any arithmetic and logic operations, and also
+                    special ':' operator which computes the linear address of a
+                    segment:offset (in real and v86 mode) or of a selector:offset
+                    (in protected mode) pair. Use $ operator for dereference,
                     for example get value of [[[rax]]] or ***rax: rax$3.
 
 </screen>

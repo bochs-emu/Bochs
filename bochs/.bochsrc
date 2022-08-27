@@ -41,14 +41,14 @@
 #=======================================================================
 # DISPLAY_LIBRARY
 #
-# The display library is the code that displays the Bochs VGA screen.  Bochs 
-# has a selection of about 10 different display library implementations for 
-# different platforms.  If you run configure with multiple --with-* options, 
+# The display library is the code that displays the Bochs VGA screen.  Bochs
+# has a selection of about 10 different display library implementations for
+# different platforms.  If you run configure with multiple --with-* options,
 # the display_library command lets you choose which one you want to run with.
 # If you do not write a display_library line, Bochs will choose a default for
 # you.
 #
-# The choices are: 
+# The choices are:
 #   x              use X windows interface, cross platform
 #   win32          use native win32 libraries
 #   carbon         use Carbon library (for MacOS X)
@@ -147,12 +147,12 @@
 #
 #  QUANTUM:
 #    Maximum amount of instructions allowed to execute by processor before
-#    returning control to another cpu. This option exists only in Bochs 
+#    returning control to another cpu. This option exists only in Bochs
 #    binary compiled with SMP support.
 #
 #  RESET_ON_TRIPLE_FAULT:
 #    Reset the CPU when triple fault occur (highly recommended) rather than
-#    PANIC. Remember that if you trying to continue after triple fault the 
+#    PANIC. Remember that if you trying to continue after triple fault the
 #    simulation will be completely bogus !
 #
 #  CPUID_LIMIT_WINNT:
@@ -179,7 +179,7 @@
 #    Measured IPS value will then be logged into your log file or shown
 #    in the status bar (if supported by the gui).
 #
-#    IPS is used to calibrate many time-dependent events within the bochs 
+#    IPS is used to calibrate many time-dependent events within the bochs
 #    simulation.  For example, changing IPS affects the frequency of VGA
 #    updates, the duration of time before a key starts to autorepeat, and
 #    the measurement of BogoMips and other benchmarks.
@@ -317,11 +317,11 @@ cpu: cpuid_limit_winnt=0
 #
 #  VENDOR_STRING:
 #    Set the CPUID vendor string returned by CPUID(0x0). This should be a
-#    twelve-character ASCII string.  
+#    twelve-character ASCII string.
 #
 #  BRAND_STRING:
-#    Set the CPUID vendor string returned by CPUID(0x80000002 .. 0x80000004).  
-#    This should be at most a forty-eight-character ASCII string.  
+#    Set the CPUID vendor string returned by CPUID(0x80000002 .. 0x80000004).
+#    This should be at most a forty-eight-character ASCII string.
 #
 #  LEVEL:
 #    Set emulated CPU level information returned by CPUID. Default value is
@@ -398,11 +398,11 @@ vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
 
 #=======================================================================
 # OPTROMIMAGE[1-4]:
-# You may now load up to 4 optional ROM images. Be sure to use a 
+# You may now load up to 4 optional ROM images. Be sure to use a
 # read-only area, typically between C8000 and EFFFF. These optional
 # ROM images should not overwrite the rombios (located at
 # F0000-FFFFF) and the videobios (located at C0000-C7FFF).
-# Those ROM images will be initialized by the bios if they contain 
+# Those ROM images will be initialized by the bios if they contain
 # the right signature (0x55AA) and a valid checksum.
 # It can also be a convenient way to upload some arbitrary code/data
 # in the simulation, that can be retrieved by the boot loader
@@ -484,7 +484,7 @@ vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
 #     characters to the keyboard controller. This leaves time for the
 #     guest os to deal with the flow of characters.  The ideal setting
 #     depends on how your operating system processes characters.  The
-#     default of 100000 usec (.1 seconds) was chosen because it works 
+#     default of 100000 usec (.1 seconds) was chosen because it works
 #     consistently in Windows.
 #     If your OS is losing characters during a paste, increase the paste
 #     delay until it stops losing characters.
@@ -567,7 +567,7 @@ mouse: enabled=0
 #  to AGP.
 #
 #  ADVOPTS:
-#  With the advanced PCI options it is possible to control the behaviour of the 
+#  With the advanced PCI options it is possible to control the behaviour of the
 #  PCI chipset. These options can be specified as comma-separated values.
 #  By default the "Bochs i440FX" chipset enables the ACPI and HPET devices, but
 #  original i440FX doesn't support them. The options 'noacpi' and 'nohpet' make
@@ -695,10 +695,10 @@ floppya: 1_44=/dev/fd0, status=inserted
 # ATA controller for hard disks and cdroms
 #
 # ata[0-3]: enabled=[0|1], ioaddr1=addr, ioaddr2=addr, irq=number
-# 
+#
 # These options enables up to 4 ata channels. For each channel
 # the two base io addresses and the irq must be specified.
-# 
+#
 # ata0 and ata1 are enabled by default with the values shown below
 #
 # Examples:
@@ -716,7 +716,7 @@ ata3: enabled=0, ioaddr1=0x168, ioaddr2=0x360, irq=9
 # ATA[0-3]-MASTER, ATA[0-3]-SLAVE
 #
 # This defines the type and characteristics of all attached ata devices:
-#   type=       type of attached device [disk|cdrom] 
+#   type=       type of attached device [disk|cdrom]
 #   mode=       only valid for disks [flat|concat|dll|sparse|vmware3|vmware4]
 #                                    [undoable|growing|volatile|vpc|vbox|vvfat]
 #   path=       path of the image / directory
@@ -733,11 +733,11 @@ ata3: enabled=0, ioaddr1=0x168, ioaddr2=0x360, irq=9
 # device.  To create a hard disk image, try running bximage.  It will help you
 # choose the size and then suggest a line that works with it.
 #
-# In UNIX it may be possible to use a raw device as a Bochs hard disk, 
+# In UNIX it may be possible to use a raw device as a Bochs hard disk,
 # but WE DON'T RECOMMEND IT.  In Windows there is no easy way.
 #
 # In windows, the drive letter + colon notation should be used for cdroms.
-# Depending on versions of windows and drivers, you may only be able to 
+# Depending on versions of windows and drivers, you may only be able to
 # access the "first" cdrom in the system.  On MacOSX, use path="drive"
 # to access the physical drive.
 #
@@ -769,7 +769,7 @@ ata0-master: type=disk, mode=flat, path="30M.sample"
 #ata0-slave: type=cdrom, path=D:, status=inserted
 #ata0-slave: type=cdrom, path=/dev/cdrom, status=inserted
 #ata0-slave: type=cdrom, path="drive", status=inserted
-#ata0-slave: type=cdrom, path=/dev/rcd0d, status=inserted 
+#ata0-slave: type=cdrom, path=/dev/rcd0d, status=inserted
 
 #=======================================================================
 # BOOT:
@@ -817,7 +817,7 @@ log: bochsout.txt
 #   %i : 8 hexadecimal digits of cpu current eip (ignored in SMP configuration)
 #   %e : 1 character event type ('i'nfo, 'd'ebug, 'p'anic, 'e'rror)
 #   %d : 5 characters string of the device, between brackets
-# 
+#
 # Default : %t%e%d
 # Examples:
 #   logprefix: %t-%e-@%i-%d
@@ -829,7 +829,7 @@ log: bochsout.txt
 # LOG CONTROLS
 #
 # Bochs has four severity levels for event logging.
-#   panic: cannot proceed.  If you choose to continue after a panic, 
+#   panic: cannot proceed.  If you choose to continue after a panic,
 #          don't be surprised if you get strange behavior or crashes.
 #   error: something went wrong, but it is probably safe to continue the
 #          simulation.
@@ -1054,7 +1054,7 @@ speaker: enabled=1, mode=sound, volume=15
 # ETHDEV: The ethdev value is the name of the network interface on your host
 # platform.  On UNIX machines, you can get the name by running ifconfig.  On
 # Windows machines, you must run niclist to get the name of the ethdev.
-# Niclist source code is in misc/niclist.c and it is included in Windows 
+# Niclist source code is in misc/niclist.c and it is included in Windows
 # binary releases.
 # The 'socket' module uses this parameter to specify the UDP port for
 # receiving packets and (optional) the host to connect.
@@ -1300,7 +1300,7 @@ speaker: enabled=1, mode=sound, volume=15
 
 #=======================================================================
 # MEGS
-# Set the number of Megabytes of physical memory you want to emulate. 
+# Set the number of Megabytes of physical memory you want to emulate.
 # The default is 32MB, most OS's won't need more than that.
 # The maximum amount of memory supported is 2048Mb.
 # The 'MEGS' option is deprecated. Use 'MEMORY' option instead.
