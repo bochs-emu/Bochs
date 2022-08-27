@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Express 2013 for Windows Desktop
-VisualStudioVersion = 12.0.21005.1
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.32802.440
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bochs", "bochs.vcxproj", "{A09427D6-1B00-4416-9B29-20E659ED2606}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -13,6 +13,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bximage", "bximage.vcxproj", "{1009364E-AC0A-4407-B18F-27BB6ED82E4C}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cpu", "cpu.vcxproj", "{17E9DDBE-FC7E-4EE0-9F21-9FA0415F9ED8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{57A4215B-7E87-447A-A0F4-5BBC0866A3D8} = {57A4215B-7E87-447A-A0F4-5BBC0866A3D8}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fpu", "fpu.vcxproj", "{5661CD4E-BA54-4E67-A586-BB014AC94614}"
 EndProject
@@ -64,10 +67,6 @@ Global
 		{17E9DDBE-FC7E-4EE0-9F21-9FA0415F9ED8}.Debug|Win32.Build.0 = Debug|Win32
 		{17E9DDBE-FC7E-4EE0-9F21-9FA0415F9ED8}.Release|Win32.ActiveCfg = Release|Win32
 		{17E9DDBE-FC7E-4EE0-9F21-9FA0415F9ED8}.Release|Win32.Build.0 = Release|Win32
-		{66392E55-53BC-4743-8712-55D8DC7D61E0}.Debug|Win32.ActiveCfg = Debug|Win32
-		{66392E55-53BC-4743-8712-55D8DC7D61E0}.Debug|Win32.Build.0 = Debug|Win32
-		{66392E55-53BC-4743-8712-55D8DC7D61E0}.Release|Win32.ActiveCfg = Release|Win32
-		{66392E55-53BC-4743-8712-55D8DC7D61E0}.Release|Win32.Build.0 = Release|Win32
 		{5661CD4E-BA54-4E67-A586-BB014AC94614}.Debug|Win32.ActiveCfg = Debug|Win32
 		{5661CD4E-BA54-4E67-A586-BB014AC94614}.Debug|Win32.Build.0 = Debug|Win32
 		{5661CD4E-BA54-4E67-A586-BB014AC94614}.Release|Win32.ActiveCfg = Release|Win32
@@ -127,5 +126,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1BA067B9-457E-43E3-B021-DEFFA43EEEAF}
 	EndGlobalSection
 EndGlobal
