@@ -5927,6 +5927,26 @@ features enabled at compile time (3rd column).
     <entry>Intel(R) Processor 5Y70 CPU (Broadwell)</entry>
     <entry>cpu level 6, x86-64, avx</entry>
   </row>
+  <row>
+    <entry>corei7_skylake_x</entry>
+    <entry>Intel(R) Core(TM) i7-7800X CPU (Skylake)</entry>
+    <entry>cpu level 6, x86-64, avx</entry>
+  </row>
+  <row>
+    <entry>corei3_cnl</entry>
+    <entry>Intel(R) Core(TM) i3-8121U CPU (Cannonlake)</entry>
+    <entry>cpu level 6, x86-64, avx</entry>
+  </row>
+  <row>
+    <entry>corei7_icelake_u</entry>
+    <entry>QuadCore Intel Core i7-1065G7 (IceLake)</entry>
+    <entry>cpu level 6, x86-64, avx</entry>
+  </row>
+  <row>
+    <entry>tigerlake</entry>
+    <entry>11th Gen Intel(R) Core(TM) i5-1135G7 (TigerLake)</entry>
+    <entry>cpu level 6, x86-64, avx</entry>
+  </row>
 </tbody>
 </tgroup>
 </table>

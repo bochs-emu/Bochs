@@ -137,6 +137,10 @@
 #  corei7_ivy_bridge_3770k    Intel(R) Core(TM) i7-3770K CPU (Ivy Bridge)
 #  corei7_haswell_4770        Intel(R) Core(TM) i7-4770 CPU (Haswell)
 #  broadwell_ult              Intel(R) Processor 5Y70 CPU (Broadwell)
+#  corei7_skylake_x           Intel(R) Core(TM) i7-7800X CPU (Skylake)
+#  corei3_cnl                 Intel(R) Core(TM) i3-8121U CPU (Cannonlake)
+#  corei7_icelake_u           QuadCore Intel Core i7-1065G7 (IceLake)
+#  tigerlake                  11th Gen Intel(R) Core(TM) i5-1135G7 (TigerLake)
 #
 #  COUNT:
 #    Set the number of processors:cores per processor:threads per core when
