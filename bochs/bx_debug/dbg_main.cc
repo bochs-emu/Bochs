@@ -62,6 +62,8 @@ static char tmp_buf_prev[512];
 static char *tmp_buf_ptr;
 static char *argv0 = NULL;
 
+static char layoutpath[BX_MAX_PATH];
+
 static FILE *debugger_log = NULL;
 
 static struct bx_debugger_state {
@@ -2258,6 +2260,29 @@ void bx_dbg_disassemble_current(int which_cpu, int print_time)
   }
 }
 
+void bx_dbg_addlyt(const char* new_layoutpath)
+{
+  if (strlen(new_layoutpath) > sizeof(layoutpath) - 1) {
+    dbg_printf("Error: %s path too long!\n", new_layoutpath);
+    return;
+  }
+  strcpy(layoutpath, new_layoutpath);
+}
+
+void bx_dbg_remlyt(void)
+{
+  layoutpath[0] = '\0';
+}
+
+void bx_dbg_lyt(void)
+{
+  if ('\0' == layoutpath[0]) {
+    return;
+  }
+
+  bx_nest_infile(layoutpath);
+}
+
 void bx_dbg_print_guard_results(void)
 {
   unsigned cpu, i;
@@ -2321,6 +2346,10 @@ void bx_dbg_print_guard_results(void)
     default:
         dbg_printf("Error: (%u) print_guard_results: guard_found ? (stop reason %u)\n",
           cpu, BX_CPU(cpu)->stop_reason);
+    }
+	
+    if (cpu == 0) {
+      bx_dbg_lyt();
     }
 
     if (bx_debugger.auto_disassemble) {
@@ -3757,7 +3786,7 @@ void bx_dbg_print_help(void)
   dbg_printf("h|help command - show short command description\n");
   dbg_printf("-*- Debugger control -*-\n");
   dbg_printf("    help, q|quit|exit, set, instrument, show, trace, trace-reg,\n");
-  dbg_printf("    trace-mem, u|disasm, ldsym, slist\n");
+  dbg_printf("    trace-mem, u|disasm, ldsym, slist, addlyt, remlyt, lyt\n");
   dbg_printf("-*- Execution control -*-\n");
   dbg_printf("    c|cont|continue, s|step, p|n|next, modebp, vmexitbp\n");
   dbg_printf("-*- Breakpoint management -*-\n");

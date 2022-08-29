@@ -123,6 +123,9 @@ Bit64u eval_value;
 %token <sval> BX_TOKEN_HELP
 %token <sval> BX_TOKEN_XML
 %token <sval> BX_TOKEN_CALC
+%token <sval> BX_TOKEN_ADDLYT
+%token <sval> BX_TOKEN_REMLYT
+%token <sval> BX_TOKEN_LYT
 %token <sval> BX_TOKEN_DEVICE
 %token <sval> BX_TOKEN_GENERIC
 %token BX_TOKEN_DEREF_CHR
@@ -205,6 +208,9 @@ command:
     | print_string_command
     | help_command
     | calc_command
+    | addlyt_command
+    | remlyt_command
+    | lyt_command
     | if_command
     | expression { eval_value = $1; }
     |
@@ -1321,6 +1327,29 @@ help_command:
          dbg_printf("    ***rax: rax$3\n");
          free($1);free($2);
        }
+     | BX_TOKEN_HELP BX_TOKEN_ADDLYT '\n'
+       {
+         dbg_printf("addlyt file - cause debugger to execute a script file every time execution stops.\n");
+         dbg_printf("    Example of use: 1. Create a script file (script.txt) with the following content:\n");
+         dbg_printf("             regs\n");
+         dbg_printf("             print-stack 7\n");
+         dbg_printf("             u /10\n");
+         dbg_printf("             <EMPTY NEW LINE>\n");
+         dbg_printf("    2. Execute: addlyt \"script.txt\"\n");
+         dbg_printf("    Then, when you execute a step/DebugBreak... you will see: registers, stack and disasm.\n");
+         free($1);free($2);
+       }
+     | BX_TOKEN_HELP BX_TOKEN_REMLYT '\n'
+       {
+         dbg_printf("remlyt - stops debugger to execute the script file added previously with addlyt command.\n");
+         free($1);free($2);
+       }
+     | BX_TOKEN_HELP BX_TOKEN_LYT '\n'
+       {
+         dbg_printf("lyt - cause debugger to execute script file added previously with addlyt command.\n");
+         dbg_printf("    Use it as a refresh/context.\n");
+         free($1);free($2);
+       }
      | BX_TOKEN_HELP BX_TOKEN_HELP '\n'
        {
          bx_dbg_print_help();
@@ -1338,6 +1367,31 @@ calc_command:
    {
      eval_value = $2;
      bx_dbg_calc_command($2);
+     free($1);
+   }
+;
+
+addlyt_command:
+   BX_TOKEN_ADDLYT BX_TOKEN_STRING '\n'
+   {
+     bx_dbg_addlyt($2);
+     free($1);
+     free($2);
+   }
+;
+
+remlyt_command:
+   BX_TOKEN_REMLYT '\n'
+   {
+     bx_dbg_remlyt();
+     free($1);
+   }
+;
+
+lyt_command:
+   BX_TOKEN_LYT '\n'
+   {
+     bx_dbg_lyt();
      free($1);
    }
 ;
