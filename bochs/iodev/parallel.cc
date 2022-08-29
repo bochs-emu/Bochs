@@ -156,8 +156,6 @@ void bx_parallel_c::init(void)
   bx_list_c *base, *misc_rt = NULL, *menu = NULL;
   int count = 0;
 
-  BX_DEBUG(("Init $Id$"));
-
   for (unsigned i=0; i<BX_N_PARALLEL_PORTS; i++) {
     sprintf(pname, "ports.parallel.%d", i+1);
     base = (bx_list_c*) SIM->get_param(pname);

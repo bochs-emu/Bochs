@@ -106,7 +106,6 @@ void bx_keyb_c::resetinternals(bool powerup)
 
 void bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id$"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");

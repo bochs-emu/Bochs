@@ -116,7 +116,6 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   const char *options;
   char *argv[16];
 
-  BX_DEBUG(("Init $Id$"));
   mem = newmem;
 
   /* set builtin default handlers, will be overwritten by the real default handler */

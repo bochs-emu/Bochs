@@ -320,8 +320,6 @@ void bx_ne2k_c::init(Bit8u card)
   Bit8u macaddr[6];
   bx_param_string_c *bootrom;
 
-  BX_DEBUG(("Init $Id$"));
-
   // Read in values from config interface
   sprintf(pname, "%s%d", BXPN_NE2K, card);
   bx_list_c *base = (bx_list_c*) SIM->get_param(pname);

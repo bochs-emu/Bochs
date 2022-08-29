@@ -107,8 +107,6 @@ bx_busm_c::~bx_busm_c()
 
 void bx_busm_c::init(void)
 {
-  BX_DEBUG(("Init $Id$"));
-
   BX_BUSM_THIS type = SIM->get_param_enum(BXPN_MOUSE_TYPE)->get();
 
   DEV_register_irq(BUS_MOUSE_IRQ, "Bus Mouse");

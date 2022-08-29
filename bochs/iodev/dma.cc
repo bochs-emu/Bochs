@@ -119,7 +119,6 @@ unsigned bx_dma_c::get_TC(void)
 void bx_dma_c::init(void)
 {
   unsigned c, i, j;
-  BX_DEBUG(("Init $Id$"));
 
   /* 8237 DMA controller */
 

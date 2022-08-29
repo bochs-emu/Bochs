@@ -182,8 +182,6 @@ void bx_hard_drive_c::init(void)
   const char *image_mode;
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id$"));
-
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
     base = (bx_list_c*) SIM->get_param(ata_name);
