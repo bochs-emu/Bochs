@@ -6854,17 +6854,34 @@ cause debugger to execute a script file
 
 <screen>addlyt file</screen>
 
-cause debugger to execute a script file every time execution stops. Example of use: 
+cause debugger to execute a script file every time execution stops. 
+</para>
 
-1. Create a script file (script.txt) with the following content:
+<para>
+Example of use: 
+</para>
+
+<para>
+Create a script file (script.txt) with the following content
+</para>
+<screen>
     regs
     print-stack 7
     u /10
-    <EMPTY NEW LINE>
-2. Execute: addlyt "script.txt"
+    (*EMPTY NEW LINE)
+</screen>
 
+<para>
+Execute addlyt
+</para>
+<screen>
+addlyt "script.txt"
+</screen>
+
+<para>
 Then, when you execute a step/DebugBreak... you will see: registers, stack and disasm.
-
+</para>
+<para>
 <screen>remlyt</screen>
 
 stops debugger to execute the script file added previously with addlyt command.
