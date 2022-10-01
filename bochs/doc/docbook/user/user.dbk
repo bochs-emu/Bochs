@@ -6812,7 +6812,8 @@ the "instrument/stubs" directory to it, then customize it.  Use:
 <title>Instrumentation commands</title>
 <para>
 <screen>
-  instrument [command]        calls BX_INSTR_DEBUG_CMD instrumentation callback with [command]
+  instrument [command]          calls BX_INSTR_DEBUG_CMD instrumentation callback with [command]
+  instrument "[command string]" calls BX_INSTR_DEBUG_CMD instrumentation callback with [command string]
 </screen>
 </para>
 </section>
@@ -6838,6 +6839,57 @@ Insert a time break point at "time" ("time" is a 64-bit integer followed by "L",
 Print the <varname>num words</varname> top 16-bit words on the stack. <varname>Num
 words</varname> defaults to 16. Only works reliably in protected mode when
 the base address of the stack segment is zero.
+
+<screen>print-string addr</screen>
+
+prints a null-ended string from a linear address.
+
+<screen>bt [num_entries]</screen>
+
+prints backtrace.
+
+<screen>source file</screen>
+
+cause debugger to execute a script file
+
+<screen>addlyt file</screen>
+
+cause debugger to execute a script file every time execution stops. 
+</para>
+
+<para>
+Example of use: 
+</para>
+
+<para>
+Create a script file (script.txt) with the following content
+</para>
+<screen>
+    regs
+    print-stack 7
+    u /10
+    (*EMPTY NEW LINE)
+</screen>
+
+<para>
+Execute addlyt
+</para>
+<screen>
+addlyt "script.txt"
+</screen>
+
+<para>
+Then, when you execute a step/DebugBreak... you will see: registers, stack and disasm.
+</para>
+<para>
+<screen>remlyt</screen>
+
+stops debugger to execute the script file added previously with addlyt command.
+
+<screen>lyt</screen>
+
+cause debugger to execute script file added previously with addlyt command. 
+Use it as a refresh/context.
 
 <screen>modebp</screen>
 

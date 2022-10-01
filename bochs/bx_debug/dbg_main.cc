@@ -3786,7 +3786,7 @@ void bx_dbg_print_help(void)
   dbg_printf("h|help command - show short command description\n");
   dbg_printf("-*- Debugger control -*-\n");
   dbg_printf("    help, q|quit|exit, set, instrument, show, trace, trace-reg,\n");
-  dbg_printf("    trace-mem, u|disasm, ldsym, slist, addlyt, remlyt, lyt\n");
+  dbg_printf("    trace-mem, u|disasm, ldsym, slist, addlyt, remlyt, lyt, source\n");
   dbg_printf("-*- Execution control -*-\n");
   dbg_printf("    c|cont|continue, s|step, p|n|next, modebp, vmexitbp\n");
   dbg_printf("-*- Breakpoint management -*-\n");
@@ -3795,7 +3795,7 @@ void bx_dbg_print_help(void)
   dbg_printf("-*- CPU and memory contents -*-\n");
   dbg_printf("    x, xp, setpmem, writemem, loadmem, crc, info, deref,\n");
   dbg_printf("    r|reg|regs|registers, fp|fpu, mmx, sse, sreg, dreg, creg,\n");
-  dbg_printf("    page, set, ptime, print-stack, bt, ?|calc\n");
+  dbg_printf("    page, set, ptime, print-stack, bt, print-string, ?|calc\n");
   dbg_printf("-*- Working with bochs param tree -*-\n");
   dbg_printf("    show \"param\", restore\n");
 }

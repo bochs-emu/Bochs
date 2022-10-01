@@ -241,6 +241,7 @@ calc            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CALC); }
 addlyt          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ADDLYT); }
 remlyt          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_REMLYT); }
 lyt             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LYT); }
+source          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SOURCE); }
 <EXAMINE>\/[0-9]+                 { BEGIN(INITIAL); bxlval.sval = strdup(bxtext); return(BX_TOKEN_XFORMAT); }
 <EXAMINE>\/[0-9]*[mxduotcsibhwg]+ { BEGIN(INITIAL); bxlval.sval = strdup(bxtext); return(BX_TOKEN_XFORMAT); }
 <DISASM>\/[0-9]+        { BEGIN(INITIAL); bxlval.sval = strdup(bxtext); return(BX_TOKEN_DISFORMAT); }

@@ -126,6 +126,7 @@ Bit64u eval_value;
 %token <sval> BX_TOKEN_ADDLYT
 %token <sval> BX_TOKEN_REMLYT
 %token <sval> BX_TOKEN_LYT
+%token <sval> BX_TOKEN_SOURCE
 %token <sval> BX_TOKEN_DEVICE
 %token <sval> BX_TOKEN_GENERIC
 %token BX_TOKEN_DEREF_CHR
@@ -1147,6 +1148,11 @@ help_command:
          dbg_printf("print-stack [num_words] - print the num_words top 16 bit words on the stack\n");
          free($1);free($2);
        }
+     | BX_TOKEN_HELP BX_TOKEN_BT '\n'
+       {
+         dbg_printf("bt [num_entries] - prints backtrace\n");
+         free($1);free($2);
+       }
      | BX_TOKEN_HELP BX_TOKEN_LOAD_SYMBOLS '\n'
        {
          dbg_printf("ldsym [global] <filename> [offset] - load symbols from file\n");
@@ -1329,7 +1335,7 @@ help_command:
        }
      | BX_TOKEN_HELP BX_TOKEN_ADDLYT '\n'
        {
-         dbg_printf("addlyt file - cause debugger to execute a script file every time execution stops.\n");
+         dbg_printf("addlyt <file> - cause debugger to execute a script file every time execution stops.\n");
          dbg_printf("    Example of use: 1. Create a script file (script.txt) with the following content:\n");
          dbg_printf("             regs\n");
          dbg_printf("             print-stack 7\n");
@@ -1348,6 +1354,16 @@ help_command:
        {
          dbg_printf("lyt - cause debugger to execute script file added previously with addlyt command.\n");
          dbg_printf("    Use it as a refresh/context.\n");
+         free($1);free($2);
+       }
+     | BX_TOKEN_HELP BX_TOKEN_PRINT_STRING '\n'
+       {
+         dbg_printf("print-string <addr> - prints a null-ended string from a linear address.\n");
+         free($1);free($2);
+       }
+     | BX_TOKEN_HELP BX_TOKEN_SOURCE '\n'
+       {
+         dbg_printf("source <file> - cause debugger to execute a script file.\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_HELP '\n'
