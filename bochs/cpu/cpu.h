@@ -3091,6 +3091,18 @@ public: // for now...
   BX_SMF void VPDPWSSD_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VPDPWSSDS_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
+  /* AVX encoded IFMA instructions */
+  BX_SMF void VPMADD52LUQ_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPMADD52HUQ_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  /* AVX encoded VNNI INT8 instructions */
+  BX_SMF void VPDPBSSD_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPDPBSSDS_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPDPBSUD_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPDPBSUDS_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPDPBUUD_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPDPBUUDS_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
   // AVX512 OPMASK instructions (VEX encoded)
   BX_SMF void KADDB_KGbKHbKEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void KANDB_KGbKHbKEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3748,9 +3760,7 @@ public: // for now...
   BX_SMF void VPMOVD2M_KGwWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VPMOVQ2M_KGbWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void VPMADD52LUQ_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VPMADD52LUQ_MASK_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VPMADD52HUQ_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VPMADD52HUQ_MASK_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void VPMULTISHIFTQB_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
