@@ -108,6 +108,7 @@ enum x86_feature_name {
   BX_ISA_AVX512_BITALG,           /* AVX-512 BITALG Instructions */
   BX_ISA_AVX512_VP2INTERSECT,     /* AVX-512 VP2INTERSECT Instructions */
   BX_ISA_AVX_VNNI,                /* AVX encoded VNNI Instructions */
+  BX_ISA_AVX_IFMA,                /* AVX encoded IFMA Instructions */
   BX_ISA_XAPIC,                   /* XAPIC support */
   BX_ISA_X2APIC,                  /* X2APIC support */
   BX_ISA_XAPIC_EXT,               /* XAPIC Extensions support */

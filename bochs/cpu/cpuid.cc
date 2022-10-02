@@ -113,6 +113,7 @@ static const char *cpu_feature_name[] =
   "avx512bitalg",           // BX_ISA_AVX512_BITALG
   "avx512vp2intersect",     // BX_ISA_AVX512_VP2INTERSECT
   "avx_vnni",               // BX_ISA_AVX_VNNI
+  "avx_ifma",               // BX_ISA_AVX_IFMA
   "xapic",                  // BX_ISA_XAPIC
   "x2apic",                 // BX_ISA_X2APIC
   "xapicext",               // BX_ISA_XAPICEXT
