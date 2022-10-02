@@ -1765,7 +1765,7 @@ bx_address bx_dbg_deref(bx_address addr, unsigned deep, unsigned* error_deep, bx
   }
   *last_data_found = 0;
 
-unsigned len;
+  unsigned len;
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU(dbg_cpu)->get_cpu_mode() == BX_MODE_LONG_64) {
@@ -1784,7 +1784,7 @@ unsigned len;
 
   Bit8u buf[8];
 
-  for (int i = 0; i < deep; i++) {
+  for (unsigned i = 0; i < deep; i++) {
     if (!bx_dbg_read_linear(dbg_cpu, deref_addr, len, buf)) {
       deref_addr = 0;
       *error_deep = i + 1;
