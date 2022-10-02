@@ -127,6 +127,7 @@ enum x86_feature_name {
   BX_ISA_CLZERO,                  /* CLZERO instruction support (AMD) */
   BX_ISA_SCA_MITIGATIONS,         /* SCA Mitigations */
   BX_ISA_CET,                     /* Control Flow Enforcement */
+  BX_ISA_WRMSRNS,                 /* Non-Serializing version of WRMSR */
   BX_ISA_EXTENSION_LAST
 };
 
