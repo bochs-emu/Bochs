@@ -134,6 +134,7 @@ static const char *cpu_feature_name[] =
   "sca_mitigations",        // BX_ISA_SCA_MITIGATIONS
   "cet",                    // BX_ISA_CET
   "wrmsrns",                // BX_ISA_WRMSRNS
+  "cmpccxadd",              // BX_ISA_CMPCCXADD
 };
 
 const char *get_cpu_feature_name(unsigned feature) { return cpu_feature_name[feature]; }
