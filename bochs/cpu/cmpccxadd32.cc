@@ -356,7 +356,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPZXADD_EdGdBd(bxInstruction_c *i)
   Bit32u op1_32 = read_RMW_linear_dword(i->seg(), laddr);
   Bit32u diff_32 = op1_32 - op2_32;
   SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
-  write_RMW_linear_dword((get_ZF()) ? op1_32 + op3_32 : op1_32);
+  write_RMW_linear_dword(get_ZF() ? op1_32 + op3_32 : op1_32);
 
   BX_WRITE_32BIT_REGZ(i->src1(), op1_32);
 

@@ -356,7 +356,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPZXADD_EqGqBq(bxInstruction_c *i)
   Bit64u op1_64 = read_RMW_linear_qword(i->seg(), laddr);
   Bit64u diff_64 = op1_64 - op2_64;
   SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);
-  write_RMW_linear_qword((get_ZF()) ? op1_64 + op3_64 : op1_64);
+  write_RMW_linear_qword(get_ZF() ? op1_64 + op3_64 : op1_64);
 
   BX_WRITE_64BIT_REG(i->src1(), op1_64);
 
