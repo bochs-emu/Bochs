@@ -2974,6 +2974,41 @@ public: // for now...
   BX_SMF void PDEP_GqBqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   /* BMI */
 
+  /* CMPccXADD */
+  BX_SMF void CMPBEXADD_EdGdBd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMPBEXADD_EqGqBq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMPBXADD_EdGdBd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMPBXADD_EqGqBq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMPLEXADD_EdGdBd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMPLEXADD_EqGqBq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMPLXADD_EdGdBd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMPLXADD_EqGqBq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMPNBEXADD_EdGdBd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMPNBEXADD_EqGqBq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMPNBXADD_EdGdBd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMPNBXADD_EqGqBq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMPNLEXADD_EdGdBd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMPNLEXADD_EqGqBq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMPNLXADD_EdGdBd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMPNLXADD_EqGqBq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMPNOXADD_EdGdBd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMPNOXADD_EqGqBq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMPNPXADD_EdGdBd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMPNPXADD_EqGqBq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMPNSXADD_EdGdBd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMPNSXADD_EqGqBq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMPNZXADD_EdGdBd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMPNZXADD_EqGqBq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMPOXADD_EdGdBd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMPOXADD_EqGqBq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMPPXADD_EdGdBd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMPPXADD_EqGqBq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMPSXADD_EdGdBd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMPSXADD_EqGqBq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMPZXADD_EdGdBd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMPZXADD_EqGqBq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  /* CMPccXADD */
+
   /* FMA4 specific handlers (AMD) */
   BX_SMF void VFMADDSS_VssHssWssVIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VFMADDSD_VsdHsdWsdVIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
