@@ -282,8 +282,9 @@ Section -post
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs" "Readme" '$INSTDIR\Readme.txt'
   WriteRegDWord HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs" "NoModify" "1"
   WriteRegDWord HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs" "NoRepair" "1"
-  WriteRegExpandStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs" "InstallLocation" '$INSTDIR\'
-  WriteRegExpandStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs" "UninstallString" '"$INSTDIR\Uninstall.exe"'
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs" "InstallLocation" '$INSTDIR\'
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs" "UninstallString" '"$INSTDIR\Uninstall.exe"'
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Bochs" "QuietUninstallString" '"$INSTDIR\Uninstall.exe" /S'
 
   ; Write the uninstaller
   WriteUninstaller "$INSTDIR\Uninstall.exe"
