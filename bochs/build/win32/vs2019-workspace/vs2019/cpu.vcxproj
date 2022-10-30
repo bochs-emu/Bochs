@@ -132,6 +132,8 @@
     <ClCompile Include="..\cpu\bmi64.cc" />
     <ClCompile Include="..\cpu\call_far.cc" />
     <ClCompile Include="..\cpu\cet.cc" />
+    <ClCompile Include="..\cpu\cmpccxadd32.cc" />
+    <ClCompile Include="..\cpu\cmpccxadd64.cc" />
     <ClCompile Include="..\cpu\cpu.cc" />
     <ClCompile Include="..\cpu\cpuid.cc" />
     <ClCompile Include="..\cpu\crc32.cc" />
