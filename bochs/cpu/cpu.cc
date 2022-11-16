@@ -699,13 +699,6 @@ bool BX_CPU_C::dbg_instruction_epilog(void)
     return(1); // on a breakpoint
   }
 
-  // see if debugger requesting icount guard
-  if (bx_guard.guard_for & BX_DBG_GUARD_ICOUNT) {
-    if (get_icount() >= BX_CPU_THIS_PTR guard_found.icount_max) {
-      return(1);
-    }
-  }
-
   // convenient point to see if user requested debug break or typed Ctrl-C
   if (bx_guard.interrupt_requested) {
     return(1);
@@ -770,6 +763,13 @@ bool BX_CPU_C::dbg_instruction_epilog(void)
       }
     }
 #endif
+  }
+
+  // see if debugger requesting icount guard
+  if (bx_guard.guard_for & BX_DBG_GUARD_ICOUNT) {
+    if (get_icount() >= BX_CPU_THIS_PTR guard_found.icount_max) {
+      return(1);
+    }
   }
 #endif
 
