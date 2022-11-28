@@ -9779,10 +9779,6 @@ else
 #  endif
 #endif
 
-#ifdef __cplusplus
-extern "C" void exit (int);
-#endif
-
 void fnord() { int i=42;}
 int main ()
 {
@@ -9796,7 +9792,7 @@ int main ()
       /* dlclose (self); */
     }
 
-    exit (status);
+    return status;
 }
 EOF
   if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_link\""; } >&5
@@ -9878,10 +9874,6 @@ else
 #  endif
 #endif
 
-#ifdef __cplusplus
-extern "C" void exit (int);
-#endif
-
 void fnord() { int i=42;}
 int main ()
 {
@@ -9895,7 +9887,7 @@ int main ()
       /* dlclose (self); */
     }
 
-    exit (status);
+    return status;
 }
 EOF
   if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_link\""; } >&5
@@ -13091,10 +13083,6 @@ else
 #  endif
 #endif
 
-#ifdef __cplusplus
-extern "C" void exit (int);
-#endif
-
 void fnord() { int i=42;}
 int main ()
 {
@@ -13108,7 +13096,7 @@ int main ()
       /* dlclose (self); */
     }
 
-    exit (status);
+    return status;
 }
 EOF
   if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_link\""; } >&5
@@ -13190,10 +13178,6 @@ else
 #  endif
 #endif
 
-#ifdef __cplusplus
-extern "C" void exit (int);
-#endif
-
 void fnord() { int i=42;}
 int main ()
 {
@@ -13207,7 +13191,7 @@ int main ()
       /* dlclose (self); */
     }
 
-    exit (status);
+    return status;
 }
 EOF
   if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_link\""; } >&5
@@ -18147,10 +18131,6 @@ else
 #  endif
 #endif
 
-#ifdef __cplusplus
-extern "C" void exit (int);
-#endif
-
 void fnord() { int i=42;}
 int main ()
 {
@@ -18164,7 +18144,7 @@ int main ()
       /* dlclose (self); */
     }
 
-    exit (status);
+    return status;
 }
 EOF
   if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_link\""; } >&5
@@ -18246,10 +18226,6 @@ else
 #  endif
 #endif
 
-#ifdef __cplusplus
-extern "C" void exit (int);
-#endif
-
 void fnord() { int i=42;}
 int main ()
 {
@@ -18263,7 +18239,7 @@ int main ()
       /* dlclose (self); */
     }
 
-    exit (status);
+    return status;
 }
 EOF
   if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_link\""; } >&5
@@ -20020,10 +19996,6 @@ else
 #  endif
 #endif
 
-#ifdef __cplusplus
-extern "C" void exit (int);
-#endif
-
 void fnord() { int i=42;}
 int main ()
 {
@@ -20037,7 +20009,7 @@ int main ()
       /* dlclose (self); */
     }
 
-    exit (status);
+    return status;
 }
 EOF
   if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_link\""; } >&5
@@ -23752,7 +23724,7 @@ else $as_nop
 
       #include <stdio.h>
       #include <readline/readline.h>
-      int main() { rl_initialize(); exit(0); }
+      int main() { rl_initialize(); return 0; }
 
 _ACEOF
 if ac_fn_c_try_run "$LINENO"
@@ -23784,7 +23756,7 @@ else $as_nop
 
       #include <stdio.h>
       #include <readline/readline.h>
-      int main() { rl_initialize(); exit(0); }
+      int main() { rl_initialize(); return 0; }
 
 _ACEOF
 if ac_fn_c_try_run "$LINENO"

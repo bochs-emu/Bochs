@@ -994,7 +994,7 @@ if test "$want_readline" = yes; then
     AC_RUN_IFELSE([AC_LANG_SOURCE([[
       #include <stdio.h>
       #include <readline/readline.h>
-      int main() { rl_initialize(); exit(0); }
+      int main() { rl_initialize(); return 0; }
       ]])],[ AC_MSG_RESULT(yes)
         rl_without_curses_ok=yes ],[ AC_MSG_RESULT(no) 
     ],[])
@@ -1003,7 +1003,7 @@ if test "$want_readline" = yes; then
     AC_RUN_IFELSE([AC_LANG_SOURCE([[
       #include <stdio.h>
       #include <readline/readline.h>
-      int main() { rl_initialize(); exit(0); }
+      int main() { rl_initialize(); return 0; }
       ]])],[AC_MSG_RESULT(yes)
        rl_with_curses_ok=yes ],[ AC_MSG_RESULT(no) 
     ],[])
