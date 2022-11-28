@@ -182,10 +182,10 @@ int ask_uint(const char *prompt, const char *help, Bit32u min, Bit32u max, Bit32
   }
 }
 
-// identical to ask_uint, but uses signed comparisons
-int ask_int(const char *prompt, const char *help, Bit32s min, Bit32s max, Bit32s the_default, Bit32s *out)
+//Identical to ask_uint but uses 64 bits signed integers
+int ask_int(const char *prompt, const char *help, Bit64s min, Bit64s max, Bit64s the_default, Bit64s *out)
 {
-  int n = max + 1;
+  Bit64s n = max + 1;
   char buffer[1024];
   char *clean;
   int illegal;
@@ -202,12 +202,12 @@ int ask_int(const char *prompt, const char *help, Bit32s min, Bit32s max, Bit32s
     }
     if ((clean[0] == '?') && (strlen(help) > 0)) {
       bx_printf("\n%s\n", help);
-      bx_printf("Your choice must be an integer between %u and %u.\n\n", min, max);
+      bx_printf("Your choice must be an integer between %ld and %ld.\n\n", min, max);
       continue;
     }
-    illegal = (1 != sscanf(buffer, "%d", &n));
+    illegal = (1 != sscanf(buffer, "%ld", &n));
     if (illegal || n<min || n>max) {
-      bx_printf("Your choice (%s) was not an integer between %d and %d.\n\n",
+      bx_printf("Your choice (%s) was not an integer between %ld and %ld.\n\n",
              clean, min, max);
     } else {
       // choice is okay
@@ -612,7 +612,8 @@ void bx_log_options(int individual)
     int done = 0;
     while (!done) {
       bx_print_log_action_table();
-      Bit32s id, level, action;
+      Bit64s id;
+      Bit32s level, action;
       Bit32s maxid = SIM->get_n_log_modules();
       if (ask_int(log_options_prompt1, "", -1, maxid-1, -1, &id) < 0)
         return;
@@ -854,11 +855,11 @@ void text_print(bx_param_c *param)
           if (base == 16)
             format = "%s: 0x%x";
           else
-            format = "%s: %d";
+            format = "%s: %ld";
           if (nparam->get_label()) {
-            bx_printf(format, nparam->get_label(), (Bit32s)nval);
+            bx_printf(format, nparam->get_label(), (Bit64s)nval);
           } else {
-            bx_printf(format, nparam->get_name(), (Bit32s)nval);
+            bx_printf(format, nparam->get_name(), (Bit64s)nval);
           }
         }
       }
@@ -940,10 +941,18 @@ int text_ask(bx_param_c *param)
             prompt = "Enter new value or '?' for help: [%d] ";
         }
         Bit32u n = nparam->get();
-        status = ask_uint(prompt, help, (Bit32u)nparam->get_min(),
+        Bit64s m = nparam->get64();
+
+        if(nparam->get_base() != 10){
+          status = ask_uint(prompt, help, (Bit32u)nparam->get_min(),
                           (Bit32u)nparam->get_max(), n, &n, nparam->get_base());
+        }else{
+          status = ask_int(prompt, help, (Bit64s)nparam->get_min(),
+                          (Bit64s)nparam->get_max(), m, &m);
+        }
         if (status < 0) return status;
-        nparam->set(n);
+        if(nparam->get_base() != 10) nparam->set(n);
+        else nparam->set(m);
       }
       break;
     case BXT_PARAM_BOOL:

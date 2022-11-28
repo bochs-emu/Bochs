@@ -31,6 +31,7 @@
 #if BX_SUPPORT_PCIUSB
 #include "iodev/usb/usb_common.h"
 #endif
+#include "iodev/utctime.h"
 #include "param_names.h"
 #include <assert.h>
 
@@ -932,6 +933,27 @@ void bx_init_options()
 
   // clock & cmos options
   static const char *clock_sync_names[] = { "none", "realtime", "slowdown", "both", NULL };
+  Bit64s mintime,maxtime;
+  struct tm mtim,xtim;
+
+  mtim.tm_year  =0000 -1900;
+  mtim.tm_mon   =   1 -   1;
+  mtim.tm_mday  =   1      ;
+  mtim.tm_hour  =  00      ;
+  mtim.tm_min   =  00      ;
+  mtim.tm_sec   =  00      ;
+  mtim.tm_isdst = -1       ;
+
+  xtim.tm_year  =9999 -1900;
+  xtim.tm_mon   =  12 -   1;
+  xtim.tm_mday  =  31      ;
+  xtim.tm_hour  =  23      ;
+  xtim.tm_min   =  59      ;
+  xtim.tm_sec   =  59      ;
+  xtim.tm_isdst = -1       ;
+
+  mintime=mktime(&mtim); //Find which epoch corresponds to the upper limit expressed in local time
+  maxtime=mktime(&xtim); //Find which epoch corresponds to the lower limit expressed in local time
 
   bx_param_enum_c *clock_sync = new bx_param_enum_c(clock_cmos,
       "clock_sync", "Synchronisation method",
@@ -943,7 +965,7 @@ void bx_init_options()
       "time0",
       "Initial CMOS time for Bochs\n(1:localtime, 2:utc, other:time in seconds)",
       "Initial time for Bochs CMOS clock, used if you really want two runs to be identical",
-      0, BX_MAX_BIT32U,
+      mintime, maxtime,
       BX_CLOCK_TIME0_LOCAL);
   bx_param_bool_c *rtc_sync = new bx_param_bool_c(clock_cmos,
       "rtc_sync", "Sync RTC speed with realtime",
@@ -973,7 +995,7 @@ void bx_init_options()
   deplist->add(rtc_init);
   use_cmosimage->set_dependent_list(deplist);
 
-  time0->set_ask_format("Enter Initial CMOS time (1:localtime, 2:utc, other:time in seconds): [%d] ");
+  time0->set_ask_format("Enter Initial CMOS time (1:localtime, 2:utc, other:time in seconds): [%ld] ");
   clock_sync->set_ask_format("Enter Synchronisation method: [%s] ");
   clock_cmos->set_options(clock_cmos->SHOW_PARENT);
   cmosimage->set_options(cmosimage->SHOW_PARENT);
@@ -3007,9 +3029,9 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "file=", 5)) {
         SIM->get_param_string(BXPN_CMOSIMAGE_PATH)->set(&params[i][5]);
-      } else if (!strcmp(params[i], "rtc_init=time0")) {
+      } else if (!strncmp(params[i], "rtc_init=time0",14)) {
         SIM->get_param_bool(BXPN_CMOSIMAGE_RTC_INIT)->set(0);
-      } else if (!strcmp(params[i], "rtc_init=image")) {
+      } else if (!strncmp(params[i], "rtc_init=image",14)) {
         SIM->get_param_bool(BXPN_CMOSIMAGE_RTC_INIT)->set(1);
       } else {
         BX_ERROR(("%s: unknown parameter for cmosimage ignored.", context));
@@ -3039,17 +3061,19 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       else if (!strncmp(params[i], "time0=", 6)) {
         if (isalpha(params[i][6])) {
           memset(&tm_time, 0, sizeof(tm_time));
-          n = sscanf(&params[i][6], "%3s %3s%3d %2d:%2d:%2d %d", wday, mon, &tm_time.tm_mday,
+          n = sscanf(&params[i][6], "%3s %3s %2d %2d:%2d:%2d %d", wday, mon, &tm_time.tm_mday,
                      &tm_time.tm_hour, &tm_time.tm_min, &tm_time.tm_sec, &year);
-          if ((n == 7) && (year >= 1980) && (strstr(months, mon) != NULL)) {
+          if ((n == 7) && (strstr(months, mon) != NULL)) {
             tm_time.tm_year = year - 1900;
             tm_time.tm_mon = 12 - ((int)strlen(strstr(months, mon)) / 4);
+            tm_time.tm_isdst = -1;
             SIM->get_param_num(BXPN_CLOCK_TIME0)->set(mktime(&tm_time));
           } else {
             PARSE_ERR(("%s: time0 string format malformed.", context));
           }
         } else {
-          SIM->get_param_num(BXPN_CLOCK_TIME0)->set(atoi(&params[i][6]));
+          Bit64s tmptm=atol(&params[i][6]);
+          SIM->get_param_num(BXPN_CLOCK_TIME0)->set(tmptm);
         }
       }
       else {
@@ -3316,8 +3340,7 @@ int bx_write_clock_cmos_options(FILE *fp)
 {
   fprintf(fp, "clock: sync=%s", SIM->get_param_enum(BXPN_CLOCK_SYNC)->get_selected());
 
-  switch (SIM->get_param_num(BXPN_CLOCK_TIME0)->get()) {
-    case 0: break;
+  switch (SIM->get_param_num(BXPN_CLOCK_TIME0)->get64()) {
     case BX_CLOCK_TIME0_LOCAL:
       fprintf(fp, ", time0=local");
       break;
@@ -3325,7 +3348,7 @@ int bx_write_clock_cmos_options(FILE *fp)
       fprintf(fp, ", time0=utc");
       break;
     default:
-      fprintf(fp, ", time0=%u", SIM->get_param_num(BXPN_CLOCK_TIME0)->get());
+      fprintf(fp, ", time0=%ld", SIM->get_param_num(BXPN_CLOCK_TIME0)->get64());
   }
 
   fprintf(fp, ", rtc_sync=%d\n", SIM->get_param_bool(BXPN_CLOCK_RTC_SYNC)->get());

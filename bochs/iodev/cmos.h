@@ -52,7 +52,7 @@ public:
   virtual void set_reg(Bit8u reg, Bit32u val) {
     s.reg[reg] = val;
   }
-  virtual time_t get_timeval() {
+  virtual Bit64s get_timeval() {
     return s.timeval;
   }
   virtual void enable_irq(bool enabled) {
@@ -64,7 +64,7 @@ public:
     Bit32u  periodic_interval_usec;
     int     one_second_timer_index;
     int     uip_timer_index;
-    time_t  timeval;
+    Bit64s  timeval;                //Changed this from time_t to Bit64s - this struct seems to not be referenced ouside of this class despite being public
     Bit8u   cmos_mem_address;
     Bit8u   cmos_ext_mem_addr;
     bool    timeval_change;
@@ -80,6 +80,7 @@ public:
   } s;  // state information
 
 private:
+
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
 #if !BX_USE_CMOS_SMF

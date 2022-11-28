@@ -234,9 +234,6 @@ AC_CHECK_FUNCS(nanosleep, AC_DEFINE(BX_HAVE_NANOSLEEP))
 AC_CHECK_FUNCS(abort, AC_DEFINE(BX_HAVE_ABORT))
 AC_CHECK_MEMBER(struct sockaddr_in.sin_len, AC_DEFINE(BX_HAVE_SOCKADDR_IN_SIN_LEN), , [#include <sys/socket.h>
 #include <netinet/in.h> ])
-AC_CHECK_FUNCS(timelocal, AC_DEFINE(BX_HAVE_TIMELOCAL))
-AC_CHECK_FUNCS(gmtime, AC_DEFINE(BX_HAVE_GMTIME))
-AC_CHECK_FUNCS(mktime, AC_DEFINE(BX_HAVE_MKTIME))
 
 dnl As of autoconf 2.53, the standard largefile test fails for Linux/gcc.
 dnl It does not put the largefiles arguments into CFLAGS, even though Linux/gcc
