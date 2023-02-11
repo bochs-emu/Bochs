@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -159,7 +159,7 @@ static BOOL  hideIPS = FALSE;
 static char ipsText[20];
 #endif
 #define BX_SB_MAX_TEXT_ELEMENTS    2
-#define SIZE_OF_SB_ELEMENT        40
+#define SIZE_OF_SB_ELEMENT        50
 #define SIZE_OF_SB_MOUSE_MESSAGE 170
 #define SIZE_OF_SB_IPS_MESSAGE    90
 Bit32u SB_Led_Colors[3] = {0x0000FF00, 0x000040FF, 0x0000FFFF};
