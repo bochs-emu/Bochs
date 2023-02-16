@@ -146,7 +146,7 @@ static bool hpet_write(bx_phy_address a20addr, unsigned len, void *data, void *p
       BX_PANIC(("Unaligned HPET write at address 0x" FMT_PHY_ADDRX, a20addr));
       return 1;
     }
-    theHPET->write_aligned(a20addr, *((Bit32u*) data));
+    theHPET->write_aligned(a20addr, *((Bit32u*) data), true);
     return 1;
   } else if (len == 8) { // must be 64-bit aligned
     if ((a20addr & 0x7) != 0) {
@@ -154,8 +154,8 @@ static bool hpet_write(bx_phy_address a20addr, unsigned len, void *data, void *p
       return 1;
     }
     Bit64u val64 = *((Bit64u*) data);
-    theHPET->write_aligned(a20addr, (Bit32u)val64);
-    theHPET->write_aligned(a20addr + 4, (Bit32u)(val64 >> 32));
+    theHPET->write_aligned(a20addr, (Bit32u)val64, false);
+    theHPET->write_aligned(a20addr + 4, (Bit32u)(val64 >> 32), true);
   } else {
     BX_PANIC(("Unsupported HPET write at address 0x" FMT_PHY_ADDRX, a20addr));
   }
@@ -463,7 +463,7 @@ Bit32u bx_hpet_c::read_aligned(bx_phy_address address)
   return value;
 }
 
-void bx_hpet_c::write_aligned(bx_phy_address address, Bit32u value)
+void bx_hpet_c::write_aligned(bx_phy_address address, Bit32u value, bool trailing_write)
 {
   int i;
   Bit16u index = (Bit16u)(address & 0x3ff);
@@ -582,7 +582,9 @@ void bx_hpet_c::write_aligned(bx_phy_address address, Bit32u value)
           timer->cmp = (timer->cmp & BX_CONST64(0xffffffff00000000)) | new_val;
         }
         timer->period = (timer->period & BX_CONST64(0xffffffff00000000)) | new_val;
-        timer->config &= ~HPET_TN_SETVAL;
+        if (trailing_write) {
+          timer->config &= ~HPET_TN_SETVAL;
+        }
         if (hpet_enabled()) {
           hpet_set_timer(timer);
         }
@@ -593,7 +595,9 @@ void bx_hpet_c::write_aligned(bx_phy_address address, Bit32u value)
           timer->cmp = (timer->cmp & BX_CONST64(0xffffffff)) | (new_val << 32);
         }
         timer->period = (timer->period & BX_CONST64(0xffffffff)) | (new_val << 32);
-        timer->config &= ~HPET_TN_SETVAL;
+        if (trailing_write) {
+          timer->config &= ~HPET_TN_SETVAL;
+        }
         if (hpet_enabled()) {
           hpet_set_timer(timer);
         }
