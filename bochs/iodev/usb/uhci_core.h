@@ -179,7 +179,6 @@ struct TD {
   Bit32u dword1;
   Bit32u dword2;
   Bit32u dword3;
-  //Bit32u resv[4];
 };
 
 struct QUEUE {
@@ -187,15 +186,6 @@ struct QUEUE {
   Bit32u vert;
 };
 #pragma pack (pop)
-
-//#define HC_HORZ    0x80
-//#define HC_VERT    0x81
-//struct HCSTACK {
-//  Bit32u  next;
-//  Bit8u   d;   // if queue, denotes VERT or HORZ
-//  bool    q;
-//  bool    t;
-//};
 
 class bx_uhci_core_c : public bx_pci_device_c {
 public:
