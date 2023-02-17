@@ -747,7 +747,7 @@ int usb_msd_device_c::handle_data(USBPacket *p)
   Bit8u devep = p->devep;
   Bit8u *data = p->data;
   int len = p->len;
-  bool was_status = FALSE; // so don't dump the status packet twice
+  bool was_status = false; // so don't dump the status packet twice
 
   // check that the length is <= the max packet size of the device
   if (p->len > get_mps(p->devep)) {
@@ -849,7 +849,7 @@ int usb_msd_device_c::handle_data(USBPacket *p)
 
           send_status(p);
           s.mode = USB_MSDM_CBW;
-          was_status = TRUE;
+          was_status = true;
           ret = 13;
           break;
 
