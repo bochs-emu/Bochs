@@ -660,7 +660,7 @@ void bx_uhci_core_c::uhci_timer(void)
     int  count = USB_UHCI_LOOP_COUNT;
     int  bytes_processed = 0; // The UHCI (USB 1.1) allows up to 1280 bytes to be processed per frame.
     bool interrupt = 0, shortpacket = 0, stalled = 0;
-    Bit32u item, queue_addr = NULL;
+    Bit32u item, queue_addr = 0;
     struct QUEUE queue;
     struct TD td;
     Bit32u address = hub.usb_frame_base.frame_base +
@@ -707,7 +707,7 @@ void bx_uhci_core_c::uhci_timer(void)
           // no vertical elements to process
           // (clear queue_addr to indicate we are not processing
           //  elements of the vertical part of a queue)
-          queue_addr = NULL;
+          queue_addr = 0;
           item = queue.horz;
         } else {
           // there are vertical elements to process
@@ -734,7 +734,7 @@ void bx_uhci_core_c::uhci_timer(void)
           const int r_actlen = (((td.dword1 & 0x7FF) + 1) & 0x7FF);
           const int r_maxlen = (((td.dword2 >> 21) + 1) & 0x7FF);
           BX_DEBUG((" r_actlen = %d r_maxlen = %d", r_actlen, r_maxlen));
-          if (((td.dword2 & 0xFF) == USB_TOKEN_IN) && spd && (queue_addr != NULL) && (r_actlen < r_maxlen) && ((td.dword1 & 0x00FF0000) == 0)) {
+          if (((td.dword2 & 0xFF) == USB_TOKEN_IN) && spd && (queue_addr != 0) && (r_actlen < r_maxlen) && ((td.dword1 & 0x00FF0000) == 0)) {
             BX_DEBUG(("Short Packet Detected"));
             shortpacket = was_short = 1;
             td.dword1 |= (1<<29);
@@ -759,7 +759,7 @@ void bx_uhci_core_c::uhci_timer(void)
           // move to the next item
           if (!was_stall) {
             item = td.dword0;
-            if (queue_addr != NULL) {
+            if (queue_addr != 0) {
               if (!was_short) {
                 // copy pointer for next queue item into vert queue head
                 DEV_MEM_WRITE_PHYSICAL((queue_addr & ~0xF) + sizeof(Bit32u), sizeof(Bit32u), (Bit8u *) &item);
@@ -767,7 +767,7 @@ void bx_uhci_core_c::uhci_timer(void)
               // if breadth first or last in the element list, move on to next queue item
               if (!depthbreadth || !USB_UHCI_IS_LINK_VALID(item)) {
                 item = queue.horz;
-                queue_addr = NULL;
+                queue_addr = 0;
               }
             }
             continue;
@@ -783,7 +783,7 @@ void bx_uhci_core_c::uhci_timer(void)
       }
       
       // move to next item (no queues) or queue head (queues found)
-      item = (queue_addr != NULL) ? queue.horz : td.dword0;
+      item = (queue_addr != 0) ? queue.horz : td.dword0;
     } // while loop
     
     // set the status register bit:0 to 1 if SPD is enabled
