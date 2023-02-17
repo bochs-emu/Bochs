@@ -5,8 +5,8 @@
 // Generic USB emulation code
 //
 // Copyright (c) 2005       Fabrice Bellard
-// Copyright (C) 2009-2015  Benjamin D Lunt (fys at fysnet net)
-//               2009-2021  The Bochs Project
+// Copyright (C) 2009-2023  Benjamin D Lunt (fys at fysnet net)
+//               2009-2023  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -50,6 +50,12 @@ bx_usbdev_ctl_c::bx_usbdev_ctl_c()
 void bx_usbdev_ctl_c::init(void)
 {
   Bit8u i, j, count;
+
+  /*  If you wish to set DEBUG=report in the code, instead of
+   *  in the configuration, simply uncomment this line.  I use
+   *  it when I am working on this emulation.
+   */
+  //LOG_THIS setonoff(LOGLEV_DEBUG, ACT_REPORT);
 
   count = PLUG_get_plugins_count(PLUGTYPE_USB);
   usb_module_names = (const char**) malloc(count * sizeof(char*));
@@ -130,7 +136,7 @@ bool bx_usbdev_ctl_c::init_device(bx_list_c *portconf, logfunctions *hub, void *
   Bit8u devtype, modtype;
   usb_device_c **device = (usb_device_c**)dev;
 
-  devtype = (Bit8u)((bx_param_enum_c*)portconf->get_by_name("device"))->get();
+  devtype = (Bit8u) ((bx_param_enum_c *) portconf->get_by_name("device"))->get();
   if (devtype == 0) return 0;
   modtype = usb_module_id[devtype];
   if (!usbdev_locator_c::module_present(usb_module_names[modtype])) {
@@ -156,8 +162,8 @@ void bx_usbdev_ctl_c::parse_port_options(usb_device_c *device, bx_list_c *portco
   char *opts[16];
 
   memset(opts, 0, sizeof(opts));
-  devtype = ((bx_param_enum_c*)portconf->get_by_name("device"))->get();
-  raw_options = ((bx_param_string_c*)portconf->get_by_name("options"))->getptr();
+  devtype = ((bx_param_enum_c *) portconf->get_by_name("device"))->get();
+  raw_options = ((bx_param_string_c *) portconf->get_by_name("options"))->getptr();
   optc = bx_split_option_list("USB port options", raw_options, opts, 16);
   for (i = 0; i < optc; i++) {
     if (!strncmp(opts[i], "speed:", 6)) {
@@ -247,10 +253,9 @@ void usbdev_locator_c::cleanup()
 }
 
 //
-// Called by USB HC emulations to locate and create a usb_device_c
-// object
+// Called by USB HC emulations to locate and create a usb_device_c object
 //
-usb_device_c* usbdev_locator_c::create(const char *type, const char *devname)
+usb_device_c *usbdev_locator_c::create(const char *type, const char *devname)
 {
   usbdev_locator_c *ptr = 0;
 
@@ -268,8 +273,15 @@ usb_device_c* usbdev_locator_c::create(const char *type, const char *devname)
 
 usb_device_c::usb_device_c(void)
 {
-  memset((void*)&d, 0, sizeof(d));
+  memset((void *) &d, 0, sizeof(d));
   d.async_mode = 1;
+  d.speed = USB_SPEED_LOW;
+  d.first8 = 0;
+#if HANDLE_TOGGLE_CONTROL
+  for (int i=0; i<USB_MAX_ENDPOINTS; i++)
+    d.endpoint_info[i].toggle = 0;
+#endif
+
 }
 
 usb_device_c::~usb_device_c()
@@ -279,7 +291,7 @@ usb_device_c::~usb_device_c()
 }
 
 // Find device with given address
-usb_device_c* usb_device_c::find_device(Bit8u addr)
+usb_device_c *usb_device_c::find_device(Bit8u addr)
 {
   if (addr == d.addr) {
     return this;
@@ -300,7 +312,7 @@ int usb_device_c::handle_packet(USBPacket *p)
   int len = p->len;
   Bit8u *data = p->data;
 
-  switch(p->pid) {
+  switch (p->pid) {
     case USB_MSG_ATTACH:
       d.state = USB_STATE_ATTACHED;
       break;
@@ -316,13 +328,39 @@ int usb_device_c::handle_packet(USBPacket *p)
     case USB_TOKEN_SETUP:
       if (d.state < USB_STATE_DEFAULT || p->devaddr != d.addr)
         return USB_RET_NODEV;
-      if (len != 8)
+      if (len != 8) {
+        BX_ERROR(("Packet length must be 8."));
         goto fail;
+      }
+      // check the speed indicator from the TD
+      if (d.speed != p->speed) {
+        BX_DEBUG(("SETUP: Packet Speed indicator doesn't match Device Speed indicator. %d != %d", p->speed, d.speed));
+        goto fail;
+      }
+#if HANDLE_TOGGLE_CONTROL
+      // manage our toggle bit
+      if ((p->toggle > -1) && (p->toggle != 0)) {
+        BX_ERROR(("SETUP: Packet Toggle indicator doesn't match Device Toggle indicator. %d != 0", p->toggle));
+        goto fail;
+      }
+      set_toggle(USB_CONTROL_EP, 1); // after a SETUP packet, the toggle bit is set for the next packet
+#endif
       d.stall = 0;
       usb_dump_packet(data, 8, 0, p->devaddr, USB_DIR_OUT | p->devep, USB_TRANS_TYPE_CONTROL, true, false);
       memcpy(d.setup_buf, data, 8);
       d.setup_len = (d.setup_buf[7] << 8) | d.setup_buf[6];
       d.setup_index = 0;
+
+      // check to see if the very first packet after an initial reset is an IN *and* 
+      //  is for the first mps-bytes of the Device Descriptor. If not, give a warning.
+      if (!d.first8 && ((d.setup_len > get_mps(p->devep)) || (d.setup_buf[0] != (USB_DIR_IN | USB_TYPE_STANDARD | USB_RECIP_DEVICE)) || 
+                        (d.setup_buf[1] != USB_REQ_GET_DESCRIPTOR) || (d.setup_buf[3] != USB_DT_DEVICE))) {
+        BX_ERROR(("The first request after an initial reset must be the Device Descriptor request with a length less than or equal to max packet size."));
+        BX_ERROR(("The device expects a reset, MPS-bytes of the descriptor, another reset, set address request, and then the full 18 byte descriptor."));
+        BX_ERROR(("Some devices (more than you think) will not initialize correctly without this (non-USB compliant) sequence."));
+      }
+      d.first8 = 1;
+      
       if (d.setup_buf[0] & USB_DIR_IN) {
         ret = handle_control((d.setup_buf[0] << 8) | d.setup_buf[1],
                              (d.setup_buf[3] << 8) | d.setup_buf[2],
@@ -344,10 +382,22 @@ int usb_device_c::handle_packet(USBPacket *p)
       if (d.state < USB_STATE_DEFAULT || p->devaddr != d.addr)
         return USB_RET_NODEV;
       if (d.stall) goto fail;
-      switch(p->devep) {
-        case 0:
-          switch(d.setup_state) {
+      if (d.speed != p->speed) {
+        BX_DEBUG(("IN: Packet Speed indicator doesn't match Device Speed indicator. %d != %d", p->speed, d.speed));
+        goto fail;
+      }
+      switch (p->devep) {
+        case USB_CONTROL_EP:
+          switch (d.setup_state) {
             case SETUP_STATE_ACK:
+#if HANDLE_TOGGLE_CONTROL
+              // manage our toggle bit
+              if ((p->toggle > -1) && (p->toggle != 1)) {
+                BX_ERROR(("STATUS: Packet Toggle indicator doesn't match Device Toggle indicator. %d != 1", p->toggle));
+                goto fail;
+              }
+              //set_toggle(USB_CONTROL_EP, 0); // after a STATUS packet, the toggle bit is clear for the next packet
+#endif
               if (!(d.setup_buf[0] & USB_DIR_IN)) {
                 d.setup_state = SETUP_STATE_IDLE;
                 ret = handle_control((d.setup_buf[0] << 8) | d.setup_buf[1],
@@ -366,6 +416,19 @@ int usb_device_c::handle_packet(USBPacket *p)
                 l = d.setup_len - d.setup_index;
                 if (l > len)
                   l = len;
+                  
+                // check that the length is <= the max packet size of the device
+                if (l > get_mps(USB_CONTROL_EP)) {
+                  BX_ERROR(("EP%d transfer length (%d) is greater than Max Packet Size (%d).", p->devep, p->len, get_mps(USB_CONTROL_EP)));
+                }
+#if HANDLE_TOGGLE_CONTROL
+                // manage our toggle bit
+                if ((p->toggle > -1) && (p->toggle != get_toggle(USB_CONTROL_EP))) {
+                  BX_ERROR(("CONTROL IN: Packet Toggle indicator doesn't match Device Toggle indicator. %d != %d", p->toggle, get_toggle(USB_CONTROL_EP)));
+                  goto fail;
+                }
+                set_toggle(USB_CONTROL_EP, get_toggle(USB_CONTROL_EP) ^ 1); // toggle the bit
+#endif
                 memcpy(data, d.data_buf + d.setup_index, l);
                 d.setup_index += l;
                 if (d.setup_index >= d.setup_len)
@@ -378,28 +441,48 @@ int usb_device_c::handle_packet(USBPacket *p)
               }
               break;
             default:
-                goto fail;
-            }
-            break;
+              goto fail;
+          }
+          break;
         default:
-            ret = handle_data(p);
-            break;
-        }
-        break;
+#if HANDLE_TOGGLE_CONTROL
+          // manage our toggle bit
+          if ((p->toggle > -1) && (p->toggle != get_toggle(p->devep))) {
+            BX_ERROR(("DATA IN: Packet Toggle indicator doesn't match Device Toggle indicator. %d != %d", p->toggle, get_toggle(p->devep)));
+            goto fail;
+          }
+          set_toggle(p->devep, get_toggle(p->devep) ^ 1); // toggle the bit
+#endif
+          ret = handle_data(p);
+          break;
+      }
+      break;
     case USB_TOKEN_OUT:
-        if (d.state < USB_STATE_DEFAULT || p->devaddr != d.addr)
-          return USB_RET_NODEV;
-        if (d.stall) goto fail;
-        switch(p->devep) {
-        case 0:
+      if (d.state < USB_STATE_DEFAULT || p->devaddr != d.addr)
+        return USB_RET_NODEV;
+      if (d.stall) goto fail;
+      if (d.speed != p->speed) {
+        BX_DEBUG(("OUT: Packet Speed indicator doesn't match Device Speed indicator. %d != %d", p->speed, d.speed));
+        goto fail;
+      }
+      switch (p->devep) {
+        case USB_CONTROL_EP:
           switch(d.setup_state) {
             case SETUP_STATE_ACK:
+#if HANDLE_TOGGLE_CONTROL
+              // manage our toggle bit
+              if ((p->toggle > -1) && (p->toggle != 1)) {
+                BX_ERROR(("STATUS: Packet Toggle indicator doesn't match Device Toggle indicator. %d != 1", p->toggle));
+                goto fail;
+              }
+              //set_toggle(USB_CONTROL_EP, 0); // after a STATUS packet, the toggle bit is clear for the next packet
+#endif
               usb_dump_packet(p->data, p->len, 0, p->devaddr, USB_DIR_OUT | p->devep, USB_TRANS_TYPE_CONTROL, false, true);
               if (d.setup_buf[0] & USB_DIR_IN) {
                 d.setup_state = SETUP_STATE_IDLE;
                 // transfer OK
               } else {
-                // ignore additionnal output
+                // ignore additional output
               }
               break;
             case SETUP_STATE_DATA:
@@ -407,6 +490,19 @@ int usb_device_c::handle_packet(USBPacket *p)
                 l = d.setup_len - d.setup_index;
                 if (l > len)
                   l = len;
+                
+                // check that the length is <= the max packet size of the device
+                if (l > get_mps(USB_CONTROL_EP)) {
+                  BX_ERROR(("EP%d transfer length (%d) is greater than Max Packet Size (%d).", p->devep, p->len, get_mps(USB_CONTROL_EP)));
+                }
+#if HANDLE_TOGGLE_CONTROL
+                // manage our toggle bit
+                if ((p->toggle > -1) && (p->toggle != get_toggle(USB_CONTROL_EP))) {
+                  BX_ERROR(("CONTROL OUT: Packet Toggle indicator doesn't match Device Toggle indicator. %d != %d", p->toggle, get_toggle(USB_CONTROL_EP)));
+                  goto fail;
+                }
+                set_toggle(USB_CONTROL_EP, get_toggle(USB_CONTROL_EP) ^ 1); // toggle the bit
+#endif
                 memcpy(d.data_buf + d.setup_index, data, l);
                 d.setup_index += l;
                 if (d.setup_index >= d.setup_len)
@@ -426,6 +522,14 @@ int usb_device_c::handle_packet(USBPacket *p)
           }
           break;
         default:
+#if HANDLE_TOGGLE_CONTROL
+          // manage our toggle bit
+          if ((p->toggle > -1) && (p->toggle != get_toggle(p->devep))) {
+            BX_ERROR(("DATA OUT: Packet Toggle indicator doesn't match Device Toggle indicator. %d != %d", p->toggle, get_toggle(p->devep)));
+            goto fail;
+          }
+          set_toggle(p->devep, get_toggle(p->devep) ^ 1);  // toggle the bit
+#endif
           ret = handle_data(p);
           break;
       }
@@ -441,16 +545,27 @@ int usb_device_c::handle_packet(USBPacket *p)
 
 int usb_device_c::handle_control_common(int request, int value, int index, int length, Bit8u *data)
 {
+  // if this function returns -1, the device's handle_control() function will have a chance to execute the request
   int ret = -1;
 
   switch (request) {
     case DeviceOutRequest | USB_REQ_SET_ADDRESS:
       BX_DEBUG(("USB_REQ_SET_ADDRESS:"));
+      // with DeviceOutRequest, The wIndex and wLength fields must be zero
+      if ((index != 0) || (length != 0)) {
+        BX_ERROR(("USB_REQ_SET_ADDRESS: This type of request requires the wIndex and wLength fields to be zero."));
+      }
       d.state = USB_STATE_ADDRESS;
       d.addr = value;
       ret = 0;
       break;
     case DeviceRequest | USB_REQ_GET_DESCRIPTOR:
+      // the wIndex is the Language Id. We only support the standard, so this field must be zero or 0x0409
+      if ((index != 0) && (index != 0x0409)) {
+        BX_ERROR(("USB_REQ_GET_DESCRIPTOR: This type of request requires the wIndex field to be zero or 0x0409. (0x%04X)", index));
+      }
+      // the standard Get Descriptor request only supports the Device, Config, and String descriptors.
+      // if the quest requests the Interface or Endpoint, this is in error
       switch (value >> 8) {
         case USB_DT_DEVICE:
           BX_DEBUG(("USB_REQ_GET_DESCRIPTOR: Device"));
@@ -487,54 +602,112 @@ int usb_device_c::handle_control_common(int request, int value, int index, int l
               break;
           }
           break;
+        case USB_DT_INTERFACE:
+          BX_ERROR(("USB_DT_INTERFACE: You cannot use the Get Descriptor request to retrieve the Interface descriptor(s)."));
+          break;
+        case USB_DT_ENDPOINT:
+          BX_ERROR(("USB_DT_ENDPOINT: You cannot use the Get Descriptor request to retrieve the Endpoint descriptor(s)."));
+          break;
       }
       break;
     case DeviceRequest | USB_REQ_GET_STATUS:
       BX_DEBUG(("USB_REQ_GET_STATUS:"));
-      data[0] = 0x00;
-      if (d.config_descriptor[7] & 0x40) {
-        data[0] |= (1 << USB_DEVICE_SELF_POWERED);
+      // with this request, the wIndex field must be zero
+      if (index != 0) {
+        BX_ERROR(("USB_REQ_GET_STATUS: This type of request requires the wIndex field to be zero."));
       }
-      if (d.remote_wakeup) {
-        data[0] |= (1 << USB_DEVICE_REMOTE_WAKEUP);
+      // standard request
+      if (value == 0) {
+        data[0] = 0x00;
+        if (d.config_descriptor[7] & 0x40) {
+          data[0] |= (1 << USB_DEVICE_SELF_POWERED);
+        }
+        if (d.remote_wakeup) {
+          data[0] |= (1 << USB_DEVICE_REMOTE_WAKEUP);
+        }
+        data[1] = 0x00;
+        ret = 2;
+      
+      // PTM Status
+      } else if (value == 1) {
+        BX_ERROR(("USB_REQ_GET_STATUS: Unsupported PTM status requested."));
+        //ret = 4;
+
+      // else reserved
+      } else {
+        BX_ERROR(("USB_REQ_GET_STATUS: Unknown type of status requested: %d", value));
       }
-      data[1] = 0x00;
-      ret = 2;
       break;
     case DeviceRequest | USB_REQ_GET_CONFIGURATION:
       BX_DEBUG(("USB_REQ_GET_CONFIGURATION:"));
+      // with this request, the wValue and wIndex fields must be zero, and wLength must be 1
+      if ((value != 0) || (index != 0) || (length != 1)) {
+        BX_ERROR(("USB_REQ_GET_CONFIGURATION: This type of request requires the wValue and wIndex fields to be zero, and the wLength field to be 1."));
+      }
       data[0] = d.config;
       ret = 1;
       break;
     case DeviceOutRequest | USB_REQ_SET_CONFIGURATION:
       BX_DEBUG(("USB_REQ_SET_CONFIGURATION: value=%d", value));
+      // with DeviceOutRequest, The wIndex and wLength fields must be zero
+      if ((index != 0) || (length != 0)) {
+        BX_ERROR(("USB_REQ_SET_CONFIGURATION: This type of request requires the wIndex and wLength fields to be zero."));
+      }
+      // check to make sure the requested value is within range
+      // (our one and only configuration)
+      if (value != d.config_descriptor[5]) {
+        BX_ERROR(("USB_REQ_SET_CONFIGURATION: Trying to set configuration value to non-existing configuration: %d", value));
+      }
       d.config = value;
       d.state = USB_STATE_CONFIGURED;
       ret = 0;
       break;
     case DeviceOutRequest | USB_REQ_CLEAR_FEATURE:
+      // with DeviceOutRequest, The wIndex and wLength fields must be zero
+      if ((index != 0) || (length != 0)) {
+        BX_ERROR(("USB_REQ_CLEAR_FEATURE: This type of request requires the wIndex and wLength fields to be zero."));
+      }
       if (value == USB_DEVICE_REMOTE_WAKEUP) {
         d.remote_wakeup = 0;
         ret = 0;
+      //} else {
+      //  BX_ERROR(("USB_REQ_CLEAR_FEATURE: Unknown Clear Feature Request found: %d", value));
       }
       break;
     case DeviceOutRequest | USB_REQ_SET_FEATURE:
+      // with DeviceOutRequest, The wLength field must be zero
+      if (length != 0) {
+        BX_ERROR(("USB_REQ_SET_FEATURE: This type of request requires the wLength field to be zero."));
+      }
       if (value == USB_DEVICE_REMOTE_WAKEUP) {
         d.remote_wakeup = 1;
         ret = 0;
+      //} else {
+      //  BX_ERROR(("USB_DEVICE_REMOTE_WAKEUP: Unknown Set Feature Request found: %d", value));
       }
       break;
     case InterfaceRequest | USB_REQ_GET_INTERFACE:
       BX_DEBUG(("USB_REQ_GET_INTERFACE:"));
+      // with InterfaceRequest, the wValue field must be zero and wLength field must be 1
+      if ((value != 0) || (length != 1)) {
+        BX_ERROR(("USB_REQ_GET_INTERFACE: This type of request requires the wValue field to be zero and wLength field to be one."));
+      }
       data[0] = d.iface;
       ret = 1;
       break;
     case InterfaceOutRequest | USB_REQ_SET_INTERFACE:
       BX_DEBUG(("USB_REQ_SET_INTERFACE: value=%d", value));
+      // with InterfaceRequest, the wIndex and wLength fields must be zero
+      if ((index != 0) || (length != 0)) {
+        BX_ERROR(("USB_REQ_SET_INTERFACE: This type of request requires the wIndex and wLength fields to be zero."));
+      }
       d.iface = value;
       ret = 0;
       break;
+    // should not have a default: here, so allowing the device's handle_control() to try to execute the request
   }
+  
+  // if 'ret' still equals -1, then the device's handle_control() has a chance to execute it
   return ret;
 }
 
@@ -571,19 +744,41 @@ void usb_device_c::usb_send_msg(int msg)
 }
 
 // Dumps the contents of a buffer to the log file
-void usb_device_c::usb_dump_packet(Bit8u *data, unsigned size, int bus, int dev_addr, int ep, int type, bool is_setup, bool can_append)
+void usb_device_c::usb_dump_packet(Bit8u *data, int size, int bus, int dev_addr, int ep, int type, bool is_setup, bool can_append)
 {
   char buf_str[1025], temp_str[17];
+  int i, j;
+
+  // if size == stall (-3), or other, no need to continue
+  if (size < 1) {
+    return;
+  }
+
+  // safety catch
+  if (size > 4096) {
+    BX_DEBUG(("packet hexdump with irregular size: %u (truncating to 64 bytes)", size));
+  }
+  
+  // safety catch (only dump up to 512 bytes per packet so to not fill the log file)
+  if (size > 512)
+    size = 512;
 
   if (getonoff(LOGLEV_DEBUG) == ACT_REPORT) {
-    BX_DEBUG(("packet hexdump (%i bytes)", size));
-    buf_str[0] = 0;
-    for (unsigned i = 0; i < size; i++) {
-      sprintf(temp_str, "%02X ", data[i]);
+    BX_DEBUG(("packet hexdump (%d bytes)", size));
+    strcpy(buf_str, "");
+    j = 0;
+    for (i = 0; i < size; i++) {
+      j++;
+      if ((j == 8) && ((i + 1) != size)) {
+        sprintf(temp_str, "%02X-", data[i]);
+      } else {
+        sprintf(temp_str, "%02X ", data[i]);
+      }
       strcat(buf_str, temp_str);
-      if ((i % 16) == 15) {
+      if (j == 16) {
         BX_DEBUG(("%s", buf_str));
-        buf_str[0] = 0;
+        strcpy(buf_str, "");
+        j = 0;
       }
     }
     if (strlen(buf_str) > 0) BX_DEBUG(("%s", buf_str));

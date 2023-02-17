@@ -4,8 +4,8 @@
 //
 //  UFI/CBI floppy disk storage device support
 //
-//  Copyright (c) 2015       Benjamin David Lunt
-//  Copyright (C) 2015-2021  The Bochs Project
+//  Copyright (c) 2015-2023  Benjamin David Lunt
+//  Copyright (C) 2015-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public

@@ -9,7 +9,7 @@
 //
 //  Written by Paul Brook
 //
-//  Copyright (C) 2007-2021  The Bochs Project
+//  Copyright (C) 2007-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -58,7 +58,7 @@ Bit64s scsireq_save_handler(void *class_ptr, bx_param_c *param)
     return 0;
   }
   sprintf(path, "%s/%s", SIM->get_param_string(BXPN_RESTORE_PATH)->getptr(), fname);
-  return ((scsi_device_t*)class_ptr)->save_requests(path);
+  return ((scsi_device_t *) class_ptr)->save_requests(path);
 }
 
 void scsireq_restore_handler(void *class_ptr, bx_param_c *param, Bit64s value)
@@ -72,7 +72,7 @@ void scsireq_restore_handler(void *class_ptr, bx_param_c *param, Bit64s value)
       strcpy(fname, fname+6);
     }
     sprintf(path, "%s/%s", SIM->get_param_string(BXPN_RESTORE_PATH)->getptr(), fname);
-    ((scsi_device_t*)class_ptr)->restore_requests(path);
+    ((scsi_device_t *) class_ptr)->restore_requests(path);
   }
 }
 
@@ -306,7 +306,7 @@ void scsi_device_t::restore_requests(const char *path)
               tag = 0;
               break;
             } else if (reqid < 0) {
-              reqid = (int)strtol(ptr, NULL, 10);
+              reqid = (int) strtol(ptr, NULL, 10);
               break;
             } else {
               strcpy(pname, ptr);
@@ -315,7 +315,7 @@ void scsi_device_t::restore_requests(const char *path)
             if (reqid >= 0) {
               if (!strcmp(pname, "tag")) {
                 if (tag == 0) {
-                  tag = (Bit32u)strtoul(ptr, NULL, 10);
+                  tag = (Bit32u) strtoul(ptr, NULL, 10);
                   r = scsi_new_request(tag);
                   if (r == NULL) {
                     BX_ERROR(("restore_requests(): cannot create request"));
@@ -326,21 +326,21 @@ void scsi_device_t::restore_requests(const char *path)
                   rrq_error = 1;
                 }
               } else {
-                value = (Bit64s)strtoll(ptr, NULL, 10);
+                value = (Bit64s) strtoll(ptr, NULL, 10);
                 if (!strcmp(pname, "sector")) {
-                  r->sector = (Bit64u)value;
+                  r->sector = (Bit64u) value;
                 } else if (!strcmp(pname, "sector_count")) {
-                  r->sector_count = (Bit32u)value;
+                  r->sector_count = (Bit32u) value;
                 } else if (!strcmp(pname, "buf_len")) {
-                  r->buf_len = (int)value;
+                  r->buf_len = (int) value;
                 } else if (!strcmp(pname, "status")) {
-                  r->status = (Bit32u)value;
+                  r->status = (Bit32u) value;
                 } else if (!strcmp(pname, "write_cmd")) {
-                  r->write_cmd = (bool)value;
+                  r->write_cmd = (bool) value;
                 } else if (!strcmp(pname, "async_mode")) {
-                  r->async_mode = (bool)value;
+                  r->async_mode = (bool) value;
                 } else if (!strcmp(pname, "seek_pending")) {
-                  r->seek_pending = (Bit8u)value;
+                  r->seek_pending = (Bit8u) value;
                 } else {
                   BX_ERROR(("restore_requests(): data format error"));
                   rrq_error = 1;
@@ -386,7 +386,7 @@ void scsi_device_t::scsi_cancel_io(Bit32u tag)
 
 void scsi_device_t::scsi_read_complete(void *req, int ret)
 {
-  SCSIRequest *r = (SCSIRequest *)req;
+  SCSIRequest *r = (SCSIRequest *) req;
 
   if (ret) {
     BX_ERROR(("IO error"));
@@ -485,12 +485,12 @@ Bit8u* scsi_device_t::scsi_get_buf(Bit32u tag)
   return r->dma_buf;
 }
 
-Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun, bool async)
+Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, const Bit8u cmd_len, int lun, bool async)
 {
   Bit64u nb_sectors;
   Bit64u lba;
   Bit32s len;
-//int cmdlen;
+  int cmdlen;  // our exected length of this command
   Bit8u command;
   Bit8u *outbuf;
   SCSIRequest *r;
@@ -508,30 +508,38 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun, bool as
     case 0:
         lba = buf[3] | (buf[2] << 8) | ((buf[1] & 0x1f) << 16);
         len = buf[4];
-        // cmdlen = 6;
+        cmdlen = 6;
         break;
     case 1:
     case 2:
         lba = buf[5] | (buf[4] << 8) | (buf[3] << 16) | (buf[2] << 24);
         len = buf[8] | (buf[7] << 8);
-        // cmdlen = 10;
+        cmdlen = 10;
         break;
     case 4:
         lba = buf[9] | (buf[8] << 8) | (buf[7] << 16) | (buf[6] << 24) |
-              ((Bit64u)buf[5] << 32) | ((Bit64u)buf[4] << 40) |
-              ((Bit64u)buf[3] << 48) | ((Bit64u)buf[2] << 56);
+              ((Bit64u) buf[5] << 32) | ((Bit64u) buf[4] << 40) |
+              ((Bit64u) buf[3] << 48) | ((Bit64u) buf[2] << 56);
         len = buf[13] | (buf[12] << 8) | (buf[11] << 16) | (buf[10] << 24);
-        // cmdlen = 16;
+        cmdlen = 16;
         break;
     case 5:
         lba = buf[5] | (buf[4] << 8) | (buf[3] << 16) | (buf[2] << 24);
         len = buf[9] | (buf[8] << 8) | (buf[7] << 16) | (buf[6] << 24);
-        // cmdlen = 12;
+        cmdlen = 12;
         break;
     default:
         BX_ERROR(("Unsupported command length, command %x", command));
         goto fail;
   }
+
+  // check that the expected command length matches the sent command length.
+  // some hardware may fail if the command length byte isn't correct.
+  if (cmdlen != cmd_len) {
+    BX_ERROR(("Sent command length (%d) doesn't match expected command length (%d).", cmd_len, cmdlen));
+    goto fail;
+  }
+
   if (lun || buf[1] >> 5) {
     BX_ERROR(("unimplemented LUN %d", lun ? lun : buf[1] >> 5));
     if ((command != 0x03) && (command != 0x12)) // REQUEST SENSE and INQUIRY
@@ -605,7 +613,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun, bool as
                 goto fail;
               }
 
-              BX_DEBUG(("Inquiry EVPD[Serial number] buffer size %d\n", len));
+              BX_DEBUG(("Inquiry EVPD[Serial number] buffer size %d", len));
               l = BX_MIN(len, (int)strlen(drive_serial_str));
 
               r->buf_len = 0;
@@ -769,9 +777,9 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun, bool as
           p[21] = (16 * 176) & 0xff;
           p += 22;
         }
-        r->buf_len = (int)(p - outbuf);
+        r->buf_len = (int) (p - outbuf);
         outbuf[0] = r->buf_len - 4;
-        if (r->buf_len > (int)len)
+        if (r->buf_len > (int) len)
           r->buf_len = len;
       }
       break;
@@ -788,6 +796,166 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun, bool as
     case 0x1e:
       BX_INFO(("Prevent Allow Medium Removal (prevent = %d)", buf[4] & 3));
       locked = buf[4] & 1;
+      break;
+    case 0x4a: // SCSI_CD_EVENT_STATUS
+      {
+        Bit8u Class = 0;
+        Bit16u out_len = 4; // the initial header is 4 bytes
+        Bit8u *p = &outbuf[4];  // starts at byte 4
+        
+        // This code is experimental. may need some help
+        BX_DEBUG(("Event Status notification: Requested Byte 0x%02X", buf[4]));
+        
+        len = (Bit32s) (((Bit32u) buf[7] << 8) | buf[8]);
+        if (buf[1] & 1) { // polled bit is set
+          // only do the Event Header if length <= 4, else we can do the Event
+          // buf[4] can be zero. Usually the Guest is requesting the support class event bitmap when this happens.
+          if (len > 4) {
+            // hightest priority (lowest bit set) gets executed (only)
+            if (buf[4] & (1<<0)) { // Reserved bit is set (MMC4R05A.PDF, 6.7.1.3, page 242, not considered an error)
+              BX_DEBUG(("Event Status Notify: bit 0 in the request byte is set"));
+              Class = 0;
+            }
+            if (buf[4] & (1<<1)) { // Opertaional Change request bit is set
+              Class = 1;
+              //p[0] = 0; // Bits 3:0 = Event Code (must be zero until an event occurs, then zero after read until next event occurs)
+            } else
+            if (buf[4] & (1<<2)) { // Power Management request bit is set
+              Class = 2;
+              //p[0] = 0; // Bits 3:0 = Event Code (must be zero until an event occurs, then zero after read until next event occurs)
+            } else
+            if (buf[4] & (1<<3)) { // External Request request bit is set
+              Class = 3;
+              //p[0] = 0; // Bits 3:0 = Event Code (must be zero until an event occurs, then zero after read until next event occurs)
+            } else
+            if (buf[4] & (1<<4)) { // MEDIA request bit is set
+              Class = 4;
+              // TODO: We need to get the status from the Host. Did the CD-ROM get ejected or inserted?
+              //       For now, we put no change (zero)
+              p[0] = 0; // Bits 3:0 = Event Code (must be zero until an event occurs, then zero after read until next event occurs)
+                        //   (MMC4R05A.PDF Section 6.7.2.5, page 248)
+              p[1] = (1<<1); // bits 7:2 = reserved, bit 1 = Media Present, bit 0 = Door/Tray open
+              p[2] = 0;  // Start slot
+              p[3] = 0;  // End slot
+              out_len += 4;  // 8 total bytes
+            } else
+            if (buf[4] & (1<<5)) { // Multi-Initiator request bit is set
+              Class = 5;
+              //p[0] = 0; // Bits 3:0 = Event Code (must be zero until an event occurs, then zero after read until next event occurs)
+            } else
+            if (buf[4] & (1<<6)) { // Device Busy request bit is set
+              Class = 6;
+              //p[0] = 0; // Bits 3:0 = Event Code (must be zero until an event occurs, then zero after read until next event occurs)
+            }
+            if (buf[4] & (1<<7)) { // Reserved bit is set (MMC4R05A.PDF, 6.7.1.3, page 242, not considered an error)
+              BX_DEBUG(("Event Status Notify: bit 7 in the request byte is set"));
+              Class = 7;
+            }
+          }
+          // only send the allocated length requested
+          if (out_len > len)
+            out_len = len;
+          
+          // out buffer
+          // Header is four bytes in length
+          r->buf_len = (int) out_len;
+          out_len = (out_len >= 4) ? (out_len - 4) : 0; // count of bytes to follow the header
+          outbuf[0] = ((out_len >> 8) & 0xFF); // this is the out_len (the count of bytes sent to the guest) (big-endian)
+          outbuf[1] = ((out_len >> 0) & 0xFF);
+          outbuf[2] = 0x00 | Class; // bit 7 = 0, bits 6:3 = resv, bits 2:0 = class returned
+          outbuf[3] = 0b00010000;  // supported Event Classes (only event class 4 supported at this time)
+        } else { // polled bit
+          // we don't (currently) support asynchronous operation.
+          goto fail;
+        }
+      }
+      break;
+    case 0x51:  // SCSI_CD_READ_DISC_INFO
+      {
+        Bit16u out_len;
+        
+        // This code is experimental. may need some help
+        BX_DEBUG(("Read Disc Information: Data type requested 0x%02X", buf[1] & 7));
+        
+        out_len = (Bit32s) (((Bit32u) buf[7] << 8) | buf[8]);
+        switch (buf[1] & 7) {
+          // mmc6r02f.pdf, section 6.21.4, page 379(427) ??
+          case 0: // Standard Disk Information
+            outbuf[ 0] = (32 * (0 * 8)) >> 8; // msb length 32 + (8 * number of OPC tables)
+            outbuf[ 1] = (32 * (0 * 8)) >> 0; // lsb length
+            outbuf[ 2] = (0 << 5) | (0 << 4) | (3 << 2) | (2 << 0); // Type = 0, Eraseable = 0, State of last session = 3 (Complete), Disc status = 2 (Finalized Disc)
+            outbuf[ 3] = 1; // number of first track on disc (1 based)
+            outbuf[ 4] = 1; // number of sessions (LSB)
+            outbuf[ 5] = 1; // first track number in last session (LSB)
+            outbuf[ 6] = 1; // last track number in last session (LSB)
+            outbuf[ 7] = (0 << 7) | (0 << 6) | (1 << 5) | (0 << 4) | (0 << 3)  | (0 << 2) | (0 << 0); // DID_V, DBC_V, URU, DAC_V, R, Legacy?, BG Format Status
+            outbuf[ 8] = 0x00; // Disc Type ( 0 = CD-ROM)
+            outbuf[ 9] = 0; // number of sessions (MSB)
+            outbuf[10] = 0; // first track number in last session (MSB)
+            outbuf[11] = 0; // last track number in last session (MSB)
+            
+            outbuf[12] = 0; // disk identification (only when DID_V bit is set)
+            outbuf[13] = 0; // 
+            outbuf[14] = 0; // 
+            outbuf[15] = 0; // 
+            
+            outbuf[16] = 0; // Last Session Lead-in Start Address
+            outbuf[17] = 0; // 
+            outbuf[18] = 0; // 
+            outbuf[19] = 0; // 
+            
+            outbuf[20] = 0; // Last Session Lead-out Start Address
+            outbuf[21] = 0; // 
+            outbuf[22] = 0; // 
+            outbuf[23] = 0; // 
+            
+            outbuf[24] = 0; // Disc bar code (only when DBC_V bit is set)
+            outbuf[25] = 0; // 
+            outbuf[26] = 0; // 
+            outbuf[27] = 0; // 
+            outbuf[28] = 0; // 
+            outbuf[29] = 0; // 
+            outbuf[30] = 0; // 
+            outbuf[31] = 0; // 
+            
+            outbuf[32] = 0; // disc application code (only when DAC_V bit is set)
+            
+            outbuf[33] = 0; // number of OPC Table entries
+            
+            // OPC Table entries = 0
+            
+            // return length
+            r->buf_len = BX_MIN(out_len, (2 + 32) * (0 * 8));
+            break;
+          case 1: // Track Resources Information
+            // I am not absolutely sure these are the correct values.
+            outbuf[ 0] =  0; // msb length
+            outbuf[ 1] = 10; // lsb length
+            outbuf[ 2] = (1 << 5) | (0 << 0); // Type = 1, reserved
+            outbuf[ 3] = 0; // reserved
+            outbuf[ 4] = ((7927 >> 8) & 0xFF); // maximum possible tracks on disc (MSB)
+            outbuf[ 5] = ((7927 >> 0) & 0xFF); // maximum possible tracks on disc (LSB)
+            outbuf[ 6] = ((7927 >> 8) & 0xFF); // number of tracks on disc (MSB)
+            outbuf[ 7] = ((7927 >> 0) & 0xFF); // number of tracks on disc (LSB)
+            outbuf[ 8] = ((99 >> 8) & 0xFF); // Maximum possible number of appendable tracks on disc (MSB)
+            outbuf[ 9] = ((99 >> 0) & 0xFF); // Maximum possible number of appendable tracks on disc (LSB)
+            outbuf[10] = ((99 >> 8) & 0xFF); // Current number of appendable tracks on disc (MSB)
+            outbuf[11] = ((99 >> 0) & 0xFF); // Current number of appendable tracks on disc (LSB)
+            
+            // return length
+            r->buf_len = BX_MIN(out_len, 12);
+            break;
+          case 2: // POW Resources Information
+            
+            // unsupported, so return 0 bytes
+            
+            // return length
+            r->buf_len = 0;
+            break;
+          default:
+            goto fail;
+        }
+      }
       break;
     case 0x25:
       BX_DEBUG(("Read Capacity"));
@@ -876,7 +1044,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun, bool as
     case 0x46:
       BX_DEBUG(("Get Configuration (rt %d, maxlen %d)", buf[1] & 3, len));
       memset(outbuf, 0, 8);
-      /* ??? This shoud probably return much more information.  For now
+      /* ??? This should probably return much more information.  For now
          just return the basic header indicating the CD-ROM profile.  */
       outbuf[7] = 8; // CD-ROM
       r->buf_len = 8;
@@ -943,7 +1111,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun, bool as
       }
       break;
     default:
-      BX_ERROR(("Unknown SCSI command (%2.2x)", buf[0]));
+      BX_ERROR(("Unknown SCSI command (0x%02X)", buf[0]));
     fail:
       scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_ILLEGAL_REQUEST);
       return 0;
@@ -1019,20 +1187,20 @@ void scsi_device_t::seek_complete(SCSIRequest *r)
   if (!r->write_cmd) {
     bx_gui->statusbar_setitem(statusbar_id, 1);
     n = r->sector_count;
-    if (n > (Bit32u)(SCSI_DMA_BUF_SIZE / block_size))
+    if (n > (Bit32u) (SCSI_DMA_BUF_SIZE / block_size))
       n = SCSI_DMA_BUF_SIZE / block_size;
     r->buf_len = n * block_size;
     if (type == SCSIDEV_TYPE_CDROM) {
       i = 0;
       do {
-        ret = (int)cdrom->read_block(r->dma_buf + (i * 2048), (Bit32u)(r->sector + i), 2048);
+        ret = (int) cdrom->read_block(r->dma_buf + (i * 2048), (Bit32u) (r->sector + i), 2048);
       } while ((++i < n) && (ret == 1));
       if (ret == 0) {
         scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_MEDIUM_ERROR);
         return;
       }
     } else {
-      ret = (int)hdimage->lseek(r->sector * block_size, SEEK_SET);
+      ret = (int) hdimage->lseek(r->sector * block_size, SEEK_SET);
       if (ret < 0) {
         BX_ERROR(("could not lseek() hard drive image file"));
         scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_HARDWARE_ERROR);
@@ -1040,7 +1208,7 @@ void scsi_device_t::seek_complete(SCSIRequest *r)
       }
       i = 0;
       do {
-        ret = (int)hdimage->read((bx_ptr_t)(r->dma_buf + (i * block_size)),
+        ret = (int) hdimage->read((bx_ptr_t) (r->dma_buf + (i * block_size)),
                                  block_size);
       } while ((++i < n) && (ret == block_size));
       if (ret != block_size) {
@@ -1063,7 +1231,7 @@ void scsi_device_t::seek_complete(SCSIRequest *r)
       }
       i = 0;
       do {
-        ret = (int)hdimage->write((bx_ptr_t)(r->dma_buf + (i * block_size)),
+        ret = (int) hdimage->write((bx_ptr_t) (r->dma_buf + (i * block_size)),
                                   block_size);
       } while ((++i < n) && (ret == block_size));
       if (ret != block_size) {
@@ -1073,7 +1241,7 @@ void scsi_device_t::seek_complete(SCSIRequest *r)
       }
       r->sector += n;
       r->sector_count -= n;
-      scsi_write_complete((void*)r, 0);
+      scsi_write_complete((void *) r, 0);
     }
   }
 }

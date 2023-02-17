@@ -1,12 +1,12 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id$
+// $Id: usb_msd.h 14155 2021-02-19 13:13:42Z vruppert $
 /////////////////////////////////////////////////////////////////////////
 //
 //  USB mass storage device support (ported from QEMU)
 //
 //  Copyright (c) 2006 CodeSourcery.
 //  Written by Paul Brook
-//  Copyright (C) 2009-2021  The Bochs Project
+//  Copyright (C) 2009-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public

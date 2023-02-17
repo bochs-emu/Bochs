@@ -8,7 +8,7 @@
 //
 // Copyright (c) 2005       Fabrice Bellard
 // Copyright (c) 2007       OpenMoko, Inc.  (andrew@openedhand.com)
-// Copyright (C) 2009-2021  The Bochs Project
+// Copyright (C) 2009-2023  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -36,10 +36,10 @@
 class usb_hid_device_c : public usb_device_c {
 public:
   usb_hid_device_c(const char *devname);
-  virtual ~usb_hid_device_c(void);
+  virtual ~usb_hid_device_c();
 
   virtual bool init();
-  virtual const char* get_info();
+  virtual const char *get_info();
   virtual void handle_reset();
   virtual int handle_control(int request, int value, int index, int length, Bit8u *data);
   virtual int handle_data(USBPacket *p);
@@ -49,6 +49,7 @@ private:
   struct {
     bool has_events;
     Bit8u idle;
+    bool boot_protocol;  // 0 = boot protocol, 1 = report protocol
     int mouse_delayed_dx;
     int mouse_delayed_dy;
     Bit16s mouse_x;

@@ -9,7 +9,7 @@
 //
 //  Written by Paul Brook
 //
-//  Copyright (C) 2007-2021  The Bochs Project
+//  Copyright (C) 2007-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -77,7 +77,7 @@ public:
   virtual ~scsi_device_t(void);
 
   void register_state(bx_list_c *parent, const char *name);
-  Bit32s scsi_send_command(Bit32u tag, Bit8u *buf, int lun, bool async);
+  Bit32s scsi_send_command(Bit32u tag, Bit8u *buf, const Bit8u cmd_len, int lun, bool async);
   void scsi_command_complete(SCSIRequest *r, int status, int sense);
   void scsi_cancel_io(Bit32u tag);
   void scsi_read_complete(void *req, int ret);
