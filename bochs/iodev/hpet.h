@@ -97,7 +97,7 @@ public:
 #endif
 
   Bit32u read_aligned(bx_phy_address address);
-  void write_aligned(bx_phy_address address, Bit32u data);
+  void write_aligned(bx_phy_address address, Bit32u data, bool trailing_write);
 
 private:
   Bit32u hpet_in_legacy_mode(void) {return s.config & HPET_CFG_LEGACY;}
