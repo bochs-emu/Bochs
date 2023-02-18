@@ -485,7 +485,7 @@ Bit8u* scsi_device_t::scsi_get_buf(Bit32u tag)
   return r->dma_buf;
 }
 
-Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, const Bit8u cmd_len, int lun, bool async)
+Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, Bit8u cmd_len, int lun, bool async)
 {
   Bit64u nb_sectors;
   Bit64u lba;
@@ -807,47 +807,47 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, const Bit8u cmd_
         BX_DEBUG(("Event Status notification: Requested Byte 0x%02X", buf[4]));
         
         len = (Bit32s) (((Bit32u) buf[7] << 8) | buf[8]);
-        if (buf[1] & 1) { // polled bit is set
+        if (buf[1] & EVENT_STATUS_POLLED) { // polled bit is set
           // only do the Event Header if length <= 4, else we can do the Event
           // buf[4] can be zero. Usually the Guest is requesting the support class event bitmap when this happens.
           if (len > 4) {
             // hightest priority (lowest bit set) gets executed (only)
-            if (buf[4] & (1<<0)) { // Reserved bit is set (MMC4R05A.PDF, 6.7.1.3, page 242, not considered an error)
+            if (buf[4] & EVENT_STATUS_RESERVED_0) { // Reserved bit is set (MMC4R05A.PDF, 6.7.1.3, page 242, not considered an error)
               BX_DEBUG(("Event Status Notify: bit 0 in the request byte is set"));
               Class = 0;
             }
-            if (buf[4] & (1<<1)) { // Opertaional Change request bit is set
+            if (buf[4] & EVENT_STATUS_OP_CHANGE) { // Operational Change request bit is set
               Class = 1;
               //p[0] = 0; // Bits 3:0 = Event Code (must be zero until an event occurs, then zero after read until next event occurs)
             } else
-            if (buf[4] & (1<<2)) { // Power Management request bit is set
+            if (buf[4] & EVENT_STATUS_POWER_MAN) { // Power Management request bit is set
               Class = 2;
               //p[0] = 0; // Bits 3:0 = Event Code (must be zero until an event occurs, then zero after read until next event occurs)
             } else
-            if (buf[4] & (1<<3)) { // External Request request bit is set
+            if (buf[4] & EVENT_STATUS_EXT_REQ) { // External Request request bit is set
               Class = 3;
               //p[0] = 0; // Bits 3:0 = Event Code (must be zero until an event occurs, then zero after read until next event occurs)
             } else
-            if (buf[4] & (1<<4)) { // MEDIA request bit is set
+            if (buf[4] & EVENT_STATUS_MEDIA_REQ) { // MEDIA request bit is set
               Class = 4;
               // TODO: We need to get the status from the Host. Did the CD-ROM get ejected or inserted?
               //       For now, we put no change (zero)
               p[0] = 0; // Bits 3:0 = Event Code (must be zero until an event occurs, then zero after read until next event occurs)
                         //   (MMC4R05A.PDF Section 6.7.2.5, page 248)
-              p[1] = (1<<1); // bits 7:2 = reserved, bit 1 = Media Present, bit 0 = Door/Tray open
+              p[1] = EVENT_STATUS_MED_PRES | EVENT_STATUS_MED_N_OPEN; // bits 7:2 = reserved, bit 1 = Media Present, bit 0 = Door/Tray open
               p[2] = 0;  // Start slot
               p[3] = 0;  // End slot
               out_len += 4;  // 8 total bytes
             } else
-            if (buf[4] & (1<<5)) { // Multi-Initiator request bit is set
+            if (buf[4] & EVENT_STATUS_MULTI_INIT) { // Multi-Initiator request bit is set
               Class = 5;
               //p[0] = 0; // Bits 3:0 = Event Code (must be zero until an event occurs, then zero after read until next event occurs)
             } else
-            if (buf[4] & (1<<6)) { // Device Busy request bit is set
+            if (buf[4] & EVENT_STATUS_DEV_BUSY) { // Device Busy request bit is set
               Class = 6;
               //p[0] = 0; // Bits 3:0 = Event Code (must be zero until an event occurs, then zero after read until next event occurs)
             }
-            if (buf[4] & (1<<7)) { // Reserved bit is set (MMC4R05A.PDF, 6.7.1.3, page 242, not considered an error)
+            if (buf[4] & EVENT_STATUS_RESERVED_7) { // Reserved bit is set (MMC4R05A.PDF, 6.7.1.3, page 242, not considered an error)
               BX_DEBUG(("Event Status Notify: bit 7 in the request byte is set"));
               Class = 7;
             }
@@ -863,7 +863,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, const Bit8u cmd_
           outbuf[0] = ((out_len >> 8) & 0xFF); // this is the out_len (the count of bytes sent to the guest) (big-endian)
           outbuf[1] = ((out_len >> 0) & 0xFF);
           outbuf[2] = 0x00 | Class; // bit 7 = 0, bits 6:3 = resv, bits 2:0 = class returned
-          outbuf[3] = 0b00010000;  // supported Event Classes (only event class 4 supported at this time)
+          outbuf[3] = EVENT_STATUS_MEDIA_REQ;  // supported Event Classes (only event class 4 supported at this time)
         } else { // polled bit
           // we don't (currently) support asynchronous operation.
           goto fail;
@@ -878,18 +878,20 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, const Bit8u cmd_
         BX_DEBUG(("Read Disc Information: Data type requested 0x%02X", buf[1] & 7));
         
         out_len = (Bit32s) (((Bit32u) buf[7] << 8) | buf[8]);
-        switch (buf[1] & 7) {
+        switch (buf[1] & DISC_INFO_MASK) {
           // mmc6r02f.pdf, section 6.21.4, page 379(427) ??
-          case 0: // Standard Disk Information
+          case DISC_INFO_STANDARD: // Standard Disk Information
             outbuf[ 0] = (32 * (0 * 8)) >> 8; // msb length 32 + (8 * number of OPC tables)
             outbuf[ 1] = (32 * (0 * 8)) >> 0; // lsb length
-            outbuf[ 2] = (0 << 5) | (0 << 4) | (3 << 2) | (2 << 0); // Type = 0, Eraseable = 0, State of last session = 3 (Complete), Disc status = 2 (Finalized Disc)
+            // Type = 0, Eraseable = 0, State of last session = 3 (Complete), Disc status = 2 (Finalized Disc)
+            outbuf[ 2] = (DISC_INFO_STANDARD << 5) | DI_STAND_N_ERASABLE | DI_STAND_LAST_STATE_COMP | DI_STAND_STATUS_FINAL;
             outbuf[ 3] = 1; // number of first track on disc (1 based)
             outbuf[ 4] = 1; // number of sessions (LSB)
             outbuf[ 5] = 1; // first track number in last session (LSB)
             outbuf[ 6] = 1; // last track number in last session (LSB)
-            outbuf[ 7] = (0 << 7) | (0 << 6) | (1 << 5) | (0 << 4) | (0 << 3)  | (0 << 2) | (0 << 0); // DID_V, DBC_V, URU, DAC_V, R, Legacy?, BG Format Status
-            outbuf[ 8] = 0x00; // Disc Type ( 0 = CD-ROM)
+            // DID_V, DBC_V, URU, DAC_V, R, Legacy?, BG Format Status
+            outbuf[ 7] = DI_STAND_DID_N_VALID | DI_STAND_DBC_N_VALID | DI_STAND_URU_OKAY | DI_STAND_DAC_N_VALID | DI_STAND_N_LEGACY | DI_STAND_BG_FORMAT_0;
+            outbuf[ 8] = DI_STAND_DISC_TYPE_0; // Disc Type ( 0 = CD-ROM)
             outbuf[ 9] = 0; // number of sessions (MSB)
             outbuf[10] = 0; // first track number in last session (MSB)
             outbuf[11] = 0; // last track number in last session (MSB)
@@ -925,13 +927,13 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, const Bit8u cmd_
             // OPC Table entries = 0
             
             // return length
-            r->buf_len = BX_MIN(out_len, (2 + 32) * (0 * 8));
+            r->buf_len = BX_MIN(out_len, (2 + 32) + (0 * 8)); // (len word + sizeof(information)) + (OPC Table Entry count * Size of entry)
             break;
-          case 1: // Track Resources Information
+          case DISC_INFO_TRACK: // Track Resources Information
             // I am not absolutely sure these are the correct values.
             outbuf[ 0] =  0; // msb length
             outbuf[ 1] = 10; // lsb length
-            outbuf[ 2] = (1 << 5) | (0 << 0); // Type = 1, reserved
+            outbuf[ 2] = DISC_INFO_TRACK | (0 << 0); // Type = 1, reserved
             outbuf[ 3] = 0; // reserved
             outbuf[ 4] = ((7927 >> 8) & 0xFF); // maximum possible tracks on disc (MSB)
             outbuf[ 5] = ((7927 >> 0) & 0xFF); // maximum possible tracks on disc (LSB)
@@ -945,7 +947,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, const Bit8u cmd_
             // return length
             r->buf_len = BX_MIN(out_len, 12);
             break;
-          case 2: // POW Resources Information
+          case DISC_INFO_POW_RES: // POW Resources Information
             
             // unsupported, so return 0 bytes
             
