@@ -2,8 +2,8 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2010-2017  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2011-2021  The Bochs Project
+//  Copyright (C) 2010-2023  Benjamin D Lunt (fys [at] fysnet [dot] net)
+//                2011-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -45,9 +45,11 @@
 
 #define OPS_REGS_OFFSET   0x20
 // Change this to 0.95, 0.96, 1.00, 1.10, according to the desired effects (LINK chain bit, etc)
-//   uPD720202 is 1.00
+//   (the NEC/Renesas uPD720202 is v1.00. If you change this version, and use a NEC/Renesas specific,
+//     driver the emulation may have undefined results)
+//   (also, the emulation for v1.10 is untested. I don't have a test-system that uses that version)
 #define VERSION_MAJOR     0x01
-#define VERSION_MINOR     0x00
+#define VERSION_MINOR     0x10
 
 // HCSPARAMS1
 #define MAX_SLOTS           32   // (1 based)
@@ -72,7 +74,7 @@
 #define ADDR_CAP_64              1
 #define BW_NEGOTIATION           1
 #define CONTEXT_SIZE            64  // Size of the CONTEXT blocks (32 or 64)
-#define PORT_POWER_CTRL          1
+#define PORT_POWER_CTRL          1  // 1 = port power is controlled by port register's power bit, 0 = power always on
 #define PORT_INDICATORS          0
 #define LIGHT_HC_RESET           0  // Do we support the Light HC Reset function
 #define LAT_TOL_MSGING_CAP       1  // Latency Tolerance Messaging Capability (v1.00+)
@@ -132,11 +134,11 @@
 #endif
 
 #if ((LAT_TOL_MSGING_CAP == 1) && ((VERSION_MAJOR < 1) || (VERSION_MINOR < 0)))
-#  error "LAT_TOL_MSGING_CAP must be used with in version 1.1 and above"
+#  error "LAT_TOL_MSGING_CAP must be used with in version 1.10 and above"
 #endif
 
 #if ((NO_SSD_SUPPORT == 1) && ((VERSION_MAJOR < 1) || (VERSION_MINOR < 0)))
-#  error "NO_SSD_SUPPORT must be used with in version 1.1 and above"
+#  error "NO_SSD_SUPPORT must be used with in version 1.10 and above"
 #endif
 
 // Each controller supports its own number of ports.  We must adhere to that for now.
@@ -145,15 +147,15 @@
 //  we are fine.
 // Note: BX_N_USB_XHCI_PORTS should have been defined as twice the amount of ports wanted.
 //  ie.: Each physical port (socket) has two defined port register sets.  One for USB3, one for USB2
-// Only one port type may be used at a time.  Port0 or Port1, not both.  If Port0 is used, then
-//  Port1 must be vacant.
+// Only one port type may be used at a time.  Socket0 or Socket1, not both.  If Socket0 is used, then
+//  Socket1 must be vacant.
 #define BX_N_USB_XHCI_PORTS 4
 
 // xHCI speed values
-#define SPEED_FULL   1
-#define SPEED_LOW    2
-#define SPEED_HI     3
-#define SPEED_SUPER  4
+#define XHCI_SPEED_FULL   1
+#define XHCI_SPEED_LOW    2
+#define XHCI_SPEED_HIGH   3
+#define XHCI_SPEED_SUPER  4
 
 #define USB2 0
 #define USB3 1
@@ -213,7 +215,6 @@ struct EP_CONTEXT {
 
 struct HC_SLOT_CONTEXT {
   bool enabled;
-  bool sent_address;  // have we sent a SET_ADDRESS command yet?
   struct SLOT_CONTEXT slot_context;
   struct {
     struct EP_CONTEXT   ep_context;
@@ -235,7 +236,18 @@ enum { NORMAL=1, SETUP_STAGE, DATA_STAGE, STATUS_STAGE, ISOCH, LINK, EVENT_DATA,
        HOST_CONTROLLER_EVENT=37, DEVICE_NOTIFICATION, MFINDEX_WRAP,
        // 40 - 47 = reserved
        // 48 - 63 = Vendor Defined
+       // 48, 49, & 50 are used for the NEC Vendor Defined commands
+       NEC_TRB_TYPE_CMD_COMP = 48,
+       NEC_TRB_TYPE_GET_FW = 49,
+       NEC_TRB_TYPE_GET_UN = 50,
+       // 60 is used for the Bochs Dump vendor command
+       BX_TRB_TYPE_DUMP = 60,
 };
+
+// NEC Vendor specific TRB types
+#define NEC_FW_MAJOR(v)       (((v) & 0x0000FF00) >> 8)
+#define NEC_FW_MINOR(v)       (((v) & 0x000000FF) >> 0)
+
 
 // event completion codes
 enum { TRB_SUCCESS=1, DATA_BUFFER_ERROR, BABBLE_DETECTION, TRANSACTION_ERROR, TRB_ERROR, STALL_ERROR,
@@ -277,14 +289,6 @@ enum { PLS_U0 = 0, PLS_U1, PLS_U2, PLS_U3_SUSPENDED, PLS_DISABLED, PLS_RXDETECT,
 #define EP_STATE_HALTED   2
 #define EP_STATE_STOPPED  3
 #define EP_STATE_ERROR    4
-
-// NEC Vendor specific TRB types
-#define NEC_TRB_TYPE_CMD_COMP 48
-#define NEC_TRB_TYPE_GET_FW   49
-#define NEC_TRB_TYPE_GET_UN   50
-  #define NEC_MAGIC           0x49434878
-#define NEC_FW_MAJOR(v)       (((v) & 0x0000FF00) >> 8)
-#define NEC_FW_MINOR(v)       (((v) & 0x000000FF) >> 0)
 
 #define TRB_GET_STYPE(x)     (((x) & (0x1F << 16)) >> 16)
 #define TRB_SET_STYPE(x)     (((x) & 0x1F) << 16)
@@ -415,6 +419,7 @@ typedef struct {
     usb_device_c *device; // device connected to this port
     bool is_usb3;         // set if usb3 port, cleared if usb2 port.
     bool has_been_reset;  // set if the port has been reset aftet powered up.
+    bool needs_psce;      // needs a port status change event on port powered.
 
     struct {
       bool  wpr;               //  1 bit Warm Port Reset             = 0b             RW or RsvdZ
@@ -565,6 +570,7 @@ private:
   static void remove_device(Bit8u port);
   static bool usb_set_connect_status(Bit8u port, bool connected);
 
+  static int  broadcast_speed(const int slot);
   static int  broadcast_packet(USBPacket *p, const int port);
   static void xhci_timer_handler(void *);
   void xhci_timer(void);
@@ -585,10 +591,10 @@ private:
   static void copy_ep_from_buffer(struct EP_CONTEXT *ep_context, const Bit8u *buffer);
   static void copy_slot_to_buffer(Bit32u *buffer, const int slot);
   static void copy_ep_to_buffer(Bit32u *buffer, const int slot, const int ep);
-  static bool validate_slot_context(const struct SLOT_CONTEXT *slot_context);
-  static bool validate_ep_context(const struct EP_CONTEXT *ep_context, int speed, int ep_num);
+  static int  validate_slot_context(const struct SLOT_CONTEXT *slot_context);
+  static int  validate_ep_context(const struct EP_CONTEXT *ep_context, const int trb_command, const Bit32u a_flags, int port_num, int ep_num);
   static int  create_unique_address(const int slot);
-  static int  send_set_address(const int addr, const int port_num);
+  static int  send_set_address(const int addr, const int port_num, const int slot);
 
   static void dump_xhci_core(const int slots, const int eps);
 

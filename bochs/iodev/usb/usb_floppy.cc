@@ -4,8 +4,8 @@
 //
 //  UFI/CBI floppy disk storage device support
 //
-//  Copyright (c) 2015       Benjamin David Lunt
-//  Copyright (C) 2015-2021  The Bochs Project
+//  Copyright (c) 2015-2023  Benjamin David Lunt
+//  Copyright (C) 2015-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -88,6 +88,10 @@ protected:
 // USB requests
 #define GetMaxLun         0xfe
 
+// If you change any of the Max Packet Size, or other fields within these
+//  descriptors, you must also change the d.endpoint_info[] array
+//  to match your changes.
+
 // Full-speed only
 static Bit8u bx_floppy_dev_descriptor[] = {
   0x12,       /*  u8 bLength; */
@@ -97,7 +101,7 @@ static Bit8u bx_floppy_dev_descriptor[] = {
   0x00,       /*  u8  bDeviceClass; */
   0x00,       /*  u8  bDeviceSubClass; */
   0x00,       /*  u8  bDeviceProtocol; [ low/full speeds only ] */
-  0x08,       /*  u8  bMaxPacketSize0; 8 Bytes */
+  0x40,       /*  u8  bMaxPacketSize; 64 Bytes */
 
   /* Vendor and product id are arbitrary.  */
   0x00, 0x00, /*  u16 idVendor; */
@@ -250,7 +254,7 @@ static Bit8u bx_floppy_dev_mode_sense_cur[] = {
   // 0x93,      // (1.25meg)
   0x94,         // (1.44meg)
   // WP (bit 7), reserved
-  0x00, // ben
+  0x00,
   // reserved
   0x00, 0x00, 0x00, 0x00,
 
@@ -321,12 +325,22 @@ usb_floppy_device_c::usb_floppy_device_c()
   bx_param_enum_c *status, *mode;
 
   d.speed = d.minspeed = d.maxspeed = USB_SPEED_FULL;
-  memset((void*)&s, 0, sizeof(s));
+  memset((void *) &s, 0, sizeof(s));
   strcpy(d.devname, "BOCHS UFI/CBI FLOPPY");
   d.dev_descriptor = bx_floppy_dev_descriptor;
   d.config_descriptor = bx_floppy_config_descriptor;
   d.device_desc_size = sizeof(bx_floppy_dev_descriptor);
   d.config_desc_size = sizeof(bx_floppy_config_descriptor);
+  d.endpoint_info[USB_CONTROL_EP].max_packet_size = 64; // Control ep0
+  d.endpoint_info[USB_CONTROL_EP].max_burst_size = 0;
+  d.endpoint_info[1].max_packet_size = 64;  // In ep1
+  d.endpoint_info[1].max_burst_size = 0;
+  d.endpoint_info[2].max_packet_size = 64;  // Out ep2
+  d.endpoint_info[2].max_burst_size = 0;
+#if USB_FLOPPY_USE_INTERRUPT
+  d.endpoint_info[3].max_packet_size = 2;  // In ep3
+  d.endpoint_info[3].max_burst_size = 0;
+#endif
   s.inserted = 0;
   s.dev_buffer = new Bit8u[USB_FLOPPY_MAX_SECTORS * 512];
   s.statusbar_id = bx_gui->register_statusitem("USB-FD", 1);
@@ -429,6 +443,12 @@ bool usb_floppy_device_c::set_option(const char *option)
 
 bool usb_floppy_device_c::init()
 {
+  /*  If you wish to set DEBUG=report in the code, instead of
+   *  in the configuration, simply uncomment this line.  I use
+   *  it when I am working on this emulation.
+   */
+  //LOG_THIS setonoff(LOGLEV_DEBUG, ACT_REPORT);
+
   // set the model information
   //  s.model == 1 if use teac model, else use bochs model
   if (s.model) {
@@ -458,7 +478,7 @@ bool usb_floppy_device_c::init()
   return 1;
 }
 
-const char* usb_floppy_device_c::get_info()
+const char *usb_floppy_device_c::get_info()
 {
   // set the write protected bit given by parameter in bochsrc.txt file
   bx_floppy_dev_mode_sense_cur[3] &= ~0x80;
@@ -508,7 +528,7 @@ int usb_floppy_device_c::handle_control(int request, int value, int index, int l
   ret = 0;
   switch (request) {
     case DeviceOutRequest | USB_REQ_CLEAR_FEATURE:
-      BX_INFO(("USB_REQ_CLEAR_FEATURE: Not handled: %i %i %i %i", request, value, index, length ));
+      BX_INFO(("USB_REQ_CLEAR_FEATURE: Not handled: %d %d %d %d", request, value, index, length ));
       // It's okay that we don't handle this.  Most likely the guest is just
       //  clearing the toggle bit.  Since we don't worry about the toggle bit (yet?),
       //  we can just ignore and continue.
@@ -522,7 +542,7 @@ int usb_floppy_device_c::handle_control(int request, int value, int index, int l
         case USB_DEVICE_U2_ENABLE:
           break;
         default:
-          BX_DEBUG(("USB_REQ_SET_FEATURE: Not handled: %i %i %i %i", request, value, index, length ));
+          BX_DEBUG(("USB_REQ_SET_FEATURE: Not handled: %d %d %d %d", request, value, index, length ));
           goto fail;
       }
       ret = 0;
@@ -535,6 +555,7 @@ int usb_floppy_device_c::handle_control(int request, int value, int index, int l
             case 0xEE:
               // Microsoft OS Descriptor check
               // We don't support this check, so fail
+              BX_INFO(("USB floppy handle_control: Microsoft OS specific 0xEE string descriptor"));
               goto fail;
             default:
               BX_ERROR(("USB floppy handle_control: unknown string descriptor 0x%02x", value & 0xff));
@@ -555,13 +576,14 @@ int usb_floppy_device_c::handle_control(int request, int value, int index, int l
       break;
     case EndpointOutRequest | USB_REQ_CLEAR_FEATURE:
       BX_DEBUG(("USB_REQ_CLEAR_FEATURE:"));
-      // It's okay that we don't handle this.  Most likely the guest is just
-      //  clearing the toggle bit.  Since we don't worry about the toggle bit (yet?),
-      //  we can just ignore and continue.
-      //if (value == 0 && index != 0x81) { /* clear ep halt */
-      //  goto fail;
-      //}
-      ret = 0;
+      // Value == 0 == Endpoint Halt (the Guest wants to reset the endpoint)
+      if (value == 0) { /* clear ep halt */
+#if HANDLE_TOGGLE_CONTROL
+        set_toggle(index, 0);
+#endif
+        ret = 0;
+      } else
+        goto fail;
       break;
     case DeviceOutRequest | USB_REQ_SET_SEL:
       // Set U1 and U2 System Exit Latency
@@ -577,7 +599,7 @@ int usb_floppy_device_c::handle_control(int request, int value, int index, int l
       break;
     // this is the request where we should receive 12 bytes
     //  of command data.
-    case InterfaceOutClassRequest:
+    case InterfaceOutClassRequest | 0x00:
       if (!handle_command(data))
         goto fail;
       break;
@@ -624,6 +646,7 @@ bool usb_floppy_device_c::handle_command(Bit8u *command)
   //  (I don't know why, and will document further when I know more)
   if ((s.fail_count > 0) &&
       (s.cur_command != UFI_INQUIRY) && (s.cur_command != UFI_REQUEST_SENSE)) {
+    BX_DEBUG(("Consistant stall of %d of 2.", 2 - s.fail_count + 1));
     s.fail_count--;
     return 0;
   }
@@ -690,7 +713,7 @@ bool usb_floppy_device_c::handle_command(Bit8u *command)
                (command[8] <<  8) |
                (command[9] <<  0));
     case UFI_READ_10:
-      BX_DEBUG(("UFI_READ_%i COMMAND (lba = %i, count = %i)", (s.cur_command == UFI_READ_12) ? 12 : 10, lba, count));
+      BX_DEBUG(("UFI_READ_%d COMMAND (lba = %d, count = %d)", (s.cur_command == UFI_READ_12) ? 12 : 10, lba, count));
       if (!s.inserted) {
         s.sense = 2;
         s.asc = 0x3a;
@@ -718,7 +741,7 @@ bool usb_floppy_device_c::handle_command(Bit8u *command)
                (command[8] <<  8) |
                (command[9] <<  0));
     case UFI_WRITE_10:
-      BX_DEBUG(("UFI_WRITE_%i COMMAND (lba = %i, count = %i)", (s.cur_command == UFI_WRITE_12) ? 12 : 10, lba, count));
+      BX_DEBUG(("UFI_WRITE_%d COMMAND (lba = %d, count = %d)", (s.cur_command == UFI_WRITE_12) ? 12 : 10, lba, count));
       if (!s.inserted) {
         s.sense = 2;
         s.asc = 0x3a;
@@ -760,7 +783,7 @@ bool usb_floppy_device_c::handle_command(Bit8u *command)
       break;
 
     case UFI_PREVENT_ALLOW_REMOVAL:
-      BX_DEBUG(("UFI_PREVENT_ALLOW_REMOVAL COMMAND (prevent = %i)", (command[4] & 1) > 0));
+      BX_DEBUG(("UFI_PREVENT_ALLOW_REMOVAL COMMAND (prevent = %d)", (command[4] & 1) > 0));
       if (command[4] & 1) {
         s.sense = 5;
         s.asc = 0x24;
@@ -771,7 +794,7 @@ bool usb_floppy_device_c::handle_command(Bit8u *command)
     case UFI_MODE_SENSE:
       pc = command[2] >> 6;
       pagecode = command[2] & 0x3F;
-      BX_DEBUG(("UFI_MODE_SENSE COMMAND.  PC = %i, PageCode = %02X", pc, pagecode));
+      BX_DEBUG(("UFI_MODE_SENSE COMMAND.  PC = %d, PageCode = %02X", pc, pagecode));
       switch (pc) {
         case 0:  // current values
           switch (pagecode) {
@@ -819,7 +842,7 @@ bool usb_floppy_device_c::handle_command(Bit8u *command)
       break;
 
     case UFI_START_STOP_UNIT:
-      BX_DEBUG(("UFI_START_STOP_UNIT COMMAND (start = %i)", command[4] & 1));
+      BX_DEBUG(("UFI_START_STOP_UNIT COMMAND (start = %d)", command[4] & 1));
       // The UFI specs say that access to the media is allowed
       //  even if the start/stop command is used to stop the device.
       // However, we'll allow the command to return valid return.
@@ -831,7 +854,7 @@ bool usb_floppy_device_c::handle_command(Bit8u *command)
       break;
 
     case UFI_FORMAT_UNIT:
-      BX_DEBUG(("UFI_FORMAT_UNIT COMMAND (track = %i)", command[2]));
+      BX_DEBUG(("UFI_FORMAT_UNIT COMMAND (track = %d)", command[2]));
       if (!s.inserted) {
         s.sense = 2;
         s.asc = 0x3a;
@@ -866,6 +889,11 @@ int usb_floppy_device_c::handle_data(USBPacket *p)
   Bit8u *data = p->data, *tmpbuf;
   int len = p->len, len1;
   Bit32u count, max_sectors;
+  
+  // check that the length is <= the max packet size of the device
+  if (p->len > get_mps(p->devep)) {
+    BX_DEBUG(("EP%d transfer length (%d) is greater than Max Packet Size (%d).", p->devep, p->len, get_mps(p->devep)));
+  }
 
   switch (p->pid) {
     case USB_TOKEN_OUT:
@@ -913,7 +941,7 @@ int usb_floppy_device_c::handle_data(USBPacket *p)
 
           if (len > (int) s.data_len)
             goto fail;
-          BX_DEBUG(("FORMAT UNIT: single track = %i, side = %i", (data[1] >> 4) & 1, data[1] & 1));
+          BX_DEBUG(("FORMAT UNIT: single track = %d, side = %d", (data[1] >> 4) & 1, data[1] & 1));
           if ((data[1] >> 4) & 1) {
             if (data[1] & 1) {
               s.sector += 18;
@@ -1131,7 +1159,7 @@ int usb_floppy_device_c::floppy_read_sector()
   ssize_t ret;
   USBPacket *p = s.packet;
 
-  BX_DEBUG(("floppy_read_sector(): sector = %i", s.sector));
+  BX_DEBUG(("floppy_read_sector(): sector = %d", s.sector));
   if (((USB_FLOPPY_MAX_SECTORS * 512) - s.usb_len) >= 512) {
     ret = s.hdimage->read((bx_ptr_t) s.usb_buf, 512);
     if (ret > 0) {
@@ -1166,7 +1194,7 @@ int usb_floppy_device_c::floppy_read_sector()
 
 int usb_floppy_device_c::floppy_write_sector()
 {
-  BX_DEBUG(("floppy_write_sector(): sector = %i", s.sector));
+  BX_DEBUG(("floppy_write_sector(): sector = %d", s.sector));
   if (s.hdimage->write((bx_ptr_t) s.usb_buf, 512) < 0) {
     BX_ERROR(("write error"));
     return -1;

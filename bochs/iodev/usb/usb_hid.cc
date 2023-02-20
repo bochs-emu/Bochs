@@ -8,7 +8,7 @@
 //
 // Copyright (c) 2005       Fabrice Bellard
 // Copyright (c) 2007       OpenMoko, Inc.  (andrew@openedhand.com)
-// Copyright (C) 2009-2021  The Bochs Project
+// Copyright (C) 2009-2023  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -30,7 +30,7 @@
 /////////////////////////////////////////////////////////////////////////
 //  Portions of this file contain code released under the LGPL.
 //
-// Copyright (C) 2004-2016  Benjamin D Lunt (fys [at] fysnet [dot] net)
+// Copyright (C) 2004-2023  Benjamin D Lunt (fys [at] fysnet [dot] net)
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -93,18 +93,28 @@ protected:
 #define HID_IDLE_TIME 4000
 
 /* HID interface requests */
-#define GET_REPORT   0xa101
-#define GET_IDLE     0xa102
-#define GET_PROTOCOL 0xa103
-#define SET_REPORT   0x2109
-#define SET_IDLE     0x210a
-#define SET_PROTOCOL 0x210b
+#define GET_REPORT   0x01
+#define GET_IDLE     0x02
+#define GET_PROTOCOL 0x03
+#define SET_REPORT   0x09
+#define SET_IDLE     0x0A
+#define SET_PROTOCOL 0x0B
+
+/* BOOT Protocol or Report Protocol */
+#define PROTOCOL_BOOT    0
+#define PROTOCOL_REPORT  1
 
 struct USBKBD {
   Bit8u code;
   bool modkey;
 };
 
+// If you change any of the Max Packet Size, or other fields within these
+//  descriptors, you must also change the d.endpoint_info[] array
+//  to match your changes.
+
+////////////////////////////////////////////////
+// Mouse
 static const Bit8u bx_mouse_dev_descriptor[] = {
   0x12,       /*  u8 bLength; */
   0x01,       /*  u8 bDescriptorType; Device */
@@ -113,7 +123,7 @@ static const Bit8u bx_mouse_dev_descriptor[] = {
   0x00,       /*  u8  bDeviceClass; */
   0x00,       /*  u8  bDeviceSubClass; */
   0x00,       /*  u8  bDeviceProtocol; [ low/full speeds only ] */
-  0x08,       /*  u8  bMaxPacketSize0; 8 Bytes */
+  0x08,       /*  u8  bMaxPacketSize; 8 Bytes */
 
   0x27, 0x06, /*  u16 idVendor; */
   0x01, 0x00, /*  u16 idProduct; */
@@ -133,7 +143,7 @@ static const Bit8u bx_mouse_dev_descriptor2[] = {
   0x00,       /*  u8  bDeviceClass; */
   0x00,       /*  u8  bDeviceSubClass; */
   0x00,       /*  u8  bDeviceProtocol; [ low/full speeds only ] */
-  0x40,       /*  u8  bMaxPacketSize0; 64 Bytes */
+  0x40,       /*  u8  bMaxPacketSize; 64 Bytes */
 
   0x27, 0x06, /*  u16 idVendor; */
   0x01, 0x00, /*  u16 idProduct; */
@@ -143,6 +153,36 @@ static const Bit8u bx_mouse_dev_descriptor2[] = {
   0x02,       /*  u8  iProduct; */
   0x03,       /*  u8  iSerialNumber; */
   0x01        /*  u8  bNumConfigurations; */
+};
+
+static const Bit8u bx_mouse_hid_report_descriptor[] = {
+  0x05, 0x01,        // Usage Page (Generic Desktop Ctrls)
+  0x09, 0x02,        // Usage (Mouse)
+  0xA1, 0x01,        // Collection (Application)
+  0x09, 0x01,        //   Usage (Pointer)
+  0xA1, 0x00,        //   Collection (Physical)
+  0x05, 0x09,        //     Usage Page (Button)
+  0x19, 0x01,        //     Usage Minimum (0x01)
+  0x29, 0x03,        //     Usage Maximum (0x03)
+  0x15, 0x00,        //     Logical Minimum (0)
+  0x25, 0x01,        //     Logical Maximum (1)
+  0x95, 0x03,        //     Report Count (3)
+  0x75, 0x01,        //     Report Size (1)
+  0x81, 0x02,        //     Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
+  0x95, 0x01,        //     Report Count (1)
+  0x75, 0x05,        //     Report Size (5)
+  0x81, 0x01,        //     Input (Const,Array,Abs,No Wrap,Linear,Preferred State,No Null Position)
+  0x05, 0x01,        //     Usage Page (Generic Desktop Ctrls)
+  0x09, 0x30,        //     Usage (X)
+  0x09, 0x31,        //     Usage (Y)
+  0x09, 0x38,        //     Usage (Wheel)
+  0x15, 0x81,        //     Logical Minimum (-127)
+  0x25, 0x7F,        //     Logical Maximum (127)
+  0x75, 0x08,        //     Report Size (8)
+  0x95, 0x03,        //     Report Count (3)
+  0x81, 0x06,        //     Input (Data,Var,Rel,No Wrap,Linear,Preferred State,No Null Position)
+  0xC0,              //   End Collection
+  0xC0,              // End Collection
 };
 
 static const Bit8u bx_mouse_config_descriptor[] = {
@@ -160,17 +200,6 @@ static const Bit8u bx_mouse_config_descriptor[] = {
 			     4..0: resvd */
   50,         /*  u8  MaxPower; */
 
-  /* USB 1.1:
-   * USB 2.0, single TT organization (mandatory):
-   *	one interface, protocol 0
-   *
-   * USB 2.0, multiple TT organization (optional):
-   *	two interfaces, protocols 1 (like single TT)
-   *	and 2 (multiple TT mode) ... config is
-   *	sometimes settable
-   *	NOT IMPLEMENTED
-   */
-
   /* one interface */
   0x09,       /*  u8  if_bLength; */
   0x04,       /*  u8  if_bDescriptorType; Interface */
@@ -179,7 +208,7 @@ static const Bit8u bx_mouse_config_descriptor[] = {
   0x01,       /*  u8  if_bNumEndpoints; */
   0x03,       /*  u8  if_bInterfaceClass; */
   0x01,       /*  u8  if_bInterfaceSubClass; */
-  0x02,       /*  u8  if_bInterfaceProtocol; [usb1.1 or single tt] */
+  0x02,       /*  u8  if_bInterfaceProtocol; */
   0x05,       /*  u8  if_iInterface; */
 
   /* HID descriptor */
@@ -189,14 +218,14 @@ static const Bit8u bx_mouse_config_descriptor[] = {
   0x00,        /*  u8 country_code */
   0x01,        /*  u8 num_descriptors */
   0x22,        /*  u8 type; Report */
-  50, 0,       /*  u16 len */
+  sizeof(bx_mouse_hid_report_descriptor), 0, /*  u16 len */
 
   /* one endpoint */
   0x07,       /*  u8  ep_bLength; */
   0x05,       /*  u8  ep_bDescriptorType; Endpoint */
   0x81,       /*  u8  ep_bEndpointAddress; IN Endpoint 1 */
   0x03,       /*  u8  ep_bmAttributes; Interrupt */
-  0x03, 0x00, /*  u16 ep_wMaxPacketSize; */
+  0x04, 0x00, /*  u16 ep_wMaxPacketSize; */
   0x0a,       /*  u8  ep_bInterval; (0 - 255ms -- usb 2.0 spec) */
 };
 
@@ -215,17 +244,6 @@ static const Bit8u bx_mouse_config_descriptor2[] = {
 			     4..0: resvd */
   50,         /*  u8  MaxPower; */
 
-  /* USB 1.1:
-   * USB 2.0, single TT organization (mandatory):
-   *	one interface, protocol 0
-   *
-   * USB 2.0, multiple TT organization (optional):
-   *	two interfaces, protocols 1 (like single TT)
-   *	and 2 (multiple TT mode) ... config is
-   *	sometimes settable
-   *	NOT IMPLEMENTED
-   */
-
   /* one interface */
   0x09,       /*  u8  if_bLength; */
   0x04,       /*  u8  if_bDescriptorType; Interface */
@@ -234,7 +252,7 @@ static const Bit8u bx_mouse_config_descriptor2[] = {
   0x01,       /*  u8  if_bNumEndpoints; */
   0x03,       /*  u8  if_bInterfaceClass; */
   0x01,       /*  u8  if_bInterfaceSubClass; */
-  0x02,       /*  u8  if_bInterfaceProtocol; [usb1.1 or single tt] */
+  0x02,       /*  u8  if_bInterfaceProtocol; */
   0x05,       /*  u8  if_iInterface; */
 
   /* HID descriptor */
@@ -244,14 +262,14 @@ static const Bit8u bx_mouse_config_descriptor2[] = {
   0x00,        /*  u8 country_code */
   0x01,        /*  u8 num_descriptors */
   0x22,        /*  u8 type; Report */
-  50, 0,       /*  u16 len */
+  sizeof(bx_mouse_hid_report_descriptor), 0, /*  u16 len */
 
   /* one endpoint */
   0x07,       /*  u8  ep_bLength; */
   0x05,       /*  u8  ep_bDescriptorType; Endpoint */
   0x81,       /*  u8  ep_bEndpointAddress; IN Endpoint 1 */
   0x03,       /*  u8  ep_bmAttributes; Interrupt */
-  0x03, 0x00, /*  u16 ep_wMaxPacketSize; */
+  0x04, 0x00, /*  u16 ep_wMaxPacketSize; */
   0x07,       /*  u8  ep_bInterval; (2 ^ (8-1) * 125 usecs = 8 ms) */
 };
 
@@ -263,17 +281,49 @@ static const Bit8u bx_mouse_hid_descriptor[] = {
   0x00,        /*  u8 country_code */
   0x01,        /*  u8 num_descriptors */
   0x22,        /*  u8 type; Report */
-  50, 0        /*  u16 len */
+  sizeof(bx_mouse_hid_report_descriptor), 0, /*  u16 len */
 };
 
-static const Bit8u bx_mouse_hid_report_descriptor[] = {
-  0x05, 0x01, 0x09, 0x02, 0xA1, 0x01, 0x09, 0x01,
-  0xA1, 0x00, 0x05, 0x09, 0x19, 0x01, 0x29, 0x03,
-  0x15, 0x00, 0x25, 0x01, 0x95, 0x03, 0x75, 0x01,
-  0x81, 0x02, 0x95, 0x01, 0x75, 0x05, 0x81, 0x01,
-  0x05, 0x01, 0x09, 0x30, 0x09, 0x31, 0x15, 0x81,
-  0x25, 0x7F, 0x75, 0x08, 0x95, 0x02, 0x81, 0x06,
-  0xC0, 0xC0,
+////////////////////////////////////////////////
+// tablet
+static const Bit8u bx_tablet_hid_report_descriptor[] = {
+  0x05, 0x01,        // Usage Page (Generic Desktop Ctrls)
+  0x09, 0x01,        // Usage (Pointer)
+  0xA1, 0x01,        // Collection (Application)
+  0x09, 0x01,        //   Usage (Pointer)
+  0xA1, 0x00,        //   Collection (Physical)
+  0x05, 0x09,        //     Usage Page (Button)
+  0x19, 0x01,        //     Usage Minimum (0x01)
+  0x29, 0x03,        //     Usage Maximum (0x03)
+  0x15, 0x00,        //     Logical Minimum (0)
+  0x25, 0x01,        //     Logical Maximum (1)
+  0x95, 0x03,        //     Report Count (3)
+  0x75, 0x01,        //     Report Size (1)
+  0x81, 0x02,        //     Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
+  0x95, 0x01,        //     Report Count (1)
+  0x75, 0x05,        //     Report Size (5)
+  0x81, 0x01,        //     Input (Const,Array,Abs,No Wrap,Linear,Preferred State,No Null Position)
+  0x05, 0x01,        //     Usage Page (Generic Desktop Ctrls)
+  0x09, 0x30,        //     Usage (X)
+  0x09, 0x31,        //     Usage (Y)
+  0x15, 0x00,        //     Logical Minimum (0)
+  0x26, 0xFF, 0x7F,  //     Logical Maximum (32767)
+  0x35, 0x00,        //     Physical Minimum (0)
+  0x46, 0xFF, 0x7F,  //     Physical Maximum (32767)
+  0x75, 0x10,        //     Report Size (16)
+  0x95, 0x02,        //     Report Count (2)
+  0x81, 0x02,        //     Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
+  0x05, 0x01,        //     Usage Page (Generic Desktop Ctrls)
+  0x09, 0x38,        //     Usage (Wheel)
+  0x15, 0x81,        //     Logical Minimum (-127)
+  0x25, 0x7F,        //     Logical Maximum (127)
+  0x35, 0x00,        //     Physical Minimum (0)
+  0x45, 0x00,        //     Physical Maximum (0)
+  0x75, 0x08,        //     Report Size (8)
+  0x95, 0x01,        //     Report Count (1)
+  0x81, 0x06,        //     Input (Data,Var,Rel,No Wrap,Linear,Preferred State,No Null Position)
+  0xC0,              //   End Collection
+  0xC0,              // End Collection
 };
 
 static const Bit8u bx_tablet_config_descriptor[] = {
@@ -299,7 +349,7 @@ static const Bit8u bx_tablet_config_descriptor[] = {
   0x01,       /*  u8  if_bNumEndpoints; */
   0x03,       /*  u8  if_bInterfaceClass; */
   0x01,       /*  u8  if_bInterfaceSubClass; */
-  0x02,       /*  u8  if_bInterfaceProtocol; [usb1.1 or single tt] */
+  0x02,       /*  u8  if_bInterfaceProtocol; */
   0x05,       /*  u8  if_iInterface; */
 
   /* HID descriptor */
@@ -309,7 +359,7 @@ static const Bit8u bx_tablet_config_descriptor[] = {
   0x00,        /*  u8 country_code */
   0x01,        /*  u8 num_descriptors */
   0x22,        /*  u8 type; Report */
-  74, 0,       /*  u16 len */
+  sizeof(bx_tablet_hid_report_descriptor), 0,       /*  u16 len */
 
   /* one endpoint */
   0x07,       /*  u8  ep_bLength; */
@@ -343,7 +393,7 @@ static const Bit8u bx_tablet_config_descriptor2[] = {
   0x01,       /*  u8  if_bNumEndpoints; */
   0x03,       /*  u8  if_bInterfaceClass; */
   0x01,       /*  u8  if_bInterfaceSubClass; */
-  0x02,       /*  u8  if_bInterfaceProtocol; [usb1.1 or single tt] */
+  0x02,       /*  u8  if_bInterfaceProtocol; */
   0x05,       /*  u8  if_iInterface; */
 
   /* HID descriptor */
@@ -353,7 +403,7 @@ static const Bit8u bx_tablet_config_descriptor2[] = {
   0x00,        /*  u8 country_code */
   0x01,        /*  u8 num_descriptors */
   0x22,        /*  u8 type; Report */
-  74, 0,       /*  u16 len */
+  sizeof(bx_tablet_hid_report_descriptor), 0,       /*  u16 len */
 
   /* one endpoint */
   0x07,       /*  u8  ep_bLength; */
@@ -372,47 +422,44 @@ static const Bit8u bx_tablet_hid_descriptor[] = {
   0x00,        /*  u8 country_code */
   0x01,        /*  u8 num_descriptors */
   0x22,        /*  u8 type; Report */
-  74, 0,       /*  u16 len */
+  sizeof(bx_tablet_hid_report_descriptor), 0,       /*  u16 len */
 };
 
-static const Bit8u bx_tablet_hid_report_descriptor[] = {
-  0x05, 0x01, /* Usage Page Generic Desktop */
-  0x09, 0x01, /* Usage Pointer */
-  0xA1, 0x01, /* Collection Application */
-  0x09, 0x01, /* Usage Pointer */
-  0xA1, 0x00, /* Collection Physical */
-  0x05, 0x09, /* Usage Page Button */
-  0x19, 0x01, /* Usage Minimum Button 1 */
-  0x29, 0x03, /* Usage Maximum Button 3 */
-  0x15, 0x00, /* Logical Minimum 0 */
-  0x25, 0x01, /* Logical Maximum 1 */
-  0x95, 0x03, /* Report Count 3 */
-  0x75, 0x01, /* Report Size 1 */
-  0x81, 0x02, /* Input (Data, Var, Abs) */
-  0x95, 0x01, /* Report Count 1 */
-  0x75, 0x05, /* Report Size 5 */
-  0x81, 0x01, /* Input (Cnst, Var, Abs) */
-  0x05, 0x01, /* Usage Page Generic Desktop */
-  0x09, 0x30, /* Usage X */
-  0x09, 0x31, /* Usage Y */
-  0x15, 0x00, /* Logical Minimum 0 */
-  0x26, 0xFF, 0x7F, /* Logical Maximum 0x7fff */
-  0x35, 0x00, /* Physical Minimum 0 */
-  0x46, 0xFF, 0x7F, /* Physical Maximum 0x7fff */
-  0x75, 0x10, /* Report Size 16 */
-  0x95, 0x02, /* Report Count 2 */
-  0x81, 0x02, /* Input (Data, Var, Abs) */
-  0x05, 0x01, /* Usage Page Generic Desktop */
-  0x09, 0x38, /* Usage Wheel */
-  0x15, 0x81, /* Logical Minimum -127 */
-  0x25, 0x7F, /* Logical Maximum 127 */
-  0x35, 0x00, /* Physical Minimum 0 (same as logical) */
-  0x45, 0x00, /* Physical Maximum 0 (same as logical) */
-  0x75, 0x08, /* Report Size 8 */
-  0x95, 0x01, /* Report Count 1 */
-  0x81, 0x06, /* Input (Data, Var, Rel) */
-  0xC0,       /* End Collection */
-  0xC0,       /* End Collection */
+////////////////////////////////////////////////
+// keypad
+static const Bit8u bx_keypad_hid_report_descriptor[] = {
+  0x05, 0x01,        // Usage Page (Generic Desktop Ctrls)
+  0x09, 0x06,        // Usage (Keyboard)
+  0xA1, 0x01,        // Collection (Application)
+  0x05, 0x07,        //   Usage Page (Kbrd/Keypad)
+  0x19, 0xE0,        //   Usage Minimum (0xE0)
+  0x29, 0xE7,        //   Usage Maximum (0xE7)
+  0x15, 0x00,        //   Logical Minimum (0)
+  0x25, 0x01,        //   Logical Maximum (1)
+  0x75, 0x01,        //   Report Size (1)
+  0x95, 0x08,        //   Report Count (8)
+  0x81, 0x02,        //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
+  0x95, 0x01,        //   Report Count (1)
+  0x75, 0x08,        //   Report Size (8)
+  0x81, 0x01,        //   Input (Const,Array,Abs,No Wrap,Linear,Preferred State,No Null Position)
+  0x95, 0x03,        //   Report Count (3)
+  0x75, 0x01,        //   Report Size (1)
+  0x05, 0x08,        //   Usage Page (LEDs)
+  0x19, 0x01,        //   Usage Minimum (Num Lock)
+  0x29, 0x03,        //   Usage Maximum (Scroll Lock)
+  0x91, 0x02,        //   Output (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position,Non-volatile)
+  0x95, 0x05,        //   Report Count (5)
+  0x75, 0x01,        //   Report Size (1)
+  0x91, 0x01,        //   Output (Const,Array,Abs,No Wrap,Linear,Preferred State,No Null Position,Non-volatile)
+  0x95, 0x06,        //   Report Count (6)
+  0x75, 0x08,        //   Report Size (8)
+  0x15, 0x00,        //   Logical Minimum (0)
+  0x26, 0xFF, 0x00,  //   Logical Maximum (255)
+  0x05, 0x07,        //   Usage Page (Kbrd/Keypad)
+  0x19, 0x00,        //   Usage Minimum (0x00)
+  0x2A, 0xFF, 0x00,  //   Usage Maximum (0xFF)
+  0x81, 0x00,        //   Input (Data,Array,Abs,No Wrap,Linear,Preferred State,No Null Position)
+  0xC0,              // End Collection
 };
 
 static const Bit8u bx_keypad_dev_descriptor[] = {
@@ -423,7 +470,7 @@ static const Bit8u bx_keypad_dev_descriptor[] = {
   0x00,       /*  u8  bDeviceClass; */
   0x00,       /*  u8  bDeviceSubClass; */
   0x00,       /*  u8  bDeviceProtocol; [ low/full speeds only ] */
-  0x08,       /*  u8  bMaxPacketSize0; 8 Bytes */
+  0x08,       /*  u8  bMaxPacketSize; 8 Bytes */
 
   0xB4, 0x04, /*  u16 idVendor; */
   0x01, 0x01, /*  u16 idProduct; */
@@ -443,7 +490,7 @@ static const Bit8u bx_keypad_dev_descriptor2[] = {
   0x00,       /*  u8  bDeviceClass; */
   0x00,       /*  u8  bDeviceSubClass; */
   0x00,       /*  u8  bDeviceProtocol; [ low/full speeds only ] */
-  0x40,       /*  u8  bMaxPacketSize0; 64 Bytes */
+  0x40,       /*  u8  bMaxPacketSize; 64 Bytes */
 
   0xB4, 0x04, /*  u16 idVendor; */
   0x01, 0x01, /*  u16 idProduct; */
@@ -478,7 +525,7 @@ static const Bit8u bx_keypad_config_descriptor[] = {
   0x01,       /*  u8  if_bNumEndpoints; */
   0x03,       /*  u8  if_bInterfaceClass; */
   0x01,       /*  u8  if_bInterfaceSubClass; */
-  0x01,       /*  u8  if_bInterfaceProtocol; [usb1.1 or single tt] */
+  0x01,       /*  u8  if_bInterfaceProtocol; */
   0x05,       /*  u8  if_iInterface; */
 
   /* HID descriptor */
@@ -488,7 +535,7 @@ static const Bit8u bx_keypad_config_descriptor[] = {
   0x00,        /*  u8 country_code */
   0x01,        /*  u8 num_descriptors */
   0x22,        /*  u8 type; Report */
-  65, 0,       /*  u16 len */
+  sizeof(bx_keypad_hid_report_descriptor), 0,  /*  u16 len */
 
   /* one endpoint (status change endpoint) */
   0x07,       /*  u8  ep_bLength; */
@@ -522,7 +569,7 @@ static const Bit8u bx_keypad_config_descriptor2[] = {
   0x01,       /*  u8  if_bNumEndpoints; */
   0x03,       /*  u8  if_bInterfaceClass; */
   0x01,       /*  u8  if_bInterfaceSubClass; */
-  0x01,       /*  u8  if_bInterfaceProtocol; [usb1.1 or single tt] */
+  0x01,       /*  u8  if_bInterfaceProtocol; */
   0x05,       /*  u8  if_iInterface; */
 
   /* HID descriptor */
@@ -532,7 +579,7 @@ static const Bit8u bx_keypad_config_descriptor2[] = {
   0x00,        /*  u8 country_code */
   0x01,        /*  u8 num_descriptors */
   0x22,        /*  u8 type; Report */
-  65, 0,       /*  u16 len */
+  sizeof(bx_keypad_hid_report_descriptor), 0,  /*  u16 len */
 
   /* one endpoint (status change endpoint) */
   0x07,       /*  u8  ep_bLength; */
@@ -551,19 +598,7 @@ static const Bit8u bx_keypad_hid_descriptor[] = {
   0x00,        /*  u8 country_code */
   0x01,        /*  u8 num_descriptors */
   0x22,        /*  u8 type; Report */
-  50, 0,       /*  u16 len */
-};
-
-static const Bit8u bx_keypad_hid_report_descriptor[] = {
-  0x05, 0x01, 0x09, 0x06, 0xA1, 0x01, 0x05, 0x07,
-  0x19, 0xE0, 0x29, 0xE7, 0x15, 0x00, 0x25, 0x01,
-  0x75, 0x01, 0x95, 0x08, 0x81, 0x02, 0x95, 0x01,
-  0x75, 0x08, 0x81, 0x01, 0x95, 0x03, 0x75, 0x01,
-  0x05, 0x08, 0x19, 0x01, 0x29, 0x03, 0x91, 0x02,
-  0x95, 0x05, 0x75, 0x01, 0x91, 0x01, 0x95, 0x06,
-  0x75, 0x08, 0x15, 0x00, 0x26, 0xFF, 0x00, 0x05,
-  0x07, 0x19, 0x00, 0x2A, 0xFF, 0x00, 0x81, 0x00,
-  0xC0
+  sizeof(bx_keypad_hid_report_descriptor), 0,  /*  u16 len */
 };
 
 struct USBKBD usbkbd_conv[BX_KEY_NBKEYS] = {
@@ -704,10 +739,10 @@ usb_hid_device_c::usb_hid_device_c(const char *devname)
   d.speed = d.minspeed;
   if (d.type == USB_HID_TYPE_MOUSE) {
     strcpy(d.devname, "USB Mouse");
-    DEV_register_removable_mouse((void*)this, mouse_enq_static, mouse_enabled_changed);
+    DEV_register_removable_mouse((void *) this, mouse_enq_static, mouse_enabled_changed);
   } else if (d.type == USB_HID_TYPE_TABLET) {
     strcpy(d.devname, "USB Tablet");
-    DEV_register_removable_mouse((void*)this, mouse_enq_static, mouse_enabled_changed);
+    DEV_register_removable_mouse((void *) this, mouse_enq_static, mouse_enabled_changed);
     bx_gui->set_mouse_mode_absxy(1);
   } else if ((d.type == USB_HID_TYPE_KEYPAD) || (d.type == USB_HID_TYPE_KEYBOARD)) {
     Bit8u led_mask;
@@ -721,7 +756,7 @@ usb_hid_device_c::usb_hid_device_c(const char *devname)
     } else {
       led_mask = BX_KBD_LED_MASK_ALL;
     }
-    DEV_register_removable_keyboard((void*)this, gen_scancode_static,
+    DEV_register_removable_keyboard((void *) this, gen_scancode_static,
                                     kbd_get_elements_static, led_mask);
   }
   timer_index = DEV_register_timer(this, hid_timer_handler, HID_IDLE_TIME, 0, 0,
@@ -729,7 +764,11 @@ usb_hid_device_c::usb_hid_device_c(const char *devname)
   d.vendor_desc = "BOCHS";
   d.product_desc = d.devname;
   d.serial_num = "1";
-  memset((void*)&s, 0, sizeof(s));
+  memset((void *) &s, 0, sizeof(s));
+  
+  // HID 1.11, section 7.2.6, page 54(64):
+  //  "When initialized, all devices default to report protocol."
+  s.boot_protocol = PROTOCOL_REPORT;
 
   put("usb_hid", "USBHID");
 }
@@ -739,24 +778,38 @@ usb_hid_device_c::~usb_hid_device_c(void)
   if ((d.type == USB_HID_TYPE_MOUSE) ||
       (d.type == USB_HID_TYPE_TABLET)) {
     bx_gui->set_mouse_mode_absxy(0);
-    DEV_unregister_removable_mouse((void*)this);
+    DEV_unregister_removable_mouse((void *) this);
   } else if ((d.type == USB_HID_TYPE_KEYPAD) ||
              (d.type == USB_HID_TYPE_KEYBOARD)) {
-    DEV_unregister_removable_keyboard((void*)this);
+    DEV_unregister_removable_keyboard((void *) this);
   }
   bx_pc_system.unregisterTimer(timer_index);
 }
 
 bool usb_hid_device_c::init()
 {
+  /*  If you wish to set DEBUG=report in the code, instead of
+   *  in the configuration, simply uncomment this line.  I use
+   *  it when I am working on this emulation.
+   */
+  LOG_THIS setonoff(LOGLEV_DEBUG, ACT_REPORT);
+
   if ((d.type == USB_HID_TYPE_MOUSE) ||
       (d.type == USB_HID_TYPE_TABLET)) {
     if (d.speed == USB_SPEED_HIGH) {
       d.dev_descriptor = bx_mouse_dev_descriptor2;
       d.device_desc_size = sizeof(bx_mouse_dev_descriptor2);
+      d.endpoint_info[USB_CONTROL_EP].max_packet_size = 64; // Control ep0
+      d.endpoint_info[USB_CONTROL_EP].max_burst_size = 0;
+      d.endpoint_info[1].max_packet_size = 4;  // In ep1
+      d.endpoint_info[1].max_burst_size = 0;
     } else {
       d.dev_descriptor = bx_mouse_dev_descriptor;
       d.device_desc_size = sizeof(bx_mouse_dev_descriptor);
+      d.endpoint_info[USB_CONTROL_EP].max_packet_size = 8; // Control ep0
+      d.endpoint_info[USB_CONTROL_EP].max_burst_size = 0;
+      d.endpoint_info[1].max_packet_size = 4;  // In ep1
+      d.endpoint_info[1].max_burst_size = 0;
     }
     if (d.type == USB_HID_TYPE_MOUSE) {
       if (d.speed == USB_SPEED_HIGH) {
@@ -781,18 +834,26 @@ bool usb_hid_device_c::init()
       d.device_desc_size = sizeof(bx_keypad_dev_descriptor2);
       d.config_descriptor = bx_keypad_config_descriptor2;
       d.config_desc_size = sizeof(bx_keypad_config_descriptor2);
+      d.endpoint_info[USB_CONTROL_EP].max_packet_size = 64; // Control ep0
+      d.endpoint_info[USB_CONTROL_EP].max_burst_size = 0;
+      d.endpoint_info[1].max_packet_size = 4;  // In ep1
+      d.endpoint_info[1].max_burst_size = 0;
     } else {
       d.dev_descriptor = bx_keypad_dev_descriptor;
       d.device_desc_size = sizeof(bx_keypad_dev_descriptor);
       d.config_descriptor = bx_keypad_config_descriptor;
       d.config_desc_size = sizeof(bx_keypad_config_descriptor);
+      d.endpoint_info[USB_CONTROL_EP].max_packet_size = 8; // Control ep0
+      d.endpoint_info[USB_CONTROL_EP].max_burst_size = 0;
+      d.endpoint_info[1].max_packet_size = 8;  // In ep1
+      d.endpoint_info[1].max_burst_size = 0;
     }
   }
   d.connected = 1;
   return 1;
 }
 
-const char* usb_hid_device_c::get_info()
+const char *usb_hid_device_c::get_info()
 {
   return d.devname;
 }
@@ -802,6 +863,7 @@ void usb_hid_device_c::register_state_specific(bx_list_c *parent)
   bx_list_c *list = new bx_list_c(parent, "s", "USB HID Device State");
   BXRS_PARAM_BOOL(list, has_events, s.has_events);
   BXRS_HEX_PARAM_FIELD(list, idle, s.idle);
+  BXRS_PARAM_BOOL(list, report_protocol, s.boot_protocol);
   BXRS_DEC_PARAM_FIELD(list, mouse_delayed_dx, s.mouse_delayed_dx);
   BXRS_DEC_PARAM_FIELD(list, mouse_delayed_dy, s.mouse_delayed_dy);
   BXRS_DEC_PARAM_FIELD(list, mouse_x, s.mouse_x);
@@ -825,8 +887,12 @@ void usb_hid_device_c::register_state_specific(bx_list_c *parent)
 
 void usb_hid_device_c::handle_reset()
 {
-  memset((void*)&s, 0, sizeof(s));
+  memset((void *) &s, 0, sizeof(s));
   BX_DEBUG(("Reset"));
+  
+  // HID 1.11, section 7.2.6, page 54(64):
+  //  "When initialized, all devices default to report protocol."
+  s.boot_protocol = PROTOCOL_REPORT;
 }
 
 int usb_hid_device_c::handle_control(int request, int value, int index, int length, Bit8u *data)
@@ -834,6 +900,7 @@ int usb_hid_device_c::handle_control(int request, int value, int index, int leng
   int ret;
   Bit8u modchange;
 
+  // let the common handler try to handle it first
   ret = handle_control_common(request, value, index, length, data);
   if (ret >= 0) {
     return ret;
@@ -842,12 +909,15 @@ int usb_hid_device_c::handle_control(int request, int value, int index, int leng
   ret = 0;
   switch(request) {
     case DeviceOutRequest | USB_REQ_CLEAR_FEATURE:
+      BX_DEBUG(("HID: DeviceRequest | CLEAR_FEATURE:"));
       goto fail;
       break;
     case DeviceOutRequest | USB_REQ_SET_FEATURE:
+      BX_DEBUG(("HID: DeviceRequest | SET_FEATURE:"));
       goto fail;
       break;
     case DeviceRequest | USB_REQ_GET_DESCRIPTOR:
+      BX_DEBUG(("HID: DeviceRequest | USB_REQ_GET_DESCRIPTOR:"));
       switch(value >> 8) {
         case USB_DT_STRING:
           switch(value & 0xff) {
@@ -869,8 +939,12 @@ int usb_hid_device_c::handle_control(int request, int value, int index, int leng
       break;
       /* hid specific requests */
     case InterfaceRequest | USB_REQ_GET_DESCRIPTOR:
+      BX_DEBUG(("HID: InterfaceRequest | USB_REQ_GET_DESCRIPTOR:"));
       switch(value >> 8) {
-        case 0x21:
+        case 0x21:  // HID Descriptor
+          if ((value & 0xFF) != 0) {
+            BX_ERROR(("USB_REQ_GET_DESCRIPTOR: The Descriptor Index must be zero for this request."));
+          }
           if (d.type == USB_HID_TYPE_MOUSE) {
             memcpy(data, bx_mouse_hid_descriptor,
                    sizeof(bx_mouse_hid_descriptor));
@@ -888,7 +962,10 @@ int usb_hid_device_c::handle_control(int request, int value, int index, int leng
             goto fail;
           }
           break;
-        case 0x22:
+        case 0x22:  // HID Report Descriptor
+          if ((value & 0xFF) != 0) {
+            BX_ERROR(("USB HID handle_control: The Descriptor Index must be zero for this request."));
+          }
           if (d.type == USB_HID_TYPE_MOUSE) {
             memcpy(data, bx_mouse_hid_report_descriptor,
                    sizeof(bx_mouse_hid_report_descriptor));
@@ -906,20 +983,22 @@ int usb_hid_device_c::handle_control(int request, int value, int index, int leng
             goto fail;
           }
           break;
-        case 0x23:
+        case 0x23:  // HID Physical Descriptor
           BX_ERROR(("USB HID handle_control: Host requested the HID Physical Descriptor"));
           goto fail;
-        default:
+        default:  // 0x24 -> 0x2F
           BX_ERROR(("USB HID handle_control: unknown HID descriptor 0x%02x", value >> 8));
           goto fail;
         }
         break;
     case EndpointOutRequest | USB_REQ_CLEAR_FEATURE:
+      BX_DEBUG(("HID: CLEAR_FEATURE:"));
       if ((value == 0) && (index != 0x81)) { /* clear EP halt */
         goto fail;
       }
       break;
-    case GET_REPORT:
+    case InterfaceInClassRequest | GET_REPORT:
+      BX_DEBUG(("HID: GET_REPORT:"));
       if ((d.type == USB_HID_TYPE_MOUSE) ||
           (d.type == USB_HID_TYPE_TABLET)) {
         ret = mouse_poll(data, length, 1);
@@ -930,9 +1009,10 @@ int usb_hid_device_c::handle_control(int request, int value, int index, int leng
         goto fail;
       }
       break;
-    case SET_REPORT:
+    case InterfaceOutClassRequest | SET_REPORT:
+      BX_DEBUG(("HID: SET_REPORT:"));
       if (((d.type == USB_HID_TYPE_KEYPAD) ||
-           (d.type == USB_HID_TYPE_KEYBOARD)) && (value = 0x200)) {
+           (d.type == USB_HID_TYPE_KEYBOARD)) && (value == 0x0200)) { // 0x02 = Report Type: Output, 0x00 = ID
         modchange = (data[0] ^ s.indicators);
         if (modchange != 0) {
           if (modchange & 0x01) {
@@ -954,17 +1034,53 @@ int usb_hid_device_c::handle_control(int request, int value, int index, int leng
         goto fail;
       }
       break;
-    case GET_IDLE:
+    case InterfaceInClassRequest | GET_IDLE:
+      BX_DEBUG(("HID: GET_IDLE:"));
+      // The wLength field should be 1 for this request
+      if (length != 1) {
+        BX_ERROR(("USB HID handle_control: The wLength field should be 1 for this request."));
+      }
       data[0] = s.idle;
       ret = 1;
       break;
-    case SET_IDLE:
+    case InterfaceOutClassRequest | SET_IDLE:
+      BX_DEBUG(("HID: SET_IDLE:"));
+      // The wLength field should be 0 for this request
+      if (length != 0) {
+        BX_ERROR(("USB HID handle_control: The wLength field should be 0 for this request."));
+      }
       s.idle = (value >> 8);
       start_idle_timer();
       ret = 0;
       break;
-    case SET_PROTOCOL:
-      ret = 0;
+    case InterfaceOutClassRequest | SET_PROTOCOL:
+      BX_DEBUG(("HID: SET_PROTOCOL:"));
+      // The wLength field should be 0 for this request
+      if (length != 0) {
+        BX_ERROR(("HID SET_PROTOCOL: The wLength field should be 0 for this request."));
+      }
+      if ((value != 0) && (value != 1)) {
+        BX_ERROR(("HID SET_PROTOCOL: The wValue field must be 0 or 1 for this request."));
+      }
+      if (value == 0) {
+        BX_DEBUG(("HID SET_PROTOCOL: SET_PROTOCOL: Boot Protocol"));
+        s.boot_protocol = PROTOCOL_BOOT;
+        ret = 0;
+      } else if (value == 1) {
+        BX_DEBUG(("HID SET_PROTOCOL: SET_PROTOCOL: Report Protocol"));
+        s.boot_protocol = PROTOCOL_REPORT;
+        ret = 0;
+      } else
+        goto fail;
+      break;
+    case InterfaceInClassRequest | GET_PROTOCOL:
+      BX_DEBUG(("HID: GET_PROTOCOL:"));
+      // The wLength field should be 1 for this request
+      if (length != 1) {
+        BX_ERROR(("HID GET_PROTOCOL: The wLength field should be 1 for this request."));
+      }
+      data[0] = (s.boot_protocol == PROTOCOL_BOOT) ? 0 : 1;
+      ret = 1;
       break;
     default:
       BX_ERROR(("USB HID handle_control: unknown request 0x%04x", request));
@@ -979,6 +1095,11 @@ int usb_hid_device_c::handle_control(int request, int value, int index, int leng
 int usb_hid_device_c::handle_data(USBPacket *p)
 {
   int ret = 0;
+  
+  // check that the length is <= the max packet size of the device
+  if (p->len > get_mps(p->devep)) {
+    BX_DEBUG(("EP%d transfer length (%d) is greater than Max Packet Size (%d).", p->devep, p->len, get_mps(p->devep)));
+  }
 
   switch(p->pid) {
     case USB_TOKEN_IN:
@@ -1041,7 +1162,7 @@ int usb_hid_device_c::mouse_poll(Bit8u *buf, int len, bool force)
 
 int usb_hid_device_c::create_mouse_packet(Bit8u *buf, int len)
 {
-  int l;
+  int l = 0;
 
   if (d.type == USB_HID_TYPE_TABLET) {
     buf[0] = (Bit8u) s.b_state;
@@ -1052,18 +1173,32 @@ int usb_hid_device_c::create_mouse_packet(Bit8u *buf, int len)
     buf[5] = (Bit8s) s.mouse_z;
     l = 6;
   } else {
-    buf[0] = (Bit8u) s.b_state;
-    buf[1] = (Bit8s) s.mouse_x;
-    buf[2] = (Bit8s) s.mouse_y;
-    s.mouse_x = 0;
-    s.mouse_y = 0;
-    l = 3;
-    if (len >= 4) {
-      buf[3] = (Bit8s) s.mouse_z; // if wheel mouse
-      s.mouse_z = 0;
+    // The HID Boot Protocol report is only three bytes long
+    if (s.boot_protocol == PROTOCOL_BOOT) {
+      buf[0] = (Bit8u) s.b_state;
+      buf[1] = (Bit8s) s.mouse_x;
+      buf[2] = (Bit8s) s.mouse_y;
+      s.mouse_x = 0;
+      s.mouse_y = 0;
+      l = 3;
+      
+    // our HID report includes the first three Boot Protocol bytes,
+    // followed by the z corrd if a wheel mouse is present
+    } else { //  PROTOCOL_REPORT
+      buf[0] = (Bit8u) s.b_state;
+      buf[1] = (Bit8s) s.mouse_x;
+      buf[2] = (Bit8s) s.mouse_y;
+      s.mouse_x = 0;
+      s.mouse_y = 0;
+      if (len >= 4) {
+        buf[3] = (Bit8s) s.mouse_z; // if wheel mouse
+        s.mouse_z = 0;
+      } else
+        buf[3] = 0;
       l = 4;
     }
   }
+  
   return l;
 }
 
@@ -1090,12 +1225,16 @@ int usb_hid_device_c::get_mouse_packet(Bit8u *buf, int len)
 
 void usb_hid_device_c::mouse_enabled_changed(void *dev, bool enabled)
 {
-  if (enabled) ((usb_hid_device_c*)dev)->handle_reset();
+  if (enabled && (dev != NULL)) {
+    ((usb_hid_device_c *) dev)->handle_reset();
+  }
 }
 
 void usb_hid_device_c::mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state, bool absxy)
 {
-  ((usb_hid_device_c*)dev)->mouse_enq(delta_x, delta_y, delta_z, button_state, absxy);
+  if (dev != NULL) {
+    ((usb_hid_device_c *) dev)->mouse_enq(delta_x, delta_y, delta_z, button_state, absxy);
+  }
 }
 
 void usb_hid_device_c::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state, bool absxy)
@@ -1109,13 +1248,13 @@ void usb_hid_device_c::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned
     if ((delta_y < -1) || (delta_y > 1))
       delta_y /= 2;
 
-    if (delta_x>127) delta_x=127;
-    if (delta_y>127) delta_y=127;
-    if (delta_x<-128) delta_x=-128;
-    if (delta_y<-128) delta_y=-128;
+    if (delta_x > 127) delta_x = 127;
+    if (delta_y > 127) delta_y = 127;
+    if (delta_x < -128) delta_x = -128;
+    if (delta_y < -128) delta_y = -128;
 
-    s.mouse_delayed_dx+=delta_x;
-    s.mouse_delayed_dy-=delta_y;
+    s.mouse_delayed_dx += delta_x;
+    s.mouse_delayed_dy -= delta_y;
 
     if (s.mouse_delayed_dx > 127) {
       delta_x = 127;
@@ -1141,7 +1280,7 @@ void usb_hid_device_c::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned
     s.mouse_x = (Bit8s) delta_x;
     s.mouse_y = (Bit8s) delta_y;
     s.mouse_z = (Bit8s) delta_z;
-    if ((s.mouse_x != 0) || (s.mouse_y != 0) || (button_state != s.b_state)) {
+    if ((s.mouse_x != 0) || (s.mouse_y != 0) || (s.mouse_z != 0) || (button_state != s.b_state)) {
       s.b_state = (Bit8u) button_state;
       if (s.mouse_event_count < BX_KBD_ELEMENTS) {
         create_mouse_packet(s.mouse_event_buf[s.mouse_event_count++], 4);
@@ -1201,7 +1340,11 @@ int usb_hid_device_c::keyboard_poll(Bit8u *buf, int len, bool force)
 
 bool usb_hid_device_c::gen_scancode_static(void *dev, Bit32u key)
 {
-  return ((usb_hid_device_c*)dev)->gen_scancode(key);
+  if (dev != NULL) {
+    return ((usb_hid_device_c *) dev)->gen_scancode(key);
+  } else {
+    return 0;
+  }
 }
 
 bool usb_hid_device_c::gen_scancode(Bit32u key)
@@ -1246,7 +1389,11 @@ bool usb_hid_device_c::gen_scancode(Bit32u key)
 
 Bit8u usb_hid_device_c::kbd_get_elements_static(void *dev)
 {
-  return ((usb_hid_device_c*)dev)->kbd_get_elements();
+  if (dev != NULL) {
+    return ((usb_hid_device_c *) dev)->kbd_get_elements();
+  } else {
+    return 0;
+  }
 }
 
 Bit8u usb_hid_device_c::kbd_get_elements()
@@ -1265,8 +1412,10 @@ void usb_hid_device_c::start_idle_timer()
 
 void usb_hid_device_c::hid_timer_handler(void *this_ptr)
 {
-  usb_hid_device_c *class_ptr = (usb_hid_device_c *) this_ptr;
-  class_ptr->hid_idle_timer();
+  if (this_ptr != NULL) {
+    usb_hid_device_c *class_ptr = (usb_hid_device_c *) this_ptr;
+    class_ptr->hid_idle_timer();
+  }
 }
 
 void usb_hid_device_c::hid_idle_timer()

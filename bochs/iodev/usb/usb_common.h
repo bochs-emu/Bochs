@@ -5,8 +5,8 @@
 // Generic USB emulation code
 //
 // Copyright (c) 2005       Fabrice Bellard
-// Copyright (C) 2009-2016  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//               2009-2021  The Bochs Project
+// Copyright (C) 2009-2023  Benjamin D Lunt (fys [at] fysnet [dot] net)
+//               2009-2023  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -35,6 +35,8 @@
 #define USB_TRANS_TYPE_INT      1
 #define USB_TRANS_TYPE_CONTROL  2
 #define USB_TRANS_TYPE_BULK     3
+
+#define USB_CONTROL_EP     0
 
 #define USB_TOKEN_IN    0x69
 #define USB_TOKEN_OUT   0xE1
@@ -67,31 +69,39 @@
 #define USB_DIR_OUT  0
 #define USB_DIR_IN   0x80
 
-#define USB_TYPE_MASK			(0x03 << 5)
+#define USB_TYPE_MASK			  (0x03 << 5)
 #define USB_TYPE_STANDARD		(0x00 << 5)
 #define USB_TYPE_CLASS			(0x01 << 5)
 #define USB_TYPE_VENDOR			(0x02 << 5)
 #define USB_TYPE_RESERVED		(0x03 << 5)
 
-#define USB_RECIP_MASK			0x1f
-#define USB_RECIP_DEVICE		0x00
+#define USB_RECIP_MASK			  0x1f
+#define USB_RECIP_DEVICE		  0x00
 #define USB_RECIP_INTERFACE		0x01
 #define USB_RECIP_ENDPOINT		0x02
-#define USB_RECIP_OTHER			0x03
+#define USB_RECIP_OTHER			  0x03
 
-#define DeviceRequest ((USB_DIR_IN|USB_TYPE_STANDARD|USB_RECIP_DEVICE)<<8)
-#define DeviceOutRequest ((USB_DIR_OUT|USB_TYPE_STANDARD|USB_RECIP_DEVICE)<<8)
+#define DeviceRequest ((USB_DIR_IN | USB_TYPE_STANDARD | USB_RECIP_DEVICE) << 8)     // Host to device / Standard Type / Recipient:Device
+#define DeviceOutRequest ((USB_DIR_OUT | USB_TYPE_STANDARD | USB_RECIP_DEVICE) << 8) // Device to host / Standard Type / Recipient:Device
+#define DeviceClassInRequest \
+   ((USB_DIR_IN | USB_TYPE_CLASS | USB_RECIP_DEVICE) << 8)
 #define InterfaceRequest \
-   ((USB_DIR_IN|USB_TYPE_STANDARD|USB_RECIP_INTERFACE)<<8)
+   ((USB_DIR_IN | USB_TYPE_STANDARD | USB_RECIP_INTERFACE) << 8)
 #define InterfaceInClassRequest \
-   ((USB_DIR_IN|USB_TYPE_CLASS|USB_RECIP_INTERFACE)<<8)
+   ((USB_DIR_IN | USB_TYPE_CLASS | USB_RECIP_INTERFACE) << 8)
+#define OtherInClassRequest \
+   ((USB_DIR_IN | USB_TYPE_CLASS | USB_RECIP_OTHER) << 8)
 #define InterfaceOutRequest \
-   ((USB_DIR_OUT|USB_TYPE_STANDARD|USB_RECIP_INTERFACE)<<8)
+   ((USB_DIR_OUT | USB_TYPE_STANDARD | USB_RECIP_INTERFACE) << 8)
+#define DeviceOutClassRequest \
+   ((USB_DIR_OUT | USB_TYPE_CLASS | USB_RECIP_DEVICE) << 8)
 #define InterfaceOutClassRequest \
-   ((USB_DIR_OUT|USB_TYPE_CLASS|USB_RECIP_INTERFACE)<<8)
-#define EndpointRequest ((USB_DIR_IN|USB_TYPE_STANDARD|USB_RECIP_ENDPOINT)<<8)
+   ((USB_DIR_OUT | USB_TYPE_CLASS | USB_RECIP_INTERFACE) << 8)
+#define OtherOutClassRequest \
+   ((USB_DIR_OUT | USB_TYPE_CLASS | USB_RECIP_OTHER) << 8)
+#define EndpointRequest ((USB_DIR_IN | USB_TYPE_STANDARD | USB_RECIP_ENDPOINT) << 8)
 #define EndpointOutRequest \
-   ((USB_DIR_OUT|USB_TYPE_STANDARD|USB_RECIP_ENDPOINT)<<8)
+   ((USB_DIR_OUT | USB_TYPE_STANDARD | USB_RECIP_ENDPOINT) << 8)
 
 #define USB_REQ_GET_STATUS        0x00
 #define USB_REQ_CLEAR_FEATURE     0x01
@@ -112,9 +122,9 @@
 #define USB_DEVICE_U2_ENABLE      49
 
 // USB 1.1
-#define USB_DT_DEVICE			0x01
-#define USB_DT_CONFIG			0x02
-#define USB_DT_STRING			0x03
+#define USB_DT_DEVICE			  0x01
+#define USB_DT_CONFIG			  0x02
+#define USB_DT_STRING			  0x03
 #define USB_DT_INTERFACE		0x04
 #define USB_DT_ENDPOINT			0x05
 // USB 2.0
@@ -129,6 +139,10 @@ typedef struct USBPacket USBPacket;
 #define USB_EVENT_WAKEUP 0
 #define USB_EVENT_ASYNC  1
 
+// set this to 1 to monitor the TD's toggle bit
+// setting to 0 will speed up the emualtion slightly
+#define HANDLE_TOGGLE_CONTROL 1
+
 typedef void USBCallback(int event, USBPacket *packet, void *dev, int port);
 
 class usb_device_c;
@@ -139,6 +153,10 @@ struct USBPacket {
   int pid;
   Bit8u devaddr;
   Bit8u devep;
+  Bit8u speed;           // packet's speed definition
+#if HANDLE_TOGGLE_CONTROL
+  int   toggle;          // packet's toggle bit (0, 1, or -1 for xHCI)
+#endif
   Bit8u *data;
   int len;
   USBCallback *complete_cb;
@@ -153,6 +171,17 @@ typedef struct USBAsync {
   Bit16u  slot_ep;
   struct USBAsync *next;
 } USBAsync;
+
+// Items about the endpoint gathered from various places
+// These values are set at init() time, this is so we
+//  don't have to parse the descriptors at runtime.
+typedef struct USBEndPoint {
+  int  max_packet_size;  // endpoint max packet size
+  int  max_burst_size;   // endpoint max burst size (super-speed endpoint companion only)
+#if HANDLE_TOGGLE_CONTROL
+  int  toggle;           // the current toggle for the endpoint (0, 1, or -1 for xHCI)
+#endif
+} USBEndPoint;
 
 class BOCHSAPI bx_usbdev_ctl_c : public logfunctions {
 public:
@@ -175,22 +204,22 @@ public:
   virtual ~usb_device_c();
 
   virtual bool init() {return d.connected;}
-  virtual const char* get_info() {return NULL;}
-  virtual usb_device_c* find_device(Bit8u addr);
+  virtual const char *get_info() { return NULL; }
+  virtual usb_device_c *find_device(Bit8u addr);
 
   virtual int handle_packet(USBPacket *p);
   virtual void handle_reset() {}
-  virtual int handle_control(int request, int value, int index, int length, Bit8u *data) {return -1;}
-  virtual int handle_data(USBPacket *p) {return 0;}
+  virtual int handle_control(int request, int value, int index, int length, Bit8u *data) { return -1; }
+  virtual int handle_data(USBPacket *p) { return 0; }
   void register_state(bx_list_c *parent);
   virtual void register_state_specific(bx_list_c *parent) {}
   virtual void after_restore_state() {}
   virtual void cancel_packet(USBPacket *p) {}
-  virtual bool set_option(const char *option) {return 0;}
+  virtual bool set_option(const char *option) { return 0; }
   virtual void runtime_config() {}
 
-  bool get_connected() {return d.connected;}
-  int get_speed() {return d.speed;}
+  bool get_connected() { return d.connected; }
+  int get_speed() { return d.speed; }
   bool set_speed(int speed)
   {
     if ((speed >= d.minspeed) && (speed <= d.maxspeed)) {
@@ -200,9 +229,32 @@ public:
       return 0;
     }
   }
+  
+  // return information for the specified ep of the current device
+#define USB_MAX_ENDPOINTS   4   // we currently don't use more than 4 endpoints (ep0, ep1, ep2, and ep3)
+  int get_mps(const int ep) {
+    return (ep < USB_MAX_ENDPOINTS) ? d.endpoint_info[ep].max_packet_size : 0;
+  }
+  int get_max_burst_size(const int ep) {
+    return (ep < USB_MAX_ENDPOINTS) ? d.endpoint_info[ep].max_burst_size : 0;
+  }
+
+#if HANDLE_TOGGLE_CONTROL
+  int get_toggle(const int ep) {
+    return (ep < USB_MAX_ENDPOINTS) ? d.endpoint_info[ep].toggle : 0;
+  }
+  void set_toggle(const int ep, const int toggle) {
+    if (ep < USB_MAX_ENDPOINTS) 
+      d.endpoint_info[ep].toggle = toggle;
+  }
+#endif
+
+  Bit8u get_type() {
+    return d.type;
+  }
 
   Bit8u get_address() {return d.addr;}
-  void set_async_mode(bool async) {d.async_mode = async;}
+  void set_async_mode(bool async) { d.async_mode = async; }
   void set_event_handler(void *dev, USBCallback *cb, int port)
   {
     d.event.dev = dev;
@@ -225,7 +277,9 @@ protected:
     Bit8u config;
     Bit8u iface;
     char devname[32];
+    USBEndPoint endpoint_info[USB_MAX_ENDPOINTS];
 
+    bool first8;
     const Bit8u *dev_descriptor;
     const Bit8u *config_descriptor;
     int device_desc_size;
@@ -255,7 +309,7 @@ protected:
   } d;
 
   int handle_control_common(int request, int value, int index, int length, Bit8u *data);
-  void usb_dump_packet(Bit8u *data, unsigned size, int bus, int dev_addr, int ep, int type, bool is_setup, bool can_append);
+  void usb_dump_packet(Bit8u *data, int size, int bus, int dev_addr, int ep, int type, bool is_setup, bool can_append);
   int set_usb_string(Bit8u *buf, const char *str);
 };
 
@@ -357,14 +411,14 @@ static BX_CPP_INLINE struct USBAsync *container_of_usb_packet(void *ptr)
 static BX_CPP_INLINE void get_dwords(bx_phy_address addr, Bit32u *buf, int num)
 {
   for (int i = 0; i < num; i++, buf++, addr += sizeof(*buf)) {
-    DEV_MEM_READ_PHYSICAL(addr, 4, (Bit8u*)buf);
+    DEV_MEM_READ_PHYSICAL(addr, 4, (Bit8u *) buf);
   }
 }
 
 static BX_CPP_INLINE void put_dwords(bx_phy_address addr, Bit32u *buf, int num)
 {
   for (int i = 0; i < num; i++, buf++, addr += sizeof(*buf)) {
-    DEV_MEM_WRITE_PHYSICAL(addr, 4, (Bit8u*)buf);
+    DEV_MEM_WRITE_PHYSICAL(addr, 4, (Bit8u *) buf);
   }
 }
 

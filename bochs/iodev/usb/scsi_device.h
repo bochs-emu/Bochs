@@ -9,7 +9,7 @@
 //
 //  Written by Paul Brook
 //
-//  Copyright (C) 2007-2021  The Bochs Project
+//  Copyright (C) 2007-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -41,6 +41,58 @@ enum scsi_reason {
   SCSI_REASON_DONE,
   SCSI_REASON_DATA
 };
+
+// SCSI_CD_EVENT_STATUS items
+#define EVENT_STATUS_POLLED       1
+#define EVENT_STATUS_RESERVED_0  (1<<0)  // reserved          (bit 0)
+#define EVENT_STATUS_OP_CHANGE   (1<<1)  // Operatinal Change (bit 1)
+#define EVENT_STATUS_POWER_MAN   (1<<2)  // Power Management  (bit 2)
+#define EVENT_STATUS_EXT_REQ     (1<<3)  // External Request  (bit 3)
+#define EVENT_STATUS_MEDIA_REQ   (1<<4)  // Media Request     (bit 4)
+  #define EVENT_STATUS_MED_N_PRES  (0<<1)  // Media is not present
+  #define EVENT_STATUS_MED_PRES    (1<<1)  // Media is present
+  #define EVENT_STATUS_MED_N_OPEN  (0<<0)  // Door/Tray is not open
+  #define EVENT_STATUS_MED_OPEN    (1<<0)  // Door/Tray is open
+#define EVENT_STATUS_MULTI_INIT  (1<<5)  // Multi-Initiator   (bit 5)
+#define EVENT_STATUS_DEV_BUSY    (1<<6)  // Device Busy       (bit 6)
+#define EVENT_STATUS_RESERVED_7  (1<<7)  // reserved          (bit 7)
+
+// SCSI_CD_READ_DISC_INFO items
+#define DISC_INFO_MASK           0x07  // mask to get disk info type
+#define DISC_INFO_STANDARD       0
+  #define DI_STAND_N_ERASABLE      (0<<4)  // Non-erasable
+  #define DI_STAND_ERASABLE        (1<<4)  // Erasable
+  #define DI_STAND_LAST_STATE_MT   (0<<2)  // Empty session
+  #define DI_STAND_LAST_STATE_INC  (1<<2)  // Incomplete session
+  #define DI_STAND_LAST_STATE_DAM  (2<<2)  // Damaged session
+  #define DI_STAND_LAST_STATE_COMP (3<<2)  // Complete session
+  #define DI_STAND_STATUS_MT       (0<<0)  // Empty disc
+  #define DI_STAND_STATUS_INC      (1<<0)  // Incomplete disc
+  #define DI_STAND_STATUS_FINAL    (2<<0)  // Finalized disc
+  #define DI_STAND_STATUS_OTHER    (3<<0)  // Other type
+  #define DI_STAND_DID_N_VALID     (0<<7)  // Disc ID area not valid
+  #define DI_STAND_DID_VALID       (1<<7)  // Disc ID area valid
+  #define DI_STAND_DBC_N_VALID     (0<<6)  // Disc Barcode area not valid
+  #define DI_STAND_DBC_VALID       (1<<6)  // Disc Barcode area valid
+  #define DI_STAND_URU_N_OKAY      (0<<5)  // Unrestricted use not okay
+  #define DI_STAND_URU_OKAY        (1<<5)  // Unrestricted use okay
+  #define DI_STAND_DAC_N_VALID     (0<<4)  // Disc Application Code not valid
+  #define DI_STAND_DAC_VALID       (1<<4)  // Disc Application Code valid
+  #define DI_STAND_N_LEGACY        (0<<2)  // Not Legacy?
+  #define DI_STAND_LEGACY          (1<<2)  // Legacy?
+  #define DI_STAND_BG_FORMAT_0     (0<<0)  // Background Format Status code 0
+  #define DI_STAND_BG_FORMAT_1     (1<<0)  // Background Format Status code 1
+  #define DI_STAND_BG_FORMAT_2     (2<<0)  // Background Format Status code 2
+  #define DI_STAND_BG_FORMAT_3     (3<<0)  // Background Format Status code 3
+  #define DI_STAND_DISC_TYPE_0      0x00   // Disc type: CD-DA or CD-ROM
+  #define DI_STAND_DISC_TYPE_1      0x10   // Disc type: CD-I disc
+  #define DI_STAND_DISC_TYPE_2      0x20   // Disc type: CD-ROM XA Disc
+  #define DI_STAND_DISC_TYPE_x      0xFF   // Disc type: Undefined
+#define DISC_INFO_TRACK          1
+#define DISC_INFO_POW_RES        2
+
+
+
 
 #define SENSE_NO_SENSE        0
 #define SENSE_NOT_READY       2
@@ -77,7 +129,7 @@ public:
   virtual ~scsi_device_t(void);
 
   void register_state(bx_list_c *parent, const char *name);
-  Bit32s scsi_send_command(Bit32u tag, Bit8u *buf, int lun, bool async);
+  Bit32s scsi_send_command(Bit32u tag, Bit8u *buf, Bit8u cmd_len, int lun, bool async);
   void scsi_command_complete(SCSIRequest *r, int status, int sense);
   void scsi_cancel_io(Bit32u tag);
   void scsi_read_complete(void *req, int ret);

@@ -2,8 +2,8 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009-2016  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2009-2021  The Bochs Project
+//  Copyright (C) 2009-2023  Benjamin D Lunt (fys [at] fysnet [dot] net)
+//                2009-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -23,6 +23,23 @@
 #define BX_IODEV_UHCI_CORE_H
 
 #define USB_UHCI_PORTS 2
+
+#define STATUS2_IOC (1<<0)
+#define STATUS2_SPD (1<<1)
+
+#define USB_UHCI_QUEUE_STACK_SIZE  256
+#define USB_UHCI_LOOP_COUNT        256
+
+#define USB_UHCI_IS_LINK_VALID(item)  ((item & 1) == 0)  // return TRUE if valid link address
+#define USB_UHCI_IS_LINK_QUEUE(item)  ((item & 2) == 2)  // return TRUE if link is a queue pointer
+
+// the standard max bandwidth (bytes per frame) for the UHCI is 1280 bytes
+#define USB_UHCI_STD_MAX_BANDWIDTH  1280
+
+struct USB_UHCI_QUEUE_STACK {
+  int    queue_cnt;
+  Bit32u queue_stack[USB_UHCI_QUEUE_STACK_SIZE];
+};
 
 typedef struct {
   int    timer_index;
@@ -117,7 +134,8 @@ typedef struct {
   // Port Register (0-1)
   //  Bits 15-13  are reserved
   //  Bit     12  suspend port
-  //  Bit  11-10  are reserved
+  //  Bit     11  over current change (read/wc)
+  //  Bit     10  over current (read-only) 0 = over_current, 1 = normal
   //  Bit      9  port in reset state
   //  Bit      8  low-speed device is attached (read-only)
   //  Bit      7  reserved
@@ -137,17 +155,21 @@ typedef struct {
 
     // bit reps of actual port
     bool suspend;
+    bool over_current_change;
+    bool over_current;
     bool reset;
     bool low_speed;
     bool resume;
     bool line_dminus;
     bool line_dplus;
-    bool able_changed;
+    bool enable_changed;
     bool enabled;
     bool connect_changed;
     bool status;
   } usb_port[USB_UHCI_PORTS];
 
+  int    max_bandwidth;  // standard USB 1.1 is 1280 bytes (VTxxxxx models allowed a few more)
+  int    loop_reached;   // did we reach our bandwidth loop limit
   Bit8u  devfunc;
 } bx_uhci_core_t;
 
@@ -157,18 +179,13 @@ struct TD {
   Bit32u dword1;
   Bit32u dword2;
   Bit32u dword3;
-  Bit32u resv[4];
+};
+
+struct QUEUE {
+  Bit32u horz;
+  Bit32u vert;
 };
 #pragma pack (pop)
-
-#define HC_HORZ    0x80
-#define HC_VERT    0x81
-struct HCSTACK {
-  Bit32u  next;
-  Bit8u   d;   // if queue, denotes VERT or HORZ
-  bool    q;
-  bool    t;
-};
 
 class bx_uhci_core_c : public bx_pci_device_c {
 public:
@@ -186,7 +203,6 @@ public:
 protected:
   bx_uhci_core_t hub;
   Bit8u          global_reset;
-  bool           busy;
 
   USBAsync *packets;
 
@@ -195,9 +211,10 @@ protected:
   int  broadcast_packet(USBPacket *p);
   bool set_connect_status(Bit8u port, bool connected);
 
+  bool uhci_add_queue(struct USB_UHCI_QUEUE_STACK *stack, const Bit32u addr);
   static void uhci_timer_handler(void *);
   void uhci_timer(void);
-  bool DoTransfer(Bit32u address, Bit32u queue_num, struct TD *);
+  bool DoTransfer(Bit32u address, struct TD *);
   void set_status(struct TD *td, bool stalled, bool data_buffer_error, bool babble,
     bool nak, bool crc_time_out, bool bitstuff_error, Bit16u act_len);
 

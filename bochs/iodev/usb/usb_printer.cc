@@ -2,8 +2,8 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009-2016  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2009-2021  The Bochs Project
+//  Copyright (C) 2009-2023  Benjamin D Lunt (fys [at] fysnet [dot] net)
+//                2009-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -39,7 +39,7 @@
 PLUGIN_ENTRY_FOR_MODULE(usb_printer)
 {
   if (mode == PLUGIN_PROBE) {
-    return (int)PLUGTYPE_USB;
+    return (int) PLUGTYPE_USB;
   }
   return 0; // Success
 }
@@ -57,6 +57,10 @@ protected:
   }
 } bx_usb_printer_match;
 
+// If you change any of the Max Packet Size, or other fields within these
+//  descriptors, you must also change the d.endpoint_info[] array
+//  to match your changes.
+
 static const Bit8u bx_printer_dev_descriptor[] = {
   0x12,       /*  u8 bLength; */
   0x01,       /*  u8 bDescriptorType; Device */
@@ -65,7 +69,7 @@ static const Bit8u bx_printer_dev_descriptor[] = {
   0x00,       /*  u8  bDeviceClass; */
   0x00,       /*  u8  bDeviceSubClass; */
   0x00,       /*  u8  bDeviceProtocol; [ low/full speeds only ] */
-  0x08,       /*  u8  bMaxPacketSize0; 8 Bytes */
+  0x40,       /*  u8  bMaxPacketSize; 64 Bytes */
 
   0xF0, 0x03, /*  u16 idVendor; */
   0x04, 0x15, /*  u16 idProduct; */
@@ -102,7 +106,7 @@ static const Bit8u bx_printer_config_descriptor[] = {
   0x01,       /*  u8  if_bInterfaceSubClass; */
   0x02,       /*  u8  if_bInterfaceProtocol; */
   0x00,       /*  u8  if_iInterface; string desc. */
-
+  
   /* first endpoint */
   0x07,       /*  u8  ep_bLength; */
   0x05,       /*  u8  ep_bDescriptorType; Endpoint */
@@ -142,12 +146,18 @@ usb_printer_device_c::usb_printer_device_c()
   bx_param_string_c *fname;
 
   d.speed = d.minspeed = d.maxspeed = USB_SPEED_FULL;
-  memset((void*)&s, 0, sizeof(s));
+  memset((void *) &s, 0, sizeof(s));
   strcpy(d.devname, "USB Printer");
   d.dev_descriptor = bx_printer_dev_descriptor;
   d.config_descriptor = bx_printer_config_descriptor;
   d.device_desc_size = sizeof(bx_printer_dev_descriptor);
   d.config_desc_size = sizeof(bx_printer_config_descriptor);
+  d.endpoint_info[USB_CONTROL_EP].max_packet_size = 64; // Control ep0
+  d.endpoint_info[USB_CONTROL_EP].max_burst_size = 0;
+  d.endpoint_info[1].max_packet_size = 64;  // In ep1
+  d.endpoint_info[1].max_burst_size = 0;
+  d.endpoint_info[2].max_packet_size = 64;  // Out ep2
+  d.endpoint_info[2].max_burst_size = 0;
   d.vendor_desc = "Hewlett-Packard";
   d.product_desc = "Deskjet 920C";
   d.serial_num = "HU18L6P2DNBI";
@@ -163,7 +173,7 @@ usb_printer_device_c::usb_printer_device_c()
   fname = new bx_param_filename_c(s.config, "file", "File", "", "", BX_PATHNAME_LEN);
   fname->set_handler(printfile_handler);
   if (SIM->is_wx_selected()) {
-    bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
+    bx_list_c *usb = (bx_list_c *) SIM->get_param("ports.usb");
     usb->add(s.config);
   }
   put("usb_printer", "USBPRN");
@@ -175,17 +185,17 @@ usb_printer_device_c::~usb_printer_device_c(void)
     fclose(s.fp);
   }
   if (SIM->is_wx_selected()) {
-    bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
+    bx_list_c *usb = (bx_list_c *) SIM->get_param("ports.usb");
     usb->remove(s.config->get_name());
   }
-  bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
+  bx_list_c *usb_rt = (bx_list_c *) SIM->get_param(BXPN_MENU_RUNTIME_USB);
   usb_rt->remove(s.config->get_name());
 }
 
 bool usb_printer_device_c::set_option(const char *option)
 {
   if (!strncmp(option, "file:", 5)) {
-    strcpy(s.fname, option+5);
+    strcpy(s.fname, option + 5);
     SIM->get_param_string("file", s.config)->set(s.fname);
     return 1;
   }
@@ -209,7 +219,7 @@ bool usb_printer_device_c::init()
   return 0;
 }
 
-const char* usb_printer_device_c::get_info()
+const char *usb_printer_device_c::get_info()
 {
   return s.info_txt;
 }
@@ -229,7 +239,7 @@ int usb_printer_device_c::handle_control(int request, int value, int index, int 
 {
   int ret = 0;
 
-  BX_DEBUG(("Printer: request: 0x%04X  value: 0x%04X  index: 0x%04X  len: %i", request, value, index, length));
+  BX_DEBUG(("Printer: request: 0x%04X  value: 0x%04X  index: 0x%04X  len: %d", request, value, index, length));
 
   ret = handle_control_common(request, value, index, length, data);
   if (ret >= 0) {
@@ -247,8 +257,18 @@ int usb_printer_device_c::handle_control(int request, int value, int index, int 
     case DeviceRequest | USB_REQ_GET_DESCRIPTOR:
       switch(value >> 8) {
         case USB_DT_STRING:
-          BX_ERROR(("USB Printer handle_control: unknown string descriptor 0x%02x", value & 0xff));
-          goto fail;
+          switch (value & 0xFF) {
+            case 0xEE:
+              // Microsoft OS Descriptor check
+              // We don't support this check, so fail
+              BX_INFO(("USB Printer handle_control: Microsoft OS specific 0xEE string descriptor"));
+              goto fail;
+              break;
+            default:
+              BX_ERROR(("USB Printer handle_control: unknown string descriptor 0x%02x", value & 0xff));
+              goto fail;
+              break;
+          }
           break;
         default:
           BX_ERROR(("USB Printer handle_control: unknown descriptor type 0x%02x", value >> 8));
@@ -286,10 +306,15 @@ int usb_printer_device_c::handle_data(USBPacket *p)
 {
   int ret = 0;
 
+  // check that the length is <= the max packet size of the device
+  if (p->len > get_mps(p->devep)) {
+    BX_DEBUG(("EP%d transfer length (%d) is greater than Max Packet Size (%d).", p->devep, p->len, get_mps(p->devep)));
+  }
+  
   switch(p->pid) {
     case USB_TOKEN_IN:
       if (p->devep == 1) {
-        BX_INFO(("Printer: handle_data: IN: len = %i", p->len));
+        BX_INFO(("Printer: handle_data: IN: len = %d", p->len));
         BX_INFO(("Printer: Ben: We need to find out what this is and send valid status back"));
         ret = p->len;
       } else {
@@ -298,7 +323,7 @@ int usb_printer_device_c::handle_data(USBPacket *p)
       break;
     case USB_TOKEN_OUT:
       if (p->devep == 2) {
-        BX_DEBUG(("Sent %i bytes to the 'usb printer': %s", p->len, s.fname));
+        BX_DEBUG(("Sent %d bytes to the 'usb printer': %s", p->len, s.fname));
         usb_dump_packet(p->data, p->len, 0, p->devaddr, USB_DIR_OUT | p->devep, USB_TRANS_TYPE_CONTROL, false, true);
         if (s.fp != NULL) {
           fwrite(p->data, 1, p->len, s.fp);

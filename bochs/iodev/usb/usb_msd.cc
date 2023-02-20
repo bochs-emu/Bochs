@@ -6,7 +6,7 @@
 //
 //  Copyright (c) 2006 CodeSourcery.
 //  Written by Paul Brook
-//  Copyright (C) 2009-2021  The Bochs Project
+//  Copyright (C) 2009-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -93,6 +93,10 @@ struct usb_msd_csw {
 #define MassStorageReset  0xff
 #define GetMaxLun         0xfe
 
+// If you change any of the Max Packet Size, or other fields within these
+//  descriptors, you must also change the d.endpoint_info[] array
+//  to match your changes.
+
 // Full-speed
 static const Bit8u bx_msd_dev_descriptor[] = {
   0x12,       /*  u8 bLength; */
@@ -102,7 +106,7 @@ static const Bit8u bx_msd_dev_descriptor[] = {
   0x00,       /*  u8  bDeviceClass; */
   0x00,       /*  u8  bDeviceSubClass; */
   0x00,       /*  u8  bDeviceProtocol; [ low/full speeds only ] */
-  0x08,       /*  u8  bMaxPacketSize0; 8 Bytes */
+  0x40,       /*  u8  bMaxPacketSize; 64 Bytes */
 
   /* Vendor and product id are arbitrary.  */
   0x00, 0x00, /*  u16 idVendor; */
@@ -169,7 +173,7 @@ static const Bit8u bx_msd_dev_descriptor2[] = {
   0x00,       /*  u8  bDeviceClass; */
   0x00,       /*  u8  bDeviceSubClass; */
   0x00,       /*  u8  bDeviceProtocol; [ low/full speeds only ] */
-  0x40,       /*  u8  bMaxPacketSize0; 64 Bytes */
+  0x40,       /*  u8  bMaxPacketSize; 64 Bytes */
 
   /* Vendor and product id are arbitrary.  */
   0x00, 0x00, /*  u16 idVendor; */
@@ -236,7 +240,7 @@ static const Bit8u bx_msd_dev_descriptor3[] = {
   0x00,       /*  u8  bDeviceClass; */
   0x00,       /*  u8  bDeviceSubClass; */
   0x00,       /*  u8  bDeviceProtocol; */
-  0x09,       /*  u8  bMaxPacketSize0; 2^^9 = 512 Bytes */
+  0x09,       /*  u8  bMaxPacketSize; 2^^9 = 512 Bytes */
 
   /* Vendor and product id are arbitrary.  */
   0x00, 0x00, /*  u16 idVendor; */
@@ -351,7 +355,7 @@ usb_msd_device_c::usb_msd_device_c(const char *devname)
   d.minspeed = USB_SPEED_FULL;
   d.maxspeed = USB_SPEED_SUPER;
   d.speed = d.minspeed;
-  memset((void*)&s, 0, sizeof(s));
+  memset((void *) &s, 0, sizeof(s));
   if (d.type == USB_MSD_TYPE_DISK) {
     strcpy(d.devname, "BOCHS USB HARDDRIVE");
     s.fname[0] = 0;
@@ -481,6 +485,12 @@ bool usb_msd_device_c::set_option(const char *option)
 
 bool usb_msd_device_c::init()
 {
+  /*  If you wish to set DEBUG=report in the code, instead of
+   *  in the configuration, simply uncomment this line.  I use
+   *  it when I am working on this emulation.
+   */
+  //LOG_THIS setonoff(LOGLEV_DEBUG, ACT_REPORT);
+
   if (d.type == USB_MSD_TYPE_DISK) {
     if (strlen(s.fname) > 0) {
       s.hdimage = DEV_hdimage_init_image(s.image_mode, 0, s.journal);
@@ -523,16 +533,34 @@ bool usb_msd_device_c::init()
     d.config_descriptor = bx_msd_config_descriptor3;
     d.device_desc_size = sizeof(bx_msd_dev_descriptor3);
     d.config_desc_size = sizeof(bx_msd_config_descriptor3);
+    d.endpoint_info[USB_CONTROL_EP].max_packet_size = 512; // Control ep0
+    d.endpoint_info[USB_CONTROL_EP].max_burst_size = 0;
+    d.endpoint_info[1].max_packet_size = 1024;  // In ep1
+    d.endpoint_info[1].max_burst_size = 15;
+    d.endpoint_info[2].max_packet_size = 1024;  // Out ep2
+    d.endpoint_info[2].max_burst_size = 15;
   } else if (get_speed() == USB_SPEED_HIGH) {
     d.dev_descriptor = bx_msd_dev_descriptor2;
     d.config_descriptor = bx_msd_config_descriptor2;
     d.device_desc_size = sizeof(bx_msd_dev_descriptor2);
     d.config_desc_size = sizeof(bx_msd_config_descriptor2);
-  } else {
+    d.endpoint_info[USB_CONTROL_EP].max_packet_size = 64; // Control ep0
+    d.endpoint_info[USB_CONTROL_EP].max_burst_size = 0;
+    d.endpoint_info[1].max_packet_size = 512;  // In ep1
+    d.endpoint_info[1].max_burst_size = 0;
+    d.endpoint_info[2].max_packet_size = 512;  // Out ep2
+    d.endpoint_info[2].max_burst_size = 0;
+  } else { // USB_SPEED_FULL
     d.dev_descriptor = bx_msd_dev_descriptor;
     d.config_descriptor = bx_msd_config_descriptor;
     d.device_desc_size = sizeof(bx_msd_dev_descriptor);
     d.config_desc_size = sizeof(bx_msd_config_descriptor);
+    d.endpoint_info[USB_CONTROL_EP].max_packet_size = 64; // Control ep0
+    d.endpoint_info[USB_CONTROL_EP].max_burst_size = 0;
+    d.endpoint_info[1].max_packet_size = 64;  // In ep1
+    d.endpoint_info[1].max_burst_size = 0;
+    d.endpoint_info[2].max_packet_size = 64;  // Out ep2
+    d.endpoint_info[2].max_burst_size = 0;
   }
   d.serial_num = s.scsi_dev->get_serial_number();
   s.mode = USB_MSDM_CBW;
@@ -576,6 +604,7 @@ int usb_msd_device_c::handle_control(int request, int value, int index, int leng
 {
   int ret = 0;
 
+  // let the common handler try to handle it first
   ret = handle_control_common(request, value, index, length, data);
   if (ret >= 0) {
     return ret;
@@ -584,7 +613,7 @@ int usb_msd_device_c::handle_control(int request, int value, int index, int leng
   ret = 0;
   switch (request) {
     case DeviceOutRequest | USB_REQ_CLEAR_FEATURE:
-      BX_DEBUG(("USB_REQ_CLEAR_FEATURE: Not handled: %i %i %i %i", request, value, index, length ));
+      BX_DEBUG(("USB_REQ_CLEAR_FEATURE: Not handled: %d %d %d %d", request, value, index, length ));
       goto fail;
       break;
     case DeviceOutRequest | USB_REQ_SET_FEATURE:
@@ -595,7 +624,7 @@ int usb_msd_device_c::handle_control(int request, int value, int index, int leng
         case USB_DEVICE_U2_ENABLE:
           break;
         default:
-          BX_DEBUG(("USB_REQ_SET_FEATURE: Not handled: %i %i %i %i", request, value, index, length ));
+          BX_DEBUG(("USB_REQ_SET_FEATURE: Not handled: %d %d %d %d", request, value, index, length ));
           goto fail;
       }
       ret = 0;
@@ -604,35 +633,59 @@ int usb_msd_device_c::handle_control(int request, int value, int index, int leng
       switch (value >> 8) {
         case USB_DT_STRING:
           BX_DEBUG(("USB_REQ_GET_DESCRIPTOR: String"));
-          switch(value & 0xff) {
+          switch(value & 0xFF) {
             case 0xEE:
               // Microsoft OS Descriptor check
               // We don't support this check, so fail
+              BX_INFO(("USB MSD handle_control: Microsoft OS specific 0xEE string descriptor"));
               goto fail;
             default:
-              BX_ERROR(("USB MSD handle_control: unknown string descriptor 0x%02x", value & 0xff));
+              BX_ERROR(("USB MSD handle_control: unknown string descriptor 0x%02x", value & 0xFF));
               goto fail;
           }
           break;
         case USB_DT_DEVICE_QUALIFIER:
           BX_DEBUG(("USB_REQ_GET_DESCRIPTOR: Device Qualifier"));
+          // USB 2.0 Specs: 9.6.1, page 261
+          // only devices with a version of 0x0200 or higher, but less than 0x0300 are allowed
+          //  to request this descriptor.
+          if ((* (Bit16u *) &d.dev_descriptor[2] < 0x0200) || (* (Bit16u *) &d.dev_descriptor[2] >= 0x0300)) {
+            BX_ERROR(("USB MSD handle_control: Only version 0x02?? devices are allowed to request the Device Qualifier"));
+          }
           // device qualifier
           if (d.speed == USB_SPEED_HIGH) {
-            data[0] = 10;
+            data[0] = 10;  // 10 bytes long
             data[1] = USB_DT_DEVICE_QUALIFIER;
-            memcpy(data+2, bx_msd_dev_descriptor+2, 6);
-            data[8] = 1;
-            data[9] = 0;
-            ret = 10;
+            memcpy(data + 2, bx_msd_dev_descriptor + 2, 6);
+            data[8] = 1;  // bNumConfigurations
+            data[9] = 0;  // reserved
+            ret = 10;     // return a 10-byte descriptor
+          } else if (d.speed == USB_SPEED_FULL) {
+            // USB 2.0 Specs: 9.6.2, page 264:
+            // "If a full-speed only device (with a device descriptor version number equal to 0200H) receives a
+            //   GetDescriptor() request for a device_qualifier, it must respond with a request error."
+            // a low-, full- or super-speed device (i.e.: a non high-speed device) must return request error on this function.
+            // *However*, a 'maybe not so recent' (released late 2009) widely used operating system will not continue without
+            //  this function succeeding.
+            data[0] = 10;  // 10 bytes long
+            data[1] = USB_DT_DEVICE_QUALIFIER;
+            memcpy(data + 2, bx_msd_dev_descriptor2 + 2, 6);
+            data[8] = 1;  // bNumConfigurations
+            data[9] = 0;  // reserved
+            ret = 10;     // return a 10-byte descriptor
           } else {
-            // a low-, full- or super-speed device (i.e.: a non high-speed device)
-            // must return request error on this function
-            BX_ERROR(("USB MSD handle_control: full-speed only device returning stall on Device Qualifier."));
+            BX_ERROR(("USB MSD handle_control: full-speed only device returning stall on Device Qualifier Descriptor."));
             goto fail;
           }
           break;
         case USB_DT_BIN_DEV_OBJ_STORE:
           BX_DEBUG(("USB_REQ_GET_DESCRIPTOR: BOS"));
+          // only devices with a version of 0x0210 or higher are allowed to request this descriptor.
+          // note: there are a few devices that indicated version 0x0201 as version 2.1 where as most devices
+          //  correctly use version 0x0210 as version 2.10. Since we don't use 0x0201, there is no need to check...
+          if (* (Bit16u *) &d.dev_descriptor[2] < 0x0210) {
+            BX_ERROR(("USB MSD handle_control: Only version 0x0210+ devices are allowed to request the BOS Descriptor"));
+          }
           if (get_speed() == USB_SPEED_SUPER) {
             memcpy(data, bx_msd_bos_descriptor3, sizeof(bx_msd_bos_descriptor3));
             ret = sizeof(bx_msd_bos_descriptor3);
@@ -646,10 +699,14 @@ int usb_msd_device_c::handle_control(int request, int value, int index, int leng
       break;
     case EndpointOutRequest | USB_REQ_CLEAR_FEATURE:
       BX_DEBUG(("USB_REQ_CLEAR_FEATURE:"));
-      if (value == 0 && index != 0x81) { /* clear ep halt */
+      // Value == 0 == Endpoint Halt (the Guest wants to reset the endpoint)
+      if (value == 0) { /* clear ep halt */
+#if HANDLE_TOGGLE_CONTROL
+        set_toggle(index, 0);
+#endif
+        ret = 0;
+      } else
         goto fail;
-      }
-      ret = 0;
       break;
     case DeviceOutRequest | USB_REQ_SET_SEL:
       // Set U1 and U2 System Exit Latency
@@ -661,6 +718,10 @@ int usb_msd_device_c::handle_control(int request, int value, int index, int leng
     case MassStorageReset:
       BX_DEBUG(("MASS STORAGE RESET:"));
       s.mode = USB_MSDM_CBW;
+#if HANDLE_TOGGLE_CONTROL
+      for (int i=1; i<USB_MAX_ENDPOINTS; i++)
+        set_toggle(i, 0);
+#endif
       ret = 0;
       break;
     case InterfaceInClassRequest | GetMaxLun:
@@ -686,6 +747,12 @@ int usb_msd_device_c::handle_data(USBPacket *p)
   Bit8u devep = p->devep;
   Bit8u *data = p->data;
   int len = p->len;
+  bool was_status = false; // so don't dump the status packet twice
+
+  // check that the length is <= the max packet size of the device
+  if (p->len > get_mps(p->devep)) {
+    BX_DEBUG(("EP%d transfer length (%d) is greater than Max Packet Size (%d).", p->devep, p->len, get_mps(p->devep)));
+  }
 
   switch (p->pid) {
     case USB_TOKEN_OUT:
@@ -696,7 +763,7 @@ int usb_msd_device_c::handle_data(USBPacket *p)
       switch (s.mode) {
         case USB_MSDM_CBW:
           if (len != 31) {
-            BX_ERROR(("bad CBW len"));
+            BX_ERROR(("bad CBW len (%d)", len));
             goto fail;
           }
           memcpy(&cbw, data, 31);
@@ -714,10 +781,10 @@ int usb_msd_device_c::handle_data(USBPacket *p)
           } else {
             s.mode = USB_MSDM_DATAOUT;
           }
-          BX_DEBUG(("command tag 0x%X flags %08X len %d data %d",
+          BX_DEBUG(("command tag 0x%X flags %02X cmd_len %d data_len %d",
                    s.tag, cbw.flags, cbw.cmd_len, s.data_len));
           s.residue = 0;
-          s.scsi_dev->scsi_send_command(s.tag, cbw.cmd, cbw.lun, d.async_mode);
+          s.scsi_dev->scsi_send_command(s.tag, cbw.cmd, cbw.cmd_len, cbw.lun, d.async_mode);
           if (s.residue == 0) {
             if (s.mode == USB_MSDM_DATAIN) {
               s.scsi_dev->scsi_read_data(s.tag);
@@ -782,6 +849,7 @@ int usb_msd_device_c::handle_data(USBPacket *p)
 
           send_status(p);
           s.mode = USB_MSDM_CBW;
+          was_status = true;
           ret = 13;
           break;
 
@@ -815,7 +883,7 @@ int usb_msd_device_c::handle_data(USBPacket *p)
           BX_ERROR(("USB MSD handle_data: unexpected mode at USB_TOKEN_IN: (0x%02X)", s.mode));
           goto fail;
       }
-      if (ret > 0) usb_dump_packet(data, ret, 0, p->devaddr, USB_DIR_IN | p->devep, USB_TRANS_TYPE_BULK, false, true);
+      if (!was_status && (ret > 0)) usb_dump_packet(data, ret, 0, p->devaddr, USB_DIR_IN | p->devep, USB_TRANS_TYPE_BULK, false, true);
       break;
 
     default:
