@@ -72,7 +72,7 @@ turion64_tyler_t::turion64_tyler_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 
 void turion64_tyler_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
-  static const char* brand_string = "AMD Turion(tm) 64 X2 Mobile Technology TL-60";
+  static const char* brand_string = "AMD Turion(tm) 64 X2 Mobile Technology TL-60\0\0\0";
 
   switch(function) {
   case 0x80000000:
