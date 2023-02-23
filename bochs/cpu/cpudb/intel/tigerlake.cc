@@ -138,7 +138,7 @@ tigerlake_t::tigerlake_t(BX_CPU_C *cpu):
 
 void tigerlake_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
-  static const char* brand_string = "11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz";
+  static const char* brand_string = "11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz\0";
 
   static bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
   if (cpuid_limit_winnt)

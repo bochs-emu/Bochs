@@ -134,7 +134,7 @@ corei7_icelake_t::corei7_icelake_t(BX_CPU_C *cpu):
 
 void corei7_icelake_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
-  static const char* brand_string = "QuadCore Intel Core i7-1065G7, 1300 MHz\0\0\0\0\0\0\0";
+  static const char* brand_string = "QuadCore Intel Core i7-1065G7, 1300 MHz\0\0\0\0\0\0\0\0";
 
   static bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
   if (cpuid_limit_winnt)
