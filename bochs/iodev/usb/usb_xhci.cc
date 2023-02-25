@@ -1641,7 +1641,7 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
             BX_XHCI_THIS hub.usb_port[port].portsc.wpr = (value & (1 << 31)) ? 1 : 0;
             BX_XHCI_THIS hub.usb_port[port].portsc.cec = (value & (1 << 23)) ? 1 : 0;
             BX_XHCI_THIS hub.usb_port[port].portsc.wrc = (value & (1 << 19)) ? 0 : BX_XHCI_THIS hub.usb_port[port].portsc.wrc;
-            if (value & (1<<18))  // For a USB3 protocol port, this bit shall never be set to ‘1’, however doesn't hurt to write to it anyway
+            if (value & (1<<18))  // For a USB3 protocol port, this bit shall never be set to 1, however doesn't hurt to write to it anyway
               BX_DEBUG(("Write to USB3 port: bit 18"));
           } else {
             BX_XHCI_THIS hub.usb_port[port].portsc.pec = (value & (1 << 18)) ? 0 : BX_XHCI_THIS hub.usb_port[port].portsc.pec;
@@ -2426,7 +2426,7 @@ void bx_usb_xhci_c::process_command_ring(void)
           if (BX_XHCI_THIS hub.slots[slot].enabled == 1) {
             get_dwords((bx_phy_address) trb.parameter, (Bit32u *) buffer, (CONTEXT_SIZE + (CONTEXT_SIZE * 32)) >> 2);
             //DEV_MEM_READ_PHYSICAL((bx_phy_address) trb.parameter + 4, 4, (Bit8u *) &a_flags);
-            a_flags = * (Bit32u *) &buffer[0];
+            a_flags = * (Bit32u *) &buffer[4];
             // only the Slot context and EP1 (control EP) contexts are evaluated. Section 6.2.3.3
             // If the slot is not addressed or configured, then return error
             // XHCI specs 1.0, page 102 says DEFAULT or higher, while page 321 states higher than DEFAULT!!!
@@ -2998,8 +2998,8 @@ int bx_usb_xhci_c::validate_slot_context(const struct SLOT_CONTEXT *slot_context
   
   // all high-speed and lower devices must have a Max Exit Latency value of zero
   // (this may fail, because the speed field may not yet be valid)
-  if ((slot_context->max_exit_latency > 0) && (slot_context->speed < XHCI_SPEED_SUPER))
-    ret = PARAMETER_ERROR;
+  //if ((slot_context->max_exit_latency > 0) && (slot_context->speed < XHCI_SPEED_SUPER))
+  //  ret = PARAMETER_ERROR;
 
   if (ret != TRB_SUCCESS) {
     BX_ERROR(("Validate Slot Context: int_target = %d (0 -> %d), slot_context->max_exit_latency = %d", 
@@ -3060,11 +3060,11 @@ int bx_usb_xhci_c::validate_ep_context(const struct EP_CONTEXT *ep_context, cons
         if (ep_context->tr_dequeue_pointer == 0)
           ret = PARAMETER_ERROR;
         
-        // 4) the DCS field = ‘1’,
+        // 4) the DCS field = 1,
         if (ep_context->dcs != 1)
           ret = PARAMETER_ERROR;
         
-        // 5) the MaxPStreams field = ‘0’, and
+        // 5) the MaxPStreams field = 0, and
         if (ep_context->max_pstreams != 0)
           ret = PARAMETER_ERROR;
         
