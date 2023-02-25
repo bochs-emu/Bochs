@@ -1641,7 +1641,7 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
             BX_XHCI_THIS hub.usb_port[port].portsc.wpr = (value & (1 << 31)) ? 1 : 0;
             BX_XHCI_THIS hub.usb_port[port].portsc.cec = (value & (1 << 23)) ? 1 : 0;
             BX_XHCI_THIS hub.usb_port[port].portsc.wrc = (value & (1 << 19)) ? 0 : BX_XHCI_THIS hub.usb_port[port].portsc.wrc;
-            if (value & (1<<18))  // For a USB3 protocol port, this bit shall never be set to 1, however doesn't hurt to write to it anyway
+            if (value & (1<<18))  // For a USB3 protocol port, this bit shall never be set to 1, however doesn't hurt to write to it anyway
               BX_DEBUG(("Write to USB3 port: bit 18"));
           } else {
             BX_XHCI_THIS hub.usb_port[port].portsc.pec = (value & (1 << 18)) ? 0 : BX_XHCI_THIS hub.usb_port[port].portsc.pec;
@@ -3060,11 +3060,11 @@ int bx_usb_xhci_c::validate_ep_context(const struct EP_CONTEXT *ep_context, cons
         if (ep_context->tr_dequeue_pointer == 0)
           ret = PARAMETER_ERROR;
         
-        // 4) the DCS field = 1,
+        // 4) the DCS field = 1,
         if (ep_context->dcs != 1)
           ret = PARAMETER_ERROR;
         
-        // 5) the MaxPStreams field = 0, and
+        // 5) the MaxPStreams field = 0, and
         if (ep_context->max_pstreams != 0)
           ret = PARAMETER_ERROR;
         
