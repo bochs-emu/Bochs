@@ -124,6 +124,7 @@ private:
                                         const char *oldval, const char *val, int maxlen);
   static Bit64s cdrom_status_handler(bx_param_c *param, bool set, Bit64s val);
 
+protected:
   int uasp_handle_data(USBPacket *p);
   void uasp_initialize_request(int tag);
   UASPRequest *uasp_find_request(Bit32u tag);
