@@ -792,7 +792,7 @@ bool usb_hid_device_c::init()
    *  in the configuration, simply uncomment this line.  I use
    *  it when I am working on this emulation.
    */
-  LOG_THIS setonoff(LOGLEV_DEBUG, ACT_REPORT);
+  //LOG_THIS setonoff(LOGLEV_DEBUG, ACT_REPORT);
 
   if ((d.type == USB_HID_TYPE_MOUSE) ||
       (d.type == USB_HID_TYPE_TABLET)) {
@@ -850,6 +850,7 @@ bool usb_hid_device_c::init()
     }
   }
   d.connected = 1;
+  d.alt_iface_max = 0;
   return 1;
 }
 

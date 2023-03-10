@@ -216,6 +216,7 @@ bool usb_printer_device_c::init()
   } else {
     BX_ERROR(("USB printer: missing output file"));
   }
+  d.alt_iface_max = 0;
   return 0;
 }
 

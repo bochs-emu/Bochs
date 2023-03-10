@@ -1432,12 +1432,13 @@ int bx_usb_ehci_c::execute(EHCIPacket *p)
 #endif
     p->packet.complete_cb = ehci_event_handler;
     p->packet.complete_dev = BX_EHCI_THIS_PTR;
+    p->packet.strm_pid = 0; // if UASP is used, this must be 0
 
     p->async = EHCI_ASYNC_INITIALIZED;
   }
 
   ret = p->queue->dev->handle_packet(&p->packet);
-  BX_DEBUG(("submit: qh %x next %x qtd %x pid %x len %d (total %d) endp %x ret %d\n",
+  BX_DEBUG(("submit: qh %x next %x qtd %x pid %x len %d (total %d) endp %x ret %d",
             p->queue->qhaddr, p->queue->qh.next, p->queue->qtdaddr, p->pid,
             p->packet.len, p->tbytes, endp, ret));
 
@@ -2079,7 +2080,10 @@ void bx_usb_ehci_c::advance_async_state(void)
 
     default:
       /* this should only be due to a developer mistake */
-      BX_PANIC(("Bad asynchronous state %d. Resetting to active", BX_EHCI_THIS hub.astate));
+      // Ben: I commented this line due to the fact that after a USB_RET_ASYNC return,
+      //  then a usb_packet_complete(p), the event handler is setting the astate to 
+      //  EST_EXECUTE instead of EST_ACTIVE ???
+      //BX_PANIC(("Bad asynchronous state %d. Resetting to active", BX_EHCI_THIS hub.astate));
       BX_EHCI_THIS set_state(async, EST_ACTIVE);
   }
 }

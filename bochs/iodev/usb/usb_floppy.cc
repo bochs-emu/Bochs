@@ -470,6 +470,7 @@ bool usb_floppy_device_c::init()
     sprintf(s.info_txt, "USB floppy: media not present");
   }
   d.connected = 1;
+  d.alt_iface_max = 0;
 
   s.did_inquiry_fail = 0;
   s.fail_count = 0;
