@@ -1176,6 +1176,7 @@ speaker: enabled=1, mode=sound, volume=15
 # speed choices depend on both HC and device. The option 'debug' turns on debug
 # output for the device at connection time. The option 'pcap' turns on packet
 # logging in PCAP format.
+#
 # For the USB 'disk' device the optionsX parameter can be used to specify an
 # alternative redolog file (journal) of some image modes. For 'vvfat' mode USB
 # disks the optionsX parameter can be used to specify the disk size (range
@@ -1185,6 +1186,13 @@ speaker: enabled=1, mode=sound, volume=15
 # supported (can fix hw detection in some guest OS). The USB floppy also
 # accepts the parameter "write_protected" with valid values 0 and 1 to select
 # the access mode (default is 0).
+#
+# For a high- or super-speed USB 'disk' device the optionsX parameter can include 
+# the 'proto:bbb' or 'proto:uasp' parameter specifying to use either the bulk-only
+# Protocol (default) or the USB Attached SCSI Protocol. If no such parameter
+# is given, the 'bbb' protocol is used. A Guest that doesn't support UASP
+# should revert to bbb even if the 'uasp' attribute is given. See the usb_ehci:
+# or usb_xhci: section below for an example. (Only 1 LUN is available at this time)
 #=======================================================================
 #usb_uhci: enabled=1
 #usb_uhci: port1=mouse, port2=disk, options2="path:usbstick.img"
@@ -1214,17 +1222,36 @@ speaker: enabled=1, mode=sound, volume=15
 # also available on EHCI.
 #=======================================================================
 #usb_ehci: enabled=1
+#usb_ehci: port1=disk, options1="speed:high, path:hdd.img, proto:bbb"
+#usb_ehci: port1=disk, options1="speed:high, path:hdd.img, proto:uasp"
 
 #=======================================================================
 # USB_XHCI:
 # This option controls the presence of the USB xHCI host controller with a
-# 4-port hub. The portX parameter accepts the same device types with the
-# same syntax as the UHCI controller (see above). The optionsX parameter is
-# also available on xHCI. NOTE: port 1 and 2 are USB3 and only support
-# super-speed devices, but port 3 and 4 are USB2 and support speed settings
-# low, full and high.
+# default 4-port hub. The portX parameter accepts the same device types 
+# with the same syntax as the UHCI controller (see above). The optionsX 
+# parameter is also available on xHCI.
+#
+# The xHCI emulation allows you to set the number of ports used with a range
+# of 2 to 10, requiring an even numbered count.
+#
+# NOTE: The first half of the ports, (ports 1 and 2 on a 4-port hub) are
+# USB3 only and support super-speed devices. The second half ports (ports
+# 3 and 4) are USB2 and support speed settings of low, full, or high.
+# The xHCI also allows for different host controllers using the model=
+# parameter. Currently, the two allowed options are "uPD720202" and 
+# "uPD720201". The first defaults to 2 sockets (4 ports) and the later 
+# defaults to 4 sockets (8 ports).
 #=======================================================================
-#usb_xhci: enabled=1
+#usb_xhci: enabled=1               # defaults to the uPD720202 w/4 ports
+#usb_xhci: enabled=1, n_ports=6    # defaults to the uPD720202 w/6 ports
+#usb_xhci: enabled=1, model=uPD720202             # defaults to 4 ports
+#usb_xhci: enabled=1, model=uPD720202, n_ports=6  # change to 6 ports
+#usb_xhci: enabled=1, model=uPD720201             # defaults to 8 ports
+#usb_xhci: enabled=1, model=uPD720201, n_ports=10 # change to 10 ports
+#usb_xhci: port1=disk, options1="speed:super, path:hdd.img, proto:bbb"
+#usb_xhci: port1=disk, options1="speed:super, path:hdd.img, proto:uasp"
+#usb_xhci: port3=disk, options3="speed:high, path:hdd.img, proto:uasp"
 
 #=======================================================================
 # PCIDEV:
