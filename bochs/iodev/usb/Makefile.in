@@ -50,7 +50,7 @@ top_builddir    = ../..
 LIBTOOL=@LIBTOOL@
 WIN32_DLL_IMPORT_LIBRARY=../../@WIN32_DLL_IMPORT_LIB@
 
-USBDEV_OBJS = usb_hid.o usb_hub.o usb_msd.o usb_printer.o usb_floppy.o
+USBDEV_OBJS = usb_hid.o usb_hub.o usb_msd.o usb_uasp.o usb_printer.o usb_floppy.o
 UHCICORE_OBJ = uhci_core.o
 SCSI_OBJS = scsi_device.o
 
@@ -99,8 +99,8 @@ libbx_%.la: %.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) $(LDFLAGS) -module $< -o $@ -rpath $(PLUGIN_PATH)
 
 # special link rules for plugins that require more than one object file
-libbx_usb_msd.la: usb_msd.lo scsi_device.lo
-	$(LIBTOOL) --mode=link --tag CXX $(CXX) $(LDFLAGS) -module usb_msd.lo scsi_device.lo -o libbx_usb_msd.la -rpath $(PLUGIN_PATH)
+libbx_usb_msd.la: usb_msd.lo scsi_device.lo usb_uasp.lo
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) $(LDFLAGS) -module usb_msd.lo scsi_device.lo usb_uasp.lo -o libbx_usb_msd.la -rpath $(PLUGIN_PATH)
 
 libbx_usb_uhci.la: usb_uhci.lo uhci_core.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) $(LDFLAGS) -module usb_uhci.lo uhci_core.lo -o libbx_usb_uhci.la -rpath $(PLUGIN_PATH)
@@ -134,8 +134,8 @@ bx_usb_hid.dll: usb_hid.o
 bx_usb_hub.dll: usb_hub.o
 	@LINK_DLL@ usb_hub.o $(WIN32_DLL_IMPORT_LIBRARY)
 
-bx_usb_msd.dll: usb_msd.o scsi_device.o
-	@LINK_DLL@ usb_msd.o scsi_device.o $(WIN32_DLL_IMPORT_LIBRARY)
+bx_usb_msd.dll: usb_msd.o usb_uasp.o scsi_device.o
+	@LINK_DLL@ usb_msd.o usb_uasp.o scsi_device.o $(WIN32_DLL_IMPORT_LIBRARY)
 
 bx_usb_printer.dll: usb_printer.o
 	@LINK_DLL@ usb_printer.o $(WIN32_DLL_IMPORT_LIBRARY)
