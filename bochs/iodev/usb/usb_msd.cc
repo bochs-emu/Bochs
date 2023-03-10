@@ -677,7 +677,7 @@ bool usb_msd_device_c::init()
    *  in the configuration, simply uncomment this line.  I use
    *  it when I am working on this emulation.
    */
-  LOG_THIS setonoff(LOGLEV_DEBUG, ACT_REPORT);
+  //LOG_THIS setonoff(LOGLEV_DEBUG, ACT_REPORT);
   
   // check to make sure correct speed is used if the proto is uasp
   if ((s.proto == MSD_PROTO_UASP) && (d.speed < USB_SPEED_HIGH)) {
@@ -1023,7 +1023,7 @@ int usb_msd_device_c::handle_data(USBPacket *p)
     BX_DEBUG(("EP%d transfer length (%d) is greater than Max Packet Size (%d).", p->devep, p->len, get_mps(p->devep)));
   }
 
-  // are we are doing bbb interface?
+  // are we doing bbb interface?
   if (aIface == MSD_PROTO_BBB) {
     switch (p->pid) {
       case USB_TOKEN_OUT:
