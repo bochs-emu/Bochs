@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2021  The Bochs Project
+# Copyright (C) 2012-2023  The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -72,7 +72,7 @@ OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
 NONPLUGIN_OBJS = @IODEV_EXT_NON_PLUGIN_OBJS@
 PLUGIN_OBJS = @IODEV_EXT_PLUGIN_OBJS@
 USBHC_DLL_TARGETS = @USBHC_DLL_TARGETS@
-USBDEV_DLL_TARGETS = bx_usb_hid.dll bx_usb_hub.dll bx_usb_msd.dll bx_usb_printer.dll bx_usb_floppy.dll
+USBDEV_DLL_TARGETS = bx_usb_hid.dll bx_usb_hub.dll bx_usb_msd.dll bx_usb_uasp.dll bx_usb_printer.dll bx_usb_floppy.dll
 
 all: libusb.a
 
@@ -216,6 +216,14 @@ usb_msd.o: usb_msd.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
  usb_common.h usb_pcap.h ../hdimage/cdrom.h ../hdimage/hdimage.h \
  scsi_device.h usb_msd.h
+usb_uasp.o: usb_uasp.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
+ ../../osdep.h ../../gui/paramtree.h ../../logio.h \
+ ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
+ ../../extplugin.h ../../param_names.h ../../pc_system.h \
+ ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
+ usb_common.h usb_pcap.h ../hdimage/cdrom.h ../hdimage/hdimage.h \
+ scsi_device.h usb_msd.h
 usb_ohci.o: usb_ohci.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../gui/paramtree.h ../../logio.h \
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
@@ -302,6 +310,14 @@ usb_hub.lo: usb_hub.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
  usb_common.h usb_pcap.h usb_hub.h
 usb_msd.lo: usb_msd.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
+ ../../osdep.h ../../gui/paramtree.h ../../logio.h \
+ ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
+ ../../extplugin.h ../../param_names.h ../../pc_system.h \
+ ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
+ usb_common.h usb_pcap.h ../hdimage/cdrom.h ../hdimage/hdimage.h \
+ scsi_device.h usb_msd.h
+usb_uasp.lo: usb_uasp.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../gui/paramtree.h ../../logio.h \
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
  ../../extplugin.h ../../param_names.h ../../pc_system.h \
