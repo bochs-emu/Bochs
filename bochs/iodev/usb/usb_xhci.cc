@@ -148,11 +148,8 @@ static Bit8u ext_caps[EXT_CAPS_SIZE] = {
 // builtin configuration handling functions
 Bit32s usb_xhci_options_parser(const char *context, int num_params, char *params[])
 {
-  // try to catch an out of range port number
-  Bit32s max_ports = SIM->get_param_num(BXPN_XHCI_N_PORTS)->get();
-  if (max_ports < 0)
-    max_ports = USB_XHCI_PORTS;
-
+  int max_ports;
+  
   if (!strcmp(params[0], "usb_xhci")) {
     bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_USB_XHCI);
     for (int i = 1; i < num_params; i++) {
@@ -166,10 +163,13 @@ Bit32s usb_xhci_options_parser(const char *context, int num_params, char *params
         else
           BX_PANIC(("%s: unknown parameter '%s' for usb_xhci: model=", context, &params[i][6]));
       } else if (!strncmp(params[i], "n_ports=", 8)) {
-        max_ports = atol(&params[i][8]);
-        SIM->get_param_num(BXPN_XHCI_N_PORTS)->set(max_ports);
+        max_ports = (int) strtol(&params[i][8], NULL, 10);
+        if ((max_ports >= 2) && (max_ports <= USB_XHCI_PORTS_MAX) && !(max_ports & 1))
+          SIM->get_param_num(BXPN_XHCI_N_PORTS)->set(max_ports);
+        else
+          BX_PANIC(("%s: n_ports= must be at least 2, no more than %d, and an even number.", context, USB_XHCI_PORTS_MAX));
       } else if (!strncmp(params[i], "port", 4) || !strncmp(params[i], "options", 7)) {
-        if (SIM->parse_usb_port_params(context, params[i], max_ports, base) < 0) {
+        if (SIM->parse_usb_port_params(context, params[i], USB_XHCI_PORTS_MAX, base) < 0) {
           return -1;
         }
       } else {
