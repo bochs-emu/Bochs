@@ -72,25 +72,25 @@
 #define UASP_SET_DIR(m,d)    (((m) & ~0x0000FF00) | ((d) << 8))
 
 struct S_UASP_COMMAND {
-	Bit8u  id;         // Information Unit Type
-	Bit8u  rsvd0;      //
-	Bit16u tag;        // big endian
-	Bit8u  prio_attr;  // Task Attribute
-	Bit8u  rsvd1;      //
-	Bit8u  len;        // len (if more than 16 bytes) (i.e.: if command len is 20 bytes, this field is 4)  (bottom 2 bits are reserved)
-	Bit8u  rsvd2;      //
-	Bit64u lun;        // eight byte lun
+  Bit8u  id;         // Information Unit Type
+  Bit8u  rsvd0;      //
+  Bit16u tag;        // big endian
+  Bit8u  prio_attr;  // Task Attribute
+  Bit8u  rsvd1;      //
+  Bit8u  len;        // len (if more than 16 bytes) (i.e.: if command len is 20 bytes, this field is 4)  (bottom 2 bits are reserved)
+  Bit8u  rsvd2;      //
+  Bit64u lun;        // eight byte lun
   Bit8u  com_block[16]; // command block
 };
 
 struct S_UASP_STATUS {
-	Bit8u  id;         // usually IU_SENSE ?
-	Bit8u  rsvd0;
-	Bit16u tag;        // big endian
-	Bit16u stat_qual;  // big endian
-	Bit8u  status;
-	Bit8u  resv1[7];
-	Bit16u len;        // big endian
+  Bit8u  id;         // usually IU_SENSE ?
+  Bit8u  rsvd0;
+  Bit16u tag;        // big endian
+  Bit16u stat_qual;  // big endian
+  Bit8u  status;
+  Bit8u  resv1[7];
+  Bit16u len;        // big endian
   Bit8u  sense[18];
 };
 
@@ -170,9 +170,7 @@ void usb_msd_device_c::uasp_initialize_request(int index)
 
 UASPRequest *usb_msd_device_c::uasp_find_request(Bit32u tag)
 {
-  int i;
-
-  for (i=0; i<UASP_MAX_STREAMS_N; i++) {
+  for (int i=0; i<UASP_MAX_STREAMS_N; i++) {
     if (UASP_GET_ACTIVE(s.uasp_request[i].mode) && (s.uasp_request[i].tag == tag))
       return &s.uasp_request[i];
   }
@@ -263,9 +261,8 @@ const struct S_UASP_INPUT *usb_msd_device_c::uasp_get_info(Bit8u command, Bit8u 
 
 int usb_msd_device_c::uasp_do_stall(UASPRequest *req)
 {
-  USBPacket *p;
+  USBPacket *p = req->p;
 
-  p = req->p;
   if (p) {
     req->p = NULL;
     p->len = USB_RET_STALL;
