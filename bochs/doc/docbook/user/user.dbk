@@ -3,7 +3,7 @@
 doc/docbook/user/user.dbk
 $Id$
 
-This is the top level file for the Bochs Users Manual.
+This is the top level file for the bochs Users Manual.
 ================================================================
 -->
 
@@ -208,7 +208,7 @@ environment that can better assist you in determining cause and effect relations
 You can take snapshots that show you what is going on behind the scenes.
 You can isolate the line that caused that crash.  You can have multiple
 images and compare them under a microscope.
-In these situation, Bochs could save you time and resources.
+In this situation, Bochs can save you time and resources.
 </para>
 
 <para>
@@ -549,8 +549,8 @@ currently work with.
   <row>
     <entry>Plugins</entry>
     <entry>Yes</entry>
-    <entry>Compiling devices, gui and drivers for network, sound and disk image
-    formats as plugins is supported on Linux, MacOS X, Solaris, Cygwin, MinGW/MSYS,
+    <entry>Compiling devices, GUI and drivers for network, sound and disk image
+    formats as plugins are supported on Linux, MacOS X, Solaris, Cygwin, MinGW/MSYS,
     MSVC nmake and the VS2019 IDE (workspace provided).
     </entry>
   </row>
@@ -585,7 +585,7 @@ currently work with.
   <row>
     <entry>Take advantage of your SMP box</entry>
     <entry>Minimal</entry>
-    <entry>At present, Bochs only uses threads in some guis, in the lowlevel
+    <entry>At present, Bochs only uses threads in some GUIs, in the lowlevel
     sound output code and in the Voodoo graphics adapter code. The simulation
     core itself uses only one thread, so it will not run any faster on
     multiprocessor hardware.
@@ -836,7 +836,7 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
      What applications are known to run inside of Bochs?
      </para></question>
      <answer><para>
-     Well, lot's of different OS's run inside of Bochs, so
+     Well, lots of different OS's run inside of Bochs, so
      thousands.  I'm assuming you are asking about Windows programs.
      To give you a few, the following ones from the Winstone'98 tests
      worked: Access 97, CorelDRAW! 7, Excel 97, Lotus 1-2-3 97, Word 97,
@@ -853,7 +853,7 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
     </para></question>
     <answer><para>
       You should read <xref linkend="setup"> first. Next, you can check <xref linkend="guests">
-      if there specific instructions on how to install your (guest) OS inside of Bochs.
+      if they are specific instructions on how to install your (guest) OS inside of Bochs.
     </para></answer>
   </qandaentry>
 
@@ -864,7 +864,7 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
      <answer><para>
        Bochs has now minimal support for the Android platform using a special
        version of the SDL library. There are some external projects that use
-       the offical sources with some modifications. They also offer a gui
+       the offical sources with some modifications. They also offer a GUI
        for easy Bochs configuration. Other mobile platforms are not officially
        supported yet.
      </para></answer>
@@ -976,7 +976,7 @@ made those changes) that have occurred to that source code. Use of SVN is
 particularly common on projects with multiple developers, since SVN ensures
 changes made by one developer are not accidentally removed when another
 developer posts their changes to the source tree. The Bochs source code and
-documentation are available using SVN<footnote>
+documentation is available using SVN<footnote>
 <para>
 You can download SVN software and documentation from
 <ulink url="http://subversion.apache.org">subversion.apache.org</ulink>.
@@ -1095,7 +1095,7 @@ below.
         <entry>?</entry>
         <entry>unknown</entry>
         <entry>
-        This file is in your bochs directory, but SVN does not know anything
+        This file is in your Bochs directory, but SVN does not know anything
         about it.  For example, when you compile Bochs, any files created
         during the build process appear as ?.
         </entry>
@@ -1374,7 +1374,7 @@ The <replaceable>tagname</replaceable> tells which release you want, and it can 
 <para>
 Entire books have been written on SVN, so there's no sense in duplicating
 it all here in the Bochs documentation.  Some sources of additional
-information are listed below.
+information is listed below.
 </para>
 <itemizedlist>
 <listitem><para>The <ulink url="http://subversion.apache.org">subversion.apache.org
@@ -1528,7 +1528,7 @@ download the source RPM and build a new binary RPM that is appropriate
 for your platform.  The command is <command>rpmbuild --rebuild
 NAME.src.rpm</command>.  As a last resort, you can run rpm with the
 <command>--nodeps</command> option to ignore dependencies and install it
-anyway, but if it is missing important pieces it may not run properly.
+anyway, but if it is missing important pieces, it may not run properly.
 </para>
 
 <para>
@@ -1690,18 +1690,18 @@ you've copied it to the hard disk.
 Once you've installed the binaries, it's probably a
 good idea to drag the _dmg_top volume to trash to
 unmount it, so you don't get confused and try to
-run bochs from there.  Then open
-the bochs folder from wherever you installed it.
+run Bochs from there.  Then open
+the Bochs folder from wherever you installed it.
 </para>
 <para>
-The MacOS X version of bochs requires a terminal
+The MacOS X version of Bochs requires a terminal
 window to run. If you just double click on the Bochs
 icon, you'll get an error message telling you to
 double click on "bochs.scpt" to start
 Bochs in a new terminal window.  You'll need to
 configure Bochs before you will get very far with
 the bochs.scpt in the top folder,
-so to try out bochs open the dlxlinux folder and
+so to try out Bochs open the dlxlinux folder and
 double click on the bochs.scpt icon inside.
 </para>
 <para>
@@ -1713,7 +1713,7 @@ do so.  You will then get a new window containing
 the VGA display of the simulated
 machine.  The new window will probably appear behind
 the current terminal window, so either click on the
-bochs icon in the dock or the simulation window to
+Bochs icon in the dock or the simulation window to
 bring it to the front.  If you're quick
 enough you'll then see the VGA BIOS screen, then
 Linux  uncompresses and boots, and you get a login
@@ -1884,7 +1884,7 @@ link the code, and more.  After you have finished the configure step, just type
 </para>
 
 <para>
-The reason that make is so popular is that it is smart about when to compile
+The reason that Make is so popular is that it is smart about when to compile
 and when not to compile.  If you run make once, it compiles every file.  But
 when you run it again, it checks to see if any source files have been modified;
 if not, there's nothing to do!  For example, the &Makefile; says that
@@ -1926,8 +1926,8 @@ at least to erase any files that it created.
 Once the program has been built, the next step is typically to run
 <command>make install</command> to copy the executables, documentation, and
 other required files into a public place so that all users can use it.
-By default the files are copied to some directories in /usr/local. The following
-tables shows the directories and their contents.
+By default, the files are copied to some directories in /usr/local. The following
+tables show the directories and their contents.
 </para>
 <table><title>Installed files</title>
   <tgroup cols="2" align="left" colsep="1" rowsep="1">
@@ -2104,7 +2104,7 @@ In Bochs 1.3 and before, the X11 GUI was always the default.
     </row>
     <row>
       <entry>--with-term</entry>
-      <entry>Use text-only gui with curses library.  Almost certainly
+      <entry>Use text-only GUI with curses library.  Almost certainly
       won't work right with the debugger or the textconfig interface.
       </entry>
     </row>
@@ -2190,7 +2190,7 @@ SMP, x86_64 support) and the devices options (e.g. PCI, USB, Cirrus graphics).
       <entry>--enable-debugger-gui</entry>
       <entry>yes if debugger is on</entry>
       <entry>
-      Enable support for the gui frontend of the Bochs debugger. This feature
+      Enable support for the GUI frontend of the Bochs debugger. This feature
       is supported on Windows hosts and on hosts with GTK2/GTK3 installed.
       </entry>
     </row>
@@ -2225,9 +2225,9 @@ SMP, x86_64 support) and the devices options (e.g. PCI, USB, Cirrus graphics).
       <entry>no</entry>
       <entry>
       Compile in support for instrumentation.  This allows you to collect
-      instrumentation data from bochs as it executes code.  You have to create
+      instrumentation data from Bochs as it executes code.  You have to create
       your own instrumentation library and define the instrumentation macros
-      (hooks in bochs) to either call your library functions or not, depending
+      (hooks in Bochs) to either call your library functions or not, depending
       upon whether you want to collect each piece of data.
       </entry>
     </row>
@@ -2312,7 +2312,7 @@ SMP, x86_64 support) and the devices options (e.g. PCI, USB, Cirrus graphics).
       <entry>no</entry>
       <entry>
       Compile in support for SMP simulation.  This allows you to boot Linux and
-      maybe other OSes in SMP mode, and bochs will simulate all the different
+      maybe other OSes in SMP mode, and Bochs will simulate all the different
       CPUs and communication between them.  Do not expect this option to speed
       up your simulation!  On the contrary, it has to spend extra time simulating
       the different CPUs (even if they're mostly idle) and the communication
@@ -2358,7 +2358,7 @@ SMP, x86_64 support) and the devices options (e.g. PCI, USB, Cirrus graphics).
     <row>
       <entry>--enable-x86-debugger</entry>
       <entry>no</entry>
-      <entry>X86 debugger support.  If the software you run in bochs
+      <entry>X86 debugger support.  If the software you run in Bochs
           needs to use the x86 hardware debugging facilities such as
           DR0..DR7, instruction and data breakpoints etc., then you
           should use this option.  Otherwise don't use it, as it
@@ -2973,9 +2973,9 @@ Compiling with MSVC <command>nmake</command> is not supported yet.
 The SDL library version 2 is now also supported by Bochs. For some basic information
 about SDL, see <xref linkend="compile-sdl">. The configure option to enable SDL2
 support is <option>--with-sdl2</option> and the configuration script is called
-<command>sdl2-config</command>. Note that the Bochs guis for SDL version 1.2.x
-and 2.x are mutually exclusive. The legacy SDL gui support will be removed someday.
-When using the gui library autodetection (<option>--with-all-libs</option>) the
+<command>sdl2-config</command>. Note that the Bochs GUIs for SDL version 1.2.x
+and 2.x are mutually exclusive. The legacy SDL GUI support will be removed someday.
+When using the GUI library autodetection (<option>--with-all-libs</option>) the
 configure script probes for SDL version 2 first.
 </para>
 </section><!-- end compile-sdl2 -->
@@ -3166,7 +3166,7 @@ instructions given in <xref linkend="keymap">.
 </para>
 
 <para>
-A collection of disk images  of different operating systems can be found at
+A collection of disk images of different operating systems can be found at
 <ulink url="http://bochs.sourceforge.net/diskimages.html"></ulink>. Some disk
 images are the size of a floppy disk (1 meg compressed) and others are gigantic
 (160 meg compressed). If you want to create a disk image yourself, please see
@@ -3333,7 +3333,7 @@ allows you to edit all the settings that control Bochs' behavior.
 Depending on the platform there are up to 3 choices of configuration
 interface: a text mode version called "textconfig" and two graphical versions
 called "win32config" and "wx".  The text mode version uses stdin/stdout or
-gui console (if available / runtime config) and is always compiled in, unless
+GUI console (if available / runtime config) and is always compiled in, unless
 Bochs is compiled for wx only. The choice "win32config" is only available on
 win32/win64 and it is the default on these platforms. The choice "wx" is only
 available when Bochs is compiled with wxWidgets support, see <xref linkend="compile-wx">.
@@ -3386,10 +3386,10 @@ behaviour. These options are supported by more than one display library:
 <screen>
   "cmdmode"     - call a headerbar button handler after pressing F7 (sdl, sdl2, win32, x)
   "fullscreen"  - startup in fullscreen mode (sdl, sdl2)
-  "gui_debug"   - use GTK debugger gui (sdl, x) / Win32 debugger gui (sdl, sdl2, win32)
+  "gui_debug"   - use GTK debugger GUI (sdl, x) / Win32 debugger GUI (sdl, sdl2, win32)
   "hideIPS"     - disable IPS output in status bar (rfb, sdl, sdl2, term, vncsrv, win32, wx, x)
   "nokeyrepeat" - turn off host keyboard repeat (sdl, sdl2, win32, x)
-  "no_gui_console" - use system console instead of builtin gui console (rfb, sdl, sdl2, vncsrv, x)
+  "no_gui_console" - use system console instead of builtin GUI console (rfb, sdl, sdl2, vncsrv, x)
   "timeout"     - time (in seconds) to wait for client (rfb, vncsrv)
 </screen>
 See the examples below for other currently supported options.
@@ -3503,14 +3503,14 @@ binary compiled with SMP support.
 </para>
 <para><command>reset_on_triple_fault</command></para>
 <para>
-Reset the CPU when triple fault occur (highly recommended) rather than PANIC.
+Reset the CPU when a triple fault occurs (highly recommended) rather than PANIC.
 Remember that if you are trying to continue after triple fault the simulation
 will be completely bogus !
 </para>
 <para><command>cpuid_limit_winnt</command></para>
 <para>
 Determine whether to limit maximum CPUID function to 2. This mode is required
-to workaround WinNT installation and boot issues.
+to work around WinNT installation and boot issues.
 </para>
 <para><command>mwait_is_nop</command></para>
 <para>
@@ -3534,7 +3534,7 @@ Emulated Instructions Per Second.  This is the number of IPS that Bochs is
 capable of running on your machine.  You can recompile Bochs with
 <option>--enable-show-ips</option> option enabled, to find your workstation's capability.
 Measured IPS value will then be logged into your <link linkend="bochsopt-log">log file</link>
-or in the status bar (if supported by the gui).
+or in the status bar (if supported by the GUI).
 </para>
 
 <para>
@@ -3628,7 +3628,7 @@ This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
 Select SIMD instructions support.
 Any of NONE/SSE/SSE2/SSE3/SSSE3/SSE4_1/SSE4_2/AVX/AVX2/AVX512 could be selected.
 This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
-The AVX choises exists only if Bochs compiled with --enable-avx option.
+The AVX choices exists only if Bochs compiled with --enable-avx option.
 </para>
 <para><command>sse4a</command></para>
 <para>
@@ -3766,7 +3766,7 @@ used all allocated host memory and wants more.
 </para>
 <note><para>
 Due to limitations in the host OS, Bochs fails to allocate more than 1024MB on most 32-bit systems.
-In order to overcome this problem configure and build Bochs with <option>--enable-large-ramfile</option>
+In order to overcome this problem, configure and build Bochs with <option>--enable-large-ramfile</option>
 option.
 </para></note>
 </section>
@@ -3884,7 +3884,7 @@ value is 1.
 </para>
 <para>
 The parameter 'ddc' defines the behaviour of the DDC emulation that returns
-the monitor EDID data. By default the 'builtin' values for 'Bochs Screen'
+the monitor EDID data. By default, the 'builtin' values for 'Bochs Screen'
 are used. Other choices are 'disabled' (no DDC emulation) and 'file'
 (read monitor EDID from file / path name separated with a colon).
 </para>
@@ -3902,7 +3902,7 @@ supported models are 'voodoo1', 'voodoo2', 'banshee' and 'voodoo3'.
 The Voodoo2 support is not yet complete, but almost usable. The Banshee /
 Voodoo3 support is under construction, but basically usable. The 2D/3D cards
 require the vga extension option to be set to 'voodoo'. If the i440BX PCI
-chipset is selected, they can be assigned to AGP (slot #5). The gui screen
+chipset is selected, they can be assigned to AGP (slot #5). The GUI screen
 update timing for all models is controlled by the related
 'vga' options. See <xref linkend="voodoo-notes"> for more information.
 </para>
@@ -3923,7 +3923,7 @@ This defines parameters related to the emulated keyboard.
 Type of keyboard return by a "identify keyboard" command to the
 keyboard controller. It must be one of "xt", "at" or "mf".
 Defaults to "mf". It should be ok for almost everybody. A known
-exception is french macs, that do have a "at"-like keyboard.
+exception is French macs, that do have a "at"-like keyboard.
 </para>
 <para><command>serial_delay</command></para>
 <para>
@@ -3995,7 +3995,7 @@ or 'usb_xhci' options (requires PCI and USB support).
 </para>
 <para><command>enabled</command></para>
 <para>
-The Bochs gui creates mouse "events" unless the 'enabled' option is
+The Bochs GUI creates mouse "events" unless the 'enabled' option is
 set to 0. The hardware emulation itself is not disabled by this.
 Unless you have a particular reason for enabling the mouse by default,
 it is recommended that you leave it off. You can also toggle the
@@ -4046,9 +4046,9 @@ to AGP.
 </para>
 <para><command>advopts</command></para>
 <para>
-With the advanced PCI options it is possible to control the behaviour of the
+With the advanced PCI options, it is possible to control the behaviour of the
 PCI chipset. These options can be specified as comma-separated values.
-By default the "Bochs i440FX" chipset enables the ACPI and HPET devices, but
+By default, the "Bochs i440FX" chipset enables the ACPI and HPET devices, but
 original i440FX doesn't support them. The options 'noacpi' and 'nohpet' make
 it possible to disable them. The option 'noagp' disables the incomplete AGP
 subsystem of the i440BX chipset.
@@ -4112,7 +4112,7 @@ Example:
 </screen>
 This defines a binary image file with size 128 bytes that can be loaded into
 the CMOS RAM at startup. The rtc_init parameter controls whether initialize
-the RTC with values stored in the image. By default the time0 argument given
+the RTC with values stored in the image. By default, the time0 argument given
 to the <link linkend="bochsopt-clock">clock option</link> is used. With
 'rtc_init=image' the image is the source for the initial time.
 </para>
@@ -4164,16 +4164,16 @@ one of the supported types.
 </para>
 <para>
 You can set the initial status of the media to <constant>ejected</constant>
-or <constant>inserted</constant>. Usually you will want to use
+or <constant>inserted</constant>. Usually, you will want to use
 <constant>inserted</constant>.
 </para>
 <para>
 The parameter 'type' can be used to enable the floppy drive without media
-and status specified. Usually the drive type is set up based on the media type.
+and status specified. Usually, the drive type is set up based on the media type.
 </para>
 <para>
 The optional parameter 'write_protected' can be used to control the media
-write protect switch. By default it is turned off.
+write protect switch. By default, it is turned off.
 </para>
 </section>
 
@@ -4187,7 +4187,7 @@ ata2: enabled=1, ioaddr1=0x1e8, ioaddr2=0x3e0, irq=11
 ata3: enabled=1, ioaddr1=0x168, ioaddr2=0x360, irq=9
 </screen>
 
-These options enables up to 4 ata channels. For each channel
+These options enable up to 4 ata channels. For each channel
 the two base io addresses and the irq must be specified.
 ata0 and ata1 are enabled by default, with the values shown above.
 
@@ -4260,7 +4260,7 @@ but <emphasis>we don't recommend it</emphasis> for safety reasons. In Windows, t
 
 <para>
 Disk geometry autodetection works with images created by bximage if CHS is set
-to 0/0/0 (cylinders are calculated using  heads=16 and spt=63). For other hard
+to 0/0/0 (cylinders are calculated using heads=16 and spt=63). For other hard
 disk images and modes the cylinders, heads, and spt are mandatory. In all cases
 the disk size reported from the image must be exactly C*H*S*512. Flat hard disk
 images from other projects might store additional information at the end of the
@@ -4403,7 +4403,7 @@ Examples:
    logprefix: %i%e%d
 </screen>
 This handles the format of the string prepended to each log line.
-You may use those special tokens :
+You may use those special tokens:
   <screen>
   %t : 11 decimal digits timer tick
   %i : 8 hexadecimal digits of current cpu eip (ignored in SMP configuration)
@@ -4432,9 +4432,9 @@ info, error, and panic.  Debug messages are usually only useful when writing
 Bochs code or when trying to locate a problem.  There may be thousands of debug
 messages per second, so be careful before turning them on.  Info messages tell
 about interesting events that don't happen that frequently.  Bochs produces an
-"error" message when it  finds a condition that really shouldn't happen,  but
-doesn't endanger the simulation.  An example of an error  might be  if the
-emulated  software produces an illegal disk command.  Panic messages mean that
+"error" message when it finds a condition that really shouldn't happen,  but
+doesn't endanger the simulation.  An example of an error might be if the
+emulated software produces an illegal disk command.  Panic messages mean that
 Bochs cannot simulate correctly and should probably shut down.
 A panic can be a configuration problem (like a misspelled bochsrc line) or an
 emulation problem (like an unsupported video mode).
@@ -4443,7 +4443,7 @@ emulation problem (like an unsupported video mode).
 <para>
 The debug, info, error, and panic lines in the bochsrc control what Bochs will
 do when it encounters each type of event.  The allowed actions are: fatal
-(terminate bochs), ask (ask the user what to do), warn (show dialog with message
+(terminate Bochs), ask (ask the user what to do), warn (show dialog with message
 and continue), report (print information to the console or log file), or ignore
 (do nothing). The recommended settings are listed in the sample above.
 </para>
@@ -4622,7 +4622,7 @@ lowlevel sound support. In this mode the 'volume' parameter can be used
 to set the output volume (0 - 15). The 'system' mode is only available on
 Linux and Windows. On Linux /dev/console is used for output and on Windows
 the Beep() function. The 'gui' mode forwards the beep to the related
-gui methods (currently only used by the Carbon gui).
+GUI methods (currently only used by the Carbon GUI).
 </para>
 </section>
 
@@ -4777,7 +4777,7 @@ Niclist source code is in misc/niclist.c and it is included in Windows
 binary releases.
 
 SCRIPT: The script value is optional, and is the name of a script that
-is executed after bochs initialize the network interface. You can use
+is executed after Bochs initialize the network interface. You can use
 this script to configure this network interface, or enable masquerading.
 This is mainly useful for the tun/tap devices that only exist during
 Bochs execution. The network interface name is supplied to the script
@@ -4976,14 +4976,20 @@ options<replaceable>X</replaceable> parameter also separated with a colon. An
 option to insert/eject media is available in the runtime configuration.
 </para>
 <para>
-To emulate a USB floppy you can use the 'floppy' device and the path to a
+To emulate a USB floppy, you can use the 'floppy' device and the path to a
 floppy image can be set with the 'path' option in the options<replaceable>X</replaceable>
 parameter separated with a colon. To use the VVFAT image mode similar to the
 legacy floppy the syntax 'path:vvfat:directory' must be used (see below).
 An option to insert/eject media is available in the runtime configuration.
+A well-known, somewhat older, but still widely used Operating System must have 
+the Vendor ID as an TEAC external drive. If the VendorID is not the TEAC id,
+this operating system doesn't know what to do with the drive. Therefore, use 
+the options<replaceable>X</replaceable>="model=teac" option in the bochsrc.txt
+file to set this model. If you do not, a default model will be used.
+
 </para>
 <para>
-The device name 'hub' connects an external hub with max. 8 ports (default: 4)
+The device name 'hub' connects an external hub with a maximum of 8 ports (default: 4)
 to the root hub. To specify the number of ports you have to use the 'ports'
 option in the options<replaceable>X</replaceable> parameter with the value
 separated with a colon. Connecting devices to the external hub ports is only
@@ -5012,9 +5018,41 @@ to specify an alternative device ID to be reported. Currently only the model
 accepts the parameter "write_protected" with valid values 0 and 1 to select
 the access mode (default is 0).
 </para>
+<para>
+For USB disk image emulation using the 'disk' or 'cdrom' type, an options<replaceable>X</replaceable>
+parameter of 'proto:bbb' or 'proto:uasp' may be used. The former tells Bochs to
+use the 'Bulk/Bulk/Bulk' protocol, aka the 'Bulk only' protocol. This is the
+standard protocol that most USB disks will use, and is used by default. The latter
+option tells Bochs to use the newer 'USB Attached SCSI' protocol, used on newer,
+more modern USB disks. If the 'proto:' parameter is not given, Bochs will default 
+to the 'bbb' protocol. See the 'ehci' and 'xhci' examples below.
+</para>
 <note><para>
 PCI support must be enabled to use USB UHCI.
 </para></note>
+<note><para>
+The BBB protocol must have a speed option of 'full', 'high', or 'super'. The UASP 
+protocol can only be used on high- and super-speed devices, therefore must only be 
+used with the 'usb_ehci' and 'usb_xhci' configuration options. Full-speed devices
+will default to the BBB protocol.
+</para></note>
+<note><para>
+Specifying the UASP option does not guarantee the Guest will use this interface.
+The Bochs emulation still gives both options. It is up to the Guest to choose which
+protocol to use. A modern, widely used OS will default to BBB for various EHCI
+controllers, and controllers that are known to have issues with this type of protocol.
+</para></note>
+<para>
+The USB emulation now checks many items for accuracy. For example, it will monitor the
+toggle bit in a Transfer Descriptor. If it is not correct, the TD will not be executed.
+If your code use to work in a Bochs emulation, but now it does not, check your toggle
+bit implementation. (This particular check can be disabled using the HANDLE_TOGGLE_CONTROL
+define in 'usb_common.h') Other checks for accuracy are checks for the 'value' and 'index'
+fields of a SETUP packet. For example, a particular request may specify that the 'value'
+field must be zero. Bochs now checks for this. Other checks include the Command Length 
+field in a SCSI command request, valid values in an xHCI 'slot' and 'endpoint' context, 
+as well as other checks.
+</para>
 </section>
 
 <section id="bochsopt-usb-ohci"><title>usb_ohci</title>
@@ -5034,6 +5072,10 @@ The optionsX parameter is also available on OHCI.</para>
 Example:
 <screen>
   usb_ehci: enabled=1, port1=tablet, options1="speed:high"
+  usb_ehci: enabled=1, port1=disk, options1="speed:high, path:hdd.img, proto:bbb"
+  usb_ehci: enabled=1, port1=disk, options1="speed:high, path:hdd.img, proto:uasp"
+  usb_ehci: enabled=1, port1=cdrom, options1="speed:high, path:bootcd.iso, proto:bbb"
+  usb_ehci: enabled=1, port1=cdrom, options1="speed:high, path:bootcd.iso, proto:uasp"
 </screen>
 This option controls the presence of the USB EHCI host controller with a
 6-port hub. The port<replaceable>X</replaceable> parameter accepts the same device types with the same
@@ -5045,14 +5087,41 @@ The optionsX parameter is also available on EHCI.</para>
 <para>
 Example:
 <screen>
-  usb_xhci: enabled=1, port1="disk:usbdisk.img"
+  usb_xhci: enabled=1, model="uPD720202", n_ports=4
+  usb_xhci: enabled=1, port1="disk:usbdisk.img"      # defaults to the BBB protocol
+  usb_xhci: port1=disk, options1="speed:super, path:usbdisk.img, proto:uasp"
+  usb_xhci: port1=disk, options1="speed:super, path:usbdisk.img, proto:bbb"
+  usb_xhci: port1=cdrom, options1="speed:super, path:bootcd.iso, proto:uasp"
+  usb_xhci: port3=disk, options3="speed:high, path:usbdisk.img, proto:uasp"
+  usb_xhci: port3=disk, options3="speed:high, path:usbdisk.img, proto:bbb"
+  usb_xhci: port3=floppy, options3="speed:full, path:floppy.img, model:teac"
+  usb_xhci: port3=tablet, options3="speed:low"
 </screen>
-This option controls the presence of the USB xHCI host controller with a 4-port
-hub. The port<replaceable>X</replaceable> parameter accepts the same device types with the same syntax as
+This option controls the presence of the USB xHCI host controller with a default 4-port
+hub. The port<replaceable>X</replaceable> parameter accepts similar device types with a similar syntax as
 the UHCI controller (see the <link linkend="bochsopt-usb-uhci">usb_uhci option</link>).
-The optionsX parameter is also available on xHCI. NOTE: port 1 and 2 are USB3 and
-only support super-speed devices, but port 3 and 4 are USB2 and support speed
-settings low, full and high.</para>
+The options<replaceable>X</replaceable> parameter is also available on xHCI.
+</para>
+<para>
+The xHCI supports up to two models, the NEC uPD720202 and the NEC uPD720201. The former
+defaults to a 4-port hub (two physical sockets), while the latter defaults to an 8-port hub
+(four physical sockets). This was added for future expansion. The 'n_ports=<replaceable>n</replaceable>'
+parameter can be given to override the count of ports used. This count must be at least two
+and not more than USB_XHCI_PORTS_MAX (currently 10), and <emphasis>must</emphasis> be 
+an even numbered count.
+</para>
+<para>
+No matter the count of ports, the first half (ports 1, 2, 3, and 4 on an 8-port hub) will
+be the USB3 ports (register sets), while the second half (ports 5, 6, 7, and 8) will be the
+USB2 ports (register sets). When the 'options<replaceable>X</replaceable>="speed:" option is
+used, it must contain 'super' for the first half ports (1, 2, 3, and 4) and the second half
+(5, 6, 7, and 8) must use a speed of 'low', 'full', or 'high'.
+</para>
+<note><para>
+On an xHCI, the number of ports used is the number of port register sets, one set for the USB3
+protocol and a paired set for the USB2 protocol. An 'n_ports=' specification of 4 defines
+<emphasis>two</emphasis> physical sockets.
+</para></note>
 </section>
 
 <section><title>pcidev</title>
@@ -5380,7 +5449,7 @@ steps are done before the simulation is running.
 </orderedlist>
 </para>
 <para>
-During simulation, Bochs usually generates more or less log output. By default it
+During simulation, Bochs usually generates more or less log output. By default, it
 is sent to the console, otherwise to the specified <link linkend="bochsopt-log">log file</link>.
 The amount of output can be controlled with the <link linkend="bochsopt-debug-info-error-panic">log options</link>
 in bochsrc, the start menu and the runtime configuration.
@@ -5524,7 +5593,7 @@ The configuration interface 'textconfig' is the text mode version of the Bochs
 configuration system. It is a series of menus (using stdin/stdout) that allows
 you to edit all the settings that control Bochs' behavior. If you do not write
 a config_interface line, Bochs will choose it as the default for you (unless Bochs
-is compiled for Win32 or wxWidgets only). If the gui console is available at
+is compiled for Win32 or wxWidgets only). If the GUI console is available at
 runtime, textconfig switches the display to text mode 80 x 25 and restores the
 simulation screen afterwards.
 </para>
@@ -5538,7 +5607,7 @@ It consists of these three parts:
 </para>
 <para>
 On Win32 (without wxWidgets) the default configuration interface 'win32config' is
-very similar, but it presents gui dialogs instead of text menus.
+very similar, but it presents GUI dialogs instead of text menus.
 </para>
 <section><title>The start menu</title>
 <para>
@@ -5555,7 +5624,7 @@ configuration file (typically called bochsrc.txt) and loaded it if it
 could be found.  When you are satisfied with the configuration, go
 ahead and start the simulation.
 
-You can also start bochs with the -q option to skip these menus.
+You can also start Bochs with the -q option to skip these menus.
 
 1. Restore factory default configuration
 2. Read options from...
@@ -5606,7 +5675,7 @@ behavoiur of Bochs at runtime if you click on one of these buttons:
 <para>
   Here you can enable the creation of mouse events by the host. Once mouse
   events are captured, you cannot reach the button anymore, in order to disable
-  capturing again. By default you can enable and disable the mouse capture pressing
+  capturing again. By default, you can enable and disable the mouse capture pressing
   the CTRL key and the third (middle) mouse button. See the <link linkend="bochsopt-mouse">mouse option</link>
   parameter 'toggle' for other methods to toggle the mouse capture.
 </para>
@@ -5642,10 +5711,10 @@ feature work.</para>
 <listitem>
 <para>snapshot button</para>
 <para>Press this button if you want to save a snapshot of the Bochs screen. All
-text and graphics modes are now supported. If gui dialogs are supported (e.g. on
+text and graphics modes are now supported. If GUI dialogs are supported (e.g. on
 win32) Bochs presents you a "Save as..." dialog box to specify the filename. In
 text modes the formats BMP and TXT are supported depending on file extension.
-Platforms without gui dialogs are using the fixed filenames "snapshot.txt" or
+Platforms without GUI dialogs are using the fixed filenames "snapshot.txt" or
 "snapshot.bmp".
 </para>
 </listitem>
@@ -5665,7 +5734,7 @@ could be restored back using bochs -r command. For more details read the
 </listitem>
 <listitem>
 <para>power button</para>
-<para>This button stops the simulation and quits bochs.</para>
+<para>This button stops the simulation and quits Bochs.</para>
 </listitem>
 </itemizedlist>
 </para>
@@ -5756,7 +5825,7 @@ hardcoded file name and the user button sends the configured shortcut.
 <para>
 If you want to change certain settings at runtime, you have to press the "config" button in
 the headerbar. The simulation stops and the runtime menu appears on the console window / xterm
-or the Bochs gui console (if available).
+or the Bochs GUI console (if available).
 <screen>
 ---------------------
 Bochs Runtime Options
@@ -5791,7 +5860,7 @@ more information (e.g. report debug messages).
 <section id="cpu-models"><title>Pre-defined CPU models</title>
 <para>
 If Bochs is compiled with cpu level 5 or higher the CPUID opcode is supported
-and it can return some information about the cpu model and it's features. When
+and it can return some information about the cpu model and its features. When
 using a pre-defined CPU model in Bochs the features reported by CPUID are set up
 according to the model's specification. The following table shows all available
 CPU models with a short description. The amount of choices depends on the CPU
@@ -5962,8 +6031,8 @@ copy the whole image or the file containing changes (journal). This may take som
 so be patient when using this feature.
 </para></footnote>
 can be saved. When running Bochs there will be a button in the
-header bar called "Suspend". Depending on config interface and gui there will be a
-prompt where you can enter a path to an existing directory or a gui folder selection
+header bar called "Suspend". Depending on config interface and GUI there will be a
+prompt where you can enter a path to an existing directory or a GUI folder selection
 dialog box. It is possible to save the state at any time, but we recommend to do it
 when the simulation is idle. After pressing OK/Enter, Bochs will save a set of files
 into the selected folder. It is possible to continue after saving the state, but when
@@ -5971,7 +6040,7 @@ using the restore function in a new Bochs session, all changes after this checkp
 will be lost.
 </para>
 <para>
-To restore the saved simulation state you can select the restore function in the
+To restore the saved simulation state, you can select the restore function in the
 text mode start menu or specify the restore path at the command line:
 <screen>
 bochs -r /path/to/save-restore-data
@@ -6055,7 +6124,7 @@ one.
 </para>
 <para>
 At runtime the lowlevel sound module will be loaded automatically if one of the
-sound devices is enabled in the <filename>bochsrc</filename>. The drivers and
+sound devices are enabled in the <filename>bochsrc</filename> file. The drivers and
 devices for wave input / output and MIDI output must be set up with the
 <link linkend="bochsopt-sound">sound</link> option.
 </para>
@@ -6076,8 +6145,8 @@ parameter of the <link linkend="bochsopt-speaker">speaker</link> option. Three c
 generator which is a part of the lowlevel sound support.</para></listitem>
 <listitem><para><option>system</option> : only available on Linux and Windows.
 On Linux /dev/console is used for output and on Windows the Beep() function.</para></listitem>
-<listitem><para><option>gui</option> : forwards the beep to the related gui methods
-(currently only used by the Carbon gui).</para></listitem>
+<listitem><para><option>gui</option> : forwards the beep to the related GUI methods
+(currently only used by the Carbon GUI).</para></listitem>
 </itemizedlist>
 </para>
 </section>
@@ -6090,7 +6159,7 @@ the simulation.
 </para>
 <section><title>Runtime options</title>
 <para>
-Unlike other devices, the SB16 emulation has it's own logfile and a loglevel parameter
+Unlike other devices, the SB16 emulation has its own logfile and a loglevel parameter
 to control what should be printed there. Both the <option>log</option> file and
 <option>loglevel</option> parameters can be changed at runtime. See the
 <link linkend="bochsopt-sb16">sb16</link> bochsrc option for details.
@@ -6102,7 +6171,7 @@ runtime.
 </para>
 <para>
 The <option>dmatimer</option> parameter controls the DMA timing for wave (PCM)
-input and output. When you get non-continuous sound this value can be ajusted
+input and output. When you get non-continuous sound, this value can be ajusted
 to fix this. This needs a reasonably correct setting for the
 <link linkend="bochsopt-cpu-ips">cpu: ips</link> option.
 </para>
@@ -6301,7 +6370,7 @@ Project news page (used for release announcements)
 <section id="sf-trackers">
 <title>SourceForge tickets section (bug and patch trackers)</title>
 <para>
-There are some requirements when submitting bug reports, patches and feature
+There are some requirements when submitting bug reports, patches, and feature
 requests for Bochs to make it easier to reproduce bugs and test patches.
 </para>
 <section><title>Reporting errors from Bochs compilation</title>
@@ -6513,7 +6582,7 @@ it if possible.
 
 <note><para>
 This section describes how to enable and use the Bochs command line debugger.
-For it's builtin graphical front-end please see the <link linkend="debugger-gui">debugger gui</link>
+For its builtin graphical front-end please see the <link linkend="debugger-gui">debugger gui</link>
 section how to enable it.
 </para></note>
 
@@ -6669,7 +6738,7 @@ From here, you may use the following commands:
   writemem filename addr len   dump a number of bytes of virtual memory starting from
                                the specified linear address into a file
 
-  loadmem filename addr        iniialize virtual memory starting from the specified linear
+  loadmem filename addr        initialize virtual memory starting from the specified linear
                                address from a file
 
   deref addr deep              pointer dereference. For example: get value of [[[rax]]] or ***rax: deref rax 3
@@ -6728,7 +6797,7 @@ From here, you may use the following commands:
                     special ':' operator which computes the linear address of a
                     segment:offset (in real and v86 mode) or of a selector:offset
                     (in protected mode) pair. Use $ operator for dereference,
-                    for example get value of [[[rax]]] or ***rax: rax$3.
+                    for example, get value of [[[rax]]] or ***rax: rax$3.
 
 </screen>
 </para>
@@ -6785,7 +6854,7 @@ From here, you may use the following commands:
 <title>Instrumentation</title>
 <para>
 
-To use instrumentation features in bochs, you must compile in support for it.
+To use instrumentation features in Bochs, you must compile in support for it.
 You should build a custom instrumentation library in a separate directory in
 the "instrument/" directory.  To tell configure which instrumentation library
 you want to use, use the <option>--enable-instrumentation</option> option.
@@ -6799,7 +6868,7 @@ equivalent:
 </screen>
 
 You could make a separate directory with your custom library,
-for example "instrument/myinstrument", copy the contents of
+for example, "instrument/myinstrument", copy the contents of
 the "instrument/stubs" directory to it, then customize it.  Use:
 
 <screen>
@@ -6935,14 +7004,14 @@ Related links
 
 <section id="debugger-gui">
 <title>
-The Bochs debugger gui
+The Bochs debugger GUI
 </title>
 <para>
 The graphical front-end for the Bochs command line debugger
 is available for Windows and GTK2/GTK3 hosts.
 </para>
 <para>
-To use the gui debugger, you must configure Bochs with the
+To use the GUI debugger, you must configure Bochs with the
 default debugger switch and the <option>--enable-debugger-gui</option> flag.
 For example:
 <screen>
@@ -6952,19 +7021,19 @@ For example:
 <para>
 At runtime you need to add the value <option>gui_debug</option> to the
 <link linkend="bochsopt-displaylibrary">display_library</link> options parameter
-in order to use the gui instead of the command line debugger. This example shows
-how to use it with the 'x' gui:
+in order to use the GUI instead of the command line debugger. This example shows
+how to use it with the 'x' GUI:
 <screen>
 display_library: x, options="gui_debug"
 </screen>
 </para>
-<note><para>The wxWidgets port of Bochs always uses this debugger gui. Passing
+<note><para>The wxWidgets port of Bochs always uses this debugger GUI. Passing
 the option to the display library is not necessary, since the command line
 interface is not available then.
 </para></note>
 <section><title>Overview</title>
 <para>
-The gui debugger consists of a gui window with a menu bar, a button bar and some
+The GUI debugger consists of a GUI window with a menu bar, a button bar and some
 child windows for different purposes. Not all windows are visible at the same time.
 </para>
 <itemizedlist>
@@ -7002,7 +7071,7 @@ Having a big list will reduce the number of autoloads, and allows you to see
 more. The list can contain up to 2048 lines. However, if you load more than
 1000 lines, you are more likely to see performance problems.
 </para>
-<para>There are two kinds of emulated memory in bochs: Linear and Physical.
+<para>There are two kinds of emulated memory in Bochs: Linear and Physical.
 Emulated Linear memory is mapped onto Physical memory by x86 virtual memory
 methods (paging and segmentation). If paging and segmenataion are "off", or
 "identity mapped", then both "types" of memory mean the same thing. But they
@@ -7010,7 +7079,7 @@ still work a little differently. With the Internal Debugger, you can set
 breakpoints to either kind of memory, separately. Normally, you would use
 the "b" command to set breakpoints in physical mem, and "lb" to set breakpoints
 in linear mem. This frontend ONLY displays linear breakpoints. It does not
-bother trying to figure out the linear->phsical reverse mapping to show
+bother trying to figure out the linear->physical reverse mapping to show
 physical breakpoints. (There are also "virtual" breakpoints that are also
 not shown.) All the types of breakpoints still WORK, it is just that you
 will not see them marked on the screen.
@@ -7030,7 +7099,7 @@ steps) to set or clear a linear breakpoint.
 <para>
 As of this version, the MemDump window isn't much more than a display of the
 contents of memory. In later versions, hopefully it will be expanded into a
-fairly fully-featured hexeditor. You can dump either phyical mem, or linear
+fairly fully-featured hexeditor. You can dump either physical mem, or linear
 mem. There are breakpoint-like things (that work with physical memory only,
 currently), called "watchpoints". A physical memory address can cause a break
 in the simulation if it is read, or written.
@@ -7043,7 +7112,7 @@ in any attempt to display the physical watchpoints while viewing linear mem.
 You must click a hex byte (on a physical mem dump that shows bytes), in order to
 set or clear a read and/or write watchpoint on that byte. Read watchpoints are
 green (on black), write watchpoints are red, watchpoints that are both write
-and read are blue. There is a hardcoded limit in bochs of 16 of each type of
+and read are blue. There is a hardcoded limit in Bochs of 16 of each type of
 watchpoint.
 </para>
 <para>
@@ -7087,7 +7156,7 @@ Hitting Enter on a blank line will cause a Singlestep.
 </section>
 <section><title>The param tree</title>
 <para>
-The bochs param_tree shows the internal state of most of bochs. It will be
+The Bochs param_tree shows the internal state of most of Bochs. It will be
 expanded in the future to show even more. You can see the detailed state of
 all cpu registers -- including the "hidden" parts (look in the "bochs" branch).
 Or see the current state of most of the emulated hardware.
@@ -7144,7 +7213,7 @@ read, especially on a proportional font. If you change to a fixed font, then you
 may want to switch the display to lowercase.
 </para>
 <para>
-Most of the gui debugger settings are now saved to an INI file on exit and
+Most of the GUI debugger settings are now saved to an INI file on exit and
 restored at the next run.
 </para>
 </section>
@@ -7311,7 +7380,7 @@ simulation is starting.
     <row>
       <entry>MACGUI</entry>
       <entry>MGUI</entry>
-      <entry>MacOS9 / MacOSX gui</entry>
+      <entry>MacOS9 / MacOSX GUI</entry>
     </row>
     <row>
       <entry>NE2K</entry>
@@ -7381,7 +7450,7 @@ simulation is starting.
     <row>
       <entry>RFB</entry>
       <entry>RFB</entry>
-      <entry>RFB gui</entry>
+      <entry>RFB GUI</entry>
     </row>
     <row>
       <entry>SB16</entry>
@@ -7401,12 +7470,12 @@ simulation is starting.
     <row>
       <entry>SDL</entry>
       <entry>SDL</entry>
-      <entry>SDL 1.2.x gui</entry>
+      <entry>SDL 1.2.x GUI</entry>
     </row>
     <row>
       <entry>SDL2</entry>
       <entry>SDL2</entry>
-      <entry>SDL 2.x gui</entry>
+      <entry>SDL 2.x GUI</entry>
     </row>
     <row>
       <entry>serial</entry>
@@ -7436,7 +7505,7 @@ simulation is starting.
     <row>
       <entry>TERM</entry>
       <entry>TERM</entry>
-      <entry>Term gui</entry>
+      <entry>Term GUI</entry>
     </row>
     <row>
       <entry>unmappped</entry>
@@ -7506,17 +7575,17 @@ simulation is starting.
     <row>
       <entry>WINGUI</entry>
       <entry>WINGUI</entry>
-      <entry>WIN32 gui</entry>
+      <entry>WIN32 GUI</entry>
     </row>
     <row>
       <entry>WX</entry>
       <entry>WX</entry>
-      <entry>wxWidgets gui</entry>
+      <entry>wxWidgets GUI</entry>
     </row>
     <row>
       <entry>XGUI</entry>
       <entry>XGUI</entry>
-      <entry>X11 gui</entry>
+      <entry>X11 GUI</entry>
     </row>
   </tbody>
   </tgroup>
@@ -7577,8 +7646,8 @@ previous step).
 </para>
 
 <para>
-When you'll update your configuration file, please
-fill in the same cylinders, heads and sector per
+When you update your configuration file, please
+fill in the same cylinders, heads, and sector per
 track values.
 </para>
 
@@ -7832,57 +7901,32 @@ http://hp.vector.co.jp/authors/VA013937/editdisk/index_e.html</ulink>
 </para>
 </section>
 
-<section> <title>Ben Lunt's MTOOLs for Bochs and Win32 and/or DOS</title>
+<section> <title>Ben Lunt's 'Ultimate' for Bochs and Win32/64</title>
 <para>
-Ben Lunt wrote a set of utilities for Dos/Win32 to manipulate flat disk images.
+Ben Lunt wrote a utility for Windows to manipulate flat disk images and their
+included file systems.
 </para>
 <para>
-You can find it at
-<ulink url="http://www.fysnet.net/mtools.htm">
-http://www.fysnet.net/mtools.htm</ulink>
+You can find it at <ulink url="https://www.fysnet.net/ultimate/index.htm">
+https://www.fysnet.net/ultimate/index.htm</ulink>
 </para>
 <para>
-These utilities includes :
+This is a Windows Dialog based utility, with source, and includes the following items:
 <itemizedlist>
 <listitem><para>
-        BOCHSRC.EXE "Bochs Resource"
-        A utility to create/modify a Bochs resource file.
+        Partitioning: MBR, PMBR, eMBR, EFI GPT
 </para></listitem>
 <listitem><para>
-        MKDOSFS.EXE  "Make DOS FS"
-        A utility to create a FAT disk image of specified size.
+        File Systems: FAT, FYSFS, LeanFS, Ext2/3/4, SimpleFS, ExFAT
 </para></listitem>
 <listitem><para>
-        MCOPYF.EXE  "Copy From"
-        A utility to copy an existing file from a FAT disk image to the current
-        directory.
+        Inserting, extracting, and deleting files from said file systems.
+        (some file system support is currently only read-only)
 </para></listitem>
 <listitem><para>
-        MDEL.EXE  "Delete file"
-        A utility to delete an existing file from a FAT disk image.
-</para></listitem>
-<listitem><para>
-        MDIREX.EXE  "Directory Extended"
-        A utility to view a FAT disk images directory and FAT contents.
-</para></listitem>
-<listitem><para>
-        MGETIMG.EXE  "Get Disk Image"
-        A utility to create a disk image from a floppy (multiple formats).
-</para></listitem>
-<listitem><para>
-        MBOOTCD.EXE  "Create a CDROM Image with boot options"
-        Create a CDROM image capable of booting with only a ROOT and a single file.
-</para></listitem>
-<listitem><para>
-        MGETCD.EXE  "Get Disk Image of Physical CD"
-        A utility to create a disk image from a CD.
-</para></listitem>
-<listitem><para>
-        MCDINFO.EXE  "Get CD Info"
-        A utility to the info from a CD.  Not much yet, but a little.
+        Checking the integrity of said file systems and other items.
 </para></listitem>
 </itemizedlist>
-
 </para>
 </section>
 
@@ -7951,7 +7995,7 @@ the files is to mount the disk image using the loop device.
 This section was contributed by Volker Ruppert.
 <screen>
 Today I have made some tests with the loop device, because I want to exchange
-files with the bochs disk images.  This is what I found out:
+files with the Bochs disk images.  This is what I found out:
 
 1.  Using Floppy images is easy, because there is no partition table:
 
@@ -7963,7 +8007,7 @@ files with the bochs disk images.  This is what I found out:
     - filesystem check : fsck.minix /dev/loop0
     - mount            : mount /dev/loop0 -o loop /mnt/floppy
 
-    Before you want to restart bochs you must do this:
+    Before you want to restart Bochs you must do this:
 
     losetup -d /dev/loop0
 
@@ -7983,7 +8027,7 @@ files with the bochs disk images.  This is what I found out:
 3.  The hard disk image access doesn't work if the image contains more than
     one partition.
 
-4.  I have made this tests with Linux and I don't know how
+4.  I have made this test with Linux and I don't know how
     this could be done with other operating systems.
 </screen>
 </para>
@@ -8051,7 +8095,7 @@ Starting with Bochs 2.2.6 you can set up the number of processors in the
 set up the number of processors.
 </para>
 <para>
-It is important to understand that configuring bochs for 4 processors will NOT
+It is important to understand that configuring Bochs for 4 processors will NOT
 make your single-threaded applications run faster in general!  On the contrary,
 it has to spend time simulating idle processors as well as the ones doing your
 task.  The point is to simulate an SMP system, not to speed up a uniprocessor
@@ -8075,7 +8119,7 @@ processors, their IDs, interrupt sources, etc. Starting with Bochs 2.2.5 these
 structures are dynamically created by Bochs.
 </para></listitem>
 <listitem><para> ACPI support is required to boot SMP system in most of modern
-operating systems. For example WinXP 64 bit require ACPI support even for
+operating systems. For example, WinXP 64 bit require ACPI support even for
 single processor configuration.
 </para></listitem>
 </itemizedlist>
@@ -8134,7 +8178,7 @@ edit the values if necessary.
   # sample for Windows
   ne2k: ioaddr=0x300, irq=9, mac=00:c4:3B:00:C3:00, ethmod=win32, ethdev=NE2000
 </screen>
-You see the pattern.  Usually you won't need to change the I/O address, IRQ
+You see the pattern.  Usually, you won't need to change the I/O address, IRQ
 number, or MAC address.  The <varname>ethmod</varname> value depends on your
 host operating system, and it must be either <constant>null</constant>,
 <constant>fbsd</constant> (for FreeBSD or OpenBSD), <constant>linux</constant>,
@@ -8150,13 +8194,13 @@ suggest an <varname>ne2k</varname> line which is a very good first try.
 
 <para>
 Next, if you are on a UNIX machine you will need to become the root user.
-Since bochs is sending and receiving raw network packets, you need to be root
+Since Bochs is sending and receiving raw network packets, you need to be root
 to use the network device.  To allow normal users to do this would be a
 security problem.
 </para>
 
 <para>
-Now run Bochs to boot DLX Linux.  Press enter a few times to accept the default
+Now run Bochs to boot DLX Linux.  Press 'enter' a few times to accept the default
 configuration choices.  This tells Bochs read the configuration file and then
 begin.  DLX Linux should boot in the Bochs window, and you should see
 that Linux detects the NE2000 card.  Eventually it gets to a login prompt.
@@ -8185,7 +8229,7 @@ network.
 
 <note>
 <para>
-The bochs IP address must be an unused IP address on your
+The Bochs IP address must be an unused IP address on your
 network.  If you duplicate someone else's IP address, your network will
 become very confused.
 </para>
@@ -8196,7 +8240,7 @@ Finally, the network is ready and you can test it out with ping, telnet, or ftp
 to various machines by their numerical IP address.  Keep in mind that for all
 UNIX host platforms, Bochs networking cannot talk to the host machine.  That
 means the host machine can't be the gateway either.  You need another physical
-machine on the network that bochs can talk to.  On Win32 this restriction does
+machine on the network that Bochs can talk to.  On Win32 this restriction does
 not apply.
 </para>
 
@@ -8338,7 +8382,7 @@ Some of the other options in this group is probably also needed,
         #!/bin/bash
         /sbin/ifconfig ${1##/*/} 192.168.1.1
         </screen>
-        The script get the interface name as the first parameter. Linux
+        The script gets the interface name as the first parameter. Linux
         will forward incoming packets between interfaces.
         </para>
         <para>
@@ -8546,7 +8590,7 @@ extensions:
 </itemizedlist>
 </para>
 <para>
-The 'socket' networking module uses two UDP ports per Bochs session. By default
+The 'socket' networking module uses two UDP ports per Bochs session. By default,
 the first session receives packets from port 40000 and sends packets to port
 40001. The second session uses then the ports 40002 and 40003. For further
 sessions the port numbers are incremented accordingly. The port number for
@@ -8594,12 +8638,12 @@ Supported options:
 <section><title>The vnet FTP service</title>
 <para>
 The 'vnet' server now provides passive FTP support also using the TFTP directory
-as root. The FTP server name is <emphasis>vnet-ftp</emphasis>. For read only access
-the user name must be set to <emphasis>anonymous</emphasis> with any password.
-This mode supports browing the directory subtree and downloading files. For
+as root. The FTP server name is <emphasis>vnet-ftp</emphasis>. For read only access,
+the username must be set to <emphasis>anonymous</emphasis> with any password.
+This mode supports browsing the directory subtree and downloading files. For
 read/write access, the user must be set to <emphasis>bochs</emphasis> with
 password <emphasis>bochs</emphasis>. This enables support for uploading,
-renaming and deleting files, creating and removing directories.
+renaming and deleting files, creating, and removing directories.
 </para>
 </section>
 </section>
@@ -8775,7 +8819,7 @@ T0:1234:respawn:/bin/agetty 38400 cua0
         <screen>
 com1: enabled=1, mode=term, dev=/dev/ptyp0
         </screen>
-        and lauch dlxlinux. After you log in as root, enter the command:
+        and launch dlxlinux. After you log in as root, enter the command:
         <screen>
 dlx:~# /sbin/agetty 38400 cua0
         </screen>
@@ -8867,16 +8911,16 @@ Here is a summary of what can happen when booting from the CD.
 <tbody>
 <row> <entry> 0x01 </entry> <entry> no atapi device found </entry> </row>
 <row> <entry> 0x02 </entry> <entry> no atapi cdrom found </entry> </row>
-<row> <entry> 0x03 </entry> <entry> can not read cd - BRVD </entry> </row>
+<row> <entry> 0x03 </entry> <entry> cannot read cd - BRVD </entry> </row>
 <row> <entry> 0x04 </entry> <entry> cd is not eltorito (BRVD) </entry> </row>
 <row> <entry> 0x05 </entry> <entry> cd is not eltorito (ISO TAG) </entry> </row>
 <row> <entry> 0x06 </entry> <entry> cd is not eltorito (ELTORITO TAG) </entry> </row>
-<row> <entry> 0x07 </entry> <entry> can not read cd - boot catalog </entry> </row>
+<row> <entry> 0x07 </entry> <entry> cannot read cd - boot catalog </entry> </row>
 <row> <entry> 0x08 </entry> <entry> boot catalog : bad header </entry> </row>
 <row> <entry> 0x09 </entry> <entry> boot catalog : bad platform </entry> </row>
 <row> <entry> 0x0A </entry> <entry> boot catalog : bad signature </entry> </row>
 <row> <entry> 0x0B </entry> <entry> boot catalog : bootable flag not set </entry> </row>
-<row> <entry> 0x0C </entry> <entry> can not read cd - boot image </entry> </row>
+<row> <entry> 0x0C </entry> <entry> cannot read cd - boot image </entry> </row>
 </tbody>
 </tgroup>
 </table>
@@ -8894,7 +8938,7 @@ been defined in Bochs conf file.
 
 <para>
 <screen>
-0x03 can not read cd - BRVD
+0x03 cannot read cd - BRVD
 </screen>
 
 For this error, the cdrom support has not been compiled in Bochs,
@@ -8929,8 +8973,8 @@ for a x86 bootable cd.
 
 <para>
 <screen>
-0x07 can not read cd - boot catalog
-0x0C can not read cd - boot image
+0x07 cannot read cd - boot catalog
+0x0C cannot read cd - boot image
 </screen>
 here, specific part of the cd could not be read. This should
 definitely not happen.
@@ -9038,7 +9082,7 @@ in the "<command>ataX-xxxx: ..., translation='algorithm'</command>" section.
     PCHS:16320/16/63
     </entry>
     <entry>
-    a LBA-assisted algorithm
+    An LBA-assisted algorithm
     is used to translate the CHS between
     the int13h interface
     and the ATA interface. The translation is achieved by
@@ -9073,7 +9117,7 @@ was used. You must not set the translation to 'auto'.
         <para>
 rechs translation should only be useful for Compaq users who wants to
 use a disk as a block device. Please report if you know any other
-system that use such translation.
+system that uses such translation.
         </para>
         </note>
 
@@ -9088,10 +9132,10 @@ Upward compatibility will be maintained.
 
 <note>
 <para>
-This translation applies only to int13h BIOS disk accesses. Older OSes (e.g. MS-DOS)
+This translation applies only to int13h BIOS disk accesses. Older OSes (e.g., MS-DOS)
 tend to use them a lot.  On modern OSes, disk accesses through BIOS int13h are
 limited to boot loaders.
-The usual rules and tricks of the installed OS still apply (ie 1024 cylinders boot limit).
+The usual rules and tricks of the installed OS still apply (i.e., 1024 cylinders boot limit).
 </para>
 </note>
 
@@ -9235,7 +9279,7 @@ Bochs VBE Display Drivers for Windows NT/2000
   <para>
   Bochs supports the emulation of 4 different 3dfx Voodoo Graphics adapter models.
   The Voodoo1 and Voodoo2 models are 3D-only add-on cards and require a VGA
-  compatible primary device. The Voodoo Banshee and it's successor Voodoo3 have
+  compatible primary device. The Voodoo Banshee and its successor Voodoo3 have
   both a VGA core and a 2D/3D core, so no other VGA card is required. The 2D/3D
   cards can be assigned to AGP if the i440BX chipset is selected (slot #5).
   </para>
@@ -9247,7 +9291,7 @@ Bochs VBE Display Drivers for Windows NT/2000
   <para>
   For emulating the Voodoo Banshee or Voodoo3 adapter, the vga extension option
   must be set to "voodoo". Using a different primary display adapter and a
-  Banshee compatible device with it's VGA interface disabled is not
+  Banshee compatible device with its VGA interface disabled is not
   implemented yet. For both Banshee and Voodoo3 there is now a specific version
   of the LGPL'd VGABIOS with Voodoo Banshee specific code called
   <filename>VGABIOS-lgpl-latest-banshee</filename>. The binary file is compiled
@@ -9535,7 +9579,7 @@ resize support for "sparse" mode images.
       <listitem>
         <para>
           Create a sparse disk image called "c.img.0".  Point .bochsrc at "c.img.0".
-          In bochs, install your favorite OS.  Switch off bochs.
+          In Bochs, install your favorite OS.  Switch off Bochs.
         </para>
       </listitem>
       <listitem>
@@ -9543,7 +9587,7 @@ resize support for "sparse" mode images.
           Create a sparse disk image (of the same size)
           and name it "c.img.1".  Point .bochsrc at "c.img.1"
           "c.img.0" is visible, but all writes go to "c.img.1".
-          After using bochs, you can simply delete
+          After using Bochs, you can simply delete
           "c.img.1" to undo changes and go back to a clean OS install.
         </para>
       </listitem>
@@ -9558,7 +9602,7 @@ resize support for "sparse" mode images.
       <listitem>
         <para>
           Create a sparse disk image called "c.img.0".  Point .bochsrc at "c.img.0".
-          In bochs, install your favorite OS.  Switch off bochs.
+          In Bochs, install your favorite OS.  Switch off Bochs.
         </para>
       </listitem>
       <listitem>
@@ -9566,14 +9610,14 @@ resize support for "sparse" mode images.
           Create a sparse disk image (of the same size) and name it "c.img.1".
           Point .bochsrc at "c.img.1"
           "c.img.0" is visible, but all writes go to "c.img.1".
-          After using bochs, if you want to keep the
+          After using Bochs, if you want to keep the
           changes, use the (currently non-existent) merge utility
           to make a single unified drive image.
         </para>
       </listitem>
       <listitem>
         <para>
-          Alternatively simply create a new partition on top called "c.img.2".
+          Alternatively, simply create a new partition on top called "c.img.2".
         </para>
       </listitem>
     </itemizedlist>
@@ -9586,14 +9630,14 @@ resize support for "sparse" mode images.
       <listitem>
         <para>
           Create a sparse disk image called "base.img".  Point .bochsrc at "base.img".
-          In bochs, install your favorite OS.  Switch off bochs.
+          In Bochs, install your favorite OS.  Switch off Bochs.
         </para>
       </listitem>
       <listitem>
         <para>
           Create a sparse disk image (of the same size) and name it "www.img.1".
           Make "wwww.img.0" a symlink to
-          "base.img".  Point .bochsrc at "www.img.1". Using bochs, install a webserver.
+          "base.img".  Point .bochsrc at "www.img.1". Using Bochs, install a webserver.
         </para>
       </listitem>
       <listitem>
@@ -9601,7 +9645,7 @@ resize support for "sparse" mode images.
           Create a symlink to "base.img" called "db.img.0".
           Create a sparse disk image (of the same size)
           and name it "db.img.1".  Point .bochsrc at "db.img.1".
-          Using bochs, install a database server.
+          Using Bochs, install a database server.
         </para>
       </listitem>
     </itemizedlist>
@@ -9770,7 +9814,7 @@ Only vmware versions 3 and 4 disk image files are supported.
 </para>
 <section><title>description</title>
     <para>
-    Growing disk images start as a small files, and
+    Growing disk images start as small files, and
     grow whenever new data is written to them.
     </para>
     <para>
@@ -9826,7 +9870,7 @@ Be sure to enter "growing" when selecting the image type.
 <section><title>description</title>
 <para>
     Volatile disks are always-rollbacked disk images.
-    An volatile disk is based on a read-only image, associated with
+    A volatile disk is based on a read-only image, associated with
     a growing redolog, that contains all changes (writes)
     made to the base image content. Currently, base images of
     types 'flat', 'sparse', 'growing', 'vmware3', 'vmware4', 'vpc' and
@@ -9995,7 +10039,7 @@ Be sure to enter "growing" when selecting the image type.
     when Bochs is starting. All writes to this virtual disk go to a volatile
     redolog and when closing Bochs, the user can decide whether or not to commit
     the changes. If "No" is seclected, all changes will be lost when Bochs quits
-    and the files of the local directory are not modified. Otherwise the changes
+    and the files of the local directory are not modified. Otherwise, the changes
     of files and directories are committed. WARNING: Don't use important data without
     backup in the "vvfat" directory when using this "optional commit" feature.
 </para>
@@ -10104,7 +10148,7 @@ Bximage is an easy to use console based tool for creating, converting and
 resizing disk images, particularly for use with Bochs. It also supports
 committing redolog files to their base images. It is completely interactive
 if no command line arguments are used. It can be switched to a non-interactive
-mode  if all required parameters are given in the command line.
+mode if all required parameters are given in the command line.
 </para>
 <para>
 When you run bximage without one of the following options, it will appear in
@@ -10208,7 +10252,7 @@ to another. The type of the source image is auto-detected. For the target
 format it supports the same disk image modes as the create function. If the
 name of the new image file is not specified or identical to the source one
 and you have enabled the backup switch, a backup of the source file will be
-created with it's original name plus the suffix ".orig".
+created with its original name plus the suffix ".orig".
 </para>
 </section>
 <section><title>Resize image</title>
@@ -10218,7 +10262,7 @@ It supports the same disk image modes as the create function.
 Making a disk image smaller is not supported, since it may damage the
 disk and data will be lost. If the name of the new image file is not
 specified or identical to the source one and you have enabled the backup
-switch, a backup of the source file will be created with it's original name
+switch, a backup of the source file will be created with its original name
 plus the suffix ".orig".
 </para>
 </section>
@@ -10249,14 +10293,14 @@ and 63 sectors per track.
 <chapter id="guests"><title>Guest operating systems</title>
 <para>
 In the past several tweaks were necessary to install a guest OS inside of Bochs.
-Nowadays it's almost the same as installing it on a real machine. There are only
+Nowadays, it is almost the same as installing it on a real machine. There are only
 a few Bochs specific issues you should know about. Note that we cannot give you
 a full installation guide if you don't know how to install an OS in the real
 world. The following remarks apply to all guest OS installations. Some specific
 issues are reported in the next sections.
 <itemizedlist>
 <listitem><para>
-First of all you need the installation media or image (floppy/CD/DVD).
+First of all, you need the installation media or image (floppy/CD/DVD).
 For platforms that don't support raw device access it might be necessary to
 create an image from the media. You must read the message regarding software
 licenses in <xref linkend="thirdparty"> before you install or use a commercial
@@ -10385,7 +10429,7 @@ Known problems
     <para>
       This is just a very short step-by-step installation guide for FreeBSD in Bochs. It
       doesn't explain what you do nor why you do it, it just tells you how to do it.
-      For in-deepth information refer to the FreeBSD handbook:
+      For in-depth information refer to the FreeBSD handbook:
       <ulink url="http://www.freebsd.org/doc/handbook/install.html">Installing FreeBSD</ulink>.
     </para>
 
@@ -10441,7 +10485,7 @@ Known problems
       All files are installed on your (virtual) hard disk now, and FreeBSD is ready for getting set
       up. As this is a very basic FreeBSD installation, you just answer 'no' to nearly all questions,
       but the one about your mouse: Answer 'yes' for PS/2 mouse, and choose 'Exit' at mouse configuration.
-      The miniinst FreeBSD ISO image contains nearly no binary packages, so don't browse the package
+      The minimalist FreeBSD ISO image contains nearly no binary packages, so don't browse the package
       collection. Then, when asked to create a new user account, answer 'yes' and create a new user
       called 'bochs' (or whatever you like). You might want to use <filename>/bin/csh</filename>
       or <filename>/bin/tcsh</filename> as shell rather than <filename>/bin/sh</filename>. Next,
@@ -10534,7 +10578,7 @@ string <varname>SDR-31STD-1-US (Revision 1)</varname>.
 </section>
 <section><title>Bootdisks of early DOS versions</title>
 <para>
-On the Web there are bootdisks available for most of the DOS versions ever released,
+On the Web, there are bootdisks available for most of the DOS versions ever released,
 but some of them have been reported to fail in Bochs. The bootdisk for MS-DOS 1.25
 contains a boot sector of a newer DOS version, so it would fail on real hardware,
 too. The floppy image for MS-DOS 2.11 has a boot sector that tries to boot from
@@ -10565,7 +10609,7 @@ first reboot.
 to log in you must press ctrl-alt-del, and it is likely that the window manager
 will trap this key combination. You can either use the trick described in
 <xref linkend="enter-special-keys"> or define a user short-cut
-(callable through the user short-cut gui button)
+(callable through the user short-cut GUI button)
 in you configuration file, for example:
 <programlisting>
 keyboard: user_shortcut=ctrl-alt-del
@@ -10792,7 +10836,7 @@ drivers have been linked out of the kernel.
 </para>
 
 <para>
-Before you configure the network card,  I'd strongly suggest getting the latest "nat" driver from SCO.
+Before you configure the network card, I'd strongly suggest getting the latest "nat" driver from SCO.
 Version 5.0.5b of this driver, according to the SCO web site, "correct[s] possible system lockup
 under high load due to internal buffer overflow."  The driver can be found
 <ulink url="ftp://ftp.caldera.com/pub/openserver5/drivers/OSR505/network/nat">here</ulink>.
@@ -10821,7 +10865,7 @@ that the printing is going through an extra layer of operating system!
 </para>
 
 <para>
-Obviously, dont forget to apply the release supplements and other patches that are considered
+Obviously, don't forget to apply the release supplements and other patches that are considered
 "must haves" for OSR5: rs505a, oss600a, oss497b (others?).
 </para>
 
