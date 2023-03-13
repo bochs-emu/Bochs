@@ -115,6 +115,7 @@
 #define USB_REQ_SET_INTERFACE     0x0B
 #define USB_REQ_SYNCH_FRAME       0x0C
 #define USB_REQ_SET_SEL           0x30
+#define USB_REQ_SET_ISO_DELAY     0x31
 
 #define USB_DEVICE_SELF_POWERED    0
 #define USB_DEVICE_REMOTE_WAKEUP   1
@@ -162,6 +163,7 @@ struct USBPacket {
   USBCallback *complete_cb;
   void *complete_dev;
   usb_device_c *dev;
+  int strm_pid;         // stream primary id
 };
 
 typedef struct USBAsync {
@@ -211,6 +213,7 @@ public:
   virtual void handle_reset() {}
   virtual int handle_control(int request, int value, int index, int length, Bit8u *data) { return -1; }
   virtual int handle_data(USBPacket *p) { return 0; }
+  virtual void handle_iface_change(int iface) {}
   void register_state(bx_list_c *parent);
   virtual void register_state_specific(bx_list_c *parent) {}
   virtual void after_restore_state() {}
@@ -231,7 +234,7 @@ public:
   }
   
   // return information for the specified ep of the current device
-#define USB_MAX_ENDPOINTS   4   // we currently don't use more than 4 endpoints (ep0, ep1, ep2, and ep3)
+#define USB_MAX_ENDPOINTS   5   // we currently don't use more than 5 endpoints (ep0, ep1, ep2, ep3, and ep4)
   int get_mps(const int ep) {
     return (ep < USB_MAX_ENDPOINTS) ? d.endpoint_info[ep].max_packet_size : 0;
   }
@@ -251,6 +254,9 @@ public:
 
   Bit8u get_type() {
     return d.type;
+  }
+  Bit8u get_aIface() {
+    return d.alt_iface;
   }
 
   Bit8u get_address() {return d.addr;}
@@ -275,7 +281,8 @@ protected:
     int speed;
     Bit8u addr;
     Bit8u config;
-    Bit8u iface;
+    Bit8u alt_iface;
+    Bit8u alt_iface_max;
     char devname[32];
     USBEndPoint endpoint_info[USB_MAX_ENDPOINTS];
 

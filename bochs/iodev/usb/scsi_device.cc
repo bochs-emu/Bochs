@@ -546,7 +546,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, Bit8u cmd_len, i
       goto fail;
   }
   switch (command) {
-    case 0x0:
+    case 0x00:
       BX_DEBUG(("Test Unit Ready"));
       if (!inserted)
         goto notready;
@@ -974,11 +974,11 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, Bit8u cmd_len, i
         outbuf[0] = (Bit8u)((nb_sectors >> 24) & 0xff);
         outbuf[1] = (Bit8u)((nb_sectors >> 16) & 0xff);
         outbuf[2] = (Bit8u)((nb_sectors >> 8) & 0xff);
-        outbuf[3] = (Bit8u)(nb_sectors & 0xff);
-        outbuf[4] = 0;
-        outbuf[5] = 0;
-        outbuf[6] = (block_size >> 8);
-        outbuf[7] = 0;
+        outbuf[3] = (Bit8u) (nb_sectors & 0xff);
+        outbuf[4] = (Bit8u) ((block_size >> 24) & 0xff);
+        outbuf[5] = (Bit8u) ((block_size >> 16) & 0xff);
+        outbuf[6] = (Bit8u) ((block_size >> 8) & 0xff);
+        outbuf[7] = (Bit8u)  (block_size & 0xff);
         r->buf_len = 8;
       } else {
       notready:
@@ -1016,6 +1016,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, Bit8u cmd_len, i
       r->async_mode = async;
       break;
     case 0x35:
+    case 0x91:
       BX_DEBUG(("Synchronise cache (sector " FMT_LL "d, count %d)", lba, len));
       // TODO: flush cache
       break;
@@ -1110,6 +1111,52 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, Bit8u cmd_len, i
 
       r->buf_len = (len < OUR_LEN) ? len : OUR_LEN;
 
+      }
+      break;
+    // The 0x9E command uses a service action code (ex: 0x9E/0x10)
+    case 0x9E:
+      switch (buf[1] & 0x1F) { // service action code
+        case 0x10: // Read Capacity(16)
+          BX_DEBUG(("Read Capacity 16"));
+          memset(outbuf, 0, 32);
+          if (type == SCSIDEV_TYPE_CDROM) {
+            nb_sectors = max_lba;
+          } else {
+            nb_sectors = hdimage->hd_size / block_size;
+            nb_sectors--;
+          }
+          /* Returned value is the address of the last sector.  */
+          if (nb_sectors) {
+            // 64-bit lba
+            outbuf[ 0] = (Bit8u)((nb_sectors >> 56) & 0xff);
+            outbuf[ 1] = (Bit8u)((nb_sectors >> 48) & 0xff);
+            outbuf[ 2] = (Bit8u)((nb_sectors >> 40) & 0xff);
+            outbuf[ 3] = (Bit8u)((nb_sectors >> 32) & 0xff);
+            outbuf[ 4] = (Bit8u)((nb_sectors >> 24) & 0xff);
+            outbuf[ 5] = (Bit8u)((nb_sectors >> 16) & 0xff);
+            outbuf[ 6] = (Bit8u)((nb_sectors >> 8) & 0xff);
+            outbuf[ 7] = (Bit8u) (nb_sectors & 0xff);
+            // 32-bit block size
+            outbuf[ 8] = (Bit8u) ((block_size >> 24) & 0xff);
+            outbuf[ 9] = (Bit8u) ((block_size >> 16) & 0xff);
+            outbuf[10] = (Bit8u) ((block_size >> 8) & 0xff);
+            outbuf[11] = (Bit8u)  (block_size & 0xff);
+            // protection
+            outbuf[12] = 0;
+            // exponent/one or more physical blocks per logical block
+            outbuf[13] = 0;
+            // lowest aligned logical block address
+            outbuf[14] = 0;
+            outbuf[15] = 0;
+            // bytes 16 through 31 are reserved (zero'd above)
+            r->buf_len = (len < 32) ? len : 32;
+          } else {
+            scsi_command_complete(r, STATUS_CHECK_CONDITION, SENSE_NOT_READY);
+            return 0;
+          }
+          break;
+        default:
+          BX_ERROR(("Unknown SCSI command (0x9E/%02X)", buf[1] & 0x1F));
       }
       break;
     default:

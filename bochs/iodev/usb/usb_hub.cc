@@ -283,6 +283,7 @@ bool usb_hub_device_c::init()
   }
   sprintf(hub.info_txt, "%d-port USB hub", hub.n_ports);
   d.connected = 1;
+  d.alt_iface_max = 0;
   return 1;
 }
 
@@ -740,8 +741,10 @@ Bit64s usb_hub_device_c::hub_param_handler(bx_param_c *param, bool set, Bit64s v
       } else {
         BX_PANIC(("usb_param_handler called with unexpected parameter '%s'", param->get_name()));
       }
-    } else {
-      BX_PANIC(("hub_param_handler: external hub not found"));
+    // hub == NULL. We shouldn't call BX_PANIC with a NULL pointer.
+    //   #define BX_PANIC(x) (LOG_THIS /* = hub-> */ panic) x
+    //} else {
+    //  BX_PANIC(("hub_param_handler: external hub not found"));
     }
   }
   return val;

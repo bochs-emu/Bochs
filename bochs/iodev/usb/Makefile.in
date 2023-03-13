@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2021  The Bochs Project
+# Copyright (C) 2012-2023  The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -50,7 +50,7 @@ top_builddir    = ../..
 LIBTOOL=@LIBTOOL@
 WIN32_DLL_IMPORT_LIBRARY=../../@WIN32_DLL_IMPORT_LIB@
 
-USBDEV_OBJS = usb_hid.o usb_hub.o usb_msd.o usb_printer.o usb_floppy.o
+USBDEV_OBJS = usb_hid.o usb_hub.o usb_msd.o usb_uasp.o usb_printer.o usb_floppy.o
 UHCICORE_OBJ = uhci_core.o
 SCSI_OBJS = scsi_device.o
 
@@ -72,7 +72,7 @@ OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
 NONPLUGIN_OBJS = @IODEV_EXT_NON_PLUGIN_OBJS@
 PLUGIN_OBJS = @IODEV_EXT_PLUGIN_OBJS@
 USBHC_DLL_TARGETS = @USBHC_DLL_TARGETS@
-USBDEV_DLL_TARGETS = bx_usb_hid.dll bx_usb_hub.dll bx_usb_msd.dll bx_usb_printer.dll bx_usb_floppy.dll
+USBDEV_DLL_TARGETS = bx_usb_hid.dll bx_usb_hub.dll bx_usb_msd.dll bx_usb_uasp.dll bx_usb_printer.dll bx_usb_floppy.dll
 
 all: libusb.a
 
@@ -99,8 +99,8 @@ libbx_%.la: %.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) $(LDFLAGS) -module $< -o $@ -rpath $(PLUGIN_PATH)
 
 # special link rules for plugins that require more than one object file
-libbx_usb_msd.la: usb_msd.lo scsi_device.lo
-	$(LIBTOOL) --mode=link --tag CXX $(CXX) $(LDFLAGS) -module usb_msd.lo scsi_device.lo -o libbx_usb_msd.la -rpath $(PLUGIN_PATH)
+libbx_usb_msd.la: usb_msd.lo scsi_device.lo usb_uasp.lo
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) $(LDFLAGS) -module usb_msd.lo scsi_device.lo usb_uasp.lo -o libbx_usb_msd.la -rpath $(PLUGIN_PATH)
 
 libbx_usb_uhci.la: usb_uhci.lo uhci_core.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) $(LDFLAGS) -module usb_uhci.lo uhci_core.lo -o libbx_usb_uhci.la -rpath $(PLUGIN_PATH)
@@ -134,8 +134,8 @@ bx_usb_hid.dll: usb_hid.o
 bx_usb_hub.dll: usb_hub.o
 	@LINK_DLL@ usb_hub.o $(WIN32_DLL_IMPORT_LIBRARY)
 
-bx_usb_msd.dll: usb_msd.o scsi_device.o
-	@LINK_DLL@ usb_msd.o scsi_device.o $(WIN32_DLL_IMPORT_LIBRARY)
+bx_usb_msd.dll: usb_msd.o usb_uasp.o scsi_device.o
+	@LINK_DLL@ usb_msd.o usb_uasp.o scsi_device.o $(WIN32_DLL_IMPORT_LIBRARY)
 
 bx_usb_printer.dll: usb_printer.o
 	@LINK_DLL@ usb_printer.o $(WIN32_DLL_IMPORT_LIBRARY)
@@ -209,6 +209,14 @@ usb_hub.o: usb_hub.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
  usb_common.h usb_pcap.h usb_hub.h
 usb_msd.o: usb_msd.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
+ ../../osdep.h ../../gui/paramtree.h ../../logio.h \
+ ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
+ ../../extplugin.h ../../param_names.h ../../pc_system.h \
+ ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
+ usb_common.h usb_pcap.h ../hdimage/cdrom.h ../hdimage/hdimage.h \
+ scsi_device.h usb_msd.h
+usb_uasp.o: usb_uasp.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../gui/paramtree.h ../../logio.h \
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
  ../../extplugin.h ../../param_names.h ../../pc_system.h \
@@ -302,6 +310,14 @@ usb_hub.lo: usb_hub.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
  usb_common.h usb_pcap.h usb_hub.h
 usb_msd.lo: usb_msd.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
+ ../../osdep.h ../../gui/paramtree.h ../../logio.h \
+ ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
+ ../../extplugin.h ../../param_names.h ../../pc_system.h \
+ ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
+ usb_common.h usb_pcap.h ../hdimage/cdrom.h ../hdimage/hdimage.h \
+ scsi_device.h usb_msd.h
+usb_uasp.lo: usb_uasp.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../gui/paramtree.h ../../logio.h \
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
  ../../extplugin.h ../../param_names.h ../../pc_system.h \

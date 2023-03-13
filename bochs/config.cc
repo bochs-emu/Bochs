@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -231,6 +231,22 @@ void bx_init_usb_options(const char *usb_name, const char *pname, int maxports)
   sprintf(label, "Enable %s emulation", usb_name);
   sprintf(descr, "Enables the %s emulation", usb_name);
   bx_param_bool_c *enabled = new bx_param_bool_c(menu, "enabled", label, descr, 1);
+  
+  // xhci host controller type and number of ports
+  static const char *xhci_model_names[] = { "uPD720202", "uPD720201", NULL };
+  bx_param_enum_c *model = new bx_param_enum_c(menu,
+      "model", "HC model",
+      "Select Host Controller to emulate",
+      xhci_model_names,
+      0, 0
+  );
+  bx_param_num_c *n_ports = new bx_param_num_c(menu,
+      "n_ports", "Number of ports",
+      "Set the number of ports for this controller",
+      -1, 10,
+      -1, 0   // -1 as a default so that we can tell if this parameter was given
+  );
+  
   deplist = new bx_list_c(NULL);
   for (Bit8u i = 0; i < maxports; i++) {
     sprintf(name, "port%u", i+1);
@@ -2261,7 +2277,7 @@ int bx_parse_usb_port_params(const char *context, const char *param,
   bool devopt = 0;
   int idx, plen;
   char tmpname[20], newopts[BX_PATHNAME_LEN];
-  char *devstr, *arg;
+  char *devstr, *arg, *pEnd;
   const char *opt = NULL, *origopts;
   static bool compat_mode = false;
 
@@ -2272,12 +2288,13 @@ int bx_parse_usb_port_params(const char *context, const char *param,
     devopt = 0;
     plen = 7;
   }
-  idx = param[plen];
-  if ((idx < '1') || (idx > '9') || (param[plen + 1] != '=')) {
+  // this gets the long int number value after the string: 'port'.
+  //  Ex: 'port15=' will produce 15 for idx. We allow up to 30 for now.
+  idx = (int) strtol(&param[plen], &pEnd, 10);
+  if ((idx < 1) || (idx > 30) || (pEnd[0] != '=')) {
     PARSE_ERR(("%s: usb_%s: portX / optionsX parameter malformed.", context, base->get_name()));
     return -1;
   }
-  idx -= '0';
   if (idx > maxports) {
     PARSE_ERR(("%s: usb_%s: port number out of range.", context, base->get_name()));
     return -1;

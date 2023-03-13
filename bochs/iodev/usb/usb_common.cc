@@ -448,7 +448,7 @@ int usb_device_c::handle_packet(USBPacket *p)
 #if HANDLE_TOGGLE_CONTROL
           // manage our toggle bit
           if ((p->toggle > -1) && (p->toggle != get_toggle(p->devep))) {
-            BX_ERROR(("DATA IN: Packet Toggle indicator doesn't match Device Toggle indicator. %d != %d", p->toggle, get_toggle(p->devep)));
+            BX_ERROR(("DATA IN EP%d: Packet Toggle indicator doesn't match Device Toggle indicator. %d != %d", p->devep, p->toggle, get_toggle(p->devep)));
             goto fail;
           }
           set_toggle(p->devep, get_toggle(p->devep) ^ 1); // toggle the bit
@@ -525,7 +525,7 @@ int usb_device_c::handle_packet(USBPacket *p)
 #if HANDLE_TOGGLE_CONTROL
           // manage our toggle bit
           if ((p->toggle > -1) && (p->toggle != get_toggle(p->devep))) {
-            BX_ERROR(("DATA OUT: Packet Toggle indicator doesn't match Device Toggle indicator. %d != %d", p->toggle, get_toggle(p->devep)));
+            BX_ERROR(("DATA OUT EP%d: Packet Toggle indicator doesn't match Device Toggle indicator. %d != %d", p->devep, p->toggle, get_toggle(p->devep)));
             goto fail;
           }
           set_toggle(p->devep, get_toggle(p->devep) ^ 1);  // toggle the bit
@@ -687,22 +687,33 @@ int usb_device_c::handle_control_common(int request, int value, int index, int l
       }
       break;
     case InterfaceRequest | USB_REQ_GET_INTERFACE:
+      // Ben TODO: If the device is not in the configured state, this request should stall
       BX_DEBUG(("USB_REQ_GET_INTERFACE:"));
       // with InterfaceRequest, the wValue field must be zero and wLength field must be 1
       if ((value != 0) || (length != 1)) {
         BX_ERROR(("USB_REQ_GET_INTERFACE: This type of request requires the wValue field to be zero and wLength field to be one."));
       }
-      data[0] = d.iface;
-      ret = 1;
+      // all our devices only have one interface, and that value must be zero
+      // if we ever add a device that has more than one interface (a video cam ?), we will need to modify this
+      if (index == 0) {
+        data[0] = d.alt_iface;
+        ret = 1;
+      }
       break;
     case InterfaceOutRequest | USB_REQ_SET_INTERFACE:
+      // Ben TODO: If the device is not in the configured state, this request should stall
       BX_DEBUG(("USB_REQ_SET_INTERFACE: value=%d", value));
       // with InterfaceRequest, the wIndex and wLength fields must be zero
       if ((index != 0) || (length != 0)) {
         BX_ERROR(("USB_REQ_SET_INTERFACE: This type of request requires the wIndex and wLength fields to be zero."));
       }
-      d.iface = value;
-      ret = 0;
+      // all our devices only have one interface, and that value must be zero
+      // if we ever add a device that has more than one interface (a video cam ?), we will need to modify this
+      if ((index == 0) && (value <= d.alt_iface_max)) {
+        d.alt_iface = value;         // alternate interface
+        handle_iface_change(value);  // let the device know we changed the interface number
+        ret = 0;
+      }
       break;
     // should not have a default: here, so allowing the device's handle_control() to try to execute the request
   }
@@ -717,7 +728,7 @@ void usb_device_c::register_state(bx_list_c *parent)
   bx_list_c *list = new bx_list_c(parent, "d", "Common USB Device State");
   BXRS_DEC_PARAM_FIELD(list, addr, d.addr);
   BXRS_DEC_PARAM_FIELD(list, config, d.config);
-  BXRS_DEC_PARAM_FIELD(list, interface, d.iface);
+  BXRS_DEC_PARAM_FIELD(list, interface, d.alt_iface);
   BXRS_DEC_PARAM_FIELD(list, state, d.state);
   BXRS_DEC_PARAM_FIELD(list, remote_wakeup, d.remote_wakeup);
   register_state_specific(parent);
@@ -755,13 +766,13 @@ void usb_device_c::usb_dump_packet(Bit8u *data, int size, int bus, int dev_addr,
   }
 
   // safety catch
-  if (size > 4096) {
-    BX_DEBUG(("packet hexdump with irregular size: %u (truncating to 64 bytes)", size));
+  if (size > 8192) {
+    BX_DEBUG(("packet hexdump with irregular size: %u (truncating to 8192 bytes)", size));
   }
   
-  // safety catch (only dump up to 512 bytes per packet so to not fill the log file)
-  if (size > 512)
-    size = 512;
+  // safety catch (only dump up to 8192 bytes per packet so to not fill the log file)
+  if (size > 8192)
+    size = 8192;
 
   if (getonoff(LOGLEV_DEBUG) == ACT_REPORT) {
     BX_DEBUG(("packet hexdump (%d bytes)", size));
