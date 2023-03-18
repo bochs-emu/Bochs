@@ -274,6 +274,7 @@ usb_device_c *usbdev_locator_c::create(const char *type, const char *devname)
 usb_device_c::usb_device_c(void)
 {
   memset((void *) &d, 0, sizeof(d));
+  d.pcapture.pcap_image_init();
   d.async_mode = 1;
   d.speed = USB_SPEED_LOW;
   d.first8 = 0;
@@ -687,7 +688,7 @@ int usb_device_c::handle_control_common(int request, int value, int index, int l
       }
       break;
     case InterfaceRequest | USB_REQ_GET_INTERFACE:
-      // Ben TODO: If the device is not in the configured state, this request should stall
+      // Ben: TODO: If the device is not in the configured state, this request should stall
       BX_DEBUG(("USB_REQ_GET_INTERFACE:"));
       // with InterfaceRequest, the wValue field must be zero and wLength field must be 1
       if ((value != 0) || (length != 1)) {
@@ -701,7 +702,7 @@ int usb_device_c::handle_control_common(int request, int value, int index, int l
       }
       break;
     case InterfaceOutRequest | USB_REQ_SET_INTERFACE:
-      // Ben TODO: If the device is not in the configured state, this request should stall
+      // Ben: TODO: If the device is not in the configured state, this request should stall
       BX_DEBUG(("USB_REQ_SET_INTERFACE: value=%d", value));
       // with InterfaceRequest, the wIndex and wLength fields must be zero
       if ((index != 0) || (length != 0)) {
