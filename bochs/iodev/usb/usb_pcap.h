@@ -92,9 +92,9 @@ struct usbmon_packet {
 class BOCHSAPI_MSVCONLY pcap_image_t
 {
   public:
-    // Default constructor
-    pcap_image_t();
+    // Uses a default constructor
     ~pcap_image_t();
+    void pcap_image_init();
 
     // append a packet to the pcap file
     int create_pcap(const char *filename);

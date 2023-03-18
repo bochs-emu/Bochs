@@ -54,18 +54,18 @@
 
 /*** base class pcap_image_t ***/
 
-pcap_image_t::pcap_image_t()
-{
-  fd = -1;
-  last_pos = 0;
-  time_usecs = 0;
-}
-
 pcap_image_t::~pcap_image_t()
 {
   if (fd > -1)
     close(fd);
   fd = -1;
+}
+
+void pcap_image_t::pcap_image_init()
+{
+  fd = -1;
+  last_pos = 0;
+  time_usecs = 0;
 }
 
 int pcap_image_t::create_pcap(const char *pathname)
