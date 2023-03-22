@@ -102,26 +102,30 @@ PLUGIN_ENTRY_FOR_MODULE(usb_uhci)
 bx_usb_uhci_c::bx_usb_uhci_c()
 {
   put("usb_uhci", "UHCI");
+  device_change = 0;
   rt_conf_id = -1;
 }
 
 bx_usb_uhci_c::~bx_usb_uhci_c()
 {
-  char pname[16];
+  char pname[32];
 
   SIM->unregister_runtime_config_handler(rt_conf_id);
-
+  
   for (int i=0; i<USB_UHCI_PORTS; i++) {
     sprintf(pname, "port%d.device", i+1);
     SIM->get_param_enum(pname, SIM->get_param(BXPN_USB_UHCI))->set_handler(NULL);
     sprintf(pname, "port%d.options", i+1);
     SIM->get_param_string(pname, SIM->get_param(BXPN_USB_UHCI))->set_enable_handler(NULL);
+    sprintf(pname, "port%d.over_current", i+1);
+    SIM->get_param_bool(pname, SIM->get_param(BXPN_USB_UHCI))->set_handler(NULL);
     remove_device(i);
   }
-
+  
   SIM->get_bochs_root()->remove("usb_uhci");
   bx_list_c *usb_rt = (bx_list_c *) SIM->get_param(BXPN_MENU_RUNTIME_USB);
   usb_rt->remove("uhci");
+  
   BX_DEBUG(("Exit"));
 }
 
@@ -132,6 +136,7 @@ void bx_usb_uhci_c::init(void)
   bx_list_c *uhci, *port;
   bx_param_enum_c *device;
   bx_param_string_c *options;
+  bx_param_bool_c *over_current;
   Bit8u devfunc;
   Bit16u devid;
 
@@ -174,6 +179,8 @@ void bx_usb_uhci_c::init(void)
     device->set_handler(usb_param_handler);
     options = (bx_param_string_c *) port->get_by_name("options");
     options->set_enable_handler(usb_param_enable_handler);
+    over_current = (bx_param_bool_c *) port->get_by_name("over_current");
+    over_current->set_handler(usb_param_oc_handler);
   }
 
   // register handler for correct device connect handling after runtime config
@@ -220,6 +227,7 @@ void bx_usb_uhci_c::init_device(Bit8u port, bx_list_c *portconf)
     } else {
       ((bx_param_enum_c *) portconf->get_by_name("device"))->set_by_name("none");
       ((bx_param_string_c *) portconf->get_by_name("options"))->set("none");
+      ((bx_param_bool_c *) portconf->get_by_name("over_current"))->set(0);
       set_connect_status(port, 0);
     }
   }
@@ -285,6 +293,31 @@ Bit64s bx_usb_uhci_c::usb_param_handler(bx_param_c *param, bool set, Bit64s val)
     }
   }
   return val;
+}
+
+// USB runtime parameter handler: over-current
+Bit64s bx_usb_uhci_c::usb_param_oc_handler(bx_param_c *param, bool set, Bit64s val)
+{
+  int portnum;
+
+  if (set && val) {
+    portnum = atoi((param->get_parent())->get_name()+4) - 1;
+    if ((portnum >= 0) && (portnum < USB_UHCI_PORTS)) {
+      if (BX_UHCI_THIS hub.usb_port[portnum].status) {
+        // The UHCI specification does not specify what happens when an over-current
+        //  condition exists. Therefore, we will set the condition and then envoke
+        //  an interrupt. Hopefully the guest will check the port change.
+        BX_UHCI_THIS hub.usb_port[portnum].over_current_change = 1;
+        BX_UHCI_THIS hub.usb_port[portnum].over_current = 1;
+        BX_DEBUG(("Over-current signaled on port #%d.", portnum + 1));
+        BX_UHCI_THIS update_irq();
+      }
+    } else {
+      BX_ERROR(("Over-current: Bad portnum given: %d", portnum + 1));
+    }
+  }
+
+  return 0; // clear the indicator for next time
 }
 
 // USB runtime parameter enable handler

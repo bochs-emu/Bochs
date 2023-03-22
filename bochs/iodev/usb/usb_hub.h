@@ -77,6 +77,7 @@ private:
 
   static Bit64s hub_param_handler(bx_param_c *param, bool set, Bit64s val);
   static bool hub_param_enable_handler(bx_param_c *param, bool en);
+  static Bit64s hub_param_oc_handler(bx_param_c *param, bool set, Bit64s val);
 };
 
 #endif
