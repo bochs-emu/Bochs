@@ -764,8 +764,8 @@ void bx_uhci_core_c::uhci_timer(void)
                 // copy pointer for next queue item into vert queue head
                 DEV_MEM_WRITE_PHYSICAL((queue_addr & ~0xF) + sizeof(Bit32u), sizeof(Bit32u), (Bit8u *) &item);
               }
-              // if breadth first or last in the element list, move on to next queue item
-              if (!depthbreadth || !USB_UHCI_IS_LINK_VALID(item)) {
+              // if breadth first, short packet, or last in the element list, move on to next queue item
+              if (!depthbreadth || !USB_UHCI_IS_LINK_VALID(item) || was_short) {
                 item = queue.horz;
                 queue_addr = 0;
               }
