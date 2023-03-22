@@ -2440,9 +2440,9 @@ SMP, x86_64 support) and the devices options (e.g. PCI, USB, Cirrus graphics).
       <entry>--enable-cdrom</entry>
       <entry>yes</entry>
       <entry>
-      Enable use of a real CDROM/DVD drive. The cdrom emulation and the portable
+      Enable use of a real CD-ROM/DVD drive. The CD-ROM emulation and the portable
       ISO image file support are always present.  You can use this option to
-      compile in support for accessing the media in your workstation's cdrom
+      compile in support for accessing the media in your workstation's CD-ROM
       drive.  The supported platforms are Linux, Solaris, FreeBSD, OpenBSD,
       MacOS X and Windows. For other platforms, a small amount of code specific
       to your platform must be written.
@@ -2547,7 +2547,7 @@ SMP, x86_64 support) and the devices options (e.g. PCI, USB, Cirrus graphics).
       <entry>no</entry>
       <entry>
         Enable i440FX / i440BX PCI USB support (UHCI). The host controller with
-        2-port root hub and 8 USB device types are available.
+        2-port root hub and 9 USB device types are available.
       </entry>
     </row>
     <row>
@@ -3292,7 +3292,7 @@ Put this on top of your config file if the global configuration is stored in /et
 Bochs now treats an unknown option as optional device plugin if it exists. It
 loads this plugin and then it tries to call the parser function for this
 configuration line which is located in the plugin. This mechanism is implemented
-for the Bochs network, sound and USB host controller devices. Externally
+for the Bochs network, sound, and USB host controller devices. Externally
 developed device plugins (AKA "user plugins") now can also be loaded this way.
 </para>
 
@@ -4230,7 +4230,7 @@ This defines the type and characteristics of all attached ata devices:
 <row> <entry> cylinders </entry> <entry> only valid for disks </entry> </row>
 <row> <entry> heads </entry> <entry> only valid for disks </entry> </row>
 <row> <entry> spt </entry> <entry> only valid for disks </entry> </row>
-<row> <entry> status </entry> <entry> only valid for cdroms </entry> <entry> [inserted | ejected] </entry> </row>
+<row> <entry> status </entry> <entry> only valid for CD-ROMs </entry> <entry> [inserted | ejected] </entry> </row>
 <row> <entry> biosdetect </entry> <entry> type of biosdetection </entry> <entry> [auto | cmos | none] </entry> </row>
 <row> <entry> translation </entry> <entry> type of translation done by the BIOS (legacy int13), only for disks </entry> <entry> [none | lba | large | rechs | auto] </entry> </row>
 <row> <entry> model </entry> <entry> string returned by identify device ATA command </entry> </row>
@@ -4246,8 +4246,8 @@ This defines the type and characteristics of all attached ata devices:
 </para>
 
 <para>
-You have to point the "path" at a hard disk image file, cdrom iso file,
-or physical cdrom device.
+You have to point the "path" at a hard disk image file, CD-ROM iso file,
+or physical CD-ROM device.
 To create a hard disk image, try running <command>bximage</command> (see
 <xref linkend="diskimagehowto">). It will help you choose the size and
 then suggest a line that works with it.
@@ -4450,7 +4450,7 @@ and continue), report (print information to the console or log file), or ignore
 
 <para>
 It is also possible to specify the 'action' to do for each Bochs facility
-separately (e.g. crash on panics from everything except the cdrom, and only
+separately (e.g. crash on panics from everything except the CD-ROM, and only
 report those). See the <link linkend="logopts-by-device">log function module table</link>
 for valid module names.
 </para>
@@ -4954,6 +4954,7 @@ i440FX PCI chipset.
 With the port<replaceable>X</replaceable> option you can connect devices
 to the hub (currently supported: 'mouse', 'tablet', 'keypad', 'keyboard',
 'disk', 'cdrom', 'floppy, ''hub' and 'printer').
+See <xref linkend="bochsopt-usb-config"> for more information on each device setting.
 </para>
 <para>
 If you connect the mouse or tablet to one of the ports, Bochs forwards the
@@ -4966,11 +4967,11 @@ keyboard is selected, all key events are sent to the USB device.
 To connect a disk image as a USB hardisk you can use the 'disk' device. Use
 the 'path' option in the options<replaceable>X</replaceable> parameter to
 specify the path to the image separated with a colon. To use other disk image
-modes similar to ATA disks the syntax 'path:mode:filename' must be used (see
+modes similar to ATA disks the syntax 'path:<emphasis>mode</emphasis>:filename' must be used (see
 below).
 </para>
 <para>
-To emulate a USB cdrom you can use the 'cdrom' device and the path to an
+To emulate a USB CD-ROM you can use the 'cdrom' device and the path to an
 ISO image or raw device name can be set with the 'path' option in the
 options<replaceable>X</replaceable> parameter also separated with a colon. An
 option to insert/eject media is available in the runtime configuration.
@@ -4984,7 +4985,7 @@ An option to insert/eject media is available in the runtime configuration.
 A well-known, somewhat older, but still widely used Operating System must have 
 the Vendor ID as an TEAC external drive. If the VendorID is not the TEAC id,
 this operating system doesn't know what to do with the drive. Therefore, use 
-the options<replaceable>X</replaceable>="model=teac" option in the bochsrc.txt
+the options<replaceable>X</replaceable>="model:teac" option in the bochsrc.txt
 file to set this model. If you do not, a default model will be used.
 
 </para>
@@ -5012,10 +5013,10 @@ time. The option 'pcap' turns on packet logging in PCAP format. For the USB
 specify an alternative redolog file (journal) of some image modes. For 'vvfat'
 mode USB disks the options<replaceable>X</replaceable> parameter can be used to
 specify the disk size (range 128M ... 128G). If the size is not specified, it
-defaults to 504M. For the USB 'floppy' device the optionsX parameter can be used
-to specify an alternative device ID to be reported. Currently only the model
-"teac" is supported (can fix hw detection in some guest OS). The USB floppy also
-accepts the parameter "write_protected" with valid values 0 and 1 to select
+defaults to 504M. For the USB 'floppy' device the options<replaceable>X</replaceable>
+parameter can be used to specify an alternative device ID to be reported. Currently 
+only the model "teac" is supported (can fix hw detection in some guest OS). The USB 
+floppy also accepts the parameter "write_protected" with valid values 0 and 1 to select
 the access mode (default is 0).
 </para>
 <para>
@@ -5064,7 +5065,7 @@ Example:
 This option controls the presence of the USB OHCI host controller with a
 2-port hub. The port<replaceable>X</replaceable> parameter accepts the same device types with the same
 syntax as the UHCI controller (see the <link linkend="bochsopt-usb-uhci">usb_uhci option</link>).
-The optionsX parameter is also available on OHCI.</para>
+The options<replaceable>X</replaceable> parameter is also available on OHCI.</para>
 </section>
 
 <section id="bochsopt-usb-ehci"><title>usb_ehci</title>
@@ -5080,7 +5081,7 @@ Example:
 This option controls the presence of the USB EHCI host controller with a
 6-port hub. The port<replaceable>X</replaceable> parameter accepts the same device types with the same
 syntax as the UHCI controller (see the <link linkend="bochsopt-usb-uhci">usb_uhci option</link>).
-The optionsX parameter is also available on EHCI.</para>
+The options<replaceable>X</replaceable> parameter is also available on EHCI.</para>
 </section>
 
 <section id="bochsopt-usb-xhci"><title>usb_xhci</title>
@@ -5662,7 +5663,7 @@ behavoiur of Bochs at runtime if you click on one of these buttons:
 </para>
 </listitem>
 <listitem>
-<para>cdrom button</para>
+<para>CD-ROM button</para>
 <para>
   Here you can toggle the media status of the first CD-ROM drive (inserted/ejected).
   CD-ROM drives can be set up using <link linkend="bochsopt-ata-master-slave">ata(0-3)-master/-slave option</link>.
@@ -5832,10 +5833,10 @@ Bochs Runtime Options
 ---------------------
 1. Floppy disk 0: /dev/fd0, size=1.44M, inserted
 2. Floppy disk 1: floppyb.img, size=1.44M, inserted
-3. 1st CDROM: (master on ata1) /dev/cdrom, ejected
-4. 2nd CDROM: (slave on ata1) /dev/cdrecorder, ejected
-5. 3rd CDROM: (not present)
-6. 4th CDROM: (not present)
+3. 1st CD-ROM: (master on ata1) /dev/cdrom, ejected
+4. 2nd CD-ROM: (slave on ata1) /dev/cdrecorder, ejected
+5. 3rd CD-ROM: (not present)
+6. 4th CD-ROM: (not present)
 7. (not implemented)
 8. Log options for all devices
 9. Log options for individual devices
@@ -5845,11 +5846,11 @@ Bochs Runtime Options
 13. Continue simulation
 14. Quit now
 
-Please choose one:  [15]
+Please choose one:  [13]
 </screen>
 </para>
 <para>
-In the runtime configuration you can change the floppy/cdrom image or device,
+In the runtime configuration you can change the floppy/CD-ROM image or device,
 change the log options or adjust some other settings. If you have trouble with
 a specific device, you can change the log options for this device only to get
 more information (e.g. report debug messages).
@@ -6264,6 +6265,247 @@ The command line can have any number of commands. However, if none are given,
 </section>
 </section>
 </section>
+
+<section id="bochsopt-usb-config"><title>USB configuration</title>
+<para>
+The USB configuration allows you to add, delete, or modify an existing USB device.
+</para>
+<para>
+The 'device' field may contain one of the following items:
+</para>
+<section><title>Mouse</title>
+<para>
+This emulates a 3-button mouse. After a reset, it is set up to send the <emphasis>Report 
+Protocol</emphasis> report and consists of a 4-byte report:
+<screen>
+byte 0:  00000BBB  Bits 7:3 are zero
+                   Bit 2 is button 3
+                   Bit 1 is button 2
+                   Bit 0 is button 1
+byte 1:  XXXXXXXX  8-bit X Displacement (-127 -> 127)
+byte 2:  YYYYYYYY  8-bit Y Displacement (-127 -> 127)
+byte 3:  ZZZZZZZZ  8-bit Z Displacement (-127 -> 127)
+</screen>
+This device may be used on all Host Controller types using a speed of 'low', 'full',
+or 'high'.
+<screen>
+usb_uhci: enabled=1, port1=mouse, options1="speed:low"
+usb_ohci: enabled=1, port1=mouse, options1="speed:full"
+usb_ehci: enabled=1, port1=mouse, options1="speed:high"
+usb_xhci: enabled=3, port3=mouse, options1="speed:full"
+</screen>
+</para>
+</section>
+
+<section><title>Keyboard</title>
+<para>
+This emulates a standard keyboard. Key press and release codes are translated from
+the Host's keyboard to the Guest as USB Interrupt packets.
+</para>
+<para>
+This device may be used on all Host Controller types using a speed of 'low', 'full',
+or 'high'.
+<screen>
+usb_uhci: enabled=1, port1=keyboard, options1="speed:low"
+usb_ohci: enabled=1, port1=keyboard, options1="speed:full"
+usb_ehci: enabled=1, port1=keyboard, options1="speed:high"
+usb_xhci: enabled=3, port3=keyboard, options1="speed:full"
+</screen>
+</para>
+</section>
+
+<section><title>Keypad</title>
+<para>
+This emulates a numeric keypad. Key press and release codes are translated from
+the Host's keyboard to the Guest as USB Interrupt packets.
+</para>
+<para>
+This device may be used on all Host Controller types using a speed of 'low', 'full',
+or 'high'.
+<screen>
+usb_uhci: enabled=1, port1=keypad, options1="speed:low"
+usb_ohci: enabled=1, port1=keypad, options1="speed:full"
+usb_ehci: enabled=1, port1=keypad, options1="speed:high"
+usb_xhci: enabled=3, port3=keypad, options1="speed:full"
+</screen>
+</para>
+</section>
+
+<section><title>Tablet</title>
+<para>
+This emulates a 3-button mouse. After a reset, it is set up to send the Report 
+Protocol report and consists of a 6-byte report:
+<screen>
+byte 0:  00000BBB  Bits 7:3 are zero
+                   Bit 2 is button 3
+                   Bit 1 is button 2
+                   Bit 0 is button 1
+byte 1:  XXXXXXXX  8-bit X Displacement (low byte)
+byte 2:  XXXXXXXX  8-bit X Displacement (high byte)
+byte 3:  YYYYYYYY  8-bit Y Displacement (low byte)
+byte 4:  YYYYYYYY  8-bit Y Displacement (high byte)
+byte 5:  ZZZZZZZZ  8-bit Z Displacement
+</screen>
+This device may be used on all Host Controller types using a speed of 'low', 'full',
+or 'high'.
+<screen>
+usb_uhci: enabled=1, port1=tablet, options1="speed:low"
+usb_ohci: enabled=1, port1=tablet, options1="speed:full"
+usb_ehci: enabled=1, port1=tablet, options1="speed:high"
+usb_xhci: enabled=3, port3=tablet, options1="speed:full"
+</screen>
+</para>
+</section>
+
+<section><title>Disk/CD-ROM</title>
+<para>
+This emulates a media device in the form of a hard-drive or CD-ROM. By default,
+the emulation uses the "Bulk-only" transport, also known as "Bulk/Bulk/Bulk". For
+high- and super-speed devices, you can specify the "UASP" protocol, also known as
+"USB Attached SCSI Protocol".
+</para>
+<para>
+This device may be used on all Host Controller types using a speed of 'full', 'high',
+or 'super'.
+<screen>
+usb_uhci: enabled=1, port1=disk, options1="speed:full, path:hdd.img"  # defaults to the BBB protocol
+usb_ohci: enabled=1, port1=disk, options1="speed:full, path:hdd.img"
+usb_ehci: enabled=1, port1=disk, options1="speed:high, path:hdd.img"
+usb_ehci: enabled=1, port1=disk, options1="speed:high, path:hdd.img, proto:bbb"
+usb_ehci: enabled=1, port1=disk, options1="speed:high, path:hdd.img, proto:uasp"
+usb_xhci: enabled=3, port1=disk, options3="speed:full, path:hdd.img"
+usb_xhci: enabled=3, port1=disk, options3="speed:high, path:hdd.img, proto:bbb"
+usb_xhci: enabled=3, port1=disk, options3="speed:high, path:hdd.img, proto:uasp"
+usb_xhci: enabled=1, port1=disk, options1="speed:super, path:hdd.img, proto:bbb"
+usb_xhci: enabled=1, port1=disk, options1="speed:super, path:hdd.img, proto:uasp"
+</screen>
+An image format, similar to the ATA option, can be used. Replace 'mode' below with
+the desired format.
+<screen>
+usb_xhci: enabled=3, port1=disk, options3="speed:high, path:<emphasis>mode</emphasis>:hdd.img, proto:bbb"
+usb_xhci: enabled=3, port1=disk, options3="speed:high, path:<emphasis>mode</emphasis>:hdd.img, proto:uasp"
+</screen>
+To emuate a CD-ROM, replace 'disk' in the examples above with 'cdrom', and adjust
+the 'path' accordingly.
+<note><para>
+Specifying 'proto:uasp' does not guarantee that the Guest will use that protocol.
+See a <link linkend="bochsopt-usb-uhci">previous section</link> for more information.
+</para></note>
+</para>
+</section>
+
+<section><title>Floppy</title>
+<para>
+This emulates a media device in the form of an external Floppy drive. By default,
+the emulation uses the "Control/Bulk/Interrupt" transport, aka "CBI". Bochs can be
+re-compiled to use the "Control/Bulk" transport, aka "CB".
+</para>
+<para>
+This device may be used on all Host Controller types using a speed of 'full'.
+<screen>
+usb_uhci: enabled=1, port1=floppy, options1="speed:full, path:floppy.img"
+usb_ohci: enabled=1, port1=floppy, options1="speed:full, path:floppy.img, model:teac"
+usb_ehci: enabled=1, port1=floppy, options1="speed:full, path:floppy.img, model:teac"
+usb_xhci: enabled=1, port3=floppy, options3="speed:full, path:floppy.img"
+</screen>
+An image format, similar to the ATA option, can be used. Replace 'mode' below with
+the desired format.
+<screen>
+usb_uhci: enabled=1, port1=floppy, options1="speed:full, path:<emphasis>mode</emphasis>:floppy.img"
+</screen>
+The 'model:teac' option can be used to emulate that specific model, else a default
+model will be used. If a guest does not see the attached floppy, try specifying the 'teac'
+model.
+</para>
+</section>
+
+<section><title>Printer</title>
+<para>
+This emulates a simple USB printer. All data sent to the printer will be appended
+to a specified file on the Host.
+</para>
+<para>
+This device may be used on all Host Controller types using a speed of 'full'.
+<screen>
+usb_uhci: enabled=1, port1=printer, options1="speed:full, file:printdata.bin"
+usb_ohci: enabled=1, port1=printer, options1="speed:full, file:printdata.bin"
+usb_ehci: enabled=1, port1=printer, options1="speed:full, file:printdata.bin"
+usb_xhci: enabled=1, port3=printer, options3="speed:full, file:printdata.bin"
+</screen>
+</para>
+</section>
+
+<section><title>Hub</title>
+<para>
+This emulates a full-speed 4-port external hub. The number of ports can be
+changed, with a range of 2 to 8.
+</para>
+<para>
+This device may be used on all Host Controller types using a speed of 'full'.
+<screen>
+usb_uhci: enabled=1, port1=hub, options1="speed:full"
+usb_ohci: enabled=1, port1=hub, options1="speed:full, ports:4"
+usb_ehci: enabled=1, port1=hub, options1="speed:full, ports:6"
+usb_xhci: enabled=1, port1=hub, options1="speed:full, ports:8"
+</screen>
+At startup, no device is attached to this hub. However, after start up, using the 
+runtime interface, a device can be attached to any or all of the ports.
+</para>
+</section>
+
+<section><title>Packet Capture</title>
+<para>
+All devices may use the 'pcap' option to send all data to a Packet Capture formatted
+file.
+<screen>
+usb_uhci: enabled=1, port1=hub, options1="speed:full, pcap:outfile.pcap"
+</screen>
+This file is formatted to be used with Linux' usbmon and utilities such as 
+<ulink url="http://www.wireshark.org/">Wire Shark</ulink>.
+</para>
+<note><para>
+Please note that this option will not capture any data that would normally <emphasis>
+flow through</emphasis> an external hub, so if you use the 'pcap' option for a hub,
+as with the example above, only the hub's data is captured, not the device(s) attached
+to it.
+</para></note>
+</section>
+
+<section><title>Signaling an Over-Current event</title>
+<para>
+During emulation, using the runtime configuration, you can signal an over-current
+event on any device using the 'over-current' checkbox (GUI) or text configuration
+option. This will signal an over-current event on the Host Controller for that
+port.
+</para>
+<para>
+Over-current is considered undefined on the UHCI, though Intel 430TX and later 
+controllers may have implemented over-current via two previously unused bits.
+</para>
+</section>
+
+<section><title>Notes</title>
+<itemizedlist>
+<listitem>
+<para>
+All devices allow the 'debug' option to be used. This turns on the BX_DEBUG() logging
+for that device.
+<screen>
+usb_uhci: enabled=1, port1=hub, options1="speed:full, debug"
+</screen>
+</para>
+</listitem>
+<listitem>
+<para>
+You can wrap options in double-quotes in your bochsrc file. However, the runtime config
+interface has problems when double-quotes are used. Therefore, don't use them in the
+runtime configuration interface.
+</para>
+</listitem>
+</itemizedlist>
+</section>
+</section>
+
 </chapter>
 
 <chapter id="common-problems">
@@ -7535,7 +7777,7 @@ simulation is starting.
     <row>
       <entry>usb_msd</entry>
       <entry>USBMSD</entry>
-      <entry>USB MSD (disk/cdrom) emulation</entry>
+      <entry>USB MSD (disk/CD-ROM) emulation</entry>
     </row>
     <row>
       <entry>usb_ohci</entry>
@@ -8910,7 +9152,7 @@ Here is a summary of what can happen when booting from the CD.
 </thead>
 <tbody>
 <row> <entry> 0x01 </entry> <entry> no atapi device found </entry> </row>
-<row> <entry> 0x02 </entry> <entry> no atapi cdrom found </entry> </row>
+<row> <entry> 0x02 </entry> <entry> no atapi CD-ROM found </entry> </row>
 <row> <entry> 0x03 </entry> <entry> cannot read cd - BRVD </entry> </row>
 <row> <entry> 0x04 </entry> <entry> cd is not eltorito (BRVD) </entry> </row>
 <row> <entry> 0x05 </entry> <entry> cd is not eltorito (ISO TAG) </entry> </row>
@@ -8928,11 +9170,11 @@ Here is a summary of what can happen when booting from the CD.
 <para>
 <screen>
 0x01 no atapi device found
-0x02 no atapi cdrom found
+0x02 no atapi CD-ROM found
 </screen>
 
 For the first two errors, an ata-*: type=cdrom is probably missing
-from the configuration file. This is what you get if no cdrom has
+from the configuration file. This is what you get if no CD-ROM has
 been defined in Bochs conf file.
 </para>
 
@@ -8941,7 +9183,7 @@ been defined in Bochs conf file.
 0x03 cannot read cd - BRVD
 </screen>
 
-For this error, the cdrom support has not been compiled in Bochs,
+For this error, the CD-ROM support has not been compiled in Bochs,
 or Bochs could not open the file or device. This is what you get if
 Bochs is not able to read the cd.
 </para>
@@ -9796,7 +10038,7 @@ Only vmware versions 3 and 4 disk image files are supported.
 <listitem><para><command>Harddisk Image on a Read-Only Medium</command></para>
 <para>
     In the 'undoable' mode, the base file is always opened in read-only mode,
-    so it can safely be stored on a read-only medium (for example on a cdrom).
+    so it can safely be stored on a read-only medium (for example on a CD-ROM).
     In that case it is recommended to specify the redolog file with the
     "journal" option.
 </para></listitem>
@@ -9938,7 +10180,7 @@ Be sure to enter "growing" when selecting the image type.
 <listitem><para><command>Harddisk Image on a Read-Only Medium</command></para>
 <para>
     In the 'volatile' mode, the base file is always opened in read-only mode,
-    so it can safely be stored on a read-only medium (for example on a cdrom).
+    so it can safely be stored on a read-only medium (for example on a CD-ROM).
     In that case it is recommended to specify the redolog file with the
     "journal" option.
 </para></listitem>
@@ -10522,13 +10764,13 @@ Known problems
 <para>You must read the message regarding software licenses in
 <xref linkend="thirdparty"> before you install or use MS-DOS, DR-DOS, FreeDOS or
 any other DOS as a guest operating system in Bochs.</para>
-<section><title>Accessing your CDROM</title>
+<section><title>Accessing your CD-ROM</title>
 <para>
-To access your CDROM in DOS, you must download an IDE CDROM driver.
-Bochs emulates a very generic CDROM drive, and several drivers are known to
+To access your CD-ROM in DOS, you must download an IDE CD-ROM driver.
+Bochs emulates a very generic CD-ROM drive, and several drivers are known to
 work.  Others don't.  This section describes how to set up your
 <filename>config.sys</filename> and <filename>autoexec.bat</filename> to enable
-the CDROM.
+the CD-ROM.
 </para>
 
 <para>
@@ -10641,7 +10883,7 @@ cpuid: cpuid_limit_winnt=1
 <para>You must read the message regarding software licenses in
 <xref linkend="thirdparty"> before you install Windows XP as a guest operating system in Bochs.</para>
         <para>
-        Windows XP has been reported to install from the CDROM, and run inside Bochs.
+        Windows XP has been reported to install from the CD-ROM, and run inside Bochs.
         The only known issue is to set the IPS to, at least, a value of 10000000.
         </para>
 </section>
@@ -10784,7 +11026,7 @@ keyboard: type=mf, keymap=, user_shortcut=none
 config_interface: textconfig
 display_library: x
 </programlisting>
-Some important things to note are that you want to boot from the cdrom, and you do NOT want the ne2000
+Some important things to note are that you want to boot from the CD-ROM, and you do NOT want the ne2000
 card configured initially.  (We'll add that later...)
 </para>
 
