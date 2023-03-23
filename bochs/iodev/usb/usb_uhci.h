@@ -50,6 +50,7 @@ private:
   void runtime_config(void);
 
   static Bit64s usb_param_handler(bx_param_c *param, bool set, Bit64s val);
+  static Bit64s usb_param_oc_handler(bx_param_c *param, bool set, Bit64s val);
   static bool usb_param_enable_handler(bx_param_c *param, bool en);
 };
 

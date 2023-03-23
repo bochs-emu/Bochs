@@ -166,7 +166,7 @@ void bx_uhci_core_c::reset_uhci(unsigned type)
     hub.usb_port[j].resume = 0;
     hub.usb_port[j].suspend = 0;
     hub.usb_port[j].over_current_change = 0;
-    hub.usb_port[j].over_current = 1;
+    hub.usb_port[j].over_current = 0;
     hub.usb_port[j].enabled = 0;
     hub.usb_port[j].enable_changed = 0;
     hub.usb_port[j].status = 0;
@@ -564,7 +564,7 @@ void bx_uhci_core_c::write(Bit32u address, Bit32u value, unsigned io_len)
         if (hub.usb_port[port].reset) {
           hub.usb_port[port].suspend = 0;
           hub.usb_port[port].over_current_change = 0;
-          hub.usb_port[port].over_current = 1;
+          hub.usb_port[port].over_current = 0;
           hub.usb_port[port].resume = 0;
           hub.usb_port[port].enabled = 0;
           // are we are currently connected/disconnected
@@ -645,7 +645,7 @@ void bx_uhci_core_c::uhci_timer(void)
       hub.usb_port[i].reset = 0;
       hub.usb_port[i].resume = 0;
       hub.usb_port[i].status = 0;
-      hub.usb_port[i].over_current = 1;
+      hub.usb_port[i].over_current = 0;
       hub.usb_port[i].over_current_change = 0;
       hub.usb_port[i].suspend = 0;
     }
@@ -734,10 +734,14 @@ void bx_uhci_core_c::uhci_timer(void)
           const int r_actlen = (((td.dword1 & 0x7FF) + 1) & 0x7FF);
           const int r_maxlen = (((td.dword2 >> 21) + 1) & 0x7FF);
           BX_DEBUG((" r_actlen = %d r_maxlen = %d", r_actlen, r_maxlen));
-          if (((td.dword2 & 0xFF) == USB_TOKEN_IN) && spd && (queue_addr != 0) && (r_actlen < r_maxlen) && ((td.dword1 & 0x00FF0000) == 0)) {
-            BX_DEBUG(("Short Packet Detected"));
-            shortpacket = was_short = 1;
-            td.dword1 |= (1<<29);
+          if (((td.dword2 & 0xFF) == USB_TOKEN_IN) && (queue_addr != 0) && (r_actlen < r_maxlen) && ((td.dword1 & 0x00FF0000) == 0)) {
+            if (spd) {
+              BX_DEBUG(("Short Packet Detected"));
+              shortpacket = was_short = 1;
+              td.dword1 |= (1<<29);
+            } else {
+              BX_DEBUG(("A Short Packet was detected, but the SPD bit in DWORD1 was clear"));
+            }
           }
           if (td.dword1 & (1<<22)) stalled = was_stall = 1;
           

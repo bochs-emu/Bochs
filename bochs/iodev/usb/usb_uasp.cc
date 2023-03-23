@@ -401,7 +401,8 @@ int usb_msd_device_c::uasp_do_data(UASPRequest *req, USBPacket *p)
     req->usb_len = 0;
   }
   
-  usb_dump_packet(p->data, len, 0, p->devaddr, ((UASP_GET_DIR(req->mode) == USB_TOKEN_IN) ? USB_DIR_IN : USB_DIR_OUT) | p->devep, USB_TRANS_TYPE_BULK, false, true);
+  // This fills the log.txt file extremely fast, so I comment it out.
+  //usb_dump_packet(p->data, len, 0, p->devaddr, ((UASP_GET_DIR(req->mode) == USB_TOKEN_IN) ? USB_DIR_IN : USB_DIR_OUT) | p->devep, USB_TRANS_TYPE_BULK, false, true);
 
   return len;
 }

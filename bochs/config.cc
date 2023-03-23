@@ -267,9 +267,14 @@ void bx_init_usb_options(const char *usb_name, const char *pname, int maxports)
       "Options",
       descr,
       "", BX_PATHNAME_LEN);
+    bx_param_bool_c *overcurrent = new bx_param_bool_c(port, 
+      "over_current",
+      "signal over-current",
+      "signal over-current", 0);
     port->set_group(group);
     deplist->add(port);
     deplist->add(device);
+    deplist->add(overcurrent);
     deplist2 = new bx_list_c(NULL);
     deplist2->add(options);
     device->set_dependent_list(deplist2, 1);

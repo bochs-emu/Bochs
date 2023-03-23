@@ -620,7 +620,7 @@ private:
 
   static void init_device(Bit8u port, bx_list_c *portconf);
   static void remove_device(Bit8u port);
-  static bool usb_set_connect_status(Bit8u port, bool connected);
+  static bool set_connect_status(Bit8u port, bool connected);
 
   static int  broadcast_speed(const int slot);
   static int  broadcast_packet(USBPacket *p, const int port);
@@ -668,6 +668,7 @@ private:
   void runtime_config(void);
 
   static Bit64s usb_param_handler(bx_param_c *param, bool set, Bit64s val);
+  static Bit64s usb_param_oc_handler(bx_param_c *param, bool set, Bit64s val);
   static bool usb_param_enable_handler(bx_param_c *param, bool en);
 };
 
