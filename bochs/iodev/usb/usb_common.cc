@@ -155,6 +155,8 @@ bool bx_usbdev_ctl_c::init_device(bx_list_c *portconf, logfunctions *hub, void *
   return (*device != NULL);
 }
 
+extern const char *usb_speed[4];
+
 void bx_usbdev_ctl_c::parse_port_options(usb_device_c *device, bx_list_c *portconf)
 {
   const char *raw_options;

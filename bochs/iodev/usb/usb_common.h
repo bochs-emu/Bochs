@@ -58,7 +58,6 @@
 #define USB_SPEED_FULL  1
 #define USB_SPEED_HIGH  2
 #define USB_SPEED_SUPER 3
-extern const char *usb_speed[4];
 
 #define USB_STATE_NOTATTACHED 0
 #define USB_STATE_ATTACHED    1
