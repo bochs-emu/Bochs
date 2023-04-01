@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -252,7 +252,7 @@ extern "C" {
 #define DEV_mem_set_bios_rom_access(a,b) bx_devices.mem->set_bios_rom_access(a,b)
 
 ///////// USB device macro
-#define DEV_usb_init_device(a,b,c) bx_usbdev_ctl.init_device(a,b,(void**)c)
+#define DEV_usb_init_device(a,b,c,d,p) bx_usbdev_ctl.init_device(a,b,(void**)c,d,p)
 
 ///////// Sound module macros
 #define DEV_sound_get_waveout(a) (bx_soundmod_ctl.get_waveout(a))
