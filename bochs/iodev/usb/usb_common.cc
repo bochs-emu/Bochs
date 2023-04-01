@@ -131,7 +131,7 @@ void bx_usbdev_ctl_c::list_devices(void)
   }
 }
 
-bool bx_usbdev_ctl_c::init_device(bx_list_c *portconf, logfunctions *hub, void **dev)
+bool bx_usbdev_ctl_c::init_device(bx_list_c *portconf, logfunctions *hub, void **dev, USBCallback *cb, int port)
 {
   Bit8u devtype, modtype;
   usb_device_c **device = (usb_device_c**)dev;
@@ -149,10 +149,19 @@ bool bx_usbdev_ctl_c::init_device(bx_list_c *portconf, logfunctions *hub, void *
   *device = usbdev_locator_c::create(usb_module_names[modtype],
                                      usb_device_names[devtype]);
   if (*device != NULL) {
+    (*device)->set_event_handler(hub, cb, port);
     parse_port_options(*device, portconf);
   }
   return (*device != NULL);
 }
+
+// these must match USB_SPEED_*
+static const char *usb_speed[4] = {
+  "low",     // USB_SPEED_LOW   = 0
+  "full",    // USB_SPEED_FULL  = 1
+  "high",    // USB_SPEED_HIGH  = 2
+  "super"    // USB_SPEED_SUPER = 3
+};
 
 void bx_usbdev_ctl_c::parse_port_options(usb_device_c *device, bx_list_c *portconf)
 {
@@ -178,10 +187,6 @@ void bx_usbdev_ctl_c::parse_port_options(usb_device_c *device, bx_list_c *portco
       } else {
         BX_ERROR(("ignoring unknown USB device speed: '%s'", opts[i]+6));
       }
-      if (!device->set_speed(speed)) {
-        BX_PANIC(("USB device '%s' doesn't support '%s' speed",
-                  usb_device_names[devtype], opts[i]+6));
-      }
     } else if (!strcmp(opts[i], "debug")) {
       device->set_debug_mode();
     } else if (!strncmp(opts[i], "pcap:", 5)) {
@@ -195,6 +200,20 @@ void bx_usbdev_ctl_c::parse_port_options(usb_device_c *device, bx_list_c *portco
       free(opts[i]);
       opts[i] = NULL;
     }
+  }
+
+  // let the device code check if the speed is valid for this device.
+  if (!device->set_speed(speed)) {
+    BX_PANIC(("USB device '%s' doesn't support '%s' speed",
+              usb_device_names[devtype], usb_speed[speed]));
+  }
+
+  // let the host controller check if the speed is valid for this device.
+  // -if we are on an xhci, all super-speed devices must be on the first half register sets,
+  //   and all other speeds on the second half register sets.
+  // -if we are on a hub, the speed must match the hub's speed.
+  if (device->hc_event(USB_EVENT_CHECK_SPEED, device) != 1) {
+    BX_PANIC(("Host Controller/Hub returned error with device speed of '%s'.", usb_speed[speed]));
   }
 }
 
@@ -258,10 +277,10 @@ void usbdev_locator_c::cleanup()
 usb_device_c *usbdev_locator_c::create(const char *type, const char *devname)
 {
   usbdev_locator_c *ptr = 0;
-
+  
   for (ptr = all; ptr != NULL; ptr = ptr->next) {
     if (strcmp(type, ptr->type) == 0)
-      return (ptr->allocate(devname));
+      return ptr->allocate(devname);
   }
   return NULL;
 }
@@ -324,6 +343,10 @@ int usb_device_c::handle_packet(USBPacket *p)
       d.remote_wakeup = 0;
       d.addr = 0;
       d.state = USB_STATE_DEFAULT;
+#if HANDLE_TOGGLE_CONTROL
+      for (int i=0; i<USB_MAX_ENDPOINTS; i++)
+        d.endpoint_info[i].toggle = 0;
+#endif
       handle_reset();
       break;
     case USB_TOKEN_SETUP:
@@ -766,15 +789,12 @@ void usb_device_c::usb_dump_packet(Bit8u *data, int size, int bus, int dev_addr,
     return;
   }
 
-  // safety catch
+  // safety catch (only dump up to 8192 bytes per packet so to not fill the log file)
   if (size > 8192) {
     BX_DEBUG(("packet hexdump with irregular size: %u (truncating to 8192 bytes)", size));
+    size = 8192;
   }
   
-  // safety catch (only dump up to 8192 bytes per packet so to not fill the log file)
-  if (size > 8192)
-    size = 8192;
-
   if (getonoff(LOGLEV_DEBUG) == ACT_REPORT) {
     BX_DEBUG(("packet hexdump (%d bytes)", size));
     strcpy(buf_str, "");
@@ -795,7 +815,7 @@ void usb_device_c::usb_dump_packet(Bit8u *data, int size, int bus, int dev_addr,
     }
     if (strlen(buf_str) > 0) BX_DEBUG(("%s", buf_str));
   }
-
+  
   if (d.pcap_mode) {
     d.pcapture.write_packet(data, size, bus, dev_addr, ep, type, is_setup, can_append);
   }

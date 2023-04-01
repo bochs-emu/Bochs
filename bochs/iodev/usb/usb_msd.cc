@@ -542,6 +542,7 @@ usb_msd_device_c::usb_msd_device_c(const char *devname)
     s.sect_size = 512;
   } else if (d.type == USB_MSD_TYPE_CDROM) {
     strcpy(d.devname, "BOCHS USB CDROM");
+    s.sect_size = 2048;
     // config options
     bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
     sprintf(pname, "cdrom%u", ++usb_cdrom_count);
@@ -677,7 +678,7 @@ bool usb_msd_device_c::init()
    *  in the configuration, simply uncomment this line.  I use
    *  it when I am working on this emulation.
    */
-  //LOG_THIS setonoff(LOGLEV_DEBUG, ACT_REPORT);
+  // LOG_THIS setonoff(LOGLEV_DEBUG, ACT_REPORT);
   
   // check to make sure correct speed is used if the proto is uasp
   if ((s.proto == MSD_PROTO_UASP) && (d.speed < USB_SPEED_HIGH)) {
@@ -689,19 +690,21 @@ bool usb_msd_device_c::init()
   if (d.type == USB_MSD_TYPE_DISK) {
     if (strlen(s.fname) > 0) {
       s.hdimage = DEV_hdimage_init_image(s.image_mode, 0, s.journal);
-      if (!strcmp(s.image_mode, "vvfat")) {
-        Bit64u hdsize = ((Bit64u)s.size) << 20;
-        s.hdimage->cylinders = (unsigned)(hdsize/16.0/63.0/512.0);
-        s.hdimage->heads = 16;
-        s.hdimage->spt = 63;
-        s.hdimage->sect_size = 512;
-      } else {
-        s.hdimage->sect_size = s.sect_size;
-      }
+      // we need sect_size defined before the open() call
+      BX_ASSERT(s.sect_size > 0); // if sect_size == zero, the divide below will cause an exception
+      s.hdimage->sect_size = (!strcmp(s.image_mode, "vvfat")) ? 512 : s.sect_size;
       if (s.hdimage->open(s.fname) < 0) {
         BX_PANIC(("could not open hard drive image file '%s'", s.fname));
         return 0;
       } else {
+        s.hdimage->heads = 16;
+        s.hdimage->spt = 63;
+        if (!strcmp(s.image_mode, "vvfat")) {
+          Bit64u hdsize = ((Bit64u) s.size) << 20;
+          s.hdimage->cylinders = (unsigned) (hdsize / s.hdimage->heads / s.hdimage->spt / 512);
+        } else {
+          s.hdimage->cylinders = (unsigned) (s.hdimage->hd_size / s.hdimage->heads / s.hdimage->spt / s.sect_size);
+        }
         s.scsi_dev = new scsi_device_t(s.hdimage, 0, usb_msd_command_complete, (void*)this);
       }
       sprintf(s.info_txt, "USB HD: path='%s', mode='%s', sect_size=%d", s.fname,
@@ -1068,7 +1071,7 @@ int usb_msd_device_c::handle_data(USBPacket *p)
 
           case USB_MSDM_DATAOUT:
             BX_DEBUG(("data out %d/%d", len, s.data_len));
-            if (len > (int)s.data_len)
+            if (len > s.data_len)
               goto fail;
 
             s.usb_buf = data;
@@ -1125,18 +1128,18 @@ int usb_msd_device_c::handle_data(USBPacket *p)
             break;
 
           case USB_MSDM_DATAIN:
-            BX_DEBUG(("data in %d/%d", len, s.data_len));
-            if (len > (int)s.data_len)
+            BX_DEBUG(("data in %d/%d/%d", len, s.data_len, s.scsi_len));
+            if (len > s.data_len)
               len = s.data_len;
             s.usb_buf = data;
             s.usb_len = len;
+            len = 0;
             while (s.usb_len && s.scsi_len) {
-              copy_data();
+              len += copy_data();
             }
             if (s.residue && s.usb_len) {
               s.data_len -= s.usb_len;
-              memset(s.usb_buf, 0, s.usb_len);
-              if (s.data_len == 0)
+              if ((s.data_len == 0) || (len <= s.usb_len))
                 s.mode = USB_MSDM_CSW;
               s.usb_len = 0;
             }
@@ -1178,9 +1181,9 @@ int usb_msd_device_c::handle_data(USBPacket *p)
   return ret;
 }
 
-void usb_msd_device_c::copy_data()
+int usb_msd_device_c::copy_data()
 {
-  Bit32u len = s.usb_len;
+  int len = s.usb_len;
   if (len > s.scsi_len)
     len = s.scsi_len;
   if (s.mode == USB_MSDM_DATAIN) {
@@ -1200,6 +1203,7 @@ void usb_msd_device_c::copy_data()
       s.scsi_dev->scsi_write_data(s.tag);
     }
   }
+  return len;
 }
 
 void usb_msd_device_c::send_status(USBPacket *p)
@@ -1234,7 +1238,7 @@ void usb_msd_device_c::command_complete(int reason, Bit32u tag, Bit32u arg)
     if (reason == SCSI_REASON_DONE) {
       BX_DEBUG(("command complete %d", arg));
       s.residue = s.data_len;
-      s.result = arg != 0;
+      s.result = arg != 0;  // result = 0 = good return, else = 1 = Command Failed
       if (s.packet) {
         if ((s.data_len == 0) && (s.mode == USB_MSDM_DATAOUT)) {
           send_status(p);
@@ -1245,8 +1249,6 @@ void usb_msd_device_c::command_complete(int reason, Bit32u tag, Bit32u arg)
         } else {
           if (s.data_len) {
             s.data_len -= s.usb_len;
-            if (s.mode == USB_MSDM_DATAIN)
-              memset(s.usb_buf, 0, s.usb_len);
             s.usb_len = 0;
           }
           if (s.data_len == 0)

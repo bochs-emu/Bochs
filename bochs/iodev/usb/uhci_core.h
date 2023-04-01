@@ -198,7 +198,7 @@ public:
   virtual void set_port_device(int port, usb_device_c *dev);
   virtual void pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 
-  void event_handler(int event, USBPacket *packet, int port);
+  int event_handler(int event, void *ptr, int port);
 
 protected:
   bx_uhci_core_t hub;

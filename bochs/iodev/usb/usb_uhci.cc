@@ -214,11 +214,13 @@ void bx_usb_uhci_c::after_restore_state()
   bx_uhci_core_c::after_restore_state();
 }
 
+int uhci_event_handler(int event, void *ptr, void *dev, int port);
+
 void bx_usb_uhci_c::init_device(Bit8u port, bx_list_c *portconf)
 {
   char pname[BX_PATHNAME_LEN];
 
-  if (DEV_usb_init_device(portconf, BX_UHCI_THIS_PTR, &BX_UHCI_THIS hub.usb_port[port].device)) {
+  if (DEV_usb_init_device(portconf, BX_UHCI_THIS_PTR, &BX_UHCI_THIS hub.usb_port[port].device, uhci_event_handler, port)) {
     if (set_connect_status(port, 1)) {
       portconf->get_by_name("options")->set_enabled(0);
       sprintf(pname, "usb_uhci.hub.port%d.device", port+1);

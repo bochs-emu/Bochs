@@ -498,11 +498,13 @@ void bx_usb_ohci_c::after_restore_state(void)
   }
 }
 
+int ohci_event_handler(int event, void *ptr, void *dev, int port);
+
 void bx_usb_ohci_c::init_device(Bit8u port, bx_list_c *portconf)
 {
   char pname[BX_PATHNAME_LEN];
 
-  if (DEV_usb_init_device(portconf, BX_OHCI_THIS_PTR, &BX_OHCI_THIS hub.usb_port[port].device)) {
+  if (DEV_usb_init_device(portconf, BX_OHCI_THIS_PTR, &BX_OHCI_THIS hub.usb_port[port].device, ohci_event_handler, port)) {
     if (set_connect_status(port, 1)) {
       portconf->get_by_name("options")->set_enabled(0);
       sprintf(pname, "usb_ohci.hub.port%d.device", port+1);
@@ -1195,36 +1197,55 @@ bool bx_usb_ohci_c::process_ed(struct OHCI_ED *ed, const Bit32u ed_address)
   return ret;
 }
 
-void ohci_event_handler(int event, USBPacket *packet, void *dev, int port)
+int ohci_event_handler(int event, void *ptr, void *dev, int port)
 {
   if (dev != NULL) {
-    ((bx_usb_ohci_c *) dev)->event_handler(event, packet, port);
+    return ((bx_usb_ohci_c *) dev)->event_handler(event, ptr, port);
   }
+  return -1;
 }
 
-void bx_usb_ohci_c::event_handler(int event, USBPacket *packet, int port)
+int bx_usb_ohci_c::event_handler(int event, void *ptr, int port)
 {
   Bit32u intr = 0;
+  int ret = 0;
+  USBAsync *p;
 
-  if (event == USB_EVENT_ASYNC) {
-    BX_DEBUG(("Async packet completion"));
-    USBAsync *p = container_of_usb_packet(packet);
-    p->done = 1;
-    BX_OHCI_THIS process_lists();
-  } else if (event == USB_EVENT_WAKEUP) {
-    if (BX_OHCI_THIS hub.usb_port[port].HcRhPortStatus.pss) {
-      BX_OHCI_THIS hub.usb_port[port].HcRhPortStatus.pss = 0;
-      BX_OHCI_THIS hub.usb_port[port].HcRhPortStatus.pssc = 1;
-      intr = OHCI_INTR_RHSC;
-    }
-    if (BX_OHCI_THIS hub.op_regs.HcControl.hcfs == OHCI_USB_SUSPEND) {
-      BX_OHCI_THIS hub.op_regs.HcControl.hcfs = OHCI_USB_RESUME;
-      intr = OHCI_INTR_RD;
-    }
-    set_interrupt(intr);
-  } else {
-    BX_ERROR(("unknown/unsupported event (id=%d) on port #%d", event, port+1));
+  switch (event) {
+    // packet events start here
+    case USB_EVENT_ASYNC:
+      BX_DEBUG(("Async packet completion"));
+      p = container_of_usb_packet(ptr);
+      p->done = 1;
+      BX_OHCI_THIS process_lists();
+      break;
+    case USB_EVENT_WAKEUP:
+      if (BX_OHCI_THIS hub.usb_port[port].HcRhPortStatus.pss) {
+        BX_OHCI_THIS hub.usb_port[port].HcRhPortStatus.pss = 0;
+        BX_OHCI_THIS hub.usb_port[port].HcRhPortStatus.pssc = 1;
+        intr = OHCI_INTR_RHSC;
+      }
+      if (BX_OHCI_THIS hub.op_regs.HcControl.hcfs == OHCI_USB_SUSPEND) {
+        BX_OHCI_THIS hub.op_regs.HcControl.hcfs = OHCI_USB_RESUME;
+        intr = OHCI_INTR_RD;
+      }
+      set_interrupt(intr);
+      break;
+
+    // host controller events start here
+    case USB_EVENT_CHECK_SPEED:
+      if (ptr != NULL) {
+        usb_device_c *usb_device = (usb_device_c *) ptr;
+        if (usb_device->get_speed() <= USB_SPEED_FULL)
+          ret = 1;
+      }
+      break;
+    default:
+      BX_ERROR(("unknown/unsupported event (id=%d) on port #%d", event, port+1));
+      ret = -1; // unknown event, event not handled
   }
+
+  return ret;
 }
 
 bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
@@ -1508,7 +1529,6 @@ bool bx_usb_ohci_c::set_connect_status(Bit8u port, bool connected)
           BX_INFO(("port #%d: connect: %s", port+1, device->get_info()));
         }
       }
-      device->set_event_handler(BX_OHCI_THIS_PTR, ohci_event_handler, port);
     } else { // not connected
       BX_INFO(("port #%d: device disconnect", port+1));
       BX_OHCI_THIS hub.usb_port[port].HcRhPortStatus.ccs = 0;

@@ -53,6 +53,7 @@
 #define USB_RET_IOERROR (-5)
 #define USB_RET_ASYNC   (-6)
 
+// these must remain in this order, 0 -> 3
 #define USB_SPEED_LOW   0
 #define USB_SPEED_FULL  1
 #define USB_SPEED_HIGH  2
@@ -137,14 +138,17 @@
 
 typedef struct USBPacket USBPacket;
 
-#define USB_EVENT_WAKEUP 0
-#define USB_EVENT_ASYNC  1
+// packet events
+#define USB_EVENT_WAKEUP        0
+#define USB_EVENT_ASYNC         1
+// controller events
+#define USB_EVENT_CHECK_SPEED  10
 
 // set this to 1 to monitor the TD's toggle bit
 // setting to 0 will speed up the emualtion slightly
 #define HANDLE_TOGGLE_CONTROL 1
 
-typedef void USBCallback(int event, USBPacket *packet, void *dev, int port);
+typedef int USBCallback(int event, void *ptr, void *dev, int port);
 
 class usb_device_c;
 
@@ -193,7 +197,7 @@ public:
   void exit(void);
   const char **get_device_names(void);
   void list_devices(void);
-  virtual bool init_device(bx_list_c *portconf, logfunctions *hub, void **dev);
+  virtual bool init_device(bx_list_c *portconf, logfunctions *hub, void **dev, USBCallback *cb, int port);
 private:
   void parse_port_options(usb_device_c *dev, bx_list_c *portconf);
 };
@@ -232,6 +236,7 @@ public:
       return 0;
     }
   }
+  int get_min_speed() { return d.minspeed; }
   
   // return information for the specified ep of the current device
 #define USB_MAX_ENDPOINTS   5   // we currently don't use more than 5 endpoints (ep0, ep1, ep2, ep3, and ep4)
@@ -269,8 +274,15 @@ public:
   }
   void set_debug_mode();
   void set_pcap_mode(const char *pcap_name);
-
+  
   void usb_send_msg(int msg);
+
+  // manually invoke a HC event
+  int hc_event(int event, usb_device_c *device) {
+    if (d.event.cb != NULL)
+      return d.event.cb(event, device, d.event.dev, d.event.port);
+    return -1;
+  }
 
 protected:
   struct {
@@ -352,7 +364,7 @@ static BX_CPP_INLINE void usb_cancel_packet(USBPacket *p)
 
 static BX_CPP_INLINE void usb_packet_complete(USBPacket *p)
 {
-    p->complete_cb(USB_EVENT_ASYNC, p, p->complete_dev, 0);
+  p->complete_cb(USB_EVENT_ASYNC, p, p->complete_dev, 0);
 }
 
 // Async packet support

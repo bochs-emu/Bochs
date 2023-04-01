@@ -592,11 +592,13 @@ int usb_hub_device_c::handle_packet(USBPacket *p)
   return usb_device_c::handle_packet(p);
 }
 
+int hub_event_handler(int event, void *ptr, void *dev, int port);
+
 void usb_hub_device_c::init_device(Bit8u port, bx_list_c *portconf)
 {
   char pname[BX_PATHNAME_LEN];
 
-  if (DEV_usb_init_device(portconf, this, &hub.usb_port[port].device)) {
+  if (DEV_usb_init_device(portconf, this, &hub.usb_port[port].device, hub_event_handler, port)) {
     if (usb_set_connect_status(port, 1)) {
       portconf->get_by_name("options")->set_enabled(0);
       sprintf(pname, "port%d.device", port+1);
@@ -614,25 +616,43 @@ void usb_hub_device_c::remove_device(Bit8u port)
   }
 }
 
-void hub_event_handler(int event, USBPacket *packet, void *dev, int port)
+int hub_event_handler(int event, void *ptr, void *dev, int port)
 {
   if (dev != NULL) {
-    ((usb_hub_device_c *) dev)->event_handler(event, packet, port);
+    return ((usb_hub_device_c *) dev)->event_handler(event, ptr, port);
   }
+  return -1;
 }
 
-void usb_hub_device_c::event_handler(int event, USBPacket *packet, int port)
+int usb_hub_device_c::event_handler(int event, void *ptr, int port)
 {
-  if (event == USB_EVENT_WAKEUP) {
-    if (hub.usb_port[port].PortStatus & PORT_STAT_SUSPEND) {
-      hub.usb_port[port].PortChange |= PORT_STAT_C_SUSPEND;
-    }
-    if (d.event.dev != NULL) {
-      d.event.cb(USB_EVENT_WAKEUP, NULL, d.event.dev, d.event.port);
-    }
-  } else {
-    BX_ERROR(("unknown/unsupported event (id=%d) on port #%d", event, port+1));
+  int ret = 0;
+
+  switch (event) {
+    // packet events start here
+    case USB_EVENT_WAKEUP:
+      if (hub.usb_port[port].PortStatus & PORT_STAT_SUSPEND) {
+        hub.usb_port[port].PortChange |= PORT_STAT_C_SUSPEND;
+      }
+      if (d.event.dev != NULL) {
+        d.event.cb(USB_EVENT_WAKEUP, NULL, d.event.dev, d.event.port);
+      }
+      break;
+
+    // host controller events start here
+    case USB_EVENT_CHECK_SPEED:
+      if (ptr != NULL) {
+        usb_device_c *usb_device = (usb_device_c *) ptr;
+        if (usb_device->get_speed() <= d.speed)
+          ret = 1;
+      }
+      break;
+    default:
+      BX_ERROR(("unknown/unsupported event (id=%d) on port #%d", event, port+1));
+      ret = -1; // unknown event, event not handled
   }
+  
+  return ret;
 }
 
 bool usb_hub_device_c::usb_set_connect_status(Bit8u port, bool connected)
@@ -675,7 +695,6 @@ bool usb_hub_device_c::usb_set_connect_status(Bit8u port, bool connected)
           BX_INFO(("hub #%d, port #%d: connect: %s", hubnum, port+1, device->get_info()));
         }
       }
-      device->set_event_handler(this, hub_event_handler, port);
     } else {
       BX_INFO(("hub #%d, port #%d: device disconnect", hubnum, port+1));
       if (d.event.dev != NULL) {

@@ -344,6 +344,7 @@ enum { PLS_U0 = 0, PLS_U1, PLS_U2, PLS_U3_SUSPENDED, PLS_DISABLED, PLS_RXDETECT,
 #define TRB_GET_TARGET(x)    (((x) & (0x3FF << 22)) >> 22)
 #define TRB_GET_TX_LEN(x)     ((x) & 0x1FFFF)
 #define TRB_GET_TOGGLE(x)    (((x) & (1<<1)) >> 1)
+#define TRB_GET_STREAM(x)    (((x) & (0xFFFF << 16)) >> 16)
 
 #define TRB_DC(x)            (((x) & (1<<9)) >> 9)
 #define TRB_IS_IMMED_DATA(x) (((x) & (1<<6)) >> 6)
@@ -600,7 +601,7 @@ public:
 
   virtual void pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 
-  void event_handler(int event, USBPacket *packet, int port);
+  int event_handler(int event, void *ptr, int port);
 
 private:
   bx_usb_xhci_t hub;
