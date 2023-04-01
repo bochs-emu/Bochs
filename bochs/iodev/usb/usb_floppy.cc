@@ -80,7 +80,7 @@ protected:
 /* A well known, somewhat older, but still widely used Operating System
  *  must have the Vendor ID as the TEAC external drive emulated below.  If
  *  the VendorID is not the TEAC id, this operating system doesn't know what
- *  to do with the drive.  Go figure.  Therefore, use the optionsX="model=teac"
+ *  to do with the drive.  Go figure.  Therefore, use the optionsX="model:teac"
  *  options in the bochsrc.txt file to set this model.  If you do not, a
  *  default model will be used.
  */
@@ -447,7 +447,7 @@ bool usb_floppy_device_c::init()
    *  in the configuration, simply uncomment this line.  I use
    *  it when I am working on this emulation.
    */
-  //LOG_THIS setonoff(LOGLEV_DEBUG, ACT_REPORT);
+//  LOG_THIS setonoff(LOGLEV_DEBUG, ACT_REPORT);
 
   // set the model information
   //  s.model == 1 if use teac model, else use bochs model
@@ -472,8 +472,10 @@ bool usb_floppy_device_c::init()
   d.connected = 1;
   d.alt_iface_max = 0;
 
+#if UFI_DO_INQUIRY_HACK
   s.did_inquiry_fail = 0;
   s.fail_count = 0;
+#endif
   s.status_changed = 0;
 
   return 1;
@@ -504,8 +506,10 @@ void usb_floppy_device_c::register_state_specific(bx_list_c *parent)
   BXRS_DEC_PARAM_FIELD(list, cur_track, s.cur_track);
   BXRS_DEC_PARAM_FIELD(list, sense, s.sense);
   BXRS_DEC_PARAM_FIELD(list, asc, s.asc);
+#if UFI_DO_INQUIRY_HACK
   BXRS_DEC_PARAM_FIELD(list, fail_count, s.fail_count);
   BXRS_PARAM_BOOL(list, did_inquiry_fail, s.did_inquiry_fail);
+#endif
   BXRS_PARAM_BOOL(list, seek_pending, s.seek_pending);
   BXRS_PARAM_SPECIAL32(list, usb_buf, param_save_handler, param_restore_handler);
   new bx_shadow_data_c(list, "dev_buffer", s.dev_buffer, USB_FLOPPY_MAX_SECTORS * 512);
@@ -641,6 +645,7 @@ bool usb_floppy_device_c::handle_command(Bit8u *command)
     return 0;
   }
 
+#if UFI_DO_INQUIRY_HACK
   // to be consistant with real hardware, we need to fail with
   //  a STALL twice for any command after the first Inquiry except
   //  for the inquiry and request_sense commands.
@@ -651,6 +656,7 @@ bool usb_floppy_device_c::handle_command(Bit8u *command)
     s.fail_count--;
     return 0;
   }
+#endif
 
   if (s.cur_command != UFI_REQUEST_SENSE) {
     s.sense = 0;
@@ -670,10 +676,12 @@ bool usb_floppy_device_c::handle_command(Bit8u *command)
       s.data_len = command[4];
       if (s.data_len > s.usb_len)
         s.data_len = s.usb_len;
+#if UFI_DO_INQUIRY_HACK
       if (s.did_inquiry_fail == 0) {
         s.fail_count = 2;
         s.did_inquiry_fail = 1;
       }
+#endif
       break;
 
     case UFI_READ_FORMAT_CAPACITIES:

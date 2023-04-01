@@ -54,8 +54,9 @@ typedef struct UASPRequest {
   Bit8u *scsi_buf;    // 
   Bit32u usb_len;     //
   Bit8u *usb_buf;     // 
-  int result;         //
+  Bit32u result;      //
   Bit32u tag;         // tag number from command ui
+  Bit8u  lun;         // lun of drive of current request
   USBPacket *p;       //
   USBPacket *status;  //
 } UASPRequest;
@@ -82,7 +83,7 @@ public:
   bool get_locked();
 
 protected:
-  void copy_data();
+  int copy_data();
   void send_status(USBPacket *p);
   static void usb_msd_command_complete(void *this_ptr, int reason, Bit32u tag, Bit32u arg);
   void command_complete(int reason, Bit32u tag, Bit32u arg);
@@ -106,10 +107,10 @@ private:
     bool status_changed;
     // members handled by save/restore
     Bit8u mode;
-    Bit32u scsi_len;
-    Bit32u usb_len;
-    Bit32u data_len;
-    Bit32u residue;
+    int scsi_len;
+    int usb_len;
+    int data_len;
+    int residue;
     Bit32u tag;
     int result;
     // members not handled by save/restore
@@ -117,17 +118,17 @@ private:
     Bit8u *usb_buf;
     USBPacket *packet;
     // UASP (w/streams)
-    UASPRequest uasp_request[UASP_MAX_STREAMS_N];
+    UASPRequest uasp_request[UASP_MAX_STREAMS_N + 1]; // + 1 for internal calls
   } s;
 
   static const char *cdrom_path_handler(bx_param_string_c *param, bool set,
                                         const char *oldval, const char *val, int maxlen);
   static Bit64s cdrom_status_handler(bx_param_c *param, bool set, Bit64s val);
 
-public:
+protected:
   int uasp_handle_data(USBPacket *p);
   void uasp_initialize_request(int tag);
-  UASPRequest *uasp_find_request(Bit32u tag);
+  UASPRequest *uasp_find_request(Bit32u tag, Bit8u lun);
   Bit32u get_data_len(const struct S_UASP_INPUT *input, Bit8u *buf);
   const struct S_UASP_INPUT *uasp_get_info(Bit8u command, Bit8u serv_action);
   int uasp_do_stall(UASPRequest *req);
@@ -136,6 +137,7 @@ public:
   int uasp_do_data(UASPRequest *req, USBPacket *p);
   int uasp_do_ready(UASPRequest *req, USBPacket *p);
   int uasp_do_status(UASPRequest *req, USBPacket *p);
+  int uasp_do_response(UASPRequest *req, USBPacket *p);
   void uasp_copy_data(UASPRequest *req);
   void uasp_command_complete(int reason, Bit32u tag, Bit32u arg);
 };

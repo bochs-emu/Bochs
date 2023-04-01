@@ -45,6 +45,8 @@
 #define UFI_READ_12                     0xA8
 #define UFI_WRITE_12                    0xAA
 
+#define UFI_DO_INQUIRY_HACK  1
+
 class device_image_t;
 
 class usb_floppy_device_c : public usb_device_c {
@@ -90,8 +92,10 @@ private:
     Bit8u cur_track;
     int sense;
     int asc;
+#if UFI_DO_INQUIRY_HACK
     int fail_count;
     bool did_inquiry_fail;
+#endif
     bool seek_pending;
     Bit8u *usb_buf;
     Bit8u *dev_buffer;

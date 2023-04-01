@@ -259,7 +259,7 @@ public:
 
   virtual void pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 
-  void event_handler(int event, USBPacket *packet, int port);
+  int event_handler(int event, void *ptr, int port);
 
 private:
 
