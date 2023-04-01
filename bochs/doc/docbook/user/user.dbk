@@ -6294,6 +6294,9 @@ usb_ohci: enabled=1, port1=mouse, options1="speed:full"
 usb_ehci: enabled=1, port1=mouse, options1="speed:high"
 usb_xhci: enabled=3, port3=mouse, options1="speed:full"
 </screen>
+<note><para>
+Please note that most physical USB mice will be 'low-speed' only.
+</para></note>
 </para>
 </section>
 
@@ -6311,6 +6314,9 @@ usb_ohci: enabled=1, port1=keyboard, options1="speed:full"
 usb_ehci: enabled=1, port1=keyboard, options1="speed:high"
 usb_xhci: enabled=3, port3=keyboard, options1="speed:full"
 </screen>
+<note><para>
+Please note that most physical USB keyboards will be 'low-speed' only.
+</para></note>
 </para>
 </section>
 
@@ -6328,6 +6334,9 @@ usb_ohci: enabled=1, port1=keypad, options1="speed:full"
 usb_ehci: enabled=1, port1=keypad, options1="speed:high"
 usb_xhci: enabled=3, port3=keypad, options1="speed:full"
 </screen>
+<note><para>
+Please note that most physical USB keypads will be 'low-speed' only.
+</para></note>
 </para>
 </section>
 
@@ -6354,6 +6363,9 @@ usb_ohci: enabled=1, port1=tablet, options1="speed:full"
 usb_ehci: enabled=1, port1=tablet, options1="speed:high"
 usb_xhci: enabled=3, port3=tablet, options1="speed:full"
 </screen>
+<note><para>
+Please note that most physical USB tablets will be 'low-speed' only.
+</para></note>
 </para>
 </section>
 
@@ -6391,6 +6403,9 @@ the 'path' accordingly.
 Specifying 'proto:uasp' does not guarantee that the Guest will use that protocol.
 See a <link linkend="bochsopt-usb-uhci">previous section</link> for more information.
 </para></note>
+<note><para>
+Please note that this device is not allowed as a low-speed only device. Low-speed should be specified.
+</para></note>
 </para>
 </section>
 
@@ -6416,6 +6431,9 @@ usb_uhci: enabled=1, port1=floppy, options1="speed:full, path:<emphasis>mode</em
 The 'model:teac' option can be used to emulate that specific model, else a default
 model will be used. If a guest does not see the attached floppy, try specifying the 'teac'
 model.
+<note><para>
+Please note that this device is a full-speed only device. No other speed should be specified.
+</para></note>
 </para>
 </section>
 
@@ -6432,6 +6450,9 @@ usb_ohci: enabled=1, port1=printer, options1="speed:full, file:printdata.bin"
 usb_ehci: enabled=1, port1=printer, options1="speed:full, file:printdata.bin"
 usb_xhci: enabled=1, port3=printer, options3="speed:full, file:printdata.bin"
 </screen>
+<note><para>
+Please note that this device is a full-speed only device. No other speed should be specified.
+</para></note>
 </para>
 </section>
 
@@ -6450,6 +6471,13 @@ usb_xhci: enabled=1, port1=hub, options1="speed:full, ports:8"
 </screen>
 At startup, no device is attached to this hub. However, after start up, using the 
 runtime interface, a device can be attached to any or all of the ports.
+</para>
+<para>
+Any device attached to this hub (via the runtime interface), must be the same as or less than the hub's current speed (which is currently only full-speed). Any device plugged into a hub, no matter its max speed, can only function at or below the speed of the hub it is attached to.
+</para>
+<note><para>
+Please note that this device is a full-speed only device. No other speed should be specified.
+</para></note>
 </para>
 </section>
 
@@ -8163,7 +8191,7 @@ This is a Windows Dialog based utility, with source, and includes the following 
 </para></listitem>
 <listitem><para>
         Inserting, extracting, and deleting files from said file systems.
-        (some file system support is currently only read-only)
+        (some file system support is currently read-only)
 </para></listitem>
 <listitem><para>
         Checking the integrity of said file systems and other items.
@@ -10544,7 +10572,7 @@ issues are reported in the next sections.
 <listitem><para>
 First of all, you need the installation media or image (floppy/CD/DVD).
 For platforms that don't support raw device access it might be necessary to
-create an image from the media. You must read the message regarding software
+create an image from the media. Please read the message regarding software
 licenses in <xref linkend="thirdparty"> before you install or use a commercial
 guest operating system in Bochs.
 </para></listitem>
@@ -10761,7 +10789,7 @@ Known problems
 </section>
 
  <section id="guest-dos"><title>DOS</title>
-<para>You must read the message regarding software licenses in
+<para>Please read the message regarding software licenses in
 <xref linkend="thirdparty"> before you install or use MS-DOS, DR-DOS, FreeDOS or
 any other DOS as a guest operating system in Bochs.</para>
 <section><title>Accessing your CD-ROM</title>
@@ -10829,10 +10857,52 @@ hard disk instead of the floppy.
 </section>
 </section>
 
+<section id="guest-win95">
+        <title>Windows 95</title>
+<para>Contributed by Benjamin David Lunt</para>
+<para>Please read the message regarding software licenses in <xref linkend="thirdparty"> before you install Windows 95 as a guest operating system in Bochs.</para>
+<para>
+Windows 95 has been reported to install from the CD-ROM, and run inside Bochs.
+Here are a few settings that seem to work well when running on a Windows10 host, running at 3.0Ghz.
+<screen>
+romimage: file=D:/path/to/your/bios/BIOS-bochs-latest
+cpu: model=broadwell_ult
+cpu: count=1, ips=50000000, reset_on_triple_fault=1, ignore_bad_msrs=1
+cpu: cpuid_limit_winnt=0
+clock: sync=realtime, time0=local
+memory: guest=512, host=512
+vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl-latest-cirrus
+vga: extension=cirrus, update_freq=5
+pci: enabled=1, chipset=i440fx, slot1=cirrus
+</screen>
+</para>
+</section>
+
+<section id="guest-win98">
+        <title>Windows 98SE</title>
+<para>Contributed by Benjamin David Lunt</para>
+<para>Please read the message regarding software licenses in <xref linkend="thirdparty"> before you install Windows 98 as a guest operating system in Bochs.</para>
+<para>
+Windows 98SE has been reported to install from the CD-ROM, and run inside Bochs.
+Here are a few settings that seem to work well when running on a Windows10 host, running at 3.0Ghz.
+<screen>
+romimage: file=D:/path/to/your/bios/BIOS-bochs-latest
+cpu: model=corei7_haswell_4770
+cpu: count=1, ips=55000000, reset_on_triple_fault=1, ignore_bad_msrs=1
+cpu: cpuid_limit_winnt=0
+clock: sync=realtime, time0=local
+memory: guest=512, host=512
+vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl-latest-cirrus
+vga: extension=cirrus, update_freq=5
+pci: enabled=1, chipset=i440fx, slot1=cirrus
+</screen>
+</para>
+</section>
+
 <section id="guest-winnt4">
         <title>Windows NT 4.0</title>
 <para>
-You must read the message regarding software licenses in
+Please read the message regarding software licenses in
 <xref linkend="thirdparty"> before you install Windows NT 4.0 as a guest operating system in Bochs.
 </para>
 <para>
@@ -10872,7 +10942,7 @@ cpuid: cpuid_limit_winnt=1
 
 <section id="guest-win2k">
         <title>Windows 2000 / Windows 2000 Server</title>
-<para>You must read the message regarding software licenses in
+<para>Please read the message regarding software licenses in
 <xref linkend="thirdparty"> before you install Windows 2000 / Windows 2000 Server as a guest operating system in Bochs.</para>
         <para>
         </para>
@@ -10880,20 +10950,112 @@ cpuid: cpuid_limit_winnt=1
 
 <section id="guest-winxp">
         <title>Windows XP</title>
-<para>You must read the message regarding software licenses in
+<para>Contributed by Benjamin David Lunt</para>
+<para>Please read the message regarding software licenses in
 <xref linkend="thirdparty"> before you install Windows XP as a guest operating system in Bochs.</para>
-        <para>
-        Windows XP has been reported to install from the CD-ROM, and run inside Bochs.
-        The only known issue is to set the IPS to, at least, a value of 10000000.
-        </para>
+<para>
+Windows XP has been reported to install from the CD-ROM, and run inside Bochs.
+Here are a few settings that seem to work well when running on a Windows10 host, running at 3.0Ghz.
+<screen>
+romimage: file=D:/path/to/your/bios/BIOS-bochs-latest
+cpu: model=broadwell_ult
+cpu: count=1, ips=75000000, reset_on_triple_fault=1, ignore_bad_msrs=1
+cpu: cpuid_limit_winnt=0
+clock: sync=realtime, time0=local
+memory: guest=512, host=512
+vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl-latest-cirrus
+vga: extension=cirrus, update_freq=5
+pci: enabled=1, chipset=i440fx, slot1=cirrus
+</screen>
+A known issue is to set the IPS value to less than 10,000,000 (minus the commas). WinXP doesn't
+run well at an IPS setting less than 10Mips.
+</para>
+<para>
+Also don't set it to more than 250,000,000. Anything faster and WinXP seems to stall within the CPU loop function. WinXP seems to work well with an IPS setting of 75,000,000 on a 3.0Ghz host.
+</para>
+<para>
+The 64-bit version of WinXP needs Bochs compiled with ACPI support even though you only set to one CPU.
+</para>
+<para>
+For some reason, writing to a USB disk in WinXP, where the write takes a little while, WinXP will think it is an error since it didn't complete fast enough, displaying the error.  I don't know why.
+</para>
 </section>
 
 <section id="guest-win7">
         <title>Windows 7</title>
-<para>You must read the message regarding software licenses in
+<para>Contributed by Benjamin David Lunt</para>
+<para>Please read the message regarding software licenses in
 <xref linkend="thirdparty"> before you install Windows 7 as a guest operating system in Bochs.</para>
-        <para>
-        </para>
+Windows 7 has been reported to install from the CD-ROM, and run inside Bochs.
+Here are a few settings that seem to work well when running on a Windows10 host, running at 3.0Ghz.
+<screen>
+romimage: file=D:/path/to/your/bios/BIOS-bochs-latest
+cpu: model=broadwell_ult
+cpu: count=1, ips=100000000, reset_on_triple_fault=1, ignore_bad_msrs=1
+cpu: cpuid_limit_winnt=0
+clock: sync=realtime, time0=local
+memory: guest=1024, host=1024
+vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl-latest-cirrus
+vga: extension=cirrus, update_freq=5
+pci: enabled=1, chipset=i440fx, slot1=cirrus
+</screen>
+</para>
+<para>
+Don't set it to more than 250,000,000. Anything faster and Win7 seems to be sluggish, but seems to work well with an IPS setting of 100,000,000 on a 3.0Ghz host.
+</para>
+</section>
+
+<section id="guest-win8">
+        <title>Windows 8</title>
+<para>Contributed by Benjamin David Lunt</para>
+<para>Please read the message regarding software licenses in
+<xref linkend="thirdparty"> before you install Windows 8 as a guest operating system in Bochs.</para>
+Windows 8 has been reported to install from the CD-ROM, and run inside Bochs.
+Here are a few settings that seem to work well when running on a Windows10 host, running at 3.0Ghz.
+<screen>
+romimage: file=D:/path/to/your/bios/BIOS-bochs-latest
+cpu: model=broadwell_ult
+cpu: count=1, ips=150000000, reset_on_triple_fault=1, ignore_bad_msrs=1
+cpu: cpuid_limit_winnt=0
+clock: sync=realtime, time0=local
+memory: guest=2048, host=2048
+vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl-latest-cirrus
+vga: extension=cirrus, update_freq=5
+pci: enabled=1, chipset=i440fx, slot1=cirrus
+</screen>
+</para>
+<para>
+Don't set it to more than 250,000,000. Anything faster and Win8 seems to be sluggish, but seems to work well with an IPS setting of 150,000,000 on a 3.0Ghz host.
+</para>
+</section>
+
+<section id="guest-win10">
+        <title>Windows 10</title>
+<para>Contributed by Benjamin David Lunt</para>
+<para>Please read the message regarding software licenses in
+<xref linkend="thirdparty"> before you install Windows 10 as a guest operating system in Bochs.</para>
+Windows 10 has been reported to install from the CD-ROM, and run inside Bochs, though a few hacks where used to do so. For more information, see <ulink url="https://sourceforge.net/p/bochs/discussion/39592/thread/4f526dc9/">this thread</ulink>.
+</para>
+<para>
+I used another emulator to successfully install Windows 10. Then using Bochs, after a considerable amount of time and a few reboots, I finally got Win10 to boot and load in Bochs.
+</para>
+<para>
+Here are the settings I used when running on a Windows10 host, running at 3.0Ghz.
+<screen>
+romimage: file=D:/path/to/your/bios/BIOS-bochs-latest
+cpu: model=corei7_sandy_bridge_2600k
+cpu: count=1, ips=325000000, reset_on_triple_fault=1, ignore_bad_msrs=1
+cpu: cpuid_limit_winnt=0
+clock: sync=realtime, time0=local
+memory: guest=2048, host=2048
+vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl-latest-cirrus
+vga: extension=cirrus, update_freq=5
+pci: enabled=1, chipset=i440fx, slot1=cirrus
+</screen>
+</para>
+<note><para>
+If you use an IPS value less than 325,000,000, Win10 will BSOD and want you to reboot (Assuming a host at 3.0Ghz).
+</para></note>
 </section>
 
 <section id="guest-osr5">
@@ -10903,7 +11065,7 @@ Contributed by Carl Sopchak
 </para>
 
 <para>
-You must read the message regarding software licenses in
+Please read the message regarding software licenses in
 <xref linkend="thirdparty"> before you install SCO OpenServer 5.0.5 as a guest operating system in Bochs.
 </para>
 
