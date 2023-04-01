@@ -155,7 +155,13 @@ bool bx_usbdev_ctl_c::init_device(bx_list_c *portconf, logfunctions *hub, void *
   return (*device != NULL);
 }
 
-extern const char *usb_speed[4];
+// these must match USB_SPEED_*
+static const char *usb_speed[4] = {
+  "low",     // USB_SPEED_LOW   = 0
+  "full",    // USB_SPEED_FULL  = 1
+  "high",    // USB_SPEED_HIGH  = 2
+  "super"    // USB_SPEED_SUPER = 3
+};
 
 void bx_usbdev_ctl_c::parse_port_options(usb_device_c *device, bx_list_c *portconf)
 {
