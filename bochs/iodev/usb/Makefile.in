@@ -50,9 +50,9 @@ top_builddir    = ../..
 LIBTOOL=@LIBTOOL@
 WIN32_DLL_IMPORT_LIBRARY=../../@WIN32_DLL_IMPORT_LIB@
 
-USBDEV_OBJS = usb_hid.o usb_hub.o usb_msd.o usb_uasp.o usb_printer.o usb_floppy.o
+USBDEV_OBJS = usb_hid.o usb_hub.o usb_msd.o usb_printer.o usb_floppy.o
 UHCICORE_OBJ = uhci_core.o
-SCSI_OBJS = scsi_device.o
+SCSI_OBJS = scsi_device.o usb_uasp.o
 
 BX_INCDIRS = -I.. -I../.. -I$(srcdir)/.. -I$(srcdir)/../.. -I../../@INSTRUMENT_DIR@ -I$(srcdir)/../../@INSTRUMENT_DIR@
 LOCAL_CXXFLAGS = $(MCH_CFLAGS)
@@ -72,7 +72,7 @@ OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
 NONPLUGIN_OBJS = @IODEV_EXT_NON_PLUGIN_OBJS@
 PLUGIN_OBJS = @IODEV_EXT_PLUGIN_OBJS@
 USBHC_DLL_TARGETS = @USBHC_DLL_TARGETS@
-USBDEV_DLL_TARGETS = bx_usb_hid.dll bx_usb_hub.dll bx_usb_msd.dll bx_usb_uasp.dll bx_usb_printer.dll bx_usb_floppy.dll
+USBDEV_DLL_TARGETS = bx_usb_hid.dll bx_usb_hub.dll bx_usb_msd.dll bx_usb_printer.dll bx_usb_floppy.dll
 
 all: libusb.a
 
