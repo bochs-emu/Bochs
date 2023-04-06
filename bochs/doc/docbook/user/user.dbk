@@ -6478,7 +6478,6 @@ Any device attached to this hub (via the runtime interface), must be the same as
 <note><para>
 Please note that this device is a full-speed only device. No other speed should be specified.
 </para></note>
-</para>
 </section>
 
 <section><title>Packet Capture</title>
@@ -10986,7 +10985,7 @@ For some reason, writing to a USB disk in WinXP, where the write takes a little 
 <para>Contributed by Benjamin David Lunt</para>
 <para>Please read the message regarding software licenses in
 <xref linkend="thirdparty"> before you install Windows 7 as a guest operating system in Bochs.</para>
-Windows 7 has been reported to install from the CD-ROM, and run inside Bochs.
+<para>Windows 7 has been reported to install from the CD-ROM, and run inside Bochs.
 Here are a few settings that seem to work well when running on a Windows10 host, running at 3.0Ghz.
 <screen>
 romimage: file=D:/path/to/your/bios/BIOS-bochs-latest
@@ -11010,7 +11009,7 @@ Don't set it to more than 250,000,000. Anything faster and Win7 seems to be slug
 <para>Contributed by Benjamin David Lunt</para>
 <para>Please read the message regarding software licenses in
 <xref linkend="thirdparty"> before you install Windows 8 as a guest operating system in Bochs.</para>
-Windows 8 has been reported to install from the CD-ROM, and run inside Bochs.
+<para>Windows 8 has been reported to install from the CD-ROM, and run inside Bochs.
 Here are a few settings that seem to work well when running on a Windows10 host, running at 3.0Ghz.
 <screen>
 romimage: file=D:/path/to/your/bios/BIOS-bochs-latest
@@ -11034,7 +11033,7 @@ Don't set it to more than 250,000,000. Anything faster and Win8 seems to be slug
 <para>Contributed by Benjamin David Lunt</para>
 <para>Please read the message regarding software licenses in
 <xref linkend="thirdparty"> before you install Windows 10 as a guest operating system in Bochs.</para>
-Windows 10 has been reported to install from the CD-ROM, and run inside Bochs, though a few hacks where used to do so. For more information, see <ulink url="https://sourceforge.net/p/bochs/discussion/39592/thread/4f526dc9/">this thread</ulink>.
+<para>Windows 10 has been reported to install from the CD-ROM, and run inside Bochs, though a few hacks where used to do so. For more information, see <ulink url="https://sourceforge.net/p/bochs/discussion/39592/thread/4f526dc9/">this thread</ulink>.
 </para>
 <para>
 I used another emulator to successfully install Windows 10. Then using Bochs, after a considerable amount of time and a few reboots, I finally got Win10 to boot and load in Bochs.
