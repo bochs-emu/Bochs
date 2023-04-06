@@ -2470,7 +2470,7 @@ void bx_usb_xhci_c::process_command_ring(void)
   struct TRB trb;
   unsigned i, j;
   int slot, ep, comp_code = 0, new_addr = 0, bsr = 0, trb_command;
-  Bit32u a_flags, d_flags;
+  Bit32u a_flags = 0, d_flags = 0;
   Bit64u org_addr, temp_addr;
   bool temp_dcs;
   Bit8u buffer[CONTEXT_SIZE + (32 * CONTEXT_SIZE)];
