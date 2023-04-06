@@ -251,10 +251,9 @@ void bx_usb_uhci_c::runtime_config_handler(void *this_ptr)
 
 void bx_usb_uhci_c::runtime_config(void)
 {
-  int i;
-  char pname[6];
+  char pname[8];
 
-  for (i = 0; i < USB_UHCI_PORTS; i++) {
+  for (int i = 0; i < USB_UHCI_PORTS; i++) {
     // device change support
     if ((BX_UHCI_THIS device_change & (1 << i)) != 0) {
       if (!BX_UHCI_THIS hub.usb_port[i].status) {
@@ -276,10 +275,8 @@ void bx_usb_uhci_c::runtime_config(void)
 // USB runtime parameter handler
 Bit64s bx_usb_uhci_c::usb_param_handler(bx_param_c *param, bool set, Bit64s val)
 {
-  int portnum;
-
   if (set) {
-    portnum = atoi((param->get_parent())->get_name() + 4) - 1;
+    int portnum = atoi((param->get_parent())->get_name() + 4) - 1;
     bool empty = (val == 0);
     if ((portnum >= 0) && (portnum < USB_UHCI_PORTS)) {
       if (empty && BX_UHCI_THIS hub.usb_port[portnum].status) {
@@ -300,10 +297,8 @@ Bit64s bx_usb_uhci_c::usb_param_handler(bx_param_c *param, bool set, Bit64s val)
 // USB runtime parameter handler: over-current
 Bit64s bx_usb_uhci_c::usb_param_oc_handler(bx_param_c *param, bool set, Bit64s val)
 {
-  int portnum;
-
   if (set && val) {
-    portnum = atoi((param->get_parent())->get_name()+4) - 1;
+    int portnum = atoi((param->get_parent())->get_name()+4) - 1;
     if ((portnum >= 0) && (portnum < USB_UHCI_PORTS)) {
       if (BX_UHCI_THIS hub.usb_port[portnum].status) {
         // The UHCI specification does not specify what happens when an over-current

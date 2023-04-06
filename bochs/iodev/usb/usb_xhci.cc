@@ -248,7 +248,7 @@ void bx_usb_xhci_c::init(void)
   unsigned i, j;
   char pname[6];
   Bit8u *p;
-  bx_list_c *xhci, *port;
+  bx_list_c *port;
   bx_param_enum_c *device;
   bx_param_string_c *options;
   bx_param_bool_c *over_current;
@@ -261,7 +261,7 @@ void bx_usb_xhci_c::init(void)
   //LOG_THIS setonoff(LOGLEV_DEBUG, ACT_REPORT);
 
   // Read in values from config interface
-  xhci = (bx_list_c *) SIM->get_param(BXPN_USB_XHCI);
+  bx_list_c *xhci = (bx_list_c *) SIM->get_param(BXPN_USB_XHCI);
   // Check if the device is disabled or not configured
   if (!SIM->get_param_bool("enabled", xhci)->get()) {
     BX_INFO(("USB xHCI disabled"));
@@ -425,8 +425,6 @@ void bx_usb_xhci_c::init(void)
 
 void bx_usb_xhci_c::reset(unsigned type)
 {
-  unsigned i;
-
   if (type == BX_RESET_HARDWARE) {
     static const struct reset_vals_t {
       unsigned      addr;
@@ -559,7 +557,7 @@ void bx_usb_xhci_c::reset(unsigned type)
       */
     };
 
-    for (i = 0; i < sizeof(reset_vals) / sizeof(*reset_vals); i++) {
+    for (unsigned i = 0; i < sizeof(reset_vals) / sizeof(*reset_vals); i++) {
         BX_XHCI_THIS pci_conf[reset_vals[i].addr] = reset_vals[i].val;
     }
   }
@@ -2048,7 +2046,8 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
   return 1;
 }
 
-void bx_usb_xhci_c::get_stream_info(struct STREAM_CONTEXT *context, const Bit64u address, const int index) {
+void bx_usb_xhci_c::get_stream_info(struct STREAM_CONTEXT *context, const Bit64u address, const int index)
+{
   struct STREAM_CONTEXT stream_context;
   Bit8u buffer[16];
 
@@ -2731,7 +2730,7 @@ void bx_usb_xhci_c::process_command_ring(void)
             for (i=2; i<32; i++) {
               if (a_flags & (1<<i)) {
                 copy_ep_from_buffer(&ep_context, &buffer[CONTEXT_SIZE + (CONTEXT_SIZE * i)]);
-                if (i > (int) slot_context.entries) {
+                if (i > slot_context.entries) {
                   comp_code = PARAMETER_ERROR;
                   break;  // no need to check the rest
                 }
@@ -3437,9 +3436,8 @@ int bx_usb_xhci_c::create_unique_address(const int slot)
 
 int bx_usb_xhci_c::send_set_address(const int addr, const int port_num, const int slot)
 {
-  int ret;
   USBPacket packet;
-  static Bit8u setup_address[8] = { 0, 0x05, 0, 0, 0, 0, 0 };
+  static Bit8u setup_address[8] = { 0, 0x05, 0, 0, 0, 0, 0, 0 };
 
   setup_address[2] = addr & 0xff;
   setup_address[3] = addr >> 8;
@@ -3455,7 +3453,7 @@ int bx_usb_xhci_c::send_set_address(const int addr, const int port_num, const in
   packet.data = setup_address;
   packet.complete_cb = NULL;
   packet.complete_dev = BX_XHCI_THIS_PTR;
-  ret = BX_XHCI_THIS broadcast_packet(&packet, port_num);
+  int ret = BX_XHCI_THIS broadcast_packet(&packet, port_num);
   if (ret == 0) {
     packet.pid = USB_TOKEN_IN;
     packet.len = 0;
@@ -3583,10 +3581,9 @@ void bx_usb_xhci_c::runtime_config_handler(void *this_ptr)
 
 void bx_usb_xhci_c::runtime_config(void)
 {
-  unsigned int i;
-  char pname[6];
+  char pname[8];
 
-  for (i = 0; i < BX_XHCI_THIS hub.n_ports; i++) {
+  for (unsigned i = 0; i < BX_XHCI_THIS hub.n_ports; i++) {
     // device change support
     if ((BX_XHCI_THIS device_change & (1 << i)) != 0) {
       if (!BX_XHCI_THIS hub.usb_port[i].portsc.ccs) {
@@ -3718,10 +3715,8 @@ bool bx_usb_xhci_c::set_connect_status(Bit8u port, bool connected)
 // USB runtime parameter handler
 Bit64s bx_usb_xhci_c::usb_param_handler(bx_param_c *param, bool set, Bit64s val)
 {
-  int portnum;
-
   if (set) {
-    portnum = atoi((param->get_parent())->get_name()+4) - 1;
+    int portnum = atoi((param->get_parent())->get_name()+4) - 1;
     bool empty = (val == 0);
     if ((portnum >= 0) && (portnum < (int) BX_XHCI_THIS hub.n_ports)) {
       if (empty && BX_XHCI_THIS hub.usb_port[portnum].portsc.ccs) {
@@ -3742,10 +3737,8 @@ Bit64s bx_usb_xhci_c::usb_param_handler(bx_param_c *param, bool set, Bit64s val)
 // USB runtime parameter handler: over-current
 Bit64s bx_usb_xhci_c::usb_param_oc_handler(bx_param_c *param, bool set, Bit64s val)
 {
-  int portnum;
-
   if (set) {
-    portnum = atoi((param->get_parent())->get_name()+4) - 1;
+    int portnum = atoi((param->get_parent())->get_name()+4) - 1;
     if ((portnum >= 0) && (portnum < (int) BX_XHCI_THIS hub.n_ports)) {
       if (val) {
         if (BX_XHCI_THIS hub.usb_port[portnum].portsc.ccs) {
@@ -3775,9 +3768,9 @@ bool bx_usb_xhci_c::usb_param_enable_handler(bx_param_c *param, bool en)
 void bx_usb_xhci_c::dump_xhci_core(const unsigned int slots, const unsigned int eps)
 {
   bx_phy_address addr = BX_XHCI_THIS pci_bar[0].addr;
+  unsigned i, p;
   Bit32u dword;
-  Bit64u qword, slot_addr;
-  unsigned int p, i;
+  Bit64u qword;
   Bit8u buffer[4096];
 
   // dump the caps registers
@@ -3825,7 +3818,7 @@ void bx_usb_xhci_c::dump_xhci_core(const unsigned int slots, const unsigned int 
     BX_INFO(("            0x%08X", dword));
   }
 
-  slot_addr = BX_XHCI_THIS hub.op_regs.HcDCBAAP.dcbaap;
+  Bit64u slot_addr = BX_XHCI_THIS hub.op_regs.HcDCBAAP.dcbaap;
   DEV_MEM_READ_PHYSICAL((bx_phy_address) slot_addr, sizeof(Bit64u), (Bit8u *) &slot_addr);
   BX_INFO((" SCRATCH PADS:  0x" FMT_ADDRX64, slot_addr));
   for (i=1; i<slots+1; i++) {
