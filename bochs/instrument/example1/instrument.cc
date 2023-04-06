@@ -52,7 +52,7 @@ void bxInstrumentation::bx_instr_reset(unsigned type)
 void bxInstrumentation::bx_print_instruction(void)
 {
   char disasm_tbuf[512];	// buffer for instruction disassembly
-  bx_dbg_disasm_wrapper(is32, is64, 0, 0, opcode, disasm_tbuf);
+  bx_disasm_wrapper(is32, is64, 0, 0, opcode, disasm_tbuf);
 
   if(opcode_length != 0)
   {

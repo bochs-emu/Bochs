@@ -81,7 +81,7 @@ void bx_print_instruction(unsigned cpu, const instruction_t *i)
 {
   char disasm_tbuf[512];	// buffer for instruction disassembly
   unsigned length = i->opcode_length, n;
-  bx_dbg_disasm_wrapper(i->is32, i->is64, 0, 0, i->opcode, disasm_tbuf);
+  bx_disasm_wrapper(i->is32, i->is64, 0, 0, i->opcode, disasm_tbuf);
 
   if(length != 0)
   {

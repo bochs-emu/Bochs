@@ -416,5 +416,6 @@ enum BxDisasmStyle {
 };
 
 extern char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr, bxInstruction_c *i, bx_address cs_base, bx_address rip, BxDisasmStyle style = BX_DISASM_INTEL);
+extern unsigned bx_disasm_wrapper(bool is_32, bool is_64, bx_address cs_base, bx_address ip, const Bit8u *instr, char *disbuf);
 
 #endif

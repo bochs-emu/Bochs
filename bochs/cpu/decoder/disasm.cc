@@ -897,3 +897,11 @@ char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr, bxIns
 
   return disbufptr;
 }
+
+unsigned bx_disasm_wrapper(bool is_32, bool is_64, bx_address cs_base, bx_address ip, const Bit8u *instr, char *disbuf)
+{
+  bxInstruction_c i;
+  disasm(instr, is_32, is_64, disbuf, &i, cs_base, ip, BX_DISASM_INTEL);
+  unsigned ilen = i.ilen();
+  return ilen;
+}
