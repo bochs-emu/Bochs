@@ -2150,6 +2150,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
       BX_CPU_THIS_PTR inhibit_mask = 0;
   }
 
+  unmask_event(BX_EVENT_VMX_VIRTUAL_NMI | BX_EVENT_NMI);
   if (guest.interruptibility_state & BX_VMX_INTERRUPTS_BLOCKED_NMI_BLOCKED) {
     if (vm->vmexec_ctrls1 & VMX_VM_EXEC_CTRL1_VIRTUAL_NMI)
       mask_event(BX_EVENT_VMX_VIRTUAL_NMI);
