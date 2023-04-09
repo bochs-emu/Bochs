@@ -39,6 +39,7 @@
 #if BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB
 #include "usb_common.h"
 #include "usb_hid.h"
+#include <cstddef>
 
 #define LOG_THIS
 
