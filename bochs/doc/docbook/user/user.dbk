@@ -6273,37 +6273,170 @@ The USB configuration allows you to add, delete, or modify an existing USB devic
 <para>
 The 'device' field may contain one of the following items:
 </para>
-<section><title>Mouse</title>
+<section id="bochsopt-usb-mouse"><title>Mouse</title>
 <para>
-This emulates a 3-button mouse. After a reset, it is set up to send the <emphasis>Report 
+By default, this emulates a 3-button mouse. After a reset, it is set up to send the <emphasis>Report 
 Protocol</emphasis> report and consists of a 4-byte report:
 <screen>
 byte 0:  00000BBB  Bits 7:3 are zero
                    Bit 2 is button 3
                    Bit 1 is button 2
                    Bit 0 is button 1
-byte 1:  XXXXXXXX  8-bit X Displacement (-127 -> 127)
-byte 2:  YYYYYYYY  8-bit Y Displacement (-127 -> 127)
-byte 3:  ZZZZZZZZ  8-bit Z Displacement (-127 -> 127)
+byte 1:  XXXXXXXX  8-bit X displacement (-127 -> 127)
+byte 2:  YYYYYYYY  8-bit Y displacement (-127 -> 127)
+byte 3:  WWWWWWWW  8-bit Wheel displacement (-127 -> 127)
 </screen>
-This device may be used on all Host Controller types using a speed of 'low', 'full',
-or 'high'.
+</para>
+<para>
+Using the 'model:xxxx" parameter, you can set the mouse to report a different type packet. See below.
+</para>
+<para>
+This device may be used on all Host Controller types using a speed of 'low', 'full', or 'high'. (see model 'm388phy')
 <screen>
-usb_uhci: enabled=1, port1=mouse, options1="speed:low"
-usb_ohci: enabled=1, port1=mouse, options1="speed:full"
-usb_ehci: enabled=1, port1=mouse, options1="speed:high"
-usb_xhci: enabled=3, port3=mouse, options1="speed:full"
+usb_uhci: enabled=1, port1=mouse, options1="speed:low"              # default report packet shown above
+usb_ohci: enabled=1, port1=mouse, options1="speed:full, model:m228" # 3-byte report packet, 2 button, 8-bits
+usb_ehci: enabled=1, port1=mouse, options1="speed:high, model:m338" # 3-byte report packet, 3 button, 8-bits
+usb_xhci: enabled=3, port3=mouse, options1="speed:full, model:m3312" # 3-byte report packet, 3 button, 12-bits
 </screen>
+</para>
+<para>
+The model: parameter may have one of the following names: 'm228', 'm338', 'm3312', 'm3316', 'm338phy', or 'm33xDebug'.
+</para>
+
+<section><title>model: m228</title>
+<para>
+Returns the 4-byte packet shown below.
+<screen>
+byte 0:  00000001  Report ID (1)
+byte 1:  000000BB  Bits 7:2 are zero
+                   Bit 1 is button 2
+                   Bit 0 is button 1
+byte 2:  XXXXXXXX  8-bit X displacement (-128 -> 127)
+byte 3:  YYYYYYYY  8-bit Y displacement (-128 -> 127)
+</screen>
+</para>
 <note><para>
-Please note that most physical USB mice will be 'low-speed' only.
+This model uses a Report ID, and prepends this byte ID to the Report Packet. (See byte 0 above)
+</para></note>
+</section>
+
+<section><title>model: m338</title>
+<para>
+Returns the 4-byte packet shown at <xref linkend="bochsopt-usb-mouse"> above. This is the default model and will be used if the <command>model:</command> parameter is not used.
+</para>
+</section>
+
+<section><title>model: m338phy</title>
+<para>
+Returns the default 4-byte packet, same as <command>m338</command>, but includes a HID Physical Descriptor and associated Designator entries.
+<note><para>
+To make the Bochs source code simpler, this model must be used with low- and full-speed devices only.
+</para></note>
+<note><para>
+Note that some Guests, including (older) widely used commercial Guests, see an HID Report with Physical indicators (Designator Min/Max) as invalid and won't continue to use the mouse.
 </para></note>
 </para>
+</section>
+
+<section><title>model: m3312</title>
+<para>
+Returns the 5-byte packet shown below.
+<screen>
+byte 0:  00000BBB  Bits 7:3 are zero
+                   Bit 2 is button 3
+                   Bit 1 is button 2
+                   Bit 0 is button 1
+byte 1:  XXXXXXXX  12-bit X displacement (-2048 -> 2047)
+byte 2:  YYYYXXXX
+byte 3:  YYYYYYYY  12-bit Y displacement (-2048 -> 2047)
+byte 4:  WWWWWWWW  8-bit Wheel displacement (-128 -> 127)
+</screen>
+</para>
+</section>
+
+<section><title>model: m3316</title>
+<para>
+Returns the 6-byte packet shown below.
+<screen>
+byte 0:  00000BBB  Bits 7:3 are zero
+                   Bit 2 is button 3
+                   Bit 1 is button 2
+                   Bit 0 is button 1
+byte 1:  XXXXXXXX  16-bit X displacement (-32768 -> 32767)
+byte 2:  XXXXXXXX
+byte 4:  YYYYYYYY  16-bit Y displacement (-32768 -> 32767)
+byte 5:  YYYYYYYY  
+byte 6:  WWWWWWWW  8-bit Wheel displacement (-128 -> 127)
+</screen>
+</para>
+</section>
+
+<section><title>model: m33xDebug (Debug model)</title>
+<para>
+This report is deliberately irregular by design, so that a Guest can test its HID Report Descriptor Parser.
+</para>
+<itemizedlist>
+<listitem><para> - the button fields are not consecutive and are at arbitrary positions in the report.</para></listitem>
+<listitem><para> - the coords fields are not byte aligned or consecutively spaced.</para></listitem>
+<listitem><para> - the coords fields are of an irregular size, each a different size.</para></listitem>
+<listitem><para> - there are padding fields between entries that <command>do not</command> align the next field on a byte boundary.</para></listitem>
+<listitem><para> - this also uses the push/pop mechanism to test the function of your parser.</para></listitem>
+</itemizedlist>
+<para>Again, this is deliberate. A correctly written parser will extract the neccessary fields no matter the irregularity.</para>
+<para>Returns the 5-byte packet shown below.</para>
+<screen>
+byte 0:  YYYYYYY0  10-bit Y displacement (-512 -> 511)
+byte 1:  WWWW0YYY  8-bit Wheel displacement (-128 -> 127)
+byte 2:  0B00WWWW  bit 6 is Button #2 (right button)
+byte 3:  XXXXX0B0  9-bit X displacement, bit 1 is Button #1 (left button)
+byte 4:  0B00XXXX  bit 6 is Button #3 (middle button)
+</screen>
+<para>
+Please note that this model is not for normal use. It is <command>intentionally</command> irregular, and its purpose is to test an HID Parser.
+</para>
+</section>
+
+<section><title>mouse: misc</title>
+<para>
+Please note that most physical USB mice will be 'low-speed' only.
+</para>
+</section>
 </section>
 
 <section><title>Keyboard</title>
 <para>
 This emulates a standard keyboard. Key press and release codes are translated from
 the Host's keyboard to the Guest as USB Interrupt packets.
+</para>
+<para>
+After a reset, it is set up to send the <emphasis>Report Protocol</emphasis> report and consists of a 8-byte report:
+<screen>
+byte 0:  MMMMMMMM  Modifier Keys
+                    Bit 7 = Right GUI
+                    Bit 6 = Right Alt
+                    Bit 5 = Right Shift
+                    Bit 4 = Right Ctrl
+                    Bit 3 = Left GUI
+                    Bit 2 = Left Alt
+                    Bit 1 = Left Shift
+                    Bit 0 = Left Ctrl
+byte 1:  00000000  Reserved
+byte 2:  xxxxxxxx  Key Code 1
+byte 3:  xxxxxxxx  Key Code 2
+byte 4:  xxxxxxxx  Key Code 3
+byte 5:  xxxxxxxx  Key Code 4
+byte 6:  xxxxxxxx  Key Code 5
+byte 7:  xxxxxxxx  Key Code 6
+</screen>
+</para>
+<para>
+The keyboard expects the following 'Output' packet when modifying the Num Lock, Caps Lock, and Scroll Lock states:
+<screen>
+byte 0:  00000LLL  Lock States
+                    Bit 2 = Scroll Lock
+                    Bit 1 = Caps Lock
+                    Bit 0 = Num Lock
+</screen>
 </para>
 <para>
 This device may be used on all Host Controller types using a speed of 'low', 'full',
@@ -6324,6 +6457,16 @@ Please note that most physical USB keyboards will be 'low-speed' only.
 <para>
 This emulates a numeric keypad. Key press and release codes are translated from
 the Host's keyboard to the Guest as USB Interrupt packets.
+</para>
+<para>
+Only the keys that are on a standard 104-key keyboard's keypad are returned. 
+These keys are the USB HID Usage ID's <command>0x53</command> to <command>0x63</command> and are handled by the USB keypad and
+are sent to the Guest via USB Interrupt packets. (see the 'Keyboard' item above for the format of this packet).
+</para>
+<para>
+All remaining key press and release events are handled by the underlining keyboard emulation, 
+usually the AT/PS2 keyboard emulation. Therefore, the guest will still receive other keypress events.
+Only the key range noted before will be sent via the USB emulation.
 </para>
 <para>
 This device may be used on all Host Controller types using a speed of 'low', 'full',
@@ -6355,6 +6498,9 @@ byte 3:  YYYYYYYY  8-bit Y Displacement (low byte)
 byte 4:  YYYYYYYY  8-bit Y Displacement (high byte)
 byte 5:  ZZZZZZZZ  8-bit Z Displacement
 </screen>
+<note><para>
+Please note that the X and Y Displacement values are absolute, not relative values.
+</para></note>
 This device may be used on all Host Controller types using a speed of 'low', 'full',
 or 'high'.
 <screen>
@@ -6478,7 +6624,6 @@ Any device attached to this hub (via the runtime interface), must be the same as
 <note><para>
 Please note that this device is a full-speed only device. No other speed should be specified.
 </para></note>
-</para>
 </section>
 
 <section><title>Packet Capture</title>
@@ -10986,6 +11131,7 @@ For some reason, writing to a USB disk in WinXP, where the write takes a little 
 <para>Contributed by Benjamin David Lunt</para>
 <para>Please read the message regarding software licenses in
 <xref linkend="thirdparty"> before you install Windows 7 as a guest operating system in Bochs.</para>
+<para>
 Windows 7 has been reported to install from the CD-ROM, and run inside Bochs.
 Here are a few settings that seem to work well when running on a Windows10 host, running at 3.0Ghz.
 <screen>
@@ -11010,6 +11156,7 @@ Don't set it to more than 250,000,000. Anything faster and Win7 seems to be slug
 <para>Contributed by Benjamin David Lunt</para>
 <para>Please read the message regarding software licenses in
 <xref linkend="thirdparty"> before you install Windows 8 as a guest operating system in Bochs.</para>
+<para>
 Windows 8 has been reported to install from the CD-ROM, and run inside Bochs.
 Here are a few settings that seem to work well when running on a Windows10 host, running at 3.0Ghz.
 <screen>
@@ -11034,6 +11181,7 @@ Don't set it to more than 250,000,000. Anything faster and Win8 seems to be slug
 <para>Contributed by Benjamin David Lunt</para>
 <para>Please read the message regarding software licenses in
 <xref linkend="thirdparty"> before you install Windows 10 as a guest operating system in Bochs.</para>
+<para>
 Windows 10 has been reported to install from the CD-ROM, and run inside Bochs, though a few hacks where used to do so. For more information, see <ulink url="https://sourceforge.net/p/bochs/discussion/39592/thread/4f526dc9/">this thread</ulink>.
 </para>
 <para>
