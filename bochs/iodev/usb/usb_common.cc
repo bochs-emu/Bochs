@@ -455,7 +455,11 @@ int usb_device_c::handle_packet(USBPacket *p)
 #endif
                 memcpy(data, d.data_buf + d.setup_index, l);
                 d.setup_index += l;
-                if (d.setup_index >= d.setup_len)
+                // if the count of bytes transfered is an even packet size, we have to allow the host controller to (possibly) do a short packet
+                //  on the next zero byte transfer, so even if d.setup_index == d.setup_len we still have to allow another packet to be processed before
+                //  we go to SETUP_STATE_ACK. If there is not another IN packet (meaning the STATUS packet is next), the OUT code below handles
+                //  the STATUS stage for us.
+                if ((d.setup_index >= d.setup_len) && (l < get_mps(USB_CONTROL_EP)))
                   d.setup_state = SETUP_STATE_ACK;
                 ret = l;
                 usb_dump_packet(data, ret, 0, p->devaddr, USB_DIR_IN | p->devep, USB_TRANS_TYPE_CONTROL, false, true);
@@ -537,6 +541,8 @@ int usb_device_c::handle_packet(USBPacket *p)
                 // it is okay for a host to send an OUT before it reads
                 //  all of the expected IN.  It is telling the controller
                 //  that it doesn't want any more from that particular call.
+                // or
+                //  we have (unexpectedly) encountered the STATUS packet.
                 ret = 0;
                 d.setup_state = SETUP_STATE_IDLE;
               }
