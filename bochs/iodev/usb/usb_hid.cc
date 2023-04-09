@@ -428,10 +428,10 @@ static Bit8u bx_mouse_config_descriptor0[] = {
   0x01,       /*  u8  bConfigurationValue; */
   0x04,       /*  u8  iConfiguration; */
   0xa0,       /*  u8  bmAttributes;
-       Bit 7: must be set,
-           6: Self-powered,
-           5: Remote wakeup,
-           4..0: resvd */
+                         Bit 7: must be set,
+                             6: Self-powered,
+                             5: Remote wakeup,
+                             4..0: resvd */
   50,         /*  u8  MaxPower; */
 
   /* one interface */
@@ -496,10 +496,10 @@ static Bit8u bx_mouse_config_descriptor1[] = {
   0x01,       /*  u8  bConfigurationValue; */
   0x04,       /*  u8  iConfiguration; */
   0xa0,       /*  u8  bmAttributes;
-       Bit 7: must be set,
-           6: Self-powered,
-           5: Remote wakeup,
-           4..0: resvd */
+                         Bit 7: must be set,
+                             6: Self-powered,
+                             5: Remote wakeup,
+                             4..0: resvd */
   50,         /*  u8  MaxPower; */
 
   /* one interface */
@@ -546,10 +546,10 @@ static Bit8u bx_mouse_config_descriptor2[] = {
   0x01,       /*  u8  bConfigurationValue; */
   0x04,       /*  u8  iConfiguration; */
   0xa0,       /*  u8  bmAttributes;
-       Bit 7: must be set,
-           6: Self-powered,
-           5: Remote wakeup,
-           4..0: resvd */
+                         Bit 7: must be set,
+                             6: Self-powered,
+                             5: Remote wakeup,
+                             4..0: resvd */
   50,         /*  u8  MaxPower; */
 
   /* one interface */
@@ -663,10 +663,10 @@ static const Bit8u bx_tablet_config_descriptor[] = {
   0x01,       /*  u8  bConfigurationValue; */
   0x04,       /*  u8  iConfiguration; */
   0xa0,       /*  u8  bmAttributes;
-       Bit 7: must be set,
-           6: Self-powered,
-           5: Remote wakeup,
-           4..0: resvd */
+                         Bit 7: must be set,
+                             6: Self-powered,
+                             5: Remote wakeup,
+                             4..0: resvd */
   50,         /*  u8  MaxPower; */
 
   /* one interface */
@@ -708,10 +708,10 @@ static const Bit8u bx_tablet_config_descriptor2[] = {
   0x01,       /*  u8  bConfigurationValue; */
   0x04,       /*  u8  iConfiguration; */
   0xa0,       /*  u8  bmAttributes;
-       Bit 7: must be set,
-           6: Self-powered,
-           5: Remote wakeup,
-           4..0: resvd */
+                         Bit 7: must be set,
+                             6: Self-powered,
+                             5: Remote wakeup,
+                             4..0: resvd */
   50,         /*  u8  MaxPower; */
 
   /* one interface */
@@ -842,10 +842,10 @@ static const Bit8u bx_keypad_config_descriptor[] = {
   0x01,       /*  u8  bConfigurationValue; */
   0x04,       /*  u8  iConfiguration; */
   0xa0,       /*  u8  bmAttributes;
-       Bit 7: must be set,
-           6: Self-powered,
-           5: Remote wakeup,
-           4..0: resvd */
+                         Bit 7: must be set,
+                             6: Self-powered,
+                             5: Remote wakeup,
+                             4..0: resvd */
   50,         /*  u8  MaxPower; */
 
   /* one interface */
@@ -887,10 +887,10 @@ static const Bit8u bx_keypad_config_descriptor2[] = {
   0x01,       /*  u8  bConfigurationValue; */
   0x04,       /*  u8  iConfiguration; */
   0xa0,       /*  u8  bmAttributes;
-       Bit 7: must be set,
-           6: Self-powered,
-           5: Remote wakeup,
-           4..0: resvd */
+                         Bit 7: must be set,
+                             6: Self-powered,
+                             5: Remote wakeup,
+                             4..0: resvd */
   50,         /*  u8  MaxPower; */
 
   /* one interface */
@@ -1298,6 +1298,11 @@ void usb_hid_device_c::register_state_specific(bx_list_c *parent)
     BXRS_HEX_PARAM_FIELD(list, kbd_packet_indx, s.kbd_packet_indx);
     BXRS_HEX_PARAM_FIELD(list, indicators, s.indicators);
     BXRS_DEC_PARAM_FIELD(list, kbd_event_count, s.kbd_event_count);
+    BXRS_DEC_PARAM_FIELD(list, report_use_id, s.report_use_id);
+    BXRS_DEC_PARAM_FIELD(list, report_id, s.report_id);
+    BXRS_DEC_PARAM_FIELD(list, bx_mouse_hid_report_descriptor_len, s.bx_mouse_hid_report_descriptor_len);
+    new bx_shadow_data_c(list, "bx_mouse_hid_report_descriptor", (Bit8u *) s.bx_mouse_hid_report_descriptor, sizeof(s.bx_mouse_hid_report_descriptor), 1);
+    new bx_shadow_data_c(list, "model", (Bit8u *) s.model, sizeof(s.model), 1);
     bx_list_c *evbuf = new bx_list_c(list, "kbd_event_buf", "");
     char pname[16];
     for (Bit8u i = 0; i < BX_KBD_ELEMENTS; i++) {
