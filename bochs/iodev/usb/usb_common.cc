@@ -288,6 +288,11 @@ usb_device_c *usbdev_locator_c::create(const char *type, const char *devname)
 #undef LOG_THIS
 #define LOG_THIS
 
+// Generic USB packet handler
+#define SETUP_STATE_IDLE      0
+#define SETUP_STATE_DATA_IN   1
+#define SETUP_STATE_DATA_OUT  2
+
 // Base class for USB devices
 
 usb_device_c::usb_device_c(void)
@@ -301,7 +306,7 @@ usb_device_c::usb_device_c(void)
   for (int i=0; i<USB_MAX_ENDPOINTS; i++)
     d.endpoint_info[i].toggle = 0;
 #endif
-
+  d.setup_state = SETUP_STATE_IDLE;
 }
 
 usb_device_c::~usb_device_c()
@@ -320,15 +325,9 @@ usb_device_c *usb_device_c::find_device(Bit8u addr)
   }
 }
 
-// Generic USB packet handler
-
-#define SETUP_STATE_IDLE 0
-#define SETUP_STATE_DATA 1
-#define SETUP_STATE_ACK  2
-
 int usb_device_c::handle_packet(USBPacket *p)
 {
-  int l, ret = 0;
+  int ret = 0;
   int len = p->len;
   Bit8u *data = p->data;
 
@@ -336,9 +335,11 @@ int usb_device_c::handle_packet(USBPacket *p)
     case USB_MSG_ATTACH:
       d.state = USB_STATE_ATTACHED;
       break;
+      
     case USB_MSG_DETACH:
       d.state = USB_STATE_NOTATTACHED;
       break;
+      
     case USB_MSG_RESET:
       d.remote_wakeup = 0;
       d.addr = 0;
@@ -347,11 +348,15 @@ int usb_device_c::handle_packet(USBPacket *p)
       for (int i=0; i<USB_MAX_ENDPOINTS; i++)
         d.endpoint_info[i].toggle = 0;
 #endif
+      d.setup_state = SETUP_STATE_IDLE;
       handle_reset();
       break;
+      
     case USB_TOKEN_SETUP:
       if (d.state < USB_STATE_DEFAULT || p->devaddr != d.addr)
         return USB_RET_NODEV;
+      if (d.setup_state != SETUP_STATE_IDLE)
+        BX_ERROR(("SETUP packet found while expecting Status Packet?"));
       if (len != 8) {
         BX_ERROR(("Packet length must be 8."));
         goto fail;
@@ -379,9 +384,9 @@ int usb_device_c::handle_packet(USBPacket *p)
       //  is for the first mps-bytes of the Device Descriptor. If not, give a warning.
       if (!d.first8 && ((d.setup_len > get_mps(p->devep)) || (d.setup_buf[0] != (USB_DIR_IN | USB_TYPE_STANDARD | USB_RECIP_DEVICE)) || 
                         (d.setup_buf[1] != USB_REQ_GET_DESCRIPTOR) || (d.setup_buf[3] != USB_DT_DEVICE))) {
-        BX_ERROR(("The first request after an initial reset must be the Device Descriptor request with a length less than or equal to max packet size."));
-        BX_ERROR(("The device expects a reset, MPS-bytes of the descriptor, another reset, set address request, and then the full 18 byte descriptor."));
-        BX_ERROR(("Some devices (more than you think) will not initialize correctly without this (non-USB compliant) sequence."));
+        BX_DEBUG(("The first request after an initial reset must be the Device Descriptor request with a length less than or equal to max packet size."));
+        BX_DEBUG(("The device expects a reset, MPS-bytes of the descriptor, another reset, set address request, and then the full 18 byte descriptor."));
+        BX_DEBUG(("Some devices (more than you think) will not initialize correctly without this (non-USB compliant) sequence."));
       }
       d.first8 = 1;
       
@@ -389,19 +394,16 @@ int usb_device_c::handle_packet(USBPacket *p)
         ret = handle_control((d.setup_buf[0] << 8) | d.setup_buf[1],
                              (d.setup_buf[3] << 8) | d.setup_buf[2],
                              (d.setup_buf[5] << 8) | d.setup_buf[4],
-                             d.setup_len, d.data_buf);
+                              d.setup_len, d.data_buf);
         if (ret < 0)
           return ret;
         if (ret < d.setup_len)
           d.setup_len = ret;
-        d.setup_state = SETUP_STATE_DATA;
-      } else {
-        if (d.setup_len == 0)
-          d.setup_state = SETUP_STATE_ACK;
-        else
-          d.setup_state = SETUP_STATE_DATA;
-      }
+        d.setup_state = SETUP_STATE_DATA_IN;
+      } else
+        d.setup_state = SETUP_STATE_DATA_OUT;
       break;
+      
     case USB_TOKEN_IN:
       if (d.state < USB_STATE_DEFAULT || p->devaddr != d.addr)
         return USB_RET_NODEV;
@@ -413,65 +415,60 @@ int usb_device_c::handle_packet(USBPacket *p)
       switch (p->devep) {
         case USB_CONTROL_EP:
           switch (d.setup_state) {
-            case SETUP_STATE_ACK:
+            // we are doing a data in packet
+            case SETUP_STATE_DATA_IN:
+              ret = d.setup_len - d.setup_index;
+              if (ret > len)
+                ret = len;
+              
+              // check that the length is <= the max packet size of the device
+              if (ret > get_mps(USB_CONTROL_EP)) {
+                BX_ERROR(("EP%d transfer length (%d) is greater than Max Packet Size (%d).", p->devep, p->len, get_mps(USB_CONTROL_EP)));
+              }
+#if HANDLE_TOGGLE_CONTROL
+              // manage our toggle bit
+              if ((p->toggle > -1) && (p->toggle != get_toggle(USB_CONTROL_EP))) {
+                BX_ERROR(("CONTROL IN: Packet Toggle indicator doesn't match Device Toggle indicator. %d != %d", p->toggle, get_toggle(USB_CONTROL_EP)));
+                goto fail;
+              }
+              set_toggle(USB_CONTROL_EP, get_toggle(USB_CONTROL_EP) ^ 1); // toggle the bit
+#endif
+              if (ret > 0) {
+                memcpy(data, d.data_buf + d.setup_index, ret);
+                d.setup_index += ret;
+                usb_dump_packet(data, ret, 0, p->devaddr, USB_DIR_IN | p->devep, USB_TRANS_TYPE_CONTROL, false, true);
+              }
+              break;
+              
+            // we were doing data out packets, now we are expecting an IN STATUS packet
+            case SETUP_STATE_DATA_OUT:
 #if HANDLE_TOGGLE_CONTROL
               // manage our toggle bit
               if ((p->toggle > -1) && (p->toggle != 1)) {
                 BX_ERROR(("STATUS: Packet Toggle indicator doesn't match Device Toggle indicator. %d != 1", p->toggle));
                 goto fail;
               }
-              //set_toggle(USB_CONTROL_EP, 0); // after a STATUS packet, the toggle bit is clear for the next packet
 #endif
-              if (!(d.setup_buf[0] & USB_DIR_IN)) {
-                d.setup_state = SETUP_STATE_IDLE;
-                ret = handle_control((d.setup_buf[0] << 8) | d.setup_buf[1],
-                                     (d.setup_buf[3] << 8) | d.setup_buf[2],
-                                     (d.setup_buf[5] << 8) | d.setup_buf[4],
-                                     d.setup_len, d.data_buf);
-                usb_dump_packet(d.data_buf, ret, 0, p->devaddr, USB_DIR_IN | p->devep, USB_TRANS_TYPE_CONTROL, false, true);
-                if (ret > 0)
-                  ret = 0;
-              } else {
-                // return 0 byte
-              }
+              d.setup_state = SETUP_STATE_IDLE;
+              // found status packet from a Control OUT transfer, so process the transfer
+              ret = handle_control((d.setup_buf[0] << 8) | d.setup_buf[1],
+                                   (d.setup_buf[3] << 8) | d.setup_buf[2],
+                                   (d.setup_buf[5] << 8) | d.setup_buf[4],
+                                    d.setup_len, d.data_buf);
+              usb_dump_packet(d.data_buf, ret, 0, p->devaddr, USB_DIR_IN | p->devep, USB_TRANS_TYPE_CONTROL, false, true);
+              // if the transfer was successful, return 0 for the STATUS packet,
+              //  else return the STALL, or other status.
+              if (ret > 0)
+                ret = 0;
               break;
-            case SETUP_STATE_DATA:
-              if (d.setup_buf[0] & USB_DIR_IN) {
-                l = d.setup_len - d.setup_index;
-                if (l > len)
-                  l = len;
-                  
-                // check that the length is <= the max packet size of the device
-                if (l > get_mps(USB_CONTROL_EP)) {
-                  BX_ERROR(("EP%d transfer length (%d) is greater than Max Packet Size (%d).", p->devep, p->len, get_mps(USB_CONTROL_EP)));
-                }
-#if HANDLE_TOGGLE_CONTROL
-                // manage our toggle bit
-                if ((p->toggle > -1) && (p->toggle != get_toggle(USB_CONTROL_EP))) {
-                  BX_ERROR(("CONTROL IN: Packet Toggle indicator doesn't match Device Toggle indicator. %d != %d", p->toggle, get_toggle(USB_CONTROL_EP)));
-                  goto fail;
-                }
-                set_toggle(USB_CONTROL_EP, get_toggle(USB_CONTROL_EP) ^ 1); // toggle the bit
-#endif
-                memcpy(data, d.data_buf + d.setup_index, l);
-                d.setup_index += l;
-                // if the count of bytes transfered is an even packet size, we have to allow the host controller to (possibly) do a short packet
-                //  on the next zero byte transfer, so even if d.setup_index == d.setup_len we still have to allow another packet to be processed before
-                //  we go to SETUP_STATE_ACK. If there is not another IN packet (meaning the STATUS packet is next), the OUT code below handles
-                //  the STATUS stage for us.
-                if ((d.setup_index >= d.setup_len) && (l < get_mps(USB_CONTROL_EP)))
-                  d.setup_state = SETUP_STATE_ACK;
-                ret = l;
-                usb_dump_packet(data, ret, 0, p->devaddr, USB_DIR_IN | p->devep, USB_TRANS_TYPE_CONTROL, false, true);
-              } else {
-                d.setup_state = SETUP_STATE_IDLE;
-                goto fail;
-              }
-              break;
+              
             default:
+              BX_ERROR(("Unknown Data state while finding Control In Packet."));
               goto fail;
           }
           break;
+          
+        // a non-control endpoint found
         default:
 #if HANDLE_TOGGLE_CONTROL
           // manage our toggle bit
@@ -485,6 +482,7 @@ int usb_device_c::handle_packet(USBPacket *p)
           break;
       }
       break;
+      
     case USB_TOKEN_OUT:
       if (d.state < USB_STATE_DEFAULT || p->devaddr != d.addr)
         return USB_RET_NODEV;
@@ -496,58 +494,45 @@ int usb_device_c::handle_packet(USBPacket *p)
       switch (p->devep) {
         case USB_CONTROL_EP:
           switch(d.setup_state) {
-            case SETUP_STATE_ACK:
+            case SETUP_STATE_DATA_OUT:
+              ret = d.setup_len - d.setup_index;
+              if (ret > len)
+                ret = len;
+              
+              // check that the length is <= the max packet size of the device
+              if (ret > get_mps(USB_CONTROL_EP)) {
+                BX_ERROR(("EP%d transfer length (%d) is greater than Max Packet Size (%d).", p->devep, p->len, get_mps(USB_CONTROL_EP)));
+              }
+#if HANDLE_TOGGLE_CONTROL
+              // manage our toggle bit
+              if ((p->toggle > -1) && (p->toggle != get_toggle(USB_CONTROL_EP))) {
+                BX_ERROR(("CONTROL OUT: Packet Toggle indicator doesn't match Device Toggle indicator. %d != %d", p->toggle, get_toggle(USB_CONTROL_EP)));
+                goto fail;
+              }
+              set_toggle(USB_CONTROL_EP, get_toggle(USB_CONTROL_EP) ^ 1); // toggle the bit
+#endif
+              if (ret > 0) {
+                memcpy(d.data_buf + d.setup_index, data, ret);
+                d.setup_index += ret;
+                usb_dump_packet(data, ret, 0, p->devaddr, USB_DIR_OUT | p->devep, USB_TRANS_TYPE_CONTROL, false, true);
+              }
+              break;
+
+            // we were doing data in packets, now we are expecting an OUT STATUS packet
+            case SETUP_STATE_DATA_IN:
 #if HANDLE_TOGGLE_CONTROL
               // manage our toggle bit
               if ((p->toggle > -1) && (p->toggle != 1)) {
                 BX_ERROR(("STATUS: Packet Toggle indicator doesn't match Device Toggle indicator. %d != 1", p->toggle));
                 goto fail;
               }
-              //set_toggle(USB_CONTROL_EP, 0); // after a STATUS packet, the toggle bit is clear for the next packet
 #endif
-              usb_dump_packet(p->data, p->len, 0, p->devaddr, USB_DIR_OUT | p->devep, USB_TRANS_TYPE_CONTROL, false, true);
-              if (d.setup_buf[0] & USB_DIR_IN) {
-                d.setup_state = SETUP_STATE_IDLE;
-                // transfer OK
-              } else {
-                // ignore additional output
-              }
+              d.setup_state = SETUP_STATE_IDLE;
+              ret = 0;
               break;
-            case SETUP_STATE_DATA:
-              if (!(d.setup_buf[0] & USB_DIR_IN)) {
-                l = d.setup_len - d.setup_index;
-                if (l > len)
-                  l = len;
-                
-                // check that the length is <= the max packet size of the device
-                if (l > get_mps(USB_CONTROL_EP)) {
-                  BX_ERROR(("EP%d transfer length (%d) is greater than Max Packet Size (%d).", p->devep, p->len, get_mps(USB_CONTROL_EP)));
-                }
-#if HANDLE_TOGGLE_CONTROL
-                // manage our toggle bit
-                if ((p->toggle > -1) && (p->toggle != get_toggle(USB_CONTROL_EP))) {
-                  BX_ERROR(("CONTROL OUT: Packet Toggle indicator doesn't match Device Toggle indicator. %d != %d", p->toggle, get_toggle(USB_CONTROL_EP)));
-                  goto fail;
-                }
-                set_toggle(USB_CONTROL_EP, get_toggle(USB_CONTROL_EP) ^ 1); // toggle the bit
-#endif
-                memcpy(d.data_buf + d.setup_index, data, l);
-                d.setup_index += l;
-                if (d.setup_index >= d.setup_len)
-                  d.setup_state = SETUP_STATE_ACK;
-                ret = l;
-                usb_dump_packet(data, ret, 0, p->devaddr, USB_DIR_OUT | p->devep, USB_TRANS_TYPE_CONTROL, false, true);
-              } else {
-                // it is okay for a host to send an OUT before it reads
-                //  all of the expected IN.  It is telling the controller
-                //  that it doesn't want any more from that particular call.
-                // or
-                //  we have (unexpectedly) encountered the STATUS packet.
-                ret = 0;
-                d.setup_state = SETUP_STATE_IDLE;
-              }
-              break;
+              
             default:
+              BX_ERROR(("Unknown Data state while finding Control Out Packet."));
               goto fail;
           }
           break;
