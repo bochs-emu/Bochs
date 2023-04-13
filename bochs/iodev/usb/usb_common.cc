@@ -166,7 +166,7 @@ static const char *usb_speed[4] = {
 void bx_usbdev_ctl_c::parse_port_options(usb_device_c *device, bx_list_c *portconf)
 {
   const char *raw_options;
-  int i, optc, speed = USB_SPEED_LOW;  // assume LOW speed device if parameter not given.
+  int i, optc, speed = USB_SPEED_FULL;  // assume FULL speed device if parameter not given.
   Bit8u devtype;
   char *opts[16];
 
@@ -420,7 +420,7 @@ int usb_device_c::handle_packet(USBPacket *p)
               ret = d.setup_len - d.setup_index;
               if (ret > len)
                 ret = len;
-              
+
               // check that the length is <= the max packet size of the device
               if (ret > get_mps(USB_CONTROL_EP)) {
                 BX_ERROR(("EP%d transfer length (%d) is greater than Max Packet Size (%d).", p->devep, p->len, get_mps(USB_CONTROL_EP)));
@@ -669,8 +669,8 @@ int usb_device_c::handle_control_common(int request, int value, int index, int l
         BX_ERROR(("USB_REQ_SET_CONFIGURATION: This type of request requires the wIndex and wLength fields to be zero."));
       }
       // check to make sure the requested value is within range
-      // (our one and only configuration)
-      if (value != d.config_descriptor[5]) {
+      // (our one and only configuration, *or* zero indicating to de-configure the device)
+      if ((value > 0) && (value != d.config_descriptor[5])) {
         BX_ERROR(("USB_REQ_SET_CONFIGURATION: Trying to set configuration value to non-existing configuration: %d", value));
       }
       d.config = value;
