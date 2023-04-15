@@ -49,22 +49,14 @@ bx_usbdev_ctl_c::bx_usbdev_ctl_c()
 
 void bx_usbdev_ctl_c::init(void)
 {
-  Bit8u i, j, count;
-
-  /*  If you wish to set DEBUG=report in the code, instead of
-   *  in the configuration, simply uncomment this line.  I use
-   *  it when I am working on this emulation.
-   */
-  //LOG_THIS setonoff(LOGLEV_DEBUG, ACT_REPORT);
-
-  count = PLUG_get_plugins_count(PLUGTYPE_USB);
+  Bit8u count = PLUG_get_plugins_count(PLUGTYPE_USB);
   usb_module_names = (const char**) malloc(count * sizeof(char*));
   usb_device_names = (const char**) malloc((count + 6) * sizeof(char*));
   usb_module_id = (Bit8u*) malloc((count + 5) * sizeof(Bit8u));
   usb_device_names[0] = "none";
   usb_module_id[0] = 0xff;
-  j = 1;
-  for (i = 0; i < count; i++) {
+  Bit8u j = 1;
+  for (Bit8u i = 0; i < count; i++) {
     usb_module_names[i] = PLUG_get_plugin_name(PLUGTYPE_USB, i);
     if (!strcmp(usb_module_names[i], "usb_hid")) {
       usb_device_names[j] = "mouse";
@@ -166,15 +158,15 @@ static const char *usb_speed[4] = {
 void bx_usbdev_ctl_c::parse_port_options(usb_device_c *device, bx_list_c *portconf)
 {
   const char *raw_options;
-  int i, optc, speed = USB_SPEED_FULL;  // assume FULL speed device if parameter not given.
+  int speed = device->get_default_speed(USB_SPEED_FULL);  // try to default to FULL speed if parameter not given.
   Bit8u devtype;
   char *opts[16];
 
   memset(opts, 0, sizeof(opts));
   devtype = ((bx_param_enum_c *) portconf->get_by_name("device"))->get();
   raw_options = ((bx_param_string_c *) portconf->get_by_name("options"))->getptr();
-  optc = bx_split_option_list("USB port options", raw_options, opts, 16);
-  for (i = 0; i < optc; i++) {
+  int optc = bx_split_option_list("USB port options", raw_options, opts, 16);
+  for (int i = 0; i < optc; i++) {
     if (!strncmp(opts[i], "speed:", 6)) {
       if (!strcmp(opts[i]+6, "low")) {
         speed = USB_SPEED_LOW;
@@ -195,7 +187,7 @@ void bx_usbdev_ctl_c::parse_port_options(usb_device_c *device, bx_list_c *portco
       BX_ERROR(("ignoring unknown USB device option: '%s'", opts[i]));
     }
   }
-  for (i = 0; i < optc; i++) {
+  for (int i = 0; i < optc; i++) {
     if (opts[i] != NULL) {
       free(opts[i]);
       opts[i] = NULL;

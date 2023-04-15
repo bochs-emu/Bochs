@@ -1600,9 +1600,10 @@ int usb_hid_device_c::handle_data(USBPacket *p)
       ret = USB_RET_STALL;
       break;
   }
-
-  if (ret > 0) usb_dump_packet(p->data, ret, 0, p->devaddr, p->devep, USB_TRANS_TYPE_BULK, false, true);
-
+  
+  if (ret > 0) usb_dump_packet(p->data, ret, 0, p->devaddr,
+    ((p->pid == USB_TOKEN_IN) ? USB_DIR_IN : USB_DIR_OUT) | p->devep, USB_TRANS_TYPE_INT, false, false);
+  
   return ret;
 }
 
