@@ -45,6 +45,11 @@
 #undef getenv
 #endif
 
+#ifdef WIN32
+#define DIRECTORY_SEPARATOR "\\"
+#else
+#define DIRECTORY_SEPARATOR "/"
+#endif
 
 const char **config_interface_list;
 const char **display_library_list;
@@ -852,7 +857,7 @@ void bx_init_options()
       "Pathname of ROM image to load",
       "", BX_PATHNAME_LEN);
   path->set_format("Name of ROM BIOS image: %s");
-  sprintf(name, "%s/BIOS-bochs-latest", (char *)get_builtin_variable("BXSHARE"));
+  sprintf(name, "%s" DIRECTORY_SEPARATOR "BIOS-bochs-latest", (char *)get_builtin_variable("BXSHARE"));
   path->set_initial_val(name);
   bx_param_num_c *romaddr = new bx_param_num_c(rom,
       "address",
@@ -876,7 +881,7 @@ void bx_init_options()
       "Pathname of VGA ROM image to load",
       "", BX_PATHNAME_LEN);
   path->set_format("Name of VGA BIOS image: %s");
-  sprintf(name, "%s/VGABIOS-lgpl-latest", get_builtin_variable("BXSHARE"));
+  sprintf(name, "%s" DIRECTORY_SEPARATOR "VGABIOS-lgpl-latest", get_builtin_variable("BXSHARE"));
   path->set_initial_val(name);
   vgarom->set_options(vgarom->SERIES_ASK);
 
