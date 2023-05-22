@@ -1569,21 +1569,32 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
      }
 
      if (n == BX_SEG_REG_CS) {
+        // Load SS
+        Bit16u ss_selector  = VMread16(VMCS_16BIT_GUEST_SS_SELECTOR);
+        bx_address ss_base = (bx_address) VMread_natural(VMCS_GUEST_SS_BASE);
+        Bit32u ss_limit = VMread32(VMCS_32BIT_GUEST_SS_LIMIT);
+        Bit32u ss_ar = VMread32(VMCS_32BIT_GUEST_SS_LIMIT);
+        ss_ar = vmx_unpack_ar_field(ss_ar, BX_CPU_THIS_PTR vmcs_map->get_access_rights_format());
+        bool ss_invalid = (ss_ar >> 16) & 1;
+
+        set_segment_ar_data(&guest.sregs[BX_SEG_REG_SS], !ss_invalid,
+                     (Bit16u) ss_selector, ss_base, ss_limit, (Bit16u) ss_ar);
+
         // CS checks
         switch (guest.sregs[BX_SEG_REG_CS].cache.type) {
           case BX_CODE_EXEC_ONLY_ACCESSED:
           case BX_CODE_EXEC_READ_ACCESSED:
              // non-conforming segment
-             if (guest.sregs[BX_SEG_REG_CS].selector.rpl != guest.sregs[BX_SEG_REG_CS].cache.dpl) {
-               BX_ERROR(("VMENTER FAIL: VMCS guest non-conforming CS.RPL <> CS.DPL"));
+             if (guest.sregs[BX_SEG_REG_CS].cache.dpl != guest.sregs[BX_SEG_REG_SS].cache.dpl) {
+               BX_ERROR(("VMENTER FAIL: VMCS guest non-conforming CS.DPL <> SS.DPL"));
                return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
              }
              break;
           case BX_CODE_EXEC_ONLY_CONFORMING_ACCESSED:
           case BX_CODE_EXEC_READ_CONFORMING_ACCESSED:
              // conforming segment
-             if (guest.sregs[BX_SEG_REG_CS].selector.rpl < guest.sregs[BX_SEG_REG_CS].cache.dpl) {
-               BX_ERROR(("VMENTER FAIL: VMCS guest non-conforming CS.RPL < CS.DPL"));
+             if (guest.sregs[BX_SEG_REG_CS].cache.dpl > guest.sregs[BX_SEG_REG_SS].cache.dpl) {
+               BX_ERROR(("VMENTER FAIL: VMCS guest non-conforming CS.DPL > SS.DPL"));
                return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
              }
              break;
