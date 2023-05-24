@@ -257,7 +257,7 @@ void bx_gdbstub_break(void)
   bx_enter_gdbstub = 1;
 }
 
-int bx_gdbstub_check(unsigned int eip)
+int bx_gdbstub_check(Bit64u eip)
 {
   unsigned int i;
   unsigned char ch;
@@ -306,7 +306,7 @@ int bx_gdbstub_check(unsigned int eip)
   {
     if (eip == breakpoints[i])
     {
-      BX_INFO(("found breakpoint at %x", eip));
+      BX_INFO(("found breakpoint at " FMT_ADDRX64, eip));
       last_stop_reason = GDBSTUB_EXECUTION_BREAKPOINT;
       return GDBSTUB_EXECUTION_BREAKPOINT;
     }

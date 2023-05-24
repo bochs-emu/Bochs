@@ -271,7 +271,7 @@ void print_statistics_tree(bx_param_c *node, int level = 0);
 // defines for GDB stub
 void bx_gdbstub_init(void);
 void bx_gdbstub_break(void);
-int bx_gdbstub_check(unsigned int eip);
+int bx_gdbstub_check(Bit64u eip);
 #define GDBSTUB_STOP_NO_REASON   (0xac0)
 
 #if BX_SUPPORT_SMP
