@@ -3141,6 +3141,11 @@ void bx_dbg_print_descriptor(Bit32u lo, Bit32u hi)
       default:
         // task, int, trap, or call gate.
         dbg_printf("target=0x%04x:0x%08x, DPL=%d", segment, offset, dpl);
+
+        const char *Sym = bx_dbg_disasm_symbolic_address(offset, 0);
+        if (Sym)
+          dbg_printf(" (%s)", Sym);
+
         break;
       }
     }
