@@ -775,7 +775,12 @@ bool BX_CPU_C::dbg_instruction_epilog(void)
 
 #if BX_GDBSTUB
   if (bx_dbg.gdbstub_enabled) {
-    unsigned reason = bx_gdbstub_check(EIP);
+    unsigned reason =
+#if BX_SUPPORT_X86_64 == 0
+        bx_gdbstub_check(EIP);
+#else
+        bx_gdbstub_check(RIP);
+#endif
     if (reason != GDBSTUB_STOP_NO_REASON) return(1);
   }
 #endif
