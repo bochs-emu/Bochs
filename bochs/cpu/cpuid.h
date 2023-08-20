@@ -449,7 +449,8 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 
 // CPUID defines - EXT5 features CPUID[0x00000007].EDX  [subleaf 0]
 // -----------------------------
-//   [1:0]    reserved
+//   [0:0]    reserved
+//   [1:1]    SGX-KEYS: Attestation Services for SGX support
 //   [2:2]    AVX512 4VNNIW instructions support
 //   [3:3]    AVX512 4FMAPS instructions support
 //   [4:4]    Support of Fast REP MOV instructions with short length
@@ -459,8 +460,8 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [9:9]    SRBDS_CTRL: IA32_MCU_OPT_CTRL MSR
 //   [10:10]  MD clear
 //   [11:11]  RTM_ALWAYS_ABORT
-//   [12:12]  RTM_FORCE_ABORT
-//   [13:13]  reserved
+//   [12:12]  reserved
+//   [13:13]  RTM_FORCE_ABORT
 //   [14:14]  SERIALIZE instruction support
 //   [15:15]  Hybrid
 //   [16:16]  TSXLDTRK: TSX suspent load tracking support
@@ -481,7 +482,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [31:31]  SSBD: Speculative Store Bypass Disable supported (SCA)
 
 #define BX_CPUID_EXT5_RESERVED0              (1 <<  0)
-#define BX_CPUID_EXT5_RESERVED1              (1 <<  1)
+#define BX_CPUID_EXT5_SGX_KEYS               (1 <<  1)
 #define BX_CPUID_EXT5_AVX512_4VNNIW          (1 <<  2)
 #define BX_CPUID_EXT5_AVX512_4FMAPS          (1 <<  3)
 #define BX_CPUID_EXT5_FAST_SHORT_REP_MOV     (1 <<  4)
@@ -492,8 +493,8 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_EXT5_SRBDS_CTRL             (1 <<  9)
 #define BX_CPUID_EXT5_MD_CLEAR               (1 << 10)
 #define BX_CPUID_EXT5_RTM_ALWAYS_ABORT       (1 << 11)
-#define BX_CPUID_EXT5_RTM_FORCE_ABORT        (1 << 12)
-#define BX_CPUID_EXT5_RESERVED13             (1 << 13)
+#define BX_CPUID_EXT5_RESERVED12             (1 << 12)
+#define BX_CPUID_EXT5_RTM_FORCE_ABORT        (1 << 13)
 #define BX_CPUID_EXT5_SERIALIZE              (1 << 14)
 #define BX_CPUID_EXT5_HYBRID                 (1 << 15)
 #define BX_CPUID_EXT5_TSXLDTRK               (1 << 16)
@@ -515,14 +516,16 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 
 // CPUID defines - EXT6 features CPUID[0x00000007].EAX  [subleaf 1]
 // -----------------------------
-//   [2:0]    reserved
+//   [0:0]    SHA-512 instructions support
+//   [1:1]    SM3 instructions support
+//   [2:2]    SM4 instructions support
 //   [3:3]    RAO-INT
 //   [4:4]    AVX VNNI
 //   [5:5]    AVX512_BF16 conversion instructions support
-//   [6:6]    reserved
+//   [6:6]    LASS: Linear Address Space Separation support
 //   [7:7]    CMPCCXADD
 //   [8:8]    Arch Perfmon
-//   [9:8]    reserved
+//   [9:9]    reserved
 //   [10:10]  Fast zero-length REP MOVSB
 //   [11:11]  Fast zero-length REP STOSB
 //   [12:12]  Fast zero-length REP CMPSB/SCASB
@@ -537,13 +540,13 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [27:27]  MSRLIST: RDMSRLIST/WRMSRLIST instructions and the IA32_BARRIER MSR
 //   [31:28]  reserved
 
-#define BX_CPUID_EXT6_RESERVED0              (1 <<  0)
-#define BX_CPUID_EXT6_RESERVED1              (1 <<  1)
-#define BX_CPUID_EXT6_RESERVED2              (1 <<  2)
+#define BX_CPUID_EXT6_SHA512                 (1 <<  0)
+#define BX_CPUID_EXT6_SM3                    (1 <<  1)
+#define BX_CPUID_EXT6_SM4                    (1 <<  2)
 #define BX_CPUID_EXT6_RAO_INT                (1 <<  3)
 #define BX_CPUID_EXT6_AVX_VNNI               (1 <<  4)
 #define BX_CPUID_EXT6_AVX512_BF16            (1 <<  5)
-#define BX_CPUID_EXT6_RESERVED6              (1 <<  6)
+#define BX_CPUID_EXT6_LASS                   (1 <<  6)
 #define BX_CPUID_EXT6_CMPCCXADD              (1 <<  7)
 #define BX_CPUID_EXT6_ARCH_PERFMON           (1 <<  8)
 #define BX_CPUID_EXT6_RESERVED9              (1 <<  9)
@@ -573,10 +576,12 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 // CPUID defines - EXT7 features CPUID[0x00000007].EBX  [subleaf 1]
 // -----------------------------
 //   [0:0]    IA32_PPIN and IA32_PPIN_CTL MSRs
+//   [1:1]    TSE: PBNDKB instruction and existence of the IA32_TSE_CAPABILITY MSR
 //   [31:1]   reserved
 
 // ...
 #define BX_CPUID_EXT7_PPIN                   (1 <<  0)
+#define BX_CPUID_EXT7_TSE                    (1 <<  1)
 // ...
 
 // CPUID defines - EXT8 features CPUID[0x00000007].ECX  [subleaf 1]
@@ -588,14 +593,35 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [3:0]    reserved
 //   [4:4]    AVX_VNNI_INT8 support
 //   [5:5]    AVX_NE_CONVERT instructions
-//   [13:6]   reserved
+//   [7:6]    reserved
+//   [8:8]    AMX-COMPLEX instructions
+//   [9:9]    reserved
+//   [10:10]  AVX-VNNI-INT16 instructions
+//   [13:11]  reserved
 //   [14:14]  PREFETCHITI: PREFETCHIT0/T1 instruction
+//   [16:15]  reserved
+//   [17:17]  UIRET sets UIF to the RFLAGS[1] image loaded from the stack
+//   [18:18]  CET_SSS
 
-// ...
+#define BX_CPUID_EXT9_RESERVED0              (1 <<  0)
+#define BX_CPUID_EXT9_RESERVED1              (1 <<  1)
+#define BX_CPUID_EXT9_RESERVED2              (1 <<  2)
+#define BX_CPUID_EXT9_RESERVED3              (1 <<  3)
 #define BX_CPUID_EXT9_AVX_VNNI_INT8          (1 <<  4)
 #define BX_CPUID_EXT9_AVX_NE_CONVERT         (1 <<  5)
-// ...
+#define BX_CPUID_EXT9_RESERVED6              (1 <<  6)
+#define BX_CPUID_EXT9_RESERVED7              (1 <<  7)
+#define BX_CPUID_EXT9_AMX_COMPLEX            (1 <<  8)
+#define BX_CPUID_EXT9_RESERVED9              (1 <<  9)
+#define BX_CPUID_EXT9_AVX_VNNI_INT16         (1 << 10)
+#define BX_CPUID_EXT9_RESERVED11             (1 << 11)
+#define BX_CPUID_EXT9_RESERVED12             (1 << 12)
+#define BX_CPUID_EXT9_RESERVED13             (1 << 13)
 #define BX_CPUID_EXT9_PREFETCHI              (1 << 14)
+#define BX_CPUID_EXT9_RESERVED15             (1 << 15)
+#define BX_CPUID_EXT9_RESERVED16             (1 << 16)
+#define BX_CPUID_EXT9_UIRET_UIF              (1 << 17)
+#define BX_CPUID_EXT9_CET_SSS                (1 << 18)
 // ...
 
 // CPUID defines - STD2 features CPUID[0x80000001].EDX
