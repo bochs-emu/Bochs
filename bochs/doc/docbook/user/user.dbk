@@ -5167,13 +5167,21 @@ This enables the GDB stub. See <xref linkend="debugging-with-gdb">.
 
 <section><title>magic_break</title>
 <para>
-Example:
+Example for breaking on "XCHGW %DI, %DI" or "XCHGW %SP, %SP" execution
+<screen>
+  magic_break: enabled=1 di sp
+</screen>
+If nothing is specified, the default will be used: XCHGW %BX, %BX 
+Note: Windows XP ntldr can cause problems with XCHGW %BX, %BX
 <screen>
   magic_break: enabled=1
 </screen>
 This enables the "magic breakpoint" feature when using the debugger.
-The useless cpu instruction XCHG BX, BX causes Bochs to enter the
+The useless cpu instruction XCHGW REGW, REGW causes Bochs to enter the
 debugger mode. This might be useful for software development.
+<screen>
+  cx dx bx sp bp si di
+</screen>
 </para>
 </section>
 
@@ -7390,6 +7398,24 @@ context.
 
 <para>
 The symbol file consists of zero or more lines of the format <screen>"%x %s"</screen>.
+
+<screen>setmagicbps "cx dx bx sp bp si di"</screen>
+
+Set new magic breakpoints. You can specify multiple at once. Using the setmagicbps command without any arguments will disable all of them
+
+Example for breaking on "XCHGW %DI, %DI" or "XCHGW %SP, %SP" execution
+<screen>
+  setmagicbps "di sp"
+</screen>
+
+<screen>clrmagicbps "cx dx bx sp bp si di"</screen>
+
+Clear magic breakpoints. You can specify multiple at once. Using the clrmagicbps command without any arguments will disable all of them
+
+Example for clearing "XCHGW %DI, %DI" and "XCHGW %SP, %SP"
+<screen>
+  clrmagicbps "di sp"
+</screen>
 
 <screen>show [<varname>string</varname>]</screen>
 

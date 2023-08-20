@@ -2283,6 +2283,50 @@ void bx_dbg_lyt(void)
   bx_nest_infile(layoutpath);
 }
 
+void bx_dbg_set_magic_bp_mask(Bit8u new_mask)
+{
+  bx_dbg.magic_break = new_mask;
+  bx_dbg_print_magic_bp_mask_from_str(bx_dbg.magic_break);
+}
+
+void bx_dbg_clr_magic_bp_mask(Bit8u mask)
+{
+  bx_dbg.magic_break &= ~mask;
+  bx_dbg_print_magic_bp_mask_from_str(bx_dbg.magic_break);
+}
+
+static const char* const magic_bp_regs[] = { "ax" /* not accessible */, "cx", "dx", "bx", "sp", "bp", "si", "di" };
+
+void bx_dbg_print_magic_bp_mask_from_str(Bit8u mask)
+{
+  dbg_printf("magic breakpoint mask: 0x%x ", mask);
+
+  for (int i = 1; i < 8; i++) {
+    if (mask & (1 << i)) {
+      dbg_printf("%s ", magic_bp_regs[i]);
+    }
+  }
+
+  dbg_printf("\n");
+}
+
+Bit8u bx_dbg_get_magic_bp_mask_from_str(const char *str)
+{
+  Bit8u new_mask = 0;
+
+  if (NULL == str) {
+    return 0;
+  }
+ 
+  for (int i = 1; i < 8; i++) {
+    if (strstr(str, magic_bp_regs[i]) != NULL) {
+      new_mask |= (1 << i);
+    }
+  }
+    
+  return new_mask;
+}
+
 void bx_dbg_print_guard_results(void)
 {
   unsigned cpu, i;
@@ -3796,7 +3840,7 @@ void bx_dbg_print_help(void)
   dbg_printf("    c|cont|continue, s|step, p|n|next, modebp, vmexitbp\n");
   dbg_printf("-*- Breakpoint management -*-\n");
   dbg_printf("    vb|vbreak, lb|lbreak, pb|pbreak|b|break, sb, sba, blist,\n");
-  dbg_printf("    bpe, bpd, d|del|delete, watch, unwatch\n");
+  dbg_printf("    bpe, bpd, d|del|delete, watch, unwatch, setmagicbps, clrmagicbps\n");
   dbg_printf("-*- CPU and memory contents -*-\n");
   dbg_printf("    x, xp, setpmem, writemem, loadmem, crc, info, deref,\n");
   dbg_printf("    r|reg|regs|registers, fp|fpu, mmx, sse, sreg, dreg, creg,\n");

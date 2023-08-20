@@ -113,6 +113,8 @@ Bit64u eval_value;
 %token <sval> BX_TOKEN_WRITE
 %token <sval> BX_TOKEN_SHOW
 %token <sval> BX_TOKEN_LOAD_SYMBOLS
+%token <sval> BX_TOKEN_SET_MAGIC_BREAK_POINTS
+%token <sval> BX_TOKEN_CLEAR_MAGIC_BREAK_POINTS
 %token <sval> BX_TOKEN_SYMBOLS
 %token <sval> BX_TOKEN_LIST_SYMBOLS
 %token <sval> BX_TOKEN_GLOBAL
@@ -200,6 +202,8 @@ command:
     | vmexitbp_command
     | print_stack_command
     | backtrace_command
+    | set_magic_break_points_command
+    | clr_magic_break_points_command
     | watch_point_command
     | page_command
     | tlb_command
@@ -456,6 +460,32 @@ symbol_command:
       {
         bx_dbg_symbol_command($3, 1, $4);
         free($1); free($2); free($3);
+      }
+    ;
+
+set_magic_break_points_command:
+      BX_TOKEN_SET_MAGIC_BREAK_POINTS '\n'
+      {
+        bx_dbg_set_magic_bp_mask(0);
+        free($1);
+      }
+    | BX_TOKEN_SET_MAGIC_BREAK_POINTS BX_TOKEN_STRING '\n'
+      {
+        bx_dbg_set_magic_bp_mask(bx_dbg_get_magic_bp_mask_from_str($2));
+        free($1); free($2);
+      }
+    ;
+
+clr_magic_break_points_command:
+      BX_TOKEN_CLEAR_MAGIC_BREAK_POINTS '\n'
+      {
+        bx_dbg_set_magic_bp_mask(0);
+        free($1);
+      }
+    | BX_TOKEN_CLEAR_MAGIC_BREAK_POINTS BX_TOKEN_STRING '\n'
+      {
+        bx_dbg_clr_magic_bp_mask(bx_dbg_get_magic_bp_mask_from_str($2));
+        free($1); free($2);
       }
     ;
 
@@ -1156,6 +1186,16 @@ help_command:
      | BX_TOKEN_HELP BX_TOKEN_LOAD_SYMBOLS '\n'
        {
          dbg_printf("ldsym [global] <filename> [offset] - load symbols from file\n");
+         free($1);free($2);
+       }
+     | BX_TOKEN_HELP BX_TOKEN_SET_MAGIC_BREAK_POINTS '\n'
+       {
+         dbg_printf("setmagicbps \"cx dx bx sp bp si di\" - set new magic breakpoints. You can specify multiple at once. Using the setmagicbps command without any arguments will disable all of them\n");
+         free($1);free($2);
+       }
+     | BX_TOKEN_HELP BX_TOKEN_CLEAR_MAGIC_BREAK_POINTS '\n'
+       {
+         dbg_printf("clrmagicbps \"cx dx bx sp bp si di\" - clear magic breakpoints. You can specify multiple at once. Using the clrmagicbps command without any arguments will disable all of them\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_LIST_SYMBOLS '\n'

@@ -219,9 +219,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XCHG_EwGwR(bxInstruction_c *i)
   Bit16u op1_16, op2_16;
 
 #if BX_DEBUGGER
-  // Note for mortals: the instruction to trigger this is "xchgw %bx,%bx"
-  if (bx_dbg.magic_break_enabled && (i->src() == 3) && (i->dst() == 3))
-  {
+  /* Note for mortals: the instruction to trigger this is "xchgw %regw,%regw"
+    66:87C9  | xchg cx,cx  | 1000011111 001 001 -> 1
+    66:87D2  | xchg dx,dx  | 1000011111 010 010 -> 2
+    66:87DB  | xchg bx,bx  | 1000011111 011 011 -> 3
+    66:87E4  | xchg sp,sp  | 1000011111 100 100 -> 4
+    66:87ED  | xchg bp,bp  | 1000011111 101 101 -> 5
+    66:87F6  | xchg si,si  | 1000011111 110 110 -> 6
+    66:87FF  | xchg di,di  | 1000011111 111 111 -> 7
+  */
+  if (bx_dbg.magic_break && i->src() == i->dst() && (bx_dbg.magic_break & (1 << (i->src())))) {
     BX_CPU_THIS_PTR magic_break = 1;
     BX_NEXT_INSTR(i);
   }
