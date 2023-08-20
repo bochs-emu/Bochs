@@ -287,7 +287,7 @@ typedef struct {
   bool exceptions;
   bool print_timestamps;
 #if BX_DEBUGGER
-  bool magic_break_enabled;
+  Bit8u magic_break;
 #endif
 #if BX_GDBSTUB
   bool gdbstub_enabled;

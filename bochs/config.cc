@@ -3147,6 +3147,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
 #endif
   } else if (!strcmp(params[0], "magic_break")) {
 #if BX_DEBUGGER
+    bx_dbg.magic_break = 0;
     if (num_params != 2) {
       PARSE_ERR(("%s: magic_break directive: wrong # args.", context));
     }
@@ -3155,14 +3156,14 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     }
     if (params[1][8] == '0') {
       BX_INFO(("Ignoring magic break points"));
-      bx_dbg.magic_break_enabled = 0;
-    }
-    else if (params[1][8] == '1') {
-      BX_INFO(("Stopping on magic break points"));
-      bx_dbg.magic_break_enabled = 1;
-    }
-    else {
-      PARSE_ERR(("%s: magic_break directive malformed.", context));
+    } else if (params[1][8] == '1') {
+      bx_dbg_set_magic_bp_mask(bx_dbg_get_magic_bp_mask_from_str(params[1]));
+      if (0 == bx_dbg.magic_break) {
+        // bx if not specified for backward compatibility
+        bx_dbg_set_magic_bp_mask(bx_dbg_get_magic_bp_mask_from_str("bx"));
+      }
+    } else {
+      PARSE_ERR(("%s: magic_break directive malformed", context));
     }
 #else
     PARSE_WARN(("%s: Bochs is not compiled with internal debugger support", context));
@@ -3406,7 +3407,7 @@ int bx_write_debugger_options(FILE *fp)
 {
 #if BX_DEBUGGER
   fprintf(fp, "debugger_log: %s\n", SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr());
-  fprintf(fp, "magic_break: enabled=%d\n", bx_dbg.magic_break_enabled);
+  fprintf(fp, "magic_break: enabled=1 0x%x\n", bx_dbg.magic_break);
   // TODO: debug symbols
 #endif
 #if BX_GDBSTUB

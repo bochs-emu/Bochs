@@ -1271,13 +1271,22 @@ speaker: enabled=1, mode=sound, volume=15
 #=======================================================================
 # MAGIC_BREAK:
 # This enables the "magic breakpoint" feature when using the debugger.
-# The useless cpu instruction XCHG BX, BX causes Bochs to enter the
+# The useless cpu instructions XCHG %REGW, %REGW causes Bochs to enter the
 # debugger mode. This might be useful for software development.
 #
-# Example:
+# You can specify multiple at once:
+#
+# cx dx bx sp bp si di
+#
+# Example for breaking on "XCHGW %DI, %DI" or "XCHG %SP, %SP" execution
+#   magic_break: enabled=1 di sp
+#
+# If nothing is specified, the default will be used: XCHGW %BX, %BX 
 #   magic_break: enabled=1
+#
+# Note: Windows XP ntldr can cause problems with XCHGW %BX, %BX
 #=======================================================================
-#magic_break: enabled=1
+# magic_break: enabled=1
 
 #=======================================================================
 # DEBUG_SYMBOLS:
