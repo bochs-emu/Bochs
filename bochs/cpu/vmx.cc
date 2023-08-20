@@ -1572,20 +1572,9 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
         // CS checks
         switch (guest.sregs[BX_SEG_REG_CS].cache.type) {
           case BX_CODE_EXEC_ONLY_ACCESSED:
-          case BX_CODE_EXEC_READ_ACCESSED:
-             // non-conforming segment
-             if (guest.sregs[BX_SEG_REG_CS].selector.rpl != guest.sregs[BX_SEG_REG_CS].cache.dpl) {
-               BX_ERROR(("VMENTER FAIL: VMCS guest non-conforming CS.RPL <> CS.DPL"));
-               return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
-             }
-             break;
+          case BX_CODE_EXEC_READ_ACCESSED:              // non-conforming segment
           case BX_CODE_EXEC_ONLY_CONFORMING_ACCESSED:
-          case BX_CODE_EXEC_READ_CONFORMING_ACCESSED:
-             // conforming segment
-             if (guest.sregs[BX_SEG_REG_CS].selector.rpl < guest.sregs[BX_SEG_REG_CS].cache.dpl) {
-               BX_ERROR(("VMENTER FAIL: VMCS guest non-conforming CS.RPL < CS.DPL"));
-               return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
-             }
+          case BX_CODE_EXEC_READ_CONFORMING_ACCESSED:   // conforming segment
              break;
 #if BX_SUPPORT_VMX >= 2
           case BX_DATA_READ_WRITE_ACCESSED:
@@ -1647,6 +1636,23 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
            }
         }
      }
+  }
+
+  switch (guest.sregs[BX_SEG_REG_CS].cache.type) {
+    case BX_CODE_EXEC_ONLY_ACCESSED:
+    case BX_CODE_EXEC_READ_ACCESSED:              // non-conforming segment
+      if (guest.sregs[BX_SEG_REG_CS].cache.dpl != guest.sregs[BX_SEG_REG_SS].cache.dpl) {
+        BX_ERROR(("VMENTER FAIL: VMCS guest non-conforming CS.DPL <> SS.DPL"));
+        return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+      }
+      break;
+    case BX_CODE_EXEC_ONLY_CONFORMING_ACCESSED:
+    case BX_CODE_EXEC_READ_CONFORMING_ACCESSED:   // conforming segment
+      if (guest.sregs[BX_SEG_REG_CS].cache.dpl > guest.sregs[BX_SEG_REG_SS].cache.dpl) {
+        BX_ERROR(("VMENTER FAIL: VMCS guest non-conforming CS.DPL > SS.DPL"));
+        return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+      }
+      break;
   }
 
   if (! v8086_guest) {
