@@ -1679,6 +1679,13 @@ void bx_init_options()
       "Debug messages written to i/o port 0xE9 will be displayed on console",
       0);
 
+  // port e9 hack all rings
+  new bx_param_bool_c(misc,
+      "port_e9_hack_all_rings",
+      "Enable port 0xE9 hack for all rings",
+      "Debug messages written to i/o port 0xE9 from ring3 will be displayed on console",
+      0);
+
   // GDB stub
   menu = new bx_list_c(misc, "gdbstub", "GDB Stub Options");
   menu->set_options(menu->SHOW_PARENT | menu->USE_BOX_TITLE);
@@ -1763,6 +1770,7 @@ void bx_init_options()
   misc->add(SIM->get_param(BXPN_KBD_PASTE_DELAY));
   misc->add(SIM->get_param(BXPN_USER_SHORTCUT));
   misc->add(SIM->get_param(BXPN_PORT_E9_HACK));
+  misc->add(SIM->get_param(BXPN_PORT_E9_HACK_ALL_RINGS));
   misc->set_options(misc->SHOW_PARENT | misc->SHOW_GROUP_NAME);
 }
 
@@ -2235,6 +2243,30 @@ static int parse_param_bool(const char *input, int len, const char *param)
   }
 
   return -1;
+}
+
+static int parse_port_e9_hack(const char *context, const char **params, int num_params)
+{
+  if (num_params > 2) {
+    PARSE_ERR(("%s: port_e9_hack directive: wrong # args.", context));
+  }
+  if (strncmp(params[0], "enabled=", 8)) {
+    PARSE_ERR(("%s: port_e9_hack directive malformed.", context));
+  }
+  if (parse_param_bool(params[0], 8, BXPN_PORT_E9_HACK) < 0) {
+    PARSE_ERR(("%s: port_e9_hack directive malformed.", context));
+  }
+  if (num_params == 2) {
+    if (!strncmp(params[1], "all_rings=", 10)) {
+      if (parse_param_bool(params[1], 10, BXPN_PORT_E9_HACK_ALL_RINGS) < 0) {
+        PARSE_ERR(("%s: all_rings option malformed.", context));
+      }
+    } else {
+      PARSE_ERR(("%s: port_e9_hack: invalid parameter %s", context, params[1]));
+    }
+  }
+
+  return 0;
 }
 
 int bx_parse_param_from_list(const char *context, const char *input, bx_list_c *list)
@@ -3186,14 +3218,8 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       PARSE_ERR(("%s: print_timestamps directive malformed.", context));
     }
   } else if (!strcmp(params[0], "port_e9_hack")) {
-    if (num_params != 2) {
-      PARSE_ERR(("%s: port_e9_hack directive: wrong # args.", context));
-    }
-    if (strncmp(params[1], "enabled=", 8)) {
-      PARSE_ERR(("%s: port_e9_hack directive malformed.", context));
-    }
-    if (parse_param_bool(params[1], 8, BXPN_PORT_E9_HACK) < 0) {
-      PARSE_ERR(("%s: port_e9_hack directive malformed.", context));
+    if (parse_port_e9_hack(context, (const char **)(params + 1), num_params - 1) < 0) {
+      return -1;
     }
   } else if (!strcmp(params[0], "load32bitOSImage")) {
     PARSE_ERR(("%s: load32bitOSImage: This legacy feature is no longer supported.", context));
@@ -3550,6 +3576,7 @@ int bx_write_configuration(const char *rc, int overwrite)
   fprintf(fp, "print_timestamps: enabled=%d\n", bx_dbg.print_timestamps);
   bx_write_debugger_options(fp);
   fprintf(fp, "port_e9_hack: enabled=%d\n", SIM->get_param_bool(BXPN_PORT_E9_HACK)->get());
+  fprintf(fp, "port_e9_hack_all_rings: enabled=%d\n", SIM->get_param_bool(BXPN_PORT_E9_HACK_ALL_RINGS)->get());
   fprintf(fp, "private_colormap: enabled=%d\n", SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get());
 #if BX_WITH_AMIGAOS
   fprintf(fp, "fullscreen: enabled=%d\n", SIM->get_param_bool(BXPN_FULLSCREEN)->get());

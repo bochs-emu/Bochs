@@ -285,6 +285,7 @@ sound
 
 misc
   port_e9_hack
+  port_e9_hack_all_rings
   gdbstub
     port
     text_base
