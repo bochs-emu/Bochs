@@ -1310,10 +1310,12 @@ speaker: enabled=1, mode=sound, volume=15
 # very early when writing BIOS or OS code for example, without having to
 # bother with setting up a serial port or etc. Reading from port 0xE9 will
 # will return 0xe9 to let you know if the feature is available.
-# Leave this 0 unless you have a reason to use it.
+# Leave this 0 unless you have a reason to use it. By enabling the 
+# 'all_rings' option, you can utilize the port e9 hack from ring3.
 #
 # Example:
 #   port_e9_hack: enabled=1
+#   port_e9_hack: enabled=1, all_rings=1
 #=======================================================================
 #port_e9_hack: enabled=1
 
