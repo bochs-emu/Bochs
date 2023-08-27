@@ -176,6 +176,7 @@
 #define BXPN_SOUND_ES1370                "sound.es1370"
 #define BXPN_PORT_E9_HACK                "misc.port_e9_hack"
 #define BXPN_PORT_E9_HACK_ALL_RINGS      "misc.port_e9_hack_all_rings"
+#define BXPN_IODEBUG_ALL_RINGS           "misc.iodebug_all_rings"
 #define BXPN_GDBSTUB                     "misc.gdbstub"
 #define BXPN_LOG_FILENAME                "log.filename"
 #define BXPN_LOG_PREFIX                  "log.prefix"

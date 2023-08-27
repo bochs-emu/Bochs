@@ -5218,6 +5218,20 @@ option, you can utilize the port e9 hack from ring3.
 </para>
 </section>
 
+<section><title>IODEBUG</title>
+<para>
+Example:
+<screen>
+  iodebug: all_rings=1
+</screen>
+I/O Interface to Bochs Debugger plugin allows the code running inside 
+Bochs to monitor memory ranges, trace individual instructions, and 
+observe register values during execution. By enabling the 'all_rings' 
+option, you can utilize the iodebug ports from ring3. For more 
+information, refer to "Advanced debugger usage" documentation.
+</para>
+</section>
+
 </section> <!--end of bochsrc section-->
 
 <section id="keymap"><title>How to write your own keymap table</title>

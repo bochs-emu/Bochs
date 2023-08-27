@@ -1686,6 +1686,15 @@ void bx_init_options()
       "Debug messages written to i/o port 0xE9 from ring3 will be displayed on console",
       0);
 
+#if BX_SUPPORT_IODEBUG
+// iodebug all rings
+  new bx_param_bool_c(misc,
+      "iodebug_all_rings",
+      "Enable iodebug ports for all rings",
+      "I/O Interface to Bochs Debugger plugin for all rings",
+      0);
+#endif
+
   // GDB stub
   menu = new bx_list_c(misc, "gdbstub", "GDB Stub Options");
   menu->set_options(menu->SHOW_PARENT | menu->USE_BOX_TITLE);
@@ -1771,6 +1780,9 @@ void bx_init_options()
   misc->add(SIM->get_param(BXPN_USER_SHORTCUT));
   misc->add(SIM->get_param(BXPN_PORT_E9_HACK));
   misc->add(SIM->get_param(BXPN_PORT_E9_HACK_ALL_RINGS));
+  #if BX_SUPPORT_IODEBUG
+  misc->add(SIM->get_param(BXPN_IODEBUG_ALL_RINGS));
+  #endif
   misc->set_options(misc->SHOW_PARENT | misc->SHOW_GROUP_NAME);
 }
 
@@ -3221,6 +3233,21 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     if (parse_port_e9_hack(context, (const char **)(params + 1), num_params - 1) < 0) {
       return -1;
     }
+  } else if (!strcmp(params[0], "iodebug")) {
+#if BX_SUPPORT_IODEBUG
+    if (num_params != 2) {
+      PARSE_ERR(("%s: iodebug directive: wrong # args.", context));
+    }
+    if (!strncmp(params[1], "all_rings=", 10)) {
+      if (parse_param_bool(params[1], 10, BXPN_IODEBUG_ALL_RINGS) < 0) {
+        PARSE_ERR(("%s: all_rings option malformed.", context));
+      }
+    } else {
+      PARSE_ERR(("%s: iodebug: invalid parameter %s", context, params[1]));
+    }
+#else
+    PARSE_WARN(("%s: Bochs is not compiled with iodebug support", context));
+#endif
   } else if (!strcmp(params[0], "load32bitOSImage")) {
     PARSE_ERR(("%s: load32bitOSImage: This legacy feature is no longer supported.", context));
   } else if (SIM->is_addon_option(params[0])) {
@@ -3577,6 +3604,9 @@ int bx_write_configuration(const char *rc, int overwrite)
   bx_write_debugger_options(fp);
   fprintf(fp, "port_e9_hack: enabled=%d\n", SIM->get_param_bool(BXPN_PORT_E9_HACK)->get());
   fprintf(fp, "port_e9_hack_all_rings: enabled=%d\n", SIM->get_param_bool(BXPN_PORT_E9_HACK_ALL_RINGS)->get());
+  #if BX_SUPPORT_IODEBUG
+  fprintf(fp, "iodebug_all_rings: enabled=%d\n", SIM->get_param_bool(BXPN_IODEBUG_ALL_RINGS)->get());
+  #endif
   fprintf(fp, "private_colormap: enabled=%d\n", SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get());
 #if BX_WITH_AMIGAOS
   fprintf(fp, "fullscreen: enabled=%d\n", SIM->get_param_bool(BXPN_FULLSCREEN)->get());
