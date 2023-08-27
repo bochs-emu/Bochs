@@ -1320,6 +1320,19 @@ speaker: enabled=1, mode=sound, volume=15
 #port_e9_hack: enabled=1
 
 #=======================================================================
+# IODEBUG:
+# I/O Interface to Bochs Debugger plugin allows the code running inside 
+# Bochs to monitor memory ranges, trace individual instructions, and 
+# observe register values during execution. By enabling the 'all_rings' 
+# option, you can utilize the iodebug ports from ring3. For more 
+# information, refer to "Advanced debugger usage" documentation.
+#
+# Example:
+#   iodebug: all_rings=1
+#=======================================================================
+#iodebug: all_rings=1
+
+#=======================================================================
 # fullscreen: ONLY IMPLEMENTED ON AMIGA
 #             Request that Bochs occupy the entire screen instead of a
 #             window.

@@ -869,6 +869,12 @@ bool BX_CPP_AttrRegparmN(3) BX_CPU_C::allow_io(bxInstruction_c *i, Bit16u port, 
   if (0xe9 == port && port_e9_hack_all_rings)
     return(1); // port e9 hack can be used by unprivileged code
 
+#if BX_SUPPORT_IODEBUG
+  static bool iodebug_all_rings = SIM->get_param_bool(BXPN_IODEBUG_ALL_RINGS)->get();
+  if ((0x8A00 == port || 0x8A01 == port) && iodebug_all_rings)
+    return(1); // iodebug ports can be used by unprivileged code
+#endif /* if BX_SUPPORT_IODEBUG */
+
   if (BX_CPU_THIS_PTR cr0.get_PE() && (BX_CPU_THIS_PTR get_VM() || (CPL > BX_CPU_THIS_PTR get_IOPL())))
   {
     if (BX_CPU_THIS_PTR tr.cache.valid==0 ||
