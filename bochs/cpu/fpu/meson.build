@@ -1,0 +1,25 @@
+sources = [
+    'f2xm1.cc',
+    'ferr.cc',
+    'fpatan.cc',
+    'fprem.cc',
+    'fpu_arith.cc',
+    'fpu.cc',
+    'fpu_cmov.cc',
+    'fpu_compare.cc',
+    'fpu_const.cc',
+    'fpu_load_store.cc',
+    'fpu_misc.cc',
+    'fpu_trans.cc',
+    'fsincos.cc',
+    'fyl2x.cc',
+    'poly.cc',
+    'softfloat16.cc',
+    'softfloat.cc',
+    'softfloat-muladd.cc',
+    'softfloat-round-pack.cc',
+    'softfloat-specialize.cc',
+    'softfloatx80.cc',
+]
+
+bx_deps += static_library('fpu', sources, include_directories: [top_include, '..'])
