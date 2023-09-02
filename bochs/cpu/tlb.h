@@ -162,6 +162,19 @@ struct bx_TLB_entry
 #if BX_SUPPORT_MEMTYPE
   Bit32u memtype;       // keep it Bit32u for alignment
 #endif
+  Bit16u tr7_attributes; // until we figure out how to set the following bits:
+                         // 11 Page-level cache disable bit (PCD). Corresponds to the PCD bit of a page table entry.
+                         // 10 Page-level cache write-through bit (PWT). Corresponds to the PWT bit of a page table entry.
+                         // 9-7 LRU bits.
+                         //      TLB lookup: LRU bits associated with the TLB entry prior to the TLB lookup.
+                         //      TLB write: ignored.
+                         // 4 PL bit.
+                         //      TLB lookup: If=1, read hit occurred. If=O, read miss occurred.
+                         //      TLB write: If=1, REP field is used to select the set. If=O, the pseudo-LRU replacement
+                         //      algorithm is used to select the set.
+                         // 3-2 Set selection (REP).
+                         //      TLB lookup: If PL=1, set in which the tag was found. If PL=O, undefined data.
+                         //      TLB write: If PL=1 , selects one of the four sets for replacement. If PL=O, ignored.
 
   bx_TLB_entry() { invalidate(); }
 

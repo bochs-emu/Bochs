@@ -904,6 +904,11 @@ public: // for now...
   bx_cr0_t   cr0;
   bx_address cr2;
   bx_address cr3;
+#if !BX_SUPPORT_X86_64
+  bx_tr6_t tr6;
+  bx_tr7_t tr7;
+#endif
+
 #if BX_CPU_LEVEL >= 5
   bx_cr4_t   cr4;
   Bit32u cr4_suppmask;
@@ -1526,6 +1531,10 @@ public: // for now...
   BX_SMF void MOV_RdCR4(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOV_DdRd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOV_RdDd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#if !BX_SUPPORT_X86_64
+  BX_SMF void MOV_TrRd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOV_RdTr(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#endif
 
   BX_SMF void JO_Jw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void JNO_Jw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -4631,6 +4640,7 @@ public: // for now...
   BX_SMF bool check_CR4(bx_address val) BX_CPP_AttrRegparmN(1);
   BX_SMF Bit32u get_cr4_allow_mask(void);
 #endif
+
 #if BX_CPU_LEVEL >= 6
   BX_SMF bool CheckPDPTR(bx_phy_address cr3_val) BX_CPP_AttrRegparmN(1);
 #endif

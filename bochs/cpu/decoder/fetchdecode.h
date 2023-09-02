@@ -147,7 +147,11 @@ enum {
   BX_KMASK_REG_PAIR = 0xC,
   BX_SEGREG = 0xD,
   BX_CREG = 0xE,
-  BX_DREG = 0xF
+  BX_DREG = 0xF,
+#if !BX_SUPPORT_X86_64
+  BX_TREG = BX_GPR64,
+#endif
+
 };
 
 // to be used together with BX_SRC_VECTOR_RM
@@ -311,6 +315,9 @@ const Bit8u OP_Cd = BX_FORM_SRC(BX_CREG, BX_SRC_NNN);
 const Bit8u OP_Cq = BX_FORM_SRC(BX_CREG, BX_SRC_NNN);
 const Bit8u OP_Dd = BX_FORM_SRC(BX_DREG, BX_SRC_NNN);
 const Bit8u OP_Dq = BX_FORM_SRC(BX_DREG, BX_SRC_NNN);
+#if !BX_SUPPORT_X86_64
+const Bit8u OP_Td = BX_FORM_SRC(BX_TREG, BX_SRC_NNN);
+#endif
 
 const Bit8u OP_Sw = BX_FORM_SRC(BX_SEGREG, BX_SRC_NNN);
 

@@ -26,6 +26,74 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#if !BX_SUPPORT_X86_64
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_TrRd(bxInstruction_c *i)
+{
+  invalidate_prefetch_q();
+  const Bit32u val_32 = BX_READ_32BIT_REG(i->src());
+  switch (i->dst()) {
+  case 6: {
+    bx_tr6_t &tr6 = BX_CPU_THIS_PTR tr6;
+    tr6.val32 = val_32;
+    if (!tr6.tlb_write())
+      break;
+
+    bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(tr6.val32, 0);
+    if (!tr6.get_valid()) {
+      tlbEntry->invalidate();
+      break;
+    }
+    bx_tr7_t &tr7 = BX_CPU_THIS_PTR tr7;
+    tlbEntry->ppf = PPFOf(tr7.val32);
+    tlbEntry->tr7_attributes = tr7.val32 & 0xf9c; // see tr7_attributes declaration for more info
+    tlbEntry->accessBits = 0;
+    if (tr6.get_read_write_attribute() == bx_tr6_t::attribute::set) {
+      tlbEntry->accessBits = TLB_UserReadOK | TLB_UserWriteOK | TLB_SysReadOK | TLB_SysWriteOK;
+    }
+    if (tr6.get_user_supervisor_attribute()) {
+      // FIXME set user/supervisor attribute
+    }
+    if (tr6.get_dirty_attribute()) {
+      // FIXME set dirty attribute
+    }
+    break;
+  } break;
+  case 7:
+    BX_CPU_THIS_PTR tr7 = val_32;
+    break;
+  default:
+    BX_ERROR(("%s: #UD - register index out of range", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+  BX_NEXT_TRACE(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdTr(bxInstruction_c *i)
+{
+  Bit32u val_32;
+  switch (i->dst()) {
+  case 6:
+    val_32 = BX_CPU_THIS_PTR tr6.val32;
+    break;
+  case 7: {
+    bx_tr6_t &tr6 = BX_CPU_THIS_PTR tr6;
+    if (tr6.tlb_lookup()) {
+      bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(tr6.val32, 0);
+      val_32 = tlbEntry->ppf | tlbEntry->tr7_attributes;
+    } else {
+      val_32 = BX_CPU_THIS_PTR tr7.val32;
+    }
+  } break;
+  default:
+    BX_ERROR(("%s: #UD - register index out of range", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+
+  BX_WRITE_32BIT_REGZ(i->dst(), val_32);
+  BX_NEXT_INSTR(i);
+}
+#endif
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX

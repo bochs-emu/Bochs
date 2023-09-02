@@ -488,6 +488,10 @@ bx_define_opcode(BX_IA_MOV_RdCR3, "mov", "movl", NULL, &BX_CPU_C::MOV_RdCR3, 0, 
 bx_define_opcode(BX_IA_MOV_RdCR4, "mov", "movl", NULL, &BX_CPU_C::MOV_RdCR4, BX_ISA_PENTIUM, OP_Ed, OP_Cd, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_MOV_RdDd, "mov", "movl", NULL, &BX_CPU_C::MOV_RdDd, 0, OP_Ed, OP_Dd, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_MOV_DdRd, "mov", "movl", NULL, &BX_CPU_C::MOV_DdRd, 0, OP_Dd, OP_Ed, OP_NONE, OP_NONE, BX_TRACE_END)
+#if !BX_SUPPORT_X86_64
+bx_define_opcode(BX_IA_MOV_RdTr, "mov", "movl", NULL, &BX_CPU_C::MOV_RdTr, 0, OP_Ed, OP_Td, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_MOV_TrRd, "mov", "movl", NULL, &BX_CPU_C::MOV_TrRd, 0, OP_Td, OP_Ed, OP_NONE, OP_NONE, BX_TRACE_END)
+#endif
 
 bx_define_opcode(BX_IA_MOV_EbIb, "mov", "movb", &BX_CPU_C::MOV_EbIbM, &BX_CPU_C::MOV_EbIbR, 0, OP_Eb, OP_Ib, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_MOV_EdId, "mov", "movl", &BX_CPU_C::MOV_EdIdM, &BX_CPU_C::MOV_EdIdR, 0, OP_Ed, OP_Id, OP_NONE, OP_NONE, 0)

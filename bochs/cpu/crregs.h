@@ -211,6 +211,35 @@ struct bx_dr7_t {
   BX_CPP_INLINE void set32(Bit32u val) { val32 = val; }
 };
 
+struct bx_tr6_t {
+  Bit32u val32;
+
+  BX_CPP_INLINE bool tlb_write() const { return (val32 & 1) == 0; }
+  BX_CPP_INLINE bool tlb_lookup() const { return (val32 & 1) == 1; }
+  enum attribute { set, clear, undefined };
+
+  BX_CPP_INLINE attribute get_read_write_attribute() const { return get_attribute(6, 5); }
+  BX_CPP_INLINE attribute get_user_supervisor_attribute() const { return get_attribute(8, 7); }
+  BX_CPP_INLINE attribute get_dirty_attribute() const { return get_attribute(10, 9); }
+  IMPLEMENT_CRREG_ACCESSORS(valid, 11)
+
+  BX_CPP_INLINE attribute get_attribute(Bit8u bit, Bit8u complement) const
+  {
+    if ((1 << bit) & val32 && !((1 << complement) & val32))
+      return set;
+    if (!((1 << bit) & val32) && (1 << complement) & val32)
+      return clear;
+    return undefined;
+  }
+};
+
+struct bx_tr7_t {
+  Bit32u val32;
+  bx_tr7_t(Bit32u val32 = 0)
+    : val32(val32)
+  {}
+};
+
 #if BX_CPU_LEVEL >= 5
 
 #define BX_EFER_SCE_MASK       (1 <<  0)

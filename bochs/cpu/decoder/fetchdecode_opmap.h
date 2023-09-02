@@ -1732,10 +1732,17 @@ static const Bit64u BxOpcodeTable0F23_32[] = { last_opcode(0, BX_IA_MOV_DdRd) };
 static const Bit64u BxOpcodeTable0F23_64[] = { last_opcode(0, BX_IA_MOV_DqRq) };
 #endif
 
+#if !BX_SUPPORT_X86_64
 // opcode 0F 24
-static const Bit64u BxOpcodeTable0F24[] = { last_opcode(0, BX_IA_ERROR) }; // BX_IA_MOV_RdTd not implemented
+static const Bit64u BxOpcodeTable0F24[] = { last_opcode(0, BX_IA_MOV_RdTr) };
 // opcode 0F 26
-static const Bit64u BxOpcodeTable0F26[] = { last_opcode(0, BX_IA_ERROR) }; // BX_IA_MOV_TdRd not implemented
+static const Bit64u BxOpcodeTable0F26[] = { last_opcode(0, BX_IA_MOV_TrRd) };
+#else
+// opcode 0F 24
+static const Bit64u BxOpcodeTable0F24[] = { last_opcode(0, BX_IA_ERROR) };
+// opcode 0F 26
+static const Bit64u BxOpcodeTable0F26[] = { last_opcode(0, BX_IA_ERROR) };
+#endif
 
 // opcode 0F 28
 static const Bit64u BxOpcodeTable0F28[] = {
