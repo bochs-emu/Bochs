@@ -1784,14 +1784,14 @@ AC_ARG_ENABLE(raw-serial,
   AS_HELP_STRING([--enable-raw-serial], [use raw serial port access (no - incomplete)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
-    AC_DEFINE(USE_RAW_SERIAL, 1)
+    AC_DEFINE(BX_USE_RAW_SERIAL, 1)
    else
     AC_MSG_RESULT(no)
-    AC_DEFINE(USE_RAW_SERIAL, 0)
+    AC_DEFINE(BX_USE_RAW_SERIAL, 0)
    fi],
   [
     AC_MSG_RESULT(no)
-    AC_DEFINE(USE_RAW_SERIAL, 0)
+    AC_DEFINE(BX_USE_RAW_SERIAL, 0)
     ]
   )
 

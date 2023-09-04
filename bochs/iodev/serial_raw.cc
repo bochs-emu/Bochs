@@ -26,7 +26,7 @@
 
 #include "iodev.h"
 
-#if USE_RAW_SERIAL
+#if BX_USE_RAW_SERIAL
 
 #include "serial_raw.h"
 
