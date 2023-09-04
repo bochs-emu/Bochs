@@ -82,7 +82,7 @@ enum {
   BX_SER_INT_FIFO
 };
 
-#if USE_RAW_SERIAL
+#if BX_USE_RAW_SERIAL
 class serial_raw;
 #endif
 
@@ -121,7 +121,7 @@ typedef struct {
   HANDLE pipe;
 #endif
 
-#if USE_RAW_SERIAL
+#if BX_USE_RAW_SERIAL
   serial_raw* raw;
 #endif
 #if defined(SERIAL_ENABLE) && !defined(BX_SER_WIN32)

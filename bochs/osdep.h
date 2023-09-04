@@ -362,8 +362,6 @@ BOCHSAPI_MSVCONLY extern Bit64u bx_get_realtime64_usec (void);
 }
 #endif   /* __cplusplus */
 
-#if BX_LARGE_RAMFILE
-
 // these macros required for large ramfile option functionality
 #if BX_HAVE_TMPFILE64 == 0
   #define tmpfile64 tmpfile /* use regular tmpfile() function */
@@ -376,7 +374,5 @@ BOCHSAPI_MSVCONLY extern Bit64u bx_get_realtime64_usec (void);
   #define fseeko64 fseeko  /* use regular fseeko() function */
 #endif
 #endif
-
-#endif // BX_LARGE_RAMFILE
 
 #endif /* ifdef BX_OSDEP_H */
