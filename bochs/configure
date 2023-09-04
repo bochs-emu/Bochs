@@ -24911,19 +24911,19 @@ then :
   enableval=$enable_raw_serial; if test "$enableval" = yes; then
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
-    printf "%s\n" "#define USE_RAW_SERIAL 1" >>confdefs.h
+    printf "%s\n" "#define BX_USE_RAW_SERIAL 1" >>confdefs.h
 
    else
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
-    printf "%s\n" "#define USE_RAW_SERIAL 0" >>confdefs.h
+    printf "%s\n" "#define BX_USE_RAW_SERIAL 0" >>confdefs.h
 
    fi
 else $as_nop
 
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
-    printf "%s\n" "#define USE_RAW_SERIAL 0" >>confdefs.h
+    printf "%s\n" "#define BX_USE_RAW_SERIAL 0" >>confdefs.h
 
 
 

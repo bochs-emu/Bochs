@@ -50,7 +50,7 @@ typedef int SOCKET;
 #define FILE_FLAG_FIRST_PIPE_INSTANCE 0
 #endif
 
-#if USE_RAW_SERIAL
+#if BX_USE_RAW_SERIAL
 #include "serial_raw.h"
 #endif
 
@@ -216,7 +216,7 @@ bx_serial_c::~bx_serial_c(void)
 #endif
           break;
         case BX_SER_MODE_RAW:
-#if USE_RAW_SERIAL
+#if BX_USE_RAW_SERIAL
           delete [] BX_SER_THIS s[i].raw;
 #endif
           break;
@@ -438,7 +438,7 @@ bx_serial_c::init(void)
         BX_PANIC(("serial terminal support not available"));
 #endif   /* def SERIAL_ENABLE */
       } else if (mode == BX_SER_MODE_RAW) {
-#if USE_RAW_SERIAL
+#if BX_USE_RAW_SERIAL
         BX_SER_THIS s[i].raw = new serial_raw(dev);
         BX_SER_THIS s[i].io_mode = BX_SER_MODE_RAW;
 #else
@@ -899,7 +899,7 @@ Bit32u bx_serial_c::read(Bit32u address, unsigned io_len)
       break;
 
     case BX_SER_MSR: /* MODEM status register */
-#if USE_RAW_SERIAL
+#if BX_USE_RAW_SERIAL
       if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_RAW) {
         bool prev_cts = BX_SER_THIS s[port].modem_status.cts;
         bool prev_dsr = BX_SER_THIS s[port].modem_status.dsr;
@@ -974,7 +974,7 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #endif  // !BX_USE_SER_SMF
   bool gen_int = 0;
   Bit8u offset, new_wordlen;
-#if USE_RAW_SERIAL
+#if BX_USE_RAW_SERIAL
   bool mcr_changed = 0;
   Bit8u p_mode;
 #endif
@@ -1156,7 +1156,7 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
     case BX_SER_LCR: /* Line control register */
       new_wordlen = value & 0x03;
-#if USE_RAW_SERIAL
+#if BX_USE_RAW_SERIAL
       if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_RAW) {
         if (BX_SER_THIS s[port].line_cntl.wordlen_sel != new_wordlen) {
           BX_SER_THIS s[port].raw->set_data_bits(new_wordlen + 5);
@@ -1179,7 +1179,7 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
           BX_SER_THIS s[port].raw->set_break(new_b6);
         }
       }
-#endif // USE_RAW_SERIAL
+#endif // BX_USE_RAW_SERIAL
       /* These are ignored, but set them up so they can be read back */
       BX_SER_THIS s[port].line_cntl.stopbits = new_b2;
       BX_SER_THIS s[port].line_cntl.parity_enable = new_b3;
@@ -1201,7 +1201,7 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
             BX_SER_THIS s[port].baudrate = new_baudrate;
             restart_timer = 1;
             BX_DEBUG(("com%d: baud rate set to %d", port+1, BX_SER_THIS s[port].baudrate));
-#if USE_RAW_SERIAL
+#if BX_USE_RAW_SERIAL
             if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_RAW) {
               BX_SER_THIS s[port].raw->set_baudrate(BX_SER_THIS s[port].baudrate);
             }
@@ -1238,7 +1238,7 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
           BX_SER_THIS detect_mouse = 2;
         }
       }
-#if USE_RAW_SERIAL
+#if BX_USE_RAW_SERIAL
       if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_RAW) {
         mcr_changed = (BX_SER_THIS s[port].modem_cntl.dtr != new_b0) |
                       (BX_SER_THIS s[port].modem_cntl.rts != new_b1);
@@ -1253,7 +1253,7 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_SER_THIS s[port].modem_cntl.local_loopback = new_b4;
         if (BX_SER_THIS s[port].modem_cntl.local_loopback) {
           /* transition to loopback mode */
-#if USE_RAW_SERIAL
+#if BX_USE_RAW_SERIAL
           if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_RAW) {
             if (BX_SER_THIS s[port].modem_cntl.dtr ||
                 BX_SER_THIS s[port].modem_cntl.rts) {
@@ -1262,7 +1262,7 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
           }
 #endif
           if (BX_SER_THIS s[port].line_cntl.break_cntl) {
-#if USE_RAW_SERIAL
+#if BX_USE_RAW_SERIAL
             if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_RAW) {
               BX_SER_THIS s[port].raw->set_break(0);
             }
@@ -1273,7 +1273,7 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
           }
         } else {
           /* transition to normal mode */
-#if USE_RAW_SERIAL
+#if BX_USE_RAW_SERIAL
           if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_RAW) {
             mcr_changed = 1;
             if (BX_SER_THIS s[port].line_cntl.break_cntl) {
@@ -1337,7 +1337,7 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
         }
 
         if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_RAW) {
-#if USE_RAW_SERIAL
+#if BX_USE_RAW_SERIAL
           if (mcr_changed) {
             BX_SER_THIS s[port].raw->set_modem_control(value & 0x03);
           }
@@ -1456,7 +1456,7 @@ void bx_serial_c::tx_timer(void)
 #endif
       break;
     case BX_SER_MODE_RAW:
-#if USE_RAW_SERIAL
+#if BX_USE_RAW_SERIAL
       if (!BX_SER_THIS s[port].raw->ready_transmit())
         BX_PANIC(("com%d: not ready to transmit", port+1));
       BX_SER_THIS s[port].raw->transmit(BX_SER_THIS s[port].tsrbuffer);
@@ -1564,7 +1564,7 @@ void bx_serial_c::rx_timer(void)
 #endif
         break;
       case BX_SER_MODE_RAW:
-#if USE_RAW_SERIAL
+#if BX_USE_RAW_SERIAL
         int data;
         if ((data_ready = BX_SER_THIS s[port].raw->ready_receive())) {
           data = BX_SER_THIS s[port].raw->receive();
