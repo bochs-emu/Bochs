@@ -676,6 +676,14 @@ void bx_uhci_core_c::uhci_timer(void)
     
     // start the loop. we allow USB_UHCI_LOOP_COUNT queues to be processed
     while (count--) {
+      // The UHCI (USB 1.1) only allows so many bytes to be transfered per frame.
+      // Due to control/bulk reclamation, we need to catch this and stop transferring 
+      //  or this code will just keep processing TDs.
+      if (bytes_processed >= hub.max_bandwidth) {
+        BX_DEBUG(("Process Bandwidth Limits for this frame (%d with a limit of %d).", bytes_processed, hub.max_bandwidth));
+        break;
+      }
+      
       if (!USB_UHCI_IS_LINK_VALID(item))  // the the T bit is set, we are done
         break;
       
@@ -750,15 +758,7 @@ void bx_uhci_core_c::uhci_timer(void)
           
           // we processed another td within this queue line
           td_count++;
-          
-          // The UHCI (USB 1.1) only allows so many bytes to be transfered per frame.
-          // Due to control/bulk reclamation, we need to catch this and stop transferring 
-          //  or this code will just keep processing TDs.
           bytes_processed += r_actlen;
-          if (bytes_processed >= hub.max_bandwidth) {
-            BX_DEBUG(("Process Bandwidth Limits for this frame (%d with a limit of %d).", bytes_processed, hub.max_bandwidth));
-            break;
-          }
           
           // move to the next item
           if (!was_stall) {
@@ -1028,7 +1028,7 @@ void bx_uhci_core_c::set_status(struct TD *td, bool stalled, bool data_buffer_er
   td->dword1 |= bitstuff_error    ? (1<<17) : 0; // bitstuff error
   td->dword1 |= (act_len & 0x7FF);               // actual length
   if (stalled || data_buffer_error || babble || crc_time_out || bitstuff_error)
-    td->dword1 &= ~((1<<28) | (1<<27));  // clear the c_err field in there was an error
+    td->dword1 &= ~((1<<28) | (1<<27));  // clear the c_err field if there was an error
 }
 
 
