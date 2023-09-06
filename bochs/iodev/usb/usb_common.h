@@ -30,6 +30,8 @@
 #ifndef BX_IODEV_USB_COMMON_H
 #define BX_IODEV_USB_COMMON_H
 
+#include "iodev/iodev.h"
+
 // for the Packet Capture code to work, these four must remain as is
 #define USB_TRANS_TYPE_ISO      0
 #define USB_TRANS_TYPE_INT      1
@@ -237,6 +239,11 @@ public:
     }
   }
   int get_min_speed() { return d.minspeed; }
+  int get_default_speed(int speed) {
+    if ((speed >= d.minspeed) && (speed <= d.maxspeed))
+      return speed;
+    return d.minspeed; // will be no more than full-speed
+  }
   
   // return information for the specified ep of the current device
 #define USB_MAX_ENDPOINTS   5   // we currently don't use more than 5 endpoints (ep0, ep1, ep2, ep3, and ep4)
@@ -245,6 +252,9 @@ public:
   }
   int get_max_burst_size(const int ep) {
     return (ep < USB_MAX_ENDPOINTS) ? d.endpoint_info[ep].max_burst_size : 0;
+  }
+  int get_max_payload(const int ep) {
+    return (ep < USB_MAX_ENDPOINTS) ? (d.endpoint_info[ep].max_burst_size * d.endpoint_info[ep].max_packet_size) : 0;
   }
 
 #if HANDLE_TOGGLE_CONTROL
@@ -288,7 +298,7 @@ protected:
   struct {
     Bit8u type;
     bool connected;
-    int minspeed;
+    int minspeed;  // must be no more than FULL speed for *any* device
     int maxspeed;
     int speed;
     Bit8u addr;
