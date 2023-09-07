@@ -445,6 +445,7 @@ typedef struct {
       bool   ca;             //  1 bit Command Abort               = 0              RW1S
       bool   cs;             //  1 bit Command Stop                = 0              RW1S
       bool   rcs;            //  1 bit Ring Cycle State            = 0              RW
+      Bit64u actual;         // Actual 64-bit value in this register (this register is read as zero, so we keep it here for internal reading)
     } HcCrcr;
     struct {
       Bit64u dcbaap;         // 64 bit hi order address            = 0x00000000     RW
@@ -603,8 +604,8 @@ public:
 
   int event_handler(int event, void *ptr, int port);
 
-private:
   bx_usb_xhci_t hub;
+private:
   Bit8u         devfunc;
   Bit8u         device_change;
   int           rt_conf_id;
