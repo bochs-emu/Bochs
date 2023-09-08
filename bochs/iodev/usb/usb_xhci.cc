@@ -1240,11 +1240,11 @@ bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *data, 
               | (BX_XHCI_THIS hub.op_regs.HcNotification.n1  ? 1 <<  1 : 0)
               | (BX_XHCI_THIS hub.op_regs.HcNotification.n0  ? 1 <<  0 : 0);
         break;
-      case 0x18: // Command Ring Control Register (Lo) (most fields always returns zero when read)
+      case 0x18: // Command Ring Control Register (Lo) (* most fields always returns zero when read *)
         val =   (BX_XHCI_THIS hub.op_regs.HcCrcr.RsvdP           <<  4)
               | (BX_XHCI_THIS hub.op_regs.HcCrcr.crr         ? 1 <<  3 : 0);
         break;
-      case 0x1C: // Command Ring Control Register (Hi) (always returns zero when read)
+      case 0x1C: // Command Ring Control Register (Hi) (* always returns zero when read *)
         val = 0;
         break;
       case 0x20: // Reserved and Zero'd
@@ -1602,8 +1602,17 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
         if (BX_XHCI_THIS hub.op_regs.HcCommand.rs == 0) {
           BX_XHCI_THIS hub.op_regs.HcCrcr.crr = 0;
           BX_XHCI_THIS hub.op_regs.HcStatus.hch = 1;  // set the Halted Bit
-        } else
+        } else {
           BX_XHCI_THIS hub.op_regs.HcStatus.hch = 0;  // clear the Halted Bit
+#if MAX_SCRATCH_PADS > 0
+          // if the scratchpad area is required, the quest must allocate and
+          //  place that address at DCBAAP[0] before setting the Run Bit.
+          Bit64u scratch_addr = 0;
+          DEV_MEM_READ_PHYSICAL((bx_phy_address) BX_XHCI_THIS hub.op_regs.HcDCBAAP.dcbaap, sizeof(Bit64u), (Bit8u *) &scratch_addr);
+          if (scratch_addr == 0)
+            BX_ERROR(("Run bit set with a NULL ScratchPad address at DCBAAP[0]"));
+#endif
+        }
         break;
 
       case 0x04: // Status
@@ -1678,6 +1687,13 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
         // if command stop or abort, stop command ring
         if (BX_XHCI_THIS hub.op_regs.HcCrcr.ca || BX_XHCI_THIS hub.op_regs.HcCrcr.cs)
           BX_XHCI_THIS hub.op_regs.HcCrcr.crr = 0;
+        // this register is read as zero, so we keep this value for internal reading
+        if (len == 8) {
+          BX_XHCI_THIS hub.op_regs.HcCrcr.actual = (Bit64u) (((Bit64u) value_hi << 32) | value);
+        } else {
+          BX_XHCI_THIS hub.op_regs.HcCrcr.actual &= (Bit64u) ~0xFFFFFFFF;
+          BX_XHCI_THIS hub.op_regs.HcCrcr.actual |= (Bit64u) value;
+        }
         break;
 
       case 0x1C: // Command Ring Control Register (Hi)
@@ -1685,6 +1701,9 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
         BX_XHCI_THIS hub.op_regs.HcCrcr.crc &= (Bit64u) 0xFFFFFFFF;
         BX_XHCI_THIS hub.op_regs.HcCrcr.crc |= (Bit64u) ((Bit64u) value << 32);
         BX_XHCI_THIS hub.ring_members.command_ring.dq_pointer = BX_XHCI_THIS hub.op_regs.HcCrcr.crc;
+        // this register is read as zero, so we keep this value for internal reading
+        BX_XHCI_THIS hub.op_regs.HcCrcr.actual &= (Bit64u) 0xFFFFFFFF;
+        BX_XHCI_THIS hub.op_regs.HcCrcr.actual |= (Bit64u) ((Bit64u) value << 32);
 #endif
         break;
 
@@ -2963,6 +2982,15 @@ void bx_usb_xhci_c::init_event_ring(const unsigned interrupter)
     BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys[0].addr;
   BX_XHCI_THIS hub.ring_members.event_rings[interrupter].trb_count =
     BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys[0].size;
+  
+  // check that the guest uses correct segment sizes
+  for (int i=0; i<(1<<MAX_SEG_TBL_SZ_EXP); i++) {
+    if ((BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys[i].size < 16) ||
+        (BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys[i].size > 4096)) {
+      BX_ERROR(("Event Ring Segment %d has a size of %d which is invalid.", i, 
+        BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys[i].size));
+    }
+  }
 
   // dump the event segment table
   BX_DEBUG(("Interrupter %02i: Event Ring Table (at 0x" FMT_ADDRX64 ") has %d entries:", interrupter,
@@ -3006,7 +3034,7 @@ void bx_usb_xhci_c::write_event_TRB(const unsigned interrupter, const Bit64u par
       BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys[BX_XHCI_THIS hub.ring_members.event_rings[interrupter].count].size;
   }
 
-  // if caller wants us to fire and interrupt, do so
+  // if caller wants us to fire an interrupt, do so
   if (fire_int) {
     BX_XHCI_THIS hub.runtime_regs.interrupter[interrupter].iman.ip = 1;
     BX_XHCI_THIS hub.runtime_regs.interrupter[interrupter].erdp.ehb = 1; // set event handler busy
@@ -3394,10 +3422,19 @@ int bx_usb_xhci_c::validate_ep_context(const struct EP_CONTEXT *ep_context, cons
       if ((ep_num > 1) && (a_flags & (1 << ep_num))) {
         // 1) the values of the Max Packet Size, Max Burst Size, and the Interval are considered within
         //    range for endpoint type and the speed of the device,
-        if (ep_context->max_packet_size != BX_XHCI_THIS hub.usb_port[port_num].device->get_mps(ep_num / 2))
+        if (ep_context->max_packet_size > (unsigned) BX_XHCI_THIS hub.usb_port[port_num].device->get_mps(ep_num / 2))
           ret = PARAMETER_ERROR;
-        if (ep_context->max_burst_size != BX_XHCI_THIS hub.usb_port[port_num].device->get_max_burst_size(ep_num / 2))
-          ret = PARAMETER_ERROR;
+        // The xhci specs are a little mis-leading. Section 6.2.3.2 states that the max_burst_size should
+        //  be within range for the endpoint type and speed. However, section 6.2.3.4 states that the 
+        //  max_burst_size should match the same entry in the super-speed endpoint companion descriptor.
+        // ( which section should we test for? I chose the former rather than the latter.)
+        if (speed == USB_SPEED_SUPER) {
+          if (ep_context->max_burst_size > 15)
+            ret = PARAMETER_ERROR;
+        } else {
+          if (ep_context->max_burst_size != 0)
+            ret = PARAMETER_ERROR;
+        }
         if (ep_context->interval > 15) // The legal range of 0 to 15 for all (non full/low-speed interrupt) endpoint types
           ret = PARAMETER_ERROR;
         
@@ -3706,8 +3743,9 @@ bool bx_usb_xhci_c::set_connect_status(Bit8u port, bool connected)
     // did we change?
     if (ccs_org != BX_XHCI_THIS hub.usb_port[port].portsc.ccs)
       BX_XHCI_THIS hub.usb_port[port].portsc.csc = 1;
-    if (ped_org != BX_XHCI_THIS hub.usb_port[port].portsc.ped)
+    if (ped_org != BX_XHCI_THIS hub.usb_port[port].portsc.ped) {
       BX_XHCI_THIS hub.usb_port[port].portsc.pec = 1;
+    }
   }
   return connected;
 }
@@ -3800,8 +3838,8 @@ void bx_usb_xhci_c::dump_xhci_core(const unsigned int slots, const unsigned int 
   BX_INFO(("   PAGE_SIZE: 0x%08X", dword));
   BX_XHCI_THIS read_handler(addr + 0x34, 4, &dword, NULL);
   BX_INFO(("      DNCTRL: 0x%08X", dword));
-  BX_XHCI_THIS read_handler(addr + 0x38, 8, &qword, NULL);
-  BX_INFO(("        CRCR: 0x" FMT_ADDRX64, qword));
+  //BX_XHCI_THIS read_handler(addr + 0x38, 8, &qword, NULL);  // * this register reads as zero *
+  BX_INFO(("        CRCR: 0x" FMT_ADDRX64 " (read as zero)", BX_XHCI_THIS hub.op_regs.HcCrcr.actual));
   BX_XHCI_THIS read_handler(addr + 0x50, 8, &qword, NULL);
   BX_INFO(("      DCBAAP: 0x" FMT_ADDRX64, qword));
   BX_XHCI_THIS read_handler(addr + 0x58, 4, &dword, NULL);
