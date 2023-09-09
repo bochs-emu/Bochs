@@ -2356,6 +2356,16 @@ int bx_parse_usb_port_params(const char *context, const char *param,
   sprintf(tmpname, "port%d.%s", idx, devopt ? "device" : "options");
   if (devopt) {
     compat_mode = false;
+    
+    // if we already have found this port's declaration in the bochsrc.txt file, give error
+    // for example:
+    //   usb_ohci: port1=mouse, options1="speed:low, model:m228"
+    //   usb_ohci: port1=keyboard, options1="speed:low"
+    // this catches the second line, giving an error...
+    if (SIM->get_param_enum(tmpname, base)->get() > 0) {
+      BX_PANIC(("%s: Already declared port%d type. Please choose another available port number.", context, idx));
+    }
+
     if (!SIM->get_param_enum(tmpname, base)->set_by_name(&param[plen + 2])) {
       // backward compatibility code
       devstr = strdup(&param[plen + 2]);
@@ -2386,6 +2396,19 @@ int bx_parse_usb_port_params(const char *context, const char *param,
       free(devstr);
     }
   } else {
+    // if we already have found this options#= declaration in the bochsrc.txt file, give warning.
+    // (it is legal to do this, as in:
+    //    usb_ohci: port2=disk
+    //    usb_ohci: options2="speed:full"
+    //    usb_ohci: options2="path:hdd.img"
+    //  however, this catches something like:
+    //    usb_ohci: port1=tablet, options1="speed:low"
+    //    usb_ohci: port2=disk, options1="speed:full, path:hdd.img"
+    //  where the user copy/pasted something and forgot to adjust the options# in the second line)
+    if (!SIM->get_param_string(tmpname, base)->isempty()) {
+      BX_INFO(("%s: Already declared options%d parameter. Was this intended?", context, idx));
+    }
+
     if (compat_mode) {
       origopts = SIM->get_param_string(tmpname, base)->getptr();
       sprintf(newopts, "%s, %s", origopts, &param[plen + 2]);
