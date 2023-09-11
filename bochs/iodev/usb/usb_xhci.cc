@@ -70,6 +70,9 @@
 #include "pci.h"
 #include "usb_common.h"
 #include "usb_xhci.h"
+#if BX_USE_WIN32USBDEBUG
+  #include "gui/win32usb.h"
+#endif
 
 #define LOG_THIS theUSB_XHCI->
 
@@ -1283,8 +1286,8 @@ bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *data, 
   } else
 
   // Register Port Sets
-  if ((offset >= PORT_SET_OFFSET) && (offset < (PORT_SET_OFFSET + (BX_XHCI_THIS hub.n_ports * 16)))) {
-    unsigned port = (((offset - PORT_SET_OFFSET) >> 4) & 0x3F); // calculate port number
+  if ((offset >= XHCI_PORT_SET_OFFSET) && (offset < (XHCI_PORT_SET_OFFSET + (BX_XHCI_THIS hub.n_ports * 16)))) {
+    unsigned port = (((offset - XHCI_PORT_SET_OFFSET) >> 4) & 0x3F); // calculate port number
     if (BX_XHCI_THIS hub.usb_port[port].portsc.pp) {
       // the speed field is only valid for USB3 before a port reset.  If a reset has not
       //  taken place after the port is powered, the USB2 ports don't show a valid speed field.
@@ -1756,8 +1759,8 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
   } else
 
   // Register Port Sets
-  if ((offset >= PORT_SET_OFFSET) && (offset < (PORT_SET_OFFSET + (BX_XHCI_THIS hub.n_ports * 16)))) {
-    unsigned port = (((offset - PORT_SET_OFFSET) >> 4) & 0x3F); // calculate port number
+  if ((offset >= XHCI_PORT_SET_OFFSET) && (offset < (XHCI_PORT_SET_OFFSET + (BX_XHCI_THIS hub.n_ports * 16)))) {
+    unsigned port = (((offset - XHCI_PORT_SET_OFFSET) >> 4) & 0x3F); // calculate port number
     switch (offset & 0x0000000F) {
       case 0x00:
         if (value & (1<<9)) {  // port power
@@ -1821,6 +1824,14 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
           if (((value & (1 << 31)) && BX_XHCI_THIS hub.usb_port[port].is_usb3) ||
                (value & (1 << 4))) {
             reset_port_usb3(port, (value & (1 << 4)) ? HOT_RESET : WARM_RESET);
+#if BX_USE_WIN32USBDEBUG
+            bx_param_enum_c *type = SIM->get_param_enum(BXPN_USB_DEBUG_TYPE);
+            if (type && (type->get() == USB_DEBUG_XHCI)) {
+              bx_param_bool_c *reset = SIM->get_param_bool(BXPN_USB_DEBUG_RESET);
+              if (reset && reset->get())
+                SIM->usb_config_interface(USB_DEBUG_RESET, 0, 0);
+            }
+#endif
           }
         } else
           BX_XHCI_THIS hub.usb_port[port].portsc.pp = 0;
@@ -1883,6 +1894,18 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
     }
   } else
 
+#if BX_USE_WIN32USBDEBUG
+  // Non existant Register Port (the next one after the last)
+  if (offset == (XHCI_PORT_SET_OFFSET + (BX_XHCI_THIS hub.n_ports * 16))) {
+      bx_param_enum_c *type = SIM->get_param_enum(BXPN_USB_DEBUG_TYPE);
+      if (type && (type->get() == USB_DEBUG_XHCI)) {
+        bx_param_bool_c *event = SIM->get_param_bool(BXPN_USB_DEBUG_NON_EXIST);
+        if (event && event->get())
+          SIM->usb_config_interface(USB_DEBUG_NONEXIST, 0, 0);
+      }
+  } else
+#endif
+  
   // Extended Capabilities
   if ((offset >= EXT_CAPS_OFFSET) && (offset < (EXT_CAPS_OFFSET + EXT_CAPS_SIZE))) {
     unsigned caps_offset = (offset - EXT_CAPS_OFFSET);
@@ -2503,6 +2526,16 @@ void bx_usb_xhci_c::process_command_ring(void)
   Bit8u buffer[CONTEXT_SIZE + (32 * CONTEXT_SIZE)];
   struct SLOT_CONTEXT slot_context;
   struct EP_CONTEXT   ep_context;
+  
+#if BX_USE_WIN32USBDEBUG
+  // did the user specify to trigger the USB DEBUG interface here?
+  bx_param_enum_c *type = SIM->get_param_enum(BXPN_USB_DEBUG_TYPE);
+  if (type && (type->get() == USB_DEBUG_XHCI)) {
+    bx_param_bool_c *doorbell = SIM->get_param_bool(BXPN_USB_DEBUG_DOORBELL);
+    if (doorbell && doorbell->get())
+      SIM->usb_config_interface(USB_DEBUG_COMMAND, 0, 0);
+  }
+#endif
 
   if (!BX_XHCI_THIS hub.op_regs.HcCrcr.crr)
     return;
@@ -3017,6 +3050,16 @@ void bx_usb_xhci_c::write_event_TRB(const unsigned interrupter, const Bit64u par
   // write the TRB
   write_TRB((bx_phy_address) BX_XHCI_THIS hub.ring_members.event_rings[interrupter].cur_trb, parameter, status,
     command | (Bit32u) BX_XHCI_THIS hub.ring_members.event_rings[interrupter].rcs); // set the cycle bit
+
+#if BX_USE_WIN32USBDEBUG
+  // did the user specify to trigger the USB DEBUG interface here?
+  bx_param_enum_c *type = SIM->get_param_enum(BXPN_USB_DEBUG_TYPE);
+  if (type && (type->get() == USB_DEBUG_XHCI)) {
+    bx_param_bool_c *event = SIM->get_param_bool(BXPN_USB_DEBUG_EVENT);
+    if (event && event->get())
+      SIM->usb_config_interface(USB_DEBUG_EVENT, interrupter, 0);
+  }
+#endif
   
   BX_DEBUG(("Write Event TRB: table index: %d, trb index: %d",
     BX_XHCI_THIS hub.ring_members.event_rings[interrupter].count,
@@ -3574,6 +3617,18 @@ void bx_usb_xhci_c::xhci_timer(void)
   if (BX_XHCI_THIS hub.op_regs.HcStatus.hch)
     return;
 
+#if BX_USE_WIN32USBDEBUG
+  // did the user specify to trigger the USB DEBUG interface here?
+  bx_param_enum_c *type = SIM->get_param_enum(BXPN_USB_DEBUG_TYPE);
+  if (type && (type->get() == USB_DEBUG_XHCI)) {
+    bx_param_num_c *sof = SIM->get_param_num(BXPN_USB_DEBUG_START_FRAME);
+    if (sof && (sof->get() == BX_USB_DEBUG_SOF_TRIGGER)) {
+      SIM->usb_config_interface(USB_DEBUG_FRAME, 0, 0);
+      sof->set(BX_USB_DEBUG_SOF_SET);
+    }
+  }
+#endif
+
   /* Per section 4.19.3 of the xHCI 1.0 specs, we need to present
     *  a "Port Status Change Event".  
     * Also, we should only present this event once if any other bits 
@@ -3754,6 +3809,14 @@ bool bx_usb_xhci_c::set_connect_status(Bit8u port, bool connected)
       BX_XHCI_THIS hub.usb_port[port].portsc.csc = 1;
     if (ped_org != BX_XHCI_THIS hub.usb_port[port].portsc.ped) {
       BX_XHCI_THIS hub.usb_port[port].portsc.pec = 1;
+#if BX_USE_WIN32USBDEBUG
+      bx_param_enum_c *type = SIM->get_param_enum(BXPN_USB_DEBUG_TYPE);
+      if (type && (type->get() == USB_DEBUG_XHCI)) {
+        bx_param_bool_c *enable = SIM->get_param_bool(BXPN_USB_DEBUG_ENABLE);
+        if (enable && enable->get())
+          SIM->usb_config_interface(USB_DEBUG_ENABLE, 0, 0);
+      }
+#endif
     }
   }
   return connected;

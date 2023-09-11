@@ -120,7 +120,7 @@
 
 #define RUNTIME_OFFSET    0x600
 
-#define PORT_SET_OFFSET  (0x400 + OPS_REGS_OFFSET)
+#define XHCI_PORT_SET_OFFSET  (0x400 + OPS_REGS_OFFSET)
 
 /************************************************************************************************/
 
@@ -605,7 +605,6 @@ public:
   int event_handler(int event, void *ptr, int port);
 
   bx_usb_xhci_t hub;
-private:
   Bit8u         devfunc;
   Bit8u         device_change;
   int           rt_conf_id;

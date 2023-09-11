@@ -200,7 +200,6 @@ public:
 
   int event_handler(int event, void *ptr, int port);
 
-protected:
   bx_uhci_core_t hub;
   Bit8u          global_reset;
 
