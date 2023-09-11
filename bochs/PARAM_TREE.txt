@@ -229,6 +229,12 @@ ports
       (same options as ports.usb.uhci)
     xhci
       (same options as ports.usb.uhci)
+  usb_debug
+    type
+    reset
+    enable
+    start_frame
+    non_exist
 
 network
   ne2k
