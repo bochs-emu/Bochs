@@ -171,6 +171,7 @@ public:
 
   void set_name(const char *name) {pci_name = name;}
   const char* get_name(void) {return pci_name;}
+  Bit32u get_bar_addr(int indx) { return pci_bar[indx].addr; }
 
 protected:
   const char *pci_name;
