@@ -2149,6 +2149,15 @@ int bx_usb_xhci_c::event_handler(int event, void *ptr, int port)
       break;
       
     // host controller events start here
+    case USB_EVENT_DEFAULT_SPEED:
+      // return default speed for specified port number
+      if (BX_XHCI_THIS hub.usb_port[port].is_usb3 == 1) {
+        // return super-speed
+        return USB_SPEED_SUPER;
+      }
+      // else return high-speed
+      return USB_SPEED_HIGH;
+      
     case USB_EVENT_CHECK_SPEED:
       // all super-speed device must be on the first half port register sets,
       //  while all non-super-speed device must be on the second half.

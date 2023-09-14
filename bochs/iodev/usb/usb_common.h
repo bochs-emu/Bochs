@@ -142,7 +142,8 @@ typedef struct USBPacket USBPacket;
 #define USB_EVENT_WAKEUP        0
 #define USB_EVENT_ASYNC         1
 // controller events
-#define USB_EVENT_CHECK_SPEED  10
+#define USB_EVENT_DEFAULT_SPEED  10
+#define USB_EVENT_CHECK_SPEED    11
 
 // set this to 1 to monitor the TD's toggle bit
 // setting to 0 will speed up the emualtion slightly
@@ -240,7 +241,7 @@ public:
   int get_default_speed(int speed) {
     if ((speed >= d.minspeed) && (speed <= d.maxspeed))
       return speed;
-    return d.minspeed; // will be no more than full-speed
+    return BX_MIN(speed, d.maxspeed);
   }
   
   // return information for the specified ep of the current device
