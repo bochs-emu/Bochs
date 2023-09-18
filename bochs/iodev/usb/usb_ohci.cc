@@ -1233,6 +1233,10 @@ int bx_usb_ohci_c::event_handler(int event, void *ptr, int port)
       break;
 
     // host controller events start here
+    case USB_EVENT_DEFAULT_SPEED:
+      // return default speed for specified port number
+      return USB_SPEED_FULL;
+      
     case USB_EVENT_CHECK_SPEED:
       if (ptr != NULL) {
         usb_device_c *usb_device = (usb_device_c *) ptr;

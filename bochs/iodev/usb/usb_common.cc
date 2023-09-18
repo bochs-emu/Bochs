@@ -157,7 +157,12 @@ static const char *usb_speed[4] = {
 
 void bx_usbdev_ctl_c::parse_port_options(usb_device_c *device, bx_list_c *portconf)
 {
-  int speed = device->get_default_speed(USB_SPEED_FULL);  // try to default to FULL speed if parameter not given.
+  // if the speed option parameter is not given:
+  //  first try to default to speed of controller
+  //  then adjust to default max speed of device
+  // if the speed option parameter is given, this will be overwritten anyway
+  int speed = device->hc_event(USB_EVENT_DEFAULT_SPEED, device);
+      speed = device->get_default_speed(speed);
   char *opts[16];
 
   memset(opts, 0, sizeof(opts));
