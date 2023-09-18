@@ -166,15 +166,47 @@ int vpc_image_t::open(const char* _pathname, int flags)
   cylinders = be16_to_cpu(footer->cyls);
   heads = footer->heads;
   spt = footer->secs_per_cyl;
-  sector_count = (Bit64u)(cylinders * heads * spt);
+  sector_count = (Bit64u)((Bit64u)cylinders * heads * spt);
   sect_size = 512;
-  hd_size = sector_count * sect_size;
 
-  if (sector_count >= 65535 * 16 * 255) {
+  /* Microsoft Virtual PC and Microsoft Hyper-V produce and read
+   * VHD image sizes differently.  VPC will rely on CHS geometry,
+   * while Hyper-V and disk2vhd use the size specified in the footer.
+   *
+   * We use a couple of approaches to try and determine the correct method:
+   * look at the Creator App field, and look for images that have CHS
+   * geometry that is the maximum value.
+   *
+   * If the CHS geometry is the maximum CHS geometry, then we assume that
+   * the size is the footer->size to avoid truncation.  Otherwise,
+   * we follow the table based on footer->creator_app:
+   *
+   *  Known creator apps:
+   *      'vpc '  :  CHS              Virtual PC (uses disk geometry)
+   *      'qemu'  :  CHS              QEMU (uses disk geometry)
+   *      'qem2'  :  current_size     QEMU (uses current_size)
+   *      'win '  :  current_size     Hyper-V
+   *      'd2v '  :  current_size     Disk2vhd
+   *      'tap\0' :  current_size     XenServer
+   *      'CTXS'  :  current_size     XenConverter
+   */
+  bool use_chs = (!!strncmp(footer->creator_app, "win ", 4) &&
+                  !!strncmp(footer->creator_app, "qem2", 4) &&
+                  !!strncmp(footer->creator_app, "d2v ", 4) &&
+                  !!strncmp(footer->creator_app, "CTXS", 4) &&
+                  !!memcmp (footer->creator_app, "tap", 4));
+  
+  if (!use_chs || sector_count == (65535 * 16 * 255)) {
+    sector_count = be64_to_cpu(footer->size) / sect_size;
+  }
+  hd_size = sector_count * sect_size;
+  
+  /* Allow a maximum disk size of 2040 GiB */
+  if (sector_count > 0xff000000) {
     bx_close_image(fd, pathname);
     return -EFBIG;
   }
-
+  
   if (disk_type == VHD_DYNAMIC) {
     if (bx_read_image(fd, be64_to_cpu(footer->data_offset), buf, HEADER_SIZE) != HEADER_SIZE) {
       bx_close_image(fd, pathname);
