@@ -203,10 +203,11 @@ int vpc_image_t::open(const char* _pathname, int flags)
   
   /* Allow a maximum disk size of 2040 GiB */
   if (sector_count > 0xff000000) {
+    BX_ERROR(("VHD Emulated Image too large. " FMT_LL "i > 4278190080", sector_count));
     bx_close_image(fd, pathname);
     return -EFBIG;
   }
-  
+
   if (disk_type == VHD_DYNAMIC) {
     if (bx_read_image(fd, be64_to_cpu(footer->data_offset), buf, HEADER_SIZE) != HEADER_SIZE) {
       bx_close_image(fd, pathname);
