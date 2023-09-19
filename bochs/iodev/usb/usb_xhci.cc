@@ -840,7 +840,7 @@ bool bx_usb_xhci_c::restore_hc_state(void)
 
   // get MAX_SCRATCH_PADS worth of pointers
   for (i=0; i<MAX_SCRATCH_PADS; i++) {
-    DEV_MEM_READ_PHYSICAL_DMA((bx_phy_address) (addr + i * 8), 8, (Bit8u*)&temp[i]);
+    DEV_MEM_READ_PHYSICAL((bx_phy_address) (addr + i * 8), 8, (Bit8u*)&temp[i]);
   }
 
   // we read it in to a temp buffer just to check the crc.
@@ -1825,12 +1825,7 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
                (value & (1 << 4))) {
             reset_port_usb3(port, (value & (1 << 4)) ? HOT_RESET : WARM_RESET);
 #if BX_USE_WIN32USBDEBUG
-            bx_param_enum_c *type = SIM->get_param_enum(BXPN_USB_DEBUG_TYPE);
-            if (type && (type->get() == USB_DEBUG_XHCI)) {
-              bx_param_bool_c *reset = SIM->get_param_bool(BXPN_USB_DEBUG_RESET);
-              if (reset && reset->get())
-                SIM->usb_config_interface(USB_DEBUG_RESET, 0, 0);
-            }
+            win32_usb_trigger(USB_DEBUG_XHCI, USB_DEBUG_RESET, 0, 0);
 #endif
           }
         } else
@@ -1897,12 +1892,7 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
 #if BX_USE_WIN32USBDEBUG
   // Non existant Register Port (the next one after the last)
   if (offset == (XHCI_PORT_SET_OFFSET + (BX_XHCI_THIS hub.n_ports * 16))) {
-      bx_param_enum_c *type = SIM->get_param_enum(BXPN_USB_DEBUG_TYPE);
-      if (type && (type->get() == USB_DEBUG_XHCI)) {
-        bx_param_bool_c *event = SIM->get_param_bool(BXPN_USB_DEBUG_NON_EXIST);
-        if (event && event->get())
-          SIM->usb_config_interface(USB_DEBUG_NONEXIST, 0, 0);
-      }
+    win32_usb_trigger(USB_DEBUG_XHCI, USB_DEBUG_NONEXIST, 0, 0);
   } else
 #endif
   
@@ -2282,7 +2272,7 @@ Bit64u bx_usb_xhci_c::process_transfer_ring(const int slot, const int ep, Bit64u
       // is the data in trb.parameter? (Immediate data?)
       is_immed_data = TRB_IS_IMMED_DATA(trb.command);
       if (is_immed_data)
-        DEV_MEM_READ_PHYSICAL_DMA((bx_phy_address) org_addr, 8, immed_data); // No byte-swapping here
+        DEV_MEM_READ_PHYSICAL((bx_phy_address) org_addr, 8, immed_data); // No byte-swapping here
       else
         address = trb.parameter;
 
@@ -2528,13 +2518,7 @@ void bx_usb_xhci_c::process_command_ring(void)
   struct EP_CONTEXT   ep_context;
   
 #if BX_USE_WIN32USBDEBUG
-  // did the user specify to trigger the USB DEBUG interface here?
-  bx_param_enum_c *type = SIM->get_param_enum(BXPN_USB_DEBUG_TYPE);
-  if (type && (type->get() == USB_DEBUG_XHCI)) {
-    bx_param_bool_c *doorbell = SIM->get_param_bool(BXPN_USB_DEBUG_DOORBELL);
-    if (doorbell && doorbell->get())
-      SIM->usb_config_interface(USB_DEBUG_COMMAND, 0, 0);
-  }
+  win32_usb_trigger(USB_DEBUG_XHCI, USB_DEBUG_COMMAND, 0, 0);
 #endif
 
   if (!BX_XHCI_THIS hub.op_regs.HcCrcr.crr)
@@ -2943,7 +2927,7 @@ void bx_usb_xhci_c::process_command_ring(void)
           unsigned offset = band_speed * (((1 + BX_XHCI_THIS hub.n_ports) + 7) & ~7);
           if (hub_id == 0) { // root hub
             if (band_speed < 4) {
-              DEV_MEM_WRITE_PHYSICAL_DMA((bx_phy_address) trb.parameter, 1 + BX_XHCI_THIS hub.n_ports, &BX_XHCI_THIS hub.port_band_width[offset]);
+              DEV_MEM_WRITE_PHYSICAL((bx_phy_address) trb.parameter, 1 + BX_XHCI_THIS hub.n_ports, &BX_XHCI_THIS hub.port_band_width[offset]);
               comp_code = TRB_SUCCESS;
             } else {
               comp_code = TRB_ERROR;
@@ -3052,13 +3036,7 @@ void bx_usb_xhci_c::write_event_TRB(const unsigned interrupter, const Bit64u par
     command | (Bit32u) BX_XHCI_THIS hub.ring_members.event_rings[interrupter].rcs); // set the cycle bit
 
 #if BX_USE_WIN32USBDEBUG
-  // did the user specify to trigger the USB DEBUG interface here?
-  bx_param_enum_c *type = SIM->get_param_enum(BXPN_USB_DEBUG_TYPE);
-  if (type && (type->get() == USB_DEBUG_XHCI)) {
-    bx_param_bool_c *event = SIM->get_param_bool(BXPN_USB_DEBUG_EVENT);
-    if (event && event->get())
-      SIM->usb_config_interface(USB_DEBUG_EVENT, interrupter, 0);
-  }
+  win32_usb_trigger(USB_DEBUG_XHCI, USB_DEBUG_EVENT, interrupter, 0);
 #endif
   
   BX_DEBUG(("Write Event TRB: table index: %d, trb index: %d",
@@ -3618,15 +3596,7 @@ void bx_usb_xhci_c::xhci_timer(void)
     return;
 
 #if BX_USE_WIN32USBDEBUG
-  // did the user specify to trigger the USB DEBUG interface here?
-  bx_param_enum_c *type = SIM->get_param_enum(BXPN_USB_DEBUG_TYPE);
-  if (type && (type->get() == USB_DEBUG_XHCI)) {
-    bx_param_num_c *sof = SIM->get_param_num(BXPN_USB_DEBUG_START_FRAME);
-    if (sof && (sof->get() == BX_USB_DEBUG_SOF_TRIGGER)) {
-      SIM->usb_config_interface(USB_DEBUG_FRAME, 0, 0);
-      sof->set(BX_USB_DEBUG_SOF_SET);
-    }
-  }
+  win32_usb_trigger(USB_DEBUG_XHCI, USB_DEBUG_FRAME, 0, 0);
 #endif
 
   /* Per section 4.19.3 of the xHCI 1.0 specs, we need to present
@@ -3810,12 +3780,7 @@ bool bx_usb_xhci_c::set_connect_status(Bit8u port, bool connected)
     if (ped_org != BX_XHCI_THIS hub.usb_port[port].portsc.ped) {
       BX_XHCI_THIS hub.usb_port[port].portsc.pec = 1;
 #if BX_USE_WIN32USBDEBUG
-      bx_param_enum_c *type = SIM->get_param_enum(BXPN_USB_DEBUG_TYPE);
-      if (type && (type->get() == USB_DEBUG_XHCI)) {
-        bx_param_bool_c *enable = SIM->get_param_bool(BXPN_USB_DEBUG_ENABLE);
-        if (enable && enable->get())
-          SIM->usb_config_interface(USB_DEBUG_ENABLE, 0, 0);
-      }
+      win32_usb_trigger(USB_DEBUG_XHCI, USB_DEBUG_ENABLE, 0, 0);
 #endif
     }
   }
@@ -3934,7 +3899,7 @@ void bx_usb_xhci_c::dump_xhci_core(const unsigned int slots, const unsigned int 
   for (i=1; i<slots+1; i++) {
     slot_addr = (BX_XHCI_THIS hub.op_regs.HcDCBAAP.dcbaap + (i * sizeof(Bit64u)));
     DEV_MEM_READ_PHYSICAL((bx_phy_address) slot_addr, sizeof(Bit64u), (Bit8u *) &slot_addr);
-    DEV_MEM_READ_PHYSICAL_DMA((bx_phy_address) slot_addr, 2048, buffer);
+    DEV_MEM_READ_PHYSICAL((bx_phy_address) slot_addr, 2048, buffer);
     dump_slot_context((Bit32u *) &buffer[0], i);
     for (p=1; p<eps+1; p++)
       dump_ep_context((Bit32u *) &buffer[p * CONTEXT_SIZE], i, p);
