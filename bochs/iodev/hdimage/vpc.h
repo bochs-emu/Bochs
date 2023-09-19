@@ -69,7 +69,7 @@ typedef
 __declspec(align(1))
 #endif
 struct vhd_footer_t {
-    Bit8u   creator[8]; // "conectix"
+    char    creator[8]; // "conectix"
     Bit32u  features;
     Bit32u  version;
 
@@ -79,10 +79,10 @@ struct vhd_footer_t {
     // Seconds since Jan 1, 2000 0:00:00 (UTC)
     Bit32u  timestamp;
 
-    Bit8u   creator_app[4]; // "vpc "
+    char    creator_app[4]; // "vpc "
     Bit16u  major;
     Bit16u  minor;
-    Bit8u   creator_os[4]; // "Wi2k"
+    char    creator_os[4]; // "Wi2k"
 
     Bit64u  orig_size;
     Bit64u  size;
