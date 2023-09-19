@@ -143,6 +143,57 @@ int win32_usb_start(HWND hwnd, int break_type, int wParam, int lParam)
   return ret;
 }
 
+// one of the controllers has triggered a debug item.
+void win32_usb_trigger(int type, int trigger, int wParam, int lParam) {
+
+  // check that we are the correct controller type
+  bx_param_enum_c *cntlr_type = SIM->get_param_enum(BXPN_USB_DEBUG_TYPE);
+  if ((cntlr_type == NULL) || (cntlr_type->get() != type))
+    return;
+  
+  bx_param_bool_c *bool_trigger;
+  bx_param_num_c *num_trigger;
+  switch (trigger) {
+    case USB_DEBUG_FRAME:
+      num_trigger = SIM->get_param_num(BXPN_USB_DEBUG_START_FRAME);
+      if (num_trigger && (num_trigger->get() == BX_USB_DEBUG_SOF_TRIGGER)) {
+        SIM->usb_config_interface(USB_DEBUG_FRAME, wParam, lParam);
+        num_trigger->set(BX_USB_DEBUG_SOF_SET);
+      }
+      break;
+      
+    case USB_DEBUG_COMMAND:
+      bool_trigger = SIM->get_param_bool(BXPN_USB_DEBUG_DOORBELL);
+      if (bool_trigger && bool_trigger->get())
+        SIM->usb_config_interface(USB_DEBUG_COMMAND, wParam, lParam);
+      break;
+      
+    case USB_DEBUG_EVENT:
+      bool_trigger = SIM->get_param_bool(BXPN_USB_DEBUG_EVENT);
+      if (bool_trigger && bool_trigger->get())
+        SIM->usb_config_interface(USB_DEBUG_EVENT, wParam, lParam);
+      break;
+      
+    case USB_DEBUG_NONEXIST:
+      bool_trigger = SIM->get_param_bool(BXPN_USB_DEBUG_NON_EXIST);
+      if (bool_trigger && bool_trigger->get())
+        SIM->usb_config_interface(USB_DEBUG_NONEXIST, wParam, lParam);
+      break;
+      
+    case USB_DEBUG_RESET:
+      bool_trigger = SIM->get_param_bool(BXPN_USB_DEBUG_RESET);
+      if (bool_trigger && bool_trigger->get())
+        SIM->usb_config_interface(USB_DEBUG_RESET, wParam, lParam);
+      break;
+      
+    case USB_DEBUG_ENABLE:
+      bool_trigger = SIM->get_param_bool(BXPN_USB_DEBUG_ENABLE);
+      if (bool_trigger && bool_trigger->get())
+        SIM->usb_config_interface(USB_DEBUG_ENABLE, wParam, lParam);
+      break;
+  }
+}
+
 HWND TreeView = NULL;
 int tree_items = 0;
 HTREEITEM TreeViewInsert(HWND TreeView, HTREEITEM Parent, HTREEITEM After, char *str, LPARAM lParam, Bit32u state) {
