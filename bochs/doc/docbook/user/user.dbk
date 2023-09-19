@@ -5089,7 +5089,9 @@ The options<replaceable>X</replaceable> parameter is also available on EHCI.</pa
 Example:
 <screen>
   usb_xhci: enabled=1, model="uPD720202", n_ports=4
-  usb_xhci: port1="disk:usbdisk.img"      # defaults to the BBB protocol, full-speed
+  usb_xhci: port1="disk:usbdisk.img"                   # defaults to super-speed
+  usb_xhci: port3="disk:usbdisk.img"                   # defaults to high-speed
+  usb_xhci: port1="speed:super, disk:usbdisk.img"      # defaults to the BBB protocol
   usb_xhci: port1=disk, options1="speed:super, path:usbdisk.img, proto:uasp"
   usb_xhci: port1=disk, options1="speed:super, path:usbdisk.img, proto:bbb"
   usb_xhci: port1=cdrom, options1="speed:super, path:bootcd.iso, proto:uasp"
@@ -5123,6 +5125,73 @@ On an xHCI, the number of ports used is the number of port register sets, one se
 protocol and a paired set for the USB2 protocol. An 'n_ports=' specification of 4 defines
 <emphasis>two</emphasis> physical sockets.
 </para></note>
+<para>
+Since the register sets are paired on the xHCI, for example if you have 2 sockets (4 register sets),
+Bochs has Port 1 and Port 3 paired.  Port 1 is for Super-speed devices while Port 3 is for high-, 
+full-, and low-speed devices. With this in mind, if you have a device on Port 1, you <emphasis>must
+not</emphasis> have a device on Port 3. If you have a (super-speed) device on Port 1 and a (non-super-speed)
+device on Port 3, Bochs will Panic with a string similar to:
+<screen>
+  >>PANIC<< Port #3: Paired port number #1 already in use.
+</screen>
+</para>
+<para>
+With an example of 4 register sets (ports), this means there are only 2 physical sockets. You may 
+only have two devices at a time. To remedy the above Panic, take the following in mind:
+</para>
+<para>
+<table frame='all'><title>Valid Port definitions (4-port example)</title>
+  <?dbhtml table-width="50%" ?>
+  <tgroup cols='5' align='left' colsep='1' rowsep='1'>
+    <colspec colname='c1' colwidth='100pt'>
+    <colspec colname='c2' colwidth='175pt'>
+    <colspec colname='c3' colwidth='175pt'>
+    <colspec colname='c4' colwidth='175pt'>
+    <colspec colname='c5' colwidth='175pt'>
+    <thead>
+    <row>
+      <entry align="center">Scenario</entry>
+      <entry align="center">Port 1 (Paired with Port 3)</entry>
+      <entry align="center">Port 2 (Paired with Port 4)</entry>
+      <entry align="center">Port 3 (Paired with Port 1)</entry>
+      <entry align="center">Port 4 (Paired with Port 2)</entry>
+    </row>
+    </thead>
+    <tbody>
+    <row>
+      <entry align="center">1</entry>
+      <entry align="center">Super</entry>
+      <entry align="center">Super</entry>
+      <entry align="center">none</entry>
+      <entry align="center">none</entry>
+    </row>
+    <row>
+      <entry align="center">2</entry>
+      <entry align="center">Super</entry>
+      <entry align="center">none</entry>
+      <entry align="center">none</entry>
+      <entry align="center">High/Full/Low</entry>
+    </row>
+    <row>
+      <entry align="center">3</entry>
+      <entry align="center">none</entry>
+      <entry align="center">Super</entry>
+      <entry align="center">High/Full/Low</entry>
+      <entry align="center">none</entry>
+    </row>
+    <row>
+      <entry align="center">4</entry>
+      <entry align="center">none</entry>
+      <entry align="center">none</entry>
+      <entry align="center">High/Full/Low</entry>
+      <entry align="center">High/Full/Low</entry>
+    </row>
+    </tbody>
+    
+  </tgroup>
+</table>
+
+</para>
 </section>
 
 <section id="bochsopt-usb-debug"><title>usb debug</title>
@@ -5219,7 +5288,7 @@ Bochs anything that is written to it. The idea is to provide debug output
 very early when writing BIOS or OS code for example, without having to
 bother with setting up a serial port or etc. Reading from port 0xE9 will
 will return 0xe9 to let you know if the feature is available. Leave
-this 0 unless you have a reason to use it. By enabling the 'all-rings' 
+this 0 unless you have a reason to use it. By enabling the 'all_rings' 
 option, you can utilize the port e9 hack from ring3.
 </para>
 </section>
@@ -6411,11 +6480,11 @@ byte 6:  WWWWWWWW  8-bit Wheel displacement (-128 -> 127)
 This report is deliberately irregular by design, so that a Guest can test its HID Report Descriptor Parser.
 </para>
 <itemizedlist>
-<listitem><para> - the button fields are not consecutive and are at arbitrary positions in the report.</para></listitem>
-<listitem><para> - the coords fields are not byte aligned or consecutively spaced.</para></listitem>
-<listitem><para> - the coords fields are of an irregular size, each a different size.</para></listitem>
-<listitem><para> - there are padding fields between entries that <command>do not</command> align the next field on a byte boundary.</para></listitem>
-<listitem><para> - this also uses the push/pop mechanism to test the function of your parser.</para></listitem>
+<listitem><para> the button fields are not consecutive and are at arbitrary positions in the report.</para></listitem>
+<listitem><para> the coords fields are not byte aligned or consecutively spaced.</para></listitem>
+<listitem><para> the coords fields are of an irregular size, each a different size.</para></listitem>
+<listitem><para> there are padding fields between entries that <command>do not</command> align the next field on a byte boundary.</para></listitem>
+<listitem><para> this also uses the push/pop mechanism to test the function of your parser.</para></listitem>
 </itemizedlist>
 <para>Again, this is deliberate. A correctly written parser will extract the neccessary fields no matter the irregularity.</para>
 <para>Returns the 5-byte packet shown below.</para>
@@ -6432,9 +6501,15 @@ Please note that this model is not for normal use. It is <command>intentionally<
 </section>
 
 <section><title>mouse: misc</title>
-<para>
-Please note that most physical USB mice will be 'low-speed' only.
-</para>
+<note><para>
+Note that most physical USB mice will be 'low-speed' only.
+</para></note>
+<note><para>
+Note that the mouse is known to not function correctly in a Windows 2000 Guest. Clearing HANDLE_TOGGLE_CONTROL to zero 
+in usb_common.h and rebuilding Bochs allows this guest to function more regularly, though there are still some issues.
+Since the USB mouse and keyboard work in all other regulary tested Guests, it must be a quirk with Win2k that needs to
+be investigated.
+</para></note>
 </section>
 </section>
 
@@ -6768,8 +6843,8 @@ runtime configuration interface.
 </screen>
 </para>
 <para>
-Currently only <emphasis>none</emphasis> or <emphasis>xhci</emphasis> can be specifed as the type.
-Furture additions will include the other three controller types.
+Currently only <emphasis>none</emphasis> or <emphasis>xhci</emphasis> can be specified as the type.
+Future additions will include the other three controller types.
 </para>
 <para>
 Only one type may be specified. You can only debug one controller type at a time.
@@ -6778,20 +6853,32 @@ Only one type may be specified. You can only debug one controller type at a time
 <screen>
  triggers: (one or more must be specified)
   'reset'       -- When the controller resets a port, the debugger will halt the emulation and display
-                   the debugger.
+                   the debugger. This does not include when the HC gets reset, which in turn would reset
+                   the downstream ports.
   'enable'      -- When the controller enables a port, the debugger will halt the emulation and display
-                   the debugger.
+                   the debugger. For an EHCI port, the controller automatically enables the port when
+                   a high-speed device is detected.
   'start_frame' -- When the controller starts a new frame, the debugger will halt the emulation 
                    and display the debugger. Please note that the implementation of this feature is/will
                    be different with each controller type.
-  'doorbell'    -- When the xHCI controller recieves a doorbell ring indicator (for the Command Ring),
-                   the debugger will halt the emulation and display the debugger. This is only used
-                   in the xHCI controller type. Other types will ignore this trigger.
+                   uhci: Load the next Frame Index and process the TD/Queue pointed by it.
+                   ohci: ** TODO **
+                   ehci: ** TODO **
+                   xhci: Start/Continue to process Transfer Rings.
+  'doorbell'    -- When the xHCI controller receives a doorbell ring indicator (for the Command Ring),
+                   the debugger will halt the emulation and display the debugger. 
+                   When the EHCI controller is to execute a single TD, the debugger will halt the 
+                   emulation and display the debugger. 
+                   When the OHCI controller is to execute a single TD, the debugger will halt the 
+                   emulation and display the debugger. 
+                   When the UHCI controller is to execute a single TD, the debugger will halt the 
+                   emulation and display the debugger. 
   'event'       -- When the xHCI controller posts an event on the event ring, the debugger will 
                    halt the emulation and display the debugger. This is only used in the xHCI controller
                    type. Other types will ignore this trigger.
-  'non_exist'   -- When the guest reads or writes to a non-existant port, the debugger will halt 
-                   the emulation and display the debugger.
+  'non_exist'   -- When the guest writes to a non-existent port, the debugger will halt the emulation 
+                   and display the debugger.  This is so you can trigger the debugger via software.
+                   Write to the first non-existent port and the debugger will be triggered.
 </screen>
 </para>
 <para>
@@ -6816,7 +6903,40 @@ the emulation will stop and display the current Command Ring with any available 
 <para>
 You can turn off or on any trigger (listed above) while within the Debugger dialog.
 </para>
-  
+<para>
+The figure below is an example of an xHCI controller using the Doorbell trigger to stop when the
+Controller receives a TRB in the Command Ring with the Command Ring Doorbell being triggered.
+<figure><title>USB Debugger Example0</title>
+  <mediaobject>
+    <imageobject>
+      <imagedata fileref="../images/usb_debugger0.png">
+    </imageobject>
+    <textobject><phrase>USB Debugger Example 0</phrase></textobject>
+  </mediaobject>
+</figure>
+The three register sets are displayed allowing you to modify their values. Please note that modifying
+the Capability Register set will produce undefined results. It is recommended that you do not modify
+this register set.
+</para>
+<para>
+The Debug Flags box allows you to set or clear a trigger. If the checkbox is checked, the trigger is active.
+</para>
+<para>
+The Port Register set displays the used registers allowing you to modify them as you see fit. Again, undefined
+results may happen if you modify these registers.
+</para>
+<para>
+The Tree List shows the current TRB list of the Command Ring. Notice that six TRBs have already been executed.
+(You should have had the Debugger triggered six times already). The TRB listed in bold is the current TRB to
+be executed. If you select that item and then click the "View TRB" button, you can modify the TRB before the
+controller has a chance to execute it. Note that you cannot change the TRB's type, though you can modify its
+attributes.
+</para>
+<para>
+The "Continue" button will exit the debugger and continue the emulation. The "Quit" button will quit the entire
+emulation.
+</para>
+
 </section>
 
 </chapter>
