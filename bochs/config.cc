@@ -31,6 +31,9 @@
 #if BX_SUPPORT_PCIUSB
 #include "iodev/usb/usb_common.h"
 #endif
+#if BX_USE_WIN32USBDEBUG
+#include "gui/win32usb.h"
+#endif
 #include "param_names.h"
 #include <assert.h>
 
@@ -3345,8 +3348,22 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     if (num_params < 2) {
       PARSE_ERR(("%s: usb_debug directive malformed.", context));
     }
+    // check that we haven't already defined the type
+    // we can only debug one controller at a time
+    Bit32s type = SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get();
+    if (type > 0) {
+      PARSE_ERR(("%s: usb_debug: type='%s' previously defined.", context, 
+        SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get_choice(type)));
+    }
     if (parse_usb_debug_options(context, num_params, params) < 0) {
       return -1;
+    }
+    // we currently only support the xHCI controller type, so give
+    //  an error if it is something else.
+    type = SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get();
+    if ((type == USB_DEBUG_UHCI) || (type == USB_DEBUG_OHCI) || (type == USB_DEBUG_EHCI)) {
+      PARSE_ERR(("%s: usb_debug: type='%s' not supported yet.", context, 
+        SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get_choice(type)));
     }
 #endif
   } else if (!strcmp(params[0], "load32bitOSImage")) {
