@@ -908,8 +908,6 @@ int bx_uhci_core_c::event_handler(int event, void *ptr, int port)
   return ret;
 }
 
-#include "./cpu/cpu.h"
-
 bool bx_uhci_core_c::DoTransfer(Bit32u address, struct TD *td) {
 
   int len = 0, ret = 0;
