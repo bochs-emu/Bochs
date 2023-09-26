@@ -1289,7 +1289,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, Bit8u cmd_len, i
       break;
     case 0x23:
       // USBMASS-UFI10.pdf  rev 1.0  Section 4.10
-      BX_INFO(("READ FORMAT CAPACITIES"));
+      BX_DEBUG(("READ FORMAT CAPACITIES"));
       
       // Cap List Header
       outbuf[0] = 0;
@@ -1308,6 +1308,18 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, Bit8u cmd_len, i
       outbuf[10] = (Bit8u) ((block_size >>  8) & 0xFF);
       outbuf[11] = (Bit8u) ((block_size >>  0) & 0xFF);
       r->buf_len = 12;
+      break;
+    case 0xAC:
+      
+      // mmc6r02f.pdf, page 378 (330)
+      BX_DEBUG(("Get Performance:"));
+      BX_DEBUG((" %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X",
+        buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7], buf[8], buf[9], buf[10], buf[11]));
+      //goto fail;
+      memset(outbuf, 0, 8);
+      outbuf[3] = 4;
+      r->buf_len = 8;
+      
       break;
     // The 0x9E command uses a service action code (ex: 0x9E/0x10)
     case 0x9E:
