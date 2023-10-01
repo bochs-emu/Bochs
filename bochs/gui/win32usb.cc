@@ -598,8 +598,8 @@ static int hc_ehci_init(HWND hwnd)
 
 struct S_ATTRIBUTES attribs_x_ports[] = {
   
-                                           //            |                               | <- max (col 67)
-  { (1ULL<<31),              (1ULL<<31),             31, "Warm Port Reset"                , {-1, } },
+                                           //       |                                   | <- max (col 67)
+  { (1<<31),                 (1<<31),                31, "Warm Port Reset"                , {-1, } },
   { (1<<30),                 (1<<30),                30, "Device Removable"               , {-1, } },
   { (1<<29),                 (1<<29),                29, "Reserved (bit 29)"              , {-1, } },
   { (1<<28),                 (1<<28),                28, "Reserved (bit 28)"              , {-1, } },
@@ -1294,15 +1294,15 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_setup(HWND hDlg, UINT msg, WPARAM w
   
   switch (msg) {
     case WM_INITDIALOG:
-      sprintf(str, "0x%04X", (Bit16u) ((g_trb.parameter & 0x00000000000000FFULL) >> 0));
+      sprintf(str, "0x%04X", (Bit16u) ((g_trb.parameter & BX_CONST64(0x00000000000000FF)) >> 0));
       SetDlgItemText(hDlg, IDC_TRB_BREQUESTTYPE, str);
-      sprintf(str, "0x%04X", (Bit16u) ((g_trb.parameter & 0x000000000000FF00ULL) >> 8));
+      sprintf(str, "0x%04X", (Bit16u) ((g_trb.parameter & BX_CONST64(0x000000000000FF00)) >> 8));
       SetDlgItemText(hDlg, IDC_TRB_BREQUEST, str);
-      sprintf(str, "0x%04X", (Bit16u) ((g_trb.parameter & 0x00000000FFFF0000ULL) >> 16));
+      sprintf(str, "0x%04X", (Bit16u) ((g_trb.parameter & BX_CONST64(0x00000000FFFF0000)) >> 16));
       SetDlgItemText(hDlg, IDC_TRB_WVALUE, str);
-      sprintf(str, "0x%04X", (Bit16u) ((g_trb.parameter & 0x0000FFFF00000000ULL) >> 32));
+      sprintf(str, "0x%04X", (Bit16u) ((g_trb.parameter & BX_CONST64(0x0000FFFF00000000)) >> 32));
       SetDlgItemText(hDlg, IDC_TRB_WINDEX, str);
-      sprintf(str, "0x%04X", (Bit16u) ((g_trb.parameter & 0xFFFF000000000000ULL) >> 48));
+      sprintf(str, "0x%04X", (Bit16u) ((g_trb.parameter & BX_CONST64(0xFFFF000000000000)) >> 48));
       SetDlgItemText(hDlg, IDC_TRB_WLENGTH, str);
       
       sprintf(str, "%i", TRB_GET_TARGET(g_trb.status));
@@ -1327,15 +1327,15 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_setup(HWND hDlg, UINT msg, WPARAM w
           switch (LOWORD(wParam)) {
             case IDOK:
               GetDlgItemText(hDlg, IDC_TRB_BREQUESTTYPE, str, COMMON_STR_SIZE);
-              g_trb.parameter  = (((Bit64u) strtol(str, NULL, 0) << 0) & 0x00000000000000FFULL);
+              g_trb.parameter  = (((Bit64u) strtol(str, NULL, 0) << 0)  & BX_CONST64(0x00000000000000FF));
               GetDlgItemText(hDlg, IDC_TRB_BREQUEST, str, COMMON_STR_SIZE);
-              g_trb.parameter |= (((Bit64u) strtol(str, NULL, 0) << 8) & 0x000000000000FF00ULL);
+              g_trb.parameter |= (((Bit64u) strtol(str, NULL, 0) << 8)  & BX_CONST64(0x000000000000FF00));
               GetDlgItemText(hDlg, IDC_TRB_WVALUE, str, COMMON_STR_SIZE);
-              g_trb.parameter |= (((Bit64u) strtol(str, NULL, 0) << 16) & 0x00000000FFFF0000ULL);
+              g_trb.parameter |= (((Bit64u) strtol(str, NULL, 0) << 16) & BX_CONST64(0x00000000FFFF0000));
               GetDlgItemText(hDlg, IDC_TRB_WINDEX, str, COMMON_STR_SIZE);
-              g_trb.parameter |= (((Bit64u) strtol(str, NULL, 0) << 32) & 0x0000FFFF00000000ULL);
+              g_trb.parameter |= (((Bit64u) strtol(str, NULL, 0) << 32) & BX_CONST64(0x0000FFFF00000000));
               GetDlgItemText(hDlg, IDC_TRB_WLENGTH, str, COMMON_STR_SIZE);
-              g_trb.parameter |= (((Bit64u) strtol(str, NULL, 0) << 48) & 0xFFFF000000000000ULL);
+              g_trb.parameter |= (((Bit64u) strtol(str, NULL, 0) << 48) & BX_CONST64(0xFFFF000000000000));
 
               GetDlgItemText(hDlg, IDC_TRB_INT_TARGET, str, COMMON_STR_SIZE);
               g_trb.status  = (strtol(str, NULL, 0) & 0x3FF) << 22;
@@ -1487,7 +1487,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_link(HWND hDlg, UINT msg, WPARAM wP
   
   switch (msg) {
     case WM_INITDIALOG:
-      sprintf(str, "0x" FMT_ADDRX64, g_trb.parameter & ~0x0FULL);
+      sprintf(str, "0x" FMT_ADDRX64, g_trb.parameter & ~BX_CONST64(0x0F));
       SetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str);
       
       sprintf(str, "%i", TRB_GET_TARGET(g_trb.status));
@@ -1509,7 +1509,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_link(HWND hDlg, UINT msg, WPARAM wP
           switch (LOWORD(wParam)) {
             case IDOK:
               GetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str, COMMON_STR_SIZE);
-              g_trb.parameter = strtol(str, NULL, 0) & ~0x0FULL;
+              g_trb.parameter = strtol(str, NULL, 0) & ~BX_CONST64(0x0F);
 
               GetDlgItemText(hDlg, IDC_TRB_INT_TARGET, str, COMMON_STR_SIZE);
               g_trb.status = (strtol(str, NULL, 0) & 0x3FF) << 22;
@@ -1728,7 +1728,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_address(HWND hDlg, UINT msg, WPARAM
 
   switch (msg) {
     case WM_INITDIALOG:
-      sprintf(str, "0x" FMT_ADDRX64, g_trb.parameter & ~0x0FULL);
+      sprintf(str, "0x" FMT_ADDRX64, g_trb.parameter & ~BX_CONST64(0x0F));
       SetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str);
 
       sprintf(str, "%i", TRB_GET_SLOT(g_trb.command));
@@ -1747,12 +1747,12 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_address(HWND hDlg, UINT msg, WPARAM
           switch (LOWORD(wParam)) {
             case IDC_IN_CONTEXT:
               GetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str, COMMON_STR_SIZE);
-              address = strtol(str, NULL, 0) & ~0x0FULL;
+              address = strtol(str, NULL, 0) & ~BX_CONST64(0x0F);
               DialogBoxParam(NULL, MAKEINTRESOURCE(USB_DEBUG_XHCI_DLG_CONTEXT), hDlg, hc_xhci_callback_context, (LPARAM) address);
               break;
             case IDOK:
               GetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str, COMMON_STR_SIZE);
-              g_trb.parameter = strtol(str, NULL, 0) & ~0x0FULL;
+              g_trb.parameter = strtol(str, NULL, 0) & ~BX_CONST64(0x0F);
 
               g_trb.status = 0;
               
@@ -1782,7 +1782,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_configep(HWND hDlg, UINT msg, WPARA
   
   switch (msg) {
     case WM_INITDIALOG:
-      sprintf(str, "0x" FMT_ADDRX64, g_trb.parameter & ~0x0FULL);
+      sprintf(str, "0x" FMT_ADDRX64, g_trb.parameter & ~BX_CONST64(0x0F));
       SetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str);
 
       sprintf(str, "%i", TRB_GET_SLOT(g_trb.command));
@@ -1801,12 +1801,12 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_configep(HWND hDlg, UINT msg, WPARA
           switch (LOWORD(wParam)) {
             case IDC_IN_CONTEXT:
               GetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str, COMMON_STR_SIZE);
-              address = strtol(str, NULL, 0) & ~0x0FULL;
+              address = strtol(str, NULL, 0) & ~BX_CONST64(0x0F);
               DialogBoxParam(NULL, MAKEINTRESOURCE(USB_DEBUG_XHCI_DLG_CONTEXT), hDlg, hc_xhci_callback_context, (LPARAM) address);
               break;
             case IDOK:
               GetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str, COMMON_STR_SIZE);
-              g_trb.parameter = strtol(str, NULL, 0) & ~0x0FULL;
+              g_trb.parameter = strtol(str, NULL, 0) & ~BX_CONST64(0x0F);
 
               g_trb.status = 0;
               
@@ -1836,7 +1836,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_evaluate(HWND hDlg, UINT msg, WPARA
   
   switch (msg) {
     case WM_INITDIALOG:
-      sprintf(str, "0x" FMT_ADDRX64, g_trb.parameter & ~0x0FULL);
+      sprintf(str, "0x" FMT_ADDRX64, g_trb.parameter & ~BX_CONST64(0x0F));
       SetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str);
 
       sprintf(str, "%i", TRB_GET_SLOT(g_trb.command));
@@ -1855,12 +1855,12 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_evaluate(HWND hDlg, UINT msg, WPARA
           switch (LOWORD(wParam)) {
             case IDC_IN_CONTEXT:
               GetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str, COMMON_STR_SIZE);
-              address = strtol(str, NULL, 0) & ~0x0FULL;
+              address = strtol(str, NULL, 0) & ~BX_CONST64(0x0F);
               DialogBoxParam(NULL, MAKEINTRESOURCE(USB_DEBUG_XHCI_DLG_CONTEXT), hDlg, hc_xhci_callback_context, (LPARAM) address);
               break;
             case IDOK:
               GetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str, COMMON_STR_SIZE);
-              g_trb.parameter = strtol(str, NULL, 0) & ~0x0FULL;
+              g_trb.parameter = strtol(str, NULL, 0) & ~BX_CONST64(0x0F);
 
               g_trb.status = 0;
               
@@ -1983,7 +1983,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_settrptr(HWND hDlg, UINT msg, WPARA
   
   switch (msg) {
     case WM_INITDIALOG:
-      sprintf(str, "0x" FMT_ADDRX64, g_trb.parameter & ~0x0FULL);
+      sprintf(str, "0x" FMT_ADDRX64, g_trb.parameter & ~BX_CONST64(0x0F));
       SetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str);
       
       sprintf(str, "%i", TRB_GET_STREAM(g_trb.status));
@@ -2006,7 +2006,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_settrptr(HWND hDlg, UINT msg, WPARA
           switch (LOWORD(wParam)) {
             case IDOK:
               GetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str, COMMON_STR_SIZE);
-              g_trb.parameter = strtol(str, NULL, 0) & ~0x0FULL;
+              g_trb.parameter = strtol(str, NULL, 0) & ~BX_CONST64(0x0F);
 
               GetDlgItemText(hDlg, IDC_TRB_STREAMID, str, COMMON_STR_SIZE);
               g_trb.status = (strtol(str, NULL, 0) & 0xFFFF) << 16;
@@ -2082,7 +2082,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_forceevent(HWND hDlg, UINT msg, WPA
   
   switch (msg) {
     case WM_INITDIALOG:
-      sprintf(str, "0x" FMT_ADDRX64, g_trb.parameter & ~0x0FULL);
+      sprintf(str, "0x" FMT_ADDRX64, g_trb.parameter & ~BX_CONST64(0x0F));
       SetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str);
       
       sprintf(str, "%i", TRB_GET_TARGET(g_trb.status));
@@ -2103,7 +2103,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_forceevent(HWND hDlg, UINT msg, WPA
           switch (LOWORD(wParam)) {
             case IDOK:
               GetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str, COMMON_STR_SIZE);
-              g_trb.parameter = strtol(str, NULL, 0) & ~0x0FULL;
+              g_trb.parameter = strtol(str, NULL, 0) & ~BX_CONST64(0x0F);
 
               GetDlgItemText(hDlg, IDC_TRB_INT_TARGET, str, COMMON_STR_SIZE);
               g_trb.status = (strtol(str, NULL, 0) & 0x3FF) << 22;
@@ -2173,7 +2173,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_getband(HWND hDlg, UINT msg, WPARAM
   
   switch (msg) {
     case WM_INITDIALOG:
-      sprintf(str, "0x" FMT_ADDRX64, g_trb.parameter & ~0x0FULL);
+      sprintf(str, "0x" FMT_ADDRX64, g_trb.parameter & ~BX_CONST64(0x0F));
       SetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str);
 
       sprintf(str, "%i", TRB_GET_SLOT(g_trb.command));
@@ -2193,7 +2193,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_getband(HWND hDlg, UINT msg, WPARAM
           switch (LOWORD(wParam)) {
             case IDOK:
               GetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str, COMMON_STR_SIZE);
-              g_trb.parameter = strtol(str, NULL, 0) & ~0x0FULL;
+              g_trb.parameter = strtol(str, NULL, 0) & ~BX_CONST64(0x0F);
               
               g_trb.status = 0;
               
@@ -2223,7 +2223,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_forcehdr(HWND hDlg, UINT msg, WPARA
   
   switch (msg) {
     case WM_INITDIALOG:
-      sprintf(str, "0x" FMT_ADDRX64, g_trb.parameter & ~0x1FULL);
+      sprintf(str, "0x" FMT_ADDRX64, g_trb.parameter & ~BX_CONST64(0x1F));
       SetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str);
 
       sprintf(str, "0x%08X", g_trb.status);
@@ -2244,7 +2244,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_forcehdr(HWND hDlg, UINT msg, WPARA
           switch (LOWORD(wParam)) {
             case IDOK:
               GetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str, COMMON_STR_SIZE);
-              g_trb.parameter = strtol(str, NULL, 0) & ~0x1FULL;
+              g_trb.parameter = strtol(str, NULL, 0) & ~BX_CONST64(0x1F);
               
               GetDlgItemText(hDlg, IDC_TRB_HDR_HI, str, COMMON_STR_SIZE);
               g_trb.status = strtol(str, NULL, 0);
@@ -2387,7 +2387,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_pschange(HWND hDlg, UINT msg, WPARA
   
   switch (msg) {
     case WM_INITDIALOG:
-      sprintf(str, "0x" FMT_ADDRX64, (g_trb.parameter & 0x00000000FF000000ULL) >> 24);
+      sprintf(str, "0x" FMT_ADDRX64, (g_trb.parameter & BX_CONST64(0x00000000FF000000)) >> 24);
       SetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str);
 
       sprintf(str, "%i", TRB_GET_COMP_CODE(g_trb.status));
@@ -2885,7 +2885,7 @@ static void hc_xhci_callback_context_ep_get(HWND hDlg)
   SetDlgItemText(hDlg, IDC_CONTEXT_EP_TYPE, str);
   sprintf(str, "%i", (p[1] & (0x3 << 1)) >> 1);
   SetDlgItemText(hDlg, IDC_CONTEXT_CERR, str);
-  sprintf(str, "0x" FMT_ADDRX64, ((Bit64u) p[3] << 32) | (p[2] & ~0xFULL));
+  sprintf(str, "0x" FMT_ADDRX64, ((Bit64u) p[3] << 32) | (p[2] & ~BX_CONST64(0xF)));
   SetDlgItemText(hDlg, IDC_CONTEXT_TR_DEQUEUE_PTR, str);
   CheckDlgButton(hDlg, IDC_CONTEXT_DCS, (p[2] & (1<<0)) ? BST_CHECKED : BST_UNCHECKED);
   sprintf(str, "%i", (p[4] & (0xFFFF << 16)) >> 16);
@@ -2940,7 +2940,7 @@ static void hc_xhci_callback_context_ep_put(HWND hDlg)
   GetDlgItemText(hDlg, IDC_CONTEXT_CERR, str, COMMON_STR_SIZE);
   p[1] |= (strtol(str, NULL, 0) & 0x3) << 1;
   GetDlgItemText(hDlg, IDC_CONTEXT_TR_DEQUEUE_PTR, str, COMMON_STR_SIZE);
-  p[2]  = strtol(str, NULL, 0) & ~0xFULL;
+  p[2]  = strtol(str, NULL, 0) & ~BX_CONST64(0xF);
   p[3]  = (Bit64u) strtol(str, NULL, 0) >> 32;
   p[2] |= (IsDlgButtonChecked(hDlg, IDC_CONTEXT_DCS) == BST_CHECKED) ? (1<<0) : 0;
   GetDlgItemText(hDlg, IDC_CONTEXT_MAX_ESIT_LO, str, COMMON_STR_SIZE);
@@ -3046,8 +3046,8 @@ static INT_PTR CALLBACK hc_xhci_callback_context(HWND hDlg, UINT msg, WPARAM wPa
               // create an attributes structure
               attribs = (struct S_ATTRIBUTES *) calloc(sizeof(struct S_ATTRIBUTES), 33);
               for (i=0,j=31; i<32; i++,j--) {
-                attribs[i].attrb = (1ULL<<i);
-                attribs[i].mask = (1ULL<<i);
+                attribs[i].attrb = (BX_CONST64(1)<<i);
+                attribs[i].mask = (BX_CONST64(1)<<i);
                 attribs[i].index = j;
                 if (i<2)
                   sprintf(attribs[i].str, "D%i (RsvdZ)", i);
@@ -3067,8 +3067,8 @@ static INT_PTR CALLBACK hc_xhci_callback_context(HWND hDlg, UINT msg, WPARAM wPa
               // create an attributes structure
               attribs = (struct S_ATTRIBUTES *) calloc(sizeof(struct S_ATTRIBUTES), 33);
               for (i=0,j=31; i<32; i++,j--) {
-                attribs[i].attrb = (1ULL<<i);
-                attribs[i].mask = (1ULL<<i);
+                attribs[i].attrb = (BX_CONST64(1)<<i);
+                attribs[i].mask = (BX_CONST64(1)<<i);
                 attribs[i].index = j;
                 sprintf(attribs[i].str, "A%i", i);
                 attribs[i].groups[0] = -1;
@@ -3112,7 +3112,7 @@ static INT_PTR CALLBACK hc_xhci_callback_context(HWND hDlg, UINT msg, WPARAM wPa
               break;
             case IDC_CONTEXT_STREAM_CONTEXT:
               GetDlgItemText(hDlg, IDC_CONTEXT_TR_DEQUEUE_PTR, str, COMMON_STR_SIZE);
-              xhci_str_context_address = strtol(str, NULL, 0) & ~0x0FULL;
+              xhci_str_context_address = strtol(str, NULL, 0) & ~BX_CONST64(0x0F);
               GetDlgItemText(hDlg, IDC_CONTEXT_MAX_PSTREAMS, str, COMMON_STR_SIZE);
               xhci_max_streams = strtol(str, NULL, 0);
               if (xhci_max_streams > MAX_PSA_SIZE)
@@ -3255,7 +3255,7 @@ static void CALLBACK hc_xhci_callback_str_context_get(HWND hDlg)
   
   // String Context
   p = (Bit32u *) &xhci_str_context[xhci_str_current_context * 32];
-  sprintf(str, "0x" FMT_ADDRX64, ((Bit64u) p[1] << 32) | (p[0] & ~0xFULL));
+  sprintf(str, "0x" FMT_ADDRX64, ((Bit64u) p[1] << 32) | (p[0] & ~BX_CONST64(0xF)));
   SetDlgItemText(hDlg, IDC_STR_CONTEXT_DQPTR, str);
   sprintf(str, "%i", (p[0] & (0x7 << 1)) >> 1);
   SetDlgItemText(hDlg, IDC_STR_CONTEXT_SCT, str);
@@ -3279,7 +3279,7 @@ static void CALLBACK hc_xhci_callback_str_context_put(HWND hDlg)
   // String Context
   p = (Bit32u *) &xhci_str_context[xhci_str_current_context * 32];
   GetDlgItemText(hDlg, IDC_STR_CONTEXT_DQPTR, str, COMMON_STR_SIZE);
-  p[0]  = strtol(str, NULL, 0) & ~0xFULL;
+  p[0]  = strtol(str, NULL, 0) & ~BX_CONST64(0xF);
   p[1]  = (Bit64u) strtol(str, NULL, 0) >> 32;
   GetDlgItemText(hDlg, IDC_STR_CONTEXT_SCT, str, COMMON_STR_SIZE);
   p[0] |= (strtol(str, NULL, 0) & 0x7) << 1;
