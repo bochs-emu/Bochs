@@ -3486,9 +3486,7 @@ void do_attributes(HWND hwnd, DWORD id, const int size, const char *title, const
   }
 }
 
-
 #endif
 
 // ben: do Software Debug in UHCI (command reg: bit 5)
 //   add 'stop' to trigger options.
-

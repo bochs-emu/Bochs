@@ -70,7 +70,7 @@ CI_OBJS_WIN32 = win32config.o
 CI_OBJS_WIN32_SUPPORT = win32paramdlg.o scrollwin.o
 
 GUI_DLL_TARGETS = @GUI_DLL_TARGETS@
-OBJS_THAT_CANNOT_BE_PLUGINS = keymap.o gui.o siminterface.o paramtree.o @ENH_DBG_OBJS@
+OBJS_THAT_CANNOT_BE_PLUGINS = keymap.o gui.o siminterface.o paramtree.o @ENH_DBG_OBJS@ @USB_DBG_OBJS@
 
 X_LIBS = @X_LIBS@
 X_PRE_LIBS = @X_PRE_LIBS@
@@ -318,6 +318,14 @@ win32paramdlg.o: win32paramdlg.@CPP_SUFFIX@ win32dialog.h ../config.h ../bochs.h
  ../config.h ../osdep.h ../gui/paramtree.h ../logio.h \
  ../misc/bswap.h siminterface.h \
  win32res.h
+win32usb.o: win32usb.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+ ../gui/paramtree.h ../logio.h ../misc/bswap.h win32dialog.h ../config.h \
+ ../iodev/iodev.h ../plugin.h ../extplugin.h ../param_names.h \
+ ../pc_system.h ../bx_debug/debug.h ../osdep.h ../cpu/decoder/decoder.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/gui.h \
+ win32usbres.h win32usb.h ../iodev/usb/usb_common.h \
+ ../iodev/usb/usb_pcap.h ../iodev/usb/uhci_core.h ../iodev/usb/usb_uhci.h \
+ ../iodev/usb/usb_xhci.h
 wx.o: wx.@CPP_SUFFIX@ ../config.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
  ../misc/bswap.h ../param_names.h \
@@ -439,6 +447,14 @@ win32paramdlg.lo: win32paramdlg.@CPP_SUFFIX@ win32dialog.h ../config.h ../bochs.
  ../config.h ../osdep.h ../gui/paramtree.h ../logio.h \
  ../misc/bswap.h siminterface.h \
  win32res.h
+win32usb.lo: win32usb.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+ ../gui/paramtree.h ../logio.h ../misc/bswap.h win32dialog.h ../config.h \
+ ../iodev/iodev.h ../plugin.h ../extplugin.h ../param_names.h \
+ ../pc_system.h ../bx_debug/debug.h ../osdep.h ../cpu/decoder/decoder.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/gui.h \
+ win32usbres.h win32usb.h ../iodev/usb/usb_common.h \
+ ../iodev/usb/usb_pcap.h ../iodev/usb/uhci_core.h ../iodev/usb/usb_uhci.h \
+ ../iodev/usb/usb_xhci.h
 wx.lo: wx.@CPP_SUFFIX@ ../config.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
  ../misc/bswap.h ../param_names.h \
