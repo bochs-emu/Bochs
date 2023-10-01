@@ -428,7 +428,7 @@ void bx_get_command(void)
       tmp_buf[0] = '\n';
       tmp_buf[1] = 0;
       tmp_buf_ptr = &tmp_buf[0];
-      bx_guard.interrupt_requested = 0;
+      bx_guard.interrupt_requested = false;
       return;
     }
 
@@ -531,7 +531,7 @@ void CDECL bx_debug_ctrlc_handler(int signum)
 
 void bx_debug_break()
 {
-  bx_guard.interrupt_requested = 1;
+  bx_guard.interrupt_requested = true;
 }
 
 void bx_dbg_exception(unsigned cpu, Bit8u vector, Bit16u error_code)
@@ -2079,7 +2079,7 @@ one_more:
   // is printed, we will return to config mode.
   SIM->set_display_mode(DISP_MODE_SIM);
 
-  bx_guard.interrupt_requested = 0;
+  bx_guard.interrupt_requested = false;
   int stop = 0;
   int which = -1;
   while (!stop && !bx_guard.interrupt_requested) {
@@ -2170,7 +2170,7 @@ void bx_dbg_stepN_command(int cpu, Bit32u count)
   SIM->set_display_mode(DISP_MODE_SIM);
 
   if (cpu >= 0 || BX_SMP_PROCESSORS == 1) {
-    bx_guard.interrupt_requested = 0;
+    bx_guard.interrupt_requested = false;
     bx_dbg_set_icount_guard(cpu, count);
     BX_CPU(cpu)->cpu_loop();
   }
@@ -2180,7 +2180,7 @@ void bx_dbg_stepN_command(int cpu, Bit32u count)
     // for now, step each CPU one instruction at a time
     for (unsigned cycle=0; !stop && cycle < count; cycle++) {
       for (unsigned ncpu=0; ncpu < BX_SMP_PROCESSORS; ncpu++) {
-        bx_guard.interrupt_requested = 0;
+        bx_guard.interrupt_requested = false;
         bx_dbg_set_icount_guard(ncpu, 1);
         BX_CPU(ncpu)->cpu_loop();
         // set stop flag if a guard found other than icount or halted
