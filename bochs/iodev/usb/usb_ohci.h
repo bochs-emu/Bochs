@@ -284,7 +284,7 @@ private:
 
   void process_lists();
   bool process_ed(struct OHCI_ED *, const Bit32u);
-  bool process_td(struct OHCI_TD *, struct OHCI_ED *);
+  int  process_td(struct OHCI_TD *, struct OHCI_ED *, int);
 
 #if BX_USE_USB_OHCI_SMF
   static bool read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
