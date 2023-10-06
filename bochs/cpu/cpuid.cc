@@ -751,25 +751,26 @@ Bit32u bx_cpuid_t::get_ext_cpuid_leaf_1_edx_amd(Bit32u extra) const
 {
   Bit32u edx = get_std_cpuid_leaf_1_edx_common(extra);
 
-  // [0:0]   FPU on chip
-  // [1:1]   VME: Virtual-8086 Mode enhancements
-  // [2:2]   DE: Debug Extensions (I/O breakpoints)
-  // [3:3]   PSE: Page Size Extensions
-  // [4:4]   TSC: Time Stamp Counter
-  // [5:5]   MSR: RDMSR and WRMSR support
-  // [6:6]   PAE: Physical Address Extensions
-  // [7:7]   MCE: Machine Check Exception
-  // [8:8]   CXS: CMPXCHG8B instruction
-  // [9:9]   APIC: APIC on Chip
-  // [10:10] Reserved
-  // [11:11] SYSCALL/SYSRET support
-  // [12:12] MTRR: Memory Type Range Reg
-  // [13:13] PGE/PTE Global Bit
-  // [14:14] MCA: Machine Check Architecture
-  // [15:15] CMOV: Cond Mov/Cmp Instructions
-  // [16:16] PAT: Page Attribute Table
-  // [17:17] PSE-36: Physical Address Extensions
-  // [19:18] Reserved
+  // [*] indicates common bits
+  // * [0:0]   FPU on chip
+  // * [1:1]   VME: Virtual-8086 Mode enhancements
+  // * [2:2]   DE: Debug Extensions (I/O breakpoints)
+  // * [3:3]   PSE: Page Size Extensions
+  // * [4:4]   TSC: Time Stamp Counter
+  // * [5:5]   MSR: RDMSR and WRMSR support
+  // * [6:6]   PAE: Physical Address Extensions
+  // * [7:7]   MCE: Machine Check Exception
+  // * [8:8]   CXS: CMPXCHG8B instruction
+  // * [9:9]   APIC: APIC on Chip
+  // * [10:10] Reserved
+  //   [11:11] SYSCALL/SYSRET support
+  // * [12:12] MTRR: Memory Type Range Reg
+  // * [13:13] PGE/PTE Global Bit
+  // * [14:14] MCA: Machine Check Architecture
+  // * [15:15] CMOV: Cond Mov/Cmp Instructions
+  // * [16:16] PAT: Page Attribute Table
+  // * [17:17] PSE-36: Physical Address Extensions
+  //   [19:18] Reserved
   if (is_cpu_extension_supported(BX_ISA_SYSCALL_SYSRET_LEGACY)) // only uncommon bit
     edx |= BX_CPUID_STD2_SYSCALL_SYSRET;
 
@@ -783,8 +784,8 @@ Bit32u bx_cpuid_t::get_ext_cpuid_leaf_1_edx_amd(Bit32u extra) const
   if (is_cpu_extension_supported(BX_ISA_SSE))
     edx |= BX_CPUID_STD2_AMD_MMX_EXT;
   
-  // [23:23] MMX Technology
-  // [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
+  // * [23:23] MMX Technology
+  // * [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
 
   // [25:25] Fast FXSAVE/FXRSTOR mode support
   if (is_cpu_extension_supported(BX_ISA_FFXSR))
