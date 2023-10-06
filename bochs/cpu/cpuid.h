@@ -111,8 +111,14 @@ protected:
   void get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
 #endif
 
+  Bit32u get_std_cpuid_leaf_1_ecx(Bit32u extra = 0) const;
+  Bit32u get_std_cpuid_leaf_1_edx_common(Bit32u extra = 0) const;
+  Bit32u get_std_cpuid_leaf_1_edx(Bit32u extra = 0) const;
   Bit32u get_std_cpuid_leaf_7_ebx(Bit32u extra = 0) const;
   Bit32u get_std_cpuid_leaf_7_ecx(Bit32u extra = 0) const;
+
+  Bit32u get_ext_cpuid_leaf_1_edx_amd(Bit32u extra = 0) const;
+  Bit32u get_ext_cpuid_leaf_1_edx_intel() const;
 
   void get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const;
 
