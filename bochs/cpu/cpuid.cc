@@ -650,7 +650,9 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_1_edx_common(Bit32u extra) const
   if (is_cpu_extension_supported(BX_ISA_PAE))
     edx |= BX_CPUID_STD_PAE;
 
-  // [7:7]   MCE: Machine Check Exception - not implemented, could be enabled through extra
+  // [7:7]   MCE: Machine Check Exception
+  if (is_cpu_extension_supported(BX_ISA_PENTIUM))
+    edx |= BX_CPUID_STD_MCE;
 
   // [8:8]   CXS: CMPXCHG8B instruction
   if (is_cpu_extension_supported(BX_ISA_PENTIUM))
@@ -678,7 +680,9 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_1_edx_common(Bit32u extra) const
   if (is_cpu_extension_supported(BX_ISA_PGE))
     edx |= BX_CPUID_STD_GLOBAL_PAGES;
 
-  // [14:14] MCA: Machine Check Architecture - not implemented, could be enabled through extra
+  // [14:14] MCA: Machine Check Architecture
+  if (is_cpu_extension_supported(BX_ISA_P6))
+    edx |= BX_CPUID_STD_MCA;
 
   // [15:15] CMOV: Cond Mov/Cmp Instructions
   if (is_cpu_extension_supported(BX_ISA_P6))

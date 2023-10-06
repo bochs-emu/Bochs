@@ -214,7 +214,7 @@ void turion64_tyler_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [29:29] TM: Thermal Monitor
   //   [30:30] Reserved
   //   [31:31] PBE: Pending Break Enable
-  leaf->edx = get_std_cpuid_leaf_1_edx(BX_CPUID_STD_MCE | BX_CPUID_STD_MCA);
+  leaf->edx = get_std_cpuid_leaf_1_edx();
 #if BX_SUPPORT_SMP
   leaf->edx |= BX_CPUID_STD_HT;
 #endif
@@ -305,7 +305,7 @@ void turion64_tyler_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   // * [29:29] Long Mode
   // * [30:30] AMD 3DNow! Extensions
   // * [31:31] AMD 3DNow! Instructions
-  leaf->edx = get_ext_cpuid_leaf_1_edx_amd(BX_CPUID_STD_MCE | BX_CPUID_STD_MCA);
+  leaf->edx = get_ext_cpuid_leaf_1_edx_amd();
 }
 
 // leaf 0x80000002 //

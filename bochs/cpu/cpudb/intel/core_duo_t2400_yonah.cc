@@ -237,9 +237,7 @@ void core_duo_t2400_yonah_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   // * [29:29] TM: Thermal Monitor
   //   [30:30] Reserved
   // * [31:31] PBE: Pending Break Enable
-  leaf->edx = get_std_cpuid_leaf_1_edx(BX_CPUID_STD_MCE |
-                                       BX_CPUID_STD_MCA |
-                                       BX_CPUID_STD_DEBUG_STORE |
+  leaf->edx = get_std_cpuid_leaf_1_edx(BX_CPUID_STD_DEBUG_STORE |
                                        BX_CPUID_STD_ACPI |
                                        BX_CPUID_STD_SELF_SNOOP |
 #if BX_SUPPORT_SMP

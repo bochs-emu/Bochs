@@ -118,7 +118,7 @@ void p2_klamath_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [29:29] TM: Thermal Monitor
   //   [30:30] Reserved
   //   [31:31] PBE: Pending Break Enable
-  leaf->edx = get_std_cpuid_leaf_1_edx(BX_CPUID_STD_MCE | BX_CPUID_STD_MCA);
+  leaf->edx = get_std_cpuid_leaf_1_edx();
 }
 
 // leaf 0x00000002 //
