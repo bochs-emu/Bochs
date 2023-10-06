@@ -255,7 +255,7 @@ void corei7_haswell_4770_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   // * [12:12] FMA Instructions support
   // * [13:13] CMPXCHG16B: CMPXCHG16B instruction support
   // * [14:14] xTPR update control
-  // * [15:15] PDCM - Perfon and Debug Capability MSR
+  // * [15:15] PDCM - Perfmon and Debug Capability MSR
   //   [16:16] reserved
   // * [17:17] PCID: Process Context Identifiers
   //   [18:18] DCA - Direct Cache Access
@@ -272,38 +272,12 @@ void corei7_haswell_4770_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   // * [29:29] AVX F16C - Float16 conversion support
   // * [30:30] RDRAND instruction
   //   [31:31] reserved
-  leaf->ecx = BX_CPUID_EXT_SSE3 |
-              BX_CPUID_EXT_PCLMULQDQ |
-              BX_CPUID_EXT_DTES64 |
-#if BX_SUPPORT_MONITOR_MWAIT
-              BX_CPUID_EXT_MONITOR_MWAIT |
-#endif
-              BX_CPUID_EXT_DS_CPL |
-#if BX_SUPPORT_VMX >= 2
-              BX_CPUID_EXT_VMX |
-#endif
-           /* BX_CPUID_EXT_SMX | */
-              BX_CPUID_EXT_EST |
-              BX_CPUID_EXT_THERMAL_MONITOR2 |
-              BX_CPUID_EXT_SSSE3 |
-              BX_CPUID_EXT_FMA |
-              BX_CPUID_EXT_CMPXCHG16B |
-              BX_CPUID_EXT_xTPR |
-              BX_CPUID_EXT_PDCM |
-              BX_CPUID_EXT_PCID |
-              BX_CPUID_EXT_SSE4_1 |
-              BX_CPUID_EXT_SSE4_2 |
-              BX_CPUID_EXT_X2APIC |
-              BX_CPUID_EXT_MOVBE |
-              BX_CPUID_EXT_POPCNT |
-              BX_CPUID_EXT_TSC_DEADLINE |
-              BX_CPUID_EXT_AES |
-              BX_CPUID_EXT_XSAVE |
-              BX_CPUID_EXT_AVX |
-              BX_CPUID_EXT_AVX_F16C |
-              BX_CPUID_EXT_RDRAND;
-  if (cpu->cr4.get_OSXSAVE())
-    leaf->ecx |= BX_CPUID_EXT_OSXSAVE;
+  leaf->ecx = get_std_cpuid_leaf_1_ecx(BX_CPUID_EXT_DTES64 |
+                                       BX_CPUID_EXT_DS_CPL |
+                                       BX_CPUID_EXT_EST |
+                                       BX_CPUID_EXT_THERMAL_MONITOR2 |
+                                       BX_CPUID_EXT_xTPR |
+                                       BX_CPUID_EXT_PDCM);
 
   // EDX: Standard Feature Flags
   // * [0:0]   FPU on chip
@@ -338,41 +312,14 @@ void corei7_haswell_4770_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   // * [29:29] TM: Thermal Monitor
   //   [30:30] Reserved
   // * [31:31] PBE: Pending Break Enable
-  leaf->edx = BX_CPUID_STD_X87 |
-              BX_CPUID_STD_VME |
-              BX_CPUID_STD_DEBUG_EXTENSIONS |
-              BX_CPUID_STD_PSE |
-              BX_CPUID_STD_TSC |
-              BX_CPUID_STD_MSR |
-              BX_CPUID_STD_PAE |
-              BX_CPUID_STD_MCE |
-              BX_CPUID_STD_CMPXCHG8B |
-              BX_CPUID_STD_SYSENTER_SYSEXIT |
-              BX_CPUID_STD_MTRR |
-              BX_CPUID_STD_GLOBAL_PAGES |
-              BX_CPUID_STD_MCA |
-              BX_CPUID_STD_CMOV |
-              BX_CPUID_STD_PAT |
-              BX_CPUID_STD_PSE36 |
-              BX_CPUID_STD_CLFLUSH |
-              BX_CPUID_STD_DEBUG_STORE |
-              BX_CPUID_STD_ACPI |
-              BX_CPUID_STD_MMX |
-              BX_CPUID_STD_FXSAVE_FXRSTOR |
-              BX_CPUID_STD_SSE |
-              BX_CPUID_STD_SSE2 |
-              BX_CPUID_STD_SELF_SNOOP |
+  leaf->edx = get_std_cpuid_leaf_1_edx(BX_CPUID_STD_DEBUG_STORE |
+                                       BX_CPUID_STD_ACPI |
+                                       BX_CPUID_STD_SELF_SNOOP |
 #if BX_SUPPORT_SMP
-              BX_CPUID_STD_HT |
+                                       BX_CPUID_STD_HT |
 #endif
-              BX_CPUID_STD_THERMAL_MONITOR |
-              BX_CPUID_STD_PBE;
-#if BX_SUPPORT_APIC
-  // if MSR_APICBASE APIC Global Enable bit has been cleared,
-  // the CPUID feature flag for the APIC is set to 0.
-  if (cpu->msr.apicbase & 0x800)
-    leaf->edx |= BX_CPUID_STD_APIC; // APIC on chip
-#endif
+                                       BX_CPUID_STD_THERMAL_MONITOR |
+                                       BX_CPUID_STD_PBE);
 }
 
 // leaf 0x00000002 //
@@ -624,7 +571,6 @@ void corei7_haswell_4770_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
               BX_CPUID_EXT2_LZCNT;
 
   // EDX:
-  // Many of the bits in EDX are the same as FN 0x00000001 [*] for AMD
   //    [10:0] Reserved for Intel
   // * [11:11] SYSCALL/SYSRET support
   //   [19:12] Reserved for Intel
@@ -636,13 +582,7 @@ void corei7_haswell_4770_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   // * [29:29] Long Mode
   //   [30:30] AMD 3DNow! Extensions
   //   [31:31] AMD 3DNow! Instructions
-
-  leaf->edx = BX_CPUID_STD2_NX |
-              BX_CPUID_STD2_1G_PAGES |
-              BX_CPUID_STD2_RDTSCP |
-              BX_CPUID_STD2_LONG_MODE;
-  if (cpu->long64_mode())
-    leaf->edx |= BX_CPUID_STD2_SYSCALL_SYSRET;
+  leaf->edx = get_ext_cpuid_leaf_1_edx_intel();
 }
 
 // leaf 0x80000002 //

@@ -206,7 +206,7 @@ void phenom_8650_toliman_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [12:12] FMA Instructions support
   // * [13:13] CMPXCHG16B: CMPXCHG16B instruction support
   //   [14:14] xTPR update control
-  //   [15:15] PDCM - Perfon and Debug Capability MSR
+  //   [15:15] PDCM - Perfmon and Debug Capability MSR
   //   [16:16] reserved
   //   [17:17] PCID: Process Context Identifiers
   //   [18:18] DCA - Direct Cache Access
@@ -223,12 +223,7 @@ void phenom_8650_toliman_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [29:29] AVX F16C - Float16 conversion support
   //   [30:30] RDRAND instruction
   //   [31:31] reserved
-  leaf->ecx = BX_CPUID_EXT_SSE3 |
-#if BX_SUPPORT_MONITOR_MWAIT
-              BX_CPUID_EXT_MONITOR_MWAIT |
-#endif
-              BX_CPUID_EXT_CMPXCHG16B |
-              BX_CPUID_EXT_POPCNT;
+  leaf->ecx = get_std_cpuid_leaf_1_ecx();
 
   // EDX: Standard Feature Flags
   // * [0:0]   FPU on chip
@@ -263,36 +258,9 @@ void phenom_8650_toliman_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [29:29] TM: Thermal Monitor
   //   [30:30] Reserved
   //   [31:31] PBE: Pending Break Enable
-  leaf->edx = BX_CPUID_STD_X87 |
-              BX_CPUID_STD_VME |
-              BX_CPUID_STD_DEBUG_EXTENSIONS |
-              BX_CPUID_STD_PSE |
-              BX_CPUID_STD_TSC |
-              BX_CPUID_STD_MSR |
-              BX_CPUID_STD_PAE |
-              BX_CPUID_STD_MCE |
-              BX_CPUID_STD_CMPXCHG8B |
-              BX_CPUID_STD_SYSENTER_SYSEXIT |
-              BX_CPUID_STD_MTRR |
-              BX_CPUID_STD_GLOBAL_PAGES |
-              BX_CPUID_STD_MCA |
-              BX_CPUID_STD_CMOV |
-              BX_CPUID_STD_PAT |
-              BX_CPUID_STD_PSE36 |
-              BX_CPUID_STD_CLFLUSH |
-              BX_CPUID_STD_MMX |
-              BX_CPUID_STD_FXSAVE_FXRSTOR |
-              BX_CPUID_STD_SSE |
-              BX_CPUID_STD_SSE2
+  leaf->edx = get_std_cpuid_leaf_1_edx();
 #if BX_SUPPORT_SMP
-              | BX_CPUID_STD_HT
-#endif
-              ;
-#if BX_SUPPORT_APIC
-  // if MSR_APICBASE APIC Global Enable bit has been cleared,
-  // the CPUID feature flag for the APIC is set to 0.
-  if (cpu->msr.apicbase & 0x800)
-    leaf->edx |= BX_CPUID_STD_APIC; // APIC on chip
+  leaf->edx |= BX_CPUID_STD_HT;
 #endif
 }
 
@@ -414,38 +382,7 @@ void phenom_8650_toliman_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   // * [29:29] Long Mode
   // * [30:30] AMD 3DNow! Extensions
   // * [31:31] AMD 3DNow! Instructions
-  leaf->edx = BX_CPUID_STD_X87 |
-              BX_CPUID_STD_VME |
-              BX_CPUID_STD_DEBUG_EXTENSIONS |
-              BX_CPUID_STD_PSE |
-              BX_CPUID_STD_TSC |
-              BX_CPUID_STD_MSR |
-              BX_CPUID_STD_PAE |
-              BX_CPUID_STD_MCE |
-              BX_CPUID_STD_CMPXCHG8B |
-              BX_CPUID_STD2_SYSCALL_SYSRET |
-              BX_CPUID_STD_MTRR |
-              BX_CPUID_STD_GLOBAL_PAGES |
-              BX_CPUID_STD_MCA |
-              BX_CPUID_STD_CMOV |
-              BX_CPUID_STD_PAT |
-              BX_CPUID_STD_PSE36 |
-              BX_CPUID_STD2_NX |
-              BX_CPUID_STD2_AMD_MMX_EXT |
-              BX_CPUID_STD_MMX |
-              BX_CPUID_STD_FXSAVE_FXRSTOR |
-              BX_CPUID_STD2_FFXSR |
-              BX_CPUID_STD2_1G_PAGES |
-              BX_CPUID_STD2_RDTSCP |
-              BX_CPUID_STD2_LONG_MODE |
-              BX_CPUID_STD2_3DNOW_EXT |
-              BX_CPUID_STD2_3DNOW;
-#if BX_SUPPORT_APIC
-  // if MSR_APICBASE APIC Global Enable bit has been cleared,
-  // the CPUID feature flag for the APIC is set to 0.
-  if (cpu->msr.apicbase & 0x800)
-    leaf->edx |= BX_CPUID_STD_APIC; // APIC on chip
-#endif
+  leaf->edx = get_ext_cpuid_leaf_1_edx_amd();
 }
 
 // leaf 0x80000002 //

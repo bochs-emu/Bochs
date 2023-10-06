@@ -504,6 +504,376 @@ void bx_cpuid_t::get_ext_cpuid_brand_string_leaf(const char *brand_string, Bit32
 #endif
 }
 
+// leaf 0x00000001 - ECX
+Bit32u bx_cpuid_t::get_std_cpuid_leaf_1_ecx(Bit32u extra) const
+{
+  Bit32u ecx = extra;
+
+  // [0:0]   SSE3: SSE3 Instructions
+  if (is_cpu_extension_supported(BX_ISA_SSE3))
+    ecx |= BX_CPUID_EXT_SSE3;
+
+  // [1:1]   PCLMULQDQ Instruction support
+  if (is_cpu_extension_supported(BX_ISA_AES_PCLMULQDQ))
+    ecx |= BX_CPUID_EXT_PCLMULQDQ;
+
+  // [2:2]   DTES64: 64-bit DS area - not supported, could be enable through extra
+
+  // [3:3]   MONITOR/MWAIT support
+#if BX_SUPPORT_MONITOR_MWAIT
+  if (is_cpu_extension_supported(BX_ISA_MONITOR_MWAIT))
+    ecx |= BX_CPUID_EXT_MONITOR_MWAIT;
+#endif
+
+  // [4:4]   DS-CPL: CPL qualified debug store  - not supported, could be enable through extra
+
+  // [5:5]   VMX: Virtual Machine Technology
+#if BX_SUPPORT_VMX >= 2
+  if (is_cpu_extension_supported(BX_ISA_VMX))
+    ecx |= BX_CPUID_EXT_VMX;
+#endif
+
+  // [6:6]   SMX: Secure Virtual Machine Technology - not supported
+  // [7:7]   EST: Enhanced Intel SpeedStep Technology - not supported, could be enabled through extra
+  // [8:8]   TM2: Thermal Monitor 2 - not supported, could be enabled through extra
+
+  // [9:9]   SSSE3: SSSE3 Instructions
+  if (is_cpu_extension_supported(BX_ISA_SSSE3))
+    ecx |= BX_CPUID_EXT_SSSE3;
+
+  // [10:10] CNXT-ID: L1 context ID - not supported, could be enabled through extra
+  // [11:11] reserved
+
+  // [12:12] FMA Instructions support
+  if (is_cpu_extension_supported(BX_ISA_AVX_FMA))
+    ecx |= BX_CPUID_EXT_FMA;
+
+  // [13:13] CMPXCHG16B: CMPXCHG16B instruction support
+  if (is_cpu_extension_supported(BX_ISA_CMPXCHG16B))
+    ecx |= BX_CPUID_EXT_CMPXCHG16B;
+
+  // [14:14] xTPR update control - not supported, could be enabled through extra
+  // [15:15] PDCM - Perfmon and Debug Capability MSR - not supported, could be enabled through extra
+  // [16:16] reserved
+
+  // [17:17] PCID: Process Context Identifiers
+  if (is_cpu_extension_supported(BX_ISA_PCID))
+    ecx |= BX_CPUID_EXT_PCID;
+
+  // [18:18] DCA - Direct Cache Access - not supported, could be enabled through extra
+
+  // [19:19] SSE4.1 Instructions
+  if (is_cpu_extension_supported(BX_ISA_SSE4_1))
+    ecx |= BX_CPUID_EXT_SSE4_1;
+
+  // [20:20] SSE4.2 Instructions
+  if (is_cpu_extension_supported(BX_ISA_SSE4_2))
+    ecx |= BX_CPUID_EXT_SSE4_2;
+
+  // [21:21] X2APIC
+  if (is_cpu_extension_supported(BX_ISA_X2APIC))
+    ecx |= BX_CPUID_EXT_X2APIC;
+
+  // [22:22] MOVBE instruction
+  if (is_cpu_extension_supported(BX_ISA_MOVBE))
+    ecx |= BX_CPUID_EXT_MOVBE;
+
+  // [23:23] POPCNT instruction
+  if (is_cpu_extension_supported(BX_ISA_POPCNT))
+    ecx |= BX_CPUID_EXT_POPCNT;
+
+  // [24:24] TSC Deadline
+  if (is_cpu_extension_supported(BX_ISA_TSC_DEADLINE))
+    ecx |= BX_CPUID_EXT_TSC_DEADLINE;
+
+  // [25:25] AES Instructions
+  if (is_cpu_extension_supported(BX_ISA_AES_PCLMULQDQ))
+    ecx |= BX_CPUID_EXT_AES;
+
+  // [26:26] XSAVE extensions support
+  if (is_cpu_extension_supported(BX_ISA_XSAVE))
+    ecx |= BX_CPUID_EXT_XSAVE;
+
+  // [27:27] OSXSAVE support
+#if BX_CPU_LEVEL >= 5
+  if (cpu->cr4.get_OSXSAVE())
+    ecx |= BX_CPUID_EXT_OSXSAVE;
+#endif
+
+  // [28:28] AVX extensions support
+  if (is_cpu_extension_supported(BX_ISA_AVX))
+    ecx |= BX_CPUID_EXT_AVX;
+
+  // [29:29] AVX F16C - Float16 conversion support
+  if (is_cpu_extension_supported(BX_ISA_AVX_F16C))
+    ecx |= BX_CPUID_EXT_AVX_F16C;
+
+  // [30:30] RDRAND instruction
+  if (is_cpu_extension_supported(BX_ISA_RDRAND))
+    ecx |= BX_CPUID_EXT_RDRAND;
+
+  // [31:31] reserved
+
+  return ecx;
+}
+
+// leaf 0x00000001 - EDX[24:23,18:12,10:0]
+Bit32u bx_cpuid_t::get_std_cpuid_leaf_1_edx_common(Bit32u extra) const
+{
+  Bit32u edx = extra;
+
+  // [0:0]   FPU on chip
+  if (is_cpu_extension_supported(BX_ISA_X87))
+    edx |= BX_CPUID_STD_X87;
+
+  // [1:1]   VME: Virtual-8086 Mode enhancements
+  if (is_cpu_extension_supported(BX_ISA_VME))
+    edx |= BX_CPUID_STD_VME;
+
+  // [2:2]   DE: Debug Extensions (I/O breakpoints)
+  if (is_cpu_extension_supported(BX_ISA_DEBUG_EXTENSIONS))
+    edx |= BX_CPUID_STD_DEBUG_EXTENSIONS;
+
+  // [3:3]   PSE: Page Size Extensions
+  if (is_cpu_extension_supported(BX_ISA_PSE))
+    edx |= BX_CPUID_STD_PSE;
+
+  // [4:4]   TSC: Time Stamp Counter
+  if (is_cpu_extension_supported(BX_ISA_PENTIUM))
+    edx |= BX_CPUID_STD_TSC;
+
+  // [5:5]   MSR: RDMSR and WRMSR support
+  if (is_cpu_extension_supported(BX_ISA_PENTIUM))
+    edx |= BX_CPUID_STD_MSR;
+
+  // [6:6]   PAE: Physical Address Extensions
+  if (is_cpu_extension_supported(BX_ISA_PAE))
+    edx |= BX_CPUID_STD_PAE;
+
+  // [7:7]   MCE: Machine Check Exception
+  if (is_cpu_extension_supported(BX_ISA_PENTIUM))
+    edx |= BX_CPUID_STD_MCE;
+
+  // [8:8]   CXS: CMPXCHG8B instruction
+  if (is_cpu_extension_supported(BX_ISA_PENTIUM))
+    edx |= BX_CPUID_STD_CMPXCHG8B;
+
+ // [9:9]   APIC: APIC on Chip
+#if BX_SUPPORT_APIC
+  if (is_cpu_extension_supported(BX_ISA_XAPIC)) {
+    // if MSR_APICBASE APIC Global Enable bit has been cleared,
+    // the CPUID feature flag for the APIC is set to 0.
+    if (cpu->msr.apicbase & 0x800)
+      edx |= BX_CPUID_STD_APIC; // APIC on chip
+  }
+#endif
+
+  // [10:10] Reserved
+
+  // [11:11] Not common between Intel and AMD
+
+  // [12:12] MTRR: Memory Type Range Reg
+  if (is_cpu_extension_supported(BX_ISA_MTRR))
+    edx |= BX_CPUID_STD_MTRR;
+
+  // [13:13] PGE/PTE Global Bit
+  if (is_cpu_extension_supported(BX_ISA_PGE))
+    edx |= BX_CPUID_STD_GLOBAL_PAGES;
+
+  // [14:14] MCA: Machine Check Architecture
+  if (is_cpu_extension_supported(BX_ISA_P6))
+    edx |= BX_CPUID_STD_MCA;
+
+  // [15:15] CMOV: Cond Mov/Cmp Instructions
+  if (is_cpu_extension_supported(BX_ISA_P6))
+    edx |= BX_CPUID_STD_CMOV;
+
+  // [16:16] PAT: Page Attribute Table
+  if (is_cpu_extension_supported(BX_ISA_PAT))
+    edx |= BX_CPUID_STD_PAT;
+
+#if BX_PHY_ADDRESS_LONG
+  // [17:17] PSE-36: Physical Address Extensions
+  if (is_cpu_extension_supported(BX_ISA_PSE36))
+    edx |= BX_CPUID_STD_PSE36;
+#endif
+
+  // [18:18] PSN: Processor Serial Number - could be enabled through extra
+
+  // [23:23] MMX Technology
+  if (is_cpu_extension_supported(BX_ISA_MMX))
+    edx |= BX_CPUID_STD_MMX;
+
+  // [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
+  if (is_cpu_extension_supported(BX_ISA_SSE))
+    edx |= BX_CPUID_STD_FXSAVE_FXRSTOR;
+
+  return edx;
+}
+
+Bit32u bx_cpuid_t::get_std_cpuid_leaf_1_edx(Bit32u extra) const
+{
+  Bit32u edx = get_std_cpuid_leaf_1_edx_common(extra);
+
+  // [*] indicates common bits
+  // * [0:0]   FPU on chip
+  // * [1:1]   VME: Virtual-8086 Mode enhancements
+  // * [2:2]   DE: Debug Extensions (I/O breakpoints)
+  // * [3:3]   PSE: Page Size Extensions
+  // * [4:4]   TSC: Time Stamp Counter
+  // * [5:5]   MSR: RDMSR and WRMSR support
+  // * [6:6]   PAE: Physical Address Extensions
+  // * [7:7]   MCE: Machine Check Exception
+  // * [8:8]   CXS: CMPXCHG8B instruction
+  // * [9:9]   APIC: APIC on Chip
+  // * [10:10] Reserved
+
+  //   [11:11] SYSENTER/SYSEXIT support
+  if (is_cpu_extension_supported(BX_ISA_SYSENTER_SYSEXIT))
+    edx |= BX_CPUID_STD_SYSENTER_SYSEXIT;
+
+  // * [12:12] MTRR: Memory Type Range Reg
+  // * [13:13] PGE/PTE Global Bit
+  // * [14:14] MCA: Machine Check Architecture
+  // * [15:15] CMOV: Cond Mov/Cmp Instructions
+  // * [16:16] PAT: Page Attribute Table
+  // * [17:17] PSE-36: Physical Address Extensions
+
+  //   [18:18] PSN: Processor Serial Number - not implemented, could be enabled through extra
+
+  //   [19:19] CLFLUSH: CLFLUSH Instruction support
+  if (is_cpu_extension_supported(BX_ISA_CLFLUSH))
+    edx |= BX_CPUID_STD_CLFLUSH;
+
+  //   [20:20] Reserved
+  //   [21:21] DS: Debug Store - not implemented, could be enabled through extra
+  //   [22:22] ACPI: Thermal Monitor and Software Controlled Clock Facilities - not implemented, could be enabled through extra
+  // * [23:23] MMX Technology
+  // * [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
+
+  //   [25:25] SSE: SSE Extensions
+  if (is_cpu_extension_supported(BX_ISA_SSE))
+    edx |= BX_CPUID_STD_SSE;
+
+  //   [26:26] SSE2: SSE2 Extensions
+  if (is_cpu_extension_supported(BX_ISA_SSE2))
+    edx |= BX_CPUID_STD_SSE2;
+
+  //   [27:27] Self Snoop - not implemented, could be enabled through extra
+  //   [28:28] Hyper Threading Technology - enabled through extra if SMT is ON
+  //   [29:29] TM: Thermal Monitor - not implemented, could be enabled through extra
+  //   [30:30] Reserved
+  //   [31:31] PBE: Pending Break Enable - not implemented, could be enabled through extra
+
+  return edx;
+}
+
+// Most of the bits in EDX are reserved for Intel
+Bit32u bx_cpuid_t::get_ext_cpuid_leaf_1_edx_intel() const
+{
+  Bit32u edx = 0;
+
+  //  [10:0] Reserved for Intel
+
+  // [11:11] SYSCALL/SYSRET support
+  if (cpu->long64_mode())
+    edx |= BX_CPUID_STD2_SYSCALL_SYSRET;
+
+  // [19:12] Reserved for Intel
+
+  // [20:20] No-Execute page protection
+  if (is_cpu_extension_supported(BX_ISA_NX))
+    edx |= BX_CPUID_STD2_NX;
+
+  // [25:21] Reserved for Intel
+
+  // [26:26] 1G paging support
+  if (is_cpu_extension_supported(BX_ISA_1G_PAGES))
+    edx |= BX_CPUID_STD2_1G_PAGES;
+
+  // [27:27] Support RDTSCP Instruction
+  if (is_cpu_extension_supported(BX_ISA_RDTSCP))
+    edx |= BX_CPUID_STD2_RDTSCP;
+
+  // [28:28] Reserved
+
+  // [29:29] Long Mode
+  if (is_cpu_extension_supported(BX_ISA_LONG_MODE))
+    edx |= BX_CPUID_STD2_LONG_MODE;
+
+  // [30:30] AMD 3DNow! Extensions
+  // [31:31] AMD 3DNow! Instructions
+
+  return edx;
+}
+
+// Many of the bits in EDX are the same as FN 0x00000001 for AMD
+Bit32u bx_cpuid_t::get_ext_cpuid_leaf_1_edx_amd(Bit32u extra) const
+{
+  Bit32u edx = get_std_cpuid_leaf_1_edx_common(extra);
+
+  // [*] indicates common bits
+  // * [0:0]   FPU on chip
+  // * [1:1]   VME: Virtual-8086 Mode enhancements
+  // * [2:2]   DE: Debug Extensions (I/O breakpoints)
+  // * [3:3]   PSE: Page Size Extensions
+  // * [4:4]   TSC: Time Stamp Counter
+  // * [5:5]   MSR: RDMSR and WRMSR support
+  // * [6:6]   PAE: Physical Address Extensions
+  // * [7:7]   MCE: Machine Check Exception
+  // * [8:8]   CXS: CMPXCHG8B instruction
+  // * [9:9]   APIC: APIC on Chip
+  // * [10:10] Reserved
+  //   [11:11] SYSCALL/SYSRET support
+  // * [12:12] MTRR: Memory Type Range Reg
+  // * [13:13] PGE/PTE Global Bit
+  // * [14:14] MCA: Machine Check Architecture
+  // * [15:15] CMOV: Cond Mov/Cmp Instructions
+  // * [16:16] PAT: Page Attribute Table
+  // * [17:17] PSE-36: Physical Address Extensions
+  //   [19:18] Reserved
+  if (is_cpu_extension_supported(BX_ISA_SYSCALL_SYSRET_LEGACY)) // only uncommon bit
+    edx |= BX_CPUID_STD2_SYSCALL_SYSRET;
+
+  // [20:20] No-Execute page protection
+  if (is_cpu_extension_supported(BX_ISA_NX))
+    edx |= BX_CPUID_STD2_NX;
+
+  // [21:21] Reserved
+
+  // [22:22] AMD MMX Extensions <- some Intel's SSE instructions were done in AMD under this name
+  if (is_cpu_extension_supported(BX_ISA_SSE))
+    edx |= BX_CPUID_STD2_AMD_MMX_EXT;
+  
+  // * [23:23] MMX Technology
+  // * [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
+
+  // [25:25] Fast FXSAVE/FXRSTOR mode support
+  if (is_cpu_extension_supported(BX_ISA_FFXSR))
+    edx |= BX_CPUID_STD2_FFXSR;
+
+  // [26:26] 1G paging support
+  if (is_cpu_extension_supported(BX_ISA_1G_PAGES))
+    edx |= BX_CPUID_STD2_1G_PAGES;
+
+  // [27:27] Support RDTSCP Instruction
+  if (is_cpu_extension_supported(BX_ISA_RDTSCP))
+    edx |= BX_CPUID_STD2_RDTSCP;
+
+  // [28:28] Reserved
+
+  // [29:29] Long Mode
+  if (is_cpu_extension_supported(BX_ISA_LONG_MODE))
+    edx |= BX_CPUID_STD2_LONG_MODE;
+
+  // [30:30] AMD 3DNow! Extensions
+  // [31:31] AMD 3DNow! Instructions
+  if (is_cpu_extension_supported(BX_ISA_3DNOW))
+    edx |= BX_CPUID_STD2_3DNOW | BX_CPUID_STD2_3DNOW_EXT;
+  
+  return edx;
+}
+ 
 // leaf 0x00000007 - EBX
 Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_ebx(Bit32u extra) const
 {
@@ -643,7 +1013,7 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_ecx(Bit32u extra) const
 
   // [3:3]   PKU: Protection keys for user-mode pages
   // [4:4]   OSPKE: OS has set CR4.PKE to enable protection keys
-#if BX_SUPPORT_PKEYS
+#if BX_SUPPORT_PKEYS && BX_CPU_LEVEL >= 5
   if (is_cpu_extension_supported(BX_ISA_PKU)) {
     ecx |= BX_CPUID_EXT4_PKU;
     if (cpu->cr4.get_PKE())

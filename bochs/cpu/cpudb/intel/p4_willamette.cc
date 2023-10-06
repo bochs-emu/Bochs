@@ -150,41 +150,11 @@ void p4_willamette_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   // * [29:29] TM: Thermal Monitor
   //   [30:30] Reserved
   //   [31:31] PBE: Pending Break Enable
-  leaf->edx = BX_CPUID_STD_X87 |
-              BX_CPUID_STD_VME |
-              BX_CPUID_STD_DEBUG_EXTENSIONS |
-              BX_CPUID_STD_PSE |
-              BX_CPUID_STD_TSC |
-              BX_CPUID_STD_MSR |
-              BX_CPUID_STD_PAE |
-              BX_CPUID_STD_MCE |
-              BX_CPUID_STD_CMPXCHG8B |
-              BX_CPUID_STD_SYSENTER_SYSEXIT |
-              BX_CPUID_STD_MTRR |
-              BX_CPUID_STD_GLOBAL_PAGES |
-              BX_CPUID_STD_MCA |
-              BX_CPUID_STD_CMOV |
-              BX_CPUID_STD_PAT |
-#if BX_PHY_ADDRESS_LONG
-              BX_CPUID_STD_PSE36 |
-#endif
-              BX_CPUID_STD_CLFLUSH |
-              BX_CPUID_STD_DEBUG_STORE |
-              BX_CPUID_STD_ACPI |
-              BX_CPUID_STD_MMX |
-              BX_CPUID_STD_FXSAVE_FXRSTOR |
-              BX_CPUID_STD_SSE |
-              BX_CPUID_STD_SSE2 |
-              BX_CPUID_STD_SELF_SNOOP
+  leaf->edx = get_std_cpuid_leaf_1_edx(BX_CPUID_STD_DEBUG_STORE |
+                                       BX_CPUID_STD_ACPI |
+                                       BX_CPUID_STD_SELF_SNOOP);
 #if BX_SUPPORT_SMP
-              | BX_CPUID_STD_HT
-#endif
-              ;
-#if BX_SUPPORT_APIC
-  // if MSR_APICBASE APIC Global Enable bit has been cleared,
-  // the CPUID feature flag for the APIC is set to 0.
-  if (cpu->msr.apicbase & 0x800)
-    leaf->edx |= BX_CPUID_STD_APIC; // APIC on chip
+  leaf->edx |= BX_CPUID_STD_HT;
 #endif
 }
 
@@ -235,7 +205,6 @@ void p4_willamette_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   leaf->ecx = 0;
 
   // EDX:
-  // Many of the bits in EDX are the same as FN 0x00000001 [*] for AMD
   //    [10:0] Reserved for Intel
   //   [11:11] SYSCALL/SYSRET support
   //   [19:12] Reserved for Intel
