@@ -595,8 +595,10 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_1_ecx(Bit32u extra) const
     ecx |= BX_CPUID_EXT_XSAVE;
 
   // [27:27] OSXSAVE support
+#if BX_CPU_LEVEL >= 5
   if (cpu->cr4.get_OSXSAVE())
     ecx |= BX_CPUID_EXT_OSXSAVE;
+#endif
 
   // [28:28] AVX extensions support
   if (is_cpu_extension_supported(BX_ISA_AVX))
@@ -615,10 +617,10 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_1_ecx(Bit32u extra) const
   return ecx;
 }
 
-// leaf 0x00000001 - EDX[18:12,10:0]
+// leaf 0x00000001 - EDX[24:23,18:12,10:0]
 Bit32u bx_cpuid_t::get_std_cpuid_leaf_1_edx_common(Bit32u extra) const
 {
-  Bit32u edx = 0;
+  Bit32u edx = extra;
 
   // [0:0]   FPU on chip
   if (is_cpu_extension_supported(BX_ISA_X87))
@@ -694,6 +696,119 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_1_edx_common(Bit32u extra) const
 
   // [18:18] PSN: Processor Serial Number - could be enabled through extra
 
+  // [23:23] MMX Technology
+  if (is_cpu_extension_supported(BX_ISA_MMX))
+    edx |= BX_CPUID_STD_MMX;
+
+  // [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
+  if (is_cpu_extension_supported(BX_ISA_SSE))
+    edx |= BX_CPUID_STD_FXSAVE_FXRSTOR;
+
+  return edx;
+}
+
+// Most of the bits in EDX are reserved for Intel
+Bit32u bx_cpuid_t::get_ext_cpuid_leaf_1_edx_intel() const
+{
+  Bit32u edx = 0;
+
+  //  [10:0] Reserved for Intel
+
+  // [11:11] SYSCALL/SYSRET support
+  if (cpu->long64_mode())
+    edx |= BX_CPUID_STD2_SYSCALL_SYSRET;
+
+  // [19:12] Reserved for Intel
+
+  // [20:20] No-Execute page protection
+  if (is_cpu_extension_supported(BX_ISA_NX))
+    edx |= BX_CPUID_STD2_NX;
+
+  // [25:21] Reserved for Intel
+
+  // [26:26] 1G paging support
+  if (is_cpu_extension_supported(BX_ISA_1G_PAGES))
+    edx |= BX_CPUID_STD2_1G_PAGES;
+
+  // [27:27] Support RDTSCP Instruction
+  if (is_cpu_extension_supported(BX_ISA_RDTSCP))
+    edx |= BX_CPUID_STD2_RDTSCP;
+
+  // [28:28] Reserved
+
+  // [29:29] Long Mode
+  if (is_cpu_extension_supported(BX_ISA_LONG_MODE))
+    edx |= BX_CPUID_STD2_LONG_MODE;
+
+  // [30:30] AMD 3DNow! Extensions
+  // [31:31] AMD 3DNow! Instructions
+
+  return edx;
+}
+
+// Many of the bits in EDX are the same as FN 0x00000001 for AMD
+Bit32u bx_cpuid_t::get_ext_cpuid_leaf_1_edx_amd(Bit32u extra) const
+{
+  Bit32u edx = get_std_cpuid_leaf_1_edx_common(extra);
+
+  // [0:0]   FPU on chip
+  // [1:1]   VME: Virtual-8086 Mode enhancements
+  // [2:2]   DE: Debug Extensions (I/O breakpoints)
+  // [3:3]   PSE: Page Size Extensions
+  // [4:4]   TSC: Time Stamp Counter
+  // [5:5]   MSR: RDMSR and WRMSR support
+  // [6:6]   PAE: Physical Address Extensions
+  // [7:7]   MCE: Machine Check Exception
+  // [8:8]   CXS: CMPXCHG8B instruction
+  // [9:9]   APIC: APIC on Chip
+  // [10:10] Reserved
+  // [11:11] SYSCALL/SYSRET support
+  // [12:12] MTRR: Memory Type Range Reg
+  // [13:13] PGE/PTE Global Bit
+  // [14:14] MCA: Machine Check Architecture
+  // [15:15] CMOV: Cond Mov/Cmp Instructions
+  // [16:16] PAT: Page Attribute Table
+  // [17:17] PSE-36: Physical Address Extensions
+  // [19:18] Reserved
+  if (is_cpu_extension_supported(BX_ISA_SYSCALL_SYSRET_LEGACY)) // only uncommon bit
+    edx |= BX_CPUID_STD2_SYSCALL_SYSRET;
+
+  // [20:20] No-Execute page protection
+  if (is_cpu_extension_supported(BX_ISA_NX))
+    edx |= BX_CPUID_STD2_NX;
+
+  // [21:21] Reserved
+
+  // [22:22] AMD MMX Extensions <- some Intel's SSE instructions were done in AMD under this name
+  if (is_cpu_extension_supported(BX_ISA_SSE))
+    edx |= BX_CPUID_STD2_AMD_MMX_EXT;
+  
+  // [23:23] MMX Technology
+  // [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
+
+  // [25:25] Fast FXSAVE/FXRSTOR mode support
+  if (is_cpu_extension_supported(BX_ISA_FFXSR))
+    edx |= BX_CPUID_STD2_FFXSR;
+
+  // [26:26] 1G paging support
+  if (is_cpu_extension_supported(BX_ISA_1G_PAGES))
+    edx |= BX_CPUID_STD2_1G_PAGES;
+
+  // [27:27] Support RDTSCP Instruction
+  if (is_cpu_extension_supported(BX_ISA_RDTSCP))
+    edx |= BX_CPUID_STD2_RDTSCP;
+
+  // [28:28] Reserved
+
+  // [29:29] Long Mode
+  if (is_cpu_extension_supported(BX_ISA_LONG_MODE))
+    edx |= BX_CPUID_STD2_LONG_MODE;
+
+  // [30:30] AMD 3DNow! Extensions
+  // [31:31] AMD 3DNow! Instructions
+  if (is_cpu_extension_supported(BX_ISA_3DNOW))
+    edx |= BX_CPUID_STD2_3DNOW | BX_CPUID_STD2_3DNOW_EXT;
+  
   return edx;
 }
  
@@ -836,7 +951,7 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_ecx(Bit32u extra) const
 
   // [3:3]   PKU: Protection keys for user-mode pages
   // [4:4]   OSPKE: OS has set CR4.PKE to enable protection keys
-#if BX_SUPPORT_PKEYS
+#if BX_SUPPORT_PKEYS && BX_CPU_LEVEL >= 5
   if (is_cpu_extension_supported(BX_ISA_PKU)) {
     ecx |= BX_CPUID_EXT4_PKU;
     if (cpu->cr4.get_PKE())

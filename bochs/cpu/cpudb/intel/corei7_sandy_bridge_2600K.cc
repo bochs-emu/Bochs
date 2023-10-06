@@ -547,7 +547,6 @@ void corei7_sandy_bridge_2600k_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) c
   leaf->ecx = BX_CPUID_EXT2_LAHF_SAHF;
 
   // EDX:
-  // Many of the bits in EDX are the same as FN 0x00000001 [*] for AMD
   //    [10:0] Reserved for Intel
   // * [11:11] SYSCALL/SYSRET support
   //   [19:12] Reserved for Intel
@@ -559,12 +558,7 @@ void corei7_sandy_bridge_2600k_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) c
   // * [29:29] Long Mode
   //   [30:30] AMD 3DNow! Extensions
   //   [31:31] AMD 3DNow! Instructions
-
-  leaf->edx = BX_CPUID_STD2_NX |
-              BX_CPUID_STD2_RDTSCP |
-              BX_CPUID_STD2_LONG_MODE;
-  if (cpu->long64_mode())
-    leaf->edx |= BX_CPUID_STD2_SYSCALL_SYSRET;
+  leaf->edx = get_ext_cpuid_leaf_1_edx_intel();
 }
 
 // leaf 0x80000002 //

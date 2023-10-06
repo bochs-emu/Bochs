@@ -547,36 +547,7 @@ void ryzen_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   // * [29:29] Long Mode
   //   [30:30] AMD 3DNow! Extensions
   //   [31:31] AMD 3DNow! Instructions
-  leaf->edx = BX_CPUID_STD_X87 |
-              BX_CPUID_STD_VME |
-              BX_CPUID_STD_DEBUG_EXTENSIONS |
-              BX_CPUID_STD_PSE |
-              BX_CPUID_STD_TSC |
-              BX_CPUID_STD_MSR |
-              BX_CPUID_STD_PAE |
-              BX_CPUID_STD_MCE |
-              BX_CPUID_STD_CMPXCHG8B |
-              BX_CPUID_STD2_SYSCALL_SYSRET |
-              BX_CPUID_STD_MTRR |
-              BX_CPUID_STD_GLOBAL_PAGES |
-              BX_CPUID_STD_MCA |
-              BX_CPUID_STD_CMOV |
-              BX_CPUID_STD_PAT |
-              BX_CPUID_STD_PSE36 |
-              BX_CPUID_STD2_NX |
-              BX_CPUID_STD2_AMD_MMX_EXT |
-              BX_CPUID_STD_MMX |
-              BX_CPUID_STD_FXSAVE_FXRSTOR |
-              BX_CPUID_STD2_FFXSR |
-              BX_CPUID_STD2_1G_PAGES |
-              BX_CPUID_STD2_RDTSCP |
-              BX_CPUID_STD2_LONG_MODE;
-#if BX_SUPPORT_APIC
-  // if MSR_APICBASE APIC Global Enable bit has been cleared,
-  // the CPUID feature flag for the APIC is set to 0.
-  if (cpu->msr.apicbase & 0x800)
-    leaf->edx |= BX_CPUID_STD_APIC; // APIC on chip
-#endif
+  leaf->edx = get_ext_cpuid_leaf_1_edx_amd(BX_CPUID_STD_MCE | BX_CPUID_STD_MCA);
 }
 
 // leaf 0x80000002 //

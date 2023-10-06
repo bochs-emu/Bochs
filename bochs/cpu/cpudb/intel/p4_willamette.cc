@@ -235,7 +235,6 @@ void p4_willamette_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   leaf->ecx = 0;
 
   // EDX:
-  // Many of the bits in EDX are the same as FN 0x00000001 [*] for AMD
   //    [10:0] Reserved for Intel
   //   [11:11] SYSCALL/SYSRET support
   //   [19:12] Reserved for Intel

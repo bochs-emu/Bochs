@@ -462,11 +462,10 @@ void core_duo_t2400_yonah_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   leaf->ecx = 0;
 
   // EDX:
-  // Many of the bits in EDX are the same as FN 0x00000001 [*] for AMD
   //    [10:0] Reserved for Intel
   //   [11:11] SYSCALL/SYSRET support
   //   [19:12] Reserved for Intel
-  //   [20:20] No-Execute page protection
+  // * [20:20] No-Execute page protection
   //   [25:21] Reserved
   //   [26:26] 1G paging support
   //   [27:27] Support RDTSCP Instruction
@@ -474,7 +473,7 @@ void core_duo_t2400_yonah_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [29:29] Long Mode
   //   [30:30] AMD 3DNow! Extensions
   //   [31:31] AMD 3DNow! Instructions
-  leaf->edx = BX_CPUID_STD2_NX;
+  leaf->edx = get_ext_cpuid_leaf_1_edx_intel();
 }
 
 // leaf 0x80000002 //

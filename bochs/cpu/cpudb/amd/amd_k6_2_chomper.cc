@@ -208,27 +208,7 @@ void amd_k6_2_chomper_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [29:29] Long Mode
   //   [30:30] AMD 3DNow! Extensions
   // * [31:31] AMD 3DNow! Instructions
-
-  leaf->edx = BX_CPUID_STD_X87 |
-              BX_CPUID_STD_VME |
-              BX_CPUID_STD_DEBUG_EXTENSIONS |
-              BX_CPUID_STD_PSE |
-              BX_CPUID_STD_TSC |
-              BX_CPUID_STD_MSR |
-              BX_CPUID_STD_MCE |
-              BX_CPUID_STD_CMPXCHG8B |
-              BX_CPUID_STD2_SYSCALL_SYSRET |
-#if BX_PHY_ADDRESS_LONG
-              BX_CPUID_STD_PSE36 |
-#endif
-              BX_CPUID_STD_MMX |
-              BX_CPUID_STD2_3DNOW;
-#if BX_SUPPORT_APIC
-  // if MSR_APICBASE APIC Global Enable bit has been cleared,
-  // the CPUID feature flag for the APIC is set to 0.
-  if (cpu->msr.apicbase & 0x800)
-    leaf->edx |= BX_CPUID_STD_APIC; // APIC on chip
-#endif
+  leaf->edx = get_ext_cpuid_leaf_1_edx_amd(BX_CPUID_STD_MCE);
 }
 
 // leaf 0x80000005 //
