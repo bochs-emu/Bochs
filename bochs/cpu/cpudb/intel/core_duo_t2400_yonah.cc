@@ -237,42 +237,15 @@ void core_duo_t2400_yonah_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   // * [29:29] TM: Thermal Monitor
   //   [30:30] Reserved
   // * [31:31] PBE: Pending Break Enable
-  leaf->edx = BX_CPUID_STD_X87 |
-              BX_CPUID_STD_VME |
-              BX_CPUID_STD_DEBUG_EXTENSIONS |
-              BX_CPUID_STD_PSE |
-              BX_CPUID_STD_TSC |
-              BX_CPUID_STD_MSR |
-              BX_CPUID_STD_PAE |
-              BX_CPUID_STD_MCE |
-              BX_CPUID_STD_CMPXCHG8B |
-              BX_CPUID_STD_SYSENTER_SYSEXIT |
-              BX_CPUID_STD_MTRR |
-              BX_CPUID_STD_GLOBAL_PAGES |
-              BX_CPUID_STD_MCA |
-              BX_CPUID_STD_CMOV |
-              BX_CPUID_STD_PAT |
-#if BX_PHY_ADDRESS_LONG
-              BX_CPUID_STD_PSE36 |
-#endif
-              BX_CPUID_STD_CLFLUSH |
-              BX_CPUID_STD_DEBUG_STORE |
-              BX_CPUID_STD_ACPI |
-              BX_CPUID_STD_MMX |
-              BX_CPUID_STD_FXSAVE_FXRSTOR |
-              BX_CPUID_STD_SSE |
-              BX_CPUID_STD_SSE2 |
-              BX_CPUID_STD_SELF_SNOOP |
+  leaf->edx = get_std_cpuid_leaf_1_edx(BX_CPUID_STD_MCE |
+                                       BX_CPUID_STD_MCA |
+                                       BX_CPUID_STD_DEBUG_STORE |
+                                       BX_CPUID_STD_ACPI |
+                                       BX_CPUID_STD_SELF_SNOOP |
 #if BX_SUPPORT_SMP
-              BX_CPUID_STD_HT |
+                                       BX_CPUID_STD_HT |
 #endif
-              BX_CPUID_STD_PBE;
-#if BX_SUPPORT_APIC
-  // if MSR_APICBASE APIC Global Enable bit has been cleared,
-  // the CPUID feature flag for the APIC is set to 0.
-  if (cpu->msr.apicbase & 0x800)
-    leaf->edx |= BX_CPUID_STD_APIC; // APIC on chip
-#endif
+                                       BX_CPUID_STD_PBE);
 }
 
 // leaf 0x00000002 //

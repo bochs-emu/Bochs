@@ -113,6 +113,7 @@ protected:
 
   Bit32u get_std_cpuid_leaf_1_ecx(Bit32u extra = 0) const;
   Bit32u get_std_cpuid_leaf_1_edx_common(Bit32u extra = 0) const;
+  Bit32u get_std_cpuid_leaf_1_edx(Bit32u extra = 0) const;
   Bit32u get_std_cpuid_leaf_7_ebx(Bit32u extra = 0) const;
   Bit32u get_std_cpuid_leaf_7_ecx(Bit32u extra = 0) const;
 

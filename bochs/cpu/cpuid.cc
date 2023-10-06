@@ -707,6 +707,63 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_1_edx_common(Bit32u extra) const
   return edx;
 }
 
+Bit32u bx_cpuid_t::get_std_cpuid_leaf_1_edx(Bit32u extra) const
+{
+  Bit32u edx = get_std_cpuid_leaf_1_edx_common(extra);
+
+  // [*] indicates common bits
+  // * [0:0]   FPU on chip
+  // * [1:1]   VME: Virtual-8086 Mode enhancements
+  // * [2:2]   DE: Debug Extensions (I/O breakpoints)
+  // * [3:3]   PSE: Page Size Extensions
+  // * [4:4]   TSC: Time Stamp Counter
+  // * [5:5]   MSR: RDMSR and WRMSR support
+  // * [6:6]   PAE: Physical Address Extensions
+  // * [7:7]   MCE: Machine Check Exception
+  // * [8:8]   CXS: CMPXCHG8B instruction
+  // * [9:9]   APIC: APIC on Chip
+  // * [10:10] Reserved
+
+  //   [11:11] SYSENTER/SYSEXIT support
+  if (is_cpu_extension_supported(BX_ISA_SYSENTER_SYSEXIT))
+    edx |= BX_CPUID_STD_SYSENTER_SYSEXIT;
+
+  // * [12:12] MTRR: Memory Type Range Reg
+  // * [13:13] PGE/PTE Global Bit
+  // * [14:14] MCA: Machine Check Architecture
+  // * [15:15] CMOV: Cond Mov/Cmp Instructions
+  // * [16:16] PAT: Page Attribute Table
+  // * [17:17] PSE-36: Physical Address Extensions
+
+  //   [18:18] PSN: Processor Serial Number - not implemented, could be enabled through extra
+
+  //   [19:19] CLFLUSH: CLFLUSH Instruction support
+  if (is_cpu_extension_supported(BX_ISA_CLFLUSH))
+    edx |= BX_CPUID_STD_CLFLUSH;
+
+  //   [20:20] Reserved
+  //   [21:21] DS: Debug Store - not implemented, could be enabled through extra
+  //   [22:22] ACPI: Thermal Monitor and Software Controlled Clock Facilities - not implemented, could be enabled through extra
+  // * [23:23] MMX Technology
+  // * [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
+
+  //   [25:25] SSE: SSE Extensions
+  if (is_cpu_extension_supported(BX_ISA_SSE))
+    edx |= BX_CPUID_STD_SSE;
+
+  //   [26:26] SSE2: SSE2 Extensions
+  if (is_cpu_extension_supported(BX_ISA_SSE2))
+    edx |= BX_CPUID_STD_SSE2;
+
+  //   [27:27] Self Snoop - not implemented, could be enabled through extra
+  //   [28:28] Hyper Threading Technology - enabled through extra if SMT is ON
+  //   [29:29] TM: Thermal Monitor - not implemented, could be enabled through extra
+  //   [30:30] Reserved
+  //   [31:31] PBE: Pending Break Enable - not implemented, could be enabled through extra
+
+  return edx;
+}
+
 // Most of the bits in EDX are reserved for Intel
 Bit32u bx_cpuid_t::get_ext_cpuid_leaf_1_edx_intel() const
 {
