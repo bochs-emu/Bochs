@@ -596,7 +596,7 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_1_ecx(Bit32u extra) const
 
   // [27:27] OSXSAVE support
   if (cpu->cr4.get_OSXSAVE())
-    leaf->ecx |= BX_CPUID_EXT_OSXSAVE;
+    ecx |= BX_CPUID_EXT_OSXSAVE;
 
   // [28:28] AVX extensions support
   if (is_cpu_extension_supported(BX_ISA_AVX))
@@ -613,6 +613,88 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_1_ecx(Bit32u extra) const
   // [31:31] reserved
 
   return ecx;
+}
+
+// leaf 0x00000001 - EDX[18:12,10:0]
+Bit32u bx_cpuid_t::get_std_cpuid_leaf_1_edx_common(Bit32u extra) const
+{
+  Bit32u edx = 0;
+
+  // [0:0]   FPU on chip
+  if (is_cpu_extension_supported(BX_ISA_X87))
+    edx |= BX_CPUID_STD_X87;
+
+  // [1:1]   VME: Virtual-8086 Mode enhancements
+  if (is_cpu_extension_supported(BX_ISA_VME))
+    edx |= BX_CPUID_STD_VME;
+
+  // [2:2]   DE: Debug Extensions (I/O breakpoints)
+  if (is_cpu_extension_supported(BX_ISA_DEBUG_EXTENSIONS))
+    edx |= BX_CPUID_STD_DEBUG_EXTENSIONS;
+
+  // [3:3]   PSE: Page Size Extensions
+  if (is_cpu_extension_supported(BX_ISA_PSE))
+    edx |= BX_CPUID_STD_PSE;
+
+  // [4:4]   TSC: Time Stamp Counter
+  if (is_cpu_extension_supported(BX_ISA_PENTIUM))
+    edx |= BX_CPUID_STD_TSC;
+
+  // [5:5]   MSR: RDMSR and WRMSR support
+  if (is_cpu_extension_supported(BX_ISA_PENTIUM))
+    edx |= BX_CPUID_STD_MSR;
+
+  // [6:6]   PAE: Physical Address Extensions
+  if (is_cpu_extension_supported(BX_ISA_PAE))
+    edx |= BX_CPUID_STD_PAE;
+
+  // [7:7]   MCE: Machine Check Exception - not implemented, could be enabled through extra
+
+  // [8:8]   CXS: CMPXCHG8B instruction
+  if (is_cpu_extension_supported(BX_ISA_PENTIUM))
+    edx |= BX_CPUID_STD_CMPXCHG8B;
+
+ // [9:9]   APIC: APIC on Chip
+#if BX_SUPPORT_APIC
+  if (is_cpu_extension_supported(BX_ISA_XAPIC)) {
+    // if MSR_APICBASE APIC Global Enable bit has been cleared,
+    // the CPUID feature flag for the APIC is set to 0.
+    if (cpu->msr.apicbase & 0x800)
+      edx |= BX_CPUID_STD_APIC; // APIC on chip
+  }
+#endif
+
+  // [10:10] Reserved
+
+  // [11:11] Not common between Intel and AMD
+
+  // [12:12] MTRR: Memory Type Range Reg
+  if (is_cpu_extension_supported(BX_ISA_MTRR))
+    edx |= BX_CPUID_STD_MTRR;
+
+  // [13:13] PGE/PTE Global Bit
+  if (is_cpu_extension_supported(BX_ISA_PGE))
+    edx |= BX_CPUID_STD_GLOBAL_PAGES;
+
+  // [14:14] MCA: Machine Check Architecture - not implemented, could be enabled through extra
+
+  // [15:15] CMOV: Cond Mov/Cmp Instructions
+  if (is_cpu_extension_supported(BX_ISA_P6))
+    edx |= BX_CPUID_STD_CMOV;
+
+  // [16:16] PAT: Page Attribute Table
+  if (is_cpu_extension_supported(BX_ISA_PAT))
+    edx |= BX_CPUID_STD_PAT;
+
+#if BX_PHY_ADDRESS_LONG
+  // [17:17] PSE-36: Physical Address Extensions
+  if (is_cpu_extension_supported(BX_ISA_PSE36))
+    edx |= BX_CPUID_STD_PSE36;
+#endif
+
+  // [18:18] PSN: Processor Serial Number - could be enabled through extra
+
+  return edx;
 }
  
 // leaf 0x00000007 - EBX
