@@ -255,7 +255,7 @@ void corei7_haswell_4770_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   // * [12:12] FMA Instructions support
   // * [13:13] CMPXCHG16B: CMPXCHG16B instruction support
   // * [14:14] xTPR update control
-  // * [15:15] PDCM - Perfon and Debug Capability MSR
+  // * [15:15] PDCM - Perfmon and Debug Capability MSR
   //   [16:16] reserved
   // * [17:17] PCID: Process Context Identifiers
   //   [18:18] DCA - Direct Cache Access
@@ -272,38 +272,12 @@ void corei7_haswell_4770_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   // * [29:29] AVX F16C - Float16 conversion support
   // * [30:30] RDRAND instruction
   //   [31:31] reserved
-  leaf->ecx = BX_CPUID_EXT_SSE3 |
-              BX_CPUID_EXT_PCLMULQDQ |
-              BX_CPUID_EXT_DTES64 |
-#if BX_SUPPORT_MONITOR_MWAIT
-              BX_CPUID_EXT_MONITOR_MWAIT |
-#endif
-              BX_CPUID_EXT_DS_CPL |
-#if BX_SUPPORT_VMX >= 2
-              BX_CPUID_EXT_VMX |
-#endif
-           /* BX_CPUID_EXT_SMX | */
-              BX_CPUID_EXT_EST |
-              BX_CPUID_EXT_THERMAL_MONITOR2 |
-              BX_CPUID_EXT_SSSE3 |
-              BX_CPUID_EXT_FMA |
-              BX_CPUID_EXT_CMPXCHG16B |
-              BX_CPUID_EXT_xTPR |
-              BX_CPUID_EXT_PDCM |
-              BX_CPUID_EXT_PCID |
-              BX_CPUID_EXT_SSE4_1 |
-              BX_CPUID_EXT_SSE4_2 |
-              BX_CPUID_EXT_X2APIC |
-              BX_CPUID_EXT_MOVBE |
-              BX_CPUID_EXT_POPCNT |
-              BX_CPUID_EXT_TSC_DEADLINE |
-              BX_CPUID_EXT_AES |
-              BX_CPUID_EXT_XSAVE |
-              BX_CPUID_EXT_AVX |
-              BX_CPUID_EXT_AVX_F16C |
-              BX_CPUID_EXT_RDRAND;
-  if (cpu->cr4.get_OSXSAVE())
-    leaf->ecx |= BX_CPUID_EXT_OSXSAVE;
+  leaf->ecx = get_std_cpuid_leaf_1_ecx(BX_CPUID_EXT_DTES64 |
+                                       BX_CPUID_EXT_DS_CPL |
+                                       BX_CPUID_EXT_EST |
+                                       BX_CPUID_EXT_THERMAL_MONITOR2 |
+                                       BX_CPUID_EXT_xTPR |
+                                       BX_CPUID_EXT_PDCM);
 
   // EDX: Standard Feature Flags
   // * [0:0]   FPU on chip

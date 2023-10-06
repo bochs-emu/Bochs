@@ -504,6 +504,117 @@ void bx_cpuid_t::get_ext_cpuid_brand_string_leaf(const char *brand_string, Bit32
 #endif
 }
 
+// leaf 0x00000001 - ECX
+Bit32u bx_cpuid_t::get_std_cpuid_leaf_1_ecx(Bit32u extra) const
+{
+  Bit32u ecx = extra;
+
+  // [0:0]   SSE3: SSE3 Instructions
+  if (is_cpu_extension_supported(BX_ISA_SSE3))
+    ecx |= BX_CPUID_EXT_SSE3;
+
+  // [1:1]   PCLMULQDQ Instruction support
+  if (is_cpu_extension_supported(BX_ISA_AES_PCLMULQDQ))
+    ecx |= BX_CPUID_EXT_PCLMULQDQ;
+
+  // [2:2]   DTES64: 64-bit DS area - not supported, could be enable through extra
+
+  // [3:3]   MONITOR/MWAIT support
+#if BX_SUPPORT_MONITOR_MWAIT
+  if (is_cpu_extension_supported(BX_ISA_MONITOR_MWAIT))
+    ecx |= BX_CPUID_EXT_MONITOR_MWAIT;
+#endif
+
+  // [4:4]   DS-CPL: CPL qualified debug store  - not supported, could be enable through extra
+
+  // [5:5]   VMX: Virtual Machine Technology
+#if BX_SUPPORT_VMX >= 2
+  if (is_cpu_extension_supported(BX_ISA_VMX))
+    ecx |= BX_CPUID_EXT_VMX;
+#endif
+
+  // [6:6]   SMX: Secure Virtual Machine Technology - not supported
+  // [7:7]   EST: Enhanced Intel SpeedStep Technology - not supported, could be enabled through extra
+  // [8:8]   TM2: Thermal Monitor 2 - not supported, could be enabled through extra
+
+  // [9:9]   SSSE3: SSSE3 Instructions
+  if (is_cpu_extension_supported(BX_ISA_SSSE3))
+    ecx |= BX_CPUID_EXT_SSSE3;
+
+  // [10:10] CNXT-ID: L1 context ID - not supported, could be enabled through extra
+  // [11:11] reserved
+
+  // [12:12] FMA Instructions support
+  if (is_cpu_extension_supported(BX_ISA_AVX_FMA))
+    ecx |= BX_CPUID_EXT_FMA;
+
+  // [13:13] CMPXCHG16B: CMPXCHG16B instruction support
+  if (is_cpu_extension_supported(BX_ISA_CMPXCHG16B))
+    ecx |= BX_CPUID_EXT_CMPXCHG16B;
+
+  // [14:14] xTPR update control - not supported, could be enabled through extra
+  // [15:15] PDCM - Perfmon and Debug Capability MSR - not supported, could be enabled through extra
+  // [16:16] reserved
+
+  // [17:17] PCID: Process Context Identifiers
+  if (is_cpu_extension_supported(BX_ISA_PCID))
+    ecx |= BX_CPUID_EXT_PCID;
+
+  // [18:18] DCA - Direct Cache Access - not supported, could be enabled through extra
+
+  // [19:19] SSE4.1 Instructions
+  if (is_cpu_extension_supported(BX_ISA_SSE4_1))
+    ecx |= BX_CPUID_EXT_SSE4_1;
+
+  // [20:20] SSE4.2 Instructions
+  if (is_cpu_extension_supported(BX_ISA_SSE4_2))
+    ecx |= BX_CPUID_EXT_SSE4_2;
+
+  // [21:21] X2APIC
+  if (is_cpu_extension_supported(BX_ISA_X2APIC))
+    ecx |= BX_CPUID_EXT_X2APIC;
+
+  // [22:22] MOVBE instruction
+  if (is_cpu_extension_supported(BX_ISA_MOVBE))
+    ecx |= BX_CPUID_EXT_MOVBE;
+
+  // [23:23] POPCNT instruction
+  if (is_cpu_extension_supported(BX_ISA_POPCNT))
+    ecx |= BX_CPUID_EXT_POPCNT;
+
+  // [24:24] TSC Deadline
+  if (is_cpu_extension_supported(BX_ISA_TSC_DEADLINE))
+    ecx |= BX_CPUID_EXT_TSC_DEADLINE;
+
+  // [25:25] AES Instructions
+  if (is_cpu_extension_supported(BX_ISA_AES_PCLMULQDQ))
+    ecx |= BX_CPUID_EXT_AES;
+
+  // [26:26] XSAVE extensions support
+  if (is_cpu_extension_supported(BX_ISA_XSAVE))
+    ecx |= BX_CPUID_EXT_XSAVE;
+
+  // [27:27] OSXSAVE support
+  if (cpu->cr4.get_OSXSAVE())
+    leaf->ecx |= BX_CPUID_EXT_OSXSAVE;
+
+  // [28:28] AVX extensions support
+  if (is_cpu_extension_supported(BX_ISA_AVX))
+    ecx |= BX_CPUID_EXT_AVX;
+
+  // [29:29] AVX F16C - Float16 conversion support
+  if (is_cpu_extension_supported(BX_ISA_AVX_F16C))
+    ecx |= BX_CPUID_EXT_AVX_F16C;
+
+  // [30:30] RDRAND instruction
+  if (is_cpu_extension_supported(BX_ISA_RDRAND))
+    ecx |= BX_CPUID_EXT_RDRAND;
+
+  // [31:31] reserved
+
+  return ecx;
+}
+ 
 // leaf 0x00000007 - EBX
 Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_ebx(Bit32u extra) const
 {
