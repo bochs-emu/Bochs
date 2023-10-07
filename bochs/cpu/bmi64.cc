@@ -116,7 +116,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RORX_GqEqIbR(bxInstruction_c *i)
 
   unsigned count = i->Ib() & 0x3f;
   if (count) {
-    op1_64 = (op1_64 >> count) | (op1_64 << (64 - count));
+    op1_64 = ror64(op1_64, count);
   }
 
   BX_WRITE_64BIT_REG(i->dst(), op1_64);
