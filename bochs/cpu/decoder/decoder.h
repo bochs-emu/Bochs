@@ -93,6 +93,8 @@ enum x86_feature_name {
   BX_ISA_RDSEED,                  /* RDSEED instruction */
   BX_ISA_SHA,                     /* SHA instruction */
   BX_ISA_GFNI,                    /* GFNI instruction */
+  BX_ISA_SM3,                     /* SM3 instruction */
+  BX_ISA_SM4,                     /* SM4 instruction */
   BX_ISA_AVX512,                  /* AVX-512 instruction */
   BX_ISA_AVX512_CD,               /* AVX-512 Conflict Detection instruction */
   BX_ISA_AVX512_PF,               /* AVX-512 Sparse Prefetch instruction */

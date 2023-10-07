@@ -24,6 +24,7 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#include "scalar_arith.h"
 #include "decoder/ia_opcodes.h"
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EwGwM(bxInstruction_c *i)
@@ -241,7 +242,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EwM(bxInstruction_c *i)
   else {
     count &= 0x0f; // only use bottom 4 bits
 
-    Bit16u result_16 = (op1_16 << count) | (op1_16 >> (16 - count));
+    Bit16u result_16 = rol16(op1_16, count);
 
     write_RMW_linear_word(result_16);
 
@@ -277,7 +278,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EwR(bxInstruction_c *i)
   else {
     count &= 0x0f; // only use bottom 4 bits
 
-    Bit16u result_16 = (op1_16 << count) | (op1_16 >> (16 - count));
+    Bit16u result_16 = rol16(op1_16, count);
 
     BX_WRITE_16BIT_REG(i->dst(), result_16);
 
@@ -315,7 +316,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_EwM(bxInstruction_c *i)
   else {
     count &= 0x0f;  // use only 4 LSB's
 
-    Bit16u result_16 = (op1_16 >> count) | (op1_16 << (16 - count));
+    Bit16u result_16 = ror16(op1_16, count);
 
     write_RMW_linear_word(result_16);
 
@@ -351,7 +352,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_EwR(bxInstruction_c *i)
   else {
     count &= 0x0f;  // use only 4 LSB's
 
-    Bit16u result_16 = (op1_16 >> count) | (op1_16 << (16 - count));
+    Bit16u result_16 = ror16(op1_16, count);
 
     BX_WRITE_16BIT_REG(i->dst(), result_16);
 

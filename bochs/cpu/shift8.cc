@@ -24,6 +24,7 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#include "scalar_arith.h"
 #include "decoder/ia_opcodes.h"
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EbR(bxInstruction_c *i)
@@ -48,7 +49,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EbR(bxInstruction_c *i)
   else {
     count &= 0x7; // use only lowest 3 bits
 
-    Bit8u result_8 = (op1_8 << count) | (op1_8 >> (8 - count));
+    Bit8u result_8 = rol8(op1_8, count);
 
     BX_WRITE_8BIT_REGx(i->dst(), i->extend8bitL(), result_8);
 
@@ -88,7 +89,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EbM(bxInstruction_c *i)
   else {
     count &= 0x7; // use only lowest 3 bits
 
-    Bit8u result_8 = (op1_8 << count) | (op1_8 >> (8 - count));
+    Bit8u result_8 = rol8(op1_8, count);
 
     write_RMW_linear_byte(result_8);
 
@@ -127,7 +128,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_EbR(bxInstruction_c *i)
   else {
     count &= 0x7; /* use only bottom 3 bits */
 
-    Bit8u result_8 = (op1_8 >> count) | (op1_8 << (8 - count));
+    Bit8u result_8 = ror8(op1_8, count);
 
     BX_WRITE_8BIT_REGx(i->dst(), i->extend8bitL(), result_8);
 
@@ -168,7 +169,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_EbM(bxInstruction_c *i)
   else {
     count &= 0x7; /* use only bottom 3 bits */
 
-    Bit8u result_8 = (op1_8 >> count) | (op1_8 << (8 - count));
+    Bit8u result_8 = ror8(op1_8, count);
 
     write_RMW_linear_byte(result_8);
 

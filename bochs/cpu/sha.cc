@@ -28,6 +28,8 @@
 
 #if BX_CPU_LEVEL >= 6
 
+#include "scalar_arith.h"
+
 //
 // sha_f0(): A bit oriented logical operation that derives a new dword from three SHA1 state variables (dword).
 // This function is used in SHA1 round 1 to 20 processing:
@@ -104,25 +106,15 @@ BX_CPP_INLINE Bit32u sha_f(Bit32u B, Bit32u C, Bit32u D, unsigned index)
 
 #define sha_maj(A,B,C) sha_f2((A), (B), (C))
 
-BX_CPP_INLINE Bit32u rotate_r(Bit32u val_32, unsigned count)
-{
-  return (val_32 >> count) | (val_32 << (32-count));
-}
-
-BX_CPP_INLINE Bit32u rotate_l(Bit32u val_32, unsigned count)
-{
-  return (val_32 << count) | (val_32 >> (32-count));
-}
-
 // A bit oriented logical and rotational transformation performed on a dword for SHA256
 BX_CPP_INLINE Bit32u sha256_transformation_rrr(Bit32u val_32, unsigned rotate1, unsigned rotate2, unsigned rotate3)
 {
-  return rotate_r(val_32, rotate1) ^ rotate_r(val_32, rotate2) ^ rotate_r(val_32, rotate3);
+  return ror32(val_32, rotate1) ^ ror32(val_32, rotate2) ^ ror32(val_32, rotate3);
 }
 
 BX_CPP_INLINE Bit32u sha256_transformation_rrs(Bit32u val_32, unsigned rotate1, unsigned rotate2, unsigned shr)
 {
-  return rotate_r(val_32, rotate1) ^ rotate_r(val_32, rotate2) ^ (val_32 >> shr);
+  return ror32(val_32, rotate1) ^ ror32(val_32, rotate2) ^ (val_32 >> shr);
 }
 
 /* 0F 38 C8 */
@@ -130,7 +122,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHA1NEXTE_VdqWdqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
 
-  op2.xmm32u(3) += rotate_l(op1.xmm32u(3), 30);
+  op2.xmm32u(3) += rol32(op1.xmm32u(3), 30);
 
   BX_WRITE_XMM_REG(i->dst(), op2);
 
@@ -157,10 +149,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHA1MSG2_VdqWdqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
 
-  op1.xmm32u(3) = rotate_l(op1.xmm32u(3) ^ op2.xmm32u(2), 1);
-  op1.xmm32u(2) = rotate_l(op1.xmm32u(2) ^ op2.xmm32u(1), 1);
-  op1.xmm32u(1) = rotate_l(op1.xmm32u(1) ^ op2.xmm32u(0), 1);
-  op1.xmm32u(0) = rotate_l(op1.xmm32u(0) ^ op1.xmm32u(3), 1);
+  op1.xmm32u(3) = rol32(op1.xmm32u(3) ^ op2.xmm32u(2), 1);
+  op1.xmm32u(2) = rol32(op1.xmm32u(2) ^ op2.xmm32u(1), 1);
+  op1.xmm32u(1) = rol32(op1.xmm32u(1) ^ op2.xmm32u(0), 1);
+  op1.xmm32u(0) = rol32(op1.xmm32u(0) ^ op1.xmm32u(3), 1);
 
   BX_WRITE_XMM_REG(i->dst(), op1);
 
@@ -257,9 +249,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHA1RNDS4_VdqWdqIbR(bxInstruction_c *i)
   E[0] = 0;
 
   for (unsigned n=0; n < 4; n++) {
-    A[n+1] = sha_f(B[n], C[n], D[n], imm) + rotate_l(A[n], 5) + W[n] + E[n] + K;
+    A[n+1] = sha_f(B[n], C[n], D[n], imm) + rol32(A[n], 5) + W[n] + E[n] + K;
     B[n+1] = A[n];
-    C[n+1] = rotate_l(B[n], 30);
+    C[n+1] = rol32(B[n], 30);
     D[n+1] = C[n];
     E[n+1] = D[n];
   }

@@ -106,7 +106,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RORX_GdEdIbR(bxInstruction_c *i)
 
   unsigned count = i->Ib() & 0x1f;
   if (count) {
-    op1_32 = (op1_32 >> count) | (op1_32 << (32 - count));
+    op1_32 = ror32(op1_32, count);
   }
 
   BX_WRITE_32BIT_REGZ(i->dst(), op1_32);
