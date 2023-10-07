@@ -172,11 +172,11 @@ void p4_prescott_celeron_336_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) con
   //   [29:29] AVX F16C - Float16 conversion support
   //   [30:30] RDRAND instruction
   //   [31:31] reserved
-  leaf->ecx = get_std_cpuid_leaf_1_ecx(BX_CPUID_EXT_DTES64 |
-                                       BX_CPUID_EXT_DS_CPL |
-                                       BX_CPUID_EXT_THERMAL_MONITOR2 |
-                                       BX_CPUID_EXT_CNXT_ID |
-                                       BX_CPUID_EXT_xTPR);
+  leaf->ecx = get_std_cpuid_leaf_1_ecx(BX_CPUID_STD1_ECX_DTES64 |
+                                       BX_CPUID_STD1_ECX_DS_CPL |
+                                       BX_CPUID_STD1_ECX_THERMAL_MONITOR2 |
+                                       BX_CPUID_STD1_ECX_CNXT_ID |
+                                       BX_CPUID_STD1_ECX_xTPR);
 
   // EDX: Standard Feature Flags
   // * [0:0]   FPU on chip
@@ -211,14 +211,14 @@ void p4_prescott_celeron_336_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) con
   // * [29:29] TM: Thermal Monitor
   //   [30:30] Reserved
   // * [31:31] PBE: Pending Break Enable
-  leaf->edx = get_std_cpuid_leaf_1_edx(BX_CPUID_STD_DEBUG_STORE |
-                                       BX_CPUID_STD_ACPI |
-                                       BX_CPUID_STD_SELF_SNOOP |
+  leaf->edx = get_std_cpuid_leaf_1_edx(BX_CPUID_STD1_EDX_DEBUG_STORE |
+                                       BX_CPUID_STD1_EDX_ACPI |
+                                       BX_CPUID_STD1_EDX_SELF_SNOOP |
 #if BX_SUPPORT_SMP
-                                       BX_CPUID_STD_HT |
+                                       BX_CPUID_STD1_EDX_HT |
 #endif
-                                       BX_CPUID_STD_THERMAL_MONITOR |
-                                       BX_CPUID_STD_PBE);
+                                       BX_CPUID_STD1_EDX_THERMAL_MONITOR |
+                                       BX_CPUID_STD1_EDX_PBE);
 }
 
 // leaf 0x00000002 //

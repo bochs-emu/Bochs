@@ -339,12 +339,12 @@ void tigerlake_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   // * [29:29] AVX F16C - Float16 conversion support
   // * [30:30] RDRAND instruction
   //   [31:31] reserved
-  leaf->ecx = get_std_cpuid_leaf_1_ecx(BX_CPUID_EXT_DTES64 |
-                                       BX_CPUID_EXT_DS_CPL |
-                                       BX_CPUID_EXT_EST |
-                                       BX_CPUID_EXT_THERMAL_MONITOR2 |
-                                       BX_CPUID_EXT_xTPR |
-                                       BX_CPUID_EXT_PDCM);
+  leaf->ecx = get_std_cpuid_leaf_1_ecx(BX_CPUID_STD1_ECX_DTES64 |
+                                       BX_CPUID_STD1_ECX_DS_CPL |
+                                       BX_CPUID_STD1_ECX_EST |
+                                       BX_CPUID_STD1_ECX_THERMAL_MONITOR2 |
+                                       BX_CPUID_STD1_ECX_xTPR |
+                                       BX_CPUID_STD1_ECX_PDCM);
 
   // EDX: Standard Feature Flags
   // * [0:0]   FPU on chip
@@ -379,14 +379,14 @@ void tigerlake_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   // * [29:29] TM: Thermal Monitor
   //   [30:30] Reserved
   // * [31:31] PBE: Pending Break Enable
-  leaf->edx = get_std_cpuid_leaf_1_edx(BX_CPUID_STD_DEBUG_STORE |
-                                       BX_CPUID_STD_ACPI |
-                                       BX_CPUID_STD_SELF_SNOOP |
+  leaf->edx = get_std_cpuid_leaf_1_edx(BX_CPUID_STD1_EDX_DEBUG_STORE |
+                                       BX_CPUID_STD1_EDX_ACPI |
+                                       BX_CPUID_STD1_EDX_SELF_SNOOP |
 #if BX_SUPPORT_SMP
-                                       BX_CPUID_STD_HT |
+                                       BX_CPUID_STD1_EDX_HT |
 #endif
-                                       BX_CPUID_STD_THERMAL_MONITOR |
-                                       BX_CPUID_STD_PBE);
+                                       BX_CPUID_STD1_EDX_THERMAL_MONITOR |
+                                       BX_CPUID_STD1_EDX_PBE);
 }
 
 // leaf 0x00000002 //
@@ -518,7 +518,7 @@ void tigerlake_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *lea
     // * [29:29]  SHA instructions support
     // * [30:30]  AVX512BW instructions support
     // * [31:31]  AVX512VL variable vector length support
-    leaf->ebx = get_std_cpuid_leaf_7_ebx(BX_CPUID_EXT3_ENCHANCED_REP_STRINGS);
+    leaf->ebx = get_std_cpuid_leaf_7_ebx(BX_CPUID_STD7_SUBLEAF0_EBX_ENCHANCED_REP_STRINGS);
 
     //   [0:0]   PREFETCHW1 instruction
     // * [1:1]   AVX512 VBMI instructions
@@ -587,21 +587,21 @@ void tigerlake_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *lea
     // * [30:30] Support for the IA32_CORE_CAPABILITIES MSR
     // * [31:31] SSBD: Speculative Store Bypass Disable
 
-    leaf->edx = BX_CPUID_EXT5_FAST_SHORT_REP_MOV |
-                BX_CPUID_EXT5_AVX512_VPINTERSECT;
+    leaf->edx = BX_CPUID_STD7_SUBLEAF0_EDX_FAST_SHORT_REP_MOV |
+                BX_CPUID_STD7_SUBLEAF0_EDX_AVX512_VPINTERSECT;
 
 #if BX_SUPPORT_CET
-    leaf->edx |= BX_CPUID_EXT5_CET_IBT;
+    leaf->edx |= BX_CPUID_STD7_SUBLEAF0_EDX_CET_IBT;
 #endif
 
     if (is_cpu_extension_supported(BX_ISA_SCA_MITIGATIONS))
-      leaf->edx |= BX_CPUID_EXT5_MD_CLEAR |
-                   BX_CPUID_EXT5_SCA_IBRS_IBPB |
-                   BX_CPUID_EXT5_SCA_STIBP |
-                   BX_CPUID_EXT5_L1D_FLUSH |
-                   BX_CPUID_EXT5_ARCH_CAPABILITIES_MSR |
-                   BX_CPUID_EXT5_CORE_CAPABILITIES_MSR |
-                   BX_CPUID_EXT5_SCA_SSBD;
+      leaf->edx |= BX_CPUID_STD7_SUBLEAF0_EDX_MD_CLEAR |
+                   BX_CPUID_STD7_SUBLEAF0_EDX_SCA_IBRS_IBPB |
+                   BX_CPUID_STD7_SUBLEAF0_EDX_SCA_STIBP |
+                   BX_CPUID_STD7_SUBLEAF0_EDX_L1D_FLUSH |
+                   BX_CPUID_STD7_SUBLEAF0_EDX_ARCH_CAPABILITIES_MSR |
+                   BX_CPUID_STD7_SUBLEAF0_EDX_CORE_CAPABILITIES_MSR |
+                   BX_CPUID_STD7_SUBLEAF0_EDX_SCA_SSBD;
     break;
 
   default:
@@ -752,10 +752,9 @@ void tigerlake_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [12:12] SKINIT support
   //   [13:13] WDT: Watchdog timer support
   //   [31:14] reserved
-
-  leaf->ecx = BX_CPUID_EXT2_LAHF_SAHF |
-              BX_CPUID_EXT2_LZCNT |
-              BX_CPUID_EXT2_PREFETCHW;
+  leaf->ecx = BX_CPUID_EXT1_ECX_LAHF_SAHF |
+              BX_CPUID_EXT1_ECX_LZCNT |
+              BX_CPUID_EXT1_ECX_PREFETCHW;
 
   // EDX:
   //    [10:0] Reserved for Intel
