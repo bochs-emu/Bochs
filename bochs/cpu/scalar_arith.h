@@ -191,4 +191,36 @@ BX_CPP_INLINE Bit64u bextrq(Bit64u val_64, unsigned start, unsigned len)
   return result;
 }
 
+// rol, ror
+
+BX_CPP_INLINE Bit16u rol16(Bit16u v16, unsigned count)
+{
+  return (v16 << count) | (v16 >> (16-count));
+}
+
+BX_CPP_INLINE Bit16u ror16(Bit16u v16, unsigned count)
+{
+  return (v16 >> count) | (v16 << (16 - count));
+}
+
+BX_CPP_INLINE Bit32u rol32(Bit32u v32, unsigned count)
+{
+  return (v32 << count) | (v32 >> (32-count));
+}
+
+BX_CPP_INLINE Bit32u ror32(Bit32u v32, unsigned count)
+{
+  return (v32 >> count) | (v32 << (32 - count));
+}
+
+BX_CPP_INLINE Bit64u rol64(Bit64u v64, unsigned count)
+{
+  return (v64 << count) | (v64 >> (64-count));
+}
+
+BX_CPP_INLINE Bit32u ror64(Bit32u v64, unsigned count)
+{
+  return (v64 >> count) | (v64 << (64 - count));
+}
+
 #endif

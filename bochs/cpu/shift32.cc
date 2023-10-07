@@ -24,6 +24,7 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#include "scalar_arith.h"
 #include "decoder/ia_opcodes.h"
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EdGdM(bxInstruction_c *i)
@@ -176,7 +177,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EdM(bxInstruction_c *i)
   count &= 0x1f;
 
   if (count) {
-    Bit32u result_32 = (op1_32 << count) | (op1_32 >> (32 - count));
+    Bit32u result_32 = rol32(op1_32, count);
 
     write_RMW_linear_dword(result_32);
 
@@ -207,7 +208,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EdR(bxInstruction_c *i)
   }
   else {
     op1_32 = BX_READ_32BIT_REG(i->dst());
-    result_32 = (op1_32 << count) | (op1_32 >> (32 - count));
+    result_32 = rol32(op1_32, count);
     BX_WRITE_32BIT_REGZ(i->dst(), result_32);
 
     bit0  = (result_32 & 0x1);
@@ -236,7 +237,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_EdM(bxInstruction_c *i)
   count &= 0x1f;
 
   if (count) {
-    Bit32u result_32 = (op1_32 >> count) | (op1_32 << (32 - count));
+    Bit32u result_32 = ror32(op1_32, count);
 
     write_RMW_linear_dword(result_32);
 
@@ -267,7 +268,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_EdR(bxInstruction_c *i)
   }
   else {
     op1_32 = BX_READ_32BIT_REG(i->dst());
-    result_32 = (op1_32 >> count) | (op1_32 << (32 - count));
+    result_32 = ror32(op1_32, count);
     BX_WRITE_32BIT_REGZ(i->dst(), result_32);
 
     bit31 = (result_32 >> 31) & 1;

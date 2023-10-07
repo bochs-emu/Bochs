@@ -480,14 +480,16 @@ bool BX_CPU_C::is_eptptr_valid(Bit64u eptptr)
 }
 #endif
 
+#include "scalar_arith.h"
+
 BX_CPP_INLINE static Bit32u rotate_r(Bit32u val_32)
 {
-  return (val_32 >> 8) | (val_32 << 24);
+  return ror32(val_32, 8);
 }
 
 BX_CPP_INLINE static Bit32u rotate_l(Bit32u val_32)
 {
-  return (val_32 << 8) | (val_32 >> 24);
+  return rol32(val_32, 8);
 }
 
 // AR.NULL is bit 16

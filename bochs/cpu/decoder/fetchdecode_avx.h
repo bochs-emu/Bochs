@@ -1172,6 +1172,11 @@ static const Bit64u BxOpcodeGroup_VEX_0F38BF[] = {
 
 static const Bit64u BxOpcodeGroup_VEX_0F38CF[] = { last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0, BX_IA_VGF2P8MULB_VdqHdqWdq) };
 
+static const Bit64u BxOpcodeGroup_VEX_0F38DA[] = {
+  form_opcode(ATTR_SSE_NO_PREFIX | ATTR_VL128 | ATTR_VEX_W0, BX_IA_VSM3MSG1_VdqHdqWdq),
+  last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VL128 | ATTR_VEX_W0, BX_IA_VSM3MSG2_VdqHdqWdq)
+};
+
 static const Bit64u BxOpcodeGroup_VEX_0F38DB[] = { last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VL128,  BX_IA_V128_VAESIMC_VdqWdq) };
 static const Bit64u BxOpcodeGroup_VEX_0F38DC[] = {
   form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VL128, BX_IA_V128_VAESENC_VdqHdqWdq),
@@ -1503,6 +1508,9 @@ static const Bit64u BxOpcodeGroup_VEX_0F3A7F[] = {
 
 static const Bit64u BxOpcodeGroup_VEX_0F3ACE[] = { last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W1, BX_IA_VGF2P8AFFINEQB_VdqHdqWdqIb) };
 static const Bit64u BxOpcodeGroup_VEX_0F3ACF[] = { last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W1, BX_IA_VGF2P8AFFINEINVQB_VdqHdqWdqIb) };
+
+static const Bit64u BxOpcodeGroup_VEX_0F3ADE[] = { last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VL128 | ATTR_VEX_W0, BX_IA_VSM3RNDS2_VdqHdqWdqIb) };
+
 static const Bit64u BxOpcodeGroup_VEX_0F3ADF[] = { last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VL128, BX_IA_V128_VAESKEYGENASSIST_VdqWdqIb) };
 
 static const Bit64u BxOpcodeGroup_VEX_0F3AF0[] = {
@@ -1990,7 +1998,7 @@ static const Bit64u *BxOpcodeTableVEX[256*3] = {
   /* D7  */ ( BxOpcodeGroup_ERR ),
   /* D8  */ ( BxOpcodeGroup_ERR ),
   /* D9  */ ( BxOpcodeGroup_ERR ),
-  /* DA  */ ( BxOpcodeGroup_ERR ),
+  /* DA  */ ( BxOpcodeGroup_VEX_0F38DA ),
   /* DB  */ ( BxOpcodeGroup_VEX_0F38DB ),
   /* DC  */ ( BxOpcodeGroup_VEX_0F38DC ),
   /* DD  */ ( BxOpcodeGroup_VEX_0F38DD ),
@@ -2252,7 +2260,7 @@ static const Bit64u *BxOpcodeTableVEX[256*3] = {
   /* DB  */ ( BxOpcodeGroup_ERR ),
   /* DC  */ ( BxOpcodeGroup_ERR ),
   /* DD  */ ( BxOpcodeGroup_ERR ),
-  /* DE  */ ( BxOpcodeGroup_ERR ),
+  /* DE  */ ( BxOpcodeGroup_VEX_0F3ADE ),
   /* DF  */ ( BxOpcodeGroup_VEX_0F3ADF ),
   /* E0  */ ( BxOpcodeGroup_ERR ),
   /* E1  */ ( BxOpcodeGroup_ERR ),

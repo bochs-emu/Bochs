@@ -26,6 +26,7 @@
 
 #if BX_SUPPORT_X86_64
 
+#include "scalar_arith.h"
 #include "decoder/ia_opcodes.h"
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_EqGqM(bxInstruction_c *i)
@@ -176,7 +177,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EqM(bxInstruction_c *i)
   count &= 0x3f;
 
   if (count) {
-    Bit64u result_64 = (op1_64 << count) | (op1_64 >> (64 - count));
+    Bit64u result_64 = rol64(op1_64, count);
 
     write_RMW_linear_qword(result_64);
 
@@ -202,7 +203,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EqR(bxInstruction_c *i)
 
   if (count) {
     Bit64u op1_64 = BX_READ_64BIT_REG(i->dst());
-    Bit64u result_64 = (op1_64 << count) | (op1_64 >> (64 - count));
+    Bit64u result_64 = rol64(op1_64, count);
     BX_WRITE_64BIT_REG(i->dst(), result_64);
 
     unsigned bit0  = (result_64 & 0x1);
@@ -230,7 +231,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_EqM(bxInstruction_c *i)
   count &= 0x3f;
 
   if (count) {
-    Bit64u result_64 = (op1_64 >> count) | (op1_64 << (64 - count));
+    Bit64u result_64 = ror64(op1_64, count);
 
     write_RMW_linear_qword(result_64);
 
@@ -256,7 +257,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_EqR(bxInstruction_c *i)
 
   if (count) {
     Bit64u op1_64 = BX_READ_64BIT_REG(i->dst());
-    Bit64u result_64 = (op1_64 >> count) | (op1_64 << (64 - count));
+    Bit64u result_64 = ror64(op1_64, count);
     BX_WRITE_64BIT_REG(i->dst(), result_64);
 
     unsigned bit63 = (result_64 >> 63) & 1;

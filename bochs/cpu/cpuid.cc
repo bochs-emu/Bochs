@@ -98,6 +98,8 @@ static const char *cpu_feature_name[] =
   "rdseed",                 // BX_ISA_RDSEED
   "sha",                    // BX_ISA_SHA
   "gfni",                   // BX_ISA_GFNI
+  "sm3",                    // BX_ISA_SM3
+  "sm4",                    // BX_ISA_SM4
   "avx512",                 // BX_ISA_AVX512
   "avx512cd",               // BX_ISA_AVX512_CD
   "avx512pf",               // BX_ISA_AVX512_PF

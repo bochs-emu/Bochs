@@ -2232,6 +2232,11 @@ bx_define_opcode(BX_IA_VGF2P8AFFINEQB_VdqHdqWdqIb, "vgf2p8affineqb", "vgf2p8affi
 bx_define_opcode(BX_IA_VGF2P8AFFINEINVQB_VdqHdqWdqIb, "vgf2p8affineinvqb", "vgf2p8affineinvqb", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::VGF2P8AFFINEINVQB_VdqHdqWdqIbR, BX_ISA_GFNI, OP_Vdq, OP_Hdq, OP_Wdq, OP_Ib, BX_PREPARE_AVX)
 bx_define_opcode(BX_IA_VGF2P8MULB_VdqHdqWdq, "vgf2p8mulb", "vgf2p8mulb", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::VGF2P8MULB_VdqHdqWdqR, BX_ISA_GFNI, OP_Vdq, OP_Hdq, OP_Wdq, OP_NONE, BX_PREPARE_AVX)
 
+// SM3 instructions
+bx_define_opcode(BX_IA_VSM3MSG1_VdqHdqWdq, "vsm3msg1", "vsm3msg1", &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::VSM3MSG1_VdqHdqWdqR, BX_ISA_SM3, OP_Vdq, OP_Hdq, OP_Wdq, OP_NONE, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_VSM3MSG2_VdqHdqWdq, "vsm3msg2", "vsm3msg2", &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::VSM3MSG2_VdqHdqWdqR, BX_ISA_SM3, OP_Vdq, OP_Hdq, OP_Wdq, OP_NONE, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_VSM3RNDS2_VdqHdqWdqIb, "vsm3rnds2", "vsm3rnds2", &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::VSM3RNDS2_VdqHdqWdqIbR, BX_ISA_SM3, OP_Vdq, OP_Hdq, OP_Wdq, OP_Ib, BX_PREPARE_AVX)
+
 bx_define_opcode(BX_IA_V128_VMOVD_VdqEd, "vmovd", "vmovd", &BX_CPU_C::MOVSS_VssWssM, &BX_CPU_C::MOVD_VdqEdR, BX_ISA_AVX, OP_Vdq, OP_Ed, OP_NONE, OP_NONE, BX_PREPARE_AVX)
 bx_define_opcode(BX_IA_V128_VMOVQ_VdqEq, "vmovq", "vmovq", &BX_CPU_C::MOVSD_VsdWsdM, &BX_CPU_C::MOVQ_VdqEqR, BX_ISA_AVX, OP_Vdq, OP_Eq, OP_NONE, OP_NONE, BX_PREPARE_AVX)
 bx_define_opcode(BX_IA_V128_VMOVD_EdVd, "vmovd", "vmovd", &BX_CPU_C::MOVSS_WssVssM, &BX_CPU_C::MOVD_EdVdR, BX_ISA_AVX, OP_Ed, OP_Vd, OP_NONE, OP_NONE, BX_PREPARE_AVX)
