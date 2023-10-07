@@ -123,7 +123,7 @@ void p3_katmai_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [29:29] TM: Thermal Monitor
   //   [30:30] Reserved
   //   [31:31] PBE: Pending Break Enable
-  leaf->edx = get_std_cpuid_leaf_1_edx(BX_CPUID_STD_PROCESSOR_SERIAL_NUMBER);
+  leaf->edx = get_std_cpuid_leaf_1_edx(BX_CPUID_STD1_EDX_PROCESSOR_SERIAL_NUMBER);
 }
 
 // leaf 0x00000002 //

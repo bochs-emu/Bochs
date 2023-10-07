@@ -298,7 +298,7 @@ void bx_generic_cpuid_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function
   switch(subfunction) {
   case 0:
     leaf->eax = 0; /* report max sub-leaf that supported in leaf 7 */
-    leaf->ebx = get_std_cpuid_leaf_7_ebx(BX_CPU_VENDOR_INTEL ? BX_CPUID_EXT3_ENCHANCED_REP_STRINGS : 0);
+    leaf->ebx = get_std_cpuid_leaf_7_ebx(BX_CPU_VENDOR_INTEL ? BX_CPUID_STD7_SUBLEAF0_EBX_ENCHANCED_REP_STRINGS : 0);
     leaf->ecx = get_std_cpuid_leaf_7_ecx();
     leaf->edx = 0;
   default:
@@ -1040,63 +1040,63 @@ Bit32u bx_generic_cpuid_t::get_extended_cpuid_features(void) const
   Bit32u features = 0;
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SSE3))
-    features |= BX_CPUID_EXT_SSE3;
+    features |= BX_CPUID_STD1_ECX_SSE3;
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AES_PCLMULQDQ))
-    features |= BX_CPUID_EXT_PCLMULQDQ;
+    features |= BX_CPUID_STD1_ECX_PCLMULQDQ;
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_MONITOR_MWAIT))
-    features |= BX_CPUID_EXT_MONITOR_MWAIT;
+    features |= BX_CPUID_STD1_ECX_MONITOR_MWAIT;
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_VMX))
-    features |= BX_CPUID_EXT_VMX;
+    features |= BX_CPUID_STD1_ECX_VMX;
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SSSE3))
-    features |= BX_CPUID_EXT_SSSE3;
+    features |= BX_CPUID_STD1_ECX_SSSE3;
 
 #if BX_SUPPORT_X86_64
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_LONG_MODE))
-    features |= BX_CPUID_EXT_CMPXCHG16B;
+    features |= BX_CPUID_STD1_ECX_CMPXCHG16B;
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PCID))
-    features |= BX_CPUID_EXT_PCID;
+    features |= BX_CPUID_STD1_ECX_PCID;
 #endif
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SSE4_1))
-    features |= BX_CPUID_EXT_SSE4_1;
+    features |= BX_CPUID_STD1_ECX_SSE4_1;
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SSE4_2))
-    features |= BX_CPUID_EXT_SSE4_2;
+    features |= BX_CPUID_STD1_ECX_SSE4_2;
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_X2APIC))
-    features |= BX_CPUID_EXT_X2APIC;
+    features |= BX_CPUID_STD1_ECX_X2APIC;
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_MOVBE))
-    features |= BX_CPUID_EXT_MOVBE;
+    features |= BX_CPUID_STD1_ECX_MOVBE;
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_POPCNT))
-    features |= BX_CPUID_EXT_POPCNT;
+    features |= BX_CPUID_STD1_ECX_POPCNT;
 
   // support for AES
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AES_PCLMULQDQ))
-    features |= BX_CPUID_EXT_AES;
+    features |= BX_CPUID_STD1_ECX_AES;
 
   // support XSAVE extensions
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_XSAVE)) {
-    features |= BX_CPUID_EXT_XSAVE;
+    features |= BX_CPUID_STD1_ECX_XSAVE;
     if (cpu->cr4.get_OSXSAVE())
-      features |= BX_CPUID_EXT_OSXSAVE;
+      features |= BX_CPUID_STD1_ECX_OSXSAVE;
   }
 
 #if BX_SUPPORT_AVX
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX))
-    features |= BX_CPUID_EXT_AVX;
+    features |= BX_CPUID_STD1_ECX_AVX;
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX_F16C))
-    features |= BX_CPUID_EXT_AVX_F16C;
+    features |= BX_CPUID_STD1_ECX_AVX_F16C;
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX_FMA))
-    features |= BX_CPUID_EXT_FMA;
+    features |= BX_CPUID_STD1_ECX_FMA;
 #endif
 
   return features;
@@ -1143,79 +1143,79 @@ Bit32u bx_generic_cpuid_t::get_std_cpuid_features(void) const
   Bit32u features = 0;
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_X87))
-    features |= BX_CPUID_STD_X87;
+    features |= BX_CPUID_STD1_EDX_X87;
 
 #if BX_CPU_LEVEL >= 5
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PENTIUM)) {
     // Pentium only features
-    features |= BX_CPUID_STD_TSC;
-    features |= BX_CPUID_STD_MSR;
+    features |= BX_CPUID_STD1_EDX_TSC;
+    features |= BX_CPUID_STD1_EDX_MSR;
     // support Machine Check
-    features |= BX_CPUID_STD_MCE | BX_CPUID_STD_MCA;
-    features |= BX_CPUID_STD_CMPXCHG8B;
+    features |= BX_CPUID_STD1_EDX_MCE | BX_CPUID_STD1_EDX_MCA;
+    features |= BX_CPUID_STD1_EDX_CMPXCHG8B;
   }
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_VME))
-    features |= BX_CPUID_STD_VME;
+    features |= BX_CPUID_STD1_EDX_VME;
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_DEBUG_EXTENSIONS))
-    features |= BX_CPUID_STD_DEBUG_EXTENSIONS;
+    features |= BX_CPUID_STD1_EDX_DEBUG_EXTENSIONS;
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PSE))
-    features |= BX_CPUID_STD_PSE;
+    features |= BX_CPUID_STD1_EDX_PSE;
 #endif
 
 #if BX_SUPPORT_APIC
   // if MSR_APICBASE APIC Global Enable bit has been cleared,
   // the CPUID feature flag for the APIC is set to 0.
   if (cpu->msr.apicbase & 0x800)
-    features |= BX_CPUID_STD_APIC; // APIC on chip
+    features |= BX_CPUID_STD1_EDX_APIC; // APIC on chip
 #endif
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SYSENTER_SYSEXIT))
-    features |= BX_CPUID_STD_SYSENTER_SYSEXIT;
+    features |= BX_CPUID_STD1_EDX_SYSENTER_SYSEXIT;
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CLFLUSH))
-    features |= BX_CPUID_STD_CLFLUSH;
+    features |= BX_CPUID_STD1_EDX_CLFLUSH;
 
 #if BX_CPU_LEVEL >= 5
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_MMX))
-    features |= BX_CPUID_STD_MMX;
+    features |= BX_CPUID_STD1_EDX_MMX;
 #endif
 
 #if BX_CPU_LEVEL >= 6
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_P6)) {
-    features |= BX_CPUID_STD_CMOV;
-    features |= BX_CPUID_STD_ACPI;
+    features |= BX_CPUID_STD1_EDX_CMOV;
+    features |= BX_CPUID_STD1_EDX_ACPI;
   }
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_MTRR))
-    features |= BX_CPUID_STD_MTRR;
+    features |= BX_CPUID_STD1_EDX_MTRR;
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PAT))
-    features |= BX_CPUID_STD_PAT;
+    features |= BX_CPUID_STD1_EDX_PAT;
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PAE))
-    features |= BX_CPUID_STD_PAE;
+    features |= BX_CPUID_STD1_EDX_PAE;
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PGE))
-    features |= BX_CPUID_STD_GLOBAL_PAGES;
+    features |= BX_CPUID_STD1_EDX_GLOBAL_PAGES;
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PSE36))
-    features |= BX_CPUID_STD_PSE36;
+    features |= BX_CPUID_STD1_EDX_PSE36;
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SSE))
-    features |= BX_CPUID_STD_FXSAVE_FXRSTOR | BX_CPUID_STD_SSE;
+    features |= BX_CPUID_STD1_EDX_FXSAVE_FXRSTOR | BX_CPUID_STD1_EDX_SSE;
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SSE2))
-    features |= BX_CPUID_STD_SSE2;
+    features |= BX_CPUID_STD1_EDX_SSE2;
 
   if (BX_CPU_VENDOR_INTEL)
-    features |= BX_CPUID_STD_SELF_SNOOP;
+    features |= BX_CPUID_STD1_EDX_SELF_SNOOP;
 #endif
 
 #if BX_SUPPORT_SMP
-  features |= BX_CPUID_STD_HT;
+  features |= BX_CPUID_STD1_EDX_HT;
 #endif
 
   return features;
@@ -1262,23 +1262,23 @@ Bit32u bx_generic_cpuid_t::get_std2_cpuid_features(void) const
   features &= 0x0183F3FF;
 #if BX_SUPPORT_3DNOW
   // only AMD is interesting in AMD MMX extensions
-  features |= BX_CPUID_STD2_AMD_MMX_EXT | BX_CPUID_STD2_3DNOW_EXT | BX_CPUID_STD2_3DNOW;
+  features |= BX_CPUID_EXT1_EDX_AMD_MMX_EXT | BX_CPUID_EXT1_EDX_3DNOW_EXT | BX_CPUID_EXT1_EDX_3DNOW;
 #endif
 #if BX_SUPPORT_X86_64
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_LONG_MODE)) {
-    features |= BX_CPUID_STD2_LONG_MODE;
+    features |= BX_CPUID_EXT1_EDX_LONG_MODE;
 
     if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_RDTSCP))
-      features |= BX_CPUID_STD2_RDTSCP;
+      features |= BX_CPUID_EXT1_EDX_RDTSCP;
     if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_NX))
-      features |= BX_CPUID_STD2_NX;
+      features |= BX_CPUID_EXT1_EDX_NX;
     if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_FFXSR))
-      features |= BX_CPUID_STD2_FFXSR;
+      features |= BX_CPUID_EXT1_EDX_FFXSR;
     if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_1G_PAGES))
-      features |= BX_CPUID_STD2_1G_PAGES;
+      features |= BX_CPUID_EXT1_EDX_1G_PAGES;
 
     if (cpu->long64_mode())
-      features |= BX_CPUID_STD2_SYSCALL_SYSRET;
+      features |= BX_CPUID_EXT1_EDX_SYSCALL_SYSRET;
   }
 #endif
 
@@ -1317,26 +1317,26 @@ Bit32u bx_generic_cpuid_t::get_ext2_cpuid_features(void) const
 
 #if BX_SUPPORT_X86_64
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_LONG_MODE))
-    features |= BX_CPUID_EXT2_LAHF_SAHF | BX_CPUID_EXT2_PREFETCHW;
+    features |= BX_CPUID_EXT1_ECX_LAHF_SAHF | BX_CPUID_EXT1_ECX_PREFETCHW;
 #endif
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_MISALIGNED_SSE))
-    features |= BX_CPUID_EXT2_MISALIGNED_SSE;
+    features |= BX_CPUID_EXT1_ECX_MISALIGNED_SSE;
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_LZCNT))
-    features |= BX_CPUID_EXT2_LZCNT;
+    features |= BX_CPUID_EXT1_ECX_LZCNT;
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SSE4A))
-    features |= BX_CPUID_EXT2_SSE4A;
+    features |= BX_CPUID_EXT1_ECX_SSE4A;
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_XOP))
-    features |= BX_CPUID_EXT2_XOP;
+    features |= BX_CPUID_EXT1_ECX_XOP;
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_FMA4))
-    features |= BX_CPUID_EXT2_FMA4;
+    features |= BX_CPUID_EXT1_ECX_FMA4;
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_TBM))
-    features |= BX_CPUID_EXT2_TBM;
+    features |= BX_CPUID_EXT1_ECX_TBM;
 
   return features;
 }

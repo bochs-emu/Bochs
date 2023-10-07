@@ -216,7 +216,7 @@ void turion64_tyler_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [31:31] PBE: Pending Break Enable
   leaf->edx = get_std_cpuid_leaf_1_edx();
 #if BX_SUPPORT_SMP
-  leaf->edx |= BX_CPUID_STD_HT;
+  leaf->edx |= BX_CPUID_STD1_EDX_HT;
 #endif
 }
 
@@ -262,14 +262,14 @@ void turion64_tyler_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [23:23] Topology extensions support
   //   [31:24] Reserved
 
-  leaf->ecx = BX_CPUID_EXT2_LAHF_SAHF |
-              BX_CPUID_EXT2_CMP_LEGACY |
+  leaf->ecx = BX_CPUID_EXT1_ECX_LAHF_SAHF |
+              BX_CPUID_EXT1_ECX_CMP_LEGACY |
 #if BX_SUPPORT_SVM
-              BX_CPUID_EXT2_SVM |
+              BX_CPUID_EXT1_ECX_SVM |
 #endif
-              BX_CPUID_EXT2_EXT_APIC_SPACE |
-              BX_CPUID_EXT2_ALT_MOV_CR8 |
-              BX_CPUID_EXT2_PREFETCHW;
+              BX_CPUID_EXT1_ECX_EXT_APIC_SPACE |
+              BX_CPUID_EXT1_ECX_ALT_MOV_CR8 |
+              BX_CPUID_EXT1_ECX_PREFETCHW;
 
   // EDX:
   // Many of the bits in EDX are the same as FN 0x00000001 for AMD

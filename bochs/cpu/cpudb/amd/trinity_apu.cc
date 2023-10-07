@@ -298,7 +298,7 @@ void trinity_apu_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [31:31] PBE: Pending Break Enable
   leaf->edx = get_std_cpuid_leaf_1_edx();
 #if BX_SUPPORT_SMP
-  leaf->edx |= BX_CPUID_STD_HT;
+  leaf->edx |= BX_CPUID_STD1_EDX_HT;
 #endif
 }
 
@@ -426,30 +426,30 @@ void trinity_apu_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   // * [24:24] PerfCtrExtNB: NB perf counter extensions support
   //   [31:25] Reserved
 
-  leaf->ecx = BX_CPUID_EXT2_LAHF_SAHF |
-              BX_CPUID_EXT2_CMP_LEGACY |
+  leaf->ecx = BX_CPUID_EXT1_ECX_LAHF_SAHF |
+              BX_CPUID_EXT1_ECX_CMP_LEGACY |
 #if BX_SUPPORT_SVM
-              BX_CPUID_EXT2_SVM |
+              BX_CPUID_EXT1_ECX_SVM |
 #endif
-              BX_CPUID_EXT2_EXT_APIC_SPACE |
-              BX_CPUID_EXT2_ALT_MOV_CR8 |
-              BX_CPUID_EXT2_LZCNT |
-              BX_CPUID_EXT2_SSE4A |
-              BX_CPUID_EXT2_MISALIGNED_SSE |
-              BX_CPUID_EXT2_PREFETCHW |
-              BX_CPUID_EXT2_OSVW |
-              BX_CPUID_EXT2_IBS |
-              BX_CPUID_EXT2_XOP |
-           /* BX_CPUID_EXT2_SKINIT | */ // not implemented
-              BX_CPUID_EXT2_WDT |
-           /* BX_CPUID_EXT2_LWP | */    // not implemented
-              BX_CPUID_EXT2_FMA4 |
-              BX_CPUID_EXT2_TCE |
-              BX_CPUID_EXT2_NODEID |
-              BX_CPUID_EXT2_TBM |
-              BX_CPUID_EXT2_TOPOLOGY_EXTENSIONS |
-              BX_CPUID_EXT2_PERFCTR_EXT_CORE |
-              BX_CPUID_EXT2_PERFCTR_EXT_NB;
+              BX_CPUID_EXT1_ECX_EXT_APIC_SPACE |
+              BX_CPUID_EXT1_ECX_ALT_MOV_CR8 |
+              BX_CPUID_EXT1_ECX_LZCNT |
+              BX_CPUID_EXT1_ECX_SSE4A |
+              BX_CPUID_EXT1_ECX_MISALIGNED_SSE |
+              BX_CPUID_EXT1_ECX_PREFETCHW |
+              BX_CPUID_EXT1_ECX_OSVW |
+              BX_CPUID_EXT1_ECX_IBS |
+              BX_CPUID_EXT1_ECX_XOP |
+           /* BX_CPUID_EXT1_ECX_SKINIT | */ // not implemented
+              BX_CPUID_EXT1_ECX_WDT |
+           /* BX_CPUID_EXT1_ECX_LWP | */    // not implemented
+              BX_CPUID_EXT1_ECX_FMA4 |
+              BX_CPUID_EXT1_ECX_TCE |
+              BX_CPUID_EXT1_ECX_NODEID |
+              BX_CPUID_EXT1_ECX_TBM |
+              BX_CPUID_EXT1_ECX_TOPOLOGY_EXTENSIONS |
+              BX_CPUID_EXT1_ECX_PERFCTR_EXT_CORE |
+              BX_CPUID_EXT1_ECX_PERFCTR_EXT_NB;
 
   // EDX:
   // Many of the bits in EDX are the same as FN 0x00000001 for AMD

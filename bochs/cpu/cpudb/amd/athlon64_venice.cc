@@ -234,8 +234,7 @@ void athlon64_venice_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [12:12] SKINIT support
   //   [13:13] WDT: Watchdog timer support
   //   [31:14] reserved
-
-  leaf->ecx = BX_CPUID_EXT2_LAHF_SAHF;
+  leaf->ecx = BX_CPUID_EXT1_ECX_LAHF_SAHF;
 
   // EDX:
   // Many of the bits in EDX are the same as FN 0x00000001 for AMD
