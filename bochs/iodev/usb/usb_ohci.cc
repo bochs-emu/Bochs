@@ -1157,6 +1157,7 @@ void bx_usb_ohci_c::process_lists(void)
 bool bx_usb_ohci_c::process_ed(struct OHCI_ED *ed, const Bit32u ed_address)
 {
   struct OHCI_TD cur_td;
+  int toggle;
   bool ret = 0;
 
   if (!ED_GET_H(ed) && !ED_GET_K(ed) && (ED_GET_HEADP(ed) != ED_GET_TAILP(ed))) {
@@ -1171,12 +1172,20 @@ bool bx_usb_ohci_c::process_ed(struct OHCI_ED *ed, const Bit32u ed_address)
       BX_DEBUG(("Found a valid ED that points to an control/bulk/int TD"));
       ret = 1;
       while (ED_GET_HEADP(ed) != ED_GET_TAILP(ed)) {
+        toggle = ED_GET_C(ed);
         DEV_MEM_READ_PHYSICAL(ED_GET_HEADP(ed),      4, (Bit8u*) &cur_td.dword0);
         DEV_MEM_READ_PHYSICAL(ED_GET_HEADP(ed) +  4, 4, (Bit8u*) &cur_td.dword1);
         DEV_MEM_READ_PHYSICAL(ED_GET_HEADP(ed) +  8, 4, (Bit8u*) &cur_td.dword2);
         DEV_MEM_READ_PHYSICAL(ED_GET_HEADP(ed) + 12, 4, (Bit8u*) &cur_td.dword3);
         BX_DEBUG(("Head: 0x%08X  Tail: 0x%08X  Next: 0x%08X", ED_GET_HEADP(ed), ED_GET_TAILP(ed), TD_GET_NEXTTD(&cur_td)));
-        if (process_td(&cur_td, ed)) {
+        if (TD_GET_T(&cur_td) & 2)
+          toggle = TD_GET_T(&cur_td) & 1;
+        int td_ret = process_td(&cur_td, ed, toggle);
+        if (td_ret == 0) {
+          // USB_RET_ASYNC or already processed TD, so done with ED (for now)
+          break;
+        } else if (td_ret > 0) {
+          // Processed TD with no error
           const Bit32u temp = ED_GET_HEADP(ed);
           if (TD_GET_CC(&cur_td) < NotAccessed) {
             ED_SET_HEADP(ed, TD_GET_NEXTTD(&cur_td));
@@ -1185,11 +1194,15 @@ bool bx_usb_ohci_c::process_ed(struct OHCI_ED *ed, const Bit32u ed_address)
             if (TD_GET_DI(&cur_td) < BX_OHCI_THIS hub.ohci_done_count)
               BX_OHCI_THIS hub.ohci_done_count = TD_GET_DI(&cur_td);
           }
+          ED_SET_C(ed, toggle ^ 1);
           DEV_MEM_WRITE_PHYSICAL(temp,      4, (Bit8u*) &cur_td.dword0);
           DEV_MEM_WRITE_PHYSICAL(temp +  4, 4, (Bit8u*) &cur_td.dword1);
           DEV_MEM_WRITE_PHYSICAL(temp +  8, 4, (Bit8u*) &cur_td.dword2);
-        } else
+        } else {
+          // Processed TD with error, advance the toggle anyway
+          ED_SET_C(ed, toggle ^ 1);
           break;
+        }
       }
     }
     DEV_MEM_WRITE_PHYSICAL(ed_address +  8, 4, (Bit8u*) &ed->dword2);
@@ -1252,10 +1265,10 @@ int bx_usb_ohci_c::event_handler(int event, void *ptr, int port)
   return ret;
 }
 
-bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
+int bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed, int toggle)
 {
   unsigned pid = 0, len = 0, len1, len2;
-  bool ret2 = 1;
+  int ret2 = 1;
   int ilen, ret = 0;
   Bit32u addr;
   Bit16u maxlen = 0;
@@ -1320,7 +1333,7 @@ bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
     p->packet.devep = ED_GET_EN(ed);
     p->packet.speed = ED_GET_S(ed) ? USB_SPEED_LOW : USB_SPEED_FULL;
 #if HANDLE_TOGGLE_CONTROL
-    p->packet.toggle = (TD_GET_T(td) & 2) ? ((TD_GET_T(td) & 1) > 0) : (ED_GET_C(ed) > 0);
+    p->packet.toggle = toggle;
 #endif
     p->packet.complete_cb = ohci_event_handler;
     p->packet.complete_dev = this;
@@ -1383,11 +1396,6 @@ bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
         TD_SET_CBP(td, TD_GET_CBP(td) + ret);
       }
     }
-    if (TD_GET_T(td) & 2) {
-      TD_SET_T(td, TD_GET_T(td) ^ 1);
-      ED_SET_C(ed, (TD_GET_T(td) & 1));
-    } else
-      ED_SET_C(ed, (ED_GET_C(ed) ^ 1));
     if ((pid != USB_TOKEN_OUT) || (ret == (int) len)) {
       TD_SET_CC(td, NoError);
       TD_SET_EC(td, 0);
@@ -1401,7 +1409,6 @@ bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
           TD_SET_CC(td, DeviceNotResponding);
           break;
         case USB_RET_NAK:    // (-2)
-          ret2 = 0;
           break;
         case USB_RET_STALL:  // (-3)
           TD_SET_CC(td, Stall);
@@ -1413,6 +1420,7 @@ bool bx_usb_ohci_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed)
           BX_ERROR(("Unknown error returned: %d", ret));
           break;
       }
+      ret2 = ret;
     }
     if (ret != USB_RET_NAK) {
       TD_SET_EC(td, 3);
