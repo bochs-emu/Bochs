@@ -86,9 +86,7 @@ private:
   void get_ext_cpuid_leaf_A(cpuid_function_t *leaf) const;
 #endif
 
-  Bit32u get_std2_cpuid_features(void) const;
   Bit32u get_ext2_cpuid_features(void) const;
-  Bit32u get_extended_cpuid_features(void) const;
 #endif
 
   Bit32u get_cpu_version_information(void) const;

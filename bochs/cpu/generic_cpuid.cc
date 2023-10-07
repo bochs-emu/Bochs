@@ -207,13 +207,24 @@ void bx_generic_cpuid_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 
   // ECX: Extended Feature Flags
 #if BX_CPU_LEVEL >= 6
-  leaf->ecx = get_extended_cpuid_features();
+  leaf->ecx = get_std_cpuid_leaf_1_ecx();
 #else
   leaf->ecx = 0;
 #endif
 
   // EDX: Standard Feature Flags
-  leaf->edx = get_std_cpuid_features();
+  Bit32u extra = 0;
+  if (BX_CPU_VENDOR_INTEL) {
+    extra = BX_CPUID_STD1_EDX_DEBUG_STORE |
+            BX_CPUID_STD1_EDX_ACPI |
+            BX_CPUID_STD1_EDX_SELF_SNOOP |
+#if BX_SUPPORT_SMP
+            BX_CPUID_STD1_EDX_HT |
+#endif
+            BX_CPUID_STD1_EDX_THERMAL_MONITOR |
+            BX_CPUID_STD1_EDX_PBE;
+  }
+  leaf->edx = get_std_cpuid_leaf_1_edx(extra);
 }
 
 #if BX_CPU_LEVEL >= 6
@@ -410,7 +421,7 @@ void bx_generic_cpuid_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   //     [29:29] Long Mode
   //     [30:30] AMD 3DNow! Extensions
   //     [31:31] AMD 3DNow! Instructions
-  leaf->edx = get_std2_cpuid_features();
+  leaf->edx = BX_CPU_VENDOR_INTEL ? get_ext_cpuid_leaf_1_edx_intel() : get_ext_cpuid_leaf_1_edx_amd();
 }
 
 // leaf 0x80000002 //
@@ -1000,290 +1011,6 @@ Bit32u bx_generic_cpuid_t::get_cpu_version_information(void) const
 }
 
 #if BX_CPU_LEVEL >= 6
-
-/* Get CPU extended feature flags. */
-Bit32u bx_generic_cpuid_t::get_extended_cpuid_features(void) const
-{
-  // [0:0]   SSE3: SSE3 Instructions
-  // [1:1]   PCLMULQDQ Instruction support
-  // [2:2]   DTES64: 64-bit DS area
-  // [3:3]   MONITOR/MWAIT support
-  // [4:4]   DS-CPL: CPL qualified debug store
-  // [5:5]   VMX: Virtual Machine Technology
-  // [6:6]   SMX: Secure Virtual Machine Technology
-  // [7:7]   EST: Enhanced Intel SpeedStep Technology
-  // [8:8]   TM2: Thermal Monitor 2
-  // [9:9]   SSSE3: SSSE3 Instructions
-  // [10:10] CNXT-ID: L1 context ID
-  // [11:11] reserved
-  // [12:12] FMA Instructions support
-  // [13:13] CMPXCHG16B: CMPXCHG16B instruction support
-  // [14:14] xTPR update control
-  // [15:15] PDCM - Perfon and Debug Capability MSR
-  // [16:16] reserved
-  // [17:17] PCID: Process Context Identifiers
-  // [18:18] DCA - Direct Cache Access
-  // [19:19] SSE4.1 Instructions
-  // [20:20] SSE4.2 Instructions
-  // [21:21] X2APIC
-  // [22:22] MOVBE instruction
-  // [23:23] POPCNT instruction
-  // [24:24] TSC Deadline
-  // [25:25] AES Instructions
-  // [26:26] XSAVE extensions support
-  // [27:27] OSXSAVE support
-  // [28:28] AVX extensions support
-  // [29:29] AVX F16C - Float16 conversion support
-  // [30:30] RDRAND instruction
-  // [31:31] reserved
-
-  Bit32u features = 0;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SSE3))
-    features |= BX_CPUID_STD1_ECX_SSE3;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AES_PCLMULQDQ))
-    features |= BX_CPUID_STD1_ECX_PCLMULQDQ;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_MONITOR_MWAIT))
-    features |= BX_CPUID_STD1_ECX_MONITOR_MWAIT;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_VMX))
-    features |= BX_CPUID_STD1_ECX_VMX;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SSSE3))
-    features |= BX_CPUID_STD1_ECX_SSSE3;
-
-#if BX_SUPPORT_X86_64
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_LONG_MODE))
-    features |= BX_CPUID_STD1_ECX_CMPXCHG16B;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PCID))
-    features |= BX_CPUID_STD1_ECX_PCID;
-#endif
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SSE4_1))
-    features |= BX_CPUID_STD1_ECX_SSE4_1;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SSE4_2))
-    features |= BX_CPUID_STD1_ECX_SSE4_2;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_X2APIC))
-    features |= BX_CPUID_STD1_ECX_X2APIC;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_MOVBE))
-    features |= BX_CPUID_STD1_ECX_MOVBE;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_POPCNT))
-    features |= BX_CPUID_STD1_ECX_POPCNT;
-
-  // support for AES
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AES_PCLMULQDQ))
-    features |= BX_CPUID_STD1_ECX_AES;
-
-  // support XSAVE extensions
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_XSAVE)) {
-    features |= BX_CPUID_STD1_ECX_XSAVE;
-    if (cpu->cr4.get_OSXSAVE())
-      features |= BX_CPUID_STD1_ECX_OSXSAVE;
-  }
-
-#if BX_SUPPORT_AVX
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX))
-    features |= BX_CPUID_STD1_ECX_AVX;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX_F16C))
-    features |= BX_CPUID_STD1_ECX_AVX_F16C;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX_FMA))
-    features |= BX_CPUID_STD1_ECX_FMA;
-#endif
-
-  return features;
-}
-
-#endif
-
-/* Get CPU feature flags. Returned by CPUID functions 1 and 80000001.  */
-Bit32u bx_generic_cpuid_t::get_std_cpuid_features(void) const
-{
-  //   [0:0]   FPU on chip
-  //   [1:1]   VME: Virtual-8086 Mode enhancements
-  //   [2:2]   DE: Debug Extensions (I/O breakpoints)
-  //   [3:3]   PSE: Page Size Extensions
-  //   [4:4]   TSC: Time Stamp Counter
-  //   [5:5]   MSR: RDMSR and WRMSR support
-  //   [6:6]   PAE: Physical Address Extensions
-  //   [7:7]   MCE: Machine Check Exception
-  //   [8:8]   CXS: CMPXCHG8B instruction
-  //   [9:9]   APIC: APIC on Chip
-  //   [10:10] Reserved
-  //   [11:11] SYSENTER/SYSEXIT support
-  //   [12:12] MTRR: Memory Type Range Reg
-  //   [13:13] PGE/PTE Global Bit
-  //   [14:14] MCA: Machine Check Architecture
-  //   [15:15] CMOV: Cond Mov/Cmp Instructions
-  //   [16:16] PAT: Page Attribute Table
-  //   [17:17] PSE-36: Physical Address Extensions
-  //   [18:18] PSN: Processor Serial Number
-  //   [19:19] CLFLUSH: CLFLUSH Instruction support
-  //   [20:20] Reserved
-  //   [21:21] DS: Debug Store
-  //   [22:22] ACPI: Thermal Monitor and Software Controlled Clock Facilities
-  //   [23:23] MMX Technology
-  //   [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
-  //   [25:25] SSE: SSE Extensions
-  //   [26:26] SSE2: SSE2 Extensions
-  //   [27:27] Self Snoop
-  //   [28:28] Hyper Threading Technology
-  //   [29:29] TM: Thermal Monitor
-  //   [30:30] Reserved
-  //   [31:31] PBE: Pending Break Enable
-
-  Bit32u features = 0;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_X87))
-    features |= BX_CPUID_STD1_EDX_X87;
-
-#if BX_CPU_LEVEL >= 5
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PENTIUM)) {
-    // Pentium only features
-    features |= BX_CPUID_STD1_EDX_TSC;
-    features |= BX_CPUID_STD1_EDX_MSR;
-    // support Machine Check
-    features |= BX_CPUID_STD1_EDX_MCE | BX_CPUID_STD1_EDX_MCA;
-    features |= BX_CPUID_STD1_EDX_CMPXCHG8B;
-  }
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_VME))
-    features |= BX_CPUID_STD1_EDX_VME;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_DEBUG_EXTENSIONS))
-    features |= BX_CPUID_STD1_EDX_DEBUG_EXTENSIONS;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PSE))
-    features |= BX_CPUID_STD1_EDX_PSE;
-#endif
-
-#if BX_SUPPORT_APIC
-  // if MSR_APICBASE APIC Global Enable bit has been cleared,
-  // the CPUID feature flag for the APIC is set to 0.
-  if (cpu->msr.apicbase & 0x800)
-    features |= BX_CPUID_STD1_EDX_APIC; // APIC on chip
-#endif
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SYSENTER_SYSEXIT))
-    features |= BX_CPUID_STD1_EDX_SYSENTER_SYSEXIT;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CLFLUSH))
-    features |= BX_CPUID_STD1_EDX_CLFLUSH;
-
-#if BX_CPU_LEVEL >= 5
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_MMX))
-    features |= BX_CPUID_STD1_EDX_MMX;
-#endif
-
-#if BX_CPU_LEVEL >= 6
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_P6)) {
-    features |= BX_CPUID_STD1_EDX_CMOV;
-    features |= BX_CPUID_STD1_EDX_ACPI;
-  }
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_MTRR))
-    features |= BX_CPUID_STD1_EDX_MTRR;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PAT))
-    features |= BX_CPUID_STD1_EDX_PAT;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PAE))
-    features |= BX_CPUID_STD1_EDX_PAE;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PGE))
-    features |= BX_CPUID_STD1_EDX_GLOBAL_PAGES;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PSE36))
-    features |= BX_CPUID_STD1_EDX_PSE36;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SSE))
-    features |= BX_CPUID_STD1_EDX_FXSAVE_FXRSTOR | BX_CPUID_STD1_EDX_SSE;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SSE2))
-    features |= BX_CPUID_STD1_EDX_SSE2;
-
-  if (BX_CPU_VENDOR_INTEL)
-    features |= BX_CPUID_STD1_EDX_SELF_SNOOP;
-#endif
-
-#if BX_SUPPORT_SMP
-  features |= BX_CPUID_STD1_EDX_HT;
-#endif
-
-  return features;
-}
-
-#if BX_CPU_LEVEL >= 6
-
-/* Get CPU feature flags. Returned by CPUID function 80000001 in EDX register */
-Bit32u bx_generic_cpuid_t::get_std2_cpuid_features(void) const
-{
-  // Many of the bits in EDX are the same as EAX [*] for AMD
-  // [*] [0:0]   FPU on chip
-  // [*] [1:1]   VME: Virtual-8086 Mode enhancements
-  // [*] [2:2]   DE: Debug Extensions (I/O breakpoints)
-  // [*] [3:3]   PSE: Page Size Extensions
-  // [*] [4:4]   TSC: Time Stamp Counter
-  // [*] [5:5]   MSR: RDMSR and WRMSR support
-  // [*] [6:6]   PAE: Physical Address Extensions
-  // [*] [7:7]   MCE: Machine Check Exception
-  // [*] [8:8]   CXS: CMPXCHG8B instruction
-  // [*] [9:9]   APIC: APIC on Chip
-  //     [10:10] Reserved
-  //     [11:11] SYSCALL/SYSRET support
-  // [*] [12:12] MTRR: Memory Type Range Reg
-  // [*] [13:13] PGE/PTE Global Bit
-  // [*] [14:14] MCA: Machine Check Architecture
-  // [*] [15:15] CMOV: Cond Mov/Cmp Instructions
-  // [*] [16:16] PAT: Page Attribute Table
-  // [*] [17:17] PSE-36: Physical Address Extensions
-  //     [18:19] Reserved
-  //     [20:20] No-Execute page protection
-  //     [21:21] Reserved
-  //     [22:22] AMD MMX Extensions
-  // [*] [23:23] MMX Technology
-  // [*] [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
-  //     [25:25] Fast FXSAVE/FXRSTOR mode support
-  //     [26:26] 1G paging support
-  //     [27:27] Support RDTSCP Instruction
-  //     [28:28] Reserved
-  //     [29:29] Long Mode
-  //     [30:30] AMD 3DNow! Extensions
-  //     [31:31] AMD 3DNow! Instructions
-  Bit32u features = BX_CPU_VENDOR_INTEL ? 0 : get_std_cpuid_features();
-  features &= 0x0183F3FF;
-#if BX_SUPPORT_3DNOW
-  // only AMD is interesting in AMD MMX extensions
-  features |= BX_CPUID_EXT1_EDX_AMD_MMX_EXT | BX_CPUID_EXT1_EDX_3DNOW_EXT | BX_CPUID_EXT1_EDX_3DNOW;
-#endif
-#if BX_SUPPORT_X86_64
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_LONG_MODE)) {
-    features |= BX_CPUID_EXT1_EDX_LONG_MODE;
-
-    if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_RDTSCP))
-      features |= BX_CPUID_EXT1_EDX_RDTSCP;
-    if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_NX))
-      features |= BX_CPUID_EXT1_EDX_NX;
-    if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_FFXSR))
-      features |= BX_CPUID_EXT1_EDX_FFXSR;
-    if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_1G_PAGES))
-      features |= BX_CPUID_EXT1_EDX_1G_PAGES;
-
-    if (cpu->long64_mode())
-      features |= BX_CPUID_EXT1_EDX_SYSCALL_SYSRET;
-  }
-#endif
-
-  return features;
-}
 
 /* Get CPU feature flags. Returned by CPUID function 80000001 in ECX register */
 Bit32u bx_generic_cpuid_t::get_ext2_cpuid_features(void) const
