@@ -56,6 +56,13 @@ AVX_3OP_VNNI(VPDPBSUDS_VdqHdqWdqR, xmm_pdpbsuds)
 AVX_3OP_VNNI(VPDPBUUD_VdqHdqWdqR, xmm_pdpbuud)
 AVX_3OP_VNNI(VPDPBUUDS_VdqHdqWdqR, xmm_pdpbuuds)
 
+AVX_3OP_VNNI(VPDPWSUD_VdqHdqWdqR, xmm_pdpwsud)
+AVX_3OP_VNNI(VPDPWSUDS_VdqHdqWdqR, xmm_pdpwsuds)
+AVX_3OP_VNNI(VPDPWUSD_VdqHdqWdqR, xmm_pdpwusd)
+AVX_3OP_VNNI(VPDPWUSDS_VdqHdqWdqR, xmm_pdpwusds)
+AVX_3OP_VNNI(VPDPWUUD_VdqHdqWdqR, xmm_pdpwuud)
+AVX_3OP_VNNI(VPDPWUUDS_VdqHdqWdqR, xmm_pdpwuuds)
+
 #endif
 
 #if BX_SUPPORT_EVEX

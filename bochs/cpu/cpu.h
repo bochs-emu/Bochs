@@ -3149,6 +3149,14 @@ public: // for now...
   BX_SMF void VPDPBUUD_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VPDPBUUDS_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
+  /* AVX encoded VNNI INT16 instructions */
+  BX_SMF void VPDPWSUD_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPDPWSUDS_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPDPWUSD_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPDPWUSDS_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPDPWUUD_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPDPWUUDS_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
   // AVX512 OPMASK instructions (VEX encoded)
   BX_SMF void KADDB_KGbKHbKEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void KANDB_KGbKHbKEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

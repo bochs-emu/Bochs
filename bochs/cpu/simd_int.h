@@ -1879,4 +1879,73 @@ BX_CPP_INLINE void xmm_pdpwssds(BxPackedXmmRegister *dst, BxPackedXmmRegister *o
   }
 }
 
+BX_CPP_INLINE void xmm_pdpwsud(BxPackedXmmRegister *dst, BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+{
+  for(unsigned n=0; n<4; n++)
+  {
+    Bit32s p1_dword = (Bit32s) op1->xmm16s(n*2)   * (Bit32u) op2->xmm16u(n*2);
+    Bit32s p2_dword = (Bit32s) op1->xmm16s(n*2+1) * (Bit32u) op2->xmm16u(n*2+1);
+
+    dst->xmm32s(n) += (p1_dword + p2_dword);
+  }
+}
+
+BX_CPP_INLINE void xmm_pdpwsuds(BxPackedXmmRegister *dst, BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+{
+  for(unsigned n=0; n<4; n++)
+  {
+    Bit32s p1_dword = (Bit32s) op1->xmm16s(n*2)   * (Bit32u) op2->xmm16u(n*2);
+    Bit32s p2_dword = (Bit32s) op1->xmm16s(n*2+1) * (Bit32u) op2->xmm16u(n*2+1);
+
+    Bit64s result = (Bit64s) dst->xmm32s(n) + (p1_dword + p2_dword);
+    dst->xmm32s(n) = SaturateQwordSToDwordS(result);
+  }
+}
+
+BX_CPP_INLINE void xmm_pdpwusd(BxPackedXmmRegister *dst, BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+{
+  for(unsigned n=0; n<4; n++)
+  {
+    Bit32s p1_dword = (Bit32u) op1->xmm16u(n*2)   * (Bit32s) op2->xmm16s(n*2);
+    Bit32s p2_dword = (Bit32u) op1->xmm16u(n*2+1) * (Bit32s) op2->xmm16s(n*2+1);
+
+    dst->xmm32s(n) += (p1_dword + p2_dword);
+  }
+}
+
+BX_CPP_INLINE void xmm_pdpwusds(BxPackedXmmRegister *dst, BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+{
+  for(unsigned n=0; n<4; n++)
+  {
+    Bit32s p1_dword = (Bit32u) op1->xmm16u(n*2)   * (Bit32s) op2->xmm16s(n*2);
+    Bit32s p2_dword = (Bit32u) op1->xmm16u(n*2+1) * (Bit32s) op2->xmm16s(n*2+1);
+
+    Bit64s result = (Bit64s) dst->xmm32s(n) + (p1_dword + p2_dword);
+    dst->xmm32s(n) = SaturateQwordSToDwordS(result);
+  }
+}
+
+BX_CPP_INLINE void xmm_pdpwuud(BxPackedXmmRegister *dst, BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+{
+  for(unsigned n=0; n<4; n++)
+  {
+    Bit32u p1_dword = (Bit32u) op1->xmm16u(n*2)   * (Bit32u) op2->xmm16u(n*2);
+    Bit32u p2_dword = (Bit32u) op1->xmm16u(n*2+1) * (Bit32u) op2->xmm16u(n*2+1);
+
+    dst->xmm32u(n) += (p1_dword + p2_dword);
+  }
+}
+
+BX_CPP_INLINE void xmm_pdpwuuds(BxPackedXmmRegister *dst, BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2)
+{
+  for(unsigned n=0; n<4; n++)
+  {
+    Bit32u p1_dword = (Bit32u) op1->xmm16u(n*2)   * (Bit32u) op2->xmm16u(n*2);
+    Bit32u p2_dword = (Bit32u) op1->xmm16u(n*2+1) * (Bit32u) op2->xmm16u(n*2+1);
+
+    Bit64u result = (Bit64u) dst->xmm32u(n) + p1_dword + p2_dword;
+    dst->xmm32u(n) = SaturateQwordUToDwordU(result);
+  }
+}
+
 #endif
