@@ -97,6 +97,7 @@ static const char *cpu_feature_name[] =
   "smap",                   // BX_ISA_SMAP
   "rdseed",                 // BX_ISA_RDSEED
   "sha",                    // BX_ISA_SHA
+  "sha512",                 // BX_ISA_SHA512
   "gfni",                   // BX_ISA_GFNI
   "sm3",                    // BX_ISA_SM3
   "sm4",                    // BX_ISA_SM4
