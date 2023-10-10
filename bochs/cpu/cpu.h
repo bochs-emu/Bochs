@@ -2581,17 +2581,6 @@ public: // for now...
   BX_SMF void GF2P8AFFINEQB_VdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void GF2P8MULB_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   /* GFNI instructions */
-
-  /* SM3 instructions */
-  BX_SMF void VSM3MSG1_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VSM3MSG2_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VSM3RNDS2_VdqHdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  /* SM3 instructions */
-
-  /* SM4 instructions */
-  BX_SMF void VSM4KEY4_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VSM4RNDS4_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  /* SM4 instructions */
 #endif
 
   /* VMX instructions */
@@ -3130,6 +3119,20 @@ public: // for now...
   BX_SMF void VGF2P8AFFINEINVQB_VdqHdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VGF2P8AFFINEQB_VdqHdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VGF2P8MULB_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  /* SHA512 instructions: VEX encoded */
+  BX_SMF void VSHA512MSG1_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VSHA512MSG2_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VSHA512RNDS2_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  /* SM3 instructions: VEX encoded */
+  BX_SMF void VSM3MSG1_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VSM3MSG2_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VSM3RNDS2_VdqHdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  /* SM4 instructions: VEX encoded */
+  BX_SMF void VSM4KEY4_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VSM4RNDS4_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   /* AVX encoded VNNI instructions */
   BX_SMF void VPDPBUSD_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
