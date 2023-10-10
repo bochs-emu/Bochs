@@ -2435,6 +2435,15 @@ bx_define_opcode(BX_IA_VPDPBUUD_VdqHdqWdq, "vpdpbuud", "vpdpbuud", &BX_CPU_C::LO
 bx_define_opcode(BX_IA_VPDPBUUDS_VdqHdqWdq, "vpdpbuuds", "vpdpbuuds", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::VPDPBUUDS_VdqHdqWdqR, BX_ISA_AVX_VNNI_INT8, OP_Vdq, OP_Hdq, OP_Wdq, OP_NONE, BX_PREPARE_AVX)
 // AVX VNNI INT8
 
+// AVX VNNI INT16
+bx_define_opcode(BX_IA_VPDPWSUD_VdqHdqWdq, "vpdpwsud", "vpdpwsud", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::VPDPWSUD_VdqHdqWdqR, BX_ISA_AVX_VNNI_INT16, OP_Vdq, OP_Hdq, OP_Wdq, OP_NONE, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_VPDPWSUDS_VdqHdqWdq, "vpdpwsuds", "vpdpwsuds", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::VPDPWSUDS_VdqHdqWdqR, BX_ISA_AVX_VNNI_INT16, OP_Vdq, OP_Hdq, OP_Wdq, OP_NONE, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_VPDPWUSD_VdqHdqWdq, "vpdpwusd", "vpdpwusd", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::VPDPWUSD_VdqHdqWdqR, BX_ISA_AVX_VNNI_INT16, OP_Vdq, OP_Hdq, OP_Wdq, OP_NONE, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_VPDPWUSDS_VdqHdqWdq, "vpdpwusds", "vpdpwusds", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::VPDPWUSDS_VdqHdqWdqR, BX_ISA_AVX_VNNI_INT16, OP_Vdq, OP_Hdq, OP_Wdq, OP_NONE, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_VPDPWUUD_VdqHdqWdq, "vpdpwuud", "vpdpwuud", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::VPDPWUUD_VdqHdqWdqR, BX_ISA_AVX_VNNI_INT16, OP_Vdq, OP_Hdq, OP_Wdq, OP_NONE, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_VPDPWUUDS_VdqHdqWdq, "vpdpwuuds", "vpdpwuuds", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::VPDPWUUDS_VdqHdqWdqR, BX_ISA_AVX_VNNI_INT16, OP_Vdq, OP_Hdq, OP_Wdq, OP_NONE, BX_PREPARE_AVX)
+// AVX VNNI INT16
+
 // BMI1
 bx_define_opcode(BX_IA_ANDN_GdBdEd, "andn", "andnl", &BX_CPU_C::LOAD_Ed, &BX_CPU_C::ANDN_GdBdEdR, BX_ISA_BMI1, OP_Gd, OP_Bd, OP_Ed, OP_NONE, 0)
 bx_define_opcode(BX_IA_ANDN_GqBqEq, "andn", "andnq", &BX_CPU_C::LOAD_Eq, &BX_CPU_C::ANDN_GqBqEqR, BX_ISA_BMI1, OP_Gq, OP_Bq, OP_Eq, OP_NONE, 0)
