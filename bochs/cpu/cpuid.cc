@@ -97,6 +97,7 @@ static const char *cpu_feature_name[] =
   "smap",                   // BX_ISA_SMAP
   "rdseed",                 // BX_ISA_RDSEED
   "sha",                    // BX_ISA_SHA
+  "sha512",                 // BX_ISA_SHA512
   "gfni",                   // BX_ISA_GFNI
   "sm3",                    // BX_ISA_SM3
   "sm4",                    // BX_ISA_SM4
@@ -114,9 +115,10 @@ static const char *cpu_feature_name[] =
   "avx512vnni",             // BX_ISA_AVX512_VNNI
   "avx512bitalg",           // BX_ISA_AVX512_BITALG
   "avx512vp2intersect",     // BX_ISA_AVX512_VP2INTERSECT
-  "avx_vnni",               // BX_ISA_AVX_VNNI
   "avx_ifma",               // BX_ISA_AVX_IFMA
+  "avx_vnni",               // BX_ISA_AVX_VNNI
   "avx_vnni_int8",          // BX_ISA_AVX_VNNI_INT8
+  "avx_vnni_int16",         // BX_ISA_AVX_VNNI_INT16
   "xapic",                  // BX_ISA_XAPIC
   "x2apic",                 // BX_ISA_X2APIC
   "xapicext",               // BX_ISA_XAPICEXT

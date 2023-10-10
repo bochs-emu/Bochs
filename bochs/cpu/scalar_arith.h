@@ -228,7 +228,7 @@ BX_CPP_INLINE Bit64u rol64(Bit64u v64, unsigned count)
   return (v64 << count) | (v64 >> (64 - count));
 }
 
-BX_CPP_INLINE Bit32u ror64(Bit32u v64, unsigned count)
+BX_CPP_INLINE Bit64u ror64(Bit64u v64, unsigned count)
 {
   return (v64 >> count) | (v64 << (64 - count));
 }
