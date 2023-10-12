@@ -773,6 +773,53 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_1_edx(Bit32u extra) const
   return edx;
 }
 
+// Most of the bits in ECX are reserved for Intel
+Bit32u bx_cpuid_t::get_ext_cpuid_leaf_1_ecx_intel(Bit32u extra) const
+{
+  Bit32u ecx = extra;
+
+  // * [0:0]   LAHF/SAHF instructions support in 64-bit mode
+  //   [1:1]   CMP_Legacy: Core multi-processing legacy mode (AMD)
+  //   [2:2]   SVM: Secure Virtual Machine (AMD)
+  //   [3:3]   Extended APIC Space
+  //   [4:4]   AltMovCR8: LOCK MOV CR0 means MOV CR8
+  // * [5:5]   LZCNT: LZCNT instruction support
+  //   [6:6]   SSE4A: SSE4A Instructions support
+  //   [7:7]   Misaligned SSE support
+  // * [8:8]   PREFETCHW: PREFETCHW instruction support - can be enabled through extra
+  //   [9:9]   OSVW: OS visible workarounds (AMD)
+  //   [10:10] IBS: Instruction based sampling
+  //   [11:11] XOP: Extended Operations Support and XOP Prefix
+  //   [12:12] SKINIT support
+  //   [13:13] WDT: Watchdog timer support
+  //   [14:14] Reserved
+  //   [15:15] LWP: Light weight profiling
+  //   [16:16] FMA4: Four-operand FMA instructions support
+  //   [17:17] Reserved
+  //   [18:18] Reserved
+  //   [19:19] NodeId: Indicates support for NodeId MSR (0xc001100c)
+  //   [20:20] Reserved
+  //   [21:21] TBM: trailing bit manipulation instructions support
+  //   [22:22] Topology extensions support
+  //   [23:23] PerfCtrExtCore: core perf counter extensions support
+  //   [24:24] PerfCtrExtNB: NB perf counter extensions support
+  //   [25:25] Reserved
+  //   [26:26] Data breakpoint extension. Indicates support for MSR 0xC0011027 and MSRs 0xC001101[B:9]
+  //   [27:27] Performance time-stamp counter. Indicates support for MSR 0xC0010280
+  //   [28:28] PerfCtrExtL2I: L2I performance counter extensions support
+  //   [31:29] Reserved
+
+#if BX_SUPPORT_X86_64
+  if (is_cpu_extension_supported(BX_ISA_LONG_MODE))
+    ecx |= BX_CPUID_EXT1_ECX_LAHF_SAHF;
+#endif
+
+  if (is_cpu_extension_supported(BX_ISA_LZCNT))
+    ecx |= BX_CPUID_EXT1_ECX_LZCNT;
+
+  return ecx;
+}
+
 // Most of the bits in EDX are reserved for Intel
 Bit32u bx_cpuid_t::get_ext_cpuid_leaf_1_edx_intel() const
 {
@@ -1215,7 +1262,38 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_eax(Bit32u extra) const
   //   [31:28]  reserved
 
   return eax;
-};
+}
+
+// leaf 0x00000007, subleaf 1 - EDX
+Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_edx(Bit32u extra) const
+{
+  Bit32u edx = extra;
+
+  // CPUID defines - features CPUID[0x00000007].EDX  [subleaf 1]
+  // -----------------------------
+  //   [3:0]    reserved
+
+  //   [4:4]    AVX_VNNI_INT8 support
+  if (is_cpu_extension_supported(BX_ISA_AVX_VNNI_INT8))
+    edx |= BX_CPUID_STD7_SUBLEAF1_EDX_AVX_VNNI_INT8;
+
+  //   [5:5]    AVX_NE_CONVERT instructions
+  //   [7:6]    reserved
+  //   [8:8]    AMX-COMPLEX instructions
+  //   [9:9]    reserved
+
+  //   [10:10]  AVX-VNNI-INT16 instructions
+  if (is_cpu_extension_supported(BX_ISA_AVX_VNNI_INT16))
+    edx |= BX_CPUID_STD7_SUBLEAF1_EDX_AVX_VNNI_INT16;
+
+  //   [13:11]  reserved
+  //   [14:14]  PREFETCHITI: PREFETCHIT0/T1 instruction
+  //   [16:15]  reserved
+  //   [17:17]  UIRET sets UIF to the RFLAGS[1] image loaded from the stack
+  //   [18:18]  CET_SSS
+
+  return edx;
+}
 
 // leaf 0x80000008 - return Intel defaults //
 void bx_cpuid_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const

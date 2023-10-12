@@ -658,12 +658,8 @@ void corei7_skylake_x_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [26:26] Data breakpoint extension. Indicates support for MSR 0xC0011027 and MSRs 0xC001101[B:9]
   //   [27:27] Performance time-stamp counter. Indicates support for MSR 0xC0010280
   //   [28:28] PerfCtrExtL2I: L2I performance counter extensions support
-  //   [29:29] Reserved
-  //   [30:30] Reserved
-  //   [31:31] Reserved
-  leaf->ecx = BX_CPUID_EXT1_ECX_LAHF_SAHF |
-              BX_CPUID_EXT1_ECX_LZCNT |
-              BX_CPUID_EXT1_ECX_PREFETCHW;
+  //   [31:29] Reserved
+  leaf->ecx = get_ext_cpuid_leaf_1_ecx_intel(BX_CPUID_EXT1_ECX_PREFETCHW);
 
   // EDX:
   //    [10:0] Reserved for Intel

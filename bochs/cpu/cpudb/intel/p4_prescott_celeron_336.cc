@@ -275,7 +275,6 @@ void p4_prescott_celeron_336_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) con
   //   [12:12] SKINIT support
   //   [13:13] WDT: Watchdog timer support
   //   [31:14] reserved
-
   leaf->ecx = 0;
 
   // EDX:

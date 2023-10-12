@@ -63,7 +63,7 @@ void p4_willamette_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_
     get_ext_cpuid_leaf_0(leaf);
     return;
   case 0x80000001:
-    get_ext_cpuid_leaf_1(leaf);
+    get_reserved_leaf(leaf);
     return;
   case 0x80000002:
   case 0x80000003:
@@ -176,47 +176,6 @@ void p4_willamette_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
   // EDX: reserved
   // ECX: reserved
   get_leaf_0(0x80000004, NULL, leaf);
-}
-
-// leaf 0x80000001 //
-void p4_willamette_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
-{
-  // EAX:       CPU Version Information (reserved for Intel)
-  leaf->eax = 0;
-
-  // EBX:       Brand ID (reserved for Intel)
-  leaf->ebx = 0;
-
-  // ECX:
-  //   [0:0]   LAHF/SAHF instructions support in 64-bit mode
-  //   [1:1]   CMP_Legacy: Core multi-processing legacy mode (AMD)
-  //   [2:2]   SVM: Secure Virtual Machine (AMD)
-  //   [3:3]   Extended APIC Space
-  //   [4:4]   AltMovCR8: LOCK MOV CR0 means MOV CR8
-  //   [5:5]   LZCNT: LZCNT instruction support
-  //   [6:6]   SSE4A: SSE4A Instructions support
-  //   [7:7]   Misaligned SSE support
-  //   [8:8]   PREFETCHW: PREFETCHW instruction support
-  //   [9:9]   OSVW: OS visible workarounds (AMD)
-  //   [11:10] reserved
-  //   [12:12] SKINIT support
-  //   [13:13] WDT: Watchdog timer support
-  //   [31:14] reserved
-  leaf->ecx = 0;
-
-  // EDX:
-  //    [10:0] Reserved for Intel
-  //   [11:11] SYSCALL/SYSRET support
-  //   [19:12] Reserved for Intel
-  //   [20:20] No-Execute page protection
-  //   [25:21] Reserved
-  //   [26:26] 1G paging support
-  //   [27:27] Support RDTSCP Instruction
-  //   [28:28] Reserved
-  //   [29:29] Long Mode
-  //   [30:30] AMD 3DNow! Extensions
-  //   [31:31] AMD 3DNow! Instructions
-  leaf->edx = 0;
 }
 
 // leaf 0x80000002 //
