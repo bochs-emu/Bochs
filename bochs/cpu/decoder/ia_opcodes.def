@@ -862,7 +862,7 @@ bx_define_opcode(BX_IA_CPUID, "cpuid", "cpuid", NULL, &BX_CPU_C::CPUID, BX_ISA_4
 bx_define_opcode(BX_IA_BSWAP_RX, "bswap", "bswapw", NULL, &BX_CPU_C::BSWAP_RX, BX_ISA_486, OP_Ew, OP_NONE, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_BSWAP_ERX, "bswap", "bswapl", NULL, &BX_CPU_C::BSWAP_ERX, BX_ISA_486, OP_Ed, OP_NONE, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_INVD, "invd", "invd", NULL, &BX_CPU_C::INVD, BX_ISA_486, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
-bx_define_opcode(BX_IA_WBINVD, "wbinvd", "wbinvd", NULL, &BX_CPU_C::WBINVD, BX_ISA_486, OP_NONE, OP_NONE, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_WBINVD, "wbinvd", "wbinvd", NULL, &BX_CPU_C::WBINVD, BX_ISA_486, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
 bx_define_opcode(BX_IA_XADD_EbGb, "xadd", "xaddb", &BX_CPU_C::XADD_EbGbM, &BX_CPU_C::XADD_EbGbR, BX_ISA_486, OP_Eb, OP_Gb, OP_NONE, OP_NONE, BX_LOCKABLE)
 bx_define_opcode(BX_IA_XADD_EwGw, "xadd", "xaddw", &BX_CPU_C::XADD_EwGwM, &BX_CPU_C::XADD_EwGwR, BX_ISA_486, OP_Ew, OP_Gw, OP_NONE, OP_NONE, BX_LOCKABLE)
 bx_define_opcode(BX_IA_XADD_EdGd, "xadd", "xaddl", &BX_CPU_C::XADD_EdGdM, &BX_CPU_C::XADD_EdGdR, BX_ISA_486, OP_Ed, OP_Gd, OP_NONE, OP_NONE, BX_LOCKABLE)
@@ -1784,6 +1784,7 @@ bx_define_opcode(BX_IA_WRPKRU, "wrpkru", "wrpkru", &BX_CPU_C::BxError, &BX_CPU_C
 bx_define_opcode(BX_IA_RDPID_Ed, "rdpid", "rdpid", NULL, &BX_CPU_C::RDPID_Ed, BX_ISA_RDPID, OP_Ed, OP_NONE, OP_NONE, OP_NONE, 0)
 
 bx_define_opcode(BX_IA_WRMSRNS, "wrmsrns", "wrmsrns", NULL, &BX_CPU_C::WRMSR, BX_ISA_WRMSRNS, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
+bx_define_opcode(BX_IA_SERIALIZE, "serialize", "serialize", &BX_CPU_C::BxError, &BX_CPU_C::NOP, BX_ISA_SERIALIZE, OP_NONE, OP_NONE, OP_NONE, OP_NONE, 0)
 
 #if BX_SUPPORT_AVX && BX_CPU_LEVEL >= 6
 // AVX1/AVX2

@@ -586,13 +586,7 @@ void tigerlake_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *lea
     // * [29:29] Support for the IA32_ARCH_CAPABILITIES MSR
     // * [30:30] Support for the IA32_CORE_CAPABILITIES MSR
     // * [31:31] SSBD: Speculative Store Bypass Disable
-
-    leaf->edx = BX_CPUID_STD7_SUBLEAF0_EDX_FAST_SHORT_REP_MOV |
-                BX_CPUID_STD7_SUBLEAF0_EDX_AVX512_VPINTERSECT;
-
-#if BX_SUPPORT_CET
-    leaf->edx |= BX_CPUID_STD7_SUBLEAF0_EDX_CET_IBT;
-#endif
+    leaf->edx = get_std_cpuid_leaf_7_edx(BX_CPUID_STD7_SUBLEAF0_EDX_FAST_SHORT_REP_MOV);
 
     if (is_cpu_extension_supported(BX_ISA_SCA_MITIGATIONS))
       leaf->edx |= BX_CPUID_STD7_SUBLEAF0_EDX_MD_CLEAR |
