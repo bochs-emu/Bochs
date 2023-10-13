@@ -114,6 +114,7 @@ enum x86_feature_name {
   BX_ISA_AVX_VNNI,                /* AVX encoded VNNI Instructions */
   BX_ISA_AVX_VNNI_INT8,           /* AVX encoded VNNI-INT8 Instructions */
   BX_ISA_AVX_VNNI_INT16,          /* AVX encoded VNNI-INT16 Instructions */
+  BX_ISA_AVX_NE_CONVERT,          /* AVX-NE-CONVERT Instructions */
   BX_ISA_XAPIC,                   /* XAPIC support */
   BX_ISA_X2APIC,                  /* X2APIC support */
   BX_ISA_XAPIC_EXT,               /* XAPIC Extensions support */

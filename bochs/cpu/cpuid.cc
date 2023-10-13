@@ -119,6 +119,7 @@ static const char *cpu_feature_name[] =
   "avx_vnni",               // BX_ISA_AVX_VNNI
   "avx_vnni_int8",          // BX_ISA_AVX_VNNI_INT8
   "avx_vnni_int16",         // BX_ISA_AVX_VNNI_INT16
+  "avx_ne_convert",         // BX_ISA_AVX_NE_CONVERT
   "xapic",                  // BX_ISA_XAPIC
   "x2apic",                 // BX_ISA_X2APIC
   "xapicext",               // BX_ISA_XAPICEXT
@@ -1278,6 +1279,9 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_edx(Bit32u extra) const
     edx |= BX_CPUID_STD7_SUBLEAF1_EDX_AVX_VNNI_INT8;
 
   //   [5:5]    AVX_NE_CONVERT instructions
+  if (is_cpu_extension_supported(BX_ISA_AVX_NE_CONVERT))
+    edx |= BX_CPUID_STD7_SUBLEAF1_EDX_AVX_NE_CONVERT;
+
   //   [7:6]    reserved
   //   [8:8]    AMX-COMPLEX instructions
   //   [9:9]    reserved

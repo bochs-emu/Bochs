@@ -47,6 +47,7 @@ AVX_OBJS = \
 	avx_cvt.o \
 	avx_fma.o \
 	avx_ifma52.o \
+	avx_ne_convert.o \
 	avx2.o \
 	avx512.o \
 	avx512_broadcast.o \
@@ -251,6 +252,15 @@ avx_ifma52.o: avx_ifma52.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h
  ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
  ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../apic.h \
  ../xmm.h ../vmx.h ../svm.h ../cpuid.h ../stack.h ../access.h ../wide_int.h
+avx_ne_convert.o: avx_ne_convert.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
+ ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../cpu/decoder/decoder.h ../../gui/paramtree.h ../../logio.h \
+ ../../instrument/stubs/instrument.h ../cpu.h \
+ ../decoder/decoder.h ../i387.h ../fpu/softfloat.h ../fpu/tag_w.h \
+ ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
+ ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../apic.h \
+ ../xmm.h ../vmx.h ../svm.h ../cpuid.h ../stack.h ../access.h ../simd_int.h \
+ bf16.h
 avx_pfp.o: avx_pfp.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../gui/paramtree.h ../../logio.h \
