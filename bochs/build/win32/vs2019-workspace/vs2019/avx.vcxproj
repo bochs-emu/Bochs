@@ -118,6 +118,7 @@
     <ClCompile Include="..\cpu\avx\avx2.cc" />
     <ClCompile Include="..\cpu\avx\avx512.cc" />
     <ClCompile Include="..\cpu\avx\avx512_bitalg.cc" />
+    <ClCompile Include="..\cpu\avx\avx512_bf16.cc" />
     <ClCompile Include="..\cpu\avx\avx512_broadcast.cc" />
     <ClCompile Include="..\cpu\avx\avx512_cvt.cc" />
     <ClCompile Include="..\cpu\avx\avx512_fma.cc" />

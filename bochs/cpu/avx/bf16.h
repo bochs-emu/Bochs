@@ -28,7 +28,6 @@
 // BF16: s|eeeeeeee|mmmmmmmm
 //  F16: s|eeeee|mmmmmmmmmmm
 
-// TBD: how NaN should be handled, force qnan ?
 BX_CPP_INLINE float32 convert_bfloat16_to_fp32(bfloat16 op)
 {
   return Bit32u(op) << 16;

@@ -3398,6 +3398,10 @@ public: // for now...
   BX_SMF void VCVTPS2PH_MASK_WpsVpsIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VCVTPS2PH_MASK_WpsVpsIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
+  BX_SMF void VCVTNEPS2BF16_MASK_Vbf16WpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTNE2PS2BF16_MASK_Vbf16HpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VDPBF16PS_MASK_VpsHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
   BX_SMF void VPABSB_MASK_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VPABSW_MASK_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VPABSD_MASK_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

@@ -132,8 +132,8 @@ struct float_status_t
     int float_exception_flags;
     int float_exception_masks;
     int float_suppress_exception;
-    int float_nan_handling_mode;	/* flag register */
-    int flush_underflow_to_zero;	/* flag register */
+    int float_nan_handling_mode;    /* flag register */
+    int flush_underflow_to_zero;    /* flag register */
     int denormals_are_zeros;        /* flag register */
 };
 

@@ -32,10 +32,28 @@
 // BF16: s|eeeeeeee|mmmmmmmm
 //  F16: s|eeeee|mmmmmmmmmmm
 
-BX_CPP_INLINE float32 make_float32_from_float16(float16 op) { return op; } // TBD: NOT IMPLEMENTED YET, SUPPRESS ALL EXCEPTIONS MODE USED
+float_status_t prepare_ne_softfloat_status_helper()
+{
+  float_status_t status;
+
+  status.float_rounding_mode = float_round_nearest_even;
+  status.float_exception_flags = 0;
+  status.float_exception_masks = float_all_exceptions_mask;
+  status.float_suppress_exception = float_all_exceptions_mask;
+  status.float_nan_handling_mode = float_first_operand_nan;
+  status.flush_underflow_to_zero = true;
+  status.denormals_are_zeros = true;
+
+  return status;
+}
+
+static float32 convert_ne_fp16_to_fp32(float16 op)
+{
+  static float_status_t status = prepare_ne_softfloat_status_helper();
+  return float16_to_float32(op, status);
+}
 
 #include "bf16.h"
-
 #include "simd_int.h"
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VBCSTNEBF162PS_VpsWwM(bxInstruction_c *i)
@@ -61,7 +79,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VBCSTNESH2PS_VpsWshM(bxInstruction_c *i)
   dst.clear();
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-  float32 op = make_float32_from_float16(read_virtual_word(i->seg(), eaddr));
+  float32 op = convert_ne_fp16_to_fp32(read_virtual_word(i->seg(), eaddr));
 
   for (unsigned n=0; n < len; n++)
     xmm_pbroadcastw(&dst.vmm128(n), op);
@@ -103,7 +121,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTNEEPH2PS_VpsWphR(bxInstruction_c *i)
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < DWORD_ELEMENTS(len); n++)
-    reg.vmm32u(n) = make_float32_from_float16(reg.vmm32u(n) & 0xFFFF);
+    reg.vmm32u(n) = convert_ne_fp16_to_fp32(reg.vmm32u(n) & 0xFFFF);
 
   BX_WRITE_AVX_REGZ(i->dst(), reg, len);
   BX_NEXT_INSTR(i);
@@ -116,7 +134,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTNEOPH2PS_VpsWphR(bxInstruction_c *i)
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < DWORD_ELEMENTS(len); n++)
-    reg.vmm32u(n) = make_float32_from_float16(reg.vmm32u(n) >> 16);
+    reg.vmm32u(n) = convert_ne_fp16_to_fp32(reg.vmm32u(n) >> 16);
 
   BX_WRITE_AVX_REGZ(i->dst(), reg, len);
   BX_NEXT_INSTR(i);
