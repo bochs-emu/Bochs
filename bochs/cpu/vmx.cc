@@ -119,12 +119,14 @@ static const char *VMX_vmexit_reason_name[] =
   /* 67 */  "UMWAIT",
   /* 68 */  "TPAUSE",
   /* 69 */  "LOADIWKEY",
-  /* 70 */  "Reserved70",
+  /* 70 */  "ENCLV",
   /* 71 */  "Reserved71",
   /* 72 */  "ENQCMD PASID Translation",
   /* 73 */  "ENQCMDS PASID Translation",
   /* 74 */  "Bus Lock",
   /* 75 */  "Notify Window",
+  /* 76 */  "SEAMCALL",
+  /* 77 */  "TDCALL",
 };
 
 #include "decoder/ia_opcodes.h"

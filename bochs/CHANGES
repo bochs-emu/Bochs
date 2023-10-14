@@ -6,7 +6,7 @@ We welcome every new contributor !
 - Bugfixes for CPU emulation correctness (MONITOR/MWAIT, VMX, SHA fixes)
 ! Implemented VMX MBE (Mode Based Execution Control) emulation required for Windows 11 guest
 ! Implemented new published Intel instruction sets:
-   - AVX IFMA52, VNNI-INT8, VNNI-INT16, CMPCCXADD, SM3, SM4, SHA512, WRMSRNS
+   - AVX512 BF16, AVX IFMA52, VNNI-INT8, VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3, SM4, SHA512, WRMSRNS, SERIALIZE
 - Improved 64-bit guest support in Bochs internal debugger, added new internal debugger commands
 - Fixed Voodoo device compilation for big endian architectures
 - Fixed memory handling in volatile BIOS write support

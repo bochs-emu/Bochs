@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2017 Stanislav Shwartsman
+//   Copyright (c) 2023 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -21,36 +21,43 @@
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef BX_P4_WMT_CPUID_DEFINITIONS_H
-#define BX_P4_WMT_CPUID_DEFINITIONS_H
+#ifndef BX_BF16_HELPER
+#define BX_BF16_HELPER
 
-#if BX_CPU_LEVEL >= 6
+// FP32: s|eeeeeeee|mmmmmmmmmmmmmmmmmmmmmmm
+// BF16: s|eeeeeeee|mmmmmmmm
+//  F16: s|eeeee|mmmmmmmmmmm
 
-#include "cpu/cpuid.h"
+BX_CPP_INLINE float32 convert_bfloat16_to_fp32(bfloat16 op)
+{
+  return Bit32u(op) << 16;
+}
 
-class p4_willamette_t : public bx_cpuid_t {
-public:
-  p4_willamette_t(BX_CPU_C *cpu);
-  virtual ~p4_willamette_t() {}
+#include "fpu/softfloat-specialize.h"
 
-  // return CPU name
-  virtual const char *get_name(void) const { return "p4_willamette"; }
+BX_CPP_INLINE bfloat16 convert_ne_fp32_to_bfloat16(float32 op)
+{
+  float_class_t op_class = float32_class(op);
 
-  virtual void get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
+  switch(op_class) {
+    case float_zero:
+    case float_denormal:
+      return (op >> 16) & 0x8000; // sign preserving zero (denormal go to zero)
 
-  virtual void dump_cpuid(void) const;
+    case float_negative_inf:
+    case float_positive_inf:
+      return op >> 16;
 
-private:
-  void get_std_cpuid_leaf_0(cpuid_function_t *leaf) const;
-  void get_std_cpuid_leaf_1(cpuid_function_t *leaf) const;
-  void get_std_cpuid_leaf_2(cpuid_function_t *leaf) const;
+    case float_SNaN:
+    case float_QNaN:
+      return (op >> 16) | 0x40;  // truncate and set msb of the mantisa, force qnan
 
-  void get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const;
-};
+    case float_normalized:
+      break;
+  }
 
-extern bx_cpuid_t *create_p4_willamette_cpuid(BX_CPU_C *cpu);
-
-#endif // BX_CPU_LEVEL >= 6
+  Bit32u rounding_bias = 0x7FFF + ((op >> 16) & 0x1);
+  return (op + rounding_bias) >> 16;
+}
 
 #endif
-

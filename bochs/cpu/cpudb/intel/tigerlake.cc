@@ -586,13 +586,7 @@ void tigerlake_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *lea
     // * [29:29] Support for the IA32_ARCH_CAPABILITIES MSR
     // * [30:30] Support for the IA32_CORE_CAPABILITIES MSR
     // * [31:31] SSBD: Speculative Store Bypass Disable
-
-    leaf->edx = BX_CPUID_STD7_SUBLEAF0_EDX_FAST_SHORT_REP_MOV |
-                BX_CPUID_STD7_SUBLEAF0_EDX_AVX512_VPINTERSECT;
-
-#if BX_SUPPORT_CET
-    leaf->edx |= BX_CPUID_STD7_SUBLEAF0_EDX_CET_IBT;
-#endif
+    leaf->edx = get_std_cpuid_leaf_7_edx(BX_CPUID_STD7_SUBLEAF0_EDX_FAST_SHORT_REP_MOV);
 
     if (is_cpu_extension_supported(BX_ISA_SCA_MITIGATIONS))
       leaf->edx |= BX_CPUID_STD7_SUBLEAF0_EDX_MD_CLEAR |
@@ -752,9 +746,7 @@ void tigerlake_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [12:12] SKINIT support
   //   [13:13] WDT: Watchdog timer support
   //   [31:14] reserved
-  leaf->ecx = BX_CPUID_EXT1_ECX_LAHF_SAHF |
-              BX_CPUID_EXT1_ECX_LZCNT |
-              BX_CPUID_EXT1_ECX_PREFETCHW;
+  leaf->ecx = get_ext_cpuid_leaf_1_ecx_intel(BX_CPUID_EXT1_ECX_PREFETCHW);
 
   // EDX:
   //    [10:0] Reserved for Intel
