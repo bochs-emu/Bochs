@@ -3160,6 +3160,15 @@ public: // for now...
   BX_SMF void VPDPWUUD_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VPDPWUUDS_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
+  /* AVX-NE-CONVERT instructions */
+  BX_SMF void VBCSTNEBF162PS_VpsWwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VBCSTNESH2PS_VpsWshM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTNEEBF162PS_VpsWbf16R(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTNEOBF162PS_VpsWbf16R(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTNEEPH2PS_VpsWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTNEOPH2PS_VpsWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTNEPS2BF16_Vbf16WpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
   // AVX512 OPMASK instructions (VEX encoded)
   BX_SMF void KADDB_KGbKHbKEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void KANDB_KGbKHbKEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3388,6 +3397,10 @@ public: // for now...
   BX_SMF void VCVTPH2PS_MASK_VpsWpsR(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void VCVTPS2PH_MASK_WpsVpsIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VCVTPS2PH_MASK_WpsVpsIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void VCVTNEPS2BF16_MASK_Vbf16WpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTNE2PS2BF16_MASK_Vbf16HpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VDPBF16PS_MASK_VpsHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void VPABSB_MASK_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VPABSW_MASK_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
