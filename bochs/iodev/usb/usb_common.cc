@@ -477,7 +477,7 @@ int usb_device_c::handle_packet(USBPacket *p)
               break;
               
             default:
-              BX_ERROR(("Unknown Data state while finding Control In Packet."));
+              BX_ERROR(("Unknown Data state while finding Control In Packet. (state = %i)", d.setup_state));
               goto fail;
           }
           break;
@@ -550,7 +550,7 @@ int usb_device_c::handle_packet(USBPacket *p)
               break;
               
             default:
-              BX_ERROR(("Unknown Data state while finding Control Out Packet."));
+              BX_ERROR(("Unknown Data state while finding Control Out Packet. (state = %i)", d.setup_state));
               goto fail;
           }
           break;
@@ -695,6 +695,11 @@ int usb_device_c::handle_control_common(int request, int value, int index, int l
       }
       d.config = value;
       d.state = USB_STATE_CONFIGURED;
+#if HANDLE_TOGGLE_CONTROL
+      // we must also clear all of the EP toggle bits
+      for (int i=0; i<USB_MAX_ENDPOINTS; i++)
+        set_toggle(i, 0);
+#endif
       ret = 0;
       break;
     case DeviceOutRequest | USB_REQ_CLEAR_FEATURE:
@@ -752,13 +757,36 @@ int usb_device_c::handle_control_common(int request, int value, int index, int l
       }
       break;
     case EndpointOutRequest | USB_REQ_CLEAR_FEATURE:
-      BX_DEBUG(("EndpointOutRequest | USB_REQ_CLEAR_FEATURE:"));
+      BX_DEBUG(("EndpointOutRequest | USB_REQ_CLEAR_FEATURE: ep = %d", index & 0x7F));
       // Value == 0 == Endpoint Halt (the Guest wants to reset the endpoint)
-      if (value == 0) { /* clear ep halt */
+      if (value == USB_ENDPOINT_HALT) {
+        if ((index & 0x7F) < USB_MAX_ENDPOINTS) {
 #if HANDLE_TOGGLE_CONTROL
-        set_toggle(index & 0x7F, 0);
+          set_toggle(index, 0);
 #endif
-        ret = 0;
+          set_halted(index, 0);
+          ret = 0;
+        } else {
+          BX_ERROR(("EndpointOutRequest | USB_REQ_CLEAR_FEATURE: index > ep count: %d", index));
+        }
+      } else {
+        BX_ERROR(("EndpointOutRequest | USB_REQ_CLEAR_FEATURE: Unknown Clear Feature Request found: %d", value));
+      }
+      break;
+    case EndpointOutRequest | USB_REQ_SET_FEATURE:
+      // with EndpointRequest, The wLength field must be zero
+      if (length != 0) {
+        BX_ERROR(("USB_REQ_SET_FEATURE: This type of request requires the wLength field to be zero."));
+      }
+      if (value == USB_ENDPOINT_HALT) {
+        if ((index & 0x7F) < USB_MAX_ENDPOINTS) {
+          set_halted(index, 1);
+          ret = 0;
+        } else {
+          BX_ERROR(("EndpointOutRequest | USB_REQ_SET_FEATURE: index > ep count: %d", index));
+        }
+      } else {
+        BX_ERROR(("EndpointOutRequest | USB_REQ_SET_FEATURE: Unknown Set Feature Request found: %d", value));
       }
       break;
     // should not have a default: here, so allowing the device's handle_control() to try to execute the request
