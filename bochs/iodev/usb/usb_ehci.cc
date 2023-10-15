@@ -123,6 +123,8 @@ static inline struct EHCIPacket *ehci_container_of_usb_packet(void *ptr)
     reinterpret_cast<size_t>(&(static_cast<struct EHCIPacket*>(0)->packet)));
 }
 
+int ehci_event_handler(int event, void *ptr, void *dev, int port);
+
 // builtin configuration handling functions
 
 Bit32s usb_ehci_options_parser(const char *context, int num_params, char *params[])
@@ -523,8 +525,6 @@ void bx_usb_ehci_c::reset_port(int p)
   BX_EHCI_THIS hub.usb_port[p].portsc.csc = 0;
 }
 
-int ehci_event_handler(int event, void *ptr, void *dev, int port);
-
 void bx_usb_ehci_c::init_device(Bit8u port, bx_list_c *portconf)
 {
   char pname[BX_PATHNAME_LEN];
@@ -603,18 +603,18 @@ bool bx_usb_ehci_c::set_connect_status(Bit8u port, bool connected)
     } else { // not connected
       BX_INFO(("port #%d: device disconnect", port+1));
       if (BX_EHCI_THIS hub.usb_port[port].portsc.po) {
-        BX_EHCI_THIS uhci[port >> 1]->set_port_device(port & 1, NULL);
-        if ((!BX_EHCI_THIS hub.usb_port[port].owner_change) &&
-            (BX_EHCI_THIS hub.op_regs.ConfigFlag & 1)) {
-          BX_EHCI_THIS hub.usb_port[port].portsc.po = 0;
-          BX_EHCI_THIS hub.usb_port[port].portsc.csc = 1;
-        }
+          BX_EHCI_THIS uhci[port >> 1]->set_port_device(port & 1, NULL);
+          if ((!BX_EHCI_THIS hub.usb_port[port].owner_change) &&
+              (BX_EHCI_THIS hub.op_regs.ConfigFlag & 1)) {
+            BX_EHCI_THIS hub.usb_port[port].portsc.po = 0;
+            BX_EHCI_THIS hub.usb_port[port].portsc.csc = 1;
+          }
       } else {
-        BX_EHCI_THIS hub.usb_port[port].portsc.ccs = 0;
-        BX_EHCI_THIS hub.usb_port[port].portsc.ped = 0;
-        BX_EHCI_THIS queues_rip_device(device, 0);
-        BX_EHCI_THIS queues_rip_device(device, 1);
-        device->set_async_mode(0);
+          BX_EHCI_THIS hub.usb_port[port].portsc.ccs = 0;
+          BX_EHCI_THIS hub.usb_port[port].portsc.ped = 0;
+          BX_EHCI_THIS queues_rip_device(device, 0);
+          BX_EHCI_THIS queues_rip_device(device, 1);
+          device->set_async_mode(0);
       }
       if (!BX_EHCI_THIS hub.usb_port[port].owner_change) {
         remove_device(port);
@@ -651,11 +651,6 @@ void bx_usb_ehci_c::change_port_owner(int port)
       if (device != NULL) {
         set_connect_status(port, 1);
       }
-    }
-    // make sure we are calling the correct handler for the device
-    if (device != NULL) {
-      if (BX_EHCI_THIS hub.usb_port[port].portsc.po == 0)
-        device->set_event_handler(BX_EHCI_THIS_PTR, ehci_event_handler, port);
     }
     BX_EHCI_THIS hub.usb_port[port].owner_change = 0;
   }
@@ -893,7 +888,6 @@ bool bx_usb_ehci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
             if (oldfpr && !BX_EHCI_THIS hub.usb_port[port].portsc.fpr) {
               BX_EHCI_THIS hub.usb_port[port].portsc.sus = 0;
             }
-          } else if (port == USB_EHCI_PORTS) {
           }
       }
     } else {
@@ -2230,7 +2224,7 @@ void bx_usb_ehci_c::ehci_frame_timer(void)
   t_now = bx_pc_system.time_usec();
   usec_elapsed = t_now - BX_EHCI_THIS hub.last_run_usec;
   frames = (int)(usec_elapsed / FRAME_TIMER_USEC);
-  
+
   if (BX_EHCI_THIS periodic_enabled() || (BX_EHCI_THIS hub.pstate != EST_INACTIVE)) {
     need_timer++;
     BX_EHCI_THIS hub.async_stepdown = 0;
