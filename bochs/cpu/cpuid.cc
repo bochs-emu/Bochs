@@ -134,6 +134,7 @@ static const char *cpu_feature_name[] =
   "pku",                    // BX_ISA_PKU
   "pks",                    // BX_ISA_PKS
   "umip",                   // BX_ISA_UMIP
+  "lass",                   // BX_ISA_LASS
   "rdpid",                  // BX_ISA_RDPID
   "tce",                    // BX_ISA_TCE
   "clzero",                 // BX_ISA_CLZERO
@@ -1237,6 +1238,8 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_eax(Bit32u extra) const
     eax |= BX_CPUID_STD7_SUBLEAF1_EAX_AVX512_BF16;
 
   //   [6:6]    LASS: Linear Address Space Separation support
+  if (is_cpu_extension_supported(BX_ISA_LASS))
+    eax |= BX_CPUID_STD7_SUBLEAF1_EAX_LASS;
 
   //   [7:7]    CMPCCXADD
   if (is_cpu_extension_supported(BX_ISA_CMPCCXADD))

@@ -1156,7 +1156,11 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
   Bit32u allowMask = 0;
 
   // CR4 bits definitions:
-  //   [31-24] Reserved, Must be Zero
+  //   [31-28] Reserved, Must be Zero
+  //   [27]    LASS: Linear Address Separation Enable R/W
+  //   [26]    Reserved, Must be Zero
+  //   [25]    UINTR: User Level Interrupt Enable R/W
+  //   [24]    PKS: Protection Keys Supervisor Enable R/W
   //   [23]    CET: Control Flow Enforcement R/W
   //   [22]    PKE: Protection Keys Enable R/W
   //   [21]    SMAP: Supervisor Mode Access Prevention R/W
@@ -1168,7 +1172,7 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
   //   [15]    Reserved, Must be Zero
   //   [14]    SMXE: SMX Extensions R/W
   //   [13]    VMXE: VMX Extensions R/W
-  //   [12] Reserved, Must be Zero
+  //   [12]    Reserved, Must be Zero
   //   [11]    UMIP: User Mode Instruction Prevention R/W
   //   [10]    OSXMMEXCPT: Operating System Unmasked Exception Support R/W
   //   [9]     OSFXSR: Operating System FXSAVE/FXRSTOR Support R/W
@@ -1261,6 +1265,8 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
     allowMask |= BX_CR4_PKS_MASK;
 #endif
 
+  if (is_cpu_extension_supported(BX_ISA_LASS))
+    allowMask |= BX_CR4_LASS_MASK;
 #endif
 
   return allowMask;
