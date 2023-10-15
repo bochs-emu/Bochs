@@ -270,9 +270,9 @@ void bx_init_usb_options(const char *usb_name, const char *pname, int maxports, 
 #if BX_SUPPORT_USB_XHCI
     if (!strcmp(usb_name, "xHCI")) {
       if (i < (param0 / 2))
-        sprintf(label, "Options: (Must be super-speed)");
+        strcpy(label, "Options: (Must be super-speed)");
       else
-        sprintf(label, "Options: (Must NOT be super-speed)");
+        strcpy(label, "Options: (Must NOT be super-speed)");
     } else
 #endif
     strcpy(label, "Options");    
