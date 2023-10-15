@@ -6,6 +6,7 @@ We welcome every new contributor !
 Brief summary :
   - Bugfixes for CPU emulation correctness (MONITOR/MWAIT, VMX, SHA fixes)
   ! Implemented VMX MBE (Mode Based Execution Control) emulation required for Windows 11 guest
+  ! Implemented Linear Address Separation (LASS) extension
   ! Implemented new published Intel instruction sets:
      - AVX512 BF16, AVX IFMA52, VNNI-INT8, VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3, SM4, SHA512, WRMSRNS, SERIALIZE
   - Improved 64-bit guest support in Bochs internal debugger, added new internal debugger commands
@@ -13,7 +14,7 @@ Brief summary :
     Enhanced magic breakpoint capabilities. Refer to user documentation for more details.
   - Updated Bochs instrumentation examples for new disassembler introduced in Bochs 2.7 release
   - USB: Fixed/added USB 2.0 Compliance to all devices. Hub still needs a few additions
-  - USB: xHCI: added the ability to have more than one model of xHCI hardware. Currently there are two
+  - USB: xHCI: added the ability to have more than one model of xHCI hardware. Currently there are two.
   - USB: Added experimental MSD UASP emulation
   - Disk images: Allows large VHD image files
   - Documentation updates and fixes
@@ -23,6 +24,7 @@ Detailed change log :
 - CPU/CPUDB
   - Bugfixes for CPU emulation correctness (MONITOR/MWAIT, VMX, SHA fixes)
   - Implemented VMX MBE (Mode Based Execution Control) emulation required for Windows 11 guest
+  - Implemented Linear Address Separation (LASS) extension
   - Implemented new published Intel instruction sets:
     - AVX512 BF16, AVX IFMA52, VNNI-INT8, VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3, SM4, SHA512, WRMSRNS, SERIALIZE
 
