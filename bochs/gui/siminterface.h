@@ -743,7 +743,7 @@ public:
   // special config parameter and options functions for plugins
   virtual bool opt_plugin_ctrl(const char *plugname, bool load) {return 0;}
   virtual void init_std_nic_options(const char *name, bx_list_c *menu) {}
-  virtual void init_usb_options(const char *usb_name, const char *pname, int maxports) {}
+  virtual void init_usb_options(const char *usb_name, const char *pname, int maxports, int param0) {}
   virtual int  parse_param_from_list(const char *context, const char *param, bx_list_c *base) {return 0;}
   virtual int  parse_nic_params(const char *context, const char *param, bx_list_c *base) {return 0;}
   virtual int  parse_usb_port_params(const char *context, const char *param,
