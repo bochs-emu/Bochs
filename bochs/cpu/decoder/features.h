@@ -19,9 +19,6 @@
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA B 02110-1301 USA
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef BX_X86_FEATURES_H
-#define BX_X86_FEATURES_H
-
 x86_feature(BX_ISA_386, "386ni")                                        /* 386 or earlier instruction */
 x86_feature(BX_ISA_X87, "x87")                                          /* FPU (x87) instruction */
 x86_feature(BX_ISA_486, "486ni")                                        /* 486 new instruction */
@@ -137,5 +134,3 @@ x86_feature(BX_ISA_WRMSRNS, "wrmsrns")                                  /* Non-S
 x86_feature(BX_ISA_CMPCCXADD, "cmpccxadd")                              /* CMPccXADD instructions */
 x86_feature(BX_ISA_SERIALIZE, "serialize")                              /* SERIALIZE instruction */
 x86_feature(BX_ISA_LASS, "lass")                                        /* Linear Address Space Separation support */
-
-#endif

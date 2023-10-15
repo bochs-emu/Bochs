@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2014-2020 Stanislav Shwartsman
+//   Copyright (c) 2014-2023 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -701,7 +701,7 @@ Bit32u bx_cpuid_t::get_ext_cpuid_leaf_1_ecx_intel(Bit32u extra) const
   //   [31:29] Reserved
 
 #if BX_SUPPORT_X86_64
-  if (is_cpu_extension_supported(BX_ISA_LONG_MODE))
+  if (is_cpu_extension_supported(BX_ISA_LM_LAHF_SAHF))
     ecx |= BX_CPUID_EXT1_ECX_LAHF_SAHF;
 #endif
 
@@ -1278,5 +1278,5 @@ void bx_cpuid_t::dump_features() const
   BX_INFO(("CPU Features supported:"));
   for (unsigned i=1; i<BX_ISA_EXTENSION_LAST; i++)
     if (is_cpu_extension_supported(i))
-      BX_INFO(("\t\t%s", cpu_feature_name[i]));
+      BX_INFO(("\t\t%s", get_cpu_feature_name(i)));
 }
