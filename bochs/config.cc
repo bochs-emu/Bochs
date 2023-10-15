@@ -216,7 +216,7 @@ void bx_init_std_nic_options(const char *name, bx_list_c *menu)
 #endif
 
 #if BX_SUPPORT_PCIUSB
-void bx_init_usb_options(const char *usb_name, const char *pname, int maxports)
+void bx_init_usb_options(const char *usb_name, const char *pname, int maxports, int param0)
 {
   char group[16], name[8], descr[512], label[512];
   bx_list_c *usb, *usbrt, *deplist, *deplist2;
@@ -270,9 +270,18 @@ void bx_init_usb_options(const char *usb_name, const char *pname, int maxports)
       bx_usbdev_ctl.get_device_names(),
       0, 0);
     sprintf(descr, "Options for device connected to %s port #%u", usb_name, i+1);
+#if BX_SUPPORT_USB_XHCI
+    if (!strcmp(usb_name, "xHCI")) {
+      if (i < (param0 / 2))
+        strcpy(label, "Options: (Must be super-speed)");
+      else
+        strcpy(label, "Options: (Must NOT be super-speed)");
+    } else
+#endif
+    strcpy(label, "Options");    
     bx_param_string_c *options = new bx_param_string_c(port,
       "options",
-      "Options",
+      label,
       descr,
       "", BX_PATHNAME_LEN);
     bx_param_bool_c *overcurrent = new bx_param_bool_c(port, 

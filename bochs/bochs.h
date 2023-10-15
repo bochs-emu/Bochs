@@ -125,7 +125,7 @@ void bx_set_log_actions_by_device(bool panic_flag);
 void bx_init_std_nic_options(const char *name, bx_list_c *menu);
 #endif
 #if BX_SUPPORT_PCIUSB
-void bx_init_usb_options(const char *usb_name, const char *pname, int maxports);
+void bx_init_usb_options(const char *usb_name, const char *pname, int maxports, int param0);
 #endif
 int  bx_parse_param_from_list(const char *context, const char *input, bx_list_c *list);
 int  bx_parse_nic_params(const char *context, const char *param, bx_list_c *base);
