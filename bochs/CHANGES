@@ -15,6 +15,50 @@ We welcome every new contributor !
 - Apply standard CPPFLAGS from environment in all makefiles
 - Fixed and improved PCI slot config error handling
 - Updated Bochs instrumentation examples for new disassembler introduced in Bochs 2.7 release
+- USB: SCSI: added the Event Status command (0x4a).
+- USB: SCSI: added BX_DEBUG checks to the command sent by the Guest.
+- USB: SCSI: added the block_size in the Read Capacity command (0x25).
+- USB: SCSI: added some 0x9E/xx commands. ReadCapacity(16).
+- USB: UHCI: re-wrote the uhci stack to better support control/bulk reclamation.
+- USB: UHCI: check that a reset doesn't clear the CSC bit during a reset, but should after the reset is complete.
+- USB: added the ability to change interfaces (ex: BBB to UASP).
+- USB: added the Toggle bit check to all controllers/devices. (optional with a #define)
+- USB: added the ability to trigger an over-current to all controllers.
+- USB: added numberous BX_DEBUG checks to the USB_COMMON emulation to help show bugs in a Guest's device driver.
+- USB: added BX_DEBUG if the first requested packet after a reset is not 8 bytes.
+- USB: added a BX_DEBUG check to make sure the speed indicator is correct within TDs.
+- USB: added BX_DEBUG checks to all request lengths, max packet size, and other length checks.
+- USB: return default speed of device/controller combination.
+- USB: check that the bochsrc file doesn't specify two different devices for the same port.
+- USB: check that the bochsrc file has a super-speed device defined on a correct port number.
+- USB: re-wrote how the USB_COMMON passed on packets to allow for zero-length packets to be accepted.
+- USB: HID: added multiple mouse modes to have different HID Reports, including a physical report, and an irregular report.
+- USB: HID: added the Boot Protocol function.
+- USB: HUB: fixed/Added a more accurate DeviceRemovable emulation.
+- USB: HUB: Allow USB 1.0 or USB 1.1 emulation (there is a difference).
+- USB: HUB: Add bit 0 function to the returned report (change status bit).
+- USB: HUB: Some Guests think a NAK on the Interrupt EP is an error. (option to ignore this)
+- USB: Floppy: Fixed the CBI/CB configuration descriptor.
+- USB: fixed/added USB 2.0 Compliance to all devices. Hub still needs a few additions.
+  - Floppies (using the CB/CBI protocol) can only be full-speed.
+  - Fixed the Endpoint Clear Feature request (halted, etc.).
+  - Added the Endpoint Get Status request to each device.
+  - Hub power switching emulation.
+  - Fixed the return/request error on Device Qualifier requests.
+  - Fixed Device Qualifier and Other Speed requests.
+- USB: MSD: fixed USB 2.0 only descriptor emulation. (Device Qualifier, etc.)
+- USB: OHCI: fixed the toggle emulation.
+- USB: added the ability to catch 0xEE descriptors (Microsoft specific).
+- USB: xHCI: added the ability to have more than one model of xHCI hardware. Currently there are two.
+- USB: xHCI: added the ability to indicate the port count.
+- USB: xHCI: check the USB2 and USB3 port assignments.
+- USB: xHCI: added experimental Stream emulation.
+- USB: added experimental MSD UASP emulation.
+- USB: xHCI: added the (vendor) Dump Controller command (Specific to Bochs).
+- USB: xHCI: added checks to the Evaluate Context and Address Device commands.
+- USB: xHCI: fixed/updated the Port Status Change Event emulation.
+- USB: xHCI: fixed/updated the port bandwidth emulation.
+- USB: Many documentation additions.
 - Documentation fixes
 
 -------------------------------------------------------------------------
