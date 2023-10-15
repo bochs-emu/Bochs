@@ -109,7 +109,7 @@ PLUGIN_ENTRY_FOR_MODULE(usb_ohci)
     theUSB_OHCI = new bx_usb_ohci_c();
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theUSB_OHCI, BX_PLUGIN_USB_OHCI);
     // add new configuration parameter for the config interface
-    SIM->init_usb_options("OHCI", "ohci", USB_OHCI_PORTS);
+    SIM->init_usb_options("OHCI", "ohci", USB_OHCI_PORTS, 0);
     // register add-on option for bochsrc and command line
     SIM->register_addon_option("usb_ohci", usb_ohci_options_parser, usb_ohci_options_save);
   } else if (mode == PLUGIN_FINI) {
