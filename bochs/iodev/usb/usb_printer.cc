@@ -68,7 +68,7 @@ static const Bit8u bx_printer_dev_descriptor[] = {
 
   0x00,       /*  u8  bDeviceClass; */
   0x00,       /*  u8  bDeviceSubClass; */
-  0x00,       /*  u8  bDeviceProtocol; [ low/full speeds only ] */
+  0x00,       /*  u8  bDeviceProtocol; */
   0x40,       /*  u8  bMaxPacketSize; 64 Bytes */
 
   0xF0, 0x03, /*  u16 idVendor; */
@@ -254,6 +254,24 @@ int usb_printer_device_c::handle_control(int request, int value, int index, int 
       break;
     case DeviceOutRequest | USB_REQ_SET_FEATURE:
       goto fail;
+      break;
+    case EndpointRequest | USB_REQ_GET_STATUS:
+      BX_DEBUG(("USB_REQ_GET_STATUS: Endpoint."));
+      // if the endpoint is currently halted, return bit 0 = 1
+      if (value == USB_ENDPOINT_HALT) {
+        int indx = (index & 0x7F);
+        if ((indx >= 1) && (indx <= 2)) {
+          data[0] = 0x00 | (get_halted(indx) ? 1 : 0);
+          data[1] = 0x00;
+          ret = 2;
+        } else {
+          BX_ERROR(("EndpointRequest | USB_REQ_GET_STATUS: index > ep count: %d", index));
+          goto fail;
+        }
+      } else {
+        BX_ERROR(("EndpointRequest | USB_REQ_SET_FEATURE: Unknown Get Status Request found: %d", value));
+        goto fail;
+      }
       break;
     case DeviceRequest | USB_REQ_GET_DESCRIPTOR:
       switch(value >> 8) {

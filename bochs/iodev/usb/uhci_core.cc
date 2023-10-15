@@ -550,9 +550,9 @@ void bx_uhci_core_c::write(Bit32u address, Bit32u value, unsigned io_len)
         if (value & (1<<11)) hub.usb_port[port].over_current_change = 0;
         hub.usb_port[port].reset = (value & (1<<9)) ? 1 : 0;
         hub.usb_port[port].resume = (value & (1<<6)) ? 1 : 0;
-        if (!hub.usb_port[port].enabled && (value & (1<<2)))
+        if (!hub.usb_port[port].enabled && (value & (1<<2))) {
           hub.usb_port[port].enable_changed = 0;
-        else
+        } else
           if (value & (1<<3)) hub.usb_port[port].enable_changed = 0;
         hub.usb_port[port].enabled = (value & (1<<2)) ? 1 : 0;
         if (value & (1<<1)) hub.usb_port[port].connect_changed = 0;
@@ -908,7 +908,7 @@ bool bx_uhci_core_c::DoTransfer(Bit32u address, struct TD *td) {
   }
 
   BX_DEBUG(("TD found at address 0x%08X:  0x%08X  0x%08X  0x%08X  0x%08X", address, td->dword0, td->dword1, td->dword2, td->dword3));
-
+  
   // check TD to make sure it is valid
   // A max length 0x500 to 0x77E is illegal
   if ((maxlen >= 0x500) && (maxlen != 0x7FF)) {
@@ -1141,6 +1141,8 @@ void bx_uhci_core_c::set_port_device(int port, usb_device_c *dev)
 {
   usb_device_c *olddev = hub.usb_port[port].device;
   if ((dev != NULL) && (olddev == NULL)) {
+    // make sure we are calling the correct handler for the device
+    dev->set_event_handler(this, uhci_event_handler, port);
     hub.usb_port[port].device = dev;
     set_connect_status(port, 1);
   } else if ((dev == NULL) && (olddev != NULL)) {

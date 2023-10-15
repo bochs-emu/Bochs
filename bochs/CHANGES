@@ -3,19 +3,112 @@ Changes after 2.7:
 The Bochs source tree is transitioning from SVN to GIT hosted on github (https://github.com/bochs-emu/Bochs)
 We welcome every new contributor !
 
-- Bugfixes for CPU emulation correctness (MONITOR/MWAIT, VMX, SHA fixes)
-! Implemented VMX MBE (Mode Based Execution Control) emulation required for Windows 11 guest
-! Implemented new published Intel instruction sets:
-   - AVX512 BF16, AVX IFMA52, VNNI-INT8, VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3, SM4, SHA512, WRMSRNS, SERIALIZE
-- Improved 64-bit guest support in Bochs internal debugger, added new internal debugger commands
-- Fixed Voodoo device compilation for big endian architectures
-- Fixed memory handling in volatile BIOS write support
-- Fixed APIC MWAIT timer activation
-- APIC: Removed timer handles from save/restore list
-- Apply standard CPPFLAGS from environment in all makefiles
-- Fixed and improved PCI slot config error handling
-- Updated Bochs instrumentation examples for new disassembler introduced in Bochs 2.7 release
-- Documentation fixes
+Brief summary :
+  - Bugfixes for CPU emulation correctness (MONITOR/MWAIT, VMX, SHA fixes)
+  ! Implemented VMX MBE (Mode Based Execution Control) emulation required for Windows 11 guest
+  ! Implemented Linear Address Separation (LASS) extension
+  ! Implemented new published Intel instruction sets:
+     - AVX512 BF16, AVX IFMA52, VNNI-INT8, VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3, SM4, SHA512, WRMSRNS, SERIALIZE
+  - Improved 64-bit guest support in Bochs internal debugger, added new internal debugger commands
+  - Bochs debugger enhanced with new commands (setpmem, loadmem, deref, ...)
+    Enhanced magic breakpoint capabilities. Refer to user documentation for more details.
+  - Updated Bochs instrumentation examples for new disassembler introduced in Bochs 2.7 release
+  - USB: Fixed/added USB 2.0 Compliance to all devices. Hub still needs a few additions
+  - USB: xHCI: added the ability to have more than one model of xHCI hardware. Currently there are two.
+  - USB: Added experimental MSD UASP emulation
+  - Disk images: Allows large VHD image files
+  - Documentation updates and fixes
+
+Detailed change log :
+
+- CPU/CPUDB
+  - Bugfixes for CPU emulation correctness (MONITOR/MWAIT, VMX, SHA fixes)
+  - Implemented VMX MBE (Mode Based Execution Control) emulation required for Windows 11 guest
+  - Implemented Linear Address Separation (LASS) extension
+  - Implemented new published Intel instruction sets:
+    - AVX512 BF16, AVX IFMA52, VNNI-INT8, VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3, SM4, SHA512, WRMSRNS, SERIALIZE
+
+- Bochs Debugger and Instrumentation
+  - Updated Bochs instrumentation examples for new disassembler introduced in Bochs 2.7 release.
+  - Implemented option to allow port-e0-hack and iodebug from any protection ring (without x86 permissions checking)
+  - Enhanced magic breakpoint capabilities
+  - Bochs debugger enhanced with new commands (setpmem, loadmem, deref, ...)
+    Refer to user documentation for more details.
+  - Improved debugger 'info gdt'/'info ldt' commands x86-64 support
+  - Added symbol info to 'info idt' in protected 32-bit mode
+  - Fixed instruction pointer truncation in gdbstub
+
+- Configure and compile
+  - Apply standard CPPFLAGS from environment in all makefiles
+
+- Memory
+  - Fixed memory handling in volatile BIOS write support
+
+- Hard drive / HD image
+   - Allows large VHD image files.
+     The size in question doesn't necessarily mean the size of the VHD file on disk. The size is the total
+     size of the image emulated. The total size increased from roughly 32gig to a limit of 2TB.
+
+- I/O Devices
+  - Timers
+    - Fixed APIC MWAIT timer activation
+    - APIC: Removed timer handles from save/restore list
+
+  - PCI
+    - Fixed and improved PCI slot config error handling
+
+  - Voodoo
+    - Fixed Voodoo device compilation for big endian architectures
+
+  - USB
+    - Added the ability to change interfaces (ex: BBB to UASP).
+    - Added the Toggle bit check to all controllers/devices. (optional with a #define)
+    - Added the ability to trigger an over-current to all controllers.
+    - Added numberous BX_DEBUG checks to the USB_COMMON emulation to help show bugs in a Guest's device driver.
+    - Added BX_DEBUG if the first requested packet after a reset is not 8 bytes.
+    - Added a BX_DEBUG check to make sure the speed indicator is correct within TDs.
+    - Added BX_DEBUG checks to all request lengths, max packet size, and other length checks.
+    - Return default speed of device/controller combination.
+    - Check that the bochsrc file doesn't specify two different devices for the same port.
+    - Check that the bochsrc file has a super-speed device defined on a correct port number.
+    - Re-wrote how the USB_COMMON passed on packets to allow for zero-length packets to be accepted.
+    - Fixed the Floppy CBI/CB configuration descriptor.
+    - Fixed/added USB 2.0 Compliance to all devices. Hub still needs a few additions.
+      - Floppies (using the CB/CBI protocol) can only be full-speed.
+      - Fixed the Endpoint Clear Feature request (halted, etc.).
+      - Added the Endpoint Get Status request to each device.
+      - Hub power switching emulation.
+      - Fixed the return/request error on Device Qualifier requests.
+      - Fixed Device Qualifier and Other Speed requests.
+    - Added hints to the xHCI configuration Port Option display.
+    - Added the ability to catch 0xEE descriptors (Microsoft specific).
+    - Added experimental MSD UASP emulation.
+    - HID: added multiple mouse modes to have different HID Reports, including a physical report, and an irregular report.
+    - HID: added the Boot Protocol function.
+    - HUB: fixed/Added a more accurate DeviceRemovable emulation.
+    - HUB: Allow USB 1.0 or USB 1.1 emulation (there is a difference).
+    - HUB: Add bit 0 function to the returned report (change status bit).
+    - HUB: Some Guests think a NAK on the Interrupt EP is an error. (option to ignore this)
+    - MSD: fixed USB 2.0 only descriptor emulation. (Device Qualifier, etc.)
+    - OHCI: fixed the toggle emulation.
+    - SCSI: added the Event Status command (0x4a).
+    - SCSI: added BX_DEBUG checks to the command sent by the Guest.
+    - SCSI: added the block_size in the Read Capacity command (0x25).
+    - SCSI: added some 0x9E/xx commands. ReadCapacity(16).
+    - UHCI: re-wrote the uhci stack to better support control/bulk reclamation.
+    - UHCI: check that a reset doesn't clear the CSC bit during a reset, but should after the reset is complete.
+    - xHCI: added the ability to have more than one model of xHCI hardware. Currently there are two.
+    - xHCI: added the ability to indicate the port count.
+    - xHCI: check the USB2 and USB3 port assignments.
+    - xHCI: added experimental Stream emulation.
+    - xHCI: added the (vendor) Dump Controller command (Specific to Bochs).
+    - xHCI: added checks to the Evaluate Context and Address Device commands.
+    - xHCI: fixed/updated the Port Status Change Event emulation.
+    - xHCI: fixed/updated the port bandwidth emulation.
+    - Many documentation additions.
+
+  - HPET
+    - Bugfixes in HPET emulation
 
 -------------------------------------------------------------------------
 Changes in 2.7 (August 1, 2021):

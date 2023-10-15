@@ -93,20 +93,22 @@ protected:
 //  to match your changes.
 
 // Full-speed only
+// * USB Mass Storage Class Specification, p4, section 3, states that
+// *  that a Mass Storage Class device using CB/CBI must be full-speed only.
 static Bit8u bx_floppy_dev_descriptor[] = {
   0x12,       /*  u8 bLength; */
   0x01,       /*  u8 bDescriptorType; Device */
-  0x00, 0x02, /*  u16 bcdUSB; v2.0 */
+  0x01, 0x01, /*  u16 bcdUSB; v1.1 */
 
   0x00,       /*  u8  bDeviceClass; */
   0x00,       /*  u8  bDeviceSubClass; */
-  0x00,       /*  u8  bDeviceProtocol; [ low/full speeds only ] */
+  0x00,       /*  u8  bDeviceProtocol; */
   0x40,       /*  u8  bMaxPacketSize; 64 Bytes */
 
   /* Vendor and product id are arbitrary.  */
   0x00, 0x00, /*  u16 idVendor; */
   0x00, 0x00, /*  u16 idProduct; */
-  0x00, 0x00, /*  u16 bcdDevice */
+  0x00, 0x00, /*  u16 bcdDevice; */
 
   0x01,       /*  u8  iManufacturer; */
   0x02,       /*  u8  iProduct; */
@@ -120,7 +122,11 @@ static const Bit8u bx_floppy_config_descriptor[] = {
   /* one configuration */
   0x09,       /*  u8  bLength; */
   0x02,       /*  u8  bDescriptorType; Configuration */
+#if USB_FLOPPY_USE_INTERRUPT
   0x27, 0x00, /*  u16 wTotalLength; */
+#else
+  0x20, 0x00, /*  u16 wTotalLength; */
+#endif
   0x01,       /*  u8  bNumInterfaces; (1) */
   0x01,       /*  u8  bConfigurationValue; */
   0x00,       /*  u8  iConfiguration; */
@@ -324,6 +330,7 @@ usb_floppy_device_c::usb_floppy_device_c()
   bx_param_bool_c *readonly;
   bx_param_enum_c *status, *mode;
 
+  // MSC Compliance states that a CB(I) device must be full-speed only
   d.speed = d.minspeed = d.maxspeed = USB_SPEED_FULL;
   memset((void *) &s, 0, sizeof(s));
   strcpy(d.devname, "BOCHS UFI/CBI FLOPPY");
@@ -456,13 +463,13 @@ bool usb_floppy_device_c::init()
     bx_floppy_dev_descriptor[9] = 0x06;
     d.vendor_desc = "TEAC    ";
     d.product_desc = "TEAC FD-05PUW   ";
-    d.serial_num = "3000";
+    d.serial_num = "3000        ";
   } else {
     bx_floppy_dev_descriptor[8] = 0x00;
     bx_floppy_dev_descriptor[9] = 0x00;
     d.vendor_desc = "BOCHS   ";
     d.product_desc = d.devname;
-    d.serial_num = "00.10";
+    d.serial_num = "00.10       ";
   }
   if (set_inserted(1)) {
     sprintf(s.info_txt, "USB floppy: path='%s', mode='%s'", s.fname, s.image_mode);
@@ -552,6 +559,29 @@ int usb_floppy_device_c::handle_control(int request, int value, int index, int l
       }
       ret = 0;
       break;
+    case EndpointRequest | USB_REQ_GET_STATUS:
+      BX_DEBUG(("USB_REQ_GET_STATUS: Endpoint."));
+      // if the endpoint is currently halted, return bit 0 = 1
+      if (value == USB_ENDPOINT_HALT) {
+        int indx = (index & 0x7F);
+#if USB_FLOPPY_USE_INTERRUPT
+        int limit = 3;
+#else
+        int limit = 2;
+#endif
+        if ((indx > 0) && (indx <= limit)) {
+          data[0] = 0x00 | (get_halted(indx) ? 1 : 0);
+          data[1] = 0x00;
+          ret = 2;
+        } else {
+          BX_ERROR(("EndpointRequest | USB_REQ_GET_STATUS: index > ep count: %d", index));
+          goto fail;
+        }
+      } else {
+        BX_ERROR(("EndpointRequest | USB_REQ_SET_FEATURE: Unknown Get Status Request found: %d", value));
+        goto fail;
+      }
+      break;
     case DeviceRequest | USB_REQ_GET_DESCRIPTOR:
       switch (value >> 8) {
         case USB_DT_STRING:
@@ -578,17 +608,6 @@ int usb_floppy_device_c::handle_control(int request, int value, int index, int l
           BX_ERROR(("USB floppy handle_control: unknown descriptor type 0x%02x", value >> 8));
           goto fail;
       }
-      break;
-    case EndpointOutRequest | USB_REQ_CLEAR_FEATURE:
-      BX_DEBUG(("USB_REQ_CLEAR_FEATURE:"));
-      // Value == 0 == Endpoint Halt (the Guest wants to reset the endpoint)
-      if (value == 0) { /* clear ep halt */
-#if HANDLE_TOGGLE_CONTROL
-        set_toggle(index, 0);
-#endif
-        ret = 0;
-      } else
-        goto fail;
       break;
     case DeviceOutRequest | USB_REQ_SET_SEL:
       // Set U1 and U2 System Exit Latency
@@ -646,13 +665,13 @@ bool usb_floppy_device_c::handle_command(Bit8u *command)
   }
 
 #if UFI_DO_INQUIRY_HACK
-  // to be consistant with real hardware, we need to fail with
+  // to be consistent with real hardware, we need to fail with
   //  a STALL twice for any command after the first Inquiry except
   //  for the inquiry and request_sense commands.
   //  (I don't know why, and will document further when I know more)
   if ((s.fail_count > 0) &&
       (s.cur_command != UFI_INQUIRY) && (s.cur_command != UFI_REQUEST_SENSE)) {
-    BX_DEBUG(("Consistant stall of %d of 2.", 2 - s.fail_count + 1));
+    BX_INFO(("Consistent stall of %d of 2.", 2 - s.fail_count + 1));
     s.fail_count--;
     return 0;
   }
