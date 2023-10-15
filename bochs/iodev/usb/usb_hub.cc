@@ -97,6 +97,31 @@ protected:
 
 static Bit32u serial_number = 1234;
 
+// Set this to a version of the USB you wish to emulate.
+// 0x0100 = v1.0 or 0x0101 = v1.1
+#define USB_HUB_VERSION 0x0100
+
+// Set USB_HUB_POWER_SWITCHING to 1 if power switching is supported
+// (If not supported power is always on)
+// (It must be set if USB_HUB_VERSION == 1.1+)
+#define USB_HUB_POWER_SWITCHING 1
+#if (USB_HUB_VERSION > 0x100) && (USB_HUB_POWER_SWITCHING == 0)
+#error USB_HUB_POWER_SWITCHING must be set for USB_HUB_VERSION 1.1+
+#endif
+
+// Set USB_HUB_POWER_PER_PORT to 1 if per-port power switching is on,
+//  else set to 0 for ganged power switching (all ports powered at same time)
+// (is ignored if USB_HUB_POWER_SWITCHING == 0)
+#define USB_HUB_POWER_PER_PORT 1
+
+// The USB specification (usb1.0 11.8, usb1.1 11.13.1, usb2.0 11.12.1)
+//  states that if there is nothing to report from the IN interrupt
+//  that the device should respond with a USB_RET_NAK. However, Win95
+//  considers that an error and stops the IN pipe, finding no further
+//  connection status. Set this to 1 if you are emulating Win95 or
+//  a similar Guest.
+#define USB_HUB_ALWAYS_REPORT 1
+
 // If you change any of the Max Packet Size, or other fields within these
 //  descriptors, you must also change the d.endpoint_info[] array
 //  to match your changes.
@@ -104,11 +129,16 @@ static Bit32u serial_number = 1234;
 static const Bit8u bx_hub_dev_descriptor[] = {
   0x12,       /*  u8 bLength; */
   0x01,       /*  u8 bDescriptorType; Device */
-  0x10, 0x01, /*  u16 bcdUSB; v1.1 */
-
+#if USB_HUB_VERSION == 0x0100
+  0x00, 0x01, /*  u16 bcdUSB; v1.0 */
+#elif USB_HUB_VERSION == 0x0101
+  0x01, 0x01, /*  u16 bcdUSB; v1.1 */
+#else
+  #error Unknown USB_HUB_VERSION value found
+#endif
   0x09,       /*  u8  bDeviceClass; HUB_CLASSCODE */
   0x00,       /*  u8  bDeviceSubClass; */
-  0x00,       /*  u8  bDeviceProtocol; [ low/full speeds only ] */
+  0x00,       /*  u8  bDeviceProtocol; */
   0x40,       /*  u8  bMaxPacketSize; 64 Bytes */
 
   0x09, 0x04, /*  u16 idVendor; */
@@ -122,6 +152,7 @@ static const Bit8u bx_hub_dev_descriptor[] = {
 };
 
 /* XXX: patch interrupt size */
+#define BX_Hub_Config_Descriptor_pos 22
 static Bit8u bx_hub_config_descriptor[] = {
 
   /* one configuration */
@@ -174,10 +205,17 @@ static const Bit8u bx_hub_hub_descriptor[] =
   0x00,       /*  u8  bLength; patched in later */
   0x29,       /*  u8  bDescriptorType; Hub-descriptor */
   0x00,       /*  u8  bNbrPorts; (patched later) */
-  0x0a,       /* u16  wHubCharacteristics; */
-  0x00,       /*   (per-port OC, no power switching) */
+#if USB_HUB_POWER_SWITCHING
+  #if USB_HUB_POWER_PER_PORT
+    0x09, 0x00, /* u16  wHubCharacteristics; (per-port OC, per-port power switching) */
+  #else
+    0x08, 0x00, /* u16  wHubCharacteristics; (per-port OC, ganged power switching) */
+  #endif
+#else
+  0x0a, 0x00, /* u16  wHubCharacteristics; (per-port OC, no power switching) */
+#endif
   0x01,       /*  u8  bPwrOn2pwrGood; 2ms */
-  0x00        /*  u8  bHubContrCurrent; 0 mA */
+  0x40        /*  u8  bHubContrCurrent; 64 mA */
 
   /* DeviceRemovable and PortPwrCtrlMask patched in later */
 };
@@ -197,9 +235,9 @@ usb_hub_device_c::usb_hub_device_c()
   d.device_desc_size = sizeof(bx_hub_dev_descriptor);
   d.config_descriptor = bx_hub_config_descriptor;
   d.config_desc_size = sizeof(bx_hub_config_descriptor);
-  d.endpoint_info[USB_CONTROL_EP].max_packet_size = 8; // Control ep0
+  d.endpoint_info[USB_CONTROL_EP].max_packet_size = 64; // Control ep0
   d.endpoint_info[USB_CONTROL_EP].max_burst_size = 0;
-  d.endpoint_info[1].max_packet_size = 2;  // In ep1
+  d.endpoint_info[1].max_packet_size = (USB_HUB_MAX_PORTS + 1 + 7) / 8;  // In ep1
   d.endpoint_info[1].max_burst_size = 0;
   d.vendor_desc = "BOCHS";
   d.product_desc = "BOCHS USB HUB";
@@ -257,11 +295,12 @@ bool usb_hub_device_c::init()
   bx_param_bool_c *overcurrent;
 
   // set up config descriptor, status and runtime config for hub.n_ports
-  bx_hub_config_descriptor[22] = (hub.n_ports + 1 + 7) / 8;
+  bx_hub_config_descriptor[BX_Hub_Config_Descriptor_pos] = (hub.n_ports + 1 + 7) / 8;
   for(i = 0; i < hub.n_ports; i++) {
     hub.usb_port[i].PortStatus = PORT_STAT_POWER;
     hub.usb_port[i].PortChange = 0;
   }
+  hub.PortStatusC = 0;
   for(i = 0; i < hub.n_ports; i++) {
     sprintf(pname, "port%d", i+1);
     sprintf(label, "Port #%d Configuration", i+1);
@@ -319,6 +358,7 @@ void usb_hub_device_c::register_state_specific(bx_list_c *parent)
     // empty list for USB device state
     new bx_list_c(port, "device");
   }
+  BXRS_HEX_PARAM_FIELD(hub.state, PortStatusC, hub.PortStatusC);
 }
 
 void usb_hub_device_c::after_restore_state()
@@ -363,14 +403,25 @@ int usb_hub_device_c::handle_control(int request, int value, int index, int leng
     case DeviceOutRequest | USB_REQ_CLEAR_FEATURE:
       goto fail;
       break;
-    case EndpointOutRequest | USB_REQ_CLEAR_FEATURE:
-      if (value == 0 && index != 0x81) { /* clear ep halt */
-        goto fail;
-      }
-      ret = 0;
-      break;
     case DeviceOutRequest | USB_REQ_SET_FEATURE:
       goto fail;
+      break;
+    case EndpointRequest | USB_REQ_GET_STATUS:
+      BX_DEBUG(("USB_REQ_GET_STATUS: Endpoint."));
+      // if the endpoint is currently halted, return bit 0 = 1
+      if (value == USB_ENDPOINT_HALT) {
+        if (index == 0x81) {
+          data[0] = 0x00 | (get_halted(index) ? 1 : 0);
+          data[1] = 0x00;
+          ret = 2;
+        } else {
+          BX_ERROR(("EndpointRequest | USB_REQ_GET_STATUS: index > ep count: %d", index));
+          goto fail;
+        }
+      } else {
+        BX_ERROR(("EndpointRequest | USB_REQ_SET_FEATURE: Unknown Get Status Request found: %d", value));
+        goto fail;
+      }
       break;
     case DeviceRequest | USB_REQ_GET_DESCRIPTOR:
       switch(value >> 8) {
@@ -437,9 +488,23 @@ int usb_hub_device_c::handle_control(int request, int value, int index, int leng
             hub.usb_port[n].PortChange |= PORT_STAT_C_RESET;
             /* set enable bit */
             hub.usb_port[n].PortStatus |= PORT_STAT_ENABLE;
+            hub.usb_port[n].PortStatus &= ~PORT_STAT_SUSPEND;
           }
           break;
         case PORT_POWER:
+#if USB_HUB_POWER_SWITCHING
+  #if USB_HUB_POWER_PER_PORT == 0
+          for (n = 0; n < hub.n_ports; n++) {
+  #endif
+            if ((hub.usb_port[n].PortStatus & PORT_STAT_POWER) == 0) {
+              hub.usb_port[n].PortStatus = PORT_STAT_POWER;
+              hub.device_change |= (1 << n);
+              runtime_config();
+            }
+  #if USB_HUB_POWER_PER_PORT == 0
+          }
+  #endif
+#endif
           break;
         default:
           BX_ERROR(("Unknown SetPortFeature: %d", value));
@@ -452,6 +517,23 @@ int usb_hub_device_c::handle_control(int request, int value, int index, int leng
       if (n >= hub.n_ports)
         goto fail;
       switch(value) {
+        case PORT_POWER:
+#if USB_HUB_POWER_SWITCHING
+  #if USB_HUB_POWER_PER_PORT == 0
+          for (n = 0; n < hub.n_ports; n++) {
+  #endif
+            if (hub.usb_port[n].PortStatus & PORT_STAT_POWER) {
+              hub.usb_port[n].PortStatus &= ~PORT_STAT_POWER;
+              hub.device_change |= (1 << n);
+              runtime_config();
+              hub.usb_port[n].PortStatus = 0;
+              hub.usb_port[n].PortChange = 0;
+            }
+  #if USB_HUB_POWER_PER_PORT == 0
+          }
+  #endif
+#endif
+          break;
         case PORT_ENABLE:
           hub.usb_port[n].PortStatus &= ~PORT_STAT_ENABLE;
           break;
@@ -480,30 +562,63 @@ int usb_hub_device_c::handle_control(int request, int value, int index, int leng
       ret = 0;
       break;
     case DeviceClassInRequest | USB_REQ_GET_DESCRIPTOR:
-      {
-        unsigned int limit, var_hub_size = 0;
+      if (
+#if USB_HUB_VERSION == 0x0100
+          ((value >> 8) == 0x00) ||   // USB 1.0 defines it as type = zero
+#endif
+          ((value >> 8) == 0x29)) {   // USB 1.1+ defines it as type = 0x29
+        unsigned int var_hub_size = 0, indx = 7;
         memcpy(data, bx_hub_hub_descriptor,
                 sizeof(bx_hub_hub_descriptor));
         data[2] = hub.n_ports;
-
+        
         /* fill DeviceRemovable bits */
-        limit = ((hub.n_ports + 1 + 7) / 8) + 7;
-        for (n = 7; n < limit; n++) {
-          data[n] = 0x00;
+        unsigned int byte_count = ((hub.n_ports + 1 + 7) / 8);
+        for (n = 0; n < byte_count; n++) {
+          data[indx + n] = 0x00;
           var_hub_size++;
         }
 
+#if USB_HUB_VERSION == 0x0100
+        /* Build a bitmap of all present ports starting with:
+                                     bit 1 = port 0, bit 2 = port 1, etc. 
+          We can assume there will be less than 16 ports (USB_HUB_MAX_PORTS < 16) */
+        unsigned int status = 0;
+        for (n = 0; n < hub.n_ports; n++) {
+          status |= (1 << (n + 1));
+        }
+#endif
         /* fill PortPwrCtrlMask bits */
-        limit = limit + ((hub.n_ports + 7) / 8);
-        for (;n < limit; n++) {
-          data[n] = 0xff;
+        /*  USB 1.0: has this field set each bit indicating if a port is present
+                     starting with bit 1. */
+        /* USB 1.1+: states that this field should be all 1's */
+        indx += var_hub_size;
+        for (n = 0; n < byte_count; n++) {
+#if USB_HUB_VERSION == 0x0100
+  #if USB_HUB_POWER_SWITCHING && USB_HUB_POWER_PER_PORT
+          data[indx + n] = (Bit8u) (status & 0xFF);
+          status >>= 8;
+  #else
+          data[indx + n] = 0x00;
+  #endif
+#else
+          data[indx + n] = 0xFF;
+#endif
           var_hub_size++;
         }
 
         ret = sizeof(bx_hub_hub_descriptor) + var_hub_size;
         data[0] = ret;
-        break;
+#if USB_HUB_VERSION != 0x0100
+      } else if ((value >> 8) == 0x00) {    // USB 1.0 defines it as type = zero
+        BX_INFO(("handle_control: Hub Class: A request of zero is a USB 1.0 request. USB 1.1+ use 0x29."));
+        goto fail;
+#endif
+      } else {
+        BX_ERROR(("handle_control: Hub Class: unknown type requested: 0x%02x", value >> 8));
+        goto fail;
       }
+      break;
     default:
       BX_ERROR(("handle_control: unknown request: 0x%04x", request));
     fail:
@@ -526,7 +641,6 @@ int usb_hub_device_c::handle_data(USBPacket *p)
   switch(p->pid) {
     case USB_TOKEN_IN:
       if (p->devep == 1) {
-        unsigned int status;
         int i, n;
         n = (hub.n_ports + 1 + 7) / 8;
         if (p->len == 1) { /* FreeBSD workaround */
@@ -534,19 +648,27 @@ int usb_hub_device_c::handle_data(USBPacket *p)
         } else if (n > p->len) {
           return USB_RET_BABBLE;
         }
-        status = 0;
+        Bit16u status = 0;
         for(i = 0; i < hub.n_ports; i++) {
           if (hub.usb_port[i].PortChange)
             status |= (1 << (i + 1));
         }
+        if (status != hub.PortStatusC) {
+          hub.PortStatusC = status;
+          status |= 1;  // bit 0 = hub change detected
+        }
+#if USB_HUB_ALWAYS_REPORT != 1
         if (status != 0) {
+#endif
           for(i = 0; i < n; i++) {
             p->data[i] = status >> (8 * i);
           }
           ret = n;
+#if USB_HUB_ALWAYS_REPORT != 1
         } else {
-          ret = USB_RET_NAK; /* usb11 11.13.1 */
+          ret = USB_RET_NAK;
         }
+#endif
       } else {
         goto fail;
       }
@@ -639,7 +761,11 @@ int usb_hub_device_c::event_handler(int event, void *ptr, int port)
       }
       break;
 
-    // host controller events start here
+    // "host controller" events start here
+    case USB_EVENT_DEFAULT_SPEED:
+      // return default speed for specified port
+      return USB_SPEED_FULL;
+      
     case USB_EVENT_CHECK_SPEED:
       if (ptr != NULL) {
         usb_device_c *usb_device = (usb_device_c *) ptr;
@@ -706,6 +832,7 @@ bool usb_hub_device_c::usb_set_connect_status(Bit8u port, bool connected)
         hub.usb_port[port].PortStatus &= ~PORT_STAT_ENABLE;
         hub.usb_port[port].PortChange |= PORT_STAT_C_ENABLE;
       }
+      hub.usb_port[port].PortStatus &= ~PORT_STAT_SUSPEND;
       remove_device(port);
     }
   }
@@ -720,13 +847,17 @@ void usb_hub_device_c::runtime_config()
   for (i = 0; i < hub.n_ports; i++) {
     // device change support
     if ((hub.device_change & (1 << i)) != 0) {
-      if ((hub.usb_port[i].PortStatus & PORT_STAT_CONNECTION) == 0) {
-        sprintf(pname, "port%d", i + 1);
-        init_device(i, (bx_list_c *) SIM->get_param(pname, hub.config));
+      if (hub.usb_port[i].PortStatus & PORT_STAT_POWER) {
+        if ((hub.usb_port[i].PortStatus & PORT_STAT_CONNECTION) == 0) {
+          sprintf(pname, "port%d", i + 1);
+          init_device(i, (bx_list_c *) SIM->get_param(pname, hub.config));
+        } else {
+          usb_set_connect_status(i, 0);
+        }
+        hub.device_change &= ~(1 << i);
       } else {
         usb_set_connect_status(i, 0);
       }
-      hub.device_change &= ~(1 << i);
     }
     // forward to connected device
     if (hub.usb_port[i].device != NULL) {
@@ -798,7 +929,9 @@ Bit64s usb_hub_device_c::hub_param_oc_handler(bx_param_c *param, bool set, Bit64
     hub = (usb_hub_device_c *) (port->get_parent()->get_device_param());
     if (hub != NULL) {
       portnum = atoi(port->get_name()+4) - 1;
+#if USB_HUB_POWER_SWITCHING
       hub->hub.usb_port[portnum].PortStatus &= ~PORT_STAT_POWER;
+#endif
       hub->hub.usb_port[portnum].PortStatus |= PORT_STAT_OVERCURRENT;
       hub->hub.usb_port[portnum].PortChange |= PORT_STAT_C_OVERCURRENT;
       BX_DEBUG(("Over-current signaled on port #%d.", portnum + 1));
