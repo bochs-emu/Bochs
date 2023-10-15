@@ -53,7 +53,6 @@ core2_penryn_t9600_t::core2_penryn_t9600_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 #if BX_SUPPORT_VMX
   enable_cpu_extension(BX_ISA_VMX);
 #endif
-  enable_cpu_extension(BX_ISA_SMX);
   enable_cpu_extension(BX_ISA_CLFLUSH);
   enable_cpu_extension(BX_ISA_DEBUG_EXTENSIONS);
   enable_cpu_extension(BX_ISA_VME);
