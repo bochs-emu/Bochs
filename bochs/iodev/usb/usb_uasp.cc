@@ -147,7 +147,6 @@ struct S_UASP_INPUT {
 int usb_msd_device_c::uasp_handle_data(USBPacket *p)
 {
   int ret = 0;
-  Bit8u *data = p->data;
   int len = p->len;
   int index = p->strm_pid; // high-speed device will be zero. super-speed device will have the stream id.
   
@@ -497,7 +496,7 @@ int usb_msd_device_c::uasp_process_request(USBPacket *p, int index)
   }
 
   // check to make sure the direction is correct
-  if (p->pid != UASP_GET_DIR(req->mode)) {
+  if (p->pid != (int) UASP_GET_DIR(req->mode)) {
     BX_ERROR(("Found packet with wrong direction."));
     uasp_do_stall(req);
   }
@@ -578,7 +577,7 @@ int usb_msd_device_c::uasp_do_status(UASPRequest *req, USBPacket *p)
     // nothing
   } else if (req->result == STATUS_CHECK_CONDITION) {
     status->stat_qual = 0;
-    if (p->len >= sizeof(struct S_UASP_STATUS)) {
+    if (p->len >= (int) sizeof(struct S_UASP_STATUS)) {
       // do a REQUEST SENSE command
       static Bit8u request_sense[6] = { 0x03, 0, 0, 0, 18, 0 };
       UASPRequest *r = &s.uasp_request[UASP_MAX_STREAMS_N];
