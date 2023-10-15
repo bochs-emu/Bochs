@@ -118,6 +118,7 @@
 #define USB_REQ_SET_SEL           0x30
 #define USB_REQ_SET_ISO_DELAY     0x31
 
+#define USB_ENDPOINT_HALT          0
 #define USB_DEVICE_SELF_POWERED    0
 #define USB_DEVICE_REMOTE_WAKEUP   1
 #define USB_DEVICE_U1_ENABLE      48
@@ -188,6 +189,7 @@ typedef struct USBEndPoint {
 #if HANDLE_TOGGLE_CONTROL
   int  toggle;           // the current toggle for the endpoint (0, 1, or -1 for xHCI)
 #endif
+  bool halted;           // is the current ep halted?
 } USBEndPoint;
 
 class BOCHSAPI bx_usbdev_ctl_c : public logfunctions {
@@ -258,13 +260,20 @@ public:
 
 #if HANDLE_TOGGLE_CONTROL
   int get_toggle(const int ep) {
-    return (ep < USB_MAX_ENDPOINTS) ? d.endpoint_info[ep].toggle : 0;
+    return ((ep & 0x7F) < USB_MAX_ENDPOINTS) ? d.endpoint_info[(ep & 0x7F)].toggle : 0;
   }
   void set_toggle(const int ep, const int toggle) {
-    if (ep < USB_MAX_ENDPOINTS) 
-      d.endpoint_info[ep].toggle = toggle;
+    if ((ep & 0x7F) < USB_MAX_ENDPOINTS) 
+      d.endpoint_info[(ep & 0x7F)].toggle = toggle;
   }
 #endif
+  bool get_halted(const int ep) {
+    return ((ep & 0x7F) < USB_MAX_ENDPOINTS) ? d.endpoint_info[(ep & 0x7F)].halted : 0;
+  }
+  void set_halted(const int ep, const bool halted) {
+    if ((ep & 0x7F) < USB_MAX_ENDPOINTS) 
+      d.endpoint_info[(ep & 0x7F)].halted = halted;
+  }
 
   Bit8u get_type() {
     return d.type;

@@ -30,7 +30,7 @@
 #define BX_IODEV_USB_HUB_H
 
 
-#define USB_HUB_MAX_PORTS 8
+#define USB_HUB_MAX_PORTS 8  // must be at least 2 and less than 16
 #define USB_HUB_DEF_PORTS 4
 
 class usb_hub_device_c : public usb_device_c {
@@ -67,6 +67,7 @@ private:
       Bit16u PortStatus;
       Bit16u PortChange;
     } usb_port[USB_HUB_MAX_PORTS];
+    Bit16u PortStatusC;
     Bit16u device_change;
   } hub;
 
