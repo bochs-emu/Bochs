@@ -1474,6 +1474,15 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
       tlbEntry->accessBits &= ~(TLB_SysReadShadowStackOK | TLB_SysWriteShadowStackOK);
 #endif
     }
+
+#if BX_SUPPORT_X86_64
+    if (long64_mode() && BX_CPU_THIS_PTR cr4.get_LASS()) {
+      if (lpf >> 63) // supervisor, cannot access user pages
+        tlbEntry->accessBits &= ~(TLB_UserReadOK | TLB_UserWriteOK | TLB_UserReadShadowStackOK | TLB_UserWriteShadowStackOK);
+      else           // user, cannot access supervisor pages
+        tlbEntry->accessBits &= ~(TLB_SysReadOK | TLB_SysWriteOK | TLB_SysReadShadowStackOK | TLB_SysWriteShadowStackOK);
+    }
+#endif
   }
 
 #if BX_SUPPORT_VMX >= 2
@@ -2481,9 +2490,19 @@ int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_
   bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(laddr, 0);
 
 #if BX_SUPPORT_X86_64
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("access_write_linear(): canonical failure"));
-    return -1;
+  if (long64_mode()) {
+    if (! IsCanonical(laddr)) {
+      BX_ERROR(("access_write_linear(): canonical failure"));
+      return -1;
+    }
+
+    if (BX_CPU_THIS_PTR cr4.get_LASS()) {
+      // laddr[63] == 0 user, laddr[63] == 1 supervisor
+      if ((laddr >> 63) == user) {
+        BX_ERROR(("access_write_linear(): LASS violation during write CPL=%d laddr=0x" FMT_PHY_ADDRX, user, laddr));
+        return -1;
+      }
+    }
   }
 #endif
 
@@ -2526,6 +2545,13 @@ int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_
       if (! IsCanonical(laddr2)) {
         BX_ERROR(("access_write_linear(): canonical failure for second half of page split access"));
         return -1;
+      }
+      if (BX_CPU_THIS_PTR cr4.get_LASS()) {
+        // laddr[63] == 0 user, laddr[63] == 1 supervisor
+        if ((laddr2 >> 63) == user) {
+          BX_ERROR(("access_write_linear(): LASS violation during write CPL=%d laddr=0x" FMT_PHY_ADDRX, user, laddr2));
+          return -1;
+        }
       }
     }
 #endif
@@ -2587,9 +2613,19 @@ int BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_p
   bool user = (curr_pl == 3);
 
 #if BX_SUPPORT_X86_64
-  if (! IsCanonical(laddr)) {
-    BX_ERROR(("access_read_linear(): canonical failure"));
-    return -1;
+  if (long64_mode()) {
+    if (! IsCanonical(laddr)) {
+      BX_ERROR(("access_read_linear(): canonical failure"));
+      return -1;
+    }
+
+    if (BX_CPU_THIS_PTR cr4.get_LASS()) {
+      // laddr[63] == 0 user, laddr[63] == 1 supervisor
+      if ((laddr >> 63) == user) {
+        BX_ERROR(("access_read_linear(): LASS violation during read CPL=%d laddr=0x" FMT_PHY_ADDRX, user, laddr));
+        return -1;
+      }
+    }
   }
 #endif
 
@@ -2631,6 +2667,13 @@ int BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_p
       if (! IsCanonical(laddr2)) {
         BX_ERROR(("access_read_linear(): canonical failure for second half of page split access"));
         return -1;
+      }
+      if (BX_CPU_THIS_PTR cr4.get_LASS()) {
+        // laddr[63] == 0 user, laddr[63] == 1 supervisor
+        if ((laddr2 >> 63) == user) {
+          BX_ERROR(("access_read_linear(): LASS violation during read CPL=%d laddr=0x" FMT_PHY_ADDRX, user, laddr2));
+          return -1;
+        }
       }
     }
 #endif
