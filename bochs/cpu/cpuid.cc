@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2014-2020 Stanislav Shwartsman
+//   Copyright (c) 2014-2023 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -27,123 +27,11 @@
 #include "param_names.h"
 #include "cpuid.h"
 
-static const char *cpu_feature_name[] =
-{
-  "386ni",                  // BX_ISA_386
-  "x87",                    // BX_ISA_X87
-  "486ni",                  // BX_ISA_486
-  "pentium_ni",             // BX_ISA_PENTIUM
-  "p6ni",                   // BX_ISA_P6
-  "mmx",                    // BX_ISA_MMX
-  "3dnow!",                 // BX_ISA_3DNOW
-  "debugext",               // BX_ISA_DEBUG_EXTENSIONS
-  "vme",                    // BX_ISA_VME
-  "pse",                    // BX_ISA_PSE
-  "pae",                    // BX_ISA_PAE
-  "pge",                    // BX_ISA_PGE
-  "pse36",                  // BX_ISA_PSE36
-  "mtrr",                   // BX_ISA_MTRR
-  "pat",                    // BX_ISA_PAT
-  "legacy_syscall_sysret",  // BX_ISA_SYSCALL_SYSRET_LEGACY
-  "sysenter_sysexit",       // BX_ISA_SYSENTER_SYSEXIT
-  "clflush",                // BX_ISA_CLFLUSH
-  "clflushopt",             // BX_ISA_CLFLUSHOPT
-  "clwb",                   // BX_ISA_CLWB
-  "cldemote",               // BX_ISA_CLDEMOTE
-  "sse",                    // BX_ISA_SSE
-  "sse2",                   // BX_ISA_SSE2
-  "sse3",                   // BX_ISA_SSE3
-  "ssse3",                  // BX_ISA_SSSE3
-  "sse4_1",                 // BX_ISA_SSE4_1
-  "sse4_2",                 // BX_ISA_SSE4_2
-  "popcnt",                 // BX_ISA_POPCNT
-  "mwait",                  // BX_ISA_MONITOR_MWAIT
-  "mwaitx",                 // BX_ISA_MONITORX_MWAITX
-  "waitpkg",                // BX_ISA_WAITPKG
-  "vmx",                    // BX_ISA_VMX
-  "smx",                    // BX_ISA_SMX
-  "longmode",               // BX_ISA_LONG_MODE
-  "lm_lahf_sahf",           // BX_ISA_LM_LAHF_SAHF
-  "nx",                     // BX_ISA_NX
-  "1g_pages",               // BX_ISA_1G_PAGES
-  "cmpxhg16b",              // BX_ISA_CMPXCHG16B
-  "rdtscp",                 // BX_ISA_RDTSCP
-  "ffxsr",                  // BX_ISA_FFXSR
-  "xsave",                  // BX_ISA_XSAVE
-  "xsaveopt",               // BX_ISA_XSAVEOPT
-  "xsavec",                 // BX_ISA_XSAVEC
-  "xsaves",                 // BX_ISA_XSAVES
-  "aes_pclmulqdq",          // BX_ISA_AES_PCLMULQDQ
-  "vaes_vpclmulqdq",        // BX_ISA_VAES_VPCLMULQDQ
-  "movbe",                  // BX_ISA_MOVBE
-  "fsgsbase",               // BX_ISA_FSGSBASE
-  "invpcid",                // BX_ISA_INVPCID
-  "avx",                    // BX_ISA_AVX
-  "avx2",                   // BX_ISA_AVX2
-  "avx_f16c",               // BX_ISA_AVX_F16C
-  "avx_fma",                // BX_ISA_AVX_FMA
-  "altmovcr8",              // BX_ISA_ALT_MOV_CR8
-  "sse4a",                  // BX_ISA_SSE4A
-  "misaligned_sse",         // BX_ISA_MISALIGNED_SSE
-  "lzcnt",                  // BX_ISA_LZCNT
-  "bmi1",                   // BX_ISA_BMI1
-  "bmi2",                   // BX_ISA_BMI2
-  "fma4",                   // BX_ISA_FMA4
-  "xop",                    // BX_ISA_XOP
-  "tbm",                    // BX_ISA_TBM
-  "svm",                    // BX_ISA_SVM
-  "rdrand",                 // BX_ISA_RDRAND
-  "adx",                    // BX_ISA_ADX
-  "smap",                   // BX_ISA_SMAP
-  "rdseed",                 // BX_ISA_RDSEED
-  "sha",                    // BX_ISA_SHA
-  "sha512",                 // BX_ISA_SHA512
-  "gfni",                   // BX_ISA_GFNI
-  "sm3",                    // BX_ISA_SM3
-  "sm4",                    // BX_ISA_SM4
-  "avx512",                 // BX_ISA_AVX512
-  "avx512cd",               // BX_ISA_AVX512_CD
-  "avx512pf",               // BX_ISA_AVX512_PF
-  "avx512er",               // BX_ISA_AVX512_ER
-  "avx512dq",               // BX_ISA_AVX512_DQ
-  "avx512bw",               // BX_ISA_AVX512_BW
-  "avx512vl",               // BX_ISA_AVX512_VL
-  "avx512vbmi",             // BX_ISA_AVX512_VBMI
-  "avx512vbmi2",            // BX_ISA_AVX512_VBMI2
-  "avx512ifma52",           // BX_ISA_AVX512_IFMA52
-  "avx512vpopcnt",          // BX_ISA_AVX512_VPOPCNTDQ
-  "avx512vnni",             // BX_ISA_AVX512_VNNI
-  "avx512bitalg",           // BX_ISA_AVX512_BITALG
-  "avx512vp2intersect",     // BX_ISA_AVX512_VP2INTERSECT
-  "avx512bf16",             // BX_ISA_AVX512_BF16
-  "avx_ifma",               // BX_ISA_AVX_IFMA
-  "avx_vnni",               // BX_ISA_AVX_VNNI
-  "avx_vnni_int8",          // BX_ISA_AVX_VNNI_INT8
-  "avx_vnni_int16",         // BX_ISA_AVX_VNNI_INT16
-  "avx_ne_convert",         // BX_ISA_AVX_NE_CONVERT
-  "xapic",                  // BX_ISA_XAPIC
-  "x2apic",                 // BX_ISA_X2APIC
-  "xapicext",               // BX_ISA_XAPICEXT
-  "pcid",                   // BX_ISA_PCID
-  "smep",                   // BX_ISA_SMEP
-  "tsc_adjust",             // BX_ISA_TSC_ADJUST
-  "tsc_deadline",           // BX_ISA_TSC_DEADLINE
-  "fopcode_deprecation",    // BX_ISA_FOPCODE_DEPRECATION
-  "fcs_fds_deprecation",    // BX_ISA_FCS_FDS_DEPRECATION
-  "fdp_deprecation",        // BX_ISA_FDP_DEPRECATION
-  "pku",                    // BX_ISA_PKU
-  "pks",                    // BX_ISA_PKS
-  "umip",                   // BX_ISA_UMIP
-  "lass",                   // BX_ISA_LASS
-  "rdpid",                  // BX_ISA_RDPID
-  "tce",                    // BX_ISA_TCE
-  "clzero",                 // BX_ISA_CLZERO
-  "sca_mitigations",        // BX_ISA_SCA_MITIGATIONS
-  "cet",                    // BX_ISA_CET
-  "wrmsrns",                // BX_ISA_WRMSRNS
-  "cmpccxadd",              // BX_ISA_CMPCCXADD
-  "serialize",              // BX_ISA_SERIALIZE
+static const char *cpu_feature_name[BX_ISA_EXTENSION_LAST] = {
+#define x86_feature(isa, feature_name) #feature_name,
+#include "decoder/features.h"
 };
+#undef x86_feature
 
 const char *get_cpu_feature_name(unsigned feature) { return cpu_feature_name[feature]; }
 
@@ -813,7 +701,7 @@ Bit32u bx_cpuid_t::get_ext_cpuid_leaf_1_ecx_intel(Bit32u extra) const
   //   [31:29] Reserved
 
 #if BX_SUPPORT_X86_64
-  if (is_cpu_extension_supported(BX_ISA_LONG_MODE))
+  if (is_cpu_extension_supported(BX_ISA_LM_LAHF_SAHF))
     ecx |= BX_CPUID_EXT1_ECX_LAHF_SAHF;
 #endif
 
@@ -1390,5 +1278,5 @@ void bx_cpuid_t::dump_features() const
   BX_INFO(("CPU Features supported:"));
   for (unsigned i=1; i<BX_ISA_EXTENSION_LAST; i++)
     if (is_cpu_extension_supported(i))
-      BX_INFO(("\t\t%s", cpu_feature_name[i]));
+      BX_INFO(("\t\t%s", get_cpu_feature_name(i)));
 }

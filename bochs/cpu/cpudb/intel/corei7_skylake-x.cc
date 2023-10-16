@@ -107,7 +107,6 @@ corei7_skylake_x_t::corei7_skylake_x_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_AVX512_DQ);
   enable_cpu_extension(BX_ISA_AVX512_CD);
   enable_cpu_extension(BX_ISA_AVX512_BW);
-  enable_cpu_extension(BX_ISA_AVX512_VL);
 #endif
   enable_cpu_extension(BX_ISA_CLFLUSHOPT);
   enable_cpu_extension(BX_ISA_CLWB);

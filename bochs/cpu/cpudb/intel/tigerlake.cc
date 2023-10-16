@@ -109,7 +109,6 @@ tigerlake_t::tigerlake_t(BX_CPU_C *cpu):
   enable_cpu_extension(BX_ISA_GFNI);
   enable_cpu_extension(BX_ISA_VAES_VPCLMULQDQ);
   enable_cpu_extension(BX_ISA_AVX512);
-  enable_cpu_extension(BX_ISA_AVX512_VL);
   enable_cpu_extension(BX_ISA_AVX512_DQ);
   enable_cpu_extension(BX_ISA_AVX512_CD);
   enable_cpu_extension(BX_ISA_AVX512_BW);
