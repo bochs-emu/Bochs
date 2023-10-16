@@ -28,6 +28,7 @@
 
 #if BX_SUPPORT_SVM
 
+#include "gui/paramtree.h"
 #include "decoder/ia_opcodes.h"
 
 extern const char *segname[];
