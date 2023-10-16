@@ -926,11 +926,13 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_ebx(Bit32u extra) const
 
   // [30:30]  AVX512BW instructions support
   // [31:31]  AVX512VL variable vector length support
+#if BX_SUPPORT_EVEX
   if (is_cpu_extension_supported(BX_ISA_AVX512)) {
     if (is_cpu_extension_supported(BX_ISA_AVX512_BW))
       ebx |= BX_CPUID_STD7_SUBLEAF0_EBX_AVX512BW;
     ebx |= BX_CPUID_STD7_SUBLEAF0_EBX_AVX512VL;
   }
+#endif
 
   return ebx;
 }
@@ -1056,8 +1058,12 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_edx(Bit32u extra) const
   //   [7:6]    reserved
 
   //   [8:8]    AVX512 VP2INTERSECT instructions support
-  if (is_cpu_extension_supported(BX_ISA_AVX512_VP2INTERSECT))
-    edx |= BX_CPUID_STD7_SUBLEAF0_EDX_AVX512_VPINTERSECT;
+#if BX_SUPPORT_EVEX
+  if (is_cpu_extension_supported(BX_ISA_AVX512)) {
+    if (is_cpu_extension_supported(BX_ISA_AVX512_VP2INTERSECT))
+      edx |= BX_CPUID_STD7_SUBLEAF0_EDX_AVX512_VPINTERSECT;
+  }
+#endif
 
   //   [9:9]    SRBDS_CTRL: IA32_MCU_OPT_CTRL MSR
   // * [10:10]  MD clear (SCA)
@@ -1122,8 +1128,12 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_eax(Bit32u extra) const
     eax |= BX_CPUID_STD7_SUBLEAF1_EAX_AVX_VNNI;
 
   //   [5:5]    AVX512_BF16 conversion instructions support
-  if (is_cpu_extension_supported(BX_ISA_AVX512_BF16))
-    eax |= BX_CPUID_STD7_SUBLEAF1_EAX_AVX512_BF16;
+#if BX_SUPPORT_EVEX
+  if (is_cpu_extension_supported(BX_ISA_AVX512)) {
+    if (is_cpu_extension_supported(BX_ISA_AVX512_BF16))
+      eax |= BX_CPUID_STD7_SUBLEAF1_EAX_AVX512_BF16;
+  }
+#endif
 
   //   [6:6]    LASS: Linear Address Space Separation support
   if (is_cpu_extension_supported(BX_ISA_LASS))

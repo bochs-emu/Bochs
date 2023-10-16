@@ -91,13 +91,13 @@ x86_feature(BX_ISA_SHA512, "sha512")                                    /* SHA-5
 x86_feature(BX_ISA_GFNI, "gfni")                                        /* GFNI instruction */
 x86_feature(BX_ISA_SM3, "sm3")                                          /* SM3 instruction */
 x86_feature(BX_ISA_SM4, "sm4")                                          /* SM4 instruction */
-#if BX_SUPPORT_EVEX
 x86_feature(BX_ISA_AVX512, "avx512")                                    /* AVX-512 instruction */
+x86_feature(BX_ISA_AVX512_DQ, "avx512dq")                               /* AVX-512DQ instruction */
+x86_feature(BX_ISA_AVX512_BW, "avx512bw")                               /* AVX-512 Byte/Word instruction */
+#if BX_SUPPORT_EVEX
 x86_feature(BX_ISA_AVX512_CD, "avx512cd")                               /* AVX-512 Conflict Detection instruction */
 x86_feature(BX_ISA_AVX512_PF, "avx512pf")                               /* AVX-512 Sparse Prefetch instruction */
 x86_feature(BX_ISA_AVX512_ER, "avx512er")                               /* AVX-512 Exponential/Reciprocal instruction */
-x86_feature(BX_ISA_AVX512_DQ, "avx512dq")                               /* AVX-512DQ instruction */
-x86_feature(BX_ISA_AVX512_BW, "avx512bw")                               /* AVX-512 Byte/Word instruction */
 x86_feature(BX_ISA_AVX512_VBMI, "avx512vbmi")                           /* AVX-512 VBMI : Vector Bit Manipulation Instructions */
 x86_feature(BX_ISA_AVX512_VBMI2, "avx512vbmi2")                         /* AVX-512 VBMI2 : Vector Bit Manipulation Instructions */
 x86_feature(BX_ISA_AVX512_IFMA52, "avx512ifma52")                       /* AVX-512 IFMA52 Instructions */
