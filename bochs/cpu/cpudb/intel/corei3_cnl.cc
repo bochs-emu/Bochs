@@ -108,7 +108,6 @@ corei3_cnl_t::corei3_cnl_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_AVX512_DQ);
   enable_cpu_extension(BX_ISA_AVX512_CD);
   enable_cpu_extension(BX_ISA_AVX512_BW);
-  enable_cpu_extension(BX_ISA_AVX512_VL);
   enable_cpu_extension(BX_ISA_AVX512_IFMA52);
   enable_cpu_extension(BX_ISA_AVX512_VBMI);
 #endif

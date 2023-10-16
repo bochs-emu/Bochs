@@ -589,7 +589,6 @@ void bx_generic_cpuid_t::init_cpu_extensions_bitmask(void)
 #if BX_SUPPORT_EVEX
     case BX_CPUID_SUPPORT_AVX512:
       enable_cpu_extension(BX_ISA_AVX512);
-      enable_cpu_extension(BX_ISA_AVX512_VL);
       enable_cpu_extension(BX_ISA_AVX512_BW);
       enable_cpu_extension(BX_ISA_AVX512_DQ);
       enable_cpu_extension(BX_ISA_AVX512_CD);
