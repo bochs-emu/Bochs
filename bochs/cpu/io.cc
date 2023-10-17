@@ -865,7 +865,7 @@ bool BX_CPP_AttrRegparmN(3) BX_CPU_C::allow_io(bxInstruction_c *i, Bit16u port, 
    * Otherwise, must check the IO permission map on >286.
    * On the 286, there is no IO permissions map */
   
-  static bool port_e9_hack_all_rings = SIM->get_param_bool(BXPN_PORT_E9_HACK_ALL_RINGS)->get();
+  static bool port_e9_hack_all_rings = SIM->get_param_bool(BXPN_PORT_E9_HACK)->get() && SIM->get_param_bool(BXPN_PORT_E9_HACK_ALL_RINGS)->get();
   if (0xe9 == port && port_e9_hack_all_rings)
     return(1); // port e9 hack can be used by unprivileged code
 
