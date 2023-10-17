@@ -9,7 +9,10 @@ set echo
             --enable-cpu-level=6 \
             --enable-x86-64 \
             --enable-vmx=2 \
+            --enable-svm \
             --enable-avx \
+            --enable-evex \
+            --enable-cet \
             --enable-pci \
             --enable-clgd54xx \
             --enable-voodoo \
@@ -21,7 +24,6 @@ set echo
             --enable-es1370 \
             --enable-e1000 \
             --enable-show-ips \
-            --enable-avx \
             --disable-readline \
             --without-x \
             --with-win32 --with-rfb --with-nogui

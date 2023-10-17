@@ -1303,8 +1303,8 @@ void usb_hid_device_c::register_state_specific(bx_list_c *parent)
     BXRS_DEC_PARAM_FIELD(list, report_use_id, s.report_use_id);
     BXRS_DEC_PARAM_FIELD(list, report_id, s.report_id);
     BXRS_DEC_PARAM_FIELD(list, bx_mouse_hid_report_descriptor_len, s.bx_mouse_hid_report_descriptor_len);
-    new bx_shadow_data_c(list, "bx_mouse_hid_report_descriptor", (Bit8u *) s.bx_mouse_hid_report_descriptor, sizeof(s.bx_mouse_hid_report_descriptor), 1);
-    new bx_shadow_data_c(list, "model", (Bit8u *) s.model, sizeof(s.model), 1);
+    new bx_shadow_data_c(list, "bx_mouse_hid_report_descriptor", (Bit8u *) s.bx_mouse_hid_report_descriptor, s.bx_mouse_hid_report_descriptor_len, 0);
+    new bx_shadow_data_c(list, "model", (Bit8u *) &s.model, sizeof(s.model), 0);
     bx_list_c *evbuf = new bx_list_c(list, "kbd_event_buf", "");
     char pname[16];
     for (Bit8u i = 0; i < BX_KBD_ELEMENTS; i++) {

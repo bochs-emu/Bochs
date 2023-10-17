@@ -205,6 +205,8 @@ enum {
 
 ///// types and definitions used in event structures
 
+#include "paramtree.h"
+
 #define BX_EVT_IS_ASYNC(type) ((type) > __ALL_EVENTS_BELOW_ARE_ASYNC__)
 
 typedef enum {

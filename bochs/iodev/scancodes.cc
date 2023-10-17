@@ -27,7 +27,7 @@
 #define BX_PLUGGABLE
 
 #include "bochs.h"
-#include "gui/gui.h"
+#include "gui/gui.h"        // for BX_KEY_NBKEYS
 #include "scancodes.h"
 
 unsigned char translation8042[256] = {
