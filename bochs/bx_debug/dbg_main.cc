@@ -387,7 +387,9 @@ void bx_get_command(void)
     charptr_ret = readline(prompt);
     // beware, returns NULL on end of file
     if (charptr_ret && strlen(charptr_ret) > 0) {
+#if HAVE_READLINE_HISTORY_H
       add_history(charptr_ret);
+#endif
       strncpy(tmp_buf, charptr_ret, sizeof(tmp_buf));
       tmp_buf[sizeof(tmp_buf) - 2] = '\0';
       strcat(tmp_buf, "\n");

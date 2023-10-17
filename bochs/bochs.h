@@ -102,7 +102,9 @@ extern "C" {
 #endif
 
 #include "osdep.h"       /* platform dependent includes and defines */
-#include "gui/paramtree.h"
+
+class bx_param_c;
+class bx_list_c;
 
 // BX_SHARE_PATH should be defined by the makefile.  If not, give it
 // a value of NULL to avoid compile problems.
