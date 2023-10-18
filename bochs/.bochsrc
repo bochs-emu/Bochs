@@ -1317,7 +1317,7 @@ speaker: enabled=1, mode=sound, volume=15
 #   port_e9_hack: enabled=1
 #   port_e9_hack: enabled=1, all_rings=1
 #=======================================================================
-#port_e9_hack: enabled=1
+#port_e9_hack: enabled=1, all_rings=1
 
 #=======================================================================
 # IODEBUG:
