@@ -38,7 +38,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTNEPS2BF16_MASK_Vbf16WpsR(bxInstruction
   dst.clear();
 
   Bit32u opmask = (i->opmask() != 0) ? BX_READ_16BIT_OPMASK(i->opmask()) : 0xffff; // mask according to fp32 source
-  opmask &= (1 << DWORD_ELEMENTS(len)) - 1;
+  opmask &= CUT_OPMASK_TO(DWORD_ELEMENTS(len));
 
   for (unsigned n=0, mask = 0x1; n < DWORD_ELEMENTS(len); n++, mask <<= 1) {
     if (opmask & mask)
