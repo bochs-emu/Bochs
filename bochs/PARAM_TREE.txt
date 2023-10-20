@@ -227,8 +227,11 @@ ports
       (same options as ports.usb.uhci)
     ehci
       (same options as ports.usb.uhci)
+      companion
     xhci
       (same options as ports.usb.uhci)
+      model
+      n_ports
 
 network
   ne2k

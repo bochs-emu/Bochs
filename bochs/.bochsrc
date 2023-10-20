@@ -1220,8 +1220,13 @@ speaker: enabled=1, mode=sound, volume=15
 # 6-port hub. The portX parameter accepts the same device types with the
 # same syntax as the UHCI controller (see above). The optionsX parameter is
 # also available on EHCI.
+# The HC will default to three UHCI companion controllers, but you can specify
+# either UHCI or OHCI. Each companion controller will be evenly divided
+# with 2 ports each, the first 2 on the first companion, and so on.
 #=======================================================================
 #usb_ehci: enabled=1
+#usb_ehci: enabled=1, companion=uhci
+#usb_ehci: enabled=1, companion=ohci
 #usb_ehci: port1=disk, options1="speed:high, path:hdd.img, proto:bbb"
 #usb_ehci: port1=disk, options1="speed:high, path:hdd.img, proto:uasp"
 
