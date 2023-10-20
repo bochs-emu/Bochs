@@ -116,6 +116,7 @@
   <ItemGroup>
     <ClCompile Include="..\iodev\usb\scsi_device.cc" />
     <ClCompile Include="..\iodev\usb\uhci_core.cc" />
+    <ClCompile Include="..\iodev\usb\ohci_core.cc" />
     <ClCompile Include="..\iodev\usb\usb_floppy.cc" />
     <ClCompile Include="..\iodev\usb\usb_common.cc" />
     <ClCompile Include="..\iodev\usb\usb_ehci.cc" />
@@ -131,6 +132,7 @@
   <ItemGroup>
     <ClInclude Include="..\iodev\usb\scsi_device.h" />
     <ClInclude Include="..\iodev\usb\uhci_core.h" />
+    <ClInclude Include="..\iodev\usb\ohci_core.h" />
     <ClInclude Include="..\iodev\usb\usb_floppy.h" />
     <ClInclude Include="..\iodev\usb\usb_common.h" />
     <ClInclude Include="..\iodev\usb\usb_ehci.h" />
