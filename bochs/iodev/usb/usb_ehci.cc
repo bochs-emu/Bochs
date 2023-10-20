@@ -45,6 +45,7 @@
 #include "pci.h"
 #include "usb_common.h"
 #include "uhci_core.h"
+#include "ohci_core.h"
 #include "qemu-queue.h"
 #include "usb_ehci.h"
 
@@ -132,6 +133,13 @@ Bit32s usb_ehci_options_parser(const char *context, int num_params, char *params
     for (int i = 1; i < num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
         SIM->get_param_bool(BXPN_EHCI_ENABLED)->set(atol(&params[i][8]));
+      } else if (!strncmp(params[i], "companion=", 10)) {
+        if (!strcmp(&params[i][10], "uhci"))
+          SIM->get_param_enum(BXPN_EHCI_COMPANION)->set(EHCI_COMPANION_UHCI);
+        else if (!strcmp(&params[i][10], "ohci"))
+          SIM->get_param_enum(BXPN_EHCI_COMPANION)->set(EHCI_COMPANION_OHCI);
+        else
+          BX_PANIC(("%s: unknown parameter '%s' for usb_ehci: companion=", context, &params[i][10]));
       } else if (!strncmp(params[i], "port", 4) || !strncmp(params[i], "options", 7)) {
         if (SIM->parse_usb_port_params(context, params[i], USB_EHCI_PORTS, base) < 0) {
           return -1;
@@ -183,8 +191,10 @@ bx_usb_ehci_c::bx_usb_ehci_c()
 {
   put("usb_ehci", "EHCI");
   memset((void*)&hub, 0, sizeof(bx_usb_ehci_t));
+  companion_type = EHCI_COMPANION_UHCI;
   for (int i = 0; i < 3; i++) {
     uhci[i] = NULL;
+    ohci[i] = NULL;
   }
   rt_conf_id = -1;
   hub.frame_timer_index = BX_NULL_TIMER_HANDLE;
@@ -200,6 +210,8 @@ bx_usb_ehci_c::~bx_usb_ehci_c()
   for (i = 0; i < 3; i++) {
     if (BX_EHCI_THIS uhci[i] != NULL)
       delete BX_EHCI_THIS uhci[i];
+    if (BX_EHCI_THIS ohci[i] != NULL)
+      delete BX_EHCI_THIS ohci[i];
   }
 
   for (i=0; i<USB_EHCI_PORTS; i++) {
@@ -253,30 +265,51 @@ void bx_usb_ehci_c::init(void)
   DEV_register_pci_handlers(this, &BX_EHCI_THIS devfunc, BX_PLUGIN_USB_EHCI,
                             "Experimental USB EHCI");
 
-  // initialize readonly registers (same as QEMU)
-  // 0x8086 = vendor (Intel)
-  // 0x24cd = device (82801D)
-  // revision number (0x10)
-  init_pci_conf(0x8086, 0x24cd, 0x10, 0x0c0320, 0x00, BX_PCI_INTD);
-  BX_EHCI_THIS pci_conf[0x60] = 0x20;
   BX_EHCI_THIS init_bar_mem(0, IO_SPACE_SIZE, read_handler, write_handler);
 
-  for (i = 0; i < 3; i++) {
-    BX_EHCI_THIS uhci[i] = new bx_uhci_core_c();
-    sprintf(lfname, "usb_uchi%d", i);
-    sprintf(pname, "UHCI%d", i);
-    BX_EHCI_THIS uhci[i]->put(lfname, pname);
-  }
-  devfunc = BX_EHCI_THIS devfunc & 0xf8;
-  BX_EHCI_THIS uhci[0]->init_uhci(devfunc, 0x24c2, 0x80, BX_PCI_INTA);
-  BX_EHCI_THIS uhci[1]->init_uhci(devfunc | 0x01, 0x24c4, 0x00, BX_PCI_INTB);
-  BX_EHCI_THIS uhci[2]->init_uhci(devfunc | 0x02, 0x24c7, 0x00, BX_PCI_INTC);
-
+  devfunc = BX_EHCI_THIS devfunc & 0xF8;
+  BX_EHCI_THIS companion_type = SIM->get_param_enum(BXPN_EHCI_COMPANION)->get();
+  if (companion_type == EHCI_COMPANION_UHCI) {
+    // initialize readonly registers (same as QEMU)
+    // 0x8086 = vendor (Intel)
+    // 0x24cd = device (82801D)
+    // revision number (0x10)
+    init_pci_conf(0x8086, 0x24CD, 0x10, 0x0C0320, 0x00, BX_PCI_INTD);
+    BX_EHCI_THIS pci_conf[0x60] = 0x20; // USB release number
+    for (i = 0; i < 3; i++) {
+      BX_EHCI_THIS uhci[i] = new bx_uhci_core_c();
+      sprintf(lfname, "usb_uchi%d", i);
+      sprintf(pname, "UHCI%d", i);
+      BX_EHCI_THIS uhci[i]->put(lfname, pname);
+    }
+    BX_EHCI_THIS uhci[0]->init_uhci(devfunc | 0x00, 0x8086, 0x24c2, 0x01, 0x80, BX_PCI_INTA);
+    BX_EHCI_THIS uhci[1]->init_uhci(devfunc | 0x01, 0x8086, 0x24c4, 0x01, 0x00, BX_PCI_INTB);
+    BX_EHCI_THIS uhci[2]->init_uhci(devfunc | 0x02, 0x8086, 0x24c7, 0x01, 0x00, BX_PCI_INTC);
+  } else if (companion_type == EHCI_COMPANION_OHCI) {
+    // initialize readonly registers
+    // 0x8086 = vendor (Intel)
+    // 0x880F = device (PCH_EG20T)
+    // revision number (0x00)
+    init_pci_conf(0x8086, 0x880F, 0x00, 0x0C0320, 0x00, BX_PCI_INTD);
+    BX_EHCI_THIS pci_conf[0x60] = 0x20;
+    for (i = 0; i < 3; i++) {
+      BX_EHCI_THIS ohci[i] = new bx_ohci_core_c();
+      sprintf(lfname, "usb_ochi%d", i);
+      sprintf(pname, "OHCI%d", i);
+      BX_EHCI_THIS ohci[i]->put(lfname, pname);
+    }
+    BX_EHCI_THIS ohci[0]->init_ohci(devfunc | 0x00, 0x8086, 0x880C, 0x00, 0x80, BX_PCI_INTA);
+    BX_EHCI_THIS ohci[1]->init_ohci(devfunc | 0x01, 0x8086, 0x880D, 0x00, 0x00, BX_PCI_INTB);
+    BX_EHCI_THIS ohci[2]->init_ohci(devfunc | 0x02, 0x8086, 0x880E, 0x00, 0x00, BX_PCI_INTC);
+  } else
+    BX_PANIC(("Unknown EHCI Companion Type found..."));
+  
   // initialize capability registers
   BX_EHCI_THIS hub.cap_regs.CapLength = OPS_REGS_OFFSET;
   BX_EHCI_THIS hub.cap_regs.HciVersion = 0x0100;
-  BX_EHCI_THIS hub.cap_regs.HcsParams = 0x00103200 | USB_EHCI_PORTS;
-  BX_EHCI_THIS hub.cap_regs.HccParams = 0x00006871;
+  BX_EHCI_THIS hub.cap_regs.HcsParams = (EHCI_N_CC << 12) | (EHCI_N_PCC << 8) | (EHCI_PORT_ROUTE << 7) | USB_EHCI_PORTS;
+  BX_EHCI_THIS hub.cap_regs.HccParams = EHCI_HCCPARAMS_EECP(0x68) | EHCI_HCCPARAMS_ISO_THRESH(7) | EHCI_HCCPARAMS_64BIT;
+  BX_EHCI_THIS hub.cap_regs.HcspPortRoute = create_port_routing(EHCI_N_CC, EHCI_N_PCC);
 
   // initialize runtime configuration
   bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
@@ -313,7 +346,10 @@ void bx_usb_ehci_c::reset(unsigned type)
   unsigned i;
 
   for (i = 0; i < 3; i++) {
-    uhci[i]->reset_uhci(type);
+    if (uhci[i])
+      uhci[i]->reset_uhci(type);
+    if (ohci[i])
+      ohci[i]->reset_ohci(type);
   }
   if (type == BX_RESET_HARDWARE) {
     static const struct reset_vals_t {
@@ -369,7 +405,7 @@ void bx_usb_ehci_c::reset(unsigned type)
     };
 
     for (i = 0; i < sizeof(reset_vals) / sizeof(*reset_vals); i++) {
-        BX_EHCI_THIS pci_conf[reset_vals[i].addr] = reset_vals[i].val;
+      BX_EHCI_THIS pci_conf[reset_vals[i].addr] = reset_vals[i].val;
     }
   }
 
@@ -380,7 +416,7 @@ void bx_usb_ehci_c::register_state(void)
 {
   unsigned i;
   char tmpname[16];
-  bx_list_c *hub, *op_regs, *port, *reg, *uhcic;
+  bx_list_c *hub, *op_regs, *port, *reg, *hcic;
 
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "usb_ehci", "USB EHCI State");
   hub = new bx_list_c(list, "hub");
@@ -434,9 +470,16 @@ void bx_usb_ehci_c::register_state(void)
     new bx_list_c(port, "device");
   }
   for (i = 0; i < 3; i++) {
-    sprintf(tmpname, "uhci%d", i);
-    uhcic = new bx_list_c(list, tmpname);
-    uhci[i]->uhci_register_state(uhcic);
+    if (uhci[i]) {
+      sprintf(tmpname, "uhci%d", i);
+      hcic = new bx_list_c(list, tmpname);
+      uhci[i]->uhci_register_state(hcic);
+    }
+    if (ohci[i]) {
+      sprintf(tmpname, "ohci%d", i);
+      hcic = new bx_list_c(list, tmpname);
+      ohci[i]->ohci_register_state(hcic);
+    }
   }
 
   register_pci_state(hub);
@@ -453,7 +496,10 @@ void bx_usb_ehci_c::after_restore_state(void)
     }
   }
   for (i = 0; i < 3; i++) {
-    uhci[i]->after_restore_state();
+    if (uhci[i])
+      uhci[i]->after_restore_state();
+    if (ohci[i])
+      ohci[i]->after_restore_state();
   }
 }
 
@@ -559,12 +605,18 @@ bool bx_usb_ehci_c::set_connect_status(Bit8u port, bool connected)
 {
   const bool ccs_org = BX_EHCI_THIS hub.usb_port[port].portsc.ccs;
   const bool ped_org = BX_EHCI_THIS hub.usb_port[port].portsc.ped;
+  int n_cc = 0, n_pcc = 0;
 
   usb_device_c *device = BX_EHCI_THIS hub.usb_port[port].device;
   if (device != NULL) {
     if (connected) {
       if (BX_EHCI_THIS hub.usb_port[port].portsc.po) {
-        BX_EHCI_THIS uhci[port >> 1]->set_port_device(port & 1, device);
+        if (get_port_routing(port, &n_cc, &n_pcc)) {
+          if (BX_EHCI_THIS companion_type == EHCI_COMPANION_UHCI)
+            BX_EHCI_THIS uhci[n_cc]->set_port_device(n_pcc, device);
+          else
+            BX_EHCI_THIS ohci[n_cc]->set_port_device(n_pcc, device);
+        }
         return 1;
       }
       if (device->get_speed() == USB_SPEED_SUPER) {
@@ -603,7 +655,12 @@ bool bx_usb_ehci_c::set_connect_status(Bit8u port, bool connected)
     } else { // not connected
       BX_INFO(("port #%d: device disconnect", port+1));
       if (BX_EHCI_THIS hub.usb_port[port].portsc.po) {
-        BX_EHCI_THIS uhci[port >> 1]->set_port_device(port & 1, NULL);
+        if (get_port_routing(port, &n_cc, &n_pcc)) {
+          if (BX_EHCI_THIS companion_type == EHCI_COMPANION_UHCI)
+            BX_EHCI_THIS uhci[n_cc]->set_port_device(n_pcc, device);
+          else
+            BX_EHCI_THIS ohci[n_cc]->set_port_device(n_pcc, device);
+        }
         if ((!BX_EHCI_THIS hub.usb_port[port].owner_change) &&
             (BX_EHCI_THIS hub.op_regs.ConfigFlag & 1)) {
           BX_EHCI_THIS hub.usb_port[port].portsc.po = 0;
@@ -643,7 +700,8 @@ void bx_usb_ehci_c::change_port_owner(int port)
     usb_device_c *device = BX_EHCI_THIS hub.usb_port[port].device;
     if (BX_EHCI_THIS hub.usb_port[port].owner_change) {
       BX_INFO(("port #%d: owner change to %s", port + 1,
-               BX_EHCI_THIS hub.usb_port[port].portsc.po ? "EHCI" : "UHCI"));
+               BX_EHCI_THIS hub.usb_port[port].portsc.po ? "EHCI" : 
+             ((BX_EHCI_THIS companion_type == EHCI_COMPANION_UHCI) ? "UHCI" : "OHCI")));
       if (device != NULL) {
         set_connect_status(port, 0);
       }
@@ -659,6 +717,75 @@ void bx_usb_ehci_c::change_port_owner(int port)
     }
     BX_EHCI_THIS hub.usb_port[port].owner_change = 0;
   }
+}
+
+// This creates the port routing register (EHCI_PORT_ROUTE == 1).
+// For testing purposes, you can change this to however you wish,
+//  as long as you are consistent with the N_CC and N_PCC values passed.
+Bit64u bx_usb_ehci_c::create_port_routing(int n_cc, int n_pcc) {
+  Bit64u ret = 0;
+  
+#if EHCI_PORT_ROUTE
+  // for simplicity sake, we place them in 'accending' order.
+  for (int c = n_cc; c > 0; c--) {
+    for (int p=0; p<n_pcc; p++) {
+      ret <<= 4;
+      ret |= (c - 1); // zero based
+    }
+  }
+  if (BX_EHCI_THIS getonoff(LOGLEV_DEBUG) == ACT_REPORT) {
+    static char str[128] = "Setting Port Routing Array:";
+    static char strstr[6];
+    Bit64u r = ret;
+    for (int i=0; i<15; i++) {
+      sprintf(strstr, " %02X", (Bit8u) (r & 0xF));
+      strcat(str, strstr);
+      r >>= 4;
+    }
+    BX_DEBUG((str));
+  }
+#endif
+  
+  return ret;
+}
+
+// returns the controller and port number on that controller of the
+//  associated companion controller.
+// returns false if out of range.
+// note: 
+//  this code is a little more detailed than needed.
+//  for example. We could actually just do:
+//    *n_cc = (int) (route >> (4 * port)) & 0xF;
+//    *n_pcc = port % N_PCC;
+//  however, this assumes that the routing register will be:
+//    00 00 01 01 02 02 ....
+//  what if it is: ( ** very unlikely, but for testing purposes ** )
+//    00 01 01 02 02 00
+//  and port = 3? The above calculation will return:
+//    *n_cc = 2   // correct
+//    *n_pcc = 1; // *incorrect*
+// if EHCI_PORT_ROUTE = 0, then we do assume something like:
+//    00 00 01 01 02 02 ....
+// (remember that each parameter is zero based)
+bool bx_usb_ehci_c::get_port_routing(int port, int *n_cc, int *n_pcc) {
+  if (port < USB_EHCI_PORTS) {
+#if EHCI_PORT_ROUTE
+    Bit64u route = BX_EHCI_THIS hub.cap_regs.HcspPortRoute;
+    *n_cc = (int) (route >> (4 * port)) & 0xF;
+    *n_pcc = 0;
+    for (int i=0; i<port; i++) {
+      if ((route & 0xF) == *n_cc)
+        (*n_pcc)++;
+      route >>= 4;
+    }
+    return true;
+#else
+    *n_cc = port / EHCI_N_PCC;
+    *n_pcc = port % EHCI_N_PCC;
+    return true;
+#endif
+  } else
+    return false;
 }
 
 bool bx_usb_ehci_c::read_handler(bx_phy_address addr, unsigned len, void *data, void *param)
@@ -681,6 +808,11 @@ bool bx_usb_ehci_c::read_handler(bx_phy_address addr, unsigned len, void *data, 
         break;
       case 0x08:
         val = BX_EHCI_THIS hub.cap_regs.HccParams;
+        break;
+      case 0x0C:
+        val = (Bit32u) BX_EHCI_THIS hub.cap_regs.HcspPortRoute;
+        if (len == 8)
+          val_hi = (Bit32u) (BX_EHCI_THIS hub.cap_regs.HcspPortRoute >> 16);
         break;
     }
   } else {

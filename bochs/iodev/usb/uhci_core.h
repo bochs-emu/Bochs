@@ -191,7 +191,7 @@ class bx_uhci_core_c : public bx_pci_device_c {
 public:
   bx_uhci_core_c();
   virtual ~bx_uhci_core_c();
-  virtual void init_uhci(Bit8u devfunc, Bit16u devid, Bit8u headt, Bit8u intp);
+  virtual void init_uhci(Bit8u devfunc, Bit16u venid, Bit16u devid, Bit8u rev, Bit8u headt, Bit8u intp);
   virtual void reset_uhci(unsigned);
   void    uhci_register_state(bx_list_c *parent);
   virtual void after_restore_state(void);
