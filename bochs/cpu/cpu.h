@@ -1954,8 +1954,14 @@ public: // for now...
 #if BX_SUPPORT_AVX
   BX_SMF void LOAD_Vector(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOAD_Half_Vector(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOAD_MASK_Half_VectorB(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOAD_MASK_Half_VectorW(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOAD_MASK_Half_VectorD(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOAD_Quarter_Vector(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOAD_MASK_Quarter_VectorB(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOAD_MASK_Quarter_VectorW(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOAD_Eighth_Vector(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOAD_MASK_Eighth_VectorB(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 #if BX_SUPPORT_EVEX
   BX_SMF void LOAD_MASK_Wss(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
