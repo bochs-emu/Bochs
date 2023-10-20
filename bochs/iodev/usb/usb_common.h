@@ -31,10 +31,12 @@
 #define BX_IODEV_USB_COMMON_H
 
 // for the Packet Capture code to work, these four must remain as is
-#define USB_TRANS_TYPE_ISO      0
-#define USB_TRANS_TYPE_INT      1
-#define USB_TRANS_TYPE_CONTROL  2
-#define USB_TRANS_TYPE_BULK     3
+enum {
+  USB_TRANS_TYPE_ISO     = 0,
+  USB_TRANS_TYPE_INT     = 1,
+  USB_TRANS_TYPE_CONTROL = 2,
+  USB_TRANS_TYPE_BULK    = 3
+};
 
 #define USB_CONTROL_EP     0
 
@@ -54,33 +56,37 @@
 #define USB_RET_ASYNC   (-6)
 
 // these must remain in this order, 0 -> 3
-#define USB_SPEED_LOW   0
-#define USB_SPEED_FULL  1
-#define USB_SPEED_HIGH  2
-#define USB_SPEED_SUPER 3
+enum {
+  USB_SPEED_LOW   = 0,
+  USB_SPEED_FULL  = 1,
+  USB_SPEED_HIGH  = 2,
+  USB_SPEED_SUPER = 3
+};
 
-#define USB_STATE_NOTATTACHED 0
-#define USB_STATE_ATTACHED    1
-//#define USB_STATE_POWERED     2
-#define USB_STATE_DEFAULT     3
-#define USB_STATE_ADDRESS     4
-#define USB_STATE_CONFIGURED  5
-#define USB_STATE_SUSPENDED   6
+enum {
+  USB_STATE_NOTATTACHED = 0,
+  USB_STATE_ATTACHED    = 1,
+//USB_STATE_POWERED     = 2,
+  USB_STATE_DEFAULT     = 3,
+  USB_STATE_ADDRESS     = 4,
+  USB_STATE_CONFIGURED  = 5,
+  USB_STATE_SUSPENDED   = 6
+};
 
 #define USB_DIR_OUT  0
 #define USB_DIR_IN   0x80
 
-#define USB_TYPE_MASK			  (0x03 << 5)
-#define USB_TYPE_STANDARD		(0x00 << 5)
-#define USB_TYPE_CLASS			(0x01 << 5)
-#define USB_TYPE_VENDOR			(0x02 << 5)
-#define USB_TYPE_RESERVED		(0x03 << 5)
+#define USB_TYPE_MASK            (0x03 << 5)
+#define USB_TYPE_STANDARD        (0x00 << 5)
+#define USB_TYPE_CLASS           (0x01 << 5)
+#define USB_TYPE_VENDOR          (0x02 << 5)
+#define USB_TYPE_RESERVED        (0x03 << 5)
 
-#define USB_RECIP_MASK			  0x1f
-#define USB_RECIP_DEVICE		  0x00
-#define USB_RECIP_INTERFACE		0x01
-#define USB_RECIP_ENDPOINT		0x02
-#define USB_RECIP_OTHER			  0x03
+#define USB_RECIP_MASK            0x1f
+#define USB_RECIP_DEVICE          0x00
+#define USB_RECIP_INTERFACE       0x01
+#define USB_RECIP_ENDPOINT        0x02
+#define USB_RECIP_OTHER           0x03
 
 #define DeviceRequest ((USB_DIR_IN | USB_TYPE_STANDARD | USB_RECIP_DEVICE) << 8)     // Host to device / Standard Type / Recipient:Device
 #define DeviceOutRequest ((USB_DIR_OUT | USB_TYPE_STANDARD | USB_RECIP_DEVICE) << 8) // Device to host / Standard Type / Recipient:Device
@@ -125,11 +131,11 @@
 #define USB_DEVICE_U2_ENABLE      49
 
 // USB 1.1
-#define USB_DT_DEVICE			  0x01
-#define USB_DT_CONFIG			  0x02
-#define USB_DT_STRING			  0x03
-#define USB_DT_INTERFACE		0x04
-#define USB_DT_ENDPOINT			0x05
+#define USB_DT_DEVICE              0x01
+#define USB_DT_CONFIG              0x02
+#define USB_DT_STRING              0x03
+#define USB_DT_INTERFACE           0x04
+#define USB_DT_ENDPOINT            0x05
 // USB 2.0
 #define USB_DT_DEVICE_QUALIFIER         0x06
 #define USB_DT_OTHER_SPEED_CONFIG       0x07
@@ -228,8 +234,8 @@ public:
   virtual bool set_option(const char *option) { return 0; }
   virtual void runtime_config() {}
 
-  bool get_connected() { return d.connected; }
-  int get_speed() { return d.speed; }
+  bool get_connected() const { return d.connected; }
+  int get_speed() const { return d.speed; }
   bool set_speed(int speed)
   {
     if ((speed >= d.minspeed) && (speed <= d.maxspeed)) {
@@ -239,7 +245,7 @@ public:
       return 0;
     }
   }
-  int get_min_speed() { return d.minspeed; }
+  int get_min_speed() const { return d.minspeed; }
   int get_default_speed(int speed) {
     if ((speed >= d.minspeed) && (speed <= d.maxspeed))
       return speed;
@@ -251,38 +257,34 @@ public:
   int get_mps(const int ep) {
     return (ep < USB_MAX_ENDPOINTS) ? d.endpoint_info[ep].max_packet_size : 0;
   }
-  int get_max_burst_size(const int ep) {
+  int get_max_burst_size(int ep) const {
     return (ep < USB_MAX_ENDPOINTS) ? d.endpoint_info[ep].max_burst_size : 0;
   }
-  int get_max_payload(const int ep) {
+  int get_max_payload(int ep) const {
     return (ep < USB_MAX_ENDPOINTS) ? (d.endpoint_info[ep].max_burst_size * d.endpoint_info[ep].max_packet_size) : 0;
   }
 
 #if HANDLE_TOGGLE_CONTROL
-  int get_toggle(const int ep) {
+  int get_toggle(int ep) const {
     return ((ep & 0x7F) < USB_MAX_ENDPOINTS) ? d.endpoint_info[(ep & 0x7F)].toggle : 0;
   }
-  void set_toggle(const int ep, const int toggle) {
+  void set_toggle(int ep, int toggle) {
     if ((ep & 0x7F) < USB_MAX_ENDPOINTS) 
       d.endpoint_info[(ep & 0x7F)].toggle = toggle;
   }
 #endif
-  bool get_halted(const int ep) {
+  bool get_halted(int ep) const {
     return ((ep & 0x7F) < USB_MAX_ENDPOINTS) ? d.endpoint_info[(ep & 0x7F)].halted : 0;
   }
-  void set_halted(const int ep, const bool halted) {
+  void set_halted(int ep, const bool halted) {
     if ((ep & 0x7F) < USB_MAX_ENDPOINTS) 
       d.endpoint_info[(ep & 0x7F)].halted = halted;
   }
 
-  Bit8u get_type() {
-    return d.type;
-  }
-  Bit8u get_aIface() {
-    return d.alt_iface;
-  }
+  Bit8u get_type() const { return d.type; }
+  Bit8u get_aIface() const { return d.alt_iface; }
+  Bit8u get_address() const { return d.addr; }
 
-  Bit8u get_address() {return d.addr;}
   void set_async_mode(bool async) { d.async_mode = async; }
   void set_event_handler(void *dev, USBCallback *cb, int port)
   {

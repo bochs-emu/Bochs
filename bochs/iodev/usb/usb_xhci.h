@@ -316,17 +316,21 @@ enum { PLS_U0 = 0, PLS_U1, PLS_U2, PLS_U3_SUSPENDED, PLS_DISABLED, PLS_RXDETECT,
 #define EP_DIR_IN   1
 
 // Slot State
-#define SLOT_STATE_DISABLED_ENABLED  0
-#define SLOT_STATE_DEFAULT           1
-#define SLOT_STATE_ADDRESSED         2
-#define SLOT_STATE_CONFIGURED        3
+enum {
+  SLOT_STATE_DISABLED_ENABLED = 0,
+  SLOT_STATE_DEFAULT          = 1,
+  SLOT_STATE_ADDRESSED        = 2,
+  SLOT_STATE_CONFIGURED       = 3
+};
 
 // EP State
-#define EP_STATE_DISABLED 0
-#define EP_STATE_RUNNING  1
-#define EP_STATE_HALTED   2
-#define EP_STATE_STOPPED  3
-#define EP_STATE_ERROR    4
+enum {
+  EP_STATE_DISABLED = 0,
+  EP_STATE_RUNNING  = 1,
+  EP_STATE_HALTED   = 2,
+  EP_STATE_STOPPED  = 3,
+  EP_STATE_ERROR    = 4
+};
 
 #define TRB_GET_STYPE(x)     (((x) & (0x1F << 16)) >> 16)
 #define TRB_SET_STYPE(x)     (((x) & 0x1F) << 16)

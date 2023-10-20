@@ -33,6 +33,8 @@
 
 #define BX_IODEBUG_THIS this->
 
+#define BX_IODEBUG_MAX_AREAS 30
+
 bx_iodebug_c *theIODebugDevice = NULL;
 
 PLUGIN_ENTRY_FOR_MODULE(iodebug)

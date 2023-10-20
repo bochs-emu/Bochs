@@ -31,10 +31,12 @@
 
 #define BX_PCI_DEVICE(device, function) ((device)<<3 | (function))
 
-#define BX_PCI_INTA 1
-#define BX_PCI_INTB 2
-#define BX_PCI_INTC 3
-#define BX_PCI_INTD 4
+enum {
+  BX_PCI_INTA = 1,
+  BX_PCI_INTB = 2,
+  BX_PCI_INTC = 3,
+  BX_PCI_INTD = 4
+};
 
 class bx_pci_vbridge_c;
 

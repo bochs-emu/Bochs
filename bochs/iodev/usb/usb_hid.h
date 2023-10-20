@@ -33,11 +33,13 @@
 #define BX_IODEV_USB_HID_H
 
 // Physical Descriptor Items
-#define HID_PHYS_BIAS_NOT_APP     0
-#define HID_PHYS_BIAS_RIGHT_HAND  1
-#define HID_PHYS_BIAS_LEFT_HAND   2
-#define HID_PHYS_BIAS_BOTH_HANDS  3
-#define HID_PHYS_BIAS_EITHER_HAND 4
+enum {
+  HID_PHYS_BIAS_NOT_APP     = 0,
+  HID_PHYS_BIAS_RIGHT_HAND  = 1,
+  HID_PHYS_BIAS_LEFT_HAND   = 2,
+  HID_PHYS_BIAS_BOTH_HANDS  = 3,
+  HID_PHYS_BIAS_EITHER_HAND = 4
+};
 
 typedef enum
 {

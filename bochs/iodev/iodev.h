@@ -120,9 +120,11 @@ class cdrom_base_c;
   else if (io_len == 4) \
     BX_DEBUG(("write PCI register 0x%02X value 0x%08X (len=4)", addr, value));
 
-#define BX_PCI_BAR_TYPE_NONE 0
-#define BX_PCI_BAR_TYPE_MEM  1
-#define BX_PCI_BAR_TYPE_IO   2
+enum {
+  BX_PCI_BAR_TYPE_NONE = 0,
+  BX_PCI_BAR_TYPE_MEM  = 1,
+  BX_PCI_BAR_TYPE_IO   = 2
+};
 
 #define BX_PCI_ADVOPT_NOACPI 0x01
 #define BX_PCI_ADVOPT_NOHPET 0x02

@@ -62,9 +62,10 @@
 #include "param_names.h"
 #include "virt_timer.h"
 
+const Bit64u BX_MAX_VIRTUAL_TIME = BX_CONST64(0x7fffffff);
+
 //Important constant #defines:
 #define USEC_PER_SECOND (1000000)
-
 
 // define a macro to convert floating point numbers into 64-bit integers.
 // In MSVC++ you can convert a 64-bit float into a 64-bit signed integer,
