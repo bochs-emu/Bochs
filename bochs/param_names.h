@@ -157,6 +157,7 @@
 #define BXPN_OHCI_ENABLED                "ports.usb.ohci.enabled"
 #define BXPN_USB_EHCI                    "ports.usb.ehci"
 #define BXPN_EHCI_ENABLED                "ports.usb.ehci.enabled"
+#define BXPN_EHCI_COMPANION              "ports.usb.ehci.companion"
 #define BXPN_USB_XHCI                    "ports.usb.xhci"
 #define BXPN_XHCI_ENABLED                "ports.usb.xhci.enabled"
 #define BXPN_XHCI_MODEL                  "ports.usb.xhci.model"

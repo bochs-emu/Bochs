@@ -75,7 +75,7 @@ bx_uhci_core_c::~bx_uhci_core_c()
   BX_DEBUG(("Exit"));
 }
 
-void bx_uhci_core_c::init_uhci(Bit8u devfunc, Bit16u devid, Bit8u headt, Bit8u intp)
+void bx_uhci_core_c::init_uhci(Bit8u devfunc, Bit16u venid, Bit16u devid, Bit8u rev, Bit8u headt, Bit8u intp)
 {
   /*  If you wish to set DEBUG=report in the code, instead of
    *  in the configuration, simply uncomment this line.  I use
@@ -93,7 +93,7 @@ void bx_uhci_core_c::init_uhci(Bit8u devfunc, Bit16u devid, Bit8u headt, Bit8u i
                             "USB UHCI");
 
   // initialize readonly registers
-  init_pci_conf(0x8086, devid, 0x01, 0x0C0300, headt, intp);
+  init_pci_conf(venid, devid, rev, 0x0C0300, headt, intp);
   init_bar_io(4, 32, read_handler, write_handler, &uhci_iomask[0]);
 
   for (int i=0; i<USB_UHCI_PORTS; i++) {

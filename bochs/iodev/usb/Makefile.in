@@ -52,6 +52,7 @@ WIN32_DLL_IMPORT_LIBRARY=../../@WIN32_DLL_IMPORT_LIB@
 
 USBDEV_OBJS = usb_hid.o usb_hub.o usb_msd.o usb_printer.o usb_floppy.o
 UHCICORE_OBJ = uhci_core.o
+OHCICORE_OBJ = ohci_core.o
 SCSI_OBJS = scsi_device.o usb_uasp.o
 
 BX_INCDIRS = -I.. -I../.. -I$(srcdir)/.. -I$(srcdir)/../.. -I../../@INSTRUMENT_DIR@ -I$(srcdir)/../../@INSTRUMENT_DIR@
@@ -67,6 +68,7 @@ OBJS_THAT_CAN_BE_PLUGINS = \
 
 OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
   $(UHCICORE_OBJ) \
+  $(OHCICORE_OBJ) \
   $(SCSI_OBJS)
 
 NONPLUGIN_OBJS = @IODEV_EXT_NON_PLUGIN_OBJS@
@@ -105,8 +107,11 @@ libbx_usb_msd.la: usb_msd.lo scsi_device.lo usb_uasp.lo
 libbx_usb_uhci.la: usb_uhci.lo uhci_core.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) $(LDFLAGS) -module usb_uhci.lo uhci_core.lo -o libbx_usb_uhci.la -rpath $(PLUGIN_PATH)
 
-libbx_usb_ehci.la: usb_ehci.lo uhci_core.lo
-	$(LIBTOOL) --mode=link --tag CXX $(CXX) $(LDFLAGS) -module usb_ehci.lo uhci_core.lo -o libbx_usb_ehci.la -rpath $(PLUGIN_PATH)
+libbx_usb_ohci.la: usb_ohci.lo ohci_core.lo
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) $(LDFLAGS) -module usb_ohci.lo ohci_core.lo -o libbx_usb_ohci.la -rpath $(PLUGIN_PATH)
+
+libbx_usb_ehci.la: usb_ehci.lo uhci_core.lo ohci_core.lo
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) $(LDFLAGS) -module usb_ehci.lo uhci_core.lo ohci_core.lo -o libbx_usb_ehci.la -rpath $(PLUGIN_PATH)
 
 #### building DLLs for win32 (Cygwin and MinGW/MSYS)
 bx_%.dll: %.o
@@ -116,11 +121,11 @@ bx_%.dll: %.o
 bx_usb_uhci.dll: usb_uhci.o uhci_core.o
 	@LINK_DLL@ usb_uhci.o uhci_core.o $(WIN32_DLL_IMPORT_LIBRARY)
 
-bx_usb_ohci.dll: usb_ohci.o
-	@LINK_DLL@ usb_ohci.o $(WIN32_DLL_IMPORT_LIBRARY)
+bx_usb_ohci.dll: usb_ohci.o ohci_core.o
+	@LINK_DLL@ usb_ohci.o ohci_core.o $(WIN32_DLL_IMPORT_LIBRARY)
 
-bx_usb_ehci.dll: usb_ehci.o uhci_core.o
-	@LINK_DLL@ usb_ehci.o uhci_core.o $(WIN32_DLL_IMPORT_LIBRARY)
+bx_usb_ehci.dll: usb_ehci.o uhci_core.o ohci_core.o
+	@LINK_DLL@ usb_ehci.o uhci_core.o ohci_core.o $(WIN32_DLL_IMPORT_LIBRARY)
 
 bx_usb_xhci.dll: usb_xhci.o
 	@LINK_DLL@ usb_xhci.o $(WIN32_DLL_IMPORT_LIBRARY)
@@ -165,6 +170,13 @@ scsi_device.o: scsi_device.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h 
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
  ../hdimage/hdimage.h ../hdimage/cdrom.h scsi_device.h
+ohci_core.o: ohci_core.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
+ ../../osdep.h ../../gui/paramtree.h ../../logio.h \
+ ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
+ ../../extplugin.h ../../param_names.h ../../pc_system.h \
+ ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
+ ../pci.h usb_common.h usb_pcap.h ohci_core.h
 uhci_core.o: uhci_core.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../gui/paramtree.h ../../logio.h \
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
@@ -185,7 +197,7 @@ usb_ehci.o: usb_ehci.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../extplugin.h ../../param_names.h ../../pc_system.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
- ../pci.h usb_common.h usb_pcap.h uhci_core.h ../../qemu-queue.h \
+ ../pci.h usb_common.h usb_pcap.h uhci_core.h ohci_core.h ../../qemu-queue.h \
  usb_ehci.h
 usb_floppy.o: usb_floppy.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../gui/paramtree.h ../../logio.h \
@@ -230,7 +242,7 @@ usb_ohci.o: usb_ohci.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../extplugin.h ../../param_names.h ../../pc_system.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
- ../pci.h usb_common.h usb_pcap.h usb_ohci.h
+ ../pci.h usb_common.h usb_pcap.h ohci_core.h usb_ohci.h
 usb_pcap.o: usb_pcap.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../gui/paramtree.h ../../logio.h \
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
@@ -273,6 +285,13 @@ uhci_core.lo: uhci_core.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
  ../pci.h usb_common.h usb_pcap.h uhci_core.h
+ohci_core.lo: ohci_core.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
+ ../../osdep.h ../../gui/paramtree.h ../../logio.h \
+ ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
+ ../../extplugin.h ../../param_names.h ../../pc_system.h \
+ ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
+ ../pci.h usb_common.h usb_pcap.h ohci_core.h
 usb_common.lo: usb_common.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../gui/paramtree.h ../../logio.h \
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
@@ -286,7 +305,7 @@ usb_ehci.lo: usb_ehci.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../extplugin.h ../../param_names.h ../../pc_system.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
- ../pci.h usb_common.h usb_pcap.h uhci_core.h ../../qemu-queue.h \
+ ../pci.h usb_common.h usb_pcap.h uhci_core.h ohci_core.h ../../qemu-queue.h \
  usb_ehci.h
 usb_floppy.lo: usb_floppy.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../gui/paramtree.h ../../logio.h \
@@ -331,7 +350,7 @@ usb_ohci.lo: usb_ohci.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../extplugin.h ../../param_names.h ../../pc_system.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
- ../pci.h usb_common.h usb_pcap.h usb_ohci.h
+ ../pci.h usb_common.h usb_pcap.h ohci_core.h usb_ohci.h
 usb_pcap.lo: usb_pcap.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../gui/paramtree.h ../../logio.h \
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \

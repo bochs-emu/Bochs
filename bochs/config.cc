@@ -237,6 +237,15 @@ void bx_init_usb_options(const char *usb_name, const char *pname, int maxports, 
   sprintf(descr, "Enables the %s emulation", usb_name);
   bx_param_bool_c *enabled = new bx_param_bool_c(menu, "enabled", label, descr, 1);
   
+  // ehci companion type
+  static const char *ehci_comp_type[] = { "uhci", "ohci", NULL };
+  bx_param_enum_c *companion = new bx_param_enum_c(menu,
+      "companion", "Companion Type",
+      "Select Companion type to emulate",
+      ehci_comp_type,
+      0, 0
+  );
+  
   // xhci host controller type and number of ports
   static const char *xhci_model_names[] = { "uPD720202", "uPD720201", NULL };
   new bx_param_enum_c(menu,
@@ -275,7 +284,7 @@ void bx_init_usb_options(const char *usb_name, const char *pname, int maxports, 
         strcpy(label, "Options: (Must NOT be super-speed)");
     } else
 #endif
-    strcpy(label, "Options");    
+    strcpy(label, "Options");
     bx_param_string_c *options = new bx_param_string_c(port,
       "options",
       label,
