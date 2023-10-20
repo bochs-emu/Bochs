@@ -242,13 +242,13 @@ void bx_init_usb_options(const char *usb_name, const char *pname, int maxports, 
   
   // xhci host controller type and number of ports
   static const char *xhci_model_names[] = { "uPD720202", "uPD720201", NULL };
-  bx_param_enum_c *model = new bx_param_enum_c(menu,
+  new bx_param_enum_c(menu,
       "model", "HC model",
       "Select Host Controller to emulate",
       xhci_model_names,
       0, 0
   );
-  bx_param_num_c *n_ports = new bx_param_num_c(menu,
+  new bx_param_num_c(menu,
       "n_ports", "Number of ports",
       "Set the number of ports for this controller",
       -1, 10,
@@ -1726,15 +1726,16 @@ void bx_init_options()
   misc->set_options(misc->SHOW_PARENT);
 
   // port e9 hack
-  new bx_param_bool_c(misc,
-      "port_e9_hack",
+  bx_list_c *port_e9_hack = new bx_list_c(misc, "port_e9_hack", "port 0xE9 hack");
+  new bx_param_bool_c(port_e9_hack,
+      "enabled",
       "Enable port 0xE9 hack",
       "Debug messages written to i/o port 0xE9 will be displayed on console",
       0);
 
   // port e9 hack all rings
-  new bx_param_bool_c(misc,
-      "port_e9_hack_all_rings",
+  new bx_param_bool_c(port_e9_hack,
+      "all_rings",
       "Enable port 0xE9 hack for all rings",
       "Debug messages written to i/o port 0xE9 from ring3 will be displayed on console",
       0);
@@ -2336,30 +2337,6 @@ static int parse_param_bool(const char *input, int len, const char *param)
   }
 
   return -1;
-}
-
-static int parse_port_e9_hack(const char *context, const char **params, int num_params)
-{
-  if (num_params > 2) {
-    PARSE_ERR(("%s: port_e9_hack directive: wrong # args.", context));
-  }
-  if (strncmp(params[0], "enabled=", 8)) {
-    PARSE_ERR(("%s: port_e9_hack directive malformed.", context));
-  }
-  if (parse_param_bool(params[0], 8, BXPN_PORT_E9_HACK) < 0) {
-    PARSE_ERR(("%s: port_e9_hack directive malformed.", context));
-  }
-  if (num_params == 2) {
-    if (!strncmp(params[1], "all_rings=", 10)) {
-      if (parse_param_bool(params[1], 10, BXPN_PORT_E9_HACK_ALL_RINGS) < 0) {
-        PARSE_ERR(("%s: all_rings option malformed.", context));
-      }
-    } else {
-      PARSE_ERR(("%s: port_e9_hack: invalid parameter %s", context, params[1]));
-    }
-  }
-
-  return 0;
 }
 
 int bx_parse_param_from_list(const char *context, const char *input, bx_list_c *list)
@@ -3334,8 +3311,10 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       PARSE_ERR(("%s: print_timestamps directive malformed.", context));
     }
   } else if (!strcmp(params[0], "port_e9_hack")) {
-    if (parse_port_e9_hack(context, (const char **)(params + 1), num_params - 1) < 0) {
-      return -1;
+    for (i=1; i<num_params; i++) {
+      if (bx_parse_param_from_list(context, params[i], (bx_list_c*) SIM->get_param(BXPN_PORT_E9_HACK_ROOT)) < 0) {
+        PARSE_ERR(("%s: port_e9_hack directive malformed.", context));
+      }
     }
   } else if (!strcmp(params[0], "iodebug")) {
 #if BX_SUPPORT_IODEBUG
@@ -3729,11 +3708,10 @@ int bx_write_configuration(const char *rc, int overwrite)
 
   fprintf(fp, "print_timestamps: enabled=%d\n", bx_dbg.print_timestamps);
   bx_write_debugger_options(fp);
-  fprintf(fp, "port_e9_hack: enabled=%d\n", SIM->get_param_bool(BXPN_PORT_E9_HACK)->get());
-  fprintf(fp, "port_e9_hack_all_rings: enabled=%d\n", SIM->get_param_bool(BXPN_PORT_E9_HACK_ALL_RINGS)->get());
-  #if BX_SUPPORT_IODEBUG
+  bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_PORT_E9_HACK_ROOT), NULL, 0);
+#if BX_SUPPORT_IODEBUG
   fprintf(fp, "iodebug_all_rings: enabled=%d\n", SIM->get_param_bool(BXPN_IODEBUG_ALL_RINGS)->get());
-  #endif
+#endif
   fprintf(fp, "private_colormap: enabled=%d\n", SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get());
 #if BX_WITH_AMIGAOS
   fprintf(fp, "fullscreen: enabled=%d\n", SIM->get_param_bool(BXPN_FULLSCREEN)->get());

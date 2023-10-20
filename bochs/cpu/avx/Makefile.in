@@ -63,6 +63,7 @@ AVX_OBJS = \
 	avx512_mask64.o \
 	avx512_bitalg.o \
 	avx512_bf16.o \
+	avx512_helpers.o \
 	vnni.o \
 	gather.o \
 	tbm32.o \
@@ -201,6 +202,15 @@ avx512_mask8.o: avx512_mask8.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../icache.h ../apic.h ../xmm.h ../vmx.h ../svm.h ../cpuid.h ../stack.h \
  ../access.h
 avx512_move.o: avx512_move.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
+ ../../logio.h ../../misc/bswap.h ../cpu.h ../../bx_debug/debug.h \
+ ../../config.h ../../osdep.h ../../cpu/decoder/decoder.h \
+ ../../cpu/decoder/features.h ../decoder/decoder.h \
+ ../../instrument/stubs/instrument.h ../i387.h ../fpu/softfloat.h \
+ ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h ../crregs.h \
+ ../descriptor.h ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h \
+ ../apic.h ../xmm.h ../vmx.h ../svm.h ../cpuid.h ../stack.h ../access.h \
+ ../simd_int.h
+avx512_helpers.o: avx512_helpers.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../logio.h ../../misc/bswap.h ../cpu.h ../../bx_debug/debug.h \
  ../../config.h ../../osdep.h ../../cpu/decoder/decoder.h \
  ../../cpu/decoder/features.h ../decoder/decoder.h \

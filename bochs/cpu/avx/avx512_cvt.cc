@@ -882,7 +882,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2PH_MASK_WpsVpsIbM(bxInstruction_c *
     status.float_rounding_mode = control & 0x3;
 
   Bit32u opmask = BX_READ_16BIT_OPMASK(i->opmask());
-  opmask &= (1 << DWORD_ELEMENTS(len)) - 1;
+  opmask &= CUT_OPMASK_TO(DWORD_ELEMENTS(len));
 
   for (unsigned n=0, mask = 0x1; n < DWORD_ELEMENTS(len); n++, mask <<= 1) {
     if (opmask & mask)

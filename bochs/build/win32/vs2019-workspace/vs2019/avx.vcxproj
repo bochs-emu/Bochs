@@ -127,6 +127,7 @@
     <ClCompile Include="..\cpu\avx\avx512_mask64.cc" />
     <ClCompile Include="..\cpu\avx\avx512_mask8.cc" />
     <ClCompile Include="..\cpu\avx\avx512_move.cc" />
+    <ClCompile Include="..\cpu\avx\avx512_helpers.cc" />
     <ClCompile Include="..\cpu\avx\avx512_pfp.cc" />
     <ClCompile Include="..\cpu\avx\avx512_rcp14.cc" />
     <ClCompile Include="..\cpu\avx\avx512_rsqrt14.cc" />
