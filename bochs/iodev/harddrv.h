@@ -43,15 +43,15 @@ class cdrom_base_c;
 
 typedef struct {
   struct {
-    bool busy;
-    bool drive_ready;
-    bool write_fault;
-    bool seek_complete;
-    bool drq;
-    bool corrected_data;
-    bool index_pulse;
+    bool busy;           // bit 7
+    bool drive_ready;    // bit 6
+    bool write_fault;    // bit 5
+    bool seek_complete;  // bit 4
+    bool drq;            // bit 3
+    bool corrected_data; // bit 2
+    bool index_pulse;    // bit 1
+    bool err;            // bit 0
     unsigned index_pulse_count;
-    bool err;
   } status;
   Bit8u    error_register;
   Bit8u    head_no;

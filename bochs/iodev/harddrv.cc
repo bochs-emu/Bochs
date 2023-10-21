@@ -809,12 +809,17 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
   switch (port) {
     case 0x00: // hard disk data (16bit) 0x1f0
       if (controller->status.drq == 0) {
-            BX_ERROR(("IO read(0x%04x) with drq == 0: last command was %02xh",
-                     address, (unsigned) controller->current_command));
-            return(0);
+        BX_ERROR(("IO read(0x%04x) with drq == 0: last command was %02xh",
+                  address, (unsigned) controller->current_command));
+        return(0);
       }
-      BX_DEBUG(("IO read(0x%04x): current command is %02xh",
+      if (controller->current_command == 0xa0) {
+        BX_DEBUG(("IO read(0x%04x): current command is a0h/%02xh",
+            address, (unsigned) BX_SELECTED_DRIVE(channel).atapi.command));
+      } else {
+        BX_DEBUG(("IO read(0x%04x): current command is %02xh",
             address, (unsigned) controller->current_command));
+      }
       switch (controller->current_command) {
         case 0x20: // READ SECTORS, with retries
         case 0x21: // READ SECTORS, without retries
@@ -1913,8 +1918,13 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           break;
 
         default:
-          BX_PANIC(("IO write(0x%04x): current command is %02xh", address,
-            (unsigned) controller->current_command));
+          if (controller->current_command == 0xa0) {
+            BX_PANIC(("IO read(0x%04x): current command is a0h/%02xh",
+              address, (unsigned) BX_SELECTED_DRIVE(channel).atapi.command));
+          } else {
+            BX_PANIC(("IO write(0x%04x): current command is %02xh", 
+              address, (unsigned) controller->current_command));
+          }
       }
       break;
 
@@ -1957,7 +1967,8 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
       {
         if ((value & 0xa0) != 0xa0) // 1x1xxxxx
           BX_DEBUG(("IO write 0x%04x (%02x): not 1x1xxxxxb", address, (unsigned) value));
-        Bit32u drvsel = BX_HD_THIS channels[channel].drive_select = (value >> 4) & 0x01;
+        Bit32u drvsel = 
+          BX_HD_THIS channels[channel].drive_select = (value >> 4) & 1;
         WRITE_HEAD_NO(channel,value & 0xf);
         if (!controller->lba_mode && ((value >> 6) & 1) == 1)
           BX_DEBUG(("enabling LBA mode"));
@@ -2333,6 +2344,14 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
               controller->status.write_fault = 0;
               controller->status.drq   = 1;
 
+              // The TEAC-CDI driver relies on the TEAC drive to set its
+              //  'interrupt_reason' register, so the driver can determine 
+              //  the direction of the transfer even though a CD-ROM is readonly.
+              //  atapi-4/5: 'Sector count' register after this command is N/A
+              controller->interrupt_reason.i_o = 1;
+              controller->interrupt_reason.c_d = 0;
+              controller->interrupt_reason.rel = 0;
+
               controller->status.seek_complete = 1;
               controller->status.corrected_data = 0;
 
@@ -2358,7 +2377,12 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           if (BX_SELECTED_IS_CD(channel)) {
             set_signature(channel, BX_SLAVE_SELECTED(channel));
 
-            controller->status.busy = 1;
+            // specs say the busy bit needs to be set, though
+            //  we don't have any mechanism to clear it after the
+            //  command, so we clear it just a few lines below.
+            // (also, the drive_ready must be zero)
+            //controller->status.busy = 1;
+            controller->status.drive_ready = 0;
             controller->error_register &= ~(1 << 7);
 
             controller->status.write_fault = 0;
@@ -3291,7 +3315,10 @@ void bx_hard_drive_c::command_aborted(Bit8u channel, unsigned value)
 {
   controller_t *controller = &BX_SELECTED_CONTROLLER(channel);
 
-  BX_DEBUG(("aborting on command 0x%02x {%s}", value, BX_SELECTED_TYPE_STRING(channel)));
+  if (value == 0xa0)
+    BX_DEBUG(("aborting on command 0xa0/0x%02x {%s}", BX_SELECTED_DRIVE(channel).atapi.command, BX_SELECTED_TYPE_STRING(channel)));
+  else
+    BX_DEBUG(("aborting on command 0x%02x {%s}", value, BX_SELECTED_TYPE_STRING(channel)));
   controller->current_command = 0;
   controller->status.busy = 0;
   controller->status.drive_ready = 1;
