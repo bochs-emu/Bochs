@@ -201,6 +201,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Half_Vector(bxInstruction_c *i)
   BX_CPU_CALL_METHOD(i->execute2(), (i));
 }
 
+#if BX_SUPPORT_EVEX
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_MASK_Half_VectorB(bxInstruction_c *i)
 {
   Bit32u opmask = (i->opmask() != 0) ? BX_READ_32BIT_OPMASK(i->opmask()) : 0xffffffff;
@@ -252,6 +254,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_MASK_Half_VectorD(bxInstruction_c *i)
   BX_CPU_CALL_METHOD(i->execute2(), (i));
 }
 
+#endif
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Quarter_Vector(bxInstruction_c *i)
 {
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
@@ -276,6 +280,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Quarter_Vector(bxInstruction_c *i)
 
   BX_CPU_CALL_METHOD(i->execute2(), (i));
 }
+
+#if BX_SUPPORT_EVEX
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_MASK_Quarter_VectorB(bxInstruction_c *i)
 {
@@ -311,6 +317,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_MASK_Quarter_VectorW(bxInstruction_c 
   BX_CPU_CALL_METHOD(i->execute2(), (i));
 }
 
+#endif
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Eighth_Vector(bxInstruction_c *i)
 {
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
@@ -337,6 +345,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Eighth_Vector(bxInstruction_c *i)
   BX_CPU_CALL_METHOD(i->execute2(), (i));
 }
 
+#if BX_SUPPORT_EVEX
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_MASK_Eighth_VectorB(bxInstruction_c *i)
 {
   Bit32u opmask = (i->opmask() != 0) ? BX_READ_8BIT_OPMASK(i->opmask()) : 0xff;
@@ -353,10 +363,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_MASK_Eighth_VectorB(bxInstruction_c *
 
   BX_CPU_CALL_METHOD(i->execute2(), (i));
 }
-
-#endif
-
-#if BX_SUPPORT_EVEX
 
 #include "simd_int.h"
 
@@ -569,4 +575,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_MASK_Half_VectorD(bxInstruc
   BX_CPU_CALL_METHOD(i->execute2(), (i));
 }
 
-#endif
+#endif // BX_SUPPORT_EVEX
+
+#endif // BX_SUPPORT_AVX
