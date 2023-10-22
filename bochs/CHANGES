@@ -61,6 +61,9 @@ Detailed change log :
   - Voodoo
     - Fixed Voodoo device compilation for big endian architectures
 
+  - CD-ROM:
+    - Fix to enable TEAC CD-ROM driver to work
+
   - USB
     - Added the ability to change interfaces (ex: BBB to UASP).
     - Added the Toggle bit check to all controllers/devices. (optional with a #define)
