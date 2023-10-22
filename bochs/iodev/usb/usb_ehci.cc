@@ -53,7 +53,7 @@
 
 bx_usb_ehci_c* theUSB_EHCI = NULL;
 
-#define USB_RET_PROCERR   (-99)
+static const int USB_RET_PROCERR = -99;
 
 #define IO_SPACE_SIZE   256
 
@@ -78,22 +78,22 @@ bx_usb_ehci_c* theUSB_EHCI = NULL;
 /*  Internal periodic / asynchronous schedule state machine states
  */
 typedef enum {
-    EST_INACTIVE = 1000,
-    EST_ACTIVE,
-    EST_EXECUTING,
-    EST_SLEEPING,
-    /*  The following states are internal to the state machine function
-    */
-    EST_WAITLISTHEAD,
-    EST_FETCHENTRY,
-    EST_FETCHQH,
-    EST_FETCHITD,
-    EST_FETCHSITD,
-    EST_ADVANCEQUEUE,
-    EST_FETCHQTD,
-    EST_EXECUTE,
-    EST_WRITEBACK,
-    EST_HORIZONTALQH
+  EST_INACTIVE = 1000,
+  EST_ACTIVE,
+  EST_EXECUTING,
+  EST_SLEEPING,
+  /*  The following states are internal to the state machine function
+  */
+  EST_WAITLISTHEAD,
+  EST_FETCHENTRY,
+  EST_FETCHQH,
+  EST_FETCHITD,
+  EST_FETCHSITD,
+  EST_ADVANCEQUEUE,
+  EST_FETCHQTD,
+  EST_EXECUTE,
+  EST_WRITEBACK,
+  EST_HORIZONTALQH
 } EHCI_STATES;
 
 /* macros for accessing fields within next link pointer entry */
@@ -722,7 +722,8 @@ void bx_usb_ehci_c::change_port_owner(int port)
 // This creates the port routing register (EHCI_PORT_ROUTE == 1).
 // For testing purposes, you can change this to however you wish,
 //  as long as you are consistent with the N_CC and N_PCC values passed.
-Bit64u bx_usb_ehci_c::create_port_routing(int n_cc, int n_pcc) {
+Bit64u bx_usb_ehci_c::create_port_routing(int n_cc, int n_pcc)
+{
   Bit64u ret = 0;
   
 #if EHCI_PORT_ROUTE
@@ -767,14 +768,15 @@ Bit64u bx_usb_ehci_c::create_port_routing(int n_cc, int n_pcc) {
 // if EHCI_PORT_ROUTE = 0, then we do assume something like:
 //    00 00 01 01 02 02 ....
 // (remember that each parameter is zero based)
-bool bx_usb_ehci_c::get_port_routing(int port, int *n_cc, int *n_pcc) {
+bool bx_usb_ehci_c::get_port_routing(int port, int *n_cc, int *n_pcc)
+{
   if (port < USB_EHCI_PORTS) {
 #if EHCI_PORT_ROUTE
     Bit64u route = BX_EHCI_THIS hub.cap_regs.HcspPortRoute;
     *n_cc = (int) (route >> (4 * port)) & 0xF;
     *n_pcc = 0;
     for (int i=0; i<port; i++) {
-      if ((route & 0xF) == *n_cc)
+      if (int(route & 0xF) == *n_cc)
         (*n_pcc)++;
       route >>= 4;
     }
@@ -1062,8 +1064,6 @@ void bx_usb_ehci_c::raise_irq(Bit8u intr)
 
 void bx_usb_ehci_c::commit_irq(void)
 {
-  Bit32u itc;
-
   if (!BX_EHCI_THIS hub.usbsts_pending) {
     return;
   }
@@ -1071,7 +1071,7 @@ void bx_usb_ehci_c::commit_irq(void)
     return;
   }
 
-  itc = BX_EHCI_THIS hub.op_regs.UsbCmd.itc;
+  Bit32u itc = BX_EHCI_THIS hub.op_regs.UsbCmd.itc;
   BX_EHCI_THIS hub.op_regs.UsbSts.inti |= BX_EHCI_THIS hub.usbsts_pending;
   BX_EHCI_THIS hub.usbsts_pending = 0;
   BX_EHCI_THIS hub.usbsts_frindex = BX_EHCI_THIS hub.op_regs.FrIndex + itc;
@@ -1186,14 +1186,12 @@ EHCIQueue *bx_usb_ehci_c::alloc_queue(Bit32u addr, int async)
 
 int bx_usb_ehci_c::cancel_queue(EHCIQueue *q)
 {
-  EHCIPacket *p;
-  int packets = 0;
-
-  p = QTAILQ_FIRST(&q->packets);
+  EHCIPacket *p = QTAILQ_FIRST(&q->packets);
   if (p == NULL) {
     return 0;
   }
 
+  int packets = 0;
   do {
     free_packet(p);
     packets++;
@@ -1322,36 +1320,30 @@ void bx_usb_ehci_c::flush_qh(EHCIQueue *q)
 int bx_usb_ehci_c::qh_do_overlay(EHCIQueue *q)
 {
   EHCIPacket *p = QTAILQ_FIRST(&q->packets);
-  int i;
-  int dtoggle;
-  int ping;
-  int eps;
-  int reload;
 
   assert(p != NULL);
   assert(p->qtdaddr == q->qtdaddr);
 
   // remember values in fields to preserve in qh after overlay
 
-  dtoggle = q->qh.token & QTD_TOKEN_DTOGGLE;
-  ping    = q->qh.token & QTD_TOKEN_PING;
+  int dtoggle = q->qh.token & QTD_TOKEN_DTOGGLE;
+  int ping    = q->qh.token & QTD_TOKEN_PING;
 
   q->qh.current_qtd = p->qtdaddr;
   q->qh.next_qtd    = p->qtd.next;
   q->qh.altnext_qtd = p->qtd.altnext;
   q->qh.token       = p->qtd.token;
 
-
-  eps = get_field(q->qh.epchar, QH_EPCHAR_EPS);
+  int eps = get_field(q->qh.epchar, QH_EPCHAR_EPS);
   if (eps == EHCI_QH_EPS_HIGH) {
     q->qh.token &= ~QTD_TOKEN_PING;
     q->qh.token |= ping;
   }
 
-  reload = get_field(q->qh.epchar, QH_EPCHAR_RL);
+  int reload = get_field(q->qh.epchar, QH_EPCHAR_RL);
   set_field(&q->qh.altnext_qtd, reload, QH_ALTNEXT_NAKCNT);
 
-  for (i = 0; i < 5; i++) {
+  for (int i = 0; i < 5; i++) {
     q->qh.bufptr[i] = p->qtd.bufptr[i];
   }
 
@@ -1554,7 +1546,7 @@ int bx_usb_ehci_c::execute(EHCIPacket *p)
   }
 
   BX_ASSERT(p->async == EHCI_ASYNC_NONE ||
-           p->async == EHCI_ASYNC_INITIALIZED);
+            p->async == EHCI_ASYNC_INITIALIZED);
 
   if (!(p->qtd.token & QTD_TOKEN_ACTIVE)) {
     BX_ERROR(("Attempting to execute inactive qtd"));
@@ -1656,7 +1648,6 @@ int bx_usb_ehci_c::process_itd(EHCIitd *itd, Bit32u addr)
 int bx_usb_ehci_c::state_waitlisthead(int async)
 {
   EHCIqh qh;
-  int i = 0;
   int again = 0;
   Bit32u entry = BX_EHCI_THIS hub.op_regs.AsyncListAddr;
 
@@ -1668,7 +1659,7 @@ int bx_usb_ehci_c::state_waitlisthead(int async)
   BX_EHCI_THIS queues_rip_unused(async);
 
   /*  Find the head of the list (4.9.1.1) */
-  for (i = 0; i < MAX_QH; i++) {
+  for (int i = 0; i < MAX_QH; i++) {
     get_dwords(NLPTR_GET(entry), (Bit32u *) &qh, sizeof(EHCIqh) >> 2);
 
     if (qh.epchar & QH_EPCHAR_H) {
@@ -1741,17 +1732,15 @@ out:
 
 EHCIQueue *bx_usb_ehci_c::state_fetchqh(int async)
 {
-  EHCIPacket *p;
-  Bit32u entry, devaddr, endp;
-  EHCIQueue *q;
+  Bit32u devaddr, endp;
   EHCIqh qh;
 
-  entry = BX_EHCI_THIS get_fetch_addr(async);
-  q = BX_EHCI_THIS find_queue_by_qh(entry, async);
+  Bit32u entry = BX_EHCI_THIS get_fetch_addr(async);
+  EHCIQueue *q = BX_EHCI_THIS find_queue_by_qh(entry, async);
   if (NULL == q) {
     q = BX_EHCI_THIS alloc_queue(entry, async);
   }
-  p = QTAILQ_FIRST(&q->packets);
+  EHCIPacket *p = QTAILQ_FIRST(&q->packets);
 
   q->seen++;
   if (q->seen > 1) {
@@ -1832,11 +1821,9 @@ out:
 
 int bx_usb_ehci_c::state_fetchitd(int async)
 {
-  Bit32u entry;
-  EHCIitd itd;
-
   BX_ASSERT(!async);
-  entry = BX_EHCI_THIS get_fetch_addr(async);
+  Bit32u entry = BX_EHCI_THIS get_fetch_addr(async);
+  EHCIitd itd;
 
   get_dwords(NLPTR_GET(entry), (Bit32u*) &itd, sizeof(EHCIitd) >> 2);
 
@@ -1853,11 +1840,9 @@ int bx_usb_ehci_c::state_fetchitd(int async)
 
 int bx_usb_ehci_c::state_fetchsitd(int async)
 {
-  Bit32u entry;
-  EHCIsitd sitd;
-
   BX_ASSERT(!async);
-  entry = BX_EHCI_THIS get_fetch_addr(async);
+  Bit32u entry = BX_EHCI_THIS get_fetch_addr(async);
+  EHCIsitd sitd;
 
   get_dwords(NLPTR_GET(entry), (Bit32u*)&sitd, sizeof(EHCIsitd) >> 2);
 
@@ -1904,12 +1889,11 @@ int bx_usb_ehci_c::state_advqueue(EHCIQueue *q)
 int bx_usb_ehci_c::state_fetchqtd(EHCIQueue *q)
 {
   EHCIqtd qtd;
-  EHCIPacket *p;
   int again = 0;
 
   get_dwords(NLPTR_GET(q->qtdaddr), (Bit32u*) &qtd, sizeof(EHCIqtd) >> 2);
 
-  p = QTAILQ_FIRST(&q->packets);
+  EHCIPacket *p = QTAILQ_FIRST(&q->packets);
   if (p != NULL) {
     if (p->qtdaddr != q->qtdaddr ||
         (!NLPTR_TBIT(p->qtd.next) && (p->qtd.next != qtd.next)) ||
@@ -2029,12 +2013,12 @@ int bx_usb_ehci_c::state_execute(EHCIQueue *q)
   // TODO Windows does not seem to ever set the MULT field
 
   if (!q->async) {
-        int transactCtr = get_field(q->qh.epcap, QH_EPCAP_MULT);
-        if (!transactCtr) {
-            BX_EHCI_THIS set_state(q->async, EST_HORIZONTALQH);
-            again = 1;
-            goto out;
-        }
+    int transactCtr = get_field(q->qh.epcap, QH_EPCAP_MULT);
+    if (!transactCtr) {
+      BX_EHCI_THIS set_state(q->async, EST_HORIZONTALQH);
+      again = 1;
+      goto out;
+    }
   }
 
   if (q->async) {
@@ -2093,15 +2077,14 @@ int bx_usb_ehci_c::state_executing(EHCIQueue *q)
 int bx_usb_ehci_c::state_writeback(EHCIQueue *q)
 {
   EHCIPacket *p = QTAILQ_FIRST(&q->packets);
-  Bit32u *qtd, addr;
   int again = 0;
 
   /*  Write back the QTD from the QH area */
   BX_ASSERT(p != NULL);
   BX_ASSERT(p->qtdaddr == q->qtdaddr);
 
-  qtd = (Bit32u*) &q->qh.next_qtd;
-  addr = NLPTR_GET(p->qtdaddr);
+  Bit32u *qtd = (Bit32u*) &q->qh.next_qtd;
+  Bit32u addr = NLPTR_GET(p->qtdaddr);
   put_dwords(addr + 2 * sizeof(Bit32u), qtd + 2, 2);
   BX_EHCI_THIS free_packet(p);
 
@@ -2319,13 +2302,11 @@ void bx_usb_ehci_c::advance_periodic_state(void)
 
 void bx_usb_ehci_c::update_frindex(int frames)
 {
-  int i;
-
   if (!BX_EHCI_THIS hub.op_regs.UsbCmd.rs) {
     return;
   }
 
-  for (i = 0; i < frames; i++) {
+  for (int i = 0; i < frames; i++) {
     BX_EHCI_THIS hub.op_regs.FrIndex += 8;
 
     if (BX_EHCI_THIS hub.op_regs.FrIndex == 0x00002000) {
@@ -2354,12 +2335,11 @@ void bx_usb_ehci_c::ehci_frame_handler(void *this_ptr)
 void bx_usb_ehci_c::ehci_frame_timer(void)
 {
   int need_timer = 0;
-  Bit64u t_now;
   Bit64u usec_elapsed;
   int frames, skipped_frames;
   int i;
 
-  t_now = bx_pc_system.time_usec();
+  Bit64u t_now = bx_pc_system.time_usec();
   usec_elapsed = t_now - BX_EHCI_THIS hub.last_run_usec;
   frames = (int)(usec_elapsed / FRAME_TIMER_USEC);
   
@@ -2428,10 +2408,9 @@ void bx_usb_ehci_c::runtime_config_handler(void *this_ptr)
 
 void bx_usb_ehci_c::runtime_config(void)
 {
-  int i;
   char pname[6];
 
-  for (i = 0; i < USB_EHCI_PORTS; i++) {
+  for (int i = 0; i < USB_EHCI_PORTS; i++) {
     // device change support
     if ((BX_EHCI_THIS device_change & (1 << i)) != 0) {
       if (BX_EHCI_THIS hub.usb_port[i].device == NULL) {
@@ -2515,10 +2494,8 @@ Bit64s bx_usb_ehci_c::usb_param_handler(bx_param_c *param, bool set, Bit64s val)
 // USB runtime parameter handler: over-current
 Bit64s bx_usb_ehci_c::usb_param_oc_handler(bx_param_c *param, bool set, Bit64s val)
 {
-  int portnum;
-
   if (set && val) {
-    portnum = atoi((param->get_parent())->get_name()+4) - 1;
+    int portnum = atoi((param->get_parent())->get_name()+4) - 1;
     if ((portnum >= 0) && (portnum < USB_EHCI_PORTS)) {
       if (BX_EHCI_THIS hub.usb_port[portnum].portsc.ccs) {
         // EHCI, section 4.2.5, page 58

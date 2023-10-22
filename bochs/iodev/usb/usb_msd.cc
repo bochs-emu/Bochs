@@ -817,10 +817,8 @@ void usb_msd_device_c::handle_reset()
 
 int usb_msd_device_c::handle_control(int request, int value, int index, int length, Bit8u *data)
 {
-  int ret = 0;
-
   // let the common handler try to handle it first
-  ret = handle_control_common(request, value, index, length, data);
+  int ret = handle_control_common(request, value, index, length, data);
   if (ret >= 0) {
     return ret;
   }

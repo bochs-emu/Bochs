@@ -1345,8 +1345,8 @@ bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_pat
   for (i=0; i<level; i++)
     fprintf(fp, "  ");
   if (node == NULL) {
-      BX_ERROR(("NULL pointer"));
-      return 0;
+    BX_ERROR(("NULL pointer"));
+    return 0;
   }
   fprintf(fp, "%s = ", node->get_name());
   switch (node->get_type()) {

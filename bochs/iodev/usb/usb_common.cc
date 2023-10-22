@@ -873,18 +873,15 @@ void usb_device_c::usb_dump_packet(Bit8u *data, int size, int bus, int dev_addr,
 
 int usb_device_c::set_usb_string(Bit8u *buf, const char *str)
 {
-  size_t len, i;
-  Bit8u *q;
-
-  q = buf;
-  len = strlen(str);
+  Bit8u *q = buf;
+  size_t len = strlen(str);
   if (len > 32) {
     *q = 0;
     return 0;
   }
   *q++ = (Bit8u)(2 * len + 2);
   *q++ = 3;
-  for(i = 0; i < len; i++) {
+  for(size_t i = 0; i < len; i++) {
     *q++ = str[i];
     *q++ = 0;
   }

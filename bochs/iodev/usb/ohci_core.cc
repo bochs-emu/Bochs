@@ -581,7 +581,7 @@ bool bx_ohci_core_c::write_handler(bx_phy_address addr, unsigned len, void *data
 bool bx_ohci_core_c::mem_write(bx_phy_address addr, unsigned len, void *data)
 {
   Bit32u value = *((Bit32u *) data);
-  Bit32u  offset = (Bit32u)addr - pci_bar[0].addr;
+  Bit32u offset = (Bit32u)addr - pci_bar[0].addr;
   int p, org_state;
 
   int name = offset >> 2;
@@ -1293,10 +1293,8 @@ int bx_ohci_core_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed, int toggl
 
 int bx_ohci_core_c::broadcast_packet(USBPacket *p)
 {
-  int i, ret;
-
-  ret = USB_RET_NODEV;
-  for (i = 0; i < USB_OHCI_PORTS && ret == USB_RET_NODEV; i++) {
+  int ret = USB_RET_NODEV;
+  for (int i = 0; i < USB_OHCI_PORTS && ret == USB_RET_NODEV; i++) {
     if ((hub.usb_port[i].device != NULL) &&
         (hub.usb_port[i].HcRhPortStatus.ccs)) {
       ret = hub.usb_port[i].device->handle_packet(p);
@@ -1308,14 +1306,12 @@ int bx_ohci_core_c::broadcast_packet(USBPacket *p)
 // pci configuration space write callback handler
 void bx_ohci_core_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {
-  Bit8u value8;
-
   if (((address >= 0x14) && (address <= 0x34)))
     return;
 
   BX_DEBUG_PCI_WRITE(address, value, io_len);
   for (unsigned i=0; i<io_len; i++) {
-    value8 = (value >> (i*8)) & 0xFF;
+    Bit8u value8 = (value >> (i*8)) & 0xFF;
 //  Bit8u oldval = pci_conf[address+i];
     switch (address+i) {
       case 0x04:

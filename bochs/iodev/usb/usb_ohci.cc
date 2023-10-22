@@ -287,11 +287,9 @@ Bit64s bx_usb_ohci_c::usb_param_handler(bx_param_c *param, bool set, Bit64s val)
 // USB runtime parameter handler: over-current
 Bit64s bx_usb_ohci_c::usb_param_oc_handler(bx_param_c *param, bool set, Bit64s val)
 {
-  int portnum;
-
   if (set && val) {
     if (BX_OHCI_THIS hub.op_regs.HcRhDescriptorA.nocp == 0) {
-      portnum = atoi((param->get_parent())->get_name()+4) - 1;
+      int portnum = atoi((param->get_parent())->get_name()+4) - 1;
       if ((portnum >= 0) && (portnum < USB_OHCI_PORTS)) {
         if (BX_OHCI_THIS hub.usb_port[portnum].HcRhPortStatus.ccs) {
           // is over current reported on a per-port basis?
