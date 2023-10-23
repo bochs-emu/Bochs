@@ -646,12 +646,34 @@ int MainMenuDialog(HWND hwnd, bool runtime)
                         (DLGPROC)MainMenuDlgProc, (LPARAM)runtime);
 }
 
+#define ML_WIN_WIDTH  400
+#define ML_WIN_HEIGHT 150
+
+// Unfortunetly, Win32 Edit Controls must have \r\n for line feeds, and Bochs uses only \n
+// We must add \r to every \n to get Windows to drop to the next line in an Edit Control.
+void conv_dos2unix(const char *src, char *targ, int max_len)
+{
+  char last = 0;
+  while (*src && (max_len > 2)) {
+    if ((*src == '\n') && (last != '\r')) {
+      *targ++ = '\r';
+      max_len--;
+    }
+    *targ++ = last = *src++;
+    max_len--;
+  }
+  *targ = '\0';
+}
+
 BxEvent* win32_notify_callback(void *unused, BxEvent *event)
 {
-  int opts;
+  int opts, x = -1, y = -1;
   bx_param_c *param;
   bx_param_string_c *sparam;
   char pname[BX_PATHNAME_LEN];
+  NONCLIENTMETRICS ncm;
+  RECT rect;
+  HWND hwnd;
 
   event->retcode = -1;
   switch (event->type)
@@ -661,6 +683,36 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
       return event;
     case BX_SYNC_EVT_MSG_BOX:
       MessageBox(GetBochsWindow(), event->u.logmsg.msg, event->u.logmsg.prefix, MB_ICONERROR);
+      return event;
+    case BX_SYNC_EVT_ML_MSG_BOX:
+      // get the coordinates of the screen size
+      if (SystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0)) {
+        x = (rect.right - rect.left - ML_WIN_WIDTH) / 2;
+        y = (rect.bottom - rect.top - ML_WIN_HEIGHT) / 2;
+      }
+      // if that failed or the screen isn't very big...
+      if (x < 0) x = 250;
+      if (y < 0) y = 250;
+      // create an EDIT window, with the edit control as read only
+      hwnd = CreateWindow("EDIT", event->u.logmsg.prefix,  
+        WS_VISIBLE | WS_BORDER | ES_READONLY | ES_LEFT | ES_MULTILINE,
+        x, y, ML_WIN_WIDTH, ML_WIN_HEIGHT, GetBochsWindow(), (HMENU) NULL, NULL, (LPVOID) NULL);
+      // if we created the window successfully, change the font to the system font and replace the text
+      if (hwnd) {
+        ncm.cbSize = sizeof(NONCLIENTMETRICS);
+        if (SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &ncm, 0))
+          SendMessage(hwnd, WM_SETFONT, (WPARAM) CreateFontIndirect(&ncm.lfMessageFont), 0);
+        conv_dos2unix(event->u.logmsg.msg, pname, BX_PATHNAME_LEN);
+        SendMessage(hwnd, EM_SETSEL, 0, -1);
+        SendMessage(hwnd, EM_REPLACESEL, 0, (LPARAM) pname);
+        ShowWindow(hwnd, SW_SHOW);
+        UpdateWindow(hwnd);
+        event->param0 = hwnd;
+      }
+      return event;
+    case BX_SYNC_EVT_ML_MSG_BOX_KILL:
+      if (event->param0)
+        DestroyWindow((HWND) event->param0);
       return event;
     case BX_SYNC_EVT_ASK_PARAM:
       param = event->u.param.param;
