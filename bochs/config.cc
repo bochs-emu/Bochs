@@ -3394,12 +3394,14 @@ int bx_write_floppy_options(FILE *fp, int drive)
 #if BX_SUPPORT_PCIUSB
 int bx_write_usb_options(FILE *fp, int maxports, bx_list_c *base)
 {
-  int i;
   char tmpname[24], tmpstr[BX_PATHNAME_LEN];
 
   fprintf(fp, "usb_%s: enabled=%d", base->get_name(), SIM->get_param_bool("enabled", base)->get());
+  // if we are the ehci, we need to add the companion= parameter
+  if (!strcmp(base->get_name(), "ehci"))
+    fprintf(fp, ", companion=%s", (SIM->get_param_enum(BXPN_EHCI_COMPANION)->get() == 1) ? "ohci" : "uhci");
   if (SIM->get_param_bool("enabled", base)->get()) {
-    for (i = 1; i <= maxports; i++) {
+    for (int i = 1; i <= maxports; i++) {
       sprintf(tmpname, "port%d.device", i);
       SIM->get_param_enum(tmpname, base)->dump_param(tmpstr, BX_PATHNAME_LEN, 1);
       fprintf(fp, ", port%d=%s", i, tmpstr);
