@@ -239,7 +239,7 @@ void bx_init_usb_options(const char *usb_name, const char *pname, int maxports, 
   
   // ehci companion type
   static const char *ehci_comp_type[] = { "uhci", "ohci", NULL };
-  bx_param_enum_c *companion = new bx_param_enum_c(menu,
+  new bx_param_enum_c(menu,
       "companion", "Companion Type",
       "Select Companion type to emulate",
       ehci_comp_type,
@@ -3394,12 +3394,22 @@ int bx_write_floppy_options(FILE *fp, int drive)
 #if BX_SUPPORT_PCIUSB
 int bx_write_usb_options(FILE *fp, int maxports, bx_list_c *base)
 {
-  int i;
   char tmpname[24], tmpstr[BX_PATHNAME_LEN];
 
   fprintf(fp, "usb_%s: enabled=%d", base->get_name(), SIM->get_param_bool("enabled", base)->get());
+
+  // if we are the ehci, we need to add the companion= parameter
+  if (base == SIM->get_param(BXPN_USB_EHCI))
+    fprintf(fp, ", companion=%s", SIM->get_param_enum(BXPN_EHCI_COMPANION)->get_selected());
+
+  // if we are the xhci, we need to add the model= and n_ports= parameters
+  if (base == SIM->get_param(BXPN_USB_XHCI)) {
+    fprintf(fp, ", model=%s", SIM->get_param_enum(BXPN_XHCI_MODEL)->get_selected());
+    fprintf(fp, ", n_ports=%i", SIM->get_param_num(BXPN_XHCI_N_PORTS)->get());
+  }
+
   if (SIM->get_param_bool("enabled", base)->get()) {
-    for (i = 1; i <= maxports; i++) {
+    for (int i = 1; i <= maxports; i++) {
       sprintf(tmpname, "port%d.device", i);
       SIM->get_param_enum(tmpname, base)->dump_param(tmpstr, BX_PATHNAME_LEN, 1);
       fprintf(fp, ", port%d=%s", i, tmpstr);
