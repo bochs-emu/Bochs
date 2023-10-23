@@ -239,7 +239,7 @@ void bx_init_usb_options(const char *usb_name, const char *pname, int maxports, 
   
   // ehci companion type
   static const char *ehci_comp_type[] = { "uhci", "ohci", NULL };
-  bx_param_enum_c *companion = new bx_param_enum_c(menu,
+  new bx_param_enum_c(menu,
       "companion", "Companion Type",
       "Select Companion type to emulate",
       ehci_comp_type,
