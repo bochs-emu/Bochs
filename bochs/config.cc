@@ -3397,9 +3397,17 @@ int bx_write_usb_options(FILE *fp, int maxports, bx_list_c *base)
   char tmpname[24], tmpstr[BX_PATHNAME_LEN];
 
   fprintf(fp, "usb_%s: enabled=%d", base->get_name(), SIM->get_param_bool("enabled", base)->get());
+
   // if we are the ehci, we need to add the companion= parameter
-  if (!strcmp(base->get_name(), "ehci"))
-    fprintf(fp, ", companion=%s", (SIM->get_param_enum(BXPN_EHCI_COMPANION)->get() == 1) ? "ohci" : "uhci");
+  if (base == SIM->get_param(BXPN_USB_EHCI))
+    fprintf(fp, ", companion=%s", SIM->get_param_enum(BXPN_EHCI_COMPANION)->get_selected());
+
+  // if we are the xhci, we need to add the model= and n_ports= parameters
+  if (base == SIM->get_param(BXPN_USB_XHCI)) {
+    fprintf(fp, ", model=%s", SIM->get_param_enum(BXPN_XHCI_MODEL)->get_selected());
+    fprintf(fp, ", n_ports=%i", SIM->get_param_num(BXPN_XHCI_N_PORTS)->get());
+  }
+
   if (SIM->get_param_bool("enabled", base)->get()) {
     for (int i = 1; i <= maxports; i++) {
       sprintf(tmpname, "port%d.device", i);
