@@ -25,25 +25,27 @@
 #ifndef BX_IODEV_USB_FLOPPY_H
 #define BX_IODEV_USB_FLOPPY_H
 
-#define UFI_TEST_UNIT_READY             0x00
-#define UFI_REZERO                      0x01
-#define UFI_REQUEST_SENSE               0x03
-#define UFI_FORMAT_UNIT                 0x04
-#define UFI_INQUIRY                     0x12
-#define UFI_START_STOP_UNIT             0x1B
-#define UFI_SEND_DIAGNOSTIC             0x1D
-#define UFI_PREVENT_ALLOW_REMOVAL       0x1E
-#define UFI_READ_FORMAT_CAPACITIES      0x23
-#define UFI_READ_CAPACITY               0x25
-#define UFI_READ_10                     0x28
-#define UFI_WRITE_10                    0x2A
-#define UFI_SEEK_10                     0x2B
-#define UFI_WRITE_VERIFY                0x2E
-#define UFI_VERIFY                      0x2F
-#define UFI_MODE_SELECT                 0x55
-#define UFI_MODE_SENSE                  0x5A
-#define UFI_READ_12                     0xA8
-#define UFI_WRITE_12                    0xAA
+enum {
+  UFI_TEST_UNIT_READY          =  0x00,
+  UFI_REZERO                   =  0x01,
+  UFI_REQUEST_SENSE            =  0x03,
+  UFI_FORMAT_UNIT              =  0x04,
+  UFI_INQUIRY                  =  0x12,
+  UFI_START_STOP_UNIT          =  0x1B,
+  UFI_SEND_DIAGNOSTIC          =  0x1D,
+  UFI_PREVENT_ALLOW_REMOVAL    =  0x1E,
+  UFI_READ_FORMAT_CAPACITIES   =  0x23,
+  UFI_READ_CAPACITY            =  0x25,
+  UFI_READ_10                  =  0x28,
+  UFI_WRITE_10                 =  0x2A,
+  UFI_SEEK_10                  =  0x2B,
+  UFI_WRITE_VERIFY             =  0x2E,
+  UFI_VERIFY                   =  0x2F,
+  UFI_MODE_SELECT              =  0x55,
+  UFI_MODE_SENSE               =  0x5A,
+  UFI_READ_12                  =  0xA8,
+  UFI_WRITE_12                 =  0xAA
+};
 
 #define UFI_DO_INQUIRY_HACK  1
 
