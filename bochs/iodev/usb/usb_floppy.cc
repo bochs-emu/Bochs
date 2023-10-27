@@ -895,8 +895,32 @@ bool usb_floppy_device_c::handle_command(Bit8u *command)
       }
       break;
 
-    case UFI_REZERO:
     case UFI_SEND_DIAGNOSTIC:
+      // The PF, Defofl, and UnitOfl bits are irrelevant to the CBI
+      // (Funny note is that the 'DefOfl' bit is misspelled in the specs.
+      //  It should be 'DevOfl' for DevOffLine and UnitOffLine respectively)
+      // 
+      // if the command is 1Dh 04h 00h 00h 00h 00h ...., then this is a Command Block Reset
+      if ((command[1] == 0x04) && !memcmp(&command[2], "\0\0\0\0\0\0\0\0\0", 9)) {
+        BX_DEBUG(("Found UFI_SEND_DIAGNOSTIC: CBI Command Block Reset"));
+        s.status_changed = 0;
+        s.sector =
+          s.sector_count = 0;
+        s.cur_track = 0;
+        s.cur_command = 0;
+        s.sense =
+          s.asc = 0;
+        s.did_inquiry_fail = 0;
+        s.fail_count = 0;
+        
+      // else it is to perform a special diagnostic test
+      } else {
+        BX_DEBUG(("Found UFI_SEND_DIAGNOSTIC: Perform Special Diagnostic Test. Returning good..."));
+        // as long as the LUN == 0, already checked at first of the function, we pass 'good test'
+      }
+      break;
+      
+    case UFI_REZERO:
     case UFI_SEEK_10:
     case UFI_WRITE_VERIFY:
     case UFI_VERIFY:
