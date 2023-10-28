@@ -16,6 +16,7 @@ export CXXFLAGS
 export WINDRES
 
 ./configure --host=x86_64-linux --target=x86_64-mingw32 \
+            --enable-sb16 \
             --enable-ne2000 \
             --enable-all-optimizations \
             --enable-cpu-level=6 \
