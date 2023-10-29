@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -822,6 +822,12 @@ ask:
         // warning prompt not implemented
         event->retcode = 0;
       }
+      return event;
+    case BX_SYNC_EVT_ML_MSG_BOX:
+      fprintf(stderr, "%s\n%s\n", event->u.logmsg.prefix, event->u.logmsg.msg);
+      return event;
+    case BX_SYNC_EVT_ML_MSG_BOX_KILL:
+      // Nothing to do
       return event;
     case BX_ASYNC_EVT_REFRESH:
     case BX_ASYNC_EVT_DBG_MSG:
