@@ -543,10 +543,8 @@ int usb_msd_device_c::uasp_do_data(UASPRequest *req, USBPacket *p)
 
 int usb_msd_device_c::uasp_do_ready(UASPRequest *req, USBPacket *p)
 {
-  struct S_UASP_HDR *ready;
-  
   // do the RRIU or WRIU
-  ready = (struct S_UASP_HDR *) p->data;
+  struct S_UASP_HDR *ready = (struct S_UASP_HDR *) p->data;
   ready->id = (UASP_GET_DIR(req->mode) == USB_TOKEN_IN) ? IU_RRDY : IU_WRDY;
   ready->rsvd0 = 0;
   ready->tag = bx_bswap16((Bit16u) req->tag);
@@ -559,7 +557,6 @@ int usb_msd_device_c::uasp_do_ready(UASPRequest *req, USBPacket *p)
 
 int usb_msd_device_c::uasp_do_status(UASPRequest *req, USBPacket *p)
 {
-  struct S_UASP_STATUS *status;
   int ret = IU_SENSE_LEN;
   
   BX_DEBUG(("uasp: Sending Status:"));
@@ -567,7 +564,7 @@ int usb_msd_device_c::uasp_do_status(UASPRequest *req, USBPacket *p)
     BX_ERROR(("Status packet length is less than 16: %d", p->len));
   
   // do the status
-  status = (struct S_UASP_STATUS *) p->data;
+  struct S_UASP_STATUS *status = (struct S_UASP_STATUS *) p->data;
   memset(status, 0, IU_SENSE_LEN);
   status->id = IU_SENSE;
   status->tag = bx_bswap16((Bit16u) req->tag);
@@ -607,11 +604,9 @@ int usb_msd_device_c::uasp_do_status(UASPRequest *req, USBPacket *p)
 
 int usb_msd_device_c::uasp_do_response(UASPRequest *req, USBPacket *p)
 {
-  struct S_UASP_RESPONSE *response;
-  
   // do the response
   BX_DEBUG(("uasp: Sending Response:"));
-  response = (struct S_UASP_RESPONSE *) p->data;
+  struct S_UASP_RESPONSE *response = (struct S_UASP_RESPONSE *) p->data;
   memset(response, 0, IU_RESP_LEN);
   response->id = IU_RESP;
   response->tag = bx_bswap16((Bit16u) req->tag);
@@ -665,7 +660,7 @@ void usb_msd_device_c::uasp_command_complete(int reason, Bit32u tag, Bit32u arg)
   BX_DEBUG(("uasp_command_complete: reason %d, arg %d, tag 0x%04X", reason, arg, tag));
 
   if (req == NULL) {
-    BX_ERROR(("uasp_command_complete: Tag 0x%X not found."));
+    BX_ERROR(("uasp_command_complete: Tag 0x%X not found", tag));
     return;
   }
 

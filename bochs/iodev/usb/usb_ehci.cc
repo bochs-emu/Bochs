@@ -743,7 +743,7 @@ Bit64u bx_usb_ehci_c::create_port_routing(int n_cc, int n_pcc)
       strcat(str, strstr);
       r >>= 4;
     }
-    BX_DEBUG((str));
+    BX_DEBUG(("%s", str));
   }
 #endif
   

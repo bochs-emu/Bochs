@@ -246,13 +246,6 @@ bx_usb_xhci_c::~bx_usb_xhci_c()
 void bx_usb_xhci_c::init(void)
 {
   unsigned i, j;
-  char pname[6];
-  Bit8u *p;
-  bx_list_c *port;
-  bx_param_enum_c *device;
-  bx_param_string_c *options;
-  bx_param_bool_c *over_current;
-  struct XHCI_PROTOCOL *protocol;
 
   /*  If you wish to set DEBUG=report in the code, instead of
    *  in the configuration, simply uncomment this line.  I use
@@ -336,14 +329,15 @@ void bx_usb_xhci_c::init(void)
   bx_list_c *xhci_rt = new bx_list_c(usb_rt, "xhci", "xHCI Runtime Options");
   xhci_rt->set_options(xhci_rt->SHOW_PARENT | xhci_rt->USE_BOX_TITLE);
   for (i=0; i<BX_XHCI_THIS hub.n_ports; i++) {
+    char pname[8];
     sprintf(pname, "port%d", i+1);
-    port = (bx_list_c *) SIM->get_param(pname, xhci);
+    bx_list_c *port = (bx_list_c *) SIM->get_param(pname, xhci);
     xhci_rt->add(port);
-    device = (bx_param_enum_c*)port->get_by_name("device");
+    bx_param_enum_c *device = (bx_param_enum_c*)port->get_by_name("device");
     device->set_handler(usb_param_handler);
-    options = (bx_param_string_c*)port->get_by_name("options");
+    bx_param_string_c *options = (bx_param_string_c*)port->get_by_name("options");
     options->set_enable_handler(usb_param_enable_handler);
-    over_current = (bx_param_bool_c*)port->get_by_name("over_current");
+    bx_param_bool_c *over_current = (bx_param_bool_c*)port->get_by_name("over_current");
     over_current->set_handler(usb_param_oc_handler);
     BX_XHCI_THIS hub.usb_port[i].device = NULL;
     BX_XHCI_THIS hub.usb_port[i].portsc.ccs = 0;
@@ -385,7 +379,7 @@ void bx_usb_xhci_c::init(void)
   // Super Speed:   { 0x00,    90,    90,     0,     0,  0, 0, 0 }
   // (These numbers are for a two socket, four port hc.)
   // (They will need to be different for a different combination)
-  p = BX_XHCI_THIS hub.port_band_width;
+  Bit8u *p = BX_XHCI_THIS hub.port_band_width;
   for (i=0; i<4; i++) { // 4 speeds
     *p++ = 0; // first entry is reserved
     for (j=0; j<BX_XHCI_THIS hub.n_ports; j++) {
@@ -411,7 +405,7 @@ void bx_usb_xhci_c::init(void)
 
   // adjust the Extended Caps Protocol fields
   // first the USB3 (first half ports)
-  protocol = (struct XHCI_PROTOCOL *) &ext_caps[PROTOCOL_UBS3_OFFSET];
+  struct XHCI_PROTOCOL *protocol = (struct XHCI_PROTOCOL *) &ext_caps[PROTOCOL_UBS3_OFFSET];
   protocol->start_index = 1; // 1 based starting index
   protocol->count = BX_XHCI_THIS hub.n_ports / 2;
   // then the USB2 (second half ports)
@@ -3419,11 +3413,9 @@ int bx_usb_xhci_c::validate_ep_context(const struct EP_CONTEXT *ep_context, int 
     // section 6.2.3.3, p326, for an Evaluate Context Command, only the Slot and EP0 are evaluated.
     case EVALUATE_CONTEXT:
       if ((ep_num == 1) && (a_flags & 2)) {
-        
         // check the max packet size field
-        if (ep_context->max_packet_size != BX_XHCI_THIS hub.usb_port[port_num].device->get_mps(ep_num / 2))
+        if ((int) ep_context->max_packet_size != BX_XHCI_THIS hub.usb_port[port_num].device->get_mps(ep_num / 2))
           ret = PARAMETER_ERROR;
-        
       }
       break;
       

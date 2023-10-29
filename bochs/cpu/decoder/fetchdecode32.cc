@@ -1688,9 +1688,7 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, unsigned nnn, 
       }
       else {
         unsigned tmpreg = BX_TMP_REGISTER;
-#if BX_SUPPORT_FPU
         if (type == BX_VMM_REG) tmpreg = BX_VECTOR_TMP_REGISTER;
-#endif
         i->setSrcReg(n, tmpreg);
       }
       break;
