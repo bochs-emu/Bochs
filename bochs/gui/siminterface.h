@@ -217,6 +217,8 @@ typedef enum {
   BX_SYNC_EVT_LOG_DLG,            // simulator -> CI, wait for response.
   BX_SYNC_EVT_GET_DBG_COMMAND,    // simulator -> CI, wait for response.
   BX_SYNC_EVT_MSG_BOX,            // simulator -> CI, wait for response.
+  BX_SYNC_EVT_ML_MSG_BOX,         // simulator -> CI, do not wait for response.
+  BX_SYNC_EVT_ML_MSG_BOX_KILL,    // simulator -> CI, do not wait for response.
   __ALL_EVENTS_BELOW_ARE_ASYNC__,
   BX_ASYNC_EVT_KEY,               // vga window -> simulator
   BX_ASYNC_EVT_MOUSE,             // vga window -> simulator
@@ -407,6 +409,7 @@ typedef struct {
 typedef struct {
   BxEventType type; // what kind is this?
   Bit32s retcode;   // success or failure. only used for synchronous events.
+  void *param0;     // misc parameter
   union {
     BxKeyEvent key;
     BxMouseEvent mouse;
@@ -667,6 +670,10 @@ public:
   virtual int ask_yes_no(const char *title, const char *prompt, bool the_default) {return -1;}
   // simple message box
   virtual void message_box(const char *title, const char *message) {}
+  // modeless message box
+  virtual void *ml_message_box(const char *title, const char *message) {return NULL;}
+  // kill modeless message box
+  virtual void ml_message_box_kill(void *ptr) {}
   // called at a regular interval, currently by the bx_devices_c::timer()
   virtual void periodic() {}
   virtual int create_disk_image(const char *filename, int sectors, bool overwrite) {return -3;}

@@ -819,17 +819,19 @@ void bx_gui_c::userbutton_handler(void)
 
 void bx_gui_c::save_restore_handler(void)
 {
-  int ret;
   char sr_path[BX_PATHNAME_LEN];
 
   if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_SAVE_RESTORE) {
     BX_GUI_THIS set_display_mode(DISP_MODE_CONFIG);
     sr_path[0] = 0;
-    ret = SIM->ask_filename(sr_path, sizeof(sr_path),
+    int ret = SIM->ask_filename(sr_path, sizeof(sr_path),
                             "Save Bochs state to folder...", "none",
                             bx_param_string_c::SELECT_FOLDER_DLG);
     if ((ret >= 0) && (strcmp(sr_path, "none"))) {
+      void *hwnd = SIM->ml_message_box("Please wait.", "Waiting for the 'save state' to finish.\n"
+              "Depending on the size of your emulated disk images, this may be a little while.");
       if (SIM->save_state(sr_path)) {
+        SIM->ml_message_box_kill(hwnd);
         if (!SIM->ask_yes_no("WARNING",
               "The state of cpu, memory, devices and hard drive images is saved now.\n"
               "It is possible to continue, but when using the restore function in a\n"
@@ -838,6 +840,7 @@ void bx_gui_c::save_restore_handler(void)
           power_handler();
         }
       } else {
+        SIM->ml_message_box_kill(hwnd);
         SIM->message_box("ERROR", "Failed to save state");
       }
     }
