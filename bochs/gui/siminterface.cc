@@ -136,6 +136,10 @@ public:
   virtual int ask_yes_no(const char *title, const char *prompt, bool the_default);
   // simple message box
   virtual void message_box(const char *title, const char *message);
+  // simple modeless message box
+  virtual void *ml_message_box(const char *title, const char *message);
+  // kill modeless message box
+  virtual void ml_message_box_kill(void *ptr);
   // called at a regular interval, currently by the keyboard handler.
   virtual void periodic();
   virtual int create_disk_image(const char *filename, int sectors, bool overwrite);
@@ -659,6 +663,27 @@ void bx_real_sim_c::message_box(const char *title, const char *message)
   event.type = BX_SYNC_EVT_MSG_BOX;
   event.u.logmsg.prefix = title;
   event.u.logmsg.msg = message;
+  sim_to_ci_event(&event);
+}
+
+void *bx_real_sim_c::ml_message_box(const char *title, const char *message)
+{
+  BxEvent event;
+
+  event.type = BX_SYNC_EVT_ML_MSG_BOX;
+  event.param0 = NULL;
+  event.u.logmsg.prefix = title;
+  event.u.logmsg.msg = message;
+  sim_to_ci_event(&event);
+  return event.param0;
+}
+
+void bx_real_sim_c::ml_message_box_kill(void *ptr)
+{
+  BxEvent event;
+
+  event.type = BX_SYNC_EVT_ML_MSG_BOX_KILL;
+  event.param0 = ptr;
   sim_to_ci_event(&event);
 }
 
