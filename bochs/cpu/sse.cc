@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2003-2018 Stanislav Shwartsman
+//   Copyright (c) 2003-2023 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -33,151 +33,12 @@
 #if BX_CPU_LEVEL >= 6
 
 #include "simd_int.h"
-#include "simd_compare.h"
-
-#define SSE_2OP(HANDLER, func)                                                             \
-  /* SSE instruction with two src operands */                                              \
-  void BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER (bxInstruction_c *i)                     \
-  {                                                                                        \
-    BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());  \
-    (func)(&op1, &op2);                                                                    \
-    BX_WRITE_XMM_REG(i->dst(), op1);                                                       \
-                                                                                           \
-    BX_NEXT_INSTR(i);                                                                      \
-  }
-
-SSE_2OP(PHADDW_VdqWdqR, xmm_phaddw)
-SSE_2OP(PHADDSW_VdqWdqR, xmm_phaddsw)
-SSE_2OP(PHADDD_VdqWdqR, xmm_phaddd)
-SSE_2OP(PHSUBW_VdqWdqR, xmm_phsubw)
-SSE_2OP(PHSUBSW_VdqWdqR, xmm_phsubsw)
-SSE_2OP(PHSUBD_VdqWdqR, xmm_phsubd)
-
-SSE_2OP(PSIGNB_VdqWdqR, xmm_psignb)
-SSE_2OP(PSIGNW_VdqWdqR, xmm_psignw)
-SSE_2OP(PSIGND_VdqWdqR, xmm_psignd)
-
-SSE_2OP(PCMPEQQ_VdqWdqR, xmm_pcmpeqq)
-SSE_2OP(PCMPGTQ_VdqWdqR, xmm_pcmpgtq)
-
-SSE_2OP(PMINSB_VdqWdqR, xmm_pminsb)
-SSE_2OP(PMINSD_VdqWdqR, xmm_pminsd)
-SSE_2OP(PMINUW_VdqWdqR, xmm_pminuw)
-SSE_2OP(PMINUD_VdqWdqR, xmm_pminud)
-SSE_2OP(PMAXSB_VdqWdqR, xmm_pmaxsb)
-SSE_2OP(PMAXSD_VdqWdqR, xmm_pmaxsd)
-SSE_2OP(PMAXUW_VdqWdqR, xmm_pmaxuw)
-SSE_2OP(PMAXUD_VdqWdqR, xmm_pmaxud)
-
-SSE_2OP(PACKUSDW_VdqWdqR, xmm_packusdw)
-
-SSE_2OP(PMULLD_VdqWdqR, xmm_pmulld)
-SSE_2OP(PMULDQ_VdqWdqR, xmm_pmuldq)
-SSE_2OP(PMULHRSW_VdqWdqR, xmm_pmulhrsw)
-
-SSE_2OP(PMADDUBSW_VdqWdqR, xmm_pmaddubsw)
-
-#endif // BX_CPU_LEVEL >= 6
-
-#if BX_CPU_LEVEL >= 6
-
-#define SSE_2OP_CPU_LEVEL6(HANDLER, func) \
-  SSE_2OP(HANDLER, func)
-
-#else
-
-#define SSE_2OP_CPU_LEVEL6(HANDLER, func)                                                  \
-  /* SSE instruction with two src operands */                                              \
-  void BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER (bxInstruction_c *i)                     \
-  {                                                                                        \
-    BX_NEXT_INSTR(i);                                                                      \
-  }
-
-#endif
-
-SSE_2OP_CPU_LEVEL6(PMINUB_VdqWdqR, xmm_pminub)
-SSE_2OP_CPU_LEVEL6(PMINSW_VdqWdqR, xmm_pminsw)
-SSE_2OP_CPU_LEVEL6(PMAXUB_VdqWdqR, xmm_pmaxub)
-SSE_2OP_CPU_LEVEL6(PMAXSW_VdqWdqR, xmm_pmaxsw)
-
-SSE_2OP_CPU_LEVEL6(PAVGB_VdqWdqR, xmm_pavgb)
-SSE_2OP_CPU_LEVEL6(PAVGW_VdqWdqR, xmm_pavgw)
-
-SSE_2OP_CPU_LEVEL6(PCMPEQB_VdqWdqR, xmm_pcmpeqb)
-SSE_2OP_CPU_LEVEL6(PCMPEQW_VdqWdqR, xmm_pcmpeqw)
-SSE_2OP_CPU_LEVEL6(PCMPEQD_VdqWdqR, xmm_pcmpeqd)
-SSE_2OP_CPU_LEVEL6(PCMPGTB_VdqWdqR, xmm_pcmpgtb)
-SSE_2OP_CPU_LEVEL6(PCMPGTW_VdqWdqR, xmm_pcmpgtw)
-SSE_2OP_CPU_LEVEL6(PCMPGTD_VdqWdqR, xmm_pcmpgtd)
-
-SSE_2OP_CPU_LEVEL6(ANDPS_VpsWpsR, xmm_andps)
-SSE_2OP_CPU_LEVEL6(ANDNPS_VpsWpsR, xmm_andnps)
-SSE_2OP_CPU_LEVEL6(ORPS_VpsWpsR, xmm_orps)
-SSE_2OP_CPU_LEVEL6(XORPS_VpsWpsR, xmm_xorps)
-
-SSE_2OP_CPU_LEVEL6(PSUBB_VdqWdqR, xmm_psubb)
-SSE_2OP_CPU_LEVEL6(PSUBW_VdqWdqR, xmm_psubw)
-SSE_2OP_CPU_LEVEL6(PSUBD_VdqWdqR, xmm_psubd)
-SSE_2OP_CPU_LEVEL6(PSUBQ_VdqWdqR, xmm_psubq)
-SSE_2OP_CPU_LEVEL6(PADDB_VdqWdqR, xmm_paddb)
-SSE_2OP_CPU_LEVEL6(PADDW_VdqWdqR, xmm_paddw)
-SSE_2OP_CPU_LEVEL6(PADDD_VdqWdqR, xmm_paddd)
-SSE_2OP_CPU_LEVEL6(PADDQ_VdqWdqR, xmm_paddq)
-
-SSE_2OP_CPU_LEVEL6(PSUBSB_VdqWdqR, xmm_psubsb)
-SSE_2OP_CPU_LEVEL6(PSUBUSB_VdqWdqR, xmm_psubusb)
-SSE_2OP_CPU_LEVEL6(PSUBSW_VdqWdqR, xmm_psubsw)
-SSE_2OP_CPU_LEVEL6(PSUBUSW_VdqWdqR, xmm_psubusw)
-SSE_2OP_CPU_LEVEL6(PADDSB_VdqWdqR, xmm_paddsb)
-SSE_2OP_CPU_LEVEL6(PADDUSB_VdqWdqR, xmm_paddusb)
-SSE_2OP_CPU_LEVEL6(PADDSW_VdqWdqR, xmm_paddsw)
-SSE_2OP_CPU_LEVEL6(PADDUSW_VdqWdqR, xmm_paddusw)
-
-SSE_2OP_CPU_LEVEL6(PACKUSWB_VdqWdqR, xmm_packuswb)
-SSE_2OP_CPU_LEVEL6(PACKSSWB_VdqWdqR, xmm_packsswb)
-SSE_2OP_CPU_LEVEL6(PACKSSDW_VdqWdqR, xmm_packssdw)
-
-SSE_2OP_CPU_LEVEL6(UNPCKLPS_VpsWpsR, xmm_unpcklps)
-SSE_2OP_CPU_LEVEL6(UNPCKHPS_VpsWpsR, xmm_unpckhps)
-SSE_2OP_CPU_LEVEL6(PUNPCKLQDQ_VdqWdqR, xmm_unpcklpd)
-SSE_2OP_CPU_LEVEL6(PUNPCKHQDQ_VdqWdqR, xmm_unpckhpd)
-
-SSE_2OP_CPU_LEVEL6(PUNPCKLBW_VdqWdqR, xmm_punpcklbw)
-SSE_2OP_CPU_LEVEL6(PUNPCKLWD_VdqWdqR, xmm_punpcklwd)
-SSE_2OP_CPU_LEVEL6(PUNPCKHBW_VdqWdqR, xmm_punpckhbw)
-SSE_2OP_CPU_LEVEL6(PUNPCKHWD_VdqWdqR, xmm_punpckhwd)
-
-SSE_2OP_CPU_LEVEL6(PMULLW_VdqWdqR, xmm_pmullw)
-SSE_2OP_CPU_LEVEL6(PMULHW_VdqWdqR, xmm_pmulhw)
-SSE_2OP_CPU_LEVEL6(PMULHUW_VdqWdqR, xmm_pmulhuw)
-SSE_2OP_CPU_LEVEL6(PMULUDQ_VdqWdqR, xmm_pmuludq)
-SSE_2OP_CPU_LEVEL6(PMADDWD_VdqWdqR, xmm_pmaddwd)
-
-SSE_2OP_CPU_LEVEL6(PSADBW_VdqWdqR, xmm_psadbw)
-
-#if BX_CPU_LEVEL >= 6
-
-#define SSE_1OP(HANDLER, func)                                                             \
-  /* SSE instruction with single src operand */                                            \
-  void BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER (bxInstruction_c *i)                     \
-  {                                                                                        \
-    BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());                                    \
-    (func)(&op);                                                                           \
-    BX_WRITE_XMM_REG(i->dst(), op);                                                        \
-                                                                                           \
-    BX_NEXT_INSTR(i);                                                                      \
-  }
-
-SSE_1OP(PABSB_VdqWdqR, xmm_pabsb)
-SSE_1OP(PABSW_VdqWdqR, xmm_pabsw)
-SSE_1OP(PABSD_VdqWdqR, xmm_pabsd)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSHUFB_VdqWdqR(bxInstruction_c *i)
 {
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst());
-  BxPackedXmmRegister op2 = BX_READ_XMM_REG(i->src()), result;
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), result;
 
-  xmm_pshufb(&result, &op1, &op2);
+  xmm_pshufb(&result, &op1, &BX_XMM_REG(i->src()));
 
   BX_WRITE_XMM_REG(i->dst(), result);
 
@@ -224,14 +85,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHMINPOSUW_VdqWdqR(bxInstruction_c *i)
 {
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
 
-  unsigned min = 0;
+  unsigned min_index = 0;
 
   for (unsigned j=1; j < 8; j++) {
-     if (op.xmm16u(j) < op.xmm16u(min)) min = j;
+     if (op.xmm16u(j) < op.xmm16u(min_index)) min_index = j;
   }
 
-  op.xmm16u(0) = op.xmm16u(min);
-  op.xmm16u(1) = min;
+  op.xmm16u(0) = op.xmm16u(min_index);
+  op.xmm16u(1) = min_index;
   op.xmm32u(1) = 0;
   op.xmm64u(1) = 0;
 
@@ -408,8 +269,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSERTPS_VpsWssIbR(bxInstruction_c *i)
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst());
   Bit8u control = i->Ib();
 
-  BxPackedXmmRegister temp = BX_READ_XMM_REG(i->src());
-  Bit32u op2 = temp.xmm32u((control >> 6) & 3);
+  BxPackedXmmRegister tmp = BX_READ_XMM_REG(i->src());
+  Bit32u op2 = tmp.xmm32u((control >> 6) & 3);
 
   op1.xmm32u((control >> 4) & 3) = op2;
   xmm_zero_blendps(&op1, &op1, ~control);
@@ -550,75 +411,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHUFPD_VpdWpdIbR(bxInstruction_c *i)
 
   BX_NEXT_INSTR(i);
 }
-
-#if BX_CPU_LEVEL >= 6
-
-#define SSE_PSHIFT_CPU_LEVEL6(HANDLER, func)                                               \
-  /* SSE packed shift instruction */                                                       \
-  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)              \
-  {                                                                                        \
-    BxPackedXmmRegister op = BX_READ_XMM_REG(i->dst());                                    \
-                                                                                           \
-    (func)(&op, BX_READ_XMM_REG_LO_QWORD(i->src()));                                       \
-                                                                                           \
-    BX_WRITE_XMM_REG(i->dst(), op);                                                        \
-                                                                                           \
-    BX_NEXT_INSTR(i);                                                                      \
-  }
-
-#else
-
-#define SSE_PSHIFT_CPU_LEVEL6(HANDLER, func)                                               \
-  /* SSE instruction with two src operands */                                              \
-  void BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER (bxInstruction_c *i)                     \
-  {                                                                                        \
-    BX_NEXT_INSTR(i);                                                                      \
-  }
-
-#endif
-
-SSE_PSHIFT_CPU_LEVEL6(PSRLW_VdqWdqR, xmm_psrlw);
-SSE_PSHIFT_CPU_LEVEL6(PSRLD_VdqWdqR, xmm_psrld);
-SSE_PSHIFT_CPU_LEVEL6(PSRLQ_VdqWdqR, xmm_psrlq);
-SSE_PSHIFT_CPU_LEVEL6(PSRAW_VdqWdqR, xmm_psraw);
-SSE_PSHIFT_CPU_LEVEL6(PSRAD_VdqWdqR, xmm_psrad);
-SSE_PSHIFT_CPU_LEVEL6(PSLLW_VdqWdqR, xmm_psllw);
-SSE_PSHIFT_CPU_LEVEL6(PSLLD_VdqWdqR, xmm_pslld);
-SSE_PSHIFT_CPU_LEVEL6(PSLLQ_VdqWdqR, xmm_psllq);
-
-#if BX_CPU_LEVEL >= 6
-
-#define SSE_PSHIFT_IMM_CPU_LEVEL6(HANDLER, func) \
-  /* SSE packed shift with imm8 instruction */                                             \
-  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)                      \
-  {                                                                                        \
-    (func)(&BX_XMM_REG(i->dst()), i->Ib());                                                \
-                                                                                           \
-    BX_NEXT_INSTR(i);                                                                      \
-  }
-
-#else
-
-#define SSE_PSHIFT_IMM_CPU_LEVEL6(HANDLER, func)                                           \
-  /* SSE packed shift with imm8 instruction */                                             \
-  void BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER (bxInstruction_c *i)                     \
-  {                                                                                        \
-    BX_NEXT_INSTR(i);                                                                      \
-  }
-
-#endif
-
-SSE_PSHIFT_IMM_CPU_LEVEL6(PSRLW_UdqIb, xmm_psrlw);
-SSE_PSHIFT_IMM_CPU_LEVEL6(PSRLD_UdqIb, xmm_psrld);
-SSE_PSHIFT_IMM_CPU_LEVEL6(PSRLQ_UdqIb, xmm_psrlq);
-SSE_PSHIFT_IMM_CPU_LEVEL6(PSRAW_UdqIb, xmm_psraw);
-SSE_PSHIFT_IMM_CPU_LEVEL6(PSRAD_UdqIb, xmm_psrad);
-SSE_PSHIFT_IMM_CPU_LEVEL6(PSLLW_UdqIb, xmm_psllw);
-SSE_PSHIFT_IMM_CPU_LEVEL6(PSLLD_UdqIb, xmm_pslld);
-SSE_PSHIFT_IMM_CPU_LEVEL6(PSLLQ_UdqIb, xmm_psllq);
-
-SSE_PSHIFT_IMM_CPU_LEVEL6(PSRLDQ_UdqIb, xmm_psrldq);
-SSE_PSHIFT_IMM_CPU_LEVEL6(PSLLDQ_UdqIb, xmm_pslldq);
 
 /* ************************ */
 /* SSE4A (AMD) INSTRUCTIONS */

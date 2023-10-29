@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2018 Stanislav Shwartsman
+//   Copyright (c) 2011-2023 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -247,533 +247,104 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRCPSS_VssHpsWssR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-/* Opcode: VEX.NDS.0F 58 (VEX.W ignore) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDPS_VpsHpsWpsR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
-  unsigned len = i->getVL();
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  for (unsigned n=0; n < len; n++) {
-    xmm_addps(&op1.vmm128(n), &op2.vmm128(n), status);
+#define AVX_PACKED_PFP(HANDLER, func)                                                       \
+  /* AVX packed shift with imm8 instruction */                                              \
+  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)                       \
+  {                                                                                         \
+    BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2()); \
+    unsigned len = i->getVL();                                                              \
+                                                                                            \
+    float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);                          \
+    softfloat_status_word_rc_override(status, i);                                           \
+                                                                                            \
+    for (unsigned n=0; n < len; n++) {                                                      \
+      (func)(&op1.vmm128(n), &op2.vmm128(n), status);                                       \
+    }                                                                                       \
+                                                                                            \
+    check_exceptionsSSE(get_exception_flags(status));                                       \
+                                                                                            \
+    BX_WRITE_AVX_REGZ(i->dst(), op1, len);                                                  \
+    BX_NEXT_INSTR(i);                                                                       \
   }
 
-  check_exceptionsSSE(get_exception_flags(status));
+AVX_PACKED_PFP(VADDPS_VpsHpsWpsR, xmm_addps);
+AVX_PACKED_PFP(VADDPD_VpdHpdWpdR, xmm_addpd);
+AVX_PACKED_PFP(VSUBPS_VpsHpsWpsR, xmm_subps);
+AVX_PACKED_PFP(VSUBPD_VpdHpdWpdR, xmm_subpd);
+AVX_PACKED_PFP(VMULPS_VpsHpsWpsR, xmm_mulps);
+AVX_PACKED_PFP(VMULPD_VpdHpdWpdR, xmm_mulpd);
+AVX_PACKED_PFP(VDIVPS_VpsHpsWpsR, xmm_divps);
+AVX_PACKED_PFP(VDIVPD_VpdHpdWpdR, xmm_divpd);
+AVX_PACKED_PFP(VMINPS_VpsHpsWpsR, xmm_minps);
+AVX_PACKED_PFP(VMINPD_VpdHpdWpdR, xmm_minpd);
+AVX_PACKED_PFP(VMAXPS_VpsHpsWpsR, xmm_maxps);
+AVX_PACKED_PFP(VMAXPD_VpdHpdWpdR, xmm_maxpd);
+AVX_PACKED_PFP(VHADDPS_VpsHpsWpsR, xmm_haddps);
+AVX_PACKED_PFP(VHADDPD_VpdHpdWpdR, xmm_haddpd);
+AVX_PACKED_PFP(VHSUBPS_VpsHpsWpsR, xmm_hsubps);
+AVX_PACKED_PFP(VHSUBPD_VpdHpdWpdR, xmm_hsubpd);
+AVX_PACKED_PFP(VADDSUBPS_VpsHpsWpsR, xmm_addsubps);
+AVX_PACKED_PFP(VADDSUBPD_VpdHpdWpdR, xmm_addsubpd);
+#if BX_SUPPORT_EVEX
+AVX_PACKED_PFP(VSCALEFPS_VpsHpsWpsR, xmm_scalefps);
+AVX_PACKED_PFP(VSCALEFPD_VpdHpdWpdR, xmm_scalefpd);
+#endif
 
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
-
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.NDS.66.0F 58 (VEX.W ignore) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDPD_VpdHpdWpdR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
-  unsigned len = i->getVL();
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  for (unsigned n=0; n < len; n++) {
-    xmm_addpd(&op1.vmm128(n), &op2.vmm128(n), status);
+#define AVX_SCALAR_SINGLE_FP(HANDLER, func)                                                 \
+  /* AVX packed shift with imm8 instruction */                                              \
+  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)                       \
+  {                                                                                         \
+    BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());                                   \
+    float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->src2());                                      \
+                                                                                            \
+    float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);                          \
+    softfloat_status_word_rc_override(status, i);                                           \
+                                                                                            \
+    op1.xmm32u(0) = (func)(op1.xmm32u(0), op2, status);                                     \
+                                                                                            \
+    check_exceptionsSSE(get_exception_flags(status));                                       \
+    BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);                                             \
+                                                                                            \
+    BX_NEXT_INSTR(i);                                                                       \
   }
 
-  check_exceptionsSSE(get_exception_flags(status));
+AVX_SCALAR_SINGLE_FP(VADDSS_VssHpsWssR, float32_add);
+AVX_SCALAR_SINGLE_FP(VSUBSS_VssHpsWssR, float32_sub);
+AVX_SCALAR_SINGLE_FP(VMULSS_VssHpsWssR, float32_mul);
+AVX_SCALAR_SINGLE_FP(VDIVSS_VssHpsWssR, float32_div);
+AVX_SCALAR_SINGLE_FP(VMINSS_VssHpsWssR, float32_min);
+AVX_SCALAR_SINGLE_FP(VMAXSS_VssHpsWssR, float32_max);
+#if BX_SUPPORT_EVEX
+AVX_SCALAR_SINGLE_FP(VSCALEFSS_VssHpsWssR, float32_scalef);
+#endif
 
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
-
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.NDS.F3.0F 58 (VEX.W ignore, VEX.L ignore) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDSS_VssHpsWssR(bxInstruction_c *i)
-{
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
-  float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->src2());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  op1.xmm32u(0) = float32_add(op1.xmm32u(0), op2, status);
-
-  check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
-
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.NDS.F2.0F 58 (VEX.W ignore, VEX.L ignore) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDSD_VsdHpdWsdR(bxInstruction_c *i)
-{
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
-  float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->src2());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  op1.xmm64u(0) = float64_add(op1.xmm64u(0), op2, status);
-
-  check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
-
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.NDS.0F 59 (VEX.W ignore) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMULPS_VpsHpsWpsR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
-  unsigned len = i->getVL();
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  for (unsigned n=0; n < len; n++) {
-    xmm_mulps(&op1.vmm128(n), &op2.vmm128(n), status);
+#define AVX_SCALAR_DOUBLE_FP(HANDLER, func)                                                 \
+  /* AVX packed shift with imm8 instruction */                                              \
+  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)                       \
+  {                                                                                         \
+    BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());                                   \
+    float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->src2());                                      \
+                                                                                            \
+    float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);                          \
+    softfloat_status_word_rc_override(status, i);                                           \
+                                                                                            \
+    op1.xmm64u(0) = (func)(op1.xmm64u(0), op2, status);                                     \
+                                                                                            \
+    check_exceptionsSSE(get_exception_flags(status));                                       \
+    BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);                                             \
+                                                                                            \
+    BX_NEXT_INSTR(i);                                                                       \
   }
 
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
-
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.NDS.66.0F 59 (VEX.W ignore) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMULPD_VpdHpdWpdR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
-  unsigned len = i->getVL();
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  for (unsigned n=0; n < len; n++) {
-    xmm_mulpd(&op1.vmm128(n), &op2.vmm128(n), status);
-  }
-
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
-
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.NDS.F3.0F 59 (VEX.W ignore, VEX.L ignore) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMULSS_VssHpsWssR(bxInstruction_c *i)
-{
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
-  float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->src2());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  op1.xmm32u(0) = float32_mul(op1.xmm32u(0), op2, status);
-
-  check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
-
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.NDS.F2.0F 59 (VEX.W ignore, VEX.L ignore) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMULSD_VsdHpdWsdR(bxInstruction_c *i)
-{
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
-  float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->src2());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  op1.xmm64u(0) = float64_mul(op1.xmm64u(0), op2, status);
-
-  check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
-
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.NDS.0F 5C (VEX.W ignore) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSUBPS_VpsHpsWpsR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
-  unsigned len = i->getVL();
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  for (unsigned n=0; n < len; n++) {
-    xmm_subps(&op1.vmm128(n), &op2.vmm128(n), status);
-  }
-
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
-
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.NDS.66.0F 5C (VEX.W ignore) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSUBPD_VpdHpdWpdR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
-  unsigned len = i->getVL();
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  for (unsigned n=0; n < len; n++) {
-    xmm_subpd(&op1.vmm128(n), &op2.vmm128(n), status);
-  }
-
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
-
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.NDS.F3.0F 5C (VEX.W ignore, VEX.L ignore) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSUBSS_VssHpsWssR(bxInstruction_c *i)
-{
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
-  float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->src2());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  op1.xmm32u(0) = float32_sub(op1.xmm32u(0), op2, status);
-
-  check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
-
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.NDS.F2.0F 5C (VEX.W ignore, VEX.L ignore) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSUBSD_VsdHpdWsdR(bxInstruction_c *i)
-{
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
-  float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->src2());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  op1.xmm64u(0) = float64_sub(op1.xmm64u(0), op2, status);
-
-  check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
-
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.NDS.0F 5D (VEX.W ignore) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMINPS_VpsHpsWpsR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
-  unsigned len = i->getVL();
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  for (unsigned n=0; n < len; n++) {
-    xmm_minps(&op1.vmm128(n), &op2.vmm128(n), status);
-  }
-
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
-
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.NDS.66.0F 5D (VEX.W ignore) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMINPD_VpdHpdWpdR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
-  unsigned len = i->getVL();
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  for (unsigned n=0; n < len; n++) {
-    xmm_minpd(&op1.vmm128(n), &op2.vmm128(n), status);
-  }
-
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
-
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.NDS.F3.0F 5D (VEX.W ignore, VEX.L ignore) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMINSS_VssHpsWssR(bxInstruction_c *i)
-{
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
-  float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->src2());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  op1.xmm32u(0) = float32_min(op1.xmm32u(0), op2, status);
-
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
-
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.NDS.F2.0F 5D (VEX.W ignore, VEX.L ignore) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMINSD_VsdHpdWsdR(bxInstruction_c *i)
-{
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
-  float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->src2());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  op1.xmm64u(0) = float64_min(op1.xmm64u(0), op2, status);
-
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
-
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.NDS.0F 5E (VEX.W ignore) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VDIVPS_VpsHpsWpsR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
-  unsigned len = i->getVL();
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  for (unsigned n=0; n < len; n++) {
-    xmm_divps(&op1.vmm128(n), &op2.vmm128(n), status);
-  }
-
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
-
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.NDS.66.0F 5E (VEX.W ignore) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VDIVPD_VpdHpdWpdR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
-  unsigned len = i->getVL();
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  for (unsigned n=0; n < len; n++) {
-    xmm_divpd(&op1.vmm128(n), &op2.vmm128(n), status);
-  }
-
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
-
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.NDS.F3.0F 5E (VEX.W ignore, VEX.L ignore) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VDIVSS_VssHpsWssR(bxInstruction_c *i)
-{
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
-  float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->src2());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  op1.xmm32u(0) = float32_div(op1.xmm32u(0), op2, status);
-
-  check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
-
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.NDS.F2.0F 5E (VEX.W ignore, VEX.L ignore) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VDIVSD_VsdHpdWsdR(bxInstruction_c *i)
-{
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
-  float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->src2());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  op1.xmm64u(0) = float64_div(op1.xmm64u(0), op2, status);
-
-  check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
-
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.NDS.0F 5F (VEX.W ignore) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMAXPS_VpsHpsWpsR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
-  unsigned len = i->getVL();
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  for (unsigned n=0; n < len; n++) {
-    xmm_maxps(&op1.vmm128(n), &op2.vmm128(n), status);
-  }
-
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
-
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.NDS.66.0F 5F (VEX.W ignore) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMAXPD_VpdHpdWpdR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
-  unsigned len = i->getVL();
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  for (unsigned n=0; n < len; n++) {
-    xmm_maxpd(&op1.vmm128(n), &op2.vmm128(n), status);
-  }
-
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
-
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.NDS.F3.0F 5F (VEX.W ignore, VEX.L ignore) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMAXSS_VssHpsWssR(bxInstruction_c *i)
-{
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
-  float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->src2());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  op1.xmm32u(0) = float32_max(op1.xmm32u(0), op2, status);
-
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
-
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.NDS.F2.0F 5F (VEX.W ignore, VEX.L ignore) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMAXSD_VsdHpdWsdR(bxInstruction_c *i)
-{
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
-  float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->src2());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  op1.xmm64u(0) = float64_max(op1.xmm64u(0), op2, status);
-
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
-
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.NDS.66.0F 7C (VEX.W ignore) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VHADDPD_VpdHpdWpdR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
-  unsigned len = i->getVL();
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  for (unsigned n=0; n < len; n++) {
-    xmm_haddpd(&op1.vmm128(n), &op2.vmm128(n), status);
-  }
-
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
-
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.NDS.F2.0F 7C (VEX.W ignore) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VHADDPS_VpsHpsWpsR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
-  unsigned len = i->getVL();
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  for (unsigned n=0; n < len; n++) {
-    xmm_haddps(&op1.vmm128(n), &op2.vmm128(n), status);
-  }
-
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
-
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.NDS.66.0F 7D (VEX.W ignore) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VHSUBPD_VpdHpdWpdR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
-  unsigned len = i->getVL();
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  for (unsigned n=0; n < len; n++) {
-    xmm_hsubpd(&op1.vmm128(n), &op2.vmm128(n), status);
-  }
-
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
-
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.NDS.F2.0F 7D (VEX.W ignore) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VHSUBPS_VpsHpsWpsR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
-  unsigned len = i->getVL();
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  for (unsigned n=0; n < len; n++) {
-    xmm_hsubps(&op1.vmm128(n), &op2.vmm128(n), status);
-  }
-
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
-
-  BX_NEXT_INSTR(i);
-}
+AVX_SCALAR_DOUBLE_FP(VADDSD_VsdHpdWsdR, float64_add);
+AVX_SCALAR_DOUBLE_FP(VSUBSD_VsdHpdWsdR, float64_sub);
+AVX_SCALAR_DOUBLE_FP(VMULSD_VsdHpdWsdR, float64_mul);
+AVX_SCALAR_DOUBLE_FP(VDIVSD_VsdHpdWsdR, float64_div);
+AVX_SCALAR_DOUBLE_FP(VMINSD_VsdHpdWsdR, float64_min);
+AVX_SCALAR_DOUBLE_FP(VMAXSD_VsdHpdWsdR, float64_max);
+#if BX_SUPPORT_EVEX
+AVX_SCALAR_DOUBLE_FP(VSCALEFSD_VsdHpdWsdR, float64_scalef);
+#endif
 
 /* Opcode: VEX.NDS.0F C2 (VEX.W ignore) */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPPS_VpsHpsWpsIbR(bxInstruction_c *i)
@@ -852,46 +423,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPSS_VssHpsWssIbR(bxInstruction_c *i)
 
   check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
-
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.NDS.F2.0F D0 (VEX.W ignore) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDSUBPD_VpdHpdWpdR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
-  unsigned len = i->getVL();
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  for (unsigned n=0; n < len; n++) {
-    xmm_addsubpd(&op1.vmm128(n), &op2.vmm128(n), status);
-  }
-
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
-
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.NDS.F2.0F D0 (VEX.W ignore) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VADDSUBPS_VpsHpsWpsR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
-  unsigned len = i->getVL();
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  for (unsigned n=0; n < len; n++) {
-    xmm_addsubps(&op1.vmm128(n), &op2.vmm128(n), status);
-  }
-
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
   BX_NEXT_INSTR(i);
 }

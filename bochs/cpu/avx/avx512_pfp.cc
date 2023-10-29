@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2013-2018 Stanislav Shwartsman
+//   Copyright (c) 2013-2023 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -1173,78 +1173,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRNDSCALESD_MASK_VsdHpdWsdIbR(bxInstructio
   }
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
-  BX_NEXT_INSTR(i);
-}
-
-// scalef
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCALEFPS_VpsHpsWpsR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
-  unsigned len = i->getVL();
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  for (unsigned n=0; n < len; n++) {
-    xmm_scalefps(&op1.vmm128(n), &op2.vmm128(n), status);
-  }
-
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCALEFPD_VpdHpdWpdR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
-  unsigned len = i->getVL();
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  for (unsigned n=0; n < len; n++) {
-    xmm_scalefpd(&op1.vmm128(n), &op2.vmm128(n), status);
-  }
-
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCALEFSS_VssHpsWssR(bxInstruction_c *i)
-{
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
-  float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->src2());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  op1.xmm32u(0) = float32_scalef(op1.xmm32u(0), op2, status);
-
-  check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSCALEFSD_VsdHpdWsdR(bxInstruction_c *i)
-{
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
-  float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->src2());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  op1.xmm64u(0) = float64_scalef(op1.xmm64u(0), op2, status);
-
-  check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
-
   BX_NEXT_INSTR(i);
 }
 

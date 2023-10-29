@@ -22,6 +22,8 @@
 
 #include "bochs.h"
 #ifndef BX_STANDALONE_DECODER
+#define NEED_CPU_REG_SHORTCUTS 1
+#define NEED_CPU_NEED_TEMPLATE_METHODS 1
 #include "../cpu.h"
 #endif
 
@@ -73,6 +75,12 @@ struct BxOpcodeDecodeDescriptor32 {
   BxFetchDecode32Ptr decode_method;
   const void *opcode_table;
 };
+
+#ifndef BX_STANDALONE_DECODER
+#include "cpu/simd_int.h"
+#include "cpu/simd_compare.h"
+#include "cpu/simd_vnni.h"
+#endif
 
 // table of all Bochs opcodes
 bxIAOpcodeTable BxOpcodesTable[] = {

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2013-2019 Stanislav Shwartsman
+//   Copyright (c) 2013-2023 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -279,7 +279,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCMPUQ_MASK_KGbHdqWdqIbR(bxInstruction_c 
 
 #define AVX512_COMPARE_BYTE_EL(HANDLER, func)                                               \
   /* AVX-512 compare instruction with two src operands working on BYTE elements */          \
-  void BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER (bxInstruction_c *i)              \
+  void BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER (bxInstruction_c *i)                      \
   {                                                                                         \
     BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2()); \
     unsigned len = i->getVL();                                                              \
@@ -304,7 +304,7 @@ AVX512_COMPARE_BYTE_EL(VPTESTNMB_MASK_KGqHdqWdqR, xmm_ptestnmb_mask)
 
 #define AVX512_COMPARE_WORD_EL(HANDLER, func)                                               \
   /* AVX-512 compare instruction with two src operands working on WORD elements */          \
-  void BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER (bxInstruction_c *i)              \
+  void BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER (bxInstruction_c *i)                      \
   {                                                                                         \
     BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2()); \
     unsigned len = i->getVL();                                                              \
@@ -329,7 +329,7 @@ AVX512_COMPARE_WORD_EL(VPTESTNMW_MASK_KGdHdqWdqR, xmm_ptestnmw_mask)
 
 #define AVX512_COMPARE_DWORD_EL(HANDLER, func)                                              \
   /* AVX-512 compare instruction with two src operands working on DWORD elements */         \
-  void BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER (bxInstruction_c *i)              \
+  void BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER (bxInstruction_c *i)                      \
   {                                                                                         \
     BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2()); \
     unsigned len = i->getVL();                                                              \
@@ -354,7 +354,7 @@ AVX512_COMPARE_DWORD_EL(VPTESTNMD_MASK_KGwHdqWdqR, xmm_ptestnmd_mask)
 
 #define AVX512_COMPARE_QWORD_EL(HANDLER, func)                                              \
   /* AVX-512 compare instruction with two src operands working on QWORD elements */         \
-  void BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER (bxInstruction_c *i)              \
+  void BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER (bxInstruction_c *i)                      \
   {                                                                                         \
     BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2()); \
     unsigned len = i->getVL();                                                              \
@@ -376,267 +376,6 @@ AVX512_COMPARE_QWORD_EL(VPCMPGTQ_MASK_KGbHdqWdqR, xmm_pcmpgtq_mask)
 AVX512_COMPARE_QWORD_EL(VPCMPEQQ_MASK_KGbHdqWdqR, xmm_pcmpeqq_mask)
 AVX512_COMPARE_QWORD_EL(VPTESTMQ_MASK_KGbHdqWdqR, xmm_ptestmq_mask)
 AVX512_COMPARE_QWORD_EL(VPTESTNMQ_MASK_KGbHdqWdqR, xmm_ptestnmq_mask)
-
-// compute, shift and rotate
-
-#define AVX512_2OP_QWORD_EL(HANDLER, func)                                                  \
-  /* AVX-512 instruction with two src operands working on QWORD elements */                 \
-  void BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER (bxInstruction_c *i)              \
-  {                                                                                         \
-    BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2()); \
-    unsigned len = i->getVL();                                                              \
-                                                                                            \
-    for (unsigned n=0; n < len; n++)                                                        \
-      (func)(&op1.vmm128(n), &op2.vmm128(n));                                               \
-                                                                                            \
-    avx512_write_regq_masked(i, &op1, len, BX_READ_8BIT_OPMASK(i->opmask()));               \
-                                                                                            \
-    BX_NEXT_INSTR(i);                                                                       \
-  }
-
-AVX512_2OP_QWORD_EL(VPMULLQ_MASK_VdqHdqWdqR, xmm_pmullq)
-AVX512_2OP_QWORD_EL(VPADDQ_MASK_VdqHdqWdqR, xmm_paddq)
-AVX512_2OP_QWORD_EL(VPSUBQ_MASK_VdqHdqWdqR, xmm_psubq)
-AVX512_2OP_QWORD_EL(VPANDQ_MASK_VdqHdqWdqR, xmm_andps)
-AVX512_2OP_QWORD_EL(VPANDNQ_MASK_VdqHdqWdqR, xmm_andnps)
-AVX512_2OP_QWORD_EL(VPORQ_MASK_VdqHdqWdqR, xmm_orps)
-AVX512_2OP_QWORD_EL(VPXORQ_MASK_VdqHdqWdqR, xmm_xorps)
-AVX512_2OP_QWORD_EL(VPMAXSQ_MASK_VdqHdqWdqR, xmm_pmaxsq)
-AVX512_2OP_QWORD_EL(VPMAXUQ_MASK_VdqHdqWdqR, xmm_pmaxuq)
-AVX512_2OP_QWORD_EL(VPMINSQ_MASK_VdqHdqWdqR, xmm_pminsq)
-AVX512_2OP_QWORD_EL(VPMINUQ_MASK_VdqHdqWdqR, xmm_pminuq)
-AVX512_2OP_QWORD_EL(VUNPCKLPD_MASK_VpdHpdWpdR, xmm_unpcklpd)
-AVX512_2OP_QWORD_EL(VUNPCKHPD_MASK_VpdHpdWpdR, xmm_unpckhpd)
-AVX512_2OP_QWORD_EL(VPMULDQ_MASK_VdqHdqWdqR, xmm_pmuldq)
-AVX512_2OP_QWORD_EL(VPMULUDQ_MASK_VdqHdqWdqR, xmm_pmuludq)
-AVX512_2OP_QWORD_EL(VPSRAVQ_MASK_VdqHdqWdqR, xmm_psravq)
-AVX512_2OP_QWORD_EL(VPSRLVQ_MASK_VdqHdqWdqR, xmm_psrlvq)
-AVX512_2OP_QWORD_EL(VPSLLVQ_MASK_VdqHdqWdqR, xmm_psllvq)
-AVX512_2OP_QWORD_EL(VPRORVQ_MASK_VdqHdqWdqR, xmm_prorvq)
-AVX512_2OP_QWORD_EL(VPROLVQ_MASK_VdqHdqWdqR, xmm_prolvq)
-
-#define AVX512_2OP_DWORD_EL(HANDLER, func)                                                  \
-  /* AVX-512 instruction with two src operands working on DWORD elements */                 \
-  void BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER (bxInstruction_c *i)              \
-  {                                                                                         \
-    BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2()); \
-    unsigned len = i->getVL();                                                              \
-                                                                                            \
-    for (unsigned n=0; n < len; n++)                                                        \
-      (func)(&op1.vmm128(n), &op2.vmm128(n));                                               \
-                                                                                            \
-    avx512_write_regd_masked(i, &op1, len, BX_READ_16BIT_OPMASK(i->opmask()));              \
-                                                                                            \
-    BX_NEXT_INSTR(i);                                                                       \
-  }
-
-AVX512_2OP_DWORD_EL(VPADDD_MASK_VdqHdqWdqR, xmm_paddd)
-AVX512_2OP_DWORD_EL(VPSUBD_MASK_VdqHdqWdqR, xmm_psubd)
-AVX512_2OP_DWORD_EL(VPANDD_MASK_VdqHdqWdqR, xmm_andps)
-AVX512_2OP_DWORD_EL(VPANDND_MASK_VdqHdqWdqR, xmm_andnps)
-AVX512_2OP_DWORD_EL(VPORD_MASK_VdqHdqWdqR, xmm_orps)
-AVX512_2OP_DWORD_EL(VPXORD_MASK_VdqHdqWdqR, xmm_xorps)
-AVX512_2OP_DWORD_EL(VPMAXSD_MASK_VdqHdqWdqR, xmm_pmaxsd)
-AVX512_2OP_DWORD_EL(VPMAXUD_MASK_VdqHdqWdqR, xmm_pmaxud)
-AVX512_2OP_DWORD_EL(VPMINSD_MASK_VdqHdqWdqR, xmm_pminsd)
-AVX512_2OP_DWORD_EL(VPMINUD_MASK_VdqHdqWdqR, xmm_pminud)
-AVX512_2OP_DWORD_EL(VUNPCKLPS_MASK_VpsHpsWpsR, xmm_unpcklps)
-AVX512_2OP_DWORD_EL(VUNPCKHPS_MASK_VpsHpsWpsR, xmm_unpckhps)
-AVX512_2OP_DWORD_EL(VPMULLD_MASK_VdqHdqWdqR, xmm_pmulld)
-AVX512_2OP_DWORD_EL(VPSRAVD_MASK_VdqHdqWdqR, xmm_psravd)
-AVX512_2OP_DWORD_EL(VPSRLVD_MASK_VdqHdqWdqR, xmm_psrlvd)
-AVX512_2OP_DWORD_EL(VPSLLVD_MASK_VdqHdqWdqR, xmm_psllvd)
-AVX512_2OP_DWORD_EL(VPRORVD_MASK_VdqHdqWdqR, xmm_prorvd)
-AVX512_2OP_DWORD_EL(VPROLVD_MASK_VdqHdqWdqR, xmm_prolvd)
-AVX512_2OP_DWORD_EL(VPMADDWD_MASK_VdqHdqWdqR, xmm_pmaddwd)
-
-#define AVX512_2OP_WORD_EL(HANDLER, func)                                                   \
-  /* AVX-512 instruction with two src operands working on WORD elements */                  \
-  void BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER (bxInstruction_c *i)              \
-  {                                                                                         \
-    BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2()); \
-    unsigned len = i->getVL();                                                              \
-                                                                                            \
-    for (unsigned n=0; n < len; n++)                                                        \
-      (func)(&op1.vmm128(n), &op2.vmm128(n));                                               \
-                                                                                            \
-    avx512_write_regw_masked(i, &op1, len, BX_READ_32BIT_OPMASK(i->opmask()));              \
-                                                                                            \
-    BX_NEXT_INSTR(i);                                                                       \
-  }
-
-AVX512_2OP_WORD_EL(VPADDW_MASK_VdqHdqWdqR, xmm_paddw)
-AVX512_2OP_WORD_EL(VPADDSW_MASK_VdqHdqWdqR, xmm_paddsw)
-AVX512_2OP_WORD_EL(VPADDUSW_MASK_VdqHdqWdqR, xmm_paddusw)
-AVX512_2OP_WORD_EL(VPSUBW_MASK_VdqHdqWdqR, xmm_psubw)
-AVX512_2OP_WORD_EL(VPSUBSW_MASK_VdqHdqWdqR, xmm_psubsw)
-AVX512_2OP_WORD_EL(VPSUBUSW_MASK_VdqHdqWdqR, xmm_psubusw)
-AVX512_2OP_WORD_EL(VPMINSW_MASK_VdqHdqWdqR, xmm_pminsw)
-AVX512_2OP_WORD_EL(VPMINUW_MASK_VdqHdqWdqR, xmm_pminuw)
-AVX512_2OP_WORD_EL(VPMAXSW_MASK_VdqHdqWdqR, xmm_pmaxsw)
-AVX512_2OP_WORD_EL(VPMAXUW_MASK_VdqHdqWdqR, xmm_pmaxuw)
-AVX512_2OP_WORD_EL(VPMADDUBSW_MASK_VdqHdqWdqR, xmm_pmaddubsw)
-AVX512_2OP_WORD_EL(VPAVGW_MASK_VdqHdqWdqR, xmm_pavgw)
-AVX512_2OP_WORD_EL(VPMULLW_MASK_VdqHdqWdqR, xmm_pmullw)
-AVX512_2OP_WORD_EL(VPMULHW_MASK_VdqHdqWdqR, xmm_pmulhw)
-AVX512_2OP_WORD_EL(VPMULHUW_MASK_VdqHdqWdqR, xmm_pmulhuw)
-AVX512_2OP_WORD_EL(VPMULHRSW_MASK_VdqHdqWdqR, xmm_pmulhrsw)
-AVX512_2OP_WORD_EL(VPACKSSDW_MASK_VdqHdqWdqR, xmm_packssdw)
-AVX512_2OP_WORD_EL(VPACKUSDW_MASK_VdqHdqWdqR, xmm_packusdw)
-AVX512_2OP_WORD_EL(VPUNPCKLWD_MASK_VdqHdqWdqR, xmm_punpcklwd)
-AVX512_2OP_WORD_EL(VPUNPCKHWD_MASK_VdqHdqWdqR, xmm_punpckhwd)
-AVX512_2OP_WORD_EL(VPSRAVW_MASK_VdqHdqWdqR, xmm_psravw)
-AVX512_2OP_WORD_EL(VPSRLVW_MASK_VdqHdqWdqR, xmm_psrlvw)
-AVX512_2OP_WORD_EL(VPSLLVW_MASK_VdqHdqWdqR, xmm_psllvw)
-
-#define AVX512_2OP_BYTE_EL(HANDLER, func)                                                   \
-  /* AVX-512 instruction with two src operands working on BYTE elements */                  \
-  void BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER (bxInstruction_c *i)              \
-  {                                                                                         \
-    BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2()); \
-    unsigned len = i->getVL();                                                              \
-                                                                                            \
-    for (unsigned n=0; n < len; n++)                                                        \
-      (func)(&op1.vmm128(n), &op2.vmm128(n));                                               \
-                                                                                            \
-    avx512_write_regb_masked(i, &op1, len, BX_READ_OPMASK(i->opmask()));                    \
-                                                                                            \
-    BX_NEXT_INSTR(i);                                                                       \
-  }
-
-AVX512_2OP_BYTE_EL(VPADDB_MASK_VdqHdqWdqR, xmm_paddb)
-AVX512_2OP_BYTE_EL(VPADDSB_MASK_VdqHdqWdqR, xmm_paddsb)
-AVX512_2OP_BYTE_EL(VPADDUSB_MASK_VdqHdqWdqR, xmm_paddusb)
-AVX512_2OP_BYTE_EL(VPSUBB_MASK_VdqHdqWdqR, xmm_psubb)
-AVX512_2OP_BYTE_EL(VPSUBSB_MASK_VdqHdqWdqR, xmm_psubsb)
-AVX512_2OP_BYTE_EL(VPSUBUSB_MASK_VdqHdqWdqR, xmm_psubusb)
-AVX512_2OP_BYTE_EL(VPMINSB_MASK_VdqHdqWdqR, xmm_pminsb)
-AVX512_2OP_BYTE_EL(VPMINUB_MASK_VdqHdqWdqR, xmm_pminub)
-AVX512_2OP_BYTE_EL(VPMAXUB_MASK_VdqHdqWdqR, xmm_pmaxub)
-AVX512_2OP_BYTE_EL(VPMAXSB_MASK_VdqHdqWdqR, xmm_pmaxsb)
-AVX512_2OP_BYTE_EL(VPAVGB_MASK_VdqHdqWdqR, xmm_pavgb)
-AVX512_2OP_BYTE_EL(VPACKSSWB_MASK_VdqHdqWdqR, xmm_packsswb)
-AVX512_2OP_BYTE_EL(VPACKUSWB_MASK_VdqHdqWdqR, xmm_packuswb)
-AVX512_2OP_BYTE_EL(VPUNPCKLBW_MASK_VdqHdqWdqR, xmm_punpcklbw)
-AVX512_2OP_BYTE_EL(VPUNPCKHBW_MASK_VdqHdqWdqR, xmm_punpckhbw)
-
-#define AVX512_PSHIFT_WORD_EL(HANDLER, func)                                  \
-  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i) \
-  {                                                                           \
-    BxPackedAvxRegister op  = BX_READ_AVX_REG(i->src1());                     \
-    Bit64u count = BX_READ_XMM_REG_LO_QWORD(i->src2());                       \
-    unsigned len = i->getVL();                                                \
-                                                                              \
-    for (unsigned n=0; n < len; n++)                                          \
-      (func)(&op.vmm128(n), count);                                           \
-                                                                              \
-    avx512_write_regw_masked(i, &op, len, BX_READ_32BIT_OPMASK(i->opmask())); \
-                                                                              \
-    BX_NEXT_INSTR(i);                                                         \
-  }
-
-AVX512_PSHIFT_WORD_EL(VPSRLW_MASK_VdqHdqWdqR, xmm_psrlw);
-AVX512_PSHIFT_WORD_EL(VPSRAW_MASK_VdqHdqWdqR, xmm_psraw);
-AVX512_PSHIFT_WORD_EL(VPSLLW_MASK_VdqHdqWdqR, xmm_psllw);
-
-#define AVX512_PSHIFT_DWORD_EL(HANDLER, func)                                 \
-  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i) \
-  {                                                                           \
-    BxPackedAvxRegister op  = BX_READ_AVX_REG(i->src1());                     \
-    Bit64u count = BX_READ_XMM_REG_LO_QWORD(i->src2());                       \
-    unsigned len = i->getVL();                                                \
-                                                                              \
-    for (unsigned n=0; n < len; n++)                                          \
-      (func)(&op.vmm128(n), count);                                           \
-                                                                              \
-    avx512_write_regd_masked(i, &op, len, BX_READ_16BIT_OPMASK(i->opmask())); \
-                                                                              \
-    BX_NEXT_INSTR(i);                                                         \
-  }
-
-AVX512_PSHIFT_DWORD_EL(VPSRLD_MASK_VdqHdqWdqR, xmm_psrld);
-AVX512_PSHIFT_DWORD_EL(VPSRAD_MASK_VdqHdqWdqR, xmm_psrad);
-AVX512_PSHIFT_DWORD_EL(VPSLLD_MASK_VdqHdqWdqR, xmm_pslld);
-
-#define AVX512_PSHIFT_QWORD_EL(HANDLER, func)                                 \
-  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i) \
-  {                                                                           \
-    BxPackedAvxRegister op  = BX_READ_AVX_REG(i->src1());                     \
-    Bit64u count = BX_READ_XMM_REG_LO_QWORD(i->src2());                       \
-    unsigned len = i->getVL();                                                \
-                                                                              \
-    for (unsigned n=0; n < len; n++)                                          \
-      (func)(&op.vmm128(n), count);                                           \
-                                                                              \
-    avx512_write_regq_masked(i, &op, len, BX_READ_8BIT_OPMASK(i->opmask()));  \
-                                                                              \
-    BX_NEXT_INSTR(i);                                                         \
-  }
-
-AVX512_PSHIFT_QWORD_EL(VPSRLQ_MASK_VdqHdqWdqR, xmm_psrlq);
-AVX512_PSHIFT_QWORD_EL(VPSRAQ_MASK_VdqHdqWdqR, xmm_psraq);
-AVX512_PSHIFT_QWORD_EL(VPSLLQ_MASK_VdqHdqWdqR, xmm_psllq);
-
-#define AVX512_PSHIFT_IMM_WORD_EL(HANDLER, func)                              \
-  /* AVX packed shift with imm8 instruction */                                \
-  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i) \
-  {                                                                           \
-    BxPackedAvxRegister op  = BX_READ_AVX_REG(i->src());                      \
-    unsigned len = i->getVL();                                                \
-                                                                              \
-    for (unsigned n=0; n < len; n++)                                          \
-      (func)(&op.vmm128(n), i->Ib());                                         \
-                                                                              \
-    avx512_write_regw_masked(i, &op, len, BX_READ_32BIT_OPMASK(i->opmask())); \
-                                                                              \
-    BX_NEXT_INSTR(i);                                                         \
-  }
-
-AVX512_PSHIFT_IMM_WORD_EL(VPSRLW_MASK_UdqIb, xmm_psrlw);
-AVX512_PSHIFT_IMM_WORD_EL(VPSRAW_MASK_UdqIb, xmm_psraw);
-AVX512_PSHIFT_IMM_WORD_EL(VPSLLW_MASK_UdqIb, xmm_psllw);
-
-#define AVX512_PSHIFT_IMM_DWORD_EL(HANDLER, func)                             \
-  /* AVX packed shift with imm8 instruction */                                \
-  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i) \
-  {                                                                           \
-    BxPackedAvxRegister op  = BX_READ_AVX_REG(i->src());                      \
-    unsigned len = i->getVL();                                                \
-                                                                              \
-    for (unsigned n=0; n < len; n++)                                          \
-      (func)(&op.vmm128(n), i->Ib());                                         \
-                                                                              \
-    avx512_write_regd_masked(i, &op, len, BX_READ_16BIT_OPMASK(i->opmask())); \
-                                                                              \
-    BX_NEXT_INSTR(i);                                                         \
-  }
-
-AVX512_PSHIFT_IMM_DWORD_EL(VPSRLD_MASK_UdqIb, xmm_psrld);
-AVX512_PSHIFT_IMM_DWORD_EL(VPSRAD_MASK_UdqIb, xmm_psrad);
-AVX512_PSHIFT_IMM_DWORD_EL(VPSLLD_MASK_UdqIb, xmm_pslld);
-AVX512_PSHIFT_IMM_DWORD_EL(VPRORD_MASK_UdqIb, xmm_prord);
-AVX512_PSHIFT_IMM_DWORD_EL(VPROLD_MASK_UdqIb, xmm_prold);
-
-#define AVX512_PSHIFT_IMM_QWORD_EL(HANDLER, func)                             \
-  /* AVX packed shift with imm8 instruction */                                \
-  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i) \
-  {                                                                           \
-    BxPackedAvxRegister op  = BX_READ_AVX_REG(i->src());                      \
-    unsigned len = i->getVL();                                                \
-                                                                              \
-    for (unsigned n=0; n < len; n++)                                          \
-      (func)(&op.vmm128(n), i->Ib());                                         \
-                                                                              \
-    avx512_write_regq_masked(i, &op, len, BX_READ_8BIT_OPMASK(i->opmask()));  \
-                                                                              \
-    BX_NEXT_INSTR(i);                                                         \
-  }
-
-AVX512_PSHIFT_IMM_QWORD_EL(VPSRLQ_MASK_UdqIb, xmm_psrlq);
-AVX512_PSHIFT_IMM_QWORD_EL(VPSRAQ_MASK_UdqIb, xmm_psraq);
-AVX512_PSHIFT_IMM_QWORD_EL(VPSLLQ_MASK_UdqIb, xmm_psllq);
-AVX512_PSHIFT_IMM_QWORD_EL(VPRORQ_MASK_UdqIb, xmm_prorq);
-AVX512_PSHIFT_IMM_QWORD_EL(VPROLQ_MASK_UdqIb, xmm_prolq);
 
 // concatenate and shift
 
@@ -997,32 +736,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSHUFPD_MASK_VpdHpdWpdIbR(bxInstruction_c 
     xmm_shufpd(&result.vmm128(n), &op1.vmm128(n), &op2.vmm128(n), order);
     order >>= 2;
   }
-
-  avx512_write_regq_masked(i, &result, len, BX_READ_8BIT_OPMASK(i->opmask()));
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMILPS_MASK_VpsHpsWpsR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
-  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2()), result;
-  unsigned len = i->getVL();
-
-  for (unsigned n=0; n < len; n++)
-    xmm_permilps(&result.vmm128(n), &op1.vmm128(n), &op2.vmm128(n));
-
-  avx512_write_regd_masked(i, &result, len, BX_READ_16BIT_OPMASK(i->opmask()));
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMILPD_MASK_VpdHpdWpdR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
-  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2()), result;
-  unsigned len = i->getVL();
-
-  for (unsigned n=0; n < len; n++)
-    xmm_permilpd(&result.vmm128(n), &op1.vmm128(n), &op2.vmm128(n));
 
   avx512_write_regq_masked(i, &result, len, BX_READ_8BIT_OPMASK(i->opmask()));
   BX_NEXT_INSTR(i);
@@ -1610,9 +1323,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXTRACTF32x8_MASK_WpsVpsIbM(bxInstruction
   if (i->Ib() & 0x1)
     op.vmm256(0) = op.vmm256(1);
 
-  Bit32u opmask = BX_READ_8BIT_OPMASK(i->opmask());
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-  avx_masked_store32(i, eaddr, &op, opmask);
+  avx_masked_store32(i, eaddr, &op, BX_READ_8BIT_OPMASK(i->opmask()));
   BX_NEXT_INSTR(i);
 }
 

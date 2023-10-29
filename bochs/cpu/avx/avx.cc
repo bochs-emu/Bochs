@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2018 Stanislav Shwartsman
+//   Copyright (c) 2011-2023 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -508,10 +508,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VINSERTF128_VdqHdqWdqIbR(bxInstruction_c *
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXTRACTF128_WdqVdqIbM(bxInstruction_c *i)
 {
   unsigned len = i->getVL(), offset = i->Ib() & (len - 1);
-  BxPackedXmmRegister op = BX_READ_AVX_REG_LANE(i->src(), offset);
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-  write_virtual_xmmword(i->seg(), eaddr, &op);
+  write_virtual_xmmword(i->seg(), eaddr, &BX_READ_AVX_REG_LANE(i->src(), offset));
 
   BX_NEXT_INSTR(i);
 }
@@ -520,40 +519,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXTRACTF128_WdqVdqIbR(bxInstruction_c *i)
 {
   unsigned len = i->getVL(), offset = i->Ib() & (len - 1);
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), BX_READ_AVX_REG_LANE(i->src(), offset));
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.66.0F.38 0C (VEX.W=0) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMILPS_VpsHpsWpsR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
-  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2()), result;
-  unsigned len = i->getVL();
-
-  result.clear();
-
-  for (unsigned n=0; n < len; n++)
-    xmm_permilps(&result.vmm128(n), &op1.vmm128(n), &op2.vmm128(n));
-
-  BX_WRITE_AVX_REG(i->dst(), result);
-
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.66.0F.3A 05 (VEX.W=0) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPERMILPD_VpdHpdWpdR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
-  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2()), result;
-  unsigned len = i->getVL();
-
-  result.clear();
-
-  for (unsigned n=0; n < len; n++)
-    xmm_permilpd(&result.vmm128(n), &op1.vmm128(n), &op2.vmm128(n));
-
-  BX_WRITE_AVX_REG(i->dst(), result);
-
   BX_NEXT_INSTR(i);
 }
 
