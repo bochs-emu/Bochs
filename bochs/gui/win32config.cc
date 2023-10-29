@@ -603,6 +603,7 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
         case IDRESTORE:
           path[0] = 0;
           if (BrowseDir("Restore Bochs state from...", path) >= 0) {
+            SetCurrentDirectory(path);
             SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(1);
             SIM->get_param_string(BXPN_RESTORE_PATH)->set(path);
             EndDialog(hDlg, 1);
