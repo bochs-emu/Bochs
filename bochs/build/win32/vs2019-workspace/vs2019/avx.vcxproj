@@ -133,7 +133,6 @@
     <ClCompile Include="..\cpu\avx\avx512_rsqrt14.cc" />
     <ClCompile Include="..\cpu\avx\avx_ifma52.cc" />
     <ClCompile Include="..\cpu\avx\avx_ne_convert.cc" />
-    <ClCompile Include="..\cpu\avx\vnni.cc" />
     <ClCompile Include="..\cpu\avx\avx_cvt.cc" />
     <ClCompile Include="..\cpu\avx\avx_fma.cc" />
     <ClCompile Include="..\cpu\avx\avx_pfp.cc" />
