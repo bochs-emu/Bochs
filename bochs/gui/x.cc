@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -2215,6 +2215,7 @@ public:
   int add_button(const char *text);
   void add_static_text(int x, int y, const char *text, int length);
   void draw_text(Display *display, int x, int y, const char *text, int length);
+  void redraw(Display *display);
   void set_control_param(int id, int value);
   int run(int start_ctrl, int ok, int cancel);
   x11_control_c* get_control(int id);
@@ -2266,7 +2267,11 @@ x11_dialog_c::x11_dialog_c(const char *name, int _width, int _height, int num_ct
   dlgwin = dialogw;
   btn_base = 0;
   ctrl_cnt = num_ctrls;
-  controls = new x11_control_c* [num_ctrls];
+  if (ctrl_cnt > 0) {
+    controls = new x11_control_c* [num_ctrls];
+  } else {
+    controls = NULL;
+  }
   static_items = NULL;
   cur_ctrl = 0;
   old_ctrl = -1;
@@ -2343,6 +2348,18 @@ void x11_dialog_c::draw_text(Display *display, int x, int y, const char *text, i
   XDrawImageString(display, dlgwin, gc, x, y, text, length);
 }
 
+void x11_dialog_c::redraw(Display *display)
+{
+  x11_static_t *temp = static_items;
+  while (temp != NULL) {
+    draw_text(display, temp->x, temp->y, temp->text, strlen(temp->text));
+    temp = temp->next;
+  }
+  for (int i = 0; i < ctrl_cnt; i++) {
+    controls[i]->draw(display, dlgwin, gc);
+  }
+}
+
 void x11_dialog_c::set_control_param(int id, int value)
 {
   if (id < ctrl_cnt) {
@@ -2357,7 +2374,6 @@ int x11_dialog_c::run(int start_ctrl, int ok, int cancel)
   bool done = 0, valid = 0, status;
   int i, init = 0;
   char text[10], editstr[27];
-  x11_static_t *temp;
 
   if (start_ctrl < 0) {
     cur_ctrl = ctrl_cnt - 1;
@@ -2369,14 +2385,7 @@ int x11_dialog_c::run(int start_ctrl, int ok, int cancel)
     switch (xevent.type) {
       case Expose:
         if (xevent.xexpose.count == 0) {
-          temp = static_items;
-          while (temp != NULL) {
-            draw_text(xevent.xexpose.display, temp->x, temp->y, temp->text, strlen(temp->text));
-            temp = temp->next;
-          }
-          for (i = 0; i < ctrl_cnt; i++) {
-            controls[i]->draw(xevent.xexpose.display, dlgwin, gc);
-          }
+          redraw(xevent.xexpose.display);
           old_ctrl = cur_ctrl - 1;
           if (old_ctrl < 0) old_ctrl = ctrl_cnt - 1;
           init = 1;
@@ -2533,6 +2542,50 @@ int x11_message_box(const char *title, const char *message, x11_button_t *button
   return retcode;
 }
 
+x11_dialog_c* x11_message_box_ml(const char *title, const char *message)
+{
+  unsigned int size_x, size_y;
+  unsigned int loffs[10], llen[10];
+  unsigned int i, cpos, len, lines, maxlen, ypos, count;
+  XEvent xevent;
+
+  cpos = 0;
+  lines = 0;
+  maxlen = 0;
+  while (cpos < strlen(message) && (lines < 10)) {
+    loffs[lines] = cpos;
+    while ((cpos < strlen(message)) && (message[cpos] != 0x0a)) cpos++;
+    len = cpos - loffs[lines];
+    llen[lines] = len;
+    if (len > maxlen) maxlen = len;
+    lines++;
+    cpos++;
+  }
+  size_x = 105;
+  if (maxlen > ((size_x - 30) / 6)) {
+    size_x = 30 + maxlen * 6;
+  }
+  size_y = 75 + lines * 15;
+  x11_dialog_c *xdlg = new x11_dialog_c(title, size_x, size_y, 0);
+  ypos = 34;
+  for (i = 0; i < lines; i++) {
+    xdlg->add_static_text(20, ypos, message+loffs[i], llen[i]);
+    ypos += 15;
+  }
+  count = 2;
+  while (count > 0) {
+    XNextEvent(bx_x_display, &xevent);
+    if (xevent.type == Expose) {
+      if (xevent.xexpose.count == 0) {
+        xdlg->redraw(xevent.xexpose.display);
+        count--;
+      }
+    }
+  }
+  XFlush(bx_x_display);
+  return xdlg;
+}
+
 // X11 dialog box functions
 
 int x11_ask_dialog(BxEvent *event)
@@ -2684,6 +2737,12 @@ BxEvent *x11_notify_callback(void *unused, BxEvent *event)
       buttons.btn[0].label = "OK";
       buttons.btn[0].code = 0;
       x11_message_box(event->u.logmsg.prefix, event->u.logmsg.msg, &buttons);
+      return event;
+    case BX_SYNC_EVT_ML_MSG_BOX:
+      event->param0 = (void*)x11_message_box_ml(event->u.logmsg.prefix, event->u.logmsg.msg);
+      return event;
+    case BX_SYNC_EVT_ML_MSG_BOX_KILL:
+      delete (x11_dialog_c*)event->param0;
       return event;
     case BX_SYNC_EVT_ASK_PARAM:
       param = event->u.param.param;
