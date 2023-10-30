@@ -2490,12 +2490,12 @@ int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_
   bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(laddr, 0);
 
 #if BX_SUPPORT_X86_64
-  if (long64_mode()) {
-    if (! IsCanonical(laddr)) {
-      BX_ERROR(("access_write_linear(): canonical failure"));
-      return -1;
-    }
+  if (! IsCanonical(laddr)) {
+    BX_ERROR(("access_write_linear(): canonical failure"));
+    return -1;
+  }
 
+  if (long64_mode()) {
     if (BX_CPU_THIS_PTR cr4.get_LASS()) {
       // laddr[63] == 0 user, laddr[63] == 1 supervisor
       if ((laddr >> 63) == user) {
@@ -2613,12 +2613,12 @@ int BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_p
   bool user = (curr_pl == 3);
 
 #if BX_SUPPORT_X86_64
-  if (long64_mode()) {
-    if (! IsCanonical(laddr)) {
-      BX_ERROR(("access_read_linear(): canonical failure"));
-      return -1;
-    }
+  if (! IsCanonical(laddr)) {
+    BX_ERROR(("access_read_linear(): canonical failure"));
+    return -1;
+  }
 
+  if (long64_mode()) {
     if (BX_CPU_THIS_PTR cr4.get_LASS()) {
       // laddr[63] == 0 user, laddr[63] == 1 supervisor
       if ((laddr >> 63) == user) {

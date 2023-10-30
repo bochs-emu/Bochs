@@ -315,12 +315,12 @@ BX_CPU_C::tickle_read_linear(unsigned s, bx_address laddr)
   }
 
 #if BX_SUPPORT_X86_64
-  if (long64_mode()) {
-    if (! IsCanonical(laddr)) {
-      BX_ERROR(("tickle_read_linear(): canonical failure"));
-      exception(int_number(s), 0);
-    }
+  if (! IsCanonical(laddr)) {
+    BX_ERROR(("tickle_read_linear(): canonical failure"));
+    exception(int_number(s), 0);
+  }
 
+  if (long64_mode()) {
     if (BX_CPU_THIS_PTR cr4.get_LASS()) {
       // laddr[63] == 0 user, laddr[63] == 1 supervisor
       if ((laddr >> 63) == USER_PL) {
