@@ -653,7 +653,7 @@ bool bx_usb_ehci_c::set_connect_status(Bit8u port, bool connected)
         }
       }
     } else { // not connected
-      BX_INFO(("port #%d: device disconnect", port+1));
+      BX_DEBUG(("port #%d: device disconnect", port+1));
       if (BX_EHCI_THIS hub.usb_port[port].portsc.po) {
         if (get_port_routing(port, &n_cc, &n_pcc)) {
           if (BX_EHCI_THIS companion_type == EHCI_COMPANION_UHCI)
@@ -699,7 +699,7 @@ void bx_usb_ehci_c::change_port_owner(int port)
   } else {
     usb_device_c *device = BX_EHCI_THIS hub.usb_port[port].device;
     if (BX_EHCI_THIS hub.usb_port[port].owner_change) {
-      BX_INFO(("port #%d: owner change to %s", port + 1,
+      BX_DEBUG(("port #%d: owner change to %s", port + 1,
                BX_EHCI_THIS hub.usb_port[port].portsc.po ? "EHCI" : 
              ((BX_EHCI_THIS companion_type == EHCI_COMPANION_UHCI) ? "UHCI" : "OHCI")));
       if (device != NULL) {
