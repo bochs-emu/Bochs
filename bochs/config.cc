@@ -3536,8 +3536,10 @@ int bx_write_configuration(const char *rc, int overwrite)
     fprintf(fp, ", options=\"%s\"\n", sparam->getptr());
   else
     fprintf(fp, "\n");
-  fprintf(fp, "memory: host=%d, guest=%d\n", SIM->get_param_num(BXPN_HOST_MEM_SIZE)->get(),
-    SIM->get_param_num(BXPN_MEM_SIZE)->get());
+  fprintf(fp, "memory: host=%d, guest=%d, block_size=%d\n",
+    SIM->get_param_num(BXPN_HOST_MEM_SIZE)->get(),
+    SIM->get_param_num(BXPN_MEM_SIZE)->get(),
+    SIM->get_param_num(BXPN_MEM_BLOCK_SIZE)->get());
 
   bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_ROMIMAGE), "romimage", 0);
   bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_VGA_ROMIMAGE), "vgaromimage", 0);
