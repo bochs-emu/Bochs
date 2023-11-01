@@ -6,7 +6,7 @@
 // ported from QEMU block driver with some additions (see below)
 //
 // Copyright (c) 2004,2005  Johannes E. Schindelin
-// Copyright (C) 2010-2021  The Bochs Project
+// Copyright (C) 2010-2023  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -371,8 +371,7 @@ vvfat_image_t::vvfat_image_t(Bit64u size, const char* _redolog_name)
     BX_FATAL(("system error: invalid bootsector structure size"));
   }
 
-  first_sectors = new Bit8u[0xc000];
-  memset(&first_sectors[0], 0, 0xc000);
+  first_sectors = NULL;
 
   hd_size = size;
   redolog = new redolog_t();
@@ -387,7 +386,7 @@ vvfat_image_t::vvfat_image_t(Bit64u size, const char* _redolog_name)
 
 vvfat_image_t::~vvfat_image_t()
 {
-  delete [] first_sectors;
+  if (first_sectors != NULL) delete [] first_sectors;
   delete redolog;
 }
 
@@ -1196,7 +1195,8 @@ int vvfat_image_t::open(const char* dirname, int flags)
 {
   Bit32u size_in_mb;
   char path[BX_PATHNAME_LEN];
-  Bit8u sector_buffer[0x200];
+  Bit8u mbr_buf[0x200];
+  Bit8u boot_buf[0x200];
   int filedes;
   const char *logname = NULL;
   char ftype[10];
@@ -1209,8 +1209,8 @@ int vvfat_image_t::open(const char* dirname, int flags)
   sectors_per_cluster = 0;
 
   snprintf(path, BX_PATHNAME_LEN, "%s/%s", dirname, VVFAT_MBR);
-  if (read_sector_from_file(path, sector_buffer, 0)) {
-    mbr_t* real_mbr = (mbr_t*)sector_buffer;
+  if (read_sector_from_file(path, mbr_buf, 0)) {
+    mbr_t* real_mbr = (mbr_t*)mbr_buf;
     partition_t* partition = &(real_mbr->partition[0]);
     if ((partition->fs_type != 0) && (partition->length_sector_long > 0)) {
       if ((partition->fs_type == 0x06) || (partition->fs_type == 0x0e)) {
@@ -1231,7 +1231,6 @@ int vvfat_image_t::open(const char* dirname, int flags)
         }
         cylinders = sector_count / (heads * spt);
         offset_to_bootsector = spt;
-        memcpy(&first_sectors[0], sector_buffer, 0x200);
         use_mbr_file = 1;
         BX_INFO(("VVFAT: using MBR from file"));
       }
@@ -1239,8 +1238,8 @@ int vvfat_image_t::open(const char* dirname, int flags)
   }
 
   snprintf(path, BX_PATHNAME_LEN, "%s/%s", dirname, VVFAT_BOOT);
-  if (read_sector_from_file(path, sector_buffer, 0)) {
-    bootsector_t* bs = (bootsector_t*)sector_buffer;
+  if (read_sector_from_file(path, boot_buf, 0)) {
+    bootsector_t* bs = (bootsector_t*)boot_buf;
     if (use_mbr_file) {
       sprintf(ftype, "FAT%d   ", fat_type);
       if (fat_type == 32) {
@@ -1283,7 +1282,6 @@ int vvfat_image_t::open(const char* dirname, int flags)
       reserved_sectors = bs->reserved_sectors;
       root_entries = bs->root_entries;
       first_cluster_of_root_dir = (fat_type != 32) ? 0 : bs->u.fat32.first_cluster_of_root_dir;
-      memcpy(&first_sectors[offset_to_bootsector * 0x200], sector_buffer, 0x200);
       BX_INFO(("VVFAT: using boot sector from file"));
     }
   }
@@ -1350,8 +1348,18 @@ int vvfat_image_t::open(const char* dirname, int flags)
   current_cluster = 0xffff;
   current_fd = 0;
 
-  if ((!use_mbr_file) && (offset_to_bootsector > 0))
+  Bit32u f_s_size = (offset_to_bootsector + reserved_sectors + 1) * 0x200;
+  first_sectors = new Bit8u[f_s_size];
+  memset(&first_sectors[0], 0, f_s_size);
+
+  if (use_mbr_file) {
+    memcpy(&first_sectors[0], mbr_buf, 0x200);
+  } else if (offset_to_bootsector > 0) {
     init_mbr();
+  }
+  if (use_boot_file) {
+    memcpy(&first_sectors[offset_to_bootsector * 0x200], boot_buf, 0x200);
+  }
 
   init_directories(dirname);
   set_file_attributes();
@@ -1976,7 +1984,7 @@ ssize_t vvfat_image_t::write(const void* buf, size_t count)
 
   while (scount-- > 0) {
     update_imagepos = 1;
-    if (sector_num == 0) {
+    if ((sector_num == 0) && (offset_to_bootsector > 0)) {
       // allow writing to MBR (except partition table)
       memcpy(&first_sectors[0], cbuf, 0x1b8);
     } else if (sector_num == offset_to_bootsector) {
