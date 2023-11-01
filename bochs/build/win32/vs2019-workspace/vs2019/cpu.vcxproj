@@ -183,11 +183,14 @@
     <ClCompile Include="..\cpu\segment_ctrl.cc" />
     <ClCompile Include="..\cpu\segment_ctrl_pro.cc" />
     <ClCompile Include="..\cpu\sha.cc" />
+    <ClCompile Include="..\cpu\sha512.cc" />
     <ClCompile Include="..\cpu\shift16.cc" />
     <ClCompile Include="..\cpu\shift32.cc" />
     <ClCompile Include="..\cpu\shift64.cc" />
     <ClCompile Include="..\cpu\shift8.cc" />
     <ClCompile Include="..\cpu\smm.cc" />
+    <ClCompile Include="..\cpu\sm3.cc" />
+    <ClCompile Include="..\cpu\sm4.cc" />
     <ClCompile Include="..\cpu\soft_int.cc" />
     <ClCompile Include="..\cpu\sse.cc" />
     <ClCompile Include="..\cpu\sse_move.cc" />

@@ -126,6 +126,7 @@
     <ClCompile Include="..\iodev\usb\usb_ohci.cc" />
     <ClCompile Include="..\iodev\usb\usb_pcap.cc" />
     <ClCompile Include="..\iodev\usb\usb_printer.cc" />
+    <ClCompile Include="..\iodev\usb\usb_uasp.cc" />
     <ClCompile Include="..\iodev\usb\usb_uhci.cc" />
     <ClCompile Include="..\iodev\usb\usb_xhci.cc" />
   </ItemGroup>
