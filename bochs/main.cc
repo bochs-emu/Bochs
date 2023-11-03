@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -911,11 +911,13 @@ int bx_init_main(int argc, char *argv[])
   }
 
   if (SIM->get_param_bool(BXPN_RESTORE_FLAG)->get()) {
+    if (!SIM->restore_config()) {
+      BX_PANIC(("cannot restore configuration"));
+    }
     if (arg < argc) {
       BX_ERROR(("WARNING: bochsrc options are ignored in restore mode!"));
     }
-  }
-  else {
+  } else {
     // parse the rest of the command line.  This is done after reading the
     // configuration file so that the command line arguments can override
     // the settings from the file.
@@ -974,12 +976,7 @@ bool load_and_init_display_lib(void)
 int bx_begin_simulation(int argc, char *argv[])
 {
   bx_user_quit = 0;
-  if (SIM->get_param_bool(BXPN_RESTORE_FLAG)->get()) {
-    if (!SIM->restore_config()) {
-      BX_PANIC(("cannot restore configuration"));
-      SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(0);
-    }
-  } else {
+  if (!SIM->get_param_bool(BXPN_RESTORE_FLAG)->get()) {
     // make sure all optional plugins have been loaded
     SIM->opt_plugin_ctrl("*", 1);
   }
