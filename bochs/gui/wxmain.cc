@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -521,6 +521,11 @@ void MyFrame::OnStateRestore(wxCommandEvent& WXUNUSED(event))
     sr_path[sizeof(sr_path) - 1] = '\0';
     SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(1);
     SIM->get_param_string(BXPN_RESTORE_PATH)->set(sr_path);
+    if (!SIM->restore_config()) {
+      wxMessageBox(wxT("Cannot restore configuration!"),
+                   wxT("ERROR"), wxOK | wxICON_ERROR, this);
+      SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(0);
+    }
   }
 }
 
@@ -1105,6 +1110,12 @@ void MyFrame::OnSim2CIEvent(wxCommandEvent& event)
                  wxString(be->u.logmsg.prefix, wxConvUTF8),
                  wxOK | wxICON_ERROR, this);
     sim_thread->SendSyncResponse(be);
+    break;
+  case BX_SYNC_EVT_ML_MSG_BOX:
+    // TODO
+    break;
+  case BX_SYNC_EVT_ML_MSG_BOX_KILL:
+    // TODO
     break;
   case BX_ASYNC_EVT_QUIT_SIM:
     wxMessageBox(wxT("Bochs simulation has stopped."), wxT("Bochs Stopped"),

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2003-2021  The Bochs Project
+//  Copyright (C) 2003-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -606,6 +606,10 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
             SetCurrentDirectory(path);
             SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(1);
             SIM->get_param_string(BXPN_RESTORE_PATH)->set(path);
+            if (!SIM->restore_config()) {
+              MessageBox(hDlg, "Cannot restore configuration!", "ERROR", MB_ICONERROR);
+              SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(0);
+            }
             EndDialog(hDlg, 1);
           }
           break;
