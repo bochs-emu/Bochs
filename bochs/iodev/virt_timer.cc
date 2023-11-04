@@ -428,15 +428,12 @@ void bx_virt_timer_c::timer_handler(bool mode)
 {
   if (!mode) {
     Bit64u temp_final_time = bx_pc_system.time_usec();
+    BX_ASSERT(temp_final_time > s[0].current_virtual_time);
     temp_final_time -= s[0].current_virtual_time;
     while (temp_final_time) {
-      if ((temp_final_time)>(s[0].virtual_next_event_time)) {
-        temp_final_time -= s[0].virtual_next_event_time;
-        advance_virtual_time(s[0].virtual_next_event_time, 0);
-      } else {
-        advance_virtual_time(temp_final_time, 0);
-        temp_final_time -= temp_final_time;
-      }
+      Bit64u step = (temp_final_time < s[0].virtual_next_event_time) ? temp_final_time : s[0].virtual_next_event_time;
+      advance_virtual_time(step, 0);
+      temp_final_time -= step;
     }
     bx_pc_system.activate_timer(s[0].system_timer_id,
                                 (Bit32u)BX_MIN(0x7FFFFFFF,(s[0].virtual_next_event_time>2)?(s[0].virtual_next_event_time-2):1),
