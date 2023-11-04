@@ -51,6 +51,12 @@ jmp_buf BX_CPU_C::jmp_buf_env;
 
 void BX_CPU_C::cpu_loop(void)
 {
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+  volatile Bit8u stack_anchor = 0;
+
+  BX_CPU_THIS_PTR cpuloop_stack_anchor = &stack_anchor;
+#endif
+
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR break_point = 0;
   BX_CPU_THIS_PTR magic_break = 0;
@@ -249,18 +255,28 @@ bxICacheEntry_c* BX_CPU_C::getICacheEntry(void)
 // The function is called after taken branch instructions and tries to link the branch to the next trace
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::linkTrace(bxInstruction_c *i)
 {
+  volatile Bit8u stack_anchor = 0;
+
 #if BX_SUPPORT_SMP
   if (BX_SMP_PROCESSORS > 1)
     return;
 #endif
 
-#define BX_HANDLERS_CHAINING_MAX_DEPTH 1000
+#define BX_HANDLERS_CHAINING_MAX_LINK_DEPTH 1000
 
   // do not allow extreme trace link depth / avoid host stack overflow
   // (could happen with badly compiled instruction handlers)
   static Bit32u linkDepth = 0;
 
-  if (BX_CPU_THIS_PTR async_event || ++linkDepth > BX_HANDLERS_CHAINING_MAX_DEPTH) {
+  if (BX_CPU_THIS_PTR async_event || ++linkDepth > BX_HANDLERS_CHAINING_MAX_LINK_DEPTH) {
+    linkDepth = 0;
+    return;
+  }
+
+#define BX_HANDLERS_CHAINING_MAX_STACK_DEPTH 0x10000
+
+  size_t stack_depth = BX_CPU_THIS_PTR cpuloop_stack_anchor - &stack_anchor;
+  if (stack_depth > BX_HANDLERS_CHAINING_MAX_STACK_DEPTH) {
     linkDepth = 0;
     return;
   }

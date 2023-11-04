@@ -1139,6 +1139,10 @@ public: // for now...
   static jmp_buf jmp_buf_env;
   unsigned last_exception_type;
 
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+  const volatile Bit8u *cpuloop_stack_anchor = NULL;
+#endif
+
   // Boundaries of current code page, based on EIP
   bx_address eipPageBias;
   Bit32u     eipPageWindowSize;
