@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1146,7 +1146,12 @@ bool bx_real_sim_c::restore_config()
   char config[BX_PATHNAME_LEN];
   sprintf(config, "%s/config", get_param_string(BXPN_RESTORE_PATH)->getptr());
   BX_INFO(("restoring '%s'", config));
-  return (read_rc(config) >= 0);
+  if (read_rc(config) >= 0) {
+    return 1;
+  } else {
+     get_param_bool(BXPN_RESTORE_FLAG)->set(0);
+    return 0;
+  }
 }
 
 bool bx_real_sim_c::restore_logopts()

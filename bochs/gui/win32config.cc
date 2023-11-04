@@ -608,7 +608,6 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
             SIM->get_param_string(BXPN_RESTORE_PATH)->set(path);
             if (!SIM->restore_config()) {
               MessageBox(hDlg, "Cannot restore configuration!", "ERROR", MB_ICONERROR);
-              SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(0);
             }
             EndDialog(hDlg, 1);
           }

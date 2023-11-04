@@ -504,7 +504,6 @@ int bx_text_config_interface(int menu)
                   SIM->get_param_string(BXPN_RESTORE_PATH)->set(sr_path);
                   if (!SIM->restore_config()) {
                     bx_printf("\nERROR: Cannot restore configuration!\n");
-                    SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(0);
                   } else {
                     bx_text_config_interface(BX_CI_START_SIMULATION);
                   }

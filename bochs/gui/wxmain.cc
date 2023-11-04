@@ -524,7 +524,6 @@ void MyFrame::OnStateRestore(wxCommandEvent& WXUNUSED(event))
     if (!SIM->restore_config()) {
       wxMessageBox(wxT("Cannot restore configuration!"),
                    wxT("ERROR"), wxOK | wxICON_ERROR, this);
-      SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(0);
     }
   }
 }
