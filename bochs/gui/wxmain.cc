@@ -1085,6 +1085,7 @@ void MyFrame::OnSim2CIEvent(wxCommandEvent& event)
 {
   IFDBG_EVENT(wxLogDebug(wxT("received a bochs event in the GUI thread")));
   BxEvent *be = (BxEvent *) event.GetEventObject();
+  ModelessDialog *ModelessMsgBox;
   IFDBG_EVENT(wxLogDebug(wxT("event type = %d"), (int)be->type));
   // all cases should return.  sync event handlers MUST send back a
   // response.  async event handlers MUST delete the event.
@@ -1111,10 +1112,16 @@ void MyFrame::OnSim2CIEvent(wxCommandEvent& event)
     sim_thread->SendSyncResponse(be);
     break;
   case BX_SYNC_EVT_ML_MSG_BOX:
-    // TODO
+    ModelessMsgBox = new ModelessDialog(this, -1,
+      wxString(be->u.logmsg.prefix, wxConvUTF8),
+      wxString(be->u.logmsg.msg, wxConvUTF8));
+    ModelessMsgBox->Show(true);
+    be->param0 = (void*)ModelessMsgBox;
+    sim_thread->SendSyncResponse(be);
     break;
   case BX_SYNC_EVT_ML_MSG_BOX_KILL:
-    // TODO
+    delete (ModelessDialog*)be->param0;
+    sim_thread->SendSyncResponse(be);
     break;
   case BX_ASYNC_EVT_QUIT_SIM:
     wxMessageBox(wxT("Bochs simulation has stopped."), wxT("Bochs Stopped"),

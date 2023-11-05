@@ -2,7 +2,7 @@
 // $Id$
 ////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -369,6 +369,25 @@ public:
   DECLARE_EVENT_TABLE()
 };
 
+////////////////////////////////////////////////////////////////////////////
+// ModelessDialog
+////////////////////////////////////////////////////////////////////////////
+//
+class ModelessDialog: public wxDialog
+{
+private:
+  wxBoxSizer *mainSizer, *msgSizer, *buttonSizer;
+  wxStaticText *message;
+public:
+  ModelessDialog(wxWindow* parent, wxWindowID id,
+      const wxString& title,
+      const wxString& msg);
+  ~ModelessDialog() {}
+  void Init();
+  bool Show(bool val);
+  void OnEvent(wxCommandEvent& event);
+DECLARE_EVENT_TABLE()
+};
 
 /**************************************************************************
 Everything else in here is a comment!
