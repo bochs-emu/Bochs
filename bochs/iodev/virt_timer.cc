@@ -65,7 +65,7 @@
 const Bit64u BX_MAX_VIRTUAL_TIME = BX_CONST64(0x7fffffff);
 
 //Important constant #defines:
-#define USEC_PER_SECOND (1000000)
+const Bit64u USEC_PER_SECOND = BX_CONST64(1000000);
 
 // define a macro to convert floating point numbers into 64-bit integers.
 // In MSVC++ you can convert a 64-bit float into a 64-bit signed integer,
@@ -85,7 +85,7 @@ const Bit64u BX_MAX_VIRTUAL_TIME = BX_CONST64(0x7fffffff);
 //Minimum number of emulated useconds per second.
 //  Now calculated using BX_MIN_IPS, the minimum number of
 //   instructions per second.
-#define MIN_USEC_PER_SECOND (((((Bit64u)USEC_PER_SECOND)*((Bit64u)BX_MIN_IPS))/((Bit64u)ips))+(Bit64u)1)
+#define MIN_USEC_PER_SECOND (((USEC_PER_SECOND*((Bit64u)BX_MIN_IPS))/((Bit64u)ips))+(Bit64u)1)
 
 
 //DEBUG configuration:
@@ -222,12 +222,12 @@ int bx_virt_timer_c::register_timer(void *this_ptr, bx_timer_handler_t handler,
                                     const char *id)
 {
   //We don't like starting with a zero period timer.
-  BX_ASSERT((!active) || (useconds>0));
+  BX_ASSERT(!active || useconds > 0);
 
   //Search for an unused timer.
   unsigned int i;
   for (i=0; i < numTimers; i++) {
-    if ((timer[i].inUse == 0) || (i == numTimers))
+    if (!timer[i].inUse || (i == numTimers))
       break;
   }
   // If we didn't find a free slot, increment the bound, numTimers.
@@ -281,8 +281,7 @@ void bx_virt_timer_c::start_timers(void)
 }
 
 //activate a deactivated but registered timer.
-void bx_virt_timer_c::activate_timer(unsigned timer_index, Bit32u useconds,
-                                     bool continuous)
+void bx_virt_timer_c::activate_timer(unsigned timer_index, Bit32u useconds, bool continuous)
 {
   BX_ASSERT(timer_index < BX_MAX_VIRTUAL_TIMERS);
 
@@ -441,7 +440,7 @@ void bx_virt_timer_c::timer_handler(bool mode)
     return;
   }
 
-  Bit64u usec_delta = bx_pc_system.time_usec()-last_usec;
+  Bit64u usec_delta = bx_pc_system.time_usec() - last_usec;
 
   if (usec_delta) {
 #if BX_HAVE_REALTIME_USEC
@@ -463,7 +462,7 @@ void bx_virt_timer_c::timer_handler(bool mode)
       //  probably only an issue on startup, but it solves some problems.
       ticks_delta = 0;
     }
-    if (ticks_delta + total_ticks - last_realtime_ticks > (F2I(MAX_MULT * I2F(last_realtime_delta)))) {
+    if (ticks_delta + total_ticks - last_realtime_ticks > F2I(MAX_MULT * I2F(last_realtime_delta))) {
       //This keeps us from going too fast in relation to real time.
 #if 0
       ticks_delta = (F2I(MAX_MULT * I2F(last_realtime_delta))) + last_realtime_ticks - total_ticks;
@@ -509,10 +508,10 @@ void bx_virt_timer_c::timer_handler(bool mode)
     if (real_time_delta) {
       //FIXME
       Bit64u em_realtime_delta = last_system_usec + stored_delta - em_last_realtime;
-      b=((Bit64u)USEC_PER_SECOND * em_realtime_delta / real_time_delta);
+      b = (USEC_PER_SECOND * em_realtime_delta / real_time_delta);
       em_last_realtime = last_system_usec + stored_delta;
     } else {
-      b=a;
+      b = a;
     }
     usec_per_second = ALPHA_LOWER(a,b);
 #else
@@ -523,7 +522,7 @@ void bx_virt_timer_c::timer_handler(bool mode)
 #endif
   }
 
-  last_usec=last_usec + usec_delta;
+  last_usec += usec_delta;
   bx_pc_system.deactivate_timer(s[1].system_timer_id);
   BX_ASSERT(s[1].virtual_next_event_time);
   bx_pc_system.activate_timer(s[1].system_timer_id,

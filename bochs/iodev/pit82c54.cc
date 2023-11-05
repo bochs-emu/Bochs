@@ -958,19 +958,9 @@ Bit32u pit_82C54::get_next_event_time(void)
   return out;
 }
 
-Bit16u pit_82C54::get_inlatch(int counternum)
-{
-  return counter[counternum].inlatch;
-}
-
-bool pit_82C54::new_count_ready(int countnum)
+bool pit_82C54::new_count_ready(int countnum) const
 {
   return (counter[countnum].write_state != MSByte_multiple);
-}
-
-Bit8u pit_82C54::get_mode(int countnum)
-{
-  return counter[countnum].mode;
 }
 
 void pit_82C54::set_OUT_handler(Bit8u counternum, out_handler_t outh)

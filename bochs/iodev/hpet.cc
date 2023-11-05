@@ -37,6 +37,23 @@
 
 #include "hpet.h"
 
+/* HPET will set up timers to fire after a certain period of time.
+ * These values can be used to clamp this period to reasonable/supported values.
+ * The values are in ticks.
+ */
+const Bit64u HPET_MAX_ALLOWED_PERIOD = BX_CONST64(0x0400000000000000);  // Must not overflow when multiplied by HPET_CLK_PERIOD
+const Bit64u HPET_MIN_ALLOWED_PERIOD = BX_CONST64(1);
+
+#define HPET_BASE 0xfed00000
+#define HPET_LEN  0x400
+
+#define RTC_ISA_IRQ 8
+
+#define HPET_CLK_PERIOD         10 // 10 ns
+#define HPET_ROUTING_CAP        BX_CONST64(0xffffff) // allowed irq routing
+
+#define FS_PER_NS 1000000       /* 1000000 femtosectons == 1 ns */
+
 #define LOG_THIS theHPET->
 
 bx_hpet_c *theHPET = NULL;
@@ -73,40 +90,40 @@ static Bit32u hpet_time_between(Bit64u start, Bit64u end, Bit64u value)
 /* Returns earliest 64-bit tick value that is after reference
  * and has same lower 32 bits as value
  */
-static Bit64u hpet_cmp32_to_cmp64(Bit64u reference, Bit32u value)
+static BX_CPP_INLINE Bit64u hpet_cmp32_to_cmp64(Bit64u reference, Bit32u value)
 {
   if ((Bit32u)reference <= value) {
-    return (reference & 0xFFFFFFFF00000000ull) | (Bit64u)value;
+    return (reference & BX_CONST64(0xFFFFFFFF00000000)) | (Bit64u)value;
   } else {
-    return ((reference + 0x100000000ull) & 0xFFFFFFFF00000000ull) | (Bit64u)value;
+    return ((reference + BX_CONST64(0x100000000)) & BX_CONST64(0xFFFFFFFF00000000)) | (Bit64u)value;
   }
 }
 
-static Bit64u ticks_to_ns(Bit64u value)
+static BX_CPP_INLINE Bit64u ticks_to_ns(Bit64u value)
 {
-    return value * HPET_CLK_PERIOD;
+  return value * HPET_CLK_PERIOD;
 }
 
-static Bit64u ns_to_ticks(Bit64u value)
+static BX_CPP_INLINE Bit64u ns_to_ticks(Bit64u value)
 {
-    return value / HPET_CLK_PERIOD;
+  return value / HPET_CLK_PERIOD;
 }
 
-static Bit64u hpet_fixup_reg(Bit64u _new, Bit64u old, Bit64u mask)
+static BX_CPP_INLINE Bit64u hpet_fixup_reg(Bit64u _new, Bit64u old, Bit64u mask)
 {
-    _new &= mask;
-    _new |= old & ~mask;
-    return _new;
+  _new &= mask;
+  _new |= old & ~mask;
+  return _new;
 }
 
-static int activating_bit(Bit64u old, Bit64u _new, Bit64u mask)
+static BX_CPP_INLINE int activating_bit(Bit64u old, Bit64u _new, Bit64u mask)
 {
-    return (!(old & mask) && (_new & mask));
+  return (!(old & mask) && (_new & mask));
 }
 
-static int deactivating_bit(Bit64u old, Bit64u _new, Bit64u mask)
+static BX_CPP_INLINE int deactivating_bit(Bit64u old, Bit64u _new, Bit64u mask)
 {
-    return ((old & mask) && !(_new & mask));
+  return ((old & mask) && !(_new & mask));
 }
 
 // static memory read/write functions
@@ -241,7 +258,7 @@ Bit64u bx_hpet_c::hpet_get_ticks(void)
 /*
  * calculate diff between comparator value and current ticks
  */
-Bit64u bx_hpet_c::hpet_calculate_diff(HPETTimer *t, Bit64u current)
+Bit64u bx_hpet_c::hpet_calculate_diff(const HPETTimer *t, Bit64u current) const
 {
   if (t->config & HPET_TN_32BIT) {
     Bit32u diff, cmp;
@@ -360,7 +377,7 @@ void bx_hpet_c::hpet_set_timer(HPETTimer *t)
   Bit64u diff = hpet_calculate_diff(t, cur_tick);
   if (diff == 0) {
     if (t->config & HPET_TN_32BIT) {
-      diff = 0x100000000ull;
+      diff = BX_CONST64(0x100000000);
     } else {
       diff = HPET_MAX_ALLOWED_PERIOD;
     }
@@ -370,7 +387,7 @@ void bx_hpet_c::hpet_set_timer(HPETTimer *t)
    */
   if (!timer_is_periodic(t)) {
     if (t->config & HPET_TN_32BIT) {
-      Bit64u wrap_diff = 0x100000000ull - (Bit64u)(Bit32u)cur_tick;
+      Bit64u wrap_diff = BX_CONST64(0x100000000) - (Bit64u)(Bit32u)cur_tick;
       if (wrap_diff < diff) diff = wrap_diff;
     }
   }
@@ -436,7 +453,7 @@ Bit32u bx_hpet_c::read_aligned(bx_phy_address address)
       BX_ERROR(("read: timer id out of range"));
       return 0;
     }
-    HPETTimer *timer = &s.timer[id];
+    const HPETTimer *timer = &s.timer[id];
     switch (index & 0x1f) {
       case HPET_TN_CFG:
         value = (Bit32u)timer->config;

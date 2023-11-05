@@ -140,9 +140,9 @@ public:
 
   Bit32u get_clock_event_time(Bit8u cnum);
   Bit32u get_next_event_time(void);
-  Bit16u get_inlatch(int countnum);
-  bool new_count_ready(int countnum);
-  Bit8u  get_mode(int countnum);
+  Bit16u get_inlatch(int countnum) const { return counter[countnum].inlatch; }
+  bool new_count_ready(int countnum) const;
+  Bit8u  get_mode(int countnum) const { return counter[countnum].mode; }
 
   void print_cnum(Bit8u cnum);
 };

@@ -30,10 +30,12 @@
 
 #define LOG_THIS theDmaDevice->
 
-#define DMA_MODE_DEMAND  0
-#define DMA_MODE_SINGLE  1
-#define DMA_MODE_BLOCK   2
-#define DMA_MODE_CASCADE 3
+enum {
+  DMA_MODE_DEMAND = 0,
+  DMA_MODE_SINGLE = 1,
+  DMA_MODE_BLOCK  = 2,
+  DMA_MODE_CASCADE = 3
+};
 
 bx_dma_c *theDmaDevice = NULL;
 
