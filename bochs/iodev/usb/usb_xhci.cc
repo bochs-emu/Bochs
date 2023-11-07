@@ -3171,9 +3171,9 @@ void bx_usb_xhci_c::dump_ep_context(const Bit32u *context, int slot, int ep)
 void bx_usb_xhci_c::dump_stream_context(const Bit32u *context)
 {
   BX_INFO((" -=-=-=-=-=-=-=- Stream Context -=-=-=-=-=-=-"));
-  BX_INFO(("  TR Dequeue Ptr: " FMT_ADDRX64 " (" FMT_ADDRX64 ")", (* (Bit64u *) &context[0] & (Bit64u) ~0x0F)));
+  BX_INFO(("  TR Dequeue Ptr: " FMT_ADDRX64 "", (* (Bit64u *) &context[0] & (Bit64u) ~0x0F)));
   BX_INFO(("    Content Type: %01x",    (context[0] & (0x07  << 1)) >>  1));
-  BX_INFO(("             DCS: %d (%d)", (context[0] & (1     << 0)) >>  0));
+  BX_INFO(("             DCS: %d", (context[0] & (1     << 0)) >>  0));
 }
 
 void bx_usb_xhci_c::copy_slot_from_buffer(struct SLOT_CONTEXT *slot_context, const Bit8u *buffer)
