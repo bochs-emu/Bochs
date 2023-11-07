@@ -351,9 +351,11 @@ extern bool bx_gui_sighandler;
 
 #define BX_PATHNAME_LEN 512
 
-#define BX_KBD_XT_TYPE        0
-#define BX_KBD_AT_TYPE        1
-#define BX_KBD_MF_TYPE        2
+enum {
+  BX_KBD_XT_TYPE = 0,
+  BX_KBD_AT_TYPE = 1,
+  BX_KBD_MF_TYPE = 2
+};
 
 #define BX_N_OPTROM_IMAGES 4
 #define BX_N_OPTRAM_IMAGES 4
