@@ -253,7 +253,7 @@ private:
       Bit8u model_no[41];
       int statusbar_id;
       Bit8u device_num; // for ATAPI identify & inquiry
-      bool status_changed;
+      int  status_changed;
       int seek_timer_index;
     } drives[2];
     unsigned drive_select;
