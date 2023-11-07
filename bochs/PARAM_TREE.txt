@@ -67,7 +67,9 @@ cpuid
 memory
   standard
     ram
-      size
+      guest
+      host
+      block_size
     rom
       path
       address

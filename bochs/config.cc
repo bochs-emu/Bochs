@@ -844,7 +844,7 @@ void bx_init_options()
 
   // memory options (ram & rom)
   bx_param_num_c *ramsize = new bx_param_num_c(ram,
-      "size",
+      "guest",
       "Memory size (megabytes)",
       "Amount of RAM in megabytes",
       1, ((Bit64u)(1) << BX_PHY_ADDRESS_WIDTH) / (1024*1024),
@@ -852,7 +852,7 @@ void bx_init_options()
   ramsize->set_ask_format("Enter memory size (MB): [%d] ");
 
   bx_param_num_c *host_ramsize = new bx_param_num_c(ram,
-      "host_size",
+      "host",
       "Host allocated memory size (megabytes)",
       "Amount of host allocated memory in megabytes",
       1, 2048,
@@ -2883,17 +2883,11 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     SIM->get_param_num(BXPN_MEM_SIZE)->set(atol(params[1]));
     SIM->get_param_num(BXPN_HOST_MEM_SIZE)->set(atol(params[1]));
   } else if (!strcmp(params[0], "memory")) {
-    if (num_params < 3) {
+    if (num_params < 2) {
       PARSE_ERR(("%s: memory directive malformed.", context));
     }
     for (i=1; i<num_params; i++) {
-      if (!strncmp(params[i], "host=", 5)) {
-        SIM->get_param_num(BXPN_HOST_MEM_SIZE)->set(atol(&params[i][5]));
-      } else if (!strncmp(params[i], "guest=", 6)) {
-        SIM->get_param_num(BXPN_MEM_SIZE)->set(atol(&params[i][6]));
-      } else if (!strncmp(params[i], "block_size=", 11)) {
-        SIM->get_param_num(BXPN_MEM_BLOCK_SIZE)->set(atol(&params[i][11]));
-      } else {
+      if (bx_parse_param_from_list(context, params[i], (bx_list_c*) SIM->get_param(BXPN_MEMORY)) < 0) {
         PARSE_ERR(("%s: memory directive malformed.", context));
       }
     }
@@ -3536,11 +3530,8 @@ int bx_write_configuration(const char *rc, int overwrite)
     fprintf(fp, ", options=\"%s\"\n", sparam->getptr());
   else
     fprintf(fp, "\n");
-  fprintf(fp, "memory: host=%d, guest=%d, block_size=%d\n",
-    SIM->get_param_num(BXPN_HOST_MEM_SIZE)->get(),
-    SIM->get_param_num(BXPN_MEM_SIZE)->get(),
-    SIM->get_param_num(BXPN_MEM_BLOCK_SIZE)->get());
 
+  bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_MEMORY), "memory", 0);
   bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_ROMIMAGE), "romimage", 0);
   bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_VGA_ROMIMAGE), "vgaromimage", 0);
   fprintf(fp, "boot: %s", SIM->get_param_enum(BXPN_BOOTDRIVE1)->get_selected());
