@@ -38,7 +38,7 @@ extern float_status_t i387cw_to_softfloat_status_word(Bit16u control_word);
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_STi(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   FPU_update_last_instruction(i);
 
   clear_C1();
@@ -70,7 +70,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_STi(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_SINGLE_REAL(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   RMAddr(i) = BX_CPU_RESOLVE_ADDR(i);
   float32 load_reg = read_virtual_dword(i->seg(), RMAddr(i));
@@ -101,7 +101,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_SINGLE_REAL(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_DOUBLE_REAL(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   RMAddr(i) = BX_CPU_RESOLVE_ADDR(i);
   float64 load_reg = read_virtual_qword(i->seg(), RMAddr(i));
@@ -132,7 +132,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_DOUBLE_REAL(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_EXTENDED_REAL(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   floatx80 result;
 
@@ -158,7 +158,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_EXTENDED_REAL(bxInstruction_c *i)
 /* DF /0 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FILD_WORD_INTEGER(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   RMAddr(i) = BX_CPU_RESOLVE_ADDR(i);
   Bit16s load_reg = (Bit16s) read_virtual_word(i->seg(), RMAddr(i));
@@ -182,7 +182,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FILD_WORD_INTEGER(bxInstruction_c *i)
 /* DB /0 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FILD_DWORD_INTEGER(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   RMAddr(i) = BX_CPU_RESOLVE_ADDR(i);
   Bit32s load_reg = (Bit32s) read_virtual_dword(i->seg(), RMAddr(i));
@@ -206,7 +206,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FILD_DWORD_INTEGER(bxInstruction_c *i)
 /* DF /5 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FILD_QWORD_INTEGER(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   RMAddr(i) = BX_CPU_RESOLVE_ADDR(i);
   Bit64s load_reg = (Bit64s) read_virtual_qword(i->seg(), RMAddr(i));
@@ -230,7 +230,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FILD_QWORD_INTEGER(bxInstruction_c *i)
 /* DF /4 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FBLD_PACKED_BCD(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   RMAddr(i) = BX_CPU_RESOLVE_ADDR(i);
   Bit16u hi2 = read_virtual_word(i->seg(), (RMAddr(i) + 8) & i->asize_mask());
@@ -272,7 +272,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FBLD_PACKED_BCD(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_STi(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   FPU_update_last_instruction(i);
 
   int pop_stack = 0;
@@ -297,7 +297,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_STi(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_SINGLE_REAL(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   RMAddr(i) = BX_CPU_RESOLVE_ADDR(i);
 
@@ -345,7 +345,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_SINGLE_REAL(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_DOUBLE_REAL(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   RMAddr(i) = BX_CPU_RESOLVE_ADDR(i);
 
@@ -394,7 +394,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_DOUBLE_REAL(bxInstruction_c *i)
 /* DB /7 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSTP_EXTENDED_REAL(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   RMAddr(i) = BX_CPU_RESOLVE_ADDR(i);
 
@@ -426,7 +426,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSTP_EXTENDED_REAL(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIST_WORD_INTEGER(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   RMAddr(i) = BX_CPU_RESOLVE_ADDR(i);
 
@@ -474,7 +474,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIST_WORD_INTEGER(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIST_DWORD_INTEGER(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   RMAddr(i) = BX_CPU_RESOLVE_ADDR(i);
 
@@ -522,7 +522,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIST_DWORD_INTEGER(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTP_QWORD_INTEGER(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   RMAddr(i) = BX_CPU_RESOLVE_ADDR(i);
 
@@ -566,7 +566,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTP_QWORD_INTEGER(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FBSTP_PACKED_BCD(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   RMAddr(i) = BX_CPU_RESOLVE_ADDR(i);
 
@@ -645,7 +645,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FBSTP_PACKED_BCD(bxInstruction_c *i)
 /* DF /1 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP16(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   RMAddr(i) = BX_CPU_RESOLVE_ADDR(i);
 
@@ -690,7 +690,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP16(bxInstruction_c *i)
 /* DB /1 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP32(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   RMAddr(i) = BX_CPU_RESOLVE_ADDR(i);
 
@@ -735,7 +735,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP32(bxInstruction_c *i)
 /* DD /1 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTTP64(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   RMAddr(i) = BX_CPU_RESOLVE_ADDR(i);
 

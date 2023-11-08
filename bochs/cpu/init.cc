@@ -1027,6 +1027,7 @@ void BX_CPU_C::reset(unsigned source)
   }
 #endif
 
+  BX_CPU_THIS_PTR fpu_mmx_ok = 0;
 #if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR sse_ok = 0;
 #if BX_SUPPORT_AVX

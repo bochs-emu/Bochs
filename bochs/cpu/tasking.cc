@@ -528,6 +528,14 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.valid = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.valid = 0;
 
+  handleFpuMmxModeChange();
+#if BX_CPU_LEVEL >= 6
+  handleSseModeChange(); /* CR0.TS changes */
+#if BX_SUPPORT_AVX
+  handleAvxModeChange();
+#endif
+#endif
+
   if ((tss_descriptor->type >= 9) && BX_CPU_THIS_PTR cr0.get_PG()) {
     // change CR3 only if it actually modified
     if (newCR3 != BX_CPU_THIS_PTR cr3) {
@@ -753,13 +761,6 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
     BX_CPU_THIS_PTR async_event = 1; // so processor knows to check
     BX_INFO(("task_switch: T bit set in new TSS"));
   }
-
-#if BX_CPU_LEVEL >= 6
-  handleSseModeChange(); /* CR0.TS changes */
-#if BX_SUPPORT_AVX
-  handleAvxModeChange();
-#endif
-#endif
 
   //
   // Step 12: Begin execution of new task.

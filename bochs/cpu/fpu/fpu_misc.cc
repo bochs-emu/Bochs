@@ -33,7 +33,7 @@
 /* D9 C8 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXCH_STi(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   int st0_tag = BX_CPU_THIS_PTR the_i387.FPU_gettagi(0);
@@ -71,7 +71,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXCH_STi(bxInstruction_c *i)
 /* D9 E0 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCHS(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   if (IS_TAG_EMPTY(0)) {
@@ -89,7 +89,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCHS(bxInstruction_c *i)
 /* D9 E1 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FABS(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   if (IS_TAG_EMPTY(0)) {
@@ -107,7 +107,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FABS(bxInstruction_c *i)
 /* D9 F6 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FDECSTP(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
@@ -120,7 +120,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FDECSTP(bxInstruction_c *i)
 /* D9 F7 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FINCSTP(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
@@ -133,7 +133,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FINCSTP(bxInstruction_c *i)
 /* DD C0 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FFREE_STi(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
@@ -151,7 +151,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FFREE_STi(bxInstruction_c *i)
 /* DF C0 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FFREEP_STi(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();

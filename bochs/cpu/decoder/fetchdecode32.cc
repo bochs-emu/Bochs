@@ -2561,6 +2561,16 @@ int assignHandler(bxInstruction_c *i, Bit32u fetchModeMask)
     }
   }
 #endif
+  if (! (fetchModeMask & BX_FETCH_MODE_FPU_MMX_OK)) {
+     if (op_flags & BX_PREPARE_FPU) {
+        if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoFPU;
+        return(1);
+     }
+     if (op_flags & BX_PREPARE_MMX) {
+        if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoMMX;
+        return(1);
+     }
+  }
 #if BX_CPU_LEVEL >= 6
   if (! (fetchModeMask & BX_FETCH_MODE_SSE_OK)) {
      if (op_flags & BX_PREPARE_SSE) {

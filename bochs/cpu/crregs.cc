@@ -1130,6 +1130,7 @@ bool BX_CPU_C::SetCR0(bxInstruction_c *i, bx_address val)
 
   handleCpuModeChange();
 
+  handleFpuMmxModeChange();
 #if BX_CPU_LEVEL >= 6
   handleSseModeChange();
 #if BX_SUPPORT_AVX
@@ -1365,6 +1366,7 @@ bool BX_CPU_C::SetCR4(bxInstruction_c *i, bx_address val)
 
   BX_CPU_THIS_PTR cr4.set32((Bit32u) val);
 
+  handleFpuMmxModeChange();
 #if BX_CPU_LEVEL >= 6
   handleSseModeChange();
 #if BX_SUPPORT_AVX
@@ -1536,6 +1538,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLTS(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR cr0.set_TS(0);
 
+  handleFpuMmxModeChange();
 #if BX_CPU_LEVEL >= 6
   handleSseModeChange();
 #if BX_SUPPORT_AVX

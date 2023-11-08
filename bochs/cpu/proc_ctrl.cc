@@ -411,6 +411,39 @@ void BX_CPU_C::handleAlignmentCheck(void)
 #endif
 
 #if BX_CPU_LEVEL >= 6
+void BX_CPU_C::handleFpuMmxModeChange(void)
+{
+  if (BX_CPU_THIS_PTR cr0.get_EM() || BX_CPU_THIS_PTR cr0.get_TS())
+    BX_CPU_THIS_PTR fpu_mmx_ok = 0;
+  else
+    BX_CPU_THIS_PTR fpu_mmx_ok = 1;
+
+  updateFetchModeMask(); /* FPU_MMX_OK changed */
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoFPU(bxInstruction_c *i)
+{
+  if (BX_CPU_THIS_PTR cr0.get_EM() || BX_CPU_THIS_PTR cr0.get_TS())
+    exception(BX_NM_EXCEPTION, 0);
+
+  BX_ASSERT(0);
+
+  BX_NEXT_TRACE(i); // keep compiler happy
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoMMX(bxInstruction_c *i)
+{
+  if(BX_CPU_THIS_PTR cr0.get_EM())
+    exception(BX_UD_EXCEPTION, 0);
+
+  if(BX_CPU_THIS_PTR cr0.get_TS())
+    exception(BX_NM_EXCEPTION, 0);
+
+  BX_ASSERT(0);
+
+  BX_NEXT_TRACE(i); // keep compiler happy
+}
+
 void BX_CPU_C::handleSseModeChange(void)
 {
   if(BX_CPU_THIS_PTR cr0.get_TS()) {
@@ -545,6 +578,7 @@ void BX_CPU_C::handleCpuContextChange(void)
 
   handleCpuModeChange();
 
+  handleFpuMmxModeChange();
 #if BX_CPU_LEVEL >= 6
   handleSseModeChange();
 #if BX_SUPPORT_AVX

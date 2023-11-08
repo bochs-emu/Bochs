@@ -1124,6 +1124,7 @@ public: // for now...
 #if BX_CPU_LEVEL >= 5
   bool  ignore_bad_msrs;
 #endif
+  unsigned fpu_mmx_ok;
 #if BX_CPU_LEVEL >= 6
   unsigned sse_ok;
 #if BX_SUPPORT_AVX
@@ -4044,6 +4045,8 @@ public: // for now...
   BX_SMF void BxEndTrace(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 
+  BX_SMF void BxNoFPU(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxNoMMX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #if BX_CPU_LEVEL >= 6
   BX_SMF void BxNoSSE(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #if BX_SUPPORT_AVX
@@ -4403,6 +4406,7 @@ public: // for now...
 #if BX_CPU_LEVEL >= 4
   BX_SMF void handleAlignmentCheck(void);
 #endif
+  BX_SMF void handleFpuMmxModeChange(void);
 #if BX_CPU_LEVEL >= 6
   BX_SMF void handleSseModeChange(void);
   BX_SMF void handleAvxModeChange(void);
@@ -4669,7 +4673,6 @@ public: // for now...
 
 #if BX_SUPPORT_FPU
   BX_SMF void print_state_FPU(void);
-  BX_SMF void prepareFPU(bxInstruction_c *i, bool = 1);
   BX_SMF void FPU_check_pending_exceptions(void);
   BX_SMF void FPU_update_last_instruction(bxInstruction_c *i);
   BX_SMF void FPU_stack_underflow(bxInstruction_c *i, int stnr, int pop_stack = 0);
@@ -4684,7 +4687,6 @@ public: // for now...
 #endif
 
 #if BX_CPU_LEVEL >= 5
-  BX_SMF void prepareMMX(void);
   BX_SMF void prepareFPU2MMX(void); /* cause transition from FPU to MMX technology state */
   BX_SMF void print_state_MMX(void);
 #endif
@@ -4769,9 +4771,9 @@ public: // for now...
 #endif
 
 #if BX_SUPPORT_MONITOR_MWAIT
-  BX_SMF bool   is_monitor(bx_phy_address addr, unsigned len);
-  BX_SMF void   check_monitor(bx_phy_address addr, unsigned len);
-  BX_SMF void   wakeup_monitor(void);
+  BX_SMF bool is_monitor(bx_phy_address addr, unsigned len);
+  BX_SMF void check_monitor(bx_phy_address addr, unsigned len);
+  BX_SMF void wakeup_monitor(void);
 #endif
 
 #if BX_SUPPORT_VMX
@@ -4916,18 +4918,6 @@ public: // for now...
 };
 
 #if BX_CPU_LEVEL >= 5
-BX_CPP_INLINE void BX_CPU_C::prepareMMX(void)
-{
-  if(BX_CPU_THIS_PTR cr0.get_EM())
-    exception(BX_UD_EXCEPTION, 0);
-
-  if(BX_CPU_THIS_PTR cr0.get_TS())
-    exception(BX_NM_EXCEPTION, 0);
-
-  /* check floating point status word for a pending FPU exceptions */
-  FPU_check_pending_exceptions();
-}
-
 BX_CPP_INLINE void BX_CPU_C::prepareFPU2MMX(void)
 {
   BX_CPU_THIS_PTR the_i387.twd = 0;
@@ -4991,19 +4981,21 @@ BX_CPP_INLINE Bit32u BX_CPP_AttrRegparmN(1) BX_CPU_C::BxResolve32(bxInstruction_
 //
 // bit 0 - CS.D_B
 // bit 1 - long64 mode (CS.L)
-// bit 2 - SSE_OK
-// bit 3 - AVX_OK
-// bit 4 - OPMASK_OK
-// bit 5 - EVEX_OK
+// bit 2 - FPU and MMX OK
+// bit 3 - SSE_OK
+// bit 4 - AVX_OK
+// bit 5 - OPMASK_OK
+// bit 6 - EVEX_OK
 //
 
 enum {
-  BX_FETCH_MODE_IS32_MASK = (1 << 0),
-  BX_FETCH_MODE_IS64_MASK = (1 << 1),
-  BX_FETCH_MODE_SSE_OK    = (1 << 2),
-  BX_FETCH_MODE_AVX_OK    = (1 << 3),
-  BX_FETCH_MODE_OPMASK_OK = (1 << 4),
-  BX_FETCH_MODE_EVEX_OK   = (1 << 5)
+  BX_FETCH_MODE_IS32_MASK  = (1 << 0),
+  BX_FETCH_MODE_IS64_MASK  = (1 << 1),
+  BX_FETCH_MODE_FPU_MMX_OK = (1 << 2),
+  BX_FETCH_MODE_SSE_OK     = (1 << 3),
+  BX_FETCH_MODE_AVX_OK     = (1 << 4),
+  BX_FETCH_MODE_OPMASK_OK  = (1 << 5),
+  BX_FETCH_MODE_EVEX_OK    = (1 << 6)
 };
 
 //
@@ -5015,13 +5007,14 @@ BX_CPP_INLINE void BX_CPU_C::updateFetchModeMask(void)
   BX_CPU_THIS_PTR fetchModeMask =
 #if BX_CPU_LEVEL >= 6
 #if BX_SUPPORT_EVEX
-     (BX_CPU_THIS_PTR evex_ok << 5) | (BX_CPU_THIS_PTR opmask_ok << 4) |
+     (BX_CPU_THIS_PTR evex_ok << 6) | (BX_CPU_THIS_PTR opmask_ok << 5) |
 #endif
 #if BX_SUPPORT_AVX
-     (BX_CPU_THIS_PTR avx_ok << 3) |
+     (BX_CPU_THIS_PTR avx_ok << 4) |
 #endif
-     (BX_CPU_THIS_PTR sse_ok << 2) |
+     (BX_CPU_THIS_PTR sse_ok << 3) |
 #endif
+     (BX_CPU_THIS_PTR fpu_mmx_ok << 2) |
 #if BX_SUPPORT_X86_64
     ((BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)<<1) |
 #endif

@@ -81,7 +81,7 @@ void BX_CPU_C::write_eflags_fpu_compare(int float_relation)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_STi(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   int pop_stack = 0;
@@ -119,7 +119,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_STi(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOMI_ST0_STj(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   int pop_stack = i->b1() & 4;
@@ -155,7 +155,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOMI_ST0_STj(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FUCOMI_ST0_STj(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   int pop_stack = i->b1() & 4;
@@ -191,7 +191,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FUCOMI_ST0_STj(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FUCOM_STi(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   int pop_stack = 0;
@@ -227,7 +227,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FUCOM_STi(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_SINGLE_REAL(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   int rc, pop_stack = 0;
   if (i->getIaOpcode() == BX_IA_FCOMP_SINGLE_REAL)
@@ -277,7 +277,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_SINGLE_REAL(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_DOUBLE_REAL(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   int rc, pop_stack = 0;
   if (i->getIaOpcode() == BX_IA_FCOMP_DOUBLE_REAL)
@@ -327,7 +327,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_DOUBLE_REAL(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FICOM_WORD_INTEGER(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   int pop_stack = 0;
   if (i->getIaOpcode() == BX_IA_FICOMP_WORD_INTEGER)
@@ -370,7 +370,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FICOM_WORD_INTEGER(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FICOM_DWORD_INTEGER(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   int pop_stack = 0;
   if (i->getIaOpcode() == BX_IA_FICOMP_DWORD_INTEGER)
@@ -413,7 +413,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FICOM_DWORD_INTEGER(bxInstruction_c *i)
 /* DE D9 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOMPP(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
@@ -448,7 +448,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOMPP(bxInstruction_c *i)
 /* DA E9 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FUCOMPP(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(1))
@@ -481,7 +481,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FUCOMPP(bxInstruction_c *i)
 /* D9 E4 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FTST(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
@@ -507,7 +507,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FTST(bxInstruction_c *i)
 /* D9 E5 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXAM(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   floatx80 reg = BX_READ_FPU_REG(0);
