@@ -427,7 +427,7 @@ void bx_virt_timer_c::timer_handler(bool mode)
 {
   if (!mode) {
     Bit64u temp_final_time = bx_pc_system.time_usec();
-    BX_ASSERT(temp_final_time > s[0].current_virtual_time);
+    BX_ASSERT(temp_final_time >= s[0].current_virtual_time);
     temp_final_time -= s[0].current_virtual_time;
     while (temp_final_time) {
       Bit64u step = (temp_final_time < s[0].virtual_next_event_time) ? temp_final_time : s[0].virtual_next_event_time;
