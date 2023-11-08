@@ -410,7 +410,6 @@ void BX_CPU_C::handleAlignmentCheck(void)
 }
 #endif
 
-#if BX_CPU_LEVEL >= 6
 void BX_CPU_C::handleFpuMmxModeChange(void)
 {
   if (BX_CPU_THIS_PTR cr0.get_EM() || BX_CPU_THIS_PTR cr0.get_TS())
@@ -444,6 +443,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoMMX(bxInstruction_c *i)
   BX_NEXT_TRACE(i); // keep compiler happy
 }
 
+#if BX_CPU_LEVEL >= 6
 void BX_CPU_C::handleSseModeChange(void)
 {
   if(BX_CPU_THIS_PTR cr0.get_TS()) {
