@@ -734,7 +734,7 @@ void bx_hard_drive_c::runtime_config(void)
 
   for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     for (Bit8u device=0; device<2; device++) {
-      if (BX_HD_THIS channels[channel].drives[device].status_changed) {
+      if (BX_HD_THIS channels[channel].drives[device].status_changed == 1) {
         handle = (channel << 1) | device;
         sprintf(pname, "ata.%d.%s", channel, device ? "slave":"master");
         bx_list_c *base = (bx_list_c*) SIM->get_param(pname);
@@ -743,7 +743,6 @@ void bx_hard_drive_c::runtime_config(void)
         if (status == BX_INSERTED) {
           BX_HD_THIS set_cd_media_status(handle, 1);
         }
-        BX_HD_THIS channels[channel].drives[device].status_changed = 0;
       }
     }
   }
@@ -1297,10 +1296,21 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
             switch (atapi_command) {
               case 0x00: // test unit ready
-                if (BX_SELECTED_DRIVE(channel).cdrom.ready) {
-                  atapi_cmd_nop(controller);
-                } else {
+                // For guests that don't use GET_EVENT_STATUS_NOTIFICATION, we actually
+                //  have to simulate a tray open (status_changed == 1) and then a 
+                //  try close (status_changed == -1).
+                if (BX_SELECTED_DRIVE(channel).status_changed == 1) {
                   atapi_cmd_error(channel, SENSE_NOT_READY, ASC_MEDIUM_NOT_PRESENT, 0);
+                  BX_SELECTED_DRIVE(channel).status_changed = -1;
+                } else if (BX_SELECTED_DRIVE(channel).status_changed == -1) {
+                  atapi_cmd_error(channel, SENSE_UNIT_ATTENTION, ASC_MEDIUM_MAY_HAVE_CHANGED, 1);
+                  BX_SELECTED_DRIVE(channel).status_changed = 0;
+                } else {
+                  if (BX_SELECTED_DRIVE(channel).cdrom.ready) {
+                    atapi_cmd_nop(controller);
+                  } else {
+                    atapi_cmd_error(channel, SENSE_NOT_READY, ASC_MEDIUM_NOT_PRESENT, 0);
+                  }
                 }
                 raise_interrupt(channel);
                 break;
@@ -1363,6 +1373,8 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                       bx_list_c *base = (bx_list_c*) SIM->get_param(ata_name);
                       SIM->get_param_enum("status", base)->set(BX_EJECTED);
                       bx_gui->update_drive_status_buttons();
+                      // indicate a status change
+                      BX_SELECTED_DRIVE(channel).status_changed = 1;
                     }
                     raise_interrupt(channel);
                   } else { // Load the disc
@@ -3368,10 +3380,6 @@ bool bx_hard_drive_c::set_cd_media_status(Bit32u handle, bool status)
       BX_HD_THIS channels[channel].drives[device].cdrom.curr_lba = capacity - 1;
       BX_INFO(("Capacity is %d sectors (%.2f MB)", capacity, (float)capacity / 512.0));
       SIM->get_param_enum("status", base)->set(BX_INSERTED);
-      BX_SELECTED_DRIVE(channel).sense.sense_key = SENSE_UNIT_ATTENTION;
-      BX_SELECTED_DRIVE(channel).sense.asc = ASC_MEDIUM_MAY_HAVE_CHANGED;
-      BX_SELECTED_DRIVE(channel).sense.ascq = 0;
-      raise_interrupt(channel);
     } else {
       BX_INFO(("Could not locate CD-ROM, continuing with media not present"));
       BX_HD_THIS channels[channel].drives[device].cdrom.ready = 0;
