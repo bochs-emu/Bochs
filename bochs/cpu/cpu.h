@@ -3433,6 +3433,8 @@ public: // for now...
   BX_SMF void VCOMPRESSPD_MASK_WpdVpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VEXPANDPS_MASK_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VEXPANDPD_MASK_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VEXPANDPS_MASK_VpsWpsM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VEXPANDPD_MASK_VpdWpdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void VPCOMPRESSB_MASK_WdqVdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VPCOMPRESSW_MASK_WdqVdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

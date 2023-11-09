@@ -30,6 +30,7 @@
 
 #include "simd_int.h"
 #include "simd_compare.h"
+#include "scalar_arith.h"
 
 // compare
 
@@ -1616,6 +1617,39 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPEXPANDW_MASK_VdqWdqR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXPANDPS_MASK_VpsWpsM(bxInstruction_c *i)
+{
+  BxPackedAvxRegister result, op;
+  if (i->isZeroMasking())
+    result.clear();
+  else
+    result = BX_READ_AVX_REG(i->dst());
+
+  Bit32u opmask = BX_READ_16BIT_OPMASK(i->opmask());
+  unsigned len = i->getVL();
+  opmask &= CUT_OPMASK_TO(DWORD_ELEMENTS(len));
+
+  if (opmask) {
+    // the EXPAND is going to read an element for each bit set to '1 in the opmask
+    // and place it into the element corresponding to the opmask bit in the result
+    // so it will read popcntw(opmask) bits from the source
+    Bit32u load_mask = (1 << popcntw(opmask)) - 1;
+    avx_masked_load32(i, BX_CPU_RESOLVE_ADDR(i), &op, load_mask); // read only popcntw(opmask) elements from the memory
+
+    for (unsigned n = 0, k = 0; n < len*4; n++, opmask >>= 1) {
+      if (! opmask) break;
+
+      if (opmask & 0x1) {
+        result.vmm32u(n) = op.vmm32u(k);
+        k++;
+      }
+    }
+  }
+
+  BX_WRITE_AVX_REGZ(i->dst(), result, len);
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXPANDPS_MASK_VpsWpsR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src()), result;
@@ -1640,6 +1674,39 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXPANDPS_MASK_VpsWpsR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXPANDPD_MASK_VpdWpdM(bxInstruction_c *i)
+{
+  BxPackedAvxRegister result, op;
+  if (i->isZeroMasking())
+    result.clear();
+  else
+    result = BX_READ_AVX_REG(i->dst());
+
+  Bit32u opmask = BX_READ_8BIT_OPMASK(i->opmask());
+  unsigned len = i->getVL();
+  opmask &= CUT_OPMASK_TO(QWORD_ELEMENTS(len));
+
+  if (opmask) {
+    // the EXPAND is going to read an element for each bit set to '1 in the opmask
+    // and place it into the element corresponding to the opmask bit in the result
+    // so it will read popcntb(opmask) bits from the source
+    Bit32u load_mask = (1 << popcntb(opmask)) - 1;
+    avx_masked_load64(i, BX_CPU_RESOLVE_ADDR(i), &op, load_mask); // read only popcntb(opmask) elements from the memory
+
+    for (unsigned n = 0, k = 0; n < len*2; n++, opmask >>= 1) {
+      if (! opmask) break;
+
+      if (opmask & 0x1) {
+        result.vmm64u(n) = op.vmm64u(k);
+        k++;
+      }
+    }
+  }
+
+  BX_WRITE_AVX_REGZ(i->dst(), result, len);
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXPANDPD_MASK_VpdWpdR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src()), result;
@@ -1649,9 +1716,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXPANDPD_MASK_VpdWpdR(bxInstruction_c *i)
     result = BX_READ_AVX_REG(i->dst());
 
   Bit32u opmask = BX_READ_8BIT_OPMASK(i->opmask());
-  unsigned len = i->getVL(), k = 0;
+  unsigned len = i->getVL();
 
-  for (unsigned n = 0; n < len*2; n++, opmask >>= 1) {
+  for (unsigned n = 0, k = 0; n < len*2; n++, opmask >>= 1) {
     if (! opmask) break;
 
     if (opmask & 0x1) {
