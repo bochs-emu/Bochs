@@ -63,6 +63,8 @@ Detailed change log :
 
   - CD-ROM:
     - Fix to enable TEAC CD-ROM driver to work
+    - Allow to change the CD-ROM via the Bochs Ribbon, as well as properly "ejecting" a CD from the guest.
+      This fix simulates an open tray and then a closed tray for all CD changes.
 
   - USB
     - Added the ability to change interfaces (ex: BBB to UASP).
