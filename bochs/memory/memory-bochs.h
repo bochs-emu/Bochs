@@ -80,9 +80,6 @@ struct memory_handler_struct {
   memory_direct_access_handler_t da_handler;
 };
 
-#define SMRAM_CODE  1
-#define SMRAM_DATA  2
-
 class BOCHSAPI BX_MEM_C : public logfunctions {
 private:
   struct memory_handler_struct **memory_handlers;
