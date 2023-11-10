@@ -632,19 +632,8 @@ void bx_dbg_check_memory_watchpoints(unsigned cpu, bx_phy_address phy, unsigned 
 
 extern const char *get_memtype_name(BxMemtype memtype);
 
-void bx_dbg_lin_memory_access(unsigned cpu, bx_address lin, bx_phy_address phy, unsigned len, unsigned memtype, unsigned rw, Bit8u *data)
+void bx_dbg_print_value(Bit8u *data, unsigned len)
 {
-  bx_dbg_check_memory_watchpoints(cpu, phy, len, rw);
-
-  if (! BX_CPU(cpu)->trace_mem)
-    return;
-
-  const char *access_type[] = {"RD","WR","EX","RW","SR","SW","--","SRW"};
-
-  dbg_printf("[CPU%d %s]: LIN 0x" FMT_ADDRX " PHY 0x" FMT_PHY_ADDRX " (len=%d, %s)",
-     cpu, access_type[rw],
-     lin, phy, len, get_memtype_name(memtype));
-
   if (len == 1) {
      Bit8u val8 = *data;
      dbg_printf(": 0x%02X", (unsigned) val8);
@@ -691,6 +680,22 @@ void bx_dbg_lin_memory_access(unsigned cpu, bx_address lin, bx_phy_address phy, 
         dbg_printf(" %02x", data[i]);
      }
   }
+}
+
+void bx_dbg_lin_memory_access(unsigned cpu, bx_address lin, bx_phy_address phy, unsigned len, unsigned memtype, unsigned rw, Bit8u *data)
+{
+  bx_dbg_check_memory_watchpoints(cpu, phy, len, rw);
+
+  if (! BX_CPU(cpu)->trace_mem)
+    return;
+
+  const char *access_type[] = {"RD","WR","EX","RW","SR","SW","--","SRW"};
+
+  dbg_printf("[CPU%d %s]: LIN 0x" FMT_ADDRX " PHY 0x" FMT_PHY_ADDRX " (len=%d, %s)",
+     cpu, access_type[rw],
+     lin, phy, len, get_memtype_name(memtype));
+
+  bx_dbg_print_value(data, len);
 
   dbg_printf("\n");
 }
@@ -741,52 +746,7 @@ void bx_dbg_phy_memory_access(unsigned cpu, bx_phy_address phy, unsigned len, un
      cpu, access_type[rw],
      phy, len, get_memtype_name(memtype));
 
-  if (len == 1) {
-     Bit8u val8 = *data;
-     dbg_printf(": 0x%02X", (unsigned) val8);
-  }
-  else if (len == 2) {
-     Bit16u val16 = *((Bit16u*) data);
-     dbg_printf(": 0x%04X", (unsigned) val16);
-  }
-  else if (len == 4) {
-     Bit32u val32 = *((Bit32u*) data);
-     dbg_printf(": 0x%08X", (unsigned) val32);
-  }
-  else if (len == 8) {
-     Bit64u data64 = * (Bit64u*)(data);
-     dbg_printf(": 0x%08X 0x%08X", GET32H(data64), GET32L(data64));
-  }
-#if BX_CPU_LEVEL >= 6
-  else if (len == 16) {
-     const BxPackedXmmRegister *xmmdata = (const BxPackedXmmRegister*)(data);
-     dbg_printf(": 0x%08X 0x%08X 0x%08X 0x%08X",
-         xmmdata->xmm32u(3), xmmdata->xmm32u(2), xmmdata->xmm32u(1), xmmdata->xmm32u(0));
-  }
-#if BX_SUPPORT_AVX
-  else if (len == 32) {
-     const BxPackedYmmRegister *ymmdata = (const BxPackedYmmRegister*)(data);
-     dbg_printf(": 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X",
-        ymmdata->ymm32u(7), ymmdata->ymm32u(6), ymmdata->ymm32u(5), ymmdata->ymm32u(4),
-        ymmdata->ymm32u(3), ymmdata->ymm32u(2), ymmdata->ymm32u(1), ymmdata->ymm32u(0));
-  }
-#endif
-#if BX_SUPPORT_EVEX
-  else if (len == 64) {
-     const BxPackedZmmRegister *zmmdata = (const BxPackedZmmRegister*)(data);
-     dbg_printf(": 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X",
-        zmmdata->zmm32u(15), zmmdata->zmm32u(14), zmmdata->zmm32u(13), zmmdata->zmm32u(12),
-        zmmdata->zmm32u(11), zmmdata->zmm32u(10), zmmdata->zmm32u(9),  zmmdata->zmm32u(8),
-        zmmdata->zmm32u(7),  zmmdata->zmm32u(6),  zmmdata->zmm32u(5),  zmmdata->zmm32u(4),
-        zmmdata->zmm32u(3),  zmmdata->zmm32u(2),  zmmdata->zmm32u(1),  zmmdata->zmm32u(0));
-  }
-#endif
-#endif
-  else {
-     for (int i=len-1;i >= 0;i--) {
-        dbg_printf(" %02x", data[i]);
-     }
-  }
+  bx_dbg_print_value(data, len);
 
   if (access != 0)
     dbg_printf("\t; %s\n", access_string[access]);
@@ -2490,7 +2450,7 @@ void dbg_printf_binary(const char *format, Bit32u data, int bits)
   char num[33];
 
   for (unsigned b = 1 << (bits - 1); b; b >>= 1)
-    num [len++] = (data & b) ? '1' : '0';
+    num[len++] = (data & b) ? '1' : '0';
   num[len] = 0;
   dbg_printf(format, num);
 }
