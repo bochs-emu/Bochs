@@ -134,3 +134,4 @@ x86_feature(BX_ISA_WRMSRNS, "wrmsrns")                                  /* Non-S
 x86_feature(BX_ISA_CMPCCXADD, "cmpccxadd")                              /* CMPccXADD instructions */
 x86_feature(BX_ISA_SERIALIZE, "serialize")                              /* SERIALIZE instruction */
 x86_feature(BX_ISA_LASS, "lass")                                        /* Linear Address Space Separation support */
+x86_feature(BX_ISA_MOVDIRI, "movdiri")                                  /* MOVDIRI instruction support */
