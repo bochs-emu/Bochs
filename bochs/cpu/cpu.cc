@@ -132,6 +132,9 @@ void BX_CPU_C::cpu_loop(void)
       BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
       RIP += i->ilen();
       BX_CPU_CALL_METHOD(i->execute1, (i)); // might iterate repeat instruction
+      BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
+      BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
+      BX_CPU_THIS_PTR icount++;
 
       BX_SYNC_TIME_IF_SINGLE_PROCESSOR(0);
 
@@ -191,6 +194,9 @@ void BX_CPU_C::cpu_run_trace(void)
     BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
     RIP += i->ilen();
     BX_CPU_CALL_METHOD(i->execute1, (i)); // might iterate repeat instruction
+    BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
+    BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
+    BX_CPU_THIS_PTR icount++;
 
     if (BX_CPU_THIS_PTR async_event) {
       // clear stop trace magic indication that probably was set by repeat or branch32/64
