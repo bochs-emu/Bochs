@@ -312,6 +312,9 @@ void bx_plugin_ctrl_init()
   bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_PLUGIN_CTRL);
   const char *name;
   int count = PLUG_get_plugins_count(PLUGTYPE_OPTIONAL);
+  if (count == 0) {
+    BX_PANIC(("bx_plugin_ctrl_init() failure: no plugins found"));
+  }
   for (int i = 0; i < count; i++) {
     name = PLUG_get_plugin_name(PLUGTYPE_OPTIONAL, i);
     new bx_param_bool_c(base, name, "", "", 0);
