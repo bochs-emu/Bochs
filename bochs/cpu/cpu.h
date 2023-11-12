@@ -5871,7 +5871,7 @@ class bxInstruction_c;
 
 #define BX_NEXT_INSTR(i) {                             \
   BX_COMMIT_INSTRUCTION(i);                            \
-  if (BX_CPU_THIS_PTR async_event) return;             \
+  if (BX_CPU_THIS_PTR async_event || bx_dbg.debugger_active) return;             \
   ++i;                                                 \
   BX_EXECUTE_INSTRUCTION(i);                           \
 }

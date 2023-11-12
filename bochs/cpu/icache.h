@@ -117,18 +117,7 @@ struct bxICacheEntry_c
 
 static const bx_phy_address BX_ICACHE_INVALID_PHY_ADDRESS = bx_phy_address(-1);
 
-BX_CPP_INLINE void flushSMC(bxICacheEntry_c *e)
-{
-  if (e->pAddr != BX_ICACHE_INVALID_PHY_ADDRESS) {
-    e->pAddr = BX_ICACHE_INVALID_PHY_ADDRESS;
-#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
-    extern void genDummyICacheEntry(bxInstruction_c *i);
-//  for (unsigned instr=0;instr < e->tlen; instr++)
-//    genDummyICacheEntry(e->i + instr);
-    genDummyICacheEntry(e->i);
-#endif
-  }
-}
+void flushSMC(bxICacheEntry_c *e);
 
 class BOCHSAPI bxICache_c {
 public:
