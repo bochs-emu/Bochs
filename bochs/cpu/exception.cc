@@ -953,6 +953,11 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
 #if BX_SUPPORT_VMX
       VMexit_TripleFault();
 #endif
+#if BX_SUPPORT_SVM
+      if (BX_CPU_THIS_PTR in_svm_guest) {
+        if (SVM_INTERCEPT(SVM_INTERCEPT0_SHUTDOWN)) Svm_Vmexit(SVM_VMEXIT_SHUTDOWN);
+      }
+#endif
 #if BX_DEBUGGER
       // trap into debugger (the same as when a PANIC occurs)
       bx_debug_break();
