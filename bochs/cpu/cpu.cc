@@ -731,8 +731,7 @@ bool BX_CPU_C::dbg_instruction_epilog(void)
   // support for 'show' command in debugger
   extern unsigned dbg_show_mask;
   if(dbg_show_mask) {
-    int rv = bx_dbg_show_symbolic();
-    if (rv) return(rv);
+    bx_dbg_show_symbolic();
   }
 
   // Just committed an instruction, before fetching a new one

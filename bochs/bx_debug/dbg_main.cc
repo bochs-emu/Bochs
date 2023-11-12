@@ -1630,7 +1630,7 @@ void bx_dbg_show_param_command(const char *param, bool xml)
 }
 
 // return non zero to cause a stop
-int bx_dbg_show_symbolic(void)
+void bx_dbg_show_symbolic(void)
 {
   static unsigned last_cpu_mode = 0;
   static bx_address last_cr3 = 0;
@@ -1704,8 +1704,6 @@ int bx_dbg_show_symbolic(void)
   last_cr3 = BX_CPU(dbg_cpu)->cr3;
   last_cpu_mode = BX_CPU(dbg_cpu)->get_cpu_mode();
   BX_CPU(dbg_cpu)->show_flag = 0;
-
-  return 0;
 }
 
 bx_address bx_dbg_deref(bx_address addr, unsigned deep, unsigned* error_deep, bx_address* last_data_found)
