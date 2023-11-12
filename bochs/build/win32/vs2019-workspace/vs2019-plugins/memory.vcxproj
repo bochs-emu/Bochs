@@ -115,6 +115,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\memory\memory.cc" />
+    <ClCompile Include="..\memory\memory_stub.cc" />
     <ClCompile Include="..\memory\misc_mem.cc" />
   </ItemGroup>
   <ItemGroup>
