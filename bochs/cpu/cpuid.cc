@@ -1026,8 +1026,12 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_ecx(Bit32u extra) const
   // [24:24] reserved
   // [25:25] CLDEMOTE: CLDEMOTE instruction support - not supported
   // [26:26] reserved
-  // [27:27] MOVDIRI: MOVDIRI instruction support - not supported
-  // [28:28] MOVDIRI64: MOVDIRI64 instruction support - not supported
+
+  // [27:27] MOVDIRI: MOVDIRI instruction support
+  if (is_cpu_extension_supported(BX_ISA_MOVDIRI))
+    ecx |= BX_CPUID_STD7_SUBLEAF0_ECX_MOVDIRI;
+
+  // [28:28] MOVDIR64B: MOVDIR64B instruction support - not supported
   // [29:29] ENQCMD: Enqueue Stores support - not supported
   // [30:30] SGX_LC: SGX Launch Configuration - not supported
 

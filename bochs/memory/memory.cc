@@ -89,27 +89,8 @@ mem_write:
     // all of data is within limits of physical memory
     if (a20addr < 0x000a0000 || a20addr >= 0x00100000)
     {
-      if (len == 8) {
-        pageWriteStampTable.decWriteStamp(a20addr, 8);
-        WriteHostQWordToLittleEndian((Bit64u*) BX_MEM_THIS get_vector(a20addr), *(Bit64u*)data);
-        return;
-      }
-      if (len == 4) {
-        pageWriteStampTable.decWriteStamp(a20addr, 4);
-        WriteHostDWordToLittleEndian((Bit32u*) BX_MEM_THIS get_vector(a20addr), *(Bit32u*)data);
-        return;
-      }
-      if (len == 2) {
-        pageWriteStampTable.decWriteStamp(a20addr, 2);
-        WriteHostWordToLittleEndian((Bit16u*) BX_MEM_THIS get_vector(a20addr), *(Bit16u*)data);
-        return;
-      }
-      if (len == 1) {
-        pageWriteStampTable.decWriteStamp(a20addr, 1);
-        * (BX_MEM_THIS get_vector(a20addr)) = * (Bit8u *) data;
-        return;
-      }
-      // len == other, just fall thru to special cases handling
+      BX_MEMORY_STUB_C::writePhysicalPage(cpu, addr, len, data);
+      return;
     }
 
 #ifdef BX_LITTLE_ENDIAN
@@ -118,44 +99,10 @@ mem_write:
     data_ptr = (Bit8u *) data + (len - 1);
 #endif
 
-    if (a20addr < 0x000a0000 || a20addr >= 0x00100000)
-    {
-      // addr *not* in range 000A0000 .. 000FFFFF
-      while(1) {
-        // Write in chunks of 8 bytes if we can
-        if ((len & 7) == 0) {
-          pageWriteStampTable.decWriteStamp(a20addr, 8);
-          WriteHostQWordToLittleEndian((Bit64u*) BX_MEM_THIS get_vector(a20addr), *(Bit64u*)data_ptr);
-          len -= 8;
-          a20addr += 8;
-          #ifdef BX_LITTLE_ENDIAN
-            data_ptr += 8;
-          #else
-            data_ptr -= 8;
-          #endif
-
-          if (len == 0) return;
-        } else {
-          pageWriteStampTable.decWriteStamp(a20addr, 1);
-          *(BX_MEM_THIS get_vector(a20addr)) = *data_ptr;
-          if (len == 1) return;
-          len--;
-          a20addr++;
-  #ifdef BX_LITTLE_ENDIAN
-          data_ptr++;
-  #else // BX_BIG_ENDIAN
-          data_ptr--;
-  #endif
-        }
-      }
-    }
-
     pageWriteStampTable.decWriteStamp(a20addr);
 
     // addr must be in range 000A0000 .. 000FFFFF
-
     for(unsigned i=0; i<len; i++) {
-
       // SMMRAM
       if (a20addr < 0x000c0000) {
         // devices are not allowed to access SMMRAM under VGA memory
@@ -273,23 +220,8 @@ mem_read:
     // all of data is within limits of physical memory
     if (a20addr < 0x000a0000 || a20addr >= 0x00100000)
     {
-      if (len == 8) {
-        * (Bit64u*) data = ReadHostQWordFromLittleEndian((Bit64u*) BX_MEM_THIS get_vector(a20addr));
-        return;
-      }
-      if (len == 4) {
-        * (Bit32u*) data = ReadHostDWordFromLittleEndian((Bit32u*) BX_MEM_THIS get_vector(a20addr));
-        return;
-      }
-      if (len == 2) {
-        * (Bit16u*) data = ReadHostWordFromLittleEndian((Bit16u*) BX_MEM_THIS get_vector(a20addr));
-        return;
-      }
-      if (len == 1) {
-        * (Bit8u *) data = * (BX_MEM_THIS get_vector(a20addr));
-        return;
-      }
-      // len == other case can just fall thru to special cases handling
+      BX_MEMORY_STUB_C::readPhysicalPage(cpu, addr, len, data);
+      return;
     }
 
 #ifdef BX_LITTLE_ENDIAN
@@ -298,38 +230,7 @@ mem_read:
     data_ptr = (Bit8u *) data + (len - 1);
 #endif
 
-    if (a20addr < 0x000a0000 || a20addr >= 0x00100000)
-    {
-      // addr *not* in range 000A0000 .. 000FFFFF
-      while(1) {
-        // Read in chunks of 8 bytes if we can
-        if ((len & 7) == 0) {
-          *((Bit64u*)data_ptr) = ReadHostQWordFromLittleEndian((Bit64u*) BX_MEM_THIS get_vector(a20addr));
-          len -= 8;
-          a20addr += 8;
-          #ifdef BX_LITTLE_ENDIAN
-            data_ptr += 8;
-          #else
-            data_ptr -= 8;
-          #endif
-
-          if (len == 0) return;
-        } else {
-          *data_ptr = *(BX_MEM_THIS get_vector(a20addr));
-          if (len == 1) return;
-          len--;
-          a20addr++;
-  #ifdef BX_LITTLE_ENDIAN
-          data_ptr++;
-  #else // BX_BIG_ENDIAN
-          data_ptr--;
-  #endif
-        }
-      }
-    }
-
     // addr must be in range 000A0000 .. 000FFFFF
-
     for (unsigned i=0; i<len; i++) {
 
       // SMMRAM
