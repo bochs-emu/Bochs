@@ -59,6 +59,21 @@ void handleSMC(bx_phy_address pAddr, Bit32u mask)
   }
 }
 
+void flushSMC(bxICacheEntry_c *e)
+{
+  if (e->pAddr != BX_ICACHE_INVALID_PHY_ADDRESS) {
+    e->pAddr = BX_ICACHE_INVALID_PHY_ADDRESS;
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+    if (! bx_dbg.debugger_active) {
+      extern void genDummyICacheEntry(bxInstruction_c *i);
+//    for (unsigned instr=0;instr < e->tlen; instr++)
+//      genDummyICacheEntry(e->i + instr);
+      genDummyICacheEntry(e->i);
+    }
+#endif
+  }
+}
+
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
 
 void BX_CPU_C::BxEndTrace(bxInstruction_c *i)
@@ -172,12 +187,14 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(Bit32u eipBiased, bx_phy_address pAdd
     fetchPtr += iLen;
 
     // try to find a trace starting from current pAddr and merge
-    if (remainingInPage >= 15) { // avoid merging with page split trace
-      if (mergeTraces(entry, i, pAddr)) {
+    if (bx_dbg.debugger_active) {
+      if (remainingInPage >= 15) { // avoid merging with page split trace
+        if (mergeTraces(entry, i, pAddr)) {
           entry->traceMask |= traceMask;
           pageWriteStampTable.markICacheMask(pAddr, entry->traceMask);
           BX_CPU_THIS_PTR iCache.commit_trace(entry->tlen);
           return entry;
+        }
       }
     }
   }
@@ -200,6 +217,8 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(Bit32u eipBiased, bx_phy_address pAdd
 
 bool BX_CPU_C::mergeTraces(bxICacheEntry_c *entry, bxInstruction_c *i, bx_phy_address pAddr)
 {
+  BX_ASSERT(!bx_dbg.debugger_active);
+
   bxICacheEntry_c *e = BX_CPU_THIS_PTR iCache.find_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
 
   if (e != NULL)
@@ -207,15 +226,14 @@ bool BX_CPU_C::mergeTraces(bxICacheEntry_c *entry, bxInstruction_c *i, bx_phy_ad
     // determine max amount of instruction to take from another entry
     unsigned max_length = e->tlen;
 
-    if (! bx_dbg.debugger_active && BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS) {
-      if (max_length + entry->tlen > BX_MAX_TRACE_LENGTH)
-        return 0;
-    }
-    else {
-      if (max_length + entry->tlen > BX_MAX_TRACE_LENGTH)
-          max_length = BX_MAX_TRACE_LENGTH - entry->tlen;
-      if(max_length == 0) return 0;
-    }
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+    if (max_length + entry->tlen > BX_MAX_TRACE_LENGTH)
+        return false;
+#else
+    if (max_length + entry->tlen > BX_MAX_TRACE_LENGTH)
+        max_length = BX_MAX_TRACE_LENGTH - entry->tlen;
+    if(max_length == 0) return false;
+#endif
 
     memcpy(i, e->i, sizeof(bxInstruction_c)*max_length);
     entry->tlen += max_length;
