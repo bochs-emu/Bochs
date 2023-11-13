@@ -273,7 +273,7 @@ void BX_CPU_C::VMexit_Event(unsigned type, unsigned vector, Bit16u errcode, bool
     BX_CPU_THIS_PTR in_event = false; // clear in_event indication on #DF
 
   if (vector == BX_DB_EXCEPTION)  {
-    // qualifcation for debug exceptions similar to debug_trap field
+    // qualification for debug exceptions similar to debug_trap field
     qualification = BX_CPU_THIS_PTR debug_trap & 0x0000600f;
   }
 

@@ -4808,7 +4808,7 @@ public: // for now...
   BX_SMF Bit32u VMenterLoadCheckGuestState(Bit64u *qualification);
   BX_SMF void VMenterInjectEvents(void);
   BX_SMF void VMexit(Bit32u reason, Bit64u qualification);
-  BX_SMF void VMexitSaveGuestState(void);
+  BX_SMF void VMexitSaveGuestState(Bit32u reason);
   BX_SMF void VMexitSaveGuestMSRs(void);
   BX_SMF void VMexitLoadHostState(void);
   BX_SMF void set_VMCSPTR(Bit64u vmxptr);
