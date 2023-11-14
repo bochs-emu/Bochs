@@ -23,11 +23,11 @@ Brief summary :
 Detailed change log :
 
 - CPU/CPUDB
-  - Bugfixes for CPU emulation correctness (MONITOR/MWAIT, VMX, AVX-512, SHA fixes)
+  - Bugfixes for CPU emulation correctness (MONITOR/MWAIT, VMX/SVM, AVX-512, SHA fixes)
   - Implemented VMX MBE (Mode Based Execution Control) emulation required for Windows 11 guest
   - Implemented Linear Address Separation (LASS) extension
-  - Implemented new published Intel instruction sets:
-    - AVX512 BF16, AVX IFMA52, VNNI-INT8, VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3, SM4, SHA512, WRMSRNS, SERIALIZE
+  - Implemented recently published Intel instruction sets:
+    - MOVDIRI, AVX512 BF16, AVX IFMA52, VNNI-INT8, VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3, SM4, SHA512, WRMSRNS, SERIALIZE
 
 - Bochs Debugger and Instrumentation
   - Updated Bochs instrumentation examples for new disassembler introduced in Bochs 2.7 release.
