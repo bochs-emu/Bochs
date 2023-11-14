@@ -272,14 +272,14 @@ void BX_CPU_C::VMexit_Event(unsigned type, unsigned vector, Bit16u errcode, bool
   if (vector == BX_DF_EXCEPTION)
     BX_CPU_THIS_PTR in_event = false; // clear in_event indication on #DF
 
-  if (vector == BX_DB_EXCEPTION)  {
+  if (vector == BX_DB_EXCEPTION) {
     // qualification for debug exceptions similar to debug_trap field
-    qualification = BX_CPU_THIS_PTR debug_trap & 0x0000600f;
+    if (type == BX_PRIVILEGED_SOFTWARE_INTERRUPT)
+      qualification = BX_CPU_THIS_PTR debug_trap & 0xf;
+    else
+      qualification = BX_CPU_THIS_PTR debug_trap & 0x0000600f;
+    BX_CPU_THIS_PTR debug_trap = 0;
   }
-
-  // clear debug_trap field
-  BX_CPU_THIS_PTR debug_trap = 0;
-  BX_CPU_THIS_PTR inhibit_mask = 0;
 
   Bit32u interruption_info = vector | (type << 8);
   if (errcode_valid)
@@ -738,7 +738,7 @@ void BX_CPU_C::Virtualization_Exception(Bit64u qualification, Bit64u guest_physi
 
   Bit32u magic;
   access_read_physical(vm->ve_info_addr + 4, 4, &magic);
-#if BX_SUPPORT_MEMTYPE
+#if BX_SUPPORT_MEMTYPE && (BX_DEBUGGER || BX_INSTRUMENTATION)
   BxMemtype ve_info_memtype = resolve_memtype(vm->ve_info_addr);
 #endif
   BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 4, 4, MEMTYPE(ve_info_memtype), BX_READ, 0, (Bit8u*)(&magic));
