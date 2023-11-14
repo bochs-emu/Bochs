@@ -287,6 +287,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::linkTrace(bxInstruction_c *i)
     return;
   }
 
+  BX_SYNC_TIME_IF_SINGLE_PROCESSOR(0);
+
   bxInstruction_c *next = i->getNextTrace(BX_CPU_THIS_PTR iCache.traceLinkTimeStamp);
   if (next) {
     BX_EXECUTE_INSTRUCTION(next);
