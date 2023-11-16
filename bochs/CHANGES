@@ -50,6 +50,31 @@ Detailed change log :
      The size in question doesn't necessarily mean the size of the VHD file on disk. The size is the total
      size of the image emulated. The total size increased from roughly 32gig to a limit of 2TB.
 
+- Floppy drive
+   - Allows a choice of multiple FDC Controllers to emulate.
+      Using a compile time #define, you can choose a specified Controller type/manufacture to emulate.
+   - Added most all FDC supported commands.
+      Use the 'FDC_TYPE_BOCHS' type to support all commands.
+      Other types will only support their respected supported commands.
+      Commands of note: 'format & write', 'read track', 'part id', and corrected the 'version' command.
+      Did not add the 'Write Deleted Data' command, since there is no way to mark the emulated image
+       file as a deleted sector. The 'Read Deleted Data' command ignores the SK bit.
+   - Fixed and enhanced the Format command and function.
+   - Fixed the Multi-track and EOT function.
+      A read/write/verify must stop at the end of a track (multi-track aware).
+   - fixed the cmos floppy type setting (config.cc::get_floppy_devtype_from_type())
+   - IGNORE_DEBUG_03F6: set this define so that the log file is not flooded with
+       reads/writes to this register by the harddrive code.
+   - changed a lot of hardcoded values to '#define's, especially with the switch/case blocks.
+   - the new command/result max size is now a #define (MAX_PHASE_SIZE)
+   - the SCANEQ/SCANLOWEQ/SCANHIGHEQ commands are untested. I don't have a 'real hardware' controller that
+      supports these commands. Even though the controller is a 82078, which specifies that it should
+      support these commands, it returns 'command unsupported'. If I find another controller type, I will
+      try that one. It would surprise me if any of them actually support this rarely used command.
+   - this new code fixes an error where Win98 and older Windows versions would set the high order 
+      drive select bit in error. This would specify drive 2 for drive 0, and drive 3 for drive 1.
+   - replaced the broken 82078 datasheet URL with one from the QEMU wiki. It should be static now.
+
 - I/O Devices
   - Timers
     - Fixed APIC MWAIT timer activation
