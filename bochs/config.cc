@@ -72,11 +72,16 @@ int get_floppy_devtype_from_type(int type)
   switch (type) {
     case BX_FLOPPY_2_88:
       return BX_FDD_350ED;
-    case BX_FLOPPY_720K:
     case BX_FLOPPY_1_44:
       return BX_FDD_350HD;
-    default:
+    case BX_FLOPPY_720K:
+      return BX_FDD_350DD;
+    case BX_FLOPPY_1_2:
       return BX_FDD_525HD;
+    // the remaining types return a 5 1/4" 360k drive
+    case BX_FLOPPY_360K:
+    default:
+      return BX_FDD_525DD;
   }
 }
 
