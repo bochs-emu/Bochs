@@ -41,7 +41,7 @@ bool BX_CPU_C::handleWaitForEvent(void)
   // an interrupt wakes up the CPU.
   while (1)
   {
-    if ((is_pending(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR) && (BX_CPU_THIS_PTR get_IF() || BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_MWAIT_IF)) ||
+    if ((is_pending(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR | BX_EVENT_PENDING_UINTR) && (BX_CPU_THIS_PTR get_IF() || BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_MWAIT_IF)) ||
          is_unmasked_event_pending(BX_EVENT_NMI | BX_EVENT_SMI | BX_EVENT_INIT |
             BX_EVENT_VMX_VTPR_UPDATE |
             BX_EVENT_VMX_VEOI_UPDATE |
@@ -324,7 +324,8 @@ bool BX_CPU_C::handleAsyncEvent(void)
     VMexit(VMX_VMEXIT_INTERRUPT_WINDOW, 0);
   }
 #endif
-  else if (is_unmasked_event_pending(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR |
+  else if (is_unmasked_event_pending(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR | 
+                                     BX_EVENT_PENDING_UINTR | 
                                      BX_EVENT_PENDING_VMX_VIRTUAL_INTR))
   {
     InterruptAcknowledge();

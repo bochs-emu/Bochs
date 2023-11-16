@@ -1266,6 +1266,11 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
     allowMask |= BX_CR4_PKS_MASK;
 #endif
 
+#if BX_SUPPORT_X86_64 && BX_SUPPORT_UINTR
+  if (is_cpu_extension_supported(BX_ISA_UINTR))
+    allowMask |= BX_CR4_UINTR_MASK;
+#endif
+
   if (is_cpu_extension_supported(BX_ISA_LASS))
     allowMask |= BX_CR4_LASS_MASK;
 #endif
@@ -1772,6 +1777,18 @@ void BX_CPU_C::xsave_xrestor_init(void)
     xsave_restore[xcr0_t::BX_XCR0_CET_S_BIT].xrstor_init_method = &BX_CPU_C::xrstor_init_cet_s_state;
   }
 #endif
+
+#if BX_SUPPORT_UINTR && BX_SUPPORT_X86_64
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_UINTR)) {
+    // XCR0[14]: UINTR State
+    xsave_restore[xcr0_t::BX_XCR0_UINTR_BIT].len    = XSAVE_UINTR_STATE_LEN;
+    xsave_restore[xcr0_t::BX_XCR0_UINTR_BIT].offset = 0;    // IA32_XSS only
+    xsave_restore[xcr0_t::BX_XCR0_UINTR_BIT].xstate_in_use_method = &BX_CPU_C::xsave_uintr_state_xinuse;
+    xsave_restore[xcr0_t::BX_XCR0_UINTR_BIT].xsave_method = &BX_CPU_C::xsave_uintr_state;
+    xsave_restore[xcr0_t::BX_XCR0_UINTR_BIT].xrstor_method = &BX_CPU_C::xrstor_uintr_state;
+    xsave_restore[xcr0_t::BX_XCR0_UINTR_BIT].xrstor_init_method = &BX_CPU_C::xrstor_init_uintr_state;
+  }
+#endif
 }
 
 #if BX_CPU_LEVEL >= 5
@@ -1827,6 +1844,9 @@ Bit32u BX_CPU_C::get_ia32_xss_allow_mask(void)
   Bit32u ia32_xss_support_mask = 0;
 #if BX_SUPPORT_CET
          ia32_xss_support_mask |= BX_XCR0_CET_U_MASK | BX_XCR0_CET_S_MASK;
+#endif
+#if BX_SUPPORT_UINTR
+         ia32_xss_support_mask |= BX_XCR0_UINTR_MASK;
 #endif
   return ia32_xss_support_mask;
 }

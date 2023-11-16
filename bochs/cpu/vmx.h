@@ -217,6 +217,7 @@ const Bit64u VMX_VMFUNC_EPTP_SWITCHING_MASK = (BX_CONST64(1) << VMX_VMFUNC_EPTP_
 #define VMCS_16BIT_GUEST_TR_SELECTOR                       0x0000080E
 #define VMCS_16BIT_GUEST_INTERRUPT_STATUS                  0x00000810 /* Virtual Interrupt Delivery */
 #define VMCS_16BIT_GUEST_PML_INDEX                         0x00000812 /* Page Modification Logging */
+#define VMCS_16BIT_GUEST_UINV                              0x00000814 /* UINTR */
 
 /* VMCS 16-bit host-state fields */
 /* binary 0000_11xx_xxxx_xxx0 */
@@ -641,6 +642,10 @@ typedef struct bx_VMCS_GUEST_STATE
    bx_address interrupt_ssp_table_address;
 #endif
 
+#if BX_SUPPORT_UINTR
+   Bit16u uintr_uinv;
+#endif
+
 #if BX_SUPPORT_PKEYS
    Bit32u pkrs;
 #endif
@@ -886,6 +891,7 @@ typedef struct bx_VMCS
 #define VMX_VMEXIT_CTRL1_SUPPRESS_HOST_VMX_TRACE    (1 << 24) /* Processor Trace (not implemented) */
 #define VMX_VMEXIT_CTRL1_CLEAR_IA32_RTIT_CTRL       (1 << 25) /* Clear IA32_RTIT_CTRL MSR on vmexit (not implemented) */
 #define VMX_VMEXIT_CTRL1_CLEAR_IA32_LBR_CTRL        (1 << 26) /* Clear IA32_LBR_CTRL MSR on vmexit (not implemented) */
+#define VMX_VMEXIT_CTRL1_CLEAR_UINV                 (1 << 27) /* UINTR */
 #define VMX_VMEXIT_CTRL1_LOAD_HOST_CET_STATE        (1 << 28) /* CET */
 #define VMX_VMEXIT_CTRL1_LOAD_HOST_PKRS             (1 << 29) /* Supervisor-Mode Protection Keys */
 #define VMX_VMEXIT_CTRL1_SAVE_PERF_GLOBAL_CTRL      (1 << 30) /* Save IA32_PERF_GLOBAL_CTRL on vmexit (not implemented) */
@@ -914,6 +920,7 @@ typedef struct bx_VMCS
 #define VMX_VMENTRY_CTRL1_LOAD_BNDCFGS                      (1 << 16) /* MPX (not implemented) */
 #define VMX_VMENTRY_CTRL1_SUPPRESS_VMX_PACKETS              (1 << 17) /* Processor Trace (not implemented) */
 #define VMX_VMENTRY_CTRL1_LOAD_GUEST_RTIT_CTRL              (1 << 18) // not implemented
+#define VMX_VMENTRY_CTRL1_LOAD_UINV                         (1 << 19) /* UINTR */
 #define VMX_VMENTRY_CTRL1_LOAD_GUEST_CET_STATE              (1 << 20) /* CET */
 #define VMX_VMENTRY_CTRL1_LOAD_GUEST_LBR_CTRL               (1 << 21) // not implemented
 #define VMX_VMENTRY_CTRL1_LOAD_GUEST_PKRS                   (1 << 22) /* Supervisor-Mode Protection Keys */

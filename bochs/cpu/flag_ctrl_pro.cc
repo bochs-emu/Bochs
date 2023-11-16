@@ -129,6 +129,10 @@ void BX_CPU_C::handleInterruptMaskChange(void)
     }
 #endif
 
+#if BX_SUPPORT_UINTR
+    if (!uintr_masked()) unmask_event(BX_EVENT_PENDING_UINTR);
+#endif
+
     return;
   }
 
@@ -136,10 +140,13 @@ void BX_CPU_C::handleInterruptMaskChange(void)
 
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest && PIN_VMEXIT(VMX_PIN_BASED_VMEXEC_CTRL_EXTERNAL_INTERRUPT_VMEXIT)) {
-     // if 'External-interrupt exiting' control is set, the value of EFLAGS.IF
-     // doesn't affect interrupt blocking
-     mask_event(BX_EVENT_VMX_INTERRUPT_WINDOW_EXITING | BX_EVENT_PENDING_VMX_VIRTUAL_INTR);
-     unmask_event(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR);
+    // if 'External-interrupt exiting' control is set, the value of EFLAGS.IF
+    // doesn't affect interrupt blocking
+    mask_event(BX_EVENT_VMX_INTERRUPT_WINDOW_EXITING | BX_EVENT_PENDING_VMX_VIRTUAL_INTR);
+    unmask_event(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR);
+#if BX_SUPPORT_UINTR
+    if (!uintr_masked()) unmask_event(BX_EVENT_PENDING_UINTR);
+#endif
      return;
   }
 #endif
@@ -147,7 +154,7 @@ void BX_CPU_C::handleInterruptMaskChange(void)
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest && SVM_V_INTR_MASKING) {
      if (! SVM_HOST_IF)
-       mask_event(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR);
+       mask_event(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR | BX_EVENT_PENDING_UINTR);
 
      mask_event(BX_EVENT_SVM_VIRQ_PENDING);
   }
@@ -157,6 +164,7 @@ void BX_CPU_C::handleInterruptMaskChange(void)
      mask_event(BX_EVENT_VMX_INTERRUPT_WINDOW_EXITING |
                 BX_EVENT_PENDING_INTR |
                 BX_EVENT_PENDING_LAPIC_INTR |
+                BX_EVENT_PENDING_UINTR |
                 BX_EVENT_PENDING_VMX_VIRTUAL_INTR |
                 BX_EVENT_SVM_VIRQ_PENDING);
   }

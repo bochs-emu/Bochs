@@ -209,6 +209,51 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
 #endif
 
+#if BX_SUPPORT_UINTR
+    case BX_MSR_IA32_UINTR_RR:
+      if (! is_cpu_extension_supported(BX_ISA_UINTR)) {
+        BX_ERROR(("RDMSR BX_MSR_IA32_UINTR_RR: UINTR not enabled in the cpu model"));
+        return handle_unknown_rdmsr(index, msr);
+      }
+      val64 = BX_CPU_THIS_PTR uintr.uirr;
+      break;
+    case BX_MSR_IA32_UINTR_HANDLER:
+      if (! is_cpu_extension_supported(BX_ISA_UINTR)) {
+        BX_ERROR(("RDMSR BX_MSR_IA32_UINTR_HANDLER: UINTR not enabled in the cpu model"));
+        return handle_unknown_rdmsr(index, msr);
+      }
+      val64 = BX_CPU_THIS_PTR uintr.ui_handler;
+      break;
+    case BX_MSR_IA32_UINTR_STACKADJUST:
+      if (! is_cpu_extension_supported(BX_ISA_UINTR)) {
+        BX_ERROR(("RDMSR BX_MSR_IA32_UINTR_STACKADJUST: UINTR not enabled in the cpu model"));
+        return handle_unknown_rdmsr(index, msr);
+      }
+      val64 = BX_CPU_THIS_PTR uintr.stack_adjust;
+      break;
+    case BX_MSR_IA32_UINTR_MISC:
+      if (! is_cpu_extension_supported(BX_ISA_UINTR)) {
+        BX_ERROR(("RDMSR BX_MSR_IA32_UINTR_MISC: UINTR not enabled in the cpu model"));
+        return handle_unknown_rdmsr(index, msr);
+      }
+      val64 = GET64_FROM_HI32_LO32(BX_CPU_THIS_PTR uintr.uinv, BX_CPU_THIS_PTR uintr.uitt_size);
+      break;
+    case BX_MSR_IA32_UINTR_PD:
+      if (! is_cpu_extension_supported(BX_ISA_UINTR)) {
+        BX_ERROR(("RDMSR BX_MSR_IA32_UINTR_PD: UINTR not enabled in the cpu model"));
+        return handle_unknown_rdmsr(index, msr);
+      }
+      val64 = BX_CPU_THIS_PTR uintr.upid_addr;
+      break;
+    case BX_MSR_IA32_UINTR_TT:
+      if (! is_cpu_extension_supported(BX_ISA_UINTR)) {
+        BX_ERROR(("RDMSR BX_MSR_IA32_UINTR_TT: UINTR not enabled in the cpu model"));
+        return handle_unknown_rdmsr(index, msr);
+      }
+      val64 = BX_CPU_THIS_PTR uintr.uitt_addr;
+      break;
+#endif
+
 #if BX_SUPPORT_PKEYS
     case BX_MSR_IA32_PKRS:
       if (! is_cpu_extension_supported(BX_ISA_PKS)) {
@@ -846,6 +891,81 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
         return 0;
       }
       BX_CPU_THIS_PTR msr.ia32_interrupt_ssp_table = val_64;
+      break;
+#endif
+
+#if BX_SUPPORT_UINTR
+    case BX_MSR_IA32_UINTR_RR:
+      if (! is_cpu_extension_supported(BX_ISA_UINTR)) {
+        BX_ERROR(("WRMSR BX_MSR_IA32_UINTR_RR: UINTR not enabled in the cpu model"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
+      BX_CPU_THIS_PTR uintr.uirr = val_64;
+      uintr_uirr_update(); // potentially signal or clear user-level-interrupt
+      break;
+    case BX_MSR_IA32_UINTR_HANDLER:
+      if (! is_cpu_extension_supported(BX_ISA_UINTR)) {
+        BX_ERROR(("WRMSR BX_MSR_IA32_UINTR_HANDLER: UINTR not enabled in the cpu model"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
+      if (! IsCanonical(val_64)) {
+        BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_UINTR_HANDLER !"));
+        return 0;
+      }
+      BX_CPU_THIS_PTR uintr.ui_handler = val_64;
+      break;
+    case BX_MSR_IA32_UINTR_STACKADJUST:
+      if (! is_cpu_extension_supported(BX_ISA_UINTR)) {
+        BX_ERROR(("WRMSR BX_MSR_IA32_UINTR_STACKADJUST: UINTR not enabled in the cpu model"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
+      if (! IsCanonical(val_64)) {
+        BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_UINTR_STACKADJUST !"));
+        return 0;
+      }
+      BX_CPU_THIS_PTR uintr.stack_adjust = val_64;
+      break;
+    case BX_MSR_IA32_UINTR_MISC:
+      if (! is_cpu_extension_supported(BX_ISA_UINTR)) {
+        BX_ERROR(("WRMSR BX_MSR_IA32_UINTR_MISC: UINTR not enabled in the cpu model"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
+      if (val_64 & BX_CONST64(0xffffff0000000000)) {
+        BX_ERROR(("WRMSR: attempt to write to reserved bits of BX_MSR_IA32_UINTR_MISC !"));
+        return 0;
+      }
+      BX_CPU_THIS_PTR uintr.uitt_size = GET32L(val_64);
+      BX_CPU_THIS_PTR uintr.uinv      = GET32H(val_64);
+      break;
+    case BX_MSR_IA32_UINTR_PD:
+      if (! is_cpu_extension_supported(BX_ISA_UINTR)) {
+        BX_ERROR(("WRMSR BX_MSR_IA32_UINTR_PD: UINTR not enabled in the cpu model"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
+      if (! IsCanonical(val_64)) {
+        BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_UINTR_PD !"));
+        return 0;
+      }
+      if (val_64 & 0x3f) { // bits [5:0] are reserved and MBZ
+        BX_ERROR(("WRMSR: attempt to write to reserved bits of BX_MSR_IA32_UINTR_MISC !"));
+        return 0;
+      }
+      BX_CPU_THIS_PTR uintr.upid_addr = val_64;
+      break;
+    case BX_MSR_IA32_UINTR_TT:
+      if (! is_cpu_extension_supported(BX_ISA_UINTR)) {
+        BX_ERROR(("WRMSR BX_MSR_IA32_UINTR_TT: UINTR not enabled in the cpu model"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
+      if (! IsCanonical(val_64)) {
+        BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_UINTR_TT !"));
+        return 0;
+      }
+      if (val_64 & 0x0E) { // bits [3:1] are reserved and MBZ
+        BX_ERROR(("WRMSR: attempt to write to reserved bits of BX_MSR_IA32_UINTR_TT !"));
+        return 0;
+      }
+      BX_CPU_THIS_PTR uintr.uitt_addr = val_64;
       break;
 #endif
 

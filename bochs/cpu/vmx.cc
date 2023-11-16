@@ -1944,6 +1944,17 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
     return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
   }
 
+
+#if BX_SUPPORT_UINTR
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_UINTR)) {
+    guest.uintr_uinv = VMread16(VMCS_16BIT_GUEST_UINV);
+    if (guest.uintr_uinv >= 256) {
+      BX_ERROR(("VMENTER FAIL: VMCS guest INTR.UINV=%d > 256", guest.uintr_uinv));
+      return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+    }
+  }
+#endif
+
   if ((guest.rflags & EFlagsIFMask) == 0) {
     if (guest.interruptibility_state & BX_VMX_INTERRUPTS_BLOCKED_BY_STI) {
       BX_ERROR(("VMENTER FAIL: VMCS guest interrupts can't be blocked by STI when EFLAGS.IF = 0"));
@@ -2125,10 +2136,19 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   BX_CPU_THIS_PTR msr.sysenter_eip_msr = guest.sysenter_eip_msr;
   BX_CPU_THIS_PTR msr.sysenter_cs_msr  = guest.sysenter_cs_msr;
 
+#if BX_SUPPORT_UINTR
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_UINTR)) {
+    BX_CPU_THIS_PTR uintr.uinv = guest.uintr_uinv;
+  }
+#endif
+
 #if BX_SUPPORT_VMX >= 2
   if (vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_PAT_MSR) {
     BX_CPU_THIS_PTR msr.pat = guest.pat_msr;
   }
+#endif
+
+#if BX_SUPPORT_VMX >= 2
   vm->ple.last_pause_time = vm->ple.first_pause_time = 0;
 #endif
 
@@ -2384,6 +2404,12 @@ void BX_CPU_C::VMexitSaveGuestState(Bit32u reason)
     VMwrite_natural(VMCS_GUEST_IA32_S_CET, BX_CPU_THIS_PTR msr.ia32_cet_control[0]);
     VMwrite_natural(VMCS_GUEST_INTERRUPT_SSP_TABLE_ADDR, BX_CPU_THIS_PTR msr.ia32_interrupt_ssp_table);
     VMwrite_natural(VMCS_GUEST_SSP, SSP);
+  }
+#endif
+
+#if BX_SUPPORT_UINTR
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_UINTR)) {
+    VMwrite16(VMCS_16BIT_GUEST_UINV, BX_CPU_THIS_PTR uintr.uinv);
   }
 #endif
 
