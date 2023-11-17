@@ -192,7 +192,6 @@ public:
   int register_statusitem(const char *text, bool auto_off=0);
   void unregister_statusitem(int id);
   void statusbar_setitem(int element, bool active, bool w=0);
-  void statusbar_setall(bool active);
   static void init_signal_handlers();
   static void toggle_mouse_enable(void);
   bool mouse_toggle_check(Bit32u key, bool pressed);
