@@ -1232,7 +1232,7 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::shadow_stack_write_qword(bx_address offset
 
 bool BX_CPP_AttrRegparmN(4) BX_CPU_C::shadow_stack_lock_cmpxchg8b(bx_address offset, unsigned curr_pl, Bit64u data, Bit64u expected_data)
 {
-  Bit64u val64 = shadow_stack_read_qword(offset, curr_pl);
+  Bit64u val64 = shadow_stack_read_qword(offset, curr_pl); // should be locked and RMW
   if (val64 == expected_data) {
     shadow_stack_write_qword(offset, curr_pl, data);
     return true;

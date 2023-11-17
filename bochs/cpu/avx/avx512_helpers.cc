@@ -162,7 +162,7 @@ void BX_CPU_C::avx_masked_store8(bxInstruction_c *i, bx_address eaddr, const BxP
   // see if you can successfully write all the elements first
   for (int n=BYTE_ELEMENTS(len)-1; n >= 0; n--) {
     if (mask & (BX_CONST64(1)<<n))
-       read_RMW_virtual_byte(i->seg(), eaddr + n);
+       read_RMW_virtual_byte(i->seg(), eaddr + n); // no lock
   }
 
   for (unsigned n=0; n < BYTE_ELEMENTS(len); n++) {
@@ -195,7 +195,7 @@ void BX_CPU_C::avx_masked_store16(bxInstruction_c *i, bx_address eaddr, const Bx
   // see if you can successfully write all the elements first
   for (int n=WORD_ELEMENTS(len)-1; n >= 0; n--) {
     if (mask & (1<<n))
-       read_RMW_virtual_word(i->seg(), eaddr + 2*n);
+       read_RMW_virtual_word(i->seg(), eaddr + 2*n); // no lock
   }
 
   for (unsigned n=0; n < WORD_ELEMENTS(len); n++) {
@@ -232,7 +232,7 @@ void BX_CPU_C::avx_masked_store32(bxInstruction_c *i, bx_address eaddr, const Bx
   // see if you can successfully write all the elements first
   for (int n=DWORD_ELEMENTS(len)-1; n >= 0; n--) {
     if (mask & (1<<n))
-       read_RMW_virtual_dword(i->seg(), eaddr + 4*n);
+       read_RMW_virtual_dword(i->seg(), eaddr + 4*n); // no lock
   }
 
   for (unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
@@ -269,7 +269,7 @@ void BX_CPU_C::avx_masked_store64(bxInstruction_c *i, bx_address eaddr, const Bx
   // see if you can successfully write all the elements first
   for (int n=QWORD_ELEMENTS(len)-1; n >= 0; n--) {
     if (mask & (1<<n))
-       read_RMW_virtual_qword(i->seg(), eaddr + 8*n);
+       read_RMW_virtual_qword(i->seg(), eaddr + 8*n); // no lock
   }
 
   for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {

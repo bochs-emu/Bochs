@@ -38,7 +38,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPBEXADD_EdGdBd(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  Bit32u op1_32 = read_RMW_linear_dword(i->seg(), laddr);
+  Bit32u op1_32 = read_RMW_linear_dword(i->seg(), laddr); // implicit lock
   Bit32u diff_32 = op1_32 - op2_32;
   SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
   write_RMW_linear_dword((get_CF() || get_ZF()) ? op1_32 + op3_32 : op1_32);
@@ -59,7 +59,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPBXADD_EdGdBd(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  Bit32u op1_32 = read_RMW_linear_dword(i->seg(), laddr);
+  Bit32u op1_32 = read_RMW_linear_dword(i->seg(), laddr); // implicit lock
   Bit32u diff_32 = op1_32 - op2_32;
   SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
   write_RMW_linear_dword(get_CF() ? op1_32 + op3_32 : op1_32);
@@ -80,7 +80,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPLEXADD_EdGdBd(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  Bit32u op1_32 = read_RMW_linear_dword(i->seg(), laddr);
+  Bit32u op1_32 = read_RMW_linear_dword(i->seg(), laddr); // implicit lock
   Bit32u diff_32 = op1_32 - op2_32;
   SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
   write_RMW_linear_dword((get_ZF() || getB_SF() != getB_OF()) ? op1_32 + op3_32 : op1_32);
@@ -101,7 +101,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPLXADD_EdGdBd(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  Bit32u op1_32 = read_RMW_linear_dword(i->seg(), laddr);
+  Bit32u op1_32 = read_RMW_linear_dword(i->seg(), laddr); // implicit lock
   Bit32u diff_32 = op1_32 - op2_32;
   SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
   write_RMW_linear_dword((getB_SF() != getB_OF()) ? op1_32 + op3_32 : op1_32);
@@ -122,7 +122,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPNBEXADD_EdGdBd(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  Bit32u op1_32 = read_RMW_linear_dword(i->seg(), laddr);
+  Bit32u op1_32 = read_RMW_linear_dword(i->seg(), laddr); // implicit lock
   Bit32u diff_32 = op1_32 - op2_32;
   SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
   write_RMW_linear_dword((!get_CF() && !get_ZF()) ? op1_32 + op3_32 : op1_32);
@@ -143,7 +143,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPNBXADD_EdGdBd(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  Bit32u op1_32 = read_RMW_linear_dword(i->seg(), laddr);
+  Bit32u op1_32 = read_RMW_linear_dword(i->seg(), laddr); // implicit lock
   Bit32u diff_32 = op1_32 - op2_32;
   SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
   write_RMW_linear_dword(!get_CF() ? op1_32 + op3_32 : op1_32);
@@ -164,7 +164,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPNLEXADD_EdGdBd(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  Bit32u op1_32 = read_RMW_linear_dword(i->seg(), laddr);
+  Bit32u op1_32 = read_RMW_linear_dword(i->seg(), laddr); // implicit lock
   Bit32u diff_32 = op1_32 - op2_32;
   SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
   write_RMW_linear_dword((!get_ZF() && getB_SF() == getB_OF()) ? op1_32 + op3_32 : op1_32);
@@ -185,7 +185,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPNLXADD_EdGdBd(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  Bit32u op1_32 = read_RMW_linear_dword(i->seg(), laddr);
+  Bit32u op1_32 = read_RMW_linear_dword(i->seg(), laddr); // implicit lock
   Bit32u diff_32 = op1_32 - op2_32;
   SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
   write_RMW_linear_dword((getB_SF() == getB_OF()) ? op1_32 + op3_32 : op1_32);
@@ -206,7 +206,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPNOXADD_EdGdBd(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  Bit32u op1_32 = read_RMW_linear_dword(i->seg(), laddr);
+  Bit32u op1_32 = read_RMW_linear_dword(i->seg(), laddr); // implicit lock
   Bit32u diff_32 = op1_32 - op2_32;
   SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
   write_RMW_linear_dword(!get_OF() ? op1_32 + op3_32 : op1_32);
@@ -227,7 +227,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPNPXADD_EdGdBd(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  Bit32u op1_32 = read_RMW_linear_dword(i->seg(), laddr);
+  Bit32u op1_32 = read_RMW_linear_dword(i->seg(), laddr); // implicit lock
   Bit32u diff_32 = op1_32 - op2_32;
   SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
   write_RMW_linear_dword(!get_PF() ? op1_32 + op3_32 : op1_32);
@@ -248,7 +248,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPNSXADD_EdGdBd(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  Bit32u op1_32 = read_RMW_linear_dword(i->seg(), laddr);
+  Bit32u op1_32 = read_RMW_linear_dword(i->seg(), laddr); // implicit lock
   Bit32u diff_32 = op1_32 - op2_32;
   SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
   write_RMW_linear_dword(!get_SF() ? op1_32 + op3_32 : op1_32);
@@ -269,7 +269,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPNZXADD_EdGdBd(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  Bit32u op1_32 = read_RMW_linear_dword(i->seg(), laddr);
+  Bit32u op1_32 = read_RMW_linear_dword(i->seg(), laddr); // implicit lock
   Bit32u diff_32 = op1_32 - op2_32;
   SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
   write_RMW_linear_dword((!get_ZF()) ? op1_32 + op3_32 : op1_32);
@@ -290,7 +290,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPOXADD_EdGdBd(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  Bit32u op1_32 = read_RMW_linear_dword(i->seg(), laddr);
+  Bit32u op1_32 = read_RMW_linear_dword(i->seg(), laddr); // implicit lock
   Bit32u diff_32 = op1_32 - op2_32;
   SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
   write_RMW_linear_dword(get_OF() ? op1_32 + op3_32 : op1_32);
@@ -311,7 +311,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPPXADD_EdGdBd(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  Bit32u op1_32 = read_RMW_linear_dword(i->seg(), laddr);
+  Bit32u op1_32 = read_RMW_linear_dword(i->seg(), laddr); // implicit lock
   Bit32u diff_32 = op1_32 - op2_32;
   SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
   write_RMW_linear_dword(get_PF() ? op1_32 + op3_32 : op1_32);
@@ -332,7 +332,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPSXADD_EdGdBd(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  Bit32u op1_32 = read_RMW_linear_dword(i->seg(), laddr);
+  Bit32u op1_32 = read_RMW_linear_dword(i->seg(), laddr); // implicit lock
   Bit32u diff_32 = op1_32 - op2_32;
   SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
   write_RMW_linear_dword(get_SF() ? op1_32 + op3_32 : op1_32);
@@ -353,7 +353,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPZXADD_EdGdBd(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  Bit32u op1_32 = read_RMW_linear_dword(i->seg(), laddr);
+  Bit32u op1_32 = read_RMW_linear_dword(i->seg(), laddr); // implicit lock
   Bit32u diff_32 = op1_32 - op2_32;
   SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
   write_RMW_linear_dword(get_ZF() ? op1_32 + op3_32 : op1_32);

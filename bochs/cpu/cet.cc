@@ -238,7 +238,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSTORSSP(bxInstruction_c *i)
 
   Bit64u previous_ssp_token = SSP | long64_mode() | 0x02;
 
-// should be done atomically
+// should be done atomically using RMW
   Bit64u SSP_tmp = shadow_stack_read_qword(laddr, CPL); // should be LWSI
   if ((SSP_tmp & 0x03) != long64_mode()) {
     BX_ERROR(("%s: CS.L of shadow stack token doesn't match or bit1 is not 0", i->getIaOpcodeNameShort()));
@@ -256,7 +256,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSTORSSP(bxInstruction_c *i)
     exception(BX_CP_EXCEPTION, BX_CP_RSTORSSP);
   }
   shadow_stack_write_qword(laddr, CPL, previous_ssp_token);
-// should be done atomically
+// should be done atomically using RMW
 
   SSP = laddr;
 

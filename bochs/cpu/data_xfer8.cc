@@ -100,7 +100,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XCHG_EbGbM(bxInstruction_c *i)
 {
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
 
-  Bit8u op1 = read_RMW_virtual_byte(i->seg(), eaddr);
+  Bit8u op1 = read_RMW_virtual_byte(i->seg(), eaddr); // always locked
   Bit8u op2 = BX_READ_8BIT_REGx(i->src(), i->extend8bitL());
 
   write_RMW_linear_byte(op2);

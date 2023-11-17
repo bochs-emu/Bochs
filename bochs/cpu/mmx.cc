@@ -2374,7 +2374,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MASKMOVQ_PqNq(bxInstruction_c *i)
     mask = BX_READ_MMX_REG(i->src2());
 
   /* do read-modify-write for efficiency */
-  MMXUQ(tmp) = read_RMW_virtual_qword(i->seg(), rdi);
+  MMXUQ(tmp) = read_RMW_virtual_qword(i->seg(), rdi); // no lock
 
   if(!MMXUQ(mask)) {
     BX_NEXT_INSTR(i);
