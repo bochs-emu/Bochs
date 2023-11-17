@@ -511,6 +511,7 @@ BX_CPU_C::touch_segment(bx_selector_t *selector, bx_descriptor_t *descriptor)
     AR_byte |= 1;
     descriptor->type |= 1;
 
+    // should be done with locked RMW
     if (selector->ti == 0) { /* GDT */
       system_write_byte(BX_CPU_THIS_PTR gdtr.base + selector->index*8 + 5, AR_byte);
     }

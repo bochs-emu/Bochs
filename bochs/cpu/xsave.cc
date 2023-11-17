@@ -147,7 +147,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
       }
 
       VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
-      Bit64u requested_features = (((Bit64u) EDX) << 32) | EAX;
+      Bit64u requested_features = GET64_FROM_HI32_LO32(EDX, EAX);
       if (requested_features & BX_CPU_THIS_PTR msr.ia32_xss & vm->xss_exiting_bitmap)
         VMexit_Instruction(i, VMX_VMEXIT_XSAVES);
     }
@@ -250,7 +250,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
       }
 
       VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
-      Bit64u requested_features = (((Bit64u) EDX) << 32) | EAX;
+      Bit64u requested_features = GET64_FROM_HI32_LO32(EDX, EAX);
       if (requested_features & BX_CPU_THIS_PTR msr.ia32_xss & vm->xss_exiting_bitmap)
         VMexit_Instruction(i, VMX_VMEXIT_XRSTORS);
     }

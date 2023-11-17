@@ -864,7 +864,7 @@ void BX_CPU_C::update_access_dirty_PAE(bx_phy_address *entry_addr, Bit64u *entry
   for (unsigned level=max_level; level > leaf; level--) {
     if (!(entry[level] & 0x20)) {
       entry[level] |= 0x20;
-      access_write_physical(entry_addr[level], 8, &entry[level]);
+      access_write_physical(entry_addr[level], 8, &entry[level]);   // should be done with locked RMW
       BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[level], 8, entry_memtype[level], BX_WRITE,
             (BX_PTE_ACCESS + level), (Bit8u*)(&entry[level]));
     }
@@ -873,7 +873,7 @@ void BX_CPU_C::update_access_dirty_PAE(bx_phy_address *entry_addr, Bit64u *entry
   // Update A/D bits if needed
   if (!(entry[leaf] & 0x20) || (write && !(entry[leaf] & 0x40))) {
     entry[leaf] |= (0x20 | (write<<6)); // Update A and possibly D bits
-    access_write_physical(entry_addr[leaf], 8, &entry[leaf]);
+    access_write_physical(entry_addr[leaf], 8, &entry[leaf]);       // should be done with locked RMW
     BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 8, entry_memtype[leaf], BX_WRITE,
             (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
   }

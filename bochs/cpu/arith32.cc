@@ -582,11 +582,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPXCHG8B(bxInstruction_c *i)
 
   // check write permission for following write
   Bit64u op1_64 = read_RMW_virtual_qword(i->seg(), eaddr);
-  Bit64u op2_64 = ((Bit64u) EDX << 32) | EAX;
+  Bit64u op2_64 = GET64_FROM_HI32_LO32(EDX, EAX);
 
   if (op1_64 == op2_64) {  // if accumulator == dest
     // dest <-- src (ECX:EBX)
-    op2_64 = ((Bit64u) ECX << 32) | EBX;
+    op2_64 = GET64_FROM_HI32_LO32(ECX, EBX);
     write_RMW_linear_qword(op2_64);
     assert_ZF();
   }

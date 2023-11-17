@@ -257,6 +257,7 @@ const unsigned XSAVE_HI_ZMM_STATE_LEN       = 1024;
 const unsigned XSAVE_PKRU_STATE_LEN         = 64;
 const unsigned XSAVE_CET_U_STATE_LEN        = 16;
 const unsigned XSAVE_CET_S_STATE_LEN        = 24;
+const unsigned XSAVE_UINTR_STATE_LEN        = 48;
 
 const unsigned XSAVE_SSE_STATE_OFFSET       = 160;
 const unsigned XSAVE_YMM_STATE_OFFSET       = 576;
@@ -272,18 +273,22 @@ struct xcr0_t {
     BX_XCR0_FPU_BIT = 0,
     BX_XCR0_SSE_BIT = 1,
     BX_XCR0_YMM_BIT = 2,
-    BX_XCR0_BNDREGS_BIT = 3,
-    BX_XCR0_BNDCFG_BIT = 4,
+    BX_XCR0_BNDREGS_BIT = 3, // not implemented, deprecated
+    BX_XCR0_BNDCFG_BIT = 4,  // not implemented, deprecated
     BX_XCR0_OPMASK_BIT = 5,
     BX_XCR0_ZMM_HI256_BIT = 6,
     BX_XCR0_HI_ZMM_BIT = 7,
-    BX_XCR0_PT_BIT = 8,
+    BX_XCR0_PT_BIT = 8,      // not implemented yet
     BX_XCR0_PKRU_BIT = 9,
+    BX_XCR0_PASID_BIT = 10,  // not implemented yet
     BX_XCR0_CET_U_BIT = 11,
     BX_XCR0_CET_S_BIT = 12,
+    BX_XCR0_HDC_BIT = 13,    // not implemented yet
     BX_XCR0_UINTR_BIT = 14,
-    BX_XCR0_XTILECFG_BIT = 17,
-    BX_XCR0_XTILEDATA_BIT = 18,
+    BX_XCR0_LBR_BIT = 15,    // not implemented yet
+    BX_XCR0_HWP_BIT = 16,    // not implemented yet
+    BX_XCR0_XTILECFG_BIT = 17,      // not implemnted yet
+    BX_XCR0_XTILEDATA_BIT = 18,     // not implemnted yet
     BX_XCR0_LAST
   };
 
@@ -297,9 +302,13 @@ struct xcr0_t {
 #define BX_XCR0_HI_ZMM_MASK    (1 << xcr0_t::BX_XCR0_HI_ZMM_BIT)
 #define BX_XCR0_PT_MASK        (1 << xcr0_t::BX_XCR0_PT_BIT)
 #define BX_XCR0_PKRU_MASK      (1 << xcr0_t::BX_XCR0_PKRU_BIT)
+#define BX_XCR0_PASID_MASK     (1 << xcr0_t::BX_XCR0_PASID_BIT)
 #define BX_XCR0_CET_U_MASK     (1 << xcr0_t::BX_XCR0_CET_U_BIT)
 #define BX_XCR0_CET_S_MASK     (1 << xcr0_t::BX_XCR0_CET_S_BIT)
+#define BX_XCR0_HDC_MASK       (1 << xcr0_t::BX_XCR0_HDC_BIT)
 #define BX_XCR0_UINTR_MASK     (1 << xcr0_t::BX_XCR0_UINTR_BIT)
+#define BX_XCR0_LBR_MASK       (1 << xcr0_t::BX_XCR0_LBR_BIT)
+#define BX_XCR0_HWP_MASK       (1 << xcr0_t::BX_XCR0_HWP_BIT)
 #define BX_XCR0_XTILECFG_MASK  (1 << xcr0_t::BX_XCR0_XTILECFG_BIT)
 #define BX_XCR0_XTILEDATA_MASK (1 << xcr0_t::BX_XCR0_XTILEDATA_BIT)
 
@@ -313,8 +322,12 @@ struct xcr0_t {
   IMPLEMENT_CRREG_ACCESSORS(HI_ZMM, BX_XCR0_HI_ZMM_BIT);
   IMPLEMENT_CRREG_ACCESSORS(PT, BX_XCR0_PT_BIT);
   IMPLEMENT_CRREG_ACCESSORS(PKRU, BX_XCR0_PKRU_BIT);
+  IMPLEMENT_CRREG_ACCESSORS(PASID, BX_XCR0_PASID_BIT);
   IMPLEMENT_CRREG_ACCESSORS(CET_U, BX_XCR0_CET_U_BIT);
   IMPLEMENT_CRREG_ACCESSORS(CET_S, BX_XCR0_CET_S_BIT);
+  IMPLEMENT_CRREG_ACCESSORS(UINTR, BX_XCR0_UINTR_BIT);
+  IMPLEMENT_CRREG_ACCESSORS(LBR, BX_XCR0_LBR_BIT);
+  IMPLEMENT_CRREG_ACCESSORS(HWP, BX_XCR0_HWP_BIT);
   IMPLEMENT_CRREG_ACCESSORS(XTILECFG, BX_XCR0_XTILECFG_BIT);
   IMPLEMENT_CRREG_ACCESSORS(XTILEDATA, BX_XCR0_XTILEDATA_BIT);
 
