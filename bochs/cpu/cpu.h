@@ -4388,6 +4388,7 @@ public: // for now...
 #endif
 #if BX_CPU_LEVEL >= 5
   BX_SMF bool SetEFER(bx_address val) BX_CPP_AttrRegparmN(1);
+  BX_SMF Bit32u get_efer_allow_mask(void);
 #endif
 
   BX_SMF bx_address read_CR0(void);

@@ -651,8 +651,6 @@ void BX_CPU_C::param_restore(bx_param_c *param, Bit64s val)
 
 void BX_CPU_C::after_restore_state(void)
 {
-  handleCpuContextChange();
-
   BX_CPU_THIS_PTR prev_rip = RIP;
 
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_IA32_REAL) CPL = 0;
@@ -671,6 +669,8 @@ void BX_CPU_C::after_restore_state(void)
 #if BX_SUPPORT_PKEYS
   set_PKeys(BX_CPU_THIS_PTR pkru, BX_CPU_THIS_PTR pkrs);
 #endif
+
+  handleCpuContextChange();
 
   assert_checks();
   debug(RIP);
@@ -912,22 +912,7 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 
   BX_CPU_THIS_PTR efer.set32(0);
-  BX_CPU_THIS_PTR efer_suppmask = 0;
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_NX))
-    BX_CPU_THIS_PTR efer_suppmask |= BX_EFER_NXE_MASK;
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SYSCALL_SYSRET_LEGACY))
-    BX_CPU_THIS_PTR efer_suppmask |= BX_EFER_SCE_MASK;
-#if BX_SUPPORT_X86_64
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_LONG_MODE)) {
-    BX_CPU_THIS_PTR efer_suppmask |= (BX_EFER_SCE_MASK | BX_EFER_LME_MASK | BX_EFER_LMA_MASK);
-    if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_FFXSR))
-      BX_CPU_THIS_PTR efer_suppmask |= BX_EFER_FFXSR_MASK;
-    if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SVM))
-      BX_CPU_THIS_PTR efer_suppmask |= BX_EFER_SVME_MASK;
-    if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_TCE))
-      BX_CPU_THIS_PTR efer_suppmask |= BX_EFER_TCE_MASK;
-  }
-#endif
+  BX_CPU_THIS_PTR efer_suppmask = get_efer_allow_mask();
 
   BX_CPU_THIS_PTR msr.star = 0;
 #if BX_SUPPORT_X86_64
