@@ -420,7 +420,6 @@ void bx_gui_c::cdrom1_handler(void)
 void bx_gui_c::reset_handler(void)
 {
   BX_INFO(("system RESET callback"));
-  BX_GUI_THIS statusbar_setall(0);
   bx_pc_system.Reset(BX_RESET_HARDWARE);
 }
 
@@ -985,12 +984,6 @@ void bx_gui_c::statusbar_setitem(int element, bool active, bool w)
       statusitem[element].counter = 5;
     }
   }
-}
-
-void bx_gui_c::statusbar_setall(bool active)
-{
-  for (int i=0; i<BX_MAX_STATUSITEMS; i++)
-    statusbar_setitem(i, active);
 }
 
 void bx_gui_c::led_timer_handler(void *this_ptr)
