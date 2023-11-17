@@ -923,8 +923,8 @@ void BX_CPU_C::xrstor_init_cet_u_state(void)
 
 bool BX_CPU_C::xsave_cet_u_state_xinuse(void)
 {
-  return BX_CPU_THIS_PTR msr.ia32_cet_control[1] == 0 &&
-         BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] == 0;
+  return BX_CPU_THIS_PTR msr.ia32_cet_control[1] != 0 ||
+         BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] != 0;
 }
 
 // CET S state management //
