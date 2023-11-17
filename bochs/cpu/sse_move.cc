@@ -616,8 +616,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MASKMOVDQU_VdqUdq(bxInstruction_c *i)
     mask = BX_READ_XMM_REG(i->src2()), temp;
 
   // check for write permissions before writing even if mask is all 0s
-  temp.xmm64u(0) = read_RMW_virtual_qword(i->seg(), rdi);
-  temp.xmm64u(1) = read_RMW_virtual_qword(i->seg(), (rdi + 8) & i->asize_mask());
+  temp.xmm64u(0) = read_RMW_virtual_qword(i->seg(), rdi);                         // no lock
+  temp.xmm64u(1) = read_RMW_virtual_qword(i->seg(), (rdi + 8) & i->asize_mask()); // no lock
 
   /* no data will be written to memory if mask is all 0s */
   if ((mask.xmm64u(0) | mask.xmm64u(1)) == 0) {

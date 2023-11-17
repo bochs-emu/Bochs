@@ -1054,11 +1054,10 @@ public: // for now...
     BX_ACTIVITY_STATE_HLT,
     BX_ACTIVITY_STATE_SHUTDOWN,
     BX_ACTIVITY_STATE_WAIT_FOR_SIPI,
+    BX_VMX_LAST_ACTIVITY_STATE = BX_ACTIVITY_STATE_WAIT_FOR_SIPI,
     BX_ACTIVITY_STATE_MWAIT,
     BX_ACTIVITY_STATE_MWAIT_IF
   };
-
-#define BX_VMX_LAST_ACTIVITY_STATE (BX_ACTIVITY_STATE_WAIT_FOR_SIPI)
 
   unsigned activity_state;
 
@@ -4280,6 +4279,7 @@ public: // for now...
   BX_SMF void system_write_byte(bx_address laddr, Bit8u data) BX_CPP_AttrRegparmN(2);
   BX_SMF void system_write_word(bx_address laddr, Bit16u data) BX_CPP_AttrRegparmN(2);
   BX_SMF void system_write_dword(bx_address laddr, Bit32u data) BX_CPP_AttrRegparmN(2);
+  BX_SMF void system_write_qword(bx_address laddr, Bit64u data) BX_CPP_AttrRegparmN(2);
 
   BX_SMF Bit8u* v2h_read_byte(bx_address laddr, bool user) BX_CPP_AttrRegparmN(2);
   BX_SMF Bit8u* v2h_write_byte(bx_address laddr, bool user) BX_CPP_AttrRegparmN(2);
@@ -4388,6 +4388,7 @@ public: // for now...
 #endif
 #if BX_CPU_LEVEL >= 5
   BX_SMF bool SetEFER(bx_address val) BX_CPP_AttrRegparmN(1);
+  BX_SMF Bit32u get_efer_allow_mask(void);
 #endif
 
   BX_SMF bx_address read_CR0(void);

@@ -206,7 +206,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ENTER16_IwIb(bxInstruction_c *i)
     // ENTER finishes with memory write check on the final stack pointer
     // the memory is touched but no write actually occurs
     // emulate it by doing RMW read access from SS:ESP
-    read_RMW_virtual_word_32(BX_SEG_REG_SS, ESP);
+    read_RMW_virtual_word_32(BX_SEG_REG_SS, ESP); // no lock, should be touch only
 
     BP = frame_ptr16;
   }
@@ -230,7 +230,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ENTER16_IwIb(bxInstruction_c *i)
     // ENTER finishes with memory write check on the final stack pointer
     // the memory is touched but no write actually occurs
     // emulate it by doing RMW read access from SS:SP
-    read_RMW_virtual_word_32(BX_SEG_REG_SS, SP);
+    read_RMW_virtual_word_32(BX_SEG_REG_SS, SP); // no lock, should be touch only
   }
 
   BP = frame_ptr16;

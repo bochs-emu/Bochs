@@ -1774,6 +1774,33 @@ void BX_CPU_C::xsave_xrestor_init(void)
 #endif
 }
 
+#if BX_CPU_LEVEL >= 5
+
+Bit32u BX_CPU_C::get_efer_allow_mask(void)
+{
+  Bit32u efer_allowed_mask = 0;
+
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_NX))
+    efer_allowed_mask |= BX_EFER_NXE_MASK;
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SYSCALL_SYSRET_LEGACY))
+    efer_allowed_mask |= BX_EFER_SCE_MASK;
+#if BX_SUPPORT_X86_64
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_LONG_MODE)) {
+    efer_allowed_mask |= (BX_EFER_SCE_MASK | BX_EFER_LME_MASK | BX_EFER_LMA_MASK);
+    if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_FFXSR))
+      efer_allowed_mask |= BX_EFER_FFXSR_MASK;
+    if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SVM))
+      efer_allowed_mask |= BX_EFER_SVME_MASK;
+    if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_TCE))
+      efer_allowed_mask |= BX_EFER_TCE_MASK;
+  }
+#endif
+
+  return efer_allowed_mask;
+}
+
+#endif
+
 Bit32u BX_CPU_C::get_xcr0_allow_mask(void)
 {
   Bit32u allowMask = 0x3;

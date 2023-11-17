@@ -1239,7 +1239,7 @@ bool bx_local_apic_c::read_x2apic(unsigned index, Bit64u *val_64)
     break;
   // full 64-bit access to ICR
   case BX_LAPIC_ICR_LO:
-    *val_64 = ((Bit64u) icr_lo) | (((Bit64u) icr_hi) << 32);
+    *val_64 = GET64_FROM_HI32_LO32(icr_hi, icr_lo);
     break;
   // not supported/not readable in x2apic mode
   case BX_LAPIC_ARBITRATION_PRIORITY:

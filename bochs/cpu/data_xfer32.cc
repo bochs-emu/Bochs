@@ -198,10 +198,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSX_GdEwR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::XCHG_EdGdM(bxInstruction_c *i)
 {
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-
-  Bit32u op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
-  Bit32u op2_32 = BX_READ_32BIT_REG(i->src());
-  write_RMW_linear_dword(op2_32);
+  Bit32u op1_32 = read_RMW_virtual_dword(i->seg(), eaddr); // always locked
+  write_RMW_linear_dword(BX_READ_32BIT_REG(i->src()));
   BX_WRITE_32BIT_REGZ(i->src(), op1_32);
 
   BX_NEXT_INSTR(i);

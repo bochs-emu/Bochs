@@ -1172,7 +1172,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
 
   invalidate_prefetch_q();
 
-  Bit64u val_64 = ((Bit64u) EDX << 32) | EAX;
+  Bit64u val_64 = GET64_FROM_HI32_LO32(EDX, EAX);
   Bit32u index = ECX;
 
 #if BX_SUPPORT_SVM
@@ -1251,9 +1251,9 @@ int BX_CPU_C::load_MSRs(const char *file)
         reset_hi, reset_lo, rsrv_hi, rsrv_lo, ignr_hi, ignr_lo));
 
       BX_CPU_THIS_PTR msrs[index] = new MSR(index, type,
-        ((Bit64u)(reset_hi) << 32) | reset_lo,
-        ((Bit64u) (rsrv_hi) << 32) | rsrv_lo,
-        ((Bit64u) (ignr_hi) << 32) | ignr_lo);
+        GET64_FROM_HI32_LO32(reset_hi, reset_lo),
+        GET64_FROM_HI32_LO32(rsrv_hi, rsrv_lo),
+        GET64_FROM_HI32_LO32(ignr_hi, ignr_lo));
     }
   } while (!feof(fd));
 

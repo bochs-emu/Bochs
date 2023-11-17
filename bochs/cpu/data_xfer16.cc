@@ -201,14 +201,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSX_GwEbR(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::XCHG_EwGwM(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16;
-
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-
-  op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
-  op2_16 = BX_READ_16BIT_REG(i->src());
-
-  write_RMW_linear_word(op2_16);
+  Bit16u op1_16 = read_RMW_virtual_word(i->seg(), eaddr); // always locked
+  write_RMW_linear_word(BX_READ_16BIT_REG(i->src()));
   BX_WRITE_16BIT_REG(i->src(), op1_16);
 
   BX_NEXT_INSTR(i);
