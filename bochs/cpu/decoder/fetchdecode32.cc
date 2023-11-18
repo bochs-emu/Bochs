@@ -2400,7 +2400,7 @@ fetch_b1:
   remain--;
 
 #if BX_SUPPORT_CET
-  // DS prefix is still recorded for CET Endranch suppress hint even if overridden by other prefixes later
+  // DS prefix is still recorded for CET Endbranch suppress hint even if overridden by other prefixes later
   if (b1 == 0x3e)
     seg_override_cet = BX_SEG_REG_DS;
 #endif

@@ -1896,7 +1896,7 @@ fetch_b1:
   remain--;
 
 #if BX_SUPPORT_CET
-  // in 64-bit mode DS prefix is ignored but still recorded for CET Endranch suppress hint
+  // in 64-bit mode DS prefix is ignored but still recorded for CET Endbranch suppress hint
   // keep it even if overridden by FS: or GS:
   if (b1 == 0x3e)
     seg_override_cet = BX_SEG_REG_DS;
