@@ -309,7 +309,7 @@ static const Bit8u priv_check[BX_PRIV_CHECK_SIZE] =
 //       1  1  1  1 | user write to user page                   | Allowed
 //
 
-const Bit64u BX_PAGING_PHY_ADDRESS_RESERVED_BITS = BX_PHY_ADDRESS_RESERVED_BITS & BX_CONST64(0xfffffffffffff);
+#define BX_PAGING_PHY_ADDRESS_RESERVED_BITS (BX_PHY_ADDRESS_RESERVED_BITS & BX_CONST64(0xfffffffffffff))
 
 const Bit64u PAGE_DIRECTORY_NX_BIT = BX_CONST64(0x8000000000000000);
 
@@ -575,10 +575,10 @@ enum {
 // 63    | Execute-Disable (XD) (if EFER.NXE=1, reserved otherwise)
 // -----------------------------------------------------------
 
-const Bit64u PAGING_PAE_RESERVED_BITS = BX_PAGING_PHY_ADDRESS_RESERVED_BITS;
+#define PAGING_PAE_RESERVED_BITS (BX_PAGING_PHY_ADDRESS_RESERVED_BITS)
 
 // in legacy PAE mode bits [62:52] are reserved. bit 63 is NXE
-const Bit64u PAGING_LEGACY_PAE_RESERVED_BITS = BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x7ff0000000000000);
+#define PAGING_LEGACY_PAE_RESERVED_BITS (BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x7ff0000000000000))
 
 //       Format of a PDPTE that References a 1-GByte Page
 // -----------------------------------------------------------
@@ -600,7 +600,7 @@ const Bit64u PAGING_LEGACY_PAE_RESERVED_BITS = BX_PAGING_PHY_ADDRESS_RESERVED_BI
 // 63    | Execute-Disable (XD) (if EFER.NXE=1, reserved otherwise)
 // -----------------------------------------------------------
 
-const Bit64u PAGING_PAE_PDPTE1G_RESERVED_BITS = BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x3FFFE000);
+#define PAGING_PAE_PDPTE1G_RESERVED_BITS (BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x3FFFE000))
 
 //        Format of a PAE PDE that Maps a 2-MByte Page
 // -----------------------------------------------------------
@@ -622,7 +622,7 @@ const Bit64u PAGING_PAE_PDPTE1G_RESERVED_BITS = BX_PAGING_PHY_ADDRESS_RESERVED_B
 // 63    | Execute-Disable (XD) (if EFER.NXE=1, reserved otherwise)
 // -----------------------------------------------------------
 
-const Bit64u PAGING_PAE_PDE2M_RESERVED_BITS = BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x001FE000);
+#define PAGING_PAE_PDE2M_RESERVED_BITS (BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x001FE000))
 
 //        Format of a PAE PTE that Maps a 4-KByte Page
 // -----------------------------------------------------------
@@ -891,7 +891,7 @@ void BX_CPU_C::update_access_dirty_PAE(bx_phy_address *entry_addr, Bit64u *entry
 // 63-PA | Reserved (must be zero)
 // -----------------------------------------------------------
 
-const Bit64u PAGING_PAE_PDPTE_RESERVED_BITS = BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0xFFF00000000001E6);
+#define PAGING_PAE_PDPTE_RESERVED_BITS (BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0xFFF00000000001E6))
 
 bool BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckPDPTR(bx_phy_address cr3_val)
 {
@@ -1920,7 +1920,7 @@ const Bit64u BX_SUPPRESS_EPT_VIOLATION_EXCEPTION = (BX_CONST64(1) << 63);
 const Bit64u BX_SUB_PAGE_PROTECTED               = (BX_CONST64(1) << 61);
 const Bit64u BX_SUPERVISOR_SHADOW_STACK_PAGE     = (BX_CONST64(1) << 60);
 
-const Bit64u PAGING_EPT_RESERVED_BITS = BX_PAGING_PHY_ADDRESS_RESERVED_BITS;
+#define PAGING_EPT_RESERVED_BITS (BX_PAGING_PHY_ADDRESS_RESERVED_BITS)
 
 // entries which were allowed to write only because of SPP cannot be cached in DTLB as writeable
 bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx_address guest_laddr, bool guest_laddr_valid, bool is_page_walk, unsigned user_page, unsigned rw, bool supervisor_shadow_stack, bool *spp_page)
@@ -2140,7 +2140,7 @@ void BX_CPU_C::update_ept_access_dirty(bx_phy_address *entry_addr, Bit64u *entry
   }
 }
 
-const Bit64u PAGING_SPP_RESERVED_BITS = BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0xFFF0000000000FFE);
+#define PAGING_SPP_RESERVED_BITS (BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0xFFF0000000000FFE))
 
 const Bit32u VMX_SPP_NOT_PRESENT_QUALIFICATION = (1<<11);
 
