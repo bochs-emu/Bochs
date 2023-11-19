@@ -201,6 +201,61 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Half_Vector(bxInstruction_c *i)
   BX_CPU_CALL_METHOD(i->execute2(), (i));
 }
 
+#if BX_SUPPORT_EVEX
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_MASK_Half_VectorB(bxInstruction_c *i)
+{
+  Bit32u opmask = (i->opmask() != 0) ? BX_READ_32BIT_OPMASK(i->opmask()) : 0xffffffff;
+  unsigned len = i->getVL();
+  opmask &= CUT_OPMASK_TO(BYTE_ELEMENTS(len));
+
+  if (opmask == 0) {
+    BX_CPU_CALL_METHOD(i->execute2(), (i)); // for now let execute method to deal with zero/merge masking semantics
+    return;
+  }
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+  avx_masked_load8(i, eaddr, &BX_READ_AVX_REG(BX_VECTOR_TMP_REGISTER), opmask);
+
+  BX_CPU_CALL_METHOD(i->execute2(), (i));
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_MASK_Half_VectorW(bxInstruction_c *i)
+{
+  Bit32u opmask = (i->opmask() != 0) ? BX_READ_16BIT_OPMASK(i->opmask()) : 0xffff;
+  unsigned len = i->getVL();
+  opmask &= CUT_OPMASK_TO(WORD_ELEMENTS(len));
+
+  if (opmask == 0) {
+    BX_CPU_CALL_METHOD(i->execute2(), (i)); // for now let execute method to deal with zero/merge masking semantics
+    return;
+  }
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+  avx_masked_load16(i, eaddr, &BX_READ_AVX_REG(BX_VECTOR_TMP_REGISTER), opmask);
+
+  BX_CPU_CALL_METHOD(i->execute2(), (i));
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_MASK_Half_VectorD(bxInstruction_c *i)
+{
+  Bit32u opmask = (i->opmask() != 0) ? BX_READ_8BIT_OPMASK(i->opmask()) : 0xff;
+  unsigned len = i->getVL();
+  opmask &= CUT_OPMASK_TO(DWORD_ELEMENTS(len));
+
+  if (opmask == 0) {
+    BX_CPU_CALL_METHOD(i->execute2(), (i)); // for now let execute method to deal with zero/merge masking semantics
+    return;
+  }
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+  avx_masked_load32(i, eaddr, &BX_READ_AVX_REG(BX_VECTOR_TMP_REGISTER), opmask);
+
+  BX_CPU_CALL_METHOD(i->execute2(), (i));
+}
+
+#endif
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Quarter_Vector(bxInstruction_c *i)
 {
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
@@ -225,6 +280,44 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Quarter_Vector(bxInstruction_c *i)
 
   BX_CPU_CALL_METHOD(i->execute2(), (i));
 }
+
+#if BX_SUPPORT_EVEX
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_MASK_Quarter_VectorB(bxInstruction_c *i)
+{
+  Bit32u opmask = (i->opmask() != 0) ? BX_READ_16BIT_OPMASK(i->opmask()) : 0xffff;
+  unsigned len = i->getVL();
+  opmask &= CUT_OPMASK_TO(WORD_ELEMENTS(len));
+
+  if (opmask == 0) {
+    BX_CPU_CALL_METHOD(i->execute2(), (i)); // for now let execute method to deal with zero/merge masking semantics
+    return;
+  }
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+  avx_masked_load8(i, eaddr, &BX_READ_AVX_REG(BX_VECTOR_TMP_REGISTER), opmask);
+
+  BX_CPU_CALL_METHOD(i->execute2(), (i));
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_MASK_Quarter_VectorW(bxInstruction_c *i)
+{
+  Bit32u opmask = (i->opmask() != 0) ? BX_READ_8BIT_OPMASK(i->opmask()) : 0xff;
+  unsigned len = i->getVL();
+  opmask &= CUT_OPMASK_TO(DWORD_ELEMENTS(len));
+
+  if (opmask == 0) {
+    BX_CPU_CALL_METHOD(i->execute2(), (i)); // for now let execute method to deal with zero/merge masking semantics
+    return;
+  }
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+  avx_masked_load16(i, eaddr, &BX_READ_AVX_REG(BX_VECTOR_TMP_REGISTER), opmask);
+
+  BX_CPU_CALL_METHOD(i->execute2(), (i));
+}
+
+#endif
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Eighth_Vector(bxInstruction_c *i)
 {
@@ -252,9 +345,24 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_Eighth_Vector(bxInstruction_c *i)
   BX_CPU_CALL_METHOD(i->execute2(), (i));
 }
 
-#endif
-
 #if BX_SUPPORT_EVEX
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_MASK_Eighth_VectorB(bxInstruction_c *i)
+{
+  Bit32u opmask = (i->opmask() != 0) ? BX_READ_8BIT_OPMASK(i->opmask()) : 0xff;
+  unsigned len = i->getVL();
+  opmask &= CUT_OPMASK_TO(QWORD_ELEMENTS(len));
+
+  if (opmask == 0) {
+    BX_CPU_CALL_METHOD(i->execute2(), (i)); // for now let execute method to deal with zero/merge masking semantics
+    return;
+  }
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+  avx_masked_load8(i, eaddr, &BX_READ_AVX_REG(BX_VECTOR_TMP_REGISTER), opmask);
+
+  BX_CPU_CALL_METHOD(i->execute2(), (i));
+}
 
 #include "simd_int.h"
 
@@ -335,7 +443,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_VectorD(bxInstruction_c *i)
   else {
     if (len == BX_VL512)
       read_virtual_zmmword(i->seg(), eaddr, &BX_READ_AVX_REG(BX_VECTOR_TMP_REGISTER));
-    if (len == BX_VL256)
+    else if (len == BX_VL256)
       read_virtual_ymmword(i->seg(), eaddr, &BX_READ_YMM_REG(BX_VECTOR_TMP_REGISTER));
     else
       read_virtual_xmmword(i->seg(), eaddr, &BX_READ_XMM_REG(BX_VECTOR_TMP_REGISTER));
@@ -382,7 +490,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_VectorQ(bxInstruction_c *i)
   else {
     if (len == BX_VL512)
       read_virtual_zmmword(i->seg(), eaddr, &BX_READ_AVX_REG(BX_VECTOR_TMP_REGISTER));
-    if (len == BX_VL256)
+    else if (len == BX_VL256)
       read_virtual_ymmword(i->seg(), eaddr, &BX_READ_YMM_REG(BX_VECTOR_TMP_REGISTER));
     else
       read_virtual_xmmword(i->seg(), eaddr, &BX_READ_XMM_REG(BX_VECTOR_TMP_REGISTER));
@@ -430,7 +538,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_Half_VectorD(bxInstruction_
     if (len == BX_VL512) {
       read_virtual_ymmword(i->seg(), eaddr, &BX_READ_YMM_REG(BX_VECTOR_TMP_REGISTER));
     }
-    if (len == BX_VL256) {
+    else if (len == BX_VL256) {
       read_virtual_xmmword(i->seg(), eaddr, &BX_READ_XMM_REG(BX_VECTOR_TMP_REGISTER));
     }
     else {
@@ -445,9 +553,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_Half_VectorD(bxInstruction_
 // load half vector of dwords, support broadcast and masked fault suppression
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_MASK_Half_VectorD(bxInstruction_c *i)
 {
+  Bit32u opmask = (i->opmask() != 0) ? BX_READ_8BIT_OPMASK(i->opmask()) : 0xff;
   unsigned len = i->getVL();
-  Bit32u opmask = (i->opmask() != 0) ? BX_READ_16BIT_OPMASK(i->opmask()) : 0xffff;
-  opmask &= CUT_OPMASK_TO(DWORD_ELEMENTS(len)-1);
+  opmask &= CUT_OPMASK_TO(QWORD_ELEMENTS(len));
 
   if (opmask == 0) {
     BX_CPU_CALL_METHOD(i->execute2(), (i)); // for now let execute method to deal with zero/merge masking semantics
@@ -467,4 +575,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_BROADCAST_MASK_Half_VectorD(bxInstruc
   BX_CPU_CALL_METHOD(i->execute2(), (i));
 }
 
-#endif
+#endif // BX_SUPPORT_EVEX
+
+#endif // BX_SUPPORT_AVX

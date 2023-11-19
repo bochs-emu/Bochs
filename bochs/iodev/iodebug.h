@@ -24,8 +24,6 @@
 
 #if BX_SUPPORT_IODEBUG
 
-#define BX_IODEBUG_MAX_AREAS 30
-
 class bx_iodebug_c : public bx_iodebug_stub_c {
 public:
   bx_iodebug_c();

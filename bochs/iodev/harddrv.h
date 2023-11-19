@@ -24,17 +24,18 @@
 #define MAX_MULTIPLE_SECTORS 16
 
 typedef enum _sense {
-      SENSE_NONE = 0, SENSE_NOT_READY = 2, SENSE_ILLEGAL_REQUEST = 5,
-      SENSE_UNIT_ATTENTION = 6
+  SENSE_NONE = 0, SENSE_NOT_READY = 2,
+  SENSE_ILLEGAL_REQUEST = 5,
+  SENSE_UNIT_ATTENTION = 6
 } sense_t;
 
 typedef enum _asc {
-      ASC_ILLEGAL_OPCODE = 0x20,
-      ASC_LOGICAL_BLOCK_OOR = 0x21,
-      ASC_INV_FIELD_IN_CMD_PACKET = 0x24,
-      ASC_MEDIUM_MAY_HAVE_CHANGED = 0x28,
-      ASC_SAVING_PARAMETERS_NOT_SUPPORTED = 0x39,
-      ASC_MEDIUM_NOT_PRESENT = 0x3a
+  ASC_ILLEGAL_OPCODE = 0x20,
+  ASC_LOGICAL_BLOCK_OOR = 0x21,
+  ASC_INV_FIELD_IN_CMD_PACKET = 0x24,
+  ASC_MEDIUM_MAY_HAVE_CHANGED = 0x28,
+  ASC_SAVING_PARAMETERS_NOT_SUPPORTED = 0x39,
+  ASC_MEDIUM_NOT_PRESENT = 0x3a
 } asc_t;
 
 class device_image_t;
@@ -42,15 +43,15 @@ class cdrom_base_c;
 
 typedef struct {
   struct {
-    bool busy;
-    bool drive_ready;
-    bool write_fault;
-    bool seek_complete;
-    bool drq;
-    bool corrected_data;
-    bool index_pulse;
+    bool busy;           // bit 7
+    bool drive_ready;    // bit 6
+    bool write_fault;    // bit 5
+    bool seek_complete;  // bit 4
+    bool drq;            // bit 3
+    bool corrected_data; // bit 2
+    bool index_pulse;    // bit 1
+    bool err;            // bit 0
     unsigned index_pulse_count;
-    bool err;
   } status;
   Bit8u    error_register;
   Bit8u    head_no;
@@ -252,7 +253,7 @@ private:
       Bit8u model_no[41];
       int statusbar_id;
       Bit8u device_num; // for ATAPI identify & inquiry
-      bool status_changed;
+      int  status_changed;
       int seek_timer_index;
     } drives[2];
     unsigned drive_select;

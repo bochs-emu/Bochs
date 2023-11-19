@@ -411,7 +411,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
 
   if (source != BX_TASK_FROM_IRET)
   {
-    // set the new task's busy bit
+    // set the new task's busy bit, should be done atomiclly using RMW
     Bit32u laddr = (Bit32u)(BX_CPU_THIS_PTR gdtr.base) + (tss_selector->index<<3) + 4;
     access_read_linear(laddr, 4, 0, BX_RW, 0x0, &dword2);
     dword2 |= 0x200;
@@ -527,6 +527,14 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.valid = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.valid = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.valid = 0;
+
+  handleFpuMmxModeChange();
+#if BX_CPU_LEVEL >= 6
+  handleSseModeChange(); /* CR0.TS changes */
+#if BX_SUPPORT_AVX
+  handleAvxModeChange();
+#endif
+#endif
 
   if ((tss_descriptor->type >= 9) && BX_CPU_THIS_PTR cr0.get_PG()) {
     // change CR3 only if it actually modified
@@ -753,13 +761,6 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
     BX_CPU_THIS_PTR async_event = 1; // so processor knows to check
     BX_INFO(("task_switch: T bit set in new TSS"));
   }
-
-#if BX_CPU_LEVEL >= 6
-  handleSseModeChange(); /* CR0.TS changes */
-#if BX_SUPPORT_AVX
-  handleAvxModeChange();
-#endif
-#endif
 
   //
   // Step 12: Begin execution of new task.

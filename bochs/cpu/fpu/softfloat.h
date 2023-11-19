@@ -44,7 +44,7 @@ these four paragraphs for those parts of this code that are retained.
 | Software IEC/IEEE floating-point types.
 *----------------------------------------------------------------------------*/
 #ifdef FLOAT16
-typedef Bit16u float16;
+typedef Bit16u float16, bfloat16;
 #endif
 typedef Bit32u float32;
 typedef Bit64u float64;
@@ -132,9 +132,9 @@ struct float_status_t
     int float_exception_flags;
     int float_exception_masks;
     int float_suppress_exception;
-    int float_nan_handling_mode;	/* flag register */
-    int flush_underflow_to_zero;	/* flag register */
-    int denormals_are_zeros;            /* flag register */
+    int float_nan_handling_mode;    /* flag register */
+    int flush_underflow_to_zero;    /* flag register */
+    int denormals_are_zeros;        /* flag register */
 };
 
 /*----------------------------------------------------------------------------

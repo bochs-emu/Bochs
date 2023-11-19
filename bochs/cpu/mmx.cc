@@ -43,7 +43,7 @@ void BX_CPU_C::print_state_MMX(void)
 /* 0F 38 00 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSHUFB_PqQq(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2, result;
 
@@ -76,7 +76,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSHUFB_PqQq(bxInstruction_c *i)
 /* 0F 38 01 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHADDW_PqQq(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -105,7 +105,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHADDW_PqQq(bxInstruction_c *i)
 /* 0F 38 02 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHADDD_PqQq(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -132,7 +132,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHADDD_PqQq(bxInstruction_c *i)
 /* 0F 38 03 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHADDSW_PqQq(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -161,7 +161,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHADDSW_PqQq(bxInstruction_c *i)
 /* 0F 38 04 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMADDUBSW_PqQq(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -193,7 +193,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMADDUBSW_PqQq(bxInstruction_c *i)
 /* 0F 38 05 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHSUBSW_PqQq(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -222,7 +222,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHSUBSW_PqQq(bxInstruction_c *i)
 /* 0F 38 05 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHSUBW_PqQq(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -251,7 +251,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHSUBW_PqQq(bxInstruction_c *i)
 /* 0F 38 06 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHSUBD_PqQq(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -278,7 +278,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PHSUBD_PqQq(bxInstruction_c *i)
 /* 0F 38 08 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSIGNB_PqQq(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -307,7 +307,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSIGNB_PqQq(bxInstruction_c *i)
 /* 0F 38 09 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSIGNW_PqQq(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -336,7 +336,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSIGNW_PqQq(bxInstruction_c *i)
 /* 0F 38 0A */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSIGND_PqQq(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -367,7 +367,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSIGND_PqQq(bxInstruction_c *i)
 /* 0F 38 0B */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULHRSW_PqQq(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -396,7 +396,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULHRSW_PqQq(bxInstruction_c *i)
 /* 0F 38 1C */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PABSB_PqQq(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op;
 
@@ -428,7 +428,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PABSB_PqQq(bxInstruction_c *i)
 /* 0F 38 1D */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PABSW_PqQq(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op;
 
@@ -456,7 +456,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PABSW_PqQq(bxInstruction_c *i)
 /* 0F 38 1E */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PABSD_PqQq(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op;
 
@@ -482,7 +482,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PABSD_PqQq(bxInstruction_c *i)
 /* 0F 3A 0F */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PALIGNR_PqQqIb(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -520,7 +520,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PALIGNR_PqQqIb(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKLBW_PqQd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -555,7 +555,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKLBW_PqQd(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKLWD_PqQd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -586,7 +586,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKLWD_PqQd(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKLDQ_PqQd(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -614,7 +614,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKLDQ_PqQd(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PACKSSWB_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -650,7 +650,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PACKSSWB_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPGTB_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -685,7 +685,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPGTB_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPGTW_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -716,7 +716,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPGTW_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPGTD_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -745,7 +745,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPGTD_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PACKUSWB_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -780,7 +780,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PACKUSWB_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKHBW_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -815,7 +815,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKHBW_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKHWD_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -846,7 +846,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKHWD_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKHDQ_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -875,7 +875,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PUNPCKHDQ_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PACKSSDW_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -906,7 +906,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PACKSSDW_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_PqEdR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
   BxPackedMmxRegister op = (Bit64u) BX_READ_32BIT_REG(i->src());
@@ -919,7 +919,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_PqEdR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_PqEdM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   BxPackedMmxRegister op = (Bit64u) read_virtual_dword(i->seg(), eaddr);
@@ -936,7 +936,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_PqEdM(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_PqEqR(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
   BxPackedMmxRegister op = BX_READ_64BIT_REG(i->src());
@@ -950,7 +950,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_PqEqR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_PqQqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
   BX_WRITE_MMX_REG(i->dst(), BX_READ_MMX_REG(i->src()));
@@ -962,7 +962,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_PqQqR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_PqQqM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   BxPackedMmxRegister op = read_virtual_qword(i->seg(), eaddr);
@@ -979,7 +979,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_PqQqM(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSHUFW_PqQqIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op, result;
   Bit8u order = i->Ib();
@@ -1011,7 +1011,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSHUFW_PqQqIb(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPEQB_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -1046,7 +1046,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPEQB_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPEQW_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -1077,7 +1077,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPEQW_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPEQD_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -1106,7 +1106,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PCMPEQD_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::EMMS(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   FPU_TAG_WORD  = 0xffff;
   FPU_TOS = 0;        /* reset FPU Top-Of-Stack */
 #endif
@@ -1118,7 +1118,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::EMMS(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_EdPqR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR prepareFPU2MMX();
 
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->src());
@@ -1131,7 +1131,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_EdPqR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_EdPqM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->src());
 
@@ -1151,7 +1151,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVD_EdPqM(bxInstruction_c *i)
 /* 0F 7E */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_EqPqR(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR prepareFPU2MMX();
 
   BX_WRITE_64BIT_REG(i->dst(), BX_MMX_REG(i->src()));
@@ -1166,7 +1166,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_EqPqR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_QqPqM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
   /* pointer, segment address pair */
@@ -1183,7 +1183,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVQ_QqPqM(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRW_PqEwIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst());
   Bit16u op2;
@@ -1212,7 +1212,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PINSRW_PqEwIb(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRW_GdNqIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->src());
@@ -1228,7 +1228,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PEXTRW_GdNqIb(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLW_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -1265,7 +1265,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLW_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLD_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -1300,7 +1300,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLD_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLQ_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -1333,7 +1333,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLQ_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDQ_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -1361,7 +1361,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDQ_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULLW_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -1397,7 +1397,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULLW_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVMSKB_GdNq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->src());
@@ -1422,7 +1422,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMOVMSKB_GdNq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBUSB_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2, result;
 
@@ -1459,7 +1459,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBUSB_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBUSW_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2, result;
 
@@ -1492,7 +1492,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBUSW_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMINUB_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -1527,7 +1527,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMINUB_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PAND_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -1555,7 +1555,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PAND_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDUSB_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -1591,7 +1591,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDUSB_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDUSW_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -1622,7 +1622,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDUSW_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMAXUB_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -1657,7 +1657,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMAXUB_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PANDN_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -1685,7 +1685,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PANDN_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PAVGB_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -1720,7 +1720,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PAVGB_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAW_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -1763,7 +1763,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAW_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAD_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -1802,7 +1802,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAD_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PAVGW_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -1833,7 +1833,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PAVGW_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULHUW_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -1869,7 +1869,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULHUW_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULHW_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -1905,7 +1905,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULHW_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBSB_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -1940,7 +1940,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBSB_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBSW_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -1971,7 +1971,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBSW_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMINSW_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -2002,7 +2002,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMINSW_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::POR_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -2030,7 +2030,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POR_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDSB_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -2065,7 +2065,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDSB_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDSW_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -2096,7 +2096,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDSW_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMAXSW_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -2127,7 +2127,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMAXSW_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PXOR_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -2155,7 +2155,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PXOR_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLW_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -2192,7 +2192,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLW_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLD_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -2227,7 +2227,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLD_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLQ_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -2260,7 +2260,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLQ_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULUDQ_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -2288,7 +2288,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULUDQ_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMADDWD_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -2328,7 +2328,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMADDWD_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSADBW_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
   Bit16u temp = 0;
@@ -2366,7 +2366,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSADBW_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MASKMOVQ_PqNq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
   bx_address rdi = RDI & i->asize_mask();
@@ -2374,7 +2374,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MASKMOVQ_PqNq(bxInstruction_c *i)
     mask = BX_READ_MMX_REG(i->src2());
 
   /* do read-modify-write for efficiency */
-  MMXUQ(tmp) = read_RMW_virtual_qword(i->seg(), rdi);
+  MMXUQ(tmp) = read_RMW_virtual_qword(i->seg(), rdi); // no lock
 
   if(!MMXUQ(mask)) {
     BX_NEXT_INSTR(i);
@@ -2399,7 +2399,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MASKMOVQ_PqNq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBB_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -2434,7 +2434,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBB_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBW_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -2465,7 +2465,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBW_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBD_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -2494,7 +2494,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBD_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBQ_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -2522,7 +2522,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSUBQ_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDB_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -2557,7 +2557,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDB_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDW_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -2588,7 +2588,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDW_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDD_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
 
@@ -2617,7 +2617,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PADDD_PqQq(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLW_NqIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->dst());
@@ -2642,7 +2642,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLW_NqIb(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAW_NqIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->dst());
@@ -2675,7 +2675,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAW_NqIb(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLW_NqIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->dst());
@@ -2700,7 +2700,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLW_NqIb(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLD_NqIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->dst());
@@ -2723,7 +2723,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLD_NqIb(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAD_NqIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->dst());
@@ -2752,7 +2752,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRAD_NqIb(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLD_NqIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->dst());
@@ -2775,7 +2775,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLD_NqIb(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLQ_NqIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->dst());
@@ -2798,7 +2798,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSRLQ_NqIb(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSLLQ_NqIb(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR prepareMMX();
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->dst());

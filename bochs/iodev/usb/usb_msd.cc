@@ -98,14 +98,17 @@ struct usb_msd_csw {
 //  to match your changes.
 
 // Full-speed
+// For full-speed devices, we set the bcdUSB to 1.1 so that an emulated host
+//  won't try to send the USB_DT_DEVICE_QUALIFIER or USB_DT_OTHER_SPEED_CONFIG
+//  requests.
 static const Bit8u bx_msd_dev_descriptor[] = {
   0x12,       /*  u8 bLength; */
   0x01,       /*  u8 bDescriptorType; Device */
-  0x00, 0x02, /*  u16 bcdUSB; v2.0 */
+  0x01, 0x01, /*  u16 bcdUSB; v1.1 */
 
   0x00,       /*  u8  bDeviceClass; */
   0x00,       /*  u8  bDeviceSubClass; */
-  0x00,       /*  u8  bDeviceProtocol; [ low/full speeds only ] */
+  0x00,       /*  u8  bDeviceProtocol; */
   0x40,       /*  u8  bMaxPacketSize; 64 Bytes */
 
   /* Vendor and product id are arbitrary.  */
@@ -172,7 +175,7 @@ static const Bit8u bx_msd_dev_descriptor2[] = {
 
   0x00,       /*  u8  bDeviceClass; */
   0x00,       /*  u8  bDeviceSubClass; */
-  0x00,       /*  u8  bDeviceProtocol; [ low/full speeds only ] */
+  0x00,       /*  u8  bDeviceProtocol; */
   0x40,       /*  u8  bMaxPacketSize; 64 Bytes */
 
   /* Vendor and product id are arbitrary.  */
@@ -814,10 +817,8 @@ void usb_msd_device_c::handle_reset()
 
 int usb_msd_device_c::handle_control(int request, int value, int index, int length, Bit8u *data)
 {
-  int ret = 0;
-
   // let the common handler try to handle it first
-  ret = handle_control_common(request, value, index, length, data);
+  int ret = handle_control_common(request, value, index, length, data);
   if (ret >= 0) {
     return ret;
   }
@@ -840,6 +841,25 @@ int usb_msd_device_c::handle_control(int request, int value, int index, int leng
           goto fail;
       }
       ret = 0;
+      break;
+    case EndpointRequest | USB_REQ_GET_STATUS:
+      BX_DEBUG(("USB_REQ_GET_STATUS: Endpoint."));
+      // if the endpoint is currently halted, return bit 0 = 1
+      if (value == USB_ENDPOINT_HALT) {
+        int indx = (index & 0x7F);
+        int limit = (get_aIface() == MSD_PROTO_BBB) ? MSD_BBB_DATAOUT_EP : MSD_UASP_DATAOUT;
+        if ((indx > 0) && (indx <= limit)) {
+          data[0] = 0x00 | (get_halted(index) ? 1 : 0);
+          data[1] = 0x00;
+          ret = 2;
+        } else {
+          BX_ERROR(("EndpointRequest | USB_REQ_GET_STATUS: index > ep count: %d", index));
+          goto fail;
+        }
+      } else {
+        BX_ERROR(("EndpointRequest | USB_REQ_SET_FEATURE: Unknown Get Status Request found: %d", value));
+        goto fail;
+      }
       break;
     case DeviceRequest | USB_REQ_GET_DESCRIPTOR:
       switch (value >> 8) {
@@ -868,8 +888,13 @@ int usb_msd_device_c::handle_control(int request, int value, int index, int leng
           if (d.speed == USB_SPEED_HIGH) {
             data[0] = 10;  // 10 bytes long
             data[1] = USB_DT_DEVICE_QUALIFIER;
-            memcpy(data + 2, bx_msd_dev_descriptor + 2, 6);
-            data[8] = 1;  // bNumConfigurations
+            data[2] = 0x00; // version 2.00
+            data[3] = 0x02; //
+            data[4] = bx_msd_dev_descriptor[4]; // class code
+            data[5] = bx_msd_dev_descriptor[5]; // subclass code
+            data[6] = bx_msd_dev_descriptor[6]; // protocol 
+            data[7] = bx_msd_dev_descriptor[7]; // max packed size
+            data[8] = 1;  // bNumConfigurations (number of other-speed configurations)
             data[9] = 0;  // reserved
             ret = 10;     // return a 10-byte descriptor
           } else if (d.speed == USB_SPEED_FULL) {
@@ -890,6 +915,21 @@ int usb_msd_device_c::handle_control(int request, int value, int index, int leng
             goto fail;
           }
           break;
+        case USB_DT_OTHER_SPEED_CONFIG:
+          BX_DEBUG(("USB_REQ_GET_DESCRIPTOR: Other Speed Configuration"));
+          if (get_speed() == USB_SPEED_HIGH) {
+            ret = * (Bit16u *) &bx_msd_config_descriptor[2];
+            memcpy(data, bx_msd_config_descriptor, ret);
+            data[1] = USB_DT_OTHER_SPEED_CONFIG;
+          } else if (get_speed() == USB_SPEED_FULL) {
+            ret = * (Bit16u *) &bx_msd_config_descriptor2[2];
+            memcpy(data, bx_msd_config_descriptor2, ret);
+            data[1] = USB_DT_OTHER_SPEED_CONFIG;
+          } else {
+            BX_ERROR(("USB_REQ_GET_DESCRIPTOR: Other Speed Configuration: Valid on high- or full-speed only."));
+            goto fail;
+          }
+          break;
         case USB_DT_BIN_DEV_OBJ_STORE:
           BX_DEBUG(("USB_REQ_GET_DESCRIPTOR: BOS"));
           // only devices with a version of 0x0210 or higher are allowed to request this descriptor.
@@ -907,19 +947,6 @@ int usb_msd_device_c::handle_control(int request, int value, int index, int leng
         default:
           BX_ERROR(("USB MSD handle_control: unknown descriptor type 0x%02x", value >> 8));
           goto fail;
-      }
-      break;
-    case EndpointOutRequest | USB_REQ_CLEAR_FEATURE:
-      BX_DEBUG(("USB_REQ_CLEAR_FEATURE:"));
-      // Value == 0 == Endpoint Halt (the Guest wants to reset the endpoint)
-      if (value == 0) { /* clear ep halt */
-#if HANDLE_TOGGLE_CONTROL
-        set_toggle(index, 0);
-#endif
-        ret = 0;
-      } else {
-        BX_ERROR(("Bad value for clear feature: %d", value));
-        goto fail;
       }
       break;
     case DeviceOutRequest | USB_REQ_SET_SEL:
@@ -986,7 +1013,6 @@ void usb_msd_device_c::handle_iface_change(int iface)
     } else {
       BX_ERROR(("Unknown interface number: %d", iface));
     }
-    // ben
   } else if (d.speed == USB_SPEED_HIGH) {
     d.endpoint_info[USB_CONTROL_EP].max_packet_size = 64; // Control ep0
     d.endpoint_info[USB_CONTROL_EP].max_burst_size = 0;

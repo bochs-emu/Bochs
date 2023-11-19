@@ -51,6 +51,12 @@ jmp_buf BX_CPU_C::jmp_buf_env;
 
 void BX_CPU_C::cpu_loop(void)
 {
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+  volatile Bit8u stack_anchor = 0;
+
+  BX_CPU_THIS_PTR cpuloop_stack_anchor = &stack_anchor;
+#endif
+
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR break_point = 0;
   BX_CPU_THIS_PTR magic_break = 0;
@@ -249,18 +255,28 @@ bxICacheEntry_c* BX_CPU_C::getICacheEntry(void)
 // The function is called after taken branch instructions and tries to link the branch to the next trace
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::linkTrace(bxInstruction_c *i)
 {
+  volatile Bit8u stack_anchor = 0;
+
 #if BX_SUPPORT_SMP
   if (BX_SMP_PROCESSORS > 1)
     return;
 #endif
 
-#define BX_HANDLERS_CHAINING_MAX_DEPTH 1000
+#define BX_HANDLERS_CHAINING_MAX_LINK_DEPTH 1000
 
   // do not allow extreme trace link depth / avoid host stack overflow
   // (could happen with badly compiled instruction handlers)
   static Bit32u linkDepth = 0;
 
-  if (BX_CPU_THIS_PTR async_event || ++linkDepth > BX_HANDLERS_CHAINING_MAX_DEPTH) {
+  if (BX_CPU_THIS_PTR async_event || ++linkDepth > BX_HANDLERS_CHAINING_MAX_LINK_DEPTH) {
+    linkDepth = 0;
+    return;
+  }
+
+#define BX_HANDLERS_CHAINING_MAX_STACK_DEPTH 0x10000
+
+  size_t stack_depth = BX_CPU_THIS_PTR cpuloop_stack_anchor - &stack_anchor;
+  if (stack_depth > BX_HANDLERS_CHAINING_MAX_STACK_DEPTH) {
     linkDepth = 0;
     return;
   }
@@ -270,6 +286,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::linkTrace(bxInstruction_c *i)
     linkDepth = 0;
     return;
   }
+
+  BX_SYNC_TIME_IF_SINGLE_PROCESSOR(0);
 
   bxInstruction_c *next = i->getNextTrace(BX_CPU_THIS_PTR iCache.traceLinkTimeStamp);
   if (next) {
@@ -557,6 +575,14 @@ void BX_CPU_C::prefetch(void)
       exception(BX_GP_EXCEPTION, 0);
     }
 
+    if (BX_CPU_THIS_PTR cr4.get_LASS()) {
+      // RIP[63] == 0 user, RIP[63] == 1 supervisor
+      if ((RIP >> 63) == USER_PL) {
+        BX_ERROR(("prefetch: #GP(0): LASS violation during fetch CPL=%d RIP=0x" FMT_PHY_ADDRX, CPL, RIP));
+        exception(BX_GP_EXCEPTION, 0);
+      }
+    }
+
     // linear address is equal to RIP in 64-bit long mode
     pageOffset = PAGE_OFFSET(EIP);
     laddr = RIP;
@@ -707,8 +733,7 @@ bool BX_CPU_C::dbg_instruction_epilog(void)
   // support for 'show' command in debugger
   extern unsigned dbg_show_mask;
   if(dbg_show_mask) {
-    int rv = bx_dbg_show_symbolic();
-    if (rv) return(rv);
+    bx_dbg_show_symbolic();
   }
 
   // Just committed an instruction, before fetching a new one

@@ -214,7 +214,7 @@ void bx_init_std_nic_options(const char *name, bx_list_c *menu)
 #endif
 
 #if BX_SUPPORT_PCIUSB
-void bx_init_usb_options(const char *usb_name, const char *pname, int maxports)
+void bx_init_usb_options(const char *usb_name, const char *pname, int maxports, int param0)
 {
   char group[16], name[8], descr[512], label[512];
   bx_list_c *usb, *usbrt, *deplist, *deplist2;
@@ -238,15 +238,24 @@ void bx_init_usb_options(const char *usb_name, const char *pname, int maxports)
   sprintf(descr, "Enables the %s emulation", usb_name);
   bx_param_bool_c *enabled = new bx_param_bool_c(menu, "enabled", label, descr, 1);
   
+  // ehci companion type
+  static const char *ehci_comp_type[] = { "uhci", "ohci", NULL };
+  new bx_param_enum_c(menu,
+      "companion", "Companion Type",
+      "Select Companion type to emulate",
+      ehci_comp_type,
+      0, 0
+  );
+  
   // xhci host controller type and number of ports
   static const char *xhci_model_names[] = { "uPD720202", "uPD720201", NULL };
-  bx_param_enum_c *model = new bx_param_enum_c(menu,
+  new bx_param_enum_c(menu,
       "model", "HC model",
       "Select Host Controller to emulate",
       xhci_model_names,
       0, 0
   );
-  bx_param_num_c *n_ports = new bx_param_num_c(menu,
+  new bx_param_num_c(menu,
       "n_ports", "Number of ports",
       "Set the number of ports for this controller",
       -1, 10,
@@ -268,9 +277,18 @@ void bx_init_usb_options(const char *usb_name, const char *pname, int maxports)
       bx_usbdev_ctl.get_device_names(),
       0, 0);
     sprintf(descr, "Options for device connected to %s port #%u", usb_name, i+1);
+#if BX_SUPPORT_USB_XHCI
+    if (!strcmp(usb_name, "xHCI")) {
+      if (i < (param0 / 2))
+        strcpy(label, "Options: (Must be super-speed)");
+      else
+        strcpy(label, "Options: (Must NOT be super-speed)");
+    } else
+#endif
+    strcpy(label, "Options");
     bx_param_string_c *options = new bx_param_string_c(port,
       "options",
-      "Options",
+      label,
       descr,
       "", BX_PATHNAME_LEN);
     bx_param_bool_c *overcurrent = new bx_param_bool_c(port, 
@@ -295,6 +313,9 @@ void bx_plugin_ctrl_init()
   bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_PLUGIN_CTRL);
   const char *name;
   int count = PLUG_get_plugins_count(PLUGTYPE_OPTIONAL);
+  if (count == 0) {
+    BX_PANIC(("bx_plugin_ctrl_init() failure: no plugins found"));
+  }
   for (int i = 0; i < count; i++) {
     name = PLUG_get_plugin_name(PLUGTYPE_OPTIONAL, i);
     new bx_param_bool_c(base, name, "", "", 0);
@@ -827,7 +848,7 @@ void bx_init_options()
 
   // memory options (ram & rom)
   bx_param_num_c *ramsize = new bx_param_num_c(ram,
-      "size",
+      "guest",
       "Memory size (megabytes)",
       "Amount of RAM in megabytes",
       1, ((Bit64u)(1) << BX_PHY_ADDRESS_WIDTH) / (1024*1024),
@@ -835,7 +856,7 @@ void bx_init_options()
   ramsize->set_ask_format("Enter memory size (MB): [%d] ");
 
   bx_param_num_c *host_ramsize = new bx_param_num_c(ram,
-      "host_size",
+      "host",
       "Host allocated memory size (megabytes)",
       "Amount of host allocated memory in megabytes",
       1, 2048,
@@ -1695,15 +1716,16 @@ void bx_init_options()
   misc->set_options(misc->SHOW_PARENT);
 
   // port e9 hack
-  new bx_param_bool_c(misc,
-      "port_e9_hack",
+  bx_list_c *port_e9_hack = new bx_list_c(misc, "port_e9_hack", "port 0xE9 hack");
+  new bx_param_bool_c(port_e9_hack,
+      "enabled",
       "Enable port 0xE9 hack",
       "Debug messages written to i/o port 0xE9 will be displayed on console",
       0);
 
   // port e9 hack all rings
-  new bx_param_bool_c(misc,
-      "port_e9_hack_all_rings",
+  new bx_param_bool_c(port_e9_hack,
+      "all_rings",
       "Enable port 0xE9 hack for all rings",
       "Debug messages written to i/o port 0xE9 from ring3 will be displayed on console",
       0);
@@ -2277,30 +2299,6 @@ static int parse_param_bool(const char *input, int len, const char *param)
   }
 
   return -1;
-}
-
-static int parse_port_e9_hack(const char *context, const char **params, int num_params)
-{
-  if (num_params > 2) {
-    PARSE_ERR(("%s: port_e9_hack directive: wrong # args.", context));
-  }
-  if (strncmp(params[0], "enabled=", 8)) {
-    PARSE_ERR(("%s: port_e9_hack directive malformed.", context));
-  }
-  if (parse_param_bool(params[0], 8, BXPN_PORT_E9_HACK) < 0) {
-    PARSE_ERR(("%s: port_e9_hack directive malformed.", context));
-  }
-  if (num_params == 2) {
-    if (!strncmp(params[1], "all_rings=", 10)) {
-      if (parse_param_bool(params[1], 10, BXPN_PORT_E9_HACK_ALL_RINGS) < 0) {
-        PARSE_ERR(("%s: all_rings option malformed.", context));
-      }
-    } else {
-      PARSE_ERR(("%s: port_e9_hack: invalid parameter %s", context, params[1]));
-    }
-  }
-
-  return 0;
 }
 
 int bx_parse_param_from_list(const char *context, const char *input, bx_list_c *list)
@@ -2910,17 +2908,11 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     SIM->get_param_num(BXPN_MEM_SIZE)->set(atol(params[1]));
     SIM->get_param_num(BXPN_HOST_MEM_SIZE)->set(atol(params[1]));
   } else if (!strcmp(params[0], "memory")) {
-    if (num_params < 3) {
+    if (num_params < 2) {
       PARSE_ERR(("%s: memory directive malformed.", context));
     }
     for (i=1; i<num_params; i++) {
-      if (!strncmp(params[i], "host=", 5)) {
-        SIM->get_param_num(BXPN_HOST_MEM_SIZE)->set(atol(&params[i][5]));
-      } else if (!strncmp(params[i], "guest=", 6)) {
-        SIM->get_param_num(BXPN_MEM_SIZE)->set(atol(&params[i][6]));
-      } else if (!strncmp(params[i], "block_size=", 11)) {
-        SIM->get_param_num(BXPN_MEM_BLOCK_SIZE)->set(atol(&params[i][11]));
-      } else {
+      if (bx_parse_param_from_list(context, params[i], (bx_list_c*) SIM->get_param(BXPN_MEMORY)) < 0) {
         PARSE_ERR(("%s: memory directive malformed.", context));
       }
     }
@@ -3277,8 +3269,10 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       PARSE_ERR(("%s: print_timestamps directive malformed.", context));
     }
   } else if (!strcmp(params[0], "port_e9_hack")) {
-    if (parse_port_e9_hack(context, (const char **)(params + 1), num_params - 1) < 0) {
-      return -1;
+    for (i=1; i<num_params; i++) {
+      if (bx_parse_param_from_list(context, params[i], (bx_list_c*) SIM->get_param(BXPN_PORT_E9_HACK_ROOT)) < 0) {
+        PARSE_ERR(("%s: port_e9_hack directive malformed.", context));
+      }
     }
   } else if (!strcmp(params[0], "iodebug")) {
 #if BX_SUPPORT_IODEBUG
@@ -3421,12 +3415,22 @@ int bx_write_floppy_options(FILE *fp, int drive)
 #if BX_SUPPORT_PCIUSB
 int bx_write_usb_options(FILE *fp, int maxports, bx_list_c *base)
 {
-  int i;
   char tmpname[24], tmpstr[BX_PATHNAME_LEN];
 
   fprintf(fp, "usb_%s: enabled=%d", base->get_name(), SIM->get_param_bool("enabled", base)->get());
+
+  // if we are the ehci, we need to add the companion= parameter
+  if (base == SIM->get_param(BXPN_USB_EHCI))
+    fprintf(fp, ", companion=%s", SIM->get_param_enum(BXPN_EHCI_COMPANION)->get_selected());
+
+  // if we are the xhci, we need to add the model= and n_ports= parameters
+  if (base == SIM->get_param(BXPN_USB_XHCI)) {
+    fprintf(fp, ", model=%s", SIM->get_param_enum(BXPN_XHCI_MODEL)->get_selected());
+    fprintf(fp, ", n_ports=%i", SIM->get_param_num(BXPN_XHCI_N_PORTS)->get());
+  }
+
   if (SIM->get_param_bool("enabled", base)->get()) {
-    for (i = 1; i <= maxports; i++) {
+    for (int i = 1; i <= maxports; i++) {
       sprintf(tmpname, "port%d.device", i);
       SIM->get_param_enum(tmpname, base)->dump_param(tmpstr, BX_PATHNAME_LEN, 1);
       fprintf(fp, ", port%d=%s", i, tmpstr);
@@ -3552,9 +3556,8 @@ int bx_write_configuration(const char *rc, int overwrite)
     fprintf(fp, ", options=\"%s\"\n", sparam->getptr());
   else
     fprintf(fp, "\n");
-  fprintf(fp, "memory: host=%d, guest=%d\n", SIM->get_param_num(BXPN_HOST_MEM_SIZE)->get(),
-    SIM->get_param_num(BXPN_MEM_SIZE)->get());
 
+  bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_MEMORY), "memory", 0);
   bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_ROMIMAGE), "romimage", 0);
   bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_VGA_ROMIMAGE), "vgaromimage", 0);
   fprintf(fp, "boot: %s", SIM->get_param_enum(BXPN_BOOTDRIVE1)->get_selected());
@@ -3648,11 +3651,10 @@ int bx_write_configuration(const char *rc, int overwrite)
 
   fprintf(fp, "print_timestamps: enabled=%d\n", bx_dbg.print_timestamps);
   bx_write_debugger_options(fp);
-  fprintf(fp, "port_e9_hack: enabled=%d\n", SIM->get_param_bool(BXPN_PORT_E9_HACK)->get());
-  fprintf(fp, "port_e9_hack_all_rings: enabled=%d\n", SIM->get_param_bool(BXPN_PORT_E9_HACK_ALL_RINGS)->get());
-  #if BX_SUPPORT_IODEBUG
+  bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_PORT_E9_HACK_ROOT), NULL, 0);
+#if BX_SUPPORT_IODEBUG
   fprintf(fp, "iodebug_all_rings: enabled=%d\n", SIM->get_param_bool(BXPN_IODEBUG_ALL_RINGS)->get());
-  #endif
+#endif
   fprintf(fp, "private_colormap: enabled=%d\n", SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get());
 #if BX_WITH_AMIGAOS
   fprintf(fp, "fullscreen: enabled=%d\n", SIM->get_param_bool(BXPN_FULLSCREEN)->get());

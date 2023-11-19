@@ -292,11 +292,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSX_GqEdR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::XCHG_EqGqM(bxInstruction_c *i)
 {
   bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
-
-  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
-  Bit64u op2_64 = BX_READ_64BIT_REG(i->src());
-
-  write_RMW_linear_qword(op2_64);
+  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr)); // always locked
+  write_RMW_linear_qword(BX_READ_64BIT_REG(i->src()));
   BX_WRITE_64BIT_REG(i->src(), op1_64);
 
   BX_NEXT_INSTR(i);

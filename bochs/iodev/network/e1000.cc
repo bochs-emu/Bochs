@@ -12,7 +12,7 @@
 //  Copyright (c) 2007 Dan Aloni
 //  Copyright (c) 2004 Antony T Curtis
 //
-//  Copyright (C) 2011-2021  The Bochs Project
+//  Copyright (C) 2011-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -459,7 +459,7 @@ void bx_e1000_main_c::init(void)
     bx_list_c *base = (bx_list_c*) SIM->get_param(pname);
     if (SIM->get_param_bool("enabled", base)->get()) {
       theE1000Dev[card] = new bx_e1000_c();
-      theE1000Dev[card]->init(card);
+      theE1000Dev[card]->init_card(card);
       count++;
     }
   }
@@ -527,7 +527,7 @@ bx_e1000_c::~bx_e1000_c()
   BX_DEBUG(("Exit"));
 }
 
-void bx_e1000_c::init(Bit8u card)
+void bx_e1000_c::init_card(Bit8u card)
 {
   char pname[20];
   Bit8u macaddr[6];

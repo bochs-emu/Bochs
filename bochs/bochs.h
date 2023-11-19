@@ -102,7 +102,9 @@ extern "C" {
 #endif
 
 #include "osdep.h"       /* platform dependent includes and defines */
-#include "gui/paramtree.h"
+
+class bx_param_c;
+class bx_list_c;
 
 // BX_SHARE_PATH should be defined by the makefile.  If not, give it
 // a value of NULL to avoid compile problems.
@@ -125,7 +127,7 @@ void bx_set_log_actions_by_device(bool panic_flag);
 void bx_init_std_nic_options(const char *name, bx_list_c *menu);
 #endif
 #if BX_SUPPORT_PCIUSB
-void bx_init_usb_options(const char *usb_name, const char *pname, int maxports);
+void bx_init_usb_options(const char *usb_name, const char *pname, int maxports, int param0);
 #endif
 int  bx_parse_param_from_list(const char *context, const char *input, bx_list_c *list);
 int  bx_parse_nic_params(const char *context, const char *param, bx_list_c *base);
@@ -349,9 +351,11 @@ extern bool bx_gui_sighandler;
 
 #define BX_PATHNAME_LEN 512
 
-#define BX_KBD_XT_TYPE        0
-#define BX_KBD_AT_TYPE        1
-#define BX_KBD_MF_TYPE        2
+enum {
+  BX_KBD_XT_TYPE = 0,
+  BX_KBD_AT_TYPE = 1,
+  BX_KBD_MF_TYPE = 2
+};
 
 #define BX_N_OPTROM_IMAGES 4
 #define BX_N_OPTRAM_IMAGES 4

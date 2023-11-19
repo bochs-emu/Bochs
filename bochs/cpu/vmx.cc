@@ -119,12 +119,14 @@ static const char *VMX_vmexit_reason_name[] =
   /* 67 */  "UMWAIT",
   /* 68 */  "TPAUSE",
   /* 69 */  "LOADIWKEY",
-  /* 70 */  "Reserved70",
+  /* 70 */  "ENCLV",
   /* 71 */  "Reserved71",
   /* 72 */  "ENQCMD PASID Translation",
   /* 73 */  "ENQCMDS PASID Translation",
   /* 74 */  "Bus Lock",
   /* 75 */  "Notify Window",
+  /* 76 */  "SEAMCALL",
+  /* 77 */  "TDCALL",
 };
 
 #include "decoder/ia_opcodes.h"
@@ -2347,7 +2349,7 @@ Bit32u BX_CPU_C::StoreMSRs(Bit32u msr_cnt, bx_phy_address pAddr)
 // VMexit
 ////////////////////////////////////////////////////////////
 
-void BX_CPU_C::VMexitSaveGuestState(void)
+void BX_CPU_C::VMexitSaveGuestState(Bit32u reason)
 {
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
   int n;
@@ -2446,9 +2448,33 @@ void BX_CPU_C::VMexitSaveGuestState(void)
 #endif
 #endif
 
-  Bit32u tmpDR6 = BX_CPU_THIS_PTR debug_trap & 0x0000400f;
-  if (tmpDR6 & 0xf) tmpDR6 |= (1 << 12);
-  VMwrite_natural(VMCS_GUEST_PENDING_DBG_EXCEPTIONS, tmpDR6);
+  // The pending debug exceptions field is saved as *clear* for all VM exits except the following:
+  //   - VMexit caused by an INIT signal, a machine-check exception, or a SMI
+  //   - Trap like VMexit ["TPR below threshold", "Virtualized EOI", "APIC write", "MTF" or "Bus-lock detected"]
+  //   - VM exits that are not caused by Debug Exceptions and occur while there is MOV-SS blocking of debug exceptions
+  bool clear_tmpDR6 = !interrupts_inhibited(BX_INHIBIT_DEBUG);
+  switch(reason) {
+  case VMX_VMEXIT_INIT:
+  case VMX_VMEXIT_SMI:
+  case VMX_VMEXIT_TPR_THRESHOLD:
+  case VMX_VMEXIT_VIRTUALIZED_EOI:
+  case VMX_VMEXIT_APIC_WRITE:
+  case VMX_VMEXIT_BUS_LOCK:
+  case VMX_VMEXIT_MONITOR_TRAP_FLAG:
+    clear_tmpDR6 = false;
+    break;
+  default:
+    break;
+  }
+
+  if (clear_tmpDR6) {
+    VMwrite_natural(VMCS_GUEST_PENDING_DBG_EXCEPTIONS, 0);
+  }
+  else {
+    Bit32u tmpDR6 = BX_CPU_THIS_PTR debug_trap & 0x0000400f;
+    if (tmpDR6 & 0xf) tmpDR6 |= (1 << 12);
+    VMwrite_natural(VMCS_GUEST_PENDING_DBG_EXCEPTIONS, tmpDR6);
+  }
 
   // effectively wakeup from MWAIT state on VMEXIT
   if (BX_CPU_THIS_PTR activity_state >= BX_VMX_LAST_ACTIVITY_STATE)
@@ -2768,7 +2794,7 @@ void BX_CPU_C::VMexit(Bit32u reason, Bit64u qualification)
     // clear VMENTRY interruption info field
     VMwrite32(VMCS_32BIT_CONTROL_VMENTRY_INTERRUPTION_INFO, vm->vmentry_interr_info & ~0x80000000);
 
-    VMexitSaveGuestState();
+    VMexitSaveGuestState(reason);
 
     Bit32u msr = StoreMSRs(vm->vmexit_msr_store_cnt, vm->vmexit_msr_store_addr);
     if (msr) {
@@ -3838,6 +3864,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVVPID(bxInstruction_c *i)
 
   BX_NEXT_TRACE(i);
 }
+
+#if BX_CPU_LEVEL >= 6
+enum {
+  BX_INVPCID_INDIVIDUAL_ADDRESS_NON_GLOBAL_INVALIDATION,
+  BX_INVPCID_SINGLE_CONTEXT_NON_GLOBAL_INVALIDATION,
+  BX_INVPCID_ALL_CONTEXT_INVALIDATION,
+  BX_INVPCID_ALL_CONTEXT_NON_GLOBAL_INVALIDATION
+};
+#endif
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVPCID(bxInstruction_c *i)
 {

@@ -316,17 +316,21 @@ enum { PLS_U0 = 0, PLS_U1, PLS_U2, PLS_U3_SUSPENDED, PLS_DISABLED, PLS_RXDETECT,
 #define EP_DIR_IN   1
 
 // Slot State
-#define SLOT_STATE_DISABLED_ENABLED  0
-#define SLOT_STATE_DEFAULT           1
-#define SLOT_STATE_ADDRESSED         2
-#define SLOT_STATE_CONFIGURED        3
+enum {
+  SLOT_STATE_DISABLED_ENABLED = 0,
+  SLOT_STATE_DEFAULT          = 1,
+  SLOT_STATE_ADDRESSED        = 2,
+  SLOT_STATE_CONFIGURED       = 3
+};
 
 // EP State
-#define EP_STATE_DISABLED 0
-#define EP_STATE_RUNNING  1
-#define EP_STATE_HALTED   2
-#define EP_STATE_STOPPED  3
-#define EP_STATE_ERROR    4
+enum {
+  EP_STATE_DISABLED = 0,
+  EP_STATE_RUNNING  = 1,
+  EP_STATE_HALTED   = 2,
+  EP_STATE_STOPPED  = 3,
+  EP_STATE_ERROR    = 4
+};
 
 #define TRB_GET_STYPE(x)     (((x) & (0x1F << 16)) >> 16)
 #define TRB_SET_STYPE(x)     (((x) & 0x1F) << 16)
@@ -614,7 +618,7 @@ private:
 
   static void reset_hc();
   static void reset_port(int);
-  static void reset_port_usb3(int, const int);
+  static void reset_port_usb3(int, int);
   static bool save_hc_state(void);
   static bool restore_hc_state(void);
 
@@ -624,39 +628,39 @@ private:
   static void remove_device(Bit8u port);
   static bool set_connect_status(Bit8u port, bool connected);
 
-  static int  broadcast_speed(const int slot);
-  static int  broadcast_packet(USBPacket *p, const int port);
-  static Bit8u get_psceg(const int port);
+  static int  broadcast_speed(int slot);
+  static int  broadcast_packet(USBPacket *p, int port);
+  static Bit8u get_psceg(int port);
   static void xhci_timer_handler(void *);
   void xhci_timer(void);
 
-  static Bit64u process_transfer_ring(const int slot, const int ep, Bit64u ring_addr, bool *rcs, const int primary_sid);
+  static Bit64u process_transfer_ring(int slot, int ep, Bit64u ring_addr, bool *rcs, int primary_sid);
   static void process_command_ring(void);
-  static void get_stream_info(struct STREAM_CONTEXT *context, const Bit64u address, const int index);
-  static void put_stream_info(struct STREAM_CONTEXT *context, const Bit64u address, const int index);
-  static void write_event_TRB(const unsigned interrupter, const Bit64u parameter, const Bit32u status,
-                              const Bit32u command, const bool fire_int);
-  static Bit32u NEC_verification(const Bit64u parameter);
-  static void init_event_ring(const unsigned interrupter);
+  static void get_stream_info(struct STREAM_CONTEXT *context, Bit64u address, int index);
+  static void put_stream_info(struct STREAM_CONTEXT *context, Bit64u address, int index);
+  static void write_event_TRB(unsigned interrupter, Bit64u parameter, Bit32u status,
+                              Bit32u command, bool fire_int);
+  static Bit32u NEC_verification(Bit64u parameter);
+  static void init_event_ring(unsigned interrupter);
   static void read_TRB(bx_phy_address addr, struct TRB *trb);
-  static void write_TRB(bx_phy_address addr, const Bit64u parameter, const Bit32u status, const Bit32u command);
-  static void update_slot_context(const int slot);
-  static void update_ep_context(const int slot, const int ep);
-  static void dump_slot_context(const Bit32u *context, const int slot);
-  static void dump_ep_context(const Bit32u *context, const int slot, const int ep);
+  static void write_TRB(bx_phy_address addr, Bit64u parameter, Bit32u status, Bit32u command);
+  static void update_slot_context(int slot);
+  static void update_ep_context(int slot, int ep);
+  static void dump_slot_context(const Bit32u *context, int slot);
+  static void dump_ep_context(const Bit32u *context, int slot, int ep);
   static void dump_stream_context(const Bit32u *context);
   static void copy_slot_from_buffer(struct SLOT_CONTEXT *slot_context, const Bit8u *buffer);
   static void copy_ep_from_buffer(struct EP_CONTEXT *ep_context, const Bit8u *buffer);
-  static void copy_slot_to_buffer(Bit32u *buffer, const int slot);
-  static void copy_ep_to_buffer(Bit32u *buffer, const int slot, const int ep);
+  static void copy_slot_to_buffer(Bit32u *buffer, int slot);
+  static void copy_ep_to_buffer(Bit32u *buffer, int slot, int ep);
   static void copy_stream_from_buffer(struct STREAM_CONTEXT *context, const Bit8u *buffer);
   static void copy_stream_to_buffer(Bit8u *buffer, const struct STREAM_CONTEXT *context);
-  static int  validate_slot_context(const struct SLOT_CONTEXT *slot_context, const int trb_command, const int slot);
-  static int  validate_ep_context(const struct EP_CONTEXT *ep_context, const int trb_command, const Bit32u a_flags, int port_num, int ep_num);
-  static int  create_unique_address(const int slot);
-  static int  send_set_address(const int addr, const int port_num, const int slot);
+  static int  validate_slot_context(const struct SLOT_CONTEXT *slot_context, int trb_command, int slot);
+  static int  validate_ep_context(const struct EP_CONTEXT *ep_context, int trb_command, Bit32u a_flags, int port_num, int ep_num);
+  static int  create_unique_address(int slot);
+  static int  send_set_address(int addr, int port_num, int slot);
 
-  static void dump_xhci_core(const unsigned int slots, const unsigned int eps);
+  static void dump_xhci_core(unsigned int slots, unsigned int eps);
 
 #if BX_USE_USB_XHCI_SMF
   static bool read_handler(bx_phy_address addr, unsigned len, void *data, void *param);

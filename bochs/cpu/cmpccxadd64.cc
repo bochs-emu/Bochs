@@ -38,7 +38,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPBEXADD_EqGqBq(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), laddr);
+  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), laddr); // implicit lock
   Bit64u diff_64 = op1_64 - op2_64;
   SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);
   write_RMW_linear_qword((get_CF() || get_ZF()) ? op1_64 + op3_64 : op1_64);
@@ -59,7 +59,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPBXADD_EqGqBq(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), laddr);
+  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), laddr); // implicit lock
   Bit64u diff_64 = op1_64 - op2_64;
   SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);
   write_RMW_linear_qword(get_CF() ? op1_64 + op3_64 : op1_64);
@@ -80,7 +80,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPLEXADD_EqGqBq(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), laddr);
+  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), laddr); // implicit lock
   Bit64u diff_64 = op1_64 - op2_64;
   SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);
   write_RMW_linear_qword((get_ZF() || getB_SF() != getB_OF()) ? op1_64 + op3_64 : op1_64);
@@ -101,7 +101,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPLXADD_EqGqBq(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), laddr);
+  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), laddr); // implicit lock
   Bit64u diff_64 = op1_64 - op2_64;
   SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);
   write_RMW_linear_qword((getB_SF() != getB_OF()) ? op1_64 + op3_64 : op1_64);
@@ -122,7 +122,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPNBEXADD_EqGqBq(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), laddr);
+  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), laddr); // implicit lock
   Bit64u diff_64 = op1_64 - op2_64;
   SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);
   write_RMW_linear_qword((!get_CF() && !get_ZF()) ? op1_64 + op3_64 : op1_64);
@@ -143,7 +143,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPNBXADD_EqGqBq(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), laddr);
+  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), laddr); // implicit lock
   Bit64u diff_64 = op1_64 - op2_64;
   SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);
   write_RMW_linear_qword(!get_CF() ? op1_64 + op3_64 : op1_64);
@@ -164,7 +164,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPNLEXADD_EqGqBq(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), laddr);
+  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), laddr); // implicit lock
   Bit64u diff_64 = op1_64 - op2_64;
   SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);
   write_RMW_linear_qword((!get_ZF() && getB_SF() == getB_OF()) ? op1_64 + op3_64 : op1_64);
@@ -185,7 +185,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPNLXADD_EqGqBq(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), laddr);
+  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), laddr); // implicit lock
   Bit64u diff_64 = op1_64 - op2_64;
   SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);
   write_RMW_linear_qword((getB_SF() == getB_OF()) ? op1_64 + op3_64 : op1_64);
@@ -206,7 +206,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPNOXADD_EqGqBq(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), laddr);
+  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), laddr); // implicit lock
   Bit64u diff_64 = op1_64 - op2_64;
   SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);
   write_RMW_linear_qword(!get_OF() ? op1_64 + op3_64 : op1_64);
@@ -227,7 +227,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPNPXADD_EqGqBq(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), laddr);
+  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), laddr); // implicit lock
   Bit64u diff_64 = op1_64 - op2_64;
   SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);
   write_RMW_linear_qword(!get_PF() ? op1_64 + op3_64 : op1_64);
@@ -248,7 +248,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPNSXADD_EqGqBq(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), laddr);
+  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), laddr); // implicit lock
   Bit64u diff_64 = op1_64 - op2_64;
   SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);
   write_RMW_linear_qword(!get_SF() ? op1_64 + op3_64 : op1_64);
@@ -269,7 +269,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPNZXADD_EqGqBq(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), laddr);
+  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), laddr); // implicit lock
   Bit64u diff_64 = op1_64 - op2_64;
   SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);
   write_RMW_linear_qword((!get_ZF()) ? op1_64 + op3_64 : op1_64);
@@ -290,7 +290,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPOXADD_EqGqBq(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), laddr);
+  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), laddr); // implicit lock
   Bit64u diff_64 = op1_64 - op2_64;
   SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);
   write_RMW_linear_qword(get_OF() ? op1_64 + op3_64 : op1_64);
@@ -311,7 +311,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPPXADD_EqGqBq(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), laddr);
+  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), laddr); // implicit lock
   Bit64u diff_64 = op1_64 - op2_64;
   SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);
   write_RMW_linear_qword(get_PF() ? op1_64 + op3_64 : op1_64);
@@ -332,7 +332,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPSXADD_EqGqBq(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), laddr);
+  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), laddr); // implicit lock
   Bit64u diff_64 = op1_64 - op2_64;
   SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);
   write_RMW_linear_qword(get_SF() ? op1_64 + op3_64 : op1_64);
@@ -353,7 +353,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPZXADD_EqGqBq(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), laddr);
+  Bit64u op1_64 = read_RMW_linear_qword(i->seg(), laddr); // implicit lock
   Bit64u diff_64 = op1_64 - op2_64;
   SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);
   write_RMW_linear_qword(get_ZF() ? op1_64 + op3_64 : op1_64);

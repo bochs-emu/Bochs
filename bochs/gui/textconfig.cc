@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -502,7 +502,11 @@ int bx_text_config_interface(int menu)
                 if (strcmp(sr_path, "none")) {
                   SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(1);
                   SIM->get_param_string(BXPN_RESTORE_PATH)->set(sr_path);
-                  bx_text_config_interface(BX_CI_START_SIMULATION);
+                  if (!SIM->restore_config()) {
+                    bx_printf("\nERROR: Cannot restore configuration!\n");
+                  } else {
+                    bx_text_config_interface(BX_CI_START_SIMULATION);
+                  }
                 }
               }
               break;
@@ -823,6 +827,12 @@ ask:
         // warning prompt not implemented
         event->retcode = 0;
       }
+      return event;
+    case BX_SYNC_EVT_ML_MSG_BOX:
+      fprintf(stderr, "%s\n%s\n", event->u.logmsg.prefix, event->u.logmsg.msg);
+      return event;
+    case BX_SYNC_EVT_ML_MSG_BOX_KILL:
+      // Nothing to do
       return event;
     case BX_ASYNC_EVT_REFRESH:
     case BX_ASYNC_EVT_DBG_MSG:

@@ -319,6 +319,16 @@ BX_CPU_C::tickle_read_linear(unsigned s, bx_address laddr)
     BX_ERROR(("tickle_read_linear(): canonical failure"));
     exception(int_number(s), 0);
   }
+
+  if (long64_mode()) {
+    if (BX_CPU_THIS_PTR cr4.get_LASS()) {
+      // laddr[63] == 0 user, laddr[63] == 1 supervisor
+      if ((laddr >> 63) == USER_PL) {
+        BX_ERROR(("tickle_read_linear(): LASS violation during tickle read CPL=%d laddr=0x" FMT_PHY_ADDRX, CPL, laddr));
+        exception(int_number(s), 0);
+      }
+    }
+  }
 #endif
 
   // Access within single page
@@ -1222,7 +1232,7 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::shadow_stack_write_qword(bx_address offset
 
 bool BX_CPP_AttrRegparmN(4) BX_CPU_C::shadow_stack_lock_cmpxchg8b(bx_address offset, unsigned curr_pl, Bit64u data, Bit64u expected_data)
 {
-  Bit64u val64 = shadow_stack_read_qword(offset, curr_pl);
+  Bit64u val64 = shadow_stack_read_qword(offset, curr_pl); // should be locked and RMW
   if (val64 == expected_data) {
     shadow_stack_write_qword(offset, curr_pl, data);
     return true;

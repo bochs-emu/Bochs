@@ -309,7 +309,7 @@ static const Bit8u priv_check[BX_PRIV_CHECK_SIZE] =
 //       1  1  1  1 | user write to user page                   | Allowed
 //
 
-const Bit64u BX_PAGING_PHY_ADDRESS_RESERVED_BITS = BX_PHY_ADDRESS_RESERVED_BITS & BX_CONST64(0xfffffffffffff);
+#define BX_PAGING_PHY_ADDRESS_RESERVED_BITS (BX_PHY_ADDRESS_RESERVED_BITS & BX_CONST64(0xfffffffffffff))
 
 const Bit64u PAGE_DIRECTORY_NX_BIT = BX_CONST64(0x8000000000000000);
 
@@ -575,10 +575,10 @@ enum {
 // 63    | Execute-Disable (XD) (if EFER.NXE=1, reserved otherwise)
 // -----------------------------------------------------------
 
-const Bit64u PAGING_PAE_RESERVED_BITS = BX_PAGING_PHY_ADDRESS_RESERVED_BITS;
+#define PAGING_PAE_RESERVED_BITS (BX_PAGING_PHY_ADDRESS_RESERVED_BITS)
 
 // in legacy PAE mode bits [62:52] are reserved. bit 63 is NXE
-const Bit64u PAGING_LEGACY_PAE_RESERVED_BITS = BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x7ff0000000000000);
+#define PAGING_LEGACY_PAE_RESERVED_BITS (BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x7ff0000000000000))
 
 //       Format of a PDPTE that References a 1-GByte Page
 // -----------------------------------------------------------
@@ -600,7 +600,7 @@ const Bit64u PAGING_LEGACY_PAE_RESERVED_BITS = BX_PAGING_PHY_ADDRESS_RESERVED_BI
 // 63    | Execute-Disable (XD) (if EFER.NXE=1, reserved otherwise)
 // -----------------------------------------------------------
 
-const Bit64u PAGING_PAE_PDPTE1G_RESERVED_BITS = BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x3FFFE000);
+#define PAGING_PAE_PDPTE1G_RESERVED_BITS (BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x3FFFE000))
 
 //        Format of a PAE PDE that Maps a 2-MByte Page
 // -----------------------------------------------------------
@@ -622,7 +622,7 @@ const Bit64u PAGING_PAE_PDPTE1G_RESERVED_BITS = BX_PAGING_PHY_ADDRESS_RESERVED_B
 // 63    | Execute-Disable (XD) (if EFER.NXE=1, reserved otherwise)
 // -----------------------------------------------------------
 
-const Bit64u PAGING_PAE_PDE2M_RESERVED_BITS = BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x001FE000);
+#define PAGING_PAE_PDE2M_RESERVED_BITS (BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0x001FE000))
 
 //        Format of a PAE PTE that Maps a 4-KByte Page
 // -----------------------------------------------------------
@@ -806,7 +806,7 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
     //  - R/W bit=0 and Dirty=1 for leaf entry
     bool shadow_stack_page = ((combined_access & BX_COMBINED_ACCESS_WRITE) != 0) && ((entry[leaf] & 0x40) != 0) && ((entry[leaf] & 0x02) == 0);
     if (!shadow_stack_page) {
-      BX_DEBUG(("shadow stack access to not shadow stack page CA=%x entry=%lx\n", combined_access, Bit32u(entry[leaf] & 0xfff)));
+      BX_DEBUG(("shadow stack access to not shadow stack page CA=%x entry=%x\n", combined_access, Bit32u(entry[leaf] & 0xfff)));
       page_fault(ERROR_PROTECTION, laddr, user, rw);
     }
 
@@ -864,7 +864,7 @@ void BX_CPU_C::update_access_dirty_PAE(bx_phy_address *entry_addr, Bit64u *entry
   for (unsigned level=max_level; level > leaf; level--) {
     if (!(entry[level] & 0x20)) {
       entry[level] |= 0x20;
-      access_write_physical(entry_addr[level], 8, &entry[level]);
+      access_write_physical(entry_addr[level], 8, &entry[level]);   // should be done with locked RMW
       BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[level], 8, entry_memtype[level], BX_WRITE,
             (BX_PTE_ACCESS + level), (Bit8u*)(&entry[level]));
     }
@@ -873,7 +873,7 @@ void BX_CPU_C::update_access_dirty_PAE(bx_phy_address *entry_addr, Bit64u *entry
   // Update A/D bits if needed
   if (!(entry[leaf] & 0x20) || (write && !(entry[leaf] & 0x40))) {
     entry[leaf] |= (0x20 | (write<<6)); // Update A and possibly D bits
-    access_write_physical(entry_addr[leaf], 8, &entry[leaf]);
+    access_write_physical(entry_addr[leaf], 8, &entry[leaf]);       // should be done with locked RMW
     BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 8, entry_memtype[leaf], BX_WRITE,
             (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
   }
@@ -891,7 +891,7 @@ void BX_CPU_C::update_access_dirty_PAE(bx_phy_address *entry_addr, Bit64u *entry
 // 63-PA | Reserved (must be zero)
 // -----------------------------------------------------------
 
-const Bit64u PAGING_PAE_PDPTE_RESERVED_BITS = BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0xFFF00000000001E6);
+#define PAGING_PAE_PDPTE_RESERVED_BITS (BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0xFFF00000000001E6))
 
 bool BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckPDPTR(bx_phy_address cr3_val)
 {
@@ -1474,6 +1474,15 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
       tlbEntry->accessBits &= ~(TLB_SysReadShadowStackOK | TLB_SysWriteShadowStackOK);
 #endif
     }
+
+#if BX_SUPPORT_X86_64
+    if (long64_mode() && BX_CPU_THIS_PTR cr4.get_LASS()) {
+      if (lpf >> 63) // supervisor, cannot access user pages
+        tlbEntry->accessBits &= ~(TLB_UserReadOK | TLB_UserWriteOK | TLB_UserReadShadowStackOK | TLB_UserWriteShadowStackOK);
+      else           // user, cannot access supervisor pages
+        tlbEntry->accessBits &= ~(TLB_SysReadOK | TLB_SysWriteOK | TLB_SysReadShadowStackOK | TLB_SysWriteShadowStackOK);
+    }
+#endif
   }
 
 #if BX_SUPPORT_VMX >= 2
@@ -1911,7 +1920,7 @@ const Bit64u BX_SUPPRESS_EPT_VIOLATION_EXCEPTION = (BX_CONST64(1) << 63);
 const Bit64u BX_SUB_PAGE_PROTECTED               = (BX_CONST64(1) << 61);
 const Bit64u BX_SUPERVISOR_SHADOW_STACK_PAGE     = (BX_CONST64(1) << 60);
 
-const Bit64u PAGING_EPT_RESERVED_BITS = BX_PAGING_PHY_ADDRESS_RESERVED_BITS;
+#define PAGING_EPT_RESERVED_BITS (BX_PAGING_PHY_ADDRESS_RESERVED_BITS)
 
 // entries which were allowed to write only because of SPP cannot be cached in DTLB as writeable
 bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx_address guest_laddr, bool guest_laddr_valid, bool is_page_walk, unsigned user_page, unsigned rw, bool supervisor_shadow_stack, bool *spp_page)
@@ -2131,7 +2140,7 @@ void BX_CPU_C::update_ept_access_dirty(bx_phy_address *entry_addr, Bit64u *entry
   }
 }
 
-const Bit64u PAGING_SPP_RESERVED_BITS = BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0xFFF0000000000FFE);
+#define PAGING_SPP_RESERVED_BITS (BX_PAGING_PHY_ADDRESS_RESERVED_BITS | BX_CONST64(0xFFF0000000000FFE))
 
 const Bit32u VMX_SPP_NOT_PRESENT_QUALIFICATION = (1<<11);
 
@@ -2485,6 +2494,16 @@ int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_
     BX_ERROR(("access_write_linear(): canonical failure"));
     return -1;
   }
+
+  if (long64_mode()) {
+    if (BX_CPU_THIS_PTR cr4.get_LASS()) {
+      // laddr[63] == 0 user, laddr[63] == 1 supervisor
+      if ((laddr >> 63) == user) {
+        BX_ERROR(("access_write_linear(): LASS violation during write CPL=%d laddr=0x" FMT_PHY_ADDRX, user, laddr));
+        return -1;
+      }
+    }
+  }
 #endif
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
@@ -2526,6 +2545,13 @@ int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_
       if (! IsCanonical(laddr2)) {
         BX_ERROR(("access_write_linear(): canonical failure for second half of page split access"));
         return -1;
+      }
+      if (BX_CPU_THIS_PTR cr4.get_LASS()) {
+        // laddr[63] == 0 user, laddr[63] == 1 supervisor
+        if ((laddr2 >> 63) == user) {
+          BX_ERROR(("access_write_linear(): LASS violation during write CPL=%d laddr=0x" FMT_PHY_ADDRX, user, laddr2));
+          return -1;
+        }
       }
     }
 #endif
@@ -2591,6 +2617,16 @@ int BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_p
     BX_ERROR(("access_read_linear(): canonical failure"));
     return -1;
   }
+
+  if (long64_mode()) {
+    if (BX_CPU_THIS_PTR cr4.get_LASS()) {
+      // laddr[63] == 0 user, laddr[63] == 1 supervisor
+      if ((laddr >> 63) == user) {
+        BX_ERROR(("access_read_linear(): LASS violation during read CPL=%d laddr=0x" FMT_PHY_ADDRX, user, laddr));
+        return -1;
+      }
+    }
+  }
 #endif
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
@@ -2631,6 +2667,13 @@ int BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_p
       if (! IsCanonical(laddr2)) {
         BX_ERROR(("access_read_linear(): canonical failure for second half of page split access"));
         return -1;
+      }
+      if (BX_CPU_THIS_PTR cr4.get_LASS()) {
+        // laddr[63] == 0 user, laddr[63] == 1 supervisor
+        if ((laddr2 >> 63) == user) {
+          BX_ERROR(("access_read_linear(): LASS violation during read CPL=%d laddr=0x" FMT_PHY_ADDRX, user, laddr2));
+          return -1;
+        }
       }
     }
 #endif

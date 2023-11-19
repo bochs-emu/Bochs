@@ -31,9 +31,11 @@
 
 #define BX_PARPORT_MAXDEV   2
 
-#define BX_PAR_DATA  0
-#define BX_PAR_STAT  1
-#define BX_PAR_CTRL  2
+enum {
+  BX_PAR_DATA = 0,
+  BX_PAR_STAT = 1,
+  BX_PAR_CTRL = 2
+};
 
 typedef struct {
   Bit8u data;

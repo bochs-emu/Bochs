@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2021  The Bochs Project
+# Copyright (C) 2001-2023  The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -180,7 +180,7 @@ bx_sdl2_gui.dll: $(GUI_OBJS_SDL2)
 	$(CXX) $(CXXFLAGS) -shared -o bx_sdl2_gui.dll $(GUI_OBJS_SDL2) $(WIN32_DLL_IMPORT_LIBRARY) $(GUI_LINK_OPTS_SDL2)
 
 bx_vncsrv_gui.dll: $(GUI_OBJS_VNCSRV)
-	$(CXX) $(CXXFLAGS) -shared -o bx_vncsrv.dll $(GUI_OBJS_VNCSRV) $(WIN32_DLL_IMPORT_LIBRARY) $(GUI_LINK_OPTS_VNCSRV)
+	$(CXX) $(CXXFLAGS) -shared -o bx_vncsrv_gui.dll $(GUI_OBJS_VNCSRV) $(WIN32_DLL_IMPORT_LIBRARY) $(GUI_LINK_OPTS_VNCSRV)
 
 # special link rules for plugins with Cygwin, MinGW/MSYS and MSVC nmake
 bx_nogui_gui.dll: $(GUI_OBJS_NOGUI)

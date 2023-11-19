@@ -459,14 +459,6 @@ void bx_generic_cpuid_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
 }
 
 // leaf 0x80000008 //
-void bx_generic_cpuid_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
-{
-  // virtual & phys address size in low 2 bytes.
-  leaf->eax = BX_PHY_ADDRESS_WIDTH | (BX_LIN_ADDRESS_WIDTH << 8);
-  leaf->ebx = 0;
-  leaf->ecx = 0; // Reserved, undefined
-  leaf->edx = 0;
-}
 
 #if BX_SUPPORT_SVM
 
@@ -597,7 +589,6 @@ void bx_generic_cpuid_t::init_cpu_extensions_bitmask(void)
 #if BX_SUPPORT_EVEX
     case BX_CPUID_SUPPORT_AVX512:
       enable_cpu_extension(BX_ISA_AVX512);
-      enable_cpu_extension(BX_ISA_AVX512_VL);
       enable_cpu_extension(BX_ISA_AVX512_BW);
       enable_cpu_extension(BX_ISA_AVX512_DQ);
       enable_cpu_extension(BX_ISA_AVX512_CD);

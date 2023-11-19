@@ -96,11 +96,11 @@ protected:
 static const Bit8u bx_mouse_dev_descriptor[] = {
   0x12,       /*  u8 bLength; */
   0x01,       /*  u8 bDescriptorType; Device */
-  0x00, 0x01, /*  u16 bcdUSB; v1.0 */
+  0x01, 0x01, /*  u16 bcdUSB; v1.1 */
 
   0x00,       /*  u8  bDeviceClass; */
   0x00,       /*  u8  bDeviceSubClass; */
-  0x00,       /*  u8  bDeviceProtocol; [ low/full speeds only ] */
+  0x00,       /*  u8  bDeviceProtocol; */
   0x08,       /*  u8  bMaxPacketSize; 8 Bytes */
 
   0x27, 0x06, /*  u16 idVendor; */
@@ -120,7 +120,7 @@ static const Bit8u bx_mouse_dev_descriptor2[] = {
 
   0x00,       /*  u8  bDeviceClass; */
   0x00,       /*  u8  bDeviceSubClass; */
-  0x00,       /*  u8  bDeviceProtocol; [ low/full speeds only ] */
+  0x00,       /*  u8  bDeviceProtocol; */
   0x40,       /*  u8  bMaxPacketSize; 64 Bytes */
 
   0x27, 0x06, /*  u16 idVendor; */
@@ -461,7 +461,8 @@ static Bit8u bx_mouse_config_descriptor0[] = {
   0x81,       /*  u8  ep_bEndpointAddress; IN Endpoint 1 */
   0x03,       /*  u8  ep_bmAttributes; Interrupt */
   0x08, 0x00, /*  u16 ep_wMaxPacketSize; */
-  0x0a,       /*  u8  ep_bInterval; (0 - 255ms -- usb 2.0 spec) */
+  0x0A,       /*  u8  ep_bInterval; (10 - 255ms -- usb 2.0 spec, 5.7.4) */
+              /*           however: (11 - 255ms -- usb 2.0 compliance 1.2.84, pg 11 */
 };
 
 #define HID_PHYS_DESC_SET_LEN   7
@@ -797,11 +798,11 @@ static const Bit8u bx_keypad_hid_report_descriptor[] = {
 static const Bit8u bx_keypad_dev_descriptor[] = {
   0x12,       /*  u8 bLength; */
   0x01,       /*  u8 bDescriptorType; Device */
-  0x10, 0x01, /*  u16 bcdUSB; v1.1 */
+  0x01, 0x01, /*  u16 bcdUSB; v1.1 */
 
   0x00,       /*  u8  bDeviceClass; */
   0x00,       /*  u8  bDeviceSubClass; */
-  0x00,       /*  u8  bDeviceProtocol; [ low/full speeds only ] */
+  0x00,       /*  u8  bDeviceProtocol; */
   0x08,       /*  u8  bMaxPacketSize; 8 Bytes */
 
   0xB4, 0x04, /*  u16 idVendor; */
@@ -821,7 +822,7 @@ static const Bit8u bx_keypad_dev_descriptor2[] = {
 
   0x00,       /*  u8  bDeviceClass; */
   0x00,       /*  u8  bDeviceSubClass; */
-  0x00,       /*  u8  bDeviceProtocol; [ low/full speeds only ] */
+  0x00,       /*  u8  bDeviceProtocol; */
   0x40,       /*  u8  bMaxPacketSize; 64 Bytes */
 
   0xB4, 0x04, /*  u16 idVendor; */
@@ -1302,8 +1303,8 @@ void usb_hid_device_c::register_state_specific(bx_list_c *parent)
     BXRS_DEC_PARAM_FIELD(list, report_use_id, s.report_use_id);
     BXRS_DEC_PARAM_FIELD(list, report_id, s.report_id);
     BXRS_DEC_PARAM_FIELD(list, bx_mouse_hid_report_descriptor_len, s.bx_mouse_hid_report_descriptor_len);
-    new bx_shadow_data_c(list, "bx_mouse_hid_report_descriptor", (Bit8u *) s.bx_mouse_hid_report_descriptor, sizeof(s.bx_mouse_hid_report_descriptor), 1);
-    new bx_shadow_data_c(list, "model", (Bit8u *) s.model, sizeof(s.model), 1);
+    new bx_shadow_data_c(list, "bx_mouse_hid_report_descriptor", (Bit8u *) s.bx_mouse_hid_report_descriptor, s.bx_mouse_hid_report_descriptor_len, 0);
+    new bx_shadow_data_c(list, "model", (Bit8u *) &s.model, sizeof(s.model), 0);
     bx_list_c *evbuf = new bx_list_c(list, "kbd_event_buf", "");
     char pname[16];
     for (Bit8u i = 0; i < BX_KBD_ELEMENTS; i++) {
@@ -1345,6 +1346,23 @@ int usb_hid_device_c::handle_control(int request, int value, int index, int leng
     case DeviceOutRequest | USB_REQ_SET_FEATURE:
       BX_DEBUG(("HID: DeviceRequest | SET_FEATURE:"));
       goto fail;
+      break;
+    case EndpointRequest | USB_REQ_GET_STATUS:
+      BX_DEBUG(("USB_REQ_GET_STATUS: Endpoint."));
+      // if the endpoint is currently halted, return bit 0 = 1
+      if (value == USB_ENDPOINT_HALT) {
+        if (index == 0x81) {
+          data[0] = 0x00 | (get_halted(index) ? 1 : 0);
+          data[1] = 0x00;
+          ret = 2;
+        } else {
+          BX_ERROR(("EndpointRequest | USB_REQ_GET_STATUS: index > ep count: %d", index));
+          goto fail;
+        }
+      } else {
+        BX_ERROR(("EndpointRequest | USB_REQ_SET_FEATURE: Unknown Get Status Request found: %d", value));
+        goto fail;
+      }
       break;
     case DeviceRequest | USB_REQ_GET_DESCRIPTOR:
       BX_DEBUG(("HID: DeviceRequest | USB_REQ_GET_DESCRIPTOR:"));
@@ -1439,12 +1457,6 @@ int usb_hid_device_c::handle_control(int request, int value, int index, int leng
           goto fail;
         }
         break;
-    case EndpointOutRequest | USB_REQ_CLEAR_FEATURE:
-      BX_DEBUG(("HID: CLEAR_FEATURE:"));
-      if ((value == 0) && (index != 0x81)) { /* clear EP halt */
-        goto fail;
-      }
-      break;
     case InterfaceInClassRequest | GET_REPORT:
       BX_DEBUG(("HID: GET_REPORT:"));
       if ((value >> 8) == 1) { // Input report

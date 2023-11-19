@@ -94,7 +94,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
 
   bx_phy_address paddr = BX_CPU_THIS_PTR address_xlation.paddress1;
 #if BX_SUPPORT_MEMTYPE
-  if (BX_CPU_THIS_PTR address_xlation.memtype1 != BX_MEMTYPE_WB) return;
+  if (BX_CPU_THIS_PTR address_xlation.memtype1 != BX_MEMTYPE_WB) {
+    BX_NEXT_INSTR(i);
+  }
 #endif
 
 #if BX_SUPPORT_SVM

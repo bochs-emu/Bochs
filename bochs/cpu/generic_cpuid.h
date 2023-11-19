@@ -81,7 +81,6 @@ private:
   void get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const;
   void get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const;
   void get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const;
-  void get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const;
 #if BX_SUPPORT_SVM
   void get_ext_cpuid_leaf_A(cpuid_function_t *leaf) const;
 #endif
@@ -90,7 +89,6 @@ private:
 #endif
 
   Bit32u get_cpu_version_information(void) const;
-  Bit32u get_std_cpuid_features(void) const;
 };
 
 extern bx_cpuid_t *create_bx_generic_cpuid(BX_CPU_C *cpu);

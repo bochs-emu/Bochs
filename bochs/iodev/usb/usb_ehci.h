@@ -46,6 +46,24 @@
 
 #define USB_EHCI_PORTS  6
 
+enum {
+  EHCI_COMPANION_UHCI,     // UHCI companions  (default)
+  EHCI_COMPANION_OHCI      // OHCI companions
+};
+
+#define EHCI_PORT_ROUTE  1  // 1 = use port routing (use HcspPortRoute)
+#define EHCI_N_CC        3  // Number of companion controllers (for now, must remain 3)
+#define EHCI_N_PCC       2  // Ports per companion controller (for now, must remain 2)
+#if ((EHCI_N_CC * EHCI_N_PCC) != USB_EHCI_PORTS)
+  #error Inconsistent CC, PCC, Total Ports values
+#endif
+
+#define EHCI_HCCPARAMS_64BIT           (1 << 0)
+#define EHCI_HCCPARAMS_PFL_FLAG        (1 << 1)
+#define EHCI_HCCPARAMS_ASYNC_CAP       (1 << 2)
+#define EHCI_HCCPARAMS_ISO_THRESH(x) ((x) << 4)
+#define EHCI_HCCPARAMS_EECP(x)       ((x) << 8)
+
 /*  EHCI spec version 1.0 Section 3.3
  */
 typedef struct EHCIitd {
@@ -231,6 +249,7 @@ typedef struct {
     Bit16u HciVersion;
     Bit32u HcsParams;
     Bit32u HccParams;
+    Bit64u HcspPortRoute;
   } cap_regs;
 
   struct {
@@ -335,7 +354,9 @@ public:
   int event_handler(int event, void *ptr, int port);
 
 private:
+  int companion_type;
   bx_uhci_core_c *uhci[3];
+  bx_ohci_core_c *ohci[3];
   bx_usb_ehci_t hub;
   Bit8u         devfunc;
   Bit8u         device_change;
@@ -349,6 +370,8 @@ private:
   static void remove_device(Bit8u port);
   static bool set_connect_status(Bit8u port, bool connected);
   static void change_port_owner(int port);
+  static Bit64u create_port_routing(int n_cc, int n_pcc);
+  static bool get_port_routing(int port, int *n_cc, int *n_pcc);
 
   // EHCI core methods ported from QEMU 1.2.2
   void update_irq(void);

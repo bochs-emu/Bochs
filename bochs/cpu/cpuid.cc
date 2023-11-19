@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2014-2020 Stanislav Shwartsman
+//   Copyright (c) 2014-2023 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -22,122 +22,16 @@
 /////////////////////////////////////////////////////////////////////////
 
 #include "bochs.h"
-#include "gui/siminterface.h"
 #include "cpu.h"
+#include "gui/siminterface.h"
 #include "param_names.h"
 #include "cpuid.h"
 
-static const char *cpu_feature_name[] =
-{
-  "386ni",                  // BX_ISA_386
-  "x87",                    // BX_ISA_X87
-  "486ni",                  // BX_ISA_486
-  "pentium_ni",             // BX_ISA_PENTIUM
-  "p6ni",                   // BX_ISA_P6
-  "mmx",                    // BX_ISA_MMX
-  "3dnow!",                 // BX_ISA_3DNOW
-  "debugext",               // BX_ISA_DEBUG_EXTENSIONS
-  "vme",                    // BX_ISA_VME
-  "pse",                    // BX_ISA_PSE
-  "pae",                    // BX_ISA_PAE
-  "pge",                    // BX_ISA_PGE
-  "pse36",                  // BX_ISA_PSE36
-  "mtrr",                   // BX_ISA_MTRR
-  "pat",                    // BX_ISA_PAT
-  "legacy_syscall_sysret",  // BX_ISA_SYSCALL_SYSRET_LEGACY
-  "sysenter_sysexit",       // BX_ISA_SYSENTER_SYSEXIT
-  "clflush",                // BX_ISA_CLFLUSH
-  "clflushopt",             // BX_ISA_CLFLUSHOPT
-  "clwb",                   // BX_ISA_CLWB
-  "cldemote",               // BX_ISA_CLDEMOTE
-  "sse",                    // BX_ISA_SSE
-  "sse2",                   // BX_ISA_SSE2
-  "sse3",                   // BX_ISA_SSE3
-  "ssse3",                  // BX_ISA_SSSE3
-  "sse4_1",                 // BX_ISA_SSE4_1
-  "sse4_2",                 // BX_ISA_SSE4_2
-  "popcnt",                 // BX_ISA_POPCNT
-  "mwait",                  // BX_ISA_MONITOR_MWAIT
-  "mwaitx",                 // BX_ISA_MONITORX_MWAITX
-  "waitpkg",                // BX_ISA_WAITPKG
-  "vmx",                    // BX_ISA_VMX
-  "smx",                    // BX_ISA_SMX
-  "longmode",               // BX_ISA_LONG_MODE
-  "lm_lahf_sahf",           // BX_ISA_LM_LAHF_SAHF
-  "nx",                     // BX_ISA_NX
-  "1g_pages",               // BX_ISA_1G_PAGES
-  "cmpxhg16b",              // BX_ISA_CMPXCHG16B
-  "rdtscp",                 // BX_ISA_RDTSCP
-  "ffxsr",                  // BX_ISA_FFXSR
-  "xsave",                  // BX_ISA_XSAVE
-  "xsaveopt",               // BX_ISA_XSAVEOPT
-  "xsavec",                 // BX_ISA_XSAVEC
-  "xsaves",                 // BX_ISA_XSAVES
-  "aes_pclmulqdq",          // BX_ISA_AES_PCLMULQDQ
-  "vaes_vpclmulqdq",        // BX_ISA_VAES_VPCLMULQDQ
-  "movbe",                  // BX_ISA_MOVBE
-  "fsgsbase",               // BX_ISA_FSGSBASE
-  "invpcid",                // BX_ISA_INVPCID
-  "avx",                    // BX_ISA_AVX
-  "avx2",                   // BX_ISA_AVX2
-  "avx_f16c",               // BX_ISA_AVX_F16C
-  "avx_fma",                // BX_ISA_AVX_FMA
-  "altmovcr8",              // BX_ISA_ALT_MOV_CR8
-  "sse4a",                  // BX_ISA_SSE4A
-  "misaligned_sse",         // BX_ISA_MISALIGNED_SSE
-  "lzcnt",                  // BX_ISA_LZCNT
-  "bmi1",                   // BX_ISA_BMI1
-  "bmi2",                   // BX_ISA_BMI2
-  "fma4",                   // BX_ISA_FMA4
-  "xop",                    // BX_ISA_XOP
-  "tbm",                    // BX_ISA_TBM
-  "svm",                    // BX_ISA_SVM
-  "rdrand",                 // BX_ISA_RDRAND
-  "adx",                    // BX_ISA_ADX
-  "smap",                   // BX_ISA_SMAP
-  "rdseed",                 // BX_ISA_RDSEED
-  "sha",                    // BX_ISA_SHA
-  "gfni",                   // BX_ISA_GFNI
-  "sm3",                    // BX_ISA_SM3
-  "sm4",                    // BX_ISA_SM4
-  "avx512",                 // BX_ISA_AVX512
-  "avx512cd",               // BX_ISA_AVX512_CD
-  "avx512pf",               // BX_ISA_AVX512_PF
-  "avx512er",               // BX_ISA_AVX512_ER
-  "avx512dq",               // BX_ISA_AVX512_DQ
-  "avx512bw",               // BX_ISA_AVX512_BW
-  "avx512vl",               // BX_ISA_AVX512_VL
-  "avx512vbmi",             // BX_ISA_AVX512_VBMI
-  "avx512vbmi2",            // BX_ISA_AVX512_VBMI2
-  "avx512ifma52",           // BX_ISA_AVX512_IFMA52
-  "avx512vpopcnt",          // BX_ISA_AVX512_VPOPCNTDQ
-  "avx512vnni",             // BX_ISA_AVX512_VNNI
-  "avx512bitalg",           // BX_ISA_AVX512_BITALG
-  "avx512vp2intersect",     // BX_ISA_AVX512_VP2INTERSECT
-  "avx_vnni",               // BX_ISA_AVX_VNNI
-  "avx_ifma",               // BX_ISA_AVX_IFMA
-  "avx_vnni_int8",          // BX_ISA_AVX_VNNI_INT8
-  "xapic",                  // BX_ISA_XAPIC
-  "x2apic",                 // BX_ISA_X2APIC
-  "xapicext",               // BX_ISA_XAPICEXT
-  "pcid",                   // BX_ISA_PCID
-  "smep",                   // BX_ISA_SMEP
-  "tsc_adjust",             // BX_ISA_TSC_ADJUST
-  "tsc_deadline",           // BX_ISA_TSC_DEADLINE
-  "fopcode_deprecation",    // BX_ISA_FOPCODE_DEPRECATION
-  "fcs_fds_deprecation",    // BX_ISA_FCS_FDS_DEPRECATION
-  "fdp_deprecation",        // BX_ISA_FDP_DEPRECATION
-  "pku",                    // BX_ISA_PKU
-  "pks",                    // BX_ISA_PKS
-  "umip",                   // BX_ISA_UMIP
-  "rdpid",                  // BX_ISA_RDPID
-  "tce",                    // BX_ISA_TCE
-  "clzero",                 // BX_ISA_CLZERO
-  "sca_mitigations",        // BX_ISA_SCA_MITIGATIONS
-  "cet",                    // BX_ISA_CET
-  "wrmsrns",                // BX_ISA_WRMSRNS
-  "cmpccxadd",              // BX_ISA_CMPCCXADD
+static const char *cpu_feature_name[BX_ISA_EXTENSION_LAST] = {
+#define x86_feature(isa, feature_name) #feature_name,
+#include "decoder/features.h"
 };
+#undef x86_feature
 
 const char *get_cpu_feature_name(unsigned feature) { return cpu_feature_name[feature]; }
 
@@ -770,6 +664,53 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_1_edx(Bit32u extra) const
   return edx;
 }
 
+// Most of the bits in ECX are reserved for Intel
+Bit32u bx_cpuid_t::get_ext_cpuid_leaf_1_ecx_intel(Bit32u extra) const
+{
+  Bit32u ecx = extra;
+
+  // * [0:0]   LAHF/SAHF instructions support in 64-bit mode
+  //   [1:1]   CMP_Legacy: Core multi-processing legacy mode (AMD)
+  //   [2:2]   SVM: Secure Virtual Machine (AMD)
+  //   [3:3]   Extended APIC Space
+  //   [4:4]   AltMovCR8: LOCK MOV CR0 means MOV CR8
+  // * [5:5]   LZCNT: LZCNT instruction support
+  //   [6:6]   SSE4A: SSE4A Instructions support
+  //   [7:7]   Misaligned SSE support
+  // * [8:8]   PREFETCHW: PREFETCHW instruction support - can be enabled through extra
+  //   [9:9]   OSVW: OS visible workarounds (AMD)
+  //   [10:10] IBS: Instruction based sampling
+  //   [11:11] XOP: Extended Operations Support and XOP Prefix
+  //   [12:12] SKINIT support
+  //   [13:13] WDT: Watchdog timer support
+  //   [14:14] Reserved
+  //   [15:15] LWP: Light weight profiling
+  //   [16:16] FMA4: Four-operand FMA instructions support
+  //   [17:17] Reserved
+  //   [18:18] Reserved
+  //   [19:19] NodeId: Indicates support for NodeId MSR (0xc001100c)
+  //   [20:20] Reserved
+  //   [21:21] TBM: trailing bit manipulation instructions support
+  //   [22:22] Topology extensions support
+  //   [23:23] PerfCtrExtCore: core perf counter extensions support
+  //   [24:24] PerfCtrExtNB: NB perf counter extensions support
+  //   [25:25] Reserved
+  //   [26:26] Data breakpoint extension. Indicates support for MSR 0xC0011027 and MSRs 0xC001101[B:9]
+  //   [27:27] Performance time-stamp counter. Indicates support for MSR 0xC0010280
+  //   [28:28] PerfCtrExtL2I: L2I performance counter extensions support
+  //   [31:29] Reserved
+
+#if BX_SUPPORT_X86_64
+  if (is_cpu_extension_supported(BX_ISA_LM_LAHF_SAHF))
+    ecx |= BX_CPUID_EXT1_ECX_LAHF_SAHF;
+#endif
+
+  if (is_cpu_extension_supported(BX_ISA_LZCNT))
+    ecx |= BX_CPUID_EXT1_ECX_LZCNT;
+
+  return ecx;
+}
+
 // Most of the bits in EDX are reserved for Intel
 Bit32u bx_cpuid_t::get_ext_cpuid_leaf_1_edx_intel() const
 {
@@ -876,7 +817,7 @@ Bit32u bx_cpuid_t::get_ext_cpuid_leaf_1_edx_amd(Bit32u extra) const
   return edx;
 }
  
-// leaf 0x00000007 - EBX
+// leaf 0x00000007, subleaf 0 - EBX
 Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_ebx(Bit32u extra) const
 {
   Bit32u ebx = extra;
@@ -985,16 +926,18 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_ebx(Bit32u extra) const
 
   // [30:30]  AVX512BW instructions support
   // [31:31]  AVX512VL variable vector length support
+#if BX_SUPPORT_EVEX
   if (is_cpu_extension_supported(BX_ISA_AVX512)) {
     if (is_cpu_extension_supported(BX_ISA_AVX512_BW))
       ebx |= BX_CPUID_STD7_SUBLEAF0_EBX_AVX512BW;
     ebx |= BX_CPUID_STD7_SUBLEAF0_EBX_AVX512VL;
   }
+#endif
 
   return ebx;
 }
 
-// leaf 0x00000007 - ECX
+// leaf 0x00000007, subleaf 0 - ECX
 Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_ecx(Bit32u extra) const
 {
   Bit32u ecx = extra;
@@ -1083,8 +1026,12 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_ecx(Bit32u extra) const
   // [24:24] reserved
   // [25:25] CLDEMOTE: CLDEMOTE instruction support - not supported
   // [26:26] reserved
-  // [27:27] MOVDIRI: MOVDIRI instruction support - not supported
-  // [28:28] MOVDIRI64: MOVDIRI64 instruction support - not supported
+
+  // [27:27] MOVDIRI: MOVDIRI instruction support
+  if (is_cpu_extension_supported(BX_ISA_MOVDIRI))
+    ecx |= BX_CPUID_STD7_SUBLEAF0_ECX_MOVDIRI;
+
+  // [28:28] MOVDIR64B: MOVDIR64B instruction support - not supported
   // [29:29] ENQCMD: Enqueue Stores support - not supported
   // [30:30] SGX_LC: SGX Launch Configuration - not supported
 
@@ -1095,6 +1042,170 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_ecx(Bit32u extra) const
 #endif
 
   return ecx;
+}
+
+// leaf 0x00000007, subleaf 0 - EDX
+Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_edx(Bit32u extra) const
+{
+  Bit32u edx = extra;
+
+  // All SCA mitigations could be enabled through extra
+
+  // CPUID defines - features CPUID[0x00000007].EDX  [subleaf 0]
+  // -----------------------------
+  //   [0:0]    reserved
+  //   [1:1]    SGX-KEYS: Attestation Services for SGX support - not supported
+  //   [2:2]    AVX512 4VNNIW instructions support - not supported
+  //   [3:3]    AVX512 4FMAPS instructions support - not supported
+  //   [4:4]    Support of Fast REP MOV instructions with short length - not supported, might be enabled through extra
+  //   [5:5]    UINTR: User interrupts support - not yet supported
+  //   [7:6]    reserved
+
+  //   [8:8]    AVX512 VP2INTERSECT instructions support
+#if BX_SUPPORT_EVEX
+  if (is_cpu_extension_supported(BX_ISA_AVX512)) {
+    if (is_cpu_extension_supported(BX_ISA_AVX512_VP2INTERSECT))
+      edx |= BX_CPUID_STD7_SUBLEAF0_EDX_AVX512_VPINTERSECT;
+  }
+#endif
+
+  //   [9:9]    SRBDS_CTRL: IA32_MCU_OPT_CTRL MSR
+  // * [10:10]  MD clear (SCA)
+  //   [11:11]  RTM_ALWAYS_ABORT - not supported
+  //   [12:12]  reserved
+  //   [13:13]  RTM_FORCE_ABORT - not supported
+
+  //   [14:14]  SERIALIZE instruction support
+  if (is_cpu_extension_supported(BX_ISA_SERIALIZE))
+    edx |= BX_CPUID_STD7_SUBLEAF0_EDX_SERIALIZE;
+
+  //   [15:15]  Hybrid - not supported, might be enabled through extra
+  //   [16:16]  TSXLDTRK: TSX suspent load tracking support - not supported
+  //   [17:17]  reserved
+  //   [18:18]  PCONFIG
+  //   [19:19]  Architectural LBRs support
+
+  //   [20:20]  CET IBT: Support CET indirect branch tracking
+#if BX_SUPPORT_CET
+  if (is_cpu_extension_supported(BX_ISA_CET))
+    edx |= BX_CPUID_STD7_SUBLEAF0_EDX_CET_IBT;
+#endif
+
+  //   [21:21]  reserved
+  //   [22:22]  AMX BF16 support
+  //   [23:23]  AVX512_FP16 instructions support
+  //   [24:24]  AMX TILE architecture support
+  //   [25:25]  AMX INT8 support
+  // * [26:26]  IBRS and IBPB: Indirect branch restricted speculation (SCA)
+  // * [27:27]  STIBP: Single Thread Indirect Branch Predictors supported (SCA)
+  // * [28:28]  L1D_FLUSH supported (SCA)
+  // * [29:29]  MSR_IA32_ARCH_CAPABILITIES supported (SCA)
+  // * [30:30]  MSR_IA32_CORE_CAPABILITIES supported (SCA)
+  // * [31:31]  SSBD: Speculative Store Bypass Disable supported (SCA)
+
+  return edx;
+}
+
+// leaf 0x00000007, subleaf 1 - EAX
+Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_eax(Bit32u extra) const
+{
+  Bit32u eax = extra;
+
+  // CPUID defines - features CPUID[0x00000007].EAX  [subleaf 1]
+  // -----------------------------
+  //   [0:0]    SHA-512 instructions support
+  if (is_cpu_extension_supported(BX_ISA_SHA512))
+    eax |= BX_CPUID_STD7_SUBLEAF1_EAX_SHA512;
+
+  //   [1:1]    SM3 instructions support
+  if (is_cpu_extension_supported(BX_ISA_SM3))
+    eax |= BX_CPUID_STD7_SUBLEAF1_EAX_SM3;
+
+  //   [2:2]    SM4 instructions support
+  if (is_cpu_extension_supported(BX_ISA_SM4))
+    eax |= BX_CPUID_STD7_SUBLEAF1_EAX_SM4;
+
+  //   [3:3]    RAO-INT
+
+  //   [4:4]    AVX VNNI
+  if (is_cpu_extension_supported(BX_ISA_AVX_VNNI))
+    eax |= BX_CPUID_STD7_SUBLEAF1_EAX_AVX_VNNI;
+
+  //   [5:5]    AVX512_BF16 conversion instructions support
+#if BX_SUPPORT_EVEX
+  if (is_cpu_extension_supported(BX_ISA_AVX512)) {
+    if (is_cpu_extension_supported(BX_ISA_AVX512_BF16))
+      eax |= BX_CPUID_STD7_SUBLEAF1_EAX_AVX512_BF16;
+  }
+#endif
+
+  //   [6:6]    LASS: Linear Address Space Separation support
+  if (is_cpu_extension_supported(BX_ISA_LASS))
+    eax |= BX_CPUID_STD7_SUBLEAF1_EAX_LASS;
+
+  //   [7:7]    CMPCCXADD
+  if (is_cpu_extension_supported(BX_ISA_CMPCCXADD))
+    eax |= BX_CPUID_STD7_SUBLEAF1_EAX_CMPCCXADD;
+
+  //   [8:8]    Arch Perfmon - not supported
+  //   [9:9]    reserved
+  //   [10:10]  Fast zero-length REP MOVSB - not supported, can be enabled through extra
+  //   [11:11]  Fast zero-length REP STOSB - not supported, can be enabled through extra
+  //   [12:12]  Fast zero-length REP CMPSB/SCASB - not supported, can be enabled through extra
+  //   [18:13]  reserved
+
+  //   [19:19]  WRMSRNS instruction
+  if (is_cpu_extension_supported(BX_ISA_WRMSRNS))
+    eax |= BX_CPUID_STD7_SUBLEAF1_EAX_WRMSRNS;
+
+  //   [20:20]  reserved
+  //   [21:21]  AMX-FB16 support
+  //   [22:22]  HRESET and CPUID leaf 0x20 support
+
+  //   [23:23]  AVX IFMA support
+  if (is_cpu_extension_supported(BX_ISA_AVX_IFMA))
+    eax |= BX_CPUID_STD7_SUBLEAF1_EAX_AVX_IFMA;
+
+  //   [25:24]  reserved
+  //   [26:26]  LAM: Linear Address Masking
+  //   [27:27]  MSRLIST: RDMSRLIST/WRMSRLIST instructions and the IA32_BARRIER MSR
+  //   [31:28]  reserved
+
+  return eax;
+}
+
+// leaf 0x00000007, subleaf 1 - EDX
+Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_edx(Bit32u extra) const
+{
+  Bit32u edx = extra;
+
+  // CPUID defines - features CPUID[0x00000007].EDX  [subleaf 1]
+  // -----------------------------
+  //   [3:0]    reserved
+
+  //   [4:4]    AVX_VNNI_INT8 support
+  if (is_cpu_extension_supported(BX_ISA_AVX_VNNI_INT8))
+    edx |= BX_CPUID_STD7_SUBLEAF1_EDX_AVX_VNNI_INT8;
+
+  //   [5:5]    AVX_NE_CONVERT instructions
+  if (is_cpu_extension_supported(BX_ISA_AVX_NE_CONVERT))
+    edx |= BX_CPUID_STD7_SUBLEAF1_EDX_AVX_NE_CONVERT;
+
+  //   [7:6]    reserved
+  //   [8:8]    AMX-COMPLEX instructions
+  //   [9:9]    reserved
+
+  //   [10:10]  AVX-VNNI-INT16 instructions
+  if (is_cpu_extension_supported(BX_ISA_AVX_VNNI_INT16))
+    edx |= BX_CPUID_STD7_SUBLEAF1_EDX_AVX_VNNI_INT16;
+
+  //   [13:11]  reserved
+  //   [14:14]  PREFETCHITI: PREFETCHIT0/T1 instruction
+  //   [16:15]  reserved
+  //   [17:17]  UIRET sets UIF to the RFLAGS[1] image loaded from the stack
+  //   [18:18]  CET_SSS
+
+  return edx;
 }
 
 // leaf 0x80000008 - return Intel defaults //
@@ -1115,7 +1226,7 @@ void bx_cpuid_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
   // [5:5] reserved
   // [6:6] Memory Bandwidth Enforcement (MBE) support
   // [8:7] reserved
-  // [9:9] WBNOINVD support - not supported yet
+  // [9:9] WBNOINVD support - when not supported fall back to legacy WBINVD
   leaf->ebx = 0;
   if (is_cpu_extension_supported(BX_ISA_CLZERO))
     leaf->ebx |= 0x1;
@@ -1181,5 +1292,5 @@ void bx_cpuid_t::dump_features() const
   BX_INFO(("CPU Features supported:"));
   for (unsigned i=1; i<BX_ISA_EXTENSION_LAST; i++)
     if (is_cpu_extension_supported(i))
-      BX_INFO(("\t\t%s", cpu_feature_name[i]));
+      BX_INFO(("\t\t%s", get_cpu_feature_name(i)));
 }

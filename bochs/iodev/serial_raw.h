@@ -29,11 +29,13 @@
 //#define WIN32_RECEIVE_RAW
 #endif
 
-#define P_NONE  0
-#define P_ODD   1
-#define P_EVEN  2
-#define P_HIGH  3
-#define P_LOW   4
+enum {
+  P_NONE = 0,
+  P_ODD  = 1,
+  P_EVEN = 2,
+  P_HIGH = 3,
+  P_LOW  = 4
+};
 
 #define RAW_EVENT_BREAK    -1
 #define RAW_EVENT_CTS_ON   -2

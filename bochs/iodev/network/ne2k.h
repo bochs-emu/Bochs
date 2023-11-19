@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -205,7 +205,7 @@ class bx_ne2k_c
 public:
   bx_ne2k_c();
   virtual ~bx_ne2k_c();
-  virtual void init(Bit8u card);
+  virtual void init_card(Bit8u card);
   virtual void reset(unsigned type);
   void         ne2k_register_state(bx_list_c *parent, Bit8u card);
 #if BX_SUPPORT_PCI

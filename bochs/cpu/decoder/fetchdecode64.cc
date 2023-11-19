@@ -903,7 +903,7 @@ static BxOpcodeDecodeDescriptor64 decode64_descriptor[] =
    /* 0F 38 F6 */ { &decoder64_modrm, BxOpcodeTable0F38F6 },
    /* 0F 38 F7 */ { &decoder_ud64, NULL },
    /* 0F 38 F8 */ { &decoder_ud64, NULL },
-   /* 0F 38 F9 */ { &decoder64_modrm, BxOpcodeTable0F38F6 },
+   /* 0F 38 F9 */ { &decoder64_modrm, BxOpcodeTable0F38F9 },
    /* 0F 38 FA */ { &decoder_ud64, NULL },
    /* 0F 38 FB */ { &decoder_ud64, NULL },
    /* 0F 38 FC */ { &decoder_ud64, NULL },
@@ -1896,7 +1896,7 @@ fetch_b1:
   remain--;
 
 #if BX_SUPPORT_CET
-  // in 64-bit mode DS prefix is ignored but still recorded for CET Endranch suppress hint
+  // in 64-bit mode DS prefix is ignored but still recorded for CET Endbranch suppress hint
   // keep it even if overridden by FS: or GS:
   if (b1 == 0x3e)
     seg_override_cet = BX_SEG_REG_DS;

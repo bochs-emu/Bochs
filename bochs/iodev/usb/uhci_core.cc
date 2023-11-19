@@ -75,7 +75,7 @@ bx_uhci_core_c::~bx_uhci_core_c()
   BX_DEBUG(("Exit"));
 }
 
-void bx_uhci_core_c::init_uhci(Bit8u devfunc, Bit16u devid, Bit8u headt, Bit8u intp)
+void bx_uhci_core_c::init_uhci(Bit8u devfunc, Bit16u venid, Bit16u devid, Bit8u rev, Bit8u headt, Bit8u intp)
 {
   /*  If you wish to set DEBUG=report in the code, instead of
    *  in the configuration, simply uncomment this line.  I use
@@ -89,11 +89,10 @@ void bx_uhci_core_c::init_uhci(Bit8u devfunc, Bit16u devid, Bit8u headt, Bit8u i
     DEV_register_timer(this, uhci_timer_handler, 1000, 1, 1, "usb.timer");
 
   hub.devfunc = devfunc;
-  DEV_register_pci_handlers(this, &hub.devfunc, BX_PLUGIN_USB_UHCI,
-                            "USB UHCI");
+  DEV_register_pci_handlers(this, &hub.devfunc, BX_PLUGIN_USB_UHCI, "USB UHCI");
 
   // initialize readonly registers
-  init_pci_conf(0x8086, devid, 0x01, 0x0C0300, headt, intp);
+  init_pci_conf(venid, devid, rev, 0x0C0300, headt, intp);
   init_bar_io(4, 32, read_handler, write_handler, &uhci_iomask[0]);
 
   for (int i=0; i<USB_UHCI_PORTS; i++) {
@@ -249,7 +248,7 @@ void bx_uhci_core_c::after_restore_state(void)
 
 void bx_uhci_core_c::update_irq()
 {
-  bool level;
+  bool level = 0;
 
   if (((hub.usb_status.status2 & STATUS2_IOC) && hub.usb_enable.on_complete) ||
       ((hub.usb_status.status2 & STATUS2_SPD) && hub.usb_enable.short_packet) ||
@@ -258,9 +257,8 @@ void bx_uhci_core_c::update_irq()
        hub.usb_status.pci_error ||
        hub.usb_status.host_error) {
     level = 1;
-  } else {
-    level = 0;
   }
+
   DEV_pci_set_irq(hub.devfunc, pci_conf[0x3d], level);
 }
 
@@ -276,14 +274,14 @@ Bit32u bx_uhci_core_c::read_handler(void *this_ptr, Bit32u address, unsigned io_
 Bit32u bx_uhci_core_c::read(Bit32u address, unsigned io_len)
 {
   Bit32u val = 0x0;
-  Bit8u  offset,port;
+  Bit8u  port;
 
   // if the host driver has not cleared the reset bit, do nothing (reads are
   // undefined)
   if (hub.usb_command.reset)
     return 0;
 
-  offset = address - pci_bar[4].addr;
+  Bit8u offset = address - pci_bar[4].addr;
 
   switch (offset) {
     case 0x00: // command register (16-bit)
@@ -376,9 +374,9 @@ void bx_uhci_core_c::write_handler(void *this_ptr, Bit32u address, Bit32u value,
 
 void bx_uhci_core_c::write(Bit32u address, Bit32u value, unsigned io_len)
 {
-  Bit8u offset, port;
+  Bit8u port;
 
-  offset = address - pci_bar[4].addr;
+  Bit8u offset = address - pci_bar[4].addr;
 
   // if the reset bit is not cleared and this write is not clearing the bit,
   // do nothing
@@ -550,9 +548,9 @@ void bx_uhci_core_c::write(Bit32u address, Bit32u value, unsigned io_len)
         if (value & (1<<11)) hub.usb_port[port].over_current_change = 0;
         hub.usb_port[port].reset = (value & (1<<9)) ? 1 : 0;
         hub.usb_port[port].resume = (value & (1<<6)) ? 1 : 0;
-        if (!hub.usb_port[port].enabled && (value & (1<<2)))
+        if (!hub.usb_port[port].enabled && (value & (1<<2))) {
           hub.usb_port[port].enable_changed = 0;
-        else
+        } else
           if (value & (1<<3)) hub.usb_port[port].enable_changed = 0;
         hub.usb_port[port].enabled = (value & (1<<2)) ? 1 : 0;
         if (value & (1<<1)) hub.usb_port[port].connect_changed = 0;
@@ -605,7 +603,8 @@ void bx_uhci_core_c::uhci_timer_handler(void *this_ptr)
 //  if the queue has not been processed yet, return FALSE
 // (when we find that we are in a loop, this list gets dumped and starts a new list
 //  starting with this one.)
-bool bx_uhci_core_c::uhci_add_queue(struct USB_UHCI_QUEUE_STACK *stack, const Bit32u addr) {
+bool bx_uhci_core_c::uhci_add_queue(struct USB_UHCI_QUEUE_STACK *stack, const Bit32u addr)
+{
   // check to see if this queue has been processed before
   for (int i=0; i<stack->queue_cnt; i++) {
     if (stack->queue_stack[i] == addr)
@@ -631,11 +630,9 @@ bool bx_uhci_core_c::uhci_add_queue(struct USB_UHCI_QUEUE_STACK *stack, const Bi
 // Called once every 1ms
 void bx_uhci_core_c::uhci_timer(void)
 {
-  int i;
-
   // If the "global reset" bit was set by software
   if (global_reset) {
-    for (i=0; i<USB_UHCI_PORTS; i++) {
+    for (int i=0; i<USB_UHCI_PORTS; i++) {
       hub.usb_port[i].enable_changed = 0;
       hub.usb_port[i].connect_changed = 0;
       hub.usb_port[i].enabled = 0;
@@ -890,25 +887,21 @@ int bx_uhci_core_c::event_handler(int event, void *ptr, int port)
   return ret;
 }
 
-bool bx_uhci_core_c::DoTransfer(Bit32u address, struct TD *td) {
-
-  int len = 0, ret = 0;
-  USBAsync *p;
-  bool completion;
-
+bool bx_uhci_core_c::DoTransfer(Bit32u address, struct TD *td)
+{
   Bit16u maxlen = (td->dword2 >> 21);
   Bit8u  addr   = (td->dword2 >> 8) & 0x7F;
   Bit8u  endpt  = (td->dword2 >> 15) & 0x0F;
   Bit8u  pid    =  td->dword2 & 0xFF;
 
-  p = find_async_packet(&packets, address);
-  completion = (p != NULL);
+  USBAsync *p = find_async_packet(&packets, address);
+  bool completion = (p != NULL);
   if (completion && !p->done) {
     return 0;
   }
 
   BX_DEBUG(("TD found at address 0x%08X:  0x%08X  0x%08X  0x%08X  0x%08X", address, td->dword0, td->dword1, td->dword2, td->dword3));
-
+  
   // check TD to make sure it is valid
   // A max length 0x500 to 0x77E is illegal
   if ((maxlen >= 0x500) && (maxlen != 0x7FF)) {
@@ -940,6 +933,8 @@ bool bx_uhci_core_c::DoTransfer(Bit32u address, struct TD *td) {
 
   maxlen++;
   maxlen &= 0x7FF;
+
+  int len = 0, ret = 0;
 
   if (completion) {
     ret = p->packet.len;
@@ -1004,10 +999,8 @@ bool bx_uhci_core_c::DoTransfer(Bit32u address, struct TD *td) {
 
 int bx_uhci_core_c::broadcast_packet(USBPacket *p)
 {
-  int i, ret;
-
-  ret = USB_RET_NODEV;
-  for (i = 0; i < USB_UHCI_PORTS && ret == USB_RET_NODEV; i++) {
+  int ret = USB_RET_NODEV;
+  for (int i = 0; i < USB_UHCI_PORTS && ret == USB_RET_NODEV; i++) {
     if ((hub.usb_port[i].device != NULL) &&
         (hub.usb_port[i].enabled)) {
       ret = hub.usb_port[i].device->handle_packet(p);
@@ -1141,6 +1134,8 @@ void bx_uhci_core_c::set_port_device(int port, usb_device_c *dev)
 {
   usb_device_c *olddev = hub.usb_port[port].device;
   if ((dev != NULL) && (olddev == NULL)) {
+    // make sure we are calling the correct handler for the device
+    dev->set_event_handler(this, uhci_event_handler, port);
     hub.usb_port[port].device = dev;
     set_connect_status(port, 1);
   } else if ((dev == NULL) && (olddev != NULL)) {

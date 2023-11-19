@@ -22,6 +22,8 @@
 
 #include "bochs.h"
 #ifndef BX_STANDALONE_DECODER
+#define NEED_CPU_REG_SHORTCUTS 1
+#define NEED_CPU_NEED_TEMPLATE_METHODS 1
 #include "../cpu.h"
 #endif
 
@@ -73,6 +75,12 @@ struct BxOpcodeDecodeDescriptor32 {
   BxFetchDecode32Ptr decode_method;
   const void *opcode_table;
 };
+
+#ifndef BX_STANDALONE_DECODER
+#include "cpu/simd_int.h"
+#include "cpu/simd_compare.h"
+#include "cpu/simd_vnni.h"
+#endif
 
 // table of all Bochs opcodes
 bxIAOpcodeTable BxOpcodesTable[] = {
@@ -883,7 +891,7 @@ static BxOpcodeDecodeDescriptor32 decode32_descriptor[] =
    /* 0F 38 F6 */ { &decoder32_modrm, BxOpcodeTable0F38F6 },
    /* 0F 38 F7 */ { &decoder_ud32, NULL },
    /* 0F 38 F8 */ { &decoder_ud32, NULL },
-   /* 0F 38 F9 */ { &decoder32_modrm, BxOpcodeTable0F38F6 },
+   /* 0F 38 F9 */ { &decoder32_modrm, BxOpcodeTable0F38F9 },
    /* 0F 38 FA */ { &decoder_ud32, NULL },
    /* 0F 38 FB */ { &decoder_ud32, NULL },
    /* 0F 38 FC */ { &decoder_ud32, NULL },
@@ -1688,9 +1696,7 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, unsigned nnn, 
       }
       else {
         unsigned tmpreg = BX_TMP_REGISTER;
-#if BX_SUPPORT_FPU
         if (type == BX_VMM_REG) tmpreg = BX_VECTOR_TMP_REGISTER;
-#endif
         i->setSrcReg(n, tmpreg);
       }
       break;
@@ -2394,7 +2400,7 @@ fetch_b1:
   remain--;
 
 #if BX_SUPPORT_CET
-  // DS prefix is still recorded for CET Endranch suppress hint even if overridden by other prefixes later
+  // DS prefix is still recorded for CET Endbranch suppress hint even if overridden by other prefixes later
   if (b1 == 0x3e)
     seg_override_cet = BX_SEG_REG_DS;
 #endif
@@ -2555,6 +2561,16 @@ int assignHandler(bxInstruction_c *i, Bit32u fetchModeMask)
     }
   }
 #endif
+  if (! (fetchModeMask & BX_FETCH_MODE_FPU_MMX_OK)) {
+     if (op_flags & BX_PREPARE_FPU) {
+        if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoFPU;
+        return(1);
+     }
+     if (op_flags & BX_PREPARE_MMX) {
+        if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoMMX;
+        return(1);
+     }
+  }
 #if BX_CPU_LEVEL >= 6
   if (! (fetchModeMask & BX_FETCH_MODE_SSE_OK)) {
      if (op_flags & BX_PREPARE_SSE) {

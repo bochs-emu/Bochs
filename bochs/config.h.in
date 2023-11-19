@@ -465,6 +465,8 @@
 #define GET32L(val64) ((Bit32u)(((Bit64u)(val64)) & 0xFFFFFFFF))
 #define GET32H(val64) ((Bit32u)(((Bit64u)(val64)) >> 32))
 
+#define GET64_FROM_HI32_LO32(hi, lo) (Bit64u(lo) | (Bit64u(hi) << 32))
+
 // now that Bit32u and Bit64u exist, defined bx_address
 #if BX_SUPPORT_X86_64
 typedef Bit64u bx_address;

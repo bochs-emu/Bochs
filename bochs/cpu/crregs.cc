@@ -1130,6 +1130,7 @@ bool BX_CPU_C::SetCR0(bxInstruction_c *i, bx_address val)
 
   handleCpuModeChange();
 
+  handleFpuMmxModeChange();
 #if BX_CPU_LEVEL >= 6
   handleSseModeChange();
 #if BX_SUPPORT_AVX
@@ -1156,7 +1157,11 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
   Bit32u allowMask = 0;
 
   // CR4 bits definitions:
-  //   [31-24] Reserved, Must be Zero
+  //   [31-28] Reserved, Must be Zero
+  //   [27]    LASS: Linear Address Separation Enable R/W
+  //   [26]    Reserved, Must be Zero
+  //   [25]    UINTR: User Level Interrupt Enable R/W
+  //   [24]    PKS: Protection Keys Supervisor Enable R/W
   //   [23]    CET: Control Flow Enforcement R/W
   //   [22]    PKE: Protection Keys Enable R/W
   //   [21]    SMAP: Supervisor Mode Access Prevention R/W
@@ -1168,7 +1173,7 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
   //   [15]    Reserved, Must be Zero
   //   [14]    SMXE: SMX Extensions R/W
   //   [13]    VMXE: VMX Extensions R/W
-  //   [12] Reserved, Must be Zero
+  //   [12]    Reserved, Must be Zero
   //   [11]    UMIP: User Mode Instruction Prevention R/W
   //   [10]    OSXMMEXCPT: Operating System Unmasked Exception Support R/W
   //   [9]     OSFXSR: Operating System FXSAVE/FXRSTOR Support R/W
@@ -1261,6 +1266,8 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
     allowMask |= BX_CR4_PKS_MASK;
 #endif
 
+  if (is_cpu_extension_supported(BX_ISA_LASS))
+    allowMask |= BX_CR4_LASS_MASK;
 #endif
 
   return allowMask;
@@ -1359,6 +1366,7 @@ bool BX_CPU_C::SetCR4(bxInstruction_c *i, bx_address val)
 
   BX_CPU_THIS_PTR cr4.set32((Bit32u) val);
 
+  handleFpuMmxModeChange();
 #if BX_CPU_LEVEL >= 6
   handleSseModeChange();
 #if BX_SUPPORT_AVX
@@ -1530,6 +1538,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLTS(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR cr0.set_TS(0);
 
+  handleFpuMmxModeChange();
 #if BX_CPU_LEVEL >= 6
   handleSseModeChange();
 #if BX_SUPPORT_AVX
@@ -1764,6 +1773,33 @@ void BX_CPU_C::xsave_xrestor_init(void)
   }
 #endif
 }
+
+#if BX_CPU_LEVEL >= 5
+
+Bit32u BX_CPU_C::get_efer_allow_mask(void)
+{
+  Bit32u efer_allowed_mask = 0;
+
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_NX))
+    efer_allowed_mask |= BX_EFER_NXE_MASK;
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SYSCALL_SYSRET_LEGACY))
+    efer_allowed_mask |= BX_EFER_SCE_MASK;
+#if BX_SUPPORT_X86_64
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_LONG_MODE)) {
+    efer_allowed_mask |= (BX_EFER_SCE_MASK | BX_EFER_LME_MASK | BX_EFER_LMA_MASK);
+    if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_FFXSR))
+      efer_allowed_mask |= BX_EFER_FFXSR_MASK;
+    if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SVM))
+      efer_allowed_mask |= BX_EFER_SVME_MASK;
+    if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_TCE))
+      efer_allowed_mask |= BX_EFER_TCE_MASK;
+  }
+#endif
+
+  return efer_allowed_mask;
+}
+
+#endif
 
 Bit32u BX_CPU_C::get_xcr0_allow_mask(void)
 {

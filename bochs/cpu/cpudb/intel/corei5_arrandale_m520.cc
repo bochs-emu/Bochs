@@ -498,7 +498,7 @@ void corei5_arrandale_m520_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [12:12] SKINIT support
   //   [13:13] WDT: Watchdog timer support
   //   [31:14] reserved
-  leaf->ecx = BX_CPUID_EXT1_ECX_LAHF_SAHF;
+  leaf->ecx = get_ext_cpuid_leaf_1_ecx_intel();
 
   // EDX:
   //    [10:0] Reserved for Intel

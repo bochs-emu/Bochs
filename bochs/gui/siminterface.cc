@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -136,6 +136,10 @@ public:
   virtual int ask_yes_no(const char *title, const char *prompt, bool the_default);
   // simple message box
   virtual void message_box(const char *title, const char *message);
+  // simple modeless message box
+  virtual void *ml_message_box(const char *title, const char *message);
+  // kill modeless message box
+  virtual void ml_message_box_kill(void *ptr);
   // called at a regular interval, currently by the keyboard handler.
   virtual void periodic();
   virtual int create_disk_image(const char *filename, int sectors, bool overwrite);
@@ -217,7 +221,7 @@ public:
   virtual void init_std_nic_options(const char *name, bx_list_c *menu);
 #endif
 #if BX_SUPPORT_PCIUSB
-  virtual void init_usb_options(const char *usb_name, const char *pname, int maxports);
+  virtual void init_usb_options(const char *usb_name, const char *pname, int maxports, int param0);
 #endif
   virtual int  parse_param_from_list(const char *context, const char *param, bx_list_c *base);
   virtual int  parse_nic_params(const char *context, const char *param, bx_list_c *base);
@@ -659,6 +663,27 @@ void bx_real_sim_c::message_box(const char *title, const char *message)
   event.type = BX_SYNC_EVT_MSG_BOX;
   event.u.logmsg.prefix = title;
   event.u.logmsg.msg = message;
+  sim_to_ci_event(&event);
+}
+
+void *bx_real_sim_c::ml_message_box(const char *title, const char *message)
+{
+  BxEvent event;
+
+  event.type = BX_SYNC_EVT_ML_MSG_BOX;
+  event.param0 = NULL;
+  event.u.logmsg.prefix = title;
+  event.u.logmsg.msg = message;
+  sim_to_ci_event(&event);
+  return event.param0;
+}
+
+void bx_real_sim_c::ml_message_box_kill(void *ptr)
+{
+  BxEvent event;
+
+  event.type = BX_SYNC_EVT_ML_MSG_BOX_KILL;
+  event.param0 = ptr;
   sim_to_ci_event(&event);
 }
 
@@ -1121,7 +1146,12 @@ bool bx_real_sim_c::restore_config()
   char config[BX_PATHNAME_LEN];
   sprintf(config, "%s/config", get_param_string(BXPN_RESTORE_PATH)->getptr());
   BX_INFO(("restoring '%s'", config));
-  return (read_rc(config) >= 0);
+  if (read_rc(config) >= 0) {
+    return 1;
+  } else {
+     get_param_bool(BXPN_RESTORE_FLAG)->set(0);
+    return 0;
+  }
 }
 
 bool bx_real_sim_c::restore_logopts()
@@ -1345,8 +1375,8 @@ bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_pat
   for (i=0; i<level; i++)
     fprintf(fp, "  ");
   if (node == NULL) {
-      BX_ERROR(("NULL pointer"));
-      return 0;
+    BX_ERROR(("NULL pointer"));
+    return 0;
   }
   fprintf(fp, "%s = ", node->get_name());
   switch (node->get_type()) {
@@ -1490,9 +1520,9 @@ void bx_real_sim_c::init_std_nic_options(const char *name, bx_list_c *menu)
 #endif
 
 #if BX_SUPPORT_PCIUSB
-void bx_real_sim_c::init_usb_options(const char *usb_name, const char *pname, int maxports)
+void bx_real_sim_c::init_usb_options(const char *usb_name, const char *pname, int maxports, int param0)
 {
-  bx_init_usb_options(usb_name, pname, maxports);
+  bx_init_usb_options(usb_name, pname, maxports, param0);
 }
 #endif
 

@@ -32,15 +32,6 @@
 #define CHECK_PENDING_EXCEPTIONS 1
 
 #if BX_SUPPORT_FPU
-void BX_CPU_C::prepareFPU(bxInstruction_c *i, bool check_pending_exceptions)
-{
-  if (BX_CPU_THIS_PTR cr0.get_EM() || BX_CPU_THIS_PTR cr0.get_TS())
-    exception(BX_NM_EXCEPTION, 0);
-
-  if (check_pending_exceptions)
-    BX_CPU_THIS_PTR FPU_check_pending_exceptions();
-}
-
 void BX_CPU_C::FPU_update_last_instruction(bxInstruction_c *i)
 {
   // when FOPCODE deprecation is set, FOPCODE is updated only when unmasked x87 exception occurs
@@ -346,7 +337,7 @@ bx_address BX_CPU_C::fpu_load_environment(bxInstruction_c *i)
 /* D9 /5 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDCW(bxInstruction_c *i)
 {
-  prepareFPU(i, CHECK_PENDING_EXCEPTIONS);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
 
@@ -371,8 +362,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDCW(bxInstruction_c *i)
 /* D9 /7 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSTCW(bxInstruction_c *i)
 {
-  prepareFPU(i, !CHECK_PENDING_EXCEPTIONS);
-
   Bit16u cwd = BX_CPU_THIS_PTR the_i387.get_control_word();
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
@@ -385,8 +374,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSTCW(bxInstruction_c *i)
 /* DD /7 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSTSW(bxInstruction_c *i)
 {
-  prepareFPU(i, !CHECK_PENDING_EXCEPTIONS);
-
   Bit16u swd = BX_CPU_THIS_PTR the_i387.get_status_word();
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
@@ -399,7 +386,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSTSW(bxInstruction_c *i)
 /* DF E0 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSTSW_AX(bxInstruction_c *i)
 {
-  prepareFPU(i, !CHECK_PENDING_EXCEPTIONS);
   AX = BX_CPU_THIS_PTR the_i387.get_status_word();
 
   BX_NEXT_INSTR(i);
@@ -408,7 +394,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSTSW_AX(bxInstruction_c *i)
 /* DD /4 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FRSTOR(bxInstruction_c *i)
 {
-  prepareFPU(i, CHECK_PENDING_EXCEPTIONS);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   bx_address offset = fpu_load_environment(i);
   floatx80 tmp;
@@ -430,8 +416,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FRSTOR(bxInstruction_c *i)
 /* DD /6 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSAVE(bxInstruction_c *i)
 {
-  prepareFPU(i, !CHECK_PENDING_EXCEPTIONS);
-
   bx_address offset = fpu_save_environment(i);
 
   /* save all registers in stack order. */
@@ -450,8 +434,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSAVE(bxInstruction_c *i)
 /* 9B E2 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNCLEX(bxInstruction_c *i)
 {
-  prepareFPU(i, !CHECK_PENDING_EXCEPTIONS);
-
   FPU_PARTIAL_STATUS &= ~(FPU_SW_Backward|FPU_SW_Summary|FPU_SW_Stack_Fault|FPU_SW_Precision|
                    FPU_SW_Underflow|FPU_SW_Overflow|FPU_SW_Zero_Div|FPU_SW_Denormal_Op|
                    FPU_SW_Invalid);
@@ -464,7 +446,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNCLEX(bxInstruction_c *i)
 /* DB E3 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNINIT(bxInstruction_c *i)
 {
-  prepareFPU(i, !CHECK_PENDING_EXCEPTIONS);
   BX_CPU_THIS_PTR the_i387.init();
 
   BX_NEXT_INSTR(i);
@@ -473,7 +454,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNINIT(bxInstruction_c *i)
 /* D9 /4 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDENV(bxInstruction_c *i)
 {
-  prepareFPU(i, CHECK_PENDING_EXCEPTIONS);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   fpu_load_environment(i);
 
   /* read all registers in stack order and update x87 tag word */
@@ -491,7 +472,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDENV(bxInstruction_c *i)
 /* D9 /6 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSTENV(bxInstruction_c *i)
 {
-  prepareFPU(i, !CHECK_PENDING_EXCEPTIONS);
   fpu_save_environment(i);
   /* mask all floating point exceptions */
   FPU_CONTROL_WORD |= FPU_CW_Exceptions_Mask;
@@ -504,7 +484,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSTENV(bxInstruction_c *i)
 /* D9 D0 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNOP(bxInstruction_c *i)
 {
-  prepareFPU(i, CHECK_PENDING_EXCEPTIONS);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   FPU_update_last_instruction(i);
 
   // Perform no FPU operation. This instruction takes up space in the
@@ -516,11 +496,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNOP(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPLEGACY(bxInstruction_c *i)
 {
-  prepareFPU(i, !CHECK_PENDING_EXCEPTIONS);
-
-  // FPU performs no specific operation and no internal x87 states
-  // are affected
-
+  // FPU performs no specific operation and no internal x87 states are affected
   BX_NEXT_INSTR(i);
 }
 

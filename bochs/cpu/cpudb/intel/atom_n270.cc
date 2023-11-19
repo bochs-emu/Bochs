@@ -445,7 +445,6 @@ void atom_n270_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [29:29] Long Mode
   //   [30:30] AMD 3DNow! Extensions
   //   [31:31] AMD 3DNow! Instructions
-
   leaf->edx = 0;
 }
 

@@ -947,553 +947,119 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SQRTSS_VssWssR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-/*
- * Opcode: 0F 58
- * Add packed single precision FP numbers from XMM2/MEM to XMM1.
- * Possible floating point exceptions: #I, #D, #O, #U, #P
- */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADDPS_VpsWpsR(bxInstruction_c *i)
-{
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
 
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  xmm_addps(&op1, &op2, status);
-  check_exceptionsSSE(get_exception_flags(status));
+#define SSE_SIMD_PFP_CPU_LEVEL6(HANDLER, func)                                             \
+  /* SSE packed shift instruction */                                                       \
+  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)                      \
+  {                                                                                        \
+    BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());  \
+                                                                                           \
+    float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);                         \
+    (func)(&op1, &op2, status);                                                            \
+    check_exceptionsSSE(get_exception_flags(status));                                      \
+                                                                                           \
+    BX_WRITE_XMM_REG(i->dst(), op1);                                                       \
+    BX_NEXT_INSTR(i);                                                                      \
+  }
 
-  BX_WRITE_XMM_REG(i->dst(), op1);
+#else
+
+#define SSE_SIMD_PFP_CPU_LEVEL6(HANDLER, func)                                             \
+  /* SSE instruction with two src operands */                                              \
+  void BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER (bxInstruction_c *i)                     \
+  {                                                                                        \
+    BX_NEXT_INSTR(i);                                                                      \
+  }
+
 #endif
 
-  BX_NEXT_INSTR(i);
-}
+SSE_SIMD_PFP_CPU_LEVEL6(ADDPS_VpsWpsR, xmm_addps);
+SSE_SIMD_PFP_CPU_LEVEL6(SUBPS_VpsWpsR, xmm_subps);
+SSE_SIMD_PFP_CPU_LEVEL6(MULPS_VpsWpsR, xmm_mulps);
+SSE_SIMD_PFP_CPU_LEVEL6(DIVPS_VpsWpsR, xmm_divps);
+SSE_SIMD_PFP_CPU_LEVEL6(MINPS_VpsWpsR, xmm_minps);
+SSE_SIMD_PFP_CPU_LEVEL6(MAXPS_VpsWpsR, xmm_maxps);
+SSE_SIMD_PFP_CPU_LEVEL6(HADDPS_VpsWpsR, xmm_haddps);
+SSE_SIMD_PFP_CPU_LEVEL6(HSUBPS_VpsWpsR, xmm_hsubps);
 
-/*
- * Opcode: 66 0F 58
- * Add packed double precision FP numbers from XMM2/MEM to XMM1.
- * Possible floating point exceptions: #I, #D, #O, #U, #P
- */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADDPD_VpdWpdR(bxInstruction_c *i)
-{
+SSE_SIMD_PFP_CPU_LEVEL6(ADDPD_VpdWpdR, xmm_addpd);
+SSE_SIMD_PFP_CPU_LEVEL6(SUBPD_VpdWpdR, xmm_subpd);
+SSE_SIMD_PFP_CPU_LEVEL6(MULPD_VpdWpdR, xmm_mulpd);
+SSE_SIMD_PFP_CPU_LEVEL6(DIVPD_VpdWpdR, xmm_divpd);
+SSE_SIMD_PFP_CPU_LEVEL6(MINPD_VpdWpdR, xmm_minpd);
+SSE_SIMD_PFP_CPU_LEVEL6(MAXPD_VpdWpdR, xmm_maxpd);
+SSE_SIMD_PFP_CPU_LEVEL6(HADDPD_VpdWpdR, xmm_haddpd);
+SSE_SIMD_PFP_CPU_LEVEL6(HSUBPD_VpdWpdR, xmm_hsubpd);
+
+SSE_SIMD_PFP_CPU_LEVEL6(ADDSUBPS_VpsWpsR, xmm_addsubps);
+SSE_SIMD_PFP_CPU_LEVEL6(ADDSUBPD_VpdWpdR, xmm_addsubpd);
+
 #if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
 
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  xmm_addpd(&op1, &op2, status);
-  check_exceptionsSSE(get_exception_flags(status));
+#define SSE_SCALAR_SINGLE_FP_CPU_LEVEL6(HANDLER, func)                                          \
+  /* SSE packed shift instruction */                                                            \
+  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)                           \
+  {                                                                                             \
+    float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->dst()), op2 = BX_READ_XMM_REG_LO_DWORD(i->src()); \
+                                                                                                \
+    float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);                              \
+    op1 = (func)(op1, op2, status);                                                             \
+    check_exceptionsSSE(get_exception_flags(status));                                           \
+    BX_WRITE_XMM_REG_LO_DWORD(i->dst(), op1);                                                   \
+    BX_NEXT_INSTR(i);                                                                           \
+  }                                                                                             \
 
-  BX_WRITE_XMM_REG(i->dst(), op1);
+#else
+
+#define SSE_SCALAR_SINGLE_FP_CPU_LEVEL6(HANDLER, func)                                          \
+  /* SSE instruction with two src operands */                                                   \
+  void BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER (bxInstruction_c *i)                          \
+  {                                                                                             \
+    BX_NEXT_INSTR(i);                                                                           \
+  }
+
 #endif
 
-  BX_NEXT_INSTR(i);
-}
+SSE_SCALAR_SINGLE_FP_CPU_LEVEL6(ADDSS_VssWssR, float32_add);
+SSE_SCALAR_SINGLE_FP_CPU_LEVEL6(SUBSS_VssWssR, float32_sub);
+SSE_SCALAR_SINGLE_FP_CPU_LEVEL6(MULSS_VssWssR, float32_mul);
+SSE_SCALAR_SINGLE_FP_CPU_LEVEL6(DIVSS_VssWssR, float32_div);
+SSE_SCALAR_SINGLE_FP_CPU_LEVEL6(MINSS_VssWssR, float32_min);
+SSE_SCALAR_SINGLE_FP_CPU_LEVEL6(MAXSS_VssWssR, float32_max);
 
-/*
- * Opcode: F2 0F 58
- * Add the lower double precision FP number from XMM2/MEM to XMM1.
- * Possible floating point exceptions: #I, #D, #O, #U, #P
- */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADDSD_VsdWsdR(bxInstruction_c *i)
-{
 #if BX_CPU_LEVEL >= 6
-  float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->dst()), op2 = BX_READ_XMM_REG_LO_QWORD(i->src());
 
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  op1 = float64_add(op1, op2, status);
-  check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_XMM_REG_LO_QWORD(i->dst(), op1);
+#define SSE_SCALAR_DOUBLE_FP_CPU_LEVEL6(HANDLER, func)                                          \
+  /* SSE packed shift instruction */                                                            \
+  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)                           \
+  {                                                                                             \
+    float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->dst()), op2 = BX_READ_XMM_REG_LO_QWORD(i->src()); \
+                                                                                                \
+    float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);                              \
+    op1 = (func)(op1, op2, status);                                                             \
+    check_exceptionsSSE(get_exception_flags(status));                                           \
+    BX_WRITE_XMM_REG_LO_QWORD(i->dst(), op1);                                                   \
+    BX_NEXT_INSTR(i);                                                                           \
+  }                                                                                             \
+
+#else
+
+#define SSE_SCALAR_DOUBLE_FP_CPU_LEVEL6(HANDLER, func)                                          \
+  /* SSE instruction with two src operands */                                                   \
+  void BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER (bxInstruction_c *i)                          \
+  {                                                                                             \
+    BX_NEXT_INSTR(i);                                                                           \
+  }
+
 #endif
 
-  BX_NEXT_INSTR(i);
-}
-
-/*
- * Opcode: F3 0F 58
- * Add the lower single precision FP number from XMM2/MEM to XMM1.
- * Possible floating point exceptions: #I, #D, #O, #U, #P
- */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADDSS_VssWssR(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->dst()), op2 = BX_READ_XMM_REG_LO_DWORD(i->src());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  op1 = float32_add(op1, op2, status);
-  check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_XMM_REG_LO_DWORD(i->dst(), op1);
-#endif
-
-  BX_NEXT_INSTR(i);
-}
-
-/*
- * Opcode: 0F 59
- * Multiply packed single precision FP numbers from XMM2/MEM to XMM1.
- * Possible floating point exceptions: #I, #D, #O, #U, #P
- */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MULPS_VpsWpsR(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  xmm_mulps(&op1, &op2, status);
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_XMM_REG(i->dst(), op1);
-#endif
-
-  BX_NEXT_INSTR(i);
-}
-
-/*
- * Opcode: 66 0F 59
- * Multiply packed double precision FP numbers from XMM2/MEM to XMM1.
- * Possible floating point exceptions: #I, #D, #O, #U, #P
- */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MULPD_VpdWpdR(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  xmm_mulpd(&op1, &op2, status);
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_XMM_REG(i->dst(), op1);
-#endif
-
-  BX_NEXT_INSTR(i);
-}
-
-/*
- * Opcode: F2 0F 59
- * Multiply the lower double precision FP number from XMM2/MEM to XMM1.
- * Possible floating point exceptions: #I, #D, #O, #U, #P
- */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MULSD_VsdWsdR(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->dst()), op2 = BX_READ_XMM_REG_LO_QWORD(i->src());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  op1 = float64_mul(op1, op2, status);
-  check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_XMM_REG_LO_QWORD(i->dst(), op1);
-#endif
-
-  BX_NEXT_INSTR(i);
-}
-
-/*
- * Opcode: F3 0F 59
- * Multiply the lower single precision FP number from XMM2/MEM to XMM1.
- * Possible floating point exceptions: #I, #D, #O, #U, #P
- */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MULSS_VssWssR(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->dst()), op2 = BX_READ_XMM_REG_LO_DWORD(i->src());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  op1 = float32_mul(op1, op2, status);
-  check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_XMM_REG_LO_DWORD(i->dst(), op1);
-#endif
-
-  BX_NEXT_INSTR(i);
-}
-
-/*
- * Opcode: 0F 5C
- * Subtract packed single precision FP numbers from XMM2/MEM to XMM1.
- * Possible floating point exceptions: #I, #D, #O, #U, #P
- */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUBPS_VpsWpsR(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  xmm_subps(&op1, &op2, status);
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_XMM_REG(i->dst(), op1);
-#endif
-
-  BX_NEXT_INSTR(i);
-}
-
-/*
- * Opcode: 66 0F 5C
- * Subtract packed double precision FP numbers from XMM2/MEM to XMM1.
- * Possible floating point exceptions: #I, #D, #O, #U, #P
- */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUBPD_VpdWpdR(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  xmm_subpd(&op1, &op2, status);
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_XMM_REG(i->dst(), op1);
-#endif
-
-  BX_NEXT_INSTR(i);
-}
-
-/*
- * Opcode: F2 0F 5C
- * Subtract the lower double precision FP number from XMM2/MEM to XMM1.
- * Possible floating point exceptions: #I, #D, #O, #U, #P
- */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUBSD_VsdWsdR(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->dst()), op2 = BX_READ_XMM_REG_LO_QWORD(i->src());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  op1 = float64_sub(op1, op2, status);
-  check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_XMM_REG_LO_QWORD(i->dst(), op1);
-#endif
-
-  BX_NEXT_INSTR(i);
-}
-
-/*
- * Opcode: F3 0F 5C
- * Subtract the lower single precision FP number from XMM2/MEM to XMM1.
- * Possible floating point exceptions: #I, #D, #O, #U, #P
- */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUBSS_VssWssR(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->dst()), op2 = BX_READ_XMM_REG_LO_DWORD(i->src());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  op1 = float32_sub(op1, op2, status);
-  check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_XMM_REG_LO_DWORD(i->dst(), op1);
-#endif
-
-  BX_NEXT_INSTR(i);
-}
-
-/*
- * Opcode: 0F 5D
- * Calculate the minimum single precision FP between XMM2/MEM to XMM1.
- * Possible floating point exceptions: #I, #D
- */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MINPS_VpsWpsR(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  xmm_minps(&op1, &op2, status);
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_XMM_REG(i->dst(), op1);
-#endif
-
-  BX_NEXT_INSTR(i);
-}
-
-/*
- * Opcode: 66 0F 5D
- * Calculate the minimum double precision FP between XMM2/MEM to XMM1.
- * Possible floating point exceptions: #I, #D
- */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MINPD_VpdWpdR(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  xmm_minpd(&op1, &op2, status);
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_XMM_REG(i->dst(), op1);
-#endif
-
-  BX_NEXT_INSTR(i);
-}
-
-/*
- * Opcode: F2 0F 5D
- * Calculate the minimum scalar double precision FP between XMM2/MEM to XMM1.
- * Possible floating point exceptions: #I, #D
- */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MINSD_VsdWsdR(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->dst()), op2 = BX_READ_XMM_REG_LO_QWORD(i->src());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  op1 = float64_min(op1, op2, status);
-  check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_XMM_REG_LO_QWORD(i->dst(), op1);
-#endif
-
-  BX_NEXT_INSTR(i);
-}
-
-/*
- * Opcode: F3 0F 5D
- * Calculate the minimum scalar single precision FP between XMM2/MEM to XMM1.
- * Possible floating point exceptions: #I, #D
- */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MINSS_VssWssR(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->dst()), op2 = BX_READ_XMM_REG_LO_DWORD(i->src());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  op1 = float32_min(op1, op2, status);
-  check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_XMM_REG_LO_DWORD(i->dst(), op1);
-#endif
-
-  BX_NEXT_INSTR(i);
-}
-
-/*
- * Opcode: 0F 5E
- * Divide packed single precision FP numbers from XMM2/MEM to XMM1.
- * Possible floating point exceptions: #I, #D, #Z, #O, #U, #P
- */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::DIVPS_VpsWpsR(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  xmm_divps(&op1, &op2, status);
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_XMM_REG(i->dst(), op1);
-#endif
-
-  BX_NEXT_INSTR(i);
-}
-
-/*
- * Opcode: 66 0F 5E
- * Divide packed double precision FP numbers from XMM2/MEM to XMM1.
- * Possible floating point exceptions: #I, #D, #Z, #O, #U, #P
- */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::DIVPD_VpdWpdR(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  xmm_divpd(&op1, &op2, status);
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_XMM_REG(i->dst(), op1);
-#endif
-
-  BX_NEXT_INSTR(i);
-}
-
-/*
- * Opcode: F2 0F 5E
- * Divide the lower double precision FP number from XMM2/MEM to XMM1.
- * Possible floating point exceptions: #I, #D, #Z, #O, #U, #P
- */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::DIVSD_VsdWsdR(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->dst()), op2 = BX_READ_XMM_REG_LO_QWORD(i->src());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  op1 = float64_div(op1, op2, status);
-  check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_XMM_REG_LO_QWORD(i->dst(), op1);
-#endif
-
-  BX_NEXT_INSTR(i);
-}
-
-/*
- * Opcode: F3 0F 5E
- * Divide the lower single precision FP number from XMM2/MEM to XMM1.
- * Possible floating point exceptions: #I, #D, #Z, #O, #U, #P
- */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::DIVSS_VssWssR(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->dst()), op2 = BX_READ_XMM_REG_LO_DWORD(i->src());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  op1 = float32_div(op1, op2, status);
-  check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_XMM_REG_LO_DWORD(i->dst(), op1);
-#endif
-
-  BX_NEXT_INSTR(i);
-}
-
-/*
- * Opcode: 0F 5F
- * Calculate the maximum single precision FP between XMM2/MEM to XMM1.
- * Possible floating point exceptions: #I, #D
- */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MAXPS_VpsWpsR(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  xmm_maxps(&op1, &op2, status);
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_XMM_REG(i->dst(), op1);
-#endif
-
-  BX_NEXT_INSTR(i);
-}
-
-/*
- * Opcode: 66 0F 5F
- * Calculate the maximum double precision FP between XMM2/MEM to XMM1.
- * Possible floating point exceptions: #I, #D
- */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MAXPD_VpdWpdR(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  xmm_maxpd(&op1, &op2, status);
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_XMM_REG(i->dst(), op1);
-#endif
-
-  BX_NEXT_INSTR(i);
-}
-
-/*
- * Opcode: F2 0F 5F
- * Calculate the maximum scalar double precision FP between XMM2/MEM to XMM1.
- * Possible floating point exceptions: #I, #D
- */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MAXSD_VsdWsdR(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->dst()), op2 = BX_READ_XMM_REG_LO_QWORD(i->src());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  op1 = float64_max(op1, op2, status);
-  check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_XMM_REG_LO_QWORD(i->dst(), op1);
-#endif
-
-  BX_NEXT_INSTR(i);
-}
-
-/*
- * Opcode: F3 0F 5F
- * Calculate the maxumim scalar single precision FP between XMM2/MEM to XMM1.
- * Possible floating point exceptions: #I, #D
- */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::MAXSS_VssWssR(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->dst()), op2 = BX_READ_XMM_REG_LO_DWORD(i->src());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  op1 = float32_max(op1, op2, status);
-  check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_XMM_REG_LO_DWORD(i->dst(), op1);
-#endif
-
-  BX_NEXT_INSTR(i);
-}
-
-/*
- * Opcode: 66 0F 7C
- * Add horizontally packed double precision FP in XMM2/MEM from XMM1.
- * Possible floating point exceptions: #I, #D, #O, #U, #P
- */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::HADDPD_VpdWpdR(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  xmm_haddpd(&op1, &op2, status);
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_XMM_REG(i->dst(), op1);
-#endif
-
-  BX_NEXT_INSTR(i);
-}
-
-/*
- * Opcode: F2 0F 7C
- * Add horizontally packed single precision FP in XMM2/MEM from XMM1.
- * Possible floating point exceptions: #I, #D, #O, #U, #P
- */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::HADDPS_VpsWpsR(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  xmm_haddps(&op1, &op2, status);
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_XMM_REG(i->dst(), op1);
-#endif
-
-  BX_NEXT_INSTR(i);
-}
-
-/*
- * Opcode: 66 0F 7D
- * Subtract horizontally packed double precision FP in XMM2/MEM from XMM1.
- * Possible floating point exceptions: #I, #D, #O, #U, #P
- */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::HSUBPD_VpdWpdR(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  xmm_hsubpd(&op1, &op2, status);
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_XMM_REG(i->dst(), op1);
-#endif
-
-  BX_NEXT_INSTR(i);
-}
-
-/*
- * Opcode: F2 0F 7D
- * Subtract horizontally packed single precision FP in XMM2/MEM from XMM1.
- * Possible floating point exceptions: #I, #D, #O, #U, #P
- */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::HSUBPS_VpsWpsR(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  xmm_hsubps(&op1, &op2, status);
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_XMM_REG(i->dst(), op1);
-#endif
-
-  BX_NEXT_INSTR(i);
-}
+SSE_SCALAR_DOUBLE_FP_CPU_LEVEL6(ADDSD_VsdWsdR, float64_add);
+SSE_SCALAR_DOUBLE_FP_CPU_LEVEL6(SUBSD_VsdWsdR, float64_sub);
+SSE_SCALAR_DOUBLE_FP_CPU_LEVEL6(MULSD_VsdWsdR, float64_mul);
+SSE_SCALAR_DOUBLE_FP_CPU_LEVEL6(DIVSD_VsdWsdR, float64_div);
+SSE_SCALAR_DOUBLE_FP_CPU_LEVEL6(MINSD_VsdWsdR, float64_min);
+SSE_SCALAR_DOUBLE_FP_CPU_LEVEL6(MAXSD_VsdWsdR, float64_max);
 
 /*
  * Opcode: 0F C2
@@ -1588,46 +1154,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPSS_VssWssIbR(bxInstruction_c *i)
 
   check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_XMM_REG_LO_DWORD(i->dst(), op1);
-#endif
-
-  BX_NEXT_INSTR(i);
-}
-
-/*
- * Opcode: 66 0F D0
- * Add/Subtract packed double precision FP numbers from XMM2/MEM to XMM1.
- * Possible floating point exceptions: #I, #D, #O, #U, #P
- */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADDSUBPD_VpdWpdR(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  xmm_addsubpd(&op1, &op2, status);
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_XMM_REG(i->dst(), op1);
-#endif
-
-  BX_NEXT_INSTR(i);
-}
-
-/*
- * Opcode: F2 0F D0
- * Add/Substract packed single precision FP numbers from XMM2/MEM to XMM1.
- * Possible floating point exceptions: #I, #D, #O, #U, #P
- */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADDSUBPS_VpsWpsR(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  xmm_addsubps(&op1, &op2, status);
-  check_exceptionsSSE(get_exception_flags(status));
-
-  BX_WRITE_XMM_REG(i->dst(), op1);
 #endif
 
   BX_NEXT_INSTR(i);

@@ -2900,6 +2900,11 @@ case $target in
       INSTALL_PLUGINS_VAR=install_dll_plugins
       WIN32_DLL_IMPORT_LIB="dllexports.a"
       LINK_DLL="\$(CXX) \$(CXXFLAGS) -shared -o \$@"
+      if test "$cross_compiling" = no; then
+        DLLTOOL="dlltool"
+      else
+        DLLTOOL="$DLLTOOL"
+      fi
     else
       if test "$with_win32" != yes; then
         LIBS="$LIBS -lcomctl32"
@@ -2913,6 +2918,7 @@ esac
 AC_SUBST(CI_PLUGIN_OBJS)
 AC_SUBST(CI_SUPPORT_OBJS)
 AC_SUBST(EXPORT_DYNAMIC)
+AC_SUBST(DLLTOOL)
 
 if test "$use_curses" = yes; then
   if test "$PKGCONFIG" != not_found; then

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1490,6 +1490,71 @@ int LogOptionsDialog::GetAction(int evtype)
   int *ptrToChoice = (int*)action[evtype]->GetClientData(sel);
   wxASSERT(ptrToChoice != NULL);
   return *ptrToChoice;
+}
+
+//////////////////////////////////////////////////////////////////////
+// ModelessDialog implementation
+//////////////////////////////////////////////////////////////////////
+
+// all events go to OnEvent method
+BEGIN_EVENT_TABLE(ModelessDialog, wxDialog)
+  EVT_BUTTON(-1, ModelessDialog::OnEvent)
+END_EVENT_TABLE()
+
+ModelessDialog::ModelessDialog(
+    wxWindow* parent,
+    wxWindowID id,
+    const wxString& title,
+    const wxString& msg)
+  : wxDialog(parent, id, title, wxDefaultPosition, wxDefaultSize,
+    wxDEFAULT_DIALOG_STYLE)
+{
+  mainSizer = new wxBoxSizer(wxVERTICAL);
+  msgSizer = new wxBoxSizer(wxHORIZONTAL);
+  buttonSizer = new wxBoxSizer(wxHORIZONTAL);
+  mainSizer->Add(msgSizer, 0, wxALIGN_CENTER);
+  mainSizer->Add(buttonSizer, 0, wxALIGN_CENTER);
+  // msgSizer contents
+  message = new wxStaticText(this, -1, msg);
+  wxFont font = message->GetFont();
+  font.SetWeight(wxFONTWEIGHT_BOLD);
+  font.SetPointSize(2 + font.GetPointSize());
+  message->SetFont(font);
+  msgSizer->Add(message, 0, wxGROW|wxALIGN_LEFT|wxLEFT, 30);
+  // buttonSizer contents
+  wxButton *btn = new wxButton(this, wxID_OK, BTNLABEL_CLOSE);
+  buttonSizer->Add(btn, 0, wxALL, 5);
+}
+
+void ModelessDialog::Init()
+{
+  SetSizer(mainSizer);
+  mainSizer->Fit(this);
+  wxSize size = mainSizer->GetMinSize();
+  int margin = 5;
+  SetSizeHints(size.GetWidth() + margin, size.GetHeight() + margin);
+  Center();
+}
+
+bool ModelessDialog::Show(bool val)
+{
+  if (val) {
+    Init();
+    wxDialog::Raise();
+  }
+  return wxDialog::Show(val);
+}
+
+void ModelessDialog::OnEvent(wxCommandEvent& event)
+{
+  int id = event.GetId();
+  switch (id) {
+    case wxID_OK:
+      Show(false);
+      break;
+    default:
+      event.Skip();
+  }
 }
 
 

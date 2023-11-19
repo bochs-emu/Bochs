@@ -22,9 +22,6 @@
 #ifndef BX_IODEV_FLOPPY_H
 #define BX_IODEV_FLOPPY_H
 
-#define FROM_FLOPPY 10
-#define TO_FLOPPY   11
-
 #if BX_USE_FD_SMF
 #  define BX_FD_SMF  static
 #  define BX_FD_THIS theFloppyController->
@@ -151,7 +148,7 @@ private:
   static void      timer_handler(void *);
   BX_FD_SMF void   timer(void);
   BX_FD_SMF void   increment_sector(void);
-  BX_FD_SMF bool   evaluate_media(Bit8u devtype, Bit8u type, char *path, floppy_t *media);
+  BX_FD_SMF bool   evaluate_media(Bit8u devtype, Bit8u type, const char *path, floppy_t *media);
   BX_FD_SMF void   close_media(floppy_t *media);
   // runtime options
   static Bit64s    floppy_param_handler(bx_param_c *param, bool set, Bit64s val);

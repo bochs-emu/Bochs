@@ -30,10 +30,12 @@
 #  define BX_KEY_THIS this->
 #endif
 
-#define MOUSE_MODE_RESET  10
-#define MOUSE_MODE_STREAM 11
-#define MOUSE_MODE_REMOTE 12
-#define MOUSE_MODE_WRAP   13
+enum {
+  MOUSE_MODE_RESET = 10,
+  MOUSE_MODE_STREAM = 11,
+  MOUSE_MODE_REMOTE = 12,
+  MOUSE_MODE_WRAP = 13
+};
 
 class bx_keyb_c : public bx_devmodel_c {
 public:
@@ -107,43 +109,40 @@ private:
       Bit8u   saved_mode;  // the mode prior to entering wrap mode
       bool    enable;
 
-      Bit8u get_status_byte ()
-	{
-	  // top bit is 0 , bit 6 is 1 if remote mode.
-	  Bit8u ret = (Bit8u) ((mode == MOUSE_MODE_REMOTE) ? 0x40 : 0);
-	  ret |= (enable << 5);
-	  ret |= (scaling == 1) ? 0 : (1 << 4);
-	  ret |= ((button_status & 0x1) << 2);
-	  ret |= ((button_status & 0x2) << 0);
-	  return ret;
-	}
+      Bit8u get_status_byte()
+ 	  {
+        // top bit is 0 , bit 6 is 1 if remote mode.
+        Bit8u ret = (Bit8u) ((mode == MOUSE_MODE_REMOTE) ? 0x40 : 0);
+        ret |= (enable << 5);
+        ret |= (scaling == 1) ? 0 : (1 << 4);
+        ret |= ((button_status & 0x1) << 2);
+        ret |= ((button_status & 0x2) << 0);
+        return ret;
+      }
 
-      Bit8u get_resolution_byte ()
-	{
-	  Bit8u ret = 0;
+      Bit8u get_resolution_byte()
+      {
+        Bit8u ret = 0;
 
-	  switch (resolution_cpmm) {
-	  case 1:
-	    ret = 0;
-	    break;
+        switch (resolution_cpmm) {
+        case 1:
+          ret = 0;
+	      break;
+        case 2:
+          ret = 1;
+	      break;
+        case 4:
+          ret = 2;
+          break;
+        case 8:
+          ret = 3;
+          break;
+        default:
+          genlog->panic("mouse: invalid resolution_cpmm");
+	    }
 
-	  case 2:
-	    ret = 1;
-	    break;
-
-	  case 4:
-	    ret = 2;
-	    break;
-
-	  case 8:
-	    ret = 3;
-	    break;
-
-	  default:
-	    genlog->panic("mouse: invalid resolution_cpmm");
-	  };
-	  return ret;
-	}
+	    return ret;
+	  }
 
       Bit8u  button_status;
       Bit16s delayed_dx;
@@ -176,24 +175,24 @@ private:
     unsigned controller_Qsource; // 0=keyboard, 1=mouse
   } s; // State information for saving/loading
 
-  BX_KEY_SMF void     resetinternals(bool powerup);
-  BX_KEY_SMF void     set_kbd_clock_enable(Bit8u value) BX_CPP_AttrRegparmN(1);
-  BX_KEY_SMF void     set_aux_clock_enable(Bit8u value);
-  BX_KEY_SMF void     kbd_ctrl_to_kbd(Bit8u value);
-  BX_KEY_SMF void     kbd_ctrl_to_mouse(Bit8u value);
-  BX_KEY_SMF void     kbd_enQ(Bit8u scancode);
-  BX_KEY_SMF void     kbd_enQ_imm(Bit8u val);
-  BX_KEY_SMF void     activate_timer(void);
-  BX_KEY_SMF void     controller_enQ(Bit8u data, unsigned source);
-  BX_KEY_SMF bool     mouse_enQ_packet(Bit8u b1, Bit8u b2, Bit8u b3, Bit8u b4);
-  BX_KEY_SMF void     mouse_enQ(Bit8u mouse_data);
+  BX_KEY_SMF void resetinternals(bool powerup);
+  BX_KEY_SMF void set_kbd_clock_enable(Bit8u value) BX_CPP_AttrRegparmN(1);
+  BX_KEY_SMF void set_aux_clock_enable(Bit8u value);
+  BX_KEY_SMF void kbd_ctrl_to_kbd(Bit8u value);
+  BX_KEY_SMF void kbd_ctrl_to_mouse(Bit8u value);
+  BX_KEY_SMF void kbd_enQ(Bit8u scancode);
+  BX_KEY_SMF void kbd_enQ_imm(Bit8u val);
+  BX_KEY_SMF void activate_timer(void);
+  BX_KEY_SMF void controller_enQ(Bit8u data, unsigned source);
+  BX_KEY_SMF bool mouse_enQ_packet(Bit8u b1, Bit8u b2, Bit8u b3, Bit8u b4);
+  BX_KEY_SMF void mouse_enQ(Bit8u mouse_data);
 
   static void mouse_enabled_changed_static(void *dev, bool enabled);
   void mouse_enabled_changed(bool enabled);
   static void mouse_enq_static(void *dev, int delta_x, int delta_y, int delta_z, unsigned button_state, bool absxy);
   void mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state, bool absxy);
 
-  static void   timer_handler(void *);
+  static void timer_handler(void *);
   int    timer_handle;
 };
 

@@ -229,12 +229,12 @@ public:
   void scsi_write_complete(void *req, int ret);
   void scsi_write_data(Bit32u tag);
   Bit8u* scsi_get_buf(Bit32u tag);
-  const char *get_serial_number() {return drive_serial_str;}
+  const char *get_serial_number() const { return drive_serial_str; }
   int scsi_do_modepage_hdr(Bit8u *p, Bit8u sub_page, Bit8u page_code, int len);
   int scsi_do_modepage(Bit8u *p, Bit8u pc, Bit8u sub_page, Bit8u page_code);
   void set_inserted(bool value);
-  bool get_inserted() {return inserted;}
-  bool get_locked() {return locked;}
+  bool get_inserted() const { return inserted; }
+  bool get_locked() const { return locked; }
   static void seek_timer_handler(void *);
   bool save_requests(const char *path);
   void restore_requests(const char *path);

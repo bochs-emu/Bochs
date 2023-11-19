@@ -27,8 +27,6 @@
 // should be adjusted if want to support more SMP processors
 #define BX_MAX_VIRTUAL_TIMERS (32)
 
-#define BX_MAX_VIRTUAL_TIME (0x7fffffff)
-
 class BOCHSAPI bx_virt_timer_c : public logfunctions {
 private:
 
@@ -128,8 +126,7 @@ public:
   void start_timers(void);
 
   //activate a deactivated but registered timer.
-  void activate_timer(unsigned timer_index, Bit32u useconds,
-                      bool continuous);
+  void activate_timer(unsigned timer_index, Bit32u useconds, bool continuous);
 
   //deactivate (but don't unregister) a currently registered timer.
   void deactivate_timer(unsigned timer_index);

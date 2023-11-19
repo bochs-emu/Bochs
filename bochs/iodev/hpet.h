@@ -32,21 +32,6 @@
 
 #if BX_SUPPORT_PCI
 
-/* HPET will set up timers to fire after a certain period of time.
- * These values can be used to clamp this period to reasonable/supported values.
- * The values are in ticks.
- */
-#define HPET_MAX_ALLOWED_PERIOD 0x0400000000000000ull // Must not overflow when multiplied by HPET_CLK_PERIOD
-#define HPET_MIN_ALLOWED_PERIOD 1
-
-#define RTC_ISA_IRQ 8
-
-#define HPET_BASE               0xfed00000
-#define HPET_LEN                0x400
-#define HPET_CLK_PERIOD         10 // 10 ns
-#define HPET_ROUTING_CAP        0xffffffull // allowed irq routing
-
-#define FS_PER_NS 1000000       /* 1000000 femtosectons == 1 ns */
 #define HPET_MIN_TIMERS         3
 #define HPET_MAX_TIMERS         32
 
@@ -100,17 +85,17 @@ public:
   void write_aligned(bx_phy_address address, Bit32u data, bool trailing_write);
 
 private:
-  Bit32u hpet_in_legacy_mode(void) {return s.config & HPET_CFG_LEGACY;}
-  Bit32u timer_int_route(HPETTimer *timer)
+  Bit32u hpet_in_legacy_mode(void) const { return s.config & HPET_CFG_LEGACY; }
+  Bit32u timer_int_route(const HPETTimer *timer) const 
   {
     return (timer->config & HPET_TN_INT_ROUTE_MASK) >> HPET_TN_INT_ROUTE_SHIFT;
   }
-  Bit32u timer_fsb_route(HPETTimer *t) {return t->config & HPET_TN_FSB_ENABLE;}
-  Bit32u hpet_enabled(void) {return s.config & HPET_CFG_ENABLE;}
-  Bit32u timer_is_periodic(HPETTimer *t) {return t->config & HPET_TN_PERIODIC;}
-  Bit32u timer_enabled(HPETTimer *t) {return t->config & HPET_TN_ENABLE;}
+  Bit32u timer_fsb_route(const HPETTimer *t) const { return t->config & HPET_TN_FSB_ENABLE; }
+  Bit32u hpet_enabled(void) const { return s.config & HPET_CFG_ENABLE; }
+  Bit32u timer_is_periodic(const HPETTimer *t) const { return t->config & HPET_TN_PERIODIC; }
+  Bit32u timer_enabled(const HPETTimer *t) const { return t->config & HPET_TN_ENABLE; }
   Bit64u hpet_get_ticks(void);
-  Bit64u hpet_calculate_diff(HPETTimer *t, Bit64u current);
+  Bit64u hpet_calculate_diff(const HPETTimer *t, Bit64u current) const;
   void   update_irq(HPETTimer *timer, bool set);
   void   hpet_set_timer(HPETTimer *t);
   void   hpet_del_timer(HPETTimer *t);

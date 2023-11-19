@@ -67,7 +67,9 @@ cpuid
 memory
   standard
     ram
-      size
+      guest
+      host
+      block_size
     rom
       path
       address
@@ -227,8 +229,11 @@ ports
       (same options as ports.usb.uhci)
     ehci
       (same options as ports.usb.uhci)
+      companion
     xhci
       (same options as ports.usb.uhci)
+      model
+      n_ports
 
 network
   ne2k
@@ -285,7 +290,8 @@ sound
 
 misc
   port_e9_hack
-  port_e9_hack_all_rings
+    enabled
+    all_rings
   iodebug_all_rings
   gdbstub
     port

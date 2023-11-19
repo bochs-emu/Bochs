@@ -79,6 +79,7 @@ bochs-msvc-src.zip
 
 # /bochs/instrument/stubs/
 /bochs/instrument/stubs/Makefile
+/bochs/instrument/example*/Makefile
 
 # /bochs/iodev/
 /bochs/iodev/Makefile

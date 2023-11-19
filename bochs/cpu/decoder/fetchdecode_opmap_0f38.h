@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2017-2019 Stanislav Shwartsman
+//   Copyright (c) 2017-2023 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -213,6 +213,14 @@ static const Bit64u BxOpcodeTable0F38F6[] = {
 #endif
   form_opcode(ATTR_SSE_PREFIX_66, BX_IA_ADCX_GdEd),
   last_opcode(ATTR_SSE_PREFIX_F3, BX_IA_ADOX_GdEd)
+};
+
+// opcode 0F 38 F9
+static const Bit64u BxOpcodeTable0F38F9[] = {
+#if BX_SUPPORT_X86_64
+  form_opcode(ATTR_OS64 | ATTR_MOD_MEM | ATTR_SSE_NO_PREFIX, BX_IA_MOVDIRI_MqGq),
+#endif
+  last_opcode(            ATTR_MOD_MEM | ATTR_SSE_NO_PREFIX, BX_IA_MOVDIRI_MdGd)
 };
 
 #endif // BX_CPU_LEVEL >= 6

@@ -92,7 +92,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit16
   }
 
   Bit16u gate_dest_selector = gate_descriptor.u.gate.dest_selector;
-  Bit64u gate_dest_offset   = ((Bit64u)dword3 << 32) | gate_descriptor.u.gate.dest_offset;
+  Bit64u gate_dest_offset   = GET64_FROM_HI32_LO32(dword3, gate_descriptor.u.gate.dest_offset);
 
   unsigned ist = gate_descriptor.u.gate.param_count & 0x7;
 
@@ -952,6 +952,11 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
       debug(BX_CPU_THIS_PTR prev_rip); // print debug information to the log
 #if BX_SUPPORT_VMX
       VMexit_TripleFault();
+#endif
+#if BX_SUPPORT_SVM
+      if (BX_CPU_THIS_PTR in_svm_guest) {
+        if (SVM_INTERCEPT(SVM_INTERCEPT0_SHUTDOWN)) Svm_Vmexit(SVM_VMEXIT_SHUTDOWN);
+      }
 #endif
 #if BX_DEBUGGER
       // trap into debugger (the same as when a PANIC occurs)

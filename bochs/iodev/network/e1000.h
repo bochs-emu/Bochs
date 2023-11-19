@@ -12,7 +12,7 @@
 //  Copyright (c) 2007 Dan Aloni
 //  Copyright (c) 2004 Antony T Curtis
 //
-//  Copyright (C) 2011-2021  The Bochs Project
+//  Copyright (C) 2011-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -114,7 +114,7 @@ class bx_e1000_c : public bx_pci_device_c {
 public:
   bx_e1000_c();
   virtual ~bx_e1000_c();
-  virtual void init(Bit8u card);
+  virtual void init_card(Bit8u card);
   virtual void reset(unsigned type);
   void         e1000_register_state(bx_list_c *parent, Bit8u card);
   virtual void after_restore_state(void);

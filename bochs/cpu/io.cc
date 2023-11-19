@@ -226,7 +226,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_INSB_YbDX(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSB16_YbDX(bxInstruction_c *i)
 {
   // trigger any segment or page faults before reading from IO port
-  Bit8u value8 = read_RMW_virtual_byte_32(BX_SEG_REG_ES, DI);
+  Bit8u value8 = read_RMW_virtual_byte_32(BX_SEG_REG_ES, DI); // no lock
 
   value8 = BX_INP(DX, 1);
 
@@ -242,7 +242,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSB16_YbDX(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSB32_YbDX(bxInstruction_c *i)
 {
   // trigger any segment or page faults before reading from IO port
-  Bit8u value8 = read_RMW_virtual_byte(BX_SEG_REG_ES, EDI);
+  Bit8u value8 = read_RMW_virtual_byte(BX_SEG_REG_ES, EDI); // no lock
 
   value8 = BX_INP(DX, 1);
 
@@ -263,7 +263,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSB32_YbDX(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSB64_YbDX(bxInstruction_c *i)
 {
   // trigger any segment or page faults before reading from IO port
-  Bit8u value8 = read_RMW_linear_byte(BX_SEG_REG_ES, RDI);
+  Bit8u value8 = read_RMW_linear_byte(BX_SEG_REG_ES, RDI); // no lock
 
   value8 = BX_INP(DX, 1);
 
@@ -305,7 +305,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_INSW_YwDX(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSW16_YwDX(bxInstruction_c *i)
 {
   // trigger any segment or page faults before reading from IO port
-  Bit16u value16 = read_RMW_virtual_word_32(BX_SEG_REG_ES, DI);
+  Bit16u value16 = read_RMW_virtual_word_32(BX_SEG_REG_ES, DI); // no lock
 
   value16 = BX_INP(DX, 2);
 
@@ -344,7 +344,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSW32_YwDX(bxInstruction_c *i)
     }
     else {
       // trigger any segment or page faults before reading from IO port
-      value16 = read_RMW_virtual_word(BX_SEG_REG_ES, edi);
+      value16 = read_RMW_virtual_word(BX_SEG_REG_ES, edi); // no lock
 
       value16 = BX_INP(DX, 2);
 
@@ -355,7 +355,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSW32_YwDX(bxInstruction_c *i)
 #endif
   {
     // trigger any segment or page faults before reading from IO port
-    value16 = read_RMW_virtual_word_32(BX_SEG_REG_ES, edi);
+    value16 = read_RMW_virtual_word_32(BX_SEG_REG_ES, edi); // no lock
 
     value16 = BX_INP(DX, 2);
 
@@ -374,7 +374,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSW32_YwDX(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSW64_YwDX(bxInstruction_c *i)
 {
   // trigger any segment or page faults before reading from IO port
-  Bit16u value16 = read_RMW_linear_word(BX_SEG_REG_ES, RDI);
+  Bit16u value16 = read_RMW_linear_word(BX_SEG_REG_ES, RDI); // no lock
 
   value16 = BX_INP(DX, 2);
 
@@ -416,7 +416,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_INSD_YdDX(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSD16_YdDX(bxInstruction_c *i)
 {
   // trigger any segment or page faults before reading from IO port
-  Bit32u value32 = read_RMW_virtual_dword_32(BX_SEG_REG_ES, DI);
+  Bit32u value32 = read_RMW_virtual_dword_32(BX_SEG_REG_ES, DI); // no lock
 
   value32 = BX_INP(DX, 4);
 
@@ -432,7 +432,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSD16_YdDX(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSD32_YdDX(bxInstruction_c *i)
 {
   // trigger any segment or page faults before reading from IO port
-  Bit32u value32 = read_RMW_virtual_dword(BX_SEG_REG_ES, EDI);
+  Bit32u value32 = read_RMW_virtual_dword(BX_SEG_REG_ES, EDI); // no lock
 
   value32 = BX_INP(DX, 4);
 
@@ -450,7 +450,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSD32_YdDX(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSD64_YdDX(bxInstruction_c *i)
 {
   // trigger any segment or page faults before reading from IO port
-  Bit32u value32 = read_RMW_linear_dword(BX_SEG_REG_ES, RDI);
+  Bit32u value32 = read_RMW_linear_dword(BX_SEG_REG_ES, RDI); // no lock
 
   value32 = BX_INP(DX, 4);
 
@@ -865,7 +865,7 @@ bool BX_CPP_AttrRegparmN(3) BX_CPU_C::allow_io(bxInstruction_c *i, Bit16u port, 
    * Otherwise, must check the IO permission map on >286.
    * On the 286, there is no IO permissions map */
   
-  static bool port_e9_hack_all_rings = SIM->get_param_bool(BXPN_PORT_E9_HACK_ALL_RINGS)->get();
+  static bool port_e9_hack_all_rings = SIM->get_param_bool(BXPN_PORT_E9_HACK)->get() && SIM->get_param_bool(BXPN_PORT_E9_HACK_ALL_RINGS)->get();
   if (0xe9 == port && port_e9_hack_all_rings)
     return(1); // port e9 hack can be used by unprivileged code
 

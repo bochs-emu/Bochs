@@ -67,18 +67,17 @@ void bx_slowdown_timer_c::init(void)
     return;
 
   BX_INFO(("using 'slowdown' timer synchronization method"));
-  s.MAXmultiplier=MAXMULT;
+  s.MAXmultiplier = MAXMULT;
   s.Q=Qval;
 
   if(s.MAXmultiplier<1)
     s.MAXmultiplier=1;
 
-  s.start_time=sectousec(time(NULL));
+  s.start_time = sectousec(time(NULL));
   s.start_emulated_time = bx_pc_system.time_usec();
   s.lasttime=0;
   if (s.timer_handle == BX_NULL_TIMER_HANDLE) {
-    s.timer_handle=bx_pc_system.register_timer(this, timer_handler, 100 , 1, 1,
-      "slowdown_timer");
+    s.timer_handle=bx_pc_system.register_timer(this, timer_handler, 100 , 1, 1, "slowdown_timer");
   }
   bx_pc_system.deactivate_timer(s.timer_handle);
   bx_pc_system.activate_timer(s.timer_handle,(Bit32u)s.Q,0);
@@ -108,7 +107,7 @@ void bx_slowdown_timer_c::handle_timer()
   Bit64u thistime=(wanttime>totaltime)?wanttime:totaltime;
 
 #if BX_SLOWDOWN_PRINTF_FEEDBACK
-  printf("Entering slowdown timer handler.\n");
+  printf("Entering slowdown timer handler\n");
 #endif
 
   /* Decide if we're behind.
@@ -178,4 +177,3 @@ void bx_slowdown_timer_c::handle_timer()
   }
 #endif // Diagnostic info
 }
-

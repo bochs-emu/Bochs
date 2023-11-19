@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -249,7 +249,7 @@ void bx_ne2k_main_c::init(void)
     bx_list_c *base = (bx_list_c*) SIM->get_param(pname);
     if (SIM->get_param_bool("enabled", base)->get()) {
       theNE2kDev[card] = new bx_ne2k_c();
-      theNE2kDev[card]->init(card);
+      theNE2kDev[card]->init_card(card);
       count++;
     }
   }
@@ -314,7 +314,7 @@ bx_ne2k_c::~bx_ne2k_c()
   BX_DEBUG(("Exit"));
 }
 
-void bx_ne2k_c::init(Bit8u card)
+void bx_ne2k_c::init_card(Bit8u card)
 {
   char pname[20];
   Bit8u macaddr[6];

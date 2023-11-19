@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -521,6 +521,10 @@ void MyFrame::OnStateRestore(wxCommandEvent& WXUNUSED(event))
     sr_path[sizeof(sr_path) - 1] = '\0';
     SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(1);
     SIM->get_param_string(BXPN_RESTORE_PATH)->set(sr_path);
+    if (!SIM->restore_config()) {
+      wxMessageBox(wxT("Cannot restore configuration!"),
+                   wxT("ERROR"), wxOK | wxICON_ERROR, this);
+    }
   }
 }
 
@@ -1081,6 +1085,7 @@ void MyFrame::OnSim2CIEvent(wxCommandEvent& event)
 {
   IFDBG_EVENT(wxLogDebug(wxT("received a bochs event in the GUI thread")));
   BxEvent *be = (BxEvent *) event.GetEventObject();
+  ModelessDialog *ModelessMsgBox;
   IFDBG_EVENT(wxLogDebug(wxT("event type = %d"), (int)be->type));
   // all cases should return.  sync event handlers MUST send back a
   // response.  async event handlers MUST delete the event.
@@ -1104,6 +1109,18 @@ void MyFrame::OnSim2CIEvent(wxCommandEvent& event)
     wxMessageBox(wxString(be->u.logmsg.msg, wxConvUTF8),
                  wxString(be->u.logmsg.prefix, wxConvUTF8),
                  wxOK | wxICON_ERROR, this);
+    sim_thread->SendSyncResponse(be);
+    break;
+  case BX_SYNC_EVT_ML_MSG_BOX:
+    ModelessMsgBox = new ModelessDialog(this, -1,
+      wxString(be->u.logmsg.prefix, wxConvUTF8),
+      wxString(be->u.logmsg.msg, wxConvUTF8));
+    ModelessMsgBox->Show(true);
+    be->param0 = (void*)ModelessMsgBox;
+    sim_thread->SendSyncResponse(be);
+    break;
+  case BX_SYNC_EVT_ML_MSG_BOX_KILL:
+    delete (ModelessDialog*)be->param0;
     sim_thread->SendSyncResponse(be);
     break;
   case BX_ASYNC_EVT_QUIT_SIM:

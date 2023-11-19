@@ -28,12 +28,12 @@ extern void handleSMC(bx_phy_address pAddr, Bit32u mask);
 
 class bxPageWriteStampTable
 {
-  const Bit32u PHY_MEM_PAGES = 1024*1024;
+  const Bit32u PHY_MEM_PAGES_IN_4G_SPACE;
   Bit32u *fineGranularityMapping;
 
 public:
-  bxPageWriteStampTable() {
-    fineGranularityMapping = new Bit32u[PHY_MEM_PAGES];
+  bxPageWriteStampTable(): PHY_MEM_PAGES_IN_4G_SPACE(1024*1024) {
+    fineGranularityMapping = new Bit32u[PHY_MEM_PAGES_IN_4G_SPACE];
     resetWriteStamps();
   }
  ~bxPageWriteStampTable() { delete [] fineGranularityMapping; }
@@ -94,7 +94,7 @@ public:
 
 BX_CPP_INLINE void bxPageWriteStampTable::resetWriteStamps(void)
 {
-  for (Bit32u i=0; i<PHY_MEM_PAGES; i++) {
+  for (Bit32u i=0; i<PHY_MEM_PAGES_IN_4G_SPACE; i++) {
     fineGranularityMapping[i] = 0;
   }
 }

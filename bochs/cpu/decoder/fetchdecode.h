@@ -78,12 +78,14 @@ BX_CPP_INLINE Bit64u FetchQWORD(const Bit8u *iptr)
 }
 #endif
 
-#define BX_PREPARE_EVEX_NO_BROADCAST (0x80 | BX_PREPARE_EVEX)
-#define BX_PREPARE_EVEX_NO_SAE       (0x40 | BX_PREPARE_EVEX)
-#define BX_PREPARE_EVEX              (0x20)
-#define BX_PREPARE_OPMASK            (0x10)
-#define BX_PREPARE_AVX               (0x08)
-#define BX_PREPARE_SSE               (0x04)
+#define BX_PREPARE_EVEX_NO_BROADCAST (0x200 | BX_PREPARE_EVEX)
+#define BX_PREPARE_EVEX_NO_SAE       (0x100 | BX_PREPARE_EVEX)
+#define BX_PREPARE_EVEX              (0x80)
+#define BX_PREPARE_OPMASK            (0x40)
+#define BX_PREPARE_AVX               (0x20)
+#define BX_PREPARE_SSE               (0x10)
+#define BX_PREPARE_MMX               (0x08)
+#define BX_PREPARE_FPU               (0x04)
 #define BX_LOCKABLE                  (0x02)
 #define BX_TRACE_END                 (0x01)
 
@@ -93,7 +95,11 @@ struct bxIAOpcodeTable {
   BxExecutePtr_tR execute2;
 #endif
   Bit8u src[4];
-  Bit8u opflags;
+#if BX_SUPPORT_EVEX
+  Bit16u opflags;
+#else
+  Bit8u  opflags;
+#endif
 };
 
 #ifdef BX_STANDALONE_DECODER
@@ -260,8 +266,11 @@ const Bit8u OP_Qd = BX_FORM_SRC(BX_MMX_HALF_REG, BX_SRC_RM);
 const Bit8u OP_Qq = BX_FORM_SRC(BX_MMX_REG, BX_SRC_RM);
 
 const Bit8u OP_Vdq = BX_FORM_SRC(BX_VMM_REG, BX_SRC_NNN);
+const Bit8u OP_Vbf16 = BX_FORM_SRC(BX_VMM_REG, BX_SRC_NNN);
+const Bit8u OP_Vph = BX_FORM_SRC(BX_VMM_REG, BX_SRC_NNN);
 const Bit8u OP_Vps = BX_FORM_SRC(BX_VMM_REG, BX_SRC_NNN);
 const Bit8u OP_Vpd = BX_FORM_SRC(BX_VMM_REG, BX_SRC_NNN);
+const Bit8u OP_Vsh = BX_FORM_SRC(BX_VMM_REG, BX_SRC_NNN);
 const Bit8u OP_Vss = BX_FORM_SRC(BX_VMM_REG, BX_SRC_NNN);
 const Bit8u OP_Vsd = BX_FORM_SRC(BX_VMM_REG, BX_SRC_NNN);
 const Bit8u OP_Vq  = BX_FORM_SRC(BX_VMM_REG, BX_SRC_NNN);
@@ -272,16 +281,22 @@ const Bit8u OP_Wd = BX_FORM_SRC(BX_VMM_SCALAR_DWORD, BX_SRC_VECTOR_RM);
 const Bit8u OP_Ww = BX_FORM_SRC(BX_VMM_SCALAR_WORD, BX_SRC_VECTOR_RM);
 const Bit8u OP_Wb = BX_FORM_SRC(BX_VMM_SCALAR_BYTE, BX_SRC_VECTOR_RM);
 const Bit8u OP_Wdq = BX_FORM_SRC(BX_VMM_FULL_VECTOR, BX_SRC_VECTOR_RM);
+const Bit8u OP_Wbf16 = BX_FORM_SRC(BX_VMM_FULL_VECTOR, BX_SRC_VECTOR_RM);
+const Bit8u OP_Wph = BX_FORM_SRC(BX_VMM_FULL_VECTOR, BX_SRC_VECTOR_RM);
 const Bit8u OP_Wps = BX_FORM_SRC(BX_VMM_FULL_VECTOR, BX_SRC_VECTOR_RM);
 const Bit8u OP_Wpd = BX_FORM_SRC(BX_VMM_FULL_VECTOR, BX_SRC_VECTOR_RM);
+const Bit8u OP_Wsh = BX_FORM_SRC(BX_VMM_SCALAR_WORD, BX_SRC_VECTOR_RM);
 const Bit8u OP_Wss = BX_FORM_SRC(BX_VMM_SCALAR_DWORD, BX_SRC_VECTOR_RM);
 const Bit8u OP_Wsd = BX_FORM_SRC(BX_VMM_SCALAR_QWORD, BX_SRC_VECTOR_RM);
 
+const Bit8u OP_mVph = BX_FORM_SRC(BX_VMM_FULL_VECTOR, BX_SRC_VECTOR_RM);
 const Bit8u OP_mVps = BX_FORM_SRC(BX_VMM_FULL_VECTOR, BX_SRC_VECTOR_RM);
 const Bit8u OP_mVpd = BX_FORM_SRC(BX_VMM_FULL_VECTOR, BX_SRC_VECTOR_RM);
+const Bit8u OP_mVph16 = BX_FORM_SRC(BX_VMM_SCALAR_WORD, BX_SRC_VECTOR_RM);
 const Bit8u OP_mVps32 = BX_FORM_SRC(BX_VMM_SCALAR_DWORD, BX_SRC_VECTOR_RM);
 const Bit8u OP_mVpd64 = BX_FORM_SRC(BX_VMM_SCALAR_QWORD, BX_SRC_VECTOR_RM);
 const Bit8u OP_mVdq = BX_FORM_SRC(BX_VMM_FULL_VECTOR, BX_SRC_VECTOR_RM);
+const Bit8u OP_mVsh = BX_FORM_SRC(BX_VMM_SCALAR_WORD, BX_SRC_VECTOR_RM);
 const Bit8u OP_mVss = BX_FORM_SRC(BX_VMM_SCALAR_DWORD, BX_SRC_VECTOR_RM);
 const Bit8u OP_mVsd = BX_FORM_SRC(BX_VMM_SCALAR_QWORD, BX_SRC_VECTOR_RM);
 const Bit8u OP_mVdq8 = BX_FORM_SRC(BX_VMM_SCALAR_BYTE, BX_SRC_VECTOR_RM);

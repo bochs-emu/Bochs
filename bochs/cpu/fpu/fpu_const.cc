@@ -54,7 +54,7 @@ BX_CPP_INLINE floatx80 FPU_round_const(const floatx80 &a, int adj)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDL2T(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
@@ -73,7 +73,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDL2T(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDL2E(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
@@ -92,7 +92,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDL2E(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDPI(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
@@ -111,7 +111,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDPI(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDLG2(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
@@ -130,7 +130,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDLG2(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDLN2(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
@@ -149,7 +149,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDLN2(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD1(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();
@@ -168,7 +168,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD1(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDZ(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR prepareFPU(i);
+  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   clear_C1();

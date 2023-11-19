@@ -124,7 +124,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ENTER64_IwIb(bxInstruction_c *i)
   // ENTER finishes with memory write check on the final stack pointer
   // the memory is touched but no write actually occurs
   // emulate it by doing RMW read access from SS:RSP
-  read_RMW_linear_qword(BX_SEG_REG_SS, temp_RSP);
+  read_RMW_linear_qword(BX_SEG_REG_SS, temp_RSP); // no lock, should be touch only
 
   RBP = frame_ptr64;
   RSP = temp_RSP;

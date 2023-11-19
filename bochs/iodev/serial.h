@@ -48,9 +48,11 @@ extern "C" {
 
 #define  BX_PC_CLOCK_XTL   1843200.0
 
-#define  BX_SER_RXIDLE  0
-#define  BX_SER_RXPOLL  1
-#define  BX_SER_RXWAIT  2
+enum {
+  BX_SER_RXIDLE = 0,
+  BX_SER_RXPOLL = 1,
+  BX_SER_RXWAIT = 2
+};
 
 #define BX_SER_THR  0
 #define BX_SER_RBR  0
@@ -63,15 +65,17 @@ extern "C" {
 #define BX_SER_MSR  6
 #define BX_SER_SCR  7
 
-#define BX_SER_MODE_NULL          0
-#define BX_SER_MODE_FILE          1
-#define BX_SER_MODE_TERM          2
-#define BX_SER_MODE_RAW           3
-#define BX_SER_MODE_MOUSE         4
-#define BX_SER_MODE_SOCKET_CLIENT 5
-#define BX_SER_MODE_SOCKET_SERVER 6
-#define BX_SER_MODE_PIPE_CLIENT   7
-#define BX_SER_MODE_PIPE_SERVER   8
+enum {
+  BX_SER_MODE_NULL          = 0,
+  BX_SER_MODE_FILE          = 1,
+  BX_SER_MODE_TERM          = 2,
+  BX_SER_MODE_RAW           = 3,
+  BX_SER_MODE_MOUSE         = 4,
+  BX_SER_MODE_SOCKET_CLIENT = 5,
+  BX_SER_MODE_SOCKET_SERVER = 6,
+  BX_SER_MODE_PIPE_CLIENT   = 7,
+  BX_SER_MODE_PIPE_SERVER   = 8
+};
 
 enum {
   BX_SER_INT_IER,

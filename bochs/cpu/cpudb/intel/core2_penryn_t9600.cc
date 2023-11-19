@@ -53,7 +53,6 @@ core2_penryn_t9600_t::core2_penryn_t9600_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 #if BX_SUPPORT_VMX
   enable_cpu_extension(BX_ISA_VMX);
 #endif
-  enable_cpu_extension(BX_ISA_SMX);
   enable_cpu_extension(BX_ISA_CLFLUSH);
   enable_cpu_extension(BX_ISA_DEBUG_EXTENSIONS);
   enable_cpu_extension(BX_ISA_VME);
@@ -480,7 +479,7 @@ void core2_penryn_t9600_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [12:12] SKINIT support
   //   [13:13] WDT: Watchdog timer support
   //   [31:14] reserved
-  leaf->ecx = BX_CPUID_EXT1_ECX_LAHF_SAHF;
+  leaf->ecx = get_ext_cpuid_leaf_1_ecx_intel();
 
   // EDX:
   //    [10:0] Reserved for Intel

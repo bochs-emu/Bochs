@@ -71,13 +71,14 @@ typedef Bit64s    Bits;
 
 #define INTFREQU    ((fltype)(14318180.0 / 288.0)) // clocking of the chip
 
-
-#define OF_TYPE_ATT      0
-#define OF_TYPE_DEC      1
-#define OF_TYPE_REL      2
-#define OF_TYPE_SUS      3
-#define OF_TYPE_SUS_NOKEEP  4
-#define OF_TYPE_OFF      5
+enum {
+  OF_TYPE_ATT = 0,
+  OF_TYPE_DEC = 1,
+  OF_TYPE_REL = 2,
+  OF_TYPE_SUS = 3,
+  OF_TYPE_SUS_NOKEEP = 4,
+  OF_TYPE_OFF = 5
+};
 
 #define ARC_CONTROL     0x00
 #define ARC_TVS_KSR_MUL 0x20
@@ -91,7 +92,6 @@ typedef Bit64s    Bits;
 #define ARC_WAVE_SEL    0xe0
 
 #define ARC_SECONDSET   0x100 // second operator set for OPL3
-
 
 #define OP_ACT_OFF      0x00
 #define OP_ACT_NORMAL   0x01  // regular channel activated (bitmasked)

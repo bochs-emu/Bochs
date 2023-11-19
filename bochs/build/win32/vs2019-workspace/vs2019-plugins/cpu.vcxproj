@@ -1,0 +1,362 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{17E9DDBE-FC7E-4EE0-9F21-9FA0415F9ED8}</ProjectGuid>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v142</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v142</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v142</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v142</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>12.0.21005.1</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>.\..\obj-debug\cpu\</OutDir>
+    <IntDir>.\..\obj-debug\cpu\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>.\..\obj-debug\cpu\</OutDir>
+    <IntDir>.\..\obj-debug\cpu\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>.\..\obj-release\cpu\</OutDir>
+    <IntDir>.\..\obj-release\cpu\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>.\..\obj-release\cpu\</OutDir>
+    <IntDir>.\..\obj-release\cpu\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <BuildLog>
+      <Path>$(IntDir)BuildLog-$(TargetName).log</Path>
+    </BuildLog>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\;..\instrument\stubs\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeaderOutputFile>.\..\obj-debug\cpu\cpu.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\..\obj-debug\cpu\</AssemblerListingLocation>
+      <ObjectFileName>.\..\obj-debug\cpu\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\obj-debug\cpu\</ProgramDataBaseFileName>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>OldStyle</DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Lib>
+      <OutputFile>.\..\obj-debug\cpu.lib</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Lib>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\..\obj-debug/cpu.bsc</OutputFile>
+    </Bscmake>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <BuildLog>
+      <Path>$(IntDir)BuildLog-$(TargetName).log</Path>
+    </BuildLog>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\;..\instrument\stubs\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeaderOutputFile>.\..\obj-debug\cpu\cpu.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\..\obj-debug\cpu\</AssemblerListingLocation>
+      <ObjectFileName>.\..\obj-debug\cpu\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\obj-debug\cpu\</ProgramDataBaseFileName>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>OldStyle</DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Lib>
+      <OutputFile>.\..\obj-debug\cpu.lib</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Lib>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\..\obj-debug/cpu.bsc</OutputFile>
+    </Bscmake>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <BuildLog>
+      <Path>$(IntDir)BuildLog-$(TargetName).log</Path>
+    </BuildLog>
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <AdditionalIncludeDirectories>..;..\instrument\stubs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <ExceptionHandling />
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PrecompiledHeaderOutputFile>.\..\obj-release\cpu\cpu.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\..\obj-release\cpu\</AssemblerListingLocation>
+      <ObjectFileName>.\..\obj-release\cpu\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\obj-release\cpu\</ProgramDataBaseFileName>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <CallingConvention>FastCall</CallingConvention>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Lib>
+      <OutputFile>.\..\obj-release\cpu.lib</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Lib>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\..\obj-release\cpu.bsc</OutputFile>
+    </Bscmake>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <BuildLog>
+      <Path>$(IntDir)BuildLog-$(TargetName).log</Path>
+    </BuildLog>
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <AdditionalIncludeDirectories>..;..\instrument\stubs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <ExceptionHandling>
+      </ExceptionHandling>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PrecompiledHeaderOutputFile>.\..\obj-release\cpu\cpu.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\..\obj-release\cpu\</AssemblerListingLocation>
+      <ObjectFileName>.\..\obj-release\cpu\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\obj-release\cpu\</ProgramDataBaseFileName>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <CallingConvention>FastCall</CallingConvention>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Lib>
+      <OutputFile>.\..\obj-release\cpu.lib</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Lib>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\..\obj-release\cpu.bsc</OutputFile>
+    </Bscmake>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\cpu\3dnow.cc" />
+    <ClCompile Include="..\cpu\access.cc" />
+    <ClCompile Include="..\cpu\access2.cc" />
+    <ClCompile Include="..\cpu\aes.cc" />
+    <ClCompile Include="..\cpu\apic.cc" />
+    <ClCompile Include="..\cpu\arith16.cc" />
+    <ClCompile Include="..\cpu\arith32.cc" />
+    <ClCompile Include="..\cpu\arith64.cc" />
+    <ClCompile Include="..\cpu\arith8.cc" />
+    <ClCompile Include="..\cpu\bcd.cc" />
+    <ClCompile Include="..\cpu\bit.cc" />
+    <ClCompile Include="..\cpu\bit16.cc" />
+    <ClCompile Include="..\cpu\bit32.cc" />
+    <ClCompile Include="..\cpu\bit64.cc" />
+    <ClCompile Include="..\cpu\bmi32.cc" />
+    <ClCompile Include="..\cpu\bmi64.cc" />
+    <ClCompile Include="..\cpu\call_far.cc" />
+    <ClCompile Include="..\cpu\cet.cc" />
+    <ClCompile Include="..\cpu\cmpccxadd32.cc" />
+    <ClCompile Include="..\cpu\cmpccxadd64.cc" />
+    <ClCompile Include="..\cpu\cpu.cc" />
+    <ClCompile Include="..\cpu\cpuid.cc" />
+    <ClCompile Include="..\cpu\crc32.cc" />
+    <ClCompile Include="..\cpu\crregs.cc" />
+    <ClCompile Include="..\cpu\ctrl_xfer16.cc" />
+    <ClCompile Include="..\cpu\ctrl_xfer32.cc" />
+    <ClCompile Include="..\cpu\ctrl_xfer64.cc" />
+    <ClCompile Include="..\cpu\ctrl_xfer_pro.cc" />
+    <ClCompile Include="..\cpu\data_xfer16.cc" />
+    <ClCompile Include="..\cpu\data_xfer32.cc" />
+    <ClCompile Include="..\cpu\data_xfer64.cc" />
+    <ClCompile Include="..\cpu\data_xfer8.cc" />
+    <ClCompile Include="..\cpu\debugstuff.cc" />
+    <ClCompile Include="..\cpu\decoder\disasm.cc" />
+    <ClCompile Include="..\cpu\decoder\fetchdecode32.cc" />
+    <ClCompile Include="..\cpu\decoder\fetchdecode64.cc" />
+    <ClCompile Include="..\cpu\event.cc" />
+    <ClCompile Include="..\cpu\exception.cc" />
+    <ClCompile Include="..\cpu\faststring.cc" />
+    <ClCompile Include="..\cpu\flag_ctrl.cc" />
+    <ClCompile Include="..\cpu\flag_ctrl_pro.cc" />
+    <ClCompile Include="..\cpu\fpu_emu.cc" />
+    <ClCompile Include="..\cpu\generic_cpuid.cc" />
+    <ClCompile Include="..\cpu\gf2.cc" />
+    <ClCompile Include="..\cpu\icache.cc" />
+    <ClCompile Include="..\cpu\init.cc" />
+    <ClCompile Include="..\cpu\io.cc" />
+    <ClCompile Include="..\cpu\iret.cc" />
+    <ClCompile Include="..\cpu\jmp_far.cc" />
+    <ClCompile Include="..\cpu\load.cc" />
+    <ClCompile Include="..\cpu\logical16.cc" />
+    <ClCompile Include="..\cpu\logical32.cc" />
+    <ClCompile Include="..\cpu\logical64.cc" />
+    <ClCompile Include="..\cpu\logical8.cc" />
+    <ClCompile Include="..\cpu\mmx.cc" />
+    <ClCompile Include="..\cpu\msr.cc" />
+    <ClCompile Include="..\cpu\mult16.cc" />
+    <ClCompile Include="..\cpu\mult32.cc" />
+    <ClCompile Include="..\cpu\mult64.cc" />
+    <ClCompile Include="..\cpu\mult8.cc" />
+    <ClCompile Include="..\cpu\mwait.cc" />
+    <ClCompile Include="..\cpu\paging.cc" />
+    <ClCompile Include="..\cpu\proc_ctrl.cc" />
+    <ClCompile Include="..\cpu\protect_ctrl.cc" />
+    <ClCompile Include="..\cpu\rdrand.cc" />
+    <ClCompile Include="..\cpu\ret_far.cc" />
+    <ClCompile Include="..\cpu\segment_ctrl.cc" />
+    <ClCompile Include="..\cpu\segment_ctrl_pro.cc" />
+    <ClCompile Include="..\cpu\sha.cc" />
+    <ClCompile Include="..\cpu\sha512.cc" />
+    <ClCompile Include="..\cpu\shift16.cc" />
+    <ClCompile Include="..\cpu\shift32.cc" />
+    <ClCompile Include="..\cpu\shift64.cc" />
+    <ClCompile Include="..\cpu\shift8.cc" />
+    <ClCompile Include="..\cpu\smm.cc" />
+    <ClCompile Include="..\cpu\sm3.cc" />
+    <ClCompile Include="..\cpu\sm4.cc" />
+    <ClCompile Include="..\cpu\soft_int.cc" />
+    <ClCompile Include="..\cpu\sse.cc" />
+    <ClCompile Include="..\cpu\sse_move.cc" />
+    <ClCompile Include="..\cpu\sse_pfp.cc" />
+    <ClCompile Include="..\cpu\sse_rcp.cc" />
+    <ClCompile Include="..\cpu\sse_string.cc" />
+    <ClCompile Include="..\cpu\stack.cc" />
+    <ClCompile Include="..\cpu\stack16.cc" />
+    <ClCompile Include="..\cpu\stack32.cc" />
+    <ClCompile Include="..\cpu\stack64.cc" />
+    <ClCompile Include="..\cpu\string.cc" />
+    <ClCompile Include="..\cpu\svm.cc" />
+    <ClCompile Include="..\cpu\tasking.cc" />
+    <ClCompile Include="..\cpu\vapic.cc" />
+    <ClCompile Include="..\cpu\vm8086.cc" />
+    <ClCompile Include="..\cpu\vmcs.cc" />
+    <ClCompile Include="..\cpu\vmexit.cc" />
+    <ClCompile Include="..\cpu\vmfunc.cc" />
+    <ClCompile Include="..\cpu\vmx.cc" />
+    <ClCompile Include="..\cpu\wide_int.cc" />
+    <ClCompile Include="..\cpu\xsave.cc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\bochs.h" />
+    <ClInclude Include="..\config.h" />
+    <ClInclude Include="..\cpudb.h" />
+    <ClInclude Include="..\cpu\access.h" />
+    <ClInclude Include="..\cpu\apic.h" />
+    <ClInclude Include="..\cpu\cpu.h" />
+    <ClInclude Include="..\cpu\cpuid.h" />
+    <ClInclude Include="..\cpu\cpustats.h" />
+    <ClInclude Include="..\cpu\crregs.h" />
+    <ClInclude Include="..\cpu\descriptor.h" />
+    <ClInclude Include="..\cpu\decoder\decoder.h" />
+    <ClInclude Include="..\cpu\decoder\fetchdecode.h" />
+    <ClInclude Include="..\cpu\decoder\fetchdecode_avx.h" />
+    <ClInclude Include="..\cpu\decoder\fetchdecode_evex.h" />
+    <ClInclude Include="..\cpu\decoder\fetchdecode_opmap.h" />
+    <ClInclude Include="..\cpu\decoder\fetchdecode_opmap_0f38.h" />
+    <ClInclude Include="..\cpu\decoder\fetchdecode_opmap_0f3a.h" />
+    <ClInclude Include="..\cpu\decoder\fetchdecode_x87.h" />
+    <ClInclude Include="..\cpu\decoder\fetchdecode_xop.h" />
+    <ClInclude Include="..\cpu\generic_cpuid.h" />
+    <ClInclude Include="..\cpu\i387.h" />
+    <ClInclude Include="..\cpu\ia_opcodes.def" />
+    <ClInclude Include="..\cpu\icache.h" />
+    <ClInclude Include="..\cpu\lazy_flags.h" />
+    <ClInclude Include="..\cpu\scalar_arith.h" />
+    <ClInclude Include="..\cpu\simd_compare.h" />
+    <ClInclude Include="..\cpu\simd_int.h" />
+    <ClInclude Include="..\cpu\simd_pfp.h" />
+    <ClInclude Include="..\cpu\smm.h" />
+    <ClInclude Include="..\cpu\stack.h" />
+    <ClInclude Include="..\cpu\svm.h" />
+    <ClInclude Include="..\cpu\tlb.h" />
+    <ClInclude Include="..\cpu\vmx.h" />
+    <ClInclude Include="..\cpu\wide_int.h" />
+    <ClInclude Include="..\cpu\xmm.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="avx.vcxproj">
+      <Project>{57a4215b-7e87-447a-a0f4-5bbc0866a3d8}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

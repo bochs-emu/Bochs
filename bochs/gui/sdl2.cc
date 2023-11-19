@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2014-2021  The Bochs Project
+//  Copyright (C) 2014-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -476,8 +476,8 @@ void bx_sdl2_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
       } else if (!strcmp(argv[i], "nokeyrepeat")) {
         BX_INFO(("disabled host keyboard repeat"));
         sdl_nokeyrepeat = 1;
-#if BX_DEBUGGER && BX_DEBUGGER_GUI
       } else if (!strcmp(argv[i], "gui_debug")) {
+#if BX_DEBUGGER && BX_DEBUGGER_GUI
         SIM->set_debug_gui(1);
 #ifdef WIN32
         if (gui_ci) {
@@ -490,6 +490,8 @@ void bx_sdl2_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 #else
         init_debug_dialog();
 #endif
+#else
+        SIM->message_box("ERROR", "Bochs debugger not available - ignoring 'gui_debug' option");
 #endif
 #if BX_SHOW_IPS
       } else if (!strcmp(argv[i], "hideIPS")) {

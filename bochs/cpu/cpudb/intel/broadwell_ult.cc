@@ -615,9 +615,7 @@ void broadwell_ult_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [29:29] Reserved
   //   [30:30] Reserved
   //   [31:31] Reserved
-  leaf->ecx = BX_CPUID_EXT1_ECX_LAHF_SAHF |
-              BX_CPUID_EXT1_ECX_LZCNT |
-              BX_CPUID_EXT1_ECX_PREFETCHW;
+  leaf->ecx = get_ext_cpuid_leaf_1_ecx_intel(BX_CPUID_EXT1_ECX_PREFETCHW);
 
   // EDX:
   //    [10:0] Reserved for Intel

@@ -81,7 +81,7 @@ PLUGIN_ENTRY_FOR_MODULE(usb_uhci)
     theUSB_UHCI = new bx_usb_uhci_c();
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theUSB_UHCI, BX_PLUGIN_USB_UHCI);
     // add new configuration parameter for the config interface
-    SIM->init_usb_options("UHCI", "uhci", USB_UHCI_PORTS);
+    SIM->init_usb_options("UHCI", "uhci", USB_UHCI_PORTS, 0);
     // register add-on option for bochsrc and command line
     SIM->register_addon_option("usb_uhci", usb_uhci_options_parser, usb_uhci_options_save);
   } else if (mode == PLUGIN_FINI) {
@@ -166,7 +166,7 @@ void bx_usb_uhci_c::init(void)
     devfunc = 0x00;
     devid = 0x7020;
   }
-  BX_UHCI_THIS init_uhci(devfunc, devid, 0x00, BX_PCI_INTD);
+  BX_UHCI_THIS init_uhci(devfunc, 0x8086, devid, 0x01, 0x00, BX_PCI_INTD);
 
   bx_list_c *usb_rt = (bx_list_c *) SIM->get_param(BXPN_MENU_RUNTIME_USB);
   bx_list_c *uhci_rt = new bx_list_c(usb_rt, "uhci", "UHCI Runtime Options");
