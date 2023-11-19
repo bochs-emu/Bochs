@@ -50,9 +50,7 @@ x86_feature(BX_ISA_POPCNT, "popcnt")                                    /* POPCN
 x86_feature(BX_ISA_MONITOR_MWAIT, "mwait")                              /* MONITOR/MWAIT instruction */
 x86_feature(BX_ISA_MONITORX_MWAITX, "mwaitx")                           /* MONITORX/MWAITX instruction (AMD) */
 x86_feature(BX_ISA_WAITPKG, "waitpkg")                                  /* TPAUSE/UMONITOR/UMWAIT instructions */
-#if BX_SUPPORT_VMX
 x86_feature(BX_ISA_VMX, "vmx")                                          /* VMX instruction */
-#endif
 x86_feature(BX_ISA_SMX, "smx")                                          /* SMX instruction */
 x86_feature(BX_ISA_LONG_MODE, "longmode")                               /* Long Mode (x86-64) support */
 x86_feature(BX_ISA_LM_LAHF_SAHF, "lm_lahf_sahf")                        /* Long Mode LAHF/SAHF instruction */
