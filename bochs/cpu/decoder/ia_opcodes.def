@@ -1743,6 +1743,7 @@ bx_define_opcode(BX_IA_GETSEC, "getsec", "getsec", &BX_CPU_C::GETSEC, &BX_CPU_C:
 // SMX
 
 // SVM
+#if BX_SUPPORT_SVM
 bx_define_opcode(BX_IA_VMRUN, "vmrun", "vmrun", &BX_CPU_C::BxError, &BX_CPU_C::VMRUN, BX_ISA_SVM, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
 bx_define_opcode(BX_IA_VMMCALL, "vmmcall", "vmmcall", &BX_CPU_C::BxError, &BX_CPU_C::VMMCALL, BX_ISA_SVM, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
 bx_define_opcode(BX_IA_VMLOAD, "vmload", "vmload", &BX_CPU_C::BxError, &BX_CPU_C::VMLOAD, BX_ISA_SVM, OP_M, OP_NONE, OP_NONE, OP_NONE, 0)
@@ -1751,6 +1752,7 @@ bx_define_opcode(BX_IA_STGI, "stgi", "stgi", &BX_CPU_C::BxError, &BX_CPU_C::STGI
 bx_define_opcode(BX_IA_CLGI, "clgi", "clgi", &BX_CPU_C::BxError, &BX_CPU_C::CLGI, BX_ISA_SVM, OP_NONE, OP_NONE, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_SKINIT, "skinit", "skinit", &BX_CPU_C::BxError, &BX_CPU_C::SKINIT, BX_ISA_SVM, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
 bx_define_opcode(BX_IA_INVLPGA, "invlpga", "invlpga", &BX_CPU_C::BxError, &BX_CPU_C::INVLPGA, BX_ISA_SVM, OP_Mb, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
+#endif
 // SVM
 
 // CET
