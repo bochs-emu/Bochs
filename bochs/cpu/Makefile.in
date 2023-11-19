@@ -126,6 +126,7 @@ OBJS = \
 	paging.o \
 	rdrand.o \
 	wide_int.o \
+    keylocker.o \
 	decoder/disasm.o
 	
 # Objects which are only used for x86-64 code
@@ -845,6 +846,13 @@ vmx.o: vmx.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  decoder/ia_opcodes.h decoder/ia_opcodes.def scalar_arith.h
 wide_int.o: wide_int.@CPP_SUFFIX@ wide_int.h ../config.h
 xsave.o: xsave.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
+ ../misc/bswap.h cpu.h ../bx_debug/debug.h ../config.h ../osdep.h \
+ ../cpu/decoder/decoder.h ../cpu/decoder/features.h decoder/decoder.h \
+ ../instrument/stubs/instrument.h i387.h fpu/softfloat.h fpu/tag_w.h \
+ fpu/status_w.h fpu/control_w.h crregs.h descriptor.h decoder/instr.h \
+ lazy_flags.h tlb.h icache.h apic.h xmm.h vmx.h svm.h cpuid.h stack.h \
+ access.h msr.h decoder/ia_opcodes.h decoder/ia_opcodes.def
+keylocker.o: keylocker.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h cpu.h ../bx_debug/debug.h ../config.h ../osdep.h \
  ../cpu/decoder/decoder.h ../cpu/decoder/features.h decoder/decoder.h \
  ../instrument/stubs/instrument.h i387.h fpu/softfloat.h fpu/tag_w.h \

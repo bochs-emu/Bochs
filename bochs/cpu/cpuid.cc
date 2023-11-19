@@ -1022,7 +1022,12 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_ecx(Bit32u extra) const
   if (is_cpu_extension_supported(BX_ISA_RDPID))
     ecx |= BX_CPUID_STD7_SUBLEAF0_ECX_RDPID;
 
-  // [23:23] Keylocker support - not supported
+  // [23:23] Keylocker support
+#if BX_SUPPORT_KEYLOCKER
+  if (is_cpu_extension_supported(BX_ISA_KEYLOCKER))
+    ecx |= BX_CPUID_STD7_SUBLEAF0_ECX_KEYLOCKER;
+#endif
+
   // [24:24] reserved
   // [25:25] CLDEMOTE: CLDEMOTE instruction support - not supported
   // [26:26] reserved

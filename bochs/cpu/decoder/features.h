@@ -122,14 +122,21 @@ x86_feature(BX_ISA_TSC_DEADLINE, "tsc_deadline")                        /* TSC-D
 x86_feature(BX_ISA_FOPCODE_DEPRECATION, "fopcode_deprecation")          /* FOPCODE Deprecation - FOPCODE update on unmasked x87 exception only */
 x86_feature(BX_ISA_FCS_FDS_DEPRECATION, "fcs_fds_deprecation")          /* FCS/FDS Deprecation */
 x86_feature(BX_ISA_FDP_DEPRECATION, "fdp_deprecation")                  /* FDP Deprecation - FDP update on unmasked x87 exception only */
+#if BX_SUPPORT_PKEYS
 x86_feature(BX_ISA_PKU, "pku")                                          /* User-Mode Protection Keys */
 x86_feature(BX_ISA_PKS, "pks")                                          /* Supervisor-Mode Protection Keys */
+#endif
 x86_feature(BX_ISA_UMIP, "umip")                                        /* User-Mode Instructions Prevention */
 x86_feature(BX_ISA_RDPID, "rdpid")                                      /* RDPID Support */
 x86_feature(BX_ISA_TCE, "tce")                                          /* Translation Cache Extensions (TCE) support (AMD) */
 x86_feature(BX_ISA_CLZERO, "clzero")                                    /* CLZERO instruction support (AMD) */
 x86_feature(BX_ISA_SCA_MITIGATIONS, "sca_mitigations")                  /* Report SCA Mitigations in CPUID */
+#if BX_SUPPORT_KEYLOCKER
+x86_feature(BX_ISA_KEYLOCKER, "keylocker")                              /* KeyLocker support */
+#endif
+#if BX_SUPPORT_CET
 x86_feature(BX_ISA_CET, "cet")                                          /* Control Flow Enforcement */
+#endif
 x86_feature(BX_ISA_WRMSRNS, "wrmsrns")                                  /* Non-Serializing version of WRMSR */
 x86_feature(BX_ISA_CMPCCXADD, "cmpccxadd")                              /* CMPccXADD instructions */
 x86_feature(BX_ISA_SERIALIZE, "serialize")                              /* SERIALIZE instruction */

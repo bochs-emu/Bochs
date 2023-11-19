@@ -854,7 +854,11 @@ static BxOpcodeDecodeDescriptor32 decode32_descriptor[] =
    /* 0F 38 D5 */ { &decoder_ud32, NULL },
    /* 0F 38 D6 */ { &decoder_ud32, NULL },
    /* 0F 38 D7 */ { &decoder_ud32, NULL },
+#if BX_SUPPORT_KEYLOCKER
+   /* 0F 38 D8 */ { &decoder32_modrm, BxOpcodeTable0F38D8 },
+#else
    /* 0F 38 D8 */ { &decoder_ud32, NULL },
+#endif
    /* 0F 38 D9 */ { &decoder_ud32, NULL },
    /* 0F 38 DA */ { &decoder_ud32, NULL },
    /* 0F 38 DB */ { &decoder32_modrm, BxOpcodeTable0F38DB },
@@ -892,8 +896,13 @@ static BxOpcodeDecodeDescriptor32 decode32_descriptor[] =
    /* 0F 38 F7 */ { &decoder_ud32, NULL },
    /* 0F 38 F8 */ { &decoder_ud32, NULL },
    /* 0F 38 F9 */ { &decoder32_modrm, BxOpcodeTable0F38F9 },
+#if BX_SUPPORT_KEYLOCKER
+   /* 0F 38 FA */ { &decoder32_modrm, BxOpcodeTable0F38FA },
+   /* 0F 38 FB */ { &decoder32_modrm, BxOpcodeTable0F38FB },
+#else
    /* 0F 38 FA */ { &decoder_ud32, NULL },
    /* 0F 38 FB */ { &decoder_ud32, NULL },
+#endif
    /* 0F 38 FC */ { &decoder_ud32, NULL },
    /* 0F 38 FD */ { &decoder_ud32, NULL },
    /* 0F 38 FE */ { &decoder_ud32, NULL },

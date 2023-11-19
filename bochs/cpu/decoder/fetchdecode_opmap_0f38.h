@@ -161,11 +161,45 @@ static const Bit64u BxOpcodeTable0F38CB[] = { last_opcode(ATTR_SSE_NO_PREFIX, BX
 static const Bit64u BxOpcodeTable0F38CC[] = { last_opcode(ATTR_SSE_NO_PREFIX, BX_IA_SHA256MSG1_VdqWdq) };
 static const Bit64u BxOpcodeTable0F38CD[] = { last_opcode(ATTR_SSE_NO_PREFIX, BX_IA_SHA256MSG2_VdqWdq) };
 static const Bit64u BxOpcodeTable0F38CF[] = { last_opcode(ATTR_SSE_PREFIX_66, BX_IA_GF2P8MULB_VdqWdq) };
+
+#if BX_SUPPORT_KEYLOCKER
+static const Bit64u BxOpcodeTable0F38D8[] = {
+  form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_NNN0 | ATTR_MOD_MEM, BX_IA_AESENCWIDE128KL_Mdq),
+  form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_NNN1 | ATTR_MOD_MEM, BX_IA_AESDECWIDE128KL_Mdq),
+  form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_NNN2 | ATTR_MOD_MEM, BX_IA_AESENCWIDE256KL_Mdq),
+  last_opcode(ATTR_SSE_PREFIX_F3 | ATTR_NNN3 | ATTR_MOD_MEM, BX_IA_AESDECWIDE256KL_Mdq)
+};
+#endif
+
 static const Bit64u BxOpcodeTable0F38DB[] = { last_opcode(ATTR_SSE_PREFIX_66, BX_IA_AESIMC_VdqWdq) };
-static const Bit64u BxOpcodeTable0F38DC[] = { last_opcode(ATTR_SSE_PREFIX_66, BX_IA_AESENC_VdqWdq) };
-static const Bit64u BxOpcodeTable0F38DD[] = { last_opcode(ATTR_SSE_PREFIX_66, BX_IA_AESENCLAST_VdqWdq) };
-static const Bit64u BxOpcodeTable0F38DE[] = { last_opcode(ATTR_SSE_PREFIX_66, BX_IA_AESDEC_VdqWdq) };
-static const Bit64u BxOpcodeTable0F38DF[] = { last_opcode(ATTR_SSE_PREFIX_66, BX_IA_AESDECLAST_VdqWdq) };
+static const Bit64u BxOpcodeTable0F38DC[] = {
+#if BX_SUPPORT_KEYLOCKER
+  form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_MOD_MEM, BX_IA_AESENC128KL_VdqMdq),
+#endif
+  last_opcode(ATTR_SSE_PREFIX_66, BX_IA_AESENC_VdqWdq)
+};
+
+static const Bit64u BxOpcodeTable0F38DD[] = { 
+#if BX_SUPPORT_KEYLOCKER
+  form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_MOD_MEM, BX_IA_AESDEC128KL_VdqMdq),
+  form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_MODC0,   BX_IA_LOADIWKEY_VdqWdq),
+#endif
+  last_opcode(ATTR_SSE_PREFIX_66, BX_IA_AESENCLAST_VdqWdq)
+};
+
+static const Bit64u BxOpcodeTable0F38DE[] = {
+#if BX_SUPPORT_KEYLOCKER
+  form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_MOD_MEM, BX_IA_AESENC256KL_VdqMdq),
+#endif
+  last_opcode(ATTR_SSE_PREFIX_66, BX_IA_AESDEC_VdqWdq)
+};
+
+static const Bit64u BxOpcodeTable0F38DF[] = {
+#if BX_SUPPORT_KEYLOCKER
+  form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_MOD_MEM, BX_IA_AESDEC256KL_VdqMdq),
+#endif
+  last_opcode(ATTR_SSE_PREFIX_66, BX_IA_AESDECLAST_VdqWdq)
+};
 
 // opcode 0F 38 F0
 static const Bit64u BxOpcodeTable0F38F0[] = {
@@ -222,6 +256,11 @@ static const Bit64u BxOpcodeTable0F38F9[] = {
 #endif
   last_opcode(            ATTR_MOD_MEM | ATTR_SSE_NO_PREFIX, BX_IA_MOVDIRI_MdGd)
 };
+
+#if BX_SUPPORT_KEYLOCKER
+static const Bit64u BxOpcodeTable0F38FA[] = { last_opcode(ATTR_SSE_PREFIX_F3 | ATTR_MODC0, BX_IA_ENCODEKEY128_GdEd) };
+static const Bit64u BxOpcodeTable0F38FB[] = { last_opcode(ATTR_SSE_PREFIX_F3 | ATTR_MODC0, BX_IA_ENCODEKEY256_GdEd) };
+#endif
 
 #endif // BX_CPU_LEVEL >= 6
 

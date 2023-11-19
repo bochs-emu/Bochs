@@ -1786,6 +1786,20 @@ bx_define_opcode(BX_IA_RDPID_Ed, "rdpid", "rdpid", NULL, &BX_CPU_C::RDPID_Ed, BX
 bx_define_opcode(BX_IA_WRMSRNS, "wrmsrns", "wrmsrns", NULL, &BX_CPU_C::WRMSR, BX_ISA_WRMSRNS, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
 bx_define_opcode(BX_IA_SERIALIZE, "serialize", "serialize", &BX_CPU_C::BxError, &BX_CPU_C::NOP, BX_ISA_SERIALIZE, OP_NONE, OP_NONE, OP_NONE, OP_NONE, 0)
 
+#if BX_SUPPORT_KEYLOCKER
+bx_define_opcode(BX_IA_AESENC128KL_VdqMdq, "aesenc128kl", "aesenc128kl", &BX_CPU_C::AESENC128KL_VdqMdq, NULL, BX_ISA_KEYLOCKER, OP_Vdq, OP_M, OP_NONE, OP_NONE, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_AESENCWIDE128KL_Mdq, "aesencwide128kl", "aesencwide128kl", &BX_CPU_C::AESENC128KL_VdqMdq, NULL, BX_ISA_KEYLOCKER, OP_NONE, OP_M, OP_NONE, OP_NONE, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_AESENC256KL_VdqMdq, "aesenc256kl", "aesenc256kl", &BX_CPU_C::AESENC256KL_VdqMdq, NULL, BX_ISA_KEYLOCKER, OP_Vdq, OP_M, OP_NONE, OP_NONE, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_AESENCWIDE256KL_Mdq, "aesencwide256kl", "aesencwide256kl", &BX_CPU_C::AESENC256KL_VdqMdq, NULL, BX_ISA_KEYLOCKER, OP_NONE, OP_M, OP_NONE, OP_NONE, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_AESDEC128KL_VdqMdq, "aesdec128kl", "aesdec128kl", &BX_CPU_C::AESDEC128KL_VdqMdq, NULL, BX_ISA_KEYLOCKER, OP_Vdq, OP_M, OP_NONE, OP_NONE, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_AESDECWIDE128KL_Mdq, "aesdecwide128kl", "aesdecwide128kl", &BX_CPU_C::AESDEC128KL_VdqMdq, NULL, BX_ISA_KEYLOCKER, OP_NONE, OP_M, OP_NONE, OP_NONE, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_AESDEC256KL_VdqMdq, "aesdec256kl", "aesdec256kl", &BX_CPU_C::AESDEC256KL_VdqMdq, NULL, BX_ISA_KEYLOCKER, OP_Vdq, OP_M, OP_NONE, OP_NONE, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_AESDECWIDE256KL_Mdq, "aesdecwide256kl", "aesdecwide256kl", &BX_CPU_C::AESDEC256KL_VdqMdq, NULL, BX_ISA_KEYLOCKER, OP_NONE, OP_M, OP_NONE, OP_NONE, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_ENCODEKEY128_GdEd, "encodekey128", "encodekey128", NULL, &BX_CPU_C::ENCODEKEY128_GdEd, BX_ISA_KEYLOCKER, OP_Gd, OP_Ed, OP_NONE, OP_NONE, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_ENCODEKEY256_GdEd, "encodekey256", "encodekey256", NULL, &BX_CPU_C::ENCODEKEY256_GdEd, BX_ISA_KEYLOCKER, OP_Gd, OP_Ed, OP_NONE, OP_NONE, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_LOADIWKEY_VdqWdq, "loadiwkey", "loadiwkey", NULL, &BX_CPU_C::LOADIWKEY_VdqWdq, BX_ISA_KEYLOCKER, OP_Vdq, OP_Wdq, OP_NONE, OP_NONE, BX_PREPARE_SSE)
+#endif
+
 #if BX_SUPPORT_AVX && BX_CPU_LEVEL >= 6
 // AVX1/AVX2
 bx_define_opcode(BX_IA_VZEROUPPER, "vzeroupper", "vzeroupper", NULL, &BX_CPU_C::VZEROUPPER, BX_ISA_AVX, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_AVX)
