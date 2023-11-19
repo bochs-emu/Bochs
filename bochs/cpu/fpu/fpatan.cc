@@ -90,7 +90,7 @@ static float128 poly_atan(float128 x1, float_status_t &status)
 }
 
 // =================================================
-// FPATAN                  Compute arctan(x/y)
+// FPATAN                  Compute arctan(y/x)
 // =================================================
 
 //
@@ -213,8 +213,12 @@ return_PI_or_ZERO:
     float_raise(status, float_flag_inexact);
 
     /* |a| = |b| ==> return PI/4 */
-    if (aSig == bSig && aExp == bExp)
-        return roundAndPackFloatx80(80, bSign, FLOATX80_PI4_EXP, FLOAT_PI_HI, FLOAT_PI_LO, status);
+    if (aSig == bSig && aExp == bExp) {
+        if (aSign)
+            return roundAndPackFloatx80(80, bSign, FLOATX80_3PI4_EXP, FLOAT_3PI4_HI, FLOAT_3PI4_LO, status);
+        else
+            return roundAndPackFloatx80(80, bSign, FLOATX80_PI4_EXP, FLOAT_PI_HI, FLOAT_PI_LO, status);
+    }
 
     /* ******************************** */
     /* using float128 for approximation */
