@@ -984,11 +984,8 @@ void BX_CPU_C::SvmInterceptPAUSE(void)
   Svm_Vmexit(SVM_VMEXIT_PAUSE);
 }
 
-#endif
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMRUN(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SVM
   if (! protected_mode() || ! BX_CPU_THIS_PTR efer.get_SVME())
     exception(BX_UD_EXCEPTION, 0);
 
@@ -1037,14 +1034,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMRUN(bxInstruction_c *i)
   //
   if (!SvmInjectEvents())
     Svm_Vmexit(SVM_VMEXIT_INVALID);
-#endif
 
   BX_NEXT_TRACE(i);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMMCALL(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR efer.get_SVME()) {
     if (BX_CPU_THIS_PTR in_svm_guest) {
       if (SVM_INTERCEPT(SVM_INTERCEPT1_VMMCALL)) Svm_Vmexit(SVM_VMEXIT_VMMCALL);
@@ -1052,14 +1047,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMMCALL(bxInstruction_c *i)
   }
 
   exception(BX_UD_EXCEPTION, 0);
-#endif
 
   BX_NEXT_TRACE(i);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLOAD(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SVM
   if (! protected_mode() || ! BX_CPU_THIS_PTR efer.get_SVME())
     exception(BX_UD_EXCEPTION, 0);
 
@@ -1105,14 +1098,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLOAD(bxInstruction_c *i)
   BX_CPU_THIS_PTR msr.sysenter_esp_msr = CanonicalizeAddress(vmcb_read64(SVM_GUEST_SYSENTER_ESP_MSR));
 
   set_VMCBPTR(vmcbPtr);
-#endif
 
   BX_NEXT_INSTR(i);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMSAVE(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SVM
   if (! protected_mode() || ! BX_CPU_THIS_PTR efer.get_SVME())
     exception(BX_UD_EXCEPTION, 0);
 
@@ -1151,14 +1142,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMSAVE(bxInstruction_c *i)
   vmcb_write64(SVM_GUEST_SYSENTER_EIP_MSR, BX_CPU_THIS_PTR msr.sysenter_eip_msr);
 
   set_VMCBPTR(vmcbPtr);
-#endif
 
   BX_NEXT_INSTR(i);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SKINIT(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SVM
   if (! protected_mode() || ! BX_CPU_THIS_PTR efer.get_SVME())
     exception(BX_UD_EXCEPTION, 0);
 
@@ -1172,14 +1161,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SKINIT(bxInstruction_c *i)
   }
 
   BX_PANIC(("SVM: SKINIT is not implemented yet"));
-#endif
 
   BX_NEXT_TRACE(i);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLGI(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SVM
   if (! protected_mode() || ! BX_CPU_THIS_PTR efer.get_SVME())
     exception(BX_UD_EXCEPTION, 0);
 
@@ -1193,14 +1180,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLGI(bxInstruction_c *i)
   }
 
   BX_CPU_THIS_PTR svm_gif = false;
-#endif
 
   BX_NEXT_TRACE(i);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::STGI(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SVM
   if (! protected_mode() || ! BX_CPU_THIS_PTR efer.get_SVME())
     exception(BX_UD_EXCEPTION, 0);
 
@@ -1215,14 +1200,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STGI(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR svm_gif = true;
   BX_CPU_THIS_PTR async_event = 1;
-#endif
 
   BX_NEXT_TRACE(i);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPGA(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SVM
   if (! protected_mode() || ! BX_CPU_THIS_PTR efer.get_SVME())
     exception(BX_UD_EXCEPTION, 0);
 
@@ -1236,12 +1219,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPGA(bxInstruction_c *i)
   }
 
   TLB_flush(); // FIXME: flush all entries for now
-#endif
 
   BX_NEXT_TRACE(i);
 }
 
-#if BX_SUPPORT_SVM
 void BX_CPU_C::register_svm_state(bx_param_c *parent)
 {
   if (! is_cpu_extension_supported(BX_ISA_SVM)) return;
@@ -1322,4 +1303,5 @@ void BX_CPU_C::register_svm_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(host, rsp, BX_CPU_THIS_PTR vmcb.host_state.rsp);
   BXRS_HEX_PARAM_FIELD(host, rax, BX_CPU_THIS_PTR vmcb.host_state.rax);
 }
-#endif
+
+#endif // BX_SUPPORT_SVM

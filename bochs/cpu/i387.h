@@ -76,7 +76,7 @@ public:
 public:
     Bit16u cwd;     // control word
     Bit16u swd;     // status word
-    Bit16u twd;        // tag word
+    Bit16u twd;     // tag word
     Bit16u foo;     // last instruction opcode
 
     bx_address fip;

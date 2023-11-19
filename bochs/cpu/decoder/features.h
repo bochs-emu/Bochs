@@ -50,7 +50,9 @@ x86_feature(BX_ISA_POPCNT, "popcnt")                                    /* POPCN
 x86_feature(BX_ISA_MONITOR_MWAIT, "mwait")                              /* MONITOR/MWAIT instruction */
 x86_feature(BX_ISA_MONITORX_MWAITX, "mwaitx")                           /* MONITORX/MWAITX instruction (AMD) */
 x86_feature(BX_ISA_WAITPKG, "waitpkg")                                  /* TPAUSE/UMONITOR/UMWAIT instructions */
+#if BX_SUPPORT_VMX
 x86_feature(BX_ISA_VMX, "vmx")                                          /* VMX instruction */
+#endif
 x86_feature(BX_ISA_SMX, "smx")                                          /* SMX instruction */
 x86_feature(BX_ISA_LONG_MODE, "longmode")                               /* Long Mode (x86-64) support */
 x86_feature(BX_ISA_LM_LAHF_SAHF, "lm_lahf_sahf")                        /* Long Mode LAHF/SAHF instruction */
@@ -81,7 +83,9 @@ x86_feature(BX_ISA_BMI2, "bmi2")                                        /* BMI2 
 x86_feature(BX_ISA_FMA4, "fma4")                                        /* FMA4 instruction (AMD) */
 x86_feature(BX_ISA_XOP, "xop")                                          /* XOP instruction (AMD) */
 x86_feature(BX_ISA_TBM, "tbm")                                          /* TBM instruction (AMD) */
+#if BX_SUPPORT_SVM
 x86_feature(BX_ISA_SVM, "svm")                                          /* SVM instruction (AMD) */
+#endif
 x86_feature(BX_ISA_RDRAND, "rdrand")                                    /* RDRAND instruction */
 x86_feature(BX_ISA_RDSEED, "rdseed")                                    /* RDSEED instruction */
 x86_feature(BX_ISA_ADX, "adx")                                          /* ADCX/ADOX instruction */
@@ -91,6 +95,7 @@ x86_feature(BX_ISA_SHA512, "sha512")                                    /* SHA-5
 x86_feature(BX_ISA_GFNI, "gfni")                                        /* GFNI instruction */
 x86_feature(BX_ISA_SM3, "sm3")                                          /* SM3 instruction */
 x86_feature(BX_ISA_SM4, "sm4")                                          /* SM4 instruction */
+#if BX_SUPPORT_AVX
 x86_feature(BX_ISA_AVX512, "avx512")                                    /* AVX-512 instruction */
 x86_feature(BX_ISA_AVX512_DQ, "avx512dq")                               /* AVX-512DQ instruction */
 x86_feature(BX_ISA_AVX512_BW, "avx512bw")                               /* AVX-512 Byte/Word instruction */
@@ -112,6 +117,7 @@ x86_feature(BX_ISA_AVX_VNNI, "avx_vnni")                                /* AVX e
 x86_feature(BX_ISA_AVX_VNNI_INT8, "avx_vnni_int8")                      /* AVX encoded VNNI-INT8 Instructions */
 x86_feature(BX_ISA_AVX_VNNI_INT16, "avx_vnni_int16")                    /* AVX encoded VNNI-INT16 Instructions */
 x86_feature(BX_ISA_AVX_NE_CONVERT, "avx_ne_convert")                    /* AVX-NE-CONVERT Instructions */
+#endif
 x86_feature(BX_ISA_XAPIC, "xapic")                                      /* XAPIC support */
 x86_feature(BX_ISA_X2APIC, "x2apic")                                    /* X2APIC support */
 x86_feature(BX_ISA_XAPIC_EXT, "xapicext")                               /* XAPIC Extensions support (AMD) */
@@ -122,14 +128,18 @@ x86_feature(BX_ISA_TSC_DEADLINE, "tsc_deadline")                        /* TSC-D
 x86_feature(BX_ISA_FOPCODE_DEPRECATION, "fopcode_deprecation")          /* FOPCODE Deprecation - FOPCODE update on unmasked x87 exception only */
 x86_feature(BX_ISA_FCS_FDS_DEPRECATION, "fcs_fds_deprecation")          /* FCS/FDS Deprecation */
 x86_feature(BX_ISA_FDP_DEPRECATION, "fdp_deprecation")                  /* FDP Deprecation - FDP update on unmasked x87 exception only */
+#if BX_SUPPORT_PKEYS
 x86_feature(BX_ISA_PKU, "pku")                                          /* User-Mode Protection Keys */
 x86_feature(BX_ISA_PKS, "pks")                                          /* Supervisor-Mode Protection Keys */
+#endif
 x86_feature(BX_ISA_UMIP, "umip")                                        /* User-Mode Instructions Prevention */
 x86_feature(BX_ISA_RDPID, "rdpid")                                      /* RDPID Support */
 x86_feature(BX_ISA_TCE, "tce")                                          /* Translation Cache Extensions (TCE) support (AMD) */
 x86_feature(BX_ISA_CLZERO, "clzero")                                    /* CLZERO instruction support (AMD) */
 x86_feature(BX_ISA_SCA_MITIGATIONS, "sca_mitigations")                  /* Report SCA Mitigations in CPUID */
+#if BX_SUPPORT_CET
 x86_feature(BX_ISA_CET, "cet")                                          /* Control Flow Enforcement */
+#endif
 x86_feature(BX_ISA_WRMSRNS, "wrmsrns")                                  /* Non-Serializing version of WRMSR */
 x86_feature(BX_ISA_CMPCCXADD, "cmpccxadd")                              /* CMPccXADD instructions */
 x86_feature(BX_ISA_SERIALIZE, "serialize")                              /* SERIALIZE instruction */

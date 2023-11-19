@@ -411,7 +411,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
 
   if (source != BX_TASK_FROM_IRET)
   {
-    // set the new task's busy bit
+    // set the new task's busy bit, should be done atomiclly using RMW
     Bit32u laddr = (Bit32u)(BX_CPU_THIS_PTR gdtr.base) + (tss_selector->index<<3) + 4;
     access_read_linear(laddr, 4, 0, BX_RW, 0x0, &dword2);
     dword2 |= 0x200;

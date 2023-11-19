@@ -413,9 +413,9 @@ void BX_CPU_C::handleAlignmentCheck(void)
 void BX_CPU_C::handleFpuMmxModeChange(void)
 {
   if (BX_CPU_THIS_PTR cr0.get_EM() || BX_CPU_THIS_PTR cr0.get_TS())
-    BX_CPU_THIS_PTR fpu_mmx_ok = 0;
+    clear_fpu_mmx_ok();
   else
-    BX_CPU_THIS_PTR fpu_mmx_ok = 1;
+    set_fpu_mmx_ok();
 
   updateFetchModeMask(); /* FPU_MMX_OK changed */
 }
@@ -447,13 +447,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoMMX(bxInstruction_c *i)
 void BX_CPU_C::handleSseModeChange(void)
 {
   if(BX_CPU_THIS_PTR cr0.get_TS()) {
-    BX_CPU_THIS_PTR sse_ok = 0;
+    clear_sse_ok();
   }
   else {
     if(BX_CPU_THIS_PTR cr0.get_EM() || !BX_CPU_THIS_PTR cr4.get_OSFXSR())
-      BX_CPU_THIS_PTR sse_ok = 0;
+      clear_sse_ok();
     else
-      BX_CPU_THIS_PTR sse_ok = 1;
+      set_sse_ok();
   }
 
   updateFetchModeMask(); /* SSE_OK changed */
@@ -475,37 +475,33 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoSSE(bxInstruction_c *i)
 #if BX_SUPPORT_AVX
 void BX_CPU_C::handleAvxModeChange(void)
 {
-  if(BX_CPU_THIS_PTR cr0.get_TS()) {
-    BX_CPU_THIS_PTR avx_ok = 0;
+  if (BX_CPU_THIS_PTR cr0.get_TS()) {
+    clear_avx_ok();
   }
   else {
     if (! protected_mode() || ! BX_CPU_THIS_PTR cr4.get_OSXSAVE() ||
         (~BX_CPU_THIS_PTR xcr0.val32 & (BX_XCR0_SSE_MASK | BX_XCR0_YMM_MASK)) != 0) {
-      BX_CPU_THIS_PTR avx_ok = 0;
+      clear_avx_ok();
     }
     else {
-      BX_CPU_THIS_PTR avx_ok = 1;
+      set_avx_ok();
 
 #if BX_SUPPORT_EVEX
       if ((~BX_CPU_THIS_PTR xcr0.val32 & BX_XCR0_OPMASK_MASK) != 0) {
-        BX_CPU_THIS_PTR opmask_ok = BX_CPU_THIS_PTR evex_ok = 0;
+        clear_opmask_ok();
+        clear_evex_ok();
       }
       else {
-        BX_CPU_THIS_PTR opmask_ok = 1;
+        set_opmask_ok();
 
         if ((~BX_CPU_THIS_PTR xcr0.val32 & (BX_XCR0_ZMM_HI256_MASK | BX_XCR0_HI_ZMM_MASK)) != 0)
-          BX_CPU_THIS_PTR evex_ok = 0;
+          clear_evex_ok();
         else
-          BX_CPU_THIS_PTR evex_ok = 1;
+          set_evex_ok();
       }
 #endif
     }
   }
-
-#if BX_SUPPORT_EVEX
-  if (! BX_CPU_THIS_PTR avx_ok)
-        BX_CPU_THIS_PTR opmask_ok = BX_CPU_THIS_PTR evex_ok = 0;
-#endif
 
   updateFetchModeMask(); /* AVX_OK changed */
 }
