@@ -256,10 +256,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHA1RNDS4_VdqWdqIbR(bxInstruction_c *i)
     E[n+1] = D[n];
   }
 
-  op1.xmm32u(3) = A[4];
-  op1.xmm32u(2) = B[4];
-  op1.xmm32u(1) = C[4];
-  op1.xmm32u(0) = D[4];
+  op1.xmm32u(0) = A[4];
+  op1.xmm32u(1) = B[4];
+  op1.xmm32u(2) = C[4];
+  op1.xmm32u(3) = D[4];
 
   BX_WRITE_XMM_REG(i->dst(), op1);
 
