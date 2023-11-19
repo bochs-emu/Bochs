@@ -90,8 +90,7 @@ static float128 poly_atan(float128 x1, float_status_t &status)
 }
 
 // =================================================
-// FPATAN                  Compute y * log (x)
-//                                        2
+// FPATAN                  Compute arctan(x/y)
 // =================================================
 
 //
