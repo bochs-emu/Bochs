@@ -808,7 +808,6 @@ struct bx_cpu_statistics;
 #include "cpuid.h"
 
 class BOCHSAPI BX_CPU_C : public logfunctions {
-
 public: // for now...
 
   unsigned bx_cpuid;
@@ -1047,7 +1046,7 @@ public: // for now...
 
   bool EXT; /* 1 if processing external interrupt or exception
                 * or if not related to current instruction,
-                * 0 if current CS:IP caused exception */
+                * 0 if current CS:EIP caused exception */
 
   enum CPU_Activity_State {
     BX_ACTIVITY_STATE_ACTIVE = 0,
@@ -1123,17 +1122,28 @@ public: // for now...
 #if BX_CPU_LEVEL >= 5
   bool  ignore_bad_msrs;
 #endif
-  unsigned fpu_mmx_ok;
-#if BX_CPU_LEVEL >= 6
-  unsigned sse_ok;
-#if BX_SUPPORT_AVX
-  unsigned avx_ok;
-#endif
-#if BX_SUPPORT_EVEX
-  unsigned opmask_ok;
-  unsigned evex_ok;
-#endif
-#endif
+
+  Bit32u cpu_state_use_ok;       // format of BX_FETCH_MODE_*
+
+  BX_SMF void set_fpu_mmx_ok();
+  BX_SMF void clear_fpu_mmx_ok();
+  BX_SMF bool get_fpu_mmx_ok();
+
+  BX_SMF void set_sse_ok();
+  BX_SMF void clear_sse_ok();
+  BX_SMF bool get_sse_ok();
+
+  BX_SMF void set_avx_ok();
+  BX_SMF void clear_avx_ok();
+  BX_SMF bool get_avx_ok();
+
+  BX_SMF void set_opmask_ok();
+  BX_SMF void clear_opmask_ok();
+  BX_SMF bool get_opmask_ok();
+
+  BX_SMF void set_evex_ok();
+  BX_SMF void clear_evex_ok();
+  BX_SMF bool get_evex_ok();
 
   // for exceptions
   static jmp_buf jmp_buf_env;
@@ -2531,6 +2541,7 @@ public: // for now...
   BX_SMF void VMFUNC(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   /* VMX instructions */
 
+#if BX_SUPPORT_SVM
   /* SVM instructions */
   BX_SMF void VMRUN(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VMMCALL(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2541,6 +2552,7 @@ public: // for now...
   BX_SMF void STGI(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void INVLPGA(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   /* SVM instructions */
+#endif
 
   /* SMX instructions */
   BX_SMF void GETSEC(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -5001,23 +5013,33 @@ enum {
   BX_FETCH_MODE_EVEX_OK    = (1 << 6)
 };
 
+BX_CPP_INLINE void BX_CPU_C::set_fpu_mmx_ok() { BX_CPU_THIS_PTR cpu_state_use_ok |= BX_FETCH_MODE_FPU_MMX_OK; }
+BX_CPP_INLINE void BX_CPU_C::clear_fpu_mmx_ok() { BX_CPU_THIS_PTR cpu_state_use_ok &= ~BX_FETCH_MODE_FPU_MMX_OK; }
+BX_CPP_INLINE bool BX_CPU_C::get_fpu_mmx_ok() { return (BX_CPU_THIS_PTR cpu_state_use_ok & BX_FETCH_MODE_FPU_MMX_OK); }
+
+BX_CPP_INLINE void BX_CPU_C::set_sse_ok() { BX_CPU_THIS_PTR cpu_state_use_ok |= BX_FETCH_MODE_SSE_OK; }
+BX_CPP_INLINE void BX_CPU_C::clear_sse_ok() { BX_CPU_THIS_PTR cpu_state_use_ok &= ~BX_FETCH_MODE_SSE_OK; }
+BX_CPP_INLINE bool BX_CPU_C::get_sse_ok() { return (BX_CPU_THIS_PTR cpu_state_use_ok & BX_FETCH_MODE_SSE_OK); }
+
+BX_CPP_INLINE void BX_CPU_C::set_avx_ok() { BX_CPU_THIS_PTR cpu_state_use_ok |= BX_FETCH_MODE_AVX_OK; }
+BX_CPP_INLINE void BX_CPU_C::clear_avx_ok() { BX_CPU_THIS_PTR cpu_state_use_ok &= ~(BX_FETCH_MODE_AVX_OK | BX_FETCH_MODE_EVEX_OK | BX_FETCH_MODE_OPMASK_OK); }
+BX_CPP_INLINE bool BX_CPU_C::get_avx_ok() { return (BX_CPU_THIS_PTR cpu_state_use_ok & BX_FETCH_MODE_AVX_OK); }
+
+BX_CPP_INLINE void BX_CPU_C::set_opmask_ok() { BX_CPU_THIS_PTR cpu_state_use_ok |= BX_FETCH_MODE_OPMASK_OK; }
+BX_CPP_INLINE void BX_CPU_C::clear_opmask_ok() { BX_CPU_THIS_PTR cpu_state_use_ok &= ~BX_FETCH_MODE_OPMASK_OK; }
+BX_CPP_INLINE bool BX_CPU_C::get_opmask_ok() { return (BX_CPU_THIS_PTR cpu_state_use_ok & BX_FETCH_MODE_OPMASK_OK); }
+
+BX_CPP_INLINE void BX_CPU_C::set_evex_ok() { BX_CPU_THIS_PTR cpu_state_use_ok |= BX_FETCH_MODE_EVEX_OK; }
+BX_CPP_INLINE void BX_CPU_C::clear_evex_ok() { BX_CPU_THIS_PTR cpu_state_use_ok &= ~BX_FETCH_MODE_EVEX_OK; }
+BX_CPP_INLINE bool BX_CPU_C::get_evex_ok() { return (BX_CPU_THIS_PTR cpu_state_use_ok & BX_FETCH_MODE_EVEX_OK); }
+
 //
 // updateFetchModeMask - has to be called everytime
 //   CS.L / CS.D_B / CR0.PE, CR0.TS or CR0.EM / CR4.OSFXSR / CR4.OSXSAVE changes
 //
 BX_CPP_INLINE void BX_CPU_C::updateFetchModeMask(void)
 {
-  BX_CPU_THIS_PTR fetchModeMask =
-#if BX_CPU_LEVEL >= 6
-#if BX_SUPPORT_EVEX
-     (BX_CPU_THIS_PTR evex_ok << 6) | (BX_CPU_THIS_PTR opmask_ok << 5) |
-#endif
-#if BX_SUPPORT_AVX
-     (BX_CPU_THIS_PTR avx_ok << 4) |
-#endif
-     (BX_CPU_THIS_PTR sse_ok << 3) |
-#endif
-     (BX_CPU_THIS_PTR fpu_mmx_ok << 2) |
+  BX_CPU_THIS_PTR fetchModeMask = BX_CPU_THIS_PTR cpu_state_use_ok |
 #if BX_SUPPORT_X86_64
     ((BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)<<1) |
 #endif
@@ -5407,15 +5429,6 @@ enum {
   BX_PRIVILEGED_SOFTWARE_INTERRUPT = 5,
   BX_SOFTWARE_EXCEPTION = 6
 };
-
-#if BX_CPU_LEVEL >= 6
-enum {
-  BX_INVPCID_INDIVIDUAL_ADDRESS_NON_GLOBAL_INVALIDATION,
-  BX_INVPCID_SINGLE_CONTEXT_NON_GLOBAL_INVALIDATION,
-  BX_INVPCID_ALL_CONTEXT_INVALIDATION,
-  BX_INVPCID_ALL_CONTEXT_NON_GLOBAL_INVALIDATION
-};
-#endif
 
 class bxInstruction_c;
 

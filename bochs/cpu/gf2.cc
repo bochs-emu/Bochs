@@ -65,12 +65,15 @@ static const Bit8u GF256_Inv[256] = {
 
 #include "scalar_arith.h"
 
-BX_CPP_INLINE Bit8u affine_byte(Bit64u src2qw, Bit8u src1byte, Bit8u imm8)
+BX_CPP_INLINE Bit8u affine_byte(Bit64u src2, Bit8u src1byte, Bit8u imm8)
 {
+  BxPackedRegister src2qw(src2);
   Bit8u result = 0;
-  for (int i=7; i >= 0; i--) {
-    result |= parity_byte((src2qw & 0xff) & src1byte) << i;
-    src2qw >>= 8;
+  for (int i=0; i < 8; i++) {
+    // the parity_byte used for arithmetic flags calculation has exactly opposite meaning
+    // it would be set if result contains an even number of '1 bits; cleared otherwise
+    // therefore use not
+    result |= !parity_byte(src2qw.ubyte(7-i) & src1byte) << i;
   }
   return result ^ imm8;
 }

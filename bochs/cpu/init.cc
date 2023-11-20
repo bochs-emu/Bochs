@@ -1012,21 +1012,9 @@ void BX_CPU_C::reset(unsigned source)
   }
 #endif
 
-  BX_CPU_THIS_PTR fpu_mmx_ok = 0;
+  BX_CPU_THIS_PTR cpu_state_use_ok = 0;
+
 #if BX_CPU_LEVEL >= 6
-  BX_CPU_THIS_PTR sse_ok = 0;
-#if BX_SUPPORT_AVX
-  BX_CPU_THIS_PTR avx_ok = 0;
-#endif
-
-#if BX_SUPPORT_EVEX
-  BX_CPU_THIS_PTR opmask_ok = BX_CPU_THIS_PTR evex_ok = 0;
-
-  if (source == BX_RESET_HARDWARE) {
-    for (n=0; n<8; n++) BX_WRITE_OPMASK(n, 0);
-  }
-#endif
-
   // Reset XMM state - unchanged on #INIT
   if (source == BX_RESET_HARDWARE) {
     for(n=0; n<BX_XMM_REGISTERS; n++) {
@@ -1039,6 +1027,10 @@ void BX_CPU_C::reset(unsigned source)
       BX_CPU_THIS_PTR mxcsr_mask |= MXCSR_DAZ;
     if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_MISALIGNED_SSE))
       BX_CPU_THIS_PTR mxcsr_mask |= MXCSR_MISALIGNED_EXCEPTION_MASK;
+
+#if BX_SUPPORT_EVEX
+    for (n=0; n<8; n++) BX_WRITE_OPMASK(n, 0);
+#endif
   }
 #endif
 

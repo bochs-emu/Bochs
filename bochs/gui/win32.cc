@@ -665,14 +665,16 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
       } else if (!strcmp(argv[i], "traphotkeys")) {
         BX_INFO(("trap system hotkeys for Bochs window"));
         win32_traphotkeys = 1;
-#if BX_DEBUGGER && BX_DEBUGGER_GUI
       } else if (!strcmp(argv[i], "gui_debug")) {
+#if BX_DEBUGGER && BX_DEBUGGER_GUI
         if (gui_ci) {
           gui_debug = TRUE;
           SIM->set_debug_gui(1);
         } else {
           BX_PANIC(("Config interface 'win32config' is required for gui debugger"));
         }
+#else
+        SIM->message_box("ERROR", "Bochs debugger not available - ignoring 'gui_debug' option");
 #endif
 #if BX_SHOW_IPS
       } else if (!strcmp(argv[i], "hideIPS")) {
@@ -1778,11 +1780,11 @@ int bx_win32_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
   if (OpenClipboard(stInfo.simWnd)) {
     HGLOBAL hg = GetClipboardData(CF_TEXT);
     char *data = (char *)GlobalLock(hg);
-    *nbytes = strlen(data);
+    *nbytes = (Bit32s)strlen(data);
     *bytes = new Bit8u[1 + *nbytes];
-    BX_INFO (("found %d bytes on the clipboard", *nbytes));
+    BX_INFO(("found %d bytes on the clipboard", *nbytes));
     memcpy (*bytes, data, *nbytes+1);
-    BX_INFO (("first byte is 0x%02x", *bytes[0]));
+    BX_INFO(("first byte is 0x%02x", *bytes[0]));
     GlobalUnlock(hg);
     CloseClipboard();
     return 1;

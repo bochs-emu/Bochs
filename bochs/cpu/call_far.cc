@@ -528,8 +528,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
   parse_descriptor(dword1, dword2, &cs_descriptor);
 
   // find the RIP in the gate_descriptor
-  Bit64u new_RIP = gate_descriptor.u.gate.dest_offset;
-  new_RIP |= ((Bit64u)dword3 << 32);
+  Bit64u new_RIP = GET64_FROM_HI32_LO32(dword3, gate_descriptor.u.gate.dest_offset);
 
   // AR byte of selected descriptor must indicate code segment,
   //   else #GP(code segment selector)
