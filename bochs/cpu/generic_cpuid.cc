@@ -69,8 +69,10 @@ bx_generic_cpuid_t::bx_generic_cpuid_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 #else
   max_ext_leaf = 0x80000008;
 
+#if BX_SUPPORT_SVM
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SVM))
     max_ext_leaf = 0x8000000A;
+#endif
 #endif
 }
 

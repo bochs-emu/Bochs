@@ -135,9 +135,7 @@ x86_feature(BX_ISA_RDPID, "rdpid")                                      /* RDPID
 x86_feature(BX_ISA_TCE, "tce")                                          /* Translation Cache Extensions (TCE) support (AMD) */
 x86_feature(BX_ISA_CLZERO, "clzero")                                    /* CLZERO instruction support (AMD) */
 x86_feature(BX_ISA_SCA_MITIGATIONS, "sca_mitigations")                  /* Report SCA Mitigations in CPUID */
-#if BX_SUPPORT_CET
 x86_feature(BX_ISA_CET, "cet")                                          /* Control Flow Enforcement */
-#endif
 x86_feature(BX_ISA_WRMSRNS, "wrmsrns")                                  /* Non-Serializing version of WRMSR */
 x86_feature(BX_ISA_CMPCCXADD, "cmpccxadd")                              /* CMPccXADD instructions */
 x86_feature(BX_ISA_SERIALIZE, "serialize")                              /* SERIALIZE instruction */
