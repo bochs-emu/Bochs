@@ -379,12 +379,9 @@ bool BX_CPU_C::set_segment_ar_data(bx_segment_reg_t *seg, bool valid,
 
   bx_descriptor_t *d = &seg->cache;
 
-  d->p        = (ar_data >> 7) & 0x1;
-  d->dpl      = (ar_data >> 5) & 0x3;
-  d->segment  = (ar_data >> 4) & 0x1;
-  d->type     = (ar_data & 0x0f);
+  set_ar_byte(d, ar_data);
 
-  d->valid    = valid;
+  d->valid = valid;
 
   if (d->segment || !valid) { /* data/code segment descriptors */
     d->u.segment.g     = (ar_data >> 15) & 0x1;
@@ -421,15 +418,13 @@ bool BX_CPU_C::set_segment_ar_data(bx_segment_reg_t *seg, bool valid,
 
 void parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
 {
-  Bit8u AR_byte;
   Bit32u limit;
 
-  AR_byte        = dword2 >> 8;
-  temp->p        = (AR_byte >> 7) & 0x1;
-  temp->dpl      = (AR_byte >> 5) & 0x3;
-  temp->segment  = (AR_byte >> 4) & 0x1;
-  temp->type     = (AR_byte & 0xf);
-  temp->valid    = 0; /* start out invalid */
+  Bit8u AR_byte = dword2 >> 8;
+
+  set_ar_byte(temp, AR_byte);
+
+  temp->valid = 0; /* start out invalid */
 
   if (temp->segment) { /* data/code segment descriptors */
     limit = (dword1 & 0xffff) | (dword2 & 0x000F0000);
@@ -543,7 +538,6 @@ void BX_CPU_C::fetch_raw_descriptor(const bx_selector_t *selector,
 {
   Bit32u index = selector->index;
   bx_address offset;
-  Bit64u raw_descriptor;
 
   if (selector->ti == 0) { /* GDT */
     if ((index*8 + 7) > BX_CPU_THIS_PTR gdtr.limit) {
@@ -566,7 +560,7 @@ void BX_CPU_C::fetch_raw_descriptor(const bx_selector_t *selector,
     offset = BX_CPU_THIS_PTR ldtr.cache.u.segment.base + index*8;
   }
 
-  raw_descriptor = system_read_qword(offset);
+  Bit64u raw_descriptor = system_read_qword(offset);
 
   *dword1 = GET32L(raw_descriptor);
   *dword2 = GET32H(raw_descriptor);
@@ -577,7 +571,6 @@ BX_CPU_C::fetch_raw_descriptor2(const bx_selector_t *selector, Bit32u *dword1, B
 {
   Bit32u index = selector->index;
   bx_address offset;
-  Bit64u raw_descriptor;
 
   if (selector->ti == 0) { /* GDT */
     if ((index*8 + 7) > BX_CPU_THIS_PTR gdtr.limit)
@@ -594,7 +587,7 @@ BX_CPU_C::fetch_raw_descriptor2(const bx_selector_t *selector, Bit32u *dword1, B
     offset = BX_CPU_THIS_PTR ldtr.cache.u.segment.base + index*8;
   }
 
-  raw_descriptor = system_read_qword(offset);
+  Bit64u raw_descriptor = system_read_qword(offset);
 
   *dword1 = GET32L(raw_descriptor);
   *dword2 = GET32H(raw_descriptor);
@@ -608,7 +601,6 @@ void BX_CPU_C::fetch_raw_descriptor_64(const bx_selector_t *selector,
 {
   Bit32u index = selector->index;
   bx_address offset;
-  Bit64u raw_descriptor1, raw_descriptor2;
 
   if (selector->ti == 0) { /* GDT */
     if ((index*8 + 15) > BX_CPU_THIS_PTR gdtr.limit) {
@@ -631,8 +623,8 @@ void BX_CPU_C::fetch_raw_descriptor_64(const bx_selector_t *selector,
     offset = BX_CPU_THIS_PTR ldtr.cache.u.segment.base + index*8;
   }
 
-  raw_descriptor1 = system_read_qword(offset);
-  raw_descriptor2 = system_read_qword(offset + 8);
+  Bit64u raw_descriptor1 = system_read_qword(offset);
+  Bit64u raw_descriptor2 = system_read_qword(offset + 8);
 
   if (raw_descriptor2 & BX_CONST64(0x00001F0000000000)) {
     BX_ERROR(("fetch_raw_descriptor64: extended attributes DWORD4 TYPE != 0"));
@@ -648,7 +640,6 @@ bool BX_CPU_C::fetch_raw_descriptor2_64(const bx_selector_t *selector, Bit32u *d
 {
   Bit32u index = selector->index;
   bx_address offset;
-  Bit64u raw_descriptor1, raw_descriptor2;
 
   if (selector->ti == 0) { /* GDT */
     if ((index*8 + 15) > BX_CPU_THIS_PTR gdtr.limit) {
@@ -671,8 +662,8 @@ bool BX_CPU_C::fetch_raw_descriptor2_64(const bx_selector_t *selector, Bit32u *d
     offset = BX_CPU_THIS_PTR ldtr.cache.u.segment.base + index*8;
   }
 
-  raw_descriptor1 = system_read_qword(offset);
-  raw_descriptor2 = system_read_qword(offset + 8);
+  Bit64u raw_descriptor1 = system_read_qword(offset);
+  Bit64u raw_descriptor2 = system_read_qword(offset + 8);
 
   if (raw_descriptor2 & BX_CONST64(0x00001F0000000000)) {
     BX_ERROR(("fetch_raw_descriptor2_64: extended attributes DWORD4 TYPE != 0"));

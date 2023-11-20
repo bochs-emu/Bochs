@@ -806,7 +806,7 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
     //  - R/W bit=0 and Dirty=1 for leaf entry
     bool shadow_stack_page = ((combined_access & BX_COMBINED_ACCESS_WRITE) != 0) && ((entry[leaf] & 0x40) != 0) && ((entry[leaf] & 0x02) == 0);
     if (!shadow_stack_page) {
-      BX_DEBUG(("shadow stack access to not shadow stack page CA=%x entry=%lx\n", combined_access, Bit32u(entry[leaf] & 0xfff)));
+      BX_DEBUG(("shadow stack access to not shadow stack page CA=%x entry=%x\n", combined_access, Bit32u(entry[leaf] & 0xfff)));
       page_fault(ERROR_PROTECTION, laddr, user, rw);
     }
 

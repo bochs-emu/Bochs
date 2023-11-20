@@ -610,9 +610,11 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
       if (!strcmp(argv[i], "nokeyrepeat")) {
         BX_INFO(("disabled host keyboard repeat"));
         x11_nokeyrepeat = 1;
-#if BX_DEBUGGER && BX_DEBUGGER_GUI
       } else if (!strcmp(argv[i], "gui_debug")) {
+#if BX_DEBUGGER && BX_DEBUGGER_GUI
         x11_with_debug_gui = 1;
+#else
+        SIM->message_box("ERROR", "Bochs debugger not available - ignoring 'gui_debug' option");
 #endif
 #if BX_SHOW_IPS
       } else if (!strcmp(argv[i], "hideIPS")) {

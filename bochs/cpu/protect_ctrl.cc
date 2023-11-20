@@ -454,7 +454,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-    descriptor.u.segment.base |= ((Bit64u)(dword3) << 32);
+    descriptor.u.segment.base |= (Bit64u(dword3) << 32);
     BX_DEBUG(("64 bit LDT base = 0x%08x%08x",
        GET32H(descriptor.u.segment.base), GET32L(descriptor.u.segment.base)));
     if (!IsCanonical(descriptor.u.segment.base)) {
@@ -563,7 +563,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LTR_Ew(bxInstruction_c *i)
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-    descriptor.u.segment.base |= ((Bit64u)(dword3) << 32);
+    descriptor.u.segment.base |= (Bit64u(dword3) << 32);
     BX_DEBUG(("64 bit TSS base = 0x%08x%08x",
        GET32H(descriptor.u.segment.base), GET32L(descriptor.u.segment.base)));
     if (!IsCanonical(descriptor.u.segment.base)) {
@@ -581,7 +581,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LTR_Ew(bxInstruction_c *i)
   BX_ASSERT((BX_CPU_THIS_PTR tr.cache.type & 2) == 0);
   BX_CPU_THIS_PTR tr.cache.type |= 2; // mark as busy
 
-  /* mark as busy */
+  /* mark as busy, should be done tomically using RMW */
   if (!(dword2 & 0x0200)) {
     dword2 |= 0x0200; /* set busy bit */
     system_write_dword(BX_CPU_THIS_PTR gdtr.base + selector.index*8 + 4, dword2);

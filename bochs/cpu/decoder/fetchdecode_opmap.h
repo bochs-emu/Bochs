@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2017-2019 Stanislav Shwartsman
+//   Copyright (c) 2017-2023 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -1529,6 +1529,7 @@ static const Bit64u BxOpcodeTable0F01[] = {
   form_opcode(ATTR_NNN2 | ATTR_RRR1 | ATTR_MODC0 | ATTR_SSE_NO_PREFIX, BX_IA_XSETBV),
   form_opcode(ATTR_NNN2 | ATTR_RRR4 | ATTR_MODC0 | ATTR_SSE_NO_PREFIX, BX_IA_VMFUNC),
 
+#if BX_SUPPORT_SVM
   form_opcode(ATTR_NNN3 | ATTR_RRR0 | ATTR_MODC0, BX_IA_VMRUN),
   form_opcode(ATTR_NNN3 | ATTR_RRR1 | ATTR_MODC0, BX_IA_VMMCALL),
   form_opcode(ATTR_NNN3 | ATTR_RRR2 | ATTR_MODC0, BX_IA_VMLOAD),
@@ -1537,6 +1538,7 @@ static const Bit64u BxOpcodeTable0F01[] = {
   form_opcode(ATTR_NNN3 | ATTR_RRR5 | ATTR_MODC0, BX_IA_CLGI),
   form_opcode(ATTR_NNN3 | ATTR_RRR6 | ATTR_MODC0, BX_IA_SKINIT),
   form_opcode(ATTR_NNN3 | ATTR_RRR7 | ATTR_MODC0, BX_IA_INVLPGA),
+#endif
 
   form_opcode(ATTR_NNN5 | ATTR_RRR0 | ATTR_MODC0   | ATTR_SSE_NO_PREFIX, BX_IA_SERIALIZE),
 

@@ -441,8 +441,10 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_1_ecx(Bit32u extra) const
   // [11:11] reserved
 
   // [12:12] FMA Instructions support
+#if BX_SUPPORT_AVX
   if (is_cpu_extension_supported(BX_ISA_AVX_FMA))
     ecx |= BX_CPUID_STD1_ECX_FMA;
+#endif
 
   // [13:13] CMPXCHG16B: CMPXCHG16B instruction support
   if (is_cpu_extension_supported(BX_ISA_CMPXCHG16B))
@@ -501,8 +503,10 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_1_ecx(Bit32u extra) const
     ecx |= BX_CPUID_STD1_ECX_AVX;
 
   // [29:29] AVX F16C - Float16 conversion support
+#if BX_SUPPORT_AVX
   if (is_cpu_extension_supported(BX_ISA_AVX_F16C))
     ecx |= BX_CPUID_STD1_ECX_AVX_F16C;
+#endif
 
   // [30:30] RDRAND instruction
   if (is_cpu_extension_supported(BX_ISA_RDRAND))
@@ -1128,8 +1132,10 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_eax(Bit32u extra) const
   //   [3:3]    RAO-INT
 
   //   [4:4]    AVX VNNI
+#if BX_SUPPORT_AVX
   if (is_cpu_extension_supported(BX_ISA_AVX_VNNI))
     eax |= BX_CPUID_STD7_SUBLEAF1_EAX_AVX_VNNI;
+#endif
 
   //   [5:5]    AVX512_BF16 conversion instructions support
 #if BX_SUPPORT_EVEX
@@ -1163,8 +1169,10 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_eax(Bit32u extra) const
   //   [22:22]  HRESET and CPUID leaf 0x20 support
 
   //   [23:23]  AVX IFMA support
+#if BX_SUPPORT_AVX
   if (is_cpu_extension_supported(BX_ISA_AVX_IFMA))
     eax |= BX_CPUID_STD7_SUBLEAF1_EAX_AVX_IFMA;
+#endif
 
   //   [25:24]  reserved
   //   [26:26]  LAM: Linear Address Masking
@@ -1184,20 +1192,24 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_edx(Bit32u extra) const
   //   [3:0]    reserved
 
   //   [4:4]    AVX_VNNI_INT8 support
+#if BX_SUPPORT_AVX
   if (is_cpu_extension_supported(BX_ISA_AVX_VNNI_INT8))
     edx |= BX_CPUID_STD7_SUBLEAF1_EDX_AVX_VNNI_INT8;
 
   //   [5:5]    AVX_NE_CONVERT instructions
   if (is_cpu_extension_supported(BX_ISA_AVX_NE_CONVERT))
     edx |= BX_CPUID_STD7_SUBLEAF1_EDX_AVX_NE_CONVERT;
+#endif
 
   //   [7:6]    reserved
   //   [8:8]    AMX-COMPLEX instructions
   //   [9:9]    reserved
 
   //   [10:10]  AVX-VNNI-INT16 instructions
+#if BX_SUPPORT_AVX
   if (is_cpu_extension_supported(BX_ISA_AVX_VNNI_INT16))
     edx |= BX_CPUID_STD7_SUBLEAF1_EDX_AVX_VNNI_INT16;
+#endif
 
   //   [13:11]  reserved
   //   [14:14]  PREFETCHITI: PREFETCHIT0/T1 instruction
