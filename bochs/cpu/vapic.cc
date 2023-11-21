@@ -81,6 +81,14 @@ void BX_CPU_C::VMX_Write_Virtual_APIC(unsigned offset, Bit32u val32)
   BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 4, MEMTYPE(resolve_memtype(pAddr)), BX_WRITE, BX_VMX_VAPIC_ACCESS, (Bit8u*)(&val32));
 }
 
+void BX_CPU_C::VMX_Write_Virtual_X2APIC(unsigned offset, Bit64u val64)
+{
+  bx_phy_address pAddr = BX_CPU_THIS_PTR vmcs.virtual_apic_page_addr + offset;
+  // must avoid recursive call to the function when VMX APIC access page = VMX Virtual Apic Page
+  BX_MEM(0)->writePhysicalPage(BX_CPU_THIS, pAddr, 8, (Bit8u*)(&val64));
+  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 8, MEMTYPE(resolve_memtype(pAddr)), BX_WRITE, BX_VMX_VAPIC_ACCESS, (Bit8u*)(&val64));
+}
+
 bx_phy_address BX_CPU_C::VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned len, void *data)
 {
   BX_ASSERT(SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES));
@@ -238,20 +246,15 @@ void BX_CPU_C::VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *
 
 #if BX_SUPPORT_VMX >= 2
 
-BX_CPP_INLINE bool vapic_read_vector(Bit32u *arr, Bit8u vector)
-{
-  unsigned apic_reg = vector / 32;
-
-  return arr[apic_reg] & (1 << (vector & 0x1f));
-}
-
 BX_CPP_INLINE void BX_CPU_C::vapic_set_vector(unsigned arrbase, Bit8u vector)
 {
   unsigned reg = vector / 32;
-  Bit32u regval = VMX_Read_Virtual_APIC(arrbase + 0x10*reg);
+  Bit32u regval = VMX_Read_Virtual_APIC(arrbase + 16*reg);
   regval |= (1 << (vector & 0x1f));
-  VMX_Write_Virtual_APIC(arrbase + 0x10*reg, regval);
+  VMX_Write_Virtual_APIC(arrbase + 16*reg, regval);
 }
+
+#include "scalar_arith.h"   // for lzcntd
 
 BX_CPP_INLINE Bit8u BX_CPU_C::vapic_clear_and_find_highest_priority_int(unsigned arrbase, Bit8u vector)
 {
@@ -259,21 +262,15 @@ BX_CPP_INLINE Bit8u BX_CPU_C::vapic_clear_and_find_highest_priority_int(unsigned
   int n;
 
   for (n=0;n<8;n++)
-    arr[n] = VMX_Read_Virtual_APIC(arrbase + 0x10*n);
+    arr[n] = VMX_Read_Virtual_APIC(arrbase + 16*n);
 
+  bx_local_apic_c::clear_vector(arr, vector);
   unsigned reg = vector / 32;
-  arr[reg] &= ~(1 << (vector & 0x1f));
-
-  VMX_Write_Virtual_APIC(arrbase + 0x10*reg, arr[reg]);
+  VMX_Write_Virtual_APIC(arrbase + 16*reg, arr[reg]);
 
   for (n = 7; n >= 0; n--) {
     if (! arr[n]) continue;
-
-    for (int bit = 31; bit >= 0; bit--) {
-      if (arr[n] & (1<<bit)) {
-        return (n * 32 + bit);
-      }
-    }
+    return (n * 32) + (31 - lzcntd(arr[n]));
   }
 
   return 0;
@@ -353,7 +350,8 @@ void BX_CPU_C::VMX_EOI_Virtualization(void)
 
     VMX_PPR_Virtualization();
 
-    if (vapic_read_vector(vm->eoi_exit_bitmap, vector)) {
+    bool bit_high = bx_local_apic_c::get_vector(vm->eoi_exit_bitmap, vector);
+    if (bit_high) {
       VMexit(VMX_VMEXIT_VIRTUALIZED_EOI, vector); // trap-like VMEXIT
     }
     else {
@@ -465,8 +463,7 @@ bool BX_CPU_C::Virtualize_X2APIC_Write(unsigned msr, Bit64u val_64)
     if ((val_64 >> 8) != 0)
       exception(BX_GP_EXCEPTION, 0);
 
-    VMX_Write_Virtual_APIC(BX_LAPIC_TPR, val_64 & 0xff);
-    VMX_Write_Virtual_APIC(BX_LAPIC_TPR + 4, 0);
+    VMX_Write_Virtual_X2APIC(BX_LAPIC_TPR, val_64 & 0xff);
     VMX_TPR_Virtualization();
 
     return true;
@@ -480,7 +477,6 @@ bool BX_CPU_C::Virtualize_X2APIC_Write(unsigned msr, Bit64u val_64)
         exception(BX_GP_EXCEPTION, 0);
 
       VMX_EOI_Virtualization();
-
       return true;
     }
 
@@ -491,8 +487,7 @@ bool BX_CPU_C::Virtualize_X2APIC_Write(unsigned msr, Bit64u val_64)
 
       Bit8u vector = val_64 & 0xff;
       if (vector < 16) {
-        VMX_Write_Virtual_APIC(BX_LAPIC_SELF_IPI, vector);
-        VMX_Write_Virtual_APIC(BX_LAPIC_SELF_IPI + 4, 0);
+        VMX_Write_Virtual_X2APIC(BX_LAPIC_SELF_IPI, vector);
         VMexit(VMX_VMEXIT_APIC_WRITE, BX_LAPIC_SELF_IPI); // trap-like vmexit
       }
       else {

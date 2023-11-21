@@ -4850,6 +4850,7 @@ public: // for now...
   BX_SMF void VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *data);
   BX_SMF Bit32u VMX_Read_Virtual_APIC(unsigned offset);
   BX_SMF void VMX_Write_Virtual_APIC(unsigned offset, Bit32u val32);
+  BX_SMF void VMX_Write_Virtual_X2APIC(unsigned offset, Bit64u val64);
   BX_SMF void VMX_TPR_Virtualization(void);
   BX_SMF bool Virtualize_X2APIC_Write(unsigned msr, Bit64u val_64);
   BX_SMF void VMX_Virtual_Apic_Access_Trap(void);

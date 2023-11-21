@@ -218,14 +218,16 @@ class BOCHSAPI bx_local_apic_c : public logfunctions
 
   BX_CPU_C *cpu;
 
-  bool get_vector(Bit32u *reg, unsigned vector);
-  void set_vector(Bit32u *reg, unsigned vector);
-  void clear_vector(Bit32u *reg, unsigned vector);
-
 public:
-  bool INTR;
   bx_local_apic_c(BX_CPU_C *cpu, unsigned id);
  ~bx_local_apic_c() { }
+
+  static bool get_vector(Bit32u *reg, unsigned vector);
+  static void set_vector(Bit32u *reg, unsigned vector);
+  static void clear_vector(Bit32u *reg, unsigned vector);
+
+  bool INTR;
+
   void reset(unsigned type);
   bx_phy_address get_base(void) const { return base_addr; }
   void set_base(bx_phy_address newbase);
