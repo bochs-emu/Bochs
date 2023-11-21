@@ -655,11 +655,15 @@ Bit32u bx_floppy_ctrl_c::read(Bit32u address, unsigned io_len)
       BX_ERROR(("io_read: unsupported address 0x%04x", (unsigned) address));
       return 0;
   }
+
 #if IGNORE_DEBUG_03F6
- if (address != 0x3F6)
+  if (address != 0x3F6)
 #endif
-  BX_DEBUG(("read(): during command 0x%02x, port 0x%04x returns 0x%02x",
+  {
+    BX_DEBUG(("read(): during command 0x%02x, port 0x%04x returns 0x%02x",
             pending_command, address, value));
+  }
+
   return value;
 }
 
@@ -687,7 +691,9 @@ void bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #if IGNORE_DEBUG_03F6
   if (address != 0x3F6)
 #endif
-  BX_DEBUG(("write access to port 0x%04x, value=0x%02x", address, value));
+  {
+    BX_DEBUG(("write access to port 0x%04x, value=0x%02x", address, value));
+  }
 
   // if we are in power down mode, no access is granted, other than a RESET via the DOR
   //  (only a reset can bring it out of power down mode)
@@ -972,9 +978,11 @@ void bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
     case 0x3F6: /* diskette controller (reserved) */
 #if IGNORE_DEBUG_03F6
-  if (address != 0x3F6)
+      if (address != 0x3F6)
 #endif
-      BX_DEBUG(("io_write: reserved register 0x3f6 unsupported"));
+      {
+        BX_DEBUG(("io_write: reserved register 0x3f6 unsupported"));
+      }
       // this address shared with the hard drive controller
       DEV_hd_write_handler(bx_devices.pluginHardDrive, address, value, io_len);
       break;
