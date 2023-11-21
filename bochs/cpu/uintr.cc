@@ -235,13 +235,50 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SENDUIPI_Gq(bxInstruction_c *i)
 // should be done atomically using RMW
 
   if (send_notify) {
-    // if in X2APIC mode:
-    //   send IPI [vector=notification_vector] to 32-bit APIC_ID=[notification_destination]
-    // else:
-    //   send IPI [vector=notification_vector] to  8-bit APIC_ID=[notification_destination >> 8]
+    send_uipi(notification_destination, notification_vector);
   }
 
   BX_NEXT_TRACE(i);
+}
+
+#include "apic.h"
+
+void BX_CPU_C::send_uipi(Bit32u notification_destination, Bit32u notification_vector)
+{
+#if BX_SUPPORT_VMX
+  VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+  if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_TPR_SHADOW) {
+    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES)) {
+      // virtualize sending of an XAPIC-mode IPI by:
+      //   - writing to VICR_HI[31:24] = 8 bit destination APIC_ID from NDST[15:8]
+      //                VICR_HI[23:00] = 0
+      VMX_Write_Virtual_APIC(BX_LAPIC_ICR_HI, (notification_destination & 0xff00) << 16);
+
+      //   - writing to VICR_LO[31:08] = 0 (indicating a physically addressed fixed-mode IPI)
+      //                VICR_HI[07:00] = notification_vector
+      VMX_Write_Virtual_APIC(BX_LAPIC_ICR_LO, notification_vector);
+    }
+    else {
+      // virtualize sending of an X2APIC-mode IPI by:
+      //   - writing 64-bit value into VICR
+      //     VICR[7:0] = notification_vector
+      //     VICR[31:8] = 0 (indicating a physically addressed fixed-mode IPI)
+      //     VICR[64:32] = 32-bit notification destination
+      VMX_Write_Virtual_X2APIC(BX_LAPIC_ICR_LO, GET64_FROM_HI32_LO32(notification_destination, notification_vector));
+    }
+
+    VMexit(VMX_VMEXIT_APIC_WRITE, BX_LAPIC_ICR_LO); // trap-like vmexit
+    return;
+  }
+#endif
+
+  // sending of IPI is done by writing to the local APIC's ICR register:
+  //    ICR[7:0] = notification_vector
+  //    ICR[64:32] = the APIC_ID from NDST[15:8] (legacy apic mode) or NDST[31:0] (x2apic mode)
+  //    ICR[31:8] = 0 (indicating a physically addressed fixed-mode IPI)
+#if BX_SUPPORT_APIC
+  BX_CPU_THIS_PTR lapic.send_ipi(x2apic_mode() ? notification_destination : (notification_destination >> 8), notification_vector);
+#endif
 }
 
 void BX_CPU_C::process_uintr_notification()

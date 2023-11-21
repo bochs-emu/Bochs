@@ -4451,6 +4451,7 @@ public: // for now...
   BX_SMF void handleAvxModeChange(void);
 #endif
 #if BX_SUPPORT_UINTR && BX_SUPPORT_X86_64
+  BX_SMF void send_uipi(Bit32u notification_destination, Bit32u notification_vector);
   BX_SMF void uintr_uirr_update();
   BX_SMF void uintr_control();
   BX_SMF bool uintr_masked();

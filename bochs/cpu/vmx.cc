@@ -974,7 +974,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
      unsigned push_error = (vm->vmentry_interr_info >> 11) & 1;
      unsigned error_code = push_error ? vm->vmentry_excep_err_code : 0;
 
-     unsigned push_error_reference = 0;
+     unsigned push_error_reference = false;
      if (event_type == BX_HARDWARE_EXCEPTION && vector < BX_CPU_HANDLED_EXCEPTIONS)
         push_error_reference = exceptions_info[vector].push_error;
 
@@ -2283,7 +2283,12 @@ void BX_CPU_C::VMenterInjectEvents(void)
   vm->idt_vector_info = vm->vmentry_interr_info & ~0x80000000;
   vm->idt_vector_error_code = error_code;
 
-  interrupt(vector, type, push_error, error_code);
+#if BX_SUPPORT_UINTR
+  if (BX_CPU_THIS_PTR cr4.get_UINTR() && long64_mode() && vector == BX_CPU_THIS_PTR uintr.uinv)
+    process_uintr_notification();
+  else
+#endif
+    interrupt(vector, type, push_error, error_code);
 
   BX_CPU_THIS_PTR last_exception_type = 0; // error resolved
 }
