@@ -28,6 +28,8 @@
 
 #if BX_SUPPORT_UINTR && BX_SUPPORT_X86_64
 
+#include "scalar_arith.h"   // for lzcntq
+
 void BX_CPU_C::deliver_UINTR()
 {
   BX_ASSERT(BX_CPU_THIS_PTR cr4.get_UINTR() && !uintr_masked());
@@ -49,7 +51,7 @@ void BX_CPU_C::deliver_UINTR()
   push_64(tmp_RSP);
   push_64(read_eflags());
   push_64(RIP);
-  unsigned vector = lzcntq(BX_CPU_THIS_PTR uirr.uirr); // find #most significant bit in UIRR
+  unsigned vector = lzcntq(BX_CPU_THIS_PTR uintr.uirr); // find #most significant bit in UIRR
   // expected to be not 0
   push_64(vector);
 
@@ -248,8 +250,9 @@ void BX_CPU_C::process_uintr_notification()
   // the User-Level Interrupt notification process looks like external interrupt with the vector UINV
   // in particular for IDT-vectoring info
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    vm->idt_vector_error_code = errcode;
-    vm->idt_vector_info = BX_CPU_THIS_PTR uintr.uinv | (BX_EXTERNAL_INTERRUPT << 8);
+    VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+    vm->idt_vector_error_code = 0;
+    vm->idt_vector_info = (BX_CPU_THIS_PTR uintr.uinv) | (BX_EXTERNAL_INTERRUPT << 8);
   }
 #endif
 
