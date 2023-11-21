@@ -2249,7 +2249,7 @@ bool bx_floppy_ctrl_c::end_of_track(void)
   if (BX_FD_THIS s.sector[drive] == BX_FD_THIS s.eot[drive]) {
     if (!BX_FD_THIS s.multi_track)
       eot_reached = 1;
-    else if ((BX_FD_THIS s.head[drive] + 1) == BX_FD_THIS s.media[drive].heads)
+    else if ((BX_FD_THIS s.head[drive] + 1) == (int)BX_FD_THIS s.media[drive].heads)
       eot_reached = 1;
   }
 
