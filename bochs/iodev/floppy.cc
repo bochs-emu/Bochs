@@ -835,6 +835,18 @@ void bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
             case FD_CMD_EXIT_STANDBY_MODE:
             // hardware/software reset
             case FD_CMD_HARD_RESET:
+            // dump registers (Enhanced drives)
+            case FD_CMD_DUMPREG:
+            // Version
+            case FD_CMD_VERSION:
+            // Part ID command
+            case FD_CMD_PART_ID:
+            // Unlock command
+            case FD_CMD_LOCK_UNLOCK:
+            // Lock command
+            case FD_CMD_LOCK_UNLOCK | FD_CMD_LOCK:
+            // Save
+            case FD_CMD_SAVE:
               BX_FD_THIS s.command_size = 1;
               break;
 
@@ -920,31 +932,13 @@ void bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
               BX_FD_THIS s.command_size = 9;
               break;
 
-            // dump registers (Enhanced drives)
-            case FD_CMD_DUMPREG:
-            // Version
-            case FD_CMD_VERSION:
-            // Part ID command
-            case FD_CMD_PART_ID:
-            // Unlock command
-            case FD_CMD_LOCK_UNLOCK:
-            // Lock command
-            case FD_CMD_LOCK_UNLOCK | FD_CMD_LOCK:
-            // Save
-            case FD_CMD_SAVE:
-              BX_FD_THIS s.command_size = 0;
-              BX_FD_THIS s.pending_command = value;
-              BX_DEBUG(("COMMAND: [%02x]", value));
-              enter_result_phase();
-              break;
-
             // Restore
             case FD_CMD_RESTORE:
               BX_FD_THIS s.command_size = 17;
               break;
 
             default:
-              BX_ERROR(("Command issued that we don't support via our checks. %02X", value));
+              BX_ERROR(("Command issued that we don't support via our checks. 0x%02X", value));
               command_error = 1;
           }
         } else
@@ -1201,9 +1195,14 @@ void bx_floppy_ctrl_c::floppy_command(void)
       BX_DEBUG(("configure (eis     = %d)", (BX_FD_THIS s.command[2] & 0x40) ? 1 : 0));
       BX_DEBUG(("configure (efifo   = %d)", (BX_FD_THIS s.command[2] & 0x20) ? 1 : 0));
       BX_DEBUG(("configure (no poll = %d)", (BX_FD_THIS s.command[2] & 0x10) ? 1 : 0));
-      BX_DEBUG(("configure (fifothr = %d)", BX_FD_THIS s.command[2] & 0x0f));
+      BX_DEBUG(("configure (fifothr = %d)", BX_FD_THIS s.command[2] & 0x0F));
       BX_DEBUG(("configure (pretrk  = %d)", BX_FD_THIS s.command[3]));
-      BX_FD_THIS s.config = BX_FD_THIS s.command[2];
+      if (((BX_FD_THIS s.command[2] & 0x0F) > 0) && ((BX_FD_THIS s.command[2] & 0x0F) <= 15)) {
+        BX_FD_THIS s.config = BX_FD_THIS s.command[2];
+      } else {
+        BX_ERROR(("Illegal size for FIFO: %d (setting to 16)", (BX_FD_THIS s.command[2] & 0x0F) + 1));
+        BX_FD_THIS s.config = (BX_FD_THIS s.command[2] & 0xF0) | 15;
+      }
       BX_FD_THIS s.pretrk = BX_FD_THIS s.command[3];
       enter_idle_phase();
       return;
@@ -1414,14 +1413,8 @@ void bx_floppy_ctrl_c::floppy_command(void)
         BX_PANIC(("read/write/verify/scan command: sector size %d not supported", 128<<sector_size));
       }
 
-      if (cylinder >= BX_FD_THIS s.media[drive].tracks) {
-        BX_PANIC(("io: norm r/w/v/s parms out of range: sec#%02xh cyl#%02xh eot#%02xh head#%02xh",
-          (unsigned) sector, (unsigned) cylinder, (unsigned) eot,
-          (unsigned) head));
-        return;
-      }
-
-      if (sector > BX_FD_THIS s.media[drive].sectors_per_track) {
+      if ((cylinder >= BX_FD_THIS s.media[drive].tracks) ||
+          (sector > BX_FD_THIS s.media[drive].sectors_per_track)) {
         BX_ERROR(("attempt to read/write/verify/scan sector %u passed last sector %u",
                      (unsigned) sector,
                      (unsigned) BX_FD_THIS s.media[drive].sectors_per_track));
@@ -1511,6 +1504,21 @@ void bx_floppy_ctrl_c::floppy_command(void)
         BX_PANIC(("floppy_command(): unknown read/write/verify/scan command"));
         return;
       }
+      break;
+
+    // dump registers (Enhanced drives)
+    case FD_CMD_DUMPREG:
+    // Version
+    case FD_CMD_VERSION:
+    // Part ID command
+    case FD_CMD_PART_ID:
+    // Unlock command
+    case FD_CMD_LOCK_UNLOCK:
+    // Lock command
+    case FD_CMD_LOCK_UNLOCK | FD_CMD_LOCK:
+    // Save
+    case FD_CMD_SAVE:
+      enter_result_phase();
       break;
 
     // Perpendicular mode
@@ -2922,7 +2930,7 @@ void bx_floppy_ctrl_c::enter_result_phase(void)
         BX_FD_THIS s.result[0] = BX_FD_THIS s.status_reg0;
     }
   }
-
+  
   // Print command result (max MAX_PHASE_SIZE bytes)
   char buf[8+(MAX_PHASE_SIZE*5)+1], *p = buf;
   p += sprintf(p, "RESULT: ");
