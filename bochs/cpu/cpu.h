@@ -4589,7 +4589,7 @@ public: // for now...
   BX_SMF void    deliver_SMI(void);
   BX_SMF void    deliver_SIPI(unsigned vector);
 #if BX_SUPPORT_UINTR && BX_SUPPORT_X86_64
-  BX_SMF void    deliver_UINTR(unsigned vector);
+  BX_SMF void    deliver_UINTR();
   BX_SMF void    process_uintr_notification();
 #endif
   BX_SMF void    debug(bx_address offset);

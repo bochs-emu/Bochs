@@ -1254,12 +1254,12 @@ fi
 
 support_uintr=0
 AC_MSG_CHECKING(for User Level Interrupt support)
-AC_ARG_ENABLE(cet,
+AC_ARG_ENABLE(uintr,
   AS_HELP_STRING([--enable-uintr], [for User Level Interrupt support (no)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_UINTR, 1)
-    support_cet=1
+    support_uintr=1
    elif test "$enableval" = no; then
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_SUPPORT_UINTR, 0)

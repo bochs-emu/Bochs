@@ -28,8 +28,10 @@
 
 #if BX_SUPPORT_UINTR && BX_SUPPORT_X86_64
 
-void BX_CPU_C::deliver_UINTR(unsigned vector)
+void BX_CPU_C::deliver_UINTR()
 {
+  BX_ASSERT(BX_CPU_THIS_PTR cr4.get_UINTR() && !uintr_masked());
+
   if (!IsCanonical(BX_CPU_THIS_PTR uintr.ui_handler)) {
     BX_ERROR(("UINTR.UI_HANDLER is not canonical: #GP(0)"));
     exception(BX_GP_EXCEPTION, 0);
@@ -47,6 +49,8 @@ void BX_CPU_C::deliver_UINTR(unsigned vector)
   push_64(tmp_RSP);
   push_64(read_eflags());
   push_64(RIP);
+  unsigned vector = lzcntq(BX_CPU_THIS_PTR uirr.uirr); // find #most significant bit in UIRR
+  // expected to be not 0
   push_64(vector);
 
 #if BX_SUPPORT_CET
@@ -240,6 +244,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SENDUIPI_Gq(bxInstruction_c *i)
 
 void BX_CPU_C::process_uintr_notification()
 {
+#if BX_SUPPORT_VMX
+  // the User-Level Interrupt notification process looks like external interrupt with the vector UINV
+  // in particular for IDT-vectoring info
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    vm->idt_vector_error_code = errcode;
+    vm->idt_vector_info = BX_CPU_THIS_PTR uintr.uinv | (BX_EXTERNAL_INTERRUPT << 8);
+  }
+#endif
+
   // Step 1: Clear UPID.ON atomically with locked AND operation
 
 // should be done atomically using RMW
@@ -274,7 +287,7 @@ bool BX_CPU_C::uintr_masked()
 void BX_CPU_C::uintr_uirr_update()
 {
   // There is a pending user-level interrupt if UINTR.UIRR != 0
-  if (BX_CPU_THIS_PTR uintr.uirr)
+  if (BX_CPU_THIS_PTR cr4.get_UINTR() && BX_CPU_THIS_PTR uintr.uirr)
     signal_event(BX_EVENT_PENDING_UINTR);
   else
     clear_event(BX_EVENT_PENDING_UINTR);

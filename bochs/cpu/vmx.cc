@@ -1944,9 +1944,8 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
     return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
   }
 
-
 #if BX_SUPPORT_UINTR
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_UINTR)) {
+  if (vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_UINV) {
     guest.uintr_uinv = VMread16(VMCS_16BIT_GUEST_UINV);
     if (guest.uintr_uinv >= 256) {
       BX_ERROR(("VMENTER FAIL: VMCS guest INTR.UINV=%d > 256", guest.uintr_uinv));
@@ -2137,7 +2136,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   BX_CPU_THIS_PTR msr.sysenter_cs_msr  = guest.sysenter_cs_msr;
 
 #if BX_SUPPORT_UINTR
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_UINTR)) {
+  if (vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_UINV) {
     BX_CPU_THIS_PTR uintr.uinv = guest.uintr_uinv;
   }
 #endif
@@ -2733,6 +2732,12 @@ void BX_CPU_C::VMexitLoadHostState(void)
     SSP = host_state->ssp;
     BX_CPU_THIS_PTR msr.ia32_interrupt_ssp_table = host_state->interrupt_ssp_table_address;
     BX_CPU_THIS_PTR msr.ia32_cet_control[0] = host_state->msr_ia32_s_cet;
+  }
+#endif
+
+#if BX_SUPPORT_UINTR
+  if (vmexit_ctrls & VMX_VMEXIT_CTRL1_CLEAR_UINV) {
+    BX_CPU_THIS_PTR uintr.uinv = 0;
   }
 #endif
 
