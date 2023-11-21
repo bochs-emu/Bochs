@@ -39,7 +39,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 #if BX_CPU_LEVEL >= 6
   if (is_cpu_extension_supported(BX_ISA_X2APIC)) {
     if (is_x2apic_msr_range(index)) {
-      if (BX_CPU_THIS_PTR msr.apicbase & 0x400)  // X2APIC mode
+      if (x2apic_mode())
         return BX_CPU_THIS_PTR lapic.read_x2apic(index, msr);
       else
         return 0;
@@ -579,7 +579,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 #if BX_CPU_LEVEL >= 6
   if (is_cpu_extension_supported(BX_ISA_X2APIC)) {
     if (is_x2apic_msr_range(index)) {
-      if (BX_CPU_THIS_PTR msr.apicbase & 0x400)  // X2APIC mode
+      if (x2apic_mode())
         return BX_CPU_THIS_PTR lapic.write_x2apic(index, val32_hi, val32_lo);
       else
         return 0;
@@ -1118,7 +1118,7 @@ bool BX_CPU_C::relocate_apic(Bit64u val_64)
 
   const Bit32u BX_MSR_APICBASE_RESERVED_BITS = (0x2ff | (is_cpu_extension_supported(BX_ISA_X2APIC) ? 0 : 0x400));
 
-  if (BX_CPU_THIS_PTR msr.apicbase & 0x800) {
+  if (apic_global_enable_on()) {
     Bit32u val32_hi = GET32H(val_64), val32_lo = GET32L(val_64);
     BX_INFO(("WRMSR: wrote %08x:%08x to MSR_APICBASE", val32_hi, val32_lo));
     if (! IsValidPhyAddr(val_64)) {
@@ -1158,6 +1158,16 @@ bool BX_CPU_C::relocate_apic(Bit64u val_64)
   }
 
   return 1;
+}
+
+bool BX_CPU_C::apic_global_enable_on()
+{
+  return BX_CPU_THIS_PTR msr.apicbase & 0x800;
+}
+
+bool BX_CPU_C::x2apic_mode()
+{
+  return BX_CPU_THIS_PTR msr.apicbase & 0x400;
 }
 #endif
 

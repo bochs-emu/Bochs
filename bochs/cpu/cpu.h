@@ -4454,6 +4454,8 @@ public: // for now...
 
 #if BX_SUPPORT_APIC
   BX_SMF bool relocate_apic(Bit64u val_64);
+  BX_SMF bool apic_global_enable_on();
+  BX_SMF bool x2apic_mode();
 #endif
 
   BX_SMF void load_segw(bxInstruction_c *i, unsigned seg) BX_CPP_AttrRegparmN(2);

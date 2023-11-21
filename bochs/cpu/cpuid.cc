@@ -563,7 +563,7 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_1_edx_common(Bit32u extra) const
   if (is_cpu_extension_supported(BX_ISA_XAPIC)) {
     // if MSR_APICBASE APIC Global Enable bit has been cleared,
     // the CPUID feature flag for the APIC is set to 0.
-    if (cpu->msr.apicbase & 0x800)
+    if (cpu->apic_global_enable_on())
       edx |= BX_CPUID_STD1_EDX_APIC; // APIC on chip
   }
 #endif
