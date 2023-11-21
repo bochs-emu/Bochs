@@ -462,14 +462,12 @@ bool BX_CPU_C::is_eptptr_valid(Bit64u eptptr)
   }
 
   // [7]   CET: Enable supervisor shadow stack control
-#if BX_SUPPORT_CET
-  if (! BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) {
-    if (eptptr & 0x80) {
+  if (eptptr & 0x80) {
+    if (! BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) {
       BX_ERROR(("is_eptptr_valid: EPTPTR CET supervisor shadow stack control bit enabled when not supported by CPU"));
       return 0;
     }
   }
-#endif
 
 #define BX_EPTPTR_RESERVED_BITS 0xf00 /* bits 11:8 are reserved */
   if (eptptr & BX_EPTPTR_RESERVED_BITS) {
@@ -973,11 +971,10 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
      unsigned push_error_reference = 0;
      if (event_type == BX_HARDWARE_EXCEPTION && vector < BX_CPU_HANDLED_EXCEPTIONS)
         push_error_reference = exceptions_info[vector].push_error;
-#if BX_SUPPORT_CET
+
      if (! BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) {
         if (vector == BX_CP_EXCEPTION) push_error_reference = false;
      }
-#endif
 
      if (vm->vmentry_interr_info & 0x7ffff000) {
         BX_ERROR(("VMFAIL: VMENTRY broken interruption info field"));
