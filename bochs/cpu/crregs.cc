@@ -1789,8 +1789,10 @@ Bit32u BX_CPU_C::get_efer_allow_mask(void)
     efer_allowed_mask |= (BX_EFER_SCE_MASK | BX_EFER_LME_MASK | BX_EFER_LMA_MASK);
     if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_FFXSR))
       efer_allowed_mask |= BX_EFER_FFXSR_MASK;
+#if BX_SUPPORT_SVM
     if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SVM))
       efer_allowed_mask |= BX_EFER_SVME_MASK;
+#endif
     if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_TCE))
       efer_allowed_mask |= BX_EFER_TCE_MASK;
   }
