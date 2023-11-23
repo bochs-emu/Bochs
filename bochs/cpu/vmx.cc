@@ -574,7 +574,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
   // Load VM-execution control fields to VMCS Cache
   //
 
-  vm->vmexec_ctrls1 = VMread32(VMCS_32BIT_CONTROL_PIN_BASED_EXEC_CONTROLS);
+  vm->pin_vmexec_ctrls = VMread32(VMCS_32BIT_CONTROL_PIN_BASED_EXEC_CONTROLS);
   vm->vmexec_ctrls2 = VMread32(VMCS_32BIT_CONTROL_PROCESSOR_BASED_VMEXEC_CONTROLS);
   if (VMEXIT(VMX_VM_EXEC_CTRL2_SECONDARY_CONTROLS))
     vm->vmexec_ctrls3 = VMread32(VMCS_32BIT_CONTROL_SECONDARY_VMEXEC_CONTROLS);
@@ -602,12 +602,12 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
   // Check VM-execution control fields
   //
 
-  if (~vm->vmexec_ctrls1 & VMX_CHECKS_USE_MSR_VMX_PINBASED_CTRLS_LO) {
+  if (~vm->pin_vmexec_ctrls & VMX_CHECKS_USE_MSR_VMX_PINBASED_CTRLS_LO) {
      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX pin-based controls allowed 0-settings"));
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
-  if (vm->vmexec_ctrls1 & ~VMX_CHECKS_USE_MSR_VMX_PINBASED_CTRLS_HI) {
-     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX pin-based controls allowed 1-settings [0x%08x]", vm->vmexec_ctrls1 & ~VMX_CHECKS_USE_MSR_VMX_PINBASED_CTRLS_HI));
+  if (vm->pin_vmexec_ctrls & ~VMX_CHECKS_USE_MSR_VMX_PINBASED_CTRLS_HI) {
+     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX pin-based controls allowed 1-settings [0x%08x]", vm->pin_vmexec_ctrls & ~VMX_CHECKS_USE_MSR_VMX_PINBASED_CTRLS_HI));
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
 
@@ -655,14 +655,14 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
      }
   }
 
-  if (! (vm->vmexec_ctrls1 & VMX_VM_EXEC_CTRL1_NMI_EXITING)) {
-     if (vm->vmexec_ctrls1 & VMX_VM_EXEC_CTRL1_VIRTUAL_NMI) {
+  if (! (vm->pin_vmexec_ctrls & VMX_PIN_BASED_VMEXEC_CTRL_NMI_EXITING)) {
+     if (vm->pin_vmexec_ctrls & VMX_PIN_BASED_VMEXEC_CTRL_VIRTUAL_NMI) {
        BX_ERROR(("VMFAIL: VMCS EXEC CTRL: misconfigured virtual NMI control"));
        return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
      }
   }
 
-  if (! (vm->vmexec_ctrls1 & VMX_VM_EXEC_CTRL1_VIRTUAL_NMI)) {
+  if (! (vm->pin_vmexec_ctrls & VMX_PIN_BASED_VMEXEC_CTRL_VIRTUAL_NMI)) {
      if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_NMI_WINDOW_EXITING) {
        BX_ERROR(("VMFAIL: VMCS EXEC CTRL: misconfigured virtual NMI control"));
        return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
@@ -702,7 +702,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
 
 #if BX_SUPPORT_VMX >= 2
      if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_VIRTUAL_INT_DELIVERY) {
-       if (! PIN_VMEXIT(VMX_VM_EXEC_CTRL1_EXTERNAL_INTERRUPT_VMEXIT)) {
+       if (! PIN_VMEXIT(VMX_PIN_BASED_VMEXEC_CTRL_EXTERNAL_INTERRUPT_VMEXIT)) {
          BX_ERROR(("VMFAIL: VMCS EXEC CTRL: virtual interrupt delivery must be set together with external interrupt exiting"));
          return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
        }
@@ -883,7 +883,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
   }
 
 #if BX_SUPPORT_VMX >= 2
-  if ((~vm->vmexec_ctrls1 & VMX_VM_EXEC_CTRL1_VMX_PREEMPTION_TIMER_VMEXIT) && (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_STORE_VMX_PREEMPTION_TIMER)) {
+  if ((~vm->pin_vmexec_ctrls & VMX_PIN_BASED_VMEXEC_CTRL_VMX_PREEMPTION_TIMER_VMEXIT) && (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_STORE_VMX_PREEMPTION_TIMER)) {
      BX_ERROR(("VMFAIL: save_VMX_preemption_timer VMEXIT control is set but VMX_preemption_timer VMEXEC control is clear"));
      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
@@ -998,7 +998,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
          }
 /*
          // injecting NMI
-         if (vm->vmexec_ctrls1 & VMX_VM_EXEC_CTRL1_VIRTUAL_NMI) {
+         if (vm->pin_vmexec_ctrls & VMX_PIN_BASED_VMEXEC_CTRL_VIRTUAL_NMI) {
            if (guest.interruptibility_state & BX_VMX_INTERRUPTS_BLOCKED_NMI_BLOCKED) {
              BX_ERROR(("VMFAIL: VMENTRY injected NMI vector when blocked by NMI in interruptibility state", vector));
              return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
@@ -2165,7 +2165,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 
   unmask_event(BX_EVENT_VMX_VIRTUAL_NMI | BX_EVENT_NMI);
   if (guest.interruptibility_state & BX_VMX_INTERRUPTS_BLOCKED_NMI_BLOCKED) {
-    if (vm->vmexec_ctrls1 & VMX_VM_EXEC_CTRL1_VIRTUAL_NMI)
+    if (vm->pin_vmexec_ctrls & VMX_PIN_BASED_VMEXEC_CTRL_VIRTUAL_NMI)
       mask_event(BX_EVENT_VMX_VIRTUAL_NMI);
     else
       mask_event(BX_EVENT_NMI);
@@ -2227,7 +2227,7 @@ void BX_CPU_C::VMenterInjectEvents(void)
       break;
 
     case BX_NMI:
-      if (vm->vmexec_ctrls1 & VMX_VM_EXEC_CTRL1_VIRTUAL_NMI)
+      if (vm->pin_vmexec_ctrls & VMX_PIN_BASED_VMEXEC_CTRL_VIRTUAL_NMI)
         mask_event(BX_EVENT_VMX_VIRTUAL_NMI);
       else
         mask_event(BX_EVENT_NMI);
@@ -2498,7 +2498,7 @@ void BX_CPU_C::VMexitSaveGuestState(Bit32u reason)
   // "VM exits that end outside system-management mode (SMM) save bit 2 (blocking by SMI)
   //  as 0 regardless of the state of such blocking before the VM exit."
 
-  if (vm->vmexec_ctrls1 & VMX_VM_EXEC_CTRL1_VIRTUAL_NMI) {
+  if (vm->pin_vmexec_ctrls & VMX_PIN_BASED_VMEXEC_CTRL_VIRTUAL_NMI) {
     if (is_masked_event(BX_EVENT_VMX_VIRTUAL_NMI))
       interruptibility_state |= BX_VMX_INTERRUPTS_BLOCKED_NMI_BLOCKED;
   }
@@ -3175,7 +3175,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
     BX_CPU_THIS_PTR tsc_offset = 0;
 
 #if BX_SUPPORT_VMX >= 2
-  if (PIN_VMEXIT(VMX_VM_EXEC_CTRL1_VMX_PREEMPTION_TIMER_VMEXIT)) {
+  if (PIN_VMEXIT(VMX_PIN_BASED_VMEXEC_CTRL_VMX_PREEMPTION_TIMER_VMEXIT)) {
     Bit32u timer_value = VMread32(VMCS_32BIT_GUEST_PREEMPTION_TIMER_VALUE);
     if (timer_value == 0) {
       signal_event(BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED);
@@ -4014,7 +4014,7 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
 
   bx_list_c *vmexec_ctrls = new bx_list_c(vmcache, "VMEXEC_CTRLS");
 
-  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vmexec_ctrls1, BX_CPU_THIS_PTR vmcs.vmexec_ctrls1);
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, pin_vmexec_ctrls, BX_CPU_THIS_PTR vmcs.pin_vmexec_ctrls);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vmexec_ctrls2, BX_CPU_THIS_PTR vmcs.vmexec_ctrls2);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vmexec_ctrls3, BX_CPU_THIS_PTR vmcs.vmexec_ctrls3);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vmexec_ctrls4, BX_CPU_THIS_PTR vmcs.vmexec_ctrls4);

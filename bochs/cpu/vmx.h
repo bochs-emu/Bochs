@@ -724,16 +724,16 @@ typedef struct bx_VMCS
   // VM-Execution Control Fields
   //
 
-#define VMX_VM_EXEC_CTRL1_EXTERNAL_INTERRUPT_VMEXIT   (1 << 0)
-#define VMX_VM_EXEC_CTRL1_NMI_EXITING                 (1 << 3)
-#define VMX_VM_EXEC_CTRL1_VIRTUAL_NMI                 (1 << 5) /* Virtual NMI */
-#define VMX_VM_EXEC_CTRL1_VMX_PREEMPTION_TIMER_VMEXIT (1 << 6) /* VMX preemption timer */
-#define VMX_VM_EXEC_CTRL1_PROCESS_POSTED_INTERRUPTS   (1 << 7) /* Posted Interrupts (not implemented) */
+#define VMX_PIN_BASED_VMEXEC_CTRL_EXTERNAL_INTERRUPT_VMEXIT   (1 << 0)
+#define VMX_PIN_BASED_VMEXEC_CTRL_NMI_EXITING                 (1 << 3)
+#define VMX_PIN_BASED_VMEXEC_CTRL_VIRTUAL_NMI                 (1 << 5) /* Virtual NMI */
+#define VMX_PIN_BASED_VMEXEC_CTRL_VMX_PREEMPTION_TIMER_VMEXIT (1 << 6) /* VMX preemption timer */
+#define VMX_PIN_BASED_VMEXEC_CTRL_PROCESS_POSTED_INTERRUPTS   (1 << 7) /* Posted Interrupts (not implemented) */
 
-#define VMX_VM_EXEC_CTRL1_SUPPORTED_BITS \
+#define VMX_PIN_BASED_VMEXEC_CTRL_SUPPORTED_BITS \
     (BX_CPU_THIS_PTR vmx_cap.vmx_pin_vmexec_ctrl_supported_bits)
 
-   Bit32u vmexec_ctrls1;
+   Bit32u pin_vmexec_ctrls;
 
 #define VMX_VM_EXEC_CTRL2_INTERRUPT_WINDOW_VMEXIT   (1 << 2)
 #define VMX_VM_EXEC_CTRL2_TSC_OFFSET                (1 << 3)
@@ -959,11 +959,13 @@ typedef struct bx_VMCS
 
 } VMCS_CACHE;
 
-#define PIN_VMEXIT(ctrl) (BX_CPU_THIS_PTR vmcs.vmexec_ctrls1 & (ctrl))
-#define     VMEXIT(ctrl) (BX_CPU_THIS_PTR vmcs.vmexec_ctrls2 & (ctrl))
+#define PIN_VMEXIT(ctrl) (BX_CPU_THIS_PTR vmcs.pin_vmexec_ctrls & (ctrl))
 
+#define PRIMARY_VMEXEC_CONTROL(ctrl)   (BX_CPU_THIS_PTR vmcs.vmexec_ctrls2 & (ctrl))
 #define SECONDARY_VMEXEC_CONTROL(ctrl) (BX_CPU_THIS_PTR vmcs.vmexec_ctrls3 & (ctrl))
 #define TERTIARY_VMEXEC_CONTROL(ctrl)  (BX_CPU_THIS_PTR vmcs.vmexec_ctrls4 & (ctrl))
+
+#define VMEXIT(ctrl) PRIMARY_VMEXEC_CONTROL(ctrl)
 
 const Bit32u BX_VMX_INTERRUPTS_BLOCKED_BY_STI      = (1 << 0);
 const Bit32u BX_VMX_INTERRUPTS_BLOCKED_BY_MOV_SS   = (1 << 1);
@@ -1034,7 +1036,7 @@ const Bit32u VMX_MSR_VMX_PINBASED_CTRLS_LO = 0x00000016;
 // Allowed 1-settings: VMentry fail if a bit is '1 in pin-based vmexec controls
 // but set to '0 in this MSR.
 #define VMX_MSR_VMX_PINBASED_CTRLS_HI \
-       (VMX_VM_EXEC_CTRL1_SUPPORTED_BITS | VMX_MSR_VMX_PINBASED_CTRLS_LO)
+       (VMX_PIN_BASED_VMEXEC_CTRL_SUPPORTED_BITS | VMX_MSR_VMX_PINBASED_CTRLS_LO)
 
 #define VMX_MSR_VMX_PINBASED_CTRLS \
    GET64_FROM_HI32_LO32(VMX_MSR_VMX_PINBASED_CTRLS_HI, VMX_MSR_VMX_PINBASED_CTRLS_LO)

@@ -612,13 +612,13 @@ void BX_CPU_C::init_pin_based_vmexec_ctrls(void)
   //   [07] Process Posted interrupts
 
   cap->vmx_pin_vmexec_ctrl_supported_bits =
-       VMX_VM_EXEC_CTRL1_EXTERNAL_INTERRUPT_VMEXIT |
-       VMX_VM_EXEC_CTRL1_NMI_EXITING;
+       VMX_PIN_BASED_VMEXEC_CTRL_EXTERNAL_INTERRUPT_VMEXIT |
+       VMX_PIN_BASED_VMEXEC_CTRL_NMI_EXITING;
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_VIRTUAL_NMI))
-    cap->vmx_pin_vmexec_ctrl_supported_bits |= VMX_VM_EXEC_CTRL1_VIRTUAL_NMI;
+    cap->vmx_pin_vmexec_ctrl_supported_bits |= VMX_PIN_BASED_VMEXEC_CTRL_VIRTUAL_NMI;
 #if BX_SUPPORT_VMX >= 2
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_PREEMPTION_TIMER))
-    cap->vmx_pin_vmexec_ctrl_supported_bits |= VMX_VM_EXEC_CTRL1_VMX_PREEMPTION_TIMER_VMEXIT;
+    cap->vmx_pin_vmexec_ctrl_supported_bits |= VMX_PIN_BASED_VMEXEC_CTRL_VMX_PREEMPTION_TIMER_VMEXIT;
 #endif
 }
 
