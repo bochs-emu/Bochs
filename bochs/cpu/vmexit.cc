@@ -167,12 +167,12 @@ void BX_CPU_C::VMexit_PAUSE(void)
 {
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
 
-  if (VMEXIT(VMX_VM_EXEC_CTRL2_PAUSE_VMEXIT)) {
+  if (VMEXIT(VMX_VM_EXEC_CTRL1_PAUSE_VMEXIT)) {
     VMexit(VMX_VMEXIT_PAUSE, 0);
   }
 
 #if BX_SUPPORT_VMX >= 2
-  if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_PAUSE_LOOP_VMEXIT) && CPL == 0) {
+  if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_PAUSE_LOOP_VMEXIT) && CPL == 0) {
     VMX_PLE *ple = &BX_CPU_THIS_PTR vmcs.ple;
     Bit64u currtime = bx_pc_system.time_ticks();
     if ((currtime - ple->last_pause_time) > ple->pause_loop_exiting_gap) {
@@ -323,7 +323,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_MSR(unsigned op, Bit32u msr)
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
 
   bool vmexit = false;
-  if (! VMEXIT(VMX_VM_EXEC_CTRL2_MSR_BITMAPS)) vmexit = true;
+  if (! VMEXIT(VMX_VM_EXEC_CTRL1_MSR_BITMAPS)) vmexit = true;
   else {
     VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
     Bit8u field;
@@ -372,7 +372,7 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_IO(bxInstruction_c *i, unsigned por
 
   bool vmexit = false;
 
-  if (VMEXIT(VMX_VM_EXEC_CTRL2_IO_BITMAPS)) {
+  if (VMEXIT(VMX_VM_EXEC_CTRL1_IO_BITMAPS)) {
      // always VMEXIT on port "wrap around" case
      if ((port + len) > 0x10000) vmexit = true;
      else {
@@ -407,7 +407,7 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_IO(bxInstruction_c *i, unsigned por
         if (combined_bitmap & mask) vmexit = true;
      }
   }
-  else if (VMEXIT(VMX_VM_EXEC_CTRL2_IO_VMEXIT)) vmexit = true;
+  else if (VMEXIT(VMX_VM_EXEC_CTRL1_IO_VMEXIT)) vmexit = true;
 
   if (vmexit) {
      BX_DEBUG(("VMEXIT: I/O port 0x%04x", port));
@@ -568,7 +568,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_CR3_Read(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
 
-  if (VMEXIT(VMX_VM_EXEC_CTRL2_CR3_READ_VMEXIT)) {
+  if (VMEXIT(VMX_VM_EXEC_CTRL1_CR3_READ_VMEXIT)) {
     BX_DEBUG(("VMEXIT: CR3 read"));
     Bit64u qualification = 3 | (VMX_VMEXIT_CR_ACCESS_CR_READ << 4) | (i->dst() << 8);
     VMexit(VMX_VMEXIT_CR_ACCESS, qualification);
@@ -581,7 +581,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_CR3_Write(bxInstruction_c *i, bx_ad
 
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
 
-  if (VMEXIT(VMX_VM_EXEC_CTRL2_CR3_WRITE_VMEXIT)) {
+  if (VMEXIT(VMX_VM_EXEC_CTRL1_CR3_WRITE_VMEXIT)) {
     for (unsigned n=0; n < vm->vm_cr3_target_cnt; n++) {
       if (vm->vm_cr3_target_value[n] == val) return;
     }
@@ -613,7 +613,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_CR8_Read(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
 
-  if (VMEXIT(VMX_VM_EXEC_CTRL2_CR8_READ_VMEXIT)) {
+  if (VMEXIT(VMX_VM_EXEC_CTRL1_CR8_READ_VMEXIT)) {
     BX_DEBUG(("VMEXIT: CR8 read"));
     Bit64u qualification = 8 | (VMX_VMEXIT_CR_ACCESS_CR_READ << 4) | (i->dst() << 8);
     VMexit(VMX_VMEXIT_CR_ACCESS, qualification);
@@ -624,7 +624,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_CR8_Write(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
 
-  if (VMEXIT(VMX_VM_EXEC_CTRL2_CR8_WRITE_VMEXIT)) {
+  if (VMEXIT(VMX_VM_EXEC_CTRL1_CR8_WRITE_VMEXIT)) {
     BX_DEBUG(("VMEXIT: CR8 write"));
     Bit64u qualification = 8 | (i->src() << 8);
     VMexit(VMX_VMEXIT_CR_ACCESS, qualification);
@@ -646,7 +646,7 @@ void BX_CPU_C::VMexit_DR_Access(unsigned read, unsigned dr, unsigned reg)
 {
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
 
-  if (VMEXIT(VMX_VM_EXEC_CTRL2_DRx_ACCESS_VMEXIT))
+  if (VMEXIT(VMX_VM_EXEC_CTRL1_DRx_ACCESS_VMEXIT))
   {
     BX_DEBUG(("VMEXIT: DR%d %s access", dr, read ? "READ" : "WRITE"));
 
@@ -661,7 +661,7 @@ void BX_CPU_C::VMexit_DR_Access(unsigned read, unsigned dr, unsigned reg)
 #if BX_SUPPORT_VMX >= 2
 Bit16u BX_CPU_C::VMX_Get_Current_VPID(void)
 {
-  if (! BX_CPU_THIS_PTR in_vmx_guest || !SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VPID_ENABLE))
+  if (! BX_CPU_THIS_PTR in_vmx_guest || !SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VPID_ENABLE))
     return 0;
 
   return BX_CPU_THIS_PTR vmcs.vpid;
@@ -673,7 +673,7 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::Vmexit_Vmread(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
 
-  if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VMCS_SHADOWING)) return true;
+  if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VMCS_SHADOWING)) return true;
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
@@ -700,7 +700,7 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::Vmexit_Vmwrite(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
 
-  if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VMCS_SHADOWING)) return true;
+  if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VMCS_SHADOWING)) return true;
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {

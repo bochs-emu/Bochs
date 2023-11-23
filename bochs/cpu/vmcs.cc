@@ -659,50 +659,50 @@ void BX_CPU_C::init_primary_proc_based_vmexec_ctrls(void)
   //      [31] Secondary proc-based vmexec controls
 
   cap->vmx_proc_vmexec_ctrl_supported_bits =
-       VMX_VM_EXEC_CTRL2_INTERRUPT_WINDOW_VMEXIT |
-       VMX_VM_EXEC_CTRL2_TSC_OFFSET |
-       VMX_VM_EXEC_CTRL2_HLT_VMEXIT |
-       VMX_VM_EXEC_CTRL2_INVLPG_VMEXIT |
-       VMX_VM_EXEC_CTRL2_RDPMC_VMEXIT |
-       VMX_VM_EXEC_CTRL2_RDTSC_VMEXIT |
-       VMX_VM_EXEC_CTRL2_DRx_ACCESS_VMEXIT |
-       VMX_VM_EXEC_CTRL2_IO_VMEXIT |
-       VMX_VM_EXEC_CTRL2_IO_BITMAPS |
-       VMX_VM_EXEC_CTRL2_MSR_BITMAPS |
-       VMX_VM_EXEC_CTRL2_PAUSE_VMEXIT;
+       VMX_VM_EXEC_CTRL1_INTERRUPT_WINDOW_VMEXIT |
+       VMX_VM_EXEC_CTRL1_TSC_OFFSET |
+       VMX_VM_EXEC_CTRL1_HLT_VMEXIT |
+       VMX_VM_EXEC_CTRL1_INVLPG_VMEXIT |
+       VMX_VM_EXEC_CTRL1_RDPMC_VMEXIT |
+       VMX_VM_EXEC_CTRL1_RDTSC_VMEXIT |
+       VMX_VM_EXEC_CTRL1_DRx_ACCESS_VMEXIT |
+       VMX_VM_EXEC_CTRL1_IO_VMEXIT |
+       VMX_VM_EXEC_CTRL1_IO_BITMAPS |
+       VMX_VM_EXEC_CTRL1_MSR_BITMAPS |
+       VMX_VM_EXEC_CTRL1_PAUSE_VMEXIT;
 
 #if BX_SUPPORT_MONITOR_MWAIT
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_MONITOR_MWAIT)) {
     cap->vmx_proc_vmexec_ctrl_supported_bits |=
-       VMX_VM_EXEC_CTRL2_MWAIT_VMEXIT | VMX_VM_EXEC_CTRL2_MONITOR_VMEXIT;
+       VMX_VM_EXEC_CTRL1_MWAIT_VMEXIT | VMX_VM_EXEC_CTRL1_MONITOR_VMEXIT;
   }
 #endif
 #if BX_SUPPORT_X86_64
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_TPR_SHADOW)) {
-    cap->vmx_proc_vmexec_ctrl_supported_bits |= VMX_VM_EXEC_CTRL2_TPR_SHADOW;
+    cap->vmx_proc_vmexec_ctrl_supported_bits |= VMX_VM_EXEC_CTRL1_TPR_SHADOW;
     if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_LONG_MODE))
       cap->vmx_proc_vmexec_ctrl_supported_bits |=
-          VMX_VM_EXEC_CTRL2_CR8_WRITE_VMEXIT | VMX_VM_EXEC_CTRL2_CR8_READ_VMEXIT;
+          VMX_VM_EXEC_CTRL1_CR8_WRITE_VMEXIT | VMX_VM_EXEC_CTRL1_CR8_READ_VMEXIT;
   }
 #endif
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_VIRTUAL_NMI))
-    cap->vmx_proc_vmexec_ctrl_supported_bits |= VMX_VM_EXEC_CTRL2_NMI_WINDOW_EXITING;
+    cap->vmx_proc_vmexec_ctrl_supported_bits |= VMX_VM_EXEC_CTRL1_NMI_WINDOW_EXITING;
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_MONITOR_TRAP_FLAG))
-    cap->vmx_proc_vmexec_ctrl_supported_bits |= VMX_VM_EXEC_CTRL2_MONITOR_TRAP_FLAG;
+    cap->vmx_proc_vmexec_ctrl_supported_bits |= VMX_VM_EXEC_CTRL1_MONITOR_TRAP_FLAG;
 #if BX_SUPPORT_VMX >= 2
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT)) {
     cap->vmx_proc_vmexec_ctrl_supported_bits |=
-        VMX_VM_EXEC_CTRL2_CR3_WRITE_VMEXIT | VMX_VM_EXEC_CTRL2_CR3_READ_VMEXIT;
+        VMX_VM_EXEC_CTRL1_CR3_WRITE_VMEXIT | VMX_VM_EXEC_CTRL1_CR3_READ_VMEXIT;
   }
 #endif
 
   // enable secondary vm exec controls if there are secondary proc-based vmexec controls present
   if (cap->vmx_vmexec_ctrl2_supported_bits != 0)
-    cap->vmx_proc_vmexec_ctrl_supported_bits |= VMX_VM_EXEC_CTRL2_SECONDARY_CONTROLS;
+    cap->vmx_proc_vmexec_ctrl_supported_bits |= VMX_VM_EXEC_CTRL1_SECONDARY_CONTROLS;
 
   // enable tertiary vm exec controls if there are tertiary proc-based vmexec controls present
   if (cap->vmx_vmexec_ctrl3_supported_bits != 0)
-    cap->vmx_proc_vmexec_ctrl_supported_bits |= VMX_VM_EXEC_CTRL2_TERTIARY_CONTROLS;
+    cap->vmx_proc_vmexec_ctrl_supported_bits |= VMX_VM_EXEC_CTRL1_TERTIARY_CONTROLS;
 }
 
 void BX_CPU_C::init_secondary_proc_based_vmexec_ctrls(void)
@@ -742,79 +742,79 @@ void BX_CPU_C::init_secondary_proc_based_vmexec_ctrls(void)
 
 #if BX_SUPPORT_X86_64
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_APIC_VIRTUALIZATION))
-    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES;
+    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL2_VIRTUALIZE_APIC_ACCESSES;
 #endif
 #if BX_SUPPORT_VMX >= 2
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT))
-    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_EPT_ENABLE;
+    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL2_EPT_ENABLE;
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_DESCRIPTOR_TABLE_EXIT))
-    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_DESCRIPTOR_TABLE_VMEXIT;
+    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL2_DESCRIPTOR_TABLE_VMEXIT;
 #endif
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_RDTSCP))
-    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_RDTSCP;
+    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL2_RDTSCP;
 #if BX_SUPPORT_VMX >= 2
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_X2APIC_VIRTUALIZATION))
-    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_VIRTUALIZE_X2APIC_MODE;
+    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL2_VIRTUALIZE_X2APIC_MODE;
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_VPID))
-    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_VPID_ENABLE;
+    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL2_VPID_ENABLE;
 #endif
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_WBINVD_VMEXIT))
-    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_WBINVD_VMEXIT;
+    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL2_WBINVD_VMEXIT;
 #if BX_SUPPORT_VMX >= 2
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_UNRESTRICTED_GUEST))
-    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_UNRESTRICTED_GUEST;
+    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL2_UNRESTRICTED_GUEST;
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_VINTR_DELIVERY))
-    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_REGISTERS | VMX_VM_EXEC_CTRL3_VIRTUAL_INT_DELIVERY;
+    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL2_VIRTUALIZE_APIC_REGISTERS | VMX_VM_EXEC_CTRL2_VIRTUAL_INT_DELIVERY;
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_PAUSE_LOOP_EXITING))
-    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_PAUSE_LOOP_VMEXIT;
+    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL2_PAUSE_LOOP_VMEXIT;
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_INVPCID))
-    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_INVPCID;
+    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL2_INVPCID;
 #endif
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_RDRAND))
-    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_RDRAND_VMEXIT;
+    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL2_RDRAND_VMEXIT;
 #if BX_SUPPORT_VMX >= 2
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_VMCS_SHADOWING))
-    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_VMCS_SHADOWING;
+    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL2_VMCS_SHADOWING;
 #endif
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_RDSEED))
-    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_RDSEED_VMEXIT;
+    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL2_RDSEED_VMEXIT;
 #if BX_SUPPORT_VMX >= 2
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_PML)) {
     if (! BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT))
       BX_PANIC(("VMX PML feature requires EPT support !"));
-    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_PML_ENABLE;
+    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL2_PML_ENABLE;
   }
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT_EXCEPTION)) {
     if (! BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPTP_SWITCHING))
       BX_PANIC(("#VE exception feature requires EPTP switching support !"));
-    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_EPT_VIOLATION_EXCEPTION;
+    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL2_EPT_VIOLATION_EXCEPTION;
   }
 #endif
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_XSAVES)) {
-    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_XSAVES_XRSTORS;
+    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL2_XSAVES_XRSTORS;
   }
 #endif
 #if BX_SUPPORT_VMX >= 2
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_MBE_CONTROL)) {
     if (! BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT))
       BX_PANIC(("VMX MBE feature requires EPT support !"));
-    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_MBE_CTRL;
+    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL2_MBE_CTRL;
   }
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_SPP)) {
     if (! BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT))
       BX_PANIC(("VMX SPP feature requires EPT support !"));
-    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_SUBPAGE_WR_PROTECT_CTRL;
+    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL2_SUBPAGE_WR_PROTECT_CTRL;
   }
 #endif
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_TSC_SCALING)) {
-    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_TSC_SCALING;
+    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL2_TSC_SCALING;
   }
 
 #if BX_SUPPORT_VMX >= 2
   // enable vm functions secondary vmexec control if there are supported vmfunctions
   if (cap->vmx_vmfunc_supported_bits != 0)
-    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_VMFUNC_ENABLE;
+    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL2_VMFUNC_ENABLE;
 #endif
 }
 

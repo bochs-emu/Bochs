@@ -141,7 +141,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX >= 2
     if (BX_CPU_THIS_PTR in_vmx_guest) {
-      if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_XSAVES_XRSTORS)) {
+      if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_XSAVES_XRSTORS)) {
         BX_ERROR(("%s in VMX guest: not allowed to use instruction !", i->getIaOpcodeNameShort()));
         exception(BX_UD_EXCEPTION, 0);
       }
@@ -244,7 +244,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX >= 2
     if (BX_CPU_THIS_PTR in_vmx_guest) {
-      if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_XSAVES_XRSTORS)) {
+      if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_XSAVES_XRSTORS)) {
         BX_ERROR(("%s in VMX guest: not allowed to use instruction !", i->getIaOpcodeNameShort()));
         exception(BX_UD_EXCEPTION, 0);
       }

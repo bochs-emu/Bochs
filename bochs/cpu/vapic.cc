@@ -34,7 +34,7 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::is_virtual_apic_page(bx_phy_address paddr)
 {
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
-    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES))
+    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_APIC_ACCESSES))
       if (PPFOf(paddr) == vm->apic_access_page) return true;
   }
 
@@ -56,7 +56,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::virtual_apic_access_vmexit(unsigned offset
   }
 
   // access is not instruction fetch because cpu::prefetch will crash them
-  if (! VMEXIT(VMX_VM_EXEC_CTRL2_TPR_SHADOW) || len > 4 || offset >= 0x400)
+  if (! VMEXIT(VMX_VM_EXEC_CTRL1_TPR_SHADOW) || len > 4 || offset >= 0x400)
     return true;
 
   BX_CPU_THIS_PTR vmcs.apic_access = offset;
@@ -91,7 +91,7 @@ void BX_CPU_C::VMX_Write_Virtual_X2APIC(unsigned offset, Bit64u val64)
 
 bx_phy_address BX_CPU_C::VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned len, void *data)
 {
-  BX_ASSERT(SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES));
+  BX_ASSERT(SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_APIC_ACCESSES));
 
   BX_INFO(("Virtual Apic RD 0x" FMT_ADDRX " len = %d", paddr, len));
 
@@ -102,7 +102,7 @@ bx_phy_address BX_CPU_C::VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned le
   // access is not instruction fetch because cpu::prefetch will crash them
   if (! vmexit) {
 
-    if (!SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_REGISTERS)) {
+    if (!SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_APIC_REGISTERS)) {
       // if 'Virtualize Apic Registers' control is disabled allow only aligned access to VTPR
       if (offset != BX_LAPIC_TPR) vmexit = true;
     }
@@ -174,7 +174,7 @@ bx_phy_address BX_CPU_C::VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned le
 
 void BX_CPU_C::VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *data)
 {
-  BX_ASSERT(SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES));
+  BX_ASSERT(SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_APIC_ACCESSES));
 
   BX_INFO(("Virtual Apic WR 0x" FMT_ADDRX " len = %d", paddr, len));
 
@@ -192,7 +192,7 @@ void BX_CPU_C::VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *
     }
 
 #if BX_SUPPORT_VMX >= 2
-    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUAL_INT_DELIVERY)) {
+    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUAL_INT_DELIVERY)) {
       if (offset == BX_LAPIC_EOI) {
          signal_event(BX_EVENT_VMX_VEOI_UPDATE);
       }
@@ -215,14 +215,14 @@ void BX_CPU_C::VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *
     case BX_LAPIC_TIMER_INITIAL_COUNT:
     case BX_LAPIC_TIMER_DIVIDE_CFG:
       // VMX_VMEXIT_APIC_ACCESS if the control is disabled
-      if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_REGISTERS)) break;
+      if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_APIC_REGISTERS)) break;
       // else fall through
 
     case BX_LAPIC_EOI:
     case BX_LAPIC_ICR_LO:
       // VMX_VMEXIT_APIC_ACCESS if both controls are disabled
-      if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUAL_INT_DELIVERY) &&
-          ! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_REGISTERS)) break;
+      if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUAL_INT_DELIVERY) &&
+          ! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_APIC_REGISTERS)) break;
       // else fall through
 
       // remap access to virtual apic page
@@ -280,7 +280,7 @@ void BX_CPU_C::VMX_Evaluate_Pending_Virtual_Interrupts(void)
 {
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
 
-  if (! VMEXIT(VMX_VM_EXEC_CTRL2_INTERRUPT_WINDOW_VMEXIT) && (vm->rvi >> 4) > (vm->vppr >> 4))
+  if (! VMEXIT(VMX_VM_EXEC_CTRL1_INTERRUPT_WINDOW_VMEXIT) && (vm->rvi >> 4) > (vm->vppr >> 4))
   {
     BX_INFO(("Pending Virtual Interrupt Vector 0x%x", vm->rvi));
     signal_event(BX_EVENT_PENDING_VMX_VIRTUAL_INTR);
@@ -301,7 +301,7 @@ void BX_CPU_C::VMX_TPR_Virtualization(void)
   clear_event(BX_EVENT_VMX_VTPR_UPDATE);
 
 #if BX_SUPPORT_VMX >= 2
-  if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUAL_INT_DELIVERY)) {
+  if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUAL_INT_DELIVERY)) {
     VMX_PPR_Virtualization();
     VMX_Evaluate_Pending_Virtual_Interrupts();
   }
@@ -341,7 +341,7 @@ void BX_CPU_C::VMX_EOI_Virtualization(void)
 
   clear_event(BX_EVENT_VMX_VEOI_UPDATE);
 
-  if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUAL_INT_DELIVERY))
+  if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUAL_INT_DELIVERY))
   {
     VMX_Write_Virtual_APIC(BX_LAPIC_EOI, 0);
 
@@ -410,7 +410,7 @@ void BX_CPU_C::VMX_Write_VICR(void)
 
   // reserved bits (31:20, 17:16, 13), 15 (trigger mode), 12 (delivery status), 10:8 (delivery mode) must be 0
   // destination shorthand: must be self
-  if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUAL_INT_DELIVERY) &&
+  if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUAL_INT_DELIVERY) &&
      (vicr & 0xfff3b700) == 0 && (dest_shorthand == 0x1) && vector >= 16)
   {
     VMX_Self_IPI_Virtualization(vector);
@@ -470,7 +470,7 @@ bool BX_CPU_C::Virtualize_X2APIC_Write(unsigned msr, Bit64u val_64)
   }
 
 #if BX_SUPPORT_VMX >= 2
-  if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUAL_INT_DELIVERY)) {
+  if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUAL_INT_DELIVERY)) {
     if (msr == 0x80b) {
       // EOI virtualization
       if (val_64 != 0)

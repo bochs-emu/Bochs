@@ -502,9 +502,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUALIZE_X2APIC_MODE)) {
+    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_X2APIC_MODE)) {
       if (index >= 0x800 && index <= 0x8FF) {
-        if (index == 0x808 || SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_REGISTERS)) {
+        if (index == 0x808 || SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_APIC_REGISTERS)) {
           unsigned vapic_offset = (index & 0xff) << 4;
           RAX = VMX_Read_Virtual_APIC(vapic_offset);
           RDX = VMX_Read_Virtual_APIC(vapic_offset + 4);
@@ -1198,7 +1198,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUALIZE_X2APIC_MODE)) {
+    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_X2APIC_MODE)) {
       if (Virtualize_X2APIC_Write(index, val_64))
         BX_NEXT_INSTR(i);
     }

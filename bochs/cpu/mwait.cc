@@ -75,7 +75,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX
     if (BX_CPU_THIS_PTR in_vmx_guest) {
-      if (VMEXIT(VMX_VM_EXEC_CTRL2_MONITOR_VMEXIT)) {
+      if (VMEXIT(VMX_VM_EXEC_CTRL1_MONITOR_VMEXIT)) {
         VMexit(VMX_VMEXIT_MONITOR, 0);
       }
     }
@@ -132,7 +132,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX
     if (BX_CPU_THIS_PTR in_vmx_guest) {
-      if (VMEXIT(VMX_VM_EXEC_CTRL2_MWAIT_VMEXIT)) {
+      if (VMEXIT(VMX_VM_EXEC_CTRL1_MWAIT_VMEXIT)) {
         VMexit(VMX_VMEXIT_MWAIT, BX_CPU_THIS_PTR monitor.armed);
       }
     }
@@ -189,7 +189,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
     // When "interrupt window exiting" VMX control is set MWAIT instruction
     // won't cause the processor to enter sleep state with EFLAGS.IF = 0
     if (BX_CPU_THIS_PTR in_vmx_guest) {
-      if (VMEXIT(VMX_VM_EXEC_CTRL2_INTERRUPT_WINDOW_VMEXIT) && ! BX_CPU_THIS_PTR get_IF()) {
+      if (VMEXIT(VMX_VM_EXEC_CTRL1_INTERRUPT_WINDOW_VMEXIT) && ! BX_CPU_THIS_PTR get_IF()) {
         BX_NEXT_TRACE(i);
       }
     }
