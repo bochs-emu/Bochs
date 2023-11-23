@@ -580,6 +580,12 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
     vm->vmexec_ctrls3 = VMread32(VMCS_32BIT_CONTROL_SECONDARY_VMEXEC_CONTROLS);
   else
     vm->vmexec_ctrls3 = 0;
+
+  if (VMEXIT(VMX_VM_EXEC_CTRL2_TERTIARY_CONTROLS))
+    vm->vmexec_ctrls4 = VMread64(VMCS_64BIT_CONTROL_TERTIARY_VMEXEC_CONTROLS);
+  else
+    vm->vmexec_ctrls4 = 0;
+
   vm->vm_exceptions_bitmap = VMread32(VMCS_32BIT_CONTROL_EXECUTION_BITMAP);
   vm->vm_pf_mask = VMread32(VMCS_32BIT_CONTROL_PAGE_FAULT_ERR_CODE_MASK);
   vm->vm_pf_match = VMread32(VMCS_32BIT_CONTROL_PAGE_FAULT_ERR_CODE_MATCH);
@@ -4011,6 +4017,7 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vmexec_ctrls1, BX_CPU_THIS_PTR vmcs.vmexec_ctrls1);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vmexec_ctrls2, BX_CPU_THIS_PTR vmcs.vmexec_ctrls2);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vmexec_ctrls3, BX_CPU_THIS_PTR vmcs.vmexec_ctrls3);
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vmexec_ctrls4, BX_CPU_THIS_PTR vmcs.vmexec_ctrls4);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vm_exceptions_bitmap, BX_CPU_THIS_PTR vmcs.vm_exceptions_bitmap);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, tsc_multiplier, BX_CPU_THIS_PTR vmcs.tsc_multiplier);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vm_pf_mask, BX_CPU_THIS_PTR vmcs.vm_pf_mask);

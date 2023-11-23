@@ -62,20 +62,35 @@ void VMCS_Mapping::init_generic_mapping()
   vmcs_launch_state_field_offset = VMCS_LAUNCH_STATE_FIELD_ADDR;
 
   // try to build generic VMCS map
-  // 16 types, 48 encodings (0x30), 4 bytes each field => 3072 bytes
-  // reserve VMCS_DATA_OFFSET bytes in the beginning for special (hidden) VMCS fields
-  for (unsigned type=0; type<16; type++) {
-    for (unsigned field=0; field < VMX_HIGHEST_VMCS_ENCODING; field++) {
-       Bit32u encoding = vmcs_encoding(type, field);
-       if (vmcs_map[type][field] != 0xffffffff) {
+
+  static const unsigned encodings_per_width[4] = {
+    VMX_HIGHEST_16BIT_VMCS_ENCODING,
+    VMX_HIGHEST_64BIT_VMCS_ENCODING,
+    VMX_HIGHEST_32BIT_VMCS_ENCODING,
+    VMX_HIGHEST_NATURAL_WIDTH_VMCS_ENCODING
+  };
+
+  unsigned offset = VMCS_DATA_OFFSET;
+
+  for (unsigned encoding_width=0; encoding_width<4; encoding_width++) {
+    // start from 4 types of 16-bit wide VMCS encodings, 32 encodings total, allocate 4 bytes for each => 512 bytes
+    // then 64-bit encodings: 4 types, 80 encodings (0x50), 4 bytes each field => 1280 bytes
+    // then 32-bit encodings: 4 types, 48 encodings (0x30), 4 bytes each field =>  768 bytes
+    // then Natural-width encodings: 4 types, 48 encodings (0x30), 4 bytes each field => 768 bytes
+    for (unsigned encoding_class=0; encoding_class<4; encoding_class++) {
+      for (unsigned field=0; field < encodings_per_width[encoding_width]; field++) {
+        Bit32u type = encoding_width * 4 + encoding_class;
+        Bit32u encoding = vmcs_encoding(type, field);
+        if (vmcs_map[type][field] != 0xffffffff) {
           BX_PANIC(("VMCS type %d field %d (encoding = 0x%08x) is already initialized", type, field, encoding));
-       }
-       // allocate 64 fields (4 byte each) per type (even more than 48 which is required now)
-       vmcs_map[type][field] = VMCS_DATA_OFFSET + (type*64 + field) * 4;
-       if(vmcs_map[type][field] >= VMX_VMCS_AREA_SIZE) {
-          BX_PANIC(("VMCS type %d field %d (encoding = 0x%08x) is out of VMCS boundaries", type, field, encoding));
-       }
-       BX_DEBUG(("VMCS field 0x%08x located at 0x%08x", encoding, vmcs_map[type][field]));
+        }
+        vmcs_map[type][field] = offset + field*4;
+        if(vmcs_map[type][field] >= (VMX_VMCS_AREA_SIZE-4)) {
+          BX_PANIC(("VMCS type %d field %d (encoding = 0x%08x) is out of VMCS boundaries at 0x%08x", type, field, encoding, vmcs_map[type][field]));
+        }
+        BX_DEBUG(("VMCS field 0x%08x located at 0x%08x", encoding, vmcs_map[type][field]));
+      }
+      offset += 4*encodings_per_width[encoding_width];
     }
   }
 }
@@ -520,6 +535,7 @@ void BX_CPU_C::init_vmx_capabilities(void)
   init_vmfunc_capabilities();
 #endif
   init_pin_based_vmexec_ctrls();
+  init_tertiary_proc_based_vmexec_ctrls(); // must initialize in reverse order
   init_secondary_proc_based_vmexec_ctrls();
   init_primary_proc_based_vmexec_ctrls();
   init_vmexit_ctrls();
@@ -626,6 +642,7 @@ void BX_CPU_C::init_primary_proc_based_vmexec_ctrls(void)
   // 1 [14-13] Reserved (must be '1)
   // 1    [15] CR3 Write Exiting (legacy must be '1, introduced with EPT support)
   // 1    [16] CR3 Read Exiting (legacy must be '1, introduced with EPT support)
+  // 0    [17] Tertiary proc-based vmexec controls
   // 0 [18-17] Reserved (must be '0)
   //      [19] CR8 Write Exiting (require TPR Shadow support, require x86-64 support)
   //      [20] CR8 Read Exiting (require TPR Shadow support, require x86-64 support)
@@ -682,6 +699,10 @@ void BX_CPU_C::init_primary_proc_based_vmexec_ctrls(void)
   // enable secondary vm exec controls if there are secondary proc-based vmexec controls present
   if (cap->vmx_vmexec_ctrl2_supported_bits != 0)
     cap->vmx_proc_vmexec_ctrl_supported_bits |= VMX_VM_EXEC_CTRL2_SECONDARY_CONTROLS;
+
+  // enable tertiary vm exec controls if there are tertiary proc-based vmexec controls present
+  if (cap->vmx_vmexec_ctrl3_supported_bits != 0)
+    cap->vmx_proc_vmexec_ctrl_supported_bits |= VMX_VM_EXEC_CTRL2_TERTIARY_CONTROLS;
 }
 
 void BX_CPU_C::init_secondary_proc_based_vmexec_ctrls(void)
@@ -795,6 +816,23 @@ void BX_CPU_C::init_secondary_proc_based_vmexec_ctrls(void)
   if (cap->vmx_vmfunc_supported_bits != 0)
     cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL3_VMFUNC_ENABLE;
 #endif
+}
+
+void BX_CPU_C::init_tertiary_proc_based_vmexec_ctrls(void)
+{
+  struct bx_VMX_Cap *cap = &BX_CPU_THIS_PTR vmx_cap;
+
+  // tertiary proc based vm exec controls
+  // -----------------------------------------------------------
+  //   [00] LOADIWKEY exiting (KeyLoker)
+  //   [01] Enable HLAT
+  //   [02] EPT Paging Write control
+  //   [03] Guest Paging verification
+  //   [04] IPI Virtualization
+  //    ...
+  //   [07] Virtualize IA32_SPEC_CTRL
+
+  cap->vmx_vmexec_ctrl3_supported_bits = 0;
 }
 
 void BX_CPU_C::init_vmexit_ctrls(void)

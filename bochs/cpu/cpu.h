@@ -4833,8 +4833,9 @@ public: // for now...
   BX_SMF void init_vmfunc_capabilities(void);
 #endif
   BX_SMF void init_pin_based_vmexec_ctrls(void);
-  BX_SMF void init_secondary_proc_based_vmexec_ctrls(void);
   BX_SMF void init_primary_proc_based_vmexec_ctrls(void);
+  BX_SMF void init_secondary_proc_based_vmexec_ctrls(void);
+  BX_SMF void init_tertiary_proc_based_vmexec_ctrls(void);
   BX_SMF void init_vmexit_ctrls(void);
   BX_SMF void init_vmentry_ctrls(void);
   BX_SMF void init_VMCS(void);
