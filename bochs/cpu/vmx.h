@@ -204,6 +204,7 @@ const Bit64u VMX_VMFUNC_EPTP_SWITCHING_MASK = (BX_CONST64(1) << VMX_VMFUNC_EPTP_
 #define VMCS_16BIT_CONTROL_VPID                            0x00000000 /* VPID */
 #define VMCS_16BIT_CONTROL_POSTED_INTERRUPT_VECTOR         0x00000002 /* Posted Interrupts - not implememted yet */
 #define VMCS_16BIT_CONTROL_EPTP_INDEX                      0x00000004 /* #VE Exception */
+#define VMCS_16BIT_CONTROL_LAST_PID_POINTER_INDEX          0x00000008 /* IPI Virtualization */
 
 /* VMCS 16-bit guest-state fields */
 /* binary 0000_10xx_xxxx_xxx0 */
@@ -297,7 +298,7 @@ const Bit64u VMX_VMFUNC_EPTP_SWITCHING_MASK = (BX_CONST64(1) << VMX_VMFUNC_EPTP_
 #define VMCS_64BIT_CONTROL_PCONFIG_EXITING_BITMAP_HI          0x0000203F
 #define VMCS_64BIT_CONTROL_HLAT_POINTER                       0x00002040 /* HLAT (not implemented) */
 #define VMCS_64BIT_CONTROL_HLAT_POINTER_HI                    0x00002041
-#define VMCS_64BIT_CONTROL_PID_POINTER_TABLE_ADDRESS          0x00002042 /* Posted interrupts (not implemented) */
+#define VMCS_64BIT_CONTROL_PID_POINTER_TABLE_ADDRESS          0x00002042 /* IPI Virtualization (not implemented) */
 #define VMCS_64BIT_CONTROL_PID_POINTER_TABLE_ADDRESS_HI       0x00002043
 #define VMCS_64BIT_CONTROL_SECONDARY_VMEXIT_CONTROLS          0x00002044
 #define VMCS_64BIT_CONTROL_SECONDARY_VMEXIT_CONTROLS_HI       0x00002045
