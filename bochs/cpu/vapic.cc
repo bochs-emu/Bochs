@@ -270,7 +270,7 @@ BX_CPP_INLINE Bit8u BX_CPU_C::vapic_clear_and_find_highest_priority_int(unsigned
 
   for (n = 7; n >= 0; n--) {
     if (! arr[n]) continue;
-    return (n * 32) + (31 - lzcntd(arr[n]));
+    return (n * 32) + most_significant_bitd(arr[n]);
   }
 
   return 0;
