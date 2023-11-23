@@ -51,8 +51,9 @@ void BX_CPU_C::deliver_UINTR()
   push_64(tmp_RSP);
   push_64(read_eflags());
   push_64(RIP);
+
+  BX_ASSERT(BX_CPU_THIS_PTR uintr.uirr != 0);
   unsigned vector = most_significant_bitq(BX_CPU_THIS_PTR uintr.uirr); // find #most significant bit in UIRR
-  // expected to be not 0
   push_64(vector);
 
 #if BX_SUPPORT_CET
