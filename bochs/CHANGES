@@ -19,6 +19,7 @@ Brief summary :
   - USB: Added OHCI as an EHCI Companion option. Now allows UHCI or OHCI specified as a configuration parameter.
   - Disk images: Allows large VHD image files
   - Enhanced the Floppy Disk emulation
+  - Bug fix which now closes the cdrom image file when using win32 configuration
   - Documentation updates and fixes
 
 Detailed change log :
