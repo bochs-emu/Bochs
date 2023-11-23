@@ -208,7 +208,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SENDUIPI_Gq(bxInstruction_c *i)
   // |  31:24 | Reserved, MBZ
   // |  63:32 | Notification destination, 32-bit APIC/X2APIC ID
   // | 127:64 | Posted interrupt requests (PIR)
-  // |        | One bit for ech user-interrupt vector
+  // |        | One bit for each user-interrupt vector
   // --------------------------------
 
   bool send_notify = false;

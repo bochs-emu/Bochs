@@ -129,8 +129,6 @@ void BX_CPU_C::InterruptAcknowledge(void)
   }
 #endif
 
-  BX_CPU_THIS_PTR EXT = 1; /* external event */
-
   // NOTE: similar code in ::take_irq()
 #if BX_SUPPORT_APIC
   if (is_pending(BX_EVENT_PENDING_LAPIC_INTR))
@@ -140,6 +138,7 @@ void BX_CPU_C::InterruptAcknowledge(void)
     // if no local APIC, always acknowledge the PIC.
     vector = DEV_pic_iac(); // may set INTR with next interrupt
 
+  BX_CPU_THIS_PTR EXT = 1; /* external event */
 #if BX_SUPPORT_VMX
   VMexit_Event(BX_EXTERNAL_INTERRUPT, vector, 0, 0);
 #endif
