@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2017 The Bochs Project
+# Copyright (C) 2001-2023 The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -863,7 +863,7 @@ disasm.o: decoder/disasm.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio
  decoder/../cpuid.h decoder/../access.h decoder/instr.h decoder/decoder.h \
  decoder/fetchdecode.h decoder/ia_opcodes.h decoder/ia_opcodes.def \
  decoder/../../bx_debug/debug.h
-fetchdecode32.o: decoder/fetchdecode32.@CPP_SUFFIX@ ../bochs.h ../config.h \
+decoder/fetchdecode32.o: decoder/fetchdecode32.@CPP_SUFFIX@ ../bochs.h ../config.h \
  ../osdep.h ../logio.h ../misc/bswap.h decoder/../cpu.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../cpu/decoder/decoder.h \
  ../cpu/decoder/features.h decoder/../decoder/decoder.h \
@@ -879,7 +879,7 @@ fetchdecode32.o: decoder/fetchdecode32.@CPP_SUFFIX@ ../bochs.h ../config.h \
  decoder/fetchdecode_opmap_0f3a.h decoder/fetchdecode_x87.h \
  decoder/fetchdecode_avx.h decoder/fetchdecode_xop.h \
  decoder/fetchdecode_evex.h
-fetchdecode64.o: decoder/fetchdecode64.@CPP_SUFFIX@ ../bochs.h ../config.h \
+decoder/fetchdecode64.o: decoder/fetchdecode64.@CPP_SUFFIX@ ../bochs.h ../config.h \
  ../osdep.h ../logio.h ../misc/bswap.h decoder/instr.h decoder/decoder.h \
  decoder/features.h decoder/fetchdecode.h decoder/ia_opcodes.h \
  decoder/ia_opcodes.def decoder/fetchdecode_opmap.h \
