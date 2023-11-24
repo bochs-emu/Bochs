@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -2374,6 +2374,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             // (also, the drive_ready must be zero)
             //controller->status.busy = 1;
             controller->status.drive_ready = 0;
+            controller->status.seek_complete = 0;
             controller->error_register &= ~(1 << 7);
 
             controller->status.write_fault = 0;
