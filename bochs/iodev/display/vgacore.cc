@@ -1279,10 +1279,10 @@ Bit8u bx_vgacore_c::get_vga_pixel(Bit16u x, Bit16u y, Bit16u saddr, Bit16u lc, b
   Bit8u attribute, bit_no, palette_reg_val, DAC_regno;
   Bit32u byte_offset;
 
+  if (BX_VGA_THIS s.x_dotclockdiv2) x >>= 1;
   if ((y <= lc) || !BX_VGA_THIS s.attribute_ctrl.mode_ctrl.pixel_panning_compat) {
     x += BX_VGA_THIS s.attribute_ctrl.horiz_pel_panning;
   }
-  if (BX_VGA_THIS s.x_dotclockdiv2) x >>= 1;
   bit_no = 7 - (x % 8);
   if (y > lc) {
     byte_offset = x / 8 +
