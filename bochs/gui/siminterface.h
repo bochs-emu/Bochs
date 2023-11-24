@@ -770,6 +770,7 @@ public:
 BOCHSAPI extern bx_simulator_interface_c *SIM;
 
 extern void bx_init_siminterface();
+extern void bx_cleanup_siminterface();
 
 #if defined(__WXMSW__) || defined(WIN32)
 // Just to provide HINSTANCE, etc. in files that have not included bochs.h.
