@@ -352,6 +352,7 @@ int bxmain(void)
 #endif
   plugin_cleanup();
   BX_INSTR_EXIT_ENV();
+  bx_cleanup_siminterface();
   return SIM->get_exit_code();
 }
 
