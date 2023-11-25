@@ -7,6 +7,7 @@ Brief summary :
   - Bugfixes for CPU emulation correctness (MONITOR/MWAIT, VMX/SVM, AVX-512, CET, SHA, GFNI fixes)
   ! Implemented VMX MBE (Mode Based Execution Control) emulation required for Windows 11 guest
   ! Implemented Linear Address Separation (LASS) extension
+  ! Implemented User-Level Interrupt (UINTR) extension
   ! Implemented recently published Intel instruction sets:
     - MOVDIRI, AVX512 BF16, AVX IFMA52, VNNI-INT8, VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3, SM4, SHA512, WRMSRNS, SERIALIZE
   - Improved 64-bit guest support in Bochs internal debugger, added new internal debugger commands
@@ -29,6 +30,7 @@ Detailed change log :
   - Critical CPU emulation bugfixes for SHA and GFNI instructions
   - Implemented VMX MBE (Mode Based Execution Control) emulation required for Windows 11 guest
   - Implemented Linear Address Separation (LASS) extension
+  - Implemented User-Level Interrupt (UINTR) extension
   - Implemented recently published Intel instruction sets:
     - MOVDIRI, AVX512 BF16, AVX IFMA52, VNNI-INT8, VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3, SM4, SHA512, WRMSRNS, SERIALIZE
 
