@@ -166,6 +166,16 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       val64 = BX_CPU_THIS_PTR tsc_adjust;
       break;
 
+#if BX_SUPPORT_MONITOR_MWAIT
+    case BX_MSR_IA32_UMWAIT_CONTROL:
+      if (! is_cpu_extension_supported(BX_ISA_WAITPKG)) {
+        BX_ERROR(("RDMSR BX_MSR_IA32_UMWAIT_CONTROL: WAITPKG is not enabled in the cpu model"));
+        return handle_unknown_rdmsr(index, msr);
+      }
+      val64 = BX_CPU_THIS_PTR msr.ia32_umwait_ctrl;
+      break;
+#endif
+
 #if BX_SUPPORT_APIC
     case BX_MSR_APICBASE:
       val64 = BX_CPU_THIS_PTR msr.apicbase;
@@ -825,6 +835,16 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       }
       BX_CPU_THIS_PTR tsc_adjust = (Bit64s) val_64;
       break;
+
+#if BX_SUPPORT_MONITOR_MWAIT
+    case BX_MSR_IA32_UMWAIT_CONTROL:
+      if (! is_cpu_extension_supported(BX_ISA_WAITPKG)) {
+        BX_ERROR(("WRMSR BX_MSR_IA32_UMWAIT_CONTROL: WAITPKG is not enabled in the cpu model"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
+      BX_CPU_THIS_PTR msr.ia32_umwait_ctrl = val32_lo;
+      break;
+#endif
 
 #if BX_SUPPORT_APIC
     case BX_MSR_APICBASE:

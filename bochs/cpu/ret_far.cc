@@ -136,6 +136,10 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 
     BX_DEBUG(("return_protected: return to OUTER PRIVILEGE LEVEL"));
 
+#if BX_SUPPORT_MONITOR_MWAIT
+    BX_CPU_THIS_PTR monitor.reset_umonitor();
+#endif
+
 #if BX_SUPPORT_X86_64
     if (i->os64L()) {
       raw_ss_selector = stack_read_word(temp_RSP + 24 + pop_bytes);

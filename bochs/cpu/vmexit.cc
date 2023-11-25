@@ -55,6 +55,8 @@ Bit32u gen_instruction_info(bxInstruction_c *i, Bit32u reason, bool rw_form)
 
     case VMX_VMEXIT_RDRAND:
     case VMX_VMEXIT_RDSEED:
+    case VMX_VMEXIT_UMWAIT:
+    case VMX_VMEXIT_TPAUSE:
       // bits 12:11 hold operand size
       if (i->os64L())
         instr_info |= 1 << 12;
@@ -152,6 +154,8 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_Instruction(bxInstruction_c *i, Bit
 
     case VMX_VMEXIT_RDRAND:
     case VMX_VMEXIT_RDSEED:
+    case VMX_VMEXIT_UMWAIT:
+    case VMX_VMEXIT_TPAUSE:
       instr_info = gen_instruction_info(i, reason, rw_form);
       VMwrite32(VMCS_32BIT_VMEXIT_INSTRUCTION_INFO, instr_info);
       break;

@@ -427,6 +427,11 @@ void BX_CPU_C::register_state(void)
 #if BX_SUPPORT_VMX
   BXRS_HEX_PARAM_FIELD(MSR, ia32_feature_ctrl, msr.ia32_feature_ctrl);
 #endif
+#if BX_SUPPORT_MONITOR_MWAIT
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_WAITPKG)) {
+    BXRS_HEX_PARAM_FIELD(MSR, ia32_umwait_ctrl, msr.ia32_umwait_ctrl);
+  }
+#endif
 
 #if BX_CONFIGURE_MSRS
   bx_list_c *MSRS = new bx_list_c(cpu, "USER_MSR");
@@ -500,7 +505,7 @@ void BX_CPU_C::register_state(void)
 #if BX_SUPPORT_MONITOR_MWAIT
   bx_list_c *monitor_list = new bx_list_c(cpu, "MONITOR");
   BXRS_HEX_PARAM_FIELD(monitor_list, monitor_addr, monitor.monitor_addr);
-  BXRS_PARAM_BOOL(monitor_list, armed, monitor.armed);
+  BXRS_DEC_PARAM_FIELD(monitor_list, armed, monitor.armed_by);
 #endif
 
 #if BX_SUPPORT_APIC
@@ -897,6 +902,10 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR xcr0_suppmask = get_xcr0_allow_mask();
 
   BX_CPU_THIS_PTR msr.ia32_xss = 0;
+
+#if BX_SUPPORT_MONITOR_MWAIT
+  BX_CPU_THIS_PTR msr.ia32_umwait_ctrl = 0;
+#endif
 
 #if BX_SUPPORT_CET
   BX_CPU_THIS_PTR msr.ia32_interrupt_ssp_table = 0;

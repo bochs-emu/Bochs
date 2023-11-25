@@ -26,10 +26,11 @@ enum MSR_Register {
   BX_MSR_TSC            = 0x010,
   BX_MSR_APICBASE       = 0x01b,
   BX_MSR_TSC_ADJUST     = 0x03b,
-  BX_MSR_TSC_DEADLINE   = 0x6E0,
+  BX_MSR_TSC_DEADLINE   = 0x6e0,
 
   BX_MSR_IA32_SPEC_CTRL         = 0x048,
   BX_MSR_IA32_PRED_CMD          = 0x049,
+  BX_MSR_IA32_UMWAIT_CONTROL    = 0x0e1,
   BX_MSR_IA32_ARCH_CAPABILITIES = 0x10a,
   BX_MSR_IA32_FLUSH_CMD         = 0x10b,
 

@@ -664,6 +664,26 @@ Bit64u BX_CPU_C::get_Virtual_TSC()
   tsc += BX_CPU_THIS_PTR tsc_offset;    // BX_CPU_THIS_PTR tsc_offset = 0 if not in VMX or SVM guest
   return tsc;
 }
+
+Bit64u BX_CPU_C::compute_physical_TSC_delay(Bit64u tsc_delay)
+{
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    if (VMEXIT(VMX_VM_EXEC_CTRL1_TSC_OFFSET) && SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_TSC_SCALING)) {
+      // The virtual delay is multiplied by 2^48 (using a shift) to produce a 128-bit 
+      // integer. That product is then divided by the TSC multiplier to produce a 64-bit integer.
+      // The physical delay is that quotient.
+      Bit128u product128, quotient;
+      product128.hi = tsc_delay >> 16;
+      product128.lo = tsc_delay << 48;
+      long_div(&quotient, &tsc_delay /*just use it as temp to be destroyed*/, &product128, BX_CPU_THIS_PTR vmcs.tsc_multiplier);
+      BX_ASSERT(quotient.hi == 0);
+      tsc_delay = quotient.lo;                // tsc = Bit128(tsc_value << 48) / tsc_multiplier
+    }
+  }
+#endif
+  return tsc_delay;
+}
 #endif
 
 void BX_CPU_C::set_TSC(Bit64u newval)
@@ -889,6 +909,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSEXIT(bxInstruction_c *i)
   }
 
   invalidate_prefetch_q();
+
+#if BX_SUPPORT_MONITOR_MWAIT
+  BX_CPU_THIS_PTR monitor.reset_umonitor();
+#endif
 
   BX_INSTR_FAR_BRANCH_ORIGIN();
 
@@ -1144,6 +1168,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
   }
 
   invalidate_prefetch_q();
+
+#if BX_SUPPORT_MONITOR_MWAIT
+  BX_CPU_THIS_PTR monitor.reset_umonitor();
+#endif
 
   BX_INSTR_FAR_BRANCH_ORIGIN();
 
