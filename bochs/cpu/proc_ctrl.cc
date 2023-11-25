@@ -646,11 +646,15 @@ Bit64u BX_CPU_C::get_TSC(void)
 }
 
 #if BX_SUPPORT_VMX || BX_SUPPORT_SVM
-Bit64u BX_CPU_C::get_TSC_VMXAdjust(Bit64u tsc)
+Bit64u BX_CPU_C::get_Virtual_TSC()
 {
+  Bit64u tsc = BX_CPU_THIS_PTR get_TSC();
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (VMEXIT(VMX_VM_EXEC_CTRL1_TSC_OFFSET) && SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_TSC_SCALING)) {
+      // RDTSC first computes the product of the value of the IA32_TIME_STAMP_COUNTER MSR and
+      // the value of the TSC multiplier. It then shifts the value of the product right 48 bits and loads 
+      // EAX:EDX with <the sum of that shifted value and the value of the TSC offset>.
       Bit128u product_128;
       long_mul(&product_128,tsc,BX_CPU_THIS_PTR vmcs.tsc_multiplier);
       tsc = (product_128.lo >> 48) | (product_128.hi << 16);   // tsc = (uint64) (long128(tsc_value * tsc_multiplier) >> 48);
@@ -694,11 +698,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSC(bxInstruction_c *i)
     if (SVM_INTERCEPT(SVM_INTERCEPT0_RDTSC)) Svm_Vmexit(SVM_VMEXIT_RDTSC);
 #endif
 
-  // return ticks
-  Bit64u ticks = BX_CPU_THIS_PTR get_TSC();
-#if BX_SUPPORT_SVM || BX_SUPPORT_VMX
-  ticks = BX_CPU_THIS_PTR get_TSC_VMXAdjust(ticks);
-#endif
+  Bit64u ticks = BX_CPU_THIS_PTR get_Virtual_TSC();
 
   RAX = GET32L(ticks);
   RDX = GET32H(ticks);
@@ -741,11 +741,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSCP(bxInstruction_c *i)
     if (SVM_INTERCEPT(SVM_INTERCEPT1_RDTSCP)) Svm_Vmexit(SVM_VMEXIT_RDTSCP);
 #endif
 
-  // return ticks
-  Bit64u ticks = BX_CPU_THIS_PTR get_TSC();
-#if BX_SUPPORT_SVM || BX_SUPPORT_VMX
-  ticks = BX_CPU_THIS_PTR get_TSC_VMXAdjust(ticks);
-#endif
+  Bit64u ticks = BX_CPU_THIS_PTR get_Virtual_TSC();
 
   RAX = GET32L(ticks);
   RDX = GET32H(ticks);

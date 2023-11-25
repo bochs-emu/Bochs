@@ -4679,9 +4679,7 @@ public: // for now...
 #if BX_CPU_LEVEL >= 5
   BX_SMF Bit64u get_TSC();
   BX_SMF void   set_TSC(Bit64u tsc);
-#if BX_SUPPORT_VMX || BX_SUPPORT_SVM
-  BX_SMF Bit64u get_TSC_VMXAdjust(Bit64u tsc);
-#endif
+  BX_SMF Bit64u get_Virtual_TSC(); // takes into account VMX or SVM adjustments
 #endif
 
 #if BX_SUPPORT_PKEYS

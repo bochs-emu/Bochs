@@ -155,10 +155,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 #endif
 
     case BX_MSR_TSC:
-      val64 = BX_CPU_THIS_PTR get_TSC();
-#if BX_SUPPORT_SVM || BX_SUPPORT_VMX
-      val64 = BX_CPU_THIS_PTR get_TSC_VMXAdjust(val64);
-#endif
+      val64 = BX_CPU_THIS_PTR get_Virtual_TSC();
       break;
 
     case BX_MSR_TSC_ADJUST:

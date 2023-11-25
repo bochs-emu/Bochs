@@ -122,8 +122,8 @@ public:
 
   int register_timer_ticks(void* this_ptr, bx_timer_handler_t, Bit64u ticks,
                            bool continuous, bool active, const char *id);
-  void activate_timer_ticks(unsigned index, Bit64u instructions,
-                            bool continuous);
+  void activate_timer_ticks(unsigned index, Bit64u instructions, bool continuous);
+
   Bit64u time_usec();
   Bit64u time_nsec();
   Bit64u time_usec_sequential();
