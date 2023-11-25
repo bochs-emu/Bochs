@@ -365,6 +365,7 @@ void bx_cleanup_siminterface()
   }
   if (root_param) {
     root_param->clear();
+    delete root_param;
     root_param = NULL;
   }
 }

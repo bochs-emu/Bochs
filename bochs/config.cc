@@ -926,7 +926,7 @@ void bx_init_options()
       "", BX_PATHNAME_LEN);
     sprintf(label, "Name of optional ROM image #%d", i+1);
     strcat(label, " : %s");
-    path->set_format(strdup(label));
+    path->set_format(label);
     sprintf(descr, "The address at which the optional ROM image #%d should be loaded", i+1);
     optaddr = new bx_param_num_c(optnum,
       "address",
@@ -938,7 +938,7 @@ void bx_init_options()
     optaddr->set_format("0x%05x");
     sprintf(label, "Optional ROM #%d address:", i+1);
     strcat(label, " 0x%05x");
-    optaddr->set_long_format(strdup(label));
+    optaddr->set_long_format(label);
     deplist = new bx_list_c(NULL);
     deplist->add(optaddr);
     path->set_dependent_list(deplist);
@@ -958,7 +958,7 @@ void bx_init_options()
       "", BX_PATHNAME_LEN);
     sprintf(label, "Name of optional RAM image #%d", i+1);
     strcat(label, " : %s");
-    path->set_format(strdup(label));
+    path->set_format(label);
     sprintf(descr, "The address at which the optional RAM image #%d should be loaded", i+1);
     optaddr = new bx_param_num_c(optnum,
       "address",
@@ -970,7 +970,7 @@ void bx_init_options()
     optaddr->set_format("0x%05x");
     sprintf(label, "Optional RAM #%d address:", i+1);
     strcat(label, " 0x%05x");
-    optaddr->set_long_format(strdup(label));
+    optaddr->set_long_format(label);
     deplist = new bx_list_c(NULL);
     deplist->add(optaddr);
     path->set_dependent_list(deplist);
