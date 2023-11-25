@@ -386,6 +386,10 @@ bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
       return BX_SUPPORT_VMX_EXTENSION(BX_VMX_TSC_SCALING);
 
 #if BX_SUPPORT_VMX >= 2
+    case VMCS_64BIT_CONTROL_TERTIARY_VMEXEC_CONTROLS:
+    case VMCS_64BIT_CONTROL_TERTIARY_VMEXEC_CONTROLS_HI:
+      return BX_CPU_THIS_PTR vmx_cap.vmx_vmexec_ctrl3_supported_bits;
+
     /* VMCS 64-bit read only data fields */
     /* binary 0010_01xx_xxxx_xxx0 */
     case VMCS_64BIT_GUEST_PHYSICAL_ADDR:
