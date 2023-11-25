@@ -1202,9 +1202,11 @@ void bx_local_apic_c::vmx_preemption_timer_expired(void *this_ptr)
 void bx_local_apic_c::set_mwaitx_timer(Bit64u value)
 {
   if (mwaitx_timer_active) deactivate_mwaitx_timer();
-  BX_DEBUG(("MWAITX timer: value = %u", value));
-  bx_pc_system.activate_timer_ticks(mwaitx_timer_handle, value, 0);
-  mwaitx_timer_active = true;
+  if (value) {
+    BX_DEBUG(("MWAITX timer: delay value = " FMT_LL "u", value));
+    bx_pc_system.activate_timer_ticks(mwaitx_timer_handle, value, 0);
+    mwaitx_timer_active = true;
+  }
 }
 
 void bx_local_apic_c::deactivate_mwaitx_timer(void)
