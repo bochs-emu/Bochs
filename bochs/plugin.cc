@@ -908,7 +908,11 @@ void bx_unload_plugins()
       bx_unload_plugin(device->name, 0);
 #endif
     } else {
-      delete device->devmodel;
+#if !BX_PLUGINS
+      if (!bx_unload_opt_plugin(device->name, 0)) {
+        delete device->devmodel;
+      }
+#endif
     }
     next = device->next;
     delete device;
@@ -1200,8 +1204,8 @@ int bx_unload_opt_plugin(const char *name, bool devflag)
   int i = 0;
   while (strcmp(bx_builtin_plugins[i].name, "NULL")) {
     if ((!strcmp(name, bx_builtin_plugins[i].name)) &&
-        ((bx_builtin_plugins[i].type == PLUGTYPE_OPTIONAL) ||
-         (bx_builtin_plugins[i].type == PLUGTYPE_VGA))) {
+        (((bx_builtin_plugins[i].type & PLUGTYPE_OPTIONAL) != 0) ||
+         ((bx_builtin_plugins[i].type & PLUGTYPE_VGA) != 0))) {
       if (bx_builtin_plugins[i].initialized == 1) {
         if (devflag) {
           pluginUnregisterDeviceDevmodel(bx_builtin_plugins[i].name,
