@@ -1062,7 +1062,13 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_edx(Bit32u extra) const
   //   [2:2]    AVX512 4VNNIW instructions support - not supported
   //   [3:3]    AVX512 4FMAPS instructions support - not supported
   //   [4:4]    Support of Fast REP MOV instructions with short length - not supported, might be enabled through extra
+
   //   [5:5]    UINTR: User interrupts support - not yet supported
+#if BX_SUPPORT_UINTR
+  if (is_cpu_extension_supported(BX_ISA_UINTR))
+    edx |= BX_CPUID_STD7_SUBLEAF0_EDX_UINTR;
+#endif
+
   //   [7:6]    reserved
 
   //   [8:8]    AVX512 VP2INTERSECT instructions support

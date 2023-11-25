@@ -199,6 +199,11 @@ bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
       return BX_SUPPORT_VMX_EXTENSION(BX_VMX_PML);
 #endif
 
+#if BX_SUPPORT_UINTR
+    case VMCS_16BIT_GUEST_UINV:
+      return is_cpu_extension_supported(BX_ISA_UINTR);
+#endif
+
     /* VMCS 16-bit host-state fields */
     /* binary 0000_11xx_xxxx_xxx0 */
     case VMCS_16BIT_HOST_ES_SELECTOR:
@@ -855,6 +860,7 @@ void BX_CPU_C::init_vmexit_ctrls(void)
   //      [20] Save guest MSR_EFER on VMEXIT
   //      [21] Load host MSR_EFER on VMEXIT
   //      [22] Save VMX preemption timer counter on VMEXIT
+  //      [27] Clear UINV state on VMEXIT
   //      [28] Save host CET state on VMEXIT
   //      [29] Save host MSR_IA32_PKRS on VMEXIT
   //      [30] Save guest MSR_PERF_GLOBAL_CTRL on VMEXIT
@@ -879,6 +885,10 @@ void BX_CPU_C::init_vmexit_ctrls(void)
   }
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_PREEMPTION_TIMER))
     cap->vmx_vmexit_ctrl_supported_bits |= VMX_VMEXIT_CTRL1_STORE_VMX_PREEMPTION_TIMER;
+#endif
+#if BX_SUPPORT_UINTR
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_UINTR))
+    cap->vmx_vmexit_ctrl_supported_bits |= VMX_VMEXIT_CTRL1_CLEAR_UINV;
 #endif
 #if BX_SUPPORT_CET
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET))
@@ -909,6 +919,7 @@ void BX_CPU_C::init_vmentry_ctrls(void)
   //      [14] Load guest MSR_PAT
   //      [15] Load guest MSR_EFER
   //      [17] Load guest CET state
+  //      [19] Load guest UINV state
   //      [22] Load guest MSR_IA32_PKRS value
 
   cap->vmx_vmentry_ctrl_supported_bits = VMX_VMENTRY_CTRL1_LOAD_DBG_CTRLS |
@@ -930,6 +941,10 @@ void BX_CPU_C::init_vmentry_ctrls(void)
 #if BX_SUPPORT_CET
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET))
     cap->vmx_vmentry_ctrl_supported_bits |= VMX_VMENTRY_CTRL1_LOAD_GUEST_CET_STATE;
+#endif
+#if BX_SUPPORT_UINTR
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_UINTR))
+    cap->vmx_vmentry_ctrl_supported_bits |= VMX_VMENTRY_CTRL1_LOAD_UINV;
 #endif
 #if BX_SUPPORT_PKEYS
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PKS))

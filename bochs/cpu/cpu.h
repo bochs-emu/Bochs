@@ -259,7 +259,8 @@ enum BX_Instr_Branch {
   BX_INSTR_IS_SYSCALL = 17,
   BX_INSTR_IS_SYSRET = 18,
   BX_INSTR_IS_SYSENTER = 19,
-  BX_INSTR_IS_SYSEXIT = 20
+  BX_INSTR_IS_SYSEXIT = 20,
+  BX_INSTR_IS_UIRET = 21
 };
 
 // possible types passed to BX_INSTR_PREFETCH_HINT()
@@ -760,7 +761,6 @@ typedef struct {
   };
 } bx_gen_reg_t;
 #endif
-
 #endif  // #if BX_SUPPORT_X86_64
 
 #if BX_SUPPORT_APIC
@@ -953,6 +953,21 @@ public: // for now...
   Bit32u wr_pkey[16];
 #endif
 
+#if BX_SUPPORT_UINTR && BX_SUPPORT_X86_64
+  struct {
+    bx_address ui_handler;
+    Bit64u stack_adjust;
+    Bit32u uinv;              // user interrupt notification vector, actually 8 bit
+    Bit32u uitt_size;         // user interrupt target table size
+    bx_address uitt_addr;     // user interrupt target table address
+    bx_address upid_addr;     // user posted-interrupt descriptor address
+    Bit64u uirr;              // user-interrupt request register
+    bool UIF;                 // if UIF=0 user interrupt cannot be delivered
+
+    bool senduipi_enabled() const { return uitt_addr & 0x1; }
+  } uintr;
+#endif
+
 #if BX_SUPPORT_FPU
   i387_t the_i387;
 #endif
@@ -1072,9 +1087,10 @@ public: // for now...
 #define BX_EVENT_PENDING_VMX_VIRTUAL_INTR     (1 <<  9)
 #define BX_EVENT_PENDING_INTR                 (1 << 10)
 #define BX_EVENT_PENDING_LAPIC_INTR           (1 << 11)
-#define BX_EVENT_VMX_VTPR_UPDATE              (1 << 12)
-#define BX_EVENT_VMX_VEOI_UPDATE              (1 << 13)
-#define BX_EVENT_VMX_VIRTUAL_APIC_WRITE       (1 << 14)
+#define BX_EVENT_PENDING_UINTR                (1 << 12)
+#define BX_EVENT_VMX_VTPR_UPDATE              (1 << 13)
+#define BX_EVENT_VMX_VEOI_UPDATE              (1 << 14)
+#define BX_EVENT_VMX_VIRTUAL_APIC_WRITE       (1 << 15)
   Bit32u  pending_event;
   Bit32u  event_mask;
   Bit32u  async_event; // keep 32-bit because of BX_ASYNC_EVENT_STOP_TRACE
@@ -4050,6 +4066,14 @@ public: // for now...
   BX_SMF void WRPKRU(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 
+#if BX_SUPPORT_UINTR && BX_SUPPORT_X86_64
+  BX_SMF void STUI(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CLUI(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void TESTUI(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void UIRET(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SENDUIPI_Gq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#endif
+
   BX_SMF void RDPID_Ed(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void UndefinedOpcode(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -4426,6 +4450,12 @@ public: // for now...
   BX_SMF void handleSseModeChange(void);
   BX_SMF void handleAvxModeChange(void);
 #endif
+#if BX_SUPPORT_UINTR && BX_SUPPORT_X86_64
+  BX_SMF void send_uipi(Bit32u notification_destination, Bit32u notification_vector);
+  BX_SMF void uintr_uirr_update();
+  BX_SMF void uintr_control();
+  BX_SMF bool uintr_masked();
+#endif
 
 #if BX_SUPPORT_AVX
   BX_SMF void avx_masked_load8(bxInstruction_c *i, bx_address eaddr, BxPackedAvxRegister *dst, Bit64u mask);
@@ -4559,6 +4589,10 @@ public: // for now...
   BX_SMF void    deliver_NMI(void);
   BX_SMF void    deliver_SMI(void);
   BX_SMF void    deliver_SIPI(unsigned vector);
+#if BX_SUPPORT_UINTR && BX_SUPPORT_X86_64
+  BX_SMF void    deliver_UINTR();
+  BX_SMF void    process_uintr_notification();
+#endif
   BX_SMF void    debug(bx_address offset);
   BX_SMF void    debug_disasm_instruction(bx_address offset);
 
@@ -4770,6 +4804,13 @@ public: // for now...
   BX_SMF void xsave_cet_s_state(bxInstruction_c *i, bx_address offset);
   BX_SMF void xrstor_cet_s_state(bxInstruction_c *i, bx_address offset);
   BX_SMF void xrstor_init_cet_s_state(void);
+#endif
+
+#if BX_SUPPORT_UINTR && BX_SUPPORT_X86_64
+  BX_SMF bool xsave_uintr_state_xinuse(void);
+  BX_SMF void xsave_uintr_state(bxInstruction_c *i, bx_address offset);
+  BX_SMF void xrstor_uintr_state(bxInstruction_c *i, bx_address offset);
+  BX_SMF void xrstor_init_uintr_state(void);
 #endif
 #endif
 
@@ -5049,6 +5090,10 @@ BX_CPP_INLINE void BX_CPU_C::updateFetchModeMask(void)
 
   BX_CPU_THIS_PTR user_pl = // CPL == 3
      (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl == 3);
+
+#if BX_SUPPORT_UINTR
+  uintr_control(); // CPL changes
+#endif
 }
 
 #if BX_X86_DEBUGGER

@@ -270,7 +270,7 @@ BX_CPP_INLINE Bit8u BX_CPU_C::vapic_clear_and_find_highest_priority_int(unsigned
 
   for (n = 7; n >= 0; n--) {
     if (! arr[n]) continue;
-    return (n * 32) + (31 - lzcntd(arr[n]));
+    return (n * 32) + most_significant_bitd(arr[n]);
   }
 
   return 0;
@@ -390,9 +390,22 @@ void BX_CPU_C::VMX_Deliver_Virtual_Interrupt(void)
 
   BX_CPU_THIS_PTR EXT = 1; /* external event */
 
-  BX_INSTR_HWINTERRUPT(BX_CPU_ID, vector,
+#if BX_SUPPORT_UINTR
+  if (BX_CPU_THIS_PTR cr4.get_UINTR() && long64_mode() && vector == BX_CPU_THIS_PTR uintr.uinv)
+  {
+    unsigned vector = vm->svi;
+    vm->svi = vapic_clear_and_find_highest_priority_int(BX_LAPIC_ISR1, vector);
+    VMX_PPR_Virtualization();
+
+    process_uintr_notification();
+  }
+  else
+#endif
+  {
+    BX_INSTR_HWINTERRUPT(BX_CPU_ID, vector,
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
-  interrupt(vector, BX_EXTERNAL_INTERRUPT, 0, 0);
+    interrupt(vector, BX_EXTERNAL_INTERRUPT, 0, 0);
+  }
 
   BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
   BX_CPU_THIS_PTR EXT = 0;
