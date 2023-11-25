@@ -286,7 +286,7 @@ public:
 #endif
 
 #if BX_SUPPORT_MONITOR_MWAIT
-  void set_mwaitx_timer(Bit32u value);
+  void set_mwaitx_timer(Bit64u value);
   void deactivate_mwaitx_timer(void);
   static void mwaitx_timer_expired(void *);
 #endif
