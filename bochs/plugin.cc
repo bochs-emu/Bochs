@@ -648,6 +648,10 @@ void plugin_startup(void)
 #endif
 }
 
+#if !BX_PLUGINS
+void plugin_cleanup_np(void);
+#endif
+
 void plugin_cleanup(void)
 {
 #if BX_PLUGINS
@@ -663,6 +667,8 @@ void plugin_cleanup(void)
     plugins = plugins->next;
     delete dead_plug;
   }
+#else
+  plugin_cleanup_np();
 #endif
 }
 
@@ -1210,6 +1216,19 @@ int bx_unload_opt_plugin(const char *name, bool devflag)
     i++;
   }
   return 0;
+}
+
+void plugin_cleanup_np(void)
+{
+  int i = 0;
+  while (strcmp(bx_builtin_plugins[i].name, "NULL")) {
+    if (bx_builtin_plugins[i].initialized == 1) {
+      bx_builtin_plugins[i].plugin_entry(NULL, bx_builtin_plugins[i].loadtype, PLUGIN_FINI);
+      bx_builtin_plugins[i].loadtype = PLUGTYPE_NULL;
+      bx_builtin_plugins[i].initialized = 0;
+    }
+    i++;
+  }
 }
 
 #endif

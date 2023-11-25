@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -584,6 +584,9 @@ enum {
       genlog->info("installing %s module as the Bochs GUI", #gui_name); \
       theGui = new bx_##gui_name##_gui_c ();                            \
       bx_gui = theGui;                                                  \
+    } else if (mode == PLUGIN_FINI) {                                   \
+      delete theGui;                                                    \
+      bx_gui = NULL;                                                    \
     } else if (mode == PLUGIN_PROBE) {                                  \
       return (int)PLUGTYPE_GUI;                                         \
     }                                                                   \
