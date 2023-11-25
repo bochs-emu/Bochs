@@ -1266,7 +1266,7 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
     allowMask |= BX_CR4_PKS_MASK;
 #endif
 
-#if BX_SUPPORT_X86_64 && BX_SUPPORT_UINTR
+#if BX_SUPPORT_UINTR
   if (is_cpu_extension_supported(BX_ISA_UINTR))
     allowMask |= BX_CR4_UINTR_MASK;
 #endif
@@ -1778,7 +1778,7 @@ void BX_CPU_C::xsave_xrestor_init(void)
   }
 #endif
 
-#if BX_SUPPORT_UINTR && BX_SUPPORT_X86_64
+#if BX_SUPPORT_UINTR
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_UINTR)) {
     // XCR0[14]: UINTR State
     xsave_restore[xcr0_t::BX_XCR0_UINTR_BIT].len    = XSAVE_UINTR_STATE_LEN;

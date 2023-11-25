@@ -907,7 +907,7 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 #endif // BX_CPU_LEVEL >= 6
 
-#if BX_SUPPORT_X86_64 && BX_SUPPORT_UINTR
+#if BX_SUPPORT_UINTR
   memset(&BX_CPU_THIS_PTR uintr, 0, sizeof(BX_CPU_THIS_PTR uintr));
 #endif
 

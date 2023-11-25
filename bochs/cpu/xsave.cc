@@ -966,7 +966,7 @@ bool BX_CPU_C::xsave_cet_s_state_xinuse(void)
 }
 #endif
 
-#if BX_SUPPORT_UINTR && BX_SUPPORT_X86_64
+#if BX_SUPPORT_UINTR
 void BX_CPU_C::xsave_uintr_state(bxInstruction_c *i, bx_address offset)
 {
   bx_address asize_mask = i->asize_mask();
