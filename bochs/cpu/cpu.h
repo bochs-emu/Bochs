@@ -953,7 +953,7 @@ public: // for now...
   Bit32u wr_pkey[16];
 #endif
 
-#if BX_SUPPORT_UINTR && BX_SUPPORT_X86_64
+#if BX_SUPPORT_UINTR
   struct {
     bx_address ui_handler;
     Bit64u stack_adjust;
@@ -4066,7 +4066,7 @@ public: // for now...
   BX_SMF void WRPKRU(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 
-#if BX_SUPPORT_UINTR && BX_SUPPORT_X86_64
+#if BX_SUPPORT_UINTR
   BX_SMF void STUI(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CLUI(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void TESTUI(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -4450,7 +4450,7 @@ public: // for now...
   BX_SMF void handleSseModeChange(void);
   BX_SMF void handleAvxModeChange(void);
 #endif
-#if BX_SUPPORT_UINTR && BX_SUPPORT_X86_64
+#if BX_SUPPORT_UINTR
   BX_SMF void send_uipi(Bit32u notification_destination, Bit32u notification_vector);
   BX_SMF void uintr_uirr_update();
   BX_SMF void uintr_control();
@@ -4589,7 +4589,7 @@ public: // for now...
   BX_SMF void    deliver_NMI(void);
   BX_SMF void    deliver_SMI(void);
   BX_SMF void    deliver_SIPI(unsigned vector);
-#if BX_SUPPORT_UINTR && BX_SUPPORT_X86_64
+#if BX_SUPPORT_UINTR
   BX_SMF void    deliver_UINTR();
   BX_SMF void    process_uintr_notification();
 #endif
@@ -4806,7 +4806,7 @@ public: // for now...
   BX_SMF void xrstor_init_cet_s_state(void);
 #endif
 
-#if BX_SUPPORT_UINTR && BX_SUPPORT_X86_64
+#if BX_SUPPORT_UINTR
   BX_SMF bool xsave_uintr_state_xinuse(void);
   BX_SMF void xsave_uintr_state(bxInstruction_c *i, bx_address offset);
   BX_SMF void xrstor_uintr_state(bxInstruction_c *i, bx_address offset);
