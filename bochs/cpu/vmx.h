@@ -703,7 +703,7 @@ typedef struct bx_VMX_Cap
   Bit32u vmx_pin_vmexec_ctrl_supported_bits;
   Bit32u vmx_proc_vmexec_ctrl_supported_bits;
   Bit32u vmx_vmexec_ctrl2_supported_bits;
-  Bit32u vmx_vmexec_ctrl3_supported_bits;
+  Bit64u vmx_vmexec_ctrl3_supported_bits;
   Bit32u vmx_vmexit_ctrl_supported_bits;
   Bit32u vmx_vmentry_ctrl_supported_bits;
 #if BX_SUPPORT_VMX >= 2

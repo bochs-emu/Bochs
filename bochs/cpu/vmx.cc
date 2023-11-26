@@ -571,16 +571,48 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
   //
 
   vm->pin_vmexec_ctrls = VMread32(VMCS_32BIT_CONTROL_PIN_BASED_EXEC_CONTROLS);
+  if (~vm->pin_vmexec_ctrls & VMX_CHECKS_USE_MSR_VMX_PINBASED_CTRLS_LO) {
+     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX pin-based controls allowed 0-settings"));
+     return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+  }
+  if (vm->pin_vmexec_ctrls & ~VMX_CHECKS_USE_MSR_VMX_PINBASED_CTRLS_HI) {
+     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX pin-based controls allowed 1-settings [0x%08x]", vm->pin_vmexec_ctrls & ~VMX_CHECKS_USE_MSR_VMX_PINBASED_CTRLS_HI));
+     return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+  }
+
   vm->vmexec_ctrls1 = VMread32(VMCS_32BIT_CONTROL_PROCESSOR_BASED_VMEXEC_CONTROLS);
+  if (~vm->vmexec_ctrls1 & VMX_CHECKS_USE_MSR_VMX_PROCBASED_CTRLS_LO) {
+     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX proc-based controls allowed 0-settings"));
+     return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+  }
+  if (vm->vmexec_ctrls1 & ~VMX_CHECKS_USE_MSR_VMX_PROCBASED_CTRLS_HI) {
+     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX proc-based controls allowed 1-settings [0x%08x]", vm->vmexec_ctrls1 & ~VMX_CHECKS_USE_MSR_VMX_PROCBASED_CTRLS_HI));
+     return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+  }
+
   if (VMEXIT(VMX_VM_EXEC_CTRL1_SECONDARY_CONTROLS))
     vm->vmexec_ctrls2 = VMread32(VMCS_32BIT_CONTROL_SECONDARY_VMEXEC_CONTROLS);
   else
     vm->vmexec_ctrls2 = 0;
 
+  if (~vm->vmexec_ctrls2 & VMX_MSR_VMX_PROCBASED_CTRLS2_LO) {
+     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX secondary proc-based controls allowed 0-settings"));
+     return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+  }
+  if (vm->vmexec_ctrls2 & ~VMX_MSR_VMX_PROCBASED_CTRLS2_HI) {
+     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX secondary controls allowed 1-settings [0x%08x]", vm->vmexec_ctrls2 & ~VMX_MSR_VMX_PROCBASED_CTRLS2_HI));
+     return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+  }
+
   if (VMEXIT(VMX_VM_EXEC_CTRL1_TERTIARY_CONTROLS))
     vm->vmexec_ctrls3 = VMread64(VMCS_64BIT_CONTROL_TERTIARY_VMEXEC_CONTROLS);
   else
     vm->vmexec_ctrls3 = 0;
+
+  if (vm->vmexec_ctrls3 & ~VMX_MSR_VMX_PROCBASED_CTRLS3) {
+     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX tertiary controls allowed 1-settings"));
+     return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+  }
 
   vm->vm_exceptions_bitmap = VMread32(VMCS_32BIT_CONTROL_EXECUTION_BITMAP);
   vm->vm_pf_mask = VMread32(VMCS_32BIT_CONTROL_PAGE_FAULT_ERR_CODE_MASK);
@@ -597,33 +629,6 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
   //
   // Check VM-execution control fields
   //
-
-  if (~vm->pin_vmexec_ctrls & VMX_CHECKS_USE_MSR_VMX_PINBASED_CTRLS_LO) {
-     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX pin-based controls allowed 0-settings"));
-     return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
-  }
-  if (vm->pin_vmexec_ctrls & ~VMX_CHECKS_USE_MSR_VMX_PINBASED_CTRLS_HI) {
-     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX pin-based controls allowed 1-settings [0x%08x]", vm->pin_vmexec_ctrls & ~VMX_CHECKS_USE_MSR_VMX_PINBASED_CTRLS_HI));
-     return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
-  }
-
-  if (~vm->vmexec_ctrls1 & VMX_CHECKS_USE_MSR_VMX_PROCBASED_CTRLS_LO) {
-     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX proc-based controls allowed 0-settings"));
-     return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
-  }
-  if (vm->vmexec_ctrls1 & ~VMX_CHECKS_USE_MSR_VMX_PROCBASED_CTRLS_HI) {
-     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX proc-based controls allowed 1-settings [0x%08x]", vm->vmexec_ctrls1 & ~VMX_CHECKS_USE_MSR_VMX_PROCBASED_CTRLS_HI));
-     return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
-  }
-
-  if (~vm->vmexec_ctrls2 & VMX_MSR_VMX_PROCBASED_CTRLS2_LO) {
-     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX secondary proc-based controls allowed 0-settings"));
-     return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
-  }
-  if (vm->vmexec_ctrls2 & ~VMX_MSR_VMX_PROCBASED_CTRLS2_HI) {
-     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX secondary controls allowed 1-settings [0x%08x]", vm->vmexec_ctrls2 & ~VMX_MSR_VMX_PROCBASED_CTRLS2_HI));
-     return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
-  }
 
   if (vm->vm_cr3_target_cnt > VMX_CR3_TARGET_MAX_CNT) {
      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: too may CR3 targets %d", vm->vm_cr3_target_cnt));
