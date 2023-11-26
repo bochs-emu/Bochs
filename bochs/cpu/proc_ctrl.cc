@@ -645,7 +645,6 @@ Bit64u BX_CPU_C::get_TSC(void)
   return tsc;
 }
 
-#if BX_SUPPORT_VMX || BX_SUPPORT_SVM
 Bit64u BX_CPU_C::get_Virtual_TSC()
 {
   Bit64u tsc = BX_CPU_THIS_PTR get_TSC();
@@ -661,10 +660,11 @@ Bit64u BX_CPU_C::get_Virtual_TSC()
     }
   }
 #endif
+#if BX_SUPPORT_VMX || BX_SUPPORT_SVM
   tsc += BX_CPU_THIS_PTR tsc_offset;    // BX_CPU_THIS_PTR tsc_offset = 0 if not in VMX or SVM guest
+#endif
   return tsc;
 }
-#endif
 
 void BX_CPU_C::set_TSC(Bit64u newval)
 {
