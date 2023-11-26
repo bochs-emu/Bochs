@@ -4354,6 +4354,10 @@ public: // for now...
 
   BX_SMF void access_read_physical(bx_phy_address paddr, unsigned len, void *data);
   BX_SMF void access_write_physical(bx_phy_address paddr, unsigned len, void *data);
+  BX_SMF Bit8u  read_physical_byte(bx_phy_address paddr);
+  BX_SMF Bit16u read_physical_word(bx_phy_address paddr);
+  BX_SMF Bit32u read_physical_dword(bx_phy_address paddr);
+  BX_SMF Bit64u read_physical_qword(bx_phy_address paddr);
 
   BX_SMF bx_hostpageaddr_t getHostMemAddr(bx_phy_address addr, unsigned rw);
 
@@ -4889,8 +4893,9 @@ public: // for now...
   BX_SMF bx_phy_address VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned len, void *data);
   BX_SMF void VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *data);
   BX_SMF Bit32u VMX_Read_Virtual_APIC(unsigned offset);
-  BX_SMF void VMX_Write_Virtual_APIC(unsigned offset, Bit32u val32);
-  BX_SMF void VMX_Write_Virtual_X2APIC(unsigned offset, Bit64u val64);
+  BX_SMF void VMX_Write_Virtual_APIC(unsigned offset, int len, Bit8u* val);
+  BX_SMF void VMX_Write_Virtual_APIC(unsigned offset, Bit32u val32) { VMX_Write_Virtual_APIC(offset, 4, (Bit8u*)(&val32)); }
+  BX_SMF void VMX_Write_Virtual_X2APIC(unsigned offset, Bit64u val64) { VMX_Write_Virtual_APIC(offset, 8, (Bit8u*)(&val64)); }
   BX_SMF void VMX_TPR_Virtualization(void);
   BX_SMF bool Virtualize_X2APIC_Write(unsigned msr, Bit64u val_64);
   BX_SMF void VMX_Virtual_Apic_Access_Trap(void);
@@ -4898,6 +4903,7 @@ public: // for now...
   BX_SMF void vapic_set_vector(unsigned apic_arrbase, Bit8u vector);
   BX_SMF Bit8u vapic_clear_and_find_highest_priority_int(unsigned apic_arrbase, Bit8u vector);
   BX_SMF void VMX_Write_VICR(void);
+  BX_SMF void VMX_Write_VICR_HI(void);
   BX_SMF void VMX_PPR_Virtualization(void);
   BX_SMF void VMX_EOI_Virtualization(void);
   BX_SMF void VMX_Self_IPI_Virtualization(Bit8u vector);

@@ -169,7 +169,7 @@ Bit16u BX_CPP_AttrRegparmN(1) BX_CPU_C::VMread16(unsigned encoding)
     field = ReadHostWordFromLittleEndian(hostAddr);
   }
   else {
-    access_read_physical(pAddr, 2, (Bit8u*)(&field));
+    field = read_physical_word(pAddr);
   }
 
   BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 2, MEMTYPE(BX_CPU_THIS_PTR vmcs_memtype), BX_READ, BX_VMCS_ACCESS, (Bit8u*)(&field));
@@ -211,7 +211,7 @@ Bit32u BX_CPP_AttrRegparmN(1) BX_CPU_C::VMread32(unsigned encoding)
     field = ReadHostDWordFromLittleEndian(hostAddr);
   }
   else {
-    access_read_physical(pAddr, 4, (Bit8u*)(&field));
+    field = read_physical_dword(pAddr);
   }
 
   BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 4, MEMTYPE(BX_CPU_THIS_PTR vmcs_memtype), BX_READ, BX_VMCS_ACCESS, (Bit8u*)(&field));
@@ -255,7 +255,7 @@ Bit64u BX_CPP_AttrRegparmN(1) BX_CPU_C::VMread64(unsigned encoding)
     field = ReadHostQWordFromLittleEndian(hostAddr);
   }
   else {
-    access_read_physical(pAddr, 8, (Bit8u*)(&field));
+    field = read_physical_qword(pAddr);
   }
 
   BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 8, MEMTYPE(BX_CPU_THIS_PTR vmcs_memtype), BX_READ, BX_VMCS_ACCESS, (Bit8u*)(&field));
@@ -320,8 +320,7 @@ Bit16u BX_CPP_AttrRegparmN(1) BX_CPU_C::VMread16_Shadow(unsigned encoding)
     BX_PANIC(("VMread16_Shadow: can't access encoding 0x%08x, offset=0x%x", encoding, offset));
 
   bx_phy_address pAddr = BX_CPU_THIS_PTR vmcs.vmcs_linkptr + offset;
-  Bit16u field;
-  access_read_physical(pAddr, 2, (Bit8u*)(&field));
+  Bit16u field = read_physical_word(pAddr);
   BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 2, MEMTYPE(resolve_memtype(pAddr)), BX_READ, BX_SHADOW_VMCS_ACCESS, (Bit8u*)(&field));
 
   return field;
@@ -346,8 +345,7 @@ Bit32u BX_CPP_AttrRegparmN(1) BX_CPU_C::VMread32_Shadow(unsigned encoding)
     BX_PANIC(("VMread32_Shadow: can't access encoding 0x%08x, offset=0x%x", encoding, offset));
 
   bx_phy_address pAddr = BX_CPU_THIS_PTR vmcs.vmcs_linkptr + offset;
-  Bit32u field;
-  access_read_physical(pAddr, 4, (Bit8u*)(&field));
+  Bit32u field = read_physical_dword(pAddr);
   BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 4, MEMTYPE(resolve_memtype(pAddr)), BX_READ, BX_SHADOW_VMCS_ACCESS, (Bit8u*)(&field));
 
   return field;
@@ -374,8 +372,7 @@ Bit64u BX_CPP_AttrRegparmN(1) BX_CPU_C::VMread64_Shadow(unsigned encoding)
     BX_PANIC(("VMread64_Shadow: can't access encoding 0x%08x, offset=0x%x", encoding, offset));
 
   bx_phy_address pAddr = BX_CPU_THIS_PTR vmcs.vmcs_linkptr + offset;
-  Bit64u field;
-  access_read_physical(pAddr, 8, (Bit8u*)(&field));
+  Bit64u field = read_physical_qword(pAddr);
   BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 8, MEMTYPE(resolve_memtype(pAddr)), BX_READ, BX_SHADOW_VMCS_ACCESS, (Bit8u*)(&field));
 
   return field;
@@ -432,8 +429,7 @@ Bit32u BX_CPU_C::VMXReadRevisionID(bx_phy_address pAddr)
   if(revision_id_field_offset >= VMX_VMCS_AREA_SIZE)
     BX_PANIC(("Can't access VMCS_REVISION_ID encoding, offset=0x%x", revision_id_field_offset));
 
-  Bit32u revision;
-  access_read_physical(pAddr + revision_id_field_offset, 4, &revision);
+  Bit32u revision = read_physical_dword(pAddr + revision_id_field_offset);
   BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr + revision_id_field_offset, 4, MEMTYPE(BX_CPU_THIS_PTR vmcs_memtype),
           BX_READ, BX_VMCS_ACCESS, (Bit8u*)(&revision));
 
@@ -2298,9 +2294,9 @@ Bit32u BX_CPU_C::LoadMSRs(Bit32u msr_cnt, bx_phy_address pAddr)
   Bit64u msr_lo, msr_hi;
 
   for (Bit32u msr = 1; msr <= msr_cnt; msr++) {
-    access_read_physical(pAddr,     8, &msr_lo);
+    msr_lo = read_physical_qword(pAddr);
     BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 8, MEMTYPE(resolve_memtype(pAddr)), BX_READ, BX_VMX_LOAD_MSR_ACCESS, (Bit8u*)(&msr_lo));
-    access_read_physical(pAddr + 8, 8, &msr_hi);
+    msr_hi = read_physical_qword(pAddr + 8);
     BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr + 8, 8, MEMTYPE(resolve_memtype(pAddr)), BX_READ, BX_VMX_LOAD_MSR_ACCESS, (Bit8u*)(&msr_hi));
     pAddr += 16; // to next MSR
 
@@ -2336,10 +2332,10 @@ Bit32u BX_CPU_C::LoadMSRs(Bit32u msr_cnt, bx_phy_address pAddr)
 
 Bit32u BX_CPU_C::StoreMSRs(Bit32u msr_cnt, bx_phy_address pAddr)
 {
-  Bit64u msr_lo, msr_hi;
+  Bit64u msr_hi;
 
   for (Bit32u msr = 1; msr <= msr_cnt; msr++) {
-    access_read_physical(pAddr, 8, &msr_lo);
+    Bit64u msr_lo = read_physical_qword(pAddr);
     BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 8, MEMTYPE(resolve_memtype(pAddr)),
                                           BX_READ, BX_VMX_STORE_MSR_ACCESS, (Bit8u*)(&msr_lo));
 

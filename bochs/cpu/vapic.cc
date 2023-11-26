@@ -73,20 +73,12 @@ Bit32u BX_CPU_C::VMX_Read_Virtual_APIC(unsigned offset)
   return field32;
 }
 
-void BX_CPU_C::VMX_Write_Virtual_APIC(unsigned offset, Bit32u val32)
+void BX_CPU_C::VMX_Write_Virtual_APIC(unsigned offset, int len, Bit8u* val)
 {
   bx_phy_address pAddr = BX_CPU_THIS_PTR vmcs.virtual_apic_page_addr + offset;
   // must avoid recursive call to the function when VMX APIC access page = VMX Virtual Apic Page
-  BX_MEM(0)->writePhysicalPage(BX_CPU_THIS, pAddr, 4, (Bit8u*)(&val32));
-  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 4, MEMTYPE(resolve_memtype(pAddr)), BX_WRITE, BX_VMX_VAPIC_ACCESS, (Bit8u*)(&val32));
-}
-
-void BX_CPU_C::VMX_Write_Virtual_X2APIC(unsigned offset, Bit64u val64)
-{
-  bx_phy_address pAddr = BX_CPU_THIS_PTR vmcs.virtual_apic_page_addr + offset;
-  // must avoid recursive call to the function when VMX APIC access page = VMX Virtual Apic Page
-  BX_MEM(0)->writePhysicalPage(BX_CPU_THIS, pAddr, 8, (Bit8u*)(&val64));
-  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 8, MEMTYPE(resolve_memtype(pAddr)), BX_WRITE, BX_VMX_VAPIC_ACCESS, (Bit8u*)(&val64));
+  BX_MEM(0)->writePhysicalPage(BX_CPU_THIS, pAddr, len, val);
+  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, len, MEMTYPE(resolve_memtype(pAddr)), BX_WRITE, BX_VMX_VAPIC_ACCESS, val);
 }
 
 bx_phy_address BX_CPU_C::VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned len, void *data)
@@ -198,14 +190,15 @@ void BX_CPU_C::VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *
       }
     }
 
+    bool virtualize_access = false;
     switch(offset & 0x3fc) {
     case BX_LAPIC_ID:
     case BX_LAPIC_TPR:
-    case BX_LAPIC_ICR_HI:
     case BX_LAPIC_LDR:
     case BX_LAPIC_DESTINATION_FORMAT:
     case BX_LAPIC_SPURIOUS_VECTOR:
     case BX_LAPIC_ESR:
+    case BX_LAPIC_ICR_HI:
     case BX_LAPIC_LVT_TIMER:
     case BX_LAPIC_LVT_THERMAL:
     case BX_LAPIC_LVT_PERFMON:
@@ -214,27 +207,28 @@ void BX_CPU_C::VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *
     case BX_LAPIC_LVT_ERROR:
     case BX_LAPIC_TIMER_INITIAL_COUNT:
     case BX_LAPIC_TIMER_DIVIDE_CFG:
-      // VMX_VMEXIT_APIC_ACCESS if the control is disabled
-      if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_APIC_REGISTERS)) break;
-      // else fall through
+      if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_APIC_REGISTERS)) {
+        virtualize_access = true;
+      }
+      break;
 
     case BX_LAPIC_EOI:
     case BX_LAPIC_ICR_LO:
-      // VMX_VMEXIT_APIC_ACCESS if both controls are disabled
-      if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUAL_INT_DELIVERY) &&
-          ! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_APIC_REGISTERS)) break;
-      // else fall through
-
-      // remap access to virtual apic page
-      paddr = BX_CPU_THIS_PTR vmcs.virtual_apic_page_addr + offset;
-      // must avoid recursive call to the function when VMX APIC access page = VMX Virtual Apic Page
-      BX_MEM(0)->writePhysicalPage(BX_CPU_THIS, paddr, len, (Bit8u *) data);
-      BX_NOTIFY_PHY_MEMORY_ACCESS(paddr, len, MEMTYPE(resolve_memtype(paddr)), BX_WRITE, BX_VMX_VAPIC_ACCESS, (Bit8u *) data);
-      signal_event(BX_EVENT_VMX_VIRTUAL_APIC_WRITE);
-      return;
+      if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_APIC_REGISTERS) ||
+          SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUAL_INT_DELIVERY))
+      {
+        virtualize_access = true;
+      }
+      break;
 
     default:
       break;
+    }
+
+    if (virtualize_access) {
+      VMX_Write_Virtual_APIC(offset, len, (Bit8u*) data);
+      signal_event(BX_EVENT_VMX_VIRTUAL_APIC_WRITE);
+      return;
     }
 #endif
   }
@@ -414,23 +408,38 @@ void BX_CPU_C::VMX_Deliver_Virtual_Interrupt(void)
   longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
 }
 
+BX_CPP_INLINE bool self_IPI_VICR(Bit32u vicr)
+{
+  // reserved bits (31:20, 17:16, 13) and bit 12 (delivery status) must be '0
+  // bit 15 (trigger mode) must be '0
+  // bits 10:8 (delivery mode) must be '0
+  // destination shorthand: must be self = '01
+  unsigned dest_shorthand = (vicr >> 18) & 0x3;
+
+  return ((vicr & 0xfff3b700) == 0) && (dest_shorthand == 0x1);
+}
+
 void BX_CPU_C::VMX_Write_VICR(void)
 {
   Bit32u vicr = VMX_Read_Virtual_APIC(BX_LAPIC_ICR_LO);
-
-  unsigned dest_shorthand = (vicr >> 18) & 0x3;
   Bit8u vector = vicr & 0xff;
 
-  // reserved bits (31:20, 17:16, 13), 15 (trigger mode), 12 (delivery status), 10:8 (delivery mode) must be 0
-  // destination shorthand: must be self
-  if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUAL_INT_DELIVERY) &&
-     (vicr & 0xfff3b700) == 0 && (dest_shorthand == 0x1) && vector >= 16)
+  if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUAL_INT_DELIVERY) && self_IPI_VICR(vicr) && vector >= 16) 
   {
     VMX_Self_IPI_Virtualization(vector);
+    return;
   }
-  else {
-    VMexit(VMX_VMEXIT_APIC_WRITE, BX_LAPIC_ICR_LO); // trap-like vmexit
-  }
+
+  VMexit(VMX_VMEXIT_APIC_WRITE, BX_LAPIC_ICR_LO); // trap-like vmexit
+}
+
+void BX_CPU_C::VMX_Write_VICR_HI(void)
+{
+  // clear bits (2:0) of VICR_HI, no VMexit should happen
+  BX_DEBUG(("Virtual Apic Access Trap: Clearing ICR_HI[23:0]"));
+  Bit32u vicr_hi = VMX_Read_Virtual_APIC(BX_LAPIC_ICR_HI);
+         vicr_hi &= 0xff000000;
+  VMX_Write_Virtual_APIC(BX_LAPIC_ICR_HI, vicr_hi);
 }
 
 #endif // BX_SUPPORT_VMX >= 2
@@ -453,10 +462,7 @@ void BX_CPU_C::VMX_Virtual_Apic_Access_Trap(void)
     BX_DEBUG(("Trap Event: Virtual Apic Access Trap offset = %08x", apic_offset));
 
     if (apic_offset >= BX_LAPIC_ICR_HI && apic_offset <= BX_LAPIC_ICR_HI+3) {
-      // clear bits (2:0) of VICR_HI, no VMexit should happen
-      BX_DEBUG(("Virtual Apic Access Trap: Clearing ICR_HI[23:0]"));
-      Bit32u vicr_hi = VMX_Read_Virtual_APIC(BX_LAPIC_ICR_HI);
-      VMX_Write_Virtual_APIC(BX_LAPIC_ICR_HI, vicr_hi & 0xff000000);
+      VMX_Write_VICR_HI();
     }
     else if (apic_offset == BX_LAPIC_ICR_LO) {
       VMX_Write_VICR();
