@@ -654,9 +654,14 @@ void plugin_cleanup_np(void);
 
 void plugin_cleanup(void)
 {
+  // Unload each loaded device plugin first
+  if (devices != NULL) {
+    bx_unload_plugins();
+  }
 #if BX_PLUGINS
   plugin_t *dead_plug;
 
+  // delete plugin database and unload non-device plugins
   while (plugins != NULL) {
     if (plugins->loadtype != PLUGTYPE_NULL) {
       plugin_unload(plugins);
@@ -881,7 +886,7 @@ void bx_unload_plugins()
 {
   device_t *device, *next;
 
-  // unload non-core plugins first
+  // unload non-core device plugins first
   device = devices;
   while (device != NULL) {
     if (device->plugin != NULL) {
@@ -901,7 +906,7 @@ void bx_unload_plugins()
   }
   devices = NULL;
 
-  // now it's safe to unload core plugins
+  // now it's safe to unload core device plugins
   device = core_devices;
   while (device != NULL) {
     if (device->plugin != NULL) {
