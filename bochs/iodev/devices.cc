@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2023  The Bochs Project
 //
 //  I/O port handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -140,11 +140,6 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   for (i=0; i < PORTS; i++) {
     read_port_to_handler[i] = &io_read_handlers;
     write_port_to_handler[i] = &io_write_handlers;
-  }
-
-  for (i=0; i < BX_MAX_IRQS; i++) {
-    delete [] irq_handler_name[i];
-    irq_handler_name[i] = NULL;
   }
 
   // removable devices init
@@ -443,6 +438,10 @@ void bx_devices_c::exit()
     io_write_handler = io_write_handler->next;
     delete [] curr->handler_name;
     delete curr;
+  }
+  for (int i = 0; i < BX_MAX_IRQS; i++) {
+    delete [] irq_handler_name[i];
+    irq_handler_name[i] = NULL;
   }
 
   bx_virt_timer.setup();
