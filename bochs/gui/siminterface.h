@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -770,7 +770,7 @@ public:
 BOCHSAPI extern bx_simulator_interface_c *SIM;
 
 extern void bx_init_siminterface();
-extern void bx_cleanup_siminterface();
+extern int bx_cleanup_siminterface();
 
 #if defined(__WXMSW__) || defined(WIN32)
 // Just to provide HINSTANCE, etc. in files that have not included bochs.h.
