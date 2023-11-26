@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -112,6 +112,7 @@ public:
   void init_log(int fd);
   void init_log(FILE *fs);
   void exit_log();
+  void exit_log2();
   void set_log_prefix(const char *prefix);
   int get_n_logfns() const { return n_logfn; }
   logfunc_t *get_logfn(int index) { return logfn_list[index]; }
