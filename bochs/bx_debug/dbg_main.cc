@@ -735,6 +735,7 @@ void bx_dbg_phy_memory_access(unsigned cpu, bx_phy_address phy, unsigned len, un
     "VMX STMSR",
     "VAPIC",
     "PML",
+    "PID",
     "SMRAM"
   };
 

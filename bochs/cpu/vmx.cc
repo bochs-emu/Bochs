@@ -695,99 +695,122 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
 
 #if BX_SUPPORT_X86_64
   if (vm->vmexec_ctrls1 & VMX_VM_EXEC_CTRL1_TPR_SHADOW) {
-     vm->virtual_apic_page_addr = (bx_phy_address) VMread64(VMCS_64BIT_CONTROL_VIRTUAL_APIC_PAGE_ADDR);
-     if (! IsValidPageAlignedPhyAddr(vm->virtual_apic_page_addr)) {
-       BX_ERROR(("VMFAIL: VMCS EXEC CTRL: virtual apic phy addr malformed"));
-       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
-     }
+    vm->virtual_apic_page_addr = (bx_phy_address) VMread64(VMCS_64BIT_CONTROL_VIRTUAL_APIC_PAGE_ADDR);
+    if (! IsValidPageAlignedPhyAddr(vm->virtual_apic_page_addr)) {
+      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: virtual apic phy addr malformed"));
+      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+    }
 
 #if BX_SUPPORT_VMX >= 2
-     if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_VIRTUAL_INT_DELIVERY) {
-       if (! PIN_VMEXIT(VMX_PIN_BASED_VMEXEC_CTRL_EXTERNAL_INTERRUPT_VMEXIT)) {
-         BX_ERROR(("VMFAIL: VMCS EXEC CTRL: virtual interrupt delivery must be set together with external interrupt exiting"));
-         return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
-       }
+    if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_VIRTUAL_INT_DELIVERY) {
+      if (! PIN_VMEXIT(VMX_PIN_BASED_VMEXEC_CTRL_EXTERNAL_INTERRUPT_VMEXIT)) {
+        BX_ERROR(("VMFAIL: VMCS EXEC CTRL: virtual interrupt delivery must be set together with external interrupt exiting"));
+        return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+      }
 
-       for (int reg = 0; reg < 8; reg++) {
-         vm->eoi_exit_bitmap[reg] = VMread32(VMCS_64BIT_CONTROL_EOI_EXIT_BITMAP0 + reg);
-       }
+      for (int reg = 0; reg < 8; reg++) {
+        vm->eoi_exit_bitmap[reg] = VMread32(VMCS_64BIT_CONTROL_EOI_EXIT_BITMAP0 + reg);
+      }
 
-       Bit16u guest_interrupt_status = VMread16(VMCS_16BIT_GUEST_INTERRUPT_STATUS);
-       vm->rvi = guest_interrupt_status & 0xff;
-       vm->svi = guest_interrupt_status >> 8;
-     }
-     else
+      Bit16u guest_interrupt_status = VMread16(VMCS_16BIT_GUEST_INTERRUPT_STATUS);
+      vm->rvi = guest_interrupt_status & 0xff;
+      vm->svi = guest_interrupt_status >> 8;
+    }
+    else
 #endif
-     {
-       vm->vm_tpr_threshold = VMread32(VMCS_32BIT_CONTROL_TPR_THRESHOLD);
+    {
+      vm->vm_tpr_threshold = VMread32(VMCS_32BIT_CONTROL_TPR_THRESHOLD);
 
-       if (vm->vm_tpr_threshold & 0xfffffff0) {
-         BX_ERROR(("VMFAIL: VMCS EXEC CTRL: TPR threshold too big"));
-         return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
-       }
+      if (vm->vm_tpr_threshold & 0xfffffff0) {
+        BX_ERROR(("VMFAIL: VMCS EXEC CTRL: TPR threshold too big"));
+        return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+      }
 
-       if (! (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_VIRTUALIZE_APIC_ACCESSES)) {
-         Bit8u tpr_shadow = (VMX_Read_Virtual_APIC(BX_LAPIC_TPR) >> 4) & 0xf;
-         if (vm->vm_tpr_threshold > tpr_shadow) {
-           BX_ERROR(("VMFAIL: VMCS EXEC CTRL: TPR threshold > TPR shadow"));
-           return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
-         }
-       }
-     }
+      if (! (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_VIRTUALIZE_APIC_ACCESSES)) {
+        Bit8u tpr_shadow = (VMX_Read_Virtual_APIC(BX_LAPIC_TPR) >> 4) & 0xf;
+        if (vm->vm_tpr_threshold > tpr_shadow) {
+          BX_ERROR(("VMFAIL: VMCS EXEC CTRL: TPR threshold > TPR shadow"));
+          return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+        }
+      }
+    }
+
+    if (PIN_VMEXIT(VMX_PIN_BASED_VMEXEC_CTRL_PROCESS_POSTED_INTERRUPTS)) {
+      if (! (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_VIRTUAL_INT_DELIVERY)) {
+        BX_ERROR(("VMFAIL: VMCS EXEC CTRL: posted interrupts must be enabled together with virtual interrupt delivery"));
+        return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+      }
+      if (! (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_INTA_ON_VMEXIT)) {
+        BX_ERROR(("VMFAIL: VMCS EXEC CTRL: posted interrupts must be enabled together 'ack interrupt on exit'"));
+        return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+      }
+
+      vm->posted_intr_notification_vector = VMread16(VMCS_16BIT_CONTROL_POSTED_INTERRUPT_VECTOR);
+      if (vm->posted_intr_notification_vector >= 256) {
+        BX_ERROR(("VMFAIL: VMCS EXEC CTRL: posted interrupts notification vector %d must be 0-255", vm->posted_intr_notification_vector));
+        return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+      }
+
+      vm->pid_addr = (bx_phy_address) VMread64(VMCS_64BIT_CONTROL_POSTED_INTERRUPT_DESC_ADDR);
+      if (! IsValidPageAlignedPhyAddr(vm->pid_addr)) {
+        BX_ERROR(("VMFAIL: VMCS EXEC CTRL: Posted Interrupt Descriptor phy addr malformed"));
+        return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+      }
+    }
   }
 #if BX_SUPPORT_VMX >= 2
   else { // TPR shadow is disabled
-     if (vm->vmexec_ctrls2 & (VMX_VM_EXEC_CTRL2_VIRTUALIZE_X2APIC_MODE |
-                              VMX_VM_EXEC_CTRL2_VIRTUALIZE_APIC_REGISTERS |
-                              VMX_VM_EXEC_CTRL2_VIRTUAL_INT_DELIVERY))
-     {
-       BX_ERROR(("VMFAIL: VMCS EXEC CTRL: apic virtualization is enabled without TPR shadow"));
-       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
-     }
+    if (vm->vmexec_ctrls2 & (VMX_VM_EXEC_CTRL2_VIRTUALIZE_X2APIC_MODE |
+                             VMX_VM_EXEC_CTRL2_VIRTUALIZE_APIC_REGISTERS |
+                             VMX_VM_EXEC_CTRL2_VIRTUAL_INT_DELIVERY))
+    {
+      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: APIC virtualization is enabled without TPR shadow"));
+      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+    }
   }
 #endif // BX_SUPPORT_VMX >= 2
 
   if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_VIRTUALIZE_APIC_ACCESSES) {
-     vm->apic_access_page = (bx_phy_address) VMread64(VMCS_64BIT_CONTROL_APIC_ACCESS_ADDR);
-     if (! IsValidPageAlignedPhyAddr(vm->apic_access_page)) {
-       BX_ERROR(("VMFAIL: VMCS EXEC CTRL: apic access page phy addr malformed"));
-       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
-     }
+    vm->apic_access_page = (bx_phy_address) VMread64(VMCS_64BIT_CONTROL_APIC_ACCESS_ADDR);
+    if (! IsValidPageAlignedPhyAddr(vm->apic_access_page)) {
+      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: apic access page phy addr malformed"));
+      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+    }
 
 #if BX_SUPPORT_VMX >= 2
-     if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_VIRTUALIZE_X2APIC_MODE) {
-       BX_ERROR(("VMFAIL: VMCS EXEC CTRL: virtualize X2APIC mode enabled together with APIC access virtualization"));
-       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
-     }
+    if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_VIRTUALIZE_X2APIC_MODE) {
+      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: virtualize X2APIC mode enabled together with APIC access virtualization"));
+      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+    }
 #endif
   }
 
 #if BX_SUPPORT_VMX >= 2
   if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_EPT_ENABLE) {
-     vm->eptptr = (bx_phy_address) VMread64(VMCS_64BIT_CONTROL_EPTPTR);
-     if (! is_eptptr_valid(vm->eptptr)) {
-       BX_ERROR(("VMFAIL: VMCS EXEC CTRL: invalid EPTPTR value"));
-       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
-     }
+    vm->eptptr = (bx_phy_address) VMread64(VMCS_64BIT_CONTROL_EPTPTR);
+    if (! is_eptptr_valid(vm->eptptr)) {
+      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: invalid EPTPTR value"));
+      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+    }
   }
   else {
-     if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_UNRESTRICTED_GUEST) {
-       BX_ERROR(("VMFAIL: VMCS EXEC CTRL: unrestricted guest without EPT"));
-       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
-     }
+    if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_UNRESTRICTED_GUEST) {
+      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: unrestricted guest without EPT"));
+      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+    }
   }
 
   if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_VPID_ENABLE) {
-     vm->vpid = VMread16(VMCS_16BIT_CONTROL_VPID);
-     if (vm->vpid == 0) {
-       BX_ERROR(("VMFAIL: VMCS EXEC CTRL: guest VPID == 0"));
-       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
-     }
+    vm->vpid = VMread16(VMCS_16BIT_CONTROL_VPID);
+    if (vm->vpid == 0) {
+      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: guest VPID == 0"));
+      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+    }
   }
 
   if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_PAUSE_LOOP_VMEXIT) {
-     vm->ple.pause_loop_exiting_gap = VMread32(VMCS_32BIT_CONTROL_PAUSE_LOOP_EXITING_GAP);
-     vm->ple.pause_loop_exiting_window = VMread32(VMCS_32BIT_CONTROL_PAUSE_LOOP_EXITING_WINDOW);
+    vm->ple.pause_loop_exiting_gap = VMread32(VMCS_32BIT_CONTROL_PAUSE_LOOP_EXITING_GAP);
+    vm->ple.pause_loop_exiting_window = VMread32(VMCS_32BIT_CONTROL_PAUSE_LOOP_EXITING_WINDOW);
   }
 
   if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_VMFUNC_ENABLE)
@@ -796,21 +819,21 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
     vm->vmfunc_ctrls = 0;
 
   if (vm->vmfunc_ctrls & ~VMX_VMFUNC_CTRL1_SUPPORTED_BITS) {
-     BX_ERROR(("VMFAIL: VMCS VM Functions control reserved bits set"));
-     return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+    BX_ERROR(("VMFAIL: VMCS VM Functions control reserved bits set"));
+    return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
 
   if (vm->vmfunc_ctrls & VMX_VMFUNC_EPTP_SWITCHING_MASK) {
-     if ((vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_EPT_ENABLE) == 0) {
-       BX_ERROR(("VMFAIL: VMFUNC EPTP-SWITCHING: EPT disabled"));
-       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
-     }
+    if ((vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_EPT_ENABLE) == 0) {
+      BX_ERROR(("VMFAIL: VMFUNC EPTP-SWITCHING: EPT disabled"));
+      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+    }
 
-     vm->eptp_list_address = VMread64(VMCS_64BIT_CONTROL_EPTP_LIST_ADDRESS);
-     if (! IsValidPageAlignedPhyAddr(vm->eptp_list_address)) {
-       BX_ERROR(("VMFAIL: VMFUNC EPTP-SWITCHING: eptp list phy addr malformed"));
-       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
-     }
+    vm->eptp_list_address = VMread64(VMCS_64BIT_CONTROL_EPTP_LIST_ADDRESS);
+    if (! IsValidPageAlignedPhyAddr(vm->eptp_list_address)) {
+      BX_ERROR(("VMFAIL: VMFUNC EPTP-SWITCHING: eptp list phy addr malformed"));
+      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+    }
   }
 
   if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_PML_ENABLE) {
@@ -848,18 +871,18 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
   }
 
   if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_XSAVES_XRSTORS)
-     vm->xss_exiting_bitmap = VMread64(VMCS_64BIT_CONTROL_XSS_EXITING_BITMAP);
+    vm->xss_exiting_bitmap = VMread64(VMCS_64BIT_CONTROL_XSS_EXITING_BITMAP);
   else
-     vm->xss_exiting_bitmap = 0;
+    vm->xss_exiting_bitmap = 0;
 #endif
 
 #endif // BX_SUPPORT_X86_64
 
   if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_TSC_SCALING) {
-     if ((vm->tsc_multiplier = VMread64(VMCS_64BIT_CONTROL_TSC_MULTIPLIER)) == 0) {
-       BX_ERROR(("VMFAIL: VMCS EXEC CTRL: TSC multiplier should be non zero"));
-       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
-     }
+    if ((vm->tsc_multiplier = VMread64(VMCS_64BIT_CONTROL_TSC_MULTIPLIER)) == 0) {
+      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: TSC multiplier should be non zero"));
+      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+    }
   }
 
   //
@@ -875,47 +898,47 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
   //
 
   if (~vm->vmexit_ctrls & VMX_CHECKS_USE_MSR_VMX_VMEXIT_CTRLS_LO) {
-     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX vmexit controls allowed 0-settings"));
-     return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+    BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX vmexit controls allowed 0-settings"));
+    return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
   if (vm->vmexit_ctrls & ~VMX_CHECKS_USE_MSR_VMX_VMEXIT_CTRLS_HI) {
-     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX vmexit controls allowed 1-settings [0x%08x]", vm->vmexit_ctrls & ~VMX_CHECKS_USE_MSR_VMX_VMEXIT_CTRLS_HI));
-     return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+    BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX vmexit controls allowed 1-settings [0x%08x]", vm->vmexit_ctrls & ~VMX_CHECKS_USE_MSR_VMX_VMEXIT_CTRLS_HI));
+    return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
 
 #if BX_SUPPORT_VMX >= 2
   if ((~vm->pin_vmexec_ctrls & VMX_PIN_BASED_VMEXEC_CTRL_VMX_PREEMPTION_TIMER_VMEXIT) && (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_STORE_VMX_PREEMPTION_TIMER)) {
-     BX_ERROR(("VMFAIL: save_VMX_preemption_timer VMEXIT control is set but VMX_preemption_timer VMEXEC control is clear"));
-     return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+    BX_ERROR(("VMFAIL: save_VMX_preemption_timer VMEXIT control is set but VMX_preemption_timer VMEXEC control is clear"));
+    return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
 #endif
 
   if (vm->vmexit_msr_store_cnt > 0) {
-     vm->vmexit_msr_store_addr = VMread64(VMCS_64BIT_CONTROL_VMEXIT_MSR_STORE_ADDR);
-     if ((vm->vmexit_msr_store_addr & 0xf) != 0 || ! IsValidPhyAddr(vm->vmexit_msr_store_addr)) {
-       BX_ERROR(("VMFAIL: VMCS VMEXIT CTRL: msr store addr malformed"));
-       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
-     }
+    vm->vmexit_msr_store_addr = VMread64(VMCS_64BIT_CONTROL_VMEXIT_MSR_STORE_ADDR);
+    if ((vm->vmexit_msr_store_addr & 0xf) != 0 || ! IsValidPhyAddr(vm->vmexit_msr_store_addr)) {
+      BX_ERROR(("VMFAIL: VMCS VMEXIT CTRL: msr store addr malformed"));
+      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+    }
 
-     Bit64u last_byte = vm->vmexit_msr_store_addr + (vm->vmexit_msr_store_cnt * 16) - 1;
-     if (! IsValidPhyAddr(last_byte)) {
-       BX_ERROR(("VMFAIL: VMCS VMEXIT CTRL: msr store addr too high"));
-       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
-     }
+    Bit64u last_byte = vm->vmexit_msr_store_addr + (vm->vmexit_msr_store_cnt * 16) - 1;
+    if (! IsValidPhyAddr(last_byte)) {
+      BX_ERROR(("VMFAIL: VMCS VMEXIT CTRL: msr store addr too high"));
+      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+    }
   }
 
   if (vm->vmexit_msr_load_cnt > 0) {
-     vm->vmexit_msr_load_addr = VMread64(VMCS_64BIT_CONTROL_VMEXIT_MSR_LOAD_ADDR);
-     if ((vm->vmexit_msr_load_addr & 0xf) != 0 || ! IsValidPhyAddr(vm->vmexit_msr_load_addr)) {
-       BX_ERROR(("VMFAIL: VMCS VMEXIT CTRL: msr load addr malformed"));
-       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
-     }
+    vm->vmexit_msr_load_addr = VMread64(VMCS_64BIT_CONTROL_VMEXIT_MSR_LOAD_ADDR);
+    if ((vm->vmexit_msr_load_addr & 0xf) != 0 || ! IsValidPhyAddr(vm->vmexit_msr_load_addr)) {
+      BX_ERROR(("VMFAIL: VMCS VMEXIT CTRL: msr load addr malformed"));
+      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+    }
 
-     Bit64u last_byte = (Bit64u) vm->vmexit_msr_load_addr + (vm->vmexit_msr_load_cnt * 16) - 1;
-     if (! IsValidPhyAddr(last_byte)) {
-       BX_ERROR(("VMFAIL: VMCS VMEXIT CTRL: msr load addr too high"));
-       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
-     }
+    Bit64u last_byte = (Bit64u) vm->vmexit_msr_load_addr + (vm->vmexit_msr_load_cnt * 16) - 1;
+    if (! IsValidPhyAddr(last_byte)) {
+      BX_ERROR(("VMFAIL: VMCS VMEXIT CTRL: msr load addr too high"));
+      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+    }
   }
 
   //
@@ -930,33 +953,33 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
   //
 
   if (~vm->vmentry_ctrls & VMX_CHECKS_USE_MSR_VMX_VMENTRY_CTRLS_LO) {
-     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX vmentry controls allowed 0-settings"));
-     return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+    BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX vmentry controls allowed 0-settings"));
+    return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
   if (vm->vmentry_ctrls & ~VMX_CHECKS_USE_MSR_VMX_VMENTRY_CTRLS_HI) {
-     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX vmentry controls allowed 1-settings [0x%08x]", vm->vmentry_ctrls & ~VMX_CHECKS_USE_MSR_VMX_VMENTRY_CTRLS_HI));
-     return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+    BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX vmentry controls allowed 1-settings [0x%08x]", vm->vmentry_ctrls & ~VMX_CHECKS_USE_MSR_VMX_VMENTRY_CTRLS_HI));
+    return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
 
   if (vm->vmentry_ctrls & VMX_VMENTRY_CTRL1_DEACTIVATE_DUAL_MONITOR_TREATMENT) {
-     if (! BX_CPU_THIS_PTR in_smm) {
-       BX_ERROR(("VMFAIL: VMENTRY from outside SMM with dual-monitor treatment enabled"));
-       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
-     }
+    if (! BX_CPU_THIS_PTR in_smm) {
+      BX_ERROR(("VMFAIL: VMENTRY from outside SMM with dual-monitor treatment enabled"));
+      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+    }
   }
 
   if (vm->vmentry_msr_load_cnt > 0) {
-     vm->vmentry_msr_load_addr = VMread64(VMCS_64BIT_CONTROL_VMENTRY_MSR_LOAD_ADDR);
-     if ((vm->vmentry_msr_load_addr & 0xf) != 0 || ! IsValidPhyAddr(vm->vmentry_msr_load_addr)) {
-       BX_ERROR(("VMFAIL: VMCS VMENTRY CTRL: msr load addr malformed"));
-       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
-     }
+    vm->vmentry_msr_load_addr = VMread64(VMCS_64BIT_CONTROL_VMENTRY_MSR_LOAD_ADDR);
+    if ((vm->vmentry_msr_load_addr & 0xf) != 0 || ! IsValidPhyAddr(vm->vmentry_msr_load_addr)) {
+      BX_ERROR(("VMFAIL: VMCS VMENTRY CTRL: msr load addr malformed"));
+      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+    }
 
-     Bit64u last_byte = vm->vmentry_msr_load_addr + (vm->vmentry_msr_load_cnt * 16) - 1;
-     if (! IsValidPhyAddr(last_byte)) {
-       BX_ERROR(("VMFAIL: VMCS VMENTRY CTRL: msr load addr too high"));
-       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
-     }
+    Bit64u last_byte = vm->vmentry_msr_load_addr + (vm->vmentry_msr_load_cnt * 16) - 1;
+    if (! IsValidPhyAddr(last_byte)) {
+      BX_ERROR(("VMFAIL: VMCS VMENTRY CTRL: msr load addr too high"));
+      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+    }
   }
 
   //
@@ -2286,7 +2309,7 @@ void BX_CPU_C::VMenterInjectEvents(void)
 
 #if BX_SUPPORT_UINTR
   if (BX_CPU_THIS_PTR cr4.get_UINTR() && long64_mode() && vector == BX_CPU_THIS_PTR uintr.uinv)
-    process_uintr_notification();
+    Process_UINTR_Notification();
   else
 #endif
     interrupt(vector, type, push_error, error_code);
@@ -4078,6 +4101,8 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, apic_access_page, BX_CPU_THIS_PTR vmcs.apic_access_page);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, apic_access, BX_CPU_THIS_PTR vmcs.apic_access);
 #endif
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, posted_intr_notification_vector, BX_CPU_THIS_PTR vmcs.posted_intr_notification_vector);
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, pid_addr, BX_CPU_THIS_PTR vmcs.pid_addr);
 #if BX_SUPPORT_VMX >= 2
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, eptptr, BX_CPU_THIS_PTR vmcs.eptptr);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vpid, BX_CPU_THIS_PTR vmcs.vpid);

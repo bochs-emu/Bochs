@@ -301,6 +301,7 @@ enum {
   BX_VMX_STORE_MSR_ACCESS,
   BX_VMX_VAPIC_ACCESS,
   BX_VMX_PML_WRITE,
+  BX_VMX_PID,
   BX_SMRAM_ACCESS
 };
 
@@ -4136,7 +4137,8 @@ public: // for now...
 #endif
   BX_SMF bool handleAsyncEvent(void);
   BX_SMF bool handleWaitForEvent(void);
-  BX_SMF void InterruptAcknowledge(void);
+  BX_SMF void HandleExtInterrupt(void);
+  BX_SMF Bit8u interrupt_acknowledge(void);
 
   BX_SMF void boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bxInstruction_c *);
 
@@ -4592,7 +4594,7 @@ public: // for now...
   BX_SMF void    deliver_SIPI(unsigned vector);
 #if BX_SUPPORT_UINTR
   BX_SMF void    deliver_UINTR();
-  BX_SMF void    process_uintr_notification();
+  BX_SMF void    Process_UINTR_Notification();
 #endif
   BX_SMF void    debug(bx_address offset);
   BX_SMF void    debug_disasm_instruction(bx_address offset);
@@ -4896,6 +4898,7 @@ public: // for now...
   BX_SMF void VMX_TPR_Virtualization(void);
   BX_SMF bool Virtualize_X2APIC_Write(unsigned msr, Bit64u val_64);
   BX_SMF void VMX_Virtual_Apic_Access_Trap(void);
+  BX_SMF bool VMX_Posted_Interrupt_Processing(Bit8u vector);
 #if BX_SUPPORT_VMX >= 2
   BX_SMF void vapic_set_vector(unsigned apic_arrbase, Bit8u vector);
   BX_SMF Bit8u vapic_clear_and_find_highest_priority_int(unsigned apic_arrbase, Bit8u vector);

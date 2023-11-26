@@ -282,8 +282,13 @@ void BX_CPU_C::send_uipi(Bit32u notification_destination, Bit32u notification_ve
 #endif
 }
 
-void BX_CPU_C::process_uintr_notification()
+void BX_CPU_C::Process_UINTR_Notification()
 {
+  // For any interrupt arriving after any iteration of a repeated instruction but the last iteration,
+  // the value pushed for RF is 1.
+  if (BX_CPU_THIS_PTR in_repeat)
+    assert_RF();
+
 #if BX_SUPPORT_VMX
   // the User-Level Interrupt notification process looks like external interrupt with the vector UINV
   // in particular for IDT-vectoring info

@@ -521,4 +521,67 @@ bool BX_CPU_C::Virtualize_X2APIC_Write(unsigned msr, Bit64u val_64)
   return false;
 }
 
+bool BX_CPU_C::VMX_Posted_Interrupt_Processing(Bit8u vector)
+{
+  BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
+
+  if (PIN_VMEXIT(VMX_PIN_BASED_VMEXEC_CTRL_PROCESS_POSTED_INTERRUPTS))
+    return false;
+
+  VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+
+  if (vector != vm->posted_intr_notification_vector)
+    return false;
+
+  // ----------- PID format --------
+  // | 255:000 | Posted interrupt requests (PIR)
+  // |         | One bit for each interrupt vector
+  // |     256 | Outstanding notification (PID.ON)
+  // | 511-257 | user available
+  // --------------------------------
+
+#if BX_SUPPORT_MEMTYPE && (BX_DEBUGGER || BX_INSTRUMENTATION)
+  BxMemtype pid_memtype = resolve_memtype(vm->pid_addr);
+#endif
+
+  // clear PID.ON using atomic RMW 'bit clear' operation
+  Bit8u pid_ON = read_physical_byte(vm->pid_addr + 32);
+  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->pid_addr + 32, 1, MEMTYPE(pid_memtype), BX_READ, BX_VMX_PID, &pid_ON);
+  pid_ON &= ~0x1;
+  access_write_physical(vm->pid_addr + 32, 1, &pid_ON);
+  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->pid_addr + 32, 1, MEMTYPE(pid_memtype), BX_WRITE, BX_VMX_PID, &pid_ON);
+
+  // write(0) into EOI register in the local APIC; this dismisses the interrupt with
+  // posted-interrupt notification vector from local APIC.
+  // instead of writing to memory, do it directly
+  BX_CPU_THIS_PTR lapic.receive_EOI();
+
+  // OR PIR into VIRR and clear PIR atomically (using lock xchg operation)
+  // no other agent supposed to read or write PIR between the time it is read and cleared
+  BxPackedYmmRegister PIR, tmp;
+  access_read_physical(vm->pid_addr, 32, (Bit8u*)(&PIR));
+  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->pid_addr, 32, MEMTYPE(pid_memtype), BX_READ, BX_VMX_PID, (Bit8u*)(&PIR));
+  tmp.clear();
+  access_write_physical(vm->pid_addr, 32, (Bit8u*)(&tmp));
+  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->pid_addr, 32, MEMTYPE(pid_memtype), BX_WRITE, BX_VMX_PID, (Bit8u*)(&tmp));
+
+  Bit32u virr[8];
+  for (unsigned n=0;n<8;n++) {
+    virr[n] = VMX_Read_Virtual_APIC(BX_LAPIC_IRR1 + 16*n); // atomic RMW 
+    virr[n] |= PIR.ymm32u(n);
+    VMX_Write_Virtual_APIC(BX_LAPIC_IRR1 + 16*n, virr[n]);
+  }
+
+  vector = BX_CPU_THIS_PTR lapic.highest_priority_int(virr);
+  if (vector >= vm->rvi) vm->rvi = vector;
+
+  VMX_Evaluate_Pending_Virtual_Interrupts();
+
+  // if in repeat operation but before the last iteration
+  if (BX_CPU_THIS_PTR in_repeat)
+    assert_RF();
+
+  return true;
+}
+
 #endif // BX_SUPPORT_VMX && BX_SUPPORT_X86_64
