@@ -368,6 +368,8 @@ void bx_cleanup_siminterface()
     delete root_param;
     root_param = NULL;
   }
+  io->exit_log2();
+  delete io;
 }
 
 bx_real_sim_c::bx_real_sim_c()

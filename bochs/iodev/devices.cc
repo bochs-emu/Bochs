@@ -430,6 +430,9 @@ void bx_devices_c::exit()
     delete [] curr->handler_name;
     delete curr;
   }
+  // delete default read handler name
+  delete [] io_read_handlers.handler_name;
+  io_read_handlers.handler_name = NULL;
   struct io_handler_struct *io_write_handler = io_write_handlers.next;
   while (io_write_handler != &io_write_handlers) {
     io_write_handler->prev->next = io_write_handler->next;
@@ -439,6 +442,10 @@ void bx_devices_c::exit()
     delete [] curr->handler_name;
     delete curr;
   }
+  // delete default write handler name
+  delete [] io_write_handlers.handler_name;
+  io_write_handlers.handler_name = NULL;
+  // delete IRQ handler names
   for (int i = 0; i < BX_MAX_IRQS; i++) {
     delete [] irq_handler_name[i];
     irq_handler_name[i] = NULL;
