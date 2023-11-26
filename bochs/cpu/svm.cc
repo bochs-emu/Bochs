@@ -1217,7 +1217,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPGA(bxInstruction_c *i)
     if (SVM_INTERCEPT(SVM_INTERCEPT0_INVLPGA)) Svm_Vmexit(SVM_VMEXIT_INVLPGA);
   }
 
-  TLB_flush(); // FIXME: flush all entries for now
+  bx_address addr = RAX & i->asize_mask();
+  TLB_invlpg(addr); // FIXME: flush all ASID entries for now
 
   BX_NEXT_TRACE(i);
 }
