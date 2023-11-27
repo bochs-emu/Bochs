@@ -218,14 +218,16 @@ class BOCHSAPI bx_local_apic_c : public logfunctions
 
   BX_CPU_C *cpu;
 
-  bool get_vector(Bit32u *reg, unsigned vector);
-  void set_vector(Bit32u *reg, unsigned vector);
-  void clear_vector(Bit32u *reg, unsigned vector);
-
 public:
-  bool INTR;
   bx_local_apic_c(BX_CPU_C *cpu, unsigned id);
  ~bx_local_apic_c() { }
+
+  static bool get_vector(const Bit32u *reg, unsigned vector);
+  static void set_vector(Bit32u *reg, unsigned vector);
+  static void clear_vector(Bit32u *reg, unsigned vector);
+
+  bool INTR;
+
   void reset(unsigned type);
   bx_phy_address get_base(void) const { return base_addr; }
   void set_base(bx_phy_address newbase);
@@ -246,19 +248,19 @@ public:
   void trigger_irq(Bit8u vector, unsigned trigger_mode, bool bypass_irr_isr = 0);
   void untrigger_irq(Bit8u vector, unsigned trigger_mode);
   Bit8u acknowledge_int(void);  // only the local CPU should call this
-  int highest_priority_int(Bit32u *array);
-  void receive_EOI(Bit32u value);
+  int highest_priority_int(const Bit32u *array) const;
+  void receive_EOI(Bit32u value = 0);
   void send_ipi(apic_dest_t dest, Bit32u lo_cmd);
   void write_spurious_interrupt_register(Bit32u value);
   void service_local_apic(void);
   void print_status(void);
   bool match_logical_addr(apic_dest_t address);
   bool deliver(Bit8u vector, Bit8u delivery_mode, Bit8u trig_mode);
-  Bit8u get_tpr(void) { return task_priority; }
+  Bit8u get_tpr(void) const { return task_priority; }
   void  set_tpr(Bit8u tpr);
-  Bit8u get_ppr(void);
+  Bit8u get_ppr(void) const;
   Bit8u get_apr(void);
-  bool is_focus(Bit8u vector);
+  bool is_focus(Bit8u vector) const;
   void set_lvt_entry(unsigned apic_reg, Bit32u val);
 
   static void periodic_smf(void *);
@@ -284,7 +286,7 @@ public:
 #endif
 
 #if BX_SUPPORT_MONITOR_MWAIT
-  void set_mwaitx_timer(Bit32u value);
+  void set_mwaitx_timer(Bit64u value);
   void deactivate_mwaitx_timer(void);
   static void mwaitx_timer_expired(void *);
 #endif

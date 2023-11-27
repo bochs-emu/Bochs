@@ -34,7 +34,7 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::is_virtual_apic_page(bx_phy_address paddr)
 {
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
-    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES))
+    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_APIC_ACCESSES))
       if (PPFOf(paddr) == vm->apic_access_page) return true;
   }
 
@@ -56,7 +56,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::virtual_apic_access_vmexit(unsigned offset
   }
 
   // access is not instruction fetch because cpu::prefetch will crash them
-  if (! VMEXIT(VMX_VM_EXEC_CTRL2_TPR_SHADOW) || len > 4 || offset >= 0x400)
+  if (! VMEXIT(VMX_VM_EXEC_CTRL1_TPR_SHADOW) || len > 4 || offset >= 0x400)
     return true;
 
   BX_CPU_THIS_PTR vmcs.apic_access = offset;
@@ -73,17 +73,17 @@ Bit32u BX_CPU_C::VMX_Read_Virtual_APIC(unsigned offset)
   return field32;
 }
 
-void BX_CPU_C::VMX_Write_Virtual_APIC(unsigned offset, Bit32u val32)
+void BX_CPU_C::VMX_Write_Virtual_APIC(unsigned offset, int len, Bit8u* val)
 {
   bx_phy_address pAddr = BX_CPU_THIS_PTR vmcs.virtual_apic_page_addr + offset;
   // must avoid recursive call to the function when VMX APIC access page = VMX Virtual Apic Page
-  BX_MEM(0)->writePhysicalPage(BX_CPU_THIS, pAddr, 4, (Bit8u*)(&val32));
-  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 4, MEMTYPE(resolve_memtype(pAddr)), BX_WRITE, BX_VMX_VAPIC_ACCESS, (Bit8u*)(&val32));
+  BX_MEM(0)->writePhysicalPage(BX_CPU_THIS, pAddr, len, val);
+  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, len, MEMTYPE(resolve_memtype(pAddr)), BX_WRITE, BX_VMX_VAPIC_ACCESS, val);
 }
 
 bx_phy_address BX_CPU_C::VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned len, void *data)
 {
-  BX_ASSERT(SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES));
+  BX_ASSERT(SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_APIC_ACCESSES));
 
   BX_INFO(("Virtual Apic RD 0x" FMT_ADDRX " len = %d", paddr, len));
 
@@ -94,7 +94,7 @@ bx_phy_address BX_CPU_C::VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned le
   // access is not instruction fetch because cpu::prefetch will crash them
   if (! vmexit) {
 
-    if (!SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_REGISTERS)) {
+    if (!SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_APIC_REGISTERS)) {
       // if 'Virtualize Apic Registers' control is disabled allow only aligned access to VTPR
       if (offset != BX_LAPIC_TPR) vmexit = true;
     }
@@ -166,7 +166,7 @@ bx_phy_address BX_CPU_C::VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned le
 
 void BX_CPU_C::VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *data)
 {
-  BX_ASSERT(SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_ACCESSES));
+  BX_ASSERT(SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_APIC_ACCESSES));
 
   BX_INFO(("Virtual Apic WR 0x" FMT_ADDRX " len = %d", paddr, len));
 
@@ -184,20 +184,21 @@ void BX_CPU_C::VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *
     }
 
 #if BX_SUPPORT_VMX >= 2
-    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUAL_INT_DELIVERY)) {
+    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUAL_INT_DELIVERY)) {
       if (offset == BX_LAPIC_EOI) {
          signal_event(BX_EVENT_VMX_VEOI_UPDATE);
       }
     }
 
+    bool virtualize_access = false;
     switch(offset & 0x3fc) {
     case BX_LAPIC_ID:
     case BX_LAPIC_TPR:
-    case BX_LAPIC_ICR_HI:
     case BX_LAPIC_LDR:
     case BX_LAPIC_DESTINATION_FORMAT:
     case BX_LAPIC_SPURIOUS_VECTOR:
     case BX_LAPIC_ESR:
+    case BX_LAPIC_ICR_HI:
     case BX_LAPIC_LVT_TIMER:
     case BX_LAPIC_LVT_THERMAL:
     case BX_LAPIC_LVT_PERFMON:
@@ -206,27 +207,28 @@ void BX_CPU_C::VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *
     case BX_LAPIC_LVT_ERROR:
     case BX_LAPIC_TIMER_INITIAL_COUNT:
     case BX_LAPIC_TIMER_DIVIDE_CFG:
-      // VMX_VMEXIT_APIC_ACCESS if the control is disabled
-      if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_REGISTERS)) break;
-      // else fall through
+      if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_APIC_REGISTERS)) {
+        virtualize_access = true;
+      }
+      break;
 
     case BX_LAPIC_EOI:
     case BX_LAPIC_ICR_LO:
-      // VMX_VMEXIT_APIC_ACCESS if both controls are disabled
-      if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUAL_INT_DELIVERY) &&
-          ! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_REGISTERS)) break;
-      // else fall through
-
-      // remap access to virtual apic page
-      paddr = BX_CPU_THIS_PTR vmcs.virtual_apic_page_addr + offset;
-      // must avoid recursive call to the function when VMX APIC access page = VMX Virtual Apic Page
-      BX_MEM(0)->writePhysicalPage(BX_CPU_THIS, paddr, len, (Bit8u *) data);
-      BX_NOTIFY_PHY_MEMORY_ACCESS(paddr, len, MEMTYPE(resolve_memtype(paddr)), BX_WRITE, BX_VMX_VAPIC_ACCESS, (Bit8u *) data);
-      signal_event(BX_EVENT_VMX_VIRTUAL_APIC_WRITE);
-      return;
+      if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_APIC_REGISTERS) ||
+          SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUAL_INT_DELIVERY))
+      {
+        virtualize_access = true;
+      }
+      break;
 
     default:
       break;
+    }
+
+    if (virtualize_access) {
+      VMX_Write_Virtual_APIC(offset, len, (Bit8u*) data);
+      signal_event(BX_EVENT_VMX_VIRTUAL_APIC_WRITE);
+      return;
     }
 #endif
   }
@@ -238,20 +240,15 @@ void BX_CPU_C::VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *
 
 #if BX_SUPPORT_VMX >= 2
 
-BX_CPP_INLINE bool vapic_read_vector(Bit32u *arr, Bit8u vector)
-{
-  unsigned apic_reg = vector / 32;
-
-  return arr[apic_reg] & (1 << (vector & 0x1f));
-}
-
 BX_CPP_INLINE void BX_CPU_C::vapic_set_vector(unsigned arrbase, Bit8u vector)
 {
   unsigned reg = vector / 32;
-  Bit32u regval = VMX_Read_Virtual_APIC(arrbase + 0x10*reg);
+  Bit32u regval = VMX_Read_Virtual_APIC(arrbase + 16*reg);
   regval |= (1 << (vector & 0x1f));
-  VMX_Write_Virtual_APIC(arrbase + 0x10*reg, regval);
+  VMX_Write_Virtual_APIC(arrbase + 16*reg, regval);
 }
+
+#include "scalar_arith.h"   // for lzcntd
 
 BX_CPP_INLINE Bit8u BX_CPU_C::vapic_clear_and_find_highest_priority_int(unsigned arrbase, Bit8u vector)
 {
@@ -259,21 +256,15 @@ BX_CPP_INLINE Bit8u BX_CPU_C::vapic_clear_and_find_highest_priority_int(unsigned
   int n;
 
   for (n=0;n<8;n++)
-    arr[n] = VMX_Read_Virtual_APIC(arrbase + 0x10*n);
+    arr[n] = VMX_Read_Virtual_APIC(arrbase + 16*n);
 
+  bx_local_apic_c::clear_vector(arr, vector);
   unsigned reg = vector / 32;
-  arr[reg] &= ~(1 << (vector & 0x1f));
-
-  VMX_Write_Virtual_APIC(arrbase + 0x10*reg, arr[reg]);
+  VMX_Write_Virtual_APIC(arrbase + 16*reg, arr[reg]);
 
   for (n = 7; n >= 0; n--) {
     if (! arr[n]) continue;
-
-    for (int bit = 31; bit >= 0; bit--) {
-      if (arr[n] & (1<<bit)) {
-        return (n * 32 + bit);
-      }
-    }
+    return (n * 32) + most_significant_bitd(arr[n]);
   }
 
   return 0;
@@ -283,7 +274,7 @@ void BX_CPU_C::VMX_Evaluate_Pending_Virtual_Interrupts(void)
 {
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
 
-  if (! VMEXIT(VMX_VM_EXEC_CTRL2_INTERRUPT_WINDOW_VMEXIT) && (vm->rvi >> 4) > (vm->vppr >> 4))
+  if (! VMEXIT(VMX_VM_EXEC_CTRL1_INTERRUPT_WINDOW_VMEXIT) && (vm->rvi >> 4) > (vm->vppr >> 4))
   {
     BX_INFO(("Pending Virtual Interrupt Vector 0x%x", vm->rvi));
     signal_event(BX_EVENT_PENDING_VMX_VIRTUAL_INTR);
@@ -304,7 +295,7 @@ void BX_CPU_C::VMX_TPR_Virtualization(void)
   clear_event(BX_EVENT_VMX_VTPR_UPDATE);
 
 #if BX_SUPPORT_VMX >= 2
-  if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUAL_INT_DELIVERY)) {
+  if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUAL_INT_DELIVERY)) {
     VMX_PPR_Virtualization();
     VMX_Evaluate_Pending_Virtual_Interrupts();
   }
@@ -344,7 +335,7 @@ void BX_CPU_C::VMX_EOI_Virtualization(void)
 
   clear_event(BX_EVENT_VMX_VEOI_UPDATE);
 
-  if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUAL_INT_DELIVERY))
+  if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUAL_INT_DELIVERY))
   {
     VMX_Write_Virtual_APIC(BX_LAPIC_EOI, 0);
 
@@ -353,7 +344,8 @@ void BX_CPU_C::VMX_EOI_Virtualization(void)
 
     VMX_PPR_Virtualization();
 
-    if (vapic_read_vector(vm->eoi_exit_bitmap, vector)) {
+    bool bit_high = bx_local_apic_c::get_vector(vm->eoi_exit_bitmap, vector);
+    if (bit_high) {
       VMexit(VMX_VMEXIT_VIRTUALIZED_EOI, vector); // trap-like VMEXIT
     }
     else {
@@ -392,9 +384,22 @@ void BX_CPU_C::VMX_Deliver_Virtual_Interrupt(void)
 
   BX_CPU_THIS_PTR EXT = 1; /* external event */
 
-  BX_INSTR_HWINTERRUPT(BX_CPU_ID, vector,
+#if BX_SUPPORT_UINTR
+  if (BX_CPU_THIS_PTR cr4.get_UINTR() && long64_mode() && vector == BX_CPU_THIS_PTR uintr.uinv)
+  {
+    unsigned vector = vm->svi;
+    vm->svi = vapic_clear_and_find_highest_priority_int(BX_LAPIC_ISR1, vector);
+    VMX_PPR_Virtualization();
+
+    Process_UINTR_Notification();
+  }
+  else
+#endif
+  {
+    BX_INSTR_HWINTERRUPT(BX_CPU_ID, vector,
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
-  interrupt(vector, BX_EXTERNAL_INTERRUPT, 0, 0);
+    interrupt(vector, BX_EXTERNAL_INTERRUPT, 0, 0);
+  }
 
   BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
   BX_CPU_THIS_PTR EXT = 0;
@@ -403,23 +408,38 @@ void BX_CPU_C::VMX_Deliver_Virtual_Interrupt(void)
   longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
 }
 
+BX_CPP_INLINE bool self_IPI_VICR(Bit32u vicr)
+{
+  // reserved bits (31:20, 17:16, 13) and bit 12 (delivery status) must be '0
+  // bit 15 (trigger mode) must be '0
+  // bits 10:8 (delivery mode) must be '0
+  // destination shorthand: must be self = '01
+  unsigned dest_shorthand = (vicr >> 18) & 0x3;
+
+  return ((vicr & 0xfff3b700) == 0) && (dest_shorthand == 0x1);
+}
+
 void BX_CPU_C::VMX_Write_VICR(void)
 {
   Bit32u vicr = VMX_Read_Virtual_APIC(BX_LAPIC_ICR_LO);
-
-  unsigned dest_shorthand = (vicr >> 18) & 0x3;
   Bit8u vector = vicr & 0xff;
 
-  // reserved bits (31:20, 17:16, 13), 15 (trigger mode), 12 (delivery status), 10:8 (delivery mode) must be 0
-  // destination shorthand: must be self
-  if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUAL_INT_DELIVERY) &&
-     (vicr & 0xfff3b700) == 0 && (dest_shorthand == 0x1) && vector >= 16)
+  if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUAL_INT_DELIVERY) && self_IPI_VICR(vicr) && vector >= 16) 
   {
     VMX_Self_IPI_Virtualization(vector);
+    return;
   }
-  else {
-    VMexit(VMX_VMEXIT_APIC_WRITE, BX_LAPIC_ICR_LO); // trap-like vmexit
-  }
+
+  VMexit(VMX_VMEXIT_APIC_WRITE, BX_LAPIC_ICR_LO); // trap-like vmexit
+}
+
+void BX_CPU_C::VMX_Write_VICR_HI(void)
+{
+  // clear bits (2:0) of VICR_HI, no VMexit should happen
+  BX_DEBUG(("Virtual Apic Access Trap: Clearing ICR_HI[23:0]"));
+  Bit32u vicr_hi = VMX_Read_Virtual_APIC(BX_LAPIC_ICR_HI);
+         vicr_hi &= 0xff000000;
+  VMX_Write_Virtual_APIC(BX_LAPIC_ICR_HI, vicr_hi);
 }
 
 #endif // BX_SUPPORT_VMX >= 2
@@ -442,10 +462,7 @@ void BX_CPU_C::VMX_Virtual_Apic_Access_Trap(void)
     BX_DEBUG(("Trap Event: Virtual Apic Access Trap offset = %08x", apic_offset));
 
     if (apic_offset >= BX_LAPIC_ICR_HI && apic_offset <= BX_LAPIC_ICR_HI+3) {
-      // clear bits (2:0) of VICR_HI, no VMexit should happen
-      BX_DEBUG(("Virtual Apic Access Trap: Clearing ICR_HI[23:0]"));
-      Bit32u vicr_hi = VMX_Read_Virtual_APIC(BX_LAPIC_ICR_HI);
-      VMX_Write_Virtual_APIC(BX_LAPIC_ICR_HI, vicr_hi & 0xff000000);
+      VMX_Write_VICR_HI();
     }
     else if (apic_offset == BX_LAPIC_ICR_LO) {
       VMX_Write_VICR();
@@ -465,22 +482,20 @@ bool BX_CPU_C::Virtualize_X2APIC_Write(unsigned msr, Bit64u val_64)
     if ((val_64 >> 8) != 0)
       exception(BX_GP_EXCEPTION, 0);
 
-    VMX_Write_Virtual_APIC(BX_LAPIC_TPR, val_64 & 0xff);
-    VMX_Write_Virtual_APIC(BX_LAPIC_TPR + 4, 0);
+    VMX_Write_Virtual_X2APIC(BX_LAPIC_TPR, val_64 & 0xff);
     VMX_TPR_Virtualization();
 
     return true;
   }
 
 #if BX_SUPPORT_VMX >= 2
-  if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUAL_INT_DELIVERY)) {
+  if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUAL_INT_DELIVERY)) {
     if (msr == 0x80b) {
       // EOI virtualization
       if (val_64 != 0)
         exception(BX_GP_EXCEPTION, 0);
 
       VMX_EOI_Virtualization();
-
       return true;
     }
 
@@ -491,8 +506,7 @@ bool BX_CPU_C::Virtualize_X2APIC_Write(unsigned msr, Bit64u val_64)
 
       Bit8u vector = val_64 & 0xff;
       if (vector < 16) {
-        VMX_Write_Virtual_APIC(BX_LAPIC_SELF_IPI, vector);
-        VMX_Write_Virtual_APIC(BX_LAPIC_SELF_IPI + 4, 0);
+        VMX_Write_Virtual_X2APIC(BX_LAPIC_SELF_IPI, vector);
         VMexit(VMX_VMEXIT_APIC_WRITE, BX_LAPIC_SELF_IPI); // trap-like vmexit
       }
       else {
@@ -505,6 +519,65 @@ bool BX_CPU_C::Virtualize_X2APIC_Write(unsigned msr, Bit64u val_64)
 #endif
 
   return false;
+}
+
+bool BX_CPU_C::VMX_Posted_Interrupt_Processing(Bit8u vector)
+{
+  BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
+
+  if (PIN_VMEXIT(VMX_PIN_BASED_VMEXEC_CTRL_PROCESS_POSTED_INTERRUPTS))
+    return false;
+
+  VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+
+  if (vector != vm->posted_intr_notification_vector)
+    return false;
+
+  // ----------- PID format --------
+  // | 255:000 | Posted interrupt requests (PIR)
+  // |         | One bit for each interrupt vector
+  // |     256 | Outstanding notification (PID.ON)
+  // | 511-257 | user available
+  // --------------------------------
+
+#if BX_SUPPORT_MEMTYPE && (BX_DEBUGGER || BX_INSTRUMENTATION)
+  BxMemtype pid_memtype = resolve_memtype(vm->pid_addr);
+#endif
+
+  // clear PID.ON using atomic RMW 'bit clear' operation
+  Bit8u pid_ON = read_physical_byte(vm->pid_addr + 32);
+  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->pid_addr + 32, 1, MEMTYPE(pid_memtype), BX_READ, BX_VMX_PID, &pid_ON);
+  pid_ON &= ~0x1;
+  access_write_physical(vm->pid_addr + 32, 1, &pid_ON);
+  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->pid_addr + 32, 1, MEMTYPE(pid_memtype), BX_WRITE, BX_VMX_PID, &pid_ON);
+
+  // write(0) into EOI register in the local APIC; this dismisses the interrupt with
+  // posted-interrupt notification vector from local APIC.
+  // instead of writing to memory, do it directly
+  BX_CPU_THIS_PTR lapic.receive_EOI();
+
+  // OR PIR into VIRR and clear PIR atomically (using lock xchg operation)
+  // no other agent supposed to read or write PIR between the time it is read and cleared
+  BxPackedYmmRegister PIR, tmp;
+  access_read_physical(vm->pid_addr, 32, (Bit8u*)(&PIR));
+  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->pid_addr, 32, MEMTYPE(pid_memtype), BX_READ, BX_VMX_PID, (Bit8u*)(&PIR));
+  tmp.clear();
+  access_write_physical(vm->pid_addr, 32, (Bit8u*)(&tmp));
+  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->pid_addr, 32, MEMTYPE(pid_memtype), BX_WRITE, BX_VMX_PID, (Bit8u*)(&tmp));
+
+  Bit32u virr[8];
+  for (unsigned n=0;n<8;n++) {
+    virr[n] = VMX_Read_Virtual_APIC(BX_LAPIC_IRR1 + 16*n); // atomic RMW 
+    virr[n] |= PIR.ymm32u(n);
+    VMX_Write_Virtual_APIC(BX_LAPIC_IRR1 + 16*n, virr[n]);
+  }
+
+  vector = BX_CPU_THIS_PTR lapic.highest_priority_int(virr);
+  if (vector >= vm->rvi) vm->rvi = vector;
+
+  VMX_Evaluate_Pending_Virtual_Interrupts();
+
+  return true;
 }
 
 #endif // BX_SUPPORT_VMX && BX_SUPPORT_X86_64

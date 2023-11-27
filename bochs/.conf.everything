@@ -20,6 +20,7 @@
   --enable-avx \
   --enable-cet \
   --enable-evex \
+  --enable-uintr \
   --enable-perfmon \
   --enable-memtype \
   --enable-x86-debugger \

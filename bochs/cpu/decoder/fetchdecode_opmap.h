@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2017-2019 Stanislav Shwartsman
+//   Copyright (c) 2017-2023 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -1529,6 +1529,7 @@ static const Bit64u BxOpcodeTable0F01[] = {
   form_opcode(ATTR_NNN2 | ATTR_RRR1 | ATTR_MODC0 | ATTR_SSE_NO_PREFIX, BX_IA_XSETBV),
   form_opcode(ATTR_NNN2 | ATTR_RRR4 | ATTR_MODC0 | ATTR_SSE_NO_PREFIX, BX_IA_VMFUNC),
 
+#if BX_SUPPORT_SVM
   form_opcode(ATTR_NNN3 | ATTR_RRR0 | ATTR_MODC0, BX_IA_VMRUN),
   form_opcode(ATTR_NNN3 | ATTR_RRR1 | ATTR_MODC0, BX_IA_VMMCALL),
   form_opcode(ATTR_NNN3 | ATTR_RRR2 | ATTR_MODC0, BX_IA_VMLOAD),
@@ -1537,6 +1538,7 @@ static const Bit64u BxOpcodeTable0F01[] = {
   form_opcode(ATTR_NNN3 | ATTR_RRR5 | ATTR_MODC0, BX_IA_CLGI),
   form_opcode(ATTR_NNN3 | ATTR_RRR6 | ATTR_MODC0, BX_IA_SKINIT),
   form_opcode(ATTR_NNN3 | ATTR_RRR7 | ATTR_MODC0, BX_IA_INVLPGA),
+#endif
 
   form_opcode(ATTR_NNN5 | ATTR_RRR0 | ATTR_MODC0   | ATTR_SSE_NO_PREFIX, BX_IA_SERIALIZE),
 
@@ -1549,6 +1551,13 @@ static const Bit64u BxOpcodeTable0F01[] = {
 #if BX_SUPPORT_PKEYS
   form_opcode(ATTR_NNN5 | ATTR_RRR6 | ATTR_MODC0 | ATTR_SSE_NO_PREFIX, BX_IA_RDPKRU),
   form_opcode(ATTR_NNN5 | ATTR_RRR7 | ATTR_MODC0 | ATTR_SSE_NO_PREFIX, BX_IA_WRPKRU),
+#endif
+
+#if BX_SUPPORT_UINTR && BX_SUPPORT_X86_64
+  form_opcode(ATTR_IS64 | ATTR_NNN5 | ATTR_RRR4 | ATTR_MODC0 | ATTR_SSE_PREFIX_F3, BX_IA_UIRET),
+  form_opcode(ATTR_IS64 | ATTR_NNN5 | ATTR_RRR5 | ATTR_MODC0 | ATTR_SSE_PREFIX_F3, BX_IA_TESTUI),
+  form_opcode(ATTR_IS64 | ATTR_NNN5 | ATTR_RRR6 | ATTR_MODC0 | ATTR_SSE_PREFIX_F3, BX_IA_CLUI),
+  form_opcode(ATTR_IS64 | ATTR_NNN5 | ATTR_RRR7 | ATTR_MODC0 | ATTR_SSE_PREFIX_F3, BX_IA_STUI),
 #endif
 
 #if BX_SUPPORT_X86_64
@@ -2833,6 +2842,9 @@ static const Bit64u BxOpcodeTable0FC7[] = {
 #if BX_SUPPORT_X86_64
   form_opcode(ATTR_OS64 | ATTR_MODC0 | ATTR_NNN6 | ATTR_NO_SSE_PREFIX_F2_F3, BX_IA_RDRAND_Eq),
   form_opcode(ATTR_OS64 | ATTR_MODC0 | ATTR_NNN7 | ATTR_NO_SSE_PREFIX_F2_F3, BX_IA_RDSEED_Eq),
+#endif
+#if BX_SUPPORT_X86_64 && BX_SUPPORT_UINTR
+  form_opcode(ATTR_IS64 | ATTR_MODC0 | ATTR_NNN6 | ATTR_SSE_PREFIX_F3, BX_IA_SENDUIPI_Gq),
 #endif
   form_opcode(ATTR_NNN7 | ATTR_MODC0 | ATTR_SSE_PREFIX_F3, BX_IA_RDPID_Ed),
   form_opcode_lockable(ATTR_OS16_32 | ATTR_NNN1 | ATTR_MOD_MEM, BX_IA_CMPXCHG8B),

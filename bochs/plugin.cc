@@ -648,11 +648,20 @@ void plugin_startup(void)
 #endif
 }
 
+#if !BX_PLUGINS
+void plugin_cleanup_np(void);
+#endif
+
 void plugin_cleanup(void)
 {
+  // Unload each loaded device plugin first
+  if (devices != NULL) {
+    bx_unload_plugins();
+  }
 #if BX_PLUGINS
   plugin_t *dead_plug;
 
+  // delete plugin database and unload non-device plugins
   while (plugins != NULL) {
     if (plugins->loadtype != PLUGTYPE_NULL) {
       plugin_unload(plugins);
@@ -663,7 +672,10 @@ void plugin_cleanup(void)
     plugins = plugins->next;
     delete dead_plug;
   }
+#else
+  plugin_cleanup_np();
 #endif
+  delete pluginlog;
 }
 
 
@@ -874,7 +886,7 @@ void bx_unload_plugins()
 {
   device_t *device, *next;
 
-  // unload non-core plugins first
+  // unload non-core device plugins first
   device = devices;
   while (device != NULL) {
     if (device->plugin != NULL) {
@@ -894,7 +906,7 @@ void bx_unload_plugins()
   }
   devices = NULL;
 
-  // now it's safe to unload core plugins
+  // now it's safe to unload core device plugins
   device = core_devices;
   while (device != NULL) {
     if (device->plugin != NULL) {
@@ -902,7 +914,11 @@ void bx_unload_plugins()
       bx_unload_plugin(device->name, 0);
 #endif
     } else {
-      delete device->devmodel;
+#if !BX_PLUGINS
+      if (!bx_unload_opt_plugin(device->name, 0)) {
+        delete device->devmodel;
+      }
+#endif
     }
     next = device->next;
     delete device;
@@ -1194,8 +1210,8 @@ int bx_unload_opt_plugin(const char *name, bool devflag)
   int i = 0;
   while (strcmp(bx_builtin_plugins[i].name, "NULL")) {
     if ((!strcmp(name, bx_builtin_plugins[i].name)) &&
-        ((bx_builtin_plugins[i].type == PLUGTYPE_OPTIONAL) ||
-         (bx_builtin_plugins[i].type == PLUGTYPE_VGA))) {
+        (((bx_builtin_plugins[i].type & PLUGTYPE_OPTIONAL) != 0) ||
+         ((bx_builtin_plugins[i].type & PLUGTYPE_VGA) != 0))) {
       if (bx_builtin_plugins[i].initialized == 1) {
         if (devflag) {
           pluginUnregisterDeviceDevmodel(bx_builtin_plugins[i].name,
@@ -1210,6 +1226,19 @@ int bx_unload_opt_plugin(const char *name, bool devflag)
     i++;
   }
   return 0;
+}
+
+void plugin_cleanup_np(void)
+{
+  int i = 0;
+  while (strcmp(bx_builtin_plugins[i].name, "NULL")) {
+    if (bx_builtin_plugins[i].initialized == 1) {
+      bx_builtin_plugins[i].plugin_entry(NULL, bx_builtin_plugins[i].loadtype, PLUGIN_FINI);
+      bx_builtin_plugins[i].loadtype = PLUGTYPE_NULL;
+      bx_builtin_plugins[i].initialized = 0;
+    }
+    i++;
+  }
 }
 
 #endif

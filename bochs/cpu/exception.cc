@@ -92,7 +92,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit16
   }
 
   Bit16u gate_dest_selector = gate_descriptor.u.gate.dest_selector;
-  Bit64u gate_dest_offset   = ((Bit64u)dword3 << 32) | gate_descriptor.u.gate.dest_offset;
+  Bit64u gate_dest_offset   = GET64_FROM_HI32_LO32(dword3, gate_descriptor.u.gate.dest_offset);
 
   unsigned ist = gate_descriptor.u.gate.param_count & 0x7;
 
@@ -819,10 +819,6 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bool push_error, Bit16u er
   }
 
   RSP_COMMIT;
-
-#if BX_X86_DEBUGGER
-  BX_CPU_THIS_PTR in_repeat = false;
-#endif
 
 #if BX_SUPPORT_VMX
   unmask_event(BX_EVENT_VMX_MONITOR_TRAP_FLAG);

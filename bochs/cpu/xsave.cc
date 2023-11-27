@@ -141,7 +141,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX >= 2
     if (BX_CPU_THIS_PTR in_vmx_guest) {
-      if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_XSAVES_XRSTORS)) {
+      if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_XSAVES_XRSTORS)) {
         BX_ERROR(("%s in VMX guest: not allowed to use instruction !", i->getIaOpcodeNameShort()));
         exception(BX_UD_EXCEPTION, 0);
       }
@@ -244,7 +244,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX >= 2
     if (BX_CPU_THIS_PTR in_vmx_guest) {
-      if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_XSAVES_XRSTORS)) {
+      if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_XSAVES_XRSTORS)) {
         BX_ERROR(("%s in VMX guest: not allowed to use instruction !", i->getIaOpcodeNameShort()));
         exception(BX_UD_EXCEPTION, 0);
       }
@@ -963,6 +963,83 @@ bool BX_CPU_C::xsave_cet_s_state_xinuse(void)
     return BX_CPU_THIS_PTR msr.ia32_pl_ssp[n] != 0;
 
   return false;
+}
+#endif
+
+#if BX_SUPPORT_UINTR
+void BX_CPU_C::xsave_uintr_state(bxInstruction_c *i, bx_address offset)
+{
+  bx_address asize_mask = i->asize_mask();
+
+  write_virtual_qword(i->seg(),  offset,                    BX_CPU_THIS_PTR uintr.ui_handler);
+  write_virtual_qword(i->seg(), (offset +  8) & asize_mask, BX_CPU_THIS_PTR uintr.stack_adjust);
+
+  Bit64u misc = GET64_FROM_HI32_LO32(BX_CPU_THIS_PTR uintr.uinv, BX_CPU_THIS_PTR uintr.uitt_size);
+  if (BX_CPU_THIS_PTR uintr.UIF)
+    misc |= BX_CONST64(0x8000000000000000);
+  write_virtual_qword(i->seg(), (offset + 16) & asize_mask, misc);
+
+  write_virtual_qword(i->seg(), (offset + 24) & asize_mask, BX_CPU_THIS_PTR uintr.upid_addr);
+  write_virtual_qword(i->seg(), (offset + 32) & asize_mask, BX_CPU_THIS_PTR uintr.uirr);
+  write_virtual_qword(i->seg(), (offset + 40) & asize_mask, BX_CPU_THIS_PTR uintr.uitt_addr);
+
+  BX_CPU_THIS_PTR uintr.uinv = 0;
+}
+
+void BX_CPU_C::xrstor_uintr_state(bxInstruction_c *i, bx_address offset)
+{
+  if (BX_CPU_THIS_PTR uintr.uinv) {
+    BX_ERROR(("Attempting to restore UINTR state when UINTR.UINV is set: #GP(0)"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
+  BX_CPU_THIS_PTR uintr.uinv = 0; // will be restored and overwritten, should stay '0 in case of any fault
+
+  bx_address asize_mask = i->asize_mask();
+
+  Bit64u ui_handler   = read_virtual_qword(i->seg(),  offset);
+  Bit64u stack_adjust = read_virtual_qword(i->seg(), (offset +  8) & asize_mask);
+  Bit64u misc         = read_virtual_qword(i->seg(), (offset + 16) & asize_mask);
+  bool UIF = (misc >> 63) != 0;
+  misc &= ~BX_CONST64(0x8000000000000000); // clear UIF
+  Bit64u upid_addr    = read_virtual_qword(i->seg(), (offset + 24) & asize_mask);
+  Bit64u uirr         = read_virtual_qword(i->seg(), (offset + 32) & asize_mask);
+  Bit64u uitt_addr    = read_virtual_qword(i->seg(), (offset + 40) & asize_mask);
+
+  // XRSTOR on UINTR state does all reserved bits and canonicality check like WRMSR would do
+  wrmsr(BX_MSR_IA32_UINTR_HANDLER, ui_handler);
+  wrmsr(BX_MSR_IA32_UINTR_STACKADJUST, stack_adjust);
+  wrmsr(BX_MSR_IA32_UINTR_PD, upid_addr);
+  wrmsr(BX_MSR_IA32_UINTR_TT, uitt_addr);
+  wrmsr(BX_MSR_IA32_UINTR_MISC, misc);   // make sure all faults happen before
+  wrmsr(BX_MSR_IA32_UINTR_RR, uirr);
+
+  BX_CPU_THIS_PTR uintr.UIF = UIF;
+  uintr_control(); // potentially enable user interrupt delivery
+}
+
+void BX_CPU_C::xrstor_init_uintr_state(void)
+{
+  BX_CPU_THIS_PTR uintr.ui_handler = 0;
+  BX_CPU_THIS_PTR uintr.stack_adjust = 0;
+  BX_CPU_THIS_PTR uintr.uitt_size = 0;
+  BX_CPU_THIS_PTR uintr.uinv = 0;
+  BX_CPU_THIS_PTR uintr.UIF = 0;
+  BX_CPU_THIS_PTR uintr.upid_addr = 0;
+  BX_CPU_THIS_PTR uintr.uitt_addr = 0;
+  BX_CPU_THIS_PTR uintr.uirr = 0;
+}
+
+bool BX_CPU_C::xsave_uintr_state_xinuse(void)
+{
+  return BX_CPU_THIS_PTR uintr.ui_handler != 0 ||
+         BX_CPU_THIS_PTR uintr.stack_adjust != 0 ||
+         BX_CPU_THIS_PTR uintr.uitt_size != 0 ||
+         BX_CPU_THIS_PTR uintr.uinv != 0 ||
+         BX_CPU_THIS_PTR uintr.UIF != 0 ||
+         BX_CPU_THIS_PTR uintr.upid_addr != 0 ||
+         BX_CPU_THIS_PTR uintr.uitt_addr != 0 ||
+         BX_CPU_THIS_PTR uintr.uirr != 0;
 }
 #endif
 

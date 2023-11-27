@@ -68,6 +68,7 @@ int  bx_init_main(int argc, char *argv[]);
 void bx_init_hardware(void);
 void bx_plugin_ctrl_reset(bool init_done);
 void bx_init_options(void);
+void bx_cleanup_options(void);
 void bx_init_bx_dbg(void);
 
 static const char *divider = "========================================================================";
@@ -352,7 +353,9 @@ int bxmain(void)
 #endif
   plugin_cleanup();
   BX_INSTR_EXIT_ENV();
-  return SIM->get_exit_code();
+  int exit_code = bx_cleanup_siminterface();
+  bx_cleanup_options();
+  return exit_code;
 }
 
 #if defined(__WXMSW__)

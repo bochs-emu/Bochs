@@ -147,6 +147,7 @@ cdrom_win32_c::~cdrom_win32_c(void)
   if (fd >= 0) {
     if (hFile != INVALID_HANDLE_VALUE)
       CloseHandle(hFile);
+    fd = -1;
   }
 }
 
@@ -209,6 +210,11 @@ void cdrom_win32_c::eject_cdrom()
       if (isWindowsXP) {
         DWORD lpBytesReturned;
         DeviceIoControl(hFile, IOCTL_STORAGE_EJECT_MEDIA, NULL, 0, NULL, 0, &lpBytesReturned, NULL);
+      }
+    } else {
+      if (hFile != INVALID_HANDLE_VALUE) {
+        CloseHandle(hFile);
+        hFile = INVALID_HANDLE_VALUE;
       }
     }
     fd = -1;

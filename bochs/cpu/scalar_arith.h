@@ -87,6 +87,11 @@ BX_CPP_INLINE unsigned lzcntw(Bit16u val_16)
   return count;
 }
 
+BX_CPP_INLINE unsigned most_significant_bitw(Bit16u val_16)
+{
+  return 15 - lzcntw(val_16);
+}
+
 BX_CPP_INLINE unsigned lzcntd(Bit32u val_32)
 {
   Bit32u mask = 0x80000000;
@@ -100,6 +105,11 @@ BX_CPP_INLINE unsigned lzcntd(Bit32u val_32)
   return count;
 }
 
+BX_CPP_INLINE unsigned most_significant_bitd(Bit32u val_32)
+{
+  return 31 - lzcntd(val_32);
+}
+
 BX_CPP_INLINE unsigned lzcntq(Bit64u val_64)
 {
   Bit64u mask = BX_CONST64(0x8000000000000000);
@@ -111,6 +121,11 @@ BX_CPP_INLINE unsigned lzcntq(Bit64u val_64)
   }
 
   return count;
+}
+
+BX_CPP_INLINE unsigned most_significant_bitq(Bit64u val_64)
+{
+  return 63 - lzcntq(val_64);
 }
 
 // popcnt

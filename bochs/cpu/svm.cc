@@ -74,7 +74,7 @@ BX_CPP_INLINE Bit8u BX_CPU_C::vmcb_read8(unsigned offset)
     val_8 = *hostAddr;
   }
   else {
-    access_read_physical(pAddr, 1, (Bit8u*)(&val_8));
+    val_8 = read_physical_byte(pAddr);
   }
 
   BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, MEMTYPE(BX_CPU_THIS_PTR vmcb_memtype), BX_READ, BX_VMCS_ACCESS, (Bit8u*)(&val_8));
@@ -91,7 +91,7 @@ BX_CPP_INLINE Bit16u BX_CPU_C::vmcb_read16(unsigned offset)
     val_16 = ReadHostWordFromLittleEndian(hostAddr);
   }
   else {
-    access_read_physical(pAddr, 2, (Bit8u*)(&val_16));
+    val_16 = read_physical_word(pAddr);
   }
 
   BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 2, MEMTYPE(BX_CPU_THIS_PTR vmcb_memtype), BX_READ, BX_VMCS_ACCESS, (Bit8u*)(&val_16));
@@ -108,7 +108,7 @@ BX_CPP_INLINE Bit32u BX_CPU_C::vmcb_read32(unsigned offset)
     val_32 = ReadHostDWordFromLittleEndian(hostAddr);
   }
   else {
-    access_read_physical(pAddr, 4, (Bit8u*)(&val_32));
+    val_32 = read_physical_dword(pAddr);
   }
 
   BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 4, MEMTYPE(BX_CPU_THIS_PTR vmcb_memtype), BX_READ, BX_VMCS_ACCESS, (Bit8u*)(&val_32));
@@ -125,7 +125,7 @@ BX_CPP_INLINE Bit64u BX_CPU_C::vmcb_read64(unsigned offset)
     val_64 = ReadHostQWordFromLittleEndian(hostAddr);
   }
   else {
-    access_read_physical(pAddr, 8, (Bit8u*)(&val_64));
+    val_64 = read_physical_qword(pAddr);
   }
 
   BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 8, MEMTYPE(BX_CPU_THIS_PTR vmcb_memtype), BX_READ, BX_VMCS_ACCESS, (Bit8u*)(&val_64));
@@ -833,11 +833,11 @@ void BX_CPU_C::SvmInterceptIO(bxInstruction_c *i, unsigned port, unsigned len)
 
   // access_read_physical cannot read 2 bytes cross 4K boundary :(
   pAddr = BX_CPU_THIS_PTR vmcb.ctrls.iopm_base + (port / 8);
-  access_read_physical(pAddr, 1, &bitmap[0]);
+  bitmap[0] = read_physical_byte(pAddr);
   BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, MEMTYPE(resolve_memtype(pAddr)), BX_READ, BX_IO_BITMAP_ACCESS, &bitmap[0]);
 
   pAddr++;
-  access_read_physical(pAddr, 1, &bitmap[1]);
+  bitmap[1] = read_physical_byte(pAddr);
   BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, MEMTYPE(resolve_memtype(pAddr)), BX_READ, BX_IO_BITMAP_ACCESS, &bitmap[1]);
 
   Bit16u combined_bitmap = bitmap[1];
@@ -926,9 +926,8 @@ void BX_CPU_C::SvmInterceptMSR(unsigned op, Bit32u msr)
     bx_phy_address msr_bitmap_addr = BX_CPU_THIS_PTR vmcb.ctrls.msrpm_base + msr_map_offset;
     Bit32u msr_offset = (msr & 0x1fff) * 2 + op;
 
-    Bit8u msr_bitmap;
     bx_phy_address pAddr = msr_bitmap_addr + (msr_offset / 8);
-    access_read_physical(pAddr, 1, (Bit8u*)(&msr_bitmap));
+    Bit8u msr_bitmap = read_physical_byte(pAddr);
     BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, MEMTYPE(resolve_memtype(pAddr)), BX_READ, BX_MSR_BITMAP_ACCESS, &msr_bitmap);
 
     vmexit = (msr_bitmap >> (msr_offset & 7)) & 0x1;
@@ -984,11 +983,8 @@ void BX_CPU_C::SvmInterceptPAUSE(void)
   Svm_Vmexit(SVM_VMEXIT_PAUSE);
 }
 
-#endif
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMRUN(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SVM
   if (! protected_mode() || ! BX_CPU_THIS_PTR efer.get_SVME())
     exception(BX_UD_EXCEPTION, 0);
 
@@ -1037,14 +1033,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMRUN(bxInstruction_c *i)
   //
   if (!SvmInjectEvents())
     Svm_Vmexit(SVM_VMEXIT_INVALID);
-#endif
 
   BX_NEXT_TRACE(i);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMMCALL(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR efer.get_SVME()) {
     if (BX_CPU_THIS_PTR in_svm_guest) {
       if (SVM_INTERCEPT(SVM_INTERCEPT1_VMMCALL)) Svm_Vmexit(SVM_VMEXIT_VMMCALL);
@@ -1052,14 +1046,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMMCALL(bxInstruction_c *i)
   }
 
   exception(BX_UD_EXCEPTION, 0);
-#endif
 
   BX_NEXT_TRACE(i);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLOAD(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SVM
   if (! protected_mode() || ! BX_CPU_THIS_PTR efer.get_SVME())
     exception(BX_UD_EXCEPTION, 0);
 
@@ -1105,14 +1097,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLOAD(bxInstruction_c *i)
   BX_CPU_THIS_PTR msr.sysenter_esp_msr = CanonicalizeAddress(vmcb_read64(SVM_GUEST_SYSENTER_ESP_MSR));
 
   set_VMCBPTR(vmcbPtr);
-#endif
 
   BX_NEXT_INSTR(i);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMSAVE(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SVM
   if (! protected_mode() || ! BX_CPU_THIS_PTR efer.get_SVME())
     exception(BX_UD_EXCEPTION, 0);
 
@@ -1151,14 +1141,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMSAVE(bxInstruction_c *i)
   vmcb_write64(SVM_GUEST_SYSENTER_EIP_MSR, BX_CPU_THIS_PTR msr.sysenter_eip_msr);
 
   set_VMCBPTR(vmcbPtr);
-#endif
 
   BX_NEXT_INSTR(i);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SKINIT(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SVM
   if (! protected_mode() || ! BX_CPU_THIS_PTR efer.get_SVME())
     exception(BX_UD_EXCEPTION, 0);
 
@@ -1172,14 +1160,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SKINIT(bxInstruction_c *i)
   }
 
   BX_PANIC(("SVM: SKINIT is not implemented yet"));
-#endif
 
   BX_NEXT_TRACE(i);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLGI(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SVM
   if (! protected_mode() || ! BX_CPU_THIS_PTR efer.get_SVME())
     exception(BX_UD_EXCEPTION, 0);
 
@@ -1193,14 +1179,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLGI(bxInstruction_c *i)
   }
 
   BX_CPU_THIS_PTR svm_gif = false;
-#endif
 
   BX_NEXT_TRACE(i);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::STGI(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SVM
   if (! protected_mode() || ! BX_CPU_THIS_PTR efer.get_SVME())
     exception(BX_UD_EXCEPTION, 0);
 
@@ -1215,14 +1199,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STGI(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR svm_gif = true;
   BX_CPU_THIS_PTR async_event = 1;
-#endif
 
   BX_NEXT_TRACE(i);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPGA(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SVM
   if (! protected_mode() || ! BX_CPU_THIS_PTR efer.get_SVME())
     exception(BX_UD_EXCEPTION, 0);
 
@@ -1235,13 +1217,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPGA(bxInstruction_c *i)
     if (SVM_INTERCEPT(SVM_INTERCEPT0_INVLPGA)) Svm_Vmexit(SVM_VMEXIT_INVLPGA);
   }
 
-  TLB_flush(); // FIXME: flush all entries for now
-#endif
+  bx_address addr = RAX & i->asize_mask();
+  TLB_invlpg(addr); // FIXME: flush all ASID entries for now
 
   BX_NEXT_TRACE(i);
 }
 
-#if BX_SUPPORT_SVM
 void BX_CPU_C::register_svm_state(bx_param_c *parent)
 {
   if (! is_cpu_extension_supported(BX_ISA_SVM)) return;
@@ -1322,4 +1303,5 @@ void BX_CPU_C::register_svm_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(host, rsp, BX_CPU_THIS_PTR vmcb.host_state.rsp);
   BXRS_HEX_PARAM_FIELD(host, rax, BX_CPU_THIS_PTR vmcb.host_state.rax);
 }
-#endif
+
+#endif // BX_SUPPORT_SVM

@@ -167,12 +167,12 @@ void BX_CPU_C::VMexit_PAUSE(void)
 {
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
 
-  if (VMEXIT(VMX_VM_EXEC_CTRL2_PAUSE_VMEXIT)) {
+  if (VMEXIT(VMX_VM_EXEC_CTRL1_PAUSE_VMEXIT)) {
     VMexit(VMX_VMEXIT_PAUSE, 0);
   }
 
 #if BX_SUPPORT_VMX >= 2
-  if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_PAUSE_LOOP_VMEXIT) && CPL == 0) {
+  if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_PAUSE_LOOP_VMEXIT) && CPL == 0) {
     VMX_PLE *ple = &BX_CPU_THIS_PTR vmcs.ple;
     Bit64u currtime = bx_pc_system.time_ticks();
     if ((currtime - ple->last_pause_time) > ple->pause_loop_exiting_gap) {
@@ -191,8 +191,9 @@ void BX_CPU_C::VMexit_ExtInterrupt(void)
 {
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
 
-  if (PIN_VMEXIT(VMX_VM_EXEC_CTRL1_EXTERNAL_INTERRUPT_VMEXIT)) {
+  if (PIN_VMEXIT(VMX_PIN_BASED_VMEXEC_CTRL_EXTERNAL_INTERRUPT_VMEXIT)) {
     VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+
     if (! (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_INTA_ON_VMEXIT)) {
        // interrupt wasn't acknowledged and still pending, interruption info is invalid
        VMwrite32(VMCS_32BIT_VMEXIT_INTERRUPTION_INFO, 0);
@@ -212,12 +213,12 @@ void BX_CPU_C::VMexit_Event(unsigned type, unsigned vector, Bit16u errcode, bool
   switch(type) {
     case BX_EXTERNAL_INTERRUPT:
       reason = VMX_VMEXIT_EXTERNAL_INTERRUPT;
-      if (PIN_VMEXIT(VMX_VM_EXEC_CTRL1_EXTERNAL_INTERRUPT_VMEXIT))
+      if (PIN_VMEXIT(VMX_PIN_BASED_VMEXEC_CTRL_EXTERNAL_INTERRUPT_VMEXIT))
          vmexit = true;
       break;
 
     case BX_NMI:
-      if (PIN_VMEXIT(VMX_VM_EXEC_CTRL1_NMI_EXITING))
+      if (PIN_VMEXIT(VMX_PIN_BASED_VMEXEC_CTRL_NMI_EXITING))
          vmexit = true;
       break;
 
@@ -323,17 +324,16 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_MSR(unsigned op, Bit32u msr)
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
 
   bool vmexit = false;
-  if (! VMEXIT(VMX_VM_EXEC_CTRL2_MSR_BITMAPS)) vmexit = true;
+  if (! VMEXIT(VMX_VM_EXEC_CTRL1_MSR_BITMAPS)) vmexit = true;
   else {
     VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
-    Bit8u field;
 
     if (msr >= BX_VMX_HI_MSR_START) {
        if (msr > BX_VMX_HI_MSR_END) vmexit = true;
        else {
          // check MSR-HI bitmaps
          bx_phy_address pAddr = vm->msr_bitmap_addr + ((msr - BX_VMX_HI_MSR_START) >> 3) + 1024 + ((op == VMX_VMEXIT_RDMSR) ? 0 : 2048);
-         access_read_physical(pAddr, 1, &field);
+         Bit8u field = read_physical_byte(pAddr);
          BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, MEMTYPE(resolve_memtype(pAddr)), BX_READ, BX_MSR_BITMAP_ACCESS, &field);
          if (field & (1 << (msr & 7)))
             vmexit = true;
@@ -344,7 +344,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_MSR(unsigned op, Bit32u msr)
        else {
          // check MSR-LO bitmaps
          bx_phy_address pAddr = vm->msr_bitmap_addr + (msr >> 3) + ((op == VMX_VMEXIT_RDMSR) ? 0 : 2048);
-         access_read_physical(pAddr, 1, &field);
+         Bit8u field = read_physical_byte(pAddr);
          BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, MEMTYPE(resolve_memtype(pAddr)), BX_READ, BX_MSR_BITMAP_ACCESS, &field);
          if (field & (1 << (msr & 7)))
             vmexit = true;
@@ -372,7 +372,7 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_IO(bxInstruction_c *i, unsigned por
 
   bool vmexit = false;
 
-  if (VMEXIT(VMX_VM_EXEC_CTRL2_IO_BITMAPS)) {
+  if (VMEXIT(VMX_VM_EXEC_CTRL1_IO_BITMAPS)) {
      // always VMEXIT on port "wrap around" case
      if ((port + len) > 0x10000) vmexit = true;
      else {
@@ -382,21 +382,21 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_IO(bxInstruction_c *i, unsigned por
         if ((port & 0x7fff) + len > 0x8000) {
           // special case - the IO access split cross both I/O bitmaps
           pAddr = BX_CPU_THIS_PTR vmcs.io_bitmap_addr[0] + 0xfff;
-          access_read_physical(pAddr, 1, &bitmap[0]);
+          bitmap[0] = read_physical_byte(pAddr);
           BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, MEMTYPE(resolve_memtype(pAddr)), BX_READ, BX_IO_BITMAP_ACCESS, &bitmap[0]);
 
           pAddr = BX_CPU_THIS_PTR vmcs.io_bitmap_addr[1];
-          access_read_physical(pAddr, 1, &bitmap[1]);
+          bitmap[1] = read_physical_byte(pAddr);
           BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, MEMTYPE(resolve_memtype(pAddr)), BX_READ, BX_IO_BITMAP_ACCESS, &bitmap[1]);
         }
         else {
           // access_read_physical cannot read 2 bytes cross 4K boundary :(
           pAddr = BX_CPU_THIS_PTR vmcs.io_bitmap_addr[(port >> 15) & 1] + ((port & 0x7fff) / 8);
-          access_read_physical(pAddr, 1, &bitmap[0]);
+          bitmap[0] = read_physical_byte(pAddr);
           BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, MEMTYPE(resolve_memtype(pAddr)), BX_READ, BX_IO_BITMAP_ACCESS, &bitmap[0]);
 
           pAddr++;
-          access_read_physical(pAddr, 1, &bitmap[1]);
+          bitmap[1] = read_physical_byte(pAddr);
           BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, MEMTYPE(resolve_memtype(pAddr)), BX_READ, BX_IO_BITMAP_ACCESS, &bitmap[1]);
         }
 
@@ -407,7 +407,7 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_IO(bxInstruction_c *i, unsigned por
         if (combined_bitmap & mask) vmexit = true;
      }
   }
-  else if (VMEXIT(VMX_VM_EXEC_CTRL2_IO_VMEXIT)) vmexit = true;
+  else if (VMEXIT(VMX_VM_EXEC_CTRL1_IO_VMEXIT)) vmexit = true;
 
   if (vmexit) {
      BX_DEBUG(("VMEXIT: I/O port 0x%04x", port));
@@ -568,7 +568,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_CR3_Read(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
 
-  if (VMEXIT(VMX_VM_EXEC_CTRL2_CR3_READ_VMEXIT)) {
+  if (VMEXIT(VMX_VM_EXEC_CTRL1_CR3_READ_VMEXIT)) {
     BX_DEBUG(("VMEXIT: CR3 read"));
     Bit64u qualification = 3 | (VMX_VMEXIT_CR_ACCESS_CR_READ << 4) | (i->dst() << 8);
     VMexit(VMX_VMEXIT_CR_ACCESS, qualification);
@@ -581,7 +581,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_CR3_Write(bxInstruction_c *i, bx_ad
 
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
 
-  if (VMEXIT(VMX_VM_EXEC_CTRL2_CR3_WRITE_VMEXIT)) {
+  if (VMEXIT(VMX_VM_EXEC_CTRL1_CR3_WRITE_VMEXIT)) {
     for (unsigned n=0; n < vm->vm_cr3_target_cnt; n++) {
       if (vm->vm_cr3_target_value[n] == val) return;
     }
@@ -613,7 +613,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_CR8_Read(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
 
-  if (VMEXIT(VMX_VM_EXEC_CTRL2_CR8_READ_VMEXIT)) {
+  if (VMEXIT(VMX_VM_EXEC_CTRL1_CR8_READ_VMEXIT)) {
     BX_DEBUG(("VMEXIT: CR8 read"));
     Bit64u qualification = 8 | (VMX_VMEXIT_CR_ACCESS_CR_READ << 4) | (i->dst() << 8);
     VMexit(VMX_VMEXIT_CR_ACCESS, qualification);
@@ -624,7 +624,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_CR8_Write(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
 
-  if (VMEXIT(VMX_VM_EXEC_CTRL2_CR8_WRITE_VMEXIT)) {
+  if (VMEXIT(VMX_VM_EXEC_CTRL1_CR8_WRITE_VMEXIT)) {
     BX_DEBUG(("VMEXIT: CR8 write"));
     Bit64u qualification = 8 | (i->src() << 8);
     VMexit(VMX_VMEXIT_CR_ACCESS, qualification);
@@ -646,7 +646,7 @@ void BX_CPU_C::VMexit_DR_Access(unsigned read, unsigned dr, unsigned reg)
 {
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
 
-  if (VMEXIT(VMX_VM_EXEC_CTRL2_DRx_ACCESS_VMEXIT))
+  if (VMEXIT(VMX_VM_EXEC_CTRL1_DRx_ACCESS_VMEXIT))
   {
     BX_DEBUG(("VMEXIT: DR%d %s access", dr, read ? "READ" : "WRITE"));
 
@@ -661,7 +661,7 @@ void BX_CPU_C::VMexit_DR_Access(unsigned read, unsigned dr, unsigned reg)
 #if BX_SUPPORT_VMX >= 2
 Bit16u BX_CPU_C::VMX_Get_Current_VPID(void)
 {
-  if (! BX_CPU_THIS_PTR in_vmx_guest || !SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VPID_ENABLE))
+  if (! BX_CPU_THIS_PTR in_vmx_guest || !SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VPID_ENABLE))
     return 0;
 
   return BX_CPU_THIS_PTR vmcs.vpid;
@@ -673,7 +673,7 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::Vmexit_Vmread(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
 
-  if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VMCS_SHADOWING)) return true;
+  if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VMCS_SHADOWING)) return true;
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
@@ -685,9 +685,8 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::Vmexit_Vmread(bxInstruction_c *i)
 
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
 
-  Bit8u bitmap;
   bx_phy_address pAddr = vm->vmread_bitmap_addr | (encoding >> 3);
-  access_read_physical(pAddr, 1, &bitmap);
+  Bit8u bitmap = read_physical_byte(pAddr);
   BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, MEMTYPE(resolve_memtype(pAddr)), BX_READ, BX_VMREAD_BITMAP_ACCESS, &bitmap);
 
   if (bitmap & (1 << (encoding & 7)))
@@ -700,7 +699,7 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::Vmexit_Vmwrite(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
 
-  if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VMCS_SHADOWING)) return true;
+  if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VMCS_SHADOWING)) return true;
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
@@ -712,9 +711,8 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::Vmexit_Vmwrite(bxInstruction_c *i)
 
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
 
-  Bit8u bitmap;
   bx_phy_address pAddr = vm->vmwrite_bitmap_addr | (encoding >> 3);
-  access_read_physical(pAddr, 1, &bitmap);
+  Bit8u bitmap = read_physical_byte(pAddr);
   BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, MEMTYPE(resolve_memtype(pAddr)), BX_READ, BX_VMWRITE_BITMAP_ACCESS, &bitmap);
 
   if (bitmap & (1 << (encoding & 7)))
@@ -736,11 +734,10 @@ void BX_CPU_C::Virtualization_Exception(Bit64u qualification, Bit64u guest_physi
 
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
 
-  Bit32u magic;
-  access_read_physical(vm->ve_info_addr + 4, 4, &magic);
 #if BX_SUPPORT_MEMTYPE && (BX_DEBUGGER || BX_INSTRUMENTATION)
   BxMemtype ve_info_memtype = resolve_memtype(vm->ve_info_addr);
 #endif
+  Bit32u magic = read_physical_dword(vm->ve_info_addr + 4);
   BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 4, 4, MEMTYPE(ve_info_memtype), BX_READ, 0, (Bit8u*)(&magic));
   if (magic != 0) return;
 

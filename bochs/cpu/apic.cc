@@ -762,7 +762,7 @@ void bx_local_apic_c::startup_msg(Bit8u vector)
   cpu->deliver_SIPI(vector);
 }
 
-bool bx_local_apic_c::get_vector(Bit32u *reg, unsigned vector)
+bool bx_local_apic_c::get_vector(const Bit32u *reg, unsigned vector)
 {
   return (reg[vector / 32] >> (vector % 32)) & 0x1;
 }
@@ -777,7 +777,7 @@ void bx_local_apic_c::clear_vector(Bit32u *reg, unsigned vector)
   reg[vector / 32] &= ~(1 << (vector % 32));
 }
 
-int bx_local_apic_c::highest_priority_int(Bit32u *array)
+int bx_local_apic_c::highest_priority_int(const Bit32u *array) const
 {
   for (int reg=7; reg>=0; reg--) {
     Bit32u tmp = array[reg];
@@ -787,7 +787,7 @@ int bx_local_apic_c::highest_priority_int(Bit32u *array)
 // ignore of interrupt vectors < 16 happen naturally as there is no way to ISR to it
 //  if (reg == 0) tmp &= 0xffff0000;
     if (tmp) {
-      int vector = (reg * 32) + (31 - lzcntd(tmp));
+      int vector = (reg * 32) + most_significant_bitd(tmp);
       return vector;
     }
   }
@@ -969,7 +969,7 @@ bool bx_local_apic_c::match_logical_addr(apic_dest_t address)
   return match;
 }
 
-Bit8u bx_local_apic_c::get_ppr(void)
+Bit8u bx_local_apic_c::get_ppr(void) const
 {
   int ppr = highest_priority_int(isr);
 
@@ -1015,7 +1015,7 @@ Bit8u bx_local_apic_c::get_apr(void)
   return(Bit8u) apr;
 }
 
-bool bx_local_apic_c::is_focus(Bit8u vector)
+bool bx_local_apic_c::is_focus(Bit8u vector) const
 {
   if(focus_disable) return 0;
   return get_vector(irr, vector) || get_vector(isr, vector);
@@ -1199,11 +1199,14 @@ void bx_local_apic_c::vmx_preemption_timer_expired(void *this_ptr)
 
 #if BX_SUPPORT_MONITOR_MWAIT
 
-void bx_local_apic_c::set_mwaitx_timer(Bit32u value)
+void bx_local_apic_c::set_mwaitx_timer(Bit64u value)
 {
-  BX_DEBUG(("MWAITX timer: value = %u", value));
-  bx_pc_system.activate_timer_ticks(mwaitx_timer_handle, value, 0);
-  mwaitx_timer_active = true;
+  if (mwaitx_timer_active) deactivate_mwaitx_timer();
+  if (value) {
+    BX_DEBUG(("MWAITX timer: delay value = " FMT_LL "u", value));
+    bx_pc_system.activate_timer_ticks(mwaitx_timer_handle, value, 0);
+    mwaitx_timer_active = true;
+  }
 }
 
 void bx_local_apic_c::deactivate_mwaitx_timer(void)

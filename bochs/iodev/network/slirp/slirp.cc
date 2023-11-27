@@ -260,10 +260,21 @@ Slirp *slirp_init(int restricted, struct in_addr vnetwork,
 
 void slirp_cleanup(Slirp *slirp)
 {
+    struct ex_list *ex_ptr;
+
     QTAILQ_REMOVE(&slirp_instances, slirp, entry);
 
     ip_cleanup(slirp);
     m_cleanup(slirp);
+
+    while (slirp->exec_list != NULL) {
+        ex_ptr = slirp->exec_list->ex_next;
+        if (slirp->exec_list->ex_pty != 3) {
+            free((void*)slirp->exec_list->ex_exec);
+        }
+        free(slirp->exec_list);
+        slirp->exec_list = ex_ptr;
+    }
 
     free(slirp->tftp_prefix);
     free(slirp->bootp_filename);

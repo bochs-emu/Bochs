@@ -99,11 +99,11 @@ protected:
   bx_list_c *parent;
   char *name;
   char *description;
-  char *label; // label string for text menus and gui dialogs
-  const char *text_format;  // printf format string. %d for ints, %s for strings, etc.
-  const char *long_text_format;  // printf format string. %d for ints, %s for strings, etc.
-  char *ask_format;  // format string for asking for a new value
-  char *group_name;  // name of the group the param belongs to
+  char *label;            // label string for text menus and gui dialogs
+  char *text_format;      // printf format string. %d for ints, %s for strings, etc.
+  char *long_text_format; // printf format string. %d for ints, %s for strings, etc.
+  char *ask_format;       // format string for asking for a new value
+  char *group_name;       // name of the group the param belongs to
   bool runtime_param;
   bool enabled;
   Bit32u options;
@@ -131,10 +131,10 @@ public:
 
   int get_param_path(char *path_out, int maxlen);
 
-  void set_format(const char *format) {text_format = format;}
+  void set_format(const char *format);
   const char *get_format() const {return text_format;}
 
-  void set_long_format(const char *format) {long_text_format = format;}
+  void set_long_format(const char *format);
   const char *get_long_format() const {return long_text_format;}
 
   void set_ask_format(const char *format);

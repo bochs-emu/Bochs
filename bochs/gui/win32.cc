@@ -592,20 +592,20 @@ void terminateEmul(int reason)
     if (vgafont[c]) DeleteObject(vgafont[c]);
 
   switch (reason) {
-  case EXIT_GUI_SHUTDOWN:
-    BX_FATAL(("Window closed, exiting!"));
-    break;
-  case EXIT_GMH_FAILURE:
-    BX_FATAL(("GetModuleHandle failure!"));
-    break;
-  case EXIT_FONT_BITMAP_ERROR:
-    BX_FATAL(("Font bitmap creation failure!"));
-    break;
-  case EXIT_HEADER_BITMAP_ERROR:
-    BX_FATAL(("Header bitmap creation failure!"));
-    break;
-  case EXIT_NORMAL:
-    break;
+    case EXIT_GUI_SHUTDOWN:
+      BX_FATAL(("Window closed, exiting!"));
+      break;
+    case EXIT_GMH_FAILURE:
+      BX_FATAL(("GetModuleHandle failure!"));
+      break;
+    case EXIT_FONT_BITMAP_ERROR:
+      BX_FATAL(("Font bitmap creation failure!"));
+      break;
+    case EXIT_HEADER_BITMAP_ERROR:
+      BX_FATAL(("Header bitmap creation failure!"));
+      break;
+    case EXIT_NORMAL:
+      break;
   }
 }
 
@@ -665,14 +665,16 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
       } else if (!strcmp(argv[i], "traphotkeys")) {
         BX_INFO(("trap system hotkeys for Bochs window"));
         win32_traphotkeys = 1;
-#if BX_DEBUGGER && BX_DEBUGGER_GUI
       } else if (!strcmp(argv[i], "gui_debug")) {
+#if BX_DEBUGGER && BX_DEBUGGER_GUI
         if (gui_ci) {
           gui_debug = TRUE;
           SIM->set_debug_gui(1);
         } else {
           BX_PANIC(("Config interface 'win32config' is required for gui debugger"));
         }
+#else
+        SIM->message_box("ERROR", "Bochs debugger not available - ignoring 'gui_debug' option");
 #endif
 #if BX_SHOW_IPS
       } else if (!strcmp(argv[i], "hideIPS")) {
@@ -1112,7 +1114,7 @@ LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
     break;
 
   case WM_DESTROY:
-    PostQuitMessage (0);
+    PostQuitMessage(0);
     return 0;
 
   case WM_SIZE:
@@ -1778,11 +1780,11 @@ int bx_win32_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
   if (OpenClipboard(stInfo.simWnd)) {
     HGLOBAL hg = GetClipboardData(CF_TEXT);
     char *data = (char *)GlobalLock(hg);
-    *nbytes = strlen(data);
+    *nbytes = (Bit32s)strlen(data);
     *bytes = new Bit8u[1 + *nbytes];
-    BX_INFO (("found %d bytes on the clipboard", *nbytes));
+    BX_INFO(("found %d bytes on the clipboard", *nbytes));
     memcpy (*bytes, data, *nbytes+1);
-    BX_INFO (("first byte is 0x%02x", *bytes[0]));
+    BX_INFO(("first byte is 0x%02x", *bytes[0]));
     GlobalUnlock(hg);
     CloseClipboard();
     return 1;
@@ -2024,7 +2026,11 @@ void bx_win32_gui_c::exit(void)
   // Wait until it dies
   while ((stInfo.kill == 0) && (workerThreadID != 0)) Sleep(500);
 
-  if (!stInfo.kill) terminateEmul(EXIT_NORMAL);
+  if (bx_user_quit) {
+    terminateEmul(EXIT_NORMAL);
+  } else {
+    terminateEmul(stInfo.kill);
+  }
 }
 
 
