@@ -371,7 +371,7 @@ cmos.lo: cmos.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../misc/bswap.h ../plugin.h \
  ../extplugin.h ../param_names.h ../pc_system.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/gui.h cmos.h virt_timer.h
+ ../gui/gui.h cmos.h virt_timer.h utctime.h
 devices.lo: devices.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
  ../misc/bswap.h ../plugin.h \

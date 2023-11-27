@@ -2,7 +2,7 @@
 // $Id: utctime.h
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2023  The Bochs Project
 //
 //  Portable gmtime()/timegm() clones by Michele Giacomone
 //
@@ -37,15 +37,15 @@ A few considerations on operand sizes:
 
 These are the contents of "struct tm":
 
-tm_sec	    int	seconds after the minute	0-61*
-tm_min	    int	minutes after the hour	    0-59
-tm_hour	    int	hours since midnight	    0-23
-tm_mday	    int	day of the month	        1-31
-tm_mon	    int	months since January	    0-11
-tm_year	    int	years since 1900
-tm_wday	    int	days since Sunday	        0-6
-tm_yday	    int	days since January 1	    0-365
-tm_isdst	int	Daylight Saving Time flag
+tm_sec    int seconds after the minute  0-61*
+tm_min    int minutes after the hour    0-59
+tm_hour   int hours since midnight      0-23
+tm_mday   int day of the month          1-31
+tm_mon    int months since January      0-11
+tm_year   int years since 1900
+tm_wday   int days since Sunday         0-6
+tm_yday   int days since January 1      0-365
+tm_isdst  int Daylight Saving Time flag
 
 *60 in C11. Technically to account for leap seconds. Since they have the same epoch value as the (normal) following second, and my functions can treat out of range values correctly, I can safely assume 0-59.
 
@@ -86,14 +86,14 @@ The allowed epoch values could all fit in 40bits
 */
 
 struct utctm {
-  Bit16s tm_sec;	                                                    //seconds after the minute	0-59
-  Bit16s tm_min;	                                                    //minutes after the hour    0-59
-  Bit16s tm_hour;	                                                    //hours since midnight	    0-23
-  Bit16s tm_mday;	                                                    //day of the month	        1-31
-  Bit16s tm_mon;	                                                    //months since January	    0-11
-  Bit16s tm_year;	                                                    //years since 1900
-  Bit16s tm_wday;	                                                    //days since Sunday	        0-6
-  Bit16s tm_yday;	                                                    //days since January 1	    0-365
+  Bit16s tm_sec;       // seconds after the minute 0-59
+  Bit16s tm_min;       // minutes after the hour   0-59
+  Bit16s tm_hour;      // hours since midnight     0-23
+  Bit16s tm_mday;      // day of the month         1-31
+  Bit16s tm_mon;       // months since January     0-11
+  Bit16s tm_year;      // years since 1900
+  Bit16s tm_wday;      // days since Sunday        0-6
+  Bit16s tm_yday;      // days since January 1     0-365
 };
 
 char *ascutc(struct utctm *src)
