@@ -519,7 +519,6 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_SIMPLE32(cpu, event_mask);
   BXRS_HEX_PARAM_SIMPLE32(cpu, async_event);
 
-  BXRS_PARAM_BOOL(cpu, in_repeat, in_repeat);
   BXRS_PARAM_BOOL(cpu, in_smm, in_smm);
 
 #if BX_DEBUGGER
@@ -858,7 +857,6 @@ void BX_CPU_C::reset(unsigned source)
 #endif
   BX_CPU_THIS_PTR dr7.val32 = 0x00000400;
 
-  BX_CPU_THIS_PTR in_repeat = false;
   BX_CPU_THIS_PTR in_smm = false;
 
   BX_CPU_THIS_PTR pending_event = 0;
