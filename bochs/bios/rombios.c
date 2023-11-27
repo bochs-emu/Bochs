@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2023  The Bochs Project
+//  Copyright (C) 2001-2021  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -573,12 +573,6 @@ typedef unsigned long  Bit32u;
     shr  ebx, #16
     ret
 
-  imodu:
-    div  bl
-    mov  al, ah
-    xor  ah, ah
-    ret
-
   ASM_END
 
 // for access to RAM area which is used by interrupt vectors
@@ -908,6 +902,8 @@ static void           print_bios_banner();
 static void           print_boot_device();
 static void           print_boot_failure();
 static void           print_cdromboot_failure();
+
+
 
 # if BX_USE_ATADRV
 
