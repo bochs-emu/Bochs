@@ -31,7 +31,7 @@
 #if BX_SUPPORT_PCIUSB
 #include "iodev/usb/usb_common.h"
 #endif
-#include "iodev/utctime.h"
+//#include "iodev/utctime.h"
 #include "param_names.h"
 #include <assert.h>
 
