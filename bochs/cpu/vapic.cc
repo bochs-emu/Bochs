@@ -391,7 +391,7 @@ void BX_CPU_C::VMX_Deliver_Virtual_Interrupt(void)
     vm->svi = vapic_clear_and_find_highest_priority_int(BX_LAPIC_ISR1, vector);
     VMX_PPR_Virtualization();
 
-    process_uintr_notification();
+    Process_UINTR_Notification();
   }
   else
 #endif
