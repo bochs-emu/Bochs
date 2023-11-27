@@ -458,7 +458,6 @@ void bx_sb16_c::register_state(void)
 {
   unsigned i;
   char name[8];
-  bx_list_c *chip, *ins_map, *patch;
 
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "sb16", "SB16 State");
   bx_list_c *mpu = new bx_list_c(list, "mpu");
@@ -471,7 +470,7 @@ void bx_sb16_c::register_state(void)
   bx_list_c *patchtbl = new bx_list_c(mpu, "patchtable");
   for (i=0; i<16; i++) {
     sprintf(name, "0x%02x", i);
-    patch = new bx_list_c(patchtbl, name);
+    bx_list_c *patch = new bx_list_c(patchtbl, name);
     new bx_shadow_num_c(patch, "banklsb", &MPU.banklsb[i]);
     new bx_shadow_num_c(patch, "bankmsb", &MPU.bankmsb[i]);
     new bx_shadow_num_c(patch, "program", &MPU.program[i]);
@@ -510,7 +509,7 @@ void bx_sb16_c::register_state(void)
   new bx_shadow_num_c(opl, "timer_running", &OPL.timer_running);
   for (i=0; i<2; i++) {
     sprintf(name, "chip%d", i+1);
-    chip = new bx_list_c(opl, name);
+    bx_list_c *chip = new bx_list_c(opl, name);
     new bx_shadow_num_c(chip, "index", &OPL.index[i]);
     new bx_shadow_num_c(chip, "timer1", &OPL.timer[i*2]);
     new bx_shadow_num_c(chip, "timer2", &OPL.timer[i*2+1]);
@@ -526,7 +525,7 @@ void bx_sb16_c::register_state(void)
   bx_list_c *remap = new bx_list_c(emul, "remaplist");
   for (i=0; i<BX_SB16_MAX_REMAPS; i++) {
     sprintf(name, "0x%02x", i);
-    ins_map = new bx_list_c(remap, name);
+    bx_list_c *ins_map = new bx_list_c(remap, name);
     new bx_shadow_num_c(ins_map, "oldbankmsb", &EMUL.remaplist[i].oldbankmsb);
     new bx_shadow_num_c(ins_map, "oldbanklsb", &EMUL.remaplist[i].oldbanklsb);
     new bx_shadow_num_c(ins_map, "oldprogch", &EMUL.remaplist[i].oldprogch);
@@ -605,10 +604,8 @@ void bx_sb16_c::dsp_dmatimer(void)
   // or if buffer is empty in input mode.
 
   if (!DSP.nondma_mode) {
-    if ((DSP.dma.chunkindex + 1 < BX_SOUNDLOW_WAVEPACKETSIZE) &&
-        (DSP.dma.count > 0)) {
-      if (((DSP.dma.output == 0) && (DSP.dma.chunkcount > 0)) ||
-          (DSP.dma.output == 1)) {
+    if ((DSP.dma.chunkindex + 1 < BX_SOUNDLOW_WAVEPACKETSIZE) && (DSP.dma.count > 0)) {
+      if (((DSP.dma.output == 0) && (DSP.dma.chunkcount > 0)) || (DSP.dma.output == 1)) {
         if ((DSP.dma.param.bits == 8) || (BX_SB16_DMAH == 0)) {
           DEV_dma_set_drq(BX_SB16_DMAL, 1);
         } else {
@@ -697,8 +694,9 @@ void bx_sb16_c::dsp_reset(Bit32u value)
 
       DSP_B.dataout.put(0xaa);  // acknowledge the reset
   }
-  else
+  else {
     DSP.resetport = value;
+  }
 }
 
 // dsp_dataread() reads the data port of the DSP
@@ -1372,9 +1370,7 @@ Bit32u bx_sb16_c::sb16_adc_handler(void *this_ptr, Bit32u buflen)
 
 Bit32u bx_sb16_c::dsp_adc_handler(Bit32u buflen)
 {
-  Bit32u len;
-
-  len = DSP.dma.chunkcount - DSP.dma.chunkindex;
+  Bit32u len = DSP.dma.chunkcount - DSP.dma.chunkindex;
   if (len > 0) {
     memmove(DSP.dma.chunk, DSP.dma.chunk+DSP.dma.chunkindex, len);
     DSP.dma.chunkcount = len;
@@ -1651,15 +1647,11 @@ Bit16u bx_sb16_c::dma_write16(Bit16u *buffer, Bit16u maxlen)
 
 Bit16u bx_sb16_c::calc_output_volume(Bit8u reg1, Bit8u reg2, bool shift)
 {
-  Bit8u vol1, vol2;
-  float fvol1, fvol2;
-  Bit16u result;
-
-  vol1 = (MIXER.reg[reg1] >> 3);
-  vol2 = (MIXER.reg[reg2] >> 3);
-  fvol1 = (float)pow(10.0f, (float)(31-vol1)*-0.065f);
-  fvol2 = (float)pow(10.0f, (float)(31-vol2)*-0.065f);
-  result = (Bit8u)(255 * fvol1 * fvol2);
+  Bit8u vol1 = (MIXER.reg[reg1] >> 3);
+  Bit8u vol2 = (MIXER.reg[reg2] >> 3);
+  float fvol1 = (float)pow(10.0f, (float)(31-vol1)*-0.065f);
+  float fvol2 = (float)pow(10.0f, (float)(31-vol2)*-0.065f);
+  Bit16u result = (Bit8u)(255 * fvol1 * fvol2);
   if (shift) result <<= 8;
   return result;
 }
@@ -2490,13 +2482,11 @@ void bx_sb16_c::writemidicommand(int command, int length, Bit8u data[])
 
 int bx_sb16_c::currentdeltatime()
 {
-  int deltatime;
-
   // counting starts at first access
   if (MPU.last_delta_time == 0xffffffff)
     MPU.last_delta_time = MPU.current_timer;
 
-  deltatime = MPU.current_timer - MPU.last_delta_time;
+  int deltatime = MPU.current_timer - MPU.last_delta_time;
   MPU.last_delta_time = MPU.current_timer;
 
   return deltatime;
@@ -2508,7 +2498,7 @@ void bx_sb16_c::processmidicommand(bool force)
 {
   int i, channel;
   Bit8u value;
-  bool needremap = 0;
+  bool needremap = false;
 
   channel = MPU_B.midicmd.currentcommand() & 0xf;
 
@@ -2519,7 +2509,7 @@ void bx_sb16_c::processmidicommand(bool force)
       writelog(MIDILOG(1), "* ProgramChange channel %d to %d",
               channel, value);
       MPU.program[channel] = value;
-      needremap = 1;
+      needremap = true;
   }
   else if ((MPU_B.midicmd.currentcommand() >> 4) == 0xb)
   {   // a control change, could be a bank change
@@ -2530,7 +2520,7 @@ void bx_sb16_c::processmidicommand(bool force)
                  MPU_B.midicmd.peek(0), MPU_B.midicmd.peek(1), MPU_B.midicmd.peek(2),
                  channel, value);
          MPU.bankmsb[channel] = value;
-         needremap = 1;
+         needremap = true;
       }
       else if (MPU_B.midicmd.peek(0) == 32)
       {  // bank select LSB
@@ -2538,7 +2528,7 @@ void bx_sb16_c::processmidicommand(bool force)
          writelog(MIDILOG(1), "* BankSelectLSB channel %d to %d",
                  channel, value);
          MPU.banklsb[channel] = value;
-         needremap = 1;
+         needremap = true;
       }
   }
 
@@ -2551,9 +2541,7 @@ void bx_sb16_c::processmidicommand(bool force)
 
   // if single command, revert to command mode
   if (MPU.singlecommand != 0)
-  {
       MPU.singlecommand = 0;
-  }
 
   if ((force == 0) && (needremap == 1))
     // have to check the remap lists, and remap program change if necessary
@@ -3185,7 +3173,7 @@ const char* bx_sb16_c::sb16_param_string_handler(bx_param_string_c *param, bool 
                                                  const char *oldval, const char *val,
                                                  int maxlen)
 {
-  if ((set) && (strcmp(val, oldval))) {
+  if (set && (strcmp(val, oldval))) {
     const char *pname = param->get_name();
     if (!strcmp(pname, "wavefile")) {
       BX_SB16_THIS wave_changed |= 2;
