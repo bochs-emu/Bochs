@@ -1129,7 +1129,6 @@ public: // for now...
 
 #define BX_ASYNC_EVENT_STOP_TRACE (1<<31)
 
-  bool  in_repeat;
   bool  in_smm;
   unsigned cpu_mode;
   bool  user_pl;

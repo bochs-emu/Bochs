@@ -820,8 +820,6 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bool push_error, Bit16u er
 
   RSP_COMMIT;
 
-  BX_CPU_THIS_PTR in_repeat = false;
-
 #if BX_SUPPORT_VMX
   unmask_event(BX_EVENT_VMX_MONITOR_TRAP_FLAG);
 #endif

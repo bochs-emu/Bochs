@@ -1578,7 +1578,7 @@ bool BX_CPU_C::hwbreakpoint_check(bx_address laddr, unsigned opa, unsigned opb)
 
 Bit32u BX_CPU_C::code_breakpoint_match(bx_address laddr)
 {
-  if (BX_CPU_THIS_PTR get_RF() || BX_CPU_THIS_PTR in_repeat)
+  if (BX_CPU_THIS_PTR get_RF())
     return 0;
 
   if (BX_CPU_THIS_PTR dr7.get_bp_enabled()) {
