@@ -6,6 +6,7 @@ We welcome every new contributor !
 Brief summary :
   - Bugfixes for CPU emulation correctness (MONITOR/MWAIT, VMX/SVM, AVX-512, CET, SHA, GFNI fixes)
   ! Implemented VMX MBE (Mode Based Execution Control) emulation required for Windows 11 guest
+  ! Implemented Posted-Interrupt Processing VMX extension emulation
   ! Implemented Linear Address Separation (LASS) extension
   ! Implemented User-Level Interrupt (UINTR) extension
   ! Implemented recently published Intel instruction sets:
@@ -29,6 +30,7 @@ Detailed change log :
   - Bugfixes for CPU emulation correctness (MONITOR/MWAIT, VMX/SVM, AVX-512, CET)
   - Critical CPU emulation bugfixes for SHA and GFNI instructions
   - Implemented VMX MBE (Mode Based Execution Control) emulation required for Windows 11 guest
+  - Implemented Posted-Interrupt Processing VMX extension emulation
   - Implemented Linear Address Separation (LASS) extension
   - Implemented User-Level Interrupt (UINTR) extension
   - Implemented recently published Intel instruction sets:

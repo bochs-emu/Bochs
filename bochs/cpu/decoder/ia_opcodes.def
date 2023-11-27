@@ -1758,7 +1758,7 @@ bx_define_opcode(BX_IA_VMSAVE, "vmsave", "vmsave", &BX_CPU_C::BxError, &BX_CPU_C
 bx_define_opcode(BX_IA_STGI, "stgi", "stgi", &BX_CPU_C::BxError, &BX_CPU_C::STGI, BX_ISA_SVM, OP_NONE, OP_NONE, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_CLGI, "clgi", "clgi", &BX_CPU_C::BxError, &BX_CPU_C::CLGI, BX_ISA_SVM, OP_NONE, OP_NONE, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_SKINIT, "skinit", "skinit", &BX_CPU_C::BxError, &BX_CPU_C::SKINIT, BX_ISA_SVM, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
-bx_define_opcode(BX_IA_INVLPGA, "invlpga", "invlpga", &BX_CPU_C::BxError, &BX_CPU_C::INVLPGA, BX_ISA_SVM, OP_Mb, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
+bx_define_opcode(BX_IA_INVLPGA, "invlpga", "invlpga", &BX_CPU_C::BxError, &BX_CPU_C::INVLPGA, BX_ISA_SVM, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
 #endif
 // SVM
 

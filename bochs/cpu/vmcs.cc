@@ -175,6 +175,9 @@ bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
     case VMCS_16BIT_CONTROL_VPID:
       return BX_SUPPORT_VMX_EXTENSION(BX_VMX_VPID);
 
+    case VMCS_16BIT_CONTROL_POSTED_INTERRUPT_VECTOR:
+      return BX_SUPPORT_VMX_EXTENSION(BX_VMX_POSTED_INTERRUPTS);
+
     case VMCS_16BIT_CONTROL_EPTP_INDEX:
       return BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT_EXCEPTION);
 #endif
@@ -339,6 +342,10 @@ bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
       return BX_SUPPORT_VMX_EXTENSION(BX_VMX_APIC_VIRTUALIZATION);
 #endif
 
+    case VMCS_64BIT_CONTROL_POSTED_INTERRUPT_DESC_ADDR:
+    case VMCS_64BIT_CONTROL_POSTED_INTERRUPT_DESC_ADDR_HI:
+      return BX_SUPPORT_VMX_EXTENSION(BX_VMX_POSTED_INTERRUPTS);
+
 #if BX_SUPPORT_VMX >= 2
     case VMCS_64BIT_CONTROL_VMFUNC_CTRLS:
     case VMCS_64BIT_CONTROL_VMFUNC_CTRLS_HI:
@@ -386,6 +393,10 @@ bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
       return BX_SUPPORT_VMX_EXTENSION(BX_VMX_TSC_SCALING);
 
 #if BX_SUPPORT_VMX >= 2
+    case VMCS_64BIT_CONTROL_TERTIARY_VMEXEC_CONTROLS:
+    case VMCS_64BIT_CONTROL_TERTIARY_VMEXEC_CONTROLS_HI:
+      return BX_CPU_THIS_PTR vmx_cap.vmx_vmexec_ctrl3_supported_bits;
+
     /* VMCS 64-bit read only data fields */
     /* binary 0010_01xx_xxxx_xxx0 */
     case VMCS_64BIT_GUEST_PHYSICAL_ADDR:
@@ -625,6 +636,8 @@ void BX_CPU_C::init_pin_based_vmexec_ctrls(void)
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_PREEMPTION_TIMER))
     cap->vmx_pin_vmexec_ctrl_supported_bits |= VMX_PIN_BASED_VMEXEC_CTRL_VMX_PREEMPTION_TIMER_VMEXIT;
 #endif
+  if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_POSTED_INTERRUPTS))
+    cap->vmx_pin_vmexec_ctrl_supported_bits |= VMX_PIN_BASED_VMEXEC_CTRL_PROCESS_POSTED_INTERRUPTS;
 }
 
 void BX_CPU_C::init_primary_proc_based_vmexec_ctrls(void)

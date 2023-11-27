@@ -301,6 +301,7 @@ enum {
   BX_VMX_STORE_MSR_ACCESS,
   BX_VMX_VAPIC_ACCESS,
   BX_VMX_PML_WRITE,
+  BX_VMX_PID,
   BX_SMRAM_ACCESS
 };
 
@@ -979,7 +980,7 @@ public: // for now...
   Bit32u wr_pkey[16];
 #endif
 
-#if BX_SUPPORT_UINTR && BX_SUPPORT_X86_64
+#if BX_SUPPORT_UINTR
   struct {
     bx_address ui_handler;
     Bit64u stack_adjust;
@@ -1155,9 +1156,6 @@ public: // for now...
 
 #define BX_ASYNC_EVENT_STOP_TRACE (1<<31)
 
-#if BX_X86_DEBUGGER
-  bool  in_repeat;
-#endif
   bool  in_smm;
   unsigned cpu_mode;
   bool  user_pl;
@@ -4094,7 +4092,7 @@ public: // for now...
   BX_SMF void WRPKRU(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 
-#if BX_SUPPORT_UINTR && BX_SUPPORT_X86_64
+#if BX_SUPPORT_UINTR
   BX_SMF void STUI(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CLUI(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void TESTUI(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -4167,7 +4165,8 @@ public: // for now...
 #endif
   BX_SMF bool handleAsyncEvent(void);
   BX_SMF bool handleWaitForEvent(void);
-  BX_SMF void InterruptAcknowledge(void);
+  BX_SMF void HandleExtInterrupt(void);
+  BX_SMF Bit8u interrupt_acknowledge(void);
 
   BX_SMF void boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bxInstruction_c *);
 
@@ -4382,6 +4381,10 @@ public: // for now...
 
   BX_SMF void access_read_physical(bx_phy_address paddr, unsigned len, void *data);
   BX_SMF void access_write_physical(bx_phy_address paddr, unsigned len, void *data);
+  BX_SMF Bit8u  read_physical_byte(bx_phy_address paddr);
+  BX_SMF Bit16u read_physical_word(bx_phy_address paddr);
+  BX_SMF Bit32u read_physical_dword(bx_phy_address paddr);
+  BX_SMF Bit64u read_physical_qword(bx_phy_address paddr);
 
   BX_SMF bx_hostpageaddr_t getHostMemAddr(bx_phy_address addr, unsigned rw);
 
@@ -4478,7 +4481,7 @@ public: // for now...
   BX_SMF void handleSseModeChange(void);
   BX_SMF void handleAvxModeChange(void);
 #endif
-#if BX_SUPPORT_UINTR && BX_SUPPORT_X86_64
+#if BX_SUPPORT_UINTR
   BX_SMF void send_uipi(Bit32u notification_destination, Bit32u notification_vector);
   BX_SMF void uintr_uirr_update();
   BX_SMF void uintr_control();
@@ -4617,9 +4620,9 @@ public: // for now...
   BX_SMF void    deliver_NMI(void);
   BX_SMF void    deliver_SMI(void);
   BX_SMF void    deliver_SIPI(unsigned vector);
-#if BX_SUPPORT_UINTR && BX_SUPPORT_X86_64
+#if BX_SUPPORT_UINTR
   BX_SMF void    deliver_UINTR();
-  BX_SMF void    process_uintr_notification();
+  BX_SMF void    Process_UINTR_Notification();
 #endif
   BX_SMF void    debug(bx_address offset);
   BX_SMF void    debug_disasm_instruction(bx_address offset);
@@ -4837,7 +4840,7 @@ public: // for now...
   BX_SMF void xrstor_init_cet_s_state(void);
 #endif
 
-#if BX_SUPPORT_UINTR && BX_SUPPORT_X86_64
+#if BX_SUPPORT_UINTR
   BX_SMF bool xsave_uintr_state_xinuse(void);
   BX_SMF void xsave_uintr_state(bxInstruction_c *i, bx_address offset);
   BX_SMF void xrstor_uintr_state(bxInstruction_c *i, bx_address offset);
@@ -4920,15 +4923,18 @@ public: // for now...
   BX_SMF bx_phy_address VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned len, void *data);
   BX_SMF void VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *data);
   BX_SMF Bit32u VMX_Read_Virtual_APIC(unsigned offset);
-  BX_SMF void VMX_Write_Virtual_APIC(unsigned offset, Bit32u val32);
-  BX_SMF void VMX_Write_Virtual_X2APIC(unsigned offset, Bit64u val64);
+  BX_SMF void VMX_Write_Virtual_APIC(unsigned offset, int len, Bit8u* val);
+  BX_SMF void VMX_Write_Virtual_APIC(unsigned offset, Bit32u val32) { VMX_Write_Virtual_APIC(offset, 4, (Bit8u*)(&val32)); }
+  BX_SMF void VMX_Write_Virtual_X2APIC(unsigned offset, Bit64u val64) { VMX_Write_Virtual_APIC(offset, 8, (Bit8u*)(&val64)); }
   BX_SMF void VMX_TPR_Virtualization(void);
   BX_SMF bool Virtualize_X2APIC_Write(unsigned msr, Bit64u val_64);
   BX_SMF void VMX_Virtual_Apic_Access_Trap(void);
+  BX_SMF bool VMX_Posted_Interrupt_Processing(Bit8u vector);
 #if BX_SUPPORT_VMX >= 2
   BX_SMF void vapic_set_vector(unsigned apic_arrbase, Bit8u vector);
   BX_SMF Bit8u vapic_clear_and_find_highest_priority_int(unsigned apic_arrbase, Bit8u vector);
   BX_SMF void VMX_Write_VICR(void);
+  BX_SMF void VMX_Write_VICR_HI(void);
   BX_SMF void VMX_PPR_Virtualization(void);
   BX_SMF void VMX_EOI_Virtualization(void);
   BX_SMF void VMX_Self_IPI_Virtualization(Bit8u vector);

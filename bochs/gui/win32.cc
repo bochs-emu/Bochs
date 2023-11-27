@@ -592,20 +592,20 @@ void terminateEmul(int reason)
     if (vgafont[c]) DeleteObject(vgafont[c]);
 
   switch (reason) {
-  case EXIT_GUI_SHUTDOWN:
-    BX_FATAL(("Window closed, exiting!"));
-    break;
-  case EXIT_GMH_FAILURE:
-    BX_FATAL(("GetModuleHandle failure!"));
-    break;
-  case EXIT_FONT_BITMAP_ERROR:
-    BX_FATAL(("Font bitmap creation failure!"));
-    break;
-  case EXIT_HEADER_BITMAP_ERROR:
-    BX_FATAL(("Header bitmap creation failure!"));
-    break;
-  case EXIT_NORMAL:
-    break;
+    case EXIT_GUI_SHUTDOWN:
+      BX_FATAL(("Window closed, exiting!"));
+      break;
+    case EXIT_GMH_FAILURE:
+      BX_FATAL(("GetModuleHandle failure!"));
+      break;
+    case EXIT_FONT_BITMAP_ERROR:
+      BX_FATAL(("Font bitmap creation failure!"));
+      break;
+    case EXIT_HEADER_BITMAP_ERROR:
+      BX_FATAL(("Header bitmap creation failure!"));
+      break;
+    case EXIT_NORMAL:
+      break;
   }
 }
 
@@ -1114,7 +1114,7 @@ LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
     break;
 
   case WM_DESTROY:
-    PostQuitMessage (0);
+    PostQuitMessage(0);
     return 0;
 
   case WM_SIZE:
@@ -2026,7 +2026,11 @@ void bx_win32_gui_c::exit(void)
   // Wait until it dies
   while ((stInfo.kill == 0) && (workerThreadID != 0)) Sleep(500);
 
-  if (!stInfo.kill) terminateEmul(EXIT_NORMAL);
+  if (bx_user_quit) {
+    terminateEmul(EXIT_NORMAL);
+  } else {
+    terminateEmul(stInfo.kill);
+  }
 }
 
 

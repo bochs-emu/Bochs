@@ -69,10 +69,9 @@ void BX_CPU_C::vmfunc_eptp_switching(void)
   }
 
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
-  Bit64u temp_eptp;
   bx_phy_address paddr = vm->eptp_list_address + 8 * ECX;
 
-  access_read_physical(paddr, 8, &temp_eptp);
+  Bit64u temp_eptp = read_physical_qword(paddr);
   BX_NOTIFY_PHY_MEMORY_ACCESS(paddr, 8, MEMTYPE(resolve_memtype(paddr)), BX_READ, 0, (Bit8u*)(&temp_eptp));
 
   if (! is_eptptr_valid(temp_eptp)) {

@@ -326,9 +326,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat(bxInstruction_c *i, BxRepIterationP
     return;
   }
 
-#if BX_X86_DEBUGGER
-  BX_CPU_THIS_PTR in_repeat = false;
-#endif
+  BX_CPU_THIS_PTR clear_RF();
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
@@ -392,9 +390,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat(bxInstruction_c *i, BxRepIterationP
     }
   }
 
-#if BX_X86_DEBUGGER
-  BX_CPU_THIS_PTR in_repeat = true;
-#endif
+  BX_CPU_THIS_PTR assert_RF();
 
   RIP = BX_CPU_THIS_PTR prev_rip; // repeat loop not done, restore RIP
 
@@ -412,9 +408,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxRepIterati
     return;
   }
 
-#if BX_X86_DEBUGGER
-  BX_CPU_THIS_PTR in_repeat = false;
-#endif
+  BX_CPU_THIS_PTR clear_RF();
 
   if (rep == 3) { /* repeat prefix 0xF3 */
 #if BX_SUPPORT_X86_64
@@ -543,9 +537,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxRepIterati
     }
   }
 
-#if BX_X86_DEBUGGER
-  BX_CPU_THIS_PTR in_repeat = true;
-#endif
+  BX_CPU_THIS_PTR assert_RF();
 
   RIP = BX_CPU_THIS_PTR prev_rip; // repeat loop not done, restore RIP
 

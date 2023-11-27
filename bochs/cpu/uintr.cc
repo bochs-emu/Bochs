@@ -282,7 +282,7 @@ void BX_CPU_C::send_uipi(Bit32u notification_destination, Bit32u notification_ve
 #endif
 }
 
-void BX_CPU_C::process_uintr_notification()
+void BX_CPU_C::Process_UINTR_Notification()
 {
 #if BX_SUPPORT_VMX
   // the User-Level Interrupt notification process looks like external interrupt with the vector UINV

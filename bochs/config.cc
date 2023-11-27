@@ -1871,6 +1871,15 @@ void bx_reset_options()
 #endif
 }
 
+void bx_cleanup_options()
+{
+  free(config_interface_list);
+  free(display_library_list);
+  free(vga_extension_names);
+  free(vga_extension_plugins);
+  free(pcislot_dev_list);
+}
+
 int bx_read_configuration(const char *rcfile)
 {
   // parse rcfile first, then parse arguments in order.

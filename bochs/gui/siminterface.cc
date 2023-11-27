@@ -358,7 +358,7 @@ void bx_init_siminterface()
   }
 }
 
-void bx_cleanup_siminterface()
+int bx_cleanup_siminterface()
 {
   if (siminterface_log) {
     delete siminterface_log;
@@ -368,6 +368,11 @@ void bx_cleanup_siminterface()
     delete root_param;
     root_param = NULL;
   }
+  io->exit_log2();
+  delete io;
+  int exit_code = SIM->get_exit_code();
+  delete SIM;
+  return exit_code;
 }
 
 bx_real_sim_c::bx_real_sim_c()

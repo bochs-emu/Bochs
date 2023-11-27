@@ -721,7 +721,7 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
 #if BX_SUPPORT_MEMTYPE
     entry_memtype[leaf] = resolve_memtype(memtype_by_mtrr(entry_addr[leaf]), memtype_by_pat(calculate_pcd_pwt((Bit32u) curr_entry)));
 #endif
-    access_read_physical(entry_addr[leaf], 8, &entry[leaf]);
+    entry[leaf] = read_physical_qword(entry_addr[leaf]);
     BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 8, entry_memtype[leaf], BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
 
     offset_mask >>= 9;
@@ -916,7 +916,7 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckPDPTR(bx_phy_address cr3_val)
   for (n=0; n<4; n++) {
     // read and check PDPTE entries
     bx_phy_address pdpe_entry_addr = (bx_phy_address) (cr3_val | (n << 3));
-    access_read_physical(pdpe_entry_addr, 8, &(pdptr[n]));
+    pdptr[n] = read_physical_qword(pdpe_entry_addr);
     BX_NOTIFY_PHY_MEMORY_ACCESS(pdpe_entry_addr, 8, BX_MEMTYPE_INVALID, BX_READ, (BX_PDPTR0_ACCESS + n), (Bit8u*) &(pdptr[n]));
 
     if (pdptr[n] & 0x1) {
@@ -956,7 +956,7 @@ bx_phy_address BX_CPU_C::translate_linear_load_PDPTR(bx_address laddr, unsigned 
     cr3_val = nested_walk(cr3_val, BX_RW, 1);
 
     bx_phy_address pdpe_entry_addr = (bx_phy_address) (cr3_val | (index << 3));
-    access_read_physical(pdpe_entry_addr, 8, &pdptr);
+    pdptr = read_physical_qword(pdpe_entry_addr);
     BX_NOTIFY_PHY_MEMORY_ACCESS(pdpe_entry_addr, 8, BX_MEMTYPE_INVALID, BX_READ, (BX_PDPTR0_ACCESS + index), (Bit8u*) &pdptr);
 
     if (pdptr & 0x1) {
@@ -1017,7 +1017,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
 #if BX_SUPPORT_MEMTYPE
     entry_memtype[leaf] = resolve_memtype(memtype_by_mtrr(entry_addr[leaf]), memtype_by_pat(calculate_pcd_pwt((Bit32u) curr_entry)));
 #endif
-    access_read_physical(entry_addr[leaf], 8, &entry[leaf]);
+    entry[leaf] = read_physical_qword(entry_addr[leaf]);
     BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 8, entry_memtype[leaf], BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
 
     curr_entry = entry[leaf];
@@ -1158,7 +1158,7 @@ bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_m
 #if BX_SUPPORT_MEMTYPE
     entry_memtype[leaf] = resolve_memtype(memtype_by_mtrr(entry_addr[leaf]), memtype_by_pat(calculate_pcd_pwt(curr_entry)));
 #endif
-    access_read_physical(entry_addr[leaf], 4, &entry[leaf]);
+    entry[leaf] = read_physical_dword(entry_addr[leaf]);
     BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 4, entry_memtype[leaf], BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
 
     curr_entry = entry[leaf];
@@ -1675,7 +1675,7 @@ bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsig
 
   for (leaf = BX_LEVEL_PML4;; --leaf) {
     entry_addr[leaf] = ppf + ((guest_paddr >> (9 + 9*leaf)) & 0xff8);
-    access_read_physical(entry_addr[leaf], 8, &entry[leaf]);
+    entry[leaf] = read_physical_qword(entry_addr[leaf]);
     BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 8, BX_MEMTYPE_INVALID, BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
     offset_mask >>= 9;
 
@@ -1736,7 +1736,7 @@ bx_phy_address BX_CPU_C::nested_walk_PAE(bx_phy_address guest_paddr, unsigned rw
   Bit64u pdptr;
 
   bx_phy_address pdpe_entry_addr = (bx_phy_address) (ncr3 | (index << 3));
-  access_read_physical(pdpe_entry_addr, 8, &pdptr);
+  pdptr = read_physical_qword(pdpe_entry_addr);
   BX_NOTIFY_PHY_MEMORY_ACCESS(pdpe_entry_addr, 8, BX_MEMTYPE_INVALID, BX_READ, (BX_PDPTR0_ACCESS + index), (Bit8u*) &pdptr);
 
   if (! (pdptr & 0x1)) {
@@ -1757,7 +1757,7 @@ bx_phy_address BX_CPU_C::nested_walk_PAE(bx_phy_address guest_paddr, unsigned rw
 
   for (leaf = BX_LEVEL_PDE;; --leaf) {
     entry_addr[leaf] = ppf + ((guest_paddr >> (9 + 9*leaf)) & 0xff8);
-    access_read_physical(entry_addr[leaf], 8, &entry[leaf]);
+    entry[leaf] = read_physical_qword(entry_addr[leaf]);
     BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 8, BX_MEMTYPE_INVALID, BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
 
     Bit64u curr_entry = entry[leaf];
@@ -1811,7 +1811,7 @@ bx_phy_address BX_CPU_C::nested_walk_legacy(bx_phy_address guest_paddr, unsigned
 
   for (leaf = BX_LEVEL_PDE;; --leaf) {
     entry_addr[leaf] = ppf + ((guest_paddr >> (10 + 10*leaf)) & 0xffc);
-    access_read_physical(entry_addr[leaf], 4, &entry[leaf]);
+    entry[leaf] = read_physical_dword(entry_addr[leaf]);
     BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 4, BX_MEMTYPE_INVALID, BX_READ, (BX_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
 
     Bit32u curr_entry = entry[leaf];
@@ -1961,7 +1961,7 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
 
   for (leaf = BX_LEVEL_PML4;; --leaf) {
     entry_addr[leaf] = ppf + ((guest_paddr >> (9 + 9*leaf)) & 0xff8);
-    access_read_physical(entry_addr[leaf], 8, &entry[leaf]);
+    entry[leaf] = read_physical_qword(entry_addr[leaf]);
     BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 8, MEMTYPE(eptptr_memtype), BX_READ, (BX_EPT_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
 
     offset_mask >>= 9;
@@ -2158,7 +2158,7 @@ bool BX_CPU_C::spp_walk(bx_phy_address guest_paddr, bx_address guest_laddr, BxMe
 
   for (leaf = BX_LEVEL_PML4;; --leaf) {
     entry_addr[leaf] = ppf + ((guest_paddr >> (9 + 9*leaf)) & 0xff8);
-    access_read_physical(entry_addr[leaf], 8, &entry[leaf]);
+    entry[leaf] = read_physical_qword(entry_addr[leaf]);
     BX_NOTIFY_PHY_MEMORY_ACCESS(entry_addr[leaf], 8, MEMTYPE(memtype), BX_READ, (BX_EPT_SPP_PTE_ACCESS + leaf), (Bit8u*)(&entry[leaf]));
 
     if (leaf == BX_LEVEL_PTE) break;
@@ -2757,6 +2757,34 @@ void BX_CPU_C::access_read_physical(bx_phy_address paddr, unsigned len, void *da
 #endif
 
   BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, paddr, len, data);
+}
+
+Bit8u BX_CPU_C::read_physical_byte(bx_phy_address paddr)
+{
+  Bit8u data;
+  access_read_physical(paddr, 2, &data);
+  return data;
+}
+
+Bit16u BX_CPU_C::read_physical_word(bx_phy_address paddr)
+{
+  Bit16u data;
+  access_read_physical(paddr, 2, (Bit8u*)(&data));
+  return data;
+}
+
+Bit32u BX_CPU_C::read_physical_dword(bx_phy_address paddr)
+{
+  Bit32u data;
+  access_read_physical(paddr, 4, (Bit8u*)(&data));
+  return data;
+}
+
+Bit64u BX_CPU_C::read_physical_qword(bx_phy_address paddr)
+{
+  Bit64u data;
+  access_read_physical(paddr, 8, (Bit8u*)(&data));
+  return data;
 }
 
 bx_hostpageaddr_t BX_CPU_C::getHostMemAddr(bx_phy_address paddr, unsigned rw)
