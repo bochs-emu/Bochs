@@ -193,6 +193,7 @@ void BX_CPU_C::VMexit_ExtInterrupt(void)
 
   if (PIN_VMEXIT(VMX_PIN_BASED_VMEXEC_CTRL_EXTERNAL_INTERRUPT_VMEXIT)) {
     VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+
     if (! (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_INTA_ON_VMEXIT)) {
        // interrupt wasn't acknowledged and still pending, interruption info is invalid
        VMwrite32(VMCS_32BIT_VMEXIT_INTERRUPTION_INFO, 0);

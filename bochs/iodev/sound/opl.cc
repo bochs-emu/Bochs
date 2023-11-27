@@ -221,7 +221,6 @@ void operator_output(op_type* op_pt, Bit32s modulator, Bit32s trem)
   }
 }
 
-
 // no action, operator is off
 void operator_off(op_type* /*op_pt*/)
 {
@@ -319,7 +318,6 @@ void operator_attack(op_type* op_pt)
   }
   op_pt->generator_pos -= num_steps_add*FIXEDPT;
 }
-
 
 typedef void (*optype_fptr)(op_type*);
 
@@ -513,7 +511,6 @@ void adlib_init(Bit32u samplerate)
 
   generator_add = (Bit32u)(INTFREQU*FIXEDPT/int_samplerate);
 
-
   memset((void *)adlibreg,0,sizeof(adlibreg));
   memset((void *)op,0,sizeof(op_type)*MAXOPERATORS);
   memset((void *)wave_sel,0,sizeof(wave_sel));
@@ -555,7 +552,6 @@ void adlib_init(Bit32u samplerate)
 
   status = 0;
   opl_index = 0;
-
 
   // create vibrato table
   vib_table[0] = 8;
@@ -625,10 +621,7 @@ void adlib_init(Bit32u samplerate)
       }
     }
   }
-
 }
-
-
 
 void adlib_write(Bitu idx, Bit8u val)
 {
@@ -677,8 +670,10 @@ void adlib_write(Bitu idx, Bit8u val)
       break;
     }
     break;
+
   case ARC_TVS_KSR_MUL:
-  case ARC_TVS_KSR_MUL+0x10: {
+  case ARC_TVS_KSR_MUL+0x10:
+  {
     // tremolo/vibrato/sustain keeping enabled; key scale rate; frequency multiplication
     int num = idx&7;
     Bitu base = (idx-ARC_TVS_KSR_MUL)&0xff;
@@ -705,10 +700,12 @@ void adlib_write(Bitu idx, Bit8u val)
       change_frequency(chanbase,base,op_ptr);
 #endif
     }
-    }
-    break;
+  }
+  break;
+
   case ARC_KSL_OUTLEV:
-  case ARC_KSL_OUTLEV+0x10: {
+  case ARC_KSL_OUTLEV+0x10:
+  {
     // key scale level; output rate
     int num = idx&7;
     Bitu base = (idx-ARC_KSL_OUTLEV)&0xff;
@@ -731,10 +728,12 @@ void adlib_write(Bitu idx, Bit8u val)
       change_frequency(chanbase,base,op_ptr);
 #endif
     }
-    }
-    break;
+  }
+  break;
+
   case ARC_ATTR_DECR:
-  case ARC_ATTR_DECR+0x10: {
+  case ARC_ATTR_DECR+0x10:
+  {
     // attack/decay rates
     int num = idx&7;
     Bitu base = (idx-ARC_ATTR_DECR)&0xff;
@@ -746,10 +745,12 @@ void adlib_write(Bitu idx, Bit8u val)
       change_attackrate(regbase,op_ptr);
       change_decayrate(regbase,op_ptr);
     }
-    }
-    break;
+  }
+  break;
+
   case ARC_SUSL_RELR:
-  case ARC_SUSL_RELR+0x10: {
+  case ARC_SUSL_RELR+0x10:
+  {
     // sustain level; release rate
     int num = idx&7;
     Bitu base = (idx-ARC_SUSL_RELR)&0xff;
@@ -761,9 +762,11 @@ void adlib_write(Bitu idx, Bit8u val)
       change_releaserate(regbase,op_ptr);
       change_sustainlevel(regbase,op_ptr);
     }
-    }
-    break;
-  case ARC_FREQ_NUM: {
+  }
+  break;
+
+  case ARC_FREQ_NUM:
+  {
     // 0xa0-0xa8 low8 frequency
     Bitu base = (idx-ARC_FREQ_NUM)&0xff;
     if (base<9) {
@@ -786,9 +789,11 @@ void adlib_write(Bitu idx, Bit8u val)
       }
 #endif
     }
-    }
-    break;
-  case ARC_KON_BNUM: {
+  }
+  break;
+
+  case ARC_KON_BNUM:
+  {
     if (idx == ARC_PERC_MODE) {
 #if defined(OPLTYPE_IS_OPL3)
       if (second_set) return;
@@ -881,9 +886,11 @@ void adlib_write(Bitu idx, Bit8u val)
       }
 #endif
     }
-    }
-    break;
-  case ARC_FEEDBACK: {
+  }
+  break;
+
+  case ARC_FEEDBACK:
+  {
     // 0xc0-0xc8 feedback/modulation type (AM/FM)
     Bitu base = (idx-ARC_FEEDBACK)&0xff;
     if (base<9) {
@@ -896,10 +903,12 @@ void adlib_write(Bitu idx, Bit8u val)
       op[opbase].right_pan = ((val&0x20)>>5);
 #endif
     }
-    }
-    break;
+  }
+  break;
+
   case ARC_WAVE_SEL:
-  case ARC_WAVE_SEL+0x10: {
+  case ARC_WAVE_SEL+0x10:
+  {
     int num = idx&7;
     Bitu base = (idx-ARC_WAVE_SEL)&0xff;
     if ((num<6) && (base<22)) {
@@ -919,8 +928,9 @@ void adlib_write(Bitu idx, Bit8u val)
       }
 #endif
     }
-    }
-    break;
+  }
+  break;
+
   default:
     break;
   }
@@ -997,7 +1007,6 @@ static void OPL_INLINE clipit16(Bit32s ival, Bit16s* outval, Bit8u vol)
 
 bool adlib_getsample(Bit16u rate, Bit16s* sndptr, Bits numsamples, Bit16u volume)
 {
-  Bit8u lvol, rvol;
   Bits i, endsamples;
   op_type* cptr;
   bool opl_active = 0;
@@ -1013,8 +1022,8 @@ bool adlib_getsample(Bit16u rate, Bit16s* sndptr, Bits numsamples, Bit16u volume
   Bit32s vib_lut[BLOCKBUF_SIZE];
   Bit32s trem_lut[BLOCKBUF_SIZE];
 
-  lvol = (Bit8u)(volume & 0xff);
-  rvol = (Bit8u)(volume >> 8);
+  Bit8u lvol = (Bit8u)(volume & 0xff);
+  Bit8u rvol = (Bit8u)(volume >> 8);
   Bits samples_to_process = numsamples;
 
   if (rate != (Bit16u)int_samplerate) {
@@ -1519,9 +1528,6 @@ bool adlib_getsample(Bit16u rate, Bit16s* sndptr, Bits numsamples, Bit16u volume
 
 void adlib_register_state(bx_list_c *parent)
 {
-  int i;
-  char numstr[8];
-
   bx_list_c *adlib = new bx_list_c(parent, "adlib");
   new bx_shadow_num_c(adlib, "opl_index", &opl_index, BASE_HEX);
 #if defined(OPLTYPE_IS_OPL3)
@@ -1531,7 +1537,8 @@ void adlib_register_state(bx_list_c *parent)
   new bx_shadow_num_c(adlib, "vibtab_pos", &vibtab_pos);
   new bx_shadow_num_c(adlib, "tremtab_pos", &tremtab_pos);
   bx_list_c *ops = new bx_list_c(adlib, "op");
-  for (i = 0; i < MAXOPERATORS; i++) {
+  for (int i = 0; i < MAXOPERATORS; i++) {
+    char numstr[8];
     sprintf(numstr, "%d", i);
     bx_list_c *opX = new bx_list_c(ops, numstr);
     new bx_shadow_num_c(opX, "cval", &op[i].cval);
@@ -1576,11 +1583,8 @@ void adlib_register_state(bx_list_c *parent)
 
 void adlib_after_restore_state()
 {
-  int i;
-  Bit8u wvsel;
-
-  for (i = 0; i < MAXOPERATORS; i++) {
-    wvsel = op[i].cur_wvsel;
+  for (int i = 0; i < MAXOPERATORS; i++) {
+    Bit8u wvsel = op[i].cur_wvsel;
     op[i].cur_wmask = wavemask[wvsel];
     op[i].cur_wform = &wavtable[waveform[wvsel]];
   }
