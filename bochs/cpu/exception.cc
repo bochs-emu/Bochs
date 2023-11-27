@@ -797,11 +797,6 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bool push_error, Bit16u er
   BX_CPU_THIS_PTR in_event = true;
 #endif
 
-  // For any interrupt arriving after any iteration of a repeated instruction but the last iteration,
-  // the value pushed for RF is 1.
-  if (BX_CPU_THIS_PTR in_repeat)
-    assert_RF();
-
   RSP_SPECULATIVE;
 
 #if BX_SUPPORT_X86_64

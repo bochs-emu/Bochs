@@ -577,10 +577,6 @@ bool BX_CPU_C::VMX_Posted_Interrupt_Processing(Bit8u vector)
 
   VMX_Evaluate_Pending_Virtual_Interrupts();
 
-  // if in repeat operation but before the last iteration
-  if (BX_CPU_THIS_PTR in_repeat)
-    assert_RF();
-
   return true;
 }
 
