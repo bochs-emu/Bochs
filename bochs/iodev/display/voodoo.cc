@@ -249,6 +249,7 @@ bx_voodoo_base_c::bx_voodoo_base_c()
 {
   put("VOODOO");
   s.vertical_timer_id = BX_NULL_TIMER_HANDLE;
+  s.vga_tile_updated = NULL;
   v = NULL;
 }
 
@@ -269,12 +270,16 @@ bx_voodoo_base_c::~bx_voodoo_base_c()
     bx_set_sem(&vertical_sem);
     bx_destroy_sem(&vertical_sem);
   }
+  if (s.vga_tile_updated != NULL) {
+    delete [] s.vga_tile_updated;
+  }
   if (v != NULL) {
     free(v->fbi.ram);
     if (s.model < VOODOO_BANSHEE) {
       free(v->tmu[0].ram);
       free(v->tmu[1].ram);
     }
+    delete [] v->thread_stats;
     delete v;
   }
 

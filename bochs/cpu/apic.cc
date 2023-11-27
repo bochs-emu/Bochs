@@ -787,7 +787,7 @@ int bx_local_apic_c::highest_priority_int(Bit32u *array)
 // ignore of interrupt vectors < 16 happen naturally as there is no way to ISR to it
 //  if (reg == 0) tmp &= 0xffff0000;
     if (tmp) {
-      int vector = (reg * 32) + (31 - lzcntd(tmp));
+      int vector = (reg * 32) + most_significant_bitd(tmp);
       return vector;
     }
   }
@@ -1199,11 +1199,14 @@ void bx_local_apic_c::vmx_preemption_timer_expired(void *this_ptr)
 
 #if BX_SUPPORT_MONITOR_MWAIT
 
-void bx_local_apic_c::set_mwaitx_timer(Bit32u value)
+void bx_local_apic_c::set_mwaitx_timer(Bit64u value)
 {
-  BX_DEBUG(("MWAITX timer: value = %u", value));
-  bx_pc_system.activate_timer_ticks(mwaitx_timer_handle, value, 0);
-  mwaitx_timer_active = true;
+  if (mwaitx_timer_active) deactivate_mwaitx_timer();
+  if (value) {
+    BX_DEBUG(("MWAITX timer: delay value = " FMT_LL "u", value));
+    bx_pc_system.activate_timer_ticks(mwaitx_timer_handle, value, 0);
+    mwaitx_timer_active = true;
+  }
 }
 
 void bx_local_apic_c::deactivate_mwaitx_timer(void)

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1027,16 +1027,22 @@ void bx_wx_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   // parse x11 specific options
   if (argc > 1) {
     for (i = 1; i < argc; i++) {
+      if (!strcmp(argv[i], "cmdmode")) {
+        BX_ERROR(("Ignoring option 'cmdmode' - not supported by wxWidgets port"));
+      } else if (!strcmp(argv[i], "gui_debug")) {
+#if BX_DEBUGGER && BX_DEBUGGER_GUI
+        BX_ERROR(("Ignoring option 'gui_debug' - wxWidgets port always uses gui debugger"));
+#else
+        BX_ERROR(("Ignoring option 'gui_debug' - debugger not present"));
+#endif
 #if BX_SHOW_IPS
-      if (!strcmp(argv[i], "hideIPS")) {
+      } else if (!strcmp(argv[i], "hideIPS")) {
         BX_INFO(("hide IPS display in status bar"));
         wx_hide_ips = 1;
+#endif
       } else {
         BX_PANIC(("Unknown wx option '%s'", argv[i]));
       }
-#else
-      BX_PANIC(("Unknown wx option '%s'", argv[i]));
-#endif
     }
   }
 

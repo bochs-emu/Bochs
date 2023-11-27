@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2020  The Bochs Project
+//  Copyright (C) 2001-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -171,6 +171,7 @@ void iofunctions::init_log(int fd)
   init_log(tmpfd);
 };
 
+// called at simulation exit
 void iofunctions::exit_log()
 {
   flush();
@@ -180,6 +181,13 @@ void iofunctions::exit_log()
     free((char *)logfn);
     logfn = "/dev/stderr";
   }
+}
+
+// called at application exit
+void iofunctions::exit_log2()
+{
+  delete log;
+  delete genlog;
 }
 
 // all other functions may use genlog safely.

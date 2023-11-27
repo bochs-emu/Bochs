@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 /*
  *  Copyright (C) 2002-2013  The DOSBox Team
- *  Copyright (C) 2015-2021  The Bochs Project
+ *  Copyright (C) 2015-2023  The Bochs Project
  *  OPL2/OPL3 emulation library
  *
  *  This library is free software; you can redistribute it and/or
@@ -62,7 +62,6 @@ static Bit32s vibval_var2[BLOCKBUF_SIZE];
 
 // vibrato/trmolo value table pointers
 static Bit32s *vibval1, *vibval2, *vibval3, *vibval4;
-static Bit32s *tremval1, *tremval2, *tremval3, *tremval4;
 
 
 // key scale level lookup table
@@ -1003,6 +1002,7 @@ bool adlib_getsample(Bit16u rate, Bit16s* sndptr, Bits numsamples, Bit16u volume
   op_type* cptr;
   bool opl_active = 0;
 
+  Bit32s *tremval1, *tremval2, *tremval3, *tremval4;
   Bit32s outbufl[BLOCKBUF_SIZE];
 #if defined(OPLTYPE_IS_OPL3)
   // second output buffer (right channel for opl3 stereo)

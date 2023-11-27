@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2011-2021  The Bochs Project
+//  Copyright (C) 2011-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -43,6 +43,11 @@ const char **sound_driver_names;
 bx_soundmod_ctl_c::bx_soundmod_ctl_c()
 {
   put("soundctl", "SNDCTL");
+}
+
+bx_soundmod_ctl_c::~bx_soundmod_ctl_c()
+{
+  free(sound_driver_names);
 }
 
 void bx_soundmod_ctl_c::init()

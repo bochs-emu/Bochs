@@ -39,7 +39,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 #if BX_CPU_LEVEL >= 6
   if (is_cpu_extension_supported(BX_ISA_X2APIC)) {
     if (is_x2apic_msr_range(index)) {
-      if (BX_CPU_THIS_PTR msr.apicbase & 0x400)  // X2APIC mode
+      if (x2apic_mode())
         return BX_CPU_THIS_PTR lapic.read_x2apic(index, msr);
       else
         return 0;
@@ -155,10 +155,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 #endif
 
     case BX_MSR_TSC:
-      val64 = BX_CPU_THIS_PTR get_TSC();
-#if BX_SUPPORT_SVM || BX_SUPPORT_VMX
-      val64 = BX_CPU_THIS_PTR get_TSC_VMXAdjust(val64);
-#endif
+      val64 = BX_CPU_THIS_PTR get_Virtual_TSC();
       break;
 
     case BX_MSR_TSC_ADJUST:
@@ -209,6 +206,51 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
         return handle_unknown_rdmsr(index, msr);
       }
       val64 = BX_CPU_THIS_PTR msr.ia32_interrupt_ssp_table;
+      break;
+#endif
+
+#if BX_SUPPORT_UINTR
+    case BX_MSR_IA32_UINTR_RR:
+      if (! is_cpu_extension_supported(BX_ISA_UINTR)) {
+        BX_ERROR(("RDMSR BX_MSR_IA32_UINTR_RR: UINTR not enabled in the cpu model"));
+        return handle_unknown_rdmsr(index, msr);
+      }
+      val64 = BX_CPU_THIS_PTR uintr.uirr;
+      break;
+    case BX_MSR_IA32_UINTR_HANDLER:
+      if (! is_cpu_extension_supported(BX_ISA_UINTR)) {
+        BX_ERROR(("RDMSR BX_MSR_IA32_UINTR_HANDLER: UINTR not enabled in the cpu model"));
+        return handle_unknown_rdmsr(index, msr);
+      }
+      val64 = BX_CPU_THIS_PTR uintr.ui_handler;
+      break;
+    case BX_MSR_IA32_UINTR_STACKADJUST:
+      if (! is_cpu_extension_supported(BX_ISA_UINTR)) {
+        BX_ERROR(("RDMSR BX_MSR_IA32_UINTR_STACKADJUST: UINTR not enabled in the cpu model"));
+        return handle_unknown_rdmsr(index, msr);
+      }
+      val64 = BX_CPU_THIS_PTR uintr.stack_adjust;
+      break;
+    case BX_MSR_IA32_UINTR_MISC:
+      if (! is_cpu_extension_supported(BX_ISA_UINTR)) {
+        BX_ERROR(("RDMSR BX_MSR_IA32_UINTR_MISC: UINTR not enabled in the cpu model"));
+        return handle_unknown_rdmsr(index, msr);
+      }
+      val64 = GET64_FROM_HI32_LO32(BX_CPU_THIS_PTR uintr.uinv, BX_CPU_THIS_PTR uintr.uitt_size);
+      break;
+    case BX_MSR_IA32_UINTR_PD:
+      if (! is_cpu_extension_supported(BX_ISA_UINTR)) {
+        BX_ERROR(("RDMSR BX_MSR_IA32_UINTR_PD: UINTR not enabled in the cpu model"));
+        return handle_unknown_rdmsr(index, msr);
+      }
+      val64 = BX_CPU_THIS_PTR uintr.upid_addr;
+      break;
+    case BX_MSR_IA32_UINTR_TT:
+      if (! is_cpu_extension_supported(BX_ISA_UINTR)) {
+        BX_ERROR(("RDMSR BX_MSR_IA32_UINTR_TT: UINTR not enabled in the cpu model"));
+        return handle_unknown_rdmsr(index, msr);
+      }
+      val64 = BX_CPU_THIS_PTR uintr.uitt_addr;
       break;
 #endif
 
@@ -502,9 +544,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUALIZE_X2APIC_MODE)) {
+    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_X2APIC_MODE)) {
       if (index >= 0x800 && index <= 0x8FF) {
-        if (index == 0x808 || SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUALIZE_APIC_REGISTERS)) {
+        if (index == 0x808 || SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_APIC_REGISTERS)) {
           unsigned vapic_offset = (index & 0xff) << 4;
           RAX = VMX_Read_Virtual_APIC(vapic_offset);
           RDX = VMX_Read_Virtual_APIC(vapic_offset + 4);
@@ -579,7 +621,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 #if BX_CPU_LEVEL >= 6
   if (is_cpu_extension_supported(BX_ISA_X2APIC)) {
     if (is_x2apic_msr_range(index)) {
-      if (BX_CPU_THIS_PTR msr.apicbase & 0x400)  // X2APIC mode
+      if (x2apic_mode())
         return BX_CPU_THIS_PTR lapic.write_x2apic(index, val32_hi, val32_lo);
       else
         return 0;
@@ -852,6 +894,81 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       break;
 #endif
 
+#if BX_SUPPORT_UINTR
+    case BX_MSR_IA32_UINTR_RR:
+      if (! is_cpu_extension_supported(BX_ISA_UINTR)) {
+        BX_ERROR(("WRMSR BX_MSR_IA32_UINTR_RR: UINTR not enabled in the cpu model"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
+      BX_CPU_THIS_PTR uintr.uirr = val_64;
+      uintr_uirr_update(); // potentially signal or clear user-level-interrupt
+      break;
+    case BX_MSR_IA32_UINTR_HANDLER:
+      if (! is_cpu_extension_supported(BX_ISA_UINTR)) {
+        BX_ERROR(("WRMSR BX_MSR_IA32_UINTR_HANDLER: UINTR not enabled in the cpu model"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
+      if (! IsCanonical(val_64)) {
+        BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_UINTR_HANDLER !"));
+        return 0;
+      }
+      BX_CPU_THIS_PTR uintr.ui_handler = val_64;
+      break;
+    case BX_MSR_IA32_UINTR_STACKADJUST:
+      if (! is_cpu_extension_supported(BX_ISA_UINTR)) {
+        BX_ERROR(("WRMSR BX_MSR_IA32_UINTR_STACKADJUST: UINTR not enabled in the cpu model"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
+      if (! IsCanonical(val_64)) {
+        BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_UINTR_STACKADJUST !"));
+        return 0;
+      }
+      BX_CPU_THIS_PTR uintr.stack_adjust = val_64;
+      break;
+    case BX_MSR_IA32_UINTR_MISC:
+      if (! is_cpu_extension_supported(BX_ISA_UINTR)) {
+        BX_ERROR(("WRMSR BX_MSR_IA32_UINTR_MISC: UINTR not enabled in the cpu model"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
+      if (val_64 & BX_CONST64(0xffffff0000000000)) {
+        BX_ERROR(("WRMSR: attempt to write to reserved bits of BX_MSR_IA32_UINTR_MISC !"));
+        return 0;
+      }
+      BX_CPU_THIS_PTR uintr.uitt_size = GET32L(val_64);
+      BX_CPU_THIS_PTR uintr.uinv      = GET32H(val_64);
+      break;
+    case BX_MSR_IA32_UINTR_PD:
+      if (! is_cpu_extension_supported(BX_ISA_UINTR)) {
+        BX_ERROR(("WRMSR BX_MSR_IA32_UINTR_PD: UINTR not enabled in the cpu model"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
+      if (! IsCanonical(val_64)) {
+        BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_UINTR_PD !"));
+        return 0;
+      }
+      if (val_64 & 0x3f) { // bits [5:0] are reserved and MBZ
+        BX_ERROR(("WRMSR: attempt to write to reserved bits of BX_MSR_IA32_UINTR_MISC !"));
+        return 0;
+      }
+      BX_CPU_THIS_PTR uintr.upid_addr = val_64;
+      break;
+    case BX_MSR_IA32_UINTR_TT:
+      if (! is_cpu_extension_supported(BX_ISA_UINTR)) {
+        BX_ERROR(("WRMSR BX_MSR_IA32_UINTR_TT: UINTR not enabled in the cpu model"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
+      if (! IsCanonical(val_64)) {
+        BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_UINTR_TT !"));
+        return 0;
+      }
+      if (val_64 & 0x0E) { // bits [3:1] are reserved and MBZ
+        BX_ERROR(("WRMSR: attempt to write to reserved bits of BX_MSR_IA32_UINTR_TT !"));
+        return 0;
+      }
+      BX_CPU_THIS_PTR uintr.uitt_addr = val_64;
+      break;
+#endif
+
 #if BX_SUPPORT_PKEYS
     case BX_MSR_IA32_PKRS:
       if (! is_cpu_extension_supported(BX_ISA_PKS)) {
@@ -1118,7 +1235,7 @@ bool BX_CPU_C::relocate_apic(Bit64u val_64)
 
   const Bit32u BX_MSR_APICBASE_RESERVED_BITS = (0x2ff | (is_cpu_extension_supported(BX_ISA_X2APIC) ? 0 : 0x400));
 
-  if (BX_CPU_THIS_PTR msr.apicbase & 0x800) {
+  if (apic_global_enable_on()) {
     Bit32u val32_hi = GET32H(val_64), val32_lo = GET32L(val_64);
     BX_INFO(("WRMSR: wrote %08x:%08x to MSR_APICBASE", val32_hi, val32_lo));
     if (! IsValidPhyAddr(val_64)) {
@@ -1159,6 +1276,16 @@ bool BX_CPU_C::relocate_apic(Bit64u val_64)
 
   return 1;
 }
+
+bool BX_CPU_C::apic_global_enable_on()
+{
+  return BX_CPU_THIS_PTR msr.apicbase & 0x800;
+}
+
+bool BX_CPU_C::x2apic_mode()
+{
+  return BX_CPU_THIS_PTR msr.apicbase & 0x400;
+}
 #endif
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
@@ -1188,7 +1315,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUALIZE_X2APIC_MODE)) {
+    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_X2APIC_MODE)) {
       if (Virtualize_X2APIC_Write(index, val_64))
         BX_NEXT_INSTR(i);
     }

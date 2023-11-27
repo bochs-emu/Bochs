@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -192,6 +192,7 @@ public:
   int register_statusitem(const char *text, bool auto_off=0);
   void unregister_statusitem(int id);
   void statusbar_setitem(int element, bool active, bool w=0);
+  void statusbar_setall(bool active);
   static void init_signal_handlers();
   static void toggle_mouse_enable(void);
   bool mouse_toggle_check(Bit32u key, bool pressed);
@@ -583,6 +584,9 @@ enum {
       genlog->info("installing %s module as the Bochs GUI", #gui_name); \
       theGui = new bx_##gui_name##_gui_c ();                            \
       bx_gui = theGui;                                                  \
+    } else if (mode == PLUGIN_FINI) {                                   \
+      delete theGui;                                                    \
+      bx_gui = NULL;                                                    \
     } else if (mode == PLUGIN_PROBE) {                                  \
       return (int)PLUGTYPE_GUI;                                         \
     }                                                                   \

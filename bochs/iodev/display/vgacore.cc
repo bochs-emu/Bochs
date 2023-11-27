@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1182,6 +1182,12 @@ void bx_vgacore_c::write(Bit32u address, Bit32u value, unsigned io_len, bool no_
             break;
           case 0x08:
             // Vertical pel panning change
+            if (BX_VGA_THIS s.graphics_ctrl.graphics_alpha && ((BX_VGA_THIS s.CRTC.reg[0x08] & 0x1f) > 0)) {
+              BX_ERROR(("CRTC: vertical pel panning in graphics mode not implemented yet"));
+            }
+            if ((BX_VGA_THIS s.CRTC.reg[0x08] & 0x60) > 0) {
+              BX_ERROR(("CRTC: byte panning not implemented yet"));
+            }
             needs_update = 1;
             break;
           case 0x09:
@@ -1274,6 +1280,9 @@ Bit8u bx_vgacore_c::get_vga_pixel(Bit16u x, Bit16u y, Bit16u saddr, Bit16u lc, b
   Bit32u byte_offset;
 
   if (BX_VGA_THIS s.x_dotclockdiv2) x >>= 1;
+  if ((y <= lc) || !BX_VGA_THIS s.attribute_ctrl.mode_ctrl.pixel_panning_compat) {
+    x += BX_VGA_THIS s.attribute_ctrl.horiz_pel_panning;
+  }
   bit_no = 7 - (x % 8);
   if (y > lc) {
     byte_offset = x / 8 +

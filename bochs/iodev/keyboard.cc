@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -189,7 +189,7 @@ void bx_keyb_c::init(void)
 
 void bx_keyb_c::reset(unsigned type)
 {
-  // Nothing here yet
+  BX_KEY_THIS s.kbd_internal_buffer.led_status = 0;
 }
 
 void bx_keyb_c::register_state(void)

@@ -1751,7 +1751,7 @@ bx_define_opcode(BX_IA_VMSAVE, "vmsave", "vmsave", &BX_CPU_C::BxError, &BX_CPU_C
 bx_define_opcode(BX_IA_STGI, "stgi", "stgi", &BX_CPU_C::BxError, &BX_CPU_C::STGI, BX_ISA_SVM, OP_NONE, OP_NONE, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_CLGI, "clgi", "clgi", &BX_CPU_C::BxError, &BX_CPU_C::CLGI, BX_ISA_SVM, OP_NONE, OP_NONE, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_SKINIT, "skinit", "skinit", &BX_CPU_C::BxError, &BX_CPU_C::SKINIT, BX_ISA_SVM, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
-bx_define_opcode(BX_IA_INVLPGA, "invlpga", "invlpga", &BX_CPU_C::BxError, &BX_CPU_C::INVLPGA, BX_ISA_SVM, OP_Mb, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
+bx_define_opcode(BX_IA_INVLPGA, "invlpga", "invlpga", &BX_CPU_C::BxError, &BX_CPU_C::INVLPGA, BX_ISA_SVM, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
 #endif
 // SVM
 
@@ -1781,6 +1781,14 @@ bx_define_opcode(BX_IA_INVPCID, "invpcid", "invpcid", &BX_CPU_C::INVPCID, &BX_CP
 #if BX_SUPPORT_PKEYS
 bx_define_opcode(BX_IA_RDPKRU, "rdpkru", "rdpkru", &BX_CPU_C::BxError, &BX_CPU_C::RDPKRU, BX_ISA_PKU, OP_NONE, OP_NONE, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_WRPKRU, "wrpkru", "wrpkru", &BX_CPU_C::BxError, &BX_CPU_C::WRPKRU, BX_ISA_PKU, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
+#endif
+
+#if BX_SUPPORT_UINTR && BX_SUPPORT_X86_64
+bx_define_opcode(BX_IA_CLUI, "clui", "clui", NULL, &BX_CPU_C::CLUI, BX_ISA_UINTR, OP_NONE, OP_NONE, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_STUI, "stui", "stui", NULL, &BX_CPU_C::STUI, BX_ISA_UINTR, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
+bx_define_opcode(BX_IA_TESTUI, "testui", "testui", NULL, &BX_CPU_C::TESTUI, BX_ISA_UINTR, OP_NONE, OP_NONE, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_UIRET, "uiret", "uiret", NULL, &BX_CPU_C::UIRET, BX_ISA_UINTR, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
+bx_define_opcode(BX_IA_SENDUIPI_Gq, "senduipi", "senduipi", NULL, &BX_CPU_C::SENDUIPI_Gq, BX_ISA_UINTR, OP_Gq, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
 #endif
 
 bx_define_opcode(BX_IA_RDPID_Ed, "rdpid", "rdpid", NULL, &BX_CPU_C::RDPID_Ed, BX_ISA_RDPID, OP_Ed, OP_NONE, OP_NONE, OP_NONE, 0)

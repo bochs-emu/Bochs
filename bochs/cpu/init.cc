@@ -444,6 +444,18 @@ void BX_CPU_C::register_state(void)
 #endif
 #endif
 
+#if BX_SUPPORT_UINTR
+  bx_list_c *UINTR = new bx_list_c(cpu, "UINTR");
+  BXRS_PARAM_BOOL(UINTR, UIF, uintr.UIF);
+  BXRS_HEX_PARAM_FIELD(UINTR, uirr, uintr.uirr);
+  BXRS_HEX_PARAM_FIELD(UINTR, ui_handler, uintr.ui_handler);
+  BXRS_HEX_PARAM_FIELD(UINTR, stack_adjust, uintr.stack_adjust);
+  BXRS_HEX_PARAM_FIELD(UINTR, uinv, uintr.uinv);
+  BXRS_HEX_PARAM_FIELD(UINTR, uitt_size, uintr.uitt_size);
+  BXRS_HEX_PARAM_FIELD(UINTR, uitt_addr, uintr.uitt_addr);
+  BXRS_HEX_PARAM_FIELD(UINTR, upid_addr, uintr.upid_addr);
+#endif
+
 #if BX_SUPPORT_FPU
   bx_list_c *fpu = new bx_list_c(cpu, "FPU");
   BXRS_HEX_PARAM_FIELD(fpu, cwd, the_i387.cwd);
@@ -507,10 +519,7 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_SIMPLE32(cpu, event_mask);
   BXRS_HEX_PARAM_SIMPLE32(cpu, async_event);
 
-#if BX_X86_DEBUGGER
   BXRS_PARAM_BOOL(cpu, in_repeat, in_repeat);
-#endif
-
   BXRS_PARAM_BOOL(cpu, in_smm, in_smm);
 
 #if BX_DEBUGGER
@@ -849,9 +858,7 @@ void BX_CPU_C::reset(unsigned source)
 #endif
   BX_CPU_THIS_PTR dr7.val32 = 0x00000400;
 
-#if BX_X86_DEBUGGER
   BX_CPU_THIS_PTR in_repeat = false;
-#endif
   BX_CPU_THIS_PTR in_smm = false;
 
   BX_CPU_THIS_PTR pending_event = 0;
@@ -894,6 +901,10 @@ void BX_CPU_C::reset(unsigned source)
   SSP = 0;
 #endif
 #endif // BX_CPU_LEVEL >= 6
+
+#if BX_SUPPORT_UINTR
+  memset(&BX_CPU_THIS_PTR uintr, 0, sizeof(BX_CPU_THIS_PTR uintr));
+#endif
 
 #if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR msr.ia32_spec_ctrl = 0;

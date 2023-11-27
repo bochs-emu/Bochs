@@ -345,16 +345,34 @@ bx_param_enum_c *bx_real_sim_c::get_param_enum(const char *pname, bx_param_c *ba
 void bx_init_siminterface()
 {
   if (SIM == NULL) {
+    SIM = new bx_real_sim_c();
+  }
+  if (siminterface_log == NULL) {
     siminterface_log = new logfunctions();
     siminterface_log->put("siminterface", "SIM");
-    SIM = new bx_real_sim_c();
   }
   if (root_param == NULL) {
     root_param = new bx_list_c(NULL,
       "bochs",
-      "list of top level bochs parameters"
-      );
+      "list of top level bochs parameters");
   }
+}
+
+int bx_cleanup_siminterface()
+{
+  if (siminterface_log) {
+    delete siminterface_log;
+  }
+  if (root_param) {
+    root_param->clear();
+    delete root_param;
+    root_param = NULL;
+  }
+  io->exit_log2();
+  delete io;
+  int exit_code = SIM->get_exit_code();
+  delete SIM;
+  return exit_code;
 }
 
 bx_real_sim_c::bx_real_sim_c()
@@ -1073,9 +1091,9 @@ void bx_real_sim_c::init_statistics()
 
 void bx_real_sim_c::cleanup_statistics()
 {
-  bx_list_c *list;
+  bx_list_c *list = get_statistics_root();
 
-  if ((list = get_statistics_root()) != NULL) {
+  if (list != NULL) {
     list->clear();
   }
 }

@@ -58,13 +58,15 @@ void BX_CPU_C::wakeup_monitor(void)
      BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_ACTIVE;
   // clear monitor
   BX_CPU_THIS_PTR monitor.reset_monitor();
+  // deactivate mwaitx timer if was active to avoid its redundant firing
+  BX_CPU_THIS_PTR lapic.deactivate_mwaitx_timer();
 }
 #endif
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MONITOR_MWAIT
-  BX_DEBUG(("%s instruction executed EAX = 0x%08x", i->getIaOpcodeNameShort(), EAX));
+  BX_DEBUG(("%s instruction executed RAX = 0x" FMT_ADDRX, i->getIaOpcodeNameShort(), RAX));
 
   if (i->getIaOpcode() == BX_IA_MONITOR) {
     // CPL is always 0 in real mode
@@ -75,7 +77,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX
     if (BX_CPU_THIS_PTR in_vmx_guest) {
-      if (VMEXIT(VMX_VM_EXEC_CTRL2_MONITOR_VMEXIT)) {
+      if (VMEXIT(VMX_VM_EXEC_CTRL1_MONITOR_VMEXIT)) {
         VMexit(VMX_VMEXIT_MONITOR, 0);
       }
     }
@@ -95,6 +97,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
   bx_phy_address paddr = BX_CPU_THIS_PTR address_xlation.paddress1;
 #if BX_SUPPORT_MEMTYPE
   if (BX_CPU_THIS_PTR address_xlation.memtype1 != BX_MEMTYPE_WB) {
+    BX_DEBUG(("%s for non-WB memory type phys_addr=0x" FMT_PHY_ADDRX, i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR monitor.monitor_addr));
     BX_NEXT_INSTR(i);
   }
 #endif
@@ -132,7 +135,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX
     if (BX_CPU_THIS_PTR in_vmx_guest) {
-      if (VMEXIT(VMX_VM_EXEC_CTRL2_MWAIT_VMEXIT)) {
+      if (VMEXIT(VMX_VM_EXEC_CTRL1_MWAIT_VMEXIT)) {
         VMexit(VMX_VMEXIT_MWAIT, BX_CPU_THIS_PTR monitor.armed);
       }
     }
@@ -184,12 +187,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
   // resets the monitoring logic.
 
   Bit32u new_state = BX_ACTIVITY_STATE_MWAIT;
-  if (ECX & 1) {
+  if (ECX & 0x1) {
 #if BX_SUPPORT_VMX
     // When "interrupt window exiting" VMX control is set MWAIT instruction
     // won't cause the processor to enter sleep state with EFLAGS.IF = 0
     if (BX_CPU_THIS_PTR in_vmx_guest) {
-      if (VMEXIT(VMX_VM_EXEC_CTRL2_INTERRUPT_WINDOW_VMEXIT) && ! BX_CPU_THIS_PTR get_IF()) {
+      if (VMEXIT(VMX_VM_EXEC_CTRL1_INTERRUPT_WINDOW_VMEXIT) && ! BX_CPU_THIS_PTR get_IF()) {
         BX_NEXT_TRACE(i);
       }
     }
@@ -199,8 +202,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
 
   BX_INSTR_MWAIT(BX_CPU_ID, BX_CPU_THIS_PTR monitor.monitor_addr, CACHE_LINE_SIZE, ECX);
 
-  if (ECX & 2) {
-    if (i->getIaOpcode() == BX_IA_MWAITX) {
+  if (i->getIaOpcode() == BX_IA_MWAITX) {
+    if ((ECX & 0x2) != 0 && EBX != 0) {
       BX_CPU_THIS_PTR lapic.set_mwaitx_timer(EBX);
     }
   }

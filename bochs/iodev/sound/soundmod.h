@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2011-2021  The Bochs Project
+//  Copyright (C) 2011-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -29,7 +29,7 @@ class bx_soundlow_midiout_c;
 class BOCHSAPI bx_soundmod_ctl_c : public logfunctions {
 public:
   bx_soundmod_ctl_c();
-  ~bx_soundmod_ctl_c() {}
+  ~bx_soundmod_ctl_c();
   void init(void);
   void exit(void);
   const char **get_driver_names();

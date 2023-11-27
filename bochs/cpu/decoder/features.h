@@ -48,11 +48,9 @@ x86_feature(BX_ISA_SSE4_1, "sse4_1")                                    /* SSE4_
 x86_feature(BX_ISA_SSE4_2, "sse4_2")                                    /* SSE4_2 instruction */
 x86_feature(BX_ISA_POPCNT, "popcnt")                                    /* POPCNT instruction */
 x86_feature(BX_ISA_MONITOR_MWAIT, "mwait")                              /* MONITOR/MWAIT instruction */
-x86_feature(BX_ISA_MONITORX_MWAITX, "mwaitx")                           /* MONITORX/MWAITX instruction (AMD) */
 x86_feature(BX_ISA_WAITPKG, "waitpkg")                                  /* TPAUSE/UMONITOR/UMWAIT instructions */
-#if BX_SUPPORT_VMX
+x86_feature(BX_ISA_MONITORX_MWAITX, "mwaitx")                           /* MONITORX/MWAITX instruction (AMD) */
 x86_feature(BX_ISA_VMX, "vmx")                                          /* VMX instruction */
-#endif
 x86_feature(BX_ISA_SMX, "smx")                                          /* SMX instruction */
 x86_feature(BX_ISA_LONG_MODE, "longmode")                               /* Long Mode (x86-64) support */
 x86_feature(BX_ISA_LM_LAHF_SAHF, "lm_lahf_sahf")                        /* Long Mode LAHF/SAHF instruction */
@@ -137,11 +135,10 @@ x86_feature(BX_ISA_RDPID, "rdpid")                                      /* RDPID
 x86_feature(BX_ISA_TCE, "tce")                                          /* Translation Cache Extensions (TCE) support (AMD) */
 x86_feature(BX_ISA_CLZERO, "clzero")                                    /* CLZERO instruction support (AMD) */
 x86_feature(BX_ISA_SCA_MITIGATIONS, "sca_mitigations")                  /* Report SCA Mitigations in CPUID */
-#if BX_SUPPORT_CET
 x86_feature(BX_ISA_CET, "cet")                                          /* Control Flow Enforcement */
-#endif
 x86_feature(BX_ISA_WRMSRNS, "wrmsrns")                                  /* Non-Serializing version of WRMSR */
 x86_feature(BX_ISA_CMPCCXADD, "cmpccxadd")                              /* CMPccXADD instructions */
 x86_feature(BX_ISA_SERIALIZE, "serialize")                              /* SERIALIZE instruction */
 x86_feature(BX_ISA_LASS, "lass")                                        /* Linear Address Space Separation support */
+x86_feature(BX_ISA_UINTR, "uintr")                                      /* User Level Interrupts support */
 x86_feature(BX_ISA_MOVDIRI, "movdiri")                                  /* MOVDIRI instruction support */

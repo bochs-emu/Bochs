@@ -562,7 +562,6 @@ void bx_usb_xhci_c::reset(unsigned type)
 void bx_usb_xhci_c::reset_hc()
 {
   unsigned int i;
-  char pname[6];
 
   // Command
   BX_XHCI_THIS hub.op_regs.HcCommand.RsvdP1 = 0;
@@ -640,6 +639,7 @@ void bx_usb_xhci_c::reset_hc()
   for (i=0; i<BX_XHCI_THIS hub.n_ports; i++) {
     reset_port(i);
     if (BX_XHCI_THIS hub.usb_port[i].device == NULL) {
+      char pname[8];
       sprintf(pname, "port%d", i+1);
       init_device(i, (bx_list_c *) SIM->get_param(pname, SIM->get_param(BXPN_USB_XHCI)));
     } else {

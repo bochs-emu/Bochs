@@ -41,7 +41,7 @@ bool BX_CPU_C::handleWaitForEvent(void)
   // an interrupt wakes up the CPU.
   while (1)
   {
-    if ((is_pending(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR) && (BX_CPU_THIS_PTR get_IF() || BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_MWAIT_IF)) ||
+    if ((is_pending(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR | BX_EVENT_PENDING_UINTR) && (BX_CPU_THIS_PTR get_IF() || BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_MWAIT_IF)) ||
          is_unmasked_event_pending(BX_EVENT_NMI | BX_EVENT_SMI | BX_EVENT_INIT |
             BX_EVENT_VMX_VTPR_UPDATE |
             BX_EVENT_VMX_VEOI_UPDATE |
@@ -143,9 +143,21 @@ void BX_CPU_C::InterruptAcknowledge(void)
   VMexit_Event(BX_EXTERNAL_INTERRUPT, vector, 0, 0);
 #endif
 
-  BX_INSTR_HWINTERRUPT(BX_CPU_ID, vector,
+#if BX_SUPPORT_UINTR
+  if (BX_CPU_THIS_PTR cr4.get_UINTR() && long64_mode() && vector == BX_CPU_THIS_PTR uintr.uinv)
+  {
+#if BX_SUPPORT_APIC
+    BX_CPU_THIS_PTR lapic.receive_EOI(0);
+#endif
+    process_uintr_notification();
+  }
+  else
+#endif
+  {
+    BX_INSTR_HWINTERRUPT(BX_CPU_ID, vector,
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
-  interrupt(vector, BX_EXTERNAL_INTERRUPT, 0, 0);
+    interrupt(vector, BX_EXTERNAL_INTERRUPT, 0, 0);
+  }
 
   BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
 }
@@ -292,6 +304,14 @@ bool BX_CPU_C::handleAsyncEvent(void)
   if (interrupts_inhibited(BX_INHIBIT_INTERRUPTS) || ! SVM_GIF) {
     // Processing external interrupts is inhibited on this
     // boundary because of certain instructions like STI.
+#if BX_SUPPORT_UINTR
+    // execution of STI doesn't block User interrupts delivery, only MOV_SS does
+    if (! interrupts_inhibited(BX_INHIBIT_INTERRUPTS_BY_MOVSS)) {
+      if (is_unmasked_event_pending(BX_EVENT_PENDING_UINTR)) {
+        deliver_UINTR();
+      }
+    }
+#endif
   }
 #if BX_SUPPORT_VMX >= 2
   else if (is_unmasked_event_pending(BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED)) {
@@ -329,6 +349,12 @@ bool BX_CPU_C::handleAsyncEvent(void)
   {
     InterruptAcknowledge();
   }
+#if BX_SUPPORT_UINTR
+  else if (is_unmasked_event_pending(BX_EVENT_PENDING_UINTR))
+  {
+    deliver_UINTR();
+  }
+#endif
 #if BX_SUPPORT_SVM
   else if (is_unmasked_event_pending(BX_EVENT_SVM_VIRQ_PENDING))
   {

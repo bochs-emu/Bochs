@@ -259,7 +259,8 @@ enum BX_Instr_Branch {
   BX_INSTR_IS_SYSCALL = 17,
   BX_INSTR_IS_SYSRET = 18,
   BX_INSTR_IS_SYSENTER = 19,
-  BX_INSTR_IS_SYSEXIT = 20
+  BX_INSTR_IS_SYSEXIT = 20,
+  BX_INSTR_IS_UIRET = 21
 };
 
 // possible types passed to BX_INSTR_PREFETCH_HINT()
@@ -760,7 +761,6 @@ typedef struct {
   };
 } bx_gen_reg_t;
 #endif
-
 #endif  // #if BX_SUPPORT_X86_64
 
 #if BX_SUPPORT_APIC
@@ -953,6 +953,21 @@ public: // for now...
   Bit32u wr_pkey[16];
 #endif
 
+#if BX_SUPPORT_UINTR
+  struct {
+    bx_address ui_handler;
+    Bit64u stack_adjust;
+    Bit32u uinv;              // user interrupt notification vector, actually 8 bit
+    Bit32u uitt_size;         // user interrupt target table size
+    bx_address uitt_addr;     // user interrupt target table address
+    bx_address upid_addr;     // user posted-interrupt descriptor address
+    Bit64u uirr;              // user-interrupt request register
+    bool UIF;                 // if UIF=0 user interrupt cannot be delivered
+
+    bool senduipi_enabled() const { return uitt_addr & 0x1; }
+  } uintr;
+#endif
+
 #if BX_SUPPORT_FPU
   i387_t the_i387;
 #endif
@@ -1072,9 +1087,10 @@ public: // for now...
 #define BX_EVENT_PENDING_VMX_VIRTUAL_INTR     (1 <<  9)
 #define BX_EVENT_PENDING_INTR                 (1 << 10)
 #define BX_EVENT_PENDING_LAPIC_INTR           (1 << 11)
-#define BX_EVENT_VMX_VTPR_UPDATE              (1 << 12)
-#define BX_EVENT_VMX_VEOI_UPDATE              (1 << 13)
-#define BX_EVENT_VMX_VIRTUAL_APIC_WRITE       (1 << 14)
+#define BX_EVENT_PENDING_UINTR                (1 << 12)
+#define BX_EVENT_VMX_VTPR_UPDATE              (1 << 13)
+#define BX_EVENT_VMX_VEOI_UPDATE              (1 << 14)
+#define BX_EVENT_VMX_VIRTUAL_APIC_WRITE       (1 << 15)
   Bit32u  pending_event;
   Bit32u  event_mask;
   Bit32u  async_event; // keep 32-bit because of BX_ASYNC_EVENT_STOP_TRACE
@@ -1113,9 +1129,7 @@ public: // for now...
 
 #define BX_ASYNC_EVENT_STOP_TRACE (1<<31)
 
-#if BX_X86_DEBUGGER
   bool  in_repeat;
-#endif
   bool  in_smm;
   unsigned cpu_mode;
   bool  user_pl;
@@ -4050,6 +4064,14 @@ public: // for now...
   BX_SMF void WRPKRU(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 
+#if BX_SUPPORT_UINTR
+  BX_SMF void STUI(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CLUI(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void TESTUI(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void UIRET(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SENDUIPI_Gq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#endif
+
   BX_SMF void RDPID_Ed(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void UndefinedOpcode(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -4330,6 +4352,10 @@ public: // for now...
 
   BX_SMF void access_read_physical(bx_phy_address paddr, unsigned len, void *data);
   BX_SMF void access_write_physical(bx_phy_address paddr, unsigned len, void *data);
+  BX_SMF Bit8u  read_physical_byte(bx_phy_address paddr);
+  BX_SMF Bit16u read_physical_word(bx_phy_address paddr);
+  BX_SMF Bit32u read_physical_dword(bx_phy_address paddr);
+  BX_SMF Bit64u read_physical_qword(bx_phy_address paddr);
 
   BX_SMF bx_hostpageaddr_t getHostMemAddr(bx_phy_address addr, unsigned rw);
 
@@ -4426,6 +4452,12 @@ public: // for now...
   BX_SMF void handleSseModeChange(void);
   BX_SMF void handleAvxModeChange(void);
 #endif
+#if BX_SUPPORT_UINTR
+  BX_SMF void send_uipi(Bit32u notification_destination, Bit32u notification_vector);
+  BX_SMF void uintr_uirr_update();
+  BX_SMF void uintr_control();
+  BX_SMF bool uintr_masked();
+#endif
 
 #if BX_SUPPORT_AVX
   BX_SMF void avx_masked_load8(bxInstruction_c *i, bx_address eaddr, BxPackedAvxRegister *dst, Bit64u mask);
@@ -4454,6 +4486,8 @@ public: // for now...
 
 #if BX_SUPPORT_APIC
   BX_SMF bool relocate_apic(Bit64u val_64);
+  BX_SMF bool apic_global_enable_on();
+  BX_SMF bool x2apic_mode();
 #endif
 
   BX_SMF void load_segw(bxInstruction_c *i, unsigned seg) BX_CPP_AttrRegparmN(2);
@@ -4557,6 +4591,10 @@ public: // for now...
   BX_SMF void    deliver_NMI(void);
   BX_SMF void    deliver_SMI(void);
   BX_SMF void    deliver_SIPI(unsigned vector);
+#if BX_SUPPORT_UINTR
+  BX_SMF void    deliver_UINTR();
+  BX_SMF void    process_uintr_notification();
+#endif
   BX_SMF void    debug(bx_address offset);
   BX_SMF void    debug_disasm_instruction(bx_address offset);
 
@@ -4677,9 +4715,7 @@ public: // for now...
 #if BX_CPU_LEVEL >= 5
   BX_SMF Bit64u get_TSC();
   BX_SMF void   set_TSC(Bit64u tsc);
-#if BX_SUPPORT_VMX || BX_SUPPORT_SVM
-  BX_SMF Bit64u get_TSC_VMXAdjust(Bit64u tsc);
-#endif
+  BX_SMF Bit64u get_Virtual_TSC(); // takes into account VMX or SVM adjustments
 #endif
 
 #if BX_SUPPORT_PKEYS
@@ -4771,6 +4807,13 @@ public: // for now...
   BX_SMF void xrstor_cet_s_state(bxInstruction_c *i, bx_address offset);
   BX_SMF void xrstor_init_cet_s_state(void);
 #endif
+
+#if BX_SUPPORT_UINTR
+  BX_SMF bool xsave_uintr_state_xinuse(void);
+  BX_SMF void xsave_uintr_state(bxInstruction_c *i, bx_address offset);
+  BX_SMF void xrstor_uintr_state(bxInstruction_c *i, bx_address offset);
+  BX_SMF void xrstor_init_uintr_state(void);
+#endif
 #endif
 
 #if BX_SUPPORT_CET
@@ -4831,8 +4874,9 @@ public: // for now...
   BX_SMF void init_vmfunc_capabilities(void);
 #endif
   BX_SMF void init_pin_based_vmexec_ctrls(void);
-  BX_SMF void init_secondary_proc_based_vmexec_ctrls(void);
   BX_SMF void init_primary_proc_based_vmexec_ctrls(void);
+  BX_SMF void init_secondary_proc_based_vmexec_ctrls(void);
+  BX_SMF void init_tertiary_proc_based_vmexec_ctrls(void);
   BX_SMF void init_vmexit_ctrls(void);
   BX_SMF void init_vmentry_ctrls(void);
   BX_SMF void init_VMCS(void);
@@ -4847,7 +4891,9 @@ public: // for now...
   BX_SMF bx_phy_address VMX_Virtual_Apic_Read(bx_phy_address paddr, unsigned len, void *data);
   BX_SMF void VMX_Virtual_Apic_Write(bx_phy_address paddr, unsigned len, void *data);
   BX_SMF Bit32u VMX_Read_Virtual_APIC(unsigned offset);
-  BX_SMF void VMX_Write_Virtual_APIC(unsigned offset, Bit32u val32);
+  BX_SMF void VMX_Write_Virtual_APIC(unsigned offset, int len, Bit8u* val);
+  BX_SMF void VMX_Write_Virtual_APIC(unsigned offset, Bit32u val32) { VMX_Write_Virtual_APIC(offset, 4, (Bit8u*)(&val32)); }
+  BX_SMF void VMX_Write_Virtual_X2APIC(unsigned offset, Bit64u val64) { VMX_Write_Virtual_APIC(offset, 8, (Bit8u*)(&val64)); }
   BX_SMF void VMX_TPR_Virtualization(void);
   BX_SMF bool Virtualize_X2APIC_Write(unsigned msr, Bit64u val_64);
   BX_SMF void VMX_Virtual_Apic_Access_Trap(void);
@@ -4855,6 +4901,7 @@ public: // for now...
   BX_SMF void vapic_set_vector(unsigned apic_arrbase, Bit8u vector);
   BX_SMF Bit8u vapic_clear_and_find_highest_priority_int(unsigned apic_arrbase, Bit8u vector);
   BX_SMF void VMX_Write_VICR(void);
+  BX_SMF void VMX_Write_VICR_HI(void);
   BX_SMF void VMX_PPR_Virtualization(void);
   BX_SMF void VMX_EOI_Virtualization(void);
   BX_SMF void VMX_Self_IPI_Virtualization(Bit8u vector);
@@ -5047,6 +5094,10 @@ BX_CPP_INLINE void BX_CPU_C::updateFetchModeMask(void)
 
   BX_CPU_THIS_PTR user_pl = // CPL == 3
      (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl == 3);
+
+#if BX_SUPPORT_UINTR
+  uintr_control(); // CPL changes
+#endif
 }
 
 #if BX_X86_DEBUGGER

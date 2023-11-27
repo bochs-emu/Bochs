@@ -73,11 +73,16 @@ int get_floppy_devtype_from_type(int type)
   switch (type) {
     case BX_FLOPPY_2_88:
       return BX_FDD_350ED;
-    case BX_FLOPPY_720K:
     case BX_FLOPPY_1_44:
       return BX_FDD_350HD;
-    default:
+    case BX_FLOPPY_720K:
+      return BX_FDD_350DD;
+    case BX_FLOPPY_1_2:
       return BX_FDD_525HD;
+    // the remaining types return a 5 1/4" 360k drive
+    case BX_FLOPPY_360K:
+    default:
+      return BX_FDD_525DD;
   }
 }
 
@@ -922,7 +927,7 @@ void bx_init_options()
       "", BX_PATHNAME_LEN);
     sprintf(label, "Name of optional ROM image #%d", i+1);
     strcat(label, " : %s");
-    path->set_format(strdup(label));
+    path->set_format(label);
     sprintf(descr, "The address at which the optional ROM image #%d should be loaded", i+1);
     optaddr = new bx_param_num_c(optnum,
       "address",
@@ -934,7 +939,7 @@ void bx_init_options()
     optaddr->set_format("0x%05x");
     sprintf(label, "Optional ROM #%d address:", i+1);
     strcat(label, " 0x%05x");
-    optaddr->set_long_format(strdup(label));
+    optaddr->set_long_format(label);
     deplist = new bx_list_c(NULL);
     deplist->add(optaddr);
     path->set_dependent_list(deplist);
@@ -954,7 +959,7 @@ void bx_init_options()
       "", BX_PATHNAME_LEN);
     sprintf(label, "Name of optional RAM image #%d", i+1);
     strcat(label, " : %s");
-    path->set_format(strdup(label));
+    path->set_format(label);
     sprintf(descr, "The address at which the optional RAM image #%d should be loaded", i+1);
     optaddr = new bx_param_num_c(optnum,
       "address",
@@ -966,7 +971,7 @@ void bx_init_options()
     optaddr->set_format("0x%05x");
     sprintf(label, "Optional RAM #%d address:", i+1);
     strcat(label, " 0x%05x");
-    optaddr->set_long_format(strdup(label));
+    optaddr->set_long_format(label);
     deplist = new bx_list_c(NULL);
     deplist->add(optaddr);
     path->set_dependent_list(deplist);
@@ -1886,6 +1891,15 @@ void bx_reset_options()
   // user-defined options
   SIM->get_param("user")->reset();
 #endif
+}
+
+void bx_cleanup_options()
+{
+  free(config_interface_list);
+  free(display_library_list);
+  free(vga_extension_names);
+  free(vga_extension_plugins);
+  free(pcislot_dev_list);
 }
 
 int bx_read_configuration(const char *rcfile)
