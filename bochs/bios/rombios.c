@@ -2316,7 +2316,7 @@ log_bios_start()
 #if BX_DEBUG_SERIAL
   outb(BX_DEBUG_PORT+UART_LCR, 0x03); /* setup for serial logging: 8N1 */
 #endif
-  BX_INFO("%s\n", bios_svn_version_string);
+  BX_INFO("BIOS BUILD DATE: %s\n", BIOS_BUILD_DATE);
 }
 
   bx_bool
