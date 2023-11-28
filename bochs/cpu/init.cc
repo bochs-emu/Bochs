@@ -29,14 +29,15 @@
 #include "param_names.h"
 #include "cpustats.h"
 
+#if BX_SUPPORT_APIC
+#include "apic.h"
+#endif
+
 #include <stdlib.h>
 
 BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
 #if BX_CPU_LEVEL >= 4
    , cpuid(NULL)
-#endif
-#if BX_SUPPORT_APIC
-   ,lapic (this, id)
 #endif
 {
   // in case of SMF, you cannot reference any member data
@@ -46,6 +47,10 @@ BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
   sprintf(name, "CPU%x", bx_cpuid);
   sprintf(logname, "cpu%x", bx_cpuid);
   put(logname, name);
+
+#if BX_SUPPORT_APIC
+  lapic = new bx_local_apic_c(this, bx_cpuid);
+#endif
 
   for (unsigned n=0;n<BX_ISA_EXTENSIONS_ARRAY_SIZE;n++)
     ia_extensions_bitmask[n] = 0;
@@ -504,7 +509,7 @@ void BX_CPU_C::register_state(void)
 #endif
 
 #if BX_SUPPORT_APIC
-  lapic.register_state(cpu);
+  lapic->register_state(cpu);
 #endif
 
 #if BX_SUPPORT_VMX
@@ -689,6 +694,10 @@ BX_CPU_C::~BX_CPU_C()
 {
 #if BX_CPU_LEVEL >= 4
   delete cpuid;
+#endif
+
+#if BX_SUPPORT_APIC
+  delete lapic;
 #endif
 
 #if InstrumentCPU
@@ -911,12 +920,12 @@ void BX_CPU_C::reset(unsigned source)
 #if BX_SUPPORT_APIC
   /* APIC Address, APIC enabled and BSP is default, we'll fill in the rest later */
   BX_CPU_THIS_PTR msr.apicbase = BX_LAPIC_BASE_ADDR;
-  BX_CPU_THIS_PTR lapic.reset(source);
+  BX_CPU_THIS_PTR lapic->reset(source);
   BX_CPU_THIS_PTR msr.apicbase |= 0x900;
-  BX_CPU_THIS_PTR lapic.set_base(BX_CPU_THIS_PTR msr.apicbase);
+  BX_CPU_THIS_PTR lapic->set_base(BX_CPU_THIS_PTR msr.apicbase);
 #if BX_CPU_LEVEL >= 6
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_XAPIC_EXT))
-    BX_CPU_THIS_PTR lapic.enable_xapic_extensions();
+    BX_CPU_THIS_PTR lapic->enable_xapic_extensions();
 #endif
 #endif
 
@@ -1070,7 +1079,7 @@ void BX_CPU_C::reset(unsigned source)
 #if BX_SUPPORT_SMP
   // notice if I'm the bootstrap processor.  If not, do the equivalent of
   // a HALT instruction.
-  int apic_id = lapic.get_id();
+  int apic_id = lapic->get_id();
   if (BX_BOOTSTRAP_PROCESSOR == apic_id) {
     // boot normally
     BX_CPU_THIS_PTR msr.apicbase |=  0x100; /* set bit 8 BSP */

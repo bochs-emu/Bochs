@@ -26,9 +26,13 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#if BX_SUPPORT_VMX && BX_SUPPORT_X86_64
+
 #include "memory/memory-bochs.h"
 
-#if BX_SUPPORT_VMX && BX_SUPPORT_X86_64
+#if BX_SUPPORT_APIC
+#include "apic.h"
+#endif
 
 bool BX_CPP_AttrRegparmN(1) BX_CPU_C::is_virtual_apic_page(bx_phy_address paddr)
 {
@@ -553,7 +557,7 @@ bool BX_CPU_C::VMX_Posted_Interrupt_Processing(Bit8u vector)
   // write(0) into EOI register in the local APIC; this dismisses the interrupt with
   // posted-interrupt notification vector from local APIC.
   // instead of writing to memory, do it directly
-  BX_CPU_THIS_PTR lapic.receive_EOI();
+  BX_CPU_THIS_PTR lapic->receive_EOI();
 
   // OR PIR into VIRR and clear PIR atomically (using lock xchg operation)
   // no other agent supposed to read or write PIR between the time it is read and cleared
@@ -571,7 +575,7 @@ bool BX_CPU_C::VMX_Posted_Interrupt_Processing(Bit8u vector)
     VMX_Write_Virtual_APIC(BX_LAPIC_IRR1 + 16*n, virr[n]);
   }
 
-  vector = BX_CPU_THIS_PTR lapic.highest_priority_int(virr);
+  vector = BX_CPU_THIS_PTR lapic->highest_priority_int(virr);
   if (vector >= vm->rvi) vm->rvi = vector;
 
   VMX_Evaluate_Pending_Virtual_Interrupts();

@@ -27,9 +27,13 @@
 #include "msr.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-#include "iodev/iodev.h"
-
 #if BX_SUPPORT_VMX
+
+#if BX_SUPPORT_APIC
+#include "apic.h"
+#endif
+
+#include "iodev/iodev.h"
 
 extern VMCS_Mapping vmcs_map;
 
@@ -407,7 +411,7 @@ void BX_CPU_C::VMabort(VMX_vmabort_code error_code)
 
 #if BX_SUPPORT_VMX >= 2
   // Deactivate VMX preemtion timer
-  BX_CPU_THIS_PTR lapic.deactivate_vmx_preemption_timer();
+  BX_CPU_THIS_PTR lapic->deactivate_vmx_preemption_timer();
 #endif
 
   shutdown();
@@ -2556,11 +2560,11 @@ void BX_CPU_C::VMexitSaveGuestState(Bit32u reason)
   }
 
   // Deactivate VMX preemtion timer
-  BX_CPU_THIS_PTR lapic.deactivate_vmx_preemption_timer();
+  BX_CPU_THIS_PTR lapic->deactivate_vmx_preemption_timer();
   clear_event(BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED);
   // Store back to VMCS
   if (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_STORE_VMX_PREEMPTION_TIMER)
-    VMwrite32(VMCS_32BIT_GUEST_PREEMPTION_TIMER_VALUE, BX_CPU_THIS_PTR lapic.read_vmx_preemption_timer());
+    VMwrite32(VMCS_32BIT_GUEST_PREEMPTION_TIMER_VALUE, BX_CPU_THIS_PTR lapic->read_vmx_preemption_timer());
 
   if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_VIRTUAL_INT_DELIVERY) {
     VMwrite16(VMCS_16BIT_GUEST_INTERRUPT_STATUS, (((Bit16u) vm->svi) << 8) | vm->rvi);
@@ -3223,7 +3227,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLAUNCH(bxInstruction_c *i)
     else {
       // activate VMX preemption timer
       BX_DEBUG(("VMX preemption timer active"));
-      BX_CPU_THIS_PTR lapic.set_vmx_preemption_timer(timer_value);
+      BX_CPU_THIS_PTR lapic->set_vmx_preemption_timer(timer_value);
     }
   }
 #endif

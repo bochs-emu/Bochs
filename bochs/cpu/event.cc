@@ -25,6 +25,10 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#if BX_SUPPORT_APIC
+#include "apic.h"
+#endif
+
 #include "iodev/iodev.h"
 
 bool BX_CPU_C::handleWaitForEvent(void)
@@ -111,7 +115,7 @@ Bit8u BX_CPU_C::interrupt_acknowledge(void)
 
 #if BX_SUPPORT_APIC
   if (is_pending(BX_EVENT_PENDING_LAPIC_INTR))
-    vector = BX_CPU_THIS_PTR lapic.acknowledge_int();
+    vector = BX_CPU_THIS_PTR lapic->acknowledge_int();
   else
 #endif
     // if no local APIC, always acknowledge the PIC.
@@ -158,7 +162,7 @@ void BX_CPU_C::HandleExtInterrupt(void)
   if (BX_CPU_THIS_PTR cr4.get_UINTR() && long64_mode() && vector == BX_CPU_THIS_PTR uintr.uinv)
   {
 #if BX_SUPPORT_APIC
-    BX_CPU_THIS_PTR lapic.receive_EOI();
+    BX_CPU_THIS_PTR lapic->receive_EOI();
 #endif
     Process_UINTR_Notification();
   }

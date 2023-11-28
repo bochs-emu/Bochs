@@ -378,6 +378,7 @@ const Bit32u CACHE_LINE_SIZE = 64;
 class BX_CPU_C;
 class BX_MEM_C;
 class bxInstruction_c;
+class bx_local_apic_c;
 
 // <TAG-TYPE-EXECUTEPTR-START>
 #if BX_USE_CPU_SMF
@@ -765,10 +766,6 @@ typedef struct {
 #endif
 #endif  // #if BX_SUPPORT_X86_64
 
-#if BX_SUPPORT_APIC
-#include "apic.h"
-#endif
-
 #include "xmm.h"
 
 typedef void (*simd_xmm_shift)(BxPackedXmmRegister *opdst, Bit64u shift_64);
@@ -1003,7 +1000,7 @@ public: // for now...
 #endif
 
 #if BX_SUPPORT_APIC
-  bx_local_apic_c lapic;
+  bx_local_apic_c *lapic;
 #endif
 
   /* SMM base register */
@@ -4667,7 +4664,7 @@ public: // for now...
 #endif
 
 #if BX_CPU_LEVEL >= 6
-  BX_SMF BX_CPP_INLINE unsigned get_cr8();
+  BX_SMF unsigned get_cr8(void);
 #endif
 
   BX_SMF bx_address get_segment_base(unsigned seg);
@@ -5380,17 +5377,6 @@ BX_CPP_INLINE void BX_CPU_C::set_opmask(unsigned reg, Bit64u val)
 {
    assert(reg < 8);
    BX_CPU_THIS_PTR opmask[reg].rrx = val;
-}
-#endif
-
-#if BX_CPU_LEVEL >= 6
-// CR8 is aliased to APIC->TASK PRIORITY register
-//   APIC.TPR[7:4] = CR8[3:0]
-//   APIC.TPR[3:0] = 0
-// Reads of CR8 return zero extended APIC.TPR[7:4]
-BX_CPP_INLINE unsigned BX_CPU_C::get_cr8(void)
-{
-   return (BX_CPU_THIS_PTR lapic.get_tpr() >> 4) & 0xf;
 }
 #endif
 

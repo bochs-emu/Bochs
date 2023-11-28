@@ -25,6 +25,10 @@
 #include "msr.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#if BX_SUPPORT_APIC
+#include "apic.h"
+#endif
+
 #include "memory/memory-bochs.h"
 #include "pc_system.h"
 
@@ -2713,8 +2717,8 @@ void BX_CPU_C::access_write_physical(bx_phy_address paddr, unsigned len, void *d
 #endif
 
 #if BX_SUPPORT_APIC
-  if (BX_CPU_THIS_PTR lapic.is_selected(paddr)) {
-    BX_CPU_THIS_PTR lapic.write(paddr, data, len);
+  if (BX_CPU_THIS_PTR lapic->is_selected(paddr)) {
+    BX_CPU_THIS_PTR lapic->write(paddr, data, len);
     return;
   }
 #endif
@@ -2755,8 +2759,8 @@ void BX_CPU_C::access_read_physical(bx_phy_address paddr, unsigned len, void *da
 #endif
 
 #if BX_SUPPORT_APIC
-  if (BX_CPU_THIS_PTR lapic.is_selected(paddr)) {
-    BX_CPU_THIS_PTR lapic.read(paddr, data, len);
+  if (BX_CPU_THIS_PTR lapic->is_selected(paddr)) {
+    BX_CPU_THIS_PTR lapic->read(paddr, data, len);
     return;
   }
 #endif
@@ -2804,7 +2808,7 @@ bx_hostpageaddr_t BX_CPU_C::getHostMemAddr(bx_phy_address paddr, unsigned rw)
 #endif
 
 #if BX_SUPPORT_APIC
-  if (BX_CPU_THIS_PTR lapic.is_selected(paddr))
+  if (BX_CPU_THIS_PTR lapic->is_selected(paddr))
     return 0; // Vetoed!  APIC address space
 #endif
 
