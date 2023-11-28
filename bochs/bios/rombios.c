@@ -909,8 +909,6 @@ static void           print_boot_device();
 static void           print_boot_failure();
 static void           print_cdromboot_failure();
 
-
-
 # if BX_USE_ATADRV
 
 // ATA / ATAPI driver
@@ -938,7 +936,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_svn_version_string[] = "$Revision$ $Date$";
+// static char bios_svn_version_string[] = "$Revision$ $Date$";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2001-2021  The Bochs Project"
 
@@ -2066,8 +2064,7 @@ void s3_resume_panic()
 void
 print_bios_banner()
 {
-  printf(BX_APPNAME" BIOS - build: %s\n%s\nOptions: ",
-    BIOS_BUILD_DATE, bios_svn_version_string);
+  printf(BX_APPNAME" BIOS - build: %s\nOptions: ", BIOS_BUILD_DATE);
   printf(
 #if BX_APM
   "apmbios "

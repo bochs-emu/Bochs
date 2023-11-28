@@ -173,8 +173,7 @@ void bx_cmos_c::init(void)
 
   if (SIM->get_param_num(BXPN_CLOCK_TIME0)->get64() == BX_CLOCK_TIME0_LOCAL) {
     time_t tmptime;
-    struct tm *tmptm;
-    struct utctm tmputc;
+    struct tm *tmptm;;
 
     BX_INFO(("Using local time for initial clock"));
 
