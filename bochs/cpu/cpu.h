@@ -4904,8 +4904,8 @@ public: // for now...
   BX_SMF void VMX_TPR_Virtualization(void);
   BX_SMF bool Virtualize_X2APIC_Write(unsigned msr, Bit64u val_64);
   BX_SMF void VMX_Virtual_Apic_Access_Trap(void);
-  BX_SMF bool VMX_Posted_Interrupt_Processing(Bit8u vector);
 #if BX_SUPPORT_VMX >= 2
+  BX_SMF bool VMX_Posted_Interrupt_Processing(Bit8u vector);
   BX_SMF void vapic_set_vector(unsigned apic_arrbase, Bit8u vector);
   BX_SMF Bit8u vapic_clear_and_find_highest_priority_int(unsigned apic_arrbase, Bit8u vector);
   BX_SMF void VMX_Write_VICR(void);

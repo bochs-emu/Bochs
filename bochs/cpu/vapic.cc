@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2012-2015 Stanislav Shwartsman
+//   Copyright (c) 2012-2023 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -521,6 +521,7 @@ bool BX_CPU_C::Virtualize_X2APIC_Write(unsigned msr, Bit64u val_64)
   return false;
 }
 
+#if BX_SUPPORT_VMX >= 2
 bool BX_CPU_C::VMX_Posted_Interrupt_Processing(Bit8u vector)
 {
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
@@ -577,5 +578,6 @@ bool BX_CPU_C::VMX_Posted_Interrupt_Processing(Bit8u vector)
 
   return true;
 }
+#endif
 
 #endif // BX_SUPPORT_VMX && BX_SUPPORT_X86_64
