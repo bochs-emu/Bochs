@@ -2358,7 +2358,7 @@ bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx_ad
         if (! (pt_address & 0x1)) {
            offset_mask = 0x3fffffff;
            goto page_fault;
-	}
+        }
         offset_mask >>= 18;
         pt_address &= BX_CONST64(0x000ffffffffff000);
         level = 1;

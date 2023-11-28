@@ -143,7 +143,7 @@ void BX_CPU_C::HandleExtInterrupt(void)
 #endif
 
   Bit8u vector = interrupt_acknowledge();
-#if BX_SUPPORT_VMX
+#if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (VMX_Posted_Interrupt_Processing(vector)) return;
   }
