@@ -72,12 +72,12 @@ BX_CPP_INLINE Bit8u BX_CPU_C::vmcb_read8(unsigned offset)
   if (BX_CPU_THIS_PTR vmcbhostptr) {
     Bit8u *hostAddr = (Bit8u*) (BX_CPU_THIS_PTR vmcbhostptr | offset);
     val_8 = *hostAddr;
+    BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, MEMTYPE(BX_CPU_THIS_PTR vmcb_memtype), BX_READ, BX_VMCS_ACCESS, (Bit8u*)(&val_8));
   }
   else {
-    val_8 = read_physical_byte(pAddr);
+    val_8 = read_physical_byte(pAddr, MEMTYPE(BX_CPU_THIS_PTR vmcb_memtype), BX_VMCS_ACCESS);
   }
 
-  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, MEMTYPE(BX_CPU_THIS_PTR vmcb_memtype), BX_READ, BX_VMCS_ACCESS, (Bit8u*)(&val_8));
   return val_8;
 }
 
@@ -89,12 +89,12 @@ BX_CPP_INLINE Bit16u BX_CPU_C::vmcb_read16(unsigned offset)
   if (BX_CPU_THIS_PTR vmcbhostptr) {
     Bit16u *hostAddr = (Bit16u*) (BX_CPU_THIS_PTR vmcbhostptr | offset);
     val_16 = ReadHostWordFromLittleEndian(hostAddr);
+    BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 2, MEMTYPE(BX_CPU_THIS_PTR vmcb_memtype), BX_READ, BX_VMCS_ACCESS, (Bit8u*)(&val_16));
   }
   else {
-    val_16 = read_physical_word(pAddr);
+    val_16 = read_physical_word(pAddr, MEMTYPE(BX_CPU_THIS_PTR vmcb_memtype), BX_VMCS_ACCESS);
   }
 
-  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 2, MEMTYPE(BX_CPU_THIS_PTR vmcb_memtype), BX_READ, BX_VMCS_ACCESS, (Bit8u*)(&val_16));
   return val_16;
 }
 
@@ -106,12 +106,12 @@ BX_CPP_INLINE Bit32u BX_CPU_C::vmcb_read32(unsigned offset)
   if (BX_CPU_THIS_PTR vmcbhostptr) {
     Bit32u *hostAddr = (Bit32u*) (BX_CPU_THIS_PTR vmcbhostptr | offset);
     val_32 = ReadHostDWordFromLittleEndian(hostAddr);
+    BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 4, MEMTYPE(BX_CPU_THIS_PTR vmcb_memtype), BX_READ, BX_VMCS_ACCESS, (Bit8u*)(&val_32));
   }
   else {
-    val_32 = read_physical_dword(pAddr);
+    val_32 = read_physical_dword(pAddr, MEMTYPE(BX_CPU_THIS_PTR vmcb_memtype), BX_VMCS_ACCESS);
   }
 
-  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 4, MEMTYPE(BX_CPU_THIS_PTR vmcb_memtype), BX_READ, BX_VMCS_ACCESS, (Bit8u*)(&val_32));
   return val_32;
 }
 
@@ -123,12 +123,12 @@ BX_CPP_INLINE Bit64u BX_CPU_C::vmcb_read64(unsigned offset)
   if (BX_CPU_THIS_PTR vmcbhostptr) {
     Bit64u *hostAddr = (Bit64u*) (BX_CPU_THIS_PTR vmcbhostptr | offset);
     val_64 = ReadHostQWordFromLittleEndian(hostAddr);
+    BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 8, MEMTYPE(BX_CPU_THIS_PTR vmcb_memtype), BX_READ, BX_VMCS_ACCESS, (Bit8u*)(&val_64));
   }
   else {
-    val_64 = read_physical_qword(pAddr);
+    val_64 = read_physical_qword(pAddr, MEMTYPE(BX_CPU_THIS_PTR vmcb_memtype), BX_VMCS_ACCESS);
   }
 
-  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 8, MEMTYPE(BX_CPU_THIS_PTR vmcb_memtype), BX_READ, BX_VMCS_ACCESS, (Bit8u*)(&val_64));
   return val_64;
 }
 
@@ -140,12 +140,11 @@ BX_CPP_INLINE void BX_CPU_C::vmcb_write8(unsigned offset, Bit8u val_8)
     Bit8u *hostAddr = (Bit8u*) (BX_CPU_THIS_PTR vmcbhostptr | offset);
     pageWriteStampTable.decWriteStamp(pAddr, 1);
     *hostAddr = val_8;
+    BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, MEMTYPE(BX_CPU_THIS_PTR vmcb_memtype), BX_WRITE, BX_VMCS_ACCESS, (Bit8u*)(&val_8));
   }
   else {
-    access_write_physical(pAddr, 1, (Bit8u*)(&val_8));
+    write_physical_byte(pAddr, val_8, MEMTYPE(BX_CPU_THIS_PTR vmcb_memtype), BX_VMCS_ACCESS);
   }
-
-  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, MEMTYPE(BX_CPU_THIS_PTR vmcb_memtype), BX_WRITE, BX_VMCS_ACCESS, (Bit8u*)(&val_8));
 }
 
 BX_CPP_INLINE void BX_CPU_C::vmcb_write16(unsigned offset, Bit16u val_16)
@@ -156,12 +155,11 @@ BX_CPP_INLINE void BX_CPU_C::vmcb_write16(unsigned offset, Bit16u val_16)
     Bit16u *hostAddr = (Bit16u*) (BX_CPU_THIS_PTR vmcbhostptr | offset);
     pageWriteStampTable.decWriteStamp(pAddr, 2);
     WriteHostWordToLittleEndian(hostAddr, val_16);
+    BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 2, MEMTYPE(BX_CPU_THIS_PTR vmcb_memtype), BX_WRITE, BX_VMCS_ACCESS, (Bit8u*)(&val_16));
   }
   else {
-    access_write_physical(pAddr, 2, (Bit8u*)(&val_16));
+    write_physical_word(pAddr, val_16, MEMTYPE(BX_CPU_THIS_PTR vmcb_memtype), BX_VMCS_ACCESS);
   }
-
-  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 2, MEMTYPE(BX_CPU_THIS_PTR vmcb_memtype), BX_WRITE, BX_VMCS_ACCESS, (Bit8u*)(&val_16));
 }
 
 BX_CPP_INLINE void BX_CPU_C::vmcb_write32(unsigned offset, Bit32u val_32)
@@ -172,12 +170,11 @@ BX_CPP_INLINE void BX_CPU_C::vmcb_write32(unsigned offset, Bit32u val_32)
     Bit32u *hostAddr = (Bit32u*) (BX_CPU_THIS_PTR vmcbhostptr | offset);
     pageWriteStampTable.decWriteStamp(pAddr, 4);
     WriteHostDWordToLittleEndian(hostAddr, val_32);
+    BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 4, MEMTYPE(BX_CPU_THIS_PTR vmcb_memtype), BX_WRITE, BX_VMCS_ACCESS, (Bit8u*)(&val_32));
   }
   else {
-    access_write_physical(pAddr, 4, (Bit8u*)(&val_32));
+    write_physical_dword(pAddr, val_32, MEMTYPE(BX_CPU_THIS_PTR vmcb_memtype), BX_VMCS_ACCESS);
   }
-
-  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 4, MEMTYPE(BX_CPU_THIS_PTR vmcb_memtype), BX_WRITE, BX_VMCS_ACCESS, (Bit8u*)(&val_32));
 }
 
 BX_CPP_INLINE void BX_CPU_C::vmcb_write64(unsigned offset, Bit64u val_64)
@@ -188,12 +185,11 @@ BX_CPP_INLINE void BX_CPU_C::vmcb_write64(unsigned offset, Bit64u val_64)
     Bit64u *hostAddr = (Bit64u*) (BX_CPU_THIS_PTR vmcbhostptr | offset);
     pageWriteStampTable.decWriteStamp(pAddr, 8);
     WriteHostQWordToLittleEndian(hostAddr, val_64);
+    BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 8, MEMTYPE(BX_CPU_THIS_PTR vmcb_memtype), BX_WRITE, BX_VMCS_ACCESS, (Bit8u*)(&val_64));
   }
   else {
-    access_write_physical(pAddr, 8, (Bit8u*)(&val_64));
+    write_physical_qword(pAddr, val_64, MEMTYPE(BX_CPU_THIS_PTR vmcb_memtype), BX_VMCS_ACCESS);
   }
-
-  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 8, MEMTYPE(BX_CPU_THIS_PTR vmcb_memtype), BX_WRITE, BX_VMCS_ACCESS, (Bit8u*)(&val_64));
 }
 
 BX_CPP_INLINE void BX_CPU_C::svm_segment_read(bx_segment_reg_t *seg, unsigned offset)
@@ -833,12 +829,10 @@ void BX_CPU_C::SvmInterceptIO(bxInstruction_c *i, unsigned port, unsigned len)
 
   // access_read_physical cannot read 2 bytes cross 4K boundary :(
   pAddr = BX_CPU_THIS_PTR vmcb.ctrls.iopm_base + (port / 8);
-  bitmap[0] = read_physical_byte(pAddr);
-  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, MEMTYPE(resolve_memtype(pAddr)), BX_READ, BX_IO_BITMAP_ACCESS, &bitmap[0]);
+  bitmap[0] = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_IO_BITMAP_ACCESS);
 
   pAddr++;
-  bitmap[1] = read_physical_byte(pAddr);
-  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, MEMTYPE(resolve_memtype(pAddr)), BX_READ, BX_IO_BITMAP_ACCESS, &bitmap[1]);
+  bitmap[1] = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_IO_BITMAP_ACCESS);
 
   Bit16u combined_bitmap = bitmap[1];
   combined_bitmap = (combined_bitmap << 8) | bitmap[0];
@@ -927,8 +921,7 @@ void BX_CPU_C::SvmInterceptMSR(unsigned op, Bit32u msr)
     Bit32u msr_offset = (msr & 0x1fff) * 2 + op;
 
     bx_phy_address pAddr = msr_bitmap_addr + (msr_offset / 8);
-    Bit8u msr_bitmap = read_physical_byte(pAddr);
-    BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, MEMTYPE(resolve_memtype(pAddr)), BX_READ, BX_MSR_BITMAP_ACCESS, &msr_bitmap);
+    Bit8u msr_bitmap = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_MSR_BITMAP_ACCESS);
 
     vmexit = (msr_bitmap >> (msr_offset & 7)) & 0x1;
   }

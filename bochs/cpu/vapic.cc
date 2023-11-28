@@ -545,11 +545,9 @@ bool BX_CPU_C::VMX_Posted_Interrupt_Processing(Bit8u vector)
 #endif
 
   // clear PID.ON using atomic RMW 'bit clear' operation
-  Bit8u pid_ON = read_physical_byte(vm->pid_addr + 32);
-  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->pid_addr + 32, 1, MEMTYPE(pid_memtype), BX_READ, BX_VMX_PID, &pid_ON);
+  Bit8u pid_ON = read_physical_byte(vm->pid_addr + 32, MEMTYPE(pid_memtype), BX_VMX_PID);
   pid_ON &= ~0x1;
-  access_write_physical(vm->pid_addr + 32, 1, &pid_ON);
-  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->pid_addr + 32, 1, MEMTYPE(pid_memtype), BX_WRITE, BX_VMX_PID, &pid_ON);
+  write_physical_byte(vm->pid_addr + 32, pid_ON, MEMTYPE(pid_memtype), BX_VMX_PID);
 
   // write(0) into EOI register in the local APIC; this dismisses the interrupt with
   // posted-interrupt notification vector from local APIC.

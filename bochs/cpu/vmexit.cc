@@ -333,8 +333,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_MSR(unsigned op, Bit32u msr)
        else {
          // check MSR-HI bitmaps
          bx_phy_address pAddr = vm->msr_bitmap_addr + ((msr - BX_VMX_HI_MSR_START) >> 3) + 1024 + ((op == VMX_VMEXIT_RDMSR) ? 0 : 2048);
-         Bit8u field = read_physical_byte(pAddr);
-         BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, MEMTYPE(resolve_memtype(pAddr)), BX_READ, BX_MSR_BITMAP_ACCESS, &field);
+         Bit8u field = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_MSR_BITMAP_ACCESS);
          if (field & (1 << (msr & 7)))
             vmexit = true;
        }
@@ -344,8 +343,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_MSR(unsigned op, Bit32u msr)
        else {
          // check MSR-LO bitmaps
          bx_phy_address pAddr = vm->msr_bitmap_addr + (msr >> 3) + ((op == VMX_VMEXIT_RDMSR) ? 0 : 2048);
-         Bit8u field = read_physical_byte(pAddr);
-         BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, MEMTYPE(resolve_memtype(pAddr)), BX_READ, BX_MSR_BITMAP_ACCESS, &field);
+         Bit8u field = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_MSR_BITMAP_ACCESS);
          if (field & (1 << (msr & 7)))
             vmexit = true;
        }
@@ -382,22 +380,18 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_IO(bxInstruction_c *i, unsigned por
         if ((port & 0x7fff) + len > 0x8000) {
           // special case - the IO access split cross both I/O bitmaps
           pAddr = BX_CPU_THIS_PTR vmcs.io_bitmap_addr[0] + 0xfff;
-          bitmap[0] = read_physical_byte(pAddr);
-          BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, MEMTYPE(resolve_memtype(pAddr)), BX_READ, BX_IO_BITMAP_ACCESS, &bitmap[0]);
+          bitmap[0] = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_IO_BITMAP_ACCESS);
 
           pAddr = BX_CPU_THIS_PTR vmcs.io_bitmap_addr[1];
-          bitmap[1] = read_physical_byte(pAddr);
-          BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, MEMTYPE(resolve_memtype(pAddr)), BX_READ, BX_IO_BITMAP_ACCESS, &bitmap[1]);
+          bitmap[1] = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_IO_BITMAP_ACCESS);
         }
         else {
           // access_read_physical cannot read 2 bytes cross 4K boundary :(
           pAddr = BX_CPU_THIS_PTR vmcs.io_bitmap_addr[(port >> 15) & 1] + ((port & 0x7fff) / 8);
-          bitmap[0] = read_physical_byte(pAddr);
-          BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, MEMTYPE(resolve_memtype(pAddr)), BX_READ, BX_IO_BITMAP_ACCESS, &bitmap[0]);
+          bitmap[0] = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_IO_BITMAP_ACCESS);
 
           pAddr++;
-          bitmap[1] = read_physical_byte(pAddr);
-          BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, MEMTYPE(resolve_memtype(pAddr)), BX_READ, BX_IO_BITMAP_ACCESS, &bitmap[1]);
+          bitmap[1] = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_IO_BITMAP_ACCESS);
         }
 
         Bit16u combined_bitmap = bitmap[1];
@@ -686,8 +680,7 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::Vmexit_Vmread(bxInstruction_c *i)
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
 
   bx_phy_address pAddr = vm->vmread_bitmap_addr | (encoding >> 3);
-  Bit8u bitmap = read_physical_byte(pAddr);
-  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, MEMTYPE(resolve_memtype(pAddr)), BX_READ, BX_VMREAD_BITMAP_ACCESS, &bitmap);
+  Bit8u bitmap = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_VMREAD_BITMAP_ACCESS);
 
   if (bitmap & (1 << (encoding & 7)))
     return true;
@@ -712,8 +705,7 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::Vmexit_Vmwrite(bxInstruction_c *i)
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
 
   bx_phy_address pAddr = vm->vmwrite_bitmap_addr | (encoding >> 3);
-  Bit8u bitmap = read_physical_byte(pAddr);
-  BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 1, MEMTYPE(resolve_memtype(pAddr)), BX_READ, BX_VMWRITE_BITMAP_ACCESS, &bitmap);
+  Bit8u bitmap = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_VMWRITE_BITMAP_ACCESS);
 
   if (bitmap & (1 << (encoding & 7)))
     return true;
@@ -737,8 +729,7 @@ void BX_CPU_C::Virtualization_Exception(Bit64u qualification, Bit64u guest_physi
 #if BX_SUPPORT_MEMTYPE && (BX_DEBUGGER || BX_INSTRUMENTATION)
   BxMemtype ve_info_memtype = resolve_memtype(vm->ve_info_addr);
 #endif
-  Bit32u magic = read_physical_dword(vm->ve_info_addr + 4);
-  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 4, 4, MEMTYPE(ve_info_memtype), BX_READ, 0, (Bit8u*)(&magic));
+  Bit32u magic = read_physical_dword(vm->ve_info_addr + 4, MEMTYPE(ve_info_memtype), BX_ACCESS_REASON_NOT_SPECIFIED);
   if (magic != 0) return;
 
   struct ve_info {
@@ -750,23 +741,12 @@ void BX_CPU_C::Virtualization_Exception(Bit64u qualification, Bit64u guest_physi
     Bit16u eptp_index;
   } ve_info = { VMX_VMEXIT_EPT_VIOLATION, 0xffffffff, qualification, guest_linear, guest_physical, vm->eptp_index };
 
-  access_write_physical(vm->ve_info_addr, 4, &ve_info.reason);
-  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr, 4, MEMTYPE(ve_info_memtype), BX_WRITE, 0, (Bit8u*)(&ve_info.reason));
-
-  access_write_physical(vm->ve_info_addr + 4, 4, &ve_info.magic);
-  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 4, 4, MEMTYPE(ve_info_memtype), BX_WRITE, 0, (Bit8u*)(&ve_info.magic));
-
-  access_write_physical(vm->ve_info_addr + 8, 8, &ve_info.qualification);
-  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 8, 8, MEMTYPE(ve_info_memtype), BX_WRITE, 0, (Bit8u*)(&ve_info.qualification));
-
-  access_write_physical(vm->ve_info_addr + 16, 8, &ve_info.guest_linear_addr);
-  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 16, 8, MEMTYPE(ve_info_memtype), BX_WRITE, 0, (Bit8u*)(&ve_info.guest_linear_addr));
-
-  access_write_physical(vm->ve_info_addr + 24, 8, &ve_info.guest_physical_addr);
-  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 24, 8, MEMTYPE(ve_info_memtype), BX_WRITE, 0, (Bit8u*)(&ve_info.guest_physical_addr));
-
-  access_write_physical(vm->ve_info_addr + 32, 8, &ve_info.eptp_index);
-  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->ve_info_addr + 32, 8, MEMTYPE(ve_info_memtype), BX_WRITE, 0, (Bit8u*)(&ve_info.eptp_index));
+  write_physical_dword(vm->ve_info_addr,      ve_info.reason,              MEMTYPE(ve_info_memtype), BX_ACCESS_REASON_NOT_SPECIFIED);
+  write_physical_dword(vm->ve_info_addr + 4,  ve_info.magic,               MEMTYPE(ve_info_memtype), BX_ACCESS_REASON_NOT_SPECIFIED);
+  write_physical_qword(vm->ve_info_addr + 8,  ve_info.qualification,       MEMTYPE(ve_info_memtype), BX_ACCESS_REASON_NOT_SPECIFIED);
+  write_physical_qword(vm->ve_info_addr + 16, ve_info.guest_linear_addr,   MEMTYPE(ve_info_memtype), BX_ACCESS_REASON_NOT_SPECIFIED);
+  write_physical_qword(vm->ve_info_addr + 24, ve_info.guest_physical_addr, MEMTYPE(ve_info_memtype), BX_ACCESS_REASON_NOT_SPECIFIED);
+  write_physical_qword(vm->ve_info_addr + 32, ve_info.eptp_index,          MEMTYPE(ve_info_memtype), BX_ACCESS_REASON_NOT_SPECIFIED);
 
   exception(BX_VE_EXCEPTION, 0);
 }
@@ -785,8 +765,7 @@ void BX_CPU_C::vmx_page_modification_logging(Bit64u guest_paddr, unsigned dirty_
 
   if (dirty_update) {
     Bit64u pAddr = vm->pml_address + 8 * vm->pml_index;
-    access_write_physical(pAddr, 8, &guest_paddr);
-    BX_NOTIFY_PHY_MEMORY_ACCESS(pAddr, 8, MEMTYPE(resolve_memtype(pAddr)), BX_WRITE, BX_VMX_PML_WRITE, (Bit8u*)(&guest_paddr));
+    write_physical_qword(pAddr, guest_paddr, MEMTYPE(resolve_memtype(pAddr)), BX_VMX_PML_WRITE);
     vm->pml_index--;
   }
 }

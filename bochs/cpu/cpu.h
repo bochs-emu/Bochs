@@ -274,7 +274,8 @@ enum BX_Instr_PrefetchHINT {
 // <TAG-INSTRUMENTATION_COMMON-END>
 
 // passed to internal debugger together with BX_READ/BX_WRITE/BX_EXECUTE/BX_RW
-enum {
+enum AccessReason {
+  BX_ACCESS_REASON_NOT_SPECIFIED = 0,
   BX_PDPTR0_ACCESS = 1,
   BX_PDPTR1_ACCESS,
   BX_PDPTR2_ACCESS,
@@ -4352,11 +4353,16 @@ public: // for now...
   BX_SMF void page_fault(unsigned fault, bx_address laddr, unsigned user, unsigned rw);
 
   BX_SMF void access_read_physical(bx_phy_address paddr, unsigned len, void *data);
+  BX_SMF Bit8u  read_physical_byte(bx_phy_address paddr, BxMemtype memtype, AccessReason reason);
+  BX_SMF Bit16u read_physical_word(bx_phy_address paddr, BxMemtype memtype, AccessReason reason);
+  BX_SMF Bit32u read_physical_dword(bx_phy_address paddr, BxMemtype memtype, AccessReason reason);
+  BX_SMF Bit64u read_physical_qword(bx_phy_address paddr, BxMemtype memtype, AccessReason reason);
+
   BX_SMF void access_write_physical(bx_phy_address paddr, unsigned len, void *data);
-  BX_SMF Bit8u  read_physical_byte(bx_phy_address paddr);
-  BX_SMF Bit16u read_physical_word(bx_phy_address paddr);
-  BX_SMF Bit32u read_physical_dword(bx_phy_address paddr);
-  BX_SMF Bit64u read_physical_qword(bx_phy_address paddr);
+  BX_SMF void write_physical_byte(bx_phy_address paddr, Bit8u val_8, BxMemtype memtype, AccessReason reason);
+  BX_SMF void write_physical_word(bx_phy_address paddr, Bit16u val_16, BxMemtype memtype, AccessReason reason);
+  BX_SMF void write_physical_dword(bx_phy_address paddr, Bit32u val_32, BxMemtype memtype, AccessReason reason);
+  BX_SMF void write_physical_qword(bx_phy_address paddr, Bit64u val_64, BxMemtype memtype, AccessReason reason);
 
   BX_SMF bx_hostpageaddr_t getHostMemAddr(bx_phy_address addr, unsigned rw);
 
