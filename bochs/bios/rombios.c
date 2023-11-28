@@ -8563,15 +8563,15 @@ int1a_function(regs, ds, iret_addr)
         regs.u.r8.dh = bin2bcd(inb_cmos(0x00)); // Seconds
         regs.u.r8.cl = bin2bcd(inb_cmos(0x02)); // Minutes
         hr = inb_cmos(0x04);
-        if((val8&0x02)&&(hr&0x80)) hr = (hr & 0x7f) + 12;
-        if((val8&0x02)&&(!(hr%12))) hr -= 12;
+        if(!(val8&0x02)&&(hr&0x80)) hr = (hr & 0x7f) + 12;
+        if(!(val8&0x02)&&(!(hr%12))) hr -= 12;
         regs.u.r8.ch = bin2bcd(hr); // Hours
       }else{
         regs.u.r8.dh = inb_cmos(0x00); // Seconds
         regs.u.r8.cl = inb_cmos(0x02); // Minutes
         hr = inb_cmos(0x04);
-        if((val8&0x02)&&(hr&0x80)) hr = (hr & 0x7f) + 0x12;
-        if((val8&0x02)&&(!(hr%0x12))) hr -= 0x12;
+        if(!(val8&0x02)&&(hr&0x80)) hr = (hr & 0x7f) + 0x12;
+        if(!(val8&0x02)&&(!(hr%0x12))) hr -= 0x12;
         regs.u.r8.ch = hr; // Hours
       }
 
