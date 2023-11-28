@@ -26,6 +26,10 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#if BX_SUPPORT_APIC
+#include "apic.h"
+#endif
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
@@ -1486,7 +1490,17 @@ void BX_CPU_C::WriteCR8(bxInstruction_c *i, bx_address val)
   }
 #endif
 
-  BX_CPU_THIS_PTR lapic.set_tpr(tpr);
+  BX_CPU_THIS_PTR lapic->set_tpr(tpr);
+}
+
+// CR8 is aliased to APIC->TASK PRIORITY register
+//   APIC.TPR[7:4] = CR8[3:0]
+//   APIC.TPR[3:0] = 0
+// Reads of CR8 return zero extended APIC.TPR[7:4]
+// Write to CR8 update APIC.TPR[7:4]
+unsigned BX_CPU_C::get_cr8(void)
+{
+   return (BX_CPU_THIS_PTR lapic->get_tpr() >> 4) & 0xf;
 }
 
 Bit32u BX_CPU_C::ReadCR8(bxInstruction_c *i)
@@ -1509,11 +1523,6 @@ Bit32u BX_CPU_C::ReadCR8(bxInstruction_c *i)
   }
 #endif
 
-  // CR8 is aliased to APIC->TASK PRIORITY register
-  //   APIC.TPR[7:4] = CR8[3:0]
-  //   APIC.TPR[3:0] = 0
-  // Reads of CR8 return zero extended APIC.TPR[7:4]
-  // Write to CR8 update APIC.TPR[7:4]
   return BX_CPU_THIS_PTR get_cr8();
 }
 

@@ -132,8 +132,7 @@ void BX_CPU_C::enter_system_management_mode(void)
   // could be optimized with reading of only non-reserved bytes
   for(n=0;n<SMM_SAVE_STATE_MAP_SIZE;n++) {
     base -= 4;
-    access_write_physical(base, 4, &saved_state[n]);
-    BX_NOTIFY_PHY_MEMORY_ACCESS(base, 4, BX_MEMTYPE_WB, BX_WRITE, BX_SMRAM_ACCESS, (Bit8u*)(&saved_state[n]));
+    write_physical_dword(base, saved_state[n], BX_MEMTYPE_WB, BX_SMRAM_ACCESS);
   }
 
   BX_CPU_THIS_PTR setEFlags(0x2); // Bit1 is always set

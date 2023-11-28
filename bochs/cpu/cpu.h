@@ -274,7 +274,8 @@ enum BX_Instr_PrefetchHINT {
 // <TAG-INSTRUMENTATION_COMMON-END>
 
 // passed to internal debugger together with BX_READ/BX_WRITE/BX_EXECUTE/BX_RW
-enum {
+enum AccessReason {
+  BX_ACCESS_REASON_NOT_SPECIFIED = 0,
   BX_PDPTR0_ACCESS = 1,
   BX_PDPTR1_ACCESS,
   BX_PDPTR2_ACCESS,
@@ -377,6 +378,7 @@ const Bit32u CACHE_LINE_SIZE = 64;
 class BX_CPU_C;
 class BX_MEM_C;
 class bxInstruction_c;
+class bx_local_apic_c;
 
 // <TAG-TYPE-EXECUTEPTR-START>
 #if BX_USE_CPU_SMF
@@ -764,10 +766,6 @@ typedef struct {
 #endif
 #endif  // #if BX_SUPPORT_X86_64
 
-#if BX_SUPPORT_APIC
-#include "apic.h"
-#endif
-
 #include "xmm.h"
 
 typedef void (*simd_xmm_shift)(BxPackedXmmRegister *opdst, Bit64u shift_64);
@@ -1002,7 +1000,7 @@ public: // for now...
 #endif
 
 #if BX_SUPPORT_APIC
-  bx_local_apic_c lapic;
+  bx_local_apic_c *lapic;
 #endif
 
   /* SMM base register */
@@ -4352,11 +4350,16 @@ public: // for now...
   BX_SMF void page_fault(unsigned fault, bx_address laddr, unsigned user, unsigned rw);
 
   BX_SMF void access_read_physical(bx_phy_address paddr, unsigned len, void *data);
+  BX_SMF Bit8u  read_physical_byte(bx_phy_address paddr, BxMemtype memtype, AccessReason reason);
+  BX_SMF Bit16u read_physical_word(bx_phy_address paddr, BxMemtype memtype, AccessReason reason);
+  BX_SMF Bit32u read_physical_dword(bx_phy_address paddr, BxMemtype memtype, AccessReason reason);
+  BX_SMF Bit64u read_physical_qword(bx_phy_address paddr, BxMemtype memtype, AccessReason reason);
+
   BX_SMF void access_write_physical(bx_phy_address paddr, unsigned len, void *data);
-  BX_SMF Bit8u  read_physical_byte(bx_phy_address paddr);
-  BX_SMF Bit16u read_physical_word(bx_phy_address paddr);
-  BX_SMF Bit32u read_physical_dword(bx_phy_address paddr);
-  BX_SMF Bit64u read_physical_qword(bx_phy_address paddr);
+  BX_SMF void write_physical_byte(bx_phy_address paddr, Bit8u val_8, BxMemtype memtype, AccessReason reason);
+  BX_SMF void write_physical_word(bx_phy_address paddr, Bit16u val_16, BxMemtype memtype, AccessReason reason);
+  BX_SMF void write_physical_dword(bx_phy_address paddr, Bit32u val_32, BxMemtype memtype, AccessReason reason);
+  BX_SMF void write_physical_qword(bx_phy_address paddr, Bit64u val_64, BxMemtype memtype, AccessReason reason);
 
   BX_SMF bx_hostpageaddr_t getHostMemAddr(bx_phy_address addr, unsigned rw);
 
@@ -4661,7 +4664,7 @@ public: // for now...
 #endif
 
 #if BX_CPU_LEVEL >= 6
-  BX_SMF BX_CPP_INLINE unsigned get_cr8();
+  BX_SMF unsigned get_cr8(void);
 #endif
 
   BX_SMF bx_address get_segment_base(unsigned seg);
@@ -4898,8 +4901,8 @@ public: // for now...
   BX_SMF void VMX_TPR_Virtualization(void);
   BX_SMF bool Virtualize_X2APIC_Write(unsigned msr, Bit64u val_64);
   BX_SMF void VMX_Virtual_Apic_Access_Trap(void);
-  BX_SMF bool VMX_Posted_Interrupt_Processing(Bit8u vector);
 #if BX_SUPPORT_VMX >= 2
+  BX_SMF bool VMX_Posted_Interrupt_Processing(Bit8u vector);
   BX_SMF void vapic_set_vector(unsigned apic_arrbase, Bit8u vector);
   BX_SMF Bit8u vapic_clear_and_find_highest_priority_int(unsigned apic_arrbase, Bit8u vector);
   BX_SMF void VMX_Write_VICR(void);
@@ -5374,17 +5377,6 @@ BX_CPP_INLINE void BX_CPU_C::set_opmask(unsigned reg, Bit64u val)
 {
    assert(reg < 8);
    BX_CPU_THIS_PTR opmask[reg].rrx = val;
-}
-#endif
-
-#if BX_CPU_LEVEL >= 6
-// CR8 is aliased to APIC->TASK PRIORITY register
-//   APIC.TPR[7:4] = CR8[3:0]
-//   APIC.TPR[3:0] = 0
-// Reads of CR8 return zero extended APIC.TPR[7:4]
-BX_CPP_INLINE unsigned BX_CPU_C::get_cr8(void)
-{
-   return (BX_CPU_THIS_PTR lapic.get_tpr() >> 4) & 0xf;
 }
 #endif
 

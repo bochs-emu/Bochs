@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2002-2021 Zwane Mwaikambo, Stanislav Shwartsman
+//  Copyright (c) 2002-2023 Zwane Mwaikambo, Stanislav Shwartsman
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -23,16 +23,18 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu.h"
-#include "scalar_arith.h"
-#include "iodev/iodev.h"
 
 #if BX_SUPPORT_APIC
+
+#include "apic.h"
+#include "scalar_arith.h"
+#include "iodev/iodev.h"
 
 extern bool simulate_xapic;
 
 #define LOG_THIS this->
 
-#define BX_CPU_APIC(i) (&(BX_CPU(i)->lapic))
+#define BX_CPU_APIC(i) (BX_CPU(i)->lapic)
 
 const unsigned BX_LAPIC_FIRST_VECTOR = 0x10;
 const unsigned BX_LAPIC_LAST_VECTOR  = 0xff;

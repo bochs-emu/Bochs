@@ -27,6 +27,10 @@
 #include "msr.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#if BX_SUPPORT_APIC
+#include "apic.h"
+#endif
+
 #if BX_SUPPORT_CET
 extern bool is_invalid_cet_control(bx_address val);
 #endif
@@ -40,7 +44,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
   if (is_cpu_extension_supported(BX_ISA_X2APIC)) {
     if (is_x2apic_msr_range(index)) {
       if (x2apic_mode())
-        return BX_CPU_THIS_PTR lapic.read_x2apic(index, msr);
+        return BX_CPU_THIS_PTR lapic->read_x2apic(index, msr);
       else
         return 0;
     }
@@ -270,7 +274,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
         BX_ERROR(("RDMSR BX_MSR_TSC_DEADLINE: TSC-Deadline not enabled in the cpu model"));
         return handle_unknown_rdmsr(index, msr);
       }
-      val64 = BX_CPU_THIS_PTR lapic.get_tsc_deadline();
+      val64 = BX_CPU_THIS_PTR lapic->get_tsc_deadline();
       break;
 #endif
 
@@ -622,7 +626,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
   if (is_cpu_extension_supported(BX_ISA_X2APIC)) {
     if (is_x2apic_msr_range(index)) {
       if (x2apic_mode())
-        return BX_CPU_THIS_PTR lapic.write_x2apic(index, val32_hi, val32_lo);
+        return BX_CPU_THIS_PTR lapic->write_x2apic(index, val32_hi, val32_lo);
       else
         return 0;
     }
@@ -986,7 +990,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
         BX_ERROR(("WRMSR BX_MSR_TSC_DEADLINE: TSC-Deadline not enabled in the cpu model"));
         return handle_unknown_wrmsr(index, val_64);
       }
-      BX_CPU_THIS_PTR lapic.set_tsc_deadline(val_64);
+      BX_CPU_THIS_PTR lapic->set_tsc_deadline(val_64);
       break;
 #endif
 
@@ -1266,7 +1270,7 @@ bool BX_CPU_C::relocate_apic(Bit64u val_64)
 #endif
 
     BX_CPU_THIS_PTR msr.apicbase = (bx_phy_address) val_64;
-    BX_CPU_THIS_PTR lapic.set_base(BX_CPU_THIS_PTR msr.apicbase);
+    BX_CPU_THIS_PTR lapic->set_base(BX_CPU_THIS_PTR msr.apicbase);
     // TLB flush is required for emulation correctness
     TLB_flush();  // don't care about performance of apic relocation
   }
