@@ -35,6 +35,13 @@ else
   cross_configure=0
 fi
 
+AC_ARG_ENABLE([static-link],
+  [AS_HELP_STRING([--enable-static-link],
+    [link libraries statically @<:@default=disabled@:>@])],
+  [enable_static_link="$enableval"],
+  [enable_static_link=no]
+)
+
 # this case statement defines the compile flags which are needed to
 # compile bochs on a platform.  Don't put things like optimization settings
 # into the configure.in file, since people will want to be able to change
@@ -59,6 +66,9 @@ case "$target" in
     ;;
   *-cygwin* | *-mingw32* | *-msys)
     NO_LT=1   # do not use libtool at all
+    if test "$enable_static_link" = yes; then
+      EXTRA_LINK_OPTS="${EXTRA_LINK_OPTS} -static"
+    fi
     if test "$with_term" = yes; then
       # ncurses won't compile with -DWIN32
       # also, I can't get it to link without this -DBROKEN_LINKER=1 hack.
