@@ -545,8 +545,9 @@ bool BX_CPU_C::VMX_Posted_Interrupt_Processing(Bit8u vector)
   // | 511-257 | user available
   // --------------------------------
 
-#if BX_SUPPORT_MEMTYPE && (BX_DEBUGGER || BX_INSTRUMENTATION)
-  BxMemtype pid_memtype = resolve_memtype(vm->pid_addr);
+  BxMemtype pid_memtype = BX_MEMTYPE_INVALID;
+#if BX_SUPPORT_MEMTYPE
+            pid_memtype = resolve_memtype(vm->pid_addr);
 #endif
 
   // clear PID.ON using atomic RMW 'bit clear' operation

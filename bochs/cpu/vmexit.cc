@@ -726,8 +726,9 @@ void BX_CPU_C::Virtualization_Exception(Bit64u qualification, Bit64u guest_physi
 
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
 
-#if BX_SUPPORT_MEMTYPE && (BX_DEBUGGER || BX_INSTRUMENTATION)
-  BxMemtype ve_info_memtype = resolve_memtype(vm->ve_info_addr);
+  BxMemtype ve_info_memtype = BX_MEMTYPE_INVALID;
+#if BX_SUPPORT_MEMTYPE
+            ve_info_memtype = resolve_memtype(vm->ve_info_addr);
 #endif
   Bit32u magic = read_physical_dword(vm->ve_info_addr + 4, MEMTYPE(ve_info_memtype), BX_ACCESS_REASON_NOT_SPECIFIED);
   if (magic != 0) return;
