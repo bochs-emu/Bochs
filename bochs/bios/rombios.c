@@ -1272,12 +1272,12 @@ ASM_START
   mov  bp, sp
 
     push dx
-    mov  dh,ah
-    mov  ah,  0
+    mov  dh, ah
+    xor  ah, ah
     mov  al, 4[bp]
-    mov  dl, 10
+    mov  dl, #10
     div  dl
-    shl  al,  4
+    shl  al,  #4
     add  al, ah
     mov  ah, dh
     pop  dx
@@ -1295,13 +1295,13 @@ ASM_START
   mov  bp, sp
 
     push dx
-    mov  dh,ah
-    mov  ah, 4[bp]
-    mov  al, ah
-    and  al,0x0f
-    shr  ah, 4
-    add  al, ah
-    mov  ah,dh
+    mov  al, 4[bp]
+    mov  dh, al
+    and  dh, #0x0f
+    shr  al, #4
+    mov  dl, #10
+    mul  dl
+    add  al, dh
     pop  dx
 
   pop  bp
@@ -8601,15 +8601,17 @@ int1a_function(regs, ds, iret_addr)
 
       if(val8 & 0x04){
         hr = bcd2bin(regs.u.r8.ch);
-        if((val8&0x02)&&(hr>=12)) hr |= 0x80;
-        if((val8&0x02)&&(hr==00)) hr  =   12;
+        if(!(val8&0x02)&&(hr>=12)) hr |= 0x80;
+        if(!(val8&0x02)&&(hr>12))  hr -=   12;
+        if(!(val8&0x02)&&(hr==00)) hr  =   12;
         outb_cmos(0x00, bcd2bin(regs.u.r8.dh)); // Seconds
         outb_cmos(0x02, bcd2bin(regs.u.r8.cl)); // Minutes
         outb_cmos(0x04, hr); // Hours
       }else{
         hr = regs.u.r8.ch;
-        if((val8&0x02)&&(hr>=0x12)) hr |= 0x80;
-        if((val8&0x02)&&(hr==0x00)) hr  = 0x12;
+        if(!(val8&0x02)&&(hr>=0x12)) hr |= 0x80;
+        if(!(val8&0x02)&&(hr>0x12))  hr -= 0x12;
+        if(!(val8&0x02)&&(hr==0x00)) hr  = 0x12;
         outb_cmos(0x00, regs.u.r8.dh); // Seconds
         outb_cmos(0x02, regs.u.r8.cl); // Minutes
         outb_cmos(0x04, hr); // Hours
