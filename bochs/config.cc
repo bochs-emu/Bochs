@@ -1046,7 +1046,7 @@ void bx_init_options()
   deplist->add(rtc_init);
   use_cmosimage->set_dependent_list(deplist);
 
-  time0->set_ask_format("Enter Initial CMOS time (1:localtime, 2:utc, other:time in seconds): [%ld] ");
+  time0->set_ask_format("Enter Initial CMOS time (1:localtime, 2:utc, other:time in seconds): [" FMT_LL "d] ");
   clock_sync->set_ask_format("Enter Synchronisation method: [%s] ");
   clock_cmos->set_options(clock_cmos->SHOW_PARENT);
   cmosimage->set_options(cmosimage->SHOW_PARENT);

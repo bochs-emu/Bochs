@@ -182,7 +182,7 @@ int ask_uint(const char *prompt, const char *help, Bit32u min, Bit32u max, Bit32
   }
 }
 
-//Identical to ask_uint but uses 64 bits signed integers
+// Identical to ask_uint but uses 64 bits signed integers
 int ask_int(const char *prompt, const char *help, Bit64s min, Bit64s max, Bit64s the_default, Bit64s *out)
 {
   Bit64s n = max + 1;
@@ -202,12 +202,12 @@ int ask_int(const char *prompt, const char *help, Bit64s min, Bit64s max, Bit64s
     }
     if ((clean[0] == '?') && (strlen(help) > 0)) {
       bx_printf("\n%s\n", help);
-      bx_printf("Your choice must be an integer between %ld and %ld.\n\n", min, max);
+      bx_printf("Your choice must be an integer between " FMT_LL "d and " FMT_LL "d.\n\n", min, max);
       continue;
     }
     illegal = (1 != sscanf(buffer, "%ld", &n));
     if (illegal || n<min || n>max) {
-      bx_printf("Your choice (%s) was not an integer between %ld and %ld.\n\n",
+      bx_printf("Your choice (%s) was not an integer between " FMT_LL "d and " FMT_LL "d.\n\n",
              clean, min, max);
     } else {
       // choice is okay
