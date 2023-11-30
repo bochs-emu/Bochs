@@ -3469,7 +3469,7 @@ int bx_write_clock_cmos_options(FILE *fp)
       fprintf(fp, ", time0=utc");
       break;
     default:
-      fprintf(fp, ", time0=%ld", SIM->get_param_num(BXPN_CLOCK_TIME0)->get64());
+      fprintf(fp, ", time0=" FMT_LL "d", SIM->get_param_num(BXPN_CLOCK_TIME0)->get64());
   }
 
   fprintf(fp, ", rtc_sync=%d\n", SIM->get_param_bool(BXPN_CLOCK_RTC_SYNC)->get());

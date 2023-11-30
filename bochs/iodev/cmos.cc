@@ -130,7 +130,7 @@ bx_cmos_c::~bx_cmos_c(void)
   char *tmptime;
   if ((tmptime = strdup(ascutc(utctime(&(BX_CMOS_THIS s.timeval))))) != NULL) {
     tmptime[strlen(tmptime)-1]='\0';
-    BX_INFO(("Last time: %ld tz=utc (%s)", get_timeval(), tmptime));
+    BX_INFO(("Last time: " FMT_LL "d tz=utc (%s)", get_timeval(), tmptime));
     free(tmptime);
   }
   SIM->get_bochs_root()->remove("cmos");
@@ -259,7 +259,7 @@ void bx_cmos_c::init(void)
     BX_PANIC(("Out of memory."));
   }
   tmptime[strlen(tmptime)-1]='\0';
-  BX_INFO(("Setting initial clock to: %s tz=utc (time0=%ld)", tmptime, (Bit64s)BX_CMOS_THIS s.timeval));
+  BX_INFO(("Setting initial clock to: %s tz=utc (time0=" FMT_LL "d)", tmptime, (Bit64s)BX_CMOS_THIS s.timeval));
   free(tmptime);
 
   BX_CMOS_THIS s.timeval_change = 0;
