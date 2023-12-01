@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -27,6 +27,7 @@
 #include "iodev.h"
 #include "cmos.h"
 #include "virt_timer.h"
+#include "utctime.h"
 
 #define LOG_THIS theCmosDevice->
 
@@ -127,9 +128,9 @@ bx_cmos_c::~bx_cmos_c(void)
 {
   save_image();
   char *tmptime;
-  if ((tmptime = strdup(ctime(&(BX_CMOS_THIS s.timeval)))) != NULL) {
+  if ((tmptime = strdup(ascutc(utctime(&(BX_CMOS_THIS s.timeval))))) != NULL) {
     tmptime[strlen(tmptime)-1]='\0';
-    BX_INFO(("Last time is %u (%s)", (unsigned) get_timeval(), tmptime));
+    BX_INFO(("Last time: " FMT_LL "d tz=utc (%s)", get_timeval(), tmptime));
     free(tmptime);
   }
   SIM->get_bochs_root()->remove("cmos");
@@ -170,36 +171,26 @@ void bx_cmos_c::init(void)
         244, 0, 0, "cmos"); // one-shot, not-active
   }
 
-  if (SIM->get_param_num(BXPN_CLOCK_TIME0)->get() == BX_CLOCK_TIME0_LOCAL) {
+  if (SIM->get_param_num(BXPN_CLOCK_TIME0)->get64() == BX_CLOCK_TIME0_LOCAL) {
+    time_t tmptime;
+    struct tm *tmptm;;
+
     BX_INFO(("Using local time for initial clock"));
-    BX_CMOS_THIS s.timeval = time(NULL);
-  } else if (SIM->get_param_num(BXPN_CLOCK_TIME0)->get() == BX_CLOCK_TIME0_UTC) {
-    bool utc_ok = 0;
 
+    tmptime = time(NULL); //Calculate which timeval will display the local time
+    tmptm = localtime(&tmptime);
+    BX_CMOS_THIS s.timeval = timeutc(pushtm(tmptm));
+
+  } else if (SIM->get_param_num(BXPN_CLOCK_TIME0)->get64() == BX_CLOCK_TIME0_UTC) {
     BX_INFO(("Using utc time for initial clock"));
-
-    BX_CMOS_THIS s.timeval = time(NULL);
-
-#if BX_HAVE_GMTIME
-#if BX_HAVE_MKTIME
-    struct tm *utc_holder = gmtime(&BX_CMOS_THIS s.timeval);
-    utc_holder->tm_isdst = -1;
-    utc_ok = 1;
-    BX_CMOS_THIS s.timeval = mktime(utc_holder);
-#elif BX_HAVE_TIMELOCAL
-    struct tm *utc_holder = gmtime(&BX_CMOS_THIS s.timeval);
-    utc_holder->tm_isdst = 0;	// XXX Is this correct???
-    utc_ok = 1;
-    BX_CMOS_THIS s.timeval = timelocal(utc_holder);
-#endif //BX_HAVE_MKTIME
-#endif //BX_HAVE_GMTIME
-
-    if (!utc_ok) {
-      BX_ERROR(("UTC time is not supported on your platform. Using current time(NULL)"));
-    }
+    BX_CMOS_THIS s.timeval = (Bit64s)time(NULL);
   } else {
+    Bit64s tmpintime;
+    struct tm *tmptmtime;
     BX_INFO(("Using specified time for initial clock"));
-    BX_CMOS_THIS s.timeval = SIM->get_param_num(BXPN_CLOCK_TIME0)->get();
+    tmpintime = SIM->get_param_num(BXPN_CLOCK_TIME0)->get64();
+    tmptmtime = localtime(&tmpintime);
+    BX_CMOS_THIS s.timeval = timeutc(pushtm(tmptmtime));
   }
 
   // load CMOS from image file if requested.
@@ -264,11 +255,11 @@ void bx_cmos_c::init(void)
   }
 
   char *tmptime;
-  while((tmptime = strdup(ctime(&(BX_CMOS_THIS s.timeval)))) == NULL) {
+  while((tmptime = strdup(ascutc(utctime(&(BX_CMOS_THIS s.timeval))))) == NULL) {
     BX_PANIC(("Out of memory."));
   }
   tmptime[strlen(tmptime)-1]='\0';
-  BX_INFO(("Setting initial clock to: %s (time0=%u)", tmptime, (Bit32u)BX_CMOS_THIS s.timeval));
+  BX_INFO(("Setting initial clock to: %s tz=utc (time0=" FMT_LL "d)", tmptime, (Bit64s)BX_CMOS_THIS s.timeval));
   free(tmptime);
 
   BX_CMOS_THIS s.timeval_change = 0;
@@ -442,8 +433,25 @@ void bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case REG_MIN_ALARM:             // minutes alarm
         case REG_HOUR_ALARM:            // hours alarm
           BX_CMOS_THIS s.reg[BX_CMOS_THIS s.cmos_mem_address] = value;
-          BX_DEBUG(("alarm time changed to %02x:%02x:%02x", BX_CMOS_THIS s.reg[REG_HOUR_ALARM],
-                    BX_CMOS_THIS s.reg[REG_MIN_ALARM], BX_CMOS_THIS s.reg[REG_SEC_ALARM]));
+          if(BX_CMOS_THIS s.rtc_mode_12hour) {
+            if(BX_CMOS_THIS s.rtc_mode_binary) {
+                BX_DEBUG(("alarm time changed to %02u:%02u:%02u %s", BX_CMOS_THIS s.reg[REG_HOUR_ALARM] & 0x7F,
+                        BX_CMOS_THIS s.reg[REG_MIN_ALARM], BX_CMOS_THIS s.reg[REG_SEC_ALARM],
+                        (BX_CMOS_THIS s.reg[REG_HOUR_ALARM] & 0x80)?"pm":"am"));
+            } else {
+                BX_DEBUG(("alarm time changed to %02x:%02x:%02x %s", BX_CMOS_THIS s.reg[REG_HOUR_ALARM] & 0x7F,
+                        BX_CMOS_THIS s.reg[REG_MIN_ALARM], BX_CMOS_THIS s.reg[REG_SEC_ALARM],
+                        (BX_CMOS_THIS s.reg[REG_HOUR_ALARM] & 0x80)?"pm":"am"));
+            }
+          } else {
+            if(BX_CMOS_THIS s.rtc_mode_binary) {
+                BX_DEBUG(("alarm time changed to %02u:%02u:%02u", BX_CMOS_THIS s.reg[REG_HOUR_ALARM],
+                        BX_CMOS_THIS s.reg[REG_MIN_ALARM], BX_CMOS_THIS s.reg[REG_SEC_ALARM]));
+            } else {
+                BX_DEBUG(("alarm time changed to %02x:%02x:%02x", BX_CMOS_THIS s.reg[REG_HOUR_ALARM],
+                        BX_CMOS_THIS s.reg[REG_MIN_ALARM], BX_CMOS_THIS s.reg[REG_SEC_ALARM]));
+            }
+          }
           break;
 
         case REG_SEC:                   // seconds
@@ -766,19 +774,20 @@ void bx_cmos_c::uip_timer()
 
 void bx_cmos_c::update_clock()
 {
-  struct tm *time_calendar;
+  struct utctm *time_calendar;
   unsigned year, month, day, century;
   Bit8u val_bcd, hour;
+  Bit64s mintvalset=-62167219200,maxtvalset[2]={253402300799, 745690751999};
 
-  time_calendar = localtime(& BX_CMOS_THIS s.timeval);
+  while(BX_CMOS_THIS s.timeval>maxtvalset[BX_CMOS_THIS s.rtc_mode_binary?1:0]) {BX_CMOS_THIS s.timeval-=(maxtvalset[BX_CMOS_THIS s.rtc_mode_binary?1:0]-mintvalset+1);}
+  while(BX_CMOS_THIS s.timeval<mintvalset) {BX_CMOS_THIS s.timeval+=(maxtvalset[BX_CMOS_THIS s.rtc_mode_binary?1:0]-mintvalset+1);}
+  time_calendar = utctime(& BX_CMOS_THIS s.timeval);
 
   // update seconds
-  BX_CMOS_THIS s.reg[REG_SEC] = bin_to_bcd(time_calendar->tm_sec,
-    BX_CMOS_THIS s.rtc_mode_binary);
+  BX_CMOS_THIS s.reg[REG_SEC] = bin_to_bcd(time_calendar->tm_sec, BX_CMOS_THIS s.rtc_mode_binary);
 
   // update minutes
-  BX_CMOS_THIS s.reg[REG_MIN] = bin_to_bcd(time_calendar->tm_min,
-    BX_CMOS_THIS s.rtc_mode_binary);
+  BX_CMOS_THIS s.reg[REG_MIN] = bin_to_bcd(time_calendar->tm_min, BX_CMOS_THIS s.rtc_mode_binary);
 
   // update hours
   if (BX_CMOS_THIS s.rtc_mode_12hour) {
@@ -789,8 +798,7 @@ void bx_cmos_c::update_clock()
     val_bcd |= bin_to_bcd(hour, BX_CMOS_THIS s.rtc_mode_binary);
     BX_CMOS_THIS s.reg[REG_HOUR] = val_bcd;
   } else {
-    BX_CMOS_THIS s.reg[REG_HOUR] = bin_to_bcd(time_calendar->tm_hour,
-      BX_CMOS_THIS s.rtc_mode_binary);
+    BX_CMOS_THIS s.reg[REG_HOUR] = bin_to_bcd(time_calendar->tm_hour, BX_CMOS_THIS s.rtc_mode_binary);
   }
 
   // update day of the week
@@ -826,7 +834,8 @@ void bx_cmos_c::update_clock()
 
 void bx_cmos_c::update_timeval()
 {
-  struct tm time_calendar;
+  struct utctm time_calendar;
+  Bit16s val_yr;
   Bit8u val_bin, pm_flag;
 
   // update seconds
@@ -862,14 +871,14 @@ void bx_cmos_c::update_timeval()
     BX_CMOS_THIS s.rtc_mode_binary) - 1;
 
   // update year
-  val_bin = bcd_to_bin(BX_CMOS_THIS s.reg[REG_IBM_CENTURY_BYTE],
+  val_yr = bcd_to_bin(BX_CMOS_THIS s.reg[REG_IBM_CENTURY_BYTE],
     BX_CMOS_THIS s.rtc_mode_binary);
-  val_bin = (val_bin - 19) * 100;
-  val_bin += bcd_to_bin(BX_CMOS_THIS s.reg[REG_YEAR],
+  val_yr = (val_yr - 19) * 100;
+  val_yr += bcd_to_bin(BX_CMOS_THIS s.reg[REG_YEAR],
     BX_CMOS_THIS s.rtc_mode_binary);
-  time_calendar.tm_year = val_bin;
+  time_calendar.tm_year = val_yr;
 
-  BX_CMOS_THIS s.timeval = mktime(& time_calendar);
+  BX_CMOS_THIS s.timeval = timeutc(& time_calendar);
 }
 
 #if BX_DEBUGGER
