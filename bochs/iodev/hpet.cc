@@ -136,24 +136,24 @@ static bool hpet_read(bx_phy_address a20addr, unsigned len, void *data, void *pa
   if (len == 4) { // must be 32-bit aligned
     if ((a20addr & 0x3) != 0) {
       BX_PANIC(("Unaligned HPET read at address 0x" FMT_PHY_ADDRX, a20addr));
-      return 1;
+      return true;
     }
     value1 = theHPET->read_aligned(a20addr);
     *((Bit32u *)data) = value1;
-    return 1;
+    return true;
   } else if (len == 8) { // must be 64-bit aligned
     if ((a20addr & 0x7) != 0) {
       BX_PANIC(("Unaligned HPET read at address 0x" FMT_PHY_ADDRX, a20addr));
-      return 1;
+      return true;
     }
     value1 = theHPET->read_aligned(a20addr);
     value2 = theHPET->read_aligned(a20addr + 4);
     *((Bit64u *)data) = (value1 | (value2 << 32));
-    return 1;
+    return true;
   } else {
     BX_PANIC(("Unsupported HPET read at address 0x" FMT_PHY_ADDRX, a20addr));
   }
-  return 1;
+  return true;
 }
 
 static bool hpet_write(bx_phy_address a20addr, unsigned len, void *data, void *param)
@@ -161,14 +161,14 @@ static bool hpet_write(bx_phy_address a20addr, unsigned len, void *data, void *p
   if (len == 4) { // must be 32-bit aligned
     if ((a20addr & 0x3) != 0) {
       BX_PANIC(("Unaligned HPET write at address 0x" FMT_PHY_ADDRX, a20addr));
-      return 1;
+      return true;
     }
     theHPET->write_aligned(a20addr, *((Bit32u*) data), true);
-    return 1;
+    return true;
   } else if (len == 8) { // must be 64-bit aligned
     if ((a20addr & 0x7) != 0) {
       BX_PANIC(("Unaligned HPET write at address 0x" FMT_PHY_ADDRX, a20addr));
-      return 1;
+      return true;
     }
     Bit64u val64 = *((Bit64u*) data);
     theHPET->write_aligned(a20addr, (Bit32u)val64, false);
@@ -176,7 +176,7 @@ static bool hpet_write(bx_phy_address a20addr, unsigned len, void *data, void *p
   } else {
     BX_PANIC(("Unsupported HPET write at address 0x" FMT_PHY_ADDRX, a20addr));
   }
-  return 1;
+  return true;
 }
 
 // the device object
@@ -261,16 +261,12 @@ Bit64u bx_hpet_c::hpet_get_ticks(void)
 Bit64u bx_hpet_c::hpet_calculate_diff(const HPETTimer *t, Bit64u current) const
 {
   if (t->config & HPET_TN_32BIT) {
-    Bit32u diff, cmp;
-
-    cmp = (Bit32u)t->cmp;
-    diff = cmp - (Bit32u)current;
+    Bit32u cmp = (Bit32u)t->cmp;
+    Bit32u diff = cmp - (Bit32u)current;
     return (Bit64u)diff;
   } else {
-    Bit64u diff2, cmp2;
-
-    cmp2 = t->cmp;
-    diff2 = cmp2 - current;
+    Bit64u cmp2 = t->cmp;
+    Bit64u diff2 = cmp2 - current;
     return diff2;
   }
 }

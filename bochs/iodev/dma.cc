@@ -65,55 +65,55 @@ bx_dma_c::~bx_dma_c()
   BX_DEBUG(("Exit"));
 }
 
-unsigned bx_dma_c::registerDMA8Channel(unsigned channel,
+bool bx_dma_c::registerDMA8Channel(unsigned channel,
     Bit16u (* dmaRead)(Bit8u *data_byte, Bit16u maxlen),
     Bit16u (* dmaWrite)(Bit8u *data_byte, Bit16u maxlen),
     const char *name)
 {
   if (channel > 3) {
     BX_PANIC(("registerDMA8Channel: invalid channel number(%u).", channel));
-    return 0; // Fail
+    return false; // Fail
   }
   if (BX_DMA_THIS s[0].chan[channel].used) {
     BX_PANIC(("registerDMA8Channel: channel(%u) already in use.", channel));
-    return 0; // Fail
+    return false; // Fail
   }
   BX_INFO(("channel %u used by %s", channel, name));
   BX_DMA_THIS h[channel].dmaRead8  = dmaRead;
   BX_DMA_THIS h[channel].dmaWrite8 = dmaWrite;
-  BX_DMA_THIS s[0].chan[channel].used = 1;
-  return 1; // OK
+  BX_DMA_THIS s[0].chan[channel].used = true;
+  return true; // OK
 }
 
-unsigned bx_dma_c::registerDMA16Channel(unsigned channel,
+bool bx_dma_c::registerDMA16Channel(unsigned channel,
     Bit16u (* dmaRead)(Bit16u *data_word, Bit16u maxlen),
     Bit16u (* dmaWrite)(Bit16u *data_word, Bit16u maxlen),
     const char *name)
 {
   if ((channel < 4) || (channel > 7)) {
     BX_PANIC(("registerDMA16Channel: invalid channel number(%u).", channel));
-    return 0; // Fail
+    return false; // Fail
   }
   if (BX_DMA_THIS s[1].chan[channel & 0x03].used) {
     BX_PANIC(("registerDMA16Channel: channel(%u) already in use.", channel));
-    return 0; // Fail
+    return false; // Fail
   }
   BX_INFO(("channel %u used by %s", channel, name));
   channel &= 0x03;
   BX_DMA_THIS h[channel].dmaRead16  = dmaRead;
   BX_DMA_THIS h[channel].dmaWrite16 = dmaWrite;
-  BX_DMA_THIS s[1].chan[channel].used = 1;
-  return 1; // OK
+  BX_DMA_THIS s[1].chan[channel].used = true;
+  return true; // OK
 }
 
-unsigned bx_dma_c::unregisterDMAChannel(unsigned channel)
+bool bx_dma_c::unregisterDMAChannel(unsigned channel)
 {
-  BX_DMA_THIS s[(channel > 3) ? 1 : 0].chan[channel & 0x03].used = 0;
+  BX_DMA_THIS s[(channel > 3) ? 1 : 0].chan[channel & 0x03].used = false;
   BX_INFO(("channel %u no longer used", channel));
-  return 1;
+  return true;
 }
 
-unsigned bx_dma_c::get_TC(void)
+bool bx_dma_c::get_TC(void)
 {
   return BX_DMA_THIS TC;
 }
@@ -162,11 +162,11 @@ void bx_dma_c::init(void)
       BX_DMA_THIS s[i].chan[c].base_count = 0;
       BX_DMA_THIS s[i].chan[c].current_count = 0;
       BX_DMA_THIS s[i].chan[c].page_reg = 0;
-      BX_DMA_THIS s[i].chan[c].used = 0;
+      BX_DMA_THIS s[i].chan[c].used = false;
     }
   }
   memset(&BX_DMA_THIS ext_page_reg[0], 0, 16);
-  BX_DMA_THIS s[1].chan[0].used = 1; // cascade channel in use
+  BX_DMA_THIS s[1].chan[0].used = true; // cascade channel in use
   BX_INFO(("channel 4 used by cascade"));
 #if BX_DEBUGGER
   // register device for the 'info device' command (calls debug_dump())
@@ -194,17 +194,16 @@ void bx_dma_c::reset_controller(unsigned num)
 
 void bx_dma_c::register_state(void)
 {
-  unsigned i, c;
   char name[6];
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "dma", "DMA State");
-  for (i=0; i<2; i++) {
+  for (unsigned i=0; i<2; i++) {
     sprintf(name, "%u", i);
     bx_list_c *ctrl = new bx_list_c(list, name);
     BXRS_PARAM_BOOL(ctrl, flip_flop, BX_DMA_THIS s[i].flip_flop);
     BXRS_HEX_PARAM_FIELD(ctrl, status_reg, BX_DMA_THIS s[i].status_reg);
     BXRS_HEX_PARAM_FIELD(ctrl, command_reg, BX_DMA_THIS s[i].command_reg);
     BXRS_PARAM_BOOL(ctrl, ctrl_disabled, BX_DMA_THIS s[i].ctrl_disabled);
-    for (c=0; c<4; c++) {
+    for (unsigned c=0; c<4; c++) {
       sprintf(name, "%u", c);
       bx_list_c *chan = new bx_list_c(ctrl, name);
       BXRS_PARAM_BOOL(chan, DRQ, BX_DMA_THIS s[i].DRQ[c]);
@@ -367,7 +366,7 @@ void bx_dma_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsig
 
   /* 8237 DMA controller */
   void BX_CPP_AttrRegparmN(3)
-bx_dma_c::write(Bit32u   address, Bit32u   value, unsigned io_len)
+bx_dma_c::write(Bit32u address, Bit32u value, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);

@@ -35,25 +35,25 @@ public:
   bx_dma_c();
   virtual ~bx_dma_c();
 
-  virtual void     init(void);
-  virtual void     reset(unsigned type);
-  virtual void     raise_HLDA(void);
-  virtual void     set_DRQ(unsigned channel, bool val);
-  virtual unsigned get_TC(void);
-  virtual void     register_state(void);
+  virtual void init(void);
+  virtual void reset(unsigned type);
+  virtual void raise_HLDA(void);
+  virtual void set_DRQ(unsigned channel, bool val);
+  virtual bool get_TC(void);
+  virtual void register_state(void);
 #if BX_DEBUGGER
   virtual void debug_dump(int argc, char **argv);
 #endif
 
-  virtual unsigned registerDMA8Channel(unsigned channel,
+  virtual bool registerDMA8Channel(unsigned channel,
     Bit16u (* dmaRead)(Bit8u *data_byte, Bit16u maxlen),
     Bit16u (* dmaWrite)(Bit8u *data_byte, Bit16u maxlen),
     const char *name);
-  virtual unsigned registerDMA16Channel(unsigned channel,
+  virtual bool registerDMA16Channel(unsigned channel,
     Bit16u (* dmaRead)(Bit16u *data_word, Bit16u maxlen),
     Bit16u (* dmaWrite)(Bit16u *data_word, Bit16u maxlen),
     const char *name);
-  virtual unsigned unregisterDMAChannel(unsigned channel);
+  virtual bool unregisterDMAChannel(unsigned channel);
 
 private:
 

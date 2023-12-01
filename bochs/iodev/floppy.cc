@@ -2307,12 +2307,12 @@ bool bx_floppy_ctrl_c::set_media_status(unsigned drive, bool status)
     BX_FD_THIS s.media_present[drive] = 0;
     SIM->get_param_enum("status", floppy)->set(BX_EJECTED);
     BX_FD_THIS s.DIR[drive] |= 0x80; // disk changed line
-    return 0;
+    return false;
   } else {
     // insert floppy
     const char *path = SIM->get_param_string("path", floppy)->getptr();
     if (!strcmp(path, "none"))
-      return 0;
+      return false;
     if (evaluate_media(BX_FD_THIS s.device_type[drive], type, path, & BX_FD_THIS s.media[drive])) {
       BX_FD_THIS s.media_present[drive] = 1;
       if (drive == 0) {
@@ -2334,12 +2334,12 @@ bool bx_floppy_ctrl_c::set_media_status(unsigned drive, bool status)
 #undef MED
         SIM->get_param_enum("status", floppy)->set(BX_INSERTED);
       }
-      return 1;
+      return true;
     } else {
       BX_FD_THIS s.media_present[drive] = 0;
       SIM->get_param_enum("status", floppy)->set(BX_EJECTED);
       SIM->get_param_enum("type", floppy)->set(BX_FLOPPY_NONE);
-      return 0;
+      return false;
     }
   }
 }
@@ -2611,7 +2611,7 @@ typedef struct {
   unsigned supported;
 } fdc_type_supported;
 
-static fdc_type_supported fdc_supported[] = {
+static const fdc_type_supported fdc_supported[] = {
   { FD_CMD_MODE,                 0x00,
         FDC_TYPE_DP8473 | FDC_TYPE_PC87306 | FDC_TYPE_BOCHS  },
   { FD_CMD_READ_TRACK,           FD_CMD_MFM,

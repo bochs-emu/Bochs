@@ -68,7 +68,7 @@ void bx_slowdown_timer_c::init(void)
 
   BX_INFO(("using 'slowdown' timer synchronization method"));
   s.MAXmultiplier = MAXMULT;
-  s.Q=Qval;
+  s.Q = Qval;
 
   if(s.MAXmultiplier<1)
     s.MAXmultiplier=1;

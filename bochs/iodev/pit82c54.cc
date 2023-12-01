@@ -918,7 +918,7 @@ bool pit_82C54::read_OUT(Bit8u cnum)
 {
   if (cnum>MAX_COUNTER) {
     BX_ERROR(("Counter number incorrect in 82C54 read_OUT"));
-    return 0;
+    return false;
   }
 
   return counter[cnum].OUTpin;
@@ -928,7 +928,7 @@ bool pit_82C54::read_GATE(Bit8u cnum)
 {
   if (cnum>MAX_COUNTER) {
     BX_ERROR(("Counter number incorrect in 82C54 read_GATE"));
-    return 0;
+    return false;
   }
 
   return counter[cnum].GATE;
@@ -938,7 +938,7 @@ Bit32u pit_82C54::get_clock_event_time(Bit8u cnum)
 {
   if (cnum>MAX_COUNTER) {
     BX_ERROR(("Counter number incorrect in 82C54 read_GATE"));
-    return 0;
+    return false;
   }
 
   return counter[cnum].next_change_time;

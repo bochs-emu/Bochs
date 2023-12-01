@@ -281,15 +281,15 @@ bx_serial_c::init(void)
         DEV_register_irq(BX_SER_THIS s[i].IRQ, name);
       }
       /* internal state */
-      BX_SER_THIS s[i].ls_ipending = 0;
-      BX_SER_THIS s[i].ms_ipending = 0;
-      BX_SER_THIS s[i].rx_ipending = 0;
-      BX_SER_THIS s[i].fifo_ipending = 0;
-      BX_SER_THIS s[i].ls_interrupt = 0;
-      BX_SER_THIS s[i].ms_interrupt = 0;
-      BX_SER_THIS s[i].rx_interrupt = 0;
-      BX_SER_THIS s[i].tx_interrupt = 0;
-      BX_SER_THIS s[i].fifo_interrupt = 0;
+      BX_SER_THIS s[i].ls_ipending = false;
+      BX_SER_THIS s[i].ms_ipending = false;
+      BX_SER_THIS s[i].rx_ipending = false;
+      BX_SER_THIS s[i].fifo_ipending = false;
+      BX_SER_THIS s[i].ls_interrupt = false;
+      BX_SER_THIS s[i].ms_interrupt = false;
+      BX_SER_THIS s[i].rx_interrupt = false;
+      BX_SER_THIS s[i].tx_interrupt = false;
+      BX_SER_THIS s[i].fifo_interrupt = false;
 
       if (BX_SER_THIS s[i].tx_timer_index == BX_NULL_TIMER_HANDLE) {
         BX_SER_THIS s[i].tx_timer_index =
@@ -697,59 +697,59 @@ void bx_serial_c::register_state(void)
 void bx_serial_c::lower_interrupt(Bit8u port)
 {
   /* If there are no more ints pending, clear the irq */
-  if ((BX_SER_THIS s[port].rx_interrupt == 0) &&
-      (BX_SER_THIS s[port].tx_interrupt == 0) &&
-      (BX_SER_THIS s[port].ls_interrupt == 0) &&
-      (BX_SER_THIS s[port].ms_interrupt == 0) &&
-      (BX_SER_THIS s[port].fifo_interrupt == 0)) {
+  if ((BX_SER_THIS s[port].rx_interrupt == false) &&
+      (BX_SER_THIS s[port].tx_interrupt == false) &&
+      (BX_SER_THIS s[port].ls_interrupt == false) &&
+      (BX_SER_THIS s[port].ms_interrupt == false) &&
+      (BX_SER_THIS s[port].fifo_interrupt == false)) {
     DEV_pic_lower_irq(BX_SER_THIS s[port].IRQ);
   }
 }
 
 void bx_serial_c::raise_interrupt(Bit8u port, int type)
 {
-  bool gen_int = 0;
+  bool gen_int = false;
 
   switch (type) {
     case BX_SER_INT_IER: /* IER has changed */
-      gen_int = 1;
+      gen_int = true;
       break;
     case BX_SER_INT_RXDATA:
       if (BX_SER_THIS s[port].int_enable.rxdata_enable) {
-        BX_SER_THIS s[port].rx_interrupt = 1;
-        gen_int = 1;
+        BX_SER_THIS s[port].rx_interrupt = true;
+        gen_int = true;
       } else {
-        BX_SER_THIS s[port].rx_ipending = 1;
+        BX_SER_THIS s[port].rx_ipending = true;
       }
       break;
     case BX_SER_INT_TXHOLD:
       if (BX_SER_THIS s[port].int_enable.txhold_enable) {
-        BX_SER_THIS s[port].tx_interrupt = 1;
-        gen_int = 1;
+        BX_SER_THIS s[port].tx_interrupt = true;
+        gen_int = true;
       }
       break;
     case BX_SER_INT_RXLSTAT:
       if (BX_SER_THIS s[port].int_enable.rxlstat_enable) {
-        BX_SER_THIS s[port].ls_interrupt = 1;
-        gen_int = 1;
+        BX_SER_THIS s[port].ls_interrupt = true;
+        gen_int = true;
       } else {
-        BX_SER_THIS s[port].ls_ipending = 1;
+        BX_SER_THIS s[port].ls_ipending = true;
       }
       break;
     case BX_SER_INT_MODSTAT:
-      if ((BX_SER_THIS s[port].ms_ipending == 1) &&
+      if ((BX_SER_THIS s[port].ms_ipending) &&
           (BX_SER_THIS s[port].int_enable.modstat_enable == 1)) {
-        BX_SER_THIS s[port].ms_interrupt = 1;
-        BX_SER_THIS s[port].ms_ipending = 0;
-        gen_int = 1;
+        BX_SER_THIS s[port].ms_interrupt = true;
+        BX_SER_THIS s[port].ms_ipending = false;
+        gen_int = true;
       }
       break;
     case BX_SER_INT_FIFO:
       if (BX_SER_THIS s[port].int_enable.rxdata_enable) {
-        BX_SER_THIS s[port].fifo_interrupt = 1;
-        gen_int = 1;
+        BX_SER_THIS s[port].fifo_interrupt = true;
+        gen_int = true;
       } else {
-        BX_SER_THIS s[port].fifo_ipending = 1;
+        BX_SER_THIS s[port].fifo_ipending = true;
       }
       break;
   }
@@ -805,17 +805,17 @@ Bit32u bx_serial_c::read(Bit32u address, unsigned io_len)
           }
           if (BX_SER_THIS s[port].rx_fifo_end == 0) {
             BX_SER_THIS s[port].line_status.rxdata_ready = 0;
-            BX_SER_THIS s[port].rx_interrupt = 0;
-            BX_SER_THIS s[port].rx_ipending = 0;
-            BX_SER_THIS s[port].fifo_interrupt = 0;
-            BX_SER_THIS s[port].fifo_ipending = 0;
+            BX_SER_THIS s[port].rx_interrupt = false;
+            BX_SER_THIS s[port].rx_ipending = false;
+            BX_SER_THIS s[port].fifo_interrupt = false;
+            BX_SER_THIS s[port].fifo_ipending = false;
             lower_interrupt(port);
           }
         } else {
           val = BX_SER_THIS s[port].rxbuffer;
           BX_SER_THIS s[port].line_status.rxdata_ready = 0;
-          BX_SER_THIS s[port].rx_interrupt = 0;
-          BX_SER_THIS s[port].rx_ipending = 0;
+          BX_SER_THIS s[port].rx_interrupt = false;
+          BX_SER_THIS s[port].rx_ipending = false;
           lower_interrupt(port);
         }
       }
@@ -855,7 +855,7 @@ Bit32u bx_serial_c::read(Bit32u address, unsigned io_len)
         BX_SER_THIS s[port].int_ident.int_ID = 0x0;
         BX_SER_THIS s[port].int_ident.ipending = 1;
       }
-      BX_SER_THIS s[port].tx_interrupt = 0;
+      BX_SER_THIS s[port].tx_interrupt = false;
       lower_interrupt(port);
 
       val = (Bit8u)BX_SER_THIS s[port].int_ident.ipending  |
@@ -893,8 +893,8 @@ Bit32u bx_serial_c::read(Bit32u address, unsigned io_len)
       BX_SER_THIS s[port].line_status.overrun_error = 0;
       BX_SER_THIS s[port].line_status.framing_error = 0;
       BX_SER_THIS s[port].line_status.break_int = 0;
-      BX_SER_THIS s[port].ls_interrupt = 0;
-      BX_SER_THIS s[port].ls_ipending = 0;
+      BX_SER_THIS s[port].ls_interrupt = false;
+      BX_SER_THIS s[port].ls_ipending = false;
       lower_interrupt(port);
       break;
 
@@ -936,8 +936,8 @@ Bit32u bx_serial_c::read(Bit32u address, unsigned io_len)
       BX_SER_THIS s[port].modem_status.delta_dsr = 0;
       BX_SER_THIS s[port].modem_status.ri_trailedge = 0;
       BX_SER_THIS s[port].modem_status.delta_dcd = 0;
-      BX_SER_THIS s[port].ms_interrupt = 0;
-      BX_SER_THIS s[port].ms_ipending = 0;
+      BX_SER_THIS s[port].ms_interrupt = false;
+      BX_SER_THIS s[port].ms_ipending = false;
       lower_interrupt(port);
       break;
 
@@ -972,7 +972,7 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif  // !BX_USE_SER_SMF
-  bool gen_int = 0;
+  bool gen_int = false;
   Bit8u offset, new_wordlen;
 #if BX_USE_RAW_SERIAL
   bool mcr_changed = 0;
@@ -1045,7 +1045,7 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
                                           0); /* not continuous */
             }
           } else {
-            BX_SER_THIS s[port].tx_interrupt = 0;
+            BX_SER_THIS s[port].tx_interrupt = false;
             lower_interrupt(port);
           }
         } else {
@@ -1069,15 +1069,15 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
         if (new_b3 != BX_SER_THIS s[port].int_enable.modstat_enable) {
           BX_SER_THIS s[port].int_enable.modstat_enable  = new_b3;
           if (BX_SER_THIS s[port].int_enable.modstat_enable == 1) {
-            if (BX_SER_THIS s[port].ms_ipending == 1) {
-              BX_SER_THIS s[port].ms_interrupt = 1;
-              BX_SER_THIS s[port].ms_ipending = 0;
-              gen_int = 1;
+            if (BX_SER_THIS s[port].ms_ipending) {
+              BX_SER_THIS s[port].ms_interrupt = true;
+              BX_SER_THIS s[port].ms_ipending = false;
+              gen_int = true;
             }
           } else {
-            if (BX_SER_THIS s[port].ms_interrupt == 1) {
-              BX_SER_THIS s[port].ms_interrupt = 0;
-              BX_SER_THIS s[port].ms_ipending = 1;
+            if (BX_SER_THIS s[port].ms_interrupt) {
+              BX_SER_THIS s[port].ms_interrupt = false;
+              BX_SER_THIS s[port].ms_ipending = true;
               lower_interrupt(port);
             }
           }
@@ -1086,34 +1086,34 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
           BX_SER_THIS s[port].int_enable.txhold_enable  = new_b1;
           if (BX_SER_THIS s[port].int_enable.txhold_enable == 1) {
             BX_SER_THIS s[port].tx_interrupt = BX_SER_THIS s[port].line_status.thr_empty;
-            if (BX_SER_THIS s[port].tx_interrupt) gen_int = 1;
+            if (BX_SER_THIS s[port].tx_interrupt) gen_int = true;
           } else {
-            BX_SER_THIS s[port].tx_interrupt = 0;
+            BX_SER_THIS s[port].tx_interrupt = false;
             lower_interrupt(port);
           }
         }
         if (new_b0 != BX_SER_THIS s[port].int_enable.rxdata_enable) {
           BX_SER_THIS s[port].int_enable.rxdata_enable  = new_b0;
           if (BX_SER_THIS s[port].int_enable.rxdata_enable == 1) {
-            if (BX_SER_THIS s[port].fifo_ipending == 1) {
-              BX_SER_THIS s[port].fifo_interrupt = 1;
-              BX_SER_THIS s[port].fifo_ipending = 0;
-              gen_int = 1;
+            if (BX_SER_THIS s[port].fifo_ipending) {
+              BX_SER_THIS s[port].fifo_interrupt = true;
+              BX_SER_THIS s[port].fifo_ipending = false;
+              gen_int = true;
             }
-            if (BX_SER_THIS s[port].rx_ipending == 1) {
-              BX_SER_THIS s[port].rx_interrupt = 1;
-              BX_SER_THIS s[port].rx_ipending = 0;
-              gen_int = 1;
+            if (BX_SER_THIS s[port].rx_ipending) {
+              BX_SER_THIS s[port].rx_interrupt = true;
+              BX_SER_THIS s[port].rx_ipending = false;
+              gen_int = true;
             }
           } else {
-            if (BX_SER_THIS s[port].rx_interrupt == 1) {
-              BX_SER_THIS s[port].rx_interrupt = 0;
-              BX_SER_THIS s[port].rx_ipending = 1;
+            if (BX_SER_THIS s[port].rx_interrupt) {
+              BX_SER_THIS s[port].rx_interrupt = false;
+              BX_SER_THIS s[port].rx_ipending = true;
               lower_interrupt(port);
             }
-            if (BX_SER_THIS s[port].fifo_interrupt == 1) {
-              BX_SER_THIS s[port].fifo_interrupt = 0;
-              BX_SER_THIS s[port].fifo_ipending = 1;
+            if (BX_SER_THIS s[port].fifo_interrupt) {
+              BX_SER_THIS s[port].fifo_interrupt = false;
+              BX_SER_THIS s[port].fifo_ipending = true;
               lower_interrupt(port);
             }
           }
@@ -1121,15 +1121,15 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
         if (new_b2 != BX_SER_THIS s[port].int_enable.rxlstat_enable) {
           BX_SER_THIS s[port].int_enable.rxlstat_enable  = new_b2;
           if (BX_SER_THIS s[port].int_enable.rxlstat_enable == 1) {
-            if (BX_SER_THIS s[port].ls_ipending == 1) {
-              BX_SER_THIS s[port].ls_interrupt = 1;
-              BX_SER_THIS s[port].ls_ipending = 0;
-              gen_int = 1;
+            if (BX_SER_THIS s[port].ls_ipending) {
+              BX_SER_THIS s[port].ls_interrupt = true;
+              BX_SER_THIS s[port].ls_ipending = false;
+              gen_int = true;
             }
           } else {
-            if (BX_SER_THIS s[port].ls_interrupt == 1) {
-              BX_SER_THIS s[port].ls_interrupt = 0;
-              BX_SER_THIS s[port].ls_ipending = 1;
+            if (BX_SER_THIS s[port].ls_interrupt) {
+              BX_SER_THIS s[port].ls_interrupt = false;
+              BX_SER_THIS s[port].ls_ipending = true;
               lower_interrupt(port);
             }
           }
@@ -1295,19 +1295,19 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_SER_THIS s[port].modem_status.dcd = BX_SER_THIS s[port].modem_cntl.out2;
         if (BX_SER_THIS s[port].modem_status.cts != prev_cts) {
           BX_SER_THIS s[port].modem_status.delta_cts = 1;
-          BX_SER_THIS s[port].ms_ipending = 1;
+          BX_SER_THIS s[port].ms_ipending = true;
         }
         if (BX_SER_THIS s[port].modem_status.dsr != prev_dsr) {
           BX_SER_THIS s[port].modem_status.delta_dsr = 1;
-          BX_SER_THIS s[port].ms_ipending = 1;
+          BX_SER_THIS s[port].ms_ipending = true;
         }
         if (BX_SER_THIS s[port].modem_status.ri != prev_ri)
-          BX_SER_THIS s[port].ms_ipending = 1;
+          BX_SER_THIS s[port].ms_ipending = true;
         if ((BX_SER_THIS s[port].modem_status.ri == 0) && (prev_ri == 1))
           BX_SER_THIS s[port].modem_status.ri_trailedge = 1;
         if (BX_SER_THIS s[port].modem_status.dcd != prev_dcd) {
           BX_SER_THIS s[port].modem_status.delta_dcd = 1;
-          BX_SER_THIS s[port].ms_ipending = 1;
+          BX_SER_THIS s[port].ms_ipending = true;
         }
         raise_interrupt(port, BX_SER_INT_MODSTAT);
       } else {
@@ -1373,7 +1373,7 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
 void bx_serial_c::rx_fifo_enq(Bit8u port, Bit8u data)
 {
-  bool gen_int = 0;
+  bool gen_int = false;
 
   if (BX_SER_THIS s[port].fifo_cntl.enable) {
     if (BX_SER_THIS s[port].rx_fifo_end == 16) {
@@ -1386,16 +1386,16 @@ void bx_serial_c::rx_fifo_enq(Bit8u port, Bit8u data)
       BX_SER_THIS s[port].rx_fifo[BX_SER_THIS s[port].rx_fifo_end++] = data;
       switch (BX_SER_THIS s[port].fifo_cntl.rxtrigger) {
         case 1:
-          if (BX_SER_THIS s[port].rx_fifo_end == 4) gen_int = 1;
+          if (BX_SER_THIS s[port].rx_fifo_end == 4) gen_int = true;
           break;
         case 2:
-          if (BX_SER_THIS s[port].rx_fifo_end == 8) gen_int = 1;
+          if (BX_SER_THIS s[port].rx_fifo_end == 8) gen_int = true;
           break;
         case 3:
-          if (BX_SER_THIS s[port].rx_fifo_end == 14) gen_int = 1;
+          if (BX_SER_THIS s[port].rx_fifo_end == 14) gen_int = true;
           break;
         default:
-          gen_int = 1;
+          gen_int = true;
       }
       if (gen_int) {
         bx_pc_system.deactivate_timer(BX_SER_THIS s[port].fifo_timer_index);
@@ -1428,7 +1428,7 @@ void bx_serial_c::tx_timer_handler(void *this_ptr)
 
 void bx_serial_c::tx_timer(void)
 {
-  bool gen_int = 0;
+  bool gen_int = false;
   Bit8u port = (Bit8u)bx_pc_system.triggeredTimerParam();
 
   switch (BX_SER_THIS s[port].io_mode) {
@@ -1493,7 +1493,7 @@ void bx_serial_c::tx_timer(void)
   } else if (!BX_SER_THIS s[port].line_status.thr_empty) {
     BX_SER_THIS s[port].tsrbuffer = BX_SER_THIS s[port].thrbuffer;
     BX_SER_THIS s[port].line_status.tsr_empty = 0;
-    gen_int = 1;
+    gen_int = true;
   }
   if (!BX_SER_THIS s[port].line_status.tsr_empty) {
     if (gen_int) {
@@ -1654,8 +1654,7 @@ void bx_serial_c::rx_timer(void)
     db_usec *= 4;
   }
 
-  bx_pc_system.activate_timer(BX_SER_THIS s[port].rx_timer_index,
-                              db_usec, 0); /* not continuous */
+  bx_pc_system.activate_timer(BX_SER_THIS s[port].rx_timer_index, db_usec, 0); /* not continuous */
 }
 
 void bx_serial_c::fifo_timer_handler(void *this_ptr)
@@ -1712,7 +1711,6 @@ void bx_serial_c::update_mouse_data()
   int delta_x, delta_y;
   Bit8u b1, b2, b3, button_state, mouse_data[5];
   int bytes, tail;
-
 
   if (BX_SER_THIS mouse_delayed_dx > 127) {
     delta_x = 127;
