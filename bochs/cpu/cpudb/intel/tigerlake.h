@@ -21,8 +21,8 @@
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef BX_COREI7_ICELAKE_CPUID_DEFINITIONS_H
-#define BX_COREI7_ICELAKE_CPUID_DEFINITIONS_H
+#ifndef BX_COREI7_TIGERLAKE_CPUID_DEFINITIONS_H
+#define BX_COREI7_TIGERLAKE_CPUID_DEFINITIONS_H
 
 #if BX_SUPPORT_X86_64 && BX_SUPPORT_AVX
 
