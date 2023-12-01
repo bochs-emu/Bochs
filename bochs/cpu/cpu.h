@@ -664,6 +664,10 @@ typedef struct
   Bit64u ia32_interrupt_ssp_table;
 #endif
 
+#if BX_SUPPORT_MONITOR_MWAIT
+  Bit32u ia32_umwait_ctrl;
+#endif
+
   Bit32u ia32_spec_ctrl; // SCA
 
   /* TODO finish of the others */
@@ -782,21 +786,43 @@ typedef void (*simd_xmm_3op)(BxPackedXmmRegister *opdst, const BxPackedXmmRegist
 #include "svm.h"
 #endif
 
+enum monitor_armed_by {
+  BX_MONITOR_NOT_ARMED = 0,
+  BX_MONITOR_ARMED_BY_MONITOR,
+  BX_MONITOR_ARMED_BY_MONITORX,
+  BX_MONITOR_ARMED_BY_UMONITOR
+};
+
 #if BX_SUPPORT_MONITOR_MWAIT
 struct monitor_addr_t {
 
     bx_phy_address monitor_addr;
-    bool armed;
+    unsigned armed_by;
 
-    monitor_addr_t(): monitor_addr(0xffffffff), armed(false) {}
+    monitor_addr_t(): monitor_addr(0xffffffff), armed_by(BX_MONITOR_NOT_ARMED) {}
 
-    BX_CPP_INLINE void arm(bx_phy_address addr) {
+    BX_CPP_INLINE void arm(bx_phy_address addr, monitor_armed_by by) {
       // align to cache line
       monitor_addr = addr & ~((bx_phy_address)(CACHE_LINE_SIZE - 1));
-      armed = true;
+      armed_by = by;
     }
 
-    BX_CPP_INLINE void reset_monitor(void) { armed = false; }
+    BX_CPP_INLINE void reset_monitor(void) { armed_by = BX_MONITOR_NOT_ARMED; }
+
+    BX_CPP_INLINE void reset_umonitor(void) {
+      if (armed_by == BX_MONITOR_ARMED_BY_UMONITOR)
+          armed_by = BX_MONITOR_NOT_ARMED;
+    }
+
+    BX_CPP_INLINE void reset_monitorx(void) {
+      if (armed_by == BX_MONITOR_ARMED_BY_MONITORX)
+          armed_by = BX_MONITOR_NOT_ARMED;
+    }
+
+    BX_CPP_INLINE bool armed(void) const { return armed_by != BX_MONITOR_NOT_ARMED; }
+    BX_CPP_INLINE bool armed_by_monitor(void) const { return armed_by == BX_MONITOR_ARMED_BY_MONITOR; }
+    BX_CPP_INLINE bool armed_by_monitorx(void) const { return armed_by == BX_MONITOR_ARMED_BY_MONITORX; }
+    BX_CPP_INLINE bool armed_by_umonitor(void) const { return armed_by == BX_MONITOR_ARMED_BY_UMONITOR; }
 };
 #endif
 
@@ -2598,6 +2624,8 @@ public: // for now...
 #endif
   /* CET instructions */
 
+  BX_SMF void MOVDIR64B(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
 #if BX_SUPPORT_AVX
   /* AVX */
   BX_SMF void VZEROUPPER(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -4056,6 +4084,8 @@ public: // for now...
 
   BX_SMF void MONITOR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MWAIT(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void UMONITOR_Eq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void UMWAIT_Ed(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
 #if BX_SUPPORT_PKEYS
   BX_SMF void RDPKRU(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -4720,6 +4750,9 @@ public: // for now...
   BX_SMF Bit64u get_TSC();
   BX_SMF void   set_TSC(Bit64u tsc);
   BX_SMF Bit64u get_Virtual_TSC(); // takes into account VMX or SVM adjustments
+#if BX_SUPPORT_VMX
+  BX_SMF Bit64u compute_physical_TSC_delay(Bit64u virtual_tsc_delay);
+#endif
 #endif
 
 #if BX_SUPPORT_PKEYS
