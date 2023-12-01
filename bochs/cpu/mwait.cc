@@ -336,7 +336,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UMWAIT_Ed(bxInstruction_c *i)
   instr_delay = compute_physical_TSC_delay(instr_delay);
 #endif
 
-  BX_CPU_THIS_PTR lapic.set_mwaitx_timer(instr_delay);
+  BX_CPU_THIS_PTR lapic->set_mwaitx_timer(instr_delay);
 
   // An external interrupt causes the processor to exit the implementation-dependent optimized state 
   // regardless of whether maskable-interrupts are inhibited (EFLAGS.IF =0)
