@@ -2624,6 +2624,8 @@ public: // for now...
 #endif
   /* CET instructions */
 
+  BX_SMF void MOVDIR64B(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
 #if BX_SUPPORT_AVX
   /* AVX */
   BX_SMF void VZEROUPPER(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

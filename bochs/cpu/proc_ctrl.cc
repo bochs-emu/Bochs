@@ -322,6 +322,26 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLZERO(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVDIR64B(bxInstruction_c *i)
+{
+#if BX_CPU_LEVEL >= 6
+
+#if BX_SUPPORT_X86_64
+  bx_address src_eaddr = BX_READ_64BIT_REG(i->dst()) & i->asize_mask();
+#else
+  bx_address src_eaddr = BX_READ_32BIT_REG(i->dst()) & i->asize_mask();
+#endif
+
+  BxPackedZmmRegister zmm; // zmm is always made available even if EVEX is not compiled in
+  read_virtual_zmmword(BX_SEG_REG_ES, src_eaddr, &zmm);
+
+  bx_address dst_eaddr = BX_CPU_RESOLVE_ADDR(i);
+  write_virtual_zmmword_aligned(i->seg(), dst_eaddr, &zmm);
+#endif
+
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPU_C::handleCpuModeChange(void)
 {
   unsigned mode = BX_CPU_THIS_PTR cpu_mode;
