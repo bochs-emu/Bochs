@@ -27,6 +27,10 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#if BX_SUPPORT_APIC
+#include "apic.h"
+#endif
+
 #include "pc_system.h"
 
 #include "decoder/ia_opcodes.h"
@@ -59,7 +63,7 @@ void BX_CPU_C::wakeup_monitor(void)
   // clear monitor
   BX_CPU_THIS_PTR monitor.reset_monitor();
   // deactivate mwaitx timer if was active to avoid its redundant firing
-  BX_CPU_THIS_PTR lapic.deactivate_mwaitx_timer();
+  BX_CPU_THIS_PTR lapic->deactivate_mwaitx_timer();
 }
 #endif
 
@@ -215,7 +219,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
 
   if (i->getIaOpcode() == BX_IA_MWAITX) {
     if ((ECX & 0x2) != 0 && EBX != 0) {
-      BX_CPU_THIS_PTR lapic.set_mwaitx_timer(EBX);
+      BX_CPU_THIS_PTR lapic->set_mwaitx_timer(EBX);
     }
   }
 

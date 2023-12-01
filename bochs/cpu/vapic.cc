@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2012-2015 Stanislav Shwartsman
+//   Copyright (c) 2012-2023 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -26,9 +26,13 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#if BX_SUPPORT_VMX && BX_SUPPORT_X86_64
+
 #include "memory/memory-bochs.h"
 
-#if BX_SUPPORT_VMX && BX_SUPPORT_X86_64
+#if BX_SUPPORT_APIC
+#include "apic.h"
+#endif
 
 bool BX_CPP_AttrRegparmN(1) BX_CPU_C::is_virtual_apic_page(bx_phy_address paddr)
 {
@@ -521,6 +525,7 @@ bool BX_CPU_C::Virtualize_X2APIC_Write(unsigned msr, Bit64u val_64)
   return false;
 }
 
+#if BX_SUPPORT_VMX >= 2
 bool BX_CPU_C::VMX_Posted_Interrupt_Processing(Bit8u vector)
 {
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
@@ -540,21 +545,20 @@ bool BX_CPU_C::VMX_Posted_Interrupt_Processing(Bit8u vector)
   // | 511-257 | user available
   // --------------------------------
 
-#if BX_SUPPORT_MEMTYPE && (BX_DEBUGGER || BX_INSTRUMENTATION)
-  BxMemtype pid_memtype = resolve_memtype(vm->pid_addr);
+  BxMemtype pid_memtype = BX_MEMTYPE_INVALID;
+#if BX_SUPPORT_MEMTYPE
+            pid_memtype = resolve_memtype(vm->pid_addr);
 #endif
 
   // clear PID.ON using atomic RMW 'bit clear' operation
-  Bit8u pid_ON = read_physical_byte(vm->pid_addr + 32);
-  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->pid_addr + 32, 1, MEMTYPE(pid_memtype), BX_READ, BX_VMX_PID, &pid_ON);
+  Bit8u pid_ON = read_physical_byte(vm->pid_addr + 32, MEMTYPE(pid_memtype), BX_VMX_PID);
   pid_ON &= ~0x1;
-  access_write_physical(vm->pid_addr + 32, 1, &pid_ON);
-  BX_NOTIFY_PHY_MEMORY_ACCESS(vm->pid_addr + 32, 1, MEMTYPE(pid_memtype), BX_WRITE, BX_VMX_PID, &pid_ON);
+  write_physical_byte(vm->pid_addr + 32, pid_ON, MEMTYPE(pid_memtype), BX_VMX_PID);
 
   // write(0) into EOI register in the local APIC; this dismisses the interrupt with
   // posted-interrupt notification vector from local APIC.
   // instead of writing to memory, do it directly
-  BX_CPU_THIS_PTR lapic.receive_EOI();
+  BX_CPU_THIS_PTR lapic->receive_EOI();
 
   // OR PIR into VIRR and clear PIR atomically (using lock xchg operation)
   // no other agent supposed to read or write PIR between the time it is read and cleared
@@ -572,12 +576,13 @@ bool BX_CPU_C::VMX_Posted_Interrupt_Processing(Bit8u vector)
     VMX_Write_Virtual_APIC(BX_LAPIC_IRR1 + 16*n, virr[n]);
   }
 
-  vector = BX_CPU_THIS_PTR lapic.highest_priority_int(virr);
+  vector = BX_CPU_THIS_PTR lapic->highest_priority_int(virr);
   if (vector >= vm->rvi) vm->rvi = vector;
 
   VMX_Evaluate_Pending_Virtual_Interrupts();
 
   return true;
 }
+#endif
 
 #endif // BX_SUPPORT_VMX && BX_SUPPORT_X86_64

@@ -71,9 +71,7 @@ void BX_CPU_C::vmfunc_eptp_switching(void)
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
   bx_phy_address paddr = vm->eptp_list_address + 8 * ECX;
 
-  Bit64u temp_eptp = read_physical_qword(paddr);
-  BX_NOTIFY_PHY_MEMORY_ACCESS(paddr, 8, MEMTYPE(resolve_memtype(paddr)), BX_READ, 0, (Bit8u*)(&temp_eptp));
-
+  Bit64u temp_eptp = read_physical_qword(paddr, MEMTYPE(resolve_memtype(paddr)), BX_ACCESS_REASON_NOT_SPECIFIED);
   if (! is_eptptr_valid(temp_eptp)) {
     BX_ERROR(("vmfunc_eptp_switching: invalid EPTP value in EPTP entry %d", ECX));
     VMexit(VMX_VMEXIT_VMFUNC, 0);

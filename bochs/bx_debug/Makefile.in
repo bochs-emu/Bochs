@@ -124,7 +124,7 @@ dbg_main.o: dbg_main.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../instrument/stubs/instrument.h ../cpu/i387.h ../cpu/fpu/softfloat.h \
  ../cpu/fpu/tag_w.h ../cpu/fpu/status_w.h ../cpu/fpu/control_w.h \
  ../cpu/crregs.h ../cpu/descriptor.h ../cpu/decoder/instr.h \
- ../cpu/lazy_flags.h ../cpu/tlb.h ../cpu/icache.h ../cpu/apic.h \
+ ../cpu/lazy_flags.h ../cpu/tlb.h ../cpu/icache.h \
  ../cpu/xmm.h ../cpu/vmx.h ../cpu/svm.h ../cpu/cpuid.h ../cpu/access.h \
  ../cpu/decoder/ia_opcodes.h ../cpu/decoder/ia_opcodes.def \
  ../iodev/iodev.h ../plugin.h ../extplugin.h ../pc_system.h \
@@ -137,7 +137,7 @@ linux.o: linux.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../cpu/fpu/softfloat.h ../cpu/fpu/tag_w.h ../cpu/fpu/status_w.h \
  ../cpu/fpu/control_w.h ../cpu/crregs.h ../cpu/descriptor.h \
  ../cpu/decoder/instr.h ../cpu/lazy_flags.h ../cpu/tlb.h ../cpu/icache.h \
- ../cpu/apic.h ../cpu/xmm.h ../cpu/vmx.h ../cpu/svm.h ../cpu/cpuid.h \
+ ../cpu/xmm.h ../cpu/vmx.h ../cpu/svm.h ../cpu/cpuid.h \
  ../cpu/access.h syscalls-linux.h
 parser.o: parser.@CPP_SUFFIX@ debug.h ../config.h ../osdep.h \
  ../cpu/decoder/decoder.h ../cpu/decoder/features.h
@@ -148,5 +148,5 @@ symbols.o: symbols.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../cpu/fpu/softfloat.h ../cpu/fpu/tag_w.h ../cpu/fpu/status_w.h \
  ../cpu/fpu/control_w.h ../cpu/crregs.h ../cpu/descriptor.h \
  ../cpu/decoder/instr.h ../cpu/lazy_flags.h ../cpu/tlb.h ../cpu/icache.h \
- ../cpu/apic.h ../cpu/xmm.h ../cpu/vmx.h ../cpu/svm.h ../cpu/cpuid.h \
+ ../cpu/xmm.h ../cpu/vmx.h ../cpu/svm.h ../cpu/cpuid.h \
  ../cpu/access.h
