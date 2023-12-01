@@ -477,6 +477,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET64(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_iret;
 #endif
 
+#if BX_SUPPORT_MONITOR_MWAIT
+  BX_CPU_THIS_PTR monitor.reset_umonitor();
+#endif
+
   BX_ASSERT(long_mode());
 
   RSP_SPECULATIVE;

@@ -970,7 +970,12 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_ecx(Bit32u extra) const
  }
 #endif
 
-  // [5:5]   WAITPKG (TPAUSE/UMONITOR/UMWAIT) support - not supported
+  // [5:5]   WAITPKG (TPAUSE/UMONITOR/UMWAIT) support
+#if BX_SUPPORT_MONITOR_MWAIT
+  if (is_cpu_extension_supported(BX_ISA_WAITPKG)) {
+    ecx |= BX_CPUID_STD7_SUBLEAF0_ECX_WAITPKG;
+  }
+#endif
 
   // [6:6]   AVX512 VBMI2 instructions support
 #if BX_SUPPORT_EVEX

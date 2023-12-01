@@ -753,8 +753,9 @@ void BX_CPU_C::init_secondary_proc_based_vmexec_ctrls(void)
   //   [21] Reserved (must be '0)
   //   [22] Mode Based Execution Control (MBE)
   //   [23] Sub Page Protection
-  //   [24] Reserved (must be '0)
+  //   [24] Processor Trace use GPA (not implemented)
   //   [25] Enable TSC Scaling
+  //   [26] UMWAIT/TPAUSE Exiting
 
   cap->vmx_vmexec_ctrl2_supported_bits = 0;
 
@@ -828,6 +829,11 @@ void BX_CPU_C::init_secondary_proc_based_vmexec_ctrls(void)
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_TSC_SCALING)) {
     cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL2_TSC_SCALING;
   }
+#if BX_SUPPORT_MONITOR_MWAIT 
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_WAITPKG)) {
+    cap->vmx_vmexec_ctrl2_supported_bits |= VMX_VM_EXEC_CTRL2_UMWAIT_TPAUSE_VMEXIT;
+  }
+#endif
 
 #if BX_SUPPORT_VMX >= 2
   // enable vm functions secondary vmexec control if there are supported vmfunctions

@@ -794,7 +794,7 @@ typedef struct bx_VMCS
 #define VMX_VM_EXEC_CTRL2_SUBPAGE_WR_PROTECT_CTRL   (1 << 23) /* Sub-Page Write Protection Control */
 #define VMX_VM_EXEC_CTRL2_PROCESSOR_TRACE_USE_GPA   (1 << 24) /* Processor Trace (not implemented) */
 #define VMX_VM_EXEC_CTRL2_TSC_SCALING               (1 << 25) /* TSC Scaling */
-#define VMX_VM_EXEC_CTRL2_USER_MWAIT_TPAUSE_VMEXIT  (1 << 26) // not implemented yet
+#define VMX_VM_EXEC_CTRL2_UMWAIT_TPAUSE_VMEXIT      (1 << 26) /* WAITPKG */
 #define VMX_VM_EXEC_CTRL2_PCONFIG_ENABLE            (1 << 27) // not implemented yet
 #define VMX_VM_EXEC_CTRL2_SGX_ENCLV_VMEXIT          (1 << 28) /* ENCLV/SGX (not implemented) */
 
