@@ -242,7 +242,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UMONITOR_Eq(bxInstruction_c *i)
   }
 #endif
 
+#if BX_SUPPORT_X86_64
   bx_address eaddr = BX_READ_64BIT_REG(i->dst()) & i->asize_mask();
+#else
+  bx_address eaddr = BX_READ_32BIT_REG(i->dst()) & i->asize_mask();
+#endif
 
   // UMONITOR performs the same segmentation and paging checks as a 1-byte read
   tickle_read_virtual(i->seg(), eaddr);

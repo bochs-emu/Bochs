@@ -173,7 +173,7 @@ void bx_virt_timer_c::periodic(Bit64u time_passed, bool mode)
   s[mode].timers_next_event_time = s[mode].current_timers_time + BX_MAX_VIRTUAL_TIME;
   for (i=0;i<numTimers;i++) {
     if (timer[i].inUse && timer[i].active && (timer[i].realtime == mode) &&
-        ((timer[i].timeToFire)<s[mode].timers_next_event_time)) {
+        (timer[i].timeToFire < s[mode].timers_next_event_time)) {
       s[mode].timers_next_event_time = timer[i].timeToFire;
     }
   }
@@ -266,13 +266,13 @@ bool bx_virt_timer_c::unregisterTimer(unsigned timerID)
 
   if (timer[timerID].active) {
     BX_PANIC(("unregisterTimer: timer '%s' is still active!", timer[timerID].id));
-    return(0); // Fail.
+    return false; // Fail
   }
 
   //No need to prevent doing this to unused timers.
   timer[timerID].inUse = 0;
   if (timerID == (numTimers-1)) numTimers--;
-  return 1;
+  return true;
 }
 
 void bx_virt_timer_c::start_timers(void)
@@ -307,7 +307,7 @@ void bx_virt_timer_c::deactivate_timer(unsigned timer_index)
   BX_ASSERT(timer_index < BX_MAX_VIRTUAL_TIMERS);
 
   //No need to prevent doing this to unused/inactive timers.
-  timer[timer_index].active = 0;
+  timer[timer_index].active = false;
 }
 
 void bx_virt_timer_c::advance_virtual_time(Bit64u time_passed, bool mode)
@@ -480,7 +480,7 @@ void bx_virt_timer_c::timer_handler(bool mode)
 
     if (ticks_delta) {
 
-#  if DEBUG_REALTIME_WITH_PRINTF
+#if DEBUG_REALTIME_WITH_PRINTF
       //Every second print some info.
       if (((last_real_time + real_time_delta) / USEC_PER_SECOND) > (last_real_time / USEC_PER_SECOND)) {
         Bit64u temp1, temp2, temp3, temp4;
@@ -493,7 +493,7 @@ void bx_virt_timer_c::timer_handler(bool mode)
         printf("ticks: " FMT_LL "u, ", temp3);
         printf("diff: " FMT_LL "u\n", temp4);
       }
-#  endif
+#endif
 
       last_real_time += real_time_delta;
       total_real_usec += real_time_delta;
