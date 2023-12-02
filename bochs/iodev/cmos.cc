@@ -185,7 +185,7 @@ void bx_cmos_c::init(void)
     BX_INFO(("Using utc time for initial clock"));
     BX_CMOS_THIS s.timeval = (Bit64s)time(NULL);
   } else {
-    Bit64s tmpintime;
+    time_t tmpintime;
     struct tm *tmptmtime;
     BX_INFO(("Using specified time for initial clock"));
     tmpintime = SIM->get_param_num(BXPN_CLOCK_TIME0)->get64();
