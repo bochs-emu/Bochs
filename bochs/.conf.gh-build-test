@@ -1,0 +1,142 @@
+#!/bin/sh
+#
+# .conf.gh-build-test (for build tests on Github only)
+#
+if test $# = 0; then
+  which_config=release
+else
+  which_config=$1
+fi
+
+CC="gcc"
+CXX="c++"
+CFLAGS="-Wall -O3 -fomit-frame-pointer -pipe"    # for speed
+#CFLAGS="-Wall -g -pipe"                         # for development
+CXXFLAGS="$CFLAGS"
+
+export CC
+export CXX
+export CFLAGS
+export CXXFLAGS
+
+
+case $which_config in
+
+  release)
+    ./configure \
+      --enable-sb16 \
+      --enable-ne2000 \
+      --enable-all-optimizations \
+      --enable-cpu-level=6 \
+      --enable-x86-64 \
+      --enable-vmx=2 \
+      --enable-svm \
+      --enable-avx \
+      --enable-evex \
+      --enable-cet \
+      --enable-pci \
+      --enable-clgd54xx \
+      --enable-voodoo \
+      --enable-usb \
+      --enable-usb-ohci \
+      --enable-usb-ehci \
+      --enable-usb-xhci \
+      --enable-busmouse \
+      --enable-es1370 \
+      --enable-e1000 \
+      --enable-plugins \
+      --enable-show-ips \
+      --with-all-libs
+    ;;
+  nothing)
+    ./configure \
+      --enable-cpu-level=3 \
+      --disable-fpu \
+      --disable-pci \
+      --with-nogui
+    ;;
+  everything)
+    ./configure \
+      --enable-smp \
+      --enable-x86-64 \
+      --enable-all-optimizations \
+      --enable-long-phy-address \
+      --enable-configurable-msrs \
+      --enable-debugger \
+      --enable-debugger-gui \
+      --enable-fpu \
+      --enable-alignment-check \
+      --enable-3dnow \
+      --enable-monitor-mwait \
+      --enable-protection-keys \
+      --enable-svm \
+      --enable-vmx=2 \
+      --enable-avx \
+      --enable-cet \
+      --enable-evex \
+      --enable-uintr \
+      --enable-perfmon \
+      --enable-memtype \
+      --enable-x86-debugger \
+      --enable-a20-pin \
+      --enable-instrumentation=instrument/example1 \
+      --enable-ne2000 \
+      --enable-e1000 \
+      --enable-pci \
+      --enable-clgd54xx \
+      --enable-voodoo \
+      --enable-usb \
+      --enable-usb-ohci \
+      --enable-usb-ehci \
+      --enable-usb-xhci \
+      --enable-cdrom \
+      --enable-sb16 \
+      --enable-es1370 \
+      --enable-gameport \
+      --enable-busmouse \
+      --enable-iodebug \
+      --enable-large-ramfile \
+      --enable-show-ips \
+      --with-all-libs
+    ;;
+  i686)
+    ./configure \
+      --enable-all-optimizations \
+      --enable-cpu-level=6 \
+      --enable-vmx=1 \
+      --enable-pci \
+      --enable-clgd54xx \
+      --enable-voodoo \
+      --enable-usb \
+      --enable-usb-ohci \
+      --enable-usb-ehci \
+      --enable-usb-xhci \
+      --enable-busmouse \
+      --enable-sb16 \
+      --enable-es1370 \
+      --enable-ne2000 \
+      --enable-e1000 \
+      --enable-show-ips
+    ;;
+  x86-64)
+    ./configure \
+      --enable-all-optimizations \
+      --enable-cpu-level=6 \
+      --enable-x86-64 \
+      --enable-pci \
+      --enable-clgd54xx \
+      --enable-voodoo \
+      --enable-usb \
+      --enable-usb-ohci \
+      --enable-usb-ehci \
+      --enable-usb-xhci \
+      --enable-busmouse \
+      --enable-sb16 \
+      --enable-es1370 \
+      --enable-ne2000 \
+      --enable-e1000 \
+      --enable-show-ips
+    ;;
+  *) echo "Unknown config \"$1\" selected!" ;;
+
+esac
