@@ -55,6 +55,8 @@ Bit32u gen_instruction_info(bxInstruction_c *i, Bit32u reason, bool rw_form)
 
     case VMX_VMEXIT_RDRAND:
     case VMX_VMEXIT_RDSEED:
+    case VMX_VMEXIT_UMWAIT:
+    case VMX_VMEXIT_TPAUSE:
       // bits 12:11 hold operand size
       if (i->os64L())
         instr_info |= 1 << 12;
@@ -152,6 +154,8 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_Instruction(bxInstruction_c *i, Bit
 
     case VMX_VMEXIT_RDRAND:
     case VMX_VMEXIT_RDSEED:
+    case VMX_VMEXIT_UMWAIT:
+    case VMX_VMEXIT_TPAUSE:
       instr_info = gen_instruction_info(i, reason, rw_form);
       VMwrite32(VMCS_32BIT_VMEXIT_INSTRUCTION_INFO, instr_info);
       break;
@@ -726,8 +730,9 @@ void BX_CPU_C::Virtualization_Exception(Bit64u qualification, Bit64u guest_physi
 
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
 
-#if BX_SUPPORT_MEMTYPE && (BX_DEBUGGER || BX_INSTRUMENTATION)
-  BxMemtype ve_info_memtype = resolve_memtype(vm->ve_info_addr);
+  BxMemtype ve_info_memtype = BX_MEMTYPE_INVALID;
+#if BX_SUPPORT_MEMTYPE
+            ve_info_memtype = resolve_memtype(vm->ve_info_addr);
 #endif
   Bit32u magic = read_physical_dword(vm->ve_info_addr + 4, MEMTYPE(ve_info_memtype), BX_ACCESS_REASON_NOT_SPECIFIED);
   if (magic != 0) return;

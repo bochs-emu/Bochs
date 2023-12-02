@@ -37,6 +37,13 @@ bochs-msvc-src.zip
 
 # /bochs/bios/
 /bochs/bios/Makefile
+/bochs/bios/_rombios*_.c
+/bochs/bios/biossums
+/bochs/bios/rombios*.s
+/bochs/bios/rombios*.sym
+/bochs/bios/rombios*.txt
+/bochs/bios/rombios*.bin
+/bochs/bios/rombios32.out
 
 # /bochs/build/linux/
 /bochs/build/linux/DOC-linux.html

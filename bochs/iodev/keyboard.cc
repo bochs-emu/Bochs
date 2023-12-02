@@ -650,7 +650,7 @@ void bx_keyb_c::write(Bit32u address, Bit32u value, unsigned io_len)
 bool bx_keyb_c::gen_scancode_static(void *dev, Bit32u key)
 {
   ((bx_keyb_c*)dev)->gen_scancode(key);
-  return 1;
+  return true;
 }
 
 void bx_keyb_c::gen_scancode(Bit32u key)

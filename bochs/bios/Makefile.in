@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2020  The Bochs Project
+# Copyright (C) 2001-2023  The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -45,8 +45,9 @@ IASL = @IASL@
 BX_INCDIRS = -I.. -I$(srcdir)/.. -I../iodev -I$(srcdir)/../iodev
 LOCAL_CXXFLAGS =
 
-UPSTREAM_RELEASE_DATE = $(shell grep "Updated:" ../README | sed 's/Updated://')
-BUILDDATE = `date -u -d '$(UPSTREAM_RELEASE_DATE)' '+%m/%d/%y'`
+# UPSTREAM_RELEASE_DATE = $(shell grep "Updated:" ../README | sed 's/Updated://')
+# BUILDDATE = `date -u -d '$(UPSTREAM_RELEASE_DATE)' '+%m/%d/%y'`
+BUILDDATE = `date -u '+%m/%d/%y'`
 BIOS_BUILD_DATE = "-DBIOS_BUILD_DATE=\"$(BUILDDATE)\""
 #
 # -------- end configurable options --------------------------

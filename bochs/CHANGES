@@ -10,7 +10,7 @@ Brief summary :
   ! Implemented Linear Address Separation (LASS) extension
   ! Implemented User-Level Interrupt (UINTR) extension
   ! Implemented recently published Intel instruction sets:
-    - MOVDIRI, AVX512 BF16, AVX IFMA52, VNNI-INT8, VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3, SM4, SHA512, WRMSRNS, SERIALIZE
+    - MOVDIRI/MOVDIR64B, AVX512 BF16, AVX IFMA52, VNNI-INT8/VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3, SM4, SHA512, WRMSRNS, WAITPKG, SERIALIZE
   - Improved 64-bit guest support in Bochs internal debugger, added new internal debugger commands
   - Bochs debugger enhanced with new commands (setpmem, loadmem, deref, ...)
     Enhanced magic breakpoint capabilities. Refer to user documentation for more details.
@@ -20,8 +20,7 @@ Brief summary :
   - USB: Added experimental MSD UASP emulation
   - USB: Added OHCI as an EHCI Companion option. Now allows UHCI or OHCI specified as a configuration parameter.
   - Disk images: Allows large VHD image files
-  - Enhanced the Floppy Disk emulation
-  - Bug fix which now closes the cdrom image file when using win32 configuration
+  - Fixed and enhanced the Floppy Disk emulation
   - Documentation updates and fixes
 
 Detailed change log :
@@ -34,7 +33,7 @@ Detailed change log :
   - Implemented Linear Address Separation (LASS) extension
   - Implemented User-Level Interrupt (UINTR) extension
   - Implemented recently published Intel instruction sets:
-    - MOVDIRI, AVX512 BF16, AVX IFMA52, VNNI-INT8, VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3, SM4, SHA512, WRMSRNS, SERIALIZE
+    - MOVDIRI/MOVDIR64B, AVX512 BF16, AVX IFMA52, VNNI-INT8/VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3, SM4, SHA512, WRMSRNS, WAITPKG, SERIALIZE
 
 - Bochs Debugger and Instrumentation
   - Updated Bochs instrumentation examples for new disassembler introduced in Bochs 2.7 release.
@@ -57,6 +56,9 @@ Detailed change log :
     - Fixed APIC MWAIT timer activation
     - APIC: Removed timer handles from save/restore list
 
+  - CMOS
+    - Fixed and improved RTC handling in CMOS and BIOS (based on SF patch by Michele Giacomone))
+
   - PCI
     - Fixed and improved PCI slot config error handling
 
@@ -67,6 +69,7 @@ Detailed change log :
     - Fix to enable TEAC CD-ROM driver to work
     - Allow to change the CD-ROM via the Bochs Ribbon, as well as properly "ejecting" a CD from the guest.
       This fix simulates an open tray and then a closed tray for all CD changes.
+    - Bug fix which now closes the cdrom image file when using win32 configuration
 
   - Hard drive / HD image
     - Allows large VHD image files.

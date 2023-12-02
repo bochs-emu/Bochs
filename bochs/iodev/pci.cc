@@ -457,11 +457,10 @@ bool bx_pci_bridge_c::agp_ap_read_handler(bx_phy_address addr, unsigned len,
       *((Bit32u *) data) = value;
       break;
   }
-  return 1;
+  return true;
 }
 
-Bit32u bx_pci_bridge_c::agp_aperture_read(bx_phy_address addr, unsigned len,
-                                          bool agp)
+Bit32u bx_pci_bridge_c::agp_aperture_read(bx_phy_address addr, unsigned len, bool agp)
 {
   if (BX_PCI_THIS pci_conf[0x51] & 0x02) {
     Bit32u offset = (Bit32u)(addr - pci_bar[0].addr);
@@ -474,20 +473,18 @@ Bit32u bx_pci_bridge_c::agp_aperture_read(bx_phy_address addr, unsigned len,
              page_addr, (Bit16u)page_offset));
     // TODO
   }
-  return 0;
+  return false;
 }
 
-bool bx_pci_bridge_c::agp_ap_write_handler(bx_phy_address addr, unsigned len,
-                                           void *data, void *param)
+bool bx_pci_bridge_c::agp_ap_write_handler(bx_phy_address addr, unsigned len, void *data, void *param)
 {
   bx_pci_bridge_c *class_ptr = (bx_pci_bridge_c*)param;
   Bit32u value = *(Bit32u*)data;
   class_ptr->agp_aperture_write(addr, value, len, 0);
-  return 1;
+  return true;
 }
 
-void bx_pci_bridge_c::agp_aperture_write(bx_phy_address addr, Bit32u value,
-                                         unsigned len, bool agp)
+void bx_pci_bridge_c::agp_aperture_write(bx_phy_address addr, Bit32u value, unsigned len, bool agp)
 {
   if (BX_PCI_THIS pci_conf[0x51] & 0x02) {
     Bit32u offset = (Bit32u)(addr - pci_bar[0].addr);

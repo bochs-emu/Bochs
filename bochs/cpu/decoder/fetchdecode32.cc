@@ -890,7 +890,7 @@ static BxOpcodeDecodeDescriptor32 decode32_descriptor[] =
 #endif
    /* 0F 38 F6 */ { &decoder32_modrm, BxOpcodeTable0F38F6 },
    /* 0F 38 F7 */ { &decoder_ud32, NULL },
-   /* 0F 38 F8 */ { &decoder_ud32, NULL },
+   /* 0F 38 F8 */ { &decoder32_modrm, BxOpcodeTable0F38F8 },
    /* 0F 38 F9 */ { &decoder32_modrm, BxOpcodeTable0F38F9 },
    /* 0F 38 FA */ { &decoder_ud32, NULL },
    /* 0F 38 FB */ { &decoder_ud32, NULL },

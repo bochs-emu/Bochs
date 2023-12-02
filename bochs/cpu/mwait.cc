@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2019  The Bochs Project
+//  Copyright (C) 2019-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -38,7 +38,7 @@
 #if BX_SUPPORT_MONITOR_MWAIT
 bool BX_CPU_C::is_monitor(bx_phy_address begin_addr, unsigned len)
 {
-  if (! BX_CPU_THIS_PTR monitor.armed) return 0;
+  if (! BX_CPU_THIS_PTR monitor.armed()) return 0;
 
   bx_phy_address monitor_begin = BX_CPU_THIS_PTR monitor.monitor_addr;
   bx_phy_address monitor_end = monitor_begin + CACHE_LINE_SIZE - 1;
@@ -114,12 +114,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
 
   // Set the monitor immediately. If monitor is still armed when we MWAIT,
   // the processor will stall.
-
   bx_pc_system.invlpg(paddr);
 
-  BX_CPU_THIS_PTR monitor.arm(paddr);
+  BX_CPU_THIS_PTR monitor.arm(paddr, (i->getIaOpcode() == BX_IA_MONITOR) ? BX_MONITOR_ARMED_BY_MONITOR : BX_MONITOR_ARMED_BY_MONITORX);
 
-  BX_DEBUG(("MONITOR for phys_addr=0x" FMT_PHY_ADDRX, BX_CPU_THIS_PTR monitor.monitor_addr));
+  BX_DEBUG(("%s: for phys_addr=0x" FMT_PHY_ADDRX, i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR monitor.monitor_addr));
 #endif
 
   BX_NEXT_INSTR(i);
@@ -140,7 +139,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
     if (BX_CPU_THIS_PTR in_vmx_guest) {
       if (VMEXIT(VMX_VM_EXEC_CTRL1_MWAIT_VMEXIT)) {
-        VMexit(VMX_VMEXIT_MWAIT, BX_CPU_THIS_PTR monitor.armed);
+        VMexit(VMX_VMEXIT_MWAIT, BX_CPU_THIS_PTR monitor.armed_by_monitor());
       }
     }
 #endif
@@ -166,14 +165,26 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
     if (SVM_INTERCEPT(SVM_INTERCEPT1_MWAIT_ARMED))
-      if (BX_CPU_THIS_PTR monitor.armed) Svm_Vmexit(SVM_VMEXIT_MWAIT_CONDITIONAL);
+      if (BX_CPU_THIS_PTR monitor.armed()) Svm_Vmexit(SVM_VMEXIT_MWAIT_CONDITIONAL);
 
     if (SVM_INTERCEPT(SVM_INTERCEPT1_MWAIT)) Svm_Vmexit(SVM_VMEXIT_MWAIT);
   }
 #endif
 
   // If monitor has already triggered, we just return.
-  if (! BX_CPU_THIS_PTR monitor.armed) {
+  bool monitor_armed = true;
+  if (i->getIaOpcode() == BX_IA_MWAITX) {
+    if (! BX_CPU_THIS_PTR monitor.armed_by_monitorx()) {
+      monitor_armed = false;
+    }
+  }
+  else {
+    if (! BX_CPU_THIS_PTR monitor.armed_by_monitor()) {
+      monitor_armed = false;
+    }
+  }
+
+  if (! monitor_armed) {
     BX_DEBUG(("%s: the MONITOR was not armed or already triggered", i->getIaOpcodeNameShort()));
     BX_NEXT_TRACE(i);
   }
@@ -213,6 +224,134 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
   }
 
   enter_sleep_state(new_state);
+#endif
+
+  BX_NEXT_TRACE(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::UMONITOR_Eq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_MONITOR_MWAIT
+
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_UMWAIT_TPAUSE_VMEXIT)) {
+      BX_DEBUG(("%s: instruction is not enabled in VMX guest", i->getIaOpcodeNameShort()));
+      exception(BX_UD_EXCEPTION, 0);
+    }
+  }
+#endif
+
+#if BX_SUPPORT_X86_64
+  bx_address eaddr = BX_READ_64BIT_REG(i->dst()) & i->asize_mask();
+#else
+  bx_address eaddr = BX_READ_32BIT_REG(i->dst()) & i->asize_mask();
+#endif
+
+  // UMONITOR performs the same segmentation and paging checks as a 1-byte read
+  tickle_read_virtual(i->seg(), eaddr);
+
+  bx_phy_address paddr = BX_CPU_THIS_PTR address_xlation.paddress1;
+#if BX_SUPPORT_MEMTYPE
+  if (BX_CPU_THIS_PTR address_xlation.memtype1 != BX_MEMTYPE_WB) {
+    BX_DEBUG(("UMONITOR for non-WB memory type phys_addr=0x" FMT_PHY_ADDRX, BX_CPU_THIS_PTR monitor.monitor_addr));
+    BX_NEXT_INSTR(i);
+  }
+#endif
+
+  // Set the monitor immediately. If monitor is still armed when we MWAIT,
+  // the processor will stall.
+  bx_pc_system.invlpg(paddr);
+
+  BX_CPU_THIS_PTR monitor.arm(paddr, BX_MONITOR_ARMED_BY_UMONITOR);
+
+  BX_DEBUG(("UMONITOR for phys_addr=0x" FMT_PHY_ADDRX, BX_CPU_THIS_PTR monitor.monitor_addr));
+#endif
+
+  BX_NEXT_INSTR(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::UMWAIT_Ed(bxInstruction_c *i)
+{
+#if BX_SUPPORT_MONITOR_MWAIT
+  BX_DEBUG(("%s instruction executed EAX = 0x%08x EDX = 0x%08x", i->getIaOpcodeNameShort(), EAX, EDX));
+
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_UMWAIT_TPAUSE_VMEXIT)) {
+      BX_DEBUG(("%s: instruction is not enabled in VMX guest", i->getIaOpcodeNameShort()));
+      exception(BX_UD_EXCEPTION, 0);
+    }
+  }
+#endif
+
+  if (BX_CPU_THIS_PTR cr4.get_TSD() && CPL != 0) {
+    BX_ERROR(("%s: not allowed to use instruction !", i->getIaOpcodeNameShort()));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_vmx_guest && VMEXIT(VMX_VM_EXEC_CTRL1_RDTSC_VMEXIT)) {
+    VMexit((i->getIaOpcode() == BX_IA_TPAUSE_Ed) ? VMX_VMEXIT_TPAUSE : VMX_VMEXIT_UMWAIT, 0);
+  }
+#endif
+
+  Bit32u req_sleep_state = BX_READ_32BIT_REG(i->dst());
+  if (req_sleep_state & ~0x1) {
+    BX_ERROR(("%s: incorrect sleep state 0x%08x - #GP(0)", i->getIaOpcodeNameShort(), req_sleep_state));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
+  clearEFlagsOSZAPC();
+
+  if (i->getIaOpcode() != BX_IA_TPAUSE_Ed) {
+    // If monitor has already triggered, we just return.
+    if (! BX_CPU_THIS_PTR monitor.armed_by_umonitor()) {
+      BX_DEBUG(("%s: the UMONITOR was not armed or already triggered", i->getIaOpcodeNameShort()));
+      BX_NEXT_TRACE(i);
+    }
+  }
+  else {
+    BX_CPU_THIS_PTR monitor.reset_umonitor();
+  }
+
+  static bool mwait_is_nop = SIM->get_param_bool(BXPN_MWAIT_IS_NOP)->get();
+  if (mwait_is_nop) {
+    BX_NEXT_TRACE(i);
+  }
+
+  Bit64u tsc = get_Virtual_TSC();
+  Bit64u instr_deadline = GET64_FROM_HI32_LO32(EDX, EAX);
+  if (instr_deadline <= tsc) {
+    BX_DEBUG(("%s: requested deadline is in the past", i->getIaOpcodeNameShort()));
+    BX_NEXT_TRACE(i);
+  }
+  Bit64u instr_delay = instr_deadline - tsc;
+
+  Bit32u umwait_control_max_delay = (BX_CPU_THIS_PTR msr.ia32_umwait_ctrl & ~0x3);
+//bool using_os_deadline = false; // FIXME
+  if (umwait_control_max_delay < instr_delay) {
+    instr_delay = umwait_control_max_delay;
+//  using_os_deadline = true;
+  }
+
+  BX_ASSERT(instr_delay > 0);
+#if BX_SUPPORT_VMX
+  instr_delay = compute_physical_TSC_delay(instr_delay);
+#endif
+
+  BX_CPU_THIS_PTR lapic->set_mwaitx_timer(instr_delay);
+
+  // An external interrupt causes the processor to exit the implementation-dependent optimized state 
+  // regardless of whether maskable-interrupts are inhibited (EFLAGS.IF =0)
+  Bit32u sleep_state = BX_ACTIVITY_STATE_MWAIT_IF;
+
+  BX_INSTR_MWAIT(BX_CPU_ID, BX_CPU_THIS_PTR monitor.monitor_addr, CACHE_LINE_SIZE, sleep_state);
+
+  enter_sleep_state(sleep_state);
+
+//if (using_os_deadline && tsc >= deadline)
+//  assert_CF();
 #endif
 
   BX_NEXT_TRACE(i);
