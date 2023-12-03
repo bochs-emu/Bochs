@@ -386,14 +386,20 @@ memory: guest=512, host=256, block_size=512
 # The start address is optional, since it can be calculated from image size.
 # The Bochs BIOS currently supports only the option "fastboot" to skip the
 # boot menu delay.
+# Please note that if you use the BIOS-bochs-legacy romimage BIOS option,
+# you cannot use a PCI enabled VGA ROM BIOS.
 #=======================================================================
 romimage: file=$BXSHARE/BIOS-bochs-latest, options=fastboot
+#romimage: file=$BXSHARE/BIOS-bochs-legacy
 #romimage: file=$BXSHARE/bios.bin-1.13.0 # http://www.seabios.org/SeaBIOS
 #romimage: file=mybios.bin, address=0xfff80000 # 512k at memory top
 
 #=======================================================================
 # VGAROMIMAGE
 # You now need to load a VGA ROM BIOS into C0000.
+# Please note that if you use the BIOS-bochs-legacy romimage BIOS option,
+# you cannot use a PCI enabled VGA ROM BIOS option such as the cirrus
+# option shown below.
 #=======================================================================
 vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
 #vgaromimage: file=bios/VGABIOS-lgpl-latest-cirrus
