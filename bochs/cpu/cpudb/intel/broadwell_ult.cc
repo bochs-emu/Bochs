@@ -238,14 +238,6 @@ Bit32u broadwell_ult_t::get_vmx_extensions_bitmask(void) const
 #endif
 
 // leaf 0x00000000 //
-void broadwell_ult_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
-{
-  // EAX: highest std function understood by CPUID
-  // EBX: vendor ID string
-  // EDX: vendor ID string
-  // ECX: vendor ID string
-  get_leaf_0(0x14, "GenuineIntel", leaf);
-}
 
 // leaf 0x00000001 //
 void broadwell_ult_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const

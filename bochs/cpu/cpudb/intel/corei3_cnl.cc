@@ -261,14 +261,6 @@ Bit32u corei3_cnl_t::get_vmx_extensions_bitmask(void) const
 #endif
 
 // leaf 0x00000000 //
-void corei3_cnl_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
-{
-  // EAX: highest std function understood by CPUID
-  // EBX: vendor ID string
-  // EDX: vendor ID string
-  // ECX: vendor ID string
-  get_leaf_0(0x16, "GenuineIntel", leaf);
-}
 
 // leaf 0x00000001 //
 void corei3_cnl_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
@@ -672,17 +664,8 @@ void corei3_cnl_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000004 //
 
 // leaf 0x80000005 - L1 Cache and TLB Identifiers (reserved for Intel)
-// leaf 0x80000006 - L2 Cache and TLB Identifiers //
-
-// leaf 0x80000007 //
-void corei3_cnl_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x80000007 - Advanced Power Management
-  leaf->eax = 0;
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0x00000100; // bit 8 - invariant TSC
-}
+// leaf 0x80000006 - L2 Cache and TLB Identifiers
+// leaf 0x80000007 - Advanced Power Management
 
 void corei3_cnl_t::dump_cpuid(void) const
 {

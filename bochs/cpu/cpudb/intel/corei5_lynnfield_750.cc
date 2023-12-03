@@ -172,14 +172,6 @@ Bit32u corei5_lynnfield_750_t::get_vmx_extensions_bitmask(void) const
 #endif
 
 // leaf 0x00000000 //
-void corei5_lynnfield_750_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
-{
-  // EAX: highest std function understood by CPUID
-  // EBX: vendor ID string
-  // EDX: vendor ID string
-  // ECX: vendor ID string
-  get_leaf_0(0xB, "GenuineIntel", leaf);
-}
 
 // leaf 0x00000001 //
 void corei5_lynnfield_750_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
@@ -446,14 +438,6 @@ void corei5_lynnfield_750_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
 }
 
 // leaf 0x80000000 //
-void corei5_lynnfield_750_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
-{
-  // EAX: highest extended function understood by CPUID
-  // EBX: reserved
-  // EDX: reserved
-  // ECX: reserved
-  get_leaf_0(0x80000008, NULL, leaf);
-}
 
 // leaf 0x80000001 //
 void corei5_lynnfield_750_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
