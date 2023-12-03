@@ -48,6 +48,9 @@ Detailed change log :
 - Configure and compile
   - Apply standard CPPFLAGS from environment in all makefiles
 
+- Config interface
+  - Show message box while saving and restoring Bochs state
+
 - Memory
   - Fixed memory handling in volatile BIOS write support
 
