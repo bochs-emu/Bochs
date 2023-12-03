@@ -2580,6 +2580,9 @@ x11_dialog_c* x11_message_box_ml(const char *title, const char *message)
     if (xevent.type == Expose) {
       if (xevent.xexpose.count == 0) {
         xdlg->redraw(xevent.xexpose.display);
+#if BX_HAVE_USLEEP
+        usleep(10000);
+#endif
         count--;
       }
     }
@@ -2744,7 +2747,10 @@ BxEvent *x11_notify_callback(void *unused, BxEvent *event)
       event->param0 = (void*)x11_message_box_ml(event->u.logmsg.prefix, event->u.logmsg.msg);
       return event;
     case BX_SYNC_EVT_ML_MSG_BOX_KILL:
-      delete (x11_dialog_c*)event->param0;
+      if (event->param0) {
+        delete (x11_dialog_c*)event->param0;
+        event->param0 = NULL;
+      }
       return event;
     case BX_SYNC_EVT_ASK_PARAM:
       param = event->u.param.param;
