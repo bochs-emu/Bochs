@@ -604,6 +604,7 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
           path[0] = 0;
           if (BrowseDir("Restore Bochs state from...", path) >= 0) {
             SetCurrentDirectory(path);
+            SIM->reset_all_param();
             SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(1);
             SIM->get_param_string(BXPN_RESTORE_PATH)->set(path);
             if (!SIM->restore_config()) {
@@ -715,8 +716,10 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
       }
       return event;
     case BX_SYNC_EVT_ML_MSG_BOX_KILL:
-      if (event->param0)
+      if (event->param0) {
         DestroyWindow((HWND) event->param0);
+        event->param0 = NULL;
+      }
       return event;
     case BX_SYNC_EVT_ASK_PARAM:
       param = event->u.param.param;

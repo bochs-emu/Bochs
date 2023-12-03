@@ -849,7 +849,7 @@ void bx_cmos_c::update_timeval()
   // update hours
   if (BX_CMOS_THIS s.rtc_mode_12hour) {
     pm_flag = BX_CMOS_THIS s.reg[REG_HOUR] & 0x80;
-    val_bin = bcd_to_bin(BX_CMOS_THIS s.reg[REG_HOUR] & 0x70,
+    val_bin = bcd_to_bin(BX_CMOS_THIS s.reg[REG_HOUR] & 0x7f,
       BX_CMOS_THIS s.rtc_mode_binary);
     if ((val_bin < 12) & (pm_flag > 0)) {
       val_bin += 12;

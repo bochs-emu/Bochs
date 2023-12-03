@@ -88,7 +88,7 @@ int get_floppy_devtype_from_type(int type)
 static Bit64s bx_param_handler(bx_param_c *param, bool set, Bit64s val)
 {
   char pname[BX_PATHNAME_LEN];
-  Bit8u device, vga_ext_id;
+  Bit8u device;
   Bit64s oldval;
 
   bx_list_c *base = (bx_list_c*) param->get_parent();
@@ -120,8 +120,7 @@ static Bit64s bx_param_handler(bx_param_c *param, bool set, Bit64s val)
       if (set) {
         oldval = ((bx_param_enum_c*)param)->get();
         if (val != oldval) {
-          vga_ext_id = (Bit8u)((bx_param_enum_c*)param)->get();
-          PLUG_unload_opt_plugin(vga_extension_plugins[vga_ext_id]);
+          PLUG_unload_opt_plugin(vga_extension_plugins[(Bit8u)oldval]);
           PLUG_load_plugin_var(vga_extension_plugins[(Bit8u)val], PLUGTYPE_VGA);
         }
       }

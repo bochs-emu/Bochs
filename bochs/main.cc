@@ -1387,16 +1387,21 @@ void bx_init_hardware()
   bx_pc_system.Reset(BX_RESET_HARDWARE);
 
   if (SIM->get_param_bool(BXPN_RESTORE_FLAG)->get()) {
+    void *hwnd = SIM->ml_message_box("Please wait.", "Waiting for the 'restore state' to finish.\n"
+                 "Depending on the size of your emulated disk images, this may be a little while.");
     if (SIM->restore_hardware()) {
       if (!SIM->restore_logopts()) {
+        SIM->ml_message_box_kill(hwnd);
         BX_PANIC(("cannot restore log options"));
         SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(0);
       }
       bx_sr_after_restore_state();
     } else {
+      SIM->ml_message_box_kill(hwnd);
       BX_PANIC(("cannot restore hardware state"));
       SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(0);
     }
+    SIM->ml_message_box_kill(hwnd);
   }
 
   bx_gui->init_signal_handlers();

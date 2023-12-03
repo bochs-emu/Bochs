@@ -500,6 +500,7 @@ int bx_text_config_interface(int menu)
             case 5:
               if (ask_string("\nWhat is the path to restore the Bochs state from?\nTo cancel, type 'none'. [%s] ", "none", sr_path) >= 0) {
                 if (strcmp(sr_path, "none")) {
+                  SIM->reset_all_param();
                   SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(1);
                   SIM->get_param_string(BXPN_RESTORE_PATH)->set(sr_path);
                   if (!SIM->restore_config()) {
