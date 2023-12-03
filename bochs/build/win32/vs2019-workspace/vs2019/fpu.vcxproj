@@ -85,7 +85,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>..;..\instrument\stubs;.\stubs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;NDEBUG;_WINDOWS;PARANOID;DEBUGGING;NO_ASSEMBLER;USE_WITH_CPU_SIM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;_WINDOWS;PARANOID;DEBUGGING;NO_ASSEMBLER;USE_WITH_CPU_SIM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeaderOutputFile>.\..\obj-debug\fpu\fpu.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\..\obj-debug\fpu\</AssemblerListingLocation>
@@ -115,7 +115,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>..;..\instrument\stubs;.\stubs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;NDEBUG;_WINDOWS;PARANOID;DEBUGGING;NO_ASSEMBLER;USE_WITH_CPU_SIM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;_WINDOWS;PARANOID;DEBUGGING;NO_ASSEMBLER;USE_WITH_CPU_SIM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeaderOutputFile>.\..\obj-debug\fpu\fpu.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\..\obj-debug\fpu\</AssemblerListingLocation>
