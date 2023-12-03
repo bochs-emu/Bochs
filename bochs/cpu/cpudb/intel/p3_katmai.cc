@@ -54,7 +54,7 @@ void p3_katmai_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_func
 {
   switch(function) {
   case 0x00000000:
-    get_std_cpuid_leaf_0(leaf);
+    get_leaf_0(0x3, "GenuineIntel", leaf);
     return;
   case 0x00000001:
     get_std_cpuid_leaf_1(leaf);
@@ -62,18 +62,14 @@ void p3_katmai_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_func
   case 0x00000002:
     get_std_cpuid_leaf_2(leaf);
     return;
-  case 0x00000003:
+  case 0x00000003: // Processor Serial Number
   default:
-    get_std_cpuid_leaf_3(leaf);
+    get_leaf(leaf, 0x00000000, 0x00000000, 0x00000000, 0x00000000);
     return;
   }
 }
 
 // leaf 0x00000000 //
-void p3_katmai_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
-{
-  get_leaf_0(0x3, "GenuineIntel", leaf);
-}
 
 // leaf 0x00000001 //
 void p3_katmai_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
@@ -136,15 +132,7 @@ void p3_katmai_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf) const
   leaf->edx = 0x0C040843;
 }
 
-// leaf 0x00000003 //
-void p3_katmai_t::get_std_cpuid_leaf_3(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x00000003 - Processor Serial Number
-  leaf->eax = 0;
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0;
-}
+// leaf 0x00000003 - Processor Serial Number //
 
 void p3_katmai_t::dump_cpuid(void) const
 {

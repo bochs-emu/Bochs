@@ -1285,13 +1285,13 @@ void bx_cpuid_t::dump_cpuid_leaf(unsigned function, unsigned subfunction) const
 
 void bx_cpuid_t::dump_cpuid(unsigned max_std_leaf, unsigned max_ext_leaf) const
 {
-  for (unsigned std_leaf=0; std_leaf<=max_std_leaf; std_leaf++) {
+  for (unsigned std_leaf=0; std_leaf <= max_std_leaf; std_leaf++) {
     dump_cpuid_leaf(std_leaf);
   }
 
   if (max_ext_leaf == 0) return;
 
-  for (unsigned ext_leaf=0x80000000; ext_leaf<=(0x80000000 + max_ext_leaf); ext_leaf++) {
+  for (unsigned ext_leaf=0x80000000; ext_leaf <= max_ext_leaf; ext_leaf++) {
     dump_cpuid_leaf(ext_leaf);
   }
 }

@@ -126,7 +126,7 @@ protected:
 
   void get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const;
 
-  BX_CPP_INLINE void get_leaf(cpuid_function_t *leaf, Bit32u eax, Bit32u ebx, Bit32u ecx, Bit32u edx)
+  BX_CPP_INLINE void get_leaf(cpuid_function_t *leaf, Bit32u eax, Bit32u ebx, Bit32u ecx, Bit32u edx) const
   {
     leaf->eax = eax;
     leaf->ebx = ebx;

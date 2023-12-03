@@ -116,6 +116,9 @@ corei3_cnl_t::corei3_cnl_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 #if BX_SUPPORT_PKEYS
   enable_cpu_extension(BX_ISA_PKU);
 #endif
+
+  max_std_leaf = 0x16;
+  max_ext_leaf = 0x80000008;
 }
 
 void corei3_cnl_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
@@ -127,7 +130,7 @@ void corei3_cnl_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_fun
 
   switch(function) {
   case 0x80000000:
-    get_ext_cpuid_leaf_0(leaf);
+    get_leaf_0(max_ext_leaf, NULL, leaf); // highest extended function understood by CPUID
     return;
   case 0x80000001:
     get_ext_cpuid_leaf_1(leaf);
@@ -140,23 +143,23 @@ void corei3_cnl_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_fun
   case 0x80000005:
     get_reserved_leaf(leaf);
     return;
-  case 0x80000006:
-    get_ext_cpuid_leaf_6(leaf);
+  case 0x80000006: // CPUID leaf 0x80000006 - L2 Cache and TLB Identifiers
+    get_leaf(leaf, 0x00000000, 0x00000000, 0x01006040, 0x00000000);
     return;
-  case 0x80000007:
-    get_ext_cpuid_leaf_7(leaf);
+  case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management leaf
+    get_leaf(leaf, 0x00000000, 0x00000000, 0x00000000, 0x00000100); // EDX[8] - invariant TSC
     return;
   case 0x80000008:
     get_ext_cpuid_leaf_8(leaf);
     return;
   case 0x00000000:
-    get_std_cpuid_leaf_0(leaf);
+    get_leaf_0(max_std_leaf, "GenuineIntel", leaf);
     return;
   case 0x00000001:
     get_std_cpuid_leaf_1(leaf);
     return;
-  case 0x00000002:
-    get_std_cpuid_leaf_2(leaf);
+  case 0x00000002: // CPUID leaf 0x00000002 - Cache and TLB Descriptors
+    get_leaf(leaf, 0x76036301, 0x00f0b5ff, 0x00000000, 0x00c30000);
     return;
   case 0x00000003:
     get_reserved_leaf(leaf);
@@ -164,11 +167,11 @@ void corei3_cnl_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_fun
   case 0x00000004:
     get_std_cpuid_leaf_4(subfunction, leaf);
     return;
-  case 0x00000005:
+  case 0x00000005: // CPUID leaf 0x00000005 - MONITOR/MWAIT leaf
     get_std_cpuid_leaf_5(leaf);
     return;
-  case 0x00000006:
-    get_std_cpuid_leaf_6(leaf);
+  case 0x00000006: // CPUID leaf 0x00000006 - Thermal and Power Management Leaf
+    get_leaf(leaf, 0x00002ff7, 0x00000002, 0x00000009, 0x00000000);
     return;
   case 0x00000007:
     get_std_cpuid_leaf_7(subfunction, leaf);
@@ -177,7 +180,7 @@ void corei3_cnl_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_fun
   case 0x00000009:
     get_reserved_leaf(leaf);
     return;
-  case 0x0000000A:
+  case 0x0000000A: // CPUID leaf 0x0000000A - Architectural Performance Monitor
     get_std_cpuid_leaf_A(leaf);
     return;
   case 0x0000000B:
@@ -190,20 +193,20 @@ void corei3_cnl_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_fun
     get_std_cpuid_xsave_leaf(subfunction, leaf);
     return;
   case 0x0000000E:
-  case 0x0000000F:
-  case 0x00000010:
+  case 0x0000000F: // CPUID leaf 0x0000000F - Intel Resource Director Technonology
+  case 0x00000010: // CPUID leaf 0x00000010 - Intel Resource Director Technonology
   case 0x00000011:
-  case 0x00000012:
+  case 0x00000012: // SGX Capability
   case 0x00000013:
-  case 0x00000014:
+  case 0x00000014: // Processor Trace
     get_reserved_leaf(leaf);
     return;
-  case 0x00000015:
-    get_std_cpuid_leaf_15(leaf);
+  case 0x00000015: // CPUID leaf 0x00000015 - Time Stamp Counter and Core Crystal Clock Information Leaf
+    get_leaf(leaf, 0x00000002, 0x000000b8, 0x016e3600, 0x00000000);
     return;
-  case 0x00000016:
+  case 0x00000016: // CPUID leaf 0x00000016 - Processor Frequency Information Leaf
   default:
-    get_std_cpuid_leaf_16(leaf);
+    get_leaf(leaf, 0x00000898, 0x00000c80, 0x00000064, 0x00000000);
     return;
   }
 }
@@ -375,16 +378,7 @@ void corei3_cnl_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
                                        BX_CPUID_STD1_EDX_PBE);
 }
 
-// leaf 0x00000002 //
-void corei3_cnl_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x00000002 - Cache and TLB Descriptors
-  leaf->eax = 0x76036301;
-  leaf->ebx = 0x00f0b5ff;
-  leaf->ecx = 0x00000000;
-  leaf->edx = 0x00c30000;
-}
-
+// leaf 0x00000002 - Cache and TLB Descriptors //
 // leaf 0x00000003 - Processor Serial Number (not supported) //
 
 // leaf 0x00000004 //
@@ -480,15 +474,7 @@ void corei3_cnl_t::get_std_cpuid_leaf_5(cpuid_function_t *leaf) const
 #endif
 }
 
-// leaf 0x00000006 //
-void corei3_cnl_t::get_std_cpuid_leaf_6(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x00000006 - Thermal and Power Management Leaf
-  leaf->eax = 0x00002ff7;
-  leaf->ebx = 0x00000002;
-  leaf->ecx = 0x00000009;
-  leaf->edx = 0x00000000;
-}
+// leaf 0x00000006 - Thermal and Power Management Leaf //
 
 // leaf 0x00000007 //
 void corei3_cnl_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *leaf) const
@@ -611,9 +597,7 @@ void corei3_cnl_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
 }
 
 // leaf 0x0000000C reserved //
-
 // leaf 0x0000000D - XSAVE //
-
 // leaf 0x0000000E reserved //
 // leaf 0x0000000F Intel Resource Director Technology (Intel RDT) Monitoring Enumeration (not implemented) //
 // leaf 0x00000010 Intel Resource Director Technology (Intel RDT) Allocation Enumeration (not implemented) //
@@ -621,34 +605,10 @@ void corei3_cnl_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
 // leaf 0x00000012 SGX (not implemented) //
 // leaf 0x00000013 reserved //
 // leaf 0x00000014 Intel Processor Trace (not implemented) //
-
-void corei3_cnl_t::get_std_cpuid_leaf_15(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x000000015 - Time Stamp Counter and Nominal Core Crystal Clock Information
-  leaf->eax = 0x00000002;
-  leaf->ebx = 0x000000b8;
-  leaf->ecx = 0x016e3600;
-  leaf->edx = 0x00000000;
-}
-
-void corei3_cnl_t::get_std_cpuid_leaf_16(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x000000016 - Processor Frequency Information
-  leaf->eax = 0x00000898;
-  leaf->ebx = 0x00000c80;
-  leaf->ecx = 0x00000064;
-  leaf->edx = 0x00000000;
-}
+// leaf 0x00000015 Time Stamp Counter and Nominal Core Crystal Clock Information //
+// leaf 0x00000016 Processor Frequency Information //
 
 // leaf 0x80000000 //
-void corei3_cnl_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
-{
-  // EAX: highest extended function understood by CPUID
-  // EBX: reserved
-  // EDX: reserved
-  // ECX: reserved
-  get_leaf_0(0x80000008, NULL, leaf);
-}
 
 // leaf 0x80000001 //
 void corei3_cnl_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
@@ -712,21 +672,12 @@ void corei3_cnl_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000004 //
 
 // leaf 0x80000005 - L1 Cache and TLB Identifiers (reserved for Intel)
-
-// leaf 0x80000006 //
-void corei3_cnl_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x800000006 - L2 Cache and TLB Identifiers
-  leaf->eax = 0x00000000;
-  leaf->ebx = 0x00000000;
-  leaf->ecx = 0x01006040;
-  leaf->edx = 0x00000000;
-}
+// leaf 0x80000006 - L2 Cache and TLB Identifiers //
 
 // leaf 0x80000007 //
 void corei3_cnl_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
 {
-  // CPUID function 0x800000007 - Advanced Power Management
+  // CPUID function 0x80000007 - Advanced Power Management
   leaf->eax = 0;
   leaf->ebx = 0;
   leaf->ecx = 0;
@@ -735,7 +686,7 @@ void corei3_cnl_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
 
 void corei3_cnl_t::dump_cpuid(void) const
 {
-  bx_cpuid_t::dump_cpuid(0x16, 0x8);
+  bx_cpuid_t::dump_cpuid(max_std_leaf, max_ext_leaf);
 }
 
 bx_cpuid_t *create_corei3_cnl_cpuid(BX_CPU_C *cpu) { return new corei3_cnl_t(cpu); }

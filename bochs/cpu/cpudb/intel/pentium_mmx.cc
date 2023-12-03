@@ -47,7 +47,7 @@ void pentium_mmx_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_fu
 {
   switch(function) {
   case 0x00000000:
-    get_std_cpuid_leaf_0(leaf);
+    get_leaf_0(0x1, "GenuineIntel", leaf);
     return;
   case 0x00000001:
   default:
@@ -57,10 +57,6 @@ void pentium_mmx_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_fu
 }
 
 // leaf 0x00000000 //
-void pentium_mmx_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
-{
-  get_leaf_0(0x1, "GenuineIntel", leaf);
-}
 
 // leaf 0x00000001 //
 void pentium_mmx_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const

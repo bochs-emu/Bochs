@@ -51,6 +51,9 @@ p4_willamette_t::p4_willamette_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_MTRR);
   enable_cpu_extension(BX_ISA_PAT);
   enable_cpu_extension(BX_ISA_XAPIC);
+
+  max_std_leaf = 0x2;
+  max_ext_leaf = 0x80000004;
 }
 
 void p4_willamette_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
@@ -60,7 +63,7 @@ void p4_willamette_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_
 
   switch(function) {
   case 0x80000000:
-    get_ext_cpuid_leaf_0(leaf);
+    get_leaf_0(max_ext_leaf, NULL, leaf); // highest extended function understood by CPUID
     return;
   case 0x80000001:
     get_reserved_leaf(leaf);
@@ -71,7 +74,7 @@ void p4_willamette_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_
     get_ext_cpuid_brand_string_leaf(brand_string, function, leaf);
     return;
   case 0x00000000:
-    get_std_cpuid_leaf_0(leaf);
+    get_leaf_0(max_std_leaf, "GenuineIntel", leaf);
     return;
   case 0x00000001:
     get_std_cpuid_leaf_1(leaf);
@@ -84,10 +87,6 @@ void p4_willamette_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_
 }
 
 // leaf 0x00000000 //
-void p4_willamette_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
-{
-  get_leaf_0(0x2, "GenuineIntel", leaf);
-}
 
 // leaf 0x00000001 //
 void p4_willamette_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
@@ -169,22 +168,14 @@ void p4_willamette_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf) const
 }
 
 // leaf 0x80000000 //
-void p4_willamette_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
-{
-  // EAX: highest extended function understood by CPUID
-  // EBX: reserved
-  // EDX: reserved
-  // ECX: reserved
-  get_leaf_0(0x80000004, NULL, leaf);
-}
-
+// leaf 0x80000001 //
 // leaf 0x80000002 //
 // leaf 0x80000003 //
 // leaf 0x80000004 //
 
 void p4_willamette_t::dump_cpuid(void) const
 {
-  bx_cpuid_t::dump_cpuid(0x2, 0x4);
+  bx_cpuid_t::dump_cpuid(max_std_leaf, max_ext_leaf);
 }
 
 bx_cpuid_t *create_p4_willamette_cpuid(BX_CPU_C *cpu) { return new p4_willamette_t(cpu); }

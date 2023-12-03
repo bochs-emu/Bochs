@@ -99,6 +99,9 @@ broadwell_ult_t::broadwell_ult_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_RDSEED);
   enable_cpu_extension(BX_ISA_ADX);
   enable_cpu_extension(BX_ISA_SMAP);
+
+  max_std_leaf = 0x14;
+  max_ext_leaf = 0x80000008;
 }
 
 void broadwell_ult_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
@@ -110,7 +113,7 @@ void broadwell_ult_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_
 
   switch(function) {
   case 0x80000000:
-    get_ext_cpuid_leaf_0(leaf);
+    get_leaf_0(max_ext_leaf, NULL, leaf);
     return;
   case 0x80000001:
     get_ext_cpuid_leaf_1(leaf);
@@ -126,20 +129,20 @@ void broadwell_ult_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_
   case 0x80000006:
     get_ext_cpuid_leaf_6(leaf);
     return;
-  case 0x80000007:
-    get_ext_cpuid_leaf_7(leaf);
+  case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management leaf
+    get_leaf(leaf, 0x00000000, 0x00000000, 0x00000000, 0x00000100); // EDX[8] - invariant TSC
     return;
   case 0x80000008:
     get_ext_cpuid_leaf_8(leaf);
     return;
   case 0x00000000:
-    get_std_cpuid_leaf_0(leaf);
+    get_leaf_0(max_std_leaf, "GenuineIntel", leaf);
     return;
   case 0x00000001:
     get_std_cpuid_leaf_1(leaf);
     return;
-  case 0x00000002:
-    get_std_cpuid_leaf_2(leaf);
+  case 0x00000002: // CPUID leaf 0x00000002 - Cache and TLB Descriptors
+    get_leaf(leaf, 0x76036301, 0x00f0b5ff, 0x00000000, 0x00c30000);
     return;
   case 0x00000003:
     get_reserved_leaf(leaf);
@@ -352,16 +355,7 @@ void broadwell_ult_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
                                        BX_CPUID_STD1_EDX_PBE);
 }
 
-// leaf 0x00000002 //
-void broadwell_ult_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x00000002 - Cache and TLB Descriptors
-  leaf->eax = 0x76036301;
-  leaf->ebx = 0x00f0b5ff;
-  leaf->ecx = 0x00000000;
-  leaf->edx = 0x00c30000;
-}
-
+// leaf 0x00000002 - Cache and TLB Descriptors //
 // leaf 0x00000003 - Processor Serial Number (not supported) //
 
 // leaf 0x00000004 //
@@ -564,14 +558,6 @@ void broadwell_ult_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
 // leaf 0x0000000D - XSAVE //
 
 // leaf 0x80000000 //
-void broadwell_ult_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
-{
-  // EAX: highest extended function understood by CPUID
-  // EBX: reserved
-  // EDX: reserved
-  // ECX: reserved
-  get_leaf_0(0x80000008, NULL, leaf);
-}
 
 // leaf 0x80000001 //
 void broadwell_ult_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
@@ -635,32 +621,23 @@ void broadwell_ult_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000002 //
 // leaf 0x80000003 //
 // leaf 0x80000004 //
-
 // leaf 0x80000005 - L1 Cache and TLB Identifiers (reserved for Intel)
 
-// leaf 0x80000006 //
+// leaf 0x80000006 - L2 Cache and TLB Identifiers //
 void broadwell_ult_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
 {
-  // CPUID function 0x800000006 - L2 Cache and TLB Identifiers
+  // CPUID function 0x80000006 - L2 Cache and TLB Identifiers
   leaf->eax = 0x00000000;
   leaf->ebx = 0x00000000;
   leaf->ecx = 0x01006040;
   leaf->edx = 0x00000000;
 }
 
-// leaf 0x80000007 //
-void broadwell_ult_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x800000007 - Advanced Power Management
-  leaf->eax = 0;
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0x00000100; // bit 8 - invariant TSC
-}
+// leaf 0x80000007 - Advanced Power Management //
 
 void broadwell_ult_t::dump_cpuid(void) const
 {
-  bx_cpuid_t::dump_cpuid(0x14, 0x8);
+  bx_cpuid_t::dump_cpuid(max_std_leaf, max_ext_leaf);
 }
 
 bx_cpuid_t *create_broadwell_ult_cpuid(BX_CPU_C *cpu) { return new broadwell_ult_t(cpu); }

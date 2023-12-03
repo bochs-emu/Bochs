@@ -389,7 +389,7 @@ void phenom_8650_toliman_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000003 //
 // leaf 0x80000004 //
 
-// leaf 0x80000005 //
+// leaf 0x80000005 - L1 Cache and TLB Identifiers //
 void phenom_8650_toliman_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
 {
   // CPUID function 0x800000005 - L1 Cache and TLB Identifiers
@@ -399,20 +399,20 @@ void phenom_8650_toliman_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
   leaf->edx = 0x40020140;
 }
 
-// leaf 0x80000006 //
+// leaf 0x80000006 - L2 Cache and TLB Identifiers //
 void phenom_8650_toliman_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
 {
-  // CPUID function 0x800000006 - L2 Cache and TLB Identifiers
+  // CPUID function 0x80000006 - L2 Cache and TLB Identifiers
   leaf->eax = 0x20800000;
   leaf->ebx = 0x42004200;
   leaf->ecx = 0x02008140;
   leaf->edx = 0x0010A140;
 }
 
-// leaf 0x80000007 //
+// leaf 0x80000007 - Advanced Power Management //
 void phenom_8650_toliman_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
 {
-  // CPUID function 0x800000007 - Advanced Power Management
+  // CPUID function 0x80000007 - Advanced Power Management
   leaf->eax = 0;
   leaf->ebx = 0;
   leaf->ecx = 0;
@@ -485,7 +485,7 @@ void phenom_8650_toliman_t::get_ext_cpuid_leaf_1A(cpuid_function_t *leaf) const
 
 void phenom_8650_toliman_t::dump_cpuid(void) const
 {
-  bx_cpuid_t::dump_cpuid(BX_SUPPORT_MONITOR_MWAIT ? 0x5 : 0x1, 0x1A);
+  bx_cpuid_t::dump_cpuid(BX_SUPPORT_MONITOR_MWAIT ? 0x5 : 0x1, 0x8000001A);
 }
 
 bx_cpuid_t *create_phenom_8650_toliman_cpuid(BX_CPU_C *cpu) { return new phenom_8650_toliman_t(cpu); }

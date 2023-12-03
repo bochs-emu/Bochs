@@ -85,6 +85,9 @@ corei7_sandy_bridge_2600k_t::corei7_sandy_bridge_2600k_t(BX_CPU_C *cpu): bx_cpui
 #if BX_SUPPORT_AVX
   enable_cpu_extension(BX_ISA_AVX);
 #endif
+
+  max_std_leaf = 0xD;
+  max_ext_leaf = 0x80000008;
 }
 
 void corei7_sandy_bridge_2600k_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
@@ -97,7 +100,7 @@ void corei7_sandy_bridge_2600k_t::get_cpuid_leaf(Bit32u function, Bit32u subfunc
 
   switch(function) {
   case 0x80000000:
-    get_ext_cpuid_leaf_0(leaf);
+    get_leaf_0(max_ext_leaf, NULL, leaf); // highest extended function understood by CPUID
     return;
   case 0x80000001:
     get_ext_cpuid_leaf_1(leaf);
@@ -113,14 +116,14 @@ void corei7_sandy_bridge_2600k_t::get_cpuid_leaf(Bit32u function, Bit32u subfunc
   case 0x80000006:
     get_ext_cpuid_leaf_6(leaf);
     return;
-  case 0x80000007:
-    get_ext_cpuid_leaf_7(leaf);
+  case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management leaf
+    get_leaf(leaf, 0x00000000, 0x00000000, 0x00000000, 0x00000100); // EDX[8] - invariant TSC
     return;
   case 0x80000008:
     get_ext_cpuid_leaf_8(leaf);
     return;
   case 0x00000000:
-    get_std_cpuid_leaf_0(leaf);
+    get_leaf_0(max_std_leaf, "GenuineIntel", leaf);
     return;
   case 0x00000001:
     get_std_cpuid_leaf_1(leaf);
@@ -205,14 +208,6 @@ Bit32u corei7_sandy_bridge_2600k_t::get_vmx_extensions_bitmask(void) const
 #endif
 
 // leaf 0x00000000 //
-void corei7_sandy_bridge_2600k_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
-{
-  // EAX: highest std function understood by CPUID
-  // EBX: vendor ID string
-  // EDX: vendor ID string
-  // ECX: vendor ID string
-  get_leaf_0(0xD, "GenuineIntel", leaf);
-}
 
 // leaf 0x00000001 //
 void corei7_sandy_bridge_2600k_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
@@ -483,14 +478,6 @@ void corei7_sandy_bridge_2600k_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) c
 // leaf 0x0000000D - XSAVE //
 
 // leaf 0x80000000 //
-void corei7_sandy_bridge_2600k_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
-{
-  // EAX: highest extended function understood by CPUID
-  // EBX: reserved
-  // EDX: reserved
-  // ECX: reserved
-  get_leaf_0(0x80000008, NULL, leaf);
-}
 
 // leaf 0x80000001 //
 void corei7_sandy_bridge_2600k_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
@@ -539,31 +526,22 @@ void corei7_sandy_bridge_2600k_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) c
 
 // leaf 0x80000005 - L1 Cache and TLB Identifiers (reserved for Intel)
 
-// leaf 0x80000006 //
+// leaf 0x80000006 - L2 Cache and TLB Identifiers //
 void corei7_sandy_bridge_2600k_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
 {
-  // CPUID function 0x800000006 - L2 Cache and TLB Identifiers
+  // CPUID function 0x80000006 - L2 Cache and TLB Identifiers
   leaf->eax = 0x00000000;
   leaf->ebx = 0x00000000;
   leaf->ecx = 0x01006040;
   leaf->edx = 0x00000000;
 }
 
-// leaf 0x80000007 //
-void corei7_sandy_bridge_2600k_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x800000007 - Advanced Power Management
-  leaf->eax = 0;
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0x00000100; // bit 8 - invariant TSC
-}
-
+// leaf 0x80000007 - Advanced Power Management //
 // leaf 0x80000008 //
 
 void corei7_sandy_bridge_2600k_t::dump_cpuid(void) const
 {
-  bx_cpuid_t::dump_cpuid(0xD, 0x8);
+  bx_cpuid_t::dump_cpuid(max_std_leaf, max_ext_leaf);
 }
 
 bx_cpuid_t *create_corei7_sandy_bridge_2600k_cpuid(BX_CPU_C *cpu) { return new corei7_sandy_bridge_2600k_t(cpu); }

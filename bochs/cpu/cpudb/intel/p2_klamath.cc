@@ -52,7 +52,7 @@ void p2_klamath_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_fun
 {
   switch(function) {
   case 0x00000000:
-    get_std_cpuid_leaf_0(leaf);
+    get_leaf_0(0x2, "GenuineIntel", leaf);
     return;
   case 0x00000001:
     get_std_cpuid_leaf_1(leaf);
@@ -65,10 +65,6 @@ void p2_klamath_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_fun
 }
 
 // leaf 0x00000000 //
-void p2_klamath_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
-{
-  get_leaf_0(0x2, "GenuineIntel", leaf);
-}
 
 // leaf 0x00000001 //
 void p2_klamath_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
@@ -121,7 +117,7 @@ void p2_klamath_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   leaf->edx = get_std_cpuid_leaf_1_edx();
 }
 
-// leaf 0x00000002 //
+// leaf 0x00000002 - Cache and TLB Descriptors //
 void p2_klamath_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000002 - Cache and TLB Descriptors

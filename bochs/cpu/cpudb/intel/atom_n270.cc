@@ -62,6 +62,9 @@ atom_n270_t::atom_n270_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_PAT);
   enable_cpu_extension(BX_ISA_XAPIC);
   enable_cpu_extension(BX_ISA_MOVBE);
+
+  max_std_leaf = 0xA;
+  max_ext_leaf = 0x80000008;
 }
 
 void atom_n270_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
@@ -74,7 +77,7 @@ void atom_n270_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_func
 
   switch(function) {
   case 0x80000000:
-    get_ext_cpuid_leaf_0(leaf);
+    get_leaf_0(max_ext_leaf, NULL, leaf);
     return;
   case 0x80000001:
     get_ext_cpuid_leaf_1(leaf);
@@ -87,23 +90,23 @@ void atom_n270_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_func
   case 0x80000005:
     get_reserved_leaf(leaf);
     return;
-  case 0x80000006:
-    get_ext_cpuid_leaf_6(leaf);
+  case 0x80000006: // CPUID leaf 0x80000006 - L2 Cache and TLB Identifiers
+    get_leaf(leaf, 0x00000000, 0x00000000, 0x02008040, 0x00000000);
     return;
-  case 0x80000007:
-    get_ext_cpuid_leaf_7(leaf);
+  case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management
+    get_reserved_leaf(leaf);
     return;
   case 0x80000008:
     get_ext_cpuid_leaf_8(leaf);
     return;
   case 0x00000000:
-    get_std_cpuid_leaf_0(leaf);
+    get_leaf_0(max_std_leaf, "GenuineIntel", leaf);
     return;
   case 0x00000001:
     get_std_cpuid_leaf_1(leaf);
     return;
-  case 0x00000002:
-    get_std_cpuid_leaf_2(leaf);
+  case 0x00000002: // CPUID leaf 0x00000002 - Cache and TLB Descriptors
+    get_leaf(leaf, 0x4FBA5901, 0x0E3080C0, 0x00000000, 0x00000000);
     return;
   case 0x00000003:
     get_reserved_leaf(leaf);
@@ -114,8 +117,8 @@ void atom_n270_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_func
   case 0x00000005:
     get_std_cpuid_leaf_5(leaf);
     return;
-  case 0x00000006:
-    get_std_cpuid_leaf_6(leaf);
+  case 0x00000006: // CPUID leaf 0x00000006 - Thermal and Power Management Leaf
+    get_leaf(leaf, 0x00000001, 0x00000002, 0x00000001, 0x00000000);
     return;
   case 0x00000007:
   case 0x00000008:
@@ -130,14 +133,6 @@ void atom_n270_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_func
 }
 
 // leaf 0x00000000 //
-void atom_n270_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
-{
-  // EAX: highest std function understood by CPUID
-  // EBX: vendor ID string
-  // EDX: vendor ID string
-  // ECX: vendor ID string
-  get_leaf_0(0xA, "GenuineIntel", leaf);
-}
 
 // leaf 0x00000001 //
 void atom_n270_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
@@ -247,16 +242,7 @@ void atom_n270_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
                                        BX_CPUID_STD1_EDX_PBE);
 }
 
-// leaf 0x00000002 //
-void atom_n270_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x00000002 - Cache and TLB Descriptors
-  leaf->eax = 0x4FBA5901;
-  leaf->ebx = 0x0E3080C0;
-  leaf->ecx = 0x00000000;
-  leaf->edx = 0x00000000;
-}
-
+// leaf 0x00000002 - Cache and TLB Descriptors //
 // leaf 0x00000003 - Processor Serial Number (not supported) //
 
 // leaf 0x00000004 //
@@ -346,16 +332,7 @@ void atom_n270_t::get_std_cpuid_leaf_5(cpuid_function_t *leaf) const
 #endif
 }
 
-// leaf 0x00000006 //
-void atom_n270_t::get_std_cpuid_leaf_6(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x00000006 - Thermal and Power Management Leaf
-  leaf->eax = 0x00000001;
-  leaf->ebx = 0x00000002;
-  leaf->ecx = 0x00000001;
-  leaf->edx = 0x00000000;
-}
-
+// leaf 0x00000006 Thermal and Power Management Leaf //
 // leaf 0x00000007 not supported                     //
 // leaf 0x00000008 reserved                          //
 // leaf 0x00000009 direct cache access not supported //
@@ -398,14 +375,6 @@ void atom_n270_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
 }
 
 // leaf 0x80000000 //
-void atom_n270_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
-{
-  // EAX: highest extended function understood by CPUID
-  // EBX: reserved
-  // EDX: reserved
-  // ECX: reserved
-  get_leaf_0(0x80000008, NULL, leaf);
-}
 
 // leaf 0x80000001 //
 void atom_n270_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
@@ -451,34 +420,14 @@ void atom_n270_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000002 //
 // leaf 0x80000003 //
 // leaf 0x80000004 //
-
 // leaf 0x80000005 - L1 Cache and TLB Identifiers (reserved for Intel)
-
-// leaf 0x80000006 //
-void atom_n270_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x800000006 - L2 Cache and TLB Identifiers
-  leaf->eax = 0x00000000;
-  leaf->ebx = 0x00000000;
-  leaf->ecx = 0x02008040;
-  leaf->edx = 0x00000000;
-}
-
+// leaf 0x80000006 - L2 Cache and TLB Identifiers
 // leaf 0x80000007 //
-void atom_n270_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x800000007 - Advanced Power Management
-  leaf->eax = 0;
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0;
-}
-
 // leaf 0x80000008 //
 
 void atom_n270_t::dump_cpuid(void) const
 {
-  bx_cpuid_t::dump_cpuid(0xA, 0x8);
+  bx_cpuid_t::dump_cpuid(max_std_leaf, max_ext_leaf);
 }
 
 bx_cpuid_t *create_atom_n270_cpuid(BX_CPU_C *cpu) { return new atom_n270_t(cpu); }
