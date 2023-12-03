@@ -79,9 +79,9 @@ void p4_willamette_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_
   case 0x00000001:
     get_std_cpuid_leaf_1(leaf);
     return;
-  case 0x00000002:
+  case 0x00000002: // CPUID leaf 0x00000002 - Cache and TLB Descriptors
   default:
-    get_std_cpuid_leaf_2(leaf);
+    get_leaf(leaf, 0x665B5001, 0x00000000, 0x00000000, 0x007A7040);
     return;
   }
 }
@@ -157,15 +157,7 @@ void p4_willamette_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 #endif
 }
 
-// leaf 0x00000002 //
-void p4_willamette_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x00000002 - Cache and TLB Descriptors
-  leaf->eax = 0x665B5001;
-  leaf->ebx = 0x00000000;
-  leaf->ecx = 0x00000000;
-  leaf->edx = 0x007A7040;
-}
+// leaf 0x00000002 - Cache and TLB Descriptors //
 
 // leaf 0x80000000 //
 // leaf 0x80000001 //

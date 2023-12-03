@@ -125,8 +125,8 @@ void corei7_haswell_4770_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, 
   case 0x80000005:
     get_reserved_leaf(leaf);
     return;
-  case 0x80000006:
-    get_ext_cpuid_leaf_6(leaf);
+  case 0x80000006: // CPUID leaf 0x80000006 - L2 Cache and TLB Identifiers
+    get_leaf(leaf, 0x00000000, 0x00000000, 0x01006040, 0x00000000);
     return;
   case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management leaf
     get_leaf(leaf, 0x00000000, 0x00000000, 0x00000000, 0x00000100); // EDX[8] - invariant TSC
@@ -575,18 +575,8 @@ void corei7_haswell_4770_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000004 //
 
 // leaf 0x80000005 - L1 Cache and TLB Identifiers (reserved for Intel)
-
-// leaf 0x80000006 - L2 Cache and TLB Identifiers //
-void corei7_haswell_4770_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x80000006 - L2 Cache and TLB Identifiers
-  leaf->eax = 0x00000000;
-  leaf->ebx = 0x00000000;
-  leaf->ecx = 0x01006040;
-  leaf->edx = 0x00000000;
-}
-
-// leaf 0x80000007 - Advanced Power Management //
+// leaf 0x80000006 - L2 Cache and TLB Identifiers
+// leaf 0x80000007 - Advanced Power Management
 // leaf 0x80000008 //
 
 void corei7_haswell_4770_t::dump_cpuid(void) const

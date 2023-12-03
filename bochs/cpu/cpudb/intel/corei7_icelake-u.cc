@@ -694,7 +694,6 @@ void corei7_icelake_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000002 //
 // leaf 0x80000003 //
 // leaf 0x80000004 //
-
 // leaf 0x80000005 - L1 Cache and TLB Identifiers (reserved for Intel)
 // leaf 0x80000006 - L2 Cache and TLB Identifiers
 // leaf 0x80000007 - Advanced Power Management

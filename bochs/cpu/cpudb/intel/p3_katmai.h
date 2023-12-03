@@ -42,7 +42,6 @@ public:
 
 private:
   void get_std_cpuid_leaf_1(cpuid_function_t *leaf) const;
-  void get_std_cpuid_leaf_2(cpuid_function_t *leaf) const;
 };
 
 extern bx_cpuid_t *create_p3_katmai_cpuid(BX_CPU_C *cpu);

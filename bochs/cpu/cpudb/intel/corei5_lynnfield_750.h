@@ -56,7 +56,6 @@ private:
   void get_std_cpuid_leaf_A(cpuid_function_t *leaf) const;
 
   void get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const;
-  void get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const;
 };
 
 extern bx_cpuid_t *create_corei5_lynnfield_750_cpuid(BX_CPU_C *cpu);
