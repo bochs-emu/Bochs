@@ -1549,15 +1549,25 @@ void bx_vgacore_c::update(void)
             for (xc=0, xti=0; xc<iWidth; xc+=X_TILESIZE, xti++) {
               if (GET_TILE_UPDATED (xti, yti)) {
                 for (r=0; r<Y_TILESIZE; r++) {
-                  pixely = yc + r;
+                  if ((yc + r) >= BX_VGA_THIS s.line_compare) {
+                    pixely = (yc - BX_VGA_THIS s.line_compare) + r;
+                  } else {
+                    pixely = yc + r;
+                  }
                   if (BX_VGA_THIS s.y_doublescan) pixely >>= 1;
                   for (c=0; c<X_TILESIZE; c++) {
                     pixelx = (xc + c) >> 1;
                     plane  = (pixelx % 4);
-                    byte_offset = (plane * 65536) +
-                                  (pixely * BX_VGA_THIS s.line_offset)
-                                  + (pixelx >> 2);
-                    color = BX_VGA_THIS s.memory[start_addr + byte_offset];
+                    if ((yc + r) >= BX_VGA_THIS s.line_compare) {
+                      byte_offset = (plane * 65536) +
+                                    (pixely * BX_VGA_THIS s.line_offset)
+                                    + (pixelx >> 2);
+                    } else {
+                      byte_offset = start_addr + (plane * 65536) +
+                                    (pixely * BX_VGA_THIS s.line_offset)
+                                    + (pixelx >> 2);
+                    }
+                    color = BX_VGA_THIS s.memory[byte_offset];
                     BX_VGA_THIS s.tile[r*X_TILESIZE + c] = color;
                   }
                 }
