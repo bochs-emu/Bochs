@@ -1048,7 +1048,7 @@ void bx_init_options()
   time0->set_ask_format("Enter Initial CMOS time (1:localtime, 2:utc, other:time in seconds): [" FMT_LL "d] ");
   clock_sync->set_ask_format("Enter Synchronisation method: [%s] ");
   clock_cmos->set_options(clock_cmos->SHOW_PARENT);
-  cmosimage->set_options(cmosimage->SHOW_PARENT);
+  cmosimage->set_options(cmosimage->SERIES_ASK);
 
   // pci subtree
   bx_list_c *pci = new bx_list_c(root_param, "pci", "PCI Options");
@@ -1830,6 +1830,10 @@ void bx_init_options()
   #if BX_SUPPORT_IODEBUG
   misc->add(SIM->get_param(BXPN_IODEBUG_ALL_RINGS));
   #endif
+  bx_list_c *cmosrt = new bx_list_c(misc, "cmosimg", "CMOS image options");
+  cmosrt->add(SIM->get_param(BXPN_CMOSIMAGE_ENABLED));
+  cmosrt->add(SIM->get_param(BXPN_CMOSIMAGE_PATH));
+  cmosrt->set_options(cdrom->SERIES_ASK);
   misc->set_options(misc->SHOW_PARENT | misc->SHOW_GROUP_NAME);
 }
 
@@ -3127,6 +3131,9 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "file=", 5)) {
         SIM->get_param_string(BXPN_CMOSIMAGE_PATH)->set(&params[i][5]);
+        if (strlen(&params[i][5]) > 0) {
+          SIM->get_param_bool(BXPN_CMOSIMAGE_ENABLED)->set(1);
+        }
       } else if (!strncmp(params[i], "rtc_init=time0",14)) {
         SIM->get_param_bool(BXPN_CMOSIMAGE_RTC_INIT)->set(0);
       } else if (!strncmp(params[i], "rtc_init=image",14)) {
@@ -3134,9 +3141,6 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       } else {
         BX_ERROR(("%s: unknown parameter for cmosimage ignored.", context));
       }
-    }
-    if (strlen(SIM->get_param_string(BXPN_CMOSIMAGE_PATH)->getptr()) > 0) {
-      SIM->get_param_bool(BXPN_CMOSIMAGE_ENABLED)->set(1);
     }
   } else if (!strcmp(params[0], "clock")) {
     const char months[] = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec ";
