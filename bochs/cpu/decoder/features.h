@@ -138,9 +138,7 @@ x86_feature(BX_ISA_SCA_MITIGATIONS, "sca_mitigations")                  /* Repor
 #if BX_SUPPORT_KEYLOCKER
 x86_feature(BX_ISA_KEYLOCKER, "keylocker")                              /* KeyLocker support */
 #endif
-#if BX_SUPPORT_CET
 x86_feature(BX_ISA_CET, "cet")                                          /* Control Flow Enforcement */
-#endif
 x86_feature(BX_ISA_WRMSRNS, "wrmsrns")                                  /* Non-Serializing version of WRMSR */
 x86_feature(BX_ISA_CMPCCXADD, "cmpccxadd")                              /* CMPccXADD instructions */
 x86_feature(BX_ISA_SERIALIZE, "serialize")                              /* SERIALIZE instruction */
