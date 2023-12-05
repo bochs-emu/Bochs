@@ -22,7 +22,7 @@
 #define BX_SCANCODES_H
 
 // Translation table of the 8042
-extern unsigned char translation8042[256];
+extern const unsigned char translation8042[256];
 
 typedef struct {
   const char *make;

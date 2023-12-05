@@ -114,7 +114,7 @@ void bx_biosdev_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case 0x0401:
       if (value==0) {
         // The next message sent to the info port will cause a panic
-        BX_BIOS_THIS s.bios_panic_flag = 1;
+        BX_BIOS_THIS s.bios_panic_flag = true;
         break;
       } else if (BX_BIOS_THIS s.bios_message_i > 0) {
         // if there are bits of message in the buffer, print them as the
@@ -149,20 +149,20 @@ void bx_biosdev_c::write(Bit32u address, Bit32u value, unsigned io_len)
       } else if ((value & 0xff) == '\n') {
         BX_BIOS_THIS s.bios_message[ BX_BIOS_THIS s.bios_message_i - 1 ] = 0;
         BX_BIOS_THIS s.bios_message_i = 0;
-        if (BX_BIOS_THIS s.bios_panic_flag==1)
+        if (BX_BIOS_THIS s.bios_panic_flag)
           bioslog->panic("%s", BX_BIOS_THIS s.bios_message);
         else if (address==0x403)
           bioslog->ldebug("%s", BX_BIOS_THIS s.bios_message);
         else
           bioslog->info("%s", BX_BIOS_THIS s.bios_message);
-        BX_BIOS_THIS s.bios_panic_flag = 0;
+        BX_BIOS_THIS s.bios_panic_flag = false;
       }
       break;
 
     // 0x501-0x502 are used as panic ports for the vgabios
     case 0x0502:
       if (value==0) {
-        BX_BIOS_THIS s.vgabios_panic_flag = 1;
+        BX_BIOS_THIS s.vgabios_panic_flag = true;
         break;
       } else if (BX_BIOS_THIS s.vgabios_message_i > 0) {
         // if there are bits of message in the buffer, print them as the
@@ -196,13 +196,13 @@ void bx_biosdev_c::write(Bit32u address, Bit32u value, unsigned io_len)
       } else if ((value & 0xff) == '\n') {
         BX_BIOS_THIS s.vgabios_message[ BX_BIOS_THIS s.vgabios_message_i - 1 ] = 0;
         BX_BIOS_THIS s.vgabios_message_i = 0;
-        if (BX_BIOS_THIS s.vgabios_panic_flag==1)
+        if (BX_BIOS_THIS s.vgabios_panic_flag)
           vgabioslog->panic("%s", BX_BIOS_THIS s.vgabios_message);
         else if (address==0x503)
           vgabioslog->ldebug("%s", BX_BIOS_THIS s.vgabios_message);
         else
           vgabioslog->info("%s", BX_BIOS_THIS s.vgabios_message);
-        BX_BIOS_THIS s.vgabios_panic_flag = 0;
+        BX_BIOS_THIS s.vgabios_panic_flag = false;
       }
       break;
 

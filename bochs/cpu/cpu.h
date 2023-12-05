@@ -274,7 +274,8 @@ enum BX_Instr_PrefetchHINT {
 // <TAG-INSTRUMENTATION_COMMON-END>
 
 // passed to internal debugger together with BX_READ/BX_WRITE/BX_EXECUTE/BX_RW
-enum {
+enum AccessReason {
+  BX_ACCESS_REASON_NOT_SPECIFIED = 0,
   BX_PDPTR0_ACCESS = 1,
   BX_PDPTR1_ACCESS,
   BX_PDPTR2_ACCESS,
@@ -377,6 +378,7 @@ const Bit32u CACHE_LINE_SIZE = 64;
 class BX_CPU_C;
 class BX_MEM_C;
 class bxInstruction_c;
+class bx_local_apic_c;
 
 // <TAG-TYPE-EXECUTEPTR-START>
 #if BX_USE_CPU_SMF
@@ -662,6 +664,10 @@ typedef struct
   Bit64u ia32_interrupt_ssp_table;
 #endif
 
+#if BX_SUPPORT_MONITOR_MWAIT
+  Bit32u ia32_umwait_ctrl;
+#endif
+
   Bit32u ia32_spec_ctrl; // SCA
 
   /* TODO finish of the others */
@@ -764,10 +770,6 @@ typedef struct {
 #endif
 #endif  // #if BX_SUPPORT_X86_64
 
-#if BX_SUPPORT_APIC
-#include "apic.h"
-#endif
-
 #include "xmm.h"
 
 typedef void (*simd_xmm_shift)(BxPackedXmmRegister *opdst, Bit64u shift_64);
@@ -784,21 +786,43 @@ typedef void (*simd_xmm_3op)(BxPackedXmmRegister *opdst, const BxPackedXmmRegist
 #include "svm.h"
 #endif
 
+enum monitor_armed_by {
+  BX_MONITOR_NOT_ARMED = 0,
+  BX_MONITOR_ARMED_BY_MONITOR,
+  BX_MONITOR_ARMED_BY_MONITORX,
+  BX_MONITOR_ARMED_BY_UMONITOR
+};
+
 #if BX_SUPPORT_MONITOR_MWAIT
 struct monitor_addr_t {
 
     bx_phy_address monitor_addr;
-    bool armed;
+    unsigned armed_by;
 
-    monitor_addr_t(): monitor_addr(0xffffffff), armed(false) {}
+    monitor_addr_t(): monitor_addr(0xffffffff), armed_by(BX_MONITOR_NOT_ARMED) {}
 
-    BX_CPP_INLINE void arm(bx_phy_address addr) {
+    BX_CPP_INLINE void arm(bx_phy_address addr, monitor_armed_by by) {
       // align to cache line
       monitor_addr = addr & ~((bx_phy_address)(CACHE_LINE_SIZE - 1));
-      armed = true;
+      armed_by = by;
     }
 
-    BX_CPP_INLINE void reset_monitor(void) { armed = false; }
+    BX_CPP_INLINE void reset_monitor(void) { armed_by = BX_MONITOR_NOT_ARMED; }
+
+    BX_CPP_INLINE void reset_umonitor(void) {
+      if (armed_by == BX_MONITOR_ARMED_BY_UMONITOR)
+          armed_by = BX_MONITOR_NOT_ARMED;
+    }
+
+    BX_CPP_INLINE void reset_monitorx(void) {
+      if (armed_by == BX_MONITOR_ARMED_BY_MONITORX)
+          armed_by = BX_MONITOR_NOT_ARMED;
+    }
+
+    BX_CPP_INLINE bool armed(void) const { return armed_by != BX_MONITOR_NOT_ARMED; }
+    BX_CPP_INLINE bool armed_by_monitor(void) const { return armed_by == BX_MONITOR_ARMED_BY_MONITOR; }
+    BX_CPP_INLINE bool armed_by_monitorx(void) const { return armed_by == BX_MONITOR_ARMED_BY_MONITORX; }
+    BX_CPP_INLINE bool armed_by_umonitor(void) const { return armed_by == BX_MONITOR_ARMED_BY_UMONITOR; }
 };
 #endif
 
@@ -1002,7 +1026,7 @@ public: // for now...
 #endif
 
 #if BX_SUPPORT_APIC
-  bx_local_apic_c lapic;
+  bx_local_apic_c *lapic;
 #endif
 
   /* SMM base register */
@@ -2610,6 +2634,8 @@ public: // for now...
   BX_SMF void LOADIWKEY_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 
+  BX_SMF void MOVDIR64B(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
 #if BX_SUPPORT_AVX
   /* AVX */
   BX_SMF void VZEROUPPER(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -4068,6 +4094,8 @@ public: // for now...
 
   BX_SMF void MONITOR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MWAIT(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void UMONITOR_Eq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void UMWAIT_Ed(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
 #if BX_SUPPORT_PKEYS
   BX_SMF void RDPKRU(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -4362,11 +4390,16 @@ public: // for now...
   BX_SMF void page_fault(unsigned fault, bx_address laddr, unsigned user, unsigned rw);
 
   BX_SMF void access_read_physical(bx_phy_address paddr, unsigned len, void *data);
+  BX_SMF Bit8u  read_physical_byte(bx_phy_address paddr, BxMemtype memtype, AccessReason reason);
+  BX_SMF Bit16u read_physical_word(bx_phy_address paddr, BxMemtype memtype, AccessReason reason);
+  BX_SMF Bit32u read_physical_dword(bx_phy_address paddr, BxMemtype memtype, AccessReason reason);
+  BX_SMF Bit64u read_physical_qword(bx_phy_address paddr, BxMemtype memtype, AccessReason reason);
+
   BX_SMF void access_write_physical(bx_phy_address paddr, unsigned len, void *data);
-  BX_SMF Bit8u  read_physical_byte(bx_phy_address paddr);
-  BX_SMF Bit16u read_physical_word(bx_phy_address paddr);
-  BX_SMF Bit32u read_physical_dword(bx_phy_address paddr);
-  BX_SMF Bit64u read_physical_qword(bx_phy_address paddr);
+  BX_SMF void write_physical_byte(bx_phy_address paddr, Bit8u val_8, BxMemtype memtype, AccessReason reason);
+  BX_SMF void write_physical_word(bx_phy_address paddr, Bit16u val_16, BxMemtype memtype, AccessReason reason);
+  BX_SMF void write_physical_dword(bx_phy_address paddr, Bit32u val_32, BxMemtype memtype, AccessReason reason);
+  BX_SMF void write_physical_qword(bx_phy_address paddr, Bit64u val_64, BxMemtype memtype, AccessReason reason);
 
   BX_SMF bx_hostpageaddr_t getHostMemAddr(bx_phy_address addr, unsigned rw);
 
@@ -4675,7 +4708,7 @@ public: // for now...
 #endif
 
 #if BX_CPU_LEVEL >= 6
-  BX_SMF BX_CPP_INLINE unsigned get_cr8();
+  BX_SMF unsigned get_cr8(void);
 #endif
 
   BX_SMF bx_address get_segment_base(unsigned seg);
@@ -4731,6 +4764,9 @@ public: // for now...
   BX_SMF Bit64u get_TSC();
   BX_SMF void   set_TSC(Bit64u tsc);
   BX_SMF Bit64u get_Virtual_TSC(); // takes into account VMX or SVM adjustments
+#if BX_SUPPORT_VMX
+  BX_SMF Bit64u compute_physical_TSC_delay(Bit64u virtual_tsc_delay);
+#endif
 #endif
 
 #if BX_SUPPORT_PKEYS
@@ -4912,8 +4948,8 @@ public: // for now...
   BX_SMF void VMX_TPR_Virtualization(void);
   BX_SMF bool Virtualize_X2APIC_Write(unsigned msr, Bit64u val_64);
   BX_SMF void VMX_Virtual_Apic_Access_Trap(void);
-  BX_SMF bool VMX_Posted_Interrupt_Processing(Bit8u vector);
 #if BX_SUPPORT_VMX >= 2
+  BX_SMF bool VMX_Posted_Interrupt_Processing(Bit8u vector);
   BX_SMF void vapic_set_vector(unsigned apic_arrbase, Bit8u vector);
   BX_SMF Bit8u vapic_clear_and_find_highest_priority_int(unsigned apic_arrbase, Bit8u vector);
   BX_SMF void VMX_Write_VICR(void);
@@ -5388,17 +5424,6 @@ BX_CPP_INLINE void BX_CPU_C::set_opmask(unsigned reg, Bit64u val)
 {
    assert(reg < 8);
    BX_CPU_THIS_PTR opmask[reg].rrx = val;
-}
-#endif
-
-#if BX_CPU_LEVEL >= 6
-// CR8 is aliased to APIC->TASK PRIORITY register
-//   APIC.TPR[7:4] = CR8[3:0]
-//   APIC.TPR[3:0] = 0
-// Reads of CR8 return zero extended APIC.TPR[7:4]
-BX_CPP_INLINE unsigned BX_CPU_C::get_cr8(void)
-{
-   return (BX_CPU_THIS_PTR lapic.get_tpr() >> 4) & 0xf;
 }
 #endif
 

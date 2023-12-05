@@ -803,7 +803,7 @@ bool bx_unload_plugin(const char *name, bool devflag)
   for (plugin = plugins; plugin; plugin = plugin->next) {
     if (!strcmp(plugin->name, name)) {
       if (devflag) {
-        pluginUnregisterDeviceDevmodel(plugin->name, plugin->type);
+        pluginUnregisterDeviceDevmodel(plugin->name, plugin->loadtype);
       }
       ret = plugin_unload(plugin);
       break;

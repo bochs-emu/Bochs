@@ -970,7 +970,12 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_ecx(Bit32u extra) const
  }
 #endif
 
-  // [5:5]   WAITPKG (TPAUSE/UMONITOR/UMWAIT) support - not supported
+  // [5:5]   WAITPKG (TPAUSE/UMONITOR/UMWAIT) support
+#if BX_SUPPORT_MONITOR_MWAIT
+  if (is_cpu_extension_supported(BX_ISA_WAITPKG)) {
+    ecx |= BX_CPUID_STD7_SUBLEAF0_ECX_WAITPKG;
+  }
+#endif
 
   // [6:6]   AVX512 VBMI2 instructions support
 #if BX_SUPPORT_EVEX
@@ -1040,7 +1045,10 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_ecx(Bit32u extra) const
   if (is_cpu_extension_supported(BX_ISA_MOVDIRI))
     ecx |= BX_CPUID_STD7_SUBLEAF0_ECX_MOVDIRI;
 
-  // [28:28] MOVDIR64B: MOVDIR64B instruction support - not supported
+  // [28:28] MOVDIR64: MOVDIR64 instruction support
+  if (is_cpu_extension_supported(BX_ISA_MOVDIR64B))
+    ecx |= BX_CPUID_STD7_SUBLEAF0_ECX_MOVDIR64B;
+
   // [29:29] ENQCMD: Enqueue Stores support - not supported
   // [30:30] SGX_LC: SGX Launch Configuration - not supported
 
@@ -1282,13 +1290,13 @@ void bx_cpuid_t::dump_cpuid_leaf(unsigned function, unsigned subfunction) const
 
 void bx_cpuid_t::dump_cpuid(unsigned max_std_leaf, unsigned max_ext_leaf) const
 {
-  for (unsigned std_leaf=0; std_leaf<=max_std_leaf; std_leaf++) {
+  for (unsigned std_leaf=0; std_leaf <= max_std_leaf; std_leaf++) {
     dump_cpuid_leaf(std_leaf);
   }
 
   if (max_ext_leaf == 0) return;
 
-  for (unsigned ext_leaf=0x80000000; ext_leaf<=(0x80000000 + max_ext_leaf); ext_leaf++) {
+  for (unsigned ext_leaf=0x80000000; ext_leaf <= max_ext_leaf; ext_leaf++) {
     dump_cpuid_leaf(ext_leaf);
   }
 }

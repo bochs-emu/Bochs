@@ -62,6 +62,9 @@ p4_prescott_celeron_336_t::p4_prescott_celeron_336_t(BX_CPU_C *cpu): bx_cpuid_t(
   enable_cpu_extension(BX_ISA_LONG_MODE);
   enable_cpu_extension(BX_ISA_NX);
   enable_cpu_extension(BX_ISA_CMPXCHG16B);
+
+  max_std_leaf = 0x3;
+  max_ext_leaf = 0x80000008;
 }
 
 void p4_prescott_celeron_336_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
@@ -70,7 +73,7 @@ void p4_prescott_celeron_336_t::get_cpuid_leaf(Bit32u function, Bit32u subfuncti
 
   switch(function) {
   case 0x80000000:
-    get_ext_cpuid_leaf_0(leaf);
+    get_leaf_0(max_ext_leaf, NULL, leaf); // highest extended function understood by CPUID
     return;
   case 0x80000001:
     get_ext_cpuid_leaf_1(leaf);
@@ -83,36 +86,32 @@ void p4_prescott_celeron_336_t::get_cpuid_leaf(Bit32u function, Bit32u subfuncti
   case 0x80000005:
     get_reserved_leaf(leaf);
     return;
-  case 0x80000006:
-    get_ext_cpuid_leaf_6(leaf);
+  case 0x80000006: // CPUID leaf 0x80000006 - L2 Cache and TLB Identifiers
+    get_leaf(leaf, 0x00000000, 0x00000000, 0x01004040, 0x00000000);
     return;
-  case 0x80000007:
-    get_ext_cpuid_leaf_7(leaf);
+  case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management leaf
+    get_reserved_leaf(leaf);
     return;
   case 0x80000008:
     get_ext_cpuid_leaf_8(leaf);
     return;
   case 0x00000000:
-    get_std_cpuid_leaf_0(leaf);
+    get_leaf_0(max_std_leaf, "GenuineIntel", leaf);
     return;
   case 0x00000001:
     get_std_cpuid_leaf_1(leaf);
     return;
-  case 0x00000002:
-    get_std_cpuid_leaf_2(leaf);
+  case 0x00000002: // CPUID leaf 0x00000002 - Cache and TLB Descriptors
+    get_leaf(leaf, 0x605B5101, 0x00000000, 0x00000000, 0x003C7040);
     return;
-  case 0x00000003:
+  case 0x00000003: // Processor Serial Number
   default:
-    get_std_cpuid_leaf_3(leaf);
+    get_leaf(leaf, 0x00000000, 0x00000000, 0x00000000, 0x00000000);
     return;
   }
 }
 
 // leaf 0x00000000 //
-void p4_prescott_celeron_336_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
-{
-  get_leaf_0(0x3, "GenuineIntel", leaf);
-}
 
 // leaf 0x00000001 //
 void p4_prescott_celeron_336_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
@@ -221,35 +220,10 @@ void p4_prescott_celeron_336_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) con
                                        BX_CPUID_STD1_EDX_PBE);
 }
 
-// leaf 0x00000002 //
-void p4_prescott_celeron_336_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x00000002 - Cache and TLB Descriptors
-  leaf->eax = 0x605B5101;
-  leaf->ebx = 0x00000000;
-  leaf->ecx = 0x00000000;
-  leaf->edx = 0x003C7040;
-}
-
-// leaf 0x00000003 //
-void p4_prescott_celeron_336_t::get_std_cpuid_leaf_3(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x00000003 - Processor Serial Number
-  leaf->eax = 0;
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0;
-}
+// leaf 0x00000002 - Cache and TLB Descriptors //
+// leaf 0x00000003 - Processor Serial Number   //
 
 // leaf 0x80000000 //
-void p4_prescott_celeron_336_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
-{
-  // EAX: highest extended function understood by CPUID
-  // EBX: reserved
-  // EDX: reserved
-  // ECX: reserved
-  get_leaf_0(0x80000008, NULL, leaf);
-}
 
 // leaf 0x80000001 //
 void p4_prescott_celeron_336_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
@@ -297,32 +271,13 @@ void p4_prescott_celeron_336_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) con
 // leaf 0x80000004 //
 
 // leaf 0x80000005 - L1 Cache and TLB Identifiers (reserved for Intel)
-
-// leaf 0x80000006 //
-void p4_prescott_celeron_336_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x800000006 - L2 Cache and TLB Identifiers
-  leaf->eax = 0x00000000;
-  leaf->ebx = 0x00000000;
-  leaf->ecx = 0x01004040;
-  leaf->edx = 0x00000000;
-}
-
-// leaf 0x80000007 //
-void p4_prescott_celeron_336_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x800000007 - Advanced Power Management
-  leaf->eax = 0;
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0;
-}
-
+// leaf 0x80000006 - L2 Cache and TLB Identifiers
+// leaf 0x80000007 - Advanced Power Management
 // leaf 0x80000008 //
 
 void p4_prescott_celeron_336_t::dump_cpuid(void) const
 {
-  bx_cpuid_t::dump_cpuid(0x3, 0x8);
+  bx_cpuid_t::dump_cpuid(max_std_leaf, max_ext_leaf);
 }
 
 bx_cpuid_t *create_p4_prescott_celeron_336_cpuid(BX_CPU_C *cpu) { return new p4_prescott_celeron_336_t(cpu); }

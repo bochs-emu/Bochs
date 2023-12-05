@@ -45,7 +45,9 @@ public:
   virtual void dump_cpuid(void) const;
 
 private:
-  void get_std_cpuid_leaf_0(cpuid_function_t *leaf) const;
+  Bit32u max_std_leaf;
+  Bit32u max_ext_leaf;
+
   void get_std_cpuid_leaf_1(cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_2(cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_t *leaf) const;
@@ -53,13 +55,8 @@ private:
   void get_std_cpuid_leaf_6(cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_A(cpuid_function_t *leaf) const;
-  void get_std_cpuid_leaf_15(cpuid_function_t *leaf) const;
-  void get_std_cpuid_leaf_16(cpuid_function_t *leaf) const;
 
-  void get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const;
   void get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const;
-  void get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const;
-  void get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const;
 };
 
 extern bx_cpuid_t *create_corei7_skylake_x_cpuid(BX_CPU_C *cpu);

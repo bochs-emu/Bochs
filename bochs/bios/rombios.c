@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -573,6 +573,12 @@ typedef unsigned long  Bit32u;
     shr  ebx, #16
     ret
 
+  imodu:
+    div  bl
+    mov  al, ah
+    xor  ah, ah
+    ret
+
   ASM_END
 
 // for access to RAM area which is used by interrupt vectors
@@ -841,6 +847,8 @@ static Bit16u         inw();
 static void           outw();
 static void           init_rtc();
 static bx_bool        rtc_updating();
+static Bit8u          bin2bcd();
+static Bit8u          bcd2bin();
 
 static Bit8u          _read_byte();
 static Bit16u         _read_word();
@@ -928,7 +936,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_svn_version_string[] = "$Revision$ $Date$";
+// static char bios_svn_version_string[] = "$Revision$ $Date$";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2001-2021  The Bochs Project"
 
@@ -1253,6 +1261,51 @@ rtc_updating()
       return(0);
     }
   return(1); // update-in-progress never transitioned to 0
+}
+
+  Bit8u
+bin2bcd(value)
+  Bit8u value;
+{
+ASM_START
+  push bp
+  mov  bp, sp
+
+    push dx
+    mov  dh, ah
+    xor  ah, ah
+    mov  al, 4[bp]
+    mov  dl, #10
+    div  dl
+    shl  al,  #4
+    add  al, ah
+    mov  ah, dh
+    pop  dx
+
+  pop  bp
+ASM_END
+}
+
+  Bit8u
+bcd2bin(value)
+  Bit8u value;
+{
+ASM_START
+  push bp
+  mov  bp, sp
+
+    push dx
+    mov  al, 4[bp]
+    mov  dh, al
+    and  dh, #0x0f
+    shr  al, #4
+    mov  dl, #10
+    mul  dl
+    add  al, dh
+    pop  dx
+
+  pop  bp
+ASM_END
 }
 
 #define read_byte(seg, offset) _read_byte(offset, seg)
@@ -2011,8 +2064,7 @@ void s3_resume_panic()
 void
 print_bios_banner()
 {
-  printf(BX_APPNAME" BIOS - build: %s\n%s\nOptions: ",
-    BIOS_BUILD_DATE, bios_svn_version_string);
+  printf(BX_APPNAME" BIOS - build: %s\nOptions: ", BIOS_BUILD_DATE);
   printf(
 #if BX_APM
   "apmbios "
@@ -2264,7 +2316,7 @@ log_bios_start()
 #if BX_DEBUG_SERIAL
   outb(BX_DEBUG_PORT+UART_LCR, 0x03); /* setup for serial logging: 8N1 */
 #endif
-  BX_INFO("%s\n", bios_svn_version_string);
+  BX_INFO("BIOS BUILD DATE: %s\n", BIOS_BUILD_DATE);
 }
 
   bx_bool
@@ -8461,7 +8513,7 @@ int1a_function(regs, ds, iret_addr)
   Bit16u ds; // previous DS:, DS set to 0x0000 by asm wrapper
   iret_addr_t  iret_addr; // CS,IP,Flags pushed from original INT call
 {
-  Bit8u val8;
+  Bit8u val8,hr;
 
   BX_DEBUG_INT1A("int1a: AX=%04x BX=%04x CX=%04x DX=%04x DS=%04x\n", regs.u.r16.ax, regs.u.r16.bx, regs.u.r16.cx, regs.u.r16.dx, ds);
 
@@ -8506,10 +8558,24 @@ int1a_function(regs, ds, iret_addr)
         break;
       }
 
-      regs.u.r8.dh = inb_cmos(0x00); // Seconds
-      regs.u.r8.cl = inb_cmos(0x02); // Minutes
-      regs.u.r8.ch = inb_cmos(0x04); // Hours
-      regs.u.r8.dl = inb_cmos(0x0b) & 0x01; // Stat Reg B
+      val8 = inb_cmos(0x0b);
+      if(val8&0x04){
+        regs.u.r8.dh = bin2bcd(inb_cmos(0x00)); // Seconds
+        regs.u.r8.cl = bin2bcd(inb_cmos(0x02)); // Minutes
+        hr = inb_cmos(0x04);
+        if(!(val8&0x02)&&(hr&0x80)) hr = (hr & 0x7f) + 12;
+        if(!(val8&0x02)&&(!(hr%12))) hr -= 12;
+        regs.u.r8.ch = bin2bcd(hr); // Hours
+      }else{
+        regs.u.r8.dh = inb_cmos(0x00); // Seconds
+        regs.u.r8.cl = inb_cmos(0x02); // Minutes
+        hr = inb_cmos(0x04);
+        if(!(val8&0x02)&&(hr&0x80)) hr = (hr & 0x7f) + 0x12;
+        if(!(val8&0x02)&&(!(hr%0x12))) hr -= 0x12;
+        regs.u.r8.ch = hr; // Hours
+      }
+
+      regs.u.r8.dl = val8 & 0x01; // Stat Reg B
       regs.u.r8.ah = 0;
       regs.u.r8.al = regs.u.r8.ch;
       ClearCF(iret_addr.flags); // OK
@@ -8530,11 +8596,29 @@ int1a_function(regs, ds, iret_addr)
         init_rtc();
         // fall through as if an update were not in progress
       }
-      outb_cmos(0x00, regs.u.r8.dh); // Seconds
-      outb_cmos(0x02, regs.u.r8.cl); // Minutes
-      outb_cmos(0x04, regs.u.r8.ch); // Hours
+
+      val8 = inb_cmos(0x0b);
+
+      if(val8 & 0x04){
+        hr = bcd2bin(regs.u.r8.ch);
+        if(!(val8&0x02)&&(hr>=12)) hr |= 0x80;
+        if(!(val8&0x02)&&(hr>12))  hr -=   12;
+        if(!(val8&0x02)&&(hr==00)) hr  =   12;
+        outb_cmos(0x00, bcd2bin(regs.u.r8.dh)); // Seconds
+        outb_cmos(0x02, bcd2bin(regs.u.r8.cl)); // Minutes
+        outb_cmos(0x04, hr); // Hours
+      }else{
+        hr = regs.u.r8.ch;
+        if(!(val8&0x02)&&(hr>=0x12)) hr |= 0x80;
+        if(!(val8&0x02)&&(hr>0x12))  hr -= 0x12;
+        if(!(val8&0x02)&&(hr==0x00)) hr  = 0x12;
+        outb_cmos(0x00, regs.u.r8.dh); // Seconds
+        outb_cmos(0x02, regs.u.r8.cl); // Minutes
+        outb_cmos(0x04, hr); // Hours
+      }
+
       // Set Daylight Savings time enabled bit to requested value
-      val8 = (inb_cmos(0x0b) & 0x60) | 0x02 | (regs.u.r8.dl & 0x01);
+      val8 = (val8 & 0x66) | (regs.u.r8.dl & 0x01);
       // (reg B already selected)
       outb_cmos(0x0b, val8);
       regs.u.r8.ah = 0;
@@ -8548,10 +8632,21 @@ int1a_function(regs, ds, iret_addr)
         SetCF(iret_addr.flags);
         break;
       }
-      regs.u.r8.cl = inb_cmos(0x09); // Year
-      regs.u.r8.dh = inb_cmos(0x08); // Month
-      regs.u.r8.dl = inb_cmos(0x07); // Day of Month
-      regs.u.r8.ch = inb_cmos(0x32); // Century
+
+      val8 = inb_cmos(0x0b);
+
+      if(val8 & 0x04){
+        regs.u.r8.cl = bin2bcd(inb_cmos(0x09)); // Year
+        regs.u.r8.dh = bin2bcd(inb_cmos(0x08)); // Month
+        regs.u.r8.dl = bin2bcd(inb_cmos(0x07)); // Day of Month
+        regs.u.r8.ch = bin2bcd(inb_cmos(0x32)); // Century
+      }else{
+        regs.u.r8.cl = inb_cmos(0x09); // Year
+        regs.u.r8.dh = inb_cmos(0x08); // Month
+        regs.u.r8.dl = inb_cmos(0x07); // Day of Month
+        regs.u.r8.ch = inb_cmos(0x32); // Century
+      }
+
       regs.u.r8.al = regs.u.r8.ch;
       ClearCF(iret_addr.flags); // OK
       break;
@@ -8572,11 +8667,21 @@ int1a_function(regs, ds, iret_addr)
         SetCF(iret_addr.flags);
         break;
         }
-      outb_cmos(0x09, regs.u.r8.cl); // Year
-      outb_cmos(0x08, regs.u.r8.dh); // Month
-      outb_cmos(0x07, regs.u.r8.dl); // Day of Month
-      outb_cmos(0x32, regs.u.r8.ch); // Century
-      val8 = inb_cmos(0x0b) & 0x7f; // clear halt-clock bit
+
+      val8=inb_cmos(0x0b);
+
+      if(val8&0x04){
+        outb_cmos(0x09, bcd2bin(regs.u.r8.cl)); // Year
+        outb_cmos(0x08, bcd2bin(regs.u.r8.dh)); // Month
+        outb_cmos(0x07, bcd2bin(regs.u.r8.dl)); // Day of Month
+        outb_cmos(0x32, bcd2bin(regs.u.r8.ch)); // Century
+      }else{
+        outb_cmos(0x09, regs.u.r8.cl); // Year
+        outb_cmos(0x08, regs.u.r8.dh); // Month
+        outb_cmos(0x07, regs.u.r8.dl); // Day of Month
+        outb_cmos(0x32, regs.u.r8.ch); // Century
+      }
+      val8 = val8 & 0x7f; // clear halt-clock bit
       outb_cmos(0x0b, val8);
       regs.u.r8.ah = 0;
       regs.u.r8.al = val8; // AL = val last written to Reg B
@@ -8605,9 +8710,23 @@ int1a_function(regs, ds, iret_addr)
         init_rtc();
         // fall through as if an update were not in progress
       }
-      outb_cmos(0x01, regs.u.r8.dh); // Seconds alarm
-      outb_cmos(0x03, regs.u.r8.cl); // Minutes alarm
-      outb_cmos(0x05, regs.u.r8.ch); // Hours alarm
+
+      if(val8&0x04){
+        hr = bcd2bin(regs.u.r8.ch);
+        outb_cmos(0x01, bcd2bin(regs.u.r8.dh)); // Seconds alarm
+        outb_cmos(0x03, bcd2bin(regs.u.r8.cl)); // Minutes alarm
+        if((val8&0x02)&&(hr>=12)) hr |= 0x80;
+        if((val8&0x02)&&(hr==00)) hr  =   12;
+        outb_cmos(0x05, hr); // Hours alarm
+      }else{
+        hr = regs.u.r8.ch;
+        outb_cmos(0x01, regs.u.r8.dh); // Seconds alarm
+        outb_cmos(0x03, regs.u.r8.cl); // Minutes alarm
+        if((val8&0x02)&&(hr>=0x12)) hr |= 0x80;
+        if((val8&0x02)&&(hr==0x00)) hr  = 0x12;
+        outb_cmos(0x05, hr); // Hours alarm
+      }
+
       outb(PORT_PIC2_DATA, inb(PORT_PIC2_DATA) & 0xfe); // enable IRQ 8
       // enable Status Reg B alarm bit, clear halt clock bit
       outb_cmos(0x0b, (val8 & 0x7f) | 0x20);

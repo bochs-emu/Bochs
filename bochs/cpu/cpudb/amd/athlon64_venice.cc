@@ -277,7 +277,7 @@ void athlon64_venice_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000003 //
 // leaf 0x80000004 //
 
-// leaf 0x80000005 //
+// leaf 0x80000005 - L1 Cache and TLB Identifiers //
 void athlon64_venice_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
 {
   // CPUID function 0x800000005 - L1 Cache and TLB Identifiers
@@ -287,20 +287,20 @@ void athlon64_venice_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
   leaf->edx = 0x40020140;
 }
 
-// leaf 0x80000006 //
+// leaf 0x80000006 - L2 Cache and TLB Identifiers //
 void athlon64_venice_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
 {
-  // CPUID function 0x800000006 - L2 Cache and TLB Identifiers
+  // CPUID function 0x80000006 - L2 Cache and TLB Identifiers
   leaf->eax = 0x00000000;
   leaf->ebx = 0x42004200;
   leaf->ecx = 0x02008140;
   leaf->edx = 0x00000000;
 }
 
-// leaf 0x80000007 //
+// leaf 0x80000007 - Advanced Power Management //
 void athlon64_venice_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
 {
-  // CPUID function 0x800000007 - Advanced Power Management
+  // CPUID function 0x80000007 - Advanced Power Management
   leaf->eax = 0;
   leaf->ebx = 0;
   leaf->ecx = 0;
@@ -308,14 +308,13 @@ void athlon64_venice_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
 }
 
 // leaf 0x80000008 //
-
 // leaf 0x80000009             : Reserved //
 // leaf 0x8000000A             : SVM      //
 // leaf 0x8000000B - 0x80000018: Reserved //
 
 void athlon64_venice_t::dump_cpuid(void) const
 {
-  bx_cpuid_t::dump_cpuid(0x1, 0x18);
+  bx_cpuid_t::dump_cpuid(0x1, 0x80000018);
   dump_cpuid_leaf(0x8fffffff);
 }
 

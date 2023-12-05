@@ -193,7 +193,7 @@ void amd_k6_2_chomper_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   leaf->edx = get_ext_cpuid_leaf_1_edx_amd();
 }
 
-// leaf 0x80000005 //
+// leaf 0x80000005 - L1 Cache and TLB Identifiers //
 void amd_k6_2_chomper_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
 {
   // CPUID function 0x800000005 - L1 Cache and TLB Identifiers
@@ -205,7 +205,7 @@ void amd_k6_2_chomper_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
 
 void amd_k6_2_chomper_t::dump_cpuid(void) const
 {
-  bx_cpuid_t::dump_cpuid(0x1, 0x5);
+  bx_cpuid_t::dump_cpuid(0x1, 0x80000005);
   dump_cpuid_leaf(0x8fffffff);
 }
 

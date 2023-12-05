@@ -147,3 +147,4 @@ x86_feature(BX_ISA_SERIALIZE, "serialize")                              /* SERIA
 x86_feature(BX_ISA_LASS, "lass")                                        /* Linear Address Space Separation support */
 x86_feature(BX_ISA_UINTR, "uintr")                                      /* User Level Interrupts support */
 x86_feature(BX_ISA_MOVDIRI, "movdiri")                                  /* MOVDIRI instruction support */
+x86_feature(BX_ISA_MOVDIR64B, "movdir64b")                              /* MOVDIR64B instruction support */

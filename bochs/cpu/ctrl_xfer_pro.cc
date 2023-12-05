@@ -114,6 +114,10 @@ BX_CPU_C::load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cp
 
 void BX_CPU_C::branch_far(bx_selector_t *selector, bx_descriptor_t *descriptor, bx_address rip, unsigned cpl)
 {
+#if BX_SUPPORT_MONITOR_MWAIT
+  BX_CPU_THIS_PTR monitor.reset_monitorx();  // reset MONITORX after every far control transfer
+#endif
+
 #if BX_SUPPORT_X86_64
   if (long_mode() && descriptor->u.segment.l) {
     if (! IsCanonical(rip)) {

@@ -249,6 +249,14 @@ static const Bit64u BxOpcodeTable0F38F6[] = {
   last_opcode(ATTR_SSE_PREFIX_F3, BX_IA_ADOX_GdEd)
 };
 
+// opcode 0F 38 F8
+static const Bit64u BxOpcodeTable0F38F8[] = {
+#if BX_SUPPORT_X86_64
+  form_opcode(ATTR_OS64 | ATTR_MOD_MEM | ATTR_SSE_PREFIX_66, BX_IA_MOVDIR64B_GqMdq),
+#endif
+  last_opcode(            ATTR_MOD_MEM | ATTR_SSE_PREFIX_66, BX_IA_MOVDIR64B_GdMdq)
+};
+
 // opcode 0F 38 F9
 static const Bit64u BxOpcodeTable0F38F9[] = {
 #if BX_SUPPORT_X86_64

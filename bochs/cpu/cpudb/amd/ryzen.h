@@ -63,7 +63,6 @@ private:
   void get_ext_cpuid_leaf_A(cpuid_function_t *leaf) const;
 #endif
   void get_ext_cpuid_leaf_19(cpuid_function_t *leaf) const;
-  void get_ext_cpuid_leaf_1A(cpuid_function_t *leaf) const;
   void get_ext_cpuid_leaf_1B(cpuid_function_t *leaf) const;
   void get_ext_cpuid_leaf_1C(cpuid_function_t *leaf) const;
   void get_ext_cpuid_leaf_1D(Bit32u subfunction, cpuid_function_t *leaf) const;

@@ -85,7 +85,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>..;..\instrument\stubs;..\build\win32\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeaderOutputFile>.\..\obj-debug\bx_debug\bx_debug.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\..\obj-debug\bx_debug\</AssemblerListingLocation>
@@ -115,7 +115,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>..;..\instrument\stubs;..\build\win32\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeaderOutputFile>.\..\obj-debug\bx_debug\bx_debug.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\..\obj-debug\bx_debug\</AssemblerListingLocation>

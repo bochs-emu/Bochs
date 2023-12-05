@@ -15,20 +15,29 @@ jobs:
     - uses: actions/checkout@v3
 
     - name: configure for release
-      run: cd bochs && ./.conf.linux
+      run: cd bochs && ./.conf.gh-build-test release
+    - name: make
+      run: make -C bochs
+    - name: cleanup
+      run: make -C bochs all-clean
+
+    - name: configure i686 configuration
+      run: cd bochs && ./.conf.gh-build-test i686
     - name: make
       run: make -C bochs
     - name: cleanup
       run: make -C bochs all-clean
 
     - name: configure minimalistic configuration
-      run: cd bochs && ./.conf.nothing
+      run: cd bochs && ./.conf.gh-build-test nothing
     - name: make
       run: make -C bochs
     - name: cleanup
       run: make -C bochs all-clean
 
     - name: configure maximum possible configuration
-      run: cd bochs && ./.conf.everything
+      run: cd bochs && ./.conf.gh-build-test everything
     - name: make
       run: make -C bochs
+    - name: cleanup
+      run: make -C bochs all-clean

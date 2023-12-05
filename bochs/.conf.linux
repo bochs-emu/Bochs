@@ -2,9 +2,11 @@
 #
 # .conf.linux
 #
-
-#which_config=normal
-which_config=plugins
+if test $# = 0; then
+  which_config=plugins
+else
+  which_config=$1
+fi
 
 CC="gcc"
 CXX="c++"
@@ -80,5 +82,6 @@ case $which_config in
                 --with-all-libs \
                 ${CONFIGURE_ARGS}
     ;;
+  *) echo "Unknown config \"$1\" selected!" ;;
 
 esac

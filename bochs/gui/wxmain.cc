@@ -519,6 +519,7 @@ void MyFrame::OnStateRestore(wxCommandEvent& WXUNUSED(event))
   if (ddialog.ShowModal() == wxID_OK) {
     strncpy(sr_path, ddialog.GetPath().mb_str(wxConvUTF8), sizeof(sr_path) - 1);
     sr_path[sizeof(sr_path) - 1] = '\0';
+    SIM->reset_all_param();
     SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(1);
     SIM->get_param_string(BXPN_RESTORE_PATH)->set(sr_path);
     if (!SIM->restore_config()) {
@@ -1120,7 +1121,10 @@ void MyFrame::OnSim2CIEvent(wxCommandEvent& event)
     sim_thread->SendSyncResponse(be);
     break;
   case BX_SYNC_EVT_ML_MSG_BOX_KILL:
-    delete (ModelessDialog*)be->param0;
+    if (be->param0) {
+      delete (ModelessDialog*)be->param0;
+      be->param0 = NULL;
+    }
     sim_thread->SendSyncResponse(be);
     break;
   case BX_ASYNC_EVT_QUIT_SIM:

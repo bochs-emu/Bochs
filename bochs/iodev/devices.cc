@@ -280,7 +280,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
     }
 
     for (i=0; i < BX_N_PCI_SLOTS; i++) {
-      pci.slot_used[i] = 0;  // no device connected
+      pci.slot_used[i] = false;  // no device connected
     }
 
     if (chipset == BX_PCI_CHIPSET_I440BX) {
@@ -634,15 +634,15 @@ bool bx_devices_c::register_irq(unsigned irq, const char *name)
   if (irq >= BX_MAX_IRQS) {
     BX_PANIC(("IO device %s registered with IRQ=%d above %u",
              name, irq, (unsigned) BX_MAX_IRQS-1));
-    return 0;
+    return false;
   }
   if (irq_handler_name[irq]) {
     BX_PANIC(("IRQ %u conflict, %s with %s", irq, irq_handler_name[irq], name));
-    return 0;
+    return false;
   }
   irq_handler_name[irq] = new char[strlen(name)+1];
   strcpy(irq_handler_name[irq], name);
-  return 1;
+  return true;
 }
 
 bool bx_devices_c::unregister_irq(unsigned irq, const char *name)
@@ -650,22 +650,21 @@ bool bx_devices_c::unregister_irq(unsigned irq, const char *name)
   if (irq >= BX_MAX_IRQS) {
     BX_PANIC(("IO device %s tried to unregister IRQ %d above %u",
              name, irq, (unsigned) BX_MAX_IRQS-1));
-    return 0;
+    return false;
   }
   if (!irq_handler_name[irq]) {
-    BX_INFO(("IO device %s tried to unregister IRQ %d, not registered",
-	      name, irq));
-    return 0;
+    BX_INFO(("IO device %s tried to unregister IRQ %d, not registered", name, irq));
+    return false;
   }
 
   if (strcmp(irq_handler_name[irq], name)) {
     BX_INFO(("IRQ %u not registered to %s but to %s", irq,
       name, irq_handler_name[irq]));
-    return 0;
+    return false;
   }
   delete [] irq_handler_name[irq];
   irq_handler_name[irq] = NULL;
-  return 1;
+  return true;
 }
 
 bool bx_devices_c::register_io_read_handler(void *this_ptr, bx_read_handler_t f,
@@ -674,16 +673,15 @@ bool bx_devices_c::register_io_read_handler(void *this_ptr, bx_read_handler_t f,
   addr &= 0xffff;
 
   if (!f)
-    return 0;
+    return false;
 
   /* first check if the port already has a handlers != the default handler */
   if (read_port_to_handler[addr] &&
       read_port_to_handler[addr] != &io_read_handlers) { // the default
-    BX_ERROR(("IO device address conflict(read) at IO address %Xh",
-              (unsigned) addr));
+    BX_ERROR(("IO device address conflict(read) at IO address %Xh", (unsigned) addr));
     BX_ERROR(("  conflicting devices: %s & %s",
               read_port_to_handler[addr]->handler_name, name));
-    return 0;
+    return false;
   }
 
   /* first find existing handle for function or create new one */
@@ -717,7 +715,7 @@ bool bx_devices_c::register_io_read_handler(void *this_ptr, bx_read_handler_t f,
 
   io_read_handler->usage_count++;
   read_port_to_handler[addr] = io_read_handler;
-  return 1; // address mapped successfully
+  return true; // address mapped successfully
 }
 
 bool bx_devices_c::register_io_write_handler(void *this_ptr, bx_write_handler_t f,
@@ -726,16 +724,15 @@ bool bx_devices_c::register_io_write_handler(void *this_ptr, bx_write_handler_t 
   addr &= 0xffff;
 
   if (!f)
-    return 0;
+    return false;
 
   /* first check if the port already has a handlers != the default handler */
   if (write_port_to_handler[addr] &&
       write_port_to_handler[addr] != &io_write_handlers) { // the default
-    BX_ERROR(("IO device address conflict(write) at IO address %Xh",
-              (unsigned) addr));
+    BX_ERROR(("IO device address conflict(write) at IO address %Xh", (unsigned) addr));
     BX_ERROR(("  conflicting devices: %s & %s",
               write_port_to_handler[addr]->handler_name, name));
-    return 0;
+    return false;
   }
 
   /* first find existing handle for function or create new one */
@@ -769,7 +766,7 @@ bool bx_devices_c::register_io_write_handler(void *this_ptr, bx_write_handler_t 
 
   io_write_handler->usage_count++;
   write_port_to_handler[addr] = io_write_handler;
-  return 1; // address mapped successfully
+  return true; // address mapped successfully
 }
 
 bool bx_devices_c::register_io_read_handler_range(void *this_ptr, bx_read_handler_t f,
@@ -782,23 +779,24 @@ bool bx_devices_c::register_io_read_handler_range(void *this_ptr, bx_read_handle
 
   if (end_addr < begin_addr) {
     BX_ERROR(("!!! end_addr < begin_addr !!!"));
-    return 0;
+    return false;
   }
 
   if (!f) {
     BX_ERROR(("!!! f == NULL !!!"));
-    return 0;
+    return false;
   }
 
   /* first check if the port already has a handlers != the default handler */
-  for (addr = begin_addr; addr <= end_addr; addr++)
+  for (addr = begin_addr; addr <= end_addr; addr++) {
     if (read_port_to_handler[addr] &&
         read_port_to_handler[addr] != &io_read_handlers) { // the default
       BX_ERROR(("IO device address conflict(read) at IO address %Xh",
                 (unsigned) addr));
       BX_ERROR(("  conflicting devices: %s & %s",
                 read_port_to_handler[addr]->handler_name, name));
-      return 0;
+      return false;
+    }
   }
 
   /* first find existing handle for function or create new one */
@@ -833,7 +831,7 @@ bool bx_devices_c::register_io_read_handler_range(void *this_ptr, bx_read_handle
   io_read_handler->usage_count += end_addr - begin_addr + 1;
   for (addr = begin_addr; addr <= end_addr; addr++)
 	  read_port_to_handler[addr] = io_read_handler;
-  return 1; // address mapped successfully
+  return true; // address mapped successfully
 }
 
 bool bx_devices_c::register_io_write_handler_range(void *this_ptr, bx_write_handler_t f,
@@ -846,24 +844,25 @@ bool bx_devices_c::register_io_write_handler_range(void *this_ptr, bx_write_hand
 
   if (end_addr < begin_addr) {
     BX_ERROR(("!!! end_addr < begin_addr !!!"));
-    return 0;
+    return false;
   }
 
   if (!f) {
     BX_ERROR(("!!! f == NULL !!!"));
-    return 0;
+    return false;
   }
 
   /* first check if the port already has a handlers != the default handler */
-  for (addr = begin_addr; addr <= end_addr; addr++)
+  for (addr = begin_addr; addr <= end_addr; addr++) {
     if (write_port_to_handler[addr] &&
         write_port_to_handler[addr] != &io_write_handlers) { // the default
       BX_ERROR(("IO device address conflict(read) at IO address %Xh",
                 (unsigned) addr));
       BX_ERROR(("  conflicting devices: %s & %s",
                 write_port_to_handler[addr]->handler_name, name));
-      return 0;
+      return false;
     }
+  }
 
   /* first find existing handle for function or create new one */
   struct io_handler_struct *curr = &io_write_handlers;
@@ -897,9 +896,8 @@ bool bx_devices_c::register_io_write_handler_range(void *this_ptr, bx_write_hand
   io_write_handler->usage_count += end_addr - begin_addr + 1;
   for (addr = begin_addr; addr <= end_addr; addr++)
 	  write_port_to_handler[addr] = io_write_handler;
-  return 1; // address mapped successfully
+  return true; // address mapped successfully
 }
-
 
 // Registration of default handlers (mainly be the unmapped device)
 bool bx_devices_c::register_default_io_read_handler(void *this_ptr, bx_read_handler_t f,
@@ -914,7 +912,7 @@ bool bx_devices_c::register_default_io_read_handler(void *this_ptr, bx_read_hand
   strcpy(io_read_handlers.handler_name, name);
   io_read_handlers.mask = mask;
 
-  return 1;
+  return true;
 }
 
 bool bx_devices_c::register_default_io_write_handler(void *this_ptr, bx_write_handler_t f,
@@ -929,11 +927,10 @@ bool bx_devices_c::register_default_io_write_handler(void *this_ptr, bx_write_ha
   strcpy(io_write_handlers.handler_name, name);
   io_write_handlers.mask = mask;
 
-  return 1;
+  return true;
 }
 
-bool bx_devices_c::unregister_io_read_handler(void *this_ptr, bx_read_handler_t f,
-                                         Bit32u addr, Bit8u mask)
+bool bx_devices_c::unregister_io_read_handler(void *this_ptr, bx_read_handler_t f, Bit32u addr, Bit8u mask)
 {
   addr &= 0xffff;
 
@@ -943,27 +940,27 @@ bool bx_devices_c::unregister_io_read_handler(void *this_ptr, bx_read_handler_t 
 
   if (!io_read_handler) {
     BX_ERROR((">>> NO IO_READ_HANDLER <<<"));
-    return 0;
+    return false;
   }
 
   if (io_read_handler == &io_read_handlers) {
     BX_ERROR((">>> CANNOT UNREGISTER THE DEFAULT IO_READ_HANDLER <<<"));
-    return 0; // cannot unregister the default handler
+    return false; // cannot unregister the default handler
   }
 
   if (io_read_handler->funct != f) {
     BX_ERROR((">>> NOT THE SAME IO_READ_HANDLER FUNC <<<"));
-    return 0;
+    return false;
   }
 
   if (io_read_handler->this_ptr != this_ptr) {
     BX_ERROR((">>> NOT THE SAME IO_READ_HANDLER THIS_PTR <<<"));
-    return 0;
+    return false;
   }
 
   if (io_read_handler->mask != mask) {
     BX_ERROR((">>> NOT THE SAME IO_READ_HANDLER MASK <<<"));
-    return 0;
+    return false;
   }
 
   read_port_to_handler[addr] = &io_read_handlers; // reset to default
@@ -975,7 +972,7 @@ bool bx_devices_c::unregister_io_read_handler(void *this_ptr, bx_read_handler_t 
     delete [] io_read_handler->handler_name;
     delete io_read_handler;
   }
-  return 1;
+  return true;
 }
 
 bool bx_devices_c::unregister_io_write_handler(void *this_ptr, bx_write_handler_t f,
@@ -986,19 +983,19 @@ bool bx_devices_c::unregister_io_write_handler(void *this_ptr, bx_write_handler_
   struct io_handler_struct *io_write_handler = write_port_to_handler[addr];
 
   if (!io_write_handler)
-    return 0;
+    return false;
 
   if (io_write_handler == &io_write_handlers)
-    return 0; // cannot unregister the default handler
+    return false; // cannot unregister the default handler
 
   if (io_write_handler->funct != f)
-    return 0;
+    return false;
 
   if (io_write_handler->this_ptr != this_ptr)
-    return 0;
+    return false;
 
   if (io_write_handler->mask != mask)
-    return 0;
+    return false;
 
   write_port_to_handler[addr] = &io_write_handlers; // reset to default
   io_write_handler->usage_count--;
@@ -1009,7 +1006,7 @@ bool bx_devices_c::unregister_io_write_handler(void *this_ptr, bx_write_handler_
     delete [] io_write_handler->handler_name;
     delete io_write_handler;
   }
-  return 1;
+  return true;
 }
 
 bool bx_devices_c::unregister_io_read_handler_range(void *this_ptr, bx_read_handler_t f,
@@ -1017,15 +1014,14 @@ bool bx_devices_c::unregister_io_read_handler_range(void *this_ptr, bx_read_hand
 {
   begin &= 0xffff;
   end &= 0xffff;
-  Bit32u addr;
-  bool ret = 1;
+  bool ret = true;
 
   /*
    * the easy way this time
    */
-  for (addr = begin; addr <= end; addr++)
+  for (Bit32u addr = begin; addr <= end; addr++)
     if (!unregister_io_read_handler(this_ptr, f, addr, mask))
-      ret = 0;
+      ret = false;
 
   return ret;
 }
@@ -1035,15 +1031,14 @@ bool bx_devices_c::unregister_io_write_handler_range(void *this_ptr, bx_write_ha
 {
   begin &= 0xffff;
   end &= 0xffff;
-  Bit32u addr;
-  bool ret = 1;
+  bool ret = true;
 
   /*
    * the easy way this time
    */
-  for (addr = begin; addr <= end; addr++)
+  for (Bit32u addr = begin; addr <= end; addr++)
     if (!unregister_io_write_handler(this_ptr, f, addr, mask))
-      ret = 0;
+      ret = false;
 
   return ret;
 }
@@ -1109,9 +1104,9 @@ bool bx_devices_c::is_harddrv_enabled(void)
   for (int i=0; i<BX_MAX_ATA_CHANNEL; i++) {
     sprintf(pname, "ata.%d.resources.enabled", i);
     if (SIM->get_param_bool(pname)->get())
-      return 1;
+      return true;
   }
-  return 0;
+  return false;
 }
 
 bool bx_devices_c::is_agp_present(void)
@@ -1119,7 +1114,7 @@ bool bx_devices_c::is_agp_present(void)
 #if BX_SUPPORT_PCI
   return (pci.enabled && ((pci.advopts & BX_PCI_ADVOPT_NOAGP) == 0));
 #else
-  return 0;
+  return false;
 #endif
 }
 
@@ -1392,7 +1387,7 @@ bool bx_devices_c::register_pci_handlers(bx_pci_device_c *dev,
         if (strcmp(device, "none")) {
           if (!strcmp(name, device) && !pci.slot_used[i]) {
             *devfunc = ((i + pci.map_slot_to_dev) << 3) | (*devfunc & 0x07);
-            pci.slot_used[i] = 1;
+            pci.slot_used[i] = true;
             BX_INFO(("PCI slot #%d used by plugin '%s'", i+1, name));
             break;
           }
@@ -1407,20 +1402,20 @@ bool bx_devices_c::register_pci_handlers(bx_pci_device_c *dev,
           sprintf(devname, "pci.slot.%d", i+1);
           SIM->get_param_enum(devname)->set_by_name(name);
           *devfunc = ((i + pci.map_slot_to_dev) << 3) | (*devfunc & 0x07);
-          pci.slot_used[i] = 1;
+          pci.slot_used[i] = true;
           BX_INFO(("PCI slot #%d used by plugin '%s'", i+1, name));
         } else {
           BX_ERROR(("Plugin '%s' not connected to a PCI slot", name));
-          return 0;
+          return false;
         }
       }
       bus_devfunc = *devfunc;
     } else if ((bus == 1) && (max_pci_slots == 4)) {
-      pci.slot_used[4] = 1;
+      pci.slot_used[4] = true;
       bus_devfunc = 0x100;
     } else {
       BX_PANIC(("Invalid bus number #%d", bus));
-      return 0;
+      return false;
     }
   }
   /* check if device/function is available */
@@ -1428,7 +1423,7 @@ bool bx_devices_c::register_pci_handlers(bx_pci_device_c *dev,
     if (pci.num_pci_handlers >= BX_MAX_PCI_DEVICES) {
       BX_INFO(("too many PCI devices installed."));
       BX_PANIC(("  try increasing BX_MAX_PCI_DEVICES"));
-      return 0;
+      return false;
     }
     handle = pci.num_pci_handlers++;
     pci.pci_handler[handle].handler = dev;
@@ -1440,10 +1435,9 @@ bool bx_devices_c::register_pci_handlers(bx_pci_device_c *dev,
       BX_INFO(("%s present on AGP bus device #0", descr));
     }
     dev->set_name(descr);
-    return 1; // device/function mapped successfully
-  } else {
-    return 0; // device/function not available, return false.
+    return true; // device/function mapped successfully
   }
+  return false; // device/function not available, return false.
 }
 
 bool bx_devices_c::pci_set_base_mem(void *this_ptr, memory_handler_t f1, memory_handler_t f2,
@@ -1469,9 +1463,9 @@ bool bx_devices_c::pci_set_base_mem(void *this_ptr, memory_handler_t f1, memory_
       DEV_register_memory_handlers(this_ptr, f1, f2, newbase, newbase + size - 1);
     }
     *addr = newbase;
-    return 1;
+    return true;
   }
-  return 0;
+  return false;
 }
 
 bool bx_devices_c::pci_set_base_io(void *this_ptr, bx_read_handler_t f1, bx_write_handler_t f2,
@@ -1504,9 +1498,9 @@ bool bx_devices_c::pci_set_base_io(void *this_ptr, bx_read_handler_t f1, bx_writ
       }
     }
     *addr = newbase;
-    return 1;
+    return true;
   }
-  return 0;
+  return false;
 }
 
 // PCI device base class (common methods)

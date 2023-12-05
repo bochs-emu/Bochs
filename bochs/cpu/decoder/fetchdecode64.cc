@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2019  The Bochs Project
+//  Copyright (C) 2001-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -906,7 +906,7 @@ static BxOpcodeDecodeDescriptor64 decode64_descriptor[] =
 #endif
    /* 0F 38 F6 */ { &decoder64_modrm, BxOpcodeTable0F38F6 },
    /* 0F 38 F7 */ { &decoder_ud64, NULL },
-   /* 0F 38 F8 */ { &decoder_ud64, NULL },
+   /* 0F 38 F8 */ { &decoder64_modrm, BxOpcodeTable0F38F8 },
    /* 0F 38 F9 */ { &decoder64_modrm, BxOpcodeTable0F38F9 },
 #if BX_SUPPORT_KEYLOCKER
    /* 0F 38 FA */ { &decoder64_modrm, BxOpcodeTable0F38FA },

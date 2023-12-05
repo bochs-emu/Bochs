@@ -149,8 +149,8 @@ void ryzen_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function
   case 0x80000019:
     get_ext_cpuid_leaf_19(leaf);
     return;
-  case 0x8000001A:
-    get_ext_cpuid_leaf_1A(leaf);
+  case 0x8000001A: // CPUID leaf 0x8000001A - Performance Optimization Identifiers
+    get_leaf(leaf, 0x00000003, 0x00000000, 0x00000000, 0x00000000);
     return;
   case 0x8000001B:
     get_ext_cpuid_leaf_1B(leaf);
@@ -527,7 +527,7 @@ void ryzen_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000003 //
 // leaf 0x80000004 //
 
-// leaf 0x80000005 //
+// leaf 0x80000005 - L1 Cache and TLB Identifiers //
 void ryzen_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
 {
   // CPUID function 0x800000005 - L1 Cache and TLB Identifiers
@@ -537,20 +537,20 @@ void ryzen_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
   leaf->edx = 0x40040140;
 }
 
-// leaf 0x80000006 //
+// leaf 0x80000006 - L2 Cache and TLB Identifiers //
 void ryzen_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
 {
-  // CPUID function 0x800000006 - L2 Cache and TLB Identifiers
+  // CPUID function 0x80000006 - L2 Cache and TLB Identifiers
   leaf->eax = 0x26006400;
   leaf->ebx = 0x66006400;
   leaf->ecx = 0x02006140;
   leaf->edx = 0x00808140;
 }
 
-// leaf 0x80000007 //
+// leaf 0x80000007 - Advanced Power Management //
 void ryzen_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
 {
-  // CPUID function 0x800000007 - Advanced Power Management
+  // CPUID function 0x80000007 - Advanced Power Management
   leaf->eax = 0;
   leaf->ebx = 0x0000001b;
   leaf->ecx = 0;
@@ -611,14 +611,7 @@ void ryzen_t::get_ext_cpuid_leaf_19(cpuid_function_t *leaf) const
   leaf->edx = 0;
 }
 
-void ryzen_t::get_ext_cpuid_leaf_1A(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x80000001A - Performance Optimization Identifiers
-  leaf->eax = 0x00000003;
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0;
-}
+// CPUID leaf 0x80000001A - Performance Optimization Identifiers
 
 void ryzen_t::get_ext_cpuid_leaf_1B(cpuid_function_t *leaf) const
 {
@@ -696,7 +689,7 @@ void ryzen_t::get_ext_cpuid_leaf_1F(cpuid_function_t *leaf) const
 
 void ryzen_t::dump_cpuid(void) const
 {
-  bx_cpuid_t::dump_cpuid(0xD, 0x1F);
+  bx_cpuid_t::dump_cpuid(0xD, 0x8000001F);
 }
 
 bx_cpuid_t *create_ryzen_cpuid(BX_CPU_C *cpu) { return new ryzen_t(cpu); }

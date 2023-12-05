@@ -132,8 +132,8 @@ void zambezi_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_functi
   case 0x80000019:
     get_ext_cpuid_leaf_19(leaf);
     return;
-  case 0x8000001A:
-    get_ext_cpuid_leaf_1A(leaf);
+  case 0x8000001A: // CPUID leaf 0x8000001A - Performance Optimization Identifiers
+    get_leaf(leaf, 0x00000003, 0x00000000, 0x00000000, 0x00000000);
     return;
   case 0x8000001B:
     get_ext_cpuid_leaf_1B(leaf);
@@ -456,7 +456,7 @@ void zambezi_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
 // leaf 0x80000006 //
 void zambezi_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
 {
-  // CPUID function 0x800000006 - L2 Cache and TLB Identifiers
+  // CPUID function 0x80000006 - L2 Cache and TLB Identifiers
   leaf->eax = 0x64000000;
   leaf->ebx = 0x64004200;
   leaf->ecx = 0x08008140;
@@ -466,7 +466,7 @@ void zambezi_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
 // leaf 0x80000007 //
 void zambezi_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
 {
-  // CPUID function 0x800000007 - Advanced Power Management
+  // CPUID function 0x80000007 - Advanced Power Management
   leaf->eax = 0;
   leaf->ebx = 0;
   leaf->ecx = 0;
@@ -527,14 +527,7 @@ void zambezi_t::get_ext_cpuid_leaf_19(cpuid_function_t *leaf) const
   leaf->edx = 0;
 }
 
-void zambezi_t::get_ext_cpuid_leaf_1A(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x80000001A - Performance Optimization Identifiers
-  leaf->eax = 0x00000003;
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0;
-}
+// CPUID leaf 0x80000001A - Performance Optimization Identifiers
 
 void zambezi_t::get_ext_cpuid_leaf_1B(cpuid_function_t *leaf) const
 {
@@ -604,7 +597,7 @@ void zambezi_t::get_ext_cpuid_leaf_1E(cpuid_function_t *leaf) const
 
 void zambezi_t::dump_cpuid(void) const
 {
-  bx_cpuid_t::dump_cpuid(0xD, 0x1E);
+  bx_cpuid_t::dump_cpuid(0xD, 0x8000001E);
 }
 
 bx_cpuid_t *create_zambezi_cpuid(BX_CPU_C *cpu) { return new zambezi_t(cpu); }

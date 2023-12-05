@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2020 Stanislav Shwartsman
+//   Copyright (c) 2008-2023 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -713,6 +713,13 @@ bx_define_opcode(BX_IA_SYSEXIT, "sysexit", "sysexit", NULL, &BX_CPU_C::SYSEXIT, 
 
 bx_define_opcode(BX_IA_MONITOR, "monitor", "monitor", &BX_CPU_C::BxError, &BX_CPU_C::MONITOR, BX_ISA_MONITOR_MWAIT, OP_NONE, OP_NONE, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_MWAIT, "mwait", "mwait", &BX_CPU_C::BxError, &BX_CPU_C::MWAIT, BX_ISA_MONITOR_MWAIT, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
+
+#if BX_SUPPORT_X86_64
+bx_define_opcode(BX_IA_UMONITOR_Eq, "umonitor", "umonitor", &BX_CPU_C::BxError, &BX_CPU_C::UMONITOR_Eq, BX_ISA_WAITPKG, OP_Eq, OP_NONE, OP_NONE, OP_NONE, 0)
+#endif
+bx_define_opcode(BX_IA_UMONITOR_Ed, "umonitor", "umonitor", &BX_CPU_C::BxError, &BX_CPU_C::UMONITOR_Eq, BX_ISA_WAITPKG, OP_Ed, OP_NONE, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_UMWAIT_Ed, "umwait", "umwait", &BX_CPU_C::BxError, &BX_CPU_C::UMWAIT_Ed, BX_ISA_WAITPKG, OP_Ed, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
+bx_define_opcode(BX_IA_TPAUSE_Ed, "tpause", "tpause", &BX_CPU_C::BxError, &BX_CPU_C::UMWAIT_Ed, BX_ISA_WAITPKG, OP_Ed, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
 
 bx_define_opcode(BX_IA_MONITORX, "monitorx", "monitorx", &BX_CPU_C::BxError, &BX_CPU_C::MONITOR, BX_ISA_MONITORX_MWAITX, OP_NONE, OP_NONE, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_MWAITX, "mwaitx", "mwaitx", &BX_CPU_C::BxError, &BX_CPU_C::MWAIT, BX_ISA_MONITORX_MWAITX, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
@@ -2750,6 +2757,12 @@ bx_define_opcode(BX_IA_RDSEED_Eq, "rdseed", "rdseedq", NULL, &BX_CPU_C::RDSEED_E
 bx_define_opcode(BX_IA_MOVDIRI_MdGd, "movdiri", "movdiril", &BX_CPU_C::MOV32_EdGdM, NULL, BX_ISA_MOVDIRI, OP_Md, OP_Gd, OP_NONE, OP_NONE, 0)
 #if BX_SUPPORT_X86_64
 bx_define_opcode(BX_IA_MOVDIRI_MqGq, "movdiri", "movdiriq", &BX_CPU_C::MOV_EqGqM, NULL, BX_ISA_MOVDIRI, OP_Mq, OP_Gq, OP_NONE, OP_NONE, 0)
+#endif
+
+// MOVDIR64B
+bx_define_opcode(BX_IA_MOVDIR64B_GdMdq, "movdir64b", "movdir64b", &BX_CPU_C::MOVDIR64B, NULL, BX_ISA_MOVDIR64B, OP_Gd, OP_M, OP_NONE, OP_NONE, 0)
+#if BX_SUPPORT_X86_64
+bx_define_opcode(BX_IA_MOVDIR64B_GqMdq, "movdir64b", "movdir64b", &BX_CPU_C::MOVDIR64B, NULL, BX_ISA_MOVDIR64B, OP_Gq, OP_M, OP_NONE, OP_NONE, 0)
 #endif
 
 #if BX_SUPPORT_AVX

@@ -40,8 +40,11 @@ tigerlake_t::tigerlake_t(BX_CPU_C *cpu):
     bx_cpuid_t(cpu)
 #endif
 {
-  if (! BX_SUPPORT_X86_64)
-    BX_PANIC(("You must enable x86-64 for Intel Core i7 Icelake configuration"));
+  if (BX_SUPPORT_VMX == 1)
+    BX_INFO(("You must compile with --enable-vmx=2 for Intel Core i7 IigerLake VMX configuration"));
+
+  if (! BX_SUPPORT_MONITOR_MWAIT)
+    BX_INFO(("WARNING: MONITOR/MWAIT support is not compiled in !"));
 
   enable_cpu_extension(BX_ISA_X87);
   enable_cpu_extension(BX_ISA_486);
@@ -133,7 +136,11 @@ tigerlake_t::tigerlake_t(BX_CPU_C *cpu):
   enable_cpu_extension(BX_ISA_UMIP);
   enable_cpu_extension(BX_ISA_RDPID);
   enable_cpu_extension(BX_ISA_MOVDIRI);
+  enable_cpu_extension(BX_ISA_MOVDIR64B);
   enable_cpu_extension(BX_ISA_SCA_MITIGATIONS);
+
+  max_std_leaf = 0x1B;
+  max_ext_leaf = 0x80000008;
 }
 
 void tigerlake_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
@@ -146,7 +153,7 @@ void tigerlake_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_func
 
   switch(function) {
   case 0x80000000:
-    get_ext_cpuid_leaf_0(leaf);
+    get_leaf_0(max_ext_leaf, NULL, leaf); // highest extended function understood by CPUID
     return;
   case 0x80000001:
     get_ext_cpuid_leaf_1(leaf);
@@ -159,23 +166,23 @@ void tigerlake_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_func
   case 0x80000005:
     get_reserved_leaf(leaf);
     return;
-  case 0x80000006:
-    get_ext_cpuid_leaf_6(leaf);
+  case 0x80000006: // CPUID leaf 0x80000006 - L2 Cache and TLB Identifiers
+    get_leaf(leaf, 0x00000000, 0x00000000, 0x01007040, 0x00000000);
     return;
-  case 0x80000007:
-    get_ext_cpuid_leaf_7(leaf);
+  case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management leaf
+    get_leaf(leaf, 0x00000000, 0x00000000, 0x00000000, 0x00000100); // EDX[8] - invariant TSC
     return;
   case 0x80000008:
     get_ext_cpuid_leaf_8(leaf);
     return;
   case 0x00000000:
-    get_std_cpuid_leaf_0(leaf);
+    get_leaf_0(max_std_leaf, "GenuineIntel", leaf);
     return;
   case 0x00000001:
     get_std_cpuid_leaf_1(leaf);
     return;
-  case 0x00000002:
-    get_std_cpuid_leaf_2(leaf);
+  case 0x00000002: // CPUID leaf 0x00000002 - Cache and TLB Descriptors
+    get_leaf(leaf, 0x00feff01, 0x000000f0, 0x00000000, 0x00000000);
     return;
   case 0x00000003:
     get_reserved_leaf(leaf);
@@ -183,11 +190,11 @@ void tigerlake_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_func
   case 0x00000004:
     get_std_cpuid_leaf_4(subfunction, leaf);
     return;
-  case 0x00000005:
+  case 0x00000005: // CPUID leaf 0x00000005 - MONITOR/MWAIT leaf
     get_std_cpuid_leaf_5(leaf);
     return;
-  case 0x00000006:
-    get_std_cpuid_leaf_6(leaf);
+  case 0x00000006: // CPUID leaf 0x00000006 - Thermal and Power Management Leaf
+    get_leaf(leaf, 0x0017eff7, 0x00000002, 0x00000009, 0x00000000);
     return;
   case 0x00000007:
     get_std_cpuid_leaf_7(subfunction, leaf);
@@ -196,7 +203,7 @@ void tigerlake_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_func
   case 0x00000009:
     get_reserved_leaf(leaf);
     return;
-  case 0x0000000A:
+  case 0x0000000A: // CPUID leaf 0x0000000A - Architectural Performance Monitor
     get_std_cpuid_leaf_A(leaf);
     return;
   case 0x0000000B:
@@ -209,28 +216,28 @@ void tigerlake_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_func
     get_std_cpuid_xsave_leaf(subfunction, leaf);
     return;
   case 0x0000000E:
-  case 0x0000000F:
-  case 0x00000010:
+  case 0x0000000F: // CPUID leaf 0x0000000F - Intel Resource Director Technonology
+  case 0x00000010: // CPUID leaf 0x00000010 - Intel Resource Director Technonology
   case 0x00000011:
   case 0x00000012: // SGX Capability
   case 0x00000013:
   case 0x00000014: // Processor Trace
     get_reserved_leaf(leaf);
     return;
-  case 0x00000015:
-    get_std_cpuid_leaf_15(leaf);
+  case 0x00000015: // CPUID leaf 0x00000015 - Time Stamp Counter and Core Crystal Clock Information Leaf
+    get_leaf(leaf, 0x00000002, 0x0000007e, 0x0249f000, 0x00000000);
     return;
-  case 0x00000016:
-    get_std_cpuid_leaf_16(leaf);
+  case 0x00000016: // CPUID leaf 0x00000016 - Processor Frequency Information Leaf
+    get_leaf(leaf, 0x00000960, 0x00001068, 0x00000064, 0x00000000);
     return;
   case 0x00000017:
     get_reserved_leaf(leaf);
     return;
-  case 0x00000018:
+  case 0x00000018: // TLB Descriptors
     get_std_cpuid_leaf_18(subfunction, leaf);
     return;
-  case 0x00000019:
-  case 0x0000001A:
+  case 0x00000019: // CPUID leaf 0x00000019 - Keylocker Leaf
+  case 0x0000001A: // CPUID leaf 0x0000001A - native Model ID Enumeration leaf (for Hybrid)
   case 0x0000001B: // PCONFIG Information
   default:
     get_reserved_leaf(leaf);
@@ -272,14 +279,6 @@ Bit32u tigerlake_t::get_vmx_extensions_bitmask(void) const
 #endif
 
 // leaf 0x00000000 //
-void tigerlake_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
-{
-  // EAX: highest std function understood by CPUID
-  // EBX: vendor ID string
-  // EDX: vendor ID string
-  // ECX: vendor ID string
-  get_leaf_0(0x1B, "GenuineIntel", leaf);
-}
 
 // leaf 0x00000001 //
 void tigerlake_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
@@ -389,16 +388,6 @@ void tigerlake_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
                                        BX_CPUID_STD1_EDX_PBE);
 }
 
-// leaf 0x00000002 //
-void tigerlake_t::get_std_cpuid_leaf_2(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x00000002 - Cache and TLB Descriptors
-  leaf->eax = 0x00feff01;
-  leaf->ebx = 0x000000f0;
-  leaf->ecx = 0x00000000;
-  leaf->edx = 0x00000000;
-}
-
 // leaf 0x00000003 - Processor Serial Number (not supported) //
 
 // leaf 0x00000004 //
@@ -438,7 +427,7 @@ void tigerlake_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_t *lea
   }
 }
 
-// leaf 0x00000005 //
+// leaf 0x00000005 - MONITOR/MWAIT Leaf //
 void tigerlake_t::get_std_cpuid_leaf_5(cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000005 - MONITOR/MWAIT Leaf
@@ -467,16 +456,6 @@ void tigerlake_t::get_std_cpuid_leaf_5(cpuid_function_t *leaf) const
   leaf->ecx = 0;
   leaf->edx = 0;
 #endif
-}
-
-// leaf 0x00000006 //
-void tigerlake_t::get_std_cpuid_leaf_6(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x00000006 - Thermal and Power Management Leaf
-  leaf->eax = 0x0017eff7;
-  leaf->ebx = 0x00000002;
-  leaf->ecx = 0x00000009;
-  leaf->edx = 0x00000000;
 }
 
 // leaf 0x00000007 //
@@ -548,7 +527,7 @@ void tigerlake_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *lea
     //   [25:25] CLDEMOTE: CLDEMOTE instruction support
     //   [26:26] reserved
     // * [27:27] MOVDIRI: MOVDIRI instruction support
-    // ! [28:28] MOVDIRI64: MOVDIRI64 instruction support (not implemented yet)
+    // * [28:28] MOVDIR64: MOVDIR64 instruction support
     //   [29:29] ENQCMD: Enqueue Stores support
     //   [30:30] SGX_LC: SGX Launch Configuration
     //   [31:31] PKS: Protection keys for supervisor-mode pages
@@ -632,23 +611,7 @@ void tigerlake_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
 // leaf 0x00000014 - Intel Processor Trace Enumeration //
 
 // leaf 0x00000015 - Time Stamp Counter and Core Crystal Clock Information Leaf //
-void tigerlake_t::get_std_cpuid_leaf_15(cpuid_function_t *leaf) const
-{
-  leaf->eax = 0x00000002;
-  leaf->ebx = 0x0000007e;
-  leaf->ecx = 0x0249f000;
-  leaf->edx = 0x00000000;
-}
-
 // leaf 0x00000016 - Processor Frequency Information Leaf
-void tigerlake_t::get_std_cpuid_leaf_16(cpuid_function_t *leaf) const
-{
-  leaf->eax = 0x00000960;
-  leaf->ebx = 0x00001068;
-  leaf->ecx = 0x00000064;
-  leaf->edx = 0x00000000;
-}
-
 // leaf 0x00000017 - System-On-Chip Vendor Attribute Enumeration //
 
 // leaf 0x00000018
@@ -713,14 +676,6 @@ void tigerlake_t::get_std_cpuid_leaf_18(Bit32u subfunction, cpuid_function_t *le
 }
 
 // leaf 0x80000000 //
-void tigerlake_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
-{
-  // EAX: highest extended function understood by CPUID
-  // EBX: reserved
-  // EDX: reserved
-  // ECX: reserved
-  get_leaf_0(0x80000008, NULL, leaf);
-}
 
 // leaf 0x80000001 //
 void tigerlake_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
@@ -766,34 +721,14 @@ void tigerlake_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000002 //
 // leaf 0x80000003 //
 // leaf 0x80000004 //
-
 // leaf 0x80000005 - L1 Cache and TLB Identifiers (reserved for Intel) //
-
 // leaf 0x80000006 //
-void tigerlake_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x800000006 - L2 Cache and TLB Identifiers
-  leaf->eax = 0x00000000;
-  leaf->ebx = 0x00000000;
-  leaf->ecx = 0x01007040;
-  leaf->edx = 0x00000000;
-}
-
-// leaf 0x80000007 //
-void tigerlake_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x800000007 - Advanced Power Management
-  leaf->eax = 0;
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0x00000100; // bit 8 - invariant TSC
-}
-
+// leaf 0x80000007 - Advanced Power Management //
 // leaf 0x80000008 //
 
 void tigerlake_t::dump_cpuid(void) const
 {
-  bx_cpuid_t::dump_cpuid(0x18, 0x8);
+  bx_cpuid_t::dump_cpuid(max_std_leaf, max_ext_leaf);
 }
 
 bx_cpuid_t *create_tigerlake_cpuid(BX_CPU_C *cpu) { return new tigerlake_t(cpu); }

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2019  The Bochs Project
+//  Copyright (C) 2001-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -29,14 +29,15 @@
 #include "param_names.h"
 #include "cpustats.h"
 
+#if BX_SUPPORT_APIC
+#include "apic.h"
+#endif
+
 #include <stdlib.h>
 
 BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
 #if BX_CPU_LEVEL >= 4
    , cpuid(NULL)
-#endif
-#if BX_SUPPORT_APIC
-   ,lapic (this, id)
 #endif
 {
   // in case of SMF, you cannot reference any member data
@@ -46,6 +47,10 @@ BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
   sprintf(name, "CPU%x", bx_cpuid);
   sprintf(logname, "cpu%x", bx_cpuid);
   put(logname, name);
+
+#if BX_SUPPORT_APIC
+  lapic = new bx_local_apic_c(this, bx_cpuid);
+#endif
 
   for (unsigned n=0;n<BX_ISA_EXTENSIONS_ARRAY_SIZE;n++)
     ia_extensions_bitmask[n] = 0;
@@ -427,6 +432,11 @@ void BX_CPU_C::register_state(void)
 #if BX_SUPPORT_VMX
   BXRS_HEX_PARAM_FIELD(MSR, ia32_feature_ctrl, msr.ia32_feature_ctrl);
 #endif
+#if BX_SUPPORT_MONITOR_MWAIT
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_WAITPKG)) {
+    BXRS_HEX_PARAM_FIELD(MSR, ia32_umwait_ctrl, msr.ia32_umwait_ctrl);
+  }
+#endif
 
 #if BX_CONFIGURE_MSRS
   bx_list_c *MSRS = new bx_list_c(cpu, "USER_MSR");
@@ -500,11 +510,11 @@ void BX_CPU_C::register_state(void)
 #if BX_SUPPORT_MONITOR_MWAIT
   bx_list_c *monitor_list = new bx_list_c(cpu, "MONITOR");
   BXRS_HEX_PARAM_FIELD(monitor_list, monitor_addr, monitor.monitor_addr);
-  BXRS_PARAM_BOOL(monitor_list, armed, monitor.armed);
+  BXRS_DEC_PARAM_FIELD(monitor_list, armed, monitor.armed_by);
 #endif
 
 #if BX_SUPPORT_APIC
-  lapic.register_state(cpu);
+  lapic->register_state(cpu);
 #endif
 
 #if BX_SUPPORT_VMX
@@ -689,6 +699,10 @@ BX_CPU_C::~BX_CPU_C()
 {
 #if BX_CPU_LEVEL >= 4
   delete cpuid;
+#endif
+
+#if BX_SUPPORT_APIC
+  delete lapic;
 #endif
 
 #if InstrumentCPU
@@ -891,6 +905,10 @@ void BX_CPU_C::reset(unsigned source)
 
   BX_CPU_THIS_PTR msr.ia32_xss = 0;
 
+#if BX_SUPPORT_MONITOR_MWAIT
+  BX_CPU_THIS_PTR msr.ia32_umwait_ctrl = 0;
+#endif
+
 #if BX_SUPPORT_CET
   BX_CPU_THIS_PTR msr.ia32_interrupt_ssp_table = 0;
   BX_CPU_THIS_PTR msr.ia32_cet_control[0] = BX_CPU_THIS_PTR msr.ia32_cet_control[1] = 0;
@@ -911,12 +929,12 @@ void BX_CPU_C::reset(unsigned source)
 #if BX_SUPPORT_APIC
   /* APIC Address, APIC enabled and BSP is default, we'll fill in the rest later */
   BX_CPU_THIS_PTR msr.apicbase = BX_LAPIC_BASE_ADDR;
-  BX_CPU_THIS_PTR lapic.reset(source);
+  BX_CPU_THIS_PTR lapic->reset(source);
   BX_CPU_THIS_PTR msr.apicbase |= 0x900;
-  BX_CPU_THIS_PTR lapic.set_base(BX_CPU_THIS_PTR msr.apicbase);
+  BX_CPU_THIS_PTR lapic->set_base(BX_CPU_THIS_PTR msr.apicbase);
 #if BX_CPU_LEVEL >= 6
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_XAPIC_EXT))
-    BX_CPU_THIS_PTR lapic.enable_xapic_extensions();
+    BX_CPU_THIS_PTR lapic->enable_xapic_extensions();
 #endif
 #endif
 
@@ -1070,7 +1088,7 @@ void BX_CPU_C::reset(unsigned source)
 #if BX_SUPPORT_SMP
   // notice if I'm the bootstrap processor.  If not, do the equivalent of
   // a HALT instruction.
-  int apic_id = lapic.get_id();
+  int apic_id = lapic->get_id();
   if (BX_BOOTSTRAP_PROCESSOR == apic_id) {
     // boot normally
     BX_CPU_THIS_PTR msr.apicbase |=  0x100; /* set bit 8 BSP */

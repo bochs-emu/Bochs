@@ -41,9 +41,7 @@ public:
   virtual void dump_cpuid(void) const;
 
 private:
-  void get_std_cpuid_leaf_0(cpuid_function_t *leaf) const;
   void get_std_cpuid_leaf_1(cpuid_function_t *leaf) const;
-  void get_std_cpuid_leaf_2(cpuid_function_t *leaf) const;
 };
 
 extern bx_cpuid_t *create_p2_klamath_cpuid(BX_CPU_C *cpu);
