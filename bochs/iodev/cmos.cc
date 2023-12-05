@@ -134,6 +134,8 @@ bx_cmos_c::~bx_cmos_c(void)
     free(tmptime);
   }
   SIM->get_bochs_root()->remove("cmos");
+  bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_MISC);
+  misc_rt->remove("cmosimage");
   BX_DEBUG(("Exit"));
 }
 
@@ -263,6 +265,13 @@ void bx_cmos_c::init(void)
   free(tmptime);
 
   BX_CMOS_THIS s.timeval_change = 0;
+
+  // init runtime parameters
+  bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_MISC);
+  bx_list_c *cmos_rt = new bx_list_c(misc_rt, "cmosimage", "Save CMOS RAM to image file on exit");
+  cmos_rt->add(SIM->get_param(BXPN_CMOSIMAGE_ENABLED));
+  cmos_rt->add(SIM->get_param(BXPN_CMOSIMAGE_PATH));
+  cmos_rt->set_options(cmos_rt->SERIES_ASK);
 
 #if BX_DEBUGGER
   // register device for the 'info device' command (calls debug_dump())

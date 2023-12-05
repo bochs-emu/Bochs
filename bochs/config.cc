@@ -1830,10 +1830,6 @@ void bx_init_options()
   #if BX_SUPPORT_IODEBUG
   misc->add(SIM->get_param(BXPN_IODEBUG_ALL_RINGS));
   #endif
-  bx_list_c *cmosrt = new bx_list_c(misc, "cmosimg", "CMOS image options");
-  cmosrt->add(SIM->get_param(BXPN_CMOSIMAGE_ENABLED));
-  cmosrt->add(SIM->get_param(BXPN_CMOSIMAGE_PATH));
-  cmosrt->set_options(cdrom->SERIES_ASK);
   misc->set_options(misc->SHOW_PARENT | misc->SHOW_GROUP_NAME);
 }
 
