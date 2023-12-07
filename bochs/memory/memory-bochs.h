@@ -148,6 +148,7 @@ private:
   Bit8u   flash_type;
   Bit8u   flash_status;
   Bit8u   flash_wsm_state;
+  bool    flash_modified;
 
   BX_MEM_SMF Bit8u flash_read(Bit32u addr);
   BX_MEM_SMF void  flash_write(Bit32u addr, Bit8u data);
