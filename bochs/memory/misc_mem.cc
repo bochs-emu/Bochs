@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2022  The Bochs Project
+//  Copyright (C) 2001-2023  The Bochs Project
 //
 //  I/O memory handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -69,6 +69,7 @@ void BX_MEM_C::init_memory(Bit64u guest, Bit64u host, Bit32u block_size)
   BX_MEM_THIS flash_type = 0;
   BX_MEM_THIS flash_status = 0x80;
   BX_MEM_THIS flash_wsm_state = FLASH_READ_ARRAY;
+  BX_MEM_THIS flash_modified = false;
 
   for (i = 0; i < 65; i++)
     BX_MEM_THIS rom_present[i] = false;
@@ -100,7 +101,10 @@ void ramfile_save_handler(void *devptr, FILE *fp)
 // Note: This must be called before the memory file save handler is called.
 Bit64s memory_param_save_handler(void *devptr, bx_param_c *param)
 {
+  char imgname[BX_PATHNAME_LEN];
+  char path[BX_PATHNAME_LEN+1];
   const char *pname = param->get_name();
+
   if (! strncmp(pname, "blk", 3)) {
     Bit32u blk_index = atoi(pname + 3);
     if (! BX_MEM(0)->blocks[blk_index])
@@ -114,13 +118,48 @@ Bit64s memory_param_save_handler(void *devptr, bx_param_c *param)
     Bit32u val = (Bit32u) (BX_MEM(0)->blocks[blk_index] - BX_MEM(0)->vector);
     if ((val & (BX_MEM_THIS block_size-1)) == 0)
        return val / BX_MEM_THIS block_size;
+  } else if (!strcmp(pname, "flash_data")) {
+    int fd = -1, size = 0, offset = 0;
+    if (BX_MEM_THIS flash_modified) {
+      param->get_param_path(imgname, BX_PATHNAME_LEN);
+      if (!strncmp(imgname, "bochs.", 6)) {
+        strcpy(imgname, imgname+6);
+      }
+      if (SIM->get_param_string(BXPN_RESTORE_PATH)->isempty()) {
+        return 0;
+      }
+      sprintf(path, "%s/%s", SIM->get_param_string(BXPN_RESTORE_PATH)->getptr(), imgname);
+      fd = open(path, O_WRONLY | O_CREAT | O_TRUNC
+#ifdef O_BINARY
+                | O_BINARY
+#endif
+                , S_IWUSR | S_IRUSR | S_IWGRP | S_IRGRP
+                );
+      if (fd >= 0) {
+        if (BX_MEM_THIS flash_type == 2) {
+          offset = 0x8000; // 28F002BC-T
+          size = 0x4000;
+        } else if (BX_MEM_THIS flash_type == 1) {
+          offset = 0x4000; // 28F001BX-T
+          size = 0x2000;
+        }
+        if (size > 0) {
+          write(fd, &BX_MEM_THIS rom[BIOSROMSZ - offset], size);
+        }
+        close(fd);
+      }
+    }
+    return (fd >= 0);
   }
   return -1;
 }
 
 void memory_param_restore_handler(void *devptr, bx_param_c *param, Bit64s val)
 {
+  char imgname[BX_PATHNAME_LEN];
+  char path[BX_PATHNAME_LEN+1];
   const char *pname = param->get_name();
+
   if (! strncmp(pname, "blk", 3)) {
     Bit32u blk_index = atoi(pname + 3);
 #if BX_LARGE_RAMFILE
@@ -137,6 +176,36 @@ void memory_param_restore_handler(void *devptr, bx_param_c *param, Bit64s val)
 #if BX_LARGE_RAMFILE
       BX_MEM(0)->read_block(blk_index);
 #endif
+  } else if (!strcmp(pname, "flash_data")) {
+    if (BX_MEM_THIS flash_modified && val) {
+      int size = 0, offset = 0;
+      param->get_param_path(imgname, BX_PATHNAME_LEN);
+      if (!strncmp(imgname, "bochs.", 6)) {
+        strcpy(imgname, imgname+6);
+      }
+      if (SIM->get_param_string(BXPN_RESTORE_PATH)->isempty()) {
+        return;
+      }
+      sprintf(path, "%s/%s", SIM->get_param_string(BXPN_RESTORE_PATH)->getptr(), imgname);
+      int fd = open(path, O_RDONLY
+#ifdef O_BINARY
+                    | O_BINARY
+#endif
+                    );
+      if (fd >= 0) {
+        if (BX_MEM_THIS flash_type == 2) {
+          offset = 0x8000; // 28F002BC-T
+          size = 0x4000;
+        } else if (BX_MEM_THIS flash_type == 1) {
+          offset = 0x4000; // 28F001BX-T
+          size = 0x2000;
+        }
+        if (size > 0) {
+          read(fd, &BX_MEM_THIS rom[BIOSROMSZ - offset], size);
+        }
+        close(fd);
+      }
+    }
   }
 }
 
@@ -171,6 +240,9 @@ void BX_MEM_C::register_state()
   }
   BXRS_HEX_PARAM_FIELD(list, flash_status, BX_MEM_THIS flash_status);
   BXRS_DEC_PARAM_FIELD(list, flash_wsm_state, BX_MEM_THIS flash_wsm_state);
+  BXRS_PARAM_BOOL(list, flash_modified, BX_MEM_THIS flash_modified);
+  bx_param_bool_c *flash_data = new bx_param_bool_c(list, "flash_data", "", "", false);
+  flash_data->set_sr_handlers(this, memory_param_save_handler, memory_param_restore_handler);
 }
 
 void BX_MEM_C::cleanup_memory()
@@ -831,6 +903,7 @@ void BX_MEM_C::flash_write(Bit32u addr, Bit8u data)
     BX_DEBUG(("flash write to ROM (address = 0x%08x, data = 0x%02x)", flash_addr, data));
     BX_MEM_THIS rom[addr] &= data;
     BX_MEM_THIS flash_wsm_state = FLASH_READ_STATUS;
+    BX_MEM_THIS flash_modified = true;
   } else {
     BX_DEBUG(("flash write command (address = 0x%08x, code = 0x%02x)", flash_addr, data));
     switch (data) {
@@ -859,11 +932,13 @@ void BX_MEM_C::flash_write(Bit32u addr, Bit8u data)
             for (i = 0; i < 0x1000; i++) {
               BX_MEM_THIS rom[addr + i] = 0xff;
             }
+            BX_MEM_THIS flash_modified = true;
           } else if ((BX_MEM_THIS flash_type == 2) &&
                      ((flash_addr = 0x38000) || (flash_addr = 0x3a000))) {
             for (i = 0; i < 0x2000; i++) {
               BX_MEM_THIS rom[addr + i] = 0xff;
             }
+            BX_MEM_THIS flash_modified = true;
           }
         } else if (BX_MEM_THIS flash_wsm_state == FLASH_ERASE_SUSP) {
           BX_MEM_THIS flash_status &= ~0x40;
