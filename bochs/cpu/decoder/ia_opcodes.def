@@ -736,6 +736,7 @@ bx_define_opcode(BX_IA_FILD_QWORD_INTEGER, "fild", "fildq", &BX_CPU_C::FILD_QWOR
 bx_define_opcode(BX_IA_FBLD_PACKED_BCD, "fbld", "fbldt", &BX_CPU_C::FBLD_PACKED_BCD, NULL, BX_ISA_X87, OP_Mt, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_FPU)
 bx_define_opcode(BX_IA_FST_STi, "fst", "fst", NULL, &BX_CPU_C::FST_STi, BX_ISA_X87, OP_STi, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_FPU)
 bx_define_opcode(BX_IA_FSTP_STi, "fstp", "fstp", NULL, &BX_CPU_C::FST_STi, BX_ISA_X87, OP_STi, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_FPU)
+bx_define_opcode(BX_IA_FSTP_SPECIAL_STi, "fstp", "fstp", NULL, &BX_CPU_C::FST_STi, BX_ISA_X87, OP_STi, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_FPU) // undocumented 287 compatibility opcode
 bx_define_opcode(BX_IA_FST_SINGLE_REAL, "fst", "fsts", &BX_CPU_C::FST_SINGLE_REAL, NULL, BX_ISA_X87, OP_Md, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_FPU)
 bx_define_opcode(BX_IA_FSTP_SINGLE_REAL, "fstp", "fstps", &BX_CPU_C::FST_SINGLE_REAL, NULL, BX_ISA_X87, OP_Md, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_FPU)
 bx_define_opcode(BX_IA_FST_DOUBLE_REAL, "fst", "fstl", &BX_CPU_C::FST_DOUBLE_REAL, NULL, BX_ISA_X87, OP_Mq, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_FPU)
