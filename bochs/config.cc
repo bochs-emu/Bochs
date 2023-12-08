@@ -1925,8 +1925,21 @@ int bx_parse_cmdline(int arg, int argc, char *argv[])
     def_action[level] = SIM->get_default_log_action(level);
   }
   while (arg < argc) {
-    BX_INFO (("parsing arg %d, %s", arg, argv[arg]));
-    parse_line_unformatted("cmdline args", argv[arg]);
+    char ch = argv[arg][strlen(argv[arg]) - 1];
+    if (((arg + 1) < argc) && ((ch == ':') || (ch == '=') || (ch == ','))) {
+      char tmparg[BX_PATHNAME_LEN];
+      strcpy(tmparg, argv[arg]);
+      do {
+        arg++;
+        strcat(tmparg, argv[arg]);
+        ch = argv[arg][strlen(argv[arg]) - 1];
+      } while (((arg + 1)< argc) && ((ch == ':') || (ch == '=') || (ch == ',')));
+      BX_INFO(("parsing concatenated arg %s", tmparg));
+      parse_line_unformatted("cmdline args", tmparg);
+    } else  {
+      BX_INFO(("parsing arg %d, %s", arg, argv[arg]));
+      parse_line_unformatted("cmdline args", argv[arg]);
+    }
     arg++;
   }
   // update log actions if default has been changed
