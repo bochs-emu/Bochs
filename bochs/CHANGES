@@ -25,6 +25,9 @@ Brief summary :
 
 Detailed change log :
 
+- General
+  - Improved parsing bochsrc options passed on the command line.
+
 - CPU/CPUDB
   - Bugfixes for CPU emulation correctness (MONITOR/MWAIT, VMX/SVM, AVX-512, CET)
   - Critical CPU emulation bugfixes for SHA and GFNI instructions
@@ -53,6 +56,7 @@ Detailed change log :
 
 - Memory
   - Fixed memory handling in volatile BIOS write support
+  - Added save/restore support for the config space of the flash BIOS rom.
 
 - I/O Devices
   - Timers
@@ -61,6 +65,7 @@ Detailed change log :
 
   - CMOS
     - Fixed and improved RTC handling in CMOS and BIOS (based on SF patch by Michele Giacomone))
+    - Added runtime option for turning on/off saving CMOS image on exit.
 
   - PCI
     - Fixed and improved PCI slot config error handling
