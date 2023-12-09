@@ -898,6 +898,11 @@ void bx_init_options()
       "BIOS options",
       "Options for the Bochs BIOS",
       "", BX_PATHNAME_LEN);
+  new bx_param_filename_c(rom,
+      "flash_data",
+      "Flash BIOS config space image",
+      "Name of the image file for the config data of the flash BIOS",
+      "", BX_PATHNAME_LEN);
   rom->set_options(rom->SERIES_ASK);
 
   path = new bx_param_filename_c(vgarom,
@@ -2942,7 +2947,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       }
     }
   } else if (!strcmp(params[0], "romimage")) {
-    if ((num_params < 2) || (num_params > 4)) {
+    if ((num_params < 2) || (num_params > 5)) {
       PARSE_ERR(("%s: romimage directive: wrong # args.", context));
     }
     // set to default value 0 (auto-detect if no specified)
@@ -2955,6 +2960,8 @@ static int parse_line_formatted(const char *context, int num_params, char *param
           SIM->get_param_num(BXPN_ROM_ADDRESS)->set(strtoul(&params[i][8], NULL, 16));
         else
           SIM->get_param_num(BXPN_ROM_ADDRESS)->set(strtoul(&params[i][8], NULL, 10));
+      } else  if (!strncmp(params[i], "flash_data=", 11)) {
+        SIM->get_param_string(BXPN_ROM_FLASH_DATA)->set(&params[i][11]);
       } else  if (!strncmp(params[i], "options=", 8)) {
         SIM->get_param_string(BXPN_ROM_OPTIONS)->set(&params[i][8]);
       } else {

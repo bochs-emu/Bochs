@@ -119,7 +119,7 @@ Bit64s memory_param_save_handler(void *devptr, bx_param_c *param)
     if ((val & (BX_MEM_THIS block_size-1)) == 0)
        return val / BX_MEM_THIS block_size;
   } else if (!strcmp(pname, "flash_data")) {
-    int fd = -1, size = 0, offset = 0;
+    bool ret = false;
     if (BX_MEM_THIS flash_modified) {
       param->get_param_path(imgname, BX_PATHNAME_LEN);
       if (!strncmp(imgname, "bochs.", 6)) {
@@ -129,27 +129,9 @@ Bit64s memory_param_save_handler(void *devptr, bx_param_c *param)
         return 0;
       }
       sprintf(path, "%s/%s", SIM->get_param_string(BXPN_RESTORE_PATH)->getptr(), imgname);
-      fd = open(path, O_WRONLY | O_CREAT | O_TRUNC
-#ifdef O_BINARY
-                | O_BINARY
-#endif
-                , S_IWUSR | S_IRUSR | S_IWGRP | S_IRGRP
-                );
-      if (fd >= 0) {
-        if (BX_MEM_THIS flash_type == 2) {
-          offset = 0x8000; // 28F002BC-T
-          size = 0x4000;
-        } else if (BX_MEM_THIS flash_type == 1) {
-          offset = 0x4000; // 28F001BX-T
-          size = 0x2000;
-        }
-        if (size > 0) {
-          write(fd, &BX_MEM_THIS rom[BIOSROMSZ - offset], size);
-        }
-        close(fd);
-      }
+      ret = BX_MEM_THIS save_flash_data(path);
     }
-    return (fd >= 0);
+    return ret;
   }
   return -1;
 }
@@ -178,7 +160,6 @@ void memory_param_restore_handler(void *devptr, bx_param_c *param, Bit64s val)
 #endif
   } else if (!strcmp(pname, "flash_data")) {
     if (BX_MEM_THIS flash_modified && val) {
-      int size = 0, offset = 0;
       param->get_param_path(imgname, BX_PATHNAME_LEN);
       if (!strncmp(imgname, "bochs.", 6)) {
         strcpy(imgname, imgname+6);
@@ -187,24 +168,7 @@ void memory_param_restore_handler(void *devptr, bx_param_c *param, Bit64s val)
         return;
       }
       sprintf(path, "%s/%s", SIM->get_param_string(BXPN_RESTORE_PATH)->getptr(), imgname);
-      int fd = open(path, O_RDONLY
-#ifdef O_BINARY
-                    | O_BINARY
-#endif
-                    );
-      if (fd >= 0) {
-        if (BX_MEM_THIS flash_type == 2) {
-          offset = 0x8000; // 28F002BC-T
-          size = 0x4000;
-        } else if (BX_MEM_THIS flash_type == 1) {
-          offset = 0x4000; // 28F001BX-T
-          size = 0x2000;
-        }
-        if (size > 0) {
-          read(fd, &BX_MEM_THIS rom[BIOSROMSZ - offset], size);
-        }
-        close(fd);
-      }
+      BX_MEM_THIS load_flash_data(path);
     }
   }
 }
@@ -247,6 +211,14 @@ void BX_MEM_C::register_state()
 
 void BX_MEM_C::cleanup_memory()
 {
+  if (BX_MEM_THIS flash_modified) {
+    bx_param_string_c *flash_data = SIM->get_param_string(BXPN_ROM_FLASH_DATA);
+    if (!flash_data->isempty()) {
+      BX_MEM_THIS save_flash_data(flash_data->getptr());
+    }
+    BX_MEM_THIS flash_modified = false;
+  }
+
   BX_MEMORY_STUB_C::cleanup_memory();
 
   if (BX_MEM_THIS memory_handlers != NULL) {
@@ -262,6 +234,57 @@ void BX_MEM_C::cleanup_memory()
     delete [] BX_MEM_THIS memory_handlers;
     BX_MEM_THIS memory_handlers = NULL;
   }
+}
+
+bool BX_MEM_C::load_flash_data(const char *path)
+{
+  int size = 0, offset = 0;
+
+  int fd = open(path, O_RDONLY
+#ifdef O_BINARY
+                | O_BINARY
+#endif
+                );
+  if (fd >= 0) {
+    if (BX_MEM_THIS flash_type == 2) {
+      offset = 0x8000; // 28F002BC-T
+      size = 0x4000;
+    } else if (BX_MEM_THIS flash_type == 1) {
+      offset = 0x4000; // 28F001BX-T
+      size = 0x2000;
+    }
+    if (size > 0) {
+      read(fd, &BX_MEM_THIS rom[BIOSROMSZ - offset], size);
+    }
+    close(fd);
+  }
+  return (fd >= 0);
+}
+
+bool BX_MEM_C::save_flash_data(const char *path)
+{
+  int offset = 0, size = 0;
+
+  int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC
+#ifdef O_BINARY
+                | O_BINARY
+#endif
+                , S_IWUSR | S_IRUSR | S_IWGRP | S_IRGRP
+                );
+  if (fd >= 0) {
+    if (BX_MEM_THIS flash_type == 2) {
+      offset = 0x8000; // 28F002BC-T
+      size = 0x4000;
+    } else if (BX_MEM_THIS flash_type == 1) {
+      offset = 0x4000; // 28F001BX-T
+      size = 0x2000;
+    }
+    if (size > 0) {
+      write(fd, &BX_MEM_THIS rom[BIOSROMSZ - offset], size);
+    }
+    close(fd);
+  }
+  return (fd >= 0);
 }
 
 //
@@ -420,6 +443,12 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
                         (unsigned) romaddress,
                         (unsigned) stat_buf.st_size,
                          path));
+  if (BX_MEM_THIS flash_type > 0) {
+    bx_param_string_c *flash_data = SIM->get_param_string(BXPN_ROM_FLASH_DATA);
+    if (!flash_data->isempty()) {
+      BX_MEM_THIS load_flash_data(flash_data->getptr());
+    }
+  }
 }
 
 void BX_MEM_C::load_RAM(const char *path, bx_phy_address ramaddress)

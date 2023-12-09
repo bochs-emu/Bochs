@@ -179,6 +179,9 @@ public:
   BX_MEM_SMF void    dmaReadPhysicalPage(bx_phy_address addr, unsigned len, Bit8u *data);
   BX_MEM_SMF void    dmaWritePhysicalPage(bx_phy_address addr, unsigned len, Bit8u *data);
 
+  BX_MEM_SMF bool    load_flash_data(const char *path);
+  BX_MEM_SMF bool    save_flash_data(const char *path);
+
   BX_MEM_SMF void    load_ROM(const char *path, bx_phy_address romaddress, Bit8u type);
   BX_MEM_SMF void    load_RAM(const char *path, bx_phy_address romaddress);
 
