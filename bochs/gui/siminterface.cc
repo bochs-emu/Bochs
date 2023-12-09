@@ -369,7 +369,6 @@ int bx_cleanup_siminterface()
     root_param = NULL;
   }
   io->exit_log2();
-  delete io;
   int exit_code = SIM->get_exit_code();
   delete SIM;
   return exit_code;
