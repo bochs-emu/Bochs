@@ -1282,6 +1282,23 @@ speaker: enabled=1, mode=sound, volume=15
 #usb_xhci: port3=disk, options3="speed:high, path:hdd.img, proto:uasp"
 
 #=======================================================================
+# USB Debugger:
+# This is the experimental USB Debugger for the Windows Platform.
+# Specify a type (none, uhci, ohci, ehci, xhci) and one or more triggers.
+# (Currently, only xhci is supported, with some uhci in the process)
+# Triggers:
+#   reset:       will break and load the debugger on a port reset
+#   enable:      will break and load the debugger on a port enable
+#   start_frame: will break and load the debugger on start of frame
+#                  (this is different for each controller type)
+#   doorbell:    will break and load the debugger a xHCI Command Ring addition
+#   event:       will break and load the debugger on a xHCI Event Ring addition
+#   non_exist:   will break and load the debugger on a non-existant port access
+# (experimental and is under development)
+#=======================================================================
+#usb_debug: type=xhci, reset, enable, start_frame, doorbell, event, non_exist
+
+#=======================================================================
 # PCIDEV:
 # PCI host device mapping
 # WARNING: This Bochs feature is not maintained yet and may fail.
