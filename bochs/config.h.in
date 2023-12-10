@@ -812,6 +812,11 @@ typedef Bit32u bx_phy_address;
   #error To enable EHCI, you must also enable UHCI
 #endif
 
+#ifdef WIN32
+// set to 1 to include the USB DEBUG CONFIG Interface
+#define BX_USB_WIN32USBDEBUG 0
+#endif
+
 // MS bus mouse support
 #define BX_SUPPORT_BUSMOUSE 0
 
