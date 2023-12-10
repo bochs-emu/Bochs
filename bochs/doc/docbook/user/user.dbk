@@ -3815,7 +3815,7 @@ The start address is optional, since it can be calculated from image size.
 The Bochs BIOS currently supports only the option "fastboot" to skip the
 boot menu delay.
 </para>
-<para><command>flash_dats</command></para>
+<para><command>flash_data</command></para>
 <para>
 This parameter defines the file name for the flash BIOS config space loaded
 startup if existing and saved on exit if modified. The Bochs BIOS doesn't
@@ -5025,8 +5025,8 @@ available in the runtime configuration.
 <para>
 The device 'printer' emulates the HP Deskjet 920C printer. The PCL data is
 sent to a file specified in the 'file' option with the options<replaceable>X</replaceable>
-parameter. The current code appends the PCL code to the file if the file already
-existed. The output file can be changed at runtime.
+parameter. Note that an existing file will be over-written when Bochs starts
+again. The output file can be changed at runtime.
 </para>
 <para>
 The options<replaceable>X</replaceable> parameter can also be used to assign
@@ -5098,6 +5098,8 @@ The options<replaceable>X</replaceable> parameter is also available on OHCI.</pa
 <para>
 Example:
 <screen>
+  usb_ehci: enabled=1, companion=uhci
+  usb_ehci: enabled=1, companion=ohci
   usb_ehci: enabled=1, port1=tablet, options1="speed:high"
   usb_ehci: enabled=1, port1=disk, options1="speed:high, path:hdd.img, proto:bbb"
   usb_ehci: enabled=1, port1=disk, options1="speed:high, path:hdd.img, proto:uasp"
@@ -5105,9 +5107,17 @@ Example:
   usb_ehci: enabled=1, port1=cdrom, options1="speed:high, path:bootcd.iso, proto:uasp"
 </screen>
 This option controls the presence of the USB EHCI host controller with a
-6-port hub. The port<replaceable>X</replaceable> parameter accepts the same device types with the same
+6-port root hub. The port<replaceable>X</replaceable> parameter accepts the same device types with the same
 syntax as the UHCI controller (see the <link linkend="bochsopt-usb-uhci">usb_uhci option</link>).
-The options<replaceable>X</replaceable> parameter is also available on EHCI.</para>
+The options<replaceable>X</replaceable> parameter is also available on EHCI.
+</para>
+<para>
+The EHCI will default to three UHCI companion controllers, but you can specify either UHCI or OHCI.
+</para>
+<para>
+Either companion with allocate there first two ports to the first companion, the second pair to the next
+companion, and the last pair to the third companion. Currently, there is no way to change this.
+</para>
 </section>
 
 <section id="bochsopt-usb-xhci"><title>usb_xhci</title>
@@ -5115,7 +5125,9 @@ The options<replaceable>X</replaceable> parameter is also available on EHCI.</pa
 Example:
 <screen>
   usb_xhci: enabled=1, model="uPD720202", n_ports=4
-  usb_xhci: enabled=1, port1="disk:usbdisk.img"      # defaults to the BBB protocol
+  usb_xhci: port1="disk:usbdisk.img"                   # defaults to super-speed
+  usb_xhci: port3="disk:usbdisk.img"                   # defaults to high-speed
+  usb_xhci: port1="speed:super, disk:usbdisk.img"      # defaults to the BBB protocol
   usb_xhci: port1=disk, options1="speed:super, path:usbdisk.img, proto:uasp"
   usb_xhci: port1=disk, options1="speed:super, path:usbdisk.img, proto:bbb"
   usb_xhci: port1=cdrom, options1="speed:super, path:bootcd.iso, proto:uasp"
@@ -5149,6 +5161,79 @@ On an xHCI, the number of ports used is the number of port register sets, one se
 protocol and a paired set for the USB2 protocol. An 'n_ports=' specification of 4 defines
 <emphasis>two</emphasis> physical sockets.
 </para></note>
+<para>
+Since the register sets are paired on the xHCI, for example if you have 2 sockets (4 register sets),
+Bochs has Port 1 and Port 3 paired.  Port 1 is for Super-speed devices while Port 3 is for high-, 
+full-, and low-speed devices. With this in mind, if you have a device on Port 1, you <emphasis>must
+not</emphasis> have a device on Port 3. If you have a (super-speed) device on Port 1 and a (non-super-speed)
+device on Port 3, Bochs will Panic with a string similar to:
+<screen>
+  >>PANIC<< Port #3: Paired port number #1 already in use.
+</screen>
+</para>
+<para>
+With an example of 4 register sets (ports), this means there are only 2 physical sockets. You may 
+only have two devices at a time. To remedy the above Panic, take the following in mind:
+</para>
+<para>
+<table frame='all'><title>Valid Port definitions (4-port example)</title>
+  <?dbhtml table-width="50%" ?>
+  <tgroup cols='5' align='left' colsep='1' rowsep='1'>
+    <colspec colname='c1' colwidth='100pt'>
+    <colspec colname='c2' colwidth='175pt'>
+    <colspec colname='c3' colwidth='175pt'>
+    <colspec colname='c4' colwidth='175pt'>
+    <colspec colname='c5' colwidth='175pt'>
+    <thead>
+    <row>
+      <entry align="center">Scenario</entry>
+      <entry align="center">Port 1 (Paired with Port 3)</entry>
+      <entry align="center">Port 2 (Paired with Port 4)</entry>
+      <entry align="center">Port 3 (Paired with Port 1)</entry>
+      <entry align="center">Port 4 (Paired with Port 2)</entry>
+    </row>
+    </thead>
+    <tbody>
+    <row>
+      <entry align="center">1</entry>
+      <entry align="center">Super</entry>
+      <entry align="center">Super</entry>
+      <entry align="center">none</entry>
+      <entry align="center">none</entry>
+    </row>
+    <row>
+      <entry align="center">2</entry>
+      <entry align="center">Super</entry>
+      <entry align="center">none</entry>
+      <entry align="center">none</entry>
+      <entry align="center">High/Full/Low</entry>
+    </row>
+    <row>
+      <entry align="center">3</entry>
+      <entry align="center">none</entry>
+      <entry align="center">Super</entry>
+      <entry align="center">High/Full/Low</entry>
+      <entry align="center">none</entry>
+    </row>
+    <row>
+      <entry align="center">4</entry>
+      <entry align="center">none</entry>
+      <entry align="center">none</entry>
+      <entry align="center">High/Full/Low</entry>
+      <entry align="center">High/Full/Low</entry>
+    </row>
+    </tbody>
+    
+  </tgroup>
+</table>
+
+</para>
+</section>
+
+<section id="bochsopt-usb-debug"><title>usb debug</title>
+<para>
+See <xref linkend="bochsopt-usb-debugger"> for this item.
+</para>
 </section>
 
 <section><title>pcidev</title>
@@ -6343,7 +6428,10 @@ byte 3:  WWWWWWWW  8-bit Wheel displacement (-127 -> 127)
 Using the 'model:xxxx" parameter, you can set the mouse to report a different type packet. See below.
 </para>
 <para>
-This device may be used on all Host Controller types using a speed of 'low', 'full', or 'high'. (see model 'm388phy')
+This device may be used on all Host Controller types using a speed of 'low', 'full', or 'high' (see model 'm388phy'). 
+<note><para>
+Only one mouse/tablet device may be used at one time per emulation session.
+</para></note>
 <screen>
 usb_uhci: enabled=1, port1=mouse, options1="speed:low"              # default report packet shown above
 usb_ohci: enabled=1, port1=mouse, options1="speed:full, model:m228" # 3-byte report packet, 2 button, 8-bits
@@ -6428,11 +6516,11 @@ byte 6:  WWWWWWWW  8-bit Wheel displacement (-128 -> 127)
 This report is deliberately irregular by design, so that a Guest can test its HID Report Descriptor Parser.
 </para>
 <itemizedlist>
-<listitem><para> - the button fields are not consecutive and are at arbitrary positions in the report.</para></listitem>
-<listitem><para> - the coords fields are not byte aligned or consecutively spaced.</para></listitem>
-<listitem><para> - the coords fields are of an irregular size, each a different size.</para></listitem>
-<listitem><para> - there are padding fields between entries that <command>do not</command> align the next field on a byte boundary.</para></listitem>
-<listitem><para> - this also uses the push/pop mechanism to test the function of your parser.</para></listitem>
+<listitem><para> the button fields are not consecutive and are at arbitrary positions in the report.</para></listitem>
+<listitem><para> the coords fields are not byte aligned or consecutively spaced.</para></listitem>
+<listitem><para> the coords fields are of an irregular size, each a different size.</para></listitem>
+<listitem><para> there are padding fields between entries that <command>do not</command> align the next field on a byte boundary.</para></listitem>
+<listitem><para> this also uses the push/pop mechanism to test the function of your parser.</para></listitem>
 </itemizedlist>
 <para>Again, this is deliberate. A correctly written parser will extract the neccessary fields no matter the irregularity.</para>
 <para>Returns the 5-byte packet shown below.</para>
@@ -6449,9 +6537,15 @@ Please note that this model is not for normal use. It is <command>intentionally<
 </section>
 
 <section><title>mouse: misc</title>
-<para>
-Please note that most physical USB mice will be 'low-speed' only.
-</para>
+<note><para>
+Note that most physical USB mice will be 'low-speed' only.
+</para></note>
+<note><para>
+Note that the mouse is known to not function correctly in a Windows 2000 Guest. Clearing HANDLE_TOGGLE_CONTROL to zero 
+in usb_common.h and rebuilding Bochs allows this guest to function more regularly, though there are still some issues.
+Since the USB mouse and keyboard work in all other regulary tested Guests, it must be a quirk with Win2k that needs to
+be investigated.
+</para></note>
 </section>
 </section>
 
@@ -6493,6 +6587,9 @@ byte 0:  00000LLL  Lock States
 <para>
 This device may be used on all Host Controller types using a speed of 'low', 'full',
 or 'high'.
+<note><para>
+Only one keyboard/keypad device may be used at one time per emulation session.
+</para></note>
 <screen>
 usb_uhci: enabled=1, port1=keyboard, options1="speed:low"
 usb_ohci: enabled=1, port1=keyboard, options1="speed:full"
@@ -6523,6 +6620,9 @@ Only the key range noted before will be sent via the USB emulation.
 <para>
 This device may be used on all Host Controller types using a speed of 'low', 'full',
 or 'high'.
+<note><para>
+Only one keyboard/keypad device may be used at one time per emulation session.
+</para></note>
 <screen>
 usb_uhci: enabled=1, port1=keypad, options1="speed:low"
 usb_ohci: enabled=1, port1=keypad, options1="speed:full"
@@ -6555,6 +6655,9 @@ Please note that the X and Y Displacement values are absolute, not relative valu
 </para></note>
 This device may be used on all Host Controller types using a speed of 'low', 'full',
 or 'high'.
+<note><para>
+Only one mouse/tablet device may be used at one time per emulation session.
+</para></note>
 <screen>
 usb_uhci: enabled=1, port1=tablet, options1="speed:low"
 usb_ohci: enabled=1, port1=tablet, options1="speed:full"
@@ -6577,6 +6680,10 @@ high- and super-speed devices, you can specify the "UASP" protocol, also known a
 <para>
 This device may be used on all Host Controller types using a speed of 'full', 'high',
 or 'super'.
+<note><para>
+Any number of disk/CD-ROM devices may be used as long as there is an available HC/Hub port,
+and that each instance uses its own image file, i.e.: image files cannot be shared.
+</para></note>
 <screen>
 usb_uhci: enabled=1, port1=disk, options1="speed:full, path:hdd.img"  # defaults to the BBB protocol
 usb_ohci: enabled=1, port1=disk, options1="speed:full, path:hdd.img"
@@ -6602,7 +6709,7 @@ Specifying 'proto:uasp' does not guarantee that the Guest will use that protocol
 See a <link linkend="bochsopt-usb-uhci">previous section</link> for more information.
 </para></note>
 <note><para>
-Please note that this device is not allowed as a low-speed only device. Low-speed should be specified.
+Please note that this device is not allowed as a low-speed only device. Low-speed should not be specified.
 </para></note>
 </para>
 </section>
@@ -6610,11 +6717,15 @@ Please note that this device is not allowed as a low-speed only device. Low-spee
 <section><title>Floppy</title>
 <para>
 This emulates a media device in the form of an external Floppy drive. By default,
-the emulation uses the "Control/Bulk/Interrupt" transport, aka "CBI". Bochs can be
-re-compiled to use the "Control/Bulk" transport, aka "CB".
+the emulation uses the "Control/Bulk/Interrupt" transport, aka "CBI". A compile-time option can be
+given to use the "Control/Bulk" transport, aka "CB".
 </para>
 <para>
 This device may be used on all Host Controller types using a speed of 'full'.
+<note><para>
+Any number of floppy devices may be used as long as there is an available HC/Hub 
+port, and that each instance uses its own image file, i.e.: image files cannot be shared.
+</para></note>
 <screen>
 usb_uhci: enabled=1, port1=floppy, options1="speed:full, path:floppy.img"
 usb_ohci: enabled=1, port1=floppy, options1="speed:full, path:floppy.img, model:teac"
@@ -6629,19 +6740,36 @@ usb_uhci: enabled=1, port1=floppy, options1="speed:full, path:<emphasis>mode</em
 The 'model:teac' option can be used to emulate that specific model, else a default
 model will be used. If a guest does not see the attached floppy, try specifying the 'teac'
 model.
+</para>
+<para>
+The 'nofail' option can be used to disable the INQUIRY quirk. This quirk is enabled by default.
+<screen>
+usb_uhci: enabled=1, port1=floppy, options1="speed:full, path:floppy.img, nofail"
+</screen>
+To be consistant with real hardware, we need to fail with a STALL twice for any command after the first
+INQUIRY command except for the INQUIRY command itself and the REQUEST SENSE command. (I don't know why,
+and will document further when I know more.)
+</para>
+<para>
+Bochs allows more than one USB floppy devices to be used at one time, one on each available port.
+Each will be displayed in the status bar, the first as USB-FD1, the second as USB-FD2, etc.
+</para>
 <note><para>
 Please note that this device is a full-speed only device. No other speed should be specified.
 </para></note>
-</para>
 </section>
 
 <section><title>Printer</title>
 <para>
-This emulates a simple USB printer. All data sent to the printer will be appended
+This emulates a simple USB printer. All data sent to the printer will be written
 to a specified file on the Host.
 </para>
 <para>
 This device may be used on all Host Controller types using a speed of 'full'.
+<note><para>
+Any number of printer devices may be used as long as there is an available HC/Hub port,
+and that each instance uses its own target file, i.e.: target files cannot be shared.
+</para></note>
 <screen>
 usb_uhci: enabled=1, port1=printer, options1="speed:full, file:printdata.bin"
 usb_ohci: enabled=1, port1=printer, options1="speed:full, file:printdata.bin"
@@ -6661,6 +6789,9 @@ changed, with a range of 2 to 8.
 </para>
 <para>
 This device may be used on all Host Controller types using a speed of 'full'.
+<note><para>
+Any number of hub devices may be used as long as there is an available HC/Hub port.
+</para></note>
 <screen>
 usb_uhci: enabled=1, port1=hub, options1="speed:full"
 usb_ohci: enabled=1, port1=hub, options1="speed:full, ports:4"
@@ -6727,8 +6858,181 @@ interface has problems when double-quotes are used. Therefore, don't use them in
 runtime configuration interface.
 </para>
 </listitem>
+<listitem>
+<para>
+When adjusting an xHCI port within the runtime configuration, you must remove a device
+from a companion port before adding to the other associated port.  For example, if port
+1 and port 3 are paired and you currently have something on port 3, you must remove it
+from port 3, continue the emulation, then come back and add something to port 1. You cannot
+remove something from port 3 and add something to port 1 at the same time.
+</para>
+</listitem>
+<listitem>
+<para>
+The USB emulation has been tested on numerous Guests. You can find these results at 
+<ulink url="http://www.fysnet.net/bochs/images/supported.htm">here</ulink>.
+</para>
+</listitem>
 </itemizedlist>
 </section>
+</section>
+
+<section id="bochsopt-usb-debugger"><title>USB Debugger</title>
+<para>
+<emphasis>This debugger implementation is experimental. Please take caution when using it.</emphasis>
+</para>
+<para>
+<screen>
+  usb_debug: type=none|uhci|ohci|ehci|xhci, reset, enable, start_frame, doorbell, event, non_exist
+</screen>
+</para>
+<para>
+Currently only <emphasis>none</emphasis>, <emphasis>uhci</emphasis>, or <emphasis>xhci</emphasis> can be specified as the type.
+Future additions will include the other two controller types.
+</para>
+<para>
+Only one type may be specified. You can only debug one controller type at a time.
+</para>
+<para>
+<screen>
+ triggers: (one or more must be specified)
+  'reset'       -- When the controller resets a port, the debugger will halt the emulation and display
+                   the debugger. This does not include when the HC gets reset, which in turn would reset
+                   the downstream ports.
+                   The debugger is triggered at the write of the port before the port value is updated by the write.
+  'enable'      -- When the controller enables a port, the debugger will halt the emulation and display
+                   the debugger. For an EHCI port, the controller automatically enables the port when
+                   a high-speed device is detected.
+                   The debugger is triggered at the write of the port before the port value is updated by the write.
+  'start_frame' -- When the controller starts a new frame, the debugger will halt the emulation 
+                   and display the debugger. Please note that the implementation of this feature is/will
+                   be different with each controller type. Also, if the frame is not active, this trigger will
+                   never be called. i.e.: In the UHCI, if the schedule is not in the RUN state, this trigger will
+                   not be active.
+                -- uhci: Load the next Frame Index and process the TD/Queue pointed by it.
+                -- ohci: ** TODO **
+                -- ehci: ** TODO **
+                -- xhci: Start/Continue to process Transfer Rings.
+  'doorbell'    -- When the xHCI controller receives a doorbell ring indicator (for the Command Ring),
+                   the debugger will halt the emulation and display the debugger. 
+                -- When the EHCI controller is to execute a single TD, the debugger will halt the 
+                   emulation and display the debugger. 
+                -- When the OHCI controller is to execute a single TD, the debugger will halt the 
+                   emulation and display the debugger. 
+                -- When the UHCI controller is to execute a single TD, the debugger will halt the 
+                   emulation and display the debugger. 
+  'event'       -- When the xHCI controller posts an event on the event ring, the debugger will 
+                   halt the emulation and display the debugger. This is only used in the xHCI controller
+                   type. Other types will ignore this trigger.
+  'non_exist'   -- When the guest writes to a non-existent port, the debugger will halt the emulation 
+                   and display the debugger.  This is so you can trigger the debugger via software.
+                   Write to the first non-existent port and the debugger will be triggered.
+                   Reads have no affect.
+</screen>
+</para>
+<para>
+The USB Debugger also has a button-bar icon that when clicked will trigger the debugger. However, please
+note that if the debugger is currently unavailable, due to the controller state for example, the icon
+will change to squiggly lines and then at the next available controller state, the debugger will display.
+If the icon has an 'X' through it, the debugger is unavailable.
+</para>
+<para>
+If you modify any value within the debugger's display, any change that might trigger a change to
+the controller's state will take place.  For example, if you change the Current Connect Status
+<emphasis>and</emphasis> the Current Enable Status, both will be triggered at the same time by
+the controller. To keep this from happening, change one and hit the Apply Button. Then trigger
+the debugger again and change another.
+</para>
+<para>
+When the Debugger dialog is displayed, you can view/modify different aspects of the controller, the
+controller root hub ports, as well as other items.  For example, with the xHCI debugger, you can view
+and modify TRBs on the Command Ring. Simply set the 'doorbell' trigger, and when a doorbell is written,
+the emulation will stop and display the current Command Ring with any available TRBs.
+</para>
+<para>
+You can turn off or on any trigger (listed above) while within the Debugger dialog. If all of them
+are off, you can use the Ribbon Trigger button to display the Debugger, then set any triggers active.
+</para>
+<para>
+The figure below is an example of an xHCI controller using the Doorbell trigger to stop when the
+Controller receives a TRB in the Command Ring with the Command Ring Doorbell being triggered.
+<figure><title>USB Debugger Example0</title>
+  <mediaobject>
+    <imageobject>
+      <imagedata fileref="../images/usb_debugger0.png">
+    </imageobject>
+    <textobject><phrase>USB Debugger Example 0</phrase></textobject>
+  </mediaobject>
+</figure>
+The three register sets are displayed allowing you to modify their values. Please note that modifying
+the Capability Register set will produce undefined results. It is recommended that you do not modify
+this register set.
+</para>
+<para>
+The Debug Flags box allows you to set or clear a trigger. If the checkbox is checked, the trigger is active.
+</para>
+<para>
+The Port Register set displays the used registers allowing you to modify them as you see fit. Again, undefined
+results may happen if you modify these registers.
+</para>
+<para>
+The Tree List shows the current TRB list of the Command Ring. Notice that six TRBs have already been executed.
+(You should have had the Debugger triggered six times already). The TRB listed in bold is the current TRB to
+be executed. If you select that item and then click the "View TRB" button, you can modify the TRB before the
+controller has a chance to execute it. Note that you cannot change the TRB's type, though you can modify its
+attributes.
+</para>
+<para>
+The "Continue" button will exit the debugger and continue the emulation. The "Quit" button will quit the entire
+emulation.
+</para>
+
+<section id="bochsopt-usb-debugger-xhci"><title>USB Debugger: xHCI</title>
+<para>
+Notes on the xHCI USB Debugger will go here.
+</para>
+</section>
+
+<section id="bochsopt-usb-debugger-ehci"><title>USB Debugger: EHCI</title>
+<para>
+Notes on the EHCI USB Debugger will go here.
+</para>
+</section>
+
+<section id="bochsopt-usb-debugger-ohci"><title>USB Debugger: OHCI</title>
+<para>
+Notes on the OHCI USB Debugger will go here.
+</para>
+</section>
+
+<section id="bochsopt-usb-debugger-uhci"><title>USB Debugger: UHCI</title>
+<para>
+When the 'doorbell' trigger is used, the debugger will trigger before the controller processes the TD *and* again 
+after the controller processes the TD. This is so you can see the TD before it is processed, allowing you to make 
+changes, and then see the results. Please note that the *before* and *after* status only effects the currently
+executing TD. All other TDs have either already been executed or have not yet been executed.
+</para>
+<para>
+Changing the 'Active' bit before the controller processes the TD is not allowed since the controller has already 
+found the TD active and is processing it. Changing it after the controller has processed it is allowed, but why
+would you?
+</para>
+<para>
+Changing any items in a TD *after* the TD has been processed is not recommended and undefined results may occur.
+</para>
+<para>
+You normally would not have both the 'start_frame' and 'doorbell' triggers active when using the UHCI. If they
+are, the 'doorbell' trigger will trigger the first TD in the frame anyway. The 'start_frame' trigger is only used
+when you want to see the frame's list once at start of frame.  The 'doorbell' trigger is used on every active TD found.
+</para>
+<para>
+If the TD is using BreadthFirst processing, the debugger will not display any TDs linked by the LINK PTR. This is
+because some drivers point the LINK PTR to itself to make sure the TD is executed. If the TD is executed, the active
+bit will be clear, so the next TD will be processed anyway.
+</para>
+
+</section>
+
 </section>
 
 </chapter>
