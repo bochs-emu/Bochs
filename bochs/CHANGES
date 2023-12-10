@@ -56,7 +56,8 @@ Detailed change log :
 
 - Memory
   - Fixed memory handling in volatile BIOS write support
-  - Added save/restore support for the config space of the flash BIOS rom.
+  - Added 'flash_data' parameter for loading/saving the config space of the
+    flash BIOS rom and save/restore support for it (unused by Bochs BIOS).
 
 - I/O Devices
   - Timers
@@ -158,6 +159,9 @@ Detailed change log :
 
   - HPET
     - Bugfixes in HPET emulation
+
+-BIOS
+  - Added capability to enter keycode with ALT + numeric keypad
 
 -------------------------------------------------------------------------
 Changes in 2.7 (August 1, 2021):
