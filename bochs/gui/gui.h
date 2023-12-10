@@ -26,8 +26,13 @@
 // header bar and status bar stuff
 #define BX_HEADER_BAR_Y 32
 
-#define BX_MAX_PIXMAPS 17
-#define BX_MAX_HEADERBAR_ENTRIES 12
+#if BX_USE_WIN32USBDEBUG
+  #define BX_MAX_PIXMAPS 19
+  #define BX_MAX_HEADERBAR_ENTRIES 13
+#else
+  #define BX_MAX_PIXMAPS 17
+  #define BX_MAX_HEADERBAR_ENTRIES 12
+#endif
 
 // align pixmaps towards left or right side of header bar
 #define BX_GRAVITY_LEFT 10
@@ -42,7 +47,12 @@
 #define BX_GUI_DLG_RUNTIME      0x08
 #define BX_GUI_DLG_USER         0x10
 #define BX_GUI_DLG_SAVE_RESTORE 0x20
-#define BX_GUI_DLG_ALL          0x3F
+#if BX_USE_WIN32USBDEBUG
+  #define BX_GUI_DLG_USB          0x40
+  #define BX_GUI_DLG_ALL          0x7F
+#else
+  #define BX_GUI_DLG_ALL          0x3F
+#endif
 
 // text mode blink feature
 #define BX_TEXT_BLINK_MODE      0x01
@@ -69,6 +79,13 @@
 #define BX_GUI_MT_CTRL_F10      (BX_MT_KEY_CTRL | BX_MT_KEY_F10)
 #define BX_GUI_MT_F12           (BX_MT_KEY_F12)
 #define BX_GUI_MT_CTRL_ALT      (BX_MT_KEY_CTRL | BX_MT_KEY_ALT)
+
+// usb_debug items
+#if BX_USE_WIN32USBDEBUG
+  #define BX_USB_DEBUG_SOF_NONE      0
+  #define BX_USB_DEBUG_SOF_SET       1
+  #define BX_USB_DEBUG_SOF_TRIGGER   2
+#endif
 
 typedef struct {
   Bit16u  start_address;
@@ -235,6 +252,9 @@ protected:
   static void paste_handler(void);
   static void snapshot_handler(void);
   static void config_handler(void);
+#if BX_USE_WIN32USBDEBUG
+  static void usb_handler(void);
+#endif
   static void userbutton_handler(void);
   static void save_restore_handler(void);
   // process clicks on the "classic" Bochs headerbar
@@ -268,6 +288,12 @@ protected:
   unsigned mouse_bmap_id, nomouse_bmap_id, mouse_hbar_id;
   unsigned user_bmap_id, user_hbar_id;
   unsigned save_restore_bmap_id, save_restore_hbar_id;
+#if BX_USE_WIN32USBDEBUG
+  // TODO: this is a lousy hack. we need to keep these protected....
+public:
+  unsigned usb_bmap_id, usb_eject_bmap_id, usb_trigger_bmap_id, usb_hbar_id;
+protected:
+#endif
   // the "classic" Bochs headerbar
   unsigned bx_headerbar_entries;
   struct {

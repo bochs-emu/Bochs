@@ -69,6 +69,9 @@ class bx_real_sim_c : public bx_simulator_interface_c {
   const char *registered_ci_name;
   config_interface_callback_t ci_callback;
   void *ci_callback_data;
+#if BX_USE_WIN32USBDEBUG
+  usb_interface_callback_t usbi_callback;
+#endif
   rt_conf_entry_t *rt_conf_entries;
   addon_option_t *addon_options;
   bool init_done;
@@ -176,6 +179,12 @@ public:
     config_interface_callback_t callback,
     void *userdata);
   virtual int configuration_interface(const char* name, ci_command_t command);
+#if BX_USE_WIN32USBDEBUG
+  virtual void register_usb_interface(
+    usb_interface_callback_t callback,
+    void *data);
+  virtual int usb_config_interface(int type, int wParam, int lParam);
+#endif
   virtual int begin_simulation(int argc, char *argv[]);
   virtual int register_runtime_config_handler(void *dev, rt_conf_handler_t handler);
   virtual void unregister_runtime_config_handler(int id);
@@ -931,6 +940,29 @@ int bx_real_sim_c::configuration_interface(const char *ignore, ci_command_t comm
   set_display_mode(DISP_MODE_SIM);
   return retval;
 }
+
+#if BX_USE_WIN32USBDEBUG
+void bx_real_sim_c::register_usb_interface(
+  usb_interface_callback_t callback,
+  void *data)
+{
+  usbi_callback = callback;
+}
+
+int bx_real_sim_c::usb_config_interface(int type, int wParam, int lParam)
+{
+  if (!usbi_callback) {
+    BX_PANIC(("no usb interface was loaded"));
+    return -1;
+  }
+  
+  set_display_mode(DISP_MODE_CONFIG);
+  int retval = (*usbi_callback)(type, wParam, lParam);
+  set_display_mode(DISP_MODE_SIM);
+  
+  return retval;
+}
+#endif
 
 int bx_real_sim_c::begin_simulation(int argc, char *argv[])
 {

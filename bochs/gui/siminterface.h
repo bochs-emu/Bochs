@@ -570,6 +570,9 @@ enum ci_return_t {
   CI_ERR_NO_TEXT_CONSOLE  // err: can't work because there's no text console
 };
 typedef int (*config_interface_callback_t)(void *userdata, ci_command_t command);
+#if BX_USE_WIN32USBDEBUG
+  typedef int (*usb_interface_callback_t)(int type, int wParam, int lParam);
+#endif
 typedef BxEvent* (*bxevent_handler)(void *theclass, BxEvent *event);
 typedef void (*rt_conf_handler_t)(void *this_ptr);
 typedef Bit32s (*addon_option_parser_t)(const char *context, int num_params, char *params[]);
@@ -710,6 +713,12 @@ public:
     config_interface_callback_t callback,
     void *userdata) {}
   virtual int configuration_interface(const char* name, ci_command_t command) {return -1; }
+#if BX_USE_WIN32USBDEBUG
+  virtual void register_usb_interface(
+    usb_interface_callback_t callback,
+    void *data) {}
+  virtual int usb_config_interface(int type, int wParam, int lParam) { return -1; }
+#endif
   virtual int begin_simulation(int argc, char *argv[]) {return -1;}
   virtual int register_runtime_config_handler(void *dev, rt_conf_handler_t handler) {return 0;}
   virtual void unregister_runtime_config_handler(int id) {}
