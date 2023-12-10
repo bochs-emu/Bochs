@@ -200,7 +200,9 @@ public:
 
   int event_handler(int event, void *ptr, int port);
 
+#if !BX_USE_WIN32USBDEBUG
 protected:
+#endif
   bx_uhci_core_t hub;
   Bit8u          global_reset;
 
