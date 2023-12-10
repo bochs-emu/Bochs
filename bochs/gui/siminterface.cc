@@ -180,9 +180,7 @@ public:
     void *userdata);
   virtual int configuration_interface(const char* name, ci_command_t command);
 #if BX_USE_WIN32USBDEBUG
-  virtual void register_usb_interface(
-    usb_interface_callback_t callback,
-    void *data);
+  virtual void register_usb_interface(usb_interface_callback_t callback, void *data);
   virtual int usb_config_interface(int type, int wParam, int lParam);
 #endif
   virtual int begin_simulation(int argc, char *argv[]);
@@ -942,9 +940,7 @@ int bx_real_sim_c::configuration_interface(const char *ignore, ci_command_t comm
 }
 
 #if BX_USE_WIN32USBDEBUG
-void bx_real_sim_c::register_usb_interface(
-  usb_interface_callback_t callback,
-  void *data)
+void bx_real_sim_c::register_usb_interface(usb_interface_callback_t callback, void *data)
 {
   usbi_callback = callback;
 }

@@ -714,9 +714,7 @@ public:
     void *userdata) {}
   virtual int configuration_interface(const char* name, ci_command_t command) {return -1; }
 #if BX_USE_WIN32USBDEBUG
-  virtual void register_usb_interface(
-    usb_interface_callback_t callback,
-    void *data) {}
+  virtual void register_usb_interface(usb_interface_callback_t callback, void *data) {}
   virtual int usb_config_interface(int type, int wParam, int lParam) { return -1; }
 #endif
   virtual int begin_simulation(int argc, char *argv[]) {return -1;}
