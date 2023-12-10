@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -548,8 +548,8 @@ void print_usage()
     "  -fd=...       create: floppy image with size code\n"
     "  -hd=...       create/resize: hard disk image with size in megabytes (M)\n"
     "                or gigabytes (G)\n"
-    "  -imgmode=...  create/convert: hard disk image mode\n"
-    "  -sectsize=... create: hard disk sector size\n"
+    "  -imgmode=...  create/convert: hard disk image mode (default = flat)\n"
+    "  -sectsize=... create: hard disk sector size (default = 512)\n"
     "  -b            convert/resize: create a backup of the source image\n"
     "                commit: create backups of the base image and redolog file\n"
     "  -q            quiet mode (don't prompt for user input)\n"
@@ -704,11 +704,13 @@ int parse_cmdline(int argc, char *argv[])
     arg++;
   }
   if (bximage_func == BXIMAGE_FUNC_NULL) {
+    printf("\nERROR: Parameter -func missing - switching to interactive mode.\n\n");
     bx_interactive = 1;
   } else {
     set_default_values();
     if (fnargs < 1) {
       bx_interactive = 1;
+      printf("\nERROR; Filename missing - switching to interactive mode.\n\n");
     }
     if ((bximage_func == BXIMAGE_FUNC_COMMIT_UNDOABLE) && (fnargs == 1)) {
       snprintf(bx_filename_2, 520, "%s%s", bx_filename_1, UNDOABLE_REDOLOG_EXTENSION);
