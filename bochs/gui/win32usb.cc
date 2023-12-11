@@ -316,7 +316,7 @@ struct S_ATTRIBUTES attribs_u_command[] = {
   { (1<<2),                  (1<<2),                  2, "Global Reset"                   , {-1, } },
   { (1<<1),                  (1<<1),                  1, "Host Controller Reset"          , {-1, } },
   { (1<<0),                  (1<<0),                  0, "Run/Stop"                       , {-1, } },
-  { 0,                   (DWORD) -1,                 -1, NULL                             , {-1, } }
+  { 0,                   (DWORD) -1,                 -1, "\0"                             , {-1, } }
 };
 
 struct S_ATTRIBUTES attribs_u_status[] = {
@@ -327,7 +327,7 @@ struct S_ATTRIBUTES attribs_u_status[] = {
   { (1<<2),                  (1<<2),                  2, "Resume Detect"                  , {-1, } },
   { (1<<1),                  (1<<1),                  1, "USB Error Interrupt"            , {-1, } },
   { (1<<0),                  (1<<0),                  0, "USB Interrupt"                  , {-1, } },
-  { 0,                   (DWORD) -1,                 -1, NULL                             , {-1, } }
+  { 0,                   (DWORD) -1,                 -1, "\0"                             , {-1, } }
 };
 
 struct S_ATTRIBUTES attribs_u_interrupt[] = {
@@ -336,7 +336,7 @@ struct S_ATTRIBUTES attribs_u_interrupt[] = {
   { (1<<2),                  (1<<2),                  2, "Interrupt On Complete (IOC)"    , {-1, } },
   { (1<<1),                  (1<<1),                  1, "Resume Interrupt Enable"        , {-1, } },
   { (1<<0),                  (1<<0),                  0, "Timeout/CRC Interrupt Enable"   , {-1, } },
-  { 0,                   (DWORD) -1,                 -1, NULL                             , {-1, } }
+  { 0,                   (DWORD) -1,                 -1, "\0"                             , {-1, } }
 };
 
 struct S_ATTRIBUTES attribs_u_ports[] = {
@@ -357,7 +357,7 @@ struct S_ATTRIBUTES attribs_u_ports[] = {
   { (1<< 2),                 (1<< 2),                 2, "Port Enabled/Disabled"          , {-1, } },
   { (1<< 1),                 (1<< 1),                 1, "Current Status Change"          , {-1, } },
   { (1<< 0),                 (1<< 0),                 0, "Current Connect Status"         , {-1, } },
-  { 0,                   (DWORD) -1,                 -1, NULL                             , {-1, } }
+  { 0,                   (DWORD) -1,                 -1, "\0"                             , {-1, } }
 };
 
 BOOL u_changed[IDC_U_EN_END - IDC_U_EN_START + 1];
@@ -1025,7 +1025,7 @@ struct S_ATTRIBUTES attribs_x_ports[] = {
   { (1<< 2),                 (1<< 2),                 2, "Reserved"                       , {-1, } },
   { (1<< 1),                 (1<< 1),                 1, "Port Enabled/Disabled"          , {-1, } },
   { (1<< 0),                 (1<< 0),                 0, "Current Connect Status"         , {-1, } },
-  { 0,                   (DWORD) -1,                 -1, NULL                             , {-1, } }
+  { 0,                   (DWORD) -1,                 -1, "\0"                             , {-1, } }
 };
 
 static bool x_changed[IDC_X_EN_END - IDC_X_EN_START + 1];
@@ -1388,7 +1388,7 @@ static const char *ring_type[] = {
   "Transfer"  // VIEW_TRB_TYPE_TRANSFER
 };
 
-static void hc_xhci_do_ring(char *ring_str, Bit64u RingPtr, Bit64u dequeue_ptr)
+static void hc_xhci_do_ring(const char *ring_str, Bit64u RingPtr, Bit64u dequeue_ptr)
 {
   char str[COMMON_STR_SIZE];
   int  trb_count = 0; // count of TRB's processed
@@ -1424,7 +1424,7 @@ static void hc_xhci_do_ring(char *ring_str, Bit64u RingPtr, Bit64u dequeue_ptr)
   } while (address != RingPtr);
 }
 
-static void hc_xhci_do_event_ring(char *ring_str, int interrupter)
+static void hc_xhci_do_event_ring(const char *ring_str, int interrupter)
 {
   char str[COMMON_STR_SIZE];
   int  trb_count = 0; // count of TRB's processed
@@ -3165,7 +3165,7 @@ static int    xhci_str_current_context = 0;
 static bool   xhci_str_context_changed = 0;
 static int    xhci_max_streams = 0;
 
-static char *slot_speed_str[] = {
+static const char *slot_speed_str[] = {
   "Undefined",
   "Full",
   "Low",
@@ -3185,7 +3185,7 @@ static char *slot_speed_str[] = {
   "Not Valid"
 };
 
-static char *slot_type_str[] = {
+static const char *slot_type_str[] = {
   "Disabled/Enabled",
   "Default",
   "Addressed",
@@ -3193,7 +3193,7 @@ static char *slot_type_str[] = {
   "Reserved"
 };
 
-static char *ep_type_str[] = {
+static const char *ep_type_str[] = {
   "n/a",
   "ISO Out",
   "Bulk Out",
@@ -3205,7 +3205,7 @@ static char *ep_type_str[] = {
   "Not Valid"
 };
 
-static char *ep_state_str[] = {
+static const char *ep_state_str[] = {
   "Disabled",
   "Running",
   "Halted",
@@ -3217,7 +3217,7 @@ static char *ep_state_str[] = {
   "Not Valid"
 };
 
-static char *string_sct_str[] = {
+static const char *string_sct_str[] = {
   "Secondary / Transfer Ring / N/A",
   "Primary / Transfer Ring / N/A",
   "Primary / SSA / 8",

@@ -106,8 +106,8 @@ struct VIEW_TRB_TYPE {
 INT_PTR CALLBACK hc_xhci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
 int hc_xhci_init(HWND hwnd);
 int hc_xhci_save(HWND hwnd);
-void hc_xhci_do_ring(char *ring_str, Bit64u RingPtr, Bit64u dequeue_ptr);
-void hc_xhci_do_event_ring(char *ring_str, int interrupter);
+void hc_xhci_do_ring(const char *ring_str, Bit64u RingPtr, Bit64u dequeue_ptr);
+void hc_xhci_do_event_ring(const char *ring_str, int interrupter);
 void xhci_display_trb(HWND hwnd, int type_mask);
 INT_PTR CALLBACK hc_xhci_callback_trb_normal(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK hc_xhci_callback_trb_setup(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
