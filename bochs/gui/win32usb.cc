@@ -220,7 +220,7 @@ HTREEITEM TreeViewInsert(HWND TreeView, HTREEITEM Parent, HTREEITEM After, char 
 }
 
 struct DUMP_PARAMS g_dump_parms;
-static INT_PTR CALLBACK dump_dialog_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK dump_dialog_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   switch (msg) {
     case WM_INITDIALOG:
@@ -363,7 +363,7 @@ struct S_ATTRIBUTES attribs_u_ports[] = {
 BOOL u_changed[IDC_U_EN_END - IDC_U_EN_START + 1];
 
 // lParam: type is in low 8 bits, break_type in high 8-bits of low word
-static INT_PTR CALLBACK hc_uhci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_uhci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
   int ret;
@@ -453,7 +453,7 @@ static INT_PTR CALLBACK hc_uhci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPA
 extern bx_usb_uhci_c *theUSB_UHCI;
 
 // returns -1 if error, else returns ID to control to set the focus to
-static int hc_uhci_init(HWND hwnd)
+int hc_uhci_init(HWND hwnd)
 {
   char str[COMMON_STR_SIZE];
   Bit32u frame_addr, frame_num;
@@ -569,7 +569,7 @@ static int hc_uhci_init(HWND hwnd)
   return ret;
 }
 
-static int hc_uhci_save(HWND hwnd)
+int hc_uhci_save(HWND hwnd)
 {
   char str[COMMON_STR_SIZE];
 
@@ -691,10 +691,10 @@ void hc_uhci_do_item(Bit32u FrameAddr, Bit32u FrameNum)
     DEV_MEM_READ_PHYSICAL(item & ~0xF, sizeof(struct TD), (Bit8u *) &td);
     const bool depthbreadth = (td.dword0 & 0x0004) ? true : false;     // 1 = depth first, 0 = breadth first
     sprintf(str, "0x%08X: TD: (0x%08X)", item & ~0xF, td.dword0);
-    if ((item & ~0xF) == g_params.wParam)
+    if ((item & ~0xF) == (Bit32u) g_params.wParam)
       state |= TVIS_BOLD;
     hCur = TreeViewInsert(TreeView, Next, TVI_LAST, str, (LPARAM) ((item & ~0xF) | 0), state);
-    if ((item & ~0xF) == g_params.wParam)
+    if ((item & ~0xF) == (Bit32u) g_params.wParam)
       TreeView_Select(TreeView, hCur, TVGN_CARET);
     item = td.dword0;
     if (queue_addr != 0) {
@@ -709,7 +709,7 @@ void hc_uhci_do_item(Bit32u FrameAddr, Bit32u FrameNum)
 
 static struct TD g_td;
 static struct QUEUE g_queue;
-static void uhci_display_td(HWND hwnd) {
+void uhci_display_td(HWND hwnd) {
   TVITEM tvitem;
   INT_PTR ret = -1;
   Bit32u address = 0;
@@ -746,7 +746,7 @@ static void uhci_display_td(HWND hwnd) {
     MessageBox(hwnd, "No TD selected", NULL, MB_ICONINFORMATION);
 }
 
-static INT_PTR CALLBACK hc_uhci_callback_queue(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_uhci_callback_queue(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
   
@@ -796,7 +796,7 @@ static INT_PTR CALLBACK hc_uhci_callback_queue(HWND hDlg, UINT msg, WPARAM wPara
   return 0;
 }
 
-static INT_PTR CALLBACK hc_uhci_callback_td(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_uhci_callback_td(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
 
@@ -957,13 +957,13 @@ static INT_PTR CALLBACK hc_uhci_callback_td(HWND hDlg, UINT msg, WPARAM wParam, 
 //
 
 // lParam: type is in low 8 bits, break_type in high 8-bits of low word
-static INT_PTR CALLBACK hc_ohci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_ohci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 
   return 0;
 }
 
-static int hc_ohci_init(HWND hwnd) {
+int hc_ohci_init(HWND hwnd) {
 
   return 0;
 }
@@ -974,13 +974,13 @@ static int hc_ohci_init(HWND hwnd) {
 //
 
 // lParam: type is in low 8 bits, break_type in high 8-bits of low word
-static INT_PTR CALLBACK hc_ehci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_ehci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 
   return 0;
 }
 
-static int hc_ehci_init(HWND hwnd)
+int hc_ehci_init(HWND hwnd)
 {
 
   return 0;
@@ -1031,7 +1031,7 @@ struct S_ATTRIBUTES attribs_x_ports[] = {
 static bool x_changed[IDC_X_EN_END - IDC_X_EN_START + 1];
 
 // lParam: type is in low 8 bits, break_type in high 8-bits of low word
-static INT_PTR CALLBACK hc_xhci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_xhci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
   int ret;
@@ -1163,7 +1163,7 @@ static Bit32u xhci_read_dword(const Bit32u address)
 }
 
 // returns -1 if error, else returns ID to control to set the focus to
-static int hc_xhci_init(HWND hwnd)
+int hc_xhci_init(HWND hwnd)
 {
   char str[COMMON_STR_SIZE];
   char str1[COMMON_STR_SIZE];
@@ -1318,7 +1318,7 @@ static int hc_xhci_init(HWND hwnd)
   return ret;
 }
 
-static int hc_xhci_save(HWND hwnd)
+int hc_xhci_save(HWND hwnd)
 {
   
   MessageBox(hwnd, "xHCI: Save to controller is not yet implemented!", NULL, MB_ICONINFORMATION);
@@ -1388,7 +1388,7 @@ static const char *ring_type[] = {
   "Transfer"  // VIEW_TRB_TYPE_TRANSFER
 };
 
-static void hc_xhci_do_ring(const char *ring_str, Bit64u RingPtr, Bit64u dequeue_ptr)
+void hc_xhci_do_ring(const char *ring_str, Bit64u RingPtr, Bit64u dequeue_ptr)
 {
   char str[COMMON_STR_SIZE];
   int  trb_count = 0; // count of TRB's processed
@@ -1424,7 +1424,7 @@ static void hc_xhci_do_ring(const char *ring_str, Bit64u RingPtr, Bit64u dequeue
   } while (address != RingPtr);
 }
 
-static void hc_xhci_do_event_ring(const char *ring_str, int interrupter)
+void hc_xhci_do_event_ring(const char *ring_str, int interrupter)
 {
   char str[COMMON_STR_SIZE];
   int  trb_count = 0; // count of TRB's processed
@@ -1466,7 +1466,7 @@ static void hc_xhci_do_event_ring(const char *ring_str, int interrupter)
 }
 
 static struct TRB g_trb;
-static void xhci_display_trb(HWND hwnd, int type_mask) {
+void xhci_display_trb(HWND hwnd, int type_mask) {
   char str[COMMON_STR_SIZE];
   TVITEM tvitem;
   INT_PTR ret = -1;
@@ -1610,7 +1610,7 @@ static void xhci_display_trb(HWND hwnd, int type_mask) {
 
 
 // lParam = address to the TRB
-static INT_PTR CALLBACK hc_xhci_callback_trb_normal(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_xhci_callback_trb_normal(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
   
@@ -1678,7 +1678,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_normal(HWND hDlg, UINT msg, WPARAM 
 }
 
 // lParam = address to the TRB
-static INT_PTR CALLBACK hc_xhci_callback_trb_setup(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_xhci_callback_trb_setup(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
   
@@ -1753,7 +1753,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_setup(HWND hDlg, UINT msg, WPARAM w
 }
 
 // lParam = address to the TRB
-static INT_PTR CALLBACK hc_xhci_callback_trb_data(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_xhci_callback_trb_data(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
   
@@ -1821,7 +1821,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_data(HWND hDlg, UINT msg, WPARAM wP
 }
 
 // lParam = address to the TRB
-static INT_PTR CALLBACK hc_xhci_callback_trb_status(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_xhci_callback_trb_status(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
   
@@ -1871,7 +1871,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_status(HWND hDlg, UINT msg, WPARAM 
 }
 
 // lParam = address to the TRB
-static INT_PTR CALLBACK hc_xhci_callback_trb_link(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_xhci_callback_trb_link(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
   
@@ -1923,7 +1923,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_link(HWND hDlg, UINT msg, WPARAM wP
 }
 
 // lParam = address to the TRB
-static INT_PTR CALLBACK hc_xhci_callback_trb_event(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_xhci_callback_trb_event(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
   
@@ -1977,7 +1977,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_event(HWND hDlg, UINT msg, WPARAM w
 }
 
 // lParam = address to the TRB
-static INT_PTR CALLBACK hc_xhci_callback_trb_noop(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_xhci_callback_trb_noop(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
   
@@ -2025,7 +2025,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_noop(HWND hDlg, UINT msg, WPARAM wP
 }
 
 // lParam = address to the TRB
-static INT_PTR CALLBACK hc_xhci_callback_trb_enslot(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_xhci_callback_trb_enslot(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
   
@@ -2066,7 +2066,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_enslot(HWND hDlg, UINT msg, WPARAM 
 }
 
 // lParam = address to the TRB
-static INT_PTR CALLBACK hc_xhci_callback_trb_disslot(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_xhci_callback_trb_disslot(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
   
@@ -2111,7 +2111,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_disslot(HWND hDlg, UINT msg, WPARAM
 }
 
 // lParam = address to the TRB
-static INT_PTR CALLBACK hc_xhci_callback_trb_address(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_xhci_callback_trb_address(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
   Bit64u address;
@@ -2165,7 +2165,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_address(HWND hDlg, UINT msg, WPARAM
 }
 
 // lParam = address to the TRB
-static INT_PTR CALLBACK hc_xhci_callback_trb_configep(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_xhci_callback_trb_configep(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
   Bit64u address;
@@ -2219,7 +2219,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_configep(HWND hDlg, UINT msg, WPARA
 }
 
 // lParam = address to the TRB
-static INT_PTR CALLBACK hc_xhci_callback_trb_evaluate(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_xhci_callback_trb_evaluate(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
   Bit64u address;
@@ -2273,7 +2273,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_evaluate(HWND hDlg, UINT msg, WPARA
 }
 
 // lParam = address to the TRB
-static INT_PTR CALLBACK hc_xhci_callback_trb_resetep(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_xhci_callback_trb_resetep(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
   
@@ -2320,7 +2320,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_resetep(HWND hDlg, UINT msg, WPARAM
 }
 
 // lParam = address to the TRB
-static INT_PTR CALLBACK hc_xhci_callback_trb_stopep(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_xhci_callback_trb_stopep(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
   
@@ -2367,7 +2367,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_stopep(HWND hDlg, UINT msg, WPARAM 
 }
 
 // lParam = address to the TRB
-static INT_PTR CALLBACK hc_xhci_callback_trb_settrptr(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_xhci_callback_trb_settrptr(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
   
@@ -2421,7 +2421,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_settrptr(HWND hDlg, UINT msg, WPARA
 }
 
 // lParam = address to the TRB
-static INT_PTR CALLBACK hc_xhci_callback_trb_resetdev(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_xhci_callback_trb_resetdev(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
   
@@ -2466,7 +2466,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_resetdev(HWND hDlg, UINT msg, WPARA
 }
 
 // lParam = address to the TRB
-static INT_PTR CALLBACK hc_xhci_callback_trb_forceevent(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_xhci_callback_trb_forceevent(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
   
@@ -2516,7 +2516,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_forceevent(HWND hDlg, UINT msg, WPA
 }
 
 // lParam = address to the TRB
-static INT_PTR CALLBACK hc_xhci_callback_trb_setlat(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_xhci_callback_trb_setlat(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
   
@@ -2557,7 +2557,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_setlat(HWND hDlg, UINT msg, WPARAM 
 }
 
 // lParam = address to the TRB
-static INT_PTR CALLBACK hc_xhci_callback_trb_getband(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_xhci_callback_trb_getband(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
   
@@ -2607,7 +2607,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_getband(HWND hDlg, UINT msg, WPARAM
 }
 
 // lParam = address to the TRB
-static INT_PTR CALLBACK hc_xhci_callback_trb_forcehdr(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_xhci_callback_trb_forcehdr(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
   
@@ -2657,7 +2657,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_forcehdr(HWND hDlg, UINT msg, WPARA
 }
 
 // lParam = address to the TRB
-static INT_PTR CALLBACK hc_xhci_callback_trb_transevent(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_xhci_callback_trb_transevent(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
   
@@ -2713,7 +2713,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_transevent(HWND hDlg, UINT msg, WPA
 }
 
 // lParam = address to the TRB
-static INT_PTR CALLBACK hc_xhci_callback_trb_compcompletion(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_xhci_callback_trb_compcompletion(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
   
@@ -2771,7 +2771,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_compcompletion(HWND hDlg, UINT msg,
 }
 
 // lParam = address to the TRB
-static INT_PTR CALLBACK hc_xhci_callback_trb_pschange(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_xhci_callback_trb_pschange(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
   
@@ -2817,7 +2817,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_pschange(HWND hDlg, UINT msg, WPARA
 }
 
 // lParam = address to the TRB
-static INT_PTR CALLBACK hc_xhci_callback_trb_bandrequ(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_xhci_callback_trb_bandrequ(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
   
@@ -2863,7 +2863,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_bandrequ(HWND hDlg, UINT msg, WPARA
 }
 
 // lParam = address to the TRB
-static INT_PTR CALLBACK hc_xhci_callback_trb_doorbell(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_xhci_callback_trb_doorbell(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
   
@@ -2917,7 +2917,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_doorbell(HWND hDlg, UINT msg, WPARA
 }
 
 // lParam = address to the TRB
-static INT_PTR CALLBACK hc_xhci_callback_trb_hostevent(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_xhci_callback_trb_hostevent(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
   
@@ -2963,7 +2963,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_hostevent(HWND hDlg, UINT msg, WPAR
 }
 
 // lParam = address to the TRB
-static INT_PTR CALLBACK hc_xhci_callback_trb_devnotevent(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_xhci_callback_trb_devnotevent(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
   
@@ -3017,7 +3017,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_devnotevent(HWND hDlg, UINT msg, WP
 }
 
 // lParam = address to the TRB
-static INT_PTR CALLBACK hc_xhci_callback_trb_necfw(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_xhci_callback_trb_necfw(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
   
@@ -3055,7 +3055,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_necfw(HWND hDlg, UINT msg, WPARAM w
 }
 
 // lParam = address to the TRB
-static INT_PTR CALLBACK hc_xhci_callback_trb_necun(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_xhci_callback_trb_necun(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
   
@@ -3097,7 +3097,7 @@ static INT_PTR CALLBACK hc_xhci_callback_trb_necun(HWND hDlg, UINT msg, WPARAM w
 }
 
 // lParam = address to the TRB
-static INT_PTR CALLBACK hc_xhci_callback_trb_necfwevent(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_xhci_callback_trb_necfwevent(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
   
@@ -3349,7 +3349,7 @@ static void hc_xhci_callback_context_ep_put(HWND hDlg)
   EnableWindow(GetDlgItem(hDlg, ID_APPLY), 0);
 }
 
-static INT_PTR CALLBACK hc_xhci_callback_context(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_xhci_callback_context(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
   struct S_ATTRIBUTES *attribs;
@@ -3682,7 +3682,7 @@ static void CALLBACK hc_xhci_callback_str_context_put(HWND hDlg)
 }
 
 // xHCI 1.2: 6.2.4.1, Page 458
-static INT_PTR CALLBACK hc_xhci_callback_str_context(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK hc_xhci_callback_str_context(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
   int i;
