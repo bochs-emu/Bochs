@@ -107,6 +107,8 @@ typedef struct {
   Bit8u devfunc;
   char devname[16];
   char ldevname[32];
+
+  Bit32u io_memaddr;
 } bx_e1000_t;
 
 

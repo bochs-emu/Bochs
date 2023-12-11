@@ -65,7 +65,7 @@ Detailed change log :
     - APIC: Removed timer handles from save/restore list
 
   - CMOS
-    - Fixed and improved RTC handling in CMOS and BIOS (based on SF patch by Michele Giacomone))
+    - Fixed and improved RTC handling in CMOS and BIOS (based on SF patch by Michele Giacomone).
     - Added runtime option for turning on/off saving CMOS image on exit.
 
   - PCI
@@ -157,6 +157,8 @@ Detailed change log :
     - xHCI: fixed/updated the port bandwidth emulation.
     - Many documentation additions.
 
+  - Networking
+    - E1000: Added support for i/o mapped register access to make DOS driver work.
   - HPET
     - Bugfixes in HPET emulation
 
