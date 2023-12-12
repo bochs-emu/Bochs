@@ -3859,7 +3859,7 @@ void do_attributes(HWND hwnd, DWORD id, const int size, const char *title, const
   char str1[COMMON_STR_SIZE];
 
   GetDlgItemText(hwnd, id, str, COMMON_STR_SIZE);
-  strncpy(a_title, title, COMMON_STR_SIZE);
+  strcpy(a_title, title);
   a_single = FALSE;
   a_attrib = strtoul(str, NULL, 0);
   a_attributes = attribs;
