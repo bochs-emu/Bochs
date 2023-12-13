@@ -1274,7 +1274,7 @@ void bx_vgacore_c::set_override(bool enabled, void *dev)
   }
 }
 
-Bit8u bx_vgacore_c::get_vga_pixel(Bit16u x, Bit16u y, Bit16u saddr, Bit16u lc, bool bs, Bit8u **plane)
+Bit8u bx_vgacore_c::get_vga_pixel(Bit16u x, Bit16u y, Bit16u raddr, Bit16u lc, bool bs, Bit8u **plane)
 {
   Bit8u attribute, bit_no, palette_reg_val, DAC_regno;
   Bit32u byte_offset;
@@ -1284,13 +1284,7 @@ Bit8u bx_vgacore_c::get_vga_pixel(Bit16u x, Bit16u y, Bit16u saddr, Bit16u lc, b
     x += BX_VGA_THIS s.attribute_ctrl.horiz_pel_panning;
   }
   bit_no = 7 - (x % 8);
-  if (y > lc) {
-    byte_offset = x / 8 +
-      ((y - lc - 1) * BX_VGA_THIS s.line_offset);
-  } else {
-    byte_offset = saddr + x / 8 +
-      (y * BX_VGA_THIS s.line_offset);
-  }
+  byte_offset = raddr + (x / 8);
   attribute =
     (((plane[0][byte_offset] >> bit_no) & 0x01) << 0) |
     (((plane[1][byte_offset] >> bit_no) & 0x01) << 1) |
@@ -1391,7 +1385,7 @@ void bx_vgacore_c::update(void)
     // Graphics mode
     Bit8u color;
     Bit16u x, y, start_addr;
-    unsigned bit_no, r, c;
+    unsigned r, c;
     unsigned long byte_offset;
     unsigned xc, yc, xti, yti;
 
@@ -1412,8 +1406,16 @@ void bx_vgacore_c::update(void)
     switch (BX_VGA_THIS s.graphics_ctrl.shift_reg) {
       case 0: // interleaved shift
         Bit8u attribute, palette_reg_val, DAC_regno;
-        Bit16u line_compare;
+        Bit16u line_compare, row_addr;
         Bit8u *plane[4];
+
+        plane[0] = &BX_VGA_THIS s.memory[0 << BX_VGA_THIS s.plane_shift];
+        plane[1] = &BX_VGA_THIS s.memory[1 << BX_VGA_THIS s.plane_shift];
+        plane[2] = &BX_VGA_THIS s.memory[2 << BX_VGA_THIS s.plane_shift];
+        plane[3] = &BX_VGA_THIS s.memory[3 << BX_VGA_THIS s.plane_shift];
+
+        line_compare = BX_VGA_THIS s.line_compare;
+        if (BX_VGA_THIS s.y_doublescan) line_compare >>= 1;
 
         if ((BX_VGA_THIS s.CRTC.reg[0x17] & 1) == 0) { // CGA 640x200x2
 
@@ -1423,20 +1425,14 @@ void bx_vgacore_c::update(void)
                 for (r=0; r<Y_TILESIZE; r++) {
                   y = yc + r;
                   if (BX_VGA_THIS s.y_doublescan) y >>= 1;
-                  for (c=0; c<X_TILESIZE; c++) {
-
-                    x = xc + c;
-                    /* 0 or 0x2000 */
-                    byte_offset = start_addr + ((y & 1) << 13);
+                  /* 0 or 0x2000 */
+                  row_addr = (start_addr & 0xdfff) + ((y & 1) << 13);
                     /* to the start of the line */
-                    byte_offset += (320 / 4) * (y / 2);
-                    /* to the byte start */
-                    byte_offset += (x / 8);
-
-                    bit_no = 7 - (x % 8);
-                    palette_reg_val = (((BX_VGA_THIS s.memory[byte_offset]) >> bit_no) & 1);
-                    DAC_regno = BX_VGA_THIS s.attribute_ctrl.palette_reg[palette_reg_val];
-                    BX_VGA_THIS s.tile[r*X_TILESIZE + c] = DAC_regno;
+                  row_addr += (320 / 4) * (y / 2);
+                  for (c=0; c<X_TILESIZE; c++) {
+                    x = xc + c;
+                    BX_VGA_THIS s.tile[r * X_TILESIZE + c] =
+                      BX_VGA_THIS get_vga_pixel(x, y, row_addr, line_compare, cs_visible, plane);
                   }
                 }
                 SET_TILE_UPDATED(BX_VGA_THIS, xti, yti, 0);
@@ -1447,23 +1443,21 @@ void bx_vgacore_c::update(void)
         } else { // output data in serial fashion with each display plane
                  // output on its associated serial output.  Standard EGA/VGA format
 
-          plane[0] = &BX_VGA_THIS s.memory[0 << BX_VGA_THIS s.plane_shift];
-          plane[1] = &BX_VGA_THIS s.memory[1 << BX_VGA_THIS s.plane_shift];
-          plane[2] = &BX_VGA_THIS s.memory[2 << BX_VGA_THIS s.plane_shift];
-          plane[3] = &BX_VGA_THIS s.memory[3 << BX_VGA_THIS s.plane_shift];
-          line_compare = BX_VGA_THIS s.line_compare;
-          if (BX_VGA_THIS s.y_doublescan) line_compare >>= 1;
-
           for (yc=0, yti=0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
             for (xc=0, xti=0; xc<iWidth; xc+=X_TILESIZE, xti++) {
               if (cs_toggle || GET_TILE_UPDATED (xti, yti)) {
                 for (r=0; r<Y_TILESIZE; r++) {
                   y = yc + r;
                   if (BX_VGA_THIS s.y_doublescan) y >>= 1;
+                  if (y > line_compare) {
+                    row_addr = (y - line_compare - 1) * BX_VGA_THIS s.line_offset;
+                  } else {
+                    row_addr = start_addr + (y * BX_VGA_THIS s.line_offset);
+                  }
                   for (c=0; c<X_TILESIZE; c++) {
                     x = xc + c;
-                    BX_VGA_THIS s.tile[r*X_TILESIZE + c] =
-                      BX_VGA_THIS get_vga_pixel(x, y, start_addr, line_compare, cs_visible, plane);
+                    BX_VGA_THIS s.tile[r * X_TILESIZE + c] =
+                      BX_VGA_THIS get_vga_pixel(x, y, row_addr, line_compare, cs_visible, plane);
                   }
                 }
                 SET_TILE_UPDATED(BX_VGA_THIS, xti, yti, 0);
