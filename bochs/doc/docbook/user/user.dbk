@@ -4810,7 +4810,8 @@ to slirp, but with only a few settings.
 
 BOOTROM: The bootrom value is optional, and is the name of the ROM image
 to load. Note that this feature is only implemented for the PCI version of
-the NE2000.
+the NE2000. For the ISA version using one of the optromimage options
+(see <xref linkend="bochsopt-optrom">) must be used instead of this one.
 </screen>
 </para>
 
