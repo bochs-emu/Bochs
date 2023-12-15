@@ -833,6 +833,8 @@ void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
         case 1:
           *((Bit8u*)data) = (Bit8u)value;
           break;
+        case 3:
+          *((Bit8u*)data + 2) = (Bit8u)(value >> 16);
         case 2:
           *((Bit16u*)data) = (Bit16u)value;
           break;
