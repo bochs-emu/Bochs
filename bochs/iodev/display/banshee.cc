@@ -834,12 +834,15 @@ void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
           *((Bit8u*)data) = (Bit8u)value;
           break;
         case 3:
-          *((Bit8u*)data + 2) = (Bit8u)(value >> 16);
+          *((Bit8u*)data + 2) = (Bit8u)(value >> 16);  // Q: how to handle this on BIG_ENDIAN platform ?
+          // fall through
         case 2:
           *((Bit16u*)data) = (Bit16u)value;
           break;
-        default:
+        case 4:
           *((Bit32u*)data) = (Bit32u)value;
+        default:
+          BX_ERROR(("bx_banshee_c::mem_read unsupported length %d", len));
       }
       return;
     }
@@ -888,8 +891,11 @@ void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
     case 4:
       *((Bit32u*)data) = (Bit32u)value;
       break;
-    default:
+    case 8:
       *((Bit64u*)data) = value;
+      break;
+    default:
+     BX_ERROR(("bx_banshee_c::mem_read unsupported length %d", len));
   }
 }
 
@@ -906,8 +912,11 @@ void bx_banshee_c::mem_write(bx_phy_address addr, unsigned len, void *data)
     case 2:
       value = *(Bit16u*)data;
       break;
-    default:
+    case 4:
       value = *(Bit32u*)data;
+      break;
+    default:
+      BX_ERROR(("bx_banshee_c::mem_write unsupported length %d", len));
   }
   if ((addr & ~0x1ffffff) == pci_bar[0].addr) {
     if (offset < 0x80000) {

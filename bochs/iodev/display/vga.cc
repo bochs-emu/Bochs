@@ -325,8 +325,8 @@ void bx_vga_c::update(void)
       bx_svga_tileinfo_t info;
       Bit8u dac_size = BX_VGA_THIS vbe.dac_8bit ? 8 : 6;
 
-      iWidth=BX_VGA_THIS vbe.xres;
-      iHeight=BX_VGA_THIS vbe.yres;
+      iWidth = BX_VGA_THIS vbe.xres;
+      iHeight = BX_VGA_THIS vbe.yres;
       pitch = BX_VGA_THIS s.line_offset;
       Bit8u *disp_ptr = &BX_VGA_THIS s.memory[BX_VGA_THIS vbe.virtual_start];
 
@@ -695,8 +695,7 @@ void bx_vga_c::mem_write(bx_phy_address addr, Bit8u value)
   bx_vgacore_c::mem_write(addr, value);
 }
 
-void bx_vga_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
-                           unsigned height)
+void bx_vga_c::redraw_area(unsigned x0, unsigned y0, unsigned width, unsigned height)
 {
   unsigned xti, yti, xt0, xt1, yt0, yt1, xmax, ymax;
 
