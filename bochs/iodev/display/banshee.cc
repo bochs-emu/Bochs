@@ -902,7 +902,7 @@ void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
 void bx_banshee_c::mem_write(bx_phy_address addr, unsigned len, void *data)
 {
   Bit32u offset = (addr & 0x1ffffff);
-  Bit32u value;
+  Bit32u value = 0;
   Bit32u mask = 0xffffffff;
 
   switch (len) {
