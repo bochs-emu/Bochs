@@ -2805,8 +2805,8 @@ void BX_CPU_C::VMexit(Bit32u reason, Bit64u qualification)
   else
     BX_DEBUG(("VMEXIT reason = %d (%s) qualification=0x" FMT_LL "x", reason, VMX_vmexit_reason_name[reason], qualification));
 
-  if (VMEXIT(VMX_VM_EXEC_CTRL1_MSR_BITMAPS) && TERTIARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_ENABLE_MSRLIST)) {
-    VMwrite64(VMCS_64BIT_MSR_DATA, (reason == VMX_VMEXIT_WRMSRLIST) ? vm->msr_data : 0);
+  if (TERTIARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_ENABLE_MSRLIST)) {
+    VMwrite64(VMCS_64BIT_MSR_DATA, ((reason == VMX_VMEXIT_WRMSRLIST) && VMEXIT(VMX_VM_EXEC_CTRL1_MSR_BITMAPS)) ? vm->msr_data : 0);
     vm->msr_data = 0;
   }
 
