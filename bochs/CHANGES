@@ -21,6 +21,7 @@ Brief summary :
   - USB: Added OHCI as an EHCI Companion option. Now allows UHCI or OHCI specified as a configuration parameter.
   - Disk images: Allows large VHD image files
   - Fixed and enhanced the Floppy Disk emulation
+  - Expand maximum resolution for Banshee and Voodoo 3 from 1600x1280 to 1920x1440
   - Documentation updates and fixes
 
 Detailed change log :
@@ -72,6 +73,8 @@ Detailed change log :
     - Fixed and improved PCI slot config error handling
 
   - Voodoo
+    - Expand maximum resolution for Banshee and Voodoo 3 from 1600x1280 to 1920x1440
+    - Fix memory corruption when reading Voodoo ROM
     - Fixed Voodoo device compilation for big endian architectures
 
   - CD-ROM:
@@ -159,6 +162,7 @@ Detailed change log :
 
   - Networking
     - E1000: Added support for i/o mapped register access to make DOS driver work.
+
   - HPET
     - Bugfixes in HPET emulation
 
