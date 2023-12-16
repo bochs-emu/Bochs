@@ -304,7 +304,16 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
 #endif
 
-    // SCA preention MSRs
+    // artificial MSR for MRSLIST serialization
+    case BX_MSR_IA32_BARRIER:
+      if (! is_cpu_extension_supported(BX_ISA_MSRLIST)) {
+        BX_ERROR(("RDMSR IA32_BARRIER: not enabled in the cpu model"));
+        return handle_unknown_rdmsr(index, msr);
+      }
+      val64 = 0;
+      break;
+
+    // SCA prevention MSRs
     case BX_MSR_IA32_ARCH_CAPABILITIES:
       if (! is_cpu_extension_supported(BX_ISA_SCA_MITIGATIONS)) {
         BX_ERROR(("RDMSR IA32_ARCH_CAPABILITIES: not enabled in the cpu model"));
@@ -374,6 +383,12 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
     case BX_MSR_VMX_PROCBASED_CTRLS2:
       if (BX_CPU_THIS_PTR vmx_cap.vmx_vmexec_ctrl2_supported_bits) {
         val64 = VMX_MSR_VMX_PROCBASED_CTRLS2;
+        break;
+      }
+      return false;
+    case BX_MSR_VMX_PROCBASED_CTRLS3:
+      if (BX_CPU_THIS_PTR vmx_cap.vmx_vmexec_ctrl3_supported_bits) {
+        val64 = VMX_MSR_VMX_PROCBASED_CTRLS3;
         break;
       }
       return false;
@@ -1024,7 +1039,15 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       break;
 #endif
 
-    // SCA preention MSRs
+    // artificial MSR for MRSLIST serialization
+    case BX_MSR_IA32_BARRIER:
+      if (! is_cpu_extension_supported(BX_ISA_MSRLIST)) {
+        BX_ERROR(("WRMSR IA32_BARRIER: not enabled in the cpu model"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
+      return true;
+
+    // SCA prevention MSRs
     case BX_MSR_IA32_ARCH_CAPABILITIES:
       if (! is_cpu_extension_supported(BX_ISA_SCA_MITIGATIONS)) {
         BX_ERROR(("WRMSR IA32_ARCH_CAPABILITIES: not enabled in the cpu model"));
@@ -1097,6 +1120,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_VMX_PINBASED_CTRLS:
     case BX_MSR_VMX_PROCBASED_CTRLS:
     case BX_MSR_VMX_PROCBASED_CTRLS2:
+    case BX_MSR_VMX_PROCBASED_CTRLS3:
     case BX_MSR_VMX_VMEXIT_CTRLS:
     case BX_MSR_VMX_VMENTRY_CTRLS:
     case BX_MSR_VMX_MISC:
