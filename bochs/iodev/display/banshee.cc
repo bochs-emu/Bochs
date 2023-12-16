@@ -841,6 +841,7 @@ void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
           break;
         case 4:
           *((Bit32u*)data) = (Bit32u)value;
+          break;
         default:
           BX_ERROR(("bx_banshee_c::mem_read unsupported length %d", len));
       }
@@ -902,7 +903,7 @@ void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
 void bx_banshee_c::mem_write(bx_phy_address addr, unsigned len, void *data)
 {
   Bit32u offset = (addr & 0x1ffffff);
-  Bit32u value = 0;
+  Bit64u value = 0;
   Bit32u mask = 0xffffffff;
 
   switch (len) {
@@ -914,6 +915,9 @@ void bx_banshee_c::mem_write(bx_phy_address addr, unsigned len, void *data)
       break;
     case 4:
       value = *(Bit32u*)data;
+      break;
+    case 8:
+      value = *(Bit64u*)data;
       break;
     default:
       BX_ERROR(("bx_banshee_c::mem_write unsupported length %d", len));
@@ -971,7 +975,7 @@ void bx_banshee_c::mem_write(bx_phy_address addr, unsigned len, void *data)
   }
 }
 
-void bx_banshee_c::mem_write_linear(Bit32u offset, Bit32u value, unsigned len)
+void bx_banshee_c::mem_write_linear(Bit32u offset, Bit64u value, unsigned len)
 {
   Bit8u value8;
   Bit32u start = v->banshee.io[io_vidDesktopStartAddr];
