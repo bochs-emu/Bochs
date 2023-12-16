@@ -40,6 +40,22 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 {
   Bit64u val64 = 0;
 
+#if BX_SUPPORT_VMX >= 2
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_X2APIC_MODE)) {
+      if (index >= 0x800 && index <= 0x8FF) {
+        if (index == 0x808 || SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_APIC_REGISTERS)) {
+          unsigned vapic_offset = (index & 0xff) << 4;
+          Bit32u msr_lo = VMX_Read_Virtual_APIC(vapic_offset);
+          Bit32u msr_hi = VMX_Read_Virtual_APIC(vapic_offset + 4);
+          *msr = GET64_FROM_HI32_LO32(msr_hi, msr_lo);
+          return true;
+        }
+      }
+    }
+  }
+#endif
+
 #if BX_CPU_LEVEL >= 6
   if (is_cpu_extension_supported(BX_ISA_X2APIC)) {
     if (is_x2apic_msr_range(index)) {
@@ -556,21 +572,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
     VMexit_MSR(VMX_VMEXIT_RDMSR, index);
 #endif
 
-#if BX_SUPPORT_VMX >= 2
-  if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_X2APIC_MODE)) {
-      if (index >= 0x800 && index <= 0x8FF) {
-        if (index == 0x808 || SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_APIC_REGISTERS)) {
-          unsigned vapic_offset = (index & 0xff) << 4;
-          RAX = VMX_Read_Virtual_APIC(vapic_offset);
-          RDX = VMX_Read_Virtual_APIC(vapic_offset + 4);
-          BX_NEXT_INSTR(i);
-        }
-      }
-    }
-  }
-#endif
-
   if (!rdmsr(index, &val64))
     exception(BX_GP_EXCEPTION, 0);
 
@@ -631,6 +632,15 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
   BX_INSTR_WRMSR(BX_CPU_ID, index, val_64);
 
   BX_DEBUG(("WRMSR: write %08x:%08x to MSR %x", val32_hi, val32_lo, index));
+
+#if BX_SUPPORT_VMX >= 2
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_X2APIC_MODE)) {
+      if (Virtualize_X2APIC_Write(index, val_64))
+        return true;
+    }
+  }
+#endif
 
 #if BX_CPU_LEVEL >= 6
   if (is_cpu_extension_supported(BX_ISA_X2APIC)) {
@@ -1337,21 +1347,124 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
     VMexit_MSR(VMX_VMEXIT_WRMSR, index);
 #endif
 
-#if BX_SUPPORT_VMX >= 2
-  if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_X2APIC_MODE)) {
-      if (Virtualize_X2APIC_Write(index, val_64))
-        BX_NEXT_INSTR(i);
-    }
-  }
-#endif
-
   if (! wrmsr(index, val_64))
     exception(BX_GP_EXCEPTION, 0);
 #endif
 
   BX_NEXT_TRACE(i);
 }
+
+#if BX_SUPPORT_X86_64
+
+#include "scalar_arith.h" 
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSRLIST(bxInstruction_c *i)
+{
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    if (! TERTIARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_ENABLE_MSRLIST))
+      exception(BX_UD_EXCEPTION, 0);
+  }
+#endif
+
+  if (!long64_mode() || CPL!=0) {
+    BX_ERROR(("RDMSRLIST: CPL != 0 cause #GP(0)"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
+  if (((ESI | EDI) & 0x7) != 0) {
+    BX_ERROR(("RDMSRLIST: RSI and RDI must be 8-byte aligned"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
+  Bit64u val64;
+
+  while (RCX != 0) {
+    unsigned MSR_index = tzcntq(RCX);   // position of least significant bit set in RCX
+    Bit64u MSR_mask = (BX_CONST64(1) << MSR_index);
+    Bit64u MSR_address = read_linear_qword(BX_SEG_REG_DS, RSI + MSR_index*8);
+    if (GET32H(MSR_address)) {
+      BX_ERROR(("RDMSRLIST index=%d #GP(0): reserved bits are set in MSR address table entry", MSR_index));
+      exception(BX_GP_EXCEPTION, 0);
+    }
+
+#if BX_SUPPORT_VMX >= 2
+    if (BX_CPU_THIS_PTR in_vmx_guest)
+      VMexit_MSR(VMX_VMEXIT_RDMSRLIST, (Bit32u) MSR_address);
+#endif
+
+    if (!rdmsr((Bit32u) MSR_address, &val64))
+      exception(BX_GP_EXCEPTION, 0);
+
+    write_linear_qword(BX_SEG_REG_DS, RDI + MSR_index*8, val64);
+
+    RCX &= ~MSR_mask;
+
+    // allow delivery of any pending interrupts or traps
+    if (BX_CPU_THIS_PTR async_event) {
+      RIP = BX_CPU_THIS_PTR prev_rip; // loop not done, restore RIP
+      break;
+    }
+  }
+
+  BX_NEXT_TRACE(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSRLIST(bxInstruction_c *i)
+{
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    if (! TERTIARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_ENABLE_MSRLIST))
+      exception(BX_UD_EXCEPTION, 0);
+  }
+#endif
+
+  if (!long64_mode() || CPL!=0) {
+    BX_ERROR(("WRMSRLIST: CPL != 0 cause #GP(0)"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
+  if (((ESI | EDI) & 0x7) != 0) {
+    BX_ERROR(("WRMSRLIST: RSI and RDI must be 8-byte aligned"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
+  invalidate_prefetch_q();
+
+  while (RCX != 0) {
+    unsigned MSR_index = tzcntq(RCX);   // position of least significant bit set in RCX
+    Bit64u MSR_mask = (BX_CONST64(1) << MSR_index);
+    Bit64u MSR_address = read_linear_qword(BX_SEG_REG_DS, RSI + MSR_index*8);
+    Bit64u MSR_data    = read_linear_qword(BX_SEG_REG_DS, RDI + MSR_index*8);
+    if (GET32H(MSR_address)) {
+      BX_ERROR(("WRMSRLIST index=%d #GP(0): reserved bits are set in MSR address table entry", MSR_index));
+      exception(BX_GP_EXCEPTION, 0);
+    }
+
+#if BX_SUPPORT_VMX >= 2
+    if (BX_CPU_THIS_PTR in_vmx_guest) {
+      VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+      vm->msr_data = MSR_data;
+      VMexit_MSR(VMX_VMEXIT_WRMSRLIST, (Bit32u) MSR_address);
+    }
+#endif
+
+    if (! wrmsr((Bit32u) MSR_address, MSR_data))
+      exception(BX_GP_EXCEPTION, 0);
+
+    RCX &= ~MSR_mask;
+
+    // allow delivery of any pending interrupts or traps
+    if (BX_CPU_THIS_PTR async_event) {
+      RIP = BX_CPU_THIS_PTR prev_rip; // loop not done, restore RIP
+      break;
+    }
+  }
+
+  BX_NEXT_TRACE(i);
+}
+
+#endif
 
 #if BX_CONFIGURE_MSRS
 

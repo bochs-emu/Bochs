@@ -131,6 +131,8 @@ static const char *VMX_vmexit_reason_name[] =
   /* 75 */  "Notify Window",
   /* 76 */  "SEAMCALL",
   /* 77 */  "TDCALL",
+  /* 78 */  "RDMSRLIST",
+  /* 79 */  "WRMSRLIST",
 };
 
 #include "decoder/ia_opcodes.h"
@@ -2331,11 +2333,9 @@ Bit32u BX_CPU_C::LoadMSRs(Bit32u msr_cnt, bx_phy_address pAddr)
     }
 #endif
 
-    if (is_cpu_extension_supported(BX_ISA_X2APIC)) {
-      if (is_x2apic_msr_range(index)) {
-        BX_ERROR(("VMX LoadMSRs %d: unable to restore X2APIC range MSR %x", msr, index));
-        return msr;
-      }
+    if (is_x2apic_msr_range(index)) {
+      BX_ERROR(("VMX LoadMSRs %d: unable to restore X2APIC range MSR %x", msr, index));
+      return msr;
     }
 
     if (! wrmsr(index, msr_hi)) {
@@ -2360,11 +2360,9 @@ Bit32u BX_CPU_C::StoreMSRs(Bit32u msr_cnt, bx_phy_address pAddr)
 
     Bit32u index = GET32L(msr_lo);
 
-    if (is_cpu_extension_supported(BX_ISA_X2APIC)) {
-      if (is_x2apic_msr_range(index)) {
-        BX_ERROR(("VMX StoreMSRs %d: unable to save X2APIC range MSR %x", msr, index));
-        return msr;
-      }
+    if (is_x2apic_msr_range(index)) {
+      BX_ERROR(("VMX StoreMSRs %d: unable to save X2APIC range MSR %x", msr, index));
+      return msr;
     }
 
     if (! rdmsr(index, &msr_hi)) {
@@ -2806,6 +2804,11 @@ void BX_CPU_C::VMexit(Bit32u reason, Bit64u qualification)
     BX_PANIC(("PANIC: broken VMEXIT reason %d", reason));
   else
     BX_DEBUG(("VMEXIT reason = %d (%s) qualification=0x" FMT_LL "x", reason, VMX_vmexit_reason_name[reason], qualification));
+
+  if (VMEXIT(VMX_VM_EXEC_CTRL1_MSR_BITMAPS) && TERTIARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_ENABLE_MSRLIST)) {
+    VMwrite64(VMCS_64BIT_MSR_DATA, (reason == VMX_VMEXIT_WRMSRLIST) ? vm->msr_data : 0);
+    vm->msr_data = 0;
+  }
 
   if (reason != VMX_VMEXIT_EXCEPTION_NMI && reason != VMX_VMEXIT_EXTERNAL_INTERRUPT) {
     VMwrite32(VMCS_32BIT_VMEXIT_INTERRUPTION_INFO, 0);
@@ -4066,6 +4069,7 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, io_bitmap_addr1, BX_CPU_THIS_PTR vmcs.io_bitmap_addr[0]);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, io_bitmap_addr2, BX_CPU_THIS_PTR vmcs.io_bitmap_addr[1]);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, msr_bitmap_addr, BX_CPU_THIS_PTR vmcs.msr_bitmap_addr);
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, msr_data, BX_CPU_THIS_PTR vmcs.msr_data);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vm_cr0_mask, BX_CPU_THIS_PTR vmcs.vm_cr0_mask);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vm_cr0_read_shadow, BX_CPU_THIS_PTR vmcs.vm_cr0_read_shadow);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vm_cr4_mask, BX_CPU_THIS_PTR vmcs.vm_cr4_mask);
