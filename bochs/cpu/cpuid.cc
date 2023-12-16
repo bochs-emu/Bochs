@@ -1190,7 +1190,11 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_eax(Bit32u extra) const
 
   //   [25:24]  reserved
   //   [26:26]  LAM: Linear Address Masking
+
   //   [27:27]  MSRLIST: RDMSRLIST/WRMSRLIST instructions and the IA32_BARRIER MSR
+  if (is_cpu_extension_supported(BX_ISA_MSRLIST))
+    eax |= BX_CPUID_STD7_SUBLEAF1_EAX_MSRLIST;
+
   //   [31:28]  reserved
 
   return eax;

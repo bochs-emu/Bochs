@@ -143,3 +143,4 @@ x86_feature(BX_ISA_LASS, "lass")                                        /* Linea
 x86_feature(BX_ISA_UINTR, "uintr")                                      /* User Level Interrupts support */
 x86_feature(BX_ISA_MOVDIRI, "movdiri")                                  /* MOVDIRI instruction support */
 x86_feature(BX_ISA_MOVDIR64B, "movdir64b")                              /* MOVDIR64B instruction support */
+x86_feature(BX_ISA_MSRLIST, "msrlist")                                  /* RDMSRLIST/WRMSRLIST instructions support */
