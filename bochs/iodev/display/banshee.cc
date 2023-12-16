@@ -842,6 +842,9 @@ void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
         case 4:
           *((Bit32u*)data) = (Bit32u)value;
           break;
+        case 8:
+          *((Bit64u*)data) = value;
+          break;
         default:
           BX_ERROR(("bx_banshee_c::mem_read unsupported length %d", len));
       }
