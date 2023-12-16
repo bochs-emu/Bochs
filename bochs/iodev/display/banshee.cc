@@ -2766,8 +2766,8 @@ bool bx_voodoo_vga_c::init_vga_extension(void)
     init_iohandlers(banshee_vga_read_handler, banshee_vga_write_handler);
     DEV_register_iowrite_handler(this, banshee_vga_write_handler, 0x0102, "banshee", 1);
     DEV_register_iowrite_handler(this, banshee_vga_write_handler, 0x46e8, "banshee", 1);
-    BX_VVGA_THIS s.max_xres = 1600;
-    BX_VVGA_THIS s.max_yres = 1280;
+    BX_VVGA_THIS s.max_xres = 1920;
+    BX_VVGA_THIS s.max_yres = 1440;
     v->banshee.disp_bpp = 8;
     BX_VVGA_THIS s.vclk[0] = 25175000;
     BX_VVGA_THIS s.vclk[1] = 28322000;
