@@ -75,7 +75,7 @@ public:
 
   virtual void reg_write(Bit32u reg, Bit32u value);
   virtual void blt_reg_write(Bit8u reg, Bit32u value) {}
-  virtual void mem_write_linear(Bit32u offset, Bit32u value, unsigned len) {}
+  virtual void mem_write_linear(Bit32u offset, Bit64u value, unsigned len) {}
   virtual void draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *info) {}
   virtual void set_tile_updated(unsigned xti, unsigned yti, bool flag) {}
 
@@ -128,7 +128,7 @@ public:
 
   virtual void reg_write(Bit32u reg, Bit32u value);
   virtual void blt_reg_write(Bit8u reg, Bit32u value);
-  virtual void mem_write_linear(Bit32u offset, Bit32u value, unsigned len);
+  virtual void mem_write_linear(Bit32u offset, Bit64u value, unsigned len);
   virtual void draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *info);
   virtual void set_tile_updated(unsigned xti, unsigned yti, bool flag);
 
