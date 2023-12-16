@@ -1227,7 +1227,8 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_edx(Bit32u extra) const
 
   //   [13:11]  reserved
   //   [14:14]  PREFETCHITI: PREFETCHIT0/T1 instruction
-  //   [16:15]  reserved
+  //   [15:15]  USER_MSR: support for URDMSR/UWRMSR instructions
+  //   [16:16]  reserved
   //   [17:17]  UIRET sets UIF to the RFLAGS[1] image loaded from the stack
   //   [18:18]  CET_SSS
 
