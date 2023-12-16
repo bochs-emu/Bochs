@@ -319,8 +319,8 @@ void bx_voodoo_base_c::init(void)
   voodoo_init(s.model);
   if (s.model >= VOODOO_BANSHEE) {
     banshee_bitblt_init();
-    s.max_xres = 1600;
-    s.max_yres = 1280;
+    s.max_xres = 1920;
+    s.max_yres = 1440;
   } else {
     s.max_xres = 800;
     s.max_yres = 680;
