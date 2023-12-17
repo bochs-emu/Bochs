@@ -45,7 +45,6 @@ private:
   Bit32u max_ext_leaf;
 
   void get_std_cpuid_leaf_1(cpuid_function_t *leaf) const;
-  void get_std_cpuid_leaf_2(cpuid_function_t *leaf) const;
 };
 
 extern bx_cpuid_t *create_p4_willamette_cpuid(BX_CPU_C *cpu);

@@ -833,11 +833,20 @@ void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
         case 1:
           *((Bit8u*)data) = (Bit8u)value;
           break;
+        case 3:
+          *((Bit8u*)data + 2) = (Bit8u)(value >> 16);  // Q: how to handle this on BIG_ENDIAN platform ?
+          // fall through
         case 2:
           *((Bit16u*)data) = (Bit16u)value;
           break;
-        default:
+        case 4:
           *((Bit32u*)data) = (Bit32u)value;
+          break;
+        case 8:
+          *((Bit64u*)data) = value;
+          break;
+        default:
+          BX_ERROR(("bx_banshee_c::mem_read unsupported length %d", len));
       }
       return;
     }
@@ -886,15 +895,18 @@ void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
     case 4:
       *((Bit32u*)data) = (Bit32u)value;
       break;
-    default:
+    case 8:
       *((Bit64u*)data) = value;
+      break;
+    default:
+     BX_ERROR(("bx_banshee_c::mem_read unsupported length %d", len));
   }
 }
 
 void bx_banshee_c::mem_write(bx_phy_address addr, unsigned len, void *data)
 {
   Bit32u offset = (addr & 0x1ffffff);
-  Bit32u value;
+  Bit64u value = 0;
   Bit32u mask = 0xffffffff;
 
   switch (len) {
@@ -904,8 +916,14 @@ void bx_banshee_c::mem_write(bx_phy_address addr, unsigned len, void *data)
     case 2:
       value = *(Bit16u*)data;
       break;
-    default:
+    case 4:
       value = *(Bit32u*)data;
+      break;
+    case 8:
+      value = *(Bit64u*)data;
+      break;
+    default:
+      BX_ERROR(("bx_banshee_c::mem_write unsupported length %d", len));
   }
   if ((addr & ~0x1ffffff) == pci_bar[0].addr) {
     if (offset < 0x80000) {
@@ -960,7 +978,7 @@ void bx_banshee_c::mem_write(bx_phy_address addr, unsigned len, void *data)
   }
 }
 
-void bx_banshee_c::mem_write_linear(Bit32u offset, Bit32u value, unsigned len)
+void bx_banshee_c::mem_write_linear(Bit32u offset, Bit64u value, unsigned len)
 {
   Bit8u value8;
   Bit32u start = v->banshee.io[io_vidDesktopStartAddr];
@@ -2748,8 +2766,8 @@ bool bx_voodoo_vga_c::init_vga_extension(void)
     init_iohandlers(banshee_vga_read_handler, banshee_vga_write_handler);
     DEV_register_iowrite_handler(this, banshee_vga_write_handler, 0x0102, "banshee", 1);
     DEV_register_iowrite_handler(this, banshee_vga_write_handler, 0x46e8, "banshee", 1);
-    BX_VVGA_THIS s.max_xres = 1600;
-    BX_VVGA_THIS s.max_yres = 1280;
+    BX_VVGA_THIS s.max_xres = 1920;
+    BX_VVGA_THIS s.max_yres = 1440;
     v->banshee.disp_bpp = 8;
     BX_VVGA_THIS s.vclk[0] = 25175000;
     BX_VVGA_THIS s.vclk[1] = 28322000;

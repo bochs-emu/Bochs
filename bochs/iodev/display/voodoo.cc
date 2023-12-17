@@ -319,8 +319,8 @@ void bx_voodoo_base_c::init(void)
   voodoo_init(s.model);
   if (s.model >= VOODOO_BANSHEE) {
     banshee_bitblt_init();
-    s.max_xres = 1600;
-    s.max_yres = 1280;
+    s.max_xres = 1920;
+    s.max_yres = 1440;
   } else {
     s.max_xres = 800;
     s.max_yres = 680;
@@ -1070,7 +1070,8 @@ bool bx_voodoo_1_2_c::update_timing(void)
   BX_INFO(("Voodoo output %dx%d@%uHz", v->fbi.width, v->fbi.height, (unsigned)v->vertfreq));
   v->fbi.swaps_pending = 0;
   v->vtimer_running = 1;
-  bx_virt_timer.activate_timer(s.vertical_timer_id, (Bit32u)s.vdraw.vtotal_usec, 1);
+  if (v->vidclk != 0.0)
+    bx_virt_timer.activate_timer(s.vertical_timer_id, (Bit32u)s.vdraw.vtotal_usec, 1);
   return 1;
 }
 

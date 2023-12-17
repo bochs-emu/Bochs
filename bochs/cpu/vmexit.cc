@@ -327,36 +327,40 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_MSR(unsigned op, Bit32u msr)
 {
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
 
-  bool vmexit = false;
-  if (! VMEXIT(VMX_VM_EXEC_CTRL1_MSR_BITMAPS)) vmexit = true;
-  else {
-    VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+  bool readmsr = (op == VMX_VMEXIT_RDMSR || op == VMX_VMEXIT_RDMSRLIST);
 
-    if (msr >= BX_VMX_HI_MSR_START) {
-       if (msr > BX_VMX_HI_MSR_END) vmexit = true;
-       else {
-         // check MSR-HI bitmaps
-         bx_phy_address pAddr = vm->msr_bitmap_addr + ((msr - BX_VMX_HI_MSR_START) >> 3) + 1024 + ((op == VMX_VMEXIT_RDMSR) ? 0 : 2048);
-         Bit8u field = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_MSR_BITMAP_ACCESS);
-         if (field & (1 << (msr & 7)))
-            vmexit = true;
-       }
-    }
+  if (! VMEXIT(VMX_VM_EXEC_CTRL1_MSR_BITMAPS)) {
+    BX_DEBUG(("VMEXIT: %sMSR 0x%08x", (readmsr) ? "RD" : "WR", msr));
+    VMexit(op, 0);
+  }
+
+  VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+
+  bool vmexit = false;
+  if (msr >= BX_VMX_HI_MSR_START) {
+    if (msr > BX_VMX_HI_MSR_END) vmexit = true;
     else {
-       if (msr > BX_VMX_LO_MSR_END) vmexit = true;
-       else {
-         // check MSR-LO bitmaps
-         bx_phy_address pAddr = vm->msr_bitmap_addr + (msr >> 3) + ((op == VMX_VMEXIT_RDMSR) ? 0 : 2048);
-         Bit8u field = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_MSR_BITMAP_ACCESS);
-         if (field & (1 << (msr & 7)))
-            vmexit = true;
-       }
+      // check MSR-HI bitmaps
+      bx_phy_address pAddr = vm->msr_bitmap_addr + ((msr - BX_VMX_HI_MSR_START) >> 3) + 1024 + (readmsr ? 0 : 2048);
+      Bit8u field = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_MSR_BITMAP_ACCESS);
+      if (field & (1 << (msr & 7)))
+        vmexit = true;
+    }
+  }
+  else {
+    if (msr > BX_VMX_LO_MSR_END) vmexit = true;
+    else {
+      // check MSR-LO bitmaps
+      bx_phy_address pAddr = vm->msr_bitmap_addr + (msr >> 3) + (readmsr ? 0 : 2048);
+      Bit8u field = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_MSR_BITMAP_ACCESS);
+      if (field & (1 << (msr & 7)))
+        vmexit = true;
     }
   }
 
   if (vmexit) {
-     BX_DEBUG(("VMEXIT: %sMSR 0x%08x", (op == VMX_VMEXIT_RDMSR) ? "RD" : "WR", msr));
-     VMexit(op, 0);
+     BX_DEBUG(("VMEXIT: %sMSR 0x%08x", (readmsr) ? "RD" : "WR", msr));
+     VMexit(op, (op >= VMX_VMEXIT_RDMSRLIST) ? msr : 0);
   }
 }
 

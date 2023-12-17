@@ -1190,7 +1190,11 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_eax(Bit32u extra) const
 
   //   [25:24]  reserved
   //   [26:26]  LAM: Linear Address Masking
+
   //   [27:27]  MSRLIST: RDMSRLIST/WRMSRLIST instructions and the IA32_BARRIER MSR
+  if (is_cpu_extension_supported(BX_ISA_MSRLIST))
+    eax |= BX_CPUID_STD7_SUBLEAF1_EAX_MSRLIST;
+
   //   [31:28]  reserved
 
   return eax;
@@ -1227,7 +1231,8 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_edx(Bit32u extra) const
 
   //   [13:11]  reserved
   //   [14:14]  PREFETCHITI: PREFETCHIT0/T1 instruction
-  //   [16:15]  reserved
+  //   [15:15]  USER_MSR: support for URDMSR/UWRMSR instructions
+  //   [16:16]  reserved
   //   [17:17]  UIRET sets UIF to the RFLAGS[1] image loaded from the stack
   //   [18:18]  CET_SSS
 

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2023  The Bochs Project
 //  PCI VGA dummy adapter Copyright (C) 2002,2003  Mike Nordell
 //
 //  This library is free software; you can redistribute it and/or
@@ -325,8 +325,8 @@ void bx_vga_c::update(void)
       bx_svga_tileinfo_t info;
       Bit8u dac_size = BX_VGA_THIS vbe.dac_8bit ? 8 : 6;
 
-      iWidth=BX_VGA_THIS vbe.xres;
-      iHeight=BX_VGA_THIS vbe.yres;
+      iWidth = BX_VGA_THIS vbe.xres;
+      iHeight = BX_VGA_THIS vbe.yres;
       pitch = BX_VGA_THIS s.line_offset;
       Bit8u *disp_ptr = &BX_VGA_THIS s.memory[BX_VGA_THIS vbe.virtual_start];
 
@@ -578,6 +578,7 @@ void bx_vga_c::update(void)
       unsigned r, c, x, y;
       unsigned xc, yc, xti, yti;
       Bit8u *plane[4];
+      Bit16u row_addr;
 
       BX_VGA_THIS determine_screen_dimensions(&iHeight, &iWidth);
       if ((iWidth != BX_VGA_THIS s.last_xres) || (iHeight != BX_VGA_THIS s.last_yres) ||
@@ -599,10 +600,11 @@ void bx_vga_c::update(void)
             for (r=0; r<Y_TILESIZE; r++) {
               y = yc + r;
               if (BX_VGA_THIS s.y_doublescan) y >>= 1;
+              row_addr = BX_VGA_THIS vbe.virtual_start + (y * BX_VGA_THIS s.line_offset);
               for (c=0; c<X_TILESIZE; c++) {
                 x = xc + c;
                 BX_VGA_THIS s.tile[r*X_TILESIZE + c] =
-                  BX_VGA_THIS get_vga_pixel(x, y, BX_VGA_THIS vbe.virtual_start, 0xffff, 0, plane);
+                  BX_VGA_THIS get_vga_pixel(x, y, row_addr, 0xffff, 0, plane);
               }
             }
             SET_TILE_UPDATED(BX_VGA_THIS, xti, yti, 0);
@@ -693,8 +695,7 @@ void bx_vga_c::mem_write(bx_phy_address addr, Bit8u value)
   bx_vgacore_c::mem_write(addr, value);
 }
 
-void bx_vga_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
-                           unsigned height)
+void bx_vga_c::redraw_area(unsigned x0, unsigned y0, unsigned width, unsigned height)
 {
   unsigned xti, yti, xt0, xt1, yt0, yt1, xmax, ymax;
 

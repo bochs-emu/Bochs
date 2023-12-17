@@ -45,10 +45,7 @@ private:
   Bit32u max_ext_leaf;
 
   void get_std_cpuid_leaf_1(cpuid_function_t *leaf) const;
-  void get_std_cpuid_leaf_2(cpuid_function_t *leaf) const;
-
   void get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const;
-  void get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const;
 };
 
 extern bx_cpuid_t *create_p4_prescott_celeron_336_cpuid(BX_CPU_C *cpu);

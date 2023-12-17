@@ -137,8 +137,8 @@ void corei7_skylake_x_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpu
   case 0x80000005:
     get_reserved_leaf(leaf);
     return;
-  case 0x80000006:
-    get_ext_cpuid_leaf_6(leaf);
+  case 0x80000006: // CPUID leaf 0x80000006 - L2 Cache and TLB Identifiers
+    get_leaf(leaf, 0x00000000, 0x00000000, 0x01006040, 0x00000000);
     return;
   case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management leaf
     get_leaf(leaf, 0x00000000, 0x00000000, 0x00000000, 0x00000100); // EDX[8] - invariant TSC
@@ -195,12 +195,12 @@ void corei7_skylake_x_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpu
   case 0x00000014:
     get_reserved_leaf(leaf);
     return;
-  case 0x00000015:
-    get_std_cpuid_leaf_15(leaf);
+  case 0x00000015: // CPUID leaf 0x000000015 - Time Stamp Counter and Nominal Core Crystal Clock Information
+    get_leaf(leaf, 0x00000002, 0x00000124, 0x00000000, 0x00000000);
     return;
-  case 0x00000016:
+  case 0x00000016: // CPUID leaf 0x000000016 - Processor Frequency Information
   default:
-    get_std_cpuid_leaf_16(leaf);
+    get_leaf(leaf, 0x00000dac, 0x00000fa0, 0x00000064, 0x00000000);
     return;
   }
 }
@@ -584,26 +584,8 @@ void corei7_skylake_x_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
 // leaf 0x00000012 SGX (not implemented) //
 // leaf 0x00000013 reserved //
 // leaf 0x00000014 Intel Processor Trace (not implemented) //
-
 // leaf 0x00000015 Time Stamp Counter and Nominal Core Crystal Clock Information //
-void corei7_skylake_x_t::get_std_cpuid_leaf_15(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x000000015 - Time Stamp Counter and Nominal Core Crystal Clock Information
-  leaf->eax = 0x00000002;
-  leaf->ebx = 0x00000124;
-  leaf->ecx = 0x00000000;
-  leaf->edx = 0x00000000;
-}
-
 // leaf 0x00000016 Processor Frequency Information //
-void corei7_skylake_x_t::get_std_cpuid_leaf_16(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x000000016 - Processor Frequency Information
-  leaf->eax = 0x00000dac;
-  leaf->ebx = 0x00000fa0;
-  leaf->ecx = 0x00000064;
-  leaf->edx = 0x00000000;
-}
 
 // leaf 0x80000000 //
 
@@ -667,20 +649,9 @@ void corei7_skylake_x_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000002 //
 // leaf 0x80000003 //
 // leaf 0x80000004 //
-
 // leaf 0x80000005 - L1 Cache and TLB Identifiers (reserved for Intel)
-
-// leaf 0x80000006 - L2 Cache and TLB Identifiers //
-void corei7_skylake_x_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
-{
-  // CPUID function 0x80000006 - L2 Cache and TLB Identifiers
-  leaf->eax = 0x00000000;
-  leaf->ebx = 0x00000000;
-  leaf->ecx = 0x01006040;
-  leaf->edx = 0x00000000;
-}
-
-// leaf 0x80000007 - Advanced Power Management //
+// leaf 0x80000006 - L2 Cache and TLB Identifiers
+// leaf 0x80000007 - Advanced Power Management
 
 void corei7_skylake_x_t::dump_cpuid(void) const
 {

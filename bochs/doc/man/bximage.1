@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bximage 1 "9 Jan 2021" "bximage" "The Bochs Project"
+.TH bximage 1 "10 Dec 2023" "bximage" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bximage \- Interactive Disk Image Creation, Conversion, Resize and
@@ -52,6 +52,10 @@ option bximage uses the  command  line parameters as
 defaults for the interactive mode. If this option is
 given and one of the required parameters is missing,
 bximage will fall back to interactive mode.
+
+This example creates a harddisk image in flat mode and sector size 512:
+
+bximage -q -func=create -hd=100M hd100meg.img
 .TP
 .BI \--help
 Print  a  summary  of  the command line options for

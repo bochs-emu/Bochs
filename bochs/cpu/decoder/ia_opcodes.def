@@ -736,6 +736,7 @@ bx_define_opcode(BX_IA_FILD_QWORD_INTEGER, "fild", "fildq", &BX_CPU_C::FILD_QWOR
 bx_define_opcode(BX_IA_FBLD_PACKED_BCD, "fbld", "fbldt", &BX_CPU_C::FBLD_PACKED_BCD, NULL, BX_ISA_X87, OP_Mt, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_FPU)
 bx_define_opcode(BX_IA_FST_STi, "fst", "fst", NULL, &BX_CPU_C::FST_STi, BX_ISA_X87, OP_STi, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_FPU)
 bx_define_opcode(BX_IA_FSTP_STi, "fstp", "fstp", NULL, &BX_CPU_C::FST_STi, BX_ISA_X87, OP_STi, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_FPU)
+bx_define_opcode(BX_IA_FSTP_SPECIAL_STi, "fstp", "fstp", NULL, &BX_CPU_C::FST_STi, BX_ISA_X87, OP_STi, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_FPU) // undocumented 287 compatibility opcode
 bx_define_opcode(BX_IA_FST_SINGLE_REAL, "fst", "fsts", &BX_CPU_C::FST_SINGLE_REAL, NULL, BX_ISA_X87, OP_Md, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_FPU)
 bx_define_opcode(BX_IA_FSTP_SINGLE_REAL, "fstp", "fstps", &BX_CPU_C::FST_SINGLE_REAL, NULL, BX_ISA_X87, OP_Md, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_FPU)
 bx_define_opcode(BX_IA_FST_DOUBLE_REAL, "fst", "fstl", &BX_CPU_C::FST_DOUBLE_REAL, NULL, BX_ISA_X87, OP_Mq, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_FPU)
@@ -1800,8 +1801,12 @@ bx_define_opcode(BX_IA_SENDUIPI_Gq, "senduipi", "senduipi", NULL, &BX_CPU_C::SEN
 
 bx_define_opcode(BX_IA_RDPID_Ed, "rdpid", "rdpid", NULL, &BX_CPU_C::RDPID_Ed, BX_ISA_RDPID, OP_Ed, OP_NONE, OP_NONE, OP_NONE, 0)
 
-bx_define_opcode(BX_IA_WRMSRNS, "wrmsrns", "wrmsrns", NULL, &BX_CPU_C::WRMSR, BX_ISA_WRMSRNS, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
 bx_define_opcode(BX_IA_SERIALIZE, "serialize", "serialize", &BX_CPU_C::BxError, &BX_CPU_C::NOP, BX_ISA_SERIALIZE, OP_NONE, OP_NONE, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_WRMSRNS, "wrmsrns", "wrmsrns", NULL, &BX_CPU_C::WRMSR, BX_ISA_WRMSRNS, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
+#if BX_SUPPORT_X86_64
+bx_define_opcode(BX_IA_RDMSRLIST, "rdmsrlist", "rdmsrlist", NULL, &BX_CPU_C::RDMSRLIST, BX_ISA_MSRLIST, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
+bx_define_opcode(BX_IA_WRMSRLIST, "wrmsrlist", "wrmsrlist", NULL, &BX_CPU_C::WRMSRLIST, BX_ISA_MSRLIST, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
+#endif
 
 #if BX_SUPPORT_AVX && BX_CPU_LEVEL >= 6
 // AVX1/AVX2

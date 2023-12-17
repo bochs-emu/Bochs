@@ -10,7 +10,7 @@ Brief summary :
   ! Implemented Linear Address Separation (LASS) extension
   ! Implemented User-Level Interrupt (UINTR) extension
   ! Implemented recently published Intel instruction sets:
-    - MOVDIRI/MOVDIR64B, AVX512 BF16, AVX IFMA52, VNNI-INT8/VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3, SM4, SHA512, WRMSRNS, WAITPKG, SERIALIZE
+    - MOVDIRI/MOVDIR64B, AVX512 BF16, AVX IFMA52, VNNI-INT8/VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3, SM4, SHA512, WRMSRNS, MSRLIST, WAITPKG, SERIALIZE
   - Improved 64-bit guest support in Bochs internal debugger, added new internal debugger commands
   - Bochs debugger enhanced with new commands (setpmem, loadmem, deref, ...)
     Enhanced magic breakpoint capabilities. Refer to user documentation for more details.
@@ -21,9 +21,13 @@ Brief summary :
   - USB: Added OHCI as an EHCI Companion option. Now allows UHCI or OHCI specified as a configuration parameter.
   - Disk images: Allows large VHD image files
   - Fixed and enhanced the Floppy Disk emulation
+  - Expand maximum resolution for Banshee and Voodoo 3 from 1600x1280 to 1920x1440
   - Documentation updates and fixes
 
 Detailed change log :
+
+- General
+  - Improved parsing bochsrc options passed on the command line.
 
 - CPU/CPUDB
   - Bugfixes for CPU emulation correctness (MONITOR/MWAIT, VMX/SVM, AVX-512, CET)
@@ -33,7 +37,7 @@ Detailed change log :
   - Implemented Linear Address Separation (LASS) extension
   - Implemented User-Level Interrupt (UINTR) extension
   - Implemented recently published Intel instruction sets:
-    - MOVDIRI/MOVDIR64B, AVX512 BF16, AVX IFMA52, VNNI-INT8/VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3, SM4, SHA512, WRMSRNS, WAITPKG, SERIALIZE
+    - MOVDIRI/MOVDIR64B, AVX512 BF16, AVX IFMA52, VNNI-INT8/VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3, SM4, SHA512, WRMSRNS, MSRLIST, WAITPKG, SERIALIZE
 
 - Bochs Debugger and Instrumentation
   - Updated Bochs instrumentation examples for new disassembler introduced in Bochs 2.7 release.
@@ -48,8 +52,13 @@ Detailed change log :
 - Configure and compile
   - Apply standard CPPFLAGS from environment in all makefiles
 
+- Config interface
+  - Show message box while saving and restoring Bochs state
+
 - Memory
   - Fixed memory handling in volatile BIOS write support
+  - Added 'flash_data' parameter for loading/saving the config space of the
+    flash BIOS rom and save/restore support for it (unused by Bochs BIOS).
 
 - I/O Devices
   - Timers
@@ -57,12 +66,15 @@ Detailed change log :
     - APIC: Removed timer handles from save/restore list
 
   - CMOS
-    - Fixed and improved RTC handling in CMOS and BIOS (based on SF patch by Michele Giacomone))
+    - Fixed and improved RTC handling in CMOS and BIOS (based on SF patch by Michele Giacomone).
+    - Added runtime option for turning on/off saving CMOS image on exit.
 
   - PCI
     - Fixed and improved PCI slot config error handling
 
   - Voodoo
+    - Expand maximum resolution for Banshee and Voodoo 3 from 1600x1280 to 1920x1440
+    - Fix memory corruption when reading Voodoo ROM
     - Fixed Voodoo device compilation for big endian architectures
 
   - CD-ROM:
@@ -148,8 +160,14 @@ Detailed change log :
     - xHCI: fixed/updated the port bandwidth emulation.
     - Many documentation additions.
 
+  - Networking
+    - E1000: Added support for i/o mapped register access to make DOS driver work.
+
   - HPET
     - Bugfixes in HPET emulation
+
+-BIOS
+  - Added capability to enter keycode with ALT + numeric keypad
 
 -------------------------------------------------------------------------
 Changes in 2.7 (August 1, 2021):

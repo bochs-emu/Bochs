@@ -3789,6 +3789,7 @@ Examples:
 <screen>
   romimage: file=bios/BIOS-bochs-latest, options=fastboot
   romimage: file=$BXSHARE/BIOS-bochs-legacy
+  romimage: file=asus_p6np5.bin, flash_data=escd.bin
   romimage: file=mybios.bin, address=0xfff80000
 </screen>
 The ROM BIOS controls what the PC does when it first powers on.  Normally, you
@@ -3797,13 +3798,33 @@ can use a precompiled BIOS in the source or binary distribution called
 starting at address 0xfffe0000, and it is exactly 128k long. The legacy version
 of the Bochs BIOS is usually loaded starting at address 0xffff0000, and it is
 exactly 64k long.
-You can use the environment variable $BXSHARE to specify the location of the BIOS.
 The usage of external large BIOS images (up to 512k) at memory top is
 now supported, but we still recommend to use the BIOS distributed with Bochs.
+</para>
+<para><command>file</command></para>
+<para>
+Name of the BIOS image file. You can use the environment variable $BXSHARE to
+specify the location of the BIOS.
+</para>
+<para><command>address</command></para>
+<para>
 The start address is optional, since it can be calculated from image size.
+</para>
+<para><command>options</command></para>
+<para>
 The Bochs BIOS currently supports only the option "fastboot" to skip the
 boot menu delay.
 </para>
+<para><command>flash_dats</command></para>
+<para>
+This parameter defines the file name for the flash BIOS config space loaded
+startup if existing and saved on exit if modified. The Bochs BIOS doesn't
+this feature yet.
+</para>
+<note><para>
+  If you use the BIOS-bochs-legacy romimage BIOS option, you cannot use a PCI
+  enabled VGA ROM BIOS.
+</para></note>
 </section>
 
 <section id="bochsopt-vgaromimage"><title>vgaromimage</title>
@@ -3820,7 +3841,8 @@ This tells Bochs what VGA ROM BIOS to load (at 0xC0000).
 are provided in the source and binary distributions.</para>
 <note><para>
   Please check with the <link linkend="bochsopt-vga">vga option</link> to decide
-  what VGA BIOS to use.
+  what VGA BIOS to use. If you use the BIOS-bochs-legacy romimage BIOS option,
+  you cannot use a PCI enabled VGA ROM BIOS.
 </para></note>
 </section>
 
@@ -4788,7 +4810,8 @@ to slirp, but with only a few settings.
 
 BOOTROM: The bootrom value is optional, and is the name of the ROM image
 to load. Note that this feature is only implemented for the PCI version of
-the NE2000.
+the NE2000. For the ISA version using one of the optromimage options
+(see <xref linkend="bochsopt-optrom">) must be used instead of this one.
 </screen>
 </para>
 

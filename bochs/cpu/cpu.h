@@ -4087,6 +4087,11 @@ public: // for now...
   BX_SMF void UMONITOR_Eq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void UMWAIT_Ed(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
+#if BX_SUPPORT_X86_64
+  BX_SMF void WRMSRLIST(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void RDMSRLIST(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#endif
+
 #if BX_SUPPORT_PKEYS
   BX_SMF void RDPKRU(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void WRPKRU(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

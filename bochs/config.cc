@@ -898,6 +898,11 @@ void bx_init_options()
       "BIOS options",
       "Options for the Bochs BIOS",
       "", BX_PATHNAME_LEN);
+  new bx_param_filename_c(rom,
+      "flash_data",
+      "Flash BIOS config space image",
+      "Name of the image file for the config data of the flash BIOS",
+      "", BX_PATHNAME_LEN);
   rom->set_options(rom->SERIES_ASK);
 
   path = new bx_param_filename_c(vgarom,
@@ -1048,7 +1053,7 @@ void bx_init_options()
   time0->set_ask_format("Enter Initial CMOS time (1:localtime, 2:utc, other:time in seconds): [" FMT_LL "d] ");
   clock_sync->set_ask_format("Enter Synchronisation method: [%s] ");
   clock_cmos->set_options(clock_cmos->SHOW_PARENT);
-  cmosimage->set_options(cmosimage->SHOW_PARENT);
+  cmosimage->set_options(cmosimage->SERIES_ASK);
 
   // pci subtree
   bx_list_c *pci = new bx_list_c(root_param, "pci", "PCI Options");
@@ -1925,8 +1930,21 @@ int bx_parse_cmdline(int arg, int argc, char *argv[])
     def_action[level] = SIM->get_default_log_action(level);
   }
   while (arg < argc) {
-    BX_INFO (("parsing arg %d, %s", arg, argv[arg]));
-    parse_line_unformatted("cmdline args", argv[arg]);
+    char ch = argv[arg][strlen(argv[arg]) - 1];
+    if (((arg + 1) < argc) && ((ch == ':') || (ch == '=') || (ch == ','))) {
+      char tmparg[BX_PATHNAME_LEN];
+      strcpy(tmparg, argv[arg]);
+      do {
+        arg++;
+        strcat(tmparg, argv[arg]);
+        ch = argv[arg][strlen(argv[arg]) - 1];
+      } while (((arg + 1)< argc) && ((ch == ':') || (ch == '=') || (ch == ',')));
+      BX_INFO(("parsing concatenated arg %s", tmparg));
+      parse_line_unformatted("cmdline args", tmparg);
+    } else  {
+      BX_INFO(("parsing arg %d, %s", arg, argv[arg]));
+      parse_line_unformatted("cmdline args", argv[arg]);
+    }
     arg++;
   }
   // update log actions if default has been changed
@@ -2929,7 +2947,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       }
     }
   } else if (!strcmp(params[0], "romimage")) {
-    if ((num_params < 2) || (num_params > 4)) {
+    if ((num_params < 2) || (num_params > 5)) {
       PARSE_ERR(("%s: romimage directive: wrong # args.", context));
     }
     // set to default value 0 (auto-detect if no specified)
@@ -2942,6 +2960,8 @@ static int parse_line_formatted(const char *context, int num_params, char *param
           SIM->get_param_num(BXPN_ROM_ADDRESS)->set(strtoul(&params[i][8], NULL, 16));
         else
           SIM->get_param_num(BXPN_ROM_ADDRESS)->set(strtoul(&params[i][8], NULL, 10));
+      } else  if (!strncmp(params[i], "flash_data=", 11)) {
+        SIM->get_param_string(BXPN_ROM_FLASH_DATA)->set(&params[i][11]);
       } else  if (!strncmp(params[i], "options=", 8)) {
         SIM->get_param_string(BXPN_ROM_OPTIONS)->set(&params[i][8]);
       } else {
@@ -3127,6 +3147,9 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "file=", 5)) {
         SIM->get_param_string(BXPN_CMOSIMAGE_PATH)->set(&params[i][5]);
+        if (strlen(&params[i][5]) > 0) {
+          SIM->get_param_bool(BXPN_CMOSIMAGE_ENABLED)->set(1);
+        }
       } else if (!strncmp(params[i], "rtc_init=time0",14)) {
         SIM->get_param_bool(BXPN_CMOSIMAGE_RTC_INIT)->set(0);
       } else if (!strncmp(params[i], "rtc_init=image",14)) {
@@ -3134,9 +3157,6 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       } else {
         BX_ERROR(("%s: unknown parameter for cmosimage ignored.", context));
       }
-    }
-    if (strlen(SIM->get_param_string(BXPN_CMOSIMAGE_PATH)->getptr()) > 0) {
-      SIM->get_param_bool(BXPN_CMOSIMAGE_ENABLED)->set(1);
     }
   } else if (!strcmp(params[0], "clock")) {
     const char months[] = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec ";

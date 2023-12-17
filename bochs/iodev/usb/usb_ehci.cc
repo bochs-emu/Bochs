@@ -893,16 +893,20 @@ bool bx_usb_ehci_c::read_handler(bx_phy_address addr, unsigned len, void *data, 
       val &= 0xFFFF;
       *((Bit16u *) data) = (Bit16u) val;
       break;
-    case 8:
-      *((Bit32u *) ((Bit8u *) data + 4)) = val_hi;
     case 4:
-      *((Bit32u *) data) = val;
+      *((Bit32u *) data) = (Bit32u) val;
       break;
+    case 8:
+      *((Bit64u *) data) = GET64_FROM_HI32_LO32(val_hi, val);
+      break;
+    default:
+     BX_ERROR(("bx_usb_ehci_c::read_handler unsupported length %d", len));
   }
+
 #if BX_PHY_ADDRESS_LONG
-    BX_DEBUG(("register read from offset 0x%04X:  0x%08X%08X (len=%d)", offset, (Bit32u) val_hi, (Bit32u) val, len));
+  BX_DEBUG(("register read from offset 0x%04X: 0x%08X%08X (len=%d)", offset, (Bit32u) val_hi, (Bit32u) val, len));
 #else
-    BX_DEBUG(("register read from offset 0x%04X:  0x%08X (len=%d)", offset, (Bit32u) val, len));
+  BX_DEBUG(("register read from offset 0x%04X: 0x%08X (len=%d)", offset, (Bit32u) val, len));
 #endif
 
   return 1;
@@ -911,26 +915,26 @@ bool bx_usb_ehci_c::read_handler(bx_phy_address addr, unsigned len, void *data, 
 bool bx_usb_ehci_c::write_handler(bx_phy_address addr, unsigned len, void *data, void *param)
 {
   Bit32u value = *((Bit32u *) data);
-  Bit32u value_hi = *((Bit32u *) ((Bit8u *) data + 4));
+  Bit32u value_hi = *((Bit32u *) ((Bit8u *) data + 4));     // Q: should value and value_hi to be swapped on BIG_ENDIAN platform ?
   bool oldcfg, oldpo, oldpr, oldfpr;
   int i, port;
   const Bit32u offset = (Bit32u) (addr - BX_EHCI_THIS pci_bar[0].addr);
 
   // modify val and val_hi per len of data to write
   switch (len) {
-    case 1:
-      value &= 0xFF;
-    case 2:
-      value &= 0xFFFF;
-    case 4:
-      value_hi = 0;
-      break;
+  case 1:
+    value &= 0xFF;
+  case 2:
+    value &= 0xFFFF;
+  case 4:
+    value_hi = 0;
+    break;
   }
 
 #if BX_PHY_ADDRESS_LONG
-    BX_DEBUG(("register write to  offset 0x%04X:  0x%08X%08X (len=%d)", offset, value_hi, value, len));
+  BX_DEBUG(("register write to  offset 0x%04X: 0x%08X%08X (len=%d)", offset, value_hi, value, len));
 #else
-    BX_DEBUG(("register write to  offset 0x%04X:  0x%08X (len=%d)", offset, value, len));
+  BX_DEBUG(("register write to  offset 0x%04X: 0x%08X (len=%d)", offset, value, len));
 #endif
 
   if (offset >= OPS_REGS_OFFSET) {
@@ -1043,10 +1047,10 @@ bool bx_usb_ehci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
 
 void bx_usb_ehci_c::update_irq(void)
 {
-  bool level = 0;
+  bool level = false;
 
   if ((BX_EHCI_THIS hub.op_regs.UsbSts.inti & BX_EHCI_THIS hub.op_regs.UsbIntr) > 0) {
-    level = 1;
+    level = true;
     BX_DEBUG(("Interrupt Fired."));
   }
   DEV_pci_set_irq(BX_EHCI_THIS devfunc, BX_EHCI_THIS pci_conf[0x3d], level);

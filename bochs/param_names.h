@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009-2020  The Bochs Project
+//  Copyright (C) 2009-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -87,6 +87,7 @@
 #define BXPN_ROM_PATH                    "memory.standard.rom.file"
 #define BXPN_ROM_ADDRESS                 "memory.standard.rom.address"
 #define BXPN_ROM_OPTIONS                 "memory.standard.rom.options"
+#define BXPN_ROM_FLASH_DATA              "memory.standard.rom.flash_data"
 #define BXPN_VGA_ROMIMAGE                "memory.standard.vgarom"
 #define BXPN_VGA_ROM_PATH                "memory.standard.vgarom.file"
 #define BXPN_OPTROM_BASE                 "memory.optrom"

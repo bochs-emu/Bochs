@@ -596,7 +596,15 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 
 // CPUID defines - features CPUID[0x00000007].ECX  [subleaf 1]
 // -----------------------------
-//   [31:0]   reserved
+//   [16:0]   reserved
+//   [17:17]  FRED support
+//   [18:18]  LKGS instruction
+//   [31:19]  reserved
+
+// ...
+#define BX_CPUID_STD7_SUBLEAF1_ECX_FRED                   (1 << 17)
+#define BX_CPUID_STD7_SUBLEAF1_ECX_LKGS                   (1 << 18)
+// ...
 
 // CPUID defines - features CPUID[0x00000007].EDX  [subleaf 1]
 // -----------------------------
@@ -609,7 +617,8 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [10:10]  AVX-VNNI-INT16 instructions
 //   [13:11]  reserved
 //   [14:14]  PREFETCHITI: PREFETCHIT0/T1 instruction
-//   [16:15]  reserved
+//   [15:15]  USER_MSR: support for URDMSR/UWRMSR instructions
+//   [16:16]  reserved
 //   [17:17]  UIRET sets UIF to the RFLAGS[1] image loaded from the stack
 //   [18:18]  CET_SSS
 
@@ -628,7 +637,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED12             (1 << 12)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED13             (1 << 13)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_PREFETCHI              (1 << 14)
-#define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED15             (1 << 15)
+#define BX_CPUID_STD7_SUBLEAF1_EDX_USER_MSR               (1 << 15)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED16             (1 << 16)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_UIRET_UIF              (1 << 17)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_CET_SSS                (1 << 18)
