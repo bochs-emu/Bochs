@@ -79,7 +79,7 @@ int CDECL main(int argc, char **argv)
     LPWSTR        wstrName;
     LPSTR         strName, strDesc;
     int           nAdapterCount;
-    PCHAR         dllVersion;
+    char          dllVersion[64] = { '\0' };
     PCHAR         testString;
     int           nDLLMajorVersion, nDLLMinorVersion;
 
@@ -98,7 +98,7 @@ int CDECL main(int argc, char **argv)
     }
 
     // Get DLL Version and Tokenize
-    dllVersion = PacketGetVersion();
+    strcpy(dllVersion, PacketGetVersion());
     nDLLMajorVersion = -1;
     nDLLMinorVersion = -1;
     for (testString = strtok(dllVersion, ",. ");
