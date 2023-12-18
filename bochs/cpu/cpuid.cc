@@ -231,10 +231,11 @@ void bx_cpuid_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *
   }
 
   if (subfunction < xcr0_t::BX_XCR0_LAST) {
-    if (cpu->xcr0_suppmask & (1 << subfunction)) {
+    Bit32u support_mask = cpu->xcr0_suppmask | cpu->ia32_xss_suppmask;
+    if (support_mask & (1 << subfunction)) {
       leaf->eax = xsave_restore[subfunction].len;
       leaf->ebx = xsave_restore[subfunction].offset;
-      leaf->ecx = (cpu->ia32_xss_suppmask & subfunction) != 0; // managed through IA32_XSS register
+      leaf->ecx = (cpu->ia32_xss_suppmask & (1 << subfunction)) != 0; // managed through IA32_XSS register
       leaf->edx = 0;
     }
   }
