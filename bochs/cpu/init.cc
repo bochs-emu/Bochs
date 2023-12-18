@@ -902,6 +902,7 @@ void BX_CPU_C::reset(unsigned source)
     BX_CPU_THIS_PTR xcr0.set32(0x1);
   }
   BX_CPU_THIS_PTR xcr0_suppmask = get_xcr0_allow_mask();
+  BX_CPU_THIS_PTR ia32_xss_suppmask = get_ia32_xss_allow_mask();
 
   BX_CPU_THIS_PTR msr.ia32_xss = 0;
 
