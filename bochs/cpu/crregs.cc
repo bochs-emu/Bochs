@@ -1695,6 +1695,7 @@ void BX_CPU_C::xsave_xrestor_init(void)
 {
   // XCR0[0]: x87 state
   xsave_restore[xcr0_t::BX_XCR0_FPU_BIT].len    = XSAVE_FPU_STATE_LEN;
+  xsave_restore[xcr0_t::BX_XCR0_FPU_BIT].offset = XSAVE_FPU_STATE_OFFSET;
   xsave_restore[xcr0_t::BX_XCR0_FPU_BIT].xstate_in_use_method = &BX_CPU_C::xsave_x87_state_xinuse;
   xsave_restore[xcr0_t::BX_XCR0_FPU_BIT].xsave_method = &BX_CPU_C::xsave_x87_state;
   xsave_restore[xcr0_t::BX_XCR0_FPU_BIT].xrstor_method = &BX_CPU_C::xrstor_x87_state;
@@ -1720,8 +1721,8 @@ void BX_CPU_C::xsave_xrestor_init(void)
   }
 #endif
 
-  // XCR0[3]: BNDREGS state (not implemented)
-  // XCR0[4]: BNDCFG state (not implemented)
+  // XCR0[3]: BNDREGS state (not implemented, deprecated)
+  // XCR0[4]: BNDCFG state (not implemented, deprecated)
 
 #if BX_SUPPORT_EVEX
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX512)) {
@@ -1765,7 +1766,7 @@ void BX_CPU_C::xsave_xrestor_init(void)
   }
 #endif
 
-  // XCR0[10]: Reserved
+  // XCR0[10]: PASID state (not implemented, IA32_XSS only)
 
 #if BX_SUPPORT_CET
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) {
@@ -1787,6 +1788,8 @@ void BX_CPU_C::xsave_xrestor_init(void)
   }
 #endif
 
+  // XCR0[13]: HDC state (not implemented, IA32_XSS only)
+
 #if BX_SUPPORT_UINTR
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_UINTR)) {
     // XCR0[14]: UINTR State
@@ -1798,6 +1801,11 @@ void BX_CPU_C::xsave_xrestor_init(void)
     xsave_restore[xcr0_t::BX_XCR0_UINTR_BIT].xrstor_init_method = &BX_CPU_C::xrstor_init_uintr_state;
   }
 #endif
+
+  // XCR0[15]: LBR state (not implemented)
+  // XCR0[16]: HWP state (not implemented)
+  // XCR0[17]: AMX XTILECFG state (not implemented)
+  // XCR0[17]: AMX XTILEDATA state (not implemented)
 }
 
 #if BX_CPU_LEVEL >= 5
@@ -1831,7 +1839,7 @@ Bit32u BX_CPU_C::get_efer_allow_mask(void)
 
 Bit32u BX_CPU_C::get_xcr0_allow_mask(void)
 {
-  Bit32u allowMask = 0x3;
+  Bit32u allowMask = BX_XCR0_FPU_MASK | BX_XCR0_SSE_MASK;
 #if BX_SUPPORT_AVX
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX))
     allowMask |= BX_XCR0_YMM_MASK;
@@ -1844,7 +1852,6 @@ Bit32u BX_CPU_C::get_xcr0_allow_mask(void)
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PKU))
     allowMask |= BX_XCR0_PKRU_MASK;
 #endif
-
   return allowMask;
 }
 

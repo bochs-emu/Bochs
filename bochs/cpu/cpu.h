@@ -954,7 +954,7 @@ public: // for now...
 
 #if BX_CPU_LEVEL >= 6
   xcr0_t xcr0;
-  Bit32u xcr0_suppmask;
+  Bit32u xcr0_suppmask, ia32_xss_suppmask;
 #endif
 
 #if BX_SUPPORT_PKEYS

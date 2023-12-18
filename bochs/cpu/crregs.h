@@ -248,17 +248,26 @@ struct bx_efer_t {
 
 #if BX_CPU_LEVEL >= 6
 
+const unsigned XSAVE_HEADER_LEN             = 64;
 const unsigned XSAVE_FPU_STATE_LEN          = 160;
 const unsigned XSAVE_SSE_STATE_LEN          = 256;
 const unsigned XSAVE_YMM_STATE_LEN          = 256;
 const unsigned XSAVE_OPMASK_STATE_LEN       = 64;
 const unsigned XSAVE_ZMM_HI256_STATE_LEN    = 512;
 const unsigned XSAVE_HI_ZMM_STATE_LEN       = 1024;
-const unsigned XSAVE_PKRU_STATE_LEN         = 64;
+const unsigned XSAVE_PT_STATE_LEN           = 128;
+const unsigned XSAVE_PKRU_STATE_LEN         = 8;
+const unsigned XSAVE_PASID_STATE_LEN        = 8;
 const unsigned XSAVE_CET_U_STATE_LEN        = 16;
 const unsigned XSAVE_CET_S_STATE_LEN        = 24;
+const unsigned XSAVE_HDC_STATE_LEN          = 8;
 const unsigned XSAVE_UINTR_STATE_LEN        = 48;
+const unsigned XSAVE_LBR_STATE_LEN          = 808;
+const unsigned XSAVE_HWP_STATE_LEN          = 8;
+const unsigned XSAVE_XTILECFG_STATE_LEN     = 64;
+const unsigned XSAVE_XTILEDATA_STATE_LEN    = 8192;
 
+const unsigned XSAVE_FPU_STATE_OFFSET       = 0;
 const unsigned XSAVE_SSE_STATE_OFFSET       = 160;
 const unsigned XSAVE_YMM_STATE_OFFSET       = 576;
 const unsigned XSAVE_OPMASK_STATE_OFFSET    = 1088;
@@ -287,9 +296,9 @@ struct xcr0_t {
     BX_XCR0_UINTR_BIT = 14,
     BX_XCR0_LBR_BIT = 15,    // not implemented yet
     BX_XCR0_HWP_BIT = 16,    // not implemented yet
-    BX_XCR0_XTILECFG_BIT = 17,      // not implemnted yet
-    BX_XCR0_XTILEDATA_BIT = 18,     // not implemnted yet
-    BX_XCR0_LAST
+    BX_XCR0_XTILECFG_BIT = 17,      // not implemented yet
+    BX_XCR0_XTILEDATA_BIT = 18,     // not implemented yet
+    BX_XCR0_LAST // make sure it is < 32
   };
 
 #define BX_XCR0_FPU_MASK       (1 << xcr0_t::BX_XCR0_FPU_BIT)
