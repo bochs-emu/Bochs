@@ -200,7 +200,7 @@ void BX_CPU_C::iret32_stack_return_from_v86(bxInstruction_c *i)
   writeEFlags(flags32, change_mask);
 }
 
-int BX_CPU_C::v86_redirect_interrupt(Bit8u vector)
+bool BX_CPU_C::v86_redirect_interrupt(Bit8u vector)
 {
 #if BX_CPU_LEVEL >= 5
   if (BX_CPU_THIS_PTR cr4.get_VME())
@@ -252,7 +252,7 @@ int BX_CPU_C::v86_redirect_interrupt(Bit8u vector)
       else
         BX_CPU_THIS_PTR clear_VIF();
 
-      return 1;
+      return true;
     }
   }
 #endif
@@ -263,7 +263,7 @@ int BX_CPU_C::v86_redirect_interrupt(Bit8u vector)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  return 0;
+  return false;
 }
 
 void BX_CPU_C::init_v8086_mode(void)

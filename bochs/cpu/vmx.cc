@@ -436,17 +436,17 @@ bool BX_CPU_C::is_eptptr_valid(Bit64u eptptr)
   //       0 = Uncacheable (UC)
   //       6 = Write-back (WB)
   Bit32u memtype = eptptr & 7;
-  if (memtype != BX_MEMTYPE_UC && memtype != BX_MEMTYPE_WB) return 0;
+  if (memtype != BX_MEMTYPE_UC && memtype != BX_MEMTYPE_WB) return false;
 
   // [5:3] This value is 1 less than the EPT page-walk length
   Bit32u walk_length = (eptptr >> 3) & 7;
-  if (walk_length != 3) return 0;
+  if (walk_length != 3) return false;
 
   // [6]   EPT A/D Enable
   if (! BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT_ACCESS_DIRTY)) {
     if (eptptr & 0x40) {
       BX_ERROR(("is_eptptr_valid: EPTPTR A/D enabled when not supported by CPU"));
-      return 0;
+      return false;
     }
   }
 
@@ -454,18 +454,18 @@ bool BX_CPU_C::is_eptptr_valid(Bit64u eptptr)
   if (eptptr & 0x80) {
     if (! BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) {
       BX_ERROR(("is_eptptr_valid: EPTPTR CET supervisor shadow stack control bit enabled when not supported by CPU"));
-      return 0;
+      return false;
     }
   }
 
 #define BX_EPTPTR_RESERVED_BITS 0xf00 /* bits 11:8 are reserved */
   if (eptptr & BX_EPTPTR_RESERVED_BITS) {
     BX_ERROR(("is_eptptr_valid: EPTPTR reserved bits set"));
-    return 0;
+    return false;
   }
 
-  if (! IsValidPhyAddr(eptptr)) return 0;
-  return 1;
+  if (! IsValidPhyAddr(eptptr)) return false;
+  return true;
 }
 #endif
 
@@ -1333,20 +1333,20 @@ BX_CPP_INLINE bool IsLimitAccessRightsConsistent(Bit32u limit, Bit32u ar)
   bool g = (ar >> 15) & 1;
 
   // access rights reserved bits set
-  if (ar & 0xfffe0f00) return 0;
+  if (ar & 0xfffe0f00) return false;
 
   if (g) {
     // if any of the bits in limit[11:00] are '0 <=> G must be '0
     if ((limit & 0xfff) != 0xfff)
-       return 0;
+       return false;
   }
   else {
     // if any of the bits in limit[31:20] are '1 <=> G must be '1
     if ((limit & 0xfff00000) != 0)
-       return 0;
+       return false;
   }
 
-  return 1;
+  return true;
 }
 
 Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)

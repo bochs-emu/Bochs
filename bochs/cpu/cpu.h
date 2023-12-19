@@ -4461,7 +4461,7 @@ public: // for now...
   BX_SMF bool CheckPDPTR(bx_phy_address cr3_val) BX_CPP_AttrRegparmN(1);
 #endif
 #if BX_SUPPORT_VMX >= 2
-  BX_SMF bool CheckPDPTR(Bit64u *pdptr) BX_CPP_AttrRegparmN(1);
+  BX_SMF bool CheckPDPTR(const Bit64u *pdptr) BX_CPP_AttrRegparmN(1);
 #endif
 #if BX_CPU_LEVEL >= 5
   BX_SMF bool SetEFER(bx_address val) BX_CPP_AttrRegparmN(1);
@@ -4563,7 +4563,7 @@ public: // for now...
   BX_SMF void stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector, Bit32u flags32);
   BX_SMF void iret16_stack_return_from_v86(bxInstruction_c *);
   BX_SMF void iret32_stack_return_from_v86(bxInstruction_c *);
-  BX_SMF int  v86_redirect_interrupt(Bit8u vector);
+  BX_SMF bool v86_redirect_interrupt(Bit8u vector);
   BX_SMF void init_v8086_mode(void);
   BX_SMF void task_switch_load_selector(bx_segment_reg_t *seg,
                  bx_selector_t *selector, Bit16u raw_selector, Bit8u cs_rpl);

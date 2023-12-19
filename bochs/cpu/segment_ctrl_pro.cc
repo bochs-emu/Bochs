@@ -574,16 +574,16 @@ BX_CPU_C::fetch_raw_descriptor2(const bx_selector_t *selector, Bit32u *dword1, B
 
   if (selector->ti == 0) { /* GDT */
     if ((index*8 + 7) > BX_CPU_THIS_PTR gdtr.limit)
-      return 0;
+      return false;
     offset = BX_CPU_THIS_PTR gdtr.base + index*8;
   }
   else { /* LDT */
     if (BX_CPU_THIS_PTR ldtr.cache.valid==0) {
       BX_ERROR(("fetch_raw_descriptor2: LDTR.valid=0"));
-      return 0;
+      return false;
     }
     if ((index*8 + 7) > BX_CPU_THIS_PTR ldtr.cache.u.segment.limit_scaled)
-      return 0;
+      return false;
     offset = BX_CPU_THIS_PTR ldtr.cache.u.segment.base + index*8;
   }
 
@@ -592,7 +592,7 @@ BX_CPU_C::fetch_raw_descriptor2(const bx_selector_t *selector, Bit32u *dword1, B
   *dword1 = GET32L(raw_descriptor);
   *dword2 = GET32H(raw_descriptor);
 
-  return 1;
+  return true;
 }
 
 #if BX_SUPPORT_X86_64
@@ -645,19 +645,19 @@ bool BX_CPU_C::fetch_raw_descriptor2_64(const bx_selector_t *selector, Bit32u *d
     if ((index*8 + 15) > BX_CPU_THIS_PTR gdtr.limit) {
       BX_ERROR(("fetch_raw_descriptor2_64: GDT: index (%x) %x > limit (%x)",
          index*8 + 15, index, BX_CPU_THIS_PTR gdtr.limit));
-      return 0;
+      return false;
     }
     offset = BX_CPU_THIS_PTR gdtr.base + index*8;
   }
   else { /* LDT */
     if (BX_CPU_THIS_PTR ldtr.cache.valid==0) {
       BX_ERROR(("fetch_raw_descriptor2_64: LDTR.valid=0"));
-      return 0;
+      return false;
     }
     if ((index*8 + 15) > BX_CPU_THIS_PTR ldtr.cache.u.segment.limit_scaled) {
       BX_ERROR(("fetch_raw_descriptor2_64: LDT: index (%x) %x > limit (%x)",
          index*8 + 15, index, BX_CPU_THIS_PTR ldtr.cache.u.segment.limit_scaled));
-      return 0;
+      return false;
     }
     offset = BX_CPU_THIS_PTR ldtr.cache.u.segment.base + index*8;
   }
@@ -667,13 +667,13 @@ bool BX_CPU_C::fetch_raw_descriptor2_64(const bx_selector_t *selector, Bit32u *d
 
   if (raw_descriptor2 & BX_CONST64(0x00001F0000000000)) {
     BX_ERROR(("fetch_raw_descriptor2_64: extended attributes DWORD4 TYPE != 0"));
-    return 0;
+    return false;
   }
 
   *dword1 = GET32L(raw_descriptor1);
   *dword2 = GET32H(raw_descriptor1);
   *dword3 = GET32L(raw_descriptor2);
 
-  return 1;
+  return true;
 }
 #endif

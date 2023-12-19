@@ -898,7 +898,7 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckPDPTR(bx_phy_address cr3_val)
   // accessed on demand as part of the guest page walk
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest && SVM_NESTED_PAGING_ENABLED)
-    return 1;
+    return true;
 #endif
 
   cr3_val &= 0xffffffe0;
@@ -918,7 +918,7 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckPDPTR(bx_phy_address cr3_val)
     pdptr[n] = read_physical_qword(pdpe_entry_addr, BX_MEMTYPE_INVALID, AccessReason(BX_PDPTR0_ACCESS + n));
 
     if (pdptr[n] & 0x1) {
-       if (pdptr[n] & PAGING_PAE_PDPTE_RESERVED_BITS) return 0;
+       if (pdptr[n] & PAGING_PAE_PDPTE_RESERVED_BITS) return false;
     }
   }
 
@@ -926,19 +926,19 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckPDPTR(bx_phy_address cr3_val)
   for (n=0; n<4; n++)
     BX_CPU_THIS_PTR PDPTR_CACHE.entry[n] = pdptr[n];
 
-  return 1; /* PDPTRs are fine */
+  return true; /* PDPTRs are fine */
 }
 
 #if BX_SUPPORT_VMX >= 2
-bool BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckPDPTR(Bit64u *pdptr)
+bool BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckPDPTR(const Bit64u *pdptr)
 {
   for (unsigned n=0; n<4; n++) {
      if (pdptr[n] & 0x1) {
-        if (pdptr[n] & PAGING_PAE_PDPTE_RESERVED_BITS) return 0;
+        if (pdptr[n] & PAGING_PAE_PDPTE_RESERVED_BITS) return false;
      }
   }
 
-  return 1; /* PDPTRs are fine */
+  return true; /* PDPTRs are fine */
 }
 #endif
 
@@ -2281,10 +2281,10 @@ bool BX_CPU_C::dbg_translate_guest_physical_ept(bx_phy_address guest_paddr, bx_p
     case BX_EPT_ENTRY_NOT_PRESENT:
     case BX_EPT_ENTRY_WRITE_ONLY:
     case BX_EPT_ENTRY_WRITE_EXECUTE:
-      return 0;
+      return false;
     }
     if (pte & BX_PAGING_PHY_ADDRESS_RESERVED_BITS)
-      return 0;
+      return false;
 
     pt_address = bx_phy_address(pte & BX_CONST64(0x000ffffffffff000));
 
@@ -2292,16 +2292,16 @@ bool BX_CPU_C::dbg_translate_guest_physical_ept(bx_phy_address guest_paddr, bx_p
 
     if (pte & 0x80) {
        if (level > (BX_LEVEL_PDE + !!is_cpu_extension_supported(BX_ISA_1G_PAGES)))
-         return 0;
+         return false;
 
         pt_address &= BX_CONST64(0x000fffffffffe000);
-        if (pt_address & offset_mask) return 0;
+        if (pt_address & offset_mask) return false;
         break;
       }
   }
 
   *phy = pt_address + (bx_phy_address)(guest_paddr & offset_mask);
-  return 1;
+  return true;
 }
 #endif
 
@@ -2451,13 +2451,13 @@ bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx_ad
   if (lpf_mask)
     *lpf_mask = offset_mask;
   *phy = A20ADDR(paddress);
-  return 1;
+  return true;
 
 page_fault:
   if (lpf_mask)
     *lpf_mask = offset_mask;
   *phy = 0;
-  return 0;
+  return false;
 }
 
 int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_pl, unsigned xlate_rw, Bit32u ac_mask, void *data)

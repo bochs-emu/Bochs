@@ -38,16 +38,16 @@
 #if BX_SUPPORT_MONITOR_MWAIT
 bool BX_CPU_C::is_monitor(bx_phy_address begin_addr, unsigned len)
 {
-  if (! BX_CPU_THIS_PTR monitor.armed()) return 0;
+  if (! BX_CPU_THIS_PTR monitor.armed()) return false;
 
   bx_phy_address monitor_begin = BX_CPU_THIS_PTR monitor.monitor_addr;
   bx_phy_address monitor_end = monitor_begin + CACHE_LINE_SIZE - 1;
 
   bx_phy_address end_addr = begin_addr + len;
   if (begin_addr >= monitor_end || end_addr <= monitor_begin)
-    return 0;
+    return false;
   else
-    return 1;
+    return true;
 }
 
 void BX_CPU_C::check_monitor(bx_phy_address begin_addr, unsigned len)

@@ -1165,7 +1165,7 @@ void bx_cpuid_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
   // [6:6] Memory Bandwidth Enforcement (MBE) support
   // [8:7] reserved
   // [9:9] WBNOINVD support - when not supported fall back to legacy WBINVD
-  leaf->ebx = 0;
+  leaf->ebx = (1<<9);
   if (is_cpu_extension_supported(BX_ISA_CLZERO))
     leaf->ebx |= 0x1;
 

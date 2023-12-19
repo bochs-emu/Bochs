@@ -513,9 +513,9 @@ bool BX_CPU_C::VMexit_CLTS(void)
   }
 
   if ((vm->vm_cr0_mask & 0x8) != 0 && (vm->vm_cr0_read_shadow & 0x8) == 0)
-    return 1; /* do not clear CR0.TS */
+    return true; /* do not clear CR0.TS */
   else
-    return 0;
+    return false;
 }
 
 Bit32u BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_LMSW(bxInstruction_c *i, Bit32u msw)
