@@ -899,6 +899,7 @@ void bx_voodoo_1_2_c::init_model(void)
   s.vdraw.output_on = 0;
   s.vdraw.override_on = 0;
   s.vdraw.screen_update_pending = 0;
+  s.vdraw.vsync_usec = 0; // prevents crash in get_retrace
 }
 
 void bx_voodoo_1_2_c::reset(unsigned type)
