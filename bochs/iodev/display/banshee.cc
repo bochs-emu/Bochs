@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2017-2021  The Bochs Project
+//  Copyright (C) 2017-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1885,6 +1885,7 @@ void bx_banshee_c::blt_screen_to_screen()
   Bit8u colorkey_en = BLT.reg[blt_commandExtra] & 3;
   int spitch;
   int dpitch = BLT.dst_pitch;
+  int bkw_adj = 0;
   int ncols, nrows, dx, dy, sx, sy, w, h;
   Bit8u smask, rop = 0;
   bool set;
@@ -1911,6 +1912,7 @@ void bx_banshee_c::blt_screen_to_screen()
   }
   dst_ptr = &v->fbi.ram[BLT.dst_base + dy * dpitch + dx * dpxsize];
   if (BLT.x_dir) {
+    bkw_adj = dpxsize - 1;
     dpxsize *= -1;
   }
   if (BLT.y_dir) {
@@ -1962,7 +1964,7 @@ void bx_banshee_c::blt_screen_to_screen()
         if (colorkey_en & 2) {
           rop |= blt_colorkey_check(dst_ptr1, abs(dpxsize), 1);
         }
-        BLT.rop_fn[rop](dst_ptr1, src_ptr1, dpitch, spitch, abs(dpxsize), 1);
+        BLT.rop_fn[rop](dst_ptr1 + bkw_adj, src_ptr1 + bkw_adj, dpitch, spitch, abs(dpxsize), 1);
         src_ptr1 += dpxsize;
         dst_ptr1 += dpxsize;
       } while (--ncols);
@@ -1970,8 +1972,8 @@ void bx_banshee_c::blt_screen_to_screen()
       dst_ptr += dpitch;
     } while (--nrows);
   } else {
-    src_ptr += (sy * abs(spitch) + sx * abs(dpxsize));
-    BLT.rop_fn[0](dst_ptr, src_ptr, dpitch, spitch, w * abs(dpxsize), h);
+    src_ptr += (sy * abs(spitch) + sx * abs(dpxsize) + bkw_adj);
+    BLT.rop_fn[0](dst_ptr + bkw_adj, src_ptr, dpitch, spitch, w * abs(dpxsize), h);
   }
   blt_complete();
   BX_UNLOCK(render_mutex);
