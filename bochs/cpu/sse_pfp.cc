@@ -874,42 +874,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::COMISD_VsdWsdR(bxInstruction_c *i)
 }
 
 /*
- * Opcode: 0F 51
- * Square Root packed single precision.
- * Possible floating point exceptions: #I, #D, #P
- */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SQRTPS_VpsWpsR(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  xmm_sqrtps(&op, status);
-  check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_XMM_REG(i->dst(), op);
-#endif
-
-  BX_NEXT_INSTR(i);
-}
-
-/*
- * Opcode: 66 0F 51
- * Square Root packed double precision.
- * Possible floating point exceptions: #I, #D, #P
- */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SQRTPD_VpdWpdR(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  xmm_sqrtpd(&op, status);
-  check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_XMM_REG(i->dst(), op);
-#endif
-
-  BX_NEXT_INSTR(i);
-}
-
-/*
  * Opcode: F2 0F 51
  * Square Root scalar double precision.
  * Possible floating point exceptions: #I, #D, #P

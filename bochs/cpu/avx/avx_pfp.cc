@@ -129,42 +129,6 @@ float64_compare_method avx_compare64[32] = {
   float64_true_signalling
 };
 
-/* Opcode: VEX.0F 51 (VEX.W ignore, VEX.VVV #UD) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSQRTPS_VpsWpsR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
-  unsigned len = i->getVL();
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  for (unsigned n=0; n < len; n++) {
-    xmm_sqrtps(&op.vmm128(n), status);
-  }
-
-  check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_AVX_REGZ(i->dst(), op, len);
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.66.0F 51 (VEX.W ignore, VEX.VVV #UD) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSQRTPD_VpdWpdR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
-  unsigned len = i->getVL();
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  for (unsigned n=0; n < len; n++) {
-    xmm_sqrtpd(&op.vmm128(n), status);
-  }
-
-  check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_AVX_REGZ(i->dst(), op, len);
-  BX_NEXT_INSTR(i);
-}
-
 /* Opcode: VEX.NDS.F3.0F 51 (VEX.W ignore, VEX.L ignore) */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSQRTSS_VssHpsWssR(bxInstruction_c *i)
 {

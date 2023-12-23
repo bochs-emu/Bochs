@@ -772,12 +772,16 @@ typedef struct {
 
 #include "xmm.h"
 
+struct float_status_t;
+
 typedef void (*simd_xmm_shift)(BxPackedXmmRegister *opdst, Bit64u shift_64);
 
 typedef void (*simd_xmm_1op)(BxPackedXmmRegister *opdst);
 typedef void (*simd_xmm_2op)(BxPackedXmmRegister *opdst, const BxPackedXmmRegister *op2);
 typedef void (*simd_xmm_3op)(BxPackedXmmRegister *opdst, const BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2);
 
+typedef void (*xmm_pfp_1op)     (BxPackedXmmRegister *opdst, float_status_t &status);
+typedef void (*xmm_pfp_1op_mask)(BxPackedXmmRegister *opdst, float_status_t &status, Bit32u mask);
 typedef void (*xmm_pfp_2op)     (BxPackedXmmRegister *opdst, const BxPackedXmmRegister *op1, float_status_t &status);
 typedef void (*xmm_pfp_2op_mask)(BxPackedXmmRegister *opdst, const BxPackedXmmRegister *op1, float_status_t &status, Bit32u mask);
 typedef void (*xmm_pfp_3op)     (BxPackedXmmRegister *opdst, const BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, float_status_t &status);
@@ -2301,6 +2305,8 @@ public: // for now...
   template <simd_xmm_2op func>
   BX_SMF void HANDLE_SSE_2OP(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
+  template <xmm_pfp_1op func>
+  BX_SMF void HANDLE_SSE_PFP_1OP(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   template <xmm_pfp_2op func>
   BX_SMF void HANDLE_SSE_PFP_2OP(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
@@ -2329,7 +2335,6 @@ public: // for now...
   BX_SMF void UCOMISS_VssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void COMISS_VssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVMSKPS_GdUps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SQRTPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void SQRTSS_VssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void RSQRTPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void RSQRTSS_VssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2372,7 +2377,6 @@ public: // for now...
   BX_SMF void UCOMISD_VsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void COMISD_VsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVMSKPD_GdUpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SQRTPD_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void SQRTSD_VsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void ADDSD_VsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MULSD_VsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2634,8 +2638,12 @@ public: // for now...
   template <simd_xmm_3op func>
   BX_SMF void HANDLE_AVX_3OP(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
+  template <xmm_pfp_1op func>
+  BX_SMF void HANDLE_AVX_PFP_1OP(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   template <xmm_pfp_2op func>
   BX_SMF void HANDLE_AVX_PFP_2OP(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  template <xmm_pfp_3op func>
+  BX_SMF void HANDLE_AVX_PFP_3OP(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void VMOVSS_VssHpsWssR(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void VMOVSD_VsdHpdWsdR(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
@@ -2654,8 +2662,6 @@ public: // for now...
   BX_SMF void VMOVMSKPS_GdUps(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VMOVMSKPD_GdUpd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VPMOVMSKB_GdUdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VSQRTPS_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VSQRTPD_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VSQRTSS_VssHpsWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VSQRTSD_VsdHpdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VADDSS_VssHpsWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2769,24 +2775,12 @@ public: // for now...
   /* AVX2 */
 
   /* AVX2 FMA */
-  BX_SMF void VFMADDPD_VpdHpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VFMADDPS_VpsHpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VFMADDSD_VpdHsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VFMADDSS_VpsHssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VFMADDSUBPD_VpdHpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VFMADDSUBPS_VpsHpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VFMSUBADDPD_VpdHpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VFMSUBADDPS_VpsHpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VFMSUBPD_VpdHpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VFMSUBPS_VpsHpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VFMSUBSD_VpdHsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VFMSUBSS_VpsHssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VFNMADDPD_VpdHpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VFNMADDPS_VpsHpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VFNMADDSD_VpdHsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VFNMADDSS_VpsHssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VFNMSUBPD_VpdHpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VFNMSUBPS_VpsHpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VFNMSUBSD_VpdHsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VFNMSUBSS_VpsHssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   /* AVX2 FMA */
@@ -3097,10 +3091,20 @@ public: // for now...
   template <simd_xmm_shift func>
   BX_SMF void HANDLE_AVX512_SHIFT_IMM_WORD_EL_MASK(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
 
+  template <xmm_pfp_1op_mask func>
+  BX_SMF void HANDLE_AVX512_MASK_PFP_1OP_SINGLE(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  template <xmm_pfp_1op_mask func>
+  BX_SMF void HANDLE_AVX512_MASK_PFP_1OP_DOUBLE(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
   template <xmm_pfp_2op_mask func>
-  BX_SMF void HANDLE_AVX512_MASK_PFP_SINGLE(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void HANDLE_AVX512_MASK_PFP_2OP_SINGLE(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   template <xmm_pfp_2op_mask func>
-  BX_SMF void HANDLE_AVX512_MASK_PFP_DOUBLE(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void HANDLE_AVX512_MASK_PFP_2OP_DOUBLE(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  template <xmm_pfp_3op_mask func>
+  BX_SMF void HANDLE_AVX512_MASK_PFP_3OP_SINGLE(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  template <xmm_pfp_3op_mask func>
+  BX_SMF void HANDLE_AVX512_MASK_PFP_3OP_DOUBLE(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void VADDSS_MASK_VssHpsWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VADDSD_MASK_VsdHpdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3281,24 +3285,12 @@ public: // for now...
   BX_SMF void VMOVSLDUP_MASK_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VMOVDDUP_MASK_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void VFMADDPD_MASK_VpdHpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VFMADDPS_MASK_VpsHpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VFMADDSD_MASK_VpdHsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VFMADDSS_MASK_VpsHssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VFMADDSUBPD_MASK_VpdHpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VFMADDSUBPS_MASK_VpsHpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VFMSUBADDPD_MASK_VpdHpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VFMSUBADDPS_MASK_VpsHpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VFMSUBPD_MASK_VpdHpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VFMSUBPS_MASK_VpsHpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VFMSUBSD_MASK_VpdHsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VFMSUBSS_MASK_VpsHssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VFNMADDPD_MASK_VpdHpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VFNMADDPS_MASK_VpsHpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VFNMADDSD_MASK_VpdHsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VFNMADDSS_MASK_VpsHssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VFNMSUBPD_MASK_VpdHpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VFNMSUBPS_MASK_VpsHpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VFNMSUBSD_MASK_VpdHsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VFNMSUBSS_MASK_VpsHssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
