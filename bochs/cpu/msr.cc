@@ -1459,11 +1459,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSRLIST(bxInstruction_c *i)
     unsigned MSR_index = tzcntq(RCX);   // position of least significant bit set in RCX
     Bit64u MSR_mask = (BX_CONST64(1) << MSR_index);
     Bit64u MSR_address = read_linear_qword(BX_SEG_REG_DS, RSI + MSR_index*8);
-    Bit64u MSR_data    = read_linear_qword(BX_SEG_REG_DS, RDI + MSR_index*8);
     if (GET32H(MSR_address)) {
       BX_ERROR(("WRMSRLIST index=%d #GP(0): reserved bits are set in MSR address table entry", MSR_index));
       exception(BX_GP_EXCEPTION, 0);
     }
+
+    Bit64u MSR_data = read_linear_qword(BX_SEG_REG_DS, RDI + MSR_index*8);
 
 #if BX_SUPPORT_VMX >= 2
     if (BX_CPU_THIS_PTR in_vmx_guest) {
