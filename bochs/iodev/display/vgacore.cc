@@ -1379,8 +1379,6 @@ void bx_vgacore_c::update(void)
   //     2: output data 8 bits at a time from the 4 bit planes
   //        (mode 13 and variants like modeX)
 
-  // if (BX_VGA_THIS s.vga_mem_updated==0 || BX_VGA_THIS s.attribute_ctrl.video_enabled == 0)
-
   if (BX_VGA_THIS s.graphics_ctrl.graphics_alpha) {
     // Graphics mode
     Bit8u color;
@@ -1511,22 +1509,32 @@ void bx_vgacore_c::update(void)
       case 3: // FIXME: is this really the same ???
 
         if (BX_VGA_THIS s.CRTC.reg[0x14] & 0x40) { // DW set: doubleword mode
-          unsigned long pixely, pixelx, plane;
+          unsigned long plane;
 
           if (BX_VGA_THIS s.misc_output.select_high_bank != 1)
             BX_PANIC(("update: select_high_bank != 1"));
 
+          start_addr <<= 2;
           for (yc=0, yti=0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
             for (xc=0, xti=0; xc<iWidth; xc+=X_TILESIZE, xti++) {
               if (GET_TILE_UPDATED (xti, yti)) {
                 for (r=0; r<Y_TILESIZE; r++) {
-                  pixely = yc + r;
-                  if (BX_VGA_THIS s.y_doublescan) pixely >>= 1;
+                  if ((yc + r) >= BX_VGA_THIS s.line_compare) {
+                    y = (yc - BX_VGA_THIS s.line_compare) + r;
+                  } else {
+                    y = yc + r;
+                  }
+                  if (BX_VGA_THIS s.y_doublescan) y >>= 1;
                   for (c=0; c<X_TILESIZE; c++) {
-                    pixelx = (xc + c) >> 1;
-                    plane  = (pixelx % 4);
-                    byte_offset = start_addr + (plane * 65536) +
-                                  (pixely * BX_VGA_THIS s.line_offset) + (pixelx & ~0x03);
+                    x = (xc + c) >> 1;
+                    plane  = (x % 4);
+                    if ((yc + r) >= BX_VGA_THIS s.line_compare) {
+                      byte_offset = (plane << 16) +
+                                    (y * BX_VGA_THIS s.line_offset) + (x & ~0x03);
+                    } else {
+                      byte_offset = start_addr + (plane << 16) +
+                                    (y * BX_VGA_THIS s.line_offset) + (x & ~0x03);
+                    }
                     color = BX_VGA_THIS s.memory[byte_offset];
                     BX_VGA_THIS s.tile[r*X_TILESIZE + c] = color;
                   }
@@ -1537,29 +1545,29 @@ void bx_vgacore_c::update(void)
             }
           }
         } else if (BX_VGA_THIS s.CRTC.reg[0x17] & 0x40) { // B/W set: byte mode, modeX
-          unsigned long pixely, pixelx, plane;
+          unsigned long plane;
 
           for (yc=0, yti=0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
             for (xc=0, xti=0; xc<iWidth; xc+=X_TILESIZE, xti++) {
               if (GET_TILE_UPDATED (xti, yti)) {
                 for (r=0; r<Y_TILESIZE; r++) {
                   if ((yc + r) >= BX_VGA_THIS s.line_compare) {
-                    pixely = (yc - BX_VGA_THIS s.line_compare) + r;
+                    y = (yc - BX_VGA_THIS s.line_compare) + r;
                   } else {
-                    pixely = yc + r;
+                    y = yc + r;
                   }
-                  if (BX_VGA_THIS s.y_doublescan) pixely >>= 1;
+                  if (BX_VGA_THIS s.y_doublescan) y >>= 1;
                   for (c=0; c<X_TILESIZE; c++) {
-                    pixelx = (xc + c) >> 1;
-                    plane  = (pixelx % 4);
+                    x = (xc + c) >> 1;
+                    plane  = (x % 4);
                     if ((yc + r) >= BX_VGA_THIS s.line_compare) {
-                      byte_offset = (plane * 65536) +
-                                    (pixely * BX_VGA_THIS s.line_offset)
-                                    + (pixelx >> 2);
+                      byte_offset = (plane << 16) +
+                                    (y * BX_VGA_THIS s.line_offset)
+                                    + (x >> 2);
                     } else {
-                      byte_offset = start_addr + (plane * 65536) +
-                                    (pixely * BX_VGA_THIS s.line_offset)
-                                    + (pixelx >> 2);
+                      byte_offset = start_addr + (plane << 16) +
+                                    (y * BX_VGA_THIS s.line_offset)
+                                    + (x >> 2);
                     }
                     color = BX_VGA_THIS s.memory[byte_offset];
                     BX_VGA_THIS s.tile[r*X_TILESIZE + c] = color;
@@ -1571,20 +1579,20 @@ void bx_vgacore_c::update(void)
             }
           }
         } else { // word mode
-          unsigned long pixely, pixelx, plane;
+          unsigned long plane;
 
           for (yc=0, yti=0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
             for (xc=0, xti=0; xc<iWidth; xc+=X_TILESIZE, xti++) {
               if (GET_TILE_UPDATED (xti, yti)) {
                 for (r=0; r<Y_TILESIZE; r++) {
-                  pixely = yc + r;
-                  if (BX_VGA_THIS s.y_doublescan) pixely >>= 1;
+                  y = yc + r;
+                  if (BX_VGA_THIS s.y_doublescan) y >>= 1;
                   for (c=0; c<X_TILESIZE; c++) {
-                    pixelx = (xc + c) >> 1;
-                    plane  = (pixelx % 4);
-                    byte_offset = (plane * 65536) +
-                                  (pixely * BX_VGA_THIS s.line_offset)
-                                  + ((pixelx >> 1) & ~0x01);
+                    x = (xc + c) >> 1;
+                    plane  = (x % 4);
+                    byte_offset = (plane << 16) +
+                                  (y * BX_VGA_THIS s.line_offset)
+                                  + ((x >> 1) & ~0x01);
                     color = BX_VGA_THIS s.memory[start_addr + byte_offset];
                     BX_VGA_THIS s.tile[r*X_TILESIZE + c] = color;
                   }
@@ -1898,18 +1906,34 @@ void bx_vgacore_c::mem_write(bx_phy_address addr, Bit8u value)
     if (BX_VGA_THIS s.sequencer.chain_four) {
       unsigned x_tileno, y_tileno;
 
+      if (BX_VGA_THIS s.CRTC.reg[0x14] & 0x40) {
+        start_addr <<= 2;
+      }
       // 320 x 200 256 color mode: chained pixel representation
       BX_VGA_THIS s.memory[(offset & ~0x03) + (offset % 4)*65536] = value;
-      if (BX_VGA_THIS s.line_offset > 0) {
-        offset -= start_addr;
-        x_tileno = (offset % BX_VGA_THIS s.line_offset) / (X_TILESIZE/2);
-        if (BX_VGA_THIS s.y_doublescan) {
-          y_tileno = (offset / BX_VGA_THIS s.line_offset) / (Y_TILESIZE/2);
-        } else {
-          y_tileno = (offset / BX_VGA_THIS s.line_offset) / Y_TILESIZE;
+      if (BX_VGA_THIS s.line_compare < BX_VGA_THIS s.vertical_display_end) {
+        if (BX_VGA_THIS s.line_offset > 0) {
+          x_tileno = (offset % BX_VGA_THIS s.line_offset) / (X_TILESIZE / 2);
+          if (BX_VGA_THIS s.y_doublescan) {
+            y_tileno = ((offset / BX_VGA_THIS s.line_offset) + BX_VGA_THIS s.line_compare + 1) / Y_TILESIZE;
+          } else {
+            y_tileno = ((offset / BX_VGA_THIS s.line_offset) + BX_VGA_THIS s.line_compare + 1) / (Y_TILESIZE / 2);
+          }
+          SET_TILE_UPDATED(BX_VGA_THIS, x_tileno, y_tileno, 1);
         }
-        BX_VGA_THIS s.vga_mem_updated = 1;
-        SET_TILE_UPDATED(BX_VGA_THIS, x_tileno, y_tileno, 1);
+      }
+      if (BX_VGA_THIS s.line_offset > 0) {
+        if (offset >= start_addr) {
+          offset -= start_addr;
+          x_tileno = (offset % BX_VGA_THIS s.line_offset) / (X_TILESIZE / 2);
+          if (BX_VGA_THIS s.y_doublescan) {
+            y_tileno = (offset / BX_VGA_THIS s.line_offset) / (Y_TILESIZE / 2);
+          } else {
+            y_tileno = (offset / BX_VGA_THIS s.line_offset) / Y_TILESIZE;
+          }
+          BX_VGA_THIS s.vga_mem_updated = 1;
+          SET_TILE_UPDATED(BX_VGA_THIS, x_tileno, y_tileno, 1);
+        }
       }
       return;
     }
