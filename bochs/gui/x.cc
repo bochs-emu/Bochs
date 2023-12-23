@@ -597,7 +597,9 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
   bool x11_with_debug_gui = 0;
 #endif
+#if BX_HAVE_XRANDR_H
   int event_base, error_base;
+#endif
 
   put("XGUI");
   bx_headerbar_y = headerbar_y;
@@ -765,9 +767,6 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
                           bx_statusbar_y;
 
   {
-  XWMHints wm_hints;
-  XClassHint class_hints;
-
   /* format of the window name and icon name
    * arguments has changed in R4 */
   XTextProperty windowName, iconName;
@@ -776,15 +775,14 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
    * XTextProperty structures and set their other
    * fields properly. */
   if (XStringListToTextProperty((char **)&window_name, 1, &windowName) == 0) {
-    BX_PANIC(("%s: structure allocation for windowName failed.",
-        progname));
+    BX_PANIC(("%s: structure allocation for windowName failed.", progname));
   }
 
   if (XStringListToTextProperty((char **)&icon_name, 1, &iconName) == 0) {
-    BX_PANIC(("%s: structure allocation for iconName failed.",
-        progname));
+    BX_PANIC(("%s: structure allocation for iconName failed.", progname));
   }
 
+  XWMHints wm_hints;
   wm_hints.initial_state = NormalState;
   wm_hints.input = True;
   wm_hints.icon_pixmap = icon_pixmap;
@@ -794,6 +792,8 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 #else
   wm_hints.flags = StateHint | IconPixmapHint | InputHint;
 #endif
+
+  XClassHint class_hints;
   class_hints.res_name = progname;
   class_hints.res_class = (char *)"Bochs";
 
@@ -840,9 +840,6 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   // Create the VGA font
   create_internal_vga_font();
 
-  {
-  char *imagedata;
-
   ximage = XCreateImage(bx_x_display, default_visual,
              default_depth,          // depth of image (bitplanes)
              ZPixmap,
@@ -858,10 +855,7 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   imWide  = ximage->bytes_per_line;
   imBPP   = ximage->bits_per_pixel;
 
-  imagedata = new char[ximage->bytes_per_line * y_tilesize];
-  if (!imagedata) BX_PANIC(("imagedata: malloc returned error"));
-
-  ximage->data = imagedata;
+  ximage->data = new char[ximage->bytes_per_line * y_tilesize];
 
   if (imBPP < imDepth) {
     BX_PANIC(("vga_x: bits_per_pixel < depth ?"));
@@ -891,7 +885,6 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   sprintf(bx_status_info_text, "%s enables mouse", get_toggle_info());
 
   x_init_done = 1;
-  }
 
   curr_background = 0;
   XSetBackground(bx_x_display, gc, col_vals[curr_background]);
@@ -1018,11 +1011,11 @@ void bx_x_gui_c::handle_events(void)
 
     case ButtonPress:
       button_event = (XButtonEvent *) &report;
-                BX_DEBUG(("xxx: buttonpress"));
+//    BX_DEBUG(("xxx: buttonpress"));
       if (button_event->y < BX_HEADER_BAR_Y) {
-                BX_DEBUG(("xxx:   in headerbar"));
+//      BX_DEBUG(("xxx:   in headerbar"));
         if (mouse_update) {
-                  BX_DEBUG(("xxx:   mouse_update=1"));
+//        BX_DEBUG(("xxx:   mouse_update=1"));
           send_mouse_status();
           mouse_update = 0;
         }
@@ -1034,7 +1027,7 @@ void bx_x_gui_c::handle_events(void)
       current_x = button_event->x;
       current_y = button_event->y;
       mouse_update = 1;
-      BX_DEBUG(("xxx:   x,y=(%d,%d)", current_x, current_y));
+//    BX_DEBUG(("xxx:   x,y=(%d,%d)", current_x, current_y));
       switch (button_event->button) {
         case Button1:
           mouse_button_state |= 0x01;
@@ -1129,7 +1122,7 @@ void bx_x_gui_c::handle_events(void)
       break;
 
     case LeaveNotify:
-//      leave_event = (XLeaveWindowEvent *) &report;
+//    leave_event = (XLeaveWindowEvent *) &report;
       prev_x = current_x = -1;
       prev_y = current_y = -1;
       break;
@@ -1440,12 +1433,10 @@ unsigned bx_x_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, uns
 
 unsigned bx_x_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, void (*f)(void))
 {
-  unsigned hb_index;
-
   if ((bx_headerbar_entries+1) > BX_MAX_HEADERBAR_ENTRIES)
     BX_PANIC(("too many headerbar entries, increase BX_MAX_HEADERBAR_ENTRIES"));
 
-  hb_index = bx_headerbar_entries++;
+  unsigned hb_index = bx_headerbar_entries++;
 
   bx_headerbar_entry[hb_index].bmap_id = bmap_id;
   bx_headerbar_entry[hb_index].xdim    = bx_bitmaps[bmap_id].xdim;
