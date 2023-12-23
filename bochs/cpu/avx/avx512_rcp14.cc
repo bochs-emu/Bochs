@@ -8301,9 +8301,15 @@ float16 approximate_rcp14(float16 op, const float_status_t &status)
 
   // Compute the single precision 23-bit mantissa from the 10-bit half
   // precision mantissa by shifting it left.
+<<<<<<< HEAD
   Bit32u fraction32 = Bit32u(fraction) << 13;
 
   fraction32 = rcp14_table_lookup(fraction32, FLOAT16_EXP_BIAS, &exp);
+=======
+  fraction = (fraction << 13);
+
+  fraction = rcp14_table_lookup(fraction, FLOAT16_EXP_BIAS, &exp) >> 4;
+>>>>>>> 83126be14 (AVX512-FP16 implementation, enabled in Sappire Rapids config)
 
   if (exp >= 0x1F) {
     /* overflow - the result is signed infinity */
@@ -8315,6 +8321,7 @@ float16 approximate_rcp14(float16 op, const float_status_t &status)
     if (get_flush_underflow_to_zero(status))
       return packFloat16(sign, 0, 0);
 
+<<<<<<< HEAD
     fraction32 >>= (1 - exp); // make denormal result, note that -1 <= exp <= 0 so no rounding needed
     exp = 0;
   }
@@ -8326,6 +8333,13 @@ float16 approximate_rcp14(float16 op, const float_status_t &status)
   if (! fraction32) exp = 0;
 
   return packFloat16(sign, exp, fraction32);
+=======
+    fraction >>= (1 - exp); // make denormal result, note that -1 <= exp <= 0 so no rounding needed
+    exp = 0;
+  }
+
+  return packFloat16(sign, exp, fraction);
+>>>>>>> 83126be14 (AVX512-FP16 implementation, enabled in Sappire Rapids config)
 }
 
 // approximate 14-bit reciprocal of scalar single precision FP
