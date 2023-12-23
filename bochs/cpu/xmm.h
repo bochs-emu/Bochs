@@ -319,6 +319,10 @@ typedef BxPackedYmmRegister BxPackedAvxRegister;
     { BX_CPU_THIS_PTR vmm[index].vmm64u(0) = (reg64); \
       BX_CPU_THIS_PTR vmm[index].vmm64u(1) = 0; BX_CLEAR_AVX_HIGH128(index); }
 
+#define BX_WRITE_XMM_REG_LO_DWORD_CLEAR_HIGH(index, reg32) \
+    { BX_CPU_THIS_PTR vmm[index].vmm64u(0) = Bit64u(reg32); \
+      BX_CPU_THIS_PTR vmm[index].vmm64u(1) = 0; BX_CLEAR_AVX_HIGH128(index); }
+
 #else /* BX_SUPPORT_AVX */
 
 /* write XMM register while clearing upper part of AVX register */
@@ -401,6 +405,12 @@ BX_CPP_INLINE void softfloat_status_word_rc_override(float_status_t &status, bxI
 #endif
 
 #if BX_SUPPORT_FPU
+/* convert float16 NaN number to QNaN */
+BX_CPP_INLINE float16 convert_to_QNaN(float16 op)
+{
+  return op | 0x7E00;
+}
+
 /* convert float32 NaN number to QNaN */
 BX_CPP_INLINE float32 convert_to_QNaN(float32 op)
 {

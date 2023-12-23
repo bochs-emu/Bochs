@@ -387,6 +387,109 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSS_MASK_VssHpsWssR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+////////////////////
+// Half precision //
+////////////////////
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVW_VshEwR(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op;
+
+  op.xmm64u(0) = (Bit64u) BX_READ_16BIT_REG(i->src());
+  op.xmm64u(1) = 0;
+
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op);
+  BX_NEXT_INSTR(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVW_EdVshR(bxInstruction_c *i)
+{
+  BX_WRITE_32BIT_REGZ(i->dst(), BX_READ_XMM_REG_LO_WORD(i->src()));
+  BX_NEXT_INSTR(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSH_VshWshM(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op;
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+  op.xmm64u(0) = (Bit64u) read_virtual_word(i->seg(), eaddr);
+  op.xmm64u(1) = 0;
+
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op);
+  BX_NEXT_INSTR(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSH_MASK_VshWshM(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op;
+
+  op.xmm64u(1) = 0;
+
+  if (BX_SCALAR_ELEMENT_MASK(i->opmask())) {
+    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+    op.xmm64u(0) = (Bit64u) read_virtual_word(i->seg(), eaddr);
+  }
+  else {
+    if (! i->isZeroMasking()) {
+      op.xmm64u(0) = (Bit64u) BX_READ_XMM_REG_LO_WORD(i->dst());
+    }
+    else {
+      op.xmm64u(0) = 0;
+    }
+  }
+
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op);
+  BX_NEXT_INSTR(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSH_VshHphWshR(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src1());
+  op.xmm16u(0) = BX_READ_XMM_REG_LO_WORD(i->src2());
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op);
+
+  BX_NEXT_INSTR(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSH_MASK_VshHphWshR(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src1());
+
+  if (BX_SCALAR_ELEMENT_MASK(i->opmask())) {
+    op.xmm16u(0) = BX_READ_XMM_REG_LO_WORD(i->src2());
+  }
+  else {
+    if (! i->isZeroMasking()) {
+      op.xmm16u(0) = BX_READ_XMM_REG_LO_WORD(i->dst());
+    }
+    else {
+      op.xmm16u(0) = 0;
+    }
+  }
+
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op);
+
+  BX_NEXT_INSTR(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSH_WshVshM(bxInstruction_c *i)
+{
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+  write_virtual_word(i->seg(), eaddr, BX_READ_XMM_REG_LO_WORD(i->src()));
+  BX_NEXT_INSTR(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSH_MASK_WshVshM(bxInstruction_c *i)
+{
+  if (BX_SCALAR_ELEMENT_MASK(i->opmask())) {
+    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+    write_virtual_word(i->seg(), eaddr, BX_READ_XMM_REG_LO_WORD(i->src()));
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
 ////////////////////////////////////
 // masked store with down convert //
 ////////////////////////////////////

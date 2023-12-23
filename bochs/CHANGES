@@ -16,7 +16,7 @@ Brief summary :
   ! Implemented User-Level Interrupt (UINTR) extension
   ! Implemented Intel AMX extensions (AMX, AMX_INT8, AMX_BF16, AMX_FP16, AMX_COMPLEX)
   ! Implemented Intel instruction sets:
-    - MOVDIRI/MOVDIR64B, AVX512 BF16, AVX IFMA52, VNNI-INT8/VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3/SM4, SHA512, WRMSRNS, MSRLIST, WAITPKG, SERIALIZE
+    - MOVDIRI/MOVDIR64B, AVX512_BF16, AVX512_FP16, AVX IFMA52, VNNI-INT8/VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3/SM4, SHA512, WRMSRNS, MSRLIST, WAITPKG, SERIALIZE
   ! CPUID: Added Xeon Sapphire Rapids CPU definition
   - Improved 64-bit guest support in Bochs internal debugger, added new internal debugger commands
   - Bochs debugger enhanced with new commands (setpmem, loadmem, deref, ...)
@@ -51,10 +51,10 @@ Detailed change log :
   - Implemented User-Level Interrupt (UINTR) extension
   - Implemented Intel AMX extensions (AMX, AMX_INT8, AMX_BF16, AMX_FP16, AMX_COMPLEX)
   - Implemented Intel instruction sets:
-    - MOVDIRI/MOVDIR64B, AVX512 BF16, AVX IFMA52, VNNI-INT8/VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3/SM4, SHA512, WRMSRNS, MSRLIST, WAITPKG, SERIALIZE
+    - MOVDIRI/MOVDIR64B, AVX512_BF16, AVX512_FP16, AVX IFMA52, VNNI-INT8/VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3/SM4, SHA512, WRMSRNS, MSRLIST, WAITPKG, SERIALIZE
   - CPUID: Added Xeon Sapphire Rapids CPU definition
-    - Features AMX/AMX_INT8/AMX_BF16, PKS, WAITPKG, UINTR, AVX-VNNI, AVX512_BF16, MOVDIRI/MOVDIR64, LA57, SERIALIZE and more
-      Not yet supported but will be added in future: AVX512_FP16, VMX Extensions (HLAT, IPI Virtualization)
+    - Features AMX/AMX_INT8/AMX_BF16, PKS, WAITPKG, UINTR, AVX-VNNI, AVX512_BF16, AVX512_FP16, MOVDIRI/MOVDIR64, LA57, SERIALIZE and more
+      Not yet supported but will be added in future: VMX Extensions (HLAT, IPI Virtualization)
 
 - Bochs Debugger and Instrumentation
   - Updated Bochs instrumentation examples for new disassembler introduced in Bochs 2.7 release.

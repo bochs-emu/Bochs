@@ -493,4 +493,232 @@ BX_CPP_INLINE int float64_true_signalling(float64 a, float64 b, float_status_t &
    return 1;
 }
 
+// ======= float16 ======= //
+
+typedef int (*float16_compare_method)(float16, float16, float_status_t &status);
+
+// 0x00
+BX_CPP_INLINE int float16_eq_ordered_quiet(float16 a, float16 b, float_status_t &status)
+{
+   int relation = float16_compare_quiet(a, b, status);
+   return (relation == float_relation_equal);
+}
+
+// 0x01
+BX_CPP_INLINE int float16_lt_ordered_signalling(float16 a, float16 b, float_status_t &status)
+{
+   int relation = float16_compare(a, b, status);
+   return (relation == float_relation_less);
+}
+
+// 0x02
+BX_CPP_INLINE int float16_le_ordered_signalling(float16 a, float16 b, float_status_t &status)
+{
+   int relation = float16_compare(a, b, status);
+   return (relation == float_relation_less) || (relation == float_relation_equal);
+}
+
+// 0x03
+BX_CPP_INLINE int float16_unordered_quiet(float16 a, float16 b, float_status_t &status)
+{
+   int relation = float16_compare_quiet(a, b, status);
+   return (relation == float_relation_unordered);
+}
+
+// 0x04
+BX_CPP_INLINE int float16_neq_unordered_quiet(float16 a, float16 b, float_status_t &status)
+{
+   int relation = float16_compare_quiet(a, b, status);
+   return (relation != float_relation_equal);
+}
+
+// 0x05
+BX_CPP_INLINE int float16_nlt_unordered_signalling(float16 a, float16 b, float_status_t &status)
+{
+   int relation = float16_compare(a, b, status);
+   return (relation != float_relation_less);
+}
+
+// 0x06
+BX_CPP_INLINE int float16_nle_unordered_signalling(float16 a, float16 b, float_status_t &status)
+{
+   int relation = float16_compare(a, b, status);
+   return (relation != float_relation_less) && (relation != float_relation_equal);
+}
+
+// 0x07
+BX_CPP_INLINE int float16_ordered_quiet(float16 a, float16 b, float_status_t &status)
+{
+   int relation = float16_compare_quiet(a, b, status);
+   return (relation != float_relation_unordered);
+}
+
+// 0x08
+BX_CPP_INLINE int float16_eq_unordered_quiet(float16 a, float16 b, float_status_t &status)
+{
+   int relation = float16_compare_quiet(a, b, status);
+   return (relation == float_relation_equal) || (relation == float_relation_unordered);
+}
+
+// 0x09
+BX_CPP_INLINE int float16_nge_unordered_signalling(float16 a, float16 b, float_status_t &status)
+{
+   int relation = float16_compare(a, b, status);
+   return (relation == float_relation_less) || (relation == float_relation_unordered);
+}
+
+// 0x0a
+BX_CPP_INLINE int float16_ngt_unordered_signalling(float16 a, float16 b, float_status_t &status)
+{
+   int relation = float16_compare(a, b, status);
+   return (relation != float_relation_greater);
+}
+
+// 0x0b
+BX_CPP_INLINE int float16_false_quiet(float16 a, float16 b, float_status_t &status)
+{
+   float16_compare_quiet(a, b, status);
+   return 0;
+}
+
+// 0x0c
+BX_CPP_INLINE int float16_neq_ordered_quiet(float16 a, float16 b, float_status_t &status)
+{
+   int relation = float16_compare_quiet(a, b, status);
+   return (relation != float_relation_equal) && (relation != float_relation_unordered);
+}
+
+// 0x0d
+BX_CPP_INLINE int float16_ge_ordered_signalling(float16 a, float16 b, float_status_t &status)
+{
+   int relation = float16_compare(a, b, status);
+   return (relation == float_relation_greater) || (relation == float_relation_equal);
+}
+
+// 0x0e
+BX_CPP_INLINE int float16_gt_ordered_signalling(float16 a, float16 b, float_status_t &status)
+{
+   int relation = float16_compare(a, b, status);
+   return (relation == float_relation_greater);
+}
+
+// 0x0f
+BX_CPP_INLINE int float16_true_quiet(float16 a, float16 b, float_status_t &status)
+{
+   float16_compare_quiet(a, b, status);
+   return 1;
+}
+
+// 0x10
+BX_CPP_INLINE int float16_eq_ordered_signalling(float16 a, float16 b, float_status_t &status)
+{
+   int relation = float16_compare(a, b, status);
+   return (relation == float_relation_equal);
+}
+
+// 0x11
+BX_CPP_INLINE int float16_lt_ordered_quiet(float16 a, float16 b, float_status_t &status)
+{
+   int relation = float16_compare_quiet(a, b, status);
+   return (relation == float_relation_less);
+}
+
+// 0x12
+BX_CPP_INLINE int float16_le_ordered_quiet(float16 a, float16 b, float_status_t &status)
+{
+   int relation = float16_compare_quiet(a, b, status);
+   return (relation == float_relation_less) || (relation == float_relation_equal);
+}
+
+// 0x13
+BX_CPP_INLINE int float16_unordered_signalling(float16 a, float16 b, float_status_t &status)
+{
+   int relation = float16_compare(a, b, status);
+   return (relation == float_relation_unordered);
+}
+
+// 0x14
+BX_CPP_INLINE int float16_neq_unordered_signalling(float16 a, float16 b, float_status_t &status)
+{
+   int relation = float16_compare(a, b, status);
+   return (relation != float_relation_equal);
+}
+
+// 0x15
+BX_CPP_INLINE int float16_nlt_unordered_quiet(float16 a, float16 b, float_status_t &status)
+{
+   int relation = float16_compare_quiet(a, b, status);
+   return (relation != float_relation_less);
+}
+
+// 0x16
+BX_CPP_INLINE int float16_nle_unordered_quiet(float16 a, float16 b, float_status_t &status)
+{
+   int relation = float16_compare_quiet(a, b, status);
+   return (relation != float_relation_less) && (relation != float_relation_equal);
+}
+
+// 0x17
+BX_CPP_INLINE int float16_ordered_signalling(float16 a, float16 b, float_status_t &status)
+{
+   int relation = float16_compare(a, b, status);
+   return (relation != float_relation_unordered);
+}
+
+// 0x18
+BX_CPP_INLINE int float16_eq_unordered_signalling(float16 a, float16 b, float_status_t &status)
+{
+   int relation = float16_compare(a, b, status);
+   return (relation == float_relation_equal) || (relation == float_relation_unordered);
+}
+
+// 0x19
+BX_CPP_INLINE int float16_nge_unordered_quiet(float16 a, float16 b, float_status_t &status)
+{
+   int relation = float16_compare_quiet(a, b, status);
+   return (relation == float_relation_less) || (relation == float_relation_unordered);
+}
+
+// 0x1a
+BX_CPP_INLINE int float16_ngt_unordered_quiet(float16 a, float16 b, float_status_t &status)
+{
+   int relation = float16_compare_quiet(a, b, status);
+   return (relation != float_relation_greater);
+}
+
+// 0x1b
+BX_CPP_INLINE int float16_false_signalling(float16 a, float16 b, float_status_t &status)
+{
+   float16_compare(a, b, status);
+   return 0;
+}
+
+// 0x1c
+BX_CPP_INLINE int float16_neq_ordered_signalling(float16 a, float16 b, float_status_t &status)
+{
+   int relation = float16_compare(a, b, status);
+   return (relation != float_relation_equal) && (relation != float_relation_unordered);
+}
+
+// 0x1d
+BX_CPP_INLINE int float16_ge_ordered_quiet(float16 a, float16 b, float_status_t &status)
+{
+   int relation = float16_compare_quiet(a, b, status);
+   return (relation == float_relation_greater) || (relation == float_relation_equal);
+}
+
+// 0x1e
+BX_CPP_INLINE int float16_gt_ordered_quiet(float16 a, float16 b, float_status_t &status)
+{
+   int relation = float16_compare_quiet(a, b, status);
+   return (relation == float_relation_greater);
+}
+
+// 0x1f
+BX_CPP_INLINE int float16_true_signalling(float16 a, float16 b, float_status_t &status)
+{
+   float16_compare(a, b, status);
+   return 1;
+}
+
 #endif

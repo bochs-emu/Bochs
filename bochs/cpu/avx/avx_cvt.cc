@@ -145,7 +145,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSS2SD_VsdWssR(bxInstruction_c *i)
   check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
-
   BX_NEXT_INSTR(i);
 }
 
@@ -161,7 +160,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSD2SS_VssWsdR(bxInstruction_c *i)
   check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
-
   BX_NEXT_INSTR(i);
 }
 

@@ -595,7 +595,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VFIXUPIMMPD_MASK_VpdHpdWpdIbR(bxInstructio
 
 // fpclass
 
-static int fpclass(float_class_t op_class, int sign, int selector)
+int fpclass(float_class_t op_class, int sign, int selector)
 {
   return ((op_class == float_QNaN) && (selector & 0x01) != 0) || // QNaN
          ((op_class == float_zero) && ! sign && (selector & 0x02) != 0) || // positive zero
