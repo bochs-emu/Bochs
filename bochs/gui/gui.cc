@@ -699,6 +699,9 @@ bool bx_gui_c::mouse_toggle_check(Bit32u key, bool pressed)
   if (pressed) {
     newstate |= key;
     if (newstate == toggle_keystate) return 0;
+    if ((key == BX_MT_KEY_CTRL) || (key == BX_MT_KEY_ALT)) {
+      newstate &= (BX_MT_KEY_CTRL | BX_MT_KEY_ALT);
+    }
     switch (toggle_method) {
       case BX_MOUSE_TOGGLE_CTRL_MB:
         toggle = (newstate & BX_GUI_MT_CTRL_MB) == BX_GUI_MT_CTRL_MB;
