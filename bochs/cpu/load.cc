@@ -273,7 +273,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LOAD_MASK_VectorB(bxInstruction_c *i)
 {
   Bit64u opmask = (i->opmask() != 0) ? BX_READ_OPMASK(i->opmask()) : BX_CONST64(0xffffffffffffffff);
   unsigned len = i->getVL();
-  opmask &= CUT_OPMASK_TO(BYTE_ELEMENTS(len));
+  if (len != BX_VL512) // avoid accidential zero of the mask, due to Bit64u computation overflow (1 << 64) == 1
+    opmask &= CUT_OPMASK_TO(BYTE_ELEMENTS(len));
 
   if (opmask == 0) {
     BX_CPU_CALL_METHOD(i->execute2(), (i)); // for now let execute method to deal with zero/merge masking semantics
