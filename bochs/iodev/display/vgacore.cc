@@ -1415,7 +1415,7 @@ void bx_vgacore_c::update(void)
         line_compare = BX_VGA_THIS s.line_compare;
         if (BX_VGA_THIS s.y_doublescan) line_compare >>= 1;
 
-        if ((BX_VGA_THIS s.CRTC.reg[0x17] & 1) == 0) { // CGA 640x200x2
+        if ((BX_VGA_THIS s.CRTC.reg[0x17] & 1) == 0) { // MAP13 (used for CGA 640x200x2)
 
           for (yc=0, yti=0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
             for (xc=0, xti=0; xc<iWidth; xc+=X_TILESIZE, xti++) {
@@ -1508,6 +1508,9 @@ void bx_vgacore_c::update(void)
               // (format for VGA mode 13 hex)
       case 3: // FIXME: is this really the same ???
 
+        line_compare = BX_VGA_THIS s.line_compare;
+        if (BX_VGA_THIS s.y_doublescan) line_compare >>= 1;
+
         if (BX_VGA_THIS s.CRTC.reg[0x14] & 0x40) { // DW set: doubleword mode
           unsigned long plane;
 
@@ -1519,22 +1522,17 @@ void bx_vgacore_c::update(void)
             for (xc=0, xti=0; xc<iWidth; xc+=X_TILESIZE, xti++) {
               if (GET_TILE_UPDATED (xti, yti)) {
                 for (r=0; r<Y_TILESIZE; r++) {
-                  if ((yc + r) >= BX_VGA_THIS s.line_compare) {
-                    y = (yc - BX_VGA_THIS s.line_compare) + r;
-                  } else {
-                    y = yc + r;
-                  }
+                  y = yc + r;
                   if (BX_VGA_THIS s.y_doublescan) y >>= 1;
+                  if (y > line_compare) {
+                    row_addr = (y - line_compare - 1) * BX_VGA_THIS s.line_offset;
+                  } else {
+                    row_addr = start_addr + (y * BX_VGA_THIS s.line_offset);
+                  }
                   for (c=0; c<X_TILESIZE; c++) {
                     x = (xc + c) >> 1;
                     plane  = (x % 4);
-                    if ((yc + r) >= BX_VGA_THIS s.line_compare) {
-                      byte_offset = (plane << 16) +
-                                    (y * BX_VGA_THIS s.line_offset) + (x & ~0x03);
-                    } else {
-                      byte_offset = start_addr + (plane << 16) +
-                                    (y * BX_VGA_THIS s.line_offset) + (x & ~0x03);
-                    }
+                    byte_offset = row_addr + (plane << 16) + (x & ~0x03);
                     color = BX_VGA_THIS s.memory[byte_offset];
                     BX_VGA_THIS s.tile[r*X_TILESIZE + c] = color;
                   }
@@ -1551,24 +1549,17 @@ void bx_vgacore_c::update(void)
             for (xc=0, xti=0; xc<iWidth; xc+=X_TILESIZE, xti++) {
               if (GET_TILE_UPDATED (xti, yti)) {
                 for (r=0; r<Y_TILESIZE; r++) {
-                  if ((yc + r) >= BX_VGA_THIS s.line_compare) {
-                    y = (yc - BX_VGA_THIS s.line_compare) + r;
-                  } else {
-                    y = yc + r;
-                  }
+                  y = yc + r;
                   if (BX_VGA_THIS s.y_doublescan) y >>= 1;
+                  if (y > line_compare) {
+                    row_addr = (y - line_compare - 1) * BX_VGA_THIS s.line_offset;
+                  } else {
+                    row_addr = start_addr + (y * BX_VGA_THIS s.line_offset);
+                  }
                   for (c=0; c<X_TILESIZE; c++) {
                     x = (xc + c) >> 1;
                     plane  = (x % 4);
-                    if ((yc + r) >= BX_VGA_THIS s.line_compare) {
-                      byte_offset = (plane << 16) +
-                                    (y * BX_VGA_THIS s.line_offset)
-                                    + (x >> 2);
-                    } else {
-                      byte_offset = start_addr + (plane << 16) +
-                                    (y * BX_VGA_THIS s.line_offset)
-                                    + (x >> 2);
-                    }
+                    byte_offset = row_addr + (plane << 16) + (x >> 2);
                     color = BX_VGA_THIS s.memory[byte_offset];
                     BX_VGA_THIS s.tile[r*X_TILESIZE + c] = color;
                   }
