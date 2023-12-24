@@ -1859,10 +1859,12 @@ Bit32u BX_CPU_C::get_ia32_xss_allow_mask(void)
 {
   Bit32u ia32_xss_support_mask = 0;
 #if BX_SUPPORT_CET
-         ia32_xss_support_mask |= BX_XCR0_CET_U_MASK | BX_XCR0_CET_S_MASK;
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET))
+    ia32_xss_support_mask |= BX_XCR0_CET_U_MASK | BX_XCR0_CET_S_MASK;
 #endif
 #if BX_SUPPORT_UINTR
-         ia32_xss_support_mask |= BX_XCR0_UINTR_MASK;
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_UINTR))
+    ia32_xss_support_mask |= BX_XCR0_UINTR_MASK;
 #endif
   return ia32_xss_support_mask;
 }
