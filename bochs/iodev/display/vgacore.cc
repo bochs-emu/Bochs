@@ -1886,15 +1886,7 @@ void bx_vgacore_c::mem_write(bx_phy_address addr, Bit8u value)
       }
       return;
       /* CGA 320x200x4 / 640x200x2 end */
-    }
-/*
-    else if (BX_VGA_THIS s.graphics_ctrl.memory_mapping != 1) {
-      BX_PANIC(("mem_write: graphics: mapping = %u",
-               (unsigned) BX_VGA_THIS s.graphics_ctrl.memory_mapping));
-      return;
-    }
-*/
-    if (BX_VGA_THIS s.sequencer.chain_four) {
+    } else if (BX_VGA_THIS s.sequencer.chain_four) {
       unsigned x_tileno, y_tileno;
 
       if (BX_VGA_THIS s.CRTC.reg[0x14] & 0x40) {
@@ -1902,8 +1894,8 @@ void bx_vgacore_c::mem_write(bx_phy_address addr, Bit8u value)
       }
       // 320 x 200 256 color mode: chained pixel representation
       BX_VGA_THIS s.memory[(offset & ~0x03) + (offset % 4)*65536] = value;
-      if (BX_VGA_THIS s.line_compare < BX_VGA_THIS s.vertical_display_end) {
-        if (BX_VGA_THIS s.line_offset > 0) {
+      if (BX_VGA_THIS s.line_offset > 0) {
+        if (BX_VGA_THIS s.line_compare < BX_VGA_THIS s.vertical_display_end) {
           x_tileno = (offset % BX_VGA_THIS s.line_offset) / (X_TILESIZE / 2);
           if (BX_VGA_THIS s.y_doublescan) {
             y_tileno = ((offset / BX_VGA_THIS s.line_offset) + BX_VGA_THIS s.line_compare + 1) / Y_TILESIZE;
@@ -1912,8 +1904,6 @@ void bx_vgacore_c::mem_write(bx_phy_address addr, Bit8u value)
           }
           SET_TILE_UPDATED(BX_VGA_THIS, x_tileno, y_tileno, 1);
         }
-      }
-      if (BX_VGA_THIS s.line_offset > 0) {
         if (offset >= start_addr) {
           offset -= start_addr;
           x_tileno = (offset % BX_VGA_THIS s.line_offset) / (X_TILESIZE / 2);
@@ -2195,47 +2185,47 @@ void bx_vgacore_c::mem_write(bx_phy_address addr, Bit8u value)
     if (BX_VGA_THIS s.sequencer.map_mask & 0x08)
       plane3[offset] = new_val[3];
 
-    unsigned x_tileno, y_tileno;
+    if (BX_VGA_THIS s.graphics_ctrl.graphics_alpha) {
+      unsigned x_tileno, y_tileno;
 
-    if (BX_VGA_THIS s.graphics_ctrl.shift_reg == 2) {
-      offset -= start_addr;
-      x_tileno = (offset % BX_VGA_THIS s.line_offset) * 4 / (X_TILESIZE / 2);
-      if (BX_VGA_THIS s.y_doublescan) {
-        y_tileno = (offset / BX_VGA_THIS s.line_offset) / (Y_TILESIZE / 2);
-      } else {
-        y_tileno = (offset / BX_VGA_THIS s.line_offset) / Y_TILESIZE;
-      }
-      SET_TILE_UPDATED(BX_VGA_THIS, x_tileno, y_tileno, 1);
-    } else {
-      if (BX_VGA_THIS s.line_compare < BX_VGA_THIS s.vertical_display_end) {
-        if (BX_VGA_THIS s.line_offset > 0) {
-          if (BX_VGA_THIS s.x_dotclockdiv2) {
-            x_tileno = (offset % BX_VGA_THIS s.line_offset) / (X_TILESIZE / 16);
-          } else {
-            x_tileno = (offset % BX_VGA_THIS s.line_offset) / (X_TILESIZE / 8);
-          }
-          if (BX_VGA_THIS s.y_doublescan) {
-            y_tileno = ((offset / BX_VGA_THIS s.line_offset) * 2 + BX_VGA_THIS s.line_compare + 1) / Y_TILESIZE;
-          } else {
-            y_tileno = ((offset / BX_VGA_THIS s.line_offset) + BX_VGA_THIS s.line_compare + 1) / Y_TILESIZE;
-          }
-          SET_TILE_UPDATED(BX_VGA_THIS, x_tileno, y_tileno, 1);
-        }
-      }
-      if (offset >= start_addr) {
+      if (BX_VGA_THIS s.graphics_ctrl.shift_reg == 2) {
         offset -= start_addr;
+        x_tileno = (offset % BX_VGA_THIS s.line_offset) * 4 / (X_TILESIZE / 2);
+        if (BX_VGA_THIS s.y_doublescan) {
+          y_tileno = (offset / BX_VGA_THIS s.line_offset) / (Y_TILESIZE / 2);
+        } else {
+          y_tileno = (offset / BX_VGA_THIS s.line_offset) / Y_TILESIZE;
+        }
+        SET_TILE_UPDATED(BX_VGA_THIS, x_tileno, y_tileno, 1);
+      } else {
         if (BX_VGA_THIS s.line_offset > 0) {
-          if (BX_VGA_THIS s.x_dotclockdiv2) {
-            x_tileno = (offset % BX_VGA_THIS s.line_offset) / (X_TILESIZE / 16);
-          } else {
-            x_tileno = (offset % BX_VGA_THIS s.line_offset) / (X_TILESIZE / 8);
+          if (BX_VGA_THIS s.line_compare < BX_VGA_THIS s.vertical_display_end) {
+            if (BX_VGA_THIS s.x_dotclockdiv2) {
+              x_tileno = (offset % BX_VGA_THIS s.line_offset) / (X_TILESIZE / 16);
+            } else {
+              x_tileno = (offset % BX_VGA_THIS s.line_offset) / (X_TILESIZE / 8);
+            }
+            if (BX_VGA_THIS s.y_doublescan) {
+              y_tileno = ((offset / BX_VGA_THIS s.line_offset) * 2 + BX_VGA_THIS s.line_compare + 1) / Y_TILESIZE;
+            } else {
+              y_tileno = ((offset / BX_VGA_THIS s.line_offset) + BX_VGA_THIS s.line_compare + 1) / Y_TILESIZE;
+            }
+            SET_TILE_UPDATED(BX_VGA_THIS, x_tileno, y_tileno, 1);
           }
-          if (BX_VGA_THIS s.y_doublescan) {
-            y_tileno = (offset / BX_VGA_THIS s.line_offset) / (Y_TILESIZE / 2);
-          } else {
-            y_tileno = (offset / BX_VGA_THIS s.line_offset) / Y_TILESIZE;
+          if (offset >= start_addr) {
+            offset -= start_addr;
+            if (BX_VGA_THIS s.x_dotclockdiv2) {
+              x_tileno = (offset % BX_VGA_THIS s.line_offset) / (X_TILESIZE / 16);
+            } else {
+              x_tileno = (offset % BX_VGA_THIS s.line_offset) / (X_TILESIZE / 8);
+            }
+            if (BX_VGA_THIS s.y_doublescan) {
+              y_tileno = (offset / BX_VGA_THIS s.line_offset) / (Y_TILESIZE / 2);
+            } else {
+              y_tileno = (offset / BX_VGA_THIS s.line_offset) / Y_TILESIZE;
+            }
+            SET_TILE_UPDATED(BX_VGA_THIS, x_tileno, y_tileno, 1);
           }
-          SET_TILE_UPDATED(BX_VGA_THIS, x_tileno, y_tileno, 1);
         }
       }
     }
