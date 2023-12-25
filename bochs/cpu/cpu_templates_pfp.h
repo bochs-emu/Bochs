@@ -113,6 +113,60 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::HANDLE_AVX_PFP_3OP(bxInstruction_c *i)
 
 #include "simd_int.h"
 
+template <xmm_pfp_1op_mask func>
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::HANDLE_AVX512_MASK_PFP_1OP_SINGLE(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
+  unsigned mask = BX_READ_16BIT_OPMASK(i->opmask());
+  unsigned len = i->getVL();
+
+  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
+  softfloat_status_word_rc_override(status, i);
+
+  for (unsigned n=0, tmp_mask = mask; n < len; n++, tmp_mask >>= 4)
+    (func)(&op.vmm128(n), status, tmp_mask);
+
+  check_exceptionsSSE(get_exception_flags(status));
+
+  if (! i->isZeroMasking()) {
+    for (unsigned n=0; n < len; n++, mask >>= 4)
+      xmm_blendps(&BX_READ_AVX_REG_LANE(i->dst(), n), &op.vmm128(n), mask);
+    BX_CLEAR_AVX_REGZ(i->dst(), len);
+  }
+  else {
+    BX_WRITE_AVX_REGZ(i->dst(), op, len);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
+template <xmm_pfp_1op_mask func>
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::HANDLE_AVX512_MASK_PFP_1OP_DOUBLE(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
+  unsigned mask = BX_READ_8BIT_OPMASK(i->opmask());
+  unsigned len = i->getVL();
+
+  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
+  softfloat_status_word_rc_override(status, i);
+
+  for (unsigned n=0, tmp_mask = mask; n < len; n++, tmp_mask >>= 2)
+    (func)(&op.vmm128(n), status, tmp_mask);
+
+  check_exceptionsSSE(get_exception_flags(status));
+
+  if (! i->isZeroMasking()) {
+    for (unsigned n=0; n < len; n++, mask >>= 2)
+      xmm_blendpd(&BX_READ_AVX_REG_LANE(i->dst(), n), &op.vmm128(n), mask);
+    BX_CLEAR_AVX_REGZ(i->dst(), len);
+  }
+  else {
+    BX_WRITE_AVX_REGZ(i->dst(), op, len);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
 template <xmm_pfp_2op_mask func>
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::HANDLE_AVX512_MASK_PFP_2OP_SINGLE(bxInstruction_c *i)
 {

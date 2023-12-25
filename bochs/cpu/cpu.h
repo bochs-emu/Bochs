@@ -3118,8 +3118,6 @@ public: // for now...
   BX_SMF void VMINSD_MASK_VsdHpdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VMAXSS_MASK_VssHpsWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VMAXSD_MASK_VsdHpdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VSQRTPS_MASK_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VSQRTPD_MASK_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VSQRTSS_MASK_VssHpsWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VSQRTSD_MASK_VsdHpdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
@@ -3128,8 +3126,8 @@ public: // for now...
   BX_SMF void VFPCLASSSS_MASK_KGbWssIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VFPCLASSSD_MASK_KGbWsdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void VGETEXPPS_MASK_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VGETEXPPD_MASK_VpdWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VGETEXPSS_VssHpsWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VGETEXPSD_VsdHpdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VGETEXPSS_MASK_VssHpsWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VGETEXPSD_MASK_VsdHpdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 

@@ -2904,8 +2904,8 @@ bx_define_opcode(BX_IA_V512_VSQRTPD_VpdWpd, "vsqrtpd", "vsqrtpd", &BX_CPU_C::LOA
 bx_define_opcode(BX_IA_V512_VSQRTSS_VssHpsWss, "vsqrtss", "vsqrtss", &BX_CPU_C::LOAD_Wss, &BX_CPU_C::VSQRTSS_VssHpsWssR, BX_ISA_AVX512, OP_Vss, OP_Hps, OP_mVss, OP_NONE, BX_PREPARE_EVEX_NO_BROADCAST)
 bx_define_opcode(BX_IA_V512_VSQRTSD_VsdHpdWsd, "vsqrtsd", "vsqrtsd", &BX_CPU_C::LOAD_Wsd, &BX_CPU_C::VSQRTSD_VsdHpdWsdR, BX_ISA_AVX512, OP_Vsd, OP_Hpd, OP_mVsd, OP_NONE, BX_PREPARE_EVEX_NO_BROADCAST)
 
-bx_define_opcode(BX_IA_V512_VSQRTPS_VpsWps_Kmask, "vsqrtps", "vsqrtps", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorD, &BX_CPU_C::VSQRTPS_MASK_VpsWpsR, BX_ISA_AVX512, OP_Vps, OP_mVps, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
-bx_define_opcode(BX_IA_V512_VSQRTPD_VpdWpd_Kmask, "vsqrtpd", "vsqrtpd", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorQ, &BX_CPU_C::VSQRTPD_MASK_VpdWpdR, BX_ISA_AVX512, OP_Vpd, OP_mVpd, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
+bx_define_opcode(BX_IA_V512_VSQRTPS_VpsWps_Kmask, "vsqrtps", "vsqrtps", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorD, &BX_CPU_C::HANDLE_AVX512_MASK_PFP_1OP_SINGLE<xmm_sqrtps_mask>, BX_ISA_AVX512, OP_Vps, OP_mVps, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
+bx_define_opcode(BX_IA_V512_VSQRTPD_VpdWpd_Kmask, "vsqrtpd", "vsqrtpd", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorQ, &BX_CPU_C::HANDLE_AVX512_MASK_PFP_1OP_DOUBLE<xmm_sqrtpd_mask>, BX_ISA_AVX512, OP_Vpd, OP_mVpd, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
 bx_define_opcode(BX_IA_V512_VSQRTSS_VssHpsWss_Kmask, "vsqrtss", "vsqrtss", &BX_CPU_C::LOAD_MASK_Wss, &BX_CPU_C::VSQRTSS_MASK_VssHpsWssR, BX_ISA_AVX512, OP_Vss, OP_Hps, OP_mVss, OP_NONE, BX_PREPARE_EVEX_NO_BROADCAST)
 bx_define_opcode(BX_IA_V512_VSQRTSD_VsdHpdWsd_Kmask, "vsqrtsd", "vsqrtsd", &BX_CPU_C::LOAD_MASK_Wsd, &BX_CPU_C::VSQRTSD_MASK_VsdHpdWsdR, BX_ISA_AVX512, OP_Vsd, OP_Hpd, OP_mVsd, OP_NONE, BX_PREPARE_EVEX_NO_BROADCAST)
 
@@ -3558,8 +3558,13 @@ bx_define_opcode(BX_IA_V512_VRANGEPD_VpdHpdWpdIb_Kmask, "vrangepd", "vrangepd", 
 bx_define_opcode(BX_IA_V512_VRANGESS_VssHpsWssIb_Kmask, "vrangess", "vrangess", &BX_CPU_C::LOAD_MASK_Wss, &BX_CPU_C::VRANGESS_MASK_VssHpsWssIbR, BX_ISA_AVX512_DQ, OP_Vss, OP_Hps, OP_mVss, OP_Ib, BX_PREPARE_EVEX_NO_BROADCAST)
 bx_define_opcode(BX_IA_V512_VRANGESD_VsdHpdWsdIb_Kmask, "vrangesd", "vrangesd", &BX_CPU_C::LOAD_MASK_Wsd, &BX_CPU_C::VRANGESD_MASK_VsdHpdWsdIbR, BX_ISA_AVX512_DQ, OP_Vsd, OP_Hpd, OP_mVsd, OP_Ib, BX_PREPARE_EVEX_NO_BROADCAST)
 
-bx_define_opcode(BX_IA_V512_VGETEXPPS_VpsWps_Kmask, "vgetexpps", "vgetexpps", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorD, &BX_CPU_C::VGETEXPPS_MASK_VpsWpsR, BX_ISA_AVX512, OP_Vps, OP_mVps, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
-bx_define_opcode(BX_IA_V512_VGETEXPPD_VpdWpd_Kmask, "vgetexppd", "vgetexppd", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorQ, &BX_CPU_C::VGETEXPPD_MASK_VpdWpdR, BX_ISA_AVX512, OP_Vpd, OP_mVpd, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
+bx_define_opcode(BX_IA_V512_VGETEXPPS_VpsWps, "vgetexpps", "vgetexpps", &BX_CPU_C::LOAD_BROADCAST_VectorD, &BX_CPU_C::HANDLE_AVX_PFP_1OP<xmm_getexpps>, BX_ISA_AVX512, OP_Vps, OP_mVps, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
+bx_define_opcode(BX_IA_V512_VGETEXPPD_VpdWpd, "vgetexppd", "vgetexppd", &BX_CPU_C::LOAD_BROADCAST_VectorQ, &BX_CPU_C::HANDLE_AVX_PFP_1OP<xmm_getexppd>, BX_ISA_AVX512, OP_Vpd, OP_mVpd, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
+bx_define_opcode(BX_IA_V512_VGETEXPSS_VssHpsWss, "vgetexpss", "vgetexpss", &BX_CPU_C::LOAD_Wss, &BX_CPU_C::VGETEXPSS_VssHpsWssR, BX_ISA_AVX512, OP_Vss, OP_Hps, OP_mVss, OP_NONE, BX_PREPARE_EVEX_NO_BROADCAST)
+bx_define_opcode(BX_IA_V512_VGETEXPSD_VsdHpdWsd, "vgetexpsd", "vgetexpsd", &BX_CPU_C::LOAD_Wsd, &BX_CPU_C::VGETEXPSD_VsdHpdWsdR, BX_ISA_AVX512, OP_Vsd, OP_Hpd, OP_mVsd, OP_NONE, BX_PREPARE_EVEX_NO_BROADCAST)
+
+bx_define_opcode(BX_IA_V512_VGETEXPPS_VpsWps_Kmask, "vgetexpps", "vgetexpps", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorD, &BX_CPU_C::HANDLE_AVX512_MASK_PFP_1OP_SINGLE<xmm_getexpps_mask>, BX_ISA_AVX512, OP_Vps, OP_mVps, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
+bx_define_opcode(BX_IA_V512_VGETEXPPD_VpdWpd_Kmask, "vgetexppd", "vgetexppd", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorQ, &BX_CPU_C::HANDLE_AVX512_MASK_PFP_1OP_DOUBLE<xmm_getexppd_mask>, BX_ISA_AVX512, OP_Vpd, OP_mVpd, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
 bx_define_opcode(BX_IA_V512_VGETEXPSS_VssHpsWss_Kmask, "vgetexpss", "vgetexpss", &BX_CPU_C::LOAD_MASK_Wss, &BX_CPU_C::VGETEXPSS_MASK_VssHpsWssR, BX_ISA_AVX512, OP_Vss, OP_Hps, OP_mVss, OP_NONE, BX_PREPARE_EVEX_NO_BROADCAST)
 bx_define_opcode(BX_IA_V512_VGETEXPSD_VsdHpdWsd_Kmask, "vgetexpsd", "vgetexpsd", &BX_CPU_C::LOAD_MASK_Wsd, &BX_CPU_C::VGETEXPSD_MASK_VsdHpdWsdR, BX_ISA_AVX512, OP_Vsd, OP_Hpd, OP_mVsd, OP_NONE, BX_PREPARE_EVEX_NO_BROADCAST)
 
