@@ -233,9 +233,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SS_VssEdR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SS_VssEqR(bxInstruction_c *i)
 {
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-
   float32 result = int64_to_float32(BX_READ_64BIT_REG(i->src()), status);
-
   check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_XMM_REG_LO_DWORD(i->dst(), result);
 

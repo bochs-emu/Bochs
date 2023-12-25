@@ -3593,25 +3593,25 @@ bx_define_opcode(BX_IA_V512_VRSQRT14PD_VpdWpd_Kmask, "vrsqrt14pd", "vrsqrt14pd",
 bx_define_opcode(BX_IA_V512_VRSQRT14SS_VssHpsWss_Kmask, "vrsqrt14ss", "vrsqrt14ss", &BX_CPU_C::LOAD_MASK_Wss, &BX_CPU_C::VRSQRT14SS_MASK_VssHpsWssR, BX_ISA_AVX512, OP_Vss, OP_Hps, OP_mVss, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
 bx_define_opcode(BX_IA_V512_VRSQRT14SD_VsdHpdWsd_Kmask, "vrsqrt14sd", "vrsqrt14sd", &BX_CPU_C::LOAD_MASK_Wsd, &BX_CPU_C::VRSQRT14SD_MASK_VsdHpdWsdR, BX_ISA_AVX512, OP_Vsd, OP_Hpd, OP_mVsd, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
 
-bx_define_opcode(BX_IA_V512_VCVTPS2UQQ_VdqWps, "vcvtps2uqq", "vcvtps2uqq", &BX_CPU_C::LOAD_BROADCAST_Half_VectorD, &BX_CPU_C::VCVTPS2UQQ_VdqWpsR, BX_ISA_AVX512_DQ, OP_Vdq, OP_mVHV, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
-bx_define_opcode(BX_IA_V512_VCVTPD2UQQ_VdqWpd, "vcvtpd2uqq", "vcvtpd2uqq", &BX_CPU_C::LOAD_BROADCAST_VectorQ, &BX_CPU_C::VCVTPD2UQQ_VdqWpdR, BX_ISA_AVX512_DQ, OP_Vdq, OP_mVpd, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
-bx_define_opcode(BX_IA_V512_VCVTPS2UQQ_VdqWps_Kmask, "vcvtps2uqq", "vcvtps2uqq", &BX_CPU_C::LOAD_BROADCAST_MASK_Half_VectorD, &BX_CPU_C::VCVTPS2UQQ_MASK_VdqWpsR, BX_ISA_AVX512_DQ, OP_Vdq, OP_mVHV, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
-bx_define_opcode(BX_IA_V512_VCVTPD2UQQ_VdqWpd_Kmask, "vcvtpd2uqq", "vcvtpd2uqq", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorQ, &BX_CPU_C::VCVTPD2UQQ_MASK_VdqWpdR, BX_ISA_AVX512_DQ, OP_Vdq, OP_mVpd, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
+bx_define_opcode(BX_IA_V512_VCVTPS2UQQ_VdqWps, "vcvtps2uqq", "vcvtps2uqq", &BX_CPU_C::LOAD_BROADCAST_Half_VectorD, &BX_CPU_C::VCVTPS2UQQ_VdqWpsR, BX_ISA_AVX512_DQ, OP_Vqq, OP_mVHV, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
+bx_define_opcode(BX_IA_V512_VCVTPD2UQQ_VdqWpd, "vcvtpd2uqq", "vcvtpd2uqq", &BX_CPU_C::LOAD_BROADCAST_VectorQ, &BX_CPU_C::VCVTPD2UQQ_VdqWpdR, BX_ISA_AVX512_DQ, OP_Vqq, OP_mVpd, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
+bx_define_opcode(BX_IA_V512_VCVTPS2UQQ_VdqWps_Kmask, "vcvtps2uqq", "vcvtps2uqq", &BX_CPU_C::LOAD_BROADCAST_MASK_Half_VectorD, &BX_CPU_C::VCVTPS2UQQ_MASK_VdqWpsR, BX_ISA_AVX512_DQ, OP_Vqq, OP_mVHV, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
+bx_define_opcode(BX_IA_V512_VCVTPD2UQQ_VdqWpd_Kmask, "vcvtpd2uqq", "vcvtpd2uqq", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorQ, &BX_CPU_C::VCVTPD2UQQ_MASK_VdqWpdR, BX_ISA_AVX512_DQ, OP_Vqq, OP_mVpd, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
 
-bx_define_opcode(BX_IA_V512_VCVTTPS2UQQ_VdqWps, "vcvttps2uqq", "vcvttps2uqq", &BX_CPU_C::LOAD_BROADCAST_Half_VectorD, &BX_CPU_C::VCVTTPS2UQQ_VdqWpsR, BX_ISA_AVX512_DQ, OP_Vdq, OP_mVHV, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
-bx_define_opcode(BX_IA_V512_VCVTTPD2UQQ_VdqWpd, "vcvttpd2uqq", "vcvttpd2uqq", &BX_CPU_C::LOAD_BROADCAST_VectorQ, &BX_CPU_C::VCVTTPD2UQQ_VdqWpdR, BX_ISA_AVX512_DQ, OP_Vdq, OP_mVpd, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
-bx_define_opcode(BX_IA_V512_VCVTTPS2UQQ_VdqWps_Kmask, "vcvttps2uqq", "vcvttps2uqq", &BX_CPU_C::LOAD_BROADCAST_MASK_Half_VectorD, &BX_CPU_C::VCVTTPS2UQQ_MASK_VdqWpsR, BX_ISA_AVX512_DQ, OP_Vdq, OP_mVHV, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
-bx_define_opcode(BX_IA_V512_VCVTTPD2UQQ_VdqWpd_Kmask, "vcvttpd2uqq", "vcvttpd2uqq", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorQ, &BX_CPU_C::VCVTTPD2UQQ_MASK_VdqWpdR, BX_ISA_AVX512_DQ, OP_Vdq, OP_mVpd, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
+bx_define_opcode(BX_IA_V512_VCVTTPS2UQQ_VdqWps, "vcvttps2uqq", "vcvttps2uqq", &BX_CPU_C::LOAD_BROADCAST_Half_VectorD, &BX_CPU_C::VCVTTPS2UQQ_VdqWpsR, BX_ISA_AVX512_DQ, OP_Vqq, OP_mVHV, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
+bx_define_opcode(BX_IA_V512_VCVTTPS2UQQ_VdqWps_Kmask, "vcvttps2uqq", "vcvttps2uqq", &BX_CPU_C::LOAD_BROADCAST_MASK_Half_VectorD, &BX_CPU_C::VCVTTPS2UQQ_MASK_VdqWpsR, BX_ISA_AVX512_DQ, OP_Vqq, OP_mVHV, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
+bx_define_opcode(BX_IA_V512_VCVTTPD2UQQ_VdqWpd, "vcvttpd2uqq", "vcvttpd2uqq", &BX_CPU_C::LOAD_BROADCAST_VectorQ, &BX_CPU_C::VCVTTPD2UQQ_VdqWpdR, BX_ISA_AVX512_DQ, OP_Vqq, OP_mVpd, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
+bx_define_opcode(BX_IA_V512_VCVTTPD2UQQ_VdqWpd_Kmask, "vcvttpd2uqq", "vcvttpd2uqq", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorQ, &BX_CPU_C::VCVTTPD2UQQ_MASK_VdqWpdR, BX_ISA_AVX512_DQ, OP_Vqq, OP_mVpd, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
 
-bx_define_opcode(BX_IA_V512_VCVTPS2QQ_VdqWps, "vcvtps2qq", "vcvtps2qq", &BX_CPU_C::LOAD_BROADCAST_Half_VectorD, &BX_CPU_C::VCVTPS2QQ_VdqWpsR, BX_ISA_AVX512_DQ, OP_Vdq, OP_mVHV, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
-bx_define_opcode(BX_IA_V512_VCVTPD2QQ_VdqWpd, "vcvtpd2qq", "vcvtpd2qq", &BX_CPU_C::LOAD_BROADCAST_VectorQ, &BX_CPU_C::VCVTPD2QQ_VdqWpdR, BX_ISA_AVX512_DQ, OP_Vdq, OP_mVpd, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
-bx_define_opcode(BX_IA_V512_VCVTPS2QQ_VdqWps_Kmask, "vcvtps2qq", "vcvtps2qq", &BX_CPU_C::LOAD_BROADCAST_MASK_Half_VectorD, &BX_CPU_C::VCVTPS2QQ_MASK_VdqWpsR, BX_ISA_AVX512_DQ, OP_Vdq, OP_mVHV, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
-bx_define_opcode(BX_IA_V512_VCVTPD2QQ_VdqWpd_Kmask, "vcvtpd2qq", "vcvtpd2qq", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorQ, &BX_CPU_C::VCVTPD2QQ_MASK_VdqWpdR, BX_ISA_AVX512_DQ, OP_Vdq, OP_mVpd, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
+bx_define_opcode(BX_IA_V512_VCVTPS2QQ_VdqWps, "vcvtps2qq", "vcvtps2qq", &BX_CPU_C::LOAD_BROADCAST_Half_VectorD, &BX_CPU_C::VCVTPS2QQ_VdqWpsR, BX_ISA_AVX512_DQ, OP_Vqq, OP_mVHV, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
+bx_define_opcode(BX_IA_V512_VCVTPS2QQ_VdqWps_Kmask, "vcvtps2qq", "vcvtps2qq", &BX_CPU_C::LOAD_BROADCAST_MASK_Half_VectorD, &BX_CPU_C::VCVTPS2QQ_MASK_VdqWpsR, BX_ISA_AVX512_DQ, OP_Vqq, OP_mVHV, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
+bx_define_opcode(BX_IA_V512_VCVTPD2QQ_VdqWpd, "vcvtpd2qq", "vcvtpd2qq", &BX_CPU_C::LOAD_BROADCAST_VectorQ, &BX_CPU_C::VCVTPD2QQ_VdqWpdR, BX_ISA_AVX512_DQ, OP_Vqq, OP_mVpd, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
+bx_define_opcode(BX_IA_V512_VCVTPD2QQ_VdqWpd_Kmask, "vcvtpd2qq", "vcvtpd2qq", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorQ, &BX_CPU_C::VCVTPD2QQ_MASK_VdqWpdR, BX_ISA_AVX512_DQ, OP_Vqq, OP_mVpd, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
 
-bx_define_opcode(BX_IA_V512_VCVTTPS2QQ_VdqWps, "vcvttps2qq", "vcvttps2qq", &BX_CPU_C::LOAD_BROADCAST_Half_VectorD, &BX_CPU_C::VCVTTPS2QQ_VdqWpsR, BX_ISA_AVX512_DQ, OP_Vdq, OP_mVHV, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
-bx_define_opcode(BX_IA_V512_VCVTTPD2QQ_VdqWpd, "vcvttpd2qq", "vcvttpd2qq", &BX_CPU_C::LOAD_BROADCAST_VectorQ, &BX_CPU_C::VCVTTPD2QQ_VdqWpdR, BX_ISA_AVX512_DQ, OP_Vdq, OP_mVpd, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
-bx_define_opcode(BX_IA_V512_VCVTTPS2QQ_VdqWps_Kmask, "vcvttps2qq", "vcvttps2qq", &BX_CPU_C::LOAD_BROADCAST_MASK_Half_VectorD, &BX_CPU_C::VCVTTPS2QQ_MASK_VdqWpsR, BX_ISA_AVX512_DQ, OP_Vdq, OP_mVHV, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
-bx_define_opcode(BX_IA_V512_VCVTTPD2QQ_VdqWpd_Kmask, "vcvttpd2qq", "vcvttpd2qq", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorQ, &BX_CPU_C::VCVTTPD2QQ_MASK_VdqWpdR, BX_ISA_AVX512_DQ, OP_Vdq, OP_mVpd, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
+bx_define_opcode(BX_IA_V512_VCVTTPS2QQ_VdqWps, "vcvttps2qq", "vcvttps2qq", &BX_CPU_C::LOAD_BROADCAST_Half_VectorD, &BX_CPU_C::VCVTTPS2QQ_VdqWpsR, BX_ISA_AVX512_DQ, OP_Vqq, OP_mVHV, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
+bx_define_opcode(BX_IA_V512_VCVTTPS2QQ_VdqWps_Kmask, "vcvttps2qq", "vcvttps2qq", &BX_CPU_C::LOAD_BROADCAST_MASK_Half_VectorD, &BX_CPU_C::VCVTTPS2QQ_MASK_VdqWpsR, BX_ISA_AVX512_DQ, OP_Vqq, OP_mVHV, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
+bx_define_opcode(BX_IA_V512_VCVTTPD2QQ_VdqWpd, "vcvttpd2qq", "vcvttpd2qq", &BX_CPU_C::LOAD_BROADCAST_VectorQ, &BX_CPU_C::VCVTTPD2QQ_VdqWpdR, BX_ISA_AVX512_DQ, OP_Vqq, OP_mVpd, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
+bx_define_opcode(BX_IA_V512_VCVTTPD2QQ_VdqWpd_Kmask, "vcvttpd2qq", "vcvttpd2qq", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorQ, &BX_CPU_C::VCVTTPD2QQ_MASK_VdqWpdR, BX_ISA_AVX512_DQ, OP_Vqq, OP_mVpd, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
 
 bx_define_opcode(BX_IA_V512_VCVTTPS2UDQ_VdqWps, "vcvttps2udq", "vcvttps2udq", &BX_CPU_C::LOAD_BROADCAST_VectorD, &BX_CPU_C::VCVTTPS2UDQ_VdqWpsR, BX_ISA_AVX512, OP_Vdq, OP_mVps, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
 bx_define_opcode(BX_IA_V512_VCVTTPD2UDQ_VdqWpd, "vcvttpd2udq", "vcvttpd2udq", &BX_CPU_C::LOAD_BROADCAST_VectorQ, &BX_CPU_C::VCVTTPD2UDQ_VdqWpdR, BX_ISA_AVX512, OP_Vdq, OP_mVpd, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
@@ -3624,24 +3624,24 @@ bx_define_opcode(BX_IA_V512_VCVTPS2UDQ_VdqWps_Kmask, "vcvtps2udq", "vcvtps2udq",
 bx_define_opcode(BX_IA_V512_VCVTPD2UDQ_VdqWpd_Kmask, "vcvtpd2udq", "vcvtpd2udq", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorQ, &BX_CPU_C::VCVTPD2UDQ_MASK_VdqWpdR, BX_ISA_AVX512, OP_Vdq, OP_mVpd, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
 
 bx_define_opcode(BX_IA_V512_VCVTUDQ2PD_VpdWdq, "vcvtudq2pd", "vcvtudq2pd", &BX_CPU_C::LOAD_BROADCAST_Half_VectorD, &BX_CPU_C::VCVTUDQ2PD_VpdWdqR, BX_ISA_AVX512, OP_Vpd, OP_mVHV, OP_NONE, OP_NONE, BX_PREPARE_EVEX) // ignore the SAE
-bx_define_opcode(BX_IA_V512_VCVTUQQ2PD_VpdWdq, "vcvtuqq2pd", "vcvtuqq2pd", &BX_CPU_C::LOAD_BROADCAST_VectorQ, &BX_CPU_C::VCVTUQQ2PD_VpdWdqR, BX_ISA_AVX512_DQ, OP_Vpd, OP_mVdq, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
 bx_define_opcode(BX_IA_V512_VCVTUDQ2PD_VpdWdq_Kmask, "vcvtudq2pd", "vcvtudq2pd", &BX_CPU_C::LOAD_BROADCAST_MASK_Half_VectorD, &BX_CPU_C::VCVTUDQ2PD_MASK_VpdWdqR, BX_ISA_AVX512, OP_Vpd, OP_mVHV, OP_NONE, OP_NONE, BX_PREPARE_EVEX) // ignore the SAE
-bx_define_opcode(BX_IA_V512_VCVTUQQ2PD_VpdWdq_Kmask, "vcvtuqq2pd", "vcvtuqq2pd", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorQ, &BX_CPU_C::VCVTUQQ2PD_MASK_VpdWdqR, BX_ISA_AVX512_DQ, OP_Vpd, OP_mVdq, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
+bx_define_opcode(BX_IA_V512_VCVTUQQ2PD_VpdWdq, "vcvtuqq2pd", "vcvtuqq2pd", &BX_CPU_C::LOAD_BROADCAST_VectorQ, &BX_CPU_C::VCVTUQQ2PD_VpdWdqR, BX_ISA_AVX512_DQ, OP_Vpd, OP_mVqq, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
+bx_define_opcode(BX_IA_V512_VCVTUQQ2PD_VpdWdq_Kmask, "vcvtuqq2pd", "vcvtuqq2pd", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorQ, &BX_CPU_C::VCVTUQQ2PD_MASK_VpdWdqR, BX_ISA_AVX512_DQ, OP_Vpd, OP_mVqq, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
 
 bx_define_opcode(BX_IA_V512_VCVTUDQ2PS_VpsWdq, "vcvtudq2ps", "vcvtudq2ps", &BX_CPU_C::LOAD_BROADCAST_VectorD, &BX_CPU_C::VCVTUDQ2PS_VpsWdqR, BX_ISA_AVX512, OP_Vps, OP_mVdq, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
-bx_define_opcode(BX_IA_V512_VCVTUQQ2PS_VpsWdq, "vcvtuqq2ps", "vcvtuqq2ps", &BX_CPU_C::LOAD_BROADCAST_VectorQ, &BX_CPU_C::VCVTUQQ2PS_VpsWdqR, BX_ISA_AVX512_DQ, OP_Vps, OP_mVdq, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
 bx_define_opcode(BX_IA_V512_VCVTUDQ2PS_VpsWdq_Kmask, "vcvtudq2ps", "vcvtudq2ps", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorD, &BX_CPU_C::VCVTUDQ2PS_MASK_VpsWdqR, BX_ISA_AVX512, OP_Vps, OP_mVdq, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
-bx_define_opcode(BX_IA_V512_VCVTUQQ2PS_VpsWdq_Kmask, "vcvtuqq2ps", "vcvtuqq2ps", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorQ, &BX_CPU_C::VCVTUQQ2PS_MASK_VpsWdqR, BX_ISA_AVX512_DQ, OP_Vps, OP_mVdq, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
+bx_define_opcode(BX_IA_V512_VCVTUQQ2PS_VpsWdq, "vcvtuqq2ps", "vcvtuqq2ps", &BX_CPU_C::LOAD_BROADCAST_VectorQ, &BX_CPU_C::VCVTUQQ2PS_VpsWdqR, BX_ISA_AVX512_DQ, OP_Vps, OP_mVqq, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
+bx_define_opcode(BX_IA_V512_VCVTUQQ2PS_VpsWdq_Kmask, "vcvtuqq2ps", "vcvtuqq2ps", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorQ, &BX_CPU_C::VCVTUQQ2PS_MASK_VpsWdqR, BX_ISA_AVX512_DQ, OP_Vps, OP_mVqq, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
 
 bx_define_opcode(BX_IA_V512_VCVTDQ2PD_VpdWdq, "vcvtdq2pd", "vcvtdq2pd", &BX_CPU_C::LOAD_BROADCAST_Half_VectorD, &BX_CPU_C::VCVTDQ2PD_VpdWdqR, BX_ISA_AVX512, OP_Vpd, OP_mVHV, OP_NONE, OP_NONE, BX_PREPARE_EVEX) // ignore the SAE
-bx_define_opcode(BX_IA_V512_VCVTQQ2PD_VpdWdq, "vcvtqq2pd", "vcvtqq2pd", &BX_CPU_C::LOAD_BROADCAST_VectorQ, &BX_CPU_C::VCVTQQ2PD_VpdWdqR, BX_ISA_AVX512_DQ, OP_Vpd, OP_mVdq, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
 bx_define_opcode(BX_IA_V512_VCVTDQ2PD_VpdWdq_Kmask, "vcvtdq2pd", "vcvtdq2pd", &BX_CPU_C::LOAD_BROADCAST_MASK_Half_VectorD, &BX_CPU_C::VCVTDQ2PD_MASK_VpdWdqR, BX_ISA_AVX512, OP_Vpd, OP_mVHV, OP_NONE, OP_NONE, BX_PREPARE_EVEX) // ignore the SAE
-bx_define_opcode(BX_IA_V512_VCVTQQ2PD_VpdWdq_Kmask, "vcvtqq2pd", "vcvtqq2pd", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorQ, &BX_CPU_C::VCVTQQ2PD_MASK_VpdWdqR, BX_ISA_AVX512_DQ, OP_Vpd, OP_mVdq, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
+bx_define_opcode(BX_IA_V512_VCVTQQ2PD_VpdWdq, "vcvtqq2pd", "vcvtqq2pd", &BX_CPU_C::LOAD_BROADCAST_VectorQ, &BX_CPU_C::VCVTQQ2PD_VpdWdqR, BX_ISA_AVX512_DQ, OP_Vpd, OP_mVqq, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
+bx_define_opcode(BX_IA_V512_VCVTQQ2PD_VpdWdq_Kmask, "vcvtqq2pd", "vcvtqq2pd", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorQ, &BX_CPU_C::VCVTQQ2PD_MASK_VpdWdqR, BX_ISA_AVX512_DQ, OP_Vpd, OP_mVqq, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
 
 bx_define_opcode(BX_IA_V512_VCVTDQ2PS_VpsWdq, "vcvtdq2ps", "vcvtdq2ps", &BX_CPU_C::LOAD_BROADCAST_VectorD, &BX_CPU_C::VCVTDQ2PS_VpsWdqR, BX_ISA_AVX512, OP_Vps, OP_mVdq, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
-bx_define_opcode(BX_IA_V512_VCVTQQ2PS_VpsWdq, "vcvtqq2ps", "vcvtqq2ps", &BX_CPU_C::LOAD_BROADCAST_VectorQ, &BX_CPU_C::VCVTQQ2PS_VpsWdqR, BX_ISA_AVX512_DQ, OP_Vps, OP_mVdq, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
 bx_define_opcode(BX_IA_V512_VCVTDQ2PS_VpsWdq_Kmask, "vcvtdq2ps", "vcvtdq2ps", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorD, &BX_CPU_C::VCVTDQ2PS_MASK_VpsWdqR, BX_ISA_AVX512, OP_Vps, OP_mVdq, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
-bx_define_opcode(BX_IA_V512_VCVTQQ2PS_VpsWdq_Kmask, "vcvtqq2ps", "vcvtqq2ps", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorQ, &BX_CPU_C::VCVTQQ2PS_MASK_VpsWdqR, BX_ISA_AVX512_DQ, OP_Vps, OP_mVdq, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
+bx_define_opcode(BX_IA_V512_VCVTQQ2PS_VpsWdq, "vcvtqq2ps", "vcvtqq2ps", &BX_CPU_C::LOAD_BROADCAST_VectorQ, &BX_CPU_C::VCVTQQ2PS_VpsWdqR, BX_ISA_AVX512_DQ, OP_Vps, OP_mVqq, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
+bx_define_opcode(BX_IA_V512_VCVTQQ2PS_VpsWdq_Kmask, "vcvtqq2ps", "vcvtqq2ps", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorQ, &BX_CPU_C::VCVTQQ2PS_MASK_VpsWdqR, BX_ISA_AVX512_DQ, OP_Vps, OP_mVqq, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
 
 bx_define_opcode(BX_IA_V512_VFMADD132PS_VpsHpsWps, "vfmadd132ps", "vfmadd132ps", &BX_CPU_C::LOAD_BROADCAST_VectorD, &BX_CPU_C::HANDLE_AVX_PFP_3OP<xmm_fmaddps>, BX_ISA_AVX512, OP_Vps, OP_Vps, OP_mVps, OP_Hps, BX_PREPARE_EVEX)
 bx_define_opcode(BX_IA_V512_VFMADD132PD_VpdHpdWpd, "vfmadd132pd", "vfmadd132pd", &BX_CPU_C::LOAD_BROADCAST_VectorQ, &BX_CPU_C::HANDLE_AVX_PFP_3OP<xmm_fmaddpd>, BX_ISA_AVX512, OP_Vpd, OP_Vpd, OP_mVpd, OP_Hpd, BX_PREPARE_EVEX)
@@ -3936,14 +3936,14 @@ bx_define_opcode(BX_IA_V512_VPSHLDVD_VdqHdqWdq_Kmask, "vpshldvd", "vpshldvd", &B
 bx_define_opcode(BX_IA_V512_VPSHLDVQ_VdqHdqWdq_Kmask, "vpshldvq", "vpshldvq", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorQ, &BX_CPU_C::VPSHLDVQ_MASK_VdqHdqWdqR, BX_ISA_AVX512_VBMI2, OP_Vdq, OP_Hdq, OP_mVdq, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
 
 bx_define_opcode(BX_IA_V512_VCVTSS2SI_GdWss, "vcvtss2si", "vcvtss2si", &BX_CPU_C::LOAD_Wss, &BX_CPU_C::CVTSS2SI_GdWssR, BX_ISA_AVX512, OP_Gd, OP_mVss, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_BROADCAST)
-bx_define_opcode(BX_IA_V512_VCVTSS2SI_GqWss, "vcvtss2si", "vcvtss2si", &BX_CPU_C::LOAD_Wss, &BX_CPU_C::CVTSS2SI_GqWssR, BX_ISA_AVX512, OP_Gq, OP_mVss, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_BROADCAST)
+bx_define_opcode(BX_IA_V512_VCVTSS2SI_GqWss, "vcvtss2si", "vcvtss2siq", &BX_CPU_C::LOAD_Wss, &BX_CPU_C::CVTSS2SI_GqWssR, BX_ISA_AVX512, OP_Gq, OP_mVss, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_BROADCAST)
 bx_define_opcode(BX_IA_V512_VCVTSD2SI_GdWsd, "vcvtsd2si", "vcvtsd2si", &BX_CPU_C::LOAD_Wsd, &BX_CPU_C::CVTSD2SI_GdWsdR, BX_ISA_AVX512, OP_Gd, OP_mVsd, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_BROADCAST)
-bx_define_opcode(BX_IA_V512_VCVTSD2SI_GqWsd, "vcvtsd2si", "vcvtsd2si", &BX_CPU_C::LOAD_Wsd, &BX_CPU_C::CVTSD2SI_GqWsdR, BX_ISA_AVX512, OP_Gq, OP_mVsd, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_BROADCAST)
+bx_define_opcode(BX_IA_V512_VCVTSD2SI_GqWsd, "vcvtsd2si", "vcvtsd2siq", &BX_CPU_C::LOAD_Wsd, &BX_CPU_C::CVTSD2SI_GqWsdR, BX_ISA_AVX512, OP_Gq, OP_mVsd, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_BROADCAST)
 
 bx_define_opcode(BX_IA_V512_VCVTTSS2SI_GdWss, "vcvttss2si", "vcvttss2si", &BX_CPU_C::LOAD_Wss, &BX_CPU_C::CVTTSS2SI_GdWssR, BX_ISA_AVX512, OP_Gd, OP_mVss, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_BROADCAST)
-bx_define_opcode(BX_IA_V512_VCVTTSS2SI_GqWss, "vcvttss2si", "vcvttss2si", &BX_CPU_C::LOAD_Wss, &BX_CPU_C::CVTTSS2SI_GqWssR, BX_ISA_AVX512, OP_Gq, OP_mVss, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_BROADCAST)
+bx_define_opcode(BX_IA_V512_VCVTTSS2SI_GqWss, "vcvttss2si", "vcvttss2siq", &BX_CPU_C::LOAD_Wss, &BX_CPU_C::CVTTSS2SI_GqWssR, BX_ISA_AVX512, OP_Gq, OP_mVss, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_BROADCAST)
 bx_define_opcode(BX_IA_V512_VCVTTSD2SI_GdWsd, "vcvttsd2si", "vcvttsd2si", &BX_CPU_C::LOAD_Wsd, &BX_CPU_C::CVTTSD2SI_GdWsdR, BX_ISA_AVX512, OP_Gd, OP_mVsd, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_BROADCAST)
-bx_define_opcode(BX_IA_V512_VCVTTSD2SI_GqWsd, "vcvttsd2si", "vcvttsd2si", &BX_CPU_C::LOAD_Wsd, &BX_CPU_C::CVTTSD2SI_GqWsdR, BX_ISA_AVX512, OP_Gq, OP_mVsd, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_BROADCAST)
+bx_define_opcode(BX_IA_V512_VCVTTSD2SI_GqWsd, "vcvttsd2si", "vcvttsd2siq", &BX_CPU_C::LOAD_Wsd, &BX_CPU_C::CVTTSD2SI_GqWsdR, BX_ISA_AVX512, OP_Gq, OP_mVsd, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_BROADCAST)
 
 bx_define_opcode(BX_IA_V512_VMOVD_VdqEd, "vmovd", "vmovd", &BX_CPU_C::MOVSS_VssWssM, &BX_CPU_C::MOVD_VdqEdR, BX_ISA_AVX512, OP_Vdq, OP_Ed, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
 bx_define_opcode(BX_IA_V512_VMOVQ_VdqEq, "vmovq", "vmovq", &BX_CPU_C::MOVSD_VsdWsdM, &BX_CPU_C::MOVQ_VdqEqR, BX_ISA_AVX512, OP_Vdq, OP_Eq, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
