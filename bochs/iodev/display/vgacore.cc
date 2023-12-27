@@ -1762,6 +1762,7 @@ void bx_vgacore_c::mem_write(bx_phy_address addr, Bit8u value)
           } else {
             y_tileno = ((offset / BX_VGA_THIS s.line_offset) + BX_VGA_THIS s.line_compare + 1) / (Y_TILESIZE / 2);
           }
+          BX_VGA_THIS s.vga_mem_updated = 1;
           SET_TILE_UPDATED(BX_VGA_THIS, x_tileno, y_tileno, 1);
         }
         if (offset >= start_addr) {
