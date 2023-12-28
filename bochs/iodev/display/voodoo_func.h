@@ -1311,7 +1311,7 @@ void recompute_video_memory(voodoo_state *v)
   }
 
   /* reset the FIFO */
-  fifo_reset(&v->fbi.fifo);
+  //fifo_reset(&v->fbi.fifo);
   if (fifo_empty_locked(&v->pci.fifo)) v->pci.op_pending = 0;
 
   /* reset our front/back buffers if they are out of range */

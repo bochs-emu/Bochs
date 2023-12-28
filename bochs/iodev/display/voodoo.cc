@@ -259,6 +259,7 @@ bx_voodoo_base_c::~bx_voodoo_base_c()
     voodoo_keep_alive = 0;
     bx_set_sem(&fifo_wakeup);
     bx_set_sem(&fifo_not_full);
+    bx_set_sem(&vertical_sem);
     BX_THREAD_JOIN(fifo_thread_var);
     BX_FINI_MUTEX(fifo_mutex);
     BX_FINI_MUTEX(render_mutex);
@@ -267,7 +268,6 @@ bx_voodoo_base_c::~bx_voodoo_base_c()
     }
     bx_destroy_sem(&fifo_wakeup);
     bx_destroy_sem(&fifo_not_full);
-    bx_set_sem(&vertical_sem);
     bx_destroy_sem(&vertical_sem);
   }
   if (s.vga_tile_updated != NULL) {
