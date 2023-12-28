@@ -4653,7 +4653,7 @@ GUI methods (currently only used by the Carbon GUI).
 Example:
 <screen>
   sb16: midimode=2, midifile=output.mid, wavemode=3, wavefile=output.wav
-        loglevel=2, log=sb16.log, dmatimer=600000
+        loglevel=2, log=sb16.log, dmatimer=900000
 </screen>
 <note><para>
 The example is wrapped onto several lines for formatting reasons, but it
@@ -4723,10 +4723,10 @@ are in the usual "property=value" format.
    <listitem><para>
    <option>dmatimer</option>:
    Microseconds per second for a DMA cycle. Make it smaller to fix
-   non-continuous sound. 750000 is usually a good value. This needs a reasonably
+   non-continuous sound. 1000000 is usually a good value. This needs a reasonably
    correct setting for the <command>ips</command> parameter of the
-   <link linkend="bochsopt-cpu-ips">cpu option</link>. It is possible to adjust the
-   dmatimer value at runtime.
+   <link linkend="bochsopt-cpu-ips">cpu option</link> und also denpends on the
+   clock sync setting. It is possible to adjust the dmatimer value at runtime.
    </para></listitem>
  </itemizedlist>
 </para>

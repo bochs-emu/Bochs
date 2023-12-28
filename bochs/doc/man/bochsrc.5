@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "14 Dec 2023" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "28 Dec 2023" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -1121,10 +1121,11 @@ loglevel:
 dmatimer:
 
 Microseconds per second for a DMA cycle.  Make it smaller
-to fix non-continuous sound.  750000 is  usually  a  good
+to fix non-continuous sound. 1000000 is  usually  a  good
 value.  This  needs  a reasonably  correct   setting  for
-the  IPS  parameter of the CPU option.  It is possible to
-adjust the dmatimer at runtime.
+the  IPS  parameter of the CPU option and also depends on
+the clock sync setting.  It  is  possible  to  adjust the
+dmatimer value at runtime.
 
 Examples for output modes:
   sb16: midimode=2, midifile="output.mid", wavemode=1 # MIDI to file

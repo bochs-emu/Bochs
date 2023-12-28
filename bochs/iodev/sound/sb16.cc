@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -104,8 +104,8 @@ void sb16_init_options(void)
     "dmatimer",
     "DMA timer",
     "Microseconds per second for a DMA cycle.",
-    0, BX_MAX_BIT32U,
-    0);
+    100000, BX_MAX_BIT32U,
+    1000000);
 
   bx_list_c *deplist = new bx_list_c(NULL);
   deplist->add(midimode);
