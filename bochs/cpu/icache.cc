@@ -187,7 +187,7 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(Bit32u eipBiased, bx_phy_address pAdd
     fetchPtr += iLen;
 
     // try to find a trace starting from current pAddr and merge
-    if (bx_dbg.debugger_active) {
+    if (!bx_dbg.debugger_active) {
       if (remainingInPage >= 15) { // avoid merging with page split trace
         if (mergeTraces(entry, i, pAddr)) {
           entry->traceMask |= traceMask;
