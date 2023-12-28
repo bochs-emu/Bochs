@@ -168,7 +168,10 @@ Detailed change log :
 
 -BIOS / VGABIOS
   - Added capability to enter keycode with ALT + numeric keypad
-  - Updated LGPL'd VGABIOS from https://github.com/bochs-emu/VGABIOS
+  - LGPL'd VGABIOS updated to version 0.8b (from https://github.com/bochs-emu/VGABIOS)
+    - Added VBE get/set palette data support for Banshee and Cirrus versions
+    - Fixed order of colors in VBE function get/set palette data
+    - VESA BIOS function 0x4f00 now stores strings in OemData (for VBE 2.0)
 
 -------------------------------------------------------------------------
 Changes in 2.7 (August 1, 2021):
