@@ -43,10 +43,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxError(bxInstruction_c *i)
   if (ia_opcode == BX_IA_ERROR) {
     BX_DEBUG(("BxError: Encountered an unknown instruction (signalling #UD)"));
 
-#if BX_DEBUGGER == 0 // with debugger it easy to see the #UD
     if (LOG_THIS getonoff(LOGLEV_DEBUG))
       debug_disasm_instruction(BX_CPU_THIS_PTR prev_rip);
-#endif
   }
   else {
     BX_DEBUG(("%s: instruction not supported - signalling #UD", get_bx_opcode_name(ia_opcode)));

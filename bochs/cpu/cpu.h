@@ -4444,6 +4444,9 @@ public: // for now...
 
   // now for some ancillary functions...
   BX_SMF void cpu_loop(void);
+#if BX_DEBUGGER
+  BX_SMF void cpu_loop_debugger(void);
+#endif
 #if BX_SUPPORT_SMP
   BX_SMF void cpu_run_trace(void);
 #endif

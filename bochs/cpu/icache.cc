@@ -136,10 +136,12 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(Bit32u eipBiased, bx_phy_address pAdd
       pageWriteStampTable.markICacheMask(entry->pAddr, entry->traceMask);
       pageWriteStampTable.markICacheMask(BX_CPU_THIS_PTR pAddrFetchPage, 0x1);
 
+      if (! bx_dbg.debugger_active) {
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
-      entry->tlen++; /* Add the inserted end of trace opcode */
-      genDummyICacheEntry(++i);
+        entry->tlen++; /* Add the inserted end of trace opcode */
+        genDummyICacheEntry(++i);
 #endif
+      }
 
       BX_CPU_THIS_PTR iCache.commit_page_split_trace(BX_CPU_THIS_PTR pAddrFetchPage, entry);
       return entry;
@@ -184,10 +186,12 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(Bit32u eipBiased, bx_phy_address pAdd
 
   pageWriteStampTable.markICacheMask(pAddr, entry->traceMask);
 
+  if (! bx_dbg.debugger_active) {
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
-  entry->tlen++; /* Add the inserted end of trace opcode */
-  genDummyICacheEntry(i);
+    entry->tlen++; /* Add the inserted end of trace opcode */
+    genDummyICacheEntry(i);
 #endif
+  }
 
   BX_CPU_THIS_PTR iCache.commit_trace(entry->tlen);
 
@@ -203,14 +207,15 @@ bool BX_CPU_C::mergeTraces(bxICacheEntry_c *entry, bxInstruction_c *i, bx_phy_ad
     // determine max amount of instruction to take from another entry
     unsigned max_length = e->tlen;
 
-#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
-    if (max_length + entry->tlen > BX_MAX_TRACE_LENGTH)
-        return false;
-#else
-    if (max_length + entry->tlen > BX_MAX_TRACE_LENGTH)
-        max_length = BX_MAX_TRACE_LENGTH - entry->tlen;
-    if(max_length == 0) return false;
-#endif
+    if (! bx_dbg.debugger_active && BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS) {
+      if (max_length + entry->tlen > BX_MAX_TRACE_LENGTH)
+        return 0;
+    }
+    else {
+      if (max_length + entry->tlen > BX_MAX_TRACE_LENGTH)
+          max_length = BX_MAX_TRACE_LENGTH - entry->tlen;
+      if(max_length == 0) return 0;
+    }
 
     memcpy(i, e->i, sizeof(bxInstruction_c)*max_length);
     entry->tlen += max_length;

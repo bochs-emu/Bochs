@@ -948,11 +948,6 @@ else
   AC_DEFINE(BX_FAST_FUNC_CALL, 0)
 fi
 
-if test "$bx_debugger" = 1 -a "$speedup_handlers_chaining" = 1; then
-  speedup_handlers_chaining=0
-  echo "ERROR: handlers-chaining speedups are not supported with internal debugger or gdbstub yet"
-fi
-
 if test "$bx_gdb_stub" = 1 -a "$speedup_handlers_chaining" = 1; then
   speedup_handlers_chaining=0
   echo "ERROR: handlers-chaining speedups are not supported with internal debugger or gdbstub yet"
