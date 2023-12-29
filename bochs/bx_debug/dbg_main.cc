@@ -701,6 +701,9 @@ void bx_dbg_print_value(Bit8u *data, unsigned len)
 
 void bx_dbg_lin_memory_access(unsigned cpu, bx_address lin, bx_phy_address phy, unsigned len, unsigned memtype, unsigned rw, Bit8u *data)
 {
+  if (! bx_dbg.debugger_active)
+    return;
+
   bx_dbg_check_memory_watchpoints(cpu, phy, len, rw);
 
   if (! BX_CPU(cpu)->trace_mem)
