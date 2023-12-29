@@ -186,7 +186,7 @@ BX_THREAD_FUNC(fifo_thread, indata)
     if (bx_wait_sem(&fifo_wakeup),1) {
       if (!voodoo_keep_alive) break;
       BX_LOCK(fifo_mutex);
-      while (1) {
+      while (voodoo_keep_alive) {
         if (!fifo_empty(&v->fbi.fifo)) {
           fifo = &v->fbi.fifo;
         } else if (!fifo_empty(&v->pci.fifo)) {
@@ -257,6 +257,7 @@ bx_voodoo_base_c::~bx_voodoo_base_c()
 {
   if (voodoo_keep_alive) {
     voodoo_keep_alive = 0;
+    v->vtimer_running = 0;
     bx_set_sem(&fifo_wakeup);
     bx_set_sem(&fifo_not_full);
     bx_set_sem(&vertical_sem);
