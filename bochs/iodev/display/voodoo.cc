@@ -856,9 +856,11 @@ void bx_voodoo_base_c::vertical_timer(void)
   if (v->fbi.video_changed || v->fbi.clut_dirty) {
     // TODO: use tile-based update mechanism
     redraw_area(0, 0, s.vdraw.width, s.vdraw.height);
+    BX_LOCK(fifo_mutex);
     if (v->fbi.clut_dirty) {
       update_pens();
     }
+    BX_UNLOCK(fifo_mutex);
     v->fbi.video_changed = 0;
     s.vdraw.gui_update_pending = 1;
   }

@@ -2106,8 +2106,10 @@ void register_w(Bit32u offset, Bit32u data, bool log)
           int index = data >> 24;
           if (index <= 32)
           {
+            BX_LOCK(fifo_mutex);
             v->fbi.clut[index] = data;
             v->fbi.clut_dirty = 1;
+            BX_UNLOCK(fifo_mutex);
           }
         }
         else
