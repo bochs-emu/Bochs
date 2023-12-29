@@ -949,7 +949,7 @@ void bx_generic_cpuid_t::init_vmx_extensions_bitmask(void)
                             BX_VMX_EPTP_SWITCHING | BX_VMX_EPT_EXCEPTION;
 
         features_bitmask |= BX_VMX_SAVE_DEBUGCTL_DISABLE |
-                         /* BX_VMX_MONITOR_TRAP_FLAG | */ // not implemented yet
+                            BX_VMX_MONITOR_TRAP_FLAG |
                             BX_VMX_PERF_GLOBAL_CTRL;
       }
 #endif
