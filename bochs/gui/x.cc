@@ -65,7 +65,7 @@ public:
   virtual void set_font(bool lg);
   virtual void draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
                          Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
-                         bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs);
+                         bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs, bool font2);
   virtual void beep_on(float frequency);
   virtual void beep_off();
 #if BX_HAVE_XRANDR_H
@@ -143,7 +143,7 @@ static Bit32u convertStringToXKeysym(const char *string);
 
 static bool x_init_done = 0;
 
-static Pixmap vgafont[256];
+static Pixmap vgafont[2][256];
 
 // header bar
 static unsigned bx_bitmap_entries = 0;
@@ -356,9 +356,13 @@ void create_internal_vga_font(void)
   font_height=16;
 
   for(int i=0; i<256; i++) {
-    vgafont[i]=XCreateBitmapFromData(bx_x_display, win, (const char*)bx_vgafont[i].data,
+    vgafont[0][i]=XCreateBitmapFromData(bx_x_display, win, (const char*)bx_vgafont[i].data,
                                      font_width, font_height);
-    if(vgafont[i] == None)
+    if(vgafont[0][i] == None)
+      BX_PANIC(("Can't create vga font [%d]", i));
+    vgafont[1][i]=XCreateBitmapFromData(bx_x_display, win, (const char*)bx_vgafont[i].data,
+                                     font_width, font_height);
+    if(vgafont[1][i] == None)
       BX_PANIC(("Can't create vga font [%d]", i));
   }
 }
@@ -1173,68 +1177,71 @@ void bx_x_gui_c::set_font(bool lg)
   bool gfxchar, dwidth;
 
   BX_INFO(("charmap update. Font is %d x %d", font_width, font_height));
-  for (unsigned c = 0; c<256; c++) {
-    if (char_changed[c]) {
-      XFreePixmap(bx_x_display, vgafont[c]);
-      gfxchar = lg && ((c & 0xE0) == 0xC0);
-      dwidth = font_width > 9;
-      i = 0;
-      j = 0;
-      memset(cell, 0, sizeof(cell));
-      if (dwidth) {
-        do {
-          frow = vga_charmap[(c<<5)+j];
-          fmask = 0x80;
-          fbits = 0x03;
-          for (k=0; k<8; k++) {
-            if (frow & fmask) cell[i] |= fbits;
-            fmask >>= 1;
-            fbits <<= 2;
-            if (k == 3) {
-              i++;
-              fbits = 0x03;
+  for (unsigned m = 0; m < 2; m++) {
+    for (unsigned c = 0; c < 256; c++) {
+      if (char_changed[m][c]) {
+        XFreePixmap(bx_x_display, vgafont[m][c]);
+        gfxchar = lg && ((c & 0xE0) == 0xC0);
+        dwidth = font_width > 9;
+        i = 0;
+        j = 0;
+        memset(cell, 0, sizeof(cell));
+        if (dwidth) {
+          do {
+            frow = vga_charmap[m][(c<<5)+j];
+            fmask = 0x80;
+            fbits = 0x03;
+            for (k=0; k<8; k++) {
+              if (frow & fmask) cell[i] |= fbits;
+              fmask >>= 1;
+              fbits <<= 2;
+              if (k == 3) {
+                i++;
+                fbits = 0x03;
+              }
             }
-          }
-          if (gfxchar) {
-            if (frow & 0x01) cell[i+1] = 0x03;
-          }
-          i += 2;
-        } while (++j < font_height);
-        vgafont[c] = XCreateBitmapFromData(bx_x_display, win,
-                         (const char*)cell, 18, font_height);
-      } else {
-        do {
-          frow = vga_charmap[(c<<5)+j];
-          fmask = 0x80;
-          fbits = 0x01;
-          for (k=0; k<8; k++) {
-            if (frow & fmask) cell[i] |= fbits;
-            fmask >>= 1;
-            fbits <<= 1;
-          }
-          if (gfxchar) {
-            if (frow & 0x01) cell[i+1] = 0x01;
-          }
-          i += 2;
-        } while (++j < font_height);
-        vgafont[c] = XCreateBitmapFromData(bx_x_display, win,
-                         (const char*)cell, 9, font_height);
+            if (gfxchar) {
+              if (frow & 0x01) cell[i+1] = 0x03;
+            }
+            i += 2;
+          } while (++j < font_height);
+          vgafont[m][c] = XCreateBitmapFromData(bx_x_display, win,
+                            (const char*)cell, 18, font_height);
+        } else {
+          do {
+            frow = vga_charmap[m][(c<<5)+j];
+            fmask = 0x80;
+            fbits = 0x01;
+            for (k=0; k<8; k++) {
+              if (frow & fmask) cell[i] |= fbits;
+              fmask >>= 1;
+              fbits <<= 1;
+            }
+            if (gfxchar) {
+              if (frow & 0x01) cell[i+1] = 0x01;
+            }
+            i += 2;
+          } while (++j < font_height);
+          vgafont[m][c] = XCreateBitmapFromData(bx_x_display, win,
+                            (const char*)cell, 9, font_height);
+        }
+        if(vgafont[m][c] == None)
+          BX_PANIC(("Can't create vga font [%d]", c));
+        char_changed[m][c] = 0;
       }
-      if(vgafont[c] == None)
-        BX_PANIC(("Can't create vga font [%d]", c));
-      char_changed[c] = 0;
     }
   }
 }
 
 void bx_x_gui_c::draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
                            Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
-                           bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs)
+                           bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs, bool font2)
 {
   yc += bx_headerbar_y;
   XSetForeground(bx_x_display, gc, col_vals[fc]);
   XSetBackground(bx_x_display, gc, col_vals[bc]);
-  XCopyPlane(bx_x_display, vgafont[ch], win, gc, fx, fy, fw, fh, xc, yc, 1);
+  Bit8u m = (font2) ? 1 : 0;
+  XCopyPlane(bx_x_display, vgafont[m][ch], win, gc, fx, fy, fw, fh, xc, yc, 1);
   if (curs && (ce >= fy) && (cs < (fh + fy))) {
     if (cs > fy) {
       yc += (cs - fy);
@@ -1245,7 +1252,7 @@ void bx_x_gui_c::draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
     }
     XSetForeground(bx_x_display, gc, col_vals[bc]);
     XSetBackground(bx_x_display, gc, col_vals[fc]);
-    XCopyPlane(bx_x_display, vgafont[ch], win, gc, fx, cs, fw, fh, xc, yc, 1);
+    XCopyPlane(bx_x_display, vgafont[m][ch], win, gc, fx, cs, fw, fh, xc, yc, 1);
   }
 }
 
@@ -1393,7 +1400,8 @@ void bx_x_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsi
     if (fwidth != font_width) {
       font_width = fwidth;
       charmap_updated = 1;
-      for (int i = 0; i < 256; i++) char_changed[i] = 1;
+      for (int i = 0; i < 256; i++) char_changed[0][i] = 1;
+      for (int i = 0; i < 256; i++) char_changed[1][i] = 1;
     }
   }
   if ((x != dimension_x) || (y != dimension_y)) {
@@ -1560,7 +1568,8 @@ void bx_x_gui_c::exit(void)
   // Delete the font bitmaps
   for (int i=0; i<256; i++) {
     //if (vgafont[i] != NULL)
-    XFreePixmap(bx_x_display,vgafont[i]);
+    XFreePixmap(bx_x_display,vgafont[0][i]);
+    XFreePixmap(bx_x_display,vgafont[1][i]);
   }
 
   if (mouse_captured)

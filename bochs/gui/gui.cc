@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -150,7 +150,8 @@ bx_gui_c::bx_gui_c(void): disp_mode(DISP_MODE_SIM)
   command_mode.active = 0;
   marker_count = 0;
   memset(palette, 0, sizeof(palette));
-  memset(vga_charmap, 0, 0x2000);
+  memset(vga_charmap[0], 0, 0x2000);
+  memset(vga_charmap[1], 0, 0x2000);
 }
 
 bx_gui_c::~bx_gui_c()
@@ -906,17 +907,17 @@ void bx_gui_c::init_signal_handlers()
 #endif
 }
 
-void bx_gui_c::set_text_charmap(Bit8u *fbuffer)
+void bx_gui_c::set_text_charmap(Bit8u map, Bit8u *fbuffer)
 {
-  memcpy(& BX_GUI_THIS vga_charmap, fbuffer, 0x2000);
-  for (unsigned i=0; i<256; i++) BX_GUI_THIS char_changed[i] = 1;
+  memcpy(& BX_GUI_THIS vga_charmap[map], fbuffer, 0x2000);
+  for (unsigned i=0; i<256; i++) BX_GUI_THIS char_changed[map][i] = 1;
   BX_GUI_THIS charmap_updated = 1;
 }
 
-void bx_gui_c::set_text_charbyte(Bit16u address, Bit8u data)
+void bx_gui_c::set_text_charbyte(Bit8u map, Bit16u address, Bit8u data)
 {
-  BX_GUI_THIS vga_charmap[address] = data;
-  BX_GUI_THIS char_changed[address >> 5] = 1;
+  BX_GUI_THIS vga_charmap[map][address] = data;
+  BX_GUI_THIS char_changed[map][address >> 5] = 1;
   BX_GUI_THIS charmap_updated = 1;
 }
 
@@ -1159,7 +1160,7 @@ void bx_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
 void bx_gui_c::draw_char_common(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc,
                                 Bit16u yc, Bit8u fw, Bit8u fh, Bit8u fx,
                                 Bit8u fy, bool gfxcharw9, Bit8u cs, Bit8u ce,
-                                bool curs)
+                                bool curs, bool font2)
 {
   Bit8u *buf, *font_ptr, fontpixels;
   Bit16u font_row, mask;
@@ -1167,7 +1168,11 @@ void bx_gui_c::draw_char_common(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc,
 
   buf = BX_GUI_THIS snapshot_buffer + yc * BX_GUI_THIS guest_xres + xc;
   dwidth = (BX_GUI_THIS guest_fwidth > 9);
-  font_ptr = &vga_charmap[(ch << 5) + fy];
+  if (font2) {
+    font_ptr = &vga_charmap[1][(ch << 5) + fy];
+  } else {
+    font_ptr = &vga_charmap[0][(ch << 5) + fy];
+  }
   do {
     font_row = *font_ptr++;
     if (gfxcharw9) {
@@ -1205,7 +1210,7 @@ void bx_gui_c::text_update_common(Bit8u *old_text, Bit8u *new_text,
   Bit8u cfheight, cfwidth, cfrow, cfcol, fgcolor, bgcolor;
   Bit8u split_textrow, split_fontrows, x, y;
   Bit8u *new_line, *old_line, *text_base;
-  bool cursor_visible, gfxcharw9, split_screen;
+  bool cursor_visible, gfxcharw9, split_screen, font2;
   bool forceUpdate = 0, blink_mode = 0, blink_state = 0;
 
   if (BX_GUI_THIS snapshot_mode || BX_GUI_THIS new_text_api) {
@@ -1313,17 +1318,18 @@ void bx_gui_c::text_update_common(Bit8u *old_text, Bit8u *new_text,
           } else {
             bgcolor = tm_info->actl_palette[(new_text[1] >> 4) & 0x0F];
           }
+          font2 = (new_text[1] & 0x08) > 0;
           gfxcharw9 = ((tm_info->line_graphics) && ((new_text[0] & 0xE0) == 0xC0));
           if (BX_GUI_THIS snapshot_mode) {
             BX_GUI_THIS draw_char_common(new_text[0], fgcolor, bgcolor, xc, yc,
                                          cfwidth, cfheight, cfcol, cfrow,
                                          gfxcharw9, tm_info->cs_start,
-                                         tm_info->cs_end, (offset == curs));
+                                         tm_info->cs_end, (offset == curs), font2);
           } else {
             BX_GUI_THIS draw_char(new_text[0], fgcolor, bgcolor, xc, yc,
                                   cfwidth, cfheight, cfcol, cfrow,
                                   gfxcharw9, tm_info->cs_start,
-                                  tm_info->cs_end, (offset == curs));
+                                  tm_info->cs_end, (offset == curs), font2);
           }
         }
         new_text += 2;
@@ -1432,10 +1438,10 @@ void bx_gui_c::console_init(void)
   console.saved_bpp = guest_bpp;
   console.saved_fwidth = guest_fwidth;
   console.saved_fheight = guest_fheight;
-  memcpy(console.saved_charmap, BX_GUI_THIS vga_charmap, 0x2000);
+  memcpy(console.saved_charmap, BX_GUI_THIS vga_charmap[0], 0x2000);
   for (i = 0; i < 256; i++) {
-    memcpy(&BX_GUI_THIS vga_charmap[0]+i*32, &sdl_font8x16[i], 16);
-    BX_GUI_THIS char_changed[i] = 1;
+    memcpy(&BX_GUI_THIS vga_charmap[0][0]+i*32, &sdl_font8x16[i], 16);
+    BX_GUI_THIS char_changed[0][i] = 1;
   }
   BX_GUI_THIS charmap_updated = 1;
   console.cursor_x = 0;
@@ -1465,7 +1471,7 @@ void bx_gui_c::console_cleanup(void)
                         console.saved_palette[28]);
   unsigned fheight = (console.saved_fheight);
   unsigned fwidth = (console.saved_fwidth);
-  set_text_charmap(console.saved_charmap);
+  set_text_charmap(0, console.saved_charmap);
   dimension_update(console.saved_xres, console.saved_yres, fheight, fwidth,
                    console.saved_bpp);
   DEV_vga_refresh(1);
