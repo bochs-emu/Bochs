@@ -121,6 +121,8 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(Bit32u eipBiased, bx_phy_address pAdd
     (BX_SMP_PROCESSORS > 1) ? SIM->get_param_num(BXPN_SMP_QUANTUM)->get() :
 #endif
     BX_MAX_TRACE_LENGTH;
+  if (bx_dbg.debugger_active)
+    quantum = 1;
 
   for (unsigned n=0;n < quantum;n++)
   {
