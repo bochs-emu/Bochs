@@ -23,6 +23,7 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu.h"
+#include "cpuid.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 #include "pc_system.h"

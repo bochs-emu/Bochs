@@ -843,8 +843,7 @@ struct monitor_addr_t {
 struct BX_SMM_State;
 struct BxOpcodeInfo_t;
 struct bx_cpu_statistics;
-
-#include "cpuid.h"
+class bx_cpuid_t;
 
 class BOCHSAPI BX_CPU_C : public logfunctions {
 public: // for now...
