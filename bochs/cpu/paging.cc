@@ -2338,18 +2338,20 @@ bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx_ad
 
 #if BX_CPU_LEVEL >= 6
     if (BX_CPU_THIS_PTR cr4.get_PAE()) {
-      int level = BX_CPU_THIS_PTR cr4.get_LA57() ? BX_LEVEL_PML5 : BX_LEVEL_PML4;
-      offset_mask = ((BX_CONST64(1) << BX_CPU_THIS_PTR linaddr_width) - 1);
+      int level = BX_LEVEL_PDE;
       if (! long_mode()) {
+        offset_mask = 0x3fffffff;
         pt_address = BX_CPU_THIS_PTR PDPTR_CACHE.entry[(laddr >> 30) & 3];
-        if (! (pt_address & 0x1)) {
-           offset_mask = 0x3fffffff;
+        if (! (pt_address & 0x1))
            goto page_fault;
-        }
-        offset_mask >>= 18;
         pt_address &= BX_CONST64(0x000ffffffffff000);
-        level = BX_LEVEL_PDE;
       }
+#if BX_SUPPORT_X86_64
+      else {
+        level = BX_CPU_THIS_PTR cr4.get_LA57() ? BX_LEVEL_PML5 : BX_LEVEL_PML4;
+        offset_mask = ((BX_CONST64(1) << BX_CPU_THIS_PTR linaddr_width) - 1);
+      }
+#endif
 
       for (; level >= 0; --level) {
         Bit64u pte;
