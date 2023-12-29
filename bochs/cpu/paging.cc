@@ -533,13 +533,14 @@ void BX_CPU_C::page_fault(unsigned fault, bx_address laddr, unsigned user, unsig
 }
 
 enum {
+  BX_LEVEL_PML5 = 4,
   BX_LEVEL_PML4 = 3,
   BX_LEVEL_PDPTE = 2,
   BX_LEVEL_PDE = 1,
   BX_LEVEL_PTE = 0
 };
 
-static const char *bx_paging_level[4] = { "PTE", "PDE", "PDPE", "PML4" }; // keep it 4 letters
+static const char *bx_paging_level[5] = { "PTE", "PDE", "PDPE", "PML4", "PML5" }; // keep it 4 letters
 
 // combined_access legend:
 // -----------------------
@@ -697,9 +698,8 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
   BxMemtype entry_memtype[4] = { 0 };
 
   bool nx_fault = false;
-  int leaf;
 
-  Bit64u offset_mask = BX_CONST64(0x0000ffffffffffff);
+  Bit64u offset_mask = ((BX_CONST64(1) << BX_CPU_THIS_PTR linaddr_width) - 1);
   lpf_mask = 0xfff;
   Bit32u combined_access = (BX_COMBINED_ACCESS_WRITE | BX_COMBINED_ACCESS_USER);
   Bit64u curr_entry = BX_CPU_THIS_PTR cr3;
@@ -708,7 +708,9 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
   if (! BX_CPU_THIS_PTR efer.get_NXE())
     reserved |= PAGE_DIRECTORY_NX_BIT;
 
-  for (leaf = BX_LEVEL_PML4;; --leaf) {
+  int start_leaf = BX_CPU_THIS_PTR cr4.get_LA57() ? BX_LEVEL_PML5 : BX_LEVEL_PML4, leaf = start_leaf;
+
+  for (;; --leaf) {
     entry_addr[leaf] = ppf + ((laddr >> (9 + 9*leaf)) & 0xff8);
 #if BX_SUPPORT_VMX >= 2
     if (BX_CPU_THIS_PTR in_vmx_guest) {
@@ -854,7 +856,7 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
 #endif
 
   // Update A/D bits if needed
-  update_access_dirty_PAE(entry_addr, entry, entry_memtype, BX_LEVEL_PML4, leaf, isWrite);
+  update_access_dirty_PAE(entry_addr, entry, entry_memtype, start_leaf, leaf, isWrite);
 
   return (ppf | combined_access);
 }
@@ -1654,19 +1656,20 @@ bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsig
   Bit64u entry[4];
   BxMemtype entry_memtype[4] = { BX_MEMTYPE_INVALID };
   bool nx_fault = false;
-  int leaf;
 
   SVM_CONTROLS *ctrls = &BX_CPU_THIS_PTR vmcb.ctrls;
   SVM_HOST_STATE *host_state = &BX_CPU_THIS_PTR vmcb.host_state;
   bx_phy_address ppf = ctrls->ncr3 & BX_CR3_PAGING_MASK;
-  Bit64u offset_mask = BX_CONST64(0x0000ffffffffffff);
+  Bit64u offset_mask = ((BX_CONST64(1) << BX_CPU_THIS_PTR linaddr_width) - 1);
   unsigned combined_access = BX_COMBINED_ACCESS_WRITE | BX_COMBINED_ACCESS_USER;
 
   Bit64u reserved = PAGING_PAE_RESERVED_BITS;
   if (! host_state->efer.get_NXE())
     reserved |= PAGE_DIRECTORY_NX_BIT;
 
-  for (leaf = BX_LEVEL_PML4;; --leaf) {
+  int start_leaf = BX_CPU_THIS_PTR cr4.get_LA57() ? BX_LEVEL_PML5 : BX_LEVEL_PML4, leaf = start_leaf;
+
+  for (;; --leaf) {
     entry_addr[leaf] = ppf + ((guest_paddr >> (9 + 9*leaf)) & 0xff8);
     entry[leaf] = read_physical_qword(entry_addr[leaf], BX_MEMTYPE_INVALID, AccessReason(BX_PTE_ACCESS + leaf));
     offset_mask >>= 9;
@@ -1705,7 +1708,7 @@ bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsig
     nested_page_fault(ERROR_PROTECTION, guest_paddr, rw, is_page_walk);
 
   // Update A/D bits if needed
-  update_access_dirty_PAE(entry_addr, entry, entry_memtype, BX_LEVEL_PML4, leaf, isWrite);
+  update_access_dirty_PAE(entry_addr, entry, entry_memtype, start_leaf, leaf, isWrite);
 
   // Make up the physical page frame address
   return ppf | (bx_phy_address)(guest_paddr & offset_mask);
@@ -2268,7 +2271,7 @@ bool BX_CPU_C::dbg_translate_guest_physical_ept(bx_phy_address guest_paddr, bx_p
   bx_phy_address pt_address = LPFOf(vm->eptptr);
   Bit64u offset_mask = BX_CONST64(0x0000ffffffffffff);
 
-  for (int level = 3; level >= 0; --level) {
+  for (int level = BX_LEVEL_PML4; level >= 0; --level) {
     Bit64u pte;
     pt_address += ((guest_paddr >> (9 + 9*level)) & 0xff8);
     offset_mask >>= 9;
@@ -2335,9 +2338,8 @@ bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx_ad
 
 #if BX_CPU_LEVEL >= 6
     if (BX_CPU_THIS_PTR cr4.get_PAE()) {
-      offset_mask = BX_CONST64(0x0000ffffffffffff);
-
-      int level = 3;
+      int level = BX_CPU_THIS_PTR cr4.get_LA57() ? BX_LEVEL_PML5 : BX_LEVEL_PML4;
+      offset_mask = ((BX_CONST64(1) << BX_CPU_THIS_PTR linaddr_width) - 1);
       if (! long_mode()) {
         pt_address = BX_CPU_THIS_PTR PDPTR_CACHE.entry[(laddr >> 30) & 3];
         if (! (pt_address & 0x1)) {
@@ -2346,7 +2348,7 @@ bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx_ad
         }
         offset_mask >>= 18;
         pt_address &= BX_CONST64(0x000ffffffffff000);
-        level = 1;
+        level = BX_LEVEL_PDE;
       }
 
       for (; level >= 0; --level) {
@@ -2394,7 +2396,7 @@ bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx_ad
 #endif
     {
       offset_mask = 0xfff;
-      for (int level = 1; level >= 0; --level) {
+      for (int level = BX_LEVEL_PDE; level >= 0; --level) {
         Bit32u pte;
         pt_address += ((laddr >> (10 + 10*level)) & 0xffc);
 #if BX_SUPPORT_VMX >= 2

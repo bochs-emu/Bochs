@@ -717,10 +717,12 @@ void bx_dbg_phy_memory_access(unsigned cpu, bx_phy_address phy, unsigned len, un
     "PDE",
     "PDPTE",
     "PML4E",
+    "PML5E",
     "EPT PTE",
     "EPT PDE",
     "EPT PDPTE",
     "EPT PML4E",
+    "EPT PML5E", // place holder
     "EPT SPP PTE",
     "EPT SPP PDE",
     "EPT SPP PDPTE",

@@ -140,6 +140,7 @@ x86_feature(BX_ISA_WRMSRNS, "wrmsrns")                                  /* Non-S
 x86_feature(BX_ISA_CMPCCXADD, "cmpccxadd")                              /* CMPccXADD instructions */
 x86_feature(BX_ISA_SERIALIZE, "serialize")                              /* SERIALIZE instruction */
 x86_feature(BX_ISA_LASS, "lass")                                        /* Linear Address Space Separation support */
+x86_feature(BX_ISA_LA57, "la57")                                        /* 57-bit Virtual Address and 5-level paging support */
 x86_feature(BX_ISA_UINTR, "uintr")                                      /* User Level Interrupts support */
 x86_feature(BX_ISA_MOVDIRI, "movdiri")                                  /* MOVDIRI instruction support */
 x86_feature(BX_ISA_MOVDIR64B, "movdir64b")                              /* MOVDIR64B instruction support */

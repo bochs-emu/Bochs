@@ -153,7 +153,7 @@ struct bx_cr4_t {
   BX_CPP_INLINE void set32(Bit32u val) { val32 = val; }
 };
 
-const Bit32u BX_CR4_FLUSH_TLB_MASK = (BX_CR4_PSE_MASK | BX_CR4_PAE_MASK | BX_CR4_PGE_MASK | BX_CR4_PCIDE_MASK | BX_CR4_SMEP_MASK | BX_CR4_SMAP_MASK | BX_CR4_PKE_MASK | BX_CR4_CET_MASK | BX_CR4_PKS_MASK | BX_CR4_LASS_MASK);
+const Bit32u BX_CR4_FLUSH_TLB_MASK = (BX_CR4_PSE_MASK | BX_CR4_PAE_MASK | BX_CR4_PGE_MASK | BX_CR4_LA57_MASK | BX_CR4_PCIDE_MASK | BX_CR4_SMEP_MASK | BX_CR4_SMAP_MASK | BX_CR4_PKE_MASK | BX_CR4_CET_MASK | BX_CR4_PKS_MASK | BX_CR4_LASS_MASK);
 
 #endif  // #if BX_CPU_LEVEL >= 5
 
@@ -398,7 +398,7 @@ typedef struct msr {
      switch(type) {
 #if BX_SUPPORT_X86_64
        case BX_LIN_ADDRESS_MSR:
-         if (! IsCanonical(new_val)) return 0;
+         if (! IsCanonical48(new_val)) return 0;
          break;
 #endif
        case BX_PHY_ADDRESS_MSR:

@@ -1152,6 +1152,10 @@ bool BX_CPU_C::SetCR0(bxInstruction_c *i, bx_address val)
 #endif
   }
 
+#if BX_SUPPORT_X86_64
+  BX_CPU_THIS_PTR linaddr_width = BX_CPU_THIS_PTR cr4.get_LA57() ? 57 : 48;
+#endif
+
   return true;
 }
 
@@ -1177,7 +1181,7 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
   //   [15]    Reserved, Must be Zero
   //   [14]    SMXE: SMX Extensions R/W
   //   [13]    VMXE: VMX Extensions R/W
-  //   [12]    Reserved, Must be Zero
+  //   [12]    LA57, 57-bit Linear Address and 5-level paging
   //   [11]    UMIP: User Mode Instruction Prevention R/W
   //   [10]    OSXMMEXCPT: Operating System Unmasked Exception Support R/W
   //   [9]     OSFXSR: Operating System FXSAVE/FXRSTOR Support R/W
@@ -1260,6 +1264,11 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
   if (is_cpu_extension_supported(BX_ISA_UMIP))
     allowMask |= BX_CR4_UMIP_MASK;
 
+#if BX_SUPPORT_X86_64
+  if (is_cpu_extension_supported(BX_ISA_LA57))
+    allowMask |= BX_CR4_LA57_MASK;
+#endif
+
 #if BX_SUPPORT_CET
   if (is_cpu_extension_supported(BX_ISA_CET))
     allowMask |= BX_CR4_CET_MASK;
@@ -1297,6 +1306,11 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::check_CR4(bx_address cr4_val)
   if (long_mode()) {
     if(! temp_cr4.get_PAE()) {
       BX_ERROR(("check_CR4(): attempt to clear CR4.PAE when EFER.LMA=1"));
+      return false;
+    }
+
+    if(! temp_cr4.get_LA57()) {
+      BX_ERROR(("check_CR4(): attempt to clear CR4.LA57 when EFER.LMA=1"));
       return false;
     }
   }
@@ -1386,6 +1400,10 @@ bool BX_CPU_C::SetCR4(bxInstruction_c *i, bx_address val)
   // re-calculate protection keys if CR4.PKE/CR4.PKS was set
 #if BX_SUPPORT_PKEYS
   set_PKeys(BX_CPU_THIS_PTR pkru, BX_CPU_THIS_PTR pkrs);
+#endif
+
+#if BX_SUPPORT_X86_64
+  BX_CPU_THIS_PTR linaddr_width = BX_CPU_THIS_PTR cr4.get_LA57() ? 57 : 48;
 #endif
 
   return true;

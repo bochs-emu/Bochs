@@ -284,10 +284,12 @@ enum AccessReason {
   BX_PDE_ACCESS,
   BX_PDTE_ACCESS,
   BX_PML4E_ACCESS,
+  BX_PML5E_ACCESS,
   BX_EPT_PTE_ACCESS,
   BX_EPT_PDE_ACCESS,
   BX_EPT_PDTE_ACCESS,
   BX_EPT_PML4E_ACCESS,
+  BX_EPT_PML5E_ACCESS, // place holder
   BX_EPT_SPP_PTE_ACCESS,
   BX_EPT_SPP_PDE_ACCESS,
   BX_EPT_SPP_PDTE_ACCESS,
@@ -357,10 +359,13 @@ const unsigned BX_MSR_MAX_INDEX = 0x1000;
 extern const char* cpu_mode_string(unsigned cpu_mode);
 
 #if BX_SUPPORT_X86_64
-BX_CPP_INLINE bool IsCanonical(bx_address offset)
+BX_CPP_INLINE bool IsCanonicalToWidth(bx_address addr, unsigned LIN_ADDRESS_WIDTH)
 {
-  return ((Bit64u)((((Bit64s)(offset)) >> (BX_LIN_ADDRESS_WIDTH-1)) + 1) < 2);
+  return ((Bit64u)((((Bit64s)(addr)) >> (LIN_ADDRESS_WIDTH-1)) + 1) < 2);
 }
+
+BX_CPP_INLINE bool IsCanonical48(bx_address addr) { return IsCanonicalToWidth(addr, 48); }
+BX_CPP_INLINE bool IsCanonical57(bx_address addr) { return IsCanonicalToWidth(addr, 57); }
 #endif
 
 BX_CPP_INLINE bool IsValidPhyAddr(bx_phy_address addr)
@@ -944,6 +949,9 @@ public: // for now...
 #if BX_CPU_LEVEL >= 5
   bx_cr4_t   cr4;
   Bit32u cr4_suppmask;
+#if BX_SUPPORT_X86_64
+  unsigned linaddr_width;
+#endif
 
   bx_efer_t efer;
   Bit32u efer_suppmask;
@@ -4146,6 +4154,10 @@ public: // for now...
   {
     BX_CPU_THIS_PTR espPageWindowSize = 0;
   }
+
+#if BX_SUPPORT_X86_64
+  BX_SMF BX_CPP_INLINE bool IsCanonical(bx_address addr) { return IsCanonicalToWidth(addr, BX_CPU_THIS_PTR linaddr_width); }
+#endif
 
   BX_SMF bool write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len, bool align = false) BX_CPP_AttrRegparmN(4);
   BX_SMF bool read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len, bool align = false) BX_CPP_AttrRegparmN(4);

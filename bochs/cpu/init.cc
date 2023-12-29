@@ -688,6 +688,10 @@ void BX_CPU_C::after_restore_state(void)
   set_PKeys(BX_CPU_THIS_PTR pkru, BX_CPU_THIS_PTR pkrs);
 #endif
 
+#if BX_SUPPORT_X86_64
+  BX_CPU_THIS_PTR linaddr_width = BX_CPU_THIS_PTR cr4.get_LA57() ? 57 : 48;
+#endif
+
   handleCpuContextChange();
 
   assert_checks();
@@ -895,6 +899,9 @@ void BX_CPU_C::reset(unsigned source)
 #if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR cr4.set32(0);
   BX_CPU_THIS_PTR cr4_suppmask = get_cr4_allow_mask();
+#if BX_SUPPORT_X86_64
+  BX_CPU_THIS_PTR linaddr_width = 48;
+#endif
 #endif
 
 #if BX_CPU_LEVEL >= 6

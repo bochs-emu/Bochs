@@ -8,9 +8,10 @@ Brief summary :
   ! Implemented VMX MBE (Mode Based Execution Control) emulation required for Windows 11 guest
   ! Implemented Posted-Interrupt Processing VMX extension emulation
   ! Implemented Linear Address Separation (LASS) extension
+  ! Implemented 57-bit Linear Address and 5-Level Paging support
   ! Implemented User-Level Interrupt (UINTR) extension
   ! Implemented recently published Intel instruction sets:
-    - MOVDIRI/MOVDIR64B, AVX512 BF16, AVX IFMA52, VNNI-INT8/VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3, SM4, SHA512, WRMSRNS, MSRLIST, WAITPKG, SERIALIZE
+    - MOVDIRI/MOVDIR64B, AVX512 BF16, AVX IFMA52, VNNI-INT8/VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3/SM4, SHA512, WRMSRNS, MSRLIST, WAITPKG, SERIALIZE
   - Improved 64-bit guest support in Bochs internal debugger, added new internal debugger commands
   - Bochs debugger enhanced with new commands (setpmem, loadmem, deref, ...)
     Enhanced magic breakpoint capabilities. Refer to user documentation for more details.
@@ -35,9 +36,10 @@ Detailed change log :
   - Implemented VMX MBE (Mode Based Execution Control) emulation required for Windows 11 guest
   - Implemented Posted-Interrupt Processing VMX extension emulation
   - Implemented Linear Address Separation (LASS) extension
+  - Implemented 57-bit Linear Address and 5-Level Paging support
   - Implemented User-Level Interrupt (UINTR) extension
   - Implemented recently published Intel instruction sets:
-    - MOVDIRI/MOVDIR64B, AVX512 BF16, AVX IFMA52, VNNI-INT8/VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3, SM4, SHA512, WRMSRNS, MSRLIST, WAITPKG, SERIALIZE
+    - MOVDIRI/MOVDIR64B, AVX512 BF16, AVX IFMA52, VNNI-INT8/VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3/SM4, SHA512, WRMSRNS, MSRLIST, WAITPKG, SERIALIZE
 
 - Bochs Debugger and Instrumentation
   - Updated Bochs instrumentation examples for new disassembler introduced in Bochs 2.7 release.

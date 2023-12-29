@@ -475,12 +475,6 @@ typedef Bit32u bx_address;
 // define physical and linear address types
 typedef bx_address bx_lin_address;
 
-#if BX_SUPPORT_X86_64
-#define BX_LIN_ADDRESS_WIDTH 48
-#else
-#define BX_LIN_ADDRESS_WIDTH 32
-#endif
-
 #if BX_PHY_ADDRESS_LONG
 typedef Bit64u bx_phy_address;
 #if BX_CPU_LEVEL == 5

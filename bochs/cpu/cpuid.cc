@@ -927,7 +927,13 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_ecx(Bit32u extra) const
 #endif
 
   // [15:15] reserved
-  // [16:16] LA57: LA57 and 5-level paging - not supported
+
+  // [16:16] LA57: LA57 and 5-level paging
+#if BX_SUPPORT_X86_64
+  if (is_cpu_extension_supported(BX_ISA_LA57))
+    ecx |= BX_CPUID_STD7_SUBLEAF0_ECX_LA57;
+#endif
+
   // [17:17] reserved
   // [18:18] reserved
   // [19:19] reserved
@@ -1152,7 +1158,8 @@ void bx_cpuid_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
   // virtual & phys address size in low 2 bytes of EAX.
   // TODO: physical address width should be 32-bit when no PSE-36 is supported
   Bit32u phy_addr_width = BX_PHY_ADDRESS_WIDTH;
-  Bit32u lin_addr_width = is_cpu_extension_supported(BX_ISA_LONG_MODE) ? BX_LIN_ADDRESS_WIDTH : 32;
+  Bit32u lin_addr_width = is_cpu_extension_supported(BX_ISA_LONG_MODE) ? 
+                                (is_cpu_extension_supported(BX_ISA_LA57) ? 57 : 48) : 32;
 
   leaf->eax = phy_addr_width | (lin_addr_width << 8);
 
