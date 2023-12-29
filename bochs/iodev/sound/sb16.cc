@@ -1336,7 +1336,7 @@ void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
         }
       }
     }
-    DSP.dma.chunkcount = sampledatarate / 10; // 0.1 sec
+    DSP.dma.chunkcount = (sampledatarate / 10 + 4) & ~3; // 0.1 sec + alignment to 4 (for 16-bit stereo)
     if (DSP.dma.chunkcount > BX_SOUNDLOW_WAVEPACKETSIZE) {
       DSP.dma.chunkcount = BX_SOUNDLOW_WAVEPACKETSIZE;
     }
