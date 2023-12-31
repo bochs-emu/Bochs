@@ -1203,7 +1203,7 @@ void bx_init_options()
       "serial_delay", "Keyboard serial delay",
       "Approximate time in microseconds that it takes one character to be transferred from the keyboard to controller over the serial path.",
       5, BX_MAX_BIT32U,
-      250);
+      150);
   new bx_param_num_c(keyboard,
       "paste_delay", "Keyboard paste delay",
       "Approximate time in microseconds between attempts to paste characters to the keyboard controller.",

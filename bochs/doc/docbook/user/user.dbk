@@ -3934,7 +3934,7 @@ update timing for all models is controlled by the related
 <para>
 Examples:
 <screen>
-  keyboard: type=mf, serial_delay=200, paste_delay=100000
+  keyboard: type=mf, serial_delay=150, paste_delay=100000
   keyboard: keymap=gui/keymaps/x11-pc-de.map
   keyboard: user_shortcut=ctrl-alt-del
 </screen>

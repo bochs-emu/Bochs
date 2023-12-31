@@ -531,7 +531,7 @@ vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
 #   keyboard: keymap=gui/keymaps/x11-pc-de.map
 #   keyboard: user_shortcut=ctrl-alt-del
 #=======================================================================
-#keyboard: type=mf, serial_delay=250
+#keyboard: type=mf, serial_delay=150
 
 #=======================================================================
 # MOUSE:
