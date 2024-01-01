@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2023  The Bochs Project
+//  Copyright (C) 2001-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1176,7 +1176,7 @@ void bx_x_gui_c::set_font(bool lg)
   unsigned char cell[96];
   bool gfxchar, dwidth;
 
-  BX_INFO(("charmap update. Font is %d x %d", font_width, font_height));
+  BX_DEBUG(("charmap update. Font is %d x %d", font_width, font_height));
   for (unsigned m = 0; m < 2; m++) {
     for (unsigned c = 0; c < 256; c++) {
       if (char_changed[m][c]) {
