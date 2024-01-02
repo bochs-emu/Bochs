@@ -426,7 +426,11 @@ void bx_banshee_c::draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *i
         } else if ((ccode == 2) || (ccode == 7)) {
           colour = v->banshee.hwcursor.color[1];
         } else {
-          vid_ptr = disp_ptr + y * pitch + x * (v->banshee.disp_bpp >> 3);
+          if (v->banshee.half_mode) {
+            vid_ptr = disp_ptr + (y >> 1) * pitch + x * (v->banshee.disp_bpp >> 3);
+          } else {
+            vid_ptr = disp_ptr + y * pitch + x * (v->banshee.disp_bpp >> 3);
+          }
           switch (v->banshee.disp_bpp) {
             case 8:
               if (info->is_indexed) {
@@ -607,6 +611,7 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
   bool prev_hwce = v->banshee.hwcursor.enabled;
   Bit16u prev_hwcx = v->banshee.hwcursor.x;
   Bit16u prev_hwcy = v->banshee.hwcursor.y;
+  Bit16u x0, y0;
   bool mode_change = 0;
 
   BX_DEBUG(("banshee write to offset 0x%02x: value = 0x%08x len=%d (%s)", offset, value,
@@ -713,8 +718,9 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
       v->banshee.hwcursor.enabled = ((v->banshee.io[reg] >> 27) & 1);
       v->banshee.hwcursor.mode = ((v->banshee.io[reg] >> 1) & 1);
       if (v->banshee.hwcursor.enabled != prev_hwce) {
-        theVoodooVga->redraw_area(v->banshee.hwcursor.x - 63, v->banshee.hwcursor.y - 63,
-                                  v->banshee.hwcursor.x, v->banshee.hwcursor.y);
+        x0 = (v->banshee.hwcursor.x < 63) ? 0 : (v->banshee.hwcursor.x - 63);
+        y0 = (v->banshee.hwcursor.y < 63) ? 0 : (v->banshee.hwcursor.y - 63);
+        theVoodooVga->redraw_area(x0, y0, 64, 64);
       }
       if ((v->banshee.io[reg] >> 2) & 1) {
         BX_ERROR(("vidProcCfg: overlay stereo mode not supported yet"));
@@ -732,8 +738,9 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
       v->banshee.io[reg] = value;
       v->banshee.hwcursor.addr = v->banshee.io[reg] & 0xffffff;
       if (v->banshee.hwcursor.enabled && (value != old)) {
-        theVoodooVga->redraw_area(v->banshee.hwcursor.x - 63, v->banshee.hwcursor.y - 63,
-                                  v->banshee.hwcursor.x, v->banshee.hwcursor.y);
+        x0 = (v->banshee.hwcursor.x < 63) ? 0 : (v->banshee.hwcursor.x - 63);
+        y0 = (v->banshee.hwcursor.y < 63) ? 0 : (v->banshee.hwcursor.y - 63);
+        theVoodooVga->redraw_area(x0, y0, 64, 64);
       }
       break;
 
@@ -742,9 +749,12 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
       v->banshee.hwcursor.x = v->banshee.io[reg] & 0x7ff;
       v->banshee.hwcursor.y = (v->banshee.io[reg] >> 16) & 0x7ff;
       if (v->banshee.hwcursor.enabled && (value != old)) {
-        theVoodooVga->redraw_area(prev_hwcx - 63, prev_hwcy - 63, prev_hwcx, prev_hwcy);
-        theVoodooVga->redraw_area(v->banshee.hwcursor.x - 63, v->banshee.hwcursor.y - 63,
-                                  v->banshee.hwcursor.x, v->banshee.hwcursor.y);
+        x0 = (prev_hwcx < 63) ? 0 : (prev_hwcx - 63);
+        y0 = (prev_hwcy < 63) ? 0 : (prev_hwcy - 63);
+        theVoodooVga->redraw_area(prev_hwcx - 63, prev_hwcy - 63, 64, 64);
+        x0 = (v->banshee.hwcursor.x < 63) ? 0 : (v->banshee.hwcursor.x - 63);
+        y0 = (v->banshee.hwcursor.y < 63) ? 0 : (v->banshee.hwcursor.y - 63);
+        theVoodooVga->redraw_area(x0, y0, 64, 64);
       }
       break;
 
@@ -1612,6 +1622,10 @@ void bx_banshee_c::blt_complete()
         y = BLT.dst_y;
         h = BLT.src_y - BLT.dst_y + 1;
       }
+    }
+    if (v->banshee.half_mode) {
+      y <<= 1;
+      h <<= 1;
     }
     theVoodooVga->redraw_area(x, y, w, h);
   }
