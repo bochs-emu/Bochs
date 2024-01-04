@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -761,6 +761,7 @@ void pit_82C54::write(Bit8u address, Bit8u data)
       case LSByte_multiple:
         thisctr.inlatch = data;
         thisctr.write_state = MSByte_multiple;
+        thisctr.count_written = 0;
         break;
       case LSByte:
         thisctr.inlatch = data;
@@ -779,13 +780,13 @@ void pit_82C54::write(Bit8u address, Bit8u data)
         BX_ERROR(("write counter in invalid write state."));
         break;
       }
-      if (thisctr.count_written && thisctr.write_state != MSByte_multiple) {
+      if (thisctr.count_written) {
         thisctr.null_count = 1;
         set_count(thisctr, thisctr.inlatch);
       }
       switch(thisctr.mode) {
       case 0:
-        if (thisctr.write_state==MSByte_multiple) {
+        if (thisctr.count_written) {
           set_OUT(thisctr,0);
         }
         thisctr.next_change_time=1;
