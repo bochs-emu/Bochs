@@ -87,8 +87,8 @@ BX_CPP_INLINE static Bit32u ilog2(Bit32u x)
 void bx_cpuid_t::get_std_cpuid_extended_topology_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
 {
   // CPUID function 0x0000000B - Extended Topology Leaf
-  leaf->eax = 0;
-  leaf->ebx = 0;
+  leaf->eax = (subfunction == 0);
+  leaf->ebx = (subfunction == 0);   // number of logical CPUs at this level
   leaf->ecx = subfunction;
   leaf->edx = cpu->get_apic_id();
 

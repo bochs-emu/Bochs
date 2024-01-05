@@ -12,6 +12,7 @@ Brief summary :
   ! Implemented User-Level Interrupt (UINTR) extension
   ! Implemented recently published Intel instruction sets:
     - MOVDIRI/MOVDIR64B, AVX512 BF16, AVX IFMA52, VNNI-INT8/VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3/SM4, SHA512, WRMSRNS, MSRLIST, WAITPKG, SERIALIZE
+  ! CPUID: Added Xeon Sapphire Rapids CPU definition
   - Improved 64-bit guest support in Bochs internal debugger, added new internal debugger commands
   - Bochs debugger enhanced with new commands (setpmem, loadmem, deref, ...)
     Enhanced magic breakpoint capabilities. Refer to user documentation for more details.
@@ -40,6 +41,9 @@ Detailed change log :
   - Implemented User-Level Interrupt (UINTR) extension
   - Implemented recently published Intel instruction sets:
     - MOVDIRI/MOVDIR64B, AVX512 BF16, AVX IFMA52, VNNI-INT8/VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3/SM4, SHA512, WRMSRNS, MSRLIST, WAITPKG, SERIALIZE
+  - CPUID: Added Xeon Sapphire Rapids CPU definition
+    - Features PKS, WAITPKG, UINTR, AVX512_BF16, MOVDIRI/MOVDIR64, LA57, SERIALIZE and more
+      Not yet supported but will be added in future: AVX512_FP16, AMX
 
 - Bochs Debugger and Instrumentation
   - Updated Bochs instrumentation examples for new disassembler introduced in Bochs 2.7 release.
