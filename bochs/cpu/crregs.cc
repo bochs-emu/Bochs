@@ -1310,11 +1310,9 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::check_CR4(bx_address cr4_val)
       return false;
     }
 
-    if(! temp_cr4.get_LA57()) {
-      if (BX_CPU_THIS_PTR cr4.get_LA57()) {
-        BX_ERROR(("check_CR4(): attempt to clear CR4.LA57 when EFER.LMA=1"));
-        return false;
-      }
+    if(temp_cr4.get_LA57() != BX_CPU_THIS_PTR cr4.get_LA57()) {
+      BX_ERROR(("check_CR4(): attempt to change CR4.LA57 when EFER.LMA=1"));
+      return false;
     }
   }
   else {
