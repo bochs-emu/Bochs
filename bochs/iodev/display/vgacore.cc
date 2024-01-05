@@ -1470,7 +1470,7 @@ void bx_vgacore_c::update(void)
                   for (c=0; c<X_TILESIZE; c++) {
                     x = (xc + c) >> 1;
                     plane  = (x % 4);
-                    byte_offset = row_addr + (plane << 16) + (x >> 2);
+                    byte_offset = (plane << 16) + ((row_addr + (x >> 2)) & 0xffff);
                     color = BX_VGA_THIS s.memory[byte_offset];
                     BX_VGA_THIS s.tile[r*X_TILESIZE + c] = color;
                   }
