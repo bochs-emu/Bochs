@@ -219,7 +219,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_INSB_YbDX(bxInstruction_c *i)
     BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::INSB16_YbDX);
   }
 
-  BX_NEXT_INSTR(i);
+  BX_NEXT_TRACE(i);
 }
 
 // 16-bit address size
@@ -298,7 +298,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_INSW_YwDX(bxInstruction_c *i)
     BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::INSW16_YwDX);
   }
 
-  BX_NEXT_INSTR(i);
+  BX_NEXT_TRACE(i);
 }
 
 // 16-bit operand size, 16-bit address size
@@ -409,7 +409,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_INSD_YdDX(bxInstruction_c *i)
     BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::INSD16_YdDX);
   }
 
-  BX_NEXT_INSTR(i);
+  BX_NEXT_TRACE(i);
 }
 
 // 32-bit operand size, 16-bit address size
@@ -489,7 +489,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_OUTSB_DXXb(bxInstruction_c *i)
     BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::OUTSB16_DXXb);
   }
 
-  BX_NEXT_INSTR(i);
+  BX_NEXT_TRACE(i);
 }
 
 // 16-bit address size
@@ -553,7 +553,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_OUTSW_DXXw(bxInstruction_c *i)
     BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::OUTSW16_DXXw);
   }
 
-  BX_NEXT_INSTR(i);
+  BX_NEXT_TRACE(i);
 }
 
 // 16-bit operand size, 16-bit address size
@@ -644,7 +644,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::REP_OUTSD_DXXd(bxInstruction_c *i)
     BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::OUTSD16_DXXd);
   }
 
-  BX_NEXT_INSTR(i);
+  BX_NEXT_TRACE(i);
 }
 
 // 32-bit operand size, 16-bit address size
@@ -702,7 +702,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IN_ALIb(bxInstruction_c *i)
 
   AL = BX_INP(port, 1);
 
-  BX_NEXT_INSTR(i);
+  BX_NEXT_TRACE(i);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::IN_AXIb(bxInstruction_c *i)
@@ -716,7 +716,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IN_AXIb(bxInstruction_c *i)
 
   AX = BX_INP(port, 2);
 
-  BX_NEXT_INSTR(i);
+  BX_NEXT_TRACE(i);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::IN_EAXIb(bxInstruction_c *i)
@@ -730,7 +730,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IN_EAXIb(bxInstruction_c *i)
 
   RAX = BX_INP(port, 4);
 
-  BX_NEXT_INSTR(i);
+  BX_NEXT_TRACE(i);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_IbAL(bxInstruction_c *i)
@@ -744,7 +744,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_IbAL(bxInstruction_c *i)
 
   BX_OUTP(port, AL, 1);
 
-  BX_NEXT_INSTR(i);
+  BX_NEXT_TRACE(i);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_IbAX(bxInstruction_c *i)
@@ -758,7 +758,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_IbAX(bxInstruction_c *i)
 
   BX_OUTP(port, AX, 2);
 
-  BX_NEXT_INSTR(i);
+  BX_NEXT_TRACE(i);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_IbEAX(bxInstruction_c *i)
@@ -772,7 +772,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_IbEAX(bxInstruction_c *i)
 
   BX_OUTP(port, EAX, 4);
 
-  BX_NEXT_INSTR(i);
+  BX_NEXT_TRACE(i);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::IN_ALDX(bxInstruction_c *i)
@@ -786,7 +786,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IN_ALDX(bxInstruction_c *i)
 
   AL = BX_INP(port, 1);
 
-  BX_NEXT_INSTR(i);
+  BX_NEXT_TRACE(i);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::IN_AXDX(bxInstruction_c *i)
@@ -800,7 +800,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IN_AXDX(bxInstruction_c *i)
 
   AX = BX_INP(port, 2);
 
-  BX_NEXT_INSTR(i);
+  BX_NEXT_TRACE(i);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::IN_EAXDX(bxInstruction_c *i)
@@ -814,7 +814,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IN_EAXDX(bxInstruction_c *i)
 
   RAX = BX_INP(port, 4);
 
-  BX_NEXT_INSTR(i);
+  BX_NEXT_TRACE(i);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_DXAL(bxInstruction_c *i)
@@ -828,7 +828,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_DXAL(bxInstruction_c *i)
 
   BX_OUTP(port, AL, 1);
 
-  BX_NEXT_INSTR(i);
+  BX_NEXT_TRACE(i);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_DXAX(bxInstruction_c *i)
@@ -842,7 +842,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_DXAX(bxInstruction_c *i)
 
   BX_OUTP(port, AX, 2);
 
-  BX_NEXT_INSTR(i);
+  BX_NEXT_TRACE(i);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_DXEAX(bxInstruction_c *i)
@@ -856,7 +856,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUT_DXEAX(bxInstruction_c *i)
 
   BX_OUTP(port, EAX, 4);
 
-  BX_NEXT_INSTR(i);
+  BX_NEXT_TRACE(i);
 }
 
 bool BX_CPP_AttrRegparmN(3) BX_CPU_C::allow_io(bxInstruction_c *i, Bit16u port, unsigned len)
