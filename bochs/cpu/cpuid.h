@@ -29,6 +29,8 @@ struct cpuid_function_t {
   Bit32u ebx;
   Bit32u ecx;
   Bit32u edx;
+
+  bool is_empty() { return (eax | ebx | ecx | edx) == 0; }
 };
 
 class VMCS_Mapping;

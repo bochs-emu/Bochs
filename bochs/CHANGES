@@ -22,7 +22,7 @@ Brief summary :
   - USB: Added experimental MSD UASP emulation
   - USB: Added OHCI as an EHCI Companion option. Now allows UHCI or OHCI specified as a configuration parameter.
   - Disk images: Allows large VHD image files
-  - Fixed and enhanced the Floppy Disk emulation
+  - Fixed and enhanced the Floppy Disk emulation, VGA emulation fixes
   - Expand maximum resolution for Banshee and Voodoo 3 from 1600x1280 to 1920x1440
   - Documentation updates and fixes
 
@@ -43,7 +43,7 @@ Detailed change log :
     - MOVDIRI/MOVDIR64B, AVX512 BF16, AVX IFMA52, VNNI-INT8/VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3/SM4, SHA512, WRMSRNS, MSRLIST, WAITPKG, SERIALIZE
   - CPUID: Added Xeon Sapphire Rapids CPU definition
     - Features PKS, WAITPKG, UINTR, AVX512_BF16, MOVDIRI/MOVDIR64, LA57, SERIALIZE and more
-      Not yet supported but will be added in future: AVX512_FP16, AMX
+      Not yet supported but will be added in future: AVX512_FP16, AMX, VMX Extensions (HLAT, IPI Virtualization)
 
 - Bochs Debugger and Instrumentation
   - Updated Bochs instrumentation examples for new disassembler introduced in Bochs 2.7 release.
@@ -82,6 +82,7 @@ Detailed change log :
     - Fixes in MAP13 disabled mode (VGA mode 6): half dot clock, color support
     - Fixed backward screen-to-screen copy operation for > 8 bpp modes
     - Fixes for the VGA mode 0x13 (Added split screen support)
+    - Fixed address wrap in non-chain4 256-color VGA mode called modeX
     - mem_write(): in text mode don't mark graphics tiles for update
     - Implemented secondary VGA charmap support
 
