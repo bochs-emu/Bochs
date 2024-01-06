@@ -1396,12 +1396,13 @@ void bx_vgacore_c::update(void)
 
                   x = xc + c;
                   if (BX_VGA_THIS s.x_dotclockdiv2) x >>= 1;
-                  /* 0 or 0x2000 */
-                  byte_offset = start_addr + ((y & 1) << 13);
                   /* to the start of the line */
-                  byte_offset += (320 / 4) * (y / 2);
+                  byte_offset = start_addr + (320 / 4) * (y / 2);
                   /* to the byte start */
                   byte_offset += (x / 4);
+                  byte_offset &= 0x1fff;
+                  /* 0 or 0x2000 */
+                  byte_offset += ((y & 1) << 13);
 
                   attribute = 6 - 2*(x % 4);
                   palette_reg_val = (BX_VGA_THIS s.memory[byte_offset]) >> attribute;
