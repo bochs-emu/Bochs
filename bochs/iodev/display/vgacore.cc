@@ -1385,6 +1385,7 @@ void bx_vgacore_c::update(void)
 
         /* CGA 320x200x4 start */
 
+        start_addr <<= 1;
         for (yc=0, yti=0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
           for (xc=0, xti=0; xc<iWidth; xc+=X_TILESIZE, xti++) {
             if (GET_TILE_UPDATED (xti, yti)) {
@@ -2069,6 +2070,9 @@ void bx_vgacore_c::mem_write(bx_phy_address addr, Bit8u value)
       if ((BX_VGA_THIS s.CRTC.reg[0x17] & 1) == 0) { // MAP13 (CGA 320x200x4 / 640x200x2)
         unsigned xc, yc;
 
+        if ((BX_VGA_THIS s.CRTC.reg[0x17] & 0x40) == 0) {
+          start_addr <<= 1;
+        }
         offset -= start_addr;
         if (offset >= 0x2000) {
           yc = (((offset - 0x2000) / (320 / 4)) << 1) + 1;
