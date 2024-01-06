@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2023  The Bochs Project
+//  Copyright (C) 2001-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1078,6 +1078,9 @@ void bx_vgacore_c::write(Bit32u address, Bit32u value, unsigned io_len, bool no_
           case 0x05:
           case 0x06:
           case 0x10:
+            if ((BX_VGA_THIS s.CRTC.reg[0x03] & 0x60) > 0) {
+              BX_ERROR(("CRTC: display enable skew not supported"));
+            }
             calculate_retrace_timing();
             break;
           case 0x07:
@@ -1092,7 +1095,7 @@ void bx_vgacore_c::write(Bit32u address, Bit32u value, unsigned io_len, bool no_
           case 0x08:
             // Vertical pel panning change
             if (BX_VGA_THIS s.graphics_ctrl.graphics_alpha && ((BX_VGA_THIS s.CRTC.reg[0x08] & 0x1f) > 0)) {
-              BX_ERROR(("CRTC: vertical pel panning in graphics mode not implemented yet"));
+              BX_ERROR(("CRTC: vertical pel panning in graphics mode not supported"));
             }
             if ((BX_VGA_THIS s.CRTC.reg[0x08] & 0x60) > 0) {
               BX_ERROR(("CRTC: byte panning not implemented yet"));
@@ -1455,6 +1458,7 @@ void bx_vgacore_c::update(void)
           }
         } else if (BX_VGA_THIS s.CRTC.reg[0x17] & 0x40) { // B/W set: byte mode, modeX
           unsigned long plane;
+          Bit8u h_panning;
 
           for (yc=0, yti=0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
             for (xc=0, xti=0; xc<iWidth; xc+=X_TILESIZE, xti++) {
@@ -1462,13 +1466,18 @@ void bx_vgacore_c::update(void)
                 for (r=0; r<Y_TILESIZE; r++) {
                   y = yc + r;
                   if (BX_VGA_THIS s.y_doublescan) y >>= 1;
+                  h_panning = BX_VGA_THIS s.attribute_ctrl.horiz_pel_panning / 2;
                   if (y > line_compare) {
                     row_addr = (y - line_compare - 1) * BX_VGA_THIS s.line_offset;
+                    if (BX_VGA_THIS s.attribute_ctrl.mode_ctrl.pixel_panning_compat) {
+                      h_panning = 0;
+                    }
                   } else {
                     row_addr = start_addr + (y * BX_VGA_THIS s.line_offset);
                   }
                   for (c=0; c<X_TILESIZE; c++) {
                     x = (xc + c) >> 1;
+                    x += h_panning;
                     plane  = (x % 4);
                     byte_offset = (plane << 16) + ((row_addr + (x >> 2)) & 0xffff);
                     color = BX_VGA_THIS s.memory[byte_offset];
