@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2017-2023  The Bochs Project
+//  Copyright (C) 2017-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -833,30 +833,23 @@ void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
   if (pci_rom_size > 0) {
     Bit32u mask = (pci_rom_size - 1);
     if (((Bit32u)addr & ~mask) == pci_rom_address) {
-      if (pci_conf[0x30] & 0x01) {
-        value = 0;
-        for (unsigned i = 0; i < len; i++) {
-          value |= (pci_rom[(addr & mask) + i] << (i * 8));
+#ifdef BX_LITTLE_ENDIAN
+      Bit8u *data_ptr = (Bit8u *) data;
+#else // BX_BIG_ENDIAN
+      Bit8u *data_ptr = (Bit8u *) data + (len - 1);
+#endif
+      for (unsigned i = 0; i < len; i++) {
+        if (pci_conf[0x30] & 0x01) {
+          *data_ptr = pci_rom[(addr & mask) + i];
+        } else {
+          *data_ptr = 0xff;
         }
-      }
-      switch (len) {
-        case 1:
-          *((Bit8u*)data) = (Bit8u)value;
-          break;
-        case 3:
-          *((Bit8u*)data + 2) = (Bit8u)(value >> 16);  // Q: how to handle this on BIG_ENDIAN platform ?
-          // fall through
-        case 2:
-          *((Bit16u*)data) = (Bit16u)value;
-          break;
-        case 4:
-          *((Bit32u*)data) = (Bit32u)value;
-          break;
-        case 8:
-          *((Bit64u*)data) = value;
-          break;
-        default:
-          BX_ERROR(("bx_banshee_c::mem_read unsupported length %d", len));
+        addr++;
+#ifdef BX_LITTLE_ENDIAN
+        data_ptr++;
+#else // BX_BIG_ENDIAN
+        data_ptr--;
+#endif
       }
       return;
     }
@@ -919,21 +912,18 @@ void bx_banshee_c::mem_write(bx_phy_address addr, unsigned len, void *data)
   Bit64u value = 0;
   Bit32u mask = 0xffffffff;
 
-  switch (len) {
-    case 1:
-      value = *(Bit8u*)data;
-      break;
-    case 2:
-      value = *(Bit16u*)data;
-      break;
-    case 4:
-      value = *(Bit32u*)data;
-      break;
-    case 8:
-      value = *(Bit64u*)data;
-      break;
-    default:
-      BX_ERROR(("bx_banshee_c::mem_write unsupported length %d", len));
+#ifdef BX_LITTLE_ENDIAN
+  Bit8u *data_ptr = (Bit8u *) data;
+#else // BX_BIG_ENDIAN
+  Bit8u *data_ptr = (Bit8u *) data + (len - 1);
+#endif
+  for (unsigned i = 0; i < len; i++) {
+    value |= (*data_ptr << (i * 8));
+#ifdef BX_LITTLE_ENDIAN
+    data_ptr++;
+#else // BX_BIG_ENDIAN
+    data_ptr--;
+#endif
   }
   if ((addr & ~0x1ffffff) == pci_bar[0].addr) {
     if (offset < 0x80000) {
@@ -1006,7 +996,7 @@ void bx_banshee_c::mem_write_linear(Bit32u offset, Bit64u value, unsigned len)
   }
   BX_LOCK(render_mutex);
   for (i = 0; i < len; i++) {
-    value8 = (value >> (i*8)) & 0xff;
+    value8 = (value >> (i * 8)) & 0xff;
     v->fbi.ram[offset + i] = value8;
   }
   if (offset >= start) {
