@@ -25,6 +25,7 @@ Brief summary :
   - Fixed and enhanced the Floppy Disk emulation, VGA emulation fixes
   - Expand maximum resolution for Banshee and Voodoo 3 from 1600x1280 to 1920x1440
   - Documentation updates and fixes
+  - LGPL'd VGABIOS updated to version 0.8c (several VBE fixes / additions)
 
 Detailed change log :
 
@@ -194,6 +195,7 @@ Detailed change log :
   - LGPL'd VGABIOS updated to version 0.8b (from https://github.com/bochs-emu/VGABIOS)
     - Added VBE get/set palette data support for Banshee and Cirrus versions
     - Fixed order of colors in VBE function get/set palette data
+    - Added VBE set palette data support to protected mode interface
     - VESA BIOS function 0x4f00 now stores strings in OemData (for VBE 2.0)
 
 -------------------------------------------------------------------------
