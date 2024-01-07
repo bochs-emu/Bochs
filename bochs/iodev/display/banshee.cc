@@ -918,7 +918,7 @@ void bx_banshee_c::mem_write(bx_phy_address addr, unsigned len, void *data)
   Bit8u *data_ptr = (Bit8u *) data + (len - 1);
 #endif
   for (unsigned i = 0; i < len; i++) {
-    value |= (*data_ptr << (i * 8));
+    value |= ((Bit64u)*data_ptr << (i * 8));
 #ifdef BX_LITTLE_ENDIAN
     data_ptr++;
 #else // BX_BIG_ENDIAN
