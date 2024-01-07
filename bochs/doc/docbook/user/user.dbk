@@ -3894,7 +3894,8 @@ as VGA BIOS) and 'voodoo' for Voodoo Graphics support (needs
 </para>
 <para>
 The VGA update frequency specifies the number of display updates per second.
-This parameter can be changed at runtime. The default value is 5.
+The VGA update timer by default uses the realtime engine with a value of 10
+(valid: 1 to 75). This parameter can be changed at runtime. 
 </para>
 <para>
 The 'realtime' option specifies the operation mode of the VGA update timer.

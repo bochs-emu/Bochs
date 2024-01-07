@@ -476,13 +476,11 @@ Bit32u bx_vgacore_c::read(Bit32u address, unsigned io_len)
 
     case 0x03c0: /* */
       if (BX_VGA_THIS s.attribute_ctrl.flip_flop == 0) {
-        //BX_INFO(("io read: 0x3c0: flip_flop = 0"));
         retval =
           (BX_VGA_THIS s.attribute_ctrl.video_enabled << 5) |
           BX_VGA_THIS s.attribute_ctrl.address;
         RETURN(retval);
-      }
-      else {
+      } else {
         BX_ERROR(("io read: 0x3c0: flip_flop != 0"));
         return(0);
       }
@@ -955,11 +953,6 @@ void bx_vgacore_c::write(Bit32u address, Bit32u value, unsigned io_len, bool no_
 
       BX_VGA_THIS s.pel.write_data_cycle++;
       if (BX_VGA_THIS s.pel.write_data_cycle >= 3) {
-        //BX_INFO(("BX_VGA_THIS s.pel.data[%u] {r=%u, g=%u, b=%u}",
-        //  (unsigned) BX_VGA_THIS s.pel.write_data_register,
-        //  (unsigned) BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.write_data_register].red,
-        //  (unsigned) BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.write_data_register].green,
-        //  (unsigned) BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.write_data_register].blue);
         BX_VGA_THIS s.pel.write_data_cycle = 0;
         BX_VGA_THIS s.pel.write_data_register++;
       }

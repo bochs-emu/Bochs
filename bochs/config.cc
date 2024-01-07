@@ -1146,8 +1146,8 @@ void bx_init_options()
       "vga_update_frequency",
       "VGA Update Frequency",
       "Number of VGA updates per emulated second",
-      1, 60,
-      5);
+      1, 75,
+      10);
   vga_update_freq->set_ask_format ("Type a new value for VGA update frequency: [%d] ");
 
   bx_init_vgaext_list();
