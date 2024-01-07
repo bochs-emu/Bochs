@@ -694,9 +694,9 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
 {
   bx_phy_address ppf = BX_CPU_THIS_PTR cr3 & BX_CR3_PAGING_MASK;
 
-  bx_phy_address entry_addr[4];
-  Bit64u entry[4];
-  BxMemtype entry_memtype[4] = { 0 };
+  bx_phy_address entry_addr[5];
+  Bit64u entry[5];
+  BxMemtype entry_memtype[5] = { BX_MEMTYPE_INVALID, BX_MEMTYPE_INVALID, BX_MEMTYPE_INVALID, BX_MEMTYPE_INVALID, BX_MEMTYPE_INVALID };
 
   bool nx_fault = false;
 
@@ -1653,9 +1653,9 @@ void BX_CPU_C::nested_page_fault(unsigned fault, bx_phy_address guest_paddr, uns
 
 bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsigned rw, bool is_page_walk)
 {
-  bx_phy_address entry_addr[4];
-  Bit64u entry[4];
-  BxMemtype entry_memtype[4] = { BX_MEMTYPE_INVALID };
+  bx_phy_address entry_addr[5];
+  Bit64u entry[5];
+  BxMemtype entry_memtype[5] = { BX_MEMTYPE_INVALID, BX_MEMTYPE_INVALID, BX_MEMTYPE_INVALID, BX_MEMTYPE_INVALID, BX_MEMTYPE_INVALID };
   bool nx_fault = false;
 
   SVM_CONTROLS *ctrls = &BX_CPU_THIS_PTR vmcb.ctrls;
