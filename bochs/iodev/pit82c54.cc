@@ -724,6 +724,9 @@ void pit_82C54::write(Bit8u address, Bit8u data)
           thisctr.rw_mode=RW;
           thisctr.bcd_mode=(BCD > 0);
           thisctr.mode=M;
+          // mode 6 is the same as mode 2, mode 7 is the same as mode 3
+          if (thisctr.mode > 5)
+            thisctr.mode &= 0x3;
           switch(RW) {
           case 0x1:
             BX_DEBUG(("Setting read_state to LSB"));
