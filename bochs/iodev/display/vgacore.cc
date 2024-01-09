@@ -215,23 +215,28 @@ void bx_vgacore_c::init_systemtimer(void)
 {
   BX_VGA_THIS update_realtime = SIM->get_param_bool(BXPN_VGA_REALTIME)->get();
   bx_param_num_c *vga_update_freq = SIM->get_param_num(BXPN_VGA_UPDATE_FREQUENCY);
-  Bit32u update_interval = (Bit32u)(1000000 / vga_update_freq->get());
-  BX_INFO(("interval=%u, mode=%s", update_interval, BX_VGA_THIS update_realtime ? "realtime":"standard"));
+  Bit32u update_interval;
+  if (vga_update_freq->get() > 0) {
+    update_interval = (Bit32u)(1000000 / vga_update_freq->get());
+    BX_INFO(("interval=%u, mode=%s", update_interval, BX_VGA_THIS update_realtime ? "realtime":"standard"));
+  } else {
+    update_interval = 0;
+    BX_INFO(("VGA update interval uses VSYNC, mode=%s", BX_VGA_THIS update_realtime ? "realtime":"standard"));
+  }
   if (BX_VGA_THIS timer_id == BX_NULL_TIMER_HANDLE) {
     BX_VGA_THIS timer_id = bx_virt_timer.register_timer(this, vga_timer_handler,
-       update_interval, 1, 1, BX_VGA_THIS update_realtime, "vga");
+       100000, 1, 1, BX_VGA_THIS update_realtime, "vga");
     vga_update_freq->set_handler(vga_param_handler);
     vga_update_freq->set_device_param(this);
   }
-  BX_VGA_THIS vsync_realtime =
-    (SIM->get_param_enum(BXPN_CLOCK_SYNC)->get() & BX_CLOCK_SYNC_REALTIME) > 0;
-  BX_INFO(("VSYNC using %s mode", BX_VGA_THIS vsync_realtime ? "realtime":"standard"));
-  // VGA text mode cursor blink frequency 1.875 Hz
-  if (update_interval < 266666) {
-    BX_VGA_THIS s.blink_counter = 266666 / (unsigned)update_interval;
+  BX_VGA_THIS set_update_timer(update_interval);
+  if (!BX_VGA_THIS vsync_update_mode) {
+    BX_VGA_THIS vsync_realtime =
+      (SIM->get_param_enum(BXPN_CLOCK_SYNC)->get() & BX_CLOCK_SYNC_REALTIME) > 0;
   } else {
-    BX_VGA_THIS s.blink_counter = 1;
+    BX_VGA_THIS vsync_realtime = BX_VGA_THIS update_realtime;
   }
+  BX_INFO(("VSYNC using %s mode", BX_VGA_THIS vsync_realtime ? "realtime":"standard"));
 }
 
 void bx_vgacore_c::vgacore_register_state(bx_list_c *parent)
@@ -407,6 +412,9 @@ void bx_vgacore_c::calculate_retrace_timing()
   BX_VGA_THIS s.vrstart_usec = BX_VGA_THIS s.htotal_usec * crtcp.vrstart;
   BX_VGA_THIS s.vrend_usec = BX_VGA_THIS s.htotal_usec * vrend;
   BX_DEBUG(("hfreq = %.1f kHz / vfreq = %d Hz", ((double)hfreq / 1000), vfreq));
+  if (BX_VGA_THIS vsync_update_mode) {
+    BX_VGA_THIS set_update_timer(0);
+  }
 }
 
 // static IO port read callback handler
@@ -454,7 +462,12 @@ Bit32u bx_vgacore_c::read(Bit32u address, unsigned io_len)
       //           horizontal or vertical blanking period is active
 
       retval = 0;
-      display_usec = bx_virt_timer.time_usec(BX_VGA_THIS vsync_realtime) % BX_VGA_THIS s.vtotal_usec;
+      if (BX_VGA_THIS vsync_update_mode) {
+        display_usec = bx_virt_timer.time_usec(BX_VGA_THIS vsync_realtime) - BX_VGA_THIS s.display_start_usec;
+        display_usec = display_usec % BX_VGA_THIS s.vtotal_usec;
+      } else {
+        display_usec = bx_virt_timer.time_usec(BX_VGA_THIS vsync_realtime) % BX_VGA_THIS s.vtotal_usec;
+      }
       if ((display_usec >= BX_VGA_THIS s.vrstart_usec) &&
           (display_usec <= BX_VGA_THIS s.vrend_usec)) {
         retval |= 0x08;
@@ -1243,10 +1256,12 @@ bool bx_vgacore_c::skip_update(void)
     return 1;
 
   /* skip screen update if the vertical retrace is in progress */
-  display_usec = bx_virt_timer.time_usec(BX_VGA_THIS vsync_realtime) % BX_VGA_THIS s.vtotal_usec;
-  if ((display_usec > BX_VGA_THIS s.vrstart_usec) &&
-      (display_usec < BX_VGA_THIS s.vrend_usec)) {
-    return 1;
+  if (!BX_VGA_THIS vsync_update_mode) {
+    display_usec = bx_virt_timer.time_usec(BX_VGA_THIS vsync_realtime) % BX_VGA_THIS s.vtotal_usec;
+    if ((display_usec > BX_VGA_THIS s.vrstart_usec) &&
+        (display_usec < BX_VGA_THIS s.vrend_usec)) {
+      return 1;
+    }
   }
   return 0;
 }
@@ -1258,6 +1273,11 @@ void bx_vgacore_c::update(void)
   static bool cs_visible = 0;
   bool cs_toggle = 0;
 
+  // Always set display start time if update timer is driven by VSYNC
+  if (BX_VGA_THIS vsync_update_mode) {
+    BX_VGA_THIS s.display_start_usec =
+      bx_virt_timer.time_usec(BX_VGA_THIS vsync_realtime) - BX_VGA_THIS s.vrend_usec;
+  }
   cs_counter--;
   /* no screen update necessary */
   if ((BX_VGA_THIS s.vga_mem_updated == 0) && (cs_counter > 0))
@@ -2295,6 +2315,30 @@ void bx_vgacore_c::vga_timer_handler(void *this_ptr)
   bx_gui->flush();
 }
 
+void bx_vgacore_c::set_update_timer(Bit32u usec)
+{
+  if (usec == 0) {
+    usec = BX_VGA_THIS s.vtotal_usec;
+    if ((usec < 8000) || (usec > 200000)) {
+      usec = 100000;
+    }
+    BX_VGA_THIS vsync_update_mode = true;
+  } else {
+    BX_VGA_THIS vsync_update_mode = false;
+  }
+  if (usec != BX_VGA_THIS vga_update_interval) {
+    BX_INFO(("Setting VGA update interval to %d", usec));
+    bx_virt_timer.activate_timer(BX_VGA_THIS timer_id, usec, 1);
+    // VGA text mode cursor blink frequency 1.875 Hz
+    if (usec < 266666) {
+      BX_VGA_THIS s.blink_counter = 266666 / (unsigned)usec;
+    } else {
+      BX_VGA_THIS s.blink_counter = 1;
+    }
+    BX_VGA_THIS vga_update_interval = usec;
+  }
+}
+
 #undef LOG_THIS
 #define LOG_THIS vgadev->
 
@@ -2302,16 +2346,14 @@ Bit64s bx_vgacore_c::vga_param_handler(bx_param_c *param, bool set, Bit64s val)
 {
   // handler for runtime parameter 'vga: update_freq'
   if (set) {
-    Bit32u update_interval = (Bit32u)(1000000 / val);
-    bx_vgacore_c *vgadev = (bx_vgacore_c *)param->get_device_param();
-    BX_INFO(("Changing timer interval to %d", update_interval));
-    vga_timer_handler(vgadev);
-    bx_virt_timer.activate_timer(vgadev->timer_id, update_interval, 1);
-    if (update_interval < 266666) {
-      vgadev->s.blink_counter = 266666 / (unsigned)update_interval;
+    Bit32u update_interval;
+    if (val > 0) {
+      update_interval = (Bit32u)(1000000 / val);
     } else {
-      vgadev->s.blink_counter = 1;
+      update_interval = 0;
     }
+    bx_vgacore_c *vgadev = (bx_vgacore_c *)param->get_device_param();
+    vgadev->set_update_timer(update_interval);
   }
   return val;
 }
