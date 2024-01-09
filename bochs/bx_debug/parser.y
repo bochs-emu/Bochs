@@ -61,6 +61,7 @@ Bit64u eval_value;
 %token <sval> BX_TOKEN_YMM
 %token <sval> BX_TOKEN_ZMM
 %token <sval> BX_TOKEN_AVX
+%token <sval> BX_TOKEN_AMX
 %token <sval> BX_TOKEN_IDT
 %token <sval> BX_TOKEN_IVT
 %token <sval> BX_TOKEN_GDT
@@ -819,6 +820,14 @@ zmm_regs_command:
       BX_TOKEN_ZMM '\n'
       {
         bx_dbg_info_registers_command(BX_INFO_ZMM_REGS);
+        free($1);
+      }
+    ;
+
+amx_regs_command:
+      BX_TOKEN_AMX '\n'
+      {
+        bx_dbg_info_registers_command(BX_INFO_AMX_REGS);
         free($1);
       }
     ;

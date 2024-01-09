@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2010-2023 Stanislav Shwartsman
+//   Copyright (c) 2010-2024 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -111,6 +111,11 @@ protected:
 
 #if BX_CPU_LEVEL >= 6
   void get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
+#endif
+
+#if BX_SUPPORT_AMX
+  void get_std_cpuid_amx_palette_info_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
+  void get_std_cpuid_amx_tmul_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
 #endif
 
   Bit32u get_std_cpuid_leaf_1_ecx(Bit32u extra = 0) const;

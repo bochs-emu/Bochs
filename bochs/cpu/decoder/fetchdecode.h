@@ -53,6 +53,7 @@ enum BxDecodeError {
   BX_EVEX_ILLEGAL_ZERO_MASKING_WITH_KMASK_SRC_OR_DEST,
   BX_EVEX_ILLEGAL_ZERO_MASKING_VSIB,
   BX_EVEX_ILLEGAL_ZERO_MASKING_MEMORY_DESTINATION,
+  BX_AMX_ILLEGAL_TILE_REGISTER
 };
 
 //
@@ -78,6 +79,7 @@ BX_CPP_INLINE Bit64u FetchQWORD(const Bit8u *iptr)
 }
 #endif
 
+#define BX_PREPARE_AMX               (0x400)
 #define BX_PREPARE_EVEX_NO_BROADCAST (0x200 | BX_PREPARE_EVEX)
 #define BX_PREPARE_EVEX_NO_SAE       (0x100 | BX_PREPARE_EVEX)
 #define BX_PREPARE_EVEX              (0x80)
@@ -95,7 +97,7 @@ struct bxIAOpcodeTable {
   BxExecutePtr_tR execute2;
 #endif
   Bit8u src[4];
-#if BX_SUPPORT_EVEX
+#if BX_SUPPORT_EVEX || BX_SUPPORT_AMX
   Bit16u opflags;
 #else
   Bit8u  opflags;
@@ -140,20 +142,20 @@ enum {
 enum {
   BX_NO_REGISTER = 0,
   BX_GPR8 = 0x1,
-  BX_GPR32_MEM8 = 0x2,  // 8-bit memory reference but 32-bit GPR
-  BX_GPR16 = 0x3,
-  BX_GPR32_MEM16 = 0x4, // 16-bit memory reference but 32-bit GPR
-  BX_GPR32 = 0x5,
-  BX_GPR64 = 0x6,
-  BX_FPU_REG = 0x7,
-  BX_MMX_REG = 0x8,
-  BX_MMX_HALF_REG = 0x9,
-  BX_VMM_REG = 0xA,
-  BX_KMASK_REG = 0xB,
-  BX_KMASK_REG_PAIR = 0xC,
-  BX_SEGREG = 0xD,
-  BX_CREG = 0xE,
-  BX_DREG = 0xF
+  BX_GPR16 = 0x2,
+  BX_GPR32 = 0x3,
+  BX_GPR64 = 0x4,
+  BX_FPU_REG = 0x5,
+  BX_MMX_REG = 0x6,
+  BX_MMX_HALF_REG = 0x7,
+  BX_VMM_REG = 0x8,
+  BX_KMASK_REG = 0x9,
+  BX_KMASK_REG_PAIR = 0xA,
+  BX_TMM_REG = 0xB,
+  BX_SEGREG = 0xC,
+  BX_CREG = 0xD,
+  BX_DREG = 0xE
+  // encoding 0xF is still free
 };
 
 // to be used together with BX_SRC_VECTOR_RM
@@ -215,9 +217,7 @@ enum {
 const Bit8u OP_NONE = BX_SRC_NONE;
 
 const Bit8u OP_Eb = BX_FORM_SRC(BX_GPR8, BX_SRC_RM);
-const Bit8u OP_Ebd = BX_FORM_SRC(BX_GPR32_MEM8, BX_SRC_RM);
 const Bit8u OP_Ew = BX_FORM_SRC(BX_GPR16, BX_SRC_RM);
-const Bit8u OP_Ewd = BX_FORM_SRC(BX_GPR32_MEM16, BX_SRC_RM);
 const Bit8u OP_Ed = BX_FORM_SRC(BX_GPR32, BX_SRC_RM);
 const Bit8u OP_Eq = BX_FORM_SRC(BX_GPR64, BX_SRC_RM);
 
@@ -355,6 +355,10 @@ const Bit8u OP_KEq = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_RM);
 const Bit8u OP_KHq = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_VVV);
 
 const Bit8u OP_KGq2 = BX_FORM_SRC(BX_KMASK_REG_PAIR, BX_SRC_NNN);
+
+const Bit8u OP_Trm  = BX_FORM_SRC(BX_TMM_REG, BX_SRC_RM);
+const Bit8u OP_Tnnn = BX_FORM_SRC(BX_TMM_REG, BX_SRC_NNN);
+const Bit8u OP_Treg = BX_FORM_SRC(BX_TMM_REG, BX_SRC_VVV);
 
 const Bit8u OP_ST0 = BX_FORM_SRC(BX_FPU_REG, BX_SRC_EAX);
 const Bit8u OP_STi = BX_FORM_SRC(BX_FPU_REG, BX_SRC_RM);

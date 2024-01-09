@@ -42,8 +42,14 @@ static const Bit64u BxOpcodeTable0F3A0F[] = {
   last_opcode(ATTR_SSE_PREFIX_66, BX_IA_PALIGNR_VdqWdqIb),
 };
 
-static const Bit64u BxOpcodeTable0F3A14[] = { last_opcode(ATTR_SSE_PREFIX_66, BX_IA_PEXTRB_EbdVdqIb) };
-static const Bit64u BxOpcodeTable0F3A15[] = { last_opcode(ATTR_SSE_PREFIX_66, BX_IA_PEXTRW_EwdVdqIb) };
+static const Bit64u BxOpcodeTable0F3A14[] = {
+  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_MODC0,   BX_IA_PEXTRB_EdVdqIbR),
+  last_opcode(ATTR_SSE_PREFIX_66 | ATTR_MOD_MEM, BX_IA_PEXTRB_MbVdqIbM)
+};
+static const Bit64u BxOpcodeTable0F3A15[] = {
+  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_MODC0,   BX_IA_PEXTRW_EdVdqIbR),
+  last_opcode(ATTR_SSE_PREFIX_66 | ATTR_MOD_MEM, BX_IA_PEXTRW_MwVdqIbM)
+};
 
 // opcode 0F 3A 16
 static const Bit64u BxOpcodeTable0F3A16[] = {

@@ -33,6 +33,10 @@
 #include "apic.h"
 #endif
 
+#if BX_SUPPORT_AMX
+#include "avx/amx.h"
+#endif
+
 #include <stdlib.h>
 
 BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
@@ -129,6 +133,13 @@ void BX_CPU_C::initialize(void)
 
 #if BX_CPU_LEVEL >= 6
   xsave_xrestor_init();
+#endif
+
+#if BX_SUPPORT_AMX
+  amx = NULL;
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AMX)) {
+    amx = new AMX;
+  }
 #endif
 
 #if BX_CONFIGURE_MSRS
@@ -707,6 +718,10 @@ BX_CPU_C::~BX_CPU_C()
 
 #if BX_SUPPORT_APIC
   delete lapic;
+#endif
+
+#if BX_SUPPORT_AMX
+  delete amx;
 #endif
 
 #if InstrumentCPU

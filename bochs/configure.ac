@@ -1432,6 +1432,29 @@ if test "$support_evex" -gt 0 -a "$support_avx" = 0; then
   AC_MSG_ERROR([for EVEX and AVX-512 support AVX emulation must be compiled in!])
 fi
 
+support_amx=0
+AC_MSG_CHECKING(for AMX extensions support)
+AC_ARG_ENABLE(amx,
+  AS_HELP_STRING([--enable-amx], [support for AMX extensions (no)]),
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_AMX, 1)
+    support_amx=1
+   elif test "$enableval" = no; then
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_AMX, 0)
+   fi
+   ],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_AMX, 0)
+  ]
+  )
+
+if test "$support_amx" -gt 0 -a "$support_evex" = 0; then
+  AC_MSG_ERROR([for AMX support AVX and EVEX emulation must be compiled in!])
+fi
+
 AC_MSG_CHECKING(for x86 debugger support)
 AC_ARG_ENABLE(x86-debugger,
   AS_HELP_STRING([--enable-x86-debugger], [x86 debugger support (no)]),
