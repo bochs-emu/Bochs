@@ -873,6 +873,13 @@ void bx_dbg_print_avx_state(unsigned vlen)
 #endif
 }
 
+#if BX_SUPPORT_AMX
+void bx_dbg_print_amx_state(void)
+{
+  // dump #palette, start, all tile dimensions, all tile data(?)
+}
+#endif
+
 void bx_dbg_print_mmx_state(void)
 {
 #if BX_CPU_LEVEL >= 5
@@ -1189,6 +1196,12 @@ void bx_dbg_info_registers_command(int which_regs_mask)
       }
     }
   }
+
+#if BX_SUPPORT_AMX
+  if (which_regs_mask & BX_INFO_AMX_REGS) {
+    bx_dbg_print_amx_state();
+  }
+#endif
 }
 
 //

@@ -151,6 +151,7 @@ void bx_dbg_quit_command(void);
 #define BX_INFO_SSE_REGS 0x08
 #define BX_INFO_YMM_REGS 0x10
 #define BX_INFO_ZMM_REGS 0x20
+#define BX_INFO_AMX_REGS 0x40
 void bx_dbg_info_registers_command(int);
 void bx_dbg_info_ivt_command(unsigned from, unsigned to);
 void bx_dbg_info_idt_command(unsigned from, unsigned to);

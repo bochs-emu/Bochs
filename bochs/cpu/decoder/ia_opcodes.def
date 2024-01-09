@@ -1347,8 +1347,10 @@ bx_define_opcode(BX_IA_ROUNDSD_VsdWsdIb, "roundsd", "roundsd", &BX_CPU_C::LOAD_W
 bx_define_opcode(BX_IA_BLENDPS_VpsWpsIb, "blendps", "blendps", &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::BLENDPS_VpsWpsIbR, BX_ISA_SSE4_1, OP_Vps, OP_Wps, OP_Ib, OP_NONE, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_BLENDPD_VpdWpdIb, "blendpd", "blendpd", &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::BLENDPD_VpdWpdIbR, BX_ISA_SSE4_1, OP_Vpd, OP_Wpd, OP_Ib, OP_NONE, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_PBLENDW_VdqWdqIb, "pblendw", "pblendw", &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::PBLENDW_VdqWdqIbR, BX_ISA_SSE4_1, OP_Vdq, OP_Wdq, OP_Ib, OP_NONE, BX_PREPARE_SSE)
-bx_define_opcode(BX_IA_PEXTRB_EbdVdqIb, "pextrb", "pextrb", &BX_CPU_C::PEXTRB_EbdVdqIbM, &BX_CPU_C::PEXTRB_EbdVdqIbR, BX_ISA_SSE4_1, OP_Ebd, OP_Vdq, OP_Ib, OP_NONE, BX_PREPARE_SSE)
-bx_define_opcode(BX_IA_PEXTRW_EwdVdqIb, "pextrw", "pextrw", &BX_CPU_C::PEXTRW_EwdVdqIbM, &BX_CPU_C::PEXTRW_EwdVdqIbR, BX_ISA_SSE4_1, OP_Ewd, OP_Vdq, OP_Ib, OP_NONE, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_PEXTRB_EdVdqIbR, "pextrb", "pextrb", NULL, &BX_CPU_C::PEXTRB_EdVdqIbR, BX_ISA_SSE4_1, OP_Ed, OP_Vdq, OP_Ib, OP_NONE, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_PEXTRB_MbVdqIbM, "pextrb", "pextrb", &BX_CPU_C::PEXTRB_MbVdqIbM, NULL, BX_ISA_SSE4_1, OP_Mb, OP_Vdq, OP_Ib, OP_NONE, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_PEXTRW_EdVdqIbR, "pextrw", "pextrw", NULL, &BX_CPU_C::PEXTRW_EdVdqIbR, BX_ISA_SSE4_1, OP_Ed, OP_Vdq, OP_Ib, OP_NONE, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_PEXTRW_MwVdqIbM, "pextrw", "pextrw", &BX_CPU_C::PEXTRW_MwVdqIbM, NULL, BX_ISA_SSE4_1, OP_Mw, OP_Vdq, OP_Ib, OP_NONE, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_PEXTRD_EdVdqIb, "pextrd", "pextrd", &BX_CPU_C::PEXTRD_EdVdqIbM, &BX_CPU_C::PEXTRD_EdVdqIbR, BX_ISA_SSE4_1, OP_Ed, OP_Vdq, OP_Ib, OP_NONE, BX_PREPARE_SSE)
 #if BX_SUPPORT_X86_64
 bx_define_opcode(BX_IA_PEXTRQ_EqVdqIb, "pextrq", "pextrq", &BX_CPU_C::PEXTRQ_EqVdqIbM, &BX_CPU_C::PEXTRQ_EqVdqIbR, BX_ISA_SSE4_1, OP_Eq, OP_Vdq, OP_Ib, OP_NONE, BX_PREPARE_SSE)
@@ -2277,8 +2279,10 @@ bx_define_opcode(BX_IA_V128_VMOVQ_EqVq, "vmovq", "vmovq", &BX_CPU_C::MOVSD_WsdVs
 bx_define_opcode(BX_IA_V128_VPINSRB_VdqEbIb, "vpinsrb", "vpinsrb", &BX_CPU_C::VPINSRB_VdqHdqEbIbM, &BX_CPU_C::VPINSRB_VdqHdqEbIbR, BX_ISA_AVX, OP_Vdq, OP_Hdq, OP_Ew, OP_Ib, BX_PREPARE_AVX)
 bx_define_opcode(BX_IA_V128_VPINSRW_VdqEwIb, "vpinsrw", "vpinsrw", &BX_CPU_C::VPINSRW_VdqHdqEwIbM, &BX_CPU_C::VPINSRW_VdqHdqEwIbR, BX_ISA_AVX, OP_Vdq, OP_Hdq, OP_Ew, OP_Ib, BX_PREPARE_AVX)
 bx_define_opcode(BX_IA_V128_VPEXTRW_GdUdqIb, "vpextrw", "vpextrw", &BX_CPU_C::BxError, &BX_CPU_C::PEXTRW_GdUdqIb, BX_ISA_AVX, OP_Gd, OP_Wdq, OP_Ib, OP_NONE, BX_PREPARE_AVX)
-bx_define_opcode(BX_IA_V128_VPEXTRB_EbdVdqIb, "vpextrb", "vpextrb", &BX_CPU_C::PEXTRB_EbdVdqIbM, &BX_CPU_C::PEXTRB_EbdVdqIbR, BX_ISA_AVX, OP_Ebd, OP_Vdq, OP_Ib, OP_NONE, BX_PREPARE_AVX)
-bx_define_opcode(BX_IA_V128_VPEXTRW_EwdVdqIb, "vpextrw", "vpextrw", &BX_CPU_C::PEXTRW_EwdVdqIbM, &BX_CPU_C::PEXTRW_EwdVdqIbR, BX_ISA_AVX, OP_Ewd, OP_Vdq, OP_Ib, OP_NONE, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_V128_VPEXTRB_EdVdqIbR, "vpextrb", "vpextrb", NULL, &BX_CPU_C::PEXTRB_EdVdqIbR, BX_ISA_AVX, OP_Ed, OP_Vdq, OP_Ib, OP_NONE, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_V128_VPEXTRB_MbVdqIbM, "vpextrb", "vpextrb", &BX_CPU_C::PEXTRB_MbVdqIbM, NULL, BX_ISA_AVX, OP_Mb, OP_Vdq, OP_Ib, OP_NONE, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_V128_VPEXTRW_EdVdqIbR, "vpextrw", "vpextrw", NULL, &BX_CPU_C::PEXTRW_EdVdqIbR, BX_ISA_AVX, OP_Ed, OP_Vdq, OP_Ib, OP_NONE, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_V128_VPEXTRW_MwVdqIbM, "vpextrw", "vpextrw", &BX_CPU_C::PEXTRW_MwVdqIbM, NULL, BX_ISA_AVX, OP_Mw, OP_Vdq, OP_Ib, OP_NONE, BX_PREPARE_AVX)
 
 bx_define_opcode(BX_IA_V128_VPINSRD_VdqEdIb, "vpinsrd", "vpinsrd", &BX_CPU_C::VPINSRD_VdqHdqEdIbM, &BX_CPU_C::VPINSRD_VdqHdqEdIbR, BX_ISA_AVX, OP_Vdq, OP_Hdq, OP_Ed, OP_Ib, BX_PREPARE_AVX)
 bx_define_opcode(BX_IA_V128_VPINSRQ_VdqEqIb, "vpinsrq", "vpinsrq", &BX_CPU_C::VPINSRQ_VdqHdqEqIbM, &BX_CPU_C::VPINSRQ_VdqHdqEqIbR, BX_ISA_AVX, OP_Vdq, OP_Hdq, OP_Eq, OP_Ib, BX_PREPARE_AVX)
@@ -2754,6 +2758,21 @@ bx_define_opcode(BX_IA_MOVDIRI_MqGq, "movdiri", "movdiriq", &BX_CPU_C::MOV_EqGqM
 bx_define_opcode(BX_IA_MOVDIR64B_GdMdq, "movdir64b", "movdir64b", &BX_CPU_C::MOVDIR64B, NULL, BX_ISA_MOVDIR64B, OP_Gd, OP_M, OP_NONE, OP_NONE, 0)
 #if BX_SUPPORT_X86_64
 bx_define_opcode(BX_IA_MOVDIR64B_GqMdq, "movdir64b", "movdir64b", &BX_CPU_C::MOVDIR64B, NULL, BX_ISA_MOVDIR64B, OP_Gq, OP_M, OP_NONE, OP_NONE, 0)
+#endif
+
+#if BX_SUPPORT_AMX
+bx_define_opcode(BX_IA_LDTILECFG, "ldtilecfg", "ldtilecfg", &BX_CPU_C::LDTILECFG, NULL, BX_ISA_AMX, OP_M, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_AMX)
+bx_define_opcode(BX_IA_STTILECFG, "sttilecfg", "sttilecfg", &BX_CPU_C::STTILECFG, NULL, BX_ISA_AMX, OP_M, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_AMX)
+bx_define_opcode(BX_IA_TILELOADD_TnnnMdq, "tileloadd", "tileloadd", &BX_CPU_C::TILELOADD_TnnnMdq, NULL, BX_ISA_AMX, OP_Tnnn, OP_M, OP_NONE, OP_NONE, BX_PREPARE_AMX)
+bx_define_opcode(BX_IA_TILELOADDT1_TnnnMdq, "tileloaddt1", "tileloaddt1", &BX_CPU_C::TILELOADD_TnnnMdq, NULL, BX_ISA_AMX, OP_Tnnn, OP_M, OP_NONE, OP_NONE, BX_PREPARE_AMX)
+bx_define_opcode(BX_IA_TILESTORED_MdqTnnn, "tilestored", "tilestored", &BX_CPU_C::TILESTORED_MdqTnnn, NULL, BX_ISA_AMX, OP_M, OP_Tnnn, OP_NONE, OP_NONE, BX_PREPARE_AMX)
+bx_define_opcode(BX_IA_TILERELEASE, "tilerelease", "tilerelease", NULL, &BX_CPU_C::TILERELEASE, BX_ISA_AMX, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_AMX)
+bx_define_opcode(BX_IA_TILEZERO_Tnnn, "tilezero", "tilezero", NULL, &BX_CPU_C::TILEZERO_Tnnn, BX_ISA_AMX, OP_Tnnn, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_AMX)
+bx_define_opcode(BX_IA_TDPBSSD_TnnnTrmTreg, "tdpbssd", "tdpbssd", NULL, &BX_CPU_C::TDPBSSD_TnnnTrmTreg, BX_ISA_AMX_INT8, OP_Tnnn, OP_Trm, OP_Treg, OP_NONE, BX_PREPARE_AMX)
+bx_define_opcode(BX_IA_TDPBSUD_TnnnTrmTreg, "tdpbsud", "tdpbsud", NULL, &BX_CPU_C::TDPBSUD_TnnnTrmTreg, BX_ISA_AMX_INT8, OP_Tnnn, OP_Trm, OP_Treg, OP_NONE, BX_PREPARE_AMX)
+bx_define_opcode(BX_IA_TDPBUSD_TnnnTrmTreg, "tdpbusd", "tdpbusd", NULL, &BX_CPU_C::TDPBUSD_TnnnTrmTreg, BX_ISA_AMX_INT8, OP_Tnnn, OP_Trm, OP_Treg, OP_NONE, BX_PREPARE_AMX)
+bx_define_opcode(BX_IA_TDPBUUD_TnnnTrmTreg, "tdpbuud", "tdpbuud", NULL, &BX_CPU_C::TDPBUUD_TnnnTrmTreg, BX_ISA_AMX_INT8, OP_Tnnn, OP_Trm, OP_Treg, OP_NONE, BX_PREPARE_AMX)
+bx_define_opcode(BX_IA_TDPBF16PS_TnnnTrmTreg, "tdpbf16ps", "tdpbf16ps", NULL, &BX_CPU_C::TDPBF16PS_TnnnTrmTreg, BX_ISA_AMX_BF16, OP_Tnnn, OP_Trm, OP_Treg, OP_NONE, BX_PREPARE_AMX)
 #endif
 
 #if BX_SUPPORT_AVX
@@ -3973,8 +3992,10 @@ bx_define_opcode(BX_IA_V512_VCVTTSD2USI_GqWsd, "vcvttsd2usi", "vcvttsd2usiq", &B
 bx_define_opcode(BX_IA_V512_VPINSRB_VdqEbIb, "vpinsrb", "vpinsrb", &BX_CPU_C::VPINSRB_VdqHdqEbIbM, &BX_CPU_C::VPINSRB_VdqHdqEbIbR, BX_ISA_AVX512_BW, OP_Vdq, OP_Hdq, OP_Ew, OP_Ib, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
 bx_define_opcode(BX_IA_V512_VPINSRW_VdqEwIb, "vpinsrw", "vpinsrw", &BX_CPU_C::VPINSRW_VdqHdqEwIbM, &BX_CPU_C::VPINSRW_VdqHdqEwIbR, BX_ISA_AVX512_BW, OP_Vdq, OP_Hdq, OP_Ew, OP_Ib, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
 bx_define_opcode(BX_IA_V512_VPEXTRW_GdUdqIb, "vpextrw", "vpextrw", &BX_CPU_C::BxError, &BX_CPU_C::PEXTRW_GdUdqIb, BX_ISA_AVX512_BW, OP_Gd, OP_Wdq, OP_Ib, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
-bx_define_opcode(BX_IA_V512_VPEXTRB_EbdVdqIb, "vpextrb", "vpextrb", &BX_CPU_C::PEXTRB_EbdVdqIbM, &BX_CPU_C::PEXTRB_EbdVdqIbR, BX_ISA_AVX512_BW, OP_Ebd, OP_Vdq, OP_Ib, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
-bx_define_opcode(BX_IA_V512_VPEXTRW_EwdVdqIb, "vpextrw", "vpextrw", &BX_CPU_C::PEXTRW_EwdVdqIbM, &BX_CPU_C::PEXTRW_EwdVdqIbR, BX_ISA_AVX512_BW, OP_Ewd, OP_Vdq, OP_Ib, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+bx_define_opcode(BX_IA_V512_VPEXTRB_EdVdqIbR, "vpextrb", "vpextrb", NULL, &BX_CPU_C::PEXTRB_EdVdqIbR, BX_ISA_AVX512_BW, OP_Ed, OP_Vdq, OP_Ib, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+bx_define_opcode(BX_IA_V512_VPEXTRB_MbVdqIbM, "vpextrb", "vpextrb", &BX_CPU_C::PEXTRB_MbVdqIbM, NULL, BX_ISA_AVX512_BW, OP_Mb, OP_Vdq, OP_Ib, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+bx_define_opcode(BX_IA_V512_VPEXTRW_EdVdqIbR, "vpextrw", "vpextrw", NULL, &BX_CPU_C::PEXTRW_EdVdqIbR, BX_ISA_AVX512_BW, OP_Ed, OP_Vdq, OP_Ib, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+bx_define_opcode(BX_IA_V512_VPEXTRW_MwVdqIbM, "vpextrw", "vpextrw", &BX_CPU_C::PEXTRW_MwVdqIbM, NULL, BX_ISA_AVX512_BW, OP_Mw, OP_Vdq, OP_Ib, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
 
 bx_define_opcode(BX_IA_V512_VPINSRD_VdqEdIb, "vpinsrd", "vpinsrd", &BX_CPU_C::VPINSRD_VdqHdqEdIbM, &BX_CPU_C::VPINSRD_VdqHdqEdIbR, BX_ISA_AVX512_DQ, OP_Vdq, OP_Hdq, OP_Ed, OP_Ib, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
 bx_define_opcode(BX_IA_V512_VPINSRQ_VdqEqIb, "vpinsrq", "vpinsrq", &BX_CPU_C::VPINSRQ_VdqHdqEqIbM, &BX_CPU_C::VPINSRQ_VdqHdqEqIbR, BX_ISA_AVX512_DQ, OP_Vdq, OP_Hdq, OP_Eq, OP_Ib, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)

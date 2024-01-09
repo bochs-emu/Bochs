@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2014-2023 Stanislav Shwartsman
+//   Copyright (c) 2014-2024 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -235,10 +235,66 @@ void bx_cpuid_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *
     if (support_mask & (1 << subfunction)) {
       leaf->eax = xsave_restore[subfunction].len;
       leaf->ebx = xsave_restore[subfunction].offset;
-      leaf->ecx = (cpu->ia32_xss_suppmask & (1 << subfunction)) != 0; // managed through IA32_XSS register
+      // ECX[0] - set if this component managed through IA32_XSS register
+      // ECX[1] - set to indicate this component must be aligned to 64-byte
+      // ECX[2] - XFD support for this component
+      leaf->ecx = (cpu->ia32_xss_suppmask & (1 << subfunction)) != 0;
       leaf->edx = 0;
     }
   }
+}
+#endif
+
+#if BX_SUPPORT_AMX
+void bx_cpuid_t::get_std_cpuid_amx_palette_info_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
+{
+  leaf->eax = 0;
+  leaf->ebx = 0;
+  leaf->ecx = 0;
+  leaf->edx = 0;
+
+  if (!is_cpu_extension_supported(BX_ISA_AMX))
+    return;
+
+  if (subfunction == 0) {
+    leaf->eax = 1; // max palette_id
+    leaf->ebx = 0;
+    leaf->ecx = 0;
+    leaf->edx = 0;
+    return;
+  }
+
+  // information about palette #1
+  if (subfunction == 1) {
+    // EAX[15:00] : Palette #1 total tile bytes = 8192
+    // EAX[31:16] : Palette #1 bytes per tile = 1024
+    leaf->eax = 8192 | (1024<<16);
+    // EBX[15:00] : Palette #1 bytes_per_row = 64
+    // EBX[31:16] : Palette #1 number of tiles = 8
+    leaf->ebx = 64 | (8<<16);
+    // ECX[15:00] : Palette #1 max_rows = 16
+    // ECX[31:16] : Reserved
+    leaf->ecx = 16;
+    // EdX[31:00] : Reserved
+    leaf->edx = 0;
+    return;
+  }
+}
+
+void bx_cpuid_t::get_std_cpuid_amx_tmul_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
+{
+  leaf->eax = 0;
+  leaf->ebx = 0;
+  leaf->ecx = 0;
+  leaf->edx = 0;
+
+  if (!is_cpu_extension_supported(BX_ISA_AMX))
+    return;
+
+  // EBX[07:00] = 16 TMUL_MAX_K (rows or columns)
+  // EBX[23:08] = 64 TMUL_MAX_N (column bytes)
+  // EBX[31:24] reserved
+  leaf->ebx = 16 | (64<<8);
 }
 #endif
 
@@ -1023,10 +1079,28 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_edx(Bit32u extra) const
 #endif
 
   //   [21:21]  reserved
+
   //   [22:22]  AMX BF16 support
+#if BX_SUPPORT_AMX
+  if (is_cpu_extension_supported(BX_ISA_AMX)) {
+    if (is_cpu_extension_supported(BX_ISA_AMX_BF16))
+      edx |= BX_CPUID_STD7_SUBLEAF0_EDX_AMX_BF16;
+  }
+#endif
+
   //   [23:23]  AVX512_FP16 instructions support
+
+#if BX_SUPPORT_AMX
   //   [24:24]  AMX TILE architecture support
-  //   [25:25]  AMX INT8 support
+  if (is_cpu_extension_supported(BX_ISA_AMX)) {
+    edx |= BX_CPUID_STD7_SUBLEAF0_EDX_AMX_TILE;
+
+    //   [25:25]  AMX INT8 support
+    if (is_cpu_extension_supported(BX_ISA_AMX_INT8))
+      edx |= BX_CPUID_STD7_SUBLEAF0_EDX_AMX_INT8;
+  }
+#endif
+
   // * [26:26]  IBRS and IBPB: Indirect branch restricted speculation (SCA)
   // * [27:27]  STIBP: Single Thread Indirect Branch Predictors supported (SCA)
   // * [28:28]  L1D_FLUSH supported (SCA)
