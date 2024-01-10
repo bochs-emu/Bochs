@@ -147,6 +147,8 @@ enum VMX_vmexit_reason {
    VMX_VMEXIT_NOTIFY_WINDOW = 75,
    VMX_VMEXIT_SEAMCALL = 76,
    VMX_VMEXIT_TDCALL = 77,
+   VMX_VMEXIT_RDMSRLIST = 78,
+   VMX_VMEXIT_WRMSRLIST = 79,
    VMX_VMEXIT_LAST_REASON
 };
 
@@ -311,6 +313,8 @@ const Bit64u VMX_VMFUNC_EPTP_SWITCHING_MASK = (BX_CONST64(1) << VMX_VMFUNC_EPTP_
 /* binary 0010_01xx_xxxx_xxx0 */
 #define VMCS_64BIT_GUEST_PHYSICAL_ADDR                     0x00002400 /* EPT */
 #define VMCS_64BIT_GUEST_PHYSICAL_ADDR_HI                  0x00002401
+#define VMCS_64BIT_MSR_DATA                                0x00002402 /* MSRLIST */
+#define VMCS_64BIT_MSR_DATA_HI                             0x00002403
 
 /* VMCS 64-bit guest state fields */
 /* binary 0010_10xx_xxxx_xxx0 */
@@ -808,6 +812,7 @@ typedef struct bx_VMCS
 #define VMX_VM_EXEC_CTRL3_EPT_PAGING_WRITE          (1 <<  2) /* HLAT (not implemented) */
 #define VMX_VM_EXEC_CTRL3_GUEST_PAGING_VERIFICATION (1 <<  3) /* HLAT (not implemented) */
 #define VMX_VM_EXEC_CTRL3_IPI_VIRTUALIZATION        (1 <<  4) /* IPI virtualization (not implemented) */
+#define VMX_VM_EXEC_CTRL3_ENABLE_MSRLIST            (1 <<  6) /* MSRLIST */
 #define VMX_VM_EXEC_CTRL3_VIRTUALIZE_IA32_SPEC_CTRL (1 <<  7)
 
 #define VMX_VM_EXEC_CTRL3_SUPPORTED_BITS \
@@ -824,6 +829,7 @@ typedef struct bx_VMCS
    Bit32u vm_pf_match;
    Bit64u io_bitmap_addr[2];
    bx_phy_address msr_bitmap_addr;
+   Bit64u msr_data;
 
    bx_address vm_cr0_mask;
    bx_address vm_cr0_read_shadow;
@@ -831,7 +837,6 @@ typedef struct bx_VMCS
    bx_address vm_cr4_read_shadow;
 
 #define VMX_CR3_TARGET_MAX_CNT 4
-
    Bit32u vm_cr3_target_cnt;
    bx_address vm_cr3_target_value[VMX_CR3_TARGET_MAX_CNT];
 

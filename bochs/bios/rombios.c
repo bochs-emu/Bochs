@@ -1098,17 +1098,17 @@ static struct {
       { 0x4400, 0x5d00, 0x6700, 0x7100, none }, /* F10 */
       {   none,   none,   none,   none, none }, /* Num Lock */
       {   none,   none,   none,   none, none }, /* Scroll Lock */
-      { 0x4700, 0x4737, 0x7700,   none, 0x20 }, /* 7 Home */
-      { 0x4800, 0x4838,   none,   none, 0x20 }, /* 8 UP */
-      { 0x4900, 0x4939, 0x8400,   none, 0x20 }, /* 9 PgUp */
+      { 0x4700, 0x4737, 0x7700, 0x0007, 0x20 }, /* 7 Home */
+      { 0x4800, 0x4838,   none, 0x0008, 0x20 }, /* 8 UP */
+      { 0x4900, 0x4939, 0x8400, 0x0009, 0x20 }, /* 9 PgUp */
       { 0x4a2d, 0x4a2d,   none,   none, none }, /* - */
-      { 0x4b00, 0x4b34, 0x7300,   none, 0x20 }, /* 4 Left */
-      { 0x4c00, 0x4c35,   none,   none, 0x20 }, /* 5 */
-      { 0x4d00, 0x4d36, 0x7400,   none, 0x20 }, /* 6 Right */
+      { 0x4b00, 0x4b34, 0x7300, 0x0004, 0x20 }, /* 4 Left */
+      { 0x4c00, 0x4c35,   none, 0x0005, 0x20 }, /* 5 */
+      { 0x4d00, 0x4d36, 0x7400, 0x0006, 0x20 }, /* 6 Right */
       { 0x4e2b, 0x4e2b,   none,   none, none }, /* + */
-      { 0x4f00, 0x4f31, 0x7500,   none, 0x20 }, /* 1 End */
-      { 0x5000, 0x5032,   none,   none, 0x20 }, /* 2 Down */
-      { 0x5100, 0x5133, 0x7600,   none, 0x20 }, /* 3 PgDn */
+      { 0x4f00, 0x4f31, 0x7500, 0x0001, 0x20 }, /* 1 End */
+      { 0x5000, 0x5032,   none, 0x0002, 0x20 }, /* 2 Down */
+      { 0x5100, 0x5133, 0x7600, 0x0003, 0x20 }, /* 3 PgDn */
       { 0x5200, 0x5230,   none,   none, 0x20 }, /* 0 Ins */
       { 0x5300, 0x532e,   none,   none, 0x20 }, /* Del */
       {   none,   none,   none,   none, none },
@@ -5146,7 +5146,7 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
   Bit16u DI, SI, BP, SP, BX, DX, CX, AX;
 {
   Bit8u scancode, asciicode, shift_flags;
-  Bit8u mf2_flags, mf2_state;
+  Bit8u mf2_flags, mf2_state, altkp_val;
 
   //
   // DS has been set to 0x40 before call
@@ -5164,6 +5164,7 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
   shift_flags = read_byte_DS(0x17);
   mf2_flags = read_byte_DS(0x18);
   mf2_state = read_byte_DS(0x96);
+  altkp_val = read_byte_DS(0x19);
   asciicode = 0;
 
   switch (scancode) {
@@ -5244,6 +5245,10 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
         mf2_flags &= ~0x02;
         write_byte_DS(0x18, mf2_flags);
       }
+      if (altkp_val > 0) {
+        enqueue_key(0, altkp_val);
+        write_byte_DS(0x19, 0);
+      }
       break;
 
     case 0x45: /* Num Lock press */
@@ -5319,6 +5324,12 @@ ASM_END
       if (shift_flags & 0x08) { /* ALT */
         asciicode = scan_to_scanascii[scancode].alt;
         scancode = scan_to_scanascii[scancode].alt >> 8;
+        if (scancode == 0) {
+          altkp_val = altkp_val * 10 + asciicode;
+          set_DS(0x40);
+          write_byte_DS(0x19, altkp_val);
+          return;
+        }
       } else if (shift_flags & 0x04) { /* CONTROL */
         asciicode = scan_to_scanascii[scancode].control;
         scancode = scan_to_scanascii[scancode].control >> 8;

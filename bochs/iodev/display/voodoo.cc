@@ -186,7 +186,7 @@ BX_THREAD_FUNC(fifo_thread, indata)
     if (bx_wait_sem(&fifo_wakeup),1) {
       if (!voodoo_keep_alive) break;
       BX_LOCK(fifo_mutex);
-      while (1) {
+      while (voodoo_keep_alive) {
         if (!fifo_empty(&v->fbi.fifo)) {
           fifo = &v->fbi.fifo;
         } else if (!fifo_empty(&v->pci.fifo)) {
@@ -257,8 +257,10 @@ bx_voodoo_base_c::~bx_voodoo_base_c()
 {
   if (voodoo_keep_alive) {
     voodoo_keep_alive = 0;
+    v->vtimer_running = 0;
     bx_set_sem(&fifo_wakeup);
     bx_set_sem(&fifo_not_full);
+    bx_set_sem(&vertical_sem);
     BX_THREAD_JOIN(fifo_thread_var);
     BX_FINI_MUTEX(fifo_mutex);
     BX_FINI_MUTEX(render_mutex);
@@ -267,7 +269,6 @@ bx_voodoo_base_c::~bx_voodoo_base_c()
     }
     bx_destroy_sem(&fifo_wakeup);
     bx_destroy_sem(&fifo_not_full);
-    bx_set_sem(&vertical_sem);
     bx_destroy_sem(&vertical_sem);
   }
   if (s.vga_tile_updated != NULL) {
@@ -319,8 +320,8 @@ void bx_voodoo_base_c::init(void)
   voodoo_init(s.model);
   if (s.model >= VOODOO_BANSHEE) {
     banshee_bitblt_init();
-    s.max_xres = 1600;
-    s.max_yres = 1280;
+    s.max_xres = 1920;
+    s.max_yres = 1440;
   } else {
     s.max_xres = 800;
     s.max_yres = 680;
@@ -855,9 +856,11 @@ void bx_voodoo_base_c::vertical_timer(void)
   if (v->fbi.video_changed || v->fbi.clut_dirty) {
     // TODO: use tile-based update mechanism
     redraw_area(0, 0, s.vdraw.width, s.vdraw.height);
+    BX_LOCK(fifo_mutex);
     if (v->fbi.clut_dirty) {
       update_pens();
     }
+    BX_UNLOCK(fifo_mutex);
     v->fbi.video_changed = 0;
     s.vdraw.gui_update_pending = 1;
   }
@@ -899,6 +902,7 @@ void bx_voodoo_1_2_c::init_model(void)
   s.vdraw.output_on = 0;
   s.vdraw.override_on = 0;
   s.vdraw.screen_update_pending = 0;
+  s.vdraw.vsync_usec = 0; // prevents crash in get_retrace
 }
 
 void bx_voodoo_1_2_c::reset(unsigned type)
@@ -1070,7 +1074,8 @@ bool bx_voodoo_1_2_c::update_timing(void)
   BX_INFO(("Voodoo output %dx%d@%uHz", v->fbi.width, v->fbi.height, (unsigned)v->vertfreq));
   v->fbi.swaps_pending = 0;
   v->vtimer_running = 1;
-  bx_virt_timer.activate_timer(s.vertical_timer_id, (Bit32u)s.vdraw.vtotal_usec, 1);
+  if (v->vidclk != 0.0)
+    bx_virt_timer.activate_timer(s.vertical_timer_id, (Bit32u)s.vdraw.vtotal_usec, 1);
   return 1;
 }
 

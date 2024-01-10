@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2018 Stanislav Shwartsman
+//   Copyright (c) 2011-2023 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -35,39 +35,6 @@ extern float_status_t mxcsr_to_softfloat_status_word(bx_mxcsr_t mxcsr);
 //////////////////////////
 // AVX FMA Instructions //
 //////////////////////////
-
-#define AVX2_FMA_PACKED(HANDLER, func)                                        \
-  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)         \
-  {                                                                           \
-    BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());                     \
-    BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());                     \
-    BxPackedAvxRegister op3 = BX_READ_AVX_REG(i->src3());                     \
-    unsigned len = i->getVL();                                                \
-                                                                              \
-    float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);            \
-    softfloat_status_word_rc_override(status, i);                             \
-                                                                              \
-    for (unsigned n=0; n < len; n++)                                          \
-      (func)(&op1.vmm128(n), &op2.vmm128(n), &op3.vmm128(n), status);         \
-                                                                              \
-    check_exceptionsSSE(get_exception_flags(status));                         \
-                                                                              \
-    BX_WRITE_AVX_REGZ(i->dst(), op1, len);                                    \
-    BX_NEXT_INSTR(i);                                                         \
-  }
-
-AVX2_FMA_PACKED(VFMADDPD_VpdHpdWpdR, xmm_fmaddpd)
-AVX2_FMA_PACKED(VFMADDPS_VpsHpsWpsR, xmm_fmaddps)
-AVX2_FMA_PACKED(VFMADDSUBPD_VpdHpdWpdR, xmm_fmaddsubpd)
-AVX2_FMA_PACKED(VFMADDSUBPS_VpsHpsWpsR, xmm_fmaddsubps)
-AVX2_FMA_PACKED(VFMSUBADDPD_VpdHpdWpdR, xmm_fmsubaddpd)
-AVX2_FMA_PACKED(VFMSUBADDPS_VpsHpsWpsR, xmm_fmsubaddps)
-AVX2_FMA_PACKED(VFMSUBPD_VpdHpdWpdR, xmm_fmsubpd)
-AVX2_FMA_PACKED(VFMSUBPS_VpsHpsWpsR, xmm_fmsubps)
-AVX2_FMA_PACKED(VFNMADDPD_VpdHpdWpdR, xmm_fnmaddpd)
-AVX2_FMA_PACKED(VFNMADDPS_VpsHpsWpsR, xmm_fnmaddps)
-AVX2_FMA_PACKED(VFNMSUBPD_VpdHpdWpdR, xmm_fnmsubpd)
-AVX2_FMA_PACKED(VFNMSUBPS_VpsHpsWpsR, xmm_fnmsubps)
 
 #define AVX2_FMA_SCALAR_SINGLE(HANDLER, func)                                 \
   void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)         \

@@ -275,14 +275,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_STi(bxInstruction_c *i)
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
   FPU_update_last_instruction(i);
 
-  int pop_stack = 0;
-  if (i->getIaOpcode() == BX_IA_FSTP_STi)
-      pop_stack = 1;
+  unsigned opcode = i->getIaOpcode();
+  int pop_stack = (opcode != BX_IA_FST_STi);
 
   clear_C1();
 
   if (IS_TAG_EMPTY(0)) {
-    FPU_stack_underflow(i, i->dst(), pop_stack);
+    // D9D8..D9DF - Behaves the same as FSTP (DDD8..DDDF) but won't cause a stack underflow exception
+    if (opcode != BX_IA_FSTP_SPECIAL_STi)
+        FPU_stack_underflow(i, i->dst(), pop_stack);
+    else
+        BX_CPU_THIS_PTR the_i387.FPU_pop();
   }
   else {
     floatx80 st0_reg = BX_READ_FPU_REG(0);
@@ -309,9 +312,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_SINGLE_REAL(bxInstruction_c *i)
 
   float32 save_reg = float32_default_nan; /* The masked response */
 
-  int pop_stack = 0;
-  if (i->getIaOpcode() == BX_IA_FSTP_SINGLE_REAL)
-      pop_stack = 1;
+  int pop_stack = (i->getIaOpcode() == BX_IA_FSTP_SINGLE_REAL);
 
   if (IS_TAG_EMPTY(0))
   {
@@ -357,9 +358,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FST_DOUBLE_REAL(bxInstruction_c *i)
 
   float64 save_reg = float64_default_nan; /* The masked response */
 
-  int pop_stack = 0;
-  if (i->getIaOpcode() == BX_IA_FSTP_DOUBLE_REAL)
-      pop_stack = 1;
+  int pop_stack = (i->getIaOpcode() == BX_IA_FSTP_DOUBLE_REAL);
 
   if (IS_TAG_EMPTY(0))
   {
@@ -436,9 +435,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIST_WORD_INTEGER(bxInstruction_c *i)
 
   Bit16s save_reg = int16_indefinite;
 
-  int pop_stack = 0;
-  if (i->getIaOpcode() == BX_IA_FISTP_WORD_INTEGER)
-      pop_stack = 1;
+  int pop_stack = (i->getIaOpcode() == BX_IA_FISTP_WORD_INTEGER);
 
   clear_C1();
 
@@ -484,9 +481,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIST_DWORD_INTEGER(bxInstruction_c *i)
 
   Bit32s save_reg = int32_indefinite; /* The masked response */
 
-  int pop_stack = 0;
-  if (i->getIaOpcode() == BX_IA_FISTP_DWORD_INTEGER)
-      pop_stack = 1;
+  int pop_stack = (i->getIaOpcode() == BX_IA_FISTP_DWORD_INTEGER);
 
   clear_C1();
 

@@ -24,6 +24,7 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu.h"
+#include "cpuid.h"
 
 #define LOG_THIS BX_CPU(0)->
 
@@ -402,6 +403,10 @@ bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
     case VMCS_64BIT_GUEST_PHYSICAL_ADDR:
     case VMCS_64BIT_GUEST_PHYSICAL_ADDR_HI:
       return BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT);
+
+    case VMCS_64BIT_MSR_DATA:
+    case VMCS_64BIT_MSR_DATA_HI:
+      return is_cpu_extension_supported(BX_ISA_MSRLIST);
 #endif
 
     /* VMCS 64-bit guest state fields */
@@ -854,9 +859,15 @@ void BX_CPU_C::init_tertiary_proc_based_vmexec_ctrls(void)
   //   [03] Guest Paging verification
   //   [04] IPI Virtualization
   //    ...
+  //   [06] Enable MSRLIST instructions
   //   [07] Virtualize IA32_SPEC_CTRL
+  //    ...
 
   cap->vmx_vmexec_ctrl3_supported_bits = 0;
+
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_MSRLIST)) {
+    cap->vmx_vmexec_ctrl3_supported_bits |= VMX_VM_EXEC_CTRL3_ENABLE_MSRLIST;
+  }
 }
 
 void BX_CPU_C::init_vmexit_ctrls(void)

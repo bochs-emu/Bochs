@@ -23,6 +23,7 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu.h"
+#include "cpuid.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 #include "pc_system.h"
@@ -523,6 +524,14 @@ void BX_CPU_C::handleAvxModeChange(void)
     }
   }
 
+#if BX_SUPPORT_AMX
+  if (! long64_mode() || ! BX_CPU_THIS_PTR cr4.get_OSXSAVE() ||
+      (~BX_CPU_THIS_PTR xcr0.val32 & (BX_XCR0_XTILECFG_MASK | BX_XCR0_XTILEDATA_MASK)) != 0)
+    clear_amx_ok();
+  else
+    set_amx_ok();
+#endif
+
   updateFetchModeMask(); /* AVX_OK changed */
 }
 
@@ -570,6 +579,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoEVEX(bxInstruction_c *i)
 
   if(BX_CPU_THIS_PTR cr0.get_TS())
     exception(BX_NM_EXCEPTION, 0);
+
+  BX_ASSERT(0);
+
+  BX_NEXT_TRACE(i); // keep compiler happy
+}
+#endif
+
+#if BX_SUPPORT_AMX
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoAMX(bxInstruction_c *i)
+{
+  if (! long64_mode() || ! BX_CPU_THIS_PTR cr4.get_OSXSAVE())
+    exception(BX_UD_EXCEPTION, 0);
+
+  if (~BX_CPU_THIS_PTR xcr0.val32 & (BX_XCR0_XTILECFG_MASK | BX_XCR0_XTILEDATA_MASK))
+    exception(BX_UD_EXCEPTION, 0);
 
   BX_ASSERT(0);
 

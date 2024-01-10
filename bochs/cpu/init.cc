@@ -33,6 +33,10 @@
 #include "apic.h"
 #endif
 
+#if BX_SUPPORT_AMX
+#include "avx/amx.h"
+#endif
+
 #include <stdlib.h>
 
 BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
@@ -129,6 +133,13 @@ void BX_CPU_C::initialize(void)
 
 #if BX_CPU_LEVEL >= 6
   xsave_xrestor_init();
+#endif
+
+#if BX_SUPPORT_AMX
+  amx = NULL;
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AMX)) {
+    amx = new AMX;
+  }
 #endif
 
 #if BX_CONFIGURE_MSRS
@@ -505,6 +516,27 @@ void BX_CPU_C::register_state(void)
     }
   }
 #endif
+
+#if BX_SUPPORT_AMX
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AMX)) {
+    bx_list_c *amx_list = new bx_list_c(cpu, "AMX");
+    BXRS_DEC_PARAM_FIELD(amx_list, palette, amx->palette_id);
+    BXRS_DEC_PARAM_FIELD(amx_list, start_row, amx->start_row);
+    BXRS_HEX_PARAM_FIELD(amx_list, tile_use_tracker, amx->tile_use_tracker);
+    for (n=0; n<8; n++) {
+      sprintf(name, "tile%d_rows", n);
+      new bx_shadow_num_c(amx_list, name, &(amx->tilecfg[n].rows), BASE_DEC);
+      sprintf(name, "tile%d_colsb", n);
+      new bx_shadow_num_c(amx_list, name, &(amx->tilecfg[n].bytes_per_row), BASE_DEC);
+      for(unsigned row=0;row < 16;row++) {
+        for(unsigned j=0;j < BX_VLMAX*2;j++) {
+          sprintf(name, "tile%d_row%d_%d", n, row, j);
+          new bx_shadow_num_c(amx_list, name, &(amx->tile[n].row[row].vmm64u(j)), BASE_HEX);
+        }
+      }
+    }
+  }
+#endif
 #endif // BX_CPU_LEVEL >= 6
 
 #if BX_SUPPORT_MONITOR_MWAIT
@@ -688,6 +720,10 @@ void BX_CPU_C::after_restore_state(void)
   set_PKeys(BX_CPU_THIS_PTR pkru, BX_CPU_THIS_PTR pkrs);
 #endif
 
+#if BX_SUPPORT_X86_64
+  BX_CPU_THIS_PTR linaddr_width = BX_CPU_THIS_PTR cr4.get_LA57() ? 57 : 48;
+#endif
+
   handleCpuContextChange();
 
   assert_checks();
@@ -703,6 +739,10 @@ BX_CPU_C::~BX_CPU_C()
 
 #if BX_SUPPORT_APIC
   delete lapic;
+#endif
+
+#if BX_SUPPORT_AMX
+  delete amx;
 #endif
 
 #if InstrumentCPU
@@ -895,6 +935,9 @@ void BX_CPU_C::reset(unsigned source)
 #if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR cr4.set32(0);
   BX_CPU_THIS_PTR cr4_suppmask = get_cr4_allow_mask();
+#if BX_SUPPORT_X86_64
+  BX_CPU_THIS_PTR linaddr_width = 48;
+#endif
 #endif
 
 #if BX_CPU_LEVEL >= 6
@@ -902,6 +945,7 @@ void BX_CPU_C::reset(unsigned source)
     BX_CPU_THIS_PTR xcr0.set32(0x1);
   }
   BX_CPU_THIS_PTR xcr0_suppmask = get_xcr0_allow_mask();
+  BX_CPU_THIS_PTR ia32_xss_suppmask = get_ia32_xss_allow_mask();
 
   BX_CPU_THIS_PTR msr.ia32_xss = 0;
 

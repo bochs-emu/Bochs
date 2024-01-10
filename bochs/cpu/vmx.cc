@@ -24,6 +24,7 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu.h"
+#include "cpuid.h"
 #include "msr.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
@@ -131,6 +132,8 @@ static const char *VMX_vmexit_reason_name[] =
   /* 75 */  "Notify Window",
   /* 76 */  "SEAMCALL",
   /* 77 */  "TDCALL",
+  /* 78 */  "RDMSRLIST",
+  /* 79 */  "WRMSRLIST",
 };
 
 #include "decoder/ia_opcodes.h"
@@ -434,17 +437,17 @@ bool BX_CPU_C::is_eptptr_valid(Bit64u eptptr)
   //       0 = Uncacheable (UC)
   //       6 = Write-back (WB)
   Bit32u memtype = eptptr & 7;
-  if (memtype != BX_MEMTYPE_UC && memtype != BX_MEMTYPE_WB) return 0;
+  if (memtype != BX_MEMTYPE_UC && memtype != BX_MEMTYPE_WB) return false;
 
   // [5:3] This value is 1 less than the EPT page-walk length
   Bit32u walk_length = (eptptr >> 3) & 7;
-  if (walk_length != 3) return 0;
+  if (walk_length != 3) return false;
 
   // [6]   EPT A/D Enable
   if (! BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT_ACCESS_DIRTY)) {
     if (eptptr & 0x40) {
       BX_ERROR(("is_eptptr_valid: EPTPTR A/D enabled when not supported by CPU"));
-      return 0;
+      return false;
     }
   }
 
@@ -452,18 +455,18 @@ bool BX_CPU_C::is_eptptr_valid(Bit64u eptptr)
   if (eptptr & 0x80) {
     if (! BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) {
       BX_ERROR(("is_eptptr_valid: EPTPTR CET supervisor shadow stack control bit enabled when not supported by CPU"));
-      return 0;
+      return false;
     }
   }
 
 #define BX_EPTPTR_RESERVED_BITS 0xf00 /* bits 11:8 are reserved */
   if (eptptr & BX_EPTPTR_RESERVED_BITS) {
     BX_ERROR(("is_eptptr_valid: EPTPTR reserved bits set"));
-    return 0;
+    return false;
   }
 
-  if (! IsValidPhyAddr(eptptr)) return 0;
-  return 1;
+  if (! IsValidPhyAddr(eptptr)) return false;
+  return true;
 }
 #endif
 
@@ -1331,20 +1334,20 @@ BX_CPP_INLINE bool IsLimitAccessRightsConsistent(Bit32u limit, Bit32u ar)
   bool g = (ar >> 15) & 1;
 
   // access rights reserved bits set
-  if (ar & 0xfffe0f00) return 0;
+  if (ar & 0xfffe0f00) return false;
 
   if (g) {
     // if any of the bits in limit[11:00] are '0 <=> G must be '0
     if ((limit & 0xfff) != 0xfff)
-       return 0;
+       return false;
   }
   else {
     // if any of the bits in limit[31:20] are '1 <=> G must be '1
     if ((limit & 0xfff00000) != 0)
-       return 0;
+       return false;
   }
 
-  return 1;
+  return true;
 }
 
 Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
@@ -2331,11 +2334,9 @@ Bit32u BX_CPU_C::LoadMSRs(Bit32u msr_cnt, bx_phy_address pAddr)
     }
 #endif
 
-    if (is_cpu_extension_supported(BX_ISA_X2APIC)) {
-      if (is_x2apic_msr_range(index)) {
-        BX_ERROR(("VMX LoadMSRs %d: unable to restore X2APIC range MSR %x", msr, index));
-        return msr;
-      }
+    if (is_x2apic_msr_range(index)) {
+      BX_ERROR(("VMX LoadMSRs %d: unable to restore X2APIC range MSR %x", msr, index));
+      return msr;
     }
 
     if (! wrmsr(index, msr_hi)) {
@@ -2360,11 +2361,9 @@ Bit32u BX_CPU_C::StoreMSRs(Bit32u msr_cnt, bx_phy_address pAddr)
 
     Bit32u index = GET32L(msr_lo);
 
-    if (is_cpu_extension_supported(BX_ISA_X2APIC)) {
-      if (is_x2apic_msr_range(index)) {
-        BX_ERROR(("VMX StoreMSRs %d: unable to save X2APIC range MSR %x", msr, index));
-        return msr;
-      }
+    if (is_x2apic_msr_range(index)) {
+      BX_ERROR(("VMX StoreMSRs %d: unable to save X2APIC range MSR %x", msr, index));
+      return msr;
     }
 
     if (! rdmsr(index, &msr_hi)) {
@@ -2806,6 +2805,11 @@ void BX_CPU_C::VMexit(Bit32u reason, Bit64u qualification)
     BX_PANIC(("PANIC: broken VMEXIT reason %d", reason));
   else
     BX_DEBUG(("VMEXIT reason = %d (%s) qualification=0x" FMT_LL "x", reason, VMX_vmexit_reason_name[reason], qualification));
+
+  if (TERTIARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_ENABLE_MSRLIST)) {
+    VMwrite64(VMCS_64BIT_MSR_DATA, ((reason == VMX_VMEXIT_WRMSRLIST) && VMEXIT(VMX_VM_EXEC_CTRL1_MSR_BITMAPS)) ? vm->msr_data : 0);
+    vm->msr_data = 0;
+  }
 
   if (reason != VMX_VMEXIT_EXCEPTION_NMI && reason != VMX_VMEXIT_EXTERNAL_INTERRUPT) {
     VMwrite32(VMCS_32BIT_VMEXIT_INTERRUPTION_INFO, 0);
@@ -4066,6 +4070,7 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, io_bitmap_addr1, BX_CPU_THIS_PTR vmcs.io_bitmap_addr[0]);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, io_bitmap_addr2, BX_CPU_THIS_PTR vmcs.io_bitmap_addr[1]);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, msr_bitmap_addr, BX_CPU_THIS_PTR vmcs.msr_bitmap_addr);
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, msr_data, BX_CPU_THIS_PTR vmcs.msr_data);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vm_cr0_mask, BX_CPU_THIS_PTR vmcs.vm_cr0_mask);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vm_cr0_read_shadow, BX_CPU_THIS_PTR vmcs.vm_cr0_read_shadow);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vm_cr4_mask, BX_CPU_THIS_PTR vmcs.vm_cr4_mask);

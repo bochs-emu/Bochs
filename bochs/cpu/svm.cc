@@ -24,6 +24,7 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu.h"
+#include "cpuid.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 #if BX_SUPPORT_SVM
@@ -707,7 +708,7 @@ bool BX_CPU_C::SvmInjectEvents(void)
   SVM_CONTROLS *ctrls = &BX_CPU_THIS_PTR vmcb.ctrls;
 
   ctrls->eventinj = vmcb_read32(SVM_CONTROL32_EVENT_INJECTION);
-  if ((ctrls->eventinj & 0x80000000) == 0) return 1;
+  if ((ctrls->eventinj & 0x80000000) == 0) return true;
 
   /* the VMENTRY injecting event to the guest */
   unsigned vector = ctrls->eventinj & 0xff;
@@ -729,7 +730,7 @@ bool BX_CPU_C::SvmInjectEvents(void)
     case BX_HARDWARE_EXCEPTION:
       if (vector == 2 || vector > 31) {
         BX_ERROR(("SvmInjectEvents: invalid vector %d for HW exception", vector));
-        return 0;
+        return false;
       }
       if (vector == BX_BP_EXCEPTION || vector == BX_OF_EXCEPTION) {
         type = BX_SOFTWARE_EXCEPTION;
@@ -742,7 +743,7 @@ bool BX_CPU_C::SvmInjectEvents(void)
 
     default:
       BX_ERROR(("SvmInjectEvents: unsupported event injection type %d !", type));
-      return 0;
+      return false;
   }
 
   BX_DEBUG(("SvmInjectEvents: Injecting vector 0x%02x (error_code 0x%04x)", vector, error_code));
@@ -760,7 +761,7 @@ bool BX_CPU_C::SvmInjectEvents(void)
 
   BX_CPU_THIS_PTR last_exception_type = 0; // error resolved
 
-  return 1;
+  return true;
 }
 
 void BX_CPU_C::SvmInterceptException(unsigned type, unsigned vector, Bit16u errcode, bool errcode_valid, Bit64u qualification)

@@ -5,7 +5,7 @@
 //  Copyright (c) 2004 Makoto Suzuki (suzu)
 //                     Volker Ruppert (vruppert)
 //                     Robin Kay (komadori)
-//  Copyright (C) 2004-2021  The Bochs Project
+//  Copyright (C) 2004-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -533,15 +533,15 @@ Bit8u bx_svga_cirrus_c::mem_read(bx_phy_address addr)
   }
 #endif
 
-  if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x01) == CIRRUS_SR7_BPP_VGA) {
-    return BX_CIRRUS_THIS bx_vgacore_c::mem_read(addr);
-  }
-
 #if BX_SUPPORT_PCI
   if (BX_CIRRUS_THIS pci_enabled) {
     if ((addr >= BX_CIRRUS_THIS pci_bar[0].addr) &&
         (addr < (BX_CIRRUS_THIS pci_bar[0].addr + CIRRUS_PNPMEM_SIZE))) {
       Bit8u *ptr;
+
+      if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x01) == CIRRUS_SR7_BPP_VGA) {
+        return 0xff;
+      }
 
       Bit32u offset = addr & BX_CIRRUS_THIS memsize_mask;
       if ((offset >= (BX_CIRRUS_THIS s.memsize - 256)) &&
@@ -583,6 +583,9 @@ Bit8u bx_svga_cirrus_c::mem_read(bx_phy_address addr)
     }
   }
 #endif // BX_SUPPORT_PCI
+  if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x01) == CIRRUS_SR7_BPP_VGA) {
+    return BX_CIRRUS_THIS bx_vgacore_c::mem_read(addr);
+  }
 
   if (addr >= 0xA0000 && addr <= 0xAFFFF)
   {
@@ -659,15 +662,14 @@ bool bx_svga_cirrus_c::cirrus_mem_write_handler(bx_phy_address addr, unsigned le
 
 void bx_svga_cirrus_c::mem_write(bx_phy_address addr, Bit8u value)
 {
-  if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x01) == CIRRUS_SR7_BPP_VGA) {
-    BX_CIRRUS_THIS bx_vgacore_c::mem_write(addr,value);
-    return;
-  }
-
 #if BX_SUPPORT_PCI
   if (BX_CIRRUS_THIS pci_enabled) {
     if ((addr >= BX_CIRRUS_THIS pci_bar[0].addr) &&
         (addr < (BX_CIRRUS_THIS pci_bar[0].addr + CIRRUS_PNPMEM_SIZE))) {
+
+      if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x01) == CIRRUS_SR7_BPP_VGA) {
+        return;
+      }
 
       Bit32u offset = addr & BX_CIRRUS_THIS memsize_mask;
       if ((offset >= (BX_CIRRUS_THIS s.memsize - 256)) &&
@@ -721,6 +723,10 @@ void bx_svga_cirrus_c::mem_write(bx_phy_address addr, Bit8u value)
     }
   }
 #endif // BX_SUPPORT_PCI
+  if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x01) == CIRRUS_SR7_BPP_VGA) {
+    BX_CIRRUS_THIS bx_vgacore_c::mem_write(addr,value);
+    return;
+  }
 
   if (addr >= 0xA0000 && addr <= 0xAFFFF) {
     Bit32u bank, offset;

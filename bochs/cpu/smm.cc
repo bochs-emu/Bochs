@@ -642,7 +642,7 @@ bool BX_CPU_C::resume_from_system_management_mode(BX_SMM_State *smm_state)
 
   if (smm_state->cr4.get_VMXE()) {
     BX_PANIC(("SMM restore: CR4.VMXE is set in restore image !"));
-    return 0;
+    return false;
   }
 
   // restore state normally from SMRAM;
@@ -681,7 +681,7 @@ bool BX_CPU_C::resume_from_system_management_mode(BX_SMM_State *smm_state)
 #if BX_CPU_LEVEL >= 5
   if (smm_state->efer.get32() & ~((Bit64u) BX_CPU_THIS_PTR efer_suppmask)) {
     BX_PANIC(("SMM restore: Attempt to set EFER reserved bits: 0x%08x !", smm_state->efer.get32()));
-    return 0;
+    return false;
   }
 
   BX_CPU_THIS_PTR efer.set32(smm_state->efer.val32);
@@ -690,13 +690,13 @@ bool BX_CPU_C::resume_from_system_management_mode(BX_SMM_State *smm_state)
   // check CR0 conditions for entering to shutdown state
   if (!check_CR0(smm_state->cr0.get32())) {
     BX_PANIC(("SMM restore: CR0 consistency check failed !"));
-    return 0;
+    return false;
   }
 
 #if BX_CPU_LEVEL >= 5
   if (!check_CR4(smm_state->cr4.get32())) {
     BX_PANIC(("SMM restore: CR4 consistency check failed !"));
-    return 0;
+    return false;
   }
 #endif
 
@@ -710,25 +710,25 @@ bool BX_CPU_C::resume_from_system_management_mode(BX_SMM_State *smm_state)
   if (BX_CPU_THIS_PTR efer.get_LMA()) {
     if (smm_state->eflags & EFlagsVMMask) {
       BX_PANIC(("SMM restore: If EFER.LMA = 1 => RFLAGS.VM=0 !"));
-      return 0;
+      return false;
     }
 
     if (!BX_CPU_THIS_PTR cr4.get_PAE() || !BX_CPU_THIS_PTR cr0.get_PG() || !BX_CPU_THIS_PTR cr0.get_PE() || !BX_CPU_THIS_PTR efer.get_LME()) {
       BX_PANIC(("SMM restore: If EFER.LMA = 1 <=> CR4.PAE, CR0.PG, CR0.PE, EFER.LME=1 !"));
-      return 0;
+      return false;
     }
   }
   else {
     if (BX_CPU_THIS_PTR cr4.get_PCIDE()) {
       BX_PANIC(("SMM restore: CR4.PCIDE must be clear when not in long mode !"));
-      return 0;
+      return false;
     }
   }
 
   if (BX_CPU_THIS_PTR cr4.get_PAE() && BX_CPU_THIS_PTR cr0.get_PG() && BX_CPU_THIS_PTR cr0.get_PE() && BX_CPU_THIS_PTR efer.get_LME()) {
     if (! BX_CPU_THIS_PTR efer.get_LMA()) {
       BX_PANIC(("SMM restore: If EFER.LMA = 1 <=> CR4.PAE, CR0.PG, CR0.PE, EFER.LME=1 !"));
-      return 0;
+      return false;
     }
   }
 #endif
@@ -737,7 +737,7 @@ bool BX_CPU_C::resume_from_system_management_mode(BX_SMM_State *smm_state)
   if (BX_CPU_THIS_PTR cr0.get_PG() && BX_CPU_THIS_PTR cr4.get_PAE() && !long_mode()) {
     if (! CheckPDPTR(smm_state->cr3)) {
       BX_ERROR(("SMM restore: PDPTR check failed !"));
-      return 0;
+      return false;
     }
   }
 #endif
@@ -770,7 +770,7 @@ bool BX_CPU_C::resume_from_system_management_mode(BX_SMM_State *smm_state)
     {
        if (! BX_CPU_THIS_PTR sregs[segreg].cache.segment) {
          BX_PANIC(("SMM restore: restored valid non segment %d !", segreg));
-         return 0;
+         return false;
        }
     }
   }
@@ -784,7 +784,7 @@ bool BX_CPU_C::resume_from_system_management_mode(BX_SMM_State *smm_state)
   {
      if (BX_CPU_THIS_PTR ldtr.cache.type != BX_SYS_SEGMENT_LDT) {
         BX_PANIC(("SMM restore: LDTR is not LDT descriptor type !"));
-        return 0;
+        return false;
      }
   }
 
@@ -801,7 +801,7 @@ bool BX_CPU_C::resume_from_system_management_mode(BX_SMM_State *smm_state)
          BX_CPU_THIS_PTR tr.cache.type != BX_SYS_SEGMENT_BUSY_386_TSS)
      {
         BX_PANIC(("SMM restore: TR is not TSS descriptor type !"));
-        return 0;
+        return false;
      }
   }
 
@@ -810,7 +810,7 @@ bool BX_CPU_C::resume_from_system_management_mode(BX_SMM_State *smm_state)
 #if BX_CPU_LEVEL < 6
      if (BX_CPU_THIS_PTR smbase & 0x7fff) {
         BX_PANIC(("SMM restore: SMBASE must be aligned to 32K !"));
-        return 0;
+        return false;
      }
 #endif
   }
@@ -823,7 +823,7 @@ bool BX_CPU_C::resume_from_system_management_mode(BX_SMM_State *smm_state)
 
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_CONTEXT_SWITCH, 0);
 
-  return 1;
+  return true;
 }
 
 #endif /* BX_CPU_LEVEL >= 3 */

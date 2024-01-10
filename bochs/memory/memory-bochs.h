@@ -148,6 +148,7 @@ private:
   Bit8u   flash_type;
   Bit8u   flash_status;
   Bit8u   flash_wsm_state;
+  bool    flash_modified;
 
   BX_MEM_SMF Bit8u flash_read(Bit32u addr);
   BX_MEM_SMF void  flash_write(Bit32u addr, Bit8u data);
@@ -177,6 +178,9 @@ public:
 
   BX_MEM_SMF void    dmaReadPhysicalPage(bx_phy_address addr, unsigned len, Bit8u *data);
   BX_MEM_SMF void    dmaWritePhysicalPage(bx_phy_address addr, unsigned len, Bit8u *data);
+
+  BX_MEM_SMF bool    load_flash_data(const char *path);
+  BX_MEM_SMF bool    save_flash_data(const char *path);
 
   BX_MEM_SMF void    load_ROM(const char *path, bx_phy_address romaddress, Bit8u type);
   BX_MEM_SMF void    load_RAM(const char *path, bx_phy_address romaddress);

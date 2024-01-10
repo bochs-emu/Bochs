@@ -45,10 +45,8 @@
 
 bx_e1000_main_c* E1000DevMain = NULL;
 
-const Bit8u e1000_iomask[64] = {7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-                                7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-                                7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-                                7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7};
+const Bit8u e1000_iomask[32] = {4, 0, 0, 0, 7, 1, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 #define E1000_CTRL     0x00000  // Device Control - RW
 #define E1000_STATUS   0x00008  // Device Status - RO
@@ -563,7 +561,7 @@ void bx_e1000_c::init_card(Bit8u card)
   init_pci_conf(0x8086, 0x100e, 0x03, 0x020000, 0x00, BX_PCI_INTA);
 
   BX_E1000_THIS init_bar_mem(0, 0x20000, mem_read_handler, mem_write_handler);
-  BX_E1000_THIS init_bar_io(1, 64, read_handler, write_handler, &e1000_iomask[0]);
+  BX_E1000_THIS init_bar_io(1, 32, read_handler, write_handler, &e1000_iomask[0]);
   BX_E1000_THIS pci_rom_address = 0;
   BX_E1000_THIS pci_rom_read_handler = mem_read_handler;
   bootrom = SIM->get_param_string("bootrom", base);
@@ -636,6 +634,7 @@ void bx_e1000_c::reset(unsigned type)
   memset(&BX_E1000_THIS s.tx, 0, sizeof(BX_E1000_THIS s.tx));
   BX_E1000_THIS s.tx.vlan = saved_ptr;
   BX_E1000_THIS s.tx.data = BX_E1000_THIS s.tx.vlan + 4;
+  BX_E1000_THIS s.io_memaddr = 0;
 
   // Deassert IRQ
   set_irq_level(0);
@@ -690,6 +689,7 @@ void bx_e1000_c::e1000_register_state(bx_list_c *parent, Bit8u card)
   BXRS_DEC_PARAM_FIELD(eecds, bitnum_out, BX_E1000_THIS s.eecd_state.bitnum_out);
   BXRS_PARAM_BOOL(eecds, reading, BX_E1000_THIS s.eecd_state.reading);
   BXRS_HEX_PARAM_FIELD(eecds, old_eecd, BX_E1000_THIS s.eecd_state.old_eecd);
+  BXRS_HEX_PARAM_FIELD(list, io_memaddr, BX_E1000_THIS s.io_memaddr);
 
   register_pci_state(list);
 }
@@ -924,12 +924,17 @@ Bit32u bx_e1000_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
 Bit32u bx_e1000_c::read(Bit32u address, unsigned io_len)
 {
   Bit8u offset;
+  Bit32u value = 0;
 
-  offset = address - BX_E1000_THIS pci_bar[1].addr;
+  offset = (Bit8u)(address - BX_E1000_THIS pci_bar[1].addr);
 
-  BX_ERROR(("register read from offset 0x%02x returns 0", offset));
-
-  return 0;
+  if (offset == 0) {
+    value = BX_E1000_THIS s.io_memaddr;
+  } else {
+    address = BX_E1000_THIS pci_bar[0].addr + BX_E1000_THIS s.io_memaddr;
+    mem_read(address, io_len, &value);
+  }
+  return value;
 }
 
 // static IO port write callback handler
@@ -944,11 +949,16 @@ void bx_e1000_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, uns
 
 void bx_e1000_c::write(Bit32u address, Bit32u value, unsigned io_len)
 {
-  Bit8u  offset;
+  Bit8u offset;
 
-  offset = address - BX_E1000_THIS pci_bar[1].addr;
+  offset = (Bit8u)(address - BX_E1000_THIS pci_bar[1].addr);
 
-  BX_ERROR(("register write to offset 0x%02x ignored - value = 0x%08x", offset, value));
+  if (offset == 0) {
+    BX_E1000_THIS s.io_memaddr = (value & 0x000fffff);
+  } else {
+    address = BX_E1000_THIS pci_bar[0].addr + BX_E1000_THIS s.io_memaddr;
+    mem_write(address, io_len, &value);
+  }
 }
 
 void bx_e1000_c::set_irq_level(bool level)

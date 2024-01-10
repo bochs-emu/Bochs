@@ -24,6 +24,7 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu.h"
+#include "cpuid.h"
 #include "msr.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
@@ -40,13 +41,29 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 {
   Bit64u val64 = 0;
 
+#if BX_SUPPORT_VMX >= 2
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_X2APIC_MODE)) {
+      if (index >= 0x800 && index <= 0x8FF) {
+        if (index == 0x808 || SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_APIC_REGISTERS)) {
+          unsigned vapic_offset = (index & 0xff) << 4;
+          Bit32u msr_lo = VMX_Read_Virtual_APIC(vapic_offset);
+          Bit32u msr_hi = VMX_Read_Virtual_APIC(vapic_offset + 4);
+          *msr = GET64_FROM_HI32_LO32(msr_hi, msr_lo);
+          return true;
+        }
+      }
+    }
+  }
+#endif
+
 #if BX_CPU_LEVEL >= 6
   if (is_cpu_extension_supported(BX_ISA_X2APIC)) {
     if (is_x2apic_msr_range(index)) {
       if (x2apic_mode())
         return BX_CPU_THIS_PTR lapic->read_x2apic(index, msr);
       else
-        return 0;
+        return false;
     }
   }
 #endif
@@ -288,7 +305,16 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
 #endif
 
-    // SCA preention MSRs
+    // artificial MSR for MRSLIST serialization
+    case BX_MSR_IA32_BARRIER:
+      if (! is_cpu_extension_supported(BX_ISA_MSRLIST)) {
+        BX_ERROR(("RDMSR IA32_BARRIER: not enabled in the cpu model"));
+        return handle_unknown_rdmsr(index, msr);
+      }
+      val64 = 0;
+      break;
+
+    // SCA prevention MSRs
     case BX_MSR_IA32_ARCH_CAPABILITIES:
       if (! is_cpu_extension_supported(BX_ISA_SCA_MITIGATIONS)) {
         BX_ERROR(("RDMSR IA32_ARCH_CAPABILITIES: not enabled in the cpu model"));
@@ -321,7 +347,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
         return handle_unknown_rdmsr(index, msr);
       }
       // write only MSR, no need to remember written value
-      return 0;
+      return false;
 
     case BX_MSR_IA32_FLUSH_CMD:
       if (! is_cpu_extension_supported(BX_ISA_SCA_MITIGATIONS)) {
@@ -329,7 +355,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
         return handle_unknown_rdmsr(index, msr);
       }
       // write only MSR, no need to remember written value
-      return 0;
+      return false;
 
 #if BX_SUPPORT_VMX
 /*
@@ -360,7 +386,13 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
         val64 = VMX_MSR_VMX_PROCBASED_CTRLS2;
         break;
       }
-      return 0;
+      return false;
+    case BX_MSR_VMX_PROCBASED_CTRLS3:
+      if (BX_CPU_THIS_PTR vmx_cap.vmx_vmexec_ctrl3_supported_bits) {
+        val64 = VMX_MSR_VMX_PROCBASED_CTRLS3;
+        break;
+      }
+      return false;
 #if BX_SUPPORT_VMX >= 2
     case BX_MSR_VMX_TRUE_PINBASED_CTRLS:
       val64 = VMX_MSR_VMX_TRUE_PINBASED_CTRLS;
@@ -379,13 +411,13 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
         val64 = VMX_MSR_VMX_EPT_VPID_CAP;
         break;
       }
-      return 0;
+      return false;
     case BX_MSR_VMX_VMFUNC:
       if (BX_CPU_THIS_PTR vmx_cap.vmx_vmfunc_supported_bits) {
         val64 = BX_CPU_THIS_PTR vmx_cap.vmx_vmfunc_supported_bits;
         break;
       }
-      return 0;
+      return false;
 #endif
     case BX_MSR_VMX_MISC:
       val64 = VMX_MSR_MISC;
@@ -498,7 +530,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
   BX_DEBUG(("RDMSR: read %08x:%08x from MSR %x", GET32H(val64), GET32L(val64), index));
 
   *msr = val64;
-  return 1;
+  return true;
 }
 
 bool BX_CPP_AttrRegparmN(2) BX_CPU_C::handle_unknown_rdmsr(Bit32u index, Bit64u *msr)
@@ -508,7 +540,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::handle_unknown_rdmsr(Bit32u index, Bit64u 
   // Try to check cpuid_t first (can implement some MSRs)
   int result = BX_CPU_THIS_PTR cpuid->rdmsr(index, &val_64);
   if (result == 0)
-    return 0; // #GP fault due to not supported MSR
+    return false; // #GP fault due to not supported MSR
 
   if (result < 0) {
     // cpuid_t have no idea about this MSR
@@ -523,12 +555,12 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::handle_unknown_rdmsr(Bit32u index, Bit64u 
       BX_ERROR(("RDMSR: Unknown register %#x", index));
 
       if (! BX_CPU_THIS_PTR ignore_bad_msrs)
-        return 0; // will result in #GP fault due to unknown MSR
+        return false; // will result in #GP fault due to unknown MSR
     }
   }
 
   *msr = val_64;
-  return 1;
+  return true;
 }
 
 #endif // BX_CPU_LEVEL >= 5
@@ -554,21 +586,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest)
     VMexit_MSR(VMX_VMEXIT_RDMSR, index);
-#endif
-
-#if BX_SUPPORT_VMX >= 2
-  if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_X2APIC_MODE)) {
-      if (index >= 0x800 && index <= 0x8FF) {
-        if (index == 0x808 || SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_APIC_REGISTERS)) {
-          unsigned vapic_offset = (index & 0xff) << 4;
-          RAX = VMX_Read_Virtual_APIC(vapic_offset);
-          RDX = VMX_Read_Virtual_APIC(vapic_offset + 4);
-          BX_NEXT_INSTR(i);
-        }
-      }
-    }
-  }
 #endif
 
   if (!rdmsr(index, &val64))
@@ -632,13 +649,22 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 
   BX_DEBUG(("WRMSR: write %08x:%08x to MSR %x", val32_hi, val32_lo, index));
 
+#if BX_SUPPORT_VMX >= 2
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_X2APIC_MODE)) {
+      if (Virtualize_X2APIC_Write(index, val_64))
+        return true;
+    }
+  }
+#endif
+
 #if BX_CPU_LEVEL >= 6
   if (is_cpu_extension_supported(BX_ISA_X2APIC)) {
     if (is_x2apic_msr_range(index)) {
       if (x2apic_mode())
         return BX_CPU_THIS_PTR lapic->write_x2apic(index, val32_hi, val32_lo);
       else
-        return 0;
+        return false;
     }
   }
 #endif
@@ -675,7 +701,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 #if BX_SUPPORT_X86_64
       if (! IsCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to MSR_SYSENTER_ESP !"));
-        return 0;
+        return false;
       }
 #endif
       BX_CPU_THIS_PTR msr.sysenter_esp_msr = val_64;
@@ -689,7 +715,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 #if BX_SUPPORT_X86_64
       if (! IsCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to MSR_SYSENTER_EIP !"));
-        return 0;
+        return false;
       }
 #endif
       BX_CPU_THIS_PTR msr.sysenter_eip_msr = val_64;
@@ -703,7 +729,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
         return handle_unknown_wrmsr(index, val_64);
       }
       BX_ERROR(("WRMSR: MTRRCAP is read only MSR"));
-      return 0;
+      return false;
 
     case BX_MSR_MTRRPHYSBASE0:
     case BX_MSR_MTRRPHYSBASE1:
@@ -719,12 +745,12 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       }
       if (! IsValidPhyAddr(val_64)) {
         BX_ERROR(("WRMSR[0x%08x]: attempt to write invalid phy addr to variable range MTRR %08x:%08x", index, val32_hi, val32_lo));
-        return 0;
+        return false;
       }
       // handle 8-11 reserved bits
       if (! isMemTypeValidMTRR(val32_lo & 0xFFF)) {
         BX_ERROR(("WRMSR: attempt to write invalid Memory Type to BX_MSR_MTRRPHYSBASE"));
-        return 0;
+        return false;
       }
       BX_CPU_THIS_PTR msr.mtrrphys[index - BX_MSR_MTRRPHYSBASE0] = val_64;
       break;
@@ -742,12 +768,12 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       }
       if (! IsValidPhyAddr(val_64)) {
         BX_ERROR(("WRMSR[0x%08x]: attempt to write invalid phy addr to variable range MTRR %08x:%08x", index, val32_hi, val32_lo));
-        return 0;
+        return false;
       }
       // handle 10-0 reserved bits
       if (val32_lo & 0x7ff) {
         BX_ERROR(("WRMSR[0x%08x]: variable range MTRR reserved bits violation %08x:%08x", index, val32_hi, val32_lo));
-        return 0;
+        return false;
       }
       BX_CPU_THIS_PTR msr.mtrrphys[index - BX_MSR_MTRRPHYSBASE0] = val_64;
       break;
@@ -759,7 +785,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       }
       if (! isValidMSR_FixedMTRR(val_64)) {
         BX_ERROR(("WRMSR: attempt to write invalid Memory Type to MSR_MTRRFIX64K_00000 !"));
-        return 0;
+        return false;
       }
       BX_CPU_THIS_PTR msr.mtrrfix64k = val_64;
       break;
@@ -772,7 +798,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       }
       if (! isValidMSR_FixedMTRR(val_64)) {
         BX_ERROR(("WRMSR: attempt to write invalid Memory Type to MSR_MTRRFIX16K register !"));
-        return 0;
+        return false;
       }
       BX_CPU_THIS_PTR msr.mtrrfix16k[index - BX_MSR_MTRRFIX16K_80000] = val_64;
       break;
@@ -791,7 +817,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       }
       if (! isValidMSR_FixedMTRR(val_64)) {
         BX_ERROR(("WRMSR: attempt to write invalid Memory Type to fixed memory range MTRR !"));
-        return 0;
+        return false;
       }
       BX_CPU_THIS_PTR msr.mtrrfix4k[index - BX_MSR_MTRRFIX4K_C0000] = val_64;
       break;
@@ -803,11 +829,11 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       }
       if (! isMemTypeValidMTRR(val32_lo & 0xFF)) {
         BX_ERROR(("WRMSR: attempt to write invalid Memory Type to MSR_MTRR_DEFTYPE"));
-        return 0;
+        return false;
       }
       if (val32_hi || (val32_lo & 0xfffff300)) {
         BX_ERROR(("WRMSR: attempt to reserved bits in MSR_MTRR_DEFTYPE"));
-        return 0;
+        return false;
       }
       BX_CPU_THIS_PTR msr.mtrr_deftype = val32_lo;
       break;
@@ -820,7 +846,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 
       if (! isValidMSR_PAT(val_64)) {
         BX_ERROR(("WRMSR: attempt to write invalid Memory Type to MSR_PAT"));
-        return 0;
+        return false;
       }
 
       BX_CPU_THIS_PTR msr.pat = val_64;
@@ -865,7 +891,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
         Bit32u xss_suport_mask = get_ia32_xss_allow_mask();
         if (val_64 & ~Bit64u(xss_suport_mask)) {
           BX_ERROR(("WRMSR: attempt to set reserved/not supported bit in BX_MSR_XSS"));
-          return 0;
+          return false;
         }
         BX_CPU_THIS_PTR msr.ia32_xss = val_64;
         break;
@@ -881,7 +907,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       }
       if (! IsCanonical(val_64) || is_invalid_cet_control(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical or invalid value to BX_MSR_IA32_U_CET/BX_MSR_IA32_S_CET !"));
-        return 0;
+        return false;
       }
       BX_CPU_THIS_PTR msr.ia32_cet_control[index == BX_MSR_IA32_U_CET] = val_64;
       break;
@@ -896,11 +922,11 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       }
       if (! IsCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_PLi_SSP !"));
-        return 0;
+        return false;
       }
       if (val_64 & 0x03) {
         BX_ERROR(("WRMSR: attempt to write non 4byte-aligned address to BX_MSR_IA32_PLi_SSP !"));
-        return 0;
+        return false;
       }
       BX_CPU_THIS_PTR msr.ia32_pl_ssp[index - BX_MSR_IA32_PL0_SSP] = val_64;
       break;
@@ -912,7 +938,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       }
       if (! IsCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_INTERRUPT_SSP_TABLE_ADDR !"));
-        return 0;
+        return false;
       }
       BX_CPU_THIS_PTR msr.ia32_interrupt_ssp_table = val_64;
       break;
@@ -934,7 +960,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       }
       if (! IsCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_UINTR_HANDLER !"));
-        return 0;
+        return false;
       }
       BX_CPU_THIS_PTR uintr.ui_handler = val_64;
       break;
@@ -945,7 +971,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       }
       if (! IsCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_UINTR_STACKADJUST !"));
-        return 0;
+        return false;
       }
       BX_CPU_THIS_PTR uintr.stack_adjust = val_64;
       break;
@@ -956,7 +982,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       }
       if (val_64 & BX_CONST64(0xffffff0000000000)) {
         BX_ERROR(("WRMSR: attempt to write to reserved bits of BX_MSR_IA32_UINTR_MISC !"));
-        return 0;
+        return false;
       }
       BX_CPU_THIS_PTR uintr.uitt_size = GET32L(val_64);
       BX_CPU_THIS_PTR uintr.uinv      = GET32H(val_64);
@@ -968,11 +994,11 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       }
       if (! IsCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_UINTR_PD !"));
-        return 0;
+        return false;
       }
       if (val_64 & 0x3f) { // bits [5:0] are reserved and MBZ
         BX_ERROR(("WRMSR: attempt to write to reserved bits of BX_MSR_IA32_UINTR_MISC !"));
-        return 0;
+        return false;
       }
       BX_CPU_THIS_PTR uintr.upid_addr = val_64;
       break;
@@ -983,11 +1009,11 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       }
       if (! IsCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_UINTR_TT !"));
-        return 0;
+        return false;
       }
       if (val_64 & 0x0E) { // bits [3:1] are reserved and MBZ
         BX_ERROR(("WRMSR: attempt to write to reserved bits of BX_MSR_IA32_UINTR_TT !"));
-        return 0;
+        return false;
       }
       BX_CPU_THIS_PTR uintr.uitt_addr = val_64;
       break;
@@ -1014,14 +1040,22 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       break;
 #endif
 
-    // SCA preention MSRs
+    // artificial MSR for MRSLIST serialization
+    case BX_MSR_IA32_BARRIER:
+      if (! is_cpu_extension_supported(BX_ISA_MSRLIST)) {
+        BX_ERROR(("WRMSR IA32_BARRIER: not enabled in the cpu model"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
+      return true;
+
+    // SCA prevention MSRs
     case BX_MSR_IA32_ARCH_CAPABILITIES:
       if (! is_cpu_extension_supported(BX_ISA_SCA_MITIGATIONS)) {
         BX_ERROR(("WRMSR IA32_ARCH_CAPABILITIES: not enabled in the cpu model"));
         return handle_unknown_wrmsr(index, val_64);
       }
       BX_ERROR(("WRMSR: IA32_ARCH_CAPABILITIES is read only MSR"));
-      return 0;
+      return false;
 
     case BX_MSR_IA32_SPEC_CTRL:
       if (! is_cpu_extension_supported(BX_ISA_SCA_MITIGATIONS)) {
@@ -1034,7 +1068,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       // [63:3] - reserved
       if (val_64 & ~(BX_CONST64(0x7))) {
         BX_ERROR(("WRMSR: attempt to set reserved bits of IA32_SPEC_CTRL !"));
-        return 0;
+        return false;
       }
       BX_CPU_THIS_PTR msr.ia32_spec_ctrl = val32_lo;
       break;
@@ -1048,7 +1082,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       // [63:1] - reserved
       if (val_64 & ~(BX_CONST64(0x1))) {
         BX_ERROR(("WRMSR: attempt to set reserved bits of IA32_PRED_CMD !"));
-        return 0;
+        return false;
       }
       // write only MSR, no need to remember written value
       break;
@@ -1062,7 +1096,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       // [63:1] - reserved
       if (val_64 & ~(BX_CONST64(0x1))) {
         BX_ERROR(("WRMSR: attempt to set reserved bits of IA32_FLUSH_CMD !"));
-        return 0;
+        return false;
       }
       // write only MSR, no need to remember written value
       break;
@@ -1072,12 +1106,12 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_IA32_FEATURE_CONTROL:
       if (BX_CPU_THIS_PTR msr.ia32_feature_ctrl & 0x1) {
         BX_ERROR(("WRMSR: IA32_FEATURE_CONTROL_MSR VMX lock bit is set !"));
-        return 0;
+        return false;
       }
 /*
       if (val_64 & ~((Bit64u)(BX_IA32_FEATURE_CONTROL_BITS))) {
         BX_ERROR(("WRMSR: attempt to set reserved bits of IA32_FEATURE_CONTROL_MSR !"));
-        return 0;
+        return false;
       }
 */
       BX_CPU_THIS_PTR msr.ia32_feature_ctrl = val32_lo;
@@ -1087,6 +1121,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_VMX_PINBASED_CTRLS:
     case BX_MSR_VMX_PROCBASED_CTRLS:
     case BX_MSR_VMX_PROCBASED_CTRLS2:
+    case BX_MSR_VMX_PROCBASED_CTRLS3:
     case BX_MSR_VMX_VMEXIT_CTRLS:
     case BX_MSR_VMX_VMENTRY_CTRLS:
     case BX_MSR_VMX_MISC:
@@ -1102,7 +1137,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_VMX_TRUE_VMENTRY_CTRLS:
     case BX_MSR_VMX_VMFUNC:
       BX_ERROR(("WRMSR: VMX read only MSR"));
-      return 0;
+      return false;
 #endif
 
 #if BX_SUPPORT_SVM
@@ -1119,7 +1154,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 #endif
 
     case BX_MSR_EFER:
-      if (! SetEFER(val_64)) return 0;
+      if (! SetEFER(val_64)) return false;
       break;
 
     case BX_MSR_STAR:
@@ -1138,7 +1173,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       }
       if (! IsCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to MSR_LSTAR !"));
-        return 0;
+        return false;
       }
       BX_CPU_THIS_PTR msr.lstar = val_64;
       break;
@@ -1150,7 +1185,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       }
       if (! IsCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to MSR_CSTAR !"));
-        return 0;
+        return false;
       }
       BX_CPU_THIS_PTR msr.cstar = val_64;
       break;
@@ -1170,7 +1205,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       }
       if (! IsCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to MSR_FSBASE !"));
-        return 0;
+        return false;
       }
       MSR_FSBASE = val_64;
       break;
@@ -1182,7 +1217,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       }
       if (! IsCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to MSR_GSBASE !"));
-        return 0;
+        return false;
       }
       MSR_GSBASE = val_64;
       break;
@@ -1194,7 +1229,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       }
       if (! IsCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to MSR_KERNELGSBASE !"));
-        return 0;
+        return false;
       }
       BX_CPU_THIS_PTR msr.kernelgsbase = val_64;
       break;
@@ -1212,7 +1247,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       return handle_unknown_wrmsr(index, val_64);
   }
 
-  return 1;
+  return true;
 }
 
 bool BX_CPP_AttrRegparmN(2) BX_CPU_C::handle_unknown_wrmsr(Bit32u index, Bit64u val_64)
@@ -1220,7 +1255,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::handle_unknown_wrmsr(Bit32u index, Bit64u 
   // Try to check cpuid_t first (can implement some MSRs)
   int result = BX_CPU_THIS_PTR cpuid->wrmsr(index, val_64);
   if (result == 0)
-    return 0; // #GP fault due to not supported MSR
+    return false; // #GP fault due to not supported MSR
 
   if (result < 0) {
     // cpuid_t have no idea about this MSR
@@ -1228,18 +1263,18 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::handle_unknown_wrmsr(Bit32u index, Bit64u 
     if (index < BX_MSR_MAX_INDEX && BX_CPU_THIS_PTR msrs[index]) {
       if (! BX_CPU_THIS_PTR msrs[index]->set64(val_64)) {
         BX_ERROR(("WRMSR: Write failed to MSR %#x - #GP fault", index));
-        return 0;
+        return false;
       }
-      return 1;
+      return true;
     }
 #endif
     // failed to find the MSR, could #GP or ignore it silently
     BX_ERROR(("WRMSR: Unknown register %#x", index));
     if (! BX_CPU_THIS_PTR ignore_bad_msrs)
-      return 0; // will result in #GP fault due to unknown MSR
+      return false; // will result in #GP fault due to unknown MSR
   }
 
-  return 1;
+  return true;
 }
 
 #endif // BX_CPU_LEVEL >= 5
@@ -1264,11 +1299,11 @@ bool BX_CPU_C::relocate_apic(Bit64u val_64)
     BX_INFO(("WRMSR: wrote %08x:%08x to MSR_APICBASE", val32_hi, val32_lo));
     if (! IsValidPhyAddr(val_64)) {
       BX_ERROR(("relocate_apic: invalid physical address"));
-      return 0;
+      return false;
     }
     if (val32_lo & BX_MSR_APICBASE_RESERVED_BITS) {
       BX_ERROR(("relocate_apic: attempt to set reserved bits"));
-      return 0;
+      return false;
     }
 
 #if BX_CPU_LEVEL >= 6
@@ -1279,11 +1314,11 @@ bool BX_CPU_C::relocate_apic(Bit64u val_64)
       if (new_state != apic_state) {
         if (new_state == BX_APIC_STATE_INVALID) {
           BX_ERROR(("relocate_apic: attempt to set invalid apic state"));
-          return 0;
+          return false;
         }
         if (apic_state == BX_APIC_X2APIC_MODE && new_state != BX_APIC_GLOBALLY_DISABLED) {
           BX_ERROR(("relocate_apic: attempt to switch from x2apic -> xapic"));
-          return 0;
+          return false;
         }
       }
     }
@@ -1298,17 +1333,17 @@ bool BX_CPU_C::relocate_apic(Bit64u val_64)
     BX_INFO(("WRMSR: MSR_APICBASE APIC global enable bit cleared !"));
   }
 
-  return 1;
+  return true;
 }
 
 bool BX_CPU_C::apic_global_enable_on()
 {
-  return BX_CPU_THIS_PTR msr.apicbase & 0x800;
+  return (BX_CPU_THIS_PTR msr.apicbase & 0x800) != 0;
 }
 
 bool BX_CPU_C::x2apic_mode()
 {
-  return BX_CPU_THIS_PTR msr.apicbase & 0x400;
+  return (BX_CPU_THIS_PTR msr.apicbase & 0x400) != 0;
 }
 #endif
 
@@ -1337,21 +1372,125 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
     VMexit_MSR(VMX_VMEXIT_WRMSR, index);
 #endif
 
-#if BX_SUPPORT_VMX >= 2
-  if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_X2APIC_MODE)) {
-      if (Virtualize_X2APIC_Write(index, val_64))
-        BX_NEXT_INSTR(i);
-    }
-  }
-#endif
-
   if (! wrmsr(index, val_64))
     exception(BX_GP_EXCEPTION, 0);
 #endif
 
   BX_NEXT_TRACE(i);
 }
+
+#if BX_SUPPORT_X86_64
+
+#include "scalar_arith.h" 
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSRLIST(bxInstruction_c *i)
+{
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    if (! TERTIARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_ENABLE_MSRLIST))
+      exception(BX_UD_EXCEPTION, 0);
+  }
+#endif
+
+  if (!long64_mode() || CPL!=0) {
+    BX_ERROR(("RDMSRLIST: CPL != 0 cause #GP(0)"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
+  if (((ESI | EDI) & 0x7) != 0) {
+    BX_ERROR(("RDMSRLIST: RSI and RDI must be 8-byte aligned"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
+  Bit64u val64;
+
+  while (RCX != 0) {
+    unsigned MSR_index = tzcntq(RCX);   // position of least significant bit set in RCX
+    Bit64u MSR_mask = (BX_CONST64(1) << MSR_index);
+    Bit64u MSR_address = read_linear_qword(BX_SEG_REG_DS, RSI + MSR_index*8);
+    if (GET32H(MSR_address)) {
+      BX_ERROR(("RDMSRLIST index=%d #GP(0): reserved bits are set in MSR address table entry", MSR_index));
+      exception(BX_GP_EXCEPTION, 0);
+    }
+
+#if BX_SUPPORT_VMX >= 2
+    if (BX_CPU_THIS_PTR in_vmx_guest)
+      VMexit_MSR(VMX_VMEXIT_RDMSRLIST, (Bit32u) MSR_address);
+#endif
+
+    if (!rdmsr((Bit32u) MSR_address, &val64))
+      exception(BX_GP_EXCEPTION, 0);
+
+    write_linear_qword(BX_SEG_REG_DS, RDI + MSR_index*8, val64);
+
+    RCX &= ~MSR_mask;
+
+    // allow delivery of any pending interrupts or traps
+    if (BX_CPU_THIS_PTR async_event) {
+      RIP = BX_CPU_THIS_PTR prev_rip; // loop not done, restore RIP
+      break;
+    }
+  }
+
+  BX_NEXT_TRACE(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSRLIST(bxInstruction_c *i)
+{
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    if (! TERTIARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_ENABLE_MSRLIST))
+      exception(BX_UD_EXCEPTION, 0);
+  }
+#endif
+
+  if (!long64_mode() || CPL!=0) {
+    BX_ERROR(("WRMSRLIST: CPL != 0 cause #GP(0)"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
+  if (((ESI | EDI) & 0x7) != 0) {
+    BX_ERROR(("WRMSRLIST: RSI and RDI must be 8-byte aligned"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
+  invalidate_prefetch_q();
+
+  while (RCX != 0) {
+    unsigned MSR_index = tzcntq(RCX);   // position of least significant bit set in RCX
+    Bit64u MSR_mask = (BX_CONST64(1) << MSR_index);
+    Bit64u MSR_address = read_linear_qword(BX_SEG_REG_DS, RSI + MSR_index*8);
+    if (GET32H(MSR_address)) {
+      BX_ERROR(("WRMSRLIST index=%d #GP(0): reserved bits are set in MSR address table entry", MSR_index));
+      exception(BX_GP_EXCEPTION, 0);
+    }
+
+    Bit64u MSR_data = read_linear_qword(BX_SEG_REG_DS, RDI + MSR_index*8);
+
+#if BX_SUPPORT_VMX >= 2
+    if (BX_CPU_THIS_PTR in_vmx_guest) {
+      VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+      vm->msr_data = MSR_data;
+      VMexit_MSR(VMX_VMEXIT_WRMSRLIST, (Bit32u) MSR_address);
+    }
+#endif
+
+    if (! wrmsr((Bit32u) MSR_address, MSR_data))
+      exception(BX_GP_EXCEPTION, 0);
+
+    RCX &= ~MSR_mask;
+
+    // allow delivery of any pending interrupts or traps
+    if (BX_CPU_THIS_PTR async_event) {
+      RIP = BX_CPU_THIS_PTR prev_rip; // loop not done, restore RIP
+      break;
+    }
+  }
+
+  BX_NEXT_TRACE(i);
+}
+
+#endif
 
 #if BX_CONFIGURE_MSRS
 

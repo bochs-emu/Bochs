@@ -51,7 +51,7 @@ public:
   DECLARE_GUI_NEW_VIRTUAL_METHODS()
   virtual void draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
                          Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
-                         bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs);
+                         bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs, bool font2);
   virtual void set_display_mode(disp_mode_t newmode);
   virtual void statusbar_setitem_specific(int element, bool active, bool w);
   virtual void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
@@ -510,10 +510,12 @@ void bx_sdl_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
   headerbar_height = headerbar_y;
 
-  for(i=0;i<256;i++)
-    for(j=0;j<16;j++)
-      vga_charmap[i*32+j] = sdl_font8x16[i][j];
-
+  for(i=0;i<256;i++) {
+    for(j=0;j<16;j++) {
+      vga_charmap[0][i*32+j] = sdl_font8x16[i][j];
+      vga_charmap[1][i*32+j] = sdl_font8x16[i][j];
+    }
+  }
   for(i=0;i<256;i++)
     for(j=0;j<8;j++)
       menufont[i][j] = sdl_font8x8[i][j];
@@ -589,7 +591,7 @@ void bx_sdl_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
 void bx_sdl_gui_c::draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
                              Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
-                             bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs)
+                             bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs, bool font2)
 {
   Uint32 *buf, pitch, fgcolor, bgcolor;
   Bit16u font_row, mask;
@@ -606,7 +608,11 @@ void bx_sdl_gui_c::draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
   fgcolor = sdl_palette[fc];
   bgcolor = sdl_palette[bc];
   dwidth = (guest_fwidth > 9);
-  font_ptr = &vga_charmap[(ch << 5) + fy];
+  if (font2) {
+    font_ptr = &vga_charmap[1][(ch << 5) + fy];
+  } else {
+    font_ptr = &vga_charmap[0][(ch << 5) + fy];
+  }
   do {
     font_row = *font_ptr++;
     if (gfxcharw9) {

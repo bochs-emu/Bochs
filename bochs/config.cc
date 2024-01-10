@@ -898,6 +898,11 @@ void bx_init_options()
       "BIOS options",
       "Options for the Bochs BIOS",
       "", BX_PATHNAME_LEN);
+  new bx_param_filename_c(rom,
+      "flash_data",
+      "Flash BIOS config space image",
+      "Name of the image file for the config data of the flash BIOS",
+      "", BX_PATHNAME_LEN);
   rom->set_options(rom->SERIES_ASK);
 
   path = new bx_param_filename_c(vgarom,
@@ -1137,12 +1142,18 @@ void bx_init_options()
       "If enabled, the VGA timer is based on realtime",
       1);
 
+// The value 0 enables support for using vertical frequency (not yet enabled for Voodoo)
+#if BX_SUPPORT_VOODOO
+#define MIN_UPDATE_FREQ 1
+#else
+#define MIN_UPDATE_FREQ 0
+#endif
   bx_param_num_c *vga_update_freq = new bx_param_num_c(display,
       "vga_update_frequency",
       "VGA Update Frequency",
       "Number of VGA updates per emulated second",
-      1, 60,
-      5);
+      MIN_UPDATE_FREQ, 75,
+      10);
   vga_update_freq->set_ask_format ("Type a new value for VGA update frequency: [%d] ");
 
   bx_init_vgaext_list();
@@ -1198,7 +1209,7 @@ void bx_init_options()
       "serial_delay", "Keyboard serial delay",
       "Approximate time in microseconds that it takes one character to be transferred from the keyboard to controller over the serial path.",
       5, BX_MAX_BIT32U,
-      250);
+      150);
   new bx_param_num_c(keyboard,
       "paste_delay", "Keyboard paste delay",
       "Approximate time in microseconds between attempts to paste characters to the keyboard controller.",
@@ -1830,10 +1841,6 @@ void bx_init_options()
   #if BX_SUPPORT_IODEBUG
   misc->add(SIM->get_param(BXPN_IODEBUG_ALL_RINGS));
   #endif
-  bx_list_c *cmosrt = new bx_list_c(misc, "cmosimg", "CMOS image options");
-  cmosrt->add(SIM->get_param(BXPN_CMOSIMAGE_ENABLED));
-  cmosrt->add(SIM->get_param(BXPN_CMOSIMAGE_PATH));
-  cmosrt->set_options(cdrom->SERIES_ASK);
   misc->set_options(misc->SHOW_PARENT | misc->SHOW_GROUP_NAME);
 }
 
@@ -1929,8 +1936,21 @@ int bx_parse_cmdline(int arg, int argc, char *argv[])
     def_action[level] = SIM->get_default_log_action(level);
   }
   while (arg < argc) {
-    BX_INFO (("parsing arg %d, %s", arg, argv[arg]));
-    parse_line_unformatted("cmdline args", argv[arg]);
+    char ch = argv[arg][strlen(argv[arg]) - 1];
+    if (((arg + 1) < argc) && ((ch == ':') || (ch == '=') || (ch == ','))) {
+      char tmparg[BX_PATHNAME_LEN];
+      strcpy(tmparg, argv[arg]);
+      do {
+        arg++;
+        strcat(tmparg, argv[arg]);
+        ch = argv[arg][strlen(argv[arg]) - 1];
+      } while (((arg + 1)< argc) && ((ch == ':') || (ch == '=') || (ch == ',')));
+      BX_INFO(("parsing concatenated arg %s", tmparg));
+      parse_line_unformatted("cmdline args", tmparg);
+    } else  {
+      BX_INFO(("parsing arg %d, %s", arg, argv[arg]));
+      parse_line_unformatted("cmdline args", argv[arg]);
+    }
     arg++;
   }
   // update log actions if default has been changed
@@ -2933,7 +2953,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       }
     }
   } else if (!strcmp(params[0], "romimage")) {
-    if ((num_params < 2) || (num_params > 4)) {
+    if ((num_params < 2) || (num_params > 5)) {
       PARSE_ERR(("%s: romimage directive: wrong # args.", context));
     }
     // set to default value 0 (auto-detect if no specified)
@@ -2946,6 +2966,8 @@ static int parse_line_formatted(const char *context, int num_params, char *param
           SIM->get_param_num(BXPN_ROM_ADDRESS)->set(strtoul(&params[i][8], NULL, 16));
         else
           SIM->get_param_num(BXPN_ROM_ADDRESS)->set(strtoul(&params[i][8], NULL, 10));
+      } else  if (!strncmp(params[i], "flash_data=", 11)) {
+        SIM->get_param_string(BXPN_ROM_FLASH_DATA)->set(&params[i][11]);
       } else  if (!strncmp(params[i], "options=", 8)) {
         SIM->get_param_string(BXPN_ROM_OPTIONS)->set(&params[i][8]);
       } else {

@@ -33,6 +33,25 @@
 /* ************************************************************************ */
 /* FPU Opcodes */
 
+
+// For compatibility with prior generations there are a few reserved x87 opcodes which do not result in an invalid
+// opcode (#UD) exception, but rather result in the same behavior as existing defined x87 instructions. In the interest
+// of standardization, it is recommended that the opcodes defined in the Intel 64 and IA-32 Architectures Software
+// Developers Manual, Volumes 2A, 2B, 2C, & 2D, be used for these operations for standardization.
+
+//  * DCD0H .. DCD7H - Behaves the same as FCOM, D8D0H through D8D7H.
+//  * DCD8H .. DCDFH - Behaves the same as FCOMP, D8D8H through D8DFH.
+//  * DDC8H .. DDCFH - Behaves the same as FXCH, D9C8H through D9CFH.
+//  * DED0H .. DED7H - Behaves the same as FCOMP, D8D8H through D8DFH.
+//  * DFD0H .. DFD7H - Behaves the same as FSTP, DDD8H through DDDFH.
+//  * DFC8H .. DFCFH - Behaves the same as FXCH, D9C8H through D9CFH.
+//  * DFD8H .. DFDFH - Behaves the same as FSTP, DDD8H through DDDFH.
+
+// There are a few reserved x87 opcodes which provide unique behavior but do not provide capabilities which are not
+// already available in the main instructions:
+//  * D9D8H through D9DFH - Behaves the same as FSTP (DDD8H through DDDFH) but won't cause a stack underflow exception.
+//  * DFC0H through DFC7H - Behaves the same as FFREE (DDC0H through DDD7H) with the addition of an x87 stack POP.
+
 // D8 (modrm is outside 00h - BFh)
 static const Bit16u BxOpcodeInfo_FloatingPointD8[64+8] = {
   /* /m form */
@@ -149,14 +168,14 @@ static const Bit16u BxOpcodeInfo_FloatingPointD9[64+8] = {
   /* D9 D5 */ BX_IA_ERROR,
   /* D9 D6 */ BX_IA_ERROR,
   /* D9 D7 */ BX_IA_ERROR,
-  /* D9 D8 */ BX_IA_FSTP_STi,	// undocumented
-  /* D9 D9 */ BX_IA_FSTP_STi,	// undocumented
-  /* D9 DA */ BX_IA_FSTP_STi,	// undocumented
-  /* D9 DB */ BX_IA_FSTP_STi,	// undocumented
-  /* D9 DC */ BX_IA_FSTP_STi,	// undocumented
-  /* D9 DD */ BX_IA_FSTP_STi,	// undocumented
-  /* D9 DE */ BX_IA_FSTP_STi,	// undocumented
-  /* D9 DF */ BX_IA_FSTP_STi,	// undocumented
+  /* D9 D8 */ BX_IA_FSTP_SPECIAL_STi,	// undocumented
+  /* D9 D9 */ BX_IA_FSTP_SPECIAL_STi,	// undocumented
+  /* D9 DA */ BX_IA_FSTP_SPECIAL_STi,	// undocumented
+  /* D9 DB */ BX_IA_FSTP_SPECIAL_STi,	// undocumented
+  /* D9 DC */ BX_IA_FSTP_SPECIAL_STi,	// undocumented
+  /* D9 DD */ BX_IA_FSTP_SPECIAL_STi,	// undocumented
+  /* D9 DE */ BX_IA_FSTP_SPECIAL_STi,	// undocumented
+  /* D9 DF */ BX_IA_FSTP_SPECIAL_STi,	// undocumented
   /* D9 E0 */ BX_IA_FCHS,
   /* D9 E1 */ BX_IA_FABS,
   /* D9 E2 */ BX_IA_ERROR,
@@ -599,7 +618,7 @@ static const Bit16u BxOpcodeInfo_FloatingPointDF[64+8] = {
   /* 7 */ BX_IA_FISTP_QWORD_INTEGER,
 
   /* /r form */
-  /* DF C0 */ BX_IA_FFREEP_STi,   // 287+ compatibility opcode
+  /* DF C0 */ BX_IA_FFREEP_STi,  // 287+ compatibility opcode
   /* DF C1 */ BX_IA_FFREEP_STi,
   /* DF C2 */ BX_IA_FFREEP_STi,
   /* DF C3 */ BX_IA_FFREEP_STi,

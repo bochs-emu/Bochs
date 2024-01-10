@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2010-2023 Stanislav Shwartsman
+//   Copyright (c) 2010-2024 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -29,6 +29,8 @@ struct cpuid_function_t {
   Bit32u ebx;
   Bit32u ecx;
   Bit32u edx;
+
+  bool is_empty() { return (eax | ebx | ecx | edx) == 0; }
 };
 
 class VMCS_Mapping;
@@ -109,6 +111,11 @@ protected:
 
 #if BX_CPU_LEVEL >= 6
   void get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
+#endif
+
+#if BX_SUPPORT_AMX
+  void get_std_cpuid_amx_palette_info_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
+  void get_std_cpuid_amx_tmul_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
 #endif
 
   Bit32u get_std_cpuid_leaf_1_ecx(Bit32u extra = 0) const;
@@ -539,15 +546,19 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [10:10]  Fast zero-length REP MOVSB
 //   [11:11]  Fast zero-length REP STOSB
 //   [12:12]  Fast zero-length REP CMPSB/SCASB
-//   [18:13]  reserved
+//   [16:13]  reserved
+//   [17:17]  Flexible Return and Event Delivery (FRED) support
+//   [18:18]  LKGS instruction support
 //   [19:19]  WRMSRNS instruction
-//   [20:20]  reserved
+//   [20:20]  NMI source reporting
 //   [21:21]  AMX-FB16 support
 //   [22:22]  HRESET and CPUID leaf 0x20 support
 //   [23:23]  AVX IFMA support
 //   [25:24]  reserved
 //   [26:26]  LAM: Linear Address Masking
 //   [27:27]  MSRLIST: RDMSRLIST/WRMSRLIST instructions and the IA32_BARRIER MSR
+//   [29:28]  reserved
+//   [30:30]  Prevent INVD execution after BIOS is done
 //   [31:28]  reserved
 
 #define BX_CPUID_STD7_SUBLEAF1_EAX_SHA512                 (1 <<  0)
@@ -567,10 +578,10 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_STD7_SUBLEAF1_EAX_RESERVED14             (1 << 14)
 #define BX_CPUID_STD7_SUBLEAF1_EAX_RESERVED15             (1 << 15)
 #define BX_CPUID_STD7_SUBLEAF1_EAX_RESERVED16             (1 << 16)
-#define BX_CPUID_STD7_SUBLEAF1_EAX_RESERVED17             (1 << 17)
-#define BX_CPUID_STD7_SUBLEAF1_EAX_RESERVED18             (1 << 18)
+#define BX_CPUID_STD7_SUBLEAF1_EAX_FRED                   (1 << 17)
+#define BX_CPUID_STD7_SUBLEAF1_EAX_LKGS                   (1 << 18)
 #define BX_CPUID_STD7_SUBLEAF1_EAX_WRMSRNS                (1 << 19)
-#define BX_CPUID_STD7_SUBLEAF1_EAX_RESERVED20             (1 << 20)
+#define BX_CPUID_STD7_SUBLEAF1_EAX_NMI_SOURCE_REPORTING   (1 << 20)
 #define BX_CPUID_STD7_SUBLEAF1_EAX_AMX_FP16               (1 << 21)
 #define BX_CPUID_STD7_SUBLEAF1_EAX_HRESET                 (1 << 22)
 #define BX_CPUID_STD7_SUBLEAF1_EAX_AVX_IFMA               (1 << 23)
@@ -580,7 +591,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_STD7_SUBLEAF1_EAX_MSRLIST                (1 << 27)
 #define BX_CPUID_STD7_SUBLEAF1_EAX_RESERVED28             (1 << 28)
 #define BX_CPUID_STD7_SUBLEAF1_EAX_RESERVED29             (1 << 29)
-#define BX_CPUID_STD7_SUBLEAF1_EAX_RESERVED30             (1 << 30)
+#define BX_CPUID_STD7_SUBLEAF1_EAX_INVD_DISABLE           (1 << 30)
 #define BX_CPUID_STD7_SUBLEAF1_EAX_RESERVED31             (1 << 31)
 
 // CPUID defines - features CPUID[0x00000007].EBX  [subleaf 1]
@@ -596,7 +607,9 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 
 // CPUID defines - features CPUID[0x00000007].ECX  [subleaf 1]
 // -----------------------------
-//   [31:0]   reserved
+//   [31:0]  reserved
+
+// ...
 
 // CPUID defines - features CPUID[0x00000007].EDX  [subleaf 1]
 // -----------------------------
@@ -609,7 +622,8 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [10:10]  AVX-VNNI-INT16 instructions
 //   [13:11]  reserved
 //   [14:14]  PREFETCHITI: PREFETCHIT0/T1 instruction
-//   [16:15]  reserved
+//   [15:15]  USER_MSR: support for URDMSR/UWRMSR instructions
+//   [16:16]  reserved
 //   [17:17]  UIRET sets UIF to the RFLAGS[1] image loaded from the stack
 //   [18:18]  CET_SSS
 
@@ -628,7 +642,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED12             (1 << 12)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED13             (1 << 13)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_PREFETCHI              (1 << 14)
-#define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED15             (1 << 15)
+#define BX_CPUID_STD7_SUBLEAF1_EDX_USER_MSR               (1 << 15)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED16             (1 << 16)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_UIRET_UIF              (1 << 17)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_CET_SSS                (1 << 18)

@@ -8,9 +8,11 @@ Brief summary :
   ! Implemented VMX MBE (Mode Based Execution Control) emulation required for Windows 11 guest
   ! Implemented Posted-Interrupt Processing VMX extension emulation
   ! Implemented Linear Address Separation (LASS) extension
+  ! Implemented 57-bit Linear Address and 5-Level Paging support
   ! Implemented User-Level Interrupt (UINTR) extension
-  ! Implemented recently published Intel instruction sets:
-    - MOVDIRI/MOVDIR64B, AVX512 BF16, AVX IFMA52, VNNI-INT8/VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3, SM4, SHA512, WRMSRNS, WAITPKG, SERIALIZE
+  ! Implemented Intel instruction sets:
+    - MOVDIRI/MOVDIR64B, AMX, AVX512 BF16, AVX IFMA52, AVX-VNNI/VNNI-INT8/VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3/SM4, SHA512, WRMSRNS, MSRLIST, WAITPKG, SERIALIZE
+  ! CPUID: Added Xeon Sapphire Rapids CPU definition
   - Improved 64-bit guest support in Bochs internal debugger, added new internal debugger commands
   - Bochs debugger enhanced with new commands (setpmem, loadmem, deref, ...)
     Enhanced magic breakpoint capabilities. Refer to user documentation for more details.
@@ -20,10 +22,15 @@ Brief summary :
   - USB: Added experimental MSD UASP emulation
   - USB: Added OHCI as an EHCI Companion option. Now allows UHCI or OHCI specified as a configuration parameter.
   - Disk images: Allows large VHD image files
-  - Fixed and enhanced the Floppy Disk emulation
+  - Fixed and enhanced the Floppy Disk emulation, VGA emulation fixes
+  - Expand maximum resolution for Banshee and Voodoo 3 from 1600x1280 to 1920x1440
   - Documentation updates and fixes
+  - LGPL'd VGABIOS updated to version 0.8c (several VBE fixes / additions)
 
 Detailed change log :
+
+- General
+  - Improved parsing bochsrc options passed on the command line.
 
 - CPU/CPUDB
   - Bugfixes for CPU emulation correctness (MONITOR/MWAIT, VMX/SVM, AVX-512, CET)
@@ -31,9 +38,13 @@ Detailed change log :
   - Implemented VMX MBE (Mode Based Execution Control) emulation required for Windows 11 guest
   - Implemented Posted-Interrupt Processing VMX extension emulation
   - Implemented Linear Address Separation (LASS) extension
+  - Implemented 57-bit Linear Address and 5-Level Paging support
   - Implemented User-Level Interrupt (UINTR) extension
-  - Implemented recently published Intel instruction sets:
-    - MOVDIRI/MOVDIR64B, AVX512 BF16, AVX IFMA52, VNNI-INT8/VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3, SM4, SHA512, WRMSRNS, WAITPKG, SERIALIZE
+  - Implemented Intel instruction sets:
+    - MOVDIRI/MOVDIR64B, AMX, AVX512 BF16, AVX IFMA52, AVX-VNNI/VNNI-INT8/VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3/SM4, SHA512, WRMSRNS, MSRLIST, WAITPKG, SERIALIZE
+  - CPUID: Added Xeon Sapphire Rapids CPU definition
+    - Features PKS, WAITPKG, UINTR, AVX-VNNI, AVX512_BF16, MOVDIRI/MOVDIR64, LA57, SERIALIZE and more
+      Not yet supported but will be added in future: AVX512_FP16, VMX Extensions (HLAT, IPI Virtualization)
 
 - Bochs Debugger and Instrumentation
   - Updated Bochs instrumentation examples for new disassembler introduced in Bochs 2.7 release.
@@ -53,6 +64,8 @@ Detailed change log :
 
 - Memory
   - Fixed memory handling in volatile BIOS write support
+  - Added 'flash_data' parameter for loading/saving the config space of the
+    flash BIOS rom and save/restore support for it (unused by Bochs BIOS).
 
 - I/O Devices
   - Timers
@@ -60,13 +73,25 @@ Detailed change log :
     - APIC: Removed timer handles from save/restore list
 
   - CMOS
-    - Fixed and improved RTC handling in CMOS and BIOS (based on SF patch by Michele Giacomone))
+    - Fixed and improved RTC handling in CMOS and BIOS (based on SF patch by Michele Giacomone).
+    - Added runtime option for turning on/off saving CMOS image on exit.
 
   - PCI
     - Fixed and improved PCI slot config error handling
 
+  - VGA
+    - Fixes in MAP13 disabled mode (VGA mode 6): half dot clock, color support
+    - Fixes for the VGA mode 0x13 (Added split screen support)
+    - Fixes for non-chain4 256-color VGA mode called modeX (address wrap, horizonal scrolling)
+    - VGA text mode: implemented secondary charmap support
+    - mem_write(): in text mode don't mark graphics tiles for update
+
   - Voodoo
+    - Expand maximum resolution for Banshee and Voodoo 3 from 1600x1280 to 1920x1440
+    - Fix memory corruption when reading Voodoo ROM
+    - Fixed backward screen-to-screen copy operation for > 8 bpp modes
     - Fixed Voodoo device compilation for big endian architectures
+    - Fixed randomly missing color palette updates
 
   - CD-ROM:
     - Fix to enable TEAC CD-ROM driver to work
@@ -151,8 +176,27 @@ Detailed change log :
     - xHCI: fixed/updated the port bandwidth emulation.
     - Many documentation additions.
 
+  - Networking
+    - E1000: Added support for i/o mapped register access to make DOS driver work.
+
   - HPET
     - Bugfixes in HPET emulation
+
+  - SB16
+    - Set default value for SB16 dmatimer to 1000000 and updated docs
+    - Align SB16 DMA buffer size to 4 to avoid crash in 16-bit stereo mode
+    - Added 16-bit write support for even i/o addresses
+
+   - Keyboard/Mouse
+    - Reduce default keyboard serial delay to 150 to avoid timeouts
+
+-BIOS / VGABIOS
+  - Added capability to enter keycode with ALT + numeric keypad
+  - LGPL'd VGABIOS updated to version 0.8b (from https://github.com/bochs-emu/VGABIOS)
+    - Added VBE get/set palette data support for Banshee and Cirrus versions
+    - Fixed order of colors in VBE function get/set palette data
+    - Added VBE set palette data support to protected mode interface
+    - VESA BIOS function 0x4f00 now stores strings in OemData (for VBE 2.0)
 
 -------------------------------------------------------------------------
 Changes in 2.7 (August 1, 2021):

@@ -949,7 +949,7 @@ void bx_generic_cpuid_t::init_vmx_extensions_bitmask(void)
                             BX_VMX_EPTP_SWITCHING | BX_VMX_EPT_EXCEPTION;
 
         features_bitmask |= BX_VMX_SAVE_DEBUGCTL_DISABLE |
-                         /* BX_VMX_MONITOR_TRAP_FLAG | */ // not implemented yet
+                            BX_VMX_MONITOR_TRAP_FLAG |
                             BX_VMX_PERF_GLOBAL_CTRL;
       }
 #endif
@@ -1065,7 +1065,7 @@ Bit32u bx_generic_cpuid_t::get_ext2_cpuid_features(void) const
 
 void bx_generic_cpuid_t::dump_cpuid(void) const
 {
-  bx_cpuid_t::dump_cpuid(max_std_leaf, (max_ext_leaf > 0x80000000) ? (max_ext_leaf-0x80000000) : 0);
+  bx_cpuid_t::dump_cpuid(max_std_leaf, max_ext_leaf);
 }
 
 bx_cpuid_t *create_bx_generic_cpuid(BX_CPU_C *cpu) { return new bx_generic_cpuid_t(cpu); }

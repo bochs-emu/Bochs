@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003       David N. Welton <davidw@dedasys.com>.
-//  Copyright (C) 2003-2021  The Bochs Project
+//  Copyright (C) 2003-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -164,6 +164,7 @@ bx_speaker_c::bx_speaker_c()
 #endif
 #if BX_SUPPORT_SOUNDLOW
   waveout = NULL;
+  dsp_event_buffer = NULL;
 #endif
 }
 
@@ -178,6 +179,9 @@ bx_speaker_c::~bx_speaker_c()
         if (beep_callback_id >= 0) {
           waveout->unregister_wave_callback(beep_callback_id);
         }
+#if BX_HAVE_REALTIME_USEC
+        delete [] dsp_event_buffer;
+#endif
       }
       break;
 #endif
@@ -211,11 +215,13 @@ void bx_speaker_c::init(void)
       if (waveout != NULL) {
         beep_active = 0;
         beep_volume = SIM->get_param_num("volume", base)->get();
+        beep_level = 0;
 #if BX_HAVE_REALTIME_USEC
         dsp_active = 0;
         dsp_start_usec = bx_get_realtime64_usec();
         dsp_cb_usec = 0;
         dsp_count = 0;
+        dsp_event_buffer = new Bit64u[DSP_EVENT_BUFSIZE];
 #endif
         BX_INIT_MUTEX(beep_mutex);
         beep_callback_id = waveout->register_wave_callback(theSpeaker, beep_callback);
@@ -297,6 +303,9 @@ Bit32u bx_speaker_c::dsp_generator(Bit16u rate, Bit8u *buffer, Bit32u len)
   Bit32u i = 0, j = 0;
   double tmp_dsp_usec, step_usec;
 
+  if (beep_level == 0) {
+    beep_level = (Bit16s)(0x4000 * (beep_volume / 15.0f));
+  }
   Bit64u new_dsp_cb_usec = bx_get_realtime64_usec() - dsp_start_usec;
   if (dsp_cb_usec == 0) {
     dsp_cb_usec = new_dsp_cb_usec - 25000;
@@ -434,7 +443,7 @@ void bx_speaker_c::set_line(bool level)
     BX_LOCK(beep_mutex);
     Bit64u timestamp = bx_get_realtime64_usec() - dsp_start_usec;
     dsp_active = 1;
-    if (dsp_count < 500) {
+    if (dsp_count < DSP_EVENT_BUFSIZE) {
       dsp_event_buffer[dsp_count++] = timestamp;
     } else {
       BX_ERROR(("DSP event buffer full"));

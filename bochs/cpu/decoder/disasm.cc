@@ -293,12 +293,10 @@ char *resolve_memsize(char *disbufptr, const bxInstruction_c *i, unsigned src_in
   else if (src_index == BX_SRC_RM) {
     switch(src_type) {
     case BX_GPR8:
-    case BX_GPR32_MEM8:      // 8-bit  memory ref but 32-bit GPR
       disbufptr = dis_sprintf(disbufptr, "byte ptr ");
       break;
 
     case BX_GPR16:
-    case BX_GPR32_MEM16:     // 16-bit memory ref but 32-bit GPR
     case BX_SEGREG:
       disbufptr = dis_sprintf(disbufptr, "word ptr ");
       break;
@@ -327,6 +325,9 @@ char *resolve_memsize(char *disbufptr, const bxInstruction_c *i, unsigned src_in
       else
 #endif
         disbufptr = dis_sprintf(disbufptr, "xmmword ptr ");
+      break;
+
+    case BX_TMM_REG:
       break;
 
     default:
@@ -401,8 +402,6 @@ char *disasm_regref(char *disbufptr, const bxInstruction_c *i, unsigned src_num,
     break;
 
   case BX_GPR32:
-  case BX_GPR32_MEM8:      // 8-bit  memory ref but 32-bit GPR
-  case BX_GPR32_MEM16:     // 16-bit memory ref but 32-bit GPR
     disbufptr = dis_sprintf(disbufptr, "%s", general_32bit_regname[srcreg]);
     break;
 
@@ -459,6 +458,10 @@ char *disasm_regref(char *disbufptr, const bxInstruction_c *i, unsigned src_num,
     assert(srcreg < 8);
     break;
 #endif
+
+  case BX_TMM_REG:
+    disbufptr = dis_sprintf(disbufptr, "tmm%d", srcreg);
+    break;
 
   case BX_SEGREG:
     disbufptr = dis_sprintf(disbufptr, "%s", segment_name[srcreg]);

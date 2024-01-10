@@ -78,6 +78,8 @@ struct BxOpcodeDecodeDescriptor32 {
 
 #ifndef BX_STANDALONE_DECODER
 #include "cpu/simd_int.h"
+#include "cpu/fpu/softfloat.h"
+#include "cpu/simd_pfp.h"
 #include "cpu/simd_compare.h"
 #include "cpu/simd_vnni.h"
 #endif
@@ -1762,6 +1764,11 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bool is_64, un
           return BX_EVEX_ILLEGAL_ZERO_MASKING_WITH_KMASK_SRC_OR_DEST;
       }
 #endif
+#if BX_SUPPORT_AMX
+      if (type == BX_TMM_REG) {
+        if (nnn >= 8) return BX_AMX_ILLEGAL_TILE_REGISTER;
+      }
+#endif
       break;
     case BX_SRC_RM:
       if (i->modC0()) {
@@ -1771,6 +1778,11 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bool is_64, un
           // vector instruction using opmask as source or dest
           if (i->isZeroMasking())
             return BX_EVEX_ILLEGAL_ZERO_MASKING_WITH_KMASK_SRC_OR_DEST;
+        }
+#endif
+#if BX_SUPPORT_AMX
+        if (type == BX_TMM_REG) {
+          if (rm >= 8) return BX_AMX_ILLEGAL_TILE_REGISTER;
         }
 #endif
         i->setSrcReg(n, rm);
@@ -1804,6 +1816,11 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bool is_64, un
         // vector instruction using opmask as source or dest
         if (i->isZeroMasking())
           return BX_EVEX_ILLEGAL_ZERO_MASKING_WITH_KMASK_SRC_OR_DEST;
+      }
+#endif
+#if BX_SUPPORT_AMX
+      if (type == BX_TMM_REG) {
+        if (vvv >= 8) return BX_AMX_ILLEGAL_TILE_REGISTER;
       }
 #endif
       break;
@@ -2607,6 +2624,14 @@ int assignHandler(bxInstruction_c *i, Bit32u fetchModeMask)
        return(1);
     }
   }
+#if BX_SUPPORT_AMX
+  if (! (fetchModeMask & BX_FETCH_MODE_AMX_OK)) {
+    if (op_flags & BX_PREPARE_AMX) {
+       if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoAMX;
+       return(1);
+    }
+  }
+#endif
 #endif
 #endif
 #endif
