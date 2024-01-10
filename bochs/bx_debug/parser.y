@@ -62,6 +62,7 @@ Bit64u eval_value;
 %token <sval> BX_TOKEN_ZMM
 %token <sval> BX_TOKEN_AVX
 %token <sval> BX_TOKEN_AMX
+%token <sval> BX_TOKEN_TILE
 %token <sval> BX_TOKEN_IDT
 %token <sval> BX_TOKEN_IVT
 %token <sval> BX_TOKEN_GDT
@@ -173,6 +174,8 @@ command:
     | xmm_regs_command
     | ymm_regs_command
     | zmm_regs_command
+    | amx_regs_command
+    | print_tile_command
     | segment_regs_command
     | debug_regs_command
     | control_regs_command
@@ -832,6 +835,14 @@ amx_regs_command:
       }
     ;
 
+print_tile_command:
+      BX_TOKEN_TILE BX_TOKEN_NUMERIC '\n'
+      {
+        bx_dbg_print_amx_tile_command($2);
+        free($1);
+      }
+    ;
+
 segment_regs_command:
       BX_TOKEN_SEGMENT_REGS '\n'
       {
@@ -1240,6 +1251,11 @@ help_command:
      | BX_TOKEN_HELP BX_TOKEN_ZMM '\n'
        {
          dbg_printf("zmm - print AVX-512 state\n");
+         free($1);free($2);
+       }
+     | BX_TOKEN_HELP BX_TOKEN_AMX '\n'
+       {
+         dbg_printf("amx - print AMX state\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_SEGMENT_REGS '\n'

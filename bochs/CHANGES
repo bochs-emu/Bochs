@@ -10,7 +10,7 @@ Brief summary :
   ! Implemented Linear Address Separation (LASS) extension
   ! Implemented 57-bit Linear Address and 5-Level Paging support
   ! Implemented User-Level Interrupt (UINTR) extension
-  ! Implemented recently published Intel instruction sets:
+  ! Implemented Intel instruction sets:
     - MOVDIRI/MOVDIR64B, AMX, AVX512 BF16, AVX IFMA52, AVX-VNNI/VNNI-INT8/VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3/SM4, SHA512, WRMSRNS, MSRLIST, WAITPKG, SERIALIZE
   ! CPUID: Added Xeon Sapphire Rapids CPU definition
   - Improved 64-bit guest support in Bochs internal debugger, added new internal debugger commands
@@ -40,7 +40,7 @@ Detailed change log :
   - Implemented Linear Address Separation (LASS) extension
   - Implemented 57-bit Linear Address and 5-Level Paging support
   - Implemented User-Level Interrupt (UINTR) extension
-  - Implemented recently published Intel instruction sets:
+  - Implemented Intel instruction sets:
     - MOVDIRI/MOVDIR64B, AMX, AVX512 BF16, AVX IFMA52, AVX-VNNI/VNNI-INT8/VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3/SM4, SHA512, WRMSRNS, MSRLIST, WAITPKG, SERIALIZE
   - CPUID: Added Xeon Sapphire Rapids CPU definition
     - Features PKS, WAITPKG, UINTR, AVX-VNNI, AVX512_BF16, MOVDIRI/MOVDIR64, LA57, SERIALIZE and more

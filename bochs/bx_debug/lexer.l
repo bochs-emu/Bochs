@@ -92,6 +92,7 @@ ymm             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_YMM); }
 zmm             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ZMM); }
 avx             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_AVX); }
 amx             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_AMX); }
+tile            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_TILE); }
 mmx             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_MMX); }
 cpu             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CPU); }
 idt		{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_IDT); }
