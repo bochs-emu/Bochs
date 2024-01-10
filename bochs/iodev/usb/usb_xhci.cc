@@ -1904,7 +1904,7 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
   // Non existant Register Port (the next one after the last)
   else if (offset == (XHCI_PORT_SET_OFFSET + (BX_XHCI_THIS hub.n_ports * 16))) {
     win32_usb_trigger(USB_DEBUG_XHCI, USB_DEBUG_NONEXIST, 0, 0);
-  }
+  } 
 #endif
   // Extended Capabilities
   else if ((offset >= EXT_CAPS_OFFSET) && (offset < (EXT_CAPS_OFFSET + EXT_CAPS_SIZE))) {
