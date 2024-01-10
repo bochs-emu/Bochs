@@ -33,6 +33,7 @@
 bool BX_CPP_AttrRegparmN(2) BX_CPU_C::configure_tiles(bxInstruction_c *i, const BxPackedAvxRegister &tilecfg)
 {
   Bit8u palette_id = tilecfg.vmmubyte(0);
+  Bit8u start_row  = tilecfg.vmmubyte(1);
 
   if (palette_id == 0) {
     BX_CPU_THIS_PTR amx->clear();
@@ -66,6 +67,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::configure_tiles(bxInstruction_c *i, const 
 
     BX_CPU_THIS_PTR amx->clear();
     BX_CPU_THIS_PTR amx->palette_id = 1;
+    BX_CPU_THIS_PTR amx->start_row = start_row;
     for (unsigned n=0; n < 8; n++)
       BX_CPU_THIS_PTR amx->tilecfg[n] = tile[n];
     return true;
