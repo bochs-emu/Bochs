@@ -115,6 +115,11 @@ x86_feature(BX_ISA_AVX_VNNI, "avx_vnni")                                /* AVX e
 x86_feature(BX_ISA_AVX_VNNI_INT8, "avx_vnni_int8")                      /* AVX encoded VNNI-INT8 Instructions */
 x86_feature(BX_ISA_AVX_VNNI_INT16, "avx_vnni_int16")                    /* AVX encoded VNNI-INT16 Instructions */
 x86_feature(BX_ISA_AVX_NE_CONVERT, "avx_ne_convert")                    /* AVX-NE-CONVERT Instructions */
+#if BX_SUPPORT_AMX
+x86_feature(BX_ISA_AMX, "amx")                                          /* AMX Instructions */
+x86_feature(BX_ISA_AMX_INT8, "amx_int8")                                /* AMX-INT8 Instructions */
+x86_feature(BX_ISA_AMX_BF16, "amx_bf16")                                /* AMX-BF16 Instructions */
+#endif
 #endif
 x86_feature(BX_ISA_XAPIC, "xapic")                                      /* XAPIC support */
 x86_feature(BX_ISA_X2APIC, "x2apic")                                    /* X2APIC support */

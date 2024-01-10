@@ -124,6 +124,11 @@ sapphire_rapids_t::sapphire_rapids_t(BX_CPU_C *cpu):
   enable_cpu_extension(BX_ISA_AVX512_VPOPCNTDQ);
   enable_cpu_extension(BX_ISA_AVX512_BF16);
 #endif
+#if BX_SUPPORT_AMX
+  enable_cpu_extension(BX_ISA_AMX);
+  enable_cpu_extension(BX_ISA_AMX_INT8);
+  enable_cpu_extension(BX_ISA_AMX_BF16);
+#endif
   enable_cpu_extension(BX_ISA_CLFLUSHOPT);
   enable_cpu_extension(BX_ISA_CLWB);
   enable_cpu_extension(BX_ISA_CLDEMOTE);
@@ -250,10 +255,19 @@ void sapphire_rapids_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpui
   case 0x0000001A: // CPUID leaf 0x0000001A - native Model ID Enumeration leaf (for Hybrid)
   case 0x0000001B: // PCONFIG Information
   case 0x0000001C: // CPUID leaf 0x0000001C - Last Branch Record (Architectural LBR) leaf
+#if BX_SUPPORT_AMX
+  case 0x0000001D: // AMX
+    get_std_cpuid_amx_palette_info_leaf(subfunction, leaf);
+    return;
+  case 0x0000001E: // AMX: TMUL Information Main leaf
+    get_std_cpuid_amx_tmul_leaf(subfunction, leaf);
+    return;
+#else
   case 0x0000001D: // AMX
   case 0x0000001E: // AMX: TMUL Information Main leaf
     get_reserved_leaf(leaf);
     return;
+#endif
   case 0x0000001F: // V2 Extended Topology Enumberation leaf
     get_reserved_leaf(leaf); // until figured it out
     return;

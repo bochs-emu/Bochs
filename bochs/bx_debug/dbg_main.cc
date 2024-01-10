@@ -873,6 +873,65 @@ void bx_dbg_print_avx_state(unsigned vlen)
 #endif
 }
 
+void bx_dbg_print_amx_state(void)
+{
+#if BX_SUPPORT_AMX
+  if (BX_CPU(dbg_cpu)->is_cpu_extension_supported(BX_ISA_AMX)) {
+    char param_name[20];
+    unsigned palette_id = SIM->get_param_num("AMX.palette", dbg_cpu_list)->get();
+    unsigned start_row = SIM->get_param_num("AMX.start_row", dbg_cpu_list)->get();
+    dbg_printf("TILECFG palette=%d, start_row=%d\n", palette_id, start_row);
+    for(unsigned i=0;i<8;i++) {
+      sprintf(param_name, "AMX.tile%d_rows", i);
+      unsigned rows = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
+      sprintf(param_name, "AMX.tile%d_colsb", i);
+      unsigned cols = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
+      dbg_printf("TILECFG[%d]: %2d x %2d\n", i, rows, cols);
+    }
+    dbg_printf("use \"tile <tile_number>\" command to print tile content\n");
+  }
+  else
+#endif
+  {
+    dbg_printf("The CPU doesn't support AMX state !\n");
+  }
+}
+
+void bx_dbg_print_amx_tile_command(int tile)
+{
+#if BX_SUPPORT_AMX
+  if (BX_CPU(dbg_cpu)->is_cpu_extension_supported(BX_ISA_AMX)) {
+    if (tile < 8) {
+      char param_name[30];
+      sprintf(param_name, "AMX.tile%d_rows", tile);
+      unsigned rows = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
+      sprintf(param_name, "AMX.tile%d_colsb", tile);
+      unsigned cols = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
+      dbg_printf("TILE[%d]: %2d x %2d\n", tile, rows, cols);
+      for (int row=0;row<16;row++) {
+        dbg_printf("row[%02d]: ", row);
+        for (int j=BX_VL512-1;j >= 0; j--) {
+          sprintf(param_name, "AMX.tile%d_row%d_%d", tile, row, j*2+1);
+          Bit64u hi = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
+          sprintf(param_name, "AMX.tile%d_row%d_%d", tile, row, j*2);
+          Bit64u lo = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
+          dbg_printf("%08x_%08x_%08x_%08x", GET32H(hi), GET32L(hi), GET32H(lo), GET32L(lo));
+          if (j!=0) dbg_printf("_");
+        }
+        dbg_printf("\n");
+      }
+    }
+    else {
+      dbg_printf("TILE[%d]: invalid or not configured\n", tile);
+    }
+  }
+  else
+#endif
+  {
+    dbg_printf("The CPU doesn't support AMX state !\n");
+  }
+}
+
 void bx_dbg_print_mmx_state(void)
 {
 #if BX_CPU_LEVEL >= 5
@@ -1160,11 +1219,9 @@ void bx_dbg_info_registers_command(int which_regs_mask)
     bx_dbg_info_flags();
   }
 
-#if BX_SUPPORT_FPU
   if (which_regs_mask & BX_INFO_FPU_REGS) {
     bx_dbg_print_fpu_state();
   }
-#endif
 
   if (which_regs_mask & BX_INFO_MMX_REGS) {
     bx_dbg_print_mmx_state();
@@ -1188,6 +1245,10 @@ void bx_dbg_info_registers_command(int which_regs_mask)
         bx_dbg_print_sse_state();
       }
     }
+  }
+
+  if (which_regs_mask & BX_INFO_AMX_REGS) {
+    bx_dbg_print_amx_state();
   }
 }
 

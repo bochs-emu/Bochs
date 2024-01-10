@@ -1823,8 +1823,28 @@ void BX_CPU_C::xsave_xrestor_init(void)
 
   // XCR0[15]: LBR state (not implemented)
   // XCR0[16]: HWP state (not implemented)
-  // XCR0[17]: AMX XTILECFG state (not implemented)
-  // XCR0[17]: AMX XTILEDATA state (not implemented)
+
+  // XCR0[17]: AMX XTILECFG state
+  // XCR0[18]: AMX XTILEDATA state
+#if BX_SUPPORT_AMX
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AMX)) {
+    // XCR0[17]: AMX XTILECFG state
+    xsave_restore[xcr0_t::BX_XCR0_XTILECFG_BIT].len    = XSAVE_XTILECFG_STATE_LEN;
+    xsave_restore[xcr0_t::BX_XCR0_XTILECFG_BIT].offset = XSAVE_XTILECFG_STATE_OFFSET;
+    xsave_restore[xcr0_t::BX_XCR0_XTILECFG_BIT].xstate_in_use_method = &BX_CPU_C::xsave_tilecfg_state_xinuse;
+    xsave_restore[xcr0_t::BX_XCR0_XTILECFG_BIT].xsave_method = &BX_CPU_C::xsave_tilecfg_state;
+    xsave_restore[xcr0_t::BX_XCR0_XTILECFG_BIT].xrstor_method = &BX_CPU_C::xrstor_tilecfg_state;
+    xsave_restore[xcr0_t::BX_XCR0_XTILECFG_BIT].xrstor_init_method = &BX_CPU_C::xrstor_init_tilecfg_state;
+
+    // XCR0[18]: AMX XTILEDATA state
+    xsave_restore[xcr0_t::BX_XCR0_XTILEDATA_BIT].len    = XSAVE_XTILEDATA_STATE_LEN;
+    xsave_restore[xcr0_t::BX_XCR0_XTILEDATA_BIT].offset = XSAVE_XTILEDATA_STATE_OFFSET;
+    xsave_restore[xcr0_t::BX_XCR0_XTILEDATA_BIT].xstate_in_use_method = &BX_CPU_C::xsave_tiledata_state_xinuse;
+    xsave_restore[xcr0_t::BX_XCR0_XTILEDATA_BIT].xsave_method = &BX_CPU_C::xsave_tiledata_state;
+    xsave_restore[xcr0_t::BX_XCR0_XTILEDATA_BIT].xrstor_method = &BX_CPU_C::xrstor_tiledata_state;
+    xsave_restore[xcr0_t::BX_XCR0_XTILEDATA_BIT].xrstor_init_method = &BX_CPU_C::xrstor_init_tiledata_state;
+  }
+#endif
 }
 
 #if BX_CPU_LEVEL >= 5
@@ -1870,6 +1890,10 @@ Bit32u BX_CPU_C::get_xcr0_allow_mask(void)
 #if BX_SUPPORT_PKEYS
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PKU))
     allowMask |= BX_XCR0_PKRU_MASK;
+#endif
+#if BX_SUPPORT_AMX
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AMX))
+    allowMask |= BX_XCR0_XTILE_BITS_MASK;
 #endif
   return allowMask;
 }

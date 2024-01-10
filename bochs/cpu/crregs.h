@@ -274,6 +274,8 @@ const unsigned XSAVE_OPMASK_STATE_OFFSET    = 1088;
 const unsigned XSAVE_ZMM_HI256_STATE_OFFSET = 1152;
 const unsigned XSAVE_HI_ZMM_STATE_OFFSET    = 1664;
 const unsigned XSAVE_PKRU_STATE_OFFSET      = 2688;
+const unsigned XSAVE_XTILECFG_STATE_OFFSET  = 2752;
+const unsigned XSAVE_XTILEDATA_STATE_OFFSET = 2816;
 
 struct xcr0_t {
   Bit32u  val32; // 32bit value of register
@@ -296,8 +298,8 @@ struct xcr0_t {
     BX_XCR0_UINTR_BIT = 14,
     BX_XCR0_LBR_BIT = 15,    // not implemented yet
     BX_XCR0_HWP_BIT = 16,    // not implemented yet
-    BX_XCR0_XTILECFG_BIT = 17,      // not implemented yet
-    BX_XCR0_XTILEDATA_BIT = 18,     // not implemented yet
+    BX_XCR0_XTILECFG_BIT = 17,
+    BX_XCR0_XTILEDATA_BIT = 18,
     BX_XCR0_LAST // make sure it is < 32
   };
 
@@ -320,6 +322,8 @@ struct xcr0_t {
 #define BX_XCR0_HWP_MASK       (1 << xcr0_t::BX_XCR0_HWP_BIT)
 #define BX_XCR0_XTILECFG_MASK  (1 << xcr0_t::BX_XCR0_XTILECFG_BIT)
 #define BX_XCR0_XTILEDATA_MASK (1 << xcr0_t::BX_XCR0_XTILEDATA_BIT)
+
+#define BX_XCR0_XTILE_BITS_MASK (BX_XCR0_XTILECFG_MASK | BX_XCR0_XTILEDATA_MASK)
 
   IMPLEMENT_CRREG_ACCESSORS(FPU, BX_XCR0_FPU_BIT);
   IMPLEMENT_CRREG_ACCESSORS(SSE, BX_XCR0_SSE_BIT);

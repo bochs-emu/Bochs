@@ -7223,6 +7223,7 @@ From here, you may use the following commands:
   mmx                          List of all MMX registers and their contents
   sse|xmm                      List of all SSE registers and their contents
   ymm|zmm                      List of all AVX registers and their contents
+  amx|tile n                   Show AMX state and TILE register contents
   sreg                         Show segment registers and their contents
   dreg                         Show debug registers and their contents
   creg                         Show control registers and their contents
