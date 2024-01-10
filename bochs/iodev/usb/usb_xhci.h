@@ -120,7 +120,7 @@
 
 #define RUNTIME_OFFSET    0x600
 
-#define PORT_SET_OFFSET  (0x400 + OPS_REGS_OFFSET)
+#define XHCI_PORT_SET_OFFSET  (0x400 + OPS_REGS_OFFSET)
 
 /************************************************************************************************/
 

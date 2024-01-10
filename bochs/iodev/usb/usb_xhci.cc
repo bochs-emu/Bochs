@@ -1275,8 +1275,8 @@ bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *data, 
     }
   }
   // Register Port Sets
-  else if ((offset >= PORT_SET_OFFSET) && (offset < (PORT_SET_OFFSET + (BX_XHCI_THIS hub.n_ports * 16)))) {
-    unsigned port = (((offset - PORT_SET_OFFSET) >> 4) & 0x3F); // calculate port number
+  else if ((offset >= XHCI_PORT_SET_OFFSET) && (offset < (XHCI_PORT_SET_OFFSET + (BX_XHCI_THIS hub.n_ports * 16)))) {
+    unsigned port = (((offset - XHCI_PORT_SET_OFFSET) >> 4) & 0x3F); // calculate port number
     if (BX_XHCI_THIS hub.usb_port[port].portsc.pp) {
       // the speed field is only valid for USB3 before a port reset.  If a reset has not
       //  taken place after the port is powered, the USB2 ports don't show a valid speed field.
@@ -1749,8 +1749,8 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
     }
   }
   // Register Port Sets
-  else if ((offset >= PORT_SET_OFFSET) && (offset < (PORT_SET_OFFSET + (BX_XHCI_THIS hub.n_ports * 16)))) {
-    unsigned port = (((offset - PORT_SET_OFFSET) >> 4) & 0x3F); // calculate port number
+  else if ((offset >= XHCI_PORT_SET_OFFSET) && (offset < (XHCI_PORT_SET_OFFSET + (BX_XHCI_THIS hub.n_ports * 16)))) {
+    unsigned port = (((offset - XHCI_PORT_SET_OFFSET) >> 4) & 0x3F); // calculate port number
     switch (offset & 0x0000000F) {
       case 0x00:
         if (value & (1<<9)) {  // port power
