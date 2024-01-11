@@ -1192,7 +1192,9 @@ void bx_vgacore_c::set_override(bool enabled, void *dev)
                              BX_VGA_THIS s.last_fh, BX_VGA_THIS s.last_fw, BX_VGA_THIS s.last_bpp);
     BX_VGA_THIS vga_redraw_area(0, 0, BX_VGA_THIS s.last_xres, BX_VGA_THIS s.last_yres);
   }
-  BX_VGA_THIS set_update_timer(0);
+  if (BX_VGA_THIS update_mode_vsync) {
+    BX_VGA_THIS set_update_timer(0);
+  }
 }
 
 Bit8u bx_vgacore_c::get_vga_pixel(Bit16u x, Bit16u y, Bit16u raddr, Bit16u lc, bool bs, Bit8u **plane)
@@ -2319,9 +2321,12 @@ void bx_vgacore_c::vga_timer_handler(void *this_ptr)
 void bx_vgacore_c::set_update_timer(Bit32u usec)
 {
   if (usec == 0) {
+#if BX_SUPPORT_PCI
     if (BX_VGA_THIS s.vga_override && (BX_VGA_THIS s.nvgadev != NULL)) {
       usec = BX_VGA_THIS s.nvgadev->get_vtotal_usec();
-    } else {
+    } else
+#endif
+    {
       usec = BX_VGA_THIS s.vtotal_usec;
     }
     if ((usec < 8000) || (usec > 200000)) {
