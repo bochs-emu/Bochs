@@ -915,13 +915,18 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
     error_code = (error_code & 0xfffe) | (Bit16u)(BX_CPU_THIS_PTR EXT);
   }
 
+  BX_DEBUG(("exception(0x%02x): error_code=%04x", vector, error_code));
+
+  if (real_mode()) {
+    push_error = false; // not INT, no error code pushed
+    error_code = 0;
+  }
+
   BX_INSTR_EXCEPTION(BX_CPU_ID, vector, error_code);
 
 #if BX_DEBUGGER
   bx_dbg_exception(BX_CPU_ID, vector, error_code);
 #endif
-
-  BX_DEBUG(("exception(0x%02x): error_code=%04x", vector, error_code));
 
 #if BX_SUPPORT_VMX
   VMexit_Event(BX_HARDWARE_EXCEPTION, vector, error_code, push_error);
@@ -995,11 +1000,6 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
   }
 
   BX_CPU_THIS_PTR last_exception_type = exception_type;
-
-  if (real_mode()) {
-    push_error = false; // not INT, no error code pushed
-    error_code = 0;
-  }
 
   interrupt(vector, BX_HARDWARE_EXCEPTION, push_error, error_code);
 

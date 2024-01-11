@@ -997,7 +997,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
         return false;
       }
       if (val_64 & 0x3f) { // bits [5:0] are reserved and MBZ
-        BX_ERROR(("WRMSR: attempt to write to reserved bits of BX_MSR_IA32_UINTR_MISC !"));
+        BX_ERROR(("WRMSR: attempt to write to reserved bits of BX_MSR_IA32_UINTR_PD !"));
         return false;
       }
       BX_CPU_THIS_PTR uintr.upid_addr = val_64;
