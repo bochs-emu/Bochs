@@ -27,6 +27,10 @@
 #include "msr.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#if BX_SUPPORT_SVM
+#include "svm.h"
+#endif
+
 #include "decoder/ia_opcodes.h"
 
 const Bit64u XSAVEC_COMPACTION_ENABLED = BX_CONST64(0x8000000000000000);

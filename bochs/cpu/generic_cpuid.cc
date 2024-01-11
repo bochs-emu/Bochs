@@ -34,6 +34,10 @@
 #define BX_CPUID_SUPPORT_ISA_EXTENSION(feature) \
    (this->is_cpu_extension_supported(feature))
 
+#if BX_SUPPORT_SVM
+#include "svm.h"
+#endif
+
 #if BX_CPU_LEVEL >= 4
 
 bx_generic_cpuid_t::bx_generic_cpuid_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)

@@ -26,6 +26,10 @@
 #include "smm.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#if BX_SUPPORT_SVM
+#include "svm.h"
+#endif
+
 #if BX_CPU_LEVEL >= 3
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSM(bxInstruction_c *i)

@@ -29,6 +29,10 @@
 #include "apic.h"
 #endif
 
+#if BX_SUPPORT_SVM
+#include "svm.h"
+#endif
+
 #include "iodev/iodev.h"
 
 bool BX_CPU_C::handleWaitForEvent(void)

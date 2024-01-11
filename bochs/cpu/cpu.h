@@ -798,7 +798,9 @@ typedef void (*xmm_pfp_3op_mask)(BxPackedXmmRegister *opdst, const BxPackedXmmRe
 #endif
 
 #if BX_SUPPORT_SVM
-#include "svm.h"
+struct SVM_HOST_STATE;
+struct SVM_CONTROLS;
+struct VMCB_CACHE;
 #endif
 
 enum monitor_armed_by {
@@ -1086,7 +1088,7 @@ public: // for now...
 #if BX_SUPPORT_MEMTYPE
   BxMemtype vmcb_memtype;
 #endif
-  VMCB_CACHE vmcb;
+  VMCB_CACHE *vmcb;
 
 // make SVM integration easier
 #define SVM_GIF (BX_CPU_THIS_PTR svm_gif)

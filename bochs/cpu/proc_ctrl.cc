@@ -26,6 +26,10 @@
 #include "cpuid.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#if BX_SUPPORT_SVM
+#include "svm.h"
+#endif
+
 #include "pc_system.h"
 #include "gui/gui.h"
 

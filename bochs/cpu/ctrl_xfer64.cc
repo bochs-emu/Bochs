@@ -449,6 +449,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP64_Ep(bxInstruction_c *i)
   BX_NEXT_TRACE(i);
 }
 
+#if BX_SUPPORT_SVM
+#include "svm.h"
+#endif
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET64(bxInstruction_c *i)
 {
   invalidate_prefetch_q();

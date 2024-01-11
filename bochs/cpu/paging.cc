@@ -30,6 +30,10 @@
 #include "apic.h"
 #endif
 
+#if BX_SUPPORT_SVM
+#include "svm.h"
+#endif
+
 #include "memory/memory-bochs.h"
 #include "pc_system.h"
 
@@ -1658,8 +1662,8 @@ bx_phy_address BX_CPU_C::nested_walk_long_mode(bx_phy_address guest_paddr, unsig
   BxMemtype entry_memtype[5] = { BX_MEMTYPE_INVALID, BX_MEMTYPE_INVALID, BX_MEMTYPE_INVALID, BX_MEMTYPE_INVALID, BX_MEMTYPE_INVALID };
   bool nx_fault = false;
 
-  SVM_CONTROLS *ctrls = &BX_CPU_THIS_PTR vmcb.ctrls;
-  SVM_HOST_STATE *host_state = &BX_CPU_THIS_PTR vmcb.host_state;
+  SVM_CONTROLS *ctrls = &BX_CPU_THIS_PTR vmcb->ctrls;
+  SVM_HOST_STATE *host_state = &BX_CPU_THIS_PTR vmcb->host_state;
   bx_phy_address ppf = ctrls->ncr3 & BX_CR3_PAGING_MASK;
   Bit64u offset_mask = ((BX_CONST64(1) << BX_CPU_THIS_PTR linaddr_width) - 1);
   unsigned combined_access = BX_COMBINED_ACCESS_WRITE | BX_COMBINED_ACCESS_USER;
@@ -1725,8 +1729,8 @@ bx_phy_address BX_CPU_C::nested_walk_PAE(bx_phy_address guest_paddr, unsigned rw
 
   unsigned combined_access = BX_COMBINED_ACCESS_WRITE | BX_COMBINED_ACCESS_USER;
 
-  SVM_CONTROLS *ctrls = &BX_CPU_THIS_PTR vmcb.ctrls;
-  SVM_HOST_STATE *host_state = &BX_CPU_THIS_PTR vmcb.host_state;
+  SVM_CONTROLS *ctrls = &BX_CPU_THIS_PTR vmcb->ctrls;
+  SVM_HOST_STATE *host_state = &BX_CPU_THIS_PTR vmcb->host_state;
   bx_phy_address ncr3 = ctrls->ncr3 & 0xffffffe0;
   unsigned index = (guest_paddr >> 30) & 0x3;
   Bit64u pdptr;
@@ -1798,8 +1802,8 @@ bx_phy_address BX_CPU_C::nested_walk_legacy(bx_phy_address guest_paddr, unsigned
   BxMemtype entry_memtype[2] = { BX_MEMTYPE_INVALID };
   int leaf;
 
-  SVM_CONTROLS *ctrls = &BX_CPU_THIS_PTR vmcb.ctrls;
-  SVM_HOST_STATE *host_state = &BX_CPU_THIS_PTR vmcb.host_state;
+  SVM_CONTROLS *ctrls = &BX_CPU_THIS_PTR vmcb->ctrls;
+  SVM_HOST_STATE *host_state = &BX_CPU_THIS_PTR vmcb->host_state;
   bx_phy_address ppf = ctrls->ncr3 & BX_CR3_PAGING_MASK;
   unsigned combined_access = BX_COMBINED_ACCESS_WRITE | BX_COMBINED_ACCESS_USER;
 
@@ -1849,7 +1853,7 @@ bx_phy_address BX_CPU_C::nested_walk_legacy(bx_phy_address guest_paddr, unsigned
 
 bx_phy_address BX_CPU_C::nested_walk(bx_phy_address guest_paddr, unsigned rw, bool is_page_walk)
 {
-  SVM_HOST_STATE *host_state = &BX_CPU_THIS_PTR vmcb.host_state;
+  SVM_HOST_STATE *host_state = &BX_CPU_THIS_PTR vmcb->host_state;
 
   BX_DEBUG(("Nested walk for guest paddr 0x" FMT_PHY_ADDRX, guest_paddr));
 
@@ -2335,7 +2339,7 @@ bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx_ad
     bx_phy_address pt_address = BX_CPU_THIS_PTR cr3 & BX_CR3_PAGING_MASK;
 #if BX_SUPPORT_SVM
     if (nested_walk) {
-      pt_address = LPFOf(BX_CPU_THIS_PTR vmcb.ctrls.ncr3);
+      pt_address = LPFOf(BX_CPU_THIS_PTR vmcb->ctrls.ncr3);
     }
 #endif
 

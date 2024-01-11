@@ -27,6 +27,10 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#if BX_SUPPORT_SVM
+#include "svm.h"
+#endif
+
 #if BX_SUPPORT_APIC
 #include "apic.h"
 #endif

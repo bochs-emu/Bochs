@@ -37,6 +37,10 @@
 #include "avx/amx.h"
 #endif
 
+#if BX_SUPPORT_SVM
+#include "svm.h"
+#endif
+
 #include <stdlib.h>
 
 BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
@@ -139,6 +143,13 @@ void BX_CPU_C::initialize(void)
   amx = NULL;
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AMX)) {
     amx = new AMX;
+  }
+#endif
+
+#if BX_SUPPORT_SVM
+  vmcb = NULL;
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SVM)) {
+    vmcb = new VMCB_CACHE;
   }
 #endif
 
@@ -743,6 +754,10 @@ BX_CPU_C::~BX_CPU_C()
 
 #if BX_SUPPORT_AMX
   delete amx;
+#endif
+
+#if BX_SUPPORT_SVM
+  delete vmcb;
 #endif
 
 #if InstrumentCPU
