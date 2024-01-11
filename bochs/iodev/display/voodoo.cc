@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2012-2021  The Bochs Project
+//  Copyright (C) 2012-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1095,6 +1095,11 @@ Bit32u bx_voodoo_1_2_c::get_retrace(bool hv)
     }
     return value;
   }
+}
+
+Bit32u bx_voodoo_1_2_c::get_vtotal_usec(void)
+{
+  return s.vdraw.vtotal_usec;
 }
 
 void bx_voodoo_1_2_c::output_enable(bool enabled)

@@ -349,6 +349,9 @@ bool bx_banshee_c::update_timing(void)
   s.vdraw.height = v->fbi.height;
   vertical_timer_handler(this);
   bx_virt_timer.activate_timer(s.vertical_timer_id, (Bit32u)s.vdraw.vtotal_usec, 1);
+  if (BX_VVGA_THIS get_update_mode()) {
+    BX_VVGA_THIS set_update_timer(0);
+  }
   return 1;
 }
 
