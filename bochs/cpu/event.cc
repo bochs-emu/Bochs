@@ -345,11 +345,11 @@ bool BX_CPU_C::handleAsyncEvent(void)
     }
 #endif
     clear_event(BX_EVENT_NMI);
-    mask_event(BX_EVENT_NMI);
     BX_CPU_THIS_PTR EXT = 1; /* external event */
 #if BX_SUPPORT_VMX
     VMexit_Event(BX_NMI, 2, 0, 0);
 #endif
+    mask_event(BX_EVENT_NMI);
     BX_INSTR_HWINTERRUPT(BX_CPU_ID, 2, BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
     interrupt(2, BX_NMI, 0, 0);
   }

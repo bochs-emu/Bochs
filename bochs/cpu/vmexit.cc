@@ -286,6 +286,15 @@ void BX_CPU_C::VMexit_Event(unsigned type, unsigned vector, Bit16u errcode, bool
     BX_CPU_THIS_PTR debug_trap = 0;
   }
 
+  // interruption info:
+  // -----------------
+  // [7 : 0] vector
+  // [10: 8] interruption type
+  // [11:11] error code delivered
+  // [12:12] NMI unblocking due to IRET
+  // [30:13] reserved
+  // [31:31] valid
+
   Bit32u interruption_info = vector | (type << 8);
   if (errcode_valid)
     interruption_info |= (1 << 11); // error code delivered
