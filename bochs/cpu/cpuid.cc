@@ -1166,7 +1166,15 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_eax(Bit32u extra) const
     eax |= BX_CPUID_STD7_SUBLEAF1_EAX_WRMSRNS;
 
   //   [20:20]  reserved
-  //   [21:21]  AMX-FB16 support
+
+  //   [21:21]  AMX-FP16 support
+#if BX_SUPPORT_AMX
+  if (is_cpu_extension_supported(BX_ISA_AMX)) {
+    if (is_cpu_extension_supported(BX_ISA_AMX_FP16))
+      eax |= BX_CPUID_STD7_SUBLEAF1_EAX_AMX_FP16;
+  }
+#endif
+
   //   [22:22]  HRESET and CPUID leaf 0x20 support
 
   //   [23:23]  AVX IFMA support
@@ -1207,7 +1215,15 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_edx(Bit32u extra) const
 #endif
 
   //   [7:6]    reserved
+
   //   [8:8]    AMX-COMPLEX instructions
+#if BX_SUPPORT_AMX
+  if (is_cpu_extension_supported(BX_ISA_AMX)) {
+    if (is_cpu_extension_supported(BX_ISA_AMX_COMPLEX))
+      edx |= BX_CPUID_STD7_SUBLEAF1_EDX_AMX_COMPLEX;
+  }
+#endif
+
   //   [9:9]    reserved
 
   //   [10:10]  AVX-VNNI-INT16 instructions

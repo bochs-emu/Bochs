@@ -204,6 +204,28 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TILESTORED_MdqTnnn(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::TILEZERO_Tnnn(bxInstruction_c *i)
+{
+  unsigned tile = i->dst();
+
+  if (tile >= BX_TILE_REGISTERS || ! BX_CPU_THIS_PTR amx->tile_valid(tile)) {
+    BX_ERROR(("TILEZERO: invalid tile %d", tile));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+
+  BX_CPU_THIS_PTR amx->clear_tile_used(tile);
+  BX_CPU_THIS_PTR amx->tile[tile].clear();
+  BX_CPU_THIS_PTR amx->restart();
+
+  BX_NEXT_INSTR(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::TILERELEASE(bxInstruction_c *i)
+{
+  BX_CPU_THIS_PTR amx->clear();
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPU_C::check_tiles(bxInstruction_c *i, unsigned tile_dst, unsigned tile_src1, unsigned tile_src2)
 {
   // #UD if srcdest == src1 OR src1 == src2 OR srcdest == src2
@@ -275,6 +297,8 @@ void BX_CPU_C::check_tiles(bxInstruction_c *i, unsigned tile_dst, unsigned tile_
     exception(BX_UD_EXCEPTION, 0);
   }
 }
+
+// AMX-INT8 //
 
 BX_CPP_INLINE Bit32u DPBDSS(Bit32u x, Bit32u y)
 {
@@ -460,6 +484,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TDPBUUD_TnnnTrmTreg(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// AMX-BF16 //
+
 #include "bf16.h"
 
 extern float_status_t prepare_ne_softfloat_status_helper();
@@ -481,7 +507,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TDPBF16PS_TnnnTrmTreg(bxInstruction_c *i)
   AMX::TILE *tsrc1 = &(BX_CPU_THIS_PTR amx->tile[tile_src1]);
   AMX::TILE *tsrc2 = &(BX_CPU_THIS_PTR amx->tile[tile_src2]);
 
+  // "round to nearest even" rounding mode is used when doing each accumulation of the FMA.
+  // output denormals are always flushed to zero and input denormals are always treated as zero.
   float_status_t status = prepare_ne_softfloat_status_helper();
+  status.denormals_are_zeros = true;
 
   for (unsigned m=0; m < max_m; m++) {
     float32 tmp[32]; // new empty array
@@ -512,25 +541,166 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TDPBF16PS_TnnnTrmTreg(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::TILEZERO_Tnnn(bxInstruction_c *i)
-{
-  unsigned tile = i->dst();
+// AMX-FP16 //
 
-  if (tile >= BX_TILE_REGISTERS || ! BX_CPU_THIS_PTR amx->tile_valid(tile)) {
-    BX_ERROR(("TILEZERO: invalid tile %d", tile));
-    exception(BX_UD_EXCEPTION, 0);
+extern float32 convert_ne_fp16_to_fp32(float16 op);
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::TDPFP16PS_TnnnTrmTreg(bxInstruction_c *i)
+{
+  unsigned tile_dst = i->dst(), tile_src1 = i->src1(), tile_src2 = i->src2();
+  check_tiles(i, tile_dst, tile_src1, tile_src2);
+
+  //     R   C
+  // A = m x k (tsrc1)
+  // B = k x n (tsrc2)
+  // C = m x n (tsrcdest)
+  unsigned max_n = BX_CPU_THIS_PTR amx->tile_bytes_per_row(tile_dst) / 4;
+  unsigned max_m = BX_CPU_THIS_PTR amx->tile_num_rows(tile_dst);
+  unsigned max_k = BX_CPU_THIS_PTR amx->tile_num_rows(tile_src2);
+
+  AMX::TILE *tdst  = &(BX_CPU_THIS_PTR amx->tile[tile_dst]);
+  AMX::TILE *tsrc1 = &(BX_CPU_THIS_PTR amx->tile[tile_src1]);
+  AMX::TILE *tsrc2 = &(BX_CPU_THIS_PTR amx->tile[tile_src2]);
+
+  // "round to nearest even" rounding mode is used when doing each accumulation of the FMA.
+  // output FP32 denormals are always flushed to zero and input denormals are always treated as zero.
+  float_status_t status = prepare_ne_softfloat_status_helper();
+  status.denormals_are_zeros = true;
+
+  for (unsigned m=0; m < max_m; m++) {
+    float32 tmp[32]; // new empty array
+    for (unsigned n=0; n < 32; n++) tmp[n] = 0;
+
+    for (unsigned k=0; k < max_k; k++) {
+      for (unsigned n=0; n < max_n; n++) {
+        tmp[2*n]   = float32_fmadd(convert_ne_fp16_to_fp32(tsrc1->row[m].vmm16u(2*k)),
+                                   convert_ne_fp16_to_fp32(tsrc2->row[k].vmm16u(2*n)),   tmp[2*n],   status);
+
+        tmp[2*n+1] = float32_fmadd(convert_ne_fp16_to_fp32(tsrc1->row[m].vmm16u(2*k+1)),
+                                   convert_ne_fp16_to_fp32(tsrc2->row[k].vmm16u(2*n+1)), tmp[2*n+1], status);
+      }
+    }
+
+    for (unsigned n=0; n < max_n; n++) {
+      float32 tmpf32 = float32_add(tmp[2*n], tmp[2*n+1], status);
+      tdst->row[m].vmm32u(n) = float32_add(tdst->row[m].vmm32u(n), tmpf32, status);
+    }
+
+    tdst->zero_upper_row_data32(m, max_n);
   }
 
-  BX_CPU_THIS_PTR amx->clear_tile_used(tile);
-  BX_CPU_THIS_PTR amx->tile[tile].clear();
+  BX_CPU_THIS_PTR amx->set_tile_used(tile_dst);
+  BX_CPU_THIS_PTR amx->tile[tile_dst].clear_upper_rows(max_m);
   BX_CPU_THIS_PTR amx->restart();
 
   BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::TILERELEASE(bxInstruction_c *i)
+// AMX-COMPLEX //
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCMMRLFP16PS_TnnnTrmTreg(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR amx->clear();
+  unsigned tile_dst = i->dst(), tile_src1 = i->src1(), tile_src2 = i->src2();
+  check_tiles(i, tile_dst, tile_src1, tile_src2);
+
+  //     R   C
+  // A = m x k (tsrc1)
+  // B = k x n (tsrc2)
+  // C = m x n (tsrcdest)
+  unsigned max_n = BX_CPU_THIS_PTR amx->tile_bytes_per_row(tile_dst) / 4;
+  unsigned max_m = BX_CPU_THIS_PTR amx->tile_num_rows(tile_dst);
+  unsigned max_k = BX_CPU_THIS_PTR amx->tile_num_rows(tile_src2);
+
+  AMX::TILE *tdst  = &(BX_CPU_THIS_PTR amx->tile[tile_dst]);
+  AMX::TILE *tsrc1 = &(BX_CPU_THIS_PTR amx->tile[tile_src1]);
+  AMX::TILE *tsrc2 = &(BX_CPU_THIS_PTR amx->tile[tile_src2]);
+
+  // "round to nearest even" rounding mode is used when doing each accumulation of the FMA.
+  // output FP32 denormals are always flushed to zero and input denormals are always treated as zero.
+  float_status_t status = prepare_ne_softfloat_status_helper();
+  status.denormals_are_zeros = true;
+
+  for (unsigned m=0; m < max_m; m++) {
+    float32 tmp[32]; // new empty array
+    for (unsigned n=0; n < 32; n++) tmp[n] = 0;
+
+    for (unsigned k=0; k < max_k; k++) {
+      for (unsigned n=0; n < max_n; n++) {
+        float32 s1r = convert_ne_fp16_to_fp32(tsrc1->row[m].vmm16u(2*k));                           // real
+        float32 s2r = convert_ne_fp16_to_fp32(tsrc2->row[k].vmm16u(2*n));                           // real
+        float32 s1i = convert_ne_fp16_to_fp32(tsrc1->row[m].vmm16u(2*k+1));                         // imaginary
+        float32 s2i = convert_ne_fp16_to_fp32(tsrc2->row[k].vmm16u(2*n+1));                         // imaginary
+
+        tmp[2*n]   = float32_muladd(s1r, s2r, tmp[2*n],   0, status);                               // real
+        tmp[2*n+1] = float32_muladd(s1i, s2i, tmp[2*n+1], float_muladd_negate_product, status);     // imaginary, negate for i^2 = -1
+      }
+    }
+
+    for (unsigned n=0; n < max_n; n++) {
+      float32 tmpf32 = float32_add(tmp[2*n], tmp[2*n+1], status);
+      tdst->row[m].vmm32u(n) = float32_add(tdst->row[m].vmm32u(n), tmpf32, status);
+    }
+
+    tdst->zero_upper_row_data32(m, max_n);
+  }
+
+  BX_CPU_THIS_PTR amx->set_tile_used(tile_dst);
+  BX_CPU_THIS_PTR amx->tile[tile_dst].clear_upper_rows(max_m);
+  BX_CPU_THIS_PTR amx->restart();
+
+  BX_NEXT_INSTR(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCMMIMFP16PS_TnnnTrmTreg(bxInstruction_c *i)
+{
+  unsigned tile_dst = i->dst(), tile_src1 = i->src1(), tile_src2 = i->src2();
+  check_tiles(i, tile_dst, tile_src1, tile_src2);
+
+  //     R   C
+  // A = m x k (tsrc1)
+  // B = k x n (tsrc2)
+  // C = m x n (tsrcdest)
+  unsigned max_n = BX_CPU_THIS_PTR amx->tile_bytes_per_row(tile_dst) / 4;
+  unsigned max_m = BX_CPU_THIS_PTR amx->tile_num_rows(tile_dst);
+  unsigned max_k = BX_CPU_THIS_PTR amx->tile_num_rows(tile_src2);
+
+  AMX::TILE *tdst  = &(BX_CPU_THIS_PTR amx->tile[tile_dst]);
+  AMX::TILE *tsrc1 = &(BX_CPU_THIS_PTR amx->tile[tile_src1]);
+  AMX::TILE *tsrc2 = &(BX_CPU_THIS_PTR amx->tile[tile_src2]);
+
+  // "round to nearest even" rounding mode is used when doing each accumulation of the FMA.
+  // output FP32 denormals are always flushed to zero and input denormals are always treated as zero.
+  float_status_t status = prepare_ne_softfloat_status_helper();
+  status.denormals_are_zeros = true;
+
+  for (unsigned m=0; m < max_m; m++) {
+    float32 tmp[32]; // new empty array
+    for (unsigned n=0; n < 32; n++) tmp[n] = 0;
+
+    for (unsigned k=0; k < max_k; k++) {
+      for (unsigned n=0; n < max_n; n++) {
+        float32 s1r = convert_ne_fp16_to_fp32(tsrc1->row[m].vmm16u(2*k));       // real
+        float32 s2r = convert_ne_fp16_to_fp32(tsrc2->row[k].vmm16u(2*n));       // real
+        float32 s1i = convert_ne_fp16_to_fp32(tsrc1->row[m].vmm16u(2*k+1));     // imaginary
+        float32 s2i = convert_ne_fp16_to_fp32(tsrc2->row[k].vmm16u(2*n+1));     // imaginary
+
+        tmp[2*n]   = float32_muladd(s1i, s2r, tmp[2*n],   0, status);
+        tmp[2*n+1] = float32_muladd(s1r, s2i, tmp[2*n+1], 0, status);
+      }
+    }
+
+    for (unsigned n=0; n < max_n; n++) {
+      float32 tmpf32 = float32_add(tmp[2*n], tmp[2*n+1], status);
+      tdst->row[m].vmm32u(n) = float32_add(tdst->row[m].vmm32u(n), tmpf32, status);
+    }
+
+    tdst->zero_upper_row_data32(m, max_n);
+  }
+
+  BX_CPU_THIS_PTR amx->set_tile_used(tile_dst);
+  BX_CPU_THIS_PTR amx->tile[tile_dst].clear_upper_rows(max_m);
+  BX_CPU_THIS_PTR amx->restart();
+
   BX_NEXT_INSTR(i);
 }
 

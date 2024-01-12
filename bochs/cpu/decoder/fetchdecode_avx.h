@@ -1031,13 +1031,21 @@ static const Bit64u BxOpcodeGroup_VEX_0F3859[] = { last_opcode(ATTR_SSE_PREFIX_6
 static const Bit64u BxOpcodeGroup_VEX_0F385A[] = { last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0 | ATTR_VL256 | ATTR_MOD_MEM, BX_IA_V256_VBROADCASTI128_VdqMdq) };
 
 #if BX_SUPPORT_AMX
-static const Bit64u BxOpcodeGroup_VEX_0F385C[] = { last_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0 | ATTR_VL128 | ATTR_MODC0 | ATTR_IS64, BX_IA_TDPBF16PS_TnnnTrmTreg) };
+static const Bit64u BxOpcodeGroup_VEX_0F385C[] = {
+  form_opcode(ATTR_SSE_PREFIX_F2 | ATTR_VEX_W0 | ATTR_VL128 | ATTR_MODC0 | ATTR_IS64, BX_IA_TDPFP16PS_TnnnTrmTreg),
+  last_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0 | ATTR_VL128 | ATTR_MODC0 | ATTR_IS64, BX_IA_TDPBF16PS_TnnnTrmTreg)
+};
 
 static const Bit64u BxOpcodeGroup_VEX_0F385E[] = {
   form_opcode(ATTR_SSE_NO_PREFIX | ATTR_VEX_W0 | ATTR_VL128 | ATTR_MODC0 | ATTR_IS64, BX_IA_TDPBUUD_TnnnTrmTreg),
   form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0 | ATTR_VL128 | ATTR_MODC0 | ATTR_IS64, BX_IA_TDPBUSD_TnnnTrmTreg),
   form_opcode(ATTR_SSE_PREFIX_F2 | ATTR_VEX_W0 | ATTR_VL128 | ATTR_MODC0 | ATTR_IS64, BX_IA_TDPBSSD_TnnnTrmTreg),
   last_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0 | ATTR_VL128 | ATTR_MODC0 | ATTR_IS64, BX_IA_TDPBSUD_TnnnTrmTreg)
+};
+
+static const Bit64u BxOpcodeGroup_VEX_0F386C[] = {
+  form_opcode(ATTR_SSE_NO_PREFIX | ATTR_VEX_W0 | ATTR_VL128 | ATTR_MODC0 | ATTR_IS64, BX_IA_TCMMRLFP16PS_TnnnTrmTreg),
+  last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0 | ATTR_VL128 | ATTR_MODC0 | ATTR_IS64, BX_IA_TCMMIMFP16PS_TnnnTrmTreg)
 };
 #endif
 
@@ -1968,7 +1976,11 @@ static const Bit64u *BxOpcodeTableVEX[256*3] = {
   /* 69  */ ( BxOpcodeGroup_ERR ),
   /* 6A  */ ( BxOpcodeGroup_ERR ),
   /* 6B  */ ( BxOpcodeGroup_ERR ),
+#if BX_SUPPORT_AMX
+  /* 6C  */ ( BxOpcodeGroup_VEX_0F386C ),
+#else
   /* 6C  */ ( BxOpcodeGroup_ERR ),
+#endif
   /* 6D  */ ( BxOpcodeGroup_ERR ),
   /* 6E  */ ( BxOpcodeGroup_ERR ),
   /* 6F  */ ( BxOpcodeGroup_ERR ),
