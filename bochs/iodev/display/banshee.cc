@@ -822,7 +822,18 @@ bool bx_banshee_c::mem_write_handler(bx_phy_address addr, unsigned len,
                                      void *data, void *param)
 {
   bx_banshee_c *class_ptr = (bx_banshee_c*)param;
-  class_ptr->mem_write(addr, len, data);
+  if (len == 16) {
+    Bit64u *data64 = (Bit64u*)data;
+#ifdef BX_LITTLE_ENDIAN
+    class_ptr->mem_write(addr, 8, &data64[0]);
+    class_ptr->mem_write(addr + 8, 8, &data64[1]);
+#else
+    class_ptr->mem_write(addr, 8, &data64[1]);
+    class_ptr->mem_write(addr + 8, 8, &data64[0]);
+#endif
+  } else {
+    class_ptr->mem_write(addr, len, data);
+  }
   return 1;
 }
 
@@ -963,6 +974,9 @@ void bx_banshee_c::mem_write(bx_phy_address addr, unsigned len, void *data)
         (offset < v->fbi.cmdfifo[0].end)) {
       if (len == 4) {
         cmdfifo_w(&v->fbi.cmdfifo[0], offset, value);
+      } else if (len == 8) {
+        cmdfifo_w(&v->fbi.cmdfifo[0], offset, value);
+        cmdfifo_w(&v->fbi.cmdfifo[0], offset + 4, value >> 32);
       } else {
         BX_ERROR(("CMDFIFO #0 write with len = %d redirected to LFB", len));
         mem_write_linear(offset, value, len);
@@ -971,6 +985,9 @@ void bx_banshee_c::mem_write(bx_phy_address addr, unsigned len, void *data)
                (offset < v->fbi.cmdfifo[1].end)) {
       if (len == 4) {
         cmdfifo_w(&v->fbi.cmdfifo[1], offset, value);
+      } else if (len == 8) {
+        cmdfifo_w(&v->fbi.cmdfifo[1], offset, value);
+        cmdfifo_w(&v->fbi.cmdfifo[1], offset + 4, value >> 32);
       } else  {
         BX_ERROR(("CMDFIFO #1 write with len = %d redirected to LFB", len));
         mem_write_linear(offset, value, len);
