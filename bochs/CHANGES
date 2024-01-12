@@ -25,8 +25,8 @@ Brief summary :
   - Disk images: Allows large VHD image files
   - Fixed and enhanced the Floppy Disk emulation, VGA emulation fixes
   - Expand maximum resolution for Banshee and Voodoo 3 from 1600x1280 to 1920x1440
-  - Documentation updates and fixes
   - LGPL'd VGABIOS updated to version 0.8c (several VBE fixes / additions)
+  - Documentation updates and fixes
 
 Detailed change log :
 
@@ -92,6 +92,7 @@ Detailed change log :
     - VGA text mode: implemented secondary charmap support
     - mem_write(): in text mode don't mark graphics tiles for update
     - Increase maximum VGA update frequency to 75 and set default to 10
+    - VGA update frequency value 0 enables support for using frame rate of emulated gfx device
     - Fixes for emulated CGA mode
 
   - SVGA Cirrus:

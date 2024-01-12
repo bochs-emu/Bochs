@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "7 Jan 2024" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "12 Jan 2024" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -493,7 +493,9 @@ update_freq:
 
 This parameter specifies the number of display updates per second.
 The VGA update timer by default uses the realtime engine with a value
-of 10 (valid: 1 to 75). This parameter can be changed at runtime.
+of 10 (valid: 1 to 75). The special value 0 enables support for using the
+frame rate of the emulated graphics device. This parameter can be changed
+at runtime.
 
 realtime:
 
