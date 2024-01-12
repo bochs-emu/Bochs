@@ -703,7 +703,7 @@ void BX_CPU_C::Svm_Vmexit(int reason, Bit64u exitinfo1, Bit64u exitinfo2)
   longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
 }
 
-extern struct BxExceptionInfo exceptions_info[];
+extern int get_exception_type(unsigned vector);
 
 bool BX_CPU_C::SvmInjectEvents(void)
 {
@@ -753,7 +753,7 @@ bool BX_CPU_C::SvmInjectEvents(void)
   if (type == BX_HARDWARE_EXCEPTION) {
     // record exception the same way as BX_CPU_C::exception does
     BX_ASSERT(vector < BX_CPU_HANDLED_EXCEPTIONS);
-    BX_CPU_THIS_PTR last_exception_type = exceptions_info[vector].exception_type;
+    BX_CPU_THIS_PTR last_exception_type = get_exception_type(vector);
   }
 
   ctrls->exitintinfo = ctrls->eventinj & ~0x80000000;

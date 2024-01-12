@@ -308,12 +308,6 @@ enum AccessReason {
   BX_SMRAM_ACCESS
 };
 
-struct BxExceptionInfo {
-  unsigned exception_type;
-  unsigned exception_class;
-  bool push_error;
-};
-
 enum BX_Exception {
   BX_DE_EXCEPTION =  0, // Divide Error (fault)
   BX_DB_EXCEPTION =  1, // Debug (fault/trap)
@@ -345,6 +339,12 @@ enum CP_Exception_Error_Code {
 };
 
 const unsigned BX_CPU_HANDLED_EXCEPTIONS = 32;
+
+enum ExceptionClass {
+  BX_EXCEPTION_CLASS_TRAP = 0,
+  BX_EXCEPTION_CLASS_FAULT = 1,
+  BX_EXCEPTION_CLASS_ABORT = 2
+};
 
 enum BxCpuMode {
   BX_MODE_IA32_REAL = 0,        // CR0.PE=0                |
@@ -4141,9 +4141,9 @@ public: // for now...
   BX_SMF unsigned   dbg_query_pending(void);
 #endif
 #if BX_DEBUGGER || BX_GDBSTUB
-  BX_SMF bool  dbg_instruction_epilog(void);
+  BX_SMF bool dbg_instruction_epilog(void);
 #endif
-  BX_SMF bool  dbg_xlate_linear2phy(bx_address linear, bx_phy_address *phy, bx_address *lpf_mask = 0, bool verbose = 0, bool nested_walk = 0);
+  BX_SMF bool dbg_xlate_linear2phy(bx_address linear, bx_phy_address *phy, bx_address *lpf_mask = 0, bool verbose = 0, bool nested_walk = 0);
 #if BX_SUPPORT_VMX >= 2
   BX_SMF bool dbg_translate_guest_physical_ept(bx_phy_address guest_paddr, bx_phy_address *phy, bool verbose = 0);
 #endif
@@ -4919,9 +4919,10 @@ public: // for now...
   BX_SMF Bit32u VMenterLoadCheckGuestState(Bit64u *qualification);
   BX_SMF void VMenterInjectEvents(void);
   BX_SMF void VMexit(Bit32u reason, Bit64u qualification);
-  BX_SMF void VMexitSaveGuestState(Bit32u reason);
+  BX_SMF void VMexitSaveGuestState(Bit32u reason, Bit32u vector);
   BX_SMF void VMexitSaveGuestMSRs(void);
   BX_SMF void VMexitLoadHostState(void);
+  BX_SMF Bit32u VMexitReadEFLAGS(Bit32u reason, Bit32u vector);
   BX_SMF void set_VMCSPTR(Bit64u vmxptr);
   BX_SMF void init_vmx_capabilities(void);
 #if BX_SUPPORT_VMX >= 2

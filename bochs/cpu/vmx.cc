@@ -532,7 +532,9 @@ BX_CPP_INLINE static Bit32u vmx_unpack_ar_field(Bit32u ar_field, VMCS_Access_Rig
 // VMenter
 ////////////////////////////////////////////////////////////
 
-extern struct BxExceptionInfo exceptions_info[];
+extern int get_exception_class(unsigned vector);
+extern int get_exception_type(unsigned vector);
+extern bool exception_push_error(unsigned vector);
 
 #define VMENTRY_INJECTING_EVENT(vmentry_interr_info) (vmentry_interr_info & 0x80000000)
 
@@ -994,7 +996,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
 
      unsigned push_error_reference = false;
      if (event_type == BX_HARDWARE_EXCEPTION && vector < BX_CPU_HANDLED_EXCEPTIONS)
-        push_error_reference = exceptions_info[vector].push_error;
+        push_error_reference = exception_push_error(vector);
 
      if (! BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) {
         if (vector == BX_CP_EXCEPTION) push_error_reference = false;
@@ -1060,7 +1062,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
 #if BX_SUPPORT_VMX >= 2
      if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_UNRESTRICTED_GUEST) {
        unsigned protected_mode_guest = (Bit32u) VMread_natural(VMCS_GUEST_CR0) & BX_CR0_PE_MASK;
-       if (! protected_mode_guest) push_error_reference = 0;
+       if (! protected_mode_guest) push_error_reference = false;
      }
 #endif
 
@@ -1068,7 +1070,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
        // CET added new #CP exception with error code but legacy software assumed that this vector have no error code.
        // Therefore CET enabled processors do not check the error code anymore and able to deliver a hardware
        // exception with or without an error code, regardless of vector as indicated in VMX_MSR_VMX_BASIC[56]
-       if (push_error != push_error_reference) {
+       if (bool(push_error) != push_error_reference) {
          BX_ERROR(("VMFAIL: VMENTRY injected event vector %d broken error code", vector));
          return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
        }
@@ -2295,7 +2297,7 @@ void BX_CPU_C::VMenterInjectEvents(void)
   if (type == BX_HARDWARE_EXCEPTION) {
     // record exception the same way as BX_CPU_C::exception does
     BX_ASSERT(vector < BX_CPU_HANDLED_EXCEPTIONS);
-    BX_CPU_THIS_PTR last_exception_type = exceptions_info[vector].exception_type;
+    BX_CPU_THIS_PTR last_exception_type = get_exception_type(vector);
   }
 
   vm->idt_vector_info = vm->vmentry_interr_info & ~0x80000000;
@@ -2383,7 +2385,48 @@ Bit32u BX_CPU_C::StoreMSRs(Bit32u msr_cnt, bx_phy_address pAddr)
 // VMexit
 ////////////////////////////////////////////////////////////
 
-void BX_CPU_C::VMexitSaveGuestState(Bit32u reason)
+Bit32u BX_CPU_C::VMexitReadEFLAGS(Bit32u reason, Bit32u vector)
+{
+  Bit32u eflags = read_eflags();
+
+  // Determine EFLAGS.RF value
+  switch(reason) {
+    // If the VM exit is caused directly by an event that would normally be delivered through the IDT, the value
+    // saved is that which would appear in the saved RFLAGS image
+    case VMX_VMEXIT_EXCEPTION_NMI:
+      if (get_exception_class(vector) == BX_EXCEPTION_CLASS_FAULT)
+        if (vector != BX_DB_EXCEPTION)
+          eflags |= EFlagsRFMask;
+      break;
+
+    // For APIC-access VM exits and for VM exits caused by:
+    //   - EPT violations
+    //   - EPT misconfigurations
+    //   - page-modification log-full events or
+    //   - SPP-related events
+    // the value saved depends on whether the VM exit occurred during delivery of an event through the IDT
+    case VMX_VMEXIT_APIC_ACCESS:
+    case VMX_VMEXIT_EPT_VIOLATION:
+    case VMX_VMEXIT_EPT_MISCONFIGURATION:
+    case VMX_VMEXIT_PML_LOGFULL:
+    case VMX_VMEXIT_SPP:
+      // * If the VM exit stored 1 for bit 31 for IDT-vectoring information field (because the VM exit did occur
+      //   during delivery of an event through the IDT), the value saved is the value that would have appeared in
+      //   the saved RFLAGS image had the event been delivered through the IDT.
+      // * If the VM exit stored 0 for bit 31 for IDT-vectoring information field (because the VM exit did not occur
+      //   during delivery of an event through the IDT), the value saved is 1.
+      if (! BX_CPU_THIS_PTR in_event)
+        eflags |= EFlagsRFMask;
+      break;
+
+    default:
+      break;
+  }
+
+  return eflags;
+}
+
+void BX_CPU_C::VMexitSaveGuestState(Bit32u reason, Bit32u vector)
 {
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
   int n;
@@ -2408,7 +2451,7 @@ void BX_CPU_C::VMexitSaveGuestState(Bit32u reason)
 
   VMwrite_natural(VMCS_GUEST_RIP, RIP);
   VMwrite_natural(VMCS_GUEST_RSP, RSP);
-  VMwrite_natural(VMCS_GUEST_RFLAGS, read_eflags());
+  VMwrite_natural(VMCS_GUEST_RFLAGS, VMexitReadEFLAGS(reason, vector));
 
 #if BX_SUPPORT_CET
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) {
@@ -2806,6 +2849,12 @@ void BX_CPU_C::VMexit(Bit32u reason, Bit64u qualification)
   else
     BX_DEBUG(("VMEXIT reason = %d (%s) qualification=0x" FMT_LL "x", reason, VMX_vmexit_reason_name[reason], qualification));
 
+  Bit32u vector = 0;
+  if (reason == VMX_VMEXIT_EXCEPTION_NMI) {
+    vector = VMread32(VMCS_32BIT_VMEXIT_INTERRUPTION_INFO);
+    vector &= 0xFF;
+  }
+
   if (TERTIARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_ENABLE_MSRLIST)) {
     VMwrite64(VMCS_64BIT_MSR_DATA, ((reason == VMX_VMEXIT_WRMSRLIST) && VMEXIT(VMX_VM_EXEC_CTRL1_MSR_BITMAPS)) ? vm->msr_data : 0);
     vm->msr_data = 0;
@@ -2845,7 +2894,7 @@ void BX_CPU_C::VMexit(Bit32u reason, Bit64u qualification)
     // clear VMENTRY interruption info field
     VMwrite32(VMCS_32BIT_CONTROL_VMENTRY_INTERRUPTION_INFO, vm->vmentry_interr_info & ~0x80000000);
 
-    VMexitSaveGuestState(reason);
+    VMexitSaveGuestState(reason, vector);
 
     Bit32u msr = StoreMSRs(vm->vmexit_msr_store_cnt, vm->vmexit_msr_store_addr);
     if (msr) {
@@ -2886,10 +2935,8 @@ void BX_CPU_C::VMexit(Bit32u reason, Bit64u qualification)
   //
 
   mask_event(BX_EVENT_INIT); // INIT is disabled in VMX root mode
-  if (reason == VMX_VMEXIT_EXCEPTION_NMI) {
-    Bit32u vector = VMread32(VMCS_32BIT_VMEXIT_INTERRUPTION_INFO) & 0xFF;
-    if (vector == 2)
-      mask_event(BX_EVENT_NMI);
+  if (reason == VMX_VMEXIT_EXCEPTION_NMI && vector == 2) {
+    if (vector == 2) mask_event(BX_EVENT_NMI);
   }
 
   BX_CPU_THIS_PTR EXT = 0;

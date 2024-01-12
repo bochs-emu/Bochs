@@ -835,10 +835,10 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bool push_error, Bit16u er
   BX_CPU_THIS_PTR EXT = 0;
 }
 
-/* Exception classes.  These are used as indexes into the 'is_exception_OK'
+/* Exception types.  These are used as indexes into the 'is_exception_OK'
  * array below, and are stored in the 'exception' array also
  */
-enum {
+enum ExceptionType {
   BX_ET_BENIGN = 0,
   BX_ET_CONTRIBUTORY = 1,
   BX_ET_PAGE_FAULT = 2,
@@ -851,13 +851,13 @@ static const bool is_exception_OK[3][3] = {
     { 1, 0, 0 }  /* 1st exception is PAGE_FAULT */
 };
 
-enum {
-  BX_EXCEPTION_CLASS_TRAP = 0,
-  BX_EXCEPTION_CLASS_FAULT = 1,
-  BX_EXCEPTION_CLASS_ABORT = 2
+struct BxExceptionInfo {
+  unsigned exception_type;
+  unsigned exception_class;
+  bool push_error;
 };
 
-struct BxExceptionInfo exceptions_info[BX_CPU_HANDLED_EXCEPTIONS] = {
+static struct BxExceptionInfo exceptions_info[BX_CPU_HANDLED_EXCEPTIONS] = {
   /* DE */ { BX_ET_CONTRIBUTORY, BX_EXCEPTION_CLASS_FAULT, 0 },
   /* DB */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 },
   /* 02 */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 }, // NMI
@@ -893,18 +893,42 @@ struct BxExceptionInfo exceptions_info[BX_CPU_HANDLED_EXCEPTIONS] = {
   /* 31 */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 }
 };
 
+int get_exception_class(unsigned vector)
+{
+  if (vector < BX_CPU_HANDLED_EXCEPTIONS)
+    return exceptions_info[vector].exception_class;
+  else
+    return BX_EXCEPTION_CLASS_FAULT;
+}
+
+int get_exception_type(unsigned vector)
+{
+  if (vector < BX_CPU_HANDLED_EXCEPTIONS)
+    return exceptions_info[vector].exception_type;
+  else
+    return BX_ET_BENIGN;
+}
+
+bool exception_push_error(unsigned vector)
+{
+  if (vector < BX_CPU_HANDLED_EXCEPTIONS)
+     return exceptions_info[vector].push_error;
+  else
+    return false;
+}
+
 // vector:     0..255: vector in IDT
 // error_code: if exception generates and error, push this error code
 void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
 {
-  unsigned exception_type = 0;
+  unsigned exception_type = BX_ET_BENIGN;
   unsigned exception_class = BX_EXCEPTION_CLASS_FAULT;
   bool push_error = false;
 
   if (vector < BX_CPU_HANDLED_EXCEPTIONS) {
-     push_error = exceptions_info[vector].push_error;
-     exception_class = exceptions_info[vector].exception_class;
-     exception_type = exceptions_info[vector].exception_type;
+     push_error = exception_push_error(vector);
+     exception_class = get_exception_class(vector);
+     exception_type = get_exception_type(vector);
   }
   else {
      BX_PANIC(("exception(%u): bad vector", vector));
