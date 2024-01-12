@@ -74,6 +74,10 @@ Detailed change log :
     - Fixed APIC MWAIT timer activation
     - APIC: Removed timer handles from save/restore list
 
+  - PIT
+    - PIT82C54: According to documentation (8254.pdf), mode 6 is the same as mode 2 and mode 7 is the same as mode 3.
+                Writes with mode 6 and 7 were not supported.
+
   - CMOS
     - Fixed and improved RTC handling in CMOS and BIOS (based on SF patch by Michele Giacomone).
     - Added runtime option for turning on/off saving CMOS image on exit.
@@ -87,6 +91,11 @@ Detailed change log :
     - Fixes for non-chain4 256-color VGA mode called modeX (address wrap, horizonal scrolling)
     - VGA text mode: implemented secondary charmap support
     - mem_write(): in text mode don't mark graphics tiles for update
+    - Increase maximum VGA update frequency to 75 and set default to 10
+    - Fixes for emulated CGA mode
+
+  - SVGA Cirrus:
+    - PCI MMIO space is not disabled if the Cirrus card is in VGA mode
 
   - Voodoo
     - Expand maximum resolution for Banshee and Voodoo 3 from 1600x1280 to 1920x1440
@@ -94,6 +103,7 @@ Detailed change log :
     - Fixed backward screen-to-screen copy operation for > 8 bpp modes
     - Fixed Voodoo device compilation for big endian architectures
     - Fixed randomly missing color palette updates
+    - Fixed Banshee read from ROM and mem_write() for any size and endianness
 
   - CD-ROM:
     - Fix to enable TEAC CD-ROM driver to work
