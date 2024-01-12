@@ -976,6 +976,8 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
     }
     BX_CPU_THIS_PTR speculative_rsp = false;
 
+    if (vector != BX_DB_EXCEPTION) BX_CPU_THIS_PTR assert_RF();
+
     if (BX_CPU_THIS_PTR last_exception_type == BX_ET_DOUBLE_FAULT)
     {
       debug(BX_CPU_THIS_PTR prev_rip); // print debug information to the log
@@ -1002,8 +1004,6 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
       }
       longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
     }
-
-    if (vector != BX_DB_EXCEPTION) BX_CPU_THIS_PTR assert_RF();
   }
 
   if (vector == BX_DB_EXCEPTION) {
