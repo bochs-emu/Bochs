@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2005-2019  The Bochs Project
+//  Copyright (C) 2005-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -289,6 +289,239 @@ int BX_CPU_C::int_number(unsigned s)
     return BX_SS_EXCEPTION;
   else
     return BX_GP_EXCEPTION;
+}
+
+#if BX_SUPPORT_X86_64
+bool BX_CPP_AttrRegparmN(2) BX_CPU_C::IsCanonicalAccess(bx_address laddr, bool user)
+{
+  if (! IsCanonical(laddr)) {
+    return false;
+  }
+
+  if (long64_mode()) {
+    if (BX_CPU_THIS_PTR cr4.get_LASS()) {
+      // laddr[63] == 0 user, laddr[63] == 1 supervisor
+      if ((laddr >> 63) == user) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+#endif
+
+int BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_pl, unsigned xlate_rw, Bit32u ac_mask, void *data)
+{
+#if BX_SUPPORT_CET
+  BX_ASSERT(xlate_rw == BX_READ || xlate_rw == BX_RW || xlate_rw == BX_SHADOW_STACK_READ || xlate_rw == BX_SHADOW_STACK_RW);
+#else
+  BX_ASSERT(xlate_rw == BX_READ || xlate_rw == BX_RW);
+#endif
+
+  bool user = (curr_pl == 3);
+
+#if BX_SUPPORT_X86_64
+  if (! IsCanonicalAccess(laddr, user)) {
+    BX_ERROR(("access_read_linear(): canonical failure"));
+    return -1;
+  }
+#endif
+
+  Bit32u pageOffset = PAGE_OFFSET(laddr);
+
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+  if (BX_CPU_THIS_PTR alignment_check() && user) {
+    if (pageOffset & ac_mask) {
+      BX_ERROR(("access_read_linear(): #AC misaligned access"));
+      exception(BX_AC_EXCEPTION, 0);
+    }
+  }
+#endif
+
+  bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(laddr, 0);
+
+  /* check for reference across multiple pages */
+  if ((pageOffset + len) <= 4096) {
+    // Access within single page.
+    BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, user, xlate_rw);
+    BX_CPU_THIS_PTR address_xlation.pages     = 1;
+#if BX_SUPPORT_MEMTYPE
+    BX_CPU_THIS_PTR address_xlation.memtype1  = tlbEntry->get_memtype();
+#endif
+    access_read_physical(BX_CPU_THIS_PTR address_xlation.paddress1, len, data);
+    BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, BX_CPU_THIS_PTR address_xlation.paddress1, len, tlbEntry->get_memtype(), xlate_rw, (Bit8u*) data);
+
+#if BX_X86_DEBUGGER
+    hwbreakpoint_match(laddr, len, xlate_rw);
+#endif
+  }
+  else {
+    // access across 2 pages
+    BX_CPU_THIS_PTR address_xlation.len1 = 4096 - pageOffset;
+    BX_CPU_THIS_PTR address_xlation.len2 = len - BX_CPU_THIS_PTR address_xlation.len1;
+    BX_CPU_THIS_PTR address_xlation.pages = 2;
+    bx_address laddr2 = laddr + BX_CPU_THIS_PTR address_xlation.len1;
+#if BX_SUPPORT_X86_64
+    if (! long64_mode()) laddr2 &= 0xffffffff; /* handle linear address wrap in legacy mode */
+    else {
+      if (! IsCanonicalAccess(laddr2, user)) {
+        BX_ERROR(("access_read_linear(): canonical failure for second half of page split access"));
+        return -1;
+      }
+    }
+#endif
+
+    bx_TLB_entry *tlbEntry2 = BX_DTLB_ENTRY_OF(laddr2, 0);
+
+    BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, user, xlate_rw);
+    BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(tlbEntry2, laddr2, user, xlate_rw);
+#if BX_SUPPORT_MEMTYPE
+    BX_CPU_THIS_PTR address_xlation.memtype1 = tlbEntry->get_memtype();
+    BX_CPU_THIS_PTR address_xlation.memtype2 = tlbEntry2->get_memtype();
+#endif
+
+#ifdef BX_LITTLE_ENDIAN
+    access_read_physical(BX_CPU_THIS_PTR address_xlation.paddress1,
+        BX_CPU_THIS_PTR address_xlation.len1, data);
+    BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, BX_CPU_THIS_PTR address_xlation.paddress1,
+        BX_CPU_THIS_PTR address_xlation.len1, tlbEntry->get_memtype(),
+        xlate_rw, (Bit8u*) data);
+    access_read_physical(BX_CPU_THIS_PTR address_xlation.paddress2,
+        BX_CPU_THIS_PTR address_xlation.len2,
+        ((Bit8u*)data) + BX_CPU_THIS_PTR address_xlation.len1);
+    BX_NOTIFY_LIN_MEMORY_ACCESS(laddr2, BX_CPU_THIS_PTR address_xlation.paddress2,
+        BX_CPU_THIS_PTR address_xlation.len2, tlbEntry2->get_memtype(),
+        xlate_rw, ((Bit8u*)data) + BX_CPU_THIS_PTR address_xlation.len1);
+#else // BX_BIG_ENDIAN
+    access_read_physical(BX_CPU_THIS_PTR address_xlation.paddress1,
+        BX_CPU_THIS_PTR address_xlation.len1,
+        ((Bit8u*)data) + (len - BX_CPU_THIS_PTR address_xlation.len1));
+    BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, BX_CPU_THIS_PTR address_xlation.paddress1,
+        BX_CPU_THIS_PTR address_xlation.len1, tlbEntry->get_memtype(),
+        xlate_rw, ((Bit8u*)data) + (len - BX_CPU_THIS_PTR address_xlation.len1));
+    access_read_physical(BX_CPU_THIS_PTR address_xlation.paddress2,
+        BX_CPU_THIS_PTR address_xlation.len2, data);
+    BX_NOTIFY_LIN_MEMORY_ACCESS(laddr2, BX_CPU_THIS_PTR address_xlation.paddress2,
+        BX_CPU_THIS_PTR address_xlation.len2, tlbEntry2->get_memtype(),
+        xlate_rw, (Bit8u*) data);
+#endif
+
+#if BX_X86_DEBUGGER
+    hwbreakpoint_match(laddr,  BX_CPU_THIS_PTR address_xlation.len1, xlate_rw);
+    hwbreakpoint_match(laddr2, BX_CPU_THIS_PTR address_xlation.len2, xlate_rw);
+#endif
+  }
+
+  return 0;
+}
+
+int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_pl, unsigned xlate_rw, Bit32u ac_mask, void *data)
+{
+#if BX_SUPPORT_CET
+  BX_ASSERT(xlate_rw == BX_WRITE || xlate_rw == BX_SHADOW_STACK_WRITE);
+#else
+  BX_ASSERT(xlate_rw == BX_WRITE);
+#endif
+
+  bool user = (curr_pl == 3);
+
+#if BX_SUPPORT_X86_64
+  if (! IsCanonicalAccess(laddr, user)) {
+    BX_ERROR(("access_write_linear(): canonical failure"));
+    return -1;
+  }
+#endif
+
+  Bit32u pageOffset = PAGE_OFFSET(laddr);
+
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+  if (BX_CPU_THIS_PTR alignment_check() && user) {
+    if (pageOffset & ac_mask) {
+      BX_ERROR(("access_write_linear(): #AC misaligned access"));
+      exception(BX_AC_EXCEPTION, 0);
+    }
+  }
+#endif
+
+  bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(laddr, 0);
+
+  /* check for reference across multiple pages */
+  if ((pageOffset + len) <= 4096) {
+    // Access within single page.
+    BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, user, xlate_rw);
+    BX_CPU_THIS_PTR address_xlation.pages     = 1;
+#if BX_SUPPORT_MEMTYPE
+    BX_CPU_THIS_PTR address_xlation.memtype1  = tlbEntry->get_memtype();
+#endif
+
+    BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, BX_CPU_THIS_PTR address_xlation.paddress1,
+                          len, tlbEntry->get_memtype(), xlate_rw, (Bit8u*) data);
+
+    access_write_physical(BX_CPU_THIS_PTR address_xlation.paddress1, len, data);
+
+#if BX_X86_DEBUGGER
+    hwbreakpoint_match(laddr, len, xlate_rw);
+#endif
+  }
+  else {
+    // access across 2 pages
+    BX_CPU_THIS_PTR address_xlation.len1 = 4096 - pageOffset;
+    BX_CPU_THIS_PTR address_xlation.len2 = len - BX_CPU_THIS_PTR address_xlation.len1;
+    BX_CPU_THIS_PTR address_xlation.pages = 2;
+    bx_address laddr2 = laddr + BX_CPU_THIS_PTR address_xlation.len1;
+#if BX_SUPPORT_X86_64
+    if (! long64_mode()) laddr2 &= 0xffffffff; /* handle linear address wrap in legacy mode */
+    else {
+      if (! IsCanonicalAccess(laddr2, user)) {
+        BX_ERROR(("access_write_linear(): canonical failure for second half of page split access"));
+        return -1;
+      }
+    }
+#endif
+
+    bx_TLB_entry *tlbEntry2 = BX_DTLB_ENTRY_OF(laddr2, 0);
+
+    BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, user, xlate_rw);
+    BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(tlbEntry2, laddr2, user, xlate_rw);
+#if BX_SUPPORT_MEMTYPE
+    BX_CPU_THIS_PTR address_xlation.memtype1 = tlbEntry->get_memtype();
+    BX_CPU_THIS_PTR address_xlation.memtype2 = tlbEntry2->get_memtype();
+#endif
+
+#ifdef BX_LITTLE_ENDIAN
+    BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, BX_CPU_THIS_PTR address_xlation.paddress1,
+        BX_CPU_THIS_PTR address_xlation.len1, tlbEntry->get_memtype(),
+        xlate_rw, (Bit8u*) data);
+    access_write_physical(BX_CPU_THIS_PTR address_xlation.paddress1,
+        BX_CPU_THIS_PTR address_xlation.len1, data);
+    BX_NOTIFY_LIN_MEMORY_ACCESS(laddr2, BX_CPU_THIS_PTR address_xlation.paddress2,
+        BX_CPU_THIS_PTR address_xlation.len2, tlbEntry2->get_memtype(),
+        xlate_rw, ((Bit8u*)data) + BX_CPU_THIS_PTR address_xlation.len1);
+    access_write_physical(BX_CPU_THIS_PTR address_xlation.paddress2,
+        BX_CPU_THIS_PTR address_xlation.len2,
+        ((Bit8u*)data) + BX_CPU_THIS_PTR address_xlation.len1);
+#else // BX_BIG_ENDIAN
+    BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, BX_CPU_THIS_PTR address_xlation.paddress1,
+        BX_CPU_THIS_PTR address_xlation.len1, tlbEntry->get_memtype(),
+        xlate_rw, ((Bit8u*)data) + (len - BX_CPU_THIS_PTR address_xlation.len1));
+    access_write_physical(BX_CPU_THIS_PTR address_xlation.paddress1,
+        BX_CPU_THIS_PTR address_xlation.len1,
+        ((Bit8u*)data) + (len - BX_CPU_THIS_PTR address_xlation.len1));
+    BX_NOTIFY_LIN_MEMORY_ACCESS(laddr2, BX_CPU_THIS_PTR address_xlation.paddress2,
+        BX_CPU_THIS_PTR address_xlation.len2, tlbEntry2->get_memtype(),
+        xlate_rw, (Bit8u*) data);
+    access_write_physical(BX_CPU_THIS_PTR address_xlation.paddress2,
+        BX_CPU_THIS_PTR address_xlation.len2, data);
+#endif
+
+#if BX_X86_DEBUGGER
+    hwbreakpoint_match(laddr,  BX_CPU_THIS_PTR address_xlation.len1, xlate_rw);
+    hwbreakpoint_match(laddr2, BX_CPU_THIS_PTR address_xlation.len2, xlate_rw);
+#endif
+  }
+
+  return 0;
 }
 
   Bit8u BX_CPP_AttrRegparmN(1)
