@@ -4,7 +4,7 @@ The Bochs source tree is transitioning from SVN to GIT hosted on github (https:/
 We welcome every new contributor !
 
 Brief summary :
-  - Bugfixes for CPU emulation correctness (MONITOR/MWAIT, VMX/SVM, x87, AVX-512, CET, SHA, GFNI fixes)
+  - Bugfixes for CPU emulation correctness (MONITOR/MWAIT, VMX/SVM, x87, AVX-VNNI, AVX-512, CET, SHA, GFNI fixes)
   ! Implemented VMX MBE (Mode Based Execution Control) emulation required for Windows 11 guest
   ! Implemented Posted-Interrupt Processing VMX extension emulation
   ! Implemented Linear Address Separation (LASS) extension
@@ -12,7 +12,7 @@ Brief summary :
   ! Implemented User-Level Interrupt (UINTR) extension
   ! Implemented Intel AMX extensions (AMX, AMX_INT8, AMX_BF16, AMX_FP16, AMX_COMPLEX)
   ! Implemented Intel instruction sets:
-    - MOVDIRI/MOVDIR64B, AVX512 BF16, AVX IFMA52, AVX-VNNI/VNNI-INT8/VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3/SM4, SHA512, WRMSRNS, MSRLIST, WAITPKG, SERIALIZE
+    - MOVDIRI/MOVDIR64B, AVX512 BF16, AVX IFMA52, VNNI-INT8/VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3/SM4, SHA512, WRMSRNS, MSRLIST, WAITPKG, SERIALIZE
   ! CPUID: Added Xeon Sapphire Rapids CPU definition
   - Improved 64-bit guest support in Bochs internal debugger, added new internal debugger commands
   - Bochs debugger enhanced with new commands (setpmem, loadmem, deref, ...)
@@ -34,7 +34,7 @@ Detailed change log :
   - Improved parsing bochsrc options passed on the command line.
 
 - CPU/CPUDB
-  - Bugfixes for CPU emulation correctness (MONITOR/MWAIT, VMX/SVM, x87, AVX-512, CET)
+  - Bugfixes for CPU emulation correctness (MONITOR/MWAIT, VMX/SVM, x87, AVX-VNNI, AVX-512, CET)
   - Critical CPU emulation bugfixes for SHA and GFNI instructions
   - Implemented VMX MBE (Mode Based Execution Control) emulation required for Windows 11 guest
   - Implemented Posted-Interrupt Processing VMX extension emulation
@@ -43,7 +43,7 @@ Detailed change log :
   - Implemented User-Level Interrupt (UINTR) extension
   - Implemented Intel AMX extensions (AMX, AMX_INT8, AMX_BF16, AMX_FP16, AMX_COMPLEX)
   - Implemented Intel instruction sets:
-    - MOVDIRI/MOVDIR64B, AVX512 BF16, AVX IFMA52, AVX-VNNI/VNNI-INT8/VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3/SM4, SHA512, WRMSRNS, MSRLIST, WAITPKG, SERIALIZE
+    - MOVDIRI/MOVDIR64B, AVX512 BF16, AVX IFMA52, VNNI-INT8/VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3/SM4, SHA512, WRMSRNS, MSRLIST, WAITPKG, SERIALIZE
   - CPUID: Added Xeon Sapphire Rapids CPU definition
     - Features AMX/AMX_INT8/AMX_BF16, PKS, WAITPKG, UINTR, AVX-VNNI, AVX512_BF16, MOVDIRI/MOVDIR64, LA57, SERIALIZE and more
       Not yet supported but will be added in future: AVX512_FP16, VMX Extensions (HLAT, IPI Virtualization)
@@ -237,6 +237,9 @@ Detailed change log :
 
 - CPU/CPUDB
   - Bugfixes for CPU emulation correctness (CPUID/VMX/SVM fixes to support Windows Hyper-V as guest in Bochs)
+  - TSC: Implemented TSC_ADJUST MSR and enabled in all relevant CPU models
+  - Protection Keys: Implemented Supervisor-Mode Protection Keys (PKS)
+  - AVX-VNNI: Implemented AVX encoded VNNI instructions
   ! CPUID: Added TigerLake CPU definition (features CET and CLWB support)
 
 - Memory
@@ -2581,10 +2584,8 @@ Detailed change log :
 
 - CPU
   - fixes for booting OS/2 by Dmitri Froloff
-    - fixed v8086 priveleged instruction processing bug (was also reported
-      by LightCone Aug 7 2003)
-    - exception process bug (was reported by Diego Henriquez Sat Nov 15
-      01:16:51 CET 2003)
+    - fixed v8086 priveleged instruction processing bug (was also reported by LightCone Aug 7 2003)
+    - exception process bug (was reported by Diego Henriquez Nov 15 2003)
     - segment validation with IRET instruction
     - CS segment not present exception processing with IRET
   - several fixes by Kevin Lawton
