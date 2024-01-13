@@ -2574,7 +2574,7 @@ void bx_svga_cirrus_c::svga_setup_bitblt_cputovideo(Bit32u dstaddr,Bit32u srcadd
     if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_COLOREXPAND) {
       w = BX_CIRRUS_THIS bitblt.bltwidth / BX_CIRRUS_THIS bitblt.pixelwidth;
       if (BX_CIRRUS_THIS bitblt.bltmodeext & CIRRUS_BLTMODEEXT_DWORDGRANULARITY) {
-        BX_CIRRUS_THIS bitblt.srcpitch = (w + 31) >> 5;
+        BX_CIRRUS_THIS bitblt.srcpitch = ((w + 31) & ~0x1f) >> 3;
       } else {
         BX_CIRRUS_THIS bitblt.srcpitch = (w + 7) >> 3;
       }
