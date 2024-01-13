@@ -398,6 +398,12 @@ bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
     case VMCS_64BIT_CONTROL_TERTIARY_VMEXEC_CONTROLS_HI:
       return BX_CPU_THIS_PTR vmx_cap.vmx_vmexec_ctrl3_supported_bits;
 
+    case VMCS_64BIT_CONTROL_IA32_SPEC_CTRL_MASK:
+    case VMCS_64BIT_CONTROL_IA32_SPEC_CTRL_MASK_HI:
+    case VMCS_64BIT_CONTROL_IA32_SPEC_CTRL_SHADOW:
+    case VMCS_64BIT_CONTROL_IA32_SPEC_CTRL_SHADOW_HI:
+      return BX_SUPPORT_VMX_EXTENSION(BX_VMX_SPEC_CTRL_VIRTUALIZATION);
+
     /* VMCS 64-bit read only data fields */
     /* binary 0010_01xx_xxxx_xxx0 */
     case VMCS_64BIT_GUEST_PHYSICAL_ADDR:
@@ -855,7 +861,7 @@ void BX_CPU_C::init_tertiary_proc_based_vmexec_ctrls(void)
 
   // tertiary proc based vm exec controls
   // -----------------------------------------------------------
-  //   [00] LOADIWKEY exiting (KeyLoker)
+  //   [00] LOADIWKEY exiting (KeyLocker)
   //   [01] Enable HLAT
   //   [02] EPT Paging Write control
   //   [03] Guest Paging verification
@@ -869,6 +875,9 @@ void BX_CPU_C::init_tertiary_proc_based_vmexec_ctrls(void)
 
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_MSRLIST)) {
     cap->vmx_vmexec_ctrl3_supported_bits |= VMX_VM_EXEC_CTRL3_ENABLE_MSRLIST;
+  }
+  if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_SPEC_CTRL_VIRTUALIZATION)) {
+    cap->vmx_vmexec_ctrl3_supported_bits |= VMX_VM_EXEC_CTRL3_VIRTUALIZE_IA32_SPEC_CTRL;
   }
 }
 

@@ -794,6 +794,10 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
       BX_ERROR(("VMFAIL: VMCS EXEC CTRL: unrestricted guest without EPT"));
       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
     }
+    if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_MBE_CTRL) {
+      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: MBE is enabled without EPT"));
+      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+    }
   }
 
   if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_VPID_ENABLE) {
@@ -859,13 +863,6 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
     }
   }
 
-  if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_MBE_CTRL) {
-    if ((vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_EPT_ENABLE) == 0) {
-       BX_ERROR(("VMFAIL: VMCS EXEC CTRL: MBE is enabled without EPT"));
-       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
-    }
-  }
-
   if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_XSAVES_XRSTORS)
     vm->xss_exiting_bitmap = VMread64(VMCS_64BIT_CONTROL_XSS_EXITING_BITMAP);
   else
@@ -879,6 +876,11 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
       BX_ERROR(("VMFAIL: VMCS EXEC CTRL: TSC multiplier should be non zero"));
       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
     }
+  }
+
+  if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_VIRTUALIZE_IA32_SPEC_CTRL) {
+    vm->ia32_spec_ctrl_shadow = VMread64(VMCS_64BIT_CONTROL_IA32_SPEC_CTRL_SHADOW);
+    vm->ia32_spec_ctrl_mask   = VMread64(VMCS_64BIT_CONTROL_IA32_SPEC_CTRL_MASK);
   }
 
   //
@@ -2530,6 +2532,9 @@ void BX_CPU_C::VMexitSaveGuestState(Bit32u reason, Bit32u vector)
     VMwrite64(VMCS_64BIT_GUEST_IA32_EFER, BX_CPU_THIS_PTR efer.get32());
 #endif
 #endif
+
+  if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_VIRTUALIZE_IA32_SPEC_CTRL)
+    VMwrite64(VMCS_64BIT_CONTROL_IA32_SPEC_CTRL_SHADOW, vm->ia32_spec_ctrl_shadow);
 
   // The pending debug exceptions field is saved as *clear* for all VM exits except the following:
   //   - VMexit caused by an INIT signal, a machine-check exception, or a SMI

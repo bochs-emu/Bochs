@@ -335,19 +335,24 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 
     case BX_MSR_IA32_SPEC_CTRL:
       if (! is_cpu_extension_supported(BX_ISA_SCA_MITIGATIONS)) {
-        BX_ERROR(("WRMSR IA32_SPEC_CTRL: not enabled in the cpu model"));
+        BX_ERROR(("RDMSR IA32_SPEC_CTRL: not enabled in the cpu model"));
         return handle_unknown_rdmsr(index, msr);
       }
       //    [0] - Enable IBRS: Indirect Branch Restricted Speculation
       //    [1] - Enable STIBP: Single Thread Indirect Branch Predictors
       //    [2] - Enable SSCB: Speculative Store Bypass Disable
       // [63:3] - reserved
-      val64 = BX_CPU_THIS_PTR msr.ia32_spec_ctrl;
+#if BX_SUPPORT_VMX
+      if (BX_CPU_THIS_PTR in_vmx_guest && TERTIARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUALIZE_IA32_SPEC_CTRL))
+        val64 = BX_CPU_THIS_PTR vmcs.ia32_spec_ctrl_shadow;
+      else
+#endif
+        val64 = BX_CPU_THIS_PTR msr.ia32_spec_ctrl;
       break;
 
     case BX_MSR_IA32_PRED_CMD:
       if (! is_cpu_extension_supported(BX_ISA_SCA_MITIGATIONS)) {
-        BX_ERROR(("WRMSR IA32_PRED_CMD: not enabled in the cpu model"));
+        BX_ERROR(("RDMSR IA32_PRED_CMD: not enabled in the cpu model"));
         return handle_unknown_rdmsr(index, msr);
       }
       // write only MSR, no need to remember written value
@@ -355,7 +360,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 
     case BX_MSR_IA32_FLUSH_CMD:
       if (! is_cpu_extension_supported(BX_ISA_SCA_MITIGATIONS)) {
-        BX_ERROR(("WRMSR IA32_FLUSH_CMD: not enabled in the cpu model"));
+        BX_ERROR(("RDMSR IA32_FLUSH_CMD: not enabled in the cpu model"));
         return handle_unknown_rdmsr(index, msr);
       }
       // write only MSR, no need to remember written value
@@ -1066,6 +1071,10 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
         BX_ERROR(("WRMSR IA32_SPEC_CTRL: not enabled in the cpu model"));
         return handle_unknown_wrmsr(index, val_64);
       }
+#if BX_SUPPORT_VMX
+      if (BX_CPU_THIS_PTR in_vmx_guest && TERTIARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_VIRTUALIZE_IA32_SPEC_CTRL))
+        val_64 = (BX_CPU_THIS_PTR msr.ia32_spec_ctrl & BX_CPU_THIS_PTR vmcs.ia32_spec_ctrl_mask) | (val_64 & ~BX_CPU_THIS_PTR vmcs.ia32_spec_ctrl_mask);
+#endif
       //    [0] - Enable IBRS: Indirect Branch Restricted Speculation
       //    [1] - Enable STIBP: Single Thread Indirect Branch Predictors
       //    [2] - Enable SSCB: Speculative Store Bypass Disable
@@ -1074,7 +1083,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
         BX_ERROR(("WRMSR: attempt to set reserved bits of IA32_SPEC_CTRL !"));
         return false;
       }
-      BX_CPU_THIS_PTR msr.ia32_spec_ctrl = val32_lo;
+      BX_CPU_THIS_PTR msr.ia32_spec_ctrl = GET32L(val_64);
       break;
 
     case BX_MSR_IA32_PRED_CMD:

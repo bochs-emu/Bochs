@@ -831,6 +831,9 @@ typedef struct bx_VMCS
    bx_phy_address msr_bitmap_addr;
    Bit64u msr_data;
 
+   Bit64u ia32_spec_ctrl_shadow;
+   Bit64u ia32_spec_ctrl_mask;
+
    bx_address vm_cr0_mask;
    bx_address vm_cr0_read_shadow;
    bx_address vm_cr4_mask;

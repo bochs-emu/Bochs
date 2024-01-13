@@ -6,6 +6,7 @@ We welcome every new contributor !
 Brief summary :
   - Bugfixes for CPU emulation correctness (MONITOR/MWAIT, VMX/SVM, x87, AVX-VNNI, AVX-512, CET, SHA, GFNI fixes)
   ! Implemented VMX MBE (Mode Based Execution Control) emulation required for Windows 11 guest
+  ! Implemented MSR IA32_SPEC_CTRL Virtualization VMX extension
   ! Implemented Posted-Interrupt Processing VMX extension emulation
   ! Implemented Linear Address Separation (LASS) extension
   ! Implemented 57-bit Linear Address and 5-Level Paging support
@@ -37,6 +38,8 @@ Detailed change log :
   - Bugfixes for CPU emulation correctness (MONITOR/MWAIT, VMX/SVM, x87, AVX-VNNI, AVX-512, CET)
   - Critical CPU emulation bugfixes for SHA and GFNI instructions
   - Implemented VMX MBE (Mode Based Execution Control) emulation required for Windows 11 guest
+  - Implemented advanced VM-exit information for EPT violations (tied to MBE Control)
+  - Implemented MSR IA32_SPEC_CTRL Virtualization VMX extension
   - Implemented Posted-Interrupt Processing VMX extension emulation
   - Implemented Linear Address Separation (LASS) extension
   - Implemented 57-bit Linear Address and 5-Level Paging support
