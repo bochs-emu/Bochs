@@ -680,6 +680,8 @@ int BX_CPU_C::check_entry_PAE(const char *s, Bit64u entry, Bit64u reserved, unsi
   return -1;
 }
 
+#endif
+
 Bit32u BX_CPU_C::check_leaf_entry_faults(bx_address laddr, Bit64u leaf_entry, Bit32u combined_access, unsigned user, unsigned rw, bool nx_page)
 {
 #if BX_SUPPORT_CET
@@ -736,6 +738,8 @@ Bit32u BX_CPU_C::check_leaf_entry_faults(bx_address laddr, Bit64u leaf_entry, Bi
 
   return combined_access;
 }
+
+#if BX_CPU_LEVEL >= 6
 
 #if BX_SUPPORT_MEMTYPE
 BX_CPP_INLINE Bit32u calculate_pcd_pwt(Bit32u entry)
