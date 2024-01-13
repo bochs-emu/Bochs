@@ -783,7 +783,7 @@ void BX_CPU_C::vmx_page_modification_logging(Bit64u guest_paddr, unsigned dirty_
 
   if (dirty_update) {
     Bit64u pAddr = vm->pml_address + 8 * vm->pml_index;
-    write_physical_qword(pAddr, guest_paddr, MEMTYPE(resolve_memtype(pAddr)), BX_VMX_PML_WRITE);
+    write_physical_qword(pAddr, LPFOf(guest_paddr), MEMTYPE(resolve_memtype(pAddr)), BX_VMX_PML_WRITE);
     vm->pml_index--;
   }
 }
