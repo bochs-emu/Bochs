@@ -578,7 +578,7 @@ void BX_CPU_C::init_ept_vpid_capabilities(void)
   // [17] - EPT 1G pages support
   // [20] - INVEPT instruction supported
   // [21] - EPT A/D bits supported
-  // [22] - advanced VM-exit information for EPT violations (not implemented yet)
+  // [22] - advanced VM-exit information for EPT violations (tied to MBE support)
   // [23] - Enable Shadow Stack control bit is supported in EPTP (CET)
   // [25] - INVEPT single-context invalidation supported
   // [26] - INVEPT all-context invalidation supported
@@ -594,6 +594,8 @@ void BX_CPU_C::init_ept_vpid_capabilities(void)
       cap->vmx_ept_vpid_cap_supported_bits |= (1 << 17);
     if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT_ACCESS_DIRTY))
       cap->vmx_ept_vpid_cap_supported_bits |= (1 << 21);
+    if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_MBE_CONTROL))
+      cap->vmx_ept_vpid_cap_supported_bits |= (1 << 22);
     if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET))
       cap->vmx_ept_vpid_cap_supported_bits |= (1 << 23);
   }
