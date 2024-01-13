@@ -307,7 +307,8 @@ Bit32u sapphire_rapids_t::get_vmx_extensions_bitmask(void) const
          BX_VMX_POSTED_INTERRUPTS |
          BX_VMX_MBE_CONTROL |
          BX_VMX_SPP |
-         BX_VMX_TSC_SCALING;
+         BX_VMX_TSC_SCALING |
+         BX_VMX_SPEC_CTRL_VIRTUALIZATION;
 }
 #endif
 
