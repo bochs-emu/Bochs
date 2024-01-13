@@ -699,6 +699,57 @@ BX_CPP_INLINE Bit32u calculate_pat(Bit32u entry, Bit32u lpf_mask)
 
 #if BX_SUPPORT_X86_64
 
+#if BX_SUPPORT_PKEYS
+Bit32u BX_CPU_C::handle_pkeys(bx_address laddr, Bit64u entry, unsigned user, unsigned rw)
+{
+  Bit32u pkey = 0;
+
+  if (rw != BX_EXECUTE) {
+    bool isWrite = (rw & 1); // write or r-m-w
+
+    if (BX_CPU_THIS_PTR cr4.get_PKE()) {
+      pkey = (entry >> 59) & 0xf;
+
+      // check of accessDisable bit set
+      if (user) {
+        if (BX_CPU_THIS_PTR pkru & (1<<(pkey*2))) {
+          BX_ERROR(("protection key access not allowed PKRU=%x pkey=%d", BX_CPU_THIS_PTR pkru, pkey));
+          page_fault(ERROR_PROTECTION | ERROR_PKEY, laddr, user, rw);
+        }
+      }
+
+      // check of writeDisable bit set
+      if (BX_CPU_THIS_PTR pkru & (1<<(pkey*2+1))) {
+        if (isWrite && (user || BX_CPU_THIS_PTR cr0.get_WP())) {
+          BX_ERROR(("protection key write not allowed PKRU=%x pkey=%d", BX_CPU_THIS_PTR pkru, pkey));
+          page_fault(ERROR_PROTECTION | ERROR_PKEY, laddr, user, rw);
+        }
+      }
+    }
+
+    if (BX_CPU_THIS_PTR cr4.get_PKS() && !user) {
+      pkey = (entry >> 59) & 0xf;
+
+      // check of accessDisable bit set
+      if (BX_CPU_THIS_PTR pkrs & (1<<(pkey*2))) {
+        BX_ERROR(("protection key access not allowed PKRS=%x pkey=%d", BX_CPU_THIS_PTR pkrs, pkey));
+        page_fault(ERROR_PROTECTION | ERROR_PKEY, laddr, user, rw);
+      }
+
+      // check of writeDisable bit set
+      if (BX_CPU_THIS_PTR pkrs & (1<<(pkey*2+1))) {
+        if (isWrite && BX_CPU_THIS_PTR cr0.get_WP()) {
+          BX_ERROR(("protection key write not allowed PKRS=%x pkey=%d", BX_CPU_THIS_PTR pkrs, pkey));
+          page_fault(ERROR_PROTECTION | ERROR_PKEY, laddr, user, rw);
+        }
+      }
+    }
+  }
+
+  return pkey;
+}
+#endif
+
 // Translate a linear address to a physical address in long mode
 bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lpf_mask, Bit32u &pkey, unsigned user, unsigned rw)
 {
@@ -771,49 +822,11 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
     combined_access &= curr_entry; // U/S and R/W
   }
 
-  bool isWrite = (rw & 1); // write or r-m-w
-
 #if BX_SUPPORT_PKEYS
-  if (rw != BX_EXECUTE) {
-    if (BX_CPU_THIS_PTR cr4.get_PKE()) {
-      pkey = (entry[leaf] >> 59) & 0xf;
-
-      // check of accessDisable bit set
-      if (user) {
-        if (BX_CPU_THIS_PTR pkru & (1<<(pkey*2))) {
-          BX_ERROR(("protection key access not allowed PKRU=%x pkey=%d", BX_CPU_THIS_PTR pkru, pkey));
-          page_fault(ERROR_PROTECTION | ERROR_PKEY, laddr, user, rw);
-        }
-      }
-
-      // check of writeDisable bit set
-      if (BX_CPU_THIS_PTR pkru & (1<<(pkey*2+1))) {
-        if (isWrite && (user || BX_CPU_THIS_PTR cr0.get_WP())) {
-          BX_ERROR(("protection key write not allowed PKRU=%x pkey=%d", BX_CPU_THIS_PTR pkru, pkey));
-          page_fault(ERROR_PROTECTION | ERROR_PKEY, laddr, user, rw);
-        }
-      }
-    }
-
-    if (BX_CPU_THIS_PTR cr4.get_PKS() && !user) {
-      pkey = (entry[leaf] >> 59) & 0xf;
-
-      // check of accessDisable bit set
-      if (BX_CPU_THIS_PTR pkrs & (1<<(pkey*2))) {
-        BX_ERROR(("protection key access not allowed PKRS=%x pkey=%d", BX_CPU_THIS_PTR pkrs, pkey));
-        page_fault(ERROR_PROTECTION | ERROR_PKEY, laddr, user, rw);
-      }
-
-      // check of writeDisable bit set
-      if (BX_CPU_THIS_PTR pkrs & (1<<(pkey*2+1))) {
-        if (isWrite && BX_CPU_THIS_PTR cr0.get_WP()) {
-          BX_ERROR(("protection key write not allowed PKRS=%x pkey=%d", BX_CPU_THIS_PTR pkrs, pkey));
-          page_fault(ERROR_PROTECTION | ERROR_PKEY, laddr, user, rw);
-        }
-      }
-    }
-  }
+  pkey = handle_pkeys(laddr, entry[leaf], user, rw);
 #endif
+
+  bool isWrite = (rw & 1); // write or r-m-w
 
 #if BX_SUPPORT_CET
   bool shadow_stack = (rw & 4) != 0;
