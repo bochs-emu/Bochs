@@ -553,14 +553,13 @@ static const char *bx_paging_level[5] = { "PTE", "PDE", "PDPE", "PML4", "PML5" }
 // 01    | R/W
 // 02    | U/S
 // 03    |
-// 07    | Shadow Stack
+// ...
 // 08    | Global
 // 11-09 | memtype (3 bits)
 
 enum {
   BX_COMBINED_ACCESS_WRITE = 0x2,
   BX_COMBINED_ACCESS_USER  = 0x4,
-  BX_COMBINED_SHADOW_STACK = 0x80,
   BX_COMBINED_GLOBAL_PAGE  = 0x100,
 };
 
@@ -827,7 +826,6 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
       BX_DEBUG(("shadow stack U/S access mismatch"));
       page_fault(ERROR_PROTECTION, laddr, user, rw);
     }
-    combined_access |= BX_COMBINED_SHADOW_STACK;
   }
   else
 #endif
@@ -1067,7 +1065,6 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
       BX_DEBUG(("shadow stack U/S access mismatch"));
       page_fault(ERROR_PROTECTION, laddr, user, rw);
     }
-    combined_access |= BX_COMBINED_SHADOW_STACK;
   }
   else
 #endif
@@ -1213,7 +1210,6 @@ bx_phy_address BX_CPU_C::translate_linear_legacy(bx_address laddr, Bit32u &lpf_m
       BX_DEBUG(("shadow stack U/S access mismatch"));
       page_fault(ERROR_PROTECTION, laddr, user, rw);
     }
-    combined_access |= BX_COMBINED_SHADOW_STACK;
   }
   else
 #endif
