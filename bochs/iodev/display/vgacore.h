@@ -63,6 +63,7 @@
 typedef struct {
   Bit16u htotal;
   Bit16u vtotal;
+  Bit16u vbstart;
   Bit16u vrstart;
 } bx_crtc_params_t;
 
@@ -107,6 +108,8 @@ public:
   virtual bool   get_update_mode(void) {return update_mode_vsync;}
   virtual void   set_update_timer(Bit32u usec);
   static void    vga_timer_handler(void *);
+  static void    vsync_timer_handler(void *);
+  virtual void   vsync_timer(void);
   static Bit64s  vga_param_handler(bx_param_c *param, bool set, Bit64s val);
 
 protected:
@@ -145,9 +148,10 @@ protected:
     } misc_output;
 
     struct {
-      Bit8u   address;
-      Bit8u   reg[0x19];
-      bool write_protect;
+      Bit8u  address;
+      Bit8u  reg[0x19];
+      bool   write_protect;
+      Bit16u start_addr;
     } CRTC;
 
     struct {
@@ -269,7 +273,8 @@ protected:
 #endif
   } s;  // state information
 
-  int timer_id;
+  int timer_id1;
+  int timer_id2;
   Bit32u vga_update_interval;
   bool update_mode_vsync;
   bool update_realtime;

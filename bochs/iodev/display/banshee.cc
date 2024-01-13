@@ -2851,6 +2851,7 @@ void bx_voodoo_vga_c::banshee_update_mode(void)
   BX_INFO(("switched to %d x %d x %d @ %d Hz", v->fbi.width, v->fbi.height,
            v->banshee.disp_bpp, (unsigned)v->vertfreq));
   bx_gui->dimension_update(v->fbi.width, v->fbi.height, 0, 0, v->banshee.disp_bpp);
+  bx_virt_timer.deactivate_timer(timer_id2);
   // compatibilty settings for VGA core
   BX_VVGA_THIS s.last_xres = v->fbi.width;
   BX_VVGA_THIS s.last_yres = v->fbi.height;
@@ -2910,6 +2911,10 @@ void bx_voodoo_vga_c::get_crtc_params(bx_crtc_params_t *crtcp, Bit32u *vclock)
   crtcp->vtotal = BX_VVGA_THIS s.CRTC.reg[6] + ((BX_VVGA_THIS s.CRTC.reg[7] & 0x01) << 8) +
                   ((BX_VVGA_THIS s.CRTC.reg[7] & 0x20) << 4) +
                   ((v->banshee.crtc[0x1b] & 0x01) << 10) + 2;
+  crtcp->vbstart = BX_VVGA_THIS s.CRTC.reg[21] +
+                   ((BX_VVGA_THIS s.CRTC.reg[7] & 0x08) << 5) +
+                   ((BX_VVGA_THIS s.CRTC.reg[9] & 0x20) << 4) +
+                   ((v->banshee.crtc[0x1b] & 0x10) << 6);
   crtcp->vrstart = BX_VVGA_THIS s.CRTC.reg[16] +
                    ((BX_VVGA_THIS s.CRTC.reg[7] & 0x04) << 6) +
                    ((BX_VVGA_THIS s.CRTC.reg[7] & 0x80) << 2) +
