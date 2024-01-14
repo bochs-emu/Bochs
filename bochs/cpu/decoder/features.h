@@ -81,9 +81,7 @@ x86_feature(BX_ISA_BMI2, "bmi2")                                        /* BMI2 
 x86_feature(BX_ISA_FMA4, "fma4")                                        /* FMA4 instruction (AMD) */
 x86_feature(BX_ISA_XOP, "xop")                                          /* XOP instruction (AMD) */
 x86_feature(BX_ISA_TBM, "tbm")                                          /* TBM instruction (AMD) */
-#if BX_SUPPORT_SVM
 x86_feature(BX_ISA_SVM, "svm")                                          /* SVM instruction (AMD) */
-#endif
 x86_feature(BX_ISA_RDRAND, "rdrand")                                    /* RDRAND instruction */
 x86_feature(BX_ISA_RDSEED, "rdseed")                                    /* RDSEED instruction */
 x86_feature(BX_ISA_ADX, "adx")                                          /* ADCX/ADOX instruction */
@@ -93,11 +91,9 @@ x86_feature(BX_ISA_SHA512, "sha512")                                    /* SHA-5
 x86_feature(BX_ISA_GFNI, "gfni")                                        /* GFNI instruction */
 x86_feature(BX_ISA_SM3, "sm3")                                          /* SM3 instruction */
 x86_feature(BX_ISA_SM4, "sm4")                                          /* SM4 instruction */
-#if BX_SUPPORT_AVX
 x86_feature(BX_ISA_AVX512, "avx512")                                    /* AVX-512 instruction */
 x86_feature(BX_ISA_AVX512_DQ, "avx512dq")                               /* AVX-512DQ instruction */
 x86_feature(BX_ISA_AVX512_BW, "avx512bw")                               /* AVX-512 Byte/Word instruction */
-#if BX_SUPPORT_EVEX
 x86_feature(BX_ISA_AVX512_CD, "avx512cd")                               /* AVX-512 Conflict Detection instruction */
 x86_feature(BX_ISA_AVX512_PF, "avx512pf")                               /* AVX-512 Sparse Prefetch instruction */
 x86_feature(BX_ISA_AVX512_ER, "avx512er")                               /* AVX-512 Exponential/Reciprocal instruction */
@@ -109,20 +105,16 @@ x86_feature(BX_ISA_AVX512_VNNI, "avx512vnni")                           /* AVX-5
 x86_feature(BX_ISA_AVX512_BITALG, "avx512bitalg")                       /* AVX-512 BITALG Instructions */
 x86_feature(BX_ISA_AVX512_VP2INTERSECT, "avx512vp2intersect")           /* AVX-512 VP2INTERSECT Instructions */
 x86_feature(BX_ISA_AVX512_BF16, "avx512bf16")                           /* AVX-512 BF16 Instructions */
-#endif
 x86_feature(BX_ISA_AVX_IFMA, "avx_ifma")                                /* AVX encoded IFMA Instructions */
 x86_feature(BX_ISA_AVX_VNNI, "avx_vnni")                                /* AVX encoded VNNI Instructions */
 x86_feature(BX_ISA_AVX_VNNI_INT8, "avx_vnni_int8")                      /* AVX encoded VNNI-INT8 Instructions */
 x86_feature(BX_ISA_AVX_VNNI_INT16, "avx_vnni_int16")                    /* AVX encoded VNNI-INT16 Instructions */
 x86_feature(BX_ISA_AVX_NE_CONVERT, "avx_ne_convert")                    /* AVX-NE-CONVERT Instructions */
-#if BX_SUPPORT_AMX
 x86_feature(BX_ISA_AMX, "amx")                                          /* AMX Instructions */
 x86_feature(BX_ISA_AMX_INT8, "amx_int8")                                /* AMX-INT8 Instructions */
 x86_feature(BX_ISA_AMX_BF16, "amx_bf16")                                /* AMX-BF16 Instructions */
 x86_feature(BX_ISA_AMX_FP16, "amx_fp16")                                /* AMX-FP16 Instructions */
 x86_feature(BX_ISA_AMX_COMPLEX, "amx_complex")                          /* AMX-COMPLEX Instructions */
-#endif
-#endif
 x86_feature(BX_ISA_XAPIC, "xapic")                                      /* XAPIC support */
 x86_feature(BX_ISA_X2APIC, "x2apic")                                    /* X2APIC support */
 x86_feature(BX_ISA_XAPIC_EXT, "xapicext")                               /* XAPIC Extensions support (AMD) */
@@ -133,10 +125,8 @@ x86_feature(BX_ISA_TSC_DEADLINE, "tsc_deadline")                        /* TSC-D
 x86_feature(BX_ISA_FOPCODE_DEPRECATION, "fopcode_deprecation")          /* FOPCODE Deprecation - FOPCODE update on unmasked x87 exception only */
 x86_feature(BX_ISA_FCS_FDS_DEPRECATION, "fcs_fds_deprecation")          /* FCS/FDS Deprecation */
 x86_feature(BX_ISA_FDP_DEPRECATION, "fdp_deprecation")                  /* FDP Deprecation - FDP update on unmasked x87 exception only */
-#if BX_SUPPORT_PKEYS
 x86_feature(BX_ISA_PKU, "pku")                                          /* User-Mode Protection Keys */
 x86_feature(BX_ISA_PKS, "pks")                                          /* Supervisor-Mode Protection Keys */
-#endif
 x86_feature(BX_ISA_UMIP, "umip")                                        /* User-Mode Instructions Prevention */
 x86_feature(BX_ISA_RDPID, "rdpid")                                      /* RDPID Support */
 x86_feature(BX_ISA_TCE, "tce")                                          /* Translation Cache Extensions (TCE) support (AMD) */
