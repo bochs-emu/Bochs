@@ -327,7 +327,8 @@ enum BX_Exception {
   BX_MC_EXCEPTION = 18,
   BX_XM_EXCEPTION = 19,
   BX_VE_EXCEPTION = 20,
-  BX_CP_EXCEPTION = 21  // Control Protection (fault)
+  BX_CP_EXCEPTION = 21, // Control Protection (fault)
+  BX_SX_EXCEPTION = 30  // SVM Security Exception (fault)
 };
 
 enum CP_Exception_Error_Code {
@@ -4446,6 +4447,8 @@ public: // for now...
 #if BX_SUPPORT_X86_64
   BX_SMF void long_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit16u error_code);
 #endif
+  BX_SMF bool exception_push_error(unsigned vector);
+  BX_SMF int  get_exception_type(unsigned vector);
   BX_SMF void exception(unsigned vector, Bit16u error_code)
                   BX_CPP_AttrNoReturn();
   BX_SMF void init_SMRAM(void);

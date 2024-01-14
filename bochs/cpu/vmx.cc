@@ -1000,10 +1000,6 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
      if (event_type == BX_HARDWARE_EXCEPTION && vector < BX_CPU_HANDLED_EXCEPTIONS)
         push_error_reference = exception_push_error(vector);
 
-     if (! BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) {
-        if (vector == BX_CP_EXCEPTION) push_error_reference = false;
-     }
-
      if (vm->vmentry_interr_info & 0x7ffff000) {
         BX_ERROR(("VMFAIL: VMENTRY broken interruption info field"));
         return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;

@@ -857,7 +857,7 @@ struct BxExceptionInfo {
   bool push_error;
 };
 
-static struct BxExceptionInfo exceptions_info[BX_CPU_HANDLED_EXCEPTIONS] = {
+static const struct BxExceptionInfo exceptions_info[BX_CPU_HANDLED_EXCEPTIONS] = {
   /* DE */ { BX_ET_CONTRIBUTORY, BX_EXCEPTION_CLASS_FAULT, 0 },
   /* DB */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 },
   /* 02 */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 }, // NMI
@@ -889,7 +889,7 @@ static struct BxExceptionInfo exceptions_info[BX_CPU_HANDLED_EXCEPTIONS] = {
   /* 27 */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 },
   /* 28 */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 },
   /* 29 */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 },
-  /* 30 */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 }, // FIXME: SVM #SF
+  /* SX */ { BX_ET_CONTRIBUTORY, BX_EXCEPTION_CLASS_FAULT, 1 }, // SVM #SX is here and pushes error code
   /* 31 */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 }
 };
 
@@ -901,18 +901,30 @@ int get_exception_class(unsigned vector)
     return BX_EXCEPTION_CLASS_FAULT;
 }
 
-int get_exception_type(unsigned vector)
+int BX_CPU_C::get_exception_type(unsigned vector)
 {
-  if (vector < BX_CPU_HANDLED_EXCEPTIONS)
+  if (vector < BX_CPU_HANDLED_EXCEPTIONS) {
+    if (vector == BX_CP_EXCEPTION)
+      if (! BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET))
+        return BX_ET_BENIGN;
+    if (vector == BX_SX_EXCEPTION)
+      if (! BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SVM))
+        return BX_ET_BENIGN;
     return exceptions_info[vector].exception_type;
+  }
   else
     return BX_ET_BENIGN;
 }
 
-bool exception_push_error(unsigned vector)
+bool BX_CPU_C::exception_push_error(unsigned vector)
 {
-  if (vector < BX_CPU_HANDLED_EXCEPTIONS)
-     return exceptions_info[vector].push_error;
+  if (vector < BX_CPU_HANDLED_EXCEPTIONS) {
+    if (vector == BX_CP_EXCEPTION)
+      if (! BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) return false;
+    if (vector == BX_SX_EXCEPTION)
+      if (! BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SVM)) return false;
+    return exceptions_info[vector].push_error;
+  }
   else
     return false;
 }
