@@ -463,6 +463,7 @@ void BX_CPU_C::register_state(void)
 #if BX_SUPPORT_SVM
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SVM)) {
     BXRS_HEX_PARAM_FIELD(MSR, svm_hsave_pa, msr.svm_hsave_pa);
+    BXRS_HEX_PARAM_FIELD(MSR, svm_vm_cr, msr.svm_vm_cr);
   }
 #endif
 
@@ -976,6 +977,7 @@ void BX_CPU_C::reset(unsigned source)
 
 #if BX_SUPPORT_SVM
   BX_CPU_THIS_PTR msr.svm_hsave_pa = 0;
+  BX_CPU_THIS_PTR msr.svm_vm_cr = 0;     // enable SVME if was disabled, clear LOCK bit
 #endif
 
 #if BX_SUPPORT_CET

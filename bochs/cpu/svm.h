@@ -326,6 +326,13 @@ struct SVM_CONTROLS
 
 #endif
 
+// VM_CR_MSR 0xc0010114
+#define BX_VM_CR_MSR_DPD_MASK           (1<<0)
+#define BX_VM_CR_MSR_INIT_REDIRECT_MASK (1<<1)
+#define BX_VM_CR_MSR_DIS_A20M_MASK      (1<<2)
+#define BX_VM_CR_MSR_LOCK_MASK          (1<<3)
+#define BX_VM_CR_MSR_SVMDIS_MASK        (1<<4)
+
 struct VMCB_CACHE
 {
   SVM_HOST_STATE host_state;

@@ -266,6 +266,11 @@ bool BX_CPU_C::handleAsyncEvent(void)
     if (BX_CPU_THIS_PTR in_svm_guest) {
       if (SVM_INTERCEPT(SVM_INTERCEPT0_INIT)) Svm_Vmexit(SVM_VMEXIT_INIT); // INIT is still pending
     }
+    if (BX_CPU_THIS_PTR msr.svm_vm_cr & BX_VM_CR_MSR_INIT_REDIRECT_MASK) {
+      clear_event(BX_EVENT_INIT);     // INIT is no longer pending
+      BX_INFO(("SVM INIT Redirect to #SX"));
+      exception(BX_SX_EXCEPTION, 1);  // The only error code is 1, and indicates redirection of INIT
+    }
 #endif
     clear_event(BX_EVENT_INIT);
 #if BX_SUPPORT_VMX
@@ -377,7 +382,6 @@ bool BX_CPU_C::handleAsyncEvent(void)
 #if BX_SUPPORT_SVM
   else if (is_unmasked_event_pending(BX_EVENT_SVM_VIRQ_PENDING))
   {
-    // virtual interrupt acknowledge
     SvmVirtualInterruptAcknowledge();
   }
 #endif
