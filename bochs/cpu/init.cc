@@ -460,6 +460,12 @@ void BX_CPU_C::register_state(void)
   }
 #endif
 
+#if BX_SUPPORT_SVM
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SVM)) {
+    BXRS_HEX_PARAM_FIELD(MSR, svm_hsave_pa, msr.svm_hsave_pa);
+  }
+#endif
+
 #if BX_CONFIGURE_MSRS
   bx_list_c *MSRS = new bx_list_c(cpu, "USER_MSR");
   for(n=0; n < BX_MSR_MAX_INDEX; n++) {
@@ -966,6 +972,10 @@ void BX_CPU_C::reset(unsigned source)
 
 #if BX_SUPPORT_MONITOR_MWAIT
   BX_CPU_THIS_PTR msr.ia32_umwait_ctrl = 0;
+#endif
+
+#if BX_SUPPORT_SVM
+  BX_CPU_THIS_PTR msr.svm_hsave_pa = 0;
 #endif
 
 #if BX_SUPPORT_CET

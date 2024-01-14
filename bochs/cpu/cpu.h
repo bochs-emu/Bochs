@@ -5036,7 +5036,7 @@ public: // for now...
   BX_SMF void SvmInterceptMSR(unsigned op, Bit32u msr);
   BX_SMF void SvmInterceptTaskSwitch(Bit16u tss_selector, unsigned source, bool push_error, Bit32u error_code);
   BX_SMF void SvmInterceptPAUSE(void);
-  BX_SMF void VirtualInterruptAcknowledge(void);
+  BX_SMF void SvmVirtualInterruptAcknowledge(void);
   BX_SMF void register_svm_state(bx_param_c *parent);
 #endif
 

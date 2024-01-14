@@ -1209,12 +1209,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPGA(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
+  bx_address laddr = RAX & i->asize_mask();
+
   if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (SVM_INTERCEPT(SVM_INTERCEPT0_INVLPGA)) Svm_Vmexit(SVM_VMEXIT_INVLPGA);
+    if (SVM_INTERCEPT(SVM_INTERCEPT0_INVLPGA))
+      Svm_Vmexit(SVM_VMEXIT_INVLPGA, BX_SUPPORT_SVM_EXTENSION(BX_CPUID_SVM_DECODE_ASSIST) ? laddr : 0);
   }
 
-  bx_address addr = RAX & i->asize_mask();
-  TLB_invlpg(addr); // FIXME: flush all ASID entries for now
+  TLB_invlpg(laddr); // FIXME: flush all ASID entries for now
 
   BX_NEXT_TRACE(i);
 }
