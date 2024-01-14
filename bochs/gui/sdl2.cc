@@ -90,6 +90,7 @@ SDL_DisplayMode sdl_maxres;
 bool sdl_init_done;
 bool sdl_fullscreen_toggle;
 bool sdl_grab = 0;
+int saved_x = 0, saved_y = 0;
 unsigned res_x, res_y;
 unsigned half_res_x, half_res_y;
 int headerbar_height;
@@ -327,6 +328,7 @@ static Bit32u sdl_sym_to_bx_key(SDL_Keycode sym)
 void switch_to_windowed(void)
 {
   SDL_SetWindowFullscreen(window, 0);
+  SDL_SetWindowPosition(window, saved_x, saved_y);
   SDL_SetWindowSize(window, res_x, res_y + headerbar_height + statusbar_height);
   sdl_screen = SDL_GetWindowSurface(window);
   sdl_fullscreen = NULL;
@@ -342,6 +344,7 @@ void switch_to_fullscreen(void)
   if (!sdl_grab) {
     bx_gui->toggle_mouse_enable();
   }
+  SDL_GetWindowPosition(window, &saved_x, &saved_y);
   SDL_SetWindowSize(window, res_x, res_y);
   SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
   sdl_fullscreen = SDL_GetWindowSurface(window);
