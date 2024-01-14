@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2014-2023  The Bochs Project
+//  Copyright (C) 2014-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -917,6 +917,9 @@ void bx_sdl2_gui_c::handle_events(void)
         break;
 
       case SDL_QUIT:
+#ifndef WIN32
+        SIM->set_notify_callback(old_callback, old_callback_arg);
+#endif
         BX_FATAL(("User requested shutdown."));
         break;
     }
