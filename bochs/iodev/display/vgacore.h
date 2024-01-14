@@ -273,8 +273,8 @@ protected:
 #endif
   } s;  // state information
 
-  int timer_id1;
-  int timer_id2;
+  int update_timer_id;
+  int vsync_timer_id;
   Bit32u vga_update_interval;
   bool update_mode_vsync;
   bool update_realtime;

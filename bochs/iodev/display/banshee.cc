@@ -2851,7 +2851,7 @@ void bx_voodoo_vga_c::banshee_update_mode(void)
   BX_INFO(("switched to %d x %d x %d @ %d Hz", v->fbi.width, v->fbi.height,
            v->banshee.disp_bpp, (unsigned)v->vertfreq));
   bx_gui->dimension_update(v->fbi.width, v->fbi.height, 0, 0, v->banshee.disp_bpp);
-  bx_virt_timer.deactivate_timer(timer_id2);
+  bx_virt_timer.deactivate_timer(vsync_timer_id);
   // compatibilty settings for VGA core
   BX_VVGA_THIS s.last_xres = v->fbi.width;
   BX_VVGA_THIS s.last_yres = v->fbi.height;
