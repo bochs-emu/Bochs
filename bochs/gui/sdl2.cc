@@ -834,7 +834,8 @@ void bx_sdl2_gui_c::handle_events(void)
         }
 
         // Window/Fullscreen toggle-check
-        if (sdl_event.key.keysym.sym == SDLK_SCROLLLOCK) {
+        if ((sdl_event.key.keysym.sym == SDLK_RETURN) &&
+            (bx_gui->get_modifier_keys() == BX_MOD_KEY_ALT)) {
           sdl_fullscreen_toggle = !sdl_fullscreen_toggle;
           if (sdl_fullscreen_toggle == 0) {
             switch_to_windowed();

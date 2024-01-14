@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2023  The Bochs Project
+//  Copyright (C) 2002-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -907,7 +907,8 @@ void bx_sdl_gui_c::handle_events(void)
         }
 
         // Window/Fullscreen toggle-check
-        if (sdl_event.key.keysym.sym == SDLK_SCROLLOCK) {
+        if ((sdl_event.key.keysym.sym == SDLK_RETURN) &&
+            (bx_gui->get_modifier_keys() == BX_MOD_KEY_ALT)) {
           sdl_fullscreen_toggle = !sdl_fullscreen_toggle;
           if (sdl_fullscreen_toggle == 0) {
             switch_to_windowed();
