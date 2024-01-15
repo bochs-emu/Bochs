@@ -825,6 +825,8 @@ void set_fullscreen_mode(BOOL enable)
     if (saveParent) {
       BX_DEBUG(("Restoring parent window"));
       SetParent(stInfo.mainWnd, saveParent);
+      SetWindowPos(stInfo.mainWnd, HWND_NOTOPMOST,
+        0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
       saveParent = NULL;
     }
     // put back the title bar, border, etc...
