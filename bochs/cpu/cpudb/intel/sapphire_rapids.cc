@@ -582,10 +582,10 @@ void sapphire_rapids_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_
     // ! [19:19] Architectural LBRs support
     // * [20:20] CET IBT: Support CET indirect branch tracking
     //   [21:21] reserved
-    // ! [22:22] AMX BF16 support
+    // * [22:22] AMX BF16 support
     // * [23:23] AVX512_FP16 instructions support
-    // ! [24:24] AMX TILE architecture support
-    // ! [25:25] AMX INT8 support
+    // * [24:24] AMX TILE architecture support
+    // * [25:25] AMX INT8 support
     // * [26:26] IBRS: indirect branch restricted speculation
     // * [27:27] STIBP: single thread indirect branch predictors
     // * [28:28] L1D_FLUSH support
@@ -621,7 +621,7 @@ void sapphire_rapids_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_
     //   [18:13] Reserved
     //   [19:19] WRMSRNS instruction
     //   [20:20] Reserved
-    //   [21:21] AMX-FB16 support
+    //   [21:21] AMX-FP16 support
     //   [22:22] HRESET and CPUID leaf 0x20 support
     //   [23:23] AVX IFMA support
     //   [25:24] Reserved
