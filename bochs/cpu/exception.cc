@@ -950,9 +950,10 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
    * least significant bit set correctly. This correction is applied first
    * to make the change transparent to any instrumentation.
    */
-  if (vector != BX_PF_EXCEPTION && vector != BX_DF_EXCEPTION && vector != BX_CP_EXCEPTION) {
-    // Page faults have different format
-    error_code = (error_code & 0xfffe) | (Bit16u)(BX_CPU_THIS_PTR EXT);
+  if (push_error) {
+    if (vector != BX_PF_EXCEPTION && vector != BX_DF_EXCEPTION && vector != BX_CP_EXCEPTION && vector != BX_SX_EXCEPTION) {
+      error_code = (error_code & 0xfffe) | (Bit16u)(BX_CPU_THIS_PTR EXT);
+    }
   }
 
   BX_DEBUG(("exception(0x%02x): error_code=%04x", vector, error_code));

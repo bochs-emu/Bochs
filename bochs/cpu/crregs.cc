@@ -1459,6 +1459,13 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetEFER(bx_address val_64)
   }
 #endif
 
+#if BX_SUPPORT_SVM
+  if (val32 & BX_EFER_SVME_MASK) {
+    if (BX_CPU_THIS_PTR msr.svm_vm_cr & BX_VM_CR_MSR_SVMDIS_MASK)
+      return false;
+  }
+#endif
+
   BX_CPU_THIS_PTR efer.set32((val32 & BX_CPU_THIS_PTR efer_suppmask & ~BX_EFER_LMA_MASK)
         | (BX_CPU_THIS_PTR efer.get32() & BX_EFER_LMA_MASK)); // keep LMA untouched
 
