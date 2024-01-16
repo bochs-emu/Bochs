@@ -27,7 +27,6 @@
 //
 // there are still many unimplemented features:
 //
-// - destination write mask support is not complete (bit 5..6)
 // - BLT mode extension support is not complete (bit 3..4)
 // - 4bpp modes
 //
@@ -2013,9 +2012,6 @@ void bx_svga_cirrus_c::svga_write_control(Bit32u address, unsigned index, Bit8u 
       value &= 0x3f;
       break;
     case 0x2f: // BLT WRITE MASK
-      if (((value ^ old_value) & 0x60) && (value & 0x60)) {
-        BX_ERROR(("BLT WRITE MASK support is not complete (value = 0x%02x)", value));
-      }
       break;
     case 0x30: // BLT MODE
       break;
@@ -3075,15 +3071,17 @@ void bx_svga_cirrus_c::svga_simplebitblt_memsrc()
   Bit8u work_colorexp[2048];
   Bit16u w;
   int pattern_x;
+  int byteofs = (BX_CIRRUS_THIS control.reg[0x2f] >> 5) & 0x03;
 
   BX_DEBUG(("svga_cirrus: BLT, cpu-to-video"));
 
-  if (BX_CIRRUS_THIS bitblt.pixelwidth == 3) {
-    pattern_x = BX_CIRRUS_THIS control.reg[0x2f] & 0x1f;
-  } else {
-    pattern_x = (BX_CIRRUS_THIS control.reg[0x2f] & 0x07) * BX_CIRRUS_THIS bitblt.pixelwidth;
-  }
   if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_COLOREXPAND) {
+    if (BX_CIRRUS_THIS bitblt.pixelwidth == 3) {
+      pattern_x = (BX_CIRRUS_THIS control.reg[0x2f] & 0x1f) + byteofs * 24;
+    }
+    else {
+      pattern_x = ((BX_CIRRUS_THIS control.reg[0x2f] & 0x07) + byteofs * 8) * BX_CIRRUS_THIS bitblt.pixelwidth;
+    }
     if (BX_CIRRUS_THIS bitblt.bltmode & ~CIRRUS_BLTMODE_COLOREXPAND) {
       BX_ERROR(("cpu-to-video BLT: unknown bltmode %02x",BX_CIRRUS_THIS bitblt.bltmode));
       return;
@@ -3100,8 +3098,8 @@ void bx_svga_cirrus_c::svga_simplebitblt_memsrc()
       return;
     }
     (*BX_CIRRUS_THIS bitblt.rop_handler)(
-        BX_CIRRUS_THIS bitblt.dst, srcptr, 0, 0,
-        BX_CIRRUS_THIS bitblt.bltwidth, 1);
+        BX_CIRRUS_THIS bitblt.dst + byteofs, srcptr + byteofs, 0, 0,
+        BX_CIRRUS_THIS bitblt.bltwidth - byteofs, 1);
   }
 }
 
@@ -3112,15 +3110,20 @@ void bx_svga_cirrus_c::svga_colorexpand_transp_memsrc()
   int x, pattern_x, srcskipleft;
   Bit8u *dst;
   unsigned bits, bits_xor, bitmask;
+  int byteofs;
 
   BX_DEBUG(("BLT, cpu-to-video, transparent"));
 
+  byteofs = (BX_CIRRUS_THIS control.reg[0x2f] >> 5) & 3;
+  src += byteofs;
+  byteofs <<= 3;
   if (BX_CIRRUS_THIS bitblt.pixelwidth == 3) {
     pattern_x = BX_CIRRUS_THIS control.reg[0x2f] & 0x1f;
     srcskipleft = pattern_x / 3;
+    pattern_x += byteofs * 3;
   } else {
     srcskipleft = BX_CIRRUS_THIS control.reg[0x2f] & 0x07;
-    pattern_x = srcskipleft * BX_CIRRUS_THIS bitblt.pixelwidth;
+    pattern_x = (srcskipleft + byteofs) * BX_CIRRUS_THIS bitblt.pixelwidth;
   }
   color[0] = BX_CIRRUS_THIS control.shadow_reg1;
   color[1] = BX_CIRRUS_THIS control.reg[0x11];
