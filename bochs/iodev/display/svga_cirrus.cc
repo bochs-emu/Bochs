@@ -2520,8 +2520,18 @@ void bx_svga_cirrus_c::svga_bitblt()
       BX_CIRRUS_THIS bitblt.dstpitch = -BX_CIRRUS_THIS bitblt.dstpitch;
       BX_CIRRUS_THIS bitblt.srcpitch = -BX_CIRRUS_THIS bitblt.srcpitch;
       BX_CIRRUS_THIS bitblt.rop_handler = svga_get_bkwd_rop_handler(BX_CIRRUS_THIS bitblt.bltrop);
-      BX_CIRRUS_THIS redraw.x -= BX_CIRRUS_THIS redraw.w;
-      BX_CIRRUS_THIS redraw.y -= BX_CIRRUS_THIS redraw.h;
+      if (BX_CIRRUS_THIS redraw.w > BX_CIRRUS_THIS redraw.x) {
+        BX_CIRRUS_THIS redraw.w = BX_CIRRUS_THIS redraw.x;
+        BX_CIRRUS_THIS redraw.x = 0;
+      } else {
+        BX_CIRRUS_THIS redraw.x -= BX_CIRRUS_THIS redraw.w;
+      }
+      if (BX_CIRRUS_THIS redraw.h > BX_CIRRUS_THIS redraw.y) {
+        BX_CIRRUS_THIS redraw.h = BX_CIRRUS_THIS redraw.y;
+        BX_CIRRUS_THIS redraw.y = 0;
+      } else {
+        BX_CIRRUS_THIS redraw.y -= BX_CIRRUS_THIS redraw.h;
+      }
     } else {
       BX_CIRRUS_THIS bitblt.rop_handler = svga_get_fwd_rop_handler(BX_CIRRUS_THIS bitblt.bltrop);
     }

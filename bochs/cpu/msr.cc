@@ -457,6 +457,14 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
 
 #if BX_SUPPORT_SVM
+    case BX_SVM_VM_CR_MSR:
+      if (! is_cpu_extension_supported(BX_ISA_SVM)) {
+        BX_ERROR(("RDMSR SVM_VM_CR_MSR: SVM support not enabled in the cpu model"));
+        return handle_unknown_rdmsr(index, msr);
+      }
+      val64 = BX_CPU_THIS_PTR msr.svm_vm_cr;
+      break;
+
     case BX_SVM_HSAVE_PA_MSR:
       if (! is_cpu_extension_supported(BX_ISA_SVM)) {
         BX_ERROR(("RDMSR SVM_HSAVE_PA_MSR: SVM support not enabled in the cpu model"));
@@ -1154,6 +1162,14 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 #endif
 
 #if BX_SUPPORT_SVM
+    case BX_SVM_VM_CR_MSR:
+      if (! is_cpu_extension_supported(BX_ISA_SVM)) {
+        BX_ERROR(("WRMSR SVM_VM_CR_MSR: SVM support not enabled in the cpu model"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
+      Svm_Update_VM_CR_MSR(val_64);
+      break;
+
     case BX_SVM_HSAVE_PA_MSR:
       if (! is_cpu_extension_supported(BX_ISA_SVM)) {
         BX_ERROR(("WRMSR SVM_HSAVE_PA_MSR: SVM support not enabled in the cpu model"));
