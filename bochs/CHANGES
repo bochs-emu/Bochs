@@ -5,6 +5,7 @@ We welcome every new contributor !
 
 Brief summary :
   - Bugfixes for CPU emulation correctness (MONITOR/MWAIT, VMX/SVM, x87, AVX-VNNI, AVX-512, CET, SHA, GFNI fixes)
+  ! SVM: Implemented SVM VM_CR_MSR and INIT redirect (required for booting SMP with SVM)
   ! Implemented VMX MBE (Mode Based Execution Control) emulation required for Windows 11 guest
   ! Implemented MSR IA32_SPEC_CTRL Virtualization VMX extension
   ! Implemented Posted-Interrupt Processing VMX extension emulation
@@ -37,6 +38,7 @@ Detailed change log :
 - CPU/CPUDB
   - Bugfixes for CPU emulation correctness (MONITOR/MWAIT, VMX/SVM, x87, AVX-VNNI, AVX-512, CET)
   - Critical CPU emulation bugfixes for SHA and GFNI instructions
+  - SVM: Implemented SVM VM_CR_MSR and INIT redirect (required for booting SMP with SVM)
   - Implemented VMX MBE (Mode Based Execution Control) emulation required for Windows 11 guest
   - Implemented advanced VM-exit information for EPT violations (tied to MBE Control)
   - Implemented MSR IA32_SPEC_CTRL Virtualization VMX extension
@@ -66,6 +68,10 @@ Detailed change log :
 
 - Config interface
   - Show message box while saving and restoring Bochs state
+
+- GUI and display libraries
+  - SDL / SDL2: change fullscreen toggle to key combination ALT+ENTER.
+  - SDL2: Save / restore window position when using fullscreen toggle
 
 - Memory
   - Fixed memory handling in volatile BIOS write support
@@ -101,6 +107,8 @@ Detailed change log :
   - SVGA Cirrus:
     - PCI MMIO space is not disabled if the Cirrus card is in VGA mode
     - Fixed color expand bitblt with dword granularity enabled
+    - Fixed redraw values for backward BitBlt
+    - BLT System-to-screen Dword Pointer (GR2F[6:5]) implemented
 
   - Voodoo
     - Expand maximum resolution for Banshee and Voodoo 3 from 1600x1280 to 1920x1440
@@ -198,6 +206,7 @@ Detailed change log :
 
   - HPET
     - Bugfixes in HPET emulation
+    - Fixed hang after HPET reset in legacy mode
 
   - SB16
     - Set default value for SB16 dmatimer to 1000000 and updated docs
