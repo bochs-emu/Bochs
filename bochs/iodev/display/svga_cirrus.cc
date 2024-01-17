@@ -451,6 +451,9 @@ void bx_svga_cirrus_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
   } else {
     yt1 = (BX_CIRRUS_THIS svga_yres - 1) / Y_TILESIZE;
   }
+  if ((x0 + width) > svga_xres) {
+    BX_CIRRUS_THIS redraw_area(0, y0 + 1, width, height);
+  }
   for (yti=yt0; yti<=yt1; yti++) {
     for (xti=xt0; xti<=xt1; xti++) {
       SET_TILE_UPDATED(BX_CIRRUS_THIS, xti, yti, 1);
