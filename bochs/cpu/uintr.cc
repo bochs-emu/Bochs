@@ -188,8 +188,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SENDUIPI_Gq(bxInstruction_c *i)
   // | 127:64 | UPID_ADDR, linear address of UPID, must be 64-byte aligned
   // --------------------------------
 
-  Bit64u tmpUITT_entry_lo = system_read_qword(BX_CPU_THIS_PTR uintr.uitt_addr + index * 16);
-  Bit64u tmpUITT_upidaddr = system_read_qword(BX_CPU_THIS_PTR uintr.uitt_addr + index * 16 + 8);
+  bx_address entry_addr = (BX_CPU_THIS_PTR uintr.uitt_addr & ~BX_CONST64(0xF)) + index * 16;
+  Bit64u tmpUITT_entry_lo = system_read_qword(entry_addr);
+  Bit64u tmpUITT_upidaddr = system_read_qword(entry_addr + 8);
   if ((tmpUITT_entry_lo & 0x1) == 0) {
     BX_ERROR(("SENDUIPI #GP(0): invalid UITT entry"));
     exception(BX_GP_EXCEPTION, 0);
@@ -201,6 +202,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SENDUIPI_Gq(bxInstruction_c *i)
   unsigned uvector = (tmpUITT_entry_lo >> 8) & 0xFF;
   if (uvector >= 64) {
     BX_ERROR(("SENDUIPI #GP(0): UVector=%d >= 64", uvector));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+  if (tmpUITT_upidaddr & 0x3F) {
+    BX_ERROR(("SENDUIPI #GP(0): UPID_ADDR must be 64-byte aligned"));
     exception(BX_GP_EXCEPTION, 0);
   }
 
