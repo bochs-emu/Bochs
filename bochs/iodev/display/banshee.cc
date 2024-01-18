@@ -271,6 +271,7 @@ void bx_banshee_c::register_state(void)
   BXRS_PARAM_BOOL(banshee, half_mode, v->banshee.half_mode);
   BXRS_PARAM_BOOL(banshee, dac_8bit, v->banshee.dac_8bit);
   BXRS_PARAM_BOOL(banshee, desktop_tiled, v->banshee.desktop_tiled);
+  BXRS_PARAM_BOOL(banshee, overlay_tiled, v->banshee.overlay_tiled);
   BXRS_PARAM_BOOL(banshee, hwcursor_enabled, v->banshee.hwcursor.enabled);
   BXRS_PARAM_BOOL(banshee, hwcursor_mode, v->banshee.hwcursor.mode);
   new bx_shadow_num_c(banshee, "hwcursor_addr", &v->banshee.hwcursor.addr, BASE_HEX);
@@ -735,6 +736,7 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_ERROR(("vidProcCfg: overlay filter mode not supported yet"));
       }
       v->banshee.desktop_tiled = ((v->banshee.io[reg] >> 24) & 1);
+      v->banshee.overlay_tiled = ((v->banshee.io[reg] >> 25) & 1);
       break;
 
     case io_hwCurPatAddr:
@@ -1600,8 +1602,14 @@ void bx_banshee_c::blt_complete()
   bool yinc = (cmd >> 11) & 1;
   int x, y, w, h;
 
-  if (v->banshee.desktop_tiled) {
-    vpitch *= 128;
+  if ((v->banshee.io[io_vidProcCfg] & 0x101) == 0x101) {
+    if (v->banshee.overlay_tiled) {
+      vpitch *= 128;
+    }
+  } else {
+    if (v->banshee.desktop_tiled) {
+      vpitch *= 128;
+    }
   }
   if ((dstart == vstart) && (dpitch == vpitch) && (dpxsize == vpxsize)) {
     if (BLT.cmd < 6) {
@@ -1637,7 +1645,11 @@ void bx_banshee_c::blt_complete()
       y <<= 1;
       h <<= 1;
     }
-    theVoodooVga->redraw_area(x, y, w, h);
+    if ((v->banshee.io[io_vidProcCfg] & 0x101) == 0x101) {
+      v->fbi.video_changed = 1;
+    } else {
+      theVoodooVga->redraw_area(x, y, w, h);
+    }
   }
   if (xinc) {
     BLT.dst_x += BLT.dst_w;

@@ -1730,6 +1730,7 @@ struct _banshee_info
   bool half_mode;
   bool dac_8bit;
   bool desktop_tiled;
+  bool overlay_tiled;
   struct {
     bool enabled;
     bool mode;

@@ -585,11 +585,15 @@ void bx_voodoo_base_c::update(void)
     BX_LOCK(fifo_mutex);
     if (s.model >= VOODOO_BANSHEE) {
       start = v->fbi.rgboffs[0];
+      pitch = v->banshee.io[io_vidDesktopOverlayStride] & 0x7fff;
+      if (v->banshee.overlay_tiled) {
+        pitch *= 128;
+      }
     } else {
       start = v->fbi.rgboffs[v->fbi.frontbuf];
+      pitch = v->fbi.rowpixels * 2;
     }
     BX_UNLOCK(fifo_mutex);
-    pitch = v->fbi.rowpixels * 2;
   }
   iWidth = s.vdraw.width;
   iHeight = s.vdraw.height;
