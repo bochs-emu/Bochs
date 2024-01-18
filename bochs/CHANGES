@@ -72,6 +72,7 @@ Detailed change log :
 - GUI and display libraries
   - SDL / SDL2: change fullscreen toggle to key combination ALT+ENTER.
   - SDL2: Save / restore window position when using fullscreen toggle
+  - win32: cancel topmost window mode after leaving fullscreen mode
 
 - Memory
   - Fixed memory handling in volatile BIOS write support
@@ -107,16 +108,17 @@ Detailed change log :
   - SVGA Cirrus:
     - PCI MMIO space is not disabled if the Cirrus card is in VGA mode
     - Fixed color expand bitblt with dword granularity enabled
-    - Fixed redraw values for backward BitBlt
     - BLT System-to-screen Dword Pointer (GR2F[6:5]) implemented
+    - Fixed redraw values for backward BitBlt
+    - Fixed bitblt issues caused by unhandled address wrap and unaligned drawing region
 
   - Voodoo
     - Expand maximum resolution for Banshee and Voodoo 3 from 1600x1280 to 1920x1440
-    - Fix memory corruption when reading Voodoo ROM
     - Fixed backward screen-to-screen copy operation for > 8 bpp modes
     - Fixed Voodoo device compilation for big endian architectures
     - Fixed randomly missing color palette updates
     - Fixed Banshee read from ROM and mem_write() for any size and endianness
+    - Fixed Banshee bitblt redraw in 3D mode and pitch used in this mode
     - Banshee: Implement 8 and 16 byte writes to CMDFIFO
 
   - CD-ROM:
