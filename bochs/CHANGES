@@ -4,7 +4,8 @@ The Bochs source tree is transitioning from SVN to GIT hosted on github (https:/
 We welcome every new contributor !
 
 Brief summary :
-  - Bugfixes for CPU emulation correctness (MONITOR/MWAIT, VMX/SVM, x87, AVX-VNNI, AVX-512, CET, SHA, GFNI fixes)
+  - Bugfixes for CPU emulation correctness (MONITOR/MWAIT, VMX/SVM, x87, AVX-VNNI, AVX-512, CET)
+  - Critical CPU emulation bugfixes for SHA and GFNI instructions, ADOX instruction (prevented boot of Win10)
   ! SVM: Implemented SVM VM_CR_MSR and INIT redirect (required for booting SMP with SVM)
   ! Implemented VMX MBE (Mode Based Execution Control) emulation required for Windows 11 guest
   ! Implemented MSR IA32_SPEC_CTRL Virtualization VMX extension
@@ -37,7 +38,7 @@ Detailed change log :
 
 - CPU/CPUDB
   - Bugfixes for CPU emulation correctness (MONITOR/MWAIT, VMX/SVM, x87, AVX-VNNI, AVX-512, CET)
-  - Critical CPU emulation bugfixes for SHA and GFNI instructions
+  - Critical CPU emulation bugfixes for SHA and GFNI instructions, ADOX instruction (prevented boot of Win10)
   - SVM: Implemented SVM VM_CR_MSR and INIT redirect (required for booting SMP with SVM)
   - Implemented VMX MBE (Mode Based Execution Control) emulation required for Windows 11 guest
   - Implemented advanced VM-exit information for EPT violations (tied to MBE Control)
