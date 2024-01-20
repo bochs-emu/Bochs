@@ -105,6 +105,9 @@ Detailed change log :
     - Increase maximum VGA update frequency to 75 and set default to 10
     - VGA update frequency value 0 enables support for using frame rate of emulated gfx device
     - Fixes for emulated CGA mode
+    - Implemented more accurate vertical timing by using one timer with two alternating
+      intervals. Set display start address from CRTC at vertical retrace end and display
+      start time for retrace and blanking detection.
 
   - SVGA Cirrus:
     - PCI MMIO space is not disabled if the Cirrus card is in VGA mode
