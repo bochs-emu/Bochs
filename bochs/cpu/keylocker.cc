@@ -38,8 +38,8 @@ struct _IWKey {
   bool NoBackup;
 } IWKey;
 
-extern UnWrapKeyAndAuthentificate384(const BxPackedZmmRegister &handle, struct _IWKey& IWKey, BxPackedYmmRegister UnwrappedKey);
-extern UnWrapKeyAndAuthentificate512(const BxPackedZmmRegister &handle, struct _IWKey& IWKey, BxPackedYmmRegister UnwrappedKey);
+extern bool UnWrapKeyAndAuthentificate384(const BxPackedZmmRegister &handle, struct _IWKey& IWKey, const BxPackedYmmRegister &UnwrappedKey);
+extern bool UnWrapKeyAndAuthentificate512(const BxPackedZmmRegister &handle, struct _IWKey& IWKey, const BxPackedYmmRegister &UnwrappedKey);
 
 // Handle for 128-bit AES keys has the following format
 // ----------------------------------------------------
