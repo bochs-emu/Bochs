@@ -64,7 +64,7 @@ bx_vgacore_c::bx_vgacore_c()
 {
   memset(&s, 0, sizeof(s));
   update_timer_id = BX_NULL_TIMER_HANDLE;
-  vertical_timer_id = BX_NULL_TIMER_HANDLE;
+  vga_vtimer_id = BX_NULL_TIMER_HANDLE;
 }
 
 bx_vgacore_c::~bx_vgacore_c()
@@ -238,8 +238,8 @@ void bx_vgacore_c::init_systemtimer(void)
       vga_update_freq->set_runtime_param(0);
     }
   }
-  if (BX_VGA_THIS vertical_timer_id == BX_NULL_TIMER_HANDLE) {
-    BX_VGA_THIS vertical_timer_id = bx_virt_timer.register_timer(this, vertical_timer_handler,
+  if (BX_VGA_THIS vga_vtimer_id == BX_NULL_TIMER_HANDLE) {
+    BX_VGA_THIS vga_vtimer_id = bx_virt_timer.register_timer(this, vertical_timer_handler,
        100000, 1, 1, BX_VGA_THIS vsync_realtime, "vga vsync");
   }
   BX_VGA_THIS set_update_timer(update_interval);
@@ -1209,7 +1209,7 @@ void bx_vgacore_c::set_override(bool enabled, void *dev)
     BX_VGA_THIS vga_redraw_area(0, 0, BX_VGA_THIS s.last_xres, BX_VGA_THIS s.last_yres);
     BX_VGA_THIS start_vertical_timer();
   } else {
-    bx_virt_timer.deactivate_timer(BX_VGA_THIS vertical_timer_id);
+    bx_virt_timer.deactivate_timer(BX_VGA_THIS vga_vtimer_id);
   }
   if (BX_VGA_THIS update_mode_vsync) {
     BX_VGA_THIS set_update_timer(0);
@@ -2339,7 +2339,7 @@ void bx_vgacore_c::vertical_timer_handler(void *this_ptr)
 void bx_vgacore_c::vertical_timer(void)
 {
   BX_VGA_THIS vtimer_toggle ^= 1;
-  bx_virt_timer.activate_timer(BX_VGA_THIS vertical_timer_id,
+  bx_virt_timer.activate_timer(BX_VGA_THIS vga_vtimer_id,
     BX_VGA_THIS vtimer_interval[BX_VGA_THIS vtimer_toggle], 0);
   if (BX_VGA_THIS vtimer_toggle) {
     BX_VGA_THIS s.CRTC.start_addr = (BX_VGA_THIS s.CRTC.reg[0x0c] << 8) | BX_VGA_THIS s.CRTC.reg[0x0d];
@@ -2381,7 +2381,7 @@ void bx_vgacore_c::start_vertical_timer(void)
   BX_VGA_THIS vtimer_toggle = 0;
   BX_VGA_THIS vtimer_interval[0] = BX_VGA_THIS s.vrend_usec;
   BX_VGA_THIS vtimer_interval[1] = BX_VGA_THIS s.vtotal_usec - BX_VGA_THIS s.vrend_usec;
-  bx_virt_timer.activate_timer(BX_VGA_THIS vertical_timer_id, vtimer_interval[0], 0);
+  bx_virt_timer.activate_timer(BX_VGA_THIS vga_vtimer_id, vtimer_interval[0], 0);
 }
 
 #undef LOG_THIS

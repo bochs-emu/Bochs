@@ -644,7 +644,11 @@ void bx_voodoo_base_c::update(void)
             for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
               if (GET_TILE_UPDATED(xti, yti)) {
                 if (v->banshee.half_mode) {
-                  vid_ptr = disp_ptr + ((yc >> 1) * pitch + xc);
+                  if (v->banshee.double_width) {
+                    vid_ptr = disp_ptr + ((yc >> 1) * pitch + (xc >> 1));
+                  } else {
+                    vid_ptr = disp_ptr + ((yc >> 1) * pitch + xc);
+                  }
                 } else {
                   vid_ptr = disp_ptr + (yc * pitch + xc);
                 }
@@ -653,7 +657,10 @@ void bx_voodoo_base_c::update(void)
                   vid_ptr2  = vid_ptr;
                   tile_ptr2 = tile_ptr;
                   for (c=0; c<w; c++) {
-                    colour = v->fbi.clut[*(vid_ptr2++)];
+                    colour = v->fbi.clut[*(vid_ptr2)];
+                    if (!v->banshee.double_width || (c & 1)) {
+                      vid_ptr2++;
+                    }
                     colour = MAKE_COLOUR(
                       colour & 0xff0000, 24, info.red_shift, info.red_mask,
                       colour & 0x00ff00, 16, info.green_shift, info.green_mask,
@@ -687,7 +694,11 @@ void bx_voodoo_base_c::update(void)
             for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
               if (GET_TILE_UPDATED(xti, yti)) {
                 if (v->banshee.half_mode) {
-                  vid_ptr = disp_ptr + ((yc >> 1) * pitch + (xc << 1));
+                  if (v->banshee.double_width) {
+                    vid_ptr = disp_ptr + ((yc >> 1) * pitch + xc);
+                  } else {
+                    vid_ptr = disp_ptr + ((yc >> 1) * pitch + (xc << 1));
+                  }
                 } else {
                   vid_ptr = disp_ptr + (yc * pitch + (xc << 1));
                 }
@@ -696,8 +707,11 @@ void bx_voodoo_base_c::update(void)
                   vid_ptr2  = vid_ptr;
                   tile_ptr2 = tile_ptr;
                   for (c=0; c<w; c++) {
-                    index = *(vid_ptr2++);
-                    index |= *(vid_ptr2++) << 8;
+                    index = *(vid_ptr2);
+                    index |= *(vid_ptr2 + 1) << 8;
+                    if (!v->banshee.double_width || (c & 1)) {
+                      vid_ptr2 += 2;
+                    }
                     colour = MAKE_COLOUR(
                       v->fbi.pen[index] & 0x0000ff, 8, info.blue_shift, info.blue_mask,
                       v->fbi.pen[index] & 0x00ff00, 16, info.green_shift, info.green_mask,
@@ -731,7 +745,11 @@ void bx_voodoo_base_c::update(void)
             for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
               if (GET_TILE_UPDATED(xti, yti)) {
                 if (v->banshee.half_mode) {
-                  vid_ptr = disp_ptr + ((yc >> 1) * pitch + 3*xc);
+                  if (v->banshee.double_width) {
+                    vid_ptr = disp_ptr + ((yc >> 1) * pitch + 3 * (xc >> 1));
+                  } else {
+                    vid_ptr = disp_ptr + ((yc >> 1) * pitch + 3 * xc);
+                  }
                 } else {
                   vid_ptr = disp_ptr + (yc * pitch + 3*xc);
                 }
@@ -740,9 +758,12 @@ void bx_voodoo_base_c::update(void)
                   vid_ptr2  = vid_ptr;
                   tile_ptr2 = tile_ptr;
                   for (c=0; c<w; c++) {
-                    blue = *(vid_ptr2++);
-                    green = *(vid_ptr2++);
-                    red = *(vid_ptr2++);
+                    blue = *(vid_ptr2);
+                    green = *(vid_ptr2 + 1);
+                    red = *(vid_ptr2 + 2);
+                    if (!v->banshee.double_width || (c & 1)) {
+                      vid_ptr2 += 3;
+                    }
                     colour = MAKE_COLOUR(
                       red, 8, info.red_shift, info.red_mask,
                       green, 8, info.green_shift, info.green_mask,
@@ -776,7 +797,11 @@ void bx_voodoo_base_c::update(void)
             for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
               if (GET_TILE_UPDATED(xti, yti)) {
                 if (v->banshee.half_mode) {
-                  vid_ptr = disp_ptr + ((yc >> 1) * pitch + (xc << 2));
+                  if (v->banshee.double_width) {
+                    vid_ptr = disp_ptr + ((yc >> 1) * pitch + (xc << 1));
+                  } else {
+                    vid_ptr = disp_ptr + ((yc >> 1) * pitch + (xc << 2));
+                  }
                 } else {
                   vid_ptr = disp_ptr + (yc * pitch + (xc << 2));
                 }
@@ -785,10 +810,12 @@ void bx_voodoo_base_c::update(void)
                   vid_ptr2  = vid_ptr;
                   tile_ptr2 = tile_ptr;
                   for (c=0; c<w; c++) {
-                    blue = *(vid_ptr2++);
-                    green = *(vid_ptr2++);
-                    red = *(vid_ptr2++);
-                    vid_ptr2++;
+                    blue = *(vid_ptr2);
+                    green = *(vid_ptr2 + 1);
+                    red = *(vid_ptr2 + 2);
+                    if (!v->banshee.double_width || (c & 1)) {
+                      vid_ptr2 += 4;
+                    }
                     colour = MAKE_COLOUR(
                       red, 8, info.red_shift, info.red_mask,
                       green, 8, info.green_shift, info.green_mask,

@@ -280,7 +280,7 @@ protected:
   bool update_realtime;
   bool update_mode_vsync;
   // vertical timer stuff
-  int vertical_timer_id;
+  int vga_vtimer_id;
   bool vsync_realtime;
   Bit8u vtimer_toggle;
   Bit32u vtimer_interval[2];
