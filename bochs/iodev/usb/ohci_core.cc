@@ -1257,9 +1257,15 @@ int bx_ohci_core_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed, int toggl
       TD_SET_EC(td, 0);
     }
   } else {
-    if (ret >= 0)
+    if (ret >= 0) {
       TD_SET_CC(td, DataUnderrun);
-    else {
+      if (((TD_GET_CBP(td) & 0xfff) + ret) >= 0x1000) {
+        TD_SET_CBP(td, (TD_GET_CBP(td) + ret) & 0x0FFF);
+        TD_SET_CBP(td, TD_GET_CBP(td) | (TD_GET_BE(td) & ~0x0FFF));
+      } else {
+        TD_SET_CBP(td, TD_GET_CBP(td) + ret);
+      }
+    } else {
       switch (ret) {
         case USB_RET_NODEV:  // (-1)
           TD_SET_CC(td, DeviceNotResponding);
