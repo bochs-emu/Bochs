@@ -264,6 +264,8 @@ int bx_dbg_main(void)
     BX_INFO(("set SIGINT handler to bx_debug_ctrlc_handler"));
   }
 
+  dbg_printf("Bochs internal debugger, type 'help' for help or 'c' to continue\n");
+
   // Print disassembly of the first instruction...  you wouldn't think it
   // would have to be so hard.  First initialize guard_found, since it is used
   // in the disassembly code to decide what instruction to print.
@@ -279,6 +281,7 @@ int bx_dbg_main(void)
     if (BX_CPU(i)->get_cpu_mode() == BX_MODE_LONG_64)
       BX_CPU(i)->guard_found.code_32_64 |= 0x2;
   }
+
   // finally, call the usual function to print the disassembly
   dbg_printf("Next at t=" FMT_LL "d\n", bx_pc_system.time_ticks());
   bx_dbg_disassemble_current(-1, 0);  // all cpus, don't print time
@@ -3868,7 +3871,7 @@ void bx_dbg_print_help(void)
   dbg_printf("    bpe, bpd, d|del|delete, watch, unwatch, setmagicbps, clrmagicbps\n");
   dbg_printf("-*- CPU and memory contents -*-\n");
   dbg_printf("    x, xp, setpmem, writemem, loadmem, crc, info, deref,\n");
-  dbg_printf("    r|reg|regs|registers, fp|fpu, mmx, sse, sreg, dreg, creg,\n");
+  dbg_printf("    r|reg|regs|registers, fp|fpu, mmx, sse, amx, tile, sreg, dreg, creg,\n");
   dbg_printf("    page, set, ptime, print-stack, bt, print-string, ?|calc\n");
   dbg_printf("-*- Working with bochs param tree -*-\n");
   dbg_printf("    show \"param\", restore\n");
