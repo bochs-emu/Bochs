@@ -2480,7 +2480,11 @@ bool bx_floppy_ctrl_c::evaluate_media(Bit8u devtype, Bit8u type, const char *pat
   else
 #endif
   { // unix
-    ret = fstat(media->fd, &stat_buf);
+    if (media->fd >= 0) {
+      ret = fstat(media->fd, &stat_buf);
+    } else {
+      ret = EBADF;
+    }
   }
   if (ret) {
     BX_PANIC(("fstat floppy 0 drive image file returns error: %s", strerror(errno)));
