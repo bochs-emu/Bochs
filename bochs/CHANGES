@@ -106,8 +106,8 @@ Detailed change log :
     - VGA update frequency value 0 enables support for using frame rate of emulated gfx device
     - Fixes for emulated CGA mode
     - Implemented more accurate vertical timing by using one timer with two alternating
-      intervals. Set display start address from CRTC at vertical retrace end and display
-      start time for retrace and blanking detection.
+      periods. Set display start address from CRTC at vertical retrace end and after second
+      period the display start time for retrace and blanking detection.
 
   - SVGA Cirrus:
     - PCI MMIO space is not disabled if the Cirrus card is in VGA mode
@@ -124,6 +124,7 @@ Detailed change log :
     - Fixed Banshee read from ROM and mem_write() for any size and endianness
     - Fixed Banshee bitblt redraw in 3D mode and pitch used in this mode
     - Banshee: Implement 8 and 16 byte writes to CMDFIFO
+    - Double the screen width in 'half mode' if height > width.
 
   - CD-ROM:
     - Fix to enable TEAC CD-ROM driver to work
