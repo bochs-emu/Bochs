@@ -546,7 +546,7 @@ enum {
 };
 
 static const char *bx_paging_level[5] = { " PTE", " PDE", " PDPE", " PML4", " PML5" }; // keep it 5 letters
-#if BX_SUPPORT_SVM
+#if BX_DEBUGGER
 static const char *bx_nested_paging_level[5] = { "NPTE", "NPDE", "NPDPE", "NPML4", "NPML5" }; // keep it 5 letters
 #endif
 
@@ -2313,6 +2313,7 @@ bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx_ad
   }
   else {
     bx_phy_address pt_address = BX_CPU_THIS_PTR cr3 & BX_CR3_PAGING_MASK;
+#if BX_CPU_LEVEL >= 6
     bx_cr4_t the_cr4 = BX_CPU_THIS_PTR cr4;
     bool in_long_mode = long_mode();
 #if BX_SUPPORT_SVM
@@ -2323,7 +2324,6 @@ bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx_ad
     }
 #endif
 
-#if BX_CPU_LEVEL >= 6
     if (the_cr4.get_PAE()) {
       int level = BX_LEVEL_PDE;
       if (! in_long_mode) {
