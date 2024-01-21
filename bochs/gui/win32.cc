@@ -595,7 +595,7 @@ void terminateEmul(int reason)
 
   switch (reason) {
     case EXIT_GUI_SHUTDOWN:
-      BX_FATAL(("Window closed, exiting!"));
+      BX_INFO(("Window closed, exiting!"));
       break;
     case EXIT_GMH_FAILURE:
       BX_FATAL(("GetModuleHandle failure!"));
